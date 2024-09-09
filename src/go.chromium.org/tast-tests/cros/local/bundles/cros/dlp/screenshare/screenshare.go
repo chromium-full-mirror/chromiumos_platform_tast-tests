@@ -12,7 +12,6 @@ import (
 
 	"go.chromium.org/tast-tests/cros/common/policy"
 	"go.chromium.org/tast-tests/cros/local/bundles/cros/dlp/restrictionlevel"
-	"go.chromium.org/tast-tests/cros/local/chrome/browser"
 	"go.chromium.org/tast-tests/cros/local/chrome/uiauto"
 	"go.chromium.org/tast/core/errors"
 	"go.chromium.org/tast/core/testing"
@@ -37,7 +36,6 @@ type TestParams struct {
 	Name        string
 	Restriction restrictionlevel.RestrictionLevel
 	Path        string
-	BrowserType browser.Type
 }
 
 // GetScreenshareBlockPolicy returns a DLP policy that blocks screen sharing.

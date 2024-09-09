@@ -26,11 +26,10 @@ import (
 
 // testParams contains parameters for testing different DLP configurations.
 type testParams struct {
-	Username    string               // username for Chrome enrollment
-	Password    string               // password for Chrome enrollment
-	BrowserType dlp.BrowserType      // which browser the test should use
-	Action      dlputil.Action       // which action the test should use
-	Counts      dlputil.EventsCounts // which and how many report events to expect
+	Username string               // username for Chrome enrollment
+	Password string               // password for Chrome enrollment
+	Action   dlputil.Action       // which action the test should use
+	Counts   dlputil.EventsCounts // which and how many report events to expect
 }
 
 // eventsCountsToMode returns the mode associated with the given events counts.
@@ -52,9 +51,8 @@ func eventsCountsToMode(count *dlputil.EventsCounts) dlp.Mode {
 
 func init() {
 	testing.AddTest(&testing.Test{
-		Func:         DlpReporting,
-		LacrosStatus: testing.LacrosVariantExists,
-		Desc:         "Tests DLP actions in report mode and check whether the correct events are generated, sent, and received from the server side",
+		Func: DlpReporting,
+		Desc: "Tests DLP actions in report mode and check whether the correct events are generated, sent, and received from the server side",
 		Contacts: []string{
 			"chromeos-dlp@google.com",
 		},
@@ -71,8 +69,6 @@ func init() {
 		VarDeps: []string{
 			dlputil.RestrictionReportReportingEnabledUsernameAsh,
 			dlputil.RestrictionReportReportingEnabledPasswordAsh,
-			dlputil.RestrictionReportReportingEnabledUsernameLacros,
-			dlputil.RestrictionReportReportingEnabledPasswordLacros,
 			dlputil.RestrictionBlockReportingEnabledUsernameAsh,
 			dlputil.RestrictionBlockReportingEnabledPasswordAsh,
 			dlputil.RestrictionWarnReportingEnabledUsernameAsh,
@@ -85,125 +81,65 @@ func init() {
 			{
 				Name: "ash_clipboard_copy_paste",
 				Val: testParams{
-					Username:    dlputil.RestrictionReportReportingEnabledUsernameAsh,
-					Password:    dlputil.RestrictionReportReportingEnabledPasswordAsh,
-					BrowserType: dlp.BrowserType_ASH,
-					Action:      dlputil.ClipboardCopyPaste,
-					Counts:      dlputil.EventsCounts{Report: 1},
+					Username: dlputil.RestrictionReportReportingEnabledUsernameAsh,
+					Password: dlputil.RestrictionReportReportingEnabledPasswordAsh,
+					Action:   dlputil.ClipboardCopyPaste,
+					Counts:   dlputil.EventsCounts{Report: 1},
 				},
-			},
-			{
-				Name: "lacros_clipboard_copy_paste",
-				Val: testParams{
-					Username:    dlputil.RestrictionReportReportingEnabledUsernameLacros,
-					Password:    dlputil.RestrictionReportReportingEnabledPasswordLacros,
-					BrowserType: dlp.BrowserType_LACROS,
-					Action:      dlputil.ClipboardCopyPaste,
-					Counts:      dlputil.EventsCounts{Report: 1},
-				},
-				ExtraSoftwareDeps: []string{"lacros"},
 			},
 			{
 				Name: "ash_print",
 				Val: testParams{
-					Username:    dlputil.RestrictionReportReportingEnabledUsernameAsh,
-					Password:    dlputil.RestrictionReportReportingEnabledPasswordAsh,
-					BrowserType: dlp.BrowserType_ASH,
-					Action:      dlputil.Printing,
-					Counts:      dlputil.EventsCounts{Report: 1},
+					Username: dlputil.RestrictionReportReportingEnabledUsernameAsh,
+					Password: dlputil.RestrictionReportReportingEnabledPasswordAsh,
+					Action:   dlputil.Printing,
+					Counts:   dlputil.EventsCounts{Report: 1},
 				},
 			},
-			{
-				Name: "lacros_print",
-				Val: testParams{
-					Username:    dlputil.RestrictionReportReportingEnabledUsernameLacros,
-					Password:    dlputil.RestrictionReportReportingEnabledPasswordLacros,
-					BrowserType: dlp.BrowserType_LACROS,
-					Action:      dlputil.Printing,
-					Counts:      dlputil.EventsCounts{Report: 1},
-				},
-				ExtraSoftwareDeps: []string{"lacros"},
-			},
+
 			{
 				Name: "ash_screenshot",
 				Val: testParams{
-					Username:    dlputil.RestrictionReportReportingEnabledUsernameAsh,
-					Password:    dlputil.RestrictionReportReportingEnabledPasswordAsh,
-					BrowserType: dlp.BrowserType_ASH,
-					Action:      dlputil.Screenshot,
-					Counts:      dlputil.EventsCounts{Report: 1},
+					Username: dlputil.RestrictionReportReportingEnabledUsernameAsh,
+					Password: dlputil.RestrictionReportReportingEnabledPasswordAsh,
+					Action:   dlputil.Screenshot,
+					Counts:   dlputil.EventsCounts{Report: 1},
 				},
-			},
-			{
-				Name: "lacros_screenshot",
-				Val: testParams{
-					Username:    dlputil.RestrictionReportReportingEnabledUsernameLacros,
-					Password:    dlputil.RestrictionReportReportingEnabledPasswordLacros,
-					BrowserType: dlp.BrowserType_LACROS,
-					Action:      dlputil.Screenshot,
-					Counts:      dlputil.EventsCounts{Report: 1},
-				},
-				ExtraSoftwareDeps: []string{"lacros"},
 			},
 			{
 				Name: "ash_screenshare",
 				Val: testParams{
-					Username:    dlputil.RestrictionReportReportingEnabledUsernameAsh,
-					Password:    dlputil.RestrictionReportReportingEnabledPasswordAsh,
-					BrowserType: dlp.BrowserType_ASH,
-					Action:      dlputil.Screenshare,
-					Counts:      dlputil.EventsCounts{Report: 1},
+					Username: dlputil.RestrictionReportReportingEnabledUsernameAsh,
+					Password: dlputil.RestrictionReportReportingEnabledPasswordAsh,
+					Action:   dlputil.Screenshare,
+					Counts:   dlputil.EventsCounts{Report: 1},
 				},
-			},
-			{
-				Name: "lacros_screenshare",
-				Val: testParams{
-					Username:    dlputil.RestrictionReportReportingEnabledUsernameLacros,
-					Password:    dlputil.RestrictionReportReportingEnabledPasswordLacros,
-					BrowserType: dlp.BrowserType_LACROS,
-					Action:      dlputil.Screenshare,
-					Counts:      dlputil.EventsCounts{Report: 1},
-				},
-				ExtraSoftwareDeps: []string{"lacros"},
 			},
 			{
 				Name: "ash_files",
 				Val: testParams{
-					Username:    dlputil.RestrictionReportReportingEnabledUsernameAsh,
-					Password:    dlputil.RestrictionReportReportingEnabledPasswordAsh,
-					BrowserType: dlp.BrowserType_ASH,
-					Action:      dlputil.Files,
-					Counts:      dlputil.EventsCounts{Report: 1},
-				},
-			},
-			{
-				Name: "lacros_files",
-				Val: testParams{
-					Username:    dlputil.RestrictionReportReportingEnabledUsernameLacros,
-					Password:    dlputil.RestrictionReportReportingEnabledPasswordLacros,
-					BrowserType: dlp.BrowserType_LACROS,
-					Action:      dlputil.Files,
-					Counts:      dlputil.EventsCounts{Report: 1},
+					Username: dlputil.RestrictionReportReportingEnabledUsernameAsh,
+					Password: dlputil.RestrictionReportReportingEnabledPasswordAsh,
+					Action:   dlputil.Files,
+					Counts:   dlputil.EventsCounts{Report: 1},
 				},
 			},
 			{
 				Name: "ash_block_files",
 				Val: testParams{
-					Username:    dlputil.RestrictionBlockReportingEnabledUsernameAsh,
-					Password:    dlputil.RestrictionBlockReportingEnabledPasswordAsh,
-					BrowserType: dlp.BrowserType_ASH,
-					Action:      dlputil.Files,
-					Counts:      dlputil.EventsCounts{Block: 1},
+					Username: dlputil.RestrictionBlockReportingEnabledUsernameAsh,
+					Password: dlputil.RestrictionBlockReportingEnabledPasswordAsh,
+					Action:   dlputil.Files,
+					Counts:   dlputil.EventsCounts{Block: 1},
 				},
 			},
 			{
 				Name: "ash_warn_files",
 				Val: testParams{
-					Username:    dlputil.RestrictionWarnReportingEnabledUsernameAsh,
-					Password:    dlputil.RestrictionWarnReportingEnabledPasswordAsh,
-					BrowserType: dlp.BrowserType_ASH,
-					Action:      dlputil.Files,
-					Counts:      dlputil.EventsCounts{Warn: 1},
+					Username: dlputil.RestrictionWarnReportingEnabledUsernameAsh,
+					Password: dlputil.RestrictionWarnReportingEnabledPasswordAsh,
+					Action:   dlputil.Files,
+					Counts:   dlputil.EventsCounts{Warn: 1},
 				},
 			},
 		},
@@ -257,7 +193,6 @@ func DlpReporting(ctx context.Context, s *testing.State) {
 		Password:           password,
 		DmserverUrl:        policy.DMServerAlphaURL,
 		ReportingServerUrl: reportingutil.ReportingServerURL,
-		EnableLacros:       params.BrowserType == dlp.BrowserType_LACROS,
 		EnabledFeatures:    "EncryptedReportingPipeline, ClientAutomatedTest",
 	}); err != nil {
 		s.Fatal("Remote call EnrollAndLogin() failed: ", err)
@@ -274,21 +209,13 @@ func DlpReporting(ctx context.Context, s *testing.State) {
 
 	switch params.Action {
 	case dlputil.ClipboardCopyPaste:
-		service.ClipboardCopyPaste(ctx, &dlp.ActionRequest{
-			BrowserType: params.BrowserType,
-		})
+		service.ClipboardCopyPaste(ctx, &dlp.ActionRequest{})
 	case dlputil.Printing:
-		service.Print(ctx, &dlp.ActionRequest{
-			BrowserType: params.BrowserType,
-		})
+		service.Print(ctx, &dlp.ActionRequest{})
 	case dlputil.Screenshot:
-		service.Screenshot(ctx, &dlp.ActionRequest{
-			BrowserType: params.BrowserType,
-		})
+		service.Screenshot(ctx, &dlp.ActionRequest{})
 	case dlputil.Screenshare:
-		service.Screenshare(ctx, &dlp.ActionRequest{
-			BrowserType: params.BrowserType,
-		})
+		service.Screenshare(ctx, &dlp.ActionRequest{})
 	case dlputil.Files:
 		// Create a temporary directory on the DUT and make sure it's deleted after test.
 		d, err := service.CreateTempDir(ctx, &empty.Empty{})
@@ -309,9 +236,8 @@ func DlpReporting(ctx context.Context, s *testing.State) {
 		}
 
 		if _, err := service.FilesDriveCopyPaste(ctx, &dlp.ActionRequest{
-			BrowserType: params.BrowserType,
-			DataPath:    d.Path,
-			Mode:        eventsCountsToMode(&params.Counts),
+			DataPath: d.Path,
+			Mode:     eventsCountsToMode(&params.Counts),
 		}); err != nil {
 			s.Fatal("Failed to test FilesCopyPaste: ", err)
 		}

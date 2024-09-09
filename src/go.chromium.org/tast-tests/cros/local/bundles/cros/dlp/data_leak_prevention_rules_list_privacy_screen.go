@@ -20,7 +20,6 @@ import (
 	"go.chromium.org/tast-tests/cros/local/chrome"
 	"go.chromium.org/tast-tests/cros/local/chrome/browser"
 	"go.chromium.org/tast-tests/cros/local/chrome/browser/browserfixt"
-	"go.chromium.org/tast-tests/cros/local/chrome/lacros"
 	"go.chromium.org/tast-tests/cros/local/chrome/uiauto"
 	"go.chromium.org/tast-tests/cros/local/chrome/uiauto/faillog"
 	"go.chromium.org/tast-tests/cros/local/chrome/uiauto/nodewith"
@@ -33,9 +32,8 @@ import (
 
 func init() {
 	testing.AddTest(&testing.Test{
-		Func:         DataLeakPreventionRulesListPrivacyScreen,
-		LacrosStatus: testing.LacrosVariantExists,
-		Desc:         "Test behavior of DataLeakPreventionRulesList policy with privacy screen blocked restriction",
+		Func: DataLeakPreventionRulesListPrivacyScreen,
+		Desc: "Test behavior of DataLeakPreventionRulesList policy with privacy screen blocked restriction",
 		Contacts: []string{
 			"chromeos-dlp@google.com",
 		},
@@ -46,18 +44,6 @@ func init() {
 			Name:      "ash_blocked",
 			ExtraAttr: []string{"group:mainline", "informational", "group:criticalstaging"},
 			Fixture:   fixture.ChromePolicyLoggedIn,
-			Val:       browser.TypeAsh,
-		}, {
-			Name: "lacros_blocked",
-			ExtraAttr: []string{
-				"group:golden_tier",
-				"group:medium_low_tier",
-				"group:hardware",
-				"group:complementary",
-			},
-			ExtraSoftwareDeps: []string{"lacros"},
-			Fixture:           fixture.LacrosPolicyLoggedIn,
-			Val:               browser.TypeLacros,
 		}},
 		SearchFlags: []*testing.StringPair{
 			pci.SearchFlag(&policy.DataLeakPreventionRulesList{}, pci.VerifiedFunctionalityUI),
@@ -117,16 +103,11 @@ func DataLeakPreventionRulesListPrivacyScreen(ctx context.Context, s *testing.St
 		s.Fatal("Failed to connect to test API: ", err)
 	}
 
-	br, closeBrowser, err := browserfixt.SetUp(ctx, cr, s.Param().(browser.Type))
+	br, closeBrowser, err := browserfixt.SetUp(ctx, cr, browser.TypeAsh)
 	if err != nil {
 		s.Fatal("Failed to open the browser: ", err)
 	}
-	defer func(ctx context.Context) {
-		if err := closeBrowser(ctx); errors.Is(err, lacros.ErrAlreadyStoppedBeforeClose) {
-			// The Lacros browser is not closed in other places in the test.
-			s.Error("The Lacros browser probably crashed: ", err)
-		}
-	}(cleanupCtx)
+	defer closeBrowser(cleanupCtx)
 
 	ui := uiauto.New(tconn)
 

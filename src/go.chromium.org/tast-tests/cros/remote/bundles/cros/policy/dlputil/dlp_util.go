@@ -53,10 +53,6 @@ const (
 	RestrictionReportReportingEnabledUsernameAsh = "dlp.restriction_level_report_reporting_enabled_username"
 	// RestrictionReportReportingEnabledPasswordAsh is the path to the secret password having report restriction level for all components, reporting enabled, and using Ash as primary browser.
 	RestrictionReportReportingEnabledPasswordAsh = "dlp.restriction_level_report_reporting_enabled_password"
-	// RestrictionReportReportingEnabledUsernameLacros is the path to the secret username having report restriction level for all components, reporting enabled, and using Lacros as primary browser.
-	RestrictionReportReportingEnabledUsernameLacros = "dlp.restriction_level_report_reporting_enabled_username_lacros"
-	// RestrictionReportReportingEnabledPasswordLacros is the path to the secret password having report restriction level for all components, reporting enabled, and using Lacros as primary browser.
-	RestrictionReportReportingEnabledPasswordLacros = "dlp.restriction_level_report_reporting_enabled_password_lacros"
 	// RestrictionBlockReportingEnabledUsernameAsh is the path to the secret username having block restriction level for all components, reporting enabled, and using Ash as primary browser.
 	RestrictionBlockReportingEnabledUsernameAsh = "dlp.restriction_level_block_reporting_enabled_username"
 	// RestrictionBlockReportingEnabledPasswordAsh is the path to the secret password having block restriction level for all components, reporting enabled, and using Ash as primary browser.

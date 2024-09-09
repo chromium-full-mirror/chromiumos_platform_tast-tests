@@ -12,7 +12,6 @@ message EnrollAndLoginRequest {
   string dmserver_url = 3;
   string reporting_server_url = 4;
   string enabled_features = 5;
-  bool enable_lacros = 6;
 }
 
 message ClientIdResponse { string clientId = 1; }
@@ -20,11 +19,6 @@ message ClientIdResponse { string clientId = 1; }
 message CreateTempDirResponse { string path = 1; }
 
 message RemoveTempDirRequest { string path = 1; }
-
-enum BrowserType {
-  ASH = 0;
-  LACROS = 1;
-}
 
 // The mode of the applied restriction.
 enum Mode {
@@ -36,9 +30,8 @@ enum Mode {
 }
 
 message ActionRequest {
-  BrowserType browser_type = 1;
-  string dataPath = 2;
-  Mode mode = 3;
+  string dataPath = 1;
+  Mode mode = 2;
 }
 
 message TestCopyFileToDriveRequest { string dataPath = 1; }

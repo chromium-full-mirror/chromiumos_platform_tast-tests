@@ -39,7 +39,6 @@ type clipboardTestParams struct {
 	name        string
 	restriction restrictionlevel.RestrictionLevel
 	copyAllowed bool
-	browserType browser.Type
 }
 
 func init() {
@@ -80,7 +79,6 @@ func init() {
 				name:        "blocked",
 				restriction: restrictionlevel.Blocked,
 				copyAllowed: false,
-				browserType: browser.TypeAsh,
 			},
 		}, {
 			Name:      "ash_warn_proceeded",
@@ -90,7 +88,6 @@ func init() {
 				name:        "warn_proceded",
 				restriction: restrictionlevel.WarnProceeded,
 				copyAllowed: true,
-				browserType: browser.TypeAsh,
 			},
 		}, {
 			Name:      "ash_warn_cancelled",
@@ -100,53 +97,9 @@ func init() {
 				name:        "warn_cancelled",
 				restriction: restrictionlevel.WarnCancelled,
 				copyAllowed: false,
-				browserType: browser.TypeAsh,
-			},
-		}, {
-			Name:              "lacros_blocked",
-			ExtraAttr:         []string{"group:golden_tier"},
-			ExtraSoftwareDeps: []string{"lacros"},
-			Fixture:           fixture.LacrosPolicyLoggedIn,
-			Val: clipboardTestParams{
-				name:        "blocked",
-				restriction: restrictionlevel.Blocked,
-				copyAllowed: false,
-				browserType: browser.TypeLacros,
-			},
-		}, {
-			Name:              "lacros_warn_proceeded",
-			ExtraAttr:         []string{"group:golden_tier"},
-			ExtraSoftwareDeps: []string{"lacros"},
-			Fixture:           fixture.LacrosPolicyLoggedIn,
-			Val: clipboardTestParams{
-				name:        "warn_proceeded",
-				restriction: restrictionlevel.WarnProceeded,
-				copyAllowed: true,
-				browserType: browser.TypeLacros,
-			},
-		}, {
-			Name: "lacros_warn_cancelled",
-			ExtraAttr: []string{
-				"group:golden_tier"},
-			ExtraSoftwareDeps: []string{"lacros"},
-			Fixture:           fixture.LacrosPolicyLoggedIn,
-			Val: clipboardTestParams{
-				name:        "warn_cancelled",
-				restriction: restrictionlevel.WarnCancelled,
-				copyAllowed: false,
-				browserType: browser.TypeLacros,
 			},
 		}},
 	})
-}
-
-// waitForDialog waits for a 2nd exo surface to appear. On Lacros the 'bubble' is retrievable before it is visible / clickable.
-func waitForDialog(ctx context.Context, s *testing.State, ui *uiauto.Context, browserType browser.Type) {
-	if browserType == browser.TypeLacros {
-		if err := ui.WaitUntilExists(nodewith.ClassName("ClipboardDlpBubble").Visible())(ctx); err != nil {
-			s.Fatal("Failed to wait for dialog: ", err)
-		}
-	}
 }
 
 func DataLeakPreventionRulesListClipboard(ctx context.Context, s *testing.State) {
@@ -197,7 +150,7 @@ func DataLeakPreventionRulesListClipboard(ctx context.Context, s *testing.State)
 		s.Fatal("Failed to wait for chrome.clipboard API to become available: ", err)
 	}
 
-	br, closeBrowser, err := browserfixt.SetUp(ctx, cr, params.browserType)
+	br, closeBrowser, err := browserfixt.SetUp(ctx, cr, browser.TypeAsh)
 	if err != nil {
 		s.Fatal("Failed to open the browser: ", err)
 	}
@@ -274,7 +227,6 @@ func DataLeakPreventionRulesListClipboard(ctx context.Context, s *testing.State)
 			s.Error("Didn't expect notification but one was found: ")
 		}
 	case restrictionlevel.WarnCancelled:
-		waitForDialog(ctx, s, ui, params.browserType)
 		bubbleClass, notifError := clipboard.WarnBubble(ctx, ui, parsedSourceURL.Hostname())
 		if notifError != nil {
 			s.Error("Expected notification but found an error: ", notifError)
@@ -284,7 +236,6 @@ func DataLeakPreventionRulesListClipboard(ctx context.Context, s *testing.State)
 			s.Fatal("Failed to click the cancel button: ", err)
 		}
 	case restrictionlevel.WarnProceeded:
-		waitForDialog(ctx, s, ui, params.browserType)
 		bubbleClass, notifError := clipboard.WarnBubble(ctx, ui, parsedSourceURL.Hostname())
 		if notifError != nil {
 			s.Error("Expected notification but found an error: ", notifError)

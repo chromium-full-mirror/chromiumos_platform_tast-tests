@@ -22,8 +22,6 @@ import (
 	"go.chromium.org/tast-tests/cros/local/chrome"
 	"go.chromium.org/tast-tests/cros/local/chrome/browser"
 	"go.chromium.org/tast-tests/cros/local/chrome/browser/browserfixt"
-	"go.chromium.org/tast-tests/cros/local/chrome/lacros"
-	"go.chromium.org/tast-tests/cros/local/chrome/lacros/lacrosfixt"
 	"go.chromium.org/tast-tests/cros/local/chrome/uiauto"
 	"go.chromium.org/tast-tests/cros/local/chrome/uiauto/filesapp"
 	"go.chromium.org/tast-tests/cros/local/chrome/uiauto/nodewith"
@@ -56,7 +54,6 @@ type DataLeakPreventionService struct {
 
 // EnrollAndLogin enrolls the device and logs in with the provided account credentials.
 func (service *DataLeakPreventionService) EnrollAndLogin(ctx context.Context, req *pb.EnrollAndLoginRequest) (_ *empty.Empty, retErr error) {
-
 	opts := []chrome.Option{
 		chrome.GAIAEnterpriseEnroll(chrome.Creds{User: req.Username, Pass: req.Password}),
 		chrome.GAIALogin(chrome.Creds{User: req.Username, Pass: req.Password}),
@@ -66,14 +63,7 @@ func (service *DataLeakPreventionService) EnrollAndLogin(ctx context.Context, re
 		chrome.CustomLoginTimeout(chrome.EnrollmentAndLoginTimeout),
 	}
 
-	bt := browser.TypeAsh
-	var lcfg *lacrosfixt.Config
-	if req.EnableLacros {
-		bt = browser.TypeLacros
-		lcfg = lacrosfixt.NewConfig(lacrosfixt.Selection(lacros.NotSelected))
-	}
-
-	cr, err := browserfixt.NewChrome(ctx, bt, lcfg, opts...)
+	cr, err := browserfixt.NewChrome(ctx, browser.TypeAsh, nil, opts...)
 	if err != nil {
 		return nil, errors.Wrap(err, "failed to start chrome")
 	}
@@ -150,21 +140,6 @@ func createHTMLTextAreaPage(path string) (*nodewith.Finder, error) {
 	return textAreaNode, nil
 }
 
-// setupBrowser returns a Browser instance for the given browser type and a closure to close the browser instance.
-func setupBrowser(ctx context.Context, chrome *chrome.Chrome, browserType pb.BrowserType) (*browser.Browser, func(ctx context.Context) error, error) {
-	bt := browser.TypeAsh
-	if browserType == pb.BrowserType_LACROS {
-		bt = browser.TypeLacros
-	}
-
-	br, closeBrowser, err := browserfixt.SetUp(ctx, chrome, bt)
-	if err != nil {
-		return nil, nil, errors.Wrap(err, "failed to open the browser")
-	}
-
-	return br, closeBrowser, nil
-}
-
 // copyToDrive tries to copy the file to Google Drive.
 func copyToDrive(ctx context.Context, f *filesapp.FilesApp, kb *input.KeyboardEventWriter, filename string) error {
 	if err := uiauto.Combine("copy the file to Google Drive",
@@ -195,7 +170,7 @@ func (service *DataLeakPreventionService) ClipboardCopyPaste(ctx context.Context
 		return &empty.Empty{}, errors.Wrap(err, "error while creating the HTML input page")
 	}
 
-	br, closeBrowser, err := setupBrowser(ctx, service.chrome, req.BrowserType)
+	br, closeBrowser, err := browserfixt.SetUp(ctx, service.chrome, browser.TypeAsh)
 	if err != nil {
 		return &empty.Empty{}, errors.Wrap(err, "error while setting up the browser")
 	}
@@ -291,7 +266,7 @@ func (service *DataLeakPreventionService) Print(ctx context.Context, req *pb.Act
 		return &empty.Empty{}, errors.Wrap(err, "error while creating the HTML text page")
 	}
 
-	br, closeBrowser, err := setupBrowser(ctx, service.chrome, req.BrowserType)
+	br, closeBrowser, err := browserfixt.SetUp(ctx, service.chrome, browser.TypeAsh)
 	if err != nil {
 		return &empty.Empty{}, errors.Wrap(err, "error while setting up the browser")
 	}
@@ -335,7 +310,7 @@ func (service *DataLeakPreventionService) Screenshot(ctx context.Context, req *p
 		return &empty.Empty{}, errors.Wrap(err, "error while creating the HTML text page")
 	}
 
-	br, closeBrowser, err := setupBrowser(ctx, service.chrome, req.BrowserType)
+	br, closeBrowser, err := browserfixt.SetUp(ctx, service.chrome, browser.TypeAsh)
 	if err != nil {
 		return &empty.Empty{}, errors.Wrap(err, "error while setting up the browser")
 	}
@@ -393,7 +368,7 @@ func (service *DataLeakPreventionService) Screenshare(ctx context.Context, req *
 		return &empty.Empty{}, errors.Wrap(err, "error while creating the HTML text page")
 	}
 
-	br, closeBrowser, err := setupBrowser(ctx, service.chrome, req.BrowserType)
+	br, closeBrowser, err := browserfixt.SetUp(ctx, service.chrome, browser.TypeAsh)
 	if err != nil {
 		return &empty.Empty{}, errors.Wrap(err, "error while setting up the browser")
 	}
@@ -444,7 +419,7 @@ func (service *DataLeakPreventionService) FilesDriveCopyPaste(ctx context.Contex
 		return nil, errors.Wrap(err, "failed to start DriveFS")
 	}
 
-	br, closeBrowser, err := setupBrowser(ctx, service.chrome, req.BrowserType)
+	br, closeBrowser, err := browserfixt.SetUp(ctx, service.chrome, browser.TypeAsh)
 	if err != nil {
 		return &empty.Empty{}, errors.Wrap(err, "error while setting up the browser")
 	}

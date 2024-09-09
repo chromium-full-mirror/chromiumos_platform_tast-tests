@@ -20,7 +20,6 @@ import (
 	"go.chromium.org/tast-tests/cros/local/chrome/ash"
 	"go.chromium.org/tast-tests/cros/local/chrome/browser"
 	"go.chromium.org/tast-tests/cros/local/chrome/browser/browserfixt"
-	"go.chromium.org/tast-tests/cros/local/chrome/lacros"
 	"go.chromium.org/tast-tests/cros/local/chrome/uiauto"
 	"go.chromium.org/tast-tests/cros/local/chrome/uiauto/faillog"
 	"go.chromium.org/tast-tests/cros/local/chrome/uiauto/filesapp"
@@ -33,7 +32,6 @@ import (
 
 type fileUSBCopyTestParams struct {
 	restriction restrictionlevel.RestrictionLevel
-	browserType browser.Type
 }
 
 // filesUSBCopyBlockPolicy returns a DLP policy that blocks copying file to USB.
@@ -96,9 +94,8 @@ func filesUSBCopyWarnPolicy() []policy.Policy {
 
 func init() {
 	testing.AddTest(&testing.Test{
-		Func:         DataLeakPreventionRulesListFilesUSB,
-		LacrosStatus: testing.LacrosVariantExists,
-		Desc:         "Test behavior of DataLeakPreventionRulesList policy with file copy to USB restriction",
+		Func: DataLeakPreventionRulesListFilesUSB,
+		Desc: "Test behavior of DataLeakPreventionRulesList policy with file copy to USB restriction",
 		Contacts: []string{
 			"chromeos-dlp@google.com",
 			"poromov@google.com",
@@ -136,21 +133,6 @@ func init() {
 				},
 				Fixture: fixture.ChromePolicyLoggedInFilesUXEnabled,
 				Val: fileUSBCopyTestParams{
-					browserType: browser.TypeAsh,
-					restriction: restrictionlevel.Allowed,
-				},
-			}, {
-				Name: "lacros_allowed",
-				ExtraAttr: []string{
-					"group:golden_tier",
-					"group:medium_low_tier",
-					"group:hardware",
-					"group:complementary",
-				},
-				ExtraSoftwareDeps: []string{"lacros"},
-				Fixture:           fixture.LacrosPolicyLoggedInFilesUXEnabled,
-				Val: fileUSBCopyTestParams{
-					browserType: browser.TypeLacros,
 					restriction: restrictionlevel.Allowed,
 				},
 			}, {
@@ -158,16 +140,6 @@ func init() {
 				ExtraAttr: []string{"group:mainline"},
 				Fixture:   fixture.ChromePolicyLoggedInFilesUXEnabled,
 				Val: fileUSBCopyTestParams{
-					browserType: browser.TypeAsh,
-					restriction: restrictionlevel.Blocked,
-				},
-			}, {
-				Name:              "lacros_blocked",
-				ExtraAttr:         []string{"group:mainline", "informational"},
-				ExtraSoftwareDeps: []string{"lacros"},
-				Fixture:           fixture.LacrosPolicyLoggedInFilesUXEnabled,
-				Val: fileUSBCopyTestParams{
-					browserType: browser.TypeLacros,
 					restriction: restrictionlevel.Blocked,
 				},
 			}, {
@@ -175,16 +147,6 @@ func init() {
 				ExtraAttr: []string{"group:mainline", "informational"},
 				Fixture:   fixture.ChromePolicyLoggedInFilesUXEnabled,
 				Val: fileUSBCopyTestParams{
-					browserType: browser.TypeAsh,
-					restriction: restrictionlevel.WarnProceeded,
-				},
-			}, {
-				Name:              "lacros_warn_proceeded",
-				ExtraAttr:         []string{"group:mainline", "informational"},
-				ExtraSoftwareDeps: []string{"lacros"},
-				Fixture:           fixture.LacrosPolicyLoggedInFilesUXEnabled,
-				Val: fileUSBCopyTestParams{
-					browserType: browser.TypeLacros,
 					restriction: restrictionlevel.WarnProceeded,
 				},
 			}, {
@@ -197,21 +159,6 @@ func init() {
 				},
 				Fixture: fixture.ChromePolicyLoggedInFilesUXEnabled,
 				Val: fileUSBCopyTestParams{
-					browserType: browser.TypeAsh,
-					restriction: restrictionlevel.WarnCancelled,
-				},
-			}, {
-				Name: "lacros_warn_cancelled",
-				ExtraAttr: []string{
-					"group:golden_tier",
-					"group:medium_low_tier",
-					"group:hardware",
-					"group:complementary",
-				},
-				ExtraSoftwareDeps: []string{"lacros"},
-				Fixture:           fixture.LacrosPolicyLoggedInFilesUXEnabled,
-				Val: fileUSBCopyTestParams{
-					browserType: browser.TypeLacros,
 					restriction: restrictionlevel.WarnCancelled,
 				},
 			},
@@ -269,16 +216,11 @@ func DataLeakPreventionRulesListFilesUSB(ctx context.Context, s *testing.State) 
 	defer ash.CloseAllWindows(cleanupCtx, tconnAsh)
 
 	// Create Browser.
-	br, closeBrowser, err := browserfixt.SetUp(ctx, cr, s.Param().(fileUSBCopyTestParams).browserType)
+	br, closeBrowser, err := browserfixt.SetUp(ctx, cr, browser.TypeAsh)
 	if err != nil {
 		s.Fatal("Failed to open the browser: ", err)
 	}
-	defer func(ctx context.Context) {
-		if err := closeBrowser(ctx); errors.Is(err, lacros.ErrAlreadyStoppedBeforeClose) {
-			// The Lacros browser is not closed in other places in the test.
-			s.Error("The Lacros browser probably crashed: ", err)
-		}
-	}(cleanupCtx)
+	defer closeBrowser(cleanupCtx)
 
 	defer faillog.DumpUITreeWithScreenshotOnError(cleanupCtx, s.OutDir(), s.HasError, cr, "ui_tree_error")
 
@@ -288,15 +230,10 @@ func DataLeakPreventionRulesListFilesUSB(ctx context.Context, s *testing.State) 
 	}
 
 	// The browsers sometimes restore some tabs, so we manually close all unneeded tabs.
-	closeTabsFunc := browser.CloseAllTabs
-	if s.Param().(fileUSBCopyTestParams).browserType == browser.TypeLacros {
-		// For lacros-Chrome, it should leave a new tab to keep the Chrome process alive.
-		closeTabsFunc = browser.ReplaceAllTabsWithSingleNewTab
-	}
-	if err := closeTabsFunc(ctx, tconnBrowser); err != nil {
+	if err := browser.CloseAllTabs(ctx, tconnBrowser); err != nil {
 		s.Fatal("Failed to close all unneeded tabs: ", err)
 	}
-	defer closeTabsFunc(cleanupCtx, tconnBrowser)
+	defer browser.CloseAllTabs(cleanupCtx, tconnBrowser)
 
 	// Close all prior notifications.
 	if err := ash.CloseNotifications(ctx, tconnAsh); err != nil {

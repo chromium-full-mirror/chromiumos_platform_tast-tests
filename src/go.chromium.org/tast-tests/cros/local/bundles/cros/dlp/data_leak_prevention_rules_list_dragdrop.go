@@ -22,7 +22,6 @@ import (
 	"go.chromium.org/tast-tests/cros/local/chrome/browser"
 	"go.chromium.org/tast-tests/cros/local/chrome/browser/browserfixt"
 	"go.chromium.org/tast-tests/cros/local/chrome/display"
-	"go.chromium.org/tast-tests/cros/local/chrome/lacros"
 	"go.chromium.org/tast-tests/cros/local/chrome/uiauto"
 	"go.chromium.org/tast-tests/cros/local/chrome/uiauto/faillog"
 	"go.chromium.org/tast-tests/cros/local/chrome/uiauto/nodewith"
@@ -32,7 +31,6 @@ import (
 	"go.chromium.org/tast-tests/cros/local/input"
 	"go.chromium.org/tast-tests/cros/local/policyutil"
 	"go.chromium.org/tast/core/ctxutil"
-	"go.chromium.org/tast/core/errors"
 	"go.chromium.org/tast/core/testing"
 )
 
@@ -40,9 +38,8 @@ const content = "example.com"
 
 func init() {
 	testing.AddTest(&testing.Test{
-		Func:         DataLeakPreventionRulesListDragdrop,
-		LacrosStatus: testing.LacrosVariantExists,
-		Desc:         "Test behavior of DataLeakPreventionRulesList policy with clipboard blocked restriction by drag and drop",
+		Func: DataLeakPreventionRulesListDragdrop,
+		Desc: "Test behavior of DataLeakPreventionRulesList policy with clipboard blocked restriction by drag and drop",
 		Contacts: []string{
 			"chromeos-dlp@google.com",
 		},
@@ -54,13 +51,6 @@ func init() {
 			Name:      "ash_blocked",
 			ExtraAttr: []string{"group:mainline"},
 			Fixture:   fixture.ChromePolicyLoggedIn,
-			Val:       browser.TypeAsh,
-		}, {
-			Name:              "lacros_blocked",
-			ExtraAttr:         []string{"group:golden_tier"},
-			ExtraSoftwareDeps: []string{"lacros"},
-			Fixture:           fixture.LacrosPolicyLoggedIn,
-			Val:               browser.TypeLacros,
 		}}})
 }
 
@@ -110,16 +100,11 @@ func DataLeakPreventionRulesListDragdrop(ctx context.Context, s *testing.State) 
 		s.Fatal("Failed to reset the Chrome: ", err)
 	}
 
-	br, closeBrowser, err := browserfixt.SetUp(ctx, cr, s.Param().(browser.Type))
+	br, closeBrowser, err := browserfixt.SetUp(ctx, cr, browser.TypeAsh)
 	if err != nil {
 		s.Fatal("Failed to open the destination browser: ", err)
 	}
-	defer func(ctx context.Context) {
-		if err := closeBrowser(ctx); errors.Is(err, lacros.ErrAlreadyStoppedBeforeClose) {
-			// The Lacros browser is not closed in other places in the test.
-			s.Error("The Lacros browser probably crashed: ", err)
-		}
-	}(cleanupCtx)
+	defer closeBrowser(cleanupCtx)
 
 	defer faillog.DumpUITreeWithScreenshotOnError(cleanupCtx, s.OutDir(), s.HasError, cr, "ui_tree_error")
 
@@ -183,7 +168,7 @@ func DataLeakPreventionRulesListDragdrop(ctx context.Context, s *testing.State) 
 	}
 
 	s.Log("Draging and dropping content")
-	// Root node of the frame with the title "Editable Text Box" in ash or lacros.
+	// Root node of the frame with the title "Editable Text Box".
 	browserRoot := nodewith.ClassNameRegex(regexp.MustCompile("(BrowserFrame)|(ExoShellSurface-.*)")).NameRegex(regexp.MustCompile(".*Editable Text Box.*"))
 	dstNode := nodewith.Name("textarea").Role(role.TextField).State(state.Editable, true).Ancestor(browserRoot)
 	if err := dragdrop.DragDrop(ctx, tconn, content, dstNode); err != nil {

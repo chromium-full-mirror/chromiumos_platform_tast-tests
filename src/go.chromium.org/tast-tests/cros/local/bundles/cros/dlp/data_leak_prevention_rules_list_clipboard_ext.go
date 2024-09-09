@@ -15,7 +15,6 @@ import (
 	"time"
 
 	"go.chromium.org/tast-tests/cros/common/chrome/extension"
-	"go.chromium.org/tast-tests/cros/common/pci"
 	policyBlob "go.chromium.org/tast-tests/cros/common/policy"
 	"go.chromium.org/tast-tests/cros/common/policy/fakedms"
 	"go.chromium.org/tast-tests/cros/local/bundles/cros/dlp/clipboard"
@@ -23,7 +22,6 @@ import (
 	"go.chromium.org/tast-tests/cros/local/chrome"
 	"go.chromium.org/tast-tests/cros/local/chrome/browser"
 	"go.chromium.org/tast-tests/cros/local/chrome/browser/browserfixt"
-	"go.chromium.org/tast-tests/cros/local/chrome/lacros/lacrosfixt"
 	"go.chromium.org/tast-tests/cros/local/chrome/uiauto"
 	"go.chromium.org/tast-tests/cros/local/chrome/uiauto/faillog"
 	"go.chromium.org/tast-tests/cros/local/chrome/uiauto/nodewith"
@@ -41,9 +39,8 @@ import (
 
 func init() {
 	testing.AddTest(&testing.Test{
-		Func:         DataLeakPreventionRulesListClipboardExt,
-		LacrosStatus: testing.LacrosVariantExists,
-		Desc:         "Test behavior of DataLeakPreventionRulesList policy with clipboard blocked restriction when accessed by extension",
+		Func: DataLeakPreventionRulesListClipboardExt,
+		Desc: "Test behavior of DataLeakPreventionRulesList policy with clipboard blocked restriction when accessed by extension",
 		Contacts: []string{
 			"chromeos-dlp@google.com",
 		},
@@ -52,32 +49,19 @@ func init() {
 		HardwareDeps: hwdep.D(hwdep.InternalDisplay()),
 		Attr:         []string{"group:hw_agnostic"},
 		Fixture:      "fakeDMS",
-		SearchFlags: []*testing.StringPair{
-			pci.SearchFlag(&policyBlob.LacrosAvailability{}, pci.Served),
-		},
-		Data: []string{"manifest.json", "background.js", "content.js", "text_1.html", "text_2.html", "editable_text_box.html"},
+		Data:         []string{"manifest.json", "background.js", "content.js", "text_1.html", "text_2.html", "editable_text_box.html"},
 		Params: []testing.Param{{
 			Name:      "ash_blocked",
 			ExtraAttr: []string{"group:mainline"},
-			Val:       browser.TypeAsh,
-		}, {
-			Name:              "lacros_blocked",
-			ExtraAttr:         []string{"group:golden_tier"},
-			ExtraSoftwareDeps: []string{"lacros"},
-			Val:               browser.TypeLacros,
 		}},
 	})
 }
 
 func DataLeakPreventionRulesListClipboardExt(ctx context.Context, s *testing.State) {
 	fakeDMS := s.FixtValue().(*fakedms.FakeDMS)
-	bt := s.Param().(browser.Type)
 
 	// DLP policy with all clipboard blocked restriction.
 	policyDLP := policy.PopulateClipboardBlockAllURLsPolicy("example.com")
-	if bt == browser.TypeLacros {
-		policyDLP = append(policyDLP, &policyBlob.LacrosAvailability{Val: "lacros_only"})
-	}
 
 	// Update the policy blob.
 	pb := policyBlob.NewBlob()
@@ -97,15 +81,13 @@ func DataLeakPreventionRulesListClipboardExt(ctx context.Context, s *testing.Sta
 		s.Fatal("Failed setup of DLP Clipboard extension: ", err)
 	}
 
-	chromeOpts := []chrome.Option{chrome.DMSPolicy(fakeDMS.URL), chrome.FakeLogin(chrome.Creds{User: fixtures.Username, Pass: fixtures.Password})}
-	if bt == browser.TypeLacros {
-		chromeOpts = append(chromeOpts, chrome.LacrosUnpackedExtension(extDir))
-	} else {
-		chromeOpts = append(chromeOpts, chrome.UnpackedExtension(extDir))
-	}
+	chromeOpts := []chrome.Option{chrome.DMSPolicy(fakeDMS.URL),
+		chrome.FakeLogin(chrome.Creds{User: fixtures.Username, Pass: fixtures.Password}),
+		chrome.UnpackedExtension(extDir)}
+
 	// Start a Chrome instance that will fetch policies from the FakeDMS.
 	// Policies are only updated after Chrome startup.
-	cr, br, closeBrowser, err := browserfixt.SetUpWithNewChrome(ctx, bt, lacrosfixt.NewConfig(),
+	cr, br, closeBrowser, err := browserfixt.SetUpWithNewChrome(ctx, browser.TypeAsh, nil,
 		chromeOpts...)
 	if err != nil {
 		s.Fatal("Chrome login failed: ", err)

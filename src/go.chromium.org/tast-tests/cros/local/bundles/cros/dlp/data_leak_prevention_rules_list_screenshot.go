@@ -19,14 +19,12 @@ import (
 	"go.chromium.org/tast-tests/cros/local/chrome/ash"
 	"go.chromium.org/tast-tests/cros/local/chrome/browser"
 	"go.chromium.org/tast-tests/cros/local/chrome/browser/browserfixt"
-	"go.chromium.org/tast-tests/cros/local/chrome/lacros"
 	"go.chromium.org/tast-tests/cros/local/chrome/uiauto/faillog"
 	"go.chromium.org/tast-tests/cros/local/cryptohome"
 	"go.chromium.org/tast-tests/cros/local/input"
 	"go.chromium.org/tast-tests/cros/local/policyutil"
 	"go.chromium.org/tast-tests/cros/local/screenshot"
 	"go.chromium.org/tast/core/ctxutil"
-	"go.chromium.org/tast/core/errors"
 	"go.chromium.org/tast/core/testing"
 )
 
@@ -45,7 +43,6 @@ type screenshotTestParams struct {
 	restriction           restrictionlevel.RestrictionLevel
 	wantNotificationTitle string
 	wantNotificationID    string
-	browserType           browser.Type
 }
 
 // Different paths used for testing.
@@ -56,9 +53,8 @@ const (
 
 func init() {
 	testing.AddTest(&testing.Test{
-		Func:         DataLeakPreventionRulesListScreenshot,
-		LacrosStatus: testing.LacrosVariantExists,
-		Desc:         "Test behavior of DataLeakPreventionRulesList policy with screenshot restrictions",
+		Func: DataLeakPreventionRulesListScreenshot,
+		Desc: "Test behavior of DataLeakPreventionRulesList policy with screenshot restrictions",
 		Contacts: []string{
 			"chromeos-dlp@google.com",
 		},
@@ -95,7 +91,6 @@ func init() {
 				restriction:           restrictionlevel.Blocked,
 				wantNotificationTitle: captureNotAllowedTitle,
 				wantNotificationID:    captureNotAllowedID,
-				browserType:           browser.TypeAsh,
 			},
 		}, {
 			Name:      "ash_warn_proceeded",
@@ -107,7 +102,6 @@ func init() {
 				restriction:           restrictionlevel.WarnProceeded,
 				wantNotificationTitle: captureTakenTitle,
 				wantNotificationID:    captureTakenID,
-				browserType:           browser.TypeAsh,
 			},
 		}, {
 			Name:      "ash_warn_cancelled",
@@ -117,44 +111,6 @@ func init() {
 				name:        "warn_cancelled",
 				path:        restrictedPath,
 				restriction: restrictionlevel.WarnCancelled,
-				browserType: browser.TypeAsh,
-			},
-		}, {
-			Name:              "lacros_blocked",
-			ExtraAttr:         []string{"group:golden_tier"},
-			ExtraSoftwareDeps: []string{"lacros"},
-			Fixture:           fixture.LacrosPolicyLoggedIn,
-			Val: screenshotTestParams{
-				name:                  "blocked",
-				path:                  restrictedPath,
-				restriction:           restrictionlevel.Blocked,
-				wantNotificationTitle: captureNotAllowedTitle,
-				wantNotificationID:    captureNotAllowedID,
-				browserType:           browser.TypeLacros,
-			},
-		}, {
-			Name:              "lacros_warn_proceeded",
-			ExtraAttr:         []string{"group:golden_tier"},
-			ExtraSoftwareDeps: []string{"lacros"},
-			Fixture:           fixture.LacrosPolicyLoggedIn,
-			Val: screenshotTestParams{
-				name:                  "warn_proceeded",
-				path:                  restrictedPath,
-				restriction:           restrictionlevel.WarnProceeded,
-				wantNotificationTitle: captureTakenTitle,
-				wantNotificationID:    captureTakenID,
-				browserType:           browser.TypeLacros,
-			},
-		}, {
-			Name:              "lacros_warn_cancelled",
-			ExtraAttr:         []string{"group:golden_tier"},
-			ExtraSoftwareDeps: []string{"lacros"},
-			Fixture:           fixture.LacrosPolicyLoggedIn,
-			Val: screenshotTestParams{
-				name:        "warn_cancelled",
-				path:        restrictedPath,
-				restriction: restrictionlevel.WarnCancelled,
-				browserType: browser.TypeLacros,
 			},
 		}},
 	})
@@ -258,16 +214,11 @@ func DataLeakPreventionRulesListScreenshot(ctx context.Context, s *testing.State
 		s.Fatal("Failed to remove screenshots: ", err)
 	}
 
-	br, closeBrowser, err := browserfixt.SetUp(ctx, cr, s.Param().(screenshotTestParams).browserType)
+	br, closeBrowser, err := browserfixt.SetUp(ctx, cr, browser.TypeAsh)
 	if err != nil {
 		s.Fatal("Failed to open the browser: ", err)
 	}
-	defer func(ctx context.Context) {
-		if err := closeBrowser(ctx); errors.Is(err, lacros.ErrAlreadyStoppedBeforeClose) {
-			// The Lacros browser is not closed in other places in the test.
-			s.Error("The Lacros browser probably crashed: ", err)
-		}
-	}(cleanupCtx)
+	defer closeBrowser(cleanupCtx)
 
 	defer faillog.DumpUITreeWithScreenshotOnError(cleanupCtx, s.OutDir(), s.HasError, cr, "ui_tree_"+s.Param().(screenshotTestParams).name)
 

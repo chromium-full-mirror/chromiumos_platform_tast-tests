@@ -20,22 +20,19 @@ import (
 	"go.chromium.org/tast-tests/cros/local/chrome/ash"
 	"go.chromium.org/tast-tests/cros/local/chrome/browser"
 	"go.chromium.org/tast-tests/cros/local/chrome/browser/browserfixt"
-	"go.chromium.org/tast-tests/cros/local/chrome/lacros"
 	"go.chromium.org/tast-tests/cros/local/chrome/uiauto"
 	"go.chromium.org/tast-tests/cros/local/chrome/uiauto/faillog"
 	"go.chromium.org/tast-tests/cros/local/chrome/webutil"
 	"go.chromium.org/tast-tests/cros/local/input"
 	"go.chromium.org/tast-tests/cros/local/policyutil"
 	"go.chromium.org/tast/core/ctxutil"
-	"go.chromium.org/tast/core/errors"
 	"go.chromium.org/tast/core/testing"
 )
 
 func init() {
 	testing.AddTest(&testing.Test{
-		Func:         DataLeakPreventionRulesListScreenshareTab,
-		LacrosStatus: testing.LacrosVariantUnneeded,
-		Desc:         "Test behavior of DataLeakPreventionRulesList policy with screen sharing restrictions while sharing a Chrome tab",
+		Func: DataLeakPreventionRulesListScreenshareTab,
+		Desc: "Test behavior of DataLeakPreventionRulesList policy with screen sharing restrictions while sharing a Chrome tab",
 		Contacts: []string{
 			"chromeos-dlp@google.com",
 		},
@@ -69,7 +66,6 @@ func init() {
 				Name:        "blocked",
 				Restriction: restrictionlevel.Blocked,
 				Path:        screenshare.RestrictedPath,
-				BrowserType: browser.TypeAsh,
 			},
 		}, {
 			Name:      "ash_warn_proceeded",
@@ -79,7 +75,6 @@ func init() {
 				Name:        "warn_proceeded",
 				Restriction: restrictionlevel.WarnProceeded,
 				Path:        screenshare.RestrictedPath,
-				BrowserType: browser.TypeAsh,
 			},
 		}, {
 			Name:      "ash_warn_cancelled",
@@ -89,7 +84,6 @@ func init() {
 				Name:        "warn_cancelled",
 				Restriction: restrictionlevel.WarnCancelled,
 				Path:        screenshare.RestrictedPath,
-				BrowserType: browser.TypeAsh,
 			},
 		},
 		}})
@@ -135,16 +129,11 @@ func DataLeakPreventionRulesListScreenshareTab(ctx context.Context, s *testing.S
 	}
 	defer keyboard.Close(ctx)
 
-	br, closeBrowser, err := browserfixt.SetUp(ctx, cr, params.BrowserType)
+	br, closeBrowser, err := browserfixt.SetUp(ctx, cr, browser.TypeAsh)
 	if err != nil {
 		s.Fatal("Failed to open the browser: ", err)
 	}
-	defer func(ctx context.Context) {
-		if err := closeBrowser(ctx); errors.Is(err, lacros.ErrAlreadyStoppedBeforeClose) {
-			// The Lacros browser is not closed in other places in the test.
-			s.Error("The Lacros browser probably crashed: ", err)
-		}
-	}(cleanupCtx)
+	defer closeBrowser(cleanupCtx)
 
 	defer faillog.DumpUITreeWithScreenshotOnError(cleanupCtx, s.OutDir(), s.HasError, cr, "ui_tree_"+params.Name)
 

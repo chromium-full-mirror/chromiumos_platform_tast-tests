@@ -22,7 +22,6 @@ import (
 	"go.chromium.org/tast-tests/cros/local/chrome/ash"
 	"go.chromium.org/tast-tests/cros/local/chrome/browser"
 	"go.chromium.org/tast-tests/cros/local/chrome/browser/browserfixt"
-	"go.chromium.org/tast-tests/cros/local/chrome/lacros"
 	"go.chromium.org/tast-tests/cros/local/chrome/uiauto"
 	"go.chromium.org/tast-tests/cros/local/chrome/uiauto/faillog"
 	"go.chromium.org/tast-tests/cros/local/chrome/uiauto/printpreview"
@@ -44,20 +43,17 @@ type printingTestParams struct {
 }
 
 const (
-	dlpPrintingBlockedPath        = "/blocked"
-	dlpPrintingAllowedPath        = "/allowed"
-	dlpPrintingWarnPath           = "/warn"
-	waitTimeSecNotificationAsh    = 10
-	waitTimeSecNotificationLacros = 15
-	waitTimeSecWarningAsh         = 4
-	waitTimeSecWarningLacros      = 5
+	dlpPrintingBlockedPath     = "/blocked"
+	dlpPrintingAllowedPath     = "/allowed"
+	dlpPrintingWarnPath        = "/warn"
+	waitTimeSecNotificationAsh = 10
+	waitTimeSecWarningAsh      = 4
 )
 
 func init() {
 	testing.AddTest(&testing.Test{
-		Func:         DataLeakPreventionRulesListPrinting,
-		LacrosStatus: testing.LacrosVariantExists,
-		Desc:         "Test behavior of DataLeakPreventionRulesList policy with printing restrictions",
+		Func: DataLeakPreventionRulesListPrinting,
+		Desc: "Test behavior of DataLeakPreventionRulesList policy with printing restrictions",
 		Contacts: []string{
 			"chromeos-dlp@google.com",
 		},
@@ -118,45 +114,6 @@ func init() {
 				browserType:             browser.TypeAsh,
 				waitTimeSecNotification: waitTimeSecNotificationAsh,
 				waitTimeSecWarning:      waitTimeSecWarningAsh,
-			},
-		}, {
-			Name:              "lacros_blocked",
-			ExtraAttr:         []string{"group:golden_tier"},
-			ExtraSoftwareDeps: []string{"lacros"},
-			Fixture:           fixture.LacrosPolicyLoggedIn,
-			Val: printingTestParams{
-				name:                    "blocked",
-				path:                    dlpPrintingBlockedPath,
-				restriction:             restrictionlevel.Blocked,
-				browserType:             browser.TypeLacros,
-				waitTimeSecNotification: waitTimeSecNotificationLacros,
-				waitTimeSecWarning:      waitTimeSecWarningLacros,
-			},
-		}, {
-			Name:              "lacros_warn_proceeded",
-			ExtraAttr:         []string{"group:golden_tier"},
-			ExtraSoftwareDeps: []string{"lacros"},
-			Fixture:           fixture.LacrosPolicyLoggedIn,
-			Val: printingTestParams{
-				name:                    "warn_proceeded",
-				path:                    dlpPrintingWarnPath,
-				restriction:             restrictionlevel.WarnProceeded,
-				browserType:             browser.TypeLacros,
-				waitTimeSecNotification: waitTimeSecNotificationLacros,
-				waitTimeSecWarning:      waitTimeSecWarningLacros,
-			},
-		}, {
-			Name:              "lacros_warn_cancelled",
-			ExtraAttr:         []string{"group:golden_tier"},
-			ExtraSoftwareDeps: []string{"lacros"},
-			Fixture:           fixture.LacrosPolicyLoggedIn,
-			Val: printingTestParams{
-				name:                    "warn_cancelled",
-				path:                    dlpPrintingWarnPath,
-				restriction:             restrictionlevel.WarnCancelled,
-				browserType:             browser.TypeLacros,
-				waitTimeSecNotification: waitTimeSecNotificationLacros,
-				waitTimeSecWarning:      waitTimeSecWarningLacros,
 			},
 		}},
 	})
@@ -260,12 +217,7 @@ func DataLeakPreventionRulesListPrinting(ctx context.Context, s *testing.State) 
 	if err != nil {
 		s.Fatal("Failed to open the browser: ", err)
 	}
-	defer func(ctx context.Context) {
-		if err := closeBrowser(ctx); errors.Is(err, lacros.ErrAlreadyStoppedBeforeClose) {
-			// The Lacros browser is not closed in other places in the test.
-			s.Error("The Lacros browser probably crashed: ", err)
-		}
-	}(cleanupCtx)
+	defer closeBrowser(cleanupCtx)
 
 	defer faillog.DumpUITreeWithScreenshotOnError(cleanupCtx, s.OutDir(), s.HasError, cr, "ui_tree_"+s.Param().(printingTestParams).name)
 
