@@ -86,20 +86,11 @@ func ForcedReEnrollment(ctx context.Context, s *testing.State) {
 	defer log.MergeLogs(cleanupCtx)
 
 	// Capture screenshot if test unexpectedly fails.
-	captureScreenshotOnError := func(ctx context.Context, filename string) {
-		cl, err := rpc.Dial(ctx, s.DUT(), s.RPCHint())
-		if err != nil {
-			s.Fatal("Failed to connect to the device to take screenshot: ", err)
-		}
-		defer cl.Close(ctx)
-		screenshotService := graphics.NewScreenshotServiceClient(cl.Conn)
-		screenshotService.CaptureScreenshot(ctx, &graphics.CaptureScreenshotRequest{FilePrefix: filename})
-	}
 	defer func() {
 		if !s.HasError() {
 			return
 		}
-		captureScreenshotOnError(cleanupCtx, "test-failure")
+		captureScreenshotFRE(cleanupCtx, "test-failure", s)
 	}()
 
 	// Deprovision the device after the test.
@@ -189,7 +180,7 @@ func ForcedReEnrollment(ctx context.Context, s *testing.State) {
 		}
 		if err != nil {
 			s.Logf("Failed to re-enroll on attempt %d with error: %s", attempt, err)
-			captureScreenshotOnError(ctx, fmt.Sprintf("attempt-%d-failure", attempt))
+			captureScreenshotFRE(ctx, fmt.Sprintf("attempt-%d-failure", attempt), s)
 
 			if err := policyutil.EnsureTPMAndSystemStateAreReset(ctx, s.DUT(), s.RPCHint()); err != nil {
 				return errors.Wrap(err, "failed to reset the TPM after failed FRE attempt")
@@ -200,4 +191,15 @@ func ForcedReEnrollment(ctx context.Context, s *testing.State) {
 	}, &testing.PollOptions{Interval: 2 * time.Minute}); err != nil {
 		s.Fatal("Failed to re-enroll: ", err)
 	}
+}
+
+func captureScreenshotFRE(ctx context.Context, filename string, s *testing.State) {
+	cl, err := rpc.Dial(ctx, s.DUT(), s.RPCHint())
+	if err != nil {
+		s.Error("Failed to connect to the device to take screenshot: ", err)
+		return
+	}
+	defer cl.Close(ctx)
+	screenshotService := graphics.NewScreenshotServiceClient(cl.Conn)
+	screenshotService.CaptureScreenshot(ctx, &graphics.CaptureScreenshotRequest{FilePrefix: filename})
 }
