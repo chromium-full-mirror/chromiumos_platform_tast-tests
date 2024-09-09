@@ -21,7 +21,7 @@ import (
 	"go.chromium.org/tast-tests/cros/local/chrome/uiauto/ossettings"
 	"go.chromium.org/tast-tests/cros/local/chrome/uiauto/role"
 	"go.chromium.org/tast-tests/cros/local/mlservice"
-	"go.chromium.org/tast-tests/cros/local/power/charge"
+	"go.chromium.org/tast-tests/cros/local/power"
 	"go.chromium.org/tast-tests/cros/local/power/setup"
 	"go.chromium.org/tast-tests/cros/local/upstart"
 	"go.chromium.org/tast/core/ctxutil"
@@ -64,8 +64,16 @@ func AdaptiveCharging(ctx context.Context, s *testing.State) {
 	// Putting battery within testable range where the Adaptive Charging
 	// notification will show. Adaptive Charging will only trigger when the
 	// battery is at or below 95%, so discharge down to at least 93%.
-	if err := charge.EnsureBatteryWithinRange(ctx, cr, 80.0, 93.0); err != nil {
-		s.Fatalf("Failed to ensure battery percentage within %d%% to %d%%: %v", 80, 93, err)
+	chargeParam := power.ChargeParams{
+		MaxBatteryPreparationTime: 80 * time.Minute,
+		MinChargePercentage:       80.0,
+		MaxChargePercentage:       93.0,
+		DischargeOnCompletion:     false,
+		IsCustomized:              false,
+		IsPowerQual:               false,
+	}
+	if err := setup.PrepareBattery(ctx, chargeParam); err != nil {
+		s.Fatalf("Failed to ensure battery percentage within %.2f%% to %.2f%%: %v", chargeParam.MinChargePercentage, chargeParam.MaxChargePercentage, err)
 	}
 
 	// Ensure that charging is turned on.
