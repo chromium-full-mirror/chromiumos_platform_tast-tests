@@ -344,7 +344,7 @@ func APROBootabilityPerformance(ctx context.Context, s *testing.State) {
 			},
 		}
 
-		if err = testWithDifferentScenario(ctx, h, fwInfoToFlash, dutTempDir, baseline); err != nil {
+		if err = testWithDifferentScenario(ctx, h, fwInfoToFlash, dutTempDir, ecRWNewID, baseline); err != nil {
 			s.Fatal("Failed while flashing DUT to restore firmware at the end of test: ", err)
 		}
 
@@ -414,7 +414,7 @@ func APROBootabilityPerformance(ctx context.Context, s *testing.State) {
 		}
 
 		// Test with the latest shipped RO and RW firmware and set it to be the baseline.
-		if err = testWithDifferentScenario(ctx, h, fwInfoToFlash, dutTempDir, baseline); err != nil {
+		if err = testWithDifferentScenario(ctx, h, fwInfoToFlash, dutTempDir, ecRWNewID, baseline); err != nil {
 			s.Fatalf("Failed while testing RO_%s + RW_%s (EC RO_%s + RW_%s): %v", fwInfoToFlash.roTag, fwInfoToFlash.rwTag, fwInfoToFlash.roTag, fwInfoToFlash.rwTag, err)
 		}
 
@@ -443,7 +443,7 @@ func APROBootabilityPerformance(ctx context.Context, s *testing.State) {
 			fwInfoToFlash.ec.path = ecBackupOnHost
 
 			// Test with the latest RO shipped fw and the to-be-qualified new RW firmware.
-			if err = testWithDifferentScenario(ctx, h, fwInfoToFlash, dutTempDir, baseline); err != nil {
+			if err = testWithDifferentScenario(ctx, h, fwInfoToFlash, dutTempDir, ecRWNewID, baseline); err != nil {
 				s.Fatalf("Failed while testing RO_%s + RW_%s (EC RO_%s + RW_%s): %v", fwInfoToFlash.roTag, fwInfoToFlash.rwTag, fwInfoToFlash.roTag, fwInfoToFlash.rwTag, err)
 			}
 		}
@@ -470,7 +470,7 @@ func APROBootabilityPerformance(ctx context.Context, s *testing.State) {
 				},
 			}
 
-			if err = testWithDifferentScenario(ctx, h, fwInfoToFlash, dutTempDir, baseline); err != nil {
+			if err = testWithDifferentScenario(ctx, h, fwInfoToFlash, dutTempDir, ecRWNewID, baseline); err != nil {
 				s.Fatalf("Failed while testing RO_%s + RW_%s (EC RO_%s + RW_%s): %v", fwInfoToFlash.roTag, fwInfoToFlash.rwTag, fwInfoToFlash.roTag, fwInfoToFlash.rwTag, err)
 			}
 
@@ -483,7 +483,7 @@ func APROBootabilityPerformance(ctx context.Context, s *testing.State) {
 			}
 			fwInfoToFlash.ec.path = ecBackupOnHost
 
-			if err = testWithDifferentScenario(ctx, h, fwInfoToFlash, dutTempDir, baseline); err != nil {
+			if err = testWithDifferentScenario(ctx, h, fwInfoToFlash, dutTempDir, ecRWNewID, baseline); err != nil {
 				s.Fatalf("Failed while testing RO_%s + RW_%s (EC RO_%s + RW_%s): %v", fwInfoToFlash.roTag, fwInfoToFlash.rwTag, fwInfoToFlash.roTag, fwInfoToFlash.rwTag, err)
 			}
 		}
@@ -505,7 +505,7 @@ func APROBootabilityPerformance(ctx context.Context, s *testing.State) {
 				},
 			}
 
-			if err = testWithDifferentScenario(ctx, h, fwInfoToFlash, dutTempDir, baseline); err != nil {
+			if err = testWithDifferentScenario(ctx, h, fwInfoToFlash, dutTempDir, ecRWNewID, baseline); err != nil {
 				s.Fatalf("Failed while testing RO_%s + RW_%s (EC RO_%s + RW_%s): %v", fwInfoToFlash.roTag, fwInfoToFlash.rwTag, fwInfoToFlash.roTag, fwInfoToFlash.rwTag, err)
 			}
 		}
@@ -714,7 +714,7 @@ func downloadAndUntarFwFile(ctx context.Context, s *testing.State, h *firmware.H
 // flashDUTAndVerifyFirmwareVersions will send the bin files to a directory in the DUT,
 // flash the files into the DUT with the bios service 'WriteImageFromMultiSectionFile',
 // reboot the DUT so that the flash takes effect, and then verify the firmware versions.
-func flashDUTAndVerifyFirmwareVersions(ctx context.Context, h *firmware.Helper, fwInfo *flashFwInfo, dutTempDir string) error {
+func flashDUTAndVerifyFirmwareVersions(ctx context.Context, h *firmware.Helper, fwInfo *flashFwInfo, dutTempDir, ecRWNewID string) error {
 	flashingCtx, cancelflashingCtx := context.WithTimeout(ctx, flashingTime)
 	defer cancelflashingCtx()
 
@@ -762,7 +762,7 @@ func flashDUTAndVerifyFirmwareVersions(ctx context.Context, h *firmware.Helper, 
 			fwInfo.ec.roID = ecROID
 			fwInfo.ec.rwID = ecRWID
 		} else if fwInfo.wp == futility.WriteProtectionEnable {
-			fwInfo.ec.rwID = ecRWID
+			fwInfo.ec.rwID = ecRWNewID
 		} else {
 			return errors.Errorf("invalid write protection value: %v", fwInfo.wp)
 		}
@@ -810,11 +810,11 @@ func flashDUTAndVerifyFirmwareVersions(ctx context.Context, h *firmware.Helper, 
 // testWithDifferentScenario will test with the scenario defined in flashFwInfo, including
 // flashing the files into the DUT, rebooting it, verifying the firmware versions, and
 // performing the speed test.
-func testWithDifferentScenario(ctx context.Context, h *firmware.Helper, fwInfo *flashFwInfo, dutTempDir string, baseline float64) error {
+func testWithDifferentScenario(ctx context.Context, h *firmware.Helper, fwInfo *flashFwInfo, dutTempDir, ecRWNewID string, baseline float64) error {
 	// Flash the RO or RW firmware with the specified files and AP section.
 	var err error
 	testing.ContextLogf(ctx, "Setting RO_%s + RW_%s (EC RO_%s + RW_%s)", fwInfo.roTag, fwInfo.rwTag, fwInfo.roTag, fwInfo.rwTag)
-	if err = flashDUTAndVerifyFirmwareVersions(ctx, h, fwInfo, dutTempDir); err != nil {
+	if err = flashDUTAndVerifyFirmwareVersions(ctx, h, fwInfo, dutTempDir, ecRWNewID); err != nil {
 		return errors.Wrapf(err, "failed to flash RO_%s + RW_%s ( %s + %s ) [EC RO_%s + RW_%s]( %s + %s )", fwInfo.roTag, fwInfo.rwTag, fwInfo.ap.roID, fwInfo.ap.rwID, fwInfo.roTag, fwInfo.rwTag, fwInfo.ec.roID, fwInfo.ec.rwID)
 	}
 
