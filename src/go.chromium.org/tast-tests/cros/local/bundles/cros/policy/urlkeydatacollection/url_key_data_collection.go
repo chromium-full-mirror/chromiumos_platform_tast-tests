@@ -24,6 +24,8 @@ const ukmTestURL = "https://www.google.com"
 // UkmNetworkAnnotationID is annotation hash code.
 const UkmNetworkAnnotationID = "727478"
 
+const regexUkmURL = "https://clients4.google.com/ukm.*"
+
 var ukmFalseMSBBTrueTestCase = policyannotations.AnnotationTestParams{
 	Name:                  "ukm_false_msbb_true",
 	AnnotationLogExpected: false,
@@ -32,6 +34,8 @@ var ukmFalseMSBBTrueTestCase = policyannotations.AnnotationTestParams{
 		&policy.SyncDisabled{Val: false},
 		&policy.EnableSyncConsent{Val: true},
 	},
+	TrafficShouldFind:    []string{},
+	TrafficShouldNotFind: []string{regexUkmURL},
 }
 
 var ukmTrueMSBBTrueTestCase = policyannotations.AnnotationTestParams{
@@ -42,6 +46,8 @@ var ukmTrueMSBBTrueTestCase = policyannotations.AnnotationTestParams{
 		&policy.SyncDisabled{Val: false},
 		&policy.EnableSyncConsent{Val: true},
 	},
+	TrafficShouldFind:    []string{regexUkmURL},
+	TrafficShouldNotFind: []string{},
 }
 
 var ukmTrueMSBBFalseTestCase = policyannotations.AnnotationTestParams{
@@ -52,6 +58,8 @@ var ukmTrueMSBBFalseTestCase = policyannotations.AnnotationTestParams{
 		&policy.SyncDisabled{Val: true},
 		&policy.EnableSyncConsent{Val: false},
 	},
+	TrafficShouldFind:    []string{regexUkmURL},
+	TrafficShouldNotFind: []string{},
 }
 
 var ukmFalseMSBBFalseTestCase = policyannotations.AnnotationTestParams{
@@ -62,6 +70,8 @@ var ukmFalseMSBBFalseTestCase = policyannotations.AnnotationTestParams{
 		&policy.SyncDisabled{Val: true},
 		&policy.EnableSyncConsent{Val: false},
 	},
+	TrafficShouldFind:    []string{},
+	TrafficShouldNotFind: []string{regexUkmURL},
 }
 
 // TestCases returns the list of TestCase objects on which

@@ -14,4 +14,8 @@ type AnnotationTestParams struct {
 	Name                  string          // name is the subtest name.
 	Policies              []policy.Policy // policies to check
 	AnnotationLogExpected bool
+	// TrafficShouldFind states the traffic should be found during tests.
+	TrafficShouldFind []string
+	// TrafficShouldNotFind states the traffic should NOT be found during tests.
+	TrafficShouldNotFind []string
 }

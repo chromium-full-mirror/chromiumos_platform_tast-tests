@@ -21,6 +21,8 @@ import (
 	"go.chromium.org/tast-tests/cros/local/chrome/uiauto/faillog"
 	"go.chromium.org/tast-tests/cros/local/netexport"
 	"go.chromium.org/tast-tests/cros/local/policyutil"
+	"go.chromium.org/tast-tests/cros/local/policyutil/fixtures"
+	"go.chromium.org/tast-tests/cros/local/testenv/proxy"
 	"go.chromium.org/tast/core/ctxutil"
 	"go.chromium.org/tast/core/testing"
 )
@@ -42,14 +44,8 @@ func init() {
 		Timeout:      8 * time.Minute,
 		Params: []testing.Param{
 			{
-				Fixture: fixture.ChromeEnrolledLoggedInShortMetricsInterval,
+				Fixture: fixture.FakeDMSEnrolled,
 				Val:     browser.TypeAsh,
-			},
-			{
-				Name:              "lacros",
-				ExtraSoftwareDeps: []string{"lacros"},
-				Fixture:           fixture.LacrosEnrolledLoggedInShortMetricsInterval,
-				Val:               browser.TypeLacros,
 			},
 		},
 		Data: []string{"autofill_address_enabled.html"},
@@ -62,7 +58,6 @@ func init() {
 }
 
 func TrafficAnnotationURLKeyedDataCollection(ctx context.Context, s *testing.State) {
-	cr := s.FixtValue().(chrome.HasChrome).Chrome()
 	fdms := s.FixtValue().(fakedms.HasFakeDMS).FakeDMS()
 
 	// Reserve 10 seconds for cleanup.
@@ -72,6 +67,28 @@ func TrafficAnnotationURLKeyedDataCollection(ctx context.Context, s *testing.Sta
 
 	server := httptest.NewServer(http.FileServer(s.DataFileSystem()))
 	defer server.Close()
+
+	mp, err := proxy.NewMitmProxy(ctx,
+		proxy.CustomCA(true),
+		proxy.DumpHTTPFlow(true),
+	)
+	if err != nil {
+		s.Fatal("Failed to start mitmproxy: ", err)
+	}
+	defer mp.Close(cleanupCtx)
+
+	opts := []chrome.Option{
+		chrome.FakeLogin(chrome.Creds{User: fixtures.Username, Pass: fixtures.Password}),
+		chrome.DMSPolicy(fdms.URL),
+		chrome.KeepEnrollment(),
+		chrome.ExtraArgs("--metrics-upload-interval=1"),
+		chrome.ProxyServer(mp.ProxyAddress()),
+	}
+
+	cr, err := chrome.New(ctx, opts...)
+	if err != nil {
+		s.Fatal("Chrome login failed: ", err)
+	}
 
 	for index, param := range ukm.TestCases() {
 		s.Run(ctx, param.Name, func(ctx context.Context, s *testing.State) {
@@ -114,6 +131,20 @@ func TrafficAnnotationURLKeyedDataCollection(ctx context.Context, s *testing.Sta
 
 			if foundAnnotation != param.AnnotationLogExpected {
 				s.Fatalf("Annotation mismatch = got %t, want %t", foundAnnotation, param.AnnotationLogExpected)
+			}
+
+			resp, err := mp.DumpHTTPFlow(ctx, true, false)
+			if err != nil {
+				s.Fatal("Failed to get dump httpflow from mitmproxy: ", err)
+			}
+
+			v := proxy.NewNetworkVerifier(resp)
+			allow := param.TrafficShouldFind
+			disallow := param.TrafficShouldNotFind
+			// allow/disallow traffic are passed by test case param.
+			// We will ignore traffic other than the allow and disallow list for verifying diff.
+			if err := v.Verify(allow, disallow, []string{".*"}); err != nil {
+				s.Fatal("Diff test result: ", err)
 			}
 		})
 	}
