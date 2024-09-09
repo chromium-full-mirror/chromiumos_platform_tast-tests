@@ -38,7 +38,7 @@ func init() {
 			"ecgh@chromium.org",
 		},
 		BugComponent: "b:792402", // ChromeOS > Platform > Enablement > Firmware > FAFT
-		Attr:         []string{"group:firmware", "firmware_unstable"},
+		Attr:         []string{"group:firmware"},
 		Fixture:      fixture.DevMode,
 		Timeout:      3 * time.Hour,
 		HardwareDeps: hwdep.D(hwdep.ChromeEC(), hwdep.X86()),
