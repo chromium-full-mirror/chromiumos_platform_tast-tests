@@ -11,6 +11,7 @@ import (
 	"net"
 	"time"
 
+	"go.chromium.org/tast-tests/cros/common/robotics/arm"
 	"go.chromium.org/tast/core/errors"
 	"go.chromium.org/tast/core/testing"
 )
@@ -22,6 +23,7 @@ var armIPVar = testing.RegisterVarString(
 )
 
 const (
+	defaultMoveDuration = 5 * time.Second
 	// DefaultReadWriteTimeout is the default timeout for connection read / write.
 	DefaultReadWriteTimeout = 10 * time.Second
 )
@@ -32,6 +34,8 @@ type Arm struct {
 	counter          uint32
 	readWriteTimeout time.Duration
 }
+
+var _ arm.Controller = (*Arm)(nil)
 
 // NewArm returns an Arm object associated with a connection to the control box.
 // |timeout| is the timeout for the connection read/write actions.
