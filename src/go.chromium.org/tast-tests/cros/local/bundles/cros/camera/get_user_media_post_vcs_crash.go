@@ -6,6 +6,7 @@ package camera
 
 import (
 	"context"
+	"net/http"
 	"os"
 	"time"
 
@@ -14,6 +15,8 @@ import (
 	"go.chromium.org/tast-tests/cros/local/camera/testutil"
 	"go.chromium.org/tast-tests/cros/local/chrome"
 	"go.chromium.org/tast-tests/cros/local/upstart"
+	"go.chromium.org/tast/core/ctxutil"
+	"go.chromium.org/tast/core/errors"
 	"go.chromium.org/tast/core/testing"
 )
 
@@ -33,18 +36,27 @@ func init() {
 // GetUserMediaPostVCSCrash calls getUserMedia and renders the camera's media stream
 // in a video tag before/after video capture service crashes.
 func GetUserMediaPostVCSCrash(ctx context.Context, s *testing.State) {
+	cleanupCtx := ctx
+	ctx, cancel := ctxutil.Shorten(ctx, 10*time.Second)
+	defer cancel()
+
 	// Restart ui to ensure that the following tests are not affected
 	// if the video capture service process fails to restart.
 	defer func() {
-		if err := upstart.RestartJob(ctx, "ui"); err != nil {
+		if err := upstart.RestartJob(cleanupCtx, "ui"); err != nil {
 			s.Error("Failed to restart ui: ", err)
 		}
 	}()
 
-	// Ensure camera service running to avoid bad state from previous tests.
-	if err := upstart.EnsureJobRunning(ctx, "cros-camera"); err != nil {
-		s.Fatal("Failed to start cros-camera: ", err)
+	// Setup fake camera HAL.
+	if err := setupFakeCameraHAL(ctx); err != nil {
+		s.Error("Failed to setup Fake HAL camera: ", err)
 	}
+	defer func() {
+		if err := resetFakeCameraHAL(cleanupCtx); err != nil {
+			s.Error("Failed to reset Fake HAL camera: ", err)
+		}
+	}()
 
 	duration := 1 * time.Second
 
@@ -53,6 +65,10 @@ func GetUserMediaPostVCSCrash(ctx context.Context, s *testing.State) {
 	_, err := os.ReadFile(s.DataPath("third_party/ssim.js"))
 	if err != nil {
 		s.Fatal("Failed to read third_party/ssim.js: ", err)
+	}
+
+	if err := checkVCSUtilityProcessReadiness(ctx, ci, s.DataFileSystem()); err != nil {
+		s.Fatal("VCS is not ready before killing video capture service process: ", err)
 	}
 
 	// Run tests for 480p and 720p.
@@ -64,17 +80,44 @@ func GetUserMediaPostVCSCrash(ctx context.Context, s *testing.State) {
 		s.Fatal("Failed to relaunch a video capture service process: ", err)
 	}
 
-	if err := testing.Poll(ctx, func(ctx context.Context) error {
-		if err := getusermedia.RunEnumerateDevices(ctx, s.DataFileSystem(), ci, getusermedia.VerboseLogging); err != nil {
-			return err
-		}
-		return nil
-	}, &testing.PollOptions{Timeout: 5 * time.Second}); err != nil {
-		s.Fatal("Failed to find video input devices: ", err)
+	if err := checkVCSUtilityProcessReadiness(ctx, ci, s.DataFileSystem()); err != nil {
+		s.Fatal("VCS is not ready after killing video capture service process: ", err)
 	}
 
 	// Run tests for 480p and 720p.
 	if _, err := getusermedia.RunGetUserMedia(ctx, s.DataFileSystem(), ci, duration, nil, getusermedia.VerboseLogging); err != nil {
 		s.Fatal("Failed to call getUserMedia() after killing video capture service process: ", err)
 	}
+}
+
+func setupFakeCameraHAL(ctx context.Context) error {
+	if err := testutil.SetupTestConfig(ctx, testutil.UseFakeHALCamera); err != nil {
+		return errors.Wrap(err, "failed to set up camera test config")
+	}
+	if err := testutil.SetupFakeHALConfig(ctx); err != nil {
+		return errors.Wrap(err, "failed to setup Fake HAL config")
+	}
+	if err := upstart.RestartJob(ctx, "cros-camera"); err != nil {
+		return errors.Wrap(err, "failed to restart cros-camera after fake camera HAL setup")
+	}
+	return nil
+}
+
+func resetFakeCameraHAL(ctx context.Context) error {
+	if err := testutil.RemoveFakeHALConfig(ctx); err != nil {
+		return errors.Wrap(err, "failed to remove fake HAL config")
+	}
+	if err := testutil.RemoveTestConfig(ctx); err != nil {
+		return errors.Wrap(err, "failed to remove camera test config")
+	}
+	if err := upstart.RestartJob(ctx, "cros-camera"); err != nil {
+		return errors.Wrap(err, "failed to restart cros-camera after fake camera HAL removal")
+	}
+	return nil
+}
+
+func checkVCSUtilityProcessReadiness(ctx context.Context, ci *chrome.Chrome, fileSystem http.FileSystem) error {
+	return testing.Poll(ctx, func(ctx context.Context) error {
+		return getusermedia.RunEnumerateDevices(ctx, fileSystem, ci, getusermedia.VerboseLogging)
+	}, &testing.PollOptions{Timeout: 10 * time.Second})
 }
