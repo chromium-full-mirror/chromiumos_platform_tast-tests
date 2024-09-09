@@ -17,8 +17,6 @@ import (
 	"go.chromium.org/tast-tests/cros/common/policy/fakedms"
 	"go.chromium.org/tast-tests/cros/local/chrome"
 	"go.chromium.org/tast-tests/cros/local/chrome/ash"
-	"go.chromium.org/tast-tests/cros/local/chrome/browser"
-	"go.chromium.org/tast-tests/cros/local/chrome/browser/browserfixt"
 	"go.chromium.org/tast-tests/cros/local/chrome/uiauto"
 	"go.chromium.org/tast-tests/cros/local/chrome/uiauto/filesinternals"
 	"go.chromium.org/tast-tests/cros/local/chrome/uiauto/ms365"
@@ -50,7 +48,6 @@ func init() {
 		Contacts:     []string{"lucmult@chromium.org", "chromeos-files-syd@google.com"},
 		BugComponent: "b:167289",
 		Impl: &onedriveFixture{
-			bt:            browser.TypeAsh,
 			chromeOptions: opts,
 			provider:      filesconsts.OneDrive,
 		},
@@ -68,7 +65,6 @@ func init() {
 		Contacts:     []string{"lmasopust@google.com", "cros-commercial-clippy-eng@google.com"},
 		BugComponent: "b:1401215", // ChromeOS > Software > Commercial (Enterprise) > Identity > 3P IdP > Enterprise Clippy
 		Impl: &onedriveFixture{
-			bt:            browser.TypeAsh,
 			chromeOptions: opts,
 			provider:      filesconsts.OneDrive,
 		},
@@ -87,7 +83,6 @@ func init() {
 		Contacts:     []string{"poromov@google.com", "cros-commercial-clippy-eng@google.com"},
 		BugComponent: "b:1401215", // ChromeOS > Software > Commercial (Enterprise) > Identity > 3P IdP > Enterprise Clippy
 		Impl: &onedriveFixture{
-			bt:            browser.TypeAsh,
 			chromeOptions: append(opts, chrome.EnableFeatures("SkyVault")),
 			provider:      filesconsts.OneDrive,
 		},
@@ -106,7 +101,6 @@ func init() {
 		Contacts:     []string{"lucmult@chromium.org", "chromeos-files-syd@google.com"},
 		BugComponent: "b:167289",
 		Impl: &onedriveFixture{
-			bt:       browser.TypeAsh,
 			provider: filesconsts.DriveFs,
 		},
 		SetUpTimeout:    chrome.LoginTimeout,
@@ -163,7 +157,6 @@ type onedriveFixture struct {
 	cr            *chrome.Chrome
 	tconn         *chrome.TestConn
 	chromeOptions []chrome.Option
-	bt            browser.Type
 	// Full path to the new folder created in Downloads to host the office files used by the test.
 	downloadSubFolder string
 	screenRecorder    *uiauto.ScreenRecorder
@@ -335,10 +328,6 @@ func (f *onedriveFixture) PreTest(ctx context.Context, s *testing.FixtTestState)
 	}
 	f.data.GeneratedFiles = generatedFiles
 
-	if _, _, err = browserfixt.SetUp(ctx, f.cr, f.bt); err != nil {
-		s.Fatal("Failed to get a browser to open new tab: ", err)
-	}
-
 	fi, err := filesinternals.Start(ctx, f.tconn, f.cr)
 	if err != nil {
 		s.Fatal("Failed to start chrome://files-internals: ", err)
@@ -364,7 +353,7 @@ func (f *onedriveFixture) PreTest(ctx context.Context, s *testing.FixtTestState)
 		s.Fatal("Failed to uninstall MS365 PWA: ", err)
 	}
 
-	if err := ms365.ClearBrowserCookiesForOffice(ctx, f.cr, f.bt); err != nil {
+	if err := ms365.ClearBrowserCookiesForOffice(ctx, f.cr); err != nil {
 		s.Fatal("Failed to clear browser cookies for office website: ", err)
 	}
 }
@@ -416,12 +405,6 @@ func (f *onedriveFixture) PostTest(ctx context.Context, s *testing.FixtTestState
 
 	if f.screenRecorder != nil {
 		f.screenRecorder.StopAndSaveOnError(ctx, filepath.Join(s.OutDir(), "record.webm"), s.HasError)
-	}
-
-	// Close the active browser if there's any.
-	_, closeBrowser, _ := browserfixt.ConnectAndOwn(ctx, f.cr, f.bt)
-	if closeBrowser != nil {
-		closeBrowser(ctx)
 	}
 }
 

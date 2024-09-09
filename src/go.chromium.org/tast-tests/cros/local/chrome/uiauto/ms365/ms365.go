@@ -17,8 +17,6 @@ import (
 	"go.chromium.org/tast-tests/cros/local/apps"
 	"go.chromium.org/tast-tests/cros/local/chrome"
 	"go.chromium.org/tast-tests/cros/local/chrome/ash"
-	"go.chromium.org/tast-tests/cros/local/chrome/browser"
-	"go.chromium.org/tast-tests/cros/local/chrome/browser/browserfixt"
 	"go.chromium.org/tast-tests/cros/local/chrome/uiauto"
 	"go.chromium.org/tast-tests/cros/local/chrome/uiauto/nodewith"
 	"go.chromium.org/tast-tests/cros/local/chrome/uiauto/ossettings"
@@ -270,19 +268,14 @@ func (ms *Ms365) WaitForMicrosoft365EditorWindowAndCloseIgnoreError(tconn *chrom
 }
 
 // InstallPWA installs Office PWA.
-func (ms *Ms365) InstallPWA(ctx context.Context, cr *chrome.Chrome, bt browser.Type) error {
+func (ms *Ms365) InstallPWA(ctx context.Context, cr *chrome.Chrome) error {
 	cleanupCtx := ctx
 	ctx, cancel := ctxutil.Shorten(ctx, 5*time.Second)
 	defer cancel()
 
-	br, _, err := browserfixt.SetUp(ctx, cr, bt)
-	if err != nil {
-		return errors.Wrap(err, "failed to get a browser to install PWA")
-	}
-
 	// Use NewConn instead of NewTab to prevent Lacros from reusing the existing
 	// chrome://newtab, the reuse will cause chrome://newtab to be closed below.
-	conn, err := br.NewConn(ctx, officePWAInstallURL)
+	conn, err := cr.Browser().NewConn(ctx, officePWAInstallURL)
 	if err != nil {
 		return errors.Wrap(err, "failed to open office website")
 	}
@@ -337,16 +330,11 @@ func MaybeUninstallPwa(ctx context.Context, cr *chrome.Chrome, tconn *chrome.Tes
 }
 
 // ClearBrowserCookiesForOffice will clear all browser cookies for the Office website.
-func ClearBrowserCookiesForOffice(ctx context.Context, cr *chrome.Chrome, bt browser.Type) error {
+func ClearBrowserCookiesForOffice(ctx context.Context, cr *chrome.Chrome) error {
 	testing.ContextLog(ctx, "Clearing cookies for Office website")
 
 	ctx, cancel := ctxutil.Shorten(ctx, 5*time.Second)
 	defer cancel()
-
-	br, _, err := browserfixt.SetUp(ctx, cr, bt)
-	if err != nil {
-		return errors.Wrap(err, "failed to get a browser to clear cookies")
-	}
 
 	interval := 200 * time.Millisecond
 
@@ -358,7 +346,7 @@ func ClearBrowserCookiesForOffice(ctx context.Context, cr *chrome.Chrome, bt bro
 
 		// Use NewConn instead of NewTab to prevent Lacros from reusing the existing
 		// chrome://newtab, the reuse will cause chrome://newtab to be closed below.
-		conn, err := br.NewConn(quickCtx, officePWAInstallURL)
+		conn, err := cr.Browser().NewConn(quickCtx, officePWAInstallURL)
 		if err != nil {
 			return errors.Wrap(err, "failed to open office website")
 		}

@@ -9,7 +9,6 @@ import (
 	"path/filepath"
 	"time"
 
-	"go.chromium.org/tast-tests/cros/local/chrome/browser"
 	"go.chromium.org/tast-tests/cros/local/chrome/uiauto"
 	"go.chromium.org/tast-tests/cros/local/chrome/uiauto/cloudupload"
 	"go.chromium.org/tast-tests/cros/local/chrome/uiauto/faillog"
@@ -59,18 +58,8 @@ func OdfsWithPWAInstalled(ctx context.Context, s *testing.State) {
 	accountPool := s.RequiredVar("onedrive.accountPool")
 	data := s.FixtValue().(*onedrive.FixtureData)
 	cr := data.Chrome
-	bt := s.Param().(browser.Type)
 	tconn := data.TestAPIConn
 	targetBaseName := filepath.Base(data.TargetFolder)
-
-	// Install Office PWA.
-	ms365App, err := ms365.App(ctx, tconn, accountPool)
-	if err != nil {
-		s.Fatal("Failed to get instance of Ms365: ", err)
-	}
-	if err := ms365App.InstallPWA(ctx, cr, bt); err != nil {
-		s.Fatal("Failed to install Office PWA: ", err)
-	}
 
 	// Pick one file from the generated files.
 	fileName := data.GeneratedFiles[0].FileName
@@ -79,13 +68,22 @@ func OdfsWithPWAInstalled(ctx context.Context, s *testing.State) {
 	cleanupCtx := ctx
 	ctx, cancel := ctxutil.Shorten(ctx, 5*time.Second)
 	defer cancel()
+	defer faillog.DumpUITreeWithScreenshotOnError(cleanupCtx, s.OutDir(), s.HasError, cr, "odfs_with_pwa_installed")
+
+	// Install Office PWA.
+	ms365App, err := ms365.App(ctx, tconn, accountPool)
+	if err != nil {
+		s.Fatal("Failed to get instance of Ms365: ", err)
+	}
+	if err := ms365App.InstallPWA(ctx, cr); err != nil {
+		s.Fatal("Failed to install Office PWA: ", err)
+	}
 
 	files, err := filesapp.Launch(ctx, tconn)
 	if err != nil {
 		s.Fatal("Failed to launch Files app: ", err)
 	}
 	defer files.Close(cleanupCtx)
-	defer faillog.DumpUITreeWithScreenshotOnError(cleanupCtx, s.OutDir(), s.HasError, cr, "odfs_with_pwa_installed")
 
 	cloudUpload, err := files.OpenOfficeFile(ctx, targetBaseName, fileName, filesconsts.OneDrive)
 	if err != nil {
