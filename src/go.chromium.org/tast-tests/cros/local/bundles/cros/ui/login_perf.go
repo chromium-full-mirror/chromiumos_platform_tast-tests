@@ -30,7 +30,6 @@ import (
 	uiperf "go.chromium.org/tast-tests/cros/local/bundles/cros/ui/perf"
 	"go.chromium.org/tast-tests/cros/local/chrome"
 	"go.chromium.org/tast-tests/cros/local/chrome/ash"
-	"go.chromium.org/tast-tests/cros/local/chrome/browser"
 	"go.chromium.org/tast-tests/cros/local/chrome/metrics"
 	"go.chromium.org/tast-tests/cros/local/chrome/uiauto"
 	"go.chromium.org/tast-tests/cros/local/chrome/uiauto/faillog"
@@ -868,14 +867,8 @@ func testFunction(
 	}
 	defer cujRecorder.Close(closeCtx)
 
-	for _, metricConfig := range [][]cujrecorder.MetricConfig{
-		cujrecorder.AshCommonMetricConfigs(),
-		cujrecorder.BrowserCommonMetricConfigs(),
-		cujrecorder.AnyChromeCommonMetricConfigs(),
-	} {
-		if err := cujRecorder.AddCollectedMetrics(tLoginConn, browser.TypeAsh, metricConfig...); err != nil {
-			s.Fatal("Failed to add recorded metrics: ", err)
-		}
+	if err := cujRecorder.AddCommonMetrics(tLoginConn, nil); err != nil {
+		s.Fatal("Failed to add recorder common metrics: ", err)
 	}
 
 	var histograms []*histogram.Histogram
