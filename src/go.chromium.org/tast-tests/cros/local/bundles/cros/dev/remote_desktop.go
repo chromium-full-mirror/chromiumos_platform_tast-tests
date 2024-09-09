@@ -16,7 +16,6 @@ import (
 	"go.chromium.org/tast-tests/cros/local/chrome"
 	"go.chromium.org/tast-tests/cros/local/chrome/browser"
 	"go.chromium.org/tast-tests/cros/local/chrome/browser/browserfixt"
-	"go.chromium.org/tast-tests/cros/local/chrome/lacros/lacrosfixt"
 	"go.chromium.org/tast-tests/cros/local/chrome/uiauto/crd"
 	"go.chromium.org/tast/core/ctxutil"
 	"go.chromium.org/tast/core/errors"
@@ -105,7 +104,6 @@ func init() {
 	// <username> and <password> are the credentials of the test GAIA account.
 	testing.AddTest(&testing.Test{
 		Func:         RemoteDesktop,
-		LacrosStatus: testing.LacrosVariantExists,
 		Desc:         "Connect to Chrome Remote Desktop for working remotely",
 		Contacts:     []string{"chromoting-team@google.com", "shik@chromium.org"},
 		BugComponent: "b:47377", // Chrome > Chromoting
@@ -120,7 +118,6 @@ func init() {
 		Params: []testing.Param{{
 			// For running manually.
 			Name: "",
-			Val:  browser.TypeAsh,
 		}, {
 			// For automated testing.
 			Name:      "test",
@@ -132,18 +129,6 @@ func init() {
 			// Although it's a long list, it only add 2 test runs per build.
 			ExtraHardwareDeps: hwdep.D(hwdep.Model(append(variousPlatformModels, dededeModels...)...)),
 			ExtraSoftwareDeps: []string{"gaia"},
-			Val:               browser.TypeAsh,
-		}, {
-			Name:              "lacros",
-			ExtraSoftwareDeps: []string{"lacros"},
-			Val:               browser.TypeLacros,
-		}, {
-			// For automated testing.
-			Name:              "test_lacros",
-			ExtraAttr:         []string{"group:mainline", "informational"},
-			ExtraSoftwareDeps: []string{"lacros"},
-			ExtraHardwareDeps: hwdep.D(hwdep.Model(append(variousPlatformModels, dededeModels...)...)),
-			Val:               browser.TypeLacros,
 		}},
 	})
 }
@@ -247,7 +232,7 @@ func RemoteDesktop(ctx context.Context, s *testing.State) {
 	}
 
 	// Set up the browser.
-	cr, br, closeBrowser, err := browserfixt.SetUpWithNewChrome(ctx, s.Param().(browser.Type), lacrosfixt.NewConfig(), opts...)
+	cr, br, closeBrowser, err := browserfixt.SetUpWithNewChrome(ctx, browser.TypeAsh, nil, opts...)
 	if err != nil {
 		// In case of authentication error, provide a more informative message to the user.
 		if strings.Contains(err.Error(), "chrome.Auth") {

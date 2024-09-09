@@ -14,7 +14,6 @@ import (
 	"go.chromium.org/tast-tests/cros/local/chrome/ash"
 	"go.chromium.org/tast-tests/cros/local/chrome/browser"
 	"go.chromium.org/tast-tests/cros/local/chrome/browser/browserfixt"
-	"go.chromium.org/tast-tests/cros/local/chrome/lacros/lacrosfixt"
 	"go.chromium.org/tast-tests/cros/local/chrome/uiauto"
 	"go.chromium.org/tast-tests/cros/local/chrome/uiauto/crd"
 	"go.chromium.org/tast-tests/cros/local/chrome/uiauto/nodewith"
@@ -29,7 +28,6 @@ import (
 func init() {
 	testing.AddTest(&testing.Test{
 		Func:         RemoteDesktopManual,
-		LacrosStatus: testing.LacrosVariantExists,
 		Desc:         "Connect to Chrome Remote Desktop for manual test",
 		Contacts:     []string{"chromoting-team@google.com", "jinrongwu@google.com"},
 		BugComponent: "b:47377", // Chrome > Chromoting
@@ -90,7 +88,7 @@ func RemoteDesktopManual(ctx context.Context, s *testing.State) {
 	opts = append(opts, chrome.ExtraArgs(extraArgs...))
 
 	// Set up the browser.
-	cr, br, closeBrowser, err := browserfixt.SetUpWithNewChrome(ctx, browser.TypeAsh, lacrosfixt.NewConfig(), opts...)
+	cr, br, closeBrowser, err := browserfixt.SetUpWithNewChrome(ctx, browser.TypeAsh, nil, opts...)
 	if err != nil {
 		// In case of authentication error, provide a more informative message to the user.
 		if strings.Contains(err.Error(), "chrome.Auth") {
