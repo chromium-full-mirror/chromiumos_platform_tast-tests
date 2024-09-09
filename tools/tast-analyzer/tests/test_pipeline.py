@@ -90,9 +90,11 @@ class PipelineTest(unittest.TestCase):
             alpha=1.0,
             hypothesis_test_params=stats_util.HypothesisTestParameters(
                 deterministic=True,
+                resamples=99999,
             ),
             bootstrap_params=stats_util.BootstrapParameters(
                 deterministic=True,
+                resamples=99999,
             ),
             multiple_test_cfg=analysis_cfg.MultipleTestCfg.FWER,
         )

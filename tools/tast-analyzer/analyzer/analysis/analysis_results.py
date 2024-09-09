@@ -4,7 +4,9 @@
 
 
 from collections import defaultdict
+from concurrent import futures
 import dataclasses
+import functools
 import itertools
 import logging
 import re
@@ -251,6 +253,33 @@ def construct_experiment_groups_list(
     return sorted(groups_list, key=lambda x: x[0].sample.metric_path)
 
 
+def _analyze_groups(
+    groups: list[ExperimentGroup],
+    hypothesis_params: stats_util.HypothesisTestParameters,
+    bootstrap_params: stats_util.BootstrapParameters,
+) -> AnalysisResult:
+    # For each group, compute its confidence interval.
+    for i in range(len(groups)):
+        bootstrap = bootstrap_params.run_one_sample_bootstrap(groups[i].sample)
+        groups[i] = dataclasses.replace(groups[i], bootstrap=bootstrap)
+
+    # For each ordered pair of groups, compute the hypothesis test.
+    pairs = []
+    for before, after in itertools.combinations(groups, 2):
+        hypothesis_result = hypothesis_params.run_hypothesis_test(
+            before.sample, after.sample
+        )
+
+        pairs.append(
+            PairwiseResult(
+                before=before,
+                after=after,
+                hypothesis_result=hypothesis_result,
+            )
+        )
+    return AnalysisResult(groups=groups, pairs=pairs)
+
+
 def generate_analysis_results(
     *,
     groups_list: list[list[ExperimentGroup]],
@@ -268,30 +297,13 @@ def generate_analysis_results(
         A list of analysis results.
     """
     out = []
-    for groups in groups_list:
-        # For each group, compute its confidence interval.
-        for i in range(len(groups)):
-            bootstrap = bootstrap_params.run_one_sample_bootstrap(
-                groups[i].sample
-            )
-            groups[i] = dataclasses.replace(groups[i], bootstrap=bootstrap)
-
-        # For each ordered pair of groups, compute the hypothesis test.
-        pairs = []
-        for before, after in itertools.combinations(groups, 2):
-            hypothesis_result = hypothesis_params.run_hypothesis_test(
-                before.sample, after.sample
-            )
-
-            pairs.append(
-                PairwiseResult(
-                    before=before,
-                    after=after,
-                    hypothesis_result=hypothesis_result,
-                )
-            )
-
-        out.append(AnalysisResult(groups=groups, pairs=pairs))
+    with futures.ProcessPoolExecutor() as executor:
+        analyze_groups = functools.partial(
+            _analyze_groups,
+            hypothesis_params=hypothesis_params,
+            bootstrap_params=bootstrap_params,
+        )
+        out = list(executor.map(analyze_groups, groups_list))
     return out
 
 

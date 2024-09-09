@@ -11,6 +11,11 @@ import numpy.typing as npt
 from scipy import stats
 
 
+DEFAULT_RESAMPLING_COUNT = 999999
+"""The default resampling count to use for resampling methods, e.g.
+bootstrapping."""
+
+
 class TestStatisticKind(enum.StrEnum):
     MEAN = "mean"
     MEDIAN = "median"
@@ -77,7 +82,7 @@ class HypothesisTestParameters:
     statistic_kind: TestStatisticKind = TestStatisticKind.MEAN
     """The test statistic used in this hypothesis test."""
 
-    resamples: int = 99999
+    resamples: int = DEFAULT_RESAMPLING_COUNT
     """The number of resamples to use in the permutation test."""
 
     deterministic: bool = False
@@ -189,7 +194,7 @@ class BootstrapParameters:
     statistic_kind: TestStatisticKind = TestStatisticKind.MEAN
     """The test statistic used in the bootstrap."""
 
-    resamples: int = 99999
+    resamples: int = DEFAULT_RESAMPLING_COUNT
     """The number of resamples to use in the bootstrap."""
 
     deterministic: bool = False

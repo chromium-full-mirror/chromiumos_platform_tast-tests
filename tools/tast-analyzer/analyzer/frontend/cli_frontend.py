@@ -159,7 +159,7 @@ def _compare_results(
     "--resamples",
     type=int,
     help="number of resamples to use for resampling methods",
-    default=99999,
+    default=stats_util.DEFAULT_RESAMPLING_COUNT,
 )
 @click.option(
     "--deterministic/--no-deterministic",
