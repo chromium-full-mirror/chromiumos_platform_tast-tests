@@ -31,6 +31,8 @@ const (
 	expectedDefinitionText = "twenty plane faces"
 
 	testFileName = "quick_answers.html"
+
+	regexQuickAnswersURL = "https://www.google.com/httpservice/web/KnowledgeApiService/Search.*"
 )
 
 // DefinitionTestCase defines test expectations based on the value of policy QuickAnswersDefinitionEnabled.
@@ -39,6 +41,10 @@ type DefinitionTestCase struct {
 	ShouldFindAnnotation  bool
 	ShouldShowContextMenu bool
 	Policy                *policy.QuickAnswersDefinitionEnabled
+	// TrafficShouldFind states the traffic should be found during tests.
+	TrafficShouldFind []string
+	// TrafficShouldNotFind states the traffic should NOT be found during tests.
+	TrafficShouldNotFind []string
 }
 
 // DefinitionTestCases returns the map of policy setting enum to DefinitionTestCase
@@ -50,18 +56,24 @@ func DefinitionTestCases() map[networkrequestmonitor.PolicySetting]DefinitionTes
 			ShouldFindAnnotation:  false,
 			ShouldShowContextMenu: false,
 			Policy:                &policy.QuickAnswersDefinitionEnabled{Val: false},
+			TrafficShouldFind:     []string{},
+			TrafficShouldNotFind:  []string{regexQuickAnswersURL},
 		},
 		networkrequestmonitor.PolicyEnabled: {
 			Name:                  "enabled",
 			ShouldFindAnnotation:  true,
 			ShouldShowContextMenu: true,
 			Policy:                &policy.QuickAnswersDefinitionEnabled{Val: true},
+			TrafficShouldFind:     []string{regexQuickAnswersURL},
+			TrafficShouldNotFind:  []string{},
 		},
 		networkrequestmonitor.PolicyUnset: {
 			Name:                  "unset",
 			ShouldFindAnnotation:  true,
 			ShouldShowContextMenu: true,
 			Policy:                &policy.QuickAnswersDefinitionEnabled{Stat: policy.StatusUnset},
+			TrafficShouldFind:     []string{regexQuickAnswersURL},
+			TrafficShouldNotFind:  []string{},
 		},
 	}
 }
@@ -72,6 +84,10 @@ type UnitConversionTestCase struct {
 	ShouldFindAnnotation  bool
 	ShouldShowContextMenu bool
 	Policy                *policy.QuickAnswersUnitConversionEnabled
+	// TrafficShouldFind states the traffic should be found during tests.
+	TrafficShouldFind []string
+	// TrafficShouldNotFind states the traffic should NOT be found during tests.
+	TrafficShouldNotFind []string
 }
 
 // UnitConversionTestCases returns the map of policy setting enum to UnitConversionTestCase
@@ -83,18 +99,24 @@ func UnitConversionTestCases() map[networkrequestmonitor.PolicySetting]UnitConve
 			ShouldFindAnnotation:  false,
 			ShouldShowContextMenu: false,
 			Policy:                &policy.QuickAnswersUnitConversionEnabled{Val: false},
+			TrafficShouldFind:     []string{},
+			TrafficShouldNotFind:  []string{regexQuickAnswersURL},
 		},
 		networkrequestmonitor.PolicyEnabled: {
 			Name:                  "enabled",
 			ShouldFindAnnotation:  true,
 			ShouldShowContextMenu: true,
 			Policy:                &policy.QuickAnswersUnitConversionEnabled{Val: true},
+			TrafficShouldFind:     []string{regexQuickAnswersURL},
+			TrafficShouldNotFind:  []string{},
 		},
 		networkrequestmonitor.PolicyUnset: {
 			Name:                  "unset",
 			ShouldFindAnnotation:  true,
 			ShouldShowContextMenu: true,
 			Policy:                &policy.QuickAnswersUnitConversionEnabled{Stat: policy.StatusUnset},
+			TrafficShouldFind:     []string{regexQuickAnswersURL},
+			TrafficShouldNotFind:  []string{},
 		},
 	}
 }
