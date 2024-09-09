@@ -74,7 +74,7 @@ def _plot_box(pair: analysis_results.PairwiseResult) -> figure.Figure:
 def create_plots(
     *,
     results: list[analysis_results.AnalysisResult],
-    plots: list[PlotKind],
+    plots: set[PlotKind],
     plot_dir: pathlib.Path,
 ) -> None:
     """Creates and saves plots for the given results and plot kinds.

@@ -10,7 +10,7 @@ from analyzer.analysis import analysis_results
 from analyzer.analysis import analyze_results
 from analyzer.analysis import metric_sample
 from analyzer.analysis import stats_util
-from analyzer.backend import tast_results_dir
+from tests import test_util
 
 
 FILES_DIR: pathlib.Path = (
@@ -19,41 +19,8 @@ FILES_DIR: pathlib.Path = (
 
 
 class AnalysisTest(unittest.TestCase):
-    def _load_before_samples(self) -> list[metric_sample.MetricSample]:
-        results = tast_results_dir._load_results_from_results_chart_json(
-            path=pathlib.Path(
-                "/before/tests/ui.OverviewPerf/results-chart.json"
-            ),
-            json_str=FILES_DIR.joinpath(
-                "results-chart-analysis1.json"
-            ).read_text(),
-            label="before",
-        )
-        return analyze_results._load_samples_from_test_results(results)
-
-    def _load_after_samples(self) -> list[metric_sample.MetricSample]:
-        results = tast_results_dir._load_results_from_results_chart_json(
-            path=pathlib.Path(
-                "/after/tests/ui.OverviewPerf/results-chart.json"
-            ),
-            json_str=FILES_DIR.joinpath(
-                "results-chart-analysis2.json"
-            ).read_text(),
-            label="after",
-        )
-        return analyze_results._load_samples_from_test_results(results)
-
-    def _samples_by_id(
-        self, samples: list[metric_sample.MetricSample]
-    ) -> dict[str, metric_sample.MetricSample]:
-        samples_by_id = {}
-        for s in samples:
-            assert s.sample_id not in samples_by_id
-            samples_by_id[s.sample_id] = s
-        return samples_by_id
-
     def test_load_samples(self) -> None:
-        before_samples = self._load_before_samples()
+        before_samples = test_util.load_before_samples()
 
         self.assertEqual(
             before_samples,
@@ -92,7 +59,7 @@ class AnalysisTest(unittest.TestCase):
             ],
         )
 
-        after_samples = self._load_after_samples()
+        after_samples = test_util.load_after_samples()
         self.assertEqual(
             after_samples,
             [
@@ -131,8 +98,10 @@ class AnalysisTest(unittest.TestCase):
         )
 
     def test_construct_experiment_groups_list(self) -> None:
-        samples = self._load_before_samples() + self._load_after_samples()
-        samples_by_id = self._samples_by_id(samples)
+        samples = (
+            test_util.load_before_samples() + test_util.load_after_samples()
+        )
+        samples_by_id = test_util.samples_by_id(samples)
 
         groups_list = analysis_results.construct_experiment_groups_list(
             samples, analysis_cfg.AnalysisCfg()
@@ -171,8 +140,8 @@ class AnalysisTest(unittest.TestCase):
     def test_explicit_experiment_group_configuration(self) -> None:
         # With explicit experiment group configuration, we should look at
         # only the explicitly set groups if there is only one label.
-        before_samples = self._load_before_samples()
-        before_samples_by_id = self._samples_by_id(before_samples)
+        before_samples = test_util.load_before_samples()
+        before_samples_by_id = test_util.samples_by_id(before_samples)
         cfg = analysis_cfg.AnalysisCfg(
             experiment_cfg=analysis_cfg.ExperimentCfg(
                 experiment_groups_cfgs=[
@@ -226,8 +195,8 @@ class AnalysisTest(unittest.TestCase):
         # If there are two labels, look at the explicit experiment groups and
         # the implicit ones between two samples with different labels but the
         # same metric path.
-        samples = before_samples + self._load_after_samples()
-        samples_by_id = self._samples_by_id(samples)
+        samples = before_samples + test_util.load_after_samples()
+        samples_by_id = test_util.samples_by_id(samples)
         cfg = analysis_cfg.AnalysisCfg(
             experiment_cfg=analysis_cfg.ExperimentCfg(
                 experiment_groups_cfgs=[
@@ -296,8 +265,10 @@ class AnalysisTest(unittest.TestCase):
         )
 
     def test_prune_samples(self) -> None:
-        samples = self._load_before_samples() + self._load_after_samples()
-        samples_by_id = self._samples_by_id(samples)
+        samples = (
+            test_util.load_before_samples() + test_util.load_after_samples()
+        )
+        samples_by_id = test_util.samples_by_id(samples)
 
         # before.ui.OverviewPerf.Test.One.average has only zeros, so we should skip it.
         self.assertEqual(
@@ -317,8 +288,10 @@ class AnalysisTest(unittest.TestCase):
         )
 
     def test_split_better_and_worse_by_mean(self) -> None:
-        samples = self._load_before_samples() + self._load_after_samples()
-        samples_by_id = self._samples_by_id(samples)
+        samples = (
+            test_util.load_before_samples() + test_util.load_after_samples()
+        )
+        samples_by_id = test_util.samples_by_id(samples)
 
         groups_list = analysis_results.construct_experiment_groups_list(
             samples, analysis_cfg.AnalysisCfg()
@@ -479,8 +452,8 @@ class AnalysisTest(unittest.TestCase):
         self.assertAlmostEqual(pruned[1].pairs[2].hypothesis_result.p, 0.03)
 
     def test_prune_experiment_cfg(self) -> None:
-        samples = self._load_before_samples()
-        samples_by_id = self._samples_by_id(samples)
+        samples = test_util.load_before_samples()
+        samples_by_id = test_util.samples_by_id(samples)
 
         cfg = analysis_cfg.ExperimentCfg()
         no_change = analyze_results._prune_experiment_cfg(samples, cfg)
@@ -501,8 +474,8 @@ class AnalysisTest(unittest.TestCase):
         )
 
     def test_prune_regex_include(self) -> None:
-        before_samples = self._load_before_samples()
-        before_samples_by_id = self._samples_by_id(before_samples)
+        before_samples = test_util.load_before_samples()
+        before_samples_by_id = test_util.samples_by_id(before_samples)
 
         self.assertEqual(
             before_samples,
@@ -526,8 +499,8 @@ class AnalysisTest(unittest.TestCase):
             analyze_results._prune_regex_include(before_samples, "Test.*o"),
         )
 
-        after_samples = self._load_after_samples()
-        after_samples_by_id = self._samples_by_id(after_samples)
+        after_samples = test_util.load_after_samples()
+        after_samples_by_id = test_util.samples_by_id(after_samples)
         self.assertEqual(
             [after_samples_by_id["after.ui.OverviewPerf.Test.Three.average"]],
             analyze_results._prune_regex_include(
@@ -536,8 +509,8 @@ class AnalysisTest(unittest.TestCase):
         )
 
     def test_prune_regex_exclude(self) -> None:
-        before_samples = self._load_before_samples()
-        before_samples_by_id = self._samples_by_id(before_samples)
+        before_samples = test_util.load_before_samples()
+        before_samples_by_id = test_util.samples_by_id(before_samples)
 
         self.assertEqual(
             [],
@@ -573,8 +546,8 @@ class AnalysisTest(unittest.TestCase):
             analyze_results._prune_regex_exclude(before_samples, "Test.*o"),
         )
 
-        after_samples = self._load_after_samples()
-        after_samples_by_id = self._samples_by_id(after_samples)
+        after_samples = test_util.load_after_samples()
+        after_samples_by_id = test_util.samples_by_id(after_samples)
         self.assertEqual(
             [
                 after_samples_by_id["after.ui.OverviewPerf.Test.Four.average"],

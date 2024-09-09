@@ -123,16 +123,26 @@ want to see if the standard deviation has changed, you can run with `stddev`.
 This may be useful for detecting changes that make things more janky or
 variable.
 
-## How to generate graphs
+## How to generate graphs and a summary report
 
 Tast-analyzer can also generate graphs. For example, it can generate CDF graphs:
 
 ![CDF graph example](./example_cdf.png)
 
-To generate graphs, provide the `--plots` and `--plot-dir` option.
+To generate graphs, provide the `--outputs` and `--output-dir` option.
 
 `python3 -m analyzer.run print-results before_change.json after_change.json
---plots plot-cdf --plot-dir plots`
+--outputs plot-cdf --output-dir plots`
+
+Similarly, a summary report can be generated with `--outputs report`:
+
+`python3 -m analyzer.run print-results before_change.json after_change.json
+--outputs report --output-dir report`
+
+Generating both graphs and a summary report is also possible by simply using
+the `--output` option multiple times (e.g., `--outputs plot-cdf --outputs
+report`).
+
 
 ## Statistical methodology
 

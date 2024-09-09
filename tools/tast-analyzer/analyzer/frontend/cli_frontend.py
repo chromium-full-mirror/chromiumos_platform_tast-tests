@@ -13,7 +13,9 @@ from analyzer.analysis import analysis_cfg
 from analyzer.analysis import analysis_results
 from analyzer.analysis import analyze_results
 from analyzer.analysis import stats_util
+from analyzer.frontend import output_kind
 from analyzer.frontend import plot_util
+from analyzer.frontend.report import report_util
 import click
 
 
@@ -112,18 +114,18 @@ def _compare_results(
     multiple=True,
 )
 @click.option(
-    "--plots",
-    type=click.Choice(list(plot_util.PlotKind)),
-    help="plots to generate",
+    "--outputs",
+    type=click.Choice(list(output_kind.OutputKind)),
+    help="outputs to generate",
     default=[],
     multiple=True,
 )
 @click.option(
-    "--plot-dir",
+    "--output-dir",
     type=click.Path(
         exists=False, file_okay=False, resolve_path=True, path_type=pathlib.Path
     ),
-    help="directory to output plots in",
+    help="directory to output artifacts (plots, report, etc.) in",
     required=False,
 )
 @click.option(
@@ -214,8 +216,8 @@ def _compare_results(
 def print_results(
     sample_paths: list[pathlib.Path],
     analyses: list[_CliAnalysis],
-    plots: list[plot_util.PlotKind],
-    plot_dir: pathlib.Path | None,
+    outputs: list[output_kind.OutputKind],
+    output_dir: pathlib.Path | None,
     skip_all_zero: bool,
     minimum_sample_size: int,
     statistic_kind: stats_util.TestStatisticKind,
@@ -263,12 +265,29 @@ def print_results(
         results=results,
         analyses=clicfg.analyses,
     )
-    if plots:
-        assert plot_dir, "must specify a plot directory for plotting"
-        logging.info("Creating plots (this may take a long time)...")
-        plot_util.init_plotting()
-        plot_util.create_plots(
-            results=results,
-            plots=plots,
-            plot_dir=plot_dir,
-        )
+
+    if outputs:
+        assert output_dir, "must specify an output directory for given outputs"
+
+        plots, reports = output_kind.sort_output_kind(outputs)
+        if plots:
+            logging.info("Creating plots (this may take a long time)...")
+            plot_util.init_plotting()
+            plot_util.create_plots(
+                results=results,
+                plots=plots,
+                plot_dir=output_dir,
+            )
+
+        if reports:
+            # Meant to be the project root (tast-analyzer/)
+            root = pathlib.Path(__file__).parent.parent.parent
+            template_dir = root / "configs" / "report" / "templates"
+
+            logging.info("Creating a summary report...")
+            report_util.create_reports(
+                results=results,
+                reports=reports,
+                template_dir=template_dir,
+                output_dir=output_dir,
+            )
