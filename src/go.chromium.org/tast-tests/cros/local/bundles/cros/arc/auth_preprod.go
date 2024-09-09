@@ -31,7 +31,7 @@ func init() {
 		Contacts:     []string{"arc-core@google.com", "jinrongwu@google.com"},
 		// ChromeOS > Software > ARC++ > Core
 		BugComponent: "b:488493",
-		SoftwareDeps: []string{"chrome", "play_store", "gaia", "android_vm"},
+		SoftwareDeps: []string{"chrome", "play_store", "gaia", "android_vm", "no_qemu"},
 		Attr:         []string{"group:external-dependency"},
 		Data:         []string{"gaia_sandbox_config.json"},
 		SearchFlags: []*testing.StringPair{
@@ -59,8 +59,9 @@ func AuthPreprod(ctx context.Context, s *testing.State) {
 	defer arc.RestoreArcvmDevConf(cleanupCtx)
 
 	urlMap := map[string]string{
-		`https://android.googleapis.com/auth`:    `https://jmt17.google.com/canary/auth`,
-		`https://android.googleapis.com/checkin`: `https://jmt17.google.com/canary/checkin`,
+		`https://android.googleapis.com/auth`:                          `https://jmt17.google.com/canary/auth`,
+		`https://android.googleapis.com/checkin`:                       `https://jmt17.google.com/canary/checkin`,
+		`https://oauthtokenbootstrap.googleapis.com/v1/tokenbootstrap`: `https://staging-oauthtokenbootstrap.sandbox.googleapis.com/v1/tokenbootstrap`,
 	}
 	opts := []proxy.Option{
 		proxy.URLRedirect(urlMap),
