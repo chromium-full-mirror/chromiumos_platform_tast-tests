@@ -9,6 +9,7 @@ import (
 	"net"
 	"time"
 
+	"go.chromium.org/tast-tests/cros/local/network/addrutil"
 	"go.chromium.org/tast-tests/cros/local/network/virtualnet"
 	"go.chromium.org/tast-tests/cros/local/network/virtualnet/dnsmasq"
 	"go.chromium.org/tast-tests/cros/local/network/virtualnet/env"
@@ -45,8 +46,8 @@ type SimpleNetworkEnv struct {
 	// Server is the server env (beyond local subnet).
 	Server *env.Env
 
-	ServerAddress *env.IfaceAddrs
-	RouterAddress *env.IfaceAddrs
+	ServerAddress *addrutil.IfaceAddrs
+	RouterAddress *addrutil.IfaceAddrs
 }
 
 // Domain names that DNS server will resolve and can be used for testing
