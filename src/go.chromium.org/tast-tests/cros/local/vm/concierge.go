@@ -58,8 +58,8 @@ func GetRunningConcierge(ctx context.Context, user string) (*Concierge, error) {
 	if err != nil {
 		return nil, errors.Wrap(err, "failed to connect to system bus")
 	}
-	if !dbusutil.ServiceOwned(ctx, conn, conciergeName) {
-		return nil, errors.Wrapf(err, "%s is not owned", conciergeName)
+	if err := dbusutil.WaitForService(ctx, conn, conciergeName); err != nil {
+		return nil, errors.Wrapf(err, "failed to wait until %s is ready", conciergeName)
 	}
 
 	concierge := conn.Object(conciergeName, conciergePath)
