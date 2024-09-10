@@ -6,10 +6,14 @@ package oobe
 
 import (
 	"context"
+	"time"
 
 	"go.chromium.org/tast-tests/cros/common/fixture"
 	"go.chromium.org/tast-tests/cros/local/chrome"
+	"go.chromium.org/tast-tests/cros/local/nebraska"
 	"go.chromium.org/tast-tests/cros/local/oobe"
+	"go.chromium.org/tast-tests/cros/local/updateengine"
+	"go.chromium.org/tast/core/ctxutil"
 	"go.chromium.org/tast/core/testing"
 )
 
@@ -40,6 +44,32 @@ func init() {
 }
 
 func Smoke(ctx context.Context, s *testing.State) {
+	cleanupCtx := ctx
+	ctx, cancel := ctxutil.Shorten(cleanupCtx, time.Second*10)
+	defer cancel()
+
+	updateServer, err := nebraska.New(ctx, nebraska.ConfigureUpdateEngine())
+	if err != nil {
+		s.Fatal("Failed to start nebraska: ", err)
+	}
+	defer updateServer.Close(cleanupCtx)
+
+	if err := updateServer.SetFakedMetadata(ctx); err != nil {
+		s.Fatal("Failed to configure Nebraska with faked update metadata: ", err)
+	}
+
+	if err := updateServer.SetCriticalUpdate(ctx, false); err != nil {
+		s.Fatal("Failed to configure Nebraska with non-critical update: ", err)
+	}
+
+	if err := updateServer.SetNoUpdateAvailable(ctx, true); err != nil {
+		s.Fatal("Failed to configure Nebraska with no update: ", err)
+	}
+
+	if err := updateengine.RestartDaemon(ctx); err != nil {
+		s.Fatal("Failed to restart updateengine daemon: ", err)
+	}
+
 	cr, err := chrome.New(ctx,
 		chrome.FieldTrialConfig(s.Param().(chrome.FieldTrialConfigMode)),
 		chrome.NoLogin())
