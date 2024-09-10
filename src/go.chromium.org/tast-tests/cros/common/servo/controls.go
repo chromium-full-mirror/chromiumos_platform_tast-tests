@@ -50,9 +50,25 @@ func findPowerRails(ctx context.Context, s *Servo, useAccum bool) ([]FloatContro
 	if err != nil {
 		return []FloatControl{}, []IntControl{}, errors.Wrap(err, "failed to get response from servo instance")
 	}
-	if (len(clearCtrlStrs) == 0) || len(ctrlStrs) != len(clearCtrlStrs) {
+
+	// If is_calib is set to false in INA settings avg ctrl is not generated. Try to filter them here.
+	if len(ctrlStrs) < len(clearCtrlStrs) {
+		var filtered []string
+		clearRegexp := regexp.MustCompile("_acc_clear$")
+		for _, c := range clearCtrlStrs {
+			toFind := clearRegexp.ReplaceAllString(c, "_avg_mw")
+			for _, d := range ctrlStrs {
+				if toFind == d {
+					filtered = append(filtered, c)
+					break
+				}
+			}
+		}
+		clearCtrlStrs = filtered
+	} else if (len(clearCtrlStrs) == 0) || len(ctrlStrs) != len(clearCtrlStrs) {
 		return []FloatControl{}, []IntControl{}, errors.New("failed to detect support for accum rails")
 	}
+
 	var clearCtrls []IntControl
 	for _, c := range clearCtrlStrs {
 		clearCtrls = append(clearCtrls, IntControl(c))
