@@ -53,6 +53,9 @@ func ServoGBBFlags(ctx context.Context, s *testing.State) {
 	if err := h.RequirePlatform(ctx); err != nil {
 		s.Fatal("Failed to require platform: ", err)
 	}
+	if err := h.RequireConfig(ctx); err != nil {
+		s.Fatal("Failed to require config: ", err)
+	}
 	if err := h.RequireServo(ctx); err != nil {
 		s.Fatal("Failed to connect to servo: ", err)
 	}
@@ -139,7 +142,14 @@ func ServoGBBFlags(ctx context.Context, s *testing.State) {
 	if !cmp.Equal(old.Set, ret.Set, sortSlice) {
 		s.Fatal("GBB flags from CDD do not match SSH'd GBB flags ", cmp.Diff(old.Set, ret.Set, sortSlice))
 	}
-	// Flashrom restarts the dut, so wait for it to boot
+	// GoBigSleepLint: Flashrom usually restarts the dut, but on a few platforms it might require a power press to come back on.
+	// But you can't press the power button too soon, or it will be ignored.
+	if err := testing.Sleep(ctx, 2*time.Second); err != nil {
+		s.Fatal("Pre-power button sleep failed: ", err)
+	}
+	if err := h.Servo.KeypressWithDuration(ctx, servo.PowerKey, servo.Dur(h.Config.HoldPwrButtonPowerOn)); err != nil {
+		s.Fatal("Power button failed: ", err)
+	}
 	s.Log("Waiting for reboot")
 	if err := h.WaitConnect(ctx); err != nil {
 		s.Fatalf("Failed to connect to DUT: %s", err)
@@ -165,7 +175,14 @@ func ServoGBBFlags(ctx context.Context, s *testing.State) {
 		s.Fatalf("Failed to enable %v: %+v", servoSPIControl, err)
 	}
 
-	// Flashrom restarts the dut, so wait for it to boot
+	// GoBigSleepLint: Flashrom usually restarts the dut, but on a few platforms it might require a power press to come back on.
+	// But you can't press the power button too soon, or it will be ignored.
+	if err := testing.Sleep(ctx, 2*time.Second); err != nil {
+		s.Fatal("Pre-power button sleep failed: ", err)
+	}
+	if err := h.Servo.KeypressWithDuration(ctx, servo.PowerKey, servo.Dur(h.Config.HoldPwrButtonPowerOn)); err != nil {
+		s.Fatal("Power button failed: ", err)
+	}
 	s.Log("Waiting for reboot")
 	if err := h.WaitConnect(ctx); err != nil {
 		s.Fatalf("Failed to connect to DUT: %s", err)
