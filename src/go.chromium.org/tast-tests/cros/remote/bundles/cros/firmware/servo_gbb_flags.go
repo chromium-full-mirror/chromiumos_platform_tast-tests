@@ -36,8 +36,12 @@ func init() {
 		Attr:         []string{"group:firmware", "firmware_cr50", "firmware_ccd", "firmware_bios", "firmware_level1"},
 		SoftwareDeps: []string{"flashrom"},
 		Fixture:      fixture.NormalMode,
-		// b/111215677: CCD servo detection doesn't work on soraka.
-		HardwareDeps: hwdep.D(hwdep.SkipOnModel("soraka")),
+		HardwareDeps: hwdep.D(hwdep.SkipOnModel(
+			// b/111215677: CCD servo detection doesn't work on soraka.
+			"soraka",
+			// b/350805894: Fizz devices don't have functional CCD.
+			"jax", "kench", "sion", "talon", "teemo", "twitch", "wukong",
+		)),
 		LacrosStatus: testing.LacrosVariantUnneeded,
 	})
 }
