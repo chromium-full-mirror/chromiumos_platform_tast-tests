@@ -19,12 +19,6 @@ import (
 	"go.chromium.org/tast/core/testing"
 )
 
-// piiTestParam contains all the data needed to run a single test iteration.
-type piiTestParam struct {
-	testType    int
-	browserType browser.Type
-}
-
 // Define test types.
 const (
 	localFileTest int = iota
@@ -37,9 +31,8 @@ const (
 
 func init() {
 	testing.AddTest(&testing.Test{
-		Func:         SysInfoPII,
-		LacrosStatus: testing.LacrosVariantExists,
-		Desc:         "Verify that known-sensitive data doesn't show up in feedback reports",
+		Func: SysInfoPII,
+		Desc: "Verify that known-sensitive data doesn't show up in feedback reports",
 		Contacts: []string{
 			"cros-feedback-app@google.com",
 			"xiangdongkong@google.com",
@@ -56,41 +49,16 @@ func init() {
 			},
 		},
 		Params: []testing.Param{{
-			Name: "local_on_ash",
-			Val: piiTestParam{
-				testType:    localFileTest,
-				browserType: browser.TypeAsh,
-			},
+			Name:      "local_on_ash",
+			Val:       localFileTest,
 			ExtraData: []string{testPageFilename},
 			ExtraAttr: []string{"informational"},
 			Fixture:   "chromeLoggedIn",
 		}, {
-			Name: "third_party_site_on_ash",
-			Val: piiTestParam{
-				testType:    thirdPartySiteTest,
-				browserType: browser.TypeAsh,
-			},
+			Name:      "third_party_site_on_ash",
+			Val:       thirdPartySiteTest,
 			ExtraAttr: []string{"informational"},
 			Fixture:   "chromeLoggedIn",
-		}, {
-			Name: "local_on_lacros",
-			Val: piiTestParam{
-				testType:    localFileTest,
-				browserType: browser.TypeLacros,
-			},
-			ExtraData:         []string{testPageFilename},
-			ExtraAttr:         []string{"informational"},
-			ExtraSoftwareDeps: []string{"lacros"},
-			Fixture:           "lacros",
-		}, {
-			Name: "third_party_site_on_lacros",
-			Val: piiTestParam{
-				testType:    thirdPartySiteTest,
-				browserType: browser.TypeLacros,
-			},
-			ExtraAttr:         []string{"informational"},
-			ExtraSoftwareDeps: []string{"lacros"},
-			Fixture:           "lacros",
 		}},
 	})
 }
@@ -119,8 +87,7 @@ func SysInfoPII(ctx context.Context, s *testing.State) {
 		localPageTitle    = "feedback.SysInfoPII test page title"
 		localPageContents = "feedback.SysInfoPII test page contents"
 	)
-	testType := s.Param().(piiTestParam).testType
-	browserType := s.Param().(piiTestParam).browserType
+	testType := s.Param().(int)
 
 	sensitiveURL := ""
 	sensitiveURLWithoutScheme := ""
@@ -147,7 +114,7 @@ func SysInfoPII(ctx context.Context, s *testing.State) {
 	cr := s.FixtValue().(chrome.HasChrome).Chrome()
 
 	// Set up a browser.
-	conn, br, closeBrowser, err := browserfixt.SetUpWithURL(ctx, cr, browserType, sensitiveURL)
+	conn, br, closeBrowser, err := browserfixt.SetUpWithURL(ctx, cr, browser.TypeAsh, sensitiveURL)
 	if err != nil {
 		s.Fatal("Failed to create new browser window: ", err)
 	}

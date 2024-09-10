@@ -22,9 +22,8 @@ import (
 
 func init() {
 	testing.AddTest(&testing.Test{
-		Func:         LaunchFeedbackFromBrowser,
-		LacrosStatus: testing.LacrosVariantExists,
-		Desc:         "Feedback app can be launched from the browser",
+		Func: LaunchFeedbackFromBrowser,
+		Desc: "Feedback app can be launched from the browser",
 		Contacts: []string{
 			"cros-feedback-app@google.com",
 			"xiangdongkong@google.com",
@@ -40,16 +39,7 @@ func init() {
 				Value: "screenplay-3f028d06-0100-4b5b-b1f3-99ceeaf3d62b",
 			},
 		},
-		Params: []testing.Param{{
-			Name:    "ash",
-			Fixture: "chromeLoggedInWithOsFeedback",
-			Val:     browser.TypeAsh,
-		}, {
-			Name:              "lacros",
-			ExtraSoftwareDeps: []string{"lacros"},
-			Fixture:           "lacrosOsFeedback",
-			Val:               browser.TypeLacros,
-		}},
+		Fixture: "chromeLoggedInWithOsFeedback",
 	})
 }
 
@@ -58,7 +48,6 @@ const settingLinkAddress = "chrome://settings/help"
 // LaunchFeedbackFromBrowser verifies the Feedback app can be launched from the browser.
 func LaunchFeedbackFromBrowser(ctx context.Context, s *testing.State) {
 	cr := s.FixtValue().(chrome.HasChrome).Chrome()
-	bt := s.Param().(browser.Type)
 
 	cleanupCtx := ctx
 	ctx, cancel := ctxutil.Shorten(ctx, 5*time.Second)
@@ -73,7 +62,7 @@ func LaunchFeedbackFromBrowser(ctx context.Context, s *testing.State) {
 
 	ui := uiauto.New(tconn)
 
-	conn, _, closeBrowser, err := browserfixt.SetUpWithURL(ctx, cr, bt, settingLinkAddress)
+	conn, _, closeBrowser, err := browserfixt.SetUpWithURL(ctx, cr, browser.TypeAsh, settingLinkAddress)
 	if err != nil {
 		s.Fatal("Failed to setup chrome: ", err)
 	}
