@@ -18,7 +18,6 @@ import (
 	"go.chromium.org/tast-tests/cros/local/chrome"
 	"go.chromium.org/tast-tests/cros/local/chrome/browser"
 	"go.chromium.org/tast-tests/cros/local/chrome/browser/browserfixt"
-	"go.chromium.org/tast-tests/cros/local/chrome/lacros/lacrosfixt"
 	"go.chromium.org/tast-tests/cros/local/chrome/uiauto"
 	"go.chromium.org/tast-tests/cros/local/chrome/uiauto/faillog"
 	"go.chromium.org/tast-tests/cros/local/chrome/uiauto/nodewith"
@@ -32,10 +31,9 @@ import (
 
 func init() {
 	testing.AddTest(&testing.Test{
-		Func:         Scan,
-		LacrosStatus: testing.LacrosVariantExists,
-		Desc:         "Tests that a scan can be performed using the simple Document Scan API",
-		Contacts:     []string{"project-bolton@google.com", "bmgordon@chromium.org"},
+		Func:     Scan,
+		Desc:     "Tests that a scan can be performed using the simple Document Scan API",
+		Contacts: []string{"project-bolton@google.com", "bmgordon@chromium.org"},
 		// ChromeOS > Platform > Services > Scanning
 		BugComponent: "b:860616",
 		Data:         []string{"manifest.json", "background.js", "scan.css", "scan.html", "scan.js", "scan_escl_ipp_source.jpg", "scan_escl_ipp_golden.png"},
@@ -47,17 +45,6 @@ func init() {
 			"paper-io_scanning",
 		},
 		Fixture: "virtualUsbPrinterModulesLoaded",
-		Params: []testing.Param{
-			{
-				Val: browser.TypeAsh,
-			},
-			{
-				Name:              "lacros",
-				Val:               browser.TypeLacros,
-				ExtraSoftwareDeps: []string{"lacros"},
-				ExtraAttr:         []string{"informational"},
-			},
-		},
 	})
 }
 
@@ -80,20 +67,13 @@ func Scan(ctx context.Context, s *testing.State) {
 		s.Fatal("Failed setup of Document Scan extension: ", err)
 	}
 
-	bt := s.Param().(browser.Type)
-	var extOpt []chrome.Option
-	if bt == browser.TypeLacros {
-		extOpt = append(extOpt, chrome.LacrosUnpackedExtension(extDir))
-	} else {
-		extOpt = append(extOpt, chrome.UnpackedExtension(extDir))
-	}
-	cr, err := browserfixt.NewChrome(ctx, bt, lacrosfixt.NewConfig(), extOpt...)
+	cr, err := browserfixt.NewChrome(ctx, browser.TypeAsh, nil, chrome.UnpackedExtension(extDir))
 	if err != nil {
 		s.Fatal("Failed to connect to Chrome: ", err)
 	}
 	defer cr.Close(cleanupCtx)
 
-	br, closeBrowser, err := browserfixt.SetUp(ctx, cr, bt)
+	br, closeBrowser, err := browserfixt.SetUp(ctx, cr, browser.TypeAsh)
 	if err != nil {
 		s.Fatal("Failed to launch browser: ", err)
 	}
