@@ -566,8 +566,13 @@ func (f *cellularFixture) SetUp(ctx context.Context, s *testing.FixtState) inter
 		}
 	}(s)
 
+	checkCtx, cancel := context.WithTimeout(ctx, time.Minute)
+	defer cancel()
+
 	// b/289540816: Ensure the APN in the modem doesn't contain a leftover value from a manual test.
-	CheckIfL850VerizonAndFixDefaultAPN(ctx)
+	if err := CheckIfL850VerizonAndFixDefaultAPN(checkCtx); err != nil {
+		s.Log("Failed to fix default APN when the device has a L850GL modem with a verizon SIM card: ", err)
+	}
 
 	// Ensure that the primary SIM slot has a valid SIM.
 	if !(f.useTestESIM || f.restartMM || f.sf != nil) {

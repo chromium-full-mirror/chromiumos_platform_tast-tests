@@ -163,46 +163,49 @@ func isL850Verizon(ctx context.Context, modem *modemmanager.Modem) bool {
 // CheckIfL850VerizonAndFixDefaultAPN checks if the device has a L850GL modem with a verizon SIM card,
 // and tries to fix the default APN in the modem. This is needed because there are 2 bugs
 // in the modem FW that causes the modem to report the last used APN as provisioned by the carrier(b/289540816, b/289530609).
-func CheckIfL850VerizonAndFixDefaultAPN(ctx context.Context) {
+func CheckIfL850VerizonAndFixDefaultAPN(ctx context.Context) error {
 	modem, err := modemmanager.NewModem(ctx)
 	if err != nil {
-		testing.ContextLog(ctx, "Failed to get new modem: ", err)
-		return
+		return errors.Wrap(err, "failed to get new modem")
 	}
+
 	if !isL850Verizon(ctx, modem) {
-		return
+		return nil
 	}
 
 	testing.ContextLog(ctx, "Verizon L850 device: Try fixing the default APN")
 	h, err := NewHelper(ctx)
 	if err != nil {
-		testing.ContextLog(ctx, "Failed to create helper: ", err)
-		return
+		return errors.Wrap(err, "failed to create helper")
 	}
+
+	cleanupCtx := ctx
+	ctx, cancel := ctxutil.Shorten(ctx, 10*time.Second)
+	defer cancel()
+	// Ensure the bearer object will be removed.
+	defer modem.DeleteAllBearers(cleanupCtx, modem)
+
 	// Ignore errors. Do best effort to fix the modem
 	if enabled, _ := h.Manager.IsEnabled(ctx, shill.TechnologyCellular); enabled {
 		_, _ = h.Disable(ctx)
-		defer h.Enable(ctx)
+		defer h.Enable(cleanupCtx)
 	}
 
 	if err := modem.Enable(ctx); err != nil {
-		testing.ContextLog(ctx, "Failed to enable: ", err)
+		return errors.Wrap(err, "failed to enable modem")
 	}
 	if err := modem.DisconnectAll(ctx); err != nil {
-		testing.ContextLog(ctx, "Failed to disconnect: ", err)
+		return errors.Wrap(err, "failed to disconnect all bearers")
 	}
 	// We don't use the profile-id number here because we want to override the APN in the modem to fix an invalid APN if there is one.
 	if _, err := modem.Connect(ctx, map[string]interface{}{"apn": "vzwinternet", "ip-type": mmconst.BearerIPFamilyIPv4v6}); err != nil {
-		testing.ContextLog(ctx, "Failed to connect: ", err)
+		return errors.Wrap(err, "failed to connect to APN")
 	}
 	if err := modem.DisconnectAll(ctx); err != nil {
-		testing.ContextLog(ctx, "Failed to disconnect: ", err)
+		return errors.Wrap(err, "failed to disconnect all bearers")
 	}
 
-	// Ensure we remove the bearer object created during the previous steps.
-	modem.DeleteAllBearers(ctx, modem)
-
-	return
+	return nil
 }
 
 // RebootL850VerizonIfModemCanNoLongerConnect checks if the device has a L850GL modem with a verizon SIM card,

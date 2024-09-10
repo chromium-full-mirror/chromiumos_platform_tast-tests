@@ -97,7 +97,9 @@ func ShillCustomApn(ctx context.Context, s *testing.State) {
 	ctx, cancel = ctxutil.Shorten(ctx, 4*time.Second)
 	defer cancel()
 	defer func(ctx context.Context) {
-		cellular.CheckIfL850VerizonAndFixDefaultAPN(ctx)
+		if err := cellular.CheckIfL850VerizonAndFixDefaultAPN(ctx); err != nil {
+			s.Log("Failed to fix default APN when the device has a L850GL modem with a verizon SIM card: ", err)
+		}
 	}(cleanupCtx)
 
 	deferCleanUp, err := cellular.SetServiceProvidersExclusiveOverride(ctx, s.DataPath(modbOverrideProto))
