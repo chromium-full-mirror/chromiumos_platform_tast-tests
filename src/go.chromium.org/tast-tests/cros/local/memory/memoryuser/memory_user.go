@@ -9,7 +9,6 @@ package memoryuser
 import (
 	"context"
 	"fmt"
-	"io/ioutil"
 	"os"
 	"path/filepath"
 	"time"
@@ -24,7 +23,6 @@ import (
 	"go.chromium.org/tast-tests/cros/local/chrome/browser/browserfixt"
 	"go.chromium.org/tast-tests/cros/local/memory/kernelmeter"
 	"go.chromium.org/tast-tests/cros/local/resourced"
-	"go.chromium.org/tast-tests/cros/local/upstart"
 	"go.chromium.org/tast-tests/cros/local/wpr"
 	"go.chromium.org/tast/core/ctxutil"
 	"go.chromium.org/tast/core/errors"
@@ -69,6 +67,7 @@ func logCmd(ctx context.Context, outfile, cmdStr string, args ...string) {
 	}
 	defer file.Close()
 	for {
+		// GoBigSleepLint: This is to log in 5 second interval periodically.
 		if err := testing.Sleep(ctx, 5*time.Second); err != nil {
 			return
 		}
@@ -83,42 +82,6 @@ func logCmd(ctx context.Context, outfile, cmdStr string, args ...string) {
 			return
 		}
 	}
-}
-
-// copyMemdLogs copies the memd log files into the output directory of the test.
-func copyMemdLogs(outDir string) error {
-	const inputDir = "/var/log/memd"
-	files, err := ioutil.ReadDir(inputDir)
-	if err != nil {
-		return errors.Wrap(err, "cannot read memd")
-	}
-
-	for _, file := range files {
-		inputFile := filepath.Join(inputDir, file.Name())
-		if err = fsutil.CopyFile(inputFile, filepath.Join(outDir, file.Name())); err != nil {
-			return errors.Wrap(err, "cannot copy memd file")
-		}
-	}
-	return nil
-}
-
-// prepareMemdLogging restarts memd and removes old memd log files.
-func prepareMemdLogging(ctx context.Context) error {
-	if err := upstart.RestartJob(ctx, "memd"); err != nil {
-		return errors.Wrap(err, "cannot restart memd")
-	}
-	const clipFilesPattern = "/var/log/memd/memd.clip*.log"
-	// Remove any clip files from /var/log/memd.
-	files, err := filepath.Glob(clipFilesPattern)
-	if err != nil {
-		return errors.Wrapf(err, "cannot list %v", clipFilesPattern)
-	}
-	for _, file := range files {
-		if err = os.Remove(file); err != nil {
-			return errors.Wrapf(err, "cannot remove %v", file)
-		}
-	}
-	return nil
 }
 
 // resetAndLogStats logs the VM stats from the provided kernelmeter with the identifying label,
@@ -390,7 +353,7 @@ func (te *TestEnv) Close(ctx context.Context, p *RunParameters) {
 }
 
 // RunTest creates a new TestEnv and then runs ARC, Chrome, and VM tasks in parallel.
-// It also logs memory and cpu usage throughout the test, and copies output from /var/log/memd and /var/log/vmlog
+// It also logs memory and cpu usage throughout the test, and copies output from and /var/log/vmlog
 // when finished.
 // All passed-in tasks will be closed automatically.
 func RunTest(ctx context.Context, outDir string, tasks []MemoryTask, p *RunParameters) (errRet error) {
@@ -403,9 +366,6 @@ func RunTest(ctx context.Context, outDir string, tasks []MemoryTask, p *RunParam
 	}
 	defer testEnv.Close(ctx, p)
 
-	if err = prepareMemdLogging(ctx); err != nil {
-		return errors.Wrap(err, "failed to prepare memd logging")
-	}
 	go logCmd(ctx, filepath.Join(outDir, "memory_use.txt"), "cat", "/proc/meminfo")
 	go logCmd(ctx, filepath.Join(outDir, "cpu_use.txt"), "iostat", "-c")
 
@@ -456,9 +416,6 @@ func RunTest(ctx context.Context, outDir string, tasks []MemoryTask, p *RunParam
 	const vmlog = "/var/log/vmlog/vmlog.LATEST"
 	if err := fsutil.CopyFile(vmlog, filepath.Join(outDir, filepath.Base(vmlog))); err != nil {
 		return errors.Wrapf(err, "failed to copy %v", vmlog)
-	}
-	if err = copyMemdLogs(outDir); err != nil {
-		return errors.Wrap(err, "failed to get memd files")
 	}
 
 	setPerfValues(testMeter, testEnv.p, "full_test")
