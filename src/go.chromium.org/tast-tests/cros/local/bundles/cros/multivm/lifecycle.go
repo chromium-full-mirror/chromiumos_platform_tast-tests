@@ -35,6 +35,7 @@ func init() {
 		Contacts: []string{
 			"arcvm-memory@google.com",
 			"cwd@google.com",
+			"kawasin@google.com",
 		},
 		// ChromeOS > Platform > baseOS > Virtualization > ARC++ & ARCVM
 		BugComponent: "b:882467",
