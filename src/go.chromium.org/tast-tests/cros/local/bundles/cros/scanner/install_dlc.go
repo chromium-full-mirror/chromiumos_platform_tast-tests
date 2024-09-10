@@ -34,7 +34,7 @@ func init() {
 			"informational",
 			"paper-io_scanning",
 		},
-		SoftwareDeps: []string{"cups", "chrome", "dlc"},
+		SoftwareDeps: []string{"chrome", "cros_internal", "cups", "dlc"},
 		Fixture:      "virtualUsbPrinterModulesLoadedWithChromeLoggedIn",
 	})
 }
