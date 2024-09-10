@@ -447,13 +447,18 @@ func collectExtraDebugInfo(ctx context.Context, s *testing.State) (bool, error) 
 	return true, nil
 }
 
-func bootPerfMetricBounds(features *protocol.DUTFeatures) []bounds.MetricBounds {
-	cpu := features.GetHardware().GetDeprecatedDeviceConfig().GetCpu()
+func bootPerfMetricBounds(ctx context.Context, features *protocol.DUTFeatures) []bounds.MetricBounds {
 	maxSecondsPowerOnToKernel := 1.0
-	// The firmware qual manual test said to give extra time to Intel Big Core ADL/RPL only, but it appears we give a waiver for every X86 platform.
-	// https://testtracker.googleplex.com/tc/fe77643b-9b26-4e48-9d82-922a385845a2?tp_id=382
-	if cpu == protocol.DeprecatedDeviceConfig_X86 || cpu == protocol.DeprecatedDeviceConfig_X86_64 {
+
+	// Intel MeteorLake and newer always have FW splash screen, and get +0.35s
+	if ok, _, _ := hwdep.IsIntelUarchEqualOrNewerThan(hwdep.IntelUarchs{IntelBigCoreOrderList: []hwdep.IntelBigCoreOrder{hwdep.MeteorLake}}).Satisfied(features.GetHardware()); ok {
+		maxSecondsPowerOnToKernel += 0.35
+		// Intel AlderLake & RaptorLake get +0.3s, unless they have the FW splash screen enabled, then they get that +0.25s
+	} else if ok, _, _ := hwdep.IsIntelUarchEqualOrNewerThan(hwdep.IntelUarchs{IntelBigCoreOrderList: []hwdep.IntelBigCoreOrder{hwdep.AlderLake}}).Satisfied(features.GetHardware()); ok {
 		maxSecondsPowerOnToKernel += 0.3
+		if ok, _, _ := hwdep.FirmwareSplashScreen().Satisfied(features.GetHardware()); ok {
+			maxSecondsPowerOnToKernel += 0.25
+		}
 	}
 	return []bounds.MetricBounds{
 		{
@@ -484,7 +489,7 @@ func BootPerf(ctx context.Context, s *testing.State) {
 
 	d := s.DUT()
 
-	var bootPerfMetricBounds = bootPerfMetricBounds(s.Features(""))
+	var bootPerfMetricBounds = bootPerfMetricBounds(ctx, s.Features(""))
 
 	// Parse test options.
 	skipRootfsCheck := defaultSkipRootfsCheck
