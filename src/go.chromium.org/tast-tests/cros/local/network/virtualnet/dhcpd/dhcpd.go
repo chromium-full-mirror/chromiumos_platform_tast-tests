@@ -14,9 +14,11 @@ import (
 	"os"
 
 	"go.chromium.org/tast-tests/cros/common/testexec"
+	"go.chromium.org/tast-tests/cros/local/network/addrutil"
 	"go.chromium.org/tast-tests/cros/local/network/virtualnet/env"
 	"go.chromium.org/tast-tests/cros/local/network/virtualnet/subnet"
 	"go.chromium.org/tast/core/errors"
+	"go.chromium.org/tast/core/testing"
 )
 
 const confTemplate = `
@@ -44,7 +46,8 @@ const (
 type dhcpd struct {
 	env *env.Env
 
-	subnet *subnet.IPv6Subnet
+	subnet          *subnet.IPv6Subnet
+	delegatedPrefix *subnet.IPv6Subnet
 
 	cmd *testexec.Cmd
 }
@@ -81,15 +84,16 @@ func (d *dhcpd) Start(ctx context.Context, env *env.Env) error {
 
 	if d.subnet != nil {
 		serverAddr := d.subnet.GetAddrEndWith(2)
-		delegatedPrefix := d.subnet.GetSecondSlash64()
+		d.delegatedPrefix = d.subnet.GetSecondSlash64()
 
 		confVals["subnet"] = d.subnet.String()
-		confVals["delegated_prefix"] = delegatedPrefix.IP.String()
+		confVals["delegated_prefix"] = d.delegatedPrefix.IP.String()
 
-		// Install gateway address and routes.
-		if err := d.env.ConfigureInterface(ctx, d.env.VethInName, serverAddr, d.subnet); err != nil {
-			return errors.Wrap(err, "failed to configure IP/route in router netns")
+		// Install gateway address.
+		if err := d.env.RunWithoutChroot(ctx, "ip", "addr", "add", serverAddr.String(), "dev", d.env.VethInName); err != nil {
+			return errors.Wrapf(err, "failed to install address %s on %s", serverAddr.String(), d.env.VethInName)
 		}
+		testing.ContextLogf(ctx, "Installed %s on interface %s in netns %s", serverAddr.String(), d.env.VethInName, d.env.NetNSName)
 	}
 
 	b := &bytes.Buffer{}
@@ -144,4 +148,21 @@ func (d *dhcpd) Stop(ctx context.Context) error {
 // WriteLogs writes traces into |f|.
 func (d *dhcpd) WriteLogs(ctx context.Context, f *os.File) error {
 	return d.env.ReadAndWriteLogIfExists(d.env.ChrootPath(logPath), f)
+}
+
+// AddDelegatedPrefixRouteToClient adds into the dhcpd server namespace a route
+// to the delegated prefix through the DHCP client. This needs to be called
+// manually after the DHCP negotiation as dhcpd is missing the functionality to
+// add this automatically.
+func (d *dhcpd) AddDelegatedPrefixRouteToClient(ctx context.Context) error {
+	hostAddrs, err := addrutil.ReadInterfaceAddresses(d.env.VethOutName)
+	if err != nil {
+		return errors.Wrapf(err, "failed to get link local addresson %s", d.env.VethInName)
+	}
+	hostLinkLocal := hostAddrs.LinkLocalIPv6Addr
+	if err := d.env.RunWithoutChroot(ctx, "ip", "route", "add", d.delegatedPrefix.String(), "dev", d.env.VethInName, "via", hostLinkLocal.String()); err != nil {
+		return errors.Wrapf(err, "failed to install route to %s through %s on %s", d.delegatedPrefix.String(), hostLinkLocal.String(), d.env.VethInName)
+	}
+	testing.ContextLogf(ctx, "Installed route to %s through %s on interface %s in netns %s", d.delegatedPrefix.String(), hostLinkLocal.String(), d.env.VethInName, d.env.NetNSName)
+	return nil
 }

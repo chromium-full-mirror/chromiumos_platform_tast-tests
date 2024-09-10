@@ -9,17 +9,22 @@ import (
 	"time"
 
 	"go.chromium.org/tast-tests/cros/common/shillconst"
+	"go.chromium.org/tast-tests/cros/common/testexec"
+	"go.chromium.org/tast-tests/cros/local/arc"
+	arcnet "go.chromium.org/tast-tests/cros/local/network/arc"
 	"go.chromium.org/tast-tests/cros/local/network/ping"
 	"go.chromium.org/tast-tests/cros/local/network/routing"
 	"go.chromium.org/tast-tests/cros/local/network/testhooks"
 	"go.chromium.org/tast-tests/cros/local/network/virtualnet/dhcpd"
 	"go.chromium.org/tast-tests/cros/local/network/virtualnet/radvd"
 	"go.chromium.org/tast/core/ctxutil"
+	"go.chromium.org/tast/core/errors"
 	"go.chromium.org/tast/core/testing"
 )
 
 type dhcppdTestParams struct {
 	hasIPv4 bool
+	hasARC  bool
 }
 
 func init() {
@@ -37,6 +42,21 @@ func init() {
 			Val: dhcppdTestParams{
 				hasIPv4: true,
 			},
+		}, {
+			Name: "with_arc",
+			Val: dhcppdTestParams{
+				hasARC: true,
+			},
+			ExtraSoftwareDeps: []string{"arc", "chrome"},
+			Fixture:           "arcBooted.ehide",
+		}, {
+			Name: "with_arc_with_ipv4",
+			Val: dhcppdTestParams{
+				hasIPv4: true,
+				hasARC:  true,
+			},
+			ExtraSoftwareDeps: []string{"arc", "chrome"},
+			Fixture:           "arcBooted.ehide",
 		}},
 	})
 }
@@ -47,19 +67,25 @@ func DHCPPD(ctx context.Context, s *testing.State) {
 	ctx, cancel := ctxutil.Shorten(ctx, 10*time.Second)
 	defer cancel()
 
+	hasIPv4 := s.Param().(dhcppdTestParams).hasIPv4
+	hasARC := s.Param().(dhcppdTestParams).hasARC
+	var a *arc.ARC
+	if hasARC {
+		a = s.FixtValue().(*arc.PreData).ARC
+	}
+
 	hookEnv, err := testhooks.RunNetworkTestHooks(ctx,
 		testhooks.NewSaveNetLogHook(),
 		testhooks.NewResetVirtualnetHook(),
 		testhooks.NewTcpdumpHook(),
 		testhooks.NewDumpHostOnFailureHook(),
+		testhooks.NewDumpARCOnFailureHook(a),
 	)
 	if err != nil {
 		s.Fatal("Failed to run network test hooks: ", err)
 	}
 	s.AttachErrorHandlers(hookEnv.OnErrorHandler, hookEnv.OnFatalHandler)
 	defer hookEnv.TearDownWithLogFailures(cleanupCtx, s.HasError)
-
-	hasIPv4 := s.Param().(dhcppdTestParams).hasIPv4
 
 	// Set up test topology.
 	testEnv := routing.NewSimpleNetworkEnv(hasIPv4, false, hasIPv4, false)
@@ -80,13 +106,22 @@ func DHCPPD(ctx context.Context, s *testing.State) {
 	if err := testEnv.Router.StartServer(ctx, "radvd", radvd.New(nil, []string{"fd00::1"})); err != nil {
 		s.Fatal("Failed to start radvd: ", err)
 	}
-	if err := testEnv.Router.StartServer(ctx, "dhcpd", dhcpd.New(dhcpd.WithDHCPPD(subnet))); err != nil {
+	d := dhcpd.New(dhcpd.WithDHCPPD(subnet))
+	if err := testEnv.Router.StartServer(ctx, "dhcpd", d); err != nil {
 		s.Fatal("Failed to start dhcpd: ", err)
 	}
 
+	// Wait for service to be online.
 	if err := testEnv.ShillService.WaitForProperty(ctx, shillconst.ServicePropertyState, shillconst.ServiceStateOnline, 10*time.Second); err != nil {
 		s.Fatal("Failed to wait for service online: ", err)
 	}
+
+	// Add route for return traffic in router with host as next hop.
+	if err := d.AddDelegatedPrefixRouteToClient(ctx); err != nil {
+		s.Fatal("Failed to add delegated prefix route: ", err)
+	}
+
+	// Verify topology in host.
 	routerAddrs, err := testEnv.Router.WaitForVethInAddrs(ctx, hasIPv4, true /*ipv6*/)
 	if err != nil {
 		s.Fatal("Failed to get inner addrs from router env: ", err)
@@ -112,5 +147,37 @@ func DHCPPD(ctx context.Context, s *testing.State) {
 		}
 	}
 
-	// TODO(b/350884946): Verify connectivity in VMs.
+	if !hasARC {
+		return
+	}
+
+	// Verify connectivity in ARC.
+	vethName := testEnv.Router.VethOutName
+	arcIfname, err := arcnet.GetARCInterfaceName(ctx, vethName)
+	if err != nil {
+		s.Fatalf("Failed to get ARC interface name corresponding to %s: %v", vethName, err)
+	}
+
+	// Check if testEnv prefix propagated into ARC, and log it for debugging.
+	const addressPollTimeout = 10 * time.Second
+	if err := testing.Poll(ctx, func(ctx context.Context) error {
+		out, err := a.Command(ctx, "/system/bin/ip", "-6", "addr", "show", "scope", "global", "dev", arcIfname).Output(testexec.DumpLogOnError)
+		if err != nil {
+			return err
+		}
+		if len(out) == 0 {
+			return errors.New("no global IPv6 address is configured")
+		}
+		testing.ContextLog(ctx, "ARC address information: ", string(out))
+		return nil
+	}, &testing.PollOptions{Timeout: addressPollTimeout}); err != nil {
+		s.Fatalf("Failed to get global IPv6 address on %s in ARC: %v", arcIfname, err)
+	}
+
+	// ping virtual router address and virtual server address from ARC.
+	for _, target := range pingAddrs {
+		if err := arcnet.ExpectPingSuccess(ctx, a, arcIfname, target); err != nil {
+			s.Errorf("Failed to ping %s from ARC over %q: %v", target, arcIfname, err)
+		}
+	}
 }
