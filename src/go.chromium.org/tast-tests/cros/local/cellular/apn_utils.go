@@ -153,7 +153,7 @@ func initializeCarrierAPNs() map[Carrier][]KnownAPN {
 			KnownAPN{Optional: true, APNInfo: map[string]interface{}{apn: "sp.telus.com", ipType: ipv4v6}, APNTypes: []string{typeDefault}},
 		},
 		CarrierCBRS: []KnownAPN{
-			KnownAPN{Optional: true, APNInfo: map[string]interface{}{apn: "", ipType: ipv4v6}, APNTypes: []string{typeDefault}},
+			KnownAPN{Optional: true, APNInfo: map[string]interface{}{apn: "internet", ipType: ipv4v6}, APNTypes: []string{typeDefault}},
 		},
 	}
 }
