@@ -70,12 +70,21 @@ func ClearSecagentdLog() error {
 	return nil
 }
 
+// GetSecagentdLogSize returns the size of the logfile.
+func GetSecagentdLogSize() (int64, error) {
+	statInfo, err := os.Stat(secagentdLogFile)
+	if err != nil {
+		return -1, err
+	}
+	return statInfo.Size(), nil
+}
+
 // WaitForStringInLog waits for a specific string to appear in the secagentd.log
 // The file should be cleared prior to restarting the daemon via ClearSecagentdLog
 // prior to waiting for a string. Failure to do so means that strings from
 // past runs may abort the wait prematurely.
-func WaitForStringInLog(ctx context.Context, text string) error {
-	offset := int64(0)
+func WaitForStringInLog(ctx context.Context, text string, startingOffset int64) error {
+	offset := startingOffset
 	return testing.Poll(ctx, func(ctx context.Context) error {
 		loginfo, err := os.Stat(secagentdLogFile)
 		if err != nil {
