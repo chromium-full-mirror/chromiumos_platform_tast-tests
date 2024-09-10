@@ -51,7 +51,7 @@ func init() {
 					},
 					extraCrasClientArgs: nil,
 				},
-				Fixture: "powerAshPlatformAudio",
+				Fixture: "powerAshPlatformAudioNoiseCancellation",
 			},
 			{
 				Name: "aec",
@@ -73,7 +73,7 @@ func init() {
 					},
 					extraCrasClientArgs: []string{"--effects=aec"},
 				},
-				Fixture: "powerAshPlatformAudio",
+				Fixture: "powerAshPlatformAudioNoiseCancellation",
 			},
 			{
 				Name: "aec_nc",
@@ -101,7 +101,7 @@ func init() {
 					},
 					extraCrasClientArgs: []string{"--effects=aec"},
 				},
-				Fixture: "powerAshPlatformAudio",
+				Fixture: "powerAshPlatformAudioNoiseCancellation",
 			},
 			{
 				Name: "aec_nc_ast",
@@ -152,7 +152,7 @@ func init() {
 					extraCrasClientArgs: []string{"--effects=0x11"},
 				},
 				ExtraHardwareDeps: hwdep.D(hwdepDSPModels),
-				Fixture:           "powerAshPlatformAudio",
+				Fixture:           "powerAshPlatformAudioNoiseCancellation",
 			},
 			{
 				Name: "dsp_aec_nc",
@@ -175,7 +175,7 @@ func init() {
 					extraCrasClientArgs: []string{"--effects=0x11"},
 				},
 				ExtraHardwareDeps: hwdep.D(hwdepDSPModels),
-				Fixture:           "powerAshPlatformAudio",
+				Fixture:           "powerAshPlatformAudioNoiseCancellation",
 			},
 		},
 	})

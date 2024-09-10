@@ -71,10 +71,10 @@ const (
 	PowerLacrosNightlight = "powerLacrosNightlight"
 
 	// For platform audio test scheme
-	PowerAshPlatformAudio              = "powerAshPlatformAudio"
-	PowerAshPlatformAudioStyleTransfer = "powerAshPlatformAudioStyleTransfer"
-	PowerAshPlatformAudioNoDSPOffload  = "powerAshPlatformAudioNoDSPOffload"
-	PowerAshPlatformAudioDSPOffload    = "powerAshPlatformAudioDSPOffload"
+	PowerAshPlatformAudioNoiseCancellation = "powerAshPlatformAudioNoiseCancellation"
+	PowerAshPlatformAudioStyleTransfer     = "powerAshPlatformAudioStyleTransfer"
+	PowerAshPlatformAudioNoDSPOffload      = "powerAshPlatformAudioNoDSPOffload"
+	PowerAshPlatformAudioDSPOffload        = "powerAshPlatformAudioDSPOffload"
 
 	// Without Charge Limit
 	PowerAshAdaptiveCharging = "powerAshAdaptiveCharging"
@@ -643,8 +643,8 @@ func init() {
 	})
 
 	testing.AddFixture(&testing.Fixture{
-		Name:         PowerAshPlatformAudio,
-		Desc:         "PowerAsh customized for testing platform audio features",
+		Name:         PowerAshPlatformAudioNoiseCancellation,
+		Desc:         "PowerAsh customized for testing platform audio noise cancellation",
 		BugComponent: "b:1361410",
 		Contacts: []string{
 			"chromeos-platform-power@google.com",
