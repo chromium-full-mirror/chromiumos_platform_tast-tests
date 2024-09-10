@@ -9,6 +9,7 @@ import (
 	"time"
 
 	"go.chromium.org/tast-tests/cros/local/chrome"
+	"go.chromium.org/tast-tests/cros/local/chrome/ash"
 	"go.chromium.org/tast-tests/cros/local/chrome/uiauto/diagnosticsapp"
 	"go.chromium.org/tast-tests/cros/local/chrome/uiauto/faillog"
 	"go.chromium.org/tast-tests/cros/local/upstart"
@@ -29,7 +30,7 @@ func init() {
 		BugComponent: "b:1131925",
 		Impl: newDiagnosticsPrepFixture(func(ctx context.Context, s *testing.FixtState) ([]chrome.Option, error) {
 			return nil, nil
-		}),
+		}, false /*disableTabletMode*/),
 		SetUpTimeout:    chrome.LoginTimeout + 15*time.Second,
 		ResetTimeout:    chrome.ResetTimeout,
 		TearDownTimeout: chrome.ResetTimeout,
@@ -50,7 +51,7 @@ func init() {
 		BugComponent: "b:1131925",
 		Impl: newDiagnosticsPrepFixture(func(ctx context.Context, s *testing.FixtState) ([]chrome.Option, error) {
 			return []chrome.Option{chrome.EnableFeatures("EnableInputInDiagnosticsApp")}, nil
-		}),
+		}, true /*disableTabletMode*/),
 		SetUpTimeout:    chrome.LoginTimeout + 15*time.Second,
 		ResetTimeout:    chrome.ResetTimeout,
 		TearDownTimeout: chrome.ResetTimeout,
@@ -70,14 +71,15 @@ type FixtureData struct {
 // diagnosticsPrepFixture is a fixture to ensure relevant service is running
 // before diagnostics ui test.
 type diagnosticsPrepFixture struct {
-	cr    *chrome.Chrome
-	api   *MojoAPI
-	tconn *chrome.TestConn
-	fopt  chrome.OptionsCallback
+	cr                *chrome.Chrome
+	api               *MojoAPI
+	tconn             *chrome.TestConn
+	fopt              chrome.OptionsCallback
+	disableTabletMode bool
 }
 
-func newDiagnosticsPrepFixture(fopt chrome.OptionsCallback) testing.FixtureImpl {
-	return &diagnosticsPrepFixture{fopt: fopt}
+func newDiagnosticsPrepFixture(fopt chrome.OptionsCallback, disableTabletMode bool) testing.FixtureImpl {
+	return &diagnosticsPrepFixture{fopt: fopt, disableTabletMode: disableTabletMode}
 }
 
 func (f *diagnosticsPrepFixture) SetUp(ctx context.Context, s *testing.FixtState) interface{} {
@@ -105,6 +107,12 @@ func (f *diagnosticsPrepFixture) SetUp(ctx context.Context, s *testing.FixtState
 	tconn, err := cr.TestAPIConn(ctx)
 	if err != nil {
 		s.Fatal("Failed to connect Test API: ", err)
+	}
+
+	if f.disableTabletMode {
+		if err := ash.SetTabletModeEnabled(ctx, tconn, false); err != nil {
+			s.Error("Failed to set the system mode: ", err)
+		}
 	}
 
 	success = true
