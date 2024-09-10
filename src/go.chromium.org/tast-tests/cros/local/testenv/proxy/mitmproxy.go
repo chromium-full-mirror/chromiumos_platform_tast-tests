@@ -76,6 +76,7 @@ type MitmProxy struct {
 	ignoredHosts        []string
 	customCA            bool                        // true if the system CA cert is used
 	disconnect          func(context.Context) error // Called in Close to disconnect from chrome if connected
+	forceUnsetOnClose   bool
 }
 
 // NewMitmProxy creates a new MitmProxy instance with default configuration and option overrides.
@@ -90,6 +91,7 @@ func NewMitmProxy(ctx context.Context, opts ...Option) (Proxy, error) {
 		customCA:            false,
 		scriptPaths:         []string{},
 		options:             []string{},
+		forceUnsetOnClose:   false,
 	}
 
 	// Override any value if users pass option from test.
@@ -509,8 +511,11 @@ func (mp *MitmProxy) Close(ctx context.Context) error {
 	if ok, err := mp.IsConnected(ctx); err != nil {
 		cleanupErrs = append(cleanupErrs, errors.Wrap(err, "failed to get proxy connection from the system"))
 	} else if ok {
-		testing.ContextLog(ctx, "mitmproxy: restarting chrome to clear stale proxy connection")
-		chrome.New(ctx)
+		testing.ContextLog(ctx, "mitmproxy: stale proxy connection found. proxy should be unset for a DUT to stay connected")
+		if mp.forceUnsetOnClose {
+			testing.ContextLog(ctx, "mitmproxy: restarting chrome to clear stale proxy connection")
+			chrome.New(ctx)
+		}
 	}
 
 	mp.isRunning = false

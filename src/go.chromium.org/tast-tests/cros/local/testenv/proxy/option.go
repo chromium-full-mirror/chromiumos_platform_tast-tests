@@ -165,3 +165,14 @@ func CustomCA(system bool) Option {
 		return nil
 	}
 }
+
+// ForceRestartChromeToUnsetOnClose is an option to force restarting chrome to unset proxy in ash-chrome
+// if proxy still remains connected even after cleanup is finished.
+// This helps keep a device connected without stale proxy configuration.
+// The default value is false.
+func ForceRestartChromeToUnsetOnClose() Option {
+	return func(mp *MitmProxy) error {
+		mp.forceUnsetOnClose = true
+		return nil
+	}
+}

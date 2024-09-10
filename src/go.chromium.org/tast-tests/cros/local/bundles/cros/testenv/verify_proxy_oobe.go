@@ -50,6 +50,7 @@ func VerifyProxyOobe(ctx context.Context, s *testing.State) {
 	mp, err := proxy.NewMitmProxy(ctx,
 		proxy.CustomCA(true),
 		proxy.DumpHTTPFlow(true),
+		proxy.ForceRestartChromeToUnsetOnClose(),
 	)
 	if err != nil {
 		s.Fatal("Failed to create new proxy: ", err)
