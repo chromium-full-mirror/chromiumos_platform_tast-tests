@@ -61,11 +61,11 @@ func VctrayLabelCheck(cleanupCtx context.Context, s *testing.State) {
 
 	vcTray.ExpandPanel(ctx)
 
-	// There are four feature labels: "Improve lighting", "Noise cancellation", "Live Caption" and "Camera framing".
+	// There are four feature labels: "Appearance effects", "Noise cancellation", "Live Caption" and "Camera framing".
 	// "Camera framing" only will be shown on some devices.
 	// If we can guarantee that all other 3 labels could be found in A11y tree. That means the UI is not broken. b/353895309
 	featureLabels := map[string]*nodewith.Finder{
-		"Improve lighting":   nodewith.Role(role.StaticText).Name("Improve lighting").HasClass("ToggleEffectsButtonLabel"),
+		"Appearance effects": nodewith.Role(role.StaticText).Name("Appearance effects").HasClass("ToggleEffectsButtonLabel"),
 		"Noise cancellation": nodewith.Role(role.StaticText).Name("Noise cancellation").HasClass("ToggleEffectsButtonLabel"),
 		"Live Caption":       nodewith.Role(role.StaticText).Name("Live Caption").HasClass("ToggleEffectsButtonLabel"),
 	}
