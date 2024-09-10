@@ -301,51 +301,51 @@ func APROBootabilityPerformance(ctx context.Context, s *testing.State) {
 	defer func(ctx context.Context, apRONewID, initialAPRWNewID, initialActSection, ecChip string) {
 		if !h.DUT.Connected(ctx) {
 			// If a DUT reaches this point unable to boot, attempt to restore
-			// the EC firmware through servo.
-			// To-Do: Add restoration of AP when a DUT can't boot.
-			s.Log("Restoring EC firmware through servo at the end of the test")
-			fileMap := map[string]string{ecBackupOnHost: filepath.Join(tmpDirServo, ecFwBackup)}
+			// the AP/EC firmware through servo.
+			s.Log("DUT disconnected, restoring firmware through servo at the end of the test")
+			futilityRemoteInstance, err := futility.NewRemoteBuilder(h.ServoProxy).Build()
+			if err != nil {
+				s.Fatal("Failed to create futility instance: ", err)
+			}
+
+			apBackupOnServo := filepath.Join(tmpDirServo, apFwBackup)
+			ecBackupOnServo := filepath.Join(tmpDirServo, ecFwBackup)
+			fileMap := map[string]string{apBackupOnHost: apBackupOnServo, ecBackupOnHost: ecBackupOnServo}
 			if err := h.ServoProxy.PutFiles(ctx, false, fileMap); err != nil {
 				s.Fatal("Failed to copy EC firmware file to servo host: ", err)
 			}
-			flashEcArgs := []string{fmt.Sprintf("--chip=%s", ecChip), fmt.Sprintf("--image=%s", filepath.Join(tmpDirServo, ecFwBackup)), fmt.Sprintf("--port=%d", h.ServoProxy.GetPort()), "--verify", "--verbose"}
-			if ecChip == "stm32" {
-				flashEcArgs = append(flashEcArgs, "--bitbang_rate=57600")
-			}
-			if strings.HasPrefix(ecChip, "it8") {
-				flashEcArgs = append(flashEcArgs, "--nouse_i2c_pseudo")
-			}
-			if err := h.ServoProxy.RunCommand(ctx, false, "flash_ec", flashEcArgs...); err != nil {
-				s.Fatalf("Failed to restore %s EC firmware: %v", ecChip, err)
+
+			flashECAPOpts := futility.NewUpdateOptions(apBackupOnServo).WithECImage(ecBackupOnServo).WithMode(futility.UpdateModeRecovery).WithWriteProtection(futility.WriteProtectionDisable)
+			if _, err := futilityRemoteInstance.Update(ctx, flashECAPOpts); err != nil {
+				s.Fatal("Failed to restore EC and AP firmware through servo at the end of the test: ", err)
 			}
 
-			if err := h.EnsureDUTBooted(ctx); err != nil {
-				s.Fatal("Failed to ensure DUT connected at the end of test before restoring firmware: ", err)
+			if err := safeReboot(ctx, h); err != nil {
+				s.Fatal("Failed to reboot DUT after restoring firmware through servo: ", err)
+			}
+		} else {
+			s.Log("Restoring firmware at the end of the test")
+			fwInfoToFlash := &flashFwInfo{
+				roTag: "ori", rwTag: "ori",
+				wp: futility.WriteProtectionDisable,
+				ap: flashAPECInfo{
+					roID: apRONewID,
+					rwID: initialAPRWNewID,
+					path: apBackupOnHost,
+				},
+				ec: flashAPECInfo{
+					path: ecBackupOnHost,
+				},
 			}
 
-			// Ensure there is a functional RPC connection.
-			h.CloseRPCConnection(ctx)
-			if err := h.RequireBiosServiceClient(ctx); err != nil {
-				s.Fatal("Failed to open RPC client for restoration: ", err)
+			if err = testWithDifferentScenario(ctx, h, fwInfoToFlash, dutTempDir, ecRWNewID, baseline); err != nil {
+				s.Fatal("Failed while flashing DUT to restore firmware at the end of test: ", err)
 			}
 		}
 
-		s.Log("Restoring firmware at the end of the test")
-		fwInfoToFlash := &flashFwInfo{
-			roTag: "ori", rwTag: "ori",
-			wp: futility.WriteProtectionDisable,
-			ap: flashAPECInfo{
-				roID: apRONewID,
-				rwID: initialAPRWNewID,
-				path: apBackupOnHost,
-			},
-			ec: flashAPECInfo{
-				path: ecBackupOnHost,
-			},
-		}
-
-		if err = testWithDifferentScenario(ctx, h, fwInfoToFlash, dutTempDir, ecRWNewID, baseline); err != nil {
-			s.Fatal("Failed while flashing DUT to restore firmware at the end of test: ", err)
+		// Ensure the DUT is connected before restoring the firmware.
+		if err := h.EnsureDUTBooted(ctx); err != nil {
+			s.Fatal("Failed to ensure DUT connected at the end of test before restoring firmware: ", err)
 		}
 
 		// Ensuring that DUT ends up running the initial RW active section.
