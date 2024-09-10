@@ -47,12 +47,13 @@ const (
 
 // PDTestParams contains common test params for PD tests.
 type PDTestParams struct {
-	CC           CCPolarity
-	DTS          DTSMode
-	Shutdown     bool
-	Suspend      bool
-	RequiredPort *int
-	PowerRole    ServoPowerRole
+	CC            CCPolarity
+	DTS           DTSMode
+	Shutdown      bool
+	Suspend       bool
+	RequiredPort  *int
+	PowerRole     ServoPowerRole
+	NumIterations int
 }
 
 // SetupPDTester handles some boilerplate tasks to prepare the Servo for PD testing:

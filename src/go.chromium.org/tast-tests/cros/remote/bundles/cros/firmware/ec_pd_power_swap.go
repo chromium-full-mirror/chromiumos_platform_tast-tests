@@ -33,32 +33,63 @@ func init() {
 		Attr:         []string{"group:firmware", "firmware_pd"},
 		Params: []testing.Param{{
 			Name: "normal",
-			Val:  firmware.PDTestParams{},
+			Val: firmware.PDTestParams{
+				NumIterations: 1,
+			},
+		}, {
+			Name: "normal_stress",
+			Val: firmware.PDTestParams{
+				NumIterations: 20,
+			},
 		}, {
 			Name: "flipcc",
 			Val: firmware.PDTestParams{
-				CC: firmware.CCPolarityFlipped,
+				CC:            firmware.CCPolarityFlipped,
+				NumIterations: 1,
+			},
+		}, {
+			Name: "flipcc_stress",
+			Val: firmware.PDTestParams{
+				CC:            firmware.CCPolarityFlipped,
+				NumIterations: 20,
 			},
 		}, {
 			Name: "dtsoff",
 			Val: firmware.PDTestParams{
-				DTS: firmware.DTSModeOff,
+				DTS:           firmware.DTSModeOff,
+				NumIterations: 1,
+			},
+		}, {
+			Name: "dtsoff_stress",
+			Val: firmware.PDTestParams{
+				DTS:           firmware.DTSModeOff,
+				NumIterations: 20,
 			},
 		}, {
 			Name: "flipcc_dtsoff",
 			Val: firmware.PDTestParams{
-				CC:  firmware.CCPolarityFlipped,
-				DTS: firmware.DTSModeOff,
+				CC:            firmware.CCPolarityFlipped,
+				DTS:           firmware.DTSModeOff,
+				NumIterations: 1,
+			},
+		}, {
+			Name: "flipcc_dtsoff_stress",
+			Val: firmware.PDTestParams{
+				CC:            firmware.CCPolarityFlipped,
+				DTS:           firmware.DTSModeOff,
+				NumIterations: 20,
 			},
 		}, {
 			Name: "shutdown",
 			Val: firmware.PDTestParams{
-				Shutdown: true,
+				Shutdown:      true,
+				NumIterations: 1,
 			},
 		}, {
 			Name: "suspend",
 			Val: firmware.PDTestParams{
-				Suspend: true,
+				Suspend:       true,
+				NumIterations: 1,
 			},
 		}},
 	})
@@ -99,52 +130,54 @@ func ECPDPowerSwap(ctx context.Context, s *testing.State) {
 	if pdState, err := h.Servo.GetDUTPDState(ctx); err != nil {
 		s.Fatal("Failed to get PD state: ", err)
 	} else {
-		testing.ContextLogf(ctx, "PD state before: %#v", pdState)
-		testing.ContextLog(ctx, "PD Role before: ", pdState.PowerRole)
 		curPowerRole = string(pdState.PowerRole)
 	}
 
-	if dutResponseMsg, err := h.Servo.ServoSendPowerSwapRequest(ctx); err != nil {
-		if powerSwapSupported {
-			s.Fatal("Send Power Swap failed: ", err)
-		}
-	} else if powerSwapSupported && dutResponseMsg != servo.PDCtrlAccept ||
-		!powerSwapSupported && dutResponseMsg != servo.PDCtrlReject {
-		s.Fatalf("Expected PRS support = %t, but DUT responded %q", powerSwapSupported, dutResponseMsg)
-	}
-
-	if powerSwapSupported {
-		if err := testing.Poll(ctx, func(ctx context.Context) error {
-			if pdState, err := h.Servo.GetDUTPDState(ctx); err == nil {
-				testing.ContextLogf(ctx, "PD state after: %#v", pdState)
-				testing.ContextLog(ctx, "PD Role after: ", pdState.PowerRole)
-				nowPowerRole = string(pdState.PowerRole)
-				if curPowerRole == nowPowerRole {
-					return errors.Wrap(err, "failed to switch power role")
-				}
-			} else {
-				return errors.Wrap(err, "failed to get PD state")
+	for i := 0; i < testParams.NumIterations; i++ {
+		testing.ContextLogf(ctx, "[%d] - PD Role Before: %s", i, curPowerRole)
+		testing.ContextLogf(ctx, "[%d] - PD Request Power Swap", i)
+		if dutResponseMsg, err := h.Servo.ServoSendPowerSwapRequest(ctx); err != nil {
+			if powerSwapSupported {
+				s.Fatal("Send Power Swap failed: ", err)
 			}
+		} else if powerSwapSupported && dutResponseMsg != servo.PDCtrlAccept ||
+			!powerSwapSupported && dutResponseMsg != servo.PDCtrlReject {
+			s.Fatalf("Expected PRS support = %t, but DUT responded %q", powerSwapSupported, dutResponseMsg)
+		}
 
-			return nil
-		}, &testing.PollOptions{Timeout: pdStatePollTimeout, Interval: pdStatePollInterval}); err != nil {
-			s.Fatal("Expected PD power swap: ", err)
-		}
-	} else {
-		// GoBigSleepLint: Check power role after timeout and confirm no power swap occurs
-		if err := testing.Sleep(ctx, pdStatePollTimeout); err != nil {
-			s.Fatal("Failed to sleep: ", err)
-		}
-		if pdState, err := h.Servo.GetDUTPDState(ctx); err == nil {
-			testing.ContextLogf(ctx, "PD state after: %#v", pdState)
-			testing.ContextLog(ctx, "PD Role after: ", pdState.PowerRole)
-			nowPowerRole = string(pdState.PowerRole)
-			if curPowerRole != nowPowerRole {
-				s.Fatal("Unexpected power role swap: ", err)
+		if powerSwapSupported {
+			if err := testing.Poll(ctx, func(ctx context.Context) error {
+				if pdState, err := h.Servo.GetDUTPDState(ctx); err == nil {
+					nowPowerRole = string(pdState.PowerRole)
+					testing.ContextLogf(ctx, "[%d] - PD Role After: %s", i, nowPowerRole)
+					if curPowerRole == nowPowerRole {
+						return errors.Wrap(err, "failed to switch power role")
+					}
+				} else {
+					return errors.Wrap(err, "failed to get PD state")
+				}
+
+				return nil
+			}, &testing.PollOptions{Timeout: pdStatePollTimeout, Interval: pdStatePollInterval}); err != nil {
+				s.Fatal("Expected PD power swap: ", err)
 			}
 		} else {
-			s.Fatal("Failed to get PD state: ", err)
+			// GoBigSleepLint: Check power role after timeout and confirm no power swap occurs
+			if err := testing.Sleep(ctx, pdStatePollTimeout); err != nil {
+				s.Fatal("Failed to sleep: ", err)
+			}
+			if pdState, err := h.Servo.GetDUTPDState(ctx); err == nil {
+				nowPowerRole = string(pdState.PowerRole)
+				testing.ContextLogf(ctx, "[%d] - PD Role After: %s", i, nowPowerRole)
+				if curPowerRole != nowPowerRole {
+					s.Fatal("Unexpected power role swap: ", err)
+				}
+			} else {
+				s.Fatal("Failed to get PD state: ", err)
+			}
 		}
+
+		curPowerRole = nowPowerRole
 	}
 
 	if powerSwapSupported {
