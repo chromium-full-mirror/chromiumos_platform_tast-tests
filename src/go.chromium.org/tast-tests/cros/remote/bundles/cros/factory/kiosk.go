@@ -36,8 +36,11 @@ func init() {
 		Timeout:      time.Minute,
 		Fixture:      fixture.EnsureToolkit,
 		// Skip "nyan_kitty" due to slow reboot speed, skip nocturne as
-		// it can not open the Kiosk page and is not manufactured.
-		HardwareDeps: hwdep.D(hwdep.SkipOnModel("kitty", "nocturne")),
+		// it can not open the Kiosk page and is not manufactured, and
+		// skip amd64-generic as it is not a real board go through
+		// factory process, and the browser blocks loading toolkit
+		// plugin. See b/365652714.
+		HardwareDeps: hwdep.D(hwdep.SkipOnModel("kitty", "nocturne", "amd64-generic")),
 		SoftwareDeps: append([]string{"factory_flow"}, fixture.EnsureToolkitSoftwareDeps...),
 	})
 }
