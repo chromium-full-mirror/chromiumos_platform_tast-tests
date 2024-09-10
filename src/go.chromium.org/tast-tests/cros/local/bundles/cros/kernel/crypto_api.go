@@ -21,7 +21,6 @@ func init() {
 		Desc: "Verifies that the crypto user API can't be used to load arbitrary modules, using the kernel module test_module",
 		Contacts: []string{
 			"chromeos-kernel-test@google.com",
-			"briannorris@chromium.org", // Original test author
 		},
 		BugComponent: "b:167278",
 		Attr:         []string{"group:mainline"},

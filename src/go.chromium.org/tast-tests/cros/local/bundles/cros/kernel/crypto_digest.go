@@ -27,7 +27,6 @@ func init() {
 		Desc: "Tests the crypto user API to compute message digests",
 		Contacts: []string{
 			"chromeos-kernel-test@google.com",
-			"briannorris@chromium.org", // Original test author
 		},
 		BugComponent: "b:167278",
 		Attr:         []string{"group:mainline"},

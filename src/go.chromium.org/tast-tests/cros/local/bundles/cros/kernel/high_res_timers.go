@@ -20,7 +20,8 @@ func init() {
 		Desc: "Fails if timers have nanosecond resolution that is not 1 ns",
 		Contacts: []string{
 			"chromeos-kernel-test@google.com",
-			"briannorris@chromium.org",
+			"joelaf@google.com",
+			"vineethrp@google.com",
 		},
 		BugComponent: "b:167278", // ChromeOS > Platform > System > Kernel
 		// b/263289152: There is an ongoing effort to disable highres timers for

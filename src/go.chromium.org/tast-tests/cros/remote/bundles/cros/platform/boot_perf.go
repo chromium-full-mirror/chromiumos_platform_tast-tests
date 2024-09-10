@@ -65,7 +65,6 @@ func init() {
 		Contacts: []string{
 			"baseos-perf@google.com",
 			"chinglinyu@chromium.org",
-			"briannorris@chromium.org",
 		},
 		BugComponent: "b:167279", // ChromeOS > Platform > System > Performance
 		ServiceDeps:  []string{"tast.cros.arc.PerfBootService", "tast.cros.platform.BootPerfService", "tast.cros.security.BootLockboxService"},

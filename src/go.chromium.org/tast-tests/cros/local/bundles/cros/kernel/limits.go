@@ -21,7 +21,6 @@ func init() {
 		Desc: "Checks kernel limits and settings in /proc",
 		Contacts: []string{
 			"chromeos-kernel-test@google.com",
-			"briannorris@chromium.org",
 		},
 		BugComponent: "b:167278", // ChromeOS > Platform > System > Kernel
 		Attr:         []string{"group:mainline"},
