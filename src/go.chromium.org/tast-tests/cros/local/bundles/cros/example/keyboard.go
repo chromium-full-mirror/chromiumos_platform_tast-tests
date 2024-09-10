@@ -26,21 +26,12 @@ import (
 func init() {
 	testing.AddTest(&testing.Test{
 		Func:         Keyboard,
-		LacrosStatus: testing.LacrosVariantExists,
 		Desc:         "Demonstrates injecting keyboard events",
 		Contacts:     []string{"tast-core@google.com", "hidehiko@chromium.org"},
 		BugComponent: "b:1034522", // ChromeOS > Test > Harness > Tast > Examples
 		Attr:         []string{"group:mainline", "informational", "group:hw_agnostic"},
 		SoftwareDeps: []string{"chrome"},
-		Params: []testing.Param{{
-			Fixture: "chromeLoggedIn",
-			Val:     browser.TypeAsh,
-		}, {
-			Name:              "lacros",
-			Fixture:           "lacros",
-			ExtraSoftwareDeps: []string{"lacros"},
-			Val:               browser.TypeLacros,
-		}},
+		Fixture:      "chromeLoggedIn",
 	})
 }
 
@@ -70,7 +61,7 @@ func Keyboard(ctx context.Context, s *testing.State) {
 	}
 	defer cleanup(cleanupCtx)
 
-	br, closeBrowser, err := browserfixt.SetUp(ctx, cr, s.Param().(browser.Type))
+	br, closeBrowser, err := browserfixt.SetUp(ctx, cr, browser.TypeAsh)
 	if err != nil {
 		s.Fatal("Failed to set up the browser: ", err)
 	}

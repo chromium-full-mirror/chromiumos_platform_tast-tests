@@ -21,22 +21,13 @@ import (
 func init() {
 	testing.AddTest(&testing.Test{
 		Func:         Touch,
-		LacrosStatus: testing.LacrosVariantExists,
 		Desc:         "Demonstrates injecting touch events",
 		Contacts:     []string{"tast-core@google.com", "ricardoq@chromium.org"},
 		BugComponent: "b:1034522", // ChromeOS > Test > Harness > Tast > Examples
 		Attr:         []string{"group:mainline", "informational"},
 		SoftwareDeps: []string{"chrome"},
 		HardwareDeps: hwdep.D(hwdep.TouchScreen()),
-		Params: []testing.Param{{
-			Fixture: "chromeLoggedIn",
-			Val:     browser.TypeAsh,
-		}, {
-			Name:              "lacros",
-			Fixture:           "lacros",
-			ExtraSoftwareDeps: []string{"lacros"},
-			Val:               browser.TypeLacros,
-		}},
+		Fixture:      "chromeLoggedIn",
 	})
 }
 
@@ -60,7 +51,7 @@ func Touch(ctx context.Context, s *testing.State) {
 	}
 
 	// Setup a browser before opening a tab.
-	br, closeBrowser, err := browserfixt.SetUp(ctx, cr, s.Param().(browser.Type))
+	br, closeBrowser, err := browserfixt.SetUp(ctx, cr, browser.TypeAsh)
 	if err != nil {
 		s.Fatal("Failed to open the browser: ", err)
 	}
