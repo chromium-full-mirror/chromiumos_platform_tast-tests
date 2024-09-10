@@ -19,7 +19,7 @@ import (
 func init() {
 	testing.AddTest(&testing.Test{
 		Func: FwupdPluginStartup,
-		Desc: "Checks that the powerd plugin is enabled",
+		Desc: "Checks that expected fwupd plugins are enabled",
 		// ChromeOS > Platform > Services > Peripherals > Firmware Update - fwupd
 		BugComponent: "b:857851",
 		Contacts: []string{
@@ -29,6 +29,39 @@ func init() {
 		Attr:         []string{"group:mainline", "informational"},
 		SoftwareDeps: []string{"fwupd"},
 		LacrosStatus: testing.LacrosVariantUnneeded,
+		Params: []testing.Param{{
+			// Baseline plugins that should always be present.
+			Val: []string{
+				"analogix",
+				"ccgx",
+				"cros_ec",
+				"dell_dock",
+				"dfu",
+				"emmc",
+				// "nvme", // Not enough permissions.
+				"parade_lspcon",
+				"pixart_rf",
+				"powerd",
+				"realtek_mst",
+				"synaptics_cape",
+				"synaptics_cxaudio",
+				// "synaptics_mst", // Disabled on some platforms due to b/187350478.
+				"test",
+				// "thunderbolt", // Disabled on some platforms.
+				"vli",
+				"wacom_raw",
+				"wacom_usb",
+			},
+		}, {
+			Name: "uefi",
+			// Plugins that should be present on UEFI systems (ChromeOS Flex).
+			Val: []string{
+				"uefi_capsule",
+				"uefi_dbx",
+				"uefi_esrt",
+			},
+			ExtraSoftwareDeps: []string{"uefi_firmware"},
+		}},
 	})
 }
 
@@ -70,27 +103,9 @@ func FwupdPluginStartup(ctx context.Context, s *testing.State) {
 		s.Fatal("search unsuccessful: ", err)
 	}
 
-	for _, plugin := range []string{
-		"analogix",
-		"ccgx",
-		"cros_ec",
-		"dell_dock",
-		"dfu",
-		"emmc",
-		// "nvme", // Not enough permissions.
-		"parade_lspcon",
-		"pixart_rf",
-		"powerd",
-		"realtek_mst",
-		"synaptics_cape",
-		"synaptics_cxaudio",
-		// "synaptics_mst", // Disabled on some platforms due to b/187350478.
-		"test",
-		// "thunderbolt", // Disabled on some platforms.
-		"vli",
-		"wacom_raw",
-		"wacom_usb",
-	} {
+	expectedPlugins := s.Param().([]string)
+
+	for _, plugin := range expectedPlugins {
 		s.Run(ctx, plugin, func(ctx context.Context, s *testing.State) {
 			flags, prs := m[plugin]
 			if !prs {
