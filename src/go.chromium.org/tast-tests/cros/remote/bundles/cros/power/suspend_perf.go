@@ -23,6 +23,7 @@ import (
 	"go.chromium.org/tast/core/errors"
 	"go.chromium.org/tast/core/rpc"
 	"go.chromium.org/tast/core/testing"
+	"go.chromium.org/tast/core/testing/hwdep"
 	"google.golang.org/protobuf/types/known/emptypb"
 )
 
@@ -82,6 +83,7 @@ func init() {
 		},
 		BugComponent: "b:167279", // ChromeOS > Platform > baseOS > Performance
 		SoftwareDeps: []string{"chrome"},
+		HardwareDeps: hwdep.D(hwdep.Display()),
 		ServiceDeps: []string{
 			"tast.cros.browser.ChromeService",
 			"tast.cros.browser.LacrosService",
