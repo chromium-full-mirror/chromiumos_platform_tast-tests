@@ -182,6 +182,15 @@ func SELinuxFilesDataDir(ctx context.Context, s *testing.State) {
 	}
 	dataDirPath := filepath.Join("/home/.shadow", ownerID, "mount/root/android-data/data")
 
+	// Return early if the Android Data directory does not exist.
+	if err := testing.Poll(ctx, func(ctx context.Context) error {
+		_, err := os.Stat(dataDirPath)
+		return err
+	}, &testing.PollOptions{Timeout: 10 * time.Second}); os.IsNotExist(errors.Unwrap(err)) {
+		s.Log("Skipped checking of SELinux labels as Android data directory did not exist")
+		return
+	}
+
 	var dirList []fs.FileInfo
 	if err := testing.Poll(ctx, func(ctx context.Context) error {
 		dirList, err = ioutil.ReadDir(dataDirPath)
