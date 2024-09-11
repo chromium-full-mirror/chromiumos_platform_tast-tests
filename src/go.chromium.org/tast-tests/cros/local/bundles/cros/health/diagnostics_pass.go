@@ -94,24 +94,6 @@ func init() {
 			ExtraHardwareDeps: hwdep.D(hwdep.FingerprintDiagSupported()),
 		}, {
 			// Contact: byronlee@google.com
-			Name:              "bluetooth_power",
-			Val:               croshealthd.NewRoutineParams(croshealthd.RoutineBluetoothPower),
-			Fixture:           "crosHealthdRunning",
-			ExtraHardwareDeps: hwdep.D(hwdep.Bluetooth()),
-		}, {
-			// Contact: byronlee@google.com
-			Name:              "bluetooth_discovery",
-			Val:               croshealthd.NewRoutineParams(croshealthd.RoutineBluetoothDiscovery),
-			Fixture:           "crosHealthdRunning",
-			ExtraHardwareDeps: hwdep.D(hwdep.Bluetooth()),
-		}, {
-			// Contact: byronlee@google.com
-			Name:              "bluetooth_scanning",
-			Val:               croshealthd.NewRoutineParams(croshealthd.RoutineBluetoothScanning),
-			Fixture:           "crosHealthdRunning",
-			ExtraHardwareDeps: hwdep.D(hwdep.Bluetooth()),
-		}, {
-			// Contact: byronlee@google.com
 			Name:    "disk_read",
 			Val:     croshealthd.NewRoutineParams(croshealthd.RoutineDiskRead),
 			Fixture: "crosHealthdRunning",
