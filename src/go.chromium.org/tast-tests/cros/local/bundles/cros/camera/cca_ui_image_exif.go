@@ -22,7 +22,7 @@ type walker struct{}
 func init() {
 	testing.AddTest(&testing.Test{
 		Func:         CCAUIImageExif,
-		Desc:         "Verifies captured imaging metadata information on EXIF, using userfacing camera",
+		Desc:         "Verifies captured imaging metadata information on EXIF, using default camera",
 		Contacts:     []string{"chromeos-camera-app-eng@google.com", "intel.chrome.automation.team@intel.com", "pathan.jilani@intel.com"},
 		BugComponent: "b:978428", // ChromeOS > Platform > Technologies > Camera > App & Framework
 		Attr:         []string{
@@ -42,24 +42,6 @@ func init() {
 func CCAUIImageExif(ctx context.Context, s *testing.State) {
 	app := s.FixtValue().(cca.FixtureData).App()
 
-	isUserFacing := func() bool {
-		facing, err := app.GetFacing(ctx)
-		if err != nil {
-			s.Fatal("Failed to get facing: ", err)
-		}
-		return facing == cca.FacingFront
-	}
-
-	// Check whether user facing camera switched.
-	if !isUserFacing() {
-		// Switch camera.
-		if err := app.SwitchCamera(ctx); err != nil {
-			s.Fatal("Switch camera failed: ", err)
-		}
-		if !isUserFacing() {
-			s.Fatal("Failed to get user facing camera")
-		}
-	}
 	fileInfo, err := app.TakeSinglePhoto(ctx, cca.TimerOff)
 	if err != nil {
 		s.Fatal("Failed to capture picture: ", err)
