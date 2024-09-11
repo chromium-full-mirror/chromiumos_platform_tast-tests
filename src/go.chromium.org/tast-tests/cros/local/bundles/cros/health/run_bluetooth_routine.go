@@ -68,8 +68,6 @@ func init() {
 				BluetoothRoutineType: croshealthd.RoutineBluetoothDiscovery,
 			},
 			Fixture: "crosHealthdRunningAndBluetoothEnabledWithFloss",
-			// TODO(b/363888266): Promote tast to critical
-			ExtraAttr: []string{"informational", "group:criticalstaging"},
 		}, {
 			Name: "v1_scanning_floss",
 			Val: bluetoothRoutineTestParams{
