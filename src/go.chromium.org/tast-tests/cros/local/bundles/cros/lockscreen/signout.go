@@ -13,7 +13,6 @@ import (
 	"go.chromium.org/tast-tests/cros/local/chrome/ash/ashproc"
 	"go.chromium.org/tast-tests/cros/local/chrome/browser"
 	"go.chromium.org/tast-tests/cros/local/chrome/browser/browserfixt"
-	"go.chromium.org/tast-tests/cros/local/chrome/lacros/lacrosfixt"
 	"go.chromium.org/tast-tests/cros/local/chrome/uiauto"
 	"go.chromium.org/tast-tests/cros/local/chrome/uiauto/faillog"
 	"go.chromium.org/tast-tests/cros/local/chrome/uiauto/lockscreen"
@@ -32,14 +31,12 @@ import (
 type testParam struct {
 	withShortcut bool
 	checkCrashes bool
-	bt           browser.Type
 }
 
 func init() {
 	testing.AddTest(&testing.Test{
-		Func:         Signout,
-		LacrosStatus: testing.LacrosVariantExists,
-		Desc:         "Test signout from the lock screen",
+		Func: Signout,
+		Desc: "Test signout from the lock screen",
 		Contacts: []string{
 			"cros-lurs@google.com",
 			"rrsilva@google.com",
@@ -50,26 +47,13 @@ func init() {
 		Attr:         []string{"group:golden_tier", "group:medium_low_tier", "group:hardware", "group:complementary", "group:hw_agnostic"},
 		VarDeps:      []string{"ui.signinProfileTestExtensionManifestKey"},
 		Params: []testing.Param{{
-			Val: testParam{false, false, browser.TypeAsh},
+			Val: testParam{false, false},
 		}, {
 			Name: "shortcut",
-			Val:  testParam{true, false, browser.TypeAsh},
+			Val:  testParam{true, false},
 		}, {
 			Name: "check_crashes",
-			Val:  testParam{false, true, browser.TypeAsh},
-		}, {
-			Name:              "lacros",
-			Val:               testParam{false, false, browser.TypeLacros},
-			ExtraSoftwareDeps: []string{"lacros"},
-			// Disabled by TORA.  See: b/312845426
-			//}, {
-			//	Name:              "shortcut_lacros",
-			//	Val:               testParam{true, false, browser.TypeLacros},
-			//	ExtraSoftwareDeps: []string{"lacros"},
-		}, {
-			Name:              "check_crashes_lacros",
-			Val:               testParam{false, true, browser.TypeLacros},
-			ExtraSoftwareDeps: []string{"lacros"},
+			Val:  testParam{false, true},
 		}},
 		// `cpu.WaitUntilIdle` takes up to 2 minutes + we start Chrome multiple times.
 		Timeout: 5 * time.Minute,
@@ -79,7 +63,6 @@ func init() {
 func Signout(ctx context.Context, s *testing.State) {
 	signoutWithKeyboardShortcut := s.Param().(testParam).withShortcut
 	checkCrashes := s.Param().(testParam).checkCrashes
-	bt := s.Param().(testParam).bt
 
 	// Reserve some time for cleanup.
 	cleanupCtx := ctx
@@ -89,10 +72,10 @@ func Signout(ctx context.Context, s *testing.State) {
 
 	// Separate function for the first chrome run to isolate from the second run. For example so it does not generate UI tree two times on error.
 	func() {
-		cr, br, closeBrowser, err := browserfixt.SetUpWithNewChrome(ctx, bt, lacrosfixt.NewConfig(),
+		cr, br, closeBrowser, err := browserfixt.SetUpWithNewChrome(ctx, browser.TypeAsh, nil,
 			chrome.ExtraArgs("--force-tablet-mode=clamshell", "--disable-virtual-keyboard"))
 		if err != nil {
-			s.Fatalf("Chrome login failed with %v browser: %v", bt, err)
+			s.Fatalf("Chrome login failed with %v browser: %v", browser.TypeAsh, err)
 		}
 		defer cr.Close(cleanupCtx)
 		defer closeBrowser(cleanupCtx)
