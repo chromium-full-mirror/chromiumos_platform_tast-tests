@@ -21,9 +21,8 @@ const testUnsupportedRecognizerFileName = "web_handwriting_recognition_not_suppo
 
 func init() {
 	testing.AddTest(&testing.Test{
-		Func:         WebHandwritingRecognitionNotSupported,
-		LacrosStatus: testing.LacrosVariantExists,
-		Desc:         "Checks Web Handwriting Recognition API works, even if ml_service doesn't support ondevice_handwriting",
+		Func: WebHandwritingRecognitionNotSupported,
+		Desc: "Checks Web Handwriting Recognition API works, even if ml_service doesn't support ondevice_handwriting",
 		Contacts: []string{
 			"ml-service-team@google.com",
 			"amoylan@google.com",
@@ -32,15 +31,7 @@ func init() {
 		Timeout:      3 * time.Minute,
 		SoftwareDeps: []string{"chrome", "no_ondevice_handwriting"},
 		Attr:         []string{"group:mainline"},
-		Params: []testing.Param{{
-			Val:     browser.TypeAsh,
-			Fixture: "chromeLoggedIn",
-		}, {
-			Name:              "lacros",
-			Val:               browser.TypeLacros,
-			Fixture:           "lacros",
-			ExtraSoftwareDeps: []string{"lacros"},
-		}},
+		Fixture:      "chromeLoggedIn",
 		Data: []string{
 			testUnsupportedRecognizerFileName,
 		},
@@ -58,7 +49,7 @@ func WebHandwritingRecognitionNotSupported(ctx context.Context, s *testing.State
 
 	// Open browser.
 	cr := s.FixtValue().(chrome.HasChrome).Chrome()
-	br, closeBrowser, err := browserfixt.SetUp(ctx, cr, s.Param().(browser.Type))
+	br, closeBrowser, err := browserfixt.SetUp(ctx, cr, browser.TypeAsh)
 	if err != nil {
 		s.Fatal("Failed to set up browser: ", err)
 	}
