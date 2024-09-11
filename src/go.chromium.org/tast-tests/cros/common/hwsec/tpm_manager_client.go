@@ -147,13 +147,47 @@ func (u *TPMManagerClient) ClearOwnerPassword(ctx context.Context) (string, erro
 	return checkStatusCommandAndReturn(ctx, binaryMsg, err, "ClearOwnerPassword")
 }
 
+// SupportedFeaturesInfo contains the supported features related info.
+type SupportedFeaturesInfo struct {
+	// Whether TPM supports u2f.
+	SupportU2F bool
+
+	// Whether TPM support pinweaver.
+	SupportPinweaver bool
+
+	// Whether TPM supports runtime selection.
+	SupportRuntimeSelection bool
+
+	// Whether the features are allowed.
+	IsAllowed bool
+
+	// Whether TPM supports clear request.
+	SupportClearRequest bool
+
+	// Whether TPM supports clear without prompt.
+	SupportClearWithoutPrompt bool
+}
+
+// GetSupportedFeatures returns the supported features status.
+func (u *TPMManagerClient) GetSupportedFeatures(ctx context.Context) (*SupportedFeaturesInfo, error) {
+	binaryMsg, err := u.binary.getSupportedFeatures(ctx)
+	if err != nil {
+		return nil, errors.Wrap(err, "failed to call get_supported_features from tpm_manager_client")
+	}
+	return parseSupportedFeatures(ctx, string(binaryMsg), true)
+}
+
 // RuntimeSelectionSupportStatus returns the runtime TPM selection support status.
 func (u *TPMManagerClient) RuntimeSelectionSupportStatus(ctx context.Context) (bool, error) {
 	binaryMsg, err := u.binary.getSupportedFeatures(ctx)
 	if err != nil {
 		return false, errors.Wrap(err, "failed to call get_supported_features from tpm_manager_client")
 	}
-	return parseSupportedFeaturesForRuntimeSelectionSupportStatus(ctx, string(binaryMsg), true)
+	supportedFeatures, err := parseSupportedFeatures(ctx, string(binaryMsg), true)
+	if err != nil {
+		return false, errors.Wrap(err, "failed to parse SupportedFeatures")
+	}
+	return supportedFeatures.SupportRuntimeSelection, nil
 }
 
 // NonsensitiveStatusInfo contains the dictionary attack related information.
@@ -193,30 +227,68 @@ func parseStringMap(ctx context.Context, msg string, checkMatch bool, prefixes [
 	return parsed, nil
 }
 
-func parseSupportedFeaturesForRuntimeSelectionSupportStatus(ctx context.Context, msg string, checkStatus bool) (bool, error) {
+func parseSupportedFeatures(ctx context.Context, msg string, checkStatus bool) (*SupportedFeaturesInfo, error) {
 	const (
-		StatusPrefix            = "  status: "
-		SupportRuntimeSelection = "  support_runtime_selection: "
+		StatusPrefix              = "  status: "
+		SupportU2F                = "  support_u2f: "
+		SupportPinweaver          = "  support_pinweaver: "
+		SupportRuntimeSelection   = "  support_runtime_selection: "
+		IsAllowed                 = "  is_allowed: "
+		SupportClearRequest       = "  support_clear_request: "
+		SupportClearWithoutPrompt = "  support_clear_without_prompt: "
 	)
 	prefixes := []string{
 		StatusPrefix,
+		SupportU2F,
+		SupportPinweaver,
 		SupportRuntimeSelection,
+		IsAllowed,
+		SupportClearRequest,
+		SupportClearWithoutPrompt,
 	}
 	parsed, err := parseStringMap(ctx, msg, checkStatus, prefixes)
 	if err != nil {
-		return false, errors.Wrap(err, "failed to parse string map")
+		return nil, errors.Wrap(err, "failed to parse string map")
 	}
 	if checkStatus {
 		// We need to check the status.
 		if parsed[StatusPrefix] != tpmManagerStatusSuccessMessage {
-			return false, errors.Errorf("incorrect status %q from GetSupportedFeatures", parsed[StatusPrefix])
+			return nil, errors.Errorf("incorrect status %q from GetSupportedFeatures", parsed[StatusPrefix])
 		}
 	}
-	supported, err := strconv.ParseBool(parsed[SupportRuntimeSelection])
+	supportU2F, err := strconv.ParseBool(parsed[SupportU2F])
 	if err != nil {
-		return false, errors.Wrap(err, "failed to parse status to boolean")
+		return nil, errors.Wrap(err, "failed to parse SupportU2F to boolean")
 	}
-	return supported, nil
+	supportPinweaver, err := strconv.ParseBool(parsed[SupportPinweaver])
+	if err != nil {
+		return nil, errors.Wrap(err, "failed to parse SupportPinweaver to boolean")
+	}
+	supportRuntimeSelection, err := strconv.ParseBool(parsed[SupportRuntimeSelection])
+	if err != nil {
+		return nil, errors.Wrap(err, "failed to parse SupportRuntimeSelection to boolean")
+	}
+	isAllowed, err := strconv.ParseBool(parsed[IsAllowed])
+	if err != nil {
+		return nil, errors.Wrap(err, "failed to parse IsAllowed to boolean")
+	}
+	supportClearRequest, err := strconv.ParseBool(parsed[SupportClearRequest])
+	if err != nil {
+		return nil, errors.Wrap(err, "failed to parse SupportClearRequest to boolean")
+	}
+	supportClearWithoutPrompt, err := strconv.ParseBool(parsed[SupportClearWithoutPrompt])
+	if err != nil {
+		return nil, errors.Wrap(err, "failed to parse SupportWithoutPrompt to boolean")
+	}
+
+	return &SupportedFeaturesInfo{
+		SupportU2F:                supportU2F,
+		SupportPinweaver:          supportPinweaver,
+		SupportRuntimeSelection:   supportRuntimeSelection,
+		IsAllowed:                 isAllowed,
+		SupportClearRequest:       supportClearRequest,
+		SupportClearWithoutPrompt: supportClearWithoutPrompt,
+	}, nil
 }
 
 // parseNonsensitiveStatusInfo tries to parse the output of NonsensitiveStatus from msg, if checkStatus is true, then we'll verify that the output of the command contains a success message.
@@ -303,6 +375,130 @@ func (u *TPMManagerClient) GetNonsensitiveStatusIgnoreCache(ctx context.Context)
 	return parseNonsensitiveStatusInfo(ctx, true, msg)
 }
 
+// VersionInfo contains the version related information.
+type VersionInfo struct {
+	// TPM Family. Represented in TPM 2.0 style encoding.
+	Family int
+
+	// TPM Spec Level.
+	SpecLevel uint64
+
+	// Manufacturer code.
+	Manufacturer int
+
+	// TPM Model Number.
+	TpmModel int
+
+	// Firmware Version.
+	FirmwareVersion uint64
+
+	// Vendor Specific Information.
+	VendorSpecific string
+
+	// GSC Version.
+	GscVersion string
+
+	// RW Version.
+	RWVersion string
+}
+
+// parseVersionInfo tries to parse the output of GetVersionInfo from msg, if checkStatus is true, then we'll verify that output of the command contains a success message.
+func parseVersionInfo(ctx context.Context, checkStatus bool, msg string) (info *VersionInfo, returnedError error) {
+	const (
+		FamilyPrefix          = "  family: "
+		SpecLevelPrefix       = "  spec_level: "
+		ManufacturerPrefix    = "  manufacturer: "
+		TpmModelPrefix        = "  tpm_model: "
+		FirmwareVersionPrefix = "  firmware_version: "
+		VendorSpecificPrefix  = "  vendor_specific: "
+		GscVersionPrefix      = "  gsc_version: "
+		RWVersionPrefix       = "  rw_version: "
+		StatusPrefix          = "  status: "
+	)
+	prefixes := []string{FamilyPrefix, SpecLevelPrefix, ManufacturerPrefix, TpmModelPrefix, FirmwareVersionPrefix, VendorSpecificPrefix, GscVersionPrefix, RWVersionPrefix, StatusPrefix}
+
+	parsed, err := parseStringMap(ctx, msg, checkStatus, prefixes)
+	if err != nil {
+		return nil, errors.Wrap(err, "failed to parse string map")
+	}
+
+	if checkStatus {
+		// We need to check the status.
+		if parsed[StatusPrefix] != tpmManagerStatusSuccessMessage {
+			return nil, errors.Errorf("incorrect status %q from GetDAInfo, expected %q", parsed[StatusPrefix], tpmManagerStatusSuccessMessage)
+		}
+	}
+
+	family := -1
+	if _, err := fmt.Sscanf(parsed[FamilyPrefix], "%d", &family); err != nil {
+		return nil, errors.Wrapf(err, "family doesn't start with a valid integer %q", parsed[FamilyPrefix])
+	}
+
+	specLevelStr := ""
+	if _, err := fmt.Sscanf(parsed[SpecLevelPrefix], "%s", &specLevelStr); err != nil {
+		return nil, errors.Wrapf(err, "specLevel doesn't start with a valid string %q", parsed[SpecLevelPrefix])
+	}
+	specLevel, _ := strconv.ParseUint(specLevelStr, 10, 64)
+
+	manufacturer := -1
+	if _, err := fmt.Sscanf(parsed[ManufacturerPrefix], "%d", &manufacturer); err != nil {
+		return nil, errors.Wrapf(err, "manufacturer doesn't start with a valid integer %q", parsed[ManufacturerPrefix])
+	}
+
+	tpmModel := -1
+	if _, err := fmt.Sscanf(parsed[TpmModelPrefix], "%d", &tpmModel); err != nil {
+		return nil, errors.Wrapf(err, "tpmModel doesn't start with a valid integer %q", parsed[TpmModelPrefix])
+	}
+
+	firmwareVersionStr := ""
+	if _, err := fmt.Sscanf(parsed[FirmwareVersionPrefix], "%s", &firmwareVersionStr); err != nil {
+		return nil, errors.Wrapf(err, "firmwareVersion doesn't start with a valid string %q", parsed[FirmwareVersionPrefix])
+	}
+	firmwareVersion, _ := strconv.ParseUint(firmwareVersionStr, 10, 64)
+
+	vendorSpecific := ""
+	if _, err := fmt.Sscanf(parsed[VendorSpecificPrefix], "%s", &vendorSpecific); err != nil {
+		return nil, errors.Wrapf(err, "vendorSpecific doesn't start with a valid string %q", parsed[VendorSpecificPrefix])
+	}
+
+	gscVersion := ""
+	if _, err := fmt.Sscanf(parsed[GscVersionPrefix], "%s", &gscVersion); err != nil {
+		return nil, errors.Wrapf(err, "gscVersion doesn't start with a valid string %q", parsed[GscVersionPrefix])
+	}
+
+	rwVersion := ""
+	if _, err := fmt.Sscanf(parsed[RWVersionPrefix], "%s", &rwVersion); err != nil {
+		return nil, errors.Wrapf(err, "rwVersion doesn't start with a valid string %q", parsed[RWVersionPrefix])
+	}
+
+	return &VersionInfo{
+		Family:          family,
+		SpecLevel:       specLevel,
+		Manufacturer:    manufacturer,
+		TpmModel:        tpmModel,
+		FirmwareVersion: firmwareVersion,
+		VendorSpecific:  vendorSpecific,
+		GscVersion:      gscVersion,
+		RWVersion:       rwVersion,
+	}, nil
+}
+
+// GetVersionInfo retrieves the gsc_version, family, spec_level, manufacturer, tpm_model, firmware_version, and vendor_specific information.
+// The returned err is nil if the operation is successful.
+func (u *TPMManagerClient) GetVersionInfo(ctx context.Context) (info *VersionInfo, returnedError error) {
+	binaryMsg, err := u.binary.getVersionInfo(ctx)
+
+	// Convert msg first because it's still used when there's an error.
+	msg := string(binaryMsg)
+
+	if err != nil {
+		return nil, errors.Wrapf(err, "calling GetVersionInfo failed with message %q", msg)
+	}
+
+	// Now try to parse everything.
+	return parseVersionInfo(ctx, true, msg)
+}
+
 // DAInfo contains the dictionary attack related information.
 type DAInfo struct {
 	// Counter is the dictionary attack lockout counter.
@@ -364,7 +560,8 @@ func parseDAInfo(ctx context.Context, checkStatus bool, msg string) (info *DAInf
 	return &DAInfo{Counter: counter, Threshold: threshold, InEffect: inEffect, Remaining: remaining}, nil
 }
 
-// GetDAInfo retrieves the dictionary attack counter, threshold, if lockout is in effect and seconds remaining. The returned err is nil iff the operation is successful.
+// GetDAInfo retrieves the dictionary attack counter, threshold, if lockout is in effect and seconds remaining.
+// The returned err is nil if the operation is successful.
 func (u *TPMManagerClient) GetDAInfo(ctx context.Context) (info *DAInfo, returnedError error) {
 	binaryMsg, err := u.binary.getDAInfo(ctx)
 

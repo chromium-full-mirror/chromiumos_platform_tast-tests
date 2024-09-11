@@ -87,6 +87,11 @@ func (c *tpmManagerBinary) status(ctx context.Context) ([]byte, error) {
 	return c.call(ctx, "status")
 }
 
+// getVersionInfo calls "tpm_manager_client get_version_info".
+func (c *tpmManagerBinary) getVersionInfo(ctx context.Context) ([]byte, error) {
+	return c.call(ctx, "get_version_info")
+}
+
 // nonsensitiveStatus calls "tpm_manager_client status --nonsensitive".
 func (c *tpmManagerBinary) nonsensitiveStatus(ctx context.Context) ([]byte, error) {
 	return c.call(ctx, "status", "--nonsensitive")
