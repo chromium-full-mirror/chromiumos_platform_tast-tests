@@ -38,6 +38,7 @@ def create_reports(
                 results=results,
                 template_dir=template_dir,
             )
+            report.make()
             report.write(output_dir=output_dir)
         else:
             raise ValueError(f"Unknown report kind: {report_kind}")

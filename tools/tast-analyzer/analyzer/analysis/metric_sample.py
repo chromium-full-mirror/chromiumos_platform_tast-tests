@@ -64,3 +64,7 @@ class MetricSample:
         s += f"  mean={d.mean:.2f} {self.units}, std={math.sqrt(d.variance):.2f}, "
         s += f"min={d.minmax[0]:.2f}, max={d.minmax[1]:.2f}, skew={d.skewness:.2f}"
         return s
+
+    def size(self) -> int:
+        """Returns the sample size of this MetricSample."""
+        return len(self.value_map)

@@ -49,6 +49,22 @@ class ExperimentGroup:
 
         return f", {kind} {100*confidence:.1f}%=[{low:.2f}, {high:.2f}], E[bias]={bias:.2f}"
 
+    def label(self) -> str:
+        """Returns the sample label of the sample of this experiment group."""
+        return self.sample.label
+
+    def metric_name(self) -> str:
+        """Returns the sample metric name of the sample of this experiment group."""
+        return self.sample.metric_name
+
+    def metric_path(self) -> str:
+        """Returns the sample metric path of the sample of this experiment group."""
+        return self.sample.metric_path
+
+    def size(self) -> int:
+        """Returns the sample size of the sample of this experiment group."""
+        return self.sample.size()
+
 
 @dataclasses.dataclass(frozen=True, kw_only=True, order=True)
 class PairwiseResult:

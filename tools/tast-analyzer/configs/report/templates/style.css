@@ -1,0 +1,29 @@
+table {
+  table-layout: fixed;
+  border-collapse: collapse;
+  border-top: 1px solid black;
+  border-bottom: 1px solid black;
+  margin: auto;
+
+  caption {
+    padding: 10px;
+  }
+}
+
+thead {
+  border-bottom: 1px solid black;
+}
+
+th,
+td {
+  padding: 10px;
+
+  &[data-is-numeric="true"] {
+    text-align: end;
+  }
+}
+
+.table-container {
+  max-width: 100%;
+  overflow-x: auto;
+}

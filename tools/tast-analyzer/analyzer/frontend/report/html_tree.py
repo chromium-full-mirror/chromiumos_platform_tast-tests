@@ -3,8 +3,10 @@
 # found in the LICENSE file.
 
 import pathlib
+import re
 import xml.dom.minidom
 import xml.etree.ElementTree as ET
+from xml.sax import saxutils
 
 
 class HtmlTree:
@@ -64,6 +66,10 @@ class HtmlTree:
         pretty_xml = dom.toprettyxml()
         pretty_html = pretty_xml.replace('<?xml version="1.0" ?>', "")
 
+        # `toprettyxml` escapes the text even within <style> tags.
+        # We need to unescape it to make the style work.
+        pretty_html = self._unescape_text_in_style(pretty_html)
+
         # `toprettyxml` appends a new line to the end of each line, which can
         # generate unnecessary blank lines. We check each line and filters it out
         # if it is empty.
@@ -71,3 +77,19 @@ class HtmlTree:
             line for line in pretty_html.split("\n") if line.strip()
         )
         return pretty_html
+
+    def _unescape_text_in_style(self, text: str) -> str:
+        """Unescapes escaped text within <style> tags.
+
+        Args:
+            text: The input text.
+
+        Returns:
+            The text with escaped text unescaped.
+        """
+
+        def replace(match: re.Match) -> str:
+            unescaped = saxutils.unescape(match.group(1), {r"&quot;": '"'})
+            return f"<style>{unescaped}</style>"
+
+        return re.sub(r"<style>(.*?)</style>", replace, text, flags=re.DOTALL)

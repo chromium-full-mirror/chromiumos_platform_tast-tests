@@ -4,6 +4,7 @@
 import pathlib
 import tempfile
 import unittest
+import xml.etree.ElementTree as ET
 
 from analyzer.analysis import analysis_cfg
 from analyzer.analysis import analysis_results
@@ -17,6 +18,9 @@ TEMPLATE_DIR: pathlib.Path = (
     / "configs"
     / "report"
     / "templates"
+)
+HTML_DIR: pathlib.Path = (
+    pathlib.Path(__file__).parent.absolute() / "files" / "report" / "html"
 )
 
 
@@ -70,6 +74,90 @@ class HtmlReportTest(unittest.TestCase):
             report._test_names(), [after_test_name, before_test_name]
         )
 
+    def test_labels(self) -> None:
+        samples = (
+            test_util.load_before_samples() + test_util.load_after_samples()
+        )
+        samples_by_id = test_util.samples_by_id(samples)
+
+        groups_list = analysis_results.construct_experiment_groups_list(
+            samples, analysis_cfg.AnalysisCfg()
+        )
+        results = [
+            analysis_results.AnalysisResult(
+                groups=groups_list[0],
+                pairs=[
+                    analysis_results.PairwiseResult(
+                        before=analysis_results.ExperimentGroup(
+                            sample=samples_by_id[
+                                "before.ui.OverviewPerf.Test.One.average"
+                            ]
+                        ),
+                        after=analysis_results.ExperimentGroup(
+                            sample=samples_by_id[
+                                "after.ui.OverviewPerf.Test.One.average"
+                            ]
+                        ),
+                        hypothesis_result=stats_util.HypothesisTestResult(
+                            statistic_kind=stats_util.TestStatisticKind.RANK_SUM,
+                            u=0.0,
+                            p=1.0,
+                        ),
+                    )
+                ],
+            )
+        ]
+        report = html_report.HtmlReport(results, TEMPLATE_DIR)
+        self.assertEqual(report._labels(), ["after", "before"])
+
+    def test_metric_paths(self) -> None:
+        before_metric_name = "Test.One"
+        after_metric_name = "Test.Three"
+        before_metric_path = f"ui.OverviewPerf.{before_metric_name}.average"
+        after_metric_path = f"ui.OverviewPerf.{after_metric_name}.average"
+        samples = (
+            test_util.load_before_samples() + test_util.load_after_samples()
+        )
+        samples_by_id = test_util.samples_by_id(samples)
+
+        experiment_cfg = analysis_cfg.ExperimentCfg(
+            per_test_cfgs=[
+                analysis_cfg.PerTestCfg(
+                    test_name_regex="ui\\.OverviewPerf",
+                    metric_name_regex_allowlist=[
+                        rf"{before_metric_name}|{after_metric_name}"
+                    ],
+                )
+            ]
+        )
+        groups_list = analysis_results.construct_experiment_groups_list(
+            samples, analysis_cfg.AnalysisCfg(experiment_cfg=experiment_cfg)
+        )
+        results = [
+            analysis_results.AnalysisResult(
+                groups=groups_list[0],
+                pairs=[
+                    analysis_results.PairwiseResult(
+                        before=analysis_results.ExperimentGroup(
+                            sample=samples_by_id[f"before.{before_metric_path}"]
+                        ),
+                        after=analysis_results.ExperimentGroup(
+                            sample=samples_by_id[f"after.{after_metric_path}"]
+                        ),
+                        hypothesis_result=stats_util.HypothesisTestResult(
+                            statistic_kind=stats_util.TestStatisticKind.RANK_SUM,
+                            u=0.0,
+                            p=1.0,
+                        ),
+                    )
+                ],
+            )
+        ]
+        report = html_report.HtmlReport(results, TEMPLATE_DIR)
+        self.assertEqual(
+            report._metric_paths(), [before_metric_path, after_metric_path]
+        )
+
     def test_set_title(self) -> None:
         before_test_name = "ui.OverviewPerfBefore"
         after_test_name = "ui.OverviewPerfAfter"
@@ -114,14 +202,47 @@ class HtmlReportTest(unittest.TestCase):
             )
         ]
         report = html_report.HtmlReport(results, TEMPLATE_DIR)
+        report._set_title()
 
-        title = f"A/B Test Report | {after_test_name}, {before_test_name}"
-        self.assertEqual(report.html.title.text, title)
+        expected_html = self._load_html(HTML_DIR / "set_title.html")
+        self._assert_elements_equal(report.html.html, expected_html)
 
-        self.assertEqual(len(report.html.body), 1)
-        h1 = report.html.body[0]
-        self.assertEqual(h1.tag, "h1")
-        self.assertEqual(h1.text, title)
+    def test_create_sample_size_table(self) -> None:
+        metric_path = "ui.OverviewPerf.Test.One.average"
+
+        samples = (
+            test_util.load_before_samples() + test_util.load_after_samples()
+        )
+        samples_by_id = test_util.samples_by_id(samples)
+
+        groups_list = analysis_results.construct_experiment_groups_list(
+            samples, analysis_cfg.AnalysisCfg()
+        )
+        results = [
+            analysis_results.AnalysisResult(
+                groups=groups_list[0],
+                pairs=[
+                    analysis_results.PairwiseResult(
+                        before=analysis_results.ExperimentGroup(
+                            sample=samples_by_id[f"before.{metric_path}"]
+                        ),
+                        after=analysis_results.ExperimentGroup(
+                            sample=samples_by_id[f"after.{metric_path}"]
+                        ),
+                        hypothesis_result=stats_util.HypothesisTestResult(
+                            statistic_kind=stats_util.TestStatisticKind.RANK_SUM,
+                            u=0.0,
+                            p=1.0,
+                        ),
+                    )
+                ],
+            )
+        ]
+        report = html_report.HtmlReport(results, TEMPLATE_DIR)
+        table = report._create_sample_size_table()
+
+        expected_table = self._load_html(HTML_DIR / "sample_size_table.html")
+        self._assert_elements_equal(table, expected_table)
 
     def test_write(self) -> None:
         samples = (
@@ -162,3 +283,24 @@ class HtmlReportTest(unittest.TestCase):
             export_dir = pathlib.Path(temp)
             report.write(output_dir=export_dir)
             self.assertTrue(export_dir.joinpath("index.html").exists())
+
+    def _load_html(self, path: pathlib.Path) -> ET.Element:
+        return ET.fromstring(path.read_text())
+
+    def _assert_html_text_equal(
+        self, text1: str | None, text2: str | None
+    ) -> None:
+        # Consecutive whitespace is normalized to a single space in HTML
+        text1 = text1 = " ".join(text1.split()) if text1 else ""
+        text2 = text2 = " ".join(text2.split()) if text2 else ""
+        self.assertEqual(text1, text2)
+
+    def _assert_elements_equal(
+        self, element1: ET.Element, element2: ET.Element
+    ) -> None:
+        self.assertEqual(element1.tag, element2.tag)
+        self._assert_html_text_equal(element1.text, element2.text)
+        self.assertDictEqual(element1.attrib, element2.attrib)
+
+        for child1, child2 in zip(element1, element2, strict=True):
+            self._assert_elements_equal(child1, child2)
