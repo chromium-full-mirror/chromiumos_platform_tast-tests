@@ -60,8 +60,7 @@ func init() {
 		Attr:         []string{"group:firmware", "firmware_bios", "firmware_level2"},
 		Vars:         []string{"firmware.skipFlashUSB"},
 		Timeout:      120 * time.Minute,
-		ServiceDeps:  []string{"tast.cros.firmware.UtilsService", "tast.cros.firmware.BiosService", "tast.cros.firmware.TPMService"},
-		SoftwareDeps: []string{"flashrom"},
+		ServiceDeps:  []string{"tast.cros.firmware.TPMService"},
 		Params: []testing.Param{
 			{
 				Name:      "firmware_data_key_version",
@@ -140,10 +139,6 @@ func UpdateVersion(ctx context.Context, s *testing.State) {
 		s.Fatal("Failed to check firmware tries: ", err)
 	}
 
-	cleanupCtx := ctx
-	ctx, cancel := ctxutil.Shorten(ctx, 10*time.Minute)
-	defer cancel()
-
 	fs := dutfs.NewClient(h.RPCClient.Conn)
 	if exist, err := fs.Exists(ctx, tempDir); err != nil {
 		s.Fatal("Failed to check if temp dir is exist: ", err)
@@ -157,6 +152,9 @@ func UpdateVersion(ctx context.Context, s *testing.State) {
 	if err := fs.MkDir(ctx, tempDir, 0777); err != nil {
 		s.Fatal("Failed to make the temp directory: ", err)
 	}
+	cleanupCtx := ctx
+	ctx, cancel := ctxutil.Shorten(ctx, 10*time.Minute)
+	defer cancel()
 	defer func(ctx context.Context) {
 		s.Log("Make sure DUT is connected before cleanup")
 		if err := h.EnsureDUTBooted(ctx); err != nil {
