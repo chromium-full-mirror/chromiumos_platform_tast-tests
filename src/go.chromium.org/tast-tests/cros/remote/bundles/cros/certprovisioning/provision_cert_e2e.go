@@ -12,6 +12,7 @@ import (
 	"github.com/golang/protobuf/ptypes/empty"
 	"golang.org/x/exp/slices"
 
+	"go.chromium.org/tast-tests/cros/common/dma"
 	"go.chromium.org/tast-tests/cros/common/fixture"
 	"go.chromium.org/tast-tests/cros/common/pkcs11"
 	"go.chromium.org/tast-tests/cros/common/policy"
@@ -57,7 +58,7 @@ func init() {
 			"group:tape-daily",
 			"group:golden_tier", // TODO: Keep golden_tier suite until b/321909589 is resolved.
 		},
-		SoftwareDeps: []string{"reboot", "chrome"},
+		SoftwareDeps: []string{"reboot", "chrome", "gaia"},
 		ServiceDeps: []string{
 			"tast.cros.hwsec.OwnershipService",
 			"tast.cros.hwsec.Pkcs11Service",
@@ -105,7 +106,7 @@ func init() {
 func ProvisionCertE2E(ctx context.Context, s *testing.State) {
 	param := s.Param().(gaiaenrollment.TestParams)
 	dmServerURL := param.DMServer
-	poolID := param.PoolID
+	poolID := dma.TapePool(param.PoolID)
 
 	// Shorten deadline to leave time for cleanup
 	cleanupCtx := ctx
