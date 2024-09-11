@@ -26,8 +26,10 @@ func init() {
 		SoftwareDeps: []string{"diagnostics"},
 		// This test should not be added to mainline group since the network
 		// bandwidth routine depends on real server but not mock server.
-		Attr:    []string{"group:healthd", "healthd_perbuild"},
-		Fixture: "crosHealthdRunning",
+		Attr: []string{"group:healthd", "healthd_perbuild"},
+		// The network bandwidth routine depends on the network connection.
+		// Reboot the DUT to ensure the network connection is stable.
+		Fixture: "crosHealthdRunningAndRebootDUT",
 	})
 }
 
