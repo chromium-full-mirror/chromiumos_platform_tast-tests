@@ -220,7 +220,11 @@ func testPreviewNotActive(ctx context.Context, cr *chrome.Chrome, outDir string)
 
 // testVideoCaptureShowPrompt tests whether a prompt will show up to request for
 // user's permission before the video capture starts.
-func testVideoCaptureShowPrompt(ctx context.Context, cr *chrome.Chrome, outDir, testURL string, shouldShowPrompt bool) error {
+func testVideoCaptureShowPrompt(ctx context.Context, cr *chrome.Chrome, outDir, testURL string, shouldShowPrompt bool) (retErr error) {
+	cleanupCtx := ctx
+	ctx, cancel := ctxutil.Shorten(ctx, 5*time.Second)
+	defer cancel()
+
 	// Open the test website.
 	conn, err := cr.NewConn(ctx, testURL)
 	if err != nil {
@@ -233,6 +237,10 @@ func testVideoCaptureShowPrompt(ctx context.Context, cr *chrome.Chrome, outDir, 
 	if err != nil {
 		return errors.Wrap(err, "failed to create Test API connection")
 	}
+	defer faillog.DumpUITreeOnError(cleanupCtx, outDir, func() bool {
+		return retErr != nil
+	}, tconn)
+
 	ui := uiauto.New(tconn)
 
 	allowButton := nodewith.Name("Allow").Role(role.Button)
