@@ -37,7 +37,6 @@ import (
 func init() {
 	testing.AddTest(&testing.Test{
 		Func:         DragDrop,
-		LacrosStatus: testing.LacrosVariantExists,
 		Desc:         "Verify drag drop from files app works",
 		BugComponent: "b:167289",
 		Contacts: []string{
@@ -59,15 +58,7 @@ func init() {
 				Value: "screenplay-4acc1d8c-a491-49ae-acb8-d3e7f29a510a",
 			},
 		},
-		Params: []testing.Param{{
-			Fixture: "chromeLoggedIn",
-			Val:     browser.TypeAsh,
-		}, {
-			Name:              "lacros",
-			Fixture:           "lacros",
-			ExtraSoftwareDeps: []string{"lacros"},
-			Val:               browser.TypeLacros,
-		}},
+		Fixture: "chromeLoggedIn",
 	})
 }
 
@@ -99,8 +90,7 @@ func DragDrop(ctx context.Context, s *testing.State) {
 		}
 	}(cleanupCtx)
 
-	bt := s.Param().(browser.Type)
-	conn, _, closeBrowser, err := browserfixt.SetUpWithURL(ctx, cr, bt, "http://localhost:8080/drag_drop_pwa_window.html")
+	conn, _, closeBrowser, err := browserfixt.SetUpWithURL(ctx, cr, browser.TypeAsh, "http://localhost:8080/drag_drop_pwa_window.html")
 	if err != nil {
 		s.Fatal("Failed to load PWA for URL: ", err)
 	}

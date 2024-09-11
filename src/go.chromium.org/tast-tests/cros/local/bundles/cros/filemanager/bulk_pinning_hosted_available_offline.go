@@ -35,7 +35,6 @@ func init() {
 	testing.AddTest(&testing.Test{
 		Func:           BulkPinningHostedAvailableOffline,
 		LifeCycleStage: testing.LifeCycleOwnerMonitored,
-		LacrosStatus:   testing.LacrosVariantExists,
 		Desc:           "Verify that after bulk pinning enabled, hosted files can be opened offline",
 		BugComponent:   "b:167289",
 		Contacts: []string{
@@ -62,11 +61,7 @@ func init() {
 			Value: "screenplay-9390581d-007a-4cc4-a9fe-1dbaed8a5aaf",
 		}},
 		Timeout: 10 * time.Minute,
-		Params: []testing.Param{{
-			Name:    "ash",
-			Val:     browser.TypeAsh,
-			Fixture: "driveFsStartedBulkPinningEnabled",
-		}},
+		Fixture: "driveFsStartedBulkPinningEnabled",
 	})
 }
 
@@ -96,15 +91,13 @@ func BulkPinningHostedAvailableOffline(ctx context.Context, s *testing.State) {
 		}
 	}()
 
-	br, closeBrowser, err := browserfixt.SetUp(ctx, s.FixtValue().(*drivefs.FixtureData).Chrome, s.Param().(browser.Type))
+	br, closeBrowser, err := browserfixt.SetUp(ctx, s.FixtValue().(*drivefs.FixtureData).Chrome, browser.TypeAsh)
 	if err != nil {
 		s.Fatal("Failed to set up browser: ", err)
 	}
 	defer closeBrowser(cleanupCtx)
 
-	// Verify the Docs service worker gets registered. When LaCrOS is enabled, the
-	// service worker will get cached in LaCrOS and the connection to it happens
-	// via crosapi.
+	// Verify the Docs service worker gets registered.
 	if err := verifyDocsServiceWorkerCached(ctx, br); err != nil {
 		s.Fatal("Failed verifying Docs service worker is cached: ", err)
 	}

@@ -29,7 +29,6 @@ import (
 func init() {
 	testing.AddTest(&testing.Test{
 		Func:         DrivefsDssOffline,
-		LacrosStatus: testing.LacrosVariantExists,
 		Desc:         "Verify that making a Docs/Sheets/Slides file available offline through Files App works",
 		BugComponent: "b:167289",
 		Contacts: []string{
@@ -49,15 +48,7 @@ func init() {
 			"informational",
 		},
 		Timeout: 5 * time.Minute,
-		Params: []testing.Param{{
-			Val:     browser.TypeAsh,
-			Fixture: "driveFsStartedWithNativeMessaging",
-		}, {
-			Name:              "lacros",
-			Val:               browser.TypeLacros,
-			ExtraSoftwareDeps: []string{"lacros"},
-			Fixture:           "driveFsStartedWithNativeMessagingLacros",
-		}},
+		Fixture: "driveFsStartedWithNativeMessaging",
 		SearchFlags: []*testing.StringPair{
 			{
 				Key:   "feature_id",
@@ -80,7 +71,7 @@ func DrivefsDssOffline(ctx context.Context, s *testing.State) {
 	ctx, cancel := ctxutil.Shorten(ctx, 30*time.Second)
 	defer cancel()
 
-	br, closeBrowser, err := browserfixt.SetUp(ctx, s.FixtValue().(*drivefs.FixtureData).Chrome, s.Param().(browser.Type))
+	br, closeBrowser, err := browserfixt.SetUp(ctx, s.FixtValue().(*drivefs.FixtureData).Chrome, browser.TypeAsh)
 	if err != nil {
 		s.Fatal("Failed to set up browser: ", err)
 	}

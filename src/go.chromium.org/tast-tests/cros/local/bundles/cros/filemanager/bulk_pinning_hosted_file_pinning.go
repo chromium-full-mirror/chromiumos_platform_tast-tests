@@ -29,7 +29,6 @@ func init() {
 	testing.AddTest(&testing.Test{
 		Func:           BulkPinningHostedFilePinning,
 		LifeCycleStage: testing.LifeCycleOwnerMonitored,
-		LacrosStatus:   testing.LacrosVariantExists,
 		Desc:           "Verify DSS files are pinned and displayed as such after the bulk pinning feature is enabled",
 		BugComponent:   "b:167289",
 		Contacts: []string{

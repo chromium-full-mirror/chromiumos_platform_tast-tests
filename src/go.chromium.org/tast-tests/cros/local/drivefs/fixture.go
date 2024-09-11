@@ -15,8 +15,6 @@ import (
 	"go.chromium.org/tast-tests/cros/common/policy"
 	"go.chromium.org/tast-tests/cros/local/chrome"
 	"go.chromium.org/tast-tests/cros/local/chrome/ash"
-	"go.chromium.org/tast-tests/cros/local/chrome/browser"
-	"go.chromium.org/tast-tests/cros/local/chrome/lacros/lacrosfixt"
 	"go.chromium.org/tast-tests/cros/local/policyutil"
 
 	"go.chromium.org/tast/core/ctxutil"
@@ -63,7 +61,7 @@ func init() {
 		Desc:            "Ensures DriveFS is mounted and provides an authenticated Drive API Client",
 		Contacts:        []string{"benreich@chromium.org", "chromeos-files-syd@google.com"},
 		BugComponent:    "b:167289",
-		Impl:            &fixture{bt: browser.TypeAsh},
+		Impl:            &fixture{},
 		SetUpTimeout:    chrome.GAIALoginTimeout + DriveFsSetupAndTearDownTimeout,
 		ResetTimeout:    DriveFsSetupAndTearDownTimeout,
 		TearDownTimeout: time.Hour,
@@ -77,7 +75,7 @@ func init() {
 		Desc:            "Ensures DriveFS is mounted and provides an authenticated Drive API Client with the field trial enabled flag supplied",
 		Contacts:        []string{"benreich@chromium.org", "chromeos-files-syd@google.com"},
 		BugComponent:    "b:167289",
-		Impl:            &fixture{bt: browser.TypeAsh, fieldTrial: chrome.FieldTrialConfigEnable},
+		Impl:            &fixture{fieldTrial: chrome.FieldTrialConfigEnable},
 		SetUpTimeout:    chrome.GAIALoginTimeout + DriveFsSetupAndTearDownTimeout,
 		ResetTimeout:    DriveFsSetupAndTearDownTimeout,
 		TearDownTimeout: time.Hour,
@@ -91,7 +89,7 @@ func init() {
 		Desc:            "Ensures DriveFS is mounted and provides an authenticated Drive API Client with the field trial disabled flag supplied",
 		Contacts:        []string{"benreich@chromium.org", "chromeos-files-syd@google.com"},
 		BugComponent:    "b:167289",
-		Impl:            &fixture{bt: browser.TypeAsh, fieldTrial: chrome.FieldTrialConfigDisable},
+		Impl:            &fixture{fieldTrial: chrome.FieldTrialConfigDisable},
 		SetUpTimeout:    chrome.GAIALoginTimeout + DriveFsSetupAndTearDownTimeout,
 		ResetTimeout:    DriveFsSetupAndTearDownTimeout,
 		TearDownTimeout: time.Hour,
@@ -107,7 +105,6 @@ func init() {
 		BugComponent: "b:167289",
 		Impl: &fixture{
 			chromeOptions: []chrome.Option{chrome.EnableFeatures("FilesTrash")},
-			bt:            browser.TypeAsh,
 		},
 		SetUpTimeout:    chrome.GAIALoginTimeout + DriveFsSetupAndTearDownTimeout,
 		ResetTimeout:    DriveFsSetupAndTearDownTimeout,
@@ -124,7 +121,6 @@ func init() {
 		BugComponent: "b:167289",
 		Impl: &fixture{
 			enableBulkPinning: true,
-			bt:                browser.TypeAsh,
 		},
 		SetUpTimeout:    chrome.GAIALoginTimeout + DriveFsSetupAndTearDownTimeout,
 		ResetTimeout:    DriveFsSetupAndTearDownTimeout,
@@ -146,7 +142,6 @@ func init() {
 				},
 			},
 			enableBulkPinning: true,
-			bt:                browser.TypeAsh,
 		},
 		SetUpTimeout:    chrome.GAIALoginTimeout + DriveFsSetupAndTearDownTimeout,
 		ResetTimeout:    DriveFsSetupAndTearDownTimeout,
@@ -165,25 +160,7 @@ func init() {
 			CliKeyFeatures: {
 				"switchblade_dss": "true",
 			},
-		}, bt: browser.TypeAsh},
-		SetUpTimeout:    chrome.GAIALoginTimeout + DriveFsSetupAndTearDownTimeout,
-		ResetTimeout:    DriveFsSetupAndTearDownTimeout,
-		TearDownTimeout: chrome.ResetTimeout + DriveFsSetupAndTearDownTimeout,
-		Vars: []string{
-			"drivefs.extensionClientID",
-		},
-	})
-
-	testing.AddFixture(&testing.Fixture{
-		Name:         "driveFsStartedWithNativeMessagingLacros",
-		Desc:         "Lacros variant of driveFsStartedWithNativeMessaging",
-		Contacts:     []string{"austinct@chromium.org", "chromeos-files-syd@google.com"},
-		BugComponent: "b:167289",
-		Impl: &fixture{drivefsOptions: CliArgsMap{
-			CliKeyFeatures: {
-				"switchblade_dss": "true",
-			},
-		}, bt: browser.TypeLacros},
+		}},
 		SetUpTimeout:    chrome.GAIALoginTimeout + DriveFsSetupAndTearDownTimeout,
 		ResetTimeout:    DriveFsSetupAndTearDownTimeout,
 		TearDownTimeout: chrome.ResetTimeout + DriveFsSetupAndTearDownTimeout,
@@ -199,7 +176,6 @@ func init() {
 		BugComponent: "b:167289",
 		Impl: &fixture{
 			chromeOptions: []chrome.Option{chrome.EnableFeatures("UploadOfficeToCloud"), chrome.ExtraArgs("--disable-sync")},
-			bt:            browser.TypeAsh,
 		},
 		SetUpTimeout:    chrome.GAIALoginTimeout + DriveFsSetupAndTearDownTimeout,
 		ResetTimeout:    DriveFsSetupAndTearDownTimeout,
@@ -216,7 +192,6 @@ func init() {
 		BugComponent: "b:1533988",
 		Impl: &fixture{
 			chromeOptions: []chrome.Option{chrome.EnableFeatures("SkyVault"), chrome.ExtraArgs("--disable-sync")},
-			bt:            browser.TypeAsh,
 			accountPool:   policy.ManagedUserAccountPoolVarName,
 			policies: []policy.Policy{
 				&policy.DownloadDirectory{Val: "${google_drive}"},
@@ -260,7 +235,6 @@ type fixture struct {
 	driveFs           *DriveFs
 	chromeOptions     []chrome.Option
 	drivefsOptions    CliArgsMap
-	bt                browser.Type
 	enableBulkPinning bool
 	fieldTrial        chrome.FieldTrialConfigMode
 	accountPool       string
@@ -323,13 +297,6 @@ func (f *fixture) SetUp(ctx context.Context, s *testing.FixtState) interface{} {
 			chrome.ARCDisabled(),
 			chrome.FieldTrialConfig(f.fieldTrial),
 		)
-		if f.bt == browser.TypeLacros {
-			var err error
-			opts, err = lacrosfixt.NewConfig(lacrosfixt.ChromeOptions(opts...)).Opts()
-			if err != nil {
-				s.Fatal("Failed to get lacros options: ", err)
-			}
-		}
 		if f.enableBulkPinning {
 			opts = append(opts, chrome.EnableFeatures("FeatureManagementDriveFsBulkPinning"))
 		}

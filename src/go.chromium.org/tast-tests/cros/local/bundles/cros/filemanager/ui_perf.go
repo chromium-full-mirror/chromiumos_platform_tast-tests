@@ -44,7 +44,6 @@ type perfTest struct {
 func init() {
 	testing.AddTest(&testing.Test{
 		Func:         UIPerf,
-		LacrosStatus: testing.LacrosVariantNeeded,
 		Desc:         "UI performance metrics for Files app",
 		BugComponent: "b:167289",
 		Contacts: []string{
