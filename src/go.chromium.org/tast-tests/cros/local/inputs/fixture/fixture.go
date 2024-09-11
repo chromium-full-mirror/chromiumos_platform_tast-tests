@@ -698,7 +698,7 @@ func (f *inputsFixtureImpl) SetUp(ctx context.Context, s *testing.FixtState) int
 			opts = append(opts, chrome.ExtraArgs("--enable-features=OrcaDogfood,MantaService"))
 			opts = append(opts, chrome.LacrosEnableFeatures("OrcaDogfood"))
 		case picker:
-			opts = append(opts, chrome.ExtraArgs("--enable-features=Picker"))
+			opts = append(opts, chrome.ExtraArgs("--enable-features=Picker,PickerGrid"))
 			opts = append(opts, chrome.ExtraArgs("--picker-feature-key="+s.RequiredVar("inputs.Picker.pickerFeatureTestKey")))
 			opts = append(opts, chrome.ExtraArgs("--disable-sync"))
 		}
