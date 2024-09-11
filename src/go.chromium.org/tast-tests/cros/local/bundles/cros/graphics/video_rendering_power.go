@@ -53,9 +53,8 @@ var (
 
 func init() {
 	testing.AddTest(&testing.Test{
-		Func:         VideoRenderingPower,
-		LacrosStatus: testing.LacrosVariantUnknown,
-		Desc:         "Reports power consumption metrics while rendering different classes of videos",
+		Func: VideoRenderingPower,
+		Desc: "Reports power consumption metrics while rendering different classes of videos",
 		Contacts: []string{
 			"chromeos-gfx@google.com",
 			"syedfaaiz@google.com",

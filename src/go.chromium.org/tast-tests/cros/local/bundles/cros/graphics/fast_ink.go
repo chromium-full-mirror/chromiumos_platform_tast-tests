@@ -15,9 +15,7 @@ import (
 	"go.chromium.org/tast-tests/cros/local/arc"
 	"go.chromium.org/tast-tests/cros/local/chrome"
 	"go.chromium.org/tast-tests/cros/local/chrome/ash"
-	"go.chromium.org/tast-tests/cros/local/chrome/browser"
 	"go.chromium.org/tast-tests/cros/local/chrome/display"
-	"go.chromium.org/tast-tests/cros/local/chrome/lacros"
 	"go.chromium.org/tast-tests/cros/local/chrome/metrics"
 	"go.chromium.org/tast-tests/cros/local/chrome/uiauto"
 	"go.chromium.org/tast-tests/cros/local/chrome/uiauto/mouse"
@@ -40,9 +38,6 @@ type fastInkTestParams struct {
 	// arc is true for testing Fast Ink in the LowLatencyStylusDemoGPU
 	// ARC app, false for testing Fast Ink in the Chrome browser.
 	arc bool
-	// browserType indicates the Ash Chrome browser or Lacros, when
-	// arc is false. If arc is true, then browserType is ignored.
-	browserType browser.Type
 	// tablet is true for tablet mode, false for clamshell mode.
 	tablet bool
 	// displayRotations indicates the display rotation angles for
@@ -54,9 +49,8 @@ type fastInkTestParams struct {
 
 func init() {
 	testing.AddTest(&testing.Test{
-		Func:         FastInk,
-		LacrosStatus: testing.LacrosVariantExists,
-		Desc:         "Verifies that fast ink is working as evidenced by a hardware overlay",
+		Func: FastInk,
+		Desc: "Verifies that fast ink is working as evidenced by a hardware overlay",
 		Contacts: []string{
 			"chromeos-wmp@google.com",
 			"zoraiznaeem@chromium.org",
@@ -74,9 +68,8 @@ func init() {
 			ExtraData:         []string{"d-canvas/main.html", "d-canvas/2d.js", "d-canvas/webgl.js"},
 			Fixture:           "chromeLoggedIn",
 			Val: fastInkTestParams{
-				arc:         false,
-				browserType: browser.TypeAsh,
-				tablet:      false,
+				arc:    false,
+				tablet: false,
 				displayRotations: []display.RotationAngle{
 					display.Rotate0,
 					display.Rotate90,
@@ -95,53 +88,8 @@ func init() {
 			ExtraData:         []string{"d-canvas/main.html", "d-canvas/2d.js", "d-canvas/webgl.js"},
 			Fixture:           "chromeLoggedIn",
 			Val: fastInkTestParams{
-				arc:         false,
-				browserType: browser.TypeAsh,
-				tablet:      true,
-				displayRotations: []display.RotationAngle{
-					display.Rotate0,
-					display.Rotate90,
-					display.Rotate180,
-					display.Rotate270,
-				},
-				wStates: []ash.WindowStateType{
-					ash.WindowStateMaximized,
-					ash.WindowStateFullscreen,
-				}},
-		}, {
-			Name:              "chrome_clamshell_lacros",
-			ExtraSoftwareDeps: []string{"lacros"},
-			// TODO(b/247879931): Remove dooly when the test can pass on it.
-			ExtraHardwareDeps: hwdep.D(hwdep.SkipOnModel("dooly")),
-			ExtraData:         []string{"d-canvas/main.html", "d-canvas/2d.js", "d-canvas/webgl.js"},
-			Fixture:           "lacros",
-			Val: fastInkTestParams{
-				arc:         false,
-				browserType: browser.TypeLacros,
-				tablet:      false,
-				displayRotations: []display.RotationAngle{
-					display.Rotate0,
-					display.Rotate90,
-					display.Rotate180,
-					display.Rotate270,
-				},
-				wStates: []ash.WindowStateType{
-					ash.WindowStateNormal,
-					ash.WindowStateMaximized,
-					ash.WindowStateFullscreen,
-				}},
-		}, {
-
-			Name:              "chrome_tablet_lacros",
-			ExtraSoftwareDeps: []string{"lacros"},
-			// TODO(b/247879931): Remove dooly when the test can pass on it.
-			ExtraHardwareDeps: hwdep.D(hwdep.SkipOnModel("dooly")),
-			ExtraData:         []string{"d-canvas/main.html", "d-canvas/2d.js", "d-canvas/webgl.js"},
-			Fixture:           "lacros",
-			Val: fastInkTestParams{
-				arc:         false,
-				browserType: browser.TypeLacros,
-				tablet:      true,
+				arc:    false,
+				tablet: true,
 				displayRotations: []display.RotationAngle{
 					display.Rotate0,
 					display.Rotate90,
@@ -237,9 +185,8 @@ func init() {
 			ExtraData:         []string{"d-canvas/main.html", "d-canvas/2d.js", "d-canvas/webgl.js"},
 			Fixture:           "chromeLoggedIn",
 			Val: fastInkTestParams{
-				arc:         false,
-				browserType: browser.TypeAsh,
-				tablet:      false,
+				arc:    false,
+				tablet: false,
 				displayRotations: []display.RotationAngle{
 					display.Rotate0,
 					display.Rotate90,
@@ -258,53 +205,8 @@ func init() {
 			ExtraData:         []string{"d-canvas/main.html", "d-canvas/2d.js", "d-canvas/webgl.js"},
 			Fixture:           "chromeLoggedIn",
 			Val: fastInkTestParams{
-				arc:         false,
-				browserType: browser.TypeAsh,
-				tablet:      true,
-				displayRotations: []display.RotationAngle{
-					display.Rotate0,
-					display.Rotate90,
-					display.Rotate180,
-					display.Rotate270,
-				},
-				wStates: []ash.WindowStateType{
-					ash.WindowStateMaximized,
-					ash.WindowStateFullscreen,
-				}},
-		}, {
-			Name:              "failing_chrome_clamshell_lacros",
-			ExtraSoftwareDeps: []string{"lacros"},
-			// TODO(b/247879931): Remove dooly when the test can pass on it.
-			ExtraHardwareDeps: hwdep.D(hwdep.Model("dooly")),
-			ExtraData:         []string{"d-canvas/main.html", "d-canvas/2d.js", "d-canvas/webgl.js"},
-			Fixture:           "lacros",
-			Val: fastInkTestParams{
-				arc:         false,
-				browserType: browser.TypeLacros,
-				tablet:      false,
-				displayRotations: []display.RotationAngle{
-					display.Rotate0,
-					display.Rotate90,
-					display.Rotate180,
-					display.Rotate270,
-				},
-				wStates: []ash.WindowStateType{
-					ash.WindowStateNormal,
-					ash.WindowStateMaximized,
-					ash.WindowStateFullscreen,
-				}},
-		}, {
-
-			Name:              "failing_chrome_tablet_lacros",
-			ExtraSoftwareDeps: []string{"lacros"},
-			// TODO(b/247879931): Remove dooly when the test can pass on it.
-			ExtraHardwareDeps: hwdep.D(hwdep.Model("dooly")),
-			ExtraData:         []string{"d-canvas/main.html", "d-canvas/2d.js", "d-canvas/webgl.js"},
-			Fixture:           "lacros",
-			Val: fastInkTestParams{
-				arc:         false,
-				browserType: browser.TypeLacros,
-				tablet:      true,
+				arc:    false,
+				tablet: true,
 				displayRotations: []display.RotationAngle{
 					display.Rotate0,
 					display.Rotate90,
@@ -368,17 +270,10 @@ func FastInk(ctx context.Context, s *testing.State) {
 
 	params := s.Param().(fastInkTestParams)
 	var cr *chrome.Chrome
-	var cs ash.ConnSource
 	if params.arc {
 		cr = s.FixtValue().(*arc.PreData).Chrome
 	} else {
-		var l *lacros.Lacros
-		var err error
-		cr, l, cs, err = lacros.Setup(ctx, s.FixtValue(), params.browserType)
-		if err != nil {
-			s.Fatal("Failed to initialize test: ", err)
-		}
-		defer lacros.CloseLacros(cleanupCtx, l)
+		cr = s.FixtValue().(chrome.HasChrome).Chrome()
 	}
 
 	tconn, err := cr.TestAPIConn(ctx)
@@ -440,7 +335,7 @@ func FastInk(ctx context.Context, s *testing.State) {
 		srv := httptest.NewServer(http.FileServer(s.DataFileSystem()))
 		defer srv.Close()
 
-		conn, err := cs.NewConn(ctx, srv.URL+"/d-canvas/main.html")
+		conn, err := cr.NewConn(ctx, srv.URL+"/d-canvas/main.html")
 		if err != nil {
 			s.Fatal("Failed to load d-canvas/main.html: ", err)
 		}

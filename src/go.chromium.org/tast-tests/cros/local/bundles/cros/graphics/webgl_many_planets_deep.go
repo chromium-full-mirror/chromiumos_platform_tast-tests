@@ -36,9 +36,8 @@ const (
 
 func init() {
 	testing.AddTest(&testing.Test{
-		Func:         WebGLManyPlanetsDeep,
-		LacrosStatus: testing.LacrosVariantExists,
-		Desc:         "Runs WebGL many planets deep demo from a local build and reports metrics",
+		Func: WebGLManyPlanetsDeep,
+		Desc: "Runs WebGL many planets deep demo from a local build and reports metrics",
 		Contacts: []string{
 			"chromeos-gfx@google.com",
 			"syedfaaiz@google.com",

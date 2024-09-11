@@ -19,7 +19,6 @@ import (
 	"go.chromium.org/tast-tests/cros/local/chrome/browser"
 	"go.chromium.org/tast-tests/cros/local/chrome/browser/browserfixt"
 	"go.chromium.org/tast-tests/cros/local/graphics/modetest"
-
 	"go.chromium.org/tast/core/errors"
 	"go.chromium.org/tast/core/testing"
 	"go.chromium.org/tast/core/testing/hwdep"
@@ -54,9 +53,8 @@ type pageTestParams struct {
 
 func init() {
 	testing.AddTest(&testing.Test{
-		Func:         HwOverlays,
-		LacrosStatus: testing.LacrosVariantExists,
-		Desc:         "This test runs HTML files and monitors the behavior of hardware overlays",
+		Func: HwOverlays,
+		Desc: "This test runs HTML files and monitors the behavior of hardware overlays",
 		Contacts: []string{
 			"chromeos-gfx@chromium.org",
 			"syedfaaiz@google.com",

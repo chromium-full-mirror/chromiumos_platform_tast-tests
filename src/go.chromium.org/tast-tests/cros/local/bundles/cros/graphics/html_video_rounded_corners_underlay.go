@@ -10,9 +10,8 @@ import (
 	"net/http/httptest"
 	"time"
 
+	"go.chromium.org/tast-tests/cros/local/chrome"
 	"go.chromium.org/tast-tests/cros/local/chrome/ash"
-	"go.chromium.org/tast-tests/cros/local/chrome/browser"
-	"go.chromium.org/tast-tests/cros/local/chrome/lacros"
 	"go.chromium.org/tast-tests/cros/local/chrome/metrics"
 	"go.chromium.org/tast-tests/cros/local/chrome/webutil"
 	"go.chromium.org/tast/core/ctxutil"
@@ -24,7 +23,6 @@ import (
 func init() {
 	testing.AddTest(&testing.Test{
 		Func:         HTMLVideoRoundedCornersUnderlay,
-		LacrosStatus: testing.LacrosVariantExists,
 		Desc:         "Verifies that HTML <video> rounded corners are implemented with a hardware underlay",
 		Contacts:     []string{"chromeos-perf@google.com", "petermcneeley@chromium.org", "oshima@chromium.org"},
 		BugComponent: "b:1021073",
@@ -37,29 +35,25 @@ func init() {
 			// TODO(b/255636769): Remove rusty, steelix, and tentacruel when the test can pass on them.
 			ExtraHardwareDeps: hwdep.D(hwdep.SkipOnModel("cave", "chell", "rusty", "steelix", "tentacruel")),
 			Fixture:           "chromeGraphics",
-			Val:               browser.TypeAsh,
 		}, {
 			Name: "failing",
 			// TODO(b/246573749): Remove cave and chell when the test can pass on them.
 			// TODO(b/255636769): Remove rusty, steelix, and tentacruel when the test can pass on them.
 			ExtraHardwareDeps: hwdep.D(hwdep.Model("cave", "chell", "rusty", "steelix", "tentacruel")),
 			Fixture:           "chromeGraphics",
-			Val:               browser.TypeAsh,
 		}},
 	})
 }
 
 func HTMLVideoRoundedCornersUnderlay(ctx context.Context, s *testing.State) {
 	// Reserve ten seconds for cleanup.
-	cleanupCtx := ctx
 	ctx, cancel := ctxutil.Shorten(ctx, 10*time.Second)
 	defer cancel()
 
-	cr, l, cs, err := lacros.Setup(ctx, s.FixtValue(), s.Param().(browser.Type))
-	if err != nil {
-		s.Fatal("Failed to initialize test: ", err)
+	if _, ok := s.FixtValue().(chrome.HasChrome); !ok {
+		s.Fatal("Unrecognized FixtValue type: ", s.FixtValue())
 	}
-	defer lacros.CloseLacros(cleanupCtx, l)
+	cr := s.FixtValue().(chrome.HasChrome).Chrome()
 
 	tconn, err := cr.TestAPIConn(ctx)
 	if err != nil {
@@ -69,7 +63,7 @@ func HTMLVideoRoundedCornersUnderlay(ctx context.Context, s *testing.State) {
 	srv := httptest.NewServer(http.FileServer(s.DataFileSystem()))
 	defer srv.Close()
 
-	conn, err := cs.NewConn(ctx, srv.URL+"/video_with_rounded_corners.html")
+	conn, err := cr.NewConn(ctx, srv.URL+"/video_with_rounded_corners.html")
 	if err != nil {
 		s.Fatal("Failed to load video_with_rounded_corners.html: ", err)
 	}

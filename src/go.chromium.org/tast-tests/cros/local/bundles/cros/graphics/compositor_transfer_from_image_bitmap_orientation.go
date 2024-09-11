@@ -27,30 +27,23 @@ import (
 )
 
 type params struct {
-	browserType          browser.Type
 	expectedID, resultID string
 	referenceColors      []color.RGBA
 }
 
-func params2d(bt browser.Type) params {
-	return params{
-		browserType: bt,
-		expectedID:  "expected2d",
-		resultID:    "result2d",
+var (
+	params2d = params{
+		expectedID: "expected2d",
+		resultID:   "result2d",
 		referenceColors: []color.RGBA{
 			{255, 0, 0, 255},
 			{0, 0, 255, 255},
 			{0, 128, 0, 255},
 			{255, 255, 255, 255},
-		},
-	}
-}
-
-func paramsWebgl(bt browser.Type) params {
-	return params{
-		browserType: bt,
-		expectedID:  "expectedWebGL",
-		resultID:    "resultWebGL",
+		}}
+	paramsWebgl = params{
+		expectedID: "expectedWebGL",
+		resultID:   "resultWebGL",
 		referenceColors: []color.RGBA{
 			{255, 0, 0, 255},
 			{0, 0, 255, 255},
@@ -58,15 +51,14 @@ func paramsWebgl(bt browser.Type) params {
 			{255, 255, 255, 255},
 		},
 	}
-}
+)
 
 const delayToScreenshot = 7 * time.Second
 
 func init() {
 	testing.AddTest(&testing.Test{
-		Func:         CompositorTransferFromImageBitmapOrientation,
-		LacrosStatus: testing.LacrosVariantExists,
-		Desc:         "Verifies that transferFromImageBitmap is oriented correctly",
+		Func: CompositorTransferFromImageBitmapOrientation,
+		Desc: "Verifies that transferFromImageBitmap is oriented correctly",
 		Contacts: []string{
 			"chromeos-gfx-compositor@google.com",
 			"aswolfers@chromium.org",
@@ -78,11 +70,11 @@ func init() {
 		HardwareDeps: hwdep.D(hwdep.InternalDisplay()),
 		Params: []testing.Param{{
 			Name:    "2d",
-			Val:     params2d(browser.TypeAsh),
+			Val:     params2d,
 			Fixture: "chromeGraphics",
 		}, {
 			Name:    "webgl",
-			Val:     paramsWebgl(browser.TypeAsh),
+			Val:     paramsWebgl,
 			Fixture: "chromeGraphics",
 		}},
 	})
@@ -98,7 +90,7 @@ func CompositorTransferFromImageBitmapOrientation(ctx context.Context, s *testin
 
 	params := s.Param().(params)
 	conn, br, closeBrowser, err := browserfixt.SetUpWithURL(
-		ctx, s.FixtValue().(chrome.HasChrome).Chrome(), params.browserType, url)
+		ctx, s.FixtValue().(chrome.HasChrome).Chrome(), browser.TypeAsh, url)
 	if err != nil {
 		s.Fatal("Failed to set up browser: ", err)
 	}

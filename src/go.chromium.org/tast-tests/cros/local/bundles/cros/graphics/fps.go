@@ -29,7 +29,6 @@ var fromHz = graphics.FromHz
 func init() {
 	testing.AddTest(&testing.Test{
 		Func:         FPS,
-		LacrosStatus: testing.LacrosVariantExists,
 		Desc:         "Measure frames per second and check it is close to expected fps",
 		BugComponent: "b:1021073", // ChromeOS > Platform > Graphics > Compositor
 		Contacts:     []string{"chromeos-gfx-compositor@google.com"},
