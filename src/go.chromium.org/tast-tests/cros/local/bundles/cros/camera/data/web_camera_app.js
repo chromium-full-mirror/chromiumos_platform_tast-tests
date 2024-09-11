@@ -17,7 +17,7 @@ class CameraApp {
     this.frameRateInput = document.getElementById('frame-rate-input');
     this.frameRateOutout = document.getElementById('frame-rate-value');
     this.takePictureButton = document.getElementById('take-picture-button');
-    this.recordingTimer = document.getElementById("recording-timer");
+    this.recordingTimer = document.getElementById("recording-timer-display");
     this.recordingTimerIntervalId = null;
     this.startButton = document.getElementById('start-button');
     this.stopButton = document.getElementById('stop-button');

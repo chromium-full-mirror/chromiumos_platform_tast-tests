@@ -6,6 +6,19 @@
   </head>
 
   <style>
+    #control-panel {
+      display: flex;
+      align-items: center;
+      padding: 20px;
+    }
+
+    #camera-setting {
+      display: flex;
+      flex-direction: column;
+      padding-left: 20px;
+      gap: 10px;
+    }
+
     .overlay {
       inset: 0;
       position: fixed;
@@ -33,31 +46,39 @@
 
   <body>
     <div id="control-panel">
-      <video id="camera-image" autoplay width="500" height="500"></video>
-      <br />
-      <button id="take-picture-button">Take picture</button>
-      <button id="start-button">Start recording</button>
-      <span id="recording-timer">00:00</span>
-      <button id="stop-button">Stop recording</button>
-      <select id="change-camera-selection"></select>
-      <span id="frame-rate-text">Frame rate:</span>
-      <input
-        id="frame-rate-input"
-        type="range"
-        min="1"
-        max="60"
-        step="1"
-      />
-      <output id="frame-rate-value">30</output>
-      <select id="camera-resolution">
-        <option value="640 360">640x360</option>
-        <option value="640 480">640x480</option>
-        <option value="1280 720">1280x720</option>
-        <option value="1920 1080">1920x1080</option>
-        <option value="2560 1440">2560x1440</option>
-        <option value="2048 1080">2048x1080</option>
-        <!--https://typito.com/blog/video-resolutions/-->
-      </select>
+      <video id="camera-image" autoplay width="800" height="600"></video>
+      <div id="camera-setting">
+        <button class="setting-per-line" id="take-picture-button">Take picture</button>
+        <div id="recording-timer">
+          <span id="recording-timer-text">Recording Time Interval:</span>
+          <span id="recording-timer-display">00:00</span>
+        </div>
+        <div class="setting-per-line">
+          <button id="start-button">Start recording</button>
+          <button id="stop-button">Stop recording</button>
+        </div>
+        <select class="setting-per-line" id="change-camera-selection"></select>
+        <div class="setting-per-line" id="frame-rate">
+          <span id="frame-rate-text">Frame rate:</span>
+          <input
+            id="frame-rate-input"
+            type="range"
+            min="1"
+            max="60"
+            step="1"
+          />
+          <output id="frame-rate-input">30</output>
+        </div>
+        <select class="setting-per-line" id="camera-resolution">
+          <option value="640 360">640x360</option>
+          <option value="640 480">640x480</option>
+          <option value="1280 720">1280x720</option>
+          <option value="1920 1080">1920x1080</option>
+          <option value="2560 1440">2560x1440</option>
+          <option value="2048 1080">2048x1080</option>
+          <!--https://typito.com/blog/video-resolutions/-->
+        </select>
+      </div>
     </div>
 
     <canvas id="photo-output" width="500" height="500"></canvas>
