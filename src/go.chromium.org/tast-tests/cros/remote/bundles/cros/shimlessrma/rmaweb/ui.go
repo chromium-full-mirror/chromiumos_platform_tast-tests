@@ -523,8 +523,7 @@ func (uiHelper *UIHelper) changeEnrollment(toEnroll bool) action.Action {
 			flags = "--flags=0"
 		}
 
-		err := uiHelper.Dut.Conn().CommandContext(ctx, "cryptohome", "--action=set_firmware_management_parameters", flags).Run()
-		if err != nil {
+		if err := uiHelper.Dut.Conn().CommandContext(ctx, "device_management_client", "--action=set_firmware_management_parameters", flags).Run(); err != nil {
 			return errors.Wrap(err, "fail to set_firmware_management_parameters")
 		}
 		return nil
