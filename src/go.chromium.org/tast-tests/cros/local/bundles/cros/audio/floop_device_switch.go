@@ -31,8 +31,8 @@ func init() {
 }
 
 func FloopDeviceSwitch(ctx context.Context, s *testing.State) {
-	const duration = 30                 // seconds
-	const toleranceUnderrunDuration = 3 // seconds
+	const duration = 30                   // seconds
+	const toleranceUnderrunDuration = 0.1 // seconds
 
 	cras, err := audio.NewCras(ctx)
 	if err != nil {
@@ -87,7 +87,7 @@ func FloopDeviceSwitch(ctx context.Context, s *testing.State) {
 		}
 		for i := 0; i < 5; i++ {
 			if debugInfo.Streams[i].UnderrunDurationSec > toleranceUnderrunDuration {
-				s.Fatalf("The underrun duration %f > threshold %ds", debugInfo.Streams[i].UnderrunDurationSec, toleranceUnderrunDuration)
+				s.Fatalf("The underrun duration %f > threshold %fs", debugInfo.Streams[i].UnderrunDurationSec, toleranceUnderrunDuration)
 			}
 		}
 	}
