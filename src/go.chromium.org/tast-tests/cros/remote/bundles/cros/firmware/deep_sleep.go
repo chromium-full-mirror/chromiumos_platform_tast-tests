@@ -6,10 +6,10 @@ package firmware
 
 import (
 	"context"
-	"strings"
 	"time"
 
 	"go.chromium.org/tast-tests/cros/common/servo"
+	"go.chromium.org/tast-tests/cros/remote/firmware"
 	"go.chromium.org/tast-tests/cros/remote/firmware/fixture"
 	"go.chromium.org/tast/core/errors"
 	"go.chromium.org/tast/core/testing"
@@ -39,14 +39,9 @@ func init() {
 func DeepSleep(ctx context.Context, s *testing.State) {
 	// requiredBatteryLife is the number of days the battery must last when in hibernate mode.
 	const requiredBatteryLife = 100 * 24 * time.Hour
-	// g3PollOptions is the time to wait for the DUT to reach G3 after power off.
-	g3PollOptions := testing.PollOptions{
-		Timeout:  30 * time.Second,
-		Interval: 3 * time.Second,
-	}
-	// postWakePollOptions is the time to wait for the battery after waking up from hibernate.
-	postWakePollOptions := testing.PollOptions{
-		Timeout:  60 * time.Second,
+	// batteryPollOptions is the time to wait for the battery after waking up from hibernate.
+	batteryPollOptions := testing.PollOptions{
+		Timeout:  2 * time.Minute,
 		Interval: 250 * time.Millisecond,
 	}
 	// getChargerPollOptions is the time to retry the GetChargerAttached command. Unexpected EC uart logging can make it fail.
@@ -108,27 +103,18 @@ func DeepSleep(ctx context.Context, s *testing.State) {
 			s.Fatal("Check for charger failed: ", err)
 		}
 
-		s.Log("Pressing power button to make DUT into deep sleep mode")
+		s.Log("Pressing power button to power off")
 		if err := h.Servo.KeypressWithDuration(ctx, servo.PowerKey, servo.Dur(h.Config.HoldPwrButtonPowerOff)); err != nil {
 			s.Fatal("Failed to set a KeypressControl by servo: ", err)
 		}
 		h.DisconnectDUT(ctx)
 
-		s.Log("Waiting until power state is G3")
-		if err := testing.Poll(ctx, func(ctx context.Context) error {
-			state, err := h.Servo.GetECSystemPowerState(ctx)
-			if err != nil {
-				if strings.Contains(err.Error(), "Timed out waiting for interfaces to become available") {
-					return err
-				}
-				return testing.PollBreak(errors.Wrap(err, "failed to get power state"))
-			}
-			if state != "G3" {
-				return errors.New("power state is " + state)
-			}
-			return nil
-		}, &g3PollOptions); err != nil {
-			s.Fatal("Failed to wait power state to be G3: ", err)
+		// On rex/karis we seem to lose the EC console in G3 if the servo isn't sourcing power.
+		// So wait for either G3 or S5.
+		s.Log("Waiting until power state is G3/S5")
+		if err := h.WaitForPowerStates(ctx, firmware.PowerStateInterval, firmware.PowerStateTimeout,
+			"G3", "S5"); err != nil {
+			s.Error("Failed to reach G3/S5 power state: ", err)
 		}
 
 		max, err = h.Servo.GetBatteryFullChargeMAH(ctx)
@@ -137,12 +123,14 @@ func DeepSleep(ctx context.Context, s *testing.State) {
 		}
 		s.Logf("Battery max capacity: %dmAh", max)
 
-		mahStart, err = h.Servo.GetBatteryChargeMAH(ctx)
-		if err != nil {
-			s.Fatal("Failed to get charge mAh: ", err)
+		if err := testing.Poll(ctx, func(ctx context.Context) error {
+			mahStart, err = h.Servo.GetBatteryChargeMAH(ctx)
+			return err
+		}, &batteryPollOptions); err != nil {
+			s.Fatal("GetBatteryChargeMAH failed after retries, is DUT off?: ", err)
 		}
 		start = time.Now()
-		s.Logf("Battery charge: %dmAh", mahStart)
+		s.Logf("Battery charge (start): %dmAh", mahStart)
 
 		if h.Config.Hibernate {
 			s.Log("Hibernating")
@@ -191,10 +179,10 @@ func DeepSleep(ctx context.Context, s *testing.State) {
 	if err := testing.Poll(ctx, func(ctx context.Context) error {
 		mahEnd, err = h.Servo.GetBatteryChargeMAH(ctx)
 		return err
-	}, &postWakePollOptions); err != nil {
+	}, &batteryPollOptions); err != nil {
 		s.Fatal("GetBatteryChargeMAH failed after retries, is DUT off?: ", err)
 	}
-	s.Logf("Battery charge: %dmAh", mahEnd)
+	s.Logf("Battery charge (end): %dmAh", mahEnd)
 
 	var (
 		dur   = time.Since(start)
