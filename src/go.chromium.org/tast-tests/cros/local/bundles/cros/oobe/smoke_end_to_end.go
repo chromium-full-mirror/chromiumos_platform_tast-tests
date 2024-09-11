@@ -28,6 +28,7 @@ import (
 type oobeTestArgs struct {
 	isAddPersonFlow       bool
 	preprod               bool // whether to run against preprod versions of dependencies (default: false)
+	gaiaSandbox           bool // whether to run against GAIA sandbox (default: false)
 	isMetricsClientIDTest bool
 }
 
@@ -51,25 +52,37 @@ func init() {
 		Timeout: chrome.GAIALoginTimeout + 5*time.Minute,
 		Params: []testing.Param{{
 			ExtraAttr: []string{"group:mainline", "informational"},
-			Val:       oobeTestArgs{isAddPersonFlow: false, preprod: false, isMetricsClientIDTest: false},
+			Val:       oobeTestArgs{isAddPersonFlow: false, preprod: false, gaiaSandbox: false, isMetricsClientIDTest: false},
 		}, {
 			Name:      "add_person_flow",
 			ExtraAttr: []string{"group:mainline", "informational"},
-			Val:       oobeTestArgs{isAddPersonFlow: true, preprod: false, isMetricsClientIDTest: false},
+			Val:       oobeTestArgs{isAddPersonFlow: true, preprod: false, gaiaSandbox: false, isMetricsClientIDTest: false},
 		}, {
 			Name:             "preprod",
 			ExtraAttr:        []string{"group:external-dependency", "group:hw_agnostic"},
 			ExtraSearchFlags: []*testing.StringPair{testenv.SearchFlag(testenv.GFEPreprod)},
-			Val:              oobeTestArgs{isAddPersonFlow: false, preprod: true, isMetricsClientIDTest: false},
+			Val:              oobeTestArgs{isAddPersonFlow: false, preprod: true, gaiaSandbox: false, isMetricsClientIDTest: false},
 		}, {
 			Name:             "preprod_add_person_flow",
 			ExtraAttr:        []string{"group:external-dependency", "group:hw_agnostic"},
 			ExtraSearchFlags: []*testing.StringPair{testenv.SearchFlag(testenv.GFEPreprod)},
-			Val:              oobeTestArgs{isAddPersonFlow: true, preprod: true, isMetricsClientIDTest: false},
+			Val:              oobeTestArgs{isAddPersonFlow: true, preprod: true, gaiaSandbox: false, isMetricsClientIDTest: false},
 		}, {
 			Name:      "metrics_client_id",
 			ExtraAttr: []string{"group:mainline", "informational"},
-			Val:       oobeTestArgs{isAddPersonFlow: false, preprod: false, isMetricsClientIDTest: true},
+			Val:       oobeTestArgs{isAddPersonFlow: false, preprod: false, gaiaSandbox: false, isMetricsClientIDTest: true},
+		}, {
+			Name:             "gaia_sandbox",
+			ExtraAttr:        []string{"group:external-dependency", "group:hw_agnostic"},
+			ExtraSearchFlags: []*testing.StringPair{testenv.SearchFlag(testenv.GAIASandbox)},
+			ExtraData:        []string{"gaia_sandbox_config.json"}, // symlinked to the external data file in chrome internal, then to the sandbox config in the private gs bucket
+			Val:              oobeTestArgs{isAddPersonFlow: false, preprod: false, gaiaSandbox: true, isMetricsClientIDTest: false},
+		}, {
+			Name:             "gaia_sandbox_add_person_flow",
+			ExtraAttr:        []string{"group:external-dependency", "group:hw_agnostic"},
+			ExtraSearchFlags: []*testing.StringPair{testenv.SearchFlag(testenv.GAIASandbox)},
+			ExtraData:        []string{"gaia_sandbox_config.json"}, // symlinked to the external data file in chrome internal, then to the sandbox config in the private gs bucket
+			Val:              oobeTestArgs{isAddPersonFlow: true, preprod: false, gaiaSandbox: true, isMetricsClientIDTest: false},
 		}},
 	})
 }
@@ -143,6 +156,11 @@ func SmokeEndToEnd(ctx context.Context, s *testing.State) {
 	// Keep the user that was previously added for the 'AddPerson' flow.
 	if isAddPersonFlow {
 		options = append(options, chrome.KeepState())
+	}
+
+	useGaiaSandbox := s.Param().(oobeTestArgs).gaiaSandbox
+	if useGaiaSandbox {
+		options = append(options, chrome.UseGaiaConfig(s.DataPath("gaia_sandbox_config.json")))
 	}
 
 	options = append(options, chrome.ExtraArgs("--skip-multidevice-screen"))
