@@ -97,6 +97,22 @@ func NetworkScan(ctx context.Context, s *testing.State) {
 	}
 	defer cr.Close(cleanupCtx, &emptypb.Empty{})
 
+	// Set WiFi RequestScanType on the DUT to active to ensure AP is discovered.
+	originalRequestScanType, err := tf.WifiClient().GetRequestScanTypeProperty(ctx)
+	if err != nil {
+		s.Error("Failed to get WiFi RequestScan type: ", err)
+	}
+	if originalRequestScanType != shillconst.WiFiRequestScanTypeActive {
+		defer func(ctx context.Context) {
+			if err := tf.WifiClient().SetRequestScanTypeProperty(ctx, originalRequestScanType); err != nil {
+				s.Errorf("Failed to reset WiFi RequestScan type to %s: %v", originalRequestScanType, err)
+			}
+		}(cleanupCtx)
+		if err := tf.WifiClient().SetRequestScanTypeProperty(ctx, shillconst.WiFiRequestScanTypeActive); err != nil {
+			s.Fatal("Failed to set WiFi RequestScan type to active: ", err)
+		}
+	}
+
 	// Configuring 1 AP to simulate the presence of Wi-Fi network within range.
 	ap, err := tf.DefaultOpenNetworkAP(ctx)
 	if err != nil {
@@ -107,26 +123,6 @@ func NetworkScan(ctx context.Context, s *testing.State) {
 	defer cancel()
 	defer tf.DeconfigAP(cleanupCtx, ap)
 
-	// Finding the AP before opening the UI since the target AP's presence is a part of criteria of scanning validation and we want the target AP to be presented at the beginning.
-	props := map[string]interface{}{
-		shillconst.ServicePropertyType: shillconst.TypeWifi,
-		shillconst.ServicePropertyName: ap.Config().SSID,
-	}
-	if err := testing.Poll(ctx, func(ctx context.Context) error {
-		if err := tf.WifiClient().RequestScan(ctx); err != nil {
-			return errors.Wrap(err, "request scan")
-		}
-		if _, err := tf.WifiClient().WaitScanIdle(ctx, &emptypb.Empty{}); err != nil {
-			return errors.Wrap(err, "wait for scan to be done")
-		}
-		if _, err = tf.WifiClient().GetServicePath(ctx, props); err != nil {
-			return errors.Wrap(err, "get expected service path")
-		}
-		return nil
-	}, &testing.PollOptions{Timeout: shillconst.DefaultTimeout, Interval: time.Second}); err != nil {
-		s.Fatalf("Failed to find wifi service %q: %v", ap.Config().SSID, err)
-	}
-
 	test := param.test(rpcClient.Conn, param.uiReq)
 	if err := test.openUI(ctx); err != nil {
 		s.Fatal("Failed to open page: ", err)
@@ -135,13 +131,11 @@ func NetworkScan(ctx context.Context, s *testing.State) {
 	defer wifiutil.DumpUITreeWithScreenshotToFile(cleanupCtx, rpcClient.Conn, s.HasError, "ui_dump")
 
 	const (
-		// Custom timeout watchdog for testing.Poll, to continuously monitor for at least a full minute.
-		checkingDuration = time.Minute
+		// Custom timeout watchdog for testing.Poll, to continuously monitor for 2 minutes.
+		checkingDuration = 2 * time.Minute
 
-		// Scans typically take 2 to 3 seconds.
-		scanDuration      = 3 * time.Second
-		scanInterval      = 5 * time.Second
-		expectedScanCount = int(checkingDuration / (scanDuration + scanInterval))
+		// Scan interval typically takes 10 seconds so expecting at lease 5 scans per minute. (see b/362415559)
+		expectedScanCount = int(5 * checkingDuration / time.Minute)
 	)
 
 	scanCount := 0
@@ -158,13 +152,14 @@ func NetworkScan(ctx context.Context, s *testing.State) {
 		if err := test.hasScanningFinished(ctx); err != nil {
 			return testing.PollBreak(errors.Wrap(err, "failed to ensure the network scanning is finished"))
 		}
-		scanCount++
-		s.Logf("UI has finished scanning (%d/%d)", scanCount, expectedScanCount)
+		s.Log("UI has finished scanning")
 
 		if err := test.isNetworkListPopulated(ctx, ap.Config().SSID); err != nil {
-			return testing.PollBreak(errors.Wrap(err, "failed to ensure the network is presented"))
+			// Scan again if the configured network did not appear.
+			return errors.Wrap(err, "failed to ensure the network is presented")
 		}
-		s.Log("The network list is populated")
+		scanCount++
+		s.Logf("The network list is populated, finish %d scanning interval", scanCount)
 
 		return errors.Errorf("still observing for the WiFi UI for %.1fs", (checkingDuration - time.Since(start)).Seconds())
 	}, nil); err != nil {
