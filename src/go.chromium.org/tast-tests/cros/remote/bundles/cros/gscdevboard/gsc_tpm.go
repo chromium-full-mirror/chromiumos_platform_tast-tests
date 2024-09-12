@@ -176,17 +176,11 @@ func GSCTPM(ctx context.Context, s *testing.State) {
 	events := b.GpioMonitorRead(ctx, gpioMonitor)
 	gpioMonitor.Save(ctx, events, "setup.vcd")
 
-	var out []byte
-	// TODO(b/361334946): add "-D" to gsctool commands in the devboard service.
-	if b.TestbedType == ti50.GscH1Shield {
-		out, err = b.GSCToolCommandViaTPM(ctx, bus, "", cmd)
-	} else {
-		out, err = b.GSCToolCommandViaTPM(ctx, bus, "", "-D", cmd)
-	}
-
+	out, err := b.GSCToolCommandViaTPM(ctx, bus, "", cmd)
 	if err != nil {
 		s.Error("Could not get version via TPM: ", err)
 	}
+
 	events = b.GpioMonitorRead(ctx, gpioMonitor)
 	gpioMonitor.Save(ctx, events, "cmd.vcd")
 	s.Logf("GSCTool %s output: %s", cmd, out)

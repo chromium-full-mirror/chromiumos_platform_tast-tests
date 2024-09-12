@@ -156,7 +156,7 @@ func checkBootTrace(ctx context.Context, s *testing.State, b utils.DevboardHelpe
 
 func checkMetrics(ctx context.Context, s *testing.State, b utils.DevboardHelper, pv *perf.Values, prefix string) {
 	th := utils.FirmwareTestingHelper{FirmwareTestingHelperDelegate: s}
-	out, err := b.GSCToolCommand(ctx, "", "--metrics", "--dauntless")
+	out, err := b.GSCToolCommand(ctx, "", "--metrics")
 	th.MustSucceed(err, "read metrics")
 	s.VLogf(string(out))
 	times := metricsRe.FindAllStringSubmatch(string(out), -1)
