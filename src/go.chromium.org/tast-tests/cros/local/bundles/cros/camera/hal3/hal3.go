@@ -19,6 +19,7 @@ import (
 	"go.chromium.org/tast-tests/cros/common/perf"
 	"go.chromium.org/tast-tests/cros/common/testexec"
 	upstartcommon "go.chromium.org/tast-tests/cros/common/upstart"
+	cameraCrosconfig "go.chromium.org/tast-tests/cros/local/camera/crosconfig"
 	"go.chromium.org/tast-tests/cros/local/cpu"
 	"go.chromium.org/tast-tests/cros/local/crosconfig"
 	"go.chromium.org/tast-tests/cros/local/gtest"
@@ -306,20 +307,6 @@ func runCrosCameraTest(ctx context.Context, cfg crosCameraTestConfig) error {
 	return nil
 }
 
-func hasMIPICamera(ctx context.Context) bool {
-	for i := 0; ; i++ {
-		devicePath := fmt.Sprintf("/camera/devices/%v", i)
-		cameraType, err := crosconfig.Get(ctx, devicePath, "interface")
-		if crosconfig.IsNotFound(err) {
-			break
-		}
-		if cameraType == "mipi" {
-			return true
-		}
-	}
-	return false
-}
-
 // getAvailableCameraHALsForTest returns a map from name to path for all camera
 // HALs that are available for test.
 // TODO(esker): Add cros-camera-tool utility utilizing GetCameraHalPaths and use
@@ -331,7 +318,7 @@ func getAvailableCameraHALsForTest(ctx context.Context) (map[string]string, erro
 	}
 
 	availableHALs := make(map[string]string)
-	noMIPICamera := !hasMIPICamera(ctx)
+	noMIPICamera := !cameraCrosconfig.HasMIPICamera(ctx)
 	for _, path := range cameraHALPaths {
 		name := strings.TrimSuffix(filepath.Base(path), filepath.Ext(path))
 		if noMIPICamera && (name != "ip" && name != "usb" && name != "fake") {

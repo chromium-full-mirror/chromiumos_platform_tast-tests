@@ -20,6 +20,7 @@ import (
 	"go.chromium.org/tast-tests/cros/common/perf"
 	"go.chromium.org/tast-tests/cros/common/testexec"
 	"go.chromium.org/tast-tests/cros/local/camera/cca"
+	cameraCrosconfig "go.chromium.org/tast-tests/cros/local/camera/crosconfig"
 	"go.chromium.org/tast-tests/cros/local/camera/pnp"
 	"go.chromium.org/tast-tests/cros/local/camera/testutil"
 	powersetup "go.chromium.org/tast-tests/cros/local/power/setup"
@@ -258,14 +259,18 @@ func PNPCameraProcessMemory(ctx context.Context, s *testing.State) {
 			daemonName:     crosCameraServiceDaemonName,
 			executablePath: crosCameraServiceExecutablePath,
 		},
-		cameraProcess{
-			daemonName:     crosCameraAlgoDaemonName,
-			executablePath: crosCameraAlgoExecutablePath,
-		},
-		cameraProcess{
-			daemonName:     crosCameraGPUAlgoDaemonName,
-			executablePath: crosCameraGPUAlgoExecutablePath,
-		},
+	}
+	if cameraCrosconfig.HasMIPICamera(ctx) {
+		cameraProcessList = append(cameraProcessList, []cameraProcess{
+			cameraProcess{
+				daemonName:     crosCameraAlgoDaemonName,
+				executablePath: crosCameraAlgoExecutablePath,
+			},
+			cameraProcess{
+				daemonName:     crosCameraGPUAlgoDaemonName,
+				executablePath: crosCameraGPUAlgoExecutablePath,
+			},
+		}...)
 	}
 
 	var filteredCameraProcessList []cameraProcess
