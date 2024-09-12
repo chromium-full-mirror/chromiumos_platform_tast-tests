@@ -85,7 +85,7 @@ func DeviceSuppressMetaFunctionKeyRewrites(ctx context.Context, s *testing.State
 	}
 
 	// Verify if virtual keyboard is created.
-	vkHeading := nodewith.NameContaining("Tast virtual keyboard").Role(role.Heading)
+	vkHeading := nodewith.NameContaining("Tast virtual keyboard").Role(role.Region)
 	if err := ui.WaitUntilExists(vkHeading)(ctx); err != nil {
 		s.Fatal("Failed to find Tast virtual keyboard: ", err)
 	}
