@@ -14,7 +14,6 @@ import (
 	"go.chromium.org/tast-tests/cros/local/chrome"
 	"go.chromium.org/tast-tests/cros/local/chrome/browser"
 	"go.chromium.org/tast-tests/cros/local/chrome/browser/browserfixt"
-	"go.chromium.org/tast-tests/cros/local/chrome/lacros/lacrosfixt"
 	"go.chromium.org/tast/core/fsutil"
 	"go.chromium.org/tast/core/testing"
 	"go.chromium.org/tast/core/testing/hwdep"
@@ -30,7 +29,6 @@ var extensionFiles = []string{
 func init() {
 	testing.AddTest(&testing.Test{
 		Func:         Pnacl,
-		LacrosStatus: testing.LacrosVariantExists,
 		Desc:         "Tests running a PNaCl module",
 		Contacts:     []string{"nacl-eng@google.com", "emaxx@chromium.org"},
 		Data:         extensionFiles,
@@ -39,16 +37,6 @@ func init() {
 		Attr:         []string{"group:mainline"},
 		// TODO(https://issuetracker.google.com/352753237): Flaky on some devices.
 		HardwareDeps: hwdep.D(hwdep.SkipOnModel("brya"), hwdep.SkipOnModel("jacuzzi"), hwdep.SkipOnModel("rex")),
-		Params: []testing.Param{{
-			Val: browser.TypeAsh,
-		},
-			{
-				Name:              "lacros",
-				ExtraSoftwareDeps: []string{"lacros"},
-				ExtraAttr:         []string{"informational"},
-				Val:               browser.TypeLacros,
-			},
-		},
 	})
 }
 
@@ -71,15 +59,7 @@ func Pnacl(ctx context.Context, s *testing.State) {
 		s.Fatalf("Failed to compute extension ID for %v: %v", extDir, err)
 	}
 
-	var extOpt chrome.Option
-	bt := s.Param().(browser.Type)
-	switch bt {
-	case browser.TypeLacros:
-		extOpt = chrome.LacrosUnpackedExtension(extDir)
-	case browser.TypeAsh:
-		extOpt = chrome.UnpackedExtension(extDir)
-	}
-	cr, br, closeBrowser, err := browserfixt.SetUpWithNewChrome(ctx, bt, lacrosfixt.NewConfig(), extOpt)
+	cr, br, closeBrowser, err := browserfixt.SetUpWithNewChrome(ctx, browser.TypeAsh, nil, chrome.UnpackedExtension(extDir))
 
 	if err != nil {
 		s.Fatal("Chrome login failed: ", err)
