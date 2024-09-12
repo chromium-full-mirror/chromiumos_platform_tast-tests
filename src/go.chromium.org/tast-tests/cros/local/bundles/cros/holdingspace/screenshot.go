@@ -20,6 +20,7 @@ import (
 	"go.chromium.org/tast-tests/cros/local/chrome/uiauto/nodewith"
 	"go.chromium.org/tast-tests/cros/local/chrome/uiauto/role"
 	"go.chromium.org/tast-tests/cros/local/cryptohome"
+	"go.chromium.org/tast/core/ctxutil"
 	"go.chromium.org/tast/core/testing"
 )
 
@@ -73,8 +74,12 @@ func init() {
 // capturing a screenshot will result in an item being added to holding space
 // from which the user can launch/pin/unpin the screenshot.
 func Screenshot(ctx context.Context, s *testing.State) {
+	cleanupCtx := ctx
+	ctx, cancel := ctxutil.Shorten(ctx, 5*time.Second)
+	defer cancel()
+
 	// Connect to a fresh Chrome instance to ensure holding space first-run state.
-	cr, err := chrome.New(ctx)
+	cr, err := chrome.New(cleanupCtx)
 	if err != nil {
 		s.Fatal("Failed to connect to Chrome: ", err)
 	}
@@ -85,8 +90,7 @@ func Screenshot(ctx context.Context, s *testing.State) {
 		s.Fatal("Failed to connect to test API: ", err)
 	}
 
-	defer faillog.DumpUITreeOnError(ctx, s.OutDir(), s.HasError, tconn)
-	defer faillog.SaveScreenshotOnError(ctx, cr, s.OutDir(), s.HasError)
+	defer faillog.DumpUITreeWithScreenshotOnError(cleanupCtx, s.OutDir(), s.HasError, cr, "ui_dump")
 
 	downloadsPath, err := cryptohome.DownloadsPath(ctx, cr.NormalizedUser())
 	if err != nil {
@@ -102,7 +106,7 @@ func Screenshot(ctx context.Context, s *testing.State) {
 	ui := uiauto.New(tconn)
 
 	var screenshotLocation string
-	if err := uiauto.Combine("capture screenshot",
+	if err := uiauto.NamedCombine("capture screenshot",
 		// Prior to capturing a screenshot, holding space should be empty and
 		// therefore the holding space tray node should not exist.
 		ui.EnsureGoneFor(holdingspace.FindTray(), 5*time.Second),
@@ -123,7 +127,7 @@ func Screenshot(ctx context.Context, s *testing.State) {
 	// Trim screenshot filename.
 	screenshotName := filepath.Base(screenshotLocation)
 
-	if err := uiauto.Combine("open bubble and confirm initial state",
+	if err := uiauto.NamedCombine("open bubble and confirm initial state",
 		// Left click the tray to open the bubble.
 		ui.LeftClick(holdingspace.FindTray()),
 
@@ -146,7 +150,7 @@ func Screenshot(ctx context.Context, s *testing.State) {
 
 	// Ensure all holding space chips and views associated with the underlying
 	// screenshot are removed when the backing file is removed.
-	if err := uiauto.Combine("remove associated chips and views",
+	if err := uiauto.NamedCombine("remove associated chips and views",
 		ui.WaitUntilGone(holdingspace.FindChip().Name(screenshotName)),
 		ui.WaitUntilGone(holdingspace.FindScreenCaptureView().Name(screenshotName)),
 	)(ctx); err != nil {
@@ -157,7 +161,7 @@ func Screenshot(ctx context.Context, s *testing.State) {
 // testScreenshotLaunch performs testing of launching a screenshot.
 func testScreenshotLaunch(
 	tconn *chrome.TestConn, ui *uiauto.Context, downloadsPath, screenshotName string) uiauto.Action {
-	return uiauto.Combine("launch screenshot",
+	return uiauto.NamedCombine("launch screenshot",
 		// Double click the screenshot view. This will wait until the screenshot
 		// view exists and stabilizes before performing the double click.
 		ui.DoubleClick(holdingspace.FindScreenCaptureView().Name(screenshotName)),
@@ -192,14 +196,14 @@ func testScreenshotOverflow(
 			}
 		}()
 
-		return uiauto.Combine("overflow screenshots",
+		return uiauto.NamedCombine("overflow screenshots",
 			// Take the first additional screenshot and verify state.
 			func(ctx context.Context) error {
 				var err error
 				if screenshotLocations[0], err = capturemode.TakeScreenshot(ctx, downloadsPath); err != nil {
 					return err
 				}
-				return uiauto.Combine(
+				return uiauto.NamedCombine(
 					"verify state after first additional screenshot",
 					ui.WaitUntilExists(holdingspace.FindScreenCaptureView().
 						Name(filepath.Base(screenshotLocations[0]))),
@@ -214,7 +218,7 @@ func testScreenshotOverflow(
 				if screenshotLocations[1], err = capturemode.TakeScreenshot(ctx, downloadsPath); err != nil {
 					return err
 				}
-				return uiauto.Combine(
+				return uiauto.NamedCombine(
 					"verify state after second additional screenshot",
 					ui.WaitUntilExists(holdingspace.FindScreenCaptureView().
 						Name(filepath.Base(screenshotLocations[0]))),
@@ -231,7 +235,7 @@ func testScreenshotOverflow(
 				if screenshotLocations[2], err = capturemode.TakeScreenshot(ctx, downloadsPath); err != nil {
 					return err
 				}
-				return uiauto.Combine(
+				return uiauto.NamedCombine(
 					"verify state after third additional screenshot",
 					ui.WaitUntilExists(holdingspace.FindScreenCaptureView().
 						Name(filepath.Base(screenshotLocations[0]))),
@@ -248,9 +252,11 @@ func testScreenshotOverflow(
 
 			// Remove the second additional screenshot and verify state.
 			func(ctx context.Context) error {
-				os.Remove(screenshotLocations[1])
-				return uiauto.Combine(
-					"verify state after removing second additional screenshot",
+				return uiauto.NamedCombine(
+					"remove second additional screenshot and verify state",
+					ui.RightClick(holdingspace.FindScreenCaptureView().
+						Name(filepath.Base(screenshotLocations[1]))),
+					ui.LeftClick(holdingspace.FindContextMenuItem().Name("Remove")),
 					ui.WaitUntilExists(holdingspace.FindScreenCaptureView().
 						Name(filepath.Base(screenshotLocations[0]))),
 					ui.WaitUntilExists(holdingspace.FindScreenCaptureView().
@@ -270,7 +276,7 @@ func testScreenshotOverflow(
 // testScreenshotPinAndUnpin performs testing of pinning and unpinning a screenshot.
 func testScreenshotPinAndUnpin(
 	tconn *chrome.TestConn, ui *uiauto.Context, downloadsPath, screenshotName string) uiauto.Action {
-	return uiauto.Combine("pin and unpin screenshot",
+	return uiauto.NamedCombine("pin and unpin screenshot",
 		// Right click the screenshot view. This will wait until the screenshot view
 		// exists and stabilizes before showing the context menu.
 		ui.RightClick(holdingspace.FindScreenCaptureView().Name(screenshotName)),
@@ -302,7 +308,7 @@ func testScreenshotPinAndUnpin(
 // testScreenshotRemove performs testing of removing a screenshot.
 func testScreenshotRemove(
 	tconn *chrome.TestConn, ui *uiauto.Context, downloadsPath, screenshotName string) uiauto.Action {
-	return uiauto.Combine("remove screenshot",
+	return uiauto.NamedCombine("remove screenshot",
 		// Right click the screenshot view. This will wait until the screenshot view
 		// exists and stabilizes before showing the context menu.
 		ui.RightClick(holdingspace.FindScreenCaptureView().Name(screenshotName)),
