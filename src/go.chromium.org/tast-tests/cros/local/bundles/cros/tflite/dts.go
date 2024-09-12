@@ -226,6 +226,12 @@ var openvinoParam = testingParam{
 
 		// TODO(b/364772332): Openvino delegate output incorrect results.
 		"FloatPoolingOpTest.MaxPoolActivationRelu6",
+
+		// TODO(b/366096384): Openvino delegate crashed on those tests after
+		// intel-npu-umd is updated to v1.6.0.
+		"SoftmaxOpTest.SimpleTest",
+		"SoftmaxOpTest.CompareWithTFminiBetaEq1",
+		"SoftmaxOpTest.CompareWithTFminiBetaNotEq1",
 	},
 	AllowFp16PrecisionForFp32: true,
 }
