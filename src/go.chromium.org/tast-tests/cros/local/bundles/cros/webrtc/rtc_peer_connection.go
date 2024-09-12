@@ -333,7 +333,7 @@ func init() {
 				BrowserType:       browser.TypeAsh,
 			},
 			ExtraSoftwareDeps: []string{caps.HWDecodeVP9},
-			Fixture:           "chromeVideoWithFakeWebcamAndHWSModeEncoding",
+			Fixture:           "chromeVideoWithFakeWebcam",
 		}, {
 			Name: "av1_verify_hw_dec",
 			Val: peerconnection.RTCTestParams{
@@ -706,7 +706,7 @@ func init() {
 				BrowserType:       browser.TypeAsh,
 			},
 			ExtraSoftwareDeps: []string{caps.HWEncodeVP9},
-			Fixture:           "chromeVideoWithFakeWebcamAndHWSModeEncoding",
+			Fixture:           "chromeVideoWithFakeWebcam",
 		}, {
 			Name: "av1_verify_hw_enc",
 			Val: peerconnection.RTCTestParams{

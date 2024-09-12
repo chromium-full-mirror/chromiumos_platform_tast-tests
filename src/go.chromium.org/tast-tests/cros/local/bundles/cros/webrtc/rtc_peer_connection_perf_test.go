@@ -195,9 +195,6 @@ func toFixture(enc encoderImpl, dec decoderImpl, stream streamType) string {
 		case swDec:
 			panic("we don't test hardware encoding + software decoding")
 		case hwDec:
-			if stream == s3t3 {
-				return "chromeVideoWithFakeWebcamAndHWSModeEncoding"
-			}
 			return "chromeVideoWithFakeWebcam"
 		case inpVD:
 			return "chromeVideoINPVDWithFakeWebcam"

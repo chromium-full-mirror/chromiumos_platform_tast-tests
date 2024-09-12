@@ -93,25 +93,6 @@ func initChromeFakeWebCamBaseFixtures() {
 		TearDownTimeout: chrome.ResetTimeout,
 	})
 
-	testing.AddFixture(&testing.Fixture{
-		Name:         "chromeVideoWithFakeWebcamAndHWSModeEncoding",
-		Desc:         "Similar to chromeVideoWithFakeWebcam fixture but enabling S-mode encoding and required WebRTC API testing it",
-		Contacts:     []string{"chromeos-gfx-video@google.com"},
-		BugComponent: "b:168352", // ChromeOS > Platform > Graphics > Video.
-		Impl: chrome.NewLoggedInFixture(func(ctx context.Context, s *testing.FixtState) ([]chrome.Option, error) {
-			return getChromeVideoOptions(
-				browser.TypeAsh,
-				chrome.ExtraArgs(chromeFakeWebcamArgs...),
-				chrome.ExtraArgs(chromeWebRTCEncodedFrameArgs...),
-				chrome.EnableFeatures("VaapiVp9SModeHWEncoding"),
-			), nil
-		}),
-		Parent:          "gpuWatchDog",
-		SetUpTimeout:    chrome.FixtureSetUpTimeout,
-		ResetTimeout:    chrome.ResetTimeout,
-		TearDownTimeout: chrome.ResetTimeout,
-	})
-
 	// TODO(b/248528896): Remove once out-of-process video encoding is enabled by default.
 	testing.AddFixture(&testing.Fixture{
 		Name:         "chromeVideoWithFakeWebcamAndOOPVE",

@@ -633,7 +633,7 @@ func init() {
 					TraceChromeEvents: true,
 				},
 				ExtraSoftwareDeps: []string{"autotest-capability:hw_enc_vp9_1080_30", "autotest-capability:hw_dec_vp9_1080_30"},
-				Fixture:           "chromeVideoWithFakeWebcamAndHWSModeEncoding",
+				Fixture:           "chromeVideoWithFakeWebcam",
 			},
 			{
 				Name: "vp9_1080p_sw_enc_sw_dec",
@@ -854,7 +854,7 @@ func init() {
 					TraceChromeEvents: true,
 				},
 				ExtraSoftwareDeps: []string{"autotest-capability:hw_enc_vp9_1080_30", "autotest-capability:hw_dec_vp9_1080_30"},
-				Fixture:           "chromeVideoWithFakeWebcamAndHWSModeEncoding",
+				Fixture:           "chromeVideoWithFakeWebcam",
 			},
 			{
 				Name: "av1_720p_sw_enc_sw_dec",
