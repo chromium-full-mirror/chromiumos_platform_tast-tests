@@ -32,16 +32,14 @@ const apkName = "customized_arc_app_release_20240704.apk"
 
 func init() {
 	testing.AddTest(&testing.Test{
-		Func:         EnableBluetoothWithArcApp,
-		LacrosStatus: testing.LacrosVariantUnneeded,
-		Desc:         "Verify that user can turn Bluetooth on with an ARC++ app",
+		Func: EnableBluetoothWithArcApp,
+		Desc: "Verify that user can turn Bluetooth on with an ARC++ app",
 		Contacts: []string{
-			"vic.lee@cienet.com",
-			"chromeos-connectivity-cienet-external@google.com",
+			"cros-connectivity@google.com",
+			"chromeos-connectivity-engprod@google.com",
 		},
-		// ChromeOS > Software > System Services > Connectivity > Bluetooth
-		BugComponent:    "b:1578688", // ChromeOS > External > Cienet > Manual Test Automation > Test stabilization
-		LifeCycleStage:  testing.LifeCycleInDevelopment,
+		BugComponent:    "b:1131776", // ChromeOS > Software > System Services > Connectivity > Bluetooth
+		LifeCycleStage:  testing.LifeCycleOwnerMonitored,
 		Attr:            []string{"group:bluetooth", "bluetooth_floss_flaky"},
 		SoftwareDeps:    []string{"chrome", "arc"},
 		TestBedDeps:     []string{tbdep.BluetoothStateNormal},
