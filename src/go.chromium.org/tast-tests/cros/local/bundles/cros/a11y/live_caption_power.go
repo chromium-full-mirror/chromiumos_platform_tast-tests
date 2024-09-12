@@ -11,6 +11,7 @@ import (
 	"time"
 
 	"go.chromium.org/tast-tests/cros/local/a11y"
+	"go.chromium.org/tast-tests/cros/local/chrome/browser"
 	"go.chromium.org/tast-tests/cros/local/chrome/browser/browserfixt"
 	"go.chromium.org/tast-tests/cros/local/chrome/uiauto"
 	"go.chromium.org/tast-tests/cros/local/chrome/uiauto/nodewith"
@@ -24,9 +25,8 @@ import (
 
 func init() {
 	testing.AddTest(&testing.Test{
-		Func:         LiveCaptionPower,
-		LacrosStatus: testing.LacrosVariantUnneeded, // Ash is only a platform dependency.
-		Desc:         "Collect power metrics of using live caption",
+		Func: LiveCaptionPower,
+		Desc: "Collect power metrics of using live caption",
 		Contacts: []string{
 			"ml-service-team@google.com",
 			"amoylan@chromium.org",
@@ -67,7 +67,6 @@ func LiveCaptionPower(ctx context.Context, s *testing.State) {
 		testDuration = 5 * time.Minute
 	)
 
-	bt := s.FixtValue().(setup.PowerUIFixtureData).Bt
 	cr := s.FixtValue().(setup.PowerUIFixtureData).Cr
 
 	tconn, err := cr.TestAPIConn(ctx)
@@ -89,7 +88,7 @@ func LiveCaptionPower(ctx context.Context, s *testing.State) {
 	}
 
 	// Open the test page and play the audio.
-	conn, _, closeBrowser, err := browserfixt.SetUpWithURL(ctx, cr, bt, server.URL+"/live_caption_power.html")
+	conn, _, closeBrowser, err := browserfixt.SetUpWithURL(ctx, cr, browser.TypeAsh, server.URL+"/live_caption_power.html")
 	if err != nil {
 		s.Fatal("Failed to open test web page: ", err)
 	}

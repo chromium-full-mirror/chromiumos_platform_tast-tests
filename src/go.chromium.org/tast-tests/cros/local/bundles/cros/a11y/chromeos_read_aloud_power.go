@@ -8,6 +8,7 @@ import (
 	"context"
 	"time"
 
+	"go.chromium.org/tast-tests/cros/local/chrome/browser"
 	"go.chromium.org/tast-tests/cros/local/chrome/browser/browserfixt"
 	"go.chromium.org/tast-tests/cros/local/chrome/uiauto"
 	"go.chromium.org/tast-tests/cros/local/chrome/uiauto/faillog"
@@ -26,9 +27,8 @@ type readAloudPowerParam struct {
 
 func init() {
 	testing.AddTest(&testing.Test{
-		Func:         ChromeosReadAloudPower,
-		LacrosStatus: testing.LacrosVariantUnneeded, // b:338224021 not support lacros yet.
-		Desc:         "Checks read loud feature power usage",
+		Func: ChromeosReadAloudPower,
+		Desc: "Checks read loud feature power usage",
 		Contacts: []string{
 			"komo-eng@google.com",
 			"trewin@google.com",
@@ -62,10 +62,9 @@ func ChromeosReadAloudPower(ctx context.Context, s *testing.State) {
 	ctx, cancel := ctxutil.Shorten(ctx, 10*time.Second)
 	defer cancel()
 
-	bt := s.FixtValue().(setup.PowerUIFixtureData).Bt
 	cr := s.FixtValue().(setup.PowerUIFixtureData).Cr
 
-	conn, _, cleanup, err := browserfixt.SetUpWithURL(ctx, cr, bt, "https://en.wikipedia.org/wiki/ChromeOS")
+	conn, _, cleanup, err := browserfixt.SetUpWithURL(ctx, cr, browser.TypeAsh, "https://en.wikipedia.org/wiki/ChromeOS")
 	if err != nil {
 		s.Fatal("Failed to open wiki page: ", err)
 	}
