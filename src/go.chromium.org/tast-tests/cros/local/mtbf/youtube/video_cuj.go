@@ -43,7 +43,6 @@ const (
 type TestResources struct {
 	Cr        *chrome.Chrome
 	Tconn     *chrome.TestConn
-	Bt        browser.Type
 	A         *arc.ARC
 	Kb        *input.KeyboardEventWriter
 	UIHandler cuj.UIActionHandler
@@ -117,7 +116,6 @@ func Run(ctx context.Context, resources TestResources, param TestParams) error {
 	var (
 		cr              = resources.Cr
 		tconn           = resources.Tconn
-		bt              = resources.Bt
 		a               = resources.A
 		kb              = resources.Kb
 		uiHandler       = resources.UIHandler
@@ -154,7 +152,7 @@ func Run(ctx context.Context, resources TestResources, param TestParams) error {
 	defer cleanupSetting(cleanupSettingsCtx)
 
 	testing.ContextLog(ctx, "Start to get browser start time")
-	l, browserStartTime, err := cuj.GetBrowserStartTime(ctx, tconn, true, tabletMode, bt)
+	l, browserStartTime, err := cuj.GetBrowserStartTime(ctx, tconn, true, tabletMode, browser.TypeAsh)
 	if err != nil {
 		return errors.Wrap(err, "failed to get browser start time")
 	}
@@ -169,7 +167,7 @@ func Run(ctx context.Context, resources TestResources, param TestParams) error {
 	}
 	bTconn, err := br.TestAPIConn(ctx)
 	if err != nil {
-		return errors.Wrapf(err, "failed to create Test API connection for %v browser", bt)
+		return errors.Wrap(err, "failed to create Test API connection for the browser")
 	}
 	videoSources := basicVideoSrc
 	if tier == cuj.Premium || tier == cuj.Advanced {
@@ -203,7 +201,7 @@ func Run(ctx context.Context, resources TestResources, param TestParams) error {
 		return errors.Wrap(err, "failed to create a recorder")
 	}
 	defer recorder.Close(cleanupRecorderCtx)
-	if err := cuj.AddPerformanceCUJMetrics(bt, tconn, bTconn, recorder); err != nil {
+	if err := cuj.AddPerformanceCUJMetrics(browser.TypeAsh, tconn, bTconn, recorder); err != nil {
 		return errors.Wrap(err, "failed to add metrics to recorder")
 	}
 
@@ -233,7 +231,7 @@ func Run(ctx context.Context, resources TestResources, param TestParams) error {
 				videoApp.Close(ctx)
 			}
 			closeFunc := func(ctx context.Context) error {
-				if err := cuj.CloseAllTabs(ctx, bTconn, bt); err != nil {
+				if err := cuj.CloseAllTabs(ctx, bTconn, browser.TypeAsh); err != nil {
 					testing.ContextLog(ctx, "Failed to close all tabs: ", err)
 				}
 				return nil
@@ -245,7 +243,7 @@ func Run(ctx context.Context, resources TestResources, param TestParams) error {
 			if appName == YoutubeWeb {
 				// Before closing the youtube site outside the recorder, dump the UI tree to capture a screenshot.
 				faillog.DumpUITreeWithScreenshotOnError(ctx, outDir, func() bool { return retErr != nil }, cr, "ui_dump")
-				if err := cuj.CloseAllTabs(ctx, bTconn, bt); err != nil {
+				if err := cuj.CloseAllTabs(ctx, bTconn, browser.TypeAsh); err != nil {
 					testing.ContextLog(ctx, "Failed to close all tabs: ", err)
 				}
 			}
@@ -328,24 +326,10 @@ func videoScenario(ctx context.Context, resources TestResources, param TestParam
 		uiHandler       = resources.UIHandler
 		tconn           = resources.Tconn
 		kb              = resources.Kb
-		bt              = resources.Bt
 	)
 
 	ui := uiauto.New(tconn)
 	openGoogleHelp := func(ctx context.Context) error {
-		if bt == browser.TypeLacros {
-			// If there's a lacros browser, bring it to active.
-			lacrosWindow, err := ash.FindWindow(ctx, tconn, func(w *ash.Window) bool {
-				return w.WindowType == ash.WindowTypeLacros
-			})
-			if err != nil {
-				return errors.Wrap(err, "failed to find the lacros window")
-			}
-			if err := lacrosWindow.ActivateWindow(ctx, tconn); err != nil {
-				return errors.Wrap(err, "failed to activate lacros window")
-			}
-		}
-
 		conn, err := uiHandler.NewChromeTab(ctx, br, cuj.GoogleHelpChromeURL, true)
 		if err != nil {
 			return errors.Wrap(err, "failed to open Google Help")

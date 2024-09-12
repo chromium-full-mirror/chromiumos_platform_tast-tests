@@ -24,9 +24,8 @@ import (
 
 func init() {
 	testing.AddTest(&testing.Test{
-		Func:         PlaybackSimultaneous,
-		LacrosStatus: testing.LacrosVariantExists,
-		Desc:         "Plays multiple videos simultaneously in different tabs",
+		Func: PlaybackSimultaneous,
+		Desc: "Plays multiple videos simultaneously in different tabs",
 		Contacts: []string{
 			"chromeos-perf-reliability-eng@google.com",
 			"abergman@google.com",
@@ -40,17 +39,7 @@ func init() {
 		Attr:         []string{"group:hw_agnostic"},
 		SoftwareDeps: []string{"chrome"},
 		Timeout:      5 * time.Minute,
-		Params: []testing.Param{
-			{
-				Fixture: mtbf.LoginReuseFixture,
-				Val:     browser.TypeAsh,
-			}, {
-				Name:              "lacros",
-				ExtraSoftwareDeps: []string{"lacros"},
-				Fixture:           mtbf.LoginReuseLacrosFixture,
-				Val:               browser.TypeLacros,
-			},
-		},
+		Fixture:      mtbf.LoginReuseFixture,
 	})
 }
 
@@ -84,7 +73,7 @@ func PlaybackSimultaneous(ctx context.Context, s *testing.State) {
 	}
 	defer kb.Close(ctx)
 
-	br, closeBrowser, err := browserfixt.SetUp(ctx, cr, s.Param().(browser.Type))
+	br, closeBrowser, err := browserfixt.SetUp(ctx, cr, browser.TypeAsh)
 	if err != nil {
 		s.Fatal("Failed to open the browser: ", err)
 	}
@@ -128,7 +117,7 @@ func PlaybackSimultaneous(ctx context.Context, s *testing.State) {
 		}
 	}
 
-	// Close the empty lacros tab after all videos are opened.
+	// Close the empty tab after all videos are opened.
 	if err := br.CloseWithURL(ctx, chrome.NewTabURL); err != nil {
 		s.Fatal("Failed to close empty tab: ", err)
 	}
