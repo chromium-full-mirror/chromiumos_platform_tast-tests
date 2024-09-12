@@ -65,6 +65,10 @@ func InputCheckRegionalKey(ctx context.Context, s *testing.State) {
 		s.Fatal("Failed to connect Test API: ", err)
 	}
 
+	if err := ash.SetTabletModeEnabled(ctx, tconn, false); err != nil {
+		s.Error("Failed to disable tablet mode: ", err)
+	}
+
 	if err = apps.Launch(ctx, tconn, apps.Diagnostics.ID); err != nil {
 		s.Fatal("Failed to launch diagnostics app")
 	}
