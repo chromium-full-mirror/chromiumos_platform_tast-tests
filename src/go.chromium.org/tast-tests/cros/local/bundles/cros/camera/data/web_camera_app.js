@@ -57,7 +57,7 @@ class CameraApp {
   }
 
   setMediaRecorder() {
-    const options = { mimeType: 'video/mp4; codecs=avc1' };
+    const options = { mimeType: 'video/mp4; codecs=vp9' };
     this.mediaRecorder = new MediaRecorder(this.stream, options);
     this.mediaRecorder.addEventListener(
         'dataavailable', (e) => this.dataAvailableHandler(e));
