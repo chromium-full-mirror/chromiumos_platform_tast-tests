@@ -12,6 +12,7 @@ import (
 	"go.chromium.org/tast-tests/cros/common/action"
 	"go.chromium.org/tast-tests/cros/common/servo"
 	"go.chromium.org/tast-tests/cros/remote/bundles/cros/shimlessrma/rmaweb"
+	"go.chromium.org/tast-tests/cros/remote/bundles/cros/shimlessrma/servoutil"
 	"go.chromium.org/tast-tests/cros/remote/firmware/fixture"
 	"go.chromium.org/tast/core/ctxutil"
 	"go.chromium.org/tast/core/testing"
@@ -198,7 +199,7 @@ func DisableHWWP(ctx context.Context, s *testing.State) {
 		s.Error("Fail to sleep: ", err)
 	}
 
-	if err := firmwareHelper.Servo.RunGSCCommand(ctx, "bpforce follow_batt_pres atboot"); err != nil {
+	if err := servoutil.SetBatteryState(ctx, firmwareHelper, servoutil.BatteryStateFollow); err != nil {
 		s.Fatal("Fail to connect battery: ", err)
 	}
 

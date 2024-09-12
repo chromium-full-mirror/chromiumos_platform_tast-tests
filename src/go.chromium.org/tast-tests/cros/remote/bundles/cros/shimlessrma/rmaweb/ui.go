@@ -17,6 +17,7 @@ import (
 
 	"go.chromium.org/tast-tests/cros/common/action"
 	"go.chromium.org/tast-tests/cros/common/servo"
+	"go.chromium.org/tast-tests/cros/remote/bundles/cros/shimlessrma/servoutil"
 	"go.chromium.org/tast-tests/cros/remote/firmware"
 	"go.chromium.org/tast-tests/cros/services/cros/graphics"
 	pb "go.chromium.org/tast-tests/cros/services/cros/shimlessrma"
@@ -709,13 +710,13 @@ func (uiHelper *UIHelper) enterIntoTextInput(content, textInputName string) acti
 
 func (uiHelper *UIHelper) disconnectBatteryByCr50() action.Action {
 	return func(ctx context.Context) error {
-		return uiHelper.FirmwareHelper.Servo.CheckGSCCommandOutput(ctx, "bpforce disconnect atboot", []string{"batt pres:"})
+		return servoutil.SetBatteryState(ctx, uiHelper.FirmwareHelper, servoutil.BatteryStateOff)
 	}
 }
 
 func (uiHelper *UIHelper) connectBatteryByCr50() action.Action {
 	return func(ctx context.Context) error {
-		return uiHelper.FirmwareHelper.Servo.CheckGSCCommandOutput(ctx, "bpforce follow_batt_pres atboot", []string{"batt pres:"})
+		return servoutil.SetBatteryState(ctx, uiHelper.FirmwareHelper, servoutil.BatteryStateFollow)
 	}
 }
 
