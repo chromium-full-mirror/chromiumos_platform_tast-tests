@@ -21,9 +21,8 @@ import (
 
 func init() {
 	testing.AddTest(&testing.Test{
-		Func:         MemoryChromeOSPerf,
-		LacrosStatus: testing.LacrosVariantExists,
-		Desc:         "How much memory can we allocate before each ChromeOS memory pressure level",
+		Func: MemoryChromeOSPerf,
+		Desc: "How much memory can we allocate before each ChromeOS memory pressure level",
 		Contacts: []string{
 			"arcvm-eng@google.com",
 			"cwd@chromium.org",
@@ -43,19 +42,6 @@ func init() {
 			ExtraSoftwareDeps: []string{"vm_host"},
 			ExtraHardwareDeps: crostini.CrostiniStable,
 			Pre:               multivm.CrostiniStarted(),
-		}, {
-			Name: "lacros",
-			Pre:  multivm.NoVMLacrosStarted(),
-		}, {
-			Name:              "with_bg_arc_lacros",
-			ExtraSoftwareDeps: []string{"arc", "lacros"},
-			Pre:               multivm.ArcLacrosStarted(),
-		}, {
-			Name:              "with_bg_crostini_lacros",
-			ExtraData:         []string{crostini.GetContainerMetadataArtifact("bullseye", false), crostini.GetContainerRootfsArtifact("bullseye", false)},
-			ExtraSoftwareDeps: []string{"vm_host", "lacros"},
-			ExtraHardwareDeps: crostini.CrostiniStable,
-			Pre:               multivm.CrostiniLacrosStarted(),
 		}},
 		Timeout: 10 * time.Minute,
 	})

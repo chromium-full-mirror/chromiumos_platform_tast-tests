@@ -19,9 +19,8 @@ import (
 
 func init() {
 	testing.AddTest(&testing.Test{
-		Func:         Login,
-		LacrosStatus: testing.LacrosVariantExists,
-		Desc:         "Tests Chrome Login with different VMs running",
+		Func: Login,
+		Desc: "Tests Chrome Login with different VMs running",
 		Contacts: []string{
 			"arcvm-memory@google.com",
 			"cwd@google.com",
@@ -46,10 +45,6 @@ func init() {
 			ExtraAttr:         []string{"crosbolt_arc_perf_qual"},
 			ExtraSoftwareDeps: []string{"android_vm"},
 		}, {
-			Name:              "arc_lacros",
-			Pre:               multivm.ArcLacrosStarted(),
-			ExtraSoftwareDeps: []string{"android_vm", "lacros"},
-		}, {
 			Name:              "arc_container",
 			Pre:               multivm.ArcStarted(),
 			ExtraAttr:         []string{"crosbolt_arc_perf_qual"},
@@ -60,10 +55,6 @@ func init() {
 			ExtraData:         []string{crostini.GetContainerMetadataArtifact("bullseye", false), crostini.GetContainerRootfsArtifact("bullseye", false)},
 			ExtraHardwareDeps: crostini.CrostiniStable,
 			ExtraSoftwareDeps: []string{"vm_host"},
-		}, {
-			Name:              "novm_lacros",
-			Pre:               multivm.NoVMLacrosStarted(),
-			ExtraSoftwareDeps: []string{"lacros"},
 		}},
 	})
 }

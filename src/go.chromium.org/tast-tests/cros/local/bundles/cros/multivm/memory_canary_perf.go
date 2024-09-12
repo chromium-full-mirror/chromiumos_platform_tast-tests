@@ -34,9 +34,8 @@ const throttleVar = "multivm.MemoryCanaryPerf.throttle"
 
 func init() {
 	testing.AddTest(&testing.Test{
-		Func:         MemoryCanaryPerf,
-		LacrosStatus: testing.LacrosVariantNeeded,
-		Desc:         "How much memory can we allocate before the specified canary dies",
+		Func: MemoryCanaryPerf,
+		Desc: "How much memory can we allocate before the specified canary dies",
 		Contacts: []string{
 			"arcvm-memory@google.com",
 			"cwd@google.com",

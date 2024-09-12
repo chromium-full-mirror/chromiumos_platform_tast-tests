@@ -30,9 +30,8 @@ import (
 
 func init() {
 	testing.AddTest(&testing.Test{
-		Func:         PerProcessMemory,
-		LacrosStatus: testing.LacrosVariantExists,
-		Desc:         "Starts session and records per-process memory usage",
+		Func: PerProcessMemory,
+		Desc: "Starts session and records per-process memory usage",
 		Contacts: []string{
 			"arcvm-eng-team@google.com",
 			"yixie@google.com",
@@ -45,13 +44,6 @@ func init() {
 			Name: "arc",
 			Val: &stateManagerOptions{
 				chromeOptions: multivm.DefaultChromeOptions,
-				vmOptions:     []multivm.VMOptions{multivm.DefaultARCOptions},
-			},
-		}, {
-			Name:              "arc_lacros",
-			ExtraSoftwareDeps: []string{"lacros"},
-			Val: &stateManagerOptions{
-				chromeOptions: multivm.LacrosChromeOptions,
 				vmOptions:     []multivm.VMOptions{multivm.DefaultARCOptions},
 			},
 		}},

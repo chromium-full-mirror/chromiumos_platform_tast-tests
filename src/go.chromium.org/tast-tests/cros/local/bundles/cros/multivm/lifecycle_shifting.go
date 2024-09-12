@@ -26,14 +26,12 @@ import (
 
 type lifecycleShiftingParam struct {
 	inHost, inCrostini, inARC bool
-	browserType               browser.Type
 }
 
 func init() {
 	testing.AddTest(&testing.Test{
-		Func:         LifecycleShifting,
-		LacrosStatus: testing.LacrosVariantExists,
-		Desc:         "Create many Apps, Tabs, Processes in turn across multiple VMs, and see how many can stay alive",
+		Func: LifecycleShifting,
+		Desc: "Create many Apps, Tabs, Processes in turn across multiple VMs, and see how many can stay alive",
 		Contacts: []string{
 			"arcvm-memory@google.com",
 			"cwd@google.com",
@@ -47,33 +45,21 @@ func init() {
 		Params: []testing.Param{{
 			Name:              "arc_host",
 			Pre:               multivm.ArcStarted(),
-			Val:               &lifecycleShiftingParam{inARC: true, inHost: true, browserType: browser.TypeAsh},
+			Val:               &lifecycleShiftingParam{inARC: true, inHost: true},
 			ExtraSoftwareDeps: []string{"android_vm"},
 			// Arc lifecycle unit allocates on the Java heap which is limited to 512MiB.
 			// 2% * 24GiB = 492MiB, which gives room for the rest of the app.
 			ExtraHardwareDeps: hwdep.D(hwdep.MaxMemory(24 * 1024)),
 		}, {
-			Name:              "arc_host_lacros",
-			Pre:               multivm.ArcLacrosStarted(),
-			Val:               &lifecycleShiftingParam{inARC: true, inHost: true, browserType: browser.TypeLacros},
-			ExtraSoftwareDeps: []string{"android_vm", "lacros"},
-			ExtraHardwareDeps: hwdep.D(hwdep.MaxMemory(24 * 1024)),
-		}, {
 			Name:              "arc_host_vmmms",
 			Pre:               multivm.ArcStartedVMMMS(),
-			Val:               &lifecycleShiftingParam{inARC: true, inHost: true, browserType: browser.TypeAsh},
+			Val:               &lifecycleShiftingParam{inARC: true, inHost: true},
 			ExtraSoftwareDeps: []string{"android_vm"},
-			ExtraHardwareDeps: hwdep.D(hwdep.MaxMemory(24 * 1024)),
-		}, {
-			Name:              "arc_host_lacros_vmmms",
-			Pre:               multivm.ArcLacrosStartedVMMMS(),
-			Val:               &lifecycleShiftingParam{inARC: true, inHost: true, browserType: browser.TypeLacros},
-			ExtraSoftwareDeps: []string{"android_vm", "lacros"},
 			ExtraHardwareDeps: hwdep.D(hwdep.MaxMemory(24 * 1024)),
 		}, {
 			Name:              "crostini_host",
 			Pre:               multivm.CrostiniStarted(),
-			Val:               &lifecycleShiftingParam{inCrostini: true, inHost: true, browserType: browser.TypeAsh},
+			Val:               &lifecycleShiftingParam{inCrostini: true, inHost: true},
 			ExtraSoftwareDeps: []string{"android_vm"},
 			ExtraData: []string{
 				crostini.GetContainerMetadataArtifact("bullseye", false),
@@ -245,7 +231,7 @@ func LifecycleShifting(ctx context.Context, s *testing.State) {
 	rp := &memoryuser.RunParameters{
 		UseARC:             preARC != nil,
 		ExistingChrome:     pre.Chrome,
-		BrowserType:        param.browserType,
+		BrowserType:        browser.TypeAsh,
 		ExistingARC:        preARC,
 		ExistingPerfValues: p,
 	}

@@ -29,9 +29,8 @@ type lifecycleParam struct {
 
 func init() {
 	testing.AddTest(&testing.Test{
-		Func:         Lifecycle,
-		LacrosStatus: testing.LacrosVariantExists,
-		Desc:         "Create many Apps, Tabs, Processes across multiple VMs, and see how many can stay alive",
+		Func: Lifecycle,
+		Desc: "Create many Apps, Tabs, Processes across multiple VMs, and see how many can stay alive",
 		Contacts: []string{
 			"arcvm-memory@google.com",
 			"cwd@google.com",
@@ -48,30 +47,15 @@ func init() {
 			Pre:  multivm.NoVMStarted(),
 			Val:  &lifecycleParam{inHost: true, browserType: browser.TypeAsh},
 		}, {
-			Name:              "host_lacros",
-			Pre:               multivm.NoVMLacrosStarted(),
-			Val:               &lifecycleParam{inHost: true, browserType: browser.TypeLacros},
-			ExtraSoftwareDeps: []string{"lacros"},
-		}, {
 			Name:              "arc",
 			Pre:               multivm.ArcStarted(),
 			Val:               &lifecycleParam{inARC: true, browserType: browser.TypeAsh},
 			ExtraSoftwareDeps: []string{"android_vm"},
 		}, {
-			Name:              "arc_lacros",
-			Pre:               multivm.ArcLacrosStarted(),
-			Val:               &lifecycleParam{inARC: true, browserType: browser.TypeLacros},
-			ExtraSoftwareDeps: []string{"android_vm", "lacros"},
-		}, {
 			Name:              "arc_vmmms",
 			Pre:               multivm.ArcStartedVMMMS(),
 			Val:               &lifecycleParam{inARC: true, browserType: browser.TypeAsh},
 			ExtraSoftwareDeps: []string{"android_vm"},
-		}, {
-			Name:              "arc_lacros_vmmms",
-			Pre:               multivm.ArcLacrosStartedVMMMS(),
-			Val:               &lifecycleParam{inARC: true, browserType: browser.TypeLacros},
-			ExtraSoftwareDeps: []string{"android_vm", "lacros"},
 		}, {
 			Name: "crostini",
 			Pre:  multivm.CrostiniStarted(),
