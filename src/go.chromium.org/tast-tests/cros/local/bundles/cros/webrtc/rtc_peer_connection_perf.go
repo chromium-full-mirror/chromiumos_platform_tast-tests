@@ -236,7 +236,7 @@ func init() {
 				Fixture:           "chromeVideoWithFakeWebcam",
 			},
 			{
-				Name: "vp8_720p_simulcast_sw_enc_sw_dec",
+				Name: "vp8_720p_simulcast_l1t1_sw_enc_sw_dec",
 				Val: peerconnection.RTCTestParams{
 					VerifyDecoderMode: peerconnection.VerifySWDecoderUsed,
 					VerifyEncoderMode: peerconnection.VerifySWEncoderUsed,
@@ -252,7 +252,7 @@ func init() {
 				Fixture: "chromeVideoWithFakeWebcamAndNoHwAcceleration",
 			},
 			{
-				Name: "vp8_720p_simulcast_sw_enc_hw_dec",
+				Name: "vp8_720p_simulcast_l1t1_sw_enc_hw_dec",
 				Val: peerconnection.RTCTestParams{
 					VerifyDecoderMode: peerconnection.VerifyHWDecoderUsed,
 					VerifyEncoderMode: peerconnection.VerifySWEncoderUsed,
@@ -269,7 +269,7 @@ func init() {
 				Fixture:           "chromeVideoWithFakeWebcamAndSWEncoding",
 			},
 			{
-				Name: "vp8_720p_simulcast_hw_enc_hw_dec",
+				Name: "vp8_720p_simulcast_l1t1_hw_enc_hw_dec",
 				Val: peerconnection.RTCTestParams{
 					VerifyDecoderMode: peerconnection.VerifyHWDecoderUsed,
 					VerifyEncoderMode: peerconnection.VerifyHWEncoderUsed,
@@ -371,7 +371,7 @@ func init() {
 				Fixture:           "chromeVideoWithFakeWebcam",
 			},
 			{
-				Name: "vp8_1080p_simulcast_sw_enc_sw_dec",
+				Name: "vp8_1080p_simulcast_l1t1_sw_enc_sw_dec",
 				Val: peerconnection.RTCTestParams{
 					VerifyDecoderMode: peerconnection.VerifySWDecoderUsed,
 					VerifyEncoderMode: peerconnection.VerifySWEncoderUsed,
@@ -387,7 +387,7 @@ func init() {
 				Fixture: "chromeVideoWithFakeWebcamAndNoHwAcceleration",
 			},
 			{
-				Name: "vp8_1080p_simulcast_sw_enc_hw_dec",
+				Name: "vp8_1080p_simulcast_l1t1_sw_enc_hw_dec",
 				Val: peerconnection.RTCTestParams{
 					VerifyDecoderMode: peerconnection.VerifyHWDecoderUsed,
 					VerifyEncoderMode: peerconnection.VerifySWEncoderUsed,
@@ -404,7 +404,7 @@ func init() {
 				Fixture:           "chromeVideoWithFakeWebcamAndSWEncoding",
 			},
 			{
-				Name: "vp8_1080p_simulcast_hw_enc_hw_dec",
+				Name: "vp8_1080p_simulcast_l1t1_hw_enc_hw_dec",
 				Val: peerconnection.RTCTestParams{
 					VerifyDecoderMode: peerconnection.VerifyHWDecoderUsed,
 					VerifyEncoderMode: peerconnection.VerifyHWEncoderUsed,
@@ -642,6 +642,53 @@ func init() {
 				Fixture:           "chromeVideoWithFakeWebcam",
 			},
 			{
+				Name: "vp9_720p_simulcast_l1t3_sw_enc_sw_dec",
+				Val: peerconnection.RTCTestParams{
+					VerifyDecoderMode: peerconnection.VerifySWDecoderUsed,
+					VerifyEncoderMode: peerconnection.VerifySWEncoderUsed,
+					Profile:           "VP9",
+					StreamWidth:       1280,
+					StreamHeight:      720,
+					Svc:               "L1T3",
+					Simulcasts:        3,
+					BrowserType:       browser.TypeAsh,
+					TraceChromeEvents: false,
+				},
+				Fixture: "chromeVideoWithFakeWebcamAndNoHwAcceleration",
+			},
+			{
+				Name: "vp9_720p_simulcast_l1t3_sw_enc_hw_dec",
+				Val: peerconnection.RTCTestParams{
+					VerifyDecoderMode: peerconnection.VerifyHWDecoderUsed,
+					VerifyEncoderMode: peerconnection.VerifySWEncoderUsed,
+					Profile:           "VP9",
+					StreamWidth:       1280,
+					StreamHeight:      720,
+					Svc:               "L1T3",
+					Simulcasts:        3,
+					BrowserType:       browser.TypeAsh,
+					TraceChromeEvents: true,
+				},
+				ExtraSoftwareDeps: []string{"autotest-capability:hw_dec_vp9_1080_30"},
+				Fixture:           "chromeVideoWithFakeWebcamAndSWEncoding",
+			},
+			{
+				Name: "vp9_720p_simulcast_l1t3_hw_enc_hw_dec",
+				Val: peerconnection.RTCTestParams{
+					VerifyDecoderMode: peerconnection.VerifyHWDecoderUsed,
+					VerifyEncoderMode: peerconnection.VerifyHWEncoderUsed,
+					Profile:           "VP9",
+					StreamWidth:       1280,
+					StreamHeight:      720,
+					Svc:               "L1T3",
+					Simulcasts:        3,
+					BrowserType:       browser.TypeAsh,
+					TraceChromeEvents: true,
+				},
+				ExtraSoftwareDeps: []string{"autotest-capability:hw_enc_vp9_1080_30", "autotest-capability:hw_dec_vp9_1080_30"},
+				Fixture:           "chromeVideoWithFakeWebcam",
+			},
+			{
 				Name: "vp9_1080p_sw_enc_sw_dec",
 				Val: peerconnection.RTCTestParams{
 					VerifyDecoderMode: peerconnection.VerifySWDecoderUsed,
@@ -856,6 +903,53 @@ func init() {
 					StreamWidth:       1920,
 					StreamHeight:      1080,
 					Svc:               "S3T3",
+					BrowserType:       browser.TypeAsh,
+					TraceChromeEvents: true,
+				},
+				ExtraSoftwareDeps: []string{"autotest-capability:hw_enc_vp9_1080_30", "autotest-capability:hw_dec_vp9_1080_30"},
+				Fixture:           "chromeVideoWithFakeWebcam",
+			},
+			{
+				Name: "vp9_1080p_simulcast_l1t3_sw_enc_sw_dec",
+				Val: peerconnection.RTCTestParams{
+					VerifyDecoderMode: peerconnection.VerifySWDecoderUsed,
+					VerifyEncoderMode: peerconnection.VerifySWEncoderUsed,
+					Profile:           "VP9",
+					StreamWidth:       1920,
+					StreamHeight:      1080,
+					Svc:               "L1T3",
+					Simulcasts:        3,
+					BrowserType:       browser.TypeAsh,
+					TraceChromeEvents: false,
+				},
+				Fixture: "chromeVideoWithFakeWebcamAndNoHwAcceleration",
+			},
+			{
+				Name: "vp9_1080p_simulcast_l1t3_sw_enc_hw_dec",
+				Val: peerconnection.RTCTestParams{
+					VerifyDecoderMode: peerconnection.VerifyHWDecoderUsed,
+					VerifyEncoderMode: peerconnection.VerifySWEncoderUsed,
+					Profile:           "VP9",
+					StreamWidth:       1920,
+					StreamHeight:      1080,
+					Svc:               "L1T3",
+					Simulcasts:        3,
+					BrowserType:       browser.TypeAsh,
+					TraceChromeEvents: true,
+				},
+				ExtraSoftwareDeps: []string{"autotest-capability:hw_dec_vp9_1080_30"},
+				Fixture:           "chromeVideoWithFakeWebcamAndSWEncoding",
+			},
+			{
+				Name: "vp9_1080p_simulcast_l1t3_hw_enc_hw_dec",
+				Val: peerconnection.RTCTestParams{
+					VerifyDecoderMode: peerconnection.VerifyHWDecoderUsed,
+					VerifyEncoderMode: peerconnection.VerifyHWEncoderUsed,
+					Profile:           "VP9",
+					StreamWidth:       1920,
+					StreamHeight:      1080,
+					Svc:               "L1T3",
+					Simulcasts:        3,
 					BrowserType:       browser.TypeAsh,
 					TraceChromeEvents: true,
 				},

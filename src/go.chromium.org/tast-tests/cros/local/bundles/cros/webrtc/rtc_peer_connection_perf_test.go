@@ -171,8 +171,8 @@ func skipTest(codec string, stream streamType, enc encoderImpl, dec decoderImpl)
 			return true
 		}
 	case simulcast:
-		if codec != "vp8" {
-			// Simulcast encoding is used in vp8 only today.
+		if codec != "vp8" && codec != "vp9" {
+			// Simulcast encoding is used in vp8 and vp9 only today.
 			return true
 		}
 	}
@@ -242,14 +242,25 @@ func TestRTCPeerConnectionPerfParams(t *testing.T) {
 							streamTypeStr = "_" + strings.ToLower(string(stream))
 							if stream == simulcast {
 								paramData.Simulcasts = 3
-								// L1T1 because we want to run vp8 encoder tests on ChromeOS ARM,
-								// where the vp8 temporal layer encoding is not supported.
-								paramData.Svc = "L1T1"
-								for i := 0; i < paramData.Simulcasts; i++ {
-									height := resolution.Height >> (paramData.Simulcasts - 1 - i)
-									// The software encoder is used for a video whose resolution is less than 360p.
-									hwEncForSimulcast := enc == hwEnc && height >= 360
-									paramData.SimulcastHWEncs = append(paramData.SimulcastHWEncs, hwEncForSimulcast)
+								if codec == "vp8" {
+									// L1T1 because we want to run vp8 encoder tests on ChromeOS ARM,
+									// where the vp8 temporal layer encoding is not supported.
+									paramData.Svc = "L1T1"
+									streamTypeStr += "_l1t1"
+									for i := 0; i < paramData.Simulcasts; i++ {
+										height := resolution.Height >> (paramData.Simulcasts - 1 - i)
+										// The software encoder is used for a video whose resolution is less than 360p.
+										hwEncForSimulcast := enc == hwEnc && height >= 360
+										paramData.SimulcastHWEncs = append(paramData.SimulcastHWEncs, hwEncForSimulcast)
+									}
+								} else if codec == "vp9" {
+									// L1T3 is because Google Meet uses it for vp9 simulcast.
+									// VP9 simulcast test runs only on ChromeOS intel, where vp9 temporal layer encoding
+									// is supported, so specifying this is not problem.
+									paramData.Svc = "L1T3"
+									streamTypeStr += "_l1t3"
+									// Since VA-API video encoder supports S-mode encoding, a single VP9 VA-API encoder performs the simulcast encoding.
+									// SimulcastHWEncs is thus not specified.
 								}
 							} else {
 								paramData.Svc = string(stream)

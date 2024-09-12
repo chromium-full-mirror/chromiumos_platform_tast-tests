@@ -83,6 +83,19 @@ func init() {
 			},
 			Fixture: "chromeVideoWithFakeWebcam",
 		}, {
+			Name: "vp9_simulcast_l1t3_no_verify_hw",
+			Val: peerconnection.RTCTestParams{
+				VerifyDecoderMode: peerconnection.NoVerifyDecoderMode,
+				VerifyEncoderMode: peerconnection.NoVerifyEncoderMode,
+				Profile:           "VP9",
+				StreamWidth:       defaultRTCStreamWidth,
+				StreamHeight:      defaultRTCStreamHeight,
+				Simulcasts:        3,
+				Svc:               "L1T3",
+				BrowserType:       browser.TypeAsh,
+			},
+			Fixture: "chromeVideoWithFakeWebcam",
+		}, {
 			Name: "av1_no_verify_hw",
 			Val: peerconnection.RTCTestParams{
 				VerifyDecoderMode: peerconnection.NoVerifyDecoderMode,
@@ -707,6 +720,22 @@ func init() {
 				StreamHeight:      defaultRTCStreamHeight,
 				Svc:               "S3T3",
 				BrowserType:       browser.TypeAsh,
+			},
+			ExtraSoftwareDeps: []string{caps.HWEncodeVP9},
+			Fixture:           "chromeVideoWithFakeWebcam",
+		}, {
+			Name: "vp9_simulcast_l1t3_verify_hw_enc",
+			Val: peerconnection.RTCTestParams{
+				VerifyDecoderMode: peerconnection.NoVerifyDecoderMode,
+				VerifyEncoderMode: peerconnection.VerifyHWEncoderUsed,
+				Profile:           "VP9",
+				StreamWidth:       defaultRTCStreamWidth,
+				StreamHeight:      defaultRTCStreamHeight,
+				Simulcasts:        3,
+				Svc:               "L1T3",
+				// No SimulcastHWEncs because only intel devices supports vp9 hw encoding on ChromeOS and
+				// the VP9 VA-API encoder supports S-mode encoding and a single encoder executes vp9 simulcast.
+				BrowserType: browser.TypeAsh,
 			},
 			ExtraSoftwareDeps: []string{caps.HWEncodeVP9},
 			Fixture:           "chromeVideoWithFakeWebcam",
