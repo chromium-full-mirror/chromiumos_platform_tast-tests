@@ -229,7 +229,8 @@ func getUpdatedBcfgBytes(ctx context.Context, h *firmware.Helper, bcfgData []byt
 	for key, val0 := range bcfgMap {
 		testing.ContextLogf(ctx, "Found key %q in bcfg map", key)
 		keys = append(keys, key)
-		if key == key0 {
+		key = strings.ToUpper(key)
+		if key == strings.ToUpper(key0) {
 			val1, exists := val0.(map[string]interface{})[key1]
 			if !exists {
 				return nil, errors.Wrapf(err, "key not found: %q in map: %q", key1, val0)
@@ -248,10 +249,10 @@ func getUpdatedBcfgBytes(ctx context.Context, h *firmware.Helper, bcfgData []byt
 			isFound = true
 			break
 		} else {
-			if strings.Split(key, ",")[0] != *battManufName {
+			if strings.Split(key, ",")[0] != strings.ToUpper(*battManufName) {
 				testing.ContextLogf(ctx, "Skipping key because manufacturer name mismatches batt manu Name key: %q", strings.Split(key, ",")[0])
 			}
-			if strings.Split(key, ",")[1] != *battDeviceName {
+			if strings.Split(key, ",")[1] != strings.ToUpper(*battDeviceName) {
 				testing.ContextLogf(ctx, "Skipping key because device name mismatches batt device Name key: %q", strings.Split(key, ",")[1])
 			}
 		}
