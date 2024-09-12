@@ -89,7 +89,7 @@ func CryptohomeRecovery(ctx context.Context, s *testing.State) {
 		if err != nil {
 			s.Fatal("Failed to connect Test API: ", err)
 		}
-		defer faillog.DumpUITreeOnError(cleanupCtx, s.OutDir(), s.HasError, tconn)
+		defer faillog.DumpUITreeWithScreenshotOnError(cleanupCtx, s.OutDir(), s.HasError, cr, "ui_dump")
 
 		oobeConn, err := cr.WaitForOOBEConnection(ctx)
 		if err != nil {
@@ -178,7 +178,7 @@ func CryptohomeRecovery(ctx context.Context, s *testing.State) {
 	if err != nil {
 		s.Fatal("Creating login test API connection failed: ", err)
 	}
-	defer faillog.DumpUITreeOnError(cleanupCtx, s.OutDir(), s.HasError, tLoginConn)
+	defer faillog.DumpUITreeWithScreenshotOnError(cleanupCtx, s.OutDir(), s.HasError, cr, "ui_dump")
 
 	if err := signinutil.EnterInvalidPassword(ctx, cr, creds); err != nil {
 		s.Fatal("Failed to enter invalid password: ", err)

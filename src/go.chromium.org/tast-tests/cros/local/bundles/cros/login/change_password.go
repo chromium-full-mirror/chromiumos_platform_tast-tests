@@ -150,7 +150,7 @@ func ChangePassword(ctx context.Context, s *testing.State) {
 		if err != nil {
 			s.Fatal("Creating login test API connection failed: ", err)
 		}
-		defer faillog.DumpUITreeOnError(cleanupCtx, s.OutDir(), s.HasError, tLoginConn)
+		defer faillog.DumpUITreeWithScreenshotOnError(cleanupCtx, s.OutDir(), s.HasError, cr, "ui_dump")
 
 		if err := signinutil.EnterInvalidPassword(ctx, cr, gaiaCreds); err != nil {
 			s.Fatal("Failed to enter invalid password: ", err)

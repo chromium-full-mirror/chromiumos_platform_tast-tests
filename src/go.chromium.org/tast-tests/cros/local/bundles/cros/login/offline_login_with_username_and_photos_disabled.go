@@ -274,7 +274,7 @@ func setupOwnerAndUsersAndPresetting(ctx, cleanUpCtxs context.Context, s *testin
 	if err != nil {
 		s.Fatal("Creating login test API connection failed: ", err)
 	}
-	defer faillog.DumpUITreeOnError(cleanUpCtxs, s.OutDir(), s.HasError, tconn)
+	defer faillog.DumpUITreeWithScreenshotOnError(cleanUpCtxs, s.OutDir(), s.HasError, cr, "ui_dump")
 
 	settings, err := signinutil.OpenManageOtherPeople(ctx, cr, tconn)
 	if err != nil {

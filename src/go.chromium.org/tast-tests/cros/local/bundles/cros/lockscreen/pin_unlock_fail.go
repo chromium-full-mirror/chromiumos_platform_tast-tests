@@ -62,7 +62,7 @@ func PinUnlockFail(ctx context.Context, s *testing.State) {
 	if err != nil {
 		s.Fatal("Getting test API connection failed: ", err)
 	}
-	defer faillog.DumpUITreeOnError(cleanupCtx, s.OutDir(), s.HasError, tconn)
+	defer faillog.DumpUITreeWithScreenshotOnError(cleanupCtx, s.OutDir(), s.HasError, cr, "ui_dump")
 
 	// Set up PIN through a connection to the Settings page.
 	settings, err := ossettings.Launch(ctx, tconn)

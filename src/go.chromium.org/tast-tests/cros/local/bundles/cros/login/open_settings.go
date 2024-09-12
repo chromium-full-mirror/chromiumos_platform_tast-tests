@@ -129,7 +129,7 @@ func OpenSettings(ctx context.Context, s *testing.State) {
 		s.Fatal("Failed to open setting page: ", err)
 	}
 	defer settings.Close(cleanupContext)
-	defer faillog.DumpUITreeOnError(cleanupContext, s.OutDir(), s.HasError, tconn)
+	defer faillog.DumpUITreeWithScreenshotOnError(cleanupContext, s.OutDir(), s.HasError, cr, "ui_dump")
 
 	var expectedPath string
 	switch params.InSessionAuth {

@@ -73,7 +73,7 @@ func RestrictSignin(ctx context.Context, s *testing.State) {
 		if err != nil {
 			s.Fatal("Creating login test API connection failed: ", err)
 		}
-		defer faillog.DumpUITreeOnError(cleanUpCtx, s.OutDir(), s.HasError, tconn)
+		defer faillog.DumpUITreeWithScreenshotOnError(cleanUpCtx, s.OutDir(), s.HasError, cr, "ui_dump")
 
 		// Make sure the button is enabled.
 		addPersonEnabled, err := getAddPersonFocusableState(ctx, tconn)
@@ -99,7 +99,7 @@ func RestrictSignin(ctx context.Context, s *testing.State) {
 		if err != nil {
 			s.Fatal("Creating login test API connection failed: ", err)
 		}
-		defer faillog.DumpUITreeOnError(cleanUpCtx, s.OutDir(), s.HasError, tconn)
+		defer faillog.DumpUITreeWithScreenshotOnError(cleanUpCtx, s.OutDir(), s.HasError, cr, "ui_dump")
 
 		settings, err := signinutil.OpenManageOtherPeople(ctx, cr, tconn)
 		if err != nil {
@@ -165,7 +165,7 @@ func RestrictSignin(ctx context.Context, s *testing.State) {
 		if err != nil {
 			s.Fatal("Creating login test API connection failed: ", err)
 		}
-		defer faillog.DumpUITreeOnError(cleanUpCtx, s.OutDir(), s.HasError, tconn)
+		defer faillog.DumpUITreeWithScreenshotOnError(cleanUpCtx, s.OutDir(), s.HasError, cr, "ui_dump")
 
 		addPersonEnabled, err := getAddPersonFocusableState(ctx, tconn)
 		if err != nil {

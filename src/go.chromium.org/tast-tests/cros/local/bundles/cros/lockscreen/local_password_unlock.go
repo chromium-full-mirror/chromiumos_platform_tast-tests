@@ -62,7 +62,7 @@ func LocalPasswordUnlock(ctx context.Context, s *testing.State) {
 	if err != nil {
 		s.Fatal("Getting test API connection failed: ", err)
 	}
-	defer faillog.DumpUITreeOnError(cleanupCtx, s.OutDir(), s.HasError, tconn)
+	defer faillog.DumpUITreeWithScreenshotOnError(cleanupCtx, s.OutDir(), s.HasError, cr, "ui_dump")
 
 	// Lock the screen.
 	if err := lockscreen.Lock(ctx, tconn); err != nil {

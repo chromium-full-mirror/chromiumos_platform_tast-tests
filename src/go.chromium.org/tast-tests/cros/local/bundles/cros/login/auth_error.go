@@ -75,7 +75,7 @@ func AuthError(ctx context.Context, s *testing.State) {
 	if err != nil {
 		s.Fatal("Getting test Signin Profile API connection failed: ", err)
 	}
-	defer faillog.DumpUITreeOnError(cleanupContext, s.OutDir(), s.HasError, tconn)
+	defer faillog.DumpUITreeWithScreenshotOnError(cleanupContext, s.OutDir(), s.HasError, cr, "ui_dump")
 
 	if err := lockscreen.WaitForPasswordField(ctx, tconn, creds.User, 10*time.Second); err != nil {
 		s.Fatal("Failed to wait for the password field: ", err)

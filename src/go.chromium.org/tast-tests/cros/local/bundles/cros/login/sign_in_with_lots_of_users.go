@@ -107,7 +107,7 @@ func SignInWithLotsOfUsers(ctx context.Context, s *testing.State) {
 			if err != nil {
 				s.Fatal("Failed to connect to test API: ", err)
 			}
-			defer faillog.DumpUITreeOnError(cleanupCtx, s.OutDir(), s.HasError, tconn)
+			defer faillog.DumpUITreeWithScreenshotOnError(cleanupCtx, s.OutDir(), s.HasError, cr, "ui_dump")
 
 			if err := signinAndVerify(ctx, tconn, kb, creds); err != nil {
 				s.Fatal("Failed to verify sign-in function: ", err)

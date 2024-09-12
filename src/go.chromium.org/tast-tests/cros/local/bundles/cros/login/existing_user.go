@@ -115,7 +115,7 @@ func ExistingUser(ctx context.Context, s *testing.State) {
 	if err != nil {
 		s.Fatal("Creating login test API connection failed: ", err)
 	}
-	defer faillog.DumpUITreeOnError(cleanupContext, s.OutDir(), s.HasError, tLoginConn)
+	defer faillog.DumpUITreeWithScreenshotOnError(cleanupContext, s.OutDir(), s.HasError, cr, "ui_dump")
 
 	// Wait for the login screen to be ready for password entry.
 	if err := lockscreen.WaitForPasswordEntry(ctx, tLoginConn, 30*time.Second); err != nil {

@@ -78,7 +78,7 @@ func Offline(ctx context.Context, s *testing.State) {
 
 		hasErrorVar := true
 		hasError := func() bool { return hasErrorVar }
-		defer faillog.DumpUITreeOnError(cleanUpCtx, s.OutDir(), hasError, tconn)
+		defer faillog.DumpUITreeWithScreenshotOnError(cleanUpCtx, s.OutDir(), hasError, cr, "ui_dump")
 
 		if err := lockscreen.WaitForPasswordField(ctx, tconn, creds.User, 10*time.Second); err != nil {
 			return errors.Wrap(err, "failed to wait for the password field")

@@ -106,7 +106,7 @@ func SSO(ctx context.Context, s *testing.State) {
 		s.Fatal("Creating login test API connection failed: ", err)
 	}
 	s.AttachErrorHandlers(nil /*OnErrorHandler*/, func(errMsg string) {
-		faillog.DumpUITreeOnError(ctx, s.OutDir(), s.HasError, tLoginConn)
+		defer faillog.DumpUITreeWithScreenshotOnError(ctx, s.OutDir(), s.HasError, cr, "ui_dump")
 	})
 
 	// Wait for the login screen to be ready for password entry.

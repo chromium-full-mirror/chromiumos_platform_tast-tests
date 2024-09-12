@@ -77,7 +77,7 @@ func SignOutAll(ctx context.Context, s *testing.State) {
 		s.Fatal("Failed to get Test API connection: ", err)
 	}
 
-	defer faillog.DumpUITreeOnError(ctx, s.OutDir(), s.HasError, tconn)
+	defer faillog.DumpUITreeWithScreenshotOnError(cleanupCtx, s.OutDir(), s.HasError, cr, "ui_dump")
 
 	currentUser := creds[len(creds)-1].User
 	if err := signInAll(ctx, tconn, creds[:len(creds)-1], currentUser); err != nil {

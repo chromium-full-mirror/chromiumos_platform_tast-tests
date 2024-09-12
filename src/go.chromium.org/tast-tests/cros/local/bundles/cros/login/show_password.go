@@ -81,7 +81,7 @@ func ShowPassword(ctx context.Context, s *testing.State) {
 		if err != nil {
 			s.Fatal("Getting test API connection failed: ", err)
 		}
-		defer faillog.DumpUITreeOnError(cleanUpCtx, s.OutDir(), s.HasError, tconn)
+		defer faillog.DumpUITreeWithScreenshotOnError(cleanUpCtx, s.OutDir(), s.HasError, cr, "ui_dump")
 
 		if enablePIN {
 			// Set up PIN through a connection to the Settings page.
@@ -112,7 +112,7 @@ func ShowPassword(ctx context.Context, s *testing.State) {
 	if err != nil {
 		s.Fatal("Creating login test API connection failed: ", err)
 	}
-	defer faillog.DumpUITreeOnError(cleanUpCtx, s.OutDir(), s.HasError, tconn)
+	defer faillog.DumpUITreeWithScreenshotOnError(cleanUpCtx, s.OutDir(), s.HasError, cr, "ui_dump")
 
 	// Wait for the login screen to be ready for PIN / Password entry.
 	if err := lockscreen.WaitForPasswordEntry(ctx, tconn, 30*time.Second); err != nil {

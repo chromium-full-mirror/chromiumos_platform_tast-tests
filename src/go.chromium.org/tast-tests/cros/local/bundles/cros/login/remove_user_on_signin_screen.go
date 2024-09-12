@@ -94,7 +94,7 @@ func RemoveUserOnSigninScreen(ctx context.Context, s *testing.State) {
 		if err != nil {
 			s.Fatal("Failed to create Test API connection: ", err)
 		}
-		defer faillog.DumpUITreeOnError(cleanUpCtx, s.OutDir(), s.HasError, tconn)
+		defer faillog.DumpUITreeWithScreenshotOnError(cleanUpCtx, s.OutDir(), s.HasError, cr, "ui_dump")
 		ui := uiauto.New(tconn)
 
 		clickSecondUser := uiauto.Combine(
@@ -160,7 +160,7 @@ func RemoveUserOnSigninScreen(ctx context.Context, s *testing.State) {
 		if err != nil {
 			s.Fatal("Failed to create Test API connection: ", err)
 		}
-		defer faillog.DumpUITreeOnError(cleanUpCtx, s.OutDir(), s.HasError, tconn)
+		defer faillog.DumpUITreeWithScreenshotOnError(cleanUpCtx, s.OutDir(), s.HasError, cr, "ui_dump")
 		ui := uiauto.New(tconn)
 
 		// Wait until we find reference to firstUser.

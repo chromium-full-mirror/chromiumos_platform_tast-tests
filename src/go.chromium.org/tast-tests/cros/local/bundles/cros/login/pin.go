@@ -143,7 +143,7 @@ func Pin(ctx context.Context, s *testing.State) {
 			if err != nil {
 				s.Fatal("Getting test API connection failed: ", err)
 			}
-			defer faillog.DumpUITreeOnError(cleanUpCtx, s.OutDir(), s.HasError, tconn)
+			defer faillog.DumpUITreeWithScreenshotOnError(cleanUpCtx, s.OutDir(), s.HasError, cr, "ui_dump")
 		} else {
 			// Setup pin from the settings.
 			// Disable VK so it does not get in the way of the pin pad.
@@ -157,7 +157,7 @@ func Pin(ctx context.Context, s *testing.State) {
 			if err != nil {
 				s.Fatal("Getting test API connection failed: ", err)
 			}
-			defer faillog.DumpUITreeOnError(cleanUpCtx, s.OutDir(), s.HasError, tconn)
+			defer faillog.DumpUITreeWithScreenshotOnError(cleanUpCtx, s.OutDir(), s.HasError, cr, "ui_dump")
 
 			// Set up PIN through a connection to the Settings page.
 			settings, err := ossettings.Launch(ctx, tconn)

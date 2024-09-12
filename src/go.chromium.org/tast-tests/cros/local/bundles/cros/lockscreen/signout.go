@@ -106,7 +106,7 @@ func Signout(ctx context.Context, s *testing.State) {
 			}
 		}
 
-		defer faillog.DumpUITreeOnError(cleanupCtx, s.OutDir(), s.HasError, tconn)
+		defer faillog.DumpUITreeWithScreenshotOnError(cleanupCtx, s.OutDir(), s.HasError, cr, "ui_dump")
 
 		oldProc, err := ashproc.Root()
 		if err != nil {
@@ -192,7 +192,7 @@ func Signout(ctx context.Context, s *testing.State) {
 		s.Fatal("Getting signing test API connection failed: ", err)
 	}
 
-	defer faillog.DumpUITreeOnError(cleanupCtx, s.OutDir(), s.HasError, tconn)
+	defer faillog.DumpUITreeWithScreenshotOnError(cleanupCtx, s.OutDir(), s.HasError, cr, "ui_dump")
 
 	if _, err := lockscreen.WaitState(ctx, tconn, func(st lockscreen.State) bool { return st.ReadyForPassword }, 10*time.Second); err != nil {
 		s.Fatal("Failed to wait for login screen: ", err)

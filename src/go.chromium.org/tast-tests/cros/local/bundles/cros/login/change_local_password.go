@@ -91,7 +91,7 @@ func ChangeLocalPassword(ctx context.Context, s *testing.State) {
 			s.Fatal("Failed to open setting page: ", err)
 		}
 		defer settings.Close(cleanupContext)
-		defer faillog.DumpUITreeOnError(cleanupContext, s.OutDir(), s.HasError, tconn)
+		defer faillog.DumpUITreeWithScreenshotOnError(cleanupContext, s.OutDir(), s.HasError, cr, "ui_dump")
 
 		// The page is password protected, confirm the old local password.
 		if err := auth.ConfirmPassword(ctx, cr, oldPassword); err != nil {
@@ -122,7 +122,7 @@ func ChangeLocalPassword(ctx context.Context, s *testing.State) {
 	if err != nil {
 		s.Fatal("Creating login test API connection failed: ", err)
 	}
-	defer faillog.DumpUITreeOnError(cleanupContext, s.OutDir(), s.HasError, tLoginConn)
+	defer faillog.DumpUITreeWithScreenshotOnError(cleanupContext, s.OutDir(), s.HasError, cr, "ui_dump")
 
 	// Wait for the login screen to be ready for password entry.
 	if err := lockscreen.WaitForPasswordEntry(ctx, tLoginConn, 30*time.Second); err != nil {

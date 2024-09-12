@@ -67,7 +67,7 @@ func DisplayProperTimeFormat(ctx context.Context, s *testing.State) {
 			if err != nil {
 				s.Fatal("Failed to connect to test API: ", err)
 			}
-			defer faillog.DumpUITreeOnError(cleanupCtx, s.OutDir(), s.HasError, tconn)
+			defer faillog.DumpUITreeWithScreenshotOnError(cleanupCtx, s.OutDir(), s.HasError, cr, "ui_dump")
 
 			// Toggle time format setting.
 			if err := tconn.Call(ctx, nil,
