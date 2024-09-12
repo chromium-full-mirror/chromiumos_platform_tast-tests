@@ -13,14 +13,9 @@ import (
 	"go.chromium.org/tast/core/testing"
 )
 
-type memoryLeakFinderParams struct {
-	bt browser.Type
-}
-
 func init() {
 	testing.AddTest(&testing.Test{
 		Func:         MemoryLeakFinder,
-		LacrosStatus: testing.LacrosVariantExists,
 		Desc:         "Open tabs until discard several times; comparing the max tabs each time",
 		Contacts:     []string{"chromeos-memory@google.com", "dianders@google.com"},
 		BugComponent: "b:167286",
@@ -34,21 +29,12 @@ func init() {
 			mempressure.WPRArchiveName,
 		},
 		SoftwareDeps: []string{"chrome"},
-		Params: []testing.Param{{
-			Val: memoryLeakFinderParams{bt: browser.TypeAsh},
-		}, {
-			Name:              "lacros",
-			Val:               memoryLeakFinderParams{bt: browser.TypeLacros},
-			ExtraSoftwareDeps: []string{"lacros"},
-		}},
 	})
 }
 
 // MemoryLeakFinder is the main test function.
 func MemoryLeakFinder(ctx context.Context, s *testing.State) {
-	bt := s.Param().(memoryLeakFinderParams).bt
-
-	testEnv, err := mempressure.NewTestEnv(ctx, s.OutDir(), false, false, false, bt, s.DataPath(mempressure.WPRArchiveName))
+	testEnv, err := mempressure.NewTestEnv(ctx, s.OutDir(), false, false, false, browser.TypeAsh, s.DataPath(mempressure.WPRArchiveName))
 	if err != nil {
 		s.Fatal("Failed creating the test environment: ", err)
 	}

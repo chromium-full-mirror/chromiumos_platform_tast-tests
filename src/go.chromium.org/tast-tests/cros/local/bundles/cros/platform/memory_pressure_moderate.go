@@ -15,14 +15,9 @@ import (
 	"go.chromium.org/tast/core/testing"
 )
 
-type memoryPressureModerateParams struct {
-	bt browser.Type
-}
-
 func init() {
 	testing.AddTest(&testing.Test{
 		Func:         MemoryPressureModerate,
-		LacrosStatus: testing.LacrosVariantExists,
 		Desc:         "Measure tab switching performance under moderate memory pressure",
 		Contacts:     []string{"chromeos-memory@google.com"},
 		BugComponent: "b:167286",
@@ -40,15 +35,9 @@ func init() {
 		},
 		Params: []testing.Param{{
 			ExtraSoftwareDeps: []string{"android_container"},
-			Val:               memoryPressureModerateParams{browser.TypeAsh},
 		}, {
 			Name:              "vm",
 			ExtraSoftwareDeps: []string{"android_vm"},
-			Val:               memoryPressureModerateParams{browser.TypeAsh},
-		}, {
-			Name:              "lacros",
-			ExtraSoftwareDeps: []string{"lacros"},
-			Val:               memoryPressureModerateParams{browser.TypeLacros},
 		}},
 	})
 }
@@ -107,9 +96,7 @@ func MemoryPressureModerate(ctx context.Context, s *testing.State) {
 	}
 	s.Log("useHugePages: ", useHugePages)
 
-	bt := s.Param().(memoryPressureModerateParams).bt
-
-	testEnv, err := mempressure.NewTestEnv(ctx, s.OutDir(), enableARC, useHugePages, false, bt, s.DataPath(mempressure.WPRArchiveName))
+	testEnv, err := mempressure.NewTestEnv(ctx, s.OutDir(), enableARC, useHugePages, false, browser.TypeAsh, s.DataPath(mempressure.WPRArchiveName))
 	if err != nil {
 		s.Fatal("Failed creating the test environment: ", err)
 	}

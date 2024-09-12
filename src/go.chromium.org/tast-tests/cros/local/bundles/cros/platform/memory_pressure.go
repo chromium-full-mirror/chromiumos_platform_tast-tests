@@ -18,7 +18,6 @@ type memoryPressureParams struct {
 	enableARC    bool
 	useHugePages bool
 	useVulkan    bool
-	bt           browser.Type
 }
 
 const (
@@ -34,7 +33,6 @@ var forceTabVar = testing.RegisterVarString(
 func init() {
 	testing.AddTest(&testing.Test{
 		Func:         MemoryPressure,
-		LacrosStatus: testing.LacrosVariantExists,
 		Desc:         "Create memory pressure and collect various measurements from Chrome and from the kernel",
 		Contacts:     []string{"chromeos-memory@google.com"},
 		BugComponent: "b:167286",
@@ -46,31 +44,26 @@ func init() {
 		},
 		SoftwareDeps: []string{"chrome"},
 		Params: []testing.Param{{
-			Val:       memoryPressureParams{enableARC: false, useHugePages: false, useVulkan: false, bt: browser.TypeAsh},
+			Val:       memoryPressureParams{enableARC: false, useHugePages: false, useVulkan: false},
 			ExtraAttr: []string{"crosbolt_memory_nightly"},
 		}, {
 			Name:              "vm",
-			Val:               memoryPressureParams{enableARC: true, useHugePages: false, useVulkan: false, bt: browser.TypeAsh},
+			Val:               memoryPressureParams{enableARC: true, useHugePages: false, useVulkan: false},
 			ExtraAttr:         []string{"crosbolt_arc_perf_qual", "crosbolt_arc_perf_memory_nightly"},
 			ExtraSoftwareDeps: []string{"android_vm"},
 		}, {
 			Name:              "huge_pages_vm",
-			Val:               memoryPressureParams{enableARC: true, useHugePages: true, useVulkan: false, bt: browser.TypeAsh},
+			Val:               memoryPressureParams{enableARC: true, useHugePages: true, useVulkan: false},
 			ExtraAttr:         []string{"crosbolt_memory_nightly"},
 			ExtraSoftwareDeps: []string{"android_vm"},
 		}, {
 			Name:              "container",
-			Val:               memoryPressureParams{enableARC: true, useHugePages: false, useVulkan: false, bt: browser.TypeAsh},
+			Val:               memoryPressureParams{enableARC: true, useHugePages: false, useVulkan: false},
 			ExtraAttr:         []string{"crosbolt_arc_perf_qual", "crosbolt_arc_perf_memory_nightly"},
 			ExtraSoftwareDeps: []string{"android_container"},
 		}, {
-			Name:              "lacros",
-			Val:               memoryPressureParams{enableARC: false, useHugePages: false, useVulkan: false, bt: browser.TypeLacros},
-			ExtraAttr:         []string{"crosbolt_memory_nightly"},
-			ExtraSoftwareDeps: []string{"lacros"},
-		}, {
 			Name:              "vulkan",
-			Val:               memoryPressureParams{enableARC: false, useHugePages: false, useVulkan: true, bt: browser.TypeAsh},
+			Val:               memoryPressureParams{enableARC: false, useHugePages: false, useVulkan: true},
 			ExtraAttr:         []string{"crosbolt_memory_nightly"},
 			ExtraSoftwareDeps: []string{"vulkan_composite"},
 		}},
@@ -82,13 +75,12 @@ func MemoryPressure(ctx context.Context, s *testing.State) {
 	enableARC := s.Param().(memoryPressureParams).enableARC
 	useHugePages := s.Param().(memoryPressureParams).useHugePages
 	useVulkan := s.Param().(memoryPressureParams).useVulkan
-	bt := s.Param().(memoryPressureParams).bt
 	forceTab, err := strconv.Atoi(forceTabVar.Value())
 	if err != nil {
 		s.Fatalf("Failed to parse %s: %v", forceTabVarName, err)
 	}
 
-	testEnv, err := mempressure.NewTestEnv(ctx, s.OutDir(), enableARC, useHugePages, useVulkan, bt, s.DataPath(mempressure.WPRArchiveName))
+	testEnv, err := mempressure.NewTestEnv(ctx, s.OutDir(), enableARC, useHugePages, useVulkan, browser.TypeAsh, s.DataPath(mempressure.WPRArchiveName))
 	if err != nil {
 		s.Fatal("Failed creating the test environment: ", err)
 	}

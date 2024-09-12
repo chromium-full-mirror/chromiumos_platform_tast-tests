@@ -15,7 +15,6 @@ import (
 func init() {
 	testing.AddTest(&testing.Test{
 		Func:         MemoryReclaim,
-		LacrosStatus: testing.LacrosVariantExists,
 		Desc:         "Eat memory and reclaim via procfs",
 		Contacts:     []string{"chromeos-memory@google.com"},
 		BugComponent: "b:167286",
