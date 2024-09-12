@@ -1,0 +1,5 @@
+{
+  "url": "gs://chromiumos-test-assets-public/tast/cros/printer/printer_add_generic_escpos_receipt_20240911.bin",
+  "size": 44813,
+  "sha256sum": "80af69f870dadc6b22bedbf61df76026979071592ff6e6297e383d438cd83b81"
+}

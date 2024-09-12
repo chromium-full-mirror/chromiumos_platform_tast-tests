@@ -160,6 +160,7 @@ func TestAddParams(t *testing.T) {
 		iTestCustomInput("custom_tg2480h", "printer_add_custom_tg2480h_printer_rastertoTG2480H.ppd.gz", "receipt_70mmx80mm.pdf", "printer_add_custom_tg2480h_printer_rastertoTG2480H.bin"),
 		iTestCustomInput("custom_vkp80iii", "printer_add_custom_vkp80iii_printer_rastertoVKP80III.ppd.gz", "receipt_70mmx80mm.pdf", "printer_add_custom_vkp80iii_printer_rastertoVKP80III.bin"),
 		iTestCustomInput("epson_thermal_receipt", "printer_add_epson_thermal_receipt.ppd", "receipt_70mmx80mm.pdf", "receipt_70mmx80mm.bin"),
+		iTestCustomInput("generic_escpos_receipt", "printer_add_generic_escpos_receipt.ppd", "receipt_70mmx80mm.pdf", "printer_add_generic_escpos_receipt.bin"),
 		iTestCustomInput("hwasung", "printer_add_hwasung_printer_rastertohwasung.ppd.gz", "receipt_70mmx80mm.pdf", "printer_add_hwasung_printer_rastertohwasung.bin"),
 	})
 	genparams.Ensure(t, "add.go", code)

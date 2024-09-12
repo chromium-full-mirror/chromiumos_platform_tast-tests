@@ -582,6 +582,15 @@ func init() {
 				ExtraData: []string{"receipt_70mmx80mm.pdf", "printer_add_epson_thermal_receipt.ppd", "receipt_70mmx80mm.bin"},
 				ExtraAttr: []string{"informational"},
 			}, {
+				Name: "generic_escpos_receipt",
+				Val: &ippprint.Params{
+					PPDFile:      "printer_add_generic_escpos_receipt.ppd",
+					PrintFile:    "receipt_70mmx80mm.pdf",
+					ExpectedFile: "printer_add_generic_escpos_receipt.bin",
+				},
+				ExtraData: []string{"receipt_70mmx80mm.pdf", "printer_add_generic_escpos_receipt.ppd", "printer_add_generic_escpos_receipt.bin"},
+				ExtraAttr: []string{"informational"},
+			}, {
 				Name: "hwasung",
 				Val: &ippprint.Params{
 					PPDFile:      "printer_add_hwasung_printer_rastertohwasung.ppd.gz",
