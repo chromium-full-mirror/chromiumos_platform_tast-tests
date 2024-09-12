@@ -52,7 +52,7 @@ const (
 	devicePolicy    testName      = "DEVICE_POLICY"
 	devicePolicyKey testName      = "DEVICE_POLICY_KEY"
 	tpmKey          testName      = "TPM_KEY"
-	authFactors     testName      = "AUTH_FACTORS"
+	authFactors     testName      = "USER_AUTH_FACTORS_FILE"
 	modifyEvent     fileEventType = "MODIFY"
 	readEvent       fileEventType = "READ"
 
@@ -137,6 +137,12 @@ func init() {
 			Name: "tpm_key",
 			Val: fileTypeParams{
 				testType: tpmKey,
+			},
+			ExtraAttr: []string{"group:mainline", "informational"},
+		}, {
+			Name: "auth_factors",
+			Val: fileTypeParams{
+				testType: authFactors,
 			},
 			ExtraAttr: []string{"group:mainline", "informational"},
 		},
@@ -500,11 +506,20 @@ func getFileEventDetails(ctx context.Context, testCaseName testName, cr *chrome.
 	normalizedUser := cr.NormalizedUser()
 
 	switch testCaseName {
+	case authFactors:
+		hashedUser, _ := cryptohome.UserHash(ctx, cr.NormalizedUser())
+		authFactorsDir := "/home/.shadow/" + hashedUser + "/auth_factors"
+		return generateWriteTestCaseForAllFilesUnderDir(ctx, authFactorsDir,
+			authFactors, &sysCmds,
+			xdr.SensitiveFileType_USER_AUTH_FACTORS_FILE)
+
 	case userCredential:
 		hashedUser, _ := cryptohome.UserHash(ctx, cr.NormalizedUser())
-		outputFile := "/home/.shadow/" + hashedUser + "/user_secret_stash/uss.0"
-		cmds = appendRWCommandDetails(ctx, cmds, outputFile, &sysCmds, xdr.SensitiveFileType_USER_ENCRYPTED_CREDENTIAL)
-		return &testCase{filesToRestore: []*restoreFile{{name: outputFile}}, commandDetails: cmds}, nil
+		secretStashDir := "/home/.shadow/" + hashedUser + "/user_secret_stash"
+		return generateRwTestCaseForAllFilesUnderDir(ctx, secretStashDir,
+			userCredential, &sysCmds,
+			xdr.SensitiveFileType_USER_ENCRYPTED_CREDENTIAL)
+
 	case rootfs:
 		outputFile := "/bin/testcase"
 		// Test setup, remount rootfs as rw then on exit remount it when test is
@@ -559,6 +574,33 @@ func getFileEventDetails(ctx context.Context, testCaseName testName, cr *chrome.
 	return nil, errors.New("could not generate a command detail for " + string(testCaseName) + ", not supported")
 }
 
+func generateRwTestCaseForAllFilesUnderDir(ctx context.Context, dirName string, testCaseName testName, sysCmds *map[string]string, fileType xdr.SensitiveFileType) (*testCase, error) {
+	files, err := recursiveGetFiles(dirName)
+	if err != nil {
+		return nil, errors.Wrapf(err, "failed to generate %q test vector, error listing files in %q", testCaseName, dirName)
+	}
+	var rv testCase
+	for _, file := range files {
+		rv.commandDetails = appendRWCommandDetails(ctx, rv.commandDetails, file, sysCmds, fileType)
+		rv.filesToRestore = append(rv.filesToRestore, &restoreFile{name: file})
+	}
+	return &rv, nil
+}
+
+func generateWriteTestCaseForAllFilesUnderDir(ctx context.Context, dirName string, testCaseName testName, sysCmds *map[string]string, fileType xdr.SensitiveFileType) (*testCase, error) {
+	files, err := recursiveGetFiles(dirName)
+	if err != nil {
+		return nil, errors.Wrapf(err, "failed to generate %q test vector, error listing files in %q", testCaseName, dirName)
+	}
+	var rv testCase
+	for _, file := range files {
+		rv.commandDetails = appendDDCommand(ctx, rv.commandDetails, file, sysCmds, fileType)
+		rv.commandDetails = appendModifyAttributeCommand(ctx, rv.commandDetails, file, sysCmds, fileType)
+		rv.filesToRestore = append(rv.filesToRestore, &restoreFile{name: file})
+	}
+	return &rv, nil
+}
+
 func appendDDCommand(ctx context.Context, cmdDetails []*commandDetail, fileName string, sysCmds *map[string]string, fileType xdr.SensitiveFileType) []*commandDetail {
 	cmdDetails = append(cmdDetails, &commandDetail{
 		cmd: testexec.CommandContext(ctx, (*sysCmds)["dd"], "if=/dev/zero", "of="+fileName, "bs=1M", "count=1"),
@@ -571,6 +613,28 @@ func appendDDCommand(ctx context.Context, cmdDetails []*commandDetail, fileName 
 		cleanup:  nil,
 	})
 	return cmdDetails
+}
+
+func recursiveGetFiles(dirName string) ([]string, error) {
+	var fileNames []string
+	dirEntries, err := os.ReadDir(dirName)
+	if err != nil {
+		return nil, errors.Wrapf(err, " failed to generate auth factors test vector, unable to read %q directory", dirName)
+	}
+	for _, dirEntry := range dirEntries {
+		if dirEntry.IsDir() {
+			subFileNames, err := recursiveGetFiles(dirEntry.Name())
+			if err != nil {
+				return nil, err
+			}
+			for _, fileName := range subFileNames {
+				fileNames = append(fileNames, fileName)
+			}
+			continue
+		}
+		fileNames = append(fileNames, filepath.Join(dirName, dirEntry.Name()))
+	}
+	return fileNames, nil
 }
 
 func appendModifyAttributeCommand(ctx context.Context, cmdDetails []*commandDetail, fileName string, sysCmds *map[string]string, fileType xdr.SensitiveFileType) []*commandDetail {
