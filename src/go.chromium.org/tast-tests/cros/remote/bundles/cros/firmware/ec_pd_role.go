@@ -151,17 +151,24 @@ func ECPDRole(ctx context.Context, s *testing.State) {
 		if err := step.testAction(ctx, h, &currentDutState); err != nil {
 			s.Fatal("Action failed: ", err)
 		}
+
 		// Verify status of all usb-c port.
 		for _, portID := range usbcPorts {
-			drpState, err := h.Servo.GetDUTDualRoleState(ctx, portID)
-			if err != nil {
-				s.Fatal("Failed to check for USB PD: ", err)
-			}
-			if drpState != step.expectStatus {
-				s.Fatalf(
-					"Got DRP state %q but expected %q (port %d)",
-					drpState, step.expectStatus, portID,
-				)
+			if err := testing.Poll(ctx, func(ctx context.Context) error {
+				drpState, err := h.Servo.GetDUTDualRoleState(ctx, portID)
+				if err != nil {
+					return errors.Wrap(err, "failed to check for USB PD")
+				}
+				if drpState != step.expectStatus {
+					return errors.Errorf(
+						"got DRP state %q but expected %q (port %d)",
+						drpState, step.expectStatus, portID,
+					)
+				}
+				return nil
+				// Poll fails if Timeout <= 10s as commands inside need longer to run.
+			}, &testing.PollOptions{Timeout: 15 * time.Second}); err != nil {
+				s.Fatal("Failed to poll for DRP state: ", err)
 			}
 		}
 	}
