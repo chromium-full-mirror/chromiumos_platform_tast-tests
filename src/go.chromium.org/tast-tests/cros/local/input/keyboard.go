@@ -42,14 +42,28 @@ var nextVirtKbdNum = 1 // appended to virtual keyboard device name
 
 // Keyboard returns an EventWriter to inject events into an arbitrary keyboard device.
 //
+// This is the normal use case for KeyboardImpl that skips looking for existing physical
+// keyboard in tablet mode.
+func Keyboard(ctx context.Context) (*KeyboardEventWriter, error) {
+	return KeyboardImpl(ctx, false)
+}
+
+// KeyboardTabletModeForceDisabled returns an EventWriter as the KeyboardImpl does but
+// manually use the physical keyboard even if querySwitch value matches SW_TABLET_MODE.
+func KeyboardTabletModeForceDisabled(ctx context.Context) (*KeyboardEventWriter, error) {
+	return KeyboardImpl(ctx, true)
+}
+
+// KeyboardImpl returns an EventWriter to inject events into an arbitrary keyboard device.
+//
 // If a physical keyboard is present, it is used.
 // Otherwise, a one-off virtual device is created.
-func Keyboard(ctx context.Context) (*KeyboardEventWriter, error) {
+func KeyboardImpl(ctx context.Context, tabletModeForceDisabled bool) (*KeyboardEventWriter, error) {
 	// Look for an existing physical keyboard first, but only if we're not in tablet mode,
 	// as the EC may mask keyboard events in that case: https://crbug.com/930568
 	if sw, err := querySwitch(ctx, SW_TABLET_MODE); err != nil {
 		return nil, errors.Wrap(err, "failed to get tablet mode state")
-	} else if sw == switchOn {
+	} else if !tabletModeForceDisabled && sw == switchOn {
 		testing.ContextLog(ctx, "In tablet mode, so not looking for physical keyboard")
 	} else {
 		foundKB, infoPath, err := FindPhysicalKeyboard(ctx)

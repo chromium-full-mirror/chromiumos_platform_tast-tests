@@ -40,7 +40,7 @@ func init() {
 func InputCheckKeyState(ctx context.Context, s *testing.State) {
 	tconn := s.FixtValue().(*utils.FixtureData).Tconn
 
-	kb, err := input.Keyboard(ctx)
+	kb, err := input.KeyboardTabletModeForceDisabled(ctx)
 	if err != nil {
 		s.Fatal("Failed to find keyboard: ", err)
 	}
