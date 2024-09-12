@@ -11,6 +11,7 @@ import (
 	"path/filepath"
 
 	"go.chromium.org/tast-tests/cros/common/chrome/extension"
+	"go.chromium.org/tast-tests/cros/common/tbdep"
 	"go.chromium.org/tast-tests/cros/local/chrome"
 	"go.chromium.org/tast-tests/cros/local/chrome/browser"
 	"go.chromium.org/tast-tests/cros/local/chrome/browser/browserfixt"
@@ -35,8 +36,19 @@ func init() {
 		SoftwareDeps: []string{"chrome", "nacl"},
 		BugComponent: "b:1258585", // ChromeOS Public Tracker > Enterprise & Edu > NaCl
 		Attr:         []string{"group:mainline"},
-		// TODO(https://issuetracker.google.com/352753237): Flaky on some devices.
-		HardwareDeps: hwdep.D(hwdep.SkipOnModel("brya"), hwdep.SkipOnModel("jacuzzi"), hwdep.SkipOnModel("rex")),
+		Params: []testing.Param{
+			{
+				ExtraHardwareDeps: hwdep.D(hwdep.FeatureLevel(0)),
+				ExtraTestBedDeps:  []string{tbdep.Cbx(false)},
+			}, {
+				// TODO(b/352753237): The test is failing on all cbx models now. Have a
+				// separate informational subtest until we have a fix.
+				Name:              "flaky",
+				ExtraHardwareDeps: hwdep.D(hwdep.FeatureLevel(1)),
+				ExtraTestBedDeps:  []string{tbdep.Cbx(true)},
+				ExtraAttr:         []string{"informational"},
+			},
+		},
 	})
 }
 
