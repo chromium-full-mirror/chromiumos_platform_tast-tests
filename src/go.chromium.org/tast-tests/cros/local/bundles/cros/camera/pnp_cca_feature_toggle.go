@@ -36,7 +36,6 @@ type pnpCCAParams struct {
 func init() {
 	testing.AddTest(&testing.Test{
 		Func:         PNPCCAFeatureToggle,
-		LacrosStatus: testing.LacrosVariantUnneeded,
 		Desc:         "Collect power metrics for CCA",
 		Contacts:     []string{"chromeos-camera-eng@google.com", "esker@chromium.org"},
 		BugComponent: "b:978428", // ChromeOS > Platform > Technologies > Camera > App & Framework

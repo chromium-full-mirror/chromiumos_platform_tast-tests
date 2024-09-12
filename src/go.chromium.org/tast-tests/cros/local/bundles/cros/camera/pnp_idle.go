@@ -22,6 +22,10 @@ const (
 	initTimePNPIdle = 1 * time.Minute
 )
 
+type pnpIdleParams struct {
+	chromeLogin bool
+}
+
 func init() {
 	testing.AddTest(&testing.Test{
 		Func:         PNPIdle,
@@ -30,8 +34,19 @@ func init() {
 		BugComponent: "b:167281", // ChromeOS > Platform > Technologies > Camera
 		Attr:         []string{"group:crosbolt", "crosbolt_perbuild"},
 		SoftwareDeps: []string{"chrome"},
-		Timeout:      initTimePNPIdle + pnp.PNPTimeParams.Total + power.RecorderTimeout,
 		Fixture:      pnp.StablePowerAsh,
+		Timeout:      initTimePNPIdle + pnp.PNPTimeParams.Total + power.RecorderTimeout,
+		Params: []testing.Param{{
+			Name: "chrome_login",
+			Val: pnpIdleParams{
+				chromeLogin: true,
+			},
+		}, {
+			Name: "no_window",
+			Val: pnpIdleParams{
+				chromeLogin: false,
+			},
+		}},
 	})
 }
 
@@ -48,27 +63,29 @@ func PNPIdle(ctx context.Context, s *testing.State) {
 	}
 
 	testing.ContextLog(ctx, "[Start Work Phase]")
-	cr := s.FixtValue().(powersetup.PowerUIFixtureData).Cr
+	if s.Param().(pnpIdleParams).chromeLogin {
+		cr := s.FixtValue().(powersetup.PowerUIFixtureData).Cr
 
-	// Open a window with about:blank tab on the target browser.
-	conn, _, cleanup, err := browserfixt.SetUpWithURL(ctx, cr, browser.TypeAsh, "about:blank")
-	if err != nil {
-		s.Fatal("Failed to open a blank new tab: ", err)
-	}
-	defer cleanup(cleanupCtx)
-	defer conn.Close()
+		// Open a window with about:blank tab on the target browser.
+		conn, _, cleanup, err := browserfixt.SetUpWithURL(ctx, cr, browser.TypeAsh, "about:blank")
+		if err != nil {
+			s.Fatal("Failed to open a blank new tab: ", err)
+		}
+		defer cleanup(cleanupCtx)
+		defer conn.Close()
 
-	tconn, err := cr.TestAPIConn(ctx)
-	if err != nil {
-		s.Fatal("Failed to get test API connection: ", err)
-	}
+		tconn, err := cr.TestAPIConn(ctx)
+		if err != nil {
+			s.Fatal("Failed to get test API connection: ", err)
+		}
 
-	w, err := ash.WaitForAnyWindow(ctx, tconn, ash.BrowserTypeMatch(browser.TypeAsh))
-	if err != nil {
-		s.Fatal("Failed to open a browser window: ", err)
-	}
-	if err := ash.SetWindowStateAndWait(ctx, tconn, w.ID, ash.WindowStateMaximized); err != nil {
-		s.Fatal("Failed to maximize the browser window: ", err)
+		w, err := ash.WaitForAnyWindow(ctx, tconn, ash.BrowserTypeMatch(browser.TypeAsh))
+		if err != nil {
+			s.Fatal("Failed to open a browser window: ", err)
+		}
+		if err := ash.SetWindowStateAndWait(ctx, tconn, w.ID, ash.WindowStateMaximized); err != nil {
+			s.Fatal("Failed to maximize the browser window: ", err)
+		}
 	}
 
 	if err := pnp.WarmUp(ctx); err != nil {

@@ -32,6 +32,10 @@ const (
 	StablePowerAshGAIA = "stablePowerAshGAIA"
 	// StablePowerAshGAIAFakeHAL provides fixture with ash chrome with GAIA login and use fake HAL.
 	StablePowerAshGAIAFakeHAL = "stablePowerAshGAIAFakeHAL"
+	// StablePowerAshWithSuperResDisabled provides fixture with ash chrome with GAIA login and force disable super resolution.
+	StablePowerAshWithSuperResDisabled = "stablePowerAshWithSuperResDisabled"
+	// StablePowerAshWithDigitalZoomSuperResDisabled provides fixture with ash chrome with GAIA login and force disable digital zoom and super resolution.
+	StablePowerAshWithDigitalZoomSuperResDisabled = "stablePowerAshWithDigitalZoomSuperResDisabled"
 
 	// cameraService is the parent fixture of the StablePower fixtures.
 	cameraService = "cameraService"
@@ -167,6 +171,51 @@ func init() {
 		TearDownTimeout: 1 * time.Second,
 		PreTestTimeout:  1 * time.Second,
 		PostTestTimeout: 1 * time.Second,
+	})
+	// TODO(b/225112054): Remove this fixture once enough performance data is collected and the performance is stabilized.
+	testing.AddFixture(&testing.Fixture{
+		Name:         StablePowerAshWithSuperResDisabled,
+		Desc:         "Disable unnessary or unstable utilities for power evaluation as much as possible using Ash chrome and force disable super resolution",
+		Contacts:     []string{"chromeos-camera-eng@google.com", "kamchonlathorn@chromium.org"},
+		BugComponent: "b:167281", // ChromeOS > Platform > Technologies > Camera
+		Impl: powersetup.NewPowerUIFixture(
+			MinPowerTestOptions,
+			powersetup.PowerFixtureOptions{
+				BrowserType:     browser.TypeAsh,
+				EnableGAIALogin: false,
+				BrowserExtraOpts: []chrome.Option{
+					chrome.ExtraArgs("--camera-super-res-override=force-disabled"),
+				},
+			}),
+		Parent:          cameraService,
+		SetUpTimeout:    powersetup.SetUpTimeout,
+		ResetTimeout:    powersetup.ResetTimeout,
+		TearDownTimeout: powersetup.TearDownTimeout,
+		PreTestTimeout:  powersetup.PreTestTimeout,
+		PostTestTimeout: powersetup.PostTestTimeout,
+	})
+	// TODO(b/225112054): Remove this fixture once enough performance data is collected and the performance is stabilized.
+	testing.AddFixture(&testing.Fixture{
+		Name:         StablePowerAshWithDigitalZoomSuperResDisabled,
+		Desc:         "Disable unnessary or unstable utilities for power evaluation as much as possible using Ash chrome and force disable digital zoom and super resolution",
+		Contacts:     []string{"chromeos-camera-eng@google.com", "kamchonlathorn@chromium.org"},
+		BugComponent: "b:167281", // ChromeOS > Platform > Technologies > Camera
+		Impl: powersetup.NewPowerUIFixture(
+			MinPowerTestOptions,
+			powersetup.PowerFixtureOptions{
+				BrowserType:     browser.TypeAsh,
+				EnableGAIALogin: false,
+				BrowserExtraOpts: []chrome.Option{
+					chrome.DisableFeatures("CameraAppDigitalZoom"),
+					chrome.ExtraArgs("--camera-super-res-override=force-disabled"),
+				},
+			}),
+		Parent:          cameraService,
+		SetUpTimeout:    powersetup.SetUpTimeout,
+		ResetTimeout:    powersetup.ResetTimeout,
+		TearDownTimeout: powersetup.TearDownTimeout,
+		PreTestTimeout:  powersetup.PreTestTimeout,
+		PostTestTimeout: powersetup.PostTestTimeout,
 	})
 }
 
