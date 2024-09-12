@@ -25,7 +25,6 @@ import (
 	"go.chromium.org/tast-tests/cros/local/arc"
 	"go.chromium.org/tast-tests/cros/local/crostini"
 	"go.chromium.org/tast-tests/cros/local/guestos"
-	"go.chromium.org/tast-tests/cros/local/network"
 	arcnet "go.chromium.org/tast-tests/cros/local/network/arc"
 	patchpanel "go.chromium.org/tast-tests/cros/local/network/patchpanel_client"
 	"go.chromium.org/tast-tests/cros/local/network/ping"
@@ -512,7 +511,7 @@ func setup(ctx context.Context, mgr *shill.Manager, pool *subnet.Pool, fam tcIPF
 		l4family = l4server.UDP4
 	}
 
-	port := network.UnusedOrRandomPort(ctx, l4family)
+	const port = 10000
 	udp := l4server.New(l4family, port, l4server.WithAddr(addr.String()), l4server.WithMsgHandler(l4server.Reflector()))
 	if err := svrEnv.StartServer(ctx, fam.String(), udp); err != nil {
 		return nil, errors.Wrapf(err, "failed to start %s server", fam)

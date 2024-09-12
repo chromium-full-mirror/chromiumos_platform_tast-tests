@@ -12,7 +12,6 @@ import (
 
 	"go.chromium.org/tast-tests/cros/common/testexec"
 	"go.chromium.org/tast-tests/cros/local/bundles/cros/network/qos"
-	"go.chromium.org/tast-tests/cros/local/network"
 	"go.chromium.org/tast-tests/cros/local/network/capture"
 	"go.chromium.org/tast-tests/cros/local/network/hwsim"
 	patchpanel "go.chromium.org/tast-tests/cros/local/network/patchpanel_client"
@@ -252,7 +251,7 @@ func QosAppMonitor(ctx context.Context, s *testing.State) {
 	} else {
 		addr = routerAddrs.IPv4Addr
 	}
-	port := network.UnusedOrRandomPort(ctx, networkFam)
+	const port = 10000
 	server := l4server.New(networkFam, port, l4server.WithAddr(addr.String()), l4server.WithMsgHandler(l4server.Reflector()))
 	if err := wifi.Router.StartServer(ctx, networkFam.String(), server); err != nil {
 		s.Fatalf("Failed to start %s server: %v", networkFam, err)
