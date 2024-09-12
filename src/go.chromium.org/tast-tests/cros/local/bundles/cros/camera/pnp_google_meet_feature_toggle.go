@@ -15,6 +15,7 @@ import (
 	"go.chromium.org/tast-tests/cros/local/chrome"
 	"go.chromium.org/tast-tests/cros/local/chrome/apps/thirdparty/googlemeet"
 	"go.chromium.org/tast-tests/cros/local/chrome/ash"
+	"go.chromium.org/tast-tests/cros/local/chrome/browser"
 	"go.chromium.org/tast-tests/cros/local/chrome/browser/browserfixt"
 	"go.chromium.org/tast-tests/cros/local/chrome/uiauto"
 	"go.chromium.org/tast-tests/cros/local/chrome/uiauto/vctray"
@@ -86,11 +87,10 @@ func PNPGoogleMeetFeatureToggle(ctx context.Context, s *testing.State) {
 	}
 
 	testing.ContextLog(ctx, "[Start Work Phase]")
-	browserType := s.FixtValue().(powersetup.PowerUIFixtureData).Bt
 	cr := s.FixtValue().(powersetup.PowerUIFixtureData).Cr
 
 	testing.ContextLog(ctx, "Opening Meet")
-	conn, br, cleanup, err := browserfixt.SetUpWithURL(ctx, cr, browserType, chrome.NewTabURL)
+	conn, br, cleanup, err := browserfixt.SetUpWithURL(ctx, cr, browser.TypeAsh, chrome.NewTabURL)
 	if err != nil {
 		s.Fatal("Failed to launch browser: ", err)
 	}
@@ -118,7 +118,7 @@ func PNPGoogleMeetFeatureToggle(ctx context.Context, s *testing.State) {
 		}
 	}
 
-	w, err := ash.WaitForAnyWindow(ctx, tconn, ash.BrowserTypeMatch(browserType))
+	w, err := ash.WaitForAnyWindow(ctx, tconn, ash.BrowserTypeMatch(browser.TypeAsh))
 	if err != nil {
 		s.Fatal("Failed to open a browser window: ", err)
 	}
