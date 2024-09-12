@@ -11,6 +11,7 @@ import (
 	"regexp"
 	"time"
 
+	"go.chromium.org/tast-tests/cros/common/tbdep"
 	"go.chromium.org/tast-tests/cros/local/chrome"
 	"go.chromium.org/tast-tests/cros/local/chrome/uiauto"
 	"go.chromium.org/tast-tests/cros/local/chrome/uiauto/faillog"
@@ -19,6 +20,7 @@ import (
 	"go.chromium.org/tast-tests/cros/local/terminalapp"
 	"go.chromium.org/tast/core/ctxutil"
 	"go.chromium.org/tast/core/testing"
+	"go.chromium.org/tast/core/testing/hwdep"
 )
 
 func init() {
@@ -34,6 +36,19 @@ func init() {
 		Attr:         []string{"group:mainline", "group:hw_agnostic"},
 		SoftwareDeps: []string{"chrome"},
 		Timeout:      3 * time.Minute,
+		Params: []testing.Param{
+			{
+				ExtraHardwareDeps: hwdep.D(hwdep.FeatureLevel(0)),
+				ExtraTestBedDeps:  []string{tbdep.Cbx(false)},
+			}, {
+				// TODO(b/352753237): The test is failing on all cbx models now due to
+				// pnacl. Have a separate informational subtest until we have a fix.
+				Name:              "flaky",
+				ExtraAttr:         []string{"informational"},
+				ExtraHardwareDeps: hwdep.D(hwdep.FeatureLevel(1)),
+				ExtraTestBedDeps:  []string{tbdep.Cbx(true)},
+			},
+		},
 	})
 }
 
