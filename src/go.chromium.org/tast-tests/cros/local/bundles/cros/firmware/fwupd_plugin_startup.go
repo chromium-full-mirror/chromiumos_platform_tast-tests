@@ -41,7 +41,7 @@ func init() {
 				// "nvme", // Not enough permissions.
 				"parade_lspcon",
 				"pixart_rf",
-				"powerd",
+				// "powerd", // Missing on hana: b/366483164
 				"realtek_mst",
 				"synaptics_cape",
 				"synaptics_cxaudio",
