@@ -20,7 +20,6 @@ import (
 	"go.chromium.org/tast-tests/cros/local/chrome/browser"
 	"go.chromium.org/tast-tests/cros/local/chrome/browser/browserfixt"
 	"go.chromium.org/tast-tests/cros/local/chrome/chromeproc"
-	"go.chromium.org/tast-tests/cros/local/chrome/lacros/lacrosproc"
 	"go.chromium.org/tast-tests/cros/local/chrome/uiauto/faillog"
 	"go.chromium.org/tast-tests/cros/local/chrome/webutil"
 	"go.chromium.org/tast/core/errors"
@@ -30,9 +29,8 @@ import (
 
 func init() {
 	testing.AddTest(&testing.Test{
-		Func:         CoreSchedTag,
-		LacrosStatus: testing.LacrosVariantExists,
-		Desc:         "Ensures renderers scheduling cookies are assigned correctly",
+		Func: CoreSchedTag,
+		Desc: "Ensures renderers scheduling cookies are assigned correctly",
 		Contacts: []string{
 			"baseos-perf@google.com",
 			"joelaf@google.com",
@@ -42,15 +40,7 @@ func init() {
 		SoftwareDeps: []string{"chrome", "arc", "coresched"},
 		HardwareDeps: hwdep.D(hwdep.CPUSupportsSMT(), hwdep.CPUNeedsCoreScheduling()),
 		Timeout:      3 * time.Minute,
-		Params: []testing.Param{{
-			Val:     browser.TypeAsh,
-			Fixture: "chromeLoggedIn",
-		}, {
-			Name:              "lacros",
-			Val:               browser.TypeLacros,
-			Fixture:           "lacros",
-			ExtraSoftwareDeps: []string{"lacros"},
-		}},
+		Fixture:      "chromeLoggedIn",
 	})
 }
 
@@ -111,21 +101,12 @@ func getThreadsFromProcess(p *process.Process) ([]*process.Process, error) {
 // verifyTags verifies the tags of all renderer and ARC processes (TODO: add ARC).
 // Make sure that the ones in containsPids are scanned (This is to ensure that
 // chrome is among the processes scanned.)
-func verifyTags(ctx context.Context, tconn *chrome.TestConn, browserType browser.Type) error {
+func verifyTags(ctx context.Context, tconn *chrome.TestConn) error {
 	cookieMap := make(map[int64]bool)
 
-	var procs []*process.Process
-	var err error
-	if browserType == browser.TypeLacros {
-		procs, err = lacrosproc.RendererProcesses(ctx, tconn)
-		if err != nil {
-			return errors.Wrap(err, "failed to get lacros renderers")
-		}
-	} else {
-		procs, err = chromeproc.GetRendererProcesses()
-		if err != nil {
-			return errors.Wrap(err, "failed to get renderer processes")
-		}
+	procs, err := chromeproc.GetRendererProcesses()
+	if err != nil {
+		return errors.Wrap(err, "failed to get renderer processes")
 	}
 
 	for _, proc := range procs {
@@ -166,14 +147,13 @@ func verifyTags(ctx context.Context, tconn *chrome.TestConn, browserType browser
 // CoreSchedTag : Function to test core scheduling cookies on ChromeOS
 func CoreSchedTag(ctx context.Context, s *testing.State) {
 	cr := s.FixtValue().(chrome.HasChrome).Chrome()
-	browserType := s.Param().(browser.Type)
 
 	tconn, err := cr.TestAPIConn(ctx)
 	if err != nil {
 		s.Fatal("Failed to connect to the test API connection: ", err)
 	}
 
-	br, closeBrowser, err := browserfixt.SetUp(ctx, cr, s.Param().(browser.Type))
+	br, closeBrowser, err := browserfixt.SetUp(ctx, cr, browser.TypeAsh)
 	if err != nil {
 		s.Fatal("Failed to set up browser: ", err)
 	}
@@ -200,7 +180,7 @@ func CoreSchedTag(ctx context.Context, s *testing.State) {
 		s.Fatal("Failed to wait for chrome://settings to achieve quiescence: ", err)
 	}
 
-	if err := verifyTags(ctx, tconn, browserType); err != nil {
+	if err := verifyTags(ctx, tconn); err != nil {
 		s.Fatal("Failed to verify tags: ", err)
 	}
 }
