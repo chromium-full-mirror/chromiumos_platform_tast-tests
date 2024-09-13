@@ -58,7 +58,7 @@ var multiTaskingAppParam = multiTaskingParam{
 func init() {
 	testing.AddTest(&testing.Test{
 		Func:         MultiTaskingApp,
-		LacrosStatus: testing.LacrosVariantExists,
+		LacrosStatus: testing.LacrosVariantUnneeded,
 		Desc:         "Collect power related data when device do multi tasking with several apps",
 		Contacts:     []string{"chromeos-power-team@google.com"},
 		BugComponent: "b:1361410", // ChromeOS > Platform > System > Core Power
@@ -80,12 +80,6 @@ func init() {
 				Timeout:   multiTaskingAppShortTimeout + setup.BatteryPreparationTimeout,
 				ExtraAttr: []string{"group:power", "power_daily"},
 				Val:       multiTaskingAppShortParam,
-			},
-			{
-				Name:    "lacros",
-				Fixture: "powerLacrosARC",
-				Timeout: multiTaskingAppTimeout + setup.BatteryPreparationTimeout,
-				Val:     multiTaskingAppParam,
 			},
 		},
 	})
