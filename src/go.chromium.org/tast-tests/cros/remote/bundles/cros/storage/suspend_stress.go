@@ -24,7 +24,7 @@ type timeParams struct {
 const (
 	fullFioTimeSec         = 7500
 	quickFioTimeSec        = 375
-	fullSuspendIterations  = 1000
+	fullSuspendIterations  = 900
 	quickSuspendIterations = 50
 	fullPollTimeoutMin     = 420
 	quickPollTimeoutMin    = 30
