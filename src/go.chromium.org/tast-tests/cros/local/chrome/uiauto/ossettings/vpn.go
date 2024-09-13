@@ -57,6 +57,10 @@ func OpenJoinVPNDialog(ctx context.Context, tconn *chrome.TestConn, cr *chrome.C
 		return nil, errors.Wrap(err, "failed to open the OS settings page")
 	}
 
+	if err := settings.WaitForQuiescence(ctx, cr, 10*time.Second); err != nil {
+		return nil, errors.Wrap(err, "failed to wait for OS settings to quiescence")
+	}
+
 	if err := uiauto.Combine(`open the "Join VPN network" dialog`,
 		settings.LeftClick(AddConnectionButton),
 		settings.LeftClick(nodewith.NameContaining("Add built-in VPN").Role(role.Button)),
