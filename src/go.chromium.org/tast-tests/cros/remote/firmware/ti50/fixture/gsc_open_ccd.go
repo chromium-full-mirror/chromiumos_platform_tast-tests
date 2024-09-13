@@ -108,10 +108,13 @@ func EnsureTestLabEnabled(ctx context.Context, s TestingState, b *remoteTi50.DUT
 		return
 	}
 
+	// Assert CHASSIS_OPEN to allow enabling testlab mode.  However, make sure it is not left
+	// asserted longer than necessary, as doing so may inadvertently enable JTAG functionality
+	// on OpenTitan chips in non-PROD lifecycle stages.
 	s.Log("Testlab disabled. Enabling now")
 	gpioSet(ctx, s, b, ti50.GpioTi50ChassisOpen, true)
-
 	runCommandExpectOutput(ctx, s, i, "ccd open", ti50.CCDOpenedRE)
+	gpioSet(ctx, s, b, ti50.GpioTi50ChassisOpen, false)
 
 	isOpen, err := i.IsCCDOpen(ctx)
 	if err != nil {
