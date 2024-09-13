@@ -24,15 +24,13 @@ import (
 
 type testParams struct {
 	cancelPrint bool
-	bt          browser.Type
 }
 
 func init() {
 	testing.AddTest(&testing.Test{
-		Func:         PrintExtension,
-		LacrosStatus: testing.LacrosVariantExists,
-		Desc:         "Tests that printing via the chrome.printing extension API works properly",
-		Contacts:     []string{"project-bolton@google.com"},
+		Func:     PrintExtension,
+		Desc:     "Tests that printing via the chrome.printing extension API works properly",
+		Contacts: []string{"project-bolton@google.com"},
 		// ChromeOS > Platform > Services > Printing
 		BugComponent: "b:167231",
 		Attr: []string{
@@ -47,27 +45,15 @@ func init() {
 		Params: []testing.Param{
 			{
 				Name:              "cancel",
-				Val:               testParams{cancelPrint: true, bt: browser.TypeAsh},
+				Val:               testParams{cancelPrint: true},
 				ExtraSoftwareDeps: []string{"chrome"},
 				Fixture:           "chromeLoggedIn",
 			},
 			{
 				Name:              "complete",
-				Val:               testParams{cancelPrint: false, bt: browser.TypeAsh},
+				Val:               testParams{cancelPrint: false},
 				ExtraSoftwareDeps: []string{"chrome"},
 				Fixture:           "chromeLoggedIn",
-			},
-			{
-				Name:              "lacros_cancel",
-				Val:               testParams{cancelPrint: true, bt: browser.TypeLacros},
-				ExtraSoftwareDeps: []string{"lacros"},
-				Fixture:           "lacros",
-			},
-			{
-				Name:              "lacros_complete",
-				Val:               testParams{cancelPrint: false, bt: browser.TypeLacros},
-				ExtraSoftwareDeps: []string{"lacros"},
-				Fixture:           "lacros",
 			},
 		},
 	})
@@ -92,7 +78,7 @@ func PrintExtension(ctx context.Context, s *testing.State) {
 		s.Fatal("Failed to read golden file: ", err)
 	}
 
-	if err := printer.ResetCups(ctx, /*usePrintscanmgr=*/false); err != nil {
+	if err := printer.ResetCups(ctx, false /*usePrintscanmgr*/); err != nil {
 		s.Fatal("Failed to reset cupsd: ", err)
 	}
 
@@ -110,7 +96,7 @@ func PrintExtension(ctx context.Context, s *testing.State) {
 		s.Fatal("Failed to connect to ash test API: ", err)
 	}
 
-	br, closeBrowser, err := browserfixt.SetUp(ctx, cr, params.bt)
+	br, closeBrowser, err := browserfixt.SetUp(ctx, cr, browser.TypeAsh)
 	if err != nil {
 		s.Fatal("Failed to launch browser: ", err)
 	}

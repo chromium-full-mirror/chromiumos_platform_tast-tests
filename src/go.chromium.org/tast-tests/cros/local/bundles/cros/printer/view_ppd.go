@@ -13,7 +13,6 @@ import (
 	"go.chromium.org/tast-tests/cros/local/chrome"
 	"go.chromium.org/tast-tests/cros/local/chrome/browser"
 	"go.chromium.org/tast-tests/cros/local/chrome/browser/browserfixt"
-	"go.chromium.org/tast-tests/cros/local/chrome/lacros/lacrosfixt"
 	"go.chromium.org/tast-tests/cros/local/chrome/uiauto"
 	"go.chromium.org/tast-tests/cros/local/chrome/uiauto/faillog"
 	"go.chromium.org/tast-tests/cros/local/chrome/uiauto/nodewith"
@@ -27,10 +26,9 @@ import (
 
 func init() {
 	testing.AddTest(&testing.Test{
-		Func:         ViewPPD,
-		LacrosStatus: testing.LacrosVariantExists,
-		Desc:         "Tests that a user can view the PPD for an installed printer",
-		Contacts:     []string{"cros-peripherals@google.com", "project-bolton@google.com", "nmuggli@google.com"},
+		Func:     ViewPPD,
+		Desc:     "Tests that a user can view the PPD for an installed printer",
+		Contacts: []string{"cros-peripherals@google.com", "project-bolton@google.com", "nmuggli@google.com"},
 		// ChromeOS > Platform > Services > Printing
 		BugComponent: "b:167231",
 		Attr: []string{
@@ -42,16 +40,6 @@ func init() {
 		},
 		Timeout:      2 * time.Minute,
 		SoftwareDeps: []string{"chrome", "cros_internal", "cups"},
-		Params: []testing.Param{
-			{
-				Val: browser.TypeAsh,
-			},
-			{
-				Name:              "lacros",
-				ExtraSoftwareDeps: []string{"lacros"},
-				Val:               browser.TypeLacros,
-			},
-		},
 	})
 }
 
@@ -187,8 +175,7 @@ func ViewPPD(ctx context.Context, s *testing.State) {
 	server.AddEntry(ppdindex.Entry{Manufacturer: manufacturer1, Model: model1})
 	server.AddEntry(ppdindex.Entry{Manufacturer: manufacturer2, Model: model2, License: license2})
 
-	bt := s.Param().(browser.Type)
-	cr, err := browserfixt.NewChrome(ctx, bt, lacrosfixt.NewConfig(), chrome.ExtraArgs("--printing-ppd-channel=localhost"))
+	cr, err := browserfixt.NewChrome(ctx, browser.TypeAsh, nil, chrome.ExtraArgs("--printing-ppd-channel=localhost"))
 	if err != nil {
 		s.Fatal("Failed to create chrome instance: ", err)
 	}
@@ -200,7 +187,7 @@ func ViewPPD(ctx context.Context, s *testing.State) {
 	}
 	defer faillog.DumpUITreeOnError(cleanupCtx, s.OutDir(), s.HasError, tconn)
 
-	if err := printer.ResetCups(ctx, /*usePrintscanmgr=*/true); err != nil {
+	if err := printer.ResetCups(ctx, true /*usePrintscanmgr*/); err != nil {
 		s.Fatal("Failed to reset cupsd: ", err)
 	}
 

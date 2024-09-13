@@ -29,10 +29,9 @@ import (
 
 func init() {
 	testing.AddTest(&testing.Test{
-		Func:         Print,
-		LacrosStatus: testing.LacrosVariantExists,
-		Desc:         "Tests that a virtual USB printer can be saved and printed to",
-		Contacts:     []string{"cros-peripherals@google.com", "project-bolton@google.com", "gavinwill@google.com"},
+		Func:     Print,
+		Desc:     "Tests that a virtual USB printer can be saved and printed to",
+		Contacts: []string{"cros-peripherals@google.com", "project-bolton@google.com", "gavinwill@google.com"},
 		Attr: []string{
 			"group:mainline",
 			"informational",
@@ -45,18 +44,7 @@ func init() {
 		Timeout:      2 * time.Minute,
 		SoftwareDeps: []string{"chrome", "cups"},
 		HardwareDeps: hwdep.D(pre.PrinterSkipUnstableModels),
-		Params: []testing.Param{
-			{
-				Val:     browser.TypeAsh,
-				Fixture: "virtualUsbPrinterModulesLoadedWithChromeLoggedIn",
-			},
-			{
-				Name:              "lacros",
-				Val:               browser.TypeLacros,
-				ExtraSoftwareDeps: []string{"lacros"},
-				Fixture:           "virtualUsbPrinterModulesLoadedWithLacros",
-			},
-		},
+		Fixture:      "virtualUsbPrinterModulesLoadedWithChromeLoggedIn",
 	})
 }
 
@@ -65,7 +53,6 @@ func Print(ctx context.Context, s *testing.State) {
 	ctx, cancel := ctxutil.Shorten(ctx, 5*time.Second)
 	defer cancel()
 
-	bt := s.Param().(browser.Type)
 	cr := s.FixtValue().(chrome.HasChrome).Chrome()
 
 	// tconn is the ash TestConn.
@@ -120,8 +107,8 @@ func Print(ctx context.Context, s *testing.State) {
 		s.Fatal("Failed to clear printing history: ", err)
 	}
 
-	// Create a browser (either ash or lacros, based on browser type).
-	br, closeBrowser, err := browserfixt.SetUp(ctx, cr, bt)
+	// Create a browser.
+	br, closeBrowser, err := browserfixt.SetUp(ctx, cr, browser.TypeAsh)
 	if err != nil {
 		s.Fatal("Failed to launch browser: ", err)
 	}

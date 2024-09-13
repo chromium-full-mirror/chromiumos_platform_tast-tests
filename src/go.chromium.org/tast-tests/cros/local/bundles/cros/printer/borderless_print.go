@@ -15,7 +15,6 @@ import (
 	"go.chromium.org/tast-tests/cros/local/chrome/ash"
 	"go.chromium.org/tast-tests/cros/local/chrome/browser"
 	"go.chromium.org/tast-tests/cros/local/chrome/browser/browserfixt"
-	"go.chromium.org/tast-tests/cros/local/chrome/lacros/lacrosfixt"
 	"go.chromium.org/tast-tests/cros/local/chrome/uiauto"
 	"go.chromium.org/tast-tests/cros/local/chrome/uiauto/checked"
 	"go.chromium.org/tast-tests/cros/local/chrome/uiauto/faillog"
@@ -34,10 +33,9 @@ import (
 
 func init() {
 	testing.AddTest(&testing.Test{
-		Func:         BorderlessPrint,
-		LacrosStatus: testing.LacrosVariantExists,
-		Desc:         "End-to-end tests for borderless printing with a virtual USB printer",
-		Contacts:     []string{"project-bolton@google.com", "bryancain@google.com"},
+		Func:     BorderlessPrint,
+		Desc:     "End-to-end tests for borderless printing with a virtual USB printer",
+		Contacts: []string{"project-bolton@google.com", "bryancain@google.com"},
 		Attr: []string{
 			"group:mainline",
 			"informational",
@@ -49,18 +47,7 @@ func init() {
 		SoftwareDeps: []string{"chrome", "cups"},
 		HardwareDeps: hwdep.D(pre.PrinterSkipUnstableModels),
 		Data:         []string{"borderless_attributes_script.textproto"},
-		Params: []testing.Param{
-			{
-				Val:     browser.TypeAsh,
-				Fixture: "virtualUsbPrinterModulesLoaded",
-			},
-			{
-				Name:              "lacros",
-				Val:               browser.TypeLacros,
-				ExtraSoftwareDeps: []string{"lacros"},
-				Fixture:           "virtualUsbPrinterModulesLoaded",
-			},
-		},
+		Fixture:      "virtualUsbPrinterModulesLoaded",
 	})
 }
 
@@ -69,10 +56,8 @@ func BorderlessPrint(ctx context.Context, s *testing.State) {
 	ctx, cancel := ctxutil.Shorten(ctx, 5*time.Second)
 	defer cancel()
 
-	bt := s.Param().(browser.Type)
 	opts := []chrome.Option{chrome.EnableFeatures("EnableBorderlessPrinting")}
-	lacrosConfig := lacrosfixt.NewConfig(lacrosfixt.ChromeOptions(chrome.LacrosEnableFeatures("EnableBorderlessPrinting")))
-	cr, err := browserfixt.NewChrome(ctx, bt, lacrosConfig, opts...)
+	cr, err := browserfixt.NewChrome(ctx, browser.TypeAsh, nil, opts...)
 	if err != nil {
 		s.Fatal("Failed to start Chrome: ", err)
 	}
@@ -124,8 +109,8 @@ func BorderlessPrint(ctx context.Context, s *testing.State) {
 		s.Fatal("Failed to clear printing history: ", err)
 	}
 
-	// Create a browser (either ash or lacros, based on browser type).
-	br, closeBrowser, err := browserfixt.SetUp(ctx, cr, bt)
+	// Create a browser.
+	br, closeBrowser, err := browserfixt.SetUp(ctx, cr, browser.TypeAsh)
 	if err != nil {
 		s.Fatal("Failed to launch browser: ", err)
 	}

@@ -27,15 +27,13 @@ import (
 
 type testParam struct {
 	descriptorPath string
-	browserType    browser.Type
 }
 
 func init() {
 	testing.AddTest(&testing.Test{
-		Func:         HardwarePrintCombinations,
-		LacrosStatus: testing.LacrosVariantExists,
-		Desc:         "Tests that settings can be set in the print dialog",
-		Contacts:     []string{"project-bolton@google.com"},
+		Func:     HardwarePrintCombinations,
+		Desc:     "Tests that settings can be set in the print dialog",
+		Contacts: []string{"project-bolton@google.com"},
 		// ChromeOS > Platform > Services > Printing
 		BugComponent: "b:167231",
 		Attr: []string{
@@ -54,172 +52,74 @@ func init() {
 				Name: "sharp_mx_b467f",
 				Val: &testParam{
 					descriptorPath: "sharp_mx_b467f_descriptor.json",
-					browserType:    browser.TypeAsh,
 				},
 				ExtraData: []string{"sharp_mx_b467f_descriptor.json"},
 				ExtraAttr: []string{"paper-io_mfp_printscan"},
 				Fixture:   "chromeLoggedIn",
-			}, {
-				//MFP in test lab
-				Name:              "lacros_sharp_mx_b467f",
-				ExtraSoftwareDeps: []string{"lacros"},
-				Val: &testParam{
-					descriptorPath: "sharp_mx_b467f_descriptor.json",
-					browserType:    browser.TypeLacros,
-				},
-				ExtraData: []string{"sharp_mx_b467f_descriptor.json"},
-				ExtraAttr: []string{"paper-io_mfp_printscan"},
-				Fixture:   "lacros",
 			}, {
 				//MFP in test lab
 				Name: "hp_laserjet_pro_m478f",
 				Val: &testParam{
 					descriptorPath: "hp_laserjet_pro_m478f_descriptor.json",
-					browserType:    browser.TypeAsh,
 				},
 				ExtraData: []string{"hp_laserjet_pro_m478f_descriptor.json"},
 				ExtraAttr: []string{"paper-io_mfp_printscan"},
 				Fixture:   "chromeLoggedIn",
-			}, {
-				//MFP in test lab
-				Name:              "lacros_hp_laserjet_pro_m478f",
-				ExtraSoftwareDeps: []string{"lacros"},
-				Val: &testParam{
-					descriptorPath: "hp_laserjet_pro_m478f_descriptor.json",
-					browserType:    browser.TypeLacros,
-				},
-				ExtraData: []string{"hp_laserjet_pro_m478f_descriptor.json"},
-				ExtraAttr: []string{"paper-io_mfp_printscan"},
-				Fixture:   "lacros",
 			}, {
 				//MFP in test lab
 				Name: "brother_dcp_l2550dw_series",
 				Val: &testParam{
 					descriptorPath: "brother_dcp_l2550dw_series_descriptor.json",
-					browserType:    browser.TypeAsh,
 				},
 				ExtraData: []string{"brother_dcp_l2550dw_series_descriptor.json"},
 				ExtraAttr: []string{"paper-io_mfp_printscan"},
 				Fixture:   "chromeLoggedIn",
-			}, {
-				//MFP in test lab
-				Name:              "lacros_brother_dcp_l2550dw_series",
-				ExtraSoftwareDeps: []string{"lacros"},
-				Val: &testParam{
-					descriptorPath: "brother_dcp_l2550dw_series_descriptor.json",
-					browserType:    browser.TypeLacros,
-				},
-				ExtraData: []string{"brother_dcp_l2550dw_series_descriptor.json"},
-				ExtraAttr: []string{"paper-io_mfp_printscan"},
-				Fixture:   "lacros",
 			}, {
 				//MFP in test lab
 				Name: "brother_hl_l8360cdw_series",
 				Val: &testParam{
 					descriptorPath: "brother_hl_l8360cdw_series_descriptor.json",
-					browserType:    browser.TypeAsh,
 				},
 				ExtraData: []string{"brother_hl_l8360cdw_series_descriptor.json"},
 				ExtraAttr: []string{"paper-io_mfp_printscan"},
 				Fixture:   "chromeLoggedIn",
-			}, {
-				//MFP in test lab
-				Name:              "lacros_brother_hl_l8360cdw_series",
-				ExtraSoftwareDeps: []string{"lacros"},
-				Val: &testParam{
-					descriptorPath: "brother_hl_l8360cdw_series_descriptor.json",
-					browserType:    browser.TypeLacros,
-				},
-				ExtraData: []string{"brother_hl_l8360cdw_series_descriptor.json"},
-				ExtraAttr: []string{"paper-io_mfp_printscan"},
-				Fixture:   "lacros",
 			}, {
 				//MFP in test lab
 				Name: "hp_laserjet_mfp_m234dw",
 				Val: &testParam{
 					descriptorPath: "hp_laserjet_mfp_m234dw_descriptor.json",
-					browserType:    browser.TypeAsh,
 				},
 				ExtraData: []string{"hp_laserjet_mfp_m234dw_descriptor.json"},
 				ExtraAttr: []string{"paper-io_mfp_printscan"},
 				Fixture:   "chromeLoggedIn",
-			}, {
-				//MFP in test lab
-				Name:              "lacros_hp_laserjet_mfp_m234dw",
-				ExtraSoftwareDeps: []string{"lacros"},
-				Val: &testParam{
-					descriptorPath: "hp_laserjet_mfp_m234dw_descriptor.json",
-					browserType:    browser.TypeLacros,
-				},
-				ExtraData: []string{"hp_laserjet_mfp_m234dw_descriptor.json"},
-				ExtraAttr: []string{"paper-io_mfp_printscan"},
-				Fixture:   "lacros",
 			}, {
 				//MFP in test lab
 				Name: "lexmark_mc3426adw",
 				Val: &testParam{
 					descriptorPath: "lexmark_mc3426adw_descriptor.json",
-					browserType:    browser.TypeAsh,
 				},
 				ExtraData: []string{"lexmark_mc3426adw_descriptor.json"},
 				ExtraAttr: []string{"paper-io_mfp_printscan"},
 				Fixture:   "chromeLoggedIn",
 			}, {
 				//MFP in test lab
-				Name:              "lacros_lexmark_mc3426adw",
-				ExtraSoftwareDeps: []string{"lacros"},
-				Val: &testParam{
-					descriptorPath: "lexmark_mc3426adw_descriptor.json",
-					browserType:    browser.TypeLacros,
-				},
-				ExtraData: []string{"lexmark_mc3426adw_descriptor.json"},
-				ExtraAttr: []string{"paper-io_mfp_printscan"},
-				Fixture:   "lacros",
-			}, {
-				//MFP in test lab
 				Name: "usb_canon_tr4700_series",
 				Val: &testParam{
 					descriptorPath: "usb_canon_tr4700_series_descriptor.json",
-					browserType:    browser.TypeAsh,
 				},
 				ExtraData:         []string{"usb_canon_tr4700_series_descriptor.json"},
 				ExtraAttr:         []string{"paper-io_mfp_printscan"},
 				Fixture:           "chromeLoggedIn",
-				ExtraHardwareDeps: hwdep.D(hwdep.Model("treeya")),
-			}, {
-				//MFP in test lab
-				Name:              "lacros_usb_canon_tr4700_series",
-				ExtraSoftwareDeps: []string{"lacros"},
-				Val: &testParam{
-					descriptorPath: "usb_canon_tr4700_series_descriptor.json",
-					browserType:    browser.TypeLacros,
-				},
-				ExtraData:         []string{"usb_canon_tr4700_series_descriptor.json"},
-				ExtraAttr:         []string{"paper-io_mfp_printscan"},
-				Fixture:           "lacros",
 				ExtraHardwareDeps: hwdep.D(hwdep.Model("treeya")),
 			}, {
 				//MFP in test lab
 				Name: "usb_hp_deskjet_2700_series",
 				Val: &testParam{
 					descriptorPath: "usb_hp_deskjet_2700_series_descriptor.json",
-					browserType:    browser.TypeAsh,
 				},
 				ExtraData:         []string{"usb_hp_deskjet_2700_series_descriptor.json"},
 				ExtraAttr:         []string{"paper-io_mfp_printscan"},
 				Fixture:           "chromeLoggedIn",
-				ExtraHardwareDeps: hwdep.D(hwdep.Model("lazor")),
-			}, {
-				//MFP in test lab
-				Name:              "lacros_usb_hp_deskjet_2700_series",
-				ExtraSoftwareDeps: []string{"lacros"},
-				Val: &testParam{
-					descriptorPath: "usb_hp_deskjet_2700_series_descriptor.json",
-					browserType:    browser.TypeLacros,
-				},
-				ExtraData:         []string{"usb_hp_deskjet_2700_series_descriptor.json"},
-				ExtraAttr:         []string{"paper-io_mfp_printscan"},
-				Fixture:           "lacros",
 				ExtraHardwareDeps: hwdep.D(hwdep.Model("lazor")),
 			},
 			// printers in BLD lab: un-comment to test them
@@ -228,170 +128,74 @@ func init() {
 				Name:      "brother_hl_l2395dw_series",
 				Val:       &testParam{
 					descriptorPath: "brother_hl_l2395dw_series_descriptor.json",
-					browserType:    browser.TypeAsh,
 				},
 				ExtraData: []string{"brother_hl_l2395dw_series_descriptor.json"},
 				ExtraAttr: []string{"paper-io_mfp_printscan"},
 				Fixture:   "chromeLoggedIn",
-			}, {
-				//MFP in BLD lab
-				Name:      "lacros_brother_hl_l2395dw_series",
-				ExtraSoftwareDeps: []string{"lacros"},
-				Val:       &testParam{
-					descriptorPath: "brother_hl_l2395dw_series_descriptor.json",
-					browserType:    browser.TypeLacros,
-				},
-				ExtraData: []string{"brother_hl_l2395dw_series_descriptor.json"},
-				ExtraAttr: []string{"paper-io_mfp_printscan"},
-				Fixture:   "lacros",
 			}, {
 				//MFP in BLD lab
 				Name:      "epson_xp_7100_series",
 				Val:       &testParam{
 					descriptorPath: "epson_xp_7100_series_descriptor.json",
-					browserType:    browser.TypeAsh,
 				},
 				ExtraData: []string{"epson_xp_7100_series_descriptor.json"},
 				ExtraAttr: []string{"paper-io_mfp_printscan"},
 				Fixture:   "chromeLoggedIn",
-			}, {
-				//MFP in BLD lab
-				Name:      "lacros_epson_xp_7100_series",
-				ExtraSoftwareDeps: []string{"lacros"},
-				Val:       &testParam{
-					descriptorPath: "epson_xp_7100_series_descriptor.json",
-					browserType:    browser.TypeLacros,
-				},
-				ExtraData: []string{"epson_xp_7100_series_descriptor.json"},
-				ExtraAttr: []string{"paper-io_mfp_printscan"},
-				Fixture:   "lacros",
 			}, {
 				//MFP in BLD lab
 				Name:      "epson_wf_2540_series",
 				Val:       &testParam{
 					descriptorPath: "epson_wf_2540_series_descriptor.json",
-					browserType:    browser.TypeAsh,
 				},
 				ExtraData: []string{"epson_wf_2540_series_descriptor.json"},
 				ExtraAttr: []string{"paper-io_mfp_printscan"},
 				Fixture:   "chromeLoggedIn",
-			}, {
-				//MFP in BLD lab
-				Name:      "lacros_epson_wf_2540_series",
-				ExtraSoftwareDeps: []string{"lacros"},
-				Val:       &testParam{
-					descriptorPath: "epson_wf_2540_series_descriptor.json",
-					browserType:    browser.TypeLacros,
-				},
-				ExtraData: []string{"epson_wf_2540_series_descriptor.json"},
-				ExtraAttr: []string{"paper-io_mfp_printscan"},
-				Fixture:   "lacros",
 			}, {
 				//MFP in BLD lab
 				Name:      "epson_artisan_837",
 				Val:       &testParam{
 					descriptorPath: "epson_artisan_837_descriptor.json",
-					browserType:    browser.TypeAsh,
 				},
 				ExtraData: []string{"epson_artisan_837_descriptor.json"},
 				ExtraAttr: []string{"paper-io_mfp_printscan"},
 				Fixture:   "chromeLoggedIn",
-			}, {
-				//MFP in BLD lab
-				Name:      "lacros_epson_artisan_837",
-				ExtraSoftwareDeps: []string{"lacros"},
-				Val:       &testParam{
-					descriptorPath: "epson_artisan_837_descriptor.json",
-					browserType:    browser.TypeLacros,
-				},
-				ExtraData: []string{"epson_artisan_837_descriptor.json"},
-				ExtraAttr: []string{"paper-io_mfp_printscan"},
-				Fixture:   "lacros",
 			}, {
 				//MFP in BLD lab
 				Name:      "hp_envy_photo_7100_series",
 				Val:       &testParam{
 					descriptorPath: "hp_envy_photo_7100_series_descriptor.json",
-					browserType:    browser.TypeAsh,
 				},
 				ExtraData: []string{"hp_envy_photo_7100_series_descriptor.json"},
 				ExtraAttr: []string{"paper-io_mfp_printscan"},
 				Fixture:   "chromeLoggedIn",
-			}, {
-				//MFP in BLD lab
-				Name:      "lacros_hp_envy_photo_7100_series",
-				ExtraSoftwareDeps: []string{"lacros"},
-				Val:       &testParam{
-					descriptorPath: "hp_envy_photo_7100_series_descriptor.json",
-					browserType:    browser.TypeLacros,
-				},
-				ExtraData: []string{"hp_envy_photo_7100_series_descriptor.json"},
-				ExtraAttr: []string{"paper-io_mfp_printscan"},
-				Fixture:   "lacros",
 			}, {
 				//MFP in BLD lab
 				Name:      "hp_envy_inspire_7900_series",
 				Val:       &testParam{
 					descriptorPath: "hp_envy_inspire_7900_series_descriptor.json",
-					browserType:    browser.TypeAsh,
 				},
 				ExtraData: []string{"hp_envy_inspire_7900_series_descriptor.json"},
 				ExtraAttr: []string{"paper-io_mfp_printscan"},
 				Fixture:   "chromeLoggedIn",
-			}, {
-				//MFP in BLD lab
-				Name:      "lacros_hp_envy_inspire_7900_series",
-				ExtraSoftwareDeps: []string{"lacros"},
-				Val:       &testParam{
-					descriptorPath: "hp_envy_inspire_7900_series_descriptor.json",
-					browserType:    browser.TypeLacros,
-				},
-				ExtraData: []string{"hp_envy_inspire_7900_series_descriptor.json"},
-				ExtraAttr: []string{"paper-io_mfp_printscan"},
-				Fixture:   "lacros",
 			}, {
 				//MFP in BLD lab
 				Name:      "lexmark_mb2236adwe",
 				Val:       &testParam{
 					descriptorPath: "lexmark_mb2236adwe_descriptor.json",
-					browserType:    browser.TypeAsh,
 				},
 				ExtraData: []string{"lexmark_mb2236adwe_descriptor.json"},
 				ExtraAttr: []string{"paper-io_mfp_printscan"},
 				Fixture:   "chromeLoggedIn",
-			}, {
-				//MFP in BLD lab
-				Name:      "lacros_lexmark_mb2236adwe",
-				ExtraSoftwareDeps: []string{"lacros"},
-				Val:       &testParam{
-					descriptorPath: "lexmark_mb2236adwe_descriptor.json",
-					browserType:    browser.TypeLacros,
-				},
-				ExtraData: []string{"lexmark_mb2236adwe_descriptor.json"},
-				ExtraAttr: []string{"paper-io_mfp_printscan"},
-				Fixture:   "lacros",
 			}, {
 				//MFP in BLD lab
 				Name:      "xerox_workcentre_6515",
 				Val:       &testParam{
 					descriptorPath: "xerox_workcentre_6515_descriptor.json",
-					browserType:    browser.TypeAsh,
 				},
 				ExtraData: []string{"xerox_workcentre_6515_descriptor.json"},
 				ExtraAttr: []string{"paper-io_mfp_printscan"},
 				Fixture:   "chromeLoggedIn",
-			}, {
-				//MFP in BLD lab
-				Name:      "lacros_xerox_workcentre_6515",
-				ExtraSoftwareDeps: []string{"lacros"},
-				Val:       &testParam{
-					descriptorPath: "xerox_workcentre_6515_descriptor.json",
-					browserType:    browser.TypeLacros,
-				},
-				ExtraData: []string{"xerox_workcentre_6515_descriptor.json"},
-				ExtraAttr: []string{"paper-io_mfp_printscan"},
-				Fixture:   "lacros",
-			},*/
+			}, */
 		},
 	})
 }
@@ -406,7 +210,7 @@ func HardwarePrintCombinations(ctx context.Context, s *testing.State) {
 	defer cancel()
 
 	br, closeBrowser, err := browserfixt.SetUp(ctx, s.FixtValue().(chrome.HasChrome).Chrome(),
-		param.browserType)
+		browser.TypeAsh)
 	if err != nil {
 		s.Fatal("Failed to open the browser: ", err)
 	}
