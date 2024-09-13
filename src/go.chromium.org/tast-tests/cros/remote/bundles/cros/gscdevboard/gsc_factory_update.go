@@ -90,8 +90,8 @@ func GSCFactoryUpdate(ctx context.Context, s *testing.State) {
 	s.Logf("efi %s: %s", efiVer, efiImage)
 
 	// Connect Suzyq, so the test can update over ccd.
-	s.Log("Simulating insertion of SuzyQ and resetting")
-	b.ResetWithStraps(ctx, ti50.CcdSuzyQ)
+	s.Log("Enabling CCD mode and resetting")
+	b.ResetWithStraps(ctx, ti50.CCDModeOn)
 	th.MustSucceed(i.WaitUntilBooted(ctx), "Ti50 revives after reboot")
 	b.WaitUntilCCDConnected(ctx)
 

@@ -64,7 +64,7 @@ func EnsureFWMPDisabled(ctx context.Context, s TestingState, b *remoteTi50.DUTCo
 	// We always use I2C since all devboard support this. We also do not have
 	// access to the GscProperties.PreferredTPMBus at this layer.
 	s.Log("Restarting ti50 with CCD, I2C, and Clamshell straps to remove FWMP")
-	gpioApplyStrap(ctx, s, b, ti50.CcdSuzyQ, ti50.TpmI2c, ti50.ApOff, ti50.FfClamshell)
+	gpioApplyStrap(ctx, s, b, ti50.CCDModeOn, ti50.TpmI2c, ti50.ApOff, ti50.FfClamshell)
 	mustSucceed(s, b.Reset(ctx), "Reset board")
 	mustSucceed(s, i.WaitUntilBooted(ctx), "Ti50 revives after reboot")
 
@@ -94,7 +94,7 @@ func EnsureFWMPDisabled(ctx context.Context, s TestingState, b *remoteTi50.DUTCo
 	}
 
 	// Turn AP back off
-	gpioApplyStrap(ctx, s, b, ti50.ApOff)
+	gpioApplyStrap(ctx, s, b, ti50.ApOff, ti50.CCDModeOff)
 	s.Log("FWMP space removed")
 }
 

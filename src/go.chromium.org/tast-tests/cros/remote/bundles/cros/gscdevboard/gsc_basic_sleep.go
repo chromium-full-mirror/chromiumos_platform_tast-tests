@@ -71,7 +71,7 @@ func GSCBasicSleep(ctx context.Context, s *testing.State) {
 
 	testConfig := s.Param().(testBasicSleepConfig)
 
-	b.ResetAndTpmStartupForBus(ctx, i, testConfig.Bus, ti50.CcdDisconnected, ti50.FfClamshell)
+	b.ResetAndTpmStartupForBus(ctx, i, testConfig.Bus, ti50.CCDModeOff, ti50.FfClamshell)
 	th.MustSucceed(i.WaitUntilBooted(ctx), "GSC revives after reboot")
 
 	var sleepDelay time.Duration

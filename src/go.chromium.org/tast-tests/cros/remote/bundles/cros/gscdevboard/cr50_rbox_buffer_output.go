@@ -159,7 +159,7 @@ func Cr50RBOXBufferOutput(ctx context.Context, s *testing.State) {
 	testSignal := s.Param().(ti50.GpioName)
 
 	s.Log("(Re)starting GSC")
-	b.ResetAndTpmStartup(ctx, i, ti50.CcdSuzyQ, ti50.FfClamshell)
+	b.ResetAndTpmStartup(ctx, i, ti50.CCDModeOn, ti50.FfClamshell)
 
 	chipSKU, err := i.ChipSKU(ctx)
 	s.Logf("Running %s test for %s", testSignal, chipSKU)

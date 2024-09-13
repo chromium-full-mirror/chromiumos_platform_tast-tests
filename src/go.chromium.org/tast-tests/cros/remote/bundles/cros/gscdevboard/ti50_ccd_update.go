@@ -66,8 +66,8 @@ func Ti50CCDUpdate(ctx context.Context, s *testing.State) {
 		s.Fatal("DBG version must be greater than current version")
 	}
 
-	s.Log("Simulating insertion of SuzyQ and resetting")
-	tpm := b.ResetAndTpmStartup(ctx, i, ti50.CcdSuzyQ, ti50.FfClamshell)
+	s.Log("Enabling CCD mode and resetting")
+	tpm := b.ResetAndTpmStartup(ctx, i, ti50.CCDModeOn, ti50.FfClamshell)
 	th.MustSucceed(i.WaitUntilBooted(ctx), "GSC revives after reboot")
 
 	// Perform a GSC reset to ensure that the rate limiting is engaged

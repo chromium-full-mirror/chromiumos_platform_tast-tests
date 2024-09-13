@@ -164,7 +164,7 @@ func GSCTPM(ctx context.Context, s *testing.State) {
 	nctx, cancel := ctxutil.Shorten(ctx, 20*time.Second)
 	defer cancel()
 
-	tpmHandle := b.ResetAndTpmStartupForBus(nctx, i, bus, ti50.CcdSuzyQ, ti50.FfClamshell)
+	tpmHandle := b.ResetAndTpmStartupForBus(nctx, i, bus, ti50.CCDModeOn, ti50.FfClamshell)
 	th.MustSucceed(i.WaitUntilBooted(ctx), "GSC revives after reboot")
 	// Read boot mode as a simple check of vendor command.
 	bm, err := tpmHandle.TpmvGetBootMode()

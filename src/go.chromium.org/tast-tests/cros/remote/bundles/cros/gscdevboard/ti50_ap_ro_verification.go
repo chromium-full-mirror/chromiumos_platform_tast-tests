@@ -91,7 +91,7 @@ func Ti50APROVerification(ctx context.Context, s *testing.State) {
 	defer i.Close(ctx)
 
 	s.Log("(Re)starting GSC with clamshell straps and no CCD")
-	b.ResetWithStraps(ctx, ti50.FfClamshell, ti50.CcdDisconnected)
+	b.ResetWithStraps(ctx, ti50.FfClamshell, ti50.CCDModeOff)
 	th.MustSucceed(i.WaitUntilBooted(ctx), "GSC revives after reboot")
 
 	s.Log("Provisioning AP SPI settings")
@@ -262,7 +262,7 @@ func verifyResetState(ctx context.Context, s *testing.State, b utils.DevboardHel
 	}
 
 	s.Log("Verify that CCD state when ", scenario)
-	b.GpioApplyStrap(ctx, ti50.CcdDisconnected)
+	b.GpioApplyStrap(ctx, ti50.CCDModeOff)
 	// GoBigSleepLint: Allow USB to settle after reboot, then poll
 	testing.Sleep(ctx, 5*time.Second)
 	if inReset {

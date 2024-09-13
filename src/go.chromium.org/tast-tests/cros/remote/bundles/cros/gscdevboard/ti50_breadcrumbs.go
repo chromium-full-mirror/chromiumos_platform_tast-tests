@@ -54,13 +54,13 @@ func Ti50Breadcrumbs(ctx context.Context, s *testing.State) {
 	var expected []int
 
 	s.Log("Reset with clamshell straps and CCD connected")
-	b.ResetWithStraps(ctx, ti50.FfClamshell, ti50.CcdSuzyQ)
+	b.ResetWithStraps(ctx, ti50.FfClamshell, ti50.CCDModeOn)
 	th.MustSucceed(i.WaitUntilBooted(ctx), "Ti50 revives after reboot")
 	expected = append(expected, projectMain, pmuPreInit, projectStart, projectRun)
 	checkBreadcrumbs(ctx, s, i, expected)
 
 	s.Log("Disconnecting CCD to allow sleep")
-	b.GpioApplyStrap(ctx, ti50.CcdDisconnected)
+	b.GpioApplyStrap(ctx, ti50.CCDModeOff)
 	// TODO(b/350972387): Verify normal sleep once A1 OT silicon is available
 	if b.TestbedType != ti50.GscOTShield {
 		s.Log("Waiting for normal sleep")
@@ -77,7 +77,7 @@ func Ti50Breadcrumbs(ctx context.Context, s *testing.State) {
 	expected = append(expected, pmuDeepSleep)
 
 	s.Log("Connecting CCD")
-	b.GpioApplyStrap(ctx, ti50.CcdSuzyQ)
+	b.GpioApplyStrap(ctx, ti50.CCDModeOn)
 	th.MustSucceed(i.WaitUntilBooted(ctx), "Ti50 is awake")
 	expected = append(expected, projectMain, pmuPreInit, projectStart, projectRun)
 	checkBreadcrumbs(ctx, s, i, expected)

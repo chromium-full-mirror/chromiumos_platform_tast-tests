@@ -62,6 +62,14 @@ const (
 	CcdServoSnk3 GpioStrap = "CCD_SERVO_SNK3"
 )
 
+// Means of enabling CCD while circumventing GSC analog voltage detection.
+const (
+	// CCDModeOff is the default, the CCD_MODE_ODL is not externally asserted.
+	CCDModeOff GpioStrap = "CCD_MODE_OFF"
+	// CCDModeOn means the CCD_MODE_ODL is externally asserted.
+	CCDModeOn GpioStrap = "CCD_MODE_ON"
+)
+
 const (
 	// ServoMicroDisconnected represents simulating that a Servo Micro is not
 	// connected.

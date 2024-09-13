@@ -332,7 +332,7 @@ func setupCr50Image(ctx context.Context, s TestingState, board *remoteTi50.DUTCo
 
 	_, imageVer, _, _, err := board.GSCToolBinVersion(ctx, imagePath)
 	mustSucceed(s, err, "parse bin version")
-	gpioApplyStrap(ctx, s, board, ti50.CcdSuzyQ)
+	gpioApplyStrap(ctx, s, board, ti50.CCDModeOn)
 	mustSucceed(s, board.GSCToolWaitUntilReady(ctx), "wait until gsc ready")
 
 	_, rw, err := board.GSCToolCurrentFwVersion(ctx)

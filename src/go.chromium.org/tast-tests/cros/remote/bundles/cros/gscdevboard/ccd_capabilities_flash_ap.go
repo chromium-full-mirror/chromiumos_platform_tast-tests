@@ -65,8 +65,7 @@ func CCDCapabilitiesFlashAP(ctx context.Context, s *testing.State) {
 	i := ti50.MustOpenCrOSImage(ctx, b, s)
 	defer i.Close(ctx)
 
-	b.GpioApplyStrap(ctx, ti50.CcdSuzyQ)
-	_ = b.ResetAndTpmStartup(ctx, i, ti50.CcdSuzyQ, ti50.FfClamshell)
+	_ = b.ResetAndTpmStartup(ctx, i, ti50.CCDModeOn, ti50.FfClamshell)
 	b.WaitUntilCCDConnected(ctx)
 
 	// Set capabilities into their correct states

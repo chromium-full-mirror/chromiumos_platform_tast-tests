@@ -71,7 +71,7 @@ func GSCFactoryConfig(ctx context.Context, s *testing.State) {
 		s.Fatal("Unsupported testbed type")
 	}
 
-	tpm := b.ResetAndTpmStartup(ctx, i, ti50.FfClamshell, ti50.CcdSuzyQ)
+	tpm := b.ResetAndTpmStartup(ctx, i, ti50.FfClamshell, ti50.CCDModeOn)
 	th.MustSucceed(i.WaitUntilBooted(ctx), "GSC failed to boot")
 	b.WaitUntilCCDConnected(ctx)
 

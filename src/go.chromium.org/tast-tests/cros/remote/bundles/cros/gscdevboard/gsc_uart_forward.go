@@ -54,14 +54,14 @@ func GSCUARTForward(ctx context.Context, s *testing.State) {
 	// Simulate the AP processor being off initially.
 	s.Log("(Re)starting ti50")
 	b.GpioSet(ctx, ti50.GpioTi50PltRstL, false)
-	b.ResetWithStraps(ctx, ti50.CcdDisconnected, ti50.ServoMicroDisconnected)
+	b.ResetWithStraps(ctx, ti50.CCDModeOff, ti50.ServoMicroDisconnected)
 	th.MustSucceed(i.WaitUntilBooted(ctx), "GSC revives after reboot")
 
 	if b.GpioGet(ctx, ti50.GpioTi50UartDbgTxEcRx) != false {
 		s.Error("GSC driving EC UART high before CCD connection")
 	}
 
-	b.GpioApplyStrap(ctx, ti50.CcdSuzyQ)
+	b.GpioApplyStrap(ctx, ti50.CCDModeOn)
 	// Wait until CCD USB shows up and CCD UART TX is enabled.
 	b.WaitUntilCCDConnectedAndUARTTXEnabled(ctx)
 
@@ -84,7 +84,7 @@ func GSCUARTForward(ctx context.Context, s *testing.State) {
 		testForwarding(ctx, s, b, th, r, ti50.UartFPMCU, true, true, "AP on, no uServo")
 	}
 
-	b.GpioApplyStrap(ctx, ti50.CcdDisconnected)
+	b.GpioApplyStrap(ctx, ti50.CCDModeOff)
 
 	startTime := time.Now()
 	for b.GpioGet(ctx, ti50.GpioTi50UartDbgTxEcRx) == true {
@@ -103,7 +103,7 @@ func GSCUARTForward(ctx context.Context, s *testing.State) {
 	b.GpioSet(ctx, ti50.GpioTi50PltRstL, false)
 	b.ResetWithStraps(ctx, ti50.ServoMicroConnected)
 	th.MustSucceed(i.WaitUntilBooted(ctx), "GSC revives after reboot")
-	b.GpioApplyStrap(ctx, ti50.CcdSuzyQ)
+	b.GpioApplyStrap(ctx, ti50.CCDModeOn)
 	b.WaitUntilCCDConnectedAndUARTTXEnabled(ctx)
 
 	// Test forwarding on each of three ports.

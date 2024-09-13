@@ -42,7 +42,7 @@ func GSCRMAProd(ctx context.Context, s *testing.State) {
 	defer i.Close(ctx)
 
 	s.Log("(Re)starting GSC")
-	b.ResetAndTpmStartup(ctx, i, ti50.CcdSuzyQ, ti50.FfClamshell)
+	b.ResetAndTpmStartup(ctx, i, ti50.CCDModeOn, ti50.FfClamshell)
 
 	if err := i.WaitUntilBooted(ctx); err != nil {
 		s.Fatal("Failed to boot GSC: ", err)

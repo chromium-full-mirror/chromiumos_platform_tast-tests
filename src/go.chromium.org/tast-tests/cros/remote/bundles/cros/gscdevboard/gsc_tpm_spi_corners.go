@@ -39,7 +39,7 @@ func GSCTPMSPICorners(ctx context.Context, s *testing.State) {
 	i := ti50.MustOpenCrOSImage(ctx, b, s)
 	defer i.Close(ctx)
 
-	tpmHandle := b.ResetAndTpmStartupForBus(ctx, i, ti50.TpmBusSpi, ti50.CcdDisconnected, ti50.FfClamshell)
+	tpmHandle := b.ResetAndTpmStartupForBus(ctx, i, ti50.TpmBusSpi, ti50.CCDModeOff, ti50.FfClamshell)
 
 	// Record everything that is transmitted by CLK/CS/MISO/MOSI lines, for manual inspection later.
 	gpioMonitor := b.GpioMonitorStart(

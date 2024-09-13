@@ -63,8 +63,8 @@ func GSCBIDMismatch(ctx context.Context, s *testing.State) {
 	_, debugVer, _, _, err := b.GSCToolBinVersion(ctx, debugImage)
 	th.MustSucceed(err, "Unable to get version from "+debugImage)
 
-	s.Log("Simulating insertion of SuzyQ and resetting")
-	b.ResetWithStraps(ctx, ti50.CcdSuzyQ)
+	s.Log("Enabling CCD mode and resetting")
+	b.ResetWithStraps(ctx, ti50.CCDModeOn)
 	th.MustSucceed(i.WaitUntilBooted(ctx), "GSC revives after reboot")
 	b.WaitUntilCCDConnected(ctx)
 

@@ -42,7 +42,7 @@ func GSCUARTConfig(ctx context.Context, s *testing.State) {
 	defer i.Close(ctx)
 
 	s.Log("(Re)starting ti50")
-	b.ResetWithStraps(ctx, ti50.CcdSuzyQ)
+	b.ResetWithStraps(ctx, ti50.CCDModeOn)
 	th.MustSucceed(i.WaitUntilBooted(ctx), "GSC revives after reboot")
 	b.WaitUntilCCDConnectedAndUARTTXEnabled(ctx)
 

@@ -117,8 +117,8 @@ func GSCUpdateRateLimit(ctx context.Context, s *testing.State) {
 	s.Logf("Image under test %s: %s", releaseVer, imageUnderTest)
 
 	// Connect Suzyq, so the test can update over ccd.
-	s.Log("Simulating insertion of SuzyQ and resetting")
-	b.ResetWithStraps(ctx, ti50.CcdSuzyQ)
+	s.Log("Enabling CCD mode and resetting")
+	b.ResetWithStraps(ctx, ti50.CCDModeOn)
 	th.MustSucceed(i.WaitUntilBooted(ctx), "GSC revives after reboot")
 
 	reset(ctx, s, b, i, resetType)

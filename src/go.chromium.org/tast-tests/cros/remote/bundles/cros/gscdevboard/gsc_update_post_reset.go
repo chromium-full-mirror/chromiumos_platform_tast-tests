@@ -100,8 +100,8 @@ func GSCUpdatePostReset(ctx context.Context, s *testing.State) {
 	s.Logf("Image under test %s: %s", currentVer, currentImage)
 
 	// Connect Suzyq, so the test can update over ccd.
-	s.Log("Simulating insertion of SuzyQ and resetting")
-	tpm := b.ResetAndTpmStartupForBus(ctx, i, testBus, ti50.CcdSuzyQ, ti50.FfClamshell)
+	s.Log("Enabling CCD mode and resetting")
+	tpm := b.ResetAndTpmStartupForBus(ctx, i, testBus, ti50.CCDModeOn, ti50.FfClamshell)
 	th.MustSucceed(i.WaitUntilBooted(ctx), "GSC revives after reboot")
 
 	gpioMonitor := b.GpioMonitorStart(ctx, ti50.GpioTi50EcRstL)
@@ -118,7 +118,7 @@ func GSCUpdatePostReset(ctx context.Context, s *testing.State) {
 		s.Fatal("GSC turned on the update immediately with post reset")
 	}
 
-	b.GpioApplyStrap(ctx, ti50.CcdDisconnected)
+	b.GpioApplyStrap(ctx, ti50.CCDModeOff)
 
 	b.GpioSet(ctx, ti50.GpioTi50PltRstL, false)
 

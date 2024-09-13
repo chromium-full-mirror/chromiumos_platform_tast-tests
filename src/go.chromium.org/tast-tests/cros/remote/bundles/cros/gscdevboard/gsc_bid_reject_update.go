@@ -117,7 +117,7 @@ func GSCBIDRejectUpdate(ctx context.Context, s *testing.State) {
 	bidImagePath, err := fixture.DownloadToTempFile(ctx, "testBID", gsURL)
 	th.MustSucceed(err, "Failed to download %s", gsURL)
 
-	tpm := b.ResetAndTpmStartup(ctx, i, ti50.FfClamshell, ti50.CcdSuzyQ)
+	tpm := b.ResetAndTpmStartup(ctx, i, ti50.FfClamshell, ti50.CCDModeOn)
 	th.MustSucceed(i.WaitUntilBooted(ctx), "GSC failed to boot")
 	b.WaitUntilCCDConnected(ctx)
 

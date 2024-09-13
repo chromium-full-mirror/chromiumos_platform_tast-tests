@@ -324,7 +324,7 @@ func Ti50Sleep(ctx context.Context, s *testing.State) {
 	b.GpioSet(ctx, ti50.GpioTi50CcdModeL, true)
 	b.GpioSet(ctx, ti50.GpioTi50WriteProtectSenseL, false)
 	b.GpioSet(ctx, ti50.GpioTi50ACPresent, false)
-	b.ResetWithStraps(ctx, testParams.servoMicroStrap, ti50.CcdDisconnected, tpmStrap)
+	b.ResetWithStraps(ctx, testParams.servoMicroStrap, ti50.CCDModeOff, tpmStrap)
 	th.MustSucceed(i.WaitUntilBooted(ctx), "Ti50 revives after reboot")
 	var gpioMonitor utils.GpioMonitorSession
 	if b.GscProperties().HasEcRstFet() {
@@ -400,18 +400,18 @@ func ti50DeepSleep(ctx context.Context, s *testing.State, b utils.DevboardHelper
 		verifyDeepSleep(ctx, s, i, th)
 	}
 
-	s.Log("Simulating SuzyQ inserted")
-	b.GpioApplyStrap(ctx, ti50.CcdSuzyQ)
+	s.Log("Simulating CCD mode")
+	b.GpioApplyStrap(ctx, ti50.CCDModeOn)
 	if verifyDeepWakeup(ctx, s, i, b, gpioMonitor, wakeSourceAdc, nil, "CCD connection") {
 		logCurrent(ctx, s, b, pv, "Awake_CCD")
 		verifyNoSleep(ctx, s, i, th)
-		b.GpioApplyStrap(ctx, ti50.CcdDisconnected)
+		b.GpioApplyStrap(ctx, ti50.CCDModeOff)
 		verifyDeepSleep(ctx, s, i, th)
 		logCurrent(ctx, s, b, pv, "DeepSleep_CCD")
 	} else {
 		// Error already reported by `verifyDeepWakeup`, disconnect SuzyQ and move on to
 		// testing other wake sources.
-		b.GpioApplyStrap(ctx, ti50.CcdDisconnected)
+		b.GpioApplyStrap(ctx, ti50.CCDModeOff)
 	}
 
 	s.Log("Simulating serial console input")
@@ -510,11 +510,11 @@ func ti50NormalSleep(ctx context.Context, s *testing.State, b utils.DevboardHelp
 	}
 
 	s.Log("Simulating SuzyQ inserted")
-	b.GpioApplyStrap(ctx, ti50.CcdSuzyQ)
+	b.GpioApplyStrap(ctx, ti50.CCDModeOn)
 	if verifyNormalWakeup(ctx, s, i, b, gpioMonitor, wakeSourceAdc, nil, "CCD connection") {
 		logCurrent(ctx, s, b, pv, "Awake_AP_CCD")
 		verifyNoSleep(ctx, s, i, th)
-		b.GpioApplyStrap(ctx, ti50.CcdDisconnected)
+		b.GpioApplyStrap(ctx, ti50.CCDModeOff)
 		verifyNormalSleep(ctx, s, i, th)
 		logCurrent(ctx, s, b, pv, "NormalSleep_CCD")
 		// For some reason, after USB disconnect it takes five seconds for Dauntless power
@@ -523,7 +523,7 @@ func ti50NormalSleep(ctx context.Context, s *testing.State, b utils.DevboardHelp
 		logCurrent(ctx, s, b, pv, "NormalSleep_CCD_2")
 	} else {
 		// Error already reported by `verifyNormalWakeup`, move on to testing other wake sources.
-		b.GpioApplyStrap(ctx, ti50.CcdDisconnected)
+		b.GpioApplyStrap(ctx, ti50.CCDModeOff)
 	}
 
 	s.Log("Simulating serial console input")

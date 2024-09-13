@@ -61,7 +61,7 @@ func Ti50BootTime(ctx context.Context, s *testing.State) {
 	b.GpioSet(ctx, ti50.GpioTi50ResetL, true)
 	th.MustSucceed(i.WaitUntilBooted(ctx), "Ti50 revives after reboot")
 	checkGpioMonitor(ctx, s, b, pv, prefix, gpioMonitor, ti50.GpioTi50ResetL)
-	b.GpioApplyStrap(ctx, ti50.CcdSuzyQ)
+	b.GpioApplyStrap(ctx, ti50.CCDModeOn)
 	b.WaitUntilCCDConnected(ctx)
 	checkBootTrace(ctx, s, b, pv, prefix, coldResetStagesRe)
 	checkMetrics(ctx, s, b, pv, prefix)
@@ -71,7 +71,7 @@ func Ti50BootTime(ctx context.Context, s *testing.State) {
 	prefix = "DeepSleep_"
 	th.MustSucceed(i.EcrstOn(ctx), "ecrst")
 	b.GpioSet(ctx, ti50.GpioTi50PltRstL, false)
-	b.GpioApplyStrap(ctx, ti50.CcdDisconnected)
+	b.GpioApplyStrap(ctx, ti50.CCDModeOff)
 	s.Log("Waiting for deep sleep")
 	th.MustSucceed(i.WaitUntilDeepSleep(ctx, ti50.WaitForSleepTimeout), "deep sleep")
 	if b.GscProperties().HasEcRstFet() {
@@ -82,7 +82,7 @@ func Ti50BootTime(ctx context.Context, s *testing.State) {
 	b.GpioSet(ctx, ti50.GpioTi50PltRstL, true)
 	th.MustSucceed(i.WaitUntilBooted(ctx), "Ti50 revives after reboot")
 	checkGpioMonitor(ctx, s, b, pv, prefix, gpioMonitor, ti50.GpioTi50PltRstL)
-	b.GpioApplyStrap(ctx, ti50.CcdSuzyQ)
+	b.GpioApplyStrap(ctx, ti50.CCDModeOn)
 	b.WaitUntilCCDConnected(ctx)
 	checkBootTrace(ctx, s, b, pv, prefix, deepSleepStagesRe)
 	checkMetrics(ctx, s, b, pv, prefix)

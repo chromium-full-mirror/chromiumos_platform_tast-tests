@@ -453,7 +453,7 @@ func Ti50TCG(ctx context.Context, s *testing.State) {
 	th := utils.FirmwareTestingHelper{FirmwareTestingHelperDelegate: s}
 
 	s.Log("Restarting ti50 with SPI straps")
-	b.ResetAndTpmStartupForBus(ctx, i, ti50.TpmBusSpi, ti50.CcdDisconnected, ti50.FfClamshell)
+	b.ResetAndTpmStartupForBus(ctx, i, ti50.TpmBusSpi, ti50.CCDModeOff, ti50.FfClamshell)
 
 	s.Log("Starting TCG tests")
 	testSuite := s.Param().(string)

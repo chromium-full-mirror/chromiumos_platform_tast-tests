@@ -86,8 +86,8 @@ func Ti50RBOX(ctx context.Context, s *testing.State) {
 	i := ti50.MustOpenCrOSImage(ctx, b, s)
 	defer i.Close(ctx)
 
-	s.Logf("Restarting ti50 with %s straps and SuzyQ connected", string(params.formFactor))
-	b.ResetWithStraps(ctx, params.formFactor, ti50.CcdSuzyQ)
+	s.Logf("Restarting ti50 with %s straps and CCD enabled", string(params.formFactor))
+	b.ResetWithStraps(ctx, params.formFactor, ti50.CCDModeOn)
 	th.MustSucceed(i.WaitUntilBooted(ctx), "Ti50 revives after reboot")
 
 	params.mainFunction(ctx, s, b, i)
@@ -129,7 +129,7 @@ func ti50RBOXBox(ctx context.Context, s *testing.State, b utils.DevboardHelper, 
 	}
 
 	s.Log("Disconnecting CCD to allow deep sleep")
-	b.GpioApplyStrap(ctx, ti50.CcdDisconnected)
+	b.GpioApplyStrap(ctx, ti50.CCDModeOff)
 
 	s.Log("Waiting for deep sleep")
 	if err := i.WaitUntilDeepSleep(ctx, deepSleepDelay); err != nil {
@@ -212,7 +212,7 @@ func ti50RBOXClamshell(ctx context.Context, s *testing.State, b utils.DevboardHe
 	}
 
 	s.Log("Disconnecting CCD to allow deep sleep")
-	b.GpioApplyStrap(ctx, ti50.CcdDisconnected)
+	b.GpioApplyStrap(ctx, ti50.CCDModeOff)
 
 	s.Log("Waiting for deep sleep")
 	if err := i.WaitUntilDeepSleep(ctx, deepSleepDelay); err != nil {
@@ -228,8 +228,8 @@ func ti50RBOXClamshell(ctx context.Context, s *testing.State, b utils.DevboardHe
 	s.Log("GSC in deep sleep")
 	verifyEcResetWithKeysInOrder(ctx, s, b, ti50.GpioTi50PowerBtnL, ti50.GpioTi50KsiRefresh, nil)
 
-	s.Log("Reconnecting SuzyQ to prevent deep sleep")
-	b.GpioApplyStrap(ctx, ti50.CcdSuzyQ)
+	s.Log("Re-enabling CCD to prevent deep sleep")
+	b.GpioApplyStrap(ctx, ti50.CCDModeOn)
 	th.MustSucceed(i.WaitUntilBooted(ctx), "Ti50 is awake")
 }
 

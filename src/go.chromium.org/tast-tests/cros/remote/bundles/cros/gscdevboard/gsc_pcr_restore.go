@@ -110,7 +110,7 @@ func GSCPCRRestore(ctx context.Context, s *testing.State) {
 	defer i.Close(ctx)
 
 	s.Log("Restarting ti50 with appropriate straps")
-	tpm := b.ResetAndTpmStartup(ctx, i, ti50.CcdDisconnected, ti50.FfClamshell)
+	tpm := b.ResetAndTpmStartup(ctx, i, ti50.CCDModeOff, ti50.FfClamshell)
 
 	pcrRead := tpm2.PCRRead{
 		PCRSelectionIn: tpm2.TPMLPCRSelection{

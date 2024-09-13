@@ -71,7 +71,7 @@ func GSCTestlab(ctx context.Context, s *testing.State) {
 	th := utils.FirmwareTestingHelper{FirmwareTestingHelperDelegate: s}
 
 	s.Log("(Re)starting GSC")
-	b.ResetAndTpmStartup(ctx, i, ti50.CcdSuzyQ, ti50.FfClamshell)
+	b.ResetAndTpmStartup(ctx, i, ti50.CCDModeOn, ti50.FfClamshell)
 
 	// Ensure the CCD is locked
 	open, err := i.IsCCDOpen(ctx)

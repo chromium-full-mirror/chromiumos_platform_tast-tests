@@ -66,9 +66,9 @@ func GSCUpdateRollback(ctx context.Context, s *testing.State) {
 
 	s.Logf("Image under test %s: %s", currentVer, currentImage)
 
-	s.Log("Simulating insertion of SuzyQ and resetting")
+	s.Log("Enabling CCD mode and resetting")
 	tpmBus := b.GscProperties().PreferredTPMBus()
-	b.ResetAndTpmStartupForBus(ctx, i, tpmBus, ti50.CcdSuzyQ, ti50.FfClamshell)
+	b.ResetAndTpmStartupForBus(ctx, i, tpmBus, ti50.CCDModeOn, ti50.FfClamshell)
 	th.MustSucceed(i.WaitUntilBooted(ctx), "GSC revives after reboot")
 
 	// AP turns on so TPM bus will be active
