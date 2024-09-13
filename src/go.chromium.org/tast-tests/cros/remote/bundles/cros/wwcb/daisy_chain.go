@@ -84,11 +84,13 @@ func DaisyChain(ctx context.Context, s *testing.State) {
 
 	tf := s.FixtValue().(*topology.TestFixture)
 	// Connect a display whose connection path passes through another display.
-	extDispID1, extDispID2, err := tf.Helper.ActivateDeviceByTypeVia(ctx, topology.DeviceTypeMonitor, topology.DeviceTypeMonitor)
+	extDispID2, extDispID1, err := tf.Helper.ActivateDeviceByTypeVia(ctx, topology.DeviceTypeMonitor, topology.DeviceTypeMonitor)
 	if err != nil {
+		s.Fatal("Failed to activate monitor: ", err)
 	}
 
 	if err := tf.Helper.DeactivateDeviceByID(ctx, extDispID2); err != nil {
+		s.Fatal("Failed to deactivate monitor: ", err)
 	}
 
 	if _, ok := s.Var("newTestItem"); ok {
@@ -114,7 +116,7 @@ func DaisyChain(ctx context.Context, s *testing.State) {
 		s.Fatal("Failed to get display ID;it must be greater than or equal to 2 after connect second external display")
 	}
 
-	if err := utils.ControlFixture(ctx, extDispID2, "on"); err != nil {
+	if err := tf.Helper.ActivateDeviceByID(ctx, extDispID2); err != nil {
 		s.Fatal("Failed to connect to the second external display: ", err)
 	}
 

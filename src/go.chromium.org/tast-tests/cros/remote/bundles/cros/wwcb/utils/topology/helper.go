@@ -182,8 +182,8 @@ func (t *Helper) ActivateDeviceByType(ctx context.Context, deviceType labapi.Pas
 	return device, nil
 }
 
-func (t *Helper) pathToDeviceVia(deviceType labapi.PasitHost_Device_Type, predicate devicePredicate) (ConnectionPath, string, string, error) {
-	devices := t.devicesByTypeVia(deviceType, predicate)
+func (t *Helper) pathToDeviceVia(deviceType labapi.PasitHost_Device_Type, viaPredicate devicePredicate) (ConnectionPath, string, string, error) {
+	devices := t.devicesByTypeVia(deviceType, viaPredicate)
 	if len(devices) == 0 {
 		return nil, "", "", errors.New("failed to get path to device")
 	}
@@ -199,8 +199,9 @@ func (t *Helper) pathToDeviceVia(deviceType labapi.PasitHost_Device_Type, predic
 		return nil, "", "", errors.Wrapf(err, "failed to get path to device with ID: %q", deviceID)
 	}
 
+	// Get first device in path that matches viaPredicate.
 	for _, d := range path {
-		if predicate(t.devices[d]) {
+		if viaPredicate(t.devices[d]) {
 			return t.connectionsInPath(path), deviceID, d, nil
 		}
 	}
@@ -208,25 +209,27 @@ func (t *Helper) pathToDeviceVia(deviceType labapi.PasitHost_Device_Type, predic
 }
 
 // devicesByTypeVia returns a list of devices whose path runs through the requested item.
-func (t *Helper) devicesByTypeVia(deviceType labapi.PasitHost_Device_Type, predicate devicePredicate) []string {
+func (t *Helper) devicesByTypeVia(deviceType labapi.PasitHost_Device_Type, viaPredicate devicePredicate) []string {
 	var devices []string
 	for _, d := range t.DevicesByType(deviceType) {
-		predicate := func(device *labapi.PasitHost_Device) bool {
+		idPredicate := func(device *labapi.PasitHost_Device) bool {
 			return device.GetId() == d
 		}
 
 		// Get the path to the device.
 		// Note: We assume that there is only one valid path from the DUT to the device.
-		path, err := t.path(predicate)
+		path, err := t.path(idPredicate)
 		if err != nil {
 			// No path to this device, just ignore it.
 			continue
 		}
 
 		// Check if the path contains the requested component.
-		for _, id := range path {
-			dev := t.devices[id]
-			if predicate(dev) {
+		// Don't include last item in path so we don't end up returning the same device
+		// when via and final device match predicate (e.g. daisy chained monitors).
+		for i := 0; i < len(path)-1; i++ {
+			dev := t.devices[path[i]]
+			if viaPredicate(dev) {
 				devices = append(devices, d)
 				break
 			}

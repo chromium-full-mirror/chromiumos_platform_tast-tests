@@ -115,8 +115,8 @@ func defaultCameraTopology(s *testing.FixtState, hostname string) *labapi.PasitH
 }
 
 func defaultDisplayTopology(s *testing.FixtState, hostname string) *labapi.PasitHost {
-	disp1ID := varOrDefault(s, "ExtDispID1", "2007901")
-	disp2ID := varOrDefault(s, "ExtDispID2", "2007902")
+	disp1ID := varOrDefault(s, "ExtDispID1", "2109001")
+	disp2ID := varOrDefault(s, "ExtDispID2", "2109002")
 	return DefaultDisplayTopology(hostname, disp1ID, disp2ID)
 }
 

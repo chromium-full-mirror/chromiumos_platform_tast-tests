@@ -97,3 +97,53 @@ func TestPaths(t *testing.T) {
 	}
 
 }
+
+func TestPathsVia(t *testing.T) {
+	tests := []struct {
+		name           string
+		topology       *labapi.PasitHost
+		via            devicePredicate
+		find           labapi.PasitHost_Device_Type
+		expectedResult []string
+		wantErr        bool
+	}{
+		{
+			name:           "default_full.m1_via_dock",
+			topology:       DefaultFullTopology("localhost", "dock_switch", "m1_switch", "m2_switch", "eth_switch", "usb1_switch"),
+			via:            func(d *labapi.PasitHost_Device) bool { return d.GetType() == DeviceTypeDockingStation },
+			find:           DeviceTypeMonitor,
+			expectedResult: []string{"localhost", "dock_switch", "dock_1", "m1_switch", "monitor_1"},
+		},
+		{
+			name:           "default_display.m2_via_dock",
+			topology:       DefaultDisplayTopology("localhost", "monitor_switch_1", "monitor_switch_2"),
+			via:            func(d *labapi.PasitHost_Device) bool { return d.GetType() == DeviceTypeMonitor },
+			find:           DeviceTypeMonitor,
+			expectedResult: []string{"localhost", "monitor_switch_1", "monitor_1", "monitor_switch_2", "monitor_2"},
+		},
+	}
+
+	for _, test := range tests {
+		t.Run(test.name, func(t *testing.T) {
+			helper := NewHelper(test.topology, "localhost")
+			devices := helper.devicesByTypeVia(test.find, test.via)
+
+			find := func(d *labapi.PasitHost_Device) bool { return d.GetId() == devices[0] }
+			path, err := helper.path(find)
+			if len(path) != len(test.expectedResult) {
+				t.Errorf("invalid result, got %d devices in path expected %d", len(path), len(test.expectedResult))
+				return
+			}
+			for i := range test.expectedResult {
+				if path[i] != test.expectedResult[i] {
+					t.Errorf("invalid result, got %v expected %v", path[i], test.expectedResult[i])
+					return
+				}
+			}
+			if (err != nil) != test.wantErr {
+				t.Errorf("error = %v, wantErr %v", err, test.wantErr)
+				return
+			}
+		})
+	}
+}
