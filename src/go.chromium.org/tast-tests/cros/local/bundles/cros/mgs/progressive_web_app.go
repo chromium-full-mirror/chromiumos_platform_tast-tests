@@ -18,15 +18,16 @@ import (
 	"go.chromium.org/tast/core/testing"
 )
 
-const port = 8080
-const url = "http://localhost:%v/pwa_index.html"
-const appID = "cpdpbfelifklonephgpieimdpcecgoen"
+const (
+	port  = 8080
+	url   = "http://localhost:%v/pwa_index.html"
+	appID = "cpdpbfelifklonephgpieimdpcecgoen"
+)
 
 func init() {
 	testing.AddTest(&testing.Test{
-		Func:         ProgressiveWebApp,
-		LacrosStatus: testing.LacrosVariantUnneeded,
-		Desc:         "Verify that Progressive Web Apps (PWA) are working in a managed guest session by trying to install and start a test PWA",
+		Func: ProgressiveWebApp,
+		Desc: "Verify that Progressive Web Apps (PWA) are working in a managed guest session by trying to install and start a test PWA",
 		Contacts: []string{
 			"chromeos-kiosk-eng+TAST@google.com",
 		},
@@ -45,7 +46,8 @@ func init() {
 			Key: "feature_id",
 			// Auto-launch MGS.
 			Value: "screenplay-c6a4d9e8-7522-448d-9fda-c8bc7db48507",
-		}}})
+		}},
+	})
 }
 
 func ProgressiveWebApp(ctx context.Context, s *testing.State) {

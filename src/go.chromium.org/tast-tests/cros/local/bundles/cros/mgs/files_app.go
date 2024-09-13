@@ -27,9 +27,8 @@ const fileName = "files_app_chrome_dino.pdf"
 
 func init() {
 	testing.AddTest(&testing.Test{
-		Func:         FilesApp,
-		LacrosStatus: testing.LacrosVariantUnneeded,
-		Desc:         "Verify that files app is working with managed guest sessions by saving and opening a pdf",
+		Func: FilesApp,
+		Desc: "Verify that files app is working with managed guest sessions by saving and opening a pdf",
 		Contacts: []string{
 			"chromeos-kiosk-eng+TAST@google.com",
 			"bfranz@google.com", // Test author

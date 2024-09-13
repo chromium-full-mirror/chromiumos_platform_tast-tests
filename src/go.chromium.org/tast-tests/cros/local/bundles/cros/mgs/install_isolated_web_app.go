@@ -23,9 +23,8 @@ import (
 
 func init() {
 	testing.AddTest(&testing.Test{
-		Func:         InstallIsolatedWebApp,
-		LacrosStatus: testing.LacrosVariantNeeded,
-		Desc:         "Checks if the isolated web apps can be installed for the MGS",
+		Func: InstallIsolatedWebApp,
+		Desc: "Checks if the isolated web apps can be installed for the MGS",
 		Contacts: []string{
 			"iwa-team@google.com",
 		},

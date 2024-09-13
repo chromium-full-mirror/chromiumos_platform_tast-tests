@@ -21,9 +21,8 @@ import (
 
 func init() {
 	testing.AddTest(&testing.Test{
-		Func:         SessionEphemeral,
-		LacrosStatus: testing.LacrosVariantUnneeded,
-		Desc:         "Verify that managed guest session (MGS) is ephermeral by checking that a toggled setting is lost upon session exit",
+		Func: SessionEphemeral,
+		Desc: "Verify that managed guest session (MGS) is ephermeral by checking that a toggled setting is lost upon session exit",
 		Contacts: []string{
 			"chromeos-kiosk-eng+TAST@google.com",
 		},
@@ -42,11 +41,14 @@ func init() {
 			Key: "feature_id",
 			// Verify that settings do not persist after MGS.
 			Value: "screenplay-1aebb48d-76b9-49a5-8d5a-8d924466f208",
-		}}})
+		}},
+	})
 }
 
-const accessibilityPage = "osAccessibility"
-const accessibilityOptions = "Show accessibility options in Quick Settings"
+const (
+	accessibilityPage    = "osAccessibility"
+	accessibilityOptions = "Show accessibility options in Quick Settings"
+)
 
 func SessionEphemeral(ctx context.Context, s *testing.State) {
 	fdms := s.FixtValue().(fakedms.HasFakeDMS).FakeDMS()

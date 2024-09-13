@@ -21,9 +21,8 @@ import (
 
 func init() {
 	testing.AddTest(&testing.Test{
-		Func:         ForceGoogleSafeSearch,
-		LacrosStatus: testing.LacrosVariantNeeded,
-		Desc:         "Verify behavior of ForceGoogleSafeSearch policy on Managed Guest Session",
+		Func: ForceGoogleSafeSearch,
+		Desc: "Verify behavior of ForceGoogleSafeSearch policy on Managed Guest Session",
 		Contacts: []string{
 			"cros-edu-eng@google.com",
 		},

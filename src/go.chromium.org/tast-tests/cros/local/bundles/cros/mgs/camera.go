@@ -18,9 +18,8 @@ import (
 
 func init() {
 	testing.AddTest(&testing.Test{
-		Func:         Camera,
-		LacrosStatus: testing.LacrosVariantUnneeded,
-		Desc:         "Verify that the camera is working in managed guest sessions",
+		Func: Camera,
+		Desc: "Verify that the camera is working in managed guest sessions",
 		Contacts: []string{
 			"chromeos-kiosk-eng+TAST@google.com",
 		},
