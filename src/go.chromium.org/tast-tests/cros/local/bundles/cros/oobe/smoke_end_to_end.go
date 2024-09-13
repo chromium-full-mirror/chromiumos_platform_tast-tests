@@ -365,7 +365,7 @@ func SmokeEndToEnd(ctx context.Context, s *testing.State) {
 			ui.WaitUntilExists(focusedButton),
 			ui.LeftClick(focusedButton),
 		)(ctx); err != nil {
-			s.Fatal("Failed to skip on the AiIntro screen: ", err)
+			s.Fatal("Failed to click next on the AiIntro screen: ", err)
 		}
 	}
 
@@ -386,7 +386,28 @@ func SmokeEndToEnd(ctx context.Context, s *testing.State) {
 			ui.WaitUntilExists(focusedButton),
 			ui.LeftClick(focusedButton),
 		)(ctx); err != nil {
-			s.Fatal("Failed to skip on the GeminiIntro screen: ", err)
+			s.Fatal("Failed to click next on the GeminiIntro screen: ", err)
+		}
+	}
+
+	shouldSkipSplitModifier := false
+	if err := oobeConn.Eval(ctx, "OobeAPI.screens.SplitModifierKeyboardInfoScreen.shouldSkip()", &shouldSkipSplitModifier); err != nil {
+		s.Fatal("Failed to evaluate whether to skip SplitModifierKeyboardInfoScreen screen: ", err)
+	}
+
+	if shouldSkipSplitModifier {
+		s.Log("Skipping the SplitModifierKeyboardInfo screen")
+	} else {
+		s.Log("Waiting for the SplitModifierKeyboardInfo screen")
+		if err := oobeConn.WaitForExprFailOnErr(ctx, "OobeAPI.screens.SplitModifierKeyboardInfoScreen.isReadyForTesting()"); err != nil {
+			s.Fatal("Failed to wait for the SplitModifierKeyboardInfoScreen screen to be visible: ", err)
+		}
+
+		if err := uiauto.Combine("click next on the SplitModifierKeyboardInfoScreen screen",
+			ui.WaitUntilExists(focusedButton),
+			ui.LeftClick(focusedButton),
+		)(ctx); err != nil {
+			s.Fatal("Failed to click next on the SplitModifierKeyboardInfoScreen screen: ", err)
 		}
 	}
 
