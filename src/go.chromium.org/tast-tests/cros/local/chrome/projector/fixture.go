@@ -17,7 +17,6 @@ import (
 	"go.chromium.org/tast-tests/cros/local/chrome"
 	"go.chromium.org/tast-tests/cros/local/chrome/ash"
 	"go.chromium.org/tast-tests/cros/local/chrome/familylink"
-	"go.chromium.org/tast-tests/cros/local/chrome/lacros/lacrosfixt"
 	"go.chromium.org/tast-tests/cros/local/policyutil"
 	"go.chromium.org/tast/core/errors"
 	"go.chromium.org/tast/core/testing"
@@ -69,24 +68,6 @@ func init() {
 				chromeFlags,
 				chrome.GAIALoginPool(dma.CredsFromPool(ui.GaiaPoolDefaultVarName)),
 			}, nil
-		}),
-		SetUpTimeout:    chrome.GAIALoginTimeout + time.Minute,
-		ResetTimeout:    resetTimeout,
-		TearDownTimeout: resetTimeout,
-		PreTestTimeout:  resetTimeout,
-		PostTestTimeout: resetTimeout,
-	})
-
-	testing.AddFixture(&testing.Fixture{
-		Name:         "lacrosProjectorLogin",
-		Desc:         "Regular user login to lacros with Projector feature flag enabled",
-		Contacts:     []string{"hyungtaekim@chromium.org", "cros-projector@google.com"},
-		BugComponent: "b:1088267",
-		Impl: NewProjectorFixture(func(ctx context.Context, s *testing.FixtState) ([]chrome.Option, error) {
-			return lacrosfixt.NewConfig(lacrosfixt.ChromeOptions(
-				chromeFlags,
-				chrome.GAIALoginPool(dma.CredsFromPool(ui.GaiaPoolDefaultVarName)),
-			)).Opts()
 		}),
 		SetUpTimeout:    chrome.GAIALoginTimeout + time.Minute,
 		ResetTimeout:    resetTimeout,

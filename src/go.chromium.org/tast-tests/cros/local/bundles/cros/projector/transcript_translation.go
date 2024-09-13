@@ -10,7 +10,6 @@ import (
 	"time"
 
 	"go.chromium.org/tast-tests/cros/local/chrome"
-	"go.chromium.org/tast-tests/cros/local/chrome/browser"
 	"go.chromium.org/tast-tests/cros/local/chrome/familylink"
 	"go.chromium.org/tast-tests/cros/local/chrome/projector"
 	"go.chromium.org/tast-tests/cros/local/chrome/uiauto"
@@ -24,10 +23,9 @@ import (
 
 func init() {
 	testing.AddTest(&testing.Test{
-		Func:         TranscriptTranslation,
-		LacrosStatus: testing.LacrosVariantUnneeded,
-		Desc:         "Tests transcript translation for various user types",
-		Contacts:     []string{"cros-projector+tast@google.com", "dorianbrandon@google.com"},
+		Func:     TranscriptTranslation,
+		Desc:     "Tests transcript translation for various user types",
+		Contacts: []string{"cros-projector+tast@google.com", "dorianbrandon@google.com"},
 		// ChromeOS > Software > Family > Projector
 		BugComponent: "b:1080013",
 		Attr:         []string{"group:mainline", "informational", "group:hw_agnostic"},
@@ -70,7 +68,7 @@ func TranscriptTranslation(ctx context.Context, s *testing.State) {
 	// Tast test projector.SharedScreencast already tests opening
 	// share links in Lacros, so a Lacros variant is not needed
 	// here.
-	if err := projector.OpenSharedScreencast(ctx, tconn, cr, browser.TypeAsh, sharedScreencast); err != nil {
+	if err := projector.OpenSharedScreencast(ctx, tconn, cr, sharedScreencast); err != nil {
 		s.Fatal("Failed to open shared screencast: ", err)
 	}
 

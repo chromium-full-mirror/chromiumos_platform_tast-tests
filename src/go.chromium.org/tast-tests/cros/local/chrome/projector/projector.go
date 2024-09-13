@@ -233,13 +233,13 @@ func DeleteScreencastItems(ctx context.Context, tconn *chrome.TestConn) error {
 }
 
 // OpenSharedScreencast opens a new browser window and launches the Projector app from a share link.
-func OpenSharedScreencast(ctx context.Context, tconn *chrome.TestConn, cr *chrome.Chrome, browserType browser.Type, sharedScreencastLink string) error {
+func OpenSharedScreencast(ctx context.Context, tconn *chrome.TestConn, cr *chrome.Chrome, sharedScreencastLink string) error {
 	ctxForCleanUp := ctx
 	ctx, cancel := ctxutil.Shorten(ctx, 10*time.Second)
 	defer cancel()
 
 	// Set up browser.
-	br, closeBrowser, err := browserfixt.SetUp(ctx, cr, browserType)
+	br, closeBrowser, err := browserfixt.SetUp(ctx, cr, browser.TypeAsh)
 	if err != nil {
 		return errors.Wrap(err, "failed to set up browser")
 	}
