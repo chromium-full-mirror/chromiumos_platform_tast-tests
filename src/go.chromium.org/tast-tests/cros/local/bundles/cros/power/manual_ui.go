@@ -27,7 +27,7 @@ import (
 func init() {
 	testing.AddTest(&testing.Test{
 		Func:         ManualUI,
-		LacrosStatus: testing.LacrosVariantExists,
+		LacrosStatus: testing.LacrosVariantUnneeded,
 		Desc:         "Allow manual power test to be performed and the test results to be collected to evaluate power metrics",
 		Contacts:     []string{"chromeos-power-team@google.com"},
 		BugComponent: "b:1361410", // ChromeOS > Platform > System > Core Power
@@ -49,22 +49,6 @@ func init() {
 			{
 				Name:    "ash_gaia",
 				Fixture: "powerAshGAIA",
-			},
-			{
-				Name:              "lacros",
-				Fixture:           "powerLacros",
-				ExtraSoftwareDeps: []string{"lacros"},
-			},
-			{
-				Name:              "lacros_arc",
-				Fixture:           "powerLacrosARC",
-				ExtraSoftwareDeps: []string{"lacros"},
-			},
-
-			{
-				Name:              "lacros_gaia",
-				Fixture:           "powerLacrosGAIA",
-				ExtraSoftwareDeps: []string{"lacros"},
 			},
 		},
 	})
