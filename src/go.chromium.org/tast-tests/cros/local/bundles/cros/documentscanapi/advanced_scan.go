@@ -110,6 +110,7 @@ func AdvancedScan(ctx context.Context, s *testing.State) {
 		s.Fatal("Failed to connect to Test API: ", err)
 	}
 	defer faillog.DumpUITreeOnError(cleanupCtx, s.OutDir(), s.HasError, tconn)
+	defer faillog.DumpDeviceEventLogOnError(cleanupCtx, s.OutDir(), s.HasError, tconn, "printer,usb")
 
 	printer, err := usbprinter.Start(ctx,
 		usbprinter.WithIPPUSBDescriptors(),

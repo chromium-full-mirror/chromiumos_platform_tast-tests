@@ -14,6 +14,8 @@ import (
 	"path/filepath"
 	"time"
 
+	"go.chromium.org/tast-tests/cros/local/chrome"
+	"go.chromium.org/tast-tests/cros/local/chrome/uiauto/faillog"
 	"go.chromium.org/tast-tests/cros/local/printing/document"
 	"go.chromium.org/tast-tests/cros/local/printing/lp"
 	"go.chromium.org/tast-tests/cros/local/printing/usbprinter"
@@ -44,6 +46,14 @@ func RunPrintTest(ctx context.Context, s *testing.State,
 	cleanupCtx := ctx
 	ctx, cancel := ctxutil.Shorten(ctx, 5*time.Second)
 	defer cancel()
+
+	if cr, ok := s.FixtValue().(chrome.HasChrome); ok {
+		tconn, err := cr.Chrome().TestAPIConn(cleanupCtx)
+		if err != nil {
+			s.Fatal("Failed to create Test API connection: ", err)
+		}
+		defer faillog.DumpDeviceEventLogOnError(cleanupCtx, s.OutDir(), s.HasError, tconn, "printer,usb")
+	}
 
 	pr, err := usbprinter.Start(ctx, opts...)
 	if err != nil {

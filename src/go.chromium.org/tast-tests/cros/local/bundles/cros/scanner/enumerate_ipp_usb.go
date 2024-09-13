@@ -11,6 +11,8 @@ import (
 
 	lpb "go.chromium.org/chromiumos/system_api/lorgnette_proto"
 
+	"go.chromium.org/tast-tests/cros/local/chrome"
+	"go.chromium.org/tast-tests/cros/local/chrome/uiauto/faillog"
 	"go.chromium.org/tast-tests/cros/local/printing/usbprinter"
 	"go.chromium.org/tast-tests/cros/local/scanner/lorgnette"
 	"go.chromium.org/tast/core/ctxutil"
@@ -170,6 +172,17 @@ func runEnumerationTest(ctx context.Context, s *testing.State, info scannerInfo)
 }
 
 func EnumerateIPPUSB(ctx context.Context, s *testing.State) {
+	cleanupCtx := ctx
+	ctx, cancel := ctxutil.Shorten(ctx, 5*time.Second)
+	defer cancel()
+
+	cr := s.FixtValue().(chrome.HasChrome).Chrome()
+	tconn, err := cr.TestAPIConn(cleanupCtx)
+	if err != nil {
+		s.Fatal("Failed to create Test API connection: ", err)
+	}
+	defer faillog.DumpDeviceEventLogOnError(cleanupCtx, s.OutDir(), s.HasError, tconn, "printer,usb")
+
 	for _, info := range []scannerInfo{{
 		name: "Non-IPP USB printer",
 		options: []usbprinter.Option{
