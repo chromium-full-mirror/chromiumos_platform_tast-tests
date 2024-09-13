@@ -131,12 +131,15 @@ func PSimNetworkName(ctx context.Context, s *testing.State) {
 	         optionNode.innerText;`
 
 	var title string
-	if err := app.EvalJSWithShadowPiercer(ctx, cr, expr, &title); err != nil {
+	// Network AP may not show up immediately so poll until network AP shows up.
+	if err := testing.Poll(ctx, func(ctx context.Context) error {
+		return app.EvalJSWithShadowPiercer(ctx, cr, expr, &title)
+	}, &testing.PollOptions{Interval: time.Second, Timeout: 10 * time.Second}); err != nil {
 		// TODO(b/333458823): Remove this function once we no longer need it for debugging.
 		if err := dumpNetworkListHTMLTree(cleanupCtx, app, cr, s.OutDir()); err != nil {
 			s.Logf("Failed to dump network list HTML: %q", err)
 		}
-		s.Fatal("Failed to fetch title: ", err)
+		s.Fatal("Failed to wait for network AP to show up: ", err)
 	}
 
 	title = strings.TrimSpace(title)
