@@ -10,8 +10,6 @@ const (
 	CitrixLaunched = "citrixLaunched"
 	// VmwareLaunched is a fixture name.
 	VmwareLaunched = "vmwareLaunched"
-	// LacrosCitrixLaunched is a fixture name.
-	LacrosCitrixLaunched = "lacrosCitrixLaunched"
 )
 
 // Fixtures defined in go.chromium.org/tast-tests/cros/local/vdi/fixtures/vdi_msg.go.
@@ -20,8 +18,6 @@ const (
 	MgsCitrixLaunched = "mgsCitrixLaunched"
 	// MgsVmwareLaunched is a fixture name.
 	MgsVmwareLaunched = "mgsVmwareLaunched"
-	// MgsLacrosCitrixLaunched is a fixture name.
-	MgsLacrosCitrixLaunched = "mgsLacrosCitrixLaunched"
 )
 
 // Fixtures defined in go.chromium.org/tast-tests/cros/local/vdi/fixtures/vdi_kiosk.go.
@@ -30,6 +26,4 @@ const (
 	KioskCitrixLaunched = "kioskCitrixLaunched"
 	// KioskVmwareLaunched is a fixture name.
 	KioskVmwareLaunched = "kioskVmwareLaunched"
-	// KioskLacrosCitrixLaunched is a fixture name.
-	KioskLacrosCitrixLaunched = "kioskLacrosCitrixLaunched"
 )

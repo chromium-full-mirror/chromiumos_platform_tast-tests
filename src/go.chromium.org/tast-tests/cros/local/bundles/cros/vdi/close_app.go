@@ -26,9 +26,8 @@ type closeAppParams struct {
 
 func init() {
 	testing.AddTest(&testing.Test{
-		Func:         CloseApp,
-		LacrosStatus: testing.LacrosVariantExists,
-		Desc:         "Test closes an application by two methods in VDI sessions in user session, Kiosk and MGS",
+		Func: CloseApp,
+		Desc: "Test closes an application by two methods in VDI sessions in user session, Kiosk and MGS",
 		Contacts: []string{
 			"cros-engprod-muc@google.com",
 			"kamilszarek@google.com", // VDI testing infrastructure owner
@@ -55,16 +54,6 @@ func init() {
 				},
 			},
 			{
-				Name:              "lacros_citrix",
-				Fixture:           fixture.LacrosCitrixLaunched,
-				ExtraAttr:         []string{"group:vdi_limited"},
-				ExtraSoftwareDeps: []string{"lacros"},
-				Val: closeAppParams{
-					AppName:     "Notepad",
-					AppOpenText: []string{"Notepad", "Untitled"},
-				},
-			},
-			{
 				Name:      "kiosk_citrix",
 				Fixture:   fixture.KioskCitrixLaunched,
 				ExtraAttr: []string{"group:vdi_limited"},
@@ -74,29 +63,9 @@ func init() {
 				},
 			},
 			{
-				Name:              "kiosk_lacros_citrix",
-				Fixture:           fixture.KioskLacrosCitrixLaunched,
-				ExtraAttr:         []string{"group:vdi_limited"},
-				ExtraSoftwareDeps: []string{"lacros"},
-				Val: closeAppParams{
-					AppName:     "Notepad",
-					AppOpenText: []string{"Notepad", "Untitled"},
-				},
-			},
-			{
 				Name:      "mgs_citrix",
 				Fixture:   fixture.MgsCitrixLaunched,
 				ExtraAttr: []string{"group:vdi_limited"},
-				Val: closeAppParams{
-					AppName:     "Notepad",
-					AppOpenText: []string{"Notepad", "Untitled"},
-				},
-			},
-			{
-				Name:              "mgs_lacros_citrix",
-				Fixture:           fixture.MgsLacrosCitrixLaunched,
-				ExtraAttr:         []string{"group:vdi_limited"},
-				ExtraSoftwareDeps: []string{"lacros"},
 				Val: closeAppParams{
 					AppName:     "Notepad",
 					AppOpenText: []string{"Notepad", "Untitled"},

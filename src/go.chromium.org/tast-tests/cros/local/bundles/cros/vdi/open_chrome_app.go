@@ -20,9 +20,8 @@ import (
 
 func init() {
 	testing.AddTest(&testing.Test{
-		Func:         OpenChromeApp,
-		LacrosStatus: testing.LacrosVariantExists,
-		Desc:         "Test opens Google Chrome application in VDI sessions in user session, Kiosk and MGS",
+		Func: OpenChromeApp,
+		Desc: "Test opens Google Chrome application in VDI sessions in user session, Kiosk and MGS",
 		Contacts: []string{
 			"cros-engprod-muc@google.com",
 			"kamilszarek@google.com", // Test author
@@ -52,27 +51,13 @@ func init() {
 				ExtraAttr: []string{"group:vdi_limited"},
 			},
 			{
-				Name:              "lacros_citrix",
-				Fixture:           fixture.LacrosCitrixLaunched,
-				ExtraAttr:         []string{"group:vdi_limited"},
-				ExtraSoftwareDeps: []string{"lacros"},
-			},
-			{
 				Name:    "vmware",
 				Fixture: fixture.VmwareLaunched,
 			},
-			// TODO(b/269235077) add vmware lacros variant when fixture is available
 			{
 				Name:      "kiosk_citrix",
 				Fixture:   fixture.KioskCitrixLaunched,
 				ExtraAttr: []string{"group:vdi_limited"},
-			},
-
-			{
-				Name:              "kiosk_lacros_citrix",
-				Fixture:           fixture.KioskLacrosCitrixLaunched,
-				ExtraAttr:         []string{"group:vdi_limited"},
-				ExtraSoftwareDeps: []string{"lacros"},
 			},
 			// b/207122370
 			// Vmware in Kiosk mode does not receive Ctrl+w to close tab.
@@ -80,23 +65,15 @@ func init() {
 				Name:    "kiosk_vmware",
 				Fixture: fixture.KioskVmwareLaunched,
 			},
-			// TODO(b/269235077) add vmware lacros kiosk variant when fixture is available
 			{
 				Name:      "mgs_citrix",
 				Fixture:   fixture.MgsCitrixLaunched,
 				ExtraAttr: []string{"group:vdi_limited"},
 			},
 			{
-				Name:              "mgs_lacros_citrix",
-				Fixture:           fixture.MgsLacrosCitrixLaunched,
-				ExtraAttr:         []string{"group:vdi_limited"},
-				ExtraSoftwareDeps: []string{"lacros"},
-			},
-			{
 				Name:    "mgs_vmware",
 				Fixture: fixture.MgsVmwareLaunched,
 			},
-			// TODO(b/269235077) add vmware lacros MGS variant when fixture is available
 		},
 	})
 }

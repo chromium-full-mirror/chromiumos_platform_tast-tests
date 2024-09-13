@@ -25,9 +25,8 @@ import (
 
 func init() {
 	testing.AddTest(&testing.Test{
-		Func:         CopyPaste,
-		LacrosStatus: testing.LacrosVariantExists,
-		Desc:         "Copy and paste text between Notepad VDI application and native text editor application",
+		Func: CopyPaste,
+		Desc: "Copy and paste text between Notepad VDI application and native text editor application",
 		Contacts: []string{
 			"cros-engprod-muc@google.com",
 			"hendrich@google.com", // Test author
@@ -48,26 +47,14 @@ func init() {
 		Requirements: []string{"screenplay-bbe00399-7b52-49ec-8402-9440c89f412c", "screenplay-ff8ef471-f3ce-4252-bee1-e7afcacd242a"},
 		Params: []testing.Param{
 			{
-				Name:      "citrix",
-				Fixture:   fixture.CitrixLaunched,
+				Name:    "citrix",
+				Fixture: fixture.CitrixLaunched,
 				// ExtraAttr: []string{"group:vdi_limited"}, TODO(b/263381075) fix failing test
 			},
 			{
-				Name:              "lacros_citrix",
-				Fixture:           fixture.LacrosCitrixLaunched,
-				// ExtraAttr:         []string{"group:vdi_limited"}, TODO(b/263381075) fix failing test
-				ExtraSoftwareDeps: []string{"lacros"},
-			},
-			{
-				Name:      "mgs_citrix",
-				Fixture:   fixture.MgsCitrixLaunched,
+				Name:    "mgs_citrix",
+				Fixture: fixture.MgsCitrixLaunched,
 				// ExtraAttr: []string{"group:vdi_limited"}, TODO(b/263381075) fix failing test
-			},
-			{
-				Name:              "mgs_lacros_citrix",
-				Fixture:           fixture.MgsLacrosCitrixLaunched,
-				// ExtraAttr:         []string{"group:vdi_limited"}, TODO(b/263381075) fix failing test
-				ExtraSoftwareDeps: []string{"lacros"},
 			},
 			// TODO(b/263381075): VMWare doesn't have as simple apps as notepad.
 		},

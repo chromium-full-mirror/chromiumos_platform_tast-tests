@@ -26,9 +26,8 @@ type desktopData struct {
 
 func init() {
 	testing.AddTest(&testing.Test{
-		Func:         OpenDesktop,
-		LacrosStatus: testing.LacrosVariantExists,
-		Desc:         "Test opens Desktop in VDI sessions in user session, Kiosk and MGS",
+		Func: OpenDesktop,
+		Desc: "Test opens Desktop in VDI sessions in user session, Kiosk and MGS",
 		Contacts: []string{
 			"cros-engprod-muc@google.com",
 			"kamilszarek@google.com", // Test author
@@ -55,16 +54,6 @@ func init() {
 				ExtraAttr: []string{"group:vdi_limited"},
 			},
 			{
-				Name:    "lacros_citrix",
-				Fixture: fixture.LacrosCitrixLaunched,
-				Val: desktopData{
-					DesktopName:   "WindowsServer2019",
-					RunDialogKeys: "Search+R",
-				},
-				ExtraAttr:         []string{"group:vdi_limited"},
-				ExtraSoftwareDeps: []string{"lacros"},
-			},
-			{
 				Name:    "vmware",
 				Fixture: fixture.VmwareLaunched,
 				Val: desktopData{
@@ -72,7 +61,6 @@ func init() {
 					RunDialogKeys: "Ctrl+Search+R",
 				},
 			},
-			// TODO(b/269235077) add vmware lacros variant when fixture is available
 			{
 				Name:    "mgs_citrix",
 				Fixture: fixture.MgsCitrixLaunched,
@@ -83,16 +71,6 @@ func init() {
 				ExtraAttr: []string{"group:vdi_limited"},
 			},
 			{
-				Name:    "mgs_lacros_citrix",
-				Fixture: fixture.MgsLacrosCitrixLaunched,
-				Val: desktopData{
-					DesktopName:   "WindowsServer2019",
-					RunDialogKeys: "Search+R",
-				},
-				ExtraAttr:         []string{"group:vdi_limited"},
-				ExtraSoftwareDeps: []string{"lacros"},
-			},
-			{
 				Name:    "mgs_vmware",
 				Fixture: fixture.MgsVmwareLaunched,
 				Val: desktopData{
@@ -100,7 +78,6 @@ func init() {
 					RunDialogKeys: "Ctrl+Search+R",
 				},
 			},
-			// TODO(b/269235077) add vmware lacros MGS variant when fixture is available
 		},
 		Data: []string{"toolbar_buttons_icon.png"},
 	})

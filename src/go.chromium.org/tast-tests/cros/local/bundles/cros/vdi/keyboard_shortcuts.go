@@ -28,9 +28,8 @@ type keyboardShortcutsParams struct {
 
 func init() {
 	testing.AddTest(&testing.Test{
-		Func:         KeyboardShortcuts,
-		LacrosStatus: testing.LacrosVariantExists,
-		Desc:         "Test checks that certain keystrokes used for e.g. copy-paste and printing are carried into VDI sessions",
+		Func: KeyboardShortcuts,
+		Desc: "Test checks that certain keystrokes used for e.g. copy-paste and printing are carried into VDI sessions",
 		Contacts: []string{
 			"pwa-commercial@google.com",
 			"kamilszarek@google.com", // VDI testing infrastructure owner
@@ -58,17 +57,6 @@ func init() {
 				},
 			},
 			{
-				Name:              "lacros_citrix",
-				ExtraAttr:         []string{"group:vdi_limited"},
-				ExtraSoftwareDeps: []string{"lacros"},
-				Fixture:           fixture.LacrosCitrixLaunched,
-				Val: keyboardShortcutsParams{
-					DesktopName:   "WindowsServer2019",
-					RunDialogKeys: "Search+R",
-					StartMenuText: []string{"Citrix", "Workspace"},
-				},
-			},
-			{
 				Name:    "vmware",
 				Fixture: fixture.VmwareLaunched,
 				Val: keyboardShortcutsParams{
@@ -77,22 +65,10 @@ func init() {
 					StartMenuText: []string{"Most", "used"},
 				},
 			},
-			// TODO(b/269235077) add vmware lacros variant when fixture is available
 			{
 				Name:      "mgs_citrix",
 				Fixture:   fixture.MgsCitrixLaunched,
 				ExtraAttr: []string{"group:vdi_limited"},
-				Val: keyboardShortcutsParams{
-					DesktopName:   "WindowsServer2019",
-					RunDialogKeys: "Search+R",
-					StartMenuText: []string{"Citrix", "Workspace"},
-				},
-			},
-			{
-				Name:              "mgs_lacros_citrix",
-				Fixture:           fixture.MgsLacrosCitrixLaunched,
-				ExtraAttr:         []string{"group:vdi_limited"},
-				ExtraSoftwareDeps: []string{"lacros"},
 				Val: keyboardShortcutsParams{
 					DesktopName:   "WindowsServer2019",
 					RunDialogKeys: "Search+R",
@@ -108,7 +84,6 @@ func init() {
 					StartMenuText: []string{"Most", "used"},
 				},
 			},
-			// TODO(b/269235077) add vmware lacros MGS  variant when fixture is available
 		},
 	})
 }

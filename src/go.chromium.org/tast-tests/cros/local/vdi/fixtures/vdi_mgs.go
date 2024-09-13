@@ -16,7 +16,6 @@ import (
 	"go.chromium.org/tast-tests/cros/local/apps"
 	"go.chromium.org/tast-tests/cros/local/chrome"
 	"go.chromium.org/tast-tests/cros/local/chrome/ash"
-	"go.chromium.org/tast-tests/cros/local/chrome/lacros/lacrosproc"
 	"go.chromium.org/tast-tests/cros/local/chrome/uiauto/faillog"
 	"go.chromium.org/tast-tests/cros/local/input"
 	"go.chromium.org/tast-tests/cros/local/mgs"
@@ -47,43 +46,6 @@ func init() {
 			vdiUsernameKey:        "vdi.citrix_username",
 			vdiPasswordKey:        "vdi.citrix_password",
 			useTape:               true,
-		},
-		Vars: []string{
-			tape.ServiceAccountVar,
-			"vdi.citrix_url",
-			"vdi.citrix_username",
-			"vdi.citrix_password",
-			"uidetection.key_type",
-			"uidetection.key",
-			"uidetection.server",
-		},
-		SetUpTimeout:    chrome.EnrollmentAndLoginTimeout + vdiApps.VDILoginTimeout,
-		ResetTimeout:    chrome.ResetTimeout,
-		TearDownTimeout: time.Minute,
-		PostTestTimeout: 25 * time.Second,
-		Data:            citrix.CitrixData,
-		Parent:          fixture.FakeDMSEnrolled,
-	})
-
-	testing.AddFixture(&testing.Fixture{
-		Name: fixture.MgsLacrosCitrixLaunched,
-		Desc: "Starts DUT fake enrolled in MGS mode with Lacros enabled with Citrix application installed, started and logged in",
-		Contacts: []string{
-			"kamilszare@google.com",
-			"cros-engprod-muc@google.com",
-		},
-		BugComponent: "b:1170223", // ChromeOS > Software > Commercial (Enterprise) > EngProd
-		Impl: &mgsFixtureState{
-			vdiApplicationToStart: apps.Citrix,
-			vdiConnector:          &citrix.Connector{},
-			vdiServerKey:          "vdi.citrix_url",
-			vdiUsernameKey:        "vdi.citrix_username",
-			vdiPasswordKey:        "vdi.citrix_password",
-			useTape:               true,
-			extraPublicAccountPolicies: []policy.Policy{
-				&policy.LacrosAvailability{Val: "lacros_only"},
-			},
-			lacros: true,
 		},
 		Vars: []string{
 			tape.ServiceAccountVar,
@@ -157,8 +119,6 @@ type mgsFixtureState struct {
 	tapeAccountManager *tape.GenericAccountManager
 	// extraPublicAccountPolicies holds a policies that will be applied.
 	extraPublicAccountPolicies []policy.Policy
-	// lacros is a flag indicating whether fixture implementation suppose to run Lacros.
-	lacros bool
 }
 
 // Credentials used for authenticating the test user.
@@ -208,15 +168,6 @@ func (v *mgsFixtureState) SetUp(ctx context.Context, s *testing.FixtState) inter
 			s.Error("Failed to take screenshot: ", err)
 		}
 		s.Fatal("Failed to start Chrome in mgs session: ", err)
-	}
-
-	if v.lacros {
-		// If we run Lacros flavor fail fast if Lacros is not up.
-		testConn, err := cr.TestAPIConn(ctx)
-		_, err = lacrosproc.Root(ctx, testConn)
-		if err != nil {
-			s.Fatal("Failed to get lacros proc: ", err)
-		}
 	}
 
 	ok = false

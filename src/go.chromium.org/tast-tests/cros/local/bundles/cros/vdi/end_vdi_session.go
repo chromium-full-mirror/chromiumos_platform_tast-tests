@@ -41,9 +41,8 @@ var citrixData = endVdiSessionData{
 
 func init() {
 	testing.AddTest(&testing.Test{
-		Func:         EndVdiSession,
-		LacrosStatus: testing.LacrosVariantExists,
-		Desc:         "Test verifies the behaviour of ending a VDI session",
+		Func: EndVdiSession,
+		Desc: "Test verifies the behaviour of ending a VDI session",
 		Contacts: []string{
 			"cros-engprod-muc@google.com",
 			"giovax@google.com", // Test author
@@ -65,37 +64,16 @@ func init() {
 				ExtraAttr: []string{"group:vdi_limited"},
 			},
 			{
-				Name:              "lacros_citrix",
-				Fixture:           fixture.LacrosCitrixLaunched,
-				Val:               citrixData,
-				ExtraAttr:         []string{"group:vdi_limited"},
-				ExtraSoftwareDeps: []string{"lacros"},
-			},
-			{
 				Name:      "kiosk_citrix",
 				Fixture:   fixture.KioskCitrixLaunched,
 				Val:       citrixData,
 				ExtraAttr: []string{"group:vdi_limited"},
 			},
 			{
-				Name:              "kiosk_lacros_citrix",
-				Fixture:           fixture.KioskLacrosCitrixLaunched,
-				Val:               citrixData,
-				ExtraAttr:         []string{"group:vdi_limited"},
-				ExtraSoftwareDeps: []string{"lacros"},
-			},
-			{
 				Name:      "mgs_citrix",
 				Fixture:   fixture.MgsCitrixLaunched,
 				Val:       citrixData,
 				ExtraAttr: []string{"group:vdi_limited"},
-			},
-			{
-				Name:              "mgs_lacros_citrix",
-				Fixture:           fixture.MgsLacrosCitrixLaunched,
-				Val:               citrixData,
-				ExtraAttr:         []string{"group:vdi_limited"},
-				ExtraSoftwareDeps: []string{"lacros"},
 			},
 			// TODO(b/270322387) add VMware implementations
 		},
