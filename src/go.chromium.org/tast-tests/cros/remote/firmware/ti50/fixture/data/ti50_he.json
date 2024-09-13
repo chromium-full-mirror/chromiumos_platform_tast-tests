@@ -1,25 +1,28 @@
 {
   "pins": [
     {
-      "alias_of": "PltRst",
-      "level": false,
-      "mode": "OpenDrain",
       "name": "PLT_RST_L",
-      "pull_mode": "PullUp"
+      "mode": "OpenDrain",
+      "level": false,
+      "pull_mode": "PullUp",
+      "alias_of": "PltRst"
     }
   ],
   "uarts": [
     {
-      "alias_of": "",
-      "name": "AP"
+      "name": "AP",
+      "alias_of": ""
     },
     {
-      "alias_of": "",
-      "name": "EC"
+      "name": "EC",
+      "alias_of": ""
     },
     {
-      "alias_of": "",
-      "name": "FPMCU"
+      "name": "FPMCU",
+      "alias_of": ""
     }
-  ]
+  ],
+  "requires": {
+    "chip": "host_emulation"
+  }
 }

@@ -1,244 +1,229 @@
 {
   "pins": [
     {
-      "name": "SW_STRAP1"
-    },
-    {
-      "name": "SW_STRAP2"
-    },
-    {
-      "name": "SW_STRAP3"
-    },
-    {
-      "level": false,
-      "mode": "PushPull",
-      "name": "TAP_STRAP0"
-    },
-    {
-      "alias_of": "IOA0",
+      "name": "UART_AP_TX_DBG_RX",
       "mode": "Alternate",
-      "name": "UART_AP_TX_DBG_RX"
+      "alias_of": "IOA0"
     },
     {
-      "alias_of": "IOA1",
+      "name": "UART_DBG_TX_AP_RX",
       "mode": "Alternate",
-      "name": "UART_DBG_TX_AP_RX"
+      "alias_of": "IOA1"
     },
     {
-      "alias_of": "IOA2",
-      "level": false,
+      "name": "WP_SENSE_L",
       "mode": "PushPull",
-      "name": "WP_SENSE_L"
+      "level": false,
+      "alias_of": "IOA2"
     },
     {
-      "alias_of": "IOA3",
-      "mode": "Input",
       "name": "GSC_AP_SPI_SEL",
-      "pull_mode": "PullUp"
-    },
-    {
-      "alias_of": "IOA4",
-      "mode": "Alternate",
-      "name": "UART_DBG_TX_FPMCU_RX"
-    },
-    {
-      "alias_of": "IOA5",
-      "mode": "Alternate",
-      "name": "UART_FPMCU_TX_DBG_RX"
-    },
-    {
-      "alias_of": "IOA6",
       "mode": "Input",
+      "pull_mode": "PullUp",
+      "alias_of": "IOA3"
+    },
+    {
+      "name": "UART_FPMCU_TX_DBG_RX",
+      "mode": "Alternate",
+      "alias_of": "IOA4"
+    },
+    {
+      "name": "UART_DBG_TX_FPMCU_RX",
+      "mode": "Alternate",
+      "alias_of": "IOA5"
+    },
+    {
       "name": "GSC_AP_INT_L",
-      "pull_mode": "PullUp"
+      "mode": "Input",
+      "pull_mode": "PullUp",
+      "alias_of": "IOA6"
     },
     {
-      "alias_of": "IOA7",
-      "name": "DEVICE_I2C_SDA"
+      "name": "DEVICE_I2C_SDA",
+      "alias_of": "IOA7"
     },
     {
-      "alias_of": "IOA8",
-      "name": "DEVICE_I2C_SCL"
+      "name": "DEVICE_I2C_SCL",
+      "alias_of": "IOA8"
     },
     {
-      "alias_of": "IOB4",
+      "name": "UART_EC_TX_DBG_RX",
       "mode": "Alternate",
-      "name": "UART_EC_TX_DBG_RX"
+      "alias_of": "IOB4"
     },
     {
-      "alias_of": "IOB5",
-      "mode": "Alternate",
       "name": "UART_DBG_TX_EC_RX",
-      "pull_mode": "None"
+      "mode": "Alternate",
+      "pull_mode": "None",
+      "alias_of": "IOB5"
     },
     {
-      "alias_of": "IOB6",
-      "level": false,
-      "mode": "PushPull",
       "name": "EC_GSC_PACKET_MODE",
-      "pull_mode": "None"
+      "mode": "PushPull",
+      "level": false,
+      "pull_mode": "None",
+      "alias_of": "IOB6"
     },
     {
-      "alias_of": "IOB7",
-      "mode": "Input",
       "name": "GSC_EC_SPI_SEL",
-      "pull_mode": "PullUp"
+      "mode": "Input",
+      "pull_mode": "PullUp",
+      "alias_of": "IOB7"
     },
     {
-      "alias_of": "IOB8",
-      "mode": "Input",
       "name": "EN_I2C_DBG_PWR_L",
-      "pull_mode": "PullUp"
+      "mode": "Input",
+      "pull_mode": "PullUp",
+      "alias_of": "IOB8"
     },
     {
-      "alias_of": "IOB9",
-      "mode": "Alternate",
       "name": "SMBUS_SCL",
-      "pull_mode": "PullUp"
+      "mode": "Alternate",
+      "pull_mode": "PullUp",
+      "alias_of": "IOB9"
     },
     {
-      "alias_of": "IOB10",
-      "mode": "Alternate",
       "name": "SMBUS_SDA",
-      "pull_mode": "PullUp"
+      "mode": "Alternate",
+      "pull_mode": "PullUp",
+      "alias_of": "IOB10"
     },
     {
-      "alias_of": "IOB11",
-      "mode": "Alternate",
       "name": "I2C_DBG_SDA",
-      "pull_mode": "PullUp"
+      "mode": "Alternate",
+      "pull_mode": "PullUp",
+      "alias_of": "IOB11"
     },
     {
-      "alias_of": "IOB12",
-      "mode": "Alternate",
       "name": "I2C_DBG_SCL",
-      "pull_mode": "PullUp"
-    },
-    {
-      "alias_of": "IOC3",
       "mode": "Alternate",
-      "name": "GSC_UART_RX"
+      "pull_mode": "PullUp",
+      "alias_of": "IOB12"
     },
     {
-      "alias_of": "IOC4",
+      "name": "GSC_UART_RX",
       "mode": "Alternate",
-      "name": "GSC_UART_TX"
+      "alias_of": "IOC3"
     },
     {
-      "alias_of": "IOC5",
-      "level": false,
-      "mode": "PushPull",
-      "name": "CHASSIS_OPEN"
+      "name": "GSC_UART_TX",
+      "mode": "Alternate",
+      "alias_of": "IOC4"
     },
     {
-      "alias_of": "IOC6",
-      "level": false,
-      "mode": "OpenDrain",
+      "name": "CHASSIS_OPEN",
+      "alias_of": "IOC5"
+    },
+    {
       "name": "PWM3",
-      "pull_mode": "PullUp"
+      "mode": "OpenDrain",
+      "level": false,
+      "pull_mode": "PullUp",
+      "alias_of": "IOC6"
     },
     {
-      "alias_of": "IOC10",
-      "level": false,
-      "mode": "OpenDrain",
       "name": "PLT_RST_L",
-      "pull_mode": "PullUp"
+      "mode": "OpenDrain",
+      "level": false,
+      "pull_mode": "PullUp",
+      "alias_of": "IOC10"
     },
     {
-      "alias_of": "IOC11",
-      "mode": "Input",
       "name": "SYS_RST_L",
-      "pull_mode": "PullUp"
+      "mode": "Input",
+      "pull_mode": "PullUp",
+      "alias_of": "IOC11"
     },
     {
-      "alias_of": "IOC12",
-      "level": true,
-      "mode": "OpenDrain",
       "name": "CCD_MODE_ODL",
-      "pull_mode": "PullUp"
+      "mode": "OpenDrain",
+      "level": true,
+      "pull_mode": "PullUp",
+      "alias_of": "IOC12"
     },
     {
-      "alias_of": "IOR0",
-      "level": true,
-      "mode": "OpenDrain",
       "name": "PWR_BTN_L",
-      "pull_mode": "PullUp"
-    },
-    {
-      "alias_of": "IOR2",
-      "level": false,
-      "mode": "PushPull",
-      "name": "AC_PRESENT"
-    },
-    {
-      "alias_of": "IOR3",
-      "level": false,
-      "mode": "PushPull",
-      "name": "EC_KSO_02_INV"
-    },
-    {
-      "alias_of": "IOR4",
-      "level": true,
       "mode": "OpenDrain",
+      "level": true,
+      "pull_mode": "PullUp",
+      "alias_of": "IOR0"
+    },
+    {
+      "name": "AC_PRESENT",
+      "mode": "PushPull",
+      "level": false,
+      "alias_of": "IOR2"
+    },
+    {
+      "name": "EC_KSO_02_INV",
+      "mode": "PushPull",
+      "level": false,
+      "alias_of": "IOR3"
+    },
+    {
       "name": "KSI_02",
-      "pull_mode": "PullUp"
-    },
-    {
-      "alias_of": "IOR5",
+      "mode": "OpenDrain",
       "level": true,
-      "mode": "PushPull",
-      "name": "KSI_00"
+      "pull_mode": "None",
+      "alias_of": "IOR4"
     },
     {
-      "alias_of": "IOR6",
-      "mode": "Input",
+      "name": "KSI_00",
+      "mode": "OpenDrain",
+      "level": true,
+      "pull_mode": "None",
+      "alias_of": "IOR5"
+    },
+    {
       "name": "EC_KSI_02",
-      "pull_mode": "PullUp"
+      "mode": "Input",
+      "pull_mode": "PullUp",
+      "alias_of": "IOR6"
     },
     {
-      "alias_of": "IOR7",
-      "mode": "Input",
       "name": "EC_KSI_00",
-      "pull_mode": "PullUp"
+      "mode": "Input",
+      "pull_mode": "PullUp",
+      "alias_of": "IOR7"
     },
     {
-      "alias_of": "IOR8",
-      "level": true,
-      "mode": "OpenDrain",
       "name": "EC_RST_ODL",
-      "pull_mode": "PullUp"
-    },
-    {
-      "alias_of": "IOR9",
+      "mode": "OpenDrain",
       "level": true,
-      "mode": "OpenDrain",
+      "pull_mode": "PullUp",
+      "alias_of": "IOR8"
+    },
+    {
       "name": "WP_L",
-      "pull_mode": "PullUp"
-    },
-    {
-      "alias_of": "IOR10",
-      "mode": "Input",
-      "name": "EC_PWR_BTN_L",
-      "pull_mode": "PullUp"
-    },
-    {
-      "alias_of": "IOR11",
-      "level": false,
       "mode": "OpenDrain",
+      "level": true,
+      "pull_mode": "PullUp",
+      "alias_of": "IOR9"
+    },
+    {
+      "name": "EC_PWR_BTN_L",
+      "mode": "Input",
+      "pull_mode": "PullUp",
+      "alias_of": "IOR10"
+    },
+    {
       "name": "LID_OPEN",
-      "pull_mode": "PullUp"
+      "mode": "OpenDrain",
+      "level": false,
+      "pull_mode": "PullUp",
+      "alias_of": "IOR11"
     },
     {
-      "alias_of": "IOR12",
-      "mode": "Input",
       "name": "BATT_DISABLE_L",
-      "pull_mode": "PullUp"
+      "mode": "Input",
+      "pull_mode": "PullUp",
+      "alias_of": "IOR12"
     },
     {
-      "alias_of": "IOR13",
-      "mode": "Input",
       "name": "KSO_02",
-      "pull_mode": "PullUp"
+      "mode": "Input",
+      "pull_mode": "PullUp",
+      "alias_of": "IOR13"
     }
   ],
   "strappings": [
@@ -246,8 +231,8 @@
       "name": "AP_ON_I2C",
       "pins": [
         {
-          "level": true,
-          "name": "PLT_RST_L"
+          "name": "PLT_RST_L",
+          "level": true
         }
       ]
     },
@@ -255,8 +240,8 @@
       "name": "AP_ON_SPI",
       "pins": [
         {
-          "level": true,
-          "name": "PLT_RST_L"
+          "name": "PLT_RST_L",
+          "level": true
         }
       ]
     },
@@ -264,8 +249,8 @@
       "name": "AP_OFF",
       "pins": [
         {
-          "level": false,
-          "name": "PLT_RST_L"
+          "name": "PLT_RST_L",
+          "level": false
         }
       ]
     },
@@ -287,11 +272,11 @@
       "pins": [
         {
           "name": "CC1",
-          "volts": 0.92
+          "volts": 0.920
         },
         {
           "name": "CC2",
-          "volts": 0.49
+          "volts": 0.490
         }
       ]
     },
@@ -300,11 +285,11 @@
       "pins": [
         {
           "name": "CC1",
-          "volts": 0.49
+          "volts": 0.490
         },
         {
           "name": "CC2",
-          "volts": 0.92
+          "volts": 0.920
         }
       ]
     },
@@ -313,11 +298,11 @@
       "pins": [
         {
           "name": "CC1",
-          "volts": 1.69
+          "volts": 1.690
         },
         {
           "name": "CC2",
-          "volts": 0.92
+          "volts": 0.920
         }
       ]
     },
@@ -326,11 +311,11 @@
       "pins": [
         {
           "name": "CC1",
-          "volts": 0.92
+          "volts": 0.920
         },
         {
           "name": "CC2",
-          "volts": 1.69
+          "volts": 1.690
         }
       ]
     },
@@ -339,11 +324,11 @@
       "pins": [
         {
           "name": "CC1",
-          "volts": 0.53
+          "volts": 0.530
         },
         {
           "name": "CC2",
-          "volts": 0.53
+          "volts": 0.530
         }
       ]
     },
@@ -352,11 +337,11 @@
       "pins": [
         {
           "name": "CC1",
-          "volts": 1.0
+          "volts": 1.000
         },
         {
           "name": "CC2",
-          "volts": 1.0
+          "volts": 1.000
         }
       ]
     },
@@ -365,20 +350,38 @@
       "pins": [
         {
           "name": "CC1",
-          "volts": 1.81
+          "volts": 1.810
         },
         {
           "name": "CC2",
-          "volts": 1.81
+          "volts": 1.810
         }
+      ]
+    },
+    {
+      "name": "CCD_MODE_ON",
+      "pins": [
+	{
+	  "name": "CCD_MODE_ODL",
+	  "level": false
+	}
+      ]
+    },
+    {
+      "name": "CCD_MODE_OFF",
+      "pins": [
+	{
+	  "name": "CCD_MODE_ODL",
+	  "level": true
+	}
       ]
     },
     {
       "name": "SERVO_MICRO_DISCONNECTED",
       "pins": [
         {
-          "mode": "Alternate",
-          "name": "UART_DBG_TX_EC_RX"
+          "name": "UART_DBG_TX_EC_RX",
+          "mode": "Alternate"
         }
       ]
     },
@@ -386,25 +389,28 @@
       "name": "SERVO_MICRO_CONNECTED",
       "pins": [
         {
-          "level": true,
+          "name": "UART_DBG_TX_EC_RX",
           "mode": "PushPull",
-          "name": "UART_DBG_TX_EC_RX"
+          "level": true
         }
       ]
     }
   ],
   "uarts": [
     {
-      "alias_of": "UART4",
-      "name": "AP"
+      "name": "AP",
+      "alias_of": "UART4"
     },
     {
-      "alias_of": "UART3",
-      "name": "EC"
+      "name": "EC",
+      "alias_of": "UART3"
     },
     {
-      "alias_of": "UART5",
-      "name": "FPMCU"
+      "name": "FPMCU",
+      "alias_of": "UART5"
     }
-  ]
+  ],
+  "requires": {
+    "chip": "opentitan"
+  }
 }
