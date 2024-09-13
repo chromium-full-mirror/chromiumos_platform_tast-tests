@@ -34,7 +34,7 @@ const (
 func init() {
 	testing.AddTest(&testing.Test{
 		Func:         SocialApp,
-		LacrosStatus: testing.LacrosVariantExists,
+		LacrosStatus: testing.LacrosVariantUnneeded,
 		Desc:         "Collect the power-related data for social app operations",
 		Contacts: []string{
 			"chromeos-power-team@google.com",
@@ -49,9 +49,6 @@ func init() {
 			Name:      "element_ash",
 			Fixture:   "powerAshARC",
 			ExtraAttr: []string{"group:power", "power_regression"},
-		}, {
-			Name:    "element_lacros",
-			Fixture: "powerLacrosARC",
 		}},
 	})
 }
