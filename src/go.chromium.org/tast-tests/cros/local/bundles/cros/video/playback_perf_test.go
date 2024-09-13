@@ -236,24 +236,6 @@ func TestPlaybackPerfConfig(t *testing.T) {
 		}
 	}
 
-	for _, codec := range []string{"h264", "vp9", "av1"} {
-		dec := "hw"
-		for _, resolution := range []int{1080, 2160} {
-			for _, fps := range []int{30, 60} {
-				param := genPlaybackPerfParam(codec, playback.GenDataPath(codec, resolution, fps), resolution, fps, dec,
-					"intel_mc", "chromeVideoWithIntelMediaCompression",
-					[]string{})
-				if len(param.ExtraAttr) != 0 {
-					panic("param.ExtraAttr is not empty")
-				}
-				param.HardwareDeps = append(param.HardwareDeps, "hwdep.GPUFamily(\"meteorlake\", \"alderlake\", \"raptorlake\")")
-				param.ExtraAttr = []string{"graphics_manual"}
-				params = append(params, param)
-			}
-
-		}
-	}
-
 	for _, codec := range []string{"h264", "vp8", "vp9", "av1"} {
 		resolution, dec := 1080, "hw"
 		for _, fps := range []int{30, 60} {

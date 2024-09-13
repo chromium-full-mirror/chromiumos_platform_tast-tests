@@ -334,24 +334,6 @@ func initChromeVideoBaseFixtures() {
 		TearDownTimeout: chrome.ResetTimeout,
 	})
 	testing.AddFixture(&testing.Fixture{
-		Name:         "chromeVideoWithIntelMediaCompression",
-		Desc:         "Similar to chromeVideo fixture but enabling media compression by Intel",
-		Contacts:     []string{"chromeos-gfx-video@google.com"},
-		BugComponent: "b:168352", // ChromeOS > Platform > Graphics > Video.
-		Impl: chrome.NewLoggedInFixture(func(ctx context.Context, s *testing.FixtState) ([]chrome.Option, error) {
-			return getChromeVideoOptions(
-				browser.TypeAsh,
-				chrome.EnableFeatures("EnableIntelMediaCompression"),
-				chrome.DisableFeatures("UseOutOfProcessVideoDecoding"),
-			), nil
-		}),
-		Parent:          "gpuWatchDog",
-		SetUpTimeout:    chrome.FixtureSetUpTimeout,
-		ResetTimeout:    chrome.ResetTimeout,
-		TearDownTimeout: chrome.ResetTimeout,
-	})
-
-	testing.AddFixture(&testing.Fixture{
 		Name:         "chromeVideoWithBatchDecodingInRenderer",
 		Desc:         "Similar to chromeVideo fixture but enabling batch decoding for non-MF renderer path",
 		Contacts:     []string{"chromeos-gfx-video@google.com"},
