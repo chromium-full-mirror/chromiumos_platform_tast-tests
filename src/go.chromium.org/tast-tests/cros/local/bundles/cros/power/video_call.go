@@ -33,7 +33,7 @@ const timeoutBuffer = 5 * time.Minute
 func init() {
 	testing.AddTest(&testing.Test{
 		Func:         VideoCall,
-		LacrosStatus: testing.LacrosVariantExists,
+		LacrosStatus: testing.LacrosVariantUnneeded,
 		Desc:         "Collect power metrics when mutitasking typing and video call",
 		BugComponent: "b:1361410", // ChromeOS > Platform > System > Core Power
 		Contacts:     []string{"chromeos-power-team@google.com"},
@@ -61,25 +61,6 @@ func init() {
 			Fixture: "powerAsh",
 			Val:     power.TimeParams{Interval: 20 * time.Second, Total: 2 * time.Hour},
 			Timeout: 2*time.Hour + timeoutBuffer + power.RecorderTimeout,
-		}, {
-			Name:              "3m_lacros",
-			Fixture:           "powerLacros",
-			ExtraSoftwareDeps: []string{"lacros"},
-			Val:               power.TimeParams{Interval: 5 * time.Second, Total: 3 * time.Minute},
-			Timeout:           3*time.Minute + timeoutBuffer + power.RecorderTimeout,
-			ExtraAttr:         []string{"group:power", "power_daily", "power_weekly"},
-		}, {
-			Name:              "25m_lacros",
-			Fixture:           "powerLacros",
-			ExtraSoftwareDeps: []string{"lacros"},
-			Val:               power.TimeParams{Interval: 20 * time.Second, Total: 25 * time.Minute},
-			Timeout:           25*time.Minute + timeoutBuffer + power.RecorderTimeout,
-		}, {
-			Name:              "2hr_lacros",
-			Fixture:           "powerLacros",
-			ExtraSoftwareDeps: []string{"lacros"},
-			Val:               power.TimeParams{Interval: 20 * time.Second, Total: 2 * time.Hour},
-			Timeout:           2*time.Hour + timeoutBuffer + power.RecorderTimeout,
 		}},
 	})
 }
