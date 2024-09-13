@@ -42,7 +42,7 @@ const setupTimeoutBuffer = 5 * time.Minute
 func init() {
 	testing.AddTest(&testing.Test{
 		Func:         Browsing,
-		LacrosStatus: testing.LacrosVariantExists,
+		LacrosStatus: testing.LacrosVariantUnneeded,
 		Desc:         "Collect power metrics when browsing",
 		BugComponent: "b:1361410", // ChromeOS > Platform > System > Core Power
 		Contacts:     []string{"chromeos-power-team@google.com"},
@@ -62,35 +62,16 @@ func init() {
 			Val:               browsingTestParam{ConfigName: "browsing", TimeParams: power.TimeParams{Interval: 20 * time.Second, Total: time.Hour}},
 			ExtraSoftwareDeps: []string{"arc"},
 		}, {
-			Name:              "lacros",
-			Fixture:           "powerLacros",
-			Timeout:           time.Hour + setupTimeoutBuffer + power.RecorderTimeout,
-			Val:               browsingTestParam{ConfigName: "browsing", TimeParams: power.TimeParams{Interval: 20 * time.Second, Total: time.Hour}},
-			ExtraSoftwareDeps: []string{"lacros"},
-		}, {
 			Name:    "20min_ash",
 			Fixture: "powerAsh",
 			Timeout: 20*time.Minute + setupTimeoutBuffer + power.RecorderTimeout,
 			Val:     browsingTestParam{ConfigName: "browsing_20min", TimeParams: power.TimeParams{Interval: 5 * time.Second, Total: 20 * time.Minute}},
-		}, {
-			Name:              "20min_lacros",
-			Fixture:           "powerLacros",
-			Timeout:           20*time.Minute + setupTimeoutBuffer + power.RecorderTimeout,
-			Val:               browsingTestParam{ConfigName: "browsing_20min", TimeParams: power.TimeParams{Interval: 5 * time.Second, Total: 20 * time.Minute}},
-			ExtraSoftwareDeps: []string{"lacros"},
 		}, {
 			Name:      "fast_ash",
 			Fixture:   "powerAsh",
 			Timeout:   3*time.Minute + setupTimeoutBuffer + power.RecorderTimeout,
 			Val:       browsingTestParam{ConfigName: "browsing_3min", TimeParams: power.TimeParams{Interval: 5 * time.Second, Total: 3 * time.Minute}},
 			ExtraAttr: []string{"group:power", "power_daily", "power_weekly"},
-		}, {
-			Name:              "fast_lacros",
-			Fixture:           "powerLacros",
-			Timeout:           3*time.Minute + setupTimeoutBuffer + power.RecorderTimeout,
-			Val:               browsingTestParam{ConfigName: "browsing_3min", TimeParams: power.TimeParams{Interval: 5 * time.Second, Total: 3 * time.Minute}},
-			ExtraSoftwareDeps: []string{"lacros"},
-			ExtraAttr:         []string{"group:power", "power_daily", "power_weekly"},
 		}, {
 			Name:    "heavy_ash",
 			Fixture: "powerAsh",
@@ -103,69 +84,32 @@ func init() {
 			Val:               browsingTestParam{ConfigName: "heavy", TimeParams: power.TimeParams{Interval: 20 * time.Second, Total: time.Hour}},
 			ExtraSoftwareDeps: []string{"arc"},
 		}, {
-			Name:              "heavy_lacros",
-			Fixture:           "powerLacros",
-			Timeout:           time.Hour + setupTimeoutBuffer + power.RecorderTimeout,
-			Val:               browsingTestParam{ConfigName: "heavy", TimeParams: power.TimeParams{Interval: 20 * time.Second, Total: time.Hour}},
-			ExtraSoftwareDeps: []string{"lacros"},
-		}, {
 			Name:      "heavy_20min_ash",
 			Fixture:   "powerAsh",
 			Timeout:   20*time.Minute + setupTimeoutBuffer + power.RecorderTimeout,
 			Val:       browsingTestParam{ConfigName: "heavy_20min", TimeParams: power.TimeParams{Interval: 5 * time.Second, Total: 20 * time.Minute}},
 			ExtraAttr: []string{"group:power", "power_regression"},
 		}, {
-			Name:              "heavy_20min_lacros",
-			Fixture:           "powerLacros",
-			Timeout:           20*time.Minute + setupTimeoutBuffer + power.RecorderTimeout,
-			Val:               browsingTestParam{ConfigName: "heavy_20min", TimeParams: power.TimeParams{Interval: 5 * time.Second, Total: 20 * time.Minute}},
-			ExtraSoftwareDeps: []string{"lacros"},
-		}, {
 			Name:    "custom_ash",
 			Fixture: "powerAsh",
 			Timeout: time.Hour + setupTimeoutBuffer + power.RecorderTimeout,
 			Val:     browsingTestParam{ConfigName: "custom", TimeParams: power.TimeParams{Interval: 20 * time.Second, Total: time.Hour}},
-		}, {
-			Name:              "custom_lacros",
-			Fixture:           "powerLacros",
-			Timeout:           time.Hour + setupTimeoutBuffer + power.RecorderTimeout,
-			Val:               browsingTestParam{ConfigName: "custom", TimeParams: power.TimeParams{Interval: 20 * time.Second, Total: time.Hour}},
-			ExtraSoftwareDeps: []string{"lacros"},
 		}, {
 			Name:    "live_ash",
 			Fixture: "powerAsh",
 			Timeout: time.Hour + setupTimeoutBuffer + power.RecorderTimeout,
 			Val:     browsingTestParam{ConfigName: "live", TimeParams: power.TimeParams{Interval: 20 * time.Second, Total: time.Hour}},
 		}, {
-			Name:              "live_lacros",
-			Fixture:           "powerLacros",
-			Timeout:           time.Hour + setupTimeoutBuffer + power.RecorderTimeout,
-			Val:               browsingTestParam{ConfigName: "live", TimeParams: power.TimeParams{Interval: 20 * time.Second, Total: time.Hour}},
-			ExtraSoftwareDeps: []string{"lacros"},
-		}, {
 			Name:    "multitab_ash",
 			Fixture: "powerAsh",
 			Timeout: time.Hour + setupTimeoutBuffer + power.RecorderTimeout,
 			Val:     browsingTestParam{ConfigName: "browsing", TimeParams: power.TimeParams{Interval: 20 * time.Second, Total: time.Hour}, MultiTab: true},
-		}, {
-			Name:              "multitab_lacros",
-			Fixture:           "powerLacros",
-			Timeout:           time.Hour + setupTimeoutBuffer + power.RecorderTimeout,
-			Val:               browsingTestParam{ConfigName: "browsing", TimeParams: power.TimeParams{Interval: 20 * time.Second, Total: time.Hour}, MultiTab: true},
-			ExtraSoftwareDeps: []string{"lacros"},
 		}, {
 			Name:      "tracing_ash",
 			Fixture:   "powerAsh",
 			Timeout:   time.Hour + setupTimeoutBuffer + power.RecorderTimeout,
 			Val:       browsingTestParam{ConfigName: "custom", TimeParams: power.TimeParams{Interval: 20 * time.Second, Total: time.Hour}, CollectTrace: true},
 			ExtraData: []string{tracing.TBMTracedProbesConfigFile},
-		}, {
-			Name:              "tracing_lacros",
-			Fixture:           "powerLacros",
-			Timeout:           time.Hour + setupTimeoutBuffer + power.RecorderTimeout,
-			Val:               browsingTestParam{ConfigName: "custom", TimeParams: power.TimeParams{Interval: 20 * time.Second, Total: time.Hour}, CollectTrace: true},
-			ExtraSoftwareDeps: []string{"lacros"},
-			ExtraData:         []string{tracing.TBMTracedProbesConfigFile},
 		}},
 	})
 }
