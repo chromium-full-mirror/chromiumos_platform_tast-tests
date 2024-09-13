@@ -71,11 +71,14 @@ const (
 // TpmI2cAddress is Ti50's 7-bit I2C address (0x50 = decimal 80).
 const TpmI2cAddress = "80"
 
-// TpmTi50DidVidValue is the value of the DID_VID register used by Ti50.
-var TpmTi50DidVidValue = []byte{0x66, 0x66, 0x4a, 0x50}
+// TpmOTDidVidValue is the value of the DID_VID register used by OpenTitan.
+var TpmOTDidVidValue = []byte{0x66, 0x66, 0x66, 0x50}
 
-// TpmCr50DidVidValue is the value of the DID_VID register used by Cr50.
-var TpmCr50DidVidValue = []byte{0xe0, 0x1a, 0x28, 0x00}
+// TpmDTDidVidValue is the value of the DID_VID register used by DT.
+var TpmDTDidVidValue = []byte{0x66, 0x66, 0x4a, 0x50}
+
+// TpmH1DidVidValue is the value of the DID_VID register used by H1.
+var TpmH1DidVidValue = []byte{0xe0, 0x1a, 0x28, 0x00}
 
 const (
 	// RootPlatformHandle is the Platform Root TPM Handle

@@ -14,7 +14,7 @@ func (g *gscHE) HasFpmcuUart() bool {
 }
 
 func (g *gscHE) ExpectedDidVidValue() []byte {
-	return ti50.TpmTi50DidVidValue
+	return ti50.TpmDTDidVidValue
 }
 
 func (g *gscHE) GscHostI2cBusses() map[byte]I2CBus {
