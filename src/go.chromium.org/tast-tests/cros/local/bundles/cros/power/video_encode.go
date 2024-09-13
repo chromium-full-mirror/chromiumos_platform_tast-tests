@@ -36,7 +36,7 @@ var defaultTimeParams = power.TimeParams{Interval: 5 * time.Second, Total: 6 * t
 func init() {
 	testing.AddTest(&testing.Test{
 		Func:         VideoEncode,
-		LacrosStatus: testing.LacrosVariantExists,
+		LacrosStatus: testing.LacrosVariantUnneeded,
 		Desc:         "Collects power metrics while encoding video files",
 		BugComponent: "b:1361410",
 		Contacts:     []string{"chromeos-power-team@google.com", "jingmuli@google.com"},
@@ -110,91 +110,6 @@ func init() {
 			Name:    "av1_qhvga_15fps_ash",
 			Fixture: "powerAsh",
 			Val:     power.VideoEncodeFormatParams{Codec: "av1", Resolution: "qhvga", Framerate: 15},
-		}, {
-			Name:              "vp9_hd_24fps_lacros",
-			Fixture:           "powerLacros",
-			ExtraSoftwareDeps: []string{"lacros"},
-			Val:               power.VideoEncodeFormatParams{Codec: "vp9", Resolution: "hd", Framerate: 24},
-		}, {
-			Name:              "vp9_vga_24fps_lacros",
-			Fixture:           "powerLacros",
-			ExtraSoftwareDeps: []string{"lacros"},
-			Val:               power.VideoEncodeFormatParams{Codec: "vp9", Resolution: "vga", Framerate: 24},
-		}, {
-			Name:              "vp9_qvga_24fps_lacros",
-			Fixture:           "powerLacros",
-			ExtraSoftwareDeps: []string{"lacros"},
-			Val:               power.VideoEncodeFormatParams{Codec: "vp9", Resolution: "qvga", Framerate: 24},
-		}, {
-			Name:              "vp8_hd_24fps_lacros",
-			Fixture:           "powerLacros",
-			ExtraSoftwareDeps: []string{"lacros"},
-			Val:               power.VideoEncodeFormatParams{Codec: "vp8", Resolution: "hd", Framerate: 24},
-		}, {
-			Name:              "vp8_vga_24fps_lacros",
-			Fixture:           "powerLacros",
-			ExtraSoftwareDeps: []string{"lacros"},
-			Val:               power.VideoEncodeFormatParams{Codec: "vp8", Resolution: "vga", Framerate: 24},
-		}, {
-			Name:              "vp8_qvga_24fps_lacros",
-			Fixture:           "powerLacros",
-			ExtraSoftwareDeps: []string{"lacros"},
-			Val:               power.VideoEncodeFormatParams{Codec: "vp8", Resolution: "qvga", Framerate: 24},
-		}, {
-			Name:              "h264_hd_24fps_lacros",
-			Fixture:           "powerLacros",
-			ExtraSoftwareDeps: []string{"lacros"},
-			Val:               power.VideoEncodeFormatParams{Codec: "h264", Resolution: "hd", Framerate: 24},
-		}, {
-			Name:              "h264_vga_24fps_lacros",
-			Fixture:           "powerLacros",
-			ExtraSoftwareDeps: []string{"lacros"},
-			Val:               power.VideoEncodeFormatParams{Codec: "h264", Resolution: "vga", Framerate: 24},
-		}, {
-			Name:              "vp9_hvga_24fps_lacros",
-			Fixture:           "powerLacros",
-			ExtraSoftwareDeps: []string{"lacros"},
-			Val:               power.VideoEncodeFormatParams{Codec: "vp9", Resolution: "hvga", Framerate: 24},
-		}, {
-			Name:              "vp9_qhvga_20fps_lacros",
-			Fixture:           "powerLacros",
-			ExtraSoftwareDeps: []string{"lacros"},
-			Val:               power.VideoEncodeFormatParams{Codec: "vp9", Resolution: "qhvga", Framerate: 20},
-		}, {
-			Name:              "vp8_hvga_24fps_lacros",
-			Fixture:           "powerLacros",
-			ExtraSoftwareDeps: []string{"lacros"},
-			Val:               power.VideoEncodeFormatParams{Codec: "vp8", Resolution: "hvga", Framerate: 24},
-		}, {
-			Name:              "vp8_qhvga_15fps_lacros",
-			Fixture:           "powerLacros",
-			ExtraSoftwareDeps: []string{"lacros"},
-			Val:               power.VideoEncodeFormatParams{Codec: "vp8", Resolution: "qhvga", Framerate: 15},
-		}, {
-			Name:              "vp9_fhd_24fps_lacros",
-			Fixture:           "powerLacros",
-			ExtraSoftwareDeps: []string{"lacros"},
-			Val:               power.VideoEncodeFormatParams{Codec: "vp9", Resolution: "fhd", Framerate: 24},
-		}, {
-			Name:              "vp8_fhd_24fps_lacros",
-			Fixture:           "powerLacros",
-			ExtraSoftwareDeps: []string{"lacros"},
-			Val:               power.VideoEncodeFormatParams{Codec: "vp8", Resolution: "fhd", Framerate: 24},
-		}, {
-			Name:              "h264_fhd_24fps_lacros",
-			Fixture:           "powerLacros",
-			ExtraSoftwareDeps: []string{"lacros"},
-			Val:               power.VideoEncodeFormatParams{Codec: "h264", Resolution: "fhd", Framerate: 24},
-		}, {
-			Name:              "av1_hvga_24fps_lacros",
-			Fixture:           "powerLacros",
-			ExtraSoftwareDeps: []string{"lacros"},
-			Val:               power.VideoEncodeFormatParams{Codec: "av1", Resolution: "hvga", Framerate: 24},
-		}, {
-			Name:              "av1_qhvga_15fps_lacros",
-			Fixture:           "powerLacros",
-			ExtraSoftwareDeps: []string{"lacros"},
-			Val:               power.VideoEncodeFormatParams{Codec: "av1", Resolution: "qhvga", Framerate: 15},
 		}, {
 			Name:    "vp9_fhd_24fps_ash_30min", // 30min version for qual test suite.
 			Fixture: "powerAsh",
