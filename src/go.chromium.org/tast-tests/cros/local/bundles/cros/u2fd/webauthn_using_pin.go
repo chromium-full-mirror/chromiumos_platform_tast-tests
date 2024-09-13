@@ -30,9 +30,8 @@ import (
 
 func init() {
 	testing.AddTest(&testing.Test{
-		Func:         WebauthnUsingPIN,
-		LacrosStatus: testing.LacrosVariantExists,
-		Desc:         "Checks that WebAuthn using PIN succeeds",
+		Func: WebauthnUsingPIN,
+		Desc: "Checks that WebAuthn using PIN succeeds",
 		Contacts: []string{
 			"cros-hwsec@google.com",
 			"hcyang@google.com",
@@ -50,15 +49,7 @@ func init() {
 			pci.SearchFlag(&policy.PinUnlockAutosubmitEnabled{}, pci.VerifiedFunctionalityOS),
 			pci.SearchFlag(&policy.QuickUnlockModeAllowlist{}, pci.VerifiedFunctionalityOS),
 		},
-		Params: []testing.Param{{
-			Fixture: fixture.ChromePolicyLoggedIn,
-			Val:     browser.TypeAsh,
-		}, {
-			Name:              "lacros",
-			ExtraSoftwareDeps: []string{"lacros"},
-			Fixture:           fixture.LacrosPolicyLoggedIn,
-			Val:               browser.TypeLacros,
-		}},
+		Fixture: fixture.ChromePolicyLoggedIn,
 	})
 }
 
@@ -73,7 +64,6 @@ func WebauthnUsingPIN(ctx context.Context, s *testing.State) {
 
 	cr := s.FixtValue().(chrome.HasChrome).Chrome()
 	fdms := s.FixtValue().(fakedms.HasFakeDMS).FakeDMS()
-	bt := s.Param().(browser.Type)
 	defer faillog.DumpUITreeWithScreenshotOnError(cleanupCtx, s.OutDir(), s.HasError, cr, "error")
 
 	u2fDaemon, err := u2fd.NewU2fDaemon(ctx)
@@ -142,9 +132,9 @@ func WebauthnUsingPIN(ctx context.Context, s *testing.State) {
 		return nil
 	}
 
-	conn, _, closeBrowser, err := browserfixt.SetUpWithURL(ctx, cr, bt, server.URL+"/webauthn.html")
+	conn, _, closeBrowser, err := browserfixt.SetUpWithURL(ctx, cr, browser.TypeAsh, server.URL+"/webauthn.html")
 	if err != nil {
-		s.Fatalf("Failed to open the %v browser: %v", bt, err)
+		s.Fatal("Failed to open the browser: ", err)
 	}
 	defer closeBrowser(cleanupCtx)
 	defer conn.Close()

@@ -20,7 +20,6 @@ import (
 	"go.chromium.org/tast-tests/cros/local/chrome"
 	"go.chromium.org/tast-tests/cros/local/chrome/browser"
 	"go.chromium.org/tast-tests/cros/local/chrome/browser/browserfixt"
-	"go.chromium.org/tast-tests/cros/local/chrome/lacros/lacrosfixt"
 	"go.chromium.org/tast-tests/cros/local/chrome/uiauto"
 	"go.chromium.org/tast-tests/cros/local/input"
 	localu2fd "go.chromium.org/tast-tests/cros/local/u2fd"
@@ -83,11 +82,8 @@ func (c *WebauthnService) New(ctx context.Context, req *hwsec.NewRequest) (*empt
 		}
 	}(ctxForCleanUp)
 
-	var bt browser.Type
-	if req.GetBrowserType() == hwsec.BrowserType_ASH {
-		bt = browser.TypeAsh
-	} else {
-		bt = browser.TypeLacros
+	if req.GetBrowserType() != hwsec.BrowserType_ASH {
+		return nil, errors.Errorf("unsupported browser type %v", req.GetBrowserType())
 	}
 
 	keyboard, err := input.VirtualKeyboard(ctx)
@@ -145,9 +141,9 @@ func (c *WebauthnService) New(ctx context.Context, req *hwsec.NewRequest) (*empt
 		opts = append(opts, chrome.FakeLogin(chrome.Creds{User: "tast-user@managedchrome.com", Pass: "testpass"}))
 	}
 
-	cr, br, closeBrowser, err := browserfixt.SetUpWithNewChrome(ctx, bt, lacrosfixt.NewConfig(), opts...)
+	cr, br, closeBrowser, err := browserfixt.SetUpWithNewChrome(ctx, browser.TypeAsh, nil, opts...)
 	if err != nil {
-		return nil, errors.Wrapf(err, "failed to log in by Chrome with %v browser", bt)
+		return nil, errors.Wrap(err, "failed to log in by Chrome")
 	}
 	defer func(ctx context.Context) {
 		if !ok {

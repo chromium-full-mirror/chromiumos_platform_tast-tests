@@ -24,9 +24,8 @@ import (
 
 func init() {
 	testing.AddTest(&testing.Test{
-		Func:         WebauthnUsingPassword,
-		LacrosStatus: testing.LacrosVariantExists,
-		Desc:         "Checks that WebAuthn using password succeeds",
+		Func: WebauthnUsingPassword,
+		Desc: "Checks that WebAuthn using password succeeds",
 		Contacts: []string{
 			"cros-hwsec@google.com",
 			"hcyang@google.com",
@@ -44,32 +43,16 @@ func init() {
 			Fixture:           "chromeLoggedIn",
 			Val:               browser.TypeAsh,
 		}, {
-			Name:              "tpm_lacros",
-			ExtraSoftwareDeps: []string{"no_gsc", "lacros", "no_tpm_dynamic"},
-			Fixture:           "lacros",
-			Val:               browser.TypeLacros,
-		}, {
 			Name:              "tpm_dynamic",
 			ExtraSoftwareDeps: []string{"tpm_dynamic"},
 			ExtraHardwareDeps: hwdep.D(hwdep.HasTpm()),
 			Fixture:           "chromeLoggedIn",
 			Val:               browser.TypeAsh,
 		}, {
-			Name:              "tpm_dynamic_lacros",
-			ExtraSoftwareDeps: []string{"tpm_dynamic", "no_gsc", "lacros"},
-			ExtraHardwareDeps: hwdep.D(hwdep.HasTpm()),
-			Fixture:           "lacros",
-			Val:               browser.TypeLacros,
-		}, {
 			Name:              "gsc",
 			ExtraSoftwareDeps: []string{"gsc"},
 			Fixture:           "chromeLoggedIn",
 			Val:               browser.TypeAsh,
-		}, {
-			Name:              "gsc_lacros",
-			ExtraSoftwareDeps: []string{"gsc", "lacros"},
-			Fixture:           "lacros",
-			Val:               browser.TypeLacros,
 		}},
 		Timeout: 5 * time.Minute,
 	})
@@ -85,7 +68,6 @@ func WebauthnUsingPassword(ctx context.Context, s *testing.State) {
 	defer server.Close(cleanupCtx)
 
 	cr := s.FixtValue().(chrome.HasChrome).Chrome()
-	bt := s.Param().(browser.Type)
 	defer faillog.DumpUITreeWithScreenshotOnError(cleanupCtx, s.OutDir(), s.HasError, cr, "error")
 
 	u2fDaemon, err := u2fd.NewU2fDaemon(ctx)
@@ -96,9 +78,9 @@ func WebauthnUsingPassword(ctx context.Context, s *testing.State) {
 		s.Fatal("Failed to wait until u2fd is initialized: ", err)
 	}
 
-	conn, _, closeBrowser, err := browserfixt.SetUpWithURL(ctx, cr, bt, server.URL+"/webauthn.html")
+	conn, _, closeBrowser, err := browserfixt.SetUpWithURL(ctx, cr, browser.TypeAsh, server.URL+"/webauthn.html")
 	if err != nil {
-		s.Fatalf("Failed to open the %v browser: %v", bt, err)
+		s.Fatal("Failed to open the browser: ", err)
 	}
 	defer closeBrowser(cleanupCtx)
 	defer conn.Close()
