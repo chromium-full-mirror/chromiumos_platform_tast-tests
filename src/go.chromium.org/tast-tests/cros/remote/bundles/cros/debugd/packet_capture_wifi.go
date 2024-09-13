@@ -216,7 +216,7 @@ func saveStreamingDataToFile(stream debugd.DebugdService_PacketCaptureClient, fi
 	for {
 		chunk, err := stream.Recv()
 		if err != nil {
-			if errors.Is(stream.Context().Err(), context.Canceled) || err == io.EOF {
+			if errors.Is(stream.Context().Err(), context.DeadlineExceeded) || errors.Is(stream.Context().Err(), context.Canceled) || err == io.EOF {
 				return nil
 			}
 			return errors.Wrap(err, "failed to receive chunk")
@@ -240,6 +240,10 @@ func validatePacketCaptureData(ctx context.Context, logFile string, apIP net.IP,
 			sourceIP := packet.NetworkLayer().NetworkFlow().Src().String()
 			return net.ParseIP(sourceIP).Equal(apIP)
 		}); index == -1 {
+			// TODO(b/366337725): Remove the log after the issue is resolved.
+			for _, packet := range packets {
+				testing.ContextLogf(ctx, "ICMP packet: source: %q , destination: %q", packet.NetworkLayer().NetworkFlow().Src().String(), packet.NetworkLayer().NetworkFlow().Dst().String())
+			}
 			return errors.Wrap(err, "failed to find packet sent by router")
 		}
 
