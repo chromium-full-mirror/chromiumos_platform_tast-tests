@@ -57,7 +57,6 @@ func init() {
 			"group:hw_agnostic",
 		},
 		SoftwareDeps: []string{"chrome"},
-		LacrosStatus: testing.LacrosVariantExists,
 		Params: []testing.Param{
 			{
 				Name: "all_data_collectors",
