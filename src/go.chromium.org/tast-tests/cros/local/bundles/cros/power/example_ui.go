@@ -23,7 +23,7 @@ var exampleUI5minTimeParams = power.TimeParams{Interval: 5 * time.Second, Total:
 func init() {
 	testing.AddTest(&testing.Test{
 		Func:         ExampleUI,
-		LacrosStatus: testing.LacrosVariantExists,
+		LacrosStatus: testing.LacrosVariantUnneeded,
 		Desc:         "Collect power metrics when device is in idle with UI",
 		BugComponent: "b:1361410",
 		Contacts:     []string{"chromeos-power-team@google.com"},
@@ -59,45 +59,6 @@ func init() {
 			Fixture: setup.PowerAshARC,
 			Val:     exampleUITimeParams,
 			Timeout: 1*time.Minute + power.RecorderTimeout,
-		}, {
-			Name:              "lacros_kbbl",
-			Fixture:           setup.PowerLacrosKbbl,
-			ExtraSoftwareDeps: []string{"lacros"},
-			ExtraAttr:         []string{"group:power", "power_daily", "power_weekly"},
-			Val:               exampleUITimeParams,
-			Timeout:           1*time.Minute + power.RecorderTimeout,
-		}, {
-			Name:              "lacros",
-			Fixture:           setup.PowerLacros,
-			ExtraSoftwareDeps: []string{"lacros"},
-			Val:               exampleUI5minTimeParams,
-			Timeout:           6*time.Minute + power.RecorderTimeout,
-		}, {
-			Name:              "lacros_dark",
-			Fixture:           setup.PowerLacrosDark,
-			ExtraSoftwareDeps: []string{"lacros"},
-			ExtraAttr:         []string{"group:power", "power_daily", "power_weekly"},
-			Val:               exampleUI5minTimeParams,
-			Timeout:           6*time.Minute + power.RecorderTimeout,
-		}, {
-			Name:              "lacros_night",
-			Fixture:           setup.PowerLacrosNightlight,
-			ExtraSoftwareDeps: []string{"lacros"},
-			ExtraAttr:         []string{"group:power", "power_daily", "power_weekly"},
-			Val:               exampleUI5minTimeParams,
-			Timeout:           6*time.Minute + power.RecorderTimeout,
-		}, {
-			Name:              "lacros_gaia",
-			Fixture:           setup.PowerLacrosGAIA,
-			ExtraSoftwareDeps: []string{"lacros"},
-			Val:               exampleUITimeParams,
-			Timeout:           1*time.Minute + power.RecorderTimeout,
-		}, {
-			Name:              "lacros_arc",
-			Fixture:           setup.PowerLacrosARC,
-			ExtraSoftwareDeps: []string{"lacros"},
-			Val:               exampleUITimeParams,
-			Timeout:           1*time.Minute + power.RecorderTimeout,
 		}},
 	})
 }
