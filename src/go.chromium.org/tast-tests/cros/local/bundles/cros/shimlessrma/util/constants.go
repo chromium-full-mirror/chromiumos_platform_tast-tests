@@ -77,6 +77,7 @@ var ShimlessRmaEnabledModelsCritical = []string{
 	"tentacruel",
 	"chinchou",
 	"chinchou360",
+	"kyogre",
 	// dedede
 	"bookem",
 	"boten",
@@ -102,6 +103,8 @@ var ShimlessRmaEnabledModelsCritical = []string{
 	"landrid",
 	"drawper",
 	"drawcia",
+	"kracko",
+	"kracko360",
 	// nissa
 	"craask",
 	"craaskbowl",
@@ -113,6 +116,8 @@ var ShimlessRmaEnabledModelsCritical = []string{
 	"yavijo",
 	"yahiko",
 	"joxer",
+	"anraggar",
+	"anraggar360",
 	// staryu
 	"starmie",
 	// brya
@@ -120,22 +125,9 @@ var ShimlessRmaEnabledModelsCritical = []string{
 	"felwinter",
 	"osiris",
 	"kano",
+	"omnigul",
 	// strongbad
 	"homestar",
-}
-
-// ShimlessRmaEnabledModelsStaging are models with Shimless RMA support and pending to be enlisted to critical model list.
-var ShimlessRmaEnabledModelsStaging = []string{
-	// corsola
-	"kyogre",
-	// dedede
-	"kracko",
-	"kracko360",
-	// nissa
-	"anraggar",
-	"anraggar360",
-	// brya
-	"omnigul",
 	// nami
 	"bard",
 	"ekko",
@@ -148,4 +140,10 @@ var ShimlessRmaEnabledModelsStaging = []string{
 	"voema",
 	// geralt
 	"ciri",
+}
+
+// ShimlessRmaEnabledModelsStaging are models with Shimless RMA support and pending to be enlisted to critical model list.
+var ShimlessRmaEnabledModelsStaging = []string{
+	// corsola
+	"voltorb",
 }
