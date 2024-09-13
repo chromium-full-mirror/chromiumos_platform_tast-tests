@@ -24,7 +24,7 @@ var webGLDefaultTimeParams = power.TimeParams{Interval: 5 * time.Second, Total: 
 func init() {
 	testing.AddTest(&testing.Test{
 		Func:         WebGL,
-		LacrosStatus: testing.LacrosVariantExists,
+		LacrosStatus: testing.LacrosVariantUnneeded,
 		Desc:         "Collect power metrics running heavy WebGL load. (400 jellyfishes)",
 		BugComponent: "b:1361410",
 		Contacts:     []string{"chromeos-power-team@google.com"},
@@ -33,10 +33,6 @@ func init() {
 		Params: []testing.Param{{
 			Name:    "10min_ash",
 			Fixture: "powerAsh",
-		}, {
-			Name:              "10min_lacros",
-			Fixture:           "powerLacros",
-			ExtraSoftwareDeps: []string{"lacros"},
 		}},
 	})
 }
