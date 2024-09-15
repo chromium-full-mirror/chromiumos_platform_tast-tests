@@ -20,7 +20,7 @@ import (
 	"go.chromium.org/tast/core/testing"
 )
 
-var devRegExp = regexp.MustCompile(`(sda|nvme\dn\d|mmcblk\d)$`)
+var devRegExp = regexp.MustCompile(`(sd[a-z]|nvme\dn\d|mmcblk\d)$`)
 
 // Blockdevice represents information about a single storage device as reported by lsblk.
 type Blockdevice struct {
