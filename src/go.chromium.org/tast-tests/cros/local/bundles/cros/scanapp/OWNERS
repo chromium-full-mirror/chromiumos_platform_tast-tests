@@ -5,7 +5,6 @@ include chromiumos/owners:v1:/printscan/OWNERS.printscan
 
 # Additional system services OWNERS
 gavinwill@chromium.org
-zentaro@chromium.org
 
 # Tast team for bulk/emergencies
 include /OWNERS.tast
