@@ -102,6 +102,9 @@ type EnvOptions struct {
 	// CapportURL is the URL of the CAPPORT API. If CapportURL is set, dnsmasq will send
 	// the DHCP option 114 with CapportURL, defined at RFC 8910.
 	CapportURL string
+	// Additional lines for the hostapd config file. Only takes effect in the
+	// virtual WiFi setup.
+	HostapdAddtionalConfLines []string
 }
 
 // ResetEthernetProperties resets all properties which can affect test runs to
@@ -327,6 +330,8 @@ type wifiEnv struct {
 	Service *shill.Service
 	// Router is the Env which simulates the WiFi router. Servers can be ran on it.
 	Router *Env
+	// SSID of the virtual AP.
+	SSID string
 
 	hostapd *testexec.Cmd
 
@@ -383,8 +388,8 @@ func CreateWifiRouterEnv(ctx context.Context, apIf string, m *shill.Manager, poo
 		return nil, err
 	}
 
-	ssid := "test-ap" + opts.NameSuffix
-	hexSSID := hex.EncodeToString([]byte(ssid))
+	wifi.SSID = "test-ap" + opts.NameSuffix
+	hexSSID := hex.EncodeToString([]byte(wifi.SSID))
 	svcProps := map[string]interface{}{
 		shillconst.ServicePropertyType:        shillconst.TypeWifi,
 		shillconst.ServicePropertyWiFiHexSSID: strings.ToUpper(hexSSID),
@@ -405,7 +410,7 @@ func CreateWifiRouterEnv(ctx context.Context, apIf string, m *shill.Manager, poo
 	// Remove the DHCP lease file if it exists one to make sure we have a clean setup.
 	leaseFile := fmt.Sprintf("/var/lib/dhcpcd7/wifi_any_%s_managed_none.lease", hexSSID)
 	if _, err := os.Stat(leaseFile); err == nil {
-		testing.ContextLogf(ctx, "DHCP lease file exists for %s, removing it", ssid)
+		testing.ContextLogf(ctx, "DHCP lease file exists for %s, removing it", wifi.SSID)
 		if err := os.Remove(leaseFile); err != nil {
 			return nil, errors.Wrap(err, "failed to remove lease file")
 		}
@@ -422,13 +427,15 @@ func CreateWifiRouterEnv(ctx context.Context, apIf string, m *shill.Manager, poo
 	if !ok {
 		return nil, errors.New("failed to get ContextOutDir")
 	}
-	hostapdConf := strings.Join([]string{
+	hostapdConfLines := []string{
 		"interface=" + apIf,
-		"ssid=" + ssid,
+		"ssid=" + wifi.SSID,
 		"bridge=" + wifi.br,
 		// Set a channel to speed up the AP setup.
 		"channel=1",
-	}, "\n")
+	}
+	hostapdConfLines = append(hostapdConfLines, opts.HostapdAddtionalConfLines...)
+	hostapdConf := strings.Join(hostapdConfLines, "\n")
 	hostapdConfFile, err := os.CreateTemp(outDir, "hostapd*.conf")
 	if err != nil {
 		return nil, errors.Wrap(err, "failed to create hostapd config file")
@@ -485,12 +492,12 @@ func CreateWifiRouterEnv(ctx context.Context, apIf string, m *shill.Manager, poo
 	// Delay to wait for a network to be discovered.
 	const scanAndWaitTimeout = 30 * time.Second
 	// Trigger a scan.
-	wifi.Service, err = wifim.ScanAndWaitForService(ctx, ssid, scanAndWaitTimeout)
+	wifi.Service, err = wifim.ScanAndWaitForService(ctx, wifi.SSID, scanAndWaitTimeout)
 	if err != nil {
 		return nil, errors.Wrap(err, "failed to request an active scan")
 	}
 
 	success = true
-	testing.ContextLogf(ctx, "Virtual WiFi router env with SSID %s has been set up", ssid)
+	testing.ContextLogf(ctx, "Virtual WiFi router env with SSID %s has been set up", wifi.SSID)
 	return wifi, nil
 }
