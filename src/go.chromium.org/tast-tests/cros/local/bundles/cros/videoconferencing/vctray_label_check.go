@@ -65,9 +65,9 @@ func VctrayLabelCheck(cleanupCtx context.Context, s *testing.State) {
 	// "Camera framing" only will be shown on some devices.
 	// If we can guarantee that all other 3 labels could be found in A11y tree. That means the UI is not broken. b/353895309
 	featureLabels := map[string]*nodewith.Finder{
-		"Appearance effects": nodewith.Role(role.StaticText).Name("Appearance effects").HasClass("ToggleEffectsButtonLabel"),
-		"Noise cancellation": nodewith.Role(role.StaticText).Name("Noise cancellation").HasClass("ToggleEffectsButtonLabel"),
-		"Live Caption":       nodewith.Role(role.StaticText).Name("Live Caption").HasClass("ToggleEffectsButtonLabel"),
+		"Appearance effects": nodewith.Role(role.StaticText).Name("Appearance effects").HasClass("Label"),
+		"Noise cancellation": nodewith.Role(role.StaticText).Name("Noise cancellation").HasClass("Label"),
+		"Live Caption":       nodewith.Role(role.StaticText).Name("Live Caption").HasClass("Label"),
 	}
 
 	backgroundLabels := map[string]*nodewith.Finder{
