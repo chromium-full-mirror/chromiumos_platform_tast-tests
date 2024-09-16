@@ -35,10 +35,10 @@ func init() {
 		BugComponent: "b:1373988",
 		Attr:         []string{"group:mainline", "informational", "group:hw_agnostic"},
 		SoftwareDeps: []string{"chrome"},
-		Fixture:      "arcBootedWithInputOverlayAlphaV2",
+		Fixture:      "arcBootedWithGameDashboard",
 		Params: []testing.Param{
 			{
-				ExtraSoftwareDeps: []string{"android_p"},
+				ExtraSoftwareDeps: []string{"android_container_r"},
 			}, {
 				Name:              "vm",
 				ExtraSoftwareDeps: []string{"android_vm"},
@@ -68,41 +68,15 @@ func InputOverlayReposition(ctx context.Context, s *testing.State) {
 		defer kb.Close(ctx)
 		defer faillog.DumpUITreeOnError(ctx, s.OutDir(), s.HasError, params.TestConn)
 
-		menuEntry := nodewith.Name("Game controls").HasClass("MenuEntryView")
-		editButton := nodewith.Name("Edit").HasClass("PillButton")
-		buttonGroup := nodewith.Name("Layout actions menu").Role(role.Group)
+		gameControlsEdit := nodewith.Name("Edit game controls").HasClass("GameDashboardMainMenuView::GameControlsDetailsRow")
 		tapAction := nodewith.Name("Keymapping touch point").Role(role.Group).First()
 		moveAction := nodewith.Name("Keymapping D-pad").Role(role.Group)
 
-		// CUJ: Reposition various UI elements.
-		if err := uiauto.Combine("drag menu entry",
-			// Close educational dialog.
-			ui.LeftClick(nodewith.Name("Got it").HasClass("LabelButtonLabel")),
-			// Verify menu entry drag works correctly.
-			testDrag(menuEntry, params.TestConn, mouseDrag, -10, -10),
-			testDrag(menuEntry, params.TestConn, touchDrag, 10, 10),
-			kb.AccelAction("Tab"),
-			testKeyDrag(menuEntry, params.TestConn),
-			testOffscreenDrag(menuEntry, params.TestConn),
-		)(ctx); err != nil {
-			s.Fatal("Failed to verify menu entry drag correctness: ", err)
-		}
-
-		if err := uiauto.Combine("drag button group",
-			// Open game controls.
-			ui.LeftClick(menuEntry),
-			ui.LeftClick(editButton),
-			// Verify button group drag works correctly.
-			testDrag(buttonGroup, params.TestConn, mouseDrag, -10, -10),
-			testDrag(buttonGroup, params.TestConn, touchDrag, -10, 10),
-			ui.FocusAndWait(buttonGroup),
-			testKeyDrag(buttonGroup, params.TestConn),
-			testOffscreenDrag(buttonGroup, params.TestConn),
-		)(ctx); err != nil {
-			s.Fatal("Failed to verify button group drag correctness: ", err)
-		}
-
 		if err := uiauto.Combine("drag actions",
+			// Open game dashboard.
+			kb.AccelAction("Search+g"),
+			// Open game controls.
+			ui.LeftClickUntil(gameControlsEdit, ui.Gone(gameControlsEdit)),
 			// Verify tap action drag works correctly.
 			testDrag(tapAction, params.TestConn, mouseDrag, -10, -10),
 			testDrag(tapAction, params.TestConn, touchDrag, 10, 10),
