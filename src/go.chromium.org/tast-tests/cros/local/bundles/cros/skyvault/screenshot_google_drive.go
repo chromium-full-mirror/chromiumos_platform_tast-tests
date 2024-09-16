@@ -7,6 +7,7 @@ package skyvault
 import (
 	"context"
 	"os"
+	"path/filepath"
 	"regexp"
 	"time"
 
@@ -72,6 +73,17 @@ func ScreenshotGoogleDrive(ctx context.Context, s *testing.State) {
 
 	handler := faillog.DumpUITreeWithScreenshotHandler(cleanupCtx, tconn, "download_google_drive")
 	s.AttachErrorHandlers(handler, handler)
+
+	recorder, err := uiauto.NewScreenRecorder(ctx, tconn)
+	if err != nil {
+		s.Log("Failed to create screen recorder: ", err)
+	}
+	if recorder != nil {
+		if err := recorder.Start(ctx, tconn); err != nil {
+			s.Log("Failed to start screen recorder: ", err)
+		}
+		defer recorder.StopAndSaveOnError(cleanupCtx, filepath.Join(s.OutDir(), "record.webm"), s.HasError)
+	}
 
 	files, err := filesapp.Launch(ctx, tconn)
 	if err != nil {
