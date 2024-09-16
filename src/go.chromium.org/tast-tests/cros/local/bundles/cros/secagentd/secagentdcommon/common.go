@@ -6,6 +6,7 @@
 package secagentdcommon
 
 import (
+	"bufio"
 	"context"
 	"io"
 	"os"
@@ -83,25 +84,29 @@ func GetSecagentdLogSize() (int64, error) {
 // The file should be cleared prior to restarting the daemon via ClearSecagentdLog
 // prior to waiting for a string. Failure to do so means that strings from
 // past runs may abort the wait prematurely.
-func WaitForStringInLog(ctx context.Context, text string, startingOffset int64) error {
+func WaitForStringInLog(ctx context.Context, text string, startingOffset int64, s *testing.State) error {
 	offset := startingOffset
 	return testing.Poll(ctx, func(ctx context.Context) error {
-		loginfo, err := os.Stat(secagentdLogFile)
+		logReader, err := os.Open(secagentdLogFile)
 		if err != nil {
-			return testing.PollBreak(errors.Wrap(err, "failed to stat "+secagentdLogFile))
+			return errors.Wrap(err, "failed to open "+secagentdLogFile)
 		}
-		currentSize := loginfo.Size()
-		buff := make([]byte, currentSize-offset)
-		logFile, err := os.Open(secagentdLogFile)
-		defer logFile.Close()
-		bytesRead, err := logFile.ReadAt(buff, offset)
-		if err != nil && err != io.EOF {
-			return testing.PollBreak(errors.Wrap(err, "failed to read "+secagentdLogFile))
+		if _, err := logReader.Seek(offset, io.SeekStart); err != nil {
+			return errors.Wrapf(err, "Seek to %d failed on %q", offset, secagentdLogFile)
 		}
-		offset += int64(bytesRead)
-		if !strings.Contains(string(buff), text) {
-			return errors.New("could not find " + text + " in " + logFile.Name())
+		logScanner := bufio.NewScanner(logReader)
+		defer logReader.Close()
+		for logScanner.Scan() {
+			if strings.Contains(logScanner.Text(), text) {
+				foundAt, _ := logReader.Seek(0, io.SeekCurrent)
+				s.Logf("Found %q in line %q at offset %v", text, logScanner.Text(), foundAt)
+				return nil
+			}
 		}
-		return nil
+		offset, err = logReader.Seek(0, io.SeekCurrent)
+		if err != nil {
+			return testing.PollBreak(errors.Wrap(err, "failed to calculate offset after scanning"))
+		}
+		return errors.New("could not find " + text + " in " + logReader.Name())
 	}, &testing.PollOptions{Timeout: 15 * time.Second, Interval: 2 * time.Second})
 }

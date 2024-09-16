@@ -195,10 +195,11 @@ func FileEvents(ctx context.Context, s *testing.State) {
 
 	s.Logf("Waiting for the string %q to appear in secagentd.log,"+
 		" starting search at offset=%v", synchLogString, initialOffset)
-	if err := secagentdcommon.WaitForStringInLog(ctx, synchLogString, initialOffset); err != nil {
-		s.Log("Failed to verify that fileplugin activated: ", err)
+	if err := secagentdcommon.WaitForStringInLog(ctx, synchLogString, initialOffset, s); err != nil {
+		s.Log("Failed to verify that fileplugin activated, continuing anyways: ", err)
+	} else {
+		s.Logf("Detected %q in log file, file plugin should be activated..starting test", synchLogString)
 	}
-	s.Logf("Detected %q in log file, file plugin should be activated..starting test", synchLogString)
 
 	cr := s.FixtValue().(chrome.HasChrome).Chrome()
 	normalizedUser := cr.NormalizedUser()
