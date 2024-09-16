@@ -13,7 +13,7 @@ import (
 var HidePasswordButton = nodewith.Role(role.ToggleButton).HasClass("DisplayPasswordButton").Name("Hide password")
 
 // ShowPasswordButton is the finder for the "Show password" button on Lock/Start screen.
-var ShowPasswordButton = nodewith.Role(role.Button).HasClass("DisplayPasswordButton").Name("Show password")
+var ShowPasswordButton = nodewith.Role(role.ToggleButton).HasClass("DisplayPasswordButton").Name("Show password")
 
 // SubmitButton is the finder for the "Submit" button on Lock/Start screen.
 var SubmitButton = nodewith.Name("Submit").Role(role.Button)

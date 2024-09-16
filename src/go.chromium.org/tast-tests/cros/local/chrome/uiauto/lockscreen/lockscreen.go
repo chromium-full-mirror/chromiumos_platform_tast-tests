@@ -41,7 +41,7 @@ var SmartLockArrowButtonFinder = nodewith.NameContaining("Unlocked by your phone
 
 // SimplePinOrPasswordFieldFinder is like PINFieldFinder, but doesn't check the name attribute so that username doesn't
 // need to be passed in and it's more convenient to use.
-var SimplePinOrPasswordFieldFinder = nodewith.Role(role.TextField).Attribute("placeholder", "PIN or password")
+var SimplePinOrPasswordFieldFinder = nodewith.Role(role.TextField).NameContaining("Password for")
 
 // PinInputFieldFinder finds the node that displays the entered PIN when autosubmit is
 // enabled.
@@ -124,7 +124,7 @@ func PasswordFieldFinder(username string) (*nodewith.Finder, error) {
 	if err != nil {
 		return nil, errors.Wrap(err, "failed to compile regexp for name attribute")
 	}
-	return nodewith.Role(role.TextField).Attribute("name", r).Attribute("placeholder", "Password"), nil
+	return nodewith.Role(role.TextField).Attribute("name", r), nil
 }
 
 // WaitForPasswordField waits for the password text field for a given user pod to appear in the UI.
@@ -328,7 +328,7 @@ func SwitchToPassword(ctx context.Context, tconn *chrome.TestConn) error {
 // PINFieldFinder generates Finder for the "PIN or password" field.
 func PINFieldFinder(username string) (*nodewith.Finder, error) {
 	r := regexp.MustCompile(fmt.Sprintf("Password for %v", username))
-	return nodewith.Role(role.TextField).Attribute("name", r).Attribute("placeholder", "PIN or password"), nil
+	return nodewith.Role(role.TextField).Attribute("name", r), nil
 }
 
 // UserPassword searches the PIN / Password field for a given user pod and returns the corresponding node.
