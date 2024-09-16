@@ -6,6 +6,8 @@ package firmware
 
 import (
 	"context"
+	"fmt"
+	"io"
 	"strconv"
 	"strings"
 	"time"
@@ -122,7 +124,11 @@ func ConsecutiveBoot(ctx context.Context, s *testing.State) {
 
 	shutdownWithShutdownCmd := func() error {
 		s.Log("Sending `/sbin/shutdown -P now` to shutdown dut")
-		if err := h.DUT.Conn().CommandContext(ctx, "/sbin/shutdown", "-P", "now").Start(); err != nil {
+		shutdownCtx, cancel := context.WithTimeout(ctx, 10*time.Second)
+		defer cancel()
+		// io.EOF errors are fine, that just means the shutdown happened so fast, ssh didn't get a chance to return success.
+		// context.DeadlineExceeded errors are also fine.
+		if err := h.DUT.Conn().CommandContext(shutdownCtx, "/sbin/shutdown", "-P", "now").Start(); err != nil && !errors.Is(err, io.EOF) && !errors.Is(err, context.DeadlineExceeded) {
 			return errors.Wrap(err, "failed to run `/sbin/shutdown -P now` cmd")
 		}
 		return nil
@@ -191,6 +197,7 @@ func ConsecutiveBoot(ctx context.Context, s *testing.State) {
 	unexpectedECReboot := 0
 	customCmdFailed := 0
 	powerdFailed := 0
+	numFails := 0
 
 	failures := make(map[int][]error, numIters)
 	for i := 0; i < numIters; i++ {
@@ -202,10 +209,19 @@ func ConsecutiveBoot(ctx context.Context, s *testing.State) {
 		if errCount != nil {
 			*errCount++
 		}
+		numFails++
 	}
 
+	startTime := time.Now()
+
 	for i := 0; i < numIters; i++ {
-		s.Logf("Running iteration %d out of %d ", i+1, numIters)
+		if i > 0 {
+			estimatedTimeRemaining := time.Now().Sub(startTime) / time.Duration(i) * time.Duration(numIters-i)
+			s.Logf("------ Running iteration %d out of %d (%d failures) Time remaining: %s ------", i+1, numIters, numFails, estimatedTimeRemaining.Round(time.Minute))
+		} else {
+			s.Logf("------ Running iteration %d out of %d ------", i+1, numIters)
+		}
+		h.Servo.Echo(ctx, fmt.Sprintf("%s iteration %d out of %d", s.TestName(), i+1, numIters))
 
 		if err := shutdownFunc(); err != nil {
 			logFailure(errors.Wrap(err, "error in shutdown func"), i, &shutdownFuncFailed)
@@ -298,10 +314,6 @@ func ConsecutiveBoot(ctx context.Context, s *testing.State) {
 		}
 	}
 
-	numFails := 0
-	for _, errors := range failures {
-		numFails += len(errors)
-	}
 	if numFails > 0 {
 		s.Logf("Encountered %d errors during execution of stress test:", numFails)
 		s.Logf("\tFailed to shutdown:........%d", shutdownFuncFailed)
@@ -314,6 +326,14 @@ func ConsecutiveBoot(ctx context.Context, s *testing.State) {
 		s.Logf("\tUnexpected EC reboot:......%d", unexpectedECReboot)
 		s.Logf("\tCustom cmd failed:.........%d", customCmdFailed)
 		s.Logf("\tPowerd was not running:....%d", powerdFailed)
+		for iter, errors := range failures {
+			if len(errors) > 0 {
+				s.Logf("Iter %d: Had the following failures:", iter+1)
+				for _, errMsg := range errors {
+					s.Logf("\t%v", errMsg)
+				}
+			}
+		}
 		s.Fatalf("ConsecutiveBoot test had %d errors, see logs for details", numFails)
 	} else {
 		s.Log("No errors encountered")
