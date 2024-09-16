@@ -138,6 +138,8 @@ func tapePools() map[string]string {
 	return map[string]string{
 		tape.DefaultManaged:                 tape.DmaDefaultManaged,
 		tape.BuiltInCertProvisioningTesting: tape.DmaBuiltInCertProvisioningTesting,
+		tape.DeviceTrustDisabled:            tape.DmaDeviceTrustDisabled,
+		tape.DeviceTrustEnabled:             tape.DmaDeviceTrustEnabled,
 	}
 }
 

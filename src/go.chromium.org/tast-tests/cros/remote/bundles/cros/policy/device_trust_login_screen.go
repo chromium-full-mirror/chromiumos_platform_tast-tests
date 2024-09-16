@@ -10,6 +10,7 @@ import (
 
 	"github.com/golang/protobuf/ptypes/empty"
 
+	"go.chromium.org/tast-tests/cros/common/dma"
 	"go.chromium.org/tast-tests/cros/common/fixture"
 	"go.chromium.org/tast-tests/cros/common/tape"
 	"go.chromium.org/tast-tests/cros/services/cros/enterpriseconnectors"
@@ -41,6 +42,7 @@ func init() {
 			"chrome",
 			"chrome_internal",
 			"reboot",
+			"gaia",
 		},
 		ServiceDeps: []string{
 			"tast.cros.hwsec.OwnershipService",
@@ -80,7 +82,7 @@ func init() {
 
 func DeviceTrustLoginScreen(ctx context.Context, s *testing.State) {
 	param := s.Param().(userParam)
-	poolID := param.poolID
+	poolID := dma.TapePool(param.poolID)
 	expectedIDPURL := param.expectedIDPURL
 	signinProfileTestExtensionManifestKey := s.RequiredVar("ui.signinProfileTestExtensionManifestKey")
 
