@@ -27,8 +27,14 @@ func init() {
 			"afakhry@google.com",
 		},
 		BugComponent: "b:1457613",
-		Attr:         []string{"group:mainline", "informational", "group:hw_agnostic"},
-		Fixture:      "chromeLoggedIn",
+		Attr: []string{
+			"group:golden_tier",
+			"group:medium_low_tier",
+			"group:hardware",
+			"group:complementary",
+			"group:hw_agnostic",
+		},
+		Fixture: "chromeLoggedIn",
 	})
 }
 

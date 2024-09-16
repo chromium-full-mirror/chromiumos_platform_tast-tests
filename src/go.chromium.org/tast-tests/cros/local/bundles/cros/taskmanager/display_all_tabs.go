@@ -36,9 +36,15 @@ func init() {
 		},
 		BugComponent:   "b:1457613",
 		LifeCycleStage: testing.LifeCycleOwnerMonitored,
-		Attr:           []string{"group:mainline", "informational", "group:hw_agnostic"},
-		SoftwareDeps:   []string{"chrome", "gaia"},
-		VarDeps:        []string{ui.GaiaPoolDefaultVarName},
+		Attr: []string{
+			"group:golden_tier",
+			"group:medium_low_tier",
+			"group:hardware",
+			"group:complementary",
+			"group:hw_agnostic",
+		},
+		SoftwareDeps: []string{"chrome", "gaia"},
+		VarDeps:      []string{ui.GaiaPoolDefaultVarName},
 		// GAIA is required to install an app from Chrome Webstore.
 		Fixture: "chromeLoggedInWithGaia",
 		// There are 10 tabs to be opened.

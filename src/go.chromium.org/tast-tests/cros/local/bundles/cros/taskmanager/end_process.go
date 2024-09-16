@@ -39,7 +39,13 @@ func init() {
 			"afakhry@google.com",
 		},
 		BugComponent: "b:1238037", // ChromeOS > Software > Task Manager
-		Attr:         []string{"group:mainline", "informational", "group:hw_agnostic"},
+		Attr: []string{
+			"group:golden_tier",
+			"group:medium_low_tier",
+			"group:hardware",
+			"group:complementary",
+			"group:hw_agnostic",
+		},
 		SoftwareDeps: []string{"chrome"},
 		Fixture:      "chromeLoggedIn",
 		Timeout:      5 * time.Minute,
