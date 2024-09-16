@@ -27,9 +27,10 @@ func init() {
 		LifeCycleStage: testing.LifeCycleOwnerMonitored,
 		Desc:           "Tests pairing of classic and LE btpeers, with pairing done through dbus",
 		Contacts: []string{
-			"cros-connectivity@google.com",
+			"chromeos-connectivity-engprod@google.com",
+			"shijinabraham@google.com",
 		},
-		BugComponent:    "b:1131776", // ChromeOS > Software > System Services > Connectivity > Bluetooth
+		BugComponent:    "b:976419", // ChromeOS > EngProd > Platform > Connectivity
 		Attr:            []string{"group:bluetooth"},
 		TestBedDeps:     []string{tbdep.Wificell, tbdep.BluetoothStateNormal, tbdep.WorkingBluetoothPeers(1)},
 		SoftwareDeps:    []string{"chrome"},
