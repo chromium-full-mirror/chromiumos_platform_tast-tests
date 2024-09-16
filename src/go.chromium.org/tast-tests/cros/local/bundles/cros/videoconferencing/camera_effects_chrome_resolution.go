@@ -14,6 +14,7 @@ import (
 	"go.chromium.org/tast-tests/cros/local/bundles/cros/videoconferencing/common"
 	"go.chromium.org/tast-tests/cros/local/bundles/cros/videoconferencing/effectshtml"
 	"go.chromium.org/tast-tests/cros/local/chrome/uiauto"
+	"go.chromium.org/tast-tests/cros/local/chrome/uiauto/faillog"
 	"go.chromium.org/tast-tests/cros/local/chrome/uiauto/vctray"
 	"go.chromium.org/tast-tests/cros/local/screenshot"
 	"go.chromium.org/tast-tests/cros/local/videoconferencing/fixture"
@@ -60,6 +61,7 @@ func init() {
 func CameraEffectsChromeResolution(cleanupCtx context.Context, s *testing.State) {
 	ctx, tconn, cr, br, srvURL, cleanupFunc := common.Setup(cleanupCtx, s)
 	defer cleanupFunc()
+	defer faillog.DumpUITreeWithScreenshotOnError(cleanupCtx, s.OutDir(), s.HasError, cr, "ui_tree")
 
 	vcTray := vctray.New(ctx, tconn)
 

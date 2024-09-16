@@ -56,7 +56,7 @@ func init() {
 			data.BackgroundImageJpg,
 			data.BackgroundMetadata,
 		},
-		Fixture: fixture.LoggedInWithFakeHALAndEffectsEnabledNoScreenRecorder,
+		Fixture: fixture.LoggedInWithFakeHALAndEffectsEnabled,
 	})
 }
 
