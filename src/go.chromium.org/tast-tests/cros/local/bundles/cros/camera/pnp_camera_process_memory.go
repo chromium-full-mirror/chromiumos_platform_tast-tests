@@ -73,16 +73,8 @@ func init() {
 		BugComponent: "b:167281", // ChromeOS > Platform > Technologies > Camera
 		Attr:         []string{"group:crosbolt", "crosbolt_perbuild"},
 		SoftwareDeps: []string{caps.BuiltinCamera, "chrome", "camera_app"},
+		Fixture:      pnp.StablePowerAsh,
 		Timeout:      5 * time.Minute,
-		Params: []testing.Param{{
-			Fixture: pnp.StablePowerAsh,
-		}, {
-			Name:    "digital_zoom_on_super_res_off",
-			Fixture: pnp.StablePowerAshWithSuperResDisabled,
-		}, {
-			Name:    "digital_zoom_off_super_res_off",
-			Fixture: pnp.StablePowerAshWithDigitalZoomSuperResDisabled,
-		}},
 	})
 }
 
