@@ -16,7 +16,6 @@ import (
 	"go.chromium.org/tast-tests/cros/local/arc"
 	"go.chromium.org/tast-tests/cros/local/arc/optin"
 	"go.chromium.org/tast-tests/cros/local/chrome"
-	"go.chromium.org/tast-tests/cros/local/chrome/lacros/lacrosfixt"
 	"go.chromium.org/tast/core/errors"
 	"go.chromium.org/tast/core/testing"
 )
@@ -116,26 +115,6 @@ func init() {
 				chrome.EnableFeatures("DesksTemplates", "EnableSavedDesks"),
 				chrome.DisableFeatures("DeskTemplateSync", "FirmwareUpdaterApp"),
 			}, nil
-		}),
-		SetUpTimeout:    chrome.GAIALoginTimeout + optin.OptinTimeout + arc.BootTimeout + 2*time.Minute,
-		ResetTimeout:    ResetTimeout,
-		PostTestTimeout: PostTestTimeout,
-		TearDownTimeout: ResetTimeout,
-	})
-
-	// savedDesksEnabledLacrosWithArcBooted is a fixture that combines the functionality of ARC,
-	// lacros, and saved desks.
-	testing.AddFixture(&testing.Fixture{
-		Name: "savedDesksEnabledLacrosWithArcBooted",
-		Desc: "Saved desks features enabled with lacros and ARC",
-		Contacts: []string{
-			"cros-commercial-productivity-eng@google.com",
-			"zhumatthew@google.com",
-		},
-		BugComponent: "b:1020793", // ChromeOS Server Projects > Enterprise Management > Commercial Productivity
-		Impl: bootedWithARCFixture(func(ctx context.Context, s *testing.FixtState) ([]chrome.Option, error) {
-			return lacrosfixt.NewConfig(lacrosfixt.ChromeOptions(chrome.GAIALoginPool(dma.CredsFromPool(ui.GaiaPoolDefaultVarName)), chrome.EnableFeatures("DesksTemplates", "EnableSavedDesks"),
-				chrome.DisableFeatures("DeskTemplateSync"))).Opts()
 		}),
 		SetUpTimeout:    chrome.GAIALoginTimeout + optin.OptinTimeout + arc.BootTimeout + 2*time.Minute,
 		ResetTimeout:    ResetTimeout,

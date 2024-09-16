@@ -17,7 +17,6 @@ import (
 	"go.chromium.org/tast-tests/cros/local/arc/optin"
 	"go.chromium.org/tast-tests/cros/local/arc/swap"
 	"go.chromium.org/tast-tests/cros/local/chrome"
-	"go.chromium.org/tast-tests/cros/local/chrome/lacros/lacrosfixt"
 	"go.chromium.org/tast-tests/cros/local/logsaver"
 	"go.chromium.org/tast-tests/cros/local/pvsched"
 
@@ -434,105 +433,6 @@ func init() {
 		PostTestTimeout: PostTestTimeout,
 		TearDownTimeout: ResetTimeout,
 		Parent:          "gpuWatchDog",
-	})
-
-	// lacrosWithArcBooted is a fixture that combines the functionality of
-	// arcBooted and lacros.
-	fixtureConfig = DefaultBootedFixtureConfig()
-	fixtureConfig.FOpts = func(ctx context.Context, s *testing.FixtState) ([]chrome.Option, error) {
-		return lacrosfixt.NewConfig(lacrosfixt.ChromeOptions(chrome.ARCEnabled(), chrome.UnRestrictARCCPU())).Opts()
-	}
-	testing.AddFixture(&testing.Fixture{
-		Name: "lacrosWithArcBooted",
-		Desc: "Lacros Chrome from a pre-built image with ARC booted",
-		Contacts: []string{
-			"cros-sw-perf@google.com",
-			"xiyuan@chromium.org",
-		},
-		BugComponent:    "b:1045832", // ChromeOS > Software > Performance > TPS
-		Impl:            NewArcBootedFixture(fixtureConfig),
-		SetUpTimeout:    chrome.LoginTimeout + BootTimeout + ui.StartTimeout,
-		ResetTimeout:    ResetTimeout,
-		PreTestTimeout:  PreTestTimeout,
-		PostTestTimeout: PostTestTimeout,
-		TearDownTimeout: ResetTimeout,
-	})
-
-	// lacrosWithArcBootedInTabletMode is a fixture similar to lacrosWithArcBooted,
-	// except that Chrome is launched in tablet mode.
-	fixtureConfig = DefaultBootedFixtureConfig()
-	fixtureConfig.FOpts = func(ctx context.Context, s *testing.FixtState) ([]chrome.Option, error) {
-		return lacrosfixt.NewConfig(lacrosfixt.ChromeOptions(chrome.ARCEnabled(), chrome.UnRestrictARCCPU(), chrome.ExtraArgs("--force-tablet-mode=touch_view", "--enable-virtual-keyboard"))).Opts()
-	}
-	testing.AddFixture(&testing.Fixture{
-		Name: "lacrosWithArcBootedInTabletMode",
-		Desc: "Lacros Chrome from a pre-built image with ARC booted in tablet mode",
-		Contacts: []string{
-			"cros-sw-perf@google.com",
-			"xiyuan@chromium.org",
-		},
-		BugComponent:    "b:1045832", // ChromeOS > Software > Performance > TPS
-		Impl:            NewArcBootedFixture(fixtureConfig),
-		SetUpTimeout:    chrome.LoginTimeout + BootTimeout + ui.StartTimeout,
-		ResetTimeout:    ResetTimeout,
-		PreTestTimeout:  PreTestTimeout,
-		PostTestTimeout: PostTestTimeout,
-		TearDownTimeout: ResetTimeout,
-	})
-
-	// lacrosWithArcBootedAndPlayStore is a fixture that combines the
-	// functionality of arcBootedWithPlayStore and lacros.
-	fixtureConfig = DefaultBootedFixtureConfig()
-	fixtureConfig.PlayStoreOptin = true
-	fixtureConfig.FOpts = func(ctx context.Context, s *testing.FixtState) ([]chrome.Option, error) {
-		return lacrosfixt.NewConfig(lacrosfixt.ChromeOptions(
-			chrome.ARCEnabled(),
-			chrome.ExtraArgs(DisableSyncFlags()...),
-			chrome.UnRestrictARCCPU(),
-			chrome.GAIALoginPool(dma.CredsFromPool(uiCommon.GaiaPoolDefaultVarName)))).Opts()
-	}
-	testing.AddFixture(&testing.Fixture{
-		Name: "lacrosWithArcBootedAndPlayStore",
-		Desc: "Lacros Chrome from a pre-built image with ARC booted and the Play Store enabled",
-		Contacts: []string{
-			"cros-sw-perf@google.com",
-			"xiyuan@chromium.org",
-		},
-		BugComponent:    "b:1045832", // ChromeOS > Software > Performance > TPS
-		Vars:            []string{uiCommon.GaiaPoolDefaultVarName},
-		Impl:            NewArcBootedFixture(fixtureConfig),
-		SetUpTimeout:    chrome.GAIALoginTimeout + optin.OptinTimeout + BootTimeout + 2*time.Minute,
-		ResetTimeout:    ResetTimeout,
-		PreTestTimeout:  PreTestTimeout,
-		PostTestTimeout: PostTestTimeout,
-		TearDownTimeout: ResetTimeout,
-	})
-
-	// lacrosWithArcBootedAndDisableExternalStorage is a fixture that combines
-	// the functionality of arcBootedWithDisableExternalStorage and lacros.
-	fixtureConfig = DefaultBootedFixtureConfig()
-	fixtureConfig.FOpts = func(ctx context.Context, s *testing.FixtState) ([]chrome.Option, error) {
-		return lacrosfixt.NewConfig(lacrosfixt.ChromeOptions(
-			chrome.ARCEnabled(),
-			chrome.UnRestrictARCCPU(),
-			chrome.ExtraArgs(DisableSyncFlags()...),
-			chrome.ExtraArgs("--disable-features=ArcExternalStorageAccess", "--disable-features=FirmwareUpdaterApp"))).Opts()
-	}
-	testing.AddFixture(&testing.Fixture{
-		Name: "lacrosWithArcBootedAndDisableExternalStorage",
-		Desc: "Lacros Chrome from a pre-built image with ARC booted and external storage disabled",
-		Contacts: []string{
-			"hungmn@google.com",
-			"arc-performance@google.com",
-		},
-		// ChromeOS > Software > ARC++ > Performance
-		BugComponent:    "b:168382",
-		Impl:            NewArcBootedFixture(fixtureConfig),
-		SetUpTimeout:    chrome.LoginTimeout + BootTimeout + ui.StartTimeout,
-		ResetTimeout:    ResetTimeout,
-		PreTestTimeout:  PreTestTimeout,
-		PostTestTimeout: PostTestTimeout,
-		TearDownTimeout: ResetTimeout,
 	})
 
 	// arcBootedWithInputOverlayAlphaV2 is a fixture similar to arcBooted but
