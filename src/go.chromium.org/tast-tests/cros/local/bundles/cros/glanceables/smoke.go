@@ -49,7 +49,12 @@ func init() {
 		},
 		// ChromeOS > Software > System UI Surfaces > Glanceables
 		BugComponent: "b:1362950",
-		Attr:         []string{"group:mainline", "informational"},
+		Attr: []string{
+			"group:golden_tier",
+			"group:medium_low_tier",
+			"group:hardware",
+			"group:complementary",
+		},
 		SearchFlags: []*testing.StringPair{
 			pci.SearchFlag(&policy.ContextualGoogleIntegrationsEnabled{}, pci.VerifiedFunctionalityOS), {
 				Key:   "feature_id",
