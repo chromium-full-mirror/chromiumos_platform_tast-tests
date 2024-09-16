@@ -1,0 +1,5 @@
+{
+  "url": "gs://chromiumos-test-assets-public/tast/cros/video/still-colors-720p-bt709-limited-srgb.h264_20240916.mp4",
+  "size": 31912,
+  "sha256sum": "b4846aefe28f300acfd92cf11180398b8a689367ed081f7a6f50672086afd632"
+}

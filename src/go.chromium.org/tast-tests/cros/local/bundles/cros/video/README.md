@@ -514,31 +514,84 @@ To run these tests use:
 ```
 #!/bin/bash
 
-# Generates an image of size canvas_width x canvas_height. The image contains an
-# area of size area_width x area_height starting at (offset_x, offset_y) which
-# has an 8px magenta interior border and the remaining area is subdivided into
-# quadrants. Each quadrant is colored differently. The rest of the image is
-# cyan. The colors are chosen so that the distance between any two colors is at
-# least 127 (when taking the maximum absolute difference between components).
-# That way, it's easy to programmatically distinguish among regions. Also, the
-# assumption is that those colors are unlikely to correspond to common artifacts
-# (e.g., green lines). The image is saved as output_file. An image of only
-# area_width x area_height starting at (offset_x, offset_y) is saved as
-# output_ref_file if provided: this is intended to be used as the "reference"
-# image for how a video frame generated from output_file should be rendered in
-# the absence of scaling and artifacts.
-gen_image() {
-  canvas_width=$1
-  canvas_height=$2
-  area_width=$3
-  area_height=$4
-  offset_x=$5
-  offset_y=$6
-  output_file=$7
-  output_ref_file=$8
+# Converts a Y'C'bC'r matrix ffmpeg name, `ycbcr_matrix_str`, to the
+# corresponding value of the matrix_coefficients element in Rec. ITU-T H.264
+# (08/2021) - E.2.1 - Table E-5.
+#
+# The ffmpeg names are documented in [1] under in_color_matrix/out_color_matrix.
+# In particular, note that "bt2020" refers to the non-constant luminance
+# variant.
+#
+# [1] https://ffmpeg.org/ffmpeg-filters.html#Options-2
+ffmpeg_ycbcr_matrix_to_h264_matrix_coeffs() {
+  local ycbcr_matrix_str=${1}
+  case "${ycbcr_matrix_str}" in
+    "bt601")
+      echo 5
+      ;;
+    "bt709")
+      echo 1
+      ;;
+    "bt2020")
+      echo 9
+      ;;
+    *)
+      echo "Unknown Y'C'bC'r matrix: " "${ycbcr_matrix_str}" 1>&2
+      exit 1
+      ;;
+  esac
+}
 
-  # Calculate the coordinates of the top left corner of the area (x0, y0), the
-  # middle of the area (x50, y50), and the bottom right corner (x100, y100).
+# Converts a Y'C'bC'r range ffmpeg name, `ycbcr_range_str`, to the corresponding
+# value of the video_full_range_flag element in Rec. ITU-T H.264 (08/2021) -
+# E.2.1.
+#
+# The ffmpeg names are documented in [1] under in_range/out_range.
+#
+# [1] https://ffmpeg.org/ffmpeg-filters.html#Options-2
+ffmpeg_ycbcr_range_to_h264_full_range_flag() {
+  local ycbcr_range_str=${1}
+  case "${ycbcr_range_str}" in
+    "mpeg" | "limited" | "tv")
+      echo 0
+      ;;
+    "jpeg" | "full" | "pc")
+      echo 1
+      ;;
+    *)
+      echo "Unknown Y'C'bC'r range: " "${ycbcr_range_str}" 1>&2
+      exit 1
+      ;;
+  esac
+}
+
+# Generates an image of size `canvas_width` x `canvas_height`. The image
+# contains an area of size `area_width` x `area_height` starting at (`offset_x`,
+# `offset_y`) which has an 8px magenta interior border and the remaining
+# interior area is subdivided into quadrants. Each quadrant is colored
+# differently. The rest of the image is cyan. The colors are chosen so that the
+# distance between any two colors is at least 127 (when taking the maximum
+# absolute difference between components). That way, it's easy to
+# programmatically distinguish among regions. Also, the assumption is that those
+# colors are unlikely to correspond to common artifacts (e.g., green lines). The
+# image is saved as `output_file`.ppm.
+#
+# Color space considerations:
+#
+# The generated PPM should be assumed to be in the sRGB color space (i.e.,
+# BT.709 primaries with an sRGB transfer function).
+gen_srgb_image() {
+  local canvas_width=${1}
+  local canvas_height=${2}
+  local area_width=${3}
+  local area_height=${4}
+  local offset_x=${5}
+  local offset_y=${6}
+  local output_file=${7}
+
+  # Calculate the coordinates of the top left corner of the area (`x0`, `y0`),
+  # the middle of the area (`x50`, `y50`), and the bottom right corner (`x100`,
+  # `y100`).
   ((x0 = offset_x))
   ((y0 = offset_y))
   ((x50 = offset_x + area_width / 2 - 1))
@@ -548,7 +601,7 @@ gen_image() {
 
   # Draw rectangles in the following order: top-left, top-right, bottom-right,
   # bottom-left.
-  convert -size ${canvas_width}x${canvas_height} canvas:cyan -draw " \
+  convert -size "${canvas_width}x${canvas_height}" canvas:cyan -draw " \
     fill rgba(255, 0, 255) \
     rectangle ${x0},${y0} ${x100},${y100} \
     fill rgba(128, 128, 0, 255) \
@@ -559,60 +612,129 @@ gen_image() {
     rectangle $((x50 + 1)),$((y50 + 1)) $((x100 - 8)),$((y100 - 8)) \
     fill rgba(0, 0, 128, 255) \
     rectangle $((x0 + 8)),$((y50 + 1)) ${x50},$((y100 - 8))" \
-    ${output_file}
+    "${output_file}.ppm"
+}
 
-  if [ -n "$output_ref_file" ]
+# Given an image (`input_file`.ppm), generates an H.264 video which lasts 30
+# seconds, removes the EXIF metadata, and saves it as `output_file`.mp4.
+#
+# `ycbcr_matrix_str` and `ycbcr_range_str` specify the Y'C'bC'r matrix and range
+# used for converting from RGB to Y'C'bC'r. They are interpreted as ffmpeg names
+# (see ffmpeg_ycbcr_matrix_to_h264_matrix_coeffs() and
+# ffmpeg_ycbcr_range_to_h264_full_range_flag() above).
+#
+# If `crop_rect` is not empty, it's assumed to be a string of the form
+# "crop_top=a:crop_right=b:crop_bottom=c:crop_left=d" which is appended to the
+# h264_metadata ffmpeg bitstream filter. See the documentation for these
+# parameters in [1].
+#
+# This function also generates `output_file`.ref.png which is an sRGB PNG file
+# corresponding to a ffmpeg capture of the 10th frame in the generated video.
+# This is intended to be used as a reference rendering.
+#
+# Color space considerations:
+#
+# The generated video encodes 4:2:0 Y'C'bC'r samples and is set to have two VUI
+# parameters that make it sRGB: colour_primaries (see Rec. ITU-T H.264 (08/2021)
+# - E.2.1 - Table E-3) is set to 1 (BT.709 primaries) and
+# transfer_characteristics (see Rec. ITU-T H.264 (08/2021) - E.2.1 - Table E-4)
+# is set to 13 (the sRGB/sYCC transfer functions).
+#
+# Note: I'm somewhat hesitant to assert that a value of 13 for
+# transfer_characteristics contributes to making the video sRGB because Table
+# E-4 indicates this value corresponds to either sRGB or sYCC depending on the
+# value of the matrix_coefficients element. That said, I tested the generated
+# videos in Chrome with hardware accelerated video decoding and logged the
+# resulting gfx::ColorSpace revealing that the decoded media::VideoFrames were
+# tagged with gfx::ColorSpace::TransferID::SRGB, so that checks out.
+#
+# The generated reference rendering `output_file`.ref.png is an sRGB PNG file.
+#
+# [1] https://www.ffmpeg.org/ffmpeg-bitstream-filters.html#h264_005fmetadata
+gen_srgb_h264_video() {
+  local ycbcr_matrix_str=${1}
+  local ycbcr_range_str=${2}
+  local crop_rect=${3}
+  local input_file=${4}
+  local output_file=${5}
+
+  local matrix_coeffs=$(ffmpeg_ycbcr_matrix_to_h264_matrix_coeffs \
+    "${ycbcr_matrix_str}")
+  local full_range_flag=$(ffmpeg_ycbcr_range_to_h264_full_range_flag \
+    "${ycbcr_range_str}")
+  local h264_metadata="matrix_coefficients=${matrix_coeffs}: \
+                       video_full_range_flag=${full_range_flag}: \
+                       colour_primaries=1: \
+                       transfer_characteristics=13"
+  if [ -n "${crop_rect}" ]
   then
-    convert ${output_file} -crop ${area_width}x${area_height}+${x0}+${y0} \
-      +repage ${output_ref_file}
-    exiftool -overwrite_original -all= ${output_ref_file}
+    h264_metadata="${h264_metadata}:${crop_rect}"
+  fi
+
+  # The "-color_primaries bt709" and "-color_trc iec61966_2_1" on the input side
+  # should ensure that the input PPM file is interpreted as sRGB.
+  ffmpeg \
+    -y \
+    -loop 1 \
+    -color_primaries bt709 \
+    -color_trc iec61966_2_1 \
+    -i "${input_file}.ppm" \
+    -vf "scale=out_color_matrix=${ycbcr_matrix_str}: \
+         out_range=${ycbcr_range_str}" \
+    -c:v libx264 \
+    -pix_fmt yuv420p \
+    -t 30 \
+    -profile:v baseline \
+    -bsf:v h264_metadata="${h264_metadata}" \
+    "${output_file}.mp4"
+  exiftool -overwrite_original -all= "${output_file}.mp4"
+
+  ffmpeg \
+    -y \
+    -i "${output_file}.mp4" \
+    -vf "select=eq(n\,9)" \
+    -update 1 \
+    "${output_file}.ref.png"
+
+  # This section here just enforces that ffmpeg outputs a PNG with an sRGB
+  # chunk [1].
+  #
+  # [1] http://www.libpng.org/pub/png/spec/1.2/PNG-Chunks.html
+  local png_identification
+  png_identification=$(identify -verbose "${output_file}.ref.png")
+  local exit_status=$?
+  if [ "${exit_status}" -ne "0" ]
+  then
+    echo "Couldn't get details about ${output_file}.ref.png" 1>&2
+    exit 1
+  fi
+  local srgb_chunk_search_res
+  srgb_chunk_search_res=$(grep -e "^\s.*png:sRGB: intent=1 (Relative Intent)$" \
+                          <<< "${png_identification}")
+  local exit_status="$?"
+  if [ "${exit_status}" -ne "0" ] || [ -z "${srgb_chunk_search_res}" ]
+  then
+    echo "Couldn't find sRGB chunk in ${output_file}.ref.png" 1>&2
+    exit 1
   fi
 }
 
-# Given an image (input_file), generates an H.264 video which lasts 30 seconds,
-# removes the EXIF metadata, and saves it as output_file.
-gen_video() {
-  input_file=$1
-  output_file=$2
-  ffmpeg -y -loop 1 -i ${input_file} -c:v libx264 -pix_fmt yuv420p -t 30 \
-    -profile:v baseline ${output_file}
-  exiftool -overwrite_original -all= ${output_file}
-}
-
-# Similar to gen_video(), but we get to specify the H.264 crop rectangle.
-gen_cropped_video() {
-  crop_top=$1
-  crop_right=$2
-  crop_bottom=$3
-  crop_left=$4
-  input_file=$5
-  output_file=$6
-  ffmpeg -y -loop 1 -i ${input_file} -c:v libx264 -pix_fmt yuv420p -t 30 \
-    -profile:v baseline \
-    -bsf:v h264_metadata="crop_top=${crop_top}: \
-                          crop_right=${crop_right}: \
-                          crop_bottom=${crop_bottom}: \
-                          crop_left=${crop_left}" \
-    ${output_file}
-  exiftool -overwrite_original -all= ${output_file}
-}
-
-# Modifies file (MP4) to make sure the image width and source image width
-# reported by exiftool is width. The offsets used here assume that the EXIF
+# Modifies `file` (MP4) to make sure the image width and source image width
+# reported by exiftool is `width`. The offsets used here assume that the EXIF
 # metadata has been removed from the file.
 overwrite_image_width() {
-  file=$1
-  width=$2
-  echo "000000f8: $(printf "%04x" ${width})" | xxd -r - ${file}
-  echo "000001f1: $(printf "%04x" ${width})" | xxd -r - ${file}
+  local file=${1}
+  local width=${2}
+  echo "000000f8: $(printf "%04x" ${width})" | xxd -r - "${file}"
+  echo "000001f1: $(printf "%04x" ${width})" | xxd -r - "${file}"
 }
 
-# Same as overwrite_image_width() but for the height.
+# Same as overwrite_image_width() but for the `height`.
 overwrite_image_height() {
-  file=$1
-  height=$2
-  echo "000000fc: $(printf "%04x" ${height})" | xxd -r - ${file}
-  echo "000001f3: $(printf "%04x" ${height})" | xxd -r - ${file}
+  file=${1}
+  height=${2}
+  echo "000000fc: $(printf "%04x" ${height})" | xxd -r - "${file}"
+  echo "000001f3: $(printf "%04x" ${height})" | xxd -r - "${file}"
 }
 
 ################################################################################
@@ -624,7 +746,7 @@ overwrite_image_height() {
 # video, the coded size is 640x368. If we supplied a 640x360 image, ffmpeg will
 # repeat the last row to fill the remaining 640x8 pixels prior to encoding. This
 # is not desirable because if Chrome doesn't apply the visible rectangle for
-# cropping (something that has occurred in the past) video.Contents and
+# cropping (a bug that has occurred in the past) video.Contents and
 # video.DrawOnCanvas will have a hard time detecting that regression because of
 # the way the color at the edges are checked. Instead, we give ffmpeg a 640x368
 # image where the last 640x8 are of a color not expected by the test. That way,
@@ -632,24 +754,44 @@ overwrite_image_height() {
 # H.264 crop rectangle and modify the resulting MP4 file to make sure it carries
 # a 640x360 size instead of 640x368.
 
-gen_image 640 368 640 360 0 0 still-colors-360p.bmp \
-  still-colors-360p.ref.png
-gen_cropped_video 0 0 8 0 still-colors-360p.bmp still-colors-360p.h264.mp4
-overwrite_image_height still-colors-360p.h264.mp4 360
+gen_srgb_image 640 368 640 360 0 0 still-colors-640x368
 
-gen_image 864 480 854 480 0 0 still-colors-480p.bmp \
-  still-colors-480p.ref.png
-gen_cropped_video 0 10 0 0 still-colors-480p.bmp still-colors-480p.h264.mp4
-overwrite_image_width still-colors-480p.h264.mp4 854
+gen_srgb_image 864 480 854 480 0 0 still-colors-864x480
 
-gen_image 1280 720 1280 720 0 0 still-colors-720p.bmp \
-  still-colors-720p.ref.png
-gen_video still-colors-720p.bmp still-colors-720p.h264.mp4
+gen_srgb_image 1280 720 1280 720 0 0 still-colors-1280x720
 
-gen_image 1920 1088 1920 1080 0 0 still-colors-1080p.bmp \
-  still-colors-1080p.ref.png
-gen_cropped_video 0 0 8 0 still-colors-1080p.bmp still-colors-1080p.h264.mp4
-overwrite_image_height still-colors-1080p.h264.mp4 1080
+gen_srgb_h264_video \
+  bt601 \
+  limited \
+  "crop_top=0:crop_right=0:crop_bottom=8:crop_left=0" \
+  still-colors-640x368 \
+  still-colors-360p-bt601-limited-srgb.h264
+overwrite_image_height \
+  still-colors-360p-bt601-limited-srgb.h264.mp4 \
+  360
+
+gen_srgb_h264_video \
+  bt601 \
+  limited \
+  "crop_top=0:crop_right=10:crop_bottom=0:crop_left=0" \
+  still-colors-864x480 \
+  still-colors-480p-bt601-limited-srgb.h264
+overwrite_image_width \
+  still-colors-480p-bt601-limited-srgb.h264.mp4 \
+  854
+
+for yuv_encoding in bt601 bt709 bt2020
+do
+  for yuv_range in limited full
+  do
+    gen_srgb_h264_video \
+      "${yuv_encoding}" \
+      "${yuv_range}" \
+      "" \
+      still-colors-1280x720 \
+      "still-colors-720p-${yuv_encoding}-${yuv_range}-srgb.h264"
+  done
+done
 
 ################################################################################
 # Generate a video with an exotic visible rectangle:
@@ -657,12 +799,16 @@ overwrite_image_height still-colors-1080p.h264.mp4 1080
 # H.264 allows for fancy visible rectangles that don't start at (0, 0). The
 # video here is 720x480 but it is cropped by a different amount on each side
 # (using H.264 metadata) in such a way that the visible area ends up being
-# 640x360 (thus, the resulting video should be rendered essentially like
-# still-colors-360p.h264.mp4 above).
+# 640x360.
 
-gen_image 720 480 640 360 64 32 still-colors-720x480.bmp
-gen_cropped_video 32 16 88 64 still-colors-720x480.bmp \
-  still-colors-720x480-cropped-to-640x360.h264.mp4
+gen_srgb_image 720 480 640 360 64 32 still-colors-720x480
+
+gen_srgb_h264_video \
+  bt601 \
+  limited \
+  "crop_top=32:crop_right=16:crop_bottom=88:crop_left=64" \
+  still-colors-720x480 \
+  still-colors-720x480-cropped-to-640x360-bt601-limited-srgb.h264
 ```
 
 [`video_decode_accelerator_tests`]: https://chromium.googlesource.com/chromium/src/+/046f987e020baba45ffb3061b3ee3d960d6ce981/docs/media/gpu/video_decoder_test_usage.md
