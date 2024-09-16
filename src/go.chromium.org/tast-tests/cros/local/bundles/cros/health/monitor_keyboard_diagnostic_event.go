@@ -41,7 +41,7 @@ func init() {
 			"weiluanwang@google.com",
 		},
 		BugComponent: "b:982097", // ChromeOS > Platform > Enablement > Health
-		Attr:         []string{"group:mainline", "informational", "group:criticalstaging"},
+		Attr:         []string{"group:mainline"},
 		SoftwareDeps: []string{"diagnostics", "chrome"},
 		// Form factors with internal keyboards:
 		//  - Clamshell
@@ -55,12 +55,22 @@ func init() {
 				forceClamshellMode: false,
 			},
 			ExtraHardwareDeps: hwdep.D(hwdep.FormFactor(hwdep.Clamshell)),
+			ExtraAttr:         []string{"informational", "group:criticalstaging"},
 		}, {
 			Name: "tablet_mode_form_factors",
 			Val: keyboardEventTestParams{
 				forceClamshellMode: true,
 			},
-			ExtraHardwareDeps: hwdep.D(hwdep.FormFactor(hwdep.Convertible, hwdep.Detachable)),
+			ExtraHardwareDeps: hwdep.D(hwdep.FormFactor(hwdep.Convertible, hwdep.Detachable), hwdep.SkipOnModel("kracko360")),
+			ExtraAttr:         []string{"informational", "group:criticalstaging"},
+		}, {
+			// TODO(b/363140028): fix the failures on kracko360.
+			Name: "tablet_mode_form_factors_unstable",
+			Val: keyboardEventTestParams{
+				forceClamshellMode: true,
+			},
+			ExtraHardwareDeps: hwdep.D(hwdep.FormFactor(hwdep.Convertible, hwdep.Detachable), hwdep.Model("kracko360")),
+			ExtraAttr:         []string{"informational"},
 		}},
 	})
 }
