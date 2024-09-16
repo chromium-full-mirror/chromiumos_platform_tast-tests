@@ -32,7 +32,12 @@ func init() {
 		},
 		// ChromeOS > Software > System Services > Peripherals > Keyboard
 		BugComponent: "b:1131926",
-		Attr:         []string{"group:mainline", "informational"},
+		Attr: []string{
+			"group:golden_tier",
+			"group:medium_low_tier",
+			"group:hardware",
+			"group:complementary",
+		},
 		SoftwareDeps: []string{"chrome"},
 		HardwareDeps: hwdep.D(hwdep.Keyboard()),
 	})

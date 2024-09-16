@@ -28,10 +28,11 @@ func init() {
 		},
 		// ChromeOS > Software > Settings
 		BugComponent: "b:1246072",
-		// b:238260020 - disable aged (>1y) unpromoted informational tests
 		Attr: []string{
-			// "group:mainline",
-			// "informational",
+			"group:golden_tier",
+			"group:medium_low_tier",
+			"group:hardware",
+			"group:complementary",
 			"group:hw_agnostic",
 		},
 		SoftwareDeps: []string{"chrome"},

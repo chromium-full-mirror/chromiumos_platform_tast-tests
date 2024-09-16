@@ -32,7 +32,12 @@ func init() {
 		},
 		// ChromeOS > Software > Fundamentals > Peripherals > Mouse
 		BugComponent: "b:1131847",
-		Attr:         []string{"group:mainline", "informational"},
+		Attr: []string{
+			"group:golden_tier",
+			"group:medium_low_tier",
+			"group:hardware",
+			"group:complementary",
+		},
 		SoftwareDeps: []string{"chrome"},
 		Timeout:      time.Minute,
 	})
