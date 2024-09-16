@@ -256,6 +256,21 @@ func SetupPDTester(ctx context.Context, h *Helper, testParams PDTestParams) erro
 		}
 	}
 
+	if testParams.Shutdown || testParams.Suspend {
+		if err := testing.Poll(ctx, func(ctx context.Context) error {
+			dualRole, err := h.Servo.GetDUTDualRoleState(ctx, servo.PDPortUnderTest)
+			if err != nil {
+				return errors.Wrap(err, "get DualRole failed")
+			}
+			if dualRole == servo.USBPdDualRoleOn {
+				return errors.Wrap(err, "power sourcing still on")
+			}
+
+			return nil
+		}, &testing.PollOptions{Timeout: PowerStateTimeout, Interval: PowerStateInterval}); err != nil {
+			return errors.Wrap(err, "failed to turn off power sourcing")
+		}
+	}
 	testing.ContextLog(ctx, "SetupPDTester succeeded. Proceeding with test")
 	return nil
 }
