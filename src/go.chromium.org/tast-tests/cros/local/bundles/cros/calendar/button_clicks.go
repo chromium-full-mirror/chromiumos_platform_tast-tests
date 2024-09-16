@@ -27,7 +27,13 @@ func init() {
 			"jiamingc@chromium.org",
 		},
 		BugComponent: "b:1246126", // ChromeOS > Software > System UI Surfaces > Status Area > Calendar
-		Attr:         []string{"group:mainline", "informational", "group:hw_agnostic"},
+		Attr: []string{
+			"group:golden_tier",
+			"group:medium_low_tier",
+			"group:hardware",
+			"group:complementary",
+			"group:hw_agnostic",
+		},
 		SoftwareDeps: []string{"chrome", "gaia"},
 		SearchFlags: []*testing.StringPair{{
 			Key:   "feature_id",
