@@ -1101,6 +1101,41 @@ func (s *Servo) GetPDAdapterSrcCaps(ctx context.Context) ([]SrcCap, error) {
 	return value, nil
 }
 
+// GetDUTSrcCaps gets the attached DUT's source caps
+func (s *Servo) GetDUTSrcCaps(ctx context.Context) ([]SrcCap, error) {
+	var value []SrcCap
+
+	if err := s.RunServoCommand(ctx, "chan save"); err != nil {
+		return nil, errors.Wrap(err, "servo console command failed")
+	}
+	if err := s.RunServoCommand(ctx, "chan 0"); err != nil {
+		return nil, errors.Wrap(err, "servo console command failed")
+	}
+	defer s.RunServoCommand(ctx, "chan restore")
+	// Run command on the servo console
+	cmdOutput, err := s.RunServoCommandGetOutput(ctx, "dut_srccaps", []string{`dut_srccaps.*> `})
+	if err != nil {
+		testing.ContextLog(ctx, "Could not run servo command, are you on the right version?")
+		testing.ContextLog(ctx, "Try updating servo \"servo_updater --updater_channel latest -- -b servo_v4p1 -c alpha\"")
+		return nil, errors.Wrap(err, "could not run command to retrieve DUT src caps, try verifying servo FW version")
+	}
+
+	matches := srcCapsRe.FindAllStringSubmatch(cmdOutput[0][0], -1)
+	for _, cap := range matches {
+		mV, err := strconv.Atoi(cap[1])
+		if err != nil {
+			return nil, errors.Wrap(err, "voltage capability is not a integer value")
+		}
+		mA, err := strconv.Atoi(cap[2])
+		if err != nil {
+			return nil, errors.Wrap(err, "current capability is not a integer value")
+		}
+		value = append(value, SrcCap{mV, mA})
+	}
+
+	return value, nil
+}
+
 // SetFWWPState sets the FWWPState control.
 // Because this is particularly disruptive, it is always logged.
 func (s *Servo) SetFWWPState(ctx context.Context, value FWWPStateValue) error {
