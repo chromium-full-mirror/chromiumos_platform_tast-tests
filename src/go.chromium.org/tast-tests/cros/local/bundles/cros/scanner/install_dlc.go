@@ -28,6 +28,7 @@ func init() {
 		// ChromeOS > Platform > Services > Scanning
 		BugComponent: "b:860616",
 		Attr: []string{
+			"group:criticalstaging",
 			"group:hw_agnostic",
 			"group:mainline",
 			"group:paper-io",
