@@ -1076,6 +1076,7 @@ const (
 	leftClick clickType = iota
 	rightClick
 	doubleClick
+	middleClick
 )
 
 func (ct clickType) mouseButton() mouse.Button {
@@ -1151,6 +1152,11 @@ func (ac *Context) MouseClickAtLocation(ct clickType, loc coords.Point) Action {
 		return func(ctx context.Context) error {
 			actionlogger.RecordClickAtLocationAction(ctx, ac.tconn, actionlogger.MouseDoubleClick, "", loc, mouse.LeftButton)
 			return mouse.DoubleClick(ac.tconn, loc, 100*time.Millisecond)(ctx)
+		}
+	case middleClick:
+		return func(ctx context.Context) error {
+			actionlogger.RecordClickAtLocationAction(ctx, ac.tconn, actionlogger.MouseClick, "", loc, mouse.MiddleButton)
+			return mouse.Click(ac.tconn, loc, mouse.MiddleButton)(ctx)
 		}
 	default:
 		return func(ctx context.Context) error {

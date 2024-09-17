@@ -43,7 +43,8 @@ service AutomationService {
 
   // WaitUntilCheckedState waits until the node found by the input finder
   // reaches the expected state.
-  rpc WaitUntilCheckedState(WaitUntilCheckedStateRequest) returns (google.protobuf.Empty) {}
+  rpc WaitUntilCheckedState(WaitUntilCheckedStateRequest)
+      returns (google.protobuf.Empty) {}
 
   // WaitUntilExists waits until the node found by the input finder exists.
   rpc WaitUntilExists(WaitUntilExistsRequest) returns (google.protobuf.Empty) {}
@@ -51,8 +52,9 @@ service AutomationService {
   // WaitUntilGone waits until the node found by the input finder gone.
   rpc WaitUntilGone(WaitUntilGoneRequest) returns (google.protobuf.Empty) {}
 
-  // EnsureGone ensures the node is gone by checks the input finder doesn't exist within the specified time duration.
-  // If the input time duration isn't specified, a default time duration will be taken.
+  // EnsureGone ensures the node is gone by checks the input finder doesn't
+  // exist within the specified time duration. If the input time duration isn't
+  // specified, a default time duration will be taken.
   rpc EnsureGone(EnsureGoneRequest) returns (google.protobuf.Empty) {}
 
   // MousePress presses a mouse button and holds it on the node. The press needs
@@ -80,15 +82,15 @@ service AutomationService {
   rpc GetUITree(GetUITreeRequest) returns (GetUITreeResponse) {}
 
   // SelectDropDownOption selects dropdown option with the option name.
-  rpc SelectDropDownOption(SelectDropDownOptionRequest) returns (google.protobuf.Empty) {}
+  rpc SelectDropDownOption(SelectDropDownOptionRequest)
+      returns (google.protobuf.Empty) {}
 
-  // DoDefault calls doDefault() JS method on the node found by the input finder.
+  // DoDefault calls doDefault() JS method on the node found by the input
+  // finder.
   rpc DoDefault(DoDefaultRequest) returns (google.protobuf.Empty) {}
 }
 
-message LeftClickRequest {
-  Finder finder = 1;
-}
+message LeftClickRequest { Finder finder = 1; }
 message MousePressRequest {
   MouseButton mouse_button = 1;
   Finder finder = 2;
@@ -97,21 +99,11 @@ message MouseMoveToRequest {
   Finder finder = 1;
   int64 duration_ms = 2;
 }
-message MouseReleaseRequest {
-  MouseButton mouse_button = 1;
-}
-message RightClickRequest {
-  Finder finder = 1;
-}
-message DoubleClickRequest {
-  Finder finder = 1;
-}
-message IsNodeFoundRequest {
-  Finder finder = 1;
-}
-message IsNodeFoundResponse {
-  bool found = 1;
-}
+message MouseReleaseRequest { MouseButton mouse_button = 1; }
+message RightClickRequest { Finder finder = 1; }
+message DoubleClickRequest { Finder finder = 1; }
+message IsNodeFoundRequest { Finder finder = 1; }
+message IsNodeFoundResponse { bool found = 1; }
 message MouseClickAtLocationRequest {
   // ClickType describes how user clicks mouse.
   ClickType click_type = 1;
@@ -119,9 +111,7 @@ message MouseClickAtLocationRequest {
   Point point = 2;
 }
 
-message EnsureFocusedRequest {
-  Finder finder = 1;
-}
+message EnsureFocusedRequest { Finder finder = 1; }
 
 message WaitUntilCheckedStateRequest {
   Finder finder = 1;
@@ -143,44 +133,28 @@ message EnsureGoneRequest {
   optional google.protobuf.Duration timeout = 2;
 }
 
-message InfoRequest {
-  Finder finder = 1;
-}
+message InfoRequest { Finder finder = 1; }
 
-message InfoResponse {
-  NodeInfo node_info = 1;
-}
+message InfoResponse { NodeInfo node_info = 1; }
 
-message MakeVisibleRequest {
-  Finder finder = 1;
-}
+message MakeVisibleRequest { Finder finder = 1; }
 
-message WaitForLocationRequest {
-  Finder finder = 1;
-}
+message WaitForLocationRequest { Finder finder = 1; }
 
-message CaptureScreenshotRequest {
-  optional Finder finder = 1;
-}
+message CaptureScreenshotRequest { optional Finder finder = 1; }
 
-message CaptureScreenshotResponse {
-  bytes png_base64 = 1;
-}
+message CaptureScreenshotResponse { bytes png_base64 = 1; }
 
 message GetUITreeRequest {}
 
-message GetUITreeResponse {
-  string ui_tree = 1;
-}
+message GetUITreeResponse { string ui_tree = 1; }
 
 message SelectDropDownOptionRequest {
   Finder finder = 1;
   string option_name = 2;
 }
 
-message DoDefaultRequest {
-  Finder finder = 1;
-}
+message DoDefaultRequest { Finder finder = 1; }
 
 // NodeInfo is a wrapper around chrome.automation API AutomationNode.
 // As defined in
@@ -325,6 +299,7 @@ enum ClickType {
   CLICK_TYPE_LEFT_CLICK = 1;
   CLICK_TYPE_RIGHT_CLICK = 2;
   CLICK_TYPE_DOUBLE_CLICK = 3;
+  CLICK_TYPE_MIDDLE_CLICK = 4;
 }
 
 // MouseButton describes mouse button types as defined in
@@ -352,9 +327,9 @@ enum Checked {
 // https://developer.chrome.com/docs/extensions/reference/automation/#type-Restriction
 enum Restriction {
   RESTRICTION_UNSPECIFIED = 0;
-  RESTRICTION_DISABLED = 1;   // disallows input in itself + any descendants
-  RESTRICTION_READ_ONLY = 2;  // allow focus/selection but not input
-  RESTRICTION_NONE = 3;  // enable control or other object that is not disabled
+  RESTRICTION_DISABLED = 1;  // disallows input in itself + any descendants
+  RESTRICTION_READ_ONLY = 2; // allow focus/selection but not input
+  RESTRICTION_NONE = 3; // enable control or other object that is not disabled
 }
 
 // State describes the characteristics of the node

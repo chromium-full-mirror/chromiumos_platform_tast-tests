@@ -84,6 +84,7 @@ const (
 	leftClick clickType = iota
 	rightClick
 	doubleClick
+	middleClick
 )
 
 // LeftClick clicks on the location of the node found by the input finder.
@@ -185,6 +186,8 @@ func (svc *AutomationService) MouseClickAtLocation(ctx context.Context, req *pb.
 		err = ui.MouseClickAtLocation(1, loc)(ctx)
 	case pb.ClickType_CLICK_TYPE_DOUBLE_CLICK:
 		err = ui.MouseClickAtLocation(2, loc)(ctx)
+	case pb.ClickType_CLICK_TYPE_MIDDLE_CLICK:
+		err = ui.MouseClickAtLocation(3, loc)(ctx)
 	default:
 		return nil, errors.New("unknown clicktype")
 	}
