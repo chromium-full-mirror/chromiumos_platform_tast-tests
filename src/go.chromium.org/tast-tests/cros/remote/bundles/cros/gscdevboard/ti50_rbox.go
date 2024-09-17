@@ -18,21 +18,24 @@ const (
 	// minEcResetPulse is how long EC reset must be asserted.
 	minEcResetPulse = 10 * time.Millisecond
 	// battDisconnectMinimum is how long AC must be removed before battery
-	// disconnect is asserted
+	// disconnect is asserted.
 	battDisconnectMinimum = 5 * time.Second
 	deepSleepDelay        = ti50.WaitForSleepTimeout
 )
 
 const (
-	// tabletEcResetHoldDelay is how long EC reset keys must be held to trigger EC reset
+	// tabletEcResetHoldDelay is how long EC reset keys must be held to trigger EC reset.
 	tabletEcResetHoldDelay = 10 * time.Second
-	// tabletGscResetHoldDelay is how long GSC reset keys must be held to trigger GSC reset
+	// tabletGscResetHoldDelay is how long GSC reset keys must be held to trigger GSC reset.
 	tabletGscResetHoldDelay = 20 * time.Second
 )
 
 const (
-	// clamshellGscResetHoldDelay is how long GSC reset keys must be held to trigger GSC reset
+	// clamshellGscResetHoldDelay is how long GSC reset keys must be held to trigger GSC reset.
 	clamshellGscResetHoldDelay = 10 * time.Second
+	// toleranceFactor is 5% to ensure that time related test assertions have some
+	// wiggle room to prevent flaky test failures.
+	toleranceFactor = 0.05
 )
 
 type ti50ValidRBOXParam struct {
@@ -77,6 +80,16 @@ func init() {
 			},
 		}},
 	})
+}
+
+func atLeastWithTolerance(want, got time.Duration) bool {
+	w := want.Seconds()
+	g := got.Seconds()
+	return w*(1-toleranceFactor) < g
+}
+
+func withinTolerance(want, got time.Duration) bool {
+	return atLeastWithTolerance(want, got) && atLeastWithTolerance(got, want)
 }
 
 func Ti50RBOX(ctx context.Context, s *testing.State) {
@@ -188,8 +201,7 @@ func ti50RBOXClamshell(ctx context.Context, s *testing.State, b utils.DevboardHe
 		s.Error("GSC did not reset with reset key combo after 10 seconds")
 	} else {
 		timeForReset := time.Now().Sub(beforeReset)
-		// Allow 1% measurement error.
-		if timeForReset.Milliseconds() < int64(float64(clamshellGscResetHoldDelay.Milliseconds())*0.99) {
+		if !withinTolerance(clamshellGscResetHoldDelay, timeForReset) {
 			s.Error("GSC reset before 10s minimum hold time: ", timeForReset)
 		} else {
 			s.Log("GSC reset after ", timeForReset)
@@ -279,8 +291,7 @@ func ti50RBOXTablet(ctx context.Context, s *testing.State, b utils.DevboardHelpe
 		s.Error("GSC did not reset with reset key combo after 25 seconds")
 	} else {
 		timeForReset := time.Now().Sub(beforeReset)
-		// Allow 1% measurement error.
-		if timeForReset.Milliseconds() < int64(float64(tabletGscResetHoldDelay.Milliseconds())*0.99) {
+		if !withinTolerance(tabletGscResetHoldDelay, timeForReset) {
 			s.Error("GSC reset before 20s minimum hold time: ", timeForReset)
 		} else {
 			s.Log("GSC reset after ", timeForReset)
@@ -359,22 +370,20 @@ func verifyEcResetWithKeysInOrder(ctx context.Context, s *testing.State, b utils
 		s.Errorf("EC_RST_L did not de-assert after key combo released %s then %s", first, second)
 		return
 	}
-	assertTime := deassertReset.TimestampUS - assertReset.TimestampUS
-	// Allow 1% measurement error.
-	if assertTime < uint64(float64(minEcResetPulse.Microseconds())*0.99) {
-		s.Errorf("EC_RST_L did stay asserted long enough: %dus", assertTime)
+	assertTime := time.Duration(deassertReset.TimestampUS-assertReset.TimestampUS) * time.Microsecond
+	if !atLeastWithTolerance(minEcResetPulse, assertTime) {
+		s.Error("EC_RST_L did stay asserted long enough: ", assertTime)
 		return
 	}
 	s.Logf("EC_RST_L asserted for %dus", assertTime)
 
 	if minHold != nil {
-		resetDelayMs := assertReset.TimestampUS / 1000
-		// Allow 2% measurement error (b/311438894).
-		if resetDelayMs < uint64(float64(minHold.Milliseconds())*0.98) {
-			s.Errorf("EC_RST_L asserted before minimum hold time: %dms", resetDelayMs)
+		resetDelay := time.Duration(assertReset.TimestampUS) * time.Microsecond
+		if !withinTolerance(*minHold, resetDelay) {
+			s.Error("EC_RST_L asserted before minimum hold time: ", resetDelay)
 			return
 		}
-		s.Logf("EC_RST_L delayed by %dms", resetDelayMs)
+		s.Log("EC_RST_L delayed by ", resetDelay)
 	}
 }
 
