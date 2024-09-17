@@ -45,7 +45,9 @@ func init() {
 			"informational",
 			"group:hw_agnostic",
 		},
-		SoftwareDeps: []string{"chrome"},
+		// TODO(b/302232315): mitmproxy fails to start on arm devices.
+		// Remove architecture restrictions when the problem is solved.
+		SoftwareDeps: []string{"chrome", "no_arm"},
 		Data:         policyquickanswers.DataFiles(),
 		SearchFlags: []*testing.StringPair{
 			pci.SearchFlag(&policy.QuickAnswersUnitConversionEnabled{}, pci.VerifiedFunctionalityUI),

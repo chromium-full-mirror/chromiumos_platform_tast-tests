@@ -43,7 +43,9 @@ func init() {
 			"group:hardware",
 			"group:hw_agnostic",
 		},
-		SoftwareDeps: []string{"chrome", "gaia"},
+		// TODO(b/302232315): mitmproxy fails to start on arm devices.
+		// Remove architecture restrictions when the problem is solved.
+		SoftwareDeps: []string{"chrome", "gaia", "no_arm"},
 		VarDeps:      []string{policy.ManagedUserAccountPoolVarName},
 		Fixture:      fixture.FakeDMS,
 		SearchFlags: []*testing.StringPair{

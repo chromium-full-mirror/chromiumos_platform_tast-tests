@@ -38,7 +38,9 @@ func init() {
 			"megjablon@google.com",
 		},
 		BugComponent: "b:1457550",
-		SoftwareDeps: []string{"chrome"},
+		// TODO(b/302232315): mitmproxy fails to start on arm devices.
+		// Remove architecture restrictions when the problem is solved.
+		SoftwareDeps: []string{"chrome", "no_arm"},
 		Attr:         []string{"group:golden_tier", "group:hw_agnostic"},
 		Timeout:      3 * time.Minute,
 		Params: []testing.Param{{

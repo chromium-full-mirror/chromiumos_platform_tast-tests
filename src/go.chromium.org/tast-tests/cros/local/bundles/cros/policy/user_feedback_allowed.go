@@ -36,7 +36,9 @@ func init() {
 			"princya@chromium.org", // Test author
 		},
 		BugComponent: "b:1129862",
-		SoftwareDeps: []string{"chrome", "chrome_internal"},
+		// TODO(b/302232315): mitmproxy fails to start on arm devices.
+		// Remove architecture restrictions when the problem is solved.
+		SoftwareDeps: []string{"chrome", "chrome_internal", "no_arm"},
 		Attr:         []string{"group:golden_tier", "group:hw_agnostic"},
 		Params: []testing.Param{{
 			Fixture: fixture.ChromePolicyLoggedIn,
