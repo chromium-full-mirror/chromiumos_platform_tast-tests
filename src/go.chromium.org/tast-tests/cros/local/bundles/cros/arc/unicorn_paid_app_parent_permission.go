@@ -53,7 +53,7 @@ func UnicornPaidAppParentPermission(ctx context.Context, s *testing.State) {
 	const (
 		provisioningTimeout     = 3 * time.Minute
 		askYourParentDialogText = "Ask your parent"
-		gamesAppName            = "org.twisevictory.apps"
+		gamesAppName            = "com.snaptypeapp.android.pro"
 	)
 	cr := s.FixtValue().(chrome.HasChrome).Chrome()
 	tconn := s.FixtValue().(familylink.HasTestConn).TestConn()
