@@ -105,7 +105,7 @@ func ShillSuspendResumeAutoconnect(ctx context.Context, s *testing.State) {
 	}
 
 	// Use wake up timeout to ensure device recovery.
-	if _, err := suspend.Request(ctx, suspend.Delay(0), suspend.For(10*time.Second), suspend.WakeUpTimeout(15*time.Second)); err != nil {
+	if _, err := suspend.Request(ctx, suspend.Delay(5*time.Second), suspend.For(10*time.Second), suspend.WakeUpTimeout(15*time.Second)); err != nil {
 		s.Fatal("Failed to perform system suspend (precondition): ", err)
 	}
 
