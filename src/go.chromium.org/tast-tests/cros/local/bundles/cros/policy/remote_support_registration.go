@@ -22,10 +22,8 @@ import (
 	"go.chromium.org/tast-tests/cros/local/chrome"
 	"go.chromium.org/tast-tests/cros/local/chrome/browser"
 	"go.chromium.org/tast-tests/cros/local/chrome/browser/browserfixt"
-	"go.chromium.org/tast-tests/cros/local/chrome/lacros/lacrosfixt"
 	"go.chromium.org/tast-tests/cros/local/chrome/uiauto/faillog"
 	"go.chromium.org/tast-tests/cros/local/input"
-	"go.chromium.org/tast-tests/cros/local/netexport"
 	"go.chromium.org/tast-tests/cros/local/policyutil"
 )
 
@@ -45,11 +43,6 @@ func init() {
 		Params: []testing.Param{{
 			Fixture: fixture.FakeDMS,
 			Val:     browser.TypeAsh,
-		}, {
-			Name:              "lacros",
-			ExtraSoftwareDeps: []string{"lacros"},
-			Fixture:           fixture.PersistentLacros, // FakeDMS with lacros policy
-			Val:               browser.TypeLacros,
 		}},
 		SearchFlags: []*testing.StringPair{
 			pci.SearchFlag(&policy.RemoteAccessHostAllowRemoteSupportConnections{},
@@ -60,7 +53,6 @@ func init() {
 
 func RemoteSupportRegistration(ctx context.Context, s *testing.State) {
 	fdms := s.FixtValue().(fakedms.HasFakeDMS).FakeDMS()
-	isLacros := s.Param().(browser.Type) == browser.TypeLacros
 
 	gaiaCreds, err := credconfig.PickRandomCreds(
 		dma.CredsFromPool(policy.ManagedUserAccountPoolVarName))
@@ -85,14 +77,6 @@ func RemoteSupportRegistration(ctx context.Context, s *testing.State) {
 		chrome.DMSPolicy(fdms.URL),  // FakeDMS for setting policies
 		chrome.GAIALogin(gaiaCreds), // Real GAIA to enable CRD
 		chrome.ExtraArgs("--force-devtools-available"),
-	}
-
-	if isLacros {
-		opts = append(opts, chrome.LacrosExtraArgs("--force-devtools-available"))
-		opts, err = lacrosfixt.NewConfig(lacrosfixt.ChromeOptions(opts...)).Opts()
-		if err != nil {
-			s.Fatal("Failed to compute lacros chrome options: ", err)
-		}
 	}
 
 	// Shorten the context to make room for cleanup jobs.
@@ -139,19 +123,6 @@ func RemoteSupportRegistration(ctx context.Context, s *testing.State) {
 			defer closeBrowser(cleanupCtx)
 			defer faillog.DumpUITreeWithScreenshotOnError(ctx, s.OutDir(), s.HasError, cr, "ui_tree_"+param.Name)
 
-			// These network calls are only made by the host in the lacros environment.
-			// In the ash clients these calls are handled by the website instead.
-			// So we only perform this check for lacros clients.
-			var netExport netexport.NetExport
-			if isLacros {
-				// Open the net-export page and start logging.
-				netExport, err = netexport.Start(ctx, cr, br, s.Param().(browser.Type))
-				if err != nil {
-					s.Fatal("Failed to start net export: ", err)
-				}
-				defer netExport.Cleanup(cleanupCtx)
-			}
-
 			if err := remotedesktop.TriggerRemoteSupportRegistration(ctx,
 				networkrequestmonitor.OptionalServiceParams{
 					Chrome:        cr,
@@ -160,22 +131,6 @@ func RemoteSupportRegistration(ctx context.Context, s *testing.State) {
 				s.Fatal("Failure during CRD launch: ", err)
 			}
 
-			hashCodes := []string{
-				remotedesktop.FTLMessagingClientReceiveMessagesHashCode,
-				remotedesktop.FTLRegistrationManagerHashCode,
-				remotedesktop.RemotingRegisterSupportHostRequestHashCode,
-			}
-			if isLacros {
-				foundAnnotations, err := netExport.FindAll()
-				if err != nil {
-					s.Fatal("Unexpected error when verifying net export logs: ", err)
-				}
-				for _, annotationID := range hashCodes {
-					if _, exists := foundAnnotations[annotationID]; exists != param.ShouldFindAnnotations {
-						s.Errorf("Unexpected status of annotation = %s, got %t, want %t", annotationID, exists, param.ShouldFindAnnotations)
-					}
-				}
-			}
 		})
 	}
 
