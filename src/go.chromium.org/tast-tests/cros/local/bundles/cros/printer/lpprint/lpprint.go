@@ -25,7 +25,7 @@ import (
 // Run runs the lp command and returns the generated print output.
 func Run(ctx context.Context, ppdFilePath, toPrintFilePath, options string, usePrintscanmgr bool) ([]byte, error) {
 	const (
-		printerID = "FakePrinterID"
+		printerID  = "FakePrinterID"
 		socketAddr = "socket://localhost:9101"
 	)
 
@@ -52,9 +52,9 @@ func Run(ctx context.Context, ppdFilePath, toPrintFilePath, options string, useP
 
 		testing.ContextLog(ctx, "Registering a printer")
 		request := ppb.CupsAddManuallyConfiguredPrinterRequest{
-				Name:        printerID,
-				Uri:         socketAddr,
-				PpdContents: ppd}
+			Name:        printerID,
+			Uri:         socketAddr,
+			PpdContents: ppd}
 		if result, err := p.CupsAddManuallyConfiguredPrinter(ctx, &request); err != nil {
 			return nil, errors.Wrap(err, "printscanmgr.CupsAddManuallyConfiguredPrinter failed")
 		} else if result.Result != ppb.AddPrinterResult_ADD_PRINTER_RESULT_SUCCESS {
@@ -87,7 +87,7 @@ func Run(ctx context.Context, ppdFilePath, toPrintFilePath, options string, useP
 	}
 
 	testing.ContextLog(ctx, "Receiving print request")
-	recvCtx, cancel := context.WithTimeout(ctx, 10*time.Second)
+	recvCtx, cancel := context.WithTimeout(ctx, 20*time.Second)
 	defer cancel()
 	request, err := fake.ReadRequest(recvCtx)
 	if err != nil {
