@@ -28,7 +28,7 @@ func init() {
 		Attr:         []string{"group:mainline", "informational"},
 		// ChromeOS > Software > ARC++ > Core
 		BugComponent: "b:488493",
-		SoftwareDeps: []string{"arc_android_data_cros_access", "chrome"},
+		SoftwareDeps: []string{"chrome"},
 		Fixture:      "arcBooted",
 		Params: []testing.Param{{
 			Name:              "real_consent",
