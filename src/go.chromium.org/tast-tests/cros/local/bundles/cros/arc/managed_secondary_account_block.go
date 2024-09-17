@@ -8,7 +8,6 @@ import (
 	"context"
 	"time"
 
-	arcCommon "go.chromium.org/tast-tests/cros/common/arc"
 	"go.chromium.org/tast-tests/cros/common/chrome/credconfig"
 	"go.chromium.org/tast-tests/cros/common/dma"
 	"go.chromium.org/tast-tests/cros/common/pci"
@@ -36,6 +35,8 @@ type managedSecondaryAccountBlockArgs struct {
 	browserType browser.Type
 }
 
+const managedEntAccountPoolName = "arc.managedEntAccountPool"
+
 func init() {
 	testing.AddTest(&testing.Test{
 		Func:         ManagedSecondaryAccountBlock,
@@ -48,7 +49,7 @@ func init() {
 		SoftwareDeps: []string{"chrome", "play_store", "gaia", "android_vm"},
 		Timeout:      15 * time.Minute,
 		VarDeps: []string{
-			arcCommon.ManagedAccountPoolVarName,
+			managedEntAccountPoolName,
 			uiCommon.GaiaPoolDefaultVarName,
 		},
 		SearchFlags: []*testing.StringPair{
@@ -97,7 +98,7 @@ func ManagedSecondaryAccountBlock(ctx context.Context, s *testing.State) {
 		primaryUser := creds[0]
 		secondaryUser := creds[1]
 		if args.managed {
-			secondaryUser, err = credconfig.PickRandomCreds(dma.CredsFromPool(arcCommon.ManagedAccountPoolVarName))
+			secondaryUser, err = credconfig.PickRandomCreds(s.RequiredVar(managedEntAccountPoolName))
 			if err != nil {
 				return rl.Exit("get secondary user creds", err)
 			}
