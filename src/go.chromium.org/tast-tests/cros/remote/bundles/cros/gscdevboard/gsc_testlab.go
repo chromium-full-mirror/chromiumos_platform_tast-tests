@@ -73,7 +73,12 @@ func GSCTestlab(ctx context.Context, s *testing.State) {
 	s.Log("(Re)starting GSC")
 	b.ResetAndTpmStartup(ctx, i, ti50.CcdSuzyQ, ti50.FfClamshell)
 
-	th.MustSucceed(i.CCDLock(ctx), "Lock CCD")
+	// Ensure the CCD is locked
+	open, err := i.IsCCDOpen(ctx)
+	th.MustSucceed(err, "Get CCD open state")
+	if open {
+		th.MustSucceed(i.CCDLock(ctx), "Lock CCD")
+	}
 	// Verify testlab mode can't be changed when ccd is locked
 	verifyTestlabBlocked(ctx, s, i, "ccd testlab disable")
 	verifyTestlabBlocked(ctx, s, i, "ccd testlab enable")

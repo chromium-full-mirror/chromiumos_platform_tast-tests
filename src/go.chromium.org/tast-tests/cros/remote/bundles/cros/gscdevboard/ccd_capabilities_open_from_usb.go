@@ -14,7 +14,7 @@ import (
 	"go.chromium.org/tast/core/testing"
 )
 
-type cCDCapabilitiesOpenFromUSB struct {
+type ccdCapabilitiesOpenFromUSB struct {
 	capState             ti50.CCDCapState
 	expectCCDCanBeOpened bool
 }
@@ -36,13 +36,13 @@ func init() {
 		Fixture: fixture.GSCOpenCCD,
 		Params: []testing.Param{{
 			Name: "cap_always",
-			Val: cCDCapabilitiesOpenFromUSB{
+			Val: ccdCapabilitiesOpenFromUSB{
 				capState:             ti50.CapAlways,
 				expectCCDCanBeOpened: true,
 			},
 		}, {
 			Name: "cap_if_opened",
-			Val: cCDCapabilitiesOpenFromUSB{
+			Val: ccdCapabilitiesOpenFromUSB{
 				capState:             ti50.CapIfOpened,
 				expectCCDCanBeOpened: false,
 			},
@@ -52,27 +52,19 @@ func init() {
 }
 
 func CCDCapabilitiesOpenFromUSB(ctx context.Context, s *testing.State) {
-	userParams := s.Param().(cCDCapabilitiesOpenFromUSB)
+	userParams := s.Param().(ccdCapabilitiesOpenFromUSB)
 	b := utils.NewDevboardHelper(s)
 	i := ti50.MustOpenCrOSImage(ctx, b, s)
 	defer i.Close(ctx)
-
-	// Open CCD + chassis when finished
-	defer func() {
-		b.GpioSet(ctx, ti50.GpioTi50ChassisOpen, true)
-		if err := i.CCDOpen(ctx); err != nil {
-			s.Fatal("Failed to open CCD during cleanup")
-		}
-	}()
+	th := utils.FirmwareTestingHelper{FirmwareTestingHelperDelegate: s}
 
 	s.Log("Resetting GSC and starting up")
 	b.GpioSet(ctx, ti50.GpioTi50ChassisOpen, true)
 	_ = b.ResetAndTpmStartup(ctx, i, ti50.CcdSuzyQ, ti50.FfClamshell)
 	b.WaitUntilCCDConnected(ctx)
 
-	if err := i.CCDOpen(ctx); err != nil {
-		s.Fatal("Failed to open CCD")
-	}
+	// Start with CCD open
+	th.MustSucceed(i.CCDOpen(ctx), "Failed to open CCD")
 
 	// Make sure we set the other CCD open related capabilities to always so CCD
 	// opens immediately when testing.
@@ -82,26 +74,22 @@ func CCDCapabilitiesOpenFromUSB(ctx context.Context, s *testing.State) {
 		ti50.OpenNoLongPP:    ti50.CapAlways,
 		ti50.UnlockNoShortPP: ti50.CapAlways,
 	}
-	if err := i.SetCCDCapabilities(ctx, ccdStates); err != nil {
-		s.Fatal("Failed to set CCD open related capabilities: ", err)
-	}
+	th.MustSucceed(i.SetCCDCapabilities(ctx, ccdStates), "Failed to set CCD open related capabilities")
 
 	b.GpioSet(ctx, ti50.GpioTi50ChassisOpen, false)
-	if err := i.CCDLock(ctx); err != nil {
-		s.Fatal("Failed to lock CCD")
-	}
+	th.MustSucceed(i.CCDLock(ctx), "Lock CCD")
 
 	// Try to reopen CCD from the console
 	_ = i.CCDOpen(ctx)
 	ccdIsOpen, err := i.IsCCDOpen(ctx)
-	if err != nil {
-		s.Fatal("Failed to determine if CCD is open")
-	}
+	th.MustSucceed(err, "Failed to determine if CCD is open")
 	checkCCDOpenExpectation(s, userParams.expectCCDCanBeOpened, ccdIsOpen, "the console")
 
 	// Lock CCD again since it might be open
-	if err := i.CCDLock(ctx); err != nil {
-		s.Fatal("Failed to lock CCD")
+	open, err := i.IsCCDOpen(ctx)
+	th.MustSucceed(err, "Get CCD open state")
+	if open {
+		th.MustSucceed(i.CCDLock(ctx), "Lock CCD")
 	}
 
 	// Try to reopen using `gsctool`, tpmv command over USB, ignore error and
@@ -109,9 +97,7 @@ func CCDCapabilitiesOpenFromUSB(ctx context.Context, s *testing.State) {
 	// DT uses the -D arg. H1 does not.
 	_, _ = b.GSCToolCommand(ctx, "", "--ccd_open")
 	ccdIsOpen, err = i.IsCCDOpen(ctx)
-	if err != nil {
-		s.Fatal("Failed to determine if CCD is open")
-	}
+	th.MustSucceed(err, "Failed to determine if CCD is open")
 	checkCCDOpenExpectation(s, userParams.expectCCDCanBeOpened, ccdIsOpen, "gsctool")
 }
 
