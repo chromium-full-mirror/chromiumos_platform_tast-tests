@@ -143,11 +143,39 @@ class HtmlReport:
         heading = components.create_element_with_text("h1", title)
         self.html.body.append(heading)
 
+    def _append_summary(self) -> None:
+        """Appends a summary of all analysis results to the HTML."""
+
+        h2 = components.create_element_with_text("h2", "Summary")
+        self.html.body.append(h2)
+
+        p = ET.SubElement(self.html.body, "p")
+        if not self.results:
+            p.text = "No statistically significant differences were detected."
+            return
+        p.text = (
+            "Statistically significant differences were detected "
+            "in the following pairs:"
+        )
+
+        pair_identifiers = sorted(
+            [
+                pair.identifier()
+                for result in self.results
+                for pair in result.pairs
+            ]
+        )
+
+        ul = ET.SubElement(self.html.body, "ul")
+        for identifier in pair_identifiers:
+            ul.append(components.create_element_with_text("li", identifier))
+
     def make(self) -> None:
         """Makes a report."""
 
         self._set_title()
 
+        self._append_summary()
         table_container = ET.Element("div", {"class": "table-container"})
         table_container.append(self._create_sample_size_table())
         self.html.body.append(table_container)

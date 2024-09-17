@@ -104,6 +104,17 @@ class PairwiseResult:
             names.append(self.after.sample.test_name)
         return names
 
+    def metric_names(self) -> list[str]:
+        """Returns a list of the metric names in this result.
+
+        This may contain more than one metric name if experiment groups were
+        explicitly set up to compare metrics with different names."""
+        names = [self.before.metric_name()]
+        if self.after.metric_name() not in names:
+            names.append(self.after.metric_name())
+
+        return names
+
     def summary(self) -> str:
         """Returns a human readable summary of this result."""
         s = f"{self.identifier()}:\n"

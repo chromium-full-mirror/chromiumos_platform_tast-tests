@@ -244,6 +244,48 @@ class HtmlReportTest(unittest.TestCase):
         expected_table = self._load_html(HTML_DIR / "sample_size_table.html")
         self._assert_elements_equal(table, expected_table)
 
+    def test_append_summary_empty_results(self) -> None:
+        report = html_report.HtmlReport([], TEMPLATE_DIR)
+        report._append_summary()
+
+        expected_html = self._load_html(
+            HTML_DIR / "append_summary_empty_results.html"
+        )
+        self._assert_elements_equal(report.html.html, expected_html)
+
+    def test_append_summary_with_results(self) -> None:
+        samples = (
+            test_util.load_before_samples() + test_util.load_after_samples()
+        )
+        samples_by_id = test_util.samples_by_id(samples)
+
+        groups_list = analysis_results.construct_experiment_groups_list(
+            samples, analysis_cfg.AnalysisCfg()
+        )
+        pair = analysis_results.PairwiseResult(
+            before=analysis_results.ExperimentGroup(
+                sample=samples_by_id["before.ui.OverviewPerf.Test.One.average"]
+            ),
+            after=analysis_results.ExperimentGroup(
+                sample=samples_by_id["after.ui.OverviewPerf.Test.One.average"]
+            ),
+            hypothesis_result=stats_util.HypothesisTestResult(
+                statistic_kind=stats_util.TestStatisticKind.RANK_SUM,
+                u=0.0,
+                p=1.0,
+            ),
+        )
+        results = [
+            analysis_results.AnalysisResult(groups=groups_list[0], pairs=[pair])
+        ]
+        report = html_report.HtmlReport(results, TEMPLATE_DIR)
+        report._append_summary()
+
+        expected_html = self._load_html(
+            HTML_DIR / "append_summary_with_results.html"
+        )
+        self._assert_elements_equal(report.html.html, expected_html)
+
     def test_write(self) -> None:
         samples = (
             test_util.load_before_samples() + test_util.load_after_samples()
