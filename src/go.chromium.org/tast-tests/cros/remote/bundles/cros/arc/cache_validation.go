@@ -53,7 +53,7 @@ func init() {
 			//	"group:mainline",
 			//	"informational"
 		},
-		SoftwareDeps: []string{"arc_android_data_cros_access", "chrome", "no_arc_userdebug"},
+		SoftwareDeps: []string{"chrome", "no_arc_userdebug"},
 		ServiceDeps:  []string{"tast.cros.arc.GmsCoreCacheService", "tast.cros.arc.TTSCacheService"},
 		Params: []testing.Param{{
 			ExtraSoftwareDeps: []string{"android_container"},
