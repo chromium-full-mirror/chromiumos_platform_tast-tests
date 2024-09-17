@@ -35,7 +35,9 @@ func init() {
 		Attr:         []string{"group:external-dependency"},
 		Data:         []string{"gaia_sandbox_config.json"},
 		SearchFlags: []*testing.StringPair{
-			testenv.SearchFlag(testenv.ARCAuthPreprod),
+			testenv.SearchFlag(testenv.AndroidAuthPreprod),
+			testenv.SearchFlag(testenv.AndroidCheckinPreprod),
+			testenv.SearchFlag(testenv.OAuthPreprod),
 			testenv.SearchFlag(testenv.GAIASandbox),
 		},
 		Timeout: chrome.GAIALoginTimeout + arc.BootTimeout + 10*time.Minute,

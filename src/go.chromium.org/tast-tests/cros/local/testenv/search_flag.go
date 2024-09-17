@@ -23,6 +23,12 @@ type ServiceDepName string
 // <service> is any target service name,
 // <environment> could be 'preprod' or any specific env name of their services.
 const (
+	// Android Authentication
+	AndroidAuthPreprod ServiceDepName = "AndroidAuth.preprod"
+
+	// Android Checkin
+	AndroidCheckinPreprod ServiceDepName = "AndroidCheckin.preprod"
+
 	// DMServer
 	DMServerProd     ServiceDepName = "DMServer.prod"
 	DMServerAlpha    ServiceDepName = "DMServer.alpha"
@@ -36,8 +42,8 @@ const (
 	// GFE
 	GFEPreprod ServiceDepName = "GFE.preprod"
 
-	// ARC++ Authentication
-	ARCAuthPreprod ServiceDepName = "ARCAuth.preprod"
+	// OnePlatform OAuth service
+	OAuthPreprod ServiceDepName = "OAuth.preprod"
 )
 
 // SearchFlag generates a StringPair based on the given ServiceDepName.
