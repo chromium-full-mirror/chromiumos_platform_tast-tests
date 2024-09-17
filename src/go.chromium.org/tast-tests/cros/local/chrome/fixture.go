@@ -283,7 +283,7 @@ func init() {
 		// ChromeOS > Software > Settings
 		BugComponent: "b:1246072",
 		Impl: NewLoggedInFixture(func(ctx context.Context, s *testing.FixtState) ([]Option, error) {
-			return []Option{EnableFeatures("OsSettingsSearchFeedback")}, nil
+			return []Option{EnableFeatures("OsSettingsSearchFeedback", "SkipSendingFeedbackReportInTastTests")}, nil
 		}),
 		SetUpTimeout:    FixtureSetUpTimeout,
 		ResetTimeout:    ResetTimeout,
@@ -292,12 +292,12 @@ func init() {
 
 	testing.AddFixture(&testing.Fixture{
 		Name:     fixture.ChromeLoggedInGuestWithOsSettingsSearchFeedback,
-		Desc:     "Logged into a guest user session with searchFeedbackEnabled flag enabled",
+		Desc:     "Logged into a guest user session with searchFeedbackEnabled and SkipSendingFeedbackReportInTastTests flags enabled",
 		Contacts: []string{"cros-settings@google.com", "moteva@google.com"},
 		// ChromeOS > Software > Settings
 		BugComponent: "b:1246072",
 		Impl: NewLoggedInFixture(func(ctx context.Context, s *testing.FixtState) ([]Option, error) {
-			return []Option{GuestLogin(), EnableFeatures("OsSettingsSearchFeedback")}, nil
+			return []Option{GuestLogin(), EnableFeatures("OsSettingsSearchFeedback", "SkipSendingFeedbackReportInTastTests")}, nil
 		}),
 		SetUpTimeout:    FixtureSetUpTimeout,
 		ResetTimeout:    ResetTimeout,
