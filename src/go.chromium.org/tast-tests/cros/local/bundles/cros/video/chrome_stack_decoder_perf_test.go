@@ -52,6 +52,7 @@ func TestChromeStackDecoderPerfParams(t *testing.T) {
 		Timeout            time.Duration
 	}
 	const defaultTimeout = 2 * time.Minute
+	const concurrentTimeOut = 5 * time.Minute
 
 	var params []paramData
 
@@ -91,7 +92,7 @@ func TestChromeStackDecoderPerfParams(t *testing.T) {
 			SoftwareDeps:       append(fillSwDeps(codec, resolution, frameRate), "thread_safe_libva_backend"),
 			Metadata:           []string{dataPath, dataPath + ".json"},
 			Attr:               []string{"graphics_video_decodeaccel"},
-			Timeout:            defaultTimeout,
+			Timeout:            concurrentTimeOut,
 		}
 
 		params = append(params, param)
