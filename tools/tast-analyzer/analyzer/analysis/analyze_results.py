@@ -115,6 +115,10 @@ def _prune_non_significant_results(
     if cfg.multiple_test_cfg == analysis_cfg.MultipleTestCfg.NONE:
         return results
 
+    # multitest.multipletests does not work if there are zero results.
+    if not results:
+        return results
+
     p_values = []
     for result in results:
         for pair in result.pairs:

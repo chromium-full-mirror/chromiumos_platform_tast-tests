@@ -202,3 +202,12 @@ class PipelineTest(unittest.TestCase):
             cfg,
         )
         self.assertEqual(len(results), 22)
+
+    def test_analyze_results_empty(self) -> None:
+        analyze_results.analyze_results(
+            [
+                FILES_DIR.joinpath("data-empty.json"),
+                FILES_DIR.joinpath("data-empty.json"),
+            ],
+            analysis_cfg.AnalysisCfg(),
+        )
