@@ -92,7 +92,7 @@ func NewBluetoothFacade(ctx context.Context, stackType common.BluetoothStackType
 }
 
 // GetBluetoothStackType determines the active Bluetooth stack on the DUT.
-// Returns BluetoothStackTypeBluez if there's an error determining the stack.
+// Returns BluetoothStackTypeUnknown if there's an error determining the stack.
 func GetBluetoothStackType(ctx context.Context) (common.BluetoothStackType, error) {
 	isFlossEnabled, err := floss.GetFlossEnabled(ctx)
 	if err != nil {
@@ -102,7 +102,7 @@ func GetBluetoothStackType(ctx context.Context) (common.BluetoothStackType, erro
 		}
 
 		// Handle other unexpected errors
-		return common.BluetoothStackTypeBluez, errors.Wrap(err, "failed to get Floss enabled state")
+		return common.BluetoothStackTypeUnknown, errors.Wrap(err, "failed to get Floss enabled state")
 	}
 
 	if isFlossEnabled {

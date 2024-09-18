@@ -542,6 +542,10 @@ type fixture struct {
 	features        *fixtureFeatures
 	fastPairEnabled bool
 	btStack         bts.BluetoothStackType
+	// Initial BT stack, for recover at clean up.
+	initBtStack     bts.BluetoothStackType
+	// Initial BT power status, for recover at clean up.
+	initPower       bool
 
 	// Stateful vars which are initialized during SetUp.
 	fv *FixtValue
@@ -685,9 +689,6 @@ func (tf *fixture) SetUp(ctx context.Context, s *testing.FixtState) interface{} 
 func (tf *fixture) Reset(ctx context.Context) error {
 	testing.ContextLog(ctx, "[BLUETOOTH_FIXTURE] Reset :: START")
 	defer testing.ContextLog(ctx, "[BLUETOOTH_FIXTURE] Reset :: END")
-	if err := GetBtpeerProvider().Reset(ctx, tf.fv.BTPeers...); err != nil {
-		return errors.Wrap(err, "failed to reset all btpeers")
-	}
 	for _, dutConfig := range tf.fv.DUTConfigs {
 		if _, err := dutConfig.BluetoothService.Reset(ctx, &bts.ResetRequest{
 			PowerOn: true,
@@ -699,6 +700,9 @@ func (tf *fixture) Reset(ctx context.Context) error {
 				return errors.Wrapf(err, "failed to reset Chrome UI of DUT %s", dutConfig.DUT.HostName())
 			}
 		}
+	}
+	if err := GetBtpeerProvider().Reset(ctx, tf.fv.BTPeers...); err != nil {
+		return errors.Wrap(err, "failed to reset all btpeers")
 	}
 	if err := tf.dumpAllCollectedLogs(ctx, "Reset"); err != nil {
 		return errors.Wrap(err, "failed to collect dbus-monitor bluetooth logs")
@@ -734,13 +738,13 @@ func (tf *fixture) PostTest(ctx context.Context, s *testing.FixtTestState) {
 func (tf *fixture) TearDown(ctx context.Context, s *testing.FixtState) {
 	s.Log("[BLUETOOTH_FIXTURE] TearDown :: START")
 	defer s.Log("[BLUETOOTH_FIXTURE] TearDown :: END")
+	// Tear down each DUT.
+	tf.cleanupAllDuts(ctx)
+
 	// Reset btpeers.
 	if err := GetBtpeerProvider().Reset(ctx, tf.fv.BTPeers...); err != nil {
 		s.Error("Failed to reset all btpeers: ", err)
 	}
-
-	// Tear down each DUT.
-	tf.cleanupAllDuts(ctx)
 
 	// Dump and close log collectors.
 	if err := tf.dumpAllCollectedLogs(ctx, "TearDown"); err != nil {
@@ -867,8 +871,24 @@ func (tf *fixture) setUpDut(ctx context.Context, dutConfig *DUTConfig) error {
 		dutConfig.btsnoopCollector = nil
 	})
 
+	if _, err := dutConfig.BluetoothService.SetupBluetoothFacade(ctx, &emptypb.Empty{}); err != nil {
+		return errors.Wrap(err, "failed to setup bluetooth facade")
+	}
+	// Get initial stack and power status.
+	stackTypeResp, err := dutConfig.BluetoothService.StackType(ctx, &emptypb.Empty{})
+	if err != nil {
+		return errors.Wrap(err, "failed to get current bluetooth stack")
+	}
+	tf.initBtStack = stackTypeResp.GetStackType()
+	powerResp, err := dutConfig.BluetoothService.IsPoweredOn(ctx, &emptypb.Empty{})
+	if err != nil {
+		return errors.Wrap(err, "failed to get current bluetooth power status")
+	}
+	tf.initPower = powerResp.GetIsPoweredOn()
+	testing.ContextLogf(ctx, "Current bluetooth stack %q and power %t", tf.initBtStack, tf.initPower)
+
 	// Configure and enable desired DUT bluetooth stack.
-	testing.ContextLogf(ctx, "=== Configuring DUT to use bluetooth stack %q ===", tf.btStack)
+	testing.ContextLogf(ctx, "Configuring DUT to use bluetooth stack %q", tf.btStack)
 	if _, err := dutConfig.BluetoothService.SetBluetoothStack(ctx, &bts.SetBluetoothStackRequest{
 		StackType: tf.btStack,
 	}); err != nil {
@@ -888,14 +908,24 @@ func (tf *fixture) setUpDut(ctx context.Context, dutConfig *DUTConfig) error {
 		}
 	}
 	dutConfig.addCleanupStep(func(ctx context.Context, dutConfig *DUTConfig) {
+		testing.ContextLog(ctx, "Cleanup bluetooth DUT")
 		if _, err := dutConfig.BluetoothService.Reset(ctx, &bts.ResetRequest{
 			PowerOn: true,
 		}); err != nil {
 			testing.ContextLogf(ctx, "WARNING: Failed to reset bluetooth stack of DUT %q: %v", dutConfig.DUT.HostName(), err)
 		}
-		testing.ContextLog(ctx, "Disabling bluetooth on DUT")
-		if _, err := dutConfig.BluetoothService.Disable(ctx, &emptypb.Empty{}); err != nil {
-			testing.ContextLogf(ctx, "WARNING: Failed to disable bluetooth stack on DUT %q: %v", dutConfig.DUT.HostName(), err)
+		// Switch back BT stack type and power status.
+		if tf.btStack != tf.initBtStack {
+			testing.ContextLogf(ctx, "Switch back bluetooth stack to %q", tf.initBtStack)
+			if _, err := dutConfig.BluetoothService.SetBluetoothStack(ctx, &bts.SetBluetoothStackRequest{
+				StackType: tf.initBtStack,
+			}); err != nil {
+				testing.ContextLogf(ctx, "WARNING: Failed to set DUT bluetooth stack as %q", tf.initBtStack)
+			}
+		}
+		testing.ContextLogf(ctx, "Switch back bluetooth power status to %t on DUT", tf.initPower)
+		if _, err := dutConfig.BluetoothService.SetPowered(ctx, &bts.SetPoweredRequest{Powered: tf.initPower}); err != nil {
+			testing.ContextLogf(ctx, "WARNING: Failed to switch back bluetooth power status on DUT %q: %v", dutConfig.DUT.HostName(), err)
 		}
 	})
 

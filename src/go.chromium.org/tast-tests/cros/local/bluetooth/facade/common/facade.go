@@ -90,6 +90,9 @@ const (
 
 	// BluetoothStackTypeFloss is the BluetoothStackType for the floss stack.
 	BluetoothStackTypeFloss BluetoothStackType = "floss"
+
+	// BluetoothStackTypeUnknown is the undefined BluetoothStackType.
+	BluetoothStackTypeUnknown BluetoothStackType = "unknown"
 )
 
 // BluetoothFacade is the generic interface for interacting with different
