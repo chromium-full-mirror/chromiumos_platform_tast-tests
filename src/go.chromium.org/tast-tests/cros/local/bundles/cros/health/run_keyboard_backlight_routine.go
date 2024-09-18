@@ -29,7 +29,7 @@ func init() {
 		},
 		BugComponent: "b:982097", // ChromeOS > Platform > Enablement > Health
 		SoftwareDeps: []string{"diagnostics"},
-		Attr:         []string{"group:mainline", "informational", "group:criticalstaging"},
+		Attr:         []string{"group:mainline"},
 		Fixture:      "crosHealthdRunning",
 		Timeout:      1 * time.Minute,
 	})
