@@ -9,17 +9,23 @@ import (
 	"io/ioutil"
 	"os"
 	"path/filepath"
+	"regexp"
 	"strings"
 	"time"
 
 	"google.golang.org/grpc"
 
 	"go.chromium.org/tast-tests/cros/local/a11y/tts"
+	"go.chromium.org/tast-tests/cros/local/arc"
 	"go.chromium.org/tast-tests/cros/local/bundles/cros/arc/cache"
 	arcpb "go.chromium.org/tast-tests/cros/services/cros/arc"
 
 	"go.chromium.org/tast/core/errors"
 	"go.chromium.org/tast/core/testing"
+)
+
+const (
+	ttsCacheUpdatedPattern = "ArcTts.*Saved to cache"
 )
 
 func init() {
@@ -63,6 +69,11 @@ func (c *TTSCacheService) Generate(ctx context.Context, request *arcpb.TTSCacheR
 
 	defer cr.Close(ctx)
 	defer a.Close(ctx)
+
+	var pred = arc.RegexpPred(regexp.MustCompile(ttsCacheUpdatedPattern))
+	if err := a.WaitForLogcat(ctx, pred); err != nil {
+		return nil, errors.Wrap(err, "failed to wait for the cache to be updated")
+	}
 
 	if err := cache.CopyTTSCache(ctx, targetDir); err != nil {
 		os.RemoveAll(targetDir)
