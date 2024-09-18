@@ -109,13 +109,21 @@ func init() {
 			ExtraSoftwareDeps: []string{"android_container"},
 			Val:               anyChildDataAppContainerPathSelector,
 		}, {
-			Name:              "whole_data_vm",
-			ExtraSoftwareDeps: []string{"android_vm"},
-			Val:               rootVMDataDirPathSelector,
+			Name: "whole_data_vm",
+			ExtraSoftwareDeps: []string{
+				"android_vm",
+				// Skip the test when ARCVM virtio-blk /data is enabled.
+				// ARC's /data directory is encapsulated in a disk image when it is enabled.
+				"no_arcvm_virtio_blk_data"},
+			Val: rootVMDataDirPathSelector,
 		}, {
-			Name:              "app_data_vm",
-			ExtraSoftwareDeps: []string{"android_vm"},
-			Val:               anyChildDataAppVMPathSelector,
+			Name: "app_data_vm",
+			ExtraSoftwareDeps: []string{
+				"android_vm",
+				// Skip the test when ARCVM virtio-blk /data is enabled.
+				// ARC's /data directory is encapsulated in a disk image when it is enabled.
+				"no_arcvm_virtio_blk_data"},
+			Val: anyChildDataAppVMPathSelector,
 		}},
 		VarDeps: []string{
 			ui.GaiaPoolDefaultVarName,
