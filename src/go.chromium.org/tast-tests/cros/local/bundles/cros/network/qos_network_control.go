@@ -274,12 +274,12 @@ func QosNetworkControl(ctx context.Context, s *testing.State) {
 
 	// Generate requests from different users to let dnsproxy do DoH requests.
 	// TODO(b/296958870): add a test for Chrome that has its own DoH flow.
-	tc := []dns.ProxyTestCase{
+	tcs := []dns.ProxyTestCase{
 		{Client: dns.System, AllowRetry: true},
 		{Client: dns.User, AllowRetry: true},
 	}
-	if errs := dns.TestQueryDNSProxy(ctx, tc, nil /* chrome */, nil /* arc */, nil /* container */, dns.NewQueryOptions()); len(errs) != 0 {
-		for _, err := range errs {
+	for _, tc := range tcs {
+		if err := tc.Run(ctx, nil /* chrome */, nil /* arc */, nil /* container */, dns.NewQueryOptions()); err != nil {
 			s.Fatal("Failed DNS query check: ", err)
 		}
 	}

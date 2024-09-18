@@ -224,8 +224,8 @@ func DNSProxyOverVPN(ctx context.Context, s *testing.State) {
 	} else if params.crostini {
 		defaultTC = []dns.ProxyTestCase{{Client: dns.Crostini}}
 	}
-	if errs := dns.TestQueryDNSProxy(ctx, defaultTC, nil /* chrome */, a, cont, dns.NewQueryOptions()); len(errs) != 0 {
-		for _, err := range errs {
+	for _, tc := range defaultTC {
+		if err := tc.Run(ctx, nil /* chrome */, a, cont, dns.NewQueryOptions()); err != nil {
 			s.Error("Failed DNS query check in the default setup: ", err)
 		}
 	}
@@ -251,8 +251,10 @@ func DNSProxyOverVPN(ctx context.Context, s *testing.State) {
 
 	// Block DNS queries over VPN through iptables.
 	if errs := dns.NewVPNBlock(vpnServer.Env.NetNSName).Run(ctx, func(ctx context.Context) {
-		if errs := dns.TestQueryDNSProxy(ctx, vpnBlockedTC, nil /* chrome */, a, cont, dns.NewQueryOptions()); len(errs) != 0 {
-			s.Error("Failed DNS query check: ", errs)
+		for _, tc := range vpnBlockedTC {
+			if err := tc.Run(ctx, nil /* chrome */, a, cont, dns.NewQueryOptions()); err != nil {
+				s.Error("Failed DNS query check: ", err)
+			}
 		}
 	}); len(errs) > 0 {
 		s.Fatal("Failed to block DNS over VPN: ", errs)

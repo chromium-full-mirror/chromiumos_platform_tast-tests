@@ -223,20 +223,20 @@ func DNSProxy(ctx context.Context, s *testing.State) {
 	// the system, and currently we don't have a good way to query that all things
 	// are ready. For ARC, the readiness is already verified above.
 	// TODO(jasongustaman): Verify resolv.conf at least before the query.
-	var tc []dns.ProxyTestCase
+	var tcs []dns.ProxyTestCase
 	if params.chrome {
-		tc = []dns.ProxyTestCase{
+		tcs = []dns.ProxyTestCase{
 			{Client: dns.System, AllowRetry: true},
 			{Client: dns.User, AllowRetry: true},
 			{Client: dns.Chronos, AllowRetry: true},
 		}
 	} else if params.arc {
-		tc = []dns.ProxyTestCase{{Client: dns.ARC}}
+		tcs = []dns.ProxyTestCase{{Client: dns.ARC}}
 	} else if params.crostini {
-		tc = []dns.ProxyTestCase{{Client: dns.Crostini, AllowRetry: true}}
+		tcs = []dns.ProxyTestCase{{Client: dns.Crostini, AllowRetry: true}}
 	}
-	if errs := dns.TestQueryDNSProxy(ctx, tc, nil /* chrome */, a, cont, dns.NewQueryOptions()); len(errs) != 0 {
-		for _, err := range errs {
+	for _, tc := range tcs {
+		if err := tc.Run(ctx, nil /* chrome */, a, cont, dns.NewQueryOptions()); err != nil {
 			s.Error("Failed DNS query check in the default setup: ", err)
 		}
 	}
@@ -264,38 +264,40 @@ func DNSProxy(ctx context.Context, s *testing.State) {
 		// For this case, the failure happens on the proxy's DoH timeout which might be longer than the client's timeout.
 		// Allow the client to retry the query. It is expected for the DoH server to be invalidated by then.
 		if params.chrome {
-			tc = []dns.ProxyTestCase{{Client: dns.System, AllowRetry: true}, {Client: dns.User, AllowRetry: true}}
+			tcs = []dns.ProxyTestCase{{Client: dns.System, AllowRetry: true}, {Client: dns.User, AllowRetry: true}}
 		} else if params.arc {
-			tc = []dns.ProxyTestCase{{Client: dns.ARC, AllowRetry: true}}
+			tcs = []dns.ProxyTestCase{{Client: dns.ARC, AllowRetry: true}}
 		} else if params.crostini {
-			tc = []dns.ProxyTestCase{{Client: dns.Crostini, AllowRetry: true}}
+			tcs = []dns.ProxyTestCase{{Client: dns.Crostini, AllowRetry: true}}
 		}
 	case dns.DoHOff:
 		// Verify blocking plaintext causes queries fail (no DoH option).
 		blocks = append(blocks, dns.NewPlaintextBlock(nss, physIfs, "" /*dest*/, "" /*excludeHexStr*/))
 		if params.chrome {
-			tc = []dns.ProxyTestCase{{Client: dns.System, ExpectErr: true}, {Client: dns.User, ExpectErr: true}, {Client: dns.Chronos, ExpectErr: true}}
+			tcs = []dns.ProxyTestCase{{Client: dns.System, ExpectErr: true}, {Client: dns.User, ExpectErr: true}, {Client: dns.Chronos, ExpectErr: true}}
 		} else if params.arc {
-			tc = []dns.ProxyTestCase{{Client: dns.ARC, ExpectErr: true}}
+			tcs = []dns.ProxyTestCase{{Client: dns.ARC, ExpectErr: true}}
 		} else if params.crostini {
-			tc = []dns.ProxyTestCase{{Client: dns.Crostini, ExpectErr: true}}
+			tcs = []dns.ProxyTestCase{{Client: dns.Crostini, ExpectErr: true}}
 		}
 	case dns.DoHAlwaysOn:
 		// Verify blocking HTTPS causes queries to fail (no plaintext fallback).
 		blocks = append(blocks, dns.NewDoHBlock(nss, physIfs))
 		if params.chrome {
-			tc = []dns.ProxyTestCase{{Client: dns.System, ExpectErr: true}, {Client: dns.User, ExpectErr: true}}
+			tcs = []dns.ProxyTestCase{{Client: dns.System, ExpectErr: true}, {Client: dns.User, ExpectErr: true}}
 		} else if params.arc {
-			tc = []dns.ProxyTestCase{{Client: dns.ARC, ExpectErr: true}}
+			tcs = []dns.ProxyTestCase{{Client: dns.ARC, ExpectErr: true}}
 		} else if params.crostini {
-			tc = []dns.ProxyTestCase{{Client: dns.Crostini, ExpectErr: true}}
+			tcs = []dns.ProxyTestCase{{Client: dns.Crostini, ExpectErr: true}}
 		}
 	}
 
 	for _, block := range blocks {
 		if errs := block.Run(ctx, func(ctx context.Context) {
-			if errs := dns.TestQueryDNSProxy(ctx, tc, nil /* chrome */, a, cont, dns.NewQueryOptions()); len(errs) != 0 {
-				s.Errorf("Failed DNS query check in condition %s: %v", block, errs)
+			for _, tc := range tcs {
+				if err := tc.Run(ctx, nil /* chrome */, a, cont, dns.NewQueryOptions()); err != nil {
+					s.Errorf("Failed DNS query check in condition %s: %v", block, err)
+				}
 			}
 		}); len(errs) > 0 {
 			s.Fatalf("Failed to block DNS in condition %s: %v", block, errs)

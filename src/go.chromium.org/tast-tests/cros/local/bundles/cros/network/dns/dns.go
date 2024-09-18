@@ -453,36 +453,33 @@ type ProxyTestCase struct {
 	AllowRetry bool
 }
 
-// TestQueryDNSProxy runs a set of test cases for DNS proxy.
-func TestQueryDNSProxy(ctx context.Context, tcs []ProxyTestCase, cr *chrome.Chrome, a *arc.ARC, cont *vm.Container, opts *QueryOptions) []error {
-	var errs []error
-	for _, tc := range tcs {
-		testing.ContextLogf(ctx, "Resolving %s as %s, expect failure: %t, allow retry: %t", opts, tc.Client, tc.ExpectErr, tc.AllowRetry)
-		if err := testing.Poll(ctx, func(ctx context.Context) error {
-			// Avoid the effect of connection pinning. We observed this issue in the
-			// crostini test since it seems that the dnsmasq in Termina will reuse the
-			// source port for DNS query. It's unlikely to be a problem in other cases
-			// but let's avoid it by any chance.
-			if err := deleteDo53EntriesInConntrack(ctx); err != nil {
-				testing.ContextLog(ctx, "Failed to clear conntrack entries for DNS: ", err)
-			}
-			var err error
-			qErr := queryDNS(ctx, tc.Client, cr, a, cont, opts, !tc.ExpectErr /*dumpLogOnError*/)
-			if qErr != nil && !tc.ExpectErr {
-				err = errors.Wrapf(qErr, "DNS query failed for %s", tc.Client)
-			}
-			if qErr == nil && tc.ExpectErr {
-				err = errors.Errorf("successful DNS query for %s, but expected failure", tc.Client)
-			}
-			if !tc.AllowRetry {
-				return testing.PollBreak(err)
-			}
-			return err
-		}, &testing.PollOptions{Timeout: 15 * time.Second}); err != nil {
-			errs = append(errs, err)
+// Run runs a DNS proxy test case.
+func (tc *ProxyTestCase) Run(ctx context.Context, cr *chrome.Chrome, a *arc.ARC, cont *vm.Container, opts *QueryOptions) error {
+	testing.ContextLogf(ctx, "Resolving %s as %s, expect failure: %t, allow retry: %t", opts, tc.Client, tc.ExpectErr, tc.AllowRetry)
+	if err := testing.Poll(ctx, func(ctx context.Context) error {
+		// Avoid the effect of connection pinning. We observed this issue in the
+		// crostini test since it seems that the dnsmasq in Termina will reuse the
+		// source port for DNS query. It's unlikely to be a problem in other cases
+		// but let's avoid it by any chance.
+		if err := deleteDo53EntriesInConntrack(ctx); err != nil {
+			testing.ContextLog(ctx, "Failed to clear conntrack entries for DNS: ", err)
 		}
+		var err error
+		qErr := queryDNS(ctx, tc.Client, cr, a, cont, opts, !tc.ExpectErr /*dumpLogOnError*/)
+		if qErr != nil && !tc.ExpectErr {
+			err = errors.Wrapf(qErr, "DNS query failed for %s", tc.Client)
+		}
+		if qErr == nil && tc.ExpectErr {
+			err = errors.Errorf("successful DNS query for %s, but expected failure", tc.Client)
+		}
+		if !tc.AllowRetry {
+			return testing.PollBreak(err)
+		}
+		return err
+	}, &testing.PollOptions{Timeout: 15 * time.Second}); err != nil {
+		return err
 	}
-	return errs
+	return nil
 }
 
 // InstallDigInARC installs a statically-linked binary of dig inside ARC.

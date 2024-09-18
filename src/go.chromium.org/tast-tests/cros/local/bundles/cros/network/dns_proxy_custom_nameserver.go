@@ -137,22 +137,26 @@ func DNSProxyCustomNameserver(ctx context.Context, s *testing.State) {
 
 	// By default, host DNS queries work as-is.
 	// TODO(b/232882301) - Add Crostini
-	tc := []dns.ProxyTestCase{
+	tcs := []dns.ProxyTestCase{
 		{Client: dns.System},
 		{Client: dns.User},
 		{Client: dns.Chronos},
 		{Client: dns.ARC},
 	}
-	if errs := dns.TestQueryDNSProxy(ctx, tc, nil, a, nil, dns.NewQueryOptions()); len(errs) > 0 {
-		s.Fatal("Failed initial DNS check: ", errs)
+	for _, tc := range tcs {
+		if err := tc.Run(ctx, nil /* chrome */, a, nil /* container */, dns.NewQueryOptions()); err != nil {
+			s.Fatal("Failed initial DNS check: ", err)
+		}
 	}
 
 	// Confirm that host queries to a different nameserver also work.
 	opts := dns.NewQueryOptions()
 	opts.Nameserver = addrs.IPv4Addr.To4().String()
 	opts.ARCDigPath = p
-	if errs := dns.TestQueryDNSProxy(ctx, tc, nil, a, nil, opts); len(errs) > 0 {
-		s.Fatal("Failed nameserver confirmation check: ", errs)
+	for _, tc := range tcs {
+		if err := tc.Run(ctx, nil /* chrome */, a, nil /* container */, dns.NewQueryOptions()); err != nil {
+			s.Fatal("Failed nameserver confirmation check: ", err)
+		}
 	}
 
 	// Now block plaintext DNS traffic to that server and confirm failure to verify.
@@ -161,12 +165,14 @@ func DNSProxyCustomNameserver(ctx context.Context, s *testing.State) {
 		s.Fatal("Failed to get DNS proxy's network namespaces: ", err)
 	}
 	if errs := dns.NewPlaintextBlock(nss, []string{env.Router.VethOutName}, opts.Nameserver, "" /*excludeHexStr*/).Run(ctx, func(ctx context.Context) {
-		for i := 0; i < len(tc); i++ {
-			tc[i].ExpectErr = true
+		for i := 0; i < len(tcs); i++ {
+			tcs[i].ExpectErr = true
 		}
 		opts.Domain = dns.RandDomain()
-		if errs := dns.TestQueryDNSProxy(ctx, tc, nil, a, nil, opts); len(errs) > 0 {
-			s.Error("Failed nameserver verification: ", errs)
+		for _, tc := range tcs {
+			if err := tc.Run(ctx, nil /* chrome */, a, nil /* container */, dns.NewQueryOptions()); err != nil {
+				s.Error("Failed nameserver verification: ", err)
+			}
 		}
 	}); len(errs) > 0 {
 		s.Fatal("Failed to block DNS to nameserver: ", errs)
