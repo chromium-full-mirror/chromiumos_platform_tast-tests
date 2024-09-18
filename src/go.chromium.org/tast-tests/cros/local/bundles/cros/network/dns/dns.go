@@ -584,7 +584,8 @@ func getQueryDomain(query []byte) (string, error) {
 	if err != nil {
 		return "", err
 	}
-	return q.Name.String(), nil
+	// dnsmessage package uses trailing "." for question name.
+	return strings.TrimSuffix(q.Name.String(), "."), nil
 }
 
 // logQuery logs DNS query target domain.
