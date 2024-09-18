@@ -10,8 +10,7 @@ import (
 	"time"
 
 	"go.chromium.org/tast-tests/cros/common/media/caps"
-	"go.chromium.org/tast-tests/cros/local/chrome/browser"
-	"go.chromium.org/tast-tests/cros/local/chrome/lacros"
+	"go.chromium.org/tast-tests/cros/local/chrome"
 	"go.chromium.org/tast-tests/cros/local/media/devtools"
 	"go.chromium.org/tast/core/errors"
 	"go.chromium.org/tast/core/testing"
@@ -35,16 +34,14 @@ const (
 )
 
 type playURLParams struct {
-	url         string
-	browserType browser.Type
-	duration    time.Duration
+	url      string
+	duration time.Duration
 }
 
 func init() {
 	testing.AddTest(&testing.Test{
-		Func:         PlayURL,
-		LacrosStatus: testing.LacrosVariantExists,
-		Desc:         "Plays video in Chrome by navigating to a given URL, and verifies it plays",
+		Func: PlayURL,
+		Desc: "Plays video in Chrome by navigating to a given URL, and verifies it plays",
 		Contacts: []string{
 			"chromeos-gfx-video@google.com",
 			"hiroh@chromium.org",
@@ -56,9 +53,8 @@ func init() {
 			{
 				Name: "crosvideo_h264_720_1minute",
 				Val: playURLParams{
-					url:         crosAppspotH264VanillaURL,
-					duration:    1 * time.Minute,
-					browserType: browser.TypeAsh,
+					url:      crosAppspotH264VanillaURL,
+					duration: 1 * time.Minute,
 				},
 				ExtraSoftwareDeps: []string{"proprietary_codecs", caps.HWDecodeH264},
 				ExtraAttr:         []string{"group:graphics", "graphics_video", "graphics_perbuild"},
@@ -68,9 +64,8 @@ func init() {
 			{
 				Name: "crosvideo_vp9_720_1minute",
 				Val: playURLParams{
-					url:         crosAppspotVP9VanillaURL,
-					duration:    1 * time.Minute,
-					browserType: browser.TypeAsh,
+					url:      crosAppspotVP9VanillaURL,
+					duration: 1 * time.Minute,
 				},
 				ExtraSoftwareDeps: []string{caps.HWDecodeVP9},
 				ExtraAttr:         []string{"group:graphics", "graphics_video", "graphics_perbuild"},
@@ -80,9 +75,8 @@ func init() {
 			{
 				Name: "crosvideo_h264_cycle_1minute",
 				Val: playURLParams{
-					url:         crosAppspotH264ChangingResolutionURL,
-					duration:    1 * time.Minute,
-					browserType: browser.TypeAsh,
+					url:      crosAppspotH264ChangingResolutionURL,
+					duration: 1 * time.Minute,
 				},
 				ExtraSoftwareDeps: []string{"proprietary_codecs", caps.HWDecodeH264},
 				ExtraAttr:         []string{"group:graphics", "graphics_video", "graphics_perbuild"},
@@ -92,9 +86,8 @@ func init() {
 			{
 				Name: "crosvideo_h264_cycle_1minute_gtfo",
 				Val: playURLParams{
-					url:         crosAppspotH264ChangingResolutionURL,
-					duration:    1 * time.Minute,
-					browserType: browser.TypeAsh,
+					url:      crosAppspotH264ChangingResolutionURL,
+					duration: 1 * time.Minute,
 				},
 				ExtraSoftwareDeps: []string{"proprietary_codecs", caps.HWDecodeH264},
 				ExtraAttr:         []string{"group:graphics", "graphics_video", "graphics_perbuild"},
@@ -104,9 +97,8 @@ func init() {
 			{
 				Name: "crosvideo_vp9_cycle_1minute",
 				Val: playURLParams{
-					url:         crosAppspotVP9ChangingResolutionURL,
-					duration:    1 * time.Minute,
-					browserType: browser.TypeAsh,
+					url:      crosAppspotVP9ChangingResolutionURL,
+					duration: 1 * time.Minute,
 				},
 				ExtraSoftwareDeps: []string{caps.HWDecodeVP9},
 				ExtraAttr:         []string{"group:graphics", "graphics_video", "graphics_perbuild"},
@@ -116,9 +108,8 @@ func init() {
 			{
 				Name: "widevine_clear_vp9_2minute",
 				Val: playURLParams{
-					url:         widevineClearURL,
-					duration:    2 * time.Minute,
-					browserType: browser.TypeAsh,
+					url:      widevineClearURL,
+					duration: 2 * time.Minute,
 				},
 				ExtraSoftwareDeps: []string{caps.HWDecodeVP9_4K},
 				ExtraAttr:         []string{"group:graphics", "graphics_video", "graphics_weekly"},
@@ -134,20 +125,8 @@ func init() {
 // played timestamp.
 func PlayURL(ctx context.Context, s *testing.State) {
 	testOpt := s.Param().(playURLParams)
-
-	cr, l, _, err := lacros.Setup(ctx, s.FixtValue(), testOpt.browserType)
-	if err != nil {
-		s.Fatal("Failed to initialize test: ", err)
-	}
-	defer lacros.CloseLacros(ctx, l)
-
-	var br *browser.Browser
-	switch testOpt.browserType {
-	case browser.TypeAsh:
-		br = cr.Browser()
-	case browser.TypeLacros:
-		br = l.Browser()
-	}
+	cr := s.FixtValue().(chrome.HasChrome).Chrome()
+	br := cr.Browser()
 
 	// Navigate to the interesting URL and maximize the window.
 	conn, err := br.NewConn(ctx, testOpt.url)

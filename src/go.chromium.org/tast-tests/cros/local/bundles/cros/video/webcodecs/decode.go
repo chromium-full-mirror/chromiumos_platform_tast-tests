@@ -16,7 +16,6 @@ import (
 	"go.chromium.org/tast-tests/cros/common/testexec"
 	"go.chromium.org/tast-tests/cros/local/chrome"
 	"go.chromium.org/tast-tests/cros/local/chrome/ash"
-	"go.chromium.org/tast-tests/cros/local/chrome/browser"
 	"go.chromium.org/tast-tests/cros/local/media/devtools"
 	"go.chromium.org/tast-tests/cros/local/media/encoding"
 	"go.chromium.org/tast/core/errors"
@@ -29,9 +28,6 @@ type TestDecodeArgs struct {
 	VideoFile string
 	// Acceleration denotes which decoder is used, hardware or software.
 	Acceleration HardwareAcceleration
-	// BrowserType indicates the type of Chrome browser to be used,
-	// Ash Chrome or Lacros Chrome.
-	BrowserType browser.Type
 }
 
 const decodeHTML = "webcodecs_decode.html"

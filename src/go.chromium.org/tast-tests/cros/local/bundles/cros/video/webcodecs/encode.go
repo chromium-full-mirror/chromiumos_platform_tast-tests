@@ -15,7 +15,6 @@ import (
 
 	"go.chromium.org/tast-tests/cros/common/perf"
 	"go.chromium.org/tast-tests/cros/local/chrome/ash"
-	"go.chromium.org/tast-tests/cros/local/chrome/browser"
 	"go.chromium.org/tast-tests/cros/local/coords"
 	"go.chromium.org/tast-tests/cros/local/media/devtools"
 	"go.chromium.org/tast-tests/cros/local/media/encoding"
@@ -40,9 +39,6 @@ type TestEncodeArgs struct {
 	// VerifyOutOfProcessVideoEncodingIsUsed denotes if we should verify
 	// that a utility encoder process was started.
 	VerifyOutOfProcessVideoEncodingIsUsed bool
-	// BrowserType indicates the type of Chrome browser to be used,
-	// Ash Chrome or Lacros Chrome.
-	BrowserType browser.Type
 	// NumOfEncoders is the number of WebCodecs encoders created in
 	// RunEncodeTest().
 	NumOfEncoders int
