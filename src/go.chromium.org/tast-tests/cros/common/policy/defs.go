@@ -26586,7 +26586,6 @@ func (p *DeviceHardwareVideoDecodingEnabled) Equal(iface interface{}) bool {
 
 // ****************************************************************************
 // 1186. TabOrganizerSettings
-// This policy has a default value of 1.
 // This policy can be modified without rebooting.
 // ****************************************************************************
 type TabOrganizerSettings struct {
@@ -26618,7 +26617,6 @@ func (p *TabOrganizerSettings) Equal(iface interface{}) bool {
 
 // ****************************************************************************
 // 1187. HelpMeWriteSettings
-// This policy has a default value of 1.
 // This policy can be modified without rebooting.
 // ****************************************************************************
 type HelpMeWriteSettings struct {
@@ -26650,7 +26648,6 @@ func (p *HelpMeWriteSettings) Equal(iface interface{}) bool {
 
 // ****************************************************************************
 // 1188. CreateThemesSettings
-// This policy has a default value of 1.
 // This policy can be modified without rebooting.
 // ****************************************************************************
 type CreateThemesSettings struct {
@@ -27617,7 +27614,6 @@ func (p *MutationEventsEnabled) Equal(iface interface{}) bool {
 
 // ****************************************************************************
 // 1228. DevToolsGenAiSettings
-// This policy has a default value of 1.
 // This policy can be modified without rebooting.
 // ****************************************************************************
 type DevToolsGenAiSettings struct {
@@ -27918,7 +27914,6 @@ func (p *PrivacySandboxFingerprintingProtectionEnabled) Equal(iface interface{})
 
 // ****************************************************************************
 // 1241. MultiScreenCaptureAllowedForUrls
-// This is a future policy, it is not present in stable builds.
 // ****************************************************************************
 type MultiScreenCaptureAllowedForUrls struct {
 	Stat Status
@@ -28364,9 +28359,7 @@ func (p *KioskVisionTelemetryEnabled) Equal(iface interface{}) bool {
 
 // ****************************************************************************
 // 1263. GenAIWallpaperSettings
-// This policy has a default value of 1.
 // This policy can be modified without rebooting.
-// This is a future policy, it is not present in stable builds.
 // ****************************************************************************
 type GenAIWallpaperSettings struct {
 	Stat Status
@@ -28397,9 +28390,7 @@ func (p *GenAIWallpaperSettings) Equal(iface interface{}) bool {
 
 // ****************************************************************************
 // 1264. GenAIVcBackgroundSettings
-// This policy has a default value of 1.
 // This policy can be modified without rebooting.
-// This is a future policy, it is not present in stable builds.
 // ****************************************************************************
 type GenAIVcBackgroundSettings struct {
 	Stat Status
@@ -28592,7 +28583,6 @@ func (p *LocalUserFilesMigrationDestination) Equal(iface interface{}) bool {
 // ****************************************************************************
 // 1273. KioskBrowserPermissionsAllowedForOrigins
 // This policy can be modified without rebooting.
-// This is a future policy, it is not present in stable builds.
 // ****************************************************************************
 type KioskBrowserPermissionsAllowedForOrigins struct {
 	Stat Status
@@ -28656,7 +28646,6 @@ func (p *LensOnGalleryEnabled) Equal(iface interface{}) bool {
 
 // ****************************************************************************
 // 1275. HistorySearchSettings
-// This policy has a default value of 1.
 // This policy can be modified without rebooting.
 // ****************************************************************************
 type HistorySearchSettings struct {
@@ -29104,7 +29093,6 @@ func (p *DeviceRestrictionSchedule) Equal(iface interface{}) bool {
 
 // ****************************************************************************
 // 1291. TabCompareSettings
-// This policy has a default value of 2.
 // This policy can be modified without rebooting.
 // ****************************************************************************
 type TabCompareSettings struct {
@@ -29218,7 +29206,6 @@ func (p *GraduationEnablementStatus) Equal(iface interface{}) bool {
 
 // ****************************************************************************
 // 1295. HelpMeReadSettings
-// This policy has a default value of 1.
 // This policy can be modified without rebooting.
 // ****************************************************************************
 type HelpMeReadSettings struct {
@@ -29252,7 +29239,6 @@ func (p *HelpMeReadSettings) Equal(iface interface{}) bool {
 // 1296. GenAiDefaultSettings
 // This policy has a default value of 1.
 // This policy can be modified without rebooting.
-// This is a future policy, it is not present in stable builds.
 // ****************************************************************************
 type GenAiDefaultSettings struct {
 	Stat Status
@@ -29284,7 +29270,6 @@ func (p *GenAiDefaultSettings) Equal(iface interface{}) bool {
 // ****************************************************************************
 // 1297. KioskActiveWiFiCredentialsScopeChangeEnabled
 // This policy can be modified without rebooting.
-// This is a future policy, it is not present in stable builds.
 // ****************************************************************************
 type KioskActiveWiFiCredentialsScopeChangeEnabled struct {
 	Stat Status
@@ -29308,6 +29293,38 @@ func (p *KioskActiveWiFiCredentialsScopeChangeEnabled) SetProto(m *protoreflect.
 	SetUserProto(m, p.Name(), p.Val)
 }
 func (p *KioskActiveWiFiCredentialsScopeChangeEnabled) Equal(iface interface{}) bool {
+	v, ok := iface.(bool)
+	if !ok {
+		return ok
+	}
+	return cmp.Equal(p.Val, v, cmpopts.EquateEmpty())
+}
+
+// ****************************************************************************
+// 1298. DataURLWhitespacePreservationEnabled
+// ****************************************************************************
+type DataURLWhitespacePreservationEnabled struct {
+	Stat Status
+	Val  bool
+}
+
+func (p *DataURLWhitespacePreservationEnabled) Name() string {
+	return "DataURLWhitespacePreservationEnabled"
+}
+func (p *DataURLWhitespacePreservationEnabled) Scope() Scope          { return ScopeUser }
+func (p *DataURLWhitespacePreservationEnabled) Status() Status        { return p.Stat }
+func (p *DataURLWhitespacePreservationEnabled) UntypedV() interface{} { return p.Val }
+func (p *DataURLWhitespacePreservationEnabled) UnmarshalAs(m json.RawMessage) (interface{}, error) {
+	var v bool
+	if err := json.Unmarshal(m, &v); err != nil {
+		return nil, errors.Wrapf(err, "could not read %s as bool", m)
+	}
+	return v, nil
+}
+func (p *DataURLWhitespacePreservationEnabled) SetProto(m *protoreflect.Message) {
+	SetUserProto(m, p.Name(), p.Val)
+}
+func (p *DataURLWhitespacePreservationEnabled) Equal(iface interface{}) bool {
 	v, ok := iface.(bool)
 	if !ok {
 		return ok
@@ -31118,6 +31135,8 @@ func newByName(name string) (Policy, error) {
 		return &GenAiDefaultSettings{}, nil
 	case "KioskActiveWiFiCredentialsScopeChangeEnabled":
 		return &KioskActiveWiFiCredentialsScopeChangeEnabled{}, nil
+	case "DataURLWhitespacePreservationEnabled":
+		return &DataURLWhitespacePreservationEnabled{}, nil
 	default:
 		return nil, errors.New("Unknown policy " + name)
 	}
