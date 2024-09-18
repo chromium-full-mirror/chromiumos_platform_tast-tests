@@ -146,6 +146,9 @@ func VPNPhysicalNetworkReconnect(ctx context.Context, s *testing.State) {
 	if err := wifi.Service.Connect(ctx); err != nil {
 		s.Fatal("Failed to reconnect WiFi: ", err)
 	}
+	if err := wifi.Service.WaitForConnectedOrError(ctx); err != nil {
+		s.Fatal("Failed to wait for to WiFi reconnected status: ", err)
+	}
 
 	// Verify VPN reconnection:
 	if err := vpnConn.Service().WaitForConnectedOrError(ctx); err != nil {
