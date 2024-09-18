@@ -94,7 +94,7 @@ func (b *BtService) assertHasFacade() error {
 	return nil
 }
 
-// StackType returns the BluetoothStackType the facade uses.
+// StackType returns the BluetoothStackType the facade uses. Must setup the facade before calling this.
 func (b *BtService) StackType(ctx context.Context, request *emptypb.Empty) (*pb.StackTypeResponse, error) {
 	if err := b.assertHasFacade(); err != nil {
 		return nil, err
