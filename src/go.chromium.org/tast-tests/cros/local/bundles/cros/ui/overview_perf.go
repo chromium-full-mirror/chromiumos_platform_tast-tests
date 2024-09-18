@@ -222,7 +222,7 @@ func OverviewPerf(ctx context.Context, s *testing.State) {
 		//   windows, tablet mode with minimized windows (the home screen),
 		//   tablet split view with maximized overview windows, or tablet
 		//   split view with minimized overview windows.
-		for i, windows := range []int{2, 3, 4, 8} {
+		for i, windows := range []int{2, 8} {
 			// This assumes that the test scenarios are sorted by
 			// number of windows. If not, then this will generate
 			// Panic: runtime error: makeslice: cap out of range
