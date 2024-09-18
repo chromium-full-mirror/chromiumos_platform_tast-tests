@@ -278,7 +278,7 @@ func QosNetworkControl(ctx context.Context, s *testing.State) {
 		{Client: dns.System, AllowRetry: true},
 		{Client: dns.User, AllowRetry: true},
 	}
-	if errs := dns.TestQueryDNSProxy(ctx, tc, nil /* arc */, nil /* container */, dns.NewQueryOptions()); len(errs) != 0 {
+	if errs := dns.TestQueryDNSProxy(ctx, tc, nil /* chrome */, nil /* arc */, nil /* container */, dns.NewQueryOptions()); len(errs) != 0 {
 		for _, err := range errs {
 			s.Fatal("Failed DNS query check: ", err)
 		}

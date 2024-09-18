@@ -218,13 +218,13 @@ func DNSProxyOverVPN(ctx context.Context, s *testing.State) {
 	// By default, DNS query should work over VPN.
 	var defaultTC []dns.ProxyTestCase
 	if params.chrome {
-		defaultTC = []dns.ProxyTestCase{{Client: dns.System}, {Client: dns.User}, {Client: dns.Chrome}}
+		defaultTC = []dns.ProxyTestCase{{Client: dns.System}, {Client: dns.User}, {Client: dns.Chronos}}
 	} else if params.arc {
 		defaultTC = []dns.ProxyTestCase{{Client: dns.ARC}}
 	} else if params.crostini {
 		defaultTC = []dns.ProxyTestCase{{Client: dns.Crostini}}
 	}
-	if errs := dns.TestQueryDNSProxy(ctx, defaultTC, a, cont, dns.NewQueryOptions()); len(errs) != 0 {
+	if errs := dns.TestQueryDNSProxy(ctx, defaultTC, nil /* chrome */, a, cont, dns.NewQueryOptions()); len(errs) != 0 {
 		for _, err := range errs {
 			s.Error("Failed DNS query check in the default setup: ", err)
 		}
@@ -242,7 +242,7 @@ func DNSProxyOverVPN(ctx context.Context, s *testing.State) {
 	// On the other hand, other traffic (Chrome, ARC, etc.) should always go through VPN.
 	var vpnBlockedTC []dns.ProxyTestCase
 	if params.chrome {
-		vpnBlockedTC = []dns.ProxyTestCase{{Client: dns.System}, {Client: dns.User, ExpectErr: true}, {Client: dns.Chrome, ExpectErr: true}}
+		vpnBlockedTC = []dns.ProxyTestCase{{Client: dns.System}, {Client: dns.User, ExpectErr: true}, {Client: dns.Chronos, ExpectErr: true}}
 	} else if params.arc {
 		vpnBlockedTC = []dns.ProxyTestCase{{Client: dns.ARC, ExpectErr: true}}
 	} else if params.crostini {
@@ -251,7 +251,7 @@ func DNSProxyOverVPN(ctx context.Context, s *testing.State) {
 
 	// Block DNS queries over VPN through iptables.
 	if errs := dns.NewVPNBlock(vpnServer.Env.NetNSName).Run(ctx, func(ctx context.Context) {
-		if errs := dns.TestQueryDNSProxy(ctx, vpnBlockedTC, a, cont, dns.NewQueryOptions()); len(errs) != 0 {
+		if errs := dns.TestQueryDNSProxy(ctx, vpnBlockedTC, nil /* chrome */, a, cont, dns.NewQueryOptions()); len(errs) != 0 {
 			s.Error("Failed DNS query check: ", errs)
 		}
 	}); len(errs) > 0 {

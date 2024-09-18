@@ -140,10 +140,10 @@ func DNSProxyCustomNameserver(ctx context.Context, s *testing.State) {
 	tc := []dns.ProxyTestCase{
 		{Client: dns.System},
 		{Client: dns.User},
-		{Client: dns.Chrome},
+		{Client: dns.Chronos},
 		{Client: dns.ARC},
 	}
-	if errs := dns.TestQueryDNSProxy(ctx, tc, a, nil, dns.NewQueryOptions()); len(errs) > 0 {
+	if errs := dns.TestQueryDNSProxy(ctx, tc, nil, a, nil, dns.NewQueryOptions()); len(errs) > 0 {
 		s.Fatal("Failed initial DNS check: ", errs)
 	}
 
@@ -151,7 +151,7 @@ func DNSProxyCustomNameserver(ctx context.Context, s *testing.State) {
 	opts := dns.NewQueryOptions()
 	opts.Nameserver = addrs.IPv4Addr.To4().String()
 	opts.ARCDigPath = p
-	if errs := dns.TestQueryDNSProxy(ctx, tc, a, nil, opts); len(errs) > 0 {
+	if errs := dns.TestQueryDNSProxy(ctx, tc, nil, a, nil, opts); len(errs) > 0 {
 		s.Fatal("Failed nameserver confirmation check: ", errs)
 	}
 
@@ -165,7 +165,7 @@ func DNSProxyCustomNameserver(ctx context.Context, s *testing.State) {
 			tc[i].ExpectErr = true
 		}
 		opts.Domain = dns.RandDomain()
-		if errs := dns.TestQueryDNSProxy(ctx, tc, a, nil, opts); len(errs) > 0 {
+		if errs := dns.TestQueryDNSProxy(ctx, tc, nil, a, nil, opts); len(errs) > 0 {
 			s.Error("Failed nameserver verification: ", errs)
 		}
 	}); len(errs) > 0 {

@@ -65,11 +65,11 @@ func DNSProxyQueries(ctx context.Context, s *testing.State) {
 	tc := []dns.ProxyTestCase{
 		{Client: dns.System, AllowRetry: true},
 		{Client: dns.User, AllowRetry: true},
-		{Client: dns.Chrome, AllowRetry: true},
+		{Client: dns.Chronos, AllowRetry: true},
 	}
 
 	s.Log("Querying through Do53")
-	if errs := dns.TestQueryDNSProxy(ctx, tc, nil /* arc */, nil /* container */, dns.NewQueryOptions()); len(errs) != 0 {
+	if errs := dns.TestQueryDNSProxy(ctx, tc, nil /* chrome */, nil /* arc */, nil /* container */, dns.NewQueryOptions()); len(errs) != 0 {
 		for _, err := range errs {
 			s.Error("Failed DNS query check: ", err)
 		}
@@ -99,7 +99,7 @@ func DNSProxyQueries(ctx context.Context, s *testing.State) {
 	testing.Sleep(ctx, 1*time.Second)
 
 	s.Log("Querying through DoH")
-	if errs := dns.TestQueryDNSProxy(ctx, tc, nil /* arc */, nil /* container */, dns.NewQueryOptions()); len(errs) != 0 {
+	if errs := dns.TestQueryDNSProxy(ctx, tc, nil /* chrome */, nil /* arc */, nil /* container */, dns.NewQueryOptions()); len(errs) != 0 {
 		for _, err := range errs {
 			s.Error("Failed DNS query check: ", err)
 		}

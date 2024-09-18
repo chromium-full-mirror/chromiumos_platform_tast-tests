@@ -70,8 +70,10 @@ const (
 	System Client = iota
 	// User is a DNS client type for users (e.g. cups, tlsdate).
 	User
-	// Chrome is a DNS client type with user 'chronos'.
+	// Chrome is a DNS client type for Chrome browser.
 	Chrome
+	// Chronos is a DNS client type with user 'chronos'.
+	Chronos
 	// Crostini is a DNS client type for Crostini.
 	Crostini
 	// ARC is a DNS client type for ARC.
@@ -79,7 +81,7 @@ const (
 )
 
 func (c Client) String() string {
-	return []string{"system", "user", "Chrome", "Crostini", "ARC"}[c]
+	return []string{"system", "user", "Chrome", "chronos", "Crostini", "ARC"}[c]
 }
 
 // Config defines a DNS-related config.
@@ -155,6 +157,12 @@ const proxyRunPath = "/run/dns-proxy"
 
 // ResolvConfPath points to the resolv.conf file for name resolution.
 const ResolvConfPath = "/etc/resolv.conf"
+
+// chromeNXDomainError is the error string used by Chrome for NXDOMAIN results.
+const chromeNXDomainError = "DNS_PROBE_FINISHED_NXDOMAIN"
+
+// httpResponse is the expected HTTP response for DNS testing.
+const httpResponse = "dns test page"
 
 // Template for the expected /etc/resolv.conf's data.
 const resolvConfTemplate = `
@@ -379,7 +387,7 @@ func (o QueryOptions) digArgs() []string {
 }
 
 // queryDNS resolves a domain through DNS with a specific client.
-func queryDNS(ctx context.Context, c Client, a *arc.ARC, cont *vm.Container, opts *QueryOptions, dumpLogOnError bool) error {
+func queryDNS(ctx context.Context, c Client, cr *chrome.Chrome, a *arc.ARC, cont *vm.Container, opts *QueryOptions, dumpLogOnError bool) error {
 	var execOpts []testexec.RunOption
 	if dumpLogOnError {
 		execOpts = append(execOpts, testexec.DumpLogOnError)
@@ -392,7 +400,7 @@ func queryDNS(ctx context.Context, c Client, a *arc.ARC, cont *vm.Container, opt
 		return testexec.CommandContext(ctx, "dig", args...).Run(execOpts...)
 	case User:
 		u = "cups"
-	case Chrome:
+	case Chronos:
 		u = "chronos"
 	case Crostini:
 		return cont.Command(ctx, append([]string{"dig"}, args...)...).Run(execOpts...)
@@ -414,6 +422,24 @@ func queryDNS(ctx context.Context, c Client, a *arc.ARC, cont *vm.Container, opt
 			return errors.New("failed to resolve domain, got errcode " + matches[1])
 		}
 		return errors.New("failed to resolve domain: " + string(out))
+	case Chrome:
+		url := "http://" + opts.Domain
+		conn, err := cr.NewConn(ctx, url)
+		if err != nil {
+			return errors.Wrapf(err, "failed to do open %s", url)
+		}
+		defer conn.Close()
+		if err := conn.WaitForExpr(ctx, "document.readyState === 'complete'"); err != nil {
+			return errors.Wrap(err, "failed to wait for page to load")
+		}
+		content, err := conn.PageContent(ctx)
+		if err != nil {
+			return errors.Wrap(err, "failed to get page content")
+		}
+		if !strings.Contains(content, httpResponse) && !strings.Contains(content, chromeNXDomainError) {
+			return errors.New("failed to resolve domain")
+		}
+		return nil
 	default:
 		return errors.New("unknown client")
 	}
@@ -428,7 +454,7 @@ type ProxyTestCase struct {
 }
 
 // TestQueryDNSProxy runs a set of test cases for DNS proxy.
-func TestQueryDNSProxy(ctx context.Context, tcs []ProxyTestCase, a *arc.ARC, cont *vm.Container, opts *QueryOptions) []error {
+func TestQueryDNSProxy(ctx context.Context, tcs []ProxyTestCase, cr *chrome.Chrome, a *arc.ARC, cont *vm.Container, opts *QueryOptions) []error {
 	var errs []error
 	for _, tc := range tcs {
 		testing.ContextLogf(ctx, "Resolving %s as %s, expect failure: %t, allow retry: %t", opts, tc.Client, tc.ExpectErr, tc.AllowRetry)
@@ -441,7 +467,7 @@ func TestQueryDNSProxy(ctx context.Context, tcs []ProxyTestCase, a *arc.ARC, con
 				testing.ContextLog(ctx, "Failed to clear conntrack entries for DNS: ", err)
 			}
 			var err error
-			qErr := queryDNS(ctx, tc.Client, a, cont, opts, !tc.ExpectErr /*dumpLogOnError*/)
+			qErr := queryDNS(ctx, tc.Client, cr, a, cont, opts, !tc.ExpectErr /*dumpLogOnError*/)
 			if qErr != nil && !tc.ExpectErr {
 				err = errors.Wrapf(qErr, "DNS query failed for %s", tc.Client)
 			}
@@ -700,7 +726,7 @@ func NewEnv(ctx context.Context, pool *subnet.Pool) (env *Env, err error) {
 	return env, nil
 }
 
-// NewServer creates a server that responds to DNS and DoH queries.
+// NewServer creates a server that responds to DNS queres, DoH queries, and HTTP requests.
 func NewServer(ctx context.Context, envName string, ipv4Subnet *subnet.IPv4Subnet, ipv6Subnet *subnet.IPv6Subnet, routerEnv *env.Env, httpsCerts *certs.Certs) (*Server, error) {
 	server := &Server{}
 	success := false
@@ -741,6 +767,16 @@ func NewServer(ctx context.Context, envName string, ipv4Subnet *subnet.IPv4Subne
 	httpsserver := httpserver.New(httpserver.TCP4, "443", DoHResponder(ctx, addr.IPv4Addr.String(), &server.DoHQueryLogs), httpsCerts)
 	if err := server.Env.StartServer(ctx, "httpsserver", httpsserver); err != nil {
 		return nil, errors.Wrap(err, "failed to start DoH server")
+	}
+
+	// Start a HTTP server. This is necessary for Chrome browser tests to do the connection.
+	httpserver := httpserver.New(httpserver.TCP4, "80", func(rw http.ResponseWriter, req *http.Request) {
+		if _, err := rw.Write([]byte(httpResponse)); err != nil {
+			testing.ContextLog(ctx, "Failed to write HTTP response: ", err)
+		}
+	}, nil)
+	if err := server.Env.StartServer(ctx, "httpserver", httpserver); err != nil {
+		return nil, errors.Wrap(err, "failed to start HTTP server")
 	}
 
 	success = true

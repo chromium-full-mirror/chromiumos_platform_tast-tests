@@ -228,14 +228,14 @@ func DNSProxy(ctx context.Context, s *testing.State) {
 		tc = []dns.ProxyTestCase{
 			{Client: dns.System, AllowRetry: true},
 			{Client: dns.User, AllowRetry: true},
-			{Client: dns.Chrome, AllowRetry: true},
+			{Client: dns.Chronos, AllowRetry: true},
 		}
 	} else if params.arc {
 		tc = []dns.ProxyTestCase{{Client: dns.ARC}}
 	} else if params.crostini {
 		tc = []dns.ProxyTestCase{{Client: dns.Crostini, AllowRetry: true}}
 	}
-	if errs := dns.TestQueryDNSProxy(ctx, tc, a, cont, dns.NewQueryOptions()); len(errs) != 0 {
+	if errs := dns.TestQueryDNSProxy(ctx, tc, nil /* chrome */, a, cont, dns.NewQueryOptions()); len(errs) != 0 {
 		for _, err := range errs {
 			s.Error("Failed DNS query check in the default setup: ", err)
 		}
@@ -274,7 +274,7 @@ func DNSProxy(ctx context.Context, s *testing.State) {
 		// Verify blocking plaintext causes queries fail (no DoH option).
 		blocks = append(blocks, dns.NewPlaintextBlock(nss, physIfs, "" /*dest*/, "" /*excludeHexStr*/))
 		if params.chrome {
-			tc = []dns.ProxyTestCase{{Client: dns.System, ExpectErr: true}, {Client: dns.User, ExpectErr: true}, {Client: dns.Chrome, ExpectErr: true}}
+			tc = []dns.ProxyTestCase{{Client: dns.System, ExpectErr: true}, {Client: dns.User, ExpectErr: true}, {Client: dns.Chronos, ExpectErr: true}}
 		} else if params.arc {
 			tc = []dns.ProxyTestCase{{Client: dns.ARC, ExpectErr: true}}
 		} else if params.crostini {
@@ -294,7 +294,7 @@ func DNSProxy(ctx context.Context, s *testing.State) {
 
 	for _, block := range blocks {
 		if errs := block.Run(ctx, func(ctx context.Context) {
-			if errs := dns.TestQueryDNSProxy(ctx, tc, a, cont, dns.NewQueryOptions()); len(errs) != 0 {
+			if errs := dns.TestQueryDNSProxy(ctx, tc, nil /* chrome */, a, cont, dns.NewQueryOptions()); len(errs) != 0 {
 				s.Errorf("Failed DNS query check in condition %s: %v", block, errs)
 			}
 		}); len(errs) > 0 {
