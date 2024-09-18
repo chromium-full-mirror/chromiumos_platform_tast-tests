@@ -8,8 +8,6 @@ import (
 	"context"
 	"fmt"
 	"math"
-	"strconv"
-	"strings"
 	"time"
 
 	"github.com/golang/protobuf/ptypes/empty"
@@ -142,36 +140,6 @@ func compareVbus(ctx context.Context, h *firmware.Helper, s *testing.State, expe
 	return pass, resultStr
 }
 
-// getVoltageAndCurrent converts a string in the following format: 0: 5000mV/3000mA
-// into its voltage and current floats
-func getVoltageAndCurrent(vc string) (float64, float64, error) {
-	// Split string into index and voltage/current
-	tmp0 := strings.Split(vc, " ")
-
-	// Split string into voltage and current
-	tmp1 := strings.Split(tmp0[1], "/")
-
-	// Strip off mV
-	vstr := tmp1[0][:len(tmp1[0])-2]
-
-	// Strip off mA
-	cstr := tmp1[1][:len(tmp1[1])-2]
-
-	// convert to float
-	v, err := strconv.ParseFloat(vstr, 64)
-	if err != nil {
-		return 0, 0, err
-	}
-
-	// convert to float
-	c, err := strconv.ParseFloat(cstr, 64)
-	if err != nil {
-		return 0, 0, err
-	}
-
-	return v, c, nil
-}
-
 // charge starts charging a the given voltage
 func charge(ctx context.Context, h *firmware.Helper, voltage int) error {
 	err := h.Servo.RunServoCommand(ctx, fmt.Sprintf("usbc_action chg %d", voltage))
@@ -258,14 +226,9 @@ func PDVbusRequest(ctx context.Context, s *testing.State) {
 
 	chargingVoltages := make(map[int]bool)
 	for _, sc := range srccaps {
-		mv, _, err := getVoltageAndCurrent(sc)
-		if err != nil {
-			s.Fatal("error")
-		}
-
-		voltage := mv / 1000.0
+		voltage := sc.Voltage / 1000
 		// Servo always returns integer voltages, even though they could theoretically be fractional.
-		chargingVoltages[int(voltage)] = true
+		chargingVoltages[voltage] = true
 	}
 	if !chargingVoltages[5] {
 		s.Error("Charger doesn't support 5v, which should be impossible. Please try a different (i.e. 65w or greater) charger")

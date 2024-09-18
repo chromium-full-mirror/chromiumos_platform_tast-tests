@@ -5,7 +5,6 @@
 package servo
 
 import (
-	"bufio"
 	"context"
 	"fmt"
 	"regexp"
@@ -270,6 +269,12 @@ const (
 // ServoKeypressDelay comes from hdctools/servo/drv/keyboard_handlers.py.
 // It is the minimum time interval between 'press' and 'release' keyboard events.
 const ServoKeypressDelay = 100 * time.Millisecond
+
+// SrcCap stores the voltage and current values of a PDO.
+type SrcCap struct {
+	Voltage int // Voltage in mV
+	Current int // Current in mA
+}
 
 // HasControl determines whether the Servo being used supports the given control.
 func (s *Servo) HasControl(ctx context.Context, ctrl string) (bool, error) {
@@ -1038,12 +1043,12 @@ func (s *Servo) SetPowerState(ctx context.Context, value PowerStateValue) (retEr
 	return s.SetStringTimeout(ctx, PowerState, string(value), 30*time.Second)
 }
 
-var srcCapsRe = regexp.MustCompile(`^\d+:`)
+var srcCapsRe = regexp.MustCompile(`([\d]+)mV\/([\d]+)mA`)
 
 // GetPDAdapterSrcCaps gets the attached charger's source caps
-func (s *Servo) GetPDAdapterSrcCaps(ctx context.Context) ([]string, error) {
+func (s *Servo) GetPDAdapterSrcCaps(ctx context.Context) ([]SrcCap, error) {
 	// The ada_srccaps servo control is flaky, just make the console command ourselves.
-	var value []string
+	var value []SrcCap
 
 	if err := s.RunServoCommand(ctx, "chan save"); err != nil {
 		return nil, errors.Wrap(err, "servo console command failed")
@@ -1058,12 +1063,19 @@ func (s *Servo) GetPDAdapterSrcCaps(ctx context.Context) ([]string, error) {
 		return nil, errors.Wrap(err, "ada_srccaps failed")
 	}
 
-	sc := bufio.NewScanner(strings.NewReader(cmdOutput[0][0]))
-	for sc.Scan() {
-		if srcCapsRe.MatchString(sc.Text()) {
-			value = append(value, sc.Text())
+	matches := srcCapsRe.FindAllStringSubmatch(cmdOutput[0][0], -1)
+	for _, cap := range matches {
+		mV, err := strconv.Atoi(cap[1])
+		if err != nil {
+			return nil, errors.Wrap(err, "voltage capability is not a integer value")
 		}
+		mA, err := strconv.Atoi(cap[2])
+		if err != nil {
+			return nil, errors.Wrap(err, "current capability is not a integer value")
+		}
+		value = append(value, SrcCap{mV, mA})
 	}
+
 	if len(value) == 0 {
 		return nil, errors.Errorf("ada_srccaps returned no srccaps: %q", cmdOutput[0][0])
 	}
