@@ -71,6 +71,8 @@ const (
 	// ToTBranch is the Tip-of-Tree branch having artifacts at postSubmitArtifactsBuilder.
 	ToTBranch                  string = "tot"
 	postSubmitArtifactsBuilder        = "chromeos-image-archive/firmware-ti50-postsubmit"
+	// b/352341481: Move back to postSubmit location once OT signing works.
+	otPostSubmitArtifactsBuilder = "chromeos-localmirror-private/ot-nightly-test"
 
 	// Cr50QualBranch is the latest qual candidate for Cr50
 	Cr50QualBranch string = "cr50qual"
@@ -311,7 +313,13 @@ func downloadImage(ctx context.Context, testbedProperties remoteTi50.TestbedProp
 
 // findLatestCompletedTi50PostsubmitBuildURL finds the most recent build with the full set of image artifacts.
 func findLatestCompletedTi50PostsubmitBuildURL(ctx context.Context, t ti50.TestbedType) (string, error) {
-	builds, err := gsLs(ctx, "builds for tot", gsPrefix+postSubmitArtifactsBuilder)
+	builder := postSubmitArtifactsBuilder
+	if t == ti50.GscOpentitanCw310Fpga || t == ti50.GscOTShield {
+		builder = otPostSubmitArtifactsBuilder
+	}
+
+	builds, err := gsLs(ctx, "builds for tot", gsPrefix+builder)
+
 	if err != nil {
 		return "", err
 	}
