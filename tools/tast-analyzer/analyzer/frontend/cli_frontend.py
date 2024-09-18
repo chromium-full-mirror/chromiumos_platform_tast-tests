@@ -101,16 +101,6 @@ def _compare_results(
 
 @click.command()
 @click.option(
-    "-c",
-    "--compare",
-    type=click.Path(
-        exists=True, dir_okay=False, resolve_path=True, path_type=pathlib.Path
-    ),
-    help="two JSON files to compare the samples from",
-    required=True,
-    nargs=2,
-)
-@click.option(
     "-a",
     "--analyses",
     type=click.Choice(list(_CliAnalysis)),
@@ -213,8 +203,16 @@ def _compare_results(
     help="path to file containing experiment configuration",
     required=False,
 )
+@click.argument(
+    "sample-paths",
+    type=click.Path(
+        exists=True, dir_okay=False, resolve_path=True, path_type=pathlib.Path
+    ),
+    required=True,
+    nargs=-1,
+)
 def print_results(
-    compare: list[pathlib.Path],
+    sample_paths: list[pathlib.Path],
     analyses: list[_CliAnalysis],
     plots: list[plot_util.PlotKind],
     plot_dir: pathlib.Path | None,
@@ -231,6 +229,7 @@ def print_results(
     remove_outliers: bool,
     experiment_cfg_path: pathlib.Path | None,
 ) -> None:
+    """Computes analysis from one or more JSON files containing samples."""
     experiment_cfg = (
         analysis_cfg.ExperimentCfg.from_json(experiment_cfg_path.read_text())
         if experiment_cfg_path
@@ -259,7 +258,7 @@ def print_results(
     )
 
     clicfg = _CliFrontendCfg(cfg=cfg, analyses=analyses)
-    results = analyze_results.analyze_results(compare, clicfg.cfg)
+    results = analyze_results.analyze_results(sample_paths, clicfg.cfg)
     _compare_results(
         results=results,
         analyses=clicfg.analyses,

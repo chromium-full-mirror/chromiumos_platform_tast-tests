@@ -38,13 +38,13 @@ Then run again on the tast results directory after your change to generate
 
 Then, run the analysis. This can take some time due to resampling.
 
-`python3 -m analyzer.run print-results -c before_change.json after_change.json`
+`python3 -m analyzer.run print-results before_change.json after_change.json`
 
 To run a quick-and-dirty analysis without confidence intervals and using the
 Mann-Whitney U test (e.g. if you want results to complete in seconds not
 minutes):
 
-`python3 -m analyzer.run print-results -c before_change.json after_change.json
+`python3 -m analyzer.run print-results before_change.json after_change.json
 --statistic-kind rank-sum`
 
 This will run a default "safe" statistical analysis on the mean of each metric.
@@ -131,7 +131,7 @@ Tast-analyzer can also generate graphs. For example, it can generate CDF graphs:
 
 To generate graphs, provide the `--plots` and `--plot-dir` option.
 
-`python3 -m analyzer.run print-results -c before_change.json after_change.json
+`python3 -m analyzer.run print-results before_change.json after_change.json
 --plots plot-cdf --plot-dir plots`
 
 ## Statistical methodology
