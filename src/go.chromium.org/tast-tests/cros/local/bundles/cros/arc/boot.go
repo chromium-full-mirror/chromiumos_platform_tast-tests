@@ -95,6 +95,7 @@ func init() {
 				Val: bootTestArgs{
 					numTrials:        1,
 					fieldTrialConfig: chrome.FieldTrialConfigDefault,
+					checkVMMMS:       true,
 				},
 				ExtraAttr:         []string{"group:mainline", "group:hw_agnostic"},
 				ExtraSoftwareDeps: []string{"android_vm"},
@@ -106,6 +107,7 @@ func init() {
 					numTrials:        1,
 					fieldTrialConfig: chrome.FieldTrialConfigDefault,
 					quickDozeMode:    true,
+					checkVMMMS:       true,
 					chromeArgs: []string{
 						"--enable-features=ArcIdleManager:ignore_battery_for_test/true/delay_ms/10000",
 					},
@@ -119,6 +121,7 @@ func init() {
 				Val: bootTestArgs{
 					numTrials:        1,
 					fieldTrialConfig: chrome.FieldTrialConfigDisable,
+					checkVMMMS:       true,
 				},
 				ExtraAttr:         []string{"group:mainline", "informational"},
 				ExtraSoftwareDeps: []string{"android_vm"},
@@ -129,6 +132,7 @@ func init() {
 				Val: bootTestArgs{
 					numTrials:        1,
 					fieldTrialConfig: chrome.FieldTrialConfigEnable,
+					checkVMMMS:       true,
 				},
 				ExtraAttr:         []string{"group:mainline", "informational", "group:chrome_uprev_cbx"},
 				ExtraSoftwareDeps: []string{"android_vm"},
@@ -139,6 +143,7 @@ func init() {
 				Val: bootTestArgs{
 					numTrials:        1,
 					fieldTrialConfig: chrome.FieldTrialConfigDefault,
+					checkVMMMS:       true,
 					chromeArgs: []string{
 						"--enable-features=ArcEnableVirtioBlkForData",
 					},
@@ -152,6 +157,7 @@ func init() {
 				Val: bootTestArgs{
 					numTrials:        1,
 					fieldTrialConfig: chrome.FieldTrialConfigDefault,
+					checkVMMMS:       true,
 					// Switch from per-VM core scheduling to per-vCPU core scheduling which
 					// is more secure but slow.
 					chromeArgs: []string{"--disable-features=ArcEnablePerVmCoreScheduling"},
@@ -165,6 +171,7 @@ func init() {
 				Val: bootTestArgs{
 					numTrials:        1000000,
 					fieldTrialConfig: chrome.FieldTrialConfigDefault,
+					checkVMMMS:       true,
 				},
 				ExtraAttr:         []string{"group:hw_agnostic"},
 				ExtraSoftwareDeps: []string{"android_vm"},
@@ -175,6 +182,7 @@ func init() {
 				Val: bootTestArgs{
 					numTrials:        10,
 					fieldTrialConfig: chrome.FieldTrialConfigDefault,
+					checkVMMMS:       true,
 				},
 				ExtraAttr:         []string{"group:mainline", "informational", "group:hw_agnostic"},
 				ExtraSoftwareDeps: []string{"android_vm"},
@@ -185,22 +193,11 @@ func init() {
 				Val: bootTestArgs{
 					numTrials:        1,
 					fieldTrialConfig: chrome.FieldTrialConfigDefault,
+					checkVMMMS:       true,
 					// Boot ARCVM with the largest possible guest memory size.
 					chromeArgs: []string{"--enable-features=ArcVmMemorySize:shift_mib/0"},
 				},
 				ExtraAttr:         []string{"group:mainline", "informational", "group:hw_agnostic"},
-				ExtraSoftwareDeps: []string{"android_vm"},
-				Timeout:           chrome.LoginTimeout + arc.BootTimeout + 30*time.Second,
-			},
-			{
-				// TODO(b:322724008): Remove this param and enable checkVMMMS on all other .vm* tests once we know this is stable.
-				Name: "vm_check_vmmms",
-				Val: bootTestArgs{
-					numTrials:        1,
-					fieldTrialConfig: chrome.FieldTrialConfigDefault,
-					checkVMMMS:       true,
-				},
-				ExtraAttr:         []string{"group:mainline", "informational", "group:criticalstaging", "group:hw_agnostic"},
 				ExtraSoftwareDeps: []string{"android_vm"},
 				Timeout:           chrome.LoginTimeout + arc.BootTimeout + 30*time.Second,
 			}},
