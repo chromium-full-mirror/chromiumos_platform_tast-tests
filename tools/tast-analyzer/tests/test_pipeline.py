@@ -122,6 +122,14 @@ class PipelineTest(unittest.TestCase):
         self.assertAlmostEqual(pair.before.bootstrap.bias_estimate, 0.0022606)
         self.assertAlmostEqual(pair.after.bootstrap.bias_estimate, -0.0028447)
 
+    def _ordered_sample_ids(
+        self, results: list[analysis_results.AnalysisResult]
+    ) -> list[list[str]]:
+        return [
+            [group.sample.sample_id for group in result.groups]
+            for result in results
+        ]
+
     def test_analyze_results_explicit_experiment_group(self) -> None:
         # Test that explicitly specifying no experiment groups produces no
         # comparisons for samples with the same label.
@@ -163,7 +171,78 @@ class PipelineTest(unittest.TestCase):
             ],
             cfg,
         )
-        self.assertEqual(len(results), 1)
+        self.assertEqual(
+            [
+                [
+                    "complex1.ui.Test.Ash.Overview.AnimationSmoothness.Enter.ClamshellMode.average",
+                    "complex1.ui.Test.Ash.Overview.AnimationSmoothness.Enter.ClamshellMode.2windows.average",
+                    "complex1.ui.Test.Ash.Overview.AnimationSmoothness.Enter.SingleClamshellMode.average",
+                    "complex1.ui.Test.Ash.Overview.AnimationSmoothness.Enter.SingleClamshellMode.2windows.average",
+                    "complex1.ui.Test.Ash.Overview.AnimationSmoothness.Exit.ClamshellMode.average",
+                    "complex1.ui.Test.Ash.Overview.AnimationSmoothness.Exit.ClamshellMode.2windows.average",
+                    "complex1.ui.Test.Ash.Overview.AnimationSmoothness.Exit.SingleClamshellMode.average",
+                    "complex1.ui.Test.Ash.Overview.AnimationSmoothness.Exit.SingleClamshellMode.2windows.average",
+                ]
+            ],
+            self._ordered_sample_ids(results),
+        )
+
+        # Test that explicitly specifying experiment groups with multiple
+        # kinds of regex lists works.
+        cfg = dataclasses.replace(
+            cfg,
+            experiment_cfg=analysis_cfg.ExperimentCfg(
+                experiment_groups_cfgs=[
+                    analysis_cfg.ExperimentGroupsCfg(
+                        test_name_regex_list=[
+                            "^ui\.Test\.variant$",
+                            "^ui\.Test$",
+                        ]
+                    )
+                ]
+            ),
+        )
+        results = analyze_results.analyze_results(
+            [
+                FILES_DIR.joinpath("data-complex1.json"),
+            ],
+            cfg,
+        )
+        # There is one ui.Test.variant sample.
+        self.assertEqual(
+            [
+                [
+                    "complex1.ui.Test.Ash.Overview.AnimationSmoothness.Exit.TabletMode.8windows.average",
+                    "complex1.ui.Test.variant.Ash.Overview.AnimationSmoothness.Exit.TabletMode.8windows.average",
+                ]
+            ],
+            self._ordered_sample_ids(results),
+        )
+
+        # Test that explicitly specifying experiment groups with multiple
+        # kinds of regex causes an assertion error.
+        cfg = dataclasses.replace(
+            cfg,
+            experiment_cfg=analysis_cfg.ExperimentCfg(
+                experiment_groups_cfgs=[
+                    analysis_cfg.ExperimentGroupsCfg(
+                        metric_path_regex_list=[
+                            "^.*ClamshellMode\.average$",
+                        ],
+                        test_name_regex_list=[
+                            "^ui\.Test\.variant$",
+                        ],
+                    )
+                ]
+            ),
+        )
+        with self.assertRaises(AssertionError):
+            analyze_results.analyze_results(
+                [
+                    FILES_DIR.joinpath("data-complex1.json"),
+                ],
+                cfg,
+            )
 
     def test_analyze_results_experiment_cfg(self) -> None:
         cfg = analysis_cfg.AnalysisCfg(

@@ -202,7 +202,13 @@ def _construct_explicit_experiment_groups_list(
     Returns:
         A list of lists of ExperimentGroups.
     """
-    groups_list = []
+    for cfg in cfgs:
+        assert not cfg.metric_path_regex_list or not cfg.test_name_regex_list, (
+            "specifying both metric_path_regex_list and test_name_regex_list"
+            " in the same experiment_groups_cfgs is not supported currently"
+        )
+
+    metric_path_groups_list = []
     for cfg in cfgs:
         groups = []
         for s in samples:
@@ -211,6 +217,25 @@ def _construct_explicit_experiment_groups_list(
                 for regex in cfg.metric_path_regex_list
             ):
                 groups.append(ExperimentGroup(sample=s))
+        metric_path_groups_list.append(groups)
+
+    test_name_groups_list = []
+    for cfg in cfgs:
+        groups_by_metric_name = defaultdict(list)
+        for s in samples:
+            if any(
+                re.match(regex, s.test_name)
+                for regex in cfg.test_name_regex_list
+            ):
+                groups_by_metric_name[s.metric_name].append(
+                    ExperimentGroup(sample=s)
+                )
+        test_name_groups_list += list(groups_by_metric_name.values())
+
+    groups_list = []
+    for groups in itertools.chain(
+        metric_path_groups_list, test_name_groups_list
+    ):
         if len(groups) > 1:
             groups_list.append(groups)
     return groups_list

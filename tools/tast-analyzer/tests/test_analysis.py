@@ -206,11 +206,40 @@ class AnalysisTest(unittest.TestCase):
             ],
         )
 
+        cfg = analysis_cfg.AnalysisCfg(
+            experiment_cfg=analysis_cfg.ExperimentCfg(
+                experiment_groups_cfgs=[
+                    analysis_cfg.ExperimentGroupsCfg(
+                        test_name_regex_list=[
+                            r"^ui\.OverviewPerf$",
+                        ]
+                    )
+                ]
+            )
+        )
+        groups_list = analysis_results.construct_experiment_groups_list(
+            before_samples, cfg
+        )
+        # Should be no groups since there is only one test.
+        self.assertEqual(groups_list, [])
+
         # If there are two labels, look at the explicit experiment groups and
         # the implicit ones between two samples with different labels but the
         # same metric path.
         samples = before_samples + self._load_after_samples()
         samples_by_id = self._samples_by_id(samples)
+        cfg = analysis_cfg.AnalysisCfg(
+            experiment_cfg=analysis_cfg.ExperimentCfg(
+                experiment_groups_cfgs=[
+                    analysis_cfg.ExperimentGroupsCfg(
+                        metric_path_regex_list=[
+                            r"^ui\.OverviewPerf\.Test\.Three\.average$",
+                            r"^ui\.OverviewPerf\.Test\.One\.average$",
+                        ]
+                    )
+                ]
+            )
+        )
         groups_list = analysis_results.construct_experiment_groups_list(
             samples, cfg
         )

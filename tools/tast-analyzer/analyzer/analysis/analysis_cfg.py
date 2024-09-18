@@ -79,11 +79,22 @@ class PerTestCfg:
 
 @dataclasses.dataclass(frozen=True, kw_only=True, order=True)
 class ExperimentGroupsCfg:
+    """Describes how to build a set of experiment groups to compare.
+
+    Currently, only one of the below regex lists may be specified per
+    ExperimentGroupsCfg."""
+
     metric_path_regex_list: list[str] = dataclasses.field(default_factory=list)
     """List of regexes to match metric paths.
 
     All metric paths matching any of the regexes will be considered in the same
     analysis as different experiment groups and compared to each other."""
+
+    test_name_regex_list: list[str] = dataclasses.field(default_factory=list)
+    """List of regexes to match test names.
+
+    This will produce one list of experiment groups for each sample whose test
+    name is matched by a regex in this list for each possible metric name."""
 
 
 @dataclasses.dataclass(frozen=True, kw_only=True, order=True)

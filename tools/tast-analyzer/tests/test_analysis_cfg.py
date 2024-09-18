@@ -46,7 +46,8 @@ class AnalysisCfgTest(unittest.TestCase):
             analysis_cfg.ExperimentCfg(
                 experiment_groups_cfgs=[
                     analysis_cfg.ExperimentGroupsCfg(
-                        metric_path_regex_list=["test1", "test2"]
+                        metric_path_regex_list=["test1.a", "test2.b"],
+                        test_name_regex_list=["test1", "test2"],
                     )
                 ]
             ),

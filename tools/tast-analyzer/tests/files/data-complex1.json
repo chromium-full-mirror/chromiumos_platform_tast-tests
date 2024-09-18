@@ -4792,7 +4792,7 @@
         72
       ]
     },
-    "{\"metric_name\": \"Ash.Overview.AnimationSmoothness.Exit.TabletMode.8windows\", \"run_id\": \"163206\", \"test_name\": \"ui.Test\", \"variant\": \"average\", \"label\": \"complex1\"}": {
+    "{\"metric_name\": \"Ash.Overview.AnimationSmoothness.Exit.TabletMode.8windows\", \"run_id\": \"163206\", \"test_name\": \"ui.Test.variant\", \"variant\": \"average\", \"label\": \"complex1\"}": {
       "improvement_direction": "up",
       "units": "percent",
       "value": [

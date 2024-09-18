@@ -2,6 +2,10 @@
   "experiment_groups_cfgs": [
     {
       "metric_path_regex_list": [
+        "test1.a",
+        "test2.b"
+      ],
+      "test_name_regex_list": [
         "test1",
         "test2"
       ]
