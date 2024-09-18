@@ -9,6 +9,7 @@ import (
 	"time"
 
 	"go.chromium.org/tast-tests/cros/local/bundles/cros/inputs/spellcheck"
+	"go.chromium.org/tast-tests/cros/local/chrome/browser"
 	"go.chromium.org/tast-tests/cros/local/chrome/uiauto"
 	"go.chromium.org/tast-tests/cros/local/chrome/uiauto/faillog"
 	"go.chromium.org/tast-tests/cros/local/chrome/uiauto/imesettings"
@@ -26,9 +27,8 @@ import (
 
 func init() {
 	testing.AddTest(&testing.Test{
-		Func:         SpellCheckRemoveWords,
-		LacrosStatus: testing.LacrosVariantExists,
-		Desc:         "Verify that spell check works while typing the word removed from customize spell check",
+		Func: SpellCheckRemoveWords,
+		Desc: "Verify that spell check works while typing the word removed from customize spell check",
 		Contacts: []string{
 			"essential-inputs-gardener-oncall@google.com",
 			"essential-inputs-team@google.com",
@@ -37,14 +37,8 @@ func init() {
 		Attr:         []string{"group:mainline", "informational", "group:input-tools"},
 		SoftwareDeps: []string{"inputs_deps", "chrome"},
 		HardwareDeps: hwdep.D(pre.InputsStableModels),
-		Params: []testing.Param{{
-			Fixture: fixture.ClamshellNonVK,
-		}, {
-			Name:              "lacros",
-			Fixture:           fixture.LacrosClamshellNonVK,
-			ExtraSoftwareDeps: []string{"lacros"},
-		}},
-		Timeout: 3 * time.Minute,
+		Fixture:      fixture.ClamshellNonVK,
+		Timeout:      3 * time.Minute,
 	})
 }
 
@@ -91,7 +85,7 @@ func SpellCheckRemoveWords(ctx context.Context, s *testing.State) {
 		s.Fatal("Failed to click delete word button: ", err)
 	}
 
-	its, err := testserver.LaunchBrowser(ctx, s.FixtValue().(fixture.FixtData).BrowserType, cr, tconn)
+	its, err := testserver.LaunchBrowser(ctx, browser.TypeAsh, cr, tconn)
 	if err != nil {
 		s.Fatal("Failed to launch inputs test server: ", err)
 	}

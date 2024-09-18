@@ -11,6 +11,7 @@ import (
 
 	"go.chromium.org/tast-tests/cros/local/audio"
 	"go.chromium.org/tast-tests/cros/local/bundles/cros/inputs/testrunner"
+	"go.chromium.org/tast-tests/cros/local/chrome/browser"
 	"go.chromium.org/tast-tests/cros/local/chrome/ime"
 	"go.chromium.org/tast-tests/cros/local/chrome/uiauto"
 	"go.chromium.org/tast-tests/cros/local/chrome/uiauto/faillog"
@@ -46,7 +47,6 @@ var voiceTestIMEsNewData = []ime.InputMethod{
 func init() {
 	testing.AddTest(&testing.Test{
 		Func:         VirtualKeyboardSpeech,
-		LacrosStatus: testing.LacrosVariantExists,
 		Desc:         "Test voice input functionality on virtual keyboard",
 		Contacts:     []string{"essential-inputs-gardener-oncall@google.com", "essential-inputs-team@google.com"},
 		BugComponent: "b:95887",
@@ -77,15 +77,6 @@ func init() {
 				ExtraHardwareDeps: hwdep.D(pre.InputsUnstableModels),
 				ExtraAttr:         []string{"informational"},
 			},
-			{
-				Name:              "lacros",
-				Fixture:           fixture.LacrosTabletVKStereoAloopLoaded,
-				Val:               append(voiceTestIMEs, voiceTestIMEsNewData...),
-				ExtraHardwareDeps: hwdep.D(pre.InputsStableModels),
-				ExtraSoftwareDeps: []string{"lacros_stable", "lacros"},
-				ExtraSearchFlags:  util.IMESearchFlags(voiceTestIMEsNewData),
-				ExtraAttr:         []string{"informational"},
-			},
 		},
 	})
 }
@@ -109,7 +100,7 @@ func VirtualKeyboardSpeech(ctx context.Context, s *testing.State) {
 	}
 
 	// Launch inputs test web server.
-	its, err := testserver.LaunchBrowser(ctx, s.FixtValue().(fixture.FixtData).BrowserType, cr, tconn)
+	its, err := testserver.LaunchBrowser(ctx, browser.TypeAsh, cr, tconn)
 	if err != nil {
 		s.Fatal("Failed to launch inputs test server: ", err)
 	}

@@ -8,6 +8,7 @@ import (
 	"context"
 	"time"
 
+	"go.chromium.org/tast-tests/cros/local/chrome/browser"
 	"go.chromium.org/tast-tests/cros/local/chrome/ime"
 	"go.chromium.org/tast-tests/cros/local/chrome/ime/emojipicker"
 	"go.chromium.org/tast-tests/cros/local/chrome/uiauto"
@@ -29,7 +30,6 @@ import (
 func init() {
 	testing.AddTest(&testing.Test{
 		Func:         PhysicalKeyboardEmoji,
-		LacrosStatus: testing.LacrosVariantExists,
 		Desc:         "Checks that right click input field and select emoji with physical keyboard",
 		Contacts:     []string{"essential-inputs-gardener-oncall@google.com", "essential-inputs-team@google.com"},
 		BugComponent: "b:95887",
@@ -56,13 +56,6 @@ func init() {
 				// Skip on grunt & zork boards due to b/213400835.
 				ExtraHardwareDeps: hwdep.D(pre.InputsUnstableModels, hwdep.SkipOnPlatform("grunt", "zork")),
 			},
-			{
-				Name:              "lacros",
-				Fixture:           fixture.LacrosClamshellNonVK,
-				ExtraSoftwareDeps: []string{"lacros", "lacros_stable"},
-				ExtraAttr:         []string{"group:input-tools-upstream"},
-				ExtraHardwareDeps: hwdep.D(hwdep.Model(pre.StableModels...), hwdep.SkipOnModel("kefka")),
-			},
 		},
 	})
 }
@@ -84,7 +77,7 @@ func PhysicalKeyboardEmoji(ctx context.Context, s *testing.State) {
 	}
 	defer kb.Close(ctx)
 
-	its, err := testserver.LaunchBrowser(ctx, s.FixtValue().(fixture.FixtData).BrowserType, cr, tconn)
+	its, err := testserver.LaunchBrowser(ctx, browser.TypeAsh, cr, tconn)
 	if err != nil {
 		s.Fatal("Failed to launch inputs test server: ", err)
 	}

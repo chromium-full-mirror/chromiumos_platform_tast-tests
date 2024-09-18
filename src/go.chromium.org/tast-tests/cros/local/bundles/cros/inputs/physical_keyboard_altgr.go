@@ -8,6 +8,7 @@ import (
 	"context"
 	"time"
 
+	"go.chromium.org/tast-tests/cros/local/chrome/browser"
 	"go.chromium.org/tast-tests/cros/local/chrome/ime"
 	"go.chromium.org/tast-tests/cros/local/chrome/uiauto"
 	"go.chromium.org/tast-tests/cros/local/chrome/uiauto/faillog"
@@ -25,7 +26,6 @@ import (
 func init() {
 	testing.AddTest(&testing.Test{
 		Func:         PhysicalKeyboardAltgr,
-		LacrosStatus: testing.LacrosVariantExists,
 		Desc:         "Checks that user can lock altgr modifier key on physical keyboard",
 		Contacts:     []string{"essential-inputs-gardener-oncall@google.com", "essential-inputs-team@google.com"},
 		BugComponent: "b:95887",
@@ -52,13 +52,6 @@ func init() {
 				Fixture:           fixture.ClamshellNonVK,
 				ExtraAttr:         []string{"informational"},
 				ExtraHardwareDeps: hwdep.D(pre.InputsUnstableModels),
-			},
-			{
-				Name:              "lacros",
-				Fixture:           fixture.LacrosClamshellNonVK,
-				ExtraSoftwareDeps: []string{"lacros", "lacros_stable"},
-				ExtraAttr:         []string{"group:input-tools-upstream"},
-				ExtraHardwareDeps: hwdep.D(pre.InputsStableModels),
 			},
 		},
 	})
@@ -131,7 +124,7 @@ func PhysicalKeyboardAltgr(ctx context.Context, s *testing.State) {
 	}
 	defer keyboard.Close(ctx)
 
-	its, err := testserver.LaunchBrowser(ctx, s.FixtValue().(fixture.FixtData).BrowserType, cr, tconn)
+	its, err := testserver.LaunchBrowser(ctx, browser.TypeAsh, cr, tconn)
 	if err != nil {
 		s.Fatal("Failed to launch inputs test server: ", err)
 	}

@@ -9,6 +9,7 @@ import (
 	"time"
 
 	"go.chromium.org/tast-tests/cros/local/bundles/cros/inputs/testrunner"
+	"go.chromium.org/tast-tests/cros/local/chrome/browser"
 	"go.chromium.org/tast-tests/cros/local/chrome/ime"
 	"go.chromium.org/tast-tests/cros/local/chrome/uiauto"
 	"go.chromium.org/tast-tests/cros/local/chrome/uiauto/faillog"
@@ -36,7 +37,6 @@ var testMessages = []data.Message{
 func init() {
 	testing.AddTest(&testing.Test{
 		Func:         InputMethodShelfInputs,
-		LacrosStatus: testing.LacrosVariantExists,
 		Desc:         "Test input functions triggered from IME tray",
 		Contacts:     []string{"essential-inputs-gardener-oncall@google.com", "essential-inputs-team@google.com"},
 		BugComponent: "b:95887",
@@ -63,13 +63,6 @@ func init() {
 				ExtraHardwareDeps: hwdep.D(pre.InputsUnstableModels),
 				ExtraAttr:         []string{"informational"},
 			},
-			{
-				Name:              "lacros",
-				Fixture:           fixture.LacrosClamshellNonVKStereoAloopLoaded,
-				ExtraHardwareDeps: hwdep.D(pre.InputsStableModels),
-				ExtraSoftwareDeps: []string{"lacros", "lacros_stable"},
-				ExtraAttr:         []string{"group:input-tools-upstream"},
-			},
 		},
 	})
 }
@@ -89,7 +82,7 @@ func InputMethodShelfInputs(ctx context.Context, s *testing.State) {
 		s.Fatal("Failed to show input options in shelf: ", err)
 	}
 
-	its, err := testserver.LaunchBrowser(ctx, s.FixtValue().(fixture.FixtData).BrowserType, cr, tconn)
+	its, err := testserver.LaunchBrowser(ctx, browser.TypeAsh, cr, tconn)
 	if err != nil {
 		s.Fatal("Failed to launch inputs test server: ", err)
 	}

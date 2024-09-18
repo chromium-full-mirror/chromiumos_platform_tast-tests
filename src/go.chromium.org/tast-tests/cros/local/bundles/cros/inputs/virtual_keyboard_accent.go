@@ -9,6 +9,7 @@ import (
 	"fmt"
 	"time"
 
+	"go.chromium.org/tast-tests/cros/local/chrome/browser"
 	"go.chromium.org/tast-tests/cros/local/chrome/ime"
 	"go.chromium.org/tast-tests/cros/local/chrome/uiauto"
 	"go.chromium.org/tast-tests/cros/local/chrome/uiauto/faillog"
@@ -29,7 +30,6 @@ import (
 func init() {
 	testing.AddTest(&testing.Test{
 		Func:         VirtualKeyboardAccent,
-		LacrosStatus: testing.LacrosVariantExists,
 		Desc:         "Checks that long pressing keys pop up accent window",
 		Contacts:     []string{"essential-inputs-gardener-oncall@google.com", "essential-inputs-team@google.com"},
 		BugComponent: "b:95887",
@@ -49,13 +49,6 @@ func init() {
 				ExtraAttr:         []string{"informational"},
 				ExtraHardwareDeps: hwdep.D(pre.InputsUnstableModels),
 			},
-			{
-				Name:              "lacros",
-				Fixture:           fixture.LacrosTabletVK,
-				ExtraHardwareDeps: hwdep.D(pre.InputsStableModels),
-				ExtraSoftwareDeps: []string{"lacros", "lacros_stable"},
-				ExtraAttr:         []string{"group:hw_agnostic"},
-			},
 		},
 	})
 }
@@ -71,7 +64,7 @@ func VirtualKeyboardAccent(ctx context.Context, s *testing.State) {
 
 	defer faillog.DumpUITreeWithScreenshotOnError(cleanupCtx, s.OutDir(), s.HasError, cr, "ui_tree")
 
-	its, err := testserver.LaunchBrowser(ctx, s.FixtValue().(fixture.FixtData).BrowserType, cr, tconn)
+	its, err := testserver.LaunchBrowser(ctx, browser.TypeAsh, cr, tconn)
 	if err != nil {
 		s.Fatal("Failed to launch inputs test server: ", err)
 	}

@@ -8,6 +8,7 @@ import (
 	"context"
 	"time"
 
+	"go.chromium.org/tast-tests/cros/local/chrome/browser"
 	"go.chromium.org/tast-tests/cros/local/chrome/ime"
 	"go.chromium.org/tast-tests/cros/local/chrome/uiauto"
 	"go.chromium.org/tast-tests/cros/local/chrome/uiauto/faillog"
@@ -26,7 +27,6 @@ import (
 func init() {
 	testing.AddTest(&testing.Test{
 		Func:         PhysicalKeyboardNumpad,
-		LacrosStatus: testing.LacrosVariantExists,
 		Desc:         "Checks that numpad keys work",
 		Contacts:     []string{"essential-inputs-gardener-oncall@google.com", "essential-inputs-team@google.com"},
 		BugComponent: "b:95887",
@@ -35,16 +35,7 @@ func init() {
 		HardwareDeps: hwdep.D(pre.InputsStableModels),
 		SearchFlags:  util.IMESearchFlags([]ime.InputMethod{ime.EnglishUS}),
 		Timeout:      5 * time.Minute,
-		Params: []testing.Param{
-			{
-				Fixture: fixture.ClamshellNonVK,
-			},
-			{
-				Name:              "lacros",
-				Fixture:           fixture.LacrosClamshellNonVK,
-				ExtraSoftwareDeps: []string{"lacros", "lacros_stable"},
-			},
-		},
+		Fixture:      fixture.ClamshellNonVK,
 	})
 }
 
@@ -75,7 +66,7 @@ func PhysicalKeyboardNumpad(ctx context.Context, s *testing.State) {
 	}
 	defer keyboard.Close(ctx)
 
-	its, err := testserver.LaunchBrowser(ctx, s.FixtValue().(fixture.FixtData).BrowserType, cr, tconn)
+	its, err := testserver.LaunchBrowser(ctx, browser.TypeAsh, cr, tconn)
 	if err != nil {
 		s.Fatal("Failed to launch inputs test server: ", err)
 	}
