@@ -125,7 +125,7 @@ func BasicDetections(ctx context.Context, s *testing.State) {
 	notificationArea := nodewith.ClassName("StatusAreaWidget")
 	chromeWindow := nodewith.Role(role.Window).Name("Chrome - New Tab")
 	noThanksButton := nodewith.Role(role.Button).Name("No thanks")
-	closeCustomizationDrawerButton := nodewith.Role(role.Button).Name("Close").Ancestor(nodewith.ClassName("SidePanel"))
+	closeCustomizationDrawerButton := nodewith.Role(role.Button).NameContaining("Close").Ancestor(nodewith.ClassName("SidePanel"))
 
 	verifyChromeIsMinimized := uiauto.NamedAction("verify that chrome is minimized",
 		ui.WaitUntilExists(chromeWindow.Invisible()))
