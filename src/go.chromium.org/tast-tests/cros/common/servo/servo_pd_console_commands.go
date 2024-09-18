@@ -175,6 +175,69 @@ func (s *Servo) ServoSetDualRole(ctx context.Context, val USBPdDualRoleValue) er
 	return nil
 }
 
+// ServoSetDPConfigs sets the DP configs for the DUT connection
+func (s *Servo) ServoSetDPConfigs(ctx context.Context, config *TypeCInfo, mfPref MultiFunctionPref) error {
+	if config.DPMode == DPEnable {
+		if err := s.RunServoCommand(ctx, "usbc_action dp enable"); err != nil {
+			return errors.Wrap(err, "failed to enable DP alt-mode")
+		}
+	} else {
+		if err := s.RunServoCommand(ctx, "usbc_action dp disable"); err != nil {
+			return errors.Wrap(err, "failed to disable DP alt-mode")
+		}
+	}
+
+	hpdLevel := ""
+	switch config.HPDLevel {
+	case HPDHigh:
+		hpdLevel = "h"
+		break
+	case HPDLow:
+		hpdLevel = "l"
+		break
+	default:
+		hpdLevel = "ext"
+	}
+
+	if err := s.RunServoCommand(ctx, fmt.Sprintf("usbc_action dp hpd %s", hpdLevel)); err != nil {
+		return errors.Wrap(err, "failed to set hpd level")
+	}
+
+	if err := s.RunServoCommand(ctx, fmt.Sprintf("usbc_action dp pins %s", config.PinsCDEF)); err != nil {
+		return errors.Wrap(err, "failed to set pin assignments")
+	}
+
+	if err := s.RunServoCommand(ctx, fmt.Sprintf("usbc_action dp mf %d", mfPref)); err != nil {
+		return errors.Wrap(err, "failed to set mf pref")
+	}
+
+	// we only use commands off and on to preserve the usbc state between resets
+	if err := s.ServoCcOff(ctx); err != nil {
+		return errors.Wrap(err, "failed to turn off cc")
+	}
+
+	if err := s.ServoCcOn(ctx); err != nil {
+		return errors.Wrap(err, "failed to turn on cc")
+	}
+
+	if err := testing.Poll(ctx, func(ctx context.Context) error {
+		ok, err := s.GetChargerAttached(ctx)
+		if err != nil {
+			testing.ContextLog(ctx, "GetChargerAttached failed: ", err)
+			return errors.Wrap(err, "error checking whether charger is attached")
+		} else if ok == false {
+			testing.ContextLogf(ctx, "GetChargerAttached got %v, want %v", ok, true)
+			return errors.Errorf("expected charger attached state: %v", true)
+		}
+
+		return nil
+	}, &testing.PollOptions{Timeout: 300 * time.Second, Interval: 10 * time.Second}); err != nil {
+		return errors.Wrap(err, "failed to check if charger is attached")
+	}
+
+	return nil
+}
+
 // ServoSetUSBVersion3 sets the DUT USB connection as version 2.0 or 3.0
 func (s *Servo) ServoSetUSBVersion3(ctx context.Context, USBVersion3 bool) error {
 	enableVersion3 := "disable"
@@ -485,6 +548,17 @@ func (s *Servo) ServoCcOff(ctx context.Context) error {
 
 	if err == nil && output[0][1] != "off" {
 		return errors.New("CC state did not change to 'off'")
+	}
+
+	return err
+}
+
+// ServoCcOn runs the `cc on` console command on the Servo.
+func (s *Servo) ServoCcOn(ctx context.Context) error {
+	output, err := s.RunServoCommandGetOutput(ctx, "cc on", []string{`cc: (\w+)[\r\n]`})
+
+	if err == nil && output[0][1] != "on" {
+		return errors.New("CC state did not change to 'on'")
 	}
 
 	return err

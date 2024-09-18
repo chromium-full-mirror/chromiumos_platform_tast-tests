@@ -7,11 +7,14 @@ package servo
 import (
 	"context"
 	"fmt"
+	"regexp"
 	"strconv"
 	"strings"
 	"time"
 
+	"go.chromium.org/tast/core/dut"
 	"go.chromium.org/tast/core/errors"
+	"go.chromium.org/tast/core/ssh"
 	"go.chromium.org/tast/core/testing"
 )
 
@@ -48,6 +51,43 @@ type DUTPDInfo struct {
 	version    TCPMVersion // TCPM stack version in use by DUT
 	activePort int         // PD port connected to servo
 	portCount  int         // Total number of PD ports on the DUT
+}
+
+// DPModeValue is a type for storing a type-c alt state dp status
+type DPModeValue int
+
+// HPDLevelValue is a type for storing a type-c alt state hpd level
+type HPDLevelValue int
+
+// MultiFunctionPref is a type for storing a type-c alt state mf pref
+type MultiFunctionPref int
+
+// supported mf pref modes
+const (
+	MFPrefEnable  MultiFunctionPref = 1
+	MFPrefDisable MultiFunctionPref = 0
+)
+
+// supported dp modes
+const (
+	DPEnable  DPModeValue = 1
+	DPDisable DPModeValue = 0
+)
+
+// Supported hpd levels
+const (
+	HPDHigh HPDLevelValue = 1
+	HPDLow  HPDLevelValue = 0
+
+	// For assigning hpd value only, reading the hpd value will only return high or low.
+	HPDExt HPDLevelValue = -1
+)
+
+// TypeCInfo stores information retrieved from probing a type-c connection by the DUT.
+type TypeCInfo struct {
+	DPMode   DPModeValue
+	HPDLevel HPDLevelValue
+	PinsCDEF string
 }
 
 func (pdInfo *DUTPDInfo) getVersionString() string {
@@ -669,4 +709,104 @@ func (s *Servo) SetPDTrySrc(ctx context.Context, port, enable int) (bool, error)
 	}
 
 	return found, nil
+}
+
+var reEcTypeC string = `Port ([\d]): USB=[\d] DP=([\d]) .* HPD_LVL=([\d])`
+
+func (s *Servo) getTypeCByDUTCommand(ctx context.Context, dut *dut.DUT) (*TypeCInfo, error) {
+	typeCInfoByteArr, err := dut.Conn().CommandContext(ctx, "ectool", "usbpdmuxinfo").Output(ssh.DumpLogOnError)
+	if err != nil {
+		return nil, errors.Wrap(err, "failed to retrieve type-c information")
+	}
+
+	typeCInfoRe := regexp.MustCompile(reEcTypeC)
+	matches := typeCInfoRe.FindAllStringSubmatch(string(typeCInfoByteArr), -1)
+
+	var ret *TypeCInfo
+	for _, typeCInfo := range matches {
+		port, err := strconv.Atoi(typeCInfo[1])
+		if err != nil || port != s.dutPDInfo.activePort {
+			continue
+		}
+		dp, err := strconv.Atoi(typeCInfo[2])
+		if err != nil {
+			return nil, errors.Wrap(err, "failed to get dp mode value")
+		}
+		hpd, err := strconv.Atoi(typeCInfo[3])
+		if err != nil {
+			return nil, errors.Wrap(err, "failed to get hpd value")
+		}
+		ret = &TypeCInfo{DPModeValue(dp), HPDLevelValue(hpd), ""}
+	}
+
+	return ret, nil
+}
+
+func (s *Servo) getTypeCByECCommand(ctx context.Context) (*TypeCInfo, error) {
+	cmd := fmt.Sprintf("typec %d", s.dutPDInfo.activePort)
+
+	typeCOutput, err := s.RunECCommandGetOutput(ctx, cmd, []string{reEcTypeC})
+	if err != nil {
+		return nil, errors.Wrap(err, "EC typec command failed")
+	}
+
+	dp, err := strconv.Atoi(typeCOutput[0][2])
+	if err != nil {
+		return nil, errors.Wrap(err, "failed to get dp mode value")
+	}
+	hpd, err := strconv.Atoi(typeCOutput[0][3])
+	if err != nil {
+		return nil, errors.Wrap(err, "failed to get hpd value")
+	}
+	ret := &TypeCInfo{DPModeValue(dp), HPDLevelValue(hpd), ""}
+
+	return ret, nil
+}
+
+// GetTypeCInfo returns the type-c information as seen from the DUT
+func (s *Servo) GetTypeCInfo(ctx context.Context, dut *dut.DUT) (*TypeCInfo, error) {
+	ret, err := s.getTypeCByDUTCommand(ctx, dut)
+	if err != nil {
+		testing.ContextLog(ctx, "unable to retrieve type-c information by ectool, attempting EC console command")
+		ret, err = s.getTypeCByECCommand(ctx)
+		if err != nil {
+			return nil, errors.Wrap(err, "failed to retrieve type-c by EC console")
+		}
+	}
+
+	pinsByteArr, err := dut.Conn().CommandContext(ctx, "ectool", "typecstatus", strconv.Itoa(s.dutPDInfo.activePort)).Output(ssh.DumpLogOnError)
+	if err != nil {
+		return nil, errors.Wrap(err, "failed to retrieve type-c status")
+	}
+
+	pinsRe := regexp.MustCompile(`DP pin mode:[ ]*([\w])`)
+	matches := pinsRe.FindAllStringSubmatch(string(pinsByteArr), -1)
+	if len(matches) != 0 {
+		ret.PinsCDEF = matches[0][1]
+	}
+
+	return ret, err
+}
+
+// VerifyPins checks that the type-c pin setting is the same as the assignment
+func (s *Servo) VerifyPins(input, output *TypeCInfo, mfPref MultiFunctionPref) error {
+	if input.DPMode != output.DPMode {
+		return errors.Errorf("incorrect DP activity, expected %d, got %d", input.DPMode, output.DPMode)
+	}
+	if input.HPDLevel != output.HPDLevel {
+		return errors.Errorf("incorrect hpd level, expected %d, got %d", input.HPDLevel, output.HPDLevel)
+	}
+
+	// TODO: b/371041395 track which pin is supposed to be selected in cases where multiple are supported.
+	if mfPref == MFPrefDisable {
+		if input.PinsCDEF[0] != output.PinsCDEF[0] {
+			return errors.Errorf("incorrect pin assignement, expected %c, got %s", input.PinsCDEF[0], output.PinsCDEF)
+		}
+	} else {
+		if input.PinsCDEF[len(input.PinsCDEF)-1] != output.PinsCDEF[0] {
+			return errors.Errorf("incorrect pin assignement, expected %c, got %s", input.PinsCDEF[len(input.PinsCDEF)-1], output.PinsCDEF)
+		}
+	}
+
+	return nil
 }
