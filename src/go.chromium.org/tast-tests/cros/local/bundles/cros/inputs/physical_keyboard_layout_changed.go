@@ -8,6 +8,7 @@ import (
 	"context"
 	"time"
 
+	"go.chromium.org/tast-tests/cros/local/chrome/browser"
 	"go.chromium.org/tast-tests/cros/local/chrome/ime"
 	"go.chromium.org/tast-tests/cros/local/chrome/uiauto"
 	"go.chromium.org/tast-tests/cros/local/chrome/useractions"
@@ -20,9 +21,8 @@ import (
 
 func init() {
 	testing.AddTest(&testing.Test{
-		Func:         PhysicalKeyboardLayoutChanged,
-		LacrosStatus: testing.LacrosVariantExists,
-		Desc:         "Test of the layout changed event",
+		Func: PhysicalKeyboardLayoutChanged,
+		Desc: "Test of the layout changed event",
 		Contacts: []string{
 			"essential-inputs-gardener-oncall@google.com",
 			"essential-inputs-team@google.com",
@@ -32,16 +32,7 @@ func init() {
 		SoftwareDeps: []string{"inputs_deps", "chrome"},
 		Attr:         []string{},
 		Timeout:      45 * time.Second,
-		Params: []testing.Param{
-			{
-				Fixture: fixture.ClamshellNonVK,
-			},
-			{
-				Name:              "lacros",
-				Fixture:           fixture.LacrosClamshellNonVK,
-				ExtraSoftwareDeps: []string{"lacros"},
-			},
-		},
+		Fixture:      fixture.ClamshellNonVK,
 	})
 	// TODO: This test is disabled as the main feature is still in development.
 	// Change the Attr value to "{"group:mainline", "informational"}" once
@@ -81,7 +72,7 @@ func PhysicalKeyboardLayoutChanged(ctx context.Context, s *testing.State) {
 
 	inputTestServer, err := testserver.LaunchBrowserWithHTML(
 		ctx,
-		fixtureData.BrowserType,
+		browser.TypeAsh,
 		false,
 		fixtureData.Chrome,
 		testConn,

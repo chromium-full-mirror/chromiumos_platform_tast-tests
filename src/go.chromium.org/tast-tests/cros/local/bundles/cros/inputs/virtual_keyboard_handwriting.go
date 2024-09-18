@@ -11,6 +11,7 @@ import (
 	"time"
 
 	"go.chromium.org/tast-tests/cros/local/bundles/cros/inputs/testrunner"
+	"go.chromium.org/tast-tests/cros/local/chrome/browser"
 	"go.chromium.org/tast-tests/cros/local/chrome/ime"
 	"go.chromium.org/tast-tests/cros/local/chrome/uiauto"
 	"go.chromium.org/tast-tests/cros/local/chrome/uiauto/faillog"
@@ -45,7 +46,6 @@ var hwTestIMEsUpstream = []ime.InputMethod{
 func init() {
 	testing.AddTest(&testing.Test{
 		Func:         VirtualKeyboardHandwriting,
-		LacrosStatus: testing.LacrosVariantExists,
 		Desc:         "Test handwriting input functionality on virtual keyboard",
 		Contacts:     []string{"essential-inputs-gardener-oncall@google.com", "essential-inputs-team@google.com"},
 		BugComponent: "b:95887",
@@ -90,22 +90,6 @@ func init() {
 				Val:               append(hwTestIMEs, hwTestIMEsUpstream...),
 				ExtraSearchFlags:  util.IMESearchFlags(hwTestIMEsUpstream),
 			},
-			{
-				Name:              "docked_lacros",
-				Fixture:           fixture.LacrosAnyVK,
-				ExtraHardwareDeps: hwdep.D(pre.InputsStableModels),
-				ExtraSoftwareDeps: []string{"lacros", "lacros_stable"},
-				ExtraAttr:         []string{"group:input-tools-upstream"},
-				Val:               append(hwTestIMEs),
-			},
-			{
-				Name:              "floating_lacros",
-				Fixture:           fixture.LacrosAnyVK,
-				ExtraHardwareDeps: hwdep.D(pre.InputsStableModels),
-				ExtraSoftwareDeps: []string{"lacros", "lacros_stable"},
-				ExtraAttr:         []string{"group:input-tools-upstream"},
-				Val:               append(hwTestIMEs),
-			},
 		},
 	})
 }
@@ -124,7 +108,7 @@ func VirtualKeyboardHandwriting(ctx context.Context, s *testing.State) {
 	defer faillog.DumpUITreeOnError(cleanupCtx, s.OutDir(), s.HasError, tconn)
 
 	// Launch inputs test web server.
-	its, err := testserver.LaunchBrowser(ctx, s.FixtValue().(fixture.FixtData).BrowserType, cr, tconn)
+	its, err := testserver.LaunchBrowser(ctx, browser.TypeAsh, cr, tconn)
 	if err != nil {
 		s.Fatal("Failed to launch inputs test server: ", err)
 	}

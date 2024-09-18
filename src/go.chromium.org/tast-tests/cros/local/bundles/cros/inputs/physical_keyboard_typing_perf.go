@@ -9,6 +9,7 @@ import (
 	"time"
 
 	"go.chromium.org/tast-tests/cros/common/perf"
+	"go.chromium.org/tast-tests/cros/local/chrome/browser"
 	"go.chromium.org/tast-tests/cros/local/chrome/ime"
 	"go.chromium.org/tast-tests/cros/local/chrome/metrics"
 	"go.chromium.org/tast-tests/cros/local/chrome/uiauto"
@@ -62,30 +63,12 @@ func init() {
 				},
 			},
 			{
-				Name:    "en_us_lacros",
-				Fixture: fixture.LacrosClamshellNonVKRestart,
-				Val: typingPerfTestParam{
-					inputMethod: ime.EnglishUS,
-					keys:        enUSTestData,
-				},
-				ExtraSoftwareDeps: []string{"lacros", "lacros_stable"},
-			},
-			{
 				Name:    "pinyin",
 				Fixture: fixture.ClamshellNonVKRestart,
 				Val: typingPerfTestParam{
 					inputMethod: ime.ChinesePinyin,
 					keys:        pinyinTestData,
 				},
-			},
-			{
-				Name:    "pinyin_lacros",
-				Fixture: fixture.LacrosClamshellNonVKRestart,
-				Val: typingPerfTestParam{
-					inputMethod: ime.ChinesePinyin,
-					keys:        pinyinTestData,
-				},
-				ExtraSoftwareDeps: []string{"lacros", "lacros_stable"},
 			},
 			{
 				Name:    "ja",
@@ -124,7 +107,7 @@ func PhysicalKeyboardTypingPerf(ctx context.Context, s *testing.State) {
 	}
 	defer keyboard.Close(ctx)
 
-	its, err := testserver.LaunchBrowser(ctx, s.FixtValue().(fixture.FixtData).BrowserType, cr, tconn)
+	its, err := testserver.LaunchBrowser(ctx, browser.TypeAsh, cr, tconn)
 	if err != nil {
 		s.Fatal("Failed to launch inputs test server: ", err)
 	}

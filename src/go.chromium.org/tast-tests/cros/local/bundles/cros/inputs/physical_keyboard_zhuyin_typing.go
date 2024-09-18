@@ -8,6 +8,7 @@ import (
 	"context"
 	"time"
 
+	"go.chromium.org/tast-tests/cros/local/chrome/browser"
 	"go.chromium.org/tast-tests/cros/local/chrome/ime"
 	"go.chromium.org/tast-tests/cros/local/chrome/uiauto"
 	"go.chromium.org/tast-tests/cros/local/chrome/uiauto/faillog"
@@ -25,7 +26,6 @@ import (
 func init() {
 	testing.AddTest(&testing.Test{
 		Func:         PhysicalKeyboardZhuyinTyping,
-		LacrosStatus: testing.LacrosVariantExists,
 		Desc:         "Checks that Zhuyin physical keyboard works",
 		Contacts:     []string{"essential-inputs-gardener-oncall@google.com", "essential-inputs-team@google.com"},
 		BugComponent: "b:95887",
@@ -43,16 +43,7 @@ func init() {
 				"screenplay-72b289de-af77-45c1-82f4-dddedbb020e3",
 				"screenplay-af2ec3b0-f5d7-433f-a324-89a1c30c66c2",
 			}),
-		Params: []testing.Param{
-			{
-				Fixture: fixture.ClamshellNonVK,
-			},
-			{
-				Name:              "lacros",
-				Fixture:           fixture.LacrosClamshellNonVK,
-				ExtraSoftwareDeps: []string{"lacros", "lacros_stable"},
-			},
-		},
+		Fixture: fixture.ClamshellNonVK,
 	})
 }
 
@@ -81,7 +72,7 @@ func PhysicalKeyboardZhuyinTyping(ctx context.Context, s *testing.State) {
 	}
 	defer kb.Close(ctx)
 
-	its, err := testserver.LaunchBrowser(ctx, s.FixtValue().(fixture.FixtData).BrowserType, cr, tconn)
+	its, err := testserver.LaunchBrowser(ctx, browser.TypeAsh, cr, tconn)
 	if err != nil {
 		s.Fatal("Failed to launch inputs test server: ", err)
 	}
