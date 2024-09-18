@@ -18,15 +18,43 @@ import (
 type feature string
 
 const (
-	batterySaver   feature = "BatterySaver"
-	arcDisabled    feature = "ArcDisabled"
-	pvSched        feature = "Pvsched"
-	fieldTrials    feature = "FieldTrials"
-	roundedWindows feature = "RoundedWindows"
-	vulkan         feature = "Vulkan"
-	wprFeature     feature = "WPR"
-	chromevox      feature = "ChromeVox"
-	imageIndexing  feature = "ImageIndexing"
+	batterySaver      feature = "BatterySaver"
+	arcDisabled       feature = "ArcDisabled"
+	arcEnabled        feature = "ArcEnabled"
+	pvSched           feature = "Pvsched"
+	fieldTrials       feature = "FieldTrials"
+	roundedWindows    feature = "RoundedWindows"
+	vulkan            feature = "Vulkan"
+	wprFeature        feature = "WPR"
+	chromevox         feature = "ChromeVox"
+	imageIndexing     feature = "ImageIndexing"
+	focusMode         feature = "FocusMode"
+	passthrough       feature = "Passthrough"
+	oak               feature = "Oak"
+	noibat            feature = "Noibat"
+	twoWindows        feature = "TwoWindows"
+	tablet            feature = "Tablet"
+	deferTabLoad      feature = "DeferTabLoad"
+	deferConcierge    feature = "DeferConcierge"
+	docs              feature = "Docs"
+	presentation      feature = "MeetPresentation"
+	echo              feature = "MeetEcho"
+	noiseCancellation feature = "MeetNoiseCancellation"
+	noMeetEffects     feature = "NoMeetEffects"
+	npu               feature = "NpuInference"
+	audioEffects      feature = "MeetAudioEffects"
+	studioMic         feature = "MeetStudioMic"
+	liveCaptions      feature = "MeetLiveCaptions"
+	backgroundBlur    feature = "MeetBackgroundBlur"
+	adjustLighting    feature = "MeetAdjustLighting"
+	retouch           feature = "MeetRetouch"
+	videoEffects      feature = "MeetVideoEffects"
+	platformEffects   feature = "MeetPlatformEffects"
+	enterprise        feature = "MeetEnterprise"
+	muteCamera        feature = "MuteCamera"
+	vsyncDecoding     feature = "MeetVsyncDecoding"
+	meetEffects       feature = "MeetEffects"
+	schedRt           feature = "RealtimeScheduler"
 )
 
 // Metadata represents metadata for a performance CUJ or a performance test.
@@ -69,6 +97,54 @@ const (
 	jetstreamMetric    = "Benchmark.Jetstream.Score"
 	webxprt4Metric     = "Benchmark.WebXPRT4.Score"
 )
+
+var idlePerfMetrics = []string{
+	"TPS.Power.Timeline",
+}
+
+var overviewPerfMetrics = []string{
+	"Ash.Overview.AnimationSmoothness.Enter.ClamshellMode.8windows",
+	"Ash.Overview.AnimationSmoothness.Enter.MinimizedTabletMode.8windows",
+	"Ash.Overview.AnimationSmoothness.Enter.SingleClamshellMode.8windows",
+	"Ash.Overview.AnimationSmoothness.Enter.SplitView.8windowsincludingmaximizedoverviewwindows",
+	"Ash.Overview.AnimationSmoothness.Enter.SplitView.8windowsincludingminimizedoverviewwindows",
+	"Ash.Overview.AnimationSmoothness.Enter.TabletMode.8windows",
+	"Ash.Overview.AnimationSmoothness.Exit.ClamshellMode.8windows",
+	"Ash.Overview.AnimationSmoothness.Exit.MinimizedTabletMode.8windows",
+	"Ash.Overview.AnimationSmoothness.Exit.SingleClamshellMode.8windows",
+	"Ash.Overview.AnimationSmoothness.Exit.SplitView.8windowsincludingmaximizedoverviewwindows",
+	"Ash.Overview.AnimationSmoothness.Exit.SplitView.8windowsincludingminimizedoverviewwindows",
+	"Ash.Overview.AnimationSmoothness.Exit.TabletMode.8windows",
+}
+
+var windowCyclePerfMetrics = []string{
+	"Ash.WindowCycleController.Enter.PresentationTime.8windows",
+	"Ash.WindowCycleView.AnimationSmoothness.Container.8windows",
+	"Ash.WindowCycleView.AnimationSmoothness.Show.8windows",
+}
+
+var loginPerfMetrics = []string{
+	"BootTime.Login2",
+	"TPS.OnAuthSuccess",
+	"TPS.UserProfileGotten",
+	"TPS.SessionRestore-Start",
+	"TPS.SessionRestore-End",
+	"Ash.LoginPerf.AutoRestore.AllBrowserWindowsCreated",
+	"Ash.LoginPerf.AutoRestore.AllBrowserWindowsShown",
+	"Ash.LoginPerf.AutoRestore.AllBrowserWindowsPresented",
+	"Ash.LoginPerf.AutoRestore.AllShelfIconsLoaded",
+	"Ash.LoginPerf.AutoRestore.ShelfLoginAnimationEnd",
+}
+
+var meetMetrics = []string{
+	"TPS.Power.Timeline",
+	"Graphics.Smoothness.PercentDroppedFrames3.AllSequences",
+	"EventLatency.MousePressed.TotalLatency",
+	"EventLatency.KeyPressed.TotalLatency",
+	"EventLatency.TotalLatency",
+	"WebRTC.Video.DroppedFrames.Capturer",
+	"WebRTC.Video.RenderFramesPerSecond",
+}
 
 // Registry maps test name to its corresponding metadata.
 var Registry = map[string]Metadata{
@@ -193,6 +269,10 @@ var Registry = map[string]Metadata{
 		BaseTestNames: []string{"ui.VideoCUJ"},
 		Features:      []feature{vulkan},
 	},
+	"ui.VideoCUJ.pvsched": Metadata{
+		BaseTestNames: []string{"ui.VideoCUJ"},
+		Features:      []feature{pvSched},
+	},
 	"ui.DocsCUJ": Metadata{
 		Metrics: defaultMetrics,
 	},
@@ -211,6 +291,242 @@ var Registry = map[string]Metadata{
 	"ui.DocsCUJ.image_indexing": Metadata{
 		BaseTestNames: []string{"ui.DocsCUJ"},
 		Features:      []feature{imageIndexing},
+	},
+	"ui.GalleryCUJ": Metadata{
+		Metrics: defaultMetrics,
+	},
+	"ui.DeskTemplatesCUJ": Metadata{
+		Metrics: []string{
+			"TPS.Power.Timeline",
+			"Ash.Smoothness.PercentDroppedFrames_1sWindow2",
+			"Ash.EventLatency.TotalLatency",
+		},
+	},
+	"ui.DragMaximizedWindowPerf": Metadata{
+		Metrics: []string{
+			"Ash.PhantomWindowController.Show.PresentationTime",
+			"Ash.Window.AnimationSmoothness.CrossFade.DragMaximize",
+			"Ash.Window.AnimationSmoothness.CrossFade.DragUnmaximize",
+		},
+	},
+	"ui.DragWindowFromShelfPerf": Metadata{
+		Metrics: []string{
+			"Ash.DragWindowFromShelf.PresentationTime.MaxLatency",
+			"Ash.DragWindowFromShelf.PresentationTime",
+			"Ash.Overview.Enter.PresentationTime",
+			"Ash.Overview.Exit.PresentationTime",
+		},
+	},
+	"ui.IdlePerf": Metadata{
+		Metrics: idlePerfMetrics,
+	},
+	"ui.IdlePerf.arc_disabled": Metadata{
+		BaseTestNames: []string{"ui.IdlePerf"},
+		Features:      []feature{arcDisabled},
+	},
+	"ui.IdlePerf.focusmode": Metadata{
+		BaseTestNames: []string{"ui.IdlePerf"},
+		Features:      []feature{focusMode},
+	},
+	"ui.IdlePerf.facegaze": Metadata{
+		Metrics: append(idlePerfMetrics, "Accessibility.FaceGaze.AverageFaceLandmarkerLatency"),
+	},
+	"ui.OverviewPerf": Metadata{
+		Metrics: overviewPerfMetrics,
+	},
+	"ui.OverviewPerf.passthrough": Metadata{
+		BaseTestNames: []string{"ui.OverviewPerf"},
+		Features:      []feature{passthrough},
+	},
+	"ui.OverviewPerf.oak": Metadata{
+		BaseTestNames: []string{"ui.OverviewPerf"},
+		Features:      []feature{oak},
+	},
+	"ui.OverviewScrollPerf": Metadata{
+		Metrics: []string{"Ash.Overview.Scroll.PresentationTime.TabletMode"},
+	},
+	"ui.WindowCyclePerf": Metadata{
+		Metrics: windowCyclePerfMetrics,
+	},
+	"ui.WindowCyclePerf.noibat": Metadata{
+		BaseTestNames: []string{"ui.WindowCyclePerf"},
+		Features:      []feature{noibat},
+	},
+	"ui.TabletTransitionPerf": Metadata{
+		Metrics: []string{
+			"Ash.TabletMode.AnimationSmoothness.Enter",
+			"Ash.TabletMode.AnimationSmoothness.Enter",
+		},
+	},
+	"ui.SnapPerf": Metadata{
+		Metrics: []string{
+			"Ash.Window.AnimationSmoothness.Snap",
+		},
+	},
+	"ui.LoginPerf": Metadata{
+		Metrics: loginPerfMetrics,
+	},
+	"ui.LoginPerf.noarc_2windows": Metadata{
+		BaseTestNames: []string{
+			"ui.LoginPerf.noarc",
+			"ui.LoginPerf.2windows",
+		},
+		Features: []feature{twoWindows, arcDisabled},
+	},
+	"ui.LoginPerf.noarc": Metadata{
+		BaseTestNames: []string{"ui.LoginPerf"},
+		Features:      []feature{arcDisabled},
+	},
+	"ui.LoginPerf.2windows": Metadata{
+		BaseTestNames: []string{"ui.LoginPerf"},
+		Features:      []feature{twoWindows},
+	},
+	"ui.LoginPerf.tablet": Metadata{
+		BaseTestNames: []string{"ui.LoginPerf"},
+		Features:      []feature{tablet},
+	},
+	"ui.LoginPerf.defer_tab_load": Metadata{
+		BaseTestNames: []string{"ui.LoginPerf"},
+		Features:      []feature{deferTabLoad},
+	},
+	"ui.LoginPerf.2windows_defer_concierge": Metadata{
+		BaseTestNames: []string{"ui.LoginPerf.2windows"},
+		Features:      []feature{deferConcierge},
+	},
+	"ui.LoginPerf.2windows_defer_concierge_arc": Metadata{
+		BaseTestNames: []string{
+			"ui.LoginPerf.2windows",
+			"ui.LoginPerf.2windows_defer_concierge",
+		},
+		Features: []feature{deferConcierge, arcEnabled},
+	},
+	"ui.MeetCUJ": Metadata{
+		Metrics: meetMetrics,
+	},
+	"ui.MeetCUJ.docs": Metadata{
+		Metrics: meetMetrics,
+	},
+	"ui.MeetCUJ.present": Metadata{
+		Metrics: meetMetrics,
+	},
+	"ui.MeetCUJ.docs_arc_disabled": Metadata{
+		BaseTestNames: []string{"ui.MeetCUJ.docs"},
+		Features:      []feature{arcDisabled},
+	},
+	"ui.MeetCUJ.docs_echo_measured": Metadata{
+		BaseTestNames: []string{"ui.MeetCUJ.docs"},
+		Features:      []feature{echo},
+	},
+	"ui.MeetCUJ.docs_nc_echo_measured": Metadata{
+		BaseTestNames: []string{
+			"ui.MeetCUJ.docs_echo_measured",
+			"ui.MeetCUJ.docs_noise_cancellation",
+		},
+		Features: []feature{noiseCancellation, echo},
+	},
+	"ui.MeetCUJ.docs_pvsched": Metadata{
+		BaseTestNames: []string{"ui.MeetCUJ.docs"},
+		Features:      []feature{pvSched},
+	},
+	"ui.MeetCUJ.docs_no_effects": Metadata{
+		BaseTestNames: []string{"ui.MeetCUJ.docs"},
+		Features:      []feature{noMeetEffects},
+	},
+	"ui.MeetCUJ.docs_no_effects_npu": Metadata{
+		BaseTestNames: []string{"ui.MeetCUJ.docs_no_effects"},
+		Features:      []feature{npu},
+	},
+	"ui.MeetCUJ.docs_audio_effects": Metadata{
+		BaseTestNames: []string{"ui.MeetCUJ.docs"},
+		Features:      []feature{audioEffects},
+	},
+	"ui.MeetCUJ.docs_audio_effects_studio_mic": Metadata{
+		BaseTestNames: []string{"ui.MeetCUJ.docs"},
+		Features:      []feature{audioEffects},
+	},
+	"ui.MeetCUJ.docs_noise_cancellation": Metadata{
+		BaseTestNames: []string{"ui.MeetCUJ.docs"},
+		Features:      []feature{noiseCancellation},
+	},
+	"ui.MeetCUJ.docs_studio_mic": Metadata{
+		BaseTestNames: []string{"ui.MeetCUJ.docs"},
+		Features:      []feature{studioMic},
+	},
+	"ui.MeetCUJ.docs_live_captions": Metadata{
+		BaseTestNames: []string{"ui.MeetCUJ.docs"},
+		Features:      []feature{liveCaptions},
+	},
+	"ui.MeetCUJ.docs_background_blur": Metadata{
+		BaseTestNames: []string{"ui.MeetCUJ.docs"},
+		Features:      []feature{backgroundBlur},
+	},
+	"ui.MeetCUJ.docs_background_blur_and_meet_effects": Metadata{
+		BaseTestNames: []string{"ui.MeetCUJ.docs_background_blur"},
+		Features:      []feature{meetEffects},
+	},
+	"ui.MeetCUJ.docs_background_blur_npu_and_meet_effects": Metadata{
+		BaseTestNames: []string{"ui.MeetCUJ.docs_background_blur_and_meet_effects"},
+		Features:      []feature{npu},
+	},
+	"ui.MeetCUJ.docs_adjust_lighting": Metadata{
+		BaseTestNames: []string{"ui.MeetCUJ.docs"},
+		Features:      []feature{adjustLighting},
+	},
+	"ui.MeetCUJ.docs_adjust_lighting_npu": Metadata{
+		BaseTestNames: []string{"ui.MeetCUJ.docs_adjust_lighting"},
+		Features:      []feature{npu},
+	},
+	"ui.MeetCUJ.docs_retouch": Metadata{
+		BaseTestNames: []string{"ui.MeetCUJ.docs"},
+		Features:      []feature{retouch},
+	},
+	"ui.MeetCUJ.docs_adjust_lighting_and_retouch": Metadata{
+		BaseTestNames: []string{
+			"ui.MeetCUJ.docs_adjust_lighting",
+			"ui.MeetCUJ.docs_retouch",
+		},
+		Features: []feature{retouch, adjustLighting},
+	},
+	"ui.MeetCUJ.docs_video_effects": Metadata{
+		BaseTestNames: []string{"ui.MeetCUJ.docs"},
+		Features:      []feature{videoEffects},
+	},
+	"ui.MeetCUJ.docs_video_effects_npu": Metadata{
+		BaseTestNames: []string{"ui.MeetCUJ.docs_video_effects"},
+		Features:      []feature{npu},
+	},
+	"ui.MeetCUJ.docs_platform_effects": Metadata{
+		BaseTestNames: []string{"ui.MeetCUJ.docs"},
+		Features:      []feature{platformEffects},
+	},
+	"ui.MeetCUJ.docs_platform_effects_npu": Metadata{
+		BaseTestNames: []string{"ui.MeetCUJ.docs_platform_effects"},
+		Features:      []feature{npu},
+	},
+	"ui.MeetCUJ.docs_platform_effects_studio_mic": Metadata{
+		BaseTestNames: []string{
+			"ui.MeetCUJ.docs_platform_effects",
+			"ui.MeetCUJ.docs_studio_mic",
+		},
+		Features: []feature{studioMic, platformEffects},
+	},
+	"ui.MeetCUJ.docs_sched_rt": Metadata{
+		BaseTestNames: []string{"ui.MeetCUJ.docs"},
+		Features:      []feature{schedRt},
+	},
+	"ui.MeetCUJ.docs_enterprise": Metadata{
+		BaseTestNames: []string{"ui.MeetCUJ.docs"},
+		Features:      []feature{enterprise},
+	},
+	"ui.MeetCUJ.docs_field_trials": Metadata{
+		BaseTestNames: []string{"ui.MeetCUJ.docs"},
+		Features:      []feature{fieldTrials},
+	},
+	"ui.PageLoadPerf": Metadata{
+		Metrics: []string{
+			"PageLoad.PaintTiming.NavigationToFirstContentfulPaint",
+			"PageLoad.PaintTiming.NavigationToLargestContentfulPaint2",
+		},
 	},
 	// The TPS Dashboard assumes that the metrics passed as part of the
 	// metadata for SlidesCUJ are the fallback metrics (default metrics) that

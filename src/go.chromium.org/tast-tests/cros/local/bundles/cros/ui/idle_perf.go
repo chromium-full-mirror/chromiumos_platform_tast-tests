@@ -90,6 +90,8 @@ func init() {
 }
 
 func IdlePerf(ctx context.Context, s *testing.State) {
+	cuj.WriteMetadataFile(ctx, s.TestName())
+
 	idleTest := s.Param().(idlePerfTest)
 
 	// Ensure display on to record ui performance correctly.

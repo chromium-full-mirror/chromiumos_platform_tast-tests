@@ -10,6 +10,7 @@ import (
 
 	"go.chromium.org/tast-tests/cros/local/bundles/cros/ui/gallerycuj"
 	"go.chromium.org/tast-tests/cros/local/chrome"
+	"go.chromium.org/tast-tests/cros/local/chrome/cuj"
 	"go.chromium.org/tast/core/testing"
 	"go.chromium.org/tast/core/testing/hwdep"
 )
@@ -35,6 +36,7 @@ func init() {
 }
 
 func GalleryCUJ(ctx context.Context, s *testing.State) {
+	cuj.WriteMetadataFile(ctx, s.TestName())
 	cr := s.FixtValue().(chrome.HasChrome).Chrome()
 	if err := gallerycuj.Run(ctx, cr, s.OutDir(), s.DataPath); err != nil {
 		s.Fatal("Failed to run Gallery CUJ: ", err)

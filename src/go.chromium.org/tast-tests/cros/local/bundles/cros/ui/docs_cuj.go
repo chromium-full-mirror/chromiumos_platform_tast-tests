@@ -72,6 +72,8 @@ func init() {
 }
 
 func DocsCUJ(ctx context.Context, s *testing.State) {
+	cuj.WriteMetadataFile(ctx, s.TestName())
+
 	cr := s.FixtValue().(chrome.HasChrome).Chrome()
 	bt := s.Param().(browser.Type)
 	traceConfigPath := s.DataPath(cujrecorder.SystemTraceConfigFile)
