@@ -72,6 +72,7 @@ var (
 		"morphius": physicalScreenSize{height: 167.2, width: 292.6},
 		"kodama":   physicalScreenSize{height: 217.3, width: 135.3},
 		"kohaku":   physicalScreenSize{height: 165.2, width: 293.8},
+		"steelix":  physicalScreenSize{height: 144.9, width: 257.7},
 	}
 )
 
