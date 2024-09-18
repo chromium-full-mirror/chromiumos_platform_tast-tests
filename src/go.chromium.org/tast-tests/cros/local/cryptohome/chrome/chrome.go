@@ -12,11 +12,17 @@ import (
 	"go.chromium.org/tast/core/errors"
 )
 
+const (
+	modernPinFeatureName                   = "CrOSLateBootEnableModernPin"
+	migrateToModenPinFeatureName           = "CrOSLateBootMigrateToModernPin"
+	generateRecoverableKeyStoreFeatureName = "CrOSLateBootGenerateRecoverableKeyStore"
+)
+
 // WithModernPin executes a block of code after enabling the ModernPin feature.
 func WithModernPin(ctx context.Context, f func() error) error {
-	const featureName = "CrOSLateBootEnableModernPin"
-	featureOption := chrome.EnableFeatures(featureName)
-	cr, err := chrome.New(ctx, chrome.DeferLogin(), featureOption, chrome.KeepState())
+	enableFeatureOption := chrome.EnableFeatures(modernPinFeatureName)
+	disableFeatureOption := chrome.DisableFeatures(migrateToModenPinFeatureName)
+	cr, err := chrome.New(ctx, chrome.DeferLogin(), enableFeatureOption, disableFeatureOption, chrome.KeepState())
 	if err != nil {
 		return errors.Wrap(err, "failed to start Chrome at the login screen")
 	}
@@ -26,8 +32,7 @@ func WithModernPin(ctx context.Context, f func() error) error {
 
 // WithModernPinDisabled executes a block of code after disabling the ModernPin feature.
 func WithModernPinDisabled(ctx context.Context, f func() error) error {
-	const featureName = "CrOSLateBootEnableModernPin"
-	featureOption := chrome.DisableFeatures(featureName)
+	featureOption := chrome.DisableFeatures(modernPinFeatureName, migrateToModenPinFeatureName)
 	cr, err := chrome.New(ctx, chrome.DeferLogin(), featureOption, chrome.KeepState())
 	if err != nil {
 		return errors.Wrap(err, "failed to start Chrome at the login screen")
@@ -38,9 +43,7 @@ func WithModernPinDisabled(ctx context.Context, f func() error) error {
 
 // WithMigrationPin executes a code block after enabling the migration of pins.
 func WithMigrationPin(ctx context.Context, f func() error) error {
-	const migrationFeatureName = "CrOSLateBootMigrateToModernPin"
-	const modernFeatureName = "CrOSLateBootEnableModernPin"
-	featureOption := chrome.EnableFeatures(migrationFeatureName, modernFeatureName)
+	featureOption := chrome.EnableFeatures(migrateToModenPinFeatureName, modernPinFeatureName)
 	cr, err := chrome.New(ctx, chrome.DeferLogin(), featureOption, chrome.KeepState())
 	if err != nil {
 		return errors.Wrap(err, "failed to start Chrome at the login screen")
@@ -51,8 +54,7 @@ func WithMigrationPin(ctx context.Context, f func() error) error {
 
 // WithGenerateRecoverableKeyStore executes a block of code after enabling the GenerateRecoverableKeyStore feature.
 func WithGenerateRecoverableKeyStore(ctx context.Context, f func() error) error {
-	const featureName = "CrOSLateBootGenerateRecoverableKeyStore"
-	featureOption := chrome.EnableFeatures(featureName)
+	featureOption := chrome.EnableFeatures(generateRecoverableKeyStoreFeatureName)
 	cr, err := chrome.New(ctx, chrome.DeferLogin(), featureOption, chrome.KeepState())
 	if err != nil {
 		return errors.Wrap(err, "failed to start Chrome at the login screen")
@@ -63,8 +65,7 @@ func WithGenerateRecoverableKeyStore(ctx context.Context, f func() error) error 
 
 // WithGenerateRecoverableKeyStoreDisabled executes a block of code after disabling the GenerateRecoverableKeyStore feature.
 func WithGenerateRecoverableKeyStoreDisabled(ctx context.Context, f func() error) error {
-	const featureName = "CrOSLateBootGenerateRecoverableKeyStore"
-	featureOption := chrome.DisableFeatures(featureName)
+	featureOption := chrome.DisableFeatures(generateRecoverableKeyStoreFeatureName)
 	cr, err := chrome.New(ctx, chrome.DeferLogin(), featureOption, chrome.KeepState())
 	if err != nil {
 		return errors.Wrap(err, "failed to start Chrome at the login screen")

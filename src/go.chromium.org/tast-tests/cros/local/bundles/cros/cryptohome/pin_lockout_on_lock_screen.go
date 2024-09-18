@@ -19,8 +19,23 @@ import (
 	"go.chromium.org/tast/core/testing"
 )
 
+// pinLockoutOnLockScreenConfig represents the different options for PIN lockout.
+type pinLockoutOnLockScreenConfig int
+
+const (
+	// noModernPin indicates no modern PIN is used at all and no migration is enabled.
+	noModernPin pinLockoutOnLockScreenConfig = iota
+
+	// enableModernPin enables modern PIN for new PINs only, with no migration.
+	enableModernPin
+
+	// enableModernPinAndMigrate enables modern PIN and migrates existing PINs on use.
+	// Do not that here, we will still setup with legacy pin.
+	enableModernPinAndMigrate
+)
+
 type pinLockoutOnLockScreenParam struct {
-	modernPin bool
+	config pinLockoutOnLockScreenConfig
 }
 
 func init() {
@@ -38,12 +53,17 @@ func init() {
 		Params: []testing.Param{{
 			Name: "legacy_pin",
 			Val: pinLockoutOnLockScreenParam{
-				modernPin: false,
+				config: noModernPin,
 			},
 		}, {
-			Name: "modern_pin",
+			Name: "modern_pin_no_migration",
 			Val: pinLockoutOnLockScreenParam{
-				modernPin: true,
+				config: enableModernPin,
+			},
+		}, {
+			Name: "migrate_legacy_pin",
+			Val: pinLockoutOnLockScreenParam{
+				config: enableModernPinAndMigrate,
 			},
 		}},
 	})
@@ -83,8 +103,10 @@ func PinLockoutOnLockScreen(ctx context.Context, s *testing.State) {
 	}
 
 	// Select the appropriate PIN wrapper function based on test parameters.
+	// Note that with enableModernPinAndMigrate, we still want a legacy pin set up
+	// to migrate the pin from legacy to moden pin later on.
 	withPinFlags := cryptochrome.WithModernPinDisabled
-	if userParam.modernPin {
+	if userParam.config == enableModernPin {
 		withPinFlags = cryptochrome.WithModernPin
 	}
 
@@ -105,7 +127,7 @@ func PinLockoutOnLockScreen(ctx context.Context, s *testing.State) {
 				return errors.Wrap(err, "failed to add password AuthFactor")
 			}
 			// Add PIN AuthFactor.
-			if userParam.modernPin {
+			if userParam.config == enableModernPin {
 				if err := client.AddModernPinAuthFactor(ctx, authSessionID, pinLabel, userPin); err != nil {
 					return errors.Wrap(err, "failed to add PIN AuthFactor")
 				}
@@ -123,25 +145,38 @@ func PinLockoutOnLockScreen(ctx context.Context, s *testing.State) {
 	// Cleanup user vault before UssMigrationPasswordPin exits.
 	defer client.RemoveVault(ctxForCleanup, userName)
 
-	// Mount and then perform lock screen actions.
-	if err := client.WithAuthSession(ctx, userName, false /*isEphemeral*/, uda.AuthIntent_AUTH_INTENT_DECRYPT, func(authSessionID string) error {
-		// Authenticate with password to use password verifier in verify intent auth.
-		if _, err := client.AuthenticateAuthFactor(ctx, authSessionID, passwordLabel, userPassword); err != nil {
-			return errors.Wrap(err, "failed to authenticate with password AuthFactor")
-		}
+	// At this point, if migration is enabled, we can simulate it. The implicit assumption
+	// here is that the following code runs "after user update" and that the user is setup
+	// accordingly with the above state.
+	if userParam.config == enableModernPinAndMigrate {
+		withPinFlags = cryptochrome.WithMigrationPin
+	}
 
-		// Mount user home directories and daemon-store directories.
-		if _, err := client.PreparePersistentVault(ctx, authSessionID, false /*ecryptfs*/); err != nil {
-			return errors.Wrap(err, "failed to mount user profile after creation")
-		}
-		defer client.Unmount(ctxForCleanup, userName)
+	if err := withPinFlags(ctx, func() error {
+		// Mount and then perform lock screen actions.
+		if err := client.WithAuthSession(ctx, userName, false /*isEphemeral*/, uda.AuthIntent_AUTH_INTENT_DECRYPT, func(authSessionID string) error {
+			// Authenticate with password to use password verifier in verify intent auth.
+			if _, err := client.AuthenticateAuthFactor(ctx, authSessionID, passwordLabel, userPassword); err != nil {
+				return errors.Wrap(err, "failed to authenticate with password AuthFactor")
+			}
 
-		// Test that PIN reset with password.
-		if err := cryptohome.TestPinCounterMechanism(ctx, userName, passwordLabel, userPassword, pinLabel, userPin, wrongPin, client, userParam.modernPin); err != nil {
-			return errors.Wrap(err, "failed in testing PIN lockout and reset mechanism with decrypt intent")
+			// Mount user home directories and daemon-store directories.
+			if _, err := client.PreparePersistentVault(ctx, authSessionID, false /*ecryptfs*/); err != nil {
+				return errors.Wrap(err, "failed to mount user profile after creation")
+			}
+			defer client.Unmount(ctxForCleanup, userName)
+
+			shouldCheckModern := (userParam.config == enableModernPin || userParam.config == enableModernPinAndMigrate)
+			// Test that PIN reset with password.
+			if err := cryptohome.TestPinCounterMechanism(ctx, userName, passwordLabel, userPassword, pinLabel, userPin, wrongPin, client, shouldCheckModern); err != nil {
+				return errors.Wrap(err, "failed in testing PIN lockout and reset mechanism with decrypt intent")
+			}
+			return nil
+		}); err != nil {
+			return errors.Wrap(err, "failed to verify pin counter mechanism")
 		}
 		return nil
 	}); err != nil {
-		s.Fatal("Failed to verify pin counter mechanism: ", err)
+		s.Fatal("Failed to verify counter mechanism: ", err)
 	}
 }
