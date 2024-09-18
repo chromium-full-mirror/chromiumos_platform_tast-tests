@@ -261,7 +261,7 @@ func (rec *record) saveMetric(ctx context.Context, pv *perf.Values, name string)
 			Name:      name,
 			Unit:      "count",
 			Variant:   "count",
-			Direction: rec.config.direction,
+			Direction: perf.BiggerIsBetter,
 		}, float64(rec.totalCount))
 
 		hist := histogram.Histogram{
