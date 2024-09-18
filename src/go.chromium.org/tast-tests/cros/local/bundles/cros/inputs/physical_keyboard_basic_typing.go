@@ -10,6 +10,7 @@ import (
 	"time"
 
 	"go.chromium.org/tast-tests/cros/local/bundles/cros/inputs/testrunner"
+	"go.chromium.org/tast-tests/cros/local/chrome/browser"
 	"go.chromium.org/tast-tests/cros/local/chrome/ime"
 	"go.chromium.org/tast-tests/cros/local/chrome/uiauto/faillog"
 	"go.chromium.org/tast-tests/cros/local/inputs/data"
@@ -52,7 +53,6 @@ var pkTypingTestMessages = []data.Message{data.TypingMessageHello}
 func init() {
 	testing.AddTest(&testing.Test{
 		Func:         PhysicalKeyboardBasicTyping,
-		LacrosStatus: testing.LacrosVariantExists,
 		Desc:         "Checks that user can do basic typing physical keyboard",
 		Contacts:     []string{"essential-inputs-gardener-oncall@google.com", "essential-inputs-team@google.com"},
 		BugComponent: "b:95887",
@@ -82,22 +82,9 @@ func init() {
 				ExtraSearchFlags:  util.IMESearchFlags(pkTypingTestIMEs),
 			},
 			{
-				Name:              "lacros",
-				ExtraHardwareDeps: hwdep.D(pre.InputsStableModels),
-				Fixture:           fixture.LacrosClamshellNonVK,
-				Val:               pkTypingTestIMEs,
-				ExtraSoftwareDeps: []string{"lacros", "lacros_stable"},
-			},
-			{
 				Name:              "first_party_vietnamese",
 				ExtraHardwareDeps: hwdep.D(pre.InputsStableModels),
 				Fixture:           fixture.ClamshellNonVKWithFirstPartyVietnamese,
-				Val:               []ime.InputMethod{ime.VietnameseTelex, ime.VietnameseVNI},
-			},
-			{
-				Name:              "lacros_first_party_vietnamese",
-				ExtraHardwareDeps: hwdep.D(pre.InputsStableModels),
-				Fixture:           fixture.LacrosClamshellNonVKWithFirstPartyVietnamese,
 				Val:               []ime.InputMethod{ime.VietnameseTelex, ime.VietnameseVNI},
 			},
 		},
@@ -115,7 +102,7 @@ func PhysicalKeyboardBasicTyping(ctx context.Context, s *testing.State) {
 
 	defer faillog.DumpUITreeWithScreenshotOnError(cleanupCtx, s.OutDir(), s.HasError, cr, "ui_tree")
 
-	its, err := testserver.LaunchBrowser(ctx, s.FixtValue().(fixture.FixtData).BrowserType, cr, tconn)
+	its, err := testserver.LaunchBrowser(ctx, browser.TypeAsh, cr, tconn)
 	if err != nil {
 		s.Fatal("Failed to launch inputs test server: ", err)
 	}

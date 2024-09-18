@@ -8,6 +8,7 @@ import (
 	"context"
 	"time"
 
+	"go.chromium.org/tast-tests/cros/local/chrome/browser"
 	"go.chromium.org/tast-tests/cros/local/chrome/ime"
 	"go.chromium.org/tast-tests/cros/local/chrome/uiauto"
 	"go.chromium.org/tast-tests/cros/local/chrome/uiauto/faillog"
@@ -25,7 +26,6 @@ import (
 func init() {
 	testing.AddTest(&testing.Test{
 		Func:         PhysicalKeyboardInputFields,
-		LacrosStatus: testing.LacrosVariantExists,
 		Desc:         "Checks that physical keyboard works on different input fields",
 		Contacts:     []string{"essential-inputs-gardener-oncall@google.com", "essential-inputs-team@google.com"},
 		BugComponent: "b:95887",
@@ -39,12 +39,6 @@ func init() {
 				Name:    "us_en",
 				Fixture: fixture.ClamshellNonVK,
 				Val:     ime.EnglishUS,
-			},
-			{
-				Name:              "us_en_lacros",
-				Fixture:           fixture.LacrosClamshellNonVK,
-				Val:               ime.EnglishUS,
-				ExtraSoftwareDeps: []string{"lacros", "lacros_stable"},
 			},
 		},
 	})
@@ -76,7 +70,7 @@ func PhysicalKeyboardInputFields(ctx context.Context, s *testing.State) {
 	}
 	defer keyboard.Close(ctx)
 
-	its, err := testserver.LaunchBrowser(ctx, s.FixtValue().(fixture.FixtData).BrowserType, cr, tconn)
+	its, err := testserver.LaunchBrowser(ctx, browser.TypeAsh, cr, tconn)
 	if err != nil {
 		s.Fatal("Failed to launch inputs test server: ", err)
 	}

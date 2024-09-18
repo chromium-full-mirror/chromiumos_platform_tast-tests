@@ -8,6 +8,7 @@ import (
 	"context"
 	"time"
 
+	"go.chromium.org/tast-tests/cros/local/chrome/browser"
 	"go.chromium.org/tast-tests/cros/local/chrome/ime"
 	"go.chromium.org/tast-tests/cros/local/chrome/uiauto"
 	"go.chromium.org/tast-tests/cros/local/chrome/uiauto/vkb"
@@ -25,7 +26,6 @@ import (
 func init() {
 	testing.AddTest(&testing.Test{
 		Func:         VirtualKeyboardOverscroll,
-		LacrosStatus: testing.LacrosVariantExists,
 		Desc:         "Check that overscroll is performed correctly when showing VK",
 		Contacts:     []string{"essential-inputs-gardener-oncall@google.com", "essential-inputs-team@google.com"},
 		BugComponent: "b:95887",
@@ -44,12 +44,6 @@ func init() {
 				Name:      "clamshell",
 				Fixture:   fixture.ClamshellVK,
 				ExtraAttr: []string{"group:input-tools-upstream"},
-			},
-			{
-				Name:              "lacros",
-				Fixture:           fixture.LacrosTabletVK,
-				ExtraSoftwareDeps: []string{"lacros", "lacros_stable"},
-				ExtraAttr:         []string{"informational"},
 			},
 		},
 	})
@@ -71,7 +65,7 @@ func VirtualKeyboardOverscroll(ctx context.Context, s *testing.State) {
 
 	// Launch the test server.
 	its, err := testserver.LaunchBrowser(
-		ctx, s.FixtValue().(fixture.FixtData).BrowserType, cr, tconn)
+		ctx, browser.TypeAsh, cr, tconn)
 	if err != nil {
 		s.Fatal("Failed to launch inputs test server: ", err)
 	}

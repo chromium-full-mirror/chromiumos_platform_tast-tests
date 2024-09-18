@@ -10,6 +10,7 @@ import (
 	"regexp"
 	"time"
 
+	"go.chromium.org/tast-tests/cros/local/chrome/browser"
 	"go.chromium.org/tast-tests/cros/local/chrome/ime"
 	"go.chromium.org/tast-tests/cros/local/chrome/uiauto"
 	"go.chromium.org/tast-tests/cros/local/chrome/uiauto/faillog"
@@ -29,7 +30,6 @@ import (
 func init() {
 	testing.AddTest(&testing.Test{
 		Func:         VirtualKeyboardChangeInput,
-		LacrosStatus: testing.LacrosVariantExists,
 		Desc:         "Checks that changing input method in different ways",
 		Contacts:     []string{"essential-inputs-gardener-oncall@google.com", "essential-inputs-team@google.com"},
 		BugComponent: "b:95887",
@@ -56,19 +56,6 @@ func init() {
 				Fixture:           fixture.TabletVK,
 				ExtraHardwareDeps: hwdep.D(pre.InputsUnstableModels),
 			},
-			{
-				Name:              "tablet_lacros",
-				Fixture:           fixture.LacrosTabletVK,
-				ExtraHardwareDeps: hwdep.D(pre.InputsStableModels),
-				ExtraSoftwareDeps: []string{"lacros", "lacros_stable"},
-			},
-			{
-				Name:              "a11y_lacros",
-				Fixture:           fixture.LacrosClamshellVK,
-				ExtraHardwareDeps: hwdep.D(pre.InputsStableModels),
-				ExtraAttr:         []string{"group:input-tools-upstream"},
-				ExtraSoftwareDeps: []string{"lacros", "lacros_stable"},
-			},
 		},
 	})
 }
@@ -94,7 +81,7 @@ func VirtualKeyboardChangeInput(ctx context.Context, s *testing.State) {
 		s.Fatalf("Failed to install input method %q: %v", inputMethod, err)
 	}
 
-	its, err := testserver.LaunchBrowser(ctx, s.FixtValue().(fixture.FixtData).BrowserType, cr, tconn)
+	its, err := testserver.LaunchBrowser(ctx, browser.TypeAsh, cr, tconn)
 	if err != nil {
 		s.Fatal("Failed to launch inputs test server: ", err)
 	}

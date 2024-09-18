@@ -9,6 +9,7 @@ import (
 	"fmt"
 	"time"
 
+	"go.chromium.org/tast-tests/cros/local/chrome/browser"
 	"go.chromium.org/tast-tests/cros/local/chrome/ime"
 	"go.chromium.org/tast-tests/cros/local/chrome/uiauto"
 	"go.chromium.org/tast-tests/cros/local/chrome/uiauto/faillog"
@@ -33,7 +34,6 @@ type pkDeadKeysTestCase struct {
 func init() {
 	testing.AddTest(&testing.Test{
 		Func:         PhysicalKeyboardDeadKeys,
-		LacrosStatus: testing.LacrosVariantExists,
 		Desc:         "Checks that dead keys on the physical keyboard work",
 		Contacts:     []string{"essential-inputs-gardener-oncall@google.com", "essential-inputs-team@google.com"},
 		BugComponent: "b:95887",
@@ -82,41 +82,6 @@ func init() {
 				ExtraAttr:        []string{"group:input-tools-upstream", "group:hw_agnostic"},
 				ExtraSearchFlags: util.IMESearchFlags([]ime.InputMethod{ime.EnglishUSWithInternationalKeyboard}),
 			},
-			{
-				Name:    "french_lacros",
-				Fixture: fixture.LacrosClamshellNonVK,
-				Val: pkDeadKeysTestCase{
-					inputMethod:          ime.FrenchFrance,
-					typingKeys:           "[e",
-					expectedTypingResult: "ê",
-				},
-				ExtraSoftwareDeps: []string{"lacros", "lacros_stable"},
-				ExtraAttr:         []string{"group:input-tools-upstream", "group:hw_agnostic"},
-				ExtraSearchFlags:  util.IMESearchFlags([]ime.InputMethod{ime.FrenchFrance}),
-			},
-			{
-				Name:    "us_intl_acute_lacros",
-				Fixture: fixture.LacrosClamshellNonVK,
-				Val: pkDeadKeysTestCase{
-					inputMethod:          ime.EnglishUSWithInternationalKeyboard,
-					typingKeys:           "'a",
-					expectedTypingResult: "á",
-				},
-				ExtraSoftwareDeps: []string{"lacros", "lacros_stable"},
-				ExtraAttr:         []string{"group:input-tools-upstream", "group:hw_agnostic"},
-				ExtraSearchFlags:  util.IMESearchFlags([]ime.InputMethod{ime.EnglishUSWithInternationalKeyboard}),
-			},
-			{
-				Name:    "us_intl_double_lacros",
-				Fixture: fixture.LacrosClamshellNonVK,
-				Val: pkDeadKeysTestCase{
-					inputMethod:          ime.EnglishUSWithInternationalKeyboard,
-					typingKeys:           "''",
-					expectedTypingResult: "´",
-				},
-				ExtraSoftwareDeps: []string{"lacros", "lacros_stable"},
-				ExtraSearchFlags:  util.IMESearchFlags([]ime.InputMethod{ime.EnglishUSWithInternationalKeyboard}),
-			},
 		},
 	})
 }
@@ -134,7 +99,7 @@ func PhysicalKeyboardDeadKeys(ctx context.Context, s *testing.State) {
 
 	defer faillog.DumpUITreeWithScreenshotOnError(cleanupCtx, s.OutDir(), s.HasError, cr, "ui_tree")
 
-	its, err := testserver.LaunchBrowser(ctx, s.FixtValue().(fixture.FixtData).BrowserType, cr, tconn)
+	its, err := testserver.LaunchBrowser(ctx, browser.TypeAsh, cr, tconn)
 	if err != nil {
 		s.Fatal("Failed to launch inputs test server: ", err)
 	}

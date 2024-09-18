@@ -10,6 +10,7 @@ import (
 	"time"
 
 	"go.chromium.org/tast-tests/cros/local/bundles/cros/inputs/autocorrect"
+	"go.chromium.org/tast-tests/cros/local/chrome/browser"
 	"go.chromium.org/tast-tests/cros/local/chrome/ime"
 	"go.chromium.org/tast-tests/cros/local/chrome/uiauto"
 	"go.chromium.org/tast-tests/cros/local/chrome/uiauto/faillog"
@@ -29,7 +30,6 @@ import (
 func init() {
 	testing.AddTest(&testing.Test{
 		Func:         PhysicalKeyboardAutocorrect,
-		LacrosStatus: testing.LacrosVariantExists,
 		Desc:         "Checks that physical keyboard can perform typing with autocorrects",
 		Contacts:     []string{"essential-inputs-gardener-oncall@google.com", "essential-inputs-team@google.com"},
 		BugComponent: "b:95887",
@@ -66,29 +66,6 @@ func init() {
 				},
 				ExtraAttr: []string{"group:input-tools-upstream", "group:hw_agnostic"},
 			},
-			{
-				Name:              "en_us_1_lacros",
-				Fixture:           fixture.LacrosClamshellNonVK,
-				ExtraSoftwareDeps: []string{"lacros", "lacros_stable"},
-				Val: autocorrect.TestCase{
-					InputMethod:  ime.EnglishUS,
-					MisspeltWord: "helol",
-					CorrectWord:  "hello",
-					UndoMethod:   autocorrect.ViaPopupUsingPK,
-				},
-			},
-			{
-				Name:              "en_us_2_lacros",
-				Fixture:           fixture.LacrosClamshellNonVK,
-				ExtraSoftwareDeps: []string{"lacros", "lacros_stable"},
-				Val: autocorrect.TestCase{
-					InputMethod:  ime.EnglishUS,
-					MisspeltWord: "wrold",
-					CorrectWord:  "world",
-					UndoMethod:   autocorrect.ViaPopupUsingMouse,
-				},
-				ExtraAttr: []string{"group:input-tools-upstream"},
-			},
 			// Test cases for other input methods can be added once the framework
 			// supports more than just US-Qwerty layout.
 		},
@@ -122,7 +99,7 @@ func PhysicalKeyboardAutocorrect(ctx context.Context, s *testing.State) {
 	}
 	defer keyboard.Close(ctx)
 
-	its, err := testserver.LaunchBrowser(ctx, s.FixtValue().(fixture.FixtData).BrowserType, cr, tconn)
+	its, err := testserver.LaunchBrowser(ctx, browser.TypeAsh, cr, tconn)
 	if err != nil {
 		s.Fatal("Failed to launch inputs test server: ", err)
 	}

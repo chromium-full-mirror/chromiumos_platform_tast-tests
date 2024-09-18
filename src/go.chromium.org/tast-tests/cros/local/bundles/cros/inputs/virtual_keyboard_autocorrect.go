@@ -11,6 +11,7 @@ import (
 	"time"
 
 	"go.chromium.org/tast-tests/cros/local/bundles/cros/inputs/autocorrect"
+	"go.chromium.org/tast-tests/cros/local/chrome/browser"
 	"go.chromium.org/tast-tests/cros/local/chrome/ime"
 	"go.chromium.org/tast-tests/cros/local/chrome/uiauto"
 	"go.chromium.org/tast-tests/cros/local/chrome/uiauto/faillog"
@@ -33,7 +34,6 @@ import (
 func init() {
 	testing.AddTest(&testing.Test{
 		Func:         VirtualKeyboardAutocorrect,
-		LacrosStatus: testing.LacrosVariantExists,
 		Desc:         "Checks that virtual keyboard can perform typing with autocorrects",
 		Contacts:     []string{"essential-inputs-gardener-oncall@google.com", "essential-inputs-team@google.com"},
 		BugComponent: "b:95887",
@@ -129,78 +129,6 @@ func init() {
 				ExtraAttr:        []string{"group:input-tools-upstream"},
 				ExtraSearchFlags: util.IMESearchFlags([]ime.InputMethod{ime.FrenchFrance}),
 			},
-			{
-				Name:              "en_us_tablet_lacros",
-				Fixture:           fixture.LacrosTabletVK,
-				ExtraSoftwareDeps: []string{"lacros", "lacros_stable"},
-				Val: autocorrect.TestCase{
-					InputMethod:  ime.EnglishUS,
-					MisspeltWord: "helol",
-					CorrectWord:  "hello",
-					UndoMethod:   autocorrect.ViaPopupUsingMouse,
-				},
-				ExtraSearchFlags: util.IMESearchFlags([]ime.InputMethod{ime.EnglishUS}),
-			},
-			{
-				Name:              "en_us_a11y_lacros",
-				Fixture:           fixture.LacrosClamshellVK,
-				ExtraSoftwareDeps: []string{"lacros", "lacros_stable"},
-				Val: autocorrect.TestCase{
-					InputMethod:  ime.EnglishUS,
-					MisspeltWord: "helol",
-					CorrectWord:  "hello",
-					UndoMethod:   autocorrect.ViaPopupUsingMouse,
-				},
-				ExtraSearchFlags: util.IMESearchFlags([]ime.InputMethod{ime.EnglishUS}),
-			},
-			{
-				Name:              "es_es_tablet_lacros",
-				Fixture:           fixture.LacrosTabletVK,
-				ExtraSoftwareDeps: []string{"lacros", "lacros_stable"},
-				Val: autocorrect.TestCase{
-					InputMethod:  ime.SpanishSpain,
-					MisspeltWord: "espanol",
-					CorrectWord:  "español",
-					UndoMethod:   autocorrect.NotApplicable,
-				},
-				ExtraSearchFlags: util.IMESearchFlags([]ime.InputMethod{ime.SpanishSpain}),
-			},
-			{
-				Name:              "es_es_a11y_lacros",
-				Fixture:           fixture.LacrosClamshellVK,
-				ExtraSoftwareDeps: []string{"lacros", "lacros_stable"},
-				Val: autocorrect.TestCase{
-					InputMethod:  ime.SpanishSpain,
-					MisspeltWord: "espanol",
-					CorrectWord:  "español",
-					UndoMethod:   autocorrect.NotApplicable,
-				},
-				ExtraSearchFlags: util.IMESearchFlags([]ime.InputMethod{ime.SpanishSpain}),
-			},
-			{
-				Name:              "fr_fr_tablet_lacros",
-				Fixture:           fixture.LacrosTabletVK,
-				ExtraSoftwareDeps: []string{"lacros", "lacros_stable"},
-				Val: autocorrect.TestCase{
-					InputMethod:  ime.FrenchFrance,
-					MisspeltWord: "francais",
-					CorrectWord:  "français",
-					UndoMethod:   autocorrect.NotApplicable,
-				},
-				ExtraSearchFlags: util.IMESearchFlags([]ime.InputMethod{ime.FrenchFrance}),
-			},
-			{
-				Name:              "fr_fr_a11y_lacros",
-				Fixture:           fixture.LacrosClamshellVK,
-				ExtraSoftwareDeps: []string{"lacros", "lacros_stable"},
-				Val: autocorrect.TestCase{
-					InputMethod:  ime.FrenchFrance,
-					MisspeltWord: "francais",
-					CorrectWord:  "français",
-					UndoMethod:   autocorrect.NotApplicable,
-				},
-				ExtraSearchFlags: util.IMESearchFlags([]ime.InputMethod{ime.FrenchFrance}),
-			},
 		},
 	})
 }
@@ -226,7 +154,7 @@ func VirtualKeyboardAutocorrect(ctx context.Context, s *testing.State) {
 
 	vkbCtx := vkb.NewContext(cr, tconn)
 
-	its, err := testserver.LaunchBrowser(ctx, s.FixtValue().(fixture.FixtData).BrowserType, cr, tconn)
+	its, err := testserver.LaunchBrowser(ctx, browser.TypeAsh, cr, tconn)
 	if err != nil {
 		s.Fatal("Failed to launch inputs test server: ", err)
 	}
