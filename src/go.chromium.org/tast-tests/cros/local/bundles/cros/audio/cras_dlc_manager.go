@@ -86,19 +86,38 @@ func CrasDLCManager(ctx context.Context, s *testing.State) {
 	}
 	defer upstart.EnsureJobRunning(cleanupCtx, "cras")
 
-	// CRAS might already started DLC installation before being stopped
-	s.Log("Checking DLC states")
-	if err := waitUntilAllDLCInstallTerminate(ctx, dlcIDs); err != nil {
-		s.Fatal("Some installation took too long, or failed to get DLC state: ", err)
+	// CRAS might already started DLC installation before being stopped.
+	// Restart dlcservice to stop the installations.
+	s.Logf("Restarting ui, update-engine, and %s", dlc.JobName)
+	if err := upstart.RestartJob(ctx, "ui"); err != nil {
+		s.Log("Failed to restart ui: ", err)
+	}
+	if err := upstart.RestartJob(ctx, "update-engine"); err != nil {
+		s.Log("Failed to restart update-engine: ", err)
+	}
+	if err := upstart.RestartJobAndWaitForDbusService(ctx, dlc.JobName, dlc.ServiceName); err != nil {
+		s.Logf("Failed to restart %s and wait for %s: %v", dlc.JobName, dlc.ServiceName, err)
 	}
 
 	s.Log("Uninstalling the DLCs")
-	for _, dlcID := range dlcIDs {
-		// Uninstall is no-op when the DLC is not installed
-		if err := dlc.Uninstall(ctx, dlcID); err != nil {
-			s.Fatalf("Failed to uninstall DLC %q: %v", dlcID, err)
+	uninstalled := make([]bool, len(dlcIDs))
+	testing.Poll(ctx, func(ctx context.Context) error {
+		for i, dlcID := range dlcIDs {
+			if uninstalled[i] {
+				continue
+			}
+			// Uninstall is no-op when the DLC is not installed
+			if err := dlc.Uninstall(ctx, dlcID); err != nil {
+				errors.Wrapf(err, "failed to uninstall DLC %q", dlcID)
+			} else {
+				uninstalled[i] = true
+			}
 		}
-	}
+		return nil
+	}, &testing.PollOptions{
+		Timeout:  3 * time.Minute,
+		Interval: 3 * time.Second,
+	})
 
 	// Check if the DLCs are uninstalled
 	for _, dlcID := range dlcIDs {
@@ -129,26 +148,6 @@ func CrasDLCManager(ctx context.Context, s *testing.State) {
 		}
 		s.Fatal("Failed to install some DLCs: ", err)
 	}
-}
-
-// waitUntilAllDLCInstallTerminate polls the state of each `dlcIDs` until all installations are done, either success or failed.
-func waitUntilAllDLCInstallTerminate(ctx context.Context, dlcIDs []string) error {
-	return testing.Poll(ctx, func(ctx context.Context) error {
-		for _, dlcID := range dlcIDs {
-			dlcState, err := dlc.GetDlcState(ctx, dlcID)
-			if err != nil {
-				return testing.PollBreak(errors.Wrapf(err, "failed to get state of DLC %q", dlcID))
-			}
-			dlcStateState := dlcservice_proto.DlcState_State(dlcState.State)
-			if dlcStateState == dlcservice_proto.DlcState_INSTALLING {
-				return errors.Errorf("DLC %q is still installing", dlcID)
-			}
-		}
-		return nil
-	}, &testing.PollOptions{
-		Timeout:  1 * time.Minute,
-		Interval: 1 * time.Second,
-	})
 }
 
 // waitUntilAllDLCAreInstalled polls the state of each `dlcIDs` until all are installed.
