@@ -53,6 +53,7 @@ const (
 	retryTimes = 3
 	// If the network is unstable, account synchronization may take a long time.
 	syncTimeout      = 5 * time.Minute
+	pageLoadTimeout  = time.Minute
 	longUITimeout    = 30 * time.Second
 	defaultUITimeout = 15 * time.Second
 	shortUITimeout   = 5 * time.Second
@@ -307,11 +308,10 @@ func (e *Element) SignOut() uiauto.Action {
 	// The |generalText| is the heading of the page.
 	// Swipe from bottom objects to the heading to show the |signOutTitle|.
 	swipeToShowSignOut := uiauto.NamedCombine("swipe to show sign out title",
-		e.swipeFromObjectToObject(integrationsTitle, generalText, swipeDuration),
+		e.swipeToShowObject(integrationsTitle, generalText, advancedTitle, swipeDuration),
 		// The |signOutTitle| might not appear with single swipe on some DUTs.
 		// Swipe again to ensure the |signOutTitle| is shown.
-		e.swipeFromObjectToObject(advancedTitle, generalText, swipeDuration),
-		apputil.WaitForExists(signOutTitle, defaultUITimeout),
+		e.swipeToShowObject(advancedTitle, generalText, signOutTitle, swipeDuration),
 	)
 
 	myEncryptedMessagesText := e.d.Object(ui.TextContains("my encrypted messages"), ui.ClassName(textClass))
@@ -345,10 +345,10 @@ func (e *Element) CreateRoom(roomName string) uiauto.Action {
 		e.dismissEncryptionAlertIfExists,
 		enterRoomCreationPage,
 		e.typeText(roomNameFieldID, roomName),
-		e.swipeFromObjectToObject(roomAccessText, roomNameFieldWithText, swipeDuration),
+		e.swipeToShowObject(roomAccessText, roomNameFieldWithText, createButton, swipeDuration),
 		apputil.FindAndClick(createButton, defaultUITimeout),
 		uiauto.NamedAction("wait for room title "+roomName,
-			apputil.WaitForExists(roomTitle, longUITimeout)),
+			apputil.WaitForExists(roomTitle, pageLoadTimeout)),
 	)
 }
 
@@ -392,7 +392,7 @@ func (e *Element) SendEmojiMessage(textMessage string, emojis ...Emoji) uiauto.A
 		sendEmojiActions = append(sendEmojiActions, e.addEmoji(emoji))
 	}
 	sendEmojiActions = append(sendEmojiActions, e.sendMessageAndWait(textMessage))
-	return uiauto.NamedCombine("send emoji message", sendEmojiActions...)
+	return uiauto.Retry(retryTimes, uiauto.NamedCombine("send emoji message", sendEmojiActions...))
 }
 
 // addEmoji types emoji text and chooses the last emoji from the recommended list.
@@ -421,13 +421,16 @@ func (e *Element) addEmoji(emoji Emoji) uiauto.Action {
 	)
 }
 
-// sendMessageAndWait clicks the send button and wait for the expected message to appear.
+// sendMessageAndWait clicks the send button and wait for the message sent image to appear.
 func (e *Element) sendMessageAndWait(expectedMessage string) uiauto.Action {
 	sendButton := e.d.Object(ui.Description("Send"), ui.ResourceID(elementIDPrefix+"sendButton"))
 	expectedMessageText := e.d.Object(ui.TextContains(expectedMessage), ui.ResourceID(elementIDPrefix+"messageTextView"))
+	messageSentImage := e.d.Object(ui.ResourceID(elementIDPrefix+"messageSendStateImageView"), ui.Description("Sent"))
 	return uiauto.NamedCombine("send message and wait for expected message",
 		apputil.FindAndClick(sendButton, defaultUITimeout),
 		apputil.WaitForExists(expectedMessageText, defaultUITimeout),
+		// On low-end machine, the message might take more time to sent.
+		apputil.WaitForExists(messageSentImage, longUITimeout),
 	)
 }
 
@@ -559,8 +562,8 @@ func (e *Element) navigateUpToObject(expectedObject *ui.Object) uiauto.Action {
 	)
 }
 
-// swipeFromObjectToObject swipes from |startObject| to |endObject|.
-func (e *Element) swipeFromObjectToObject(startObject, endObject *ui.Object, swipeDuration time.Duration) uiauto.Action {
+// swipeToShowObject swipes from |startObject| to |endObject| until |expectedObject| appears.
+func (e *Element) swipeToShowObject(startObject, endObject, expectedObject *ui.Object, swipeDuration time.Duration) uiauto.Action {
 	return func(ctx context.Context) error {
 		startObjectBound, err := startObject.GetBounds(ctx)
 		if err != nil {
@@ -575,6 +578,9 @@ func (e *Element) swipeFromObjectToObject(startObject, endObject *ui.Object, swi
 		endPoint := endObjectBound.CenterPoint()
 
 		// Use DragAndDrop to simulate the swipe action.
-		return apputil.DragAndDrop(e.a, startPoint, endPoint, swipeDuration)(ctx)
+		return e.ui.WithTimeout(longUITimeout).RetryUntil(
+			apputil.DragAndDrop(e.a, startPoint, endPoint, swipeDuration),
+			apputil.WaitForExists(expectedObject, defaultUITimeout),
+		)(ctx)
 	}
 }
