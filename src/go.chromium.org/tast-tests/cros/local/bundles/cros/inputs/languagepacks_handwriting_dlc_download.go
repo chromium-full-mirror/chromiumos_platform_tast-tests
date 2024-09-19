@@ -16,6 +16,7 @@ import (
 	"go.chromium.org/tast-tests/cros/local/inputs/testserver"
 	"go.chromium.org/tast/core/ctxutil"
 
+	"go.chromium.org/tast-tests/cros/local/chrome/browser"
 	"go.chromium.org/tast-tests/cros/local/chrome/ime"
 	"go.chromium.org/tast-tests/cros/local/chrome/uiauto"
 	"go.chromium.org/tast-tests/cros/local/chrome/uiauto/faillog"
@@ -34,7 +35,6 @@ func init() {
 		Contacts:     []string{"cros-borders-eng@google.com", "xiuwen@google.com"},
 		BugComponent: "b:934840",
 		Attr:         []string{"group:language_packs_hw_recognition_dlc_download_daily"},
-		LacrosStatus: testing.LacrosVariantExists,
 		SoftwareDeps: []string{"chrome", "chrome_internal"},
 		Timeout:      10 * time.Minute,
 		HardwareDeps: hwdep.D(pre.InputsStableModels),
@@ -53,7 +53,7 @@ func LanguagepacksHandwritingDlcDownload(ctx context.Context, s *testing.State) 
 
 	defer faillog.DumpUITreeWithScreenshotOnError(cleanupCtx, s.OutDir(), s.HasError, cr, "ui_tree")
 
-	its, err := testserver.LaunchBrowser(ctx, s.FixtValue().(fixture.FixtData).BrowserType, cr, tconn)
+	its, err := testserver.LaunchBrowser(ctx, browser.TypeAsh, cr, tconn)
 	if err != nil {
 		s.Fatal("Failed to launch inputs test server: ", err)
 	}

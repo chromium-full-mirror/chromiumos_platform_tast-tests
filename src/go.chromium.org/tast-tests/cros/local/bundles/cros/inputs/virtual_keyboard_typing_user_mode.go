@@ -12,6 +12,7 @@ import (
 	"time"
 
 	"go.chromium.org/tast-tests/cros/local/bundles/cros/inputs/testrunner"
+	"go.chromium.org/tast-tests/cros/local/chrome/browser"
 	"go.chromium.org/tast-tests/cros/local/chrome/ime"
 	"go.chromium.org/tast-tests/cros/local/chrome/uiauto/faillog"
 	"go.chromium.org/tast-tests/cros/local/chrome/uiauto/vkb"
@@ -36,7 +37,6 @@ var typingModeTestMessages = []data.Message{data.TypingMessageHello}
 func init() {
 	testing.AddTest(&testing.Test{
 		Func:         VirtualKeyboardTypingUserMode,
-		LacrosStatus: testing.LacrosVariantExists,
 		Desc:         "Checks that virtual keyboard works in different user modes",
 		Contacts:     []string{"essential-inputs-gardener-oncall@google.com", "essential-inputs-team@google.com"},
 		BugComponent: "b:95887",
@@ -60,18 +60,6 @@ func init() {
 				Name:      "incognito",
 				ExtraAttr: []string{"group:input-tools-upstream"},
 				Fixture:   fixture.AnyVK,
-			},
-			{
-				Name:              "guest_lacros",
-				ExtraAttr:         []string{"group:input-tools-upstream"},
-				ExtraSoftwareDeps: []string{"lacros", "lacros_stable"},
-				Fixture:           fixture.LacrosAnyVKInGuest,
-			},
-			{
-				Name:              "incognito_lacros",
-				ExtraAttr:         []string{"group:input-tools-upstream"},
-				ExtraSoftwareDeps: []string{"lacros", "lacros_stable"},
-				Fixture:           fixture.LacrosAnyVK,
 			},
 		},
 	})
@@ -97,7 +85,7 @@ func virtualKeyboardTypingUserMode(ctx context.Context, s *testing.State) {
 	ctx, cancel := ctxutil.Shorten(ctx, 5*time.Second)
 	defer cancel()
 
-	its, err := testserver.LaunchBrowserInMode(ctx, cr, tconn, s.FixtValue().(fixture.FixtData).BrowserType, strings.Contains(s.TestName(), "incognito"))
+	its, err := testserver.LaunchBrowserInMode(ctx, cr, tconn, browser.TypeAsh, strings.Contains(s.TestName(), "incognito"))
 	if err != nil {
 		s.Fatal("Failed to launch inputs test server: ", err)
 	}

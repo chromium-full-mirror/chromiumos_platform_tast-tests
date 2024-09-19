@@ -9,6 +9,7 @@ import (
 	"time"
 
 	"go.chromium.org/tast-tests/cros/local/bundles/cros/inputs/testrunner"
+	"go.chromium.org/tast-tests/cros/local/chrome/browser"
 	"go.chromium.org/tast-tests/cros/local/chrome/ime"
 	"go.chromium.org/tast-tests/cros/local/chrome/uiauto"
 	"go.chromium.org/tast-tests/cros/local/chrome/uiauto/faillog"
@@ -28,11 +29,10 @@ import (
 func init() {
 	testing.AddTest(&testing.Test{
 		Func:         PhysicalKeyboardLongpressDiacritics,
-		LacrosStatus: testing.LacrosVariantExists,
 		Desc:         "Checks diacritics on long-press with physical keyboard typing",
 		Contacts:     []string{"essential-inputs-gardener-oncall@google.com", "essential-inputs-team@google.com"},
 		BugComponent: "b:95887",
-		Attr:         []string{"group:mainline", "group:input-tools", "group:hw_agnostic"},
+		Attr:         []string{"group:mainline", "group:input-tools", "group:hw_agnostic", "group:input-tools-upstream"},
 		SoftwareDeps: []string{"inputs_deps", "chrome", "chrome_internal"},
 		Timeout:      2 * time.Minute,
 		SearchFlags: util.SearchFlagsWithIMEAndScreenPlay(
@@ -43,19 +43,8 @@ func init() {
 				"screenplay-739015bc-416f-4da4-8703-410b9f7f1926",
 				"screenplay-26c40157-cf25-4cd7-a315-dbba94391197",
 			}),
-		Params: []testing.Param{
-			{
-				Fixture:           fixture.ClamshellNonVKWithDiacriticsOnPKLongpress,
-				ExtraHardwareDeps: hwdep.D(pre.InputsStableModels),
-				ExtraAttr:         []string{"group:input-tools-upstream"},
-			},
-			{
-				Name:              "lacros",
-				Fixture:           fixture.LacrosClamshellNonVKWithDiacriticsOnPKLongpress,
-				ExtraSoftwareDeps: []string{"lacros", "lacros_stable"},
-				ExtraHardwareDeps: hwdep.D(pre.InputsStableModels),
-			},
-		},
+		Fixture:      fixture.ClamshellNonVKWithDiacriticsOnPKLongpress,
+		HardwareDeps: hwdep.D(pre.InputsStableModels),
 	})
 }
 
@@ -76,7 +65,7 @@ func PhysicalKeyboardLongpressDiacritics(ctx context.Context, s *testing.State) 
 	}
 	uc.SetAttribute(useractions.AttributeInputMethod, inputMethod.Name)
 
-	its, err := testserver.LaunchBrowser(ctx, s.FixtValue().(fixture.FixtData).BrowserType, cr, tconn)
+	its, err := testserver.LaunchBrowser(ctx, browser.TypeAsh, cr, tconn)
 	if err != nil {
 		s.Fatal("Failed to launch inputs test server: ", err)
 	}

@@ -9,6 +9,7 @@ import (
 	"path/filepath"
 	"time"
 
+	"go.chromium.org/tast-tests/cros/local/chrome/browser"
 	"go.chromium.org/tast-tests/cros/local/chrome/ime"
 	"go.chromium.org/tast-tests/cros/local/chrome/uiauto/faillog"
 	"go.chromium.org/tast-tests/cros/local/chrome/uiauto/vkb"
@@ -45,7 +46,6 @@ var inputFieldToMessage = map[testserver.InputField]data.Message{
 func init() {
 	testing.AddTest(&testing.Test{
 		Func:         VirtualKeyboardTypingInputFields,
-		LacrosStatus: testing.LacrosVariantExists,
 		Desc:         "Checks that virtual keyboard works on different input fields",
 		Contacts:     []string{"essential-inputs-gardener-oncall@google.com", "essential-inputs-team@google.com"},
 		BugComponent: "b:95887",
@@ -65,12 +65,6 @@ func init() {
 				ExtraAttr:         []string{"informational"},
 				ExtraHardwareDeps: hwdep.D(pre.InputsUnstableModels),
 			},
-			{
-				Name:              "lacros",
-				ExtraHardwareDeps: hwdep.D(pre.InputsStableModels),
-				Fixture:           fixture.LacrosTabletVK,
-				ExtraSoftwareDeps: []string{"lacros", "lacros_stable"},
-			},
 		},
 	})
 }
@@ -87,7 +81,7 @@ func VirtualKeyboardTypingInputFields(ctx context.Context, s *testing.State) {
 	ctx, cancel := ctxutil.Shorten(ctx, 10*time.Second)
 	defer cancel()
 
-	its, err := testserver.LaunchBrowser(ctx, s.FixtValue().(fixture.FixtData).BrowserType, cr, tconn)
+	its, err := testserver.LaunchBrowser(ctx, browser.TypeAsh, cr, tconn)
 	if err != nil {
 		s.Fatal("Failed to launch inputs test server: ", err)
 	}

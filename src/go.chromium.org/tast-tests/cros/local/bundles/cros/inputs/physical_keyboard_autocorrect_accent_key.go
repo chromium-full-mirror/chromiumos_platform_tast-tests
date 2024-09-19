@@ -9,6 +9,7 @@ import (
 	"fmt"
 	"time"
 
+	"go.chromium.org/tast-tests/cros/local/chrome/browser"
 	"go.chromium.org/tast-tests/cros/local/chrome/ime"
 	"go.chromium.org/tast-tests/cros/local/chrome/uiauto"
 	"go.chromium.org/tast-tests/cros/local/chrome/uiauto/imesettings"
@@ -25,9 +26,8 @@ import (
 
 func init() {
 	testing.AddTest(&testing.Test{
-		Func:         PhysicalKeyboardAutocorrectAccentKey,
-		LacrosStatus: testing.LacrosVariantExists,
-		Desc:         "Checks that physical keyboard with accent keys can perform typing with autocorrects",
+		Func: PhysicalKeyboardAutocorrectAccentKey,
+		Desc: "Checks that physical keyboard with accent keys can perform typing with autocorrects",
 		Contacts: []string{
 			"essential-inputs-gardener-oncall@google.com", // PoC
 			"essential-inputs-team@google.com",
@@ -48,13 +48,6 @@ func init() {
 				ExtraHardwareDeps: hwdep.D(pre.InputsUnstableModels),
 				ExtraAttr:         []string{"informational"},
 			},
-			{
-				Name:              "lacros",
-				Fixture:           fixture.LacrosClamshellNonVK,
-				ExtraHardwareDeps: hwdep.D(pre.InputsStableModels),
-				ExtraSoftwareDeps: []string{"lacros", "lacros_stable"},
-				ExtraAttr:         []string{"informational"},
-			},
 		},
 	})
 }
@@ -68,7 +61,7 @@ func PhysicalKeyboardAutocorrectAccentKey(ctx context.Context, s *testing.State)
 	ctx, cancel := ctxutil.Shorten(ctx, 5*time.Second)
 	defer cancel()
 
-	its, err := testserver.LaunchBrowser(ctx, s.FixtValue().(fixture.FixtData).BrowserType, cr, tconn)
+	its, err := testserver.LaunchBrowser(ctx, browser.TypeAsh, cr, tconn)
 	if err != nil {
 		s.Fatal("Failed to launch inputs test server: ", err)
 	}

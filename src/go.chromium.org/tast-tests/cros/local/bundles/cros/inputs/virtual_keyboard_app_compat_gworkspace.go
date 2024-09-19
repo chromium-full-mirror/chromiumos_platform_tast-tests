@@ -35,7 +35,6 @@ func init() {
 		Contacts:     []string{"essential-inputs-team@google.com", "essential-inputs-gardener-oncall@google.com"},
 		BugComponent: "b:95887",
 		Attr:         []string{"group:inputs_appcompat_gworkspace_perbuild"},
-		LacrosStatus: testing.LacrosVariantExists,
 		SoftwareDeps: []string{"inputs_deps", "chrome", "google_virtual_keyboard", "gaia"},
 		SearchFlags:  util.IMESearchFlags([]ime.InputMethod{ime.FrenchFrance, ime.EnglishUS}),
 		Timeout:      5 * time.Minute,

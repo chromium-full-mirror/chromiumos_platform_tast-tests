@@ -8,6 +8,7 @@ import (
 	"context"
 	"time"
 
+	"go.chromium.org/tast-tests/cros/local/chrome/browser"
 	"go.chromium.org/tast-tests/cros/local/chrome/ime"
 	"go.chromium.org/tast-tests/cros/local/chrome/uiauto"
 	"go.chromium.org/tast-tests/cros/local/chrome/uiauto/faillog"
@@ -27,7 +28,6 @@ import (
 func init() {
 	testing.AddTest(&testing.Test{
 		Func:         PhysicalKeyboardMultiwordSuggestion,
-		LacrosStatus: testing.LacrosVariantExists,
 		Desc:         "Checks on device multiword suggestions with physical keyboard typing",
 		Contacts:     []string{"essential-inputs-gardener-oncall@google.com", "essential-inputs-team@google.com"},
 		BugComponent: "b:95887",
@@ -46,13 +46,6 @@ func init() {
 				Name:              "informational",
 				Fixture:           fixture.ClamshellNonVKWithMultiwordSuggest,
 				ExtraHardwareDeps: hwdep.D(pre.InputsUnstableModels),
-			},
-			{
-				Name:              "lacros",
-				Fixture:           fixture.LacrosClamshellNonVKWithMultiwordSuggest,
-				ExtraSoftwareDeps: []string{"lacros", "lacros_stable"},
-				ExtraAttr:         []string{"group:input-tools-upstream"},
-				ExtraHardwareDeps: hwdep.D(pre.InputsStableModels),
 			},
 		},
 	})
@@ -80,7 +73,7 @@ func PhysicalKeyboardMultiwordSuggestion(ctx context.Context, s *testing.State) 
 	}
 	uc.SetAttribute(useractions.AttributeInputMethod, inputMethod.Name)
 
-	its, err := testserver.LaunchBrowser(ctx, s.FixtValue().(fixture.FixtData).BrowserType, cr, tconn)
+	its, err := testserver.LaunchBrowser(ctx, browser.TypeAsh, cr, tconn)
 	if err != nil {
 		s.Fatal("Failed to launch inputs test server: ", err)
 	}
