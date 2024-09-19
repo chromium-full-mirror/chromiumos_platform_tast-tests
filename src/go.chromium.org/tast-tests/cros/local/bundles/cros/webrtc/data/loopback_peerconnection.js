@@ -92,9 +92,14 @@ async function start(
       rids.push(i);
     }
     init.sendEncodings = rids.map((i) => {
-      return { rid: i, scaleResolutionDownBy: 2 ** (rids.length - (i + 1)) };
+      return {
+        rid: i,
+        scaleResolutionDownBy: 2 ** (rids.length - (i + 1)),
+        scalabilityMode: svcScalabilityMode,
+      };
     });
   }
+
   localPC.addTransceiver(stream.getVideoTracks()[0], init);
   remotePC.addTransceiver('video');
 

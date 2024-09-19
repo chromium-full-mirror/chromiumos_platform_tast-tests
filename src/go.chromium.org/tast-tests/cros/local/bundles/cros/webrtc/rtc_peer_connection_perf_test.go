@@ -242,6 +242,9 @@ func TestRTCPeerConnectionPerfParams(t *testing.T) {
 							streamTypeStr = "_" + strings.ToLower(string(stream))
 							if stream == simulcast {
 								paramData.Simulcasts = 3
+								// L1T1 because we want to run vp8 encoder tests on ChromeOS ARM,
+								// where the vp8 temporal layer encoding is not supported.
+								paramData.Svc = "L1T1"
 								for i := 0; i < paramData.Simulcasts; i++ {
 									height := resolution.Height >> (paramData.Simulcasts - 1 - i)
 									// The software encoder is used for a video whose resolution is less than 360p.

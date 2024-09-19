@@ -142,19 +142,18 @@ func readRTCReport(id int) webrtc.ReadRTCReportFunc {
 	}
 }
 
+// isSpatialLayerSVC returns whether scalabilityMode represents spatial scalability.
+// For example, L2T3_KEY, S3T1 are spatial layer encoding, though L1T2 or empty scalabilityMode are not.
 func isSpatialLayerSVC(scalabilityMode string) bool {
-	if strings.HasPrefix(scalabilityMode, "S") {
-		return true
-	}
-	if strings.HasPrefix(scalabilityMode, "L") {
+	if strings.HasPrefix(scalabilityMode, "L") || strings.HasPrefix(scalabilityMode, "S") {
 		if numLayers, err := strconv.Atoi(string(scalabilityMode[1])); err == nil {
 			return numLayers > 1
 		}
-
 	}
 	return false
 }
 
+// numSpatialLayers returns the number of spatial layers from scalabilityMode.
 func numSpatialLayers(scalabilityMode string) (int, error) {
 	if !isSpatialLayerSVC(scalabilityMode) {
 		return 1, nil
@@ -169,9 +168,14 @@ func numSpatialLayers(scalabilityMode string) (int, error) {
 // RunRTCPeerConnection launches a loopback RTCPeerConnection and inspects that the
 // VerifyHWAcceleratorMode codec is hardware accelerated if profile is not NoVerifyHWAcceleratorUsed.
 func RunRTCPeerConnection(ctx context.Context, cs ash.ConnSource, cr *chrome.Chrome, fileSystem http.FileSystem, params RTCTestParams) error {
-	// verifyMode VerifyHWAcceleratorMode, profile string, simulcast bool, svc string, displayMediaType DisplayMediaType)
-	if params.Simulcasts > 1 && params.Svc != "" {
-		return errors.New("|simulcast| and |svc| cannot be set simultaneously")
+	if params.Simulcasts > 1 {
+		// In simulcast encoding, Svc must be specified and Svc is temporal scalability only such as L1T1, L1T2 and L1T3.
+		if params.Svc == "" {
+			return errors.New("svcScalabilityMode must be specified in simulcast")
+		}
+		if isSpatialLayerSVC(params.Svc) { // Check non spatial layer scalability such as L2T3_KEY and S3T3.
+			return errors.New("unexpected |simulcasts| and |svc| parameters, simulcast and spatial layer encoding are requested at the same time")
+		}
 	}
 	if params.DisplayMediaType != "" && (params.Simulcasts > 1 || params.Svc != "") {
 		return errors.New("Screen capture can't be used with simulcast or SVC")
