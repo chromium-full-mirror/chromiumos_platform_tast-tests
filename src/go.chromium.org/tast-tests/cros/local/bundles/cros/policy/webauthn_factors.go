@@ -35,14 +35,12 @@ import (
 
 type webauthnTestParam struct {
 	fingerprintSupported bool
-	browserType          browser.Type
 }
 
 func init() {
 	testing.AddTest(&testing.Test{
-		Func:         WebauthnFactors,
-		LacrosStatus: testing.LacrosVariantExists,
-		Desc:         "Checks that WebAuthn options are enabled or disabled based on the policy value",
+		Func: WebauthnFactors,
+		Desc: "Checks that WebAuthn options are enabled or disabled based on the policy value",
 		Contacts: []string{
 			"cros-hwsec@google.com",
 			"hcyang@google.com", // Test author
@@ -58,7 +56,6 @@ func init() {
 			{
 				Val: webauthnTestParam{
 					fingerprintSupported: false,
-					browserType:          browser.TypeAsh,
 				},
 				Fixture: fixture.ChromePolicyLoggedIn,
 			},
@@ -67,26 +64,8 @@ func init() {
 				ExtraHardwareDeps: hwdep.D(hwdep.Fingerprint()),
 				Val: webauthnTestParam{
 					fingerprintSupported: true,
-					browserType:          browser.TypeAsh,
 				},
 				Fixture: fixture.ChromePolicyLoggedIn,
-			},
-			{
-				Name: "lacros",
-				Val: webauthnTestParam{
-					fingerprintSupported: false,
-					browserType:          browser.TypeLacros,
-				},
-				Fixture: fixture.LacrosPolicyLoggedIn,
-			},
-			{
-				Name:              "fingerprint_lacros",
-				ExtraHardwareDeps: hwdep.D(hwdep.Fingerprint()),
-				Val: webauthnTestParam{
-					fingerprintSupported: true,
-					browserType:          browser.TypeLacros,
-				},
-				Fixture: fixture.LacrosPolicyLoggedIn,
 			},
 		},
 		SearchFlags: []*testing.StringPair{
@@ -236,7 +215,7 @@ func WebauthnFactors(ctx context.Context, s *testing.State) {
 					s.Fatal("Failed to set up PIN: ", err)
 				}
 
-				conn, _, closeBrowser, err := browserfixt.SetUpWithURL(ctx, cr, s.Param().(webauthnTestParam).browserType, server.URL+"/webauthn/webauthn.html")
+				conn, _, closeBrowser, err := browserfixt.SetUpWithURL(ctx, cr, browser.TypeAsh, server.URL+"/webauthn/webauthn.html")
 				if err != nil {
 					s.Fatal("Failed to open the browser: ", err)
 				}

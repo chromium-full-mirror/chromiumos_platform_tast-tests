@@ -22,15 +22,13 @@ import (
 )
 
 type testParams struct {
-	boxNames    []string
-	browserType browser.Type
+	boxNames []string
 }
 
 func init() {
 	testing.AddTest(&testing.Test{
-		Func:         ChromePolicyPageStatusTimestamps,
-		LacrosStatus: testing.LacrosVariantExists,
-		Desc:         "Tests timestamps in status boxes on chrome://policy page",
+		Func: ChromePolicyPageStatusTimestamps,
+		Desc: "Tests timestamps in status boxes on chrome://policy page",
 		Contacts: []string{
 			"cros-engprod-muc@google.com",
 			"sergiyb@google.com", // Test author
@@ -39,16 +37,14 @@ func init() {
 		BugComponent: "b:1263917",
 		SoftwareDeps: []string{"chrome"},
 		Params: []testing.Param{
-			// TODO(b/308448107): Test unmanaged user on enrolled device in Ash and Lacros.
-			// TODO(b/308448107): Test managed/unmanaged secondary profile in enrolled/unenrolled Lacros.
+			// TODO(b/308448107): Test unmanaged user on enrolled device in Ash.
 			{
 				// User is managed, but device is not.
 				Name:      "ash_managed",
 				Fixture:   fixture.ChromePolicyLoggedIn,
 				ExtraAttr: []string{"group:golden_tier", "group:hw_agnostic"},
 				Val: testParams{
-					boxNames:    []string{"User policies"},
-					browserType: browser.TypeAsh,
+					boxNames: []string{"User policies"},
 				},
 			},
 			{
@@ -57,35 +53,7 @@ func init() {
 				Fixture:   fixture.ChromeEnrolledLoggedIn,
 				ExtraAttr: []string{"group:golden_tier", "group:hw_agnostic"},
 				Val: testParams{
-					boxNames:    []string{"User policies", "Device policies"},
-					browserType: browser.TypeAsh,
-				},
-			},
-			{
-				// User is managed, but device is not.
-				Name:              "lacros_managed",
-				ExtraSoftwareDeps: []string{"lacros"},
-				Fixture:           fixture.LacrosPolicyLoggedIn,
-				// TODO(b/307688738): Enable test.
-				// ExtraAttr: []string{"group:golden_tier", "group:hw_agnostic"},
-				Val: testParams{
-					boxNames:    []string{"User policies"},
-					browserType: browser.TypeLacros,
-				},
-			},
-			{
-				// Both user and device are managed.
-				Name:              "lacros_enrolled",
-				ExtraSoftwareDeps: []string{"lacros"},
-				Fixture:           fixture.LacrosEnrolledLoggedIn,
-				ExtraAttr:         []string{"group:golden_tier", "group:hw_agnostic"},
-				Val: testParams{
-					boxNames: []string{
-						"User policies",
-						// TODO(b/308417012): Enable testing device policies.
-						// "Device policies",
-					},
-					browserType: browser.TypeLacros,
+					boxNames: []string{"User policies", "Device policies"},
 				},
 			},
 		},
@@ -95,7 +63,7 @@ func init() {
 // reloadPolicies clicks the "Reload policies" button on the chrome://policy
 // page to reload policies. Although we could use `policyutil.Refresh`, we
 // prefer clicking the button to ensure that it works as expected.
-func reloadPolicies(ctx context.Context, conn *browser.Conn, s *testing.State, isLacros bool) {
+func reloadPolicies(ctx context.Context, conn *browser.Conn, s *testing.State) {
 	if err := conn.Eval(ctx, `document.getElementById('reload-policies').click()`, nil); err != nil {
 		s.Fatal("Failed to click Reload policies button: ", err)
 	}
@@ -103,16 +71,6 @@ func reloadPolicies(ctx context.Context, conn *browser.Conn, s *testing.State, i
 	// Wait until reload button becomes enabled again, i.e. policies reloaded.
 	if err := conn.WaitForExpr(ctx, `!document.getElementById('reload-policies').disabled`); err != nil {
 		s.Fatal("Failed while waiting for Reload policies button to become enabled again: ", err)
-	}
-
-	if isLacros {
-		// GoBigSleepLint: TODO(crbug/1326565): Wait for policies to be reloaded.
-		if err := testing.Sleep(ctx, 5*time.Second); err != nil {
-			s.Fatal("Failed while waiting for policies to be reloaded: ", err)
-		}
-		if err := conn.Navigate(ctx, "chrome://policy"); err != nil {
-			s.Fatal("Failed to refresh chrome://policy after reloading policies: ", err)
-		}
 	}
 }
 
@@ -175,7 +133,7 @@ func ChromePolicyPageStatusTimestamps(ctx context.Context, s *testing.State) {
 	defer cancel()
 
 	// Setup browser based on the chrome type.
-	br, closeBrowser, err := browserfixt.SetUp(ctx, cr, params.browserType)
+	br, closeBrowser, err := browserfixt.SetUp(ctx, cr, browser.TypeAsh)
 	if err != nil {
 		s.Fatal("Failed to open the browser: ", err)
 	}
@@ -196,7 +154,7 @@ func ChromePolicyPageStatusTimestamps(ctx context.Context, s *testing.State) {
 	var oneMinAgoRE = regexp.MustCompile(`1 min ago`)
 
 	// Reload policies and immediately check that timestamps are at 0 secs ago.
-	reloadPolicies(ctx, conn, s, params.browserType == browser.TypeLacros)
+	reloadPolicies(ctx, conn, s)
 	newBoxes := readStatusBoxes(ctx, conn, s)
 	checkTime(newBoxes, params.boxNames, "time-since-last-refresh", zeroSecsAgoRE, s)
 	checkTime(newBoxes, params.boxNames, "time-since-last-fetch-attempt", zeroSecsAgoRE, s)
@@ -219,7 +177,7 @@ func ChromePolicyPageStatusTimestamps(ctx context.Context, s *testing.State) {
 	if err = policyutil.ServeBlobAndRefresh(ctx, fdms, cr, pb); err != nil {
 		s.Fatal("Failed to simulate error 500 on the policy server: ", err)
 	}
-	reloadPolicies(ctx, conn, s, params.browserType == browser.TypeLacros)
+	reloadPolicies(ctx, conn, s)
 	mixedBoxes := readStatusBoxes(ctx, conn, s)
 	checkTime(mixedBoxes, params.boxNames, "time-since-last-refresh", oneMinAgoRE, s)
 	checkTime(mixedBoxes, params.boxNames, "time-since-last-fetch-attempt", zeroSecsAgoRE, s)

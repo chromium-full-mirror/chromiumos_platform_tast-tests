@@ -26,9 +26,8 @@ import (
 
 func init() {
 	testing.AddTest(&testing.Test{
-		Func:         ShowHomeButton,
-		LacrosStatus: testing.LacrosVariantExists,
-		Desc:         "Test the behavior of ShowHomeButton policy: check if a home button is shown based on the value of the policy",
+		Func: ShowHomeButton,
+		Desc: "Test the behavior of ShowHomeButton policy: check if a home button is shown based on the value of the policy",
 		Contacts: []string{
 			"chrome-desktop-ui-sea@google.com",
 			"dpenning@google.com",
@@ -37,15 +36,7 @@ func init() {
 		BugComponent: "b:1457393",
 		SoftwareDeps: []string{"chrome"},
 		Attr:         []string{"group:golden_tier", "group:hw_agnostic"},
-		Params: []testing.Param{{
-			Fixture: fixture.ChromePolicyLoggedIn,
-			Val:     browser.TypeAsh,
-		}, {
-			Name:              "lacros",
-			ExtraSoftwareDeps: []string{"lacros"},
-			Fixture:           fixture.LacrosPolicyLoggedIn,
-			Val:               browser.TypeLacros,
-		}},
+		Fixture:      fixture.ChromePolicyLoggedIn,
 		SearchFlags: []*testing.StringPair{
 			pci.SearchFlag(&policy.ShowHomeButton{}, pci.VerifiedFunctionalityUI),
 		},
@@ -99,7 +90,7 @@ func ShowHomeButton(ctx context.Context, s *testing.State) {
 				s.Fatal("Failed to update policies: ", err)
 			}
 
-			br, closeBrowser, err := browserfixt.SetUp(ctx, cr, s.Param().(browser.Type))
+			br, closeBrowser, err := browserfixt.SetUp(ctx, cr, browser.TypeAsh)
 			if err != nil {
 				s.Fatal("Failed to setup chrome: ", err)
 			}

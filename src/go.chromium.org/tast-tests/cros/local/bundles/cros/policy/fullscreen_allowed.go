@@ -25,9 +25,8 @@ import (
 
 func init() {
 	testing.AddTest(&testing.Test{
-		Func:         FullscreenAllowed,
-		LacrosStatus: testing.LacrosVariantExists,
-		Desc:         "Behavior of FullscreenAllowed policy: checking if fullscreen is allowed or not",
+		Func: FullscreenAllowed,
+		Desc: "Behavior of FullscreenAllowed policy: checking if fullscreen is allowed or not",
 		Contacts: []string{
 			"cros-engprod-muc@google.com",
 			"swapnilgupta@google.com", // Test author
@@ -35,15 +34,7 @@ func init() {
 		BugComponent: "b:1263917",
 		SoftwareDeps: []string{"chrome"},
 		Attr:         []string{"group:golden_tier", "group:hw_agnostic"},
-		Params: []testing.Param{{
-			Fixture: fixture.ChromePolicyLoggedIn,
-			Val:     browser.TypeAsh,
-		}, {
-			Name:              "lacros",
-			ExtraSoftwareDeps: []string{"lacros"},
-			Fixture:           fixture.LacrosPolicyLoggedIn,
-			Val:               browser.TypeLacros,
-		}},
+		Fixture:      fixture.ChromePolicyLoggedIn,
 		SearchFlags: []*testing.StringPair{
 			pci.SearchFlag(&policy.FullscreenAllowed{}, pci.VerifiedFunctionalityJS),
 		},
@@ -92,7 +83,7 @@ func FullscreenAllowed(ctx context.Context, s *testing.State) {
 				s.Fatal("Failed to update policies: ", err)
 			}
 
-			conn, _, closeBrowser, err := browserfixt.SetUpWithURL(ctx, cr, s.Param().(browser.Type), "about:blank")
+			conn, _, closeBrowser, err := browserfixt.SetUpWithURL(ctx, cr, browser.TypeAsh, "about:blank")
 			if err != nil {
 				s.Fatal("Failed to setup chrome: ", err)
 			}

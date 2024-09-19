@@ -30,15 +30,13 @@ import (
 )
 
 type testData struct {
-	testFunc    func(ctx context.Context, tconn *chrome.TestConn) (bool, error) // contains the contents of the test itself.
-	browserType browser.Type                                                    // browser type used in the subtest; must match the fixture.
+	testFunc func(ctx context.Context, tconn *chrome.TestConn) (bool, error) // contains the contents of the test itself.
 }
 
 func init() {
 	testing.AddTest(&testing.Test{
-		Func:         PrintingEnabled,
-		LacrosStatus: testing.LacrosVariantExists,
-		Desc:         "Behavior of PrintingEnabled policy, checking the correspoding menu item restriction and printing preview dialog after setting the policy",
+		Func: PrintingEnabled,
+		Desc: "Behavior of PrintingEnabled policy, checking the correspoding menu item restriction and printing preview dialog after setting the policy",
 		Contacts: []string{
 			"chromeos-commercial-printing@google.com",
 			"ust@google.com",
@@ -57,33 +55,18 @@ func init() {
 			{
 				Name:    "print_from_chrome_menu",
 				Fixture: fixture.ChromePolicyLoggedIn,
-				Val:     testData{testPrintingFromThreeDotMenu, browser.TypeAsh},
+				Val:     testData{testPrintingFromThreeDotMenu},
 			}, {
 				Name:    "print_with_hotkey",
 				Fixture: fixture.ChromePolicyLoggedIn,
-				Val:     testData{testPrintingWithHotkey, browser.TypeAsh},
+				Val:     testData{testPrintingWithHotkey},
 				Timeout: 3 * time.Minute,
 			}, {
 				Name:    "print_from_context_menu",
 				Fixture: fixture.ChromePolicyLoggedIn,
-				Val:     testData{testPrintingFromContextMenu, browser.TypeAsh},
-			}, {
-				Name:              "lacros_print_from_chrome_menu",
-				ExtraSoftwareDeps: []string{"lacros"},
-				Fixture:           fixture.LacrosPolicyLoggedIn,
-				Val:               testData{testPrintingFromThreeDotMenu, browser.TypeLacros},
-			}, {
-				Name:              "lacros_print_with_hotkey",
-				ExtraSoftwareDeps: []string{"lacros"},
-				Val:               testData{testPrintingWithHotkey, browser.TypeLacros},
-				Fixture:           fixture.LacrosPolicyLoggedIn,
-				Timeout:           3 * time.Minute,
-			}, {
-				Name:              "lacros_print_from_context_menu",
-				ExtraSoftwareDeps: []string{"lacros"},
-				Fixture:           fixture.LacrosPolicyLoggedIn,
-				Val:               testData{testPrintingFromContextMenu, browser.TypeLacros},
-			}},
+				Val:     testData{testPrintingFromContextMenu},
+			},
+		},
 		SearchFlags: []*testing.StringPair{
 			pci.SearchFlag(&policy.PrintingEnabled{}, pci.VerifiedFunctionalityUI),
 		},
@@ -140,7 +123,7 @@ func PrintingEnabled(ctx context.Context, s *testing.State) {
 				s.Fatal("Failed to update policies: ", err)
 			}
 
-			br, closeBrowser, err := browserfixt.SetUp(ctx, cr, data.browserType)
+			br, closeBrowser, err := browserfixt.SetUp(ctx, cr, browser.TypeAsh)
 			if err != nil {
 				s.Fatal("Failed to setup chrome: ", err)
 			}
@@ -156,7 +139,7 @@ func PrintingEnabled(ctx context.Context, s *testing.State) {
 			defer conn.Close()
 
 			// Wait for browser window.
-			if err := ash.WaitForCondition(ctx, tconn, ash.BrowserTypeMatch(data.browserType), nil); err != nil {
+			if err := ash.WaitForCondition(ctx, tconn, ash.BrowserTypeMatch(browser.TypeAsh), nil); err != nil {
 				s.Fatal("Unexpected window state: ", err)
 			}
 
