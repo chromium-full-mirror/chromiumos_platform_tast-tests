@@ -30,9 +30,8 @@ import (
 
 func init() {
 	testing.AddTest(&testing.Test{
-		Func:         DownloadRestrictions,
-		LacrosStatus: testing.LacrosVariantExists,
-		Desc:         "Behavior of DownloadRestrictions policy, check if a file is downloaded or not based on the value of the policy",
+		Func: DownloadRestrictions,
+		Desc: "Behavior of DownloadRestrictions policy, check if a file is downloaded or not based on the value of the policy",
 		Contacts: []string{
 			"chrome-downloads@google.com",
 			"dtrainor@google.com",
@@ -42,16 +41,8 @@ func init() {
 		BugComponent: "b:47901",
 		SoftwareDeps: []string{"chrome"},
 		Attr:         []string{"group:golden_tier", "group:hw_agnostic"},
-		Params: []testing.Param{{
-			Fixture: fixture.ChromePolicyLoggedIn,
-			Val:     browser.TypeAsh,
-		}, {
-			Name:              "lacros",
-			ExtraSoftwareDeps: []string{"lacros"},
-			Fixture:           fixture.LacrosPolicyLoggedIn,
-			Val:               browser.TypeLacros,
-		}},
-		Data: []string{"download_restrictions_index.html", "download_restrictions.zip"},
+		Fixture:      fixture.ChromePolicyLoggedIn,
+		Data:         []string{"download_restrictions_index.html", "download_restrictions.zip"},
 		SearchFlags: []*testing.StringPair{
 			pci.SearchFlag(&policy.DownloadRestrictions{}, pci.VerifiedFunctionalityUI),
 		},
@@ -118,7 +109,7 @@ func DownloadRestrictions(ctx context.Context, s *testing.State) {
 			}
 
 			// Setup browser based on the chrome type.
-			br, closeBrowser, err := browserfixt.SetUp(ctx, cr, s.Param().(browser.Type))
+			br, closeBrowser, err := browserfixt.SetUp(ctx, cr, browser.TypeAsh)
 			if err != nil {
 				s.Fatal("Failed to open the browser: ", err)
 			}

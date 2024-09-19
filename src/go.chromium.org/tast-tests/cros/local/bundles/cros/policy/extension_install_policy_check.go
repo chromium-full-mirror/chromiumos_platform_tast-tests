@@ -24,9 +24,8 @@ import (
 
 func init() {
 	testing.AddTest(&testing.Test{
-		Func:         ExtensionInstallPolicyCheck,
-		LacrosStatus: testing.LacrosVariantNeeded,
-		Desc:         "Checks the behavior of ExtensionInstallAllowlist, ExtensionInstallBlocklist policies",
+		Func: ExtensionInstallPolicyCheck,
+		Desc: "Checks the behavior of ExtensionInstallAllowlist, ExtensionInstallBlocklist policies",
 		Contacts: []string{
 			"cros-commercial-chromeapps-eng@google.com",
 			"dp-chromeos-eng@google.com",
@@ -34,7 +33,7 @@ func init() {
 		},
 		BugComponent: "b:1253865",
 		SoftwareDeps: []string{"chrome"},
-		Attr: []string{
+		Attr:         []string{
 			//Disabled by TORA.  See:b/328649670
 			//"group:golden_tier",
 			//"group:mainline",

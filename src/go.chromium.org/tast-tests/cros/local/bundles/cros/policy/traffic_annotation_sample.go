@@ -24,16 +24,14 @@ import (
 	"go.chromium.org/tast-tests/cros/local/policyutil"
 	"go.chromium.org/tast/core/ctxutil"
 	"go.chromium.org/tast/core/testing"
-	"go.chromium.org/tast/core/testing/hwdep"
 )
 
 const sampleAnnotationHashCode = "88863520" // autofill_query
 
 func init() {
 	testing.AddTest(&testing.Test{
-		Func:         TrafficAnnotationSample,
-		LacrosStatus: testing.LacrosVariantExists,
-		Desc:         "This test is a sample test for checking traffic annotations. It doesn't verify that the policy works, it just checks for the correct logs. Proof of concept, to be modified later",
+		Func: TrafficAnnotationSample,
+		Desc: "This test is a sample test for checking traffic annotations. It doesn't verify that the policy works, it just checks for the correct logs. Proof of concept, to be modified later",
 		Contacts: []string{
 			"nicolaso@google.com",
 			"ramyagopalan@google.com",
@@ -41,17 +39,8 @@ func init() {
 		BugComponent: "b:1107020",
 		SoftwareDeps: []string{"chrome"},
 		Attr:         []string{"group:golden_tier"},
-		Params: []testing.Param{{
-			Fixture: fixture.ChromePolicyLoggedIn,
-			Val:     browser.TypeAsh,
-		}, {
-			Name:              "lacros",
-			ExtraSoftwareDeps: []string{"lacros"},
-			ExtraHardwareDeps: hwdep.D(hwdep.Model("atlas")), // Enough to run on one device.
-			Fixture:           fixture.LacrosPolicyLoggedIn,
-			Val:               browser.TypeLacros,
-		}},
-		Data: []string{"autofill_address_enabled.html"},
+		Fixture:      fixture.ChromePolicyLoggedIn,
+		Data:         []string{"autofill_address_enabled.html"},
 		SearchFlags: []*testing.StringPair{
 			pci.SearchFlag(&policy.AutofillAddressEnabled{}, pci.VerifiedFunctionalityJS),
 		},
@@ -94,7 +83,7 @@ func TrafficAnnotationSample(ctx context.Context, s *testing.State) {
 				s.Fatal("Failed to update policies: ", err)
 			}
 			// Setup browser based on the chrome type.
-			br, closeBrowser, err := browserfixt.SetUp(ctx, cr, s.Param().(browser.Type))
+			br, closeBrowser, err := browserfixt.SetUp(ctx, cr, browser.TypeAsh)
 			if err != nil {
 				s.Fatal("Failed to open the browser: ", err)
 			}
@@ -103,7 +92,7 @@ func TrafficAnnotationSample(ctx context.Context, s *testing.State) {
 			defer faillog.DumpUITreeWithScreenshotOnError(ctx, s.OutDir(), s.HasError, cr, "ui_tree_"+param.name)
 
 			// Open the net-export page and start logging.
-			netExport, err := netexport.Start(ctx, cr, br, s.Param().(browser.Type))
+			netExport, err := netexport.Start(ctx, cr, br, browser.TypeAsh)
 			if err != nil {
 				s.Fatal("Failed to start net export: ", err)
 			}

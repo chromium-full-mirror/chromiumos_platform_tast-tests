@@ -25,9 +25,8 @@ import (
 
 func init() {
 	testing.AddTest(&testing.Test{
-		Func:         AudioCaptureAllowed,
-		LacrosStatus: testing.LacrosVariantNeeded,
-		Desc:         "Checking if audio capture is allowed on websites or not, depending on the value of the policy",
+		Func: AudioCaptureAllowed,
+		Desc: "Checking if audio capture is allowed on websites or not, depending on the value of the policy",
 		Contacts: []string{
 			"cros-engprod-muc@google.com",
 			"alexanderhartl@google.com", // Test author
@@ -123,9 +122,9 @@ func AudioCaptureAllowed(ctx context.Context, s *testing.State) {
 					s.Error("Unexpected dialog to ask for microphone permission found")
 				}
 
-				// TODO(crbug.com/1197511): investigate why this is needed.
-				// Wait for a second before clicking the allow button as the click
+				// GoBigSleepLint: Wait for a second before clicking the allow button as the click
 				// won't be registered otherwise.
+				// TODO(crbug.com/1197511): Investigate why this is needed.
 				testing.Sleep(ctx, time.Second)
 
 				if err := ui.LeftClickUntil(allowButton, ui.Gone(allowButton))(ctx); err != nil {

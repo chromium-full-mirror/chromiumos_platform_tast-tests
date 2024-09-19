@@ -24,25 +24,16 @@ import (
 
 func init() {
 	testing.AddTest(&testing.Test{
-		Func:         CookiesAllowedForUrls,
-		LacrosStatus: testing.LacrosVariantExists,
-		Desc:         "Check that the CookiesAllowedForUrls policy allows setting cookies only on the given sites",
+		Func: CookiesAllowedForUrls,
+		Desc: "Check that the CookiesAllowedForUrls policy allows setting cookies only on the given sites",
 		Contacts: []string{
 			"cros-engprod-muc@google.com",
 		},
 		BugComponent: "b:1263917",
 		SoftwareDeps: []string{"chrome"},
 		Attr:         []string{"group:golden_tier", "group:hw_agnostic"},
-		Params: []testing.Param{{
-			Fixture: fixture.ChromePolicyLoggedIn,
-			Val:     browser.TypeAsh,
-		}, {
-			Name:              "lacros",
-			ExtraSoftwareDeps: []string{"lacros"},
-			Fixture:           fixture.LacrosPolicyLoggedIn,
-			Val:               browser.TypeLacros,
-		}},
-		Data: []string{"cookies_test.html"},
+		Fixture:      fixture.ChromePolicyLoggedIn,
+		Data:         []string{"cookies_test.html"},
 		SearchFlags: []*testing.StringPair{
 			pci.SearchFlag(&policy.CookiesAllowedForUrls{}, pci.VerifiedFunctionalityJS),
 			pci.SearchFlag(&policy.DefaultCookiesSetting{}, pci.VerifiedFunctionalityJS),
@@ -100,7 +91,7 @@ func CookiesAllowedForUrls(ctx context.Context, s *testing.State) {
 				s.Fatal("Failed to serve and verify policies: ", err)
 			}
 
-			conn, _, closeBrowser, err := browserfixt.SetUpWithURL(ctx, cr, s.Param().(browser.Type), url+"/cookies_test.html")
+			conn, _, closeBrowser, err := browserfixt.SetUpWithURL(ctx, cr, browser.TypeAsh, url+"/cookies_test.html")
 			if err != nil {
 				s.Fatal("Failed to setup chrome: ", err)
 			}

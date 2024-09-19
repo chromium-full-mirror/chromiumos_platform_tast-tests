@@ -39,8 +39,6 @@ import (
 	webrtc "go.chromium.org/tast-tests/cros/local/bundles/cros/policy/webrtclogupload"
 	"go.chromium.org/tast-tests/cros/local/chrome"
 	"go.chromium.org/tast-tests/cros/local/chrome/browser"
-	"go.chromium.org/tast-tests/cros/local/chrome/lacros"
-	"go.chromium.org/tast-tests/cros/local/chrome/lacros/lacrosfixt"
 	"go.chromium.org/tast-tests/cros/local/chrome/uiauto/faillog"
 	"go.chromium.org/tast-tests/cros/local/input"
 	"go.chromium.org/tast-tests/cros/local/netexport"
@@ -56,9 +54,8 @@ var tbuUnsupportedServices = []string{"domain_reliability"}
 
 func init() {
 	testing.AddTest(&testing.Test{
-		Func:         NetworkRequestMonitor,
-		LacrosStatus: testing.LacrosVariantExists,
-		Desc:         "Verifies that the optional services are not making any unwanted network requests when disabled",
+		Func: NetworkRequestMonitor,
+		Desc: "Verifies that the optional services are not making any unwanted network requests when disabled",
 		Contacts: []string{
 			"cros-engprod-muc@google.com",
 			"dp-chromeos-eng@google.com",
@@ -76,29 +73,18 @@ func init() {
 			Fixture: fixture.FakeDMSEnrolled,
 			Val: networkrequestmonitor.TestVariant{
 				Variant:      networkrequestmonitor.Umbrella,
-				BrowserType:  browser.TypeAsh,
-				PolicyStatus: networkrequestmonitor.PolicyDisabled,
-			}}, {
-			Name:              "umbrella_lacros",
-			ExtraSoftwareDeps: []string{"lacros"},
-			Fixture:           fixture.PersistentLacrosEnrolled, // FakeDMSEnrolled with lacros policy.
-			Val: networkrequestmonitor.TestVariant{
-				Variant:      networkrequestmonitor.Umbrella,
-				BrowserType:  browser.TypeLacros,
 				PolicyStatus: networkrequestmonitor.PolicyDisabled,
 			}}, {
 			Name:    "annotations_diff",
 			Fixture: fixture.FakeDMSEnrolled,
 			Val: networkrequestmonitor.TestVariant{
 				Variant:      networkrequestmonitor.AnnotationsDiff,
-				BrowserType:  browser.TypeAsh,
 				PolicyStatus: networkrequestmonitor.PolicyDisabled,
 			}}, {
 			Name:    "annotations_diff_enabled",
 			Fixture: fixture.FakeDMSEnrolled,
 			Val: networkrequestmonitor.TestVariant{
 				Variant:      networkrequestmonitor.AnnotationsDiffEnabled,
-				BrowserType:  browser.TypeAsh,
 				PolicyStatus: networkrequestmonitor.PolicyEnabled,
 				ExcludeServices: []string{
 					// TODO(b/303726475): add quick_answers to annotations_diff_enabled test variant
@@ -355,25 +341,15 @@ func NetworkRequestMonitor(ctx context.Context, s *testing.State) {
 	}
 
 	opts := []chrome.Option{
-		chrome.DMSPolicy(fdms.URL),                           // FakeDMS for setting policies.
-		chrome.GAIALogin(gaiaCreds),                          // Some of the optional service tests need a real GAIA account.
-		chrome.ExtraArgs("--metrics-upload-interval=1"),      // Reduce upload interval for UKM.
-		chrome.ExtraArgs("--force-devtools-available"),       // Enable developer tools for extensions.
-		chrome.KeepEnrollment(),                              // Required when restarting Chrome for device policy tests.
-		chrome.LacrosExtraArgs("--force-devtools-available"), // Enable developer tools for extensions.
+		chrome.DMSPolicy(fdms.URL),                      // FakeDMS for setting policies.
+		chrome.GAIALogin(gaiaCreds),                     // Some of the optional service tests need a real GAIA account.
+		chrome.ExtraArgs("--metrics-upload-interval=1"), // Reduce upload interval for UKM.
+		chrome.ExtraArgs("--force-devtools-available"),  // Enable developer tools for extensions.
+		chrome.KeepEnrollment(),                         // Required when restarting Chrome for device policy tests.
 	}
 
-	browserType := tcs.BrowserType
 	// Add args to start net export on startup.
-	opts = append(opts, netexport.CommandLineArgs(browserType)...)
-
-	// If browser type is lacros, handle differently.
-	if browserType == browser.TypeLacros {
-		opts, err = lacrosfixt.NewConfig(lacrosfixt.ChromeOptions(opts...)).Opts()
-		if err != nil {
-			s.Fatal("Failed to compute lacros chrome options: ", err)
-		}
-	}
+	opts = append(opts, netexport.CommandLineArgs(browser.TypeAsh)...)
 
 	cr, err := chrome.New(ctx, opts...)
 	if err != nil {
@@ -440,32 +416,11 @@ func NetworkRequestMonitor(ctx context.Context, s *testing.State) {
 		s.Fatal("Failed to create Test API connection: ", err)
 	}
 
-	// Setup the browser and get lacros object after the policy was set.
-	var br *browser.Browser
-	var lacrosSession *lacros.Lacros
-	switch browserType {
-	case browser.TypeLacros:
-		lacrosSession, err = lacros.Launch(ctx, tconn)
-		if err != nil {
-			s.Fatal("Failed to launch lacros-chrome: ", err)
-		}
-		br = lacrosSession.Browser()
-		defer lacrosSession.Close(cleanupCtx)
-	case browser.TypeAsh:
-		br = cr.Browser()
-	default:
-		s.Fatalf("Unrecognized browser type %s", browserType)
-	}
-
 	// Setup credential for a test bond user to join Meet call.
 	webrtc.SetBondCredentials(s.RequiredVar("ui.bond_credentials"))
 
 	// Setup connection source for webrtc Meet operations.
-	if browserType == browser.TypeLacros {
-		webrtc.SetConnSource(lacrosSession)
-	} else {
-		webrtc.SetConnSource(cr)
-	}
+	webrtc.SetConnSource(cr)
 
 	defer faillog.DumpUITreeWithScreenshotOnError(cleanupCtx, s.OutDir(), s.HasError, cr, "ui_tree_network_request_monitor")
 
@@ -481,7 +436,7 @@ func NetworkRequestMonitor(ctx context.Context, s *testing.State) {
 		s.Run(ctx, service.name, func(ctx context.Context, s *testing.State) {
 			params := networkrequestmonitor.OptionalServiceParams{
 				Chrome:        cr,
-				Browser:       br,
+				Browser:       cr.Browser(),
 				Server:        server,
 				PolicySetting: tcs.PolicyStatus}
 
@@ -493,7 +448,7 @@ func NetworkRequestMonitor(ctx context.Context, s *testing.State) {
 	}
 
 	// Get net export session.
-	netExport, err := netexport.FromCommandLineArg(browserType)
+	netExport, err := netexport.FromCommandLineArg(browser.TypeAsh)
 	if err != nil {
 		s.Fatal("Failed to get net export session: ", err)
 	}

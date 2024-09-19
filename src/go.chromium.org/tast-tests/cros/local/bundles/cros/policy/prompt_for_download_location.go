@@ -35,9 +35,8 @@ import (
 
 func init() {
 	testing.AddTest(&testing.Test{
-		Func:         PromptForDownloadLocation,
-		LacrosStatus: testing.LacrosVariantExists,
-		Desc:         "Test behavior of PromptForDownloadLocation policy: checking if a prompt for the download location appears based on the value of the policy",
+		Func: PromptForDownloadLocation,
+		Desc: "Test behavior of PromptForDownloadLocation policy: checking if a prompt for the download location appears based on the value of the policy",
 		Contacts: []string{
 			"chrome-downloads@google.com",
 			"dtrainor@google.com",
@@ -47,16 +46,8 @@ func init() {
 		BugComponent: "b:47901",
 		SoftwareDeps: []string{"chrome"},
 		Attr:         []string{"group:golden_tier", "group:hw_agnostic"},
-		Params: []testing.Param{{
-			Fixture: fixture.ChromePolicyLoggedIn,
-			Val:     browser.TypeAsh,
-		}, {
-			Name:              "lacros",
-			ExtraSoftwareDeps: []string{"lacros"},
-			Fixture:           fixture.LacrosPolicyLoggedIn,
-			Val:               browser.TypeLacros,
-		}},
-		Data: []string{"prompt_for_download_location.html", "prompt_for_download_location.zip"},
+		Fixture:      fixture.ChromePolicyLoggedIn,
+		Data:         []string{"prompt_for_download_location.html", "prompt_for_download_location.zip"},
 		SearchFlags: []*testing.StringPair{
 			pci.SearchFlag(&policy.PromptForDownloadLocation{}, pci.VerifiedFunctionalityUI),
 		},
@@ -140,7 +131,7 @@ func PromptForDownloadLocation(ctx context.Context, s *testing.State) {
 			}
 
 			// Setup browser based on the chrome type.
-			br, closeBrowser, err := browserfixt.SetUp(ctx, cr, s.Param().(browser.Type))
+			br, closeBrowser, err := browserfixt.SetUp(ctx, cr, browser.TypeAsh)
 			if err != nil {
 				s.Fatal("Failed to open the browser: ", err)
 			}
