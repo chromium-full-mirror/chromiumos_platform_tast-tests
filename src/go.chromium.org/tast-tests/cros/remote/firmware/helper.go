@@ -973,7 +973,7 @@ func (h *Helper) SetDUTPower(ctx context.Context, powerOn bool) error {
 // Args:
 //
 //	ensureTestlab: If true, this will ensure testlab enabled after CCD is open.
-//	resetCCD: If true, reset ccd to factory mode after open.
+//	resetCCD: If true, reset ccd after open.
 //	ccdLevel: Should contain the current ccd level as returned by GetCCDLevel().
 func (h *Helper) OpenCCD(ctx context.Context, ensureTestlab, resetCCD bool) error {
 	// Get CCD current status.
@@ -1026,16 +1026,16 @@ func (h *Helper) OpenCCD(ctx context.Context, ensureTestlab, resetCCD bool) erro
 		}
 	}
 
-	// By request, reset capabilities to factory mode.
+	// By request, reset capabilities.
 	if resetCCD {
-		out, err := h.Servo.RunGSCCommandGetOutput(ctx, "ccd reset factory", []string{`[^>]*> `})
+		out, err := h.Servo.RunGSCCommandGetOutput(ctx, "ccd reset", []string{`[^>]*> `})
 		if err != nil {
-			return errors.Wrap(err, "failed resetting capabilities to factory mode")
+			return errors.Wrap(err, "failed resetting capabilities")
 		}
-		// CR50 prints: Opening factory  settings.
+		// CR50 prints: Opening settings.
 		// Ti50 prints nothing
 		if strings.Contains(out[0][0], "Access Denied") {
-			return errors.Errorf("unexpected ccd reset factory output: %s", out[0][0])
+			return errors.Errorf("unexpected ccd reset output: %s", out[0][0])
 		}
 	}
 
