@@ -247,18 +247,19 @@ func runPeerConnectionAndVerifyImplementation(ctx context.Context, conn *chrome.
 	}
 
 	return verifyCodecImplementation(ctx, conn, params.VerifyDecoderMode,
-		params.VerifyEncoderMode, params.Svc, params.SimulcastHWEncs)
+		params.VerifyEncoderMode, params.Svc, params.Simulcasts, params.SimulcastHWEncs)
 }
 
 func verifyCodecImplementation(ctx context.Context,
 	conn *chrome.Conn, verifyDecoderMode VerifyDecoderMode,
 	verifyEncoderMode VerifyEncoderMode,
 	scalabilityMode string,
+	simulcasts int,
 	simulcastHWEncs []bool) error {
 	if err := verifyDecoderImplementation(ctx, conn, verifyDecoderMode, scalabilityMode); err != nil {
 		return err
 	}
-	if err := verifyEncoderImplementation(ctx, conn, verifyEncoderMode, scalabilityMode, simulcastHWEncs); err != nil {
+	if err := verifyEncoderImplementation(ctx, conn, verifyEncoderMode, scalabilityMode, simulcasts, simulcastHWEncs); err != nil {
 		return err
 	}
 	return nil
@@ -290,7 +291,7 @@ func verifyDecoderImplementation(ctx context.Context, conn *chrome.Conn, verifyD
 	return nil
 }
 
-func verifyEncoderImplementation(ctx context.Context, conn *chrome.Conn, verifyEncoderMode VerifyEncoderMode, scalabilityMode string, simulcastHWEncs []bool) error {
+func verifyEncoderImplementation(ctx context.Context, conn *chrome.Conn, verifyEncoderMode VerifyEncoderMode, scalabilityMode string, simulcasts int, simulcastHWEncs []bool) error {
 	if verifyEncoderMode == NoVerifyEncoderMode {
 		return nil
 	}
@@ -307,8 +308,15 @@ func verifyEncoderImplementation(ctx context.Context, conn *chrome.Conn, verifyE
 	if err != nil {
 		return errors.Wrap(err, "failed to get encoder implementation name")
 	}
-	if len(simulcastHWEncs) > 1 {
-		return checkSimulcastEncImpl(encImplName, simulcastHWEncs)
+
+	if simulcasts > 1 {
+		// In simulcast encoding, if simulcastHWEncs is not provided, the encoder is expected to be single encoder without SimulcastEncoderAdapter.
+		if len(simulcastHWEncs) > 1 {
+			return checkSimulcastEncImpl(encImplName, simulcastHWEncs)
+		}
+		if strings.Contains(encImplName, "SimulcastEncoderAdapter") {
+			return errors.Errorf("the simulcast encoding is executed with SimulcastEncoderAdapter, encoder name=%s", encImplName)
+		}
 	}
 
 	if verifyEncoderMode == VerifyHWEncoderUsed && !hwEncoderUsed {
