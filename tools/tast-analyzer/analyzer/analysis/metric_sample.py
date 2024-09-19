@@ -6,6 +6,7 @@ from dataclasses import dataclass
 import math
 
 from analyzer.backend.test_result import ImprovementDirection
+import numpy as np
 import scipy
 
 
@@ -46,6 +47,11 @@ class MetricSample:
         for v in self.value_map.values():
             s += v
         return s / len(self.value_map)
+
+    def std(self) -> float:
+        """Returns the standard deviation of the values in this MetricSample."""
+        vals = list(self.value_map.values())
+        return float(np.std(vals))
 
     def description(self, print_vals: bool = False) -> str:
         """Returns a human readable description of this MetricSample.

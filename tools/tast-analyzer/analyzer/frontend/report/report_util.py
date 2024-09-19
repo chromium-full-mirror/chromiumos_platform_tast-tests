@@ -5,6 +5,7 @@
 import enum
 import pathlib
 
+from analyzer.analysis import analysis_cfg
 from analyzer.analysis import analysis_results
 from analyzer.frontend.report import html_report
 
@@ -21,6 +22,7 @@ def create_reports(
     results: list[analysis_results.AnalysisResult],
     reports: set[ReportKind],
     template_dir: pathlib.Path,
+    cfg: analysis_cfg.AnalysisCfg,
     output_dir: pathlib.Path,
 ) -> None:
     """Creates and saves reports for the given results and report kinds.
@@ -37,6 +39,7 @@ def create_reports(
             report = html_report.HtmlReport(
                 results=results,
                 template_dir=template_dir,
+                cfg=cfg,
             )
             report.make()
             report.write(output_dir=output_dir)

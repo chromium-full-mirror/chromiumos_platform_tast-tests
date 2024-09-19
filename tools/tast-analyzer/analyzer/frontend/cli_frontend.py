@@ -289,5 +289,6 @@ def print_results(
                 results=results,
                 reports=reports,
                 template_dir=template_dir,
+                cfg=cfg,
                 output_dir=output_dir,
             )

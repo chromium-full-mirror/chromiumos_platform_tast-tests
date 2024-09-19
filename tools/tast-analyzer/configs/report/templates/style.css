@@ -1,3 +1,8 @@
+:root {
+  --better-bg-color: #13acff3b;
+  --worse-bg-color: #dd1e1e52;
+}
+
 table {
   table-layout: fixed;
   border-collapse: collapse;
@@ -17,6 +22,13 @@ thead {
 th,
 td {
   padding: 10px;
+
+  &.better {
+    background-color: var(--better-bg-color);
+  }
+  &.worse {
+    background-color: var(--worse-bg-color);
+  }
 
   &[data-is-numeric="true"] {
     text-align: end;

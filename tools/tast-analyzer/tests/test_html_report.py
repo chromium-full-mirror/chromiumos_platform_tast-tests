@@ -69,7 +69,9 @@ class HtmlReportTest(unittest.TestCase):
             )
         ]
 
-        report = html_report.HtmlReport(results, TEMPLATE_DIR)
+        report = html_report.HtmlReport(
+            results, TEMPLATE_DIR, analysis_cfg.AnalysisCfg()
+        )
         self.assertEqual(
             report._test_names(), [after_test_name, before_test_name]
         )
@@ -107,7 +109,9 @@ class HtmlReportTest(unittest.TestCase):
                 ],
             )
         ]
-        report = html_report.HtmlReport(results, TEMPLATE_DIR)
+        report = html_report.HtmlReport(
+            results, TEMPLATE_DIR, analysis_cfg.AnalysisCfg()
+        )
         self.assertEqual(report._labels(), ["after", "before"])
 
     def test_metric_paths(self) -> None:
@@ -153,7 +157,9 @@ class HtmlReportTest(unittest.TestCase):
                 ],
             )
         ]
-        report = html_report.HtmlReport(results, TEMPLATE_DIR)
+        report = html_report.HtmlReport(
+            results, TEMPLATE_DIR, analysis_cfg.AnalysisCfg()
+        )
         self.assertEqual(
             report._metric_paths(), [before_metric_path, after_metric_path]
         )
@@ -201,7 +207,9 @@ class HtmlReportTest(unittest.TestCase):
                 ],
             )
         ]
-        report = html_report.HtmlReport(results, TEMPLATE_DIR)
+        report = html_report.HtmlReport(
+            results, TEMPLATE_DIR, analysis_cfg.AnalysisCfg()
+        )
         report._set_title()
 
         expected_html = self._load_html(HTML_DIR / "set_title.html")
@@ -238,14 +246,18 @@ class HtmlReportTest(unittest.TestCase):
                 ],
             )
         ]
-        report = html_report.HtmlReport(results, TEMPLATE_DIR)
+        report = html_report.HtmlReport(
+            results, TEMPLATE_DIR, analysis_cfg.AnalysisCfg()
+        )
         table = report._create_sample_size_table()
 
         expected_table = self._load_html(HTML_DIR / "sample_size_table.html")
         self._assert_elements_equal(table, expected_table)
 
     def test_append_summary_empty_results(self) -> None:
-        report = html_report.HtmlReport([], TEMPLATE_DIR)
+        report = html_report.HtmlReport(
+            [], TEMPLATE_DIR, analysis_cfg.AnalysisCfg()
+        )
         report._append_summary()
 
         expected_html = self._load_html(
@@ -278,13 +290,81 @@ class HtmlReportTest(unittest.TestCase):
         results = [
             analysis_results.AnalysisResult(groups=groups_list[0], pairs=[pair])
         ]
-        report = html_report.HtmlReport(results, TEMPLATE_DIR)
+        report = html_report.HtmlReport(
+            results, TEMPLATE_DIR, analysis_cfg.AnalysisCfg()
+        )
         report._append_summary()
 
         expected_html = self._load_html(
             HTML_DIR / "append_summary_with_results.html"
         )
         self._assert_elements_equal(report.html.html, expected_html)
+
+    def test_create_pairwise_result_table(self) -> None:
+        before_metric_name = "Test.Two"
+        after_metric_name = "Test.One"
+        before_test_name = "ui.OverviewPerfBefore"
+        after_test_name = "ui.OverviewPerfAfter"
+
+        samples = test_util.load_before_samples(
+            before_test_name
+        ) + test_util.load_after_samples(after_test_name)
+        samples_by_id = test_util.samples_by_id(samples)
+
+        experiment_cfg = analysis_cfg.ExperimentCfg(
+            experiment_groups_cfgs=[
+                analysis_cfg.ExperimentGroupsCfg(
+                    metric_path_regex_list=[
+                        f".*{before_test_name}.{before_metric_name}",
+                        f".*{after_test_name}.{after_metric_name}",
+                    ]
+                )
+            ]
+        )
+        groups_list = analysis_results.construct_experiment_groups_list(
+            samples, analysis_cfg.AnalysisCfg(experiment_cfg=experiment_cfg)
+        )
+        results = [
+            analysis_results.AnalysisResult(
+                groups=groups_list[0],
+                pairs=[
+                    analysis_results.PairwiseResult(
+                        before=analysis_results.ExperimentGroup(
+                            sample=samples_by_id[
+                                f"before.{before_test_name}.{before_metric_name}.average"
+                            ],
+                        ),
+                        after=analysis_results.ExperimentGroup(
+                            sample=samples_by_id[
+                                f"after.{after_test_name}.{after_metric_name}.average"
+                            ],
+                            bootstrap=stats_util.BootstrapResult(
+                                statistic_kind=stats_util.TestStatisticKind.MEAN,
+                                confidence_interval=stats_util.ConfidenceInterval(
+                                    low=0, high=1, confidence=0.95
+                                ),
+                                bias_estimate=0,
+                            ),
+                        ),
+                        hypothesis_result=stats_util.HypothesisTestResult(
+                            statistic_kind=stats_util.TestStatisticKind.MEAN,
+                            u=0.0,
+                            p=1.0,
+                        ),
+                    )
+                ],
+            )
+        ]
+        report = html_report.HtmlReport(
+            results, TEMPLATE_DIR, analysis_cfg.AnalysisCfg()
+        )
+        pair = results[0].pairs[0]
+        table = report._create_pairwise_result_table(pair)
+
+        expected_table = self._load_html(
+            HTML_DIR / "pairwise_result_table.html"
+        )
+        self._assert_elements_equal(table, expected_table)
 
     def test_write(self) -> None:
         samples = (
@@ -319,7 +399,9 @@ class HtmlReportTest(unittest.TestCase):
                 ],
             )
         ]
-        report = html_report.HtmlReport(results, TEMPLATE_DIR)
+        report = html_report.HtmlReport(
+            results, TEMPLATE_DIR, analysis_cfg.AnalysisCfg()
+        )
 
         with tempfile.TemporaryDirectory() as temp:
             export_dir = pathlib.Path(temp)

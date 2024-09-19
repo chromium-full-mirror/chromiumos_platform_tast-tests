@@ -6,6 +6,7 @@ from collections import defaultdict
 import pathlib
 import xml.etree.ElementTree as ET
 
+from analyzer.analysis import analysis_cfg
 from analyzer.analysis import analysis_results
 from analyzer.frontend.report import components
 from analyzer.frontend.report import html_tree
@@ -18,6 +19,9 @@ class HtmlReport:
     template_dir: pathlib.Path
     """The path to the HTML template directory. """
 
+    cfg: analysis_cfg.AnalysisCfg
+    """The configuration for the statistical analysis."""
+
     html: html_tree.HtmlTree
     """The HTML structure of the report."""
 
@@ -28,9 +32,11 @@ class HtmlReport:
         self,
         results: list[analysis_results.AnalysisResult],
         template_dir: pathlib.Path,
+        cfg: analysis_cfg.AnalysisCfg,
     ) -> None:
         self.results = results
         self.template_dir = template_dir
+        self.cfg = cfg
         self.html = html_tree.HtmlTree(template_dir / "index.html")
         self.num_tables = 0
 
@@ -170,6 +176,113 @@ class HtmlReport:
         for identifier in pair_identifiers:
             ul.append(components.create_element_with_text("li", identifier))
 
+    def _create_pairwise_result_table(
+        self, pair: analysis_results.PairwiseResult
+    ) -> ET.Element:
+        """Creates a summary table for the given pairwise result.
+
+        Args:
+            pair: The pairwise result to make a summary table for.
+
+        Returns:
+            A `<table>` element.
+        """
+        metric_names = pair.metric_names()
+
+        self.num_tables += 1
+        caption = components.create_element_with_text(
+            "caption",
+            f"Table {self.num_tables}. Change in the mean of "
+            f"{'/'.join(metric_names)} in {pair.units()}. "
+            f"{'Higher' if pair.is_up_better() else 'Lower'} is better.",
+        )
+
+        thead = ET.Element("thead")
+        thead_row = ET.Element("tr")
+        confidence = self.cfg.bootstrap_params.confidence
+        headers = (
+            ["Label"]
+            # Show metrics only if they are different
+            + (["Metric"] if len(metric_names) > 1 else [])
+            + ["Mean ± std", "ΔMean", f"{confidence:.0%} CI"]
+        )
+        for header in headers:
+            th = components.create_element_with_text(
+                "th", header, {"scope": "col"}
+            )
+            if header != "Label":
+                th.set("data-is-numeric", "true")
+            thead_row.append(th)
+        thead.append(thead_row)
+
+        tbody = ET.Element("tbody")
+        before_row = ET.Element("tr")
+        after_row = ET.Element("tr")
+        for row, group in zip(
+            [before_row, after_row], [pair.before, pair.after]
+        ):
+            row.append(
+                components.create_element_with_text(
+                    "th", group.label(), {"scope": "row"}
+                )
+            )
+            if len(metric_names) > 1:
+                row.append(
+                    components.create_element_with_text(
+                        "td", group.metric_name(), {"data-is-numeric": "true"}
+                    )
+                )
+            row.append(
+                components.create_element_with_text(
+                    "td",
+                    f"{group.sample.mean():.2f} ± {group.sample.std():.2f}",
+                    {"data-is-numeric": "true"},
+                )
+            )
+
+            mean_change_cell = ET.Element("td", {"data-is-numeric": "true"})
+            if row == before_row:
+                mean_change_cell.text = "-"
+            else:
+                proportion_change = pair.mean_change_better()
+                mean_change_cell.text = f"{proportion_change:.2%}"
+                mean_change_cell.set(
+                    "class", "better" if proportion_change > 0 else "worse"
+                )
+            row.append(mean_change_cell)
+
+            ci_cell = ET.Element("td", {"data-is-numeric": "true"})
+            if (bootstrap := group.bootstrap) is None:
+                ci_cell.text = "-"
+            else:
+                low = bootstrap.confidence_interval.low
+                high = bootstrap.confidence_interval.high
+                ci_cell.text = f"[{low:.3f}, {high:.3f}]"
+            row.append(ci_cell)
+        tbody.append(before_row)
+        tbody.append(after_row)
+
+        table = ET.Element("table", {"id": f"table-{self.num_tables}"})
+        table.append(caption)
+        table.append(thead)
+        table.append(tbody)
+
+        return table
+
+    def _append_pairwise_result_summary(
+        self, pair: analysis_results.PairwiseResult
+    ) -> None:
+        """Appends a summary of the given pairwise result to the HTML.
+
+        Args:
+            pair: The pairwise result to make a summary for.
+        """
+
+        self.html.body.append(
+            components.create_element_with_text("h2", pair.identifier())
+        )
+        self.html.body.append(self._create_pairwise_result_table(pair))
+
     def make(self) -> None:
         """Makes a report."""
 
@@ -179,6 +292,10 @@ class HtmlReport:
         table_container = ET.Element("div", {"class": "table-container"})
         table_container.append(self._create_sample_size_table())
         self.html.body.append(table_container)
+
+        for result in self.results:
+            for pair in result.pairs:
+                self._append_pairwise_result_summary(pair)
 
     def write(self, output_dir: pathlib.Path) -> None:
         """Writes the report."""
