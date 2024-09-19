@@ -97,7 +97,7 @@ func CrasSidetone(ctx context.Context, s *testing.State) {
 		Channels:      2,
 		Rate:          48000,
 		Frequencies:   []int{440, 440},
-		Volume:        0.8,
+		Volume:        0.25,
 		Duration:      int(wavDuration.Seconds()),
 	}
 	if err := audio.GenerateTestWavData(ctx, wavData); err != nil {
