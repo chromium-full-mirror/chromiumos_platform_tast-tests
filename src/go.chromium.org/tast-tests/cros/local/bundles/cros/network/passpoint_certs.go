@@ -32,7 +32,7 @@ func init() {
 		// ChromeOS > Platform > System > Networking > Continuous Maintenance
 		BugComponent: "b:1493959",
 		Fixture:      "arcBooted",
-		Attr:         []string{"group:mainline", "informational"},
+		Attr:         []string{"group:mainline", "informational", "group:criticalstaging"},
 		SoftwareDeps: []string{"wifi", "chrome", "arc"},
 		Timeout:      7 * time.Minute,
 	})

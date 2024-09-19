@@ -32,7 +32,7 @@ func init() {
 		// ChromeOS > Platform > System > Networking > Continuous Maintenance
 		BugComponent: "b:1493959",
 		Fixture:      "shillSimulatedWiFiWithArcBooted",
-		Attr:         []string{"group:mainline", "informational"},
+		Attr:         []string{"group:network", "network_platform"},
 		SoftwareDeps: []string{"wifi", "chrome", "arc"},
 		LacrosStatus: testing.LacrosVariantUnneeded,
 		Timeout:      7 * time.Minute,

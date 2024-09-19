@@ -27,7 +27,7 @@ func init() {
 		Contacts:     []string{"cros-networking@google.com", "jasongustaman@google.com", "garrick@google.com"},
 		// ChromeOS > Platform > System > Networking > Continuous Maintenance
 		BugComponent: "b:1493959",
-		Attr:         []string{"group:mainline", "informational"},
+		Attr:         []string{"group:network", "network_platform"},
 		SoftwareDeps: []string{"chrome", "arc", "no_kernel_upstream"},
 		Data:         []string{digExecutable()},
 		Fixture:      "arcBooted",
