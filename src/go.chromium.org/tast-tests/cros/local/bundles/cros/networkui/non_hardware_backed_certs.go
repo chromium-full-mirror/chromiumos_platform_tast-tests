@@ -96,6 +96,10 @@ func NonHardwareBackedCerts(ctx context.Context, s *testing.State) {
 	ctx, cancelDeleteCertsCtx := ctxutil.Shorten(ctx, deleteCertTimeout)
 	defer cancelDeleteCertsCtx()
 
+	// TODO(b/368455160): Remove the recorder once the issue is resolved.
+	recorder := uiauto.CreateAndStartScreenRecorder(ctx, tconn)
+	defer uiauto.StopAndSaveOnError(deleteCertsCtx, recorder, filepath.Join(s.OutDir(), "screen_recording.webm"), s.HasError)
+
 	res := newNonHardwareBackedCertsTestResource(cr, tconn, certificate.TestCert1(), s.OutDir())
 	if err := certManager.CreateCertAndImport(ctx, cr, tconn, certificate.TestCert1(), certManager.TypeImport, "" /* password */, 0 /* trustSettings */); err != nil {
 		s.Fatal("Failed to create and import certificates: ", err)
