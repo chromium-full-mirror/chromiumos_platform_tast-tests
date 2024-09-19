@@ -8,6 +8,7 @@ import (
 	"context"
 	"time"
 
+	"go.chromium.org/tast-tests/cros/local/chrome/browser"
 	"go.chromium.org/tast-tests/cros/local/chrome/ime"
 	"go.chromium.org/tast-tests/cros/local/chrome/uiauto/faillog"
 	"go.chromium.org/tast-tests/cros/local/input"
@@ -23,7 +24,6 @@ import (
 func init() {
 	testing.AddTest(&testing.Test{
 		Func:         PhysicalKeyboardEmojiGifInsertion,
-		LacrosStatus: testing.LacrosVariantExists,
 		Desc:         "Checks that we can search and insert GIFs (from emoji picker)",
 		Contacts:     []string{"essential-inputs-gardener-oncall@google.com", "essential-inputs-team@google.com"},
 		BugComponent: "b:95887",
@@ -38,16 +38,7 @@ func init() {
 		SoftwareDeps: []string{"inputs_deps", "chrome", "chrome_internal"},
 		HardwareDeps: hwdep.D(hwdep.Model(pre.StableModels...), hwdep.SkipOnModel("kefka")),
 		SearchFlags:  util.IMESearchFlags([]ime.InputMethod{ime.DefaultInputMethod}),
-		Params: []testing.Param{
-			{
-				Fixture: fixture.ClamshellNonVK,
-			},
-			{
-				Name:              "lacros",
-				Fixture:           fixture.LacrosClamshellNonVK,
-				ExtraSoftwareDeps: []string{"lacros", "lacros_stable"},
-			},
-		},
+		Fixture:      fixture.ClamshellNonVK,
 	})
 }
 
@@ -68,7 +59,7 @@ func PhysicalKeyboardEmojiGifInsertion(ctx context.Context, s *testing.State) {
 	}
 	defer keyboard.Close(ctx)
 
-	its, err := testserver.LaunchBrowser(ctx, s.FixtValue().(fixture.FixtData).BrowserType, cr, tconn)
+	its, err := testserver.LaunchBrowser(ctx, browser.TypeAsh, cr, tconn)
 	if err != nil {
 		s.Fatal("Failed to launch inputs test server: ", err)
 	}

@@ -9,6 +9,7 @@ import (
 	"fmt"
 	"time"
 
+	"go.chromium.org/tast-tests/cros/local/chrome/browser"
 	"go.chromium.org/tast-tests/cros/local/chrome/ime"
 	"go.chromium.org/tast-tests/cros/local/chrome/uiauto"
 	"go.chromium.org/tast-tests/cros/local/chrome/uiauto/faillog"
@@ -34,7 +35,6 @@ type pkShapeBasedChineseTestCase struct {
 func init() {
 	testing.AddTest(&testing.Test{
 		Func:         PhysicalKeyboardShapeBasedChineseTyping,
-		LacrosStatus: testing.LacrosVariantExists,
 		Desc:         "Checks that shape-based Chinese physical keyboard works",
 		Contacts:     []string{"essential-inputs-gardener-oncall@google.com", "essential-inputs-team@google.com"},
 		BugComponent: "b:95887",
@@ -99,61 +99,6 @@ func init() {
 				},
 				ExtraSearchFlags: util.IMESearchFlags([]ime.InputMethod{ime.ChineseWubi}),
 			},
-			{
-				Name:    "array_lacros",
-				Fixture: fixture.LacrosClamshellNonVK,
-				Val: pkShapeBasedChineseTestCase{
-					inputMethod:    ime.ChineseArray,
-					typingKeys:     "aaa lbj mc gds exxw pf alpe ajr .aad ame ",
-					expectedResult: "三節外也關由面再行列",
-				},
-				ExtraSoftwareDeps: []string{"lacros", "lacros_stable"},
-				ExtraSearchFlags:  util.IMESearchFlags([]ime.InputMethod{ime.ChineseArray}),
-			},
-			{
-				Name:    "cangjie_lacros",
-				Fixture: fixture.LacrosClamshellNonVK,
-				Val: pkShapeBasedChineseTestCase{
-					inputMethod:    ime.ChineseCangjie,
-					typingKeys:     "a jwj yrhhi hui hxyc oiar grmbc ",
-					expectedResult: "日車謝鬼與倉頡",
-				},
-				ExtraSoftwareDeps: []string{"lacros", "lacros_stable"},
-				ExtraSearchFlags:  util.IMESearchFlags([]ime.InputMethod{ime.ChineseCangjie}),
-			},
-			{
-				Name:    "dayi_lacros",
-				Fixture: fixture.LacrosClamshellNonVK,
-				Val: pkShapeBasedChineseTestCase{
-					inputMethod:    ime.ChineseDayi,
-					typingKeys:     "1 j 123 asox db/ ",
-					expectedResult: "言月詐做易",
-				},
-				ExtraSoftwareDeps: []string{"lacros", "lacros_stable"},
-				ExtraSearchFlags:  util.IMESearchFlags([]ime.InputMethod{ime.ChineseDayi}),
-			},
-			{
-				Name:    "quick_lacros",
-				Fixture: fixture.LacrosClamshellNonVK,
-				Val: pkShapeBasedChineseTestCase{
-					inputMethod:    ime.ChineseQuick,
-					typingKeys:     "a jw yr an is ",
-					expectedResult: "日富這門成",
-				},
-				ExtraSoftwareDeps: []string{"lacros", "lacros_stable"},
-				ExtraSearchFlags:  util.IMESearchFlags([]ime.InputMethod{ime.ChineseQuick}),
-			},
-			{
-				Name:    "wubi_lacros",
-				Fixture: fixture.LacrosClamshellNonVK,
-				Val: pkShapeBasedChineseTestCase{
-					inputMethod:    ime.ChineseWubi,
-					typingKeys:     "yge yygy ggll yygt gg tt ",
-					expectedResult: "请文一方五笔",
-				},
-				ExtraSoftwareDeps: []string{"lacros", "lacros_stable"},
-				ExtraSearchFlags:  util.IMESearchFlags([]ime.InputMethod{ime.ChineseWubi}),
-			},
 		},
 	})
 }
@@ -185,7 +130,7 @@ func PhysicalKeyboardShapeBasedChineseTyping(ctx context.Context, s *testing.Sta
 	}
 	defer kb.Close(ctx)
 
-	its, err := testserver.LaunchBrowser(ctx, s.FixtValue().(fixture.FixtData).BrowserType, cr, tconn)
+	its, err := testserver.LaunchBrowser(ctx, browser.TypeAsh, cr, tconn)
 	if err != nil {
 		s.Fatal("Failed to launch inputs test server: ", err)
 	}

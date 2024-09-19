@@ -29,7 +29,6 @@ import (
 func init() {
 	testing.AddTest(&testing.Test{
 		Func:         VirtualKeyboardKioskRestrictFeatures,
-		LacrosStatus: testing.LacrosVariantExists,
 		Desc:         "Checks that restrict features functionality of extension API works in kiosk mode",
 		Contacts:     []string{"essential-inputs-gardener-oncall@google.com", "essential-inputs-team@google.com"},
 		BugComponent: "b:95887",
@@ -50,16 +49,7 @@ func init() {
 		SoftwareDeps: []string{"reboot", "inputs_deps", "chrome", "chrome_internal"},
 		HardwareDeps: hwdep.D(pre.InputsStableModels),
 		Timeout:      5 * time.Minute,
-		Params: []testing.Param{
-			{
-				Fixture: fixture.KioskVK,
-			},
-			{
-				Name:              "lacros",
-				ExtraSoftwareDeps: []string{"lacros"},
-				Fixture:           fixture.LacrosKioskVK,
-			},
-		},
+		Fixture:      fixture.KioskVK,
 	})
 }
 

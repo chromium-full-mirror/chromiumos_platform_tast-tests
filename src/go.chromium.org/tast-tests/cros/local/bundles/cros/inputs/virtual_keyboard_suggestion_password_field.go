@@ -9,6 +9,7 @@ import (
 	"strings"
 	"time"
 
+	"go.chromium.org/tast-tests/cros/local/chrome/browser"
 	"go.chromium.org/tast-tests/cros/local/chrome/ime"
 	"go.chromium.org/tast-tests/cros/local/chrome/uiauto"
 	"go.chromium.org/tast-tests/cros/local/chrome/uiauto/faillog"
@@ -35,7 +36,6 @@ var imes = []ime.InputMethod{
 func init() {
 	testing.AddTest(&testing.Test{
 		Func:         VirtualKeyboardSuggestionPasswordField,
-		LacrosStatus: testing.LacrosVariantExists,
 		Desc:         "Checks that virtual keyboard shows digits as candidates when user typing in password field",
 		Contacts:     []string{"essential-inputs-gardener-oncall@google.com", "essential-inputs-team@google.com"},
 		BugComponent: "b:95887",
@@ -44,15 +44,7 @@ func init() {
 		SoftwareDeps: []string{"inputs_deps", "chrome", "google_virtual_keyboard"},
 		HardwareDeps: hwdep.D(pre.InputsStableModels),
 		Timeout:      2 * time.Minute,
-		Params: []testing.Param{
-			{
-				Fixture: fixture.TabletVK,
-			},
-			{
-				Name:    "lacros",
-				Fixture: fixture.LacrosTabletVK,
-			},
-		},
+		Fixture:      fixture.TabletVK,
 	})
 }
 
@@ -66,7 +58,7 @@ func VirtualKeyboardSuggestionPasswordField(ctx context.Context, s *testing.Stat
 	ctx, cancel := ctxutil.Shorten(ctx, 10*time.Second)
 	defer cancel()
 
-	its, err := testserver.LaunchBrowser(ctx, s.FixtValue().(fixture.FixtData).BrowserType, cr, tconn)
+	its, err := testserver.LaunchBrowser(ctx, browser.TypeAsh, cr, tconn)
 	if err != nil {
 		s.Fatal("Failed to launch inputs test server: ", err)
 	}
