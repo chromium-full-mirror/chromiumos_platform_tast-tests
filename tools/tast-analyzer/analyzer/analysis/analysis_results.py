@@ -195,6 +195,9 @@ def _construct_explicit_experiment_groups_list(
     based on two differently named metrics that should be compared to each
     other.
 
+    ExperimentGroups will be listed in the same order that they match the
+    regexes specified in each ExperimentGroupsCfg.
+
     Args:
         samples: List of samples.
         cfgs: List of ExperimentGroupsCfg.
@@ -211,25 +214,25 @@ def _construct_explicit_experiment_groups_list(
     metric_path_groups_list = []
     for cfg in cfgs:
         groups = []
-        for s in samples:
-            if any(
-                re.match(regex, s.metric_path)
-                for regex in cfg.metric_path_regex_list
-            ):
-                groups.append(ExperimentGroup(sample=s))
+        ids = set()
+        for regex in cfg.metric_path_regex_list:
+            for s in samples:
+                if s.sample_id not in ids and re.match(regex, s.metric_path):
+                    groups.append(ExperimentGroup(sample=s))
+                    ids.add(s.sample_id)
         metric_path_groups_list.append(groups)
 
     test_name_groups_list = []
     for cfg in cfgs:
         groups_by_metric_name = defaultdict(list)
-        for s in samples:
-            if any(
-                re.match(regex, s.test_name)
-                for regex in cfg.test_name_regex_list
-            ):
-                groups_by_metric_name[s.metric_name].append(
-                    ExperimentGroup(sample=s)
-                )
+        ids = set()
+        for regex in cfg.test_name_regex_list:
+            for s in samples:
+                if s.sample_id not in ids and re.match(regex, s.test_name):
+                    groups_by_metric_name[s.metric_name].append(
+                        ExperimentGroup(sample=s)
+                    )
+                    ids.add(s.sample_id)
         test_name_groups_list += list(groups_by_metric_name.values())
 
     groups_list = []

@@ -194,12 +194,12 @@ class AnalysisTest(unittest.TestCase):
                 [
                     analysis_results.ExperimentGroup(
                         sample=before_samples_by_id[
-                            "before.ui.OverviewPerf.Test.One.average"
+                            "before.ui.OverviewPerf.Test.Three.average"
                         ]
                     ),
                     analysis_results.ExperimentGroup(
                         sample=before_samples_by_id[
-                            "before.ui.OverviewPerf.Test.Three.average"
+                            "before.ui.OverviewPerf.Test.One.average"
                         ]
                     ),
                 ],
@@ -261,17 +261,7 @@ class AnalysisTest(unittest.TestCase):
                 [
                     analysis_results.ExperimentGroup(
                         sample=samples_by_id[
-                            "before.ui.OverviewPerf.Test.One.average"
-                        ]
-                    ),
-                    analysis_results.ExperimentGroup(
-                        sample=samples_by_id[
                             "before.ui.OverviewPerf.Test.Three.average"
-                        ]
-                    ),
-                    analysis_results.ExperimentGroup(
-                        sample=samples_by_id[
-                            "after.ui.OverviewPerf.Test.One.average"
                         ]
                     ),
                     analysis_results.ExperimentGroup(
@@ -289,6 +279,16 @@ class AnalysisTest(unittest.TestCase):
                     analysis_results.ExperimentGroup(
                         sample=samples_by_id[
                             "after.ui.OverviewPerf.Test.Three.average"
+                        ]
+                    ),
+                    analysis_results.ExperimentGroup(
+                        sample=samples_by_id[
+                            "before.ui.OverviewPerf.Test.One.average"
+                        ]
+                    ),
+                    analysis_results.ExperimentGroup(
+                        sample=samples_by_id[
+                            "after.ui.OverviewPerf.Test.One.average"
                         ]
                     ),
                 ],
