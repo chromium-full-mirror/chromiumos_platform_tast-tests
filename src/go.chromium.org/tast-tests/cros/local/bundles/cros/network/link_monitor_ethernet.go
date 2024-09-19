@@ -34,9 +34,8 @@ func init() {
 		Contacts:     []string{"cros-networking@google.com", "ningyuan@google.com"},
 		// ChromeOS > Platform > System > Networking > Continuous Maintenance
 		BugComponent: "b:1493959",
-		// TODO(b/261383020): Promote to group:network after test is stable.
-		Attr:    []string{"group:mainline", "informational", "group:hw_agnostic"},
-		Timeout: 10 * time.Minute,
+		Attr:         []string{"group:network", "network_platform"},
+		Timeout:      10 * time.Minute,
 	})
 }
 
