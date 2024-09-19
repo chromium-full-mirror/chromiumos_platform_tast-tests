@@ -98,6 +98,7 @@ func init() {
 const (
 	pdStatePollTimeout  time.Duration = 10 * time.Second
 	pdStatePollInterval time.Duration = 500 * time.Millisecond
+	pdSettleTime        time.Duration = 2 * time.Second
 )
 
 func ECPDPowerSwap(ctx context.Context, s *testing.State) {
@@ -178,6 +179,10 @@ func ECPDPowerSwap(ctx context.Context, s *testing.State) {
 		}
 
 		curPowerRole = nowPowerRole
+		// GoBigSleepLint: Let PDC settle before initiating next PRS
+		if err := testing.Sleep(ctx, pdSettleTime); err != nil {
+			s.Fatal("Failed to sleep for PDC settle: ", err)
+		}
 	}
 
 	if powerSwapSupported {
