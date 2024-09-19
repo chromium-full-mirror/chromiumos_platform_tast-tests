@@ -28,16 +28,14 @@ import (
 
 type vkTestCase struct {
 	name          string          // name is the subtest name.
-	browserType   browser.Type    // browser type used in the subtest.
 	wantedAllowVK bool            // wantedAllowVK describes if virtual keyboard is expected to be shown or not.
 	policies      []policy.Policy // policies is the policies values.
 }
 
 func init() {
 	testing.AddTest(&testing.Test{
-		Func:         VirtualKeyboard,
-		LacrosStatus: testing.LacrosVariantExists,
-		Desc:         "Behavior of VirtualKeyboardEnabled and TouchVirtualKeyboardEnabled policies and their mixing by checking that the virtual keyboard (is/is not) displayed as requested by the policy",
+		Func: VirtualKeyboard,
+		Desc: "Behavior of VirtualKeyboardEnabled and TouchVirtualKeyboardEnabled policies and their mixing by checking that the virtual keyboard (is/is not) displayed as requested by the policy",
 		Contacts: []string{
 			"e14s-eng@google.com",
 		},
@@ -51,55 +49,46 @@ func init() {
 				Val: []vkTestCase{
 					{
 						name:          "vke_enabled-tvke_enabled",
-						browserType:   browser.TypeAsh,
 						wantedAllowVK: true,
 						policies:      []policy.Policy{&policy.VirtualKeyboardEnabled{Val: true}, &policy.TouchVirtualKeyboardEnabled{Val: true}},
 					},
 					{
 						name:          "vke_enabled-tvke_disabled",
-						browserType:   browser.TypeAsh,
 						wantedAllowVK: true,
 						policies:      []policy.Policy{&policy.VirtualKeyboardEnabled{Val: true}, &policy.TouchVirtualKeyboardEnabled{Val: false}},
 					},
 					{
 						name:          "vke_disabled-tvke_enabled",
-						browserType:   browser.TypeAsh,
 						wantedAllowVK: true,
 						policies:      []policy.Policy{&policy.VirtualKeyboardEnabled{Val: false}, &policy.TouchVirtualKeyboardEnabled{Val: true}},
 					},
 					{
 						name:          "vke_disabled-tvke_disabled",
-						browserType:   browser.TypeAsh,
 						wantedAllowVK: false,
 						policies:      []policy.Policy{&policy.VirtualKeyboardEnabled{Val: false}, &policy.TouchVirtualKeyboardEnabled{Val: false}},
 					},
 					{
 						name:          "vke_unset-tvke_enabled",
-						browserType:   browser.TypeAsh,
 						wantedAllowVK: true,
 						policies:      []policy.Policy{&policy.VirtualKeyboardEnabled{Stat: policy.StatusUnset}, &policy.TouchVirtualKeyboardEnabled{Val: true}},
 					},
 					{
 						name:          "vke_enabled-tvke_unset",
-						browserType:   browser.TypeAsh,
 						wantedAllowVK: true,
 						policies:      []policy.Policy{&policy.VirtualKeyboardEnabled{Val: true}, &policy.TouchVirtualKeyboardEnabled{Stat: policy.StatusUnset}},
 					},
 					{
 						name:          "vke_unset-tvke_disabled",
-						browserType:   browser.TypeAsh,
 						wantedAllowVK: false,
 						policies:      []policy.Policy{&policy.VirtualKeyboardEnabled{Stat: policy.StatusUnset}, &policy.TouchVirtualKeyboardEnabled{Val: false}},
 					},
 					{
 						name:          "vke_disabled-tvke_unset",
-						browserType:   browser.TypeAsh,
 						wantedAllowVK: false,
 						policies:      []policy.Policy{&policy.VirtualKeyboardEnabled{Val: false}, &policy.TouchVirtualKeyboardEnabled{Stat: policy.StatusUnset}},
 					},
 					{
 						name:          "vke_unset-tvke_unset",
-						browserType:   browser.TypeAsh,
 						wantedAllowVK: false,
 						policies:      []policy.Policy{&policy.VirtualKeyboardEnabled{Stat: policy.StatusUnset}, &policy.TouchVirtualKeyboardEnabled{Stat: policy.StatusUnset}},
 					},
@@ -111,19 +100,16 @@ func init() {
 				Val: []vkTestCase{
 					{
 						name:          "enabled",
-						browserType:   browser.TypeAsh,
 						wantedAllowVK: true,
 						policies:      []policy.Policy{&policy.VirtualKeyboardEnabled{Val: true}},
 					},
 					{
 						name:          "disabled",
-						browserType:   browser.TypeAsh,
 						wantedAllowVK: false,
 						policies:      []policy.Policy{&policy.VirtualKeyboardEnabled{Val: false}},
 					},
 					{
 						name:          "unset",
-						browserType:   browser.TypeAsh,
 						wantedAllowVK: false,
 						policies:      []policy.Policy{&policy.VirtualKeyboardEnabled{Stat: policy.StatusUnset}},
 					},
@@ -141,130 +127,16 @@ func init() {
 				Val: []vkTestCase{
 					{
 						name:          "enabled",
-						browserType:   browser.TypeAsh,
 						wantedAllowVK: true,
 						policies:      []policy.Policy{&policy.TouchVirtualKeyboardEnabled{Val: true}},
 					},
 					{
 						name:          "disabled",
-						browserType:   browser.TypeAsh,
 						wantedAllowVK: false,
 						policies:      []policy.Policy{&policy.TouchVirtualKeyboardEnabled{Val: false}},
 					},
 					{
 						name:          "unset",
-						browserType:   browser.TypeAsh,
-						wantedAllowVK: false,
-						policies:      []policy.Policy{&policy.TouchVirtualKeyboardEnabled{Stat: policy.StatusUnset}},
-					},
-				},
-			},
-			{
-				Name:              "lacros_both",
-				ExtraSoftwareDeps: []string{"lacros"},
-				Fixture:           fixture.LacrosPolicyLoggedIn,
-				Val: []vkTestCase{
-					{
-						name:          "vke_enabled-tvke_enabled",
-						browserType:   browser.TypeLacros,
-						wantedAllowVK: true,
-						policies:      []policy.Policy{&policy.VirtualKeyboardEnabled{Val: true}, &policy.TouchVirtualKeyboardEnabled{Val: true}},
-					},
-					{
-						name:          "vke_enabled-tvke_disabled",
-						browserType:   browser.TypeLacros,
-						wantedAllowVK: true,
-						policies:      []policy.Policy{&policy.VirtualKeyboardEnabled{Val: true}, &policy.TouchVirtualKeyboardEnabled{Val: false}},
-					},
-					{
-						name:          "vke_disabled-tvke_enabled",
-						browserType:   browser.TypeLacros,
-						wantedAllowVK: true,
-						policies:      []policy.Policy{&policy.VirtualKeyboardEnabled{Val: false}, &policy.TouchVirtualKeyboardEnabled{Val: true}},
-					},
-					{
-						name:          "vke_disabled-tvke_disabled",
-						browserType:   browser.TypeLacros,
-						wantedAllowVK: false,
-						policies:      []policy.Policy{&policy.VirtualKeyboardEnabled{Val: false}, &policy.TouchVirtualKeyboardEnabled{Val: false}},
-					},
-					{
-						name:          "vke_unset-tvke_enabled",
-						browserType:   browser.TypeLacros,
-						wantedAllowVK: true,
-						policies:      []policy.Policy{&policy.VirtualKeyboardEnabled{Stat: policy.StatusUnset}, &policy.TouchVirtualKeyboardEnabled{Val: true}},
-					},
-					{
-						name:          "vke_enabled-tvke_unset",
-						browserType:   browser.TypeLacros,
-						wantedAllowVK: true,
-						policies:      []policy.Policy{&policy.VirtualKeyboardEnabled{Val: true}, &policy.TouchVirtualKeyboardEnabled{Stat: policy.StatusUnset}},
-					},
-					{
-						name:          "vke_unset-tvke_disabled",
-						browserType:   browser.TypeLacros,
-						wantedAllowVK: false,
-						policies:      []policy.Policy{&policy.VirtualKeyboardEnabled{Stat: policy.StatusUnset}, &policy.TouchVirtualKeyboardEnabled{Val: false}},
-					},
-					{
-						name:          "vke_disabled-tvke_unset",
-						browserType:   browser.TypeLacros,
-						wantedAllowVK: false,
-						policies:      []policy.Policy{&policy.VirtualKeyboardEnabled{Val: false}, &policy.TouchVirtualKeyboardEnabled{Stat: policy.StatusUnset}},
-					},
-					{
-						name:          "vke_unset-tvke_unset",
-						browserType:   browser.TypeLacros,
-						wantedAllowVK: false,
-						policies:      []policy.Policy{&policy.VirtualKeyboardEnabled{Stat: policy.StatusUnset}, &policy.TouchVirtualKeyboardEnabled{Stat: policy.StatusUnset}},
-					},
-				},
-			},
-			{
-				Name:              "lacros_virtual",
-				ExtraSoftwareDeps: []string{"lacros"},
-				Fixture:           fixture.LacrosPolicyLoggedIn,
-				Val: []vkTestCase{
-					{
-						name:          "enabled",
-						browserType:   browser.TypeLacros,
-						wantedAllowVK: true,
-						policies:      []policy.Policy{&policy.VirtualKeyboardEnabled{Val: true}},
-					},
-					{
-						name:          "disabled",
-						browserType:   browser.TypeLacros,
-						wantedAllowVK: false,
-						policies:      []policy.Policy{&policy.VirtualKeyboardEnabled{Val: false}},
-					},
-					{
-						name:          "unset",
-						browserType:   browser.TypeLacros,
-						wantedAllowVK: false,
-						policies:      []policy.Policy{&policy.VirtualKeyboardEnabled{Stat: policy.StatusUnset}},
-					},
-				},
-			},
-			{
-				Name:              "lacros_touch_virtual",
-				ExtraSoftwareDeps: []string{"lacros"},
-				Fixture:           fixture.LacrosPolicyLoggedIn,
-				Val: []vkTestCase{
-					{
-						name:          "enabled",
-						browserType:   browser.TypeLacros,
-						wantedAllowVK: true,
-						policies:      []policy.Policy{&policy.TouchVirtualKeyboardEnabled{Val: true}},
-					},
-					{
-						name:          "disabled",
-						browserType:   browser.TypeLacros,
-						wantedAllowVK: false,
-						policies:      []policy.Policy{&policy.TouchVirtualKeyboardEnabled{Val: false}},
-					},
-					{
-						name:          "unset",
-						browserType:   browser.TypeLacros,
 						wantedAllowVK: false,
 						policies:      []policy.Policy{&policy.TouchVirtualKeyboardEnabled{Stat: policy.StatusUnset}},
 					},
@@ -326,7 +198,7 @@ func VirtualKeyboard(ctx context.Context, s *testing.State) {
 
 			// TODO(crbug.com/1254152): Modify browser setup after creating the new browser package.
 			// Setup browser based on the chrome type.
-			br, closeBrowser, err := browserfixt.SetUp(ctx, cr, tc.browserType)
+			br, closeBrowser, err := browserfixt.SetUp(ctx, cr, browser.TypeAsh)
 			if err != nil {
 				s.Fatal("Failed to open the browser: ", err)
 			}

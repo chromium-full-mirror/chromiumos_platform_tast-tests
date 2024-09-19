@@ -26,27 +26,16 @@ import (
 
 func init() {
 	testing.AddTest(&testing.Test{
-		Func:         SerialBlockedForUrls,
-		LacrosStatus: testing.LacrosVariantExists,
-		Desc:         "Tests the behavior of the SerialBlockedForUrls policy by checking that it correctly configures access to the serial port selection prompt",
+		Func: SerialBlockedForUrls,
+		Desc: "Tests the behavior of the SerialBlockedForUrls policy by checking that it correctly configures access to the serial port selection prompt",
 		Contacts: []string{
 			"cros-engprod-muc@google.com",
 		},
 		BugComponent: "b:1263917",
 		SoftwareDeps: []string{"chrome"},
 		Attr:         []string{"group:golden_tier", "group:hw_agnostic"},
-		Params: []testing.Param{
-			{
-				Fixture: fixture.ChromePolicyLoggedIn,
-				Val:     browser.TypeAsh,
-			}, {
-				Name:              "lacros",
-				Fixture:           fixture.LacrosPolicyLoggedIn,
-				Val:               browser.TypeLacros,
-				ExtraSoftwareDeps: []string{"lacros"},
-			},
-		},
-		Data: []string{serial.SerialTestPage},
+		Fixture:      fixture.ChromePolicyLoggedIn,
+		Data:         []string{serial.SerialTestPage},
 		SearchFlags: []*testing.StringPair{
 			pci.SearchFlag(&policy.DefaultSerialGuardSetting{}, pci.VerifiedFunctionalityUI),
 			pci.SearchFlag(&policy.SerialBlockedForUrls{}, pci.VerifiedFunctionalityUI),
@@ -119,7 +108,7 @@ func SerialBlockedForUrls(ctx context.Context, s *testing.State) {
 			}
 
 			// Setup browser based on the chrome type.
-			br, closeBrowser, err := browserfixt.SetUp(ctx, cr, s.Param().(browser.Type))
+			br, closeBrowser, err := browserfixt.SetUp(ctx, cr, browser.TypeAsh)
 			if err != nil {
 				s.Fatal("Failed to open the browser: ", err)
 			}

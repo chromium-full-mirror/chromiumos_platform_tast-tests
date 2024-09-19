@@ -24,9 +24,8 @@ import (
 
 func init() {
 	testing.AddTest(&testing.Test{
-		Func:         ForceYouTubeRestrict,
-		LacrosStatus: testing.LacrosVariantExists,
-		Desc:         "Check if YouTube content restrictions work as specified by the ForceYouTubeRestrict policy",
+		Func: ForceYouTubeRestrict,
+		Desc: "Check if YouTube content restrictions work as specified by the ForceYouTubeRestrict policy",
 		Contacts: []string{
 			"cros-edu-eng@google.com",
 			"sinhak@google.com", // Test author
@@ -39,15 +38,7 @@ func init() {
 			"group:hardware",
 			"group:complementary",
 			"group:hw_agnostic"},
-		Params: []testing.Param{{
-			Fixture: fixture.ChromePolicyLoggedIn,
-			Val:     browser.TypeAsh,
-		}, {
-			Name:              "lacros",
-			ExtraSoftwareDeps: []string{"lacros"},
-			Fixture:           fixture.LacrosPolicyLoggedIn,
-			Val:               browser.TypeLacros,
-		}},
+		Fixture: fixture.ChromePolicyLoggedIn,
 		// Loading two YouTube videos on slower devices can take a while (we observed subtests that took up to 40 seconds), thus give every subtest 1 minute to run.
 		Timeout: 4 * time.Minute,
 		SearchFlags: []*testing.StringPair{
@@ -66,7 +57,7 @@ func ForceYouTubeRestrict(ctx context.Context, s *testing.State) {
 	ctx, cancel := ctxutil.Shorten(ctx, 10*time.Second)
 	defer cancel()
 
-	br, closeBrowser, err := browserfixt.SetUp(ctx, cr, s.Param().(browser.Type))
+	br, closeBrowser, err := browserfixt.SetUp(ctx, cr, browser.TypeAsh)
 	if err != nil {
 		s.Fatal("Failed to setup chrome: ", err)
 	}
