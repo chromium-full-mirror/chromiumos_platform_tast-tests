@@ -10,6 +10,7 @@ import (
 	"strings"
 	"time"
 
+	"go.chromium.org/tast-tests/cros/local/chrome/browser"
 	"go.chromium.org/tast-tests/cros/local/chrome/ime"
 	"go.chromium.org/tast-tests/cros/local/chrome/uiauto"
 	"go.chromium.org/tast-tests/cros/local/chrome/uiauto/faillog"
@@ -32,7 +33,6 @@ import (
 func init() {
 	testing.AddTest(&testing.Test{
 		Func:         PhysicalKeyboardEmojiSuggestion,
-		LacrosStatus: testing.LacrosVariantExists,
 		Desc:         "Checks emoji suggestions with physical keyboard typing",
 		Contacts:     []string{"essential-inputs-gardener-oncall@google.com", "essential-inputs-team@google.com"},
 		BugComponent: "b:95887",
@@ -63,26 +63,6 @@ func init() {
 				ExtraAttr:         []string{"group:input-tools-upstream"},
 				ExtraHardwareDeps: hwdep.D(hwdep.Model(pre.StableModels...)),
 				Fixture:           fixture.ClamshellNonVK,
-			},
-			{
-				Name:              "lacros",
-				ExtraSoftwareDeps: []string{"lacros", "lacros_stable"},
-				ExtraHardwareDeps: hwdep.D(hwdep.Model(pre.StableModels...)),
-				Fixture:           fixture.LacrosClamshellNonVK,
-			},
-			{
-				Name:              "guest_lacros",
-				ExtraAttr:         []string{"group:input-tools-upstream"},
-				ExtraSoftwareDeps: []string{"lacros", "lacros_stable"},
-				ExtraHardwareDeps: hwdep.D(hwdep.Model(pre.StableModels...)),
-				Fixture:           fixture.LacrosClamshellNonVKInGuest,
-			},
-			{
-				Name:              "incognito_lacros",
-				ExtraAttr:         []string{"group:input-tools-upstream"},
-				ExtraSoftwareDeps: []string{"lacros", "lacros_stable"},
-				ExtraHardwareDeps: hwdep.D(hwdep.Model(pre.StableModels...)),
-				Fixture:           fixture.LacrosClamshellNonVK,
 			},
 			{
 				// Only run informational tests in consumer mode.
@@ -127,7 +107,7 @@ func physicalKeyboardEmojiSuggestion(ctx context.Context, s *testing.State) {
 	}
 	uc.SetAttribute(useractions.AttributeInputMethod, inputMethod.Name)
 
-	its, err := testserver.LaunchBrowserInMode(ctx, cr, tconn, s.FixtValue().(fixture.FixtData).BrowserType, strings.Contains(s.TestName(), "incognito"))
+	its, err := testserver.LaunchBrowserInMode(ctx, cr, tconn, browser.TypeAsh, strings.Contains(s.TestName(), "incognito"))
 	if err != nil {
 		s.Fatal("Failed to launch inputs test server: ", err)
 	}

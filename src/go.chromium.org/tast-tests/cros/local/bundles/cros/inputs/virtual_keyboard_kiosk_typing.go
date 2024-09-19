@@ -28,7 +28,6 @@ import (
 func init() {
 	testing.AddTest(&testing.Test{
 		Func:         VirtualKeyboardKioskTyping,
-		LacrosStatus: testing.LacrosVariantExists,
 		Desc:         "Checks that user can type in virtual keyboard in kiosk mode",
 		Contacts:     []string{"essential-inputs-gardener-oncall@google.com", "essential-inputs-team@google.com"},
 		BugComponent: "b:95887",
@@ -42,16 +41,7 @@ func init() {
 		HardwareDeps: hwdep.D(pre.InputsStableModels),
 		SearchFlags:  util.IMESearchFlags([]ime.InputMethod{ime.DefaultInputMethod}),
 		Timeout:      2 * time.Minute,
-		Params: []testing.Param{
-			{
-				Fixture: fixture.KioskVK,
-			},
-			{
-				Name:              "lacros",
-				ExtraSoftwareDeps: []string{"lacros"},
-				Fixture:           fixture.LacrosKioskVK,
-			},
-		},
+		Fixture:      fixture.KioskVK,
 	})
 }
 

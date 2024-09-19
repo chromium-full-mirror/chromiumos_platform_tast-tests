@@ -8,6 +8,7 @@ import (
 	"context"
 	"time"
 
+	"go.chromium.org/tast-tests/cros/local/chrome/browser"
 	"go.chromium.org/tast-tests/cros/local/chrome/ime"
 	"go.chromium.org/tast-tests/cros/local/chrome/uiauto"
 	"go.chromium.org/tast-tests/cros/local/chrome/uiauto/faillog"
@@ -26,26 +27,15 @@ import (
 func init() {
 	testing.AddTest(&testing.Test{
 		Func:         PhysicalKeyboardEnglishTyping,
-		LacrosStatus: testing.LacrosVariantExists,
 		Desc:         "Checks that physical keyboard can perform basic typing",
 		Contacts:     []string{"essential-inputs-gardener-oncall@google.com", "essential-inputs-team@google.com"},
 		BugComponent: "b:95887",
-		Attr:         []string{"group:mainline", "group:input-tools", "group:input-tools-upstream", "group:intel-gating", "group:hw_agnostic"},
+		Attr:         []string{"group:mainline", "group:input-tools", "group:input-tools-upstream", "group:intel-gating", "group:hw_agnostic", "group:intel-nda"},
 		SoftwareDeps: []string{"inputs_deps", "chrome", "chrome_internal"},
 		HardwareDeps: hwdep.D(pre.InputsStableModels),
 		SearchFlags:  util.SearchFlagsWithIMEAndScreenPlay([]ime.InputMethod{ime.EnglishUS}, []string{"screenplay-2dc011b8-41c9-451f-a47b-5e5e6a3d55bb"}),
 		Timeout:      5 * time.Minute,
-		Params: []testing.Param{
-			{
-				Fixture:   fixture.ClamshellNonVK,
-				ExtraAttr: []string{"group:intel-nda"},
-			},
-			{
-				Name:              "lacros",
-				Fixture:           fixture.LacrosClamshellNonVK,
-				ExtraSoftwareDeps: []string{"lacros", "lacros_stable"},
-			},
-		},
+		Fixture:      fixture.ClamshellNonVK,
 	})
 }
 
@@ -75,7 +65,7 @@ func PhysicalKeyboardEnglishTyping(ctx context.Context, s *testing.State) {
 	}
 	defer keyboard.Close(ctx)
 
-	its, err := testserver.LaunchBrowser(ctx, s.FixtValue().(fixture.FixtData).BrowserType, cr, tconn)
+	its, err := testserver.LaunchBrowser(ctx, browser.TypeAsh, cr, tconn)
 	if err != nil {
 		s.Fatal("Failed to launch inputs test server: ", err)
 	}

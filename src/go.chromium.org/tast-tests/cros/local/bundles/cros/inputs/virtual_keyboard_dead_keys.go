@@ -8,6 +8,7 @@ import (
 	"context"
 	"time"
 
+	"go.chromium.org/tast-tests/cros/local/chrome/browser"
 	"go.chromium.org/tast-tests/cros/local/chrome/ime"
 	"go.chromium.org/tast-tests/cros/local/chrome/uiauto"
 	"go.chromium.org/tast-tests/cros/local/chrome/uiauto/faillog"
@@ -38,7 +39,6 @@ const (
 func init() {
 	testing.AddTest(&testing.Test{
 		Func:         VirtualKeyboardDeadKeys,
-		LacrosStatus: testing.LacrosVariantExists,
 		Desc:         "Checks that dead keys on the virtual keyboard work",
 		Contacts:     []string{"essential-inputs-gardener-oncall@google.com", "essential-inputs-team@google.com"},
 		BugComponent: "b:95887",
@@ -116,32 +116,6 @@ func init() {
 				},
 				ExtraSearchFlags: util.IMESearchFlags([]ime.InputMethod{ime.Catalan}),
 			},
-			{
-				Name:              "french_lacros",
-				ExtraHardwareDeps: hwdep.D(pre.InputsStableModels),
-				ExtraSoftwareDeps: []string{"lacros", "lacros_stable"},
-				Fixture:           fixture.LacrosClamshellVK,
-				Val: deadKeysTestCase{
-					inputMethod:          ime.FrenchFrance,
-					typingKeys:           []string{circumflex, "a"},
-					expectedTypingResult: "â",
-				},
-				ExtraSearchFlags: util.IMESearchFlags([]ime.InputMethod{ime.FrenchFrance}),
-				ExtraAttr:        []string{"group:hw_agnostic"},
-			},
-			{
-				Name:              "catalan_lacros",
-				ExtraHardwareDeps: hwdep.D(pre.InputsStableModels),
-				ExtraSoftwareDeps: []string{"lacros", "lacros_stable"},
-				Fixture:           fixture.LacrosTabletVK,
-				Val: deadKeysTestCase{
-					inputMethod:          ime.Catalan,
-					typingKeys:           []string{acuteAccent, "a"},
-					expectedTypingResult: "á",
-				},
-				ExtraSearchFlags: util.IMESearchFlags([]ime.InputMethod{ime.Catalan}),
-				ExtraAttr:        []string{"group:hw_agnostic"},
-			},
 		},
 	})
 }
@@ -159,7 +133,7 @@ func VirtualKeyboardDeadKeys(ctx context.Context, s *testing.State) {
 
 	defer faillog.DumpUITreeWithScreenshotOnError(cleanupCtx, s.OutDir(), s.HasError, cr, "ui_tree")
 
-	its, err := testserver.LaunchBrowser(ctx, s.FixtValue().(fixture.FixtData).BrowserType, cr, tconn)
+	its, err := testserver.LaunchBrowser(ctx, browser.TypeAsh, cr, tconn)
 	if err != nil {
 		s.Fatal("Failed to launch inputs test server: ", err)
 	}

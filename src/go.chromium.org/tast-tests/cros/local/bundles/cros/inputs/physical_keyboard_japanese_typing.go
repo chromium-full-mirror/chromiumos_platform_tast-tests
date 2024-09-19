@@ -9,6 +9,7 @@ import (
 	"time"
 
 	"go.chromium.org/tast-tests/cros/local/chrome"
+	"go.chromium.org/tast-tests/cros/local/chrome/browser"
 	"go.chromium.org/tast-tests/cros/local/chrome/ime"
 	"go.chromium.org/tast-tests/cros/local/chrome/uiauto"
 	"go.chromium.org/tast-tests/cros/local/chrome/uiauto/faillog"
@@ -26,7 +27,6 @@ import (
 func init() {
 	testing.AddTest(&testing.Test{
 		Func:         PhysicalKeyboardJapaneseTyping,
-		LacrosStatus: testing.LacrosVariantExists,
 		Desc:         "Checks that Japanese physical keyboard works",
 		Contacts:     []string{"essential-inputs-gardener-oncall@google.com", "essential-inputs-team@google.com"},
 		BugComponent: "b:95887",
@@ -53,20 +53,6 @@ func init() {
 				Fixture:          fixture.ClamshellNonVKWithAltClickAndSixPackCustomization,
 				Val:              ime.Japanese,
 				ExtraSearchFlags: util.IMESearchFlags([]ime.InputMethod{ime.Japanese}),
-			},
-			{
-				Name:              "us_lacros",
-				Fixture:           fixture.LacrosClamshellNonVKWithAltClickAndSixPackCustomization,
-				Val:               ime.JapaneseWithUSKeyboard,
-				ExtraSoftwareDeps: []string{"lacros", "lacros_stable"},
-				ExtraSearchFlags:  util.IMESearchFlags([]ime.InputMethod{ime.JapaneseWithUSKeyboard}),
-			},
-			{
-				Name:              "jp_lacros",
-				Fixture:           fixture.LacrosClamshellNonVKWithAltClickAndSixPackCustomization,
-				Val:               ime.Japanese,
-				ExtraSoftwareDeps: []string{"lacros", "lacros_stable"},
-				ExtraSearchFlags:  util.IMESearchFlags([]ime.InputMethod{ime.Japanese}),
 			},
 		},
 	})
@@ -105,7 +91,7 @@ func PhysicalKeyboardJapaneseTyping(ctx context.Context, s *testing.State) {
 	}
 	defer kb.Close(ctx)
 
-	its, err := testserver.LaunchBrowser(ctx, s.FixtValue().(fixture.FixtData).BrowserType, cr, tconn)
+	its, err := testserver.LaunchBrowser(ctx, browser.TypeAsh, cr, tconn)
 	if err != nil {
 		s.Fatal("Failed to launch inputs test server: ", err)
 	}

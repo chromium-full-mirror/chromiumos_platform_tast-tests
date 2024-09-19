@@ -9,6 +9,7 @@ import (
 	"time"
 
 	"go.chromium.org/tast-tests/cros/local/bundles/cros/inputs/testrunner"
+	"go.chromium.org/tast-tests/cros/local/chrome/browser"
 	"go.chromium.org/tast-tests/cros/local/chrome/ime"
 	"go.chromium.org/tast-tests/cros/local/chrome/uiauto"
 	"go.chromium.org/tast-tests/cros/local/chrome/uiauto/faillog"
@@ -33,7 +34,6 @@ type glideTypingTestParam struct {
 func init() {
 	testing.AddTest(&testing.Test{
 		Func:         VirtualKeyboardGlideTyping,
-		LacrosStatus: testing.LacrosVariantExists,
 		Desc:         "Test handwriting input functionality on virtual keyboard",
 		Contacts:     []string{"essential-inputs-gardener-oncall@google.com", "essential-inputs-team@google.com"},
 		BugComponent: "b:95887",
@@ -96,50 +96,6 @@ func init() {
 				},
 				ExtraSearchFlags: util.IMESearchFlags([]ime.InputMethod{ime.EnglishUS}),
 			},
-			{
-				Name:    "tablet_docked_lacros",
-				Fixture: fixture.LacrosTabletVK,
-				Val: glideTypingTestParam{
-					floatLayout: false,
-					inputMethod: ime.EnglishUS,
-				},
-				ExtraAttr:         []string{"group:input-tools-upstream"},
-				ExtraSoftwareDeps: []string{"lacros", "lacros_stable"},
-				ExtraSearchFlags:  util.IMESearchFlags([]ime.InputMethod{ime.EnglishUS}),
-			},
-			{
-				Name:    "tablet_floating_lacros",
-				Fixture: fixture.LacrosTabletVK,
-				Val: glideTypingTestParam{
-					floatLayout: true,
-					inputMethod: ime.EnglishUSWithInternationalKeyboard,
-				},
-				ExtraAttr:         []string{"group:input-tools-upstream"},
-				ExtraSoftwareDeps: []string{"lacros", "lacros_stable"},
-				ExtraSearchFlags:  util.IMESearchFlags([]ime.InputMethod{ime.EnglishUSWithInternationalKeyboard}),
-			},
-			{
-				Name:    "clamshell_a11y_docked_lacros",
-				Fixture: fixture.LacrosClamshellVK,
-				Val: glideTypingTestParam{
-					floatLayout: false,
-					inputMethod: ime.EnglishUS,
-				},
-				ExtraAttr:         []string{"group:input-tools-upstream"},
-				ExtraSoftwareDeps: []string{"lacros", "lacros_stable"},
-				ExtraSearchFlags:  util.IMESearchFlags([]ime.InputMethod{ime.EnglishUS}),
-			},
-			{
-				Name:    "clamshell_a11y_floating_lacros",
-				Fixture: fixture.LacrosClamshellVK,
-				Val: glideTypingTestParam{
-					floatLayout: true,
-					inputMethod: ime.EnglishUS,
-				},
-				ExtraAttr:         []string{"group:input-tools-upstream"},
-				ExtraSoftwareDeps: []string{"lacros", "lacros_stable"},
-				ExtraSearchFlags:  util.IMESearchFlags([]ime.InputMethod{ime.EnglishUS}),
-			},
 		},
 	})
 }
@@ -163,7 +119,7 @@ func VirtualKeyboardGlideTyping(ctx context.Context, s *testing.State) {
 	uc.SetAttribute(useractions.AttributeInputMethod, inputMethod.Name)
 
 	// Launch inputs test web server.
-	its, err := testserver.LaunchBrowser(ctx, s.FixtValue().(fixture.FixtData).BrowserType, cr, tconn)
+	its, err := testserver.LaunchBrowser(ctx, browser.TypeAsh, cr, tconn)
 	if err != nil {
 		s.Fatal("Failed to launch inputs test server: ", err)
 	}
