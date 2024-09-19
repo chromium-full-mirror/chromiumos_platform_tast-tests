@@ -388,6 +388,7 @@ func ShareNetwork(ctx context.Context, s *testing.State) {
 	}
 
 	testScenario := s.Param().([]*shareNetworkTestScenario)
+	cleanupCtx := ctx
 	// Configuring networks.
 	for _, test := range testScenario {
 		if len(test.networksToJoin) > 0 {
@@ -395,13 +396,26 @@ func ShareNetwork(ctx context.Context, s *testing.State) {
 			if err := loginAndPerformActions(ctx, rpcClient, loginReqs[user], configureNetworks(tf, test.networksToJoin)); err != nil {
 				s.Fatalf("Failed to configure networks under user %d: %v", user, err)
 			}
+
+			for _, network := range test.networksToJoin {
+				var cancel context.CancelFunc
+				ctx, cancel = tf.ReserveForDeconfigAP(ctx, network.APIface)
+				defer cancel()
+			}
 		}
 	}
-
-	cleanupCtx := ctx
-	ctx, cancel := ctxutil.Shorten(ctx, 10*time.Second)
-	defer cancel()
-	defer tf.DeconfigAllAPs(cleanupCtx)
+	// Deconfiguring networks.
+	// Defer the deconfiguration of networks until all scenarios are completed to make sure cleanup happens only after the entire test finishes.
+	defer func(ctx context.Context) {
+		for _, test := range testScenario {
+			if len(test.networksToJoin) > 0 {
+				for _, network := range test.networksToJoin {
+					tf.DeconfigAP(ctx, network.APIface)
+					network.APIface = nil
+				}
+			}
+		}
+	}(cleanupCtx)
 
 	for _, test := range testScenario {
 		user := test.loginAs
