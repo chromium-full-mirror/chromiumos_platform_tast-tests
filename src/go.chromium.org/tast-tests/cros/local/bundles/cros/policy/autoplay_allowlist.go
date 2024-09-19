@@ -28,9 +28,8 @@ var errMediaNotPlaying = errors.New("media is not playing")
 
 func init() {
 	testing.AddTest(&testing.Test{
-		Func:         AutoplayAllowlist,
-		LacrosStatus: testing.LacrosVariantExists,
-		Desc:         "Checking if autoplay is allowed on a website or not, depending on the value of the AutoplayAllowlist policy",
+		Func: AutoplayAllowlist,
+		Desc: "Checking if autoplay is allowed on a website or not, depending on the value of the AutoplayAllowlist policy",
 		Contacts: []string{
 			"cros-engprod-muc@google.com",
 			"fbeaufort@chromium.org", // Owner of the policy
@@ -39,16 +38,8 @@ func init() {
 		BugComponent: "b:1263917",
 		SoftwareDeps: []string{"chrome"},
 		Attr:         []string{"group:golden_tier", "group:hw_agnostic"},
-		Params: []testing.Param{{
-			Fixture: fixture.ChromePolicyLoggedIn,
-			Val:     browser.TypeAsh,
-		}, {
-			Name:              "lacros",
-			ExtraSoftwareDeps: []string{"lacros"},
-			Fixture:           fixture.LacrosPolicyLoggedIn,
-			Val:               browser.TypeLacros,
-		}},
-		Data: []string{"autoplay_allowed.html", "audio.mp3"},
+		Fixture:      fixture.ChromePolicyLoggedIn,
+		Data:         []string{"autoplay_allowed.html", "audio.mp3"},
 		SearchFlags: []*testing.StringPair{
 			pci.SearchFlag(&policy.AutoplayAllowed{}, pci.VerifiedFunctionalityJS),
 			pci.SearchFlag(&policy.AutoplayAllowlist{}, pci.VerifiedFunctionalityJS),
@@ -120,7 +111,7 @@ func AutoplayAllowlist(ctx context.Context, s *testing.State) {
 			}
 
 			// Setup browser based on the chrome type.
-			br, closeBrowser, err := browserfixt.SetUp(ctx, cr, s.Param().(browser.Type))
+			br, closeBrowser, err := browserfixt.SetUp(ctx, cr, browser.TypeAsh)
 			if err != nil {
 				s.Fatal("Failed to open the browser: ", err)
 			}

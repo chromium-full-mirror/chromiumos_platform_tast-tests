@@ -28,9 +28,8 @@ import (
 
 func init() {
 	testing.AddTest(&testing.Test{
-		Func:         AllowWakeLocks,
-		LacrosStatus: testing.LacrosVariantExists,
-		Desc:         "Behavior of AllowWakeLocks policy check whether it shows idle window or not for pages with wake locks requests",
+		Func: AllowWakeLocks,
+		Desc: "Behavior of AllowWakeLocks policy check whether it shows idle window or not for pages with wake locks requests",
 		Contacts: []string{
 			"cros-demo-mode-eng@google.com",
 			"mohamedaomar@google.com", // Test author
@@ -38,16 +37,8 @@ func init() {
 		BugComponent: "b:812312", // Chrome OS Server Projects > Enterprise Management > Demo Mode
 		SoftwareDeps: []string{"chrome"},
 		Attr:         []string{"group:golden_tier", "group:hw_agnostic"},
-		Params: []testing.Param{{
-			Fixture: fixture.ChromePolicyLoggedIn,
-			Val:     browser.TypeAsh,
-		}, {
-			Name:              "lacros",
-			ExtraSoftwareDeps: []string{"lacros"},
-			Fixture:           fixture.LacrosPolicyLoggedIn,
-			Val:               browser.TypeLacros,
-		}},
-		Data: []string{"allow_wake_locks_index.html"},
+		Fixture:      fixture.ChromePolicyLoggedIn,
+		Data:         []string{"allow_wake_locks_index.html"},
 		SearchFlags: []*testing.StringPair{
 			pci.SearchFlag(&policy.AllowWakeLocks{}, pci.VerifiedFunctionalityUI),
 			pci.SearchFlag(&policy.PowerManagementIdleSettings{}, pci.VerifiedValue),
@@ -136,7 +127,7 @@ func AllowWakeLocks(ctx context.Context, s *testing.State) {
 			}
 
 			// Setup browser based on the chrome type.
-			br, closeBrowser, err := browserfixt.SetUp(ctx, cr, s.Param().(browser.Type))
+			br, closeBrowser, err := browserfixt.SetUp(ctx, cr, browser.TypeAsh)
 			if err != nil {
 				s.Fatal("Failed to open the browser: ", err)
 			}

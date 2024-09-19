@@ -20,7 +20,6 @@ import (
 	"go.chromium.org/tast-tests/cros/local/chrome"
 	"go.chromium.org/tast-tests/cros/local/chrome/browser"
 	"go.chromium.org/tast-tests/cros/local/chrome/browser/browserfixt"
-	"go.chromium.org/tast-tests/cros/local/chrome/lacros/lacrosfixt"
 	"go.chromium.org/tast-tests/cros/local/policyutil"
 	"go.chromium.org/tast-tests/cros/local/policyutil/fixtures"
 	"go.chromium.org/tast-tests/cros/local/sysutil"
@@ -33,7 +32,6 @@ import (
 func init() {
 	testing.AddTest(&testing.Test{
 		Func:         ExtensionPolicy,
-		LacrosStatus: testing.LacrosVariantExists,
 		Desc:         "Check if extension policies can be applied",
 		BugComponent: "b:1111617",
 		Contacts: []string{
@@ -49,16 +47,8 @@ func init() {
 			"group:complementary",
 			"group:hw_agnostic",
 		},
-		Data: []string{"extension_policy/policy.json", "extension_policy/background.js", "extension_policy/manifest.json", "extension_policy/schema.json"},
-		Params: []testing.Param{{
-			Val:     browser.TypeAsh,
-			Fixture: fixture.FakeDMS,
-		}, {
-			Name:              "lacros",
-			ExtraSoftwareDeps: []string{"lacros"},
-			Val:               browser.TypeLacros,
-			Fixture:           fixture.PersistentLacros,
-		}},
+		Data:    []string{"extension_policy/policy.json", "extension_policy/background.js", "extension_policy/manifest.json", "extension_policy/schema.json"},
+		Fixture: fixture.FakeDMS,
 	})
 }
 
@@ -67,7 +57,6 @@ const extensionPolicyDir = "extension_policy"
 var extensionPolicyFiles = []string{"background.js", "manifest.json", "schema.json"}
 
 func ExtensionPolicy(ctx context.Context, s *testing.State) {
-	browserType := s.Param().(browser.Type)
 	fdms := s.FixtValue().(fakedms.HasFakeDMS).FakeDMS()
 
 	cleanupCtx := ctx
@@ -127,14 +116,9 @@ func ExtensionPolicy(ctx context.Context, s *testing.State) {
 		// autotestprivate is not available in lacros. We always need the extension in Ash to read back its policy values.
 		chrome.UnpackedExtension(extDir),
 	}
-	if browserType == browser.TypeLacros {
-		chromeOptions = append(chromeOptions, chrome.LacrosUnpackedExtension(extDir))
-	}
 
 	cr, br, closeBrowser, err := browserfixt.SetUpWithNewChrome(
-		ctx, browserType,
-		lacrosfixt.NewConfig(lacrosfixt.KeepAlive(true)),
-		chromeOptions...,
+		ctx, browser.TypeAsh, nil, chromeOptions...,
 	)
 	if err != nil {
 		s.Fatal("Failed to setup chrome: ", err)
