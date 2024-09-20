@@ -325,7 +325,7 @@ func file(fileName string) *nodewith.Finder {
 	return nodewith.Name(fileName).Role(role.StaticText).Ancestor(filesBox)
 }
 
-// fileRegex returns a nodewith.Finder for a file that matches the provided pattern.
+// fileRegex returns a nodewith.Finder for the first file that matches the provided pattern.
 func fileRegex(fileNamePattern *regexp.Regexp) *nodewith.Finder {
 	filesBox := nodewith.Role(role.ListBox)
 	return nodewith.NameRegex(fileNamePattern).Role(role.StaticText).Ancestor(filesBox).First()
@@ -346,9 +346,22 @@ func (f *FilesApp) EnsureFileGone(fileName string, duration time.Duration) uiaut
 	return f.EnsureGoneFor(file(fileName), duration)
 }
 
-// FileExists calls ui.Exists to check whether a folder or a file exists in the Files App.
-func (f *FilesApp) FileExists(fileName string) uiauto.Action {
-	return f.Exists(file(fileName))
+// FileExists checks whether a file or folder exists in the Files App.
+//
+// fileSelector can be a string (for exact match) or a *regexp.Regexp (for pattern matching).
+// Returns an error if fileSelector is of an unsupported type.
+func (f *FilesApp) FileExists(fileSelector interface{}) uiauto.Action {
+	switch t := fileSelector.(type) {
+	case string:
+		return f.Exists(file(fileSelector.(string)))
+	case *regexp.Regexp:
+		re := fileSelector.(*regexp.Regexp)
+		return f.Exists(fileRegex(re))
+	default:
+		return func(ctx context.Context) error {
+			return errors.Errorf("unsupported fileSelector type %s", t)
+		}
+	}
 }
 
 // WaitForFileByPattern waits for any file matching the pattern and returns its name or an error.
@@ -363,13 +376,33 @@ func (f *FilesApp) WaitForFileByPattern(ctx context.Context, fileNamePattern *re
 	return node.Name, nil
 }
 
-// IsFileSelected returns an Action that returns `nil` when the file exists.
-// When it doesn't exist it returns an error. This is useful to use with some polling functions e.g.:
+// IsFileSelected returns an Action that returns `nil` when the file exists and is selected.
+// When it doesn't exist or isn't selected, it returns an error.
+//
+// fileSelector can be a string (for exact match) or a *regexp.Regexp (for pattern matching), in which case the first match is used.
+// Returns an error if fileSelector is of an unsupported type.
+//
+// This is useful to use with some polling functions e.g.:
 // f.LeftClickUntil(aFinder, f.IsFileSelected("leFile"))
-func (f *FilesApp) IsFileSelected(fileName string) uiauto.Action {
+// f.LeftClickUntil(aFinder, f.IsFileSelected(regexp.MustCompile("leFile.*")))
+func (f *FilesApp) IsFileSelected(fileSelector interface{}) uiauto.Action {
 	return func(ctx context.Context) error {
-		// The ARIA label for the file row starts with the file name and is followed by " Size" and the content of the other colunmns.
-		nodeInfo, err := f.Info(ctx, nodewith.Role(role.ListBoxOption).NameStartingWith(fileName+" Size"))
+		var nodeMatcher *nodewith.Finder
+		// The ARIA label for the file row starts with the file name and
+		// is followed by " Size" and the content of the other columns.
+		switch t := fileSelector.(type) {
+		case string:
+			nodeMatcher = nodewith.Role(role.ListBoxOption).NameStartingWith(fileSelector.(string) + " Size")
+			break
+		case *regexp.Regexp:
+			re := fileSelector.(*regexp.Regexp)
+			pattern := fmt.Sprintf("%s.* Size", re.String())
+			nodeMatcher = nodewith.Role(role.ListBoxOption).NameRegex(regexp.MustCompile(pattern))
+		default:
+			return errors.Errorf("unsupported fileSelector type %s", t)
+		}
+
+		nodeInfo, err := f.Info(ctx, nodeMatcher)
 		if err != nil {
 			return err
 		}
@@ -383,16 +416,48 @@ func (f *FilesApp) IsFileSelected(fileName string) uiauto.Action {
 }
 
 // SelectFile returns a function that selects a file by clicking on it.
-func (f *FilesApp) SelectFile(fileName string) uiauto.Action {
+//
+// fileSelector can be a string (for exact match) or a *regexp.Regexp (for pattern matching), in which case the first match is used.
+// Returns an error if fileSelector is of an unsupported type.
+func (f *FilesApp) SelectFile(fileSelector interface{}) uiauto.Action {
+	var nodeMatcher *nodewith.Finder
+	switch t := fileSelector.(type) {
+	case string:
+		nodeMatcher = file(fileSelector.(string))
+		break
+	case *regexp.Regexp:
+		re := fileSelector.(*regexp.Regexp)
+		nodeMatcher = fileRegex(re)
+	default:
+		return func(ctx context.Context) error {
+			return errors.Errorf("unsupported fileSelector type %s", t)
+		}
+	}
+
 	return uiauto.Combine("select file",
-		f.WaitForFile(fileName),
-		f.LeftClickUntil(file(fileName), f.IsFileSelected(fileName)),
+		f.WaitUntilExists(nodeMatcher),
+		f.LeftClickUntil(nodeMatcher, f.IsFileSelected(fileSelector)),
 	)
 }
 
 // OpenFile returns a function that executes double click on a file to open it with default app.
-func (f *FilesApp) OpenFile(fileName string) uiauto.Action {
-	return f.DoubleClick(file(fileName))
+//
+// fileSelector can be a string (for exact match) or a *regexp.Regexp (for pattern matching), in which case the first match is used.
+// Returns an error if fileSelector is of an unsupported type.
+func (f *FilesApp) OpenFile(fileSelector interface{}) uiauto.Action {
+	var nodeMatcher *nodewith.Finder
+	switch t := fileSelector.(type) {
+	case string:
+		nodeMatcher = file(fileSelector.(string))
+		break
+	case *regexp.Regexp:
+		nodeMatcher = fileRegex(fileSelector.(*regexp.Regexp))
+	default:
+		return func(ctx context.Context) error {
+			return errors.Errorf("unsupported fileSelector type %s", t)
+		}
+	}
+	return f.DoubleClick(nodeMatcher)
 }
 
 // OpenContextMenu returns a function that selects a file, then executes right click to open its context menu.
@@ -570,12 +635,34 @@ func (f *FilesApp) OpenPathBySearch(kb *input.KeyboardEventWriter, dirName strin
 // DeleteFileOrFolder returns a function that deletes a file or folder.
 // The parent folder must currently be open for this to work.
 // Consider using OpenPath to do this.
-func (f *FilesApp) DeleteFileOrFolder(kb *input.KeyboardEventWriter, fileName string) uiauto.Action {
+//
+// fileSelector can be a string (for exact match) or a *regexp.Regexp (for pattern matching), in which case the first match is used.
+// Returns an error if fileSelector is of an unsupported type.
+func (f *FilesApp) DeleteFileOrFolder(kb *input.KeyboardEventWriter, fileSelector interface{}) uiauto.Action {
+	var (
+		nodeMatcher *nodewith.Finder
+		fileName    string
+	)
+	switch t := fileSelector.(type) {
+	case string:
+		fileName = fileSelector.(string)
+		nodeMatcher = file(fileName)
+		break
+	case *regexp.Regexp:
+		re := fileSelector.(*regexp.Regexp)
+		fileName = re.String()
+		nodeMatcher = fileRegex(re)
+	default:
+		return func(ctx context.Context) error {
+			return errors.Errorf("unsupported fileSelector type %s", t)
+		}
+	}
+
 	return uiauto.Combine(fmt.Sprintf("DeleteFileOrFolder(%s)", fileName),
-		f.SelectFile(fileName),
+		f.SelectFile(fileSelector),
 		kb.AccelAction("Alt+Shift+Backspace"),
 		f.LeftClick(nodewith.NameRegex(regexp.MustCompile("^Delete( forever)?$")).HasClass("cr-dialog-ok").Role(role.Button)),
-		f.WaitUntilFileGone(fileName),
+		f.WaitUntilGone(nodeMatcher),
 	)
 }
 
