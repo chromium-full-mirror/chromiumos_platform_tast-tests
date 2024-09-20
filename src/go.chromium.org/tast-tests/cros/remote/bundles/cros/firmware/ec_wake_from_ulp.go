@@ -52,6 +52,7 @@ func init() {
 				"calus",
 				"dochi",
 				"felwinter",
+				"gimble",
 				"kano",
 				"mithrax",
 				"omnigul",
