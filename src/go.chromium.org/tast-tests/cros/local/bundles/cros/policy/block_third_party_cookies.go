@@ -34,9 +34,8 @@ import (
 
 func init() {
 	testing.AddTest(&testing.Test{
-		Func:         BlockThirdPartyCookies,
-		LacrosStatus: testing.LacrosVariantExists,
-		Desc:         "Test the behavior of BlockThirdPartyCookies policy: check if third party cookies are allowed based on policy value",
+		Func: BlockThirdPartyCookies,
+		Desc: "Test the behavior of BlockThirdPartyCookies policy: check if third party cookies are allowed based on policy value",
 		Contacts: []string{
 			"cros-engprod-muc@google.com",
 			"snijhara@google.com", // Test author
@@ -45,15 +44,7 @@ func init() {
 		BugComponent: "b:1263917",
 		SoftwareDeps: []string{"chrome"},
 		Attr:         []string{"group:golden_tier", "group:hw_agnostic"},
-		Params: []testing.Param{{
-			Fixture: fixture.ChromePolicyLoggedIn,
-			Val:     browser.TypeAsh,
-		}, {
-			Name:              "lacros",
-			ExtraSoftwareDeps: []string{"lacros"},
-			Fixture:           fixture.LacrosPolicyLoggedIn,
-			Val:               browser.TypeLacros,
-		}},
+		Fixture:      fixture.ChromePolicyLoggedIn,
 		Data: []string{
 			"third_party_cookies.html",
 			"third_party_cookies.js",
@@ -213,7 +204,7 @@ func BlockThirdPartyCookies(ctx context.Context, s *testing.State) {
 				s.Fatal("Failed to update policies: ", err)
 			}
 
-			br, closeBrowser, err := browserfixt.SetUp(ctx, cr, s.Param().(browser.Type))
+			br, closeBrowser, err := browserfixt.SetUp(ctx, cr, browser.TypeAsh)
 			if err != nil {
 				s.Fatal("Failed to setup chrome: ", err)
 			}

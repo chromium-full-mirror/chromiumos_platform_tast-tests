@@ -29,22 +29,21 @@ const (
 
 func init() {
 	testing.AddTest(&testing.Test{
-		Func:         EditBookmarksEnabled,
-		LacrosStatus: testing.LacrosVariantNeeded,
-		Desc:         "Behavior of EditBookmarksEnabled policy: check if you can create, edit and remove bookmarks based on the policy value",
+		Func: EditBookmarksEnabled,
+		Desc: "Behavior of EditBookmarksEnabled policy: check if you can create, edit and remove bookmarks based on the policy value",
 		Contacts: []string{
 			"cros-engprod-muc@google.com",
 			"kamilszarek@google.com", // Test author
 		},
 		BugComponent: "b:1263917",
 		SoftwareDeps: []string{"chrome"},
-		Attr: []string{
-		// Disabled by TORA.  See: b/298852783
-		// 	"group:golden_tier",
-		// 	"group:medium_low_tier",
-		// 	"group:hardware",
-		// 	"group:complementary",
-		// 	"group:hw_agnostic"
+		Attr:         []string{
+			// Disabled by TORA.  See: b/298852783
+			// 	"group:golden_tier",
+			// 	"group:medium_low_tier",
+			// 	"group:hardware",
+			// 	"group:complementary",
+			// 	"group:hw_agnostic"
 		},
 		Fixture: fixture.ChromePolicyLoggedIn,
 		SearchFlags: []*testing.StringPair{

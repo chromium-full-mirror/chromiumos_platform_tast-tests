@@ -27,9 +27,8 @@ import (
 
 func init() {
 	testing.AddTest(&testing.Test{
-		Func:         ExtensionAllowedTypes,
-		LacrosStatus: testing.LacrosVariantExists,
-		Desc:         "Behavior of ExtensionAllowedTypes policy, checking if a theme can be added to Chrome",
+		Func: ExtensionAllowedTypes,
+		Desc: "Behavior of ExtensionAllowedTypes policy, checking if a theme can be added to Chrome",
 		Contacts: []string{
 			"cros-commercial-chromeapps-eng@google.com",
 			"giovax@google.com", // Test owner
@@ -37,16 +36,8 @@ func init() {
 		BugComponent: "b:1253865", // ChromeOS > Software > Commercial (Enterprise) > Chrome Apps and Extensions
 		SoftwareDeps: []string{"chrome"},
 		Attr:         []string{"group:golden_tier", "group:hw_agnostic"},
-		Params: []testing.Param{{
-			Fixture: fixture.ChromePolicyLoggedIn,
-			Val:     browser.TypeAsh,
-		}, {
-			Name:              "lacros",
-			ExtraSoftwareDeps: []string{"lacros"},
-			Fixture:           fixture.LacrosPolicyLoggedIn,
-			Val:               browser.TypeLacros,
-		}},
-		Timeout: 4 * time.Minute, // There is a longer wait when installing the extension.
+		Fixture:      fixture.ChromePolicyLoggedIn,
+		Timeout:      4 * time.Minute, // There is a longer wait when installing the extension.
 		SearchFlags: []*testing.StringPair{
 			pci.SearchFlag(&policy.ExtensionAllowedTypes{}, pci.VerifiedFunctionalityUI),
 		},
@@ -109,7 +100,7 @@ func ExtensionAllowedTypes(ctx context.Context, s *testing.State) {
 			}
 
 			// Setup browser based on the chrome type.
-			br, closeBrowser, err := browserfixt.SetUp(ctx, cr, s.Param().(browser.Type))
+			br, closeBrowser, err := browserfixt.SetUp(ctx, cr, browser.TypeAsh)
 			if err != nil {
 				s.Fatal("Failed to open the browser: ", err)
 			}

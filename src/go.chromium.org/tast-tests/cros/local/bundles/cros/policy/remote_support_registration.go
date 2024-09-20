@@ -29,9 +29,8 @@ import (
 
 func init() {
 	testing.AddTest(&testing.Test{
-		Func:         RemoteSupportRegistration,
-		LacrosStatus: testing.LacrosVariantExists,
-		Desc:         "Verifies behavior of RemoteAccessHostAllowRemoteSupportConnections policy",
+		Func: RemoteSupportRegistration,
+		Desc: "Verifies behavior of RemoteAccessHostAllowRemoteSupportConnections policy",
 		Contacts: []string{
 			"dp-chromeos-eng@google.com",
 			"crmullins@google.com",
@@ -40,10 +39,7 @@ func init() {
 		Attr:         []string{"group:golden_tier", "group:hw_agnostic"},
 		SoftwareDeps: []string{"chrome", "gaia"},
 		Timeout:      3 * time.Minute,
-		Params: []testing.Param{{
-			Fixture: fixture.FakeDMS,
-			Val:     browser.TypeAsh,
-		}},
+		Fixture:      fixture.FakeDMS,
 		SearchFlags: []*testing.StringPair{
 			pci.SearchFlag(&policy.RemoteAccessHostAllowRemoteSupportConnections{},
 				pci.VerifiedFunctionalityUI),
@@ -116,7 +112,7 @@ func RemoteSupportRegistration(ctx context.Context, s *testing.State) {
 			}
 
 			// Setup browser.
-			br, closeBrowser, err := browserfixt.SetUp(ctx, cr, s.Param().(browser.Type))
+			br, closeBrowser, err := browserfixt.SetUp(ctx, cr, browser.TypeAsh)
 			if err != nil {
 				s.Fatal("Failed to open the browser: ", err)
 			}
@@ -130,7 +126,6 @@ func RemoteSupportRegistration(ctx context.Context, s *testing.State) {
 					PolicySetting: key}); err != nil {
 				s.Fatal("Failure during CRD launch: ", err)
 			}
-
 		})
 	}
 

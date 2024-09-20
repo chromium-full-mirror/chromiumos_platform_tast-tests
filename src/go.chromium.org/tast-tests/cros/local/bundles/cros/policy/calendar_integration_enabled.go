@@ -28,7 +28,6 @@ import (
 func init() {
 	testing.AddTest(&testing.Test{
 		Func:         CalendarIntegrationEnabled,
-		LacrosStatus: testing.LacrosVariantExists,
 		Desc:         "Checks behavior of CalendarIntegrationEnabled policy, check if event list is shown based on value of the policy",
 		BugComponent: "b:1129862",
 		Contacts: []string{
@@ -49,15 +48,7 @@ func init() {
 			pci.SearchFlag(&policy.CalendarIntegrationEnabled{}, pci.VerifiedFunctionalityUI),
 			pci.SearchFlag(&policy.CalendarIntegrationEnabled{}, pci.VerifiedFunctionalityOS),
 		},
-		Params: []testing.Param{{
-			Val:     browser.TypeAsh,
-			Fixture: fixture.ChromePolicyRealUserLoggedIn,
-		}, {
-			Name:              "lacros",
-			ExtraSoftwareDeps: []string{"lacros"},
-			Fixture:           fixture.LacrosPolicyRealUserLoggedIn,
-			Val:               browser.TypeLacros,
-		}},
+		Fixture: fixture.ChromePolicyRealUserLoggedIn,
 	})
 }
 
@@ -95,14 +86,14 @@ func CalendarIntegrationEnabled(ctx context.Context, s *testing.State) {
 			}
 
 			// Setup browser based on the chrome type.
-			br, closeBrowser, err := browserfixt.SetUp(ctx, cr, s.Param().(browser.Type))
+			br, closeBrowser, err := browserfixt.SetUp(ctx, cr, browser.TypeAsh)
 			if err != nil {
 				s.Fatal("Failed to open the browser: ", err)
 			}
 			defer closeBrowser(cleanupCtx)
 
 			// Open the net-export page and start logging.
-			netExport, err := netexport.Start(ctx, cr, br, s.Param().(browser.Type))
+			netExport, err := netexport.Start(ctx, cr, br, browser.TypeAsh)
 			if err != nil {
 				s.Fatal("Failed to start net export: ", err)
 			}

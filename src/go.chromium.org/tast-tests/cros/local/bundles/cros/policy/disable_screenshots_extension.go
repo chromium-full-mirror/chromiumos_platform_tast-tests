@@ -21,7 +21,6 @@ import (
 	"go.chromium.org/tast-tests/cros/local/chrome"
 	"go.chromium.org/tast-tests/cros/local/chrome/browser"
 	"go.chromium.org/tast-tests/cros/local/chrome/browser/browserfixt"
-	"go.chromium.org/tast-tests/cros/local/chrome/lacros/lacrosfixt"
 	"go.chromium.org/tast-tests/cros/local/input"
 	"go.chromium.org/tast-tests/cros/local/policyutil"
 	"go.chromium.org/tast-tests/cros/local/policyutil/fixtures"
@@ -42,9 +41,8 @@ var extensionFiles = []string{
 
 func init() {
 	testing.AddTest(&testing.Test{
-		Func:         DisableScreenshotsExtension,
-		LacrosStatus: testing.LacrosVariantExists,
-		Desc:         "Behavior of the DisableScreenshots policy, check whether screenshot can be taken by chrome.tabs.captureVisibleTab extensions API",
+		Func: DisableScreenshotsExtension,
+		Desc: "Behavior of the DisableScreenshots policy, check whether screenshot can be taken by chrome.tabs.captureVisibleTab extensions API",
 		Contacts: []string{
 			"cros-engprod-muc@google.com",
 			"poromov@google.com", // Policy owner
@@ -53,19 +51,11 @@ func init() {
 		SoftwareDeps: []string{"chrome"},
 		Attr:         []string{"group:golden_tier", "group:hw_agnostic"},
 		Fixture:      fixture.FakeDMS,
-		Params: []testing.Param{{
-			Val: browser.TypeAsh,
-		}, {
-			Name:              "lacros",
-			ExtraSoftwareDeps: []string{"lacros"},
-			Val:               browser.TypeLacros,
-		}},
-		Data: append(extensionFiles, disableScreenshotsExtensionHTML),
+		Data:         append(extensionFiles, disableScreenshotsExtensionHTML),
 		// 2 minutes is the default local test timeout. Check localTestTimeout constant in tast/src/go.chromium.org/tast-tests/cros/internal/bundle/local.go.
 		Timeout: chrome.ManagedUserLoginTimeout + 2*time.Minute,
 		SearchFlags: []*testing.StringPair{
 			pci.SearchFlag(&policy.DisableScreenshots{}, pci.VerifiedFunctionalityJS),
-			pci.SearchFlag(&policy.LacrosAvailability{}, pci.Served),
 		},
 	})
 }
@@ -78,7 +68,6 @@ func DisableScreenshotsExtension(ctx context.Context, s *testing.State) {
 	defer keyboard.Close(ctx)
 
 	fdms := s.FixtValue().(*fakedms.FakeDMS)
-	bt := s.Param().(browser.Type)
 
 	extDir, err := ioutil.TempDir("", "screen_shooter_extension")
 	if err != nil {
@@ -97,28 +86,14 @@ func DisableScreenshotsExtension(ctx context.Context, s *testing.State) {
 		}
 	}
 
-	// Setting Lacros policy if needed
-	pb := policy.NewBlob()
-	if bt == browser.TypeLacros {
-		pb.AddPolicies([]policy.Policy{&policy.LacrosAvailability{Val: "lacros_only"}})
-	}
-	if err := fdms.WritePolicyBlob(pb); err != nil {
-		s.Fatal("Failed to write policies to FakeDMS: ", err)
-	}
-
 	server := httptest.NewServer(http.FileServer(s.DataFileSystem()))
 	defer server.Close()
 
 	// Setup browser based on the chrome type.
 	chromeOpts := []chrome.Option{
-		chrome.DMSPolicy(fdms.URL), chrome.FakeLogin(chrome.Creds{User: fixtures.Username, Pass: fixtures.Password}),
+		chrome.DMSPolicy(fdms.URL), chrome.FakeLogin(chrome.Creds{User: fixtures.Username, Pass: fixtures.Password}), chrome.UnpackedExtension(extDir),
 	}
-	if bt == browser.TypeLacros {
-		chromeOpts = append(chromeOpts, chrome.LacrosUnpackedExtension(extDir))
-	} else {
-		chromeOpts = append(chromeOpts, chrome.UnpackedExtension(extDir))
-	}
-	cr, br, closeBrowser, err := browserfixt.SetUpWithNewChrome(ctx, bt, lacrosfixt.NewConfig(), chromeOpts...)
+	cr, br, closeBrowser, err := browserfixt.SetUpWithNewChrome(ctx, browser.TypeAsh, nil, chromeOpts...)
 	if err != nil {
 		s.Fatal("Failed to start Chrome: ", err)
 	}
@@ -170,11 +145,7 @@ func DisableScreenshotsExtension(ctx context.Context, s *testing.State) {
 				s.Fatal("Failed to sleep: ", err)
 			}
 
-			policies := tc.value
-			if bt == browser.TypeLacros {
-				policies = append(policies, &policy.LacrosAvailability{Val: "lacros_only"})
-			}
-			if err := policyutil.ServeAndVerify(ctx, fdms, cr, policies); err != nil {
+			if err := policyutil.ServeAndVerify(ctx, fdms, cr, tc.value); err != nil {
 				s.Fatal("Failed to serve and verify: ", err)
 			}
 

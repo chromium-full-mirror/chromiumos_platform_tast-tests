@@ -30,9 +30,8 @@ import (
 
 func init() {
 	testing.AddTest(&testing.Test{
-		Func:         DefaultGeolocationSetting,
-		LacrosStatus: testing.LacrosVariantExists,
-		Desc:         "Behavior of DefaultGeolocationSetting policy, checking the location site settings after setting the policy",
+		Func: DefaultGeolocationSetting,
+		Desc: "Behavior of DefaultGeolocationSetting policy, checking the location site settings after setting the policy",
 		Contacts: []string{
 			"cros-engprod-muc@google.com",
 			"alexanderhartl@google.com", // Test author
@@ -40,16 +39,8 @@ func init() {
 		BugComponent: "b:1263917",
 		SoftwareDeps: []string{"chrome"},
 		Attr:         []string{"group:golden_tier", "group:hw_agnostic"},
-		Params: []testing.Param{{
-			Fixture: fixture.ChromePolicyLoggedIn,
-			Val:     browser.TypeAsh,
-		}, {
-			Name:              "lacros",
-			ExtraSoftwareDeps: []string{"lacros"},
-			Fixture:           fixture.LacrosPolicyLoggedIn,
-			Val:               browser.TypeLacros,
-		}},
-		Data: []string{"default_geolocation_setting_index.html"},
+		Fixture:      fixture.ChromePolicyLoggedIn,
+		Data:         []string{"default_geolocation_setting_index.html"},
 		SearchFlags: []*testing.StringPair{
 			pci.SearchFlag(&policy.DefaultGeolocationSetting{}, pci.VerifiedFunctionalityUI),
 		},
@@ -137,7 +128,7 @@ func DefaultGeolocationSetting(ctx context.Context, s *testing.State) {
 			}
 
 			// Setup browser based on the chrome type.
-			br, closeBrowser, err := browserfixt.SetUp(ctx, cr, s.Param().(browser.Type))
+			br, closeBrowser, err := browserfixt.SetUp(ctx, cr, browser.TypeAsh)
 			if err != nil {
 				s.Fatal("Failed to open the browser: ", err)
 			}
@@ -171,9 +162,9 @@ func DefaultGeolocationSetting(ctx context.Context, s *testing.State) {
 					s.Error("Unexpected dialog to ask for geolocation access permission found")
 				}
 
-				// TODO(crbug.com/1197511): investigate why this is needed.
-				// Wait for a second before clicking the allow button as the click
+				// GoBigSleepLint: Wait for a second before clicking the allow button as the click
 				// won't be registered otherwise.
+				// TODO(crbug.com/1197511): Investigate why this is needed.
 				testing.Sleep(ctx, time.Second)
 
 				if err := ui.DoDefaultUntil(allowButton, ui.Gone(allowButton))(ctx); err != nil {
