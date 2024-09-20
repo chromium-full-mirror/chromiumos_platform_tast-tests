@@ -114,7 +114,6 @@ func runAccelVideoTestCmd(ctx context.Context, execCmd, filter, logfilepath stri
 		gtest.Filter(filter),
 		gtest.UID(int(sysutil.ChronosUID)),
 	)
-
 	args, err := t.Args()
 	if err != nil {
 		testing.ContextLog(ctx, "Failed to get GTest args: ", err)
@@ -123,7 +122,6 @@ func runAccelVideoTestCmd(ctx context.Context, execCmd, filter, logfilepath stri
 		// Always print gtest args for inspection in verbose mode.
 		testing.ContextLog(ctx, "Running: ", shutil.EscapeSlice(args))
 	}
-
 	if report, err := t.Run(ctx); err != nil {
 		if !verbose {
 			// Avoid double-printing the args in verbose mode.
@@ -150,7 +148,6 @@ func RunAccelVideoTest(ctx context.Context, outDir, filename string, parameters 
 		return errors.Wrap(err, "failed to set values for verbose logging")
 	}
 	defer vl.Close()
-
 	args := generateCmdArgs(outDir, filename, parameters)
 	args = append(args, logging.ChromeVmoduleFlag())
 	args = append(args, "--single-process-tests")
@@ -159,7 +156,6 @@ func RunAccelVideoTest(ctx context.Context, outDir, filename string, parameters 
 	if len(enabledFeatures) > 0 {
 		args = append(args, "--enable-features="+strings.Join(enabledFeatures, `,`))
 	}
-
 	const exec = "video_decode_accelerator_tests"
 	if report, err := runAccelVideoTestCmd(ctx,
 		exec, "", filepath.Join(outDir, exec+".log"), args, true); err != nil {
@@ -186,7 +182,6 @@ func RunAccelVideoTestWithTestVectors(ctx context.Context, outDir string, testVe
 		return errors.Wrap(err, "failed to set values for verbose logging")
 	}
 	defer vl.Close()
-
 	const exec = "video_decode_accelerator_tests"
 	var filenamesToReport []string
 	for _, file := range testVectors {
@@ -199,16 +194,13 @@ func RunAccelVideoTestWithTestVectors(ctx context.Context, outDir string, testVe
 			args = append(args, "--validator_type=md5")
 		}
 		filename := filepath.Base(file)
-
 		args = append(args, "--output_frames=corrupt")
 		args = append(args, "--output_format=png")
 		args = append(args, "--output_limit=5")
 		args = append(args, "--output_folder="+filepath.Join(outDir, filename))
-
 		if len(enabledFeatures) > 0 {
 			args = append(args, "--enable-features="+strings.Join(enabledFeatures, `,`))
 		}
-
 		hasFailed := false
 		if _, err = runAccelVideoTestCmd(ctx,
 			exec, "VideoDecoderTest.FlushAtEndOfStream",
@@ -228,12 +220,10 @@ func RunAccelVideoTestWithTestVectors(ctx context.Context, outDir string, testVe
 				testing.ContextLog(ctx, "Test vector passed (expected): ", filename)
 			}
 		}
-
 		if hasFailed != mustFail {
 			filenamesToReport = append(filenamesToReport, filename)
 		}
 	}
-
 	if filenamesToReport != nil {
 		return errors.Errorf("failed to validate: %v", filenamesToReport)
 	}
@@ -260,22 +250,24 @@ func RunAccelVideoPerfTest(ctx context.Context, outDir, filename string, paramet
 		// Time reserved for cleanup.
 		cleanupTime = 10 * time.Second
 	)
-
 	// Setup benchmark mode.
 	cleanUpBenchmark, err := mediacpu.SetUpBenchmark(ctx)
 	if err != nil {
 		return errors.Wrap(err, "failed to set up benchmark mode")
 	}
 	defer cleanUpBenchmark(ctx)
-
 	// Reserve time to restart the ui job and perform cleanup at the end of the test.
 	ctx, cancel := ctxutil.Shorten(ctx, cleanupTime)
 	defer cancel()
-
-	if err := cpu.WaitUntilIdle(ctx); err != nil {
+	// Low powered devices like dedede or octopus have a harder time reducing
+	// the workload due to stubborn network processes, see e.g. b/368281015.
+	idleConfig := cpu.DefaultIdleConfig()
+	idleConfig.Timeout = 3 * time.Minute
+	idleConfig.CPUUsagePercentMax = 40
+	idleConfig.Steps = 8
+	if err := cpu.WaitUntilIdleWithConfig(ctx, idleConfig); err != nil {
 		return errors.Wrap(err, "failed waiting for CPU to become idle")
 	}
-
 	var tests = []struct {
 		testCase     TestCaseBitmask
 		gTestName    string
@@ -288,14 +280,12 @@ func RunAccelVideoPerfTest(ctx context.Context, outDir, filename string, paramet
 			// TODO(b/211783279) Replace this parser with one that can handle multiple captures.
 			parseUncappedPerfMetrics},
 	}
-
 	p := perf.NewValues()
 	for _, test := range tests {
 		if parameters.TestCases&test.testCase == 0 {
 			continue
 		}
 		testing.ContextLogf(ctx, "Running %s", test.gTestName)
-
 		args := generateCmdArgs(outDir, filename, parameters)
 		if len(enabledFeatures) > 0 {
 			args = append(args, "--enable-features="+strings.Join(enabledFeatures, `,`))
@@ -318,7 +308,6 @@ func RunAccelVideoPerfTest(ctx context.Context, outDir, filename string, paramet
 		if err := test.parseFunc(ctx, json, p, test.metricPrefix); err != nil {
 			return errors.Wrap(err, "failed to parse performance metrics")
 		}
-
 		// Run the same test case on repeat for a while and collect CPU and power
 		// usage.
 		measurements, err := mediacpu.MeasureProcessUsage(ctx, measureDuration, mediacpu.KillProcess, gtest.New(
@@ -339,7 +328,6 @@ func RunAccelVideoPerfTest(ctx context.Context, outDir, filename string, paramet
 			Unit:      "percent",
 			Direction: perf.SmallerIsBetter,
 		}, measurements["cpu"])
-
 		// Power measurements are not supported on all platforms.
 		if power, ok := measurements["power"]; ok {
 			p.Set(perf.Metric{
@@ -349,7 +337,6 @@ func RunAccelVideoPerfTest(ctx context.Context, outDir, filename string, paramet
 			}, power)
 		}
 	}
-
 	if err := p.Save(outDir); err != nil {
 		return errors.Wrap(err, "failed to save performance metrics")
 	}

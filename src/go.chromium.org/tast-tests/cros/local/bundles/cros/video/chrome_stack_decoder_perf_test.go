@@ -7,7 +7,6 @@ package video
 import (
 	"fmt"
 	"testing"
-	"time"
 
 	"go.chromium.org/tast-tests/cros/common/genparams"
 )
@@ -49,10 +48,7 @@ func TestChromeStackDecoderPerfParams(t *testing.T) {
 		SoftwareDeps       []string
 		Metadata           []string
 		Attr               []string
-		Timeout            time.Duration
 	}
-	const defaultTimeout = 2 * time.Minute
-	const concurrentTimeOut = 5 * time.Minute
 
 	var params []paramData
 
@@ -69,11 +65,6 @@ func TestChromeStackDecoderPerfParams(t *testing.T) {
 					SoftwareDeps: fillSwDeps(codec, resolution, frameRate),
 					Metadata:     []string{dataPath, dataPath + ".json"},
 					Attr:         []string{"graphics_video_decodeaccel"},
-				}
-				if resolution == "2160" {
-					param.Timeout = 4 * time.Minute
-				} else {
-					param.Timeout = defaultTimeout
 				}
 				params = append(params, param)
 			}
@@ -92,7 +83,6 @@ func TestChromeStackDecoderPerfParams(t *testing.T) {
 			SoftwareDeps:       append(fillSwDeps(codec, resolution, frameRate), "thread_safe_libva_backend"),
 			Metadata:           []string{dataPath, dataPath + ".json"},
 			Attr:               []string{"graphics_video_decodeaccel"},
-			Timeout:            concurrentTimeOut,
 		}
 
 		params = append(params, param)
@@ -104,7 +94,6 @@ func TestChromeStackDecoderPerfParams(t *testing.T) {
 			dataPath: {{ .File | fmt }},
 			runConcurrentDecodersOnly: {{ .ConcurrentDecoders | fmt }},
 		},
-		Timeout: {{ .Timeout | fmt }},
 		{{ if .SoftwareDeps }}
 		ExtraSoftwareDeps: {{ .SoftwareDeps | fmt }},
 		{{ end }}
