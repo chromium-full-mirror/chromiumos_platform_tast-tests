@@ -56,7 +56,7 @@ func init() {
 		LacrosStatus: testing.LacrosVariantUnneeded,
 		BugComponent: "b:1361410", // ChromeOS > Platform > System > Power
 		Contacts:     []string{"cros-pe-pnp@google.com", "zhaon@google.com", "khwon@google.com"},
-		Timeout:      24 * time.Hour, // Depends on subtest, so set maximum value here.
+		Timeout:      4 * time.Hour, // Depends on subtest, so set maximum value here.
 		Params: []testing.Param{
 			// Special test cases can be added as a Param here.
 			{
@@ -120,6 +120,114 @@ func init() {
 					useAccum: true,
 				},
 				ExtraAttr: []string{"group:power", "power_cpd"},
+			},
+			{
+				Name: "htl_idle_display_on_bt_off_ash",
+				Val: testParams{
+					cpd:      false,
+					subtest:  "power.Idle.display_on_bt_off_ash",
+					useAccum: true,
+				},
+				ExtraAttr: []string{"group:power", "power_regression_htl"},
+			},
+			{
+				Name: "htl_idle_display_on_bt_on_ash",
+				Val: testParams{
+					cpd:      false,
+					subtest:  "power.Idle.display_on_bt_on_ash",
+					useAccum: true,
+				},
+				ExtraAttr: []string{"group:power", "power_regression_htl"},
+			},
+			{
+				Name: "htl_browsing_heavy_20min_ash",
+				Val: testParams{
+					cpd:      false,
+					subtest:  "power.Browsing.heavy_20min_ash",
+					useAccum: true,
+				},
+				ExtraAttr: []string{"group:power", "power_regression_htl"},
+			},
+			{
+				Name: "htl_gaming_app_asphalt8",
+				Val: testParams{
+					cpd:      false,
+					subtest:  "power.GamingApp.asphalt8",
+					useAccum: true,
+				},
+				ExtraAttr: []string{"group:power", "power_regression_htl"},
+			},
+			{
+				Name: "htl_gaming_app_super_tux_kart",
+				Val: testParams{
+					cpd:      false,
+					subtest:  "power.GamingApp.super_tux_kart",
+					useAccum: true,
+				},
+				ExtraAttr: []string{"group:power", "power_regression_htl"},
+			},
+			{
+				Name: "htl_video_playback_h264_1080_30fps_1hr_ash",
+				Val: testParams{
+					cpd:      false,
+					subtest:  "power.VideoPlayback.h264_1080_30fps_1hr_ash",
+					useAccum: true,
+				},
+				ExtraAttr: []string{"group:power", "power_regression_htl"},
+			},
+			{
+				Name: "htl_video_playback_vp9_1080_30fps_1hr_ash",
+				Val: testParams{
+					cpd:      false,
+					subtest:  "power.VideoPlayback.vp9_1080_30fps_1hr_ash",
+					useAccum: true,
+				},
+				ExtraAttr: []string{"group:power", "power_regression_htl"},
+			},
+			{
+				Name: "htl_arc_video_playback_exoplayer_h264_1080_30fps_ash",
+				Val: testParams{
+					cpd:      false,
+					subtest:  "power.ARCVideoPlayback.exoplayer_h264_1080_30fps_ash",
+					useAccum: true,
+				},
+				ExtraAttr: []string{"group:power", "power_regression_htl"},
+			},
+			{
+				Name: "htl_arc_video_playback_exoplayer_vp9_1080_30fps_ash",
+				Val: testParams{
+					cpd:      false,
+					subtest:  "power.ARCVideoPlayback.exoplayer_vp9_1080_30fps_ash",
+					useAccum: true,
+				},
+				ExtraAttr: []string{"group:power", "power_regression_htl"},
+			},
+			{
+				Name: "htl_social_app_element_ash",
+				Val: testParams{
+					cpd:      false,
+					subtest:  "power.SocialApp.element_ash",
+					useAccum: true,
+				},
+				ExtraAttr: []string{"group:power", "power_regression_htl"},
+			},
+			{
+				Name: "htl_video_call_25m_ash",
+				Val: testParams{
+					cpd:      false,
+					subtest:  "power.VideoCall.25m_ash",
+					useAccum: true,
+				},
+				ExtraAttr: []string{"group:power", "power_regression_htl"},
+			},
+			{
+				Name: "htl_multi_tasking_app_ash",
+				Val: testParams{
+					cpd:      false,
+					subtest:  "power.MultiTaskingApp.ash",
+					useAccum: true,
+				},
+				ExtraAttr: []string{"group:power", "power_regression_htl"},
 			},
 		},
 		Vars: []string{"servo", "subtest", "meta.PowerServodWrapper.interval"},
