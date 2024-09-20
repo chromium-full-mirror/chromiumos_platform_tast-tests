@@ -10,6 +10,7 @@ import (
 
 	"gopkg.in/yaml.v2"
 
+	"go.chromium.org/tast-tests/cros/local/testenv"
 	"go.chromium.org/tast/core/errors"
 )
 
@@ -125,7 +126,23 @@ func Allowlist(hosts []string) Option {
 	}
 }
 
-// Ignorelist configures MitmProxy ignore_hosts.
+// IgnorelistExceptFor captures the given domains only and ignores all other traffic
+// using the mitmproxy's built-in `allow_hosts` option.
+// This option is different from `Allowlist` that blocks all other traffic and returns a 403 error if not specified.
+// Note that this option should not be set with Ignorelist as it may conflict each other.
+func IgnorelistExceptFor(hosts []string) Option {
+	var lines []string
+	if len(hosts) > 0 {
+		hosts = append(hosts, testenv.MagicDomain) // Ignore the magic domain by default for health check
+		lines = append(lines, "allow_hosts: ")
+		for _, host := range hosts {
+			lines = append(lines, fmt.Sprintf(` - '%s'`, host))
+		}
+	}
+	return CustomOptions(strings.Join(lines, "\n"))
+}
+
+// Ignorelist configures MitmProxy's `ignore_hosts`.
 // It accepts a list of hostnames.
 // MitmProxy ignores any host in the list without processing it.
 // It is useful if you want to exempt some traffic that is protected using certificate pinning
@@ -133,11 +150,10 @@ func Allowlist(hosts []string) Option {
 func Ignorelist(hosts []string) Option {
 	return func(mp *MitmProxy) error {
 		if len(hosts) == 0 {
-			return errors.New("failed to setup IgnoreHosts since host is empty")
+			return errors.New("failed to setup Ignorelist since host is empty")
 		}
-
 		if len(mp.ignoredHosts) != 0 {
-			return errors.New("failed to setup IgnoreHosts since it has been setup")
+			return errors.New("failed to setup Ignorelist since it has been setup")
 		}
 
 		mp.ignoredHosts = hosts
@@ -146,11 +162,10 @@ func Ignorelist(hosts []string) Option {
 		}
 		yamlConfig, err := yaml.Marshal(&config)
 		if err != nil {
-			return errors.Wrapf(err, "failed to marshal IgnoreHosts: %s", hosts)
+			return errors.Wrapf(err, "failed to marshal Ignorelist: %s", hosts)
 		}
 
 		mp.options = append(mp.options, string(yamlConfig))
-
 		return nil
 	}
 }
