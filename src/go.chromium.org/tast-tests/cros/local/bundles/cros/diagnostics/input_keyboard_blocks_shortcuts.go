@@ -25,7 +25,7 @@ func init() {
 		// ChromeOS > Software > System Services > Serviceability > Diagnostics
 		BugComponent: "b:1131925",
 		Contacts: []string{
-			"cros-peripherals@google.com",
+			"cros-device-enablement@google.com",
 			"dpad@google.com",
 		},
 		Fixture:      "diagnosticsPrepForInputDiagnostics",

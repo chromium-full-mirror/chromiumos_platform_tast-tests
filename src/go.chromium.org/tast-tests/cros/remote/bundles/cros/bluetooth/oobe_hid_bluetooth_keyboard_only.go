@@ -32,7 +32,7 @@ func init() {
 		LifeCycleStage: testing.LifeCycleOwnerMonitored,
 		Desc:           "Checks that a bluetooth keyboard can be used to complete OOBE",
 		Contacts: []string{
-			"cros-connectivity@google.com",
+			"cros-device-enablement@google.com",
 			"tjohnsonkanu@google.com",
 		},
 		VarDeps:      []string{"servo"},

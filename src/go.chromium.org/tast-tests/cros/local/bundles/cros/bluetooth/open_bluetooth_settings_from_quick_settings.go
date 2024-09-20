@@ -25,7 +25,7 @@ func init() {
 		LifeCycleStage: testing.LifeCycleOwnerMonitored,
 		Desc:           "Checks that clicking the Settings button on the detailed Bluetooth page within the Quick Settings navigates to the Bluetooth Settings",
 		Contacts: []string{
-			"cros-connectivity@google.com",
+			"cros-device-enablement@google.com",
 			"chadduffin@chromium.org",
 		},
 		BugComponent:    "b:1131776", // ChromeOS > Software > System Services > Connectivity > Bluetooth

@@ -20,7 +20,7 @@ func init() {
 		Desc: "Logs into a user session with the Floss feature flag disabled",
 		Contacts: []string{
 			"chadduffin@chromium.org",
-			"cros-connectivity@google.com",
+			"cros-device-enablement@google.com",
 		},
 		BugComponent:    "b:1131776", // ChromeOS > Software > Fundamentals > Connectivity > Bluetooth
 		Impl:            fixtureImplWithFeatures([]string{}, []string{"Floss"}, false),
@@ -33,7 +33,7 @@ func init() {
 		Desc: "Logs into a user session with the Floss feature flag enabled",
 		Contacts: []string{
 			"chadduffin@chromium.org",
-			"cros-connectivity@google.com",
+			"cros-device-enablement@google.com",
 		},
 		BugComponent: "b:1131776", // ChromeOS > Software > Fundamentals > Connectivity > Bluetooth
 		// chromeFeatureFlossIsAvailabilityCheckNeeded needs to be disabled when
@@ -51,7 +51,7 @@ func init() {
 		Desc: "Enter Chrome OOBE with Floss feature flag disabled",
 		Contacts: []string{
 			"chadduffin@chromium.org",
-			"cros-connectivity@google.com",
+			"cros-device-enablement@google.com",
 		},
 		BugComponent:    "b:1131776", // ChromeOS > Software > Fundamentals > Connectivity > Bluetooth
 		Impl:            fixtureImplWithFeatures([]string{}, []string{"Floss"}, true),
@@ -65,7 +65,7 @@ func init() {
 		Desc: "Enter Chrome OOBE with Floss feature flag enabled",
 		Contacts: []string{
 			"chadduffin@chromium.org",
-			"cros-connectivity@google.com",
+			"cros-device-enablement@google.com",
 		},
 		BugComponent: "b:1131776", // ChromeOS > Software > Fundamentals > Connectivity > Bluetooth
 		// chromeFeatureFlossIsAvailabilityCheckNeeded needs to be disabled when
@@ -84,7 +84,7 @@ func init() {
 		Desc: "Logs into Chrome with Floss disabled, and enables Bluetooth during set up and tear down",
 		Contacts: []string{
 			"chadduffin@chromium.org",
-			"cros-connectivity@google.com",
+			"cros-device-enablement@google.com",
 		},
 		BugComponent:    "b:1131776", // ChromeOS > Software > Fundamentals > Connectivity > Bluetooth
 		Impl:            &bluetoothEnabledFixt{btImpl: &bluez.BlueZ{}},
@@ -98,7 +98,7 @@ func init() {
 		Desc: "Logs into Chrome with Floss enabled, and enables Bluetooth during set up and tear down",
 		Contacts: []string{
 			"chadduffin@chromium.org",
-			"cros-connectivity@google.com",
+			"cros-device-enablement@google.com",
 		},
 		BugComponent:    "b:1131776", // ChromeOS > Software > Fundamentals > Connectivity > Bluetooth
 		Impl:            &bluetoothEnabledFixt{btImpl: &floss.Floss{}},
@@ -112,7 +112,7 @@ func init() {
 		Desc: "Enter Chrome OOBE with Floss disabled, and enables Bluetooth during set up and tear down",
 		Contacts: []string{
 			"chadduffin@chromium.org",
-			"cros-connectivity@google.com",
+			"cros-device-enablement@google.com",
 		},
 		BugComponent:    "b:1131776", // ChromeOS > Software > Fundamentals > Connectivity > Bluetooth
 		Impl:            &bluetoothEnabledFixt{btImpl: &bluez.BlueZ{}, isOobe: true},
@@ -126,7 +126,7 @@ func init() {
 		Desc: "Enter Chrome OOBE with Floss enabled, and enables Bluetooth during set up and tear down",
 		Contacts: []string{
 			"chadduffin@chromium.org",
-			"cros-connectivity@google.com",
+			"cros-device-enablement@google.com",
 		},
 		BugComponent:    "b:1131776", // ChromeOS > Software > Fundamentals > Connectivity > Bluetooth
 		Impl:            &bluetoothEnabledFixt{btImpl: &floss.Floss{}, isOobe: true},

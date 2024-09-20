@@ -28,7 +28,7 @@ func init() {
 		LacrosStatus: testing.LacrosVariantUnneeded,
 		Desc:         "Checks that rainbow mode updates the correct number of keys for each device",
 		Contacts: []string{
-			"cros-peripherals@google.com",
+			"cros-device-enablement@google.com",
 			"chromeos-consumer-engprod@google.com",
 		},
 		// ChromeOS > Software > System Services > Peripherals > Keyboard

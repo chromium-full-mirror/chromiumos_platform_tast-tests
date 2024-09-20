@@ -24,7 +24,7 @@ func init() {
 		LacrosStatus: testing.LacrosVariantUnneeded,
 		Desc:         "Tests the add eSIM profile via activation code flow in the success and failure cases",
 		Contacts: []string{
-			"cros-connectivity@google.com",
+			"cros-device-enablement@google.com",
 			"hsuregan@google.com",
 		},
 		BugComponent:   "b:1131774", // ChromeOS > Software > System Services > Connectivity > Cellular

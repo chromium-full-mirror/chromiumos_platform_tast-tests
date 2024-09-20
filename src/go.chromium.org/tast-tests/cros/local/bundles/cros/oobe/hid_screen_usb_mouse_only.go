@@ -24,7 +24,7 @@ func init() {
 		LifeCycleStage: testing.LifeCycleOwnerMonitored,
 		Desc:           "Checks that a single usb mouse device can be connected in OOBE HID Detection screen",
 		Contacts: []string{
-			"cros-connectivity@google.com",
+			"cros-device-enablement@google.com",
 			"tjohnsonkanu@google.com",
 		},
 		VarDeps: []string{

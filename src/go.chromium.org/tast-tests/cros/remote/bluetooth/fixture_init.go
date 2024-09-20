@@ -517,7 +517,7 @@ func init() {
 		Desc: "Logs into a user session, enables Bluetooth, and connects to 1 btpeer",
 		Contacts: []string{
 			"chadduffin@chromium.org",
-			"cros-connectivity@google.com",
+			"cros-device-enablement@google.com",
 		},
 		BugComponent: "b:1131776", // ChromeOS > Software > Fundamentals > Connectivity > Bluetooth
 		Impl: newFixture(&fixtureFeatures{
@@ -549,7 +549,7 @@ func init() {
 		Desc: "Logs into a user session, enables Bluetooth, and connects to 1 btpeer",
 		Contacts: []string{
 			"chadduffin@chromium.org",
-			"cros-connectivity@google.com",
+			"cros-device-enablement@google.com",
 		},
 		BugComponent: "b:1131776", // ChromeOS > Software > Fundamentals > Connectivity > Bluetooth
 		Impl: newFixture(&fixtureFeatures{
@@ -581,7 +581,7 @@ func init() {
 		Desc: "Puts the DUT into OOBE, enables Bluetooth, and connects to 1 btpeer",
 		Contacts: []string{
 			"chadduffin@chromium.org",
-			"cros-connectivity@google.com",
+			"cros-device-enablement@google.com",
 		},
 		BugComponent: "b:1131776", // ChromeOS > Software > Fundamentals > Connectivity > Bluetooth
 		Impl: newFixture(&fixtureFeatures{
@@ -615,7 +615,7 @@ func init() {
 		Desc: "Puts the DUT into OOBE, enables Bluetooth, and connects to 1 btpeer",
 		Contacts: []string{
 			"chadduffin@chromium.org",
-			"cros-connectivity@google.com",
+			"cros-device-enablement@google.com",
 		},
 		Impl: newFixture(&fixtureFeatures{
 			EnableChromeUI:        true,
@@ -648,7 +648,7 @@ func init() {
 		Name: "chromeLoggedInAsUserWithFastPairAnd1BTPeerFlossDisabled",
 		Desc: "Logs into a chrome as a specific user and enables Bluetooth, FastPair, and connects to 1 btpeer",
 		Contacts: []string{
-			"cros-connectivity@google.com",
+			"cros-device-enablement@google.com",
 		},
 		BugComponent: "b:1131776", // ChromeOS > Software > Fundamentals > Connectivity > Bluetooth
 		Impl: newFixture(&fixtureFeatures{
@@ -764,7 +764,7 @@ func init() {
 		Name: "chromeLoggedInAsUserWithFastPairAnd1BTPeerFlossEnabled",
 		Desc: "Logs into a chrome as a specific user and enables Bluetooth, FastPair, and connects to 1 btpeer",
 		Contacts: []string{
-			"cros-connectivity@google.com",
+			"cros-device-enablement@google.com",
 		},
 		BugComponent: "b:1131776", // ChromeOS > Software > Fundamentals > Connectivity > Bluetooth
 		Impl: newFixture(&fixtureFeatures{
@@ -880,7 +880,7 @@ func init() {
 		Desc: "Logs into a user session, enables Bluetooth and Bluetooth warning dialog, and connects to 2 btpeers",
 		Contacts: []string{
 			"tjohnsonkanu@chromium.org",
-			"cros-connectivity@google.com",
+			"cros-device-enablement@google.com",
 		},
 		BugComponent: "b:1131776", // ChromeOS > Software > Fundamentals > Connectivity > Bluetooth
 		Impl: newFixture(&fixtureFeatures{
@@ -912,7 +912,7 @@ func init() {
 		Desc: "Logs into a user session, enables Bluetooth and Bluetooth warning dialog, and connects to 2 btpeers",
 		Contacts: []string{
 			"chadduffin@chromium.org",
-			"cros-connectivity@google.com",
+			"cros-device-enablement@google.com",
 		},
 		BugComponent: "b:1131776", // ChromeOS > Software > Fundamentals > Connectivity > Bluetooth
 		Impl: newFixture(&fixtureFeatures{

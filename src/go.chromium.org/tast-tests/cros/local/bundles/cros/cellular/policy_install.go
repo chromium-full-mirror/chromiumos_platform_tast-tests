@@ -33,7 +33,7 @@ func init() {
 		LacrosStatus: testing.LacrosVariantUnneeded,
 		Desc:         "Test that managed eSIM profile can correctly be installed from device policy and the profile can not be removed or renamed",
 		Contacts: []string{
-			"cros-connectivity@google.com",
+			"cros-device-enablement@google.com",
 			"jiajunz@google.com",
 		},
 		BugComponent:   "b:1131774", // ChromeOS > Software > System Services > Connectivity > Cellular

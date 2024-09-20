@@ -210,7 +210,7 @@ func init() {
 	testing.AddFixture(&testing.Fixture{
 		Name:            "cellularWithFakeDMSEnrolledAndSIMLockCleared",
 		Desc:            "Cellular tests are safe to run that require a functioning SIM and a fake DMS (for managed eSIM profiles) is running",
-		Contacts:        []string{"cros-connectivity@google.com", "jiajunz@google.com"},
+		Contacts:        []string{"cros-device-enablement@google.com", "jiajunz@google.com"},
 		BugComponent:    "b:167157", // ChromeOS > Platform > Connectivity > Cellular
 		SetUpTimeout:    3 * time.Minute,
 		ResetTimeout:    5 * time.Second,
@@ -286,7 +286,7 @@ func init() {
 	testing.AddFixture(&testing.Fixture{
 		Name:            "cellularWithFunctioningRoamingSim",
 		Desc:            "Cellular tests that require a functioning roaming SIM are safe to run",
-		Contacts:        []string{"cros-connectivity@google.com", "nikhilcn@google.com"},
+		Contacts:        []string{"cros-device-enablement@google.com", "nikhilcn@google.com"},
 		BugComponent:    "b:167157", // ChromeOS > Platform > Connectivity > Cellular
 		SetUpTimeout:    4 * time.Minute,
 		ResetTimeout:    5 * time.Second,
@@ -299,7 +299,7 @@ func init() {
 	testing.AddFixture(&testing.Fixture{
 		Name:            "cellularWithFunctioningSim",
 		Desc:            "Cellular tests that require a functioning SIM are safe to run",
-		Contacts:        []string{"cros-connectivity@google.com", "nikhilcn@google.com"},
+		Contacts:        []string{"cros-device-enablement@google.com", "nikhilcn@google.com"},
 		BugComponent:    "b:167157", // ChromeOS > Platform > Connectivity > Cellular
 		SetUpTimeout:    4 * time.Minute,
 		ResetTimeout:    5 * time.Second,

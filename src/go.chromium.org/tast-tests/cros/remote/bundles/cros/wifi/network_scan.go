@@ -35,7 +35,7 @@ func init() {
 		LacrosStatus: testing.LacrosVariantUnneeded,
 		Desc:         "Verify that the WiFi UIs will scan for networks periodically",
 		Contacts: []string{
-			//"cros-connectivity@google.com",
+			//"cros-device-enablement@google.com",
 			//"chromeos-connectivity-engprod@google.com",
 			"vivian.chen@cienet.com",
 			"chromeos-connectivity-cienet-external@google.com",

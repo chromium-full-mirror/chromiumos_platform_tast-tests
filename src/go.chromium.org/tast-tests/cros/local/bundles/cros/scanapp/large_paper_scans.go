@@ -19,7 +19,7 @@ func init() {
 		Func:         LargePaperScans,
 		LacrosStatus: testing.LacrosVariantUnneeded,
 		Desc:         "Tests that the Scan app supports large paper size selection when available from printer",
-		Contacts:     []string{"project-bolton@google.com", "cros-peripherals@google.com", "bmgordon@chromium.org"},
+		Contacts:     []string{"project-bolton@google.com", "cros-device-enablement@google.com", "bmgordon@chromium.org"},
 		// ChromeOS > Platform > Services > Scanning
 		BugComponent: "b:860616",
 		Attr: []string{

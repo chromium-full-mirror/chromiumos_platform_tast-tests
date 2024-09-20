@@ -319,7 +319,7 @@ func init() {
 	testing.AddFixture(&testing.Fixture{
 		Name:     "chromeLoggedInWithShortcutCustomizationApp",
 		Desc:     "Logged into a user session with ShortcutCustomizationApp, OnlyShowNewShortcutsApp and SearchInShortcutsApp enabled",
-		Contacts: []string{"jimmyxgong@google.com", "cros-peripherals@google.com"},
+		Contacts: []string{"jimmyxgong@google.com", "cros-device-enablement@google.com"},
 		// ChromeOS > Software > System Services > Peripherals > Shortcuts
 		BugComponent: "b:1131848",
 		Impl: NewLoggedInFixture(func(ctx context.Context, s *testing.FixtState) ([]Option, error) {

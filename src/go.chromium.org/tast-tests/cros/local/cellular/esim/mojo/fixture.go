@@ -20,7 +20,7 @@ func init() {
 		Desc: "Logs into a user session and creates a JS object for accessing mojo eSIM API calls for test eUICCS",
 		Contacts: []string{
 			"jstanko@google.com",
-			"cros-connectivity@google.com",
+			"cros-device-enablement@google.com",
 		},
 		BugComponent:    "b:1131774", // ChromeOS > Software > Fundamentals > Connectivity > Cellular
 		Impl:            newESimMojoFixture(testEuicc()),
@@ -58,8 +58,8 @@ type FixtData struct {
 
 // eSimMojoFixture implements testing.FixtureImpl.
 type eSimMojoFixture struct {
-	cr                  *chrome.Chrome
-	isTestEuicc         bool
+	cr          *chrome.Chrome
+	isTestEuicc bool
 }
 
 func (f *eSimMojoFixture) Reset(ctx context.Context) error {

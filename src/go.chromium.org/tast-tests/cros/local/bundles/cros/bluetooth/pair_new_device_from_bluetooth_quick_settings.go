@@ -26,7 +26,7 @@ func init() {
 		LifeCycleStage: testing.LifeCycleOwnerMonitored,
 		Desc:           "Checks that the pairing dialog can be opened from within the Bluetooth Quick Settings",
 		Contacts: []string{
-			"cros-connectivity@google.com",
+			"cros-device-enablement@google.com",
 			"chadduffin@chromium.org",
 		},
 		BugComponent:    "b:1131776", // ChromeOS > Software > System Services > Connectivity > Bluetooth

@@ -266,7 +266,7 @@ func init() {
 		Desc: "ARC is booted and Bluetooth-Floss is enabled",
 		Contacts: []string{
 			"chadduffin@chromium.org",
-			"cros-connectivity@google.com",
+			"cros-device-enablement@google.com",
 			"vic.lee@cienet.com",
 			"chromeos-connectivity-cienet-external@google.com",
 		},

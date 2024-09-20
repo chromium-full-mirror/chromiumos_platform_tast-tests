@@ -54,7 +54,7 @@ func init() {
 		Func: NonHardwareBackedCerts,
 		Desc: "Verify the behavior of certificates which are non-hardware backed",
 		Contacts: []string{
-			// "cros-connectivity@google.com",
+			// "cros-device-enablement@google.com",
 			// "chromeos-connectivity-engprod@google.com",
 			"alfredyu@cienet.com",
 			"chromeos-connectivity-cienet-external@google.com",

@@ -37,7 +37,7 @@ func init() {
 		LacrosStatus: testing.LacrosVariantUnneeded,
 		Desc:         "Test that managed eSIM profile can be installed from device policy via the esim_manager Mojo API",
 		Contacts: []string{
-			"cros-connectivity@google.com",
+			"cros-device-enablement@google.com",
 			"chadduffin@google.com",
 			"khegde@google.com",
 		},

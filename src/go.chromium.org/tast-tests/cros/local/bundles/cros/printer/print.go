@@ -31,7 +31,7 @@ func init() {
 	testing.AddTest(&testing.Test{
 		Func:     Print,
 		Desc:     "Tests that a virtual USB printer can be saved and printed to",
-		Contacts: []string{"cros-peripherals@google.com", "project-bolton@google.com", "gavinwill@google.com"},
+		Contacts: []string{"cros-device-enablement@google.com", "project-bolton@google.com", "gavinwill@google.com"},
 		Attr: []string{
 			"group:mainline",
 			"informational",

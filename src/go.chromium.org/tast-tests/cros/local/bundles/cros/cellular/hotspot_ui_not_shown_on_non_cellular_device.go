@@ -25,7 +25,7 @@ func init() {
 		LifeCycleStage: testing.LifeCycleOwnerMonitored,
 		Desc:           "Tests that hotspot UI should not show on non-cellular capable devices",
 		Contacts: []string{
-			"cros-connectivity@google.com",
+			"cros-device-enablement@google.com",
 			"jiajunz@google.com",
 		},
 		BugComponent: "b:1281224", // ChromeOS > Software > System Services > Connectivity > Hotspot

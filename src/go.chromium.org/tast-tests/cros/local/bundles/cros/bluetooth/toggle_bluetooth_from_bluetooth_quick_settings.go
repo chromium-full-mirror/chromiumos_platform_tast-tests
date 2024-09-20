@@ -22,7 +22,7 @@ func init() {
 		Func: ToggleBluetoothFromBluetoothQuickSettings,
 		Desc: "Checks that Bluetooth can be enabled and disabled from within the Bluetooth Quick Settings",
 		Contacts: []string{
-			"cros-connectivity@google.com",
+			"cros-device-enablement@google.com",
 			"chadduffin@chromium.org",
 		},
 		BugComponent:   "b:1131776", // ChromeOS > Software > System Services > Connectivity > Bluetooth

@@ -22,9 +22,9 @@ func init() {
 		Name: "diagnosticsPrep",
 		Desc: "Ensure relevant service is running before diagnostics ui test",
 		Contacts: []string{
-			"zhangwenyu@google.com",       // Fixture maintainer
-			"ashleydp@google.com",         // Fixture maintainer
-			"cros-peripherals@google.com", // team mailing list
+			"zhangwenyu@google.com",             // Fixture maintainer
+			"ashleydp@google.com",               // Fixture maintainer
+			"cros-device-enablement@google.com", // team mailing list
 		},
 		// ChromeOS > Software > System Services > Serviceability > Diagnostics
 		BugComponent: "b:1131925",
@@ -42,10 +42,10 @@ func init() {
 		Name: "diagnosticsPrepForInputDiagnostics",
 		Desc: "Ensure relevant service is running before diagnostics ui test",
 		Contacts: []string{
-			"zhangwenyu@google.com",       // Fixture maintainer
-			"ashleydp@google.com",         // Fixture maintainer
-			"dpad@google.com",             // Fixture maintainer
-			"cros-peripherals@google.com", // team mailing list
+			"zhangwenyu@google.com",             // Fixture maintainer
+			"ashleydp@google.com",               // Fixture maintainer
+			"dpad@google.com",                   // Fixture maintainer
+			"cros-device-enablement@google.com", // team mailing list
 		},
 		// ChromeOS > Software > System Services > Serviceability > Diagnostics
 		BugComponent: "b:1131925",

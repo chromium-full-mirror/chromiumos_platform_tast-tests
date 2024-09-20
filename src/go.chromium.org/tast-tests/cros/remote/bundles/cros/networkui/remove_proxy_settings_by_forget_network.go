@@ -41,7 +41,7 @@ func init() {
 		LacrosStatus: testing.LacrosVariantUnneeded,
 		Desc:         "Verify that if a user forgets a network, the proxy settings are removed for that network as well",
 		Contacts: []string{
-			"cros-connectivity@google.com",
+			"cros-device-enablement@google.com",
 			"chromeos-connectivity-engprod@google.com",
 		},
 		BugComponent:   "b:1318544", // ChromeOS > Software > System Services > Connectivity > General

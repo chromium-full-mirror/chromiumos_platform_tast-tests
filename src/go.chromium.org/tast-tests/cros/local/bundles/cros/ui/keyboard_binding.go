@@ -35,7 +35,7 @@ func init() {
 		LacrosStatus: testing.LacrosVariantUnneeded,
 		Desc:         "Change and disable keyboard key bindings from OS settings",
 		Contacts: []string{
-			"cros-peripherals@google.com",
+			"cros-device-enablement@google.com",
 			"michaelcheco@google.com",
 			"dpad@google.com",
 		},

@@ -27,7 +27,7 @@ func init() {
 		LacrosStatus: testing.LacrosVariantUnneeded,
 		Desc:         "Tests that a scan can be opened in the Files app",
 		Contacts: []string{
-			"cros-peripherals@google.com",
+			"cros-device-enablement@google.com",
 			"project-bolton@google.com",
 		},
 		// ChromeOS > Platform > Services > Scanning

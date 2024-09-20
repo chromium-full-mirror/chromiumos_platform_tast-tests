@@ -30,7 +30,7 @@ func init() {
 		LacrosStatus: testing.LacrosVariantUnneeded,
 		Desc:         "Tests the policy that only allows managed cellular networks",
 		Contacts: []string{
-			"cros-connectivity@google.com",
+			"cros-device-enablement@google.com",
 			"nikhilcn@google.com",
 		},
 		BugComponent:   "b:1131774", // ChromeOS > Software > System Services > Connectivity > Cellular

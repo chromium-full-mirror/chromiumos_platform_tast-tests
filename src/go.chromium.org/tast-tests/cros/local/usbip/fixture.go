@@ -78,7 +78,7 @@ func init() {
 	testing.AddFixture(&testing.Fixture{
 		Name:     "virtualUsbPrinterModulesLoadedWithDriveFsStarted",
 		Desc:     "Kernel modules necessary for `virtual-usb-printer` loaded (with `chromeLoggedInWithGaia` fixture)",
-		Contacts: []string{"cros-peripherals@google.com"},
+		Contacts: []string{"cros-device-enablement@google.com"},
 		// ChromeOS > Platform > Services > Scanning
 		BugComponent:    "b:860616",
 		Impl:            &LoadModuleFixture{},

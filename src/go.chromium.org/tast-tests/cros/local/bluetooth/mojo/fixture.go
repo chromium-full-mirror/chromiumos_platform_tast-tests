@@ -19,7 +19,7 @@ func init() {
 		Name: "bluetoothMojoJSObjectWithBlueZ",
 		Desc: "Fixture for tests that use the CrosNetworkConfig mojo API using BlueZ",
 		Contacts: []string{
-			"cros-connectivity@google.com",
+			"cros-device-enablement@google.com",
 			"chadduffin@google.com",
 		},
 		BugComponent:    "b:1131776", // ChromeOS > Software > Fundamentals > Connectivity > Bluetooth
@@ -33,7 +33,7 @@ func init() {
 		Name: "bluetoothMojoJSObjectWithFloss",
 		Desc: "Fixture for tests that use the CrosNetworkConfig mojo API using Floss",
 		Contacts: []string{
-			"cros-connectivity@google.com",
+			"cros-device-enablement@google.com",
 			"chadduffin@google.com",
 		},
 		BugComponent:    "b:1131776", // ChromeOS > Software > Fundamentals > Connectivity > Bluetooth

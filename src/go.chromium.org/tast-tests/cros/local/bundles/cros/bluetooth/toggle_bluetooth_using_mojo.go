@@ -17,7 +17,7 @@ func init() {
 		Func: ToggleBluetoothUsingMojo,
 		Desc: "Checks that Bluetooth can be enabled and disabled using Mojo API",
 		Contacts: []string{
-			"cros-connectivity@google.com",
+			"cros-device-enablement@google.com",
 			"chromeos-connectivity-engprod@google.com",
 		},
 		BugComponent:    "b:1131776", // ChromeOS > Software > System Services > Connectivity > Bluetooth

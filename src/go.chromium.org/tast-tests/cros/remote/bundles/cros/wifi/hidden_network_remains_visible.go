@@ -36,7 +36,7 @@ func init() {
 		LifeCycleStage: testing.LifeCycleOwnerMonitored,
 		Desc:           "Verify that hidden networks are visible after logging out/logging in and rebooting",
 		Contacts: []string{
-			"cros-connectivity@google.com",
+			"cros-device-enablement@google.com",
 			"cros-conn-test-team@google.com",
 			"chromeos-connectivity-engprod@google.com",
 			"shijinabraham@google.com",

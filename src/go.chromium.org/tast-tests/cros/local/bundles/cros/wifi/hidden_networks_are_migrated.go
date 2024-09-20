@@ -36,7 +36,7 @@ func init() {
 		LacrosStatus:   testing.LacrosVariantUnneeded,
 		LifeCycleStage: testing.LifeCycleOwnerMonitored,
 		Desc:           "Tests that hidden networks are migrated, for more details see go/cros-hidden-ssid-dd-software",
-		Contacts:       []string{"cros-connectivity@google.com", "chadduffin@google.com"},
+		Contacts:       []string{"cros-device-enablement@google.com", "chadduffin@google.com"},
 		BugComponent:   "b:1131912", // ChromeOS > Software > System Services > Connectivity > WiFi
 		Attr:           []string{"group:mainline", "informational", "group:wificell", "wificell_e2e"},
 		SoftwareDeps:   []string{"chrome"},

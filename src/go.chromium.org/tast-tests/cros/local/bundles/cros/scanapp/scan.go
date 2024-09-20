@@ -20,7 +20,7 @@ func init() {
 		LacrosStatus: testing.LacrosVariantUnneeded,
 		Desc:         "Tests that the Scan app can be used to perform scans",
 		Contacts: []string{
-			"cros-peripherals@google.com",
+			"cros-device-enablement@google.com",
 			"project-bolton@google.com",
 		},
 		// ChromeOS > Platform > Services > Scanning

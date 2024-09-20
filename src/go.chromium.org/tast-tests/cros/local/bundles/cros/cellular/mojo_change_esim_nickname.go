@@ -19,7 +19,7 @@ func init() {
 		LacrosStatus: testing.LacrosVariantUnneeded,
 		Desc:         "Installs a new eSIM profile on the device and then changes its nickname",
 		Contacts: []string{
-			"cros-connectivity@google.com",
+			"cros-device-enablement@google.com",
 			"jstanko@google.com",
 		},
 		BugComponent:   "b:1131774", // ChromeOS > Software > System Services > Connectivity > Cellular

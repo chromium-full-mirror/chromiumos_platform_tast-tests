@@ -42,7 +42,7 @@ func init() {
 		LifeCycleStage: testing.LifeCycleOwnerMonitored,
 		Desc:           "ConnectivitySurfaces is a test that is intended to be run during CQ to prevent regressions resulting from changes to ChromeOS Connectivity surfaces",
 		Contacts: []string{
-			"cros-connectivity@google.com",
+			"cros-device-enablement@google.com",
 			"chadduffin@google.com",
 		},
 		BugComponent: "b:1318544", // ChromeOS > Software > System Services > Connectivity > General

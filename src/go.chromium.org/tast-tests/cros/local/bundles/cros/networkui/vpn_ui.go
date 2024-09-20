@@ -40,7 +40,7 @@ func init() {
 			// These are commented out instead of removed outright to avoid losing any contacts in the process.
 			// "cros-networking@google.com",
 			// "jiejiang@google.com",
-			// "cros-connectivity@google.com",
+			// "cros-device-enablement@google.com",
 			// "chromeos-connectivity-engprod@google.com",
 			// "shijinabraham@google.com",
 			// "chadduffin@chromium.org",

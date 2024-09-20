@@ -42,7 +42,7 @@ func init() {
 		Func: CertsAreUserSpecific,
 		Desc: "Verify that the imported certificates are user specific",
 		Contacts: []string{
-			"cros-connectivity@google.com",
+			"cros-device-enablement@google.com",
 			"chromeos-connectivity-engprod@google.com",
 			"shijinabraham@google.com",
 			"chadduffin@chromium.org",

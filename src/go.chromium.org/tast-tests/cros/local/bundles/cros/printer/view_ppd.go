@@ -28,7 +28,7 @@ func init() {
 	testing.AddTest(&testing.Test{
 		Func:     ViewPPD,
 		Desc:     "Tests that a user can view the PPD for an installed printer",
-		Contacts: []string{"cros-peripherals@google.com", "project-bolton@google.com", "nmuggli@google.com"},
+		Contacts: []string{"cros-device-enablement@google.com", "project-bolton@google.com", "nmuggli@google.com"},
 		// ChromeOS > Platform > Services > Printing
 		BugComponent: "b:167231",
 		Attr: []string{

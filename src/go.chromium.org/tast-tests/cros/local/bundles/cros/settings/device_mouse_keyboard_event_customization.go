@@ -27,7 +27,7 @@ func init() {
 		LacrosStatus: testing.LacrosVariantUnneeded,
 		Desc:         "Test mouse key customization to a keyboard action in device settings",
 		Contacts: []string{
-			"cros-peripherals@google.com",
+			"cros-device-enablement@google.com",
 			"chromeos-consumer-engprod@google.com",
 		},
 		// ChromeOS > Software > Fundamentals > Peripherals > Mouse

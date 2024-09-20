@@ -18,7 +18,7 @@ func init() {
 		Name: "chromeEnterOobeHidDetection",
 		Desc: "Enter Chrome OOBE HID Detection screen",
 		Contacts: []string{
-			"cros-connectivity@google.com",
+			"cros-device-enablement@google.com",
 		},
 		BugComponent:    "b:1131776", // ChromeOS > Software > Fundamentals > Connectivity > Bluetooth
 		Vars:            []string{"ui.signinProfileTestExtensionManifestKey"},
@@ -31,7 +31,7 @@ func init() {
 		Name: "chromeEnterOobeHidDetectionServoOff",
 		Desc: "Enter Chrome OOBE HID Detection screen with the servo keyboard turned off",
 		Contacts: []string{
-			"cros-connectivity@google.com",
+			"cros-device-enablement@google.com",
 		},
 		BugComponent:    "b:1131776", // ChromeOS > Software > Fundamentals > Connectivity > Bluetooth
 		Vars:            []string{"ui.signinProfileTestExtensionManifestKey"},

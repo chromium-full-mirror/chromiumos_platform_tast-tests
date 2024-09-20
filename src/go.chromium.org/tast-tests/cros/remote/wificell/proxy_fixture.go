@@ -39,7 +39,7 @@ func init() {
 		Name: ProxyFixtBootToLoginScreen,
 		Desc: "The fixture is for proxy tests; boot the DUT to log-in screen, configure an AP, connect the AP and initiate the proxy-settings service client",
 		Contacts: []string{
-			"cros-connectivity@google.com",
+			"cros-device-enablement@google.com",
 		},
 		BugComponent:    "b:1318544",                     // ChromeOS > Software > System Services > Connectivity > General
 		SetUpTimeout:    15*time.Second + 2*loginTimeout, // Boot the DUT to sign-in screen requires log-in, log-out and then no-log-in.
@@ -59,7 +59,7 @@ func init() {
 		Name: ProxyFixtBootToOOBEScreen,
 		Desc: "The fixture is for proxy tests; boot the DUT to log-in screen, configure an AP, connect the AP and initiate the proxy-settings service client",
 		Contacts: []string{
-			"cros-connectivity@google.com",
+			"cros-device-enablement@google.com",
 		},
 		BugComponent:    "b:1318544", // ChromeOS > Software > System Services > Connectivity > General
 		SetUpTimeout:    15 * time.Second,

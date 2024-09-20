@@ -47,7 +47,7 @@ func init() {
 		Name: "hiddenNetworkMigration",
 		Desc: "Logs into a user session where hidden networks are migrated at a more quick/test-friendly interval",
 		Contacts: []string{
-			"cros-connectivity@google.com",
+			"cros-device-enablement@google.com",
 			"chadduffin@google.com",
 		},
 		BugComponent:    "b:1131912", // ChromeOS > Software > Fundamentals > Connectivity > WiFi
