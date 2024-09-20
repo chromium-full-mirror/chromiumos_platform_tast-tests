@@ -6,8 +6,6 @@ package cellular
 
 import (
 	"context"
-	"fmt"
-	"os"
 	"path/filepath"
 	"strings"
 	"time"
@@ -15,12 +13,10 @@ import (
 	"go.chromium.org/tast-tests/cros/common/networkui/netconfigtypes"
 	"go.chromium.org/tast-tests/cros/common/shillconst"
 	"go.chromium.org/tast-tests/cros/local/cellular"
-	"go.chromium.org/tast-tests/cros/local/chrome"
 	"go.chromium.org/tast-tests/cros/local/chrome/uiauto"
 	"go.chromium.org/tast-tests/cros/local/chrome/uiauto/faillog"
 	"go.chromium.org/tast-tests/cros/local/chrome/uiauto/ossettings"
 	"go.chromium.org/tast/core/ctxutil"
-	"go.chromium.org/tast/core/errors"
 	"go.chromium.org/tast/core/testing"
 )
 
@@ -135,10 +131,6 @@ func PSimNetworkName(ctx context.Context, s *testing.State) {
 	if err := testing.Poll(ctx, func(ctx context.Context) error {
 		return app.EvalJSWithShadowPiercer(ctx, cr, expr, &title)
 	}, &testing.PollOptions{Interval: time.Second, Timeout: 10 * time.Second}); err != nil {
-		// TODO(b/333458823): Remove this function once we no longer need it for debugging.
-		if err := dumpNetworkListHTMLTree(cleanupCtx, app, cr, s.OutDir()); err != nil {
-			s.Logf("Failed to dump network list HTML: %q", err)
-		}
 		s.Fatal("Failed to wait for network AP to show up: ", err)
 	}
 
@@ -147,59 +139,4 @@ func PSimNetworkName(ctx context.Context, s *testing.State) {
 	if networkName != title {
 		s.Fatalf("Network name is not the same as title. Got %q expected %q", title, networkName)
 	}
-}
-
-// dumpNetworkListHTMLTree dumps the HTML tree of the network list.
-// TODO(b/333458823): Remove this function once we no longer need it for debugging.
-func dumpNetworkListHTMLTree(ctx context.Context, app *ossettings.OSSettings, cr *chrome.Chrome, outDir string) (retErr error) {
-	cleanupCtx := ctx
-	ctx, cancel := ctxutil.Shorten(ctx, 10*time.Second)
-	defer cancel()
-
-	defer func(ctx context.Context) {
-		if retErr != nil {
-			testing.ContextLog(ctx, "Failed to dump the HTML tree of the network list: ", retErr)
-		}
-	}(cleanupCtx)
-
-	const (
-		// Dump all network-list-items, expect to see all title for all eSIM/pSIM profile
-		exprAllItems = `var nodes = shadowPiercingQueryAll('network-list-item');
-				var list = [].slice.call(nodes);
-				var innertext = list.map(function(e) { return e.shadowRoot.innerHTML; }).join("\n");
-				innertext;`
-
-		// Dump the HTML element under psimNetworkList, expect to see at least one networkList which should include a network-list-item.
-		exprPSimNetworkList = `var nodes = shadowPiercingQueryAll('network-list#psimNetworkList');
-				var list = [].slice.call(nodes);
-				var innertext = list.map(function(e) { return e.shadowRoot.innerHTML; }).join("\n");
-				innertext;`
-
-		// Dump the HTML element under network-list-items that are under psimNetworkList, expect to see the network title.
-		exprPSimItems = `var nodes = shadowPiercingQueryAll('network-list#psimNetworkList network-list-item');
-				var list = [].slice.call(nodes);
-				var innertext = list.map(function(e) { return e.shadowRoot.innerHTML; }).join("\n");
-				innertext;`
-	)
-
-	for _, s := range []struct {
-		title    string
-		expr     string
-		filename string
-	}{
-		{"all network list items", exprAllItems, "network_list_items_html_content.txt"},
-		{"psim network list", exprPSimNetworkList, "psim_network_list_html_content.txt"},
-		{"network list item under psim network list", exprPSimItems, "psim_items_html_content.txt"},
-	} {
-		var result string
-		if err := app.EvalJSWithShadowPiercer(ctx, cr, s.expr, &result); err != nil {
-			testing.ContextLogf(ctx, "Failed to get %s: %v", s.title, err)
-		}
-		out := fmt.Sprintf("Dump %s: \n%s\n", s.title, result)
-		if err := os.WriteFile(filepath.Join(outDir, s.filename), []byte(out), 0644); err != nil {
-			return errors.Wrapf(err, "failed to write data to %s.txt", s.filename)
-		}
-	}
-
-	return nil
 }
