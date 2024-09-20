@@ -150,11 +150,16 @@ func GSCI2CBridge(ctx context.Context, s *testing.State) {
 	// With CCD open, I2C tunneling should always be allowed.
 	for index, i2cBus := range i2cBusses {
 		for addr := 8; addr < 112; addr++ {
+			if addr == 52 {
+				// OpenTitan Teacup board has an LED driver I2C device on the bus,
+				// using address 52.
+				continue
+			}
 			runI2CTransaction(ctx, index, i2cBus.BusName, byte(addr), true, false, r, b, s)
 		}
 	}
 
-	addr := 8 + r.Intn(112)
+	addr := 88
 
 	// It seems that Cr50 suffers from a flaw, that if asked to perform a I2C operation while
 	// the bus is unpowered, it gets stuck in a state of pulling SCL low indefinitely, even
@@ -193,6 +198,11 @@ func GSCI2CBridge(ctx context.Context, s *testing.State) {
 
 	// With CCD closed, I2C tunneling should be allowed only according to capabilities.
 	for index, i2cBus := range i2cBusses {
+		if addr == 52 {
+			// OpenTitan Teacup board has an LED driver I2C device on the bus,
+			// using address 52.
+			continue
+		}
 		runI2CTransaction(ctx, index, i2cBus.BusName, byte(addr), userParams.expectInterfaceOpenWhenCCDLocked, false, r, b, s)
 	}
 }
