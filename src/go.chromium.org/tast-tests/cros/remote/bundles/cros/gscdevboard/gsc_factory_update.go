@@ -31,6 +31,10 @@ func init() {
 			Val:       "0.3.22",
 			ExtraAttr: []string{"gsc_h1_shield"},
 		}, {
+			Name:      "ti50_0_21_1",
+			Val:       "0.21.1",
+			ExtraAttr: []string{"gsc_dt_shield"},
+		}, {
 			Name:      "ti50_0_23_30",
 			Val:       "0.23.30",
 			ExtraAttr: []string{"gsc_dt_shield"},
