@@ -1545,3 +1545,21 @@ func (s *Servo) IsServoTypeC(ctx context.Context) (bool, error) {
 	}
 	return connectionType == string(DUTConnTypeC), nil
 }
+
+// CheckECActiveCopyMatch polls to check if the EC active copy matches the expected one.
+func (s *Servo) CheckECActiveCopyMatch(ctx context.Context, expectedCopy string) error {
+	activeCopy := ""
+	if err := testing.Poll(ctx, func(ctx context.Context) error {
+		var err error
+		activeCopy, err = s.GetString(ctx, ECActiveCopy)
+		return err
+	}, &testing.PollOptions{
+		Timeout: 20 * time.Second,
+	}); err != nil {
+		return errors.Wrap(err, "EC active copy failed")
+	}
+	if !strings.HasPrefix(activeCopy, expectedCopy) {
+		return errors.Errorf("EC active copy incorrect, got %q want %q", activeCopy, expectedCopy)
+	}
+	return nil
+}

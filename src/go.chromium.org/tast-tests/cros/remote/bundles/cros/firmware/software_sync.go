@@ -8,12 +8,10 @@ import (
 	"bytes"
 	"context"
 	"fmt"
-	"strings"
 	"time"
 
 	fwCommon "go.chromium.org/tast-tests/cros/common/firmware"
 	"go.chromium.org/tast-tests/cros/common/firmware/bios"
-	"go.chromium.org/tast-tests/cros/common/servo"
 	"go.chromium.org/tast-tests/cros/remote/firmware"
 	"go.chromium.org/tast-tests/cros/remote/firmware/fixture"
 	pb "go.chromium.org/tast-tests/cros/services/cros/firmware"
@@ -109,8 +107,9 @@ func SoftwareSync(ctx context.Context, s *testing.State) {
 	if err := ms.ModeAwareReboot(ctx, firmware.ColdReset); err != nil {
 		s.Fatal("Failed to reboot: ", err)
 	}
-
-	checkActiveCopyRW(ctx, s, h.Servo)
+	if err := h.Servo.CheckECActiveCopyMatch(ctx, "RW"); err != nil {
+		s.Fatal("Failed to verify EC active copy: ", err)
+	}
 	s.Log("Corrupt the EC section: ", bios.RWFWIDImageSection)
 	if err := h.DUT.Conn().CommandContext(ctx, "futility", "dump_fmap", "-x", fmt.Sprintf("%s/ec_backup.bin", backupState.RemoteTempDir()), fmt.Sprintf("%s:%s/fwid.good", bios.RWFWIDImageSection, backupState.RemoteTempDir())).Run(ssh.DumpLogOnError); err != nil {
 		s.Fatal("Failed extracting fwid.good: ", err)
@@ -135,7 +134,9 @@ func SoftwareSync(ctx context.Context, s *testing.State) {
 
 	s.Log("Expect EC in RW and RW is restored")
 	checkECHash(ctx, s, ecHashBefore)
-	checkActiveCopyRW(ctx, s, h.Servo)
+	if err := h.Servo.CheckECActiveCopyMatch(ctx, "RW"); err != nil {
+		s.Fatal("Failed to verify EC active copy: ", err)
+	}
 
 	if features, err := h.DUT.Conn().CommandContext(ctx, "ectool", "inventory").Output(ssh.DumpLogOnError); err != nil {
 		s.Fatal("Failed to get features: ", err)
@@ -161,24 +162,9 @@ func SoftwareSync(ctx context.Context, s *testing.State) {
 		}
 		s.Log("Expect EC in RW and RW is restored")
 		checkECHash(ctx, s, ecHashBefore)
-		checkActiveCopyRW(ctx, s, h.Servo)
-	}
-}
-
-func checkActiveCopyRW(ctx context.Context, s *testing.State, srvo *servo.Servo) {
-	activeCopy := ""
-	err := testing.Poll(ctx, func(ctx context.Context) error {
-		var err error
-		activeCopy, err = srvo.GetString(ctx, servo.ECActiveCopy)
-		return err
-	}, &testing.PollOptions{
-		Timeout: 20 * time.Second,
-	})
-	if err != nil {
-		s.Fatal("EC active copy failed: ", err)
-	}
-	if !strings.HasPrefix(activeCopy, "RW") {
-		s.Fatalf("EC active copy incorrect, got %q want RW", activeCopy)
+		if err := h.Servo.CheckECActiveCopyMatch(ctx, "RW"); err != nil {
+			s.Fatal("Failed to verify EC active copy: ", err)
+		}
 	}
 }
 
