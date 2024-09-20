@@ -229,7 +229,7 @@ func RoamFT(ctx context.Context, s *testing.State) {
 			hostapd.MobilityDomain(mdID), hostapd.NASIdentifier(id0), hostapd.R1KeyHolder(id0),
 			hostapd.R0KHs(fmt.Sprintf("%s %s %s", mac1, id1, key0)),
 			hostapd.R1KHs(fmt.Sprintf("%s %s %s", mac1, mac1, key1)),
-			hostapd.Bridge(br[0]), hostapd.SecurityConfig(ap0SecConf),
+			hostapd.Bridge(br[0]), hostapd.SecurityConfig(ap0SecConf), hostapd.SpectrumManagement(),
 		}
 		ap0Ops = append(ap0Ops, apOpts...)
 		ap0Conf, err := hostapd.NewConfig(ap0Ops...)
@@ -246,7 +246,7 @@ func RoamFT(ctx context.Context, s *testing.State) {
 			hostapd.MobilityDomain(mdID), hostapd.NASIdentifier(id1), hostapd.R1KeyHolder(id1),
 			hostapd.R0KHs(fmt.Sprintf("%s %s %s", mac0, id0, key1)),
 			hostapd.R1KHs(fmt.Sprintf("%s %s %s", mac0, mac0, key0)),
-			hostapd.Bridge(br[1]), hostapd.SecurityConfig(ap1SecConf),
+			hostapd.Bridge(br[1]), hostapd.SecurityConfig(ap1SecConf), hostapd.SpectrumManagement(),
 		}
 		ap1Ops = append(ap1Ops, apOpts...)
 		ap1Conf, err := hostapd.NewConfig(ap1Ops...)
