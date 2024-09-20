@@ -33,9 +33,8 @@ import (
 
 func init() {
 	testing.AddTest(&testing.Test{
-		Func:         EnableA11yImageLabels,
-		LacrosStatus: testing.LacrosVariantExists,
-		Desc:         "Verifies that the AccessibilityImageLabels policy works as intended",
+		Func: EnableA11yImageLabels,
+		Desc: "Verifies that the AccessibilityImageLabels policy works as intended",
 		Contacts: []string{
 			"cros-engprod-muc@google.com",
 			"eariassoto@google.com", // Test author
@@ -47,15 +46,7 @@ func init() {
 			"enable_a11y_image_labels_index.html",
 			"enable_a11y_image_labels_image.jpg",
 		},
-		Params: []testing.Param{{
-			Fixture: fixture.ChromePolicyLoggedIn,
-			Val:     browser.TypeAsh,
-		}, {
-			Name:              "lacros",
-			ExtraSoftwareDeps: []string{"lacros"},
-			Fixture:           fixture.LacrosPolicyLoggedIn,
-			Val:               browser.TypeLacros,
-		}},
+		Fixture: fixture.ChromePolicyLoggedIn,
 		SearchFlags: []*testing.StringPair{
 			pci.SearchFlag(&policy.AccessibilityImageLabelsEnabled{}, pci.VerifiedFunctionalityUI),
 		},
@@ -114,7 +105,7 @@ func EnableA11yImageLabels(ctx context.Context, s *testing.State) {
 			}
 
 			// Open the test web page in a browser.
-			br, closeBrowser, err := browserfixt.SetUp(ctx, cr, s.Param().(browser.Type))
+			br, closeBrowser, err := browserfixt.SetUp(ctx, cr, browser.TypeAsh)
 			if err != nil {
 				s.Fatal("Failed to open browser: ", err)
 			}

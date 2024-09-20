@@ -32,9 +32,8 @@ const captureAllowedTestHTML = "audio_capture_allowed_urls.html"
 
 func init() {
 	testing.AddTest(&testing.Test{
-		Func:         AudioCaptureAllowedUrls,
-		LacrosStatus: testing.LacrosVariantExists,
-		Desc:         "Checking if audio capture is allowed on websites or not, depending on the value of the policy",
+		Func: AudioCaptureAllowedUrls,
+		Desc: "Checking if audio capture is allowed on websites or not, depending on the value of the policy",
 		Contacts: []string{
 			"cros-engprod-muc@google.com",
 			"chromeos-sw-engprod@google.com",
@@ -45,15 +44,7 @@ func init() {
 		SoftwareDeps: []string{"chrome"},
 		Attr:         []string{"group:golden_tier", "group:hw_agnostic"},
 		Data:         []string{captureAllowedTestHTML},
-		Params: []testing.Param{{
-			Fixture: fixture.ChromePolicyLoggedIn,
-			Val:     browser.TypeAsh,
-		}, {
-			Name:              "lacros",
-			ExtraSoftwareDeps: []string{"lacros"},
-			Fixture:           fixture.LacrosPolicyLoggedIn,
-			Val:               browser.TypeLacros,
-		}},
+		Fixture:      fixture.ChromePolicyLoggedIn,
 		SearchFlags: []*testing.StringPair{
 			pci.SearchFlag(&policy.AudioCaptureAllowedUrls{}, pci.VerifiedFunctionalityUI),
 		},
@@ -118,7 +109,7 @@ func AudioCaptureAllowedUrls(ctx context.Context, s *testing.State) {
 			defer cancel()
 
 			// Setup browser based on the chrome type.
-			br, closeBrowser, err := browserfixt.SetUp(ctx, cr, s.Param().(browser.Type))
+			br, closeBrowser, err := browserfixt.SetUp(ctx, cr, browser.TypeAsh)
 			if err != nil {
 				s.Fatal("Failed to open the browser: ", err)
 			}

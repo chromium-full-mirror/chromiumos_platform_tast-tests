@@ -15,7 +15,6 @@ import (
 	"go.chromium.org/tast-tests/cros/common/pci"
 	"go.chromium.org/tast-tests/cros/common/policy"
 	filesystemreadwrite "go.chromium.org/tast-tests/cros/local/bundles/cros/policy/file_system_read_write"
-	"go.chromium.org/tast-tests/cros/local/chrome/browser"
 	"go.chromium.org/tast/core/testing"
 )
 
@@ -23,25 +22,16 @@ const writeBlockTestHTML = "file_system_write_for_urls_index.html"
 
 func init() {
 	testing.AddTest(&testing.Test{
-		Func:         FileSystemWriteBlockedForUrls,
-		LacrosStatus: testing.LacrosVariantExists,
-		Desc:         "Checking if file system writes are blocked depending on the value of this policy",
+		Func: FileSystemWriteBlockedForUrls,
+		Desc: "Checking if file system writes are blocked depending on the value of this policy",
 		Contacts: []string{
 			"cros-engprod-muc@google.com",
 		},
 		BugComponent: "b:1263917",
 		SoftwareDeps: []string{"chrome"},
 		Attr:         []string{"group:golden_tier", "group:hw_agnostic"},
-		Params: []testing.Param{{
-			Fixture: fixture.ChromePolicyLoggedIn,
-			Val:     browser.TypeAsh,
-		}, {
-			Name:              "lacros",
-			ExtraSoftwareDeps: []string{"lacros"},
-			Fixture:           fixture.LacrosPolicyLoggedIn,
-			Val:               browser.TypeLacros,
-		}},
-		Data: []string{writeBlockTestHTML},
+		Fixture:      fixture.ChromePolicyLoggedIn,
+		Data:         []string{writeBlockTestHTML},
 		SearchFlags: []*testing.StringPair{
 			pci.SearchFlag(&policy.FileSystemWriteBlockedForUrls{}, pci.VerifiedFunctionalityUI),
 		},

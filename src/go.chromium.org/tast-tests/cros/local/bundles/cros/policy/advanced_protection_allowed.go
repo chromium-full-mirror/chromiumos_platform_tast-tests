@@ -31,9 +31,8 @@ import (
 
 func init() {
 	testing.AddTest(&testing.Test{
-		Func:         AdvancedProtectionAllowed,
-		LacrosStatus: testing.LacrosVariantExists,
-		Desc:         "Check behavior of the AdvancedProtectionAllowed policy",
+		Func: AdvancedProtectionAllowed,
+		Desc: "Check behavior of the AdvancedProtectionAllowed policy",
 		Contacts: []string{
 			"dp-chromeos-eng@google.com",
 			"chiav@google.com",
@@ -44,15 +43,7 @@ func init() {
 		// Remove architecture restrictions when the problem is solved.
 		SoftwareDeps: []string{"chrome", "no_arm"},
 		Data:         advancedprotection.DataFiles(),
-		Params: []testing.Param{{
-			Fixture: fixture.ChromePolicyLoggedInAdvancedProtection,
-			Val:     browser.TypeAsh,
-		}, {
-			Name:              "lacros",
-			ExtraSoftwareDeps: []string{"lacros"},
-			Fixture:           fixture.LacrosPolicyLoggedInAdvancedProtection,
-			Val:               browser.TypeLacros,
-		}},
+		Fixture:      fixture.ChromePolicyLoggedInAdvancedProtection,
 		SearchFlags: []*testing.StringPair{
 			pci.SearchFlag(&policy.AdvancedProtectionAllowed{}, pci.VerifiedFunctionalityOS),
 		},
@@ -103,7 +94,7 @@ func AdvancedProtectionAllowed(ctx context.Context, s *testing.State) {
 			}
 
 			// Setup browser based on the chrome type.
-			br, closeBrowser, err := browserfixt.SetUp(ctx, cr, s.Param().(browser.Type))
+			br, closeBrowser, err := browserfixt.SetUp(ctx, cr, browser.TypeAsh)
 			if err != nil {
 				s.Fatal("Failed to open the browser: ", err)
 			}
@@ -115,7 +106,7 @@ func AdvancedProtectionAllowed(ctx context.Context, s *testing.State) {
 			defer faillog.DumpUITreeWithScreenshotOnError(ctx, s.OutDir(), s.HasError, cr, "ui_tree_"+param.Name)
 
 			// Open the net-export page and start logging.
-			netExport, err := netexport.Start(ctx, cr, br, s.Param().(browser.Type))
+			netExport, err := netexport.Start(ctx, cr, br, browser.TypeAsh)
 			if err != nil {
 				s.Fatal("Failed to start net export: ", err)
 			}

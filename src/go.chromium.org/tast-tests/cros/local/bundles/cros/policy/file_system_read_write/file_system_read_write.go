@@ -164,7 +164,7 @@ func RunTestCases(ctx context.Context, s *testing.State, param TestCase) {
 		}
 
 		// Setup browser based on the browser type.
-		br, closeBrowser, err := browserfixt.SetUp(ctx, cr, s.Param().(browser.Type))
+		br, closeBrowser, err := browserfixt.SetUp(ctx, cr, browser.TypeAsh)
 		if err != nil {
 			s.Fatal("Failed to open the browser: ", err)
 		}

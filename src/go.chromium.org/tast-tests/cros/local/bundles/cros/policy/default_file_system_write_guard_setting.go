@@ -15,7 +15,6 @@ import (
 	"go.chromium.org/tast-tests/cros/common/pci"
 	"go.chromium.org/tast-tests/cros/common/policy"
 	filesystemreadwrite "go.chromium.org/tast-tests/cros/local/bundles/cros/policy/file_system_read_write"
-	"go.chromium.org/tast-tests/cros/local/chrome/browser"
 	"go.chromium.org/tast/core/testing"
 )
 
@@ -25,7 +24,6 @@ func init() {
 	testing.AddTest(&testing.Test{
 		Func:           DefaultFileSystemWriteGuardSetting,
 		LifeCycleStage: testing.LifeCycleOwnerMonitored,
-		LacrosStatus:   testing.LacrosVariantExists,
 		Desc:           "Tests the DefaultFileSystemWriteGuardSetting policy",
 		Contacts: []string{
 			// "cros-engprod-muc@google.com",
@@ -36,16 +34,8 @@ func init() {
 		BugComponent: "b:1263917",
 		SoftwareDeps: []string{"chrome"},
 		Attr:         []string{"group:golden_tier", "group:hw_agnostic"},
-		Params: []testing.Param{{
-			Fixture: fixture.ChromePolicyLoggedIn,
-			Val:     browser.TypeAsh,
-		}, {
-			Name:              "lacros",
-			ExtraSoftwareDeps: []string{"lacros"},
-			Fixture:           fixture.LacrosPolicyLoggedIn,
-			Val:               browser.TypeLacros,
-		}},
-		Data: []string{writeGuardSettingTestHTML},
+		Fixture:      fixture.ChromePolicyLoggedIn,
+		Data:         []string{writeGuardSettingTestHTML},
 		SearchFlags: []*testing.StringPair{
 			pci.SearchFlag(&policy.DefaultFileSystemWriteGuardSetting{}, pci.VerifiedFunctionalityUI),
 		},

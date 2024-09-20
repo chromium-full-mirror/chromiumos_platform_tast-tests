@@ -29,9 +29,8 @@ import (
 
 func init() {
 	testing.AddTest(&testing.Test{
-		Func:         SpellCheckServiceEnabled,
-		LacrosStatus: testing.LacrosVariantExists,
-		Desc:         "Behavior of SpellCheckServiceEnabled policy",
+		Func: SpellCheckServiceEnabled,
+		Desc: "Behavior of SpellCheckServiceEnabled policy",
 		Contacts: []string{
 			"chrome-language@google.com",
 			"dp-chromeos-eng@google.com",
@@ -43,16 +42,8 @@ func init() {
 		SoftwareDeps: []string{"chrome", "no_arm"},
 		Attr:         []string{"group:golden_tier", "group:hw_agnostic"},
 		Timeout:      3 * time.Minute,
-		Params: []testing.Param{{
-			Fixture: fixture.ChromePolicyLoggedIn,
-			Val:     browser.TypeAsh,
-		}, {
-			Name:              "lacros",
-			ExtraSoftwareDeps: []string{"lacros"},
-			Fixture:           fixture.LacrosPolicyLoggedIn,
-			Val:               browser.TypeLacros,
-		}},
-		Data: spellcheck.DataFiles(),
+		Fixture:      fixture.ChromePolicyLoggedIn,
+		Data:         spellcheck.DataFiles(),
 		SearchFlags: []*testing.StringPair{
 			pci.SearchFlag(&policy.SpellCheckServiceEnabled{}, pci.VerifiedFunctionalityUI),
 		},
@@ -96,7 +87,7 @@ func SpellCheckServiceEnabled(ctx context.Context, s *testing.State) {
 			}
 
 			// Setup the browser for lacros tests after the policy was set.
-			br, closeBrowser, err := browserfixt.SetUp(ctx, cr, s.Param().(browser.Type))
+			br, closeBrowser, err := browserfixt.SetUp(ctx, cr, browser.TypeAsh)
 			if err != nil {
 				s.Fatal("Failed to open the browser: ", err)
 			}
@@ -105,7 +96,7 @@ func SpellCheckServiceEnabled(ctx context.Context, s *testing.State) {
 			defer faillog.DumpUITreeWithScreenshotOnError(cleanupCtx, s.OutDir(), s.HasError, cr, "ui_tree_"+param.Name)
 
 			// Open the net-export page and start logging.
-			netExport, err := netexport.Start(ctx, cr, br, s.Param().(browser.Type))
+			netExport, err := netexport.Start(ctx, cr, br, browser.TypeAsh)
 			if err != nil {
 				s.Fatal("Failed to start net export: ", err)
 			}

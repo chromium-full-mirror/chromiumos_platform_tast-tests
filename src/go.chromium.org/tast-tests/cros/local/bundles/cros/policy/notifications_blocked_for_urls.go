@@ -25,9 +25,8 @@ import (
 
 func init() {
 	testing.AddTest(&testing.Test{
-		Func:         NotificationsBlockedForUrls,
-		LacrosStatus: testing.LacrosVariantExists,
-		Desc:         "Behavior of NotificationsBlockedForUrls policy: checking if notifications are blocked for a specified url",
+		Func: NotificationsBlockedForUrls,
+		Desc: "Behavior of NotificationsBlockedForUrls policy: checking if notifications are blocked for a specified url",
 		Contacts: []string{
 			"cros-engprod-muc@google.com",
 			"swapnilgupta@google.com", // Test author
@@ -35,16 +34,8 @@ func init() {
 		BugComponent: "b:1263917",
 		SoftwareDeps: []string{"chrome"},
 		Attr:         []string{"group:golden_tier", "group:hw_agnostic"},
-		Params: []testing.Param{{
-			Fixture: fixture.ChromePolicyLoggedIn,
-			Val:     browser.TypeAsh,
-		}, {
-			Name:              "lacros",
-			ExtraSoftwareDeps: []string{"lacros"},
-			Fixture:           fixture.LacrosPolicyLoggedIn,
-			Val:               browser.TypeLacros,
-		}},
-		Data: []string{"notifications_for_urls_test_page.html"},
+		Fixture:      fixture.ChromePolicyLoggedIn,
+		Data:         []string{"notifications_for_urls_test_page.html"},
 		SearchFlags: []*testing.StringPair{
 			pci.SearchFlag(&policy.NotificationsBlockedForUrls{}, pci.VerifiedFunctionalityJS),
 			pci.SearchFlag(&policy.DefaultNotificationsSetting{}, pci.VerifiedValue),
@@ -112,7 +103,7 @@ func NotificationsBlockedForUrls(ctx context.Context, s *testing.State) {
 				s.Fatal("Failed to update policies: ", err)
 			}
 
-			br, closeBrowser, err := browserfixt.SetUp(ctx, cr, s.Param().(browser.Type))
+			br, closeBrowser, err := browserfixt.SetUp(ctx, cr, browser.TypeAsh)
 			if err != nil {
 				s.Fatal("Failed to setup chrome: ", err)
 			}
