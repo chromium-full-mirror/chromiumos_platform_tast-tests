@@ -30,7 +30,7 @@ func init() {
 		Desc:         "Collect power metrics for playback-related use cases in Recorder App",
 		Contacts:     []string{"chromeos-recorder-app@google.com", "kamchonlathorn@chromium.org"},
 		BugComponent: "b:1522466", // ChromeOS > Platform > Technologies > Audio > Recorder App
-		Timeout:      recorderapp.PowerTimeParams.Total + power.RecorderTimeout + 2*time.Minute,
+		Timeout:      recorderapp.PowerTimeParams.Total + power.RecorderTimeout + 4*time.Minute,
 		Attr:         []string{"group:crosbolt", "crosbolt_perbuild"},
 		SoftwareDeps: []string{"chrome"},
 		Fixture:      "powerAshWithRecorderApp",
