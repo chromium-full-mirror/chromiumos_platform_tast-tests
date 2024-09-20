@@ -33,13 +33,14 @@ func init() {
 // chipSizeMap is a map of chip Name(.Revision) to size of flash in KiB.
 // Please keep items alphabetized.
 var chipSizeMap = map[string]int{
-	"it82102.ax":          1024,
-	"it82102.bx":          1024,
 	"it81202.bx":          1024,
 	"it81202.cx":          1024,
 	"it81202.dx":          1024,
 	"it81302":             1024,
 	"it81302.bx":          1024,
+	"it82102.ax":          1024,
+	"it82102.bx":          1024,
+	"it82202.bx":          1024,
 	"it8320.dx":           512,
 	"ite_spi_ccd_i2c":     1024,
 	"mec1322.81":          256,
