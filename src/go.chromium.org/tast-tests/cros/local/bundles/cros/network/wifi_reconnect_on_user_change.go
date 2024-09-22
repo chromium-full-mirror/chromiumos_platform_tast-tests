@@ -26,6 +26,7 @@ import (
 	"go.chromium.org/tast-tests/cros/local/shill"
 	"go.chromium.org/tast-tests/cros/local/upstart"
 	"go.chromium.org/tast/core/ctxutil"
+	"go.chromium.org/tast/core/errors"
 	"go.chromium.org/tast/core/testing"
 )
 
@@ -264,6 +265,28 @@ func WifiReconnectOnUserChange(ctx context.Context, s *testing.State) {
 		}
 	}
 
+	verifyIPProvision := func(tag string, svc *shill.Service) {
+		s.Log("Verifying IPv4 and IPv6 provision")
+		if err := testing.Poll(ctx, func(ctx context.Context) error {
+			config, err := svc.GetNetworkConfig(ctx)
+			if err != nil {
+				return testing.PollBreak(err)
+			}
+			if !config.HasIPv4Address() {
+				return errors.New("no IPv4 address")
+			}
+			if !config.HasIPv6Address() {
+				return errors.New("no IPv6 address")
+			}
+			return nil
+		}, &testing.PollOptions{
+			// IP provision can take time.
+			Timeout: 30 * time.Second,
+		}); err != nil {
+			s.Fatalf("%s: Failed to verify IP provision: %v", tag, err)
+		}
+	}
+
 	// Verify that service is pingable by IP addresses.
 	verifyIPConnectivity := func(tag string) {
 		s.Log("Verifying pinging the server IP addresses")
@@ -340,6 +363,7 @@ func WifiReconnectOnUserChange(ctx context.Context, s *testing.State) {
 			cr := login(tag)
 			svc := scanAndFindSvc(tag, ssid)
 			verifySvcOnline(tag, svc)
+			verifyIPProvision(tag, svc)
 			verifyIPConnectivity(tag)
 			verifyDNS(tag)
 			verifyChromePage(tag, cr)
@@ -351,6 +375,7 @@ func WifiReconnectOnUserChange(ctx context.Context, s *testing.State) {
 			logout(tag)
 			svc := scanAndFindSvc(tag, ssid)
 			verifySvcOnline(tag, svc)
+			verifyIPProvision(tag, svc)
 			verifyIPConnectivity(tag)
 			verifyDNS(tag)
 			// We cannot open a Chrome page at login screen so skip the Chrome page test.
