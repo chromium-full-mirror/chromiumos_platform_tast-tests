@@ -28,11 +28,15 @@ func init() {
 			"chromeos-consumer-engprod@google.com",
 		},
 		Attr: []string{
-			"group:mainline",
-			"informational",
-			"group:hw_agnostic",
+			// Disabled by TORA.  See:b/330878696.
+			//"group:mainline",
+			//"informational",
+			//"group:hw_agnostic",
 		},
-		SoftwareDeps: []string{"chrome", "chrome_internal", "gaia"},
+		SoftwareDeps: []string{"chrome", "chrome_internal",
+			// Disabled by TORA.  See:b/330878696.
+			// "gaia"
+		},
 		Timeout:      chrome.GAIALoginTimeout + time.Minute,
 		Fixture:      "assistantWithGaia",
 	})
