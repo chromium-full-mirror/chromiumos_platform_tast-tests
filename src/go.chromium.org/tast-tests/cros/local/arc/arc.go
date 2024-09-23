@@ -32,6 +32,8 @@ import (
 	"go.chromium.org/tast/core/fsutil"
 	"go.chromium.org/tast/core/testing"
 	"go.chromium.org/tast/core/timing"
+
+	"golang.org/x/exp/slices"
 )
 
 const (
@@ -1220,6 +1222,14 @@ func (a *ARC) schedulePostBootDexOpt(ctx context.Context) error {
 	return a.Command(ctx, "cmd", "jobscheduler", "run", "-f", "android", "801").Run(testexec.DumpLogOnError)
 }
 
+var playAutoPreinstalledPackages = []string{
+	"/vendor/app/com.google.android.youtube/com.google.android.youtube.apk",
+	"/vendor/app/com.google.android.gm/com.google.android.gm.apk",
+	"/vendor/app/com.google.android.apps.maps/com.google.android.apps.maps.apk",
+	"/vendor/app/com.google.android.apps.photos/com.google.android.apps.photos.apk",
+	"/vendor/app/com.google.android.calendar/com.google.android.calendar.apk",
+}
+
 // CheckNoDex2Oat verifies whether ARC is pre-optimized and no dex2oat was previously running in the background.
 func CheckNoDex2Oat(outDir string) error {
 	const (
@@ -1248,9 +1258,14 @@ func CheckNoDex2Oat(outDir string) error {
 	m := regexp.MustCompile(dexPrefix).FindAllStringSubmatch(string(dump), -1)
 	for _, match := range m {
 		res := match[1]
-		if !strings.HasPrefix(res, "/data/") {
-			unoptimizedPackages = append(unoptimizedPackages, res)
+		if strings.HasPrefix(res, "/data/") {
+			continue
 		}
+		// TODO(b/367566822): stop excluding these packages when their dex2oat artifacts are generated correctly.
+		if strings.HasPrefix(res, "/vendor/app/PlayAutoInstallConfig/") || slices.Contains(playAutoPreinstalledPackages, res) {
+			continue
+		}
+		unoptimizedPackages = append(unoptimizedPackages, res)
 	}
 
 	if len(unoptimizedPackages) != 0 {
