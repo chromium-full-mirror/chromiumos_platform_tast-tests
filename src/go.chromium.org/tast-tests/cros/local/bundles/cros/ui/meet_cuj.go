@@ -12,6 +12,7 @@ import (
 	"go.chromium.org/tast-tests/cros/local/chrome"
 	"go.chromium.org/tast-tests/cros/local/chrome/apps/thirdparty/googlemeet"
 	"go.chromium.org/tast-tests/cros/local/chrome/browser"
+	"go.chromium.org/tast-tests/cros/local/chrome/cuj"
 	"go.chromium.org/tast-tests/cros/local/ui/cujrecorder"
 	"go.chromium.org/tast-tests/cros/local/ui/meetcuj"
 	"go.chromium.org/tast/core/testing"
@@ -710,6 +711,8 @@ func init() {
 // After recording:
 //   - Record and save metrics.
 func MeetCUJ(ctx context.Context, s *testing.State) {
+	cuj.WriteMetadataFile(ctx, s.TestName())
+
 	// Ensure that the Meet test parameters are properly formed.
 	meet := s.Param().(meetcuj.MeetTest)
 	cr := s.FixtValue().(chrome.HasChrome).Chrome()
