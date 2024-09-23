@@ -154,6 +154,8 @@ type TestFixture struct {
 	hostForwarder   *ssh.Forwarder
 	grpcConn        *grpc.ClientConn
 	switchService   api.SwitchService
+	cameraService   api.CameraService
+	CameraHelper    *api.CameraServiceHelper
 }
 
 // SetUp configures the fixture.
@@ -212,6 +214,7 @@ func (tf *TestFixture) SetUp(ctx context.Context, s *testing.FixtState) interfac
 
 		// Create the service clients.
 		tf.switchService = passport.NewSwitchServiceClient(tf.grpcConn)
+		tf.cameraService = passport.NewCameraServiceClient(tf.grpcConn)
 	} else {
 		// No host info provided, assume that USB devices are connected to the local host.
 		s.Log("Using local pasit host")
@@ -220,9 +223,16 @@ func (tf *TestFixture) SetUp(ctx context.Context, s *testing.FixtState) interfac
 			s.Fatal("Failed to create local switch service: ", err)
 		}
 		tf.switchService = switchService
+
+		cameraService, err := api.NewLocalCameraService(ctx)
+		if err != nil {
+			s.Fatal("Failed to create local camera service: ", err)
+		}
+		tf.cameraService = cameraService
 	}
 
 	tf.Helper = NewHelper(pasitTopology, hostname, tf.switchService)
+	tf.CameraHelper = api.NewCameraServiceHelper(tf.cameraService)
 	return tf
 }
 
@@ -236,6 +246,9 @@ func (tf *TestFixture) PreTest(ctx context.Context, s *testing.FixtTestState) {
 	// Initialize fixtures to find the connected devices.
 	if err := tf.Helper.InitializeFixtures(ctx); err != nil {
 		s.Fatal("Failed to initialize fixtures: ", err)
+	}
+	if err := tf.CameraHelper.InitializeCameras(ctx); err != nil {
+		s.Fatal("Failed to initialize cameras: ", err)
 	}
 
 	// Try to power cycle IP power for DUTs that have it.

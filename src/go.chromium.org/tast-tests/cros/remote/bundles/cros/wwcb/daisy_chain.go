@@ -142,11 +142,8 @@ func DaisyChain(ctx context.Context, s *testing.State) {
 	}
 	defer appsSvc.CloseApp(cleanupCtx, &pb.CloseAppRequest{AppName: "Gallery", TimeoutSecs: 60})
 
-	if err := utils.InitWebcam(ctx, s); err != nil {
-		s.Fatal("Failed to initialize webcam: ", err)
-	}
-
-	if err := utils.PairWebcamToDisplay(ctx, s, threeDisplays.DisplayIds); err != nil {
+	parings, err := tf.CameraHelper.PairWebcamToDisplay(ctx, s.OutDir(), threeDisplays.DisplayIds)
+	if err != nil {
 		s.Fatal("Failed to pair webcam to display: ", err)
 	}
 
@@ -181,7 +178,7 @@ func DaisyChain(ctx context.Context, s *testing.State) {
 			s.Fatal("Failed to click on play button on the Gallery: ", err)
 		}
 
-		if err := utils.VerifyVideo(ctx, s, test.extDispID, 30); err != nil {
+		if err := tf.CameraHelper.VerifyVideo(ctx, s.OutDir(), parings[test.extDispID], 30); err != nil {
 			s.Fatal("Failed to verify video on the external display: ", err)
 		}
 

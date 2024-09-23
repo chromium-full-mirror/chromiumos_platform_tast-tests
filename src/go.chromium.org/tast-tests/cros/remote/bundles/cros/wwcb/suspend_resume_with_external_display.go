@@ -35,7 +35,7 @@ func init() {
 		Desc:         "Suspend/resume DUT then check screen brightness on DUT & external display by camera connecting to the host",
 		Contacts:     []string{"cros-wwcb-automation@google.com", "allion-wwcb@allion.corp-partner.google.com"},
 		BugComponent: "b:1289112", // ChromeOS > External > WWCB > Allion > Automation
-		Attr:         []string{
+		Attr: []string{
 			"group:wwcb",
 			"group:pasit",
 			"group:release-health",
@@ -134,20 +134,19 @@ func SuspendResumeWithExternalDisplay(ctx context.Context, s *testing.State) {
 	}
 	defer appsSvc.CloseApp(ctx, &pb.CloseAppRequest{AppName: "Gallery", TimeoutSecs: 60})
 
-	if err := utils.InitWebcam(ctx, s); err != nil {
-		s.Fatal("Failed to initialize webcam: ", err)
-	}
-
-	if err := utils.PairWebcamToDisplay(ctx, s, displayIDs.DisplayIds); err != nil {
+	parings, err := tf.CameraHelper.PairWebcamToDisplay(ctx, s.OutDir(), displayIDs.DisplayIds)
+	if err != nil {
 		s.Fatal("Failed to pair webcam to display: ", err)
 	}
+	dutDispCamera := parings[displayIDs.DisplayIds[0]]
+	extDispCamera := parings[displayIDs.DisplayIds[1]]
 
-	extDispBrightnessAwake, err := utils.GetGamLightingValue(ctx, s, displayIDs.DisplayIds[1])
+	extDispBrightnessAwake, err := tf.CameraHelper.GAMLightingValue(ctx, s.OutDir(), extDispCamera)
 	if err != nil {
 		s.Fatal("Failed to get the external display's brightness when the DUT is awake: ", err)
 	}
 
-	dutBrightnessAwake, err := utils.GetGamLightingValue(ctx, s, displayIDs.DisplayIds[0])
+	dutBrightnessAwake, err := tf.CameraHelper.GAMLightingValue(ctx, s.OutDir(), dutDispCamera)
 	if err != nil {
 		s.Fatal("Failed to get the DUT's screen's brightness when the DUT is awake: ", err)
 	}
@@ -163,13 +162,12 @@ func SuspendResumeWithExternalDisplay(ctx context.Context, s *testing.State) {
 
 	var extDispBrightnessSuspend, dutBrightnessSuspend int
 	if err := testing.Poll(ctx, func(ctx context.Context) error {
-
-		extDispBrightnessSuspend, err = utils.GetGamLightingValue(ctx, s, displayIDs.DisplayIds[1])
+		extDispBrightnessSuspend, err = tf.CameraHelper.GAMLightingValue(ctx, s.OutDir(), extDispCamera)
 		if err != nil {
 			return errors.Wrap(err, "failed to get the external display's brightness when the DUT is suspended")
 		}
 
-		dutBrightnessSuspend, err = utils.GetGamLightingValue(ctx, s, displayIDs.DisplayIds[0])
+		dutBrightnessSuspend, err = tf.CameraHelper.GAMLightingValue(ctx, s.OutDir(), dutDispCamera)
 		if err != nil {
 			return errors.Wrap(err, "failed to get the DUT's screen's brightness when the DUT is suspended")
 		}
@@ -199,20 +197,19 @@ func SuspendResumeWithExternalDisplay(ctx context.Context, s *testing.State) {
 	}
 
 	if err := testing.Poll(ctx, func(ctx context.Context) error {
-
-		extDispBrigthnessResume, err := utils.GetGamLightingValue(ctx, s, displayIDs.DisplayIds[1])
+		extDispBrightnessResume, err := tf.CameraHelper.GAMLightingValue(ctx, s.OutDir(), extDispCamera)
 		if err != nil {
 			return errors.Wrap(err, "failed to get the external display's brightness when DUT is resumed")
 		}
 
-		dutBrightnessResume, err := utils.GetGamLightingValue(ctx, s, displayIDs.DisplayIds[0])
+		dutBrightnessResume, err := tf.CameraHelper.GAMLightingValue(ctx, s.OutDir(), dutDispCamera)
 		if err != nil {
 			return errors.Wrap(err, "failed to get the DUT's screen's brightness when DUT is resumed")
 		}
 
 		// Check the external display & DUT screen being turned on when DUT is resumed by the camera connecting to host.
-		if extDispBrightnessSuspend >= extDispBrigthnessResume {
-			return errors.Errorf("expect the brightness of the external display to be higher when the DUT is resumed than when the DUT is suspended; suspended brightness: %d, resumed brightness: %d", extDispBrightnessSuspend, extDispBrigthnessResume)
+		if extDispBrightnessSuspend >= extDispBrightnessResume {
+			return errors.Errorf("expect the brightness of the external display to be higher when the DUT is resumed than when the DUT is suspended; suspended brightness: %d, resumed brightness: %d", extDispBrightnessSuspend, extDispBrightnessResume)
 		}
 
 		if dutBrightnessSuspend >= dutBrightnessResume {
@@ -223,5 +220,4 @@ func SuspendResumeWithExternalDisplay(ctx context.Context, s *testing.State) {
 	}, &testing.PollOptions{Timeout: 2 * time.Minute, Interval: 5 * time.Second}); err != nil {
 		s.Fatal("Failed to check screen is turned on: ", err)
 	}
-
 }

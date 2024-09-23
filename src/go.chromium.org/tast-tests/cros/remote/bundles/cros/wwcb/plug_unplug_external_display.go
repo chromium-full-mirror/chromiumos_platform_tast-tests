@@ -32,7 +32,7 @@ func init() {
 		Desc:         "Plug in the external display then play video to check the external display is functional by the camera connecting to the host, then unplug the external display",
 		Contacts:     []string{"cros-wwcb-automation@google.com", "allion-wwcb@allion.corp-partner.google.com"},
 		BugComponent: "b:1289112", // ChromeOS > External > WWCB > Allion > Automation
-		Attr:         []string{
+		Attr: []string{
 			"group:wwcb",
 			"group:pasit",
 			"group:release-health",
@@ -133,13 +133,11 @@ func PlugUnplugExternalDisplay(ctx context.Context, s *testing.State) {
 		s.Fatal("Failed to open RGB image on each display: ", err)
 	}
 
-	if err := utils.InitWebcam(ctx, s); err != nil {
-		s.Fatal("Failed to initialize webcam: ", err)
-	}
-
-	if err := utils.PairWebcamToDisplay(ctx, s, displayIDs.DisplayIds); err != nil {
+	parings, err := tf.CameraHelper.PairWebcamToDisplay(ctx, s.OutDir(), displayIDs.DisplayIds)
+	if err != nil {
 		s.Fatal("Failed to pair webcam to display: ", err)
 	}
+	camera := parings[displayIDs.DisplayIds[1]]
 
 	if _, err := appsSvc.CloseApp(ctx, &pb.CloseAppRequest{AppName: "Gallery", TimeoutSecs: 60}); err != nil {
 		s.Fatal("Failed to close Gallery app: ", err)
@@ -166,7 +164,7 @@ func PlugUnplugExternalDisplay(ctx context.Context, s *testing.State) {
 		s.Fatal("Failed to click on play button on the Gallery: ", err)
 	}
 
-	if err := utils.VerifyVideo(ctx, s, displayIDs.DisplayIds[1], 30); err != nil {
+	if err := tf.CameraHelper.VerifyVideo(ctx, s.OutDir(), camera, 30); err != nil {
 		s.Fatal("Failed to verify video on the external display: ", err)
 	}
 

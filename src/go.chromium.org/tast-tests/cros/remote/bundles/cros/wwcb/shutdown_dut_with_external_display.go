@@ -33,7 +33,7 @@ func init() {
 		Desc:         "Shutdown DUT then check both screens on DUT & external display to become dark by camera connecting to the host",
 		Contacts:     []string{"cros-wwcb-automation@google.com", "allion-wwcb@allion.corp-partner.google.com"},
 		BugComponent: "b:1289112", // ChromeOS > External > WWCB > Allion > Automation
-		Attr:         []string{
+		Attr: []string{
 			"group:wwcb",
 			"group:pasit",
 			"group:release-health",
@@ -132,20 +132,19 @@ func ShutdownDUTWithExternalDisplay(ctx context.Context, s *testing.State) {
 	}
 	defer appsSvc.CloseApp(cleanupCtx, &pb.CloseAppRequest{AppName: "Gallery", TimeoutSecs: 60})
 
-	if err := utils.InitWebcam(ctx, s); err != nil {
-		s.Fatal("Failed to initialize webcam: ", err)
-	}
-
-	if err := utils.PairWebcamToDisplay(ctx, s, displayIDs.DisplayIds); err != nil {
+	parings, err := tf.CameraHelper.PairWebcamToDisplay(ctx, s.OutDir(), displayIDs.DisplayIds)
+	if err != nil {
 		s.Fatal("Failed to pair webcam to display: ", err)
 	}
+	dutDispCamera := parings[displayIDs.DisplayIds[0]]
+	extDispCamera := parings[displayIDs.DisplayIds[1]]
 
-	extScreenOn, err := utils.GetGamLightingValue(ctx, s, displayIDs.DisplayIds[1])
+	extScreenOn, err := tf.CameraHelper.GAMLightingValue(ctx, s.OutDir(), extDispCamera)
 	if err != nil {
 		s.Fatal("Failed to get the external screen light when DUT is turned on: ", err)
 	}
 
-	dutScreenOn, err := utils.GetGamLightingValue(ctx, s, displayIDs.DisplayIds[0])
+	dutScreenOn, err := tf.CameraHelper.GAMLightingValue(ctx, s.OutDir(), dutDispCamera)
 	if err != nil {
 		s.Fatal("Failed to get the DUT screen light when DUT is turned on: ", err)
 	}
@@ -156,12 +155,12 @@ func ShutdownDUTWithExternalDisplay(ctx context.Context, s *testing.State) {
 	}
 	defer utils.PowerOnDUT(cleanupCtx, pxy, dut)
 
-	extScreenOff, err := utils.GetGamLightingValue(ctx, s, displayIDs.DisplayIds[1])
+	extScreenOff, err := tf.CameraHelper.GAMLightingValue(ctx, s.OutDir(), extDispCamera)
 	if err != nil {
 		s.Fatal("Failed to get the external screen light when DUT is shutdown: ", err)
 	}
 
-	dutScreenOff, err := utils.GetGamLightingValue(ctx, s, displayIDs.DisplayIds[0])
+	dutScreenOff, err := tf.CameraHelper.GAMLightingValue(ctx, s.OutDir(), dutDispCamera)
 	if err != nil {
 		s.Fatal("Failed to get the DUT screen light when DUT is shutdown: ", err)
 	}

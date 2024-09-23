@@ -91,67 +91,6 @@ func OpenRGBImageOnDisplays(ctx context.Context, fs *dutfs.Client, appsSvc pb.Ap
 	return nil
 }
 
-// PairWebcamToDisplay pairs between multiple displays and webcams using the RGB color image displayed on the screen.
-func PairWebcamToDisplay(ctx context.Context, s *testing.State, displayIDs []string) error {
-	if len(displayIDs) > len(webcamOnline) {
-		return errors.Errorf("Expect the number of online webcams is higher than the number of displays; webcams: %d, displays: %d", len(webcamOnline), len(displayIDs))
-	}
-
-	return testing.Poll(ctx, func(ctx context.Context) error {
-		// Let each webcam capture the image and store the average pixel.
-		camPxl := make(map[string]Pixel)
-		for _, webcam := range webcamOnline {
-			avgPixel, err := getAvgPixelFromWebcam(ctx, s, webcam, "mapping")
-			if err != nil {
-				return errors.Wrap(err, "get average pixel from webcam")
-			}
-			camPxl[webcam] = filterColorPixelValue(avgPixel)
-		}
-
-		mappingColors := [3]Pixel{redColor, greenColor, blueColor}
-		alreadyMappingCamera := make(map[string]bool)
-		for dispIndex, dispID := range displayIDs {
-			maxScore := -1
-			mappingPort := ""
-			mappingColor := mappingColors[dispIndex]
-
-			testing.ContextLogf(ctx, "==== Display %d: %s ====", dispIndex, dispID)
-			for cam, pxl := range camPxl {
-				// Skip it if already mapped.
-				if alreadyMappingCamera[cam] {
-					continue
-				}
-
-				// Use display index to find which RGB values in pixel use as the comparison reference.
-				rgbScore := []int{pxl.R, pxl.G, pxl.B}
-				imgScore := rgbScore[dispIndex]
-				testing.ContextLogf(ctx, "Webcam: %s, Pixel: %v, Score: %d", cam, pxl, imgScore)
-
-				if imgScore > maxScore {
-					mappingPort = cam
-					maxScore = imgScore
-				}
-			}
-
-			// Check the color image showing on the display is good enough.
-			if maxScore < webcamMappingLimitScore {
-				p := camPxl[mappingPort]
-				grayScore := scalarScore(p, grayColor)
-				expectColorScore := scalarScore(p, mappingColor)
-
-				if int(expectColorScore) < webcamMappingLimitScore && grayScore > expectColorScore {
-					return errors.Errorf("'Display: %d, %s' is abnormal. Please check if the display is on. (GrayScore (%f) is higher than ColorScore (%f))", dispIndex, dispID, grayScore, expectColorScore)
-				}
-			}
-
-			screenToCamera[dispID] = mappingPort
-			alreadyMappingCamera[mappingPort] = true
-			testing.ContextLogf(ctx, "Mapping %s to Display %d, %s within the score is %d", mappingPort, dispIndex, dispID, maxScore)
-		}
-		return nil
-	}, &testing.PollOptions{Timeout: 30 * time.Second, Interval: 1 * time.Second})
-}
-
 // HostWebcams returns a list of host webcams.
 func HostWebcams(ctx context.Context) ([]string, error) {
 	var found []string

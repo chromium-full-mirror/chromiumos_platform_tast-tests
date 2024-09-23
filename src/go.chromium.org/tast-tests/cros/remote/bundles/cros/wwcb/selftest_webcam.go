@@ -13,6 +13,7 @@ import (
 	"github.com/golang/protobuf/ptypes/empty"
 	"go.chromium.org/tast-tests/cros/common/tbdep"
 	"go.chromium.org/tast-tests/cros/remote/bundles/cros/wwcb/utils"
+	"go.chromium.org/tast-tests/cros/remote/bundles/cros/wwcb/utils/api"
 	"go.chromium.org/tast-tests/cros/remote/dutfs"
 	pb "go.chromium.org/tast-tests/cros/services/cros/apps"
 	"go.chromium.org/tast-tests/cros/services/cros/ui"
@@ -119,9 +120,11 @@ func SelftestWebcam(ctx context.Context, s *testing.State) {
 	uiautoSvc := ui.NewAutomationServiceClient(cl.Conn)
 	fs := dutfs.NewClient(cl.Conn)
 
-	if err := utils.InitWebcam(ctx, s); err != nil {
-		s.Fatal("Failed to initialize webcam: ", err)
+	cameraService, err := api.NewLocalCameraService(ctx)
+	if err != nil {
+		s.Fatal("Failed to create camera service")
 	}
+	cameraHelper := api.NewCameraServiceHelper(cameraService)
 
 	switch category {
 	case "docking", "docking_daisychain":
@@ -174,7 +177,7 @@ func SelftestWebcam(ctx context.Context, s *testing.State) {
 		s.Fatal("Failed to open RGB image on each display: ", err)
 	}
 
-	if err := utils.PairWebcamToDisplay(ctx, s, displayIDs.DisplayIds); err != nil {
+	if _, err := cameraHelper.PairWebcamToDisplay(ctx, s.OutDir(), displayIDs.DisplayIds); err != nil {
 		s.Fatal("Failed to pair webcam to display: ", err)
 	}
 

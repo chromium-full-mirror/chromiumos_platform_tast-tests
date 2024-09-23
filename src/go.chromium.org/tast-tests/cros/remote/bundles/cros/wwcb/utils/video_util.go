@@ -13,44 +13,24 @@ import (
 	"image"
 	"image/jpeg"
 	"io"
-	"math"
 	"os"
-	"path"
-	"time"
 
 	"github.com/blackjack/webcam"
+
+	"go.chromium.org/chromiumos/config/go/test/lab/api/passport"
 
 	"go.chromium.org/tast/core/errors"
 	"go.chromium.org/tast/core/testing"
 )
 
-// Pixel struct
-type Pixel struct {
-	R int
-	G int
-	B int
-	A int
-}
+type pixel = passport.Pixel
 
 var (
-	redColor   = Pixel{240, 80, 80, 255}   // RGBA
-	greenColor = Pixel{80, 240, 80, 255}   // RGBA
-	blueColor  = Pixel{80, 80, 240, 255}   // RGBA
-	grayColor  = Pixel{120, 120, 120, 255} // RGBA
-
-	detectVideoColor = [3]string{"red", "green", "blue"}
-
 	// key:id , value:dev id
 	webcamOnline = make(map[int]string)
 
 	// max webcam length
 	maxWebcamLen = 20
-
-	// webcam limit score
-	webcamMappingLimitScore = 160
-
-	// key: screen id (or 'dut' & fixture uid) , value: webcam port
-	screenToCamera = make(map[string]string)
 
 	// dht
 	dhtMarker = []byte{255, 196}
@@ -74,27 +54,8 @@ var (
 	sosMarker = []byte{255, 218}
 )
 
-// DUTMonitor is the definition word of DUT.
-var DUTMonitor = "dut"
-
-// RedPicFileName is the red pic file name.
-var RedPicFileName = "r.jpg"
-
-// GreenPicFileName is the green pic file name.
-var GreenPicFileName = "g.jpg"
-
-// BluePicFileName is the blue pic file name.
-var BluePicFileName = "b.jpg"
-
-// Enable Webcam Save Img if value is "on".
-var enableWebcamSaveImg = testing.RegisterVarString(
-	"utils.enableWebcamSaveImg",
-	"off",
-	"WWCB enable webcam save image",
-)
-
 // InitWebcam initializes Webcam.
-func InitWebcam(ctx context.Context, s *testing.State) error {
+func InitWebcam(ctx context.Context) error {
 	var cams = make(map[string](*webcam.Webcam))
 	for i := 0; i < maxWebcamLen; i++ {
 		s := fmt.Sprintf("/dev/video%d", i)
@@ -137,165 +98,13 @@ func InitWebcam(ctx context.Context, s *testing.State) error {
 	return nil
 }
 
-// VerifyVideo is Verify by detect three color (R->G->B) video.
-// Take frame from webcam every second.
-// Verify is ok will return true, else return false
-func VerifyVideo(ctx context.Context, s *testing.State, uid string, duration int) error {
-	devPort, isHave := screenToCamera[uid]
-
-	if !isHave {
-		return errors.New("the uid " + uid + " not found")
+// CamerasOnline fetches the found cameras.
+func CamerasOnline() []string {
+	var cameras []string
+	for _, value := range webcamOnline {
+		cameras = append(cameras, value)
 	}
-
-	cam, err := webcam.Open(devPort)
-	if err != nil {
-		return errors.New("webcam with '" + uid + "' open failed")
-	}
-	defer cam.Close()
-
-	formatDesc := cam.GetSupportedFormats()
-	for f := range formatDesc {
-		if formatDesc[f] == "Motion-JPEG" {
-			format := f
-			_, _, _, err := cam.SetImageFormat(format, uint32(600), uint32(600))
-
-			if err != nil {
-				return errors.New("Set image format failed")
-			}
-
-			break
-		}
-	}
-
-	err = cam.StartStreaming()
-	if err != nil {
-		return errors.New("webcam with '" + uid + "' streaming failed")
-	}
-
-	// 5 seconds time out.
-	timeout := uint32(5)
-	detectColorCount := 0
-	startTime := time.Now().Unix()
-	takeFrameTime := startTime
-
-	for {
-		err = cam.WaitForFrame(timeout)
-
-		switch err.(type) {
-		case nil:
-		case *webcam.Timeout:
-			return errors.New(err.Error())
-		default:
-			return errors.New("webcam with '" + uid + "' webcam take frame time out failed")
-		}
-
-		imgFileName := path.Join(s.OutDir(), "tmp.jpeg")
-		if enableWebcamSaveImg.Value() == "on" {
-			currentTime := time.Now()
-			imgFileName = path.Join(s.OutDir(), devPort[5:]+"_verify_"+currentTime.Format("15:04:05")+".jpeg")
-		}
-
-		frame, err := cam.ReadFrame()
-		if len(frame) != 0 {
-			timeNow := time.Now().Unix()
-
-			if int(timeNow-startTime) >= duration {
-				return errors.New("verify fail")
-			}
-
-			distTime := timeNow - takeFrameTime
-
-			if distTime >= 1 {
-				err := os.WriteFile(imgFileName, frame, 0644)
-
-				if err != nil {
-					return errors.New("webcam with '" + uid + "' webcam write file error")
-				}
-
-				frameColor, err := GetColor(imgFileName)
-
-				// some jpeg file from webcam need to add Dht
-				if err != nil {
-					frame = addMotionDht(frame)
-					os.Remove(imgFileName)
-					err := os.WriteFile(imgFileName, frame, 0644)
-					if err != nil {
-						return errors.New("webcam with '" + uid + "' webcam write file error")
-					}
-
-					frameColor, err = GetColor(imgFileName)
-
-					if err != nil {
-						testing.ContextLog(ctx, "jpeg file from webcam had decode issue")
-						continue
-					}
-				}
-
-				testing.ContextLog(ctx, "Detect color: "+frameColor)
-				testing.ContextLogf(ctx, "Expected color %s", detectVideoColor[detectColorCount])
-				if frameColor == detectVideoColor[detectColorCount] {
-					testing.ContextLogf(ctx, "%s color detected, incrementing colorCount", frameColor)
-					detectColorCount++
-					if detectColorCount > 2 {
-						break
-					}
-				} else {
-					if detectColorCount > 0 {
-						if frameColor != detectVideoColor[detectColorCount-1] {
-							detectColorCount = 0
-						}
-					}
-				}
-
-				takeFrameTime = timeNow
-			}
-
-		} else if err != nil {
-			panic(err.Error())
-		}
-	}
-
-	if detectColorCount <= 2 {
-		return errors.New("verify fail")
-	}
-
-	return nil
-}
-
-// GetGamLightingValue is for detect lighting value by webcam.
-// Value: 0(dark) ~ 255 (light).
-func GetGamLightingValue(ctx context.Context, s *testing.State, uid string) (int, error) {
-	devPort, isHave := screenToCamera[uid]
-
-	if !isHave {
-		return -1, errors.New("the webcam uid " + uid + " not found")
-	}
-
-	pixel, err := getAvgPixelFromWebcam(ctx, s, devPort, "LightingValue")
-
-	if err != nil {
-		return -1, err
-	}
-
-	return ((pixel.R + pixel.G + pixel.B) / 3), nil
-}
-
-// GetGamHotColdValue is for detect hot & cold value by webcam.
-// Value: -255(cold) ~ 255 (hot).
-func GetGamHotColdValue(ctx context.Context, s *testing.State, uid string) (int, error) {
-	devPort, isHave := screenToCamera[uid]
-
-	if !isHave {
-		return -1, errors.New("the webcam uid " + uid + " not found")
-	}
-
-	pixel, err := getAvgPixelFromWebcam(ctx, s, devPort, "HotColdValue")
-
-	if err != nil {
-		return -1, err
-	}
-
-	return (pixel.R - pixel.B), nil
+	return cameras
 }
 
 // addMotionDht is for add header to JPEG file.
@@ -304,28 +113,13 @@ func addMotionDht(frame []byte) []byte {
 	return append(jpegParts[0], append(dhtMarker, append(dht, append(sosMarker, jpegParts[1]...)...)...)...)
 }
 
-// filterColorPixelValue is for get max pixel value by color.
-func filterColorPixelValue(p Pixel) Pixel {
-	colorStr := detectColor(p)
-
-	if colorStr == "red" {
-		return Pixel{p.R, 0, 0, 255}
-	}
-
-	if colorStr == "green" {
-		return Pixel{0, p.G, 0, 255}
-	}
-
-	return Pixel{0, 0, p.B, 255}
-}
-
-// getAvgPixelFromWebcam is for get avg pixel from webcam.
-func getAvgPixelFromWebcam(ctx context.Context, s *testing.State, devPort, logStr string) (Pixel, error) {
-	var p Pixel
+// GetAvgPixelFromWebcam is for get avg pixel from webcam.
+func GetAvgPixelFromWebcam(ctx context.Context, devPort string) (*pixel, []byte, error) {
+	var p *pixel
 	cam, err := webcam.Open(devPort)
 
 	if err != nil {
-		return Pixel{}, errors.New(devPort + " not found")
+		return nil, nil, errors.New(devPort + " not found")
 	}
 	defer cam.Close()
 
@@ -336,7 +130,7 @@ func getAvgPixelFromWebcam(ctx context.Context, s *testing.State, devPort, logSt
 			_, _, _, err := cam.SetImageFormat(format, uint32(600), uint32(600))
 
 			if err != nil {
-				return Pixel{}, errors.New("Set image format failed")
+				return nil, nil, errors.New("Set image format failed")
 			}
 
 			break
@@ -345,7 +139,7 @@ func getAvgPixelFromWebcam(ctx context.Context, s *testing.State, devPort, logSt
 
 	err = cam.StartStreaming()
 	if err != nil {
-		return Pixel{}, errors.New(devPort + " streaming failed")
+		return nil, nil, errors.Wrap(err, devPort+" streaming failed")
 	}
 
 	// 5 seconds time out.
@@ -360,99 +154,39 @@ func getAvgPixelFromWebcam(ctx context.Context, s *testing.State, devPort, logSt
 			fmt.Fprint(os.Stderr, err.Error())
 			continue
 		default:
-			return Pixel{}, errors.New(devPort + " webcam take frame time out failed")
-		}
-
-		imgFileName := path.Join(s.OutDir(), "tmp.jpeg")
-		if enableWebcamSaveImg.Value() == "on" {
-			currentTime := time.Now()
-			imgFileName = path.Join(s.OutDir(), devPort[5:]+"_"+logStr+"_"+currentTime.Format("15:04:05")+".jpeg")
+			return nil, nil, errors.New(devPort + " webcam take frame time out failed")
 		}
 
 		frame, err := cam.ReadFrame()
 		frameCount++
 
 		if err != nil {
-			return Pixel{}, err
+			return nil, nil, err
 		} else if frameCount > 10 && len(frame) != 0 {
 			frame = addMotionDht(frame)
-			err := os.WriteFile(imgFileName, frame, 0644)
 
 			if err != nil {
-				return Pixel{}, errors.New("get Pixel From Webcam write file error: " + devPort)
+				return nil, nil, errors.New("get Pixel From Webcam write file error: " + devPort)
 			}
 
 			image.RegisterFormat("jpeg", "jpeg", jpeg.Decode, jpeg.DecodeConfig)
-			file, err := os.Open(imgFileName)
-
+			p, err = getAvgPixelColor(bytes.NewReader(frame))
 			if err != nil {
-				return Pixel{}, errors.New("get Pixel From Webcam file open error: " + devPort)
+				return nil, nil, errors.New("get Pixel From Webcam error: " + devPort)
 			}
 
-			defer file.Close()
-
-			p, err = getAvgPixelColor(file)
-
-			if err != nil {
-				return Pixel{}, errors.New("get Pixel From Webcam error: " + devPort)
-			}
-
-			break
+			return p, frame, nil
 		}
 	}
-
-	return p, nil
-}
-
-// GetColor is for get color from JPEG file.
-func GetColor(fileName string) (string, error) {
-	image.RegisterFormat("jpeg", "jpeg", jpeg.Decode, jpeg.DecodeConfig)
-	file, err := os.Open(fileName)
-
-	if err != nil {
-		return "", errors.New("Error: File could not be opened")
-	}
-
-	defer file.Close()
-
-	p, err := getAvgPixelColor(file)
-
-	if err != nil {
-		return "", errors.New("Error: Image could not be decoded:" + err.Error())
-	}
-
-	return detectColor(p), nil
-}
-
-// detectColor is for detect color from pixel.
-func detectColor(p Pixel) string {
-	redScore := int(scalarScore(p, redColor))
-	greenScore := int(scalarScore(p, greenColor))
-	blueScore := int(scalarScore(p, blueColor))
-
-	if blueScore > redScore && blueScore > greenScore {
-		return "blue"
-	} else if greenScore > redScore {
-		return "green"
-	}
-
-	return "red"
-}
-
-// scalarScore is for get the score from two Pixels.
-// score more high means two pixels more similar.
-func scalarScore(s1, s2 Pixel) float64 {
-	score := (math.Abs(float64(s1.R-s2.R))+math.Abs(float64(s1.G-s2.G))+math.Abs(float64(s1.B-s2.B)))/3*-1 + 255
-	return score
 }
 
 // getAvgPixelColor is for get the bi-dimensional pixel array.
-func getAvgPixelColor(file io.Reader) (Pixel, error) {
+func getAvgPixelColor(file io.Reader) (*pixel, error) {
 	img, _, err := image.Decode(file)
 
 	if err != nil {
 		fmt.Println(err.Error())
-		return Pixel{}, err
+		return nil, err
 	}
 
 	bounds := img.Bounds()
@@ -472,12 +206,20 @@ func getAvgPixelColor(file io.Reader) (Pixel, error) {
 		}
 	}
 
-	p := Pixel{int(redSum / float64(pixelsCount)), int(greenSum / float64(pixelsCount)), int(blueSum / float64(pixelsCount)), 255}
+	p := &pixel{
+		R: int32(redSum / float64(pixelsCount)),
+		G: int32(greenSum / float64(pixelsCount)),
+		B: int32(blueSum / float64(pixelsCount)),
+		A: 255}
 
 	return p, nil
 }
 
 // rgbaToPixel is for translate from rgb value to Pixel format.
-func rgbaToPixel(r, g, b, a uint32) Pixel {
-	return Pixel{int(r / 257), int(g / 257), int(b / 257), int(a / 257)}
+func rgbaToPixel(r, g, b, a uint32) pixel {
+	return pixel{
+		R: int32(r / 257),
+		G: int32(g / 257),
+		B: int32(b / 257),
+		A: int32(a / 257)}
 }

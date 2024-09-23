@@ -188,11 +188,8 @@ func NightLightViaDock(ctx context.Context, s *testing.State) {
 		s.Fatal("Failed to open RGB image on each display: ", err)
 	}
 
-	if err := utils.InitWebcam(ctx, s); err != nil {
-		s.Fatal("Failed to initialize webcam: ", err)
-	}
-
-	if err := utils.PairWebcamToDisplay(ctx, s, displayIDs.DisplayIds); err != nil {
+	parings, err := tf.CameraHelper.PairWebcamToDisplay(ctx, s.OutDir(), displayIDs.DisplayIds)
+	if err != nil {
 		s.Fatal("Failed to pair webcam to display: ", err)
 	}
 
@@ -227,13 +224,16 @@ func NightLightViaDock(ctx context.Context, s *testing.State) {
 
 	nightLightOff := "off"
 
-	extDispHCVs[nightLightOff], err = utils.GetGamHotColdValue(ctx, s, displayIDs.DisplayIds[1])
+	extDispCamera := parings[displayIDs.DisplayIds[1]]
+	extDispHCVs[nightLightOff], err = tf.CameraHelper.GAMLightingValue(ctx, s.OutDir(), extDispCamera)
+
 	if err != nil {
 		s.Fatal("Failed to get the external display HCV during night light is off: ", err)
 	}
 	s.Logf("External display HCV during night light is off: %d", extDispHCVs[nightLightOff])
 
-	dutHCVs[nightLightOff], err = utils.GetGamHotColdValue(ctx, s, displayIDs.DisplayIds[0])
+	dutDispCamera := parings[displayIDs.DisplayIds[0]]
+	dutHCVs[nightLightOff], err = tf.CameraHelper.GAMLightingValue(ctx, s.OutDir(), dutDispCamera)
 	if err != nil {
 		s.Fatal("Failed to get the DUT HCV during night light is off: ", err)
 	}
@@ -284,13 +284,13 @@ func NightLightViaDock(ctx context.Context, s *testing.State) {
 			s.Fatalf("Failed to set color temperature; got %s, want %s", clrTmpSilderInfo.NodeInfo.Value, test.colorTemperatureValue)
 		}
 
-		extDispHCVs[test.name], err = utils.GetGamHotColdValue(ctx, s, displayIDs.DisplayIds[1])
+		extDispHCVs[test.name], err = tf.CameraHelper.GAMLightingValue(ctx, s.OutDir(), extDispCamera)
 		if err != nil {
 			s.Fatalf("Failed to get the external display HCV during night light is %s: %v", test.name, err)
 		}
 		s.Logf("External display HCV during night light is %s: %d", test.name, extDispHCVs[test.name])
 
-		dutHCVs[test.name], err = utils.GetGamHotColdValue(ctx, s, displayIDs.DisplayIds[0])
+		dutHCVs[test.name], err = tf.CameraHelper.GAMLightingValue(ctx, s.OutDir(), dutDispCamera)
 		if err != nil {
 			s.Fatalf("Failed to get the DUT HCV during night light is %s: %v", test.name, err)
 		}

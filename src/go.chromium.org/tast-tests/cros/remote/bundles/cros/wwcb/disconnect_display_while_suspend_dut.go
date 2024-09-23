@@ -34,7 +34,7 @@ func init() {
 		Desc:         "Disconnect the external display while DUT is in suspend mode",
 		Contacts:     []string{"cros-wwcb-automation@google.com", "allion-wwcb@allion.corp-partner.google.com"},
 		BugComponent: "b:1289112", // ChromeOS > External > WWCB > Allion > Automation
-		Attr:         []string{
+		Attr: []string{
 			"group:wwcb",
 			"group:pasit",
 			"group:release-health",
@@ -135,15 +135,13 @@ func DisconnectDisplayWhileSuspendDUT(ctx context.Context, s *testing.State) {
 	}
 	defer appsSvc.CloseApp(cleanupCtx, &pb.CloseAppRequest{AppName: "Gallery", TimeoutSecs: 60})
 
-	if err := utils.InitWebcam(ctx, s); err != nil {
-		s.Fatal("Failed to initialize webcam: ", err)
-	}
-
-	if err := utils.PairWebcamToDisplay(ctx, s, displayIDs.DisplayIds); err != nil {
+	parings, err := tf.CameraHelper.PairWebcamToDisplay(ctx, s.OutDir(), displayIDs.DisplayIds)
+	camera := parings[displayIDs.DisplayIds[0]]
+	if err != nil {
 		s.Fatal("Failed to pair webcam to display: ", err)
 	}
 
-	screenOn, err := utils.GetGamLightingValue(ctx, s, displayIDs.DisplayIds[0])
+	screenOn, err := tf.CameraHelper.GAMLightingValue(ctx, s.OutDir(), camera)
 	if err != nil {
 		s.Fatal("Failed to get DUT screen light when DUT is turned on: ", err)
 	}
@@ -164,7 +162,7 @@ func DisconnectDisplayWhileSuspendDUT(ctx context.Context, s *testing.State) {
 	}
 
 	if err := testing.Poll(ctx, func(ctx context.Context) error {
-		screenOff, err := utils.GetGamLightingValue(ctx, s, displayIDs.DisplayIds[0])
+		screenOff, err := tf.CameraHelper.GAMLightingValue(ctx, s.OutDir(), camera)
 		if err != nil {
 			return errors.Wrap(err, "failed to get DUT screen light when DUT is suspended")
 		}
@@ -176,5 +174,4 @@ func DisconnectDisplayWhileSuspendDUT(ctx context.Context, s *testing.State) {
 	}, &testing.PollOptions{Timeout: 2 * time.Minute, Interval: 5 * time.Second}); err != nil {
 		s.Fatal("Failed to check screen is turned off: ", err)
 	}
-
 }
