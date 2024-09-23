@@ -32,7 +32,10 @@ func init() {
 			"chromeos-consumer-engprod@google.com",
 		},
 		BugComponent: "b:1246070", // ChromeOS > Software > System UI Surfaces > Status Area
-		Attr:         []string{"group:mainline", "informational"},
+		Attr:         []string{
+			// Disabled by TORA.  See:b/345799861.
+			// "group:mainline", "informational"
+			},
 		SoftwareDeps: []string{"chrome", "chrome_internal"},
 		SearchFlags: []*testing.StringPair{{
 			Key:   "feature_id",
