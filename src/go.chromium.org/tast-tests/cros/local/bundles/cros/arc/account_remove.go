@@ -42,8 +42,15 @@ func init() {
 		Contacts:     []string{"arc-commercial@google.com", "mhasank@chromium.org"},
 		// ChromeOS > Software > ARC++ > Commercial > Tast Tests
 		BugComponent: "b:1487630",
-		Attr:         []string{"group:mainline", "group:hw_agnostic"},
-		SoftwareDeps: []string{"chrome", "play_store", "gaia"},
+		Attr:         []string{
+			// Disabled by TORA.  See:b/342208261.
+			// "group:mainline", "group:hw_agnostic"
+			},
+		SoftwareDeps: []string{
+			"chrome", "play_store",
+			// Disabled by TORA.  See:b/342208261.
+			// "gaia"
+			},
 		Timeout:      15 * time.Minute,
 		VarDeps: []string{
 			arcCommon.ManagedAccountPoolVarName,
@@ -60,8 +67,8 @@ func init() {
 					secondaryAccountPool: uiCommon.GaiaPoolDefaultVarName,
 					optin:                false,
 				},
-				ExtraSoftwareDeps: []string{"android_container"},
-				ExtraAttr:         []string{"informational"},
+				ExtraSoftwareDeps: []string{"android_container", "gaia"},
+				ExtraAttr:         []string{"informational", "group:mainline"},
 			},
 			{
 				Name: "managed_vm",
@@ -71,7 +78,10 @@ func init() {
 					optin:                false,
 				},
 				ExtraSoftwareDeps: []string{"android_vm"},
-				ExtraAttr:         []string{"informational"},
+				ExtraAttr:         []string{
+					// Disabled by TORA.  See:b/342208261.
+					//"informational"
+					},
 			},
 			{
 				Name: "unmanaged",
@@ -80,8 +90,8 @@ func init() {
 					secondaryAccountPool: arcCommon.ManagedAccountPoolVarName,
 					optin:                true,
 				},
-				ExtraSoftwareDeps: []string{"android_container"},
-				ExtraAttr:         []string{"informational"},
+				ExtraSoftwareDeps: []string{"android_container", "gaia"},
+				ExtraAttr:         []string{"informational", "group:mainline"},
 			},
 			{
 				Name: "unmanaged_vm",
@@ -90,8 +100,8 @@ func init() {
 					secondaryAccountPool: arcCommon.ManagedAccountPoolVarName,
 					optin:                true,
 				},
-				ExtraSoftwareDeps: []string{"android_vm"},
-				ExtraAttr:         []string{"informational"},
+				ExtraSoftwareDeps: []string{"android_vm", "gaia"},
+				ExtraAttr:         []string{"informational", "group:mainline"},
 			}},
 	})
 }
