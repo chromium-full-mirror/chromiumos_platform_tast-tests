@@ -32,7 +32,10 @@ func init() {
 		},
 		// ChromeOS > Software > Commercial (Enterprise) > DLP (Data Loss Prevention)
 		BugComponent: "b:892101",
-		Attr:         []string{"group:data-leak-prevention-dmserver-enrollment-daily"},
+		Attr:         []string{
+			// Disabled by TORA. See: b/348064972
+			// "group:data-leak-prevention-dmserver-enrollment-daily",
+		},
 		SoftwareDeps: []string{"reboot", "chrome"},
 		ServiceDeps: []string{
 			"tast.cros.hwsec.OwnershipService",
