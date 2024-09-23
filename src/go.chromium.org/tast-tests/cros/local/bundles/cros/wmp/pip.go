@@ -118,11 +118,14 @@ func init() {
 		Timeout:      chrome.GAIALoginTimeout + arc.BootTimeout + 2*time.Minute,
 		Params: []testing.Param{{
 			Val: ashPipTests,
-		}, {
-			Name:              "arc",
-			Val:               arcPipTests,
-			ExtraSoftwareDeps: []string{"android_vm"},
-		}},
+		},
+		// Disabled by TORA. See: b/346822601
+		// {
+		// 	Name:              "arc",
+		// 	Val:               arcPipTests,
+		// 	ExtraSoftwareDeps: []string{"android_vm"},
+		// },
+		},
 	})
 }
 
