@@ -39,12 +39,19 @@ func init() {
 		},
 		// ChromeOS > Software > Personalization
 		BugComponent: "b:1006527",
-		Attr:         []string{"group:mainline", "informational", "group:hw_agnostic"},
+		Attr:         []string{
+			// Disabled by TORA.  See:b/343060560.
+			//"group:mainline", "informational", "group:hw_agnostic"
+			},
 		SearchFlags: []*testing.StringPair{{
 			Key:   "feature_id",
 			Value: "screenplay-47bb4826-69df-4c03-aaf2-e9a8a0f0f636",
 		}},
-		SoftwareDeps: []string{"chrome", "gaia"},
+		SoftwareDeps: []string{
+			"chrome",
+			// Disabled by TORA.  See:b/343060560.
+			// "gaia"
+		},
 		Timeout:      5 * time.Minute,
 		Fixture:      personalization.GooglePhotosFixture,
 		Params: []testing.Param{{
