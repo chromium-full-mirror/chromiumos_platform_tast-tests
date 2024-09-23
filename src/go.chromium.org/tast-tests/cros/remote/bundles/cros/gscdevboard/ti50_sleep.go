@@ -400,18 +400,18 @@ func ti50DeepSleep(ctx context.Context, s *testing.State, b utils.DevboardHelper
 		verifyDeepSleep(ctx, s, i, th)
 	}
 
-	s.Log("Simulating CCD mode")
-	b.GpioApplyStrap(ctx, ti50.CCDModeOn)
+	s.Log("Simulating SuzyQ inserted")
+	b.GpioApplyStrap(ctx, ti50.CcdSuzyQ)
 	if verifyDeepWakeup(ctx, s, i, b, gpioMonitor, wakeSourceAdc, nil, "CCD connection") {
 		logCurrent(ctx, s, b, pv, "Awake_CCD")
 		verifyNoSleep(ctx, s, i, th)
-		b.GpioApplyStrap(ctx, ti50.CCDModeOff)
+		b.GpioApplyStrap(ctx, ti50.CcdDisconnected)
 		verifyDeepSleep(ctx, s, i, th)
 		logCurrent(ctx, s, b, pv, "DeepSleep_CCD")
 	} else {
 		// Error already reported by `verifyDeepWakeup`, disconnect SuzyQ and move on to
 		// testing other wake sources.
-		b.GpioApplyStrap(ctx, ti50.CCDModeOff)
+		b.GpioApplyStrap(ctx, ti50.CcdDisconnected)
 	}
 
 	s.Log("Simulating serial console input")
