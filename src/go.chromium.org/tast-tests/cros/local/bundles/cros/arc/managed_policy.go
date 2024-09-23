@@ -20,6 +20,7 @@ import (
 	"go.chromium.org/tast-tests/cros/local/apps"
 	"go.chromium.org/tast-tests/cros/local/arc"
 	"go.chromium.org/tast-tests/cros/local/chrome"
+	"go.chromium.org/tast-tests/cros/local/chrome/uiauto"
 	"go.chromium.org/tast-tests/cros/local/testenv"
 
 	"go.chromium.org/tast/core/errors"
@@ -64,17 +65,24 @@ func ManagedPolicy(ctx context.Context, s *testing.State) {
 
 	DMServerURL := s.Param().(string)
 
-	cr, err := chrome.New(
-		ctx,
-		login,
-		chrome.ARCSupported(),
-		chrome.DMSPolicy(DMServerURL),
-		chrome.ExtraArgs(append(
-			// to prevent unnecessary sync operations in arc
-			arc.DisableSyncFlags(),
-			// to enable verbose logging in arc policy bridge
-			"--vmodule=arc_policy_bridge=1")...),
-	)
+	var cr *chrome.Chrome
+
+	if err := uiauto.Retry(3, func(ctx context.Context) error {
+		cr, err = chrome.New(
+			ctx,
+			login,
+			chrome.ARCSupported(),
+			chrome.DMSPolicy(DMServerURL),
+			chrome.ExtraArgs(append(
+				// to prevent unnecessary sync operations in arc
+				arc.DisableSyncFlags(),
+				// to enable verbose logging in arc policy bridge
+				"--vmodule=arc_policy_bridge=1")...),
+		)
+		return err
+	})(ctx); err != nil {
+		s.Fatal("Failed to connect to Chrome: ", err)
+	}
 
 	tconn, err := cr.TestAPIConn(ctx)
 	if err != nil {
