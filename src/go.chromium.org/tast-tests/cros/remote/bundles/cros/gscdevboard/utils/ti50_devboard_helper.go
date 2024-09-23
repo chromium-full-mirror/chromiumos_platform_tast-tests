@@ -614,9 +614,9 @@ func (h DevboardHelper) ResetAndTpmStartupForBus(ctx context.Context, i *ti50.Cr
 }
 
 // WithApFlashAccess runs `f` with the proper setup and teardown to access the SPI flash chip.
-// This function asserts the SuzyQ strapping and leaves it in that state, so `gsctool` should work immediately.
+// This function asserts the CCD_MODE_L signal and leaves it in that state, so `gsctool` should work immediately.
 func (h DevboardHelper) WithApFlashAccess(ctx context.Context, i *ti50.CrOSImage, holdReset ti50.HoldReset, f func(ti50.ApFlash)) {
-	h.GpioApplyStrap(ctx, ti50.CcdSuzyQ)
+	h.GpioApplyStrap(ctx, ti50.CCDModeOn)
 	h.WaitUntilCCDConnected(ctx)
 
 	flash := remoteTi50.NewApFlash(h.DUTControlAndreiboard)
