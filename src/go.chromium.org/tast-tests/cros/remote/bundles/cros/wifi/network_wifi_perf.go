@@ -430,8 +430,6 @@ func init() {
 						wpa.Mode(wpa.ModePureWPA3), wpa.Ciphers2(wpa.CipherCCMP)),
 					powerSave: true, shouldTputRequired: false,
 				}},
-				// TODO(b/323903848): Promote test to stable by removing wificell_unstable attribute.
-				ExtraAttr:         []string{"wificell_unstable"},
 				ExtraTestBedDeps:  tbdep.WifiRouterFeatures(labapi.WifiRouterFeature_WIFI_ROUTER_FEATURE_IEEE_802_11_BE),
 				ExtraHardwareDeps: hwdep.D(hwdep.Wifi80211be()),
 			},
@@ -453,8 +451,6 @@ func init() {
 						wpa.Mode(wpa.ModePureWPA3), wpa.Ciphers2(wpa.CipherCCMP)),
 					powerSave: true, shouldTputRequired: false,
 				}},
-				// TODO(b/323903848): Promote test to stable by removing wificell_unstable attribute.
-				ExtraAttr:         []string{"wificell_unstable"},
 				ExtraTestBedDeps:  tbdep.WifiRouterFeatures(labapi.WifiRouterFeature_WIFI_ROUTER_FEATURE_IEEE_802_11_BE),
 				ExtraHardwareDeps: hwdep.D(hwdep.Wifi80211be()),
 			},
@@ -476,8 +472,6 @@ func init() {
 						wpa.Mode(wpa.ModePureWPA3), wpa.Ciphers2(wpa.CipherCCMP)),
 					powerSave: true, shouldTputRequired: false,
 				}},
-				// TODO(b/323903848): Promote test to stable by removing wificell_unstable attribute.
-				ExtraAttr:         []string{"wificell_unstable"},
 				ExtraTestBedDeps:  tbdep.WifiRouterFeatures(labapi.WifiRouterFeature_WIFI_ROUTER_FEATURE_IEEE_802_11_BE),
 				ExtraHardwareDeps: hwdep.D(hwdep.Wifi80211be()),
 			},
@@ -497,8 +491,6 @@ func init() {
 						wpa.Mode(wpa.ModePureWPA3), wpa.Ciphers2(wpa.CipherCCMP)),
 					powerSave: true, shouldTputRequired: false,
 				}},
-				// TODO(b/323903848): Promote test to stable by removing wificell_unstable attribute.
-				ExtraAttr:         []string{"wificell_unstable"},
 				ExtraTestBedDeps:  tbdep.WifiRouterFeatures(labapi.WifiRouterFeature_WIFI_ROUTER_FEATURE_IEEE_802_11_BE),
 				ExtraHardwareDeps: hwdep.D(hwdep.Wifi80211be()),
 			},
