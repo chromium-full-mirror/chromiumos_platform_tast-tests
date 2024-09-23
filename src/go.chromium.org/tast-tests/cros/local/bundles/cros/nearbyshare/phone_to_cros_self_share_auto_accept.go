@@ -108,19 +108,20 @@ func init() {
 				ExtraHardwareDeps: hwdep.D(hwdep.SkipOnModel(crossdevice.UnstableModels...)),
 				Timeout:           nearbycommon.DetectionTimeout + nearbycommon.SmallFileTransferTimeout,
 			},
-			{
-				Name:    "dataonline_allcontacts_txt30mb_floss",
-				Fixture: "nearbyShareDataUsageOnlineSelfShareFloss",
-				Val: nearbycommon.TestData{
-					Filename:        "big_txt.zip",
-					TransferTimeout: nearbycommon.LargeFileOnlineTransferTimeout,
-					TestTimeout:     nearbycommon.DetectionTimeout + nearbycommon.LargeFileOnlineTransferTimeout,
-				},
-				ExtraData:         []string{"big_txt.zip"},
-				ExtraAttr:         []string{"group:cross-device", "cross-device_nearbyshare", "cross-device_floss"},
-				ExtraHardwareDeps: hwdep.D(hwdep.SkipOnModel(crossdevice.UnstableModels...)),
-				Timeout:           nearbycommon.DetectionTimeout + nearbycommon.LargeFileOnlineTransferTimeout,
-			},
+			// Disabled by TORA. See: b/347918724
+			// {
+			// 	Name:    "dataonline_allcontacts_txt30mb_floss",
+			// 	Fixture: "nearbyShareDataUsageOnlineSelfShareFloss",
+			// 	Val: nearbycommon.TestData{
+			// 		Filename:        "big_txt.zip",
+			// 		TransferTimeout: nearbycommon.LargeFileOnlineTransferTimeout,
+			// 		TestTimeout:     nearbycommon.DetectionTimeout + nearbycommon.LargeFileOnlineTransferTimeout,
+			// 	},
+			// 	ExtraData:         []string{"big_txt.zip"},
+			// 	ExtraAttr:         []string{"group:cross-device", "cross-device_nearbyshare", "cross-device_floss"},
+			// 	ExtraHardwareDeps: hwdep.D(hwdep.SkipOnModel(crossdevice.UnstableModels...)),
+			// 	Timeout:           nearbycommon.DetectionTimeout + nearbycommon.LargeFileOnlineTransferTimeout,
+			// },
 		},
 	})
 }
