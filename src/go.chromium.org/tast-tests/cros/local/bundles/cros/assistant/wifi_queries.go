@@ -31,10 +31,11 @@ func init() {
 			"chromeos-consumer-engprod@google.com",
 		},
 		BugComponent: "b:905229", // ChromeOS > Software > Assistive
-		Attr: []string{
-			"group:mainline",
-			"informational",
-			"group:hw_agnostic",
+		Attr:         []string{
+			// Disabled by TORA. See: b/347570529
+			// "group:mainline",
+			// "informational",
+			// "group:hw_agnostic",
 		},
 		SoftwareDeps: []string{"chrome", "gaia"},
 		Fixture:      "assistantWithGaia",
