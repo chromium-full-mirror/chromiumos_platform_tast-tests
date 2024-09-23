@@ -40,7 +40,12 @@ func init() {
 		},
 		BugComponent: "b:1027806", // ChromeOS > Software > Commercial (Enterprise) > Identity
 		SoftwareDeps: []string{"chrome"},
-		Attr:         []string{"group:hw_agnostic", "group:mainline", "informational"},
+		Attr:         []string{
+			// Disabled by TORA. See: b/331259610
+			// "group:hw_agnostic",
+			// "group:mainline",
+			// "informational"
+		},
 		Params: []testing.Param{{
 			Fixture: fixture.ChromePolicyLoggedIn,
 			Val:     browser.TypeAsh,
