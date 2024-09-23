@@ -11,6 +11,7 @@ import (
 	labapi "go.chromium.org/chromiumos/config/go/test/lab/api"
 )
 
+// TODO(b/384765859): Add tests for switchService
 func TestPaths(t *testing.T) {
 	tests := []struct {
 		name           string
@@ -77,7 +78,7 @@ func TestPaths(t *testing.T) {
 
 	for _, test := range tests {
 		t.Run(test.name, func(t *testing.T) {
-			helper := NewHelper(test.topology, "localhost")
+			helper := NewHelper(test.topology, "localhost", nil)
 			path, err := helper.path(test.find)
 			if len(path) != len(test.expectedResult) {
 				t.Errorf("invalid result, got %d devices in path expected %d", len(path), len(test.expectedResult))
@@ -125,7 +126,7 @@ func TestPathsVia(t *testing.T) {
 
 	for _, test := range tests {
 		t.Run(test.name, func(t *testing.T) {
-			helper := NewHelper(test.topology, "localhost")
+			helper := NewHelper(test.topology, "localhost", nil)
 			devices := helper.devicesByTypeVia(test.find, test.via)
 
 			find := func(d *labapi.PasitHost_Device) bool { return d.GetId() == devices[0] }

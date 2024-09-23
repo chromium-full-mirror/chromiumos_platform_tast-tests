@@ -6,6 +6,7 @@ package topology
 
 import (
 	"context"
+	"fmt"
 	"net"
 	"os"
 	"path/filepath"
@@ -15,11 +16,15 @@ import (
 	"google.golang.org/protobuf/encoding/prototext"
 
 	labapi "go.chromium.org/chromiumos/config/go/test/lab/api"
+	"go.chromium.org/chromiumos/config/go/test/lab/api/passport"
 
 	"go.chromium.org/tast-tests/cros/remote/bundles/cros/wwcb/utils"
+	"go.chromium.org/tast-tests/cros/remote/bundles/cros/wwcb/utils/api"
 	"go.chromium.org/tast/core/dut"
 	"go.chromium.org/tast/core/errors"
+	"go.chromium.org/tast/core/ssh"
 	"go.chromium.org/tast/core/testing"
+	"google.golang.org/grpc"
 )
 
 const (
@@ -36,6 +41,18 @@ var topologyFileVar = testing.RegisterVarString(
 	"topology.file",
 	"",
 	"A textproto file containing the PASIT testbed topology when running the test manually.",
+)
+
+var rpcServicePortVar = testing.RegisterVarString(
+	"topology.apiPort",
+	"8300",
+	"A string containing the port that the passport API uses when running in a docker image.",
+)
+
+var rpcServiceHostVar = testing.RegisterVarString(
+	"topology.apiHost",
+	"",
+	"A string containing the host that the passport API is running on.",
 )
 
 func init() {
@@ -131,7 +148,12 @@ func defaultFullTopology(s *testing.FixtState, hostname string) *labapi.PasitHos
 
 // TestFixture is the PASIT test fixture.
 type TestFixture struct {
-	Helper *Helper
+	Helper          *Helper
+	defaultTopology func(*testing.FixtState, string) *labapi.PasitHost
+	hostConn        *ssh.Conn
+	hostForwarder   *ssh.Forwarder
+	grpcConn        *grpc.ClientConn
+	switchService   api.SwitchService
 }
 
 // SetUp configures the fixture.
@@ -173,7 +195,34 @@ func (tf *TestFixture) SetUp(ctx context.Context, s *testing.FixtState) interfac
 		s.Log("Failed to save topology.textproto: ", err)
 	}
 
-	tf.Helper = NewHelper(pasitTopology, hostname)
+	s.Log("Using topology: ", marshaller.Format(pasitTopology))
+
+	// Connect to PASIT Host service.
+	apiHostname := rpcServiceHostVar.Value()
+	if apiHostname == "" {
+		apiHostname = pasitTopology.GetHostname()
+	}
+	if apiHostname != "" {
+		s.Logf("Connecting to pasit host: %q", apiHostname)
+		if err := testing.Poll(ctx, func(ctx context.Context) error {
+			return tf.connectToGrpcServices(ctx, s, apiHostname)
+		}, &testing.PollOptions{Timeout: 60 * time.Second}); err != nil {
+			s.Fatal("Failed to connect to passport host: ", err)
+		}
+
+		// Create the service clients.
+		tf.switchService = passport.NewSwitchServiceClient(tf.grpcConn)
+	} else {
+		// No host info provided, assume that USB devices are connected to the local host.
+		s.Log("Using local pasit host")
+		switchService, err := api.NewLocalSwitchService(ctx)
+		if err != nil {
+			s.Fatal("Failed to create local switch service: ", err)
+		}
+		tf.switchService = switchService
+	}
+
+	tf.Helper = NewHelper(pasitTopology, hostname, tf.switchService)
 	return tf
 }
 
@@ -268,5 +317,79 @@ func (tf *TestFixture) VerifyDockingInterface(ctx context.Context, dut *dut.DUT,
 	if err := utils.VerifyDockingInterface(ctx, dut, capFile, disable, enable); err != nil {
 		return errors.Wrap(err, "failed to verify the docking station interface")
 	}
+	return nil
+}
+
+// connectToGrpcServices connects to a passport API gRPC connection at the provided address.
+//
+// Address can be of the form:
+//
+//	<host>:<port> - The service is running at host:port so we should connect directly there
+//		e.g. localhost:8300
+//
+//	<host>:<port>:docker:<container_name> - The service is running on the host in a docker container
+//	so we should connect to the machine using the host:port and forward the docker container port locally.
+//		e.g. chromeos1-row1-rack1-host1-apihost:22:docker:pasit-dev
+//		e.g. localhost:2202:docker:pasit-dev
+func (tf *TestFixture) connectToGrpcServices(ctx context.Context, s *testing.FixtState, address string) error {
+	s.Logf("Connecting to PASIT host :%q", address)
+
+	containerName := ""
+	dockerParts := strings.SplitN(address, ":docker:", 2)
+	if len(dockerParts) > 1 {
+		address = dockerParts[0]
+		containerName = dockerParts[1]
+	}
+
+	// If the container name is empty, then the address we're being given is
+	// directly connectable, e.g. we forwarded the port locally or it is directly
+	// available on the same network.
+	if containerName == "" {
+		grpcConn, err := grpc.Dial(address, grpc.WithInsecure())
+		if err != nil {
+			return errors.Wrapf(err, "failed to connect to btpeerd gRPC server %s", address)
+		}
+		tf.grpcConn = grpcConn
+		return nil
+	}
+
+	// Open a ssh connection to the passport host.
+	sshOptions := &ssh.Options{
+		KeyDir:       s.DUT().KeyDir(),
+		KeyFile:      s.DUT().KeyFile(),
+		ProxyCommand: s.DUT().ProxyCommand(),
+		Hostname:     address,
+	}
+	conn, err := ssh.New(ctx, sshOptions)
+	if err != nil {
+		return errors.Wrapf(err, "failed to connect to %s", sshOptions.Hostname)
+	}
+	tf.hostConn = conn
+
+	// Get ip of container on the host.
+	output, err := conn.CommandContext(ctx, "docker", "inspect", "-f", "{{range.NetworkSettings.Networks}}{{.IPAddress}}{{end}}", containerName).Output()
+	if err != nil {
+		return errors.Wrap(err, "failed to find address of docker image")
+	}
+
+	// Forward the gRPC port to the local machine using the created ssh connection.
+	onFwdError := func(err error) {
+		testing.ContextLogf(ctx, "ERROR: passport host ssh error %s: %v", address, err)
+	}
+	remoteAddr := fmt.Sprintf("%s:%s", strings.TrimSpace(string(output)), rpcServicePortVar.Value())
+
+	testing.ContextLogf(ctx, "Connecting to service at: %q", remoteAddr)
+	portForwarder, err := conn.ForwardLocalToRemote("tcp", "localhost:0", remoteAddr, onFwdError)
+	if err != nil {
+		return errors.Wrapf(err, "failed to port forward PASIT host for port at %s", address)
+	}
+	tf.hostForwarder = portForwarder
+
+	// Dial gRPC service.
+	grpcConn, err := grpc.Dial(portForwarder.ListenAddr().String(), grpc.WithInsecure())
+	if err != nil {
+		return errors.Wrapf(err, "failed to connect to btpeerd gRPC server on %s through forwarded btpeerd port at %q", address, portForwarder.ListenAddr().String())
+	}
+	tf.grpcConn = grpcConn
 	return nil
 }

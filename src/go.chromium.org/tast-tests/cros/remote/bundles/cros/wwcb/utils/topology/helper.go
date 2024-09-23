@@ -9,8 +9,9 @@ import (
 	"context"
 
 	labapi "go.chromium.org/chromiumos/config/go/test/lab/api"
+	"go.chromium.org/chromiumos/config/go/test/lab/api/passport"
+	"go.chromium.org/tast-tests/cros/remote/bundles/cros/wwcb/utils/api"
 
-	"go.chromium.org/tast-tests/cros/remote/bundles/cros/wwcb/utils"
 	"go.chromium.org/tast/core/errors"
 	"go.chromium.org/tast/core/testing"
 )
@@ -41,10 +42,12 @@ type Helper struct {
 	connections map[string][]*Connection
 	// devices in the topology.
 	devices map[string]*labapi.PasitHost_Device
+	// service for controlling PASIT switches.
+	switchService api.SwitchService
 }
 
 // NewHelper creates a new PASIT topology helper for the given topology and host.
-func NewHelper(topology *labapi.PasitHost, hostname string) *Helper {
+func NewHelper(topology *labapi.PasitHost, hostname string, switchService api.SwitchService) *Helper {
 	// Cache devices in the topology.
 	devices := make(map[string]*labapi.PasitHost_Device)
 	for _, d := range topology.GetDevices() {
@@ -57,34 +60,37 @@ func NewHelper(topology *labapi.PasitHost, hostname string) *Helper {
 		child := c.GetChildId()
 		parent := c.GetParentId()
 
-		manager := connectionManager(devices[parent], c)
-		connections[parent] = append(connections[parent], newConnection(c, false, manager))
-		connections[child] = append(connections[child], newConnection(c, true, manager))
+		var service api.SwitchService
+		if devices[parent].GetType() == DeviceTypeSwitchFixture {
+			service = switchService
+		}
+
+		connections[parent] = append(connections[parent], newConnection(c, false, service))
+		connections[child] = append(connections[child], newConnection(c, true, service))
 	}
 
 	return &Helper{
-		topology:    topology,
-		hostname:    hostname,
-		connections: connections,
-		devices:     devices,
+		topology:      topology,
+		hostname:      hostname,
+		connections:   connections,
+		devices:       devices,
+		switchService: switchService,
 	}
-}
-
-// connectionManager gets the correct switch wrapper for a given connection.
-func connectionManager(parent *labapi.PasitHost_Device, conn *labapi.PasitHost_Connection) ConnectionManager {
-	// If the parent device is not a switch then we have nothing to return.
-	// Switches are always defined from parent device to child.
-	if parent.GetType() != DeviceTypeSwitchFixture {
-		return nil
-	}
-
-	// We only support alieon switches at the moment.
-	return &allionConnectionManager{id: parent.GetId()}
 }
 
 // InitializeFixtures initializes the fixtures in the topology.
 func (t *Helper) InitializeFixtures(ctx context.Context) error {
-	if err := utils.InitFixture(ctx); err != nil {
+	// Query and log all switches connected.
+	resp, err := t.switchService.GetSwitches(ctx, &passport.GetSwitchesRequest{})
+	if err != nil {
+		return errors.Wrap(err, "failed to fetch switches connected to host")
+	}
+	for _, s := range resp.GetSwitches() {
+		testing.ContextLogf(ctx, "Found switch: %q", s.GetId())
+	}
+
+	// Reset all connected switches.
+	if err := t.resetAllSwitches(ctx); err != nil {
 		return errors.Wrap(err, "failed to initialize fixtures")
 	}
 	return nil
@@ -92,12 +98,23 @@ func (t *Helper) InitializeFixtures(ctx context.Context) error {
 
 // CloseAll cleans up and releases any resources held open by the fixtures.
 func (t *Helper) CloseAll(ctx context.Context) error {
-	return utils.CloseAllFixture(ctx)
+	if err := t.resetAllSwitches(ctx); err != nil {
+		return errors.Wrap(err, "failed to reset switches")
+	}
+	return nil
 }
 
 // ResetAll resets the fixture state to the default.
 func (t *Helper) ResetAll(ctx context.Context) error {
-	return utils.CloseAllFixture(ctx)
+	if err := t.resetAllSwitches(ctx); err != nil {
+		return errors.Wrap(err, "failed to reset switches")
+	}
+	return nil
+}
+
+func (t *Helper) resetAllSwitches(ctx context.Context) error {
+	_, err := t.switchService.ResetAllSwitches(ctx, &passport.ResetAllSwitchesRequest{})
+	return err
 }
 
 // devicePredicate is a function that returns true if this is the device that we're searching for.

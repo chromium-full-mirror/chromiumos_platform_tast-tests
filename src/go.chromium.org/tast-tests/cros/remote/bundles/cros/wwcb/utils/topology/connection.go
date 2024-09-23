@@ -10,28 +10,22 @@ import (
 	"fmt"
 
 	labapi "go.chromium.org/chromiumos/config/go/test/lab/api"
+	"go.chromium.org/chromiumos/config/go/test/lab/api/passport"
+
+	"go.chromium.org/tast-tests/cros/remote/bundles/cros/wwcb/utils/api"
 	"go.chromium.org/tast/core/errors"
 )
-
-// ConnectionManager is an interface that handles enabling/disabling connections between components
-// for devices that support it.
-type ConnectionManager interface {
-	// Configures the enable state of the connection.
-	EnabledState(context.Context, bool) error
-	// Flips the connection orientation on a symmetric connector (e.g. USB-C).
-	Flip(context.Context) error
-}
 
 // Connection is a directed connection between two components in the PASIT topology.
 // It wraps switches (fixtures) to abstract away the switch "activation" implementations.
 type Connection struct {
 	connection *labapi.PasitHost_Connection
 	childID    string
-	manager    ConnectionManager
+	manager    api.SwitchService
 }
 
 // newConnection creates a connection between to components.
-func newConnection(connection *labapi.PasitHost_Connection, reverse bool, manager ConnectionManager) *Connection {
+func newConnection(connection *labapi.PasitHost_Connection, reverse bool, manager api.SwitchService) *Connection {
 	childID := connection.GetChildId()
 	if reverse {
 		childID = connection.GetParentId()
@@ -66,7 +60,11 @@ func (c ConnectionPath) Activate(ctx context.Context) error {
 			continue
 		}
 
-		if err := con.manager.EnabledState(ctx, true); err != nil {
+		req := &passport.ConfigureSwitchPortRequest{
+			State:    passport.SwitchPortState_SWITCH_PORT_ENABLED,
+			SwitchId: con.connection.GetParentId(),
+		}
+		if _, err := con.manager.ConfigureSwitchPort(ctx, req); err != nil {
 			return errors.Wrap(err, "failed to enable connection")
 		}
 	}
@@ -81,7 +79,11 @@ func (c ConnectionPath) DisableAll(ctx context.Context) error {
 			continue
 		}
 
-		if err := con.manager.EnabledState(ctx, true); err != nil {
+		req := &passport.ConfigureSwitchPortRequest{
+			State:    passport.SwitchPortState_SWITCH_PORT_DISABLED,
+			SwitchId: con.connection.GetParentId(),
+		}
+		if _, err := con.manager.ConfigureSwitchPort(ctx, req); err != nil {
 			return errors.Wrap(err, "failed to enable connection")
 		}
 		foundSwitch = true
@@ -102,7 +104,12 @@ func (c ConnectionPath) DisableLast(ctx context.Context) error {
 		if con.IsStatic() {
 			continue
 		}
-		if err := con.manager.EnabledState(ctx, false); err != nil {
+
+		req := &passport.ConfigureSwitchPortRequest{
+			State:    passport.SwitchPortState_SWITCH_PORT_DISABLED,
+			SwitchId: con.connection.GetParentId(),
+		}
+		if _, err := con.manager.ConfigureSwitchPort(ctx, req); err != nil {
 			return errors.Wrap(err, "failed to enable connection")
 		}
 		return nil
@@ -120,10 +127,15 @@ func (c ConnectionPath) FlipLast(ctx context.Context) error {
 		if con.IsStatic() {
 			continue
 		}
-		if err := con.manager.Flip(ctx); err != nil {
-			return errors.Wrap(err, "failed to enable connection")
+
+		req := &passport.ConfigureSwitchPortRequest{
+			State:    passport.SwitchPortState_SWITCH_PORT_FLIP,
+			SwitchId: con.connection.GetParentId(),
+		}
+		if _, err := con.manager.ConfigureSwitchPort(ctx, req); err != nil {
+			return errors.Wrap(err, "failed to flip connection")
 		}
 		return nil
 	}
-	return errors.New("failed to disable path, no switch connections found")
+	return errors.New("failed to flip path, no switch connections found")
 }
