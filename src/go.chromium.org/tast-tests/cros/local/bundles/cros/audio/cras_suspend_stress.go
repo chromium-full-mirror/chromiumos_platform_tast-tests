@@ -33,10 +33,12 @@ type crasSuspendStressParam struct {
 }
 
 var suspendStressUnstableModels = []string{
-	// TODO(b/352295088): Undo after fix.
+	// TODO(b/352295088): Undo octopus board after fix.
 	"apel", "bloog", "blooglet", "blooguard", "bobba", "bobba360", "casta", "dood", "foob",
-	"garg", "garg360", "grabbiter", "meep", "orbatrix", "sparky", "sparky360", "vorticon",
-	"vortininja",
+	"foob360", "garfour", "garg", "garg360", "grabbiter", "meep", "orbatrix", "phaser360",
+	"sparky", "sparky360", "vorticon", "vortininja",
+	// TODO(b/349281352): Undo kano and zavala after fix.
+	"kano", "zavala",
 }
 
 func init() {
