@@ -40,11 +40,12 @@ func init() {
 				Name: "partialscreen",
 				Val:  wmp.PartialScreen,
 			},
-			{
-				Name:      "window",
-				Val:       wmp.Window,
-				ExtraAttr: []string{"group:hw_agnostic"},
-			},
+			// Disabled by TORA. See: b/346697014
+			// {
+			// 	Name:      "window",
+			// 	Val:       wmp.Window,
+			// 	ExtraAttr: []string{"group:hw_agnostic"},
+			// },
 		},
 		SearchFlags: []*testing.StringPair{{
 			Key:   "feature_id",
