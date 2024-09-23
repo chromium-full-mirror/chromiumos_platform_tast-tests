@@ -42,16 +42,20 @@ func init() {
 			Value: "screenplay-90e4fecc-d2ea-40dc-b9db-eb9d61089e22",
 		}},
 		Timeout: 3*time.Minute + cws.InstallationTimeout,
-		Params: []testing.Param{{
-			Name:    "clamshell_mode",
-			Val:     launcher.TestCase{TabletMode: false},
-			Fixture: "chromeLoggedInWithGaia",
-		}, {
-			Name:              "tablet_mode",
-			Val:               launcher.TestCase{TabletMode: true},
-			Fixture:           "chromeLoggedInWithGaia",
-			ExtraHardwareDeps: hwdep.D(hwdep.InternalDisplay()),
-		}},
+		Params: []testing.Param{
+			// Disabled by TORA. See: b/343060877
+			// {
+			// 	Name:    "clamshell_mode",
+			// 	Val:     launcher.TestCase{TabletMode: false},
+			// 	Fixture: "chromeLoggedInWithGaia",
+			// },
+			{
+				Name:              "tablet_mode",
+				Val:               launcher.TestCase{TabletMode: true},
+				Fixture:           "chromeLoggedInWithGaia",
+				ExtraHardwareDeps: hwdep.D(hwdep.InternalDisplay()),
+			},
+		},
 	})
 }
 
