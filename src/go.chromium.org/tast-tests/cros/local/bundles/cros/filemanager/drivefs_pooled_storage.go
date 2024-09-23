@@ -40,13 +40,15 @@ func init() {
 			"chrome",
 			"chrome_internal",
 			"drivefs",
-			"gaia",
+			// Disabled by TORA.  See:b/341752800.
+			// "gaia",
 		},
 		Attr: []string{
-			"group:drivefs-cq",
-			"group:hw_agnostic",
-			"group:mainline",
-			"informational",
+			// Disabled by TORA.  See:b/341752800.
+			// "group:drivefs-cq",
+			// "group:hw_agnostic",
+			// "group:mainline",
+			// "informational",
 		},
 		VarDeps: []string{
 			filemanager.FullAccountPoolVarName,
