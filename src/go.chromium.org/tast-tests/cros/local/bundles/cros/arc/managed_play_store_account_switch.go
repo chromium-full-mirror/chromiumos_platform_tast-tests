@@ -38,8 +38,15 @@ func init() {
 		Contacts:     []string{"arc-commercial@google.com", "mhasank@chromium.org"},
 		// ChromeOS > Software > ARC++ > Commercial > Tast Tests
 		BugComponent: "b:1487630",
-		Attr:         []string{"group:mainline"},
-		SoftwareDeps: []string{"chrome", "play_store", "gaia"},
+		Attr:         []string{
+			// Disabled by TORA.  See:b/345997350.
+			// "group:mainline"
+			},
+		SoftwareDeps: []string{
+			"chrome", "play_store",
+			// Disabled by TORA.  See:b/345997350.
+			// "gaia"
+			},
 		Timeout:      15 * time.Minute,
 		VarDeps: []string{
 			arcCommon.ManagedAccountPoolVarName,
@@ -56,7 +63,10 @@ func init() {
 					accountSwitchEnabled: true,
 				},
 				ExtraSoftwareDeps: []string{"android_container"},
-				ExtraAttr:         []string{"informational"},
+				ExtraAttr:         []string{
+					// Disabled by TORA.  See:b/345997350.
+					//"informational"
+					},
 			},
 			{
 				Name: "blocklist_vm",
@@ -64,8 +74,8 @@ func init() {
 					playStoreMode:        arcent.PlayStoreModeBlockList,
 					accountSwitchEnabled: true,
 				},
-				ExtraSoftwareDeps: []string{"android_vm", "no_qemu"},
-				ExtraAttr:         []string{"informational"},
+				ExtraSoftwareDeps: []string{"android_vm", "no_qemu", "gaia"},
+				ExtraAttr:         []string{"informational", "group:mainline"},
 			},
 			{
 				Name: "blocklist_betty_vm",
@@ -73,8 +83,8 @@ func init() {
 					playStoreMode:        arcent.PlayStoreModeBlockList,
 					accountSwitchEnabled: true,
 				},
-				ExtraSoftwareDeps: []string{"android_vm", "qemu"},
-				ExtraAttr:         []string{"informational", "group:hw_agnostic"},
+				ExtraSoftwareDeps: []string{"android_vm", "qemu", "gaia"},
+				ExtraAttr:         []string{"informational", "group:hw_agnostic", "group:mainline"},
 			},
 			{
 				Name: "allowlist",
@@ -82,8 +92,8 @@ func init() {
 					playStoreMode:        arcent.PlayStoreModeAllowList,
 					accountSwitchEnabled: false,
 				},
-				ExtraSoftwareDeps: []string{"android_container"},
-				ExtraAttr:         []string{"informational"},
+				ExtraSoftwareDeps: []string{"android_container", "gaia"},
+				ExtraAttr:         []string{"informational", "group:mainline"},
 			},
 			{
 				Name: "allowlist_vm",
@@ -91,8 +101,8 @@ func init() {
 					playStoreMode:        arcent.PlayStoreModeAllowList,
 					accountSwitchEnabled: false,
 				},
-				ExtraSoftwareDeps: []string{"android_vm", "no_qemu"},
-				ExtraAttr:         []string{"informational"},
+				ExtraSoftwareDeps: []string{"android_vm", "no_qemu", "gaia"},
+				ExtraAttr:         []string{"informational", "group:mainline"},
 			},
 			{
 				Name: "allowlist_betty_vm",
@@ -100,8 +110,8 @@ func init() {
 					playStoreMode:        arcent.PlayStoreModeAllowList,
 					accountSwitchEnabled: false,
 				},
-				ExtraSoftwareDeps: []string{"android_vm", "qemu"},
-				ExtraAttr:         []string{"informational", "group:hw_agnostic"},
+				ExtraSoftwareDeps: []string{"android_vm", "qemu", "gaia"},
+				ExtraAttr:         []string{"informational", "group:hw_agnostic", "group:mainline"},
 			}},
 	})
 }
