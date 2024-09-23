@@ -107,7 +107,8 @@ var keyIDMap = map[string]KeyType{
 	"07b1af57220c196e363e68d73a5966047c77011e": KeyTypePreMp,
 	"1c590ef36399f6a2b2ef87079c135b69ef89eb60": KeyTypeMp,
 
-	// buccaneer - uses helipilot's pre-mp signing key
+	// buccaneer.
+	"95fb0d0a5f1c1f658a0526430a3a184301421e32": KeyTypeMp,
 
 	// dartmonkey.
 	"257a0aa3ac9e81aa4bc3aabdb6d3d079117c5799": KeyTypeMp,
@@ -147,11 +148,11 @@ var firmwareVersionMap = map[fp.BoardName]map[string]firmwareMetadata{
 		},
 	},
 	fp.BoardNameBuccaneer: {
-		"buccaneer_v2.0.25637-5fdc348ccc.bin": {
-			sha256sum: "8b28460645e1764999f5865f775cdc4ae8485fb1eb700504844e5d6f13cb27d5",
-			roVersion: "buccaneer_v2.0.25637-5fdc348ccc",
-			rwVersion: "buccaneer_v2.0.25637-5fdc348ccc",
-			keyID:     "ff60ba1fe2cf13f60d0debfb350f7c321115e59a",
+		"buccaneer_v2.0.26327-becca858dd.bin": {
+			sha256sum: "7837e479c5bd9893946c32f5890e89bf080979d31ec7c1c85e00610f979f6dfc",
+			roVersion: "buccaneer_v2.0.26327-becca858dd",
+			rwVersion: "buccaneer_v2.0.26327-becca858dd",
+			keyID:     "95fb0d0a5f1c1f658a0526430a3a184301421e32",
 		},
 	},
 	fp.BoardNameDartmonkey: {
