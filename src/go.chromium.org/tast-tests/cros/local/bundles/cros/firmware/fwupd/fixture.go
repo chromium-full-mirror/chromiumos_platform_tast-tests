@@ -47,7 +47,7 @@ func (f *fwupdFixture) SetUp(ctx context.Context, s *testing.FixtState) interfac
 	}
 
 	// Refresh LVFS metadata.
-	cmd := testexec.CommandContext(ctx, "/usr/bin/fwupdmgr", "refresh", "--force", "--json")
+	cmd := testexec.CommandContext(ctx, "/usr/bin/fwupdmgr", "refresh", "--json")
 
 	if output, err := cmd.Output(testexec.DumpLogOnError); err != nil {
 		s.Errorf("Metadata refresh failed: %q: err: %v output: %v", shutil.EscapeSlice(cmd.Args), err, string(output[:]))
