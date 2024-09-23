@@ -35,14 +35,15 @@ func init() {
 		}},
 		SoftwareDeps: []string{"chrome", "gaia"},
 		Params: []testing.Param{
-			{
-				Name: "es",
-				Fixture: quickanswers.Parameterize(
-					quickanswers.EnabledWithBrowserFixture,
-					quickanswers.VariantSingleWordEs,
-				),
-				Val: "cinco lados",
-			},
+			// Disabled by TORA. See: b/347301139
+			// {
+			// 	Name: "es",
+			// 	Fixture: quickanswers.Parameterize(
+			// 		quickanswers.EnabledWithBrowserFixture,
+			// 		quickanswers.VariantSingleWordEs,
+			// 	),
+			// 	Val: "cinco lados",
+			// },
 			{
 				Name: "it",
 				Fixture: quickanswers.Parameterize(
