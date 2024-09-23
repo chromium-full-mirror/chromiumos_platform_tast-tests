@@ -66,11 +66,6 @@ func ScreenshotGoogleDrive(ctx context.Context, s *testing.State) {
 	ctx, cancel := ctxutil.Shorten(ctx, 5*time.Second)
 	defer cancel()
 
-	kb, err := input.Keyboard(ctx)
-	if err != nil {
-		s.Fatal("Failed to get Keyboard: ", err)
-	}
-
 	handler := faillog.DumpUITreeWithScreenshotHandler(cleanupCtx, tconn, "download_google_drive")
 	s.AttachErrorHandlers(handler, handler)
 
@@ -91,13 +86,20 @@ func ScreenshotGoogleDrive(ctx context.Context, s *testing.State) {
 	}
 	defer files.Close(cleanupCtx)
 
-	layout, err := input.KeyboardTopRowLayout(ctx, kb)
+	// Using the virtual keyboard is required since different physical keyboards can require different key combinations to take a screenshot.
+	vkb, err := input.VirtualKeyboard(ctx)
+	if err != nil {
+		s.Fatal("Failed to get Keyboard: ", err)
+	}
+	defer vkb.Close(cleanupCtx)
+
+	layout, err := input.KeyboardTopRowLayout(ctx, vkb)
 	if err != nil {
 		s.Fatal("Failed to retrieve keyboard top row layout: ", err)
 	}
 
 	// Press Ctrl+F5 to take the screenshot.
-	if err := kb.Accel(ctx, "Ctrl+"+layout.SelectTask); err != nil {
+	if err := vkb.Accel(ctx, "Ctrl+"+layout.SelectTask); err != nil {
 		s.Fatal("Failed to type screenshot hotkey: ", err)
 	}
 
