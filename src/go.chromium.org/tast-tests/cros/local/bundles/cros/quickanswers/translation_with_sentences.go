@@ -25,9 +25,10 @@ func init() {
 		},
 		BugComponent: "b:905229", // ChromeOS > Software > Assistive
 		Attr: []string{
-			"group:hw_agnostic",
-			"group:mainline",
-			"informational",
+			// Disabled by TORA.  See:b/341753076.
+			// "group:hw_agnostic",
+			// "group:mainline",
+			// "informational",
 		},
 		SearchFlags: []*testing.StringPair{{
 			Key:   "feature_id",
