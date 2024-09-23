@@ -36,7 +36,7 @@ type igtResultSummary struct {
 var IgtGpuQcom = []string{"strongbad", "trogdor"}
 
 // IgtGpuMtk is a list of MTK boards.
-var IgtGpuMtk = []string{"kukui", "jacuzzi", "asurada", "cherry", "corsola", "geralt"}
+var IgtGpuMtk = []string{"kukui", "jacuzzi", "asurada", "cherry", "corsola", "geralt", "rauru"}
 
 // IgtExecuteTests executes the IGT binary of the an IgtTest. If the test has a subtest, it executes it as well. Otherwise, it executes the entire test.
 func IgtExecuteTests(ctx context.Context, testOpt IgtTest, f *os.File) (bool, *exec.ExitError, error) {
