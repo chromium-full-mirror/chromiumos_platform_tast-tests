@@ -34,7 +34,7 @@ func init() {
 		Func: SysInfoPII,
 		Desc: "Verify that known-sensitive data doesn't show up in feedback reports",
 		Contacts: []string{
-			"cros-feedback-app@google.com",
+			"cros-device-enablement@google.com",
 			"xiangdongkong@google.com",
 		},
 		// ChromeOS > Data > Engineering > Feedback

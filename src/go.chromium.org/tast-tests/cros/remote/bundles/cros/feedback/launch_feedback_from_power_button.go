@@ -26,7 +26,7 @@ func init() {
 		LacrosStatus: testing.LacrosVariantUnneeded,
 		Desc:         "User is able to launch feedback app from power button",
 		Contacts: []string{
-			"cros-feedback-app@google.com",
+			"cros-device-enablement@google.com",
 			"xiangdongkong@google.com",
 		},
 		// ChromeOS > Data > Engineering > Feedback

@@ -25,7 +25,7 @@ func init() {
 		Func: LaunchFeedbackFromBrowser,
 		Desc: "Feedback app can be launched from the browser",
 		Contacts: []string{
-			"cros-feedback-app@google.com",
+			"cros-device-enablement@google.com",
 			"xiangdongkong@google.com",
 		},
 		// ChromeOS > Data > Engineering > Feedback
