@@ -58,7 +58,7 @@ func init() {
 			"chromeos-pvs-eng@google.com",
 		},
 		BugComponent: "b:1110659", // ChromeOS > Platform > Enablement > PVS Framework
-		Attr:         []string{"group:power", "power_cpd"},
+		Attr:         []string{"group:power"},
 		Fixture:      fixture.NormalMode,
 		Timeout:      defaultLPMDuration + 2*time.Hour,           // Ensure we have enough time for test setup/teardown
 		Vars:         []string{varLPMDuration, varServoHostPort}, // Duration is in seconds, servoHostPort defaults 9999
