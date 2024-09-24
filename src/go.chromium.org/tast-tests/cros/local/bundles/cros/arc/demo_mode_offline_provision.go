@@ -27,10 +27,7 @@ func init() {
 		// ChromeOS > Software > ARC++ > Commercial > Tast Tests
 		BugComponent: "b:1487630",
 		Fixture:      fixture.PostDemoModeOOBESkipBothComponentsProd,
-		Attr:         []string{
-			// Disabled by TORA. See: b/337500189
-			// "group:mainline",
-		},
+		Attr:         []string{"group:mainline"},
 		// Demo Mode uses Zero Touch Enrollment for enterprise enrollment, which
 		// requires a real TPM.
 		// We require "arc" and "chrome_internal" because the ARC TOS screen
@@ -40,15 +37,15 @@ func init() {
 		Params: []testing.Param{
 			{
 				ExtraSoftwareDeps: []string{"android_container"},
-				// Disabled by TORA. See: b/337500189
-				// ExtraAttr:         []string{"informational"},
+				ExtraAttr:         []string{"informational"},
 			},
-			{
-				Name:              "vm",
-				ExtraSoftwareDeps: []string{"android_vm"},
-				// Disabled by TORA. See: b/337500189
-				// ExtraAttr:         []string{"informational", "group:hw_agnostic"},
-			}},
+			// Disabled by TORA. See: b/337500189
+			// {
+			// 	Name:              "vm",
+			// 	ExtraSoftwareDeps: []string{"android_vm"},
+			// 	ExtraAttr:         []string{"informational", "group:hw_agnostic"},
+			// }
+		},
 	})
 }
 
