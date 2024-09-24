@@ -148,10 +148,10 @@ var firmwareVersionMap = map[fp.BoardName]map[string]firmwareMetadata{
 		},
 	},
 	fp.BoardNameBuccaneer: {
-		"buccaneer_v2.0.26327-becca858dd.bin": {
-			sha256sum: "7837e479c5bd9893946c32f5890e89bf080979d31ec7c1c85e00610f979f6dfc",
-			roVersion: "buccaneer_v2.0.26327-becca858dd",
-			rwVersion: "buccaneer_v2.0.26327-becca858dd",
+		"buccaneer_v2.0.26328-821504380b.bin": {
+			sha256sum: "6411e1a0ba252b6264fd64c805369d204892653418419d6634da8860bf0bdfcf",
+			roVersion: "buccaneer_v2.0.26328-821504380b",
+			rwVersion: "buccaneer_v2.0.26328-821504380b",
 			keyID:     "95fb0d0a5f1c1f658a0526430a3a184301421e32",
 		},
 	},
