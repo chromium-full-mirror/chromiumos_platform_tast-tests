@@ -1,0 +1,5 @@
+{
+  "url": "gs://chromeos-test-assets-private/tast/cros/firmware/buccaneer_v2.0.26327-becca858dd_20240922.bin",
+  "size": 1048576,
+  "sha256sum": "7837e479c5bd9893946c32f5890e89bf080979d31ec7c1c85e00610f979f6dfc"
+}
