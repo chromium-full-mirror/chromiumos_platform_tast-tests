@@ -31,8 +31,8 @@ func init() {
 		LacrosStatus: testing.LacrosVariantUnneeded,
 		Desc:         "Test that users cannot change avatar if managed by enterprise policy",
 		Contacts: []string{
-			"assistive-eng@google.com",
-			"pzliu@google.com",
+			"cros-p13n-eng@google.com",
+			"chromeos-consumer-engprod@google.com",
 		},
 		// ChromeOS > Software > Personalization
 		BugComponent: "b:1006527",
@@ -100,11 +100,8 @@ func UserAvatarImage(ctx context.Context, s *testing.State) {
 
 			// Open the personalization hub.
 			ui := uiauto.New(tconn)
-			if err := uiauto.Combine("Click open avatar subpage button",
-				personalization.OpenPersonalizationHub(ui),
-				personalization.OpenAvatarSubpage(ui),
-			)(ctx); err != nil {
-				s.Fatal("Failed to click open avatar subpage button: ", err)
+			if err := personalization.OpenPersonalizationHub(ui)(ctx); err != nil {
+				s.Fatal("Failed to open personalization hub: ", err)
 			}
 
 			breadcrumbAvatar := personalization.BreadcrumbNodeFinder(personalization.AvatarSubpageName)
@@ -119,6 +116,7 @@ func UserAvatarImage(ctx context.Context, s *testing.State) {
 				}
 			} else {
 				if err := uiauto.Combine("Confirm that avatar subpage is open",
+					personalization.OpenAvatarSubpage(ui),
 					ui.WaitUntilExists(breadcrumbAvatar),
 					ui.LeftClick(breadcrumbAvatar),
 				)(ctx); err != nil {
