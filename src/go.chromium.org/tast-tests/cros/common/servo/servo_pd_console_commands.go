@@ -412,6 +412,11 @@ func (s *Servo) TriggerServoPDHardReset(ctx context.Context) error {
 	// Go back to `pd dump 0` after.
 	defer s.DisableServoPDConsoleDebug(ctx)
 
+	// GoBigSleepLint: Let PD state settle before triggering hard reset.
+	if err := testing.Sleep(ctx, time.Second); err != nil {
+		return errors.Wrap(err, "failed to sleep")
+	}
+
 	// Depending on the current power role, set the list of expected
 	// PD states following the soft reset
 	var expectedResetSequence []string
@@ -453,10 +458,10 @@ func (s *Servo) TriggerServoPDHardReset(ctx context.Context) error {
 	}
 
 	// Hard reset should result in the same power after as before, but the data
-	// role may be different as it be the data role associated with the power
+	// role may be different as it may be the data role associated with the power
 	// role. Poll here to wait for the data role after the hard reset to be
 	// the same as before to ensure the PD connection is back to its steady
-	// state condition
+	// state condition.
 	if err := testing.Poll(ctx, func(ctx context.Context) error {
 		if pdStateAfter, err := s.GetServoPDState(ctx); err == nil {
 			if pdState.DataRole != pdStateAfter.DataRole {
