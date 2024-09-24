@@ -13,8 +13,10 @@ import (
 
 	"go.chromium.org/tast-tests/cros/local/chrome"
 	"go.chromium.org/tast-tests/cros/local/chrome/uiauto"
+	"go.chromium.org/tast-tests/cros/local/chrome/uiauto/checked"
 	"go.chromium.org/tast-tests/cros/local/chrome/uiauto/nodewith"
 	"go.chromium.org/tast-tests/cros/local/chrome/uiauto/role"
+	"go.chromium.org/tast-tests/cros/local/input"
 	"go.chromium.org/tast-tests/cros/local/networkui/netconfig"
 	"go.chromium.org/tast/core/ctxutil"
 	"go.chromium.org/tast/core/errors"
@@ -153,7 +155,10 @@ func (s *OSSettings) MaybeConnectToApn(cr *chrome.Chrome) uiauto.Action {
 		// The action will be skipped if the APN is not available to connect to,
 		// such as the APN is already connected, or still connecting.
 		uiauto.IfSuccessThen(
-			s.WaitUntilExists(ConnectButton),
+			uiauto.Combine("ensure connect button exist",
+				s.WaitUntilExists(ConnectButton),
+				s.EnsureExistsFor(ConnectButton, 5*time.Second),
+			),
 			s.DoDefault(ConnectButton),
 		),
 	)
@@ -174,6 +179,112 @@ func (s *OSSettings) CreateCustomAPN(ctx context.Context, apn *ApnConfig) error 
 		s.ui.WaitUntilExists(nodewith.NameContaining(apn.Name).First()),
 	)(ctx); err != nil {
 		return errors.Wrap(err, "failed to add custom APN and verify it shows in the APN list")
+	}
+
+	return nil
+}
+
+// OpenNewAPNDialogAndPopulateFields opens the new APN dialog and populates its
+// fields with |apn| configuration.
+func (s *OSSettings) OpenNewAPNDialogAndPopulateFields(ctx context.Context, apn *ApnConfig) error {
+	if err := s.LeftClick(MoreApnActionsTridot)(ctx); err != nil {
+		return errors.Wrap(err, "failed to click more actions tridot")
+	}
+
+	if err := uiauto.Combine("Add custom APN in new APN dialog",
+		s.WaitUntilExists(CreateNewApnMenuBtn),
+		s.LeftClick(CreateNewApnMenuBtn),
+	)(ctx); err != nil {
+		return errors.Wrap(err, "failed to click create custom APN menu button")
+	}
+
+	cleanupCtx := ctx
+	ctx, cancel := ctxutil.Shorten(ctx, 10*time.Second)
+	defer cancel()
+
+	kb, err := input.Keyboard(ctx)
+	if err != nil {
+		return errors.Wrap(err, "failed to open the keyboard")
+	}
+	defer kb.Close(cleanupCtx)
+
+	if err := uiauto.Combine("Add custom APN in new APN dialog",
+		s.WaitUntilExists(NameOfAPNInput),
+		kb.TypeAction(apn.Name),
+		s.LeftClick(UserNameOfAPNInput),
+		kb.TypeAction(apn.Username),
+		s.LeftClick(PasswordOfAPNInput),
+		kb.TypeAction(apn.Password),
+	)(ctx); err != nil {
+		return errors.Wrap(err, "failed to fill non-advanced field")
+	}
+
+	if err := uiauto.Combine("Show advanced settings",
+		s.LeftClick(APNAdvancedBtn),
+		s.WaitUntilExists(AuthenticationTypeDropdown),
+		s.WaitUntilExists(IPTypeDropdown),
+		s.WaitUntilExists(DefaultAPNCheckbox),
+		s.WaitUntilExists(AttachAPNCheckbox),
+	)(ctx); err != nil {
+		return errors.Wrap(err, "failed to show all advanced fields")
+	}
+
+	if len(apn.AuthenticationType) != 0 {
+		authenticationTypeMenuItem := nodewith.Name(apn.AuthenticationType).Role(role.MenuListOption).Ancestor(AuthenticationTypeDropdown)
+
+		if err := uiauto.Combine("Select authentication menu item",
+			s.LeftClick(AuthenticationTypeDropdown),
+			s.WaitUntilExists(authenticationTypeMenuItem),
+			s.LeftClick(authenticationTypeMenuItem),
+		)(ctx); err != nil {
+			return errors.Wrapf(err, "failed to select authentication menu item: %s", apn.AuthenticationType)
+		}
+	}
+
+	isDefault := apn.ApnType&ApnIsDefault == ApnIsDefault
+	isAttach := apn.ApnType&ApnIsAttach == ApnIsAttach
+
+	// ChromeOS does not accept an APN with type that is neither default nor attach.
+	if !isDefault && !isAttach {
+		return errors.New("the APN type can't be neither default nor attach")
+	}
+
+	selectCheckboxFunc := func(name string, node *nodewith.Finder, expected bool) uiauto.Action {
+		return func(ctx context.Context) error {
+			if err := s.WaitUntilExists(node)(ctx); err != nil {
+				return errors.Wrapf(err, "failed to wait until checkbox %q exists", name)
+			}
+
+			info, err := s.Info(ctx, node)
+			if err != nil {
+				return errors.Wrapf(err, "failed to check checkbox %q", name)
+			}
+			if expected != (info.Checked == checked.True) {
+				if err := s.LeftClick(node)(ctx); err != nil {
+					return errors.Wrapf(err, "failed to click checkbox %q", name)
+				}
+			}
+			return nil
+		}
+	}
+
+	if err := uiauto.Combine("set APN type",
+		selectCheckboxFunc("isDefault", DefaultAPNCheckbox, isDefault),
+		selectCheckboxFunc("isAttach", AttachAPNCheckbox, isAttach),
+	)(ctx); err != nil {
+		return err
+	}
+
+	if len(apn.IPType) != 0 {
+		ipTypeMenuItem := nodewith.Name(apn.IPType).Role(role.MenuListOption).Ancestor(IPTypeDropdown)
+
+		if err := uiauto.Combine("Select IP menu item",
+			s.LeftClick(IPTypeDropdown),
+			s.WaitUntilExists(ipTypeMenuItem),
+			s.LeftClick(ipTypeMenuItem),
+		)(ctx); err != nil {
+			return errors.Wrapf(err, "failed to select IP menu item: %s", apn.IPType)
+		}
 	}
 
 	return nil
@@ -419,7 +530,7 @@ func VerifyAPNStabilized(ctx context.Context, tconn *chrome.TestConn, name strin
 }
 
 // GoConnectIfNotConnectedThenReturnApnSubpage navigates back from the APN subpage, connects if not connected, then returns to the APN subpage.
-// Deprecated: Use `(s *OSSettings) ClickToConnectToApn` instead.
+// Deprecated: Use `(s *OSSettings) MaybeConnectToApn` instead.
 func GoConnectIfNotConnectedThenReturnApnSubpage(ctx context.Context, tconn *chrome.TestConn) error {
 	ui := uiauto.New(tconn)
 

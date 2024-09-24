@@ -18,7 +18,6 @@ import (
 	"go.chromium.org/tast-tests/cros/local/chrome/uiauto/restriction"
 	"go.chromium.org/tast-tests/cros/local/chrome/uiauto/role"
 	"go.chromium.org/tast/core/ctxutil"
-	"go.chromium.org/tast/core/errors"
 	"go.chromium.org/tast/core/testing"
 )
 
@@ -72,109 +71,98 @@ func CustomDefaultAndAttachApnFallbackBehavior(ctx context.Context, s *testing.S
 		s.Fatal("Failed to create Test API connection: ", err)
 	}
 
-	mdp, err := ossettings.OpenMobileDataSubpage(ctx, tconn, cr)
+	settings, err := ossettings.LaunchAtMobileData(ctx, tconn, cr)
 	if err != nil {
 		s.Fatal("Failed to open mobile data subpage: ", err)
 	}
-	defer mdp.Close(cleanupCtx)
+	defer settings.Close(cleanupCtx)
 	defer faillog.DumpUITreeWithScreenshotOnError(cleanupCtx, s.OutDir(), s.HasError, cr, "ui_tree")
 
-	if err := ossettings.GoToActiveNetworkApnSubpage(ctx, tconn, true /*isFromMobileDataSubpage*/); err != nil {
-		s.Fatal("Failed to go to apn subpage: ", err)
+	if err := uiauto.Combine("go to APN page of the active cellular network",
+		settings.NavigateToMobileNetworkDetailsPage(cr, ossettings.ActiveCellularBtn),
+		settings.NavigateToApnPage(cr),
+	)(ctx); err != nil {
+		s.Fatal("Failed to move to the desired page: ", err)
 	}
 
 	serviceLastGoodAPN, err := helper.GetCellularLastGoodAPN(ctx)
 	if err != nil {
 		s.Fatal("Error getting Service properties: ", err)
 	}
-	apnName := serviceLastGoodAPN[shillconst.DevicePropertyCellularAPNInfoApnName]
-	authenticationType := ossettings.GetUIStringForAuthenticationType(serviceLastGoodAPN[shillconst.DevicePropertyCellularAPNInfoApnAuthentication])
-	username := serviceLastGoodAPN[shillconst.DevicePropertyCellularAPNInfoApnUsername]
-	password := serviceLastGoodAPN[shillconst.DevicePropertyCellularAPNInfoApnPassword]
-	ipType := ossettings.GetUIStringForIPType(serviceLastGoodAPN[shillconst.DevicePropertyCellularAPNInfoApnIPType])
+
+	apnConfig := &ossettings.ApnConfig{
+		Name:               serviceLastGoodAPN[shillconst.DevicePropertyCellularAPNInfoApnName],
+		Username:           serviceLastGoodAPN[shillconst.DevicePropertyCellularAPNInfoApnUsername],
+		Password:           serviceLastGoodAPN[shillconst.DevicePropertyCellularAPNInfoApnPassword],
+		AuthenticationType: ossettings.GetUIStringForAuthenticationType(serviceLastGoodAPN[shillconst.DevicePropertyCellularAPNInfoApnAuthentication]),
+		IPType:             ossettings.GetUIStringForIPType(serviceLastGoodAPN[shillconst.DevicePropertyCellularAPNInfoApnIPType]),
+		ApnType:            ossettings.ApnIsAttach,
+	}
 
 	// Enter details for a new APN that is attach only.
-	if err := mdp.OpenNewAPNDialogAndPopulateFields(ctx, &ossettings.ApnConfig{
-		Name:               apnName,
-		Username:           username,
-		Password:           password,
-		AuthenticationType: authenticationType,
-		IPType:             ipType,
-		ApnType:            ossettings.ApnIsAttach,
-	}); err != nil {
+	if err := settings.OpenNewAPNDialogAndPopulateFields(ctx, apnConfig); err != nil {
 		s.Fatal("Failed to add attach custom APN: ", err)
 	}
 
 	ui := uiauto.New(tconn)
-	if err := ui.CheckRestriction(nodewith.Name("Add").Role(role.Button), restriction.Disabled)(ctx); err != nil {
-		s.Fatal("Failed to verify Add button disabled: ", err)
-	}
-
 	attachApnWarningText := nodewith.NameContaining("A default APN is required").Role(role.StaticText)
-	if err := ui.WithTimeout(5 * time.Second).WaitUntilExists(attachApnWarningText)(ctx); err != nil {
-		s.Fatal("Failed to verify attach-only APN warning exists: ", err)
+	if err := uiauto.Combine("verify the behavior of attach-only APN warning",
+		ui.CheckRestriction(nodewith.Name("Add").Role(role.Button), restriction.Disabled),
+		settings.WithTimeout(5*time.Second).WaitUntilExists(attachApnWarningText),
+		settings.LeftClick(ossettings.DefaultAPNCheckbox),
+		settings.WaitUntilGone(attachApnWarningText),
+	)(ctx); err != nil {
+		s.Fatal("Failed to complete all steps: ", err)
 	}
 
-	if err := ui.LeftClick(ossettings.DefaultAPNCheckbox)(ctx); err != nil {
-		s.Fatal("Failed to check default checkbox: ", err)
-	}
-
-	if err := testing.Poll(ctx, func(ctx context.Context) error {
-		if err := ui.Exists(attachApnWarningText)(ctx); err == nil {
-			return errors.Wrap(err, "failed to verify attach-only APN warning doesn't exist")
-		}
-		return nil
-	}, &testing.PollOptions{
-		Timeout:  2 * time.Second,
-		Interval: time.Second,
-	}); err != nil {
-		s.Fatal("Failed polling for attach-only APN warning: ", err)
-	}
-
-	if err := uiauto.Combine("Add and verify APN added",
+	// The APN type is changed to ApnIsDefault and ApnIsAttach.
+	apnConfig.ApnType |= ossettings.ApnIsDefault
+	if err := uiauto.Combine("add and verify APN added",
 		ui.LeftClick(nodewith.Name("Add").Role(role.Button)),
-		ui.WaitUntilExists(nodewith.NameContaining(apnName).First()),
+		ui.WaitUntilExists(nodewith.NameContaining(apnConfig.Name).First()),
+		// Settings app should be at APN page at this point.
+		settings.VerifyApnStabilized(apnConfig, ossettings.ApnEnabled),
+		// Back to network details page to connect to the network.
+		settings.DoDefault(ossettings.BackArrowBtn),
+		ui.WithTimeout(ossettings.WaitForConnectionTimeout).RetryUntil(
+			settings.MaybeConnectToApn(cr),
+			settings.WaitUntilExists(ossettings.ConnectedStatus),
+		),
+		// Navigate to the APN page to verify that the APN page UI reports it's connected to the newly added APN correctly.
+		settings.NavigateToApnPage(cr),
+		settings.VerifyApnConnected(cr, apnConfig.Name, "" /* source */),
 	)(ctx); err != nil {
 		s.Fatal("Failed to add custom APN and verify it shows in the APN list: ", err)
 	}
 
-	if err := ossettings.VerifyAPNStabilized(ctx, tconn, apnName, ossettings.ApnEnabled, true /*isAttach*/, true /*isDefault*/); err != nil {
-		s.Fatal("Failed to verify Default APN added successfully: ", err)
-	}
-
-	if err := ossettings.GoConnectIfNotConnectedThenReturnApnSubpage(ctx, tconn); err != nil {
-		s.Fatal("Failed to ensure successful connection: ", err)
-	}
-
-	if err := mdp.VerifyAPNSubpageConnectedApnUI(ctx, tconn, cr, apnName, ""); err != nil {
-		s.Fatal("Failed to verify connected UI: ", err)
-	}
-
-	invalidApnName := "invalid_apn"
-	if err := mdp.CreateCustomAPN(ctx, &ossettings.ApnConfig{
-		Name:               invalidApnName,
-		Username:           username,
-		Password:           password,
-		AuthenticationType: authenticationType,
-		IPType:             ipType,
+	invalidApnConfig := &ossettings.ApnConfig{
+		Name:               "invalid_apn",
+		Username:           "invalid_user",
+		Password:           "invalid_password",
+		AuthenticationType: apnConfig.AuthenticationType,
+		IPType:             apnConfig.IPType,
 		ApnType:            ossettings.ApnIsDefault,
-	}); err != nil {
+	}
+
+	if err := settings.CreateCustomAPN(ctx, invalidApnConfig); err != nil {
 		s.Fatal("Failed to add invalid custom APN: ", err)
 	}
 
-	if err := ossettings.VerifyAPNStabilized(ctx, tconn, invalidApnName, ossettings.ApnEnabled, false /*isAttach*/, true /*isDefault*/); err != nil {
-		s.Fatal("Failed to verify Default APN added successfully: ", err)
-	}
-
-	if err := ossettings.GoConnectIfNotConnectedThenReturnApnSubpage(ctx, tconn); err != nil {
-		s.Fatal("Failed to ensure successful connection: ", err)
-	}
-
-	if err := mdp.VerifyAPNSubpageConnectedApnUI(ctx, tconn, cr, apnName, "" /*source*/); err != nil {
-		s.Fatal("Failed to verify connected UI: ", err)
-	}
-
-	if err := mdp.VerifyAPNSubpageNotConnectedApnUI(ctx, tconn, cr, invalidApnName); err != nil {
+	if err := uiauto.Combine("verify invalid apn",
+		// Settings app should be at APN page at this point.
+		settings.VerifyApnStabilized(invalidApnConfig, ossettings.ApnEnabled),
+		// Back to network details page to connect to the network.
+		settings.DoDefault(ossettings.BackArrowBtn),
+		ui.WithTimeout(ossettings.WaitForConnectionTimeout).RetryUntil(
+			settings.MaybeConnectToApn(cr),
+			// The network should automatically reconnect to the first network.
+			settings.WaitUntilExists(ossettings.ConnectedStatus),
+		),
+		// Navigate to the APN page to verify that the APN page UI reports it's connected to the newly added APN correctly.
+		settings.NavigateToApnPage(cr),
+		settings.VerifyApnConnected(cr, apnConfig.Name, "" /* source */),
+		settings.VerifyApnNotConnected(cr, invalidApnConfig.Name),
+	)(ctx); err != nil {
 		s.Fatal("Failed to verify invalid APN is not connected: ", err)
 	}
 }

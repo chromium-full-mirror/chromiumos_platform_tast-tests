@@ -133,3 +133,8 @@ func (s *OSSettings) WaitUntilCheckedState(finder *nodewith.Finder, expectedStat
 func (s *OSSettings) DoDefault(finder *nodewith.Finder) uiauto.Action {
 	return s.ui.DoDefault(finder.FinalAncestor(WindowFinder))
 }
+
+// EnsureExistsFor calls ui.EnsureExistsFor scoping the finder to the Settings app.
+func (s *OSSettings) EnsureExistsFor(finder *nodewith.Finder, duration time.Duration) uiauto.Action {
+	return s.ui.EnsureExistsFor(finder.FinalAncestor(WindowFinder), duration)
+}
