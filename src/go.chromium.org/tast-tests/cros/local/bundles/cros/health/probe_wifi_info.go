@@ -11,6 +11,7 @@ import (
 
 	"go.chromium.org/tast-tests/cros/common/testexec"
 	"go.chromium.org/tast-tests/cros/local/croshealthd"
+	"go.chromium.org/tast/core/errors"
 	"go.chromium.org/tast/core/testing"
 )
 
@@ -56,6 +57,20 @@ func init() {
 	})
 }
 
+func isRouterConnected(ctx context.Context, interfaceName string) (bool, error) {
+	iwLinkOut, err := testexec.CommandContext(ctx, "iw", interfaceName, "link").Output()
+	if err != nil {
+		return false, errors.Wrapf(err, "failed to execute `iw %s link` command", interfaceName)
+	}
+	if strings.Contains(string(iwLinkOut), "Not connected") {
+		return false, nil
+	} else if strings.Contains(string(iwLinkOut), "Connected to") {
+		return true, nil
+	} else {
+		return false, errors.Errorf("unexpected `iw %s link` output: %s", interfaceName, iwLinkOut)
+	}
+}
+
 func ProbeWifiInfo(ctx context.Context, s *testing.State) {
 	params := croshealthd.TelemParams{Category: "network_interface"}
 	var wifi wifiInfo
@@ -84,15 +99,11 @@ func ProbeWifiInfo(ctx context.Context, s *testing.State) {
 					s.Fatal("Failed to get PowerManagementOn value as false when power_scheme not present")
 				}
 			}
-			// Check whether router connected or not.
-			iwconfigOut, err := testexec.CommandContext(ctx, "iwconfig").Output()
+			routerConnected, err := isRouterConnected(ctx, ifc.WirelessInterfaces.InterfaceName)
 			if err != nil {
-				s.Fatal("Failed to execute iwconfig command: ", err)
+				s.Fatal("Failed to determine WiFi connection state: ", err)
 			}
-			// Check whether 'Access Point: Not-Associated' is presented or not.
-			want := "Access Point: Not-Associated"
-			isRouterConnected := !strings.Contains(string(iwconfigOut), want)
-			if !isRouterConnected {
+			if !routerConnected {
 				if ifc.WirelessInterfaces.LinkInfo != nil {
 					s.Fatal("Failed to validate empty LinkInfo data")
 				}
