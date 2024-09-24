@@ -126,3 +126,13 @@ func GetCstate(ctx context.Context, effect DSPEffect) (DSPEffectState, error) {
 	}
 	return dspEffectStateFromString(strings.TrimSpace(string(stdout)))
 }
+
+// GetCstateRawOutput fetches the raw output from sof_helper devtool dump.
+func GetCstateRawOutput(ctx context.Context) ([]byte, error) {
+	cmd := testexec.CommandContext(ctx, "sof_helper", "cstate", "--json")
+	stdout, err := cmd.CombinedOutput(testexec.DumpLogOnError)
+	if err != nil {
+		return []byte{}, errors.Wrap(err, "call sof_helper")
+	}
+	return stdout, nil
+}

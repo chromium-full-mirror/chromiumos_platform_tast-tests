@@ -119,4 +119,19 @@ func SofProfileDump(ctx context.Context, s *testing.State) {
 	if err := os.WriteFile(filepath.Join(s.OutDir(), "sof_profile.json"), byteDump, 0644); err != nil {
 		s.Error("Failed to write output file: ", err)
 	}
+
+	// Try to save the component support information to file.
+	byteCstate, err := sof.GetCstateRawOutput(ctx)
+	if err != nil {
+		s.Log("Skipped collecting cstate due to error: ", err)
+		return
+	}
+	if !json.Valid(byteCstate) {
+		s.Log("Omitted invalid cstate output (as JSON), output: ", string(byteCstate))
+		return
+	}
+
+	if err := os.WriteFile(filepath.Join(s.OutDir(), "sof_comp_state.json"), byteCstate, 0644); err != nil {
+		s.Error("Failed to write output file: ", err)
+	}
 }
