@@ -19,7 +19,6 @@ import (
 	"go.chromium.org/tast-tests/cros/remote/firmware"
 	"go.chromium.org/tast-tests/cros/remote/firmware/fixture"
 	"go.chromium.org/tast-tests/cros/remote/firmware/reporters"
-	"go.chromium.org/tast/core/ctxutil"
 	"go.chromium.org/tast/core/errors"
 	"go.chromium.org/tast/core/ssh"
 	"go.chromium.org/tast/core/testing"
@@ -152,9 +151,6 @@ func UpdateVersion(ctx context.Context, s *testing.State) {
 	if err := fs.MkDir(ctx, tempDir, 0777); err != nil {
 		s.Fatal("Failed to make the temp directory: ", err)
 	}
-	cleanupCtx := ctx
-	ctx, cancel := ctxutil.Shorten(ctx, 10*time.Minute)
-	defer cancel()
 	defer func(ctx context.Context) {
 		s.Log("Make sure DUT is connected before cleanup")
 		if err := h.EnsureDUTBooted(ctx); err != nil {
@@ -169,7 +165,7 @@ func UpdateVersion(ctx context.Context, s *testing.State) {
 		if err := fs.RemoveAll(ctx, tempDir); err != nil {
 			s.Fatal("Failed to remove temp dir: ", err)
 		}
-	}(cleanupCtx)
+	}(ctx)
 
 	var err error
 	var initTpmNvRAM uint16
@@ -357,7 +353,7 @@ func UpdateVersion(ctx context.Context, s *testing.State) {
 		if err := checkKeyVer(ctx, h, initRWAKeyVer, keyVerOpts, tc); err != nil {
 			s.Fatal("Failed to check the key version: ", err)
 		}
-	}(cleanupCtx, fwidAfterAutoUpdate)
+	}(ctx, fwidAfterAutoUpdate)
 
 	if err := rebootDUTAndRequireRPCClient(ctx, h); err != nil {
 		s.Fatal("Failed to reboot DUT: ", err)
