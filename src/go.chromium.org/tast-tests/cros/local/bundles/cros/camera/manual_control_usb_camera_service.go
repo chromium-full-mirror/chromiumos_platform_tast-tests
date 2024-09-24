@@ -276,9 +276,6 @@ func validateControlByImages(ctx context.Context, outDir, cameraUserControlValid
 }
 
 func controlCameraByVideoNode(ctx context.Context, videoNode, vidPid string, saveImage bool, app *cca.App, outDir string) (map[pb.Control]bool, []*pb.ManualControlImageConfig, error) {
-	if err := switchCameraByVidPid(ctx, vidPid, app); err != nil {
-		return nil, nil, errors.Wrapf(err, "failed to find camera with vid:pid=%s", vidPid)
-	}
 
 	controlMap, err := getV4L2ListControlInfo(ctx, videoNode)
 	if err != nil {
@@ -399,60 +396,19 @@ func augmentReportWithFunctionality(ctx context.Context, reportPath string, cont
 	return nil
 }
 
-func getFacingByVidPid(ctx context.Context, targetVidPid string) (camera.Facing, error) {
-	crosConfigPathPrefix := "/run/chromeos-config/v1/camera"
-	cameraCountCmd := testexec.CommandContext(
-		ctx, "cat", crosConfigPathPrefix+"/count")
-	cameraCountOutput, err := cameraCountCmd.Output(testexec.DumpLogOnError)
+func checkFacing(ctx context.Context, app *cca.App, requiredFacing camera.Facing) (bool, error) {
+	facing, err := app.GetFacing(ctx)
 	if err != nil {
-		return camera.Facing_FACING_UNSET, errors.Wrapf(err, "failed to run command %s", cameraCountCmd)
+		return false, errors.Wrap(err, "failed to get facing from cca")
 	}
-
-	cameraCount, err := strconv.Atoi(strings.TrimSpace(string(cameraCountOutput)))
-	if err != nil {
-		return camera.Facing_FACING_UNSET, errors.Wrapf(err, "failed to convert %s to integer", cameraCountOutput)
+	switch facing {
+	case cca.FacingBack:
+		return requiredFacing == camera.Facing_FACING_BACK, nil
+	case cca.FacingFront:
+		return requiredFacing == camera.Facing_FACING_FRONT, nil
+	default:
+		return false, nil
 	}
-	for i := 0; i < cameraCount; i++ {
-		cameraIDDir := crosConfigPathPrefix + "/devices/" + strconv.Itoa(i) + "/ids"
-		findTarget := false
-		err := filepath.Walk(cameraIDDir, func(path string, info os.FileInfo, err error) error {
-			if err != nil {
-				return err
-			}
-
-			if !info.IsDir() {
-				vidPidCmd := testexec.CommandContext(ctx, "cat", path)
-				vidPidOutput, err := vidPidCmd.Output(testexec.DumpLogOnError)
-				if err != nil {
-					return errors.Wrapf(err, "failed to run command %s", vidPidCmd)
-				}
-				if strings.TrimSpace(string(vidPidOutput)) == targetVidPid {
-					findTarget = true
-				}
-			}
-			return nil
-		})
-		if err != nil {
-			return camera.Facing_FACING_UNSET, errors.Wrapf(err, "failed to traverse directory %s", cameraIDDir)
-		}
-
-		if findTarget {
-			facingCmd := testexec.CommandContext(ctx, "cat", crosConfigPathPrefix+"/devices/"+strconv.Itoa(i)+"/facing")
-			facingOutput, err := facingCmd.Output(testexec.DumpLogOnError)
-			if err != nil {
-				return camera.Facing_FACING_UNSET, errors.Wrapf(err, "failed to run command %s", facingCmd)
-			}
-			facing := strings.TrimSpace(string(facingOutput))
-			if facing == "back" {
-				return camera.Facing_FACING_BACK, nil
-			} else if facing == "front" {
-				return camera.Facing_FACING_FRONT, nil
-			} else {
-				return camera.Facing_FACING_UNSET, nil
-			}
-		}
-	}
-	return camera.Facing_FACING_UNSET, nil
 }
 
 func removeImagesInDir(outDir string) error {
@@ -529,12 +485,13 @@ func (f *ManualControlUSBCameraService) ValidateControl(ctx context.Context, req
 		}
 		vidPid := usbCameraVersion.IDVendor + ":" + usbCameraVersion.IDProduct
 
-		facing, err := getFacingByVidPid(ctx, vidPid)
-		if err != nil {
-			return nil, errors.Wrapf(err, "failed to get facing by vid:pid %s", vidPid)
+		if err := switchCameraByVidPid(ctx, vidPid, app); err != nil {
+			return nil, errors.Wrapf(err, "failed to find camera with vid:pid=%s", vidPid)
 		}
-		if facing != req.Facing {
-			testing.ContextLogf(ctx, "Vid:pid %s is with facing %s, different with request %s so skipped", vidPid, facing, req.Facing)
+
+		if correctFacing, err := checkFacing(ctx, app, req.Facing); err != nil {
+			return nil, errors.Wrap(err, "failed to check facing")
+		} else if !correctFacing {
 			continue
 		}
 
