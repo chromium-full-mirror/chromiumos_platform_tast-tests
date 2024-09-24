@@ -35,15 +35,25 @@ func init() {
 			{
 				Name:              "keyboard",
 				Fixture:           fixture.TelemetryExtensionSkipOEMNameCheck,
-				ExtraHardwareDeps: hwdep.D(hwdep.InternalKeyboard()),
-				Val:               true, // has keyboard
+				ExtraHardwareDeps: hwdep.D(hwdep.InternalKeyboard(), hwdep.SkipOnModel("xol")),
+				Val:               true, // keyboardTesterSupported
+				ExtraAttr:         []string{"informational", "group:criticalstaging"},
+			},
+			{
+				// The keyboard tester is not supported on certain models at
+				// this moment. See b/362396752.
+				// TODO(b/369345485): create a hwdep for this.
+				Name:              "unsupported_keyboard",
+				Fixture:           fixture.TelemetryExtensionSkipOEMNameCheck,
+				ExtraHardwareDeps: hwdep.D(hwdep.InternalKeyboard(), hwdep.Model("xol")),
+				Val:               false, // keyboardTesterSupported
 				ExtraAttr:         []string{"informational", "group:criticalstaging"},
 			},
 			{
 				Name:              "no_keyboard",
 				Fixture:           fixture.TelemetryExtensionSkipOEMNameCheck,
 				ExtraHardwareDeps: hwdep.D(hwdep.NoInternalKeyboard()),
-				Val:               false, // has keyboard
+				Val:               false, // keyboardTesterSupported
 			},
 		},
 	})
@@ -66,12 +76,12 @@ func PlatformAPIEventsKeyboardDiagnostic(ctx context.Context, s *testing.State) 
 		s.Fatal("Failed to load diagnostics app: ", err)
 	}
 
-	hasKeyboard, ok := s.Param().(bool)
+	keyboardTesterSupported, ok := s.Param().(bool)
 	if !ok {
 		s.Fatal("Unable to convert param")
 	}
 
-	if hasKeyboard {
+	if keyboardTesterSupported {
 		// Check that the keyboard tester on the keyboard page is shown.
 		keyboardTesterDoneButton := nodewith.NameContaining("Done").Role(role.Button)
 		if err := uiauto.New(v.TConn).WaitUntilExists(keyboardTesterDoneButton)(ctx); err != nil {
