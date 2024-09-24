@@ -536,6 +536,9 @@ var Registry = map[string]Metadata{
 	"ui.GoogleSlidesCUJ": Metadata{
 		Metrics: defaultMetrics,
 	},
+	"ui.DesksCUJV2": Metadata{
+		Metrics: defaultMetrics,
+	},
 }
 
 // WriteMetadataFile stores a metadata.json file in the testing out
