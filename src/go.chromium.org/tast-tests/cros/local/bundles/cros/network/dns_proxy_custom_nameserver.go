@@ -154,7 +154,7 @@ func DNSProxyCustomNameserver(ctx context.Context, s *testing.State) {
 	opts.Nameserver = addrs.IPv4Addr.To4().String()
 	opts.ARCDigPath = p
 	for _, tc := range tcs {
-		if err := tc.Run(ctx, nil /* chrome */, a, nil /* container */, dns.NewQueryOptions()); err != nil {
+		if err := tc.Run(ctx, nil /* chrome */, a, nil /* container */, opts); err != nil {
 			s.Fatal("Failed nameserver confirmation check: ", err)
 		}
 	}
@@ -170,7 +170,7 @@ func DNSProxyCustomNameserver(ctx context.Context, s *testing.State) {
 		}
 		opts.Domain = dns.RandDomain()
 		for _, tc := range tcs {
-			if err := tc.Run(ctx, nil /* chrome */, a, nil /* container */, dns.NewQueryOptions()); err != nil {
+			if err := tc.Run(ctx, nil /* chrome */, a, nil /* container */, opts); err != nil {
 				s.Error("Failed nameserver verification: ", err)
 			}
 		}
