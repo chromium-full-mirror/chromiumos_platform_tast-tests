@@ -109,6 +109,7 @@ func systemFeaturesDisableList() policy.Policy {
 		"explore",
 		"gallery",
 		"terminal",
+		"recorder",
 	}}
 }
 
