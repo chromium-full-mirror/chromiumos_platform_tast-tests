@@ -244,17 +244,6 @@ func APROBootabilityPerformance(ctx context.Context, s *testing.State) {
 		s.Fatal("Failed to read DUT EC Chip: ", err)
 	}
 
-	// Recover DUT first before following flashing process.
-	s.Log("Recover DUT before flashing process")
-	if _, err := h.BiosServiceClient.ChromeosFirmwareUpdate(ctx, &fwpb.FirmwareUpdateModeRequest{Mode: fwpb.UpdateMode_RecoveryMode}); err != nil {
-		s.Fatal("Failed to update firmware in recovery mode: ", err)
-	}
-
-	// Reboot DUT for flash to take effect.
-	if err := safeReboot(ctx, h); err != nil {
-		s.Fatal("Failed to reboot DUT: ", err)
-	}
-
 	// Back up current EC firmware. AP firmware is handled by fixture.
 	s.Log("Backing up EC firmware")
 	ecBackupData, err := h.BiosServiceClient.BackupImageSection(ctx, &fwpb.FWSectionInfo{Section: fwpb.ImageSection_EmptyImageSection, Programmer: fwpb.Programmer_ECProgrammer})
@@ -268,15 +257,13 @@ func APROBootabilityPerformance(ctx context.Context, s *testing.State) {
 	}
 	dutTempDir := strings.TrimSuffix(string(out), "\n")
 	defer func() {
-		s.Log("Deleting tmp directory on DUT: ", dutTempDir)
 		h.DUT.Conn().CommandContext(cleanupCtx, "rm", "-r", dutTempDir)
 	}()
-	apBackupOnDut := filepath.Join(dutTempDir, apFwBackup)
+	apBackupOnDut := filepath.Join(dutTempDir, "bios_backup.bin")
 	if err := backupManager.CopyBackupToDut(ctx, h.DUT, fixture.FirmwareAP, apBackupOnDut); err != nil {
 		s.Fatal("Failed to copy firmware image to DUT: ", err)
 	}
 
-	// Save AP/EC backup firmware files on host.
 	s.Log("Saving the AP firmware")
 	apBackupOnHost := filepath.Join(tmpDir, apFwBackup)
 	if err := backupManager.CopyBackupFile(fixture.FirmwareAP, apBackupOnHost); err != nil {
@@ -386,7 +373,7 @@ func APROBootabilityPerformance(ctx context.Context, s *testing.State) {
 	// The json file was manually deposited as internal data under 'firmware/data'.
 
 	// Get the verified shipped firmware version IDs from command line or the json file.
-	shippedFwVersions, err := verifyShippedFwIDsToBeTested(ctx, s, h, apRONewID)
+	shippedFwVersions, err := verifyShippedFwIDsToBeTested(ctx, s, h, apRWNewID)
 	if err != nil {
 		s.Fatal("Failed to verify shipped firmware version IDs to be tested: ", err)
 	}
@@ -581,9 +568,9 @@ func checkVersions(ctx context.Context, fwID string, shippedFwInfos []jsonFwInfo
 	return validShippedFwInfos, nil
 }
 
-// verifyShippedFwIDsToBeTested accepts the RO firmware version ID on the DUT, gets and sorts the
-// shipped firmware versions for the model, and returns the verified ones to be tested.
-func verifyShippedFwIDsToBeTested(ctx context.Context, s *testing.State, h *firmware.Helper, roNewID string) ([]jsonFwInfo, error) {
+// verifyShippedFwIDsToBeTested accepts the RW firmware version ID, gets and sorts the shipped
+// firmware versions for the model, and returns the verified ones to be tested.
+func verifyShippedFwIDsToBeTested(ctx context.Context, s *testing.State, h *firmware.Helper, rwNewID string) ([]jsonFwInfo, error) {
 	// Get the shipped firmware versions from command line if branch and version(s) are both
 	// specified, or it will read from the 'shipped-firmwares.json' file.
 	var shippedFwVersions []jsonFwInfo
@@ -616,9 +603,9 @@ func verifyShippedFwIDsToBeTested(ctx context.Context, s *testing.State, h *firm
 		return nil, errors.Wrap(err, "failed to sort the shipped fw versions")
 	}
 
-	// Check whether the shipped firmware version IDs are older than the RO one on the DUT,
+	// Check whether the shipped firmware version IDs are older than the newest RW one on the DUT,
 	// or the step of which will be skipped.
-	if shippedFwVersions, err = checkVersions(ctx, roNewID, shippedFwVersions); err != nil {
+	if shippedFwVersions, err = checkVersions(ctx, rwNewID, shippedFwVersions); err != nil {
 		return nil, errors.Wrap(err, "failed to check the shipped fw versions")
 	}
 
