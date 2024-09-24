@@ -10,6 +10,7 @@ import (
 	"bytes"
 	"context"
 	"fmt"
+	"io"
 	"io/fs"
 	"os"
 	"path/filepath"
@@ -265,9 +266,22 @@ func (c *CrosFixture) Mount(ctx context.Context, s *testing.FixtState) error {
 		}
 	}
 
-	// Write resolv.conf to enable the internet connectivity
-	if err := os.WriteFile(filepath.Join(chrootEtc, "resolv.conf"), []byte("nameserver 8.8.8.8"), 0644); err != nil {
-		s.Fatal("Failed to write ", filepath.Join(chrootEtc, "resolv.conf"))
+	// Copy /run/dns-proxy/resolv.conf to chrootEtc to enable the internet connectivity
+	source, err := os.Open("/run/dns-proxy/resolv.conf")
+	if err != nil {
+		s.Fatal("Error opening /run/dns-proxy/resolv.conf: ", err)
+		return err
+	}
+	defer source.Close()
+	destination, err := os.OpenFile(filepath.Join(chrootEtc, "resolv.conf"), os.O_RDWR|os.O_CREATE|os.O_TRUNC, 0644)
+	if err != nil {
+		s.Fatalf("Error creating %s: %s", filepath.Join(chrootEtc, "resolv.conf"), err)
+		return err
+	}
+	defer destination.Close()
+	_, err = io.Copy(destination, source)
+	if err != nil {
+		s.Fatal("Error copying resolv.conf: ", err)
 		return err
 	}
 
