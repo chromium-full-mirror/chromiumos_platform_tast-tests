@@ -8,6 +8,7 @@ import xml.etree.ElementTree as ET
 
 from analyzer.analysis import analysis_cfg
 from analyzer.analysis import analysis_results
+from analyzer.frontend import plot_util
 from analyzer.frontend.report import components
 from analyzer.frontend.report import html_tree
 
@@ -22,23 +23,32 @@ class HtmlReport:
     cfg: analysis_cfg.AnalysisCfg
     """The configuration for the statistical analysis."""
 
+    identifier_to_plots_map: dict[str, list[plot_util.PlotData]]
+    """The mapping from pairwise result identifiers to lists of their plot data."""
+
     html: html_tree.HtmlTree
     """The HTML structure of the report."""
 
     num_tables: int
     """The number of tables in the report."""
 
+    num_figures: int
+    """The number of figures in the report."""
+
     def __init__(
         self,
         results: list[analysis_results.AnalysisResult],
         template_dir: pathlib.Path,
         cfg: analysis_cfg.AnalysisCfg,
+        identifier_to_plots_map: dict[str, list[plot_util.PlotData]],
     ) -> None:
         self.results = results
         self.template_dir = template_dir
         self.cfg = cfg
+        self.identifier_to_plots_map = identifier_to_plots_map
         self.html = html_tree.HtmlTree(template_dir / "index.html")
         self.num_tables = 0
+        self.num_figures = 0
 
     def _test_names(self) -> list[str]:
         """Returns the test names to make a report for."""
@@ -269,6 +279,30 @@ class HtmlReport:
 
         return table
 
+    def _create_pairwise_result_figure(
+        self,
+        pair: analysis_results.PairwiseResult,
+        plot_data: plot_util.PlotData,
+    ) -> ET.Element:
+        """Creates a `<figure>` element from the given plot data for the given
+        pairwise result.
+
+        Args:
+            pair: The pairwise result to make a `<figure>` element for.
+            plot_data: The plot data used to create the `<figure>` element.
+
+        Returns:
+            A `<figure>` element.
+        """
+        self.num_figures += 1
+
+        return components.create_figure(
+            plot_data=plot_data,
+            caption=f"Figure {self.num_figures}. "
+            f"{plot_data.kind.description()} of {'/'.join(pair.metric_names())}.",
+            attributes={"id": f"figure-{self.num_figures}"},
+        )
+
     def _append_pairwise_result_summary(
         self, pair: analysis_results.PairwiseResult
     ) -> None:
@@ -282,6 +316,11 @@ class HtmlReport:
             components.create_element_with_text("h2", pair.identifier())
         )
         self.html.body.append(self._create_pairwise_result_table(pair))
+
+        for plot in self.identifier_to_plots_map[pair.identifier()]:
+            self.html.body.append(
+                self._create_pairwise_result_figure(pair, plot)
+            )
 
     def make(self) -> None:
         """Makes a report."""

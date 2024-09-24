@@ -4,12 +4,13 @@
 import pathlib
 import tempfile
 import unittest
-import xml.etree.ElementTree as ET
 
 from analyzer.analysis import analysis_cfg
 from analyzer.analysis import analysis_results
 from analyzer.analysis import stats_util
+from analyzer.frontend import plot_util
 from analyzer.frontend.report import html_report
+from matplotlib import figure
 from tests import test_util
 
 
@@ -70,7 +71,10 @@ class HtmlReportTest(unittest.TestCase):
         ]
 
         report = html_report.HtmlReport(
-            results, TEMPLATE_DIR, analysis_cfg.AnalysisCfg()
+            results=results,
+            template_dir=TEMPLATE_DIR,
+            cfg=analysis_cfg.AnalysisCfg(),
+            identifier_to_plots_map={},
         )
         self.assertEqual(
             report._test_names(), [after_test_name, before_test_name]
@@ -110,7 +114,10 @@ class HtmlReportTest(unittest.TestCase):
             )
         ]
         report = html_report.HtmlReport(
-            results, TEMPLATE_DIR, analysis_cfg.AnalysisCfg()
+            results=results,
+            template_dir=TEMPLATE_DIR,
+            cfg=analysis_cfg.AnalysisCfg(),
+            identifier_to_plots_map={},
         )
         self.assertEqual(report._labels(), ["after", "before"])
 
@@ -158,7 +165,10 @@ class HtmlReportTest(unittest.TestCase):
             )
         ]
         report = html_report.HtmlReport(
-            results, TEMPLATE_DIR, analysis_cfg.AnalysisCfg()
+            results=results,
+            template_dir=TEMPLATE_DIR,
+            cfg=analysis_cfg.AnalysisCfg(),
+            identifier_to_plots_map={},
         )
         self.assertEqual(
             report._metric_paths(), [before_metric_path, after_metric_path]
@@ -208,12 +218,17 @@ class HtmlReportTest(unittest.TestCase):
             )
         ]
         report = html_report.HtmlReport(
-            results, TEMPLATE_DIR, analysis_cfg.AnalysisCfg()
+            results=results,
+            template_dir=TEMPLATE_DIR,
+            cfg=analysis_cfg.AnalysisCfg(),
+            identifier_to_plots_map={},
         )
         report._set_title()
 
-        expected_html = self._load_html(HTML_DIR / "set_title.html")
-        self._assert_elements_equal(report.html.html, expected_html)
+        expected_html = test_util.load_html(HTML_DIR / "set_title.html")
+        test_util.assert_elements_equal_except_image_data(
+            self, report.html.html, expected_html
+        )
 
     def test_create_sample_size_table(self) -> None:
         metric_path = "ui.OverviewPerf|Test.One.average"
@@ -247,23 +262,35 @@ class HtmlReportTest(unittest.TestCase):
             )
         ]
         report = html_report.HtmlReport(
-            results, TEMPLATE_DIR, analysis_cfg.AnalysisCfg()
+            results=results,
+            template_dir=TEMPLATE_DIR,
+            cfg=analysis_cfg.AnalysisCfg(),
+            identifier_to_plots_map={},
         )
         table = report._create_sample_size_table()
 
-        expected_table = self._load_html(HTML_DIR / "sample_size_table.html")
-        self._assert_elements_equal(table, expected_table)
+        expected_table = test_util.load_html(
+            HTML_DIR / "sample_size_table.html"
+        )
+        test_util.assert_elements_equal_except_image_data(
+            self, table, expected_table
+        )
 
     def test_append_summary_empty_results(self) -> None:
         report = html_report.HtmlReport(
-            [], TEMPLATE_DIR, analysis_cfg.AnalysisCfg()
+            results=[],
+            template_dir=TEMPLATE_DIR,
+            cfg=analysis_cfg.AnalysisCfg(),
+            identifier_to_plots_map={},
         )
         report._append_summary()
 
-        expected_html = self._load_html(
+        expected_html = test_util.load_html(
             HTML_DIR / "append_summary_empty_results.html"
         )
-        self._assert_elements_equal(report.html.html, expected_html)
+        test_util.assert_elements_equal_except_image_data(
+            self, report.html.html, expected_html
+        )
 
     def test_append_summary_with_results(self) -> None:
         samples = (
@@ -291,14 +318,19 @@ class HtmlReportTest(unittest.TestCase):
             analysis_results.AnalysisResult(groups=groups_list[0], pairs=[pair])
         ]
         report = html_report.HtmlReport(
-            results, TEMPLATE_DIR, analysis_cfg.AnalysisCfg()
+            results=results,
+            template_dir=TEMPLATE_DIR,
+            cfg=analysis_cfg.AnalysisCfg(),
+            identifier_to_plots_map={},
         )
         report._append_summary()
 
-        expected_html = self._load_html(
+        expected_html = test_util.load_html(
             HTML_DIR / "append_summary_with_results.html"
         )
-        self._assert_elements_equal(report.html.html, expected_html)
+        test_util.assert_elements_equal_except_image_data(
+            self, report.html.html, expected_html
+        )
 
     def test_create_pairwise_result_table(self) -> None:
         before_metric_name = "Test.Two.average"
@@ -356,15 +388,87 @@ class HtmlReportTest(unittest.TestCase):
             )
         ]
         report = html_report.HtmlReport(
-            results, TEMPLATE_DIR, analysis_cfg.AnalysisCfg()
+            results=results,
+            template_dir=TEMPLATE_DIR,
+            cfg=analysis_cfg.AnalysisCfg(),
+            identifier_to_plots_map={},
         )
         pair = results[0].pairs[0]
         table = report._create_pairwise_result_table(pair)
 
-        expected_table = self._load_html(
+        expected_table = test_util.load_html(
             HTML_DIR / "pairwise_result_table.html"
         )
-        self._assert_elements_equal(table, expected_table)
+        test_util.assert_elements_equal_except_image_data(
+            self, table, expected_table
+        )
+
+    def test_create_pairwise_result_figure(self) -> None:
+        before_metric_name = "Test.One"
+        after_metric_name = "Test.Three"
+        samples = (
+            test_util.load_before_samples() + test_util.load_after_samples()
+        )
+        samples_by_id = test_util.samples_by_id(samples)
+
+        experiment_cfg = analysis_cfg.ExperimentCfg(
+            per_test_cfgs=[
+                analysis_cfg.PerTestCfg(
+                    test_name_regex="ui\\.OverviewPerf",
+                    metric_name_regex_allowlist=[
+                        rf"{before_metric_name}|{after_metric_name}"
+                    ],
+                )
+            ]
+        )
+        groups_list = analysis_results.construct_experiment_groups_list(
+            samples, analysis_cfg.AnalysisCfg(experiment_cfg=experiment_cfg)
+        )
+        pair = analysis_results.PairwiseResult(
+            before=analysis_results.ExperimentGroup(
+                sample=samples_by_id[
+                    f"before|ui.OverviewPerf|{before_metric_name}.average"
+                ]
+            ),
+            after=analysis_results.ExperimentGroup(
+                sample=samples_by_id[
+                    f"after|ui.OverviewPerf|{after_metric_name}.average"
+                ]
+            ),
+            hypothesis_result=stats_util.HypothesisTestResult(
+                statistic_kind=stats_util.TestStatisticKind.RANK_SUM,
+                u=0.0,
+                p=1.0,
+            ),
+        )
+        results = [
+            analysis_results.AnalysisResult(groups=groups_list[0], pairs=[pair])
+        ]
+
+        plot_data = plot_util.PlotData(
+            kind=plot_util.PlotKind.PLOT_BOX,
+            figure=figure.Figure(),
+            width_px=100,
+            height_px=200,
+        )
+        pairwise_result_plots_map = {pair.identifier(): [plot_data]}
+
+        report = html_report.HtmlReport(
+            results=results,
+            template_dir=TEMPLATE_DIR,
+            cfg=analysis_cfg.AnalysisCfg(),
+            identifier_to_plots_map=pairwise_result_plots_map,
+        )
+        figure_element = report._create_pairwise_result_figure(
+            pair=pair, plot_data=plot_data
+        )
+
+        expected_figure = test_util.load_html(
+            HTML_DIR / "pairwise_result_figure.html"
+        )
+        test_util.assert_elements_equal_except_image_data(
+            self, figure_element, expected_figure
+        )
 
     def test_write(self) -> None:
         samples = (
@@ -399,32 +503,14 @@ class HtmlReportTest(unittest.TestCase):
                 ],
             )
         ]
-        report = html_report.HtmlReport(
-            results, TEMPLATE_DIR, analysis_cfg.AnalysisCfg()
-        )
 
         with tempfile.TemporaryDirectory() as temp:
-            export_dir = pathlib.Path(temp)
-            report.write(output_dir=export_dir)
-            self.assertTrue(export_dir.joinpath("index.html").exists())
-
-    def _load_html(self, path: pathlib.Path) -> ET.Element:
-        return ET.fromstring(path.read_text())
-
-    def _assert_html_text_equal(
-        self, text1: str | None, text2: str | None
-    ) -> None:
-        # Consecutive whitespace is normalized to a single space in HTML
-        text1 = text1 = " ".join(text1.split()) if text1 else ""
-        text2 = text2 = " ".join(text2.split()) if text2 else ""
-        self.assertEqual(text1, text2)
-
-    def _assert_elements_equal(
-        self, element1: ET.Element, element2: ET.Element
-    ) -> None:
-        self.assertEqual(element1.tag, element2.tag)
-        self._assert_html_text_equal(element1.text, element2.text)
-        self.assertDictEqual(element1.attrib, element2.attrib)
-
-        for child1, child2 in zip(element1, element2, strict=True):
-            self._assert_elements_equal(child1, child2)
+            output_dir = pathlib.Path(temp)
+            report = html_report.HtmlReport(
+                results=results,
+                template_dir=TEMPLATE_DIR,
+                cfg=analysis_cfg.AnalysisCfg(),
+                identifier_to_plots_map={},
+            )
+            report.write(output_dir=output_dir)
+            self.assertTrue(output_dir.joinpath("index.html").exists())

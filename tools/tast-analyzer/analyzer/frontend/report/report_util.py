@@ -7,6 +7,7 @@ import pathlib
 
 from analyzer.analysis import analysis_cfg
 from analyzer.analysis import analysis_results
+from analyzer.frontend import plot_util
 from analyzer.frontend.report import html_report
 
 
@@ -22,6 +23,7 @@ def create_reports(
     results: list[analysis_results.AnalysisResult],
     reports: set[ReportKind],
     template_dir: pathlib.Path,
+    identifier_to_plots_map: dict[str, list[plot_util.PlotData]],
     cfg: analysis_cfg.AnalysisCfg,
     output_dir: pathlib.Path,
 ) -> None:
@@ -31,6 +33,8 @@ def create_reports(
         results: The results to report.
         reports: The kinds of reports to create.
         template_dir: The directory to load the template from.
+        identifier_to_plots_map: The mapping from pairwise result identifiers
+            to their plots.
         output_dir: The directory to save the reports to.
     """
 
@@ -40,6 +44,7 @@ def create_reports(
                 results=results,
                 template_dir=template_dir,
                 cfg=cfg,
+                identifier_to_plots_map=identifier_to_plots_map,
             )
             report.make()
             report.write(output_dir=output_dir)

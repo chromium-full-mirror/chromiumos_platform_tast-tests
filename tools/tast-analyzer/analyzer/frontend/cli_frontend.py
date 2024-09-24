@@ -269,26 +269,44 @@ def print_results(
     if outputs:
         assert output_dir, "must specify an output directory for given outputs"
 
-        plots, reports = output_kind.sort_output_kind(outputs)
-        if plots:
-            logging.info("Creating plots (this may take a long time)...")
-            plot_util.init_plotting()
-            plot_util.create_plots(
-                results=results,
-                plots=plots,
-                plot_dir=output_dir,
-            )
+        save_plots, reports = output_kind.sort_output_kind(outputs)
+
+        # Currently, all available plots are used for the report
+        report_plots: set[plot_util.PlotKind] = (
+            set(plot_util.PlotKind) if reports else set()
+        )
+
+        logging.info("Creating plots (this may take a long time)...")
+        plot_util.init_plotting()
+        identifier_to_plots_map = plot_util.create_plots(
+            results=results,
+            plots=save_plots | report_plots,
+        )
+        plot_util.save_plots(
+            identifier_to_plots_map=identifier_to_plots_map,
+            plots=save_plots,
+            plot_dir=output_dir,
+        )
 
         if reports:
             # Meant to be the project root (tast-analyzer/)
             root = pathlib.Path(__file__).parent.parent.parent
             template_dir = root / "configs" / "report" / "templates"
 
+            report_plots_map = {
+                pair_id: [
+                    plot_data
+                    for plot_data in plot_data_list
+                    if plot_data.kind in report_plots
+                ]
+                for pair_id, plot_data_list in identifier_to_plots_map.items()
+            }
             logging.info("Creating a summary report...")
             report_util.create_reports(
                 results=results,
                 reports=reports,
                 template_dir=template_dir,
+                identifier_to_plots_map=report_plots_map,
                 cfg=cfg,
                 output_dir=output_dir,
             )

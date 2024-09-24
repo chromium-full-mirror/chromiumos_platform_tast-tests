@@ -39,3 +39,14 @@ td {
   max-width: 100%;
   overflow-x: auto;
 }
+
+figure {
+  img {
+    display: block;
+    margin: auto;
+  }
+
+  figcaption {
+    text-align: center;
+  }
+}
