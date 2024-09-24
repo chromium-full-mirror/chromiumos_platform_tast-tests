@@ -40,10 +40,9 @@ func init() {
 			"chromeos-sw-engprod@google.com",
 		},
 		BugComponent: "b:1288350",
-		Attr:         []string{
-			// Disabled by TORA. See: b/341411279
-			// "group:mainline",
-			// "informational",
+		Attr: []string{
+			"group:mainline",
+			"informational",
 		},
 		SoftwareDeps: []string{"chrome"},
 		SearchFlags: []*testing.StringPair{{
@@ -65,12 +64,13 @@ func init() {
 				ExtraHardwareDeps: hwdep.D(hwdep.InternalDisplay()),
 				Timeout:           chrome.GAIALoginTimeout + arc.BootTimeout + 120*time.Second,
 			},
-			{
-				Name:              "androidvm_clamshell",
-				Val:               initParams{TabletMode: false, BootWithArc: true},
-				ExtraSoftwareDeps: []string{"android_vm"},
-				Timeout:           chrome.GAIALoginTimeout + arc.BootTimeout + 120*time.Second,
-			},
+			// Disabled by TORA. See: b/341411279
+			// {
+			// 	Name:              "androidvm_clamshell",
+			// 	Val:               initParams{TabletMode: false, BootWithArc: true},
+			// 	ExtraSoftwareDeps: []string{"android_vm"},
+			// 	Timeout:           chrome.GAIALoginTimeout + arc.BootTimeout + 120*time.Second,
+			// },
 			{
 				Name:              "androidvm_tablet",
 				Val:               initParams{TabletMode: true, BootWithArc: true},
