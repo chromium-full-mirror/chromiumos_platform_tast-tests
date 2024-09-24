@@ -69,6 +69,7 @@ func MoveMouseFor(ctx context.Context, tconn *chrome.TestConn, duration time.Dur
 			if err := mouse.Move(tconn, point, deltaTime)(ctx); err != nil {
 				return errors.Wrap(err, "failed to move mouse")
 			}
+			// GoBigSleepLint: sleep for a second.
 			if err := testing.Sleep(ctx, time.Second); err != nil {
 				return errors.Wrap(err, "failed to sleep")
 			}
@@ -76,7 +77,7 @@ func MoveMouseFor(ctx context.Context, tconn *chrome.TestConn, duration time.Dur
 	}
 }
 
-// ScrollMouseDownFor rolls the scroll wheel for |duration|, with a |delay|
+// ScrollMouseDownFor rolls the scroll wheel down for |duration|, with a |delay|
 // between ticks.
 func ScrollMouseDownFor(ctx context.Context, mw *input.MouseEventWriter, delay, duration time.Duration) error {
 	if err := runActionFor(ctx, duration, action.Combine(
@@ -85,6 +86,19 @@ func ScrollMouseDownFor(ctx context.Context, mw *input.MouseEventWriter, delay, 
 		action.Sleep(delay),
 	)); err != nil {
 		return errors.Wrap(err, "failed to scroll down repeatedly")
+	}
+	return nil
+}
+
+// ScrollMouseUpFor rolls the scroll wheel up for |duration|, with a |delay|
+// between ticks.
+func ScrollMouseUpFor(ctx context.Context, mw *input.MouseEventWriter, delay, duration time.Duration) error {
+	if err := runActionFor(ctx, duration, action.Combine(
+		"scroll up and sleep",
+		func(ctx context.Context) error { return mw.ScrollUp() },
+		action.Sleep(delay),
+	)); err != nil {
+		return errors.Wrap(err, "failed to scroll up repeatedly")
 	}
 	return nil
 }

@@ -17,9 +17,7 @@ import (
 	"go.chromium.org/tast-tests/cros/local/chrome/browser/browserfixt"
 	"go.chromium.org/tast-tests/cros/local/chrome/cuj"
 	"go.chromium.org/tast-tests/cros/local/chrome/uiauto"
-	"go.chromium.org/tast-tests/cros/local/chrome/uiauto/event"
 	"go.chromium.org/tast-tests/cros/local/chrome/uiauto/faillog"
-	"go.chromium.org/tast-tests/cros/local/chrome/uiauto/nodewith"
 	"go.chromium.org/tast-tests/cros/local/input"
 	localPerf "go.chromium.org/tast-tests/cros/local/perf"
 	"go.chromium.org/tast-tests/cros/local/power"
@@ -167,14 +165,15 @@ func Run(ctx context.Context, cr *chrome.Chrome, testParam TestParam, args func(
 		}
 		return ash.WaitForOverviewState(ctx, tconn, ash.Shown, time.Minute)
 	}
+	deskSwitchWorkflows := []DeskSwitchWorkflow{
+		GetKeyboardSearchBracketWorkflow(tconn, kw),
+		GetKeyboardSearchNumberWorkflow(tconn, kw),
+		GetOverviewWorkflow(tconn, ac, setOverviewModeAndWait),
+	}
 
 	if err := browser.CloseTabByTitle(ctx, bTconn, "about:blank"); err != nil {
 		return nil, errors.Wrap(err, "failed to close blank tab")
 	}
-
-	// Get a list of metrics to collect for each test phase.
-	ashMetrics, browserMetrics := cujrecorder.GetShortenedPerformanceMetrics()
-	ashMetrics = append(ashMetrics, "Ash.Desks.AnimationLatency.DeskActivation", "Ash.Desks.AnimationSmoothness.DeskActivation")
 
 	if err := recorder.Run(ctx, func(ctx context.Context) error {
 		// Open a window within recorder.Run to ensure we collect
@@ -196,92 +195,17 @@ func Run(ctx context.Context, cr *chrome.Chrome, testParam TestParam, args func(
 		}
 		expectedNumWindows++
 
-		for _, deskSwitcher := range []deskSwitchWorkflow{
-			getKeyboardSearchBracketWorkflow(tconn, kw),
-			getKeyboardSearchNumberWorkflow(tconn, kw),
-			getOverviewWorkflow(tconn, ac, setOverviewModeAndWait),
-		} {
-			cycles := 0
-
-			if startDesk := deskSwitcher.itinerary[0]; activeDesk != startDesk {
-				if err := ash.ActivateDeskAtIndex(ctx, tconn, startDesk); err != nil {
-					return errors.Wrapf(err, "failed to activate desk %d with the autotest API", startDesk)
-				}
-				activeDesk = startDesk
-			}
-
-			recorder.Annotate(ctx, "Cycle_through_desks_with_"+deskSwitcher.name)
-
-			stopSnapshot, err := recorder.StartSnapshot(ctx, deskSwitcher.name, ashMetrics, browserMetrics)
-			if err != nil {
-				return errors.Wrapf(err, "failed to start snapshot for %s", deskSwitcher.name)
-			}
-
-			i := 0
-			for endTime := time.Now().Add(deskSwitchingDuration); time.Now().Before(endTime); {
-				// Record trace from starting cycling with search-bracket to completing 4 cycles.
-				// See go/trace-in-cuj-tests about rules for tracing.
-				if deskSwitcher.recordTrace {
-					if cycles == 0 {
-						if err := recorder.StartTracing(ctx, outDir, systemTraceConfigPath); err != nil {
-							return errors.Wrap(err, "failed to start tracing")
-						}
-					} else if cycles == 4 {
-						if err := recorder.StopTracing(ctx); err != nil {
-							return errors.Wrap(err, "failed to stop tracing")
-						}
-					}
-				}
-				i = (i + 1) % len(deskSwitcher.itinerary)
-				nextDesk := deskSwitcher.itinerary[i]
-
-				err := deskSwitcher.run(ctx, activeDesk, nextDesk)
-				if err != nil {
-					return errors.Wrapf(err, "failed to switch to the next desk using %s", deskSwitcher.name)
-				}
-
-				if err := ash.WaitForDesk(tconn, nextDesk)(ctx); err != nil {
-					return errors.Wrapf(err, "failed to wait for the %d desk to be active", nextDesk)
-				}
-				activeDesk = nextDesk
-
-				// Give a few seconds for the current desk to stabilize
-				// before interacting with it.
-				if err := ac.WithInterval(time.Second).WithTimeout(5*time.Second).WaitUntilNoEvent(nodewith.Root(), event.LocationChanged)(ctx); err != nil {
-					testing.ContextLog(ctx, "Failed to wait for current desk to stabilize: ", err)
-				}
-
-				if err := onVisitActions[activeDesk](ctx); err != nil {
-					return errors.Wrapf(err, "failed to perform unique action on desk %d", activeDesk)
-				}
-				cycles++
-			}
-
-			if err := stopSnapshot(ctx); err != nil {
-				return errors.Wrapf(err, "failed to stop snapshot for %s", deskSwitcher.name)
-			}
-
-			// Ensure that none of the windows crashed during the test.
-			ws, err := ash.GetAllWindows(ctx, tconn)
-			if err != nil {
-				return errors.Wrap(err, "failed to get all windows")
-			}
-
-			if len(ws) != expectedNumWindows {
-				return errors.Errorf("unexpected number of open windows, got %d, expected %d", len(ws), expectedNumWindows)
-			}
-
-			testing.ContextLogf(ctx, "Switched desk by %s %d times", deskSwitcher.name, cycles)
+		deskSwitcher := NewDeskSwitcher(tconn, recorder, outDir, systemTraceConfigPath, deskSwitchingDuration, deskSwitchWorkflows, onVisitActions, expectedNumWindows, activeDesk)
+		if err := deskSwitcher.DeskSwitch(ctx); err != nil {
+			return errors.Wrap(err, "failed to perform desk switching action")
 		}
 
 		// Activate the desk where Google Slides is at.
-		if activeDesk != 0 {
+		if deskSwitcher.ActiveDesk != 0 {
 			if err := ash.ActivateDeskAtIndex(ctx, tconn, 0); err != nil {
 				return errors.Wrap(err, "failed to activate leftmost desk with the autotest API")
 			}
-			activeDesk = 0
 		}
-
 		const chromeVersionURL = chrome.VersionURL
 		// Navigate away to record PageLoad.PaintTiming.NavigationToLargestContentfulPaint2.
 		if err := slidesConn.Navigate(ctx, chromeVersionURL); err != nil {
