@@ -10,8 +10,6 @@ import (
 	"strings"
 	"time"
 
-	_ "time/tzdata"
-
 	"go.chromium.org/tast-tests/cros/local/chrome"
 	"go.chromium.org/tast/core/testing"
 )
@@ -23,8 +21,7 @@ func init() {
 		Desc:         "Test that verifies OOBE timezones accuracy, accounting for accurate offsets and unique timezone entries",
 		Contacts: []string{
 			"core-devices@google.com",
-			"torikauffman@google.com", // Test author
-			"egwuekwe@google.com",     // Test author
+			"joshuapius@google.com", // Test author
 		},
 		BugComponent: "b:543707", // Communications > Video (Meet) > Platforms > Rooms > Core Devices (OS & Hardware)
 		Attr:         []string{"group:meet", "group:mainline", "informational", "group:hw_agnostic"},

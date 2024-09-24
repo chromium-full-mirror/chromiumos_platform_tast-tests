@@ -31,8 +31,7 @@ func init() {
 		Desc:         "Test that checks DUT video quality",
 		Contacts: []string{
 			"core-devices@google.com",
-			"torikauffman@google.com", // Test author
-			"egwuekwe@google.com",     // Test author
+			"joshuapius@google.com", // Test author
 		},
 
 		BugComponent: "b:543707", // Communications > Video (Meet) > Platforms > Rooms > Core Devices (OS & Hardware)
@@ -89,7 +88,7 @@ func VideoQuality(ctx context.Context, s *testing.State) {
 			return testing.PollBreak(errors.Wrap(err, "failed to get video count"))
 		}
 		if !videoFound {
-			return errors.New("No videos found on loading screen")
+			return errors.New("no videos found on loading screen")
 		}
 		var videoReady bool
 		if err := conn.Eval(ctx, "document.getElementsByTagName('video')[0].readyState > 2", &videoReady); err != nil {
@@ -98,7 +97,7 @@ func VideoQuality(ctx context.Context, s *testing.State) {
 		if videoReady {
 			return nil
 		}
-		return errors.Errorf("Video not yet loaded; invalid video readyState found")
+		return errors.New("Video not yet loaded; invalid video readyState found")
 
 	}, &testing.PollOptions{
 		Timeout:  15 * time.Second,

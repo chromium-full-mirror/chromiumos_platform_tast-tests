@@ -20,7 +20,7 @@ func init() {
 		Desc:         "Checks that text, icons, and buttons are displayed with the correct color, font-family, font-size, and background color",
 		Contacts: []string{
 			"core-devices@google.com",
-			"egwuekwe@google.com", // Test author
+			"joshuapius@google.com", // Test author
 		},
 		BugComponent: "b:543707",
 		Attr: []string{"group:meet", "group:mainline", "informational",

@@ -21,8 +21,7 @@ func init() {
 		Desc:         "Test that clicks through dialogs on the OOBE welcome screen and checks that they are present and interactive",
 		Contacts: []string{
 			"core-devices@google.com",
-			"torikauffman@google.com", // Test author
-			"egwuekwe@google.com",     // Test author
+			"joshuapius@google.com", // Test author
 		},
 		BugComponent: "b:341064525", // Communications > Video (Meet) > Platforms > Rooms > Core Devices (OS & Hardware)
 		Attr:         []string{"group:meet", "group:mainline", "informational", "group:hw_agnostic"},

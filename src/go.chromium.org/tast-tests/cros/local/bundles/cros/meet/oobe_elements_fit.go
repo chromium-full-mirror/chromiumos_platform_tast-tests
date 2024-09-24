@@ -23,7 +23,7 @@ func init() {
 		Desc:         "Test that checks whether unexpected scrollbars have been added to any OOBE elements",
 		Contacts: []string{
 			"core-devices@google.com",
-			"torikauffman@google.com", // Test author
+			"joshuapius@google.com", // Test author
 		},
 		BugComponent: "b:341064525", // Communications > Video (Meet) > Platforms > Rooms > Core Devices (OS & Hardware)
 		Attr:         []string{"group:meet", "group:mainline", "informational", "group:hw_agnostic"},
@@ -78,7 +78,7 @@ func OobeElementsFit(ctx context.Context, s *testing.State) {
 			return nil
 		}
 
-		return errors.Errorf("Unexpected screen dimensions, width=%d, height=%d, ratio=%f", width, height, ratio)
+		return errors.Errorf("unexpected screen dimensions, width=%d, height=%d, ratio=%f", width, height, ratio)
 	}, &testing.PollOptions{
 		Timeout:  20 * time.Second,
 		Interval: 2 * time.Second,
