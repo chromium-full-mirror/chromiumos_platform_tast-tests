@@ -12,6 +12,7 @@ import (
 	"go.chromium.org/tast-tests/cros/local/chrome/uiauto"
 	"go.chromium.org/tast-tests/cros/local/chrome/uiauto/diagnosticsapp"
 	"go.chromium.org/tast-tests/cros/local/cpu"
+	"go.chromium.org/tast-tests/cros/local/memory/kernelmeter"
 	"go.chromium.org/tast-tests/cros/local/procutil"
 	"go.chromium.org/tast/core/ctxutil"
 	"go.chromium.org/tast/core/testing"
@@ -70,6 +71,13 @@ func MemoryRoutine(ctx context.Context, s *testing.State) {
 			s.Log("Failed to wait cpu idle after running MemoryRoutine test")
 		}
 	}()
+
+	memInfo, err := kernelmeter.ReadMemInfo()
+	if err != nil {
+		s.Log("Cannot obtain memory info: ", err)
+	} else {
+		s.Logf("Meminfo: total=%s, avaialble=%s", memInfo["MemTotal"], memInfo["MemAvailable"])
+	}
 
 	// Test memory routine.
 	pollOpts := testing.PollOptions{Interval: time.Second, Timeout: 20 * time.Second}
