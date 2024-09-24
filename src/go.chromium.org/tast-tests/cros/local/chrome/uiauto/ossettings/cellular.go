@@ -568,7 +568,8 @@ func VerifyAutoconnectStateOfActiveNetwork(ctx context.Context, tconn *chrome.Te
 	if err := uiauto.Combine("Verify network autoconnect",
 		ui.WaitUntilExists(AutoconnectToggle),
 		ui.WaitUntilCheckedState(AutoconnectToggle, enabled),
-		ui.LeftClick(BackArrowBtn),
+		// Avoid the back page arrow button out of screen.
+		ui.DoDefault(BackArrowBtn),
 		ui.WaitUntilExists(ActiveCellularBtn),
 	)(ctx); err != nil {
 		return errors.Wrap(err, "failed to verify autoconnect state in network details setting page")
@@ -587,7 +588,8 @@ func VerifyNetworkIsActive(ctx context.Context, tconn *chrome.TestConn, activeIc
 	if err := uiauto.Combine("Verify network connected",
 		expandable.EnsureExpandableSectionOpened(tconn, CellularAdvanced),
 		ui.WithTimeout(30*time.Second).WaitUntilExists(displayedIccid),
-		ui.LeftClick(BackArrowBtn),
+		// Avoid the back page arrow button out of screen.
+		ui.DoDefault(BackArrowBtn),
 		ui.WaitUntilExists(ActiveCellularBtn),
 	)(ctx); err != nil {
 		return errors.Wrap(err, "failed to verify network iccid in network details setting page")
