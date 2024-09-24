@@ -73,8 +73,10 @@ func init() {
 		}, {
 			// Contact: weiluanwang@google.com
 			Name:    "dns_resolution",
-			Val:     croshealthd.NewRoutineParams(croshealthd.RoutineDNSResolverPresent),
+			Val:     croshealthd.NewRoutineParams(croshealthd.RoutineDNSResolution),
 			Fixture: "crosHealthdRunning",
+			// TODO(b/369257389): Promote to critical.
+			ExtraAttr: []string{"informational", "group:criticalstaging"},
 		}, {
 			// Contact: yycheng@google.com
 			Name:    "memory",
