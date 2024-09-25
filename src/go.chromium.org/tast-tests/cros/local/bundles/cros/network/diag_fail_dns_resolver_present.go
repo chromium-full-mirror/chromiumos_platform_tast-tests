@@ -46,29 +46,9 @@ func init() {
 		Attr:         []string{"group:mainline"},
 		Fixture:      "networkDiagnosticsShillReset",
 		Params: []testing.Param{{
-			Name: "no_name_servers",
-			Val: &dnsResolverPresentParams{
-				NameServers:     []string{},
-				ExpectedProblem: problemNoNameServersFound,
-			},
-			ExtraAttr: []string{"informational"},
-		}, {
-			Name: "malformed_name_servers",
-			Val: &dnsResolverPresentParams{
-				NameServers:     []string{"bad.ip.address"},
-				ExpectedProblem: problemMalformedNameServers,
-			},
-			ExtraAttr: []string{"informational"},
-		}, {
-			Name: "empty_name_servers",
-			Val: &dnsResolverPresentParams{
-				NameServers:     []string{""},
-				ExpectedProblem: problemNoNameServersFound,
-			},
-			ExtraAttr: []string{"informational"},
-		}, {
-
-			Name: "default_name_servers",
+			// Note: Shill ignores empty or malformed nameservers, so only non-functional
+			// nameservers resulting in a "not found" failure can be tested.
+			Name: "name_servers_not_found",
 			Val: &dnsResolverPresentParams{
 				NameServers:     []string{"0.0.0.0"},
 				ExpectedProblem: problemNoNameServersFound,
