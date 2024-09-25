@@ -11,6 +11,7 @@ import (
 	"path/filepath"
 	"time"
 
+	"go.chromium.org/tast-tests/cros/common/action"
 	"go.chromium.org/tast-tests/cros/local/chrome"
 	"go.chromium.org/tast-tests/cros/local/chrome/uiauto"
 	"go.chromium.org/tast-tests/cros/local/chrome/uiauto/faillog"
@@ -111,7 +112,12 @@ func SMBPassword(ctx context.Context, s *testing.State) {
 
 	ui := uiauto.New(tconn)
 	if err := uiauto.Combine("add secureshare via Files context menu",
-		files.ClickMoreMenuItem("Services", "SMB file share"),
+		action.Retry( /*retries=*/ 5, uiauto.Combine("Repeatedly try open SMB share dialog",
+			// Clicking the more menu item again just causes it to hide, use the ESC
+			// key to hide it before clicking it again.
+			kb.AccelAction("Esc"),
+			files.WithTimeout(5*time.Second).ClickMoreMenuItem("Services", "SMB file share"),
+		), /*timeout=*/ 5*time.Second),
 		smb.AddFileShareAction(ui, kb, rememberPassword, shareName, smbUsername, smbPassword),
 		files.OpenPath(filesapp.FilesTitlePrefix+shareName, shareName),
 		files.WaitForFile(textFile),
