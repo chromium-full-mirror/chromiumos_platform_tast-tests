@@ -206,11 +206,11 @@ func matchReferencePathToResultPath(resultPoints []*hmrNode, referencePaths [][]
 				referencePathEndPoint := referencePaths[referencePathIdx][len(referencePaths[referencePathIdx])-1]
 				if resultPoints[i-1].pressure > 0 && euclideanDistance(resultPoints[i-1], referencePathEndPoint) <= epsilon {
 					resultPaths = append(resultPaths, path)
+					path = []*hmrNode{}
 					referencePathIdx++
 					if referencePathIdx >= len(referencePaths) {
 						break
 					}
-					path = []*hmrNode{}
 				} else {
 					// If pressure == 0 and an open path exists. Add this point to it.
 					path = append(path, resultPoints[i])
