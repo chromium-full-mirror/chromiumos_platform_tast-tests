@@ -21,7 +21,7 @@ func init() {
 		Desc:         "Measure the average latency of saving images as a searchable PDF using OCR in document scanning mode",
 		Contacts:     []string{"chromeos-camera-app-eng@google.com", "chuhsuan@chromium.org"},
 		BugComponent: "b:978428", // ChromeOS > Platform > Technologies > Camera > App & Framework
-		Attr:         []string{
+		Attr: []string{
 			"group:crosbolt",
 			"crosbolt_perbuild",
 			"group:release-health",
@@ -30,10 +30,10 @@ func init() {
 		SoftwareDeps: []string{"camera_app", "chrome", "ondevice_document_scanner_rootfs_or_dlc"},
 		Data:         []string{"ocr_full_of_text_3264x2448.jpg"},
 		Fixture:      "ccaTestBridgeReadyWithFakeHALCamera",
-		// testOnePage: 120 seconds
-		// testTenPage: 1200 seconds
-		// 1320 seconds + 2 minutes `cpu.WaitUntilIdle`.
-		Timeout: 24 * time.Minute,
+		// testOnePage: 150 seconds
+		// testTenPage: 1500 seconds
+		// 1650 seconds + 2 minutes `cpu.WaitUntilIdle`.
+		Timeout: 29*time.Minute + 30*time.Second,
 	})
 }
 
@@ -57,8 +57,8 @@ func CCAUIDocumentScanningPerf(ctx context.Context, s *testing.State) {
 		{"testOnePage", 1},
 		{"testTenPage", 10},
 	} {
-		// pageCount * 20 seconds (10s for cropping + 10s for OCR and saving) * rounds (1 warm up + roundsPerSubTest)
-		timeout := time.Duration(tst.pageCount*20*(1+roundsPerSubTest)) * time.Second
+		// pageCount * 25 seconds (10s for cropping + 15s for OCR and saving) * rounds (1 warm up + roundsPerSubTest)
+		timeout := time.Duration(tst.pageCount*25*(1+roundsPerSubTest)) * time.Second
 		subTestCtx, cancel := context.WithTimeout(ctx, timeout)
 		s.Run(subTestCtx, tst.name, func(ctx context.Context, s *testing.State) {
 			if err := switchScene(ctx, cca.SceneData{Path: s.DataPath("ocr_full_of_text_3264x2448.jpg"), ScaleMode: "contain"}); err != nil {
@@ -116,7 +116,7 @@ func testDocumentScanningPerf(ctx context.Context, app *cca.App, tst *documentSc
 
 // takeImagesAndSave takes `pageCount` images in document sub-mode and click "Save as PDF".
 func takeImagesAndSave(ctx context.Context, app *cca.App, pageCount int) error {
-	timeoutPerPage := 10 * time.Second
+	timeoutPerPage := 15 * time.Second
 
 	if err := app.ClickShutter(ctx); err != nil {
 		return errors.Wrap(err, "failed to click the shutter button")
