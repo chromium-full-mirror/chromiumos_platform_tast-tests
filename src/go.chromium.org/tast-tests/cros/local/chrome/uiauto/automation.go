@@ -784,7 +784,7 @@ func (ac *Context) RetrieveTextSelectionInfo(ctx context.Context, conn *chrome.C
 			}
 		}
 	`
-	if err := conn.Call(ctx, result, query, nodeInfo.HTMLAttributes["aria-label"]); err != nil {
+	if err := conn.Call(ctx, result, query, nodeInfo.Name); err != nil {
 		return nil, errors.Wrap(err, "failed to retrieve text selection info via JS")
 	}
 	return result, nil
