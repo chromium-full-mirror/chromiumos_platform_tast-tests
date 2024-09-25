@@ -23,7 +23,7 @@ import (
 type vpnReconnectParams struct {
 	vpnType vpn.Type
 	// If the VPN type reports disconnect when underlying network is down.
-	expectVpnDownOnPhysicalDown bool
+	expectVPNDownOnPhysicalDown bool
 	// Timeout before VPN reports disconnect when underlying network is down.
 	vpnDownTimeout time.Duration
 }
@@ -42,7 +42,7 @@ func init() {
 			Name: "openvpn",
 			Val: vpnReconnectParams{
 				vpnType:                     vpn.TypeOpenVPN,
-				expectVpnDownOnPhysicalDown: true,
+				expectVPNDownOnPhysicalDown: true,
 				vpnDownTimeout:              40 * time.Second,
 			},
 			Fixture:           "shillSimulatedWiFiWithCerts.ehide",
@@ -51,7 +51,7 @@ func init() {
 			Name: "wireguard",
 			Val: vpnReconnectParams{
 				vpnType:                     vpn.TypeWireGuard,
-				expectVpnDownOnPhysicalDown: false,
+				expectVPNDownOnPhysicalDown: false,
 			},
 			Fixture:           "shillSimulatedWiFi.ehide",
 			ExtraSoftwareDeps: []string{"wireguard"},
@@ -103,26 +103,55 @@ func VPNPhysicalNetworkReconnect(ctx context.Context, s *testing.State) {
 		s.Fatal("Failed to connect server env to WiFi env: ", err)
 	}
 
-	// Start VPN connection.
 	param := s.Param().(vpnReconnectParams)
-	vpnConn, err := vpn.StartConnection(ctx, serverEnv, param.vpnType, vpn.WithCertVals(s.FixtValue().(*hwsim.ShillSimulatedWiFi).CertVals))
+	certVals := s.FixtValue().(*hwsim.ShillSimulatedWiFi).CertVals
+
+	// Create VPN service and server. Do not use StartConnection() here since we
+	// may start a different server later.
+	config := vpn.NewConfig(param.vpnType, vpn.WithCertVals(certVals))
+	server, err := vpn.StartServerWithConfig(ctx, serverEnv, config)
 	if err != nil {
-		s.Fatal("Failed to start VPN connection: ", err)
+		s.Fatal("Failed to start VPN server: ", err)
 	}
 	defer func() {
-		if err := vpnConn.Cleanup(cleanupCtx); err != nil {
-			s.Log("Failed to clean up VPN connection: ", err)
+		if server == nil {
+			return
+		}
+		if err := server.StopServer(cleanupCtx); err != nil {
+			s.Fatal("Failed to stop VPN server: ", err)
+		}
+	}()
+	service, err := vpn.ConfigureService(ctx, server, nil /*secondServer*/)
+	if err != nil {
+		s.Fatal("Failed to configure VPN service: ", err)
+	}
+	defer func() {
+		if err := service.Remove(cleanupCtx); err != nil {
+			s.Fatal("Failed to remove VPN service: ", err)
 		}
 	}()
 
+	// Connect the service and verify the connection.
+	if err := service.Connect(ctx); err != nil {
+		s.Fatal("Failed to connect to VPN service: ", err)
+	}
+	if err := service.WaitForConnectedOrError(ctx); err != nil {
+		s.Fatal("Failed to wait for connected state: ", err)
+	}
+	if err := ping.ExpectPingSuccessWithTimeout(ctx, server.OverlayIPv4, "chronos", 10*time.Second); err != nil {
+		s.Fatalf("Failed to ping %s: %s", server.OverlayIPv4, err)
+	}
+
+	s.Log("Disconnecting physical network")
 	if err := wifi.Service.Disconnect(ctx); err != nil {
 		s.Fatal("Failed to disconnect WiFi: ", err)
 	}
+
 	s.Log("Verifying VPN is disconnected after physical network disconnected")
 	// Check VPN reports to be in a disconnected state if supported.
-	if param.expectVpnDownOnPhysicalDown {
+	if param.expectVPNDownOnPhysicalDown {
 		if err := testing.Poll(ctx, func(ctx context.Context) error {
-			connected, err := vpnConn.Service().IsConnected(ctx)
+			connected, err := service.IsConnected(ctx)
 			if err != nil {
 				testing.PollBreak(err)
 			} else if connected {
@@ -136,7 +165,7 @@ func VPNPhysicalNetworkReconnect(ctx context.Context, s *testing.State) {
 			s.Fatal("Failed to wait for VPN service to be not connected: ", err)
 		}
 	} else {
-		if err := ping.ExpectPingFailure(ctx, vpnConn.Server.OverlayIPv4, "chronos"); err != nil {
+		if err := ping.ExpectPingFailure(ctx, server.OverlayIPv4, "chronos"); err != nil {
 			s.Fatal("Expected ping fail after disconnect: ", err)
 		}
 	}
@@ -150,11 +179,11 @@ func VPNPhysicalNetworkReconnect(ctx context.Context, s *testing.State) {
 		s.Fatal("Failed to wait for to WiFi reconnected status: ", err)
 	}
 
-	// Verify VPN reconnection:
-	if err := vpnConn.Service().WaitForConnectedOrError(ctx); err != nil {
-		s.Fatal("Failed to wait for connected state: ", err)
+	// Verify VPN reconnection.
+	if err := service.WaitForConnectedOrError(ctx); err != nil {
+		s.Fatal("Failed to wait for connected state after reconnection: ", err)
 	}
-	if err := ping.ExpectPingSuccessWithTimeout(ctx, vpnConn.Server.OverlayIPv4, "chronos", 10*time.Second); err != nil {
-		s.Fatalf("Failed to ping %s: %s", vpnConn.Server.OverlayIPv4, err)
+	if err := ping.ExpectPingSuccessWithTimeout(ctx, server.OverlayIPv4, "chronos", 10*time.Second); err != nil {
+		s.Fatalf("Failed to ping %s after reconnection: %s", server.OverlayIPv4, err)
 	}
 }
