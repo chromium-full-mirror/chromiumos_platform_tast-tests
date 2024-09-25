@@ -7,13 +7,17 @@ package power
 import (
 	"context"
 	"fmt"
+	"regexp"
 	"strconv"
 	"strings"
 	"time"
 
 	"go.chromium.org/tast-tests/cros/common/chrome/histogram"
 	"go.chromium.org/tast-tests/cros/common/perf"
+	"go.chromium.org/tast-tests/cros/common/servo"
 	"go.chromium.org/tast-tests/cros/remote/cros/metrics"
+	"go.chromium.org/tast-tests/cros/remote/firmware"
+	"go.chromium.org/tast-tests/cros/remote/firmware/fixture"
 	"go.chromium.org/tast-tests/cros/remote/memory/mempressure"
 	"go.chromium.org/tast-tests/cros/remote/tracing"
 	"go.chromium.org/tast-tests/cros/remote/tracing/linuxperf"
@@ -70,6 +74,7 @@ type testArgsForSuspendPerf struct {
 	enableArc         bool
 	enableMempressure bool
 	enableDisplay     bool
+	benchMarkEval     bool
 }
 
 func init() {
@@ -138,6 +143,14 @@ func init() {
 			},
 			// 10 min for setting up (login and opening tabs) +(3 min for each suspend/resume) * 5 times
 			Timeout: 30 * time.Minute,
+		}, {
+			Name:    "fw_qual",
+			Fixture: fixture.NormalMode,
+			Val: testArgsForSuspendPerf{
+				numSuspend:    5,
+				benchMarkEval: true,
+			},
+			Timeout: 30 * time.Minute,
 		}},
 	})
 }
@@ -150,6 +163,9 @@ const (
 	defaultBufferSize   = 10240
 
 	defaultCycleTabs = 10
+
+	// hwClockFile is the path where the timestamp, recorded by the RTC, will be saved to capture when the DUT wakes up from suspend.
+	hwClockFile = "/run/power_manager/root/hwclock-on-resume"
 )
 
 type histogramRequest struct {
@@ -187,6 +203,50 @@ func SuspendPerf(ctx context.Context, s *testing.State) {
 		s.Fatal("Failed to convert ", forceTabsVarName, err)
 	}
 	pv := perf.NewValues()
+
+	var h *firmware.Helper
+	if args.benchMarkEval {
+		h = s.FixtValue().(*fixture.Value).Helper
+		if err := h.RequireServo(ctx); err != nil {
+			s.Fatal("Failed to connect to servo: ", err)
+		}
+
+		testing.ContextLog(ctx, "Removing USB")
+		if err := h.Servo.SetUSBMuxState(ctx, servo.USBMuxOff); err != nil {
+			s.Fatal("Failed to remove the USB: ", err)
+		}
+
+		if err := h.DUT.Conn().CommandContext(ctx, "sudo", "touch", hwClockFile).Run(); err != nil {
+			s.Fatal("Failed to create hwClock file: ", err)
+		}
+		defer func() {
+			if err := h.DUT.Conn().CommandContext(ctx, "rm", hwClockFile).Run(); err != nil {
+				s.Error("Failed to remove hwClock file: ", err)
+			}
+		}()
+
+		tlsdatedStatus, err := h.DUT.Conn().CommandContext(ctx, "status", "tlsdated").Output()
+		if err != nil {
+			s.Fatal("Failed to get the tlsdated status: ", err)
+		}
+		if strings.Contains(string(tlsdatedStatus), "start") {
+			// Stop the tlsdated to use the rtc for the clock.
+			if err := h.DUT.Conn().CommandContext(ctx, "stop", "tlsdated").Run(); err != nil {
+				s.Fatal("Failed to stop the tlsdated: ", err)
+			}
+			defer func() {
+				if err := h.DUT.Conn().CommandContext(ctx, "start", "tlsdated").Run(); err != nil {
+					s.Error("Failed to start the tlsdated: ", err)
+				}
+			}()
+		}
+
+		defer func() {
+			if err := h.EnsureDUTBooted(ctx); err != nil {
+				s.Fatal("Failed to connect to the DUT: ", err)
+			}
+		}()
+	}
 
 	cl, err := rpc.Dial(ctx, s.DUT(), s.RPCHint())
 	if err != nil {
@@ -253,14 +313,24 @@ func SuspendPerf(ctx context.Context, s *testing.State) {
 
 	prev := older
 	seconds := defaultSuspendSeconds
-
+	expectedSuspendStates := []string{"S0ix", "S3"}
 	for i := 0; i < args.numSuspend; i++ {
 		tracer.start(ctx, s, cl, true)
 		// Suspend and resume
 		s.Logf("Suspending DUT for %d seconds", seconds)
 		mp.Disconnect(ctx)
+
+		powerStateCh := make(chan string, 1)
+		errCh := make(chan error, 1)
+		if args.benchMarkEval {
+			verifyPowerStateCtx, cancel := context.WithCancel(ctx)
+			defer cancel()
+			go verifyPowerState(verifyPowerStateCtx, h, powerStateCh, errCh, expectedSuspendStates)
+		}
+
 		req := powerpb.SuspendRequest{Seconds: int32(seconds)}
-		if res, err := service.Suspend(ctx, &req); err != nil {
+		res, err := service.Suspend(ctx, &req)
+		if err != nil {
 			if res != nil && res.Failed {
 				if res.Output != "" {
 					s.Logf("Suspend command failed, the command output is: %s", res.Output)
@@ -268,6 +338,23 @@ func SuspendPerf(ctx context.Context, s *testing.State) {
 				s.Fatal("Failed to suspend DUT: ", err)
 			}
 			s.Log("Ignore suspend command error if connection is lost: ", err)
+		}
+
+		if args.benchMarkEval {
+			select {
+			case err := <-errCh:
+				if err != nil {
+					s.Fatalf("Failed to get one of %v power state: %s", expectedSuspendStates, err)
+				}
+			}
+			powerState := <-powerStateCh
+
+			if res != nil {
+				if err := evalSecondSystemResume(ctx, h, powerState, res.Output); err != nil {
+					s.Fatalf("Failed to pass the second system resume time evaluation in iteration %d: %v", i+1, err)
+				}
+				continue
+			}
 		}
 		s.Log("Resumed")
 
@@ -314,6 +401,76 @@ func SuspendPerf(ctx context.Context, s *testing.State) {
 	if err := pv.Save(s.OutDir()); err != nil {
 		s.Fatal("Failed saving perf data: ", err)
 	}
+}
+
+func verifyPowerState(ctx context.Context, h *firmware.Helper, powerStateCh chan string, errCh chan error, expectedSuspendStates []string) {
+	var err error
+	var currPowerState string
+	defer func() {
+		errCh <- err
+		powerStateCh <- currPowerState
+		close(errCh)
+		close(powerStateCh)
+	}()
+
+	// Try reading the power state from the EC and verify if it includes the expected value.
+	err = testing.Poll(ctx, func(c context.Context) error {
+		state, err := h.Servo.GetECSystemPowerState(ctx)
+		if err != nil {
+			return errors.Wrap(err, "failed to check power state")
+		}
+		if hasPowerState := func(currState string, expectedStates ...string) bool {
+			for _, state := range expectedStates {
+				if currState == state {
+					return true
+				}
+			}
+			return false
+		}(state, expectedSuspendStates...); !hasPowerState {
+			return errors.Errorf("Power state = %s", state)
+		}
+		currPowerState = state
+		return nil
+	}, &testing.PollOptions{Timeout: 15 * time.Second, Interval: 500 * time.Millisecond})
+}
+
+func convertTimeStamp(timeStr string) (int64, error) {
+	t, err := time.Parse(time.RFC3339Nano, timeStr)
+	if err != nil {
+		return -1, errors.Wrap(err, "failed to parse time")
+	}
+
+	return t.UnixMilli(), nil
+}
+
+func evalSecondSystemResume(ctx context.Context, h *firmware.Helper, powerState, wakeAlarm string) error {
+	matchSubString := regexp.MustCompile(`rtc wakealarm: (\d+)`).FindStringSubmatch(wakeAlarm)
+	if len(matchSubString) != 2 {
+		return errors.Errorf("unexpected wakealarm format, got: %s", wakeAlarm)
+	}
+	expectedWakeupTime, err := strconv.ParseInt(matchSubString[1], 10, 64)
+	if err != nil {
+		return errors.Wrap(err, "failed to convert the matched substring to int64 format")
+	}
+
+	out, err := h.DUT.Conn().CommandContext(ctx, "cat", hwClockFile).Output()
+	if err != nil {
+		return errors.Wrap(err, "failed to read hwClock file")
+	}
+	timeString := strings.Replace(strings.TrimSpace(string(out)), " ", "T", 1)
+	actualWakeupTime, err := convertTimeStamp(timeString)
+	if err != nil {
+		return errors.Wrap(err, "failed to convert time format")
+	}
+
+	secondSystemResumeTime := actualWakeupTime - expectedWakeupTime*1000
+	if powerState == "S0ix" && secondSystemResumeTime > 500 {
+		return errors.Errorf("failed to resume from S0ix suspend state in 500 milliseconds, got %d", secondSystemResumeTime)
+	} else if powerState == "S3" && secondSystemResumeTime > 1000 {
+		return errors.Errorf("failed to resume from S3 suspend state in 1000 milliseconds, got %d", secondSystemResumeTime)
+	}
+
+	return nil
 }
 
 func redialRPC(ctx context.Context, dut *dut.DUT, hint *testing.RPCHint, timeoutSeconds int) (*rpc.Client, error) {

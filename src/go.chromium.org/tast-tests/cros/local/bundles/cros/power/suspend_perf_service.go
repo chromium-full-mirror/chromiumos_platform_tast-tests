@@ -41,7 +41,8 @@ func (h *SuspendPerfService) Suspend(ctx context.Context, req *powerpb.SuspendRe
 	}
 	defer unlock()
 
-	if out, err := testexec.CommandContext(ctx, "powerd_dbus_suspend", "--suspend_for_sec="+strconv.Itoa(int(req.Seconds))).CombinedOutput(); err != nil {
+	out, err := testexec.CommandContext(ctx, "powerd_dbus_suspend", "--suspend_for_sec="+strconv.Itoa(int(req.Seconds))).CombinedOutput()
+	if err != nil {
 		return &powerpb.SuspendResponse{Failed: true, Output: string(out)}, errors.Wrap(err, "failed to perform system suspend")
 	}
 
@@ -49,7 +50,7 @@ func (h *SuspendPerfService) Suspend(ctx context.Context, req *powerpb.SuspendRe
 		return &powerpb.SuspendResponse{Failed: true}, errors.Wrap(err, "failed to recover network")
 	}
 
-	return &powerpb.SuspendResponse{Failed: false}, nil
+	return &powerpb.SuspendResponse{Failed: false, Output: string(out)}, nil
 }
 
 func (h *SuspendPerfService) TurnOnDisplay(ctx context.Context, req *emptypb.Empty) (*emptypb.Empty, error) {
