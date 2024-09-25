@@ -161,6 +161,29 @@ func (a *DUTControlAndreiboard) GSCVersionInfo(ctx context.Context) (ver GSCVers
 	}, nil
 }
 
+// ServiceVersionInfo is version information of the currently running service.
+type ServiceVersionInfo struct {
+	ContainerVersion string
+}
+
+// ServiceVersionInfo returns the version information of the currently running service.
+func (a *DUTControlAndreiboard) ServiceVersionInfo(ctx context.Context) (ServiceVersionInfo, error) {
+
+	req := &dutcontrol.ServiceVersionRequest{}
+
+	resp, err := a.client.ServiceVersion(ctx, req)
+	if err != nil {
+		return ServiceVersionInfo{}, errors.Wrap(err, "ServiceVersion request")
+	}
+	if resp.Err != "" {
+		return ServiceVersionInfo{}, errors.Errorf("ServiceVersion operation failed: %s", resp.Err)
+	}
+	log.Printf("Service version info: %v", resp)
+	return ServiceVersionInfo{
+		ContainerVersion: resp.ContainerVersion,
+	}, nil
+}
+
 // StartSession will initialize the devboard and debugger to a known state.
 func (a *DUTControlAndreiboard) StartSession(ctx context.Context, gpioStrap ti50.GpioStrap) (err error) {
 	req := &dutcontrol.StartSessionRequest{}

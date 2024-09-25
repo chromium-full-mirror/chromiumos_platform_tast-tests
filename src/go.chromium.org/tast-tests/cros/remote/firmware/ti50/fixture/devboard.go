@@ -176,6 +176,8 @@ type ResultInfoTags struct {
 	TagTestbedType string `json:"gsc_testbed_type"`
 	// TagCCDSerial is the serial number of the GSC chip (and CCD USB serial).
 	TagCCDSerial string `json:"gsc_ccd_serial"`
+	// TagServiceVersion is the container version of the devboard service.
+	TagServiceVersion string `json:"gsc_devboardservice_version"`
 }
 
 func (i *devboardFixture) SetUp(ctx context.Context, s *testing.FixtState) interface{} {
@@ -198,6 +200,14 @@ func (i *devboardFixture) SetUp(ctx context.Context, s *testing.FixtState) inter
 	} else {
 		i.v.TestbedProperties = p
 	}
+
+	serviceVersion, err := i.v.devboard.ServiceVersionInfo(ctx)
+	if err != nil {
+		s.Log("Could not get service version info: ", err)
+	} else {
+		i.resultInfo.TagServiceVersion = serviceVersion.ContainerVersion
+	}
+
 	i.resultInfo.TagTestbedType = string(i.v.TestbedProperties.TestbedType)
 	i.resultInfo.TagCCDSerial = i.v.TestbedProperties.UsbSerial
 	burl, _ := s.Var(BuildURL)

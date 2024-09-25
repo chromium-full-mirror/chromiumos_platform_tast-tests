@@ -345,6 +345,16 @@ message GscVersionResponse {
   string sha = 7;
 }
 
+message ServiceVersionRequest {}
+
+message ServiceVersionResponse {
+  // Empty indicates no error.
+  string err = 1;
+
+  // The container version, e.g. 1.35.
+  string container_version = 2;
+}
+
 /// One service for a DUT (which is a Suzy and hyperdebug pair)
 service DutControl {
   // Console allows stream access to a serial interface.
@@ -408,6 +418,9 @@ service DutControl {
   rpc GscUsbApSpiBridge(GscUsbApSpiBridgeRequest)
       returns (GscUsbApSpiBridgeResponse);
 
-  // Returns the GSC version infomation of the currently running image
+  // Returns the GSC version information of the currently running image
   rpc GscVersion(GscVersionRequest) returns (GscVersionResponse);
+
+  // Returns the Service version information of the currently running image
+  rpc ServiceVersion(ServiceVersionRequest) returns (ServiceVersionResponse);
 }
