@@ -1,3 +1,7 @@
+// Copyright 2024 The ChromiumOS Authors
+// Use of this source code is governed by a BSD-style license that can be
+// found in the LICENSE file.
+
 package printer
 
 import (
@@ -13,8 +17,9 @@ import (
 
 func init() {
 	testing.AddTest(&testing.Test{
-		Func: Rastertoescpos,
-		Desc: "Tests that the rastertoescpos CUPS filter produces expected output",
+		Func:     Rastertoescpos,
+		Desc:     "Tests that the rastertoescpos CUPS filter produces expected output",
+		Contacts: []string{"project-bolton@google.com", "nmuggli@google.com"},
 		// ChromeOS > Platform > Services > Printing
 		BugComponent: "b:167231",
 		Attr: []string{
@@ -38,7 +43,7 @@ func Rastertoescpos(ctx context.Context, s *testing.State) {
 
 	inputContents, err := ioutil.ReadFile(s.DataPath(input))
 	if err != nil {
-		s.Fatalf("Failed to read input file: %v", err)
+		s.Fatal("Failed to read input file: ", err)
 	}
 
 	escposFilterPath := "/usr/libexec/cups/filter/" + escposFilter
@@ -56,14 +61,14 @@ func Rastertoescpos(ctx context.Context, s *testing.State) {
 	// Capture a pipe to the stdin of the rastertoescpos filter.
 	escposStdin, err := escposCmd.StdinPipe()
 	if err != nil {
-		s.Fatalf("Failed to open stdin pipe: %v", err)
+		s.Fatal("Failed to open stdin pipe: ", err)
 	}
 	// Pass the contents of the given input file into the rastertoescpos filter using
 	// the stdin pipe.
 	go func() {
 		defer escposStdin.Close()
 		if _, err := escposStdin.Write(inputContents); err != nil {
-			s.Errorf("Failed to write to stdin pipe: %v", err)
+			s.Error("Failed to write to stdin pipe: ", err)
 		}
 	}()
 	rastertoescposOutput, _ := escposCmd.Output(testexec.DumpLogOnError)
