@@ -161,7 +161,7 @@ func RoutingDHCPClasslessStatic(ctx context.Context, s *testing.State) {
 		}()
 
 		if err := serverEnv.ConnectToRouterWithPool(ctx, gatewayEnv, testEnv.Pool); err != nil {
-			return nil, errors.Wrap(err, "TODO")
+			return nil, errors.Wrap(err, "failed to connect server env to the router env")
 		}
 
 		// Move the out interface of gatewayEnv into the router netns, and bridge it
