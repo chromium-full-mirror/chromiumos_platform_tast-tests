@@ -67,7 +67,9 @@ func init() {
 						Hardware:     manager.CallboxHardwareCMW,
 						CellularType: manager.CellularTechnologyLTE,
 						Parameters: []manager.CellConfiguration{
-							manager.NewLteCellConfiguration(),
+							manager.NewLteCellConfiguration(
+								manager.RxPowerOption(manager.NewRxPower(-70)),
+							),
 						},
 					},
 				},
@@ -85,13 +87,11 @@ func AssertUISignalQuality(ctx context.Context, s *testing.State) {
 		s.Fatal("Failed to initialize cellular connection: ", err)
 	}
 
-	// get initial power set on the callbox
-	// NOTE: callbox power is in RS EPRE while lte is reported by the modem in RSRP, the two should be nearly identical in this scenario
-	rxResp, err := tf.CallboxManagerClient.FetchRxPower(ctx, &manager.FetchRxPowerRequestBody{})
-	if err != nil {
-		s.Fatal("Failed to fetch callbox downlink power: ", err)
+	req := &manager.ConfigureRxPowerRequestBody{Power: manager.NewRxPower(tc.maxPower)}
+	if err := tf.CallboxManagerClient.ConfigureRxPower(ctx, req); err != nil {
+		s.Fatal("Failed to change callbox uplink power: ", err)
 	}
-	pReq := rxResp.Power
+	pReq := tc.maxPower
 
 	// wait for received power at the DUT to update
 	pMeas, err := waitForSignalPower(ctx, tc, tf.RemoteCellularClient, pReq)
