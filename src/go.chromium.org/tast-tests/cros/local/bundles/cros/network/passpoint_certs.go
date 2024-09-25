@@ -129,12 +129,17 @@ func PasspointCerts(ctx context.Context, s *testing.State) {
 		}
 
 		// Ensure that the added certificate and key are removed.
-		aObjs, err := getAddedPKCS11Objects(ctx, objs)
-		if err != nil {
-			s.Fatal("Failed to get added PKCS#11 objects: ", err)
-		}
-		if len(aObjs) != 0 {
-			s.Fatal("Failed to remove certificate or key, still got ", aObjs)
+		if err := testing.Poll(ctx, func(ctx context.Context) error {
+			aObjs, err := getAddedPKCS11Objects(ctx, objs)
+			if err != nil {
+				return errors.Wrap(err, "failed to get added PKCS#11 objects")
+			}
+			if len(aObjs) != 0 {
+				return errors.Errorf("expected empty added certificate or key, still got %v", aObjs)
+			}
+			return nil
+		}, &testing.PollOptions{Timeout: 5 * time.Second}); err != nil {
+			s.Fatal("Failed to remove certificate or key: ", err)
 		}
 	}
 }
