@@ -471,7 +471,7 @@ func UninstallApp(ctx context.Context, tconn *chrome.TestConn, cr *chrome.Chrome
 	defer osSettings.Close(ctx)
 
 	uninstall := nodewith.Name("Uninstall").Role(role.Button)
-	uninstallWindow := nodewith.NameStartingWith("Uninstall").Role(role.Window)
+	uninstallWindow := nodewith.Role(role.Window).ClassName("AppUninstallDialogView")
 
 	return uiauto.Combine("uninstall the app",
 		ui.LeftClick(uninstall),
