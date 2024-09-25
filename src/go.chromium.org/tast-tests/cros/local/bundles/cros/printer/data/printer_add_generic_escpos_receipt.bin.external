@@ -1,5 +1,5 @@
 {
-  "url": "gs://chromiumos-test-assets-public/tast/cros/printer/printer_add_generic_escpos_receipt_20240911.bin",
-  "size": 44813,
-  "sha256sum": "80af69f870dadc6b22bedbf61df76026979071592ff6e6297e383d438cd83b81"
+  "url": "gs://chromiumos-test-assets-public/tast/cros/printer/printer_add_generic_escpos_receipt_20240925.bin",
+  "size": 44953,
+  "sha256sum": "082940febba887528286d2dc3c4adcfabf1332a72bd398354647a0fc8440f239"
 }
