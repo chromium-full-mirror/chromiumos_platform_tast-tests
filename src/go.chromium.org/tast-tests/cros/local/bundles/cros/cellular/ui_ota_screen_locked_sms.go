@@ -37,7 +37,7 @@ func init() {
 		SoftwareDeps:   []string{"chrome"},
 		Timeout:        10 * time.Minute,
 		VarDeps:        []string{"cellular.gaiaAccountPool"},
-		Vars:           []string{"autotest_host_info_labels"},
+		TestBedDeps:    []string{"sim_state:WORKING"},
 	})
 }
 

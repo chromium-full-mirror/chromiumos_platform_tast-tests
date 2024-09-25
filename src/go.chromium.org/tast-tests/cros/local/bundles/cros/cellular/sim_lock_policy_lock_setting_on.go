@@ -43,7 +43,8 @@ func init() {
 		SearchFlags: []*testing.StringPair{
 			pci.SearchFlag(&policy.DeviceOpenNetworkConfiguration{}, pci.VerifiedFunctionalityOS),
 		},
-		Timeout: 9 * time.Minute,
+		Timeout:     9 * time.Minute,
+		TestBedDeps: []string{"sim_state:WORKING"},
 	})
 }
 

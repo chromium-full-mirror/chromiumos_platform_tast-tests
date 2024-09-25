@@ -36,9 +36,10 @@ func init() {
 		BugComponent: "b:1578688", // ChromeOS > External > Cienet > Manual Test Automation > Test stabilization
 		SoftwareDeps: []string{"chrome"},
 		// Run test only on cellular capable devices that only have one active SIM.
-		Attr:    []string{"group:cellular", "cellular_unstable", "cellular_sim_pinlock", "cellular_e2e"},
-		Fixture: "cellularSIMLockCleared",
-		Timeout: 8 * time.Minute,
+		Attr:        []string{"group:cellular", "cellular_unstable", "cellular_sim_pinlock", "cellular_e2e"},
+		Fixture:     "cellularSIMLockCleared",
+		Timeout:     8 * time.Minute,
+		TestBedDeps: []string{"sim_state:WORKING"},
 	})
 }
 

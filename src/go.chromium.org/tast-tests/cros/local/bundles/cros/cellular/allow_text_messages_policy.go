@@ -51,6 +51,7 @@ func init() {
 		Timeout:        10 * time.Minute,
 		VarDeps:        []string{"cellular.gaiaAccountPool"},
 		Vars:           []string{"autotest_host_info_labels"},
+		TestBedDeps:    []string{"sim_state:WORKING"},
 		Params: []testing.Param{
 			{
 				Name: "policy_value_allow",

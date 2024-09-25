@@ -23,6 +23,7 @@ func init() {
 		Attr:         []string{"group:cellular", "cellular_sim_pinlock"},
 		Fixture:      "cellularSIMLockCleared",
 		Timeout:      5 * time.Minute,
+		TestBedDeps:  []string{"sim_state:WORKING"},
 	})
 }
 

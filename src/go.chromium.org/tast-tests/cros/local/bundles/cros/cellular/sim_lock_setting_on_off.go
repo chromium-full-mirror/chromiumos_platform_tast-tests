@@ -32,6 +32,7 @@ func init() {
 		BugComponent: "b:1578688", // ChromeOS > External > Cienet > Manual Test Automation > Test stabilization
 		Attr:         []string{"group:cellular", "cellular_unstable", "cellular_sim_pinlock", "cellular_e2e"},
 		Fixture:      "cellularSIMLockCleared",
+		TestBedDeps:  []string{"sim_state:WORKING"},
 	})
 }
 
