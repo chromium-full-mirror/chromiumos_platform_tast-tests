@@ -110,7 +110,7 @@ func EnsureDocsOfflineEnabled(ctx context.Context, br *browser.Browser, tconn *c
 		// might pop up. Dismiss the dialog before checking the offline checkbox.
 		if err := uiauto.NamedCombine("dismiss 'Add another Google Account' dialog",
 			uiauto.IfSuccessThen(ui.Exists(addAnotherAccountHeading), ui.LeftClick(closeButton)),
-			uiauto.NamedAction("check if the page redirected to Drive Settings", ui.WithTimeout(5*time.Second).WaitUntilExists(googleDriveRootWebArea)),
+			uiauto.NamedAction("check if the page redirected to Drive Settings", ui.WaitUntilExists(googleDriveRootWebArea)),
 		)(ctx); err != nil {
 			return errors.Wrap(err, "failed to ensure the Drive Settings page exist")
 		}
