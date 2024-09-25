@@ -49,7 +49,13 @@ def _plot_cdfs(pair: analysis_results.PairwiseResult) -> figure.Figure:
     fig, ax = plt.subplots()
     before_values = pair.before.sample.value_map.values()
     after_values = pair.after.sample.value_map.values()
-    sns.ecdfplot(data={"before": before_values, "after": after_values}, ax=ax)
+    sns.ecdfplot(
+        data={
+            pair.before.label(): before_values,
+            pair.after.label(): after_values,
+        },
+        ax=ax,
+    )
     ax.set_xlabel(pair.units())
     return fig
 
@@ -59,12 +65,18 @@ def _plot_box(pair: analysis_results.PairwiseResult) -> figure.Figure:
     before_values = pair.before.sample.value_map.values()
     after_values = pair.after.sample.value_map.values()
     sns.boxplot(
-        data={"before": before_values, "after": after_values},
+        data={
+            pair.before.label(): before_values,
+            pair.after.label(): after_values,
+        },
         color=(0.9, 0.9, 0.9, 0.9),
         ax=ax,
     )
     sns.stripplot(
-        data={"before": before_values, "after": after_values},
+        data={
+            pair.before.label(): before_values,
+            pair.after.label(): after_values,
+        },
         ax=ax,
     )
     ax.set_ylabel(pair.units())
