@@ -20,7 +20,6 @@ import (
 	"go.chromium.org/tast-tests/cros/common/android/ui"
 	"go.chromium.org/tast-tests/cros/common/testexec"
 	"go.chromium.org/tast-tests/cros/local/arc"
-	patchpanel "go.chromium.org/tast-tests/cros/local/network/patchpanel_client"
 	"go.chromium.org/tast/core/errors"
 	"go.chromium.org/tast/core/testing"
 )
@@ -217,63 +216,6 @@ func SetIPv6Enabled(ctx context.Context, d *ui.Device, b bool) error {
 		return errors.Wrap(err, "failed to toggle IPv6 checkbox")
 	}
 	return nil
-}
-
-// PhysicalInterfaces lists all available physical interfaces.
-func PhysicalInterfaces(ctx context.Context) ([]string, error) {
-	pc, err := patchpanel.New(ctx)
-	if err != nil {
-		return nil, errors.Wrap(err, "failed to create patchpanel client")
-	}
-
-	response, err := pc.GetDevices(ctx)
-	if err != nil {
-		return nil, errors.Wrap(err, "failed to get patchpanel devices")
-	}
-
-	var ifnames []string
-	for _, device := range response.Devices {
-		ifnames = append(ifnames, device.PhysIfname)
-	}
-	return ifnames, nil
-}
-
-// SupportedInterfaces gets all physical interfaces and checks the physical interfaces for multicast
-// support. This is done by checking multicast flag followed by IPv4 existence.
-// We don't check for IPv6 as kernel always provision an EUI 64 derived like local address in the fe80::/64 prefix.
-func SupportedInterfaces(ctx context.Context) ([]string, error) {
-	allIfnames, err := PhysicalInterfaces(ctx)
-	if err != nil {
-		return nil, errors.Wrap(err, "failed to get physical interfaces")
-	}
-	var ifnames []string
-	for _, ifname := range allIfnames {
-		iface, err := net.InterfaceByName(ifname)
-		if err != nil {
-			return nil, errors.Wrap(err, "failed to get interface by name")
-		}
-
-		if iface.Flags&net.FlagMulticast == 0 {
-			continue
-		}
-
-		addrs, err := iface.Addrs()
-		if err != nil {
-			return nil, errors.Wrap(err, "failed to get interface addresses")
-		}
-
-		for _, addr := range addrs {
-			ip, _, err := net.ParseCIDR(addr.String())
-			if err != nil {
-				return nil, errors.Wrap(err, "failed to parse interface CIDR")
-			}
-			if ip.To4() != nil {
-				ifnames = append(ifnames, ifname)
-				break
-			}
-		}
-	}
-	return ifnames, nil
 }
 
 // StreamCmd takes a command cmd and stream its output. It search its output for every key in map

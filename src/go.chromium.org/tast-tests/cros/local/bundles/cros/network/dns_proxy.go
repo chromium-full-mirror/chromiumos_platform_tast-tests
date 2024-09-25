@@ -8,17 +8,19 @@ import (
 	"context"
 	"time"
 
+	"go.chromium.org/tast-tests/cros/common/shillconst"
 	"go.chromium.org/tast-tests/cros/local/arc"
 	"go.chromium.org/tast-tests/cros/local/bundles/cros/network/dns"
 	"go.chromium.org/tast-tests/cros/local/crostini"
+	"go.chromium.org/tast-tests/cros/local/dbusutil"
 	"go.chromium.org/tast-tests/cros/local/guestos"
-	"go.chromium.org/tast-tests/cros/local/network"
 	arcnet "go.chromium.org/tast-tests/cros/local/network/arc"
 	"go.chromium.org/tast-tests/cros/local/network/testhooks"
 	"go.chromium.org/tast-tests/cros/local/network/virtualnet/subnet"
 	"go.chromium.org/tast-tests/cros/local/shill"
 	"go.chromium.org/tast-tests/cros/local/vm"
 	"go.chromium.org/tast/core/ctxutil"
+	"go.chromium.org/tast/core/errors"
 	"go.chromium.org/tast/core/testing"
 )
 
@@ -246,7 +248,7 @@ func DNSProxy(ctx context.Context, s *testing.State) {
 		s.Fatal("Failed to get DNS proxy's network namespaces: ", err)
 	}
 
-	physIfs, err := network.PhysicalInterfaces(ctx)
+	physIfs, err := physicalInterfaces(ctx)
 	if err != nil {
 		s.Fatal("Failed to get physical interfaces: ", err)
 	}
@@ -303,4 +305,37 @@ func DNSProxy(ctx context.Context, s *testing.State) {
 			s.Fatalf("Failed to block DNS in condition %s: %v", block, errs)
 		}
 	}
+}
+
+// physicalInterfaces lists all available physical interfaces.
+// This function may not be accurate on multiplexed cellular interface.
+func physicalInterfaces(ctx context.Context) ([]string, error) {
+	m, err := shill.NewManager(ctx)
+	if err != nil {
+		return nil, errors.Wrap(err, "failed to create shill client")
+	}
+
+	devs, err := m.Devices(ctx)
+	if err != nil {
+		return nil, err
+	}
+
+	var ifnames []string
+	for _, dev := range devs {
+		p, err := dev.GetProperties(ctx)
+		if err != nil {
+			if dbusutil.IsDBusError(err, dbusutil.DBusErrorUnknownObject) {
+				// This error is forgivable as a device may go down anytime.
+				continue
+			}
+			return nil, err
+		}
+		if ifname, err := p.GetString(shillconst.DevicePropertyInterface); err != nil {
+			testing.ContextLogf(ctx, "Error getting the device interface %q: %v", dev, err)
+			continue
+		} else {
+			ifnames = append(ifnames, ifname)
+		}
+	}
+	return ifnames, nil
 }
