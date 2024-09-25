@@ -66,9 +66,8 @@ func isRouterConnected(ctx context.Context, interfaceName string) (bool, error) 
 		return false, nil
 	} else if strings.Contains(string(iwLinkOut), "Connected to") {
 		return true, nil
-	} else {
-		return false, errors.Errorf("unexpected `iw %s link` output: %s", interfaceName, iwLinkOut)
 	}
+	return false, errors.Errorf("unexpected `iw %s link` output: %s", interfaceName, iwLinkOut)
 }
 
 func ProbeWifiInfo(ctx context.Context, s *testing.State) {
