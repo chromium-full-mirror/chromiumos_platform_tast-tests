@@ -10,6 +10,7 @@ import (
 	"fmt"
 	"net"
 	"os"
+	"path/filepath"
 	"strconv"
 	"strings"
 	"time"
@@ -21,6 +22,7 @@ import (
 	pb "go.chromium.org/tast-tests/cros/services/cros/firmware"
 	"go.chromium.org/tast/core/errors"
 	"go.chromium.org/tast/core/ssh"
+	"go.chromium.org/tast/core/ssh/linuxssh"
 	"go.chromium.org/tast/core/testing"
 )
 
@@ -225,8 +227,9 @@ type Value struct {
 
 // impl contains fields that are useful for Fixture methods.
 type impl struct {
-	value       *BaseValue
-	disallowSSH bool
+	value        *BaseValue
+	disallowSSH  bool
+	checkECCrash bool
 }
 
 type firmwareBackupAPImpl struct {
@@ -299,6 +302,8 @@ func (i *impl) SetUp(ctx context.Context, s *testing.FixtState) interface{} {
 
 	s.Log("Creating a new firmware Helper instance for fixture: ", i.String())
 	i.initHelper(ctx, s)
+
+	i.checkECCrash = true
 
 	return i.value
 }
@@ -439,6 +444,8 @@ func (i *impl) Reset(ctx context.Context) error {
 	i.value.Helper.CloseServo(ctx)
 	// Close the RPC client in case the DUT rebooted at some point, and it doesn't recover well.
 	i.value.Helper.CloseRPCConnection(ctx)
+	// Reset after every test to retry for next test.
+	i.checkECCrash = true
 	return nil
 }
 
@@ -460,6 +467,16 @@ func (i *bootModeImpl) Reset(ctx context.Context) error {
 	// Close the RPC client in case the DUT rebooted at some point, and it doesn't recover well.
 	i.value.Helper.CloseRPCConnection(ctx)
 	return nil
+}
+
+// logECCrash returns a log string with a searchable prefix to find EC crash check issues in testhaus.
+// Allows optional error(s) to be passed in.
+func logECCrash(msg string, s *testing.FixtTestState, errs ...error) string {
+	res := fmt.Sprintf("EC crash error in %s: %s", s.TestName(), msg)
+	for _, err := range errs {
+		res = fmt.Sprintf("%s, with error: %v", res, err)
+	}
+	return res
 }
 
 // PreTest is called by the framework before each test to do a light-weight set up for the test.
@@ -532,6 +549,22 @@ func (i *impl) PreTest(ctx context.Context, s *testing.FixtTestState) {
 			s.Fatal("Sending ec command failed: ", err)
 		}
 		s.Log("EC is active")
+	}
+
+	// Only get/check EC crash logs if ssh is allow, has cros EC, and is explicitly enabled..
+	if !i.disallowSSH && supportCrosEC == "yes" && i.checkECCrash {
+		connectTimeout, cancel := context.WithTimeout(ctx, 5*time.Second)
+		defer cancel()
+		if err := i.value.Helper.WaitConnect(connectTimeout); err != nil {
+			s.Log(logECCrash("failed to connect to dut before test to clear ec crashes", s, err))
+		}
+
+		s.Logf("Updating EC crash cache before test %s", s.TestName())
+		if err := i.value.Helper.UpdateECCrashCache(ctx); err != nil {
+			s.Log(logECCrash("failed to update EC crash cache", s, err))
+			// Couldn't update EC cache, don't check for crash files in post test.
+			i.checkECCrash = false
+		}
 	}
 }
 
@@ -702,6 +735,57 @@ func (i *bootModeImpl) PreTest(ctx context.Context, s *testing.FixtTestState) {
 func (i *impl) PostTest(ctx context.Context, s *testing.FixtTestState) {
 	if err := i.value.Helper.RequireServo(ctx); err != nil {
 		s.Fatal("Failed to connect to servod: ", err)
+	}
+
+	supportCrosEC, err := i.value.Helper.Servo.GetString(ctx, servo.SupportCrosECComm)
+	if err != nil {
+		s.Logf("Failed to get value for %s: %v", servo.SupportCrosECComm, err)
+	}
+
+	// Check EC crash logs if ssh is allowed and has cros EC and pretest successfully cached previous crash files.
+	if !i.disallowSSH && supportCrosEC == "yes" && i.checkECCrash {
+		checkAndLogECCrashes(ctx, s, i)
+	}
+}
+
+func checkAndLogECCrashes(ctx context.Context, s *testing.FixtTestState, i *impl) {
+	connectTimeout, cancel := context.WithTimeout(ctx, 5*time.Second)
+	defer cancel()
+	if err := i.value.Helper.WaitConnect(connectTimeout); err != nil {
+		s.Log(logECCrash("failed to reconnect to dut to check ec crashes after test", s, err))
+	}
+
+	crashLogs, err := i.value.Helper.GetNewECCrashes(ctx)
+	if err != nil {
+		s.Fatal(logECCrash("failed to get latest ec crash logs", s, err))
+	}
+	if len(crashLogs) == 0 {
+		s.Logf("No unexpected EC crashes during %s", s.TestName())
+		return
+	}
+
+	for crashName, listOfCrashFiles := range crashLogs {
+		crashSaveDir := filepath.Join(s.OutDir(), crashName)
+		if err := os.MkdirAll(crashSaveDir, os.ModePerm); err != nil {
+			s.Fatal(logECCrash("found crashes but failed to create dir to save crash logs", s, err))
+		}
+		for _, f := range listOfCrashFiles {
+			saveFilePath := filepath.Join(crashSaveDir, strings.TrimPrefix(f, firmware.ECCrashBaseDir))
+			if err := linuxssh.GetFile(ctx, i.value.Helper.DUT.Conn(), f, saveFilePath, linuxssh.DereferenceSymlinks); err != nil {
+				msg := fmt.Sprintf("failed to save log for file %s", f)
+				s.Error(logECCrash(msg, s))
+			}
+		}
+		logFilePath := firmware.ECCrashBaseDir + crashName + ".eccrash"
+		out, err := i.value.Helper.Reporter.CatFile(ctx, logFilePath)
+		if err != nil {
+			msg := fmt.Sprintf("failed to read .eccrash file %s to print in log", logFilePath)
+			s.Log(logECCrash(msg, s, err))
+		}
+		// The .eccrash file is of predictable length (and not too long), just print it out.
+		printStr := string(out)
+		msg := fmt.Sprintf("found unexpected EC Crash, saved ec crash log to %s: %s)", crashSaveDir, printStr)
+		s.Error(logECCrash(msg, s))
 	}
 }
 

@@ -122,6 +122,10 @@ func ECWatchdog(ctx context.Context, s *testing.State) {
 		if watchdogPanicReason.MatchString(panicInfo) || watchdogWarnPanicReason.MatchString(panicInfo) {
 			s.Fatal("Failed to clear panicinfo")
 		}
+		if err := h.UpdateECCrashCache(ctx); err != nil {
+			s.Fatal("Failed to update EC crash file cache after test: ", err)
+		}
+
 	}
 
 	if oldBootID, err = h.Reporter.BootID(ctx); err != nil {
@@ -264,6 +268,8 @@ func ECWatchdog(ctx context.Context, s *testing.State) {
 	if !watchdogPanicReason.MatchString(panicInfo) {
 		s.Fatal("Watchdog panic reason missing in panicinfo")
 	}
-
+	if err := h.UpdateECCrashCache(ctx); err != nil {
+		s.Fatal("Failed to update EC crash file cache after test: ", err)
+	}
 	s.Logf("Boot ID old: %s, new: %s", newBootID, oldBootID)
 }

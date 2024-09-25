@@ -132,6 +132,9 @@ type Helper struct {
 
 	// powerunitHostname, powerunitOutlet, hydraHostname identify the managed power outlet for the DUT.
 	powerunitHostname, powerunitOutlet, hydraHostname string
+
+	// eccrashFileCache holds a cache of the current ec crash files in /var/spool/crash/ (without file ext).
+	ecCrashFileCache []string
 }
 
 // WaitConnectOption includes situations to wait to connect from.
@@ -161,6 +164,9 @@ const (
 	// as that running currently on the DUT.
 	DontFlashIfSameMilestone SetupUSBOption = iota
 )
+
+// ECCrashBaseDir is the path to a dir on DUT where ec crash files are stored.
+const ECCrashBaseDir = "/var/spool/crash/"
 
 // NewHelper creates a new Helper object with info from testing.State.
 // For tests that do not use a certain Helper aspect (e.g. RPC or Servo), it is OK to pass null-values (nil or "").
@@ -2451,4 +2457,64 @@ func (h *Helper) ReturnToDeveloperScreen(ctx context.Context) error {
 		return errors.Wrapf(err, "failed to sleep for %v second", h.Config.KeypressDelay)
 	}
 	return nil
+}
+
+// GetAllECCrashFiles finds all files in /var/spool/crash that start with embedded_controller*.
+// Since there are multiple files with the same name/different extensions,
+// it maps the base name (without ext) to all filepaths with that base name.
+func (h *Helper) GetAllECCrashFiles(ctx context.Context) (map[string][]string, error) {
+	if err := h.RequireRPCClient(ctx); err != nil {
+		return nil, errors.Wrap(err, "failed to connect to the RPC service on the DUT")
+	}
+	fs := dutfs.NewClient(h.RPCClient.Conn)
+
+	files, err := fs.ReadDir(ctx, ECCrashBaseDir)
+	if err != nil {
+		return nil, errors.Wrapf(err, "failed to list files at %s", ECCrashBaseDir)
+	}
+
+	var fileMap = make(map[string][]string)
+	for _, f := range files {
+		if strings.HasPrefix(f.Name(), "embedded_controller") {
+			fileWithoutExt := strings.TrimSuffix(f.Name(), filepath.Ext(f.Name()))
+			filePath := ECCrashBaseDir + f.Name()
+			if _, ok := fileMap[fileWithoutExt]; ok {
+				fileMap[fileWithoutExt] = append(fileMap[fileWithoutExt], filePath)
+			} else {
+				fileMap[fileWithoutExt] = []string{filePath}
+			}
+		}
+	}
+
+	return fileMap, nil
+}
+
+// UpdateECCrashCache updates the ecCrashFileCache to include all the current existing ec crash files on the DUT.
+func (h *Helper) UpdateECCrashCache(ctx context.Context) error {
+	crashFiles, err := h.GetAllECCrashFiles(ctx)
+	if err != nil {
+		return err
+	}
+	// Clear existing cache because some existing files may be deleted.
+	h.ecCrashFileCache = make([]string, 0)
+	for file := range crashFiles {
+		h.ecCrashFileCache = append(h.ecCrashFileCache, file)
+	}
+	return nil
+}
+
+// GetNewECCrashes gets the most recent ec crashes in /var/spool/crash on the DUT that aren't in the cache.
+// It returns a map of the crash and list of files associated with that crash.
+func (h *Helper) GetNewECCrashes(ctx context.Context) (map[string][]string, error) {
+	crashFiles, err := h.GetAllECCrashFiles(ctx)
+	if err != nil {
+		return nil, err
+	}
+
+	// Remove cached files only keep new ones.
+	for _, file := range h.ecCrashFileCache {
+		delete(crashFiles, file)
+	}
+
+	return crashFiles, err
 }

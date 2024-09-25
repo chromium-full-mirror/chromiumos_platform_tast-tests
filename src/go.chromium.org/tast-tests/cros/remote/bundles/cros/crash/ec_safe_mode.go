@@ -225,6 +225,10 @@ func ECSafeMode(ctx context.Context, s *testing.State) {
 	if err != nil {
 		s.Fatal("Failed to connect to the RPC service on the DUT: ", err)
 	}
+	if err := h.UpdateECCrashCache(ctx); err != nil {
+		s.Fatal("Failed to update EC crash file cache after test: ", err)
+	}
+
 	fs = crash_service.NewFixtureServiceClient(cl.Conn)
 
 	const base = `embedded_controller\.\d{8}\.\d{6}\.\d+\.0`
