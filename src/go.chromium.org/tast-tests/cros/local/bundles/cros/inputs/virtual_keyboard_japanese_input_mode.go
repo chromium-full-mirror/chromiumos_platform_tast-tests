@@ -98,7 +98,7 @@ func VirtualKeyboardJapaneseInputMode(ctx context.Context, s *testing.State) {
 		output:  "ち",
 	}
 
-	omniboxFinder := nodewith.Role(role.TextField).Attribute("inputType", "url")
+	omniboxFinder := nodewith.Role(role.TextField).ClassName("OmniboxViewViews")
 	omniboxFirstResultFinder := nodewith.ClassName("OmniboxResultView").First()
 	settingPageHeaderFinder := nodewith.Role(role.Heading).Name("Japanese input settings")
 
