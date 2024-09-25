@@ -399,34 +399,26 @@ func SliderDiskSizes(ctx context.Context, tconn *chrome.TestConn, slider *nodewi
 	}
 
 	// Get the current size.
-	curSize, err = ParseDiskSize(sliderNode.HTMLAttributes["aria-valuenow"])
+	var units uint64
+	curSize, units, err = ParseDiskSize(sliderNode.Value)
 	if err != nil {
 		return 0, 0, 0, errors.Wrap(err, "failed to retrieve the current disk size")
 	}
 
-	// Get the maximum size.
-	maxSize, err = ParseDiskSize(sliderNode.HTMLAttributes["aria-valuemax"])
-	if err != nil {
-		return 0, 0, 0, errors.Wrap(err, "failed to retrieve the maximum disk size")
-	}
-
-	// Get the minimum size.
-	minSize, err = ParseDiskSize(sliderNode.HTMLAttributes["aria-valuemin"])
-	if err != nil {
-		return 0, 0, 0, errors.Wrap(err, "failed to retrieve the minimum disk size")
-	}
+	maxSize = uint64(sliderNode.MaxValue) * units
+	minSize = uint64(sliderNode.MinValue) * units
 	return curSize, maxSize, minSize, nil
 }
 
 // ParseDiskSize parses disk size from a string like "xx.x GB" to a uint64 value in bytes.
-func ParseDiskSize(sizeString string) (uint64, error) {
+func ParseDiskSize(sizeString string) (uint64, uint64, error) {
 	parts := strings.Split(sizeString, " ")
 	if len(parts) != 2 {
-		return 0, errors.Errorf("failed to parse disk size from %s: does not have exactly 2 space separated parts", sizeString)
+		return 0, 0, errors.Errorf("failed to parse disk size from %s: does not have exactly 2 space separated parts", sizeString)
 	}
 	num, err := strconv.ParseFloat(parts[0], 64)
 	if err != nil {
-		return 0, errors.Wrapf(err, "failed to parse disk size from %s", sizeString)
+		return 0, 0, errors.Wrapf(err, "failed to parse disk size from %s", sizeString)
 	}
 	unitMap := map[string]float64{
 		"B":  SizeB,
@@ -437,9 +429,9 @@ func ParseDiskSize(sizeString string) (uint64, error) {
 	}
 	units, ok := unitMap[parts[1]]
 	if !ok {
-		return 0, errors.Errorf("failed to parse disk size from %s: does not have a recognized units string", sizeString)
+		return 0, 0, errors.Errorf("failed to parse disk size from %s: does not have a recognized units string", sizeString)
 	}
-	return uint64(num * units), nil
+	return uint64(num * units), uint64(units), nil
 }
 
 // UpdateDiskSizeSliderWithJS uses JS function to change the disk size slider
@@ -597,11 +589,11 @@ func (s *Settings) VerifyResizeResults(ctx context.Context, cont *vm.Container, 
 		return errors.Wrap(err, "failed to get the disk size from the Settings app after resizing")
 	}
 
-	bytesOnSlider, err := ParseDiskSize(sizeOnSlider)
+	bytesOnSlider, _, err := ParseDiskSize(sizeOnSlider)
 	if err != nil {
 		return err
 	}
-	bytesOnSetting, err := ParseDiskSize(sizeOnSettings)
+	bytesOnSetting, _, err := ParseDiskSize(sizeOnSettings)
 	if err != nil {
 		return err
 	}

@@ -64,7 +64,7 @@ func ResizeSpaceConstrained(ctx context.Context, s *testing.State) {
 	if err != nil {
 		s.Fatal("Failed to get current disk size: ", err)
 	}
-	currSizeBytes, err := settings.ParseDiskSize(currSizeStr)
+	currSizeBytes, _, err := settings.ParseDiskSize(currSizeStr)
 	if err != nil {
 		s.Fatalf("Failed to parse disk size string %s: %v", currSizeStr, err)
 	}

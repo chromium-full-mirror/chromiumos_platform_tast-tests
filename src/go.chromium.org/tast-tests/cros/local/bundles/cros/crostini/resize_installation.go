@@ -181,7 +181,7 @@ func verifyDiskSize(ctx context.Context, tconn *chrome.TestConn, cr *chrome.Chro
 	if err != nil {
 		return errors.Wrap(err, "failed to get the disk size from the Settings app")
 	}
-	parsedSize, err := settings.ParseDiskSize(sizeOnSettings)
+	parsedSize, _, err := settings.ParseDiskSize(sizeOnSettings)
 	if err != nil {
 		return errors.Wrap(err, "failed to get result disk size in bytes")
 	}

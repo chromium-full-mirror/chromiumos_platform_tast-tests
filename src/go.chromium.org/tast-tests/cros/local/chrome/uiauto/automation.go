@@ -48,6 +48,8 @@ const (
 				selected: node.selected,
 				state: node.state,
 				value: node.value,
+				minValueForRange: node.minValueForRange,
+				maxValueForRange: node.maxValueForRange,
 			}`
 )
 
@@ -271,6 +273,8 @@ type NodeInfo struct {
 	Selected       bool                    `json:"selected,omitempty"`
 	State          map[state.State]bool    `json:"state,omitempty"`
 	Value          string                  `json:"value,omitempty"`
+	MinValue       float64                 `json:"minValueForRange,omitempty"`
+	MaxValue       float64                 `json:"maxValueForRange,omitempty"`
 }
 
 // Info returns the information for the node found by the input finder.
