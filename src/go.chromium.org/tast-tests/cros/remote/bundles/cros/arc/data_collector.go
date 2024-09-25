@@ -158,19 +158,6 @@ func init() {
 		// then disabling this in Android PFQ. At this time missing the data is allowed
 		// for the grace period however it will be a build stopper after.
 		Params: []testing.Param{{
-			ExtraAttr:         []string{"group:arc-data-collector"},
-			ExtraSoftwareDeps: []string{"android_p"},
-			Val: testParam{
-				vmEnabled:               false,
-				androidPackage:          "android-container-pi",
-				upload:                  true,
-				uploadPackagesReference: false,
-				uprevBranch:             false,
-				dexOptCacheGen:          false,
-				dataDir:                 "",
-				tmpCachesDir:            "",
-			},
-		}, {
 			Name:              "container_r",
 			ExtraAttr:         []string{"group:arc-data-collector"},
 			ExtraSoftwareDeps: []string{"android_container_r"},
@@ -199,19 +186,6 @@ func init() {
 				tmpCachesDir:            tmpVMCacheArtifactsRoot,
 			},
 		}, {
-			Name:              "local",
-			ExtraSoftwareDeps: []string{"android_p"},
-			Val: testParam{
-				vmEnabled:               false,
-				androidPackage:          "android-container-pi",
-				upload:                  false,
-				uploadPackagesReference: false,
-				uprevBranch:             false,
-				dexOptCacheGen:          false,
-				dataDir:                 "/tmp/data_collector",
-				tmpCachesDir:            "",
-			},
-		}, {
 			Name:              "container_r_local",
 			ExtraSoftwareDeps: []string{"android_container_r"},
 			Val: testParam{
@@ -236,40 +210,6 @@ func init() {
 				dexOptCacheGen:          true,
 				dataDir:                 "/tmp/data_collector",
 				tmpCachesDir:            tmpVMCacheArtifactsRoot,
-			},
-		}, {
-			// branch_uprev versions are designed to provide caches uprev functionality
-			// on release branches. For the main branch, uprev is done automatically by
-			// passing PFQ where data collector is scheduled for execution. Release
-			// branches don't have PFQ running and these configurations provide a
-			// workaround. This passes DataCollector as usual and as a result caches
-			// for the particular version are uploaded. However, this itself does not
-			// bring caches to the official build once this is generated post-factum.
-			// Instead we use here pin caches functionality to force using caches for
-			// particular version at specific branch. This should not be the problem
-			// for the release branch once it has only minor changes. As a result, for
-			// release branch builds, the most recent version of caches would be used.
-			// Note, pin does not distinguish CPU ABI caches os uprev happens only in
-			// case all possible CPU ABI caches are generated.
-			// Limit the run for several key models only once caches are model
-			// agnostic.
-			// Follow the policy 2+ models per ARCH of different boards.
-			// 8GB+ if possible for ureadahead generation.
-			Name:              "branch_uprev",
-			ExtraAttr:         []string{"group:mainline", "informational"},
-			ExtraSoftwareDeps: []string{"android_p"},
-			// x86-64 ARC: pyro(reef-Intel), sand(reef-Intel), snappy(reef-Intel)
-			ExtraHardwareDeps: hwdep.D(hwdep.Model("pyro", "sand", "snappy")),
-			Val: testParam{
-				vmEnabled:                     false,
-				androidPackage:                "android-container-pi",
-				upload:                        true,
-				uploadPackagesReference:       false,
-				uprevBranch:                   true,
-				dexOptCacheGen:                false,
-				requiredCPUAbisForBranchUprev: []string{"x86_64-houdini"},
-				dataDir:                       "/tmp/data_collector",
-				tmpCachesDir:                  "",
 			},
 		}, {
 			Name:              "container_r_branch_uprev",
@@ -428,7 +368,7 @@ func DataCollector(ctx context.Context, s *testing.State) {
 
 	// Create temp caches directory before starting generation.
 	tmpCachesDir := param.tmpCachesDir
-	// TODO(b/279554423): Eventually enable this for container-rvc, vm-rvc, pi-arc,
+	// TODO(b/279554423): Eventually enable this for container-rvc, vm-rvc,
 	// devices after initial experiments are conducted on local and vm-tm configs.
 	useDevCaches := (tmpCachesDir != "" && (!param.upload || param.androidPackage == "android-vm-tm"))
 	if useDevCaches {
