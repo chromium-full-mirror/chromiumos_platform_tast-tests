@@ -24,6 +24,10 @@ type vpnReconnectParams struct {
 	vpnType vpn.Type
 	// If the VPN type reports disconnect when underlying network is down.
 	expectVPNDownOnPhysicalDown bool
+	// Restart server to apply new config after underlying network is down, to
+	// verify that the new config takes effect after VPN is reconnected. This
+	// option is only meaningful is the configuration is pushed from the server.
+	pushNewConfigAfterPhysicalDown bool
 	// Timeout before VPN reports disconnect when underlying network is down.
 	vpnDownTimeout time.Duration
 }
@@ -44,6 +48,16 @@ func init() {
 				vpnType:                     vpn.TypeOpenVPN,
 				expectVPNDownOnPhysicalDown: true,
 				vpnDownTimeout:              40 * time.Second,
+			},
+			Fixture:           "shillSimulatedWiFiWithCerts.ehide",
+			ExtraHardwareDeps: hwdep.D(hwdep.HasTpm()),
+		}, {
+			Name: "openvpn_new_config",
+			Val: vpnReconnectParams{
+				vpnType:                        vpn.TypeOpenVPN,
+				expectVPNDownOnPhysicalDown:    true,
+				pushNewConfigAfterPhysicalDown: true,
+				vpnDownTimeout:                 40 * time.Second,
 			},
 			Fixture:           "shillSimulatedWiFiWithCerts.ehide",
 			ExtraHardwareDeps: hwdep.D(hwdep.HasTpm()),
@@ -108,7 +122,11 @@ func VPNPhysicalNetworkReconnect(ctx context.Context, s *testing.State) {
 
 	// Create VPN service and server. Do not use StartConnection() here since we
 	// may start a different server later.
-	config := vpn.NewConfig(param.vpnType, vpn.WithCertVals(certVals))
+	config := vpn.NewConfig(
+		param.vpnType,
+		vpn.WithCertVals(certVals),
+		vpn.WithIPType(vpn.IPTypeIPv4),
+	)
 	server, err := vpn.StartServerWithConfig(ctx, serverEnv, config)
 	if err != nil {
 		s.Fatal("Failed to start VPN server: ", err)
@@ -169,9 +187,30 @@ func VPNPhysicalNetworkReconnect(ctx context.Context, s *testing.State) {
 			s.Fatal("Expected ping fail after disconnect: ", err)
 		}
 	}
-	s.Log("Verified VPN is disconnected. Reconnecting physical network")
 
-	// Reconnect WiFi.
+	s.Log("Verified VPN is disconnected")
+
+	if param.pushNewConfigAfterPhysicalDown {
+		newIPSubnet, err := pool.AllocNextIPv4Subnet()
+		if err != nil {
+			s.Fatal("Failed to allocate IPv4 subnet for new VPN config: ", err)
+		}
+		newConfig := vpn.NewConfig(
+			param.vpnType,
+			vpn.WithCertVals(certVals),
+			vpn.WithIPv4Subnet(newIPSubnet),
+		)
+		if err := server.StopServer(ctx); err != nil {
+			s.Fatal("Failed to stop VPN server: ", err)
+		}
+		server, err = vpn.StartServerWithConfig(ctx, serverEnv, newConfig)
+		if err != nil {
+			s.Fatal("Failed to restart VPN server with new config: ", err)
+		}
+		// Defer cleanup for server is set up above.
+	}
+
+	s.Log("Reconnecting physical network")
 	if err := wifi.Service.Connect(ctx); err != nil {
 		s.Fatal("Failed to reconnect WiFi: ", err)
 	}
