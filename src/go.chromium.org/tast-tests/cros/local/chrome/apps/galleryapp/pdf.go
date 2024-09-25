@@ -16,7 +16,7 @@ import (
 )
 
 var (
-	pdfCanvas            = nodewith.Role(role.GraphicsDocument).Ancestor(RootFinder)
+	pdfCanvas            = nodewith.Role(role.Canvas).Ancestor(RootFinder).First()
 	drawSignatureCanvas  = nodewith.Name("Draw your signature in this area").Role(role.Canvas).Ancestor(RootFinder)
 	placeSignatureButton = nodewith.Name("Place signature").Role(role.Button).Ancestor(RootFinder)
 )
