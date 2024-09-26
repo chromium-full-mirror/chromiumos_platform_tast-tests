@@ -159,6 +159,12 @@ func APSupportedRates(ctx context.Context, s *testing.State) {
 				if dot11.Type == layers.Dot11TypeCtrlRTS {
 					return false
 				}
+				// Skip CF-End
+				// A CF-End frame may use a rate in BSSBasicRateSet or the mandatory
+				// rate set, see b/366273190.
+				if dot11.Type == layers.Dot11TypeCtrlCFEnd {
+					return false
+				}
 				return true
 			},
 		),
