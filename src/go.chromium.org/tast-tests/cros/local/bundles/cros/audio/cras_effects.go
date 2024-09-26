@@ -76,9 +76,9 @@ func init() {
 			{
 				Name: "dsp_aec",
 				Val: crasEffectsParam{
-					noiseCancellationEnabled: true,
-					inputDevice:              "INTERNAL_MIC",
-					outputDevice:             "INTERNAL_SPEAKER",
+					voiceIsolationUIEnabled: true,
+					inputDevice:             "INTERNAL_MIC",
+					outputDevice:            "INTERNAL_SPEAKER",
 					captureClients: []captureConfig{
 						{effects: 0x11, expectAPEffects: nil},
 					},
@@ -94,9 +94,9 @@ func init() {
 			{
 				Name: "dsp_0x0_conflict",
 				Val: crasEffectsParam{
-					noiseCancellationEnabled: true,
-					inputDevice:              "INTERNAL_MIC",
-					outputDevice:             "INTERNAL_SPEAKER",
+					voiceIsolationUIEnabled: true,
+					inputDevice:             "INTERNAL_MIC",
+					outputDevice:            "INTERNAL_SPEAKER",
 					captureClients: []captureConfig{
 						{effects: 0x0, expectAPEffects: []string{apNC}},
 					},
@@ -112,9 +112,9 @@ func init() {
 			{
 				Name: "dsp_0x10_conflict", // 0x10 is exactly the same as 0x0.
 				Val: crasEffectsParam{
-					noiseCancellationEnabled: true,
-					inputDevice:              "INTERNAL_MIC",
-					outputDevice:             "INTERNAL_SPEAKER",
+					voiceIsolationUIEnabled: true,
+					inputDevice:             "INTERNAL_MIC",
+					outputDevice:            "INTERNAL_SPEAKER",
 					captureClients: []captureConfig{
 						{effects: 0x10, expectAPEffects: []string{apNC}},
 					},
@@ -130,9 +130,9 @@ func init() {
 			{
 				Name: "dsp_0x10_0x11_conflict",
 				Val: crasEffectsParam{
-					noiseCancellationEnabled: true,
-					inputDevice:              "INTERNAL_MIC",
-					outputDevice:             "INTERNAL_SPEAKER",
+					voiceIsolationUIEnabled: true,
+					inputDevice:             "INTERNAL_MIC",
+					outputDevice:            "INTERNAL_SPEAKER",
 					captureClients: []captureConfig{
 						{effects: 0x10, expectAPEffects: []string{apNC}},
 						{effects: 0x11, expectAPEffects: []string{apAEC, apNC}},
@@ -149,9 +149,9 @@ func init() {
 			{
 				Name: "dsp_0x0_dont_care",
 				Val: crasEffectsParam{
-					noiseCancellationEnabled: true,
-					inputDevice:              "INTERNAL_MIC",
-					outputDevice:             "INTERNAL_SPEAKER",
+					voiceIsolationUIEnabled: true,
+					inputDevice:             "INTERNAL_MIC",
+					outputDevice:            "INTERNAL_SPEAKER",
 					captureClients: []captureConfig{
 						{
 							effects:         0x0,
@@ -171,9 +171,9 @@ func init() {
 			{
 				Name: "dsp_aec_0x0_conflict",
 				Val: crasEffectsParam{
-					noiseCancellationEnabled: true,
-					inputDevice:              "INTERNAL_MIC",
-					outputDevice:             "INTERNAL_SPEAKER",
+					voiceIsolationUIEnabled: true,
+					inputDevice:             "INTERNAL_MIC",
+					outputDevice:            "INTERNAL_SPEAKER",
 					captureClients: []captureConfig{
 						{effects: 0x11, expectAPEffects: []string{apNC, apAEC}},
 						{effects: 0x0, expectAPEffects: []string{apNC}},
@@ -190,9 +190,9 @@ func init() {
 			{
 				Name: "dsp_aec_0x0_dont_care",
 				Val: crasEffectsParam{
-					noiseCancellationEnabled: true,
-					inputDevice:              "INTERNAL_MIC",
-					outputDevice:             "INTERNAL_SPEAKER",
+					voiceIsolationUIEnabled: true,
+					inputDevice:             "INTERNAL_MIC",
+					outputDevice:            "INTERNAL_SPEAKER",
 					captureClients: []captureConfig{
 						{effects: 0x11, expectAPEffects: nil},
 						{
@@ -213,9 +213,9 @@ func init() {
 			{
 				Name: "dsp_echo_ref_blocked_by_selection",
 				Val: crasEffectsParam{
-					noiseCancellationEnabled: true,
-					inputDevice:              "INTERNAL_MIC",
-					outputDevice:             "ALSA_LOOPBACK",
+					voiceIsolationUIEnabled: true,
+					inputDevice:             "INTERNAL_MIC",
+					outputDevice:            "ALSA_LOOPBACK",
 					captureClients: []captureConfig{
 						{effects: 0x11, expectAPEffects: []string{apAEC, apNC}},
 					},
@@ -231,10 +231,10 @@ func init() {
 			{
 				Name: "dsp_echo_ref_blocked_by_playback",
 				Val: crasEffectsParam{
-					noiseCancellationEnabled: true,
-					inputDevice:              "INTERNAL_MIC",
-					outputDevice:             "INTERNAL_SPEAKER",
-					addPlaybackPinDevice:     "ALSA_LOOPBACK",
+					voiceIsolationUIEnabled: true,
+					inputDevice:             "INTERNAL_MIC",
+					outputDevice:            "INTERNAL_SPEAKER",
+					addPlaybackPinDevice:    "ALSA_LOOPBACK",
 					captureClients: []captureConfig{
 						{effects: 0x11, expectAPEffects: []string{apAEC, apNC}},
 					},
@@ -250,10 +250,10 @@ func init() {
 			{
 				Name: "dsp_echo_ref_not_blocked_by_playback",
 				Val: crasEffectsParam{
-					noiseCancellationEnabled: true,
-					inputDevice:              "INTERNAL_MIC",
-					outputDevice:             "INTERNAL_SPEAKER",
-					addPlaybackPinDevice:     "INTERNAL_SPEAKER",
+					voiceIsolationUIEnabled: true,
+					inputDevice:             "INTERNAL_MIC",
+					outputDevice:            "INTERNAL_SPEAKER",
+					addPlaybackPinDevice:    "INTERNAL_SPEAKER",
 					captureClients: []captureConfig{
 						{effects: 0x11, expectAPEffects: nil},
 					},
@@ -270,9 +270,9 @@ func init() {
 			{
 				Name: "nc_both_prefer_dsp",
 				Val: crasEffectsParam{
-					noiseCancellationEnabled: true,
-					inputDevice:              "INTERNAL_MIC",
-					outputDevice:             "INTERNAL_SPEAKER",
+					voiceIsolationUIEnabled: true,
+					inputDevice:             "INTERNAL_MIC",
+					outputDevice:            "INTERNAL_SPEAKER",
 					captureClients: []captureConfig{
 						{
 							effects:         0x11, // Set AEC on to avoid blocking DSP NC.
@@ -291,9 +291,9 @@ func init() {
 			{
 				Name: "nc_both_disabled",
 				Val: crasEffectsParam{
-					noiseCancellationEnabled: false,
-					inputDevice:              "INTERNAL_MIC",
-					outputDevice:             "INTERNAL_SPEAKER",
+					voiceIsolationUIEnabled: false,
+					inputDevice:             "INTERNAL_MIC",
+					outputDevice:            "INTERNAL_SPEAKER",
 					captureClients: []captureConfig{
 						{
 							effects:         0x11, // Set AEC on to avoid blocking DSP NC.
@@ -312,9 +312,9 @@ func init() {
 			{
 				Name: "nc_both_fallback_ap",
 				Val: crasEffectsParam{
-					noiseCancellationEnabled: true,
-					inputDevice:              "INTERNAL_MIC",
-					outputDevice:             "ALSA_LOOPBACK", // Using non-internal speaker should block DSP AEC.
+					voiceIsolationUIEnabled: true,
+					inputDevice:             "INTERNAL_MIC",
+					outputDevice:            "ALSA_LOOPBACK", // Using non-internal speaker should block DSP AEC.
 					captureClients: []captureConfig{
 						{
 							effects:         0x11, // Set AEC on to avoid blocking DSP NC.
@@ -333,9 +333,9 @@ func init() {
 			{
 				Name: "nc_both_fallback_ap_disabled",
 				Val: crasEffectsParam{
-					noiseCancellationEnabled: false,
-					inputDevice:              "INTERNAL_MIC",
-					outputDevice:             "ALSA_LOOPBACK", // Using non-internal speaker should block DSP AEC.
+					voiceIsolationUIEnabled: false,
+					inputDevice:             "INTERNAL_MIC",
+					outputDevice:            "ALSA_LOOPBACK", // Using non-internal speaker should block DSP AEC.
 					captureClients: []captureConfig{
 						{
 							effects:         0x11, // Set AEC on to avoid blocking DSP NC.
@@ -355,9 +355,9 @@ func init() {
 			{
 				Name: "nc_both_prefer_ast",
 				Val: crasEffectsParam{
-					styleTransferEnabled: true,
-					inputDevice:          "INTERNAL_MIC",
-					outputDevice:         "INTERNAL_SPEAKER",
+					voiceIsolationUIEnabled: true,
+					inputDevice:             "INTERNAL_MIC",
+					outputDevice:            "INTERNAL_SPEAKER",
 					captureClients: []captureConfig{
 						{
 							effects:         0x11,
@@ -378,9 +378,9 @@ func init() {
 			{
 				Name: "nc_both_ast_disabled",
 				Val: crasEffectsParam{
-					styleTransferEnabled: false,
-					inputDevice:          "INTERNAL_MIC",
-					outputDevice:         "INTERNAL_SPEAKER",
+					voiceIsolationUIEnabled: false,
+					inputDevice:             "INTERNAL_MIC",
+					outputDevice:            "INTERNAL_SPEAKER",
 					captureClients: []captureConfig{
 						{
 							effects:         0x11, // Set AEC on to avoid blocking DSP NC.
@@ -399,9 +399,9 @@ func init() {
 			{
 				Name: "nc_both_ast",
 				Val: crasEffectsParam{
-					styleTransferEnabled: true,
-					inputDevice:          "INTERNAL_MIC",
-					outputDevice:         "ALSA_LOOPBACK", // Using non-internal speaker should block DSP AEC.
+					voiceIsolationUIEnabled: true,
+					inputDevice:             "INTERNAL_MIC",
+					outputDevice:            "ALSA_LOOPBACK", // Using non-internal speaker should block DSP AEC.
 					captureClients: []captureConfig{
 						{
 							effects:         0x11, // Set AEC on to avoid blocking DSP NC.
@@ -423,9 +423,9 @@ func init() {
 			{
 				Name: "nc_only_dsp_enabled",
 				Val: crasEffectsParam{
-					noiseCancellationEnabled: true,
-					inputDevice:              "INTERNAL_MIC",
-					outputDevice:             "ALSA_LOOPBACK", // Using non-internal speaker should allow DSP NC.
+					voiceIsolationUIEnabled: true,
+					inputDevice:             "INTERNAL_MIC",
+					outputDevice:            "ALSA_LOOPBACK", // Using non-internal speaker should allow DSP NC.
 					captureClients: []captureConfig{
 						{effects: 0, expectAPEffects: nil}, // Effects=0 should not block.
 					},
@@ -441,9 +441,9 @@ func init() {
 			{
 				Name: "nc_only_dsp_block_select_internal_speaker",
 				Val: crasEffectsParam{
-					noiseCancellationEnabled: true,
-					inputDevice:              "INTERNAL_MIC",
-					outputDevice:             "INTERNAL_SPEAKER", // Using internal speaker should block DSP NC.
+					voiceIsolationUIEnabled: true,
+					inputDevice:             "INTERNAL_MIC",
+					outputDevice:            "INTERNAL_SPEAKER", // Using internal speaker should block DSP NC.
 					captureClients: []captureConfig{
 						{effects: 0, expectAPEffects: nil}, // Effects=0 should not block.
 					},
@@ -459,9 +459,9 @@ func init() {
 			{
 				Name: "nc_only_dsp_block_pin_internal_speaker",
 				Val: crasEffectsParam{
-					noiseCancellationEnabled: true,
-					inputDevice:              "INTERNAL_MIC",
-					outputDevice:             "ALSA_LOOPBACK",
+					voiceIsolationUIEnabled: true,
+					inputDevice:             "INTERNAL_MIC",
+					outputDevice:            "ALSA_LOOPBACK",
 					captureClients: []captureConfig{
 						{effects: 0, expectAPEffects: nil}, // Effects=0 should not block.
 					},
@@ -478,9 +478,9 @@ func init() {
 			{
 				Name: "nc_only_dsp_enabled_with_aec",
 				Val: crasEffectsParam{
-					noiseCancellationEnabled: true,
-					inputDevice:              "INTERNAL_MIC",
-					outputDevice:             "ALSA_LOOPBACK", // Using non-internal speaker should allow DSP NC.
+					voiceIsolationUIEnabled: true,
+					inputDevice:             "INTERNAL_MIC",
+					outputDevice:            "ALSA_LOOPBACK", // Using non-internal speaker should allow DSP NC.
 					captureClients: []captureConfig{
 						{effects: 0x1, expectAPEffects: []string{apAEC}}, // Effects=1 should not block.
 					},
@@ -496,9 +496,9 @@ func init() {
 			{
 				Name: "nc_only_dsp_block_select_internal_speaker_with_aec",
 				Val: crasEffectsParam{
-					noiseCancellationEnabled: true,
-					inputDevice:              "INTERNAL_MIC",
-					outputDevice:             "INTERNAL_SPEAKER", // Using internal speaker should block DSP NC.
+					voiceIsolationUIEnabled: true,
+					inputDevice:             "INTERNAL_MIC",
+					outputDevice:            "INTERNAL_SPEAKER", // Using internal speaker should block DSP NC.
 					captureClients: []captureConfig{
 						{effects: 0x1, expectAPEffects: []string{apAEC}}, // Effects=1 should not block.
 					},
@@ -514,9 +514,9 @@ func init() {
 			{
 				Name: "nc_only_dsp_block_pin_internal_speaker_with_aec",
 				Val: crasEffectsParam{
-					noiseCancellationEnabled: true,
-					inputDevice:              "INTERNAL_MIC",
-					outputDevice:             "ALSA_LOOPBACK",
+					voiceIsolationUIEnabled: true,
+					inputDevice:             "INTERNAL_MIC",
+					outputDevice:            "ALSA_LOOPBACK",
 					captureClients: []captureConfig{
 						{effects: 0x1, expectAPEffects: []string{apAEC}}, // Effects=1 should not block.
 					},
@@ -534,9 +534,9 @@ func init() {
 			{
 				Name: "forced_voice_isolation_with_nc_button_disabled",
 				Val: crasEffectsParam{
-					noiseCancellationEnabled: false,
-					inputDevice:              "INTERNAL_MIC",
-					outputDevice:             "INTERNAL_SPEAKER",
+					voiceIsolationUIEnabled: false,
+					inputDevice:             "INTERNAL_MIC",
+					outputDevice:            "INTERNAL_SPEAKER",
 					captureClients: []captureConfig{
 						{effects: 0x310, expectAPEffects: []string{apNC}}, // Force enable NC.
 					},
@@ -552,9 +552,9 @@ func init() {
 			{
 				Name: "forced_voice_isolation_with_nc_button_enabled",
 				Val: crasEffectsParam{
-					noiseCancellationEnabled: true,
-					inputDevice:              "INTERNAL_MIC",
-					outputDevice:             "INTERNAL_SPEAKER",
+					voiceIsolationUIEnabled: true,
+					inputDevice:             "INTERNAL_MIC",
+					outputDevice:            "INTERNAL_SPEAKER",
 					captureClients: []captureConfig{
 						{effects: 0x310, expectAPEffects: []string{apNC}}, // Force enable NC.
 					},
@@ -570,9 +570,9 @@ func init() {
 			{
 				Name: "forced_disabled_voice_isolation_with_nc_button_disabled",
 				Val: crasEffectsParam{
-					noiseCancellationEnabled: false,
-					inputDevice:              "INTERNAL_MIC",
-					outputDevice:             "INTERNAL_SPEAKER",
+					voiceIsolationUIEnabled: false,
+					inputDevice:             "INTERNAL_MIC",
+					outputDevice:            "INTERNAL_SPEAKER",
 					captureClients: []captureConfig{
 						{effects: 0x100, expectAPEffects: nil}, // Force disable NC.
 					},
@@ -588,9 +588,9 @@ func init() {
 			{
 				Name: "forced_disabled_voice_isolation_with_nc_button_enabled",
 				Val: crasEffectsParam{
-					noiseCancellationEnabled: true,
-					inputDevice:              "INTERNAL_MIC",
-					outputDevice:             "INTERNAL_SPEAKER",
+					voiceIsolationUIEnabled: true,
+					inputDevice:             "INTERNAL_MIC",
+					outputDevice:            "INTERNAL_SPEAKER",
 					captureClients: []captureConfig{
 						{effects: 0x100, expectAPEffects: nil}, // Force disable NC.
 					},
@@ -607,9 +607,9 @@ func init() {
 			{
 				Name: "forced_voice_isolation_with_ast_button_disabled",
 				Val: crasEffectsParam{
-					styleTransferEnabled: false,
-					inputDevice:          "INTERNAL_MIC",
-					outputDevice:         "INTERNAL_SPEAKER",
+					voiceIsolationUIEnabled: false,
+					inputDevice:             "INTERNAL_MIC",
+					outputDevice:            "INTERNAL_SPEAKER",
 					captureClients: []captureConfig{
 						{effects: 0x310, expectAPEffects: []string{apNC, apAST}},
 					},
@@ -625,9 +625,9 @@ func init() {
 			{
 				Name: "forced_voice_isolation_with_ast_button_enabled",
 				Val: crasEffectsParam{
-					styleTransferEnabled: true,
-					inputDevice:          "INTERNAL_MIC",
-					outputDevice:         "INTERNAL_SPEAKER",
+					voiceIsolationUIEnabled: true,
+					inputDevice:             "INTERNAL_MIC",
+					outputDevice:            "INTERNAL_SPEAKER",
 					captureClients: []captureConfig{
 						{effects: 0x310, expectAPEffects: []string{apNC, apAST}},
 					},
@@ -645,9 +645,9 @@ func init() {
 			{
 				Name: "forced_disabled_voice_isolation_with_ast_button_disabled",
 				Val: crasEffectsParam{
-					styleTransferEnabled: false,
-					inputDevice:          "INTERNAL_MIC",
-					outputDevice:         "INTERNAL_SPEAKER",
+					voiceIsolationUIEnabled: false,
+					inputDevice:             "INTERNAL_MIC",
+					outputDevice:            "INTERNAL_SPEAKER",
 					captureClients: []captureConfig{
 						{effects: 0x100, expectAPEffects: nil}, // Force disable NC.
 					},
@@ -663,9 +663,9 @@ func init() {
 			{
 				Name: "forced_disabled_voice_isolation_with_ast_button_enabled",
 				Val: crasEffectsParam{
-					styleTransferEnabled: true,
-					inputDevice:          "INTERNAL_MIC",
-					outputDevice:         "INTERNAL_SPEAKER",
+					voiceIsolationUIEnabled: true,
+					inputDevice:             "INTERNAL_MIC",
+					outputDevice:            "INTERNAL_SPEAKER",
 					captureClients: []captureConfig{
 						{effects: 0x100, expectAPEffects: nil}, // Force disable NC.
 					},
@@ -682,9 +682,9 @@ func init() {
 			{
 				Name: "nc_then_unprocessed_stream",
 				Val: crasEffectsParam{
-					noiseCancellationEnabled: true,
-					inputDevice:              "INTERNAL_MIC",
-					outputDevice:             "INTERNAL_SPEAKER",
+					voiceIsolationUIEnabled: true,
+					inputDevice:             "INTERNAL_MIC",
+					outputDevice:            "INTERNAL_SPEAKER",
 					captureClients: []captureConfig{
 						{effects: 0x310, expectAPEffects: []string{apNC}}, // Force enable NC.
 						{effects: 0x100, expectAPEffects: nil},            // unprocessed.
@@ -701,9 +701,9 @@ func init() {
 			{
 				Name: "unprocessed_then_nc_stream",
 				Val: crasEffectsParam{
-					noiseCancellationEnabled: true,
-					inputDevice:              "INTERNAL_MIC",
-					outputDevice:             "INTERNAL_SPEAKER",
+					voiceIsolationUIEnabled: true,
+					inputDevice:             "INTERNAL_MIC",
+					outputDevice:            "INTERNAL_SPEAKER",
 					captureClients: []captureConfig{
 						{effects: 0x100, expectAPEffects: nil},            // Force enable NC.
 						{effects: 0x310, expectAPEffects: []string{apNC}}, // unprocessed.
@@ -720,9 +720,9 @@ func init() {
 			{
 				Name: "beamforming_enabled_by_client",
 				Val: crasEffectsParam{
-					noiseCancellationEnabled: false,
-					inputDevice:              "INTERNAL_MIC",
-					outputDevice:             "INTERNAL_SPEAKER",
+					voiceIsolationUIEnabled: false,
+					inputDevice:             "INTERNAL_MIC",
+					outputDevice:            "INTERNAL_SPEAKER",
 					captureClients: []captureConfig{
 						{effects: 0x300, expectAPEffects: []string{apNC, apBF}}, // Force enable NC.
 						{effects: 0x100, expectAPEffects: nil},                  // unprocessed.
@@ -739,9 +739,9 @@ func init() {
 			{
 				Name: "beamforming_enabled_by_ui",
 				Val: crasEffectsParam{
-					noiseCancellationEnabled: true,
-					inputDevice:              "INTERNAL_MIC",
-					outputDevice:             "INTERNAL_SPEAKER",
+					voiceIsolationUIEnabled: true,
+					inputDevice:             "INTERNAL_MIC",
+					outputDevice:            "INTERNAL_SPEAKER",
 					captureClients: []captureConfig{
 						{effects: 0x0, expectAPEffects: []string{apNC, apBF}}, // NC enabled with UI.
 						{effects: 0x100, expectAPEffects: nil},                // unprocessed.
@@ -758,9 +758,9 @@ func init() {
 			{
 				Name: "style_transfer",
 				Val: crasEffectsParam{
-					styleTransferEnabled: true,
-					inputDevice:          "INTERNAL_MIC",
-					outputDevice:         "INTERNAL_SPEAKER",
+					voiceIsolationUIEnabled: true,
+					inputDevice:             "INTERNAL_MIC",
+					outputDevice:            "INTERNAL_SPEAKER",
 					captureClients: []captureConfig{
 						{effects: 0x300, expectAPEffects: []string{apNC, apAST}},
 						{effects: 0x100, expectAPEffects: nil}, // unprocessed.
@@ -781,13 +781,12 @@ func init() {
 }
 
 type crasEffectsParam struct {
-	noiseCancellationEnabled bool
-	styleTransferEnabled     bool
-	inputDevice              string
-	outputDevice             string
-	addPlaybackPinDevice     string
-	captureClients           []captureConfig
-	expectDSPEffects         dspEffects
+	voiceIsolationUIEnabled bool
+	inputDevice             string
+	outputDevice            string
+	addPlaybackPinDevice    string
+	captureClients          []captureConfig
+	expectDSPEffects        dspEffects
 }
 
 // dspEffects observed and expected.
@@ -917,11 +916,8 @@ func CrasEffects(ctx context.Context, s *testing.State) {
 	if err := audio.SelectIODevices(ctx, cras, param.inputDevice, param.outputDevice); err != nil {
 		s.Fatal("Failed to select IO devices: ", err)
 	}
-	if err := cras.SetNoiseCancellationEnabled(ctx, param.noiseCancellationEnabled); err != nil {
-		s.Fatal("Failed to set noise cancellation: ", err)
-	}
-	if err := cras.SetStyleTransferEnabled(ctx, param.styleTransferEnabled); err != nil {
-		s.Fatal("Failed to set style transfer: ", err)
+	if err := cras.SetVoiceIsolationUIEnabled(ctx, param.voiceIsolationUIEnabled); err != nil {
+		s.Fatal("Failed to set voice isolation enabled/disabled: ", err)
 	}
 
 	// Start capture clients.

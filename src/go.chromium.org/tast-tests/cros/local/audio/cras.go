@@ -496,14 +496,9 @@ func (c *Cras) SetFlossEnabled(ctx context.Context, enabled bool) error {
 	return c.call(ctx, "SetFlossEnabled", enabled).Err
 }
 
-// SetNoiseCancellationEnabled enables or disables noise cancellation.
-func (c *Cras) SetNoiseCancellationEnabled(ctx context.Context, enabled bool) error {
-	return c.call(ctx, "SetNoiseCancellationEnabled", enabled).Err
-}
-
-// SetStyleTransferEnabled enables or disables style transfer.
-func (c *Cras) SetStyleTransferEnabled(ctx context.Context, enabled bool) error {
-	return c.call(ctx, "SetStyleTransferEnabled", enabled).Err
+// SetVoiceIsolationUIEnabled enables or disables voice isolation effects.
+func (c *Cras) SetVoiceIsolationUIEnabled(ctx context.Context, enabled bool) error {
+	return c.call(ctx, "SetVoiceIsolationUIEnabled", enabled).Err
 }
 
 // IsStyleTransferSupported returns support status of the queried device.

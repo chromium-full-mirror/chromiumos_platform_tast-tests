@@ -17,6 +17,11 @@ const (
 	RTCFeatureVsyncDecoding
 	// RTCFeatureVsyncEncoding enables WebRTC VsyncEncoding feature.
 	RTCFeatureVsyncEncoding
+	// AudioFeatureNoiseCancellation enables NoiseCancellation
+	// and disables StyleTransfer.
+	AudioFeatureNoiseCancellation
+	// AudioFeatureStyleTransfer enables StyleTransfer.
+	AudioFeatureStyleTransfer
 
 	// keep this at last
 	numChromeRTCFeatures = iota
@@ -32,6 +37,8 @@ func initChromeRTCFixtures() {
 		comb(chromeRTC, RTCFeatureVsyncDecoding),
 		comb(chromeRTC, RTCFeatureVsyncEncoding),
 		comb(chromeRTC, RTCFeatureVsyncDecoding, RTCFeatureVsyncEncoding),
+		comb(chromeRTC, AudioFeatureNoiseCancellation),
+		comb(chromeRTC, AudioFeatureStyleTransfer),
 	}
 	featureMap := map[featureType]featureInfo{
 		chromeRTC: {
@@ -60,8 +67,6 @@ func initChromeRTCFixtures() {
 				chrome.EnableFeatures(
 					// Prefer using constant frame rate for camera streaming.
 					"PreferConstantFrameRate",
-					// Make noise cancellation available.
-					"CrOSLateBootAudioAPNoiseCancellation",
 				),
 			},
 		},
@@ -78,6 +83,26 @@ func initChromeRTCFixtures() {
 			[]chrome.Option{
 				chrome.EnableFeatures(
 					"VSyncEncoding",
+				),
+			},
+		},
+		AudioFeatureNoiseCancellation: {
+			"NoiseCancellation",
+			[]chrome.Option{
+				chrome.EnableFeatures(
+					"CrOSLateBootAudioAPNoiseCancellation",
+				),
+				chrome.DisableFeatures(
+					"CrOSLateBootAudioStyleTransfer",
+				),
+			},
+		},
+		AudioFeatureStyleTransfer: {
+			"StyleTransfer",
+			[]chrome.Option{
+				chrome.EnableFeatures(
+					"CrOSLateBootAudioAPNoiseCancellation",
+					"CrOSLateBootAudioStyleTransfer",
 				),
 			},
 		},

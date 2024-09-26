@@ -73,8 +73,8 @@ type crasSidetoneMultipleLoopbackLatencyParams struct {
 func CrasSidetoneMultipleLoopbackLatency(ctx context.Context, s *testing.State) {
 	param := s.Param().(crasSidetoneMultipleLoopbackLatencyParams)
 	apConfig := audio.NoiseCancellationConfig{
-		NoiseCancellationEnabled: param.noiseCancellationEnabled,
-		StyleTransferEnabled:     param.styleTransferEnabled,
+		StyleTransferAllowed: param.styleTransferEnabled,
+		VoiceIsolation:       param.noiseCancellationEnabled || param.styleTransferEnabled,
 	}
 	if err := audio.WithNoiseCancellation(ctx, apConfig, s.OutDir(), s.HasError, "Loopback Capture", "Loopback Playback 1", func(ctx context.Context, cras *audio.Cras) {
 		if err := cras.SetSidetoneEnabled(ctx, true); err != nil {

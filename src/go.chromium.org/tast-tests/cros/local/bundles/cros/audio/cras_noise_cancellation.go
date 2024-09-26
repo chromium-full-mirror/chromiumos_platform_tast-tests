@@ -167,9 +167,9 @@ type crasNoiseCancellationParams struct {
 func CrasNoiseCancellation(ctx context.Context, s *testing.State) {
 	param := s.Param().(crasNoiseCancellationParams)
 	apConfig := audio.NoiseCancellationConfig{
-		NoiseCancellationEnabled: param.noiseCancellationEnabled,
-		StyleTransferEnabled:     param.styleTransferEnabled,
-		ChromeOpts:               param.extraChromeOpts,
+		StyleTransferAllowed: param.styleTransferEnabled,
+		VoiceIsolation:       param.noiseCancellationEnabled || param.styleTransferEnabled,
+		ChromeOpts:           param.extraChromeOpts,
 	}
 
 	if err := audio.WithNoiseCancellation(ctx, apConfig, s.OutDir(), s.HasError, "Loopback Playback", "Loopback Capture", func(ctx context.Context, _ *audio.Cras) {

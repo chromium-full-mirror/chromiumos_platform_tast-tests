@@ -15,8 +15,8 @@ import (
 )
 
 // setUpAudio configures the audio server according to noiseCancellation and styleTransfer.
-func setUpAudio(ctx context.Context, noiseCancellation, styleTransfer bool) error {
-	if noiseCancellation {
+func setUpAudio(ctx context.Context, voiceIsolation bool) error {
+	if voiceIsolation {
 		if err := dlc.Install(ctx, "nc-ap-dlc", ""); err != nil {
 			return errors.Wrap(err, "cannot install nc-ap-dlc")
 		}
@@ -30,12 +30,8 @@ func setUpAudio(ctx context.Context, noiseCancellation, styleTransfer bool) erro
 		return errors.Wrap(err, "audio.SelectIODevices")
 	}
 
-	if err := cras.SetNoiseCancellationEnabled(ctx, noiseCancellation); err != nil {
-		return errors.Wrap(err, "cras.SetNoiseCancellationEnabled")
-	}
-
-	if err := cras.SetStyleTransferEnabled(ctx, styleTransfer); err != nil {
-		return errors.Wrap(err, "cras.SetStyleTransferEnabled")
+	if err := cras.SetVoiceIsolationUIEnabled(ctx, voiceIsolation); err != nil {
+		return errors.Wrap(err, "cras.SetVoiceIsolationUIEnabled")
 	}
 	return nil
 }

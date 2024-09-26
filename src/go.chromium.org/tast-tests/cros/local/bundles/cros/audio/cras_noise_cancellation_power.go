@@ -67,8 +67,8 @@ func init() {
 						if err := cras.SetActiveNodeByType(ctx, "INTERNAL_SPEAKER"); err != nil {
 							s.Fatal("Failed to set internal speaker active: ", err)
 						}
-						if err := cras.SetNoiseCancellationEnabled(ctx, false); err != nil {
-							s.Fatal("Failed to SetNoiseCancellationEnabled: ", err)
+						if err := cras.SetVoiceIsolationUIEnabled(ctx, false); err != nil {
+							s.Fatal("Failed to SetVoiceIsolationUIEnabled: ", err)
 						}
 					},
 					extraCrasClientArgs: []string{"--effects=aec"},
@@ -92,8 +92,8 @@ func init() {
 						if err := cras.SetActiveNodeByType(ctx, "INTERNAL_SPEAKER"); err != nil {
 							s.Fatal("Failed to set internal speaker active: ", err)
 						}
-						if err := cras.SetNoiseCancellationEnabled(ctx, true); err != nil {
-							s.Fatal("Failed to SetNoiseCancellationEnabled: ", err)
+						if err := cras.SetVoiceIsolationUIEnabled(ctx, true); err != nil {
+							s.Fatal("Failed to SetVoiceIsolationUIEnabled: ", err)
 						}
 						if err := cras.WaitUntilFeatureFlagHasValue(ctx, "CrOSLateBootAudioAPNoiseCancellation", true); err != nil {
 							s.Fatal("Faild to WaitUntilFeatureFlagHasValue: ", err)
@@ -123,8 +123,8 @@ func init() {
 						if err := cras.SetActiveNodeByType(ctx, "INTERNAL_SPEAKER"); err != nil {
 							s.Fatal("Failed to set internal speaker active: ", err)
 						}
-						if err := cras.SetStyleTransferEnabled(ctx, true); err != nil {
-							s.Fatal("Failed to SetStyleTransferEnabled: ", err)
+						if err := cras.SetVoiceIsolationUIEnabled(ctx, true); err != nil {
+							s.Fatal("Failed to set voice isolation enabled/disabled: ", err)
 						}
 						if err := cras.WaitUntilFeatureFlagHasValue(ctx, "CrOSLateBootAudioAPNoiseCancellation", true); err != nil {
 							s.Fatal("Faild to WaitUntilFeatureFlagHasValue: ", err)
@@ -171,8 +171,8 @@ func init() {
 						if err := cras.SetActiveNodeByType(ctx, "INTERNAL_SPEAKER"); err != nil {
 							s.Fatal("Failed to set internal speaker active: ", err)
 						}
-						if err := cras.SetNoiseCancellationEnabled(ctx, true); err != nil {
-							s.Fatal("Failed to SetNoiseCancellationEnabled: ", err)
+						if err := cras.SetVoiceIsolationUIEnabled(ctx, true); err != nil {
+							s.Fatal("Failed to SetVoiceIsolationUIEnabled: ", err)
 						}
 					},
 					extraCrasClientArgs: []string{"--effects=0x11"},

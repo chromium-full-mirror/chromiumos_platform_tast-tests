@@ -15,8 +15,8 @@ import (
 
 // NoiseCancellationConfig struct
 type NoiseCancellationConfig struct {
-	NoiseCancellationEnabled bool
-	StyleTransferEnabled     bool
+	StyleTransferAllowed bool
+	VoiceIsolation       bool
 
 	ChromeOpts []chrome.Option
 }
@@ -43,7 +43,7 @@ func WithNoiseCancellation(
 
 	// Start chrome.
 	chromeOpts := config.ChromeOpts
-	if config.StyleTransferEnabled {
+	if config.StyleTransferAllowed {
 		chromeOpts = append(chromeOpts, chrome.EnableFeatures("CrOSLateBootAudioStyleTransfer"))
 	} else {
 		chromeOpts = append(chromeOpts, chrome.DisableFeatures("CrOSLateBootAudioStyleTransfer"))
@@ -56,7 +56,7 @@ func WithNoiseCancellation(
 	defer cr.Close(cleanupCtx)
 
 	// Install DLC.
-	if config.NoiseCancellationEnabled || config.StyleTransferEnabled {
+	if config.VoiceIsolation {
 		if err := installDlcs(ctx, []string{"nc-ap-dlc"}); err != nil {
 			return errors.Wrap(err, "failed at installing nc-ap-dlc")
 		}
@@ -71,14 +71,11 @@ func WithNoiseCancellation(
 	if err != nil {
 		return errors.Wrap(err, "failed to connect to CRAS")
 	}
-	if err := cras.WaitUntilFeatureFlagHasValue(ctx, "CrOSLateBootAudioStyleTransfer", config.StyleTransferEnabled); err != nil {
+	if err := cras.WaitUntilFeatureFlagHasValue(ctx, "CrOSLateBootAudioStyleTransfer", config.StyleTransferAllowed); err != nil {
 		return errors.Wrap(err, "feature flag not propagated to CRAS")
 	}
-	if err := cras.SetNoiseCancellationEnabled(ctx, config.NoiseCancellationEnabled); err != nil {
-		return errors.Wrap(err, "failed to SetNoiseCancellationEnabled")
-	}
-	if err := cras.SetStyleTransferEnabled(ctx, config.StyleTransferEnabled); err != nil {
-		return errors.Wrap(err, "failed to SetStyleTransferEnabled")
+	if err := cras.SetVoiceIsolationUIEnabled(ctx, config.VoiceIsolation); err != nil {
+		return errors.Wrap(err, "failed to SetVoiceIsolationUIEnabled")
 	}
 
 	f(ctx, cras)

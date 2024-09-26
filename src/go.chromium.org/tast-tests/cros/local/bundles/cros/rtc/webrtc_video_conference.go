@@ -144,22 +144,21 @@ func init() {
 			{
 				Name: "4p_present_noise_cancellation",
 				Val: webrtc.VCTestParams{
-					NumPeople:         4,
-					Present:           true,
-					NoiseCancellation: true,
+					NumPeople:      4,
+					Present:        true,
+					VoiceIsolation: true,
 				},
-				Fixture:   pre.ChromeRTCFixture(),
+				Fixture:   pre.ChromeRTCFixture(pre.AudioFeatureNoiseCancellation),
 				ExtraAttr: []string{"group:crosbolt", "crosbolt_perbuild"},
 			},
 			{
 				Name: "4p_present_noise_cancellation_style_transfer",
 				Val: webrtc.VCTestParams{
-					NumPeople:         4,
-					Present:           true,
-					NoiseCancellation: true,
-					StyleTransfer:     true,
+					NumPeople:      4,
+					Present:        true,
+					VoiceIsolation: true,
 				},
-				Fixture:   pre.ChromeRTCFixture(),
+				Fixture:   pre.ChromeRTCFixture(pre.AudioFeatureStyleTransfer),
 				ExtraAttr: []string{"group:crosbolt", "crosbolt_perbuild"},
 			},
 			{
@@ -184,12 +183,12 @@ func init() {
 			{
 				Name: "4p_present_text_noise_cancellation",
 				Val: webrtc.VCTestParams{
-					NumPeople:         4,
-					Text:              true,
-					Present:           true,
-					NoiseCancellation: true,
+					NumPeople:      4,
+					Text:           true,
+					Present:        true,
+					VoiceIsolation: true,
 				},
-				Fixture:   pre.ChromeRTCFixture(),
+				Fixture:   pre.ChromeRTCFixture(pre.AudioFeatureNoiseCancellation),
 				ExtraAttr: []string{"group:crosbolt", "crosbolt_perbuild"},
 			},
 			{
@@ -227,12 +226,12 @@ func init() {
 			{
 				Name: "4p_present_mouse_noise_cancellation",
 				Val: webrtc.VCTestParams{
-					NumPeople:         4,
-					Mouse:             true,
-					Present:           true,
-					NoiseCancellation: true,
+					NumPeople:      4,
+					Mouse:          true,
+					Present:        true,
+					VoiceIsolation: true,
 				},
-				Fixture:   pre.ChromeRTCFixture(),
+				Fixture:   pre.ChromeRTCFixture(pre.AudioFeatureNoiseCancellation),
 				ExtraAttr: []string{"group:crosbolt", "crosbolt_perbuild"},
 			},
 			{

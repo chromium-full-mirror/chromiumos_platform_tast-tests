@@ -54,10 +54,8 @@ type VCTestParams struct {
 	// If Trace is true, then perfetto tracing is executed and the tracing
 	// result is saved in the result directory.
 	Trace bool
-	// If NoiseCancellation is true, enable input noise cancellation on the platform.
-	NoiseCancellation bool
-	// If StyleTransfer is true, enable input style transfer on the platform.
-	StyleTransfer bool
+	// If VoiceIsolation is true, enable input voice isolation effects on the platform.
+	VoiceIsolation bool
 	// If Blur is true, enable platform blurring.
 	Blur bool
 	// If Relight is true, enable platform relighting.
@@ -311,7 +309,7 @@ func runVCPerf(ctx context.Context, tconn, bTconn *chrome.TestConn, s *testing.S
 	ctx, cancel := ctxutil.Shorten(ctx, 2*time.Second)
 	defer cancel()
 
-	if err := setUpAudio(ctx, params.NoiseCancellation, params.StyleTransfer); err != nil {
+	if err := setUpAudio(ctx, params.VoiceIsolation); err != nil {
 		return errors.Wrap(err, "setUpAudio")
 	}
 

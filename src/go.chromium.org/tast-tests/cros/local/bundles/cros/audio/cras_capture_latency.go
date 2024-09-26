@@ -71,8 +71,8 @@ type crasCaptureLatencyParams struct {
 func CrasCaptureLatency(ctx context.Context, s *testing.State) {
 	param := s.Param().(crasCaptureLatencyParams)
 	apConfig := audio.NoiseCancellationConfig{
-		NoiseCancellationEnabled: param.noiseCancellationEnabled,
-		StyleTransferEnabled:     param.styleTransferEnabled,
+		StyleTransferAllowed: param.styleTransferEnabled,
+		VoiceIsolation:       param.noiseCancellationEnabled || param.styleTransferEnabled,
 	}
 	if err := audio.WithNoiseCancellation(ctx, apConfig, s.OutDir(), s.HasError, "Loopback Playback", "Loopback Capture", func(ctx context.Context, _ *audio.Cras) {
 		outputPath := filepath.Join(s.OutDir(), "result.txt")
