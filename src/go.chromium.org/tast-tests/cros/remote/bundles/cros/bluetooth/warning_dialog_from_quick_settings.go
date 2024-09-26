@@ -45,7 +45,8 @@ func init() {
 			"tast.cros.bluetooth.BluetoothUIService",
 			"tast.cros.chrome.uiauto.quicksettings.QuickSettingsService",
 		},
-		HardwareDeps:    hwdep.D(hwdep.FormFactor(hwdep.Chromebase, hwdep.Chromebox, hwdep.Chromebit)),
+		// User can re-enable Bluetooth via touch screen, so the warning dialog is not expected to appear on devices with the touch screen.
+		HardwareDeps:    hwdep.D(hwdep.FormFactor(hwdep.Chromebase, hwdep.Chromebox, hwdep.Chromebit), hwdep.NoTouchScreen()),
 		VariantCategory: `{"name": "BT_Chipset_Kernel"}`,
 		Params: []testing.Param{{
 			Name:      "floss_disabled",
