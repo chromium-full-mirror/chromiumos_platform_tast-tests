@@ -74,8 +74,11 @@ func init() {
 					playStoreMode:        arcent.PlayStoreModeBlockList,
 					accountSwitchEnabled: true,
 				},
-				ExtraSoftwareDeps: []string{"android_vm", "no_qemu", "gaia"},
-				ExtraAttr:         []string{"informational", "group:mainline"},
+				ExtraSoftwareDeps: []string{"android_vm", "no_qemu"},
+				ExtraAttr:         []string{
+					// Disabled by TORA.  See:b/345997350.
+					//"informational"
+					},
 			},
 			{
 				Name: "blocklist_betty_vm",
@@ -83,8 +86,11 @@ func init() {
 					playStoreMode:        arcent.PlayStoreModeBlockList,
 					accountSwitchEnabled: true,
 				},
-				ExtraSoftwareDeps: []string{"android_vm", "qemu", "gaia"},
-				ExtraAttr:         []string{"informational", "group:hw_agnostic", "group:mainline"},
+				ExtraSoftwareDeps: []string{"android_vm", "qemu"},
+					ExtraAttr:         []string{
+					// Disabled by TORA.  See:b/345997350.
+					//"informational", "group:hw_agnostic"
+					},
 			},
 			{
 				Name: "allowlist",
@@ -92,8 +98,11 @@ func init() {
 					playStoreMode:        arcent.PlayStoreModeAllowList,
 					accountSwitchEnabled: false,
 				},
-				ExtraSoftwareDeps: []string{"android_container", "gaia"},
-				ExtraAttr:         []string{"informational", "group:mainline"},
+				ExtraSoftwareDeps: []string{"android_container"},
+				ExtraAttr:         []string{
+					// Disabled by TORA.  See:b/345997350.
+					//"informational"
+					},
 			},
 			{
 				Name: "allowlist_vm",
@@ -101,8 +110,11 @@ func init() {
 					playStoreMode:        arcent.PlayStoreModeAllowList,
 					accountSwitchEnabled: false,
 				},
-				ExtraSoftwareDeps: []string{"android_vm", "no_qemu", "gaia"},
-				ExtraAttr:         []string{"informational", "group:mainline"},
+				ExtraSoftwareDeps: []string{"android_vm", "no_qemu"},
+				ExtraAttr:         []string{
+					// Disabled by TORA.  See:b/345997350.
+					//"informational"
+					},
 			},
 			{
 				Name: "allowlist_betty_vm",
@@ -110,8 +122,11 @@ func init() {
 					playStoreMode:        arcent.PlayStoreModeAllowList,
 					accountSwitchEnabled: false,
 				},
-				ExtraSoftwareDeps: []string{"android_vm", "qemu", "gaia"},
-				ExtraAttr:         []string{"informational", "group:hw_agnostic", "group:mainline"},
+				ExtraSoftwareDeps: []string{"android_vm", "qemu"},
+				ExtraAttr:         []string{
+					// Disabled by TORA.  See:b/345997350.
+					//"informational", "group:hw_agnostic"
+					},
 			}},
 	})
 }
