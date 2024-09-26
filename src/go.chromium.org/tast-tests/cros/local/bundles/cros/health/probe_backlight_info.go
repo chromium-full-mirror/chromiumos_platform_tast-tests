@@ -12,6 +12,7 @@ import (
 	"go.chromium.org/tast-tests/cros/local/jsontypes"
 	"go.chromium.org/tast/core/errors"
 	"go.chromium.org/tast/core/testing"
+	"go.chromium.org/tast/core/testing/hwdep"
 )
 
 type backlightInfo struct {
@@ -37,6 +38,14 @@ func init() {
 		Attr:         []string{"group:mainline"},
 		SoftwareDeps: []string{"diagnostics"},
 		Fixture:      "crosHealthdRunning",
+		Params: []testing.Param{{
+			ExtraHardwareDeps: hwdep.D(hwdep.SkipOnModel("nuc11")),
+		}, {
+			// TODO(b/369455834): Fix the failure.
+			Name:              "unstable",
+			ExtraHardwareDeps: hwdep.D(hwdep.Model("nuc11")),
+			ExtraAttr:         []string{"informational"},
+		}},
 	})
 }
 
