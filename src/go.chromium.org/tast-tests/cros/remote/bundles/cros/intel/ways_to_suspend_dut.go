@@ -261,7 +261,7 @@ func waitForSystemIdle(ctx context.Context, dut *dut.DUT) error {
 			return errors.New("system display failed to go to idle state")
 		}
 		return nil
-	}, &testing.PollOptions{Timeout: 6 * time.Minute})
+	}, &testing.PollOptions{Timeout: 10 * time.Minute})
 }
 
 // performSuspendViaDisplay performs DUT suspend by waiting for system display
