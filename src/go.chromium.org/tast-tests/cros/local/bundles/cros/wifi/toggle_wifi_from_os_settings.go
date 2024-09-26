@@ -22,11 +22,14 @@ import (
 
 func init() {
 	testing.AddTest(&testing.Test{
-		Func:         UIToggleFromWIFISettings,
+		Func:         ToggleWifiFromOsSettings,
 		LacrosStatus: testing.LacrosVariantUnneeded,
 		Desc:         "Enable and disable WiFi from ChromeOS Settings UI",
-		Contacts:     []string{"cros-network-health-team@google.com", "intel.chrome.automation.team@intel.com", "pathan.jilani@intel.com"},
-		BugComponent: "b:157291", // ChromeOS > External > Intel
+		Contacts: []string{
+			"chromeos-connectivity-cienet-external@google.com",
+			"edgar.chang@cienet.com",
+		},
+		BugComponent: "b:1578688", // ChromeOS > External > Cienet > Manual Test Automation > Test stabilization
 		Attr:         []string{"group:mainline", "informational", "group:intel-gating", "group:intel-nda"},
 		SoftwareDeps: []string{"chrome"},
 		TestBedDeps:  []string{tbdep.WifiStateNormal},
@@ -34,8 +37,8 @@ func init() {
 	})
 }
 
-// UIToggleFromWIFISettings tests enabling/disabling WiFi from the WiFi settings UI in ChromeOS settings.
-func UIToggleFromWIFISettings(ctx context.Context, s *testing.State) {
+// ToggleWifiFromOsSettings tests enabling/disabling WiFi from the WiFi settings UI in ChromeOS settings.
+func ToggleWifiFromOsSettings(ctx context.Context, s *testing.State) {
 	cr := s.FixtValue().(chrome.HasChrome).Chrome()
 
 	// Shorten deadline to leave time for cleanup.
