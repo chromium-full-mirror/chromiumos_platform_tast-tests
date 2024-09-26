@@ -22,7 +22,6 @@ func init() {
 		Desc:         "Validates touch firmware information is always available after boot and not empty",
 		Contacts: []string{
 			"chromeos-tango@google.com",
-			"maek@google.com", // Test author
 		},
 		Attr:         []string{"group:mainline", "informational"},
 		BugComponent: "b:167253", // ChromeOS > Platform > baseOS > Input > Touchpad

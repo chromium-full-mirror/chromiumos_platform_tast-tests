@@ -31,8 +31,6 @@ func init() {
 		Desc:         "Run a Stylus Drag Latency HMR Test",
 		Contacts: []string{
 			"chromeos-tango@google.com",
-			"joeyholtzman@google.com", // Test author
-			"maek@google.com",         // Test author
 		},
 		BugComponent: "b:189315", // ChromeOS > Platform > System > Input > Stylus
 		Attr:         []string{"group:human_motion_robot", "human_motion_robot_latency"},

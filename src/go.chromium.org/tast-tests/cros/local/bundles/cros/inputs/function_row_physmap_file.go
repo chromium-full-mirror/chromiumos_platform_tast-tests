@@ -75,7 +75,6 @@ func init() {
 		Desc:         "Validate the contents of the function_row_physmap file",
 		Contacts: []string{
 			"chromeos-tango@google.com",
-			"joeyholtzman@google.com", // Test author
 		},
 		BugComponent: "b:167212", // ChromeOS > Platform > baseOS > Input
 		Attr:         []string{"group:mainline", "informational"},
