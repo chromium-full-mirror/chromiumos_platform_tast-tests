@@ -557,9 +557,6 @@ func DataCollector(ctx context.Context, s *testing.State) {
 			}
 			gmsCacheBaseName := strings.TrimSuffix(response.GmsCoreCacheName, filepath.Ext(response.GmsCoreCacheName))
 			localGMSCoreCache := filepath.Join(tempDir, gmsCacheBaseName)
-			localPackagesCache := filepath.Join(tempDir, response.PackagesCacheName)
-			fileCacheBaseName := "file_hash_cache"
-			localFileHashCache := filepath.Join(tempDir, fileCacheBaseName)
 
 			testing.ContextLogf(ctx, "Installing GMS core caches into temp directory: %q", localGMSCoreCache)
 			if err := cache.InstallGmsCoreCaches(ctx, jarPath, tempDir, localGMSTar, localGMSManifest, localGMSCoreCache, true /* enforceMatchingTimestamp */, true /* preservePermissionsOwnership */); err != nil {
@@ -579,13 +576,13 @@ func DataCollector(ctx context.Context, s *testing.State) {
 				s.Fatal("Failed to decompress vendor image: ", err)
 			}
 
-			testing.ContextLogf(ctx, "Generating Packages cache and File Hash cache into temp directories: %q and %q respectively", localPackagesCache, localFileHashCache)
-			if err := cache.GeneratePackagesCache(ctx, jarPath, tempDir, getAndroidPath(param.vmEnabled), vendorTmpDir, localPackagesCache, localFileHashCache, localXMLPath, param.uploadPackagesReference); err != nil {
+			testing.ContextLogf(ctx, "Generating Packages cache and File Hash cache into temp directory %q", tempDir)
+			if err := cache.GeneratePackagesCache(ctx, jarPath, tempDir, getAndroidPath(param.vmEnabled), vendorTmpDir, localXMLPath, param.uploadPackagesReference); err != nil {
 				s.Fatal("Failed to generate packages cache: ", err)
 			}
 
 			testing.ContextLog(ctx, "Copying dev cache artifacts to remote device")
-			if err := copyDevCacheArtifactsToRemote(ctx, d, param.vmEnabled, tempDir, tmpCachesDir, gmsCacheBaseName, response.PackagesCacheName, fileCacheBaseName); err != nil {
+			if err := copyDevCacheArtifactsToRemote(ctx, d, param.vmEnabled, tempDir, tmpCachesDir, gmsCacheBaseName); err != nil {
 				s.Fatal("Failed to copy temp cache artifacts to remote device: ", err)
 			}
 		}
@@ -599,7 +596,7 @@ func DataCollector(ctx context.Context, s *testing.State) {
 		}
 
 		if param.uploadPackagesReference {
-			resources = []string{response.PackagesCacheName}
+			resources = []string{response.PackagesCacheName, response.PackagesCacheArchive}
 			packAndUploadData(shortCtx, packagesReference, response.TargetDir, resources)
 		}
 
@@ -980,23 +977,27 @@ func repackErofsImageAsSquashfs(ctx context.Context, d *dut.DUT, srcImagePath, d
 	return nil
 }
 
-func copyDevCacheArtifactsToRemote(ctx context.Context, d *dut.DUT, vmEnabled bool, localDir, remoteDir, gmsCoreCacheName, packagesCacheName, fileHashCacheName string) error {
+func copyDevCacheArtifactsToRemote(ctx context.Context, d *dut.DUT, vmEnabled bool, localDir, remoteDir, gmsCoreCacheName string) error {
 	const (
 		appChimera        = "app_chimera"
 		androidSystemUgid = "656360"
 	)
 
 	localGMSCoreCache := filepath.Join(localDir, gmsCoreCacheName)
-	localPackagesCache := filepath.Join(localDir, packagesCacheName)
-	localFileHashCache := filepath.Join(localDir, fileHashCacheName)
+	localPackagesCache := filepath.Join(localDir, cache.PackagesCacheXML)
+	localFileHashCache := filepath.Join(localDir, cache.FileHashCache)
+	localSharedUsers := filepath.Join(localDir, cache.SharedUsersTxt)
+
 	remoteGMSCoreCache := filepath.Join(remoteDir, gmsCoreCacheName)
 	remoteAppChimera := filepath.Join(remoteGMSCoreCache, appChimera)
-	remotePackagesCache := filepath.Join(remoteDir, packagesCacheName)
-	remoteFileHashCache := filepath.Join(remoteDir, fileHashCacheName)
+	remotePackagesCache := filepath.Join(remoteDir, cache.PackagesCacheXML)
+	remoteFileHashCache := filepath.Join(remoteDir, cache.FileHashCache)
+	remoteSharedUsers := filepath.Join(remoteDir, cache.SharedUsersTxt)
 	dataMap := map[string]string{
 		localGMSCoreCache:  remoteAppChimera,
 		localPackagesCache: remotePackagesCache,
 		localFileHashCache: remoteFileHashCache,
+		localSharedUsers:   remoteSharedUsers,
 	}
 	if bytes, err := linuxssh.PutFiles(ctx, d.Conn(), dataMap, linuxssh.PreserveSymlinks); err != nil {
 		return errors.Wrapf(err, "failed to copy data from %q to remote data path %q", localDir, remoteDir)

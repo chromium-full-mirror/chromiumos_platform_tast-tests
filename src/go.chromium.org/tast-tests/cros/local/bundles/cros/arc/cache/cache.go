@@ -62,8 +62,12 @@ const (
 	// LayoutTxt defines output file name that contains generated file directory layout and
 	// file attributes.
 	LayoutTxt = "layout.txt"
-	// PackagesCacheXML defines the name of packages cache file name.
+	// PackagesCacheXML defines the name of packages XML file.
 	PackagesCacheXML = "packages_cache.xml"
+	// PackageCacheArchive defines the name of packages cache archive file.
+	PackageCacheArchive = "package_cache.tar"
+	// PackageCacheSystemDir defines that path on the device with system cache.
+	PackageCacheSystemDir = "/data/system/package_cache"
 	// GeneratedPackagesCacheXML defines the name of pregenerated packages cache file name.
 	// Used to rename the cache file retrieved from /system/etc.
 	GeneratedPackagesCacheXML = "generated_packages_cache.xml"
@@ -325,6 +329,14 @@ func CopyGmsCoreCaches(ctx context.Context, a *arc.ARC, outputDir string) error 
 	packagesPathLocal := filepath.Join(outputDir, PackagesCacheXML)
 	if err := ioutil.WriteFile(packagesPathLocal, packagesXML, 0644); err != nil {
 		return errors.Wrapf(err, "failed to write the parsed packages cache XML content to %q", packagesPathLocal)
+	}
+
+	packagesCacheTar := filepath.Join(outputDir, PackageCacheArchive)
+	packagesCacheUnderHome := filepath.Join(androidDataDir, PackageCacheSystemDir)
+
+	testing.ContextLogf(ctx, "Compressing %q to %q", packagesCacheUnderHome, packagesCacheTar)
+	if err := testexec.CommandContext(ctx, "tar", "-cvpf", packagesCacheTar, "-C", packagesCacheUnderHome, ".").Run(testexec.DumpLogOnError); err != nil {
+		return errors.Wrap(err, "failed to compress package caches dir")
 	}
 
 	// GSF cache

@@ -87,6 +87,7 @@ func (c *GmsCoreCacheService) Generate(ctx context.Context, request *arcpb.GmsCo
 	response := arcpb.GmsCoreCacheResponse{
 		TargetDir:                  targetDir,
 		PackagesCacheName:          cache.PackagesCacheXML,
+		PackagesCacheArchive:       cache.PackageCacheArchive,
 		GmsCoreCacheName:           cache.GMSCoreCacheArchive,
 		GmsCoreManifestName:        cache.GMSCoreManifest,
 		GsfCacheName:               cache.GSFCache,

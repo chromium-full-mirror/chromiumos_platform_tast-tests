@@ -27,6 +27,15 @@ const (
 
 	// Name of jar cache library file.
 	cacheBuilderJarName = "org.chromium.arc.cachebuilder.jar"
+
+	// PackagesCacheXML defines the name of packages cache file name.
+	PackagesCacheXML = "packages_cache.xml"
+
+	// FileHashCache defines the name to keep file hashes cache.
+	FileHashCache = "file_hash_cache"
+
+	// SharedUsersTxt defines the name to keep shared users map.
+	SharedUsersTxt = "shared_users.txt"
 )
 
 // regExpEndsWithBuildID is the regexp to find the build ID from the path entry where build ID
@@ -191,9 +200,9 @@ func InstallGmsCoreCaches(ctx context.Context, jarPath, rootDir, tarPath, manife
 
 // GeneratePackagesCache generates packages cache based on files in the vendor image where useReference means
 // packages reference will be used for dynamic generation.
-func GeneratePackagesCache(ctx context.Context, jarPath, rootDir, androidPath, vendorTmpDir, packagesCache, fileHashCache, packagesReference string, useReference bool) error {
+func GeneratePackagesCache(ctx context.Context, jarPath, rootDir, androidPath, vendorTmpDir, packagesReference string, useReference bool) error {
 	const javaClass = "org.chromium.arc.cachebuilder.CacheGenerator"
-	if androidPath == "" || vendorTmpDir == "" || packagesCache == "" || fileHashCache == "" {
+	if androidPath == "" || vendorTmpDir == "" {
 		return errors.New("failed to run cache generator with invalid empty path(s)")
 	}
 	args := []string{
@@ -201,13 +210,18 @@ func GeneratePackagesCache(ctx context.Context, jarPath, rootDir, androidPath, v
 		"--system-root", rootDir,
 		"--vendor-root", androidPath,
 		"--vendor-root", vendorTmpDir,
-		"--output", packagesCache, "--output-apk-hashes", fileHashCache,
+		"--output",
+		filepath.Join(rootDir, PackagesCacheXML),
+		"--output-apk-hashes",
+		filepath.Join(rootDir, FileHashCache),
 	}
 	if useReference {
 		if packagesReference == "" {
 			return errors.New("failed to run cache generator with invalid empty reference path")
 		}
-		args = append(args, "--reference", packagesReference, "--generate", "yes")
+		args = append(args, "--reference", packagesReference)
+		args = append(args, "--output-user-map", filepath.Join(rootDir, SharedUsersTxt))
+		args = append(args, "--generate", "yes")
 	}
 	if err := testexec.CommandContext(ctx, "sudo", args...).Run(testexec.DumpLogOnError); err != nil {
 		return err

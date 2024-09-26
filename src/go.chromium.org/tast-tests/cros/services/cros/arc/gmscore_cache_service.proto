@@ -8,10 +8,14 @@ package tast.cros.arc;
 
 option go_package = "go.chromium.org/tast-tests/cros/services/cros/arc";
 
+// To gen:
+// ~/chromiumos/src/platform/tast/tools/go.sh generate
+// go.chromium.org/tast-tests/cros/services/cros/arc
+
 // GmsCoreService provides GMS Core and GFS caches generation
 service GmsCoreCacheService {
   // Generate generates GMS Core and GFS caches.
-  rpc Generate (GmsCoreCacheRequest) returns (GmsCoreCacheResponse) {}
+  rpc Generate(GmsCoreCacheRequest) returns (GmsCoreCacheResponse) {}
 }
 
 message GmsCoreCacheRequest {
@@ -29,11 +33,13 @@ message GmsCoreCacheRequest {
 message GmsCoreCacheResponse {
   // Path to directory with caches.
   string target_dir = 1;
-  // Name of packages cache.
+  // Name of packages cache XML.
   string packages_cache_name = 2;
-  //Name of GMS Core caches packed to tar file.
+  // Name of packages cache archive.
+  string packages_cache_archive = 7;
+  // Name of GMS Core caches packed to tar file.
   string gms_core_cache_name = 3;
-  //Name of GMS Core manifest file.
+  // Name of GMS Core manifest file.
   string gms_core_manifest_name = 4;
   // Name of GSF cache.
   string gsf_cache_name = 5;
