@@ -90,13 +90,6 @@ func init() {
 			Fixture: "crosHealthdRunning",
 		}, {
 			// Contact: weiluanwang@google.com
-			Name:    "dns_resolution",
-			Val:     croshealthd.NewRoutineParams(croshealthd.RoutineDNSResolution),
-			Fixture: "crosHealthdRunning",
-			// TODO(b/369257389): Promote to critical.
-			ExtraAttr: []string{"informational", "group:criticalstaging"},
-		}, {
-			// Contact: weiluanwang@google.com
 			// Cannot be added to DiagnosticsPass.* since that requires the
 			// routine to be run in a good network environment. The
 			// DiagnosticsPass.* counterpart will be flaky in a normal lab.
