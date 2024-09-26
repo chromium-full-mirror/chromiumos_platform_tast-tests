@@ -65,8 +65,12 @@ const (
 
 const checkInterval = 5 * time.Second
 
-// SystemTraceConfigFile is a perfetto tracing config.
-const SystemTraceConfigFile = "perfetto/system_trace_config.pbtxt"
+const (
+	// SystemTraceConfigFile is a perfetto tracing config.
+	SystemTraceConfigFile = "perfetto/system_trace_config.pbtxt"
+	// PerfettoConfigFile is a ARC perfetto tracing config.
+	PerfettoConfigFile = "perfetto/perfetto_config.pbtxt"
+)
 
 const (
 	// CPUCoolDownTimeout is the time to wait for CPU cool down.
