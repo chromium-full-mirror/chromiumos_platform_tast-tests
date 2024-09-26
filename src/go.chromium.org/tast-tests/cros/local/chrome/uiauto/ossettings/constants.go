@@ -424,6 +424,9 @@ var (
 
 // Elements in "Network" page.
 var (
+	// NetworkHeading is the finder for the heading of the Network page.
+	NetworkHeading = nodewith.Name("Network").Role(role.Heading)
+
 	// JoinWiFiNetworkDialog is the finder for the "Join Wi-Fi network" dialog in the network page.
 	JoinWiFiNetworkDialog = nodewith.NameContaining("Join Wi-Fi network").Role(role.Dialog)
 

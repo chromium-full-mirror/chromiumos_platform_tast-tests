@@ -53,7 +53,7 @@ func OpenJoinVPNDialog(ctx context.Context, tconn *chrome.TestConn, cr *chrome.C
 		}
 	}(cleanupCtx)
 
-	if err := settings.NavigateToPageURL(ctx, cr, "internet", settings.Exists(Internet)); err != nil {
+	if err := settings.NavigateToPageURL(ctx, cr, "internet", settings.Exists(NetworkHeading)); err != nil {
 		return nil, errors.Wrap(err, "failed to open the OS settings page")
 	}
 
