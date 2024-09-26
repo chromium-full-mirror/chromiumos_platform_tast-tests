@@ -69,6 +69,12 @@ func WifiReconnectOnUserChange(ctx context.Context, s *testing.State) {
 	s.AttachErrorHandlers(hookEnv.OnErrorHandler, hookEnv.OnFatalHandler)
 	defer hookEnv.TearDownWithLogFailures(cleanupCtx, s.HasError)
 
+	// If the test requires a relog virtualnet must be started with Chrome logged
+	// out (b/300208832). Restart UI to force the logged out state.
+	if err := upstart.RestartJob(ctx, "ui"); err != nil {
+		s.Fatal("Failed to logout user before starting the test: ", err)
+	}
+
 	const (
 		// Constants for EAP. We use different identity and password for user and
 		// device profiles.
