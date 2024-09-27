@@ -14,6 +14,7 @@ import (
 	"go.chromium.org/tast-tests/cros/local/modemfwd"
 	"go.chromium.org/tast-tests/cros/local/upstart"
 	"go.chromium.org/tast/core/ctxutil"
+	"go.chromium.org/tast/core/errors"
 	"go.chromium.org/tast/core/testing"
 	"go.chromium.org/tast/core/timing"
 )
@@ -118,6 +119,12 @@ func ModemFWManifestInstallation(ctx context.Context, s *testing.State) {
 	// Ensure the test restores the modemfwd state.
 	defer cleanUp(cleanupCtx, s)
 
+	// While running the installation test, check if each FW is known by the cellular helper.
+	// The "FW known" check is only fatal if all the FW installation tests are succesfull, since the
+	// priority of the test is to check the FW installation, and we are checking for the FW version
+	// just for convenience.
+	var isModemFirmwareKnownErr error = nil
+
 	// Use a combination of minimum number of retries and time. Sometimes failures take a long time,
 	// and a single retry is enough, but when the modem is not ready for an update, the retries will
 	// fail very quickly.
@@ -146,10 +153,16 @@ func ModemFWManifestInstallation(ctx context.Context, s *testing.State) {
 					s.Fatal("Failed to flash fw: ", err)
 				}
 			} else {
+				if err := cellular.IsModemFirmwareKnown(ctx); err != nil {
+					isModemFirmwareKnownErr = errors.Join(isModemFirmwareKnownErr, err)
+				}
 				break
 			}
 		}
+	}
 
+	if isModemFirmwareKnownErr != nil {
+		s.Fatal("All FWs installed correctly, but some FWs versions are unknown: ", isModemFirmwareKnownErr)
 	}
 }
 
