@@ -44,9 +44,8 @@ const (
 
 func init() {
 	testing.AddTest(&testing.Test{
-		Func:         AutofillCreditCardEnabled,
-		LacrosStatus: testing.LacrosVariantExists,
-		Desc:         "Behavior of AutofillCreditCardEnabled policy, checking the correspoding toggle button states (restriction and checked) after setting the policy",
+		Func: AutofillCreditCardEnabled,
+		Desc: "Behavior of AutofillCreditCardEnabled policy, checking the correspoding toggle button states (restriction and checked) after setting the policy",
 		Contacts: []string{
 			"chrome-payments-team@google.com", // Feature owner
 			"dp-chromeos-eng@google.com",
@@ -56,16 +55,8 @@ func init() {
 		// Remove architecture restrictions when the problem is solved.
 		SoftwareDeps: []string{"chrome", "no_arm"},
 		Attr:         []string{"group:golden_tier", "group:hw_agnostic"},
-		Params: []testing.Param{{
-			Fixture: fixture.ChromePolicyLoggedIn,
-			Val:     browser.TypeAsh,
-		}, {
-			Name:              "lacros",
-			ExtraSoftwareDeps: []string{"lacros"},
-			Fixture:           fixture.LacrosPolicyLoggedIn,
-			Val:               browser.TypeLacros,
-		}},
-		Data: []string{autofillCreditCardHTMLFile, autofillCreditCardKeyFile, autofillCreditCardCertFile, autofillCreditCardCaCertFile},
+		Fixture:      fixture.ChromePolicyLoggedIn,
+		Data:         []string{autofillCreditCardHTMLFile, autofillCreditCardKeyFile, autofillCreditCardCertFile, autofillCreditCardCaCertFile},
 		SearchFlags: []*testing.StringPair{
 			pci.SearchFlag(&policy.AutofillCreditCardEnabled{}, pci.VerifiedFunctionalityUI),
 		},
@@ -141,7 +132,7 @@ func AutofillCreditCardEnabled(ctx context.Context, s *testing.State) {
 			}
 
 			// Setup browser based on the chrome type.
-			br, closeBrowser, err := browserfixt.SetUp(ctx, cr, s.Param().(browser.Type))
+			br, closeBrowser, err := browserfixt.SetUp(ctx, cr, browser.TypeAsh)
 			if err != nil {
 				s.Fatal("Failed to open the browser: ", err)
 			}
@@ -149,7 +140,7 @@ func AutofillCreditCardEnabled(ctx context.Context, s *testing.State) {
 			defer faillog.DumpUITreeWithScreenshotOnError(ctx, s.OutDir(), s.HasError, cr, "ui_tree_"+param.Name)
 
 			// Open the net-export page and start logging.
-			netExport, err := netexport.Start(ctx, cr, br, s.Param().(browser.Type))
+			netExport, err := netexport.Start(ctx, cr, br, browser.TypeAsh)
 			if err != nil {
 				s.Fatal("Failed to start net export: ", err)
 			}

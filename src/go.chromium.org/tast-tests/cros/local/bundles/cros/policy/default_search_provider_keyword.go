@@ -27,9 +27,8 @@ import (
 
 func init() {
 	testing.AddTest(&testing.Test{
-		Func:         DefaultSearchProviderKeyword,
-		LacrosStatus: testing.LacrosVariantExists,
-		Desc:         "Behavior of DefaultSearchProviderKeyword policy: check if specified keyword triggers the search for search provider",
+		Func: DefaultSearchProviderKeyword,
+		Desc: "Behavior of DefaultSearchProviderKeyword policy: check if specified keyword triggers the search for search provider",
 		Contacts: []string{
 			"cros-engprod-muc@google.com",
 			"dp-chromeos-eng@google.com",
@@ -37,15 +36,7 @@ func init() {
 		BugComponent: "b:1263917",
 		SoftwareDeps: []string{"chrome"},
 		Attr:         []string{"group:golden_tier", "group:hw_agnostic"},
-		Params: []testing.Param{{
-			Fixture: fixture.ChromePolicyLoggedIn,
-			Val:     browser.TypeAsh,
-		}, {
-			Name:              "lacros",
-			ExtraSoftwareDeps: []string{"lacros"},
-			Fixture:           fixture.LacrosPolicyLoggedIn,
-			Val:               browser.TypeLacros,
-		}},
+		Fixture:      fixture.ChromePolicyLoggedIn,
 		SearchFlags: []*testing.StringPair{
 			pci.SearchFlag(&policy.DefaultSearchProviderKeyword{}, pci.VerifiedFunctionalityUI),
 			pci.SearchFlag(&policy.DefaultSearchProviderEnabled{}, pci.VerifiedValue),
@@ -120,7 +111,7 @@ func DefaultSearchProviderKeyword(ctx context.Context, s *testing.State) {
 				s.Fatal("Failed to update policies: ", err)
 			}
 
-			br, closeBrowser, err := browserfixt.SetUp(ctx, cr, s.Param().(browser.Type))
+			br, closeBrowser, err := browserfixt.SetUp(ctx, cr, browser.TypeAsh)
 			if err != nil {
 				s.Fatal("Failed to setup chrome: ", err)
 			}

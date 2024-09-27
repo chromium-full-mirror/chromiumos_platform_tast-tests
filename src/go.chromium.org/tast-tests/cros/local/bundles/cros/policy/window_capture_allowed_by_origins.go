@@ -34,9 +34,8 @@ const (
 
 func init() {
 	testing.AddTest(&testing.Test{
-		Func:         WindowCaptureAllowedByOrigins,
-		LacrosStatus: testing.LacrosVariantExists,
-		Desc:         "Behavior of WindowCaptureAllowedByOrigins policy",
+		Func: WindowCaptureAllowedByOrigins,
+		Desc: "Behavior of WindowCaptureAllowedByOrigins policy",
 		Contacts: []string{
 			"cros-engprod-muc@google.com",
 			"dandrader@google.com", // Test author
@@ -44,16 +43,8 @@ func init() {
 		BugComponent: "b:1263917",
 		SoftwareDeps: []string{"chrome"},
 		Attr:         []string{"group:golden_tier", "group:hw_agnostic"},
-		Params: []testing.Param{{
-			Fixture: fixture.ChromePolicyLoggedIn,
-			Val:     browser.TypeAsh,
-		}, {
-			Name:              "lacros",
-			ExtraSoftwareDeps: []string{"lacros"},
-			Fixture:           fixture.LacrosPolicyLoggedIn,
-			Val:               browser.TypeLacros,
-		}},
-		Data: []string{windowCaptureAllowedByOriginsHTML},
+		Fixture:      fixture.ChromePolicyLoggedIn,
+		Data:         []string{windowCaptureAllowedByOriginsHTML},
 		SearchFlags: []*testing.StringPair{
 			pci.SearchFlag(&policy.ScreenCaptureAllowed{}, pci.VerifiedFunctionalityUI),
 			pci.SearchFlag(&policy.WindowCaptureAllowedByOrigins{}, pci.VerifiedFunctionalityUI),
@@ -134,7 +125,7 @@ func WindowCaptureAllowedByOrigins(ctx context.Context, s *testing.State) {
 			}
 
 			// Setup browser based on the chrome type.
-			br, closeBrowser, err := browserfixt.SetUp(ctx, cr, s.Param().(browser.Type))
+			br, closeBrowser, err := browserfixt.SetUp(ctx, cr, browser.TypeAsh)
 			if err != nil {
 				s.Fatal("Failed to open the browser: ", err)
 			}

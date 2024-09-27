@@ -23,8 +23,7 @@ import (
 
 func init() {
 	testing.AddTest(&testing.Test{
-		Func:         DeveloperToolsAvailability,
-		LacrosStatus: testing.LacrosVariantExists,
+		Func: DeveloperToolsAvailability,
 		// TODO(crbug/1125548): add functionality to verify policy with
 		// force installed extension.
 		Desc: "Behavior of the DeveloperToolsAvailability policy, check whether developer tools can be opened on chrome://user-actions page",
@@ -35,15 +34,7 @@ func init() {
 		SoftwareDeps: []string{"chrome"},
 		BugComponent: "b:1263917", // ChromeOS > Software > Commercial (Enterprise) > Testing
 		Attr:         []string{"group:golden_tier", "group:hw_agnostic"},
-		Params: []testing.Param{{
-			Fixture: fixture.ChromePolicyLoggedIn,
-			Val:     browser.TypeAsh,
-		}, {
-			Name:              "lacros",
-			ExtraSoftwareDeps: []string{"lacros"},
-			Fixture:           fixture.LacrosPolicyLoggedIn,
-			Val:               browser.TypeLacros,
-		}},
+		Fixture:      fixture.ChromePolicyLoggedIn,
 		// This test
 		// - starts 16 subtests, each of which can realistically take up to 20 seconds and
 		// - reserves 10 seconds for cleanup.
@@ -103,7 +94,7 @@ func DeveloperToolsAvailability(ctx context.Context, s *testing.State) {
 				s.Fatal("Failed to update policies: ", err)
 			}
 
-			_, closeBrowser, err := browserfixt.SetUp(ctx, cr, s.Param().(browser.Type))
+			_, closeBrowser, err := browserfixt.SetUp(ctx, cr, browser.TypeAsh)
 			if err != nil {
 				s.Fatal("Failed to setup chrome: ", err)
 			}

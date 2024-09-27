@@ -24,24 +24,15 @@ import (
 
 func init() {
 	testing.AddTest(&testing.Test{
-		Func:         ForceYouTubeSafetyMode,
-		LacrosStatus: testing.LacrosVariantExists,
-		Desc:         "Test the behavior of deprecated ForceYouTubeSafetyMode policy: check if YouTube safe search is enabled based on the value of the policy",
+		Func: ForceYouTubeSafetyMode,
+		Desc: "Test the behavior of deprecated ForceYouTubeSafetyMode policy: check if YouTube safe search is enabled based on the value of the policy",
 		Contacts: []string{
 			"cros-engprod-muc@google.com",
 		},
 		BugComponent: "b:1263917",
 		SoftwareDeps: []string{"chrome"},
 		Attr:         []string{"group:golden_tier", "group:hw_agnostic"},
-		Params: []testing.Param{{
-			Fixture: fixture.ChromePolicyLoggedIn,
-			Val:     browser.TypeAsh,
-		}, {
-			Name:              "lacros",
-			ExtraSoftwareDeps: []string{"lacros"},
-			Fixture:           fixture.LacrosPolicyLoggedIn,
-			Val:               browser.TypeLacros,
-		}},
+		Fixture:      fixture.ChromePolicyLoggedIn,
 		// Loading two YouTube videos on slower devices can take a while (we observed subtests that took up to 40 seconds), thus give every subtest 1 minute to run.
 		Timeout: 7 * time.Minute,
 		SearchFlags: []*testing.StringPair{
@@ -126,7 +117,7 @@ func ForceYouTubeSafetyMode(ctx context.Context, s *testing.State) {
 				s.Fatal("Failed to update policies: ", err)
 			}
 
-			br, closeBrowser, err := browserfixt.SetUp(ctx, cr, s.Param().(browser.Type))
+			br, closeBrowser, err := browserfixt.SetUp(ctx, cr, browser.TypeAsh)
 			if err != nil {
 				s.Fatal("Failed to setup chrome: ", err)
 			}

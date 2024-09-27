@@ -24,25 +24,16 @@ import (
 
 func init() {
 	testing.AddTest(&testing.Test{
-		Func:         DefaultJavaScriptSetting,
-		LacrosStatus: testing.LacrosVariantExists,
-		Desc:         "Check that the DefaultJavaScript policy blocks or allows JavaScript",
+		Func: DefaultJavaScriptSetting,
+		Desc: "Check that the DefaultJavaScript policy blocks or allows JavaScript",
 		Contacts: []string{
 			"chrome-permissions-team@google.com",
 		},
 		BugComponent: "b:1456817",
 		SoftwareDeps: []string{"chrome"},
 		Attr:         []string{"group:golden_tier", "group:hw_agnostic"},
-		Params: []testing.Param{{
-			Fixture: fixture.ChromePolicyLoggedIn,
-			Val:     browser.TypeAsh,
-		}, {
-			Name:              "lacros",
-			ExtraSoftwareDeps: []string{"lacros"},
-			Fixture:           fixture.LacrosPolicyLoggedIn,
-			Val:               browser.TypeLacros,
-		}},
-		Data: []string{"js_test.html"},
+		Fixture:      fixture.ChromePolicyLoggedIn,
+		Data:         []string{"js_test.html"},
 		SearchFlags: []*testing.StringPair{
 			pci.SearchFlag(&policy.DefaultJavaScriptSetting{}, pci.VerifiedFunctionalityJS),
 		},
@@ -86,7 +77,7 @@ func DefaultJavaScriptSetting(ctx context.Context, s *testing.State) {
 				s.Fatal("Failed to serve and verify policies: ", err)
 			}
 
-			br, closeBrowser, err := browserfixt.SetUp(ctx, cr, s.Param().(browser.Type))
+			br, closeBrowser, err := browserfixt.SetUp(ctx, cr, browser.TypeAsh)
 			if err != nil {
 				s.Fatal("Failed to setup chrome: ", err)
 			}

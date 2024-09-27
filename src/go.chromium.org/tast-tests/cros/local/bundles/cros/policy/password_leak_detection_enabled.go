@@ -30,9 +30,8 @@ import (
 
 func init() {
 	testing.AddTest(&testing.Test{
-		Func:         PasswordLeakDetectionEnabled,
-		LacrosStatus: testing.LacrosVariantExists,
-		Desc:         "Test PasswordLeakDetectionEnabled policy",
+		Func: PasswordLeakDetectionEnabled,
+		Desc: "Test PasswordLeakDetectionEnabled policy",
 		Contacts: []string{
 			"dp-chromeos-eng@google.com",
 			"chiav@google.com",
@@ -53,15 +52,7 @@ func init() {
 			pci.SearchFlag(&policy.PasswordLeakDetectionEnabled{}, pci.VerifiedFunctionalityUI),
 			pci.SearchFlag(&policy.SafeBrowsingProtectionLevel{}, pci.VerifiedValue),
 		},
-		Params: []testing.Param{{
-			Fixture: fixture.ChromePolicyRealUserLoggedIn,
-			Val:     browser.TypeAsh,
-		}, {
-			Name:              "lacros",
-			Fixture:           fixture.LacrosPolicyRealUserLoggedIn,
-			ExtraSoftwareDeps: []string{"lacros"},
-			Val:               browser.TypeLacros,
-		}},
+		Fixture: fixture.ChromePolicyRealUserLoggedIn,
 	})
 }
 
@@ -109,15 +100,14 @@ func PasswordLeakDetectionEnabled(ctx context.Context, s *testing.State) {
 			}
 
 			// Setup a browser.
-			bt := s.Param().(browser.Type)
-			br, closeBrowser, err := browserfixt.SetUp(ctx, cr, bt)
+			br, closeBrowser, err := browserfixt.SetUp(ctx, cr, browser.TypeAsh)
 			if err != nil {
 				s.Fatal("Failed to open the browser: ", err)
 			}
 			defer closeBrowser(cleanupCtx)
 
 			// Open the net-export page and start logging.
-			netExport, err := netexport.Start(ctx, cr, br, s.Param().(browser.Type))
+			netExport, err := netexport.Start(ctx, cr, br, browser.TypeAsh)
 			if err != nil {
 				s.Fatal("Failed to start net export: ", err)
 			}

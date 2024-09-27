@@ -27,9 +27,8 @@ import (
 
 func init() {
 	testing.AddTest(&testing.Test{
-		Func:         SafeBrowsingProtectionLevel,
-		LacrosStatus: testing.LacrosVariantExists,
-		Desc:         "Checks if Google Chrome's Safe Browsing feature is enabled and the mode it operates in",
+		Func: SafeBrowsingProtectionLevel,
+		Desc: "Checks if Google Chrome's Safe Browsing feature is enabled and the mode it operates in",
 		Contacts: []string{
 			"cros-engprod-muc@google.com",
 			"mohamedaomar@google.com", // Test author
@@ -37,15 +36,7 @@ func init() {
 		BugComponent: "b:1263917",
 		Attr:         []string{"group:golden_tier", "group:hw_agnostic"},
 		SoftwareDeps: []string{"chrome"},
-		Params: []testing.Param{{
-			Fixture: fixture.ChromePolicyLoggedIn,
-			Val:     browser.TypeAsh,
-		}, {
-			Name:              "lacros",
-			ExtraSoftwareDeps: []string{"lacros"},
-			Fixture:           fixture.LacrosPolicyLoggedIn,
-			Val:               browser.TypeLacros,
-		}},
+		Fixture:      fixture.ChromePolicyLoggedIn,
 		SearchFlags: []*testing.StringPair{
 			pci.SearchFlag(&policy.SafeBrowsingProtectionLevel{}, pci.VerifiedFunctionalityUI),
 		},
@@ -104,7 +95,7 @@ func SafeBrowsingProtectionLevel(ctx context.Context, s *testing.State) {
 			}
 
 			// Setup browser based on the chrome type.
-			br, closeBrowser, err := browserfixt.SetUp(ctx, cr, s.Param().(browser.Type))
+			br, closeBrowser, err := browserfixt.SetUp(ctx, cr, browser.TypeAsh)
 			if err != nil {
 				s.Fatal("Failed to open the browser: ", err)
 			}

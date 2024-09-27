@@ -28,24 +28,15 @@ import (
 
 func init() {
 	testing.AddTest(&testing.Test{
-		Func:         AllowDeletingBrowserHistory,
-		LacrosStatus: testing.LacrosVariantExists,
-		Desc:         "Behavior of AllowDeletingBrowserHistory policy, checking the correspoding checkbox states (restriction and checked) after setting the policy",
+		Func: AllowDeletingBrowserHistory,
+		Desc: "Behavior of AllowDeletingBrowserHistory policy, checking the correspoding checkbox states (restriction and checked) after setting the policy",
 		Contacts: []string{
 			"chrome-enterprise-team@google.com",
 		},
 		BugComponent: "b:322532",
 		SoftwareDeps: []string{"chrome"},
 		Attr:         []string{"group:golden_tier", "group:hw_agnostic"},
-		Params: []testing.Param{{
-			Fixture: fixture.ChromePolicyLoggedIn,
-			Val:     browser.TypeAsh,
-		}, {
-			Name:              "lacros",
-			ExtraSoftwareDeps: []string{"lacros"},
-			Fixture:           fixture.LacrosPolicyLoggedIn,
-			Val:               browser.TypeLacros,
-		}},
+		Fixture:      fixture.ChromePolicyLoggedIn,
 		SearchFlags: []*testing.StringPair{
 			pci.SearchFlag(&policy.AllowDeletingBrowserHistory{}, pci.VerifiedFunctionalityUI),
 		},
@@ -106,7 +97,7 @@ func AllowDeletingBrowserHistory(ctx context.Context, s *testing.State) {
 			}
 
 			// Setup browser based on the chrome type.
-			br, closeBrowser, err := browserfixt.SetUp(ctx, cr, s.Param().(browser.Type))
+			br, closeBrowser, err := browserfixt.SetUp(ctx, cr, browser.TypeAsh)
 			if err != nil {
 				s.Fatal("Failed to open the browser: ", err)
 			}
