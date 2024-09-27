@@ -40,9 +40,12 @@ func init() {
 			"jbk@chromium.org",      // Test Author
 		},
 		BugComponent: "b:715469", // ChromeOS > Platform > System > Hardware Security > HwSec GSC > Ti50
-		Attr:         []string{"group:gsc", "gsc_dt_ab", "gsc_dt_shield", "gsc_image_ti50", "gsc_nightly"},
-		Fixture:      fixture.GSCOpenCCD,
-		Vars:         []string{"bypass_sleep_check"},
+		Attr: []string{"group:gsc",
+			"gsc_dt_ab", "gsc_dt_shield", "gsc_ot_fpga_cw310",
+			"gsc_image_ti50",
+			"gsc_nightly"},
+		Fixture: fixture.GSCOpenCCD,
+		Vars:    []string{"bypass_sleep_check"},
 		Params: []testing.Param{{
 			Name: "deep_spi_no_uservo",
 			Val: ti50SleepParam{
@@ -124,6 +127,10 @@ type wakeSource string
 type whichPin string
 
 func logCurrent(ctx context.Context, s *testing.State, b utils.DevboardHelper, pv *perf.Values, label string) {
+	if b.TestbedType == ti50.GscOpentitanCw310Fpga {
+		// Current sensing not supported on FPGA
+		return
+	}
 	for n := 1; n <= 5; n++ {
 		testing.Sleep(ctx, 100*time.Millisecond) // GoBigSleepLint: Space out readings
 		c := b.ReadGscTotalMilliAmps(ctx)
@@ -400,18 +407,22 @@ func ti50DeepSleep(ctx context.Context, s *testing.State, b utils.DevboardHelper
 		verifyDeepSleep(ctx, s, i, th)
 	}
 
-	s.Log("Simulating SuzyQ inserted")
-	b.GpioApplyStrap(ctx, ti50.CcdSuzyQ)
-	if verifyDeepWakeup(ctx, s, i, b, gpioMonitor, wakeSourceAdc, nil, "CCD connection") {
-		logCurrent(ctx, s, b, pv, "Awake_CCD")
-		verifyNoSleep(ctx, s, i, th)
-		b.GpioApplyStrap(ctx, ti50.CcdDisconnected)
-		verifyDeepSleep(ctx, s, i, th)
-		logCurrent(ctx, s, b, pv, "DeepSleep_CCD")
+	if b.TestbedType == ti50.GscOpentitanCw310Fpga {
+		// Analog voltages on CC lines not supported on FPGA
 	} else {
-		// Error already reported by `verifyDeepWakeup`, disconnect SuzyQ and move on to
-		// testing other wake sources.
-		b.GpioApplyStrap(ctx, ti50.CcdDisconnected)
+		s.Log("Simulating SuzyQ inserted")
+		b.GpioApplyStrap(ctx, ti50.CcdSuzyQ)
+		if verifyDeepWakeup(ctx, s, i, b, gpioMonitor, wakeSourceAdc, nil, "CCD connection") {
+			logCurrent(ctx, s, b, pv, "Awake_CCD")
+			verifyNoSleep(ctx, s, i, th)
+			b.GpioApplyStrap(ctx, ti50.CcdDisconnected)
+			verifyDeepSleep(ctx, s, i, th)
+			logCurrent(ctx, s, b, pv, "DeepSleep_CCD")
+		} else {
+			// Error already reported by `verifyDeepWakeup`, disconnect SuzyQ and move on to
+			// testing other wake sources.
+			b.GpioApplyStrap(ctx, ti50.CcdDisconnected)
+		}
 	}
 
 	s.Log("Simulating serial console input")
@@ -509,21 +520,25 @@ func ti50NormalSleep(ctx context.Context, s *testing.State, b utils.DevboardHelp
 		b.GpioSet(ctx, ti50.GpioTi50CcdModeL, true)
 	}
 
-	s.Log("Simulating SuzyQ inserted")
-	b.GpioApplyStrap(ctx, ti50.CcdSuzyQ)
-	if verifyNormalWakeup(ctx, s, i, b, gpioMonitor, wakeSourceAdc, nil, "CCD connection") {
-		logCurrent(ctx, s, b, pv, "Awake_AP_CCD")
-		verifyNoSleep(ctx, s, i, th)
-		b.GpioApplyStrap(ctx, ti50.CcdDisconnected)
-		verifyNormalSleep(ctx, s, i, th)
-		logCurrent(ctx, s, b, pv, "NormalSleep_CCD")
-		// For some reason, after USB disconnect it takes five seconds for Dauntless power
-		// consumption to drop.
-		testing.Sleep(ctx, 5*time.Second) // GoBigSleepLint: Wait for power change
-		logCurrent(ctx, s, b, pv, "NormalSleep_CCD_2")
+	if b.TestbedType == ti50.GscOpentitanCw310Fpga {
+		// Analog voltages on CC lines not supported on FPGA
 	} else {
-		// Error already reported by `verifyNormalWakeup`, move on to testing other wake sources.
-		b.GpioApplyStrap(ctx, ti50.CcdDisconnected)
+		s.Log("Simulating SuzyQ inserted")
+		b.GpioApplyStrap(ctx, ti50.CcdSuzyQ)
+		if verifyNormalWakeup(ctx, s, i, b, gpioMonitor, wakeSourceAdc, nil, "CCD connection") {
+			logCurrent(ctx, s, b, pv, "Awake_AP_CCD")
+			verifyNoSleep(ctx, s, i, th)
+			b.GpioApplyStrap(ctx, ti50.CcdDisconnected)
+			verifyNormalSleep(ctx, s, i, th)
+			logCurrent(ctx, s, b, pv, "NormalSleep_CCD")
+			// For some reason, after USB disconnect it takes five seconds for Dauntless power
+			// consumption to drop.
+			testing.Sleep(ctx, 5*time.Second) // GoBigSleepLint: Wait for power change
+			logCurrent(ctx, s, b, pv, "NormalSleep_CCD_2")
+		} else {
+			// Error already reported by `verifyNormalWakeup`, move on to testing other wake sources.
+			b.GpioApplyStrap(ctx, ti50.CcdDisconnected)
+		}
 	}
 
 	s.Log("Simulating serial console input")

@@ -31,8 +31,11 @@ func init() {
 			"mruthven@chromium.org", // Test Author
 		},
 		BugComponent: "b:715469", // ChromeOS > Platform > System > Hardware Security > HwSec GSC > Ti50
-		Attr:         []string{"group:gsc", "gsc_dt_ab", "gsc_dt_shield", "gsc_h1_shield", "gsc_image_ti50", "gsc_nightly"},
-		Fixture:      fixture.GSCOpenCCD,
+		Attr: []string{"group:gsc",
+			"gsc_dt_ab", "gsc_dt_shield", "gsc_h1_shield",
+			"gsc_image_ti50",
+			"gsc_nightly"},
+		Fixture: fixture.GSCOpenCCD,
 		Params: []testing.Param{{
 			Name:      "deep_sleep",
 			ExtraAttr: []string{"gsc_ot_shield"},
@@ -74,18 +77,6 @@ func GSCBasicSleep(ctx context.Context, s *testing.State) {
 	b.ResetAndTpmStartupForBus(ctx, i, testConfig.Bus, ti50.CCDModeOff, ti50.FfClamshell)
 	th.MustSucceed(i.WaitUntilBooted(ctx), "GSC revives after reboot")
 
-	var sleepDelay time.Duration
-	switch b.TestbedType {
-	case ti50.GscH1Shield:
-		// H1 takes 20s to enter sleep. Add 5s to be safe.
-		sleepDelay = 25 * time.Second
-	case ti50.GscDTAndreiboard, ti50.GscDTShield, ti50.GscOTShield:
-		// DT takes 60s to enter sleep. Add 5s to be safe.
-		sleepDelay = 65 * time.Second
-	default:
-		s.Fatalf("Unknown testbed type: %s", b.TestbedType)
-	}
-
 	err := b.WaitForPowerRise(ctx, 10.0, 5*time.Second)
 	if err != nil {
 		s.Fatalf("Did not hit the AP on power threshold at the start of the test: %s", err)
@@ -100,7 +91,7 @@ func GSCBasicSleep(ctx context.Context, s *testing.State) {
 		b.GpioSet(ctx, testConfig.WakeSignal, !testConfig.WakeSignalVal)
 		waitForSleep = b.WaitUntilDeepSleep
 	}
-	err = waitForSleep(ctx, i, sleepDelay)
+	err = waitForSleep(ctx, i, ti50.WaitForSleepTimeout)
 	if err != nil {
 		// Run some commands that will help debug sleep issues.
 		i.Command(ctx, "sleepmask")
