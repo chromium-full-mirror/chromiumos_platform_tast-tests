@@ -510,11 +510,11 @@ func ti50NormalSleep(ctx context.Context, s *testing.State, b utils.DevboardHelp
 	}
 
 	s.Log("Simulating SuzyQ inserted")
-	b.GpioApplyStrap(ctx, ti50.CCDModeOn)
+	b.GpioApplyStrap(ctx, ti50.CcdSuzyQ)
 	if verifyNormalWakeup(ctx, s, i, b, gpioMonitor, wakeSourceAdc, nil, "CCD connection") {
 		logCurrent(ctx, s, b, pv, "Awake_AP_CCD")
 		verifyNoSleep(ctx, s, i, th)
-		b.GpioApplyStrap(ctx, ti50.CCDModeOff)
+		b.GpioApplyStrap(ctx, ti50.CcdDisconnected)
 		verifyNormalSleep(ctx, s, i, th)
 		logCurrent(ctx, s, b, pv, "NormalSleep_CCD")
 		// For some reason, after USB disconnect it takes five seconds for Dauntless power
@@ -523,7 +523,7 @@ func ti50NormalSleep(ctx context.Context, s *testing.State, b utils.DevboardHelp
 		logCurrent(ctx, s, b, pv, "NormalSleep_CCD_2")
 	} else {
 		// Error already reported by `verifyNormalWakeup`, move on to testing other wake sources.
-		b.GpioApplyStrap(ctx, ti50.CCDModeOff)
+		b.GpioApplyStrap(ctx, ti50.CcdDisconnected)
 	}
 
 	s.Log("Simulating serial console input")
