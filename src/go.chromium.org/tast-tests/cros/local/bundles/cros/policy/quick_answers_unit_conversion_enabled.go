@@ -31,9 +31,8 @@ import (
 
 func init() {
 	testing.AddTest(&testing.Test{
-		Func:         QuickAnswersUnitConversionEnabled,
-		LacrosStatus: testing.LacrosVariantExists,
-		Desc:         "Test QuickAnswersUnitConversionEnabled policy",
+		Func: QuickAnswersUnitConversionEnabled,
+		Desc: "Test QuickAnswersUnitConversionEnabled policy",
 		Contacts: []string{
 			"dp-chromeos-eng@google.com",
 			"chiav@google.com",
@@ -53,10 +52,7 @@ func init() {
 			pci.SearchFlag(&policy.QuickAnswersUnitConversionEnabled{}, pci.VerifiedFunctionalityUI),
 			pci.SearchFlag(&policy.QuickAnswersUnitConversionEnabled{}, pci.VerifiedFunctionalityOS),
 		},
-		Params: []testing.Param{{
-			Fixture: fixture.FakeDMSEnrolled,
-			Val:     browser.TypeAsh,
-		}},
+		Fixture: fixture.FakeDMSEnrolled,
 	})
 }
 
@@ -115,15 +111,14 @@ func QuickAnswersUnitConversionEnabled(ctx context.Context, s *testing.State) {
 			}
 
 			// Setup a browser.
-			bt := s.Param().(browser.Type)
-			br, closeBrowser, err := browserfixt.SetUp(ctx, cr, bt)
+			br, closeBrowser, err := browserfixt.SetUp(ctx, cr, browser.TypeAsh)
 			if err != nil {
 				s.Fatal("Failed to open the browser: ", err)
 			}
 			defer closeBrowser(cleanupCtx)
 
 			// Open the net-export page and start logging.
-			netExport, err := netexport.Start(ctx, cr, br, s.Param().(browser.Type))
+			netExport, err := netexport.Start(ctx, cr, br, browser.TypeAsh)
 			if err != nil {
 				s.Fatal("Failed to start net export: ", err)
 			}

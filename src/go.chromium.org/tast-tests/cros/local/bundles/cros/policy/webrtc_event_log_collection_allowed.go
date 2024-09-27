@@ -22,9 +22,8 @@ import (
 
 func init() {
 	testing.AddTest(&testing.Test{
-		Func:         WebrtcEventLogCollectionAllowed,
-		LacrosStatus: testing.LacrosVariantExists,
-		Desc:         "Test network annotation by turning on and off WebRTCEventLogCollectionAllowed policy",
+		Func: WebrtcEventLogCollectionAllowed,
+		Desc: "Test network annotation by turning on and off WebRTCEventLogCollectionAllowed policy",
 		Contacts: []string{
 			"dp-chromeos-eng@google.com",
 			"sugandhagoyal@google.com",
@@ -37,15 +36,7 @@ func init() {
 		SearchFlags: []*testing.StringPair{
 			pci.SearchFlag(&policy.WebRtcEventLogCollectionAllowed{}, pci.VerifiedValue),
 		},
-		Params: []testing.Param{{
-			Fixture: fixture.ChromePolicyRealUserLoggedIn,
-			Val:     browser.TypeAsh,
-		}, {
-			Name:              "lacros",
-			Fixture:           fixture.LacrosPolicyRealUserLoggedIn,
-			ExtraSoftwareDeps: []string{"lacros"},
-			Val:               browser.TypeLacros,
-		}},
+		Fixture: fixture.ChromePolicyRealUserLoggedIn,
 	})
 }
 
@@ -69,7 +60,7 @@ func WebrtcEventLogCollectionAllowed(ctx context.Context, s *testing.State) {
 		s.Run(ctx, param.Name, func(ctx context.Context, s *testing.State) {
 			runParam := webrtclogupload.AnnotationTestParam{
 				AnnotationHashCode: webrtclogupload.EventLogCollectionHashID,
-				Bt:                 s.Param().(browser.Type),
+				Bt:                 browser.TypeAsh,
 				Creds:              bondCreds,
 				Tc:                 param,
 				Timeout:            2 * time.Minute,

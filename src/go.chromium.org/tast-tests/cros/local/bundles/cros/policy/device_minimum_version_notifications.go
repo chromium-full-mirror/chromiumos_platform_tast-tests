@@ -22,9 +22,8 @@ import (
 
 func init() {
 	testing.AddTest(&testing.Test{
-		Func:         DeviceMinimumVersionNotifications,
-		LacrosStatus: testing.LacrosVariantNeeded,
-		Desc:         "Notifications of DeviceMinimumVersion policy when device has reached auto update expiration",
+		Func: DeviceMinimumVersionNotifications,
+		Desc: "Notifications of DeviceMinimumVersion policy when device has reached auto update expiration",
 		Contacts: []string{
 			"chromeos-commercial-remote-management@google.com",
 		},

@@ -24,9 +24,8 @@ import (
 
 func init() {
 	testing.AddTest(&testing.Test{
-		Func:         DefaultJavascriptJitSetting,
-		LacrosStatus: testing.LacrosVariantExists,
-		Desc:         "Check that the DefaultJavaScriptJitSetting policy blocks or allows the JIT compiler",
+		Func: DefaultJavascriptJitSetting,
+		Desc: "Check that the DefaultJavaScriptJitSetting policy blocks or allows the JIT compiler",
 		Contacts: []string{
 			"cros-engprod-muc@google.com",
 			"eariassoto@google.com", // Test author
@@ -34,16 +33,8 @@ func init() {
 		BugComponent: "b:1263917",
 		SoftwareDeps: []string{"chrome"},
 		Attr:         []string{"group:golden_tier", "group:hw_agnostic"},
-		Params: []testing.Param{{
-			Fixture: fixture.ChromePolicyLoggedIn,
-			Val:     browser.TypeAsh,
-		}, {
-			Name:              "lacros",
-			ExtraSoftwareDeps: []string{"lacros"},
-			Fixture:           fixture.LacrosPolicyLoggedIn,
-			Val:               browser.TypeLacros,
-		}},
-		Data: []string{"jit_test.html", "is_jit_enabled.wasm"},
+		Fixture:      fixture.ChromePolicyLoggedIn,
+		Data:         []string{"jit_test.html", "is_jit_enabled.wasm"},
 		SearchFlags: []*testing.StringPair{
 			pci.SearchFlag(&policy.DefaultJavaScriptJitSetting{}, pci.VerifiedFunctionalityJS),
 		},
@@ -92,7 +83,7 @@ func DefaultJavascriptJitSetting(ctx context.Context, s *testing.State) {
 				s.Error("Failed to serve and verify policies: ", err)
 			}
 
-			br, closeBrowser, err := browserfixt.SetUp(ctx, cr, s.Param().(browser.Type))
+			br, closeBrowser, err := browserfixt.SetUp(ctx, cr, browser.TypeAsh)
 			if err != nil {
 				s.Error("Failed to setup chrome: ", err)
 			}

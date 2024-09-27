@@ -42,9 +42,8 @@ const defaultNotificationsSettingGcmTrafficAnnotationServiceWorkerJs = "default_
 
 func init() {
 	testing.AddTest(&testing.Test{
-		Func:         DefaultNotificationsSettingGcmTrafficAnnotation,
-		LacrosStatus: testing.LacrosVariantExists,
-		Desc:         "Behavior of DefaultNotificationsSetting policy, checks for `gcm_registration` traffic annotation on allowing notifications on pop-up at different policy values",
+		Func: DefaultNotificationsSettingGcmTrafficAnnotation,
+		Desc: "Behavior of DefaultNotificationsSetting policy, checks for `gcm_registration` traffic annotation on allowing notifications on pop-up at different policy values",
 		Contacts: []string{
 			"dp-chromeos-eng@google.com",
 			"alexwchen@google.com", // Test author
@@ -53,16 +52,8 @@ func init() {
 		SoftwareDeps: []string{"chrome"},
 		Attr:         []string{"group:golden_tier"},
 		Data:         []string{defaultNotificationsSettingGcmTrafficAnnotationHTML, defaultNotificationsSettingGcmTrafficAnnotationServiceWorkerJs},
-		Params: []testing.Param{{
-			Fixture: fixture.ChromePolicyLoggedIn,
-			Val:     browser.TypeAsh,
-		}, {
-			Name:              "lacros",
-			ExtraSoftwareDeps: []string{"lacros"},
-			Fixture:           fixture.LacrosPolicyLoggedIn,
-			Val:               browser.TypeLacros,
-		}},
-		Timeout: 5 * time.Minute,
+		Fixture:      fixture.ChromePolicyLoggedIn,
+		Timeout:      5 * time.Minute,
 		SearchFlags: []*testing.StringPair{
 			pci.SearchFlag(&policy.DefaultNotificationsSetting{}, pci.VerifiedFunctionalityUI),
 		},
@@ -143,7 +134,7 @@ func DefaultNotificationsSettingGcmTrafficAnnotation(ctx context.Context, s *tes
 			}
 
 			// Setup browser based on the chrome type.
-			br, closeBrowser, err := browserfixt.SetUp(ctx, cr, s.Param().(browser.Type))
+			br, closeBrowser, err := browserfixt.SetUp(ctx, cr, browser.TypeAsh)
 			if err != nil {
 				s.Fatal("Failed to open the browser: ", err)
 			}
@@ -221,14 +212,6 @@ func DefaultNotificationsSettingGcmTrafficAnnotation(ctx context.Context, s *tes
 			}
 
 			if param.shouldFindAnnotation {
-				// For lacros, the permission panel occasionally shows up again. Click "allow" if needed.
-				if s.Param().(browser.Type) == browser.TypeLacros {
-					if param.name == "ask_allow" {
-						if err := ui.DoDefault(allowButton)(ctx); err != nil {
-							s.Log("Failed to click additional allow button in lacros: ", err)
-						}
-					}
-				}
 				// Verify the status text has been replaced.
 				if err := ui.WaitUntilGone(statusText)(ctx); err != nil {
 					s.Fatal("Got unexpected Status text: ", err)

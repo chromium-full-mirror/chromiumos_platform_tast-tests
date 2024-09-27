@@ -31,9 +31,8 @@ const ukmTestURL = "https://www.google.com"
 
 func init() {
 	testing.AddTest(&testing.Test{
-		Func:         TrafficAnnotationURLKeyedDataCollection,
-		LacrosStatus: testing.LacrosVariantExists,
-		Desc:         "This test checks the network annotation for UKM policy to make sure we are not sending network traffic when it's off",
+		Func: TrafficAnnotationURLKeyedDataCollection,
+		Desc: "This test checks the network annotation for UKM policy to make sure we are not sending network traffic when it's off",
 		Contacts: []string{
 			"dp-chromeos-eng@google.com",
 			"yanghenry@google.com",
@@ -44,13 +43,8 @@ func init() {
 		SoftwareDeps: []string{"chrome", "no_arm"},
 		Attr:         []string{"group:golden_tier"},
 		Timeout:      8 * time.Minute,
-		Params: []testing.Param{
-			{
-				Fixture: fixture.FakeDMSEnrolled,
-				Val:     browser.TypeAsh,
-			},
-		},
-		Data: []string{"autofill_address_enabled.html"},
+		Fixture:      fixture.FakeDMSEnrolled,
+		Data:         []string{"autofill_address_enabled.html"},
 		SearchFlags: []*testing.StringPair{
 			pci.SearchFlag(&policy.UrlKeyedAnonymizedDataCollectionEnabled{}, pci.VerifiedFunctionalityJS),
 			pci.SearchFlag(&policy.EnableSyncConsent{}, pci.VerifiedFunctionalityUI),
@@ -104,7 +98,7 @@ func TrafficAnnotationURLKeyedDataCollection(ctx context.Context, s *testing.Sta
 				s.Fatal("Failed to update policies: ", err)
 			}
 			// Setup browser based on the chrome type.
-			br, closeBrowser, err := browserfixt.SetUp(ctx, cr, s.Param().(browser.Type))
+			br, closeBrowser, err := browserfixt.SetUp(ctx, cr, browser.TypeAsh)
 			if err != nil {
 				s.Fatal("Failed to open the browser: ", err)
 			}
@@ -113,7 +107,7 @@ func TrafficAnnotationURLKeyedDataCollection(ctx context.Context, s *testing.Sta
 			defer faillog.DumpUITreeWithScreenshotOnError(ctx, s.OutDir(), s.HasError, cr, "ui_tree_"+param.Name)
 
 			// Open the net-export page and start logging.
-			netExport, err := netexport.Start(ctx, cr, br, s.Param().(browser.Type))
+			netExport, err := netexport.Start(ctx, cr, br, browser.TypeAsh)
 			if err != nil {
 				s.Fatal("Failed to start net export: ", err)
 			}

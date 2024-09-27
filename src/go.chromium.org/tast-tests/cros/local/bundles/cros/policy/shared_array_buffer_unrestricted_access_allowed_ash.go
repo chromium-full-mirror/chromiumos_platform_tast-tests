@@ -24,9 +24,8 @@ import (
 
 func init() {
 	testing.AddTest(&testing.Test{
-		Func:         SharedArrayBufferUnrestrictedAccessAllowedAsh,
-		LacrosStatus: testing.LacrosVariantExists,
-		Desc:         "Checking if SharedArrayBuffer is available in non-cross-origin-isolated contexts depending on the value of this policy",
+		Func: SharedArrayBufferUnrestrictedAccessAllowedAsh,
+		Desc: "Checking if SharedArrayBuffer is available in non-cross-origin-isolated contexts depending on the value of this policy",
 		Contacts: []string{
 			"cros-engprod-muc@google.com",
 		},
@@ -88,8 +87,7 @@ func SharedArrayBufferUnrestrictedAccessAllowedAsh(ctx context.Context, s *testi
 		s.Run(ctx, param.name, func(ctx context.Context, s *testing.State) {
 			// The SharedArrayBufferUnrestrictedAccessAllowed policy does not support
 			// dynamic refresh, which means that we need to restart the browser for
-			// every subtest. This works out of the box for Lacros, but requires us
-			// to manually close and reopen Ash Chrome.
+			// every subtest.
 			pb := policy.NewBlob()
 			pb.AddPolicies([]policy.Policy{param.policy})
 			if err := fdms.WritePolicyBlob(pb); err != nil {

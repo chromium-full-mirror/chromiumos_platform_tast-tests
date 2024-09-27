@@ -31,9 +31,8 @@ import (
 
 func init() {
 	testing.AddTest(&testing.Test{
-		Func:         DefaultSearchProviderSuggestURL,
-		LacrosStatus: testing.LacrosVariantExists,
-		Desc:         "Behavior of DefaultSearchProviderSuggestURL policy: check if provided search provider is being used for suggestions",
+		Func: DefaultSearchProviderSuggestURL,
+		Desc: "Behavior of DefaultSearchProviderSuggestURL policy: check if provided search provider is being used for suggestions",
 		Contacts: []string{
 			"chromeos-commercial-identity@google.com",
 			"fabiansommer@chromium.org", // Test author
@@ -46,15 +45,7 @@ func init() {
 			// "group:mainline",
 			// "informational"
 		},
-		Params: []testing.Param{{
-			Fixture: fixture.ChromePolicyLoggedIn,
-			Val:     browser.TypeAsh,
-		}, {
-			Name:              "lacros",
-			ExtraSoftwareDeps: []string{"lacros"},
-			Fixture:           fixture.LacrosPolicyLoggedIn,
-			Val:               browser.TypeLacros,
-		}},
+		Fixture: fixture.ChromePolicyLoggedIn,
 		SearchFlags: []*testing.StringPair{
 			pci.SearchFlag(&policy.DefaultSearchProviderEnabled{}, pci.VerifiedValue),
 			pci.SearchFlag(&policy.DefaultSearchProviderSearchURL{}, pci.VerifiedValue),
@@ -143,7 +134,7 @@ func DefaultSearchProviderSuggestURL(ctx context.Context, s *testing.State) {
 				s.Fatal("Failed to update policies: ", err)
 			}
 
-			br, closeBrowser, err := browserfixt.SetUp(ctx, cr, s.Param().(browser.Type))
+			br, closeBrowser, err := browserfixt.SetUp(ctx, cr, browser.TypeAsh)
 			if err != nil {
 				s.Fatal("Failed to setup chrome: ", err)
 			}
