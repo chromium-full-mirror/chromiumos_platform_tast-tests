@@ -15,7 +15,6 @@ import (
 	"go.chromium.org/tast-tests/cros/local/chrome/ash"
 	"go.chromium.org/tast-tests/cros/local/chrome/browser"
 	"go.chromium.org/tast-tests/cros/local/chrome/browser/browserfixt"
-	"go.chromium.org/tast-tests/cros/local/chrome/lacros/lacrosfixt"
 	"go.chromium.org/tast-tests/cros/local/chrome/uiauto"
 	"go.chromium.org/tast-tests/cros/local/chrome/uiauto/nodewith"
 	"go.chromium.org/tast-tests/cros/local/perfutil"
@@ -37,7 +36,6 @@ const (
 
 type notificationClearTestVal struct {
 	testType notificationCloseTestType
-	bt       browser.Type
 }
 
 func init() {
@@ -45,7 +43,6 @@ func init() {
 	// TODO(b/294542488): Re-enable the `one_at_a_time*` variants.
 	testing.AddTest(&testing.Test{
 		Func:         NotificationClosePerf,
-		LacrosStatus: testing.LacrosVariantExists,
 		Desc:         "Measures animation performance of the clear all animation or individual notification deletion in the message center",
 		Contacts:     []string{"cros-status-area-eng@google.com", "newcomer@chromium.org", "chromeos-sw-engprod@google.com"},
 		BugComponent: "b:1246021", // ChromeOS > Software > System UI Surfaces > Notifications
@@ -54,34 +51,18 @@ func init() {
 		Timeout:      10 * time.Minute,
 		Params: []testing.Param{{
 			Name: "one_at_a_time",
-			Val:  notificationClearTestVal{clearOneAtATime, browser.TypeAsh},
+			Val:  notificationClearTestVal{clearOneAtATime},
 		}, {
 			Name:              "one_at_a_time_arc",
 			ExtraSoftwareDeps: []string{"arc"},
-			Val:               notificationClearTestVal{clearOneAtATimeWithARC, browser.TypeAsh},
+			Val:               notificationClearTestVal{clearOneAtATimeWithARC},
 		}, {
 			Name: "clear_all",
-			Val:  notificationClearTestVal{clearAll, browser.TypeAsh},
+			Val:  notificationClearTestVal{clearAll},
 		}, {
 			Name:              "clear_all_arc",
 			ExtraSoftwareDeps: []string{"arc"},
-			Val:               notificationClearTestVal{clearAllWithARC, browser.TypeAsh},
-		}, {
-			Name:              "one_at_a_time_lacros",
-			ExtraSoftwareDeps: []string{"lacros"},
-			Val:               notificationClearTestVal{clearOneAtATime, browser.TypeLacros},
-		}, {
-			Name:              "one_at_a_time_arc_lacros",
-			ExtraSoftwareDeps: []string{"arc", "lacros"},
-			Val:               notificationClearTestVal{clearOneAtATimeWithARC, browser.TypeLacros},
-		}, {
-			Name:              "clear_all_lacros",
-			ExtraSoftwareDeps: []string{"lacros"},
-			Val:               notificationClearTestVal{clearAll, browser.TypeLacros},
-		}, {
-			Name:              "clear_all_arc_lacros",
-			ExtraSoftwareDeps: []string{"arc", "lacros"},
-			Val:               notificationClearTestVal{clearAllWithARC, browser.TypeLacros},
+			Val:               notificationClearTestVal{clearAllWithARC},
 		}},
 	})
 }
@@ -106,8 +87,7 @@ func NotificationClosePerf(ctx context.Context, s *testing.State) {
 		initArcOpt = []chrome.Option{chrome.ARCEnabled()}
 	}
 
-	bt := s.Param().(notificationClearTestVal).bt
-	cr, br, closeBrowser, err := browserfixt.SetUpWithNewChrome(ctx, bt, lacrosfixt.NewConfig(), initArcOpt...)
+	cr, br, closeBrowser, err := browserfixt.SetUpWithNewChrome(ctx, browser.TypeAsh, nil, initArcOpt...)
 	if err != nil {
 		s.Fatal("Failed to set up browser: ", err)
 	}

@@ -7,7 +7,6 @@ package ui
 import (
 	"context"
 	"fmt"
-	"regexp"
 	"time"
 
 	"go.chromium.org/tast-tests/cros/common/dma"
@@ -16,7 +15,6 @@ import (
 	"go.chromium.org/tast-tests/cros/local/chrome/ash"
 	"go.chromium.org/tast-tests/cros/local/chrome/browser"
 	"go.chromium.org/tast-tests/cros/local/chrome/browser/browserfixt"
-	"go.chromium.org/tast-tests/cros/local/chrome/lacros/lacrosfixt"
 	"go.chromium.org/tast-tests/cros/local/chrome/uiauto"
 	"go.chromium.org/tast-tests/cros/local/chrome/uiauto/faillog"
 	"go.chromium.org/tast-tests/cros/local/chrome/uiauto/nodewith"
@@ -29,9 +27,8 @@ import (
 
 func init() {
 	testing.AddTest(&testing.Test{
-		Func:         RequestMobileSiteTablet,
-		LacrosStatus: testing.LacrosVariantExists,
-		Desc:         "Test request mobile site function on websites under different types of login account",
+		Func: RequestMobileSiteTablet,
+		Desc: "Test request mobile site function on websites under different types of login account",
 		Contacts: []string{
 			"cj.tsai@cienet.com",
 			"chromeos-connectivity-cienet-external@google.com",
@@ -44,16 +41,6 @@ func init() {
 		VarDeps: []string{
 			family.ParentAccountVarName,
 			family.UnicornAccountVarName,
-		},
-		Params: []testing.Param{
-			{
-				Val: browser.TypeAsh,
-			},
-			{
-				Name:              "lacros",
-				ExtraSoftwareDeps: []string{"lacros"},
-				Val:               browser.TypeLacros,
-			},
 		},
 	})
 }
@@ -105,23 +92,10 @@ func RequestMobileSiteTablet(ctx context.Context, s *testing.State) {
 	// disabled for supervised users. Always force enable them in supervised users tests.
 	const extraArg = "--force-devtools-available"
 
-	var optsForUser map[userType][]chrome.Option
-	browserType := s.Param().(browser.Type)
-	switch browserType {
-	case browser.TypeAsh:
-		optsForUser = map[userType][]chrome.Option{
-			normal: {chrome.GAIALogin(parentCred)},
-			child:  {chrome.GAIALogin(childCred), chrome.ExtraArgs(extraArg)},
-			guest:  {chrome.GuestLogin()},
-		}
-	case browser.TypeLacros:
-		optsForUser = map[userType][]chrome.Option{
-			normal: {chrome.GAIALogin(parentCred)},
-			child:  {chrome.GAIALogin(childCred), chrome.EnableFeatures("LacrosForSupervisedUsers"), chrome.ExtraArgs(extraArg), chrome.LacrosExtraArgs(extraArg)},
-			// TODO(b/244513681): Enable guest mode test for lacros once lacros supports the guest mode.
-		}
-	default:
-		s.Fatal("Unrecognized browser type: ", browserType)
+	optsForUser := map[userType][]chrome.Option{
+		normal: {chrome.GAIALogin(parentCred)},
+		child:  {chrome.GAIALogin(childCred), chrome.ExtraArgs(extraArg)},
+		guest:  {chrome.GuestLogin()},
 	}
 
 	websites := map[string]string{
@@ -142,7 +116,7 @@ func RequestMobileSiteTablet(ctx context.Context, s *testing.State) {
 			defer cancel()
 
 			s.Log("Logging in as ", user)
-			cr, br, closeBrowser, err := browserfixt.SetUpWithNewChrome(ctx, browserType, lacrosfixt.NewConfig(), opts...)
+			cr, br, closeBrowser, err := browserfixt.SetUpWithNewChrome(ctx, browser.TypeAsh, nil, opts...)
 			if err != nil {
 				s.Fatal("Failed to sign in: ", err)
 			}
@@ -173,11 +147,6 @@ func RequestMobileSiteTablet(ctx context.Context, s *testing.State) {
 
 			for websiteName, url := range websites {
 				browserRoot := nodewith.Role(role.Window).HasClass("BrowserFrame").NameContaining(websiteName)
-				if browserType == browser.TypeLacros {
-					browserClassRegexp := regexp.MustCompile(`^ExoShellSurface(-\d+)?$`)
-					browserRoot = nodewith.Role(role.Window).ClassNameRegex(browserClassRegexp).NameContaining(websiteName)
-				}
-
 				res.threeDotMenuBtn = nodewith.HasClass("BrowserAppMenuButton").Role(role.PopUpButton).Ancestor(nodewith.HasClass("ToolbarView").Role(role.Toolbar).Ancestor(browserRoot))
 				if err := mobileSiteTest(ctx, br, res, websiteName, url); err != nil {
 					s.Fatalf("Failed to run mobileSiteTest on website %q: %v", websiteName, err)

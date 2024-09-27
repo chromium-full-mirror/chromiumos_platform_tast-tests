@@ -18,7 +18,6 @@ import (
 	"go.chromium.org/tast-tests/cros/local/chrome/ash"
 	"go.chromium.org/tast-tests/cros/local/chrome/browser"
 	"go.chromium.org/tast-tests/cros/local/chrome/browser/browserfixt"
-	"go.chromium.org/tast-tests/cros/local/chrome/lacros/lacrosfixt"
 	"go.chromium.org/tast-tests/cros/local/chrome/uiauto"
 	"go.chromium.org/tast-tests/cros/local/chrome/uiauto/event"
 	"go.chromium.org/tast-tests/cros/local/chrome/uiauto/nodewith"
@@ -33,9 +32,8 @@ import (
 
 func init() {
 	testing.AddTest(&testing.Test{
-		Func:         DeskButtonDeskBarPerf,
-		LacrosStatus: testing.LacrosVariantExists,
-		Desc:         "Measures the performance of opening and closing the desk button desk bar",
+		Func: DeskButtonDeskBarPerf,
+		Desc: "Measures the performance of opening and closing the desk button desk bar",
 		Contacts: []string{
 			"yongshun@google.com",
 			"sammiequon@google.com",
@@ -49,13 +47,6 @@ func init() {
 		HardwareDeps: hwdep.D(hwdep.InternalDisplay()),
 		VarDeps:      []string{uiCommon.GaiaPoolDefaultVarName},
 		Timeout:      chrome.GAIALoginTimeout + 2*time.Minute,
-		Params: []testing.Param{{
-			Val: browser.TypeAsh,
-		}, {
-			Name:              "lacros",
-			ExtraSoftwareDeps: []string{"lacros"},
-			Val:               browser.TypeLacros,
-		}},
 	})
 }
 
@@ -72,7 +63,7 @@ func DeskButtonDeskBarPerf(ctx context.Context, s *testing.State) {
 
 	opts := []chrome.Option{chrome.EnableFeatures("DeskButton"),
 		chrome.GAIALoginPool(dma.CredsFromPool(uiCommon.GaiaPoolDefaultVarName))}
-	cr, _, closeBrowser, err := browserfixt.SetUpWithNewChrome(ctx, s.Param().(browser.Type), lacrosfixt.NewConfig(), opts...)
+	cr, _, closeBrowser, err := browserfixt.SetUpWithNewChrome(ctx, browser.TypeAsh, nil, opts...)
 	if err != nil {
 		s.Fatal("Failed to start Chrome: ", err)
 	}

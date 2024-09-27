@@ -11,10 +11,9 @@ import (
 	"time"
 
 	"go.chromium.org/tast-tests/cros/common/action"
+	"go.chromium.org/tast-tests/cros/local/chrome"
 	"go.chromium.org/tast-tests/cros/local/chrome/ash"
-	"go.chromium.org/tast-tests/cros/local/chrome/browser"
 	"go.chromium.org/tast-tests/cros/local/chrome/display"
-	"go.chromium.org/tast-tests/cros/local/chrome/lacros"
 	"go.chromium.org/tast-tests/cros/local/chrome/metrics"
 	"go.chromium.org/tast-tests/cros/local/chrome/uiauto"
 	"go.chromium.org/tast-tests/cros/local/chrome/uiauto/faillog"
@@ -42,7 +41,6 @@ const (
 func init() {
 	testing.AddTest(&testing.Test{
 		Func:         ChromePIPRoundedCornersUnderlay,
-		LacrosStatus: testing.LacrosVariantExists,
 		Desc:         "Verifies that Chrome PIP rounded corners are implemented with a hardware underlay",
 		Contacts:     []string{"chromeos-perf@google.com", "petermcneeley@chromium.org", "oshima@chromium.org"},
 		BugComponent: "b:1021073",
@@ -50,33 +48,16 @@ func init() {
 		SoftwareDeps: []string{"chrome", "proprietary_codecs"},
 		HardwareDeps: hwdep.D(hwdep.SupportsNV12Overlays()),
 		Data:         []string{"180p_60fps_600frames.h264.mp4", "pip_video.html"},
+		Fixture:      "chromeGraphics",
 		Params: []testing.Param{{
 			// TODO(b/246573749): Remove cave and chell when the test can pass on them.
 			// TODO(b/255636769): Remove rusty, steelix, and tentacruel when the test can pass on them.
 			ExtraHardwareDeps: hwdep.D(hwdep.SkipOnModel("cave", "chell", "rusty", "steelix", "tentacruel")),
-			Fixture:           "chromeGraphics",
-			Val:               browser.TypeAsh,
-		}, {
-			Name:              "lacros",
-			ExtraSoftwareDeps: []string{"lacros"},
-			// TODO(b/246573749): Remove cave and chell when the test can pass on them.
-			ExtraHardwareDeps: hwdep.D(hwdep.SkipOnModel("cave", "chell")),
-			Fixture:           "chromeGraphicsLacros",
-			Val:               browser.TypeLacros,
 		}, {
 			Name: "failing",
 			// TODO(b/246573749): Remove cave and chell when the test can pass on them.
 			// TODO(b/255636769): Remove rusty, steelix, and tentacruel when the test can pass on them.
 			ExtraHardwareDeps: hwdep.D(hwdep.Model("cave", "chell", "rusty", "steelix", "tentacruel")),
-			Fixture:           "chromeGraphics",
-			Val:               browser.TypeAsh,
-		}, {
-			Name:              "failing_lacros",
-			ExtraSoftwareDeps: []string{"lacros"},
-			// TODO(b/246573749): Remove cave and chell when the test can pass on them.
-			ExtraHardwareDeps: hwdep.D(hwdep.Model("cave", "chell")),
-			Fixture:           "chromeGraphicsLacros",
-			Val:               browser.TypeLacros,
 		}},
 	})
 }
@@ -87,12 +68,7 @@ func ChromePIPRoundedCornersUnderlay(ctx context.Context, s *testing.State) {
 	ctx, cancel := ctxutil.Shorten(ctx, 10*time.Second)
 	defer cancel()
 
-	browserType := s.Param().(browser.Type)
-	cr, l, cs, err := lacros.Setup(ctx, s.FixtValue(), browserType)
-	if err != nil {
-		s.Fatal("Failed to initialize test: ", err)
-	}
-	defer lacros.CloseLacros(cleanupCtx, l)
+	cr := s.FixtValue().(chrome.HasChrome).Chrome()
 
 	tconn, err := cr.TestAPIConn(ctx)
 	if err != nil {
@@ -109,7 +85,7 @@ func ChromePIPRoundedCornersUnderlay(ctx context.Context, s *testing.State) {
 	srv := httptest.NewServer(http.FileServer(s.DataFileSystem()))
 	defer srv.Close()
 
-	conn, err := cs.NewConn(ctx, srv.URL+"/pip_video.html")
+	conn, err := cr.NewConn(ctx, srv.URL+"/pip_video.html")
 	if err != nil {
 		s.Fatal("Failed to load pip_video.html: ", err)
 	}
@@ -152,15 +128,7 @@ func ChromePIPRoundedCornersUnderlay(ctx context.Context, s *testing.State) {
 
 	ac := uiauto.New(tconn)
 	pipButton := nodewith.Name("PIP").Role(role.Button)
-
-	var pipClassName string
-	switch browserType {
-	case browser.TypeAsh:
-		pipClassName = "PictureInPictureWindow"
-	case browser.TypeLacros:
-		pipClassName = "Widget"
-	}
-	pipWindow := nodewith.Name("Picture in picture").ClassName(pipClassName).Onscreen().First()
+	pipWindow := nodewith.Name("Picture in picture").ClassName("PictureInPictureWindow").Onscreen().First()
 
 	if err := action.Combine(
 		"click/tap PIP button and wait for PIP window",

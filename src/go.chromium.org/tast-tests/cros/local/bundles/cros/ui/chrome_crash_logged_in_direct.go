@@ -12,22 +12,19 @@ import (
 	"go.chromium.org/tast-tests/cros/local/chrome"
 	"go.chromium.org/tast-tests/cros/local/chrome/browser"
 	"go.chromium.org/tast-tests/cros/local/chrome/browser/browserfixt"
-	"go.chromium.org/tast-tests/cros/local/chrome/lacros/lacrosfixt"
 	"go.chromium.org/tast-tests/cros/local/crash"
 	"go.chromium.org/tast/core/ctxutil"
 	"go.chromium.org/tast/core/testing"
 )
 
 type chromeCrashLoggedInDirectParams struct {
-	fileType    chromecrash.CrashFileType
-	handler     chromecrash.CrashHandler
-	browserType browser.Type
+	fileType chromecrash.CrashFileType
+	handler  chromecrash.CrashHandler
 }
 
 func init() {
 	testing.AddTest(&testing.Test{
 		Func:         ChromeCrashLoggedInDirect,
-		LacrosStatus: testing.LacrosVariantExists,
 		Desc:         "Checks that Chrome writes crash dumps while logged in; old version that does not invoke crash_reporter",
 		Contacts:     []string{"chromeos-data-eng@google.com", "hirthanan@google.com"},
 		BugComponent: "b:1032705",
@@ -37,28 +34,17 @@ func init() {
 		Params: []testing.Param{{
 			Name: "breakpad",
 			Val: chromeCrashLoggedInDirectParams{
-				handler:     chromecrash.Breakpad,
-				fileType:    chromecrash.BreakpadDmp,
-				browserType: browser.TypeAsh,
+				handler:  chromecrash.Breakpad,
+				fileType: chromecrash.BreakpadDmp,
 			},
 			ExtraSoftwareDeps: []string{"breakpad"},
 		}, {
 			Name: "crashpad",
 			Val: chromeCrashLoggedInDirectParams{
-				handler:     chromecrash.Crashpad,
-				fileType:    chromecrash.MetaFile,
-				browserType: browser.TypeAsh,
+				handler:  chromecrash.Crashpad,
+				fileType: chromecrash.MetaFile,
 			},
 			ExtraSoftwareDeps: []string{"crashpad"},
-			ExtraAttr:         []string{"group:hw_agnostic"},
-		}, {
-			Name: "crashpad_lacros",
-			Val: chromeCrashLoggedInDirectParams{
-				handler:     chromecrash.Crashpad,
-				fileType:    chromecrash.MetaFile,
-				browserType: browser.TypeLacros,
-			},
-			ExtraSoftwareDeps: []string{"crashpad", "lacros"},
 			ExtraAttr:         []string{"group:hw_agnostic"},
 		}},
 	})
@@ -85,15 +71,15 @@ func ChromeCrashLoggedInDirect(ctx context.Context, s *testing.State) {
 	defer cancel()
 
 	params := s.Param().(chromeCrashLoggedInDirectParams)
-	ct, err := chromecrash.NewCrashTester(ctx, chromecrash.GPUProcess, params.browserType, params.fileType)
+	ct, err := chromecrash.NewCrashTester(ctx, chromecrash.GPUProcess, browser.TypeAsh, params.fileType)
 	if err != nil {
 		s.Fatal("NewCrashTester failed: ", err)
 	}
 	defer ct.Close()
 
 	// TODO(b/292145636): Use fixtures for ChromeCrash tast tests instead.
-	cr, _, closeBrowser, err := browserfixt.SetUpWithNewChrome(ctx, params.browserType,
-		lacrosfixt.NewConfig(), chrome.ExtraArgs(chromecrash.GetExtraArgs(params.handler, crash.MockConsent)...))
+	cr, _, closeBrowser, err := browserfixt.SetUpWithNewChrome(ctx, browser.TypeAsh,
+		nil, chrome.ExtraArgs(chromecrash.GetExtraArgs(params.handler, crash.MockConsent)...))
 	if err != nil {
 		s.Fatal("Chrome login failed: ", err)
 	}
