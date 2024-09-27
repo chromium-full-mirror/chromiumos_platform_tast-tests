@@ -18,8 +18,8 @@ import (
 	"go.chromium.org/tast/core/testing"
 )
 
-const dlcID = "ml-core-internal"
-const dlcCLCacheDir = "/run/imageloader/ml-core-internal/package/root/cl_cache"
+const dlcID = "ml-core-dlc"
+const dlcCLCacheDir = "/run/imageloader/ml-core-dlc/package/root/cl_cache"
 
 func init() {
 	testing.AddTest(&testing.Test{

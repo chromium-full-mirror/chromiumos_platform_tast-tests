@@ -78,7 +78,7 @@ func SearchCategoriesImages(ctx context.Context, s *testing.State) {
 	// Gather required DLCs
 	var dlcList []string
 	if param.UseIca {
-		dlcList = append(dlcList, "ml-core-internal")
+		dlcList = append(dlcList, "ml-core-dlc")
 	}
 	if param.UseOcr {
 		dlcList = append(dlcList, "screen-ai")
