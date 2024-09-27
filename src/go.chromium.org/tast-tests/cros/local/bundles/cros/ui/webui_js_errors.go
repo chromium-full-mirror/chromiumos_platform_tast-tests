@@ -14,7 +14,6 @@ import (
 	"go.chromium.org/tast-tests/cros/local/chrome"
 	"go.chromium.org/tast-tests/cros/local/chrome/browser"
 	"go.chromium.org/tast-tests/cros/local/chrome/browser/browserfixt"
-	"go.chromium.org/tast-tests/cros/local/chrome/lacros/lacrosfixt"
 	"go.chromium.org/tast-tests/cros/local/chrome/uiauto/faillog"
 	"go.chromium.org/tast-tests/cros/local/crash"
 	"go.chromium.org/tast-tests/cros/local/input"
@@ -24,14 +23,12 @@ import (
 )
 
 type webUIJSErrorsParams struct {
-	browserType          browser.Type
 	fieldTrialConfigMode chrome.FieldTrialConfigMode
 }
 
 func init() {
 	testing.AddTest(&testing.Test{
 		Func:         WebUIJSErrors,
-		LacrosStatus: testing.LacrosVariantExists,
 		Desc:         "Checks that Chrome's WebUI JavaScript Error Reporting works on ChromeOS",
 		Contacts:     []string{"chromeos-data-eng@google.com", "hirthanan@google.com"},
 		BugComponent: "b:1032705",
@@ -40,40 +37,16 @@ func init() {
 		Timeout:      chrome.MinLoginTimeout + time.Minute,
 		Params: []testing.Param{{
 			Val: webUIJSErrorsParams{
-				browserType:          browser.TypeAsh,
 				fieldTrialConfigMode: chrome.FieldTrialConfigDefault,
 			},
 		}, {
 			Name: "field_trial_on",
 			Val: webUIJSErrorsParams{
-				browserType:          browser.TypeAsh,
 				fieldTrialConfigMode: chrome.FieldTrialConfigEnable,
 			},
 		}, {
 			Name: "field_trial_off",
 			Val: webUIJSErrorsParams{
-				browserType:          browser.TypeAsh,
-				fieldTrialConfigMode: chrome.FieldTrialConfigDisable,
-			},
-		}, {
-			Name:              "lacros",
-			ExtraSoftwareDeps: []string{"lacros"},
-			Val: webUIJSErrorsParams{
-				browserType:          browser.TypeLacros,
-				fieldTrialConfigMode: chrome.FieldTrialConfigDefault,
-			},
-		}, {
-			Name:              "lacros_field_trial_on",
-			ExtraSoftwareDeps: []string{"lacros"},
-			Val: webUIJSErrorsParams{
-				browserType:          browser.TypeLacros,
-				fieldTrialConfigMode: chrome.FieldTrialConfigEnable,
-			},
-		}, {
-			Name:              "lacros_field_trial_off",
-			ExtraSoftwareDeps: []string{"lacros"},
-			Val: webUIJSErrorsParams{
-				browserType:          browser.TypeLacros,
 				fieldTrialConfigMode: chrome.FieldTrialConfigDisable,
 			},
 		}},
@@ -269,7 +242,7 @@ func WebUIJSErrors(ctx context.Context, s *testing.State) {
 	if params.fieldTrialConfigMode != chrome.FieldTrialConfigDefault {
 		chromeOpts = append(chromeOpts, chrome.FieldTrialConfig(params.fieldTrialConfigMode))
 	}
-	cr, br, closeBrowser, err := browserfixt.SetUpWithNewChrome(ctx, params.browserType, lacrosfixt.NewConfig(),
+	cr, br, closeBrowser, err := browserfixt.SetUpWithNewChrome(ctx, browser.TypeAsh, nil,
 		chromeOpts...)
 	if err != nil {
 		s.Fatal("Chrome login failed: ", err)

@@ -25,9 +25,8 @@ import (
 
 func init() {
 	testing.AddTest(&testing.Test{
-		Func:         WindowControl,
-		LacrosStatus: testing.LacrosVariantExists,
-		Desc:         "Check if the performance around window controlling is good enough; go/cros-ui-perftests-cq#heading=h.fwfk0yg3teo1",
+		Func: WindowControl,
+		Desc: "Check if the performance around window controlling is good enough; go/cros-ui-perftests-cq#heading=h.fwfk0yg3teo1",
 		Contacts: []string{
 			"chromeos-wm@google.com",
 			"cros-sw-perf@google.com",
@@ -40,16 +39,7 @@ func init() {
 		// no_qemu: VMs often fail performance expectations.
 		SoftwareDeps: []string{"chrome", "no_chrome_dcheck", "no_qemu"},
 		HardwareDeps: hwdep.D(hwdep.InternalDisplay()),
-		Params: []testing.Param{{
-			Fixture: "chromeLoggedIn",
-			Val:     browser.TypeAsh,
-		}, {
-			Name:              "lacros",
-			Fixture:           "lacros",
-			ExtraAttr:         []string{"informational"},
-			ExtraSoftwareDeps: []string{"lacros"},
-			Val:               browser.TypeLacros,
-		}},
+		Fixture:      "chromeLoggedIn",
 	})
 }
 
@@ -60,9 +50,6 @@ func WindowControl(ctx context.Context, s *testing.State) {
 	defer cancel()
 
 	interactiveWindowResizeHistogram := "Ash.InteractiveWindowResize.TimeToPresent"
-	if s.Param().(browser.Type) == browser.TypeLacros {
-		interactiveWindowResizeHistogram = "Ash.InteractiveWindowResize.Lacros.TimeToPresent"
-	}
 	expects := perfutil.CreateExpectations(ctx,
 		"Ash.Window.AnimationSmoothness.CrossFade",
 		"Ash.Window.AnimationSmoothness.CrossFade.DragMaximize",
@@ -87,7 +74,7 @@ func WindowControl(ctx context.Context, s *testing.State) {
 	// Set up the browser, open a first window.
 	const numWindows = 8
 	const url = chrome.BlankURL
-	conn, br, closeBrowser, err := browserfixt.SetUpWithURL(ctx, cr, s.Param().(browser.Type), url)
+	conn, br, closeBrowser, err := browserfixt.SetUpWithURL(ctx, cr, browser.TypeAsh, url)
 	if err != nil {
 		s.Fatal("Failed to open the browser: ", err)
 	}

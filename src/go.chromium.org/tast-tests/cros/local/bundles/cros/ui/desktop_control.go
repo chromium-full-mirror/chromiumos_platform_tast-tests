@@ -26,9 +26,8 @@ import (
 
 func init() {
 	testing.AddTest(&testing.Test{
-		Func:         DesktopControl,
-		LacrosStatus: testing.LacrosVariantExists,
-		Desc:         "Check if the performance around desktop UI components is good enough; see also go/cros-ui-perftests-cq#heading=h.fwfk0yg3teo1",
+		Func: DesktopControl,
+		Desc: "Check if the performance around desktop UI components is good enough; see also go/cros-ui-perftests-cq#heading=h.fwfk0yg3teo1",
 		Contacts: []string{
 			"cros-system-ui-eng@google.com",
 			"newcomer@chromium.org",
@@ -45,7 +44,6 @@ func init() {
 				ExtraAttr:         []string{"group:mainline", "informational"},
 				ExtraHardwareDeps: hwdep.D(hwdep.SkipOnModel(perfutil.UnstableModels...)),
 				Fixture:           "chromeLoggedIn",
-				Val:               browser.TypeAsh,
 			},
 			// TODO(crbug.com/1163981): remove "unstable" once we see stability on all platforms.
 			{
@@ -54,23 +52,6 @@ func init() {
 				// ExtraAttr:         []string{"group:mainline", "informational"},
 				ExtraHardwareDeps: hwdep.D(hwdep.Model(perfutil.UnstableModels...)),
 				Fixture:           "chromeLoggedIn",
-				Val:               browser.TypeAsh,
-			},
-			{
-				Name:              "lacros",
-				ExtraAttr:         []string{"group:mainline", "informational"},
-				ExtraSoftwareDeps: []string{"lacros"},
-				ExtraHardwareDeps: hwdep.D(hwdep.SkipOnModel(perfutil.UnstableModels...)),
-				Fixture:           "lacros",
-				Val:               browser.TypeLacros,
-			},
-			{
-				Name:              "lacros_unstable",
-				ExtraAttr:         []string{"group:mainline", "informational"},
-				ExtraSoftwareDeps: []string{"lacros"},
-				ExtraHardwareDeps: hwdep.D(hwdep.Model(perfutil.UnstableModels...)),
-				Fixture:           "lacros",
-				Val:               browser.TypeLacros,
 			},
 		},
 	})
@@ -90,7 +71,7 @@ func DesktopControl(ctx context.Context, s *testing.State) {
 
 	cr := s.FixtValue().(chrome.HasChrome).Chrome()
 	const url = chrome.BlankURL
-	conn1, br, closeBrowser, err := browserfixt.SetUpWithURL(ctx, cr, s.Param().(browser.Type), url)
+	conn1, br, closeBrowser, err := browserfixt.SetUpWithURL(ctx, cr, browser.TypeAsh, url)
 	if err != nil {
 		s.Fatal("Failed to open the browser: ", err)
 	}

@@ -13,11 +13,7 @@ import (
 	"strings"
 	"time"
 
-	"go.chromium.org/tast-tests/cros/local/apps"
 	"go.chromium.org/tast-tests/cros/local/bundles/cros/ui/chromecrash"
-	"go.chromium.org/tast-tests/cros/local/chrome"
-	"go.chromium.org/tast-tests/cros/local/chrome/browser"
-	"go.chromium.org/tast-tests/cros/local/chrome/lacros/lacrosfixt"
 	"go.chromium.org/tast-tests/cros/local/crash"
 	"go.chromium.org/tast-tests/cros/local/session"
 	"go.chromium.org/tast-tests/cros/local/upstart"
@@ -51,14 +47,12 @@ const (
 
 // chromeCrashEarlyParams contains the test parameters which are different between the various tests.
 type chromeCrashEarlyParams struct {
-	looseMode   bool
-	browserType browser.Type
+	looseMode bool
 }
 
 func init() {
 	testing.AddTest(&testing.Test{
 		Func:         ChromeCrashEarly,
-		LacrosStatus: testing.LacrosVariantExists,
 		Desc:         "Checks that if Chrome crashes before crashpad is initialized, the user collector collects the crash",
 		Contacts:     []string{"chromeos-data-eng@google.com", "hirthanan@google.com"},
 		BugComponent: "b:1032705",
@@ -67,36 +61,16 @@ func init() {
 		Params: []testing.Param{{
 			Name: "strict",
 			Val: chromeCrashEarlyParams{
-				looseMode:   false,
-				browserType: browser.TypeAsh,
+				looseMode: false,
 			},
 			Timeout:           upstart.UIRestartTimeout + chromeCrashEarlyCleanupTimeout + chromeCrashEarlyCrashFileTimeout + time.Minute,
 			ExtraSoftwareDeps: []string{"chrome_internal"},
 		}, {
-			Name: "strict_lacros",
-			Val: chromeCrashEarlyParams{
-				looseMode:   false,
-				browserType: browser.TypeLacros,
-			},
-			// Lacros test logs in so it needs more time.
-			Timeout:           chrome.MinLoginTimeout + chromeCrashEarlyCleanupTimeout + chromeCrashEarlyCrashFileTimeout + time.Minute,
-			ExtraSoftwareDeps: []string{"lacros"}, // There's no such thing as lacros_internal.
-		}, {
 			Name: "loose",
 			Val: chromeCrashEarlyParams{
-				looseMode:   true,
-				browserType: browser.TypeAsh,
+				looseMode: true,
 			},
 			Timeout: upstart.UIRestartTimeout + chromeCrashEarlyCleanupTimeout + chromeCrashEarlyCrashFileTimeout + time.Minute,
-		}, {
-			Name: "loose_lacros",
-			Val: chromeCrashEarlyParams{
-				looseMode:   true,
-				browserType: browser.TypeLacros,
-			},
-			// Lacros test logs in so it needs more time.
-			Timeout:           chrome.MinLoginTimeout + chromeCrashEarlyCleanupTimeout + chromeCrashEarlyCrashFileTimeout + time.Minute,
-			ExtraSoftwareDeps: []string{"lacros"},
 		}}})
 }
 
@@ -112,7 +86,7 @@ func filterMetaFiles(files []string) []string {
 	return metaFiles
 }
 
-func waitForEarlyCrashFiles(ctx context.Context, crashDirectories []string, expectedProductName string) error {
+func waitForEarlyCrashFiles(ctx context.Context, crashDirectories []string) error {
 	outDir, ok := testing.ContextOutDir(ctx)
 	if !ok {
 		return errors.New("could not determine output directory to save problematic files")
@@ -123,9 +97,9 @@ func waitForEarlyCrashFiles(ctx context.Context, crashDirectories []string, expe
 	const earlyCrashCollector = "upload_var_collector=user"
 	// And should be marked as being handled by the early Chrome crash code.
 	const earlyCrashMarker = "upload_var_early_chrome_crash=true"
-	// And should be product name Chrome_ChromeOS or Chrome_Lacros, NOT the
+	// And should be product name Chrome_ChromeOS, NOT the
 	// ChromeOS product name normally used by UserCollector.
-	expectedProductVar := "upload_var_prod=" + expectedProductName
+	const expectedProductVar = "upload_var_prod=Chrome_ChromeOS"
 	// And we should have a Chrome-like version number (four numbers separated
 	// by dots) not a ChromeOS-like version number.
 	expectedVersion := regexp.MustCompile(`upload_var_ver=\d+\.\d+\.\d+\.\d+\n`)
@@ -191,58 +165,8 @@ func chromeCrashEarlyAsh(ctx, cleanupCtx context.Context) error {
 		return errors.Wrap(err, "start-crash-looping-Chrome call failed")
 	}
 
-	const expectedProductName = "Chrome_ChromeOS"
 	directories := []string{crash.LocalCrashDir}
-	if err := waitForEarlyCrashFiles(ctx, directories, expectedProductName); err != nil {
-		return errors.Wrap(err, "waiting for crash files failed")
-	}
-
-	return nil
-}
-
-// chromeCrashEarlyLacros implements the Lacros-specific heart of ChromeCrashEarly.
-func chromeCrashEarlyLacros(ctx, cleanupCtx context.Context) error {
-	// Start up Chrome, tell it to start Lacros, and have it pass
-	// --pre-crashpad-crash-test to Lacros. We don't use the normal
-	// browserfixt.SetUpWithNewChrome() or any other function that calls
-	// lacros.Launch() because Lacros won't be up long enough for us to connect to
-	// it.
-	chromeOpts, err := lacrosfixt.NewConfig().Opts()
-	if err != nil {
-		return errors.Wrap(err, "could not get needed options for Lacros")
-	}
-
-	chromeOpts = append(chromeOpts,
-		chrome.ExtraArgs(chromecrash.GetExtraArgs(chromecrash.Crashpad, crash.MockConsent)...),
-		chrome.LacrosExtraArgs("--pre-crashpad-crash-test"))
-	testing.ContextLog(ctx, "Starting up ash chrome")
-	cr, err := chrome.New(ctx, chromeOpts...)
-	if err != nil {
-		return errors.Wrap(err, "could not start ash chrome")
-	}
-	defer cr.Close(cleanupCtx)
-
-	if err := crash.SetUpCrashTest(ctx, crash.WithMockConsent()); err != nil {
-		return errors.Wrap(err, "SetUpCrashTest failed")
-	}
-	defer crash.TearDownCrashTest(cleanupCtx)
-
-	tconn, err := cr.TestAPIConn(ctx)
-	if err != nil {
-		return errors.Wrap(err, "failed to connect to ash-chrome test API")
-	}
-	testing.ContextLog(ctx, "Launching Lacros in insta-crash mode and waiting for crash files")
-	if err := apps.Launch(ctx, tconn, apps.Lacros.ID); err != nil {
-		return errors.Wrap(err, "failed to launch Lacros")
-	}
-
-	crashDirectories, err := crash.GetDaemonStoreCrashDirs(ctx)
-	if err != nil {
-		return errors.Wrap(err, "failed to get daemon store crash directories")
-	}
-
-	const expectedProductName = "Chrome_Lacros"
-	if err := waitForEarlyCrashFiles(ctx, crashDirectories, expectedProductName); err != nil {
+	if err := waitForEarlyCrashFiles(ctx, directories); err != nil {
 		return errors.Wrap(err, "waiting for crash files failed")
 	}
 
@@ -288,13 +212,7 @@ func ChromeCrashEarly(ctx context.Context, s *testing.State) {
 		}
 	}()
 
-	if params.browserType == browser.TypeAsh {
-		if err := chromeCrashEarlyAsh(ctx, cleanupCtx); err != nil {
-			s.Error("Ash test failed: ", err)
-		}
-	} else {
-		if err := chromeCrashEarlyLacros(ctx, cleanupCtx); err != nil {
-			s.Error("Lacros test failed: ", err)
-		}
+	if err := chromeCrashEarlyAsh(ctx, cleanupCtx); err != nil {
+		s.Error("Ash test failed: ", err)
 	}
 }

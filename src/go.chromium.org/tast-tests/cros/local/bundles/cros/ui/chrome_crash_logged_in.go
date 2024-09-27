@@ -15,7 +15,6 @@ import (
 	"go.chromium.org/tast-tests/cros/local/chrome"
 	"go.chromium.org/tast-tests/cros/local/chrome/browser"
 	"go.chromium.org/tast-tests/cros/local/chrome/browser/browserfixt"
-	"go.chromium.org/tast-tests/cros/local/chrome/lacros/lacrosfixt"
 	"go.chromium.org/tast-tests/cros/local/crash"
 	"go.chromium.org/tast/core/ctxutil"
 	"go.chromium.org/tast/core/testing"
@@ -25,18 +24,14 @@ import (
 type chromeCrashLoggedInParams struct {
 	ptype                chromecrash.ProcessType
 	handler              chromecrash.CrashHandler
-	browserType          browser.Type
 	consent              crash.ConsentType
 	fieldTrialConfigMode chrome.FieldTrialConfigMode
 	restartChrome        bool
 }
 
 func init() {
-	// Note: There are no Lacros variants for breakpad tests because we are close
-	// enough to deprecating breakpad that there's no value in adding them.
 	testing.AddTest(&testing.Test{
 		Func:         ChromeCrashLoggedIn,
-		LacrosStatus: testing.LacrosVariantExists,
 		Desc:         "Checks that Chrome writes crash dumps while logged in",
 		Contacts:     []string{"chromeos-data-eng@google.com", "hirthanan@google.com"},
 		BugComponent: "b:1032705",
@@ -46,7 +41,6 @@ func init() {
 			Val: chromeCrashLoggedInParams{
 				ptype:                chromecrash.Browser,
 				handler:              chromecrash.Breakpad,
-				browserType:          browser.TypeAsh,
 				consent:              crash.RealConsent,
 				fieldTrialConfigMode: chrome.FieldTrialConfigDefault,
 			},
@@ -58,7 +52,6 @@ func init() {
 			Val: chromeCrashLoggedInParams{
 				ptype:                chromecrash.Browser,
 				handler:              chromecrash.Breakpad,
-				browserType:          browser.TypeAsh,
 				consent:              crash.MockConsent,
 				fieldTrialConfigMode: chrome.FieldTrialConfigDefault,
 			},
@@ -70,7 +63,6 @@ func init() {
 			Val: chromeCrashLoggedInParams{
 				ptype:                chromecrash.Browser,
 				handler:              chromecrash.Crashpad,
-				browserType:          browser.TypeAsh,
 				consent:              crash.RealConsent,
 				fieldTrialConfigMode: chrome.FieldTrialConfigDefault,
 			},
@@ -78,23 +70,10 @@ func init() {
 			ExtraSoftwareDeps: []string{"crashpad", "metrics_consent"},
 			Timeout:           chrome.MinLoginTimeout + time.Minute,
 		}, {
-			Name: "browser_lacros_crashpad",
-			Val: chromeCrashLoggedInParams{
-				ptype:                chromecrash.Browser,
-				handler:              chromecrash.Crashpad,
-				browserType:          browser.TypeLacros,
-				consent:              crash.RealConsent,
-				fieldTrialConfigMode: chrome.FieldTrialConfigDefault,
-			},
-			ExtraAttr:         []string{"group:mainline"},
-			ExtraSoftwareDeps: []string{"crashpad", "metrics_consent", "lacros"},
-			Timeout:           chrome.MinLoginTimeout + time.Minute,
-		}, {
 			Name: "browser_crashpad_mock_consent",
 			Val: chromeCrashLoggedInParams{
 				ptype:                chromecrash.Browser,
 				handler:              chromecrash.Crashpad,
-				browserType:          browser.TypeAsh,
 				consent:              crash.MockConsent,
 				fieldTrialConfigMode: chrome.FieldTrialConfigDefault,
 			},
@@ -106,7 +85,6 @@ func init() {
 			Val: chromeCrashLoggedInParams{
 				ptype:                chromecrash.Browser,
 				handler:              chromecrash.Crashpad,
-				browserType:          browser.TypeAsh,
 				consent:              crash.MockConsent,
 				fieldTrialConfigMode: chrome.FieldTrialConfigEnable,
 			},
@@ -118,7 +96,6 @@ func init() {
 			Val: chromeCrashLoggedInParams{
 				ptype:                chromecrash.Browser,
 				handler:              chromecrash.Crashpad,
-				browserType:          browser.TypeAsh,
 				consent:              crash.MockConsent,
 				fieldTrialConfigMode: chrome.FieldTrialConfigDisable,
 			},
@@ -126,48 +103,11 @@ func init() {
 			ExtraSoftwareDeps: []string{"crashpad"},
 			Timeout:           chrome.MinLoginTimeout + time.Minute,
 		}, {
-			Name: "browser_lacros_crashpad_mock_consent",
-			Val: chromeCrashLoggedInParams{
-				ptype:                chromecrash.Browser,
-				handler:              chromecrash.Crashpad,
-				browserType:          browser.TypeLacros,
-				consent:              crash.MockConsent,
-				fieldTrialConfigMode: chrome.FieldTrialConfigDefault,
-			},
-			ExtraAttr:         []string{"group:mainline", "group:hw_agnostic"},
-			ExtraSoftwareDeps: []string{"crashpad", "lacros"},
-			Timeout:           chrome.MinLoginTimeout + time.Minute,
-		}, {
-			Name: "browser_lacros_crashpad_mock_consent_field_trials_on",
-			Val: chromeCrashLoggedInParams{
-				ptype:                chromecrash.Browser,
-				handler:              chromecrash.Crashpad,
-				browserType:          browser.TypeLacros,
-				consent:              crash.MockConsent,
-				fieldTrialConfigMode: chrome.FieldTrialConfigEnable,
-			},
-			ExtraAttr:         []string{"group:mainline", "group:hw_agnostic"},
-			ExtraSoftwareDeps: []string{"crashpad", "lacros"},
-			Timeout:           chrome.MinLoginTimeout + time.Minute,
-		}, {
-			Name: "browser_lacros_crashpad_mock_consent_field_trials_off",
-			Val: chromeCrashLoggedInParams{
-				ptype:                chromecrash.Browser,
-				handler:              chromecrash.Crashpad,
-				browserType:          browser.TypeLacros,
-				consent:              crash.MockConsent,
-				fieldTrialConfigMode: chrome.FieldTrialConfigDisable,
-			},
-			ExtraAttr:         []string{"group:mainline", "group:hw_agnostic"},
-			ExtraSoftwareDeps: []string{"crashpad", "lacros"},
-			Timeout:           chrome.MinLoginTimeout + time.Minute,
-		}, {
 			Name: "gpu_process_breakpad",
 			Val: chromeCrashLoggedInParams{
 				ptype:                chromecrash.GPUProcess,
 				handler:              chromecrash.Breakpad,
 				consent:              crash.RealConsent,
-				browserType:          browser.TypeAsh,
 				fieldTrialConfigMode: chrome.FieldTrialConfigDefault,
 				// Breakpad only adds a signal handler to a process if it has consent
 				// at the time the process starts up. There's a special hook in the
@@ -190,7 +130,6 @@ func init() {
 			Val: chromeCrashLoggedInParams{
 				ptype:                chromecrash.GPUProcess,
 				handler:              chromecrash.Breakpad,
-				browserType:          browser.TypeAsh,
 				consent:              crash.MockConsent,
 				fieldTrialConfigMode: chrome.FieldTrialConfigDefault,
 			},
@@ -202,7 +141,6 @@ func init() {
 			Val: chromeCrashLoggedInParams{
 				ptype:                chromecrash.GPUProcess,
 				handler:              chromecrash.Crashpad,
-				browserType:          browser.TypeAsh,
 				consent:              crash.RealConsent,
 				fieldTrialConfigMode: chrome.FieldTrialConfigDefault,
 			},
@@ -210,23 +148,10 @@ func init() {
 			ExtraSoftwareDeps: []string{"crashpad", "metrics_consent"},
 			Timeout:           chrome.MinLoginTimeout + time.Minute,
 		}, {
-			Name: "gpu_process_lacros_crashpad",
-			Val: chromeCrashLoggedInParams{
-				ptype:                chromecrash.GPUProcess,
-				handler:              chromecrash.Crashpad,
-				browserType:          browser.TypeLacros,
-				consent:              crash.RealConsent,
-				fieldTrialConfigMode: chrome.FieldTrialConfigDefault,
-			},
-			ExtraAttr:         []string{"group:mainline"},
-			ExtraSoftwareDeps: []string{"crashpad", "metrics_consent", "lacros"},
-			Timeout:           chrome.MinLoginTimeout + time.Minute,
-		}, {
 			Name: "gpu_process_crashpad_mock_consent",
 			Val: chromeCrashLoggedInParams{
 				ptype:                chromecrash.GPUProcess,
 				handler:              chromecrash.Crashpad,
-				browserType:          browser.TypeAsh,
 				consent:              crash.MockConsent,
 				fieldTrialConfigMode: chrome.FieldTrialConfigDefault,
 			},
@@ -238,7 +163,6 @@ func init() {
 			Val: chromeCrashLoggedInParams{
 				ptype:                chromecrash.GPUProcess,
 				handler:              chromecrash.Crashpad,
-				browserType:          browser.TypeAsh,
 				consent:              crash.MockConsent,
 				fieldTrialConfigMode: chrome.FieldTrialConfigEnable,
 			},
@@ -250,7 +174,6 @@ func init() {
 			Val: chromeCrashLoggedInParams{
 				ptype:                chromecrash.GPUProcess,
 				handler:              chromecrash.Crashpad,
-				browserType:          browser.TypeAsh,
 				consent:              crash.MockConsent,
 				fieldTrialConfigMode: chrome.FieldTrialConfigDisable,
 			},
@@ -258,47 +181,10 @@ func init() {
 			ExtraSoftwareDeps: []string{"crashpad"},
 			Timeout:           chrome.MinLoginTimeout + time.Minute,
 		}, {
-			Name: "gpu_process_lacros_crashpad_mock_consent",
-			Val: chromeCrashLoggedInParams{
-				ptype:                chromecrash.GPUProcess,
-				handler:              chromecrash.Crashpad,
-				browserType:          browser.TypeLacros,
-				consent:              crash.MockConsent,
-				fieldTrialConfigMode: chrome.FieldTrialConfigDefault,
-			},
-			ExtraAttr:         []string{"group:mainline", "group:hw_agnostic"},
-			ExtraSoftwareDeps: []string{"crashpad", "lacros"},
-			Timeout:           chrome.MinLoginTimeout + time.Minute,
-		}, {
-			Name: "gpu_process_lacros_crashpad_mock_consent_field_trial_on",
-			Val: chromeCrashLoggedInParams{
-				ptype:                chromecrash.GPUProcess,
-				handler:              chromecrash.Crashpad,
-				browserType:          browser.TypeLacros,
-				consent:              crash.MockConsent,
-				fieldTrialConfigMode: chrome.FieldTrialConfigEnable,
-			},
-			ExtraAttr:         []string{"group:mainline", "group:hw_agnostic"},
-			ExtraSoftwareDeps: []string{"crashpad", "lacros"},
-			Timeout:           chrome.MinLoginTimeout + time.Minute,
-		}, {
-			Name: "gpu_process_lacros_crashpad_mock_consent_field_trial_off",
-			Val: chromeCrashLoggedInParams{
-				ptype:                chromecrash.GPUProcess,
-				handler:              chromecrash.Crashpad,
-				browserType:          browser.TypeLacros,
-				consent:              crash.MockConsent,
-				fieldTrialConfigMode: chrome.FieldTrialConfigDisable,
-			},
-			ExtraAttr:         []string{"group:mainline", "group:hw_agnostic"},
-			ExtraSoftwareDeps: []string{"crashpad", "lacros"},
-			Timeout:           chrome.MinLoginTimeout + time.Minute,
-		}, {
 			Name: "broker_breakpad_mock_consent",
 			Val: chromeCrashLoggedInParams{
 				ptype:                chromecrash.Broker,
 				handler:              chromecrash.Breakpad,
-				browserType:          browser.TypeAsh,
 				consent:              crash.MockConsent,
 				fieldTrialConfigMode: chrome.FieldTrialConfigDefault,
 			},
@@ -311,26 +197,12 @@ func init() {
 			Val: chromeCrashLoggedInParams{
 				ptype:                chromecrash.Broker,
 				handler:              chromecrash.Crashpad,
-				browserType:          browser.TypeAsh,
 				consent:              crash.MockConsent,
 				fieldTrialConfigMode: chrome.FieldTrialConfigDefault,
 			},
 			ExtraAttr: []string{"group:mainline"},
 			// If the gpu process is not sandboxed, it will not create a broker.
 			ExtraSoftwareDeps: []string{"crashpad", "gpu_sandboxing"},
-			Timeout:           chrome.MinLoginTimeout + time.Minute,
-		}, {
-			Name: "broker_lacros_crashpad_mock_consent",
-			Val: chromeCrashLoggedInParams{
-				ptype:                chromecrash.Broker,
-				handler:              chromecrash.Crashpad,
-				browserType:          browser.TypeLacros,
-				consent:              crash.MockConsent,
-				fieldTrialConfigMode: chrome.FieldTrialConfigDefault,
-			},
-			ExtraAttr: []string{"group:mainline"},
-			// If the gpu process is not sandboxed, it will not create a broker.
-			ExtraSoftwareDeps: []string{"crashpad", "gpu_sandboxing", "lacros"},
 			Timeout:           chrome.MinLoginTimeout + time.Minute,
 		}},
 	})
@@ -342,7 +214,7 @@ func ChromeCrashLoggedIn(ctx context.Context, s *testing.State) {
 	defer cancel()
 
 	params := s.Param().(chromeCrashLoggedInParams)
-	ct, err := chromecrash.NewCrashTester(ctx, params.ptype, params.browserType, chromecrash.MetaFile)
+	ct, err := chromecrash.NewCrashTester(ctx, params.ptype, browser.TypeAsh, chromecrash.MetaFile)
 	if err != nil {
 		s.Fatal("NewCrashTester failed: ", err)
 	}
@@ -355,8 +227,8 @@ func ChromeCrashLoggedIn(ctx context.Context, s *testing.State) {
 	}
 	// In theory it would nice to rewrite this to use fixtures "correctly" but
 	// there's significant engineering work for that (b/292145636).
-	cr, _, closeBrowser, err := browserfixt.SetUpWithNewChrome(ctx, params.browserType,
-		lacrosfixt.NewConfig(), chromeOpts...)
+	cr, _, closeBrowser, err := browserfixt.SetUpWithNewChrome(ctx, browser.TypeAsh,
+		nil, chromeOpts...)
 	if err != nil {
 		s.Fatal("Chrome login failed: ", err)
 	}
@@ -381,8 +253,8 @@ func ChromeCrashLoggedIn(ctx context.Context, s *testing.State) {
 		cr.Close(ctx)
 		// Need to KeepState to avoid erasing the consent we just set up.
 		restartOpts := append(chromeOpts, chrome.KeepState())
-		cr, _, closeBrowser, err = browserfixt.SetUpWithNewChrome(ctx, params.browserType,
-			lacrosfixt.NewConfig(), restartOpts...)
+		cr, _, closeBrowser, err = browserfixt.SetUpWithNewChrome(ctx, browser.TypeAsh,
+			nil, restartOpts...)
 		if err != nil {
 			cr = nil
 			s.Fatal("Chrome login failed: ", err)

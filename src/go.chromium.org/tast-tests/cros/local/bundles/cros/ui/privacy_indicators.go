@@ -25,7 +25,6 @@ import (
 func init() {
 	testing.AddTest(&testing.Test{
 		Func:         PrivacyIndicators,
-		LacrosStatus: testing.LacrosVariantExists,
 		Desc:         "Check if the privacy indicators view show up when entering Google Meet",
 		Contacts:     []string{"cros-status-area-eng@google.com", "leandre@chromium.org"},
 		BugComponent: "b:1246070", // ChromeOS > Software > System UI Surfaces > Status Area
@@ -35,15 +34,7 @@ func init() {
 			"ui.PrivacyIndicators.meet_code",
 		},
 		Timeout: 3 * time.Minute,
-		Params: []testing.Param{{
-			Fixture: "chromeLoggedInWithCalendarEvents",
-			Val:     browser.TypeAsh,
-		}, {
-			Name:              "lacros",
-			ExtraSoftwareDeps: []string{"lacros"},
-			Fixture:           "lacrosLoggedInWithCalendarEvents",
-			Val:               browser.TypeLacros,
-		}},
+		Fixture: "chromeLoggedInWithCalendarEvents",
 	})
 }
 
@@ -54,7 +45,7 @@ func PrivacyIndicators(ctx context.Context, s *testing.State) {
 	defer cancel()
 
 	cr := s.FixtValue().(chrome.HasChrome).Chrome()
-	br, closeBrowser, err := browserfixt.SetUp(ctx, cr, s.Param().(browser.Type))
+	br, closeBrowser, err := browserfixt.SetUp(ctx, cr, browser.TypeAsh)
 	if err != nil {
 		s.Fatal("Failed to open the browser: ", err)
 	}
