@@ -37,11 +37,6 @@ func init() {
 			Fixture: setup.PowerAsh,
 			Val:     exampleHistTimeParams,
 			Timeout: 1*time.Minute + power.RecorderTimeout,
-		}, {
-			Name:    "lacros",
-			Fixture: setup.PowerLacros,
-			Val:     exampleHistTimeParams,
-			Timeout: 1*time.Minute + power.RecorderTimeout,
 		}},
 	})
 }
