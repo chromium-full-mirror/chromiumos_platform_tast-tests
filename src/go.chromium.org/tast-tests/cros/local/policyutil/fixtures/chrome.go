@@ -125,6 +125,8 @@ func init() {
 			extraOptsFunc: func(ctx context.Context, s *testing.FixtState) ([]chrome.Option, error) {
 				return []chrome.Option{
 					chrome.EnableFeatures("Bruschetta"),
+					// Disable hard-coded install checks for testing.
+					chrome.EnableFeatures("DisableBruschettaInstallChecks"),
 					// Don't show time-of-day wallpapers. We want a solid color for screenshots.
 					chrome.DisableFeatures("FeatureManagementTimeOfDayWallpaper"),
 				}, nil
@@ -149,6 +151,8 @@ func init() {
 					chrome.FieldTrialConfig(chrome.FieldTrialConfigEnable),
 					// Don't show time-of-day wallpapers. We want a solid color for screenshots.
 					chrome.DisableFeatures("FeatureManagementTimeOfDayWallpaper"),
+					// Disable hard-coded install checks for testing.
+					chrome.EnableFeatures("DisableBruschettaInstallChecks"),
 				}, nil
 			},
 		},
