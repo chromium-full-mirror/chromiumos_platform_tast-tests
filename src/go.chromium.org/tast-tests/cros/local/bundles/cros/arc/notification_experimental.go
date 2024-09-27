@@ -64,7 +64,7 @@ func init() {
 		},
 		// ChromeOS > Software > ARC++ > Framework > Notifications
 		BugComponent: "b:537324",
-		Attr:         []string{"group:mainline", "informational"},
+		// TODO (b/369917409): Add test back to mainline.
 		Data:         []string{arcNotificationTest2ApkFilename},
 		SoftwareDeps: []string{"chrome"},
 		Timeout:      4 * time.Minute,
