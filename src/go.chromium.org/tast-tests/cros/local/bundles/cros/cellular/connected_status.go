@@ -6,10 +6,13 @@ package cellular
 
 import (
 	"context"
+	"time"
 
 	"go.chromium.org/tast-tests/cros/local/cellular"
 	"go.chromium.org/tast-tests/cros/local/chrome"
+	"go.chromium.org/tast-tests/cros/local/chrome/uiauto/faillog"
 	"go.chromium.org/tast-tests/cros/local/chrome/uiauto/ossettings"
+	"go.chromium.org/tast/core/ctxutil"
 	"go.chromium.org/tast/core/testing"
 )
 
@@ -31,10 +34,15 @@ func init() {
 }
 
 func ConnectedStatus(ctx context.Context, s *testing.State) {
+	cleanupCtx := ctx
+	ctx, cancel := ctxutil.Shorten(ctx, 5*time.Second)
+	defer cancel()
+
 	cr, err := chrome.New(ctx)
 	if err != nil {
 		s.Fatal("Failed to create a new instance of Chrome: ", err)
 	}
+	defer cr.Close(cleanupCtx)
 
 	tconn, err := cr.TestAPIConn(ctx)
 	if err != nil {
@@ -45,7 +53,8 @@ func ConnectedStatus(ctx context.Context, s *testing.State) {
 	if err != nil {
 		s.Fatal("Failed to open mobile data subpage: ", err)
 	}
-	defer mdp.Close(ctx)
+	defer mdp.Close(cleanupCtx)
+	defer faillog.DumpUITreeWithScreenshotWithTestAPIOnError(cleanupCtx, s.OutDir(), s.HasError, tconn, "os_settings")
 
 	helper, err := cellular.NewHelper(ctx)
 	if err != nil {
@@ -80,13 +89,8 @@ func ConnectedStatus(ctx context.Context, s *testing.State) {
 	if err != nil {
 		s.Fatal("Could not get current ICCID: ", err)
 	}
-
 	if firstIccid == secondIccid {
 		s.Fatal("Failed to connect to a different cellular network")
-	}
-
-	if err != nil {
-		s.Fatal("Failed to open mobile data subpage: ", err)
 	}
 
 	if err := ossettings.VerifyNetworkIsActive(ctx, tconn, secondIccid); err != nil {
