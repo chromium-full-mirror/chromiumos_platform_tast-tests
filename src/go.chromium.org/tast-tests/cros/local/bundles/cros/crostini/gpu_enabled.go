@@ -25,7 +25,6 @@ func init() {
 		SoftwareDeps: []string{"chrome", "vm_host", "crosvm_gpu"},
 		BugComponent: "b:1122570",
 		Params: []testing.Param{
-			// TODO(b/304170307): Mali-G57 crashes on bookworm.
 			{
 				Name:              "sw_bullseye_stable",
 				ExtraSoftwareDeps: []string{"crosvm_no_gpu", "dlc"},
@@ -47,7 +46,7 @@ func init() {
 				ExtraHardwareDeps: crostini.CrostiniOptimalPerf,
 				Fixture:           "crostiniBullseye",
 				Timeout:           7 * time.Minute,
-				Val:               "virgl",
+				Val:               "llvmpipe",
 			}, {
 				Name:              "gpu_bookworm_stable",
 				ExtraAttr:         []string{"informational"},
@@ -55,7 +54,7 @@ func init() {
 				ExtraHardwareDeps: crostini.CrostiniOptimalPerf,
 				Fixture:           "crostiniBookworm",
 				Timeout:           7 * time.Minute,
-				Val:               "virgl",
+				Val:               "llvmpipe",
 			},
 		},
 	})
