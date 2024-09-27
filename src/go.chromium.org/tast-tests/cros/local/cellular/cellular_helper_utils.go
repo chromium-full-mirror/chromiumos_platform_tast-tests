@@ -344,6 +344,62 @@ func (filter ModemFwFilter) IsMatch(modemType cellularconst.ModemType, fwVersion
 	panic("unhandled switch case")
 }
 
+// IsModemFirmwareKnown Test
+func IsModemFirmwareKnown(ctx context.Context) error {
+	modem, err := modemmanager.NewModem(ctx)
+	if err != nil {
+		return errors.Wrap(err, "failed to create modem")
+	}
+	fwVersion, err := modem.GetFwVersion(ctx, modem)
+	if err != nil {
+		return errors.Wrap(err, "failed to get FW version")
+	}
+	testing.ContextLog(ctx, "FW version: ", fwVersion)
+	modemType, err := GetModemType(ctx)
+	if err != nil {
+		return errors.Wrap(err, "failed to get modem type")
+	}
+	switch modemType {
+	case cellularconst.ModemTypeEM060:
+		if ModemFwFilterEM060V01.IsMatch(modemType, fwVersion) {
+			return nil
+		}
+	case cellularconst.ModemTypeLCUK54:
+		if ModemFwFilterLCUK54V01.IsMatch(modemType, fwVersion) {
+			return nil
+		}
+	case cellularconst.ModemTypeFM101:
+		if ModemFwFilterFM101MR1.IsMatch(modemType, fwVersion) || ModemFwFilterFM101MR2.IsMatch(modemType, fwVersion) {
+			return nil
+		}
+	case cellularconst.ModemTypeFM350:
+		if ModemFwFilterFM350MR3AndLower.IsMatch(modemType, fwVersion) || ModemFwFilterFM350MR4.IsMatch(modemType, fwVersion) {
+			return nil
+		}
+	case cellularconst.ModemTypeL850:
+		if ModemFwFilterL850MR8AndLower.IsMatch(modemType, fwVersion) {
+			return nil
+		}
+	case cellularconst.ModemTypeNL668:
+		if ModemFwFilterNL668A01.IsMatch(modemType, fwVersion) || ModemFwFilterNL668A04.IsMatch(modemType, fwVersion) {
+			return nil
+		}
+	case cellularconst.ModemTypeRW101:
+		if ModemFwFilterRW101MR1.IsMatch(modemType, fwVersion) {
+			return nil
+		}
+	case cellularconst.ModemTypeRW135:
+		if ModemFwFilterRW135MR1.IsMatch(modemType, fwVersion) {
+			return nil
+		}
+	case cellularconst.ModemTypeSC7180:
+		if ModemFwFilterSC7180All.IsMatch(modemType, fwVersion) {
+			return nil
+		}
+	}
+	return errors.Errorf("unknown FW version %s on modem: %s", fwVersion, modemType.String())
+}
+
 // ModemFwMatch returns (true,modemType, fwVersion, nil) if the ModemFwFilter matches the DUT's Modem type
 // and FW version, otherwise returns an error.
 func ModemFwMatch(ctx context.Context, filter ModemFwFilter) (bool, cellularconst.ModemType, string, error) {
