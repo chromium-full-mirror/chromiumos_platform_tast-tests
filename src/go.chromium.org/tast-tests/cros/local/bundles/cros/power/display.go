@@ -139,7 +139,7 @@ const tmpPath = "/tmp"
 func init() {
 	testing.AddTest(&testing.Test{
 		Func:         Display,
-		LacrosStatus: testing.LacrosVariantExists,
+		LacrosStatus: testing.LacrosVariantUnneeded,
 		Desc:         "Collect power metrics displaying different static pages with different screen brightness level",
 		BugComponent: "b:1361410",
 		Contacts:     []string{"chromeos-power-team@google.com", "jingmuli@google.com"},
@@ -180,48 +180,6 @@ func init() {
 			Timeout:   10*time.Minute + power.RecorderTimeout,
 			Val:       maxCABCDisplayParams,
 			ExtraData: pageDataForCABCTest,
-		}, {
-			Name:              "default_lacros",
-			Fixture:           "powerLacros",
-			ExtraSoftwareDeps: []string{"lacros"},
-			Timeout:           10*time.Minute + power.RecorderTimeout,
-			Val:               defaultDisplayParams,
-			ExtraData:         pageData,
-		}, {
-			Name:              "fast_lacros",
-			Fixture:           "powerLacros",
-			ExtraSoftwareDeps: []string{"lacros"},
-			Timeout:           5*time.Minute + power.RecorderTimeout,
-			Val:               fastDisplayParams,
-			ExtraData:         pageData,
-		}, {
-			Name:              "max_lacros",
-			Fixture:           "powerLacros",
-			ExtraSoftwareDeps: []string{"lacros"},
-			Timeout:           10*time.Minute + power.RecorderTimeout,
-			Val:               maxDisplayParams,
-			ExtraData:         pageData,
-		}, {
-			Name:              "all_brightness_lacros",
-			Fixture:           "powerLacros",
-			ExtraSoftwareDeps: []string{"lacros"},
-			Timeout:           1*time.Hour + power.RecorderTimeout,
-			Val:               brightnessDisplayParams,
-			ExtraData:         pageDataForBrightnessTest,
-		}, {
-			Name:              "default_cabc_lacros",
-			Fixture:           "powerLacros",
-			ExtraSoftwareDeps: []string{"lacros"},
-			Timeout:           10*time.Minute + power.RecorderTimeout,
-			Val:               defaultCABCDisplayParams,
-			ExtraData:         pageDataForCABCTest,
-		}, {
-			Name:              "max_cabc_lacros",
-			Fixture:           "powerLacros",
-			ExtraSoftwareDeps: []string{"lacros"},
-			Timeout:           10*time.Minute + power.RecorderTimeout,
-			Val:               maxCABCDisplayParams,
-			ExtraData:         pageDataForCABCTest,
 		}},
 	})
 }
