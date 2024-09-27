@@ -62,10 +62,8 @@ func AcceptIncomingShareNotification(ctx context.Context, tconn *chrome.TestConn
 	}
 	ui := uiauto.New(tconn)
 
-	// Select the notification by name, in case there are multiple notifications
-	// visible, and click the Accept button within it.
-	notification := nodewith.Role(role.AlertDialog).NameContaining("Receive with Quick Share")
-	btn := nodewith.Role(role.Button).NameRegex(regexp.MustCompile("(?i)accept")).FinalAncestor(notification)
+	// Click the visible "Accept" button.
+	btn := nodewith.Role(role.Button).NameRegex(regexp.MustCompile("(?i)accept"))
 	if err := ui.LeftClick(btn)(ctx); err != nil {
 		return errors.Wrap(err, "failed to click sharing notification's receive button")
 	}
