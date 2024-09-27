@@ -17,7 +17,6 @@ import (
 	"go.chromium.org/tast-tests/cros/local/chrome/ash"
 	"go.chromium.org/tast-tests/cros/local/chrome/browser"
 	"go.chromium.org/tast-tests/cros/local/chrome/display"
-	"go.chromium.org/tast-tests/cros/local/chrome/lacros"
 	"go.chromium.org/tast-tests/cros/local/chrome/uiauto"
 	"go.chromium.org/tast-tests/cros/local/chrome/uiauto/faillog"
 	"go.chromium.org/tast-tests/cros/local/chrome/uiauto/nodewith"
@@ -34,14 +33,12 @@ import (
 )
 
 type chromePIPEnergyAndPowerTestParams struct {
-	bigPIP      bool
-	browserType browser.Type
+	bigPIP bool
 }
 
 func init() {
 	testing.AddTest(&testing.Test{
 		Func:         ChromePIPEnergyAndPower,
-		LacrosStatus: testing.LacrosVariantExists,
 		Desc:         "Measures energy and power usage of Chrome PIP",
 		Contacts:     []string{"chromeos-perf@google.com", "petermcneeley@chromium.org"},
 		BugComponent: "b:995569", // ChromeOS > Platform > Graphics > GPU
@@ -52,47 +49,28 @@ func init() {
 		Params: []testing.Param{{
 			Name:    "small",
 			Fixture: "chromeLoggedIn",
-			Val:     chromePIPEnergyAndPowerTestParams{bigPIP: false, browserType: browser.TypeAsh},
+			Val:     chromePIPEnergyAndPowerTestParams{bigPIP: false},
 		}, {
 			Name:    "big",
 			Fixture: "chromeLoggedIn",
-			Val:     chromePIPEnergyAndPowerTestParams{bigPIP: true, browserType: browser.TypeAsh},
-		}, {
-			Name:              "small_lacros",
-			ExtraSoftwareDeps: []string{"lacros"},
-			Fixture:           "lacros",
-			Val:               chromePIPEnergyAndPowerTestParams{bigPIP: false, browserType: browser.TypeLacros},
-		}, {
-			Name:              "big_lacros",
-			ExtraSoftwareDeps: []string{"lacros"},
-			Fixture:           "lacros",
-			Val:               chromePIPEnergyAndPowerTestParams{bigPIP: true, browserType: browser.TypeLacros},
+			Val:     chromePIPEnergyAndPowerTestParams{bigPIP: true},
 		}},
 	})
 }
 
 func ChromePIPEnergyAndPower(ctx context.Context, s *testing.State) {
 	params := s.Param().(chromePIPEnergyAndPowerTestParams)
-	var pipClassName, settingsTitle string
-	switch params.browserType {
-	case browser.TypeAsh:
-		pipClassName = "PictureInPictureWindow"
+	const (
+		pipClassName  = "PictureInPictureWindow"
 		settingsTitle = "Chrome - Settings"
-	case browser.TypeLacros:
-		pipClassName = "Widget"
-		settingsTitle = "Settings - Google Chrome"
-	}
+	)
 
 	// Reserve one minute for various cleanup.
 	cleanupCtx := ctx
 	ctx, cancel := ctxutil.Shorten(ctx, time.Minute)
 	defer cancel()
 
-	cr, l, cs, err := lacros.Setup(ctx, s.FixtValue(), params.browserType)
-	if err != nil {
-		s.Fatal("Failed to initialize test: ", err)
-	}
-	defer lacros.CloseLacros(cleanupCtx, l)
+	cr := s.FixtValue().(chrome.HasChrome).Chrome()
 
 	tconn, err := cr.TestAPIConn(ctx)
 	if err != nil {
@@ -136,7 +114,7 @@ func ChromePIPEnergyAndPower(ctx context.Context, s *testing.State) {
 	srv := httptest.NewServer(http.FileServer(s.DataFileSystem()))
 	defer srv.Close()
 
-	conn, err := cs.NewConn(ctx, srv.URL+"/pip_video.html")
+	conn, err := cr.NewConn(ctx, srv.URL+"/pip_video.html")
 	if err != nil {
 		s.Fatal("Failed to load pip_video.html: ", err)
 	}
@@ -194,7 +172,7 @@ func ChromePIPEnergyAndPower(ctx context.Context, s *testing.State) {
 		}
 	}
 
-	extraConn, err := cs.NewConn(ctx, "chrome://settings")
+	extraConn, err := cr.NewConn(ctx, "chrome://settings")
 	if err != nil {
 		s.Fatal("Failed to load chrome://settings: ", err)
 	}

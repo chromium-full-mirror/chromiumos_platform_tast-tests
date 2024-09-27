@@ -12,7 +12,6 @@ import (
 	"go.chromium.org/tast-tests/cros/local/chrome"
 	"go.chromium.org/tast-tests/cros/local/chrome/browser"
 	"go.chromium.org/tast-tests/cros/local/chrome/browser/browserfixt"
-	"go.chromium.org/tast-tests/cros/local/chrome/lacros/lacrosfixt"
 	"go.chromium.org/tast-tests/cros/local/chrome/metrics"
 	"go.chromium.org/tast-tests/cros/local/crash"
 	"go.chromium.org/tast-tests/cros/local/upstart"
@@ -50,8 +49,6 @@ type chromeCrashReporterMetricsParams struct {
 	// chromeOptions gives the list of options we pass to chrome.New. These are used
 	// to force a failure in the "miss" test.
 	chromeOptions []chrome.Option
-	// browser is the browser (ash or Lacros) to test.
-	browser browser.Type
 	// crashFileType tells chromecrash.KillAndGetCrashFiles what type of files to
 	// wait on. As a side effect of the way we force a miss in the "miss" test,
 	// we expect breakpad dmp files instead of the normal .meta files.
@@ -68,7 +65,6 @@ type chromeCrashReporterMetricsParams struct {
 func init() {
 	testing.AddTest(&testing.Test{
 		Func:         ChromeCrashReporterMetrics,
-		LacrosStatus: testing.LacrosVariantExists,
 		Desc:         "Checks that anomaly detector reports whether crash_reporter was invoked",
 		Contacts:     []string{"chromeos-data-eng@google.com", "hirthanan@google.com"},
 		BugComponent: "b:1032705",
@@ -86,7 +82,6 @@ func init() {
 				// chrome.restartChromeForTesting, where it sets CHROME_HEADLESS and
 				// BREAKPAD_DUMP_LOCATION environmental variables)
 				chromeOptions: nil,
-				browser:       browser.TypeAsh,
 				crashFileType: chromecrash.BreakpadDmp,
 				killCrashpad:  false,
 				expectMissing: true,
@@ -97,18 +92,6 @@ func init() {
 			Val: chromeCrashReporterMetricsParams{
 				handler:       chromecrash.Crashpad,
 				chromeOptions: []chrome.Option{chrome.CrashNormalMode()},
-				browser:       browser.TypeAsh,
-				crashFileType: chromecrash.NoCrashFile,
-				killCrashpad:  true,
-				expectMissing: true,
-			},
-		}, {
-			Name:              "miss_crashpad_lacros",
-			ExtraSoftwareDeps: []string{"crashpad", "lacros"},
-			Val: chromeCrashReporterMetricsParams{
-				handler:       chromecrash.Crashpad,
-				chromeOptions: []chrome.Option{chrome.CrashNormalMode()},
-				browser:       browser.TypeLacros,
 				crashFileType: chromecrash.NoCrashFile,
 				killCrashpad:  true,
 				expectMissing: true,
@@ -119,7 +102,6 @@ func init() {
 			Val: chromeCrashReporterMetricsParams{
 				handler:       chromecrash.Breakpad,
 				chromeOptions: []chrome.Option{chrome.CrashNormalMode()},
-				browser:       browser.TypeAsh,
 				crashFileType: chromecrash.MetaFile,
 				killCrashpad:  false,
 				expectMissing: false,
@@ -130,18 +112,6 @@ func init() {
 			Val: chromeCrashReporterMetricsParams{
 				handler:       chromecrash.Crashpad,
 				chromeOptions: []chrome.Option{chrome.CrashNormalMode()},
-				browser:       browser.TypeAsh,
-				crashFileType: chromecrash.MetaFile,
-				killCrashpad:  false,
-				expectMissing: false,
-			},
-		}, {
-			Name:              "success_crashpad_lacros",
-			ExtraSoftwareDeps: []string{"crashpad", "lacros"},
-			Val: chromeCrashReporterMetricsParams{
-				handler:       chromecrash.Crashpad,
-				chromeOptions: []chrome.Option{chrome.CrashNormalMode()},
-				browser:       browser.TypeLacros,
 				crashFileType: chromecrash.MetaFile,
 				killCrashpad:  false,
 				expectMissing: false,
@@ -169,7 +139,7 @@ func ChromeCrashReporterMetrics(ctx context.Context, s *testing.State) {
 	params := s.Param().(chromeCrashReporterMetricsParams)
 	// Crash GPUProcess. Do not crash Browser process. Crashing the Browser
 	// process will disconnect our cr object.
-	ct, err := chromecrash.NewCrashTester(ctx, chromecrash.GPUProcess, params.browser, params.crashFileType)
+	ct, err := chromecrash.NewCrashTester(ctx, chromecrash.GPUProcess, browser.TypeAsh, params.crashFileType)
 	if err != nil {
 		s.Fatal("NewCrashTester failed: ", err)
 	}
@@ -181,8 +151,8 @@ func ChromeCrashReporterMetrics(ctx context.Context, s *testing.State) {
 
 	// In theory it would nice to rewrite this to use fixtures "correctly" but
 	// there's significant engineering work for that (b/292145636).
-	cr, _, closeBrowser, err := browserfixt.SetUpWithNewChrome(ctx, params.browser,
-		lacrosfixt.NewConfig(), chromeOptions...)
+	cr, _, closeBrowser, err := browserfixt.SetUpWithNewChrome(ctx, browser.TypeAsh,
+		nil, chromeOptions...)
 	if err != nil {
 		s.Fatal("Chrome login failed: ", err)
 	}

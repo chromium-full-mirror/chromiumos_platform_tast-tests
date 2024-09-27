@@ -27,17 +27,15 @@ import (
 )
 
 const (
-	// stackSampledMetricsFileAsh and stackSampledMetricsFileLacros must match
-	// kDefaultFilePath in Chrome's chromeos/tast_support/stack_sampling_recorder.cc
-	stackSampledMetricsFileAsh    = "/tmp/stack-sampling-data"
-	stackSampledMetricsFileLacros = "/tmp/stack-sampling-data-lacros"
+	// stackSampledMetricsFileAsh must match kDefaultFilePath in Chrome's
+	// chromeos/tast_support/stack_sampling_recorder.cc
+	stackSampledMetricsFileAsh = "/tmp/stack-sampling-data"
 )
 
 func init() {
 	testing.AddTest(&testing.Test{
-		Func:         StackSampledMetricsV2,
-		LacrosStatus: testing.LacrosVariantExists,
-		Desc:         "Check that stack-sampled metrics work",
+		Func: StackSampledMetricsV2,
+		Desc: "Check that stack-sampled metrics work",
 		Contacts: []string{
 			"chromeos-data-eng@google.com",
 			"hirthanan@google.com",
@@ -46,30 +44,13 @@ func init() {
 		Attr:         []string{"group:mainline"},
 		SoftwareDeps: []string{"chrome", "stack_sampled_metrics"},
 		Timeout:      2 * time.Minute,
-		Params: []testing.Param{{
-			Name:    "ash",
-			Fixture: fixture.ChromeLoggedInWithStackSampledMetrics,
-			Val:     browser.TypeAsh,
-		}, {
-			Name:              "lacros",
-			Fixture:           "lacrosWithStackSampledMetrics",
-			ExtraSoftwareDeps: []string{"lacros", "lacros_stable"},
-			Val:               browser.TypeLacros,
-		}},
+		Fixture:      fixture.ChromeLoggedInWithStackSampledMetrics,
 	})
 }
 
 func StackSampledMetricsV2(ctx context.Context, s *testing.State) {
-	browserType := s.Param().(browser.Type)
-
-	var fileName string
-	if browserType == browser.TypeAsh {
-		fileName = stackSampledMetricsFileAsh
-	} else {
-		fileName = stackSampledMetricsFileLacros
-	}
 	// Remove any stale files.
-	os.Remove(fileName)
+	os.Remove(stackSampledMetricsFileAsh)
 
 	// Reserve a few seconds for cleanup.
 	cleanupCtx := ctx
@@ -79,7 +60,7 @@ func StackSampledMetricsV2(ctx context.Context, s *testing.State) {
 	cr := s.FixtValue().(chrome.HasChrome).Chrome()
 	// Set up the browser, open a window.
 	const url = chrome.NewTabURL
-	conn, _, closeBrowser, err := browserfixt.SetUpWithURL(ctx, cr, browserType, url)
+	conn, _, closeBrowser, err := browserfixt.SetUpWithURL(ctx, cr, browser.TypeAsh, url)
 	if err != nil {
 		s.Fatal("Failed to open the browser: ", err)
 	}
@@ -106,7 +87,7 @@ func StackSampledMetricsV2(ctx context.Context, s *testing.State) {
 	testing.ContextLog(ctx, "Waiting for all processes + threads to be profiled")
 
 	if err := testing.Poll(ctx, func(ctx context.Context) error {
-		statusFile, err := os.Open(fileName)
+		statusFile, err := os.Open(stackSampledMetricsFileAsh)
 		if err != nil {
 			return errors.Wrap(err, "failed to open status file")
 		}

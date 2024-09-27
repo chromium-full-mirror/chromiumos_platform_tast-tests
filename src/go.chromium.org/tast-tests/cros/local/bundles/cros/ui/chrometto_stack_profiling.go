@@ -32,23 +32,13 @@ const (
 func init() {
 	testing.AddTest(&testing.Test{
 		Func:         ChromettoStackProfiling,
-		LacrosStatus: testing.LacrosVariantExists,
 		Desc:         "Checks that Chrometto can gather stack data",
 		Contacts:     []string{"chrometto-bugs@google.com"},
 		BugComponent: "b:582280", // Android > Android OS & Apps > Web on Android Performance > Chrometto
 		Attr:         []string{"group:mainline", "informational"},
 		SoftwareDeps: []string{"chrome", "stack_sampled_metrics"},
 		Timeout:      chromettoStackProfilingTimeout,
-		Params: []testing.Param{{
-			Name:    "ash",
-			Fixture: fixture.ChromeLoggedIn,
-			Val:     browser.TypeAsh,
-		}, {
-			Name:              "lacros",
-			ExtraSoftwareDeps: []string{"lacros"},
-			Fixture:           "lacros",
-			Val:               browser.TypeLacros,
-		}},
+		Fixture:      fixture.ChromeLoggedIn,
 	})
 }
 
@@ -61,7 +51,7 @@ func ChromettoStackProfiling(ctx context.Context, s *testing.State) {
 
 	cr := s.FixtValue().(chrome.HasChrome).Chrome()
 
-	br, closeBrowser, err := browserfixt.SetUp(ctx, cr, s.Param().(browser.Type))
+	br, closeBrowser, err := browserfixt.SetUp(ctx, cr, browser.TypeAsh)
 	if err != nil {
 		s.Fatal("Failed to set up browser: ", err)
 	}

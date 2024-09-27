@@ -14,32 +14,22 @@ import (
 
 	"go.chromium.org/tast-tests/cros/local/chrome/browser"
 	"go.chromium.org/tast-tests/cros/local/chrome/browser/browserfixt"
-	"go.chromium.org/tast-tests/cros/local/chrome/lacros/lacrosfixt"
 	"go.chromium.org/tast/core/testing"
 )
 
 func init() {
 	testing.AddTest(&testing.Test{
 		Func:         ChromeConnEvalLargeExpr,
-		LacrosStatus: testing.LacrosVariantExists,
 		Desc:         "Tests Chrome Conn.Eval with a very large expression",
 		Contacts:     []string{"chromeos-sw-engprod@google.com", "jonfan@google.com"},
 		BugComponent: "b:1034649",
 		Attr:         []string{"group:mainline", "group:hw_agnostic", "informational"},
 		SoftwareDeps: []string{"chrome"},
-		Params: []testing.Param{{
-			Val: browser.TypeAsh,
-		}, {
-			Name:              "lacros",
-			ExtraSoftwareDeps: []string{"lacros"},
-			Val:               browser.TypeLacros,
-		}},
 	})
 }
 
 func ChromeConnEvalLargeExpr(ctx context.Context, s *testing.State) {
-	bt := s.Param().(browser.Type)
-	cr, err := browserfixt.NewChrome(ctx, bt, lacrosfixt.NewConfig())
+	cr, err := browserfixt.NewChrome(ctx, browser.TypeAsh, nil)
 	if err != nil {
 		s.Fatal("Failed to connect to Chrome: ", err)
 	}

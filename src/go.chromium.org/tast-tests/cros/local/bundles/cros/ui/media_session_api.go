@@ -9,7 +9,6 @@ import (
 	"net/http"
 	"net/http/httptest"
 	"path/filepath"
-	"regexp"
 	"time"
 
 	"go.chromium.org/tast-tests/cros/local/chrome"
@@ -30,9 +29,8 @@ import (
 
 func init() {
 	testing.AddTest(&testing.Test{
-		Func:         MediaSessionAPI,
-		LacrosStatus: testing.LacrosVariantExists,
-		Desc:         "Verify the control buttons exist and there should be a space for artwork if the audio has artwork",
+		Func: MediaSessionAPI,
+		Desc: "Verify the control buttons exist and there should be a space for artwork if the audio has artwork",
 		Contacts: []string{
 			"chromeos-sw-engprod@google.com",
 			"cros-status-area-eng@google.com",
@@ -42,25 +40,14 @@ func init() {
 		Attr:         []string{"group:mainline", "informational"},
 		SoftwareDeps: []string{"chrome"},
 		Data:         []string{"media_session_api.html", "Lenna.png", "five_minute_audio_20211116.mp3"},
-		Params: []testing.Param{
-			{
-				Fixture: "chromeLoggedIn",
-				Val:     browser.TypeAsh,
-			}, {
-				Name:              "lacros",
-				Fixture:           "lacros",
-				ExtraSoftwareDeps: []string{"lacros"},
-				Val:               browser.TypeLacros,
-			},
-		},
-		Timeout: 3 * time.Minute,
+		Fixture:      "chromeLoggedIn",
+		Timeout:      3 * time.Minute,
 	})
 }
 
 // MediaSessionAPI verifies the control buttons exist and there should be a space for artwork if the audio has artwork.
 func MediaSessionAPI(ctx context.Context, s *testing.State) {
 	cr := s.FixtValue().(chrome.HasChrome).Chrome()
-	browserType := s.Param().(browser.Type)
 
 	tconn, err := cr.TestAPIConn(ctx)
 	if err != nil {
@@ -83,7 +70,7 @@ func MediaSessionAPI(ctx context.Context, s *testing.State) {
 	defer cancel()
 
 	// Setup browser based on the chrome type.
-	br, closeBrowser, err := browserfixt.SetUp(ctx, cr, browserType)
+	br, closeBrowser, err := browserfixt.SetUp(ctx, cr, browser.TypeAsh)
 	if err != nil {
 		s.Fatal("Failed to open the browser: ", err)
 	}
@@ -104,10 +91,6 @@ func MediaSessionAPI(ctx context.Context, s *testing.State) {
 	}
 
 	browserFinder := nodewith.Ancestor(nodewith.Role(role.Window).HasClass("BrowserFrame").NameContaining("MediaSessionAPI"))
-	if browserType == browser.TypeLacros {
-		classNameRegexp := regexp.MustCompile(`^ExoShellSurface(-\d+)?$`)
-		browserFinder = nodewith.Ancestor(nodewith.Role(role.Window).ClassNameRegex(classNameRegexp).NameContaining("MediaSessionAPI"))
-	}
 
 	playButton := browserFinder.Name("play").Role(role.Button)
 	if err := uiauto.Combine("play the audio",
