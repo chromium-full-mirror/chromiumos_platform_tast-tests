@@ -162,7 +162,7 @@ func ECKeyboard(ctx context.Context, s *testing.State) {
 				if err := h.RequirePlatform(ctx); err != nil {
 					s.Error("Could not read platform: ", err)
 				}
-				if h.Model == "steelix" {
+				if h.Model == "steelix" || h.Model == "rusty" {
 					s.Log("Testing steelix keys: KEY_BRIGHTNESSDOWN, KEY_BRIGHTNESSUP, KEY_MICMUTE")
 					testKeyMap["<f5>"] = "KEY_BRIGHTNESSDOWN"
 					testKeyMap["<f6>"] = "KEY_BRIGHTNESSUP"
