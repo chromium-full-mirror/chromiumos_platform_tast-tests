@@ -19,12 +19,10 @@ func init() {
 		Func:         Input,
 		LacrosStatus: testing.LacrosVariantUnneeded,
 		Desc:         "Can successfully navigate to the Input page",
-		// ChromeOS > Software > System Services > Serviceability > Diagnostics
-		BugComponent: "b:1131925",
+		// ChromeOS > Platform > Enablement > Health
+		BugComponent: "b:982097",
 		Contacts: []string{
-			"cros-device-enablement@google.com",
-			"dpad@google.com",
-			"ashleydp@google.com",
+			"cros-tdm-tpe-eng@google.com",
 		},
 		Fixture:      "diagnosticsPrepForInputDiagnostics",
 		Attr:         []string{"group:mainline", "informational", "group:hw_agnostic"},

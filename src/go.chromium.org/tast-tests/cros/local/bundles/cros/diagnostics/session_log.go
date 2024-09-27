@@ -27,12 +27,11 @@ func init() {
 		Func:         SessionLog,
 		LacrosStatus: testing.LacrosVariantUnneeded,
 		Desc:         "Diagnostics app session log saves to files successfully",
-		// ChromeOS > Software > System Services > Serviceability > Diagnostics
-		BugComponent: "b:1131925",
+		// ChromeOS > Platform > Enablement > Health
+		BugComponent: "b:982097",
 		Contacts: []string{
-			"cros-device-enablement@google.com",
-			"ashleydp@google.com",
-			"menghuan@google.com",
+			"cros-tdm-tpe-eng@google.com",
+			"menghuan@google.comcom",
 		},
 		Attr:         []string{"group:mainline", "informational", "group:hw_agnostic"},
 		SoftwareDeps: []string{"chrome"},

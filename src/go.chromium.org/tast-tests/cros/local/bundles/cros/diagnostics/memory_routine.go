@@ -25,8 +25,8 @@ func init() {
 		Func:         MemoryRoutine,
 		LacrosStatus: testing.LacrosVariantUnneeded,
 		Desc:         "Diagnostics app memory routine runs and stops successfully",
-		// ChromeOS > Software > System Services > Serviceability > Diagnostics
-		BugComponent: "b:1131925",
+		// ChromeOS > Platform > Enablement > Health
+		BugComponent: "b:982097",
 		Contacts: []string{
 			"cros-tdm-tpe-eng@google.com",
 			"weiluanwang@google.com",

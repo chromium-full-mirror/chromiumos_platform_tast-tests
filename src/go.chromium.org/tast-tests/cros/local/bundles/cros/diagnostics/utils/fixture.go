@@ -22,12 +22,10 @@ func init() {
 		Name: "diagnosticsPrep",
 		Desc: "Ensure relevant service is running before diagnostics ui test",
 		Contacts: []string{
-			"zhangwenyu@google.com",             // Fixture maintainer
-			"ashleydp@google.com",               // Fixture maintainer
-			"cros-device-enablement@google.com", // team mailing list
+			"cros-tdm-tpe-eng@google.com",
 		},
-		// ChromeOS > Software > System Services > Serviceability > Diagnostics
-		BugComponent: "b:1131925",
+		// ChromeOS > Platform > Enablement > Health
+		BugComponent: "b:982097",
 		Impl: newDiagnosticsPrepFixture(func(ctx context.Context, s *testing.FixtState) ([]chrome.Option, error) {
 			return nil, nil
 		}, false /*disableTabletMode*/),
@@ -42,13 +40,10 @@ func init() {
 		Name: "diagnosticsPrepForInputDiagnostics",
 		Desc: "Ensure relevant service is running before diagnostics ui test",
 		Contacts: []string{
-			"zhangwenyu@google.com",             // Fixture maintainer
-			"ashleydp@google.com",               // Fixture maintainer
-			"dpad@google.com",                   // Fixture maintainer
-			"cros-device-enablement@google.com", // team mailing list
+			"cros-tdm-tpe-eng@google.com",
 		},
-		// ChromeOS > Software > System Services > Serviceability > Diagnostics
-		BugComponent: "b:1131925",
+		// ChromeOS > Platform > Enablement > Health
+		BugComponent: "b:982097",
 		Impl: newDiagnosticsPrepFixture(func(ctx context.Context, s *testing.FixtState) ([]chrome.Option, error) {
 			return []chrome.Option{chrome.EnableFeatures("EnableInputInDiagnosticsApp")}, nil
 		}, true /*disableTabletMode*/),
