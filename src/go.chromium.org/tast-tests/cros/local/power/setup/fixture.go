@@ -44,31 +44,24 @@ const (
 	PowerNoUIPlatformAudio = "powerNoUIPlatformAudio"
 
 	// UI
-	PowerAsh       = "powerAsh"
-	PowerLacros    = "powerLacros"
-	PowerAshARC    = "powerAshARC"
-	PowerLacrosARC = "powerLacrosARC"
+	PowerAsh    = "powerAsh"
+	PowerAshARC = "powerAshARC"
 
 	// Keyboard backlight
-	PowerAshKbbl    = "powerAshKbbl"
-	PowerLacrosKbbl = "powerLacrosKbbl"
+	PowerAshKbbl = "powerAshKbbl"
 
 	// With GAIA login
-	PowerAshGAIA    = "powerAshGAIA"
-	PowerLacrosGAIA = "powerLacrosGAIA"
+	PowerAshGAIA = "powerAshGAIA"
 
 	// With ramfs setup
 	PowerAshRamfs    = "powerAshRamfs"
 	PowerAshARCRamfs = "powerAshARCRamfs"
-	PowerLacrosRamfs = "powerLacrosRamfs"
 
 	// With Dark theme
-	PowerAshDark    = "powerAshDark"
-	PowerLacrosDark = "powerLacrosDark"
+	PowerAshDark = "powerAshDark"
 
 	// With Nightlight
-	PowerAshNightlight    = "powerAshNightlight"
-	PowerLacrosNightlight = "powerLacrosNightlight"
+	PowerAshNightlight = "powerAshNightlight"
 
 	// For platform audio test scheme
 	PowerAshPlatformAudioNoiseCancellation = "powerAshPlatformAudioNoiseCancellation"
@@ -90,8 +83,7 @@ const (
 	PowerAshSpeakOnMute = "powerAshSpeakOnMute"
 
 	// Protected video playback
-	PowerAshProtectedVideo    = "powerAshProtectedVideo"
-	PowerLacrosProtectedVideo = "powerLacrosProtectedVideo"
+	PowerAshProtectedVideo = "powerAshProtectedVideo"
 
 	// Mahi
 	PowerAshMahi = "powerAshMahi"
@@ -364,46 +356,6 @@ func init() {
 	})
 
 	testing.AddFixture(&testing.Fixture{
-		Name:         PowerLacrosKbbl,
-		Desc:         "Keyboard backlight default level, recommended for simulating user behavior",
-		BugComponent: "b:1361410",
-		Contacts: []string{
-			"chromeos-platform-power@google.com",
-			"mqg@chromium.org",
-		},
-		Impl: NewPowerUIFixture(PowerTestOptions{
-			NightLight:         DisableNightLight,
-			DarkTheme:          EnableLightTheme,
-			KeyboardBrightness: SetKbBrightness,
-		}, PowerFixtureOptions{BrowserType: browser.TypeLacros}),
-		SetUpTimeout:    SetUpTimeout,
-		ResetTimeout:    ResetTimeout,
-		TearDownTimeout: TearDownTimeout,
-		PreTestTimeout:  PreTestTimeout,
-		PostTestTimeout: PostTestTimeout,
-	})
-
-	testing.AddFixture(&testing.Fixture{
-		Name:         PowerLacros,
-		Desc:         "Keyboard backlight off, recommended for testing feature power",
-		BugComponent: "b:1361410",
-		Contacts: []string{
-			"chromeos-platform-power@google.com",
-			"mqg@chromium.org",
-		},
-		Impl: NewPowerUIFixture(PowerTestOptions{
-			NightLight:         DisableNightLight,
-			DarkTheme:          EnableLightTheme,
-			KeyboardBrightness: SetKbBrightnessToZero,
-		}, PowerFixtureOptions{BrowserType: browser.TypeLacros}),
-		SetUpTimeout:    SetUpTimeout,
-		ResetTimeout:    ResetTimeout,
-		TearDownTimeout: TearDownTimeout,
-		PreTestTimeout:  PreTestTimeout,
-		PostTestTimeout: PostTestTimeout,
-	})
-
-	testing.AddFixture(&testing.Fixture{
 		Name:         PowerAshGAIA,
 		Desc:         "Keyboard backlight off with GAIA login, recommended for testing feature power",
 		BugComponent: "b:1361410",
@@ -427,29 +379,6 @@ func init() {
 	})
 
 	testing.AddFixture(&testing.Fixture{
-		Name:         PowerLacrosGAIA,
-		Desc:         "Keyboard backlight off with GAIA login, recommended for testing feature power",
-		BugComponent: "b:1361410",
-		Contacts: []string{
-			"chromeos-platform-power@google.com",
-			"mqg@chromium.org",
-		},
-		Impl: NewPowerUIFixture(PowerTestOptions{
-			NightLight:         DisableNightLight,
-			DarkTheme:          EnableLightTheme,
-			KeyboardBrightness: SetKbBrightnessToZero,
-		}, PowerFixtureOptions{
-			BrowserType:     browser.TypeLacros,
-			EnableGAIALogin: true,
-		}),
-		SetUpTimeout:    chrome.GAIALoginTimeout + SetUpTimeout,
-		ResetTimeout:    ResetTimeout,
-		TearDownTimeout: TearDownTimeout,
-		PreTestTimeout:  PreTestTimeout,
-		PostTestTimeout: PostTestTimeout,
-	})
-
-	testing.AddFixture(&testing.Fixture{
 		Name:         PowerAshARC,
 		Desc:         "Keyboard backlight off with ARC enabled, recommended for testing feature power",
 		BugComponent: "b:1361410",
@@ -463,30 +392,6 @@ func init() {
 			KeyboardBrightness: SetKbBrightnessToZero,
 		}, PowerFixtureOptions{
 			BrowserType:     browser.TypeAsh,
-			EnableGAIALogin: true,
-			EnableARC:       true,
-		}),
-		SetUpTimeout:    chrome.GAIALoginTimeout + optin.OptinTimeout + arc.BootTimeout + SetUpTimeout,
-		ResetTimeout:    ResetTimeout,
-		TearDownTimeout: TearDownTimeout,
-		PreTestTimeout:  PreTestTimeout,
-		PostTestTimeout: PostTestTimeout,
-	})
-
-	testing.AddFixture(&testing.Fixture{
-		Name:         PowerLacrosARC,
-		Desc:         "Lacros variation of powerAshARC",
-		BugComponent: "b:1361410",
-		Contacts: []string{
-			"chromeos-platform-power@google.com",
-			"mqg@chromium.org",
-		},
-		Impl: NewPowerUIFixture(PowerTestOptions{
-			NightLight:         DisableNightLight,
-			DarkTheme:          EnableLightTheme,
-			KeyboardBrightness: SetKbBrightnessToZero,
-		}, PowerFixtureOptions{
-			BrowserType:     browser.TypeLacros,
 			EnableGAIALogin: true,
 			EnableARC:       true,
 		}),
@@ -543,26 +448,6 @@ func init() {
 		PostTestTimeout: PostTestTimeout,
 	})
 
-	testing.AddFixture(&testing.Fixture{
-		Name:         PowerLacrosRamfs,
-		Desc:         "PowerLacros with ramfs setup for local data",
-		BugComponent: "b:1361410",
-		Contacts: []string{
-			"chromeos-platform-power@google.com",
-			"mqg@chromium.org",
-		},
-		Impl: NewPowerUIFixture(PowerTestOptions{
-			NightLight:         DisableNightLight,
-			DarkTheme:          EnableLightTheme,
-			KeyboardBrightness: SetKbBrightnessToZero,
-			Ramfs:              SetupRamfs,
-		}, PowerFixtureOptions{BrowserType: browser.TypeLacros, EnableHDR: true}),
-		SetUpTimeout:    SetUpTimeout,
-		ResetTimeout:    ResetTimeout,
-		TearDownTimeout: TearDownTimeout,
-		PreTestTimeout:  PreTestTimeout,
-		PostTestTimeout: PostTestTimeout,
-	})
 	// Dark theme basic fixtures
 	testing.AddFixture(&testing.Fixture{
 		Name:         PowerAshDark,
@@ -583,25 +468,7 @@ func init() {
 		PreTestTimeout:  PreTestTimeout,
 		PostTestTimeout: PostTestTimeout,
 	})
-	testing.AddFixture(&testing.Fixture{
-		Name:         PowerLacrosDark,
-		Desc:         "Dark theme version of powerLacros",
-		BugComponent: "b:1361410",
-		Contacts: []string{
-			"chromeos-platform-power@google.com",
-			"mqg@chromium.org",
-		},
-		Impl: NewPowerUIFixture(PowerTestOptions{
-			NightLight:         DisableNightLight,
-			DarkTheme:          EnableDarkTheme,
-			KeyboardBrightness: SetKbBrightnessToZero,
-		}, PowerFixtureOptions{BrowserType: browser.TypeLacros}),
-		SetUpTimeout:    SetUpTimeout,
-		ResetTimeout:    ResetTimeout,
-		TearDownTimeout: TearDownTimeout,
-		PreTestTimeout:  PreTestTimeout,
-		PostTestTimeout: PostTestTimeout,
-	})
+
 	// Nightlight basic fixtures
 	testing.AddFixture(&testing.Fixture{
 		Name:         PowerAshNightlight,
@@ -616,25 +483,6 @@ func init() {
 			DarkTheme:          EnableLightTheme,
 			KeyboardBrightness: SetKbBrightnessToZero,
 		}, PowerFixtureOptions{BrowserType: browser.TypeAsh}),
-		SetUpTimeout:    SetUpTimeout,
-		ResetTimeout:    ResetTimeout,
-		TearDownTimeout: TearDownTimeout,
-		PreTestTimeout:  PreTestTimeout,
-		PostTestTimeout: PostTestTimeout,
-	})
-	testing.AddFixture(&testing.Fixture{
-		Name:         PowerLacrosNightlight,
-		Desc:         "Nightlight version of powerLacros",
-		BugComponent: "b:1361410",
-		Contacts: []string{
-			"chromeos-platform-power@google.com",
-			"mqg@chromium.org",
-		},
-		Impl: NewPowerUIFixture(PowerTestOptions{
-			NightLight:         EnableNightLight,
-			DarkTheme:          EnableLightTheme,
-			KeyboardBrightness: SetKbBrightnessToZero,
-		}, PowerFixtureOptions{BrowserType: browser.TypeLacros}),
 		SetUpTimeout:    SetUpTimeout,
 		ResetTimeout:    ResetTimeout,
 		TearDownTimeout: TearDownTimeout,
@@ -952,33 +800,6 @@ func init() {
 			DarkTheme:          EnableLightTheme,
 			KeyboardBrightness: SetKbBrightnessToZero,
 		}, PowerFixtureOptions{BrowserType: browser.TypeAsh,
-			BrowserExtraOpts: []chrome.Option{
-				// Options for allowing L1 playback in dev mode
-				chrome.ExtraArgs("--allow-ra-in-dev-mode"),
-				chrome.ExtraArgs("--unsafely-allow-protected-media-identifier-for-domain=127.0.0.1"),
-				// Feature flags.
-				chrome.EnableFeatures("EnableArmHwdrm"),
-			}}),
-		SetUpTimeout:    SetUpTimeout,
-		ResetTimeout:    ResetTimeout,
-		TearDownTimeout: TearDownTimeout,
-		PreTestTimeout:  PreTestTimeout,
-		PostTestTimeout: PostTestTimeout,
-	})
-
-	testing.AddFixture(&testing.Fixture{
-		Name:         PowerLacrosProtectedVideo,
-		Desc:         "Like PowerLacros but allows protected video",
-		BugComponent: "b:1361410",
-		Contacts: []string{
-			"chromeos-platform-power@google.com",
-			"jkardatzke@google.com",
-		},
-		Impl: NewPowerUIFixture(PowerTestOptions{
-			NightLight:         DisableNightLight,
-			DarkTheme:          EnableLightTheme,
-			KeyboardBrightness: SetKbBrightnessToZero,
-		}, PowerFixtureOptions{BrowserType: browser.TypeLacros,
 			BrowserExtraOpts: []chrome.Option{
 				// Options for allowing L1 playback in dev mode
 				chrome.ExtraArgs("--allow-ra-in-dev-mode"),
