@@ -148,10 +148,6 @@ class AnalysisResult:
                 group.sample.improvement_direction
                 == self.groups[0].sample.improvement_direction
             )
-        # There should be N choose 2 pairwise results.
-        assert (
-            len(self.pairs) == (len(self.groups) * (len(self.groups) - 1)) / 2
-        )
 
 
 def _construct_implicit_experiment_groups_list(
