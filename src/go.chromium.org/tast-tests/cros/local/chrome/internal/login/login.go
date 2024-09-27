@@ -126,7 +126,13 @@ func FinishUserLogin(ctx context.Context, cfg *config.Config, sess *driver.Sessi
 
 	if cfg.RemoveNotification() {
 		if err := removeNotifications(ctx, sess); err != nil {
-			return errors.Wrap(err, "failed to remove notifications")
+			// TODO(b/354048099): This was originally a fatal error, but it's
+			// not actually critical at least for some e2e tests that also cannot
+			// change the `cfg` (e.g. certprovisioning.ProvisionCertE2E.*). The
+			// notification removal seems to be broken because of the Manifest V3
+			// changes. This can be changed back to a fatal error once the removal
+			// is fixed.
+			testing.ContextLog(ctx, "Failed to remove notifications")
 		}
 	}
 
