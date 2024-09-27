@@ -111,6 +111,11 @@ func (f *Finder) attributesBytes() ([]byte, error) {
 		fmt.Fprintf(&buf, "\"name\":selectName({")
 		for _, locale := range locales {
 			regex := f.name[locale]
+			// An empty regex will be translated to "//", which causes the subsequent expression to
+			// become invalid syntax in JavaScript.
+			if len(regex.String()) == 0 {
+				return nil, errors.Errorf("nodewith.Finder: empty node name for locale (%s) is not allowed", locale)
+			}
 			// We need to escape all "/", to avoid something like the regex "a/b" being translated to /a/b/,
 			// which is invalid syntax in javascript.
 			fmt.Fprintf(&buf, `%q:%s,`, locale, convertRegexp(&regex))
