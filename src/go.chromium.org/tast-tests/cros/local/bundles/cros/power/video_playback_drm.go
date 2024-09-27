@@ -38,7 +38,7 @@ var hwdrmDataFiles = []string{
 func init() {
 	testing.AddTest(&testing.Test{
 		Func:         VideoPlaybackDrm,
-		LacrosStatus: testing.LacrosVariantExists,
+		LacrosStatus: testing.LacrosVariantUnneeded,
 		Desc:         "Collect power metrics playing protected offline video",
 		BugComponent: "b:1361410",
 		Contacts: []string{
@@ -53,25 +53,11 @@ func init() {
 			Fixture:           "powerAshProtectedVideo",
 			Timeout:           6*time.Minute + power.RecorderTimeout,
 		}, {
-			Name:              "cencv1_h264_ctr_lacros",
-			Val:               videoPlaybackDrmTestParam{VideoName: "tulip_480p_h264_cencv1_ctr.mpd"},
-			ExtraData:         append(hwdrmDataFiles, "drm_video_playback/tulip_480p_h264_cencv1_ctr.mp4", "drm_video_playback/tulip_audio_aac_cencv1_ctr.mp4", "drm_video_playback/tulip_480p_h264_cencv1_ctr.mpd"),
-			ExtraSoftwareDeps: []string{caps.HWDecodeCTRV1H264, "proprietary_codecs"},
-			Fixture:           "powerLacrosProtectedVideo",
-			Timeout:           6*time.Minute + power.RecorderTimeout,
-		}, {
 			Name:              "cencv3_h264_ctr_ash",
 			Val:               videoPlaybackDrmTestParam{VideoName: "tulip_480p_h264_cencv3_ctr.mpd"},
 			ExtraData:         append(hwdrmDataFiles, "drm_video_playback/tulip_480p_h264_cencv3_ctr.mp4", "drm_video_playback/tulip_audio_aac_cencv3_ctr.mp4", "drm_video_playback/tulip_480p_h264_cencv3_ctr.mpd"),
 			ExtraSoftwareDeps: []string{caps.HWDecodeCTRV3H264, "proprietary_codecs"},
 			Fixture:           "powerAshProtectedVideo",
-			Timeout:           6*time.Minute + power.RecorderTimeout,
-		}, {
-			Name:              "cencv3_h264_ctr_lacros",
-			Val:               videoPlaybackDrmTestParam{VideoName: "tulip_480p_h264_cencv3_ctr.mpd"},
-			ExtraData:         append(hwdrmDataFiles, "drm_video_playback/tulip_480p_h264_cencv3_ctr.mp4", "drm_video_playback/tulip_audio_aac_cencv3_ctr.mp4", "drm_video_playback/tulip_480p_h264_cencv3_ctr.mpd"),
-			ExtraSoftwareDeps: []string{caps.HWDecodeCTRV3H264, "proprietary_codecs"},
-			Fixture:           "powerLacrosProtectedVideo",
 			Timeout:           6*time.Minute + power.RecorderTimeout,
 		}, {
 			Name:              "cencv3_hevc_ctr_ash",
@@ -82,14 +68,6 @@ func init() {
 			Fixture:           "powerAshProtectedVideo",
 			Timeout:           6*time.Minute + power.RecorderTimeout,
 		}, {
-			Name:              "cencv3_hevc_ctr_lacros",
-			Val:               videoPlaybackDrmTestParam{VideoName: "tulip_480p_hevc_cencv3_ctr.mpd"},
-			ExtraData:         append(hwdrmDataFiles, "drm_video_playback/tulip_480p_hevc_cencv3_ctr.mp4", "drm_video_playback/tulip_audio_aac_cencv3_ctr.mp4", "drm_video_playback/tulip_480p_hevc_cencv3_ctr.mpd"),
-			ExtraHardwareDeps: hwdep.D(hwdep.SupportsHEVCVideoDecodingInChrome()),
-			ExtraSoftwareDeps: []string{caps.HWDecodeCTRV3HEVC, "proprietary_codecs"},
-			Fixture:           "powerLacrosProtectedVideo",
-			Timeout:           6*time.Minute + power.RecorderTimeout,
-		}, {
 			Name:              "cencv3_vp9_cbc_ash",
 			Val:               videoPlaybackDrmTestParam{VideoName: "tulip_480p_vp9_cencv3_cbc.mpd"},
 			ExtraData:         append(hwdrmDataFiles, "drm_video_playback/tulip_480p_vp9_cencv3_cbc.mp4", "drm_video_playback/tulip_audio_aac_cencv3_cbc.mp4", "drm_video_playback/tulip_480p_vp9_cencv3_cbc.mpd"),
@@ -97,25 +75,11 @@ func init() {
 			Fixture:           "powerAshProtectedVideo",
 			Timeout:           6*time.Minute + power.RecorderTimeout,
 		}, {
-			Name:              "cencv3_vp9_cbc_lacros",
-			Val:               videoPlaybackDrmTestParam{VideoName: "tulip_480p_vp9_cencv3_cbc.mpd"},
-			ExtraData:         append(hwdrmDataFiles, "drm_video_playback/tulip_480p_vp9_cencv3_cbc.mp4", "drm_video_playback/tulip_audio_aac_cencv3_cbc.mp4", "drm_video_playback/tulip_480p_vp9_cencv3_cbc.mpd"),
-			ExtraSoftwareDeps: []string{caps.HWDecodeCBCV3VP9, "proprietary_codecs"},
-			Fixture:           "powerLacrosProtectedVideo",
-			Timeout:           6*time.Minute + power.RecorderTimeout,
-		}, {
 			Name:              "cencv3_av1_cbc_ash",
 			Val:               videoPlaybackDrmTestParam{VideoName: "tulip_480p_av1_cencv3_cbc.mpd"},
 			ExtraData:         append(hwdrmDataFiles, "drm_video_playback/tulip_480p_av1_cencv3_cbc.webm", "drm_video_playback/tulip_audio_aac_cencv3_cbc.mp4", "drm_video_playback/tulip_480p_av1_cencv3_cbc.mpd"),
 			ExtraSoftwareDeps: []string{caps.HWDecodeCBCV3AV1, "proprietary_codecs"},
 			Fixture:           "powerAshProtectedVideo",
-			Timeout:           6*time.Minute + power.RecorderTimeout,
-		}, {
-			Name:              "cencv3_av1_cbc_lacros",
-			Val:               videoPlaybackDrmTestParam{VideoName: "tulip_480p_av1_cencv3_cbc.mpd"},
-			ExtraData:         append(hwdrmDataFiles, "drm_video_playback/tulip_480p_av1_cencv3_cbc.webm", "drm_video_playback/tulip_audio_aac_cencv3_cbc.mp4", "drm_video_playback/tulip_480p_av1_cencv3_cbc.mpd"),
-			ExtraSoftwareDeps: []string{caps.HWDecodeCBCV3AV1, "proprietary_codecs"},
-			Fixture:           "powerLacrosProtectedVideo",
 			Timeout:           6*time.Minute + power.RecorderTimeout,
 		}},
 	})
