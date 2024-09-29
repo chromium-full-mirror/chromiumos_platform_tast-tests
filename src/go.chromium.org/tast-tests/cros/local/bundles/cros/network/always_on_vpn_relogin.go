@@ -11,7 +11,7 @@ import (
 	"go.chromium.org/tast-tests/cros/common/pkcs11/netcertstore"
 	"go.chromium.org/tast-tests/cros/common/shillconst"
 	"go.chromium.org/tast-tests/cros/local/chrome"
-	"go.chromium.org/tast-tests/cros/local/network/dumputil"
+	"go.chromium.org/tast-tests/cros/local/network/testhooks"
 	"go.chromium.org/tast-tests/cros/local/network/vpn"
 	"go.chromium.org/tast-tests/cros/local/shill"
 	"go.chromium.org/tast-tests/cros/local/upstart"
@@ -81,9 +81,17 @@ func AlwaysOnVPNRelogin(ctx context.Context, s *testing.State) {
 	ctx, cancel := ctxutil.Shorten(ctx, 10*time.Second)
 	defer cancel()
 
-	// Dump network info on failure.
-	errorHandler := dumputil.CreateErrorHandler(cleanupCtx)
-	s.AttachErrorHandlers(errorHandler, errorHandler)
+	hookEnv, err := testhooks.RunNetworkTestHooks(ctx,
+		testhooks.NewSaveNetLogHook(),
+		testhooks.NewTcpdumpHook(),
+		testhooks.NewDumpHostOnFailureHook(),
+		testhooks.NewDisablePortalDetectionHook(),
+	)
+	if err != nil {
+		s.Fatal("Failed to run network test hooks: ", err)
+	}
+	s.AttachErrorHandlers(hookEnv.OnErrorHandler, hookEnv.OnFatalHandler)
+	defer hookEnv.TearDownWithLogFailures(cleanupCtx, s.HasError)
 
 	m, err := shill.NewManager(ctx)
 	if err != nil {
@@ -109,16 +117,6 @@ func AlwaysOnVPNRelogin(ctx context.Context, s *testing.State) {
 	if err != nil {
 		s.Fatal("Failed to start Chrome: ", err)
 	}
-
-	// Disable portal detection to avoid default network fallback.
-	if err := m.SetProperty(ctx, shillconst.ProfilePropertyCheckPortalList, "wifi,cellular"); err != nil {
-		s.Fatal("Failed to disable portal detection on ethernet: ", err)
-	}
-	defer func() {
-		if err := m.SetProperty(cleanupCtx, shillconst.ProfilePropertyCheckPortalList, "ethernet,wifi,cellular"); err != nil {
-			s.Fatal("Failed to restore portal detection on ethernet: ", err)
-		}
-	}()
 
 	// Set up VPN server and shill profile based on the config.
 	config := vpn.NewConfig(
@@ -207,12 +205,6 @@ func AlwaysOnVPNRelogin(ctx context.Context, s *testing.State) {
 			s.Fatal("Failed to close Chrome connection: ", err)
 		}
 	}()
-
-	// Manager properties will be cleared after re-login, so we need to disable
-	// portal detection again.
-	if err := m.SetProperty(ctx, shillconst.ProfilePropertyCheckPortalList, "wifi,cellular"); err != nil {
-		s.Fatal("Failed to disable portal detection on ethernet: ", err)
-	}
 
 	// Search for the VPN service we set up.
 	// In this testing condition, we only have one VPN service, so we can directly
