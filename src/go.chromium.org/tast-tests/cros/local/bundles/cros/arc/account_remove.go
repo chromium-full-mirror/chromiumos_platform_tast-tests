@@ -67,8 +67,15 @@ func init() {
 					secondaryAccountPool: uiCommon.GaiaPoolDefaultVarName,
 					optin:                false,
 				},
-				ExtraSoftwareDeps: []string{"android_container", "gaia"},
-				ExtraAttr:         []string{"informational", "group:mainline"},
+				ExtraSoftwareDeps: []string{
+					"android_container",
+					// Disabled by TORA.  See:b/342208261.
+					//"gaia"
+				},
+				ExtraAttr:         []string{
+					// Disabled by TORA.  See:b/342208261.
+					// "informational", "group:mainline"
+					},
 			},
 			{
 				Name: "managed_vm",
@@ -90,8 +97,15 @@ func init() {
 					secondaryAccountPool: arcCommon.ManagedAccountPoolVarName,
 					optin:                true,
 				},
-				ExtraSoftwareDeps: []string{"android_container", "gaia"},
-				ExtraAttr:         []string{"informational", "group:mainline"},
+				ExtraSoftwareDeps: []string{
+					"android_container",
+					// Disabled by TORA.  See:b/342208261.
+					//"gaia"
+				},
+				ExtraAttr:         []string{
+					// Disabled by TORA.  See:b/342208261.
+					// "informational", "group:mainline"
+					},
 			},
 			{
 				Name: "unmanaged_vm",
@@ -100,8 +114,15 @@ func init() {
 					secondaryAccountPool: arcCommon.ManagedAccountPoolVarName,
 					optin:                true,
 				},
-				ExtraSoftwareDeps: []string{"android_vm", "gaia"},
-				ExtraAttr:         []string{"informational", "group:mainline"},
+				ExtraSoftwareDeps: []string{
+					"android_vm",
+					// Disabled by TORA.  See:b/342208261.
+					//"gaia"
+				},
+				ExtraAttr:         []string{
+					// Disabled by TORA.  See:b/342208261.
+					// "informational", "group:mainline"
+					},
 			}},
 	})
 }
