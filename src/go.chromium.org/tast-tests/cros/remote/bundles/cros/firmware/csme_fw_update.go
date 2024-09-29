@@ -40,7 +40,7 @@ func init() {
 	testing.AddTest(&testing.Test{
 		Func:         CsmeFwUpdate,
 		Desc:         "Verifies that CSME RW firmware can be upgraded or downgraded using chromeos-firmwareupdate --mode=recovery",
-		Contacts:     []string{"digehlot@google.com", "chromeos-firmware@google.com"},
+		Contacts:     []string{"chromeos-firmware@google.com", "digehlot@google.com"},
 		BugComponent: "b:792402", // ChromeOS > Platform > Enablement > Firmware > FAFT
 		HardwareDeps: hwdep.D(hwdep.CPUSocFamily("intel")),
 		SoftwareDeps: []string{"csme_update"},
