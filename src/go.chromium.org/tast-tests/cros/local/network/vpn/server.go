@@ -14,6 +14,8 @@ import (
 	"time"
 
 	"go.chromium.org/tast-tests/cros/common/crypto/certificate"
+	"go.chromium.org/tast-tests/cros/common/testexec"
+	"go.chromium.org/tast-tests/cros/local/network/virtualnet"
 	"go.chromium.org/tast-tests/cros/local/network/virtualnet/env"
 	"go.chromium.org/tast-tests/cros/local/network/vpn/internal/toyserver"
 	"go.chromium.org/tast/core/errors"
@@ -382,6 +384,8 @@ type serverCore struct {
 type Server struct {
 	*serverCore
 
+	env *virtualnet.Env
+
 	OverlayIPv4 string
 	OverlayIPv6 string
 	UnderlayIP  string
@@ -423,6 +427,7 @@ func StartServerWithConfig(ctx context.Context, env *env.Env, config *Config) (*
 
 	server := &Server{
 		serverCore: serverCore,
+		env:        env,
 		// Make a copy of the config, in case that the caller changes it later.
 		Config: *config,
 	}
@@ -442,14 +447,18 @@ func StartServerWithConfig(ctx context.Context, env *env.Env, config *Config) (*
 
 	if !server.Config.allowReachUnderlayIPFromVPN {
 		if server.OverlayIPv4 != "" {
-			if err := env.RunWithoutChroot(ctx, "iptables", "-I", "INPUT", "-i", server.OverlayIfname, "!", "-d", server.OverlayIPv4, "-j", "DROP", "-w"); err != nil {
+			iptablesArgs := []string{"INPUT", "-i", server.OverlayIfname, "!", "-d", server.OverlayIPv4, "-j", "DROP", "-w"}
+			if err := env.CreateCommand(ctx, append([]string{"/sbin/iptables", "-I"}, iptablesArgs...)...).Run(testexec.DumpLogOnError); err != nil {
 				return nil, errors.Wrap(err, "failed to install iptables rules to drop packets")
 			}
+			server.stopCommands = append(server.stopCommands, append([]string{"/sbin/iptables", "-D"}, iptablesArgs...))
 		}
 		if server.OverlayIPv6 != "" {
-			if err := env.RunWithoutChroot(ctx, "ip6tables", "-I", "INPUT", "-i", server.OverlayIfname, "!", "-d", server.OverlayIPv6, "-j", "DROP", "-w"); err != nil {
+			iptablesArgs := []string{"INPUT", "-i", server.OverlayIfname, "!", "-d", server.OverlayIPv6, "-j", "DROP", "-w"}
+			if err := env.CreateCommand(ctx, append([]string{"/sbin/ip6tables", "-I"}, iptablesArgs...)...).Run(testexec.DumpLogOnError); err != nil {
 				return nil, errors.Wrap(err, "failed to install iptables rules to drop packets")
 			}
+			server.stopCommands = append(server.stopCommands, append([]string{"/sbin/ip6tables", "-D"}, iptablesArgs...))
 		}
 	}
 
@@ -799,7 +808,7 @@ func startToyVPNServer(ctx context.Context, env *env.Env, config *Config) (retSe
 func (s *Server) StopServer(ctx context.Context) error {
 	runner := s.serverRunner
 	for _, cmd := range s.stopCommands {
-		if err := runner.RunChroot(ctx, cmd); err != nil {
+		if err := s.env.CreateCommand(ctx, cmd...).Run(testexec.DumpLogOnError); err != nil {
 			return errors.Wrapf(err, "failed to execute %v", cmd)
 		}
 	}
