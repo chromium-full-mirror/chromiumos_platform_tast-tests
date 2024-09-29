@@ -22,7 +22,7 @@ func init() {
 		Contacts:     []string{"digehlot@google.com", "chromeos-firmware@google.com"},
 		BugComponent: "b:792402", // ChromeOS > Platform > Enablement > Firmware > FAFT
 		HardwareDeps: hwdep.D(hwdep.FirmwareSplashScreen()),
-		Attr:         []string{"group:firmware", "firmware_unstable"},
+		Attr:         []string{"group:firmware", "firmware_bios", "firmware_level2"},
 		Fixture:      fixture.NormalMode,
 		Timeout:      5 * time.Minute,
 	})
