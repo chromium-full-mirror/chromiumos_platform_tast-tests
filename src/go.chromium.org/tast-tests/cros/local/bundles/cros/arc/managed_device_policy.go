@@ -166,8 +166,15 @@ func init() {
 			{
 				Name:              "enabled_system_app_package_names_vm",
 				Val:               policyEnabledSystemAppPackageNames,
-				ExtraSoftwareDeps: []string{"android_vm", "gaia"},
-				ExtraAttr:         []string{"informational", "group:mainline"},
+				ExtraSoftwareDeps: []string{
+					"android_vm",
+					// Disabled by TORA.  See:b/346157268.
+					// "gaia"
+				},
+				ExtraAttr:         []string{
+					// Disabled by TORA.  See:b/346157268.
+					// "informational", "group:mainline"
+					},
 			},
 			{
 				Name:              "install_unknown_sources_disabled",
