@@ -157,6 +157,16 @@ a different name (e.g. compare ui.OverviewPerf and ui.OverviewPerf.lacros). In
 this case, you don't need to provide two JSON files containing the samples ---
 it's sufficient to provide one that contains samples for both tests.
 
+`--control-label`:
+
+The control label to use as a baseline. If not specified, all experiment
+groups are compared against each other, resulting N choose 2 comparisons. If
+specified, experiment groups with this label are compared against all other
+groups, running N-1 comparisons in total. This is beneficial particularly when
+you have specific experiment groups acting as control groups. For instance,
+if you create a new feature with multiple variations, you can use this
+option to compare their performance to the original version.
+
 ## How to generate graphs and a summary report
 
 Tast-analyzer can also generate graphs. For example, it can generate CDF graphs:

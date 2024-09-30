@@ -325,6 +325,44 @@ class AnalysisTest(unittest.TestCase):
             analyze_results._prune_minimum_sample_size(samples, 4), []
         )
 
+    def test_generate_analysis_results_with_control_label(self) -> None:
+        samples = (
+            test_util.load_before_samples() + test_util.load_after_samples()
+        )
+
+        # Add a control label to see if 1:N-1 comparisons are performed
+        control_label = "control"
+        for sample in test_util.load_before_samples():
+            samples.append(dataclasses.replace(sample, label=control_label))
+
+        # Prune other metric paths just to simplify assersions below
+        samples = analyze_results._prune_regex_include(samples, "Test.One")
+
+        cfg = analysis_cfg.AnalysisCfg(
+            hypothesis_test_params=stats_util.HypothesisTestParameters(
+                statistic_kind=stats_util.TestStatisticKind.RANK_SUM
+            ),
+            bootstrap_params=stats_util.BootstrapParameters(
+                statistic_kind=stats_util.TestStatisticKind.RANK_SUM
+            ),
+            control_label=control_label,
+        )
+        results = analysis_results.generate_analysis_results(
+            groups_list=analysis_results.construct_experiment_groups_list(
+                samples=samples, cfg=cfg
+            ),
+            cfg=cfg,
+        )
+
+        for result in results:
+            self.assertEqual(len(result.pairs), 2)
+
+            self.assertEqual(result.pairs[0].before.label(), control_label)
+            self.assertIn(result.pairs[0].after.label(), "before")
+
+            self.assertEqual(result.pairs[1].before.label(), control_label)
+            self.assertIn(result.pairs[1].after.label(), "after")
+
     def test_split_better_and_worse_by_mean(self) -> None:
         samples = (
             test_util.load_before_samples() + test_util.load_after_samples()
@@ -366,11 +404,17 @@ class AnalysisTest(unittest.TestCase):
 
         results = analysis_results.generate_analysis_results(
             groups_list=groups_list,
-            hypothesis_params=stats_util.HypothesisTestParameters(
-                statistic_kind=stats_util.TestStatisticKind.RANK_SUM
-            ),
-            bootstrap_params=stats_util.BootstrapParameters(
-                statistic_kind=stats_util.TestStatisticKind.RANK_SUM
+            cfg=analysis_cfg.AnalysisCfg(
+                experiment_cfg=analysis_cfg.ExperimentCfg(
+                    experiment_groups_cfgs=[analysis_cfg.ExperimentGroupsCfg()]
+                ),
+                hypothesis_test_params=stats_util.HypothesisTestParameters(
+                    statistic_kind=stats_util.TestStatisticKind.RANK_SUM
+                ),
+                bootstrap_params=stats_util.BootstrapParameters(
+                    statistic_kind=stats_util.TestStatisticKind.RANK_SUM
+                ),
+                control_label=None,
             ),
         )
         better_result = analysis_results.AnalysisResult(

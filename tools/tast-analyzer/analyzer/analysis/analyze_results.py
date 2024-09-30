@@ -249,9 +249,7 @@ def analyze_results(
         samples, cfg
     )
     results = analysis_results.generate_analysis_results(
-        groups_list=groups_list,
-        hypothesis_params=cfg.hypothesis_test_params,
-        bootstrap_params=cfg.bootstrap_params,
+        groups_list=groups_list, cfg=cfg
     )
 
     return _prune_non_significant_results(results, cfg)

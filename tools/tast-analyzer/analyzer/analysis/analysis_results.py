@@ -2,7 +2,6 @@
 # Use of this source code is governed by a BSD-style license that can be
 # found in the LICENSE file.
 
-
 from collections import defaultdict
 from concurrent import futures
 import dataclasses
@@ -10,6 +9,7 @@ import functools
 import itertools
 import logging
 import re
+import typing
 
 from analyzer.analysis import analysis_cfg
 from analyzer.analysis import metric_sample
@@ -305,19 +305,37 @@ def construct_experiment_groups_list(
 
 
 def _analyze_groups(
-    groups: list[ExperimentGroup],
-    hypothesis_params: stats_util.HypothesisTestParameters,
-    bootstrap_params: stats_util.BootstrapParameters,
+    groups: list[ExperimentGroup], cfg: analysis_cfg.AnalysisCfg
 ) -> AnalysisResult:
     # For each group, compute its confidence interval.
     for i in range(len(groups)):
-        bootstrap = bootstrap_params.run_one_sample_bootstrap(groups[i].sample)
+        bootstrap = cfg.bootstrap_params.run_one_sample_bootstrap(
+            groups[i].sample
+        )
         groups[i] = dataclasses.replace(groups[i], bootstrap=bootstrap)
 
-    # For each ordered pair of groups, compute the hypothesis test.
+    group_pairs: typing.Iterable[tuple[ExperimentGroup, ExperimentGroup]]
+    if cfg.control_label:
+        control_group = [
+            group for group in groups if group.label() == cfg.control_label
+        ]
+        assert len(control_group) == 1, (
+            ("No" if len(control_group) == 0 else "Multiple")
+            + f" groups with label {cfg.control_label} found. "
+            "Specify a unique label with the --control-label option."
+        )
+        group_pairs = [
+            (control_group[0], group)
+            for group in groups
+            if group != control_group[0]
+        ]
+    else:
+        # For each ordered pair of groups, compute the hypothesis test.
+        group_pairs = itertools.combinations(groups, 2)
+
     pairs = []
-    for before, after in itertools.combinations(groups, 2):
-        hypothesis_result = hypothesis_params.run_hypothesis_test(
+    for before, after in group_pairs:
+        hypothesis_result = cfg.hypothesis_test_params.run_hypothesis_test(
             before.sample, after.sample
         )
 
@@ -334,26 +352,20 @@ def _analyze_groups(
 def generate_analysis_results(
     *,
     groups_list: list[list[ExperimentGroup]],
-    hypothesis_params: stats_util.HypothesisTestParameters,
-    bootstrap_params: stats_util.BootstrapParameters,
+    cfg: analysis_cfg.AnalysisCfg,
 ) -> list[AnalysisResult]:
     """Makes a list of AnalysisResults for the given list of list of groups.
 
     Args:
         groups_list: List of list of ExperimentGroup.
-        hypothesis_params: Parameters for hypothesis testing.
-        bootstrap_params: Parameters for bootstrapping.
+        cfg: The analysis configuration.
 
     Returns:
         A list of analysis results.
     """
     out = []
     with futures.ProcessPoolExecutor() as executor:
-        analyze_groups = functools.partial(
-            _analyze_groups,
-            hypothesis_params=hypothesis_params,
-            bootstrap_params=bootstrap_params,
-        )
+        analyze_groups = functools.partial(_analyze_groups, cfg=cfg)
         out = list(executor.map(analyze_groups, groups_list))
     return out
 

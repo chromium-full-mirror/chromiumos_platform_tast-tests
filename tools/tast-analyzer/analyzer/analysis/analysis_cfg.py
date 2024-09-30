@@ -238,3 +238,10 @@ class AnalysisCfg:
     experiment_cfg: ExperimentCfg = dataclasses.field(
         default_factory=ExperimentCfg
     )
+
+    control_label: str | None = None
+    """The label of the control group.
+
+    If specified, the control group is compared against all other groups.
+    Otherwise, all groups are compared against each other.
+    """

@@ -205,6 +205,13 @@ def _compare_results(
     help="path to file containing experiment configuration",
     required=False,
 )
+@click.option(
+    "--control-label",
+    type=str,
+    help="if specified, the group with this label is compared against all "
+    "other groups",
+    required=False,
+)
 @click.argument(
     "sample-paths",
     type=click.Path(
@@ -230,6 +237,7 @@ def print_results(
     metric_exclude_regex: str | None,
     remove_outliers: bool,
     experiment_cfg_path: pathlib.Path | None,
+    control_label: str | None,
 ) -> None:
     """Computes analysis from one or more JSON files containing samples."""
     experiment_cfg = (
@@ -257,6 +265,7 @@ def print_results(
         metric_include_regex=metric_include_regex,
         remove_outliers=remove_outliers,
         experiment_cfg=experiment_cfg,
+        control_label=control_label,
     )
 
     clicfg = _CliFrontendCfg(cfg=cfg, analyses=analyses)
