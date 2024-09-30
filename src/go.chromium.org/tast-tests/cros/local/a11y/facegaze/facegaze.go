@@ -24,6 +24,10 @@ import (
 // FakeCameraVideoFile720p specifies the video file to use for FaceGaze tests.
 const FakeCameraVideoFile720p = "facegaze_camera_video_720p.y4m"
 
+// faceGazeConfirmationDialogText specifies the text of the confirmation
+// dialog that is shown when FaceGaze is first enabled.
+const faceGazeConfirmationDialogText = "Face control gives you cursor control with face pointing and ability to perform actions, such as left clicking with facial gestures like smile"
+
 // conn represents a connection to the FaceGaze background page.
 type conn struct {
 	*chrome.Conn
@@ -143,7 +147,7 @@ func setUpFakeCamera(ctx context.Context, dataPath func(string) string, tdh *a11
 // enabled, if it appears on the screen. The dialog informs the user about how
 // to use the FaceGaze feature. This function accepts the dialog so we can use the feature.
 func maybeCloseConfirmationDialog(ctx context.Context, ui *uiauto.Context) error {
-	text := nodewith.NameContaining("Face control").Onscreen()
+	text := nodewith.NameContaining(faceGazeConfirmationDialogText).Onscreen()
 	continueButton := nodewith.Name("Continue").ClassName("MdTextButton").Onscreen()
 
 	// Check if the dialog pops up.
