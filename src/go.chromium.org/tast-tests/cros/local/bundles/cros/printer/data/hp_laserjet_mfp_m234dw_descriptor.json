@@ -27,7 +27,7 @@
         "Input Tray": ["Manual Slot", "tray1"],
         "Job sheets": ["None", "classified", "confidential", "secret", "Standard", "topsecret", "unclassified"],
         "Output bin": ["Face down"],
-        "Page delivery": ["reverse-order", "same-order"],
+        "Page delivery": ["Reverse order", "Same order"],
         "Print quality": ["Normal"]
     }
 }

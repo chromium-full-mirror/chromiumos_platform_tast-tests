@@ -31,7 +31,7 @@
         "Input Tray": ["Primary Tray", "Photo Tray", "Auto"],
         "Job sheets": ["None", "classified", "confidential", "secret", "Standard", "topsecret", "unclassified"],
         "Output bin": ["Face up"],
-        "Page delivery": ["reverse-order", "same-order"],
+        "Page delivery": ["Reverse order", "Same order"],
         "Print quality": ["Draft", "Normal", "High"]
     }
 }

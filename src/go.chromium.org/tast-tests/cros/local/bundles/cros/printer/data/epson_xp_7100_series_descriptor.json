@@ -31,7 +31,7 @@
         "Input Tray": ["Auto", "cassette-1", "cassette-2", "Rear Tray"],
         "Job sheets": ["None", "classified", "confidential", "secret", "Standard", "topsecret", "unclassified"],
         "Output bin": ["Face up"],
-        "Page delivery": ["reverse-order", "same-order"],
+        "Page delivery": ["Reverse order", "Same order"],
         "Print quality": ["Normal"]
     }
 }
