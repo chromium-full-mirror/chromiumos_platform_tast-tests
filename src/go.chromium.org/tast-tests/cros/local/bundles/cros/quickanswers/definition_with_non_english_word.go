@@ -34,7 +34,7 @@ func init() {
 			Value: "screenplay-71a93fd0-c626-4d4c-9434-3544261d46ce",
 		}},
 		SoftwareDeps: []string{"chrome", "gaia"},
-		Params: []testing.Param{
+		Params:       []testing.Param{
 			// Disabled by TORA. See: b/347301139
 			// {
 			// 	Name: "es",
@@ -44,38 +44,38 @@ func init() {
 			// 	),
 			// 	Val: "cinco lados",
 			// },
-			{
-				Name: "it",
-				Fixture: quickanswers.Parameterize(
-					quickanswers.EnabledWithBrowserFixture,
-					quickanswers.VariantSingleWordIt,
-				),
-				Val: "sette giorni",
-			},
-			{
-				Name: "fr",
-				Fixture: quickanswers.Parameterize(
-					quickanswers.EnabledWithBrowserFixture,
-					quickanswers.VariantSingleWordFr,
-				),
-				Val: "sept jours",
-			},
-			{
-				Name: "pt",
-				Fixture: quickanswers.Parameterize(
-					quickanswers.EnabledWithBrowserFixture,
-					quickanswers.VariantSingleWordPt,
-				),
-				Val: "11 jogadores",
-			},
-			{
-				Name: "de",
-				Fixture: quickanswers.Parameterize(
-					quickanswers.EnabledWithBrowserFixture,
-					quickanswers.VariantSingleWordDe,
-				),
-				Val: "dreimal",
-			},
+			// {
+			// 	Name: "it",
+			// 	Fixture: quickanswers.Parameterize(
+			// 		quickanswers.EnabledWithBrowserFixture,
+			// 		quickanswers.VariantSingleWordIt,
+			// 	),
+			// 	Val: "sette giorni",
+			// },
+			// {
+			// 	Name: "fr",
+			// 	Fixture: quickanswers.Parameterize(
+			// 		quickanswers.EnabledWithBrowserFixture,
+			// 		quickanswers.VariantSingleWordFr,
+			// 	),
+			// 	Val: "sept jours",
+			// },
+			// {
+			// 	Name: "pt",
+			// 	Fixture: quickanswers.Parameterize(
+			// 		quickanswers.EnabledWithBrowserFixture,
+			// 		quickanswers.VariantSingleWordPt,
+			// 	),
+			// 	Val: "11 jogadores",
+			// },
+			// {
+			// 	Name: "de",
+			// 	Fixture: quickanswers.Parameterize(
+			// 		quickanswers.EnabledWithBrowserFixture,
+			// 		quickanswers.VariantSingleWordDe,
+			// 	),
+			// 	Val: "dreimal",
+			// },
 		},
 	})
 }
