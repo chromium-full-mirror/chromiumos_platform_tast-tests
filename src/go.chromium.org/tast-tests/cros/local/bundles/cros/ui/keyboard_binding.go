@@ -127,7 +127,7 @@ func KeyboardBinding(ctx context.Context, s *testing.State) {
 	}
 
 	// Open Settings and go to "Keyboard" page.
-	keyboardLinkNode := nodewith.HasClass("cr-title-text").Name("Keyboard").Role(role.Heading)
+	keyboardLinkNode := nodewith.NameContaining("Keyboard").Role(role.Heading)
 	res.settings, err = ossettings.LaunchAtPageURL(ctx, tconn, cr, "keyboard-overlay", res.ui.Exists(keyboardLinkNode))
 	if err != nil {
 		s.Fatal("Failed to launch OS settings: ", err)
@@ -139,7 +139,7 @@ func KeyboardBinding(ctx context.Context, s *testing.State) {
 	}(cleanupCtx)
 
 	// Go to the "Customize keyboard keys" subpage.
-	entryFinder := nodewith.Name(customizeKeyboardRowLabel).Role(role.Link).Ancestor(ossettings.WindowFinder)
+	entryFinder := nodewith.Name(customizeKeyboardRowLabel).Role(role.Link).Ancestor(ossettings.WindowFinder).First()
 	if _, err := ossettings.LaunchAtPageURL(ctx, tconn, cr, customizeKeyboardSettingsPageURL, res.ui.Exists(entryFinder)); err != nil {
 		s.Fatal("Failed to launch Keyboard Settings page: ", err)
 	}
@@ -215,7 +215,8 @@ func KeyboardBinding(ctx context.Context, s *testing.State) {
 // The key name and function name of "search"/"launcher" will display differently across different models.
 func obtainSearchKeyAndFunction(ctx context.Context, ui *uiauto.Context) (*key, func(*keyboardBindingTestResources, string) *searchFunctionVerifier, error) {
 	nameRegex := regexp.MustCompile(fmt.Sprintf(`^(%s|%s)$`, searchKey, launcherKey))
-	option := nodewith.NameRegex(nameRegex).HasClass("md-select").Role(role.ComboBoxSelect)
+	keyRow := nodewith.NameRegex(nameRegex).Role(role.GenericContainer)
+	option := nodewith.NameRegex(nameRegex).Role(role.MenuListOption).Ancestor(keyRow)
 
 	if err := ui.WaitUntilExists(option)(ctx); err != nil {
 		return nil, nil, errors.Wrap(err, "failed to find key with name 'Search' or 'Launcher'")
@@ -238,12 +239,14 @@ func obtainSearchKeyAndFunction(ctx context.Context, ui *uiauto.Context) (*key, 
 
 // setKeybinding sets the key binding of the key to the specified option.
 func setKeybinding(res *keyboardBindingTestResources, k *key, functionName string) uiauto.Action {
-	menu := nodewith.Role(role.ComboBoxSelect).HasClass("md-select").Name(string(k.name))
-	targetOption := nodewith.Role(role.ListBoxOption).Name(functionName)
+	keyRow := nodewith.Name(string(k.name)).Role(role.GenericContainer)
+	menu := nodewith.Role(role.ComboBoxSelect).Name(string(k.name)).Ancestor(keyRow)
+	targetOption := nodewith.Role(role.MenuListOption).Name(functionName).Ancestor(keyRow)
 
 	return uiauto.Combine(fmt.Sprintf("set key %q bind with function %q", k.name, functionName),
 		res.settings.LeftClickUntil(menu, res.settings.WithTimeout(3*time.Second).WaitUntilExists(targetOption)),
-		res.settings.LeftClickUntil(targetOption, res.settings.WithTimeout(3*time.Second).WaitUntilGone(targetOption)),
+		res.settings.LeftClick(targetOption),
+		res.settings.WaitUntilExists(targetOption),
 	)
 }
 
