@@ -14,6 +14,7 @@ import (
 	"go.chromium.org/tast-tests/cros/common/policy"
 	"go.chromium.org/tast-tests/cros/common/tape"
 	"go.chromium.org/tast-tests/cros/remote/gaiaenrollment"
+	"go.chromium.org/tast-tests/cros/remote/log"
 	"go.chromium.org/tast-tests/cros/services/cros/graphics"
 	pspb "go.chromium.org/tast-tests/cros/services/cros/policy"
 	"go.chromium.org/tast/core/ctxutil"
@@ -124,6 +125,7 @@ func GAIAEnrollmentSlowConnection(ctx context.Context, s *testing.State) {
 	defer cleanupCancel()
 	ctx, cancel := ctxutil.Shorten(cleanupCtx, 20*time.Second)
 	defer cancel()
+	defer log.Collect(cleanupCtx, s.DUT())
 
 	cl, err := rpc.Dial(ctx, s.DUT(), s.RPCHint())
 	if err != nil {
