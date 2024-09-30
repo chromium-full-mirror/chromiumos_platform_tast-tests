@@ -145,7 +145,7 @@ func (e *Element) Login(ctx context.Context, username string) error {
 			apputil.WaitForExists(waitingStatusText, defaultUITimeout),
 			apputil.WaitUntilGone(waitingStatusText, syncTimeout),
 		),
-		e.dismissEncryptionAlertIfExists,
+		e.dismissEncryptionAlertIfExists(),
 	)(ctx)
 }
 
@@ -245,25 +245,21 @@ func (e *Element) createAccount(username string) uiauto.Action {
 }
 
 // dismissEncryptionAlertIfExists dismisses the encryption alert if it exists.
-func (e *Element) dismissEncryptionAlertIfExists(ctx context.Context) error {
-	topRow, err := input.KeyboardTopRowLayout(ctx, e.kb)
-	if err != nil {
-		return errors.Wrap(err, "failed to get keyboard top row layout")
-	}
-
+func (e *Element) dismissEncryptionAlertIfExists() uiauto.Action {
 	alert := e.d.Object(ui.ResourceID(elementIDPrefix + "llAlertBackground"))
+	elementWindow := nodewith.Name("Element").Role(role.Window).HasClass("Widget")
+	backButton := nodewith.Name("Back button").Role(role.Button).Ancestor(elementWindow)
 	skipButton := e.d.Object(ui.TextMatches("(?i)SKIP"), ui.PackageName(elementPackage))
 	dismissAlert := uiauto.NamedCombine("dismiss encryption alert",
 		apputil.FindAndClick(alert, defaultUITimeout),
 		apputil.WaitUntilGone(alert, defaultUITimeout),
-		// Use keyboard to trigger back action on both clamshell and tablet devices.
-		e.kb.AccelAction(topRow.BrowserBack),
+		e.ui.LeftClick(backButton),
 		apputil.ClickIfExist(skipButton, defaultUITimeout),
 	)
 	return uiauto.IfSuccessThen(
 		alert.Exists,
 		dismissAlert,
-	)(ctx)
+	)
 }
 
 // dismissNotificationPrompt dismisses the notification prompt if it pops up and
@@ -342,7 +338,7 @@ func (e *Element) CreateRoom(roomName string) uiauto.Action {
 	createButton := e.d.Object(ui.Text("CREATE"), ui.ResourceID(elementIDPrefix+"form_submit_button"))
 	roomTitle := e.d.Object(ui.Text(roomName), ui.ClassName(textClass))
 	return uiauto.NamedCombine("create room",
-		e.dismissEncryptionAlertIfExists,
+		e.dismissEncryptionAlertIfExists(),
 		enterRoomCreationPage,
 		e.typeText(roomNameFieldID, roomName),
 		e.swipeToShowObject(roomAccessText, roomNameFieldWithText, createButton, swipeDuration),
@@ -447,7 +443,7 @@ func (e *Element) RenameCurrentRoom(newRoomName string) uiauto.Action {
 
 	return uiauto.NamedCombine("rename current room as "+newRoomName,
 		e.navigateUpToObject(moreOptionsButton),
-		e.dismissEncryptionAlertIfExists,
+		e.dismissEncryptionAlertIfExists(),
 		openSettingsPage,
 		// Sometimes the save button does not appear.
 		// Retry to ensure the room is renamed.
@@ -508,7 +504,7 @@ func (e *Element) SearchPublicRoom(roomID, roomName string) uiauto.Action {
 	publicRoom := e.d.Object(ui.TextMatches(publicRoomText), ui.ClassName(textClass))
 	return uiauto.NamedCombine("explore public room with ID "+roomID,
 		e.navigateUpToObject(createRoomButton),
-		e.dismissEncryptionAlertIfExists,
+		e.dismissEncryptionAlertIfExists(),
 		apputil.FindAndClick(createRoomButton, defaultUITimeout),
 		apputil.FindAndClick(exploreRoomsText, defaultUITimeout),
 		e.typeText(searchFieldID, roomID),
@@ -524,7 +520,7 @@ func (e *Element) JoinRoom(roomName string) uiauto.Action {
 	roomTitle := e.d.Object(ui.Text(roomName), ui.ClassName(textClass))
 	return uiauto.NamedCombine(fmt.Sprintf("join %q room from home page", roomName),
 		e.navigateUpToObject(roomFilter),
-		e.dismissEncryptionAlertIfExists,
+		e.dismissEncryptionAlertIfExists(),
 		apputil.FindAndClick(roomFilter, defaultUITimeout),
 		e.typeText(searchFieldID, roomName),
 		apputil.FindAndClick(room, defaultUITimeout),
@@ -551,7 +547,7 @@ func (e *Element) typeText(fieldID, text string) uiauto.Action {
 func (e *Element) navigateUpToObject(expectedObject *ui.Object) uiauto.Action {
 	navigateUpButton := e.d.Object(ui.PackageName(elementPackage), ui.Description("Navigate up"), ui.ClassName(imageButtonClass))
 	return uiauto.NamedCombine(fmt.Sprintf("navigate up to %v", expectedObject),
-		e.dismissEncryptionAlertIfExists,
+		e.dismissEncryptionAlertIfExists(),
 		uiauto.IfFailThen(
 			expectedObject.Exists,
 			e.ui.WithTimeout(longUITimeout).RetryUntil(
