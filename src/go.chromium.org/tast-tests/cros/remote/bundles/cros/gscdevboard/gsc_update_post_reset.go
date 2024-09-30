@@ -89,7 +89,7 @@ func GSCUpdatePostReset(ctx context.Context, s *testing.State) {
 	th.MustSucceed(err, "Unable to get version from "+debugImage)
 
 	if debugVer.Less(currentVer) || debugVer == currentVer {
-		s.Fatal("DBG version must be greater than current version")
+		s.Fatalf("DBG version (%s) must be greater than current version (%s)", debugVer, currentVer)
 	}
 
 	// Ti50 devices turn the update on when PLT_RST_L is asserted. Cr50 waits
