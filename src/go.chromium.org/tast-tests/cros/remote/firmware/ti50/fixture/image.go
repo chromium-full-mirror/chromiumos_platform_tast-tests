@@ -85,8 +85,8 @@ const (
 	latestQualFile = "chromeos-localmirror-private/distfiles/chromeos-%s-QUAL_VERSION"
 	// DevGSCImageBucket is the bucket where node locked GSC test images are stored.
 	DevGSCImageBucket  = "gs://chromeos-localmirror-private/distfiles/chromeos-%s*/"
-	debugImageTemplate = DevGSCImageBucket + "*_shield/*.dbg.0x%s_0x%s.bin.*"
-	efiImageTemplate   = DevGSCImageBucket + "*_shield/*_Unknown_NodeLocked-%s_*-accessory-mp.bin"
+	debugImageTemplate = "*.dbg.0x%s_0x%s.bin.*"
+	efiImageTemplate   = "*_Unknown_NodeLocked-%s_*-accessory-mp.bin"
 	qualPrivateBucket  = "chromeos-localmirror-private/distfiles/"
 	qualBucket         = "chromeos-localmirror/distfiles/"
 
@@ -435,6 +435,21 @@ func qualVersionToGsGlob(qualVersion, fwName string) (string, error) {
 	return fmt.Sprintf(releaseBIDLockedFormat, m[1], m[2], bIDMask, bIDFlags), nil
 }
 
+// imageDir returns a cloud directory storing EFI and debug images signed for particular testbeds.
+func imageDir(t ti50.TestbedType) string {
+	if t == ti50.GscH1Shield {
+		return fmt.Sprintf(DevGSCImageBucket, "cr50") + "h1_shield"
+	} else if t == ti50.GscDTShield {
+		return fmt.Sprintf(DevGSCImageBucket, "ti50") + "dt_shield"
+	} else if t == ti50.GscOTShield {
+		return fmt.Sprintf(DevGSCImageBucket, "ti50") + "ot_shield"
+	} else if t == ti50.GscOpentitanCw310Fpga {
+		return fmt.Sprintf(DevGSCImageBucket, "ti50") + "ot_fpga_cw310"
+	} else {
+		panic("Directory with EFI/Debug images not declared for testbed type: " + t)
+	}
+}
+
 // findGSCImage finds the image with the given gsTemplate.
 func findGSCImage(ctx context.Context, gsTemplate string) (string, error) {
 	gsURL, err := gsLs(ctx, "list gsc images", gsTemplate)
@@ -452,17 +467,17 @@ func findGSCDebugImage(ctx context.Context, testbedProperties remoteTi50.Testbed
 		return "", errors.New("usb_serial parse error " + testbedProperties.UsbSerial)
 	}
 
-	fwName := FindFwName(testbedProperties.TestbedType)
-	debugImageGlob := fmt.Sprintf(debugImageTemplate, fwName, strings.ToLower(devIds[0]), strings.ToLower(devIds[1]))
-	return findGSCImage(ctx, debugImageGlob)
+	imageDir := imageDir(testbedProperties.TestbedType)
+	debugImageGlob := fmt.Sprintf(debugImageTemplate, strings.ToLower(devIds[0]), strings.ToLower(devIds[1]))
+	return findGSCImage(ctx, imageDir+"/"+debugImageGlob)
 }
 
 // findGSCEFIImage finds the eraseflashinfo image for cr50 board.
 func findGSCEFIImage(ctx context.Context, testbedProperties remoteTi50.TestbedProperties) (string, error) {
+	imageDir := imageDir(testbedProperties.TestbedType)
 	efiDevidStr := strings.ToLower(testbedProperties.UsbSerial)
-	fwName := FindFwName(testbedProperties.TestbedType)
-	efiImageGlob := fmt.Sprintf(efiImageTemplate, fwName, efiDevidStr)
-	return findGSCImage(ctx, efiImageGlob)
+	efiImageGlob := fmt.Sprintf(efiImageTemplate, efiDevidStr)
+	return findGSCImage(ctx, imageDir+"/"+efiImageGlob)
 }
 
 // DownloadEfiImage finds the eraseflashinfo image for gsc board.
