@@ -41,9 +41,17 @@ func init() {
 			"josephkimsh@google.com",
 		},
 		BugComponent: "b:562866",
-		Attr:         []string{"group:mainline", "informational"},
+		Attr:         []string{
+			// Disabled by TORA.  See:b/330878684.
+			// "group:mainline", "informational"
+		},
 		Timeout:      8 * time.Minute,
-		SoftwareDeps: []string{"chrome", "chrome_internal", "gaia"},
+		SoftwareDeps: []string{
+			"chrome",
+			"chrome_internal",
+			// Disabled by TORA.  See:b/330878684.
+			// "gaia"
+		},
 		Data:         []string{testImageFileWithText},
 		Params: []testing.Param{
 			{
