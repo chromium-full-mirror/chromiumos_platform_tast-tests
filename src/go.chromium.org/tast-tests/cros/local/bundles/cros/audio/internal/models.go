@@ -19,7 +19,9 @@ var (
 		// TODO(b/370379143): Add back "osiris" after fix.
 		//"osiris",
 		// Upon "nissa" board
-		"anraggar", "craask", "craaskana", "craaskbowl", "craaskino", "craaskov",
+		"anraggar", "craask", "craaskana", "craaskbowl", "craaskino",
 		"craaskvin", "gothrax", "hideo", "joxer", "pirrha", "quandiso", "uldren", "xivu",
+		// TODO(b/327997966): Add back "craaskov" when the WA fix is reduced.
+		//"craaskov",
 	}
 )
