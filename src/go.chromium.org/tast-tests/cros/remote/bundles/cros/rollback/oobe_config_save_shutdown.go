@@ -34,7 +34,6 @@ func init() {
 			"group:hardware",
 			"group:complementary",
 			"group:hw_agnostic",
-			"group:criticalstaging",
 			"group:mainline",
 			"informational",
 		},
