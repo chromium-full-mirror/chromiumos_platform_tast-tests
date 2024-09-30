@@ -6,8 +6,10 @@ package policy
 
 import (
 	"context"
+	"fmt"
 	"net/http"
 	"net/http/httptest"
+	"path/filepath"
 	"time"
 
 	"go.chromium.org/tast-tests/cros/common/fixture"
@@ -19,6 +21,7 @@ import (
 	"go.chromium.org/tast-tests/cros/local/chrome"
 	"go.chromium.org/tast-tests/cros/local/chrome/browser"
 	"go.chromium.org/tast-tests/cros/local/chrome/browser/browserfixt"
+	"go.chromium.org/tast-tests/cros/local/chrome/uiauto"
 	"go.chromium.org/tast-tests/cros/local/netexport"
 	"go.chromium.org/tast-tests/cros/local/policyutil"
 	"go.chromium.org/tast-tests/cros/local/policyutil/fixtures"
@@ -65,7 +68,7 @@ func QuickAnswersUnitConversionEnabled(ctx context.Context, s *testing.State) {
 	defer server.Close()
 
 	cleanupCtx := ctx
-	ctx, cancel := ctxutil.Shorten(ctx, 5*time.Second)
+	ctx, cancel := ctxutil.Shorten(ctx, 15*time.Second)
 	defer cancel()
 
 	mp, err := proxy.NewMitmProxy(ctx,
@@ -109,6 +112,11 @@ func QuickAnswersUnitConversionEnabled(ctx context.Context, s *testing.State) {
 			if err := policyutil.ServeAndVerify(ctx, fdms, cr, []policy.Policy{param.Policy}); err != nil {
 				s.Fatal("Failed to update policies: ", err)
 			}
+
+			recorder := uiauto.CreateAndStartScreenRecorder(ctx, tconn)
+			defer uiauto.StopAndSaveOnError(cleanupCtx, recorder,
+				filepath.Join(s.OutDir(), fmt.Sprintf("screen_recording_%s.webm", param.Name)),
+				s.HasError)
 
 			// Setup a browser.
 			br, closeBrowser, err := browserfixt.SetUp(ctx, cr, browser.TypeAsh)
