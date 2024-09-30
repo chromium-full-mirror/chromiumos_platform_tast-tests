@@ -22570,6 +22570,7 @@ type IsolatedWebAppInstallForceList struct {
 }
 
 type IsolatedWebAppInstallForceListValue struct {
+	UpdateChannel     string `json:"update_channel"`
 	UpdateManifestUrl string `json:"update_manifest_url"`
 	WebBundleId       string `json:"web_bundle_id"`
 }
@@ -28360,6 +28361,7 @@ func (p *KioskVisionTelemetryEnabled) Equal(iface interface{}) bool {
 // ****************************************************************************
 // 1263. GenAIWallpaperSettings
 // This policy can be modified without rebooting.
+// This is a future policy, it is not present in stable builds.
 // ****************************************************************************
 type GenAIWallpaperSettings struct {
 	Stat Status
@@ -28391,6 +28393,7 @@ func (p *GenAIWallpaperSettings) Equal(iface interface{}) bool {
 // ****************************************************************************
 // 1264. GenAIVcBackgroundSettings
 // This policy can be modified without rebooting.
+// This is a future policy, it is not present in stable builds.
 // ****************************************************************************
 type GenAIVcBackgroundSettings struct {
 	Stat Status
@@ -28873,7 +28876,6 @@ func (p *QRCodeGeneratorEnabled) Equal(iface interface{}) bool {
 // ****************************************************************************
 // 1282. DnsOverHttpsExcludedDomains
 // This policy can be modified without rebooting.
-// This is a future policy, it is not present in stable builds.
 // ****************************************************************************
 type DnsOverHttpsExcludedDomains struct {
 	Stat Status
@@ -28905,7 +28907,6 @@ func (p *DnsOverHttpsExcludedDomains) Equal(iface interface{}) bool {
 // ****************************************************************************
 // 1283. DnsOverHttpsIncludedDomains
 // This policy can be modified without rebooting.
-// This is a future policy, it is not present in stable builds.
 // ****************************************************************************
 type DnsOverHttpsIncludedDomains struct {
 	Stat Status
@@ -29125,7 +29126,6 @@ func (p *TabCompareSettings) Equal(iface interface{}) bool {
 // ****************************************************************************
 // 1293. KioskWebAppOfflineEnabled
 // This policy can be modified without rebooting.
-// This is a future policy, it is not present in stable builds.
 // ****************************************************************************
 type KioskWebAppOfflineEnabled struct {
 	Stat Status
