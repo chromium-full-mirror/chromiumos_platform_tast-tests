@@ -117,7 +117,7 @@ func stressCanary(ctx context.Context, param *canaryHealthPerfParam, allocationM
 	if err != nil {
 		return errors.Wrap(err, "failed to connect to Resource Manager")
 	}
-	margins, err := rm.MemoryMarginsKB(ctx)
+	margins, err := rm.ComponentMemoryMarginsKB(ctx)
 	if err != nil {
 		return errors.Wrap(err, "failed to get memory margins")
 	}
@@ -185,7 +185,8 @@ func stressCanary(ctx context.Context, param *canaryHealthPerfParam, allocationM
 		// Don't allocate unless after this allocation we would still be less than
 		// one half of a canary size below the ChromeOS critical margin. We don't
 		// want Chrome discarding two canaries at once.
-		aboveCriticalKiB := int64(availableKB) - int64(margins.CriticalKB)
+		aboveCriticalKiB := int64(availableKB) - int64(margins.ChromeCriticalProtectedKB)
+
 		if aboveCriticalKiB-allocationKiB < -canaryAllocationKiB/2 {
 			testing.ContextLogf(ctx, "ChromeOS critical margin breached by %d kiB, sleeping", -aboveCriticalKiB)
 			// GoBigSleepLint: Sleep until we are not below the critical margin.
