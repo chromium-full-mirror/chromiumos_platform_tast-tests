@@ -6,6 +6,7 @@ package wificell
 
 import (
 	"context"
+	"fmt"
 	"net"
 	"os"
 	"strconv"
@@ -126,6 +127,55 @@ func (ad *androidDeviceData) Ping(ctx context.Context, addr string, ifType Iface
 		return nil, err
 	}
 	return res, nil
+}
+
+// State returns the android device's string state.
+func (ad *androidDeviceData) State(ctx context.Context) (string, error) {
+	stateCmd := fmt.Sprintf("adb devices | grep -sw '%s' | awk '{print $2}'", ad.serialNumber)
+	out, err := ad.labstation.host.CommandContext(ctx, "bash", "-c", stateCmd).Output()
+	if err != nil {
+		return "", errors.Wrap(err, "failed to check adb devices states")
+	}
+	state := strings.TrimSpace(string(out))
+	testing.ContextLogf(ctx, "Got state: %q for android device %q", state, ad.serialNumber)
+	return state, err
+}
+
+// EnsureAccessible ensures the device is accessible over ADB or resets it if needed.
+func (ad *androidDeviceData) EnsureAccessible(ctx context.Context) error {
+	// Check if device is alive.
+	if state, err := ad.State(ctx); err != nil {
+		testing.ContextLog(ctx, "Failed to get device state: ", err)
+	} else if !strings.EqualFold(state, "device") {
+		testing.ContextLogf(ctx, "Wrong android state, expected: %q, got %q", "device", state)
+	} else {
+		return nil
+	}
+
+	// Not alive, restart with fastboot.
+	testing.ContextLog(ctx, "Attempting to reboot device with fastboot")
+	if err := ad.labstation.host.CommandContext(ctx, "fastboot", "reboot", "-s", ad.serialNumber).Run(); err != nil {
+		return errors.Wrapf(err, "failed to reboot device %q with fastboot", ad.serialNumber)
+	}
+
+	// Wait for device after restarting.
+	if err := testing.Poll(ctx, func(context.Context) error {
+		// Check if device is alive.
+		state, err := ad.State(ctx)
+		if err != nil {
+			return errors.Wrap(err, "failed to get device state")
+		}
+		if !strings.EqualFold(state, "device") {
+			return errors.Errorf("wrong android state, expected: %q, got %q", "device", state)
+		}
+		return nil
+	}, &testing.PollOptions{
+		Interval: time.Second,
+		Timeout:  30 * time.Second,
+	}); err != nil {
+		return errors.Wrapf(err, "failed wait for android %q device to be accessible", ad.serialNumber)
+	}
+	return nil
 }
 
 // P2PIfName returns P2P interface name of a particular

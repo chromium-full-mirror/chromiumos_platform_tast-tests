@@ -39,7 +39,7 @@ const (
 	tearDownTimeout      = 5 * time.Minute
 	resetTimeout         = 11 * time.Minute
 	preTestTimeout       = 30 * time.Second
-	postTestTimeout      = 30 * time.Second
+	postTestTimeout      = 90 * time.Second
 	enrollmentRunTimeout = 4 * time.Minute
 	enrollRetry          = 3
 	idlePowerSleepTime   = 50 * time.Second
@@ -80,6 +80,12 @@ const (
 	// fixtureVarInvokeMethod is the fixture var for setting
 	// defaultRPCInvokeMethod for all fixtures.
 	fixtureVarInvokeMethod = "wificell.InvokeMethod"
+)
+
+var alwaysInitAndroid = testing.RegisterVarString(
+	"wificell.alwaysInitAndroid",
+	"false",
+	"should android devices always be created even if they aren't explicitly required for the test.",
 )
 
 func init() {
@@ -577,13 +583,19 @@ func (f *tastFixtureImpl) SetUp(ctx context.Context, s *testing.FixtState) inter
 	}
 
 	// Read Android Devices.
-	if f.features&TFFeaturesCompanionAndroid != 0 {
+	if f.features&TFFeaturesCompanionAndroid != 0 || alwaysInitAndroid.Value() == "true" {
 		// Get Android companion DUT info
-		companions, err := android.Companions()
-		if err != nil {
-			s.Fatal("Failed to find Android companion devices: ", err)
-		} else {
+		if companions, err := android.Companions(); err != nil {
+			if f.features&TFFeaturesCompanionAndroid != 0 {
+				// Companion devices are not optional.
+				s.Fatal("Failed to find Android companion devices: ", err)
+			}
+			// Optional companion devices, just log error.
+			s.Log("Failed to find Android companion devices: ", err)
+		} else if len(companions) > 0 {
 			ops.LabstationTarget(companions[0].AssociatedHostname, companions)
+		} else if f.features&TFFeaturesCompanionAndroid != 0 {
+			s.Fatal("No android device provided")
 		}
 	}
 
@@ -764,8 +776,12 @@ func (f *tastFixtureImpl) PostTest(ctx context.Context, s *testing.FixtTestState
 		}
 	}
 
-	if f.features&TFFeaturesCompanionAndroid != 0 {
+	if f.features&TFFeaturesCompanionAndroid != 0 || alwaysInitAndroid.Value() == "true" {
 		for _, dev := range f.tf.androidDevices {
+			if err := dev.EnsureAccessible(ctx); err != nil {
+				s.Error("Failed to ensure device is accessable over adb: ", err)
+			}
+
 			fileName := "android-device-" + dev.serialNumber + "-logcat.txt"
 			if err := dev.P2PDeviceLogcat(ctx, filepath.Join(s.OutDir(), fileName)); err != nil {
 				s.Error("Failed to save the Android Device Logs: ", err)
