@@ -185,8 +185,8 @@ func PowerQual(ctx context.Context, s *testing.State) {
 			}
 			if i != len(testGroups)-1 {
 				s.Log("Continue to run the following test group")
-				continue
 			}
+			continue
 		}
 		if err := run.AddTestResults(ctx, tests, skippedTests, resultsDir); err != nil {
 			s.Error("Failed to add test results: ", err)
