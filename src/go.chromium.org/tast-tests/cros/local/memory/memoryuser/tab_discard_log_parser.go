@@ -8,7 +8,7 @@ import (
 	"context"
 	"io"
 	"regexp"
-	"strconv"
+	"strings"
 	"time"
 
 	"go.chromium.org/tast-tests/cros/local/chrome"
@@ -20,29 +20,12 @@ import (
 type TabDiscardInfo struct {
 	// Time is when the tab was discarded.
 	Time time.Time
-	// ID is the ID of the discarded tab.
-	ID int
 	// Priority is the priority of the discarded tab.
-	Priority string
+	Priority VmmmsPriority
 }
 
-// VmmmsPriority converts the TabDiscardInfo.Priority to a VmmmsPriority.
-func (i TabDiscardInfo) VmmmsPriority() VmmmsPriority {
-	switch i.Priority {
-	case "BACKGROUND":
-		return VmmmsCachedTabPriority
-	case "PROTECTED_BACKGROUND":
-		return VmmmsPerceptibleTabPriority
-	default:
-		return -1
-	}
-}
-
-// 2023-01-18T03:37:17.807226Z ERROR chrome[23832:23832]: [device_event_log_impl.cc(221)] [12:37:17.807] Memory: tab_manager_delegate_chromeos.cc:552 tab (id: 1, pid: 24754), process_type BACKGROUND
-var discardCandidateRE = regexp.MustCompile(`^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}\.\d+Z ERROR chrome\[\d+:\d+\]: \[[^\]]*\] \[\d{2}:\d{2}:\d{2}\.\d{3}\] Memory: tab_manager_delegate_chromeos.cc:\d+ tab \(id: (\d+), pid: \d+\), process_type (BACKGROUND|PROTECTED_BACKGROUND)`)
-
-// 2023-01-18T03:37:18.316273Z ERROR chrome[23832:23832]: [device_event_log_impl.cc(221)] [12:37:18.316] Memory: tab_manager_delegate_chromeos.cc:617 Killed tab (id: 1), estimated 306836 KB freed
-var discardRE = regexp.MustCompile(`^(\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}\.\d+Z) ERROR chrome\[\d+:\d+\]: \[[^\]]*\] \[\d{2}:\d{2}:\d{2}\.\d{3}\] Memory: tab_manager_delegate_chromeos.cc:\d+ Killed tab \(id: (\d+)\)`)
+// 2024-09-30T06:58:58.176402Z WARNING chrome[10008:10026]: [page_discarding_helper.cc(213)] Queueing discard attempt, type=kTab, flags=[ protected visible ] to save 81920 KiB
+var discardRE = regexp.MustCompile(`^(\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}\.\d+Z) .* Queueing discard attempt, type=kTab, flags=\[(.*)\] to save [\d]+ KiB`)
 
 // ParseTabDiscards reads all the tab_manager_delegate Killed tab lines from the
 // Chrome logs between the given time stamps and returns a list of
@@ -54,7 +37,6 @@ func ParseTabDiscards(ctx context.Context, cr *chrome.Chrome, start, stop time.T
 		return nil, errors.Wrapf(err, "failed to open %q to parse tab discards", fileName)
 	}
 
-	tabPri := make(map[int]string) // Tab ID -> priority string.
 	var log []*TabDiscardInfo
 	for {
 		line, err := reader.ReadLine()
@@ -64,14 +46,7 @@ func ParseTabDiscards(ctx context.Context, cr *chrome.Chrome, start, stop time.T
 			return nil, errors.Wrapf(err, "failed to read %q looking for tab discards", fileName)
 		}
 
-		if m := discardCandidateRE.FindStringSubmatch(line); m != nil {
-			// Line is from a list of tab discard candidates, save the priority for later.
-			id, err := strconv.Atoi(m[1])
-			if err != nil {
-				return nil, errors.Wrap(err, "failed to parse ID for tab discard candidate")
-			}
-			tabPri[id] = m[2]
-		} else if m := discardRE.FindStringSubmatch(line); m != nil {
+		if m := discardRE.FindStringSubmatch(line); m != nil {
 			// Line is a tab discard record.
 			t, err := time.ParseInLocation(time.RFC3339Nano, m[1], time.UTC)
 			if err != nil {
@@ -81,18 +56,15 @@ func ParseTabDiscards(ctx context.Context, cr *chrome.Chrome, start, stop time.T
 				// The discard is after the stop time, we are done.
 				return log, nil
 			}
-			id, err := strconv.Atoi(m[2])
-			if err != nil {
-				return nil, errors.Wrap(err, "failed to parse ID for discarded tab")
-			}
-			pri, priExists := tabPri[id]
-			if !priExists {
-				return nil, errors.Errorf("discarded tab %d was never a candidate", id)
+
+			pri := VmmmsCachedTabPriority
+
+			if strings.Contains(m[2], "protected") {
+				pri = VmmmsPerceptibleTabPriority
 			}
 
 			log = append(log, &TabDiscardInfo{
 				Time:     t,
-				ID:       id,
 				Priority: pri,
 			})
 		}
@@ -103,7 +75,7 @@ func ParseTabDiscards(ctx context.Context, cr *chrome.Chrome, start, stop time.T
 // priority or nil if none exist.
 func FirstTabDiscardOfPriority(log []*TabDiscardInfo, priority VmmmsPriority) *TabDiscardInfo {
 	for _, info := range log {
-		if info.VmmmsPriority() == priority {
+		if info.Priority == priority {
 			return info
 		}
 	}
