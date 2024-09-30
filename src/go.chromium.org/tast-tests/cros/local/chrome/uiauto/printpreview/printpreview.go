@@ -90,6 +90,24 @@ func SelectPrinter(ctx context.Context, tconn *chrome.TestConn, printerName stri
 		return err
 	}
 
+	kb, err := input.Keyboard(ctx)
+	if err != nil {
+		return err
+	}
+	defer kb.Close(ctx)
+
+	// Type the printer name into the destination box to ensure it's visible.
+	searchBox := nodewith.Name("Search destinations").Role(role.SearchBox)
+	if err := uiauto.Combine("select search box",
+		ui.WithTimeout(10*time.Second).WaitUntilExists(searchBox),
+		ui.EnsureFocused(searchBox),
+	)(ctx); err != nil {
+		return err
+	}
+	if err := kb.Type(ctx, printerName); err != nil {
+		return err
+	}
+
 	// Find and select the printer.
 	// TODO(b/294823934): Consider replacing the regexp with a simple string
 	// if/after the default language is the same among all the test devices.
