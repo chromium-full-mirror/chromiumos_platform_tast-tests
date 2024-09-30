@@ -66,7 +66,7 @@ func init() {
 		}, {
 			Name:              "vm_t",
 			Val:               "arc_print_vm_ippusb_golden.pwg",
-			ExtraAttr:         []string{"informational", "group:criticalstaging"},
+			ExtraAttr:         []string{"informational"},
 			ExtraSoftwareDeps: []string{"android_vm_t"},
 			ExtraData:         []string{"arc_print_vm_ippusb_golden.pwg"},
 		}},
