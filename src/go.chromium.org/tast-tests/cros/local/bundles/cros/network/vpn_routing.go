@@ -290,9 +290,8 @@ func VPNRouting(ctx context.Context, s *testing.State) {
 	if tc.ipType != vpn.IPTypeIPv4 {
 		return
 	}
-	// TODO(b/257379393): WireGuard does not support this properly now.
-	if tc.vpnType == vpn.TypeWireGuard {
-		testing.ContextLog(ctx, "Skip IPv6 blocking check for WireGuard")
+	if tc.vpnType == vpn.TypeWireGuard && tc.wgTwoPeers {
+		testing.ContextLog(ctx, "Skip IPv6 blocking check for split-routing WireGuard")
 		return
 	}
 	if err := ping.ExpectPingFailure(ctx, physicalAddrs.IPv6Addrs[0].String(), "chronos"); err != nil {
