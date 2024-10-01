@@ -125,16 +125,17 @@ func ShortcutOnInputLanguageChange(ctx context.Context, s *testing.State) {
 	}
 
 	// Verify two shortcuts:
-	// 1. Open Help in Explore app: "ctrl /" for US input and "ctrl -" for German input.
+	// 1. Minimize window: "alt -" for US input and "alt ß" for German input.
 	// 2. Pin window to left: "alt [" for US input and "alt ü" for German input.
-	// Verify the US input shortcut for "Open Help in Explore app" is "ctrl /"
-	if err := sc.VerifyShortcuts(ctx, ui, "Open \"Help\" in Explore app", sc.ShortcutKeys{Keys: "ctrl /", Role: role.GenericContainer}); err != nil {
-		s.Fatal("Failed to find ctrl+/ for us input for 'Open Explore app' shortcut: ", err)
-	}
+
 	// Go to "Windows and desks" from the side nav.
 	WindowAndDesksCategory := nodewith.Name("Windows and desks").Role(role.StaticText).Ancestor(shortcutCustomizationRootNode)
 	if err := ui.DoDefault(WindowAndDesksCategory)(ctx); err != nil {
 		s.Fatal("Failed to click Windows and desks category: ", err)
+	}
+	// Verify the US input shortcut for "Minimize window" is "alt -"
+	if err := sc.VerifyShortcuts(ctx, ui, "Minimize window", sc.ShortcutKeys{Keys: "alt -", Role: role.GenericContainer}); err != nil {
+		s.Fatal("Failed to find alt+- for us input for 'Minimize window' shortcut: ", err)
 	}
 	// Verify the US input shortcut for "Pin window to left" is "alt ["
 	if err := sc.VerifyShortcuts(ctx, ui, "Pin window to left", sc.ShortcutKeys{Keys: "alt [", Role: role.GenericContainer}); err != nil {
@@ -149,13 +150,13 @@ func ShortcutOnInputLanguageChange(ctx context.Context, s *testing.State) {
 		s.Fatal("Failed to send Ctrl-R: ", err)
 	}
 
-	// Verify the German input shortcut for "Open Help in Explore app" is "ctrl -"
-	if err := sc.VerifyShortcuts(ctx, ui, "Open \"Help\" in Explore app", sc.ShortcutKeys{Keys: "ctrl -", Role: role.GenericContainer}); err != nil {
-		s.Fatal("Failed to find 'ctrl -' for German input for 'Open Explore app' shortcut: ", err)
-	}
 	// Go to "Windows and desks" from the side nav.
 	if err := ui.DoDefault(nodewith.Name("Windows and desks").Role(role.StaticText))(ctx); err != nil {
 		s.Fatal("Failed to click Windows and desks category: ", err)
+	}
+	// Verify the German input shortcut for "Minimize window" is "alt ß"
+	if err := sc.VerifyShortcuts(ctx, ui, "Minimize window", sc.ShortcutKeys{Keys: "alt ß", Role: role.GenericContainer}); err != nil {
+		s.Fatal("Failed to find alt+ß for German input for 'Minimize window' shortcut: ", err)
 	}
 	// Verify the German input shortcut for "Pin window to left" is "alt ü"
 	if err := sc.VerifyShortcuts(ctx, ui, "Pin window to left", sc.ShortcutKeys{Keys: "alt ü", Role: role.GenericContainer}); err != nil {
