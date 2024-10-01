@@ -25,8 +25,7 @@ func init() {
 		Contacts: []string{"cros-networking@google.com", "jiejiang@google.com"},
 		// ChromeOS > Platform > System > Networking > Continuous Maintenance
 		BugComponent: "b:1493959",
-		// TODO(b/356752035): Reenable the test.
-		// Attr:         []string{"group:mainline", "informational"},
+		Attr:         []string{"group:mainline", "informational", "group:criticalstaging"},
 		SoftwareDeps: []string{"wifi"},
 		LacrosStatus: testing.LacrosVariantUnneeded,
 		Fixture:      "shillSimulatedWiFi",
@@ -40,13 +39,14 @@ func init() {
 }
 
 // DHCPInitBound verifies the DHCP negotiation behavior on a WiFi network
-// without MAC randomization:
-//   - When connecting to the AP for the first time, the DHCP client should
-//     enter the INIT state, a DISCOVER and then a REQUEST packet will be sent
-//     for the negotiation.
-//   - When connecting to same AP again and we still hold a valid lease, the
-//     DHCP client should enter the INIT-REBOOT state, only one REQUEST packet
-//     will be sent for the negotiation.
+// without MAC randomization. When connecting and reconnect to an AP, the DHCP
+// client should enter the INIT state, a DISCOVER and then a REQUEST packet will
+// be sent for the negotiation.
+//
+// (Note that before M128, when reconnecting to a same AP that the client
+// connected to before and still holds a valid lease, the DHCP client will enter
+// the INIT-REBOOT state, and only one REQUEST packet will be sent for the
+// negotiation. This behavior was changed in M129.)
 func DHCPInitBound(ctx context.Context, s *testing.State) {
 	//Use a shortened context for test operations to reserve time for cleanup.
 	cleanupCtx := ctx
@@ -119,13 +119,8 @@ func DHCPInitBound(ctx context.Context, s *testing.State) {
 		s.Fatal("Failed to disconnect from the WiFi service: ", err)
 	}
 
-	// Reconnect the service. Configure the server with REQUEST rule. Note that
-	// server id must not be included in the request. See RFC 2131 for more
-	// details.
-	requestRule = dhcp.NewRespondToPostT2Request(intendedIP.String(), gatewayIP.String(),
-		dhcp.NewOptionMap(gatewayIP, intendedIP), dhcp.FieldMap{}, true /*shouldRespond*/, intendedIP.String())
-	requestRule.SetIsFinalHandler(true)
-	if _, errs := dhcp.RunTestWithEnv(ctx, wifi.Router, []dhcp.HandlingRule{*requestRule}, func(ctx context.Context) error {
+	// Reconnect the service.
+	if _, errs := dhcp.RunTestWithEnv(ctx, wifi.Router, []dhcp.HandlingRule{*discoveryRule, *requestRule}, func(ctx context.Context) error {
 		if err := wifi.Service.Connect(ctx); err != nil {
 			return err
 		}
