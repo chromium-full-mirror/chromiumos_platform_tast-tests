@@ -16,6 +16,7 @@ import (
 	"go.chromium.org/tast-tests/cros/local/chrome/ash"
 	"go.chromium.org/tast-tests/cros/local/chrome/browser"
 	"go.chromium.org/tast-tests/cros/local/chrome/browser/browserfixt"
+	"go.chromium.org/tast-tests/cros/local/chrome/cuj"
 	"go.chromium.org/tast-tests/cros/local/chrome/lacros/lacrosfixt"
 	"go.chromium.org/tast-tests/cros/local/chrome/metrics"
 	"go.chromium.org/tast-tests/cros/local/chrome/uiauto"
@@ -89,6 +90,8 @@ func openAndCloseLauncher(ctx context.Context, tconn *chrome.TestConn, ui *uiaut
 }
 
 func BubbleLauncherAnimationPerf(ctx context.Context, s *testing.State) {
+	cuj.WriteMetadataFile(ctx, s.TestName())
+
 	// Reserve a few seconds for cleanup.
 	cleanupCtx := ctx
 	ctx, cancel := ctxutil.Shorten(cleanupCtx, 10*time.Second)

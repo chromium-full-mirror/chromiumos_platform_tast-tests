@@ -12,6 +12,7 @@ import (
 	"go.chromium.org/tast-tests/cros/common/testexec"
 	"go.chromium.org/tast-tests/cros/local/chrome/ash"
 	"go.chromium.org/tast-tests/cros/local/chrome/browser/browserfixt"
+	"go.chromium.org/tast-tests/cros/local/chrome/cuj"
 	"go.chromium.org/tast-tests/cros/local/power"
 	pm "go.chromium.org/tast-tests/cros/local/power/metrics"
 	"go.chromium.org/tast-tests/cros/local/power/setup"
@@ -230,6 +231,8 @@ func init() {
 }
 
 func VideoPlayback(ctx context.Context, s *testing.State) {
+	cuj.WriteMetadataFile(ctx, s.TestName())
+
 	// Reserve some time to cleanup, even if it fails due to ctx timeout.
 	cleanupCtx := ctx
 	ctx, cancel := ctxutil.Shorten(ctx, 10*time.Second)

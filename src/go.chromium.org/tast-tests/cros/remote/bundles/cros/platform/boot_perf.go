@@ -485,7 +485,6 @@ func bootPerfMetricBounds(ctx context.Context, features *protocol.DUTFeatures) [
 
 // BootPerf is the function that reboots the client and collect boot perf data.
 func BootPerf(ctx context.Context, s *testing.State) {
-
 	d := s.DUT()
 
 	var bootPerfMetricBounds = bootPerfMetricBounds(ctx, s.Features(""))

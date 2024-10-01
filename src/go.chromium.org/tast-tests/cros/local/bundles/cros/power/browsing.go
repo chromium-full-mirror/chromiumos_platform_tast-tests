@@ -149,6 +149,8 @@ type browsingConfig struct {
 }
 
 func Browsing(ctx context.Context, s *testing.State) {
+	cuj.WriteMetadataFile(ctx, s.TestName())
+
 	// Reserve some time to cleanup, even if it fails due to ctx timeout.
 	cleanupCtx := ctx
 	ctx, cancel := ctxutil.Shorten(ctx, 10*time.Second)

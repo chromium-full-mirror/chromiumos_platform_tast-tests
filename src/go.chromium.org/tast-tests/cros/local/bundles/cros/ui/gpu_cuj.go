@@ -152,6 +152,8 @@ func init() {
 }
 
 func GpuCUJ(ctx context.Context, s *testing.State) {
+	cuj.WriteMetadataFile(ctx, s.TestName())
+
 	// Setup server to serve video file.
 	server := httptest.NewServer(http.FileServer(s.DataFileSystem()))
 	defer server.Close()

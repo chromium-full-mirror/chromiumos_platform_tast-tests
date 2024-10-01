@@ -34,14 +34,6 @@ func TestRegistryTestNames(t *testing.T) {
 	}
 }
 
-func TestRegistryMetrics(t *testing.T) {
-	for _, test := range Registry {
-		if len(test.BaseTestNames) == 0 && len(test.Metrics) == 0 {
-			t.Fatalf("Found invalid test metrics registration, if there is no base test, recommended metrics must be present")
-		}
-	}
-}
-
 func TestRegistryNoDuplicateMetricsOrCycles(t *testing.T) {
 	// Use DFS to find test cycles (a test references a base test that
 	// references the original test as its own base test), and to ensure

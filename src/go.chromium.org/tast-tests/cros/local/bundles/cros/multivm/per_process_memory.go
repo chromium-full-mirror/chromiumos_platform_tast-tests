@@ -18,6 +18,7 @@ import (
 
 	"go.chromium.org/tast-tests/cros/common/perf"
 	"go.chromium.org/tast-tests/cros/local/arc"
+	"go.chromium.org/tast-tests/cros/local/chrome/cuj"
 	"go.chromium.org/tast-tests/cros/local/memory"
 	memoryarc "go.chromium.org/tast-tests/cros/local/memory/arc"
 	"go.chromium.org/tast-tests/cros/local/memory/kernelmeter"
@@ -71,6 +72,8 @@ const (
 )
 
 func PerProcessMemory(ctx context.Context, s *testing.State) {
+	cuj.WriteMetadataFile(ctx, s.TestName())
+
 	opts := s.Param().(*stateManagerOptions)
 
 	// Fetching smaps_rollup inside ARCVM requires adb root.

@@ -146,6 +146,63 @@ var meetMetrics = []string{
 	"WebRTC.Video.RenderFramesPerSecond",
 }
 
+var webglAquariumMetrics = []string{
+	"avg_fps",
+	"avg_interframe_time",
+	"cpu_usage",
+	"frequency",
+	"gpu_usage",
+	"rc6_usage",
+}
+
+var powerMetrics = []string{
+	"perf.minutes_battery_life",
+}
+
+var webRTCVideoConferenceMetrics = []string{
+	"perf.minutes_battery_life",
+	"EventLatency.KeyPressed.TotalLatency_mean",
+	"EventLatency.MouseDragged.TotalLatency_mean",
+	"EventLatency.MousePressed.TotalLatency_mean",
+	"Graphics.Smoothness.PercentDroppedFrames3.AllSequences_mean",
+}
+
+var hotseatScrollMetrics = []string{
+	"Apps.ScrollableShelf.AnimationSmoothness.TabletMode.LauncherHidden",
+	"Apps.ScrollableShelf.AnimationSmoothness.TabletMode.LauncherHidden.OverviewShown",
+	"Apps.ScrollableShelf.AnimationSmoothness.TabletMode.LauncherVisible",
+}
+
+var hotseatAnimationMetrics = []string{
+	"Apps.HomeLauncherTransition.AnimationSmoothness.FadeInOverview",
+	"Apps.HomeLauncherTransition.AnimationSmoothness.FadeOutOverview",
+	"Ash.HotseatWidgetAnimation.Widget.AnimationSmoothness.TransitionToExtendedHotseat",
+	"Ash.HotseatWidgetAnimation.Widget.AnimationSmoothness.TransitionToHiddenHotseat.WindowActivation",
+	"Ash.HotseatWidgetAnimation.Widget.AnimationSmoothness.TransitionToHiddenHotseat.WindowCreation",
+	"Ash.HotseatWidgetAnimation.Widget.AnimationSmoothness.TransitionToShownHotseat",
+	"Ash.HotseatWidgetAnimation.Widget.AnimationSmoothness.TransitionToShownHotseat.WindowCreation",
+}
+
+var overviewDragMetrics = []string{
+	"Ash.Overview.WindowDrag.PresentationTime.TabletMode.DragToClose.2windows",
+	"Ash.Overview.WindowDrag.PresentationTime.TabletMode.DragToClose.2windows",
+}
+
+var splitViewMetrics = []string{
+	"Ash.SplitViewResize.AnimationSmoothness.DividerAnimation",
+	"Ash.SplitViewResize.PresentationTime.MaxLatency.TabletMode.MultiWindow",
+	"Ash.SplitViewResize.PresentationTime.MaxLatency.TabletMode.SingleWindow",
+	"Ash.SplitViewResize.PresentationTime.MaxLatency.TabletMode.WithOverview",
+	"Ash.SplitViewResize.PresentationTime.TabletMode.MultiWindow",
+	"Ash.SplitViewResize.PresentationTime.TabletMode.SingleWindow",
+	"Ash.SplitViewResize.PresentationTime.TabletMode.WithOverview",
+}
+
+var playbackMetrics = []string{
+	"dropped_frames",
+	"dropped_frames_percent",
+}
+
 // Registry maps test name to its corresponding metadata.
 var Registry = map[string]Metadata{
 	"ui.DesksCUJ": Metadata{
@@ -301,6 +358,10 @@ var Registry = map[string]Metadata{
 			"Ash.Smoothness.PercentDroppedFrames_1sWindow2",
 			"Ash.EventLatency.TotalLatency",
 		},
+	},
+	"ui.DeskTemplatesCUJ.arc_enabled": Metadata{
+		BaseTestNames: []string{"ui.DeskTemplatesCUJ"},
+		Features:      []feature{arcEnabled},
 	},
 	"ui.DragMaximizedWindowPerf": Metadata{
 		Metrics: []string{
@@ -522,21 +583,154 @@ var Registry = map[string]Metadata{
 		BaseTestNames: []string{"ui.MeetCUJ.docs"},
 		Features:      []feature{fieldTrials},
 	},
+	"ui.MeetCUJ.9p_mute_camera": Metadata{
+		Metrics: meetMetrics,
+	},
+	"ui.MeetCUJ.9p_mute_camera_vsync_decoding": Metadata{
+		BaseTestNames: []string{"ui.MeetCUJ.9p_mute_camera"},
+		Features:      []feature{vsyncDecoding},
+	},
 	"ui.PageLoadPerf": Metadata{
 		Metrics: []string{
 			"PageLoad.PaintTiming.NavigationToFirstContentfulPaint",
 			"PageLoad.PaintTiming.NavigationToLargestContentfulPaint2",
 		},
 	},
+	"graphics.WebGLAquarium.50_fishes": Metadata{
+		Metrics: webglAquariumMetrics,
+	},
+	"graphics.WebGLAquarium.1000_fishes": Metadata{
+		Metrics: webglAquariumMetrics,
+	},
+	// There are no recommended metrics for this test, as the metric names
+	// vary based on which processes are active during the test.
+	"multivm.PerProcessMemory.arc": Metadata{},
+	"power.Browsing.fast_ash": Metadata{
+		Metrics: powerMetrics,
+	},
+	"power.Idle.default_fast_ash": Metadata{
+		Metrics: powerMetrics,
+	},
+	"power.VideoCall.3m_ash": Metadata{
+		Metrics: powerMetrics,
+	},
+	"power.VideoPlayback.h264_1080_30fps_ash": Metadata{
+		Metrics: powerMetrics,
+	},
+	"power.VideoPlayback.vp9_1080_30fps_ash": Metadata{
+		Metrics: powerMetrics,
+	},
+	"power.VideoPlayback.vp9_bt2020_1080_30fps_ash": Metadata{
+		Metrics: powerMetrics,
+	},
+	"ui.DesksCUJV2": Metadata{
+		Metrics: defaultMetrics,
+	},
+	"rtc.WebRTCVideoConference.4p_present_mouse": Metadata{
+		Metrics: webRTCVideoConferenceMetrics,
+	},
+	"rtc.WebRTCVideoConference.4p_present_text": Metadata{
+		Metrics: webRTCVideoConferenceMetrics,
+	},
+	"ui.BubbleLauncherAnimationPerf": Metadata{
+		Metrics: []string{
+			"Apps.ClamshellLauncher.AnimationSmoothness.Close.0Windows",
+			"Apps.ClamshellLauncher.AnimationSmoothness.Close.2Windows",
+			"Apps.ClamshellLauncher.AnimationSmoothness.OpenAppsPage.0Windows",
+			"Apps.ClamshellLauncher.AnimationSmoothness.OpenAppsPage.2Windows",
+		},
+	},
+	"ui.HotseatAnimation.non_overflow_shelf": Metadata{
+		Metrics: hotseatAnimationMetrics,
+	},
+	"ui.HotseatAnimation.overflow_shelf": Metadata{
+		Metrics: hotseatAnimationMetrics,
+	},
+	"ui.HotseatAnimation.shelf_with_navigation_widget": Metadata{
+		Metrics: hotseatAnimationMetrics,
+	},
+	"ui.HotseatDrag": Metadata{
+		Metrics: []string{
+			"Ash.HotseatTransition.Drag.PresentationTime",
+			"Ash.HotseatTransition.Drag.PresentationTime.MaxLatency",
+		},
+	},
+	"ui.HotseatScrollPerf": Metadata{
+		Metrics: hotseatScrollMetrics,
+	},
+	"ui.HotseatScrollPerf.clamshell_mode": Metadata{
+		Metrics: hotseatScrollMetrics,
+	},
+	"ui.LauncherPageSwitchPerf": Metadata{
+		Metrics: []string{
+			"Apps.PaginationTransition.AnimationSmoothness.TabletMode",
+			"Apps.PaginationTransition.DragScroll.PresentationTime.MaxLatency.TabletMode",
+			"Apps.PaginationTransition.DragScroll.PresentationTime.TabletMode",
+		},
+	},
+	"ui.OverviewDragWindowPerf.drag_to_close": Metadata{
+		Metrics: overviewDragMetrics,
+	},
+	"ui.OverviewDragWindowPerf.drag_to_snap": Metadata{
+		Metrics: overviewDragMetrics,
+	},
+	"ui.OverviewDragWindowPerf.normal_drag": Metadata{
+		Metrics: overviewDragMetrics,
+	},
+	"ui.ScreenRotationPerf": Metadata{
+		Metrics: []string{
+			"Ash.Rotation.AnimationSmoothness.2windows",
+			"Ash.Rotation.AnimationSmoothness.8windows",
+		},
+	},
+	"ui.SplitViewResizePerf": Metadata{
+		Metrics: splitViewMetrics,
+	},
+	"ui.SplitViewResizePerf.clamshell_mode": Metadata{
+		Metrics: splitViewMetrics,
+	},
+	"ui.TabLoadingAnimationPerf": Metadata{
+		Metrics: []string{
+			"Chrome.Tabs.AnimationSmoothness.TabLoading",
+		},
+	},
+	"ui.UnlockPerf": Metadata{
+		Metrics: []string{
+			"Ash.UnlockAnimation.Smoothness.ClamshellMode.2windows",
+			"Ash.UnlockAnimation.Smoothness.ClamshellMode.8windows",
+			"Ash.UnlockAnimation.Smoothness.TabletMode.2windows",
+			"Ash.UnlockAnimation.Smoothness.TabletMode.8windows",
+		},
+	},
+	"ui.UnlockPerf.passthrough": Metadata{
+		BaseTestNames: []string{"ui.UnlockPerf"},
+		Features:      []feature{passthrough},
+	},
+	"ui.WindowResizePerf": Metadata{
+		Metrics: []string{
+			"Ash.InteractiveWindowResize.TimeToPresent.1windows",
+			"Ash.InteractiveWindowResize.TimeToPresent.2windows",
+		},
+	},
+	"video.PlaybackPerf.av1_1080p_30fps_hw": Metadata{
+		Metrics: playbackMetrics,
+	},
+	"video.PlaybackPerf.h264_1080p_30fps_hw": Metadata{
+		Metrics: playbackMetrics,
+	},
+	"video.PlaybackPerf.vp8_1080p_30fps_hw": Metadata{
+		Metrics: playbackMetrics,
+	},
+	"video.PlaybackPerf.vp9_1080p_30fps_hw": Metadata{
+		Metrics: playbackMetrics,
+	},
+
 	// The TPS Dashboard assumes that the metrics passed as part of the
 	// metadata for SlidesCUJ are the fallback metrics (default metrics) that
 	// should be recommended for tests that don't have corresponding metadata.
 	// Thus, any changes here would update default metrics for all tests
 	// that aren't defined in this map.
 	"ui.GoogleSlidesCUJ": Metadata{
-		Metrics: defaultMetrics,
-	},
-	"ui.DesksCUJV2": Metadata{
 		Metrics: defaultMetrics,
 	},
 }

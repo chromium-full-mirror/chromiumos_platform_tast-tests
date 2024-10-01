@@ -13,6 +13,7 @@ import (
 	"go.chromium.org/tast-tests/cros/common/media/caps"
 	"go.chromium.org/tast-tests/cros/local/bundles/cros/rtc/webrtc"
 	"go.chromium.org/tast-tests/cros/local/chrome"
+	"go.chromium.org/tast-tests/cros/local/chrome/cuj"
 	"go.chromium.org/tast-tests/cros/local/graphics"
 	"go.chromium.org/tast-tests/cros/local/media/pre"
 	"go.chromium.org/tast-tests/cros/local/power"
@@ -292,6 +293,8 @@ func init() {
 }
 
 func WebRTCVideoConference(ctx context.Context, s *testing.State) {
+	cuj.WriteMetadataFile(ctx, s.TestName())
+
 	params := s.Param().(webrtc.VCTestParams)
 
 	if val, ok := s.Var("rtc.WebRTCVideoConference.NumPeople"); ok {
