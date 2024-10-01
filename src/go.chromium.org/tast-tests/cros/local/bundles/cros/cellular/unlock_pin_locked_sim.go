@@ -161,6 +161,8 @@ func UnlockPinLockedSim(ctx context.Context, s *testing.State) {
 
 	var incorrectPinSublabel = nodewith.NameContaining("Incorrect PIN").Role(role.StaticText)
 	if err := uiauto.Combine("Incorrect PIN does not unlock the SIM",
+		// The unlock button may remain restricted for a short periods even after the cellular profiles have refreshed.
+		ui.WaitUntilEnabled(ossettings.UnlockButton),
 		ui.LeftClick(ossettings.UnlockButton),
 		ui.WaitUntilExists(ossettings.CancelButton),
 
