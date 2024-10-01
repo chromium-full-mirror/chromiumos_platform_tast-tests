@@ -10,6 +10,7 @@ import (
 
 	"go.chromium.org/tast-tests/cros/local/network/hwsim"
 	"go.chromium.org/tast-tests/cros/local/network/ping"
+	"go.chromium.org/tast-tests/cros/local/network/testhooks"
 	"go.chromium.org/tast-tests/cros/local/network/virtualnet"
 	"go.chromium.org/tast-tests/cros/local/network/virtualnet/subnet"
 	"go.chromium.org/tast-tests/cros/local/network/vpn"
@@ -78,6 +79,18 @@ func VPNPhysicalNetworkReconnect(ctx context.Context, s *testing.State) {
 	ctx, cancel := ctxutil.Shorten(cleanupCtx, 30*time.Second)
 	defer cancel()
 
+	hookEnv, err := testhooks.RunNetworkTestHooks(ctx,
+		testhooks.NewSaveNetLogHook(),
+		testhooks.NewDumpHostOnFailureHook(),
+		testhooks.NewTcpdumpHook(),
+		testhooks.NewDisablePortalDetectionHook(),
+	)
+	if err != nil {
+		s.Fatal("Failed to run network test hooks: ", err)
+	}
+	s.AttachErrorHandlers(hookEnv.OnErrorHandler, hookEnv.OnFatalHandler)
+	defer hookEnv.TearDownWithLogFailures(cleanupCtx, s.HasError)
+
 	m, err := shill.NewManager(ctx)
 	if err != nil {
 		s.Fatal("Failed to create shill manager proxy: ", err)
@@ -103,7 +116,6 @@ func VPNPhysicalNetworkReconnect(ctx context.Context, s *testing.State) {
 		s.Fatal("Failed to wait for to WiFi connected status: ", err)
 	}
 
-	// Create VPN server env.
 	serverEnv, err := virtualnet.CreateEnv(ctx, "server")
 	if err != nil {
 		s.Fatal("Failed to create server env: ", err)
