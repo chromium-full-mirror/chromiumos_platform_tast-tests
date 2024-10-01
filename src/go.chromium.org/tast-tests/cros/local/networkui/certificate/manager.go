@@ -319,14 +319,6 @@ func (m *Manager) CreateCertAndImport(ctx context.Context, cr *chrome.Chrome, ce
 	defer cancel()
 
 	clientCertFileName := "test_client_cert.p12"
-	// Write client certificate file to temp path.
-	clientCertDest := certificate.NewLocalDestination(os.TempDir(), clientCertFileName)
-	cleanUpClientCert, err := certificate.WriteClientCertWithPassword(ctx, clientCertDest, certs, password)
-	if err != nil {
-		return errors.Wrap(err, "failed to create the client certificate file")
-	}
-	defer cleanUpClientCert(cleanupCtx)
-
 	serverCAFileName := "test_server_CA.pem"
 
 	createCertsManager := &createCertsManager{
