@@ -10,6 +10,7 @@ import (
 	"os"
 	"path/filepath"
 	"strconv"
+	"time"
 
 	"go.chromium.org/tast-tests/cros/local/audio/sof"
 	"go.chromium.org/tast-tests/cros/local/crosconfig"
@@ -47,8 +48,9 @@ func init() {
 		BugComponent: "b:776546",
 		Attr: []string{
 			"group:mainline",
-			"informational",
+			"informational", "group:criticalstaging",
 		},
+		Timeout:      1 * time.Minute,
 		HardwareDeps: hwdep.D(hwdep.SOFAudioDSP()),
 		LacrosStatus: testing.LacrosVariantUnneeded,
 	})
