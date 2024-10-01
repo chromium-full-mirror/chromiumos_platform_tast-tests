@@ -6,13 +6,10 @@ package touchpad
 
 import (
 	"context"
-	"fmt"
-	"io/ioutil"
-	"os/exec"
-	"regexp"
 	"strings"
 	"time"
 
+	"go.chromium.org/tast-tests/cros/common/testexec"
 	"go.chromium.org/tast-tests/cros/local/chrome/ash"
 	"go.chromium.org/tast/core/ctxutil"
 	"go.chromium.org/tast/core/errors"
@@ -71,23 +68,12 @@ func FunctionalityCheck(ctx context.Context, s *testing.State) {
 		defer cleanUp(cleanupCtx)
 	}
 
-	// Gets touchpad event number from evtest.
-	out, _ := exec.Command("evtest").CombinedOutput()
-	re := regexp.MustCompile(`(?i)/dev/input/event([0-9]+):.*Touchpad.*`)
-	result := re.FindStringSubmatch(string(out))
-	touchpadEventNum := ""
-	if len(result) > 0 {
-		touchpadEventNum = result[1]
-	} else {
-		s.Fatal("Failed to find touchpad in evtest command output")
-	}
-
 	// Verifies touchpad detection with expected detectionStatus.
-	wakeSourceFile := fmt.Sprintf("/sys/class/input/event%s/device/device/power/wakeup", touchpadEventNum)
+	wakeUpCommand := "cat /sys/devices/pci0000:00/0000:00:15.0/i2c_designware.0/*/*/power/wakeup"
 	if err := testing.Poll(ctx, func(ctx context.Context) error {
-		sourceOut, err := ioutil.ReadFile(wakeSourceFile)
+		sourceOut, err := testexec.CommandContext(ctx, "sh", "-c", wakeUpCommand).Output()
 		if err != nil {
-			return testing.PollBreak(errors.Wrapf(err, "failed to read %q file", wakeSourceFile))
+			return testing.PollBreak(errors.Wrapf(err, "failed to read %q file", wakeUpCommand))
 		}
 		actualStatus := strings.TrimSpace(string(sourceOut))
 		if !strings.Contains(actualStatus, testOpt.detectionStatus) {
