@@ -57,7 +57,6 @@ const (
 
 	// MemoryRetrainTimeout is the default timeout for retraining memory.
 	MemoryRetrainTimeout = 120 * time.Second
-
 )
 
 // ModeSwitcher enables booting the DUT into different firmware boot modes (normal, dev, rec).
@@ -680,7 +679,7 @@ func (ms *ModeSwitcher) ModeAwareReboot(ctx context.Context, resetType ResetType
 		if msOptsContain(opts, WaitSoftwareSync) {
 			connectTime += h.Config.SoftwareSyncUpdate
 		}
-		if (msOptsContain(opts, WaitMemoryRetrain)) {
+		if msOptsContain(opts, WaitMemoryRetrain) {
 			connectTime += h.Config.MemoryRetrainTimeout
 		}
 		connectCtx, cancel := context.WithTimeout(ctx, connectTime)
@@ -980,9 +979,9 @@ func (ms *ModeSwitcher) PowerOff(ctx context.Context) error {
 		// If Chrome EC exists, check power state reaches G3,
 		// otherwise wait for DUT unreachable.
 		if h.Config.ChromeEC {
-			return h.WaitForPowerStates(ctx, PowerStateInterval, powerOffTimeout, "G3")
+			return h.WaitForPowerStates(ctx, PowerStateInterval, h.Config.ShutdownTimeout, "G3")
 		}
-		offCtx, cancel := context.WithTimeout(ctx, powerOffTimeout)
+		offCtx, cancel := context.WithTimeout(ctx, h.Config.ShutdownTimeout)
 		defer cancel()
 		return ms.waitUnreachable(offCtx)
 	}
