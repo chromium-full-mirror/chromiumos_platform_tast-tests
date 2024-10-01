@@ -21,10 +21,12 @@ package netexport
 import (
 	"context"
 	"fmt"
+	"io"
 	"io/ioutil"
 	"os"
 	"path/filepath"
 	"regexp"
+	"strings"
 
 	"go.chromium.org/tast-tests/cros/local/annotations"
 	"go.chromium.org/tast-tests/cros/local/chrome"
@@ -237,6 +239,35 @@ func (ne *NetExport) Cleanup(ctx context.Context) {
 	for _, logFile := range ne.logFiles {
 		if err := os.Remove(logFile); err != nil {
 			testing.ContextLog(ctx, "Failed to delete net log file: ", err)
+		}
+	}
+}
+
+// Save saves the netlog JSON files into the output dir. This can be useful for
+// debugging tast test results.
+func (ne *NetExport) Save(ctx context.Context, testCaseName, outDir string) {
+	for _, logFile := range ne.logFiles {
+		srcFile, err := os.Open(logFile)
+		if err != nil {
+			testing.ContextLog(ctx, "Failed to read net log file during save: ", err)
+		}
+		defer srcFile.Close()
+
+		// Append test case name to log file name, so that we can save the log
+		// files for each test case. Example:
+		//   "chrome-net-export-log.json" --> "chrome-net-export-log_unset.json"
+		destFileName := fmt.Sprintf("%s_%s%s",
+			strings.TrimSuffix(filepath.Base(logFile), filepath.Ext(logFile)),
+			testCaseName,
+			filepath.Ext(logFile))
+		destFile, err := os.Create(filepath.Join(outDir, destFileName))
+		if err != nil {
+			testing.ContextLog(ctx, "Failed to create new net log file: ", err)
+		}
+		defer destFile.Close()
+
+		if _, err := io.Copy(destFile, srcFile); err != nil {
+			testing.ContextLog(ctx, "Failed to copy net log file: ", err)
 		}
 	}
 }

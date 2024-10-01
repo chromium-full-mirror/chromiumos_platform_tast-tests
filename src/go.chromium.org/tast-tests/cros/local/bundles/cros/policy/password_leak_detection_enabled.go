@@ -112,6 +112,7 @@ func PasswordLeakDetectionEnabled(ctx context.Context, s *testing.State) {
 				s.Fatal("Failed to start net export: ", err)
 			}
 			defer netExport.Cleanup(cleanupCtx)
+			defer netExport.Save(cleanupCtx, param.Name, s.OutDir())
 
 			if err := passwordleakdetection.TriggerPasswordLeakDetection(ctx,
 				networkrequestmonitor.OptionalServiceParams{

@@ -88,6 +88,7 @@ func DefaultSearchProviderEnabled(ctx context.Context, s *testing.State) {
 				s.Fatal("Failed to start net export: ", err)
 			}
 			defer netExport.Cleanup(cleanupCtx)
+			defer netExport.Save(cleanupCtx, param.Name, s.OutDir())
 
 			if err := defaultsearchprovider.TriggerDefaultSearchProvider(ctx,
 				networkrequestmonitor.OptionalServiceParams{
