@@ -25,6 +25,9 @@ type vpnReconnectParams struct {
 	vpnType vpn.Type
 	// If the VPN type reports disconnect when underlying network is down.
 	expectVPNDownOnPhysicalDown bool
+	// If the VPN type reconnects automatically when underlying network is
+	// reconnected.
+	expectVPNReconnectOnPhysicalReconnect bool
 	// Restart server to apply new config after underlying network is down, to
 	// verify that the new config takes effect after VPN is reconnected. This
 	// option is only meaningful is the configuration is pushed from the server.
@@ -44,29 +47,43 @@ func init() {
 		// TODO(258091734): Move to CQ after test is stable.
 		Attr: []string{"group:mainline", "informational"},
 		Params: []testing.Param{{
+			Name: "ikev2",
+			Val: vpnReconnectParams{
+				vpnType:                               vpn.TypeIKEv2,
+				expectVPNDownOnPhysicalDown:           true,
+				expectVPNReconnectOnPhysicalReconnect: false,
+				vpnDownTimeout:                        40 * time.Second,
+			},
+			Fixture:           "shillSimulatedWiFiWithCerts.ehide",
+			ExtraHardwareDeps: hwdep.D(hwdep.HasTpm()),
+			ExtraSoftwareDeps: []string{"ikev2"},
+		}, {
 			Name: "openvpn",
 			Val: vpnReconnectParams{
-				vpnType:                     vpn.TypeOpenVPN,
-				expectVPNDownOnPhysicalDown: true,
-				vpnDownTimeout:              40 * time.Second,
+				vpnType:                               vpn.TypeOpenVPN,
+				expectVPNDownOnPhysicalDown:           true,
+				expectVPNReconnectOnPhysicalReconnect: true,
+				vpnDownTimeout:                        40 * time.Second,
 			},
 			Fixture:           "shillSimulatedWiFiWithCerts.ehide",
 			ExtraHardwareDeps: hwdep.D(hwdep.HasTpm()),
 		}, {
 			Name: "openvpn_new_config",
 			Val: vpnReconnectParams{
-				vpnType:                        vpn.TypeOpenVPN,
-				expectVPNDownOnPhysicalDown:    true,
-				pushNewConfigAfterPhysicalDown: true,
-				vpnDownTimeout:                 40 * time.Second,
+				vpnType:                               vpn.TypeOpenVPN,
+				expectVPNDownOnPhysicalDown:           true,
+				expectVPNReconnectOnPhysicalReconnect: true,
+				pushNewConfigAfterPhysicalDown:        true,
+				vpnDownTimeout:                        40 * time.Second,
 			},
 			Fixture:           "shillSimulatedWiFiWithCerts.ehide",
 			ExtraHardwareDeps: hwdep.D(hwdep.HasTpm()),
 		}, {
 			Name: "wireguard",
 			Val: vpnReconnectParams{
-				vpnType:                     vpn.TypeWireGuard,
-				expectVPNDownOnPhysicalDown: false,
+				vpnType:                               vpn.TypeWireGuard,
+				expectVPNDownOnPhysicalDown:           false,
+				expectVPNReconnectOnPhysicalReconnect: true,
 			},
 			Fixture:           "shillSimulatedWiFi.ehide",
 			ExtraSoftwareDeps: []string{"wireguard"},
@@ -201,6 +218,10 @@ func VPNPhysicalNetworkReconnect(ctx context.Context, s *testing.State) {
 	}
 
 	s.Log("Verified VPN is disconnected")
+
+	if !param.expectVPNReconnectOnPhysicalReconnect {
+		return
+	}
 
 	if param.pushNewConfigAfterPhysicalDown {
 		newIPSubnet, err := pool.AllocNextIPv4Subnet()
