@@ -173,7 +173,7 @@ func OmahaInvalidation(ctx context.Context, s *testing.State) {
 	// Create and set up a Nebraska client for an in-place update.
 	nebraskaClient, nebraskaPort, err := updateutil.ConfigureNebraskaFromGS(ctx, cl.Conn, s.DUT(), s.OutDir(), builderPath)
 	if err != nil {
-		s.Fatal("Failed to set up nebraska for an in-place update")
+		s.Fatal("Failed to set up nebraska for an in-place update: ", err)
 	}
 	defer func(ctx context.Context) {
 		if cl != nil {
