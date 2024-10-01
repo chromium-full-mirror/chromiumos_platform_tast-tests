@@ -34,8 +34,7 @@ import (
 
 // TaskSwitchTest holds parameters for the TaskSwitchCUJ test variants.
 type TaskSwitchTest struct {
-	BrowserType browser.Type
-	Tablet      bool
+	Tablet bool
 }
 
 // Run runs the task switch CUJ by opening up ARC and browser windows
@@ -58,7 +57,7 @@ func Run(ctx context.Context, s *testing.State) {
 	cr := s.FixtValue().(chrome.HasChrome).Chrome()
 	a := s.FixtValue().(cuj.FixtureData).ARC
 
-	br, closeBrowser, err := browserfixt.SetUp(ctx, cr, testParam.BrowserType)
+	br, closeBrowser, err := browserfixt.SetUp(ctx, cr, browser.TypeAsh)
 	if err != nil {
 		s.Fatal("Failed to setup Chrome: ", err)
 	}
@@ -231,7 +230,7 @@ func Run(ctx context.Context, s *testing.State) {
 	}
 
 	s.Log("Opening Chrome Tabs")
-	numBrowserWindows, err := openChromeTabs(ctx, tconn, bTconn, br, testParam.BrowserType, testParam.Tablet)
+	numBrowserWindows, err := openChromeTabs(ctx, tconn, bTconn, br, testParam.Tablet)
 	if err != nil {
 		s.Fatal("Failed to open Chrome tabs: ", err)
 	}

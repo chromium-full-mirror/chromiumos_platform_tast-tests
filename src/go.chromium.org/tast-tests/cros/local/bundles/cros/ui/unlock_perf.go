@@ -15,8 +15,6 @@ import (
 	uiperf "go.chromium.org/tast-tests/cros/local/bundles/cros/ui/perf"
 	"go.chromium.org/tast-tests/cros/local/chrome"
 	"go.chromium.org/tast-tests/cros/local/chrome/ash"
-	"go.chromium.org/tast-tests/cros/local/chrome/browser"
-	"go.chromium.org/tast-tests/cros/local/chrome/lacros"
 	"go.chromium.org/tast-tests/cros/local/chrome/uiauto/lockscreen"
 	"go.chromium.org/tast-tests/cros/local/input"
 	"go.chromium.org/tast-tests/cros/local/perfutil"
@@ -39,11 +37,9 @@ func init() {
 		SoftwareDeps: []string{"chrome"},
 		Timeout:      4 * time.Minute,
 		Params: []testing.Param{{
-			Val:     browser.TypeAsh,
 			Fixture: "chromeLoggedIn",
 		}, {
 			Name:    "passthrough",
-			Val:     browser.TypeAsh,
 			Fixture: "chromeLoggedInWith100FakeAppsPassthroughCmdDecoder",
 		}},
 		Data: []string{"animation.html", "animation.js"},
@@ -69,11 +65,7 @@ func UnlockPerf(ctx context.Context, s *testing.State) {
 
 	defer kb.Close(ctx)
 
-	cr, l, cs, err := lacros.Setup(ctx, s.FixtValue(), s.Param().(browser.Type))
-	if err != nil {
-		s.Fatal("Failed to initialize test: ", err)
-	}
-	defer lacros.CloseLacros(ctx, l)
+	cr := s.FixtValue().(chrome.HasChrome).Chrome()
 
 	tconn, err := cr.TestAPIConn(ctx)
 	if err != nil {
@@ -96,17 +88,9 @@ func UnlockPerf(ctx context.Context, s *testing.State) {
 	// Run the unlock flow for various situations.
 	// - change the number of browser windows, 2 or 8
 	// - the window system status; clamshell mode or tablet mode.
-	// If these window number values are changed, make sure to check lacros new tab pages are closed correctly.
-	for i, windows := range []int{2, 8} {
-		if err := ash.CreateWindows(ctx, tconn, cs, url, windows-currentWindows); err != nil {
+	for _, windows := range []int{2, 8} {
+		if err := ash.CreateWindows(ctx, tconn, cr, url, windows-currentWindows); err != nil {
 			s.Fatal("Failed to create browser windows: ", err)
-		}
-
-		// This must be done after ash.CreateWindows to avoid terminating lacros-chrome.
-		if i == 0 && s.Param().(browser.Type) == browser.TypeLacros {
-			if err := l.Browser().CloseWithURL(ctx, chrome.NewTabURL); err != nil {
-				s.Fatal("Failed to close blank tab: ", err)
-			}
 		}
 
 		currentWindows = windows

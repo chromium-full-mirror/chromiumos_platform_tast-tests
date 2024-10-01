@@ -33,7 +33,7 @@ var simpleWebsites = []string{
 // This function opens an individual window for each URL in
 // simpleWebsites. It also opens a window with multiple tabs, to
 // increase RAM pressure during the test.
-func openChromeTabs(ctx context.Context, tconn, bTconn *chrome.TestConn, br *browser.Browser, bt browser.Type, tabletMode bool) (int, error) {
+func openChromeTabs(ctx context.Context, tconn, bTconn *chrome.TestConn, br *browser.Browser, tabletMode bool) (int, error) {
 	const numExtraWebsites = 2
 
 	// Keep track of the initial number of windows, to ensure
@@ -48,16 +48,6 @@ func openChromeTabs(ctx context.Context, tconn, bTconn *chrome.TestConn, br *bro
 	tabs, err := cuj.NewTabs(ctx, br, false, numExtraWebsites)
 	if err != nil {
 		return 0, errors.Wrap(err, "failed to bulk open tabs")
-	}
-
-	// Lacros specific setup to close "New Tab" window.
-	if bt == browser.TypeLacros {
-		// Don't include the "New Tab" window in the initial window count.
-		initialNumWindows--
-
-		if err := browser.CloseTabByTitle(ctx, bTconn, "New Tab"); err != nil {
-			return 0, errors.Wrap(err, `failed to close "New Tab" tab`)
-		}
 	}
 
 	// Open up individual window for each website in simpleWebsites.

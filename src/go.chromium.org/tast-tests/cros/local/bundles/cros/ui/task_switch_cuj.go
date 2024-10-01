@@ -9,7 +9,6 @@ import (
 	"time"
 
 	"go.chromium.org/tast-tests/cros/local/bundles/cros/ui/taskswitchcuj"
-	"go.chromium.org/tast-tests/cros/local/chrome/browser"
 	"go.chromium.org/tast-tests/cros/local/chrome/cuj"
 	"go.chromium.org/tast-tests/cros/local/ui/cujrecorder"
 
@@ -19,9 +18,8 @@ import (
 
 func init() {
 	testing.AddTest(&testing.Test{
-		Func:         TaskSwitchCUJ,
-		LacrosStatus: testing.LacrosVariantUnneeded,
-		Desc:         "Measures the performance of the critical user journey for task switching",
+		Func: TaskSwitchCUJ,
+		Desc: "Measures the performance of the critical user journey for task switching",
 		Contacts: []string{
 			"cros-sw-perf@google.com",
 			"ramsaroop@google.com",
@@ -39,15 +37,14 @@ func init() {
 			{
 				Fixture: "loggedInToCUJUserARCSupported",
 				Val: taskswitchcuj.TaskSwitchTest{
-					BrowserType: browser.TypeAsh,
+					Tablet: false,
 				},
 			}, {
 				Name:              "tablet",
 				ExtraHardwareDeps: hwdep.D(hwdep.TouchScreen()),
 				Fixture:           "loggedInToCUJUserARCSupported",
 				Val: taskswitchcuj.TaskSwitchTest{
-					BrowserType: browser.TypeAsh,
-					Tablet:      true,
+					Tablet: true,
 				},
 			},
 
@@ -56,7 +53,7 @@ func init() {
 				Name:      "field_trials",
 				ExtraAttr: []string{"cuj_experimental"},
 				Val: taskswitchcuj.TaskSwitchTest{
-					BrowserType: browser.TypeAsh,
+					Tablet: false,
 				},
 				Fixture: "loggedInToCUJUserARCSupportedWithFieldTrials",
 			},
@@ -67,7 +64,7 @@ func init() {
 				ExtraHardwareDeps: hwdep.D(hwdep.HasParavirtSchedControl()),
 				Fixture:           "loggedInToCUJUserARCSupportedWithPvSchedEnabled",
 				Val: taskswitchcuj.TaskSwitchTest{
-					BrowserType: browser.TypeAsh,
+					Tablet: false,
 				},
 			},
 		},

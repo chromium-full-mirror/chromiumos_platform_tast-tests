@@ -181,7 +181,7 @@ func (conf *ZoomConference) End(ctx context.Context) error {
 
 var _ Conference = (*ZoomConference)(nil)
 
-// SetBrowser sets browser to chrome or lacros.
+// SetBrowser sets browser to chrome.
 func (conf *ZoomConference) SetBrowser(br *browser.Browser) {
 	conf.br = br
 }

@@ -15,7 +15,6 @@ import (
 	"go.chromium.org/tast-tests/cros/local/chrome/ash"
 	"go.chromium.org/tast-tests/cros/local/chrome/browser"
 	"go.chromium.org/tast-tests/cros/local/chrome/display"
-	"go.chromium.org/tast-tests/cros/local/chrome/lacros"
 	"go.chromium.org/tast-tests/cros/local/chrome/uiauto/mouse"
 	"go.chromium.org/tast-tests/cros/local/coords"
 	"go.chromium.org/tast-tests/cros/local/perfutil"
@@ -41,12 +40,7 @@ func init() {
 		SoftwareDeps: []string{"chrome"},
 		HardwareDeps: hwdep.D(hwdep.InternalDisplay()),
 		Timeout:      3 * time.Minute,
-		Params: []testing.Param{
-			{
-				Val:     browser.TypeAsh,
-				Fixture: "chromeLoggedIn",
-			},
-		},
+		Fixture:      "chromeLoggedIn",
 	})
 }
 
@@ -61,11 +55,7 @@ func WindowResizePerf(ctx context.Context, s *testing.State) {
 		s.Fatal("Failed to turn on display: ", err)
 	}
 
-	cr, l, cs, err := lacros.Setup(ctx, s.FixtValue(), s.Param().(browser.Type))
-	if err != nil {
-		s.Fatal("Failed to initialize test: ", err)
-	}
-	defer lacros.CloseLacros(cleanupCtx, l)
+	cr := s.FixtValue().(chrome.HasChrome).Chrome()
 
 	tconn, err := cr.TestAPIConn(ctx)
 	if err != nil {
@@ -93,25 +83,15 @@ func WindowResizePerf(ctx context.Context, s *testing.State) {
 		defer display.SetDisplayRotationSync(cleanupCtx, tconn, info.ID, display.Rotate0)
 	}
 
-	metricsName := "Ash.InteractiveWindowResize.TimeToPresent"
-	if s.Param().(browser.Type) == browser.TypeLacros {
-		metricsName = "Ash.InteractiveWindowResize.Lacros.TimeToPresent"
-	}
+	const metricsName = "Ash.InteractiveWindowResize.TimeToPresent"
 
 	runner := perfutil.NewRunner(cr.Browser(), perfutil.RunnerOptions{IgnoreFirstRun: true, DropMinMaxValues: true})
-	for i, numWindows := range []int{1, 2} {
-		conn, err := cs.NewConn(ctx, ui.PerftestURL, browser.WithNewWindow())
+	for _, numWindows := range []int{1, 2} {
+		conn, err := cr.NewConn(ctx, ui.PerftestURL, browser.WithNewWindow())
 		if err != nil {
 			s.Fatal("Failed to open a new connection: ", err)
 		}
 		defer conn.Close()
-
-		// This must be done after opening a new window to avoid terminating lacros-chrome.
-		if i == 0 && s.Param().(browser.Type) == browser.TypeLacros {
-			if err := l.Browser().CloseWithURL(ctx, chrome.NewTabURL); err != nil {
-				s.Fatal("Failed to close blank tab: ", err)
-			}
-		}
 
 		ws, err := ash.GetAllWindows(ctx, tconn)
 		if err != nil || len(ws) == 0 {
@@ -147,8 +127,8 @@ func WindowResizePerf(ctx context.Context, s *testing.State) {
 				if err := mouse.Move(tconn, start, 0)(ctx); err != nil {
 					return errors.Wrap(err, "failed to move the mouse")
 				}
-				// Waiting for the resize-handle to appear. TODO(mukai): find the right
-				// wait to see its visibility.
+				// GoBigSleepLint: Waiting for the resize-handle to appear.
+				// TODO(mukai): find the right wait to see its visibility.
 				if err := testing.Sleep(ctx, 3*time.Second); err != nil {
 					return errors.Wrap(err, "failed to wait")
 				}

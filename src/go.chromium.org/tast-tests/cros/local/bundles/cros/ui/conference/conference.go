@@ -12,7 +12,6 @@ import (
 
 	"go.chromium.org/tast-tests/cros/local/chrome"
 	"go.chromium.org/tast-tests/cros/local/chrome/browser"
-	"go.chromium.org/tast-tests/cros/local/chrome/cuj"
 	"go.chromium.org/tast-tests/cros/local/chrome/uiauto"
 	"go.chromium.org/tast-tests/cros/local/chrome/uiauto/nodewith"
 	"go.chromium.org/tast/core/errors"
@@ -24,16 +23,6 @@ const (
 	shortUITimeout  = 3 * time.Second  // Used for situations where UI response are faster.
 	viewingTime     = 5 * time.Second  // Used to view the effect after clicking application.
 )
-
-// TestParameters defines the test parameters for conference.
-type TestParameters struct {
-	// RoomType defines the conference room type.
-	RoomType RoomType
-	// Tier defines the test tier: basic, plus, or premium.
-	Tier cuj.Tier
-	// BrowserType defines the browser type is Lacros or Ash.
-	BrowserType browser.Type
-}
 
 // Conference contains user's operation when enter a confernece room.
 type Conference interface {
