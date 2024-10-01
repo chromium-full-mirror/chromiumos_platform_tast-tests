@@ -26,7 +26,7 @@ func init() {
 			"chromeos-fwupd@google.com", // CrOS FWUPD
 			"rishabhagr@chromium.org",
 		},
-		Attr:         []string{"group:mainline", "informational", "group:criticalstaging"},
+		Attr:         []string{"group:mainline"},
 		SoftwareDeps: []string{"fwupd"},
 		LacrosStatus: testing.LacrosVariantUnneeded,
 		Params: []testing.Param{{
@@ -60,6 +60,7 @@ func init() {
 				"uefi_dbx",
 				"uefi_esrt",
 			},
+			ExtraAttr:         []string{"informational", "group:criticalstaging"},
 			ExtraSoftwareDeps: []string{"uefi_firmware"},
 		}},
 	})
