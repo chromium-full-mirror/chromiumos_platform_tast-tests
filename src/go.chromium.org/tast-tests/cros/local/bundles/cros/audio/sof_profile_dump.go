@@ -13,6 +13,7 @@ import (
 
 	"go.chromium.org/tast-tests/cros/local/audio/sof"
 	"go.chromium.org/tast-tests/cros/local/crosconfig"
+	"go.chromium.org/tast-tests/cros/local/sysutil"
 	"go.chromium.org/tast/core/errors"
 	"go.chromium.org/tast/core/testing"
 	"go.chromium.org/tast/core/testing/hwdep"
@@ -83,23 +84,32 @@ func getDeviceIdentity(ctx context.Context) (devID deviceIdentity, err error) {
 	return devID, nil
 }
 
-func SofProfileDump(ctx context.Context, s *testing.State) {
-
+func dumpProfile(ctx context.Context) ([]byte, error) {
 	profile, err := sof.GetProfile(ctx)
 	if err != nil {
+		if !sof.IsProfileNoInquiry(err) {
+			return nil, errors.Wrap(err, "failed to get SOF profile")
+		}
+
+		ver, _, kerr := sysutil.KernelVersionAndArch()
+		if kerr != nil {
+			return nil, errors.Wrap(kerr, "failed to get kernel version")
+		}
+		testing.ContextLog(ctx, "No inquiry into SOF profile on device kernel ", ver.String())
+
+		if ver.IsOrLater(6, 1) {
+			return nil, errors.Errorf("Profile inquiry failed on device kernel %s", ver.String())
+		}
+
 		// SOF profile is not liable to inquiry for ChromeOS kernel
 		// version lower than 6.1. If that is the case on DUT, skip
-		// the test right away.
-		if sof.IsProfileNoInquiry(err) {
-			s.Log("There is no inquiry into SOF profile on device")
-			return
-		}
-		s.Fatal("Failed to get SOF profile: ", err)
+		// dumping profile.
+		return nil, nil
 	}
 
 	devID, err := getDeviceIdentity(ctx)
 	if err != nil {
-		s.Fatal("Failed to get device identity: ", err)
+		return nil, errors.Wrap(err, "failed to get device identity")
 	}
 
 	profDump := deviceProfile{
@@ -110,28 +120,44 @@ func SofProfileDump(ctx context.Context, s *testing.State) {
 
 	byteDump, err := json.MarshalIndent(profDump, "", "    ")
 	if err != nil {
-		s.Fatal("Failed to encode JSON dump data: ", err)
+		return nil, errors.Wrap(err, "failed to encode JSON dump data")
 	}
 
-	s.Log("SOF profile to dump: ", string(byteDump))
+	return byteDump, nil
+}
 
-	// Save the information in JSON format to file.
-	if err := os.WriteFile(filepath.Join(s.OutDir(), "sof_profile.json"), byteDump, 0644); err != nil {
-		s.Error("Failed to write output file: ", err)
-	}
-
-	// Try to save the component support information to file.
+func dumpCstate(ctx context.Context) []byte {
 	byteCstate, err := sof.GetCstateRawOutput(ctx)
 	if err != nil {
-		s.Log("Skipped collecting cstate due to error: ", err)
-		return
-	}
-	if !json.Valid(byteCstate) {
-		s.Log("Omitted invalid cstate output (as JSON), output: ", string(byteCstate))
-		return
+		testing.ContextLog(ctx, "Skipped collecting cstate due to error: ", err)
+		return nil
 	}
 
-	if err := os.WriteFile(filepath.Join(s.OutDir(), "sof_comp_state.json"), byteCstate, 0644); err != nil {
-		s.Error("Failed to write output file: ", err)
+	return byteCstate
+}
+
+func SofProfileDump(ctx context.Context, s *testing.State) {
+
+	profileDump, err := dumpProfile(ctx)
+	if err != nil {
+		s.Fatal("Failed to dump profile: ", err)
+	}
+	if profileDump != nil {
+		s.Log("SOF profile to dump: ", string(profileDump))
+
+		if err := os.WriteFile(filepath.Join(s.OutDir(), "sof_profile.json"), profileDump, 0644); err != nil {
+			s.Error("Failed to write output file: ", err)
+		}
+	}
+
+	if cstateDump := dumpCstate(ctx); cstateDump != nil {
+		s.Log("SOF cstate to dump: ", string(cstateDump))
+
+		if !json.Valid(cstateDump) {
+			s.Log("Invalid cstate output as JSON")
+		}
+		if err := os.WriteFile(filepath.Join(s.OutDir(), "sof_comp_state.json"), cstateDump, 0644); err != nil {
+			s.Error("Failed to write output file: ", err)
+		}
 	}
 }
