@@ -467,7 +467,7 @@ func (app *MicrosoftWebOffice) Cleanup(ctx context.Context, sheetName string) er
 	return nil
 }
 
-// SetBrowser sets browser to chrome or lacros.
+// SetBrowser sets browser to chrome.
 func (app *MicrosoftWebOffice) SetBrowser(br *browser.Browser) {
 	app.br = br
 }

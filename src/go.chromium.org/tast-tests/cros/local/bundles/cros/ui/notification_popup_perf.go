@@ -24,23 +24,14 @@ import (
 func init() {
 	testing.AddTest(&testing.Test{
 		Func:         NotificationPopupPerf,
-		LacrosStatus: testing.LacrosVariantExists,
 		Desc:         "Measures animation smoothness of notification popup animations",
 		Contacts:     []string{"cros-status-area-eng@google.com", "leandre@chromium.org", "amehfooz@chromium.org", "chromeos-sw-engprod@google.com"},
 		BugComponent: "b:1246021", // ChromeOS > Software > System UI Surfaces > Notifications
 		Attr:         []string{"group:crosbolt", "crosbolt_perbuild"},
 		SoftwareDeps: []string{"chrome"},
 		HardwareDeps: hwdep.D(hwdep.InternalDisplay()),
-		Params: []testing.Param{{
-			Fixture: "chromeLoggedIn",
-			Val:     browser.TypeAsh,
-		}, {
-			Name:              "lacros",
-			Fixture:           "lacros",
-			ExtraSoftwareDeps: []string{"lacros"},
-			Val:               browser.TypeLacros,
-		}},
-		Timeout: 3 * time.Minute,
+		Fixture:      "chromeLoggedIn",
+		Timeout:      3 * time.Minute,
 	})
 }
 
@@ -57,15 +48,14 @@ func NotificationPopupPerf(ctx context.Context, s *testing.State) {
 	}
 
 	// Setup a browser.
-	bt := s.Param().(browser.Type)
-	br, closeBrowser, err := browserfixt.SetUp(ctx, cr, bt)
+	br, closeBrowser, err := browserfixt.SetUp(ctx, cr, browser.TypeAsh)
 	if err != nil {
 		s.Fatal("Failed to open the browser: ", err)
 	}
 	defer closeBrowser(ctx)
 	bTconn, err := br.TestAPIConn(ctx)
 	if err != nil {
-		s.Fatalf("Failed to create Test API connection for %v browser: %v", bt, err)
+		s.Fatal("Failed to create Test API connection: ", err)
 	}
 
 	// Pre-add some notifications to show remove animation on the first run.
@@ -101,7 +91,7 @@ func NotificationPopupPerf(ctx context.Context, s *testing.State) {
 
 // addNotifications create some test notifications and return the ids of those notifications
 // in reverse order (newer then older).
-// tconn is used for ash to wait notifications on the receiver side, while bTconn is for either ash-chrome or lacros-chrome browser to send notifications on the sender side.
+// tconn is used for ash to wait notifications on the receiver side, while bTconn is to send notifications on the sender side.
 func addNotifications(ctx context.Context, tconn *chrome.TestConn, bTconn *browser.TestConn) ([]string, error) {
 	var ids []string
 	const uiTimeout = 30 * time.Second

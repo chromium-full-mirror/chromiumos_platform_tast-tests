@@ -9,7 +9,6 @@ import (
 	"time"
 
 	"go.chromium.org/tast-tests/cros/local/bundles/cros/ui/tabswitchperf"
-	"go.chromium.org/tast-tests/cros/local/chrome/browser"
 	"go.chromium.org/tast-tests/cros/local/chrome/cuj"
 	"go.chromium.org/tast-tests/cros/local/ui/cujrecorder"
 	"go.chromium.org/tast/core/testing"
@@ -17,9 +16,8 @@ import (
 
 func init() {
 	testing.AddTest(&testing.Test{
-		Func:         TabSwitchPerf,
-		LacrosStatus: testing.LacrosVariantUnneeded,
-		Desc:         "Measures the performance of tab-switching",
+		Func: TabSwitchPerf,
+		Desc: "Measures the performance of tab-switching",
 		Contacts: []string{
 			"cros-sw-perf@google.com",
 			"ramsaroop@google.com",
@@ -27,20 +25,12 @@ func init() {
 		BugComponent: "b:1045832", // ChromeOS > Software > Performance > TPS
 		Attr:         []string{"group:cuj"},
 		SoftwareDeps: []string{"chrome"},
-		Data:         []string{cujrecorder.SystemTraceConfigFile},
+		Data:         []string{cujrecorder.SystemTraceConfigFile, tabswitchperf.WPRArchiveName},
 		Timeout:      15*time.Minute + cujrecorder.CooldownTimeout,
 		Vars: []string{
 			"mute",
 		},
-		Params: []testing.Param{
-			{
-				ExtraData: []string{tabswitchperf.WPRArchiveName},
-				Val: tabswitchperf.TabSwitchParam{
-					BrowserType: browser.TypeAsh,
-				},
-				Fixture: "tabSwitchPerfWPRAsh",
-			},
-		},
+		Fixture: "tabSwitchPerfWPRAsh",
 	})
 }
 

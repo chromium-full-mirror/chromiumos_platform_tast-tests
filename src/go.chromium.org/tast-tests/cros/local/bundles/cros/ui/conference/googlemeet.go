@@ -464,7 +464,7 @@ func (conf *GoogleMeetConference) End(ctx context.Context) error {
 	return cuj.CloseAllWindows(ctx, conf.tconn)
 }
 
-// SetBrowser sets browser to chrome or lacros.
+// SetBrowser sets browser to chrome.
 func (conf *GoogleMeetConference) SetBrowser(br *browser.Browser) {
 	conf.br = br
 }

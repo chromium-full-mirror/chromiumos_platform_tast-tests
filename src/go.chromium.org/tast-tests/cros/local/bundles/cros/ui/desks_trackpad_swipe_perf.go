@@ -29,9 +29,8 @@ import (
 
 func init() {
 	testing.AddTest(&testing.Test{
-		Func:         DesksTrackpadSwipePerf,
-		LacrosStatus: testing.LacrosVariantExists,
-		Desc:         "Measures the performance of using the trackpad to change desks",
+		Func: DesksTrackpadSwipePerf,
+		Desc: "Measures the performance of using the trackpad to change desks",
 		Contacts: []string{
 			"chromeos-wm@google.com",
 			"chromeos-sw-engprod@google.com",
@@ -49,15 +48,7 @@ func init() {
 			// on most boards is good enough.
 			hwdep.SkipOnModel("kohaku", "morphius", "samus"),
 		),
-		Params: []testing.Param{{
-			Fixture: "chromeLoggedIn",
-			Val:     browser.TypeAsh,
-		}, {
-			Name:              "lacros",
-			Fixture:           "lacros",
-			ExtraSoftwareDeps: []string{"lacros"},
-			Val:               browser.TypeLacros,
-		}},
+		Fixture: "chromeLoggedIn",
 	})
 }
 
@@ -115,7 +106,7 @@ func DesksTrackpadSwipePerf(ctx context.Context, s *testing.State) {
 	// windows since windows affect overview performance directly, and
 	// indirectly by adding extra mirrored layers to the desk bar.
 	const numWindows = 12
-	blankConn, br, closeBrowser, err := browserfixt.SetUpWithURL(ctx, cr, s.Param().(browser.Type), chrome.BlankURL)
+	blankConn, br, closeBrowser, err := browserfixt.SetUpWithURL(ctx, cr, browser.TypeAsh, chrome.BlankURL)
 	if err != nil {
 		s.Fatal("Failed to set up the browser: ", err)
 	}

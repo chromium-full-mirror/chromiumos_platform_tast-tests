@@ -331,7 +331,7 @@ func (app *GoogleDocs) Cleanup(ctx context.Context, sheetName string) error {
 	return nil
 }
 
-// SetBrowser sets browser to chrome or lacros.
+// SetBrowser sets browser to chrome.
 func (app *GoogleDocs) SetBrowser(br *browser.Browser) {
 	app.br = br
 }

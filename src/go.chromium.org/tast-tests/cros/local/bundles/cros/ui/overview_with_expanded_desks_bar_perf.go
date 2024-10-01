@@ -28,9 +28,8 @@ import (
 
 func init() {
 	testing.AddTest(&testing.Test{
-		Func:         OverviewWithExpandedDesksBarPerf,
-		LacrosStatus: testing.LacrosVariantExists,
-		Desc:         "Measures the performance of entering and exiting overview with the desks bar expanded",
+		Func: OverviewWithExpandedDesksBarPerf,
+		Desc: "Measures the performance of entering and exiting overview with the desks bar expanded",
 		Contacts: []string{
 			"chromeos-wm@google.com",
 			"dandersson@google.com",
@@ -42,15 +41,7 @@ func init() {
 		Attr:         []string{"group:crosbolt", "crosbolt_perbuild"},
 		SoftwareDeps: []string{"chrome"},
 		HardwareDeps: hwdep.D(hwdep.InternalDisplay()),
-		Params: []testing.Param{{
-			Fixture: "chromeLoggedIn",
-			Val:     browser.TypeAsh,
-		}, {
-			Name:              "lacros",
-			Fixture:           "lacros",
-			ExtraSoftwareDeps: []string{"lacros"},
-			Val:               browser.TypeLacros,
-		}},
+		Fixture:      "chromeLoggedIn",
 	})
 }
 
@@ -67,7 +58,7 @@ func OverviewWithExpandedDesksBarPerf(ctx context.Context, s *testing.State) {
 
 	cr := s.FixtValue().(chrome.HasChrome).Chrome()
 
-	blankConn, br, closeBrowser, err := browserfixt.SetUpWithURL(ctx, cr, s.Param().(browser.Type), chrome.BlankURL)
+	blankConn, br, closeBrowser, err := browserfixt.SetUpWithURL(ctx, cr, browser.TypeAsh, chrome.BlankURL)
 	if err != nil {
 		s.Fatal("Failed to set up the browser: ", err)
 	}

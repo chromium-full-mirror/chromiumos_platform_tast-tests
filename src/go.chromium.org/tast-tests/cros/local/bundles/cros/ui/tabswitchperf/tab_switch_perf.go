@@ -49,15 +49,9 @@ const (
 	WPRArchiveName = "tab_switch_perf.wprgo"
 )
 
-// TabSwitchParam holds parameters of TabSwitchPerf test variations.
-type TabSwitchParam struct {
-	BrowserType browser.Type // Chrome type.
-}
-
 // tabSwitchVariables holds all the necessary variables used by the test.
 type tabSwitchVariables struct {
-	param    TabSwitchParam // Test Parameters
-	webPages []webPage      // List of sites to visit
+	webPages []webPage // List of sites to visit
 
 	cr                 *chrome.Chrome
 	br                 *browser.Browser
@@ -82,7 +76,6 @@ const coreTestDuration = 3 * time.Minute
 
 func runSetup(ctx context.Context, s *testing.State) (*tabSwitchVariables, error) {
 	vars := tabSwitchVariables{
-		param:              s.Param().(TabSwitchParam),
 		webPages:           getTestWebpages(),
 		cr:                 s.FixtValue().(chrome.HasChrome).Chrome(),
 		outDir:             s.OutDir(),
@@ -90,7 +83,7 @@ func runSetup(ctx context.Context, s *testing.State) (*tabSwitchVariables, error
 	}
 
 	var err error
-	vars.br, vars.closeBrowser, err = browserfixt.SetUp(ctx, vars.cr, vars.param.BrowserType)
+	vars.br, vars.closeBrowser, err = browserfixt.SetUp(ctx, vars.cr, browser.TypeAsh)
 	if err != nil {
 		return nil, errors.Wrap(err, "failed to open the browser")
 	}
@@ -282,12 +275,6 @@ func testBody(ctx context.Context, test *tabSwitchVariables) error {
 		}
 		conns = append(conns, firstPage)
 
-		if test.param.BrowserType == browser.TypeLacros {
-			if err := browser.CloseTabByTitle(ctx, test.bTconn, "New Tab"); err != nil {
-				return errors.Wrap(err, `failed to close "New Tab" tab`)
-			}
-		}
-
 		// Find extra urls to navigate to.
 		urls, err := findAnchorURLs(ctx, firstPage, data.urlPattern, numPages-1)
 		if err != nil {
@@ -383,17 +370,8 @@ func testBody(ctx context.Context, test *tabSwitchVariables) error {
 		// window before closing it.
 		test.recorder.CustomScreenshot(ctx)
 
-		switch test.param.BrowserType {
-		case browser.TypeLacros:
-			if err := browser.ReplaceAllTabsWithSingleNewTab(ctx, test.bTconn); err != nil {
-				return errors.Wrap(err, "failed to close all tabs and leave a single new tab open")
-			}
-		case browser.TypeAsh:
-			if err := browser.CloseAllTabs(ctx, test.bTconn); err != nil {
-				return errors.Wrap(err, "failed to close all tabs")
-			}
-		default:
-			return errors.Errorf("unsupported browser type %v", test.param.BrowserType)
+		if err = browser.CloseAllTabs(ctx, test.bTconn); err != nil {
+			return errors.Wrap(err, "failed to close all tabs")
 		}
 	}
 

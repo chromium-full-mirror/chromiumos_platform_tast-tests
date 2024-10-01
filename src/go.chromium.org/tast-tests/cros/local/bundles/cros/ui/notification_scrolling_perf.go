@@ -15,7 +15,6 @@ import (
 	"go.chromium.org/tast-tests/cros/local/chrome/ash"
 	"go.chromium.org/tast-tests/cros/local/chrome/browser"
 	"go.chromium.org/tast-tests/cros/local/chrome/browser/browserfixt"
-	"go.chromium.org/tast-tests/cros/local/chrome/lacros/lacrosfixt"
 	"go.chromium.org/tast-tests/cros/local/chrome/uiauto"
 	"go.chromium.org/tast-tests/cros/local/chrome/uiauto/nodewith"
 	"go.chromium.org/tast-tests/cros/local/input"
@@ -29,13 +28,11 @@ import (
 
 type notificationScrollingPerfTestParam struct {
 	arc bool
-	bt  browser.Type
 }
 
 func init() {
 	testing.AddTest(&testing.Test{
 		Func:         NotificationScrollingPerf,
-		LacrosStatus: testing.LacrosVariantExists,
 		Desc:         "Measures input latency of scrolling through notification list",
 		Contacts:     []string{"cros-status-area-eng@google.com", "leandre@chromium.org", "chromeos-sw-engprod@google.com"},
 		BugComponent: "b:1246021", // ChromeOS > Software > System UI Surfaces > Notifications
@@ -44,19 +41,11 @@ func init() {
 		HardwareDeps: hwdep.D(hwdep.InternalDisplay()),
 		Timeout:      3 * time.Minute,
 		Params: []testing.Param{{
-			Val: notificationScrollingPerfTestParam{false, browser.TypeAsh},
+			Val: notificationScrollingPerfTestParam{false},
 		}, {
 			Name:              "arc",
 			ExtraSoftwareDeps: []string{"arc"},
-			Val:               notificationScrollingPerfTestParam{true, browser.TypeAsh},
-		}, {
-			Name:              "lacros",
-			ExtraSoftwareDeps: []string{"lacros"},
-			Val:               notificationScrollingPerfTestParam{false, browser.TypeLacros},
-		}, {
-			Name:              "arc_lacros",
-			ExtraSoftwareDeps: []string{"arc", "lacros"},
-			Val:               notificationScrollingPerfTestParam{true, browser.TypeLacros},
+			Val:               notificationScrollingPerfTestParam{true},
 		}},
 	})
 }
@@ -68,7 +57,6 @@ func NotificationScrollingPerf(ctx context.Context, s *testing.State) {
 	defer cancel()
 
 	isArc := s.Param().(notificationScrollingPerfTestParam).arc
-	bt := s.Param().(notificationScrollingPerfTestParam).bt
 
 	// Ensure display on to record ui performance correctly.
 	if err := power.TurnOnDisplay(ctx); err != nil {
@@ -81,7 +69,7 @@ func NotificationScrollingPerf(ctx context.Context, s *testing.State) {
 	}
 
 	// Set up the browser.
-	cr, br, closeBrowser, err := browserfixt.SetUpWithNewChrome(ctx, bt, lacrosfixt.NewConfig(), initArcOpt...)
+	cr, br, closeBrowser, err := browserfixt.SetUpWithNewChrome(ctx, browser.TypeAsh, nil, initArcOpt...)
 	if err != nil {
 		s.Fatal("Failed to set up browser: ", err)
 	}
