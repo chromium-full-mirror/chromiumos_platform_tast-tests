@@ -30,6 +30,7 @@ import (
 	uiperf "go.chromium.org/tast-tests/cros/local/bundles/cros/ui/perf"
 	"go.chromium.org/tast-tests/cros/local/chrome"
 	"go.chromium.org/tast-tests/cros/local/chrome/ash"
+	"go.chromium.org/tast-tests/cros/local/chrome/browser"
 	"go.chromium.org/tast-tests/cros/local/chrome/metrics"
 	"go.chromium.org/tast-tests/cros/local/chrome/uiauto"
 	"go.chromium.org/tast-tests/cros/local/chrome/uiauto/faillog"
@@ -58,6 +59,7 @@ const (
 	ashTastBootTimeLogin2                                 = "Ash.Tast.BootTime.Login2"
 	ashTastArcUIAvailableAfterLoginDuration               = "Ash.Tast.ArcUiAvailableAfterLogin.Duration"
 	arcTastUIAvailableTimeDelta                           = "Arc.Tast.UiAvailable.TimeDelta"
+	bootTimeLogin2                                        = "BootTime.Login2"
 	bootTimeLogin3                                        = "BootTime.Login3"
 	uptimeLogoutToUIStopAfterLogout                       = "Uptime.LogoutToUIStopAfterLogout"
 	uptimeUIStopToProcessesTerminatedAfterLogout          = "Uptime.UIStopToProcessesTerminatedAfterLogout"
@@ -851,8 +853,14 @@ func testFunction(
 	}
 	defer cujRecorder.Close(closeCtx)
 
-	if err := cujRecorder.AddCommonMetrics(tLoginConn, nil); err != nil {
-		s.Fatal("Failed to add recorder common metrics: ", err)
+	for _, metricConfig := range [][]cujrecorder.MetricConfig{
+		cujrecorder.AshCommonMetricConfigs(),
+		cujrecorder.BrowserCommonMetricConfigs(),
+		cujrecorder.AnyChromeCommonMetricConfigs(),
+	} {
+		if err := cujRecorder.AddCollectedMetrics(tLoginConn, browser.TypeAsh, metricConfig...); err != nil {
+			s.Fatal("Failed to add recorded metrics: ", err)
+		}
 	}
 
 	var histograms []*histogram.Histogram
@@ -937,6 +945,7 @@ func storeHistograms(
 			allBrowserWindowsShown,
 			allShelfIconsLoaded,
 			ashTastBootTimeLogin2,
+			bootTimeLogin2,
 			bootTimeLogin3,
 			establishGpuChannelSyncTime,
 			shelfLoginAnimationEnd,
@@ -1079,6 +1088,7 @@ func LoginPerf(ctx context.Context, s *testing.State) {
 		allBrowserWindowsShown,
 		allShelfIconsLoaded,
 		ashTastBootTimeLogin2,
+		bootTimeLogin2,
 		bootTimeLogin3,
 		uptimeLogoutToUIStopAfterLogout,
 		uptimeUIStopToProcessesTerminatedAfterLogout,
