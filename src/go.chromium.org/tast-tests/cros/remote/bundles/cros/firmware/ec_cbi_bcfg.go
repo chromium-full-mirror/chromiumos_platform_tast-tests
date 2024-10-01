@@ -22,6 +22,12 @@ import (
 	"go.chromium.org/tast/core/testing/hwdep"
 )
 
+type bcfgData struct {
+	battManufName  string
+	battDeviceName string
+	bytes          []byte
+}
+
 func init() {
 	testing.AddTest(&testing.Test{
 		Func: ECCbiBcfg,
@@ -55,13 +61,7 @@ func ECCbiBcfg(ctx context.Context, s *testing.State) {
 
 	batteryConfigTag := "12"
 	modifiedTag := false
-	originalBcicData := ""
-	tempDir := ""
-	originalBcfgData := ""
-	updatedBcfgData := ""
 	modifiedBcfgDataFile := "modifiedBcfgData.json"
-	battManufName := ""
-	battDeviceName := ""
 
 	originalBcicData, err := readBatteryConfigFromCbi(ctx, h, batteryConfigTag)
 	if err != nil {
@@ -79,7 +79,7 @@ func ECCbiBcfg(ctx context.Context, s *testing.State) {
 
 	fs := dutfs.NewClient(cl.Conn)
 
-	tempDir, err = fs.TempDir(ctx, "", "ECBcicTAST_*")
+	tempDir, err := fs.TempDir(ctx, "", "ECBcicTAST_*")
 	if err != nil {
 		s.Fatal("Failed to create temp directory: ", err)
 	}
@@ -123,29 +123,30 @@ func ECCbiBcfg(ctx context.Context, s *testing.State) {
 		}
 	}()
 
-	originalBcfgData, err = getBcfg(ctx, h)
+	originalBcfgData, err := getBcfg(ctx, h, "")
 	if err != nil {
 		s.Fatal("Expected BCFG read to succeed: ", err)
 	}
 	originalBcfgBytes := []byte(originalBcfgData)
+	bcfg := &bcfgData{
+		bytes: originalBcfgBytes,
+	}
 
-	battManufName, battDeviceName, err = getManufacturerAndDeviceName(ctx, h)
+	battManufName, battDeviceName, err := getManufacturerAndDeviceName(ctx, h)
 	if err != nil {
 		s.Fatal("Battery info not found: ", err)
 	}
 	s.Logf("Battery manufacturer name: %q, Battery device name: %q", battManufName, battDeviceName)
 
-	modifiedBcfgBytes, err := getUpdatedBcfgBytes(ctx, h, originalBcfgBytes, &battManufName, &battDeviceName)
-	if err != nil {
+	if err := updateBcfgBytes(ctx, h, bcfg, battManufName, battDeviceName); err != nil {
 		s.Fatal("Data modification failed: ", err)
 	}
 
-	if err := fs.WriteFile(ctx, modifiedBcfgDataFile, modifiedBcfgBytes, 0666); err != nil {
+	if err := fs.WriteFile(ctx, modifiedBcfgDataFile, bcfg.bytes, 0666); err != nil {
 		s.Fatal("Expected file write to succeed: ", err)
 	}
 
-	err = setBcfg(ctx, h, modifiedBcfgDataFile, battManufName, battDeviceName)
-	if err != nil {
+	if err = setBcfg(ctx, h, modifiedBcfgDataFile, bcfg); err != nil {
 		s.Fatal("Expected BCFG write to succeed: ", err)
 	} else {
 		modifiedTag = true
@@ -164,7 +165,7 @@ func ECCbiBcfg(ctx context.Context, s *testing.State) {
 
 	fs = dutfs.NewClient(cl.Conn)
 
-	updatedBcfgData, err = getBcfg(ctx, h)
+	updatedBcfgData, err := getBcfg(ctx, h, "0")
 	if err != nil {
 		s.Fatal("Expected BCFG read to succeed: ", err)
 	}
@@ -192,52 +193,56 @@ func ECCbiBcfg(ctx context.Context, s *testing.State) {
 		s.Fatal("Expected BCFG output not remain same: ", string(originalBcfgBytes), string(updatedBcfgBytes))
 	}
 
-	if !bytes.Equal(modifiedBcfgBytes, updatedBcfgBytes) {
-		s.Fatal("Expected BCFG output match: ", string(modifiedBcfgBytes), string(updatedBcfgBytes))
+	if !bytes.Equal(bcfg.bytes, updatedBcfgBytes) {
+		s.Fatal("Expected BCFG output match: ", string(bcfg.bytes), string(updatedBcfgBytes))
 	}
 	return
 }
 
 func getManufacturerAndDeviceName(ctx context.Context, h *firmware.Helper) (string, string, error) {
-	manufName := ""
-	deviceName := ""
 	testing.ContextLog(ctx, "Attempting to read Battery info")
-	batteryData, err := firmware.NewECTool(h.DUT, firmware.ECToolNameMain).Battery(ctx)
+	out, err := h.Servo.RunECCommandGetOutput(ctx, "battery", []string{`Manuf:\s+([^\n\r]+)[\n\r]`, `Device:\s+([^\n\r]+)[\n\r]`})
 	if err != nil {
-		return "", "", errors.Wrapf(err, "failed to get Battery info, got output: %v", batteryData)
+		return "", "", errors.Wrap(err, "failed to get Battery info")
 	}
-
-	manufName = batteryData["Manufacturer"]
-	deviceName = batteryData["Device name"]
+	manufName, deviceName := out[0][1], out[1][1]
 	return manufName, deviceName, nil
 }
 
-// getUpdatedBcfgBytes modifies the input bytes and return updated bytes as output.
-func getUpdatedBcfgBytes(ctx context.Context, h *firmware.Helper, bcfgData []byte, battManufName, battDeviceName *string) ([]byte, error) {
-	key0 := strings.Join([]string{*battManufName, *battDeviceName}, ",")
+// updateBcfgBytes modifies the input bytes in the bcfg data based on the battery manufacturer and
+// device name from the EC console.
+func updateBcfgBytes(ctx context.Context, h *firmware.Helper, bcfg *bcfgData, battManufName, battDeviceName string) error {
+	key0 := strings.Join([]string{battManufName, battDeviceName}, ",")
 	key1 := "batt_info"
 	key2 := "start_charging_max_c"
 	var val float64
 
-	bcfgMap, err := jsonBytesToMap(ctx, bcfgData)
+	bcfgMap, err := jsonBytesToMap(ctx, bcfg.bytes)
 	if err != nil {
-		return nil, errors.Wrap(err, "Updating BCFG bytes failed")
+		return errors.Wrap(err, "failed to convert bytes to map")
 	}
 
-	var isFound bool
 	var keys = []string{}
 	for key, val0 := range bcfgMap {
 		testing.ContextLogf(ctx, "Found key %q in bcfg map", key)
 		keys = append(keys, key)
-		key = strings.ToUpper(key)
-		if key == strings.ToUpper(key0) {
+		keySplit := strings.Split(strings.ToUpper(key), ",")
+		if len(keySplit) != 2 || keySplit[0] == "" || keySplit[1] == "" {
+			testing.ContextLogf(ctx, "Key %q does not have 2 parts", key)
+			continue
+		}
+
+		if strings.HasPrefix(strings.ToUpper(battManufName), keySplit[0]) &&
+			strings.HasPrefix(strings.ToUpper(battDeviceName), keySplit[1]) {
+			bcfg.battManufName = keySplit[0]
+			bcfg.battDeviceName = keySplit[1]
 			val1, exists := val0.(map[string]interface{})[key1]
 			if !exists {
-				return nil, errors.Wrapf(err, "key not found: %q in map: %q", key1, val0)
+				return errors.Wrapf(err, "key not found: %q in map: %q", key1, val0)
 			}
 			val2, exists := val1.(map[string]interface{})[key2]
 			if !exists {
-				return nil, errors.Wrapf(err, "key not found: %q in map: %q", key2, val1)
+				return errors.Wrapf(err, "key not found: %q in map: %q", key2, val1)
 			}
 			val = val2.(float64)
 			if val == 100 {
@@ -246,35 +251,32 @@ func getUpdatedBcfgBytes(ctx context.Context, h *firmware.Helper, bcfgData []byt
 				val++
 			}
 			val1.(map[string]interface{})[key2] = val
-			isFound = true
-			break
-		} else {
-			if strings.Split(key, ",")[0] != strings.ToUpper(*battManufName) {
-				testing.ContextLogf(ctx, "Skipping key because manufacturer name mismatches batt manu Name key: %q", strings.Split(key, ",")[0])
+			if bcfg.bytes, err = jsonMapToBytes(ctx, bcfgMap); err != nil {
+				return errors.Wrap(err, "failed to convert map to bytes")
 			}
-			if strings.Split(key, ",")[1] != strings.ToUpper(*battDeviceName) {
-				testing.ContextLogf(ctx, "Skipping key because device name mismatches batt device Name key: %q", strings.Split(key, ",")[1])
-			}
+			return nil
 		}
+		testing.ContextLogf(ctx, "Skipping key because manufacturer or device name mismatches battery info: %s,%s", bcfg.battManufName, bcfg.battDeviceName)
 	}
-	if isFound {
-		return jsonMapToBytes(ctx, bcfgMap)
-	}
-	return nil, errors.Wrapf(err, "Key not found: %q in the keys of bcfg map: %q", key0, keys)
+	return errors.Wrapf(err, "key not found: %s in the keys of bcfg map: %q", key0, keys)
 }
 
-func getBcfg(ctx context.Context, h *firmware.Helper) (string, error) {
+func getBcfg(ctx context.Context, h *firmware.Helper, index string) (string, error) {
 	testing.ContextLog(ctx, "Attempting to read Battery config")
-	out, err := firmware.NewECTool(h.DUT, firmware.ECToolNameMain).BCFG(ctx, firmware.BCFGGet, "-j")
+	args := []string{"-j"}
+	if index != "" {
+		args = append(args, index)
+	}
+	out, err := firmware.NewECTool(h.DUT, firmware.ECToolNameMain).BCFG(ctx, firmware.BCFGGet, args...)
 	if err != nil {
 		return "", errors.Wrap(err, "failed to get Battery config")
 	}
 	return out, nil
 }
 
-func setBcfg(ctx context.Context, h *firmware.Helper, fileName, manufName, deviceName string) error {
+func setBcfg(ctx context.Context, h *firmware.Helper, fileName string, bcfg *bcfgData) error {
 	testing.ContextLog(ctx, "Attempting to write Battery config")
-	args := []string{fileName, manufName, deviceName}
+	args := []string{fileName, bcfg.battManufName, bcfg.battDeviceName}
 	_, err := firmware.NewECTool(h.DUT, firmware.ECToolNameMain).BCFG(ctx, firmware.BCFGSet, args...)
 	if err != nil {
 		return errors.Wrap(err, "failed to set Battery config")
