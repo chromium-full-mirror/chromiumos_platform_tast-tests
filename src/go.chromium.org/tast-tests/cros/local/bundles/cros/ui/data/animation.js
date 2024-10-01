@@ -25,8 +25,11 @@ function createShader(gl, type, source){
 }
 
 function onResized() {
-  canvas.width = window.innerWidth;
-  canvas.height = window.innerHeight;
+  // `window.innerWidth/Height` could have wrong values. It should be same
+  // as `document.body.clientWidth/Height` in the setup. So use that instead.
+  // See http://b/369250271.
+  canvas.width = document.body.offsetWidth;
+  canvas.height = document.body.offsetHeight;
 }
 
 function main() {
