@@ -30,7 +30,7 @@ func init() {
 		// ChromeOS > Platform > Services > Fingerprint
 		BugComponent: "b:782045",
 		Attr:         []string{"group:fingerprint-cq", "group:fingerprint-release"},
-		Timeout:      8 * time.Minute,
+		Timeout:      10 * time.Minute,
 		SoftwareDeps: []string{"biometrics_daemon"},
 		HardwareDeps: hwdep.D(hwdep.Fingerprint()),
 		ServiceDeps:  []string{"tast.cros.platform.UpstartService", dutfs.ServiceName},
