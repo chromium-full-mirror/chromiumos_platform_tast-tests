@@ -23,6 +23,9 @@ const (
 
 // ServoSendDataSwapRequest initiates a data swap request from the servo's PD port.
 func (s *Servo) ServoSendDataSwapRequest(ctx context.Context) (pdControlMsgType, error) {
+	if err := s.EnableServoConsoleChannel(ctx, "usbpd"); err != nil {
+		return PDCtrlReserved, errors.Wrap(err, "failed to enable usbpd logging channel")
+	}
 	// Enable PD message so we can check the response from the DUT.
 	err := s.RunServoCommand(ctx, "pd dump 2")
 	if err != nil {
