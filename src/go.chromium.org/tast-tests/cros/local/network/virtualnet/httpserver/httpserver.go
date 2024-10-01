@@ -74,7 +74,21 @@ func New(family Family, port string, handle func(rw http.ResponseWriter, req *ht
 // the server will serve HTTPS.
 func (h *httpServer) Start(ctx context.Context, env *env.Env) (retErr error) {
 	h.env = env
-	handler := &Handler{handle: h.handle}
+	// Wrap the handler to run inside the virtualenv's network namespace.
+	handler := &Handler{handle: func(rw http.ResponseWriter, req *http.Request) {
+		cleanup, err := h.env.EnterNetNS(ctx)
+		if err != nil {
+			testing.ContextLogf(ctx, "Failed to go to the netns %s: %v", h.env.NetNSName, err)
+			return
+		}
+		defer func() {
+			if err := cleanup(); err != nil {
+				testing.ContextLogf(ctx, "Failed to go back to the original netns from netns %s: %v", h.env.NetNSName, err)
+				return
+			}
+		}()
+		h.handle(rw, req)
+	}}
 	h.server = &http.Server{Addr: fmt.Sprintf(":%v", h.port), Handler: handler}
 
 	errChannel := make(chan error)

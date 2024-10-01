@@ -420,7 +420,7 @@ func (e *Env) makeChroot(ctx context.Context) error {
 	return nil
 }
 
-// makeNetNS prepares the veth pair and netns.
+// makeNetNS prepares the loopback interface, veth pair and netns.
 func (e *Env) makeNetNS(ctx context.Context) error {
 	needCoolDown := false
 
@@ -484,6 +484,11 @@ func (e *Env) makeNetNS(ctx context.Context) error {
 
 	if err := e.RunWithoutChroot(ctx, "ip", "link", "set", e.VethInName, "up"); err != nil {
 		return errors.Wrapf(err, "failed to enable interface %s", e.VethInName)
+	}
+
+	// Enable loopback interface.
+	if err := e.RunWithoutChroot(ctx, "ip", "link", "set", "lo", "up"); err != nil {
+		return errors.Wrap(err, "failed to enable loopback interface")
 	}
 
 	return nil
