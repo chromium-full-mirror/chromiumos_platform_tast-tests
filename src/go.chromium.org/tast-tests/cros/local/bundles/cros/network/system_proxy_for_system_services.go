@@ -47,7 +47,7 @@ func init() {
 		Params: []testing.Param{{
 			// TODO(b/335124753): mitmproxy occasionally fails to start on arm devices.
 			// Remove architecture restrictions when the problem is solved.
-			ExtraSoftwareDeps: []string{"no_arm"},
+			ExtraSoftwareDeps: []string{"amd64"},
 		}},
 		SearchFlags: []*testing.StringPair{
 			pci.SearchFlag(&policy.ProxyMode{}, pci.VerifiedFunctionalityOS),

@@ -41,7 +41,7 @@ func init() {
 		Attr:         []string{"group:golden_tier", "group:hw_agnostic"},
 		// TODO(b/302232315): mitmproxy fails to start on arm devices.
 		// Remove architecture restrictions when the problem is solved.
-		SoftwareDeps: []string{"chrome", "no_arm"},
+		SoftwareDeps: []string{"chrome", "amd64"},
 		Data:         advancedprotection.DataFiles(),
 		Fixture:      fixture.ChromePolicyLoggedInAdvancedProtection,
 		SearchFlags: []*testing.StringPair{

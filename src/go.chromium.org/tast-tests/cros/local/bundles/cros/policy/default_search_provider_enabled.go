@@ -35,7 +35,7 @@ func init() {
 		BugComponent: "b:1129862",
 		// TODO(b/302232315): mitmproxy fails to start on arm devices.
 		// Remove architecture restrictions when the problem is solved.
-		SoftwareDeps: []string{"chrome", "no_arm"},
+		SoftwareDeps: []string{"chrome", "amd64"},
 		Attr:         []string{"group:golden_tier", "group:mainline", "informational", "group:hw_agnostic"},
 		Fixture:      fixture.ChromePolicyLoggedIn,
 		SearchFlags: []*testing.StringPair{

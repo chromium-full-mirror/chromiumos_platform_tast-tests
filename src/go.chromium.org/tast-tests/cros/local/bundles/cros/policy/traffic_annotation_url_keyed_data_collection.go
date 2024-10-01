@@ -40,7 +40,7 @@ func init() {
 		BugComponent: "b:1129862", // ChromeOS > Privacy > DPChromeOS > DPChromeOS Engineering
 		// TODO(b/302232315): mitmproxy fails to start on arm devices.
 		// Remove architecture restrictions when the problem is solved.
-		SoftwareDeps: []string{"chrome", "no_arm"},
+		SoftwareDeps: []string{"chrome", "amd64"},
 		Attr:         []string{"group:golden_tier"},
 		Timeout:      8 * time.Minute,
 		Fixture:      fixture.FakeDMSEnrolled,

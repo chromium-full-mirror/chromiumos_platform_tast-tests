@@ -48,7 +48,7 @@ func init() {
 		Params: []testing.Param{{
 			// TODO(b/335124753): mitmproxy occasionally fails to start on arm devices.
 			// Remove architecture restrictions when the problem is solved.
-			ExtraSoftwareDeps: []string{"android_vm", "no_arm"},
+			ExtraSoftwareDeps: []string{"android_vm", "amd64"},
 		}},
 		Vars: []string{
 			tape.ServiceAccountVar,
