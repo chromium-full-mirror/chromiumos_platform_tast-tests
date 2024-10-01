@@ -23,9 +23,8 @@ import (
 
 func init() {
 	testing.AddTest(&testing.Test{
-		Func:         LoginScreenUIAPI,
-		LacrosStatus: testing.LacrosVariantUnneeded,
-		Desc:         "Test chrome.loginScreenUi Extension API",
+		Func: LoginScreenUIAPI,
+		Desc: "Test chrome.loginScreenUi Extension API",
 		Contacts: []string{
 			"chromeos-commercial-identity@google.com",
 			"mpetrisor@chromium.org",
@@ -95,30 +94,23 @@ func LoginScreenUIAPI(ctx context.Context, s *testing.State) {
 		s.Fatal("Chrome restart failed: ", err)
 	}
 
-	bgConn, err := cr.NewConnForTarget(ctx, chrome.MatchTargetURLPrefix(mgs.LoginScreenExtensionURLPrefix))
+	bgConn, err := cr.NewConnForTarget(ctx, chrome.MatchTargetURL(mgs.LoginScreenExtensionURL))
 	if err != nil {
 		s.Fatal("Failed to connect to login screen extension: ", err)
 	}
 	defer bgConn.Close()
 
-	// Show window.html.
-	// The file window.html is bundled with the extension.
-	if err := bgConn.Eval(ctx, `new Promise((resolve, reject) => {
-		chrome.loginScreenUi.show({url: "window.html"}, () => {
-			if (chrome.runtime.lastError) {
-				reject(new Error(chrome.runtime.lastError.message));
-				return;
-			}
-			resolve();
-		});
-	})`, nil); err != nil {
-		s.Fatal("Failed to show window: ", err)
+	// Wait for the API to become available.
+	if err = bgConn.WaitForExpr(ctx, `chrome.loginScreenUi !== undefined`); err != nil {
+		bgConn.Close()
+		s.Fatal("Failed to wait for the API to be available: ", err)
 	}
 
-	windowURL := fmt.Sprintf("chrome-extension://%s/window.html", mgs.LoginScreenExtensionID)
+	// The modalities UI is already shown via chrome.loginScreenUI.show() by the production extension.
+	windowURL := fmt.Sprintf("chrome-extension://%s/ui/modalities", mgs.LoginScreenExtensionID)
 	windowConn, err := cr.NewConnForTarget(ctx, chrome.MatchTargetURL(windowURL))
 	if err != nil {
-		s.Fatal("Failed to connect to window: ", err)
+		s.Fatal("Failed to connect to modalities UI: ", err)
 	}
 	defer windowConn.Close()
 
@@ -127,7 +119,7 @@ func LoginScreenUIAPI(ctx context.Context, s *testing.State) {
 
 	// Check that the window title is correct.
 	// WaitForExpr has to be used since the window title is not updated immediately.
-	expectedWindowTitle := "Login screen APIs test extension"
+	expectedWindowTitle := "Imprivata Enterprise Access Management"
 	expr := fmt.Sprintf(`document.querySelector('title').innerText === '%s'`, expectedWindowTitle)
 	if err := windowConn.WaitForExpr(windowCtx, expr); err != nil {
 		s.Error("Window title does not match: ", err)

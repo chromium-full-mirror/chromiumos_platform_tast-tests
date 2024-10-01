@@ -8,6 +8,7 @@ import (
 	"context"
 	"net/http"
 	"net/http/httptest"
+	"strings"
 	"time"
 
 	"go.chromium.org/tast-tests/cros/common/fixture"
@@ -16,7 +17,6 @@ import (
 	"go.chromium.org/tast-tests/cros/common/policy/fakedms"
 	"go.chromium.org/tast-tests/cros/local/chrome"
 	"go.chromium.org/tast-tests/cros/local/chrome/ash"
-	"go.chromium.org/tast-tests/cros/local/chrome/browser"
 	"go.chromium.org/tast-tests/cros/local/chrome/uiauto"
 	"go.chromium.org/tast-tests/cros/local/chrome/uiauto/nodewith"
 	"go.chromium.org/tast-tests/cros/local/chrome/uiauto/role"
@@ -34,9 +34,8 @@ const (
 
 func init() {
 	testing.AddTest(&testing.Test{
-		Func:         SharedManagedGuestSessionCleanup,
-		LacrosStatus: testing.LacrosVariantExists,
-		Desc:         "Test chrome.login.endSharedSession Extension API properly performs cleanup",
+		Func: SharedManagedGuestSessionCleanup,
+		Desc: "Test chrome.login.endSharedSession Extension API properly performs cleanup",
 		Contacts: []string{
 			"chromeos-commercial-identity@google.com",
 			"mpetrisor@chromium.org",
@@ -58,21 +57,12 @@ func init() {
 			pci.SearchFlag(&policy.DeviceRestrictedManagedGuestSessionEnabled{}, pci.VerifiedFunctionalityJS),
 			pci.SearchFlag(&policy.ExtensionInstallForcelist{}, pci.VerifiedFunctionalityJS),
 			pci.SearchFlag(&policy.RestrictedManagedGuestSessionExtensionCleanupExemptList{}, pci.VerifiedFunctionalityJS),
-			pci.SearchFlag(&policy.LacrosAvailability{}, pci.VerifiedFunctionalityJS),
 			{
 				Key: "feature_id",
 				// Clean shared MGS on clinician logout (COM_HEALTH_CUJ2_TASK1_WF1).
 				Value: "screenplay-3422ba87-53ab-4a6b-9ee2-135ad7eca0f5",
 			},
 		},
-		Params: []testing.Param{{
-			Name: "ash",
-			Val:  browser.TypeAsh,
-		}, {
-			Name:              "lacros",
-			Val:               browser.TypeLacros,
-			ExtraSoftwareDeps: []string{"lacros"},
-		}},
 	})
 }
 
@@ -125,15 +115,7 @@ func SharedManagedGuestSessionCleanup(ctx context.Context, s *testing.State) {
 		}),
 		mgs.ExtraChromeOptions(
 			chrome.ExtraArgs("--force-devtools-available"),
-			chrome.LacrosExtraArgs("--force-devtools-available"),
 		),
-	}
-
-	bt := s.Param().(browser.Type)
-	if bt == browser.TypeLacros {
-		opts = append(opts, mgs.AddPublicAccountPolicies(accountID, []policy.Policy{
-			&policy.LacrosAvailability{Val: "lacros-only"},
-		}))
 	}
 
 	m, cr, err := mgs.New(ctx, fdms, opts...)
@@ -153,11 +135,17 @@ func SharedManagedGuestSessionCleanup(ctx context.Context, s *testing.State) {
 	}
 	defer sw.Close(ctx)
 
-	conn, err := cr.NewConnForTarget(ctx, chrome.MatchTargetURLPrefix(mgs.LoginScreenExtensionURLPrefix))
+	conn, err := cr.NewConnForTarget(ctx, chrome.MatchTargetURL(mgs.LoginScreenExtensionURL))
 	if err != nil {
 		s.Fatal("Failed to connect to login screen extension: ", err)
 	}
 	defer conn.Close()
+
+	// Wait for the API to become available.
+	if err = conn.WaitForExpr(ctx, `chrome.login !== undefined`); err != nil {
+		conn.Close()
+		s.Fatal("Failed to wait for the API to be available: ", err)
+	}
 
 	// Launch a shared managed guest session.
 	password := "password"
@@ -180,11 +168,17 @@ func SharedManagedGuestSessionCleanup(ctx context.Context, s *testing.State) {
 		s.Fatal("Timeout before getting SessionStateChanged signal: ", err)
 	}
 
-	inSessionConn, err := cr.NewConnForTarget(ctx, chrome.MatchTargetURLPrefix(mgs.InSessionExtensionURLPrefix))
+	inSessionConn, err := cr.NewConnForTarget(ctx, chrome.MatchTargetURL(mgs.InSessionExtensionURL))
 	if err != nil {
 		s.Fatal("Failed to connect to in-session extension: ", err)
 	}
 	defer inSessionConn.Close()
+
+	// Wait for the API to become available.
+	if err = inSessionConn.WaitForExpr(ctx, `chrome.login !== undefined`); err != nil {
+		inSessionConn.Close()
+		s.Fatal("Failed to wait for the API to be available: ", err)
+	}
 
 	swLocked, err := sm.WatchScreenIsLocked(ctx)
 	if err != nil {
@@ -271,11 +265,17 @@ func SharedManagedGuestSessionCleanup(ctx context.Context, s *testing.State) {
 
 	// Previous conn is closed since it is a login screen extension which
 	// closes when the session starts.
-	conn2, err := cr.NewConnForTarget(ctx, chrome.MatchTargetURLPrefix(mgs.LoginScreenExtensionURLPrefix))
+	conn2, err := cr.NewConnForTarget(ctx, chrome.MatchTargetURL(mgs.LoginScreenExtensionURL))
 	if err != nil {
 		s.Fatal("Failed to connect to login screen extension on lock screen: ", err)
 	}
 	defer conn2.Close()
+
+	// Wait for the API to become available.
+	if err = conn2.WaitForExpr(ctx, `chrome.login !== undefined`); err != nil {
+		conn2.Close()
+		s.Fatal("Failed to wait for the API to be available: ", err)
+	}
 
 	// Enter a new shared session.
 	if err := conn2.Call(ctx, nil, `(password) => new Promise((resolve, reject) => {
@@ -351,11 +351,19 @@ func SharedManagedGuestSessionCleanup(ctx context.Context, s *testing.State) {
 		s.Fatal("Failed to run keyboard command for restoring tabs: ", err)
 	}
 
-	// Check that no browser tabs from previous session got restored.
-	pages, err := cr.FindTargets(ctx, chrome.MatchAllPages())
+	// Check that the opened page from the previous session is not restored. We
+	// cannot use a generic page matcher (such as MatchAllPages()) because
+	// extensions can have pages/offscreen documents and those should not be
+	// counted since extensions are supposed to start. Specifically look for the
+	// page that we previously opened.
+	matchCleanupTestPage := func(t *chrome.Target) bool {
+		return strings.Contains(t.URL, cleanupTestPageHTML)
+	}
+	pages, err := cr.FindTargets(ctx, matchCleanupTestPage)
 	if err != nil {
 		s.Fatal("Failed to collect info about Chrome webpages: ", err)
 	}
+
 	if len(pages) > 0 {
 		s.Fatal("Expected no restored tabs but found ", len(pages))
 	}

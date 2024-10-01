@@ -12,7 +12,6 @@ import (
 	"go.chromium.org/tast-tests/cros/common/policy"
 	"go.chromium.org/tast-tests/cros/common/policy/fakedms"
 	"go.chromium.org/tast-tests/cros/local/chrome"
-	"go.chromium.org/tast-tests/cros/local/chrome/browser"
 	"go.chromium.org/tast-tests/cros/local/mgs"
 	"go.chromium.org/tast-tests/cros/local/session"
 	"go.chromium.org/tast/core/testing"
@@ -20,9 +19,8 @@ import (
 
 func init() {
 	testing.AddTest(&testing.Test{
-		Func:         LaunchSharedManagedGuestSession,
-		LacrosStatus: testing.LacrosVariantExists,
-		Desc:         "Test chrome.login.launchSharedManagedGuestSession Extension API",
+		Func: LaunchSharedManagedGuestSession,
+		Desc: "Test chrome.login.launchSharedManagedGuestSession Extension API",
 		Contacts: []string{
 			"chromeos-commercial-identity@google.com",
 			"mpetrisor@chromium.org",
@@ -42,16 +40,7 @@ func init() {
 			pci.SearchFlag(&policy.DeviceLoginScreenExtensions{}, pci.VerifiedFunctionalityJS),
 			pci.SearchFlag(&policy.DeviceRestrictedManagedGuestSessionEnabled{}, pci.VerifiedFunctionalityJS),
 			pci.SearchFlag(&policy.ExtensionInstallForcelist{}, pci.VerifiedFunctionalityJS),
-			pci.SearchFlag(&policy.LacrosAvailability{}, pci.VerifiedFunctionalityJS),
 		},
-		Params: []testing.Param{{
-			Name: "ash",
-			Val:  browser.TypeAsh,
-		}, {
-			Name:              "lacros",
-			Val:               browser.TypeLacros,
-			ExtraSoftwareDeps: []string{"lacros"},
-		}},
 	})
 }
 
@@ -71,15 +60,7 @@ func LaunchSharedManagedGuestSession(ctx context.Context, s *testing.State) {
 		}),
 		mgs.ExtraChromeOptions(
 			chrome.ExtraArgs("--force-devtools-available"),
-			chrome.LacrosExtraArgs("--force-devtools-available"),
 		),
-	}
-
-	bt := s.Param().(browser.Type)
-	if bt == browser.TypeLacros {
-		opts = append(opts, mgs.AddPublicAccountPolicies(accountID, []policy.Policy{
-			&policy.LacrosAvailability{Val: "lacros-only"},
-		}))
 	}
 
 	m, cr, err := mgs.New(ctx, fdms, opts...)
@@ -103,11 +84,17 @@ func LaunchSharedManagedGuestSession(ctx context.Context, s *testing.State) {
 	}
 	defer sw.Close(ctx)
 
-	conn, err := cr.NewConnForTarget(ctx, chrome.MatchTargetURLPrefix(mgs.LoginScreenExtensionURLPrefix))
+	conn, err := cr.NewConnForTarget(ctx, chrome.MatchTargetURL(mgs.LoginScreenExtensionURL))
 	if err != nil {
 		s.Fatal("Failed to connect to login screen extension: ", err)
 	}
 	defer conn.Close()
+
+	// Wait for the API to become available.
+	if err = conn.WaitForExpr(ctx, `chrome.login !== undefined`); err != nil {
+		conn.Close()
+		s.Fatal("Failed to wait for the API to be available: ", err)
+	}
 
 	// Launch a shared managed guest session.
 	password := "password"
@@ -130,11 +117,17 @@ func LaunchSharedManagedGuestSession(ctx context.Context, s *testing.State) {
 		s.Fatal("Timeout before getting SessionStateChanged signal: ", err)
 	}
 
-	inSessionConn, err := cr.NewConnForTarget(ctx, chrome.MatchTargetURLPrefix(mgs.InSessionExtensionURLPrefix))
+	inSessionConn, err := cr.NewConnForTarget(ctx, chrome.MatchTargetURL(mgs.InSessionExtensionURL))
 	if err != nil {
 		s.Fatal("Failed to connect to in-session extension: ", err)
 	}
 	defer inSessionConn.Close()
+
+	// Wait for the API to become available.
+	if err = inSessionConn.WaitForExpr(ctx, `chrome.login !== undefined`); err != nil {
+		inSessionConn.Close()
+		s.Fatal("Failed to wait for the API to be available: ", err)
+	}
 
 	// Note that this uses lockManagedGuestSession() since locking an MGS is
 	// equivalent to locking the shared session.
@@ -152,11 +145,17 @@ func LaunchSharedManagedGuestSession(ctx context.Context, s *testing.State) {
 
 	// Previous conn is closed since it is a login screen extension which
 	// closes when the session starts.
-	conn2, err := cr.NewConnForTarget(ctx, chrome.MatchTargetURLPrefix(mgs.LoginScreenExtensionURLPrefix))
+	conn2, err := cr.NewConnForTarget(ctx, chrome.MatchTargetURL(mgs.LoginScreenExtensionURL))
 	if err != nil {
 		s.Fatal("Failed to connect to login screen extension on lock screen: ", err)
 	}
 	defer conn2.Close()
+
+	// Wait for the API to become available.
+	if err = conn2.WaitForExpr(ctx, `chrome.login !== undefined`); err != nil {
+		conn2.Close()
+		s.Fatal("Failed to wait for the API to be available: ", err)
+	}
 
 	unlockSessionFunc := `(password) => new Promise((resolve, reject) => {
 		chrome.login.unlockSharedSession(password, () => {

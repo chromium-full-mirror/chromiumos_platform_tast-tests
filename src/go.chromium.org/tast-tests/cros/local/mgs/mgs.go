@@ -19,21 +19,16 @@ import (
 )
 
 const (
-	// These extensions are unlisted on the Chrome Web Store but can be
-	// downloaded directly using the extension IDs.
-	// The code for the extensions can be found in the Chromium repo at
-	// chrome/test/data/extensions/api_test/login_screen_apis/.
+	// These extensions are hosted on Chrome Web Store (CWS).
 
-	// LoginScreenExtensionID is the ID for "Login screen APIs test extension".
-	LoginScreenExtensionID = "oclffehlkdgibkainkilopaalpdobkan"
-	// LoginScreenExtensionURLPrefix is the prefix of the login screen extension service
-	// worker. In MV3, URLs are not generic any more so we can only use a prefix.
-	LoginScreenExtensionURLPrefix = "chrome-extension://oclffehlkdgibkainkilopaalpdobkan/"
-	// InSessionExtensionID is the ID for "Login screen APIs in-session test extension".
-	InSessionExtensionID = "ofcpkomnogjenhfajfjadjmjppbegnad"
-	// InSessionExtensionURLPrefix is the prefix of the in-session extension service
-	// worker. In MV3, URLs are not generic any more so we can only use a prefix.
-	InSessionExtensionURLPrefix = "chrome-extension://ofcpkomnogjenhfajfjadjmjppbegnad/"
+	// LoginScreenExtensionID is the ID for the Imprivata CWS login screen extension.
+	LoginScreenExtensionID = "cdgickkdpbekbnalbmpgochbninibkko"
+	// LoginScreenExtensionURL is the URL of the Imprivata login screen extension service worker.
+	LoginScreenExtensionURL = "chrome-extension://cdgickkdpbekbnalbmpgochbninibkko/background.js"
+	// InSessionExtensionID is the ID for the Imprivata CWS in-session extension.
+	InSessionExtensionID = "omificdfgpipkkpdhbjmefgfgbppehke"
+	// InSessionExtensionURL is the URL of the Imprivata in-session extension service worker.
+	InSessionExtensionURL = "chrome-extension://omificdfgpipkkpdhbjmefgfgbppehke/background.js"
 )
 
 var (
