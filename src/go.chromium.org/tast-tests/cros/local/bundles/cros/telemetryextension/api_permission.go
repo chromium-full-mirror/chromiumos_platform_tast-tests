@@ -19,7 +19,6 @@ func init() {
 	testing.AddTest(&testing.Test{
 		Func:           APIPermission,
 		LifeCycleStage: testing.LifeCycleOwnerMonitored,
-		LacrosStatus:   testing.LacrosVariantExists,
 		Desc:           "Tests extension access permission. Test one API is sufficient because API guard is a single entry point for telemetry and diagnostics APIs. It verifies whether APIs can be called within caller context",
 		Contacts:       []string{"cros-tdm-tpe-eng@google.com"},
 		// ChromeOS > Software > Commercial (Enterprise) > OEM Services.
