@@ -304,7 +304,7 @@ func init() {
 			}, {
 				Name:              "battery_private",
 				Fixture:           fixture.DecryptProbeConfig,
-				ExtraHardwareDeps: common.UnreleasedDeviceDeps(),
+				ExtraHardwareDeps: common.UnreleasedDeviceDeps(hwdep.SkipOnModel("gothrax")),
 				Val: probeFunctionTestParam{
 					categories:           []string{"battery"},
 					allowExtraComponents: false,
@@ -319,7 +319,7 @@ func init() {
 			}, {
 				Name:              "camera_private",
 				Fixture:           fixture.DecryptProbeConfig,
-				ExtraHardwareDeps: common.UnreleasedDeviceDeps(hwdep.SkipOnModel("blacktip360")),
+				ExtraHardwareDeps: common.UnreleasedDeviceDeps(hwdep.SkipOnModel("wugtrio")),
 				Val: probeFunctionTestParam{
 					categories:           []string{"camera"},
 					allowExtraComponents: false,
