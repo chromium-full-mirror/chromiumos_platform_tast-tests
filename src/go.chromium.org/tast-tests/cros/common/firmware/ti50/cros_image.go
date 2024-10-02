@@ -998,18 +998,18 @@ func (i *CrOSImage) Time(ctx context.Context) (GSCTime, error) {
 }
 
 // UsbDeviceLinkState contains all possible USB link states the GSC can detect.
-type UsbDeviceLinkState uint
+type UsbDeviceLinkState string
 
 // USB device link states
 const (
-	UsbDisconnected UsbDeviceLinkState = iota
-	SuzyQConnected
-	SuzyQFlippedConnected
-	ServoConnected
-	ServoFlippedConnected
-	ServoSink1Connected
-	ServoSink2Connected
-	ServoSink3Connected
+	UsbDisconnected       UsbDeviceLinkState = "UsbDisconnected"
+	SuzyQConnected        UsbDeviceLinkState = "SuzyQConnected"
+	SuzyQFlippedConnected UsbDeviceLinkState = "SuzyQFlippedConnected"
+	ServoConnected        UsbDeviceLinkState = "ServoConnected"
+	ServoFlippedConnected UsbDeviceLinkState = "ServoFlippedConnected"
+	ServoSink1Connected   UsbDeviceLinkState = "ServoSink1Connected"
+	ServoSink2Connected   UsbDeviceLinkState = "ServoSink2Connected"
+	ServoSink3Connected   UsbDeviceLinkState = "ServoSink3Connected"
 )
 
 // USBADCInfo contains information about the connected USB device and raw voltages

@@ -14,16 +14,78 @@ import (
 	"go.chromium.org/tast/core/testing"
 )
 
+type ccRange struct {
+	// lowerBoundVolts is the lower end of the voltage range guaranteed to be recognized.
+	lowerBoundVolts float32
+	// upperBoundVolts is the upper end of the voltage range guaranteed to be recognized.
+	upperBoundVolts float32
+	// margin is the band outside either end of the range defined above, for which we know
+	// that no other types of cables should appear.  It is acceptable if the GSC interprets a
+	// voltage within the margin as belonging to the detection range, but it is not acceptable
+	// for the GSC interpret any voltage outside of the margin as a CCD cable.
+	margin float32
+}
+
 type gSCCCDStrapsParam struct {
-	strap         ti50.GpioStrap
+	cc1           ccRange
+	cc2           ccRange
 	expectedState ti50.UsbDeviceLinkState
+}
+
+// Voltage ranges lifted from the diagram in section "Potential Improvement: Change the Resistors"
+// in the below document:
+// https://docs.google.com/document/d/1KRKCMJG85X7cgCFhVENLpDybfO4jm9wK5Nbd4RVyC90/edit?tab=t.0#bookmark=id.77qu8h5t9siz
+
+var suzyqL = ccRange{
+	lowerBoundVolts: 0.400,
+	upperBoundVolts: 0.600,
+	margin:          0.030,
+}
+
+var suzyqH = ccRange{
+	lowerBoundVolts: 0.750,
+	upperBoundVolts: 1.120,
+	margin:          0.030,
+}
+
+var servoL = ccRange{
+	lowerBoundVolts: 0.870,
+	upperBoundVolts: 1.080,
+	// TODO(b/370810285) This margin could be too large "below", and go into the "cyan" range
+	// that we may want to guarantee is not detected as CCD.  It should be reduced to at most
+	// 140mV and GSC code adapted accordingly.
+	margin: 0.160,
+}
+
+var servoH = ccRange{
+	lowerBoundVolts: 1.530,
+	upperBoundVolts: 1.820,
+	margin:          0.200,
+}
+
+var servoSnk1 = ccRange{
+	lowerBoundVolts: 0.320,
+	upperBoundVolts: 0.600,
+	margin:          0.030,
+}
+
+var servoSnk2 = ccRange{
+	lowerBoundVolts: 0.840,
+	upperBoundVolts: 1.130,
+	margin:          0.150,
+}
+
+var servoSnk3 = ccRange{
+	lowerBoundVolts: 1.530,
+	upperBoundVolts: 2.000,
+	margin:          0.200,
 }
 
 func init() {
 	testing.AddTest(&testing.Test{
 		Func:    GSCCCDStraps,
 		Desc:    "Test that the GSC identifies all valid CCD strap configurations",
-		Timeout: 10 * time.Second,
+		Timeout: 1 * time.Minute,
 		Contacts: []string{
 			"cros-hwsec@google.com", // CrOS GSC Developers
 		},
@@ -33,47 +95,69 @@ func init() {
 		Params: []testing.Param{{
 			Name: "suzyq",
 			Val: gSCCCDStrapsParam{
-				strap:         ti50.CcdSuzyQ,
+				cc1:           suzyqH,
+				cc2:           suzyqL,
 				expectedState: ti50.SuzyQConnected,
 			},
 		}, {
 			Name: "suzyq_flipped",
 			Val: gSCCCDStrapsParam{
-				strap:         ti50.CcdSuzyQFlipped,
+				cc1:           suzyqL,
+				cc2:           suzyqH,
 				expectedState: ti50.UsbDisconnected,
 			},
 		}, {
 			Name: "servo",
 			Val: gSCCCDStrapsParam{
-				strap:         ti50.CcdServo,
+				cc1:           servoH,
+				cc2:           servoL,
 				expectedState: ti50.ServoConnected,
 			},
 		}, {
 			Name: "servo_flipped",
 			Val: gSCCCDStrapsParam{
-				strap:         ti50.CcdServoFlipped,
+				cc1:           servoL,
+				cc2:           servoH,
 				expectedState: ti50.ServoFlippedConnected,
 			},
 		}, {
 			Name: "servo_sink1",
 			Val: gSCCCDStrapsParam{
-				strap:         ti50.CcdServoSnk1,
+				cc1:           servoSnk1,
+				cc2:           servoSnk1,
 				expectedState: ti50.ServoSink1Connected,
 			},
 		}, {
 			Name: "servo_sink2",
 			Val: gSCCCDStrapsParam{
-				strap:         ti50.CcdServoSnk2,
+				cc1:           servoSnk2,
+				cc2:           servoSnk2,
 				expectedState: ti50.ServoSink2Connected,
 			},
 		}, {
 			Name: "servo_sink3",
 			Val: gSCCCDStrapsParam{
-				strap:         ti50.CcdServoSnk3,
+				cc1:           servoSnk3,
+				cc2:           servoSnk3,
 				expectedState: ti50.ServoSink3Connected,
 			},
 		}},
 	})
+}
+
+func eventsMustBe(events utils.GpioEvents, expected []utils.GpioEdge, caseStr string, s *testing.State) {
+	if len(events.Sorted) != len(expected) {
+		s.Log("Got events: ", events)
+		s.Errorf("Expected %s at %s", expected, caseStr)
+		return
+	}
+	for i := 0; i < len(expected); i++ {
+		if events.Sorted[i].Edge != expected[i] {
+			s.Log("Got events: ", events)
+			s.Errorf("Expected %s at %s", expected, caseStr)
+			return
+		}
+	}
 }
 
 func GSCCCDStraps(ctx context.Context, s *testing.State) {
@@ -81,40 +165,152 @@ func GSCCCDStraps(ctx context.Context, s *testing.State) {
 	b := utils.NewDevboardHelper(s)
 	i := ti50.MustOpenCrOSImage(ctx, b, s)
 	defer i.Close(ctx)
+
+	// Run test with voltages "in the middle" of the allowed ranges.
+	testStrapCorner(ctx, userParams.expectedState,
+		(userParams.cc1.lowerBoundVolts+userParams.cc1.upperBoundVolts)/2,
+		(userParams.cc2.lowerBoundVolts+userParams.cc2.upperBoundVolts)/2,
+		s.TestName()+" center",
+		b, i, s)
+
+	// Run test with voltages barely inside each of four corners of the allowed ranges.
+	// Ideally, we would want to test exactly at the corner, but HyperDebug has +/-.5%
+	// accuracy on its analog outputs, so in order to be sure that a failing test is not
+	// caused by HyperDebug providing a voltage just outside the nominal range, we have to
+	// stay safe.
+	testStrapCorner(ctx, userParams.expectedState,
+		userParams.cc1.lowerBoundVolts*1.005,
+		userParams.cc2.lowerBoundVolts*1.005,
+		s.TestName()+" lower left corner",
+		b, i, s)
+	testStrapCorner(ctx, userParams.expectedState,
+		userParams.cc1.upperBoundVolts*0.995,
+		userParams.cc2.lowerBoundVolts*1.005,
+		s.TestName()+" lower right corner",
+		b, i, s)
+	testStrapCorner(ctx, userParams.expectedState,
+		userParams.cc1.upperBoundVolts*0.995,
+		userParams.cc2.upperBoundVolts*0.995,
+		s.TestName()+" upper right corner",
+		b, i, s)
+	testStrapCorner(ctx, userParams.expectedState,
+		userParams.cc1.lowerBoundVolts*1.005,
+		userParams.cc2.upperBoundVolts*0.995,
+		s.TestName()+" upper left corner",
+		b, i, s)
+
+	// Test just outside each edge of the box.
+	testStrapCorner(ctx, ti50.UsbDisconnected,
+		(userParams.cc1.lowerBoundVolts+userParams.cc1.upperBoundVolts)/2,
+		(userParams.cc2.lowerBoundVolts-userParams.cc2.margin)*.995,
+		s.TestName()+" below",
+		b, i, s)
+	testStrapCorner(ctx, ti50.UsbDisconnected,
+		(userParams.cc1.lowerBoundVolts+userParams.cc1.upperBoundVolts)/2,
+		(userParams.cc2.upperBoundVolts+userParams.cc2.margin)*1.005,
+		s.TestName()+" above",
+		b, i, s)
+	testStrapCorner(ctx, ti50.UsbDisconnected,
+		(userParams.cc1.lowerBoundVolts-userParams.cc1.margin)*.995,
+		(userParams.cc2.lowerBoundVolts+userParams.cc2.upperBoundVolts)/2,
+		s.TestName()+" left",
+		b, i, s)
+	testStrapCorner(ctx, ti50.UsbDisconnected,
+		(userParams.cc1.upperBoundVolts+userParams.cc1.margin)*1.005,
+		(userParams.cc2.lowerBoundVolts+userParams.cc2.upperBoundVolts)/2,
+		s.TestName()+" right",
+		b, i, s)
+}
+
+func testStrapCorner(ctx context.Context, expectedState ti50.UsbDeviceLinkState, cc1Volts, cc2Volts float32, caseStr string, b utils.DevboardHelper, i *ti50.CrOSImage, s *testing.State) {
 	th := utils.FirmwareTestingHelper{FirmwareTestingHelperDelegate: s}
 
 	s.Log("Restarting GSC")
-	b.GpioApplyStrap(ctx, ti50.CcdDisconnected)
+	b.GpioApplyStrap(ctx, ti50.CcdDisconnected, ti50.StrapReset)
+	gpioMonitor := b.GpioMonitorStart(ctx, ti50.GpioTi50CcdModeL)
+	defer b.GpioMonitorFinish(ctx, gpioMonitor)
 	b.Reset(ctx)
 	th.MustSucceed(i.WaitUntilBooted(ctx), "GSC revives after reboot")
 
-	// Make sure that we report that we're disconnected first
-	usbAdcInfo, err := i.USBADCInfo(ctx)
-	th.MustSucceed(err, "Error communicating with GSC")
-	if usbAdcInfo.State != ti50.UsbDisconnected {
-		s.Error("Expected GSC to report CCD disconnect, but was: ", usbAdcInfo.State)
+	if b.TestbedType != ti50.GscH1Shield {
+		// The Cr50 codebase does not implement ADC reading through the console, skip and
+		// rely instead on GPIO monitoring of CCD_MODE_L to verify detection.
+
+		// Make sure that we report that we're disconnected first
+		usbAdcInfo, err := i.USBADCInfo(ctx)
+		th.MustSucceed(err, "Error communicating with GSC")
+		if usbAdcInfo.State != ti50.UsbDisconnected {
+			s.Error("Expected GSC to report CCD disconnected, but was: ", usbAdcInfo.State)
+		}
 	}
 
 	// Set the strap to test
-	b.GpioApplyStrap(ctx, userParams.strap)
+	applyCCVoltages(ctx, cc1Volts, cc2Volts, b)
 	th.MustSucceed(testing.Sleep(ctx, 2*time.Second), "Context expired while waiting for GSC to process the strap change") // GoBigSleepLint: Wait for GSC to process the strap change
 
-	// Check the we report the new USB ADC link state
-	usbAdcInfo, err = i.USBADCInfo(ctx)
-	th.MustSucceed(err, "Error communicating with GSC")
-	if usbAdcInfo.State != userParams.expectedState {
-		s.Errorf("Expected GSC to report %v state with no reboot, but was %v", userParams.expectedState, usbAdcInfo.State)
+	if b.TestbedType != ti50.GscH1Shield {
+		// The Cr50 codebase does not implement ADC reading through the console, skip and
+		// rely instead on GPIO monitoring of CCD_MODE_L to verify detection.
+
+		// Check the we report the new USB ADC link state
+		usbAdcInfo, err := i.USBADCInfo(ctx)
+		th.MustSucceed(err, "Error communicating with GSC")
+		if usbAdcInfo.State != expectedState {
+			s.Errorf("Expected GSC to report %v state with no reboot, but was %v at %s", expectedState, usbAdcInfo.State, caseStr)
+		}
+	}
+	if expectedState != ti50.UsbDisconnected {
+		eventsMustBe(b.GpioMonitorRead(ctx, gpioMonitor), []utils.GpioEdge{utils.GpioEdgeFalling}, caseStr, s)
+	} else {
+		eventsMustBe(b.GpioMonitorRead(ctx, gpioMonitor), []utils.GpioEdge{}, caseStr, s)
 	}
 
 	// Reboot the device again without changing the strap
 	s.Log("Restarting GSC without changing CCD strap")
+	b.GpioApplyStrap(ctx, ti50.StrapReset)
+	b.GpioMonitorRead(ctx, gpioMonitor) // Discard "artificial" rising edge upon reset.
 	b.Reset(ctx)
 	th.MustSucceed(i.WaitUntilBooted(ctx), "GSC revives after reboot")
 
-	// Check that we read the correct strapping
-	usbAdcInfo, err = i.USBADCInfo(ctx)
-	th.MustSucceed(err, "Error communicating with GSC")
-	if usbAdcInfo.State != userParams.expectedState {
-		s.Errorf("Expected GSC to report %v state after reboot, but was %v", userParams.expectedState, usbAdcInfo.State)
+	if b.TestbedType != ti50.GscH1Shield {
+		// The Cr50 codebase does not implement ADC reading through the console, skip and
+		// rely instead on GPIO monitoring of CCD_MODE_L to verify detection.
+
+		// Check that we read the correct strapping
+		usbAdcInfo, err := i.USBADCInfo(ctx)
+		th.MustSucceed(err, "Error communicating with GSC")
+		if usbAdcInfo.State != expectedState {
+			s.Errorf("Expected GSC to report %v state after reboot, but was %v at %s", expectedState, usbAdcInfo.State, caseStr)
+		}
 	}
+	if expectedState != ti50.UsbDisconnected {
+		eventsMustBe(b.GpioMonitorRead(ctx, gpioMonitor), []utils.GpioEdge{utils.GpioEdgeFalling}, caseStr, s)
+	} else {
+		eventsMustBe(b.GpioMonitorRead(ctx, gpioMonitor), []utils.GpioEdge{}, caseStr, s)
+	}
+
+	// Simulate disconnection of CCD cable.
+	b.GpioApplyStrap(ctx, ti50.CcdDisconnected)
+	th.MustSucceed(testing.Sleep(ctx, 2*time.Second), "Context expired while waiting for GSC to process the strap change") // GoBigSleepLint: Wait for GSC to process the strap change
+
+	if b.TestbedType != ti50.GscH1Shield {
+		// The Cr50 codebase does not implement ADC reading through the console, skip and
+		// rely instead on GPIO monitoring of CCD_MODE_L to verify detection.
+
+		usbAdcInfo, err := i.USBADCInfo(ctx)
+		th.MustSucceed(err, "Error communicating with GSC")
+		if usbAdcInfo.State != ti50.UsbDisconnected {
+			s.Error("Expected GSC to report CCD disconnected, but was: ", usbAdcInfo.State)
+		}
+	}
+	if expectedState != ti50.UsbDisconnected {
+		eventsMustBe(b.GpioMonitorRead(ctx, gpioMonitor), []utils.GpioEdge{utils.GpioEdgeRising}, caseStr, s)
+	} else {
+		eventsMustBe(b.GpioMonitorRead(ctx, gpioMonitor), []utils.GpioEdge{}, caseStr, s)
+	}
+}
+
+func applyCCVoltages(ctx context.Context, cc1Volts, cc2Volts float32, b utils.DevboardHelper) {
+	b.GpioAnalogSet(ctx, ti50.GpioTi50CC1, cc1Volts)
+	b.GpioAnalogSet(ctx, ti50.GpioTi50CC2, cc2Volts)
 }

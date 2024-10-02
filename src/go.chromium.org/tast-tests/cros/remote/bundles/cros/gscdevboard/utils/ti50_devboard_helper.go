@@ -276,6 +276,14 @@ func (h DevboardHelper) GpioSetMode(ctx context.Context, g ti50.GpioName, m Gpio
 	}
 }
 
+// GpioAnalogSet sets the voltage of a particular GPIO pin already in analog output mode.  If
+// there are any errors, set a fatal condition on the test state
+func (h DevboardHelper) GpioAnalogSet(ctx context.Context, g ti50.GpioName, volts float32) {
+	if _, err := h.PlainCommand(ctx, "gpio", "analog-write", string(g), strconv.FormatFloat(float64(volts), 'f', 3, 32)); err != nil {
+		h.Fatalf("Failed to set gpio %s: %s", g, err)
+	}
+}
+
 // GpioMultiSet configures a gpio pin in a particular logic level, drive mode, and weak pull
 // mode.  If there are any errors, set a fatal condition on the test state
 func (h DevboardHelper) GpioMultiSet(ctx context.Context, g ti50.GpioName, val bool, m GpioMode, p GpioPullMode) {

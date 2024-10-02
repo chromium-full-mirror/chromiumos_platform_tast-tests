@@ -197,6 +197,10 @@ const (
 	GpioTi50UartEcTxDbgRx GpioName = "UART_EC_TX_DBG_RX"
 	// GpioTi50UartDbgTxEcRx is the UART signal from Ti50 to EC.
 	GpioTi50UartDbgTxEcRx GpioName = "UART_DBG_TX_EC_RX"
+	// GpioTi50CC1 is one of the analog USB-C signals used for detection/negotiation.
+	GpioTi50CC1 GpioName = "CC1"
+	// GpioTi50CC2 is the other analog USB-C signal used for detection/negotiation.
+	GpioTi50CC2 GpioName = "CC2"
 )
 
 const (
