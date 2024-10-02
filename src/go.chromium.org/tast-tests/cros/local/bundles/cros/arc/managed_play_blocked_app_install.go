@@ -129,10 +129,6 @@ func ManagedPlayBlockedAppInstall(ctx context.Context, s *testing.State) {
 			return rl.Retry("wait for provisioning", err)
 		}
 
-		defer a.DumpUIHierarchyOnError(cleanupCtx, s.OutDir(), func() bool {
-			return s.HasError() || retErr != nil
-		})
-
 		d, err := a.NewUIDevice(ctx)
 		if err != nil {
 			return rl.Exit("initialize UI Automator", err)

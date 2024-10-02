@@ -185,7 +185,6 @@ func EnsurePlayStoreNotEmpty(ctx context.Context, tconn *chrome.TestConn, cr *ch
 // EnsurePlayStoreState ensures that the asset browser has expected state.
 func EnsurePlayStoreState(ctx context.Context, tconn *chrome.TestConn, cr *chrome.Chrome, a *arc.ARC, d *ui.Device, outDir string, runID int, shouldBeEmpty bool) (retErr error) {
 	const (
-		searchBarTextStart = "Search.*apps.*"
 		emptyPlayStoreText = "No results found."
 	)
 
@@ -200,6 +199,7 @@ func EnsurePlayStoreState(ctx context.Context, tconn *chrome.TestConn, cr *chrom
 			return nil
 		}
 
+		a.DumpUIHierarchyOnError(cleanupCtx, outDir, func() bool { return true })
 		faillog.SaveScreenshotToFileOnError(cleanupCtx, cr, outDir, func() bool { return true }, fmt.Sprintf("play_store_%d_%d.png", runID, attempts))
 
 		testing.ContextLog(ctx, message)
@@ -229,10 +229,10 @@ func EnsurePlayStoreState(ctx context.Context, tconn *chrome.TestConn, cr *chrom
 				return testing.PollBreak(err)
 			}
 
-			// This is to ensure that we're looking at a normal asset browser UI.
-			if err := d.Object(ui.TextMatches(searchBarTextStart)).Exists(ctx); err != nil {
-				testing.ContextLog(ctx, "Search bar is missing")
-				return errors.Wrap(err, "Search bar is missing")
+			if err := d.Object(ui.Text("Meet the Search tab")).Exists(ctx); err == nil {
+				if err := d.Object(ui.Text("Search")).Click(ctx); err != nil {
+					return errors.Wrap(err, "failed to click Search tab")
+				}
 			}
 
 			// Play Store is considered empty if shows the message when there are no available apps.
@@ -259,12 +259,12 @@ func EnsurePlayStoreState(ctx context.Context, tconn *chrome.TestConn, cr *chrom
 // IsAnyAppInCatalog finds an app icon in Play Store catalog view.
 func IsAnyAppInCatalog(ctx context.Context, d *ui.Device) bool {
 	selectors := [][]ui.SelectorOption{
-		{ui.DescriptionStartsWith("Image of app or game"), ui.ClassName("android.view.View")},
-		{ui.ResourceID("com.android.vending:id/mini_blurb"), ui.ClassName("android.widget.FrameLayout")},
-		{ui.ResourceID("com.android.vending:id/play_card"), ui.ClassName("android.view.ViewGroup")},
-		{ui.DescriptionStartsWith("Install"), ui.ClassName("android.view.View")}, // 36.7.21-21
-		{ui.Text("Games"), ui.ClassName("android.widget.TextView")},              // 36.7.21-21
-		{ui.Text("Apps"), ui.ClassName("android.widget.TextView")},               // 36.7.21-21
+		{ui.DescriptionStartsWith("Image of app or game")},
+		{ui.ResourceID("com.android.vending:id/mini_blurb")},
+		{ui.ResourceID("com.android.vending:id/play_card")},
+		{ui.DescriptionContains("Install")},
+		{ui.Text("Install")},
+		{ui.Text("Apps")},
 	}
 
 	for _, selector := range selectors {
