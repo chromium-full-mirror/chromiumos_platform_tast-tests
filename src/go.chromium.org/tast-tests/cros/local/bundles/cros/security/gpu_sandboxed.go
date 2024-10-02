@@ -16,9 +16,8 @@ import (
 
 func init() {
 	testing.AddTest(&testing.Test{
-		Func:         GPUSandboxed,
-		LacrosStatus: testing.LacrosVariantExists,
-		Desc:         "Verify GPU sandbox status",
+		Func: GPUSandboxed,
+		Desc: "Verify GPU sandbox status",
 		Contacts: []string{
 			"chromeos-hardening@google.com",
 		},
@@ -26,15 +25,7 @@ func init() {
 		BugComponent: "b:1040049",
 		SoftwareDeps: []string{"chrome", "gpu_sandboxing"},
 		Attr:         []string{"group:mainline"},
-		Params: []testing.Param{{
-			Fixture: "chromeLoggedIn",
-			Val:     browser.TypeAsh,
-		}, {
-			Name:              "lacros",
-			Fixture:           "lacros",
-			ExtraSoftwareDeps: []string{"lacros"},
-			Val:               browser.TypeLacros,
-		}},
+		Fixture:      "chromeLoggedIn",
 	})
 }
 
@@ -45,7 +36,7 @@ func GPUSandboxed(ctx context.Context, s *testing.State) {
 	)
 
 	cr := s.FixtValue().(chrome.HasChrome).Chrome()
-	conn, _, closeBrowser, err := browserfixt.SetUpWithURL(ctx, cr, s.Param().(browser.Type), url)
+	conn, _, closeBrowser, err := browserfixt.SetUpWithURL(ctx, cr, browser.TypeAsh, url)
 	if err != nil {
 		s.Fatal("Failed to create a new connection: ", err)
 	}
