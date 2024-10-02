@@ -60,7 +60,8 @@ var ashPipTests = pipTestParams{
 	pipType: ashPip,
 	tests: []pipTestFunc{
 		testPipPinchResize,
-		testPipDoubleTapToResize,
+		testPipDoubleTapToEnlarge,
+		testPipDoubleTapToOriginalSize,
 		testPipTuck,
 		testPipMove,
 		testPipExpandViaMenu,
@@ -74,7 +75,8 @@ var lacrosPipTests = pipTestParams{
 	pipType: lacrosPip,
 	tests: []pipTestFunc{
 		testPipPinchResize,
-		testPipDoubleTapToResize,
+		testPipDoubleTapToEnlarge,
+		testPipDoubleTapToOriginalSize,
 		testPipTuck,
 		testPipMove,
 		testPipExpandViaMenu,
@@ -88,7 +90,8 @@ var arcPipTests = pipTestParams{
 	pipType: arcPip,
 	tests: []pipTestFunc{
 		testPipPinchResize,
-		testPipDoubleTapToResize,
+		testPipDoubleTapToEnlarge,
+		testPipDoubleTapToOriginalSize,
 		testPipTuck,
 		testPipMove,
 		testPipExpandViaMenu,
@@ -246,35 +249,14 @@ func Pip(ctx context.Context, s *testing.State) {
 }
 
 func testPipPinchResize(ctx context.Context, tconn *chrome.TestConn, ac *uiauto.Context, dispInfo *display.Info, tsw *input.TouchscreenEventWriter) error {
-	mtw, err := tsw.NewMultiTouchWriter(2)
-	if err != nil {
-		return errors.Wrap(err, "failed to get touch event writer")
-	}
-	defer mtw.Close()
-
 	window, err := getPIPWindow(ctx, tconn)
 	if err != nil {
 		return errors.Wrap(err, "failed to get PiP window")
 	}
 	beforeBounds := window.BoundsInRoot
 
-	// Perform pinch gesture on the PiP window.
-	tcc := tsw.NewTouchCoordConverter(dispInfo.Bounds.Size())
-	offset := coords.NewPoint(beforeBounds.Width/4, beforeBounds.Height/4)
-
-	rightStartX, rightStartY := tcc.ConvertLocation(beforeBounds.CenterPoint().Add(offset))
-	rightEndX, rightEndY := tcc.ConvertLocation(beforeBounds.CenterPoint().Add(offset).Add(offset))
-
-	leftStartX, leftStartY := tcc.ConvertLocation(beforeBounds.CenterPoint().Sub(offset))
-	leftEndX, leftEndY := tcc.ConvertLocation(beforeBounds.CenterPoint().Sub(offset).Sub(offset))
-
-	// Here, `Zoom()` is not used. With `Zoom()`, the zoom-in pinch
-	// gesture begins with the two fingers in the exact same location,
-	// and therefore the gesture is not correctly registered in the
-	// client side.
-	if err := mtw.Pinch(ctx, leftStartX, leftStartY, leftEndX, leftEndY,
-		rightStartX, rightStartY, rightEndX, rightEndY, time.Second); err != nil {
-		return errors.Wrap(err, "failed to perform pinch zoom")
+	if err := pinchPipWindowToEnlarge(ctx, tconn, dispInfo); err != nil {
+		return errors.Wrap(err, "failed to pinch PiP window")
 	}
 
 	// Confirm that the window has resized due to the gesture.
@@ -292,27 +274,26 @@ func testPipPinchResize(ctx context.Context, tconn *chrome.TestConn, ac *uiauto.
 	return nil
 }
 
-// testPipDoubleTapToResize verifies that PiP gets enlarged as expected via the double-tap-to-resize feature.
-// TODO(b/314875724): Add more test cases for this feature.
-func testPipDoubleTapToResize(ctx context.Context, tconn *chrome.TestConn, ac *uiauto.Context, dispInfo *display.Info, tsw *input.TouchscreenEventWriter) error {
+// testPipDoubleTapToEnlarge verifies that PiP gets enlarged as expected via the double-tap-to-resize feature.
+func testPipDoubleTapToEnlarge(ctx context.Context, tconn *chrome.TestConn, ac *uiauto.Context, dispInfo *display.Info, tsw *input.TouchscreenEventWriter) error {
 	window, err := getPIPWindow(ctx, tconn)
 	if err != nil {
 		return errors.Wrap(err, "failed to get PiP window")
 	}
 	beforeBounds := window.BoundsInRoot
-	// Target the upper part of the PiP window so we don't click on any button accidentally.
-	clickPoint := beforeBounds.CenterPoint().Sub(coords.NewPoint(0, beforeBounds.Height/4))
-	if err := mouse.DoubleClick(tconn, clickPoint, 100*time.Millisecond)(ctx); err != nil {
-		return errors.Wrap(err, "failed to double-click PiP")
-	}
 
 	// Confirm that the window has been enlarged via the double-tap-to-resize feature.
 	return testing.Poll(ctx, func(ctx context.Context) error {
+		if err := waitUntilPipWindowIsEnlargedByDoubleTap(ctx, tconn); err != nil {
+			return errors.Wrap(err, "failed to wait until the pip window is enlarged")
+		}
+
 		window, err = getPIPWindow(ctx, tconn)
 		if err != nil {
 			return errors.Wrap(err, "failed to get PiP window")
 		}
 		afterBounds := window.BoundsInRoot
+
 		if beforeBounds.Width >= afterBounds.Width {
 			return errors.Wrapf(err, "unexpected PiP window width; want: width>%v, actual: width=%v", beforeBounds.Width, afterBounds.Width)
 		}
@@ -320,7 +301,54 @@ func testPipDoubleTapToResize(ctx context.Context, tconn *chrome.TestConn, ac *u
 			return errors.Wrapf(err, "unexpected PiP window height; want: height>%v, actual: height=%v", beforeBounds.Height, afterBounds.Height)
 		}
 		return nil
-	}, &testing.PollOptions{Timeout: 10 * time.Second})
+	}, &testing.PollOptions{Timeout: 10 * time.Second, Interval: 500 * time.Millisecond})
+}
+
+// testPipDoubleTapToOriginalSize verifies that PiP gets shrunk to the original size via the double-tap-to-resize feature.
+func testPipDoubleTapToOriginalSize(ctx context.Context, tconn *chrome.TestConn, ac *uiauto.Context, dispInfo *display.Info, tsw *input.TouchscreenEventWriter) error {
+	// First, change the PiP window size using pinch.
+	if err := pinchPipWindowToEnlarge(ctx, tconn, dispInfo); err != nil {
+		return errors.Wrap(err, "failed to pinch PiP window")
+	}
+
+	window, err := getPIPWindow(ctx, tconn)
+	if err != nil {
+		return errors.Wrap(err, "failed to get PiP window")
+	}
+	beforeBounds := window.BoundsInRoot
+
+	// Double tap to enlarge the PiP window to the max size.
+	if err := waitUntilPipWindowIsEnlargedByDoubleTap(ctx, tconn); err != nil {
+		return errors.Wrap(err, "failed to wait until the pip window is enlarged")
+	}
+
+	// Confirm that the window has been shrunk to original size via the double-tap-to-resize feature.
+	return testing.Poll(ctx, func(ctx context.Context) error {
+		window, err := getPIPWindow(ctx, tconn)
+		if err != nil {
+			return errors.Wrap(err, "failed to get PiP window")
+		}
+		enlargedBounds := window.BoundsInRoot
+		// Target the upper part of the PiP window so we don't click on any button accidentally.
+		clickPoint := enlargedBounds.CenterPoint().Sub(coords.NewPoint(0, enlargedBounds.Height/4))
+
+		if err := mouse.DoubleClick(tconn, clickPoint, 100*time.Millisecond)(ctx); err != nil {
+			return errors.Wrap(err, "failed to double-click PiP")
+		}
+		window, err = getPIPWindow(ctx, tconn)
+		if err != nil {
+			return errors.Wrap(err, "failed to get PiP window")
+		}
+		afterBounds := window.BoundsInRoot
+
+		if beforeBounds.Width != afterBounds.Width {
+			return errors.Wrapf(err, "unexpected PiP window width; want: width=%v, actual: width=%v", beforeBounds.Width, afterBounds.Width)
+		}
+		if beforeBounds.Height != afterBounds.Height {
+			return errors.Wrapf(err, "unexpected PiP window height; want: height=%v, actual: height=%v", beforeBounds.Height, afterBounds.Height)
+		}
+		return nil
+	}, &testing.PollOptions{Timeout: 10 * time.Second, Interval: 600 * time.Millisecond})
 }
 
 func testPipTuck(ctx context.Context, tconn *chrome.TestConn, ac *uiauto.Context, dispInfo *display.Info, tsw *input.TouchscreenEventWriter) error {
@@ -636,4 +664,75 @@ func waitUntilPipWindowIsGone(ctx context.Context, tconn *chrome.TestConn) error
 		}
 		return nil
 	}, &testing.PollOptions{Timeout: 10 * time.Second})
+}
+
+// waitUntilPipWindowIsEnlargedByDoubleTap makes double-tapping and waits for the PiP become the max size.
+func waitUntilPipWindowIsEnlargedByDoubleTap(ctx context.Context, tconn *chrome.TestConn) error {
+	window, err := getPIPWindow(ctx, tconn)
+	if err != nil {
+		return errors.Wrap(err, "failed to get PiP window")
+	}
+	beforeBounds := window.BoundsInRoot
+
+	// Target the upper part of the PiP window so we don't click on any button accidentally.
+	clickPoint := beforeBounds.CenterPoint().Sub(coords.NewPoint(0, beforeBounds.Height/4))
+	if err := mouse.DoubleClick(tconn, clickPoint, 100*time.Millisecond)(ctx); err != nil {
+		return errors.Wrap(err, "failed to double-click PiP")
+	}
+
+	//GoBigSleepLint: Waiting needed for first comparison
+	testing.Sleep(ctx, 100*time.Millisecond)
+	return testing.Poll(ctx, func(ctx context.Context) error {
+		window, err := getPIPWindow(ctx, tconn)
+		if err != nil {
+			return errors.Wrap(err, "failed to get PiP window")
+		}
+		afterBounds := window.BoundsInRoot
+
+		// Check a difference of the previous bound and the new bound.
+		// If there's no more difference, the PiP should already be at the max size.
+		if beforeBounds.Width != afterBounds.Width || beforeBounds.Height != afterBounds.Height {
+			beforeBounds.Width = afterBounds.Width
+			beforeBounds.Height = afterBounds.Height
+			return errors.Wrapf(err, "the PiP window is not enlarged enough")
+		}
+		return nil
+	}, &testing.PollOptions{Timeout: 10 * time.Second, Interval: 100 * time.Millisecond})
+}
+
+
+// pinchPipWindowToEnlarge pinch the PiP window to enlarge.
+func pinchPipWindowToEnlarge(ctx context.Context, tconn *chrome.TestConn, dispInfo *display.Info) error {
+	window, err := getPIPWindow(ctx, tconn)
+	if err != nil {
+		return errors.Wrap(err, "failed to get PiP window")
+	}
+	beforeBounds := window.BoundsInRoot
+
+	tsw, err := input.Touchscreen(ctx)
+	if err != nil {
+		return errors.Wrap(err, "failed to get touchscreen event writer")
+	}
+	defer tsw.Close(ctx)
+
+	mtw, err := tsw.NewMultiTouchWriter(2)
+	if err != nil {
+		return errors.Wrap(err, "failed to get touch event writer")
+	}
+	defer mtw.Close()
+
+	tcc := tsw.NewTouchCoordConverter(dispInfo.Bounds.Size())
+	offset := coords.NewPoint(beforeBounds.Width/4, beforeBounds.Height/4)
+	rightStartX, rightStartY := tcc.ConvertLocation(beforeBounds.CenterPoint().Add(offset))
+	rightEndX, rightEndY := tcc.ConvertLocation(beforeBounds.CenterPoint().Add(offset).Add(offset))
+	leftStartX, leftStartY := tcc.ConvertLocation(beforeBounds.CenterPoint().Sub(offset))
+	leftEndX, leftEndY := tcc.ConvertLocation(beforeBounds.CenterPoint().Sub(offset).Sub(offset))
+	if err := mtw.Pinch(ctx, leftStartX, leftStartY, leftEndX, leftEndY,
+		rightStartX, rightStartY, rightEndX, rightEndY, time.Second); err != nil {
+		return errors.Wrap(err, "failed to perform pinch zoom")
+	}
+	if err := mtw.End(); err != nil {
+		return errors.Wrap(err, "failed to end pinch zoom")
+	}
+	return nil
 }
