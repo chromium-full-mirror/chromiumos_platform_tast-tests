@@ -34,10 +34,9 @@ import (
 
 func init() {
 	testing.AddTest(&testing.Test{
-		Func:         ExpiredCert,
-		LacrosStatus: testing.LacrosVariantExists,
-		Desc:         "Tests that a printer with an expired SSL certificate fails print jobs and propagates the error to chrome",
-		Contacts:     []string{"project-bolton@google.com"},
+		Func:     ExpiredCert,
+		Desc:     "Tests that a printer with an expired SSL certificate fails print jobs and propagates the error to chrome",
+		Contacts: []string{"project-bolton@google.com"},
 		Attr: []string{
 			"group:paper-io",
 			"paper-io_printing",
@@ -49,18 +48,7 @@ func init() {
 		SoftwareDeps: []string{"chrome", "cups"},
 		HardwareDeps: hwdep.D(pre.PrinterSkipUnstableModels),
 		Data:         []string{"localhost.key", "localhost.crt"},
-		Params: []testing.Param{
-			{
-				Val:     browser.TypeAsh,
-				Fixture: "chromeLoggedIn",
-			},
-			{
-				Name:              "lacros",
-				Val:               browser.TypeLacros,
-				ExtraSoftwareDeps: []string{"lacros"},
-				Fixture:           "lacros",
-			},
-		},
+		Fixture:      "chromeLoggedIn",
 	})
 }
 
@@ -73,7 +61,6 @@ func ExpiredCert(ctx context.Context, s *testing.State) {
 	ctx, cancel := ctxutil.Shorten(ctx, 5*time.Second)
 	defer cancel()
 
-	bt := s.Param().(browser.Type)
 	cr := s.FixtValue().(chrome.HasChrome).Chrome()
 
 	tconn, err := cr.TestAPIConn(ctx)
@@ -92,7 +79,7 @@ func ExpiredCert(ctx context.Context, s *testing.State) {
 	fsutil.CopyFile(s.DataPath("localhost.key"), filepath.Join(tmpDir, "localhost.key"))
 
 	s.Log("Installing printer")
-	if err := printer.ResetCups(ctx, /*usePrintscanmgr=*/false); err != nil {
+	if err := printer.ResetCups(ctx, false /*usePrintscanmgr*/); err != nil {
 		s.Fatal("Failed to reset cupsd: ", err)
 	}
 
@@ -143,8 +130,8 @@ func ExpiredCert(ctx context.Context, s *testing.State) {
 		s.Fatal("Failed to clear initial printing history: ", err)
 	}
 
-	// Create a browser (either ash or lacros, based on browser type).
-	br, closeBrowser, err := browserfixt.SetUp(ctx, cr, bt)
+	// Create a browser.
+	br, closeBrowser, err := browserfixt.SetUp(ctx, cr, browser.TypeAsh)
 	if err != nil {
 		s.Fatal("Failed to launch browser: ", err)
 	}
