@@ -37,11 +37,20 @@ func init() {
 		SoftwareDeps: []string{"android_vm", "chrome"},
 		Fixture:      "arcBooted",
 		Timeout:      8 * time.Minute,
+		Params: []testing.Param{
+			{Val: false},
+			{
+				Name:      "betty_only",
+				ExtraAttr: []string{"hw_agnostic_vm_stable"},
+				Val:       true,
+			},
+		},
 	})
 }
 
 func WMResizableClamshell(ctx context.Context, s *testing.State) {
-	wm.SetupAndRunTestCases(ctx, s, false, []wm.TestCase{
+	vmOnly := s.Param().(bool)
+	testCases := []wm.TestCase{
 		{
 			// resizable/clamshell: default launch behavior
 			Name: "RC01_launch",
@@ -88,11 +97,6 @@ func WMResizableClamshell(ctx context.Context, s *testing.State) {
 			Func: wmRC09,
 		},
 		{
-			// resizable/clamshell: font size change
-			Name: "RC10_font_size_change",
-			Func: wmRC10,
-		},
-		{
 			// resizable/clamshell: hide Shelf when app maximized
 			Name: "RC12_hide_Shelf_when_app_maximized",
 			Func: wmRC12,
@@ -117,12 +121,25 @@ func WMResizableClamshell(ctx context.Context, s *testing.State) {
 			Name: "RC17_font_size_change",
 			Func: wmRC17,
 		},
-		{
-			// resizable/clamshell: snap to half screen
-			Name: "RC22_split_screen",
-			Func: wmRC22,
-		},
-	})
+	}
+	if vmOnly {
+		// Following tests are flaky on real devices.
+		testCases = []wm.TestCase{
+			// TODO(b/371072099): Stabilize the case on real devices.
+			{
+				// resizable/clamshell: font size change
+				Name: "RC10_font_size_change",
+				Func: wmRC10,
+			},
+			// TODO(b/371072120): Stabilize the case on real devices.
+			{
+				// resizable/clamshell: snap to half screen
+				Name: "RC22_split_screen",
+				Func: wmRC22,
+			},
+		}
+	}
+	wm.SetupAndRunTestCases(ctx, s, false, testCases)
 }
 
 // wmRC01 covers resizable/clamshell default launch behavior.
