@@ -44,7 +44,6 @@ var japaneseTestData = "wagahai wa nekodearu. na ma e wa mada nai. doko de uma r
 func init() {
 	testing.AddTest(&testing.Test{
 		Func:         PhysicalKeyboardTypingPerf,
-		LacrosStatus: testing.LacrosVariantExists,
 		Desc:         "Checks the physical keyboard typing performance",
 		Contacts:     []string{"essential-inputs-gardener-oncall@google.com", "essential-inputs-team@google.com"},
 		BugComponent: "b:95887",

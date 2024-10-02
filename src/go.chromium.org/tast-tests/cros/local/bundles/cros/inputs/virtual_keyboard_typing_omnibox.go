@@ -31,7 +31,6 @@ import (
 func init() {
 	testing.AddTest(&testing.Test{
 		Func:         VirtualKeyboardTypingOmnibox,
-		LacrosStatus: testing.LacrosVariantExists,
 		Desc:         "Checks that the virtual keyboard works in Chrome browser omnibox",
 		Contacts:     []string{"essential-inputs-gardener-oncall@google.com", "essential-inputs-team@google.com"},
 		BugComponent: "b:95887",
@@ -69,30 +68,6 @@ func init() {
 				ExtraHardwareDeps: hwdep.D(pre.InputsUnstableModels),
 				ExtraAttr:         []string{"informational"},
 				ExtraSearchFlags:  util.IMESearchFlags([]ime.InputMethod{ime.EnglishUS, ime.Japanese, ime.Arabic}),
-			},
-			{
-				Name:              "lacros",
-				Fixture:           fixture.LacrosTabletVK,
-				ExtraHardwareDeps: hwdep.D(pre.InputsStableModels),
-				Val:               []ime.InputMethod{ime.EnglishUS, ime.Japanese, ime.ChinesePinyin},
-				ExtraSoftwareDeps: []string{"lacros", "lacros_stable"},
-				ExtraSearchFlags:  util.IMESearchFlags([]ime.InputMethod{ime.EnglishUS, ime.Japanese, ime.ChinesePinyin}),
-			},
-			{
-				Name:              "guest_lacros",
-				Fixture:           fixture.LacrosTabletVKInGuest,
-				Val:               []ime.InputMethod{ime.EnglishUSWithInternationalKeyboard, ime.JapaneseWithUSKeyboard, ime.Korean},
-				ExtraHardwareDeps: hwdep.D(pre.InputsStableModels),
-				ExtraSoftwareDeps: []string{"lacros", "lacros_stable"},
-				ExtraSearchFlags:  util.IMESearchFlags([]ime.InputMethod{ime.EnglishUSWithInternationalKeyboard, ime.JapaneseWithUSKeyboard, ime.Korean}),
-			},
-			{
-				Name:              "a11y_lacros",
-				Fixture:           fixture.LacrosClamshellVK,
-				Val:               []ime.InputMethod{ime.EnglishUK, ime.AlphanumericWithJapaneseKeyboard, ime.Arabic},
-				ExtraHardwareDeps: hwdep.D(pre.InputsStableModels),
-				ExtraSoftwareDeps: []string{"lacros", "lacros_stable"},
-				ExtraSearchFlags:  util.IMESearchFlags([]ime.InputMethod{ime.EnglishUK, ime.AlphanumericWithJapaneseKeyboard, ime.Arabic}),
 			},
 		},
 	})

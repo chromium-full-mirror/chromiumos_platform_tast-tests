@@ -31,7 +31,6 @@ import (
 func init() {
 	testing.AddTest(&testing.Test{
 		Func:         VirtualKeyboardMultitouch,
-		LacrosStatus: testing.LacrosVariantExists,
 		Desc:         "Checks typing on virtual keyboard with multiple simultaneous touches",
 		Contacts:     []string{"essential-inputs-gardener-oncall@google.com", "essential-inputs-team@google.com"},
 		BugComponent: "b:95887",
@@ -47,17 +46,7 @@ func init() {
 				"screenplay-bbe796e7-250a-4850-8007-351fc172c62a",
 			}),
 		Timeout: 5 * time.Minute,
-		Params: []testing.Param{
-			{
-				Fixture: fixture.TabletVK,
-			},
-			{
-				Name:              "lacros",
-				Fixture:           fixture.LacrosTabletVK,
-				ExtraSoftwareDeps: []string{"lacros", "lacros_stable"},
-				ExtraAttr:         []string{"informational"},
-			},
-		},
+		Fixture: fixture.TabletVK,
 	})
 }
 

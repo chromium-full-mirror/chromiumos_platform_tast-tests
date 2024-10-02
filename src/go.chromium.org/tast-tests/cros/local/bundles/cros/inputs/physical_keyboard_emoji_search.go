@@ -39,16 +39,7 @@ func init() {
 				"screenplay-48fd8e95-731f-49a3-9658-e0388692cb98",
 				"screenplay-b8443fd1-891d-4b3b-8f0d-f3be50b46dc7",
 			}),
-		Params: []testing.Param{
-			{
-				Fixture: fixture.ClamshellNonVK,
-			},
-			{
-				Name:              "lacros",
-				Fixture:           fixture.LacrosClamshellNonVK,
-				ExtraSoftwareDeps: []string{"lacros", "lacros_stable"},
-			},
-		},
+		Fixture: fixture.ClamshellNonVK,
 	})
 }
 

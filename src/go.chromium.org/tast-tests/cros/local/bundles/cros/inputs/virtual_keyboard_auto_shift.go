@@ -34,7 +34,7 @@ func init() {
 		Desc:         "Checks that auto shift feature of virtual keyboard",
 		Contacts:     []string{"essential-inputs-gardener-oncall@google.com", "essential-inputs-team@google.com"},
 		BugComponent: "b:95887",
-		Attr:         []string{"group:mainline", "group:input-tools", "group:hw_agnostic"},
+		Attr:         []string{"group:mainline", "group:input-tools", "group:hw_agnostic", "group:input-tools-upstream"},
 		SoftwareDeps: []string{"inputs_deps", "chrome", "google_virtual_keyboard"},
 		HardwareDeps: hwdep.D(pre.InputsStableModels),
 		SearchFlags: util.SearchFlagsWithIMEAndScreenPlay(
@@ -48,19 +48,8 @@ func init() {
 				"screenplay-b490f01c-aa6c-4b62-a00a-ac85ed19769b",
 			}),
 		Timeout: 5 * time.Minute,
-		Params: []testing.Param{
-			{
-				// Auto-shift is primarily designed for tablet mode.
-				Fixture:   fixture.TabletVKRestart,
-				ExtraAttr: []string{"group:input-tools-upstream"},
-			},
-			{
-				Name:              "lacros",
-				Fixture:           fixture.LacrosTabletVKRestart,
-				ExtraAttr:         []string{"group:input-tools-upstream"},
-				ExtraSoftwareDeps: []string{"lacros", "lacros_stable"},
-			},
-		},
+		// Auto-shift is primarily designed for tablet mode.
+		Fixture: fixture.TabletVKRestart,
 	})
 }
 

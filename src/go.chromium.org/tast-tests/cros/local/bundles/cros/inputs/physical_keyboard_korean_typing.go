@@ -32,7 +32,7 @@ func init() {
 		Desc:         "Checks that physical keyboard can perform basic typing in korean",
 		Contacts:     []string{"essential-inputs-gardener-oncall@google.com", "essential-inputs-team@google.com"},
 		BugComponent: "b:95887",
-		Attr:         []string{"group:mainline", "group:input-tools", "group:hw_agnostic"},
+		Attr:         []string{"group:mainline", "group:input-tools", "group:hw_agnostic", "group:input-tools-upstream"},
 		SoftwareDeps: []string{"inputs_deps", "chrome", "chrome_internal"},
 		SearchFlags: util.SearchFlagsWithIMEAndScreenPlay(
 			[]ime.InputMethod{ime.Korean},
@@ -43,18 +43,7 @@ func init() {
 			}),
 		HardwareDeps: hwdep.D(pre.InputsStableModels),
 		Timeout:      12 * time.Minute,
-		Params: []testing.Param{
-			{
-				Fixture:   fixture.ClamshellNonVK,
-				ExtraAttr: []string{"group:input-tools-upstream"},
-			},
-			{
-				Name:              "lacros",
-				Fixture:           fixture.LacrosClamshellNonVK,
-				ExtraSoftwareDeps: []string{"lacros", "lacros_stable"},
-				ExtraAttr:         []string{"informational"},
-			},
-		},
+		Fixture:      fixture.ClamshellNonVK,
 	})
 }
 
