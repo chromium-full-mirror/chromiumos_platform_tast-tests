@@ -22,9 +22,8 @@ import (
 
 func init() {
 	testing.AddTest(&testing.Test{
-		Func:         CallAdaptiveChargingModel,
-		LacrosStatus: testing.LacrosVariantExists,
-		Desc:         "Check the AdaptiveCharging model",
+		Func: CallAdaptiveChargingModel,
+		Desc: "Check the AdaptiveCharging model",
 		Contacts: []string{
 			"ml-service-team@google.com",
 			"alanlxl@chromium.org",

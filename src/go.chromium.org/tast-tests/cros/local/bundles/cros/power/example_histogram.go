@@ -27,7 +27,6 @@ var exampleHistTimeParams = power.TimeParams{Interval: 5 * time.Second, Total: 3
 func init() {
 	testing.AddTest(&testing.Test{
 		Func:         ExampleHistogram,
-		LacrosStatus: testing.LacrosVariantExists,
 		Desc:         "Collect browser histogram metrics",
 		BugComponent: "b:1361410",
 		Contacts:     []string{"chromeos-power-team@google.com", "mqg@google.com"},
