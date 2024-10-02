@@ -7,6 +7,7 @@ package mlbenchmark
 import (
 	"bufio"
 	"context"
+	"os"
 	"regexp"
 	"strconv"
 	"strings"
@@ -200,6 +201,11 @@ func buildBenchmarkArgs(graphFileName string, backend TFLiteBackendType) map[str
 
 func executeBenchmark(ctx context.Context, graphFileName string, backend TFLiteBackendType, p *perf.Values) error {
 	var cmd = BuildCommand(ctx, benchmarkModelCLI, buildBenchmarkArgs(graphFileName, backend))
+
+	if backend == KGpuOpenCl {
+		os.Setenv("CLVK_POLL_MAIN_THREAD", "1")
+		os.Setenv("CLVK_POLL_EXECUTOR", "1")
+	}
 
 	testing.ContextLog(ctx, "Benchmark command: ", shutil.EscapeSlice(cmd.Args))
 	output, err := cmd.CombinedOutput()
