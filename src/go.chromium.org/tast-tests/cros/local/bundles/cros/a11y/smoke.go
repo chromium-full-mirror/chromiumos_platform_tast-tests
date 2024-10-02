@@ -53,14 +53,6 @@ func Smoke(ctx context.Context, s *testing.State) {
 		s.Fatal("Failed to create Test API connection: ", err)
 	}
 
-	// TODO(crbug.com/1240344): Ensure the tablet mode is turned off until it is supported on Lacros.
-	const tabletMode = false
-	cleanup, err := ash.EnsureTabletModeEnabled(ctx, tconn, tabletMode)
-	if err != nil {
-		s.Fatalf("Failed to ensure the tablet mode is set to %v: %v", tabletMode, err)
-	}
-	defer cleanup(cleanupCtx)
-
 	app, err := apps.PrimaryBrowser(ctx, tconn)
 	if err != nil {
 		s.Fatal("Could not determine the correct browser app to use: ", err)
