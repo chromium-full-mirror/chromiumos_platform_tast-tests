@@ -77,7 +77,7 @@ func init() {
 		Desc:         "Tests crosvm's virtio-net performance with iperf3 command",
 		Contacts:     []string{"cros-virt-devices-guests@google.com", "yuanyaogoog@google.com"},
 		BugComponent: "b:1248538",
-		Attr:         []string{"group:crosbolt", "crosbolt_nightly"},
+		Attr:         []string{"group:crosbolt", "crosbolt_weekly"},
 		Data:         []string{runIperfTest},
 		SoftwareDeps: []string{"vm_host", "chrome"},
 		// Specify guest kernel(if not provided use termina dlc)
