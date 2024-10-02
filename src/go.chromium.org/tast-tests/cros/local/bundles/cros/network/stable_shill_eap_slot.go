@@ -22,6 +22,7 @@ import (
 	"go.chromium.org/tast/core/ctxutil"
 	"go.chromium.org/tast/core/errors"
 	"go.chromium.org/tast/core/testing"
+	"go.chromium.org/tast/core/testing/hwdep"
 )
 
 func init() {
@@ -37,6 +38,7 @@ func init() {
 		BugComponent: "b:1493959",
 		Attr:         []string{"group:mainline", "informational", "group:criticalstaging"},
 		SoftwareDeps: []string{"chrome"},
+		HardwareDeps: hwdep.D(hwdep.HasTpm()),
 		LacrosStatus: testing.LacrosVariantUnneeded,
 		Timeout:      7 * time.Minute,
 	})
