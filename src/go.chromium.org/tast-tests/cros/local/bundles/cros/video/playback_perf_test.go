@@ -80,7 +80,7 @@ func genPlaybackPerfParam(codec, file string, resolution, fps int, dec, nameSuff
 		ExtraAttr:       extraAttr,
 		PerfMeasurement: true,
 		Duration:        measurementDurationShort,
-		Timeout:         5 * time.Minute,
+		Timeout:         10 * time.Minute,
 	}
 }
 

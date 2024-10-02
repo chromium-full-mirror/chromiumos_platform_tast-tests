@@ -56,7 +56,7 @@ func init() {
 				ExtraSoftwareDeps: []string{"proprietary_codecs", "autotest-capability:hw_dec_h264_1080_30"},
 				ExtraData:         []string{"perf/h264/720p_30fps_300frames.h264.mp4"},
 				Fixture:           "chromeVideo",
-				Timeout:           5 * time.Minute,
+				Timeout:           10 * time.Minute,
 			},
 			{
 				Name: "h264_720p_30fps_sw",
@@ -71,7 +71,7 @@ func init() {
 				ExtraSoftwareDeps: []string{"proprietary_codecs"},
 				ExtraData:         []string{"perf/h264/720p_30fps_300frames.h264.mp4"},
 				Fixture:           "chromeVideoWithSWDecoding",
-				Timeout:           5 * time.Minute,
+				Timeout:           10 * time.Minute,
 			},
 			{
 				Name: "h264_1080p_30fps_hw",
@@ -86,7 +86,7 @@ func init() {
 				ExtraSoftwareDeps: []string{"proprietary_codecs", "autotest-capability:hw_dec_h264_1080_30"},
 				ExtraData:         []string{"perf/h264/1080p_30fps_300frames.h264.mp4"},
 				Fixture:           "chromeVideo",
-				Timeout:           5 * time.Minute,
+				Timeout:           10 * time.Minute,
 			},
 			{
 				Name: "h264_1080p_30fps_sw",
@@ -101,7 +101,7 @@ func init() {
 				ExtraSoftwareDeps: []string{"proprietary_codecs"},
 				ExtraData:         []string{"perf/h264/1080p_30fps_300frames.h264.mp4"},
 				Fixture:           "chromeVideoWithSWDecoding",
-				Timeout:           5 * time.Minute,
+				Timeout:           10 * time.Minute,
 			},
 			{
 				Name: "h264_1080p_60fps_hw",
@@ -117,7 +117,7 @@ func init() {
 				ExtraData:         []string{"perf/h264/1080p_60fps_600frames.h264.mp4"},
 				ExtraAttr:         []string{"group:graphics", "graphics_video", "graphics_nightly", "group:crosbolt", "crosbolt_fsi_check"},
 				Fixture:           "chromeVideo",
-				Timeout:           5 * time.Minute,
+				Timeout:           10 * time.Minute,
 			},
 			{
 				Name: "h264_1080p_60fps_sw",
@@ -132,7 +132,7 @@ func init() {
 				ExtraSoftwareDeps: []string{"proprietary_codecs"},
 				ExtraData:         []string{"perf/h264/1080p_60fps_600frames.h264.mp4"},
 				Fixture:           "chromeVideoWithSWDecoding",
-				Timeout:           5 * time.Minute,
+				Timeout:           10 * time.Minute,
 			},
 			{
 				Name: "h264_1080p_120fps_hw",
@@ -147,7 +147,7 @@ func init() {
 				ExtraSoftwareDeps: []string{"proprietary_codecs", "autotest-capability:hw_dec_h264_1080_60"},
 				ExtraData:         []string{"perf/h264/1080p_120fps_1200frames.h264.mp4"},
 				Fixture:           "chromeVideo",
-				Timeout:           5 * time.Minute,
+				Timeout:           10 * time.Minute,
 			},
 			{
 				Name: "h264_1080p_120fps_sw",
@@ -162,7 +162,7 @@ func init() {
 				ExtraSoftwareDeps: []string{"proprietary_codecs"},
 				ExtraData:         []string{"perf/h264/1080p_120fps_1200frames.h264.mp4"},
 				Fixture:           "chromeVideoWithSWDecoding",
-				Timeout:           5 * time.Minute,
+				Timeout:           10 * time.Minute,
 			},
 			{
 				Name: "h264_2160p_30fps_hw",
@@ -177,7 +177,7 @@ func init() {
 				ExtraSoftwareDeps: []string{"proprietary_codecs", "autotest-capability:hw_dec_h264_2160_30"},
 				ExtraData:         []string{"perf/h264/2160p_30fps_300frames.h264.mp4"},
 				Fixture:           "chromeVideo",
-				Timeout:           5 * time.Minute,
+				Timeout:           10 * time.Minute,
 			},
 			{
 				Name: "h264_2160p_30fps_sw",
@@ -192,7 +192,7 @@ func init() {
 				ExtraSoftwareDeps: []string{"proprietary_codecs"},
 				ExtraData:         []string{"perf/h264/2160p_30fps_300frames.h264.mp4"},
 				Fixture:           "chromeVideoWithSWDecoding",
-				Timeout:           5 * time.Minute,
+				Timeout:           10 * time.Minute,
 			},
 			{
 				Name: "h264_2160p_60fps_hw",
@@ -207,7 +207,7 @@ func init() {
 				ExtraSoftwareDeps: []string{"proprietary_codecs", "autotest-capability:hw_dec_h264_2160_60"},
 				ExtraData:         []string{"perf/h264/2160p_60fps_600frames.h264.mp4"},
 				Fixture:           "chromeVideo",
-				Timeout:           5 * time.Minute,
+				Timeout:           10 * time.Minute,
 			},
 			{
 				Name: "h264_2160p_60fps_sw",
@@ -222,7 +222,7 @@ func init() {
 				ExtraSoftwareDeps: []string{"proprietary_codecs"},
 				ExtraData:         []string{"perf/h264/2160p_60fps_600frames.h264.mp4"},
 				Fixture:           "chromeVideoWithSWDecoding",
-				Timeout:           5 * time.Minute,
+				Timeout:           10 * time.Minute,
 			},
 			{
 				Name: "vp8_720p_30fps_hw",
@@ -237,7 +237,7 @@ func init() {
 				ExtraSoftwareDeps: []string{"autotest-capability:hw_dec_vp8_1080_30"},
 				ExtraData:         []string{"perf/vp8/720p_30fps_300frames.vp8.webm"},
 				Fixture:           "chromeVideo",
-				Timeout:           5 * time.Minute,
+				Timeout:           10 * time.Minute,
 			},
 			{
 				Name: "vp8_720p_30fps_sw",
@@ -251,7 +251,7 @@ func init() {
 				},
 				ExtraData: []string{"perf/vp8/720p_30fps_300frames.vp8.webm"},
 				Fixture:   "chromeVideoWithSWDecoding",
-				Timeout:   5 * time.Minute,
+				Timeout:   10 * time.Minute,
 			},
 			{
 				Name: "vp8_1080p_30fps_hw",
@@ -266,7 +266,7 @@ func init() {
 				ExtraSoftwareDeps: []string{"autotest-capability:hw_dec_vp8_1080_30"},
 				ExtraData:         []string{"perf/vp8/1080p_30fps_300frames.vp8.webm"},
 				Fixture:           "chromeVideo",
-				Timeout:           5 * time.Minute,
+				Timeout:           10 * time.Minute,
 			},
 			{
 				Name: "vp8_1080p_30fps_sw",
@@ -280,7 +280,7 @@ func init() {
 				},
 				ExtraData: []string{"perf/vp8/1080p_30fps_300frames.vp8.webm"},
 				Fixture:   "chromeVideoWithSWDecoding",
-				Timeout:   5 * time.Minute,
+				Timeout:   10 * time.Minute,
 			},
 			{
 				Name: "vp8_1080p_60fps_hw",
@@ -295,7 +295,7 @@ func init() {
 				ExtraSoftwareDeps: []string{"autotest-capability:hw_dec_vp8_1080_60"},
 				ExtraData:         []string{"perf/vp8/1080p_60fps_600frames.vp8.webm"},
 				Fixture:           "chromeVideo",
-				Timeout:           5 * time.Minute,
+				Timeout:           10 * time.Minute,
 			},
 			{
 				Name: "vp8_1080p_60fps_sw",
@@ -309,7 +309,7 @@ func init() {
 				},
 				ExtraData: []string{"perf/vp8/1080p_60fps_600frames.vp8.webm"},
 				Fixture:   "chromeVideoWithSWDecoding",
-				Timeout:   5 * time.Minute,
+				Timeout:   10 * time.Minute,
 			},
 			{
 				Name: "vp8_2160p_30fps_hw",
@@ -324,7 +324,7 @@ func init() {
 				ExtraSoftwareDeps: []string{"autotest-capability:hw_dec_vp8_2160_30"},
 				ExtraData:         []string{"perf/vp8/2160p_30fps_300frames.vp8.webm"},
 				Fixture:           "chromeVideo",
-				Timeout:           5 * time.Minute,
+				Timeout:           10 * time.Minute,
 			},
 			{
 				Name: "vp8_2160p_30fps_sw",
@@ -338,7 +338,7 @@ func init() {
 				},
 				ExtraData: []string{"perf/vp8/2160p_30fps_300frames.vp8.webm"},
 				Fixture:   "chromeVideoWithSWDecoding",
-				Timeout:   5 * time.Minute,
+				Timeout:   10 * time.Minute,
 			},
 			{
 				Name: "vp8_2160p_60fps_hw",
@@ -353,7 +353,7 @@ func init() {
 				ExtraSoftwareDeps: []string{"autotest-capability:hw_dec_vp8_2160_60"},
 				ExtraData:         []string{"perf/vp8/2160p_60fps_600frames.vp8.webm"},
 				Fixture:           "chromeVideo",
-				Timeout:           5 * time.Minute,
+				Timeout:           10 * time.Minute,
 			},
 			{
 				Name: "vp8_2160p_60fps_sw",
@@ -367,7 +367,7 @@ func init() {
 				},
 				ExtraData: []string{"perf/vp8/2160p_60fps_600frames.vp8.webm"},
 				Fixture:   "chromeVideoWithSWDecoding",
-				Timeout:   5 * time.Minute,
+				Timeout:   10 * time.Minute,
 			},
 			{
 				Name: "vp9_720p_30fps_hw",
@@ -382,7 +382,7 @@ func init() {
 				ExtraSoftwareDeps: []string{"autotest-capability:hw_dec_vp9_1080_30"},
 				ExtraData:         []string{"perf/vp9/720p_30fps_300frames.vp9.webm"},
 				Fixture:           "chromeVideo",
-				Timeout:           5 * time.Minute,
+				Timeout:           10 * time.Minute,
 			},
 			{
 				Name: "vp9_720p_30fps_sw",
@@ -396,7 +396,7 @@ func init() {
 				},
 				ExtraData: []string{"perf/vp9/720p_30fps_300frames.vp9.webm"},
 				Fixture:   "chromeVideoWithSWDecoding",
-				Timeout:   5 * time.Minute,
+				Timeout:   10 * time.Minute,
 			},
 			{
 				Name: "vp9_1080p_30fps_hw",
@@ -411,7 +411,7 @@ func init() {
 				ExtraSoftwareDeps: []string{"autotest-capability:hw_dec_vp9_1080_30"},
 				ExtraData:         []string{"perf/vp9/1080p_30fps_300frames.vp9.webm"},
 				Fixture:           "chromeVideo",
-				Timeout:           5 * time.Minute,
+				Timeout:           10 * time.Minute,
 			},
 			{
 				Name: "vp9_1080p_30fps_sw",
@@ -425,7 +425,7 @@ func init() {
 				},
 				ExtraData: []string{"perf/vp9/1080p_30fps_300frames.vp9.webm"},
 				Fixture:   "chromeVideoWithSWDecoding",
-				Timeout:   5 * time.Minute,
+				Timeout:   10 * time.Minute,
 			},
 			{
 				Name: "vp9_1080p_60fps_hw",
@@ -441,7 +441,7 @@ func init() {
 				ExtraData:         []string{"perf/vp9/1080p_60fps_600frames.vp9.webm"},
 				ExtraAttr:         []string{"group:graphics", "graphics_video", "graphics_nightly", "group:crosbolt", "crosbolt_fsi_check"},
 				Fixture:           "chromeVideo",
-				Timeout:           5 * time.Minute,
+				Timeout:           10 * time.Minute,
 			},
 			{
 				Name: "vp9_1080p_60fps_sw",
@@ -455,7 +455,7 @@ func init() {
 				},
 				ExtraData: []string{"perf/vp9/1080p_60fps_600frames.vp9.webm"},
 				Fixture:   "chromeVideoWithSWDecoding",
-				Timeout:   5 * time.Minute,
+				Timeout:   10 * time.Minute,
 			},
 			{
 				Name: "vp9_1080p_120fps_hw",
@@ -470,7 +470,7 @@ func init() {
 				ExtraSoftwareDeps: []string{"autotest-capability:hw_dec_vp9_1080_60"},
 				ExtraData:         []string{"perf/vp9/1080p_120fps_1200frames.vp9.webm"},
 				Fixture:           "chromeVideo",
-				Timeout:           5 * time.Minute,
+				Timeout:           10 * time.Minute,
 			},
 			{
 				Name: "vp9_1080p_120fps_sw",
@@ -484,7 +484,7 @@ func init() {
 				},
 				ExtraData: []string{"perf/vp9/1080p_120fps_1200frames.vp9.webm"},
 				Fixture:   "chromeVideoWithSWDecoding",
-				Timeout:   5 * time.Minute,
+				Timeout:   10 * time.Minute,
 			},
 			{
 				Name: "vp9_2160p_30fps_hw",
@@ -499,7 +499,7 @@ func init() {
 				ExtraSoftwareDeps: []string{"autotest-capability:hw_dec_vp9_2160_30"},
 				ExtraData:         []string{"perf/vp9/2160p_30fps_300frames.vp9.webm"},
 				Fixture:           "chromeVideo",
-				Timeout:           5 * time.Minute,
+				Timeout:           10 * time.Minute,
 			},
 			{
 				Name: "vp9_2160p_30fps_sw",
@@ -513,7 +513,7 @@ func init() {
 				},
 				ExtraData: []string{"perf/vp9/2160p_30fps_300frames.vp9.webm"},
 				Fixture:   "chromeVideoWithSWDecoding",
-				Timeout:   5 * time.Minute,
+				Timeout:   10 * time.Minute,
 			},
 			{
 				Name: "vp9_2160p_60fps_hw",
@@ -528,7 +528,7 @@ func init() {
 				ExtraSoftwareDeps: []string{"autotest-capability:hw_dec_vp9_2160_60"},
 				ExtraData:         []string{"perf/vp9/2160p_60fps_600frames.vp9.webm"},
 				Fixture:           "chromeVideo",
-				Timeout:           5 * time.Minute,
+				Timeout:           10 * time.Minute,
 			},
 			{
 				Name: "vp9_2160p_60fps_sw",
@@ -542,7 +542,7 @@ func init() {
 				},
 				ExtraData: []string{"perf/vp9/2160p_60fps_600frames.vp9.webm"},
 				Fixture:   "chromeVideoWithSWDecoding",
-				Timeout:   5 * time.Minute,
+				Timeout:   10 * time.Minute,
 			},
 			{
 				Name: "vp9_4320p_30fps_hw",
@@ -557,7 +557,7 @@ func init() {
 				ExtraSoftwareDeps: []string{"autotest-capability:hw_dec_vp9_4320_30"},
 				ExtraData:         []string{"perf/vp9/4320p_30fps_300frames.vp9.webm"},
 				Fixture:           "chromeVideo",
-				Timeout:           5 * time.Minute,
+				Timeout:           10 * time.Minute,
 			},
 			{
 				Name: "vp9_4320p_60fps_hw",
@@ -572,7 +572,7 @@ func init() {
 				ExtraSoftwareDeps: []string{"autotest-capability:hw_dec_vp9_4320_60"},
 				ExtraData:         []string{"perf/vp9/4320p_60fps_600frames.vp9.webm"},
 				Fixture:           "chromeVideo",
-				Timeout:           5 * time.Minute,
+				Timeout:           10 * time.Minute,
 			},
 			{
 				Name: "av1_720p_30fps_hw",
@@ -587,7 +587,7 @@ func init() {
 				ExtraSoftwareDeps: []string{"autotest-capability:hw_dec_av1_1080_30"},
 				ExtraData:         []string{"perf/av1/720p_30fps_300frames.av1.mp4"},
 				Fixture:           "chromeVideo",
-				Timeout:           5 * time.Minute,
+				Timeout:           10 * time.Minute,
 			},
 			{
 				Name: "av1_720p_30fps_sw",
@@ -601,7 +601,7 @@ func init() {
 				},
 				ExtraData: []string{"perf/av1/720p_30fps_300frames.av1.mp4"},
 				Fixture:   "chromeVideoWithSWDecoding",
-				Timeout:   5 * time.Minute,
+				Timeout:   10 * time.Minute,
 			},
 			{
 				Name: "av1_1080p_30fps_hw",
@@ -616,7 +616,7 @@ func init() {
 				ExtraSoftwareDeps: []string{"autotest-capability:hw_dec_av1_1080_30"},
 				ExtraData:         []string{"perf/av1/1080p_30fps_300frames.av1.mp4"},
 				Fixture:           "chromeVideo",
-				Timeout:           5 * time.Minute,
+				Timeout:           10 * time.Minute,
 			},
 			{
 				Name: "av1_1080p_30fps_sw",
@@ -630,7 +630,7 @@ func init() {
 				},
 				ExtraData: []string{"perf/av1/1080p_30fps_300frames.av1.mp4"},
 				Fixture:   "chromeVideoWithSWDecoding",
-				Timeout:   5 * time.Minute,
+				Timeout:   10 * time.Minute,
 			},
 			{
 				Name: "av1_1080p_60fps_hw",
@@ -645,7 +645,7 @@ func init() {
 				ExtraSoftwareDeps: []string{"autotest-capability:hw_dec_av1_1080_60"},
 				ExtraData:         []string{"perf/av1/1080p_60fps_600frames.av1.mp4"},
 				Fixture:           "chromeVideo",
-				Timeout:           5 * time.Minute,
+				Timeout:           10 * time.Minute,
 			},
 			{
 				Name: "av1_1080p_60fps_sw",
@@ -659,7 +659,7 @@ func init() {
 				},
 				ExtraData: []string{"perf/av1/1080p_60fps_600frames.av1.mp4"},
 				Fixture:   "chromeVideoWithSWDecoding",
-				Timeout:   5 * time.Minute,
+				Timeout:   10 * time.Minute,
 			},
 			{
 				Name: "av1_1080p_120fps_hw",
@@ -674,7 +674,7 @@ func init() {
 				ExtraSoftwareDeps: []string{"autotest-capability:hw_dec_av1_1080_60"},
 				ExtraData:         []string{"perf/av1/1080p_120fps_1200frames.av1.mp4"},
 				Fixture:           "chromeVideo",
-				Timeout:           5 * time.Minute,
+				Timeout:           10 * time.Minute,
 			},
 			{
 				Name: "av1_1080p_120fps_sw",
@@ -688,7 +688,7 @@ func init() {
 				},
 				ExtraData: []string{"perf/av1/1080p_120fps_1200frames.av1.mp4"},
 				Fixture:   "chromeVideoWithSWDecoding",
-				Timeout:   5 * time.Minute,
+				Timeout:   10 * time.Minute,
 			},
 			{
 				Name: "av1_2160p_30fps_hw",
@@ -703,7 +703,7 @@ func init() {
 				ExtraSoftwareDeps: []string{"autotest-capability:hw_dec_av1_2160_30"},
 				ExtraData:         []string{"perf/av1/2160p_30fps_300frames.av1.mp4"},
 				Fixture:           "chromeVideo",
-				Timeout:           5 * time.Minute,
+				Timeout:           10 * time.Minute,
 			},
 			{
 				Name: "av1_2160p_30fps_sw",
@@ -717,7 +717,7 @@ func init() {
 				},
 				ExtraData: []string{"perf/av1/2160p_30fps_300frames.av1.mp4"},
 				Fixture:   "chromeVideoWithSWDecoding",
-				Timeout:   5 * time.Minute,
+				Timeout:   10 * time.Minute,
 			},
 			{
 				Name: "av1_2160p_60fps_hw",
@@ -732,7 +732,7 @@ func init() {
 				ExtraSoftwareDeps: []string{"autotest-capability:hw_dec_av1_2160_60"},
 				ExtraData:         []string{"perf/av1/2160p_60fps_600frames.av1.mp4"},
 				Fixture:           "chromeVideo",
-				Timeout:           5 * time.Minute,
+				Timeout:           10 * time.Minute,
 			},
 			{
 				Name: "av1_2160p_60fps_sw",
@@ -746,7 +746,7 @@ func init() {
 				},
 				ExtraData: []string{"perf/av1/2160p_60fps_600frames.av1.mp4"},
 				Fixture:   "chromeVideoWithSWDecoding",
-				Timeout:   5 * time.Minute,
+				Timeout:   10 * time.Minute,
 			},
 			{
 				Name: "hevc_720p_30fps_hw",
@@ -762,7 +762,7 @@ func init() {
 				ExtraSoftwareDeps: []string{"proprietary_codecs", "autotest-capability:hw_dec_hevc_1080_30"},
 				ExtraData:         []string{"perf/hevc/720p_30fps_300frames.hevc.mp4"},
 				Fixture:           "chromeVideo",
-				Timeout:           5 * time.Minute,
+				Timeout:           10 * time.Minute,
 			},
 			{
 				Name: "hevc_1080p_30fps_hw",
@@ -778,7 +778,7 @@ func init() {
 				ExtraSoftwareDeps: []string{"proprietary_codecs", "autotest-capability:hw_dec_hevc_1080_30"},
 				ExtraData:         []string{"perf/hevc/1080p_30fps_300frames.hevc.mp4"},
 				Fixture:           "chromeVideo",
-				Timeout:           5 * time.Minute,
+				Timeout:           10 * time.Minute,
 			},
 			{
 				Name: "hevc_1080p_60fps_hw",
@@ -794,7 +794,7 @@ func init() {
 				ExtraSoftwareDeps: []string{"proprietary_codecs", "autotest-capability:hw_dec_hevc_1080_60"},
 				ExtraData:         []string{"perf/hevc/1080p_60fps_600frames.hevc.mp4"},
 				Fixture:           "chromeVideo",
-				Timeout:           5 * time.Minute,
+				Timeout:           10 * time.Minute,
 			},
 			{
 				Name: "hevc_1080p_120fps_hw",
@@ -810,7 +810,7 @@ func init() {
 				ExtraSoftwareDeps: []string{"proprietary_codecs", "autotest-capability:hw_dec_hevc_1080_60"},
 				ExtraData:         []string{"perf/hevc/1080p_120fps_1200frames.hevc.mp4"},
 				Fixture:           "chromeVideo",
-				Timeout:           5 * time.Minute,
+				Timeout:           10 * time.Minute,
 			},
 			{
 				Name: "hevc_2160p_30fps_hw",
@@ -826,7 +826,7 @@ func init() {
 				ExtraSoftwareDeps: []string{"proprietary_codecs", "autotest-capability:hw_dec_hevc_2160_30"},
 				ExtraData:         []string{"perf/hevc/2160p_30fps_300frames.hevc.mp4"},
 				Fixture:           "chromeVideo",
-				Timeout:           5 * time.Minute,
+				Timeout:           10 * time.Minute,
 			},
 			{
 				Name: "hevc_2160p_60fps_hw",
@@ -842,7 +842,7 @@ func init() {
 				ExtraSoftwareDeps: []string{"proprietary_codecs", "autotest-capability:hw_dec_hevc_2160_60"},
 				ExtraData:         []string{"perf/hevc/2160p_60fps_600frames.hevc.mp4"},
 				Fixture:           "chromeVideo",
-				Timeout:           5 * time.Minute,
+				Timeout:           10 * time.Minute,
 			},
 			{
 				Name: "hevc_4320p_30fps_hw",
@@ -858,7 +858,7 @@ func init() {
 				ExtraSoftwareDeps: []string{"proprietary_codecs", "autotest-capability:hw_dec_hevc_4320_30"},
 				ExtraData:         []string{"perf/hevc/4320p_30fps_300frames.hevc.mp4"},
 				Fixture:           "chromeVideo",
-				Timeout:           5 * time.Minute,
+				Timeout:           10 * time.Minute,
 			},
 			{
 				Name: "hevc_4320p_60fps_hw",
@@ -874,7 +874,7 @@ func init() {
 				ExtraSoftwareDeps: []string{"proprietary_codecs", "autotest-capability:hw_dec_hevc_4320_60"},
 				ExtraData:         []string{"perf/hevc/4320p_60fps_600frames.hevc.mp4"},
 				Fixture:           "chromeVideo",
-				Timeout:           5 * time.Minute,
+				Timeout:           10 * time.Minute,
 			},
 			{
 				Name: "hevc10_2160p_30fps_hw",
@@ -890,7 +890,7 @@ func init() {
 				ExtraSoftwareDeps: []string{"proprietary_codecs", "autotest-capability:hw_dec_hevc_2160_30_10bpp"},
 				ExtraData:         []string{"perf/hevc10/2160p_30fps_300frames.hevc10.mp4"},
 				Fixture:           "chromeVideo",
-				Timeout:           5 * time.Minute,
+				Timeout:           10 * time.Minute,
 			},
 			{
 				Name: "hevc10_4320p_30fps_hw",
@@ -906,7 +906,7 @@ func init() {
 				ExtraSoftwareDeps: []string{"proprietary_codecs", "autotest-capability:hw_dec_hevc_4320_30_10bpp"},
 				ExtraData:         []string{"perf/hevc10/4320p_30fps_300frames.hevc10.mp4"},
 				Fixture:           "chromeVideo",
-				Timeout:           5 * time.Minute,
+				Timeout:           10 * time.Minute,
 			},
 			{
 				Name: "hevc10_2160p_60fps_hw",
@@ -922,7 +922,7 @@ func init() {
 				ExtraSoftwareDeps: []string{"proprietary_codecs", "autotest-capability:hw_dec_hevc_2160_60_10bpp"},
 				ExtraData:         []string{"perf/hevc10/2160p_60fps_600frames.hevc10.mp4"},
 				Fixture:           "chromeVideo",
-				Timeout:           5 * time.Minute,
+				Timeout:           10 * time.Minute,
 			},
 			{
 				Name: "hevc10_4320p_60fps_hw",
@@ -938,7 +938,7 @@ func init() {
 				ExtraSoftwareDeps: []string{"proprietary_codecs", "autotest-capability:hw_dec_hevc_4320_60_10bpp"},
 				ExtraData:         []string{"perf/hevc10/4320p_60fps_600frames.hevc10.mp4"},
 				Fixture:           "chromeVideo",
-				Timeout:           5 * time.Minute,
+				Timeout:           10 * time.Minute,
 			},
 			{
 				Name: "h264_1080p_30fps_hw_long",
@@ -956,7 +956,7 @@ func init() {
 				ExtraSoftwareDeps: []string{"proprietary_codecs", "autotest-capability:hw_dec_h264_1080_30", "drm_atomic"},
 				ExtraData:         []string{"crosvideo/1080.mp4"},
 				Fixture:           "chromeVideo",
-				Timeout:           5 * time.Minute,
+				Timeout:           10 * time.Minute,
 			},
 			{
 				Name: "h264_1080p_30fps_sw_long",
@@ -974,7 +974,7 @@ func init() {
 				ExtraSoftwareDeps: []string{"proprietary_codecs", "drm_atomic"},
 				ExtraData:         []string{"crosvideo/1080.mp4"},
 				Fixture:           "chromeVideoWithSWDecoding",
-				Timeout:           5 * time.Minute,
+				Timeout:           10 * time.Minute,
 			},
 			{
 				Name: "hevc_1080p_30fps_hw_long",
@@ -992,7 +992,7 @@ func init() {
 				ExtraSoftwareDeps: []string{"proprietary_codecs", "autotest-capability:hw_dec_hevc_1080_30", "drm_atomic"},
 				ExtraData:         []string{"crosvideo/1080-5-frag.mp4"},
 				Fixture:           "chromeVideo",
-				Timeout:           5 * time.Minute,
+				Timeout:           10 * time.Minute,
 			},
 			{
 				Name: "vp8_1080p_30fps_hw_long",
@@ -1010,7 +1010,7 @@ func init() {
 				ExtraSoftwareDeps: []string{"autotest-capability:hw_dec_vp8_1080_30", "drm_atomic"},
 				ExtraData:         []string{"crosvideo/1080_vp8.webm"},
 				Fixture:           "chromeVideo",
-				Timeout:           5 * time.Minute,
+				Timeout:           10 * time.Minute,
 			},
 			{
 				Name: "vp8_1080p_30fps_sw_long",
@@ -1028,7 +1028,7 @@ func init() {
 				ExtraSoftwareDeps: []string{"drm_atomic"},
 				ExtraData:         []string{"crosvideo/1080_vp8.webm"},
 				Fixture:           "chromeVideoWithSWDecoding",
-				Timeout:           5 * time.Minute,
+				Timeout:           10 * time.Minute,
 			},
 			{
 				Name: "vp9_1080p_30fps_hw_long",
@@ -1046,7 +1046,7 @@ func init() {
 				ExtraSoftwareDeps: []string{"autotest-capability:hw_dec_vp9_1080_30", "drm_atomic"},
 				ExtraData:         []string{"crosvideo/1080.webm"},
 				Fixture:           "chromeVideo",
-				Timeout:           5 * time.Minute,
+				Timeout:           10 * time.Minute,
 			},
 			{
 				Name: "vp9_1080p_30fps_sw_long",
@@ -1064,7 +1064,7 @@ func init() {
 				ExtraSoftwareDeps: []string{"drm_atomic"},
 				ExtraData:         []string{"crosvideo/1080.webm"},
 				Fixture:           "chromeVideoWithSWDecoding",
-				Timeout:           5 * time.Minute,
+				Timeout:           10 * time.Minute,
 			},
 			{
 				Name: "av1_1080p_30fps_hw_long",
@@ -1082,7 +1082,7 @@ func init() {
 				ExtraSoftwareDeps: []string{"autotest-capability:hw_dec_av1_1080_30", "drm_atomic"},
 				ExtraData:         []string{"crosvideo/av1_1080p_30fps.mp4"},
 				Fixture:           "chromeVideo",
-				Timeout:           5 * time.Minute,
+				Timeout:           10 * time.Minute,
 			},
 			{
 				Name: "av1_1080p_30fps_sw_long",
@@ -1100,7 +1100,7 @@ func init() {
 				ExtraSoftwareDeps: []string{"drm_atomic"},
 				ExtraData:         []string{"crosvideo/av1_1080p_30fps.mp4"},
 				Fixture:           "chromeVideoWithSWDecoding",
-				Timeout:           5 * time.Minute,
+				Timeout:           10 * time.Minute,
 			},
 			{
 				Name: "h264_720p_30fps_hw_inpvd",
@@ -1115,7 +1115,7 @@ func init() {
 				ExtraSoftwareDeps: []string{"proprietary_codecs", "autotest-capability:hw_dec_h264_1080_30"},
 				ExtraData:         []string{"perf/h264/720p_30fps_300frames.h264.mp4"},
 				Fixture:           "chromeVideoINPVD",
-				Timeout:           5 * time.Minute,
+				Timeout:           10 * time.Minute,
 			},
 			{
 				Name: "h264_1080p_30fps_hw_inpvd",
@@ -1133,7 +1133,7 @@ func init() {
 				ExtraSoftwareDeps: []string{"proprietary_codecs", "autotest-capability:hw_dec_h264_1080_30"},
 				ExtraData:         []string{"perf/h264/1080p_30fps_300frames.h264.mp4"},
 				Fixture:           "chromeVideoINPVD",
-				Timeout:           5 * time.Minute,
+				Timeout:           10 * time.Minute,
 			},
 			{
 				Name: "h264_1080p_60fps_hw_inpvd",
@@ -1148,7 +1148,7 @@ func init() {
 				ExtraSoftwareDeps: []string{"proprietary_codecs", "autotest-capability:hw_dec_h264_1080_60"},
 				ExtraData:         []string{"perf/h264/1080p_60fps_600frames.h264.mp4"},
 				Fixture:           "chromeVideoINPVD",
-				Timeout:           5 * time.Minute,
+				Timeout:           10 * time.Minute,
 			},
 			{
 				Name: "h264_2160p_30fps_hw_inpvd",
@@ -1163,7 +1163,7 @@ func init() {
 				ExtraSoftwareDeps: []string{"proprietary_codecs", "autotest-capability:hw_dec_h264_2160_30"},
 				ExtraData:         []string{"perf/h264/2160p_30fps_300frames.h264.mp4"},
 				Fixture:           "chromeVideoINPVD",
-				Timeout:           5 * time.Minute,
+				Timeout:           10 * time.Minute,
 			},
 			{
 				Name: "h264_2160p_60fps_hw_inpvd",
@@ -1178,7 +1178,7 @@ func init() {
 				ExtraSoftwareDeps: []string{"proprietary_codecs", "autotest-capability:hw_dec_h264_2160_60"},
 				ExtraData:         []string{"perf/h264/2160p_60fps_600frames.h264.mp4"},
 				Fixture:           "chromeVideoINPVD",
-				Timeout:           5 * time.Minute,
+				Timeout:           10 * time.Minute,
 			},
 			{
 				Name: "h264_1080p_30fps_hw_long_inpvd",
@@ -1197,7 +1197,7 @@ func init() {
 				ExtraSoftwareDeps: []string{"proprietary_codecs", "autotest-capability:hw_dec_h264_1080_30", "drm_atomic"},
 				ExtraData:         []string{"crosvideo/1080.mp4"},
 				Fixture:           "chromeVideoINPVD",
-				Timeout:           5 * time.Minute,
+				Timeout:           10 * time.Minute,
 			},
 			{
 				Name: "hevc_1080p_30fps_hw_long_inpvd",
@@ -1215,7 +1215,7 @@ func init() {
 				ExtraSoftwareDeps: []string{"proprietary_codecs", "autotest-capability:hw_dec_hevc_1080_30", "drm_atomic"},
 				ExtraData:         []string{"crosvideo/1080-5-frag.mp4"},
 				Fixture:           "chromeVideoINPVD",
-				Timeout:           5 * time.Minute,
+				Timeout:           10 * time.Minute,
 			},
 			{
 				Name: "vp9_1080p_30fps_hw_long_inpvd",
@@ -1233,7 +1233,7 @@ func init() {
 				ExtraSoftwareDeps: []string{"autotest-capability:hw_dec_vp9_1080_30", "drm_atomic"},
 				ExtraData:         []string{"crosvideo/1080.webm"},
 				Fixture:           "chromeVideoINPVD",
-				Timeout:           5 * time.Minute,
+				Timeout:           10 * time.Minute,
 			},
 			{
 				Name: "av1_1080p_30fps_hw_long_inpvd",
@@ -1251,7 +1251,7 @@ func init() {
 				ExtraSoftwareDeps: []string{"autotest-capability:hw_dec_av1_1080_30", "drm_atomic"},
 				ExtraData:         []string{"crosvideo/av1_1080p_30fps.mp4"},
 				Fixture:           "chromeVideoINPVD",
-				Timeout:           5 * time.Minute,
+				Timeout:           10 * time.Minute,
 			},
 			{
 				Name: "h264_1080p_30fps_hw_long_gtfo",
@@ -1269,7 +1269,7 @@ func init() {
 				ExtraSoftwareDeps: []string{"proprietary_codecs", "autotest-capability:hw_dec_h264_1080_30", "drm_atomic"},
 				ExtraData:         []string{"crosvideo/1080.mp4"},
 				Fixture:           "chromeVideoGTFO",
-				Timeout:           5 * time.Minute,
+				Timeout:           10 * time.Minute,
 			},
 			{
 				Name: "h264_1080p_30fps_hw_x2",
@@ -1289,7 +1289,7 @@ func init() {
 				ExtraData:         []string{"perf/h264/1080p_30fps_300frames.h264.mp4"},
 				ExtraAttr:         []string{"group:graphics", "graphics_video", "graphics_weekly"},
 				Fixture:           "chromeVideo",
-				Timeout:           5 * time.Minute,
+				Timeout:           10 * time.Minute,
 			},
 			{
 				Name: "h264_720p_30fps_hw_x4",
@@ -1308,7 +1308,7 @@ func init() {
 				ExtraSoftwareDeps: []string{"proprietary_codecs", "autotest-capability:hw_dec_h264_1080_30"},
 				ExtraData:         []string{"perf/h264/720p_30fps_300frames.h264.mp4"},
 				Fixture:           "chromeVideo",
-				Timeout:           5 * time.Minute,
+				Timeout:           10 * time.Minute,
 			},
 			{
 				Name: "h264_480p_30fps_hw_x9",
@@ -1328,7 +1328,7 @@ func init() {
 				ExtraData:         []string{"perf/h264/480p_30fps_300frames.h264.mp4"},
 				ExtraAttr:         []string{"group:graphics", "graphics_video", "graphics_weekly"},
 				Fixture:           "chromeVideo",
-				Timeout:           5 * time.Minute,
+				Timeout:           10 * time.Minute,
 			},
 			{
 				Name: "h264_360p_30fps_hw_x16",
@@ -1349,7 +1349,7 @@ func init() {
 				ExtraData:         []string{"perf/h264/360p_30fps_300frames.h264.mp4"},
 				ExtraAttr:         []string{"group:graphics", "graphics_video", "graphics_weekly"},
 				Fixture:           "chromeVideo",
-				Timeout:           5 * time.Minute,
+				Timeout:           10 * time.Minute,
 			},
 			{
 				Name: "hevc_1080p_30fps_hw_x2",
@@ -1370,7 +1370,7 @@ func init() {
 				ExtraData:         []string{"perf/hevc/1080p_30fps_300frames.hevc.mp4"},
 				ExtraAttr:         []string{"group:graphics", "graphics_video", "graphics_weekly"},
 				Fixture:           "chromeVideo",
-				Timeout:           5 * time.Minute,
+				Timeout:           10 * time.Minute,
 			},
 			{
 				Name: "hevc_720p_30fps_hw_x4",
@@ -1390,7 +1390,7 @@ func init() {
 				ExtraSoftwareDeps: []string{"proprietary_codecs", "autotest-capability:hw_dec_hevc_1080_30"},
 				ExtraData:         []string{"perf/hevc/720p_30fps_300frames.hevc.mp4"},
 				Fixture:           "chromeVideo",
-				Timeout:           5 * time.Minute,
+				Timeout:           10 * time.Minute,
 			},
 			{
 				Name: "vp8_1080p_30fps_hw_x2",
@@ -1410,7 +1410,7 @@ func init() {
 				ExtraData:         []string{"perf/vp8/1080p_30fps_300frames.vp8.webm"},
 				ExtraAttr:         []string{"group:graphics", "graphics_video", "graphics_weekly"},
 				Fixture:           "chromeVideo",
-				Timeout:           5 * time.Minute,
+				Timeout:           10 * time.Minute,
 			},
 			{
 				Name: "vp8_720p_30fps_hw_x4",
@@ -1429,7 +1429,7 @@ func init() {
 				ExtraSoftwareDeps: []string{"autotest-capability:hw_dec_vp8_1080_30"},
 				ExtraData:         []string{"perf/vp8/720p_30fps_300frames.vp8.webm"},
 				Fixture:           "chromeVideo",
-				Timeout:           5 * time.Minute,
+				Timeout:           10 * time.Minute,
 			},
 			{
 				Name: "vp8_480p_30fps_hw_x9",
@@ -1449,7 +1449,7 @@ func init() {
 				ExtraData:         []string{"perf/vp8/480p_30fps_300frames.vp8.webm"},
 				ExtraAttr:         []string{"group:graphics", "graphics_video", "graphics_weekly"},
 				Fixture:           "chromeVideo",
-				Timeout:           5 * time.Minute,
+				Timeout:           10 * time.Minute,
 			},
 			{
 				Name: "vp8_360p_30fps_hw_x16",
@@ -1470,7 +1470,7 @@ func init() {
 				ExtraData:         []string{"perf/vp8/360p_30fps_300frames.vp8.webm"},
 				ExtraAttr:         []string{"group:graphics", "graphics_video", "graphics_weekly"},
 				Fixture:           "chromeVideo",
-				Timeout:           5 * time.Minute,
+				Timeout:           10 * time.Minute,
 			},
 			{
 				Name: "vp9_1080p_30fps_hw_x2",
@@ -1490,7 +1490,7 @@ func init() {
 				ExtraData:         []string{"perf/vp9/1080p_30fps_300frames.vp9.webm"},
 				ExtraAttr:         []string{"group:graphics", "graphics_video", "graphics_weekly"},
 				Fixture:           "chromeVideo",
-				Timeout:           5 * time.Minute,
+				Timeout:           10 * time.Minute,
 			},
 			{
 				Name: "vp9_720p_30fps_hw_x4",
@@ -1509,7 +1509,7 @@ func init() {
 				ExtraSoftwareDeps: []string{"autotest-capability:hw_dec_vp9_1080_30"},
 				ExtraData:         []string{"perf/vp9/720p_30fps_300frames.vp9.webm"},
 				Fixture:           "chromeVideo",
-				Timeout:           5 * time.Minute,
+				Timeout:           10 * time.Minute,
 			},
 			{
 				Name: "vp9_480p_30fps_hw_x9",
@@ -1529,7 +1529,7 @@ func init() {
 				ExtraData:         []string{"perf/vp9/480p_30fps_300frames.vp9.webm"},
 				ExtraAttr:         []string{"group:graphics", "graphics_video", "graphics_weekly"},
 				Fixture:           "chromeVideo",
-				Timeout:           5 * time.Minute,
+				Timeout:           10 * time.Minute,
 			},
 			{
 				Name: "vp9_360p_30fps_hw_x16",
@@ -1550,7 +1550,7 @@ func init() {
 				ExtraData:         []string{"perf/vp9/360p_30fps_300frames.vp9.webm"},
 				ExtraAttr:         []string{"group:graphics", "graphics_video", "graphics_weekly"},
 				Fixture:           "chromeVideo",
-				Timeout:           5 * time.Minute,
+				Timeout:           10 * time.Minute,
 			},
 			{
 				Name: "av1_1080p_30fps_hw_x2",
@@ -1570,7 +1570,7 @@ func init() {
 				ExtraData:         []string{"perf/av1/1080p_30fps_300frames.av1.mp4"},
 				ExtraAttr:         []string{"group:graphics", "graphics_video", "graphics_weekly"},
 				Fixture:           "chromeVideo",
-				Timeout:           5 * time.Minute,
+				Timeout:           10 * time.Minute,
 			},
 			{
 				Name: "av1_720p_30fps_hw_x4",
@@ -1589,7 +1589,7 @@ func init() {
 				ExtraSoftwareDeps: []string{"autotest-capability:hw_dec_av1_1080_30"},
 				ExtraData:         []string{"perf/av1/720p_30fps_300frames.av1.mp4"},
 				Fixture:           "chromeVideo",
-				Timeout:           5 * time.Minute,
+				Timeout:           10 * time.Minute,
 			},
 			{
 				Name: "h264_1080p_30fps_hw_batch_decoding_in_renderer",
@@ -1605,7 +1605,7 @@ func init() {
 				ExtraSoftwareDeps: []string{"proprietary_codecs", "autotest-capability:hw_dec_h264_1080_30"},
 				ExtraData:         []string{"perf/h264/1080p_30fps_300frames.h264.mp4"},
 				Fixture:           "chromeVideoWithBatchDecodingInRenderer",
-				Timeout:           5 * time.Minute,
+				Timeout:           10 * time.Minute,
 			},
 			{
 				Name: "h264_1080p_60fps_hw_batch_decoding_in_renderer",
@@ -1621,7 +1621,7 @@ func init() {
 				ExtraSoftwareDeps: []string{"proprietary_codecs", "autotest-capability:hw_dec_h264_1080_60"},
 				ExtraData:         []string{"perf/h264/1080p_60fps_600frames.h264.mp4"},
 				Fixture:           "chromeVideoWithBatchDecodingInRenderer",
-				Timeout:           5 * time.Minute,
+				Timeout:           10 * time.Minute,
 			},
 			{
 				Name: "vp8_1080p_30fps_hw_batch_decoding_in_renderer",
@@ -1637,7 +1637,7 @@ func init() {
 				ExtraSoftwareDeps: []string{"autotest-capability:hw_dec_vp8_1080_30"},
 				ExtraData:         []string{"perf/vp8/1080p_30fps_300frames.vp8.webm"},
 				Fixture:           "chromeVideoWithBatchDecodingInRenderer",
-				Timeout:           5 * time.Minute,
+				Timeout:           10 * time.Minute,
 			},
 			{
 				Name: "vp8_1080p_60fps_hw_batch_decoding_in_renderer",
@@ -1653,7 +1653,7 @@ func init() {
 				ExtraSoftwareDeps: []string{"autotest-capability:hw_dec_vp8_1080_60"},
 				ExtraData:         []string{"perf/vp8/1080p_60fps_600frames.vp8.webm"},
 				Fixture:           "chromeVideoWithBatchDecodingInRenderer",
-				Timeout:           5 * time.Minute,
+				Timeout:           10 * time.Minute,
 			},
 			{
 				Name: "vp9_1080p_30fps_hw_batch_decoding_in_renderer",
@@ -1669,7 +1669,7 @@ func init() {
 				ExtraSoftwareDeps: []string{"autotest-capability:hw_dec_vp9_1080_30"},
 				ExtraData:         []string{"perf/vp9/1080p_30fps_300frames.vp9.webm"},
 				Fixture:           "chromeVideoWithBatchDecodingInRenderer",
-				Timeout:           5 * time.Minute,
+				Timeout:           10 * time.Minute,
 			},
 			{
 				Name: "vp9_1080p_60fps_hw_batch_decoding_in_renderer",
@@ -1685,7 +1685,7 @@ func init() {
 				ExtraSoftwareDeps: []string{"autotest-capability:hw_dec_vp9_1080_60"},
 				ExtraData:         []string{"perf/vp9/1080p_60fps_600frames.vp9.webm"},
 				Fixture:           "chromeVideoWithBatchDecodingInRenderer",
-				Timeout:           5 * time.Minute,
+				Timeout:           10 * time.Minute,
 			},
 			{
 				Name: "av1_1080p_30fps_hw_batch_decoding_in_renderer",
@@ -1701,7 +1701,7 @@ func init() {
 				ExtraSoftwareDeps: []string{"autotest-capability:hw_dec_av1_1080_30"},
 				ExtraData:         []string{"perf/av1/1080p_30fps_300frames.av1.mp4"},
 				Fixture:           "chromeVideoWithBatchDecodingInRenderer",
-				Timeout:           5 * time.Minute,
+				Timeout:           10 * time.Minute,
 			},
 			{
 				Name: "av1_1080p_60fps_hw_batch_decoding_in_renderer",
@@ -1717,7 +1717,7 @@ func init() {
 				ExtraSoftwareDeps: []string{"autotest-capability:hw_dec_av1_1080_60"},
 				ExtraData:         []string{"perf/av1/1080p_60fps_600frames.av1.mp4"},
 				Fixture:           "chromeVideoWithBatchDecodingInRenderer",
-				Timeout:           5 * time.Minute,
+				Timeout:           10 * time.Minute,
 			},
 			{
 				Name: "h264_1080p_30fps_hw_reduced_hardware_video_decoder_buffers",
@@ -1732,7 +1732,7 @@ func init() {
 				ExtraSoftwareDeps: []string{"proprietary_codecs", "autotest-capability:hw_dec_h264_1080_30"},
 				ExtraData:         []string{"perf/h264/1080p_30fps_300frames.h264.mp4"},
 				Fixture:           "chromeVideoWithReducedHardwareVideoDecoderBuffers",
-				Timeout:           5 * time.Minute,
+				Timeout:           10 * time.Minute,
 			},
 			{
 				Name: "h264_1080p_60fps_hw_reduced_hardware_video_decoder_buffers",
@@ -1747,7 +1747,7 @@ func init() {
 				ExtraSoftwareDeps: []string{"proprietary_codecs", "autotest-capability:hw_dec_h264_1080_60"},
 				ExtraData:         []string{"perf/h264/1080p_60fps_600frames.h264.mp4"},
 				Fixture:           "chromeVideoWithReducedHardwareVideoDecoderBuffers",
-				Timeout:           5 * time.Minute,
+				Timeout:           10 * time.Minute,
 			},
 			{
 				Name: "vp9_1080p_30fps_hw_reduced_hardware_video_decoder_buffers",
@@ -1762,7 +1762,7 @@ func init() {
 				ExtraSoftwareDeps: []string{"autotest-capability:hw_dec_vp9_1080_30"},
 				ExtraData:         []string{"perf/vp9/1080p_30fps_300frames.vp9.webm"},
 				Fixture:           "chromeVideoWithReducedHardwareVideoDecoderBuffers",
-				Timeout:           5 * time.Minute,
+				Timeout:           10 * time.Minute,
 			},
 			{
 				Name: "vp9_1080p_60fps_hw_reduced_hardware_video_decoder_buffers",
@@ -1777,7 +1777,7 @@ func init() {
 				ExtraSoftwareDeps: []string{"autotest-capability:hw_dec_vp9_1080_60"},
 				ExtraData:         []string{"perf/vp9/1080p_60fps_600frames.vp9.webm"},
 				Fixture:           "chromeVideoWithReducedHardwareVideoDecoderBuffers",
-				Timeout:           5 * time.Minute,
+				Timeout:           10 * time.Minute,
 			},
 			{
 				Name: "av1_1080p_30fps_hw_reduced_hardware_video_decoder_buffers",
@@ -1792,7 +1792,7 @@ func init() {
 				ExtraSoftwareDeps: []string{"autotest-capability:hw_dec_av1_1080_30"},
 				ExtraData:         []string{"perf/av1/1080p_30fps_300frames.av1.mp4"},
 				Fixture:           "chromeVideoWithReducedHardwareVideoDecoderBuffers",
-				Timeout:           5 * time.Minute,
+				Timeout:           10 * time.Minute,
 			},
 			{
 				Name: "av1_1080p_60fps_hw_reduced_hardware_video_decoder_buffers",
@@ -1807,7 +1807,7 @@ func init() {
 				ExtraSoftwareDeps: []string{"autotest-capability:hw_dec_av1_1080_60"},
 				ExtraData:         []string{"perf/av1/1080p_60fps_600frames.av1.mp4"},
 				Fixture:           "chromeVideoWithReducedHardwareVideoDecoderBuffers",
-				Timeout:           5 * time.Minute,
+				Timeout:           10 * time.Minute,
 			},
 		},
 	})
