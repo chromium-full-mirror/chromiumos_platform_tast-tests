@@ -89,14 +89,14 @@ func init() {
 }
 
 const (
-	pdDataRolePollTimeout  time.Duration = 5 * time.Second
-	pdDataRolePollInterval time.Duration = 100 * time.Millisecond
+	pdDataRolePollTimeout time.Duration = 5 * time.Second
 )
 
 // PDDataSwap requests a single data role swap from the servo. The test is successful if the swap
-// works or is rejected but the servo stays in UFP. In practice the servo should already be UFP,
-// so all the swaps will be rejected. This is the only scenario that is actually supported as
-// ChromeOS always wants to be in the DFP role.
+// is rejected and the servo stays in UFP. In practice the servo always is in UFP, even when
+// connected as source - in such scenario, before we get to this function, DUT will automatically
+// request DRS which servo will always accept. Thus all the swaps in this test should be rejected.
+// This is the only scenario that is actually supported as ChromeOS always wants to be in the DFP role.
 func PDDataSwap(ctx context.Context, s *testing.State) {
 	h := s.FixtValue().(*fixture.Value).Helper
 
@@ -126,7 +126,8 @@ func PDDataSwap(ctx context.Context, s *testing.State) {
 }
 
 // dataRoleSwap tests data role swaps from servo.
-// As the DUT always wants to be DFP (servo is UFP), we count it as success if the swap is successful, or if it is rejected and servo is UFP.
+// As the DUT should already be a DFP and always wants to be DFP (servo is UFP),
+// we count it as success if DRS is rejected and servo is UFP.
 func dataRoleSwap(ctx context.Context, h *firmware.Helper) error {
 	// Get the servo's current role.
 	pdState, err := h.Servo.GetServoPDState(ctx)
@@ -134,8 +135,10 @@ func dataRoleSwap(ctx context.Context, h *firmware.Helper) error {
 		return errors.Wrap(err, "failed to get Servo PD state before data swap")
 	}
 
-	servoRoleBefore := pdState.DataRole
-	testing.ContextLog(ctx, "Servo data role before: ", servoRoleBefore)
+	// Make sure servo is UFP
+	if pdState.DataRole != servo.DataRoleUFP {
+		return errors.New("DUT failed to automatically switch to DFP")
+	}
 
 	// Initiate swap from the servo.
 	reply, err := h.Servo.ServoSendDataSwapRequest(ctx)
@@ -145,9 +148,9 @@ func dataRoleSwap(ctx context.Context, h *firmware.Helper) error {
 
 	testing.ContextLogf(ctx, "DUT swap response %q", reply)
 
-	if reply == servo.PDCtrlReject && servoRoleBefore == servo.DataRoleUFP {
+	if reply == servo.PDCtrlReject {
 		// A PD device is allowed to reject a data swap request.
-		// The DUT may reject a data swap if it is already in its
+		// The DUT should reject a data swap if it is already in its
 		// preferred role. The DUT's preferred role should always be DFP.
 		testing.ContextLog(ctx, "DUT rejected data swap (expected)")
 		// GoBigSleepLint: Sleep for pdDataRolePollTimeout to make sure the data role doesn't spontaneously change.
@@ -166,24 +169,9 @@ func dataRoleSwap(ctx context.Context, h *firmware.Helper) error {
 		return nil
 	}
 
-	if err := testing.Poll(ctx, func(ctx context.Context) error {
-		if pdState, err = h.Servo.GetServoPDState(ctx); err == nil {
-			if pdState.DataRole == servoRoleBefore {
-				return errors.Wrap(err, "failed to switch data role")
-			}
-		} else {
-			return errors.Wrap(err, "failed to get servo PD state after data swap")
-		}
-
-		testing.ContextLog(ctx, "Servo data role after: ", pdState.DataRole)
-		return nil
-	}, &testing.PollOptions{Timeout: pdDataRolePollTimeout, Interval: pdDataRolePollInterval}); err != nil {
-		return errors.Wrap(err, "expected data role swap")
-	}
-
 	if err := h.Servo.RestorePDDataRole(ctx); err != nil {
 		return errors.Wrap(err, "failed to restore DUT to DFP")
 	}
 
-	return nil
+	return errors.New("DUT did not reject the swap response")
 }
