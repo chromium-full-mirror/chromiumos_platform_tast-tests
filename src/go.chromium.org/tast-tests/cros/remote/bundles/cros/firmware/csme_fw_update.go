@@ -246,9 +246,9 @@ func getFwName(ctx context.Context, reporter *reporters.Reporter) (string, error
 	if err != nil {
 		return "", errors.Wrap(err, "cannot obtain FWID from crossystem params")
 	}
-	re := regexp.MustCompile(`Google_([a-z-A-Z-0-9]*)\.(\d*)\.\d*.\d*`)
+	re := regexp.MustCompile(`Google_([a-z-A-Z-0-9]*)(_Ufs)?\.(\d*)\.\d*.\d*`)
 	match := re.FindStringSubmatch(fwName)
-	if len(match) != 3 {
+	if len(match) < 3 {
 		return "", errors.Errorf("unexpected fw id format from crossystem %v, got: %s", reporters.CrossystemParamFwid, fwName)
 	}
 	fwName = strings.ToLower(match[1])
