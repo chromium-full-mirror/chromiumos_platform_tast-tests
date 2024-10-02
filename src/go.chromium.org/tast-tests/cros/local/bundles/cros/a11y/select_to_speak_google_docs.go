@@ -20,9 +20,8 @@ import (
 
 func init() {
 	testing.AddTest(&testing.Test{
-		Func:         SelectToSpeakGoogleDocs,
-		LacrosStatus: testing.LacrosVariantExists,
-		Desc:         "A test that invokes Select-to-Speak and verifies it can read content in a Google doc",
+		Func: SelectToSpeakGoogleDocs,
+		Desc: "A test that invokes Select-to-Speak and verifies it can read content in a Google doc",
 		Contacts: []string{
 			"chromeos-a11y-eng@google.com", // Mailing list
 			"katie@chromium.org",           // Test author

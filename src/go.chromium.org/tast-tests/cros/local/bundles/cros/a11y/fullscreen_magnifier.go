@@ -22,9 +22,8 @@ import (
 
 func init() {
 	testing.AddTest(&testing.Test{
-		Func:         FullscreenMagnifier,
-		LacrosStatus: testing.LacrosVariantUnneeded, // Does not use the browser
-		Desc:         "Toggles the fullscreen magnifier using the keyboard shortcut and ensures the feature is updated",
+		Func: FullscreenMagnifier,
+		Desc: "Toggles the fullscreen magnifier using the keyboard shortcut and ensures the feature is updated",
 		Contacts: []string{
 			"chromeos-a11y-eng@google.com", // Mailing list
 			"katie@chromium.org",           // Test author

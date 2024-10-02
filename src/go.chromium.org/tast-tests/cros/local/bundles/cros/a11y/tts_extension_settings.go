@@ -7,7 +7,6 @@ package a11y
 import (
 	"context"
 	"fmt"
-	"strings"
 	"time"
 
 	"go.chromium.org/tast-tests/cros/local/a11y"
@@ -28,28 +27,17 @@ import (
 func init() {
 	testing.AddTest(&testing.Test{
 		Func:         TTSExtensionSettings,
-		LacrosStatus: testing.LacrosVariantExists,
 		Desc:         "Test that each Text-to-Speech extension's settings can be opened",
 		Contacts:     []string{"chromeos-a11y-eng@google.com", "neis@chromium.org"},
 		BugComponent: "b:1272672",
 		SoftwareDeps: []string{"chrome"},
 		Attr:         []string{"group:mainline", "informational", "group:hw_agnostic"},
-		Params: []testing.Param{{
-			Name:    "ash",
-			Fixture: "chromeLoggedIn",
-			Val:     browser.TypeAsh,
-		}, {
-			Name:              "lacros",
-			ExtraSoftwareDeps: []string{"lacros"},
-			Fixture:           "lacros",
-			Val:               browser.TypeLacros,
-		}},
+		Fixture:      "chromeLoggedIn",
 	})
 }
 
 func TTSExtensionSettings(ctx context.Context, s *testing.State) {
 	cr := s.FixtValue().(chrome.HasChrome).Chrome()
-	bt := s.Param().(browser.Type)
 
 	tconn, err := cr.TestAPIConn(ctx)
 	if err != nil {
@@ -99,7 +87,7 @@ func TTSExtensionSettings(ctx context.Context, s *testing.State) {
 			)(ctx)
 		},
 		checkSettingsOpened: func(ctx context.Context, ui *uiauto.Context) (retErr error) {
-			return ash.WaitForCondition(ctx, tconn, settingsWindowMatch(ctx, bt, "eSpeak-NG Options"), &testing.PollOptions{Timeout: 5 * time.Second})
+			return ash.WaitForCondition(ctx, tconn, ash.BrowserTitleMatch(browser.TypeAsh, "eSpeak-NG Options"), &testing.PollOptions{Timeout: 5 * time.Second})
 		},
 		numOfWindows: 2,
 	}, {
@@ -111,7 +99,7 @@ func TTSExtensionSettings(ctx context.Context, s *testing.State) {
 			)(ctx)
 		},
 		checkSettingsOpened: func(ctx context.Context, ui *uiauto.Context) (retErr error) {
-			return ash.WaitForCondition(ctx, tconn, settingsWindowMatch(ctx, bt, "Google TTS Settings"), &testing.PollOptions{Timeout: 5 * time.Second})
+			return ash.WaitForCondition(ctx, tconn, ash.BrowserTitleMatch(browser.TypeAsh, "Google TTS Settings"), &testing.PollOptions{Timeout: 5 * time.Second})
 		},
 		numOfWindows: 2,
 	}} {
@@ -145,19 +133,5 @@ func TTSExtensionSettings(ctx context.Context, s *testing.State) {
 		if err := cr.ResetState(ctx); err != nil {
 			s.Fatal("Failed to reset Chrome: ", err)
 		}
-	}
-}
-
-func settingsWindowMatch(ctx context.Context, bt browser.Type, titlePrefix string) func(w *ash.Window) bool {
-	if bt == browser.TypeLacros {
-		return osURLHandlerWindowMatch(ctx, titlePrefix)
-	}
-	return ash.BrowserTitleMatch(browser.TypeAsh, titlePrefix)
-}
-
-func osURLHandlerWindowMatch(ctx context.Context, titlePrefix string) func(w *ash.Window) bool {
-	titlePrefix = "ChromeOS-URLs - " + titlePrefix
-	return func(w *ash.Window) bool {
-		return w.WindowType == ash.WindowTypeSystem && strings.HasPrefix(w.Title, titlePrefix)
 	}
 }

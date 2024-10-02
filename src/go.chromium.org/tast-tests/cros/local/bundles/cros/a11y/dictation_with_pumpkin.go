@@ -17,9 +17,8 @@ import (
 
 func init() {
 	testing.AddTest(&testing.Test{
-		Func:         DictationWithPumpkin,
-		LacrosStatus: testing.LacrosVariantExists,
-		Desc:         "Tests that the Dictation feature can use the Pumpkin semantic parser to input text",
+		Func: DictationWithPumpkin,
+		Desc: "Tests that the Dictation feature can use the Pumpkin semantic parser to input text",
 		Contacts: []string{
 			"chromeos-a11y-eng@google.com", // Mailing list
 			"akihiroota@chromium.org",      // Test author

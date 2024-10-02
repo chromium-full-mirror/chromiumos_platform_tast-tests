@@ -19,9 +19,8 @@ import (
 
 func init() {
 	testing.AddTest(&testing.Test{
-		Func:         ChromevoxToggleOnShortcut,
-		LacrosStatus: testing.LacrosVariantUnneeded, // TODO(crbug.com/1159107): Test is disabled in continuous testing. Migrate when enabled.
-		Desc:         "A test that verifies Ctrl+Alt+Z toggles on Chromevox",
+		Func: ChromevoxToggleOnShortcut,
+		Desc: "A test that verifies Ctrl+Alt+Z toggles on Chromevox",
 		Contacts: []string{
 			"chromeos-a11y-eng@google.com", // Mailing list
 			"dtseng@chromium.org",          // Test author

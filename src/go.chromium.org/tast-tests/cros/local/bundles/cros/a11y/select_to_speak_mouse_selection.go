@@ -20,9 +20,8 @@ import (
 
 func init() {
 	testing.AddTest(&testing.Test{
-		Func:         SelectToSpeakMouseSelection,
-		LacrosStatus: testing.LacrosVariantExists,
-		Desc:         "A test that invokes Select-to-Speak by holding search and clicking and dragging",
+		Func: SelectToSpeakMouseSelection,
+		Desc: "A test that invokes Select-to-Speak by holding search and clicking and dragging",
 		Contacts: []string{
 			"chromeos-a11y-eng@google.com", // Mailing list
 			"katie@chromium.org",           // Test author
