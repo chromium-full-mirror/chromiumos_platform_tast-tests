@@ -80,6 +80,8 @@ func init() {
 					shouldBeEmpty: false,
 				},
 				ExtraSoftwareDeps: []string{"android_container"},
+				// TODO(b/370783628): Promote back after flakiness is fixed.
+				ExtraAttr:         []string{"informational"},
 			},
 			{
 				Name: "blocklist_vm",
