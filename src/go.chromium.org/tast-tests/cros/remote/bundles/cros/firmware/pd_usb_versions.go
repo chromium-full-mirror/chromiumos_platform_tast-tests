@@ -9,6 +9,7 @@ import (
 	"regexp"
 	"time"
 
+	"go.chromium.org/tast-tests/cros/common/servo"
 	"go.chromium.org/tast-tests/cros/remote/firmware"
 	"go.chromium.org/tast-tests/cros/remote/firmware/fixture"
 	"go.chromium.org/tast/core/errors"
@@ -75,6 +76,18 @@ func init() {
 				DTS:       firmware.DTSModeOff,
 				PowerRole: firmware.RoleSink,
 			},
+		}, {
+			Name: "shutdown",
+			Val: firmware.PDTestParams{
+				Shutdown: true,
+				DTS:      firmware.DTSModeOff,
+			},
+		}, {
+			Name: "suspend",
+			Val: firmware.PDTestParams{
+				Suspend: true,
+				DTS:     firmware.DTSModeOff,
+			},
 		}},
 	})
 }
@@ -106,6 +119,15 @@ func PDUsbVersions(ctx context.Context, s *testing.State) {
 	testing.ContextLog(ctx, "turning USB 3 off")
 	h.Servo.ServoSetUSBVersion3(ctx, false)
 
+	if testParams.Shutdown || testParams.Suspend {
+		if err := h.Servo.SetPowerState(ctx, servo.PowerStateOn); err != nil {
+			testing.ContextLog(ctx, "Failed to power on DUT: ", err)
+		}
+		if err := h.WaitConnect(ctx); err != nil {
+			s.Fatal("Failed to boot after test: ", err)
+		}
+	}
+
 	if err := testing.Poll(ctx, func(ctx context.Context) error {
 		testing.ContextLog(ctx, "retrieving USB information")
 		usbInfoByteArr, err := h.DUT.Conn().CommandContext(ctx, "lsusb", "-d", servoHubVendorID, "-v").Output(ssh.DumpLogOnError)
@@ -128,8 +150,33 @@ func PDUsbVersions(ctx context.Context, s *testing.State) {
 		s.Fatal("Expected only usb 2 connection: ", err)
 	}
 
+	if testParams.Shutdown {
+		if err := firmware.ShutdownDUT(ctx, h); err != nil {
+			s.Fatal("Failed to shutdown: ", err)
+		}
+	}
+	if testParams.Suspend {
+		cmd := h.DUT.Conn().CommandContext(ctx, "powerd_dbus_suspend", "--delay=3")
+		if err := cmd.Start(); err != nil {
+			s.Fatal("Failed to invoke powerd_dbus_suspend: ", err)
+		}
+
+		if err := h.WaitForPowerStates(ctx, firmware.PowerStateInterval, firmware.PowerStateTimeout, "S3", "S0ix"); err != nil {
+			s.Fatal("Failed to suspend: ", err)
+		}
+	}
+
 	testing.ContextLog(ctx, "turning USB 3 on")
 	h.Servo.ServoSetUSBVersion3(ctx, true)
+
+	if testParams.Shutdown || testParams.Suspend {
+		if err := h.Servo.SetPowerState(ctx, servo.PowerStateOn); err != nil {
+			testing.ContextLog(ctx, "Failed to power on DUT: ", err)
+		}
+		if err := h.WaitConnect(ctx); err != nil {
+			s.Fatal("Failed to boot after test: ", err)
+		}
+	}
 
 	if err := testing.Poll(ctx, func(ctx context.Context) error {
 		testing.ContextLog(ctx, "retrieving USB information")
