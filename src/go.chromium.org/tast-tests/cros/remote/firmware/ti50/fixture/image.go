@@ -588,9 +588,9 @@ func ti50ImageDirectory(t ti50.TestbedType, i ImageType) (string, error) {
 	case ti50.GscDTShield:
 		return "andreiboard-" + n, nil
 	case ti50.GscOTShield:
-		fallthrough
-	case ti50.GscOpentitanCw310Fpga:
 		return "opentitan-" + n, nil
+	case ti50.GscOpentitanCw310Fpga:
+		return "nuvotitan_cw310_a1-" + n, nil
 	case ti50.GscHostEmulation:
 		return "host_emulation-" + n, nil
 	default:
