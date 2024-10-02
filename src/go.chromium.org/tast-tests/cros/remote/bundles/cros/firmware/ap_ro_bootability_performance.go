@@ -315,8 +315,11 @@ func APROBootabilityPerformance(ctx context.Context, s *testing.State) {
 				s.Fatal("Failed to copy EC firmware file to servo host: ", err)
 			}
 
-			flashECAPOpts := futility.NewUpdateOptions(apBackupOnServo).WithECImage(ecBackupOnServo).WithMode(futility.UpdateModeRecovery).WithWriteProtection(futility.WriteProtectionDisable)
-			if _, err := futilityRemoteInstance.Update(ctx, flashECAPOpts); err != nil {
+			if _, err := futilityRemoteInstance.Update(ctx,
+				futility.NewUpdateOptions(apBackupOnServo).
+					WithECImage(ecBackupOnServo).
+					WithMode(futility.UpdateModeRecovery).
+					WithWriteProtection(futility.WriteProtectionDisable)); err != nil {
 				s.Fatal("Failed to restore EC and AP firmware through servo at the end of the test: ", err)
 			}
 
@@ -754,13 +757,11 @@ func flashDUTAndVerifyFirmwareVersions(ctx context.Context, h *firmware.Helper, 
 
 		// Get the EC RO and RW versions from the binary file which is specified,
 		// or use the old ones.
-		ecROID, ecRWID, err := getFWIDFromBinFile(ctx, h, ecPathOnDut, bios.ROFRIDImageSection, bios.RWFWIDImageSection)
-		if err != nil {
+		if ecIDs, err := getFWIDFromBinFile(ctx, h, ecPathOnDut, bios.ROFRIDImageSection, bios.RWFWIDImageSection); err != nil {
 			return errors.Wrap(err, "failed to get EC IDs")
-		}
-		if fwInfo.wp == futility.WriteProtectionDisable {
-			fwInfo.ec.roID = ecROID
-			fwInfo.ec.rwID = ecRWID
+		} else if fwInfo.wp == futility.WriteProtectionDisable {
+			fwInfo.ec.roID = ecIDs[0]
+			fwInfo.ec.rwID = ecIDs[1]
 		} else if fwInfo.wp == futility.WriteProtectionEnable {
 			fwInfo.ec.rwID = ecRWNewID
 		} else {
@@ -785,7 +786,14 @@ func flashDUTAndVerifyFirmwareVersions(ctx context.Context, h *firmware.Helper, 
 		if fwInfo.ec.path != "" && !skipECFlashing {
 			updateOptions.WithECImage(ecPathOnDut)
 		}
-		futilityInstance.Update(ctx, updateOptions)
+		if hasCSME, err := checkCSME(ctx, h, apPathOnDut); err != nil {
+			return errors.Wrap(err, "failed to check for CSME sections")
+		} else if hasCSME {
+			updateOptions.WithQuirks(map[string]string{"unlock_csme": "1"})
+		}
+		if _, err := futilityInstance.Update(ctx, updateOptions); err != nil {
+			return errors.Wrap(err, "failed to flash firmware bin files")
+		}
 	}
 
 	// Reboot DUT for flash to take effect.
@@ -987,54 +995,102 @@ func collectShippedFws(h *firmware.Helper, filepath string) ([]jsonFwInfo, error
 	return shippedFws, nil
 }
 
-// getFWIDFromBinFile returns a string representation of the data pointed by sections from a bin file.
-func getFWIDFromBinFile(ctx context.Context, h *firmware.Helper, pathToFile string, section1, section2 bios.ImageSection) (string, string, error) {
+// getFWIDFromBinFile returns the firmware version IDs specified by the sections of a bin file.
+func getFWIDFromBinFile(ctx context.Context, h *firmware.Helper, pathToFile string, sections ...bios.ImageSection) ([]string, error) {
 	futilityInstance, err := futility.NewLocalBuilder(h.DUT).Build()
 	if err != nil {
-		return "", "", errors.Wrap(err, "failed to setup futility instance")
+		return nil, errors.Wrap(err, "failed to setup futility instance")
 	}
 
-	fmapSections, out, err := futilityInstance.DumpFmap(ctx, pathToFile, []string{string(section1), string(section2)})
+	sectionStrings := make([]string, len(sections))
+	for i, sec := range sections {
+		sectionStrings[i] = string(sec)
+	}
+
+	fmapSections, out, err := futilityInstance.DumpFmap(ctx, pathToFile, sectionStrings)
 	if err != nil {
-		return "", "", errors.Wrapf(err, "failed to get FMap sections, output: %s", string(out))
+		return nil, errors.Wrapf(err, "failed to get FMap sections, output: %s", string(out))
 	}
 
-	fmapSection1 := fmapSections[slices.IndexFunc(fmapSections, func(s futility.FMapSection) bool { return s.Name == string(section1) })]
-	fmapSection2 := fmapSections[slices.IndexFunc(fmapSections, func(s futility.FMapSection) bool { return s.Name == string(section2) })]
-
-	// Open and read the bin file.
 	bin, err := linuxssh.ReadFile(ctx, h.DUT.Conn(), pathToFile)
+	if err != nil {
+		return nil, errors.Wrap(err, "failed to read bin file")
+	}
 
-	// Get only the firmware IDs numbers from required sections.
-	section1ID := strings.Trim(string(bin[fmapSection1.Offset:fmapSection1.Offset+fmapSection1.Size]), "\x00")
-	section2ID := strings.Trim(string(bin[fmapSection2.Offset:fmapSection2.Offset+fmapSection2.Size]), "\x00")
+	sectionIDs := make([]string, len(sections))
+	for i, str := range sectionStrings {
+		fmapSection := fmapSections[slices.IndexFunc(fmapSections, func(s futility.FMapSection) bool { return s.Name == str })]
+		sectionIDs[i] = strings.Trim(string(bin[fmapSection.Offset:fmapSection.Offset+fmapSection.Size]), "\x00")
+		testing.ContextLogf(ctx, "Found ID = %s, in section = %s", sectionIDs[i], fmapSection.Name)
+	}
+	return sectionIDs, nil
+}
 
-	testing.ContextLogf(ctx, "Found ID = %s, in section = %s", section1ID, fmapSection1.Name)
-	testing.ContextLogf(ctx, "Found ID = %s, in section = %s", section2ID, fmapSection2.Name)
-	return section1ID, section2ID, nil
+// getAPFWIDFromBinFile returns only the version numbers specified by the AP RO or RW sections of
+// a bin file.
+func getAPFWIDFromBinFile(ctx context.Context, h *firmware.Helper, pathToFile string, apSections ...bios.ImageSection) ([]string, error) {
+	apIDs, err := getFWIDFromBinFile(ctx, h, pathToFile, apSections...)
+	if err != nil {
+		return nil, errors.Wrap(err, "failed to get AP firmware ID from bin file")
+	}
+
+	onlyIDs := make([]string, len(apIDs))
+	for i, apID := range apIDs {
+		if strings.Count(apID, ".") != 3 {
+			return nil, errors.Errorf("got invalid firmware ID: %s", apID)
+		}
+		onlyIDs[i] = strings.SplitN(apID, ".", 2)[1]
+	}
+	return onlyIDs, nil
 }
 
 // getNewestRWIDAvailable identifies which is the newest firmware ID available
 // in the DUT by dissecting the AP bin file.
 func getNewestRWIDAvailable(ctx context.Context, h *firmware.Helper, pathToFile string, rwSectionA, rwSectionB bios.ImageSection) (string, fwpb.ImageSection, error) {
-	apRWA, apRWB, err := getFWIDFromBinFile(ctx, h, pathToFile, rwSectionA, rwSectionB)
+	apIDRW, err := getAPFWIDFromBinFile(ctx, h, pathToFile, rwSectionA, rwSectionB)
 	if err != nil {
-		return "", fwpb.ImageSection_EmptyImageSection, errors.Wrap(err, "failed to get ID from bin file")
+		return "", fwpb.ImageSection_EmptyImageSection, errors.Wrap(err, "failed to get AP RW IDs from bin file")
 	}
 
 	// Compare the firmware IDs from section A and B to identify which is the newer.
 	// If they are the same, use section A as default.
-	apIDRWA := strings.SplitN(apRWA, ".", 2)[1]
-	apIDRWB := strings.SplitN(apRWB, ".", 2)[1]
-	if apIDRWA == apIDRWB {
-		return apIDRWA, fwpb.ImageSection_APRWAImageSection, nil
+	apIDRWA, apIDRWB := apIDRW[0], apIDRW[1]
+	areDesc, err := areVersionsDescending(apIDRWB, apIDRWA)
+	if err != nil {
+		return "", fwpb.ImageSection_EmptyImageSection, errors.Wrapf(err, "failed to compare firmware IDs %s and %s", apIDRWA, apIDRWB)
 	}
 
-	if areDesc, err := areVersionsDescending(apIDRWA, apIDRWB); err != nil {
-		return "", fwpb.ImageSection_EmptyImageSection, errors.Wrapf(err, "failed to compare firmware IDs %s and %s", apIDRWA, apIDRWB)
-	} else if areDesc {
-		return apIDRWA, fwpb.ImageSection_APRWAImageSection, nil
-	} else {
+	if areDesc {
 		return apIDRWB, fwpb.ImageSection_APRWBImageSection, nil
 	}
+	return apIDRWA, fwpb.ImageSection_APRWAImageSection, nil
+}
+
+// checkCSME checks whether the CSME can be used in the image bin file.
+func checkCSME(ctx context.Context, h *firmware.Helper, imagePath string) (bool, error) {
+	configFile := imagePath + "-config"
+	if err := h.DUT.Conn().CommandContext(ctx, "which", "ifdtool").Run(); err != nil {
+		testing.ContextLogf(ctx, "idftool not found: %s", err)
+		return false, nil
+	}
+
+	if err := h.DUT.Conn().CommandContext(ctx, "cbfstool", imagePath, "extract", "-n", "config", "-f", configFile).Run(); err != nil {
+		return false, errors.Wrap(err, "failed to extract config file")
+	}
+
+	out, err := h.DUT.Conn().CommandContext(ctx, "cat", configFile).Output()
+	if err != nil {
+		return false, errors.Wrap(err, "failed to read config file")
+	}
+
+	for _, config := range strings.Split(string(out), "\n") {
+		cfg, value, _ := strings.Cut(config, "=")
+		if cfg == "CONFIG_IFD_CHIPSET" || (cfg == "CONFIG_IFD_BIN_PATH" && strings.Contains(value, "/nissa/")) {
+			testing.ContextLogf(ctx, "Image %s has %s", imagePath, cfg)
+			return true, nil
+		}
+	}
+
+	testing.ContextLogf(ctx, "Image %s has no CONFIG_IFD_CHIPSET", imagePath)
+	return false, nil
 }
