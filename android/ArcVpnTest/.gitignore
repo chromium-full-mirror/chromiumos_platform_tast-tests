@@ -1,0 +1,9 @@
+# ignore Android Studio files
+*.iml
+.idea
+.gradle
+gradle
+gradlew
+gradlew.bat
+local.properties
+build/
