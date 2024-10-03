@@ -141,24 +141,27 @@ func (tf *TestFixture) SetUp(ctx context.Context, s *testing.FixtState) interfac
 		hostname = host
 	}
 
-	pasitTopology := &labapi.PasitHost{}
-	if dutConfig, err := s.ChromeOSDUTLabConfig(""); err == nil {
-		if dutConfig.GetChromeos().GetPasitHost() != nil {
-			pasitTopology = dutConfig.GetChromeos().GetPasitHost()
-			s.Log("Loaded DUT info from lab config")
-		}
-	} else if topologyFileVar.Value() != "" {
+	var pasitTopology *labapi.PasitHost
+	if topologyFileVar.Value() != "" {
 		rawText, err := os.ReadFile(topologyFileVar.Value())
 		if err != nil {
 			s.Fatal("Failed to read topology file: ", err)
 		}
 
+		pasitTopology = &labapi.PasitHost{}
 		if err := unmarshaller.Unmarshal(rawText, pasitTopology); err != nil {
 			s.Fatal("Failed to unmarshal topology file: ", err)
 		}
 		s.Log("Loaded DUT info from textproto file")
-	} else {
-		// No dut topology defined, use default.
+	} else if dutConfig, err := s.ChromeOSDUTLabConfig(""); err == nil {
+		if dutConfig.GetChromeos().GetPasitHost() != nil {
+			pasitTopology = dutConfig.GetChromeos().GetPasitHost()
+			s.Log("Loaded DUT info from lab config")
+		}
+	}
+
+	// No dut topology defined, use default.
+	if pasitTopology == nil {
 		params := s.Param().(topologyParamVal)
 		pasitTopology = params.defaultTopology(s, hostname)
 		s.Log("Loaded DUT info from CLI args")
