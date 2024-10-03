@@ -73,6 +73,12 @@ func DumpNetworkInfo(ctx context.Context, filename string) error {
 		runCmdAndLog("ip", family, "route", "list", "table", "all")
 	}
 
+	// Dump ip-neigh in root and all other netns.
+	for _, family := range []string{"-4", "-6"} {
+		runCmdAndLog("ip", family, "neigh")
+		runCmdAndLog("ip", "-all", "netns", "exec", "ip", family, "neigh")
+	}
+
 	// Dumps conntrack. Filters out SSDP (dport=1900) and MDNS (dport=5353)
 	// connections since they are very noisy in the lab network and in general
 	// they are not very helpful here. Also dumps the counters in case we want to
