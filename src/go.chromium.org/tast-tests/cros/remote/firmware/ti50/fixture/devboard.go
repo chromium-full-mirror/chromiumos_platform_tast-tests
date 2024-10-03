@@ -139,7 +139,7 @@ func (v *Value) EfiImagePath(ctx context.Context) (string, error) {
 // exists.  Debug image is required for H1, but not strictly required for DT.
 func (v *Value) DebugImagePath(ctx context.Context) (string, error) {
 	if v.debugImagePath != "" {
-		return v.efiImagePath, nil
+		return v.debugImagePath, nil
 	}
 	debugImage, err := DownloadDebugImage(ctx, v.TestbedProperties)
 	if err != nil {
