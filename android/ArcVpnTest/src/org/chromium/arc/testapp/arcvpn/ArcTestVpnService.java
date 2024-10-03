@@ -38,6 +38,7 @@ import java.net.Inet6Address;
 import java.net.InetAddress;
 import java.net.InetSocketAddress;
 import java.net.Socket;
+import java.net.SocketAddress;
 import java.net.UnknownHostException;
 import java.nio.ByteBuffer;
 import java.util.concurrent.ExecutorService;
@@ -245,7 +246,14 @@ public class ArcTestVpnService extends VpnService {
 
     @Override
     public int onStartCommand(Intent intent, int flags, int startId) {
-        Log.d(TAG, "onStartCommand is called");
+        Log.i(TAG, "onStartCommand is called");
+        if (intent.getExtras() != null) {
+            for (String key : intent.getExtras().keySet()) {
+                Object value = intent.getExtras().get(key);
+                Log.d(TAG, "Extra data with key=" + key + ", value=" + value);
+            }
+        }
+
         showNotification();
 
         // Registers ourselves as an actual VpnService and sets up the underlying interface.
@@ -265,15 +273,7 @@ public class ArcTestVpnService extends VpnService {
             connectToToyVpnServer(
                     ifname, serverAddress, serverPort, intent.getIntExtra(MTU_KEY, DEFAULT_MTU));
         } else {
-            Log.d(
-                    TAG,
-                    "Arguments for connecting to toy VPN server is invalid, ifname: "
-                            + ifname
-                            + ", server address: "
-                            + serverAddress
-                            + ", server port: "
-                            + serverPort
-                            + ", ignore if this is expected");
+            Log.i(TAG, "Skip connecting to toy VPN server");
         }
 
         // Setup socket if arguments are given.
@@ -287,17 +287,7 @@ public class ArcTestVpnService extends VpnService {
                 && sockPort != INVALID_PORT) {
             setupSocket(sockProto, sockIfname, sockAddress, sockPort);
         } else {
-            Log.d(
-                    TAG,
-                    "Arguments for setting up socket is invalid, proto: "
-                            + sockProto
-                            + ", ifname: "
-                            + sockIfname
-                            + ", address: "
-                            + sockAddress
-                            + ", port: "
-                            + sockPort
-                            + ", ignore if this is expected");
+            Log.i(TAG, "Skip setting up socket for generating test traffic");
         }
         mBroadcastReceiver = new ArcVpnBroadcastReceiver();
         IntentFilter intentFilter = new IntentFilter();
@@ -308,16 +298,6 @@ public class ArcTestVpnService extends VpnService {
 
     /** Setup socket by connecting to address:port with proto via ifname. */
     private void setupSocket(String proto, String ifname, String address, int port) {
-        Log.d(
-                TAG,
-                "Start setting up socket, proto: "
-                        + proto
-                        + ", ifname: "
-                        + ifname
-                        + ", address: "
-                        + address
-                        + ", port: "
-                        + port);
         InetAddress inetAddress;
         try {
             inetAddress = InetAddress.getByName(address);
@@ -327,10 +307,10 @@ public class ArcTestVpnService extends VpnService {
         }
         switch (proto) {
             case PROTOCOL_TCP:
-                setupTcpSocket(ifname, inetAddress, port);
+                setupTcpSocket(ifname, new InetSocketAddress(inetAddress, port));
                 break;
             case PROTOCOL_UDP:
-                setupUdpSocket(ifname, inetAddress, port);
+                setupUdpSocket(ifname, new InetSocketAddress(inetAddress, port));
                 break;
             default:
                 Log.e(TAG, "Invalid protocol: " + proto + ", setup socket failed.");
@@ -388,24 +368,17 @@ public class ArcTestVpnService extends VpnService {
      * starts the packet forwarding between the TCP connection tun interface after that.
      */
     private void connectToToyVpnServer(String ifname, String address, int port, int mtu) {
-        Log.d(
-                TAG,
-                "Start connecting to toy VPN server, ifname: "
-                        + ifname
-                        + ", address: "
-                        + address
-                        + ", port: "
-                        + port
-                        + ", mtu: "
-                        + mtu);
         InetAddress inetAddress;
         try {
             inetAddress = InetAddress.getByName(address);
         } catch (UnknownHostException e) {
-            Log.e(TAG, "Address is unknown, setup socket failed", e);
+            Log.e(TAG, "Unable to resolve address of toy vpn server", e);
             return;
         }
-        setupTcpSocket(ifname, inetAddress, port);
+
+        InetSocketAddress socketAddress = new InetSocketAddress(inetAddress, port);
+        Log.i(TAG, "Connecting to toy VPN server at " + socketAddress + " via " + ifname);
+        setupTcpSocket(ifname, socketAddress);
         startForwarding(mtu);
     }
 
@@ -415,30 +388,19 @@ public class ArcTestVpnService extends VpnService {
      * multiple times in one test, the older socket will be replaced by newly setup socket for
      * sending messages.
      */
-    private void setupTcpSocket(String ifname, InetAddress address, int port) {
+    private void setupTcpSocket(String ifname, InetSocketAddress socketAddress) {
         mExecutor.submit(
                 () -> {
-                    Log.d(
-                            TAG,
-                            "Start setting up TCP socket, ifname: "
-                                    + ifname
-                                    + ", address: "
-                                    + address.toString()
-                                    + ", port: "
-                                    + port);
+                    Log.i(TAG, "Setting up TCP socket to " + socketAddress + " via " + ifname);
+                    Network net = getNetworkByInterface(ifname);
+                    if (net == null) {
+                        Log.e(TAG, "Socket setup failed since network does not exist: " + ifname);
+                        return;
+                    }
                     try {
-                        Network net = getNetworkByInterface(ifname);
-                        if (net == null) {
-                            Log.e(
-                                    TAG,
-                                    "Network with "
-                                            + ifname
-                                            + " does not exist, set up socket failed.");
-                            return;
-                        }
                         mTcpSocket = net.getSocketFactory().createSocket();
                         protect(mTcpSocket);
-                        mTcpSocket.connect(new InetSocketAddress(address, port));
+                        mTcpSocket.connect(socketAddress);
                         mWriter =
                                 new PrintWriter(
                                         mTcpSocket.getOutputStream(), /* autoFlush= */ true);
@@ -452,7 +414,7 @@ public class ArcTestVpnService extends VpnService {
 
     /**
      * Sends a message via setup TCP socket. This method needs to be called after calling {@link
-     * #setupTcpSocket(String ifname, InetAddress address, int port)}.
+     * #setupTcpSocket(String, InetSocketAddress)}.
      */
     public void sendTcpMessage(String msg) {
         mExecutor.submit(
@@ -477,31 +439,20 @@ public class ArcTestVpnService extends VpnService {
      * multiple times in one test, the older socket will be replaced by newly setup socket for
      * sending messages.
      */
-    private void setupUdpSocket(String ifname, InetAddress address, int port) {
+    private void setupUdpSocket(String ifname, InetSocketAddress socketAddress) {
         mExecutor.submit(
                 () -> {
-                    Log.d(
-                            TAG,
-                            "Start setting up UDP socket, ifname: "
-                                    + ifname
-                                    + ", address: "
-                                    + address.toString()
-                                    + ", port: "
-                                    + port);
+                    Log.i(TAG, "Setting up UDP socket to " + socketAddress + " via " + ifname);
+                    Network net = getNetworkByInterface(ifname);
+                    if (net == null) {
+                        Log.e(TAG, "Socket setup failed since network does not exist: " + ifname);
+                        return;
+                    }
                     try {
-                        Network net = getNetworkByInterface(ifname);
-                        if (net == null) {
-                            Log.e(
-                                    TAG,
-                                    "Network with name "
-                                            + ifname
-                                            + " does not exist, set up socket failed.");
-                            return;
-                        }
                         mUdpSocket = new DatagramSocket();
                         net.bindSocket(mUdpSocket);
                         protect(mUdpSocket);
-                        mUdpSocket.connect(address, port);
+                        mUdpSocket.connect(socketAddress);
                         mLastSetupSocketFamily = PROTOCOL_UDP;
                         Log.d(TAG, "Setting up UDP socket succeed");
                     } catch (IOException e) {
@@ -512,7 +463,7 @@ public class ArcTestVpnService extends VpnService {
 
     /**
      * Sends a message via setup UDP socket. This method needs to be called after calling {@link
-     * #setupUdpSocket(String ifname, InetAddress address, int port)}.
+     * #setupUdpSocket(String, InetSocketAddress)}.
      */
     public void sendUdpMessage(String msg) {
         mExecutor.submit(
