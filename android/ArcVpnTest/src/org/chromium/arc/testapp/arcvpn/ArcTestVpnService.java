@@ -15,12 +15,16 @@ import android.content.Context;
 import android.content.Intent;
 import android.content.IntentFilter;
 import android.net.ConnectivityManager;
+import android.net.IpPrefix;
 import android.net.LinkProperties;
 import android.net.Network;
 import android.net.VpnService;
+import android.os.Build.VERSION;
+import android.os.Build.VERSION_CODES;
 import android.os.ParcelFileDescriptor;
 import android.util.Log;
 
+import android.util.Pair;
 import java.io.FileInputStream;
 import java.io.FileOutputStream;
 import java.io.IOException;
@@ -29,6 +33,8 @@ import java.io.OutputStream;
 import java.io.PrintWriter;
 import java.net.DatagramPacket;
 import java.net.DatagramSocket;
+import java.net.Inet4Address;
+import java.net.Inet6Address;
 import java.net.InetAddress;
 import java.net.InetSocketAddress;
 import java.net.Socket;
@@ -45,8 +51,10 @@ public class ArcTestVpnService extends VpnService {
             "org.chromium.arc.testapp.arcvpn.SEND_MESSAGE";
 
     // Keys used for setting intent extras for setting up VPN service.
-    private static final String OVERLAY_ADDRESS_KEY = "overlay_address";
+    private static final String OVERLAY_ADDRESSES_KEY = "overlay_addresses";
     private static final String DNS_SERVER_KEY = "dns_server";
+    private static final String INCLUDED_ROUTES_KEY = "included_routes";
+    private static final String EXCLUDED_ROUTES_KEY = "excluded_routes";
     private static final String MTU_KEY = "mtu";
     // Keys used for setting intent extras for connecting to toy VPN server.
     private static final String INTERFACE_KEY = "interface";
@@ -140,23 +148,122 @@ public class ArcTestVpnService extends VpnService {
         }
     }
 
+    /**
+     * Parses a CIDR string, e.g., "192.168.0.1/24" -> ("192.168.0.1", 24).
+     * Note that there is a IpPrefix class in Android which provides the same functionality, but
+     * it's only available on T+.
+     */
+    private static Pair<InetAddress, Integer> parseIpCidrString(String cidr) {
+        String[] parts = cidr.split("/");
+        if (parts.length == 0 || parts.length > 2) {
+            throw new IllegalArgumentException("Invalid CIDR string " + cidr);
+        }
+
+        InetAddress address;
+        try {
+            address = InetAddress.getByName(parts[0]);
+        } catch (UnknownHostException e) {
+            throw new IllegalArgumentException("Invalid CIDR string " + cidr);
+        }
+
+        int prefixLength = 0;
+        if (parts.length == 1) {
+            if (address instanceof Inet4Address) {
+                prefixLength = 32;
+            } else {
+                prefixLength = 128;
+            }
+        } else {
+            prefixLength = Integer.parseInt(parts[1]);
+        }
+
+        return new Pair<>(address, prefixLength);
+    }
+
+    /** Create a `VpnService.Builder` from the arguments passed in `intent`. */
+    private Builder createVpnServiceBuilderFromStartIntent(Intent intent) {
+        Builder builder = new Builder();
+
+        // IP address.
+        boolean hasIpv4 = false;
+        boolean hasIpv6 = false;
+        String overlayAddresses = intent.getStringExtra(OVERLAY_ADDRESSES_KEY);
+        if (overlayAddresses == null) {
+            overlayAddresses = DEFAULT_OVERLAY_ADDRESS;
+        }
+        String[] addresses = overlayAddresses.split(",");
+        for (String address : addresses) {
+            Pair<InetAddress, Integer> addressWithPrefix = parseIpCidrString(address);
+            builder.addAddress(addressWithPrefix.first, addressWithPrefix.second);
+            hasIpv4 |= addressWithPrefix.first instanceof Inet4Address;
+            hasIpv6 |= addressWithPrefix.first instanceof Inet6Address;
+        }
+
+        // Routes.
+        String includedRoutes = intent.getStringExtra(INCLUDED_ROUTES_KEY);
+        if (includedRoutes != null) {
+            String[] routes = includedRoutes.split(",");
+            for (String route : routes) {
+                Pair<InetAddress, Integer> prefix = parseIpCidrString(route);
+                builder.addRoute(prefix.first, prefix.second);
+            }
+        } else {
+            // If there is no included route set, install default routes for the enabled IP family.
+            if (hasIpv4) {
+                builder.addRoute("0.0.0.0", 0);
+            }
+            if (hasIpv6) {
+                builder.addRoute("::", 0);
+            }
+        }
+
+        String excludedRoutes = intent.getStringExtra(EXCLUDED_ROUTES_KEY);
+        if (excludedRoutes != null) {
+            if (VERSION.SDK_INT >= VERSION_CODES.TIRAMISU) {
+                String[] routes = excludedRoutes.split(",");
+                for (String route : routes) {
+                    Pair<InetAddress, Integer> prefix = parseIpCidrString(route);
+                    builder.excludeRoute(new IpPrefix(prefix.first, prefix.second));
+                }
+            } else {
+                Log.w(TAG, EXCLUDED_ROUTES_KEY + " specified but not supported");
+            }
+        }
+
+        // DNS.
+        String dnsServer = intent.getStringExtra(DNS_SERVER_KEY);
+        if (dnsServer != null) {
+            builder.addDnsServer(dnsServer);
+        } else {
+            builder.addDnsServer(DEFAULT_DNS_SERVER);
+        }
+
+        // MTU.
+        builder.setMtu(intent.getIntExtra(MTU_KEY, DEFAULT_MTU));
+
+        return builder;
+    }
+
     @Override
     public int onStartCommand(Intent intent, int flags, int startId) {
         Log.d(TAG, "onStartCommand is called");
         showNotification();
 
-        String overlayAddress = intent.getStringExtra(OVERLAY_ADDRESS_KEY);
-        String dnsServer = intent.getStringExtra(DNS_SERVER_KEY);
-        int mtu = intent.getIntExtra(MTU_KEY, DEFAULT_MTU);
-        setUpVpnService(
-                overlayAddress == null ? DEFAULT_OVERLAY_ADDRESS : overlayAddress,
-                dnsServer == null ? DEFAULT_DNS_SERVER : dnsServer, mtu);
+        // Registers ourselves as an actual VpnService and sets up the underlying interface.
+        VpnService.prepare(getApplicationContext());
+        mTunFd = createVpnServiceBuilderFromStartIntent(intent)
+                // Make sure read on the returned tun fd will be blocked, so that our programming
+                // model will be easier.
+                .setBlocking(true)
+                .establish();
 
+        // Connect to VPN server if arguments are given.
         String ifname = intent.getStringExtra(INTERFACE_KEY);
         String serverAddress = intent.getStringExtra(ADDRESS_KEY);
         int serverPort = intent.getIntExtra(PORT_KEY, INVALID_PORT);
         if (ifname != null && serverAddress != null && serverPort != INVALID_PORT) {
-            connectToToyVpnServer(ifname, serverAddress, serverPort, mtu);
+            connectToToyVpnServer(
+                    ifname, serverAddress, serverPort, intent.getIntExtra(MTU_KEY, DEFAULT_MTU));
         } else {
             Log.d(TAG, "Arguments for connecting to toy VPN server is invalid, ifname: " + ifname +
                     ", server address: " + serverAddress + ", server port: " + serverPort +
@@ -257,7 +364,7 @@ public class ArcTestVpnService extends VpnService {
      * starts the packet forwarding between the TCP connection tun interface after that.
      */
     private void connectToToyVpnServer(String ifname, String address, int port, int mtu) {
-        Log.d(TAG, "Start connecting to toy VPN server, ifname: " + ifname +", address: "+
+        Log.d(TAG, "Start connecting to toy VPN server, ifname: " + ifname + ", address: "+
                 address + ", port: " + port + ", mtu: " + mtu);
         InetAddress inetAddress;
         try {
@@ -268,21 +375,6 @@ public class ArcTestVpnService extends VpnService {
         }
         setupTcpSocket(ifname, inetAddress, port);
         startForwarding(mtu);
-    }
-
-    /** Registers ourselves as an actual VpnService and sets up the underlying interface. */
-    private void setUpVpnService(String overlayAddress, String dnsServer, int mtu) {
-        VpnService.prepare(getApplicationContext());
-
-        mTunFd = new VpnService.Builder()
-                .addAddress(overlayAddress, 24)
-                .addRoute("0.0.0.0", 0)
-                .addDnsServer(dnsServer)
-                // Make sure read on the returned tun fd will be blocked, so that our programming
-                // model will be easier.
-                .setBlocking(true)
-                .setMtu(mtu)
-                .establish();
     }
 
     /**

@@ -16,12 +16,20 @@ adb shell am broadcast -a org.chromium.arc.testapp.arcvpn.LAUNCH_VPN \
         --receiver-include-background \
         --es interface <ARC_IFNAME> \
         --es address <SERVER_IP> --ei port <SERVER_TCP_PORT> \
-        --es overlay_address <LOCAL_OVERLAY_IPV4> \
+        --es overlay_addresses <LOCAL_OVERLAY_IPV4> \
+        --es included_routes <INCLUDED_ROUTES> \
+        --es excluded_routes <EXCLUDED_ROUTES> \
         --es dns_server <DNS_SERVER> \
         --ei mtu <MTU>
 ```
 
-if a socket is required to be set up when service is started, run:
+Notes:
+- `overlay_addresses`, `included_routes` and `excluded_routes` are csv strings.
+- If `included_routes` is not specified, default routes for the available IP
+  families (which are in `overlay_addresses`) will be installed.
+- `excluded_routes` is only available on T+.
+
+If a socket is required to be set up when service is started, run:
 
 ```
 adb shell am broadcast -a org.chromium.arc.testapp.arcvpn.LAUNCH_VPN \
