@@ -47,8 +47,7 @@ public class ArcTestVpnService extends VpnService {
     private static final String TAG = ArcTestVpnService.class.getSimpleName();
 
     // Intent for sending a message through the last set up socket.
-    private static final String SEND_MESSAGE =
-            "org.chromium.arc.testapp.arcvpn.SEND_MESSAGE";
+    private static final String SEND_MESSAGE = "org.chromium.arc.testapp.arcvpn.SEND_MESSAGE";
 
     // Keys used for setting intent extras for setting up VPN service.
     private static final String OVERLAY_ADDRESSES_KEY = "overlay_addresses";
@@ -149,9 +148,9 @@ public class ArcTestVpnService extends VpnService {
     }
 
     /**
-     * Parses a CIDR string, e.g., "192.168.0.1/24" -> ("192.168.0.1", 24).
-     * Note that there is a IpPrefix class in Android which provides the same functionality, but
-     * it's only available on T+.
+     * Parses a CIDR string, e.g., "192.168.0.1/24" -> ("192.168.0.1", 24). Note that there is a
+     * IpPrefix class in Android which provides the same functionality, but it's only available on
+     * T+.
      */
     private static Pair<InetAddress, Integer> parseIpCidrString(String cidr) {
         String[] parts = cidr.split("/");
@@ -251,11 +250,12 @@ public class ArcTestVpnService extends VpnService {
 
         // Registers ourselves as an actual VpnService and sets up the underlying interface.
         VpnService.prepare(getApplicationContext());
-        mTunFd = createVpnServiceBuilderFromStartIntent(intent)
-                // Make sure read on the returned tun fd will be blocked, so that our programming
-                // model will be easier.
-                .setBlocking(true)
-                .establish();
+        mTunFd =
+                createVpnServiceBuilderFromStartIntent(intent)
+                        // Make sure read on the returned tun fd will be blocked, so that our
+                        // programming model will be easier.
+                        .setBlocking(true)
+                        .establish();
 
         // Connect to VPN server if arguments are given.
         String ifname = intent.getStringExtra(INTERFACE_KEY);
@@ -265,9 +265,15 @@ public class ArcTestVpnService extends VpnService {
             connectToToyVpnServer(
                     ifname, serverAddress, serverPort, intent.getIntExtra(MTU_KEY, DEFAULT_MTU));
         } else {
-            Log.d(TAG, "Arguments for connecting to toy VPN server is invalid, ifname: " + ifname +
-                    ", server address: " + serverAddress + ", server port: " + serverPort +
-                    ", ignore if this is expected");
+            Log.d(
+                    TAG,
+                    "Arguments for connecting to toy VPN server is invalid, ifname: "
+                            + ifname
+                            + ", server address: "
+                            + serverAddress
+                            + ", server port: "
+                            + serverPort
+                            + ", ignore if this is expected");
         }
 
         // Setup socket if arguments are given.
@@ -275,13 +281,23 @@ public class ArcTestVpnService extends VpnService {
         String sockIfname = intent.getStringExtra(SOCKET_INTERFACE_KEY);
         String sockAddress = intent.getStringExtra(SOCKET_ADDRESS_KEY);
         int sockPort = intent.getIntExtra(SOCKET_PORT_KEY, INVALID_PORT);
-        if (sockProto != null && sockIfname != null && sockAddress != null
+        if (sockProto != null
+                && sockIfname != null
+                && sockAddress != null
                 && sockPort != INVALID_PORT) {
             setupSocket(sockProto, sockIfname, sockAddress, sockPort);
         } else {
-            Log.d(TAG, "Arguments for setting up socket is invalid, proto: " + sockProto +
-                    ", ifname: " + sockIfname + ", address: " + sockAddress + ", port: " +
-                    sockPort + ", ignore if this is expected");
+            Log.d(
+                    TAG,
+                    "Arguments for setting up socket is invalid, proto: "
+                            + sockProto
+                            + ", ifname: "
+                            + sockIfname
+                            + ", address: "
+                            + sockAddress
+                            + ", port: "
+                            + sockPort
+                            + ", ignore if this is expected");
         }
         mBroadcastReceiver = new ArcVpnBroadcastReceiver();
         IntentFilter intentFilter = new IntentFilter();
@@ -292,8 +308,16 @@ public class ArcTestVpnService extends VpnService {
 
     /** Setup socket by connecting to address:port with proto via ifname. */
     private void setupSocket(String proto, String ifname, String address, int port) {
-        Log.d(TAG, "Start setting up socket, proto: " + proto + ", ifname: " + ifname +
-                ", address: "+ address + ", port: " + port);
+        Log.d(
+                TAG,
+                "Start setting up socket, proto: "
+                        + proto
+                        + ", ifname: "
+                        + ifname
+                        + ", address: "
+                        + address
+                        + ", port: "
+                        + port);
         InetAddress inetAddress;
         try {
             inetAddress = InetAddress.getByName(address);
@@ -309,7 +333,7 @@ public class ArcTestVpnService extends VpnService {
                 setupUdpSocket(ifname, inetAddress, port);
                 break;
             default:
-                Log.e(TAG, "Invalid procotol: " + proto + ", setup socket failed.");
+                Log.e(TAG, "Invalid protocol: " + proto + ", setup socket failed.");
         }
     }
 
@@ -364,8 +388,16 @@ public class ArcTestVpnService extends VpnService {
      * starts the packet forwarding between the TCP connection tun interface after that.
      */
     private void connectToToyVpnServer(String ifname, String address, int port, int mtu) {
-        Log.d(TAG, "Start connecting to toy VPN server, ifname: " + ifname + ", address: "+
-                address + ", port: " + port + ", mtu: " + mtu);
+        Log.d(
+                TAG,
+                "Start connecting to toy VPN server, ifname: "
+                        + ifname
+                        + ", address: "
+                        + address
+                        + ", port: "
+                        + port
+                        + ", mtu: "
+                        + mtu);
         InetAddress inetAddress;
         try {
             inetAddress = InetAddress.getByName(address);
@@ -379,102 +411,129 @@ public class ArcTestVpnService extends VpnService {
 
     /**
      * Sets up a TCP socket using given address and port of the remote peer we want to connect to,
-     * and the name of the interface in ARC that we want to use to setup the socket.
-     * When called multiple times in one test, the older socket will be replaced by newly setup
-     * socket for sending messages.
+     * and the name of the interface in ARC that we want to use to setup the socket. When called
+     * multiple times in one test, the older socket will be replaced by newly setup socket for
+     * sending messages.
      */
     private void setupTcpSocket(String ifname, InetAddress address, int port) {
-        mExecutor.submit(() -> {
-            Log.d(TAG, "Start setting up TCP socket, ifname: "+ifname +
-            ", address: "+ address.toString() + ", port: " + port);
-            try {
-                Network net = getNetworkByInterface(ifname);
-                if (net == null) {
-                    Log.e(TAG, "Network with specified interface name does not exist, set up "
-                            + "socket failed.");
-                    return;
-                }
-                mTcpSocket = net.getSocketFactory().createSocket();
-                protect(mTcpSocket);
-                mTcpSocket.connect(new InetSocketAddress(address, port));
-                mWriter = new PrintWriter(mTcpSocket.getOutputStream(), /*autoFlush=*/ true);
-                mLastSetupSocketFamily = PROTOCOL_TCP;
-                Log.d(TAG, "Setting up TCP socket succeed");
-            } catch (IOException e) {
-                Log.e(TAG, "Error opening TCP socket", e);
-            }
-        });
+        mExecutor.submit(
+                () -> {
+                    Log.d(
+                            TAG,
+                            "Start setting up TCP socket, ifname: "
+                                    + ifname
+                                    + ", address: "
+                                    + address.toString()
+                                    + ", port: "
+                                    + port);
+                    try {
+                        Network net = getNetworkByInterface(ifname);
+                        if (net == null) {
+                            Log.e(
+                                    TAG,
+                                    "Network with "
+                                            + ifname
+                                            + " does not exist, set up socket failed.");
+                            return;
+                        }
+                        mTcpSocket = net.getSocketFactory().createSocket();
+                        protect(mTcpSocket);
+                        mTcpSocket.connect(new InetSocketAddress(address, port));
+                        mWriter =
+                                new PrintWriter(
+                                        mTcpSocket.getOutputStream(), /* autoFlush= */ true);
+                        mLastSetupSocketFamily = PROTOCOL_TCP;
+                        Log.d(TAG, "Setting up TCP socket succeed");
+                    } catch (IOException e) {
+                        Log.e(TAG, "Error opening TCP socket", e);
+                    }
+                });
     }
 
     /**
-     * Sends a message via setup TCP socket. This method needs to be called after calling
-     * {@link #setupTcpSocket()}.
+     * Sends a message via setup TCP socket. This method needs to be called after calling {@link
+     * #setupTcpSocket(String ifname, InetAddress address, int port)}.
      */
     public void sendTcpMessage(String msg) {
-        mExecutor.submit(() -> {
-            Log.d(TAG, "sendTcpMessage");
-            try {
-                if (mWriter == null) {
-                    Log.e(TAG, "TCP socket has not been set up yet, send message failed.");
-                    return;
-                }
-                mWriter.println(msg);
-                Log.d(TAG, "sendTcpMessage succeed");
-            } catch (Exception e) {
-                Log.e(TAG, "Failed to send TCP messages", e);
-            }
-        });
+        mExecutor.submit(
+                () -> {
+                    Log.d(TAG, "sendTcpMessage");
+                    try {
+                        if (mWriter == null) {
+                            Log.e(TAG, "TCP socket has not been set up yet, send message failed.");
+                            return;
+                        }
+                        mWriter.println(msg);
+                        Log.d(TAG, "sendTcpMessage succeed");
+                    } catch (Exception e) {
+                        Log.e(TAG, "Failed to send TCP messages", e);
+                    }
+                });
     }
 
     /**
      * Sets up a UDP socket using given address and port of the remote peer we want to connect to,
-     * and the name of the interface in ARC that we want to use to setup the socket.
-     * When called multiple times in one test, the older socket will be replaced by newly setup
-     * socket for sending messages.
+     * and the name of the interface in ARC that we want to use to setup the socket. When called
+     * multiple times in one test, the older socket will be replaced by newly setup socket for
+     * sending messages.
      */
     private void setupUdpSocket(String ifname, InetAddress address, int port) {
-        mExecutor.submit(() -> {
-            Log.d(TAG, "Start setting up UDP socket, ifname: "+ifname+
-            ", address: "+ address.toString() + ", port: " + port);
-            try {
-                Network net = getNetworkByInterface(ifname);
-                if (net == null) {
-                    Log.e(TAG, "Network with specified interface name does not exist, set up "
-                            + "socket failed.");
-                    return;
-                }
-                mUdpSocket = new DatagramSocket();
-                net.bindSocket(mUdpSocket);
-                protect(mUdpSocket);
-                mUdpSocket.connect(address, port);
-                mLastSetupSocketFamily = PROTOCOL_UDP;
-                Log.d(TAG, "Setting up UDP socket succeed");
-            } catch (IOException e) {
-                Log.e(TAG, "Error opening UDP socket", e);
-            }
-        });
+        mExecutor.submit(
+                () -> {
+                    Log.d(
+                            TAG,
+                            "Start setting up UDP socket, ifname: "
+                                    + ifname
+                                    + ", address: "
+                                    + address.toString()
+                                    + ", port: "
+                                    + port);
+                    try {
+                        Network net = getNetworkByInterface(ifname);
+                        if (net == null) {
+                            Log.e(
+                                    TAG,
+                                    "Network with name "
+                                            + ifname
+                                            + " does not exist, set up socket failed.");
+                            return;
+                        }
+                        mUdpSocket = new DatagramSocket();
+                        net.bindSocket(mUdpSocket);
+                        protect(mUdpSocket);
+                        mUdpSocket.connect(address, port);
+                        mLastSetupSocketFamily = PROTOCOL_UDP;
+                        Log.d(TAG, "Setting up UDP socket succeed");
+                    } catch (IOException e) {
+                        Log.e(TAG, "Error opening UDP socket", e);
+                    }
+                });
     }
 
     /**
-     * Sends a message via setup UDP socket. This method needs to be called after calling
-     * {@link #setupUdpSocket()}.
+     * Sends a message via setup UDP socket. This method needs to be called after calling {@link
+     * #setupUdpSocket(String ifname, InetAddress address, int port)}.
      */
     public void sendUdpMessage(String msg) {
-        mExecutor.submit(() -> {
-            try {
-                Log.d(TAG, "sendUdpMessage");
-                if (mUdpSocket == null) {
-                    Log.e(TAG, "UDP socket has not been set up yet, send message failed.");
-                    return;
-                }
-                DatagramPacket dp = new DatagramPacket(msg.getBytes(), msg.length(),
-                        mUdpSocket.getRemoteSocketAddress());
-                mUdpSocket.send(dp);
-                Log.d(TAG, "sendUdpMessage succeed");
-            } catch (IOException e) {
-                Log.e(TAG, "Failed to send UDP messages", e);
-            }
-        });
+        mExecutor.submit(
+                () -> {
+                    try {
+                        Log.d(TAG, "sendUdpMessage");
+                        if (mUdpSocket == null) {
+                            Log.e(TAG, "UDP socket has not been set up yet, send message failed.");
+                            return;
+                        }
+                        DatagramPacket dp =
+                                new DatagramPacket(
+                                        msg.getBytes(),
+                                        msg.length(),
+                                        mUdpSocket.getRemoteSocketAddress());
+                        mUdpSocket.send(dp);
+                        Log.d(TAG, "sendUdpMessage succeed");
+                    } catch (IOException e) {
+                        Log.e(TAG, "Failed to send UDP messages", e);
+                    }
+                });
     }
 
     /**
@@ -482,7 +541,7 @@ public class ArcTestVpnService extends VpnService {
      * function will try to read exactly len bytes before return. Returns -1 if EOF is reached
      * before `len` bytes are read.
      */
-    static private int readExact(InputStream input, byte[] b, int len) throws IOException {
+    private static int readExact(InputStream input, byte[] b, int len) throws IOException {
         int readTotal = 0;
         while (readTotal < len) {
             int cnt = input.read(b, readTotal, len - readTotal);
@@ -494,90 +553,103 @@ public class ArcTestVpnService extends VpnService {
         return readTotal;
     }
 
-    /**
-     * Starts two threads to do the bidirectional forwarding between TUN device and TCP socket.
-     */
+    /** Starts two threads to do the bidirectional forwarding between TUN device and TCP socket. */
     private void startForwarding(int mtu) {
+        // TCP -> TUN. Read a message from TCP connection which contains a packet length and an IP
+        // packet, and write the IP packet to the TUN device. Note that for a TCP socket, it cannot
+        // be guaranteed that one read can get the whole message or packet, and thus we need to do a
+        // loop to read until we get enough bytes.
+        Runnable tcpToTunTask =
+                () -> {
+                    try {
+                        byte[] headerBytes = new byte[TOY_VPN_MESSAGE_HEADER_SIZE];
+                        InputStream input = mTcpSocket.getInputStream();
+                        try (OutputStream output =
+                                new FileOutputStream(mTunFd.getFileDescriptor())) {
+                            while (true) {
+                                // Read the header as length.
+                                int readCnt =
+                                        readExact(input, headerBytes, TOY_VPN_MESSAGE_HEADER_SIZE);
+                                if (readCnt != TOY_VPN_MESSAGE_HEADER_SIZE) {
+                                    Log.i(
+                                            TAG,
+                                            "Read header bytes returned "
+                                                    + readCnt
+                                                    + ", assume connection ended");
+                                    break;
+                                }
+                                int length = ByteBuffer.wrap(headerBytes).getInt();
+
+                                // Read the payload as packet.
+                                byte[] payloadBytes = new byte[length];
+                                readCnt = readExact(input, payloadBytes, length);
+                                if (readCnt != length) {
+                                    Log.e(
+                                            TAG,
+                                            "Failed to read the payload, got "
+                                                    + readCnt
+                                                    + ", want "
+                                                    + length);
+                                    break;
+                                }
+
+                                // Write the packet to tun interface.
+                                output.write(payloadBytes);
+                            }
+                        }
+                    } catch (IOException e) {
+                        Log.e(TAG, "Failed to forward from TCP connection to TUN device", e);
+                    }
+                };
+
+        // TUN -> TCP. Read an IP packet from the TUN device, compose a message which is the length
+        // of this packet and the IP packet itself, and write it to the TCP connection.
+        Runnable tunToTcpTask =
+                () -> {
+                    try {
+                        byte[] payloadBytes = new byte[mtu * 2];
+                        OutputStream output = mTcpSocket.getOutputStream();
+                        try (InputStream input = new FileInputStream(mTunFd.getFileDescriptor())) {
+                            while (true) {
+                                // Read the packet.
+                                int readCnt = input.read(payloadBytes);
+                                if (readCnt == -1) {
+                                    Log.i(TAG, "Read returned -1, assume connection ended");
+                                    break;
+                                }
+
+                                // Write the length as header.
+                                byte[] headerBytes =
+                                        ByteBuffer.allocate(TOY_VPN_MESSAGE_HEADER_SIZE)
+                                                .putInt(readCnt)
+                                                .array();
+                                output.write(headerBytes);
+
+                                // Write the packet as payload.
+                                output.write(payloadBytes, /* off= */ 0, readCnt);
+                            }
+                        }
+                    } catch (IOException e) {
+                        Log.e(TAG, "Failed to forward from TUN device to TCP connection", e);
+                    }
+                };
+
         // Wrap this as a task and post it in the executor because the TCP socket is set up
         // asynchronously.
-        mExecutor.submit(() -> {
-            if (mTcpSocket == null) {
-                Log.e(TAG, "TCP connection to the server has not been established");
-                return;
-            }
-            if (mTunFd == null) {
-                Log.e(TAG, "TUN device is not ready");
-                return;
-            }
-
-            // TCP -> TUN. Read a message from TCP connection which contains a packet length and an
-            // IP packet, and write the IP packet to the TUN device. Note that for a TCP socket, it
-            // cannot be guaranteed that one read can get the whole message or packet, and thus we
-            // need to do a loop to read until we get enough bytes.
-            new Thread(()-> {
-                try {
-                    byte[] headerBytes = new byte[TOY_VPN_MESSAGE_HEADER_SIZE];
-                    InputStream input = mTcpSocket.getInputStream();
-                    try (OutputStream output = new FileOutputStream(mTunFd.getFileDescriptor())) {
-                        while (true) {
-                            // Read the header as length.
-                            int readCnt = readExact(
-                                    input, headerBytes, TOY_VPN_MESSAGE_HEADER_SIZE);
-                            if (readCnt != TOY_VPN_MESSAGE_HEADER_SIZE) {
-                                Log.i(TAG, "Read header bytes returned " + readCnt
-                                        + ", assume connection ended");
-                                break;
-                            }
-                            int length = ByteBuffer.wrap(headerBytes).getInt();
-
-                            // Read the payload as packet.
-                            byte[] payloadBytes = new byte[length];
-                            readCnt = readExact(input, payloadBytes, length);
-                            if (readCnt != length) {
-                                Log.e(TAG, "Failed to read the payload, got " + readCnt
-                                        + ", want " + length);
-                                break;
-                            }
-
-                            // Write the packet to tun interface.
-                            output.write(payloadBytes);
-                        }
+        mExecutor.submit(
+                () -> {
+                    if (mTcpSocket == null) {
+                        Log.e(TAG, "TCP connection to the server has not been established");
+                        return;
                     }
-                } catch (IOException e) {
-                    Log.e(TAG, "Failed to forward from TCP connection to TUN device", e);
-                }
-            }).start();
-
-            // TUN -> TCP. Read an IP packet from the TUN device, compose a message which is the
-            // length of this packet and the IP packet itself, and write it to the TCP connection.
-            new Thread(()-> {
-                try {
-                    byte[] payloadBytes = new byte[mtu * 2];
-                    OutputStream output = mTcpSocket.getOutputStream();
-                    try (InputStream input = new FileInputStream(mTunFd.getFileDescriptor())) {
-                        while (true) {
-                            // Read the packet.
-                            int readCnt = input.read(payloadBytes);
-                            if (readCnt == -1) {
-                                Log.i(TAG, "Read returned -1, assume connection ended");
-                                break;
-                            }
-
-                            // Write the length as header.
-                            byte[] headerBytes = ByteBuffer.allocate(TOY_VPN_MESSAGE_HEADER_SIZE)
-                                                           .putInt(readCnt)
-                                                           .array();
-                            output.write(headerBytes);
-
-                            // Write the packet as payload.
-                            output.write(payloadBytes, /*off=*/0, readCnt);
-                        }
+                    if (mTunFd == null) {
+                        Log.e(TAG, "TUN device is not ready");
+                        return;
                     }
-                } catch (IOException e) {
-                    Log.e(TAG, "Failed to forward from TUN device to TCP connection", e);
-                }
-            }).start();
-        });
+
+                    new Thread(tcpToTunTask).start();
+                    new Thread(tunToTcpTask).start();
+                });
     }
 
     /**
@@ -587,8 +659,9 @@ public class ArcTestVpnService extends VpnService {
      * @return the network that matches the interface, null if it doesn't exist
      */
     private Network getNetworkByInterface(String ifname) {
-        ConnectivityManager connectivityManager = (ConnectivityManager) getApplicationContext()
-                .getSystemService(Context.CONNECTIVITY_SERVICE);
+        ConnectivityManager connectivityManager =
+                (ConnectivityManager)
+                        getApplicationContext().getSystemService(Context.CONNECTIVITY_SERVICE);
         if (connectivityManager == null) {
             Log.e(TAG, "Get connected WiFi network failed, failed to get ConnectivityManager.");
             return null;

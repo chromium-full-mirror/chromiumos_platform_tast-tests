@@ -44,3 +44,7 @@ The socket is set up with protocol(either `tcp` or `udp`), remote peer address a
 After setting up socket, we can send messages from the last setup socket by command:
 
 `adb shell am broadcast -a org.chromium.arc.testapp.arcvpn.SEND_MESSAGE --es message <MESSAGE>`
+
+## Development
+
+Use `google-java-format --aosp` to format the code.
