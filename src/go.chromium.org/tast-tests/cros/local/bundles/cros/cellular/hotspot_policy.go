@@ -208,7 +208,8 @@ func HotspotPolicy(ctx context.Context, s *testing.State) {
 
 	ui := uiauto.New(tconn)
 	if err := uiauto.Combine("Verify hotspot is off and toggle disabled",
-		ui.WaitUntilExists(ossettings.HotspotOffSublabel),
+		// TODO(b/370733459): Check the hotspot label to determine if the hotspot is enabled after the a11y tree is updated.
+		ui.WaitUntilCheckedState(ossettings.HotspotToggle, false),
 		ui.CheckRestriction(ossettings.HotspotToggle, restriction.Disabled),
 	)(ctx); err != nil {
 		s.Fatal("Failed to verify hotspot is off and toggle disabled: ", err)
