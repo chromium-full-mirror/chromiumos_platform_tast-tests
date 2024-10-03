@@ -378,6 +378,7 @@ Loop:
 // DownloadToTempFile downloads url (gs) to a temp file.
 func DownloadToTempFile(ctx context.Context, desc, url string) (string, error) {
 	baseName := filepath.Base(url)
+	baseName = strings.ReplaceAll(baseName, "*", "STAR")
 	f, err := os.CreateTemp("", "*."+baseName)
 	if err != nil {
 		return "", errors.Wrapf(err, "Unable to download %s to: %s ", desc, baseName)
