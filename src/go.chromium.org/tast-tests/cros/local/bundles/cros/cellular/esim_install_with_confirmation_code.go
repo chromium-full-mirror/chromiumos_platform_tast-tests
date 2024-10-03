@@ -6,6 +6,7 @@ package cellular
 
 import (
 	"context"
+	"path/filepath"
 	"regexp"
 	"time"
 
@@ -19,6 +20,7 @@ import (
 	"go.chromium.org/tast-tests/cros/local/hermes"
 	"go.chromium.org/tast-tests/cros/local/input"
 	"go.chromium.org/tast-tests/cros/local/stork"
+	"go.chromium.org/tast/core/ctxutil"
 	"go.chromium.org/tast/core/testing"
 )
 
@@ -46,11 +48,15 @@ func ESimInstallWithConfirmationCode(ctx context.Context, s *testing.State) {
 		s.Fatal("Failed to get test euicc: ", err)
 	}
 
+	cleanupCtx := ctx
+	ctx, cancel := ctxutil.Shorten(ctx, 10*time.Second)
+	defer cancel()
+
 	// Remove any existing profiles on test euicc
 	if err := euicc.ResetMemory(ctx); err != nil {
 		s.Fatal("Failed to reset test euicc: ", err)
 	}
-	defer euicc.ResetMemory(ctx)
+	defer euicc.ResetMemory(cleanupCtx)
 	s.Log("Reset test euicc completed")
 
 	if err := euicc.DBusObject.Call(ctx, hermesconst.EuiccMethodUseTestCerts, true).Err; err != nil {
@@ -71,19 +77,23 @@ func ESimInstallWithConfirmationCode(ctx context.Context, s *testing.State) {
 	if err != nil {
 		s.Fatal("Chrome login failed: ", err)
 	}
-
-	defer cr.Close(ctx)
+	defer cr.Close(cleanupCtx)
 
 	tconn, err := cr.TestAPIConn(ctx)
 	if err != nil {
 		s.Fatal("Failed to connect Test API: ", err)
 	}
-	defer faillog.DumpUITreeOnError(ctx, s.OutDir(), s.HasError, tconn)
+
+	// TODO: Remove this function once we no longer need it for debugging.
+	recorder := uiauto.CreateAndStartScreenRecorder(ctx, tconn)
+	defer uiauto.StopAndSaveOnError(cleanupCtx, recorder, filepath.Join(s.OutDir(), "recording.webm"), s.HasError)
 
 	mdp, err := ossettings.OpenMobileDataSubpage(ctx, tconn, cr)
 	if err != nil {
 		s.Fatal("Failed to open mobile data subpage: ", err)
 	}
+	defer mdp.Close(cleanupCtx)
+	defer faillog.DumpUITreeOnError(cleanupCtx, s.OutDir(), s.HasError, tconn)
 
 	confirmationCode := "0909"
 	incorrectConfirmationCode := "9090"
@@ -93,7 +103,7 @@ func ESimInstallWithConfirmationCode(ctx context.Context, s *testing.State) {
 	if err != nil {
 		s.Fatal("Failed to fetch Stork profile: ", err)
 	}
-	defer cleanupFunc(ctx)
+	defer cleanupFunc(cleanupCtx)
 
 	s.Log("Fetched Stork profile with activation code: ", activationCode)
 
@@ -101,7 +111,7 @@ func ESimInstallWithConfirmationCode(ctx context.Context, s *testing.State) {
 	if err != nil {
 		s.Fatal("Failed to open the keyboard: ", err)
 	}
-	defer kb.Close(ctx)
+	defer kb.Close(cleanupCtx)
 
 	if err := ossettings.AddESimWithActivationCode(ctx, tconn, string(activationCode)); err != nil {
 		s.Fatal("Failed to add esim profile with correct activation code: ", err)
