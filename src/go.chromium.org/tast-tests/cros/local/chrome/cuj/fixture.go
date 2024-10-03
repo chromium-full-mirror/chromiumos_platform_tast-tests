@@ -41,6 +41,7 @@ import (
 	"go.chromium.org/tast-tests/cros/local/power/setup"
 	pUtil "go.chromium.org/tast-tests/cros/local/power/util"
 	"go.chromium.org/tast-tests/cros/local/pvsched"
+	"go.chromium.org/tast-tests/cros/local/scx"
 	"go.chromium.org/tast-tests/cros/local/sysutil"
 	"go.chromium.org/tast-tests/cros/local/ui/cujrecorder"
 	"go.chromium.org/tast-tests/cros/local/wpr"
@@ -73,6 +74,9 @@ const (
 
 	// batterySaverTimeout is the time to enable or disable battery saver.
 	batterySaverTimeout = 10 * time.Second
+
+	// scxTimeout is the time to load or unload scx scheduler.
+	scxTimeout = 3 * time.Second
 
 	webRTCEventLogCommandFlag = "--webrtc-event-logging=/tmp"
 	webRTCEventLogFilePattern = "/tmp/event_log_*.log"
@@ -684,6 +688,32 @@ func init() {
 		BugComponent:    "b:1045832", // ChromeOS > Software > Performance > TPS
 		Impl:            &androidBatterySaverFixture{},
 		Parent:          "loggedInToCUJUserWithWebRTCEventLoggingWithBatterySaverParent",
+		SetUpTimeout:    setUpTimeout,
+		ResetTimeout:    resetTimeout,
+		TearDownTimeout: resetTimeout,
+		PreTestTimeout:  CPUStablizationTimeout,
+		PostTestTimeout: postTestTimeout,
+	})
+	testing.AddFixture(&testing.Fixture{
+		Name: "loggedInToCUJUserWithWebRTCEventLoggingWithScxCentral",
+		Desc: "CUJ test fixture with WebRTC event logging with scx_central scheduler",
+		Contacts: []string{
+			"darrenwu@google.com",
+			"joelaf@google.com",
+			"cros-sw-perf@google.com",
+		},
+		BugComponent: "b:1045832", // ChromeOS > Software > Performance > TPS
+		Data:         docsBlockerFiles,
+		Impl: &loggedInToCUJUserFixture{
+			chromeExtraOpts: []chrome.Option{
+				chrome.EnableFeatures("PreferConstantFrameRate"),
+				chrome.ExtraArgs(webRTCEventLogCommandFlag),
+			},
+			bt:          browser.TypeAsh,
+			docsBlocker: true,
+			scxType:     scx.TypeScxCentral,
+		},
+		Parent:          "prepareForCUJ",
 		SetUpTimeout:    setUpTimeout,
 		ResetTimeout:    resetTimeout,
 		TearDownTimeout: resetTimeout,
@@ -1485,6 +1515,8 @@ type loggedInToCUJUserFixture struct {
 	enablePvSched bool
 	// pvSchedEnabled specifies if paravirt sched was already enabled when the cuj started.
 	pvSchedEnabled bool
+	// Scx scheduler type to be loaded.
+	scxType scx.Type
 }
 
 // NewWPRLoggedInToCUJUserWithoutCooldownFixture returns a newly created fixture object with WPR parameters
@@ -1608,6 +1640,15 @@ func (f *loggedInToCUJUserFixture) SetUp(ctx context.Context, s *testing.FixtSta
 				pvsched.Enable()
 			}
 
+		}
+		if f.scxType != scx.TypeScxOff {
+			if !scx.IsLoaded(f.scxType) {
+				if err := scx.Load(ctx, s.OutDir(), f.scxType); err != nil {
+					s.Fatalf("Failed to load scx %s: %v", string(f.scxType), err)
+				}
+			} else {
+				s.Logf("scx scheduler %s has been loaded", string(f.scxType))
+			}
 		}
 		opts = append(opts, f.chromeExtraOpts...)
 		// Delay for logging memory metrics is set to 6 minutes. Considering most of CUJ tests
@@ -1901,6 +1942,11 @@ func (f *loggedInToCUJUserFixture) TearDown(ctx context.Context, s *testing.Fixt
 	if f.enablePvSched {
 		if !f.pvSchedEnabled {
 			pvsched.Disable()
+		}
+	}
+	if f.scxType != scx.TypeScxOff {
+		if err := scx.Unload(ctx, f.scxType); err != nil {
+			testing.ContextLogf(ctx, "Failed to unload scx %s: %v", string(f.scxType), err)
 		}
 	}
 }

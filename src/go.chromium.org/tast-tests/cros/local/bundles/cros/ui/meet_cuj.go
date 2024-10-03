@@ -600,6 +600,21 @@ func init() {
 				ExtraHardwareDeps: hwdep.D(hwdep.HasSchedRTControl(),
 					hwdep.SkipOnModel("reven")),
 			}, {
+				Name:    "docs_scx_central",
+				Timeout: meetcuj.DefaultTestTimeout,
+				Val: meetcuj.MeetTest{
+					Bots:        []int{1, 3, 15},
+					Layout:      googlemeet.TiledLayout,
+					Present:     true,
+					Docs:        true,
+					Split:       true,
+					Cam:         true,
+					ZoomOut:     true,
+					Effects:     true,
+					BrowserType: browser.TypeAsh,
+				},
+				Fixture: "loggedInToCUJUserWithWebRTCEventLoggingWithScxCentral",
+			}, {
 				Name:      "docs_enterprise",
 				Timeout:   meetcuj.DefaultTestTimeout,
 				ExtraAttr: []string{"group:cuj", "cuj_experimental"},
