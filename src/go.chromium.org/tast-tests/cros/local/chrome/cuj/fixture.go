@@ -2057,8 +2057,11 @@ type androidBatterySaverFixture struct {
 
 func (f *androidBatterySaverFixture) SetUp(ctx context.Context, s *testing.FixtState) interface{} {
 	value := s.ParentValue().(FixtureData)
-	f.arc = value.ARC
+	if !arc.Supported() {
+		return value
+	}
 
+	f.arc = value.ARC
 	if err := simulateARCBatterySaver(ctx, f.arc); err != nil {
 		s.Fatal("Failed to simulate Android battery saver: ", err)
 	}
@@ -2067,6 +2070,10 @@ func (f *androidBatterySaverFixture) SetUp(ctx context.Context, s *testing.FixtS
 }
 
 func (f *androidBatterySaverFixture) TearDown(ctx context.Context, s *testing.FixtState) {
+	if !arc.Supported() {
+		return
+	}
+
 	if err := disableARCBatterySaver(ctx, f.arc); err != nil {
 		s.Fatal("Failed to disable Android battery saver: ", err)
 	}
@@ -2078,6 +2085,10 @@ func (f *androidBatterySaverFixture) Reset(ctx context.Context) error {
 }
 
 func (f *androidBatterySaverFixture) PreTest(ctx context.Context, s *testing.FixtTestState) {
+	if !arc.Supported() {
+		return
+	}
+
 	if err := setARCLowBattery(ctx, f.arc); err != nil {
 		s.Fatal("Failed to set ARC low battery: ", err)
 	}
