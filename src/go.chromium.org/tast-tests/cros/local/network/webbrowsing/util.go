@@ -54,7 +54,11 @@ func VerifyWebPageContains(ctx context.Context, cr *chrome.Chrome, url, content 
 	}
 
 	if !strings.Contains(gotContent, content) {
-		return errors.Wrapf(err, "unexpected page content: got `%s`, want `%s` in the output", gotContent, content)
+		// Do not include gotContent in the error msg since it can be very long. In
+		// general a screenshot should be available in the failure case which can be
+		// used for debugging. It might be helpful to extract the error code from
+		// the page and include it in the msg.
+		return errors.Wrapf(err, "unexpected page content: want `%s` in the output", content)
 	}
 
 	return nil
