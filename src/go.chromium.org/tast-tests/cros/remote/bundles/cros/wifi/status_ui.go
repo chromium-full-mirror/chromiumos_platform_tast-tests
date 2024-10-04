@@ -37,7 +37,7 @@ func init() {
 		},
 		// ChromeOS > External > Cienet > Manual Test Automation > Test stabilization
 		BugComponent: "b:1578688",
-		Attr:         []string{"group:wificell", "wificell_e2e"},
+		Attr:         []string{"group:wificell", "wificell_e2e", "group:release-health", "release-health_wifi"},
 		TestBedDeps:  []string{tbdep.Wificell, tbdep.WifiStateNormal, tbdep.BluetoothStateNormal, tbdep.PeripheralWifiStateWorking},
 		ServiceDeps: []string{
 			wificell.ShillServiceName,

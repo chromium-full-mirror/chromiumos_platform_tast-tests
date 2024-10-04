@@ -42,7 +42,7 @@ func init() {
 			"chromeos-wifi-champs@google.com", // WiFi oncall rotation
 		},
 		BugComponent: "b:893827", // ChromeOS > Platform > Connectivity > WiFi
-		Attr:         []string{"group:wificell"},
+		Attr:         []string{"group:wificell", "group:release-health", "release-health_wifi"},
 		TestBedDeps:  []string{tbdep.Wificell, tbdep.WifiStateNormal, tbdep.BluetoothStateNormal, tbdep.PeripheralWifiStateWorking},
 		ServiceDeps:  []string{wificell.ShillServiceName},
 		Fixture:      wificell.FixtureID(wificell.TFFeaturesCapture),

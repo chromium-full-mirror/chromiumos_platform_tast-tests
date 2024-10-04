@@ -91,7 +91,7 @@ func init() {
 		},
 		BugComponent:    "b:893827", // ChromeOS > Platform > Connectivity > WiFi
 		LifeCycleStage:  testing.LifeCycleInDevelopment,
-		Attr:            []string{"group:wificell", "wificell_func"},
+		Attr:            []string{"group:wificell", "wificell_func", "group:release-health", "release-health_wifi"},
 		TestBedDeps:     []string{tbdep.Wificell, tbdep.WifiStateNormal, tbdep.BluetoothStateNormal, tbdep.PeripheralWifiStateWorking},
 		ServiceDeps:     []string{wificell.ShillServiceName},
 		Fixture:         wificell.FixtureID(wificell.TFFeaturesCapture),
