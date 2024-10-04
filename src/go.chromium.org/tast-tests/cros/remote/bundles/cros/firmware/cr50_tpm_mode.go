@@ -50,11 +50,10 @@ func init() {
 		Desc: "Verify TPM disabling and getting back enabled after reset",
 		Contacts: []string{
 			"chromeos-faft@google.com",
-			"pf@semihalf.com",
+			"mruthven@google.com",
 		},
 		BugComponent: "b:792402", // ChromeOS > Platform > Enablement > Firmware > FAFT
-		// TODO: When stable, change firmware_unstable to a different attr.
-		Attr:         []string{"group:firmware", "firmware_unstable"},
+		Attr:         []string{"group:firmware", "firmware_cr50"},
 		HardwareDeps: hwdep.D(hwdep.GSCUART()),
 		Fixture:      fixture.NormalMode,
 		Timeout:      15 * time.Minute,
