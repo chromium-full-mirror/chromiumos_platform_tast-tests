@@ -18,8 +18,10 @@ import (
 	"go.chromium.org/tast-tests/cros/local/chrome/uiauto/role"
 	"go.chromium.org/tast-tests/cros/local/chrome/uiauto/state"
 	hwseclocal "go.chromium.org/tast-tests/cros/local/hwsec"
+	"go.chromium.org/tast-tests/cros/local/nebraska"
 	"go.chromium.org/tast-tests/cros/local/oobe"
 	"go.chromium.org/tast-tests/cros/local/testenv"
+	"go.chromium.org/tast-tests/cros/local/updateengine"
 
 	"go.chromium.org/tast/core/ctxutil"
 	"go.chromium.org/tast/core/testing"
@@ -51,7 +53,7 @@ func init() {
 		},
 		Timeout: chrome.GAIALoginTimeout + 5*time.Minute,
 		Params: []testing.Param{{
-			ExtraAttr: []string{"group:mainline", "informational"},
+			ExtraAttr: []string{"group:mainline", "informational", "group:criticalstaging"},
 			Val:       oobeTestArgs{isAddPersonFlow: false, preprod: false, gaiaSandbox: false, isMetricsClientIDTest: false},
 		}, {
 			Name:      "add_person_flow",
@@ -139,6 +141,29 @@ func SmokeEndToEnd(ctx context.Context, s *testing.State) {
 			s.Fatal("Failed to start Chrome and create a new user: ", err)
 		}
 		cr.Close(ctx)
+	} else {
+		// Disable updates for the Onboarding flow.
+		updateServer, err := nebraska.New(ctx, nebraska.ConfigureUpdateEngine())
+		if err != nil {
+			s.Fatal("Failed to start nebraska: ", err)
+		}
+		defer updateServer.Close(cleanupCtx)
+
+		if err := updateServer.SetFakedMetadata(ctx); err != nil {
+			s.Fatal("Failed to configure Nebraska with faked update metadata: ", err)
+		}
+
+		if err := updateServer.SetCriticalUpdate(ctx, false); err != nil {
+			s.Fatal("Failed to configure Nebraska with non-critical update: ", err)
+		}
+
+		if err := updateServer.SetNoUpdateAvailable(ctx, true); err != nil {
+			s.Fatal("Failed to configure Nebraska with no update: ", err)
+		}
+
+		if err := updateengine.RestartDaemon(ctx); err != nil {
+			s.Fatal("Failed to restart updateengine daemon: ", err)
+		}
 	}
 
 	options := []chrome.Option{
