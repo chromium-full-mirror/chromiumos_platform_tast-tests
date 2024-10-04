@@ -138,7 +138,7 @@ func (vlc *Vlc) getApkName(ctx context.Context) (string, error) {
 	if err != nil {
 		return "", errors.Wrapf(err, "failed to get abi: %s", string(out))
 	}
-	arch := "x86"
+	arch := "x86_64"
 	if strings.HasPrefix(string(out), "arm64-v8a") {
 		arch = "arm64-v8a"
 	}
