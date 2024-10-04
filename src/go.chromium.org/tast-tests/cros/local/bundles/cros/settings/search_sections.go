@@ -23,6 +23,7 @@ import (
 	"go.chromium.org/tast/core/ctxutil"
 	"go.chromium.org/tast/core/errors"
 	"go.chromium.org/tast/core/testing"
+	"go.chromium.org/tast/core/testing/hwdep"
 )
 
 type settingsSearchTestParams struct {
@@ -70,7 +71,8 @@ func init() {
 					arc:        false,
 					searchtype: normalOptions,
 				},
-				Fixture: "chromeLoggedInWithOsSettingsSearchFeedback",
+				Fixture:           "chromeLoggedInWithOsSettingsSearchFeedback",
+				ExtraHardwareDeps: hwdep.D(hwdep.Model("betty")),
 			}, {
 				Name: "arc_options",
 				Val: settingsSearchTestParams{
@@ -84,7 +86,8 @@ func init() {
 					arc:        false,
 					searchtype: optionsAndSubpage,
 				},
-				Fixture: "chromeLoggedIn",
+				Fixture:           "chromeLoggedIn",
+				ExtraHardwareDeps: hwdep.D(hwdep.Model("betty")),
 			}, {
 				Name: "options_and_deep_linking",
 				Val: settingsSearchTestParams{
@@ -98,7 +101,8 @@ func init() {
 					arc:        false,
 					searchtype: guestMode,
 				},
-				Fixture: "chromeLoggedInGuestWithOsSettingsSearchFeedback",
+				Fixture:           "chromeLoggedInGuestWithOsSettingsSearchFeedback",
+				ExtraHardwareDeps: hwdep.D(hwdep.Model("betty")),
 			},
 		},
 	})
