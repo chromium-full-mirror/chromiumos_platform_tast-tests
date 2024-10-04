@@ -25,7 +25,7 @@ func init() {
 		Desc:         "Check and verify camera configuration",
 		Contacts:     []string{"chromeos-camera-eng@google.com", "yerlandinata@chromium.org"},
 		BugComponent: "b:167281", // ChromeOS > Platform > Technologies > Camera
-		Attr:         []string{"group:mainline", "informational", "group:camera", "camera_config"},
+		Attr:         []string{"group:mainline", "informational", "group:criticalstaging", "group:camera", "camera_config"},
 		SoftwareDeps: []string{caps.BuiltinCamera},
 	})
 }
