@@ -11,7 +11,10 @@ import (
 
 	"github.com/google/go-cmp/cmp"
 
+	"go.chromium.org/tast-tests/cros/common/fixture"
 	"go.chromium.org/tast-tests/cros/common/shillconst"
+	"go.chromium.org/tast-tests/cros/common/testexec"
+	"go.chromium.org/tast-tests/cros/local/chrome"
 	"go.chromium.org/tast-tests/cros/local/network/routing"
 	"go.chromium.org/tast-tests/cros/local/network/virtualnet"
 	"go.chromium.org/tast-tests/cros/local/shill"
@@ -27,8 +30,21 @@ func init() {
 		Contacts: []string{"cros-networking@google.com", "jiejiang@google.com"},
 		// ChromeOS > Platform > System > Networking > Continuous Maintenance
 		BugComponent: "b:1493959",
-		Attr:         []string{"group:mainline", "group:network", "network_cq"},
+		Attr:         []string{"group:mainline"},
 		LacrosStatus: testing.LacrosVariantUnneeded,
+		Params: []testing.Param{
+			{
+				Val:       false,
+				ExtraAttr: []string{"group:network", "network_cq"},
+			},
+			{
+				Name:              "chrome",
+				Val:               true,
+				Fixture:           fixture.ChromeLoggedIn,
+				ExtraSoftwareDeps: []string{"chrome"},
+				ExtraAttr:         []string{"informational"},
+			},
+		},
 	})
 }
 
@@ -38,17 +54,27 @@ func RoutingIPv4StaticWithDHCP(ctx context.Context, s *testing.State) {
 	ctx, cancel := ctxutil.Shorten(ctx, 10*time.Second)
 	defer cancel()
 
-	// This test changes static IP configure, push a test profile to avoid
-	// polluting default profile by any chance.
-	popFunc, err := shill.LogOutUserAndPushTestProfile(ctx)
-	if err != nil {
-		s.Fatal("Failed to push test profile: ", err)
+	var cr *chrome.Chrome
+	if s.Param().(bool) {
+		cr = s.FixtValue().(chrome.HasChrome).Chrome()
 	}
-	defer popFunc(cleanupCtx)
 
-	// TODO(b/370369740): Use ehide and then enable web browsing check.
-	testEnv := routing.NewTestEnv(nil /*cr*/)
-	if err := testEnv.SetUp(ctx); err != nil {
+	// This test changes static IP configure, push a test profile to avoid
+	// polluting default profile by any chance. Ideally we want to do this even
+	// with Chrome, but it's not practical now since 1) test profile cannot be
+	// pushed on top of a user profile and 2) we don't have a good way to push the
+	// test profile before login with the chromeLoggedIn feature. If this becomes
+	// a problem, we can consider doing StaticIPConfig cleanup in test hooks.
+	if cr == nil {
+		popFunc, err := shill.LogOutUserAndPushTestProfile(ctx)
+		if err != nil {
+			s.Fatal("Failed to push test profile: ", err)
+		}
+		defer popFunc(cleanupCtx)
+	}
+
+	testEnv := routing.NewTestEnv(cr)
+	if err := testEnv.SetUpWithoutBaseNetwork(ctx); err != nil {
 		s.Fatal("Failed to set up routing test env: ", err)
 	}
 	defer func(ctx context.Context) {
@@ -148,6 +174,14 @@ func RoutingIPv4StaticWithDHCP(ctx context.Context, s *testing.State) {
 		return nil
 	}, &testing.PollOptions{Timeout: 10 * time.Second}); err != nil {
 		s.Fatal("Failed to wait for the StaticIPConfig to be applied: ", err)
+	}
+
+	// Destroy all the TCP connections using the previous IP address, otherwise
+	// Chrome may try to reuse the old socket and thus the connection will be
+	// hanging.
+	// TODO(b/372345809): Do this in shill/patchpanel.
+	if err := testexec.CommandContext(ctx, "ss", "--kill", "state", "established", "src", dhcpProps.Address).Run(testexec.DumpLogOnError); err != nil {
+		s.Fatal("Failed to destroy sockets with previous IP address: ", err)
 	}
 
 	// The test network should still be the primary network. Changing IP

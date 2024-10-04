@@ -99,6 +99,18 @@ func NewTestEnv(cr *chrome.Chrome) *TestEnv {
 
 // SetUp configures shill and brings up the base network.
 func (e *TestEnv) SetUp(ctx context.Context) error {
+	return e.setUpInternal(ctx, true /*enableBaseNetwork*/)
+}
+
+// SetUpWithoutBaseNetwork configures shill for the routing test. Compared with
+// SetUp(), this function won't bring up the base network, which could be
+// helpful in the test which is not for verifying multi-network behavior and
+// only want 1 Ethernet for testing (used together with ehide).
+func (e *TestEnv) SetUpWithoutBaseNetwork(ctx context.Context) error {
+	return e.setUpInternal(ctx, false /*enableBaseNetwork*/)
+}
+
+func (e *TestEnv) setUpInternal(ctx context.Context, enableBaseNetwork bool) error {
 	// Reserve some time for cleanup on failures. This function will start some
 	// processes which are supposed to be kept running so do not defer the
 	// cancel() here.
@@ -131,41 +143,43 @@ func (e *TestEnv) SetUp(ctx context.Context) error {
 		return errors.Wrap(err, "failed to reset ethernet properties")
 	}
 
-	opts := virtualnet.EnvOptions{
-		Priority:   BasePriority,
-		NameSuffix: BaseSuffix,
-		EnableDHCP: true,
-		RAServer:   true,
-	}
-	e.BaseService, e.BaseRouter, e.BaseServer, err = virtualnet.CreateRouterServerEnv(ctx, e.Manager, e.Pool, opts)
-	if err != nil {
-		return errors.Wrap(err, "failed to create base virtualnet env")
-	}
-
-	if err := startDNSServer(ctx, baseServerDomain, e.BaseRouter, e.BaseServer); err != nil {
-		return errors.Wrap(err, "failed to start DNS server on base router")
-	}
-
-	if err := webbrowsing.StartSimpleHTTPServer(ctx, e.BaseServer, baseServerContent); err != nil {
-		return errors.Wrap(err, "failed to start HTTP server on base server")
-	}
-
-	if err := e.WaitForServiceOnline(ctx, e.BaseService); err != nil {
-		return errors.Wrap(err, "failed to wait for base service online")
-	}
-
-	// Check the connectivity to the base network. Also make sure that routing is
-	// setup properly for the base network.
-	if errs := e.VerifyBaseNetwork(ctx, VerifyOptions{
-		IPv4:      true,
-		IPv6:      true,
-		IsPrimary: true,
-		Timeout:   30 * time.Second,
-	}); len(errs) != 0 {
-		for _, err := range errs {
-			testing.ContextLog(ctx, "Failed to verify connectivity to the base network: ", err)
+	if enableBaseNetwork {
+		opts := virtualnet.EnvOptions{
+			Priority:   BasePriority,
+			NameSuffix: BaseSuffix,
+			EnableDHCP: true,
+			RAServer:   true,
 		}
-		return errors.Wrap(errs[0], "failed to verify connectivity to the base network")
+		e.BaseService, e.BaseRouter, e.BaseServer, err = virtualnet.CreateRouterServerEnv(ctx, e.Manager, e.Pool, opts)
+		if err != nil {
+			return errors.Wrap(err, "failed to create base virtualnet env")
+		}
+
+		if err := startDNSServer(ctx, baseServerDomain, e.BaseRouter, e.BaseServer); err != nil {
+			return errors.Wrap(err, "failed to start DNS server on base router")
+		}
+
+		if err := webbrowsing.StartSimpleHTTPServer(ctx, e.BaseServer, baseServerContent); err != nil {
+			return errors.Wrap(err, "failed to start HTTP server on base server")
+		}
+
+		if err := e.WaitForServiceOnline(ctx, e.BaseService); err != nil {
+			return errors.Wrap(err, "failed to wait for base service online")
+		}
+
+		// Check the connectivity to the base network. Also make sure that routing is
+		// setup properly for the base network.
+		if errs := e.VerifyBaseNetwork(ctx, VerifyOptions{
+			IPv4:      true,
+			IPv6:      true,
+			IsPrimary: true,
+			Timeout:   30 * time.Second,
+		}); len(errs) != 0 {
+			for _, err := range errs {
+				testing.ContextLog(ctx, "Failed to verify connectivity to the base network: ", err)
+			}
+			return errors.Wrap(errs[0], "failed to verify connectivity to the base network")
+		}
 	}
 
 	success = true

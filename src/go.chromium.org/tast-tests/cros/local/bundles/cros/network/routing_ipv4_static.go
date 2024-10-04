@@ -11,12 +11,18 @@ import (
 	"github.com/google/go-cmp/cmp"
 
 	"go.chromium.org/tast-tests/cros/common/shillconst"
+	"go.chromium.org/tast-tests/cros/local/chrome"
 	"go.chromium.org/tast-tests/cros/local/network/routing"
 	"go.chromium.org/tast-tests/cros/local/network/virtualnet"
 	"go.chromium.org/tast-tests/cros/local/shill"
 	"go.chromium.org/tast/core/ctxutil"
 	"go.chromium.org/tast/core/testing"
 )
+
+type routingIPv4StaticTestCase struct {
+	applyWhenConnecting bool
+	useChrome           bool
+}
 
 func init() {
 	testing.AddTest(&testing.Test{
@@ -27,13 +33,39 @@ func init() {
 		BugComponent: "b:1493959",
 		Attr:         []string{"group:mainline"},
 		LacrosStatus: testing.LacrosVariantUnneeded,
+		// Using ehide in this test since there might be some problems with
+		// StaticIPConfig due to the ethernet_any profile implementation
+		// (b/159725895).
 		Params: []testing.Param{{
-			// Apply static IP when the network is idle.
-			Val: false,
+			Name: "apply_when_idle",
+			Val: routingIPv4StaticTestCase{
+				applyWhenConnecting: false,
+			},
+			Fixture: "ehide",
 		}, {
-			// Apply static IP when the network is connecting.
 			Name: "apply_when_connecting",
-			Val:  true,
+			Val: routingIPv4StaticTestCase{
+				applyWhenConnecting: true,
+			},
+			Fixture: "ehide",
+		}, {
+			Name: "apply_when_idle_chrome",
+			Val: routingIPv4StaticTestCase{
+				applyWhenConnecting: false,
+				useChrome:           true,
+			},
+			ExtraAttr:         []string{"informational"},
+			ExtraSoftwareDeps: []string{"chrome"},
+			Fixture:           "chromeLoggedIn.ehide",
+		}, {
+			Name: "apply_when_connecting_chrome",
+			Val: routingIPv4StaticTestCase{
+				applyWhenConnecting: true,
+				useChrome:           true,
+			},
+			ExtraAttr:         []string{"informational"},
+			ExtraSoftwareDeps: []string{"chrome"},
+			Fixture:           "chromeLoggedIn.ehide",
 		}},
 	})
 }
@@ -44,19 +76,30 @@ func RoutingIPv4Static(ctx context.Context, s *testing.State) {
 	ctx, cancel := ctxutil.Shorten(ctx, 10*time.Second)
 	defer cancel()
 
-	// This test changes static IP configure, push a test profile to avoid
-	// polluting default profile by any chance.
-	popFunc, err := shill.LogOutUserAndPushTestProfile(ctx)
-	if err != nil {
-		s.Fatal("Failed to push test profile: ", err)
+	tc := s.Param().(routingIPv4StaticTestCase)
+	disconnectBeforeApply := !tc.applyWhenConnecting
+
+	var cr *chrome.Chrome
+	if tc.useChrome {
+		cr = s.FixtValue().(chrome.HasChrome).Chrome()
 	}
-	defer popFunc(cleanupCtx)
 
-	disconnectBeforeApply := s.Param().(bool)
+	// This test changes static IP configure, push a test profile to avoid
+	// polluting default profile by any chance. Ideally we want to do this even
+	// with Chrome, but it's not practical now since 1) test profile cannot be
+	// pushed on top of a user profile and 2) we don't have a good way to push the
+	// test profile before login with the chromeLoggedIn feature. If this becomes
+	// a problem, we can consider doing StaticIPConfig cleanup in test hooks.
+	if cr == nil {
+		popFunc, err := shill.LogOutUserAndPushTestProfile(ctx)
+		if err != nil {
+			s.Fatal("Failed to push test profile: ", err)
+		}
+		defer popFunc(cleanupCtx)
+	}
 
-	// TODO(b/370369740): Use ehide in this test and then enable web browsing check.
-	testEnv := routing.NewTestEnv(nil /*cr*/)
-	if err := testEnv.SetUp(ctx); err != nil {
+	testEnv := routing.NewTestEnv(cr)
+	if err := testEnv.SetUpWithoutBaseNetwork(ctx); err != nil {
 		s.Fatal("Failed to set up routing test env: ", err)
 	}
 	defer func(ctx context.Context) {
@@ -101,9 +144,10 @@ func RoutingIPv4Static(ctx context.Context, s *testing.State) {
 	// Configure static IP config on shill service.
 	prefixLen := ipv4Subnet.PrefixLen()
 	svcStaticIPConfig := map[string]interface{}{
-		shillconst.IPConfigPropertyAddress:   localIPv4Addr.String(),
-		shillconst.IPConfigPropertyGateway:   routerIPv4Addr.String(),
-		shillconst.IPConfigPropertyPrefixlen: prefixLen,
+		shillconst.IPConfigPropertyAddress:     localIPv4Addr.String(),
+		shillconst.IPConfigPropertyGateway:     routerIPv4Addr.String(),
+		shillconst.IPConfigPropertyPrefixlen:   prefixLen,
+		shillconst.IPConfigPropertyNameServers: []string{routerIPv4Addr.String()},
 	}
 	testing.ContextLogf(ctx, "Configuring %v on the test interface", svcStaticIPConfig)
 	if err := testEnv.TestService.SetProperty(ctx, shillconst.ServicePropertyStaticIPConfig, svcStaticIPConfig); err != nil {
@@ -138,17 +182,13 @@ func RoutingIPv4Static(ctx context.Context, s *testing.State) {
 	testing.ContextLog(ctx, "DHCP timeout was triggered")
 
 	// Verify the service state is still online.
-	// TODO(b/159725895): Ideally the service state should not change after DHCP
-	// failure, but actually after the service becomes online at the first time in
-	// the above code, the StaticIPConfig will be reset due to the current
-	// ethernet_any implementation, so when DHCP failure is triggered, the Network
-	// class in shill does not know any IP config on this network so the state
-	// will be turned to disconnected at once. After that, this network is no
-	// longer attached to ethernet_any and get the StaticIPConfig back and becomes
-	// online again. As a result, we need to wait for service online instead of
-	// checking its state directly here.
 	if err := testEnv.TestService.WaitForProperty(ctx, shillconst.ServicePropertyState, shillconst.ServiceStateOnline, 5*time.Second); err != nil {
 		s.Fatal("Failed to wait for the test service online after DHCP expired: ", err)
+	}
+	if state, err := testEnv.TestService.GetState(ctx); err != nil {
+		s.Fatal("Failed to get state of the test service: ", err)
+	} else if state != shillconst.ServiceStateOnline {
+		s.Fatalf("Unexpected service state: got %s, want %s", state, shillconst.ServiceStateOnline)
 	}
 
 	// Verify routing setup for test network.
@@ -161,15 +201,6 @@ func RoutingIPv4Static(ctx context.Context, s *testing.State) {
 		for _, err := range errs {
 			s.Error("Failed to verify test network after configuring static IP: ", err)
 		}
-	}
-
-	// TODO(b/159725895): When the Ethernet service order changes, the first
-	// Ethernet service will be reloaded from the ethernet_any profile, this will
-	// also overwrite the StaticIPConfig field. This will not affect routing but
-	// will affect the IPConfig objects on the Device, so in this test we rewrite
-	// this property again.
-	if err := testEnv.TestService.SetProperty(ctx, shillconst.ServicePropertyStaticIPConfig, svcStaticIPConfig); err != nil {
-		s.Fatal("Failed to configure StaticIPConfig property on the test service: ", err)
 	}
 
 	// Verify IPConfigs.
@@ -189,7 +220,7 @@ func RoutingIPv4Static(ctx context.Context, s *testing.State) {
 		Gateway:     routerIPv4Addr.String(),
 		Method:      "ipv4",
 		PrefixLen:   int32(prefixLen),
-		NameServers: []string{},
+		NameServers: []string{routerIPv4Addr.String()},
 	}
 	if diff := cmp.Diff(actualIPProps, expectedIPProps); diff != "" {
 		s.Fatal("Got unexpected IPProperties with diff: ", diff)
