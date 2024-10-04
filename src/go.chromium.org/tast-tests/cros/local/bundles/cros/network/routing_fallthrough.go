@@ -8,6 +8,8 @@ import (
 	"context"
 	"time"
 
+	"go.chromium.org/tast-tests/cros/common/fixture"
+	"go.chromium.org/tast-tests/cros/local/chrome"
 	"go.chromium.org/tast-tests/cros/local/network/routing"
 	"go.chromium.org/tast-tests/cros/local/network/virtualnet"
 	"go.chromium.org/tast/core/ctxutil"
@@ -19,6 +21,11 @@ const (
 	primaryIPv6Only = "ipv6-only"
 )
 
+type routingFallthroughTestCase struct {
+	primaryFamily string
+	useChrome     bool
+}
+
 func init() {
 	testing.AddTest(&testing.Test{
 		Func:     RoutingFallthrough,
@@ -26,14 +33,38 @@ func init() {
 		Contacts: []string{"cros-networking@google.com", "jiejiang@google.com"},
 		// ChromeOS > Platform > System > Networking > Continuous Maintenance
 		BugComponent: "b:1493959",
-		Attr:         []string{"group:mainline", "group:network", "network_cq"},
+		Attr:         []string{"group:mainline"},
 		LacrosStatus: testing.LacrosVariantUnneeded,
 		Params: []testing.Param{{
 			Name: "ipv4_only_primary",
-			Val:  primaryIPv4Only,
+			Val: routingFallthroughTestCase{
+				primaryFamily: primaryIPv4Only,
+			},
+			ExtraAttr: []string{"group:network", "network_cq"},
 		}, {
 			Name: "ipv6_only_primary",
-			Val:  primaryIPv6Only,
+			Val: routingFallthroughTestCase{
+				primaryFamily: primaryIPv6Only,
+			},
+			ExtraAttr: []string{"group:network", "network_cq"},
+		}, {
+			Name: "ipv4_only_primary_chrome",
+			Val: routingFallthroughTestCase{
+				primaryFamily: primaryIPv4Only,
+				useChrome:     true,
+			},
+			ExtraAttr:         []string{"informational"},
+			ExtraSoftwareDeps: []string{"chrome"},
+			Fixture:           fixture.ChromeLoggedIn,
+		}, {
+			Name: "ipv6_only_primary_chrome",
+			Val: routingFallthroughTestCase{
+				primaryFamily: primaryIPv6Only,
+				useChrome:     true,
+			},
+			ExtraAttr:         []string{"informational"},
+			ExtraSoftwareDeps: []string{"chrome"},
+			Fixture:           fixture.ChromeLoggedIn,
 		}},
 	})
 }
@@ -46,7 +77,14 @@ func RoutingFallthrough(ctx context.Context, s *testing.State) {
 	ctx, cancel := ctxutil.Shorten(ctx, 10*time.Second)
 	defer cancel()
 
-	testEnv := routing.NewTestEnv()
+	tc := s.Param().(routingFallthroughTestCase)
+
+	var cr *chrome.Chrome
+	if tc.useChrome {
+		cr = s.FixtValue().(chrome.HasChrome).Chrome()
+	}
+
+	testEnv := routing.NewTestEnv(cr)
 	if err := testEnv.SetUp(ctx); err != nil {
 		s.Fatal("Failed to set up routing test env: ", err)
 	}
@@ -56,7 +94,7 @@ func RoutingFallthrough(ctx context.Context, s *testing.State) {
 		}
 	}(cleanupCtx)
 
-	primaryFamily := s.Param().(string)
+	primaryFamily := tc.primaryFamily
 
 	testNetworkOpts := virtualnet.EnvOptions{
 		Priority:   routing.HighPriority,

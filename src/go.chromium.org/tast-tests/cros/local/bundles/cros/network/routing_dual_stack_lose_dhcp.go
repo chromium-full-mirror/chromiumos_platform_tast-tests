@@ -8,7 +8,9 @@ import (
 	"context"
 	"time"
 
+	"go.chromium.org/tast-tests/cros/common/fixture"
 	"go.chromium.org/tast-tests/cros/local/arc"
+	"go.chromium.org/tast-tests/cros/local/chrome"
 	"go.chromium.org/tast-tests/cros/local/crostini"
 	"go.chromium.org/tast-tests/cros/local/guestos"
 	arcnet "go.chromium.org/tast-tests/cros/local/network/arc"
@@ -24,8 +26,9 @@ import (
 type lostDHCPTestCase int
 
 const (
-	loseDHCPTestCaseARC lostDHCPTestCase = iota
-	lostDHCPTestCaseCrostini
+	loseDHCPTestCaseChrome lostDHCPTestCase = iota
+	loseDHCPTestCaseARC
+	loseDHCPTestCaseCrostini
 )
 
 func init() {
@@ -39,13 +42,18 @@ func init() {
 		LacrosStatus: testing.LacrosVariantUnneeded,
 		Timeout:      3 * time.Minute,
 		Params: []testing.Param{{
+			Name:              "chrome",
+			Val:               loseDHCPTestCaseChrome,
+			Fixture:           fixture.ChromeLoggedIn,
+			ExtraSoftwareDeps: []string{"chrome"},
+		}, {
 			Name:              "arc",
 			Val:               loseDHCPTestCaseARC,
 			Fixture:           "arcBooted",
 			ExtraSoftwareDeps: []string{"arc"},
 		}, {
 			Name:              "crostini",
-			Val:               lostDHCPTestCaseCrostini,
+			Val:               loseDHCPTestCaseCrostini,
 			Fixture:           "crostiniBullseye",
 			ExtraSoftwareDeps: []string{"vm_host"},
 		}},
@@ -58,7 +66,12 @@ func RoutingDualStackLoseDHCP(ctx context.Context, s *testing.State) {
 	ctx, cancel := ctxutil.Shorten(ctx, 10*time.Second)
 	defer cancel()
 
-	testEnv := routing.NewTestEnv()
+	var cr *chrome.Chrome
+	if s.Param().(lostDHCPTestCase) == loseDHCPTestCaseChrome {
+		cr = s.FixtValue().(chrome.HasChrome).Chrome()
+	}
+
+	testEnv := routing.NewTestEnv(cr)
 	if err := testEnv.SetUp(ctx); err != nil {
 		s.Fatal("Failed to set up routing test env: ", err)
 	}
@@ -196,7 +209,7 @@ func RoutingDualStackLoseDHCP(ctx context.Context, s *testing.State) {
 		if err := arcnet.ExpectPingSuccess(ctx, a, arcIfname, ipv6Addr); err != nil {
 			s.Errorf("Failed to verify IPv6 reachability to %s from ARC: %v", ipv6Addr, err)
 		}
-	case lostDHCPTestCaseCrostini:
+	case loseDHCPTestCaseCrostini:
 		cont := s.FixtValue().(crostini.FixtureData).Cont
 		if err := guestos.PingWithRetryAndTimeout(ctx, cont, ipv6Addr, 5*time.Second); err != nil {
 			s.Errorf("Failed to verify IPv6 reachability to %s from Crostini: %v", ipv6Addr, err)

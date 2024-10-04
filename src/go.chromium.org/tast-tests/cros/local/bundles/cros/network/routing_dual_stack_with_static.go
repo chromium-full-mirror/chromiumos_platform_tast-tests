@@ -9,7 +9,9 @@ import (
 	"net"
 	"time"
 
+	"go.chromium.org/tast-tests/cros/common/fixture"
 	"go.chromium.org/tast-tests/cros/common/shillconst"
+	"go.chromium.org/tast-tests/cros/local/chrome"
 	"go.chromium.org/tast-tests/cros/local/network/routing"
 	"go.chromium.org/tast-tests/cros/local/network/virtualnet"
 	"go.chromium.org/tast/core/ctxutil"
@@ -26,6 +28,15 @@ func init() {
 		BugComponent: "b:1493959",
 		Attr:         []string{"group:mainline"},
 		LacrosStatus: testing.LacrosVariantUnneeded,
+		Params: []testing.Param{{
+			Val: false,
+		}, {
+			Name:              "chrome",
+			Val:               true,
+			Fixture:           fixture.ChromeLoggedIn,
+			ExtraSoftwareDeps: []string{"chrome"},
+			ExtraAttr:         []string{"informational"},
+		}},
 	})
 }
 
@@ -37,7 +48,12 @@ func RoutingDualStackWithStatic(ctx context.Context, s *testing.State) {
 	ctx, cancel := ctxutil.Shorten(ctx, 10*time.Second)
 	defer cancel()
 
-	testEnv := routing.NewTestEnv()
+	var cr *chrome.Chrome
+	if s.Param().(bool) {
+		cr = s.FixtValue().(chrome.HasChrome).Chrome()
+	}
+
+	testEnv := routing.NewTestEnv(cr)
 	if err := testEnv.SetUp(ctx); err != nil {
 		s.Fatal("Failed to set up routing test env: ", err)
 	}

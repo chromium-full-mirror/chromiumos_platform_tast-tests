@@ -33,7 +33,7 @@ func DHCPWebProxy(ctx context.Context, s *testing.State) {
 	ctx, cancel := ctxutil.Shorten(ctx, 10*time.Second)
 	defer cancel()
 
-	testEnv := routing.NewTestEnv()
+	testEnv := routing.NewTestEnv(nil /*cr*/)
 	if err := testEnv.SetUp(ctx); err != nil {
 		s.Fatal("Failed to set up routing test env: ", err)
 	}

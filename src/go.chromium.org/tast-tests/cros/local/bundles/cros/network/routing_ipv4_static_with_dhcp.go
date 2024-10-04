@@ -46,7 +46,8 @@ func RoutingIPv4StaticWithDHCP(ctx context.Context, s *testing.State) {
 	}
 	defer popFunc(cleanupCtx)
 
-	testEnv := routing.NewTestEnv()
+	// TODO(b/370369740): Use ehide and then enable web browsing check.
+	testEnv := routing.NewTestEnv(nil /*cr*/)
 	if err := testEnv.SetUp(ctx); err != nil {
 		s.Fatal("Failed to set up routing test env: ", err)
 	}

@@ -91,10 +91,10 @@ const (
 	DHCPExtraTimeout = DHCPTimeout + time.Second
 )
 
-// NewTestEnv creates a new TestEnv object for routing tests.
-// TODO(jiejiang): Add Chrome as a param.
-func NewTestEnv() *TestEnv {
-	return &TestEnv{Pool: subnet.NewPool()}
+// NewTestEnv creates a new TestEnv object for routing tests. If cr is not nil,
+// verification using Chrome will be enabled.
+func NewTestEnv(cr *chrome.Chrome) *TestEnv {
+	return &TestEnv{cr: cr, Pool: subnet.NewPool()}
 }
 
 // SetUp configures shill and brings up the base network.

@@ -109,7 +109,9 @@ func RoutingTagSocketAPI(ctx context.Context, s *testing.State) {
 	}
 	defer popFunc(cleanupCtx)
 
-	testEnv := routing.NewTestEnv()
+	// Skip verification for web browsing since it won't be affected by the
+	// TagSocket API.
+	testEnv := routing.NewTestEnv(nil /*cr*/)
 	if err := testEnv.SetUp(ctx); err != nil {
 		s.Fatal("Failed to set up routing test env: ", err)
 	}

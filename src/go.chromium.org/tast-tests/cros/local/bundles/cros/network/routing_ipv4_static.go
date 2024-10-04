@@ -54,7 +54,8 @@ func RoutingIPv4Static(ctx context.Context, s *testing.State) {
 
 	disconnectBeforeApply := s.Param().(bool)
 
-	testEnv := routing.NewTestEnv()
+	// TODO(b/370369740): Use ehide in this test and then enable web browsing check.
+	testEnv := routing.NewTestEnv(nil /*cr*/)
 	if err := testEnv.SetUp(ctx); err != nil {
 		s.Fatal("Failed to set up routing test env: ", err)
 	}
