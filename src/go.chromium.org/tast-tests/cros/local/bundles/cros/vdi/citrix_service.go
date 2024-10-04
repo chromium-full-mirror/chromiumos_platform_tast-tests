@@ -57,6 +57,7 @@ type CitrixService struct {
 	dataPath     func(string) string
 	signaturePad citrix.SignaturePad
 	bounds       coords.Rect
+	login        bool
 }
 
 // NewCitrix creates a new instance of Citrix and launches the Citrix app.
@@ -121,7 +122,7 @@ func (c *CitrixService) LoginCitrix(ctx context.Context, req *empty.Empty) (*emp
 		}); err != nil {
 		return nil, errors.Wrap(err, "failed to login to the Citrix application")
 	}
-
+	c.login = true
 	if err := citrix.WaitForDesktop(c.ud, c.dataPath)(ctx); err != nil {
 		return nil, errors.Wrap(err, "failed to wait for desktop")
 	}
@@ -154,6 +155,14 @@ func (c *CitrixService) OpenCitrix(ctx context.Context, req *empty.Empty) (*empt
 
 // CloseCitrix closes the Citrix app.
 func (c *CitrixService) CloseCitrix(ctx context.Context, req *empty.Empty) (*empty.Empty, error) {
+	if c.login {
+		testing.ContextLog(ctx, "VDI: Log off from Citrix desktop")
+		if err := citrix.LogOff(c.ud, c.dataPath)(ctx); err != nil {
+			return nil, errors.Wrap(err, "failed to log off from Citrix desktop")
+		}
+	}
+	c.login = false
+
 	testing.ContextLog(ctx, "VDI: Closing all windows")
 	// Ensure that there are no windows open.
 	if err := ash.CloseAllWindows(ctx, c.tconn); err != nil {

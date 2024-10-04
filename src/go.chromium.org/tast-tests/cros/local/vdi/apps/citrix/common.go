@@ -27,6 +27,18 @@ func WaitForDesktop(ud *uidetection.Context, dataPath func(string) string) uiaut
 	)
 }
 
+// LogOff logs off from Citrix desktop.
+func LogOff(ud *uidetection.Context, dataPath func(string) string) uiauto.Action {
+	topBtn := uidetection.CustomIcon(dataPath(topBtnIcon))
+	moreOptionBtn := uidetection.CustomIcon(dataPath(moreOptionBtnIcon))
+	logOffText := uidetection.TextBlockFromSentence("Log Off").First()
+	return uiauto.NamedCombine("log off from Citrix desktop",
+		ud.LeftClick(topBtn),
+		ud.LeftClick(moreOptionBtn),
+		ud.LeftClick(logOffText),
+	)
+}
+
 // OpenApp opens the application with given name in Citrix.
 func OpenApp(ud *uidetection.Context, dataPath func(string) string, appName, appTitle string) uiauto.Action {
 	appText := uidetection.Word(appName).First()
