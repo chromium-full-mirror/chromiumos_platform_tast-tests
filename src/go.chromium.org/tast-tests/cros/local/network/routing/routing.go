@@ -11,11 +11,13 @@ import (
 	"time"
 
 	"go.chromium.org/tast-tests/cros/common/shillconst"
+	"go.chromium.org/tast-tests/cros/local/chrome"
 	"go.chromium.org/tast-tests/cros/local/network/ping"
 	"go.chromium.org/tast-tests/cros/local/network/virtualnet"
 	"go.chromium.org/tast-tests/cros/local/network/virtualnet/dnsmasq"
 	"go.chromium.org/tast-tests/cros/local/network/virtualnet/env"
 	"go.chromium.org/tast-tests/cros/local/network/virtualnet/subnet"
+	"go.chromium.org/tast-tests/cros/local/network/webbrowsing"
 	"go.chromium.org/tast-tests/cros/local/shill"
 	"go.chromium.org/tast/core/ctxutil"
 	"go.chromium.org/tast/core/errors"
@@ -30,6 +32,8 @@ import (
 // The test network is configured according to the needs in a test and used to
 // simulate different network environments.
 type TestEnv struct {
+	cr *chrome.Chrome
+
 	resetCheckPortalList func(ctx context.Context)
 
 	// Manager wraps the Manager D-Bus object in shill.
@@ -72,6 +76,11 @@ const (
 	// testServerDomain can be resolved to the IP addresses (both v4 and v6) of
 	// the test server, by the DNS server on the test router.
 	testServerDomain = "test.server.domain"
+
+	// baseServerContent is the string returned by the HTTP server on base server.
+	baseServerContent = "Hello world from base server"
+	// testServerContent is the string returned by the HTTP server on base server.
+	testServerContent = "Hello world from test server"
 )
 
 const (
@@ -83,6 +92,7 @@ const (
 )
 
 // NewTestEnv creates a new TestEnv object for routing tests.
+// TODO(jiejiang): Add Chrome as a param.
 func NewTestEnv() *TestEnv {
 	return &TestEnv{Pool: subnet.NewPool()}
 }
@@ -136,6 +146,10 @@ func (e *TestEnv) SetUp(ctx context.Context) error {
 		return errors.Wrap(err, "failed to start DNS server on base router")
 	}
 
+	if err := webbrowsing.StartSimpleHTTPServer(ctx, e.BaseServer, baseServerContent); err != nil {
+		return errors.Wrap(err, "failed to start HTTP server on base server")
+	}
+
 	if err := e.WaitForServiceOnline(ctx, e.BaseService); err != nil {
 		return errors.Wrap(err, "failed to wait for base service online")
 	}
@@ -167,6 +181,9 @@ func (e *TestEnv) CreateNetworkEnvForTest(ctx context.Context, opts virtualnet.E
 	}
 	if err := startDNSServer(ctx, testServerDomain, e.TestRouter, e.TestServer); err != nil {
 		return errors.Wrap(err, "failed to start DNS server on test router")
+	}
+	if err := webbrowsing.StartSimpleHTTPServer(ctx, e.TestServer, testServerContent); err != nil {
+		return errors.Wrap(err, "failed to start HTTP server on test server")
 	}
 	return nil
 }
@@ -241,19 +258,27 @@ type VerifyOptions struct {
 	// that should happen in the given timeout. 0 means the network is already
 	// connected.
 	Timeout time.Duration
+
+	// Fields used internally.
+	webBrowsingURL     string
+	webBrowsingContent string
 }
 
 // VerifyBaseNetwork verifies the routing setup for the base network.
 func (e *TestEnv) VerifyBaseNetwork(ctx context.Context, opts VerifyOptions) []error {
-	return verifyNetworkConnectivity(ctx, e.BaseRouter, e.BaseServer, opts)
+	opts.webBrowsingURL = "http://" + baseServerDomain
+	opts.webBrowsingContent = baseServerContent
+	return verifyNetworkConnectivity(ctx, e.cr, e.BaseRouter, e.BaseServer, opts)
 }
 
 // VerifyTestNetwork verifies the routing setup for the test network.
 func (e *TestEnv) VerifyTestNetwork(ctx context.Context, opts VerifyOptions) []error {
-	return verifyNetworkConnectivity(ctx, e.TestRouter, e.TestServer, opts)
+	opts.webBrowsingURL = "http://" + testServerDomain
+	opts.webBrowsingContent = testServerContent
+	return verifyNetworkConnectivity(ctx, e.cr, e.TestRouter, e.TestServer, opts)
 }
 
-func verifyNetworkConnectivity(ctx context.Context, router, server *env.Env, opts VerifyOptions) []error {
+func verifyNetworkConnectivity(ctx context.Context, cr *chrome.Chrome, router, server *env.Env, opts VerifyOptions) []error {
 	if !opts.IPv4 && !opts.IPv6 {
 		return []error{errors.New("neither IPv4 nor IPv6 is set")}
 	}
@@ -338,6 +363,14 @@ func verifyNetworkConnectivity(ctx context.Context, router, server *env.Env, opt
 			if err := ping.ExpectPingFailure(ctx, ip.String(), user); err != nil {
 				errs = append(errs, errors.Wrapf(err, "non-local address %v on non-primary network is reachable as user %s", ip, user))
 			}
+		}
+	}
+
+	// Verify web browsing only on default network.
+	if cr != nil && opts.IsPrimary {
+		testing.ContextLog(ctx, "Verifying web browsing at ", opts.webBrowsingURL)
+		if err := webbrowsing.VerifyWebPageContains(ctx, cr, opts.webBrowsingURL, opts.webBrowsingContent); err != nil {
+			errs = append(errs, errors.Wrap(err, "failed to verify web browsing"))
 		}
 	}
 
