@@ -8,7 +8,6 @@ import (
 	"context"
 	"fmt"
 	"net"
-	"net/http"
 	"os"
 	"strings"
 	"time"
@@ -21,8 +20,8 @@ import (
 	"go.chromium.org/tast-tests/cros/local/network/ping"
 	"go.chromium.org/tast-tests/cros/local/network/testhooks"
 	"go.chromium.org/tast-tests/cros/local/network/virtualnet"
-	"go.chromium.org/tast-tests/cros/local/network/virtualnet/httpserver"
 	"go.chromium.org/tast-tests/cros/local/network/virtualnet/subnet"
+	"go.chromium.org/tast-tests/cros/local/network/webbrowsing"
 	"go.chromium.org/tast-tests/cros/local/shill"
 	"go.chromium.org/tast-tests/cros/local/upstart"
 	"go.chromium.org/tast/core/ctxutil"
@@ -191,12 +190,7 @@ func WifiReconnectOnUserChange(ctx context.Context, s *testing.State) {
 	if err := serverEnv.ConnectToRouter(ctx, wifi.Router, serverIPv4Subnet, serverIPv6Subnet); err != nil {
 		s.Fatal("Failed to connect server env to the router")
 	}
-	httpServer := httpserver.New(httpserver.TCP4, "80", func(rw http.ResponseWriter, req *http.Request) {
-		if _, err := rw.Write([]byte(httpResponse)); err != nil {
-			testing.ContextLog(ctx, "Failed to write response in HTTP server: ", err)
-		}
-	}, nil)
-	if err := serverEnv.StartServer(ctx, "http", httpServer); err != nil {
+	if err := webbrowsing.StartSimpleHTTPServer(ctx, serverEnv, httpResponse); err != nil {
 		s.Fatal("Failed to start HTTP server in the server env: ", err)
 	}
 
@@ -329,23 +323,8 @@ func WifiReconnectOnUserChange(ctx context.Context, s *testing.State) {
 		url := "http://" + testHostname
 		s.Logf("Verifying opening %s in Chrome", url)
 
-		conn, err := cr.NewConn(ctx, url)
-		if err != nil {
-			s.Fatalf("%s: Failed to open %s: %v", tag, url, err)
-		}
-		defer conn.Close()
-
-		if err := conn.WaitForExpr(ctx, "document.readyState === 'complete'"); err != nil {
-			s.Fatalf("%s: Failed to wait for page to load: %v", tag, err)
-		}
-
-		content, err := conn.PageContent(ctx)
-		if err != nil {
-			s.Fatalf("%s: Failed to get page content: %v", tag, err)
-		}
-
-		if !strings.Contains(content, httpResponse) {
-			s.Fatalf("%s: Unexpected page content: got `%s`, want `%s` in the output", tag, content, httpResponse)
+		if err := webbrowsing.VerifyWebPageContains(ctx, cr, url, httpResponse); err != nil {
+			s.Fatalf("%s: Failed to verify web browsing: %v", tag, err)
 		}
 	}
 
