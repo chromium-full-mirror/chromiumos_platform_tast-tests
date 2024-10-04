@@ -3,6 +3,7 @@
 # found in the LICENSE file.
 
 
+import collections
 import logging
 import pathlib
 
@@ -11,6 +12,7 @@ from analyzer.frontend import output
 from analyzer.frontend import plot
 from matplotlib import figure
 from matplotlib import pyplot as plt
+import numpy as np
 import seaborn as sns
 
 
@@ -20,10 +22,102 @@ def init_plotting() -> None:
     sns.set(font_scale=1)
 
 
+def _get_groups_name_for_plot(
+    groups: list[analysis_results.ExperimentGroup],
+) -> str:
+    """Returns a name of the given groups for groups level plots."""
+    labels_by_metric_path = collections.defaultdict(list)
+    for group in groups:
+        labels_by_metric_path[group.metric_path()].append(group.label())
+
+    metric_paths_with_label: list[str] = []
+    for metric_path, labels in labels_by_metric_path.items():
+        metric_name = "|".join(labels)
+        if len(labels) > 1:
+            metric_name = f"({metric_name})"
+        metric_paths_with_label.append(f"{metric_name}|{metric_path}")
+
+    return ", ".join(metric_paths_with_label)
+
+
+def _create_plot_data_for_groups(
+    result: analysis_results.AnalysisResult,
+    fig: figure.Figure,
+    kind: plot.GroupsPlotKind,
+) -> plot.PlotData:
+    """Creates the figure for the given groups.
+
+    Args:
+        results: The result to create PlotData for.
+        fig: The figure to create.
+        kind: The plot kind of the figure.
+
+    Returns:
+        A PlotData.
+    """
+    groups_name = _get_groups_name_for_plot(result.groups)
+    direction = "higher" if result.is_up_better() else "lower"
+    fig.suptitle(f"{groups_name}\n{direction} is better", wrap=True)
+    fig.tight_layout()
+
+    return plot.PlotData(kind=kind, figure=fig)
+
+
+def _plot_box_for_groups(
+    result: analysis_results.AnalysisResult,
+) -> figure.Figure:
+    """Creates the box plot for groups.
+
+    Args:
+        results: The result to plot.
+
+    Returns:
+        The created figure.
+    """
+    label_to_values = {
+        group.label(): list(group.sample.values()) for group in result.groups
+    }
+
+    fig, ax = plt.subplots()
+    order = sorted(label_to_values, key=lambda x: np.mean(label_to_values[x]))
+    sns.boxplot(
+        data=label_to_values, color=(0.9, 0.9, 0.9, 0.9), ax=ax, order=order
+    )
+    sns.stripplot(data=label_to_values, ax=ax, order=order)
+    ax.set_ylabel(result.units())
+
+    return fig
+
+
+def _create_plots_for_groups(
+    result: analysis_results.AnalysisResult,
+    plot_kinds: set[plot.GroupsPlotKind],
+) -> list[plot.PlotData]:
+    """Creates groups level plots for the given result.
+
+    Args:
+        results: The result to plot.
+        plot_kinds: The kinds of plots to create.
+
+    Returns:
+        A list of PlotData.
+    """
+    groups_plot: list[plot.PlotData] = []
+    for kind in plot_kinds:
+        if kind == plot.GroupsPlotKind.PLOT_BOX:
+            fig = _plot_box_for_groups(result)
+        else:
+            raise ValueError(f"Unknown plot kind: {kind}")
+        groups_plot.append(
+            _create_plot_data_for_groups(result=result, fig=fig, kind=kind)
+        )
+    return groups_plot
+
+
 def _create_plot_data_for_pair(
     pair: analysis_results.PairwiseResult,
     fig: figure.Figure,
-    kind: plot.PlotKind,
+    kind: plot.PairwisePlotKind,
 ) -> plot.PlotData:
     """Creates PlotData for the given pairwise result.
 
@@ -46,7 +140,7 @@ def _create_plot_data_for_pair(
     return plot.PlotData(kind=kind, figure=fig)
 
 
-def _plot_cdfs(pair: analysis_results.PairwiseResult) -> figure.Figure:
+def _plot_cdfs_for_pair(pair: analysis_results.PairwiseResult) -> figure.Figure:
     fig, ax = plt.subplots()
     before_values = pair.before.sample.values()
     after_values = pair.after.sample.values()
@@ -61,7 +155,7 @@ def _plot_cdfs(pair: analysis_results.PairwiseResult) -> figure.Figure:
     return fig
 
 
-def _plot_box(pair: analysis_results.PairwiseResult) -> figure.Figure:
+def _plot_box_for_pair(pair: analysis_results.PairwiseResult) -> figure.Figure:
     fig, ax = plt.subplots()
     before_values = list(pair.before.sample.values())
     after_values = list(pair.after.sample.values())
@@ -87,13 +181,15 @@ def _plot_box(pair: analysis_results.PairwiseResult) -> figure.Figure:
 def create_plots(
     *,
     results: list[analysis_results.AnalysisResult],
-    plot_kinds: set[plot.PlotKind],
+    pairwise_plot_kinds: set[plot.PairwisePlotKind],
+    groups_plot_kinds: set[plot.GroupsPlotKind],
 ) -> list[output.AnalysisResultForOutput]:
     """Creates plots for the given results and plot kinds.
 
     Args:
         results: The results to plot.
-        plot_kinds: The kinds of plots to create.
+        pairwise_plot_kinds: The kinds of pairwise plots to create.
+        groups_plot_kinds: The kinds of groups plots to create.
 
     Returns:
         A list of analysis results with their output data.
@@ -105,11 +201,11 @@ def create_plots(
         for pair in result.pairs:
             logging.info(f"Creating plots for {pair.identifier()}")
             pairwise_result_plots: list[plot.PlotData] = []
-            for kind in plot_kinds:
-                if kind == plot.PlotKind.PLOT_CDF:
-                    fig = _plot_cdfs(pair)
-                elif kind == plot.PlotKind.PLOT_BOX:
-                    fig = _plot_box(pair)
+            for kind in pairwise_plot_kinds:
+                if kind == plot.PairwisePlotKind.PLOT_CDF:
+                    fig = _plot_cdfs_for_pair(pair)
+                elif kind == plot.PairwisePlotKind.PLOT_BOX:
+                    fig = _plot_box_for_pair(pair)
                 else:
                     raise ValueError(f"Unknown plot kind: {kind}")
                 pairwise_result_plots.append(
@@ -123,7 +219,11 @@ def create_plots(
 
         results_for_output.append(
             output.AnalysisResultForOutput(
-                groups=result.groups, pairs=pairs_for_output
+                groups=result.groups,
+                pairs=pairs_for_output,
+                groups_plots=_create_plots_for_groups(
+                    result, groups_plot_kinds
+                ),
             )
         )
 

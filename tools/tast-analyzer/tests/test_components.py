@@ -28,7 +28,7 @@ class ComponentsTest(unittest.TestCase):
     def test_create_figure_with_caption(self) -> None:
         figure_element = components.create_figure(
             plot_data=plot.PlotData(
-                kind=plot.PlotKind.PLOT_BOX, figure=figure.Figure()
+                kind=plot.PairwisePlotKind.PLOT_BOX, figure=figure.Figure()
             ),
             caption="placeholder",
             attributes={"class": "placeholder"},
@@ -43,7 +43,7 @@ class ComponentsTest(unittest.TestCase):
     def test_create_figure_without_caption(self) -> None:
         figure_element = components.create_figure(
             plot_data=plot.PlotData(
-                kind=plot.PlotKind.PLOT_BOX,
+                kind=plot.PairwisePlotKind.PLOT_BOX,
                 figure=figure.Figure(),
             ),
             attributes={"class": "placeholder"},

@@ -71,6 +71,7 @@ class HtmlReportTest(unittest.TestCase):
                         plots=[],
                     ),
                 ],
+                groups_plots=[],
             )
         ]
 
@@ -117,6 +118,7 @@ class HtmlReportTest(unittest.TestCase):
                         plots=[],
                     ),
                 ],
+                groups_plots=[],
             )
         ]
         report = html_report.HtmlReport(
@@ -174,6 +176,7 @@ class HtmlReportTest(unittest.TestCase):
                         plots=[],
                     ),
                 ],
+                groups_plots=[],
             )
         ]
         report = html_report.HtmlReport(
@@ -229,6 +232,7 @@ class HtmlReportTest(unittest.TestCase):
                         plots=[],
                     ),
                 ],
+                groups_plots=[],
             )
         ]
         report = html_report.HtmlReport(
@@ -275,6 +279,7 @@ class HtmlReportTest(unittest.TestCase):
                         plots=[],
                     ),
                 ],
+                groups_plots=[],
             )
         ]
         report = html_report.HtmlReport(
@@ -332,6 +337,7 @@ class HtmlReportTest(unittest.TestCase):
             output.AnalysisResultForOutput(
                 groups=groups_list[0],
                 pairs=[output.PairwiseResultForOutput(result=pair, plots=[])],
+                groups_plots=[],
             ),
         ]
         report = html_report.HtmlReport(
@@ -404,6 +410,7 @@ class HtmlReportTest(unittest.TestCase):
                         plots=[],
                     ),
                 ],
+                groups_plots=[],
             )
         ]
         report = html_report.HtmlReport(
@@ -460,7 +467,7 @@ class HtmlReportTest(unittest.TestCase):
             ),
         )
         plot_data = plot.PlotData(
-            kind=plot.PlotKind.PLOT_BOX, figure=figure.Figure()
+            kind=plot.PairwisePlotKind.PLOT_BOX, figure=figure.Figure()
         )
         results = [
             output.AnalysisResultForOutput(
@@ -470,6 +477,7 @@ class HtmlReportTest(unittest.TestCase):
                         result=pair, plots=[plot_data]
                     )
                 ],
+                groups_plots=[],
             )
         ]
 
@@ -523,6 +531,7 @@ class HtmlReportTest(unittest.TestCase):
                         plots=[],
                     ),
                 ],
+                groups_plots=[],
             )
         ]
 

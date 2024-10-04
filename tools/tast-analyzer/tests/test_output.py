@@ -12,7 +12,12 @@ from analyzer.frontend.report import report_kind
 class OutputKindTest(unittest.TestCase):
     def test_sort_output(self) -> None:
         outputs: list[output.OutputKind] = list(output.OutputKind)
-        plot_kinds, report_kinds = output.sort_output_kind(outputs)
+        (
+            pairwise_plot_kinds,
+            groups_plot_kinds,
+            report_kinds,
+        ) = output.sort_output_kind(outputs)
 
-        self.assertSetEqual(plot_kinds, set(plot.PlotKind))
+        self.assertSetEqual(pairwise_plot_kinds, set(plot.PairwisePlotKind))
+        self.assertSetEqual(groups_plot_kinds, set(plot.GroupsPlotKind))
         self.assertSetEqual(report_kinds, set(report_kind.ReportKind))

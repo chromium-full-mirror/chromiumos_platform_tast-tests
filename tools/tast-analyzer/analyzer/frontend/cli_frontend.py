@@ -279,21 +279,31 @@ def print_results(
     if outputs:
         assert output_dir, "must specify an output directory for given outputs"
 
-        save_plot_kinds, report_kinds = output.sort_output_kind(outputs)
+        (
+            save_pairwise_plot_kinds,
+            save_groups_plot_kinds,
+            report_kinds,
+        ) = output.sort_output_kind(outputs)
 
         # Currently, all available plots are used for the report
-        report_plot_kinds: set[plot.PlotKind] = (
-            set(plot.PlotKind) if report_kinds else set()
+        report_pairwise_plot_kinds: set[plot.PairwisePlotKind] = (
+            set(plot.PairwisePlotKind) if report_kinds else set()
+        )
+        report_groups_plot_kinds: set[plot.GroupsPlotKind] = (
+            set(plot.GroupsPlotKind) if report_kinds else set()
         )
 
         logging.info("Creating plots (this may take a long time)...")
         plot_util.init_plotting()
         results_for_output = plot_util.create_plots(
-            results=results, plot_kinds=save_plot_kinds | report_plot_kinds
+            results=results,
+            pairwise_plot_kinds=save_pairwise_plot_kinds
+            | report_pairwise_plot_kinds,
+            groups_plot_kinds=save_groups_plot_kinds | report_groups_plot_kinds,
         )
         plot_util.save_plots(
             results_for_output=results_for_output,
-            plot_kinds=save_plot_kinds,
+            plot_kinds=save_pairwise_plot_kinds | save_groups_plot_kinds,
             plot_dir=output_dir,
         )
 

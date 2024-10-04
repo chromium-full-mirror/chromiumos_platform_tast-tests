@@ -176,6 +176,14 @@ class AnalysisResult:
                 == self.groups[0].sample.improvement_direction
             )
 
+    def units(self) -> str:
+        """Returns the units of the samples of the groups."""
+        return self.groups[0].sample.units
+
+    def is_up_better(self) -> bool:
+        """Returns if going up is better for the samples of the groups."""
+        return self.groups[0].sample.improvement_direction.is_up_better()
+
 
 def _construct_implicit_experiment_groups_list(
     samples: list[metric_sample.MetricSample],

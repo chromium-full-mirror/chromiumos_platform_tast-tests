@@ -209,7 +209,7 @@ class AnalysisTest(unittest.TestCase):
                             "before|ui.OverviewPerf|Test.One.average"
                         ]
                     ),
-                ],
+                ]
             ],
         )
 
@@ -458,7 +458,7 @@ class AnalysisTest(unittest.TestCase):
                         u=7.0,
                         p=0.36868826936178156,
                     ),
-                )
+                ),
             ],
         )
         self.assertEqual(
