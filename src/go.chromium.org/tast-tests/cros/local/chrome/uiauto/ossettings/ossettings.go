@@ -73,42 +73,43 @@ func (s *OSSettings) Close(ctx context.Context) error {
 	return nil
 }
 
-// LaunchAtPage launches the Settings app at a particular page.
-// An error is returned if the app fails to launch.
+// LaunchAtPage launches the Settings app and navigates to a page by finding and
+// clicking the respective top-level menu item. An error is returned if the app
+// fails to launch.
 // TODO (b/189055966): Fix the failure to launch the right subpage.
-func LaunchAtPage(ctx context.Context, tconn *chrome.TestConn, subpage *nodewith.Finder) (*OSSettings, error) {
+func LaunchAtPage(ctx context.Context, tconn *chrome.TestConn, menuItem *nodewith.Finder) (*OSSettings, error) {
 	// Launch Settings App.
 	s, err := Launch(ctx, tconn)
 	if err != nil {
 		return nil, err
 	}
 
-	// Wait until either the subpage or main menu exist.
-	// On small screens the sidebar is collapsed, and the main menu must be clicked.
-	subPageInApp := subpage.FinalAncestor(WindowFinder)
+	// Wait until either the menu item or menu button (small screens) exist.
+	// On small screens the sidebar is collapsed, and the menu button must be
+	// clicked to expand the menu.
+	menuItemInApp := menuItem.FinalAncestor(WindowFinder)
 	menuButton := MenuButton.Ancestor(WindowFinder)
 	if err := testing.Poll(ctx, func(ctx context.Context) error {
-		if err := s.ui.Exists(subPageInApp)(ctx); err == nil {
+		if err := s.ui.Exists(menuItemInApp)(ctx); err == nil {
 			return nil
 		}
 		if err := s.ui.Exists(menuButton)(ctx); err == nil {
 			return nil
 		}
-		return errors.New("neither subpage nor main menu exist")
+		return errors.New("neither menu item nor menu button exist")
 	}, &testing.PollOptions{Interval: 1 * time.Second, Timeout: 30 * time.Second}); err != nil {
 		return nil, err
 	}
 
-	// If the subpage doesn't exist, click the main menu.
-	// Focus the subpage to ensure it is on-screen.
-	// Then click the subpage that we want in the sidebar.
-	if err := uiauto.Combine("click subpage",
-		uiauto.IfSuccessThen(s.ui.Gone(subPageInApp), s.ui.LeftClick(menuButton)),
-		s.ui.FocusAndWait(subPageInApp),
-		s.ui.LeftClick(subPageInApp),
+	if err := uiauto.Combine("click menu item",
+		// If the menu item doesn't exist, click the menu button to expand the menu.
+		uiauto.IfSuccessThen(s.ui.Gone(menuItemInApp), s.ui.LeftClick(menuButton)),
+		// Prefer using DoDefault() to avoid needing to scroll the item into view.
+		s.ui.DoDefault(menuItemInApp),
 	)(ctx); err != nil {
-		return nil, errors.Wrapf(err, "failed to click subpage with %v", subpage)
+		return nil, errors.Wrapf(err, "failed to click menu item with %v", menuItem)
 	}
+
 	return s, nil
 }
 
