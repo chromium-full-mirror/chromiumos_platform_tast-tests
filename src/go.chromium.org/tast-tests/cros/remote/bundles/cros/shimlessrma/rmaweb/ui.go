@@ -8,6 +8,8 @@ package rmaweb
 import (
 	"context"
 	"fmt"
+	"os"
+	"path/filepath"
 	"regexp"
 	"strings"
 	"time"
@@ -448,7 +450,59 @@ func CreateErrorHandler(ctx context.Context, uiHelper **UIHelper, testname strin
 		if _, err := screenshotService.CaptureScreenshot(ctx, &graphics.CaptureScreenshotRequest{FilePrefix: testname}); err != nil {
 			testing.ContextLogf(ctx, "Failed to take screenshot: %s", err)
 		}
+
+		if err := (*uiHelper).saveRmaStateFile(ctx); err != nil {
+			testing.ContextLogf(ctx, "Failed to save state: %s", err)
+		}
 	}
+}
+
+// saveRmaStateFile saves the rmad state file to test output directory.
+func (uiHelper *UIHelper) saveRmaStateFile(ctx context.Context) error {
+	dir, ok := testing.ContextOutDir(ctx)
+	if !ok || dir == "" {
+		return errors.New("failed to get name of directory")
+	}
+	if _, err := os.Stat(dir); err != nil {
+		return errors.Wrap(err, "output directory not found")
+	}
+
+	stateDir := filepath.Join(dir, "rmad_state")
+	if err := os.MkdirAll(stateDir, 0755); err != nil {
+		return errors.Wrap(err, "failed to create directory for rmad state file")
+	}
+
+	saveStateFile := func(from, to string) error {
+		rawOutput, err := uiHelper.readStateFile(ctx, from)
+		if err != nil {
+			return errors.Wrapf(err, "failed to read data from %s", from)
+		}
+
+		path := filepath.Join(stateDir, to)
+		f, err := os.Create(path)
+		if err != nil {
+			return errors.Wrapf(err, "failed to create %s", to)
+		}
+		defer f.Close()
+
+		if _, err := f.Write(rawOutput); err != nil {
+			return errors.Wrapf(err, "failed to write data to %s", to)
+		}
+
+		testing.ContextLogf(ctx, "Saved state file to %s", path)
+		return nil
+	}
+
+	if err := saveStateFile(stateFile, "state"); err != nil {
+		testing.ContextLog(ctx, "Failed to save state: ", err)
+	}
+
+	return nil
+}
+
+// readStateFile reads content of rmad state file and prettify the content.
+func (uiHelper *UIHelper) readStateFile(ctx context.Context, filename string) ([]byte, error) {
+	return uiHelper.Dut.Conn().CommandContext(ctx, "sh", "-c", fmt.Sprintf("jq . %s", filename)).Output()
 }
 
 func (uiHelper *UIHelper) deleteLogsIfExisting(ctx context.Context) error {
