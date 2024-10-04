@@ -166,12 +166,12 @@ func WifiReconnectOnUserChange(ctx context.Context, s *testing.State) {
 	// Start virtualnet with the AP.
 	simWiFi := s.FixtValue().(*hwsim.ShillSimulatedWiFi)
 	opts := virtualnet.EnvOptions{
-		EnableDHCP:                true,
-		RAServer:                  true,
-		EnableDNS:                 true,
-		ResolvedHost:              testHostname,
-		ResolveHostToIP:           serverIPv4,
-		HostapdAddtionalConfLines: hostapdConfLines,
+		EnableDHCP:                 true,
+		RAServer:                   true,
+		EnableDNS:                  true,
+		ResolvedHost:               testHostname,
+		ResolveHostToIP:            serverIPv4,
+		HostapdAdditionalConfLines: hostapdConfLines,
 	}
 	wifi, err := virtualnet.CreateWifiRouterEnv(ctx, simWiFi.AP[0], mgr, pool, opts)
 	if err != nil {

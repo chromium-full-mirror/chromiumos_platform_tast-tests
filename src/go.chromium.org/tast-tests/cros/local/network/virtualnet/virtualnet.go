@@ -105,7 +105,7 @@ type EnvOptions struct {
 	CapportURL string
 	// Additional lines for the hostapd config file. Only takes effect in the
 	// virtual WiFi setup.
-	HostapdAddtionalConfLines []string
+	HostapdAdditionalConfLines []string
 }
 
 // ResetEthernetProperties resets all properties which can affect test runs to
@@ -439,7 +439,7 @@ func CreateWifiRouterEnv(ctx context.Context, apIf string, m *shill.Manager, poo
 		// Set a channel to speed up the AP setup.
 		"channel=1",
 	}
-	hostapdConfLines = append(hostapdConfLines, opts.HostapdAddtionalConfLines...)
+	hostapdConfLines = append(hostapdConfLines, opts.HostapdAdditionalConfLines...)
 	hostapdConf := strings.Join(hostapdConfLines, "\n")
 	hostapdConfFile, err := os.CreateTemp(outDir, "hostapd*.conf")
 	if err != nil {
