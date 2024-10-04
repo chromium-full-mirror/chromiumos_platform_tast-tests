@@ -13,6 +13,7 @@ import (
 	"go.chromium.org/tast-tests/cros/common/shillconst"
 	"go.chromium.org/tast-tests/cros/local/network/ping"
 	"go.chromium.org/tast-tests/cros/local/network/virtualnet"
+	"go.chromium.org/tast-tests/cros/local/network/virtualnet/dnsmasq"
 	"go.chromium.org/tast-tests/cros/local/network/virtualnet/env"
 	"go.chromium.org/tast-tests/cros/local/network/virtualnet/subnet"
 	"go.chromium.org/tast-tests/cros/local/shill"
@@ -62,6 +63,15 @@ const (
 const (
 	BaseSuffix = "b"
 	TestSuffix = "t"
+)
+
+const (
+	// baseServerDomain can be resolved to the IP addresses (both v4 and v6) of
+	// the base server, by the DNS server on the base router.
+	baseServerDomain = "base.server.domain"
+	// testServerDomain can be resolved to the IP addresses (both v4 and v6) of
+	// the test server, by the DNS server on the test router.
+	testServerDomain = "test.server.domain"
 )
 
 const (
@@ -122,6 +132,10 @@ func (e *TestEnv) SetUp(ctx context.Context) error {
 		return errors.Wrap(err, "failed to create base virtualnet env")
 	}
 
+	if err := startDNSServer(ctx, baseServerDomain, e.BaseRouter, e.BaseServer); err != nil {
+		return errors.Wrap(err, "failed to start DNS server on base router")
+	}
+
 	if err := e.WaitForServiceOnline(ctx, e.BaseService); err != nil {
 		return errors.Wrap(err, "failed to wait for base service online")
 	}
@@ -151,6 +165,9 @@ func (e *TestEnv) CreateNetworkEnvForTest(ctx context.Context, opts virtualnet.E
 	if err != nil {
 		return errors.Wrap(err, "failed to create test virtualnet env")
 	}
+	if err := startDNSServer(ctx, testServerDomain, e.TestRouter, e.TestServer); err != nil {
+		return errors.Wrap(err, "failed to start DNS server on test router")
+	}
 	return nil
 }
 
@@ -178,6 +195,30 @@ func (e *TestEnv) TearDown(ctx context.Context) error {
 	}
 
 	return lastErr
+}
+
+// startDNSServer starts a DNS server in router which resolves domain to IPs of
+// server. DNS server is started in router instead of server because
+// CreateRouterServerEnv() will broadcast the router's address as the DNS server
+// by default. We should create the topology from scratch here if we want to run
+// DNS server in the server env.
+func startDNSServer(ctx context.Context, domain string, router, server *virtualnet.Env) error {
+	addrs, err := server.GetVethInAddrs(ctx)
+	if err != nil {
+		return errors.Wrap(err, "failed to get in addrs")
+	}
+
+	var opts []dnsmasq.Option
+	opts = append(opts, dnsmasq.WithResolveHost(domain, addrs.IPv4Addr))
+	for _, addr := range addrs.IPv6Addrs {
+		opts = append(opts, dnsmasq.WithResolveHost(domain, addr))
+	}
+
+	dnsmasqServer := dnsmasq.New(opts...)
+	if err := router.StartServer(ctx, "dns_Server", dnsmasqServer); err != nil {
+		return errors.Wrap(err, "failed to start dnsmasq as DNS server")
+	}
+	return nil
 }
 
 // VerifyOptions characterizes a network (a interface) on DUT. The routing
