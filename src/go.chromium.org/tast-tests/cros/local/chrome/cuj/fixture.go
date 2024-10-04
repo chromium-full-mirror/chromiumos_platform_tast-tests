@@ -648,8 +648,8 @@ func init() {
 		PostTestTimeout: postTestTimeout,
 	})
 	testing.AddFixture(&testing.Fixture{
-		Name: "loggedInToCUJUserWithWebRTCEventLoggingWithBatterySaver",
-		Desc: "CUJ test fixture with WebRTC event logging and battery saver",
+		Name: "loggedInToCUJUserWithWebRTCEventLoggingWithBatterySaverParent",
+		Desc: "CUJ test fixture with WebRTC event logging before set ARC battery saver mode",
 		Contacts: []string{
 			"darrenwu@google.com",
 			"chromeos-bsm@google.com",
@@ -659,14 +659,32 @@ func init() {
 		Data:         docsBlockerFiles,
 		Impl: &loggedInToCUJUserFixture{
 			chromeExtraOpts: []chrome.Option{
-				chrome.EnableFeatures("PreferConstantFrameRate"),
+				chrome.EnableFeatures("PreferConstantFrameRate",
+					"CrosBatterySaver",
+					"CrosBatterySaverAlwaysOn"),
 				chrome.ExtraArgs(webRTCEventLogCommandFlag),
 			},
 			bt:          browser.TypeAsh,
 			docsBlocker: true,
-			enableBSM:   true,
 		},
 		Parent:          "prepareForCUJ",
+		SetUpTimeout:    setUpTimeout,
+		ResetTimeout:    resetTimeout,
+		TearDownTimeout: resetTimeout,
+		PreTestTimeout:  CPUStablizationTimeout,
+		PostTestTimeout: postTestTimeout,
+	})
+	testing.AddFixture(&testing.Fixture{
+		Name: "loggedInToCUJUserWithWebRTCEventLoggingWithBatterySaver",
+		Desc: "CUJ test fixture with WebRTC event logging and battery saver",
+		Contacts: []string{
+			"darrenwu@google.com",
+			"chromeos-bsm@google.com",
+			"cros-sw-perf@google.com",
+		},
+		BugComponent:    "b:1045832", // ChromeOS > Software > Performance > TPS
+		Impl:            &androidBatterySaverFixture{},
+		Parent:          "loggedInToCUJUserWithWebRTCEventLoggingWithBatterySaverParent",
 		SetUpTimeout:    setUpTimeout,
 		ResetTimeout:    resetTimeout,
 		TearDownTimeout: resetTimeout,
@@ -1458,7 +1476,6 @@ type loggedInToCUJUserFixture struct {
 	cleanupTheme       func(ctx context.Context) error
 	// mlbenchmarkDataDirectory describes whether to create data directory for mlbenchmark.
 	mlbenchmarkDataDirectory bool
-	enableBSM                bool
 	// If other than -1, indicates a WPR mode to work in using wprArchive.
 	wprMode    wpr.Mode
 	wprArchive string
@@ -1590,9 +1607,6 @@ func (f *loggedInToCUJUserFixture) SetUp(ctx context.Context, s *testing.FixtSta
 				pvsched.Enable()
 			}
 
-		}
-		if f.enableBSM {
-			opts = append(opts, chrome.EnableFeatures("CrosBatterySaver", "CrosBatterySaverAlwaysOn"))
 		}
 		opts = append(opts, f.chromeExtraOpts...)
 		// Delay for logging memory metrics is set to 6 minutes. Considering most of CUJ tests
@@ -1756,12 +1770,6 @@ func (f *loggedInToCUJUserFixture) SetUp(ctx context.Context, s *testing.FixtSta
 					s.Error("Failed to close ARC connection: ", err)
 				}
 				s.Fatal("Failed to list running packages: ", err)
-			}
-
-			if f.enableBSM {
-				if err := simulateARCBatterySaver(ctx, a); err != nil {
-					s.Fatal("Failed to simulate ARC battery saver mode: ", err)
-				}
 			}
 		}()
 	}
@@ -1965,11 +1973,6 @@ func (f *loggedInToCUJUserFixture) PreTest(ctx context.Context, s *testing.FixtT
 		}
 		if err := f.arc.ResetOutDir(ctx, arcLogOutDir); err != nil {
 			s.Log("Failed to reset outDir field of ARC object: ", err)
-		}
-		if f.enableBSM {
-			if err := setARCLowBattery(ctx, f.arc); err != nil {
-				s.Log("Failed to set to low battery in ARC")
-			}
 		}
 	}
 
