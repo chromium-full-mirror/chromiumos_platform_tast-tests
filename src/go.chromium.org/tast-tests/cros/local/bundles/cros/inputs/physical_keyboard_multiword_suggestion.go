@@ -114,18 +114,18 @@ func PhysicalKeyboardMultiwordSuggestion(ctx context.Context, s *testing.State) 
 			),
 		},
 		{
-			// Trigger suggestion "look at" and insert into
+			// Trigger suggestion "how are you" and insert into
 			// textfield with down + enter key.
 			name:     "AcceptSuggestionWithDownAndEnter",
 			scenario: "verify suggestion appears and accepted with down and enter key",
 			errStr:   "Failed to accept suggestion: %v",
 			action: uiauto.Combine("accept multiword suggestion with down and enter",
-				keyboard.TypeAction("please take a lo"),
-				util.WaitForFieldTextToBeIgnoringCase(tconn, inputField.Finder(), "please take a lo"),
+				keyboard.TypeAction("hi how ar"),
+				util.WaitForFieldTextToBeIgnoringCase(tconn, inputField.Finder(), "hi how ar"),
 				ui.WaitUntilExists(suggestionWindowFinder),
 				keyboard.AccelAction("Down"),
 				keyboard.AccelAction("Enter"),
-				util.WaitForFieldTextToBeIgnoringCase(tconn, inputField.Finder(), "please take a look at"),
+				util.WaitForFieldTextToBeIgnoringCase(tconn, inputField.Finder(), "hi how are you"),
 			),
 		},
 		{
@@ -151,20 +151,21 @@ func PhysicalKeyboardMultiwordSuggestion(ctx context.Context, s *testing.State) 
 			scenario: "track typing in suggestion and dismiss when deleting past trigger point",
 			errStr:   "Failed to dismiss suggestion: %v",
 			action: uiauto.Combine("dismiss multiword suggestion by deleting past trigger point",
-				keyboard.TypeAction("ok so"),
-				util.WaitForFieldTextToBeIgnoringCase(tconn, inputField.Finder(), "ok so"),
+				keyboard.TypeAction("ok that so"),
+				util.WaitForFieldTextToBeIgnoringCase(tconn, inputField.Finder(), "ok that so"),
 				ui.WaitUntilExists(suggestionWindowFinder),
 				keyboard.TypeAction("unds g"),
-				util.WaitForFieldTextToBeIgnoringCase(tconn, inputField.Finder(), "ok sounds g"),
+				util.WaitForFieldTextToBeIgnoringCase(tconn, inputField.Finder(), "ok that sounds g"),
 				ui.WaitUntilExists(suggestionWindowFinder),
-				keyboard.AccelAction("Backspace"), // "ok sounds "
-				keyboard.AccelAction("Backspace"), // "ok sounds"
-				keyboard.AccelAction("Backspace"), // "ok sound"
-				keyboard.AccelAction("Backspace"), // "ok soun"
-				keyboard.AccelAction("Backspace"), // "ok sou"
-				keyboard.AccelAction("Backspace"), // "ok so"
+				keyboard.AccelAction("Backspace"), // "ok that sounds "
+				keyboard.AccelAction("Backspace"), // "ok that sounds"
+				keyboard.AccelAction("Backspace"), // "ok that sound"
+				keyboard.AccelAction("Backspace"), // "ok that soun"
+				keyboard.AccelAction("Backspace"), // "ok that sou"
+				keyboard.AccelAction("Backspace"), // "ok that so"
+				keyboard.AccelAction("Backspace"), // "ok that s"
 				ui.WaitUntilExists(suggestionWindowFinder),
-				keyboard.AccelAction("Backspace"), // "ok s"
+				keyboard.AccelAction("Backspace"), // "ok that "
 				ui.WaitUntilGone(suggestionWindowFinder),
 			),
 		},
