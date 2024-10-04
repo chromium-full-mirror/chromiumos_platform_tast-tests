@@ -654,6 +654,25 @@ func (e *Env) ConfigureInterface(ctx context.Context, ifname string, addr net.IP
 	return nil
 }
 
+// CheckIfUDPPortListened returns if there is a process listening on UDP port in
+// this env.
+func (e *Env) CheckIfUDPPortListened(ctx context.Context, port int) (bool, error) {
+	// Run ss to check if port is listened.
+	// -u: only for UDP;
+	// -l: listening sockets;
+	// -p: show the process (just for debugging if we need the output);
+	// -n: do not resolve names;
+	// -H: do not show header.
+	// `( sport = :port )`: filter by source port.
+	// The output will be empty if there is no process listening on port.
+	cmd := e.CreateCommandWithoutChroot(ctx, "ss", "-ulpnH", fmt.Sprintf("( sport = :%d )", port))
+	output, err := cmd.Output(testexec.DumpLogOnError)
+	if err != nil {
+		return false, errors.Wrap(err, "failed to run ss to check listening port")
+	}
+	return len(strings.TrimSpace(string(output))) != 0, nil
+}
+
 // isLink returns whether path is a symbolic link.
 func isLink(path string) bool {
 	if !assureExists(path) {

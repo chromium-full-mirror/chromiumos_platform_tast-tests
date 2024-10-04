@@ -15,11 +15,13 @@ import (
 	"net"
 	"os"
 	"strings"
+	"time"
 
 	"go.chromium.org/tast-tests/cros/common/testexec"
 	"go.chromium.org/tast-tests/cros/local/network/virtualnet/env"
 	"go.chromium.org/tast-tests/cros/local/network/virtualnet/subnet"
 	"go.chromium.org/tast/core/errors"
+	"go.chromium.org/tast/core/testing"
 )
 
 const confTemplate = `
@@ -66,11 +68,9 @@ log-dhcp
 
 // Paths in chroot.
 const (
-	dnsmasqPath   = "/usr/sbin/dnsmasq"
-	confPath      = "/tmp/dnsmasq.conf"
-	logPath       = "/tmp/dnsmasq.log"
-	leaseFilePath = "/tmp/dnsmasq.leases"
-	dnsPort       = "53"
+	dnsmasqPath    = "/usr/sbin/dnsmasq"
+	dnsPort        = 53
+	dhcpServerPort = 67
 )
 
 // Route represents a classless static route.
@@ -101,6 +101,10 @@ type dnsmasq struct {
 	v6OnlyWaitSeconds     int
 	mtu                   int
 	capportAPI            string
+
+	confPath      string
+	logPath       string
+	leaseFilePath string
 
 	cmd *testexec.Cmd
 }
@@ -217,6 +221,20 @@ func New(opts ...Option) *dnsmasq {
 func (d *dnsmasq) Start(ctx context.Context, env *env.Env) error {
 	d.env = env
 
+	// Check if required ports are available at first. This should be after
+	// setting d.env since d.env is used in this function.
+	if err := d.assertPortsListenedState(ctx, false); err != nil {
+		return errors.Wrap(err, "failed to assert ports state before starting dnsmasq")
+	}
+
+	// Use file paths with timestamp to avoid collision in case there are multiple
+	// instances. Note that we don't use TempFile() or similar utils here because
+	// the files will live in chroot.
+	timeStr := time.Now().Format("030405000")
+	d.confPath = fmt.Sprintf("/tmp/dnsmasq-%s.conf", timeStr)
+	d.logPath = fmt.Sprintf("/tmp/dnsmasq-%s.log", timeStr)
+	d.leaseFilePath = fmt.Sprintf("/tmp/dnsmasq-%s.leases", timeStr)
+
 	if !d.noIfname && d.ifname == "" {
 		d.ifname = d.env.VethInName
 	}
@@ -322,7 +340,7 @@ func (d *dnsmasq) Start(ctx context.Context, env *env.Env) error {
 	}
 	b := &bytes.Buffer{}
 	template.Must(template.New("").Parse(confTemplate)).Execute(b, confVals)
-	if err := os.WriteFile(d.env.ChrootPath(confPath), []byte(b.String()), 0644); err != nil {
+	if err := os.WriteFile(d.env.ChrootPath(d.confPath), []byte(b.String()), 0644); err != nil {
 		return errors.Wrap(err, "failed to write config file")
 	}
 
@@ -330,11 +348,11 @@ func (d *dnsmasq) Start(ctx context.Context, env *env.Env) error {
 	cmd := []string{
 		dnsmasqPath,
 		"--keep-in-foreground",
-		"-C", confPath,
-		"--log-facility=" + logPath,
+		"-C", d.confPath,
+		"--log-facility=" + d.logPath,
 		"--no-resolv",
 		"--no-hosts",
-		"--dhcp-leasefile=" + leaseFilePath,
+		"--dhcp-leasefile=" + d.leaseFilePath,
 	}
 	d.cmd = d.env.CreateCommand(ctx, cmd...)
 
@@ -342,6 +360,32 @@ func (d *dnsmasq) Start(ctx context.Context, env *env.Env) error {
 		return errors.Wrap(err, "failed to start dnsmasq daemon")
 	}
 
+	// Wait until the corresponding ports are opened. This will make the error
+	// easier to understand in case dnsmasq failed to start.
+	if err := testing.Poll(ctx, func(ctx context.Context) error {
+		return d.assertPortsListenedState(ctx, true)
+	}, &testing.PollOptions{Timeout: 5 * time.Second}); err != nil {
+		return errors.Wrap(err, "failed to wait for ports to be listened")
+	}
+
+	return nil
+}
+
+func (d *dnsmasq) assertPortsListenedState(ctx context.Context, want bool) error {
+	if d.enableDNS {
+		if listened, err := d.env.CheckIfUDPPortListened(ctx, dnsPort); err != nil {
+			return errors.Wrap(err, "failed to check port availability for DNS")
+		} else if listened != want {
+			return errors.Wrapf(err, "DNS port is not in expected state: got listened %v, want %v", listened, want)
+		}
+	}
+	if d.subnet != nil {
+		if listened, err := d.env.CheckIfUDPPortListened(ctx, dhcpServerPort); err != nil {
+			return errors.Wrap(err, "failed to check port availability for DHCP")
+		} else if listened != want {
+			return errors.Wrapf(err, "DHCP server port is not in expected state: got listened %v, want %v", listened, want)
+		}
+	}
 	return nil
 }
 
@@ -360,7 +404,7 @@ func (d *dnsmasq) Stop(ctx context.Context) error {
 
 // WriteLogs writes logs into |f|.
 func (d *dnsmasq) WriteLogs(ctx context.Context, f *os.File) error {
-	return d.env.ReadAndWriteLogIfExists(d.env.ChrootPath(logPath), f)
+	return d.env.ReadAndWriteLogIfExists(d.env.ChrootPath(d.logPath), f)
 }
 
 type lease struct {
@@ -369,7 +413,7 @@ type lease struct {
 
 // GetLeases returns the leases issued by dnsmasq.
 func (d *dnsmasq) GetLeases(ctx context.Context) ([]lease, error) {
-	s, err := os.ReadFile(d.env.ChrootPath(leaseFilePath))
+	s, err := os.ReadFile(d.env.ChrootPath(d.leaseFilePath))
 	if err != nil {
 		return nil, errors.Wrap(err, "failed to read leases file")
 	}
