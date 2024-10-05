@@ -560,9 +560,8 @@ func prepareScreenSaver(tconn *chrome.TestConn, ui *uiauto.Context, testParams T
 		albumsFinder := nodewith.Role(role.ListBoxOption).HasClass("album")
 
 		if err := uiauto.Combine("Choose topic source",
-			ui.FocusAndWait(topicSourceContainer),
-			ui.LeftClick(topicSourceContainer),
-			ui.WaitUntilExists(albumsFinder.First()))(ctx); err != nil {
+			ui.EnsureFocused(topicSourceContainer),
+			ui.LeftClickUntil(topicSourceContainer, ui.Exists(albumsFinder.First())))(ctx); err != nil {
 			return errors.Wrapf(err, "failed to select %v", testParams.TopicSource)
 		}
 
