@@ -9,6 +9,7 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
+	"io"
 	"os"
 	"path/filepath"
 	"regexp"
@@ -85,30 +86,31 @@ type MeetTest struct {
 	// spotlight bot that is in every test.
 	Bots []int
 
-	Layout            googlemeet.LayoutOption // Type of the layout in the meeting.
-	Enterprise        bool                    // Whether to use enterprise accounts.
-	Present           bool                    // Whether it is presenting the Google Docs window.
-	Docs              bool                    // Whether it is running with a Google Docs window.
-	Slides            bool                    // Whether it is running with a Google Slides window.
-	Sheets            bool                    // Whether it is running with a Google Sheets window.
-	Split             bool                    // Whether it is in split screen mode. It can not be true if docs is false.
-	Cam               bool                    // Whether the camera is on or not.
-	Effects           bool                    // Whether to turn on visual effects within Meet.
-	BackgroundBlur    bool                    // Whether to turn on platform-level background blur.
-	AdjustLighting    bool                    // Whether to turn on the platform-level adjust lighting feature.
-	Retouch           bool                    // Whether to turn on the platform-level face retouch feature.
-	NpuInference      bool                    // Whether to use NPU as inference backend for platform-level effects.
-	LiveCaptions      bool                    // Whether to turn on live captioning.
-	NoiseCancellation bool                    // Whether to turn on noise cancellation.
-	StudioMic         bool                    // Whether to turn on studio mic.
-	ZoomOut           bool                    // Whether to zoom out on both the browser and display.
-	TabSwitchDocs     bool                    // Whether to switch between Docs and Meet. It cannot be true if docs is false.
-	Duration          time.Duration           // Duration of the meet call. Must be less than test timeout.
-	TypingDuration    time.Duration           // Duration of typing on Google Docs. Must be less than the duration of the meet call. If |typingDuration| is not given, it defaults to |meetTimeout|.
-	BrowserType       browser.Type            // Ash Chrome browser or Lacros.
-	BotsOptions       []bond.AddBotsOption    // Customizes the meeting participant bots.
-	FakeCamHALCfg     *fakeCameraHALCfg       // Enable Fake Camera HAL if the config is present.
-	MeasureEcho       bool                    // Whether to measure the echo RMS. The number of meeting participant bot must be one and should be enabled with human speech as the only audio source (no other noise) to accurately evaluate the echo RMS.
+	Layout              googlemeet.LayoutOption // Type of the layout in the meeting.
+	Enterprise          bool                    // Whether to use enterprise accounts.
+	Present             bool                    // Whether it is presenting the Google Docs window.
+	Docs                bool                    // Whether it is running with a Google Docs window.
+	Slides              bool                    // Whether it is running with a Google Slides window.
+	Sheets              bool                    // Whether it is running with a Google Sheets window.
+	Split               bool                    // Whether it is in split screen mode. It can not be true if docs is false.
+	Cam                 bool                    // Whether the camera is on or not.
+	Effects             bool                    // Whether to turn on visual effects within Meet.
+	BackgroundBlur      bool                    // Whether to turn on platform-level background blur.
+	AdjustLighting      bool                    // Whether to turn on the platform-level adjust lighting feature.
+	Retouch             bool                    // Whether to turn on the platform-level face retouch feature.
+	NpuInference        bool                    // Whether to use NPU as inference backend for platform-level effects.
+	LiveCaptions        bool                    // Whether to turn on live captioning.
+	NoiseCancellation   bool                    // Whether to turn on noise cancellation.
+	StudioMic           bool                    // Whether to turn on studio mic.
+	ZoomOut             bool                    // Whether to zoom out on both the browser and display.
+	TabSwitchDocs       bool                    // Whether to switch between Docs and Meet. It cannot be true if docs is false.
+	Duration            time.Duration           // Duration of the meet call. Must be less than test timeout.
+	TypingDuration      time.Duration           // Duration of typing on Google Docs. Must be less than the duration of the meet call. If |typingDuration| is not given, it defaults to |meetTimeout|.
+	BrowserType         browser.Type            // Ash Chrome browser or Lacros.
+	BotsOptions         []bond.AddBotsOption    // Customizes the meeting participant bots.
+	FakeCamHALCfg       *fakeCameraHALCfg       // Enable Fake Camera HAL if the config is present.
+	MeasureEcho         bool                    // Whether to measure the echo RMS. The number of meeting participant bot must be one and should be enabled with human speech as the only audio source (no other noise) to accurately evaluate the echo RMS.
+	DisabledExperiments []string                // List of experiments to disable with the e= parameter in the Meet URL.
 }
 
 // FakeCamHALCfg720p is the fake camera HAL used in MeetCUJ.
@@ -523,7 +525,7 @@ func Run(ctx context.Context, meet MeetTest, cr *chrome.Chrome, testCaseVar func
 		return pv, errors.Wrap(err, "failed to start recording WebRTC metrics")
 	}
 
-	if err := meetHelper.JoinMeeting(ctx, meetingCode, browser.WithNewWindow()); err != nil {
+	if err := meetHelper.JoinMeetingWithDisabledExperiments(ctx, meetingCode, meet.DisabledExperiments, browser.WithNewWindow()); err != nil {
 		return pv, errors.Wrap(err, "failed to open the hangout meet website")
 	}
 	defer meetHelper.Close(closeCtx)
@@ -1820,4 +1822,21 @@ func reportWebRTCInternals(ctx context.Context, dump []byte, meetingCode string,
 	}
 
 	return pv, nil
+}
+
+// GetDisabledExperiments gets the list of partially rolled out experiments,
+// that should be disabled in Meet tests.
+func GetDisabledExperiments(ctx context.Context, cloudStorage *testing.CloudStorage) ([]string, error) {
+	reader, err := cloudStorage.Open(ctx, "gs://sw-perf-meet-experiments/meet-experiments/partial-rollout-experiments.txt")
+	if err != nil {
+		return nil, errors.Wrap(err, "failed to download experiment list")
+	}
+	defer reader.Close()
+
+	b, err := io.ReadAll(reader)
+	if err != nil {
+		return nil, errors.Wrap(err, "failed to read experiments list")
+	}
+
+	return strings.Split(strings.TrimSpace(string(b)), "\n"), nil
 }

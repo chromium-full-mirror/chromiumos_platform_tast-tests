@@ -85,6 +85,7 @@ var orderedHooks []string = []string{
 	"diskThrottler",
 	"cleanupChecksHook",
 	"actionLoggerHook",
+	"cujCleanup",
 	"debugInfoHook", // Prefer to run this hook at the end if possible.
 }
 

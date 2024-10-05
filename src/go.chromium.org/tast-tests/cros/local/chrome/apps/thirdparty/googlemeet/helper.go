@@ -52,6 +52,20 @@ func NewHRTelemetryHelper(cs ash.ConnSource, tconn *chrome.TestConn) *HRTelemetr
 	}
 }
 
+// JoinMeetingWithDisabledExperiments joins the meeting room with the passed in
+// list of experiments disabled.
+func (h *HRTelemetryHelper) JoinMeetingWithDisabledExperiments(ctx context.Context, meetingCode string, disabledExperiments []string, opts ...browser.CreateTargetOption) (err error) {
+	if h.meetConn != nil {
+		return errors.New("already joined a meeting")
+	}
+
+	// Experiments in the url are disabled using the e= parameter, where
+	// each experiment is prefixed with - to mark it as disabled.
+	experiments := strings.Join(disabledExperiments, ",-")
+	h.meetConn, err = h.cs.NewConn(ctx, fmt.Sprintf("https://meet.google.com/%s/?e=-%s", meetingCode, experiments), opts...)
+	return err
+}
+
 // JoinMeeting joins the meeting room with the conn source.
 func (h *HRTelemetryHelper) JoinMeeting(ctx context.Context, meetingCode string, opts ...browser.CreateTargetOption) (err error) {
 	if h.meetConn != nil {

@@ -715,6 +715,15 @@ func MeetCUJ(ctx context.Context, s *testing.State) {
 
 	// Ensure that the Meet test parameters are properly formed.
 	meet := s.Param().(meetcuj.MeetTest)
+
+	if meet.DisabledExperiments == nil {
+		disabledExperiments, err := meetcuj.GetDisabledExperiments(ctx, s.CloudStorage())
+		if err != nil {
+			s.Fatal("Failed to get disabled experiments: ", err)
+		}
+		meet.DisabledExperiments = disabledExperiments
+	}
+
 	cr := s.FixtValue().(chrome.HasChrome).Chrome()
 	creds := s.RequiredVar("ui.MeetCUJ.bond_credentials")
 
