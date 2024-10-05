@@ -64,7 +64,8 @@ type EnvOptions struct {
 	// EnableDHCP enables the DHCP server in the Env. IPv4 address can be obtained
 	// on the interface by DHCP.
 	EnableDHCP bool
-	// IPv4DNSServers specifies the IPv4 DNS servers to be advertised by the router (dnsmasq).
+	// IPv4DNSServers specifies the IPv4 DNS servers to be advertised by the
+	// router (dnsmasq). If not specified, an IP of router itself will be used.
 	IPv4DNSServers []string
 	// IPv4DomainSearchList specifies the IPv4 DNS search list to be advertised
 	// by the router (dnsmasq). EnableDHCP must be set for this option.
@@ -231,7 +232,11 @@ func startServersInRouter(ctx context.Context, router *Env, pool *subnet.Pool, o
 		if err != nil {
 			return errors.Wrap(err, "failed to allocate v4 subnet for DHCP")
 		}
-		dnsmasqOpts = append(dnsmasqOpts, dnsmasq.WithDHCPServer(v4Subnet), dnsmasq.WithDHCPNameServers(opts.IPv4DNSServers), dnsmasq.WithDHCPDomainSearchList(opts.IPv4DomainSearchList))
+		dnsmasqOpts = append(dnsmasqOpts,
+			dnsmasq.WithDHCPServer(v4Subnet),
+			dnsmasq.WithDHCPNameServers(opts.IPv4DNSServers, len(opts.IPv4DNSServers) == 0 /*includeGateway*/),
+			dnsmasq.WithDHCPDomainSearchList(opts.IPv4DomainSearchList),
+		)
 	}
 	if opts.EnableDNS {
 		dnsmasqOpts = append(dnsmasqOpts, dnsmasq.WithResolveHost(opts.ResolvedHost, opts.ResolveHostToIP))

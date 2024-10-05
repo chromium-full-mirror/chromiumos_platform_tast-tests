@@ -92,6 +92,7 @@ type dnsmasq struct {
 	classlessStaticRoutes []Route
 	resolvedHosts         []ResolvedHost
 	dns                   []string
+	dnsIncludeGateway     bool
 	searchList            []string
 	enableDNS             bool
 	ifname                string
@@ -117,10 +118,12 @@ func WithDHCPServer(subnet *subnet.IPv4Subnet) Option {
 }
 
 // WithDHCPNameServers configures the external DNS server lists which will be
-// broadcast as a DHCP option.
-func WithDHCPNameServers(dns []string) Option {
+// broadcast as a DHCP option. If includeGateway is set, the gateway address
+// (DHCP server address) will be appended to the list.
+func WithDHCPNameServers(dns []string, includeGateway bool) Option {
 	return func(d *dnsmasq) {
 		d.dns = dns
+		d.dnsIncludeGateway = includeGateway
 	}
 }
 
@@ -255,6 +258,9 @@ func (d *dnsmasq) Start(ctx context.Context, env *env.Env) error {
 		confVals["classless_static_routes"] = strings.Join(routes, ",")
 	}
 
+	if d.dnsIncludeGateway {
+		d.dns = append(d.dns, gateway.String())
+	}
 	if len(d.dns) > 0 {
 		confVals["dns"] = strings.Join(d.dns, ",")
 	}

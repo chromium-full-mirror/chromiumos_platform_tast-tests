@@ -132,7 +132,10 @@ func (e *SimpleNetworkEnv) startServers(ctx context.Context) error {
 		var dnsmasqOpts []dnsmasq.Option
 		dnsmasqOpts = append(dnsmasqOpts, dnsmasq.WithDHCPServer(v4Subnet))
 		if e.hasIPv4DNS {
-			dnsmasqOpts = append(dnsmasqOpts, dnsmasq.WithDHCPNameServers([]string{e.ServerAddress.IPv4Addr.String()}))
+			dnsmasqOpts = append(
+				dnsmasqOpts,
+				dnsmasq.WithDHCPNameServers([]string{e.ServerAddress.IPv4Addr.String()}, false /*includeGateway*/),
+			)
 		}
 		dnsmasq := dnsmasq.New(dnsmasqOpts...)
 		if err := e.Router.StartServer(ctx, "dnsmasq", dnsmasq); err != nil {
