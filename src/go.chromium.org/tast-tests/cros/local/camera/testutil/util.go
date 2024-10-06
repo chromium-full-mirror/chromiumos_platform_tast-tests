@@ -310,6 +310,46 @@ func GetMaxCameraResolution(ctx context.Context) (Resolution, error) {
 	return result, nil
 }
 
+// GetGPUProcess returns GPU process.
+func GetGPUProcess(ctx context.Context) (*process.Process, error) {
+	procs, err := chromeproc.GetGPUProcesses()
+	if err != nil {
+		return nil, errors.Wrap(err, "failed to get GPU processes by chromeproc api")
+	}
+	if len(procs) != 1 {
+		return nil, errors.Wrapf(err, "expect 1 GPU process but found %d", len(procs))
+	}
+	return procs[0], nil
+}
+
+// KillGPUProcess kills GPU process. Ash will launch a new GPU process after the old
+// process is killed or crashed.
+func KillGPUProcess(ctx context.Context) error {
+	oldProc, err := GetGPUProcess(ctx)
+	if err != nil {
+		return errors.Wrap(err, "failed to get GPU process before killing")
+	}
+	oldPid := oldProc.Pid
+
+	if err := oldProc.Kill(); err != nil {
+		return errors.Wrap(err, "failed to execute kill command")
+	}
+	if err := testing.Poll(ctx, func(ctx context.Context) error {
+		newProc, err := GetGPUProcess(ctx)
+		if err != nil {
+			return errors.Wrap(err, "failed to find new GPU process after killing")
+		}
+		newPid := newProc.Pid
+		if oldPid == newPid {
+			return errors.New("failed to kill old GPU process")
+		}
+		return nil
+	}, &testing.PollOptions{Interval: 1 * time.Second, Timeout: 3 * time.Second}); err != nil {
+		return errors.Wrap(err, "failed to launch a new GPU process")
+	}
+	return nil
+}
+
 // GetVideoCaptureServiceProcess returns video capture service process.
 func GetVideoCaptureServiceProcess(ctx context.Context) (*process.Process, error) {
 	const videoCaptureUtilProcName = "video_capture.mojom.VideoCaptureService"

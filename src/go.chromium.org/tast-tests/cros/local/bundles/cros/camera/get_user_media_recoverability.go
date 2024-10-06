@@ -22,7 +22,7 @@ import (
 
 func init() {
 	testing.AddTest(&testing.Test{
-		Func:         GetUserMediaPostVCSCrash,
+		Func:         GetUserMediaRecoverability,
 		Desc:         "Verifies that getUserMedia works after the video capture service crashed",
 		Contacts:     []string{"chromeos-camera-app-eng@google.com", "seannli@google.com"},
 		BugComponent: "b:978428", // ChromeOS > Platform > Technologies > Camera > App & Framework
@@ -33,9 +33,10 @@ func init() {
 	})
 }
 
-// GetUserMediaPostVCSCrash calls getUserMedia and renders the camera's media stream
-// in a video tag before/after video capture service crashes.
-func GetUserMediaPostVCSCrash(ctx context.Context, s *testing.State) {
+// GetUserMediaRecoverability verifies the recoverability of camera functionality after the
+// video capture service process and GPU process crash. It calls getUserMedia and renders
+// the media stream before and after each crash.
+func GetUserMediaRecoverability(ctx context.Context, s *testing.State) {
 	cleanupCtx := ctx
 	ctx, cancel := ctxutil.Shorten(ctx, 10*time.Second)
 	defer cancel()
@@ -87,6 +88,15 @@ func GetUserMediaPostVCSCrash(ctx context.Context, s *testing.State) {
 	// Run tests for 480p and 720p.
 	if _, err := getusermedia.RunGetUserMedia(ctx, s.DataFileSystem(), ci, duration, nil, getusermedia.VerboseLogging); err != nil {
 		s.Fatal("Failed to call getUserMedia() after killing video capture service process: ", err)
+	}
+
+	if err := testutil.KillGPUProcess(ctx); err != nil {
+		s.Fatal("Failed to relaunch a GPU process: ", err)
+	}
+
+	// Run tests for 480p and 720p.
+	if _, err := getusermedia.RunGetUserMedia(ctx, s.DataFileSystem(), ci, duration, nil, getusermedia.VerboseLogging); err != nil {
+		s.Fatal("Failed to call getUserMedia() after killing GPU process: ", err)
 	}
 }
 
