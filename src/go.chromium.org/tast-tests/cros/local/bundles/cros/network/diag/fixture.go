@@ -44,7 +44,17 @@ func init() {
 		ResetTimeout:    5 * time.Second,
 		TearDownTimeout: 10 * time.Second,
 		Impl:            &networkDiagnosticsFixture{},
-		Parent:          "shillReset",
+		Params: []testing.FixtureParam{
+			{
+				Parent: "shillReset",
+			}, {
+				// The fixture using Ethernet-hide (platform2/ethernet-hide). This will
+				// boot ARC without Internet connection.
+				Name:          "ehide",
+				Parent:        "shillReset.ehide",
+				ExtraContacts: []string{"chenzikai@google.com", "cros-networking@google.com"},
+			},
+		},
 	})
 }
 
