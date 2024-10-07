@@ -81,8 +81,8 @@ func PerfettoBatteryDataSource(ctx context.Context, s *testing.State) {
 		return
 	}
 
-	var capacity, charge, current, voltage []float64 // Use slices since there can be multiple batteries.
-	for _, row := range batt[1:] {                   // Skip the 1st row of column names.
+	var capacity, charge, current, voltage, power []float64 // Use slices since there can be multiple batteries.
+	for _, row := range batt[1:] {                          // Skip the 1st row of column names.
 		name, val := row[0], row[1]
 		v, err := strconv.ParseFloat(val, 64)
 		if err != nil {
@@ -96,8 +96,10 @@ func PerfettoBatteryDataSource(ctx context.Context, s *testing.State) {
 			current = append(current, v)
 		} else if strings.HasSuffix(name, "voltage_uv") {
 			voltage = append(voltage, v)
+		} else if strings.HasSuffix(name, "power_mw") {
+			power = append(power, v)
 		} else {
-			s.Fatalf("Unexpected battery counter: %s", name)
+			s.Log("Unexpected battery counter: ", name)
 		}
 	}
 
@@ -140,5 +142,8 @@ func PerfettoBatteryDataSource(ctx context.Context, s *testing.State) {
 			// TODO(skyostil): Turn this into Fatal() after the Perfetto roll.
 			s.Log("Invalid battery voltage value: ", voltage)
 		}
+	}
+	if status.BatteryEnergyRate != 0.0 && power == nil {
+		s.Fatal("Battery power counter is missing")
 	}
 }
