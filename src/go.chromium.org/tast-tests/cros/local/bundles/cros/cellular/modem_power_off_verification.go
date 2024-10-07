@@ -29,7 +29,8 @@ func init() {
 		Attr:         []string{"group:cellular", "cellular_unstable", "group:cellular_crosbolt", "cellular_crosbolt_perf_nightly"},
 		Fixture:      "cellular",
 		Timeout:      5 * time.Minute,
-		HardwareDeps: hwdep.D(hwdep.CellularModemType(cellularconst.ModemTypeFM101)),
+		// TODO: b/359648309, remove the model dependency when modem off feature is enabled on other models with FM101
+		HardwareDeps: hwdep.D(hwdep.CellularModemType(cellularconst.ModemTypeFM101), hwdep.Model("crota")),
 		SoftwareDeps: []string{"modemfwd"},
 	})
 }
