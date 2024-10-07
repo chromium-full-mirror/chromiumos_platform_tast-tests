@@ -852,8 +852,8 @@ func (f *FilesApp) GetOdfsFuseboxToken(ctx context.Context, cr *chrome.Chrome) (
 	}
 
 	jsCode := fmt.Sprintf(`
-	  const volumes = fileManager.store_.getState().volumes;
-		const odfsVolumeId = Object.keys(volumes).find(volumeId => volumes[volumeId].diskFileSystemType === "fusebox" && volumes[volumeId].label === "%s");
+	    volumes = fileManager.store_.getState().volumes;
+		odfsVolumeId = Object.keys(volumes).find(volumeId => volumes[volumeId].diskFileSystemType === "fusebox" && volumes[volumeId].label === "%s");
 		odfsVolumeId ? odfsVolumeId.replace("fuseboxprovided:", "") : "";
 	`, OneDrive)
 	var odfsFuseboxToken string
