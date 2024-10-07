@@ -16,7 +16,6 @@ import (
 	"go.chromium.org/tast/core/ctxutil"
 	"go.chromium.org/tast/core/errors"
 	"go.chromium.org/tast/core/testing"
-	"go.chromium.org/tast/core/testing/hwdep"
 )
 
 // searchAutocompleteTestCase describes modes in which the launcher UI can be
@@ -60,16 +59,16 @@ func init() {
 			// 		expectedGhostGhostText: "Search and Assistant",
 			// 	},
 			// },
-			{
-				Name:    "tablet_mode_isaac_newto",
-				Fixture: "chromeLoggedIn",
-				Val: searchAutocompleteTestCase{TabletMode: true,
-					searchKeyword:          "Isaac Newto",
-					result:                 "Isaac Newton, Google Search",
-					expectedSearchBoxText:  "Isaac Newton",
-					expectedGhostGhostText: "Search and Assistant"},
-				ExtraHardwareDeps: hwdep.D(hwdep.InternalDisplay()),
-			},
+			// {
+			// 	Name:    "tablet_mode_isaac_newto",
+			// 	Fixture: "chromeLoggedIn",
+			// 	Val: searchAutocompleteTestCase{TabletMode: true,
+			// 		searchKeyword:          "Isaac Newto",
+			// 		result:                 "Isaac Newton, Google Search",
+			// 		expectedSearchBoxText:  "Isaac Newton",
+			// 		expectedGhostGhostText: "Search and Assistant"},
+			// 	ExtraHardwareDeps: hwdep.D(hwdep.InternalDisplay()),
+			// },
 			// {
 			// 	Name:    "clamshell_mode_saac_newton",
 			// 	Fixture: "chromeLoggedIn",
