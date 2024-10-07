@@ -212,6 +212,8 @@ func (r *RMAApp) RetrieveTextByPrefix(ctx context.Context, prefix string) (*uiau
 func (r *RMAApp) EnterIntoTextInput(ctx context.Context, textInputName, content string) uiauto.Action {
 	keyboard, _ := input.Keyboard(ctx)
 	var textInputFinder = nodewith.Role(role.TextField)
+	defer keyboard.Close(ctx)
+
 	return uiauto.Combine("type keyword to enter content to text input",
 		r.ui.LeftClickUntil(textInputFinder, r.ui.WaitUntilExists(textInputFinder.Focused())),
 		keyboard.TypeAction(content),
@@ -272,7 +274,17 @@ func (r *RMAApp) leftClickButton(button *nodewith.Finder) uiauto.Action {
 			}
 			return nil
 		},
-		r.ui.LeftClick(button),
+		// TODO(b/371463651): Click the button with mouse event after b/371463651 is resolved.
+		func(ctx context.Context) error {
+			// Keyboard to input key inputs.
+			keyboard, err := input.Keyboard(ctx)
+			if err != nil {
+				return errors.Wrap(err, "failed to get keyboard")
+			}
+			defer keyboard.Close(ctx)
+
+			return keyboard.Accel(ctx, "Enter")
+		},
 	)
 }
 
