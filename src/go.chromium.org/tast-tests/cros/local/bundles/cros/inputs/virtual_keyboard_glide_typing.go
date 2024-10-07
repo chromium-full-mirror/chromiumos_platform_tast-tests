@@ -66,16 +66,17 @@ func init() {
 				},
 				ExtraSearchFlags: util.IMESearchFlags([]ime.InputMethod{ime.EnglishUS}),
 			},
-			{
-				Name:      "tablet_floating",
-				Fixture:   fixture.TabletVK,
-				ExtraAttr: []string{"group:input-tools-upstream"},
-				Val: glideTypingTestParam{
-					floatLayout: true,
-					inputMethod: ime.EnglishUSWithInternationalKeyboard,
-				},
-				ExtraSearchFlags: util.IMESearchFlags([]ime.InputMethod{ime.EnglishUSWithInternationalKeyboard}),
-			},
+			// Disabled by TORA. See: b/340909892
+			// {
+			// 	Name:      "tablet_floating",
+			// 	Fixture:   fixture.TabletVK,
+			// 	ExtraAttr: []string{"group:input-tools-upstream"},
+			// 	Val: glideTypingTestParam{
+			// 		floatLayout: true,
+			// 		inputMethod: ime.EnglishUSWithInternationalKeyboard,
+			// 	},
+			// 	ExtraSearchFlags: util.IMESearchFlags([]ime.InputMethod{ime.EnglishUSWithInternationalKeyboard}),
+			// },
 			{
 				Name:      "clamshell_a11y_docked",
 				Fixture:   fixture.ClamshellVK,
