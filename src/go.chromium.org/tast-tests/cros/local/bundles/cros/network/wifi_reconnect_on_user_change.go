@@ -295,9 +295,22 @@ func WifiReconnectOnUserChange(ctx context.Context, s *testing.State) {
 
 	// Verify that service is pingable by IP addresses.
 	verifyIPConnectivity := func(tag string) {
+		s.Log("Verifying pinging the gateway IP addresses")
+		routerAddrs, err := wifi.Router.GetVethInAddrs(ctx)
+		if err != nil {
+			s.Fatalf("%s: Failed to get router addrs: %v", tag, err)
+		}
+		for _, ip := range routerAddrs.All() {
+			if err := ping.ExpectPingSuccessWithTimeout(ctx, ip.String(), "chronos", 5*time.Second); err != nil {
+				s.Fatalf("%s: Failed to verify ping reachability to %s: %v", tag, ip, err)
+			}
+		}
+
 		s.Log("Verifying pinging the server IP addresses")
 		for _, ip := range []net.IP{serverIPv4, serverIPv6} {
-			if err := ping.ExpectPingSuccessWithTimeout(ctx, ip.String(), "chronos", 5*time.Second); err != nil {
+			// b/369774809#comment5: There seems to be transient issue with the test
+			// setup. Use a relatively long timeout here.
+			if err := ping.ExpectPingSuccessWithTimeout(ctx, ip.String(), "chronos", 20*time.Second); err != nil {
 				s.Fatalf("%s: Failed to verify ping reachability to %s: %v", tag, ip, err)
 			}
 		}
