@@ -39,18 +39,23 @@ func init() {
 		},
 		Timeout: 15 * time.Minute,
 		VarDeps: []string{arcCommon.ChildAccountVarName, arcCommon.ParentAccountVarName},
-		Params: []testing.Param{{
-			ExtraSoftwareDeps: []string{"android_container"},
-			ExtraAttr:         []string{"informational"},
-		}, {
-			Name:              "vm",
-			ExtraSoftwareDeps: []string{"android_vm", "no_qemu"},
-			ExtraAttr:         []string{"informational"},
-		}, {
-			Name:              "betty_vm",
-			ExtraSoftwareDeps: []string{"android_vm", "qemu"},
-			ExtraAttr:         []string{"informational", "group:hw_agnostic"},
-		}},
+		Params: []testing.Param{
+			// Disabled by TORA. See: b/337892189
+			// {
+			// 	ExtraSoftwareDeps: []string{"android_container"},
+			// 	ExtraAttr:         []string{"informational"},
+			// },
+			{
+				Name:              "vm",
+				ExtraSoftwareDeps: []string{"android_vm", "no_qemu"},
+				ExtraAttr:         []string{"informational"},
+			},
+			{
+				Name:              "betty_vm",
+				ExtraSoftwareDeps: []string{"android_vm", "qemu"},
+				ExtraAttr:         []string{"informational", "group:hw_agnostic"},
+			},
+		},
 		SearchFlags: []*testing.StringPair{
 			pci.SearchFlag(&policy.ArcEnabled{}, pci.VerifiedFunctionalityOS),
 		},
