@@ -46,7 +46,12 @@ func init() {
 			"tsergeant@chromium.org",
 		},
 		BugComponent: "b:1203766",
-		Attr:         []string{"group:mainline", "informational", "group:hw_agnostic"},
+		Attr:         []string{
+			// Disabled by TORA. See: b/341117039
+			// "group:mainline",
+			// "informational",
+			// "group:hw_agnostic",
+		},
 		// Read-only permissions is currently only enabled on ARC-T.
 		SoftwareDeps: []string{"chrome", "android_vm_t"},
 		Fixture:      "arcBooted",
