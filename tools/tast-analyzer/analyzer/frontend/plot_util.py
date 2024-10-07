@@ -64,12 +64,13 @@ def _create_plot_data_for_groups(
 
 
 def _plot_box_for_groups(
-    result: analysis_results.AnalysisResult,
+    result: analysis_results.AnalysisResult, control_label: str | None
 ) -> figure.Figure:
     """Creates the box plot for groups.
 
     Args:
         results: The result to plot.
+        control_label: The label of the control group.
 
     Returns:
         The created figure.
@@ -77,6 +78,13 @@ def _plot_box_for_groups(
     label_to_values = {
         group.label(): list(group.sample.values()) for group in result.groups
     }
+
+    (
+        better_results,
+        worse_results,
+    ) = analysis_results.split_better_and_worse_by_mean(result.pairs)
+    better_labels = {result.after.label() for result in better_results}
+    worse_labels = {result.after.label() for result in worse_results}
 
     fig, ax = plt.subplots()
     order = sorted(label_to_values, key=lambda x: np.mean(label_to_values[x]))
@@ -86,18 +94,31 @@ def _plot_box_for_groups(
     sns.stripplot(data=label_to_values, ax=ax, order=order)
     ax.set_ylabel(result.units())
 
+    CONTROL_BORDER = "black"
+    BETTER_BACKGROUND = "#13acff3b"
+    WORSE_BACKGROUND = "#dd1e1e52"
+    for label in ax.get_xticklabels():
+        if label.get_text() == control_label:
+            label.set_bbox({"facecolor": "none", "edgecolor": CONTROL_BORDER})
+        elif label.get_text() in better_labels:
+            label.set_bbox({"facecolor": BETTER_BACKGROUND})
+        elif label.get_text() in worse_labels:
+            label.set_bbox({"facecolor": WORSE_BACKGROUND})
+
     return fig
 
 
 def _create_plots_for_groups(
     result: analysis_results.AnalysisResult,
     plot_kinds: set[plot.GroupsPlotKind],
+    control_label: str | None,
 ) -> list[plot.PlotData]:
     """Creates groups level plots for the given result.
 
     Args:
         results: The result to plot.
         plot_kinds: The kinds of plots to create.
+        control_label: The label of the control group.
 
     Returns:
         A list of PlotData.
@@ -105,7 +126,9 @@ def _create_plots_for_groups(
     groups_plot: list[plot.PlotData] = []
     for kind in plot_kinds:
         if kind == plot.GroupsPlotKind.PLOT_BOX:
-            fig = _plot_box_for_groups(result)
+            fig = _plot_box_for_groups(
+                result=result, control_label=control_label
+            )
         else:
             raise ValueError(f"Unknown plot kind: {kind}")
         groups_plot.append(
@@ -183,6 +206,7 @@ def create_plots(
     results: list[analysis_results.AnalysisResult],
     pairwise_plot_kinds: set[plot.PairwisePlotKind],
     groups_plot_kinds: set[plot.GroupsPlotKind],
+    control_label: str | None,
 ) -> list[output.AnalysisResultForOutput]:
     """Creates plots for the given results and plot kinds.
 
@@ -190,6 +214,7 @@ def create_plots(
         results: The results to plot.
         pairwise_plot_kinds: The kinds of pairwise plots to create.
         groups_plot_kinds: The kinds of groups plots to create.
+        control_label: The label of the control group.
 
     Returns:
         A list of analysis results with their output data.
@@ -222,7 +247,7 @@ def create_plots(
                 groups=result.groups,
                 pairs=pairs_for_output,
                 groups_plots=_create_plots_for_groups(
-                    result, groups_plot_kinds
+                    result, groups_plot_kinds, control_label
                 ),
             )
         )

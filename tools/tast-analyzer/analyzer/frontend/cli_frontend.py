@@ -300,6 +300,7 @@ def print_results(
             pairwise_plot_kinds=save_pairwise_plot_kinds
             | report_pairwise_plot_kinds,
             groups_plot_kinds=save_groups_plot_kinds | report_groups_plot_kinds,
+            control_label=cfg.control_label,
         )
         plot_util.save_plots(
             results_for_output=results_for_output,
