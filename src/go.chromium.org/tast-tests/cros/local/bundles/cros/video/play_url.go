@@ -17,10 +17,12 @@ import (
 )
 
 const (
-	crosAppspotH264VanillaURL            = "https://crosvideo.appspot.com/?codec=h264&resolution=720&loop=true&mute=true"
-	crosAppspotVP9VanillaURL             = "https://crosvideo.appspot.com/?codec=vp9&resolution=720&loop=true&mute=true"
-	crosAppspotH264ChangingResolutionURL = "https://crosvideo.appspot.com/?codec=h264&cycle=true&loop=true&mute=true"
-	crosAppspotVP9ChangingResolutionURL  = "https://crosvideo.appspot.com/?codec=vp9&cycle=true&loop=true&mute=true"
+	crosAppspotH264VanillaURL              = "https://crosvideo.appspot.com/?codec=h264&resolution=720&loop=true&mute=true"
+	crosAppspotVP9VanillaURL               = "https://crosvideo.appspot.com/?codec=vp9&resolution=720&loop=true&mute=true"
+	crosAppspotH264ChangingResolutionURL   = "https://crosvideo.appspot.com/?codec=h264&max_resolution=1088&cycle=true&loop=true&mute=true"
+	crosAppspotVP9ChangingResolutionURL    = "https://crosvideo.appspot.com/?codec=vp9&max_resolution=1088&cycle=true&loop=true&mute=true"
+	crosAppspotH264ChangingResolutionURL4K = "https://crosvideo.appspot.com/?codec=h264&cycle=true&loop=true&mute=true"
+	crosAppspotVP9ChangingResolutionURL4K  = "https://crosvideo.appspot.com/?codec=vp9&cycle=true&loop=true&mute=true"
 
 	// From b/342022288.
 	widevineClearURL = "https://integration.uat.widevine.com/player?autoPlay=true&contentUrl=https://storage.googleapis.com/wvmedia/clear/vp9/30fps/llama/llama_uhd.mpd"
@@ -84,6 +86,18 @@ func init() {
 				Timeout:           5 * time.Minute,
 			},
 			{
+				Name: "crosvideo_h264_4k_cycle_1minute",
+				Val: playURLParams{
+					url:      crosAppspotH264ChangingResolutionURL4K,
+					duration: 1 * time.Minute,
+				},
+				ExtraSoftwareDeps: []string{"proprietary_codecs", caps.HWDecodeH264_4K},
+				ExtraAttr:         []string{"group:graphics", "graphics_video", "graphics_perbuild"},
+				Fixture:           "chromeVideo",
+				Timeout:           5 * time.Minute,
+			},
+
+			{
 				Name: "crosvideo_h264_cycle_1minute_gtfo",
 				Val: playURLParams{
 					url:      crosAppspotH264ChangingResolutionURL,
@@ -101,6 +115,17 @@ func init() {
 					duration: 1 * time.Minute,
 				},
 				ExtraSoftwareDeps: []string{caps.HWDecodeVP9},
+				ExtraAttr:         []string{"group:graphics", "graphics_video", "graphics_perbuild"},
+				Fixture:           "chromeVideo",
+				Timeout:           5 * time.Minute,
+			},
+			{
+				Name: "crosvideo_vp9_4k_cycle_1minute",
+				Val: playURLParams{
+					url:      crosAppspotVP9ChangingResolutionURL4K,
+					duration: 1 * time.Minute,
+				},
+				ExtraSoftwareDeps: []string{caps.HWDecodeVP9_4K},
 				ExtraAttr:         []string{"group:graphics", "graphics_video", "graphics_perbuild"},
 				Fixture:           "chromeVideo",
 				Timeout:           5 * time.Minute,
