@@ -241,7 +241,7 @@ func init() {
 				// Verifies that DUT can connect to an open 802.11ax network on channel 40 with a channel width of 20MHz.
 				Name:      "80211axhe20",
 				Fixture:   wificell.FixtureID(wificell.TFFeaturesCapture),
-				ExtraAttr: []string{"wificell_unstable", "wificell_func_ax"},
+				ExtraAttr: []string{"wificell_func_ax"},
 				Val: []simpleConnectTestcase{{
 					apConfigs: []ap.ApConfig{{
 						ApOpts: []ap.Option{
@@ -258,7 +258,7 @@ func init() {
 				// Verifies that DUT can connect to an open 802.11ax network on channel 157 with a channel width of 40MHz.
 				Name:      "80211axhe40",
 				Fixture:   wificell.FixtureID(wificell.TFFeaturesCapture),
-				ExtraAttr: []string{"wificell_unstable", "wificell_func_ax"},
+				ExtraAttr: []string{"wificell_func_ax"},
 				Val: []simpleConnectTestcase{{
 					apConfigs: []ap.ApConfig{{
 						ApOpts: []ap.Option{
@@ -275,7 +275,7 @@ func init() {
 				// Verifies that DUT can connect to an open 802.11ax network on 5GHz channel 157 with center channel of 155 and channel width of 80MHz.
 				Name:      "80211axhe80mixed",
 				Fixture:   wificell.FixtureID(wificell.TFFeaturesCapture),
-				ExtraAttr: []string{"wificell_unstable", "wificell_func_ax"},
+				ExtraAttr: []string{"wificell_func_ax"},
 				Val: []simpleConnectTestcase{{
 					apConfigs: []ap.ApConfig{{
 						ApOpts: []ap.Option{
@@ -293,7 +293,7 @@ func init() {
 				// The router is forced to use HE WiFi standard.
 				Name:      "80211axhe80pure",
 				Fixture:   wificell.FixtureID(wificell.TFFeaturesCapture),
-				ExtraAttr: []string{"wificell_unstable", "wificell_func_ax"},
+				ExtraAttr: []string{"wificell_func_ax"},
 				Val: []simpleConnectTestcase{{
 					apConfigs: []ap.ApConfig{{
 						ApOpts: []ap.Option{
