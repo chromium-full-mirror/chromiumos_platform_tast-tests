@@ -509,9 +509,8 @@ func init() {
 				VariantCategory:   `{"name": "WifiBtChipset_Soc_Kernel_80211_BE"}`,
 			}, {
 				// Verifies that DUT can connect to an OWE 802.11be network on 6GHz PSC channel 21 with a channel width of 20MHz.
-				Name:      "80211beehtowe_6ghz",
-				Fixture:   wificell.FixtureID(wificell.TFFeaturesCapture),
-				ExtraAttr: []string{"wificell_unstable"},
+				Name:    "80211beehtowe_6ghz",
+				Fixture: wificell.FixtureID(wificell.TFFeaturesCapture),
 				Val: []simpleConnectTestcase{{
 					apConfigs: []ap.ApConfig{{
 						ApOpts: []ap.Option{ap.Mode(ap.Mode80211bePure), ap.Channel(21), ap.HTCaps(ap.HTCapHT20),
@@ -529,7 +528,6 @@ func init() {
 				// Verifies that DUT can connect to a WPA3-SAE ("pure") 802.11be network on 6GHz PSC channel 21 with a channel width of 20MHz.
 				Name:              "80211beeht20_6ghz",
 				Fixture:           wificell.FixtureID(wificell.TFFeaturesCapture),
-				ExtraAttr:         []string{"wificell_unstable"},
 				ExtraSoftwareDeps: []string{"wpa3_sae"},
 				Val: []simpleConnectTestcase{{
 					apConfigs: []ap.ApConfig{{
@@ -548,7 +546,6 @@ func init() {
 				// Verifies that DUT can connect to a WPA3-SAE ("pure") 802.11be network on 6GHz PSC channel 21 with a channel width of 40MHz.
 				Name:              "80211beeht40_6ghz",
 				Fixture:           wificell.FixtureID(wificell.TFFeaturesCapture),
-				ExtraAttr:         []string{"wificell_unstable"},
 				ExtraSoftwareDeps: []string{"wpa3_sae"},
 				Val: []simpleConnectTestcase{{
 					apConfigs: []ap.ApConfig{{
@@ -566,7 +563,6 @@ func init() {
 				// Verifies that DUT can connect to a WPA3-SAE ("mixed") 802.11be network on 6GHz PSC channel 5 with center channel of 7 and channel width of 80MHz.
 				Name:              "80211beeht80mixed_6ghz",
 				Fixture:           wificell.FixtureID(wificell.TFFeaturesCapture),
-				ExtraAttr:         []string{"wificell_unstable"},
 				ExtraSoftwareDeps: []string{"wpa3_sae"},
 				Val: []simpleConnectTestcase{{
 					apConfigs: []ap.ApConfig{{
@@ -586,7 +582,6 @@ func init() {
 				// The router is forced to use EHT WiFi standard.
 				Name:              "80211beeht80pure_6ghz",
 				Fixture:           wificell.FixtureID(wificell.TFFeaturesCapture),
-				ExtraAttr:         []string{"wificell_unstable"},
 				ExtraSoftwareDeps: []string{"wpa3_sae"},
 				Val: []simpleConnectTestcase{{
 					apConfigs: []ap.ApConfig{{
@@ -605,7 +600,6 @@ func init() {
 				// Verifies that DUT can connect to a WPA3-SAE ("mixed") 802.11be network on 6GHz PSC channel 5 with center channel of 15 and channel width of 160MHz.
 				Name:              "80211beeht160mixed_6ghz",
 				Fixture:           wificell.FixtureID(wificell.TFFeaturesCapture),
-				ExtraAttr:         []string{"wificell_unstable"},
 				ExtraSoftwareDeps: []string{"wpa3_sae"},
 				Val: []simpleConnectTestcase{{
 					apConfigs: []ap.ApConfig{{
@@ -626,7 +620,6 @@ func init() {
 				// The router is forced to use EHT WiFi standard.
 				Name:              "80211beeht160pure_6ghz",
 				Fixture:           wificell.FixtureID(wificell.TFFeaturesCapture),
-				ExtraAttr:         []string{"wificell_unstable"},
 				ExtraSoftwareDeps: []string{"wpa3_sae"},
 				Val: []simpleConnectTestcase{{
 					apConfigs: []ap.ApConfig{{
@@ -646,7 +639,6 @@ func init() {
 				// The router is forced to use EHT WiFi standard.
 				Name:              "80211beeht320mixed_6ghz",
 				Fixture:           wificell.FixtureID(wificell.TFFeaturesCapture),
-				ExtraAttr:         []string{"wificell_unstable"},
 				ExtraSoftwareDeps: []string{"wpa3_sae"},
 				Val: []simpleConnectTestcase{{
 					apConfigs: []ap.ApConfig{{
@@ -667,7 +659,6 @@ func init() {
 				// The router is forced to use EHT WiFi standard.
 				Name:              "80211beeht320pure_6ghz",
 				Fixture:           wificell.FixtureID(wificell.TFFeaturesCapture),
-				ExtraAttr:         []string{"wificell_unstable"},
 				ExtraSoftwareDeps: []string{"wpa3_sae"},
 				Val: []simpleConnectTestcase{{
 					apConfigs: []ap.ApConfig{{

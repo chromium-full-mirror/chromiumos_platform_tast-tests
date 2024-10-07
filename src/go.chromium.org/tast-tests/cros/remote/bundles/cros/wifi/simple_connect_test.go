@@ -475,10 +475,9 @@ func simpleConnect80211be() []*simpleConnectParams {
 
 func simpleConnect80211be6ghz() []*simpleConnectParams {
 	return []*simpleConnectParams{{
-		Name:      "80211beehtowe_6ghz",
-		Fixture:   defaultFixture,
-		ExtraAttr: []string{"wificell_unstable"},
-		Doc:       simpleConnectDocPref("an OWE 802.11be network on 6GHz PSC channel 21 with a channel width of 20MHz."),
+		Name:    "80211beehtowe_6ghz",
+		Fixture: defaultFixture,
+		Doc:     simpleConnectDocPref("an OWE 802.11be network on 6GHz PSC channel 21 with a channel width of 20MHz."),
 		Val: []simpleConnectParamsVal{{
 			APConfigs: []apConfigVal{{
 				APOpts: `ap.Mode(ap.Mode80211bePure), ap.Channel(21), ap.HTCaps(ap.HTCapHT20),
@@ -495,7 +494,6 @@ func simpleConnect80211be6ghz() []*simpleConnectParams {
 	}, {
 		Name:              "80211beeht20_6ghz",
 		Fixture:           defaultFixture,
-		ExtraAttr:         []string{"wificell_unstable"},
 		ExtraSoftwareDeps: []string{"wpa3_sae"},
 		Doc:               simpleConnectDocPref("a WPA3-SAE (\"pure\") 802.11be network on 6GHz PSC channel 21 with a channel width of 20MHz."),
 		Val: []simpleConnectParamsVal{{
@@ -514,7 +512,6 @@ func simpleConnect80211be6ghz() []*simpleConnectParams {
 	}, {
 		Name:              "80211beeht40_6ghz",
 		Fixture:           defaultFixture,
-		ExtraAttr:         []string{"wificell_unstable"},
 		ExtraSoftwareDeps: []string{"wpa3_sae"},
 		Doc:               simpleConnectDocPref("a WPA3-SAE (\"pure\") 802.11be network on 6GHz PSC channel 21 with a channel width of 40MHz."),
 		Val: []simpleConnectParamsVal{{
@@ -532,7 +529,6 @@ func simpleConnect80211be6ghz() []*simpleConnectParams {
 	}, {
 		Name:              "80211beeht80mixed_6ghz",
 		Fixture:           defaultFixture,
-		ExtraAttr:         []string{"wificell_unstable"},
 		ExtraSoftwareDeps: []string{"wpa3_sae"},
 		Doc:               simpleConnectDocPref("a WPA3-SAE (\"mixed\") 802.11be network on 6GHz PSC channel 5 with center channel of 7 and channel width of 80MHz."),
 		Val: []simpleConnectParamsVal{{
@@ -551,7 +547,6 @@ func simpleConnect80211be6ghz() []*simpleConnectParams {
 	}, {
 		Name:              "80211beeht80pure_6ghz",
 		Fixture:           defaultFixture,
-		ExtraAttr:         []string{"wificell_unstable"},
 		ExtraSoftwareDeps: []string{"wpa3_sae"},
 		Doc: append(simpleConnectDocPref("a WPA3-SAE (\"pure\") 802.11be network on 6GHz PSC channel 5 with center channel of 7 and channel width of 80MHz."),
 			"The router is forced to use EHT WiFi standard."),
@@ -571,7 +566,6 @@ func simpleConnect80211be6ghz() []*simpleConnectParams {
 	}, {
 		Name:              "80211beeht160mixed_6ghz",
 		Fixture:           defaultFixture,
-		ExtraAttr:         []string{"wificell_unstable"},
 		ExtraSoftwareDeps: []string{"wpa3_sae"},
 		Doc:               simpleConnectDocPref("a WPA3-SAE (\"mixed\") 802.11be network on 6GHz PSC channel 5 with center channel of 15 and channel width of 160MHz."),
 		Val: []simpleConnectParamsVal{{
@@ -591,7 +585,6 @@ func simpleConnect80211be6ghz() []*simpleConnectParams {
 	}, {
 		Name:              "80211beeht160pure_6ghz",
 		Fixture:           defaultFixture,
-		ExtraAttr:         []string{"wificell_unstable"},
 		ExtraSoftwareDeps: []string{"wpa3_sae"},
 		Doc: append(simpleConnectDocPref("a WPA3-SAE (\"pure\") 802.11be network on 6GHz PSC channel 5 with center channel of 15 and channel width of 160MHz."),
 			"The router is forced to use EHT WiFi standard."),
@@ -611,7 +604,6 @@ func simpleConnect80211be6ghz() []*simpleConnectParams {
 	}, {
 		Name:              "80211beeht320mixed_6ghz",
 		Fixture:           defaultFixture,
-		ExtraAttr:         []string{"wificell_unstable"},
 		ExtraSoftwareDeps: []string{"wpa3_sae"},
 		Doc: append(simpleConnectDocPref("a WPA3-SAE (\"mixed\") 802.11be network on 6GHz PSC channel 5 with center channel of 31 and channel width of 320MHz."),
 			"The router is forced to use EHT WiFi standard."),
@@ -632,7 +624,6 @@ func simpleConnect80211be6ghz() []*simpleConnectParams {
 	}, {
 		Name:              "80211beeht320pure_6ghz",
 		Fixture:           defaultFixture,
-		ExtraAttr:         []string{"wificell_unstable"},
 		ExtraSoftwareDeps: []string{"wpa3_sae"},
 		Doc: append(simpleConnectDocPref("a WPA3-SAE (\"pure\") 802.11be network on 6GHz PSC channel 5 with center channel of 31 and channel width of 320MHz."),
 			"The router is forced to use EHT WiFi standard."),
