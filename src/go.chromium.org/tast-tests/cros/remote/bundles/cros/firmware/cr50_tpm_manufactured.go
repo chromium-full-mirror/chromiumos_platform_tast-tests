@@ -22,11 +22,10 @@ func init() {
 		Desc: "Check if the TPM is manufactured",
 		Contacts: []string{
 			"chromeos-faft@google.com",
-			"pf@semihalf.com",
+			"mruthven@google.com",
 		},
 		BugComponent: "b:792402", // ChromeOS > Platform > Enablement > Firmware > FAFT
-		// TODO: When stable, change firmware_unstable to a different attr.
-		Attr:         []string{"group:firmware", "firmware_unstable"},
+		Attr:         []string{"group:firmware", "firmware_cr50"},
 		Fixture:      fixture.DevMode,
 		Timeout:      5 * time.Minute,
 		HardwareDeps: hwdep.D(hwdep.ChromeEC(), hwdep.GSCRWKeyIDProd(), hwdep.GSCUART()),
@@ -58,7 +57,7 @@ func Cr50TPMManufactured(ctx context.Context, s *testing.State) {
 		s.Fatal("Failed to read UART: ", err)
 	}
 	s.Log("Rebooting GSC")
-	if err := h.Servo.RunGSCCommand(ctx, "reboot"); err != nil {
+	if err := h.DUT.Conn().CommandContext(ctx, "gsctool", "-a", "--reboot", "1000").Start(); err != nil {
 		s.Fatal("Failed to send reboot command: ", err)
 	}
 	// Wait a little at the end of the test to make sure the GSC finishes booting before the next test runs.
