@@ -29,7 +29,9 @@ func init() {
 			"cros-tdm-tpe-eng@google.com",
 			"weiluanwang@google.com",
 		},
-		Attr:         []string{"group:mainline", "informational", "group:criticalstaging"},
+		Attr: []string{"group:mainline", "informational", "group:criticalstaging",
+			// TODO(b/362930919): Remove the below attributes after the test is stable on all boards.
+			"group:healthd", "healthd_perbuild"},
 		SoftwareDeps: []string{"chrome"},
 		Fixture:      "diagnosticsPrep",
 		Timeout:      2 * time.Minute,
