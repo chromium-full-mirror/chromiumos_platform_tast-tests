@@ -172,11 +172,12 @@ func formatTraceOutput(traceOut [][]string) (events []chromeEventInfo, err error
 			curEvent.strArgs[argKey] = out[argStrValueIndex]
 			if name == "MojoVideoDecoder::OnVideoFrameDecoded" && argKey == "frame" {
 				// MojoVideoDecoder::OnVideoFrameDecoded() reports the timestamp by VideoFrame::AsHumanReadableString().
-				// Example: format:PIXEL_FORMAT_NV12 storage_type:OPAQUE coded_size:1280x720 visible_rect:0,0 1280x720 natural_size:1280x720 timestamp:3947083370 texture: true
+				// Example: format:PIXEL_FORMAT_NV12 storage_type:OPAQUE coded_size:1280x720
+				// visible_rect:0,0 1280x720 natural_size:1280x720 timestamp:3947083370 shared_image:true
 				frameStr := out[argStrValueIndex]
 				beginIndex := strings.Index(frameStr, "timestamp:")
-				endIndex := strings.Index(frameStr, "texture:")
-				// textures is not logged if a frame doesn't have a texture.
+				endIndex := strings.Index(frameStr, "shared_image:")
+				// shared_image is not logged if a frame doesn't have a shared_image.
 				if endIndex == -1 {
 					endIndex = len(frameStr)
 				}
