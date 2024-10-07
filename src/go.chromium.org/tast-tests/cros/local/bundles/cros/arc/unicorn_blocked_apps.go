@@ -40,10 +40,11 @@ func init() {
 		Timeout: 15 * time.Minute,
 		VarDeps: []string{arcCommon.ChildAccountVarName, arcCommon.ParentAccountVarName},
 		Params: []testing.Param{
-			{
-				ExtraSoftwareDeps: []string{"android_container"},
-				ExtraAttr:         []string{"informational"},
-			},
+			// Disabled by TORA. See: b/336400628
+			// {
+			// 	ExtraSoftwareDeps: []string{"android_container"},
+			// 	ExtraAttr:         []string{"informational"},
+			// },
 			{
 				Name:              "vm",
 				ExtraSoftwareDeps: []string{"android_vm", "no_qemu"},
