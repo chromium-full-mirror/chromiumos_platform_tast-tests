@@ -82,7 +82,7 @@ func DNSProxyUISettings(ctx context.Context, s *testing.State) {
 
 	// Reset to off at the end of the test.
 	defer func() {
-		if _, err := dns.SetDoHModeViaShill(ctx, dns.DoHOff, "" /*dohProvider*/); err != nil {
+		if err := dns.SetDoHModeViaUI(ctx, cr, tconn, dns.DoHOff, "" /*dohProvider*/); err != nil {
 			s.Log("Failed to set DNS-over-HTTPS mode to off: ", err)
 		}
 	}()
