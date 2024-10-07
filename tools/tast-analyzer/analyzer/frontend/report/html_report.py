@@ -174,17 +174,20 @@ class HtmlReport:
             "in the following pairs:"
         )
 
-        pair_identifiers = sorted(
-            [
-                pair.result.identifier()
-                for result in self.results
-                for pair in result.pairs
-            ]
-        )
-
         ul = ET.SubElement(self.html.body, "ul")
-        for identifier in pair_identifiers:
-            ul.append(components.create_element_with_text("li", identifier))
+        for result in self.results:
+            ul.append(
+                components.create_element_with_text(
+                    "li", plot_util.get_groups_name_for_plot(result.groups)
+                )
+            )
+            inner_ul = ET.SubElement(ul, "ul")
+            for pair in sorted(result.pairs):
+                inner_ul.append(
+                    components.create_element_with_text(
+                        "li", pair.result.identifier()
+                    )
+                )
 
     def _create_pairwise_result_table(
         self, pair: analysis_results.PairwiseResult
