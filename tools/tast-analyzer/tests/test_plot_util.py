@@ -77,7 +77,7 @@ class PlotUtilTest(unittest.TestCase):
     def test_get_groups_name_for_plot(self) -> None:
         metric_path = "Test.One.average"
         groups = self._get_groups_with_same_test_metric()
-        result = plot_util._get_groups_name_for_plot(groups)
+        result = plot_util.get_groups_name_for_plot(groups)
         self.assertEqual(
             result, f"(before|after)|ui.OverviewPerf|{metric_path}"
         )
@@ -87,7 +87,7 @@ class PlotUtilTest(unittest.TestCase):
         groups = self._get_groups_with_different_test(
             before_test_name, after_test_name
         )
-        result = plot_util._get_groups_name_for_plot(groups)
+        result = plot_util.get_groups_name_for_plot(groups)
         self.assertEqual(
             result,
             f"before|{before_test_name}|{metric_path}, "
@@ -95,7 +95,7 @@ class PlotUtilTest(unittest.TestCase):
         )
 
         groups = self._get_groups_with_different_metric()
-        result = plot_util._get_groups_name_for_plot(groups)
+        result = plot_util.get_groups_name_for_plot(groups)
         self.assertEqual(
             result,
             "before|ui.OverviewPerf|Test.Two.average, "

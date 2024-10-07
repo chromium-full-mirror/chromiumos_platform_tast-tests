@@ -10,6 +10,7 @@ from analyzer.analysis import analysis_cfg
 from analyzer.analysis import analysis_results
 from analyzer.frontend import output
 from analyzer.frontend import plot
+from analyzer.frontend import plot_util
 from analyzer.frontend.report import components
 from analyzer.frontend.report import html_tree
 
@@ -312,7 +313,7 @@ class HtmlReport:
         """
 
         self.html.body.append(
-            components.create_element_with_text("h2", pair.result.identifier())
+            components.create_element_with_text("h3", pair.result.identifier())
         )
         self.html.body.append(self._create_pairwise_result_table(pair.result))
 
@@ -320,6 +321,51 @@ class HtmlReport:
             self.html.body.append(
                 self._create_pairwise_result_figure(pair.result, plot_data)
             )
+
+    def _append_groups_result_figure(
+        self,
+        groups_id: str,
+        plot_data: plot.PlotData,
+    ) -> None:
+        """Appends a `<figure>` element of the groups level plot to the HTML body.
+
+        Args:
+            groups_id: The groups ID of the plot.
+            plot_data: The plot data used to create the `<figure>` element.
+        """
+        self.num_figures += 1
+        self.html.body.append(
+            components.create_figure(
+                plot_data=plot_data,
+                caption=f"Figure {self.num_figures}. "
+                f"{plot_data.kind.description()} of {groups_id}.",
+                attributes={"id": f"figure-{self.num_figures}"},
+            )
+        )
+
+    def _append_groups_summary(
+        self, result: output.AnalysisResultForOutput
+    ) -> None:
+        """Appends a summary of the given analysis result of certain groups
+        to the HTML.
+
+        Args:
+            result: The groups level analysis result to make a summary for.
+        """
+        groups_name = plot_util.get_groups_name_for_plot(result.groups)
+        self.html.body.append(
+            components.create_element_with_text("h2", groups_name)
+        )
+
+        # If the number of samples is two, groups level figures are the same
+        # as pairwise result figures. To avoid duplication, we show groups
+        # level figures only if there are more than two samples.
+        if len(result.groups) > 2:
+            for result_plot in result.groups_plots:
+                self._append_groups_result_figure(groups_name, result_plot)
+
+        for pair in result.pairs:
+            self._append_pairwise_result_summary(pair)
 
     def make(self) -> None:
         """Makes a report."""
@@ -332,8 +378,7 @@ class HtmlReport:
         self.html.body.append(table_container)
 
         for result in self.results:
-            for pair in result.pairs:
-                self._append_pairwise_result_summary(pair)
+            self._append_groups_summary(result=result)
 
     def write(self, output_dir: pathlib.Path) -> None:
         """Writes the report."""

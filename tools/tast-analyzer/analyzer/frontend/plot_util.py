@@ -22,7 +22,7 @@ def init_plotting() -> None:
     sns.set(font_scale=1)
 
 
-def _get_groups_name_for_plot(
+def get_groups_name_for_plot(
     groups: list[analysis_results.ExperimentGroup],
 ) -> str:
     """Returns a name of the given groups for groups level plots."""
@@ -55,7 +55,7 @@ def _create_plot_data_for_groups(
     Returns:
         A PlotData.
     """
-    groups_name = _get_groups_name_for_plot(result.groups)
+    groups_name = get_groups_name_for_plot(result.groups)
     direction = "higher" if result.is_up_better() else "lower"
     fig.suptitle(f"{groups_name}\n{direction} is better", wrap=True)
     fig.tight_layout()

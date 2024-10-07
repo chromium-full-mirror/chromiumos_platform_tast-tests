@@ -10,6 +10,7 @@ from analyzer.analysis import analysis_results
 from analyzer.analysis import stats_util
 from analyzer.frontend import output
 from analyzer.frontend import plot
+from analyzer.frontend import plot_util
 from analyzer.frontend.report import html_report
 from matplotlib import figure
 from tests import test_util
@@ -492,6 +493,49 @@ class HtmlReportTest(unittest.TestCase):
 
         expected_figure = test_util.load_html(
             HTML_DIR / "pairwise_result_figure.html"
+        )
+        test_util.assert_elements_equal_except_image_data(
+            self, figure_element, expected_figure
+        )
+
+    def test_append_groups_result_figure(self) -> None:
+        samples = (
+            test_util.load_before_samples() + test_util.load_after_samples()
+        )
+        groups_list = (
+            analysis_results._construct_explicit_experiment_groups_list(
+                samples,
+                cfgs=[
+                    analysis_cfg.ExperimentGroupsCfg(
+                        metric_path_regex_list=[
+                            r"^ui\.OverviewPerf\|Test\.(One|Three)\.average$",
+                        ]
+                    )
+                ],
+            )
+        )
+        results = [
+            output.AnalysisResultForOutput(
+                groups=groups_list[0], pairs=[], groups_plots=[]
+            ),
+        ]
+
+        plot_data = plot.PlotData(
+            kind=plot.GroupsPlotKind.PLOT_BOX, figure=figure.Figure()
+        )
+        report = html_report.HtmlReport(
+            results=results,
+            template_dir=TEMPLATE_DIR,
+            cfg=analysis_cfg.AnalysisCfg(),
+        )
+        report._append_groups_result_figure(
+            groups_id=plot_util.get_groups_name_for_plot(groups_list[0]),
+            plot_data=plot_data,
+        )
+        figure_element = report.html.body.findall("figure")[0]
+
+        expected_figure = test_util.load_html(
+            HTML_DIR / "groups_result_figure.html"
         )
         test_util.assert_elements_equal_except_image_data(
             self, figure_element, expected_figure
