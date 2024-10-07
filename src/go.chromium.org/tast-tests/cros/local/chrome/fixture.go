@@ -277,34 +277,6 @@ func init() {
 	})
 
 	testing.AddFixture(&testing.Fixture{
-		Name:     fixture.ChromeLoggedInWithOsSettingsSearchFeedback,
-		Desc:     "Logged into a user session with searchFeedbackEnabled flag enabled",
-		Contacts: []string{"cros-settings@google.com", "moteva@google.com"},
-		// ChromeOS > Software > Settings
-		BugComponent: "b:1246072",
-		Impl: NewLoggedInFixture(func(ctx context.Context, s *testing.FixtState) ([]Option, error) {
-			return []Option{EnableFeatures("OsSettingsSearchFeedback", "SkipSendingFeedbackReportInTastTests")}, nil
-		}),
-		SetUpTimeout:    FixtureSetUpTimeout,
-		ResetTimeout:    ResetTimeout,
-		TearDownTimeout: ResetTimeout,
-	})
-
-	testing.AddFixture(&testing.Fixture{
-		Name:     fixture.ChromeLoggedInGuestWithOsSettingsSearchFeedback,
-		Desc:     "Logged into a guest user session with searchFeedbackEnabled and SkipSendingFeedbackReportInTastTests flags enabled",
-		Contacts: []string{"cros-settings@google.com", "moteva@google.com"},
-		// ChromeOS > Software > Settings
-		BugComponent: "b:1246072",
-		Impl: NewLoggedInFixture(func(ctx context.Context, s *testing.FixtState) ([]Option, error) {
-			return []Option{GuestLogin(), EnableFeatures("OsSettingsSearchFeedback", "SkipSendingFeedbackReportInTastTests")}, nil
-		}),
-		SetUpTimeout:    FixtureSetUpTimeout,
-		ResetTimeout:    ResetTimeout,
-		TearDownTimeout: ResetTimeout,
-	})
-
-	testing.AddFixture(&testing.Fixture{
 		Name:     fixture.ChromeLoggedInVerboseConsentLogs,
 		Desc:     "Logged into a user session with flags to enable verbose logging about consent",
 		Contacts: []string{"cwd@chromium.org"},

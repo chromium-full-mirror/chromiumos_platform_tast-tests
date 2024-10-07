@@ -71,7 +71,7 @@ func init() {
 					arc:        false,
 					searchtype: normalOptions,
 				},
-				Fixture:           "chromeLoggedInWithOsSettingsSearchFeedback",
+				Fixture: "chromeLoggedIn",
 				ExtraHardwareDeps: hwdep.D(hwdep.Model("betty")),
 			}, {
 				Name: "arc_options",
@@ -101,7 +101,7 @@ func init() {
 					arc:        false,
 					searchtype: guestMode,
 				},
-				Fixture:           "chromeLoggedInGuestWithOsSettingsSearchFeedback",
+				Fixture: "chromeLoggedInGuest",
 				ExtraHardwareDeps: hwdep.D(hwdep.Model("betty")),
 			},
 		},

@@ -44,10 +44,6 @@ const (
 	ChromeLoggedInWithOobeAndAccessibilityButtonEnabled = "chromeLoggedInWithOobeAndAccessibilityButtonEnabled"
 	// Logged into a user session; stack-sampled metrics on turned on.
 	ChromeLoggedInWithStackSampledMetrics = "chromeLoggedInWithStackSampledMetrics"
-	// Logged into a user session with searchFeedbackEnabled flag enabled.
-	ChromeLoggedInWithOsSettingsSearchFeedback = "chromeLoggedInWithOsSettingsSearchFeedback"
-	// Logged into a guest user session with searchFeedbackEnabled flag enabled.
-	ChromeLoggedInGuestWithOsSettingsSearchFeedback = "chromeLoggedInGuestWithOsSettingsSearchFeedback"
 	// Ownership cleaned, logged into a user session with flags to enable verbose logging about consent.
 	ChromeLoggedInVerboseConsentLogs = "chromeLoggedInVerboseConsentLogs"
 	// Logged into a user session with VM display marked as external, allowing display mode change.
