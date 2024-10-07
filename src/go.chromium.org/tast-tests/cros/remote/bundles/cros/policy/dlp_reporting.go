@@ -106,15 +106,16 @@ func init() {
 					Counts:   dlputil.EventsCounts{Report: 1},
 				},
 			},
-			{
-				Name: "ash_screenshare",
-				Val: testParams{
-					Username: dlputil.RestrictionReportReportingEnabledUsernameAsh,
-					Password: dlputil.RestrictionReportReportingEnabledPasswordAsh,
-					Action:   dlputil.Screenshare,
-					Counts:   dlputil.EventsCounts{Report: 1},
-				},
-			},
+			// Disabled by TORA. See: b/340355045
+			// {
+			// 	Name: "ash_screenshare",
+			// 	Val: testParams{
+			// 		Username: dlputil.RestrictionReportReportingEnabledUsernameAsh,
+			// 		Password: dlputil.RestrictionReportReportingEnabledPasswordAsh,
+			// 		Action:   dlputil.Screenshare,
+			// 		Counts:   dlputil.EventsCounts{Report: 1},
+			// 	},
+			// },
 			{
 				Name: "ash_files",
 				Val: testParams{
