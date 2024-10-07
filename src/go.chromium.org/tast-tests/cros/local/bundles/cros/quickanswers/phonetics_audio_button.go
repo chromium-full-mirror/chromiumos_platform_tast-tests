@@ -26,9 +26,10 @@ func init() {
 			"chromeos-consumer-engprod@google.com",
 		},
 		BugComponent: "b:905229", // ChromeOS > Software > Assistive
-		Attr: []string{
-			"group:mainline",
-			"informational",
+		Attr:         []string{
+			// Disabled by TORA. See: b/333275553
+			// "group:mainline",
+			// "informational",
 		},
 		SoftwareDeps: []string{"chrome", "gaia"},
 		Fixture: quickanswers.Parameterize(
