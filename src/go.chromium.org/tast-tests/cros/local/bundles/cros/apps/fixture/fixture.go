@@ -15,9 +15,6 @@ import (
 	uiCommon "go.chromium.org/tast-tests/cros/common/ui"
 	"go.chromium.org/tast-tests/cros/local/arc"
 	"go.chromium.org/tast-tests/cros/local/chrome"
-	"go.chromium.org/tast-tests/cros/local/chrome/browser"
-	"go.chromium.org/tast-tests/cros/local/chrome/browser/browserfixt"
-	"go.chromium.org/tast-tests/cros/local/chrome/lacros/lacrosfixt"
 	"go.chromium.org/tast-tests/cros/local/chrome/uiauto"
 	"go.chromium.org/tast/core/errors"
 	"go.chromium.org/tast/core/testing"
@@ -186,12 +183,7 @@ func (f *fixtureImpl) SetUp(ctx context.Context, s *testing.FixtState) interface
 		opts = append(opts, chrome.EnableWebAppInstall())
 	}
 
-	// According to b/245224264, default Web app installation requires Lacros to be alive.
-	lacrosOpts := []lacrosfixt.Option{lacrosfixt.KeepAlive(true)}
-	if f.webAppInstall {
-		lacrosOpts = append(lacrosOpts, lacrosfixt.EnableWebAppInstall())
-	}
-	cr, err := browserfixt.NewChrome(ctx, browser.TypeAsh, lacrosfixt.NewConfig(lacrosOpts...), opts...)
+	cr, err := chrome.New(ctx, opts...)
 	if err != nil {
 		s.Fatal("Failed to start Chrome: ", err)
 	}

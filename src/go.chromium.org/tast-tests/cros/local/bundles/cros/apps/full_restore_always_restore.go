@@ -11,8 +11,6 @@ import (
 	"go.chromium.org/tast-tests/cros/local/chrome"
 	"go.chromium.org/tast-tests/cros/local/chrome/ash"
 	"go.chromium.org/tast-tests/cros/local/chrome/browser"
-	"go.chromium.org/tast-tests/cros/local/chrome/browser/browserfixt"
-	"go.chromium.org/tast-tests/cros/local/chrome/lacros/lacrosfixt"
 	"go.chromium.org/tast-tests/cros/local/chrome/uiauto"
 	"go.chromium.org/tast-tests/cros/local/chrome/uiauto/faillog"
 	"go.chromium.org/tast-tests/cros/local/chrome/uiauto/nodewith"
@@ -53,20 +51,14 @@ func FullRestoreAlwaysRestore(ctx context.Context, s *testing.State) {
 }
 
 func openBrowser(ctx context.Context) error {
-	// TODO(crbug.com/1318180): at the moment for Lacros, we're not getting SetUpWithNewChrome
-	// close closure because when used it'd close all resources, including targets and wouldn't let
-	// the session to proper restore later. As a short term workaround we're closing Lacros
-	// resources using CloseResources fn instead, though ideally we want to use
-	// SetUpWithNewChrome close closure when it's properly implemented.
 	var cr *chrome.Chrome
-	var br *browser.Browser
 	var err error
 
 	// Sometimes, it fails to start Chrome.
 	// Give it a retry.
 	const retry = 2
 	for i := 0; i < retry; i++ {
-		cr, br, _, err = browserfixt.SetUpWithNewChrome(ctx, browser.TypeAsh, lacrosfixt.NewConfig())
+		cr, err = chrome.New(ctx)
 		if err == nil {
 			break
 		}
@@ -83,7 +75,7 @@ func openBrowser(ctx context.Context) error {
 
 	// Open browser.
 	// The opened browser is not closed before reboot so that it could be restored after reboot.
-	conn, err := br.NewConn(ctx, "https://abc.xyz")
+	conn, err := cr.NewConn(ctx, "https://abc.xyz")
 	if err != nil {
 		return errors.Wrap(err, "failed to connect to the restore URL")
 	}
@@ -121,7 +113,7 @@ func restoreBrowser(ctx context.Context, outDir string, hasError func() bool) er
 		chrome.EnableRestoreTabs(),
 		chrome.KeepState()}
 
-	cr, err := browserfixt.NewChrome(ctx, browser.TypeAsh, lacrosfixt.NewConfig(), opts...)
+	cr, err := chrome.New(ctx, opts...)
 	if err != nil {
 		return errors.Wrap(err, "failed to start Chrome")
 	}
