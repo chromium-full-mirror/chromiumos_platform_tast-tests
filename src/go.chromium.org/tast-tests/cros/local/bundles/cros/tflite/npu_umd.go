@@ -29,9 +29,8 @@ func init() {
 func NPUUMD(ctx context.Context, s *testing.State) {
 	gtestLogPath := filepath.Join(s.OutDir(), "gtest.log")
 
-	// NPU was renamed from VPU, and the test binary is still using the old name.
 	if report, err := gtest.New(
-		"vpu-umd-test",
+		"npu-umd-test",
 		gtest.Logfile(gtestLogPath),
 		gtest.Filter("-Umd.ConfigurationCheck"),
 	).Run(ctx); err != nil {
