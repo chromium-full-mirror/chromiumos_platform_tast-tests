@@ -16,6 +16,7 @@ import (
 	"go.chromium.org/tast-tests/cros/local/audio/fixture"
 	"go.chromium.org/tast-tests/cros/local/bundles/cros/audio/data"
 	"go.chromium.org/tast-tests/cros/local/bundles/cros/audio/device"
+	"go.chromium.org/tast-tests/cros/local/bundles/cros/audio/internal"
 	"go.chromium.org/tast/core/testing"
 )
 
@@ -92,6 +93,17 @@ func init() {
 					Parent:   fixture.UIStopped{}.Instance(),
 				}.Instance(),
 			},
+			{
+				Name: "10ch_aec",
+				Val: crasMultiChannelCaptureParam{
+					channels: 10,
+					effects:  0x1,
+				},
+				Fixture: fixture.AloopLoaded{
+					Channels: 10,
+					Parent:   fixture.UIStopped{}.Instance(),
+				}.Instance(),
+			},
 		},
 	})
 }
@@ -103,6 +115,11 @@ type crasMultiChannelCaptureParam struct {
 
 func CrasMultiChannelCapture(ctx context.Context, s *testing.State) {
 	param := s.Param().(crasMultiChannelCaptureParam)
+
+	cd, err := internal.NewCrashDetector(ctx)
+	if err != nil {
+		s.Fatal("NewCrashDetector failed: ", err)
+	}
 
 	cras, err := audio.NewCras(ctx)
 	if err != nil {
@@ -173,4 +190,8 @@ func CrasMultiChannelCapture(ctx context.Context, s *testing.State) {
 
 	<-playbackDone
 	// TODO(b/261951580): Actually verify the capture content.
+
+	if err := cd.CheckCrash(ctx); err != nil {
+		s.Fatal("CheckCrash failed: ", err)
+	}
 }
