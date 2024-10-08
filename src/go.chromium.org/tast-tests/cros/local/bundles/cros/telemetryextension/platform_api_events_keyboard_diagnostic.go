@@ -35,17 +35,15 @@ func init() {
 			{
 				Name:              "keyboard",
 				Fixture:           fixture.TelemetryExtensionSkipOEMNameCheck,
-				ExtraHardwareDeps: hwdep.D(hwdep.InternalKeyboard(), hwdep.SkipOnModel("xol")),
+				ExtraHardwareDeps: hwdep.D(hwdep.InternalKeyboard(), hwdep.NoSplitModifierKeyboard()),
 				Val:               true, // keyboardTesterSupported
 				ExtraAttr:         []string{"informational", "group:criticalstaging"},
 			},
 			{
-				// The keyboard tester is not supported on certain models at
-				// this moment. See b/362396752.
-				// TODO(b/369345485): create a hwdep for this.
+				// The keyboard tester is not supported on split modifier keyboard.
 				Name:              "unsupported_keyboard",
 				Fixture:           fixture.TelemetryExtensionSkipOEMNameCheck,
-				ExtraHardwareDeps: hwdep.D(hwdep.InternalKeyboard(), hwdep.Model("xol")),
+				ExtraHardwareDeps: hwdep.D(hwdep.InternalKeyboard(), hwdep.SplitModifierKeyboard()),
 				Val:               false, // keyboardTesterSupported
 				ExtraAttr:         []string{"informational", "group:criticalstaging"},
 			},
