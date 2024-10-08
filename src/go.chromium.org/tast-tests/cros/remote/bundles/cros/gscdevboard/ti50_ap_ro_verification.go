@@ -90,6 +90,10 @@ func Ti50APROVerification(ctx context.Context, s *testing.State) {
 	i := ti50.MustOpenCrOSImage(ctx, b, s)
 	defer i.Close(ctx)
 
+	b.Reset(ctx)
+	th.MustSucceed(i.WaitUntilBooted(ctx), "GSC revives after reboot")
+	flashInfo := probeSPIFlashChip(ctx, s, b, i)
+
 	s.Log("(Re)starting GSC with clamshell straps and no CCD")
 	b.ResetWithStraps(ctx, ti50.FfClamshell, ti50.CCDModeOff)
 	th.MustSucceed(i.WaitUntilBooted(ctx), "GSC revives after reboot")
@@ -101,9 +105,18 @@ func Ti50APROVerification(ctx context.Context, s *testing.State) {
 		s.Fatal("Could not set BID: ", bidSet)
 	}
 
-	// Found with the `src/third_party/ap_wpsr` tool with
-	// `./ap_wpsr --name W25Q256JV_M --start 0 --length 0x00100000`
-	wpsrSet, err := i.Command(ctx, "ap_ro_verify wpsr d4 fc 0 41")
+	var wpsrSet string
+	if flashInfo.Name == "W25Q256JV_M" {
+		// Found with the `src/third_party/ap_wpsr` tool with
+		// `./ap_wpsr --name W25Q256JV_M --start 0 --length 0x00100000`
+		wpsrSet, err = i.Command(ctx, "ap_ro_verify wpsr d4 fc 0 41")
+	} else if flashInfo.Name == "GD25Q256D/GD25Q256E" {
+		// Found with the `src/third_party/ap_wpsr` tool with
+		// `./ap_wpsr --name GD25Q256D/GD25Q256E --start 0 --length 0x00100000`
+		wpsrSet, err = i.Command(ctx, "ap_ro_verify wpsr d4 fc 0 40")
+	} else {
+		s.Fatalf("Unrecognized AP SPI flash chip: %s", flashInfo.Name)
+	}
 	th.MustSucceed(err, "Set wpsr")
 	if strings.Contains(wpsrSet, "failed") {
 		s.Fatal("Could not set wpsr: ", wpsrSet)
@@ -477,6 +490,17 @@ func tapActiveLowKey(ctx context.Context, b utils.DevboardHelper, gpio ti50.Gpio
 	b.GpioSet(ctx, gpio, false)
 	testing.Sleep(ctx, 100*time.Millisecond) // GoBigSleepLint: Simulating 100ms button press
 	b.GpioSet(ctx, gpio, true)
+}
+
+func probeSPIFlashChip(ctx context.Context, s *testing.State, b utils.DevboardHelper, i *ti50.CrOSImage) (result *ti50.ApFlashInfo) {
+	b.WithApFlashAccess(ctx, i, ti50.HoldInReset, func(flash ti50.ApFlash) {
+		chipInfo, err := flash.FetchApFlashInfo(ctx)
+		if err != nil {
+			s.Fatalf("Could not get ap flash info: %s", err)
+		}
+		result = chipInfo
+	})
+	return result
 }
 
 func flashSPIImage(ctx context.Context, s *testing.State, b utils.DevboardHelper, i *ti50.CrOSImage, spi spiImage) {
