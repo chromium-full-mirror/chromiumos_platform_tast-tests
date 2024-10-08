@@ -15,6 +15,14 @@ from analyzer.backend import test_result
 from statsmodels.stats import multitest
 
 
+def _convert_val(val: int | float) -> float:
+    if isinstance(val, float):
+        return val
+    if isinstance(val, int):
+        return float(val)
+    assert False, f"Unknown value type: {val}"
+
+
 def _load_samples_from_test_results(
     results: test_result.TestResults,
 ) -> list[metric_sample.MetricSample]:
@@ -22,20 +30,6 @@ def _load_samples_from_test_results(
 
     logging.info(f"Examining {len(results.results)} records")
     for key, result in sorted(results.results.items()):
-        val: float
-        if isinstance(result.value, float):
-            val = result.value
-        elif isinstance(result.value, int):
-            val = float(result.value)
-        elif isinstance(result.value, list):
-            # TODO(b/343114458): Consider using the entire sample somehow.
-            # Currently, if there are multiple values we just take the mean.
-            # Handling these as a sample is likely required to properly handle
-            # TPS CUJ tests.
-            val = sum(result.value) / len(result.value)
-        else:
-            assert False, f"Unknown value type: {result.value}"
-
         s = samples_by_id.setdefault(
             key.sample_id(),
             metric_sample.MetricSample(
@@ -46,7 +40,6 @@ def _load_samples_from_test_results(
                 metric_path=key.sample_metric_path(),
                 units=result.units,
                 improvement_direction=result.improvement_direction,
-                value_map={},
             ),
         )
 
@@ -56,14 +49,17 @@ def _load_samples_from_test_results(
         assert s.metric_path == key.sample_metric_path()
         assert s.units == result.units
         assert s.improvement_direction == result.improvement_direction
-        assert key.run_id not in s.value_map
-        s.value_map[key.run_id] = val
+        assert key.run_id not in s._value_map
+
+        if isinstance(result.value, list):
+            s._value_map[key.run_id] = [_convert_val(v) for v in result.value]
+        else:
+            s._value_map[key.run_id] = [_convert_val(result.value)]
 
     logging.info(f"Loaded {len(samples_by_id)} samples")
     sample_sizes: dict[int, int] = defaultdict(int)
-    for v in samples_by_id.values():
-        sample_size = len(v.value_map)
-        sample_sizes[sample_size] += 1
+    for s in samples_by_id.values():
+        sample_sizes[s.size()] += 1
     logging.info(f"Sample size distribution: {sorted(sample_sizes.items())}")
 
     return list(samples_by_id.values())
@@ -174,12 +170,18 @@ def _prune_outliers(
 ) -> list[metric_sample.MetricSample]:
     out_samples = []
     for s in samples:
-        vals = sorted(s.value_map.items(), key=lambda x: x[1])
-        if len(vals):
-            del vals[0]
-        if len(vals):
-            del vals[-1]
-        out_samples.append(dataclasses.replace(s, value_map=dict(vals)))
+        sorted_vals = sorted(s.values())
+        value_map = copy.deepcopy(s._value_map)
+        outliers = [sorted_vals[0], sorted_vals[-1]] if sorted_vals else []
+        # Remove an arbitrary instance of each outlier.
+        for lst in value_map.values():
+            for outlier in outliers[:]:
+                if outlier in lst:
+                    lst.remove(outlier)
+                    outliers.remove(outlier)
+        # Remove runs that no longer have any values:
+        value_map = {k: v for k, v in value_map.items() if v}
+        out_samples.append(dataclasses.replace(s, _value_map=value_map))
     return out_samples
 
 
@@ -188,7 +190,7 @@ def _prune_all_zero_samples(
 ) -> list[metric_sample.MetricSample]:
     out_samples = []
     for s in samples:
-        if any(i != 0.0 for i in s.value_map.values()):
+        if any(i != 0.0 for i in s.values()):
             out_samples.append(s)
     return out_samples
 
@@ -197,7 +199,7 @@ def _prune_minimum_sample_size(
     samples: list[metric_sample.MetricSample],
     sample_size: int,
 ) -> list[metric_sample.MetricSample]:
-    return [s for s in samples if len(s.value_map) >= sample_size]
+    return [s for s in samples if s.size() >= sample_size]
 
 
 def analyze_results(

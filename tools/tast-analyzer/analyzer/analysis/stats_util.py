@@ -75,8 +75,8 @@ def mannwhitneyu_test(
     Returns:
         A HypothesisTestResult with the U-statistic and p-value.
     """
-    x = list(s1.value_map.values())
-    y = list(s2.value_map.values())
+    x = list(s1.values())
+    y = list(s2.values())
     u, p = stats.mannwhitneyu(x, y, alternative="two-sided")
     return HypothesisTestResult(
         statistic_kind=TestStatisticKind.RANK_SUM, u=u, p=p
@@ -142,11 +142,11 @@ def _permutation_test(
         A HypothesisTestResult if successful, or None if the test failed.
     """
     # We can't perform the permutation test without at least two values.
-    if len(s1.value_map) < 2 or len(s2.value_map) < 2:
+    if s1.size() < 2 or s2.size() < 2:
         return None
 
-    s1_values = list(s1.value_map.values())
-    s2_values = list(s2.value_map.values())
+    s1_values = list(s1.values())
+    s2_values = list(s2.values())
     seed = 0 if params.deterministic else None
 
     res = stats.permutation_test(
@@ -244,7 +244,7 @@ def _one_sample_bootstrap(
     Returns:
         A BootstrapResult if successful, or None if the bootstrap failed.
     """
-    x = list(s.value_map.values())
+    x = list(s.values())
 
     # Want there to be at least 100 distinct resamples to avoid monte carlo
     # error. Really, it should be at least 1000 for confidence intervals

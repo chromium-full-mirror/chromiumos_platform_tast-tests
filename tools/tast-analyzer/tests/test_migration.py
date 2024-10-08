@@ -30,7 +30,7 @@ class MigrationTest(unittest.TestCase):
                     metric_path="ui.Test.Migration.Results.V1.average",
                     units="percent",
                     improvement_direction=metric_sample.ImprovementDirection.UP,
-                    value_map={"1": 1.0},
+                    _value_map={"1": [1.0]},
                 )
             ],
         )

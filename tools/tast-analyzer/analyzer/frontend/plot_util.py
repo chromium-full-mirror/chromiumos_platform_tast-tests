@@ -47,8 +47,8 @@ def _save_figure_for_pair(
 
 def _plot_cdfs(pair: analysis_results.PairwiseResult) -> figure.Figure:
     fig, ax = plt.subplots()
-    before_values = pair.before.sample.value_map.values()
-    after_values = pair.after.sample.value_map.values()
+    before_values = pair.before.sample.values()
+    after_values = pair.after.sample.values()
     sns.ecdfplot(
         data={
             pair.before.label(): before_values,
@@ -62,8 +62,8 @@ def _plot_cdfs(pair: analysis_results.PairwiseResult) -> figure.Figure:
 
 def _plot_box(pair: analysis_results.PairwiseResult) -> figure.Figure:
     fig, ax = plt.subplots()
-    before_values = pair.before.sample.value_map.values()
-    after_values = pair.after.sample.value_map.values()
+    before_values = pair.before.sample.values()
+    after_values = pair.after.sample.values()
     sns.boxplot(
         data={
             pair.before.label(): before_values,

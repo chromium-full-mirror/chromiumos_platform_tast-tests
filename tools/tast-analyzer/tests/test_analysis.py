@@ -33,7 +33,7 @@ class AnalysisTest(unittest.TestCase):
                     metric_path="ui.OverviewPerf.Test.One.average",
                     units="percent",
                     improvement_direction=metric_sample.ImprovementDirection.UP,
-                    value_map={"before": 0},
+                    _value_map={"before": [0]},
                 ),
                 metric_sample.MetricSample(
                     label="before",
@@ -43,8 +43,7 @@ class AnalysisTest(unittest.TestCase):
                     metric_path="ui.OverviewPerf.Test.Three.average",
                     units="percent",
                     improvement_direction=metric_sample.ImprovementDirection.UP,
-                    # Currently we take the arithmetic mean of lists of values.
-                    value_map={"before": 2},
+                    _value_map={"before": [1, 2, 3]},
                 ),
                 metric_sample.MetricSample(
                     label="before",
@@ -54,7 +53,7 @@ class AnalysisTest(unittest.TestCase):
                     metric_path="ui.OverviewPerf.Test.Two.average",
                     units="percent",
                     improvement_direction=metric_sample.ImprovementDirection.UP,
-                    value_map={"before": 2},
+                    _value_map={"before": [2]},
                 ),
             ],
         )
@@ -71,7 +70,7 @@ class AnalysisTest(unittest.TestCase):
                     metric_path="ui.OverviewPerf.Test.Four.average",
                     units="percent",
                     improvement_direction=metric_sample.ImprovementDirection.UP,
-                    value_map={"after": 2},
+                    _value_map={"after": [2]},
                 ),
                 metric_sample.MetricSample(
                     label="after",
@@ -81,7 +80,7 @@ class AnalysisTest(unittest.TestCase):
                     metric_path="ui.OverviewPerf.Test.One.average",
                     units="percent",
                     improvement_direction=metric_sample.ImprovementDirection.UP,
-                    value_map={"after": 1},
+                    _value_map={"after": [1]},
                 ),
                 metric_sample.MetricSample(
                     label="after",
@@ -91,8 +90,7 @@ class AnalysisTest(unittest.TestCase):
                     metric_path="ui.OverviewPerf.Test.Three.average",
                     units="percent",
                     improvement_direction=metric_sample.ImprovementDirection.UP,
-                    # Currently we take the arithmetic mean of lists of values.
-                    value_map={"after": 1},
+                    _value_map={"after": [0, 1, 2]},
                 ),
             ],
         )
@@ -294,9 +292,9 @@ class AnalysisTest(unittest.TestCase):
             ],
         )
 
-        # Sample size is one for all metrics, so this should produce nothing.
+        # Sample size less than 4 for all metrics, so this should produce nothing.
         self.assertEqual(
-            analyze_results._prune_minimum_sample_size(samples, 2), []
+            analyze_results._prune_minimum_sample_size(samples, 4), []
         )
 
     def test_split_better_and_worse_by_mean(self) -> None:
@@ -385,8 +383,8 @@ class AnalysisTest(unittest.TestCase):
                     ),
                     hypothesis_result=stats_util.HypothesisTestResult(
                         statistic_kind=stats_util.TestStatisticKind.RANK_SUM,
-                        u=1.0,
-                        p=1.0,
+                        u=7.0,
+                        p=0.36868826936178156,
                     ),
                 )
             ],
@@ -418,7 +416,7 @@ class AnalysisTest(unittest.TestCase):
             metric_path="placeholder",
             units="placeholder",
             improvement_direction=metric_sample.ImprovementDirection.UP,
-            value_map={},
+            _value_map={},
         )
         group = analysis_results.ExperimentGroup(sample=placeholder)
         pair = analysis_results.PairwiseResult(
@@ -580,7 +578,7 @@ class AnalysisTest(unittest.TestCase):
                 metric_path="test.name.metric.variant",
                 units="percent",
                 improvement_direction=metric_sample.ImprovementDirection.UP,
-                value_map={},
+                _value_map={},
             )
         ]
         samples_pruned = copy.deepcopy(samples)
@@ -589,21 +587,21 @@ class AnalysisTest(unittest.TestCase):
             analyze_results._prune_outliers(samples),
         )
 
-        samples[0].value_map["test1"] = 1
+        samples[0]._value_map["test1"] = [1]
         self.assertEqual(
             samples_pruned,
             analyze_results._prune_outliers(samples),
         )
 
-        samples[0].value_map["test2"] = 2
+        samples[0]._value_map["test2"] = [2]
         self.assertEqual(
             samples_pruned,
             analyze_results._prune_outliers(samples),
         )
 
         # Remove highest and lowest.
-        samples[0].value_map["test3"] = 3
-        samples_pruned[0].value_map["test2"] = 2
+        samples[0]._value_map["test3"] = [3]
+        samples_pruned[0]._value_map["test2"] = [2]
         self.assertEqual(
             samples_pruned,
             analyze_results._prune_outliers(samples),

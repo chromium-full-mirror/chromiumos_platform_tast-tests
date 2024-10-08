@@ -119,8 +119,8 @@ class PipelineTest(unittest.TestCase):
         ]
         assert pair.before.bootstrap
         assert pair.after.bootstrap
-        self.assertAlmostEqual(pair.before.bootstrap.bias_estimate, 0.0022606)
-        self.assertAlmostEqual(pair.after.bootstrap.bias_estimate, -0.0028447)
+        self.assertAlmostEqual(pair.before.bootstrap.bias_estimate, -0.0020173)
+        self.assertAlmostEqual(pair.after.bootstrap.bias_estimate, -0.0023285)
 
     def _ordered_sample_ids(
         self, results: list[analysis_results.AnalysisResult]

@@ -122,8 +122,8 @@ class PairwiseResult:
         s += (
             f"  {self.hypothesis_result.summary()}, "
             f"dir={self.before.sample.improvement_direction}, "
-            f"n=({len(self.before.sample.value_map)}, "
-            f"{len(self.after.sample.value_map)}), "
+            f"n=({self.before.sample.size()}, "
+            f"{self.after.sample.size()}), "
             f"%better={100.0*self.mean_change_better():.2f}%\n"
         )
 
