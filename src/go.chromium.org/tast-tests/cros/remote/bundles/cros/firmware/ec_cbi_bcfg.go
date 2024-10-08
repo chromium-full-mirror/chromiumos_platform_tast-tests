@@ -226,14 +226,14 @@ func updateBcfgBytes(ctx context.Context, h *firmware.Helper, bcfg *bcfgData, ba
 	for key, val0 := range bcfgMap {
 		testing.ContextLogf(ctx, "Found key %q in bcfg map", key)
 		keys = append(keys, key)
-		keySplit := strings.Split(strings.ToUpper(key), ",")
+		keySplit := strings.Split(key, ",")
 		if len(keySplit) != 2 || keySplit[0] == "" || keySplit[1] == "" {
 			testing.ContextLogf(ctx, "Key %q does not have 2 parts", key)
 			continue
 		}
 
-		if strings.HasPrefix(strings.ToUpper(battManufName), keySplit[0]) &&
-			strings.HasPrefix(strings.ToUpper(battDeviceName), keySplit[1]) {
+		if strings.HasPrefix(strings.ToUpper(battManufName), strings.ToUpper(keySplit[0])) &&
+			strings.HasPrefix(strings.ToUpper(battDeviceName), strings.ToUpper(keySplit[1])) {
 			bcfg.battManufName = keySplit[0]
 			bcfg.battDeviceName = keySplit[1]
 			val1, exists := val0.(map[string]interface{})[key1]
