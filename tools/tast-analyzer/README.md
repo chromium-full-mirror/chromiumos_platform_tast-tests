@@ -123,6 +123,36 @@ want to see if the standard deviation has changed, you can run with `stddev`.
 This may be useful for detecting changes that make things more janky or
 variable.
 
+`--experiment-cfg-path`:
+
+You may provide a file that describes how to build sets of experiment groups to
+compare. See configs/experiment_groups_cfg*.json for examples of how to do this.
+
+The configuration supports specifying sets of experiment groups via regexes on
+metric paths or regexes on test names. For each set of experiment groups, you
+can specify using exactly one of these methods.
+
+For metric paths, use `metric_path_regex_list`. All samples with metric paths
+that match any of the regexes will be put into the same set of groups for
+comparison.
+
+For test names, use `test_name_regex_list`. Samples with test names that match
+any of the regexes will be put into the same set of groups. But, they will
+additionally be split by the metric name. This lets you compare all metrics with
+the same name between two tests with different names easily.
+
+For pairwise comparison, samples are ordered based on the regex they matched
+first. So if a sample matched a regex specified earlier in the list, it will be
+before any samples that did not match that regex or a previous one. If two
+samples have the same earliest regex match, their order will be determined based
+on their order in the files specified.
+
+Generally speaking, you will want to use `test_name_regex_list` to say that you
+want to compare all metrics with the same metric name but between two tests with
+a different name (e.g. compare ui.OverviewPerf and ui.OverviewPerf.lacros). In
+this case, you don't need to provide two JSON files containing the samples ---
+it's sufficient to provide one that contains samples for both tests.
+
 ## How to generate graphs and a summary report
 
 Tast-analyzer can also generate graphs. For example, it can generate CDF graphs:

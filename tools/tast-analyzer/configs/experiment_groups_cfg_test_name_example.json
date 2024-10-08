@@ -1,0 +1,10 @@
+{
+  "experiment_groups_cfgs": [
+    {
+      "test_name_regex_list": [
+        "^ui\\.OverviewPerf$",
+        "^ui\\.OverviewPerf\\.lacros$"
+      ]
+    }
+  ]
+}

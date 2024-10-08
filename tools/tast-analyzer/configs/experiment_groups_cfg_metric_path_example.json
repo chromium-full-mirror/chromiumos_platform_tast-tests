@@ -1,0 +1,10 @@
+{
+  "experiment_groups_cfgs": [
+    {
+      "metric_path_regex_list": [
+        "^ui\\.OverviewPerf\\.ChromeOS\\.Zram\\.CompressedSizePct\\.average$",
+        "^ui\\.OverviewPerf\\.lacros\\.ChromeOS\\.Zram\\.CompressedSizePct\\.average$"
+      ]
+    }
+  ]
+}
