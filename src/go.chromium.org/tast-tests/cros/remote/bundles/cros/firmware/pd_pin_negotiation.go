@@ -60,6 +60,11 @@ func init() {
 	})
 }
 
+type pinsMF struct {
+	pinsCDEF string
+	mfPref   servo.MultiFunctionPref
+}
+
 func PDPinNegotiation(ctx context.Context, s *testing.State) {
 	h := s.FixtValue().(*fixture.Value).Helper
 
@@ -74,13 +79,19 @@ func PDPinNegotiation(ctx context.Context, s *testing.State) {
 	}
 
 	hpdRange := []servo.HPDLevelValue{servo.HPDLow, servo.HPDHigh}
-	pinsRange := []string{"C", "D", "CD"}
+	pinsRange := []pinsMF{
+		pinsMF{"C", servo.MFPrefDisable},
+		pinsMF{"D", servo.MFPrefEnable},
+		pinsMF{"CD", servo.MFPrefDisable},
+		pinsMF{"CD", servo.MFPrefEnable},
+	}
 
 	for _, hpd := range hpdRange {
 		for _, pins := range pinsRange {
-			input := servo.TypeCInfo{DPMode: servo.DPEnable, HPDLevel: hpd, PinsCDEF: pins}
+			testing.ContextLogf(ctx, "testing DP mode: hpd=%d, pins=%s, MF pref=%d", int(hpd), pins.pinsCDEF, int(pins.mfPref))
+			input := servo.TypeCInfo{DPMode: servo.DPEnable, HPDLevel: hpd, PinsCDEF: pins.pinsCDEF}
 
-			if err := h.Servo.ServoSetDPConfigs(ctx, &input, servo.MFPrefDisable); err != nil {
+			if err := h.Servo.ServoSetDPConfigs(ctx, &input, pins.mfPref); err != nil {
 				s.Fatal("Failed to set DP alt-mode: ", err)
 			}
 			testing.ContextLog(ctx, "retrieving type-c information")
@@ -88,24 +99,8 @@ func PDPinNegotiation(ctx context.Context, s *testing.State) {
 			if err != nil {
 				s.Fatal("Failed to retrieve type-c information: ", err)
 			}
-			if err := h.Servo.VerifyPins(&input, typecInfo, servo.MFPrefDisable); err != nil {
+			if err := h.Servo.VerifyPins(&input, typecInfo, pins.mfPref); err != nil {
 				s.Fatal("Could not retrieve assigned DP setting: ", err)
-			}
-
-			if len(pins) > 1 {
-				input := servo.TypeCInfo{DPMode: servo.DPEnable, HPDLevel: hpd, PinsCDEF: pins}
-
-				if err := h.Servo.ServoSetDPConfigs(ctx, &input, servo.MFPrefEnable); err != nil {
-					s.Fatal("Failed to set DP alt-mode: ", err)
-				}
-				testing.ContextLog(ctx, "retrieving type-c information")
-				typecInfo, err := h.Servo.GetTypeCInfo(ctx, h.DUT)
-				if err != nil {
-					s.Fatal("Failed to retrieve type-c information: ", err)
-				}
-				if err := h.Servo.VerifyPins(&input, typecInfo, servo.MFPrefEnable); err != nil {
-					s.Fatal("Could not retrieve assigned DP setting: ", err)
-				}
 			}
 		}
 	}
@@ -123,4 +118,5 @@ func PDPinNegotiation(ctx context.Context, s *testing.State) {
 	if typecInfo.DPMode != servo.DPDisable {
 		s.Fatal("Type-c DP did not disable")
 	}
+
 }

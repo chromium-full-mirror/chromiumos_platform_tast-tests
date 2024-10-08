@@ -798,13 +798,16 @@ func (s *Servo) VerifyPins(input, output *TypeCInfo, mfPref MultiFunctionPref) e
 	}
 
 	// TODO: b/371041395 track which pin is supposed to be selected in cases where multiple are supported.
+	if len(output.PinsCDEF) == 0 {
+		return errors.Errorf("no pin assignment found, expected %s", input.PinsCDEF)
+	}
 	if mfPref == MFPrefDisable {
 		if input.PinsCDEF[0] != output.PinsCDEF[0] {
-			return errors.Errorf("incorrect pin assignement, expected %c, got %s", input.PinsCDEF[0], output.PinsCDEF)
+			return errors.Errorf("incorrect pin assignment, expected %c, got %s", input.PinsCDEF[0], output.PinsCDEF)
 		}
 	} else {
 		if input.PinsCDEF[len(input.PinsCDEF)-1] != output.PinsCDEF[0] {
-			return errors.Errorf("incorrect pin assignement, expected %c, got %s", input.PinsCDEF[len(input.PinsCDEF)-1], output.PinsCDEF)
+			return errors.Errorf("incorrect pin assignment, expected %c, got %s", input.PinsCDEF[len(input.PinsCDEF)-1], output.PinsCDEF)
 		}
 	}
 
