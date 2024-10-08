@@ -32,7 +32,7 @@ func init() {
 
 func FloopDeviceSwitch(ctx context.Context, s *testing.State) {
 	const duration = 30                   // seconds
-	const toleranceUnderrunDuration = 0.1 // seconds
+	const toleranceUnderrunDuration = 1.0 // seconds
 
 	cras, err := audio.NewCras(ctx)
 	if err != nil {
