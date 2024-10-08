@@ -15,7 +15,7 @@ from analyzer.backend import test_result
 from statsmodels.stats import multitest
 
 
-def _convert_val(val: int | float) -> float:
+def _convert_value(val: int | float) -> float:
     if isinstance(val, float):
         return val
     if isinstance(val, int):
@@ -52,9 +52,24 @@ def _load_samples_from_test_results(
         assert key.run_id not in s._value_map
 
         if isinstance(result.value, list):
-            s._value_map[key.run_id] = [_convert_val(v) for v in result.value]
+            values = [_convert_value(v) for v in result.value]
+
+            # We don't have a way to determine if lists of scalar values are a
+            # time series or not. These can't be compared like a regular sample.
+            # They also tend to be large, and that can slow down processing a
+            # lot. Heuristically detect this case and take the arithmetic mean.
+            LARGE_TEST_RESULT_LIMIT = 64
+            if len(values) > LARGE_TEST_RESULT_LIMIT:
+                logging.warning(
+                    f"Sample {s.sample_id} has a test result with many"
+                    f" ({len(values)}) values. This may be a time-series and "
+                    "results for it won't be valid for this sample if so. "
+                    "Taking the mean to avoid long computation time."
+                )
+                values = [sum(values) / len(values)]
+            s._value_map[key.run_id] = values
         else:
-            s._value_map[key.run_id] = [_convert_val(result.value)]
+            s._value_map[key.run_id] = [_convert_value(result.value)]
 
     logging.info(f"Loaded {len(samples_by_id)} samples")
     sample_sizes: dict[int, int] = defaultdict(int)

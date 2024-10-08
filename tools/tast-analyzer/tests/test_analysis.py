@@ -10,6 +10,7 @@ from analyzer.analysis import analysis_results
 from analyzer.analysis import analyze_results
 from analyzer.analysis import metric_sample
 from analyzer.analysis import stats_util
+from analyzer.backend import test_result
 from tests import test_util
 
 
@@ -19,6 +20,28 @@ FILES_DIR: pathlib.Path = (
 
 
 class AnalysisTest(unittest.TestCase):
+    def test_load_samples_from_test_results(self) -> None:
+        # Test that a large time-series-like test result has its arithmetic mean
+        # taken.
+        results = test_result.TestResults(
+            results={
+                test_result.TestResultKey(
+                    run_id="1",
+                    test_name="test",
+                    metric_name="metric",
+                    variant="variant",
+                    label="label",
+                ): test_result.TestResult(
+                    units="s",
+                    improvement_direction=test_result.ImprovementDirection.DOWN,
+                    value=[1.0] * 100,
+                )
+            }
+        )
+        samples = analyze_results._load_samples_from_test_results(results)
+        self.assertEqual(len(samples), 1)
+        self.assertEqual(samples[0]._value_map, {"1": [1.0]})
+
     def test_load_samples(self) -> None:
         before_samples = test_util.load_before_samples()
 
