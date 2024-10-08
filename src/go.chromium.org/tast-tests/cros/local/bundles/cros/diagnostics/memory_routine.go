@@ -8,6 +8,8 @@ import (
 	"context"
 	"time"
 
+	"github.com/shirou/gopsutil/v3/process"
+
 	"go.chromium.org/tast-tests/cros/local/bundles/cros/diagnostics/utils"
 	"go.chromium.org/tast-tests/cros/local/chrome/uiauto"
 	"go.chromium.org/tast-tests/cros/local/chrome/uiauto/diagnosticsapp"
@@ -97,11 +99,17 @@ func MemoryRoutine(ctx context.Context, s *testing.State) {
 	}
 
 	// Detect memtester launched using process lookup.
-	proc, err := procutil.FindUnique(procutil.ByExe(memtesterExecPath))
-	if err != nil {
+	var memtesterProc *process.Process
+	if err := testing.Poll(ctx, func(ctx context.Context) error {
+		proc, err := procutil.FindUnique(procutil.ByExe(memtesterExecPath))
+		if err == nil {
+			memtesterProc = proc
+		}
+		return err
+	}, &testing.PollOptions{Interval: 500 * time.Millisecond, Timeout: 3 * time.Second}); err != nil {
 		s.Fatal("Memtester did not start: ", err)
 	}
-	s.Log("Memtester running at ", proc)
+	s.Log("Memtester running at ", memtesterProc)
 
 	// GoBigSleepLint: Wait to verify the routine can be running for a period of
 	// time.
@@ -127,7 +135,7 @@ func MemoryRoutine(ctx context.Context, s *testing.State) {
 	}
 
 	// Detect memtester process terminated.
-	if err := procutil.WaitForTerminated(ctx, proc, 10*time.Second); err != nil {
+	if err := procutil.WaitForTerminated(ctx, memtesterProc, 10*time.Second); err != nil {
 		s.Fatal("Memtester did not stop: ", err)
 	}
 	s.Log("Memtester process no longer running")
