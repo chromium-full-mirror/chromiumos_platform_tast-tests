@@ -143,7 +143,6 @@ func PNPGoogleMeetFrameCapture(ctx context.Context, s *testing.State) {
 	// Configure Meeting.
 	if err := uiauto.Combine("Configure Google Meet",
 		gm.EnterFullScreen,
-		gm.MuteIfMicAvailable,
 		gm.ChangeSettings(
 			gm.SetSendResolution(googlemeet.ResolutionHD720P),
 			gm.SetReceiveResolution(googlemeet.ResolutionHD720P),
