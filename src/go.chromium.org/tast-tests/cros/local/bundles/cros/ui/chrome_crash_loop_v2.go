@@ -31,7 +31,7 @@ func init() {
 		Func:         ChromeCrashLoopV2,
 		LacrosStatus: testing.LacrosVariantUnneeded, // Lacros crash loops do not log the user out. Only ash-chrome does that.
 		Desc:         "Checks that if Chrome crashes repeatedly when logged in, it does an immediate crash upload",
-		Contacts:     []string{"chromeos-data-eng@google.com", "hirthanan@google.com"},
+		Contacts:     []string{"chromeos-data-eng@google.com", "troywang@google.com"},
 		BugComponent: "b:1032705",
 		Attr:         []string{"group:mainline"},
 		SoftwareDeps: []string{"chrome", "memfd_create"},

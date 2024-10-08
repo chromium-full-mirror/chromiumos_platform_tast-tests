@@ -33,7 +33,7 @@ func init() {
 	testing.AddTest(&testing.Test{
 		Func:         ChromeCrashLoggedIn,
 		Desc:         "Checks that Chrome writes crash dumps while logged in",
-		Contacts:     []string{"chromeos-data-eng@google.com", "hirthanan@google.com"},
+		Contacts:     []string{"chromeos-data-eng@google.com", "troywang@google.com"},
 		BugComponent: "b:1032705",
 		SoftwareDeps: []string{"chrome"},
 		Params: []testing.Param{{

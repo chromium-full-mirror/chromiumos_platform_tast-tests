@@ -48,7 +48,7 @@ func init() {
 			// Crosvm
 			"drmasquatch@google.com",
 			// Data team
-			"hirthanan@google.com",
+			"troywang@google.com",
 			"chromeos-data-eng@google.com",
 		},
 		SoftwareDeps: []string{"chrome", "vm_host"},

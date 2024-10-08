@@ -22,7 +22,7 @@ func init() {
 		Desc: "Check that old minidump crashes are uploaded",
 		Contacts: []string{
 			"chromeos-data-eng@google.com",
-			"hirthanan@google.com",
+			"troywang@google.com",
 			"nya@chromium.org", // ported to Tast
 		},
 		BugComponent: "b:1032705",

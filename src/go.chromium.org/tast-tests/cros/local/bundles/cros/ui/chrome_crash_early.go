@@ -54,7 +54,7 @@ func init() {
 	testing.AddTest(&testing.Test{
 		Func:         ChromeCrashEarly,
 		Desc:         "Checks that if Chrome crashes before crashpad is initialized, the user collector collects the crash",
-		Contacts:     []string{"chromeos-data-eng@google.com", "hirthanan@google.com"},
+		Contacts:     []string{"chromeos-data-eng@google.com", "troywang@google.com"},
 		BugComponent: "b:1032705",
 		Attr:         []string{"group:mainline", "group:hw_agnostic"},
 		SoftwareDeps: []string{"chrome", "crashpad"},

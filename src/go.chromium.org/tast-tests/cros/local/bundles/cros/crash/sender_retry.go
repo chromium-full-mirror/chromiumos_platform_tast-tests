@@ -20,7 +20,7 @@ func init() {
 		Desc: "Check that crash_sender failures are retried",
 		Contacts: []string{
 			"chromeos-data-eng@google.com",
-			"hirthanan@google.com",
+			"troywang@google.com",
 			"nya@chromium.org", // ported to Tast
 		},
 		BugComponent: "b:1032705",

@@ -30,7 +30,7 @@ func init() {
 			"arc-core@google.com",
 			"jhorwich@google.com",
 			// Data team
-			"hirthanan@google.com",
+			"troywang@google.com",
 			"chromeos-data-eng@google.com",
 		},
 		BugComponent: "b:153255",

@@ -66,7 +66,7 @@ func init() {
 	testing.AddTest(&testing.Test{
 		Func:         ChromeCrashReporterMetrics,
 		Desc:         "Checks that anomaly detector reports whether crash_reporter was invoked",
-		Contacts:     []string{"chromeos-data-eng@google.com", "hirthanan@google.com"},
+		Contacts:     []string{"chromeos-data-eng@google.com", "troywang@google.com"},
 		BugComponent: "b:1032705",
 		SoftwareDeps: []string{"chrome", "metrics_consent"},
 		Attr:         []string{"group:mainline"},

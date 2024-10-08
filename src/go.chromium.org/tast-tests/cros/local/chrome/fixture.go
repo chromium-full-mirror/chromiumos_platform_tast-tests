@@ -266,8 +266,8 @@ func init() {
 	testing.AddFixture(&testing.Fixture{
 		Name:         fixture.ChromeLoggedInWithStackSampledMetrics,
 		Desc:         "Logged into a user session; stack-sampled metrics on turned on",
-		Contacts:     []string{"chromeos-data-eng@google.com", "hirthanan@google.com"},
-		BugComponent: "b:1087262",
+		Contacts:     []string{"chromeos-data-eng@google.com", "troywang@google.com"},
+		BugComponent: "b:1087262", // ChromeOS > Data > Engineering > Metrics
 		Impl: NewLoggedInFixture(func(ctx context.Context, s *testing.FixtState) ([]Option, error) {
 			return []Option{EnableStackSampledMetrics(), ExtraArgs("--metrics-recording-only", "--record-stack-sampling-data")}, nil
 		}),
