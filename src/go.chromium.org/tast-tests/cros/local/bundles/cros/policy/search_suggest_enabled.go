@@ -58,22 +58,22 @@ func SearchSuggestEnabled(ctx context.Context, s *testing.State) {
 
 	defer faillog.DumpUITreeWithScreenshotOnError(cleanupCtx, s.OutDir(), s.HasError, cr, "ui_tree")
 
-	mp, err := proxy.NewMitmProxy(ctx,
-		proxy.DumpHTTPFlow(true),
-	)
-	if err != nil {
-		s.Fatal("Failed to start mitmproxy: ", err)
-	}
-	defer mp.Close(cleanupCtx)
-	if err := mp.Connect(ctx, cr); err != nil {
-		s.Fatal("Failed to configure chrome for proxy: ", err)
-	}
-
 	for key, param := range searchsuggestion.TestCases() {
 		s.Run(ctx, param.Name, func(ctx context.Context, s *testing.State) {
 			// Perform cleanup.
 			if err := policyutil.ResetChrome(ctx, fdms, cr); err != nil {
 				s.Fatal("Failed to clean up: ", err)
+			}
+
+			mp, err := proxy.NewMitmProxy(ctx,
+				proxy.DumpHTTPFlow(true),
+			)
+			if err != nil {
+				s.Fatal("Failed to start mitmproxy: ", err)
+			}
+			defer mp.Close(cleanupCtx)
+			if err := mp.Connect(ctx, cr); err != nil {
+				s.Fatal("Failed to configure chrome for proxy: ", err)
 			}
 
 			// Update policies.
