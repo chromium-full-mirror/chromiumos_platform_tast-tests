@@ -24,8 +24,6 @@ import (
 	"go.chromium.org/tast-tests/cros/local/arc/optin"
 	"go.chromium.org/tast-tests/cros/local/chrome"
 	"go.chromium.org/tast-tests/cros/local/chrome/browser"
-	"go.chromium.org/tast-tests/cros/local/chrome/browser/browserfixt"
-	"go.chromium.org/tast-tests/cros/local/chrome/lacros/lacrosfixt"
 	"go.chromium.org/tast-tests/cros/local/cpu"
 	"go.chromium.org/tast-tests/cros/local/disk"
 	"go.chromium.org/tast-tests/cros/local/power/metrics"
@@ -173,10 +171,8 @@ func createChrome(ctx context.Context, gaia chrome.Option, param testParam) (*ch
 		args = append(args, param.chromeArgs...)
 	}
 
-	cr, err := browserfixt.NewChrome(
+	cr, err := chrome.New(
 		ctx,
-		param.browserType,
-		lacrosfixt.NewConfig(),
 		chrome.ARCSupported(),
 		gaia,
 		chrome.ExtraArgs(args...),

@@ -15,8 +15,6 @@ import (
 	uiCommon "go.chromium.org/tast-tests/cros/common/ui"
 	"go.chromium.org/tast-tests/cros/local/accountmanager"
 	"go.chromium.org/tast-tests/cros/local/chrome/browser"
-	"go.chromium.org/tast-tests/cros/local/chrome/browser/browserfixt"
-	"go.chromium.org/tast-tests/cros/local/chrome/lacros/lacrosfixt"
 	"go.chromium.org/tast-tests/cros/local/chrome/uiauto"
 	"go.chromium.org/tast-tests/cros/local/chrome/uiauto/nodewith"
 	"go.chromium.org/tast-tests/cros/local/chrome/uiauto/role"
@@ -104,7 +102,7 @@ func ManagedSecondaryAccountBlock(ctx context.Context, s *testing.State) {
 			}
 		}
 
-		cr, err := browserfixt.NewChrome(ctx, args.browserType, lacrosfixt.NewConfig(), chrome.GAIALogin(primaryUser),
+		cr, err := chrome.New(ctx, chrome.GAIALogin(primaryUser),
 			chrome.ARCSupported(),
 			chrome.UnRestrictARCCPU(),
 			chrome.EnableFeatures("SecondaryAccountAllowedInArcPolicy"),
