@@ -36,7 +36,7 @@ func init() {
 		HardwareDeps: hwdep.D(
 			hwdep.Battery(), // Test doesn't run on ChromeOS devices without a battery.
 		),
-		Fixture: "chromeLoggedIn",
+		Fixture: "powerAsh",
 		// Battery should be drained before the test gets started and usually we expect it
 		// to finish within 3 hours and at most 4 hours.
 		Timeout: 4 * time.Hour,

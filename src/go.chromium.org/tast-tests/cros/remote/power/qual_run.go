@@ -9,6 +9,7 @@ import (
 	"encoding/json"
 	"fmt"
 	"io/fs"
+	"math"
 	"os"
 	"path"
 	"regexp"
@@ -184,7 +185,7 @@ func (r *QualRun) AddTestResults(ctx context.Context, tests, skippedTests []stri
 			// Record other average values.
 			for _, key := range []string{cp.BacklightPercentNonlinearKey, cp.BacklightPercentLinearKey} {
 				if value, ok := average[key]; ok {
-					r.otherInfo[key] = value
+					r.otherInfo[t+"_"+key] = value
 				}
 			}
 		}
@@ -208,6 +209,9 @@ func (r *QualRun) GenerateReport(ctx context.Context, outputDir, testName string
 
 	// Calculate result for each persona.
 	for _, p := range r.Config.Personas {
+		// Initialize variables to store the minimum backlight values.
+		minBacklightPercentNonlinear, minBacklightPercentLinear := 100.0, 100.0
+
 		missingTestResultFlag := false
 		disqualifiedRunningTimeFlag := false
 		persona := result.Persona{
@@ -218,6 +222,7 @@ func (r *QualRun) GenerateReport(ctx context.Context, outputDir, testName string
 		var dischargeRateValues []float64
 		var weights []float64
 		minutesBatteryLifeTestedTotal := 0.0
+
 		for _, t := range p.Tests {
 			if r.isTestSkipped(t.Name) {
 				persona.Skipped = append(persona.Skipped, t.Name)
@@ -243,6 +248,7 @@ func (r *QualRun) GenerateReport(ctx context.Context, outputDir, testName string
 				Unit:      "minute",
 				Direction: perf.SmallerIsBetter,
 			}, powerResult.Average.MinutesBatteryLifeTested)
+
 			if strings.Contains(strings.ToLower(t.Name), "browsing") {
 				pv.Set(perf.Metric{
 					Name:      p.Name + "." + t.Name + "." + cp.BrowsingTestConfigVersionKey,
@@ -255,6 +261,7 @@ func (r *QualRun) GenerateReport(ctx context.Context, outputDir, testName string
 					Direction: perf.BiggerIsBetter,
 				}, powerResult.Average.BrowsingTestCachedSiteVersion)
 			}
+
 			if strings.Contains(strings.ToLower(t.Name), "arcvideoplayback") {
 				pv.Set(perf.Metric{
 					Name:      p.Name + "." + t.Name + "." + cp.ArcVPBAppVersionKey,
@@ -262,10 +269,14 @@ func (r *QualRun) GenerateReport(ctx context.Context, outputDir, testName string
 					Direction: perf.BiggerIsBetter,
 				}, powerResult.Average.ArcVPBTestAppVersion)
 			}
+
 			persona.Tests = append(persona.Tests, result.Test{Name: t.Name, Weight: t.Weight, Power: *powerResult})
 			minutesBatteryLifeValues = append(minutesBatteryLifeValues, powerResult.Average.MinutesBatteryLife)
 			dischargeRateValues = append(dischargeRateValues, powerResult.Average.DischargeRate)
 			weights = append(weights, t.Weight)
+
+			minBacklightPercentNonlinear = math.Min(minBacklightPercentNonlinear, r.otherInfo[t.Name+"_"+cp.BacklightPercentNonlinearKey].(float64))
+			minBacklightPercentLinear = math.Min(minBacklightPercentLinear, r.otherInfo[t.Name+"_"+cp.BacklightPercentLinearKey].(float64))
 		}
 		if missingTestResultFlag {
 			testing.ContextLogf(ctx, "No aggregated power test results for persona %s because some test results in that persona is missing", p.Name)
@@ -283,15 +294,18 @@ func (r *QualRun) GenerateReport(ctx context.Context, outputDir, testName string
 			Unit:      "minute",
 			Direction: perf.BiggerIsBetter,
 		}, minutesBatteryLife)
-		for _, key := range []string{cp.BacklightPercentNonlinearKey, cp.BacklightPercentLinearKey} {
-			if value, ok := r.otherInfo[key].(float64); ok {
-				pv.Set(perf.Metric{
-					Name:      p.Name + "." + key,
-					Unit:      cp.GeneralPerfMetricTypeUnit,
-					Direction: perf.BiggerIsBetter,
-				}, value)
-			}
-		}
+
+		pv.Set(perf.Metric{
+			Name:      p.Name + "." + cp.BacklightPercentNonlinearKey,
+			Unit:      cp.GeneralPerfMetricTypeUnit,
+			Direction: perf.BiggerIsBetter,
+		}, minBacklightPercentNonlinear)
+
+		pv.Set(perf.Metric{
+			Name:      p.Name + "." + cp.BacklightPercentLinearKey,
+			Unit:      cp.GeneralPerfMetricTypeUnit,
+			Direction: perf.BiggerIsBetter,
+		}, minBacklightPercentLinear)
 
 		// Persona local perf values that will be used to generate power log.
 		pvLocal := perf.NewValues()
