@@ -176,16 +176,20 @@ class HtmlReport:
 
         ul = ET.SubElement(self.html.body, "ul")
         for result in self.results:
-            ul.append(
+            groups_name = plot_util.get_groups_name_for_plot(result.groups)
+            li = ET.SubElement(ul, "li")
+            li.append(
                 components.create_element_with_text(
-                    "li", plot_util.get_groups_name_for_plot(result.groups)
+                    "a", groups_name, {"href": f"#{groups_name}"}
                 )
             )
             inner_ul = ET.SubElement(ul, "ul")
             for pair in sorted(result.pairs):
-                inner_ul.append(
+                inner_li = ET.SubElement(inner_ul, "li")
+                pair_id = pair.result.identifier()
+                inner_li.append(
                     components.create_element_with_text(
-                        "li", pair.result.identifier()
+                        "a", pair_id, {"href": f"#{pair_id}"}
                     )
                 )
 
@@ -315,8 +319,9 @@ class HtmlReport:
             pair: The pairwise result to make a summary for.
         """
 
+        pair_id = pair.result.identifier()
         self.html.body.append(
-            components.create_element_with_text("h3", pair.result.identifier())
+            components.create_element_with_text("h3", pair_id, {"id": pair_id})
         )
         self.html.body.append(self._create_pairwise_result_table(pair.result))
 
@@ -357,7 +362,9 @@ class HtmlReport:
         """
         groups_name = plot_util.get_groups_name_for_plot(result.groups)
         self.html.body.append(
-            components.create_element_with_text("h2", groups_name)
+            components.create_element_with_text(
+                "h2", groups_name, {"id": groups_name}
+            )
         )
 
         # If the number of samples is two, groups level figures are the same
