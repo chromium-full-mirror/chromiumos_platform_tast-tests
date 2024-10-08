@@ -16,6 +16,12 @@ DEFAULT_RESAMPLING_COUNT = 999999
 bootstrapping."""
 
 
+def _batch_size(sample_size: int) -> int:
+    """The total size each batch should be for resampling methods."""
+    BATCH_TOTAL_SIZE = 65536  # 64 KiB
+    return max(1, BATCH_TOTAL_SIZE // sample_size)
+
+
 class TestStatisticKind(enum.StrEnum):
     MEAN = "mean"
     MEDIAN = "median"
@@ -151,6 +157,7 @@ def _permutation_test(
         alternative="two-sided",
         random_state=seed,
         vectorized=True,
+        batch=_batch_size(len(s1_values) + len(s2_values)),
     )
 
     return HypothesisTestResult(
@@ -270,6 +277,7 @@ def _one_sample_bootstrap(
         confidence_level=params.confidence,
         random_state=seed,
         vectorized=True,
+        batch=_batch_size(len(x)),
     )
 
     observed_statistic = params.statistic_kind.compute_value(np.array(x))
