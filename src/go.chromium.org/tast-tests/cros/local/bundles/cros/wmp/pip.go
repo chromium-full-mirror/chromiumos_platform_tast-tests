@@ -466,6 +466,8 @@ func testPipExpandViaMenu(ctx context.Context, tconn *chrome.TestConn, ac *uiaut
 	tcc := tsw.NewTouchCoordConverter(dispInfo.Bounds.Size())
 	centerX, centerY := tcc.ConvertLocation(bounds.CenterPoint())
 
+	ui := uiauto.New(tconn)
+
 	// Tap the center of the PiP menu, where the expand button exists for any type of PiP.
 	// Here, we retry tapping until PiP is gone because we don't know when PiP menu starts accepting input events (PiP menu is rendered on the client side).
 	return testing.Poll(ctx, func(ctx context.Context) error {
@@ -475,6 +477,12 @@ func testPipExpandViaMenu(ctx context.Context, tconn *chrome.TestConn, ac *uiaut
 		if err := stw.End(); err != nil {
 			return errors.Wrap(err, "failed to finish tap gesture")
 		}
+
+		button := nodewith.HasClass("BackToTabLabelButton")
+		if err := ui.DoDefault(button)(ctx); err != nil {
+			return errors.Wrap(err, "failed to push the button")
+		}
+
 		ws, err := ash.GetAllWindows(ctx, tconn)
 		if err != nil {
 			return testing.PollBreak(errors.Wrap(err, "failed to get the window list"))
