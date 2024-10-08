@@ -50,30 +50,30 @@ class AnalysisTest(unittest.TestCase):
             [
                 metric_sample.MetricSample(
                     label="before",
-                    sample_id="before.ui.OverviewPerf.Test.One.average",
+                    sample_id="before|ui.OverviewPerf|Test.One.average",
                     test_name="ui.OverviewPerf",
                     metric_name="Test.One.average",
-                    metric_path="ui.OverviewPerf.Test.One.average",
+                    metric_path="ui.OverviewPerf|Test.One.average",
                     units="percent",
                     improvement_direction=metric_sample.ImprovementDirection.UP,
                     _value_map={"before": [0]},
                 ),
                 metric_sample.MetricSample(
                     label="before",
-                    sample_id="before.ui.OverviewPerf.Test.Three.average",
+                    sample_id="before|ui.OverviewPerf|Test.Three.average",
                     test_name="ui.OverviewPerf",
                     metric_name="Test.Three.average",
-                    metric_path="ui.OverviewPerf.Test.Three.average",
+                    metric_path="ui.OverviewPerf|Test.Three.average",
                     units="percent",
                     improvement_direction=metric_sample.ImprovementDirection.UP,
                     _value_map={"before": [1, 2, 3]},
                 ),
                 metric_sample.MetricSample(
                     label="before",
-                    sample_id="before.ui.OverviewPerf.Test.Two.average",
+                    sample_id="before|ui.OverviewPerf|Test.Two.average",
                     test_name="ui.OverviewPerf",
                     metric_name="Test.Two.average",
-                    metric_path="ui.OverviewPerf.Test.Two.average",
+                    metric_path="ui.OverviewPerf|Test.Two.average",
                     units="percent",
                     improvement_direction=metric_sample.ImprovementDirection.UP,
                     _value_map={"before": [2]},
@@ -87,30 +87,30 @@ class AnalysisTest(unittest.TestCase):
             [
                 metric_sample.MetricSample(
                     label="after",
-                    sample_id="after.ui.OverviewPerf.Test.Four.average",
+                    sample_id="after|ui.OverviewPerf|Test.Four.average",
                     test_name="ui.OverviewPerf",
                     metric_name="Test.Four.average",
-                    metric_path="ui.OverviewPerf.Test.Four.average",
+                    metric_path="ui.OverviewPerf|Test.Four.average",
                     units="percent",
                     improvement_direction=metric_sample.ImprovementDirection.UP,
                     _value_map={"after": [2]},
                 ),
                 metric_sample.MetricSample(
                     label="after",
-                    sample_id="after.ui.OverviewPerf.Test.One.average",
+                    sample_id="after|ui.OverviewPerf|Test.One.average",
                     test_name="ui.OverviewPerf",
                     metric_name="Test.One.average",
-                    metric_path="ui.OverviewPerf.Test.One.average",
+                    metric_path="ui.OverviewPerf|Test.One.average",
                     units="percent",
                     improvement_direction=metric_sample.ImprovementDirection.UP,
                     _value_map={"after": [1]},
                 ),
                 metric_sample.MetricSample(
                     label="after",
-                    sample_id="after.ui.OverviewPerf.Test.Three.average",
+                    sample_id="after|ui.OverviewPerf|Test.Three.average",
                     test_name="ui.OverviewPerf",
                     metric_name="Test.Three.average",
-                    metric_path="ui.OverviewPerf.Test.Three.average",
+                    metric_path="ui.OverviewPerf|Test.Three.average",
                     units="percent",
                     improvement_direction=metric_sample.ImprovementDirection.UP,
                     _value_map={"after": [0, 1, 2]},
@@ -127,8 +127,12 @@ class AnalysisTest(unittest.TestCase):
             # definitions:
             # 1. metric path = (test name, metric name)
             # 2. sample id = (label, test name, metric name)
-            self.assertEqual(s.metric_path, s.test_name + "." + s.metric_name)
-            self.assertEqual(s.sample_id, s.label + "." + s.metric_path)
+            self.assertEqual(
+                s.metric_path, s.test_name + test_result.DELIM + s.metric_name
+            )
+            self.assertEqual(
+                s.sample_id, s.label + test_result.DELIM + s.metric_path
+            )
 
     def test_construct_experiment_groups_list(self) -> None:
         samples = (
@@ -146,24 +150,24 @@ class AnalysisTest(unittest.TestCase):
                 [
                     analysis_results.ExperimentGroup(
                         sample=samples_by_id[
-                            "before.ui.OverviewPerf.Test.One.average"
+                            "before|ui.OverviewPerf|Test.One.average"
                         ]
                     ),
                     analysis_results.ExperimentGroup(
                         sample=samples_by_id[
-                            "after.ui.OverviewPerf.Test.One.average"
+                            "after|ui.OverviewPerf|Test.One.average"
                         ]
                     ),
                 ],
                 [
                     analysis_results.ExperimentGroup(
                         sample=samples_by_id[
-                            "before.ui.OverviewPerf.Test.Three.average"
+                            "before|ui.OverviewPerf|Test.Three.average"
                         ]
                     ),
                     analysis_results.ExperimentGroup(
                         sample=samples_by_id[
-                            "after.ui.OverviewPerf.Test.Three.average"
+                            "after|ui.OverviewPerf|Test.Three.average"
                         ]
                     ),
                 ],
@@ -180,8 +184,8 @@ class AnalysisTest(unittest.TestCase):
                 experiment_groups_cfgs=[
                     analysis_cfg.ExperimentGroupsCfg(
                         metric_path_regex_list=[
-                            r"^ui\.OverviewPerf\.Test\.Three\.average$",
-                            r"^ui\.OverviewPerf\.Test\.One\.average$",
+                            r"^ui\.OverviewPerf\|Test\.Three\.average$",
+                            r"^ui\.OverviewPerf\|Test\.One\.average$",
                         ]
                     )
                 ]
@@ -196,12 +200,12 @@ class AnalysisTest(unittest.TestCase):
                 [
                     analysis_results.ExperimentGroup(
                         sample=before_samples_by_id[
-                            "before.ui.OverviewPerf.Test.Three.average"
+                            "before|ui.OverviewPerf|Test.Three.average"
                         ]
                     ),
                     analysis_results.ExperimentGroup(
                         sample=before_samples_by_id[
-                            "before.ui.OverviewPerf.Test.One.average"
+                            "before|ui.OverviewPerf|Test.One.average"
                         ]
                     ),
                 ],
@@ -235,8 +239,8 @@ class AnalysisTest(unittest.TestCase):
                 experiment_groups_cfgs=[
                     analysis_cfg.ExperimentGroupsCfg(
                         metric_path_regex_list=[
-                            r"^ui\.OverviewPerf\.Test\.Three\.average$",
-                            r"^ui\.OverviewPerf\.Test\.One\.average$",
+                            r"^ui\.OverviewPerf\|Test\.Three\.average$",
+                            r"^ui\.OverviewPerf\|Test\.One\.average$",
                         ]
                     )
                 ]
@@ -251,46 +255,46 @@ class AnalysisTest(unittest.TestCase):
                 [
                     analysis_results.ExperimentGroup(
                         sample=samples_by_id[
-                            "before.ui.OverviewPerf.Test.One.average"
+                            "before|ui.OverviewPerf|Test.One.average"
                         ]
                     ),
                     analysis_results.ExperimentGroup(
                         sample=samples_by_id[
-                            "after.ui.OverviewPerf.Test.One.average"
-                        ]
-                    ),
-                ],
-                [
-                    analysis_results.ExperimentGroup(
-                        sample=samples_by_id[
-                            "before.ui.OverviewPerf.Test.Three.average"
-                        ]
-                    ),
-                    analysis_results.ExperimentGroup(
-                        sample=samples_by_id[
-                            "after.ui.OverviewPerf.Test.Three.average"
+                            "after|ui.OverviewPerf|Test.One.average"
                         ]
                     ),
                 ],
                 [
                     analysis_results.ExperimentGroup(
                         sample=samples_by_id[
-                            "before.ui.OverviewPerf.Test.Three.average"
+                            "before|ui.OverviewPerf|Test.Three.average"
                         ]
                     ),
                     analysis_results.ExperimentGroup(
                         sample=samples_by_id[
-                            "after.ui.OverviewPerf.Test.Three.average"
+                            "after|ui.OverviewPerf|Test.Three.average"
+                        ]
+                    ),
+                ],
+                [
+                    analysis_results.ExperimentGroup(
+                        sample=samples_by_id[
+                            "before|ui.OverviewPerf|Test.Three.average"
                         ]
                     ),
                     analysis_results.ExperimentGroup(
                         sample=samples_by_id[
-                            "before.ui.OverviewPerf.Test.One.average"
+                            "after|ui.OverviewPerf|Test.Three.average"
                         ]
                     ),
                     analysis_results.ExperimentGroup(
                         sample=samples_by_id[
-                            "after.ui.OverviewPerf.Test.One.average"
+                            "before|ui.OverviewPerf|Test.One.average"
+                        ]
+                    ),
+                    analysis_results.ExperimentGroup(
+                        sample=samples_by_id[
+                            "after|ui.OverviewPerf|Test.One.average"
                         ]
                     ),
                 ],
@@ -303,15 +307,15 @@ class AnalysisTest(unittest.TestCase):
         )
         samples_by_id = test_util.samples_by_id(samples)
 
-        # before.ui.OverviewPerf.Test.One.average has only zeros, so we should skip it.
+        # before|ui.OverviewPerf|Test.One.average has only zeros, so we should skip it.
         self.assertEqual(
             analyze_results._prune_all_zero_samples(samples),
             [
-                samples_by_id["before.ui.OverviewPerf.Test.Three.average"],
-                samples_by_id["before.ui.OverviewPerf.Test.Two.average"],
-                samples_by_id["after.ui.OverviewPerf.Test.Four.average"],
-                samples_by_id["after.ui.OverviewPerf.Test.One.average"],
-                samples_by_id["after.ui.OverviewPerf.Test.Three.average"],
+                samples_by_id["before|ui.OverviewPerf|Test.Three.average"],
+                samples_by_id["before|ui.OverviewPerf|Test.Two.average"],
+                samples_by_id["after|ui.OverviewPerf|Test.Four.average"],
+                samples_by_id["after|ui.OverviewPerf|Test.One.average"],
+                samples_by_id["after|ui.OverviewPerf|Test.Three.average"],
             ],
         )
 
@@ -335,24 +339,24 @@ class AnalysisTest(unittest.TestCase):
                 [
                     analysis_results.ExperimentGroup(
                         sample=samples_by_id[
-                            "before.ui.OverviewPerf.Test.One.average"
+                            "before|ui.OverviewPerf|Test.One.average"
                         ]
                     ),
                     analysis_results.ExperimentGroup(
                         sample=samples_by_id[
-                            "after.ui.OverviewPerf.Test.One.average"
+                            "after|ui.OverviewPerf|Test.One.average"
                         ]
                     ),
                 ],
                 [
                     analysis_results.ExperimentGroup(
                         sample=samples_by_id[
-                            "before.ui.OverviewPerf.Test.Three.average"
+                            "before|ui.OverviewPerf|Test.Three.average"
                         ]
                     ),
                     analysis_results.ExperimentGroup(
                         sample=samples_by_id[
-                            "after.ui.OverviewPerf.Test.Three.average"
+                            "after|ui.OverviewPerf|Test.Three.average"
                         ]
                     ),
                 ],
@@ -374,12 +378,12 @@ class AnalysisTest(unittest.TestCase):
                 analysis_results.PairwiseResult(
                     before=analysis_results.ExperimentGroup(
                         sample=samples_by_id[
-                            "before.ui.OverviewPerf.Test.One.average"
+                            "before|ui.OverviewPerf|Test.One.average"
                         ]
                     ),
                     after=analysis_results.ExperimentGroup(
                         sample=samples_by_id[
-                            "after.ui.OverviewPerf.Test.One.average"
+                            "after|ui.OverviewPerf|Test.One.average"
                         ]
                     ),
                     hypothesis_result=stats_util.HypothesisTestResult(
@@ -396,12 +400,12 @@ class AnalysisTest(unittest.TestCase):
                 analysis_results.PairwiseResult(
                     before=analysis_results.ExperimentGroup(
                         sample=samples_by_id[
-                            "before.ui.OverviewPerf.Test.Three.average"
+                            "before|ui.OverviewPerf|Test.Three.average"
                         ]
                     ),
                     after=analysis_results.ExperimentGroup(
                         sample=samples_by_id[
-                            "after.ui.OverviewPerf.Test.Three.average"
+                            "after|ui.OverviewPerf|Test.Three.average"
                         ]
                     ),
                     hypothesis_result=stats_util.HypothesisTestResult(
@@ -503,7 +507,7 @@ class AnalysisTest(unittest.TestCase):
         only_one = analyze_results._prune_experiment_cfg(samples, cfg)
 
         self.assertEqual(
-            only_one, [samples_by_id["before.ui.OverviewPerf.Test.One.average"]]
+            only_one, [samples_by_id["before|ui.OverviewPerf|Test.One.average"]]
         )
 
     def test_prune_regex_include(self) -> None:
@@ -518,26 +522,26 @@ class AnalysisTest(unittest.TestCase):
             [], analyze_results._prune_regex_include(before_samples, "^Test$")
         )
         self.assertEqual(
-            [before_samples_by_id["before.ui.OverviewPerf.Test.Three.average"]],
+            [before_samples_by_id["before|ui.OverviewPerf|Test.Three.average"]],
             analyze_results._prune_regex_include(
                 before_samples, r"Test\.Three"
             ),
         )
         self.assertEqual(
-            [before_samples_by_id["before.ui.OverviewPerf.Test.Three.average"]],
+            [before_samples_by_id["before|ui.OverviewPerf|Test.Three.average"]],
             analyze_results._prune_regex_include(before_samples, "Test.*ee"),
         )
         self.assertEqual(
-            [before_samples_by_id["before.ui.OverviewPerf.Test.Two.average"]],
+            [before_samples_by_id["before|ui.OverviewPerf|Test.Two.average"]],
             analyze_results._prune_regex_include(before_samples, "Test.*o"),
         )
 
         after_samples = test_util.load_after_samples()
         after_samples_by_id = test_util.samples_by_id(after_samples)
         self.assertEqual(
-            [after_samples_by_id["after.ui.OverviewPerf.Test.Three.average"]],
+            [after_samples_by_id["after|ui.OverviewPerf|Test.Three.average"]],
             analyze_results._prune_regex_include(
-                after_samples, r"^ui\.OverviewPerf\.Test\.Three\.average$"
+                after_samples, r"^ui\.OverviewPerf\|Test\.Three\.average$"
             ),
         )
 
@@ -555,8 +559,8 @@ class AnalysisTest(unittest.TestCase):
         )
         self.assertEqual(
             [
-                before_samples_by_id["before.ui.OverviewPerf.Test.One.average"],
-                before_samples_by_id["before.ui.OverviewPerf.Test.Two.average"],
+                before_samples_by_id["before|ui.OverviewPerf|Test.One.average"],
+                before_samples_by_id["before|ui.OverviewPerf|Test.Two.average"],
             ],
             analyze_results._prune_regex_exclude(
                 before_samples, r"Test\.Three"
@@ -564,16 +568,16 @@ class AnalysisTest(unittest.TestCase):
         )
         self.assertEqual(
             [
-                before_samples_by_id["before.ui.OverviewPerf.Test.One.average"],
-                before_samples_by_id["before.ui.OverviewPerf.Test.Two.average"],
+                before_samples_by_id["before|ui.OverviewPerf|Test.One.average"],
+                before_samples_by_id["before|ui.OverviewPerf|Test.Two.average"],
             ],
             analyze_results._prune_regex_exclude(before_samples, "Test.*ee"),
         )
         self.assertEqual(
             [
-                before_samples_by_id["before.ui.OverviewPerf.Test.One.average"],
+                before_samples_by_id["before|ui.OverviewPerf|Test.One.average"],
                 before_samples_by_id[
-                    "before.ui.OverviewPerf.Test.Three.average"
+                    "before|ui.OverviewPerf|Test.Three.average"
                 ],
             ],
             analyze_results._prune_regex_exclude(before_samples, "Test.*o"),
@@ -583,11 +587,11 @@ class AnalysisTest(unittest.TestCase):
         after_samples_by_id = test_util.samples_by_id(after_samples)
         self.assertEqual(
             [
-                after_samples_by_id["after.ui.OverviewPerf.Test.Four.average"],
-                after_samples_by_id["after.ui.OverviewPerf.Test.One.average"],
+                after_samples_by_id["after|ui.OverviewPerf|Test.Four.average"],
+                after_samples_by_id["after|ui.OverviewPerf|Test.One.average"],
             ],
             analyze_results._prune_regex_exclude(
-                after_samples, r"^ui\.OverviewPerf\.Test\.Three\.average$"
+                after_samples, r"^ui\.OverviewPerf\|Test\.Three\.average$"
             ),
         )
 

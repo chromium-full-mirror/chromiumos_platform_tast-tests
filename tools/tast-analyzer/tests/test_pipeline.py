@@ -114,7 +114,7 @@ class PipelineTest(unittest.TestCase):
                 assert pair.identifier() not in pairs_by_id
                 pairs_by_id[pair.identifier()] = pair
         pair = pairs_by_id[
-            "ui.Test.Ash.Overview.AnimationSmoothness.Enter"
+            "ui.Test|Ash.Overview.AnimationSmoothness.Enter"
             ".ClamshellMode.2windows.average:complex1->complex2"
         ]
         assert pair.before.bootstrap
@@ -174,14 +174,14 @@ class PipelineTest(unittest.TestCase):
         self.assertEqual(
             [
                 [
-                    "complex1.ui.Test.Ash.Overview.AnimationSmoothness.Enter.ClamshellMode.average",
-                    "complex1.ui.Test.Ash.Overview.AnimationSmoothness.Enter.SingleClamshellMode.average",
-                    "complex1.ui.Test.Ash.Overview.AnimationSmoothness.Exit.ClamshellMode.average",
-                    "complex1.ui.Test.Ash.Overview.AnimationSmoothness.Exit.SingleClamshellMode.average",
-                    "complex1.ui.Test.Ash.Overview.AnimationSmoothness.Enter.ClamshellMode.2windows.average",
-                    "complex1.ui.Test.Ash.Overview.AnimationSmoothness.Enter.SingleClamshellMode.2windows.average",
-                    "complex1.ui.Test.Ash.Overview.AnimationSmoothness.Exit.ClamshellMode.2windows.average",
-                    "complex1.ui.Test.Ash.Overview.AnimationSmoothness.Exit.SingleClamshellMode.2windows.average",
+                    "complex1|ui.Test|Ash.Overview.AnimationSmoothness.Enter.ClamshellMode.average",
+                    "complex1|ui.Test|Ash.Overview.AnimationSmoothness.Enter.SingleClamshellMode.average",
+                    "complex1|ui.Test|Ash.Overview.AnimationSmoothness.Exit.ClamshellMode.average",
+                    "complex1|ui.Test|Ash.Overview.AnimationSmoothness.Exit.SingleClamshellMode.average",
+                    "complex1|ui.Test|Ash.Overview.AnimationSmoothness.Enter.ClamshellMode.2windows.average",
+                    "complex1|ui.Test|Ash.Overview.AnimationSmoothness.Enter.SingleClamshellMode.2windows.average",
+                    "complex1|ui.Test|Ash.Overview.AnimationSmoothness.Exit.ClamshellMode.2windows.average",
+                    "complex1|ui.Test|Ash.Overview.AnimationSmoothness.Exit.SingleClamshellMode.2windows.average",
                 ]
             ],
             self._ordered_sample_ids(results),
@@ -211,8 +211,8 @@ class PipelineTest(unittest.TestCase):
         self.assertEqual(
             [
                 [
-                    "complex1.ui.Test.variant.Ash.Overview.AnimationSmoothness.Exit.TabletMode.8windows.average",
-                    "complex1.ui.Test.Ash.Overview.AnimationSmoothness.Exit.TabletMode.8windows.average",
+                    "complex1|ui.Test.variant|Ash.Overview.AnimationSmoothness.Exit.TabletMode.8windows.average",
+                    "complex1|ui.Test|Ash.Overview.AnimationSmoothness.Exit.TabletMode.8windows.average",
                 ]
             ],
             self._ordered_sample_ids(results),
@@ -268,12 +268,12 @@ class PipelineTest(unittest.TestCase):
         self.assertEqual(
             [
                 [
-                    "complex1.ui.Test.variant1.Ash.Overview.AnimationSmoothness.Exit.TabletMode.8windows.variant1",
-                    "complex1.ui.Test.variant2.Ash.Overview.AnimationSmoothness.Exit.TabletMode.8windows.variant1",
+                    "complex1|ui.Test.variant1|Ash.Overview.AnimationSmoothness.Exit.TabletMode.8windows.variant1",
+                    "complex1|ui.Test.variant2|Ash.Overview.AnimationSmoothness.Exit.TabletMode.8windows.variant1",
                 ],
                 [
-                    "complex1.ui.Test.variant1.Ash.Overview.AnimationSmoothness.Exit.TabletMode.8windows.variant2",
-                    "complex1.ui.Test.variant2.Ash.Overview.AnimationSmoothness.Exit.TabletMode.8windows.variant2",
+                    "complex1|ui.Test.variant1|Ash.Overview.AnimationSmoothness.Exit.TabletMode.8windows.variant2",
+                    "complex1|ui.Test.variant2|Ash.Overview.AnimationSmoothness.Exit.TabletMode.8windows.variant2",
                 ],
             ],
             self._ordered_sample_ids(results),

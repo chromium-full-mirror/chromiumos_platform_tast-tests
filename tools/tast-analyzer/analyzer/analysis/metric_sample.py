@@ -23,16 +23,16 @@ class MetricSample:
     sample_id: str
     """A unique identifier for this sample.
 
-    For example, control_group.ui.OverviewPerf.Memory.Total.TileMemory.summary"""
+    For example, control_group|ui.OverviewPerf|Memory.Total.TileMemory.summary"""
 
     test_name: str
     """The name of a test this metric is from, e.g. ui.OverviewPerf."""
 
     metric_name: str
-    """The name of this metric, e.g. ui.OverviewPerf.Memory.Total.TileMemory.summary"""
+    """The name of this metric, e.g. Memory.Total.TileMemory.summary"""
 
     metric_path: str
-    """Full metric path, e.g. ui.OverviewPerf.Memory.Total.TileMemory.summary"""
+    """Full metric path, e.g. ui.OverviewPerf|Memory.Total.TileMemory.summary"""
 
     units: str
     """Units of the metric value - e.g. 's' for seconds."""

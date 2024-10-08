@@ -6,6 +6,10 @@ from enum import StrEnum
 import json
 
 
+DELIM = "|"
+"""Delimiter of parts inside a metric path or sample ID."""
+
+
 class ImprovementDirection(StrEnum):
     UP = "up"
     DOWN = "down"
@@ -37,19 +41,21 @@ class TestResultKey:
     def sample_id(self) -> str:
         """Returns a unique identifier for which sample this test result should
         belong to."""
-        return self.label + "." + self.sample_metric_path()
+        return self.label + DELIM + self.sample_metric_path()
 
     def sample_metric_name(self) -> str:
         """Returns the name for the metric in the context of a set of test
         runs."""
         if not self.variant:
             return self.metric_name
+        # We do not use `DELIM` here because the variant is considered as
+        # conceptually part of the metric name.
         return self.metric_name + "." + self.variant
 
     def sample_metric_path(self) -> str:
         """Returns an identifier for the metric in the context of a set
         of test runs."""
-        return self.test_name + "." + self.sample_metric_name()
+        return self.test_name + DELIM + self.sample_metric_name()
 
     def to_json(self) -> str:
         return json.dumps(dataclasses.asdict(self), sort_keys=True)

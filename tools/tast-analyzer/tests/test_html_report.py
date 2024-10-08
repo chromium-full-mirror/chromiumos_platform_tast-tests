@@ -51,12 +51,12 @@ class HtmlReportTest(unittest.TestCase):
                     analysis_results.PairwiseResult(
                         before=analysis_results.ExperimentGroup(
                             sample=samples_by_id[
-                                f"before.{before_test_name}.Test.One.average"
+                                f"before|{before_test_name}|Test.One.average"
                             ]
                         ),
                         after=analysis_results.ExperimentGroup(
                             sample=samples_by_id[
-                                f"after.{after_test_name}.Test.One.average"
+                                f"after|{after_test_name}|Test.One.average"
                             ]
                         ),
                         hypothesis_result=stats_util.HypothesisTestResult(
@@ -92,12 +92,12 @@ class HtmlReportTest(unittest.TestCase):
                     analysis_results.PairwiseResult(
                         before=analysis_results.ExperimentGroup(
                             sample=samples_by_id[
-                                "before.ui.OverviewPerf.Test.One.average"
+                                "before|ui.OverviewPerf|Test.One.average"
                             ]
                         ),
                         after=analysis_results.ExperimentGroup(
                             sample=samples_by_id[
-                                "after.ui.OverviewPerf.Test.One.average"
+                                "after|ui.OverviewPerf|Test.One.average"
                             ]
                         ),
                         hypothesis_result=stats_util.HypothesisTestResult(
@@ -117,8 +117,8 @@ class HtmlReportTest(unittest.TestCase):
     def test_metric_paths(self) -> None:
         before_metric_name = "Test.One.average"
         after_metric_name = "Test.Three.average"
-        before_metric_path = f"ui.OverviewPerf.{before_metric_name}"
-        after_metric_path = f"ui.OverviewPerf.{after_metric_name}"
+        before_metric_path = f"ui.OverviewPerf|{before_metric_name}"
+        after_metric_path = f"ui.OverviewPerf|{after_metric_name}"
         samples = (
             test_util.load_before_samples() + test_util.load_after_samples()
         )
@@ -143,10 +143,10 @@ class HtmlReportTest(unittest.TestCase):
                 pairs=[
                     analysis_results.PairwiseResult(
                         before=analysis_results.ExperimentGroup(
-                            sample=samples_by_id[f"before.{before_metric_path}"]
+                            sample=samples_by_id[f"before|{before_metric_path}"]
                         ),
                         after=analysis_results.ExperimentGroup(
-                            sample=samples_by_id[f"after.{after_metric_path}"]
+                            sample=samples_by_id[f"after|{after_metric_path}"]
                         ),
                         hypothesis_result=stats_util.HypothesisTestResult(
                             statistic_kind=stats_util.TestStatisticKind.RANK_SUM,
@@ -190,12 +190,12 @@ class HtmlReportTest(unittest.TestCase):
                     analysis_results.PairwiseResult(
                         before=analysis_results.ExperimentGroup(
                             sample=samples_by_id[
-                                f"before.{before_test_name}.Test.One.average"
+                                f"before|{before_test_name}|Test.One.average"
                             ]
                         ),
                         after=analysis_results.ExperimentGroup(
                             sample=samples_by_id[
-                                f"after.{after_test_name}.Test.One.average"
+                                f"after|{after_test_name}|Test.One.average"
                             ]
                         ),
                         hypothesis_result=stats_util.HypothesisTestResult(
@@ -216,7 +216,7 @@ class HtmlReportTest(unittest.TestCase):
         self._assert_elements_equal(report.html.html, expected_html)
 
     def test_create_sample_size_table(self) -> None:
-        metric_path = "ui.OverviewPerf.Test.One.average"
+        metric_path = "ui.OverviewPerf|Test.One.average"
 
         samples = (
             test_util.load_before_samples() + test_util.load_after_samples()
@@ -232,10 +232,10 @@ class HtmlReportTest(unittest.TestCase):
                 pairs=[
                     analysis_results.PairwiseResult(
                         before=analysis_results.ExperimentGroup(
-                            sample=samples_by_id[f"before.{metric_path}"]
+                            sample=samples_by_id[f"before|{metric_path}"]
                         ),
                         after=analysis_results.ExperimentGroup(
-                            sample=samples_by_id[f"after.{metric_path}"]
+                            sample=samples_by_id[f"after|{metric_path}"]
                         ),
                         hypothesis_result=stats_util.HypothesisTestResult(
                             statistic_kind=stats_util.TestStatisticKind.RANK_SUM,
@@ -276,10 +276,10 @@ class HtmlReportTest(unittest.TestCase):
         )
         pair = analysis_results.PairwiseResult(
             before=analysis_results.ExperimentGroup(
-                sample=samples_by_id["before.ui.OverviewPerf.Test.One.average"]
+                sample=samples_by_id["before|ui.OverviewPerf|Test.One.average"]
             ),
             after=analysis_results.ExperimentGroup(
-                sample=samples_by_id["after.ui.OverviewPerf.Test.One.average"]
+                sample=samples_by_id["after|ui.OverviewPerf|Test.One.average"]
             ),
             hypothesis_result=stats_util.HypothesisTestResult(
                 statistic_kind=stats_util.TestStatisticKind.RANK_SUM,
@@ -315,8 +315,8 @@ class HtmlReportTest(unittest.TestCase):
             experiment_groups_cfgs=[
                 analysis_cfg.ExperimentGroupsCfg(
                     metric_path_regex_list=[
-                        f".*{before_test_name}.{before_metric_name}",
-                        f".*{after_test_name}.{after_metric_name}",
+                        f".*{before_test_name}\|{before_metric_name}",
+                        f".*{after_test_name}\|{after_metric_name}",
                     ]
                 )
             ]
@@ -331,12 +331,12 @@ class HtmlReportTest(unittest.TestCase):
                     analysis_results.PairwiseResult(
                         before=analysis_results.ExperimentGroup(
                             sample=samples_by_id[
-                                f"before.{before_test_name}.{before_metric_name}"
+                                f"before|{before_test_name}|{before_metric_name}"
                             ],
                         ),
                         after=analysis_results.ExperimentGroup(
                             sample=samples_by_id[
-                                f"after.{after_test_name}.{after_metric_name}"
+                                f"after|{after_test_name}|{after_metric_name}"
                             ],
                             bootstrap=stats_util.BootstrapResult(
                                 statistic_kind=stats_util.TestStatisticKind.MEAN,
@@ -382,12 +382,12 @@ class HtmlReportTest(unittest.TestCase):
                     analysis_results.PairwiseResult(
                         before=analysis_results.ExperimentGroup(
                             sample=samples_by_id[
-                                "before.ui.OverviewPerf.Test.One.average"
+                                "before|ui.OverviewPerf|Test.One.average"
                             ]
                         ),
                         after=analysis_results.ExperimentGroup(
                             sample=samples_by_id[
-                                "after.ui.OverviewPerf.Test.One.average"
+                                "after|ui.OverviewPerf|Test.One.average"
                             ]
                         ),
                         hypothesis_result=stats_util.HypothesisTestResult(
