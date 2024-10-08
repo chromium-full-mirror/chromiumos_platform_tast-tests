@@ -71,8 +71,8 @@ func init() {
 					arc:        false,
 					searchtype: normalOptions,
 				},
-				Fixture: "chromeLoggedIn",
-				ExtraHardwareDeps: hwdep.D(hwdep.Model("betty")),
+				Fixture:           "chromeLoggedIn",
+				ExtraHardwareDeps: hwdep.D(hwdep.SkipOnModel("betty")),
 			}, {
 				Name: "arc_options",
 				Val: settingsSearchTestParams{
@@ -87,7 +87,7 @@ func init() {
 					searchtype: optionsAndSubpage,
 				},
 				Fixture:           "chromeLoggedIn",
-				ExtraHardwareDeps: hwdep.D(hwdep.Model("betty")),
+				ExtraHardwareDeps: hwdep.D(hwdep.SkipOnModel("betty")),
 			}, {
 				Name: "options_and_deep_linking",
 				Val: settingsSearchTestParams{
@@ -101,8 +101,8 @@ func init() {
 					arc:        false,
 					searchtype: guestMode,
 				},
-				Fixture: "chromeLoggedInGuest",
-				ExtraHardwareDeps: hwdep.D(hwdep.Model("betty")),
+				Fixture:           "chromeLoggedInGuest",
+				ExtraHardwareDeps: hwdep.D(hwdep.SkipOnModel("betty")),
 			},
 		},
 	})
