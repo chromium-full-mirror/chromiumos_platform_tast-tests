@@ -66,9 +66,6 @@ type apROBootabilityPerformanceArgs struct {
 }
 
 const (
-	// firmwareFileName contains the name of the file when downloaded.
-	firmwareFileName = "firmware_from_source.tar.bz2"
-
 	// flashingTime sets the timeout for the flashing process.
 	flashingTime = 20 * time.Minute
 
@@ -200,7 +197,6 @@ func APROBootabilityPerformance(ctx context.Context, s *testing.State) {
 		s.Fatalf("Unexpected fw id format from crossystem %v, got: %s", reporters.CrossystemParamFwid, initialAPRWID)
 	}
 	fwidModel := strings.ToLower(match[1])
-	initialAPRWID = match[2]
 
 	// Get the initial active section.
 	initialActSection, err := h.Reporter.CrossystemParam(ctx, reporters.CrossystemParamMainfwAct)
@@ -239,11 +235,6 @@ func APROBootabilityPerformance(ctx context.Context, s *testing.State) {
 		}
 	}()
 
-	ecChip, err := h.Servo.GetString(ctx, servo.ECChip)
-	if err != nil {
-		s.Fatal("Failed to read DUT EC Chip: ", err)
-	}
-
 	// Back up current EC firmware. AP firmware is handled by fixture.
 	s.Log("Backing up EC firmware")
 	ecBackupData, err := h.BiosServiceClient.BackupImageSection(ctx, &fwpb.FWSectionInfo{Section: fwpb.ImageSection_EmptyImageSection, Programmer: fwpb.Programmer_ECProgrammer})
@@ -257,7 +248,10 @@ func APROBootabilityPerformance(ctx context.Context, s *testing.State) {
 	}
 	dutTempDir := strings.TrimSuffix(string(out), "\n")
 	defer func() {
-		h.DUT.Conn().CommandContext(cleanupCtx, "rm", "-r", dutTempDir)
+		s.Log("Deleting tmp directory on DUT: ", dutTempDir)
+		if err := h.DUT.Conn().CommandContext(cleanupCtx, "rm", "-r", dutTempDir).Run(); err != nil {
+			s.Fatal("Failed to delete tmp directory on DUT: ", err)
+		}
 	}()
 	apBackupOnDut := filepath.Join(dutTempDir, "bios_backup.bin")
 	if err := backupManager.CopyBackupToDut(ctx, h.DUT, fixture.FirmwareAP, apBackupOnDut); err != nil {
@@ -271,7 +265,7 @@ func APROBootabilityPerformance(ctx context.Context, s *testing.State) {
 	}
 	s.Log("Saving the EC firmware")
 	ecBackupOnHost := filepath.Join(tmpDir, ecFwBackup)
-	if err := linuxssh.GetFile(ctx, s.DUT().Conn(), ecBackupData.Path, ecBackupOnHost, linuxssh.DereferenceSymlinks); err != nil {
+	if err := linuxssh.GetFile(ctx, h.DUT.Conn(), ecBackupData.Path, ecBackupOnHost, linuxssh.DereferenceSymlinks); err != nil {
 		s.Fatal("Failed to save EC backup file on host: ", err)
 	}
 
@@ -298,11 +292,18 @@ func APROBootabilityPerformance(ctx context.Context, s *testing.State) {
 	s.Logf("Setting EC RO ID = %s, RW ID = %s as the to-be-qualified EC_new firmware", ecRONewID, ecRWNewID)
 
 	// At the end of this test, restore firmware to the one found at the beginning.
-	defer func(ctx context.Context, apRONewID, initialAPRWNewID, initialActSection, ecChip string) {
+	defer func(ctx context.Context, apRONewID, apRWNewID, initialActSection string) {
+		s.Log("Restoring firmware at the end of the test")
+
+		// Ensure the DUT is connected before restoring the firmware.
+		if err := h.EnsureDUTBooted(ctx); err != nil {
+			s.Error("Failed to ensure DUT connected at the end of test: ", err)
+		}
+
 		if !h.DUT.Connected(ctx) {
 			// If a DUT reaches this point unable to boot, attempt to restore
 			// the AP/EC firmware through servo.
-			s.Log("DUT disconnected, restoring firmware through servo at the end of the test")
+			s.Log("DUT disconnected, restoring firmware through servo first")
 			futilityRemoteInstance, err := futility.NewRemoteBuilder(h.ServoProxy).Build()
 			if err != nil {
 				s.Fatal("Failed to create futility instance: ", err)
@@ -315,40 +316,34 @@ func APROBootabilityPerformance(ctx context.Context, s *testing.State) {
 				s.Fatal("Failed to copy EC firmware file to servo host: ", err)
 			}
 
-			if _, err := futilityRemoteInstance.Update(ctx,
+			if out, err := futilityRemoteInstance.Update(ctx,
 				futility.NewUpdateOptions(apBackupOnServo).
 					WithECImage(ecBackupOnServo).
 					WithMode(futility.UpdateModeRecovery).
 					WithWriteProtection(futility.WriteProtectionDisable)); err != nil {
-				s.Fatal("Failed to restore EC and AP firmware through servo at the end of the test: ", err)
+				s.Fatalf("Failed to restore EC and AP firmware through servo at the end of the test: %v, output: %s", err, string(out))
 			}
 
 			if err := safeReboot(ctx, h); err != nil {
 				s.Fatal("Failed to reboot DUT after restoring firmware through servo: ", err)
 			}
-		} else {
-			s.Log("Restoring firmware at the end of the test")
-			fwInfoToFlash := &flashFwInfo{
-				roTag: "ori", rwTag: "ori",
-				wp: futility.WriteProtectionDisable,
-				ap: flashAPECInfo{
-					roID: apRONewID,
-					rwID: initialAPRWNewID,
-					path: apBackupOnHost,
-				},
-				ec: flashAPECInfo{
-					path: ecBackupOnHost,
-				},
-			}
-
-			if err = testWithDifferentScenario(ctx, h, fwInfoToFlash, dutTempDir, ecRWNewID, baseline); err != nil {
-				s.Fatal("Failed while flashing DUT to restore firmware at the end of test: ", err)
-			}
 		}
 
-		// Ensure the DUT is connected before restoring the firmware.
-		if err := h.EnsureDUTBooted(ctx); err != nil {
-			s.Fatal("Failed to ensure DUT connected at the end of test before restoring firmware: ", err)
+		fwInfoToFlash := &flashFwInfo{
+			roTag: "ori", rwTag: "ori",
+			wp: futility.WriteProtectionDisable,
+			ap: flashAPECInfo{
+				roID: apRONewID,
+				rwID: apRWNewID,
+				path: apBackupOnHost,
+			},
+			ec: flashAPECInfo{
+				path: ecBackupOnHost,
+			},
+		}
+
+		if err := flashDUTAndVerifyFirmwareVersions(ctx, h, fwInfoToFlash, dutTempDir, ecRWNewID); err != nil {
+			s.Fatal("Failed while flashing DUT to restore firmware at the end of test: ", err)
 		}
 
 		// Ensuring that DUT ends up running the initial RW active section.
@@ -363,7 +358,7 @@ func APROBootabilityPerformance(ctx context.Context, s *testing.State) {
 				s.Fatal("While rebooting at the end of the test: ", err)
 			}
 		}
-	}(cleanupCtx, apRONewID, initialAPRWID, initialActSection, ecChip)
+	}(cleanupCtx, apRONewID, apRWNewID, initialActSection)
 
 	// The 'SHIPPED' firmware IDs can be generated and exported to a json file
 	// by running the following bq command:
@@ -389,7 +384,7 @@ func APROBootabilityPerformance(ctx context.Context, s *testing.State) {
 		s.Log("WARNING! Only one shipped firmware found. And it is the same as RO_new and RW_new. End test")
 	} else {
 		// Get the coreboot name from the 'config.yaml' file.
-		fwTargets, err := firmware.ReadFirmwareTargets(ctx, s.DUT().Conn(), h.Model, fwidModel)
+		fwTargets, err := firmware.ReadFirmwareTargets(ctx, h.DUT.Conn(), h.Model, fwidModel)
 		if err != nil {
 			s.Fatal("Failed to read config.yaml file from the DUT: ", err)
 		}
@@ -657,10 +652,8 @@ func downloadAndUntarFwFile(ctx context.Context, s *testing.State, h *firmware.H
 			completeURL = re.FindString(string(out))
 			if completeURL == "" {
 				completeURL = path + "/" + releasedFWid
-				completeFileName = firmwareFileName
-			} else {
-				completeFileName = firmwareFileName
 			}
+			completeFileName = firmware.FirmwareFileName
 		}
 		return completeURL, completeFileName, nil
 	}
@@ -710,7 +703,6 @@ func downloadAndUntarFwFile(ctx context.Context, s *testing.State, h *firmware.H
 			return filesToFlash, nil
 		}
 	}
-
 	return nil, errors.Errorf("unable to get both AP and EC firmware files for board: %s, model: %s, firmware ID: %s", fwToTest.Board, fwToTest.Model, fwToTest.FwID)
 }
 
@@ -791,8 +783,8 @@ func flashDUTAndVerifyFirmwareVersions(ctx context.Context, h *firmware.Helper, 
 		} else if hasCSME {
 			updateOptions.WithQuirks(map[string]string{"unlock_csme": "1"})
 		}
-		if _, err := futilityInstance.Update(ctx, updateOptions); err != nil {
-			return errors.Wrap(err, "failed to flash firmware bin files")
+		if out, err := futilityInstance.Update(ctx, updateOptions); err != nil {
+			return errors.Wrapf(err, "failed to flash firmware bin files, output: %s", string(out))
 		}
 	}
 
@@ -827,7 +819,7 @@ func testWithDifferentScenario(ctx context.Context, h *firmware.Helper, fwInfo *
 	}
 
 	// Perform the speed test.
-	if fwInfo.roTag != "ori" && (fwInfo.roTag == "old" || fwInfo.rwTag == "new") {
+	if fwInfo.roTag == "old" || fwInfo.rwTag == "new" {
 		testing.ContextLog(ctx, "Performing the speed test")
 		var speedResult float64
 		if err := func() error {
@@ -880,7 +872,6 @@ func safeReboot(ctx context.Context, h *firmware.Helper) error {
 	if err := h.RequireBiosServiceClient(ctx); err != nil {
 		return errors.Wrap(err, "failed to setup BiosServiceClient after reboot")
 	}
-
 	return nil
 }
 
@@ -917,7 +908,6 @@ func speedTest(ctx context.Context, h *firmware.Helper) (float64, error) {
 	if err != nil {
 		return 0.0, errors.Wrap(err, "failed to convert the result into float")
 	}
-
 	testing.ContextLogf(speedometerCtx, "Speedometer Result: %f", result)
 	return result, nil
 }
@@ -991,7 +981,6 @@ func collectShippedFws(h *firmware.Helper, filepath string) ([]jsonFwInfo, error
 	if len(shippedFws) == 0 {
 		return nil, errors.Errorf("did not find any shipped fw for board: %s, model: %s", h.Board, h.Model)
 	}
-
 	return shippedFws, nil
 }
 
@@ -1090,7 +1079,6 @@ func checkCSME(ctx context.Context, h *firmware.Helper, imagePath string) (bool,
 			return true, nil
 		}
 	}
-
 	testing.ContextLogf(ctx, "Image %s has no CONFIG_IFD_CHIPSET", imagePath)
 	return false, nil
 }
