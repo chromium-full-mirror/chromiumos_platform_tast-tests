@@ -241,14 +241,15 @@ func ShillTethering(ctx context.Context, s *testing.State) {
 	if len(addrs.IPv6Addrs) == 0 {
 		s.Fatal("Failed to get router's IPv6 address")
 	}
+	// b/371841235: Added 1s deadline to the curl command ("-m 1") and extended its timeout.
 	if err := testing.Poll(ctx, func(ctx context.Context) error {
-		if resp, errResp, err := dsEnv.CreateCommandWithoutChroot(ctx, curlCmdPath, "["+addrs.IPv6Addrs[0].String()+"]").SeparatedOutput(); err != nil {
+		if resp, errResp, err := dsEnv.CreateCommandWithoutChroot(ctx, curlCmdPath, "-m", "1", "["+addrs.IPv6Addrs[0].String()+"]").SeparatedOutput(testexec.DumpLogOnError); err != nil {
 			return errors.Wrapf(err, "failed to get HTTP response via IPv6: %s", string(errResp))
 		} else if strings.TrimSpace(string(resp[:])) != httpResp {
 			return testing.PollBreak(errors.New("Got wrong HTTP response content: " + string(resp)))
 		}
 		return nil
-	}, &testing.PollOptions{Timeout: 10 * time.Second, Interval: 100 * time.Millisecond}); err != nil {
+	}, &testing.PollOptions{Timeout: 20 * time.Second, Interval: 100 * time.Millisecond}); err != nil {
 		s.Fatal("Timeout waiting for downstream device getting HTTP response from upstream via IPv6: ", err)
 	}
 	s.Log("Got the correct HTTP response via IPv6")
