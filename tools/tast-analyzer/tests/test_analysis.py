@@ -97,6 +97,18 @@ class AnalysisTest(unittest.TestCase):
             ],
         )
 
+    def test_identifier_consistency(self) -> None:
+        samples = (
+            test_util.load_before_samples() + test_util.load_after_samples()
+        )
+        for s in samples:
+            # Given the tuple (label, test name, metric name), check the
+            # definitions:
+            # 1. metric path = (test name, metric name)
+            # 2. sample id = (label, test name, metric name)
+            self.assertEqual(s.metric_path, s.test_name + "." + s.metric_name)
+            self.assertEqual(s.sample_id, s.label + "." + s.metric_path)
+
     def test_construct_experiment_groups_list(self) -> None:
         samples = (
             test_util.load_before_samples() + test_util.load_after_samples()
