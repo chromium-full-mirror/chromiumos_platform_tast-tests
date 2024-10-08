@@ -24,9 +24,8 @@ func init() {
 			"honscheid@google.com",     // Test author
 		},
 		BugComponent: "b:792402", // ChromeOS > Platform > Enablement > Firmware > FAFT
-		// TODO: When stable, move to firmware_pd.
 		Data:         []string{firmware.ConfigFile},
-		Attr:         []string{"group:firmware", "firmware_pd_unstable"},
+		Attr:         []string{"group:firmware", "firmware_pd"},
 		Vars:         []string{"servo"},
 		Fixture:      fixture.NormalMode,
 		HardwareDeps: hwdep.D(hwdep.ChromeEC()),
