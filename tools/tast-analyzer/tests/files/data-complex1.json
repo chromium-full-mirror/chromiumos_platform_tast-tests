@@ -4727,7 +4727,7 @@
         73
       ]
     },
-    "{\"metric_name\": \"Ash.Overview.AnimationSmoothness.Exit.TabletMode.8windows\", \"run_id\": \"121657\", \"test_name\": \"ui.Test\", \"variant\": \"average\", \"label\": \"complex1\"}": {
+    "{\"metric_name\": \"Ash.Overview.AnimationSmoothness.Exit.TabletMode.8windows\", \"run_id\": \"121657\", \"test_name\": \"ui.Test.variant1\", \"variant\": \"variant1\", \"label\": \"complex1\"}": {
       "improvement_direction": "up",
       "units": "percent",
       "value": [
@@ -4740,7 +4740,7 @@
         68
       ]
     },
-    "{\"metric_name\": \"Ash.Overview.AnimationSmoothness.Exit.TabletMode.8windows\", \"run_id\": \"125912\", \"test_name\": \"ui.Test\", \"variant\": \"average\", \"label\": \"complex1\"}": {
+    "{\"metric_name\": \"Ash.Overview.AnimationSmoothness.Exit.TabletMode.8windows\", \"run_id\": \"125912\", \"test_name\": \"ui.Test.variant2\", \"variant\": \"variant1\", \"label\": \"complex1\"}": {
       "improvement_direction": "up",
       "units": "percent",
       "value": [
@@ -4753,7 +4753,7 @@
         70
       ]
     },
-    "{\"metric_name\": \"Ash.Overview.AnimationSmoothness.Exit.TabletMode.8windows\", \"run_id\": \"135122\", \"test_name\": \"ui.Test\", \"variant\": \"average\", \"label\": \"complex1\"}": {
+    "{\"metric_name\": \"Ash.Overview.AnimationSmoothness.Exit.TabletMode.8windows\", \"run_id\": \"135122\", \"test_name\": \"ui.Test.variant1\", \"variant\": \"variant2\", \"label\": \"complex1\"}": {
       "improvement_direction": "up",
       "units": "percent",
       "value": [
@@ -4766,7 +4766,7 @@
         36
       ]
     },
-    "{\"metric_name\": \"Ash.Overview.AnimationSmoothness.Exit.TabletMode.8windows\", \"run_id\": \"144325\", \"test_name\": \"ui.Test\", \"variant\": \"average\", \"label\": \"complex1\"}": {
+    "{\"metric_name\": \"Ash.Overview.AnimationSmoothness.Exit.TabletMode.8windows\", \"run_id\": \"144325\", \"test_name\": \"ui.Test.variant2\", \"variant\": \"variant2\", \"label\": \"complex1\"}": {
       "improvement_direction": "up",
       "units": "percent",
       "value": [

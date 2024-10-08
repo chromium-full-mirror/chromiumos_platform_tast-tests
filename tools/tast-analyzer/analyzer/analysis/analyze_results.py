@@ -42,8 +42,8 @@ def _load_samples_from_test_results(
                 label=key.label,
                 sample_id=key.sample_id(),
                 test_name=key.test_name,
-                metric_name=key.metric_name,
-                metric_path=key.metric_path(),
+                metric_name=key.sample_metric_name(),
+                metric_path=key.sample_metric_path(),
                 units=result.units,
                 improvement_direction=result.improvement_direction,
                 value_map={},
@@ -53,7 +53,7 @@ def _load_samples_from_test_results(
         assert s.label == key.label
         assert s.sample_id == key.sample_id()
         assert s.test_name == key.test_name
-        assert s.metric_path == key.metric_path()
+        assert s.metric_path == key.sample_metric_path()
         assert s.units == result.units
         assert s.improvement_direction == result.improvement_direction
         assert key.run_id not in s.value_map

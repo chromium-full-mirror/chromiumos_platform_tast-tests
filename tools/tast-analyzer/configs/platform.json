@@ -2,155 +2,155 @@
   "per_test_cfgs": [
     {
       "metric_name_regex_allowlist": [
-        "^Browser\\.MainThreadsCongestion$",
-        "^PageLoad\\.InteractiveTiming\\.InputDelay3$",
-        "^WebVitals\\.FirstInputDelay2$",
-        "^WebVitals\\.InteractionToNextPaint2$",
-        "^WebVitals\\.FirstContentfulPaint3$",
-        "^WebVitals\\.LargestContentfulPaint2$",
-        "^Graphics\\.Smoothness\\.PercentDroppedFrames3\\.AllSequences$",
-        "^Graphics\\.Smoothness\\.Checkerboarding3\\.AllSequences$",
-        "^EventLatency\\.GestureScrollUpdate\\.Touchscreen\\.TotalLatency$",
-        "^Memory\\.Browser\\.PrivateMemoryFootprint$",
-        "^Memory\\.Gpu\\.PrivateMemoryFootprint$",
-        "^Power\\.BatteryDischargeRate$",
-        "^Ash\\.LoginAnimation\\.Jank\\.ClamshellMode$",
-        "^Ash\\.LoginAnimation\\.Duration\\.ClamshellMode$",
-        "^Ash\\.LoginAnimation\\.Jank\\.TabletMode$",
-        "^Ash\\.LoginAnimation\\.Duration\\.TabletMode$",
-        "^Ash\\.Desks\\.AnimationLatency\\.DeskActivation$",
-        "^Ash\\.Desks\\.AnimationLatency\\.DeskRemoval$",
-        "^Ash\\.EventLatency\\.Core\\.TotalLatency$",
-        "^Ash\\.EventLatency\\.KeyPressed\\.TotalLatency$",
-        "^Ash\\.EventLatency\\.MousePressed\\.TotalLatency$",
-        "^Memory\\.PressureLevel2$",
-        "^ChromeOS\\.CWP\\.PSIMemPressure\\.Some$",
-        "^ChromeOS\\.CWP\\.PSIMemPressure\\.Full$",
-        "^ChromeOS\\.CWP\\.PSIMemPressure\\.ArcSome$",
-        "^ChromeOS\\.CWP\\.PSIMemPressure\\.ArcFull$",
-        "^Memory\\.PressureWindowDuration\\.CriticalToModerate$",
-        "^Memory\\.PressureWindowDuration\\.CriticalToNone$",
-        "^Memory\\.PressureWindowDuration\\.ModerateToCritical$",
-        "^Memory\\.PressureWindowDuration\\.ModerateToNone$",
-        "^PageLoad\\.Cpu\\.TotalUsage$",
-        "^BootTime\\.Total2$",
-        "^BootTime\\.System$",
-        "^BootTime\\.Login2$",
-        "^BootTime\\.Kernel$",
-        "^BootTime\\.Firmware$",
-        "^Browser\\.Tabs\\.TotalSwitchDuration3$"
+        "^Browser\\.MainThreadsCongestion(\\..*)?$",
+        "^PageLoad\\.InteractiveTiming\\.InputDelay3(\\..*)?$",
+        "^WebVitals\\.FirstInputDelay2(\\..*)?$",
+        "^WebVitals\\.InteractionToNextPaint2(\\..*)?$",
+        "^WebVitals\\.FirstContentfulPaint3(\\..*)?$",
+        "^WebVitals\\.LargestContentfulPaint2(\\..*)?$",
+        "^Graphics\\.Smoothness\\.PercentDroppedFrames3\\.AllSequences(\\..*)?$",
+        "^Graphics\\.Smoothness\\.Checkerboarding3\\.AllSequences(\\..*)?$",
+        "^EventLatency\\.GestureScrollUpdate\\.Touchscreen\\.TotalLatency(\\..*)?$",
+        "^Memory\\.Browser\\.PrivateMemoryFootprint(\\..*)?$",
+        "^Memory\\.Gpu\\.PrivateMemoryFootprint(\\..*)?$",
+        "^Power\\.BatteryDischargeRate(\\..*)?$",
+        "^Ash\\.LoginAnimation\\.Jank\\.ClamshellMode(\\..*)?$",
+        "^Ash\\.LoginAnimation\\.Duration\\.ClamshellMode(\\..*)?$",
+        "^Ash\\.LoginAnimation\\.Jank\\.TabletMode(\\..*)?$",
+        "^Ash\\.LoginAnimation\\.Duration\\.TabletMode(\\..*)?$",
+        "^Ash\\.Desks\\.AnimationLatency\\.DeskActivation(\\..*)?$",
+        "^Ash\\.Desks\\.AnimationLatency\\.DeskRemoval(\\..*)?$",
+        "^Ash\\.EventLatency\\.Core\\.TotalLatency(\\..*)?$",
+        "^Ash\\.EventLatency\\.KeyPressed\\.TotalLatency(\\..*)?$",
+        "^Ash\\.EventLatency\\.MousePressed\\.TotalLatency(\\..*)?$",
+        "^Memory\\.PressureLevel2(\\..*)?$",
+        "^ChromeOS\\.CWP\\.PSIMemPressure\\.Some(\\..*)?$",
+        "^ChromeOS\\.CWP\\.PSIMemPressure\\.Full(\\..*)?$",
+        "^ChromeOS\\.CWP\\.PSIMemPressure\\.ArcSome(\\..*)?$",
+        "^ChromeOS\\.CWP\\.PSIMemPressure\\.ArcFull(\\..*)?$",
+        "^Memory\\.PressureWindowDuration\\.CriticalToModerate(\\..*)?$",
+        "^Memory\\.PressureWindowDuration\\.CriticalToNone(\\..*)?$",
+        "^Memory\\.PressureWindowDuration\\.ModerateToCritical(\\..*)?$",
+        "^Memory\\.PressureWindowDuration\\.ModerateToNone(\\..*)?$",
+        "^PageLoad\\.Cpu\\.TotalUsage(\\..*)?$",
+        "^BootTime\\.Total2(\\..*)?$",
+        "^BootTime\\.System(\\..*)?$",
+        "^BootTime\\.Login2(\\..*)?$",
+        "^BootTime\\.Kernel(\\..*)?$",
+        "^BootTime\\.Firmware(\\..*)?$",
+        "^Browser\\.Tabs\\.TotalSwitchDuration3(\\..*)?$"
       ],
       "test_name_regex": "^.*$"
     },
     {
       "metric_name_regex_allowlist": [
-        "^total_score$",
-        "^io_score$",
-        "^memory_zram\\.zram_write_IOs$",
-        "^memory_zram\\.zram_read_IOs$"
+        "^total_score(\\..*)?$",
+        "^io_score(\\..*)?$",
+        "^memory_zram\\.zram_write_IOs(\\..*)?$",
+        "^memory_zram\\.zram_read_IOs(\\..*)?$"
       ],
       "test_name_regex": "^arc\\.AppLoadingPerf(\\..+)?$"
     },
     {
       "metric_name_regex_allowlist": [
-        "^sign_in_time$",
-        "^play_store_shown$"
+        "^sign_in_time(\\..*)?$",
+        "^play_store_shown(\\..*)?$"
       ],
       "test_name_regex": "^arc\\.AuthPerf(\\..+)?$"
     },
     {
       "metric_name_regex_allowlist": [
-        "^avgGamepadButtonLatency$"
+        "^avgGamepadButtonLatency(\\..*)?$"
       ],
       "test_name_regex": "^arc\\.GamepadPerf(\\..+)?$"
     },
     {
       "metric_name_regex_allowlist": [
-        "^avgKeyboardLatency$"
+        "^avgKeyboardLatency(\\..*)?$"
       ],
       "test_name_regex": "^arc\\.KeyboardPerf(\\..+)?$"
     },
     {
       "metric_name_regex_allowlist": [
-        "^avgMouseLeftClickLatency$"
+        "^avgMouseLeftClickLatency(\\..*)?$"
       ],
       "test_name_regex": "^arc\\.MousePerf(\\..+)?$"
     },
     {
       "metric_name_regex_allowlist": [
-        "^provisioning_time$",
-        "^arc_total_kills$"
+        "^provisioning_time(\\..*)?$",
+        "^arc_total_kills(\\..*)?$"
       ],
       "test_name_regex": "^arc\\.OobeProvisioningPerf(\\..+)?$"
     },
     {
       "metric_name_regex_allowlist": [
-        "^system$"
+        "^system(\\..*)?$"
       ],
       "test_name_regex": "^arc\\.PowerIdlePerf(\\..+)?$"
     },
     {
       "metric_name_regex_allowlist": [
-        "^app_shown_time$",
-        "^arc_total_kills$"
+        "^app_shown_time(\\..*)?$",
+        "^arc_total_kills(\\..*)?$"
       ],
       "test_name_regex": "^arc\\.RegularBoot(\\..+)?$"
     },
     {
       "metric_name_regex_allowlist": [
-        "^avgTouchScreenPressLatency$"
+        "^avgTouchScreenPressLatency(\\..*)?$"
       ],
       "test_name_regex": "^arc\\.TouchPerf(\\..+)?$"
     },
     {
       "metric_name_regex_allowlist": [
-        "^fps$",
-        "^launchTime$"
+        "^fps(\\..*)?$",
+        "^launchTime(\\..*)?$"
       ],
       "test_name_regex": "^arcappgameperf\\.DotaUnderlords(\\..+)?$"
     },
     {
       "metric_name_regex_blocklist": [
-        "^fps$"
+        "^fps(\\..*)?$"
       ],
       "test_name_regex": "^arcappgameperf\\.DotaUnderlords\\.vm$"
     },
     {
       "metric_name_regex_allowlist": [
-        "^fps$",
-        "^launchTime$"
+        "^fps(\\..*)?$",
+        "^launchTime(\\..*)?$"
       ],
       "test_name_regex": "^arcappgameperf\\.GachaClub(\\..+)?$"
     },
     {
       "metric_name_regex_blocklist": [
-        "^fps$"
+        "^fps(\\..*)?$"
       ],
       "test_name_regex": "^arcappgameperf\\.GachaClub\\.vm$"
     },
     {
       "metric_name_regex_allowlist": [
-        "^fps$",
-        "^launchTime$"
+        "^fps(\\..*)?$",
+        "^launchTime(\\..*)?$"
       ],
       "test_name_regex": "^arcappgameperf\\.MinecraftConsumer(\\..+)?$"
     },
     {
       "metric_name_regex_blocklist": [
-        "^fps$"
+        "^fps(\\..*)?$"
       ],
       "test_name_regex": "^arcappgameperf\\.MinecraftConsumer\\.vm$"
     },
     {
       "metric_name_regex_allowlist": [
-        "^fps$",
-        "^launchTime$"
+        "^fps(\\..*)?$",
+        "^launchTime(\\..*)?$"
       ],
       "test_name_regex": "^arcappgameperf\\.RaidShadowLegends(\\..+)?$"
     },
     {
       "metric_name_regex_blocklist": [
-        "^fps$"
+        "^fps(\\..*)?$"
       ],
       "test_name_regex": "^arcappgameperf\\.RaidShadowLegends\\.vm$"
     },
@@ -162,80 +162,80 @@
     },
     {
       "metric_name_regex_allowlist": [
-        "^arc_foreground$",
-        "^arc_perceptible$",
-        "^tab_protected$"
+        "^arc_foreground(\\..*)?$",
+        "^arc_perceptible(\\..*)?$",
+        "^tab_protected(\\..*)?$"
       ],
       "test_name_regex": "^multivm\\.MemoryCanaryPerf(\\..+)?$"
     },
     {
       "metric_name_regex_allowlist": [
-        "^seconds_power_on_to_kernel$",
-        "^seconds_kernel_to_login$"
+        "^seconds_power_on_to_kernel(\\..*)?$",
+        "^seconds_kernel_to_login(\\..*)?$"
       ],
       "test_name_regex": "^platform\\.BootPerf(\\..+)?$"
     },
     {
       "metric_name_regex_allowlist": [
-        "^Benchmark\\.JetStream\\.Score$"
+        "^Benchmark\\.JetStream\\.Score(\\..*)?$"
       ],
       "test_name_regex": "^ui\\.BenchmarkCUJ\\.jetstream$"
     },
     {
       "metric_name_regex_allowlist": [
-        "^Benchmark\\.MotionMark\\.Score$"
+        "^Benchmark\\.MotionMark\\.Score(\\..*)?$"
       ],
       "test_name_regex": "^ui\\.BenchmarkCUJ\\.motionmark$"
     },
     {
       "metric_name_regex_allowlist": [
-        "^Benchmark\\.Speedometer\\.Score$"
+        "^Benchmark\\.Speedometer\\.Score(\\..*)?$"
       ],
       "test_name_regex": "^ui\\.BenchmarkCUJ\\.speedometer$"
     },
     {
       "metric_name_regex_allowlist": [
-        "^Ash\\.EventLatency\\.TotalLatency$",
-        "^Ash\\.Smoothness\\.PercentDroppedFrames_1sWindow2$",
-        "^EventLatency\\.KeyPressed\\.TotalLatency$",
-        "^EventLatency\\.MousePressed\\.TotalLatency$",
-        "^EventLatency\\.TotalLatency$",
-        "^Graphics\\.Smoothness\\.PercentDroppedFrames3\\.AllSequences$",
-        "^Memory\\.PressureLevel2$",
-        "^PageLoad\\.InteractiveTiming\\.FirstInputDelay4$",
-        "^PageLoad\\.InteractiveTiming\\.InputDelay$",
-        "^PageLoad\\.PaintTiming\\.NavigationToFirstContentfulPaint$",
-        "^PageLoad\\.PaintTiming\\.NavigationToLargestContentfulPaint2$",
-        "^TPS\\.Power\\.Timeline$",
-        "^TPS\\.RAM\\.Zram\\.Max$",
-        "^psi_full_avg10_final$"
+        "^Ash\\.EventLatency\\.TotalLatency(\\..*)?$",
+        "^Ash\\.Smoothness\\.PercentDroppedFrames_1sWindow2(\\..*)?$",
+        "^EventLatency\\.KeyPressed\\.TotalLatency(\\..*)?$",
+        "^EventLatency\\.MousePressed\\.TotalLatency(\\..*)?$",
+        "^EventLatency\\.TotalLatency(\\..*)?$",
+        "^Graphics\\.Smoothness\\.PercentDroppedFrames3\\.AllSequences(\\..*)?$",
+        "^Memory\\.PressureLevel2(\\..*)?$",
+        "^PageLoad\\.InteractiveTiming\\.FirstInputDelay4(\\..*)?$",
+        "^PageLoad\\.InteractiveTiming\\.InputDelay(\\..*)?$",
+        "^PageLoad\\.PaintTiming\\.NavigationToFirstContentfulPaint(\\..*)?$",
+        "^PageLoad\\.PaintTiming\\.NavigationToLargestContentfulPaint2(\\..*)?$",
+        "^TPS\\.Power\\.Timeline(\\..*)?$",
+        "^TPS\\.RAM\\.Zram\\.Max(\\..*)?$",
+        "^psi_full_avg10_final(\\..*)?$"
       ],
       "test_name_regex": "^ui\\.(Desks|Docs|Meet|Video)CUJ(\\..+)?$"
     },
     {
       "metric_name_regex_allowlist": [
-        "^CrosVideo\\.DroppedFrames$"
+        "^CrosVideo\\.DroppedFrames(\\..*)?$"
       ],
       "test_name_regex": "^ui\\.VideoCUJ(\\..+)?$"
     },
     {
       "metric_name_regex_allowlist": [
-        "^WebRTC\\.Video\\.DroppedFrames\\.Capturer$"
+        "^WebRTC\\.Video\\.DroppedFrames\\.Capturer(\\..*)?$"
       ],
       "test_name_regex": "^ui\\.MeetCUJ(\\..+)?$"
     },
     {
       "metric_name_regex_allowlist": [
-        "^Ash\\.LoginAnimation\\.Duration2\\.ClamshellMode\\.arcenabled\\.8windows\\.average$",
-        "^Ash\\.LoginAnimation\\.Duration\\.ClamshellMode\\.arcenabled\\.8windows\\.average$",
-        "^Ash\\.LoginAnimation\\.Duration\\.ClamshellMode\\.noarc\\.8windows\\.average$",
-        "^Ash\\.LoginAnimation\\.Duration2\\.ClamshellMode\\.noarc\\.8windows\\.average$"
+        "^Ash\\.LoginAnimation\\.Duration2\\.ClamshellMode\\.arcenabled\\.8windows\\.average(\\..*)?$",
+        "^Ash\\.LoginAnimation\\.Duration\\.ClamshellMode\\.arcenabled\\.8windows\\.average(\\..*)?$",
+        "^Ash\\.LoginAnimation\\.Duration\\.ClamshellMode\\.noarc\\.8windows\\.average(\\..*)?$",
+        "^Ash\\.LoginAnimation\\.Duration2\\.ClamshellMode\\.noarc\\.8windows\\.average(\\..*)?$"
       ],
       "test_name_regex": "^ui\\.LoginPerf(\\..+)?$"
     },
     {
       "metric_name_regex_allowlist": [
-        "^OOBE\\.WebUI\\.LoadTime\\.FirstRun\\.Duration\\.average$"
+        "^OOBE\\.WebUI\\.LoadTime\\.FirstRun\\.Duration\\.average(\\..*)?$"
       ],
       "test_name_regex": "^ui\\.OobePerf(\\..+)?$"
     }

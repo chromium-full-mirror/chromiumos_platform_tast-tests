@@ -149,9 +149,9 @@ class PipelineTest(unittest.TestCase):
         )
         self.assertEqual(len(results), 0)
 
-        # Test that explicitly specifying experiment groups works. Compare
-        # Ash.Overview.AnimationSmoothness.Enter.ClamshellMode with
-        # Ash.Overview.AnimationSmoothness.Enter.ClamshellMode.2windows.
+        # Test that explicitly specifying experiment groups by metric paths
+        # works. Compare Ash.Overview.AnimationSmoothness.Enter.ClamshellMode
+        # with Ash.Overview.AnimationSmoothness.Enter.ClamshellMode.2windows.
         cfg = dataclasses.replace(
             cfg,
             experiment_cfg=analysis_cfg.ExperimentCfg(
@@ -187,8 +187,7 @@ class PipelineTest(unittest.TestCase):
             self._ordered_sample_ids(results),
         )
 
-        # Test that explicitly specifying experiment groups with multiple
-        # kinds of regex lists works.
+        # Test that explicitly specifying experiment groups by test names works.
         cfg = dataclasses.replace(
             cfg,
             experiment_cfg=analysis_cfg.ExperimentCfg(
@@ -243,6 +242,42 @@ class PipelineTest(unittest.TestCase):
                 ],
                 cfg,
             )
+
+        # Test that explicitly specifying experiment groups with test names does
+        # not bucket metric paths with the same variant in their `TestResultKey`
+        # into the same set of experiment groups.
+        cfg = dataclasses.replace(
+            cfg,
+            experiment_cfg=analysis_cfg.ExperimentCfg(
+                experiment_groups_cfgs=[
+                    analysis_cfg.ExperimentGroupsCfg(
+                        test_name_regex_list=[
+                            "^ui\.Test\.variant1$",
+                            "^ui\.Test\.variant2$",
+                        ]
+                    )
+                ]
+            ),
+        )
+        results = analyze_results.analyze_results(
+            [
+                FILES_DIR.joinpath("data-complex1.json"),
+            ],
+            cfg,
+        )
+        self.assertEqual(
+            [
+                [
+                    "complex1.ui.Test.variant1.Ash.Overview.AnimationSmoothness.Exit.TabletMode.8windows.variant1",
+                    "complex1.ui.Test.variant2.Ash.Overview.AnimationSmoothness.Exit.TabletMode.8windows.variant1",
+                ],
+                [
+                    "complex1.ui.Test.variant1.Ash.Overview.AnimationSmoothness.Exit.TabletMode.8windows.variant2",
+                    "complex1.ui.Test.variant2.Ash.Overview.AnimationSmoothness.Exit.TabletMode.8windows.variant2",
+                ],
+            ],
+            self._ordered_sample_ids(results),
+        )
 
     def test_analyze_results_experiment_cfg(self) -> None:
         cfg = analysis_cfg.AnalysisCfg(

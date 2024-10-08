@@ -27,7 +27,7 @@ class MetricSample:
     """The name of a test this metric is from, e.g. ui.OverviewPerf."""
 
     metric_name: str
-    """The name of this metric."""
+    """The name of this metric, e.g. ui.OverviewPerf.Memory.Total.TileMemory.summary"""
 
     metric_path: str
     """Full metric path, e.g. ui.OverviewPerf.Memory.Total.TileMemory.summary"""

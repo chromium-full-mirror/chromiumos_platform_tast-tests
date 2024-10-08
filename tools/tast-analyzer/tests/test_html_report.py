@@ -115,10 +115,10 @@ class HtmlReportTest(unittest.TestCase):
         self.assertEqual(report._labels(), ["after", "before"])
 
     def test_metric_paths(self) -> None:
-        before_metric_name = "Test.One"
-        after_metric_name = "Test.Three"
-        before_metric_path = f"ui.OverviewPerf.{before_metric_name}.average"
-        after_metric_path = f"ui.OverviewPerf.{after_metric_name}.average"
+        before_metric_name = "Test.One.average"
+        after_metric_name = "Test.Three.average"
+        before_metric_path = f"ui.OverviewPerf.{before_metric_name}"
+        after_metric_path = f"ui.OverviewPerf.{after_metric_name}"
         samples = (
             test_util.load_before_samples() + test_util.load_after_samples()
         )
@@ -301,8 +301,8 @@ class HtmlReportTest(unittest.TestCase):
         self._assert_elements_equal(report.html.html, expected_html)
 
     def test_create_pairwise_result_table(self) -> None:
-        before_metric_name = "Test.Two"
-        after_metric_name = "Test.One"
+        before_metric_name = "Test.Two.average"
+        after_metric_name = "Test.One.average"
         before_test_name = "ui.OverviewPerfBefore"
         after_test_name = "ui.OverviewPerfAfter"
 
@@ -331,12 +331,12 @@ class HtmlReportTest(unittest.TestCase):
                     analysis_results.PairwiseResult(
                         before=analysis_results.ExperimentGroup(
                             sample=samples_by_id[
-                                f"before.{before_test_name}.{before_metric_name}.average"
+                                f"before.{before_test_name}.{before_metric_name}"
                             ],
                         ),
                         after=analysis_results.ExperimentGroup(
                             sample=samples_by_id[
-                                f"after.{after_test_name}.{after_metric_name}.average"
+                                f"after.{after_test_name}.{after_metric_name}"
                             ],
                             bootstrap=stats_util.BootstrapResult(
                                 statistic_kind=stats_util.TestStatisticKind.MEAN,

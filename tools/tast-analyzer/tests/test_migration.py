@@ -26,7 +26,7 @@ class MigrationTest(unittest.TestCase):
                     label="data-migration-results-v1.json",
                     sample_id="data-migration-results-v1.json.ui.Test.Migration.Results.V1.average",
                     test_name="ui.Test",
-                    metric_name="Migration.Results.V1",
+                    metric_name="Migration.Results.V1.average",
                     metric_path="ui.Test.Migration.Results.V1.average",
                     units="percent",
                     improvement_direction=metric_sample.ImprovementDirection.UP,
