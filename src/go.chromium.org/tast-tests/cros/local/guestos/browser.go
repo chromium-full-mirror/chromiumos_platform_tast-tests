@@ -31,7 +31,7 @@ func LaunchBrowser(ctx context.Context, tconn *chrome.TestConn, bt browser.Type,
 	}
 
 	pollOptions := &testing.PollOptions{Timeout: time.Minute, Interval: time.Second}
-	if err = ash.WaitForCondition(ctx, tconn, ash.BrowserTitleMatch(bt, title), pollOptions); err != nil {
+	if err = ash.WaitForCondition(ctx, tconn, ash.BrowserTitleMatch(title), pollOptions); err != nil {
 		return errors.Wrapf(err, "failed to wait for the window to be open, browser: %v", bt)
 	}
 

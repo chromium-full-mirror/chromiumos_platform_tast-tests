@@ -168,7 +168,7 @@ func VideoStreaming(ctx context.Context, s *testing.State) {
 		s.Fatal("Failed to open cros video: ", err)
 	}
 	defer crosVideoConn.Close()
-	crosVideoWindow, err := ash.FindOnlyWindow(ctx, tconn, ash.BrowserTitleMatch(browser.TypeAsh, "CrosVideo Test"))
+	crosVideoWindow, err := ash.FindOnlyWindow(ctx, tconn, ash.BrowserTitleMatch("CrosVideo Test"))
 	if err != nil {
 		s.Fatal("Failed to find the CrosVideo window: ", err)
 	}

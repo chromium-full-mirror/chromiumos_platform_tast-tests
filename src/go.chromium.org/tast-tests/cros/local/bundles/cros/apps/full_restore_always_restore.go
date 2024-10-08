@@ -10,7 +10,6 @@ import (
 
 	"go.chromium.org/tast-tests/cros/local/chrome"
 	"go.chromium.org/tast-tests/cros/local/chrome/ash"
-	"go.chromium.org/tast-tests/cros/local/chrome/browser"
 	"go.chromium.org/tast-tests/cros/local/chrome/uiauto"
 	"go.chromium.org/tast-tests/cros/local/chrome/uiauto/faillog"
 	"go.chromium.org/tast-tests/cros/local/chrome/uiauto/nodewith"
@@ -127,7 +126,7 @@ func restoreBrowser(ctx context.Context, outDir string, hasError func() bool) er
 	defer faillog.DumpUITreeOnError(ctx, outDir, hasError, tconn)
 
 	// Confirm that the browser is restored.
-	if err := ash.WaitForCondition(ctx, tconn, ash.BrowserTitleMatch(browser.TypeAsh, "Alphabet"),
+	if err := ash.WaitForCondition(ctx, tconn, ash.BrowserTitleMatch("Alphabet"),
 		&testing.PollOptions{Timeout: time.Minute, Interval: time.Second}); err != nil {
 		return errors.Wrap(err, "failed to wait for the browser window to be open")
 	}

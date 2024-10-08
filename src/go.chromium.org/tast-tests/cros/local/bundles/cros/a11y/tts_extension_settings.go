@@ -13,7 +13,6 @@ import (
 	"go.chromium.org/tast-tests/cros/local/audio/crastestclient"
 	"go.chromium.org/tast-tests/cros/local/chrome"
 	"go.chromium.org/tast-tests/cros/local/chrome/ash"
-	"go.chromium.org/tast-tests/cros/local/chrome/browser"
 	"go.chromium.org/tast-tests/cros/local/chrome/uiauto"
 	"go.chromium.org/tast-tests/cros/local/chrome/uiauto/faillog"
 	"go.chromium.org/tast-tests/cros/local/chrome/uiauto/nodewith"
@@ -87,7 +86,7 @@ func TTSExtensionSettings(ctx context.Context, s *testing.State) {
 			)(ctx)
 		},
 		checkSettingsOpened: func(ctx context.Context, ui *uiauto.Context) (retErr error) {
-			return ash.WaitForCondition(ctx, tconn, ash.BrowserTitleMatch(browser.TypeAsh, "eSpeak-NG Options"), &testing.PollOptions{Timeout: 5 * time.Second})
+			return ash.WaitForCondition(ctx, tconn, ash.BrowserTitleMatch("eSpeak-NG Options"), &testing.PollOptions{Timeout: 5 * time.Second})
 		},
 		numOfWindows: 2,
 	}, {
@@ -99,7 +98,7 @@ func TTSExtensionSettings(ctx context.Context, s *testing.State) {
 			)(ctx)
 		},
 		checkSettingsOpened: func(ctx context.Context, ui *uiauto.Context) (retErr error) {
-			return ash.WaitForCondition(ctx, tconn, ash.BrowserTitleMatch(browser.TypeAsh, "Google TTS Settings"), &testing.PollOptions{Timeout: 5 * time.Second})
+			return ash.WaitForCondition(ctx, tconn, ash.BrowserTitleMatch("Google TTS Settings"), &testing.PollOptions{Timeout: 5 * time.Second})
 		},
 		numOfWindows: 2,
 	}} {

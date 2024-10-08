@@ -326,7 +326,7 @@ func MeetCall(ctx context.Context, s *testing.State) {
 		s.Fatal("Failed to open chrome://webrtc-internals: ", err)
 	}
 	defer webrtcInternals.Close()
-	webRTCInternalsWindow, err := ash.FindOnlyWindow(ctx, tconn, ash.BrowserTitleMatch(browser.TypeAsh, "WebRTC Internals"))
+	webRTCInternalsWindow, err := ash.FindOnlyWindow(ctx, tconn, ash.BrowserTitleMatch("WebRTC Internals"))
 	if err != nil {
 		s.Fatal("Failed to find the WebRTC Internals window: ", err)
 	}
