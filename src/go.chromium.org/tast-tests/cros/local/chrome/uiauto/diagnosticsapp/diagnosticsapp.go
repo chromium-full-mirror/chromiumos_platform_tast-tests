@@ -129,6 +129,16 @@ func Launch(ctx context.Context, tconn *chrome.TestConn) (*nodewith.Finder, erro
 		return nil, errors.Wrap(err, "diagnostics app did not appear in shelf after launch")
 	}
 
+	window, err := ash.BringWindowToForeground(ctx, tconn, apps.Diagnostics.Name)
+	if err != nil {
+		return nil, errors.Wrap(err, "failed to get window for diagnostics app")
+	}
+
+	err = ash.SetWindowStateAndWait(ctx, tconn, window.ID, ash.WindowStateMaximized)
+	if err != nil {
+		return nil, errors.Wrap(err, "failed to set window state to maximized")
+	}
+
 	dxRootNode, err := DiagnosticsRootNode(ctx, tconn)
 	if err != nil {
 		return nil, errors.Wrap(err, "failed to find diagnostics app")
