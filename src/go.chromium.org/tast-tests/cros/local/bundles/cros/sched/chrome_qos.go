@@ -19,6 +19,7 @@ import (
 	"go.chromium.org/tast-tests/cros/local/chrome"
 	"go.chromium.org/tast-tests/cros/local/chrome/ash/ashproc"
 	"go.chromium.org/tast-tests/cros/local/chrome/chromeproc"
+	"go.chromium.org/tast-tests/cros/local/sysutil"
 	"go.chromium.org/tast/core/errors"
 	"go.chromium.org/tast/core/testing"
 )
@@ -80,7 +81,17 @@ func getCPUSetCgroup(pid, tid int32) (string, error) {
 	return "", errors.New("cpuset cgroup not found")
 }
 
-func checkCPUCgroup(pid int32) error {
+func checkCPUCgroup(ctx context.Context, pid int32) error {
+	version, _, err := sysutil.KernelVersionAndArch()
+	if err != nil {
+		return errors.Wrap(err, "failed to get kernel version")
+	}
+	// Applying cpu cgroup can fail due to timing issue before 6.1.
+	if !version.IsOrLater(6, 1) {
+		testing.ContextLogf(ctx, "Skipping check cpu cgroup because kernel version is %q", version.String())
+		return nil
+	}
+
 	cgroup, err := getCPUCgroup(pid)
 	if os.IsNotExist(err) {
 		return nil
@@ -146,7 +157,7 @@ func ChromeQoS(ctx context.Context, s *testing.State) {
 		// Check cpu cgroups of all Chrome processes are managed by resourced.
 		for _, process := range processes {
 			if isQoSEligibleProcess(ctx, s, process) {
-				if err := checkCPUCgroup(process.Pid); err != nil {
+				if err := checkCPUCgroup(ctx, process.Pid); err != nil {
 					return errors.Wrapf(err, "failed to check cpu cgroup for process %d", process.Pid)
 				}
 				if err := checkCPUSetCgroup(process.Pid, process.Pid); err != nil {
