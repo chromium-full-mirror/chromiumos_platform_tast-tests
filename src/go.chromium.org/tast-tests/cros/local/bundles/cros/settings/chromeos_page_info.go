@@ -241,8 +241,9 @@ func checkTermsOfServiceLinks(resource *chromeOSPageInfo) uiauto.Action {
 	termsTitleFinder := nodewith.NameRegex(regexp.MustCompile("^" + title + "$")).Role(role.Heading).Ancestor(termsWindowFinder)
 
 	return uiauto.Combine("click term of service",
-		resource.settings.FocusAndWait(ossettings.TermsOfService),
-		resource.settings.LeftClick(ossettings.TermsOfService),
+		// Terms of service link is at the bottom of the page. Prefer DoDefault to
+		// reliably click the link instead of scrolling and clicking.
+		resource.settings.DoDefault(ossettings.TermsOfService),
 		resource.ui.WaitUntilExists(termsTitleFinder),
 		func(ctx context.Context) error { return apps.Close(ctx, resource.tconn, resource.chrome.ID) },
 	)
