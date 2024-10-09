@@ -100,9 +100,10 @@ func checkTermsOfService(ctx context.Context, cr *chrome.Chrome, tconn *chrome.T
 
 	termsOfServiceLink := nodewith.Name("Terms of Service").Role(role.Link)
 	if err := uiauto.Combine("click terms of service link",
-		ui.FocusAndWait(termsOfServiceLink),
 		ui.WaitUntilExists(termsOfServiceLink),
-		ui.LeftClick(termsOfServiceLink),
+		// Terms of service link is at the bottom of the page. Prefer DoDefault to
+		// reliably click the link instead of scrolling and clicking.
+		ui.DoDefault(termsOfServiceLink),
 	)(ctx); err != nil {
 		return err
 	}
