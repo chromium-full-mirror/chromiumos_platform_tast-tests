@@ -308,7 +308,7 @@ func DNSProxy(ctx context.Context, s *testing.State) {
 }
 
 // physicalInterfaces lists all available physical interfaces.
-// This function may not be accurate on multiplexed cellular interface.
+// This function returns the primary interface on multiplexed cell interface.
 func physicalInterfaces(ctx context.Context) ([]string, error) {
 	m, err := shill.NewManager(ctx)
 	if err != nil {
@@ -330,8 +330,20 @@ func physicalInterfaces(ctx context.Context) ([]string, error) {
 			}
 			return nil, err
 		}
-		if ifname, err := p.GetString(shillconst.DevicePropertyInterface); err != nil {
+		t, err := p.GetString(shillconst.DevicePropertyType)
+		if err != nil {
+			testing.ContextLogf(ctx, "Error getting the device type %q: %v", dev, err)
+			continue
+		}
+		ifProp := shillconst.DevicePropertyInterface
+		if t == shillconst.TypeCellular {
+			ifProp = shillconst.DevicePropertyCellularPrimaryMultiplexedInterface
+		}
+		if ifname, err := p.GetString(ifProp); err != nil {
 			testing.ContextLogf(ctx, "Error getting the device interface %q: %v", dev, err)
+			continue
+		} else if ifname == "" {
+			testing.ContextLogf(ctx, "Empty interface name for device %q", dev)
 			continue
 		} else {
 			ifnames = append(ifnames, ifname)
