@@ -87,7 +87,7 @@ func checkCPUCgroup(pid int32) error {
 	} else if err != nil {
 		return errors.Wrapf(err, "failed to get cpu cgroup for process %d", pid)
 	}
-	if cgroup == "/resourced/normal" || cgroup == "/resourced/background" {
+	if cgroup == "/normal" || cgroup == "/background" {
 		return nil
 	}
 	return errors.Errorf("unexpected cpu cgroup %s for process %d", cgroup, pid)
@@ -122,7 +122,7 @@ func getBackgroundProcessIds(ctx context.Context, s *testing.State, processes []
 	for _, p := range processes {
 		if cgroup, err := getCPUCgroup(p.Pid); err != nil {
 			s.Fatalf("Failed to get cpu cgroup for process %d: %v", p.Pid, err)
-		} else if cgroup == "/resourced/background" {
+		} else if cgroup == "/background" {
 			pids[p.Pid] = struct{}{}
 		}
 	}

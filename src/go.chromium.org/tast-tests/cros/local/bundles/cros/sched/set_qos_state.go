@@ -19,8 +19,8 @@ import (
 )
 
 const (
-	normalCPUCgroupProcessesFile     = "/sys/fs/cgroup/cpu/resourced/normal/cgroup.procs"
-	backgroundCPUCgroupProcessesFile = "/sys/fs/cgroup/cpu/resourced/background/cgroup.procs"
+	normalCPUCgroupProcessesFile     = "/sys/fs/cgroup/cpu/normal/cgroup.procs"
+	backgroundCPUCgroupProcessesFile = "/sys/fs/cgroup/cpu/background/cgroup.procs"
 	allCPUSetCgroupThreadsFile       = "/sys/fs/cgroup/cpuset/resourced/all/tasks"
 	efficientCPUSetCgroupThreadsFile = "/sys/fs/cgroup/cpuset/resourced/efficient/tasks"
 )
