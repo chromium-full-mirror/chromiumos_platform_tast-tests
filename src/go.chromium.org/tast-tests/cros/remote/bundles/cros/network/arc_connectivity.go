@@ -148,6 +148,11 @@ func ArcConnectivity(ctx context.Context, s *testing.State) {
 		s.Fatal("Failed to set the force-installed APP policy: ", err)
 	}
 
+	assetPolicy := &tape.AllowPopulateAssetIdentifierUsers{AllowToUpdateDeviceAttribute: false}
+	if err := tapeClient.SetPolicy(ctx, assetPolicy, []string{"allowToUpdateDeviceAttribute"}, nil, acc.RequestID); err != nil {
+		s.Log("Failed to disable the AllowToUpdateDeviceAttribute policy: ", err)
+	}
+
 	// Deprovision the DUT at the end of the test. As devices might get
 	// provisioned even when the enrollment fails we need to defer the
 	// deprovisioning before enrolling.
