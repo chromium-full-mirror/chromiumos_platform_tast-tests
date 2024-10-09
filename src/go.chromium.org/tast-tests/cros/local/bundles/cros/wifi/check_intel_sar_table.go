@@ -95,7 +95,7 @@ func (table geoSARTable) String() string {
 
 const (
 	// These values represent the allowable SAR limits in units of 1 dBm.
-	sarHardMax = 22.0
+	sarHardMax = 31.75
 	sarSoftMax = 20.0
 	sarHardMin = 4.0
 	sarSoftMin = 6.0
