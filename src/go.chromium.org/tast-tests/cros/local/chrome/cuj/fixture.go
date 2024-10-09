@@ -15,7 +15,6 @@ import (
 
 	"go.chromium.org/tast-tests/cros/common/chrome/credconfig"
 	"go.chromium.org/tast-tests/cros/common/dma"
-	"go.chromium.org/tast-tests/cros/common/fixture"
 	"go.chromium.org/tast-tests/cros/common/policy"
 	"go.chromium.org/tast-tests/cros/common/policy/fakedms"
 	"go.chromium.org/tast-tests/cros/common/testexec"
@@ -703,7 +702,7 @@ func init() {
 		Impl:            &prepareCUJFixture{},
 		PreTestTimeout:  CPUStablizationTimeout + 3*time.Second,
 		PostTestTimeout: postTestTimeout,
-		Parent:          fixture.SchedRTGpuWatchHangs,
+		Parent:          "gpuWatchHangs",
 	})
 	testing.AddFixture(&testing.Fixture{
 		Name: "loggedInToCUJUserWithWebRTCEventLoggingWithSchedRT",
@@ -717,6 +716,8 @@ func init() {
 		Data:         docsBlockerFiles,
 		Impl: &loggedInToCUJUserFixture{
 			chromeExtraOpts: []chrome.Option{
+				chrome.EnableFeatures("CrOSLateBootInitDLServer"),
+				chrome.EnableFeatures("CrOSLateBootSetRtForDisplayThreads"),
 				chrome.EnableFeatures("SetThreadBgForBgProcess"),
 				chrome.EnableFeatures("SetRtForDisplayThreads"),
 				chrome.ExtraArgs(webRTCEventLogCommandFlag),
