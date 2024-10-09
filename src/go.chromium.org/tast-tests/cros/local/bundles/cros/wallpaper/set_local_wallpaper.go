@@ -21,6 +21,7 @@ import (
 	"go.chromium.org/tast-tests/cros/local/wallpaper"
 	"go.chromium.org/tast-tests/cros/local/wallpaper/constants"
 	"go.chromium.org/tast/core/ctxutil"
+	"go.chromium.org/tast/core/errors"
 	"go.chromium.org/tast/core/fsutil"
 	"go.chromium.org/tast/core/testing"
 )
@@ -44,8 +45,19 @@ func init() {
 		Data:         []string{constants.LocalWallpaperFilename},
 		SoftwareDeps: []string{"chrome"},
 		Timeout:      5 * time.Minute,
-		Fixture:      personalization.BaseFixture,
+		// Force Chrome to be in clamshell mode to make sure wallpaper view is clearly
+		// visible for us to compare it with the given rgba color.
+		Fixture: personalization.ClamshellFixture,
 	})
+}
+
+func closeAllWindows(tconn *chrome.TestConn) uiauto.Action {
+	return func(ctx context.Context) error {
+		if err := ash.CloseAllWindows(ctx, tconn); err != nil {
+			return errors.Wrap(err, "failed to close all windows")
+		}
+		return nil
+	}
 }
 
 func SetLocalWallpaper(ctx context.Context, s *testing.State) {
@@ -59,14 +71,6 @@ func SetLocalWallpaper(ctx context.Context, s *testing.State) {
 	if err != nil {
 		s.Fatal("Failed to create Test API connection: ", err)
 	}
-
-	// Force Chrome to be in clamshell mode to make sure wallpaper view is clearly
-	// visible for us to compare it with the given rgba color.
-	cleanup, err := ash.EnsureTabletModeEnabled(ctx, tconn, false)
-	if err != nil {
-		s.Fatal("Failed to ensure DUT is not in tablet mode: ", err)
-	}
-	defer cleanup(cleanupCtx)
 
 	defer faillog.DumpUITreeOnError(cleanupCtx, s.OutDir(), s.HasError, tconn)
 
@@ -88,14 +92,14 @@ func SetLocalWallpaper(ctx context.Context, s *testing.State) {
 		wallpaper.SelectCollection(ui, constants.LocalWallpaperCollection),
 		wallpaper.SelectImage(ui, constants.LocalWallpaperFilename),
 		ui.LeftClick(nodewith.Name("Fill").Role(role.ToggleButton)),
-		wallpaper.MinimizeWallpaperPicker(ui),
+		closeAllWindows(tconn),
 	)(ctx); err != nil {
 		s.Fatal("Failed to set new wallpaper: ", err)
 	}
 
 	const expectedFilledPercent = 90
 	if err := wallpaper.ValidateBackground(cr, constants.LocalWallpaperColor, expectedFilledPercent)(ctx); err != nil {
-		s.Error("Failed to validate wallpaper background: ", err)
+		s.Error("Failed to validate fill wallpaper background: ", err)
 	}
 
 	// Take a screenshot of the current wallpaper.
@@ -108,9 +112,9 @@ func SetLocalWallpaper(ctx context.Context, s *testing.State) {
 		wallpaper.OpenWallpaperPicker(ui),
 		wallpaper.SelectCollection(ui, constants.LocalWallpaperCollection),
 		ui.LeftClick(nodewith.Name("Center").Role(role.ToggleButton)),
-		wallpaper.MinimizeWallpaperPicker(ui),
+		closeAllWindows(tconn),
 	)(ctx); err != nil {
-		s.Fatal("Failed to set new wallpaper: ", err)
+		s.Fatal("Failed to crop wallpaper to center: ", err)
 	}
 
 	// Take a screenshot of the same wallpaper with new layout.
@@ -121,7 +125,7 @@ func SetLocalWallpaper(ctx context.Context, s *testing.State) {
 
 	// Verify that the wallpaper has indeed changed.
 	// The percentage takes into account the center cropped image is similar to the filled image.
-	const expectedSimilarityPercent = 70
+	const expectedSimilarityPercent = 60
 	if err = wallpaper.ValidateDiff(firstScreenshot, secondScreenshot, expectedSimilarityPercent); err != nil {
 		firstScreenshotPath := filepath.Join(s.OutDir(), "screenshot_1.png")
 		secondScreenshotPath := filepath.Join(s.OutDir(), "screenshot_2.png")
@@ -131,6 +135,6 @@ func SetLocalWallpaper(ctx context.Context, s *testing.State) {
 		if err := imgcmp.DumpImageToPNG(ctx, &secondScreenshot, secondScreenshotPath); err != nil {
 			s.Errorf("Failed to dump image to %s: %v", secondScreenshotPath, err)
 		}
-		s.Fatal("Failed to validate wallpaper difference: ", err)
+		s.Fatal("Failed to validate center cropped wallpaper difference: ", err)
 	}
 }
