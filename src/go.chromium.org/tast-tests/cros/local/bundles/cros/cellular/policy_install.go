@@ -23,7 +23,7 @@ import (
 	"go.chromium.org/tast-tests/cros/local/policyutil"
 	"go.chromium.org/tast-tests/cros/local/policyutil/fixtures"
 	"go.chromium.org/tast-tests/cros/local/stork"
-	"go.chromium.org/tast/core/errors"
+	"go.chromium.org/tast/core/ctxutil"
 	"go.chromium.org/tast/core/testing"
 )
 
@@ -95,38 +95,37 @@ func PolicyInstall(ctx context.Context, s *testing.State) {
 		chromeOpts = append(chromeOpts, chrome.EnableFeatures("CellularUseSecondEuicc"))
 	}
 
+	cleanupCtx := ctx
+	ctx, cancel := ctxutil.Shorten(ctx, 15*time.Second)
+	defer cancel()
+
 	cr, err := chrome.New(ctx, chromeOpts...)
 	if err != nil {
 		s.Fatal("Chrome login failed: ", err)
 	}
-
-	defer cr.Close(ctx)
+	defer cr.Close(cleanupCtx)
 
 	tconn, err := cr.TestAPIConn(ctx)
 	if err != nil {
 		s.Fatal("Failed to connect Test API: ", err)
 	}
-	defer faillog.DumpUITreeOnError(ctx, s.OutDir(), s.HasError, tconn)
 
-	mdp, err := ossettings.OpenMobileDataSubpage(ctx, tconn, cr)
+	mdp, err := ossettings.LaunchAtMobileData(ctx, tconn, cr)
 	if err != nil {
 		s.Fatal("Failed to open mobile data subpage: ", err)
 	}
+	defer mdp.Close(cleanupCtx)
+	defer faillog.DumpUITreeWithScreenshotWithTestAPIOnError(cleanupCtx, s.OutDir(), s.HasError, tconn, "os_settings")
 
-	refreshProfileText := nodewith.NameStartingWith("Refreshing profile list").Role(role.StaticText)
-	if err := mdp.WithTimeout(5 * time.Second).WaitUntilExists(refreshProfileText)(ctx); err == nil {
-		s.Log("Wait until refresh profile finishes")
-		if err := mdp.WithTimeout(time.Minute).WaitUntilGone(refreshProfileText)(ctx); err != nil {
-			s.Fatal("Failed to wait until refresh profile complete: ", err)
-		}
+	if err := ossettings.WaitUntilRefreshCellularProfileCompletes(ctx, tconn); err != nil {
+		s.Fatal("Failed to wait until refresh profile complete: ", err)
 	}
 
 	activationCode, cleanupFunc, err := stork.FetchStorkProfile(ctx)
 	if err != nil {
 		s.Fatal("Failed to fetch Stork profile: ", err)
 	}
-
-	defer cleanupFunc(ctx)
+	defer cleanupFunc(cleanupCtx)
 	s.Log("Fetched Stork profile with activation code: ", activationCode)
 
 	cellularONC := &policy.ONCCellular{
@@ -160,7 +159,13 @@ func PolicyInstall(ctx context.Context, s *testing.State) {
 		s.Fatal("Failed to ServeAndRefresh ONC policy: ", err)
 	}
 	s.Log("Applied device policy with managed cellular network configuration")
-	defer euicc.DBusObject.Call(ctx, hermesconst.EuiccMethodResetMemory, 1)
+	defer euicc.DBusObject.Call(cleanupCtx, hermesconst.EuiccMethodResetMemory, 1)
+	// Capture the status of the OS settings before removing the existing profiles on the test eUICC.
+	defer faillog.DumpUITreeWithScreenshotWithTestAPIOnError(cleanupCtx, s.OutDir(), s.HasError, tconn, "os_settings_before_reset_memory")
+
+	if err := ossettings.WaitUntilRefreshCellularProfileCompletes(ctx, tconn); err != nil {
+		s.Fatal("Failed to wait until refresh profile complete: ", err)
+	}
 
 	if err := verifyTestESimProfileNotModifiable(ctx, tconn); err != nil {
 		s.Fatal("Failed to verify newly installed stork profile: ", err)
@@ -169,29 +174,16 @@ func PolicyInstall(ctx context.Context, s *testing.State) {
 }
 
 func verifyTestESimProfileNotModifiable(ctx context.Context, tconn *chrome.TestConn) error {
-	ui := uiauto.New(tconn).WithTimeout(3 * time.Second)
+	ui := uiauto.New(tconn)
 
-	managedTestProfile := nodewith.NameRegex(regexp.MustCompile("^Network [0-9] of [0-9],.*Managed by your Administrator.*"))
+	managedTestProfile := nodewith.NameRegex(regexp.MustCompile("^Network [0-9] of [0-9],.*Managed by your Administrator.*")).First()
 	// testProfileDetailButton is the finder for the "Test Profile" detail subpage arrow button in the mobile data page UI.
-	var testProfileDetailButton = nodewith.ClassName("subpage-arrow").Role(role.Button).Ancestor(managedTestProfile.First())
-	if err := ui.WithTimeout(time.Minute).WaitUntilExists(managedTestProfile)(ctx); err != nil {
-		return errors.Wrap(err, "failed to find the newly installed test profile as a managed profile")
-	}
-
-	if err := ui.WithTimeout(3 * time.Minute).LeftClick(testProfileDetailButton)(ctx); err != nil {
-		return errors.Wrap(err, "failed to left click Test Profile detail button")
-	}
-
-	if err := ui.WithTimeout(3 * time.Second).LeftClick(tridots)(ctx); err != nil {
-		return errors.Wrap(err, "failed to left click tridots button")
-	}
-
-	if err := ui.EnsureGoneFor(removeMenu, 3*time.Second)(ctx); err != nil {
-		return errors.Wrap(err, "should not show Remove profile in tridot menu")
-	}
-
-	if err := ui.EnsureGoneFor(renameMenu, 3*time.Second)(ctx); err != nil {
-		return errors.Wrap(err, "should not show Rename profile in tridot menu")
-	}
-	return nil
+	testProfileDetailButton := nodewith.ClassName("subpage-arrow").Role(role.Button).Ancestor(managedTestProfile)
+	return uiauto.Combine("navigate to the test eSIM profile detail subpage and verify that it is not modifiable",
+		ui.WithTimeout(time.Minute).WaitUntilExists(testProfileDetailButton),
+		ui.WithTimeout(3*time.Minute).DoDefault(testProfileDetailButton),
+		ui.WithTimeout(3*time.Second).DoDefault(tridots),
+		ui.EnsureGoneFor(removeMenu, 3*time.Second),
+		ui.EnsureGoneFor(renameMenu, 3*time.Second),
+	)(ctx)
 }
