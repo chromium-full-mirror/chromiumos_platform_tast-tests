@@ -2,6 +2,7 @@
 # Use of this source code is governed by a BSD-style license that can be
 # found in the LICENSE file.
 import copy
+import dataclasses
 import pathlib
 import unittest
 
@@ -480,6 +481,19 @@ class AnalysisTest(unittest.TestCase):
         self.assertEqual(len(pruned), 2)
         self.assertEqual(len(pruned[0].pairs), 3)
         self.assertEqual(len(pruned[1].pairs), 3)
+        # Check p-values were adjusted.
+        self.assertAlmostEqual(pruned[0].pairs[0].hypothesis_result.p, 0.018)
+        self.assertAlmostEqual(pruned[0].pairs[1].hypothesis_result.p, 0.018)
+        self.assertAlmostEqual(pruned[0].pairs[2].hypothesis_result.p, 0.018)
+        self.assertAlmostEqual(pruned[1].pairs[0].hypothesis_result.p, 0.03)
+        self.assertAlmostEqual(pruned[1].pairs[1].hypothesis_result.p, 0.03)
+        self.assertAlmostEqual(pruned[1].pairs[2].hypothesis_result.p, 0.03)
+
+        # Test that using a negative value does not prune results but still
+        # adjusts p-values.
+        cfg = dataclasses.replace(cfg, alpha=-1.0)
+        pruned = analyze_results._prune_non_significant_results(results, cfg)
+        self.assertEqual(len(pruned), len(results))
         # Check p-values were adjusted.
         self.assertAlmostEqual(pruned[0].pairs[0].hypothesis_result.p, 0.018)
         self.assertAlmostEqual(pruned[0].pairs[1].hypothesis_result.p, 0.018)

@@ -67,6 +67,10 @@ Some tests output only zeros for some metrics. This flag skips those metrics.
 This is like the "p-value", except tast-analyzer works with a large set of
 hypothesis tests, not a single one. The default is 0.05.
 
+If this is negative, no pruning of non-statistically significant results
+will be done, but the adjusted p-values (for multiple test correction) will
+still be computed.
+
 `--multiple-test-correction`:
 
 Since tast-analyzer works with multiple hypothesis tests, if we used a p-value

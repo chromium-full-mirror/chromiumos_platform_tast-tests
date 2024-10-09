@@ -135,8 +135,12 @@ def _prune_non_significant_results(
         for pair in result.pairs:
             p_values.append(pair.hypothesis_result.p)
 
+    # If the alpha value is negative, do not prune results but still compute
+    # adjusted p-values.
+    prune = cfg.alpha >= 0.0
+    alpha = cfg.alpha if prune else 1.0
     rejects, p_corrected, _, _ = multitest.multipletests(
-        p_values, alpha=cfg.alpha, method=cfg.multiple_test_cfg.scipy_name()
+        p_values, alpha=alpha, method=cfg.multiple_test_cfg.scipy_name()
     )
 
     idx = 0
@@ -145,7 +149,7 @@ def _prune_non_significant_results(
         out_pairs = []
         for pair in result.pairs:
             # Reject the null hypothesis (that they are the same).
-            if rejects[idx]:
+            if rejects[idx] or not prune:
                 out_pair = copy.deepcopy(pair)
                 out_pair.hypothesis_result.p = p_corrected[idx]
                 out_pairs.append(out_pair)

@@ -169,7 +169,7 @@ def _compare_results(
     "-p",
     "--alpha-value",
     type=float,
-    help="statistical significance level to use",
+    help="statistical significance level to use - none if negative",
     default=0.05,
 )
 @click.option(

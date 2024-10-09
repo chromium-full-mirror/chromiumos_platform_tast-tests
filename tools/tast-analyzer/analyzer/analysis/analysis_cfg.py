@@ -205,7 +205,9 @@ class AnalysisCfg:
     """The minimum sample size required to include a sample in the analysis."""
 
     alpha: float = 0.05
-    """The significance level for the analysis."""
+    """The significance level for the analysis.
+
+    No pruning is performed if this is negative."""
 
     hypothesis_test_params: stats_util.HypothesisTestParameters = (
         dataclasses.field(default_factory=stats_util.HypothesisTestParameters)
