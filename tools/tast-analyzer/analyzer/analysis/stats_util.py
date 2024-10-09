@@ -4,6 +4,7 @@
 import dataclasses
 import enum
 import logging
+import warnings
 
 from analyzer.analysis import metric_sample
 import numpy as np
@@ -149,16 +150,18 @@ def _permutation_test(
     s2_values = list(s2.values())
     seed = 0 if params.deterministic else None
 
-    res = stats.permutation_test(
-        [s1_values, s2_values],
-        statistic=params.statistic_kind.compute_statistic,
-        permutation_type="independent",
-        n_resamples=params.resamples,
-        alternative="two-sided",
-        random_state=seed,
-        vectorized=True,
-        batch=_batch_size(len(s1_values) + len(s2_values)),
-    )
+    with warnings.catch_warnings():
+        warnings.simplefilter("ignore")
+        res = stats.permutation_test(
+            [s1_values, s2_values],
+            statistic=params.statistic_kind.compute_statistic,
+            permutation_type="independent",
+            n_resamples=params.resamples,
+            alternative="two-sided",
+            random_state=seed,
+            vectorized=True,
+            batch=_batch_size(len(s1_values) + len(s2_values)),
+        )
 
     return HypothesisTestResult(
         statistic_kind=params.statistic_kind,
@@ -269,16 +272,18 @@ def _one_sample_bootstrap(
         )
 
     seed = 0 if params.deterministic else None
-    res = stats.bootstrap(
-        [x],
-        statistic=params.statistic_kind.compute_value,
-        method="bca",
-        n_resamples=params.resamples,
-        confidence_level=params.confidence,
-        random_state=seed,
-        vectorized=True,
-        batch=_batch_size(len(x)),
-    )
+    with warnings.catch_warnings():
+        warnings.simplefilter("ignore")
+        res = stats.bootstrap(
+            [x],
+            statistic=params.statistic_kind.compute_value,
+            method="bca",
+            n_resamples=params.resamples,
+            confidence_level=params.confidence,
+            random_state=seed,
+            vectorized=True,
+            batch=_batch_size(len(x)),
+        )
 
     observed_statistic = params.statistic_kind.compute_value(np.array(x))
     bootstrap_statistic = np.mean(res.bootstrap_distribution)
