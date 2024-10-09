@@ -9,6 +9,7 @@ package document
 import (
 	"context"
 	"io/ioutil"
+	"path/filepath"
 	"regexp"
 
 	"github.com/kylelemons/godebug/diff"
@@ -145,37 +146,63 @@ func CleanContents(contents string) string {
 	return cleanRegex.ReplaceAllLiteralString(contents, "")
 }
 
-// CompareFileContents compares the string contents given by output and golden
-// and returns an error if there are any differences. If there are any
-// differences between the given file contents then the results of the diff are
-// written to diffPath.
-func CompareFileContents(ctx context.Context, output, golden, diffPath string) error {
-	output = CleanContents(output)
-	golden = CleanContents(golden)
+// CompareFileContents compares the string contents given by actual and expected
+// and returns an error if there are any differences . This will first 'clean'
+// the data to strip out anything known to be different (such as dates, etc).
+// If there are any differences between the given file contents then the
+// following data is saved to logDir:
+// the results of the diff are written to logDir/diffFn,
+// the actual data is written to logDir/actualFn,
+// the expected data is written to logDir/expectedFn
+// the cleaned actual data is written to logDir/cleanedActualFn
+// the cleaned expected data is written to logDir/cleanedExpectedFn
+// where the filenames are created as follows (assuming saveFn is results.bin):
+// actualFn = actual-results.bin
+// expectedFn = expected-results.bin
+// cleanedActualFn = cleaned-actual-results.bin
+// cleanedExpectedFn = cleaned-expected-results.bin
+func CompareFileContents(ctx context.Context, actual, expected, logDir, diffFn, saveFn string) error {
+	testing.ContextLog(ctx, "Comparing actual with expected file")
 
-	testing.ContextLog(ctx, "Comparing output with golden file")
-	if diff := diff.Diff(output, golden); diff != "" {
-		testing.ContextLog(ctx, "Dumping diff to ", diffPath)
-		if err := ioutil.WriteFile(diffPath, []byte(diff), 0644); err != nil {
-			testing.ContextLog(ctx, "Failed to dump diff: ", err)
+	cleanedActual := CleanContents(actual)
+	cleanedExpected := CleanContents(expected)
+
+	if diff := diff.Diff(cleanedActual, cleanedExpected); diff != "" {
+		actualModifier := "actual-"
+		expectedModifier := "expected-"
+		cleanedModifier := "cleaned-"
+
+		// A small helper function to write the file to disk, along with appropriate
+		// logs.
+		writeData := func(description, data, filename string) {
+			path := filepath.Join(logDir, filename)
+			testing.ContextLog(ctx, "Dumping ", description, " data to ", path)
+			if err := ioutil.WriteFile(path, []byte(data), 0644); err != nil {
+				testing.ContextLog(ctx, "Failed to dump ", description, " data: ", err)
+			}
 		}
-		return errors.New("result file did not match the expected file")
+		writeData("diff", diff, diffFn)
+		writeData("actual", actual, actualModifier+saveFn)
+		writeData("expected", expected, expectedModifier+saveFn)
+		writeData("cleaned actual", cleanedActual, cleanedModifier+actualModifier+saveFn)
+		writeData("cleaned expected", cleanedExpected, cleanedModifier+expectedModifier+saveFn)
+
+		return errors.New("actual file did not match the expected file")
 	}
 	return nil
 }
 
-// CompareFiles loads the contents of the given output and golden files and
-// compares them for differences. If there are any differences between the two
-// files then an error will be returned and the result of the diff are written
-// to diffPath.
-func CompareFiles(ctx context.Context, output, golden, diffPath string) error {
-	outputBytes, err := ioutil.ReadFile(output)
+// CompareFiles loads the contents of the given actual and expected files and
+// compares them for differences by delegating to CompareFileContents.
+func CompareFiles(ctx context.Context, actual, expected, logDir, diffFn, saveFn string) error {
+	actualBytes, err := ioutil.ReadFile(actual)
 	if err != nil {
-		return errors.Wrapf(err, "failed to read file %s", output)
+		return errors.Wrapf(err, "failed to read file %s", actual)
 	}
-	goldenBytes, err := ioutil.ReadFile(golden)
+	expectedBytes, err := ioutil.ReadFile(expected)
 	if err != nil {
-		return errors.Wrapf(err, "failed to read file %s", golden)
+		return errors.Wrapf(err, "failed to read file %s", expected)
 	}
-	return CompareFileContents(ctx, string(outputBytes), string(goldenBytes), diffPath)
+	return CompareFileContents(ctx, string(actualBytes), string(expectedBytes),
+		logDir, diffFn, saveFn)
 }

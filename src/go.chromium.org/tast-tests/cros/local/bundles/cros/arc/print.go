@@ -22,7 +22,6 @@ import (
 	"go.chromium.org/tast-tests/cros/local/printing/usbprinter"
 	"go.chromium.org/tast/core/ctxutil"
 	"go.chromium.org/tast/core/errors"
-	"go.chromium.org/tast/core/fsutil"
 	"go.chromium.org/tast/core/testing"
 	"go.chromium.org/tast/core/testing/hwdep"
 )
@@ -219,15 +218,8 @@ func Print(ctx context.Context, s *testing.State) {
 	}
 
 	golden := s.DataPath(s.Param().(string))
-	diffPath := filepath.Join(s.OutDir(), "diff.txt")
-	if err := document.CompareFiles(ctx, recordPath, golden, diffPath); err != nil {
+	if err := document.CompareFiles(ctx, recordPath, golden, s.OutDir(),
+		"diff.txt", filepath.Base(golden)); err != nil {
 		s.Error("Printed file differs from golden file: ", err)
-		// If we get an error comparing files, save the results we got.
-		outFile := filepath.Base(golden)
-		s.Log("Saving printed file to: ", outFile)
-		savedPath := filepath.Join(s.OutDir(), outFile)
-		if err := fsutil.MoveFile(recordPath, savedPath); err != nil {
-			s.Error("Failed to save printed file: ", err)
-		}
 	}
 }

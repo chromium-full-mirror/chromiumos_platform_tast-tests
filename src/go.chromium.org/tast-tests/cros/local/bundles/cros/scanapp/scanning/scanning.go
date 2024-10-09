@@ -37,7 +37,6 @@ import (
 	"go.chromium.org/tast-tests/cros/local/scanner/lorgnette"
 	"go.chromium.org/tast/core/ctxutil"
 	"go.chromium.org/tast/core/errors"
-	"go.chromium.org/tast/core/fsutil"
 	"go.chromium.org/tast/core/testing"
 )
 
@@ -600,15 +599,9 @@ func RunAppSettingsTests(ctx context.Context, s *testing.State, cr *chrome.Chrom
 				s.Fatal("Failed to find scan: ", err)
 			}
 
-			diffPath := filepath.Join(s.OutDir(), test.Name+"_diff.txt")
-			if err := document.CompareFiles(ctx, scan, s.DataPath(test.GoldenFile), diffPath); err != nil {
-				saveFilename := test.Name + filepath.Ext(scan)
-				s.Log("Saving scanned file to: ", saveFilename)
+			if err := document.CompareFiles(ctx, scan, s.DataPath(test.GoldenFile),
+				s.OutDir(), test.Name+"_diff.txt", test.Name+filepath.Ext(scan)); err != nil {
 				s.Error("Scan differs from golden file: ", err)
-				saveScanPath := filepath.Join(s.OutDir(), saveFilename)
-				if err := fsutil.MoveFile(scan, saveScanPath); err != nil {
-					s.Error("Unable to preserve scanned file output: ", err)
-				}
 			}
 
 			s.Log("Finished subtest ", test.Name)

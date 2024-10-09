@@ -59,8 +59,8 @@ func GenerateSearchablePDFFromImage(ctx context.Context, s *testing.State) {
 		s.Fatal("Failed to write output to ", path)
 	}
 
-	diffPath := filepath.Join(s.OutDir(), "diff.txt")
-	if err := document.CompareFiles(ctx, outputPDFPath, s.DataPath(goldenPDF), diffPath); err != nil {
+	if err := document.CompareFiles(ctx, outputPDFPath, s.DataPath(goldenPDF),
+		s.OutDir(), "diff.txt", filepath.Base(outputPDFPath)); err != nil {
 		s.Error("Generated PDF file differs from golden file: ", err)
 	}
 
