@@ -26,14 +26,14 @@ func init() {
 		Desc:         "Verify CCA volume button shutter related use cases",
 		Contacts:     []string{"chromeos-camera-app-eng@google.com", "pihsun@chromium.org"},
 		BugComponent: "b:978428", // ChromeOS > Platform > Technologies > Camera > App & Framework
-		Attr:         []string{
+		Attr: []string{
 			"group:mainline",
 			"informational",
 			"group:release-health",
 			"release-health_camera",
 		},
 		SoftwareDeps: []string{"camera_app", "chrome", "proprietary_codecs"},
-		HardwareDeps: hwdep.D(hwdep.InternalDisplay(), hwdep.SkipOnFormFactor(hwdep.Chromebase)),
+		HardwareDeps: hwdep.D(hwdep.InternalDisplay(), hwdep.SkipOnFormFactor(hwdep.Chromebase), hwdep.Speaker()),
 		Fixture:      "ccaLaunchedWithFakeHALCamera",
 	})
 }
