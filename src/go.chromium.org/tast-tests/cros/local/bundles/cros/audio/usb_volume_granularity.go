@@ -25,7 +25,7 @@ func init() {
 		Contacts:     []string{"chromeos-audio-bugs@google.com", "whalechang@chromium.org"},
 		BugComponent: "b:776546",
 		Attr:         []string{"group:mainline", "informational"},
-		SoftwareDeps: []string{"chrome"},
+		SoftwareDeps: []string{"chrome", "qemu"},
 		Fixture:      "chromeLoggedIn",
 		Timeout:      20 * time.Minute,
 	})
