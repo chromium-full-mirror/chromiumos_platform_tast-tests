@@ -1,4 +1,9 @@
 # Copyright 2023 The ChromiumOS Authors
 # Use of this source code is governed by a BSD-style license that can be
 # found in the LICENSE file.
-include /src/go.chromium.org/tast-tests/cros/common/devicesettings/OWNERS
+
+# General settings test owners. Refer to more specific test owners below.
+include /src/go.chromium.org/tast-tests/cros/common/ossettings/OWNERS
+
+# Device settings test owners
+per-file device_*.go=file:/src/go.chromium.org/tast-tests/cros/common/devicesettings/OWNERS
