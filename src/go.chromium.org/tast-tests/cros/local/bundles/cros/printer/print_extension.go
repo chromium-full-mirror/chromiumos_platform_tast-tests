@@ -8,7 +8,6 @@ import (
 	"context"
 	"io/ioutil"
 	"os"
-	"path/filepath"
 	"time"
 
 	"go.chromium.org/tast-tests/cros/local/bundles/cros/printer/fake"
@@ -232,12 +231,9 @@ func PrintExtension(ctx context.Context, s *testing.State) {
 		s.Fatal("Fake printer didn't receive a request: ", err)
 	}
 
-	if document.CleanContents(string(expect)) != document.CleanContents(string(request)) {
-		outPath := filepath.Join(s.OutDir(), goldenFile)
-		if err := ioutil.WriteFile(outPath, request, 0644); err != nil {
-			s.Error("Failed to dump output: ", err)
-		}
-		s.Errorf("Printer output differs from expected: output saved to %q", goldenFile)
+	if err = document.CompareFileContents(ctx, string(request), string(expect),
+		s.OutDir(), "diff.txt", goldenFile); err != nil {
+		s.Error("Printer output differs from expected: ", err)
 	}
 
 	var events []struct {

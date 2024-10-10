@@ -9,7 +9,6 @@ import (
 	"context"
 	"fmt"
 	"io/ioutil"
-	"path/filepath"
 	"strings"
 
 	"go.chromium.org/tast-tests/cros/local/bundles/cros/printer/lpprint"
@@ -71,11 +70,8 @@ func run(ctx context.Context, s *testing.State, p *Params, printFun func(context
 	if err != nil {
 		s.Fatal("Print job failed: ", err)
 	}
-	if document.CleanContents(string(expect)) != document.CleanContents(string(request)) {
-		outPath := filepath.Join(s.OutDir(), p.ExpectedFile)
-		if err := ioutil.WriteFile(outPath, request, 0644); err != nil {
-			s.Error("Failed to dump output: ", err)
-		}
-		s.Errorf("Printer output differs from expected: output saved to %q", p.ExpectedFile)
+	if err = document.CompareFileContents(ctx, string(request), string(expect),
+		s.OutDir(), "diff.txt", p.ExpectedFile); err != nil {
+		s.Error("Printer output differs from expected: ", err)
 	}
 }

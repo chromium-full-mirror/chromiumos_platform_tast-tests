@@ -78,13 +78,10 @@ func Rastertoescpos(ctx context.Context, s *testing.State) {
 		s.Fatalf("Failed to read file %s: %v", golden, err)
 	}
 
-	if document.CleanContents(string(goldenBytes)) != document.CleanContents(string(rastertoescposOutput)) {
+	if err = document.CompareFileContents(
+		ctx, string(rastertoescposOutput), string(goldenBytes),
+		s.OutDir(), "diff.txt", filepath.Base(s.DataPath(golden))); err != nil {
 		escposCmd.DumpLog(ctx)
-		outFile := filepath.Base(s.DataPath(golden))
-		outPath := filepath.Join(s.OutDir(), outFile)
-		if err := ioutil.WriteFile(outPath, rastertoescposOutput, 0644); err != nil {
-			s.Error("Failed to dump output: ", err)
-		}
-		s.Errorf("Output differs from expected: output saved to %q", outFile)
+		s.Error("Output differs from expected: ", err)
 	}
 }

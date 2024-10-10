@@ -61,13 +61,9 @@ func RunTest(ctx context.Context, s *testing.State, gsFilter, input, golden, env
 		s.Fatalf("Failed to read file %s: %v", golden, err)
 	}
 
-	if document.CleanContents(string(goldenBytes)) != document.CleanContents(string(output)) {
+	if err = document.CompareFileContents(ctx, string(output), string(goldenBytes),
+		s.OutDir(), "diff.txt", filepath.Base(golden)); err != nil {
 		cmd.DumpLog(ctx)
-		outFile := filepath.Base(golden)
-		outPath := filepath.Join(s.OutDir(), outFile)
-		if err := ioutil.WriteFile(outPath, output, 0644); err != nil {
-			s.Error("Failed to dump output: ", err)
-		}
-		s.Errorf("Output differs from expected: output saved to %q", outFile)
+		s.Error("Output differs from expected: ", err)
 	}
 }

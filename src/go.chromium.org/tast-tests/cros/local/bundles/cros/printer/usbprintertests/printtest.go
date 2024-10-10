@@ -9,7 +9,6 @@ package usbprintertests
 import (
 	"context"
 	"fmt"
-	"io/ioutil"
 	"os"
 	"path/filepath"
 	"time"
@@ -106,20 +105,8 @@ func RunPrintJob(ctx context.Context, s *testing.State, printerName string, job 
 	}, nil); err != nil {
 		s.Fatal("Print job didn't complete: ", err)
 	}
-	goldenData, err := ioutil.ReadFile(job.GoldenFile)
-	if err != nil {
-		s.Fatal("Failed to read golden file: ", err)
-	}
-	output, err := ioutil.ReadFile(job.PrintedFile)
-	if err != nil {
-		s.Fatal("Failed to read output file: ", err)
-	}
-	if document.CleanContents(string(goldenData)) != document.CleanContents(string(output)) {
-		outFile := filepath.Base(job.GoldenFile)
-		outPath := filepath.Join(s.OutDir(), outFile)
-		if err := ioutil.WriteFile(outPath, output, 0644); err != nil {
-			s.Error("Failed to dump output: ", err)
-		}
-		s.Errorf("Printer output differs from expected: output saved to %q", outFile)
+	if err = document.CompareFiles(ctx, job.PrintedFile, job.GoldenFile,
+		s.OutDir(), "diff.txt", filepath.Base(job.GoldenFile)); err != nil {
+		s.Error("Printer output differs from expected: ", err)
 	}
 }
