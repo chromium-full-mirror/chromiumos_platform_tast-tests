@@ -97,15 +97,15 @@ func init() {
 				numSuspend: 5,
 			},
 			ExtraAttr: []string{"group:crosbolt", "crosbolt_perbuild"},
-			// (40 sec for histograms + 10 + 60 sec suspend/resume) * 5 times + open tabs.
-			Timeout: 20 * time.Minute,
+			// 10 min for setting up (login and opening tabs) +(3 min for each suspend/resume) * 5 times
+			Timeout: 30 * time.Minute,
 		}, {
 			Name: "arc",
 			Val: testArgsForSuspendPerf{
 				numSuspend: 5,
 				enableArc:  true,
 			},
-			Timeout: 20 * time.Minute,
+			Timeout: 30 * time.Minute,
 		}, {
 			Name: "mem",
 			Val: testArgsForSuspendPerf{
@@ -113,7 +113,7 @@ func init() {
 				enableMempressure: true,
 			},
 			// mempressure will take another 20minutes
-			Timeout: 30 * time.Minute,
+			Timeout: 45 * time.Minute,
 		}, {
 			Name: "arc_mem",
 			Val: testArgsForSuspendPerf{
@@ -122,7 +122,7 @@ func init() {
 				enableMempressure: true,
 			},
 			// mempressure will take another 20minutes
-			Timeout: 30 * time.Minute,
+			Timeout: 45 * time.Minute,
 		}},
 	})
 }
