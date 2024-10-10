@@ -70,7 +70,7 @@ func KeepFanMax(ctx context.Context, useFan bool) (<-chan error, func(context.Co
 				}
 				// GoBigSleepLint: We need to periodically set the fan to max to
 				// overwrite the device fan profile.
-				if err := testing.Sleep(ctx, time.Second); err != nil {
+				if err := testing.Sleep(ctx, 5*time.Second); err != nil {
 					status <- errors.Wrap(err, "failing to sleep while keeping fan max")
 					finished <- true
 					return
