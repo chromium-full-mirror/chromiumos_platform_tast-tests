@@ -406,3 +406,28 @@ func (t *TpmHandle) TpmvTurnUpdateOn(delay uint16) error {
 	}
 	return nil
 }
+
+// TpmvSetSNBits sets the GSC serial number.
+func (t *TpmHandle) TpmvSetSNBits(sn []byte) error {
+	sizeStr := fmt.Sprintf("%08x", 12+len(sn))
+	var setSNBitsHeader, err = hex.DecodeString("8001" + // tag: TPM_ST_NO_SESSIONS
+		sizeStr +
+		"20000000" + // ordinal vendor
+		"0029") // subcommand: set SN_BITS
+	if err != nil {
+		return err
+	}
+	tpmvSetSNBits := append(setSNBitsHeader, sn...)
+	response, err := t.Send(tpmvSetSNBits)
+	if err != nil {
+		return err
+	}
+	errorCode, err := getTPMVResponseStatus(response)
+	if err != nil {
+		return err
+	}
+	if errorCode != 0 {
+		return errors.Errorf("SetSNBits command returned error: 0x%x", errorCode)
+	}
+	return nil
+}
