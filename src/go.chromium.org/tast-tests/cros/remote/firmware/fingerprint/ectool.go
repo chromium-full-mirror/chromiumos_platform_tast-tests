@@ -7,9 +7,9 @@ package fingerprint
 import (
 	"context"
 	"strconv"
-	"strings"
 	"time"
 
+	fp "go.chromium.org/tast-tests/cros/common/fingerprint"
 	"go.chromium.org/tast-tests/cros/remote/firmware"
 	"go.chromium.org/tast/core/dut"
 	"go.chromium.org/tast/core/errors"
@@ -57,7 +57,7 @@ type RollbackState struct {
 
 // UnmarshalerEctool unmarshals part of ectool's output into a RollbackState.
 func (r *RollbackState) UnmarshalerEctool(data []byte) error {
-	rollbackInfoMap := parseColonDelimitedOutput(string(data))
+	rollbackInfoMap := fp.ParseColonDelimitedOutput(string(data))
 
 	var state RollbackState
 	blockID, err := strconv.Atoi(rollbackInfoMap["Rollback block id"])
@@ -164,7 +164,7 @@ func RunningFirmwareCopy(ctx context.Context, d *dut.DUT) (FWImageType, error) {
 	if err != nil {
 		return FWImageType(""), errors.Wrap(err, "failed to query FPMCU version")
 	}
-	versionInfoMap := parseColonDelimitedOutput(string(out))
+	versionInfoMap := fp.ParseColonDelimitedOutput(string(out))
 	firmwareCopy := versionInfoMap["Firmware copy"]
 	if firmwareCopy != string(ImageTypeRO) && firmwareCopy != string(ImageTypeRW) {
 		return FWImageType(""), errors.New("cannot find firmware copy string")
@@ -211,7 +211,7 @@ func runningFirmwareVersion(ctx context.Context, d *dut.DUT, image FWImageType) 
 	if err != nil {
 		return "", errors.Wrap(err, "failed to query FPMCU version")
 	}
-	versionInfoMap := parseColonDelimitedOutput(string(out))
+	versionInfoMap := fp.ParseColonDelimitedOutput(string(out))
 	switch image {
 	case ImageTypeRW:
 		return versionInfoMap[ectoolRWVersion], nil
@@ -229,19 +229,4 @@ func rawFPFrameCommand(ctx context.Context, d *dut.DUT) *ssh.Cmd {
 // FpInfoCommand returns the ssh command for running fpinfo.
 func FpInfoCommand(ctx context.Context, d *dut.DUT) *ssh.Cmd {
 	return EctoolCommand(ctx, d, "fpinfo")
-}
-
-// parseColonDelimitedOutput parses colon delimited information to a map.
-func parseColonDelimitedOutput(output string) map[string]string {
-	ret := map[string]string{}
-	for _, line := range strings.Split(output, "\n") {
-		// Note that the ectool version build info line uses ':'s as time of
-		// date delimiters.
-		splits := strings.SplitN(line, ":", 2)
-		if len(splits) != 2 {
-			continue
-		}
-		ret[strings.TrimSpace(splits[0])] = strings.TrimSpace(splits[1])
-	}
-	return ret
 }

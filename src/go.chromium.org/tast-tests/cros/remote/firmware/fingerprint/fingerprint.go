@@ -373,7 +373,7 @@ func readFirmwareKeyID(ctx context.Context, d *rpcdut.RPCDUT, buildFwFile string
 	if err != nil {
 		return "", errors.Wrap(err, "failed to run futility on device")
 	}
-	parsed := parseColonDelimitedOutput(string(out))
+	parsed := fp.ParseColonDelimitedOutput(string(out))
 	keyID, ok := parsed["ID"]
 	if !ok {
 		return "", errors.Errorf("failed to find key ID for %s", buildFwFile)
