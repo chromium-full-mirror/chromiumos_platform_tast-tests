@@ -3,3 +3,9 @@ seewaifu@google.com #{LAST_RESORT_SUGGESTION}
 rohitbm@chromium.org #{LAST_RESORT_SUGGESTION}
 yichiyan@google.com #{LAST_RESORT_SUGGESTION}
 abergman@google.com #{LAST_RESORT_SUGGESTION}
+
+# Temporary reviewers for the purposes of work on Lacros sunsetting
+# (go/lacros-removal). Please only send mechanical changes for this project
+# to these reviewers.
+hidehiko@chromium.org
+neis@chromium.org
