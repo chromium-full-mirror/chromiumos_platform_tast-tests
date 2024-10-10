@@ -30,19 +30,18 @@ func init() {
 		Desc:         "This test ensure that we can backup and restore Android Apps",
 		Contacts: []string{
 			"arcvm-software@google.com", // Owner team.
+			"niwa@google.com",           // ARCVM data migration.
 			"raging@google.com",         // Owner for VM tests.
-			"rohitbm@google.com",
-			"arc-core@google.com",
+			"rohitbm@google.com",        // Original author.
 		},
 		BugComponent: "b:883059",
 		SoftwareDeps: []string{"chrome"},
-		// b:238260020 - disable aged (>1y) unpromoted informational tests
-		// Attr:         []string{"group:mainline", "informational"},
 		Params: []testing.Param{{
+			// b:238260020 - disable aged (>1y) unpromoted informational tests
 			ExtraSoftwareDeps: []string{"android_container"},
 		}, {
 			Name:              "vm",
-			ExtraAttr:         []string{"group:hw_agnostic"},
+			ExtraAttr:         []string{"group:mainline", "informational", "group:hw_agnostic"},
 			ExtraSoftwareDeps: []string{"android_vm"},
 		}},
 		Timeout: chrome.LoginTimeout + arc.BootTimeout + 30*time.Second,
