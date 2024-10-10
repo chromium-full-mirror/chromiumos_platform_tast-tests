@@ -9,7 +9,6 @@ import (
 	"context"
 	"image"
 	"image/color"
-	"image/png"
 	"math"
 	"net/http"
 	"net/http/httptest"
@@ -552,7 +551,7 @@ func TestPlayAndScreenshot(ctx context.Context, s *testing.State, tconn *chrome.
 		return errors.Wrap(err, "failed to sleep prior to taking screenshot")
 	}
 	sshotPath := filepath.Join(s.OutDir(), "screenshot.png")
-	if err := screenshot.Capture(ctx, sshotPath); err != nil {
+	if err := screenshot.CaptureWithPanelOrientationRotation(ctx, sshotPath); err != nil {
 		return errors.Wrap(err, "failed to capture screen")
 	}
 
@@ -568,25 +567,6 @@ func TestPlayAndScreenshot(ctx context.Context, s *testing.State, tconn *chrome.
 	}
 	if err != nil {
 		return errors.Wrapf(err, "could not decode %v", sshotPath)
-	}
-	if img.Bounds().Dx() < img.Bounds().Dy() {
-		s.Log("The screenshot is in portrait orientation; rotating it")
-		rotImg := image.NewRGBA(image.Rectangle{image.Point{}, image.Point{img.Bounds().Max.Y, img.Bounds().Max.X}})
-		for dstY := 0; dstY < rotImg.Bounds().Dy(); dstY++ {
-			for dstX := 0; dstX < rotImg.Bounds().Dx(); dstX++ {
-				srcColor := img.At(dstY, img.Bounds().Dy()-1-dstX)
-				rotImg.Set(dstX, dstY, srcColor)
-			}
-		}
-		f, err := os.Create(sshotPath)
-		if err != nil {
-			return errors.Wrapf(err, "could not create the rotated screenshot (%v)", sshotPath)
-		}
-		defer f.Close()
-		if err := png.Encode(f, rotImg); err != nil {
-			return errors.Wrapf(err, "could not encode the rotated screenshot (%v)", sshotPath)
-		}
-		img = rotImg
 	}
 
 	// Find the bounds of the video by excluding the black strips on each side.

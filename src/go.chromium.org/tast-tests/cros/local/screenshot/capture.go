@@ -30,6 +30,15 @@ func Capture(ctx context.Context, path string) error {
 	return cliscreenshot.Capture(ctx, path)
 }
 
+// CaptureWithPanelOrientationRotation differs from Capture in that it passes
+// "--panel-orientation-rotation" to the utility. This parameter will use the
+// DRM_MODE_OBJECT_CONNECTOR property to correctly orient the screenshot. Using
+// this parameter is necessary when trying to determine if a landscape panel
+// is naturally rotated 90° CW or 90° CCW.
+func CaptureWithPanelOrientationRotation(ctx context.Context, path string) error {
+	return cliscreenshot.CaptureWithPanelOrientationRotation(ctx, path)
+}
+
 // CaptureWithStderr differs from Capture in that it returns the stderr when
 // capturing a screenshot fails. This is useful for verification on whether turning display
 // on/off is successful by matching with the message, "CRTC not found. Is the screen on?".
