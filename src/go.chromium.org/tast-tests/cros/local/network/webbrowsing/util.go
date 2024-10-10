@@ -10,6 +10,7 @@ import (
 	"context"
 	"net/http"
 	"strings"
+	"time"
 
 	"go.chromium.org/tast-tests/cros/local/chrome"
 	"go.chromium.org/tast-tests/cros/local/network/virtualnet"
@@ -38,6 +39,10 @@ func StartSimpleHTTPServer(ctx context.Context, env *virtualnet.Env, content str
 // VerifyWebPageContains opens url in cr, waits for the page loading finished,
 // and checks if the page contains pattern by a substring match.
 func VerifyWebPageContains(ctx context.Context, cr *chrome.Chrome, url, content string) error {
+	// Have a shorter ctx to limit the execution time of this function.
+	ctx, cancel := context.WithTimeout(ctx, 20*time.Second)
+	defer cancel()
+
 	conn, err := cr.NewConn(ctx, url)
 	if err != nil {
 		return errors.Wrap(err, "failed to create Chrome connection")
