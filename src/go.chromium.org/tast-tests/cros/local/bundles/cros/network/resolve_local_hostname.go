@@ -27,6 +27,8 @@ func init() {
 			"group:paper-io",
 			"group:network",
 			"network_cq",
+			"group:release-health",
+			"release-health_network",
 		},
 	})
 }

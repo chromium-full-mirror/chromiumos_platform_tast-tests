@@ -39,7 +39,7 @@ func init() {
 		Contacts:     []string{"cros-networking@google.com", "jasongustaman@google.com", "garrick@google.com"},
 		// ChromeOS > Platform > System > Networking > Continuous Maintenance
 		BugComponent: "b:1493959",
-		Attr:         []string{"group:mainline"},
+		Attr:         []string{"group:mainline", "group:release-health", "release-health_network"},
 		SoftwareDeps: []string{"chrome", "no_kernel_upstream"},
 		Timeout:      2 * time.Minute,
 		Params: []testing.Param{{

@@ -20,7 +20,7 @@ func init() {
 		Desc:         "Test that shill init scripts perform as expected",
 		Contacts:     []string{"cros-networking@google.com", "hugobenichi@google.com"},
 		BugComponent: "b:1493959",
-		Attr:         []string{"group:mainline", "group:network", "network_cq"},
+		Attr:         []string{"group:mainline", "group:network", "network_cq", "group:release-health", "release-health_network"},
 	})
 }
 

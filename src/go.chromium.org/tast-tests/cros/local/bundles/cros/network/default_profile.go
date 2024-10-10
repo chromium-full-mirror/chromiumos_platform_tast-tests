@@ -31,7 +31,7 @@ func init() {
 			"stevenjb@chromium.org", // Connectivity team
 			"nya@chromium.org",      // Tast port author
 		},
-		Attr:         []string{"group:mainline", "group:network", "network_cq"},
+		Attr:         []string{"group:mainline", "group:network", "network_cq", "group:release-health", "release-health_network"},
 		HardwareDeps: hwdep.D(hwdep.SkipOnModel("winky")), // b/182293895: winky DUTs are having USB Ethernet issues that surface during `restart shill`
 	})
 }

@@ -29,7 +29,7 @@ func init() {
 		},
 		// ChromeOS > Platform > System > Networking > Continuous Maintenance
 		BugComponent: "b:1493959",
-		Attr:         []string{"group:network", "network_platform"},
+		Attr:         []string{"group:network", "network_platform", "group:release-health", "release-health_network"},
 	})
 }
 

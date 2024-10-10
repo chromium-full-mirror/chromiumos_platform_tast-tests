@@ -24,7 +24,7 @@ func init() {
 		Contacts:     []string{"cros-networking@google.com", "taoyl@google.com"},
 		BugComponent: "b:1493959",
 		SoftwareDeps: []string{"chrome"},
-		Attr:         []string{"group:mainline", "informational"},
+		Attr:         []string{"group:mainline", "informational", "group:release-health", "release-health_network"},
 		Fixture:      "shillReset",
 	})
 }

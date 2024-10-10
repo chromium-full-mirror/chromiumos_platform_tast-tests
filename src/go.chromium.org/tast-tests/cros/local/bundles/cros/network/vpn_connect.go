@@ -63,7 +63,7 @@ func init() {
 				},
 			},
 			Fixture:           "vpnEnvWithCerts",
-			ExtraAttr:         []string{"group:mainline"},
+			ExtraAttr:         []string{"group:mainline", "group:release-health", "release-health_network"},
 			ExtraHardwareDeps: hwdep.D(hwdep.HasTpm()),
 			ExtraSoftwareDeps: []string{"ikev2"},
 		}, {
@@ -75,7 +75,7 @@ func init() {
 				},
 			},
 			Fixture:           "vpnEnvWithCerts",
-			ExtraAttr:         []string{"group:mainline"},
+			ExtraAttr:         []string{"group:mainline", "group:release-health", "release-health_network"},
 			ExtraHardwareDeps: hwdep.D(hwdep.HasTpm()),
 			ExtraSoftwareDeps: []string{"ikev2"},
 		}, {
@@ -88,7 +88,7 @@ func init() {
 				},
 			},
 			Fixture:   "vpnEnv",
-			ExtraAttr: []string{"group:mainline"},
+			ExtraAttr: []string{"group:mainline", "group:release-health", "release-health_network"},
 		}, {
 			Name: "l2tp_ipsec_psk_xauth_missing_user",
 			Val: vpnConnectTestParams{
@@ -101,7 +101,7 @@ func init() {
 				shouldFail:            true,
 			},
 			Fixture:   "vpnEnv",
-			ExtraAttr: []string{"group:network", "network_platform"},
+			ExtraAttr: []string{"group:network", "network_platform", "group:release-health", "release-health_network"},
 		}, {
 			Name: "l2tp_ipsec_psk_xauth_wrong_user",
 			Val: vpnConnectTestParams{
@@ -114,7 +114,7 @@ func init() {
 				shouldFail:          true,
 			},
 			Fixture:   "vpnEnv",
-			ExtraAttr: []string{"group:network", "network_platform"},
+			ExtraAttr: []string{"group:network", "network_platform", "group:release-health", "release-health_network"},
 		}, {
 			Name: "l2tp_ipsec_cert",
 			Val: vpnConnectTestParams{
@@ -124,7 +124,7 @@ func init() {
 				},
 			},
 			Fixture:           "vpnEnvWithCerts",
-			ExtraAttr:         []string{"group:mainline"},
+			ExtraAttr:         []string{"group:mainline", "group:release-health", "release-health_network"},
 			ExtraHardwareDeps: hwdep.D(hwdep.HasTpm()),
 		}, {
 			Name: "openvpn",
@@ -136,7 +136,7 @@ func init() {
 				},
 			},
 			Fixture:           "vpnEnvWithCerts",
-			ExtraAttr:         []string{"group:mainline"},
+			ExtraAttr:         []string{"group:mainline", "group:release-health", "release-health_network"},
 			ExtraHardwareDeps: hwdep.D(hwdep.HasTpm()),
 		}, {
 			Name: "openvpn_user_pass",
@@ -148,7 +148,7 @@ func init() {
 				},
 			},
 			Fixture:           "vpnEnvWithCerts",
-			ExtraAttr:         []string{"group:mainline"},
+			ExtraAttr:         []string{"group:mainline", "group:release-health", "release-health_network"},
 			ExtraHardwareDeps: hwdep.D(hwdep.HasTpm()),
 		}, {
 			Name: "openvpn_cert_verify",
@@ -160,7 +160,7 @@ func init() {
 				},
 			},
 			Fixture:           "vpnEnvWithCerts",
-			ExtraAttr:         []string{"group:mainline"},
+			ExtraAttr:         []string{"group:mainline", "group:release-health", "release-health_network"},
 			ExtraHardwareDeps: hwdep.D(hwdep.HasTpm()),
 		}, {
 			Name: "openvpn_cert_verify_wrong_hash",
@@ -174,7 +174,7 @@ func init() {
 				shouldFail:                 true,
 			},
 			Fixture:           "vpnEnvWithCerts",
-			ExtraAttr:         []string{"group:network", "network_platform"},
+			ExtraAttr:         []string{"group:network", "network_platform", "group:release-health", "release-health_network"},
 			ExtraHardwareDeps: hwdep.D(hwdep.HasTpm()),
 		}, {
 			Name: "openvpn_cert_verify_wrong_subject",
@@ -188,7 +188,7 @@ func init() {
 				shouldFail:                    true,
 			},
 			Fixture:           "vpnEnvWithCerts",
-			ExtraAttr:         []string{"group:network", "network_platform"},
+			ExtraAttr:         []string{"group:network", "network_platform", "group:release-health", "release-health_network"},
 			ExtraHardwareDeps: hwdep.D(hwdep.HasTpm()),
 		}, {
 			Name: "openvpn_cert_verify_wrong_cn",
@@ -202,7 +202,7 @@ func init() {
 				shouldFail:               true,
 			},
 			Fixture:           "vpnEnvWithCerts",
-			ExtraAttr:         []string{"group:network", "network_platform"},
+			ExtraAttr:         []string{"group:network", "network_platform", "group:release-health", "release-health_network"},
 			ExtraHardwareDeps: hwdep.D(hwdep.HasTpm()),
 		}, {
 			Name: "openvpn_cert_verify_cn_only",
@@ -214,7 +214,7 @@ func init() {
 				},
 			},
 			Fixture:           "vpnEnvWithCerts",
-			ExtraAttr:         []string{"group:network", "network_platform"},
+			ExtraAttr:         []string{"group:network", "network_platform", "group:release-health", "release-health_network"},
 			ExtraHardwareDeps: hwdep.D(hwdep.HasTpm()),
 		}, {
 			Name: "wireguard_psk",
@@ -225,7 +225,7 @@ func init() {
 				},
 			},
 			Fixture:           "vpnEnv",
-			ExtraAttr:         []string{"group:mainline"},
+			ExtraAttr:         []string{"group:mainline", "group:release-health", "release-health_network"},
 			ExtraSoftwareDeps: []string{"wireguard"},
 		}, {
 			Name: "wireguard_generate_key",
@@ -234,7 +234,7 @@ func init() {
 				wgGenKey: true,
 			},
 			Fixture:           "vpnEnv",
-			ExtraAttr:         []string{"group:mainline"},
+			ExtraAttr:         []string{"group:mainline", "group:release-health", "release-health_network"},
 			ExtraSoftwareDeps: []string{"wireguard"},
 		}},
 	})

@@ -31,6 +31,8 @@ func init() {
 			"group:hardware",
 			"group:complementary",
 			"group:hw_agnostic",
+			"group:release-health",
+			"release-health_network",
 		},
 		SoftwareDeps: []string{"chrome"},
 	})

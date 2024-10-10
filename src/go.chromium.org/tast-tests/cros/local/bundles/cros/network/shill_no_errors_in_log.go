@@ -28,7 +28,7 @@ func init() {
 			"cros-network-health-team@google.com", // Network Health team
 			"stevenjb@google.com",                 // Test author
 		},
-		Attr: []string{"group:mainline", "informational"},
+		Attr: []string{"group:mainline", "informational", "group:release-health", "release-health_network"},
 	})
 }
 

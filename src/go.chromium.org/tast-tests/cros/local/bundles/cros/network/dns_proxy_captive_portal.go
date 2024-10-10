@@ -50,7 +50,7 @@ func init() {
 			Val: dnsProxyCaptivePortalTestParams{
 				relog: true,
 			},
-			ExtraAttr:         []string{"group:network", "network_platform"},
+			ExtraAttr:         []string{"group:network", "network_platform", "group:release-health", "release-health_network"},
 			ExtraSoftwareDeps: []string{"arc"},
 			Fixture:           "ehide",
 			Timeout:           10 * time.Minute,

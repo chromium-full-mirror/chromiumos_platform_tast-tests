@@ -40,6 +40,8 @@ func init() {
 			"group:hardware",
 			"group:complementary",
 			"group:hw_agnostic",
+			"group:release-health",
+			"release-health_network",
 			//"group:cq-medium",
 		},
 		Fixture: "chromeEnrolledLoggedIn",

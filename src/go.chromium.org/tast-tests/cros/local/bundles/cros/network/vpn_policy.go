@@ -41,6 +41,8 @@ func init() {
 			"group:medium_low_tier",
 			"group:hardware",
 			"group:complementary",
+			"group:release-health",
+			"release-health_network",
 		},
 		Fixture: "chromeEnrolledLoggedIn",
 		SearchFlags: []*testing.StringPair{

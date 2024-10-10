@@ -23,7 +23,7 @@ func init() {
 			"cros-networking@google.com", // Platform networking team: owner/maintainer
 			"stevenjb@google.com",        // Test author
 		},
-		Attr: []string{"group:mainline"},
+		Attr: []string{"group:mainline", "group:release-health", "release-health_network"},
 	})
 }
 

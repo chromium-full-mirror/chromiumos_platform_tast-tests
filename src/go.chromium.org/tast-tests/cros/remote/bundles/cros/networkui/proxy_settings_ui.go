@@ -32,7 +32,7 @@ func init() {
 			"chromeos-connectivity-cienet-external@google.com",
 		},
 		BugComponent: "b:1578688", // ChromeOS > External > Cienet > Manual Test Automation > Test stabilization
-		Attr:         []string{"group:wificell", "wificell_e2e"},
+		Attr:         []string{"group:wificell", "wificell_e2e", "group:release-health", "release-health_network"},
 		TestBedDeps:  []string{tbdep.Wificell, tbdep.WifiStateNormal, tbdep.BluetoothStateNormal, tbdep.PeripheralWifiStateWorking},
 		ServiceDeps: []string{
 			wificell.ProxyFixtServiceDepsProxySetting,

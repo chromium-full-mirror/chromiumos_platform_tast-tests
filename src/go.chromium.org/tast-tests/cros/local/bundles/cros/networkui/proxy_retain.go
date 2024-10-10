@@ -46,7 +46,7 @@ func init() {
 			"chadduffin@chromium.org",
 		},
 		BugComponent: "b:1318544", // ChromeOS > Software > System Services > Connectivity > General
-		Attr:         []string{"group:network", "network_e2e"},
+		Attr:         []string{"group:network", "network_e2e", "group:release-health", "release-health_network"},
 		SoftwareDeps: []string{"chrome"},
 		Vars:         []string{"ui.signinProfileTestExtensionManifestKey"},
 		Fixture:      "shillReset",

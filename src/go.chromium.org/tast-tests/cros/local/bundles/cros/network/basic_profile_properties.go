@@ -21,7 +21,7 @@ func init() {
 		Contacts: []string{
 			"cros-networking@google.com",
 		},
-		Attr: []string{"group:mainline", "group:network", "network_cq"},
+		Attr: []string{"group:mainline", "group:network", "network_cq", "group:release-health", "release-health_network"},
 		Pre:  pre.SetLoggingWiFi(),
 	})
 }
