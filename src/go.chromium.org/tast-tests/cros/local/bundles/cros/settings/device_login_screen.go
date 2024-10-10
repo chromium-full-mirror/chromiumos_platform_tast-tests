@@ -8,11 +8,9 @@ import (
 	"context"
 	"time"
 
-	"go.chromium.org/tast-tests/cros/common/dma"
 	"go.chromium.org/tast-tests/cros/common/ui"
 	"go.chromium.org/tast-tests/cros/local/chrome"
 	"go.chromium.org/tast-tests/cros/local/chrome/uiauto"
-	"go.chromium.org/tast-tests/cros/local/chrome/uiauto/faillog"
 	"go.chromium.org/tast-tests/cros/local/chrome/uiauto/lockscreen"
 	"go.chromium.org/tast-tests/cros/local/chrome/uiauto/nodewith"
 	"go.chromium.org/tast-tests/cros/local/chrome/uiauto/ossettings"
@@ -21,7 +19,6 @@ import (
 	"go.chromium.org/tast-tests/cros/local/devicesettings"
 	"go.chromium.org/tast-tests/cros/local/devicesettings/constants"
 	"go.chromium.org/tast-tests/cros/local/input"
-	"go.chromium.org/tast-tests/cros/local/upstart"
 	"go.chromium.org/tast/core/ctxutil"
 	"go.chromium.org/tast/core/testing"
 	"go.chromium.org/tast/core/testing/hwdep"
@@ -58,97 +55,74 @@ func init() {
 // and later uses the password field on the login screen to verify that the
 // modifier key remapping setting change works on the login screen.
 func DeviceLoginScreen(ctx context.Context, s *testing.State) {
-	var creds chrome.Creds
+	username := "test123@gmail.com"
+	password := "pass"
 	// Log in and remap a modifier key in the remap keys subpage.
 	// Logging in and out will also create a user pod on the login screen that
 	// we can use to verify keyboard settings.
-	func() {
-		cr, err := chrome.New(ctx, chrome.EnableFeatures("InputDeviceSettingsSplit"), chrome.GAIALoginPool(dma.CredsFromPool(ui.GaiaPoolDefaultVarName)))
-		if err != nil {
-			s.Fatal("Chrome login failed: ", err)
-		}
+	cleanupCtx := ctx
+	ctx, cancel := ctxutil.Shorten(ctx, 30*time.Second)
+	defer cancel()
+	cr, err := chrome.New(ctx, chrome.FakeLogin(chrome.Creds{User: username, Pass: password}))
+	defer userutil.ResetUsers(cleanupCtx)
+	if err != nil {
+		s.Fatal("Chrome login failed: ", err)
+	}
+	defer cr.Close(cleanupCtx)
 
-		cleanupCtx := ctx
-		ctx, cancel := ctxutil.Shorten(ctx, 5*time.Second)
-		defer cancel()
-		defer faillog.DumpUITreeWithScreenshotOnError(cleanupCtx, s.OutDir(), s.HasError, cr,
-			"ui_dump")
-		creds = cr.Creds()
+	tconn, err := cr.TestAPIConn(ctx)
+	if err != nil {
+		s.Fatal("Failed to connect to Test API: ", err)
+	}
 
-		// This is needed for reven tests, as login flow there relies on the existence of a device setting.
-		if err := userutil.WaitForOwnership(ctx, cr); err != nil {
-			s.Fatal("User did not become device owner: ", err)
-		}
-		tconn, err := cr.TestAPIConn(ctx)
-		if err != nil {
-			s.Fatal("Failed to connect to Test API: ", err)
-		}
+	ui := uiauto.New(tconn).WithTimeout(20 * time.Second)
+	s.Log("Opening device settings page")
+	settings, err := ossettings.LaunchAtPage(ctx, tconn, ossettings.Device)
+	if err != nil {
+		s.Fatal("Failed to open device settings page: ", err)
+	}
+	defer settings.Close(cleanupCtx)
 
-		ui := uiauto.New(tconn).WithTimeout(20 * time.Second)
+	// Find Keyboard row and click it.
+	if err := ui.DoDefault(nodewith.Role(role.Link).NameStartingWith("Keyboard and inputs"))(ctx); err != nil {
+		s.Fatal("Failed to click keyboard row: ", err)
+	}
 
-		s.Log("Open setting page and starting test")
-		settings, err := ossettings.LaunchAtPage(ctx, tconn, ossettings.Device)
-		if err != nil {
-			s.Fatal("Failed to open setting page: ", err)
-		}
-		defer settings.Close(cleanupCtx)
-		defer faillog.DumpUITreeWithScreenshotOnError(cleanupCtx, s.OutDir(), s.HasError, cr, "ui")
+	// Click customize keyboard keys row and verify if all the buttons show up.
+	if err := ui.DoDefault(constants.CustomizeKeyboardKeys)(ctx); err != nil {
+		s.Fatal("Failed to click Customize keyboard keys row: ", err)
+	}
 
-		// Find Keyboard row and click it.
-		if err := ui.DoDefault(nodewith.Role(role.Link).NameStartingWith("Keyboard and inputs"))(ctx); err != nil {
-			s.Fatal("Failed to click keyboard row: ", err)
-		}
+	err = devicesettings.Remap(ctx, ui, constants.Control, constants.Backspace)
+	if err != nil {
+		s.Fatal("Failed to remap: ", err)
+	}
 
-		// Click customize keyboard keys row and verify if all the buttons show up.
-		if err := ui.DoDefault(constants.CustomizeKeyboardKeys)(ctx); err != nil {
-			s.Fatal("Failed to click Customize keyboard keys row: ", err)
-		}
+	if err := lockscreen.Lock(ctx, tconn); err != nil {
+		s.Fatal("Failed to lock the screen: ", err)
+	}
 
-		err = devicesettings.Remap(ctx, ui, constants.Control, constants.Backspace)
-		if err != nil {
-			s.Fatal("Failed to remap: ", err)
-		}
+	if st, err := lockscreen.WaitState(ctx, tconn, func(st lockscreen.State) bool { return st.Locked && st.ReadyForPassword }, 30*time.Second); err != nil {
+		s.Fatalf("Waiting for the screen to be locked failed: %v (last status %+v)", err, st)
+	}
 
-		if err := upstart.RestartJob(ctx, "ui"); err != nil {
-			s.Fatal("Failed to restart ui: ", err)
+	// Unlock the screen to ensure subsequent tests aren't affected by the screen remaining locked.
+	// TODO(b/187794615): Remove once chrome.go has a way to clean up the lock screen state.
+	defer func() {
+		if err := lockscreen.Unlock(cleanupCtx, tconn); err != nil {
+			s.Fatal("Failed to unlock the screen: ", err)
 		}
 	}()
 
-	// NoLogin is used to land in signin screen.
-	cr, err := chrome.New(
-		ctx,
-		chrome.EnableFeatures("InputDeviceSettingsSplit"),
-		chrome.NoLogin(),
-		chrome.KeepState(),
-		chrome.LoadSigninProfileExtension(s.RequiredVar("ui.signinProfileTestExtensionManifestKey")),
-	)
-
-	if err != nil {
-		s.Fatal("Chrome start failed: ", err)
-	}
-
-	cleanupCtx := ctx
-	ctx, cancel := ctxutil.Shorten(ctx, 5*time.Second)
-	defer cancel()
-
-	tconn, err := cr.SigninProfileTestAPIConn(ctx)
-	if err != nil {
-		s.Fatal("Creating login test API connection failed: ", err)
-	}
-
-	defer faillog.DumpUITreeWithScreenshotOnError(cleanupCtx, s.OutDir(), s.HasError, cr,
-		"ui_dump")
-
-	if err = lockscreen.WaitForPasswordField(ctx, tconn, creds.User, 10*time.Second); err != nil {
+	if err = lockscreen.WaitForPasswordField(ctx, tconn, username, 10*time.Second); err != nil {
 		s.Fatal("Failed to wait for password field: ", err)
 	}
 
-	field, err := lockscreen.PasswordFieldFinder(creds.User)
+	field, err := lockscreen.PasswordFieldFinder(username)
 	if err != nil {
 		s.Fatal("Failed to find password field: ", err)
 	}
 
-	ui := uiauto.New(tconn)
 	if err := ui.WithTimeout(10 * time.Second).WaitUntilExists(field)(ctx); err != nil {
 		s.Fatal("Failed to find password box: ", err)
 	}
@@ -168,7 +142,7 @@ func DeviceLoginScreen(ctx context.Context, s *testing.State) {
 	}
 
 	defer kb.Close(ctx)
-	if err := kb.Type(ctx, creds.Pass); err != nil {
+	if err := kb.Type(ctx, password); err != nil {
 		s.Fatal("Failed to type password: ", err)
 	}
 
@@ -176,25 +150,25 @@ func DeviceLoginScreen(ctx context.Context, s *testing.State) {
 		s.Fatal("Failed to click the Show password button: ", err)
 	}
 
-	passwordField, err := lockscreen.UserPassword(ctx, tconn, creds.User, false)
+	passwordField, err := lockscreen.UserPassword(ctx, tconn, username, false)
 	if err != nil {
 		s.Fatal("Failed to read Password: ", err)
 	}
 
-	if passwordField.Value != creds.Pass {
-		s.Fatalf("Passwords do not match Password Field: %q User entered value: %q", passwordField.Value, creds.Pass)
+	if passwordField.Value != password {
+		s.Fatalf("Passwords do not match Password Field: %q User entered value: %q", passwordField.Value, password)
 	}
 
 	if err := kb.Accel(ctx, "Ctrl"); err != nil {
 		s.Fatal("Failed to press Ctrl: ", err)
 	}
 
-	passwordField, err = lockscreen.UserPassword(ctx, tconn, creds.User, false)
+	passwordField, err = lockscreen.UserPassword(ctx, tconn, username, false)
 	if err != nil {
 		s.Fatal("Failed to read Password: ", err)
 	}
 
-	if passwordField.Value == creds.Pass {
+	if passwordField.Value == password {
 		s.Fatal("Passwords unexpectedly match. Remapping Ctrl -> Backspace did not persist to login screen settings")
 	}
 }
