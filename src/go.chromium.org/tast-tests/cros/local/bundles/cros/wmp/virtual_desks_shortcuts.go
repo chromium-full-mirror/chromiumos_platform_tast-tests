@@ -68,7 +68,7 @@ func deskMiniViewFinder(deskName string) *nodewith.Finder {
 }
 
 func findBrowserWindow(ctx context.Context, s *testing.State, tconn *chrome.TestConn, bt browser.Type) *ash.Window {
-	window, err := ash.FindWindow(ctx, tconn, ash.BrowserTypeMatch(bt))
+	window, err := ash.FindWindow(ctx, tconn, ash.BrowserTypeMatch())
 	if err != nil {
 		s.Fatal("Failed to find browser window: ", err)
 	}

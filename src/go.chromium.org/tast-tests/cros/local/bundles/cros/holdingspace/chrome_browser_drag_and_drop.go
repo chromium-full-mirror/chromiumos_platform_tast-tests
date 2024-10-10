@@ -13,7 +13,6 @@ import (
 
 	"go.chromium.org/tast-tests/cros/local/chrome"
 	"go.chromium.org/tast-tests/cros/local/chrome/ash"
-	"go.chromium.org/tast-tests/cros/local/chrome/browser"
 	"go.chromium.org/tast-tests/cros/local/chrome/uiauto"
 	"go.chromium.org/tast-tests/cros/local/chrome/uiauto/capturemode"
 	"go.chromium.org/tast-tests/cros/local/chrome/uiauto/faillog"
@@ -174,7 +173,7 @@ func ChromeBrowserDragAndDrop(ctx context.Context, s *testing.State) {
 		return nil
 	}
 
-	brw, err := ash.FindWindow(ctx, tconn, ash.BrowserTypeMatch(browser.TypeAsh))
+	brw, err := ash.FindWindow(ctx, tconn, ash.BrowserTypeMatch())
 	if err != nil {
 		s.Fatal("Failed to get browser window: ", err)
 	}

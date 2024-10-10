@@ -113,7 +113,7 @@ func VideoCall(ctx context.Context, s *testing.State) {
 		s.Fatal("Failed to get browser test API connection: ", err)
 	}
 
-	videoWin, err := ash.WaitForAnyWindow(ctx, tconn, ash.BrowserTypeMatch(bt))
+	videoWin, err := ash.WaitForAnyWindow(ctx, tconn, ash.BrowserTypeMatch())
 	if err != nil {
 		s.Fatal("Failed to open a browser window: ", err)
 	}

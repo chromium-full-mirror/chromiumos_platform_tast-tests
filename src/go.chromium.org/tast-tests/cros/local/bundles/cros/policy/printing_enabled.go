@@ -139,7 +139,7 @@ func PrintingEnabled(ctx context.Context, s *testing.State) {
 			defer conn.Close()
 
 			// Wait for browser window.
-			if err := ash.WaitForCondition(ctx, tconn, ash.BrowserTypeMatch(browser.TypeAsh), nil); err != nil {
+			if err := ash.WaitForCondition(ctx, tconn, ash.BrowserTypeMatch(), nil); err != nil {
 				s.Fatal("Unexpected window state: ", err)
 			}
 

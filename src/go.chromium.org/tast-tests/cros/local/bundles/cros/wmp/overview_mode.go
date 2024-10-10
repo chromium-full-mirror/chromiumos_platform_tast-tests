@@ -13,7 +13,6 @@ import (
 	"go.chromium.org/tast-tests/cros/local/apps"
 	"go.chromium.org/tast-tests/cros/local/chrome"
 	"go.chromium.org/tast-tests/cros/local/chrome/ash"
-	"go.chromium.org/tast-tests/cros/local/chrome/browser"
 	"go.chromium.org/tast-tests/cros/local/chrome/uiauto"
 	"go.chromium.org/tast-tests/cros/local/chrome/uiauto/event"
 	"go.chromium.org/tast-tests/cros/local/chrome/uiauto/faillog"
@@ -67,7 +66,6 @@ func OverviewMode(ctx context.Context, s *testing.State) {
 
 	ac := uiauto.New(tconn)
 
-	bt := browser.TypeAsh
 	browserApp, err := apps.PrimaryBrowser(ctx, tconn)
 	if err != nil {
 		s.Fatal("Could not find browser app info: ", err)
@@ -85,7 +83,7 @@ func OverviewMode(ctx context.Context, s *testing.State) {
 	}
 	// Set Chrome window's state to maximized and Files window's state to normal.
 	if err := ash.ForEachWindow(ctx, tconn, func(w *ash.Window) error {
-		if ash.BrowserTypeMatch(bt)(w) {
+		if ash.BrowserTypeMatch()(w) {
 			return ash.SetWindowStateAndWait(ctx, tconn, w.ID, ash.WindowStateMaximized)
 		}
 		if strings.Contains(w.Title, "Files") {
@@ -108,7 +106,7 @@ func OverviewMode(ctx context.Context, s *testing.State) {
 				return testing.PollBreak(animationError)
 			}
 			for _, window := range ws {
-				if ash.BrowserTypeMatch(bt)(window) && !window.IsAnimating {
+				if ash.BrowserTypeMatch()(window) && !window.IsAnimating {
 					animationError = errors.New("chrome window is not animating")
 					return animationError
 				}
@@ -145,7 +143,7 @@ func OverviewMode(ctx context.Context, s *testing.State) {
 	if len(ws) != 1 {
 		s.Fatalf("Expected 1 window, got %v window(s)", len(ws))
 	}
-	if ash.BrowserTypeMatch(bt)(ws[0]) {
+	if ash.BrowserTypeMatch()(ws[0]) {
 		s.Fatal("Chrome window still exists after closing it in overview")
 	}
 }

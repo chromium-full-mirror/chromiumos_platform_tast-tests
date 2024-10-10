@@ -118,7 +118,7 @@ func PNPGoogleMeetFeatureToggle(ctx context.Context, s *testing.State) {
 		}
 	}
 
-	w, err := ash.WaitForAnyWindow(ctx, tconn, ash.BrowserTypeMatch(browser.TypeAsh))
+	w, err := ash.WaitForAnyWindow(ctx, tconn, ash.BrowserTypeMatch())
 	if err != nil {
 		s.Fatal("Failed to open a browser window: ", err)
 	}

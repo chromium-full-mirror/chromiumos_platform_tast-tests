@@ -69,7 +69,7 @@ func PNPGoogleMeetFrameCapture(ctx context.Context, s *testing.State) {
 		s.Fatal("Failed to get ash tconn: ", err)
 	}
 
-	w, err := ash.WaitForAnyWindow(ctx, tconn, ash.BrowserTypeMatch(browserType))
+	w, err := ash.WaitForAnyWindow(ctx, tconn, ash.BrowserTypeMatch())
 	if err != nil {
 		s.Fatal("Failed to open a browser window: ", err)
 	}

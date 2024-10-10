@@ -1012,14 +1012,10 @@ func BrowserTitleMatch(bt browser.Type, titlePrefix string) func(w *Window) bool
 	}
 }
 
-// BrowserTypeMatch returns a func to check whether a window is a browser window of the given type.
-func BrowserTypeMatch(bt browser.Type) func(w *Window) bool {
-	wt := WindowTypeLacros
-	if bt == browser.TypeAsh {
-		wt = WindowTypeBrowser
-	}
+// BrowserTypeMatch returns a func to check whether a window is a browser window or not.
+func BrowserTypeMatch() func(w *Window) bool {
 	return func(w *Window) bool {
-		return w.WindowType == wt
+		return w.WindowType == WindowTypeBrowser
 	}
 }
 

@@ -41,7 +41,7 @@ func EnsureOnlyBrowserWindowOpen(ctx context.Context, tconn *chrome.TestConn, bt
 
 		// Check if that is the browser window and visible (!IsAnimating also used as heuristic criteria for readiness to accept inputs).
 		w = ws[0]
-		if !w.IsVisible || w.IsAnimating || !ash.BrowserTypeMatch(bt)(w) {
+		if !w.IsVisible || w.IsAnimating || !ash.BrowserTypeMatch()(w) {
 			return errors.Errorf("expected %v browser window to become visible, State: %v", bt, w.State)
 		}
 		return nil
