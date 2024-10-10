@@ -18,7 +18,7 @@ import (
 )
 
 // This package depends on the following services.
-// "tast.cros.browser.ChromeService", "tast.cros.browser.LacrosService", "tast.cros.ui.ConnService", "tast.cros.ui.TconnService"
+// "tast.cros.browser.ChromeService", "tast.cros.ui.ConnService", "tast.cros.ui.TconnService"
 
 // tabURLs is a list of URLs to visit in the test.
 var tabURLs = []string{
@@ -72,7 +72,6 @@ const (
 
 // RemoteMemoryPressure represents a memory pressure task
 type RemoteMemoryPressure struct {
-	lacros    bool
 	lastIndex int
 	conn      ui.ConnServiceClient
 	tconn     ui.TconnServiceClient
@@ -84,7 +83,6 @@ type remoteTab struct {
 	id       uint32
 	tabID    int
 	targetID string
-	lacros   bool
 	pinned   bool
 	closed   bool
 	conn     ui.ConnServiceClient
@@ -169,11 +167,11 @@ func (t *remoteTab) waitForRender(ctx context.Context, timeout time.Duration) er
 }
 
 func (m *RemoteMemoryPressure) newTab(ctx context.Context, url string) (*remoteTab, error) {
-	res, err := m.conn.NewConn(ctx, &ui.NewConnRequest{Url: url, CallOnLacros: m.lacros})
+	res, err := m.conn.NewConn(ctx, &ui.NewConnRequest{Url: url, CallOnLacros: false})
 	if err != nil {
 		return nil, errors.Wrap(err, "failed to open new Tab")
 	}
-	tab := &remoteTab{id: res.Id, targetID: res.TargetId, lacros: m.lacros, conn: m.conn}
+	tab := &remoteTab{id: res.Id, targetID: res.TargetId, conn: m.conn}
 
 	tab.tabID, err = m.getCurrentActiveTabID(ctx)
 	if err != nil {
@@ -192,7 +190,7 @@ func (m *RemoteMemoryPressure) pinTab(ctx context.Context, tab *remoteTab) error
 	if _, err := m.tconn.Call(ctx, &ui.CallRequest{
 		Fn:           `(id) => tast.promisify(chrome.tabs.update)(id, {pinned: true})`,
 		Args:         []*structpb.Value{value(tab.tabID)},
-		CallOnLacros: m.lacros}); err != nil {
+		CallOnLacros: false}); err != nil {
 		return errors.Wrap(err, "failed to pin a tab")
 	}
 	tab.pinned = true
@@ -215,7 +213,7 @@ func (t *remoteTab) reconnect(ctx context.Context) error {
 		return nil
 	}
 	res, err := t.conn.NewConnForTarget(ctx, &ui.NewConnForTargetRequest{
-		CallOnLacros: t.lacros,
+		CallOnLacros: false,
 		TargetId:     t.targetID,
 	})
 	if err != nil {
@@ -253,7 +251,7 @@ func (m *RemoteMemoryPressure) queryTestConnTabIDs(ctx context.Context, conditio
 			return tabs.map((tab) => tab.id);
 		  }`,
 		Args:         []*structpb.Value{},
-		CallOnLacros: m.lacros,
+		CallOnLacros: false,
 	})
 	if err != nil {
 		return nil, errors.Wrap(err, "cannot query tab list")
@@ -449,10 +447,10 @@ func (m *RemoteMemoryPressure) OpenCycleTabs(ctx context.Context) error {
 // this mempressure as;
 //
 //	// Login as a test user (you can implement your login function)
-//	if err := mempressure.NewTestEnv(ctx, cl.Conn, arc, lacros); err != nil {
+//	if err := mempressure.NewTestEnv(ctx, cl.Conn, arc); err != nil {
 //		s.Fatal("Failed to initialize test environment: ", err)
 //	}
-//	mp, err := mempressure.NewRemoteMemoryPressure(ctx, cl.Conn, lacros)
+//	mp, err := mempressure.NewRemoteMemoryPressure(ctx, cl.Conn)
 //	if err != nil {
 //		s.Fatal("Failed to make a nre RemoteMemoryPressure: ", err)
 //	}
@@ -461,9 +459,8 @@ func (m *RemoteMemoryPressure) OpenCycleTabs(ctx context.Context) error {
 //	}
 //
 // This opens tabs until a tab is discarded or reaches forceTab.
-func NewRemoteMemoryPressure(ctx context.Context, cc grpc.ClientConnInterface, lacros bool) (*RemoteMemoryPressure, error) {
+func NewRemoteMemoryPressure(ctx context.Context, cc grpc.ClientConnInterface) (*RemoteMemoryPressure, error) {
 	m := &RemoteMemoryPressure{
-		lacros:    lacros,
 		conn:      ui.NewConnServiceClient(cc),
 		tconn:     ui.NewTconnServiceClient(cc),
 		lastIndex: 0,
@@ -476,30 +473,21 @@ func NewRemoteMemoryPressure(ctx context.Context, cc grpc.ClientConnInterface, l
 }
 
 // NewTestEnv login with fake test account.
-func NewTestEnv(ctx context.Context, cc grpc.ClientConnInterface, arc, lacros bool) error {
+func NewTestEnv(ctx context.Context, cc grpc.ClientConnInterface, arc bool) error {
 	crs := ui.NewChromeServiceClient(cc)
 	req := &ui.NewRequest{}
 	if arc {
 		req.ArcMode = ui.ArcMode_ARC_MODE_ENABLED
 	}
-	if lacros {
-		req.Lacros = &ui.Lacros{}
-	}
 	// Fake login on the DUT through the chrome service.
 	if _, err := crs.New(ctx, req, grpc.WaitForReady(true)); err != nil {
 		return errors.Wrap(err, "failed to login on the DUT ")
-	}
-	if lacros {
-		las := ui.NewLacrosServiceClient(cc)
-		if _, err := las.Launch(ctx, &emptypb.Empty{}); err != nil {
-			return errors.Wrap(err, "failed to launch lacros ")
-		}
 	}
 	return nil
 }
 
 // ConnectTestEnv connects to running test account.
-func ConnectTestEnv(ctx context.Context, cc grpc.ClientConnInterface, arc, lacros bool) error {
+func ConnectTestEnv(ctx context.Context, cc grpc.ClientConnInterface, arc bool) error {
 	crs := ui.NewChromeServiceClient(cc)
 	req := &ui.NewRequest{
 		KeepState:       true,
@@ -508,18 +496,9 @@ func ConnectTestEnv(ctx context.Context, cc grpc.ClientConnInterface, arc, lacro
 	if arc {
 		req.ArcMode = ui.ArcMode_ARC_MODE_ENABLED
 	}
-	if lacros {
-		req.Lacros = &ui.Lacros{}
-	}
 	// Fake login on the DUT through the chrome service.
 	if _, err := crs.New(ctx, req, grpc.WaitForReady(true)); err != nil {
 		return errors.Wrap(err, "failed to connect to login session on the DUT ")
-	}
-	if lacros {
-		las := ui.NewLacrosServiceClient(cc)
-		if _, err := las.Connect(ctx, &emptypb.Empty{}); err != nil {
-			return errors.Wrap(err, "failed to connect lacros ")
-		}
 	}
 	return nil
 }

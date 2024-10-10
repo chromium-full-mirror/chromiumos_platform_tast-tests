@@ -67,16 +67,14 @@ var perfEventVar = testing.RegisterVarString(
 
 type testArgsForSuspendPerf struct {
 	numSuspend        int
-	enableLacros      bool
 	enableArc         bool
 	enableMempressure bool
 }
 
 func init() {
 	testing.AddTest(&testing.Test{
-		Func:         SuspendPerf,
-		LacrosStatus: testing.LacrosVariantUnneeded,
-		Desc:         "Tests that performance of suspend/resume",
+		Func: SuspendPerf,
+		Desc: "Tests that performance of suspend/resume",
 		Contacts: []string{
 			"cros-suspend-resume@google.com",
 			"mhiramat@google.com",
@@ -86,7 +84,6 @@ func init() {
 		HardwareDeps: hwdep.D(hwdep.Display()),
 		ServiceDeps: []string{
 			"tast.cros.browser.ChromeService",
-			"tast.cros.browser.LacrosService",
 			"tast.cros.power.SuspendPerfService",
 			"tast.cros.tracing.TraceCmdService",
 			"tast.cros.tracing.PerfettoTraceService",
@@ -110,14 +107,6 @@ func init() {
 			},
 			Timeout: 20 * time.Minute,
 		}, {
-			Name: "arc_lacros",
-			Val: testArgsForSuspendPerf{
-				numSuspend:   5,
-				enableArc:    true,
-				enableLacros: true,
-			},
-			Timeout: 20 * time.Minute,
-		}, {
 			Name: "mem",
 			Val: testArgsForSuspendPerf{
 				numSuspend:        5,
@@ -134,15 +123,6 @@ func init() {
 			},
 			// mempressure will take another 20minutes
 			Timeout: 30 * time.Minute,
-		}, {
-			Name: "arc_lacros_mem",
-			Val: testArgsForSuspendPerf{
-				numSuspend:        5,
-				enableArc:         true,
-				enableLacros:      true,
-				enableMempressure: true,
-			},
-			Timeout: 30 * time.Minute,
 		}},
 	})
 }
@@ -158,8 +138,7 @@ const (
 )
 
 type histogramRequest struct {
-	Name       string
-	FromLacros bool
+	Name string
 }
 
 // TODO make a new struct type with name and direction.
@@ -167,7 +146,7 @@ var defaultMetrics = []*histogramRequest{
 	{Name: "Power.KernelSuspendTimeOnAC"},
 	{Name: "Power.KernelResumeTimeOnAC"},
 	{Name: "Power.DisplayAfterResumeDurationMsOnAC"},
-	{Name: "Browser.Tabs.TotalSwitchDuration3", FromLacros: true},
+	{Name: "Browser.Tabs.TotalSwitchDuration3"},
 }
 
 // Delay and timeout for waitHistogramsUpdate().
@@ -184,12 +163,6 @@ func SuspendPerf(ctx context.Context, s *testing.State) {
 	}
 	pv := perf.NewValues()
 
-	var useMetrics []*histogramRequest
-	for _, m := range defaultMetrics {
-		m.FromLacros = m.FromLacros && args.enableLacros
-		useMetrics = append(useMetrics, m)
-	}
-
 	cl, err := rpc.Dial(ctx, s.DUT(), s.RPCHint())
 	if err != nil {
 		s.Fatal("Failed to connect to the RPC service on the DUT: ", err)
@@ -197,12 +170,12 @@ func SuspendPerf(ctx context.Context, s *testing.State) {
 	defer cl.Close(ctx)
 
 	// Login test user for memory pressure and suspend/resume.
-	if err := mempressure.NewTestEnv(ctx, cl.Conn, args.enableArc, args.enableLacros); err != nil {
+	if err := mempressure.NewTestEnv(ctx, cl.Conn, args.enableArc); err != nil {
 		s.Fatal("Failed to initalize test environment: ", err)
 	}
 
 	// Launch tabs for tab switching time.
-	mp, err := mempressure.NewRemoteMemoryPressure(ctx, cl.Conn, args.enableLacros)
+	mp, err := mempressure.NewRemoteMemoryPressure(ctx, cl.Conn)
 	if err != nil {
 		s.Fatal("Failed to make a RemoteMemoryPressure: ", err)
 	}
@@ -238,13 +211,13 @@ func SuspendPerf(ctx context.Context, s *testing.State) {
 	// Trace the base metrics.
 	tracer.start(ctx, s, cl, false)
 	s.Log("Take a metric before suspend as a base metric")
-	if err := measureBaseTabSwitching(ctx, tconn, mp, args.enableLacros, pv); err != nil {
+	if err := measureBaseTabSwitching(ctx, tconn, mp, pv); err != nil {
 		s.Fatal("Failed to measure base tab switching performance: ", err)
 	}
 	tracer.save(ctx, s, cl, "_base")
 
 	// Get old (before the suspend) histograms if exist. Usually this is empty.
-	older, err := getHistograms(ctx, tconn, useMetrics)
+	older, err := getHistograms(ctx, tconn, defaultMetrics)
 	if err != nil {
 		s.Fatal("Failed to get Histograms from DUT: ", err)
 	}
@@ -275,7 +248,7 @@ func SuspendPerf(ctx context.Context, s *testing.State) {
 			s.Fatal("Failed to reconnect the RPC: ", err)
 		}
 		// defer cl.Close() is already set.
-		if err := mempressure.ConnectTestEnv(ctx, cl.Conn, args.enableArc, args.enableLacros); err != nil {
+		if err := mempressure.ConnectTestEnv(ctx, cl.Conn, args.enableArc); err != nil {
 			s.Fatal("Failed to re-initalize test environment: ", err)
 		}
 		tracer.save(ctx, s, cl, fmt.Sprintf("_resumed-%d", i))
@@ -293,7 +266,7 @@ func SuspendPerf(ctx context.Context, s *testing.State) {
 		s.Log("Wait for suspend metrics update")
 		service = powerpb.NewSuspendPerfServiceClient(cl.Conn)
 		tconn = ui.NewTconnServiceClient(cl.Conn)
-		prev, err = waitForHistogramsUpdate(ctx, tconn, useMetrics, prev)
+		prev, err = waitForHistogramsUpdate(ctx, tconn, defaultMetrics, prev)
 		if err != nil {
 			s.Fatal("Could not observe histogram update: ", err)
 		}
@@ -334,9 +307,9 @@ func redialRPC(ctx context.Context, dut *dut.DUT, hint *testing.RPCHint, timeout
 	return rpc.Dial(ctx, dut, hint)
 }
 
-func measureBaseTabSwitching(ctx context.Context, tconn ui.TconnServiceClient, mp *mempressure.RemoteMemoryPressure, lacros bool, pv *perf.Values) error {
+func measureBaseTabSwitching(ctx context.Context, tconn ui.TconnServiceClient, mp *mempressure.RemoteMemoryPressure, pv *perf.Values) error {
 
-	prev, err := metrics.GetHistogram(ctx, tconn, "Browser.Tabs.TotalSwitchDuration3", lacros)
+	prev, err := metrics.GetHistogram(ctx, tconn, "Browser.Tabs.TotalSwitchDuration3", false)
 	if err != nil {
 		return errors.Wrap(err, "failed to get histogram for cyclic tabs(prev)")
 	}
@@ -346,7 +319,7 @@ func measureBaseTabSwitching(ctx context.Context, tconn ui.TconnServiceClient, m
 	testing.ContextLog(ctx, "Cycke tab switching done")
 
 	if err := testing.Poll(ctx, func(ctx context.Context) error {
-		post, err := metrics.GetHistogram(ctx, tconn, "Browser.Tabs.TotalSwitchDuration3", lacros)
+		post, err := metrics.GetHistogram(ctx, tconn, "Browser.Tabs.TotalSwitchDuration3", false)
 		if err != nil {
 			return errors.Wrap(err, "failed to get histogram for cyclic tabs(post)")
 		}
@@ -367,7 +340,7 @@ func measureBaseTabSwitching(ctx context.Context, tconn ui.TconnServiceClient, m
 		return err
 	}
 
-	post, err := metrics.GetHistogram(ctx, tconn, "Browser.Tabs.TotalSwitchDuration3", lacros)
+	post, err := metrics.GetHistogram(ctx, tconn, "Browser.Tabs.TotalSwitchDuration3", false)
 	if err != nil {
 		return errors.Wrap(err, "failed to get histogram for cyclic tabs(post)")
 	}
@@ -606,7 +579,7 @@ func waitForHistogramsUpdate(ctx context.Context, tconn ui.TconnServiceClient, r
 func getHistograms(ctx context.Context, tconn ui.TconnServiceClient, req []*histogramRequest) ([]*histogram.Histogram, error) {
 	var hists []*histogram.Histogram
 	for _, r := range req {
-		hist, err := metrics.GetHistogram(ctx, tconn, r.Name, r.FromLacros)
+		hist, err := metrics.GetHistogram(ctx, tconn, r.Name, false)
 		if err != nil {
 			return nil, err
 		}
