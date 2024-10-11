@@ -503,6 +503,13 @@ func (f *cellularFixture) SetUp(ctx context.Context, s *testing.FixtState) inter
 	if err != nil {
 		s.Fatal("Failed to get crashes: ", err)
 	}
+	// Ensure cellular is enabled because on models with modem power off feature implemented,
+	// the modem is powered off when cellular is disabled; need to power on the modem by
+	// enabling cellular before a test.
+	if manager, err := shill.NewManager(ctx); err == nil {
+		manager.EnableTechnology(ctx, shill.TechnologyCellular)
+	}
+
 	// Give some time for cellular daemons to perform any modem operations. Stopping them via upstart might leave the modem in a bad state.
 	if err := EnsureUptime(ctx, f.systemUptimeBeforeTest); err != nil {
 		s.Fatal("Failed to wait for system uptime: ", err)
