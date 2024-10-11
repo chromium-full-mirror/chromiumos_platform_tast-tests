@@ -128,6 +128,12 @@ func DragDrop(ctx context.Context, s *testing.State) {
 		s.Fatal("Failed to create Test API connection: ", err)
 	}
 
+	cleanup, err := ash.EnsureTabletModeEnabled(ctx, tconn, false)
+	if err != nil {
+		s.Fatal("Failed to ensure in clamshell mode: ", err)
+	}
+	defer cleanup(cleanupCtx)
+
 	s.Log("Start the Web server")
 	server := httptest.NewServer(http.FileServer(s.DataFileSystem()))
 	defer server.Close()
