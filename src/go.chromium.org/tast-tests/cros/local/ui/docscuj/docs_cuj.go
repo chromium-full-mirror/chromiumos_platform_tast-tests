@@ -229,6 +229,13 @@ func Run(ctx context.Context, cr *chrome.Chrome, bt browser.Type, outDir, system
 			return errors.Wrap(err, "failed to wait for docs root web area")
 		}
 
+		// Google Docs sometimes pops up a prompt to notice users
+		// if there're new features. Dismiss prompt if it exist.
+		gotItButton := nodewith.Name("Got it").Role(role.Button)
+		if err := uiauto.IfSuccessThen(ac.Exists(gotItButton), ac.DoDefault(gotItButton))(ctx); err != nil {
+			return errors.Wrap(err, "failed to click 'Got it' prompt")
+		}
+
 		// Close any potential security alert that pops up.
 		if err := cuj.DismissCriticalSecurityAlert(ctx, tconn, conn); err != nil {
 			return errors.Wrap(err, "failed to dismiss Critical Security Alert")
