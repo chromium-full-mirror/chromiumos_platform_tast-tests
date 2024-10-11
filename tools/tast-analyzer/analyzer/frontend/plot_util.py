@@ -39,12 +39,6 @@ class PlotData:
     figure: figure.Figure
     """The figure of the plot."""
 
-    width_px: int
-    """The width of the plot in pixel."""
-
-    height_px: int
-    """The height of the plot in pixel."""
-
 
 def init_plotting() -> None:
     """Initialize plotting."""
@@ -75,10 +69,7 @@ def _create_plot_data_for_pair(
     )
     fig.tight_layout()
 
-    width_px, height_px = (fig.get_size_inches() * fig.dpi).astype(int)
-    return PlotData(
-        kind=kind, figure=fig, width_px=width_px, height_px=height_px
-    )
+    return PlotData(kind=kind, figure=fig)
 
 
 def _plot_cdfs(pair: analysis_results.PairwiseResult) -> figure.Figure:

@@ -53,12 +53,7 @@ def create_figure(
 
     img = ET.Element(
         "img",
-        {
-            "src": f"{prefix}:{media_type};{token},{data}",
-            "width": str(plot_data.width_px),
-            "height": str(plot_data.height_px),
-            "alt": caption,
-        },
+        {"src": f"{prefix}:{media_type};{token},{data}", "alt": caption},
     )
     figure_element.append(img)
 

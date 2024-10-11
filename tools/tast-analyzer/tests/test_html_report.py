@@ -446,10 +446,7 @@ class HtmlReportTest(unittest.TestCase):
         ]
 
         plot_data = plot_util.PlotData(
-            kind=plot_util.PlotKind.PLOT_BOX,
-            figure=figure.Figure(),
-            width_px=100,
-            height_px=200,
+            kind=plot_util.PlotKind.PLOT_BOX, figure=figure.Figure()
         )
         pairwise_result_plots_map = {pair.identifier(): [plot_data]}
 

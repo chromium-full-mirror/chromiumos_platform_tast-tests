@@ -28,10 +28,7 @@ class ComponentsTest(unittest.TestCase):
     def test_create_figure_with_caption(self) -> None:
         figure_element = components.create_figure(
             plot_data=plot_util.PlotData(
-                kind=plot_util.PlotKind.PLOT_BOX,
-                figure=figure.Figure(),
-                width_px=200,
-                height_px=100,
+                kind=plot_util.PlotKind.PLOT_BOX, figure=figure.Figure()
             ),
             caption="placeholder",
             attributes={"class": "placeholder"},
@@ -48,8 +45,6 @@ class ComponentsTest(unittest.TestCase):
             plot_data=plot_util.PlotData(
                 kind=plot_util.PlotKind.PLOT_BOX,
                 figure=figure.Figure(),
-                width_px=200,
-                height_px=100,
             ),
             attributes={"class": "placeholder"},
         )
