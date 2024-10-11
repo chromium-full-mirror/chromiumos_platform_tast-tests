@@ -76,8 +76,8 @@ func CorruptBothFWSigABAndEC(ctx context.Context, s *testing.State) {
 	if err := h.RequireServo(ctx); err != nil {
 		s.Fatal("Failed to init servo: ", err)
 	}
-	if err := h.RequireBiosServiceClient(ctx); err != nil {
-		s.Fatal("Failed to require BiosServiceClient: ", err)
+	if err := h.RequireConfig(ctx); err != nil {
+		s.Fatal("Failed to create config: ", err)
 	}
 	ms, err := firmware.NewModeSwitcher(ctx, h)
 	if err != nil {
@@ -173,9 +173,6 @@ func CorruptBothFWSigABAndEC(ctx context.Context, s *testing.State) {
 	if err := h.Servo.CheckECActiveCopyMatch(ctx, "RW"); err != nil {
 		s.Fatal("Failed to verify EC active copy: ", err)
 	}
-	if err := h.Reporter.ClearEventlog(ctx); err != nil {
-		s.Fatal("Failed to clear event log: ", err)
-	}
 
 	needsUSBRestore := true
 	defer func(ctx context.Context) {
@@ -218,10 +215,10 @@ func CorruptBothFWSigABAndEC(ctx context.Context, s *testing.State) {
 		}
 	}(ctx)
 
-	s.Log("Corrupt firmware A/B signatures")
 	if err := h.RequireBiosServiceClient(ctx); err != nil {
 		s.Fatal("Failed to require BiosServiceClient: ", err)
 	}
+	s.Log("Corrupt firmware A/B signatures")
 	if _, err := h.BiosServiceClient.CorruptFWSection(ctx, &pb.FWSectionInfo{Section: pb.ImageSection_FWSignAImageSection, Programmer: pb.Programmer_BIOSProgrammer}); err != nil {
 		s.Fatal("Failed to corrupt Firmware A Sign (VBOOTA) section: ", err)
 	}
@@ -245,97 +242,102 @@ func CorruptBothFWSigABAndEC(ctx context.Context, s *testing.State) {
 	if err := h.DUT.Conn().CommandContext(ctx, "futility", "load_fmap", "-o", fmt.Sprintf("%s/ec_corrupt.bin", backupState.RemoteTempDir()), fmt.Sprintf("%s/ec_backup.bin", backupState.RemoteTempDir()), fmt.Sprintf("%s:%s/fwid.bad", bios.RWFWIDImageSection, backupState.RemoteTempDir())).Run(ssh.DumpLogOnError); err != nil {
 		s.Fatal("Failed to write ec_corrupt.bin: ", err)
 	}
-	// Some boards (e.g., Coral) may enter the recovery screen directly instead of the broken screen.
-	// To prevent the DUT from booting directly from the USB in recovery mode, ensure the USB is removed.
 	s.Log("Removing USB")
 	if err := h.Servo.SetUSBMuxState(ctx, servo.USBMuxOff); err != nil {
 		s.Fatal("Failed to remove the USB: ", err)
 	}
 	backupState.ShouldRestoreFirmware = true
+	s.Log("Set FW tries to A")
+	if err := firmware.SetFWTries(ctx, h.DUT, fwCommon.RWSectionA, 0); err != nil {
+		s.Fatal("Failed to set FW tries to A: ", err)
+	}
 	if err := flashCorruptEC(ctx, h, fmt.Sprintf("%s/ec_corrupt.bin", backupState.RemoteTempDir()), shellDir); err != nil {
 		s.Fatal("Failed to corrupt ec: ", err)
 	}
+	if err := h.CloseRPCConnection(ctx); err != nil {
+		s.Fatal("Failed to close RPC connection: ", err)
+	}
 
-	s.Log("Verify if the DUT is able to boot from USB in recovery mode")
-	if err := brokenToRec(ctx, h, &state); err != nil {
-		s.Fatal("Failed to boot from the broken screen: ", err)
-	}
-	if err := pollToCheckRecoveryReason(ctx, h, filepath.Join(s.OutDir(), "eventlog.txt")); err != nil {
-		s.Fatal("Failed to check the recovery event: ", err)
-	}
-	s.Log("Set FW tries to B")
-	if err := firmware.SetFWTries(ctx, h.DUT, fwCommon.RWSectionB, 0); err != nil {
-		s.Fatal("Failed to set FW tries to B: ", err)
-	}
-	if err := h.Reporter.ClearEventlog(ctx); err != nil {
-		s.Fatal("Failed to clear event log: ", err)
-	}
-	if err := brokenToRec(ctx, h, &state); err != nil {
-		s.Fatal("Failed to boot from the broken screen: ", err)
-	}
-	if err := pollToCheckRecoveryReason(ctx, h, filepath.Join(s.OutDir(), "eventlog.txt")); err != nil {
-		s.Fatal("Failed to check the recovery event: ", err)
+	hasBrokenScreen := pv.BootMode != fwCommon.BootModeDev || !h.Config.NoBrokenScreenInDev
+	for _, section := range []fwCommon.RWSection{
+		fwCommon.RWSectionA,
+		fwCommon.RWSectionB,
+	} {
+		if section == fwCommon.RWSectionB {
+			s.Log("Set FW tries to B")
+			if err := firmware.SetFWTries(ctx, h.DUT, section, 0); err != nil {
+				s.Fatal("Failed to set FW tries to B: ", err)
+			}
+			s.Log("Rebooting the DUT")
+			if err := h.DUT.Conn().CommandContext(ctx, "reboot").Run(); err != nil && !errors.As(err, &context.DeadlineExceeded) {
+				s.Fatal("Failed to run reboot command: ", err)
+			}
+			waitDisconnectCtx, cancelWaitDisconnect := context.WithTimeout(ctx, 1*time.Minute)
+			defer cancelWaitDisconnect()
+			if err := h.DUT.WaitUnreachable(waitDisconnectCtx); err != nil {
+				s.Fatal("Failed to wait for DUT to become unreachable, reboot failed: ", err)
+			}
+			s.Log("Removing USB")
+			if err := h.Servo.SetUSBMuxState(ctx, servo.USBMuxOff); err != nil {
+				s.Fatal("Failed to remove the USB: ", err)
+			}
+		}
+		s.Log("Waiting for DUT to reach the firmware screen")
+		if err := h.WaitFirmwareScreen(ctx, h.Config.FirmwareScreenRecMode); err != nil {
+			s.Fatal("Failed to get to firmware screen: ", err)
+		}
+		s.Log("Checking if EC active copy is RO")
+		if err := h.Servo.CheckECActiveCopyMatch(ctx, "RO"); err != nil {
+			s.Fatal("Failed to verify EC active copy: ", err)
+		}
+		if state.RemoveServoChargerRequired && state.IsServoChargerConnected {
+			if err := h.SetDUTPower(ctx, false); err != nil {
+				s.Fatal("Failed to remove charger: ", err)
+			}
+			state.IsServoChargerConnected = false
+			// GoBigSleepLint: Wait for a while between removing the charger and
+			// booting the DUT from USB to prevent USB disconnected issues.
+			if err := testing.Sleep(ctx, 5*time.Second); err != nil {
+				s.Fatal("Failed to sleep: ", err)
+			}
+		}
+		s.Log("Setting DFP mode")
+		if err := h.Servo.SetDUTPDDataRole(ctx, servo.DFP); err != nil {
+			testing.ContextLogf(ctx, "Failed to set pd data role to DFP: %.400s", err)
+		}
+		s.Log("Inserting the USB to DUT")
+		if err := h.Servo.SetUSBMuxState(ctx, servo.USBMuxDUT); err != nil {
+			s.Fatal("Failed to insert a valid USB to DUT: ", err)
+		}
+
+		if err := h.WaitDUTConnectDuringBootFromUSB(ctx, !hasBrokenScreen); err != nil {
+			s.Fatalf("Failed to get expected behavior, expected stay in broken screen: %v: %v", hasBrokenScreen, err)
+		}
+		if hasBrokenScreen {
+			if state.RemoveServoChargerRequired && !state.IsServoChargerConnected {
+				if err := h.SetDUTPower(ctx, true); err != nil {
+					s.Fatal("Failed to connect charger: ", err)
+				}
+				state.IsServoChargerConnected = false
+				// GoBigSleepLint: Wait for a while for connecting the charger.
+				if err := testing.Sleep(ctx, 5*time.Second); err != nil {
+					s.Fatal("Failed to sleep: ", err)
+				}
+			}
+			s.Log("Booting the DUT from USB")
+			if err := h.BootToRecoveryMode(ctx, &state, false); err != nil {
+				s.Fatal("Failed to boot to the recovery mode: ", err)
+			}
+		}
+
+		s.Log("Checking if crossystem recovery_reason is ", reporters.RecoveryReasonROInvalidRW)
+		if isExpected, err := h.Reporter.ContainsRecoveryReason(ctx, []reporters.RecoveryReason{reporters.RecoveryReasonROInvalidRW}); err != nil {
+			s.Fatal("Failed to check the recovery reason: ", err)
+		} else if !isExpected {
+			s.Fatal("Failed to get the expected recovery reason")
+		}
 	}
 	needsUSBRestore = false
-}
-
-// brokenToRec first verifies that the DUT remains at the broken screen, then boots from the USB.
-func brokenToRec(ctx context.Context, h *firmware.Helper, state *firmware.CheckAndSetServoCharger) error {
-	testing.ContextLog(ctx, "Removing USB")
-	if err := h.Servo.SetUSBMuxState(ctx, servo.USBMuxOff); err != nil {
-		return errors.Wrap(err, "failed to remove the USB")
-	}
-	if err := h.CloseRPCConnection(ctx); err != nil {
-		return errors.Wrap(err, "failed to close RPC connection")
-	}
-	if err := h.Servo.SetPowerState(ctx, servo.PowerStateReset); err != nil {
-		return errors.Wrap(err, "failed to reset DUT")
-	}
-
-	testing.ContextLog(ctx, "Checking if EC active copy is RO")
-	if err := h.Servo.CheckECActiveCopyMatch(ctx, "RO"); err != nil {
-		return errors.Wrap(err, "failed to verify EC active copy")
-	}
-
-	testing.ContextLog(ctx, "Checking if DUT stays at the broken screen, waiting for ", h.Config.DelayRebootToPing)
-	brokenToDevWaitConnectCtx, cancelWaitConnectBrokenToDev := context.WithTimeout(ctx, h.Config.DelayRebootToPing)
-	defer cancelWaitConnectBrokenToDev()
-	err := h.WaitConnect(brokenToDevWaitConnectCtx, firmware.ResetEthernetDongle)
-	switch err.(type) {
-	case nil:
-		return errors.Wrap(err, "DUT woke up unexpectedly")
-	default:
-		if !errors.As(err, &context.DeadlineExceeded) {
-			return errors.Wrap(err, "unexpected error occurred")
-		}
-	}
-
-	testing.ContextLog(ctx, "Booting from USB")
-	if err := h.BootToRecoveryMode(ctx, state, false); err != nil {
-		return errors.Wrap(err, "failed to boot to recovery mode")
-	}
-	return nil
-}
-
-// pollToCheckRecoveryReason verifies that the expected recovery reasons are present in event log.
-func pollToCheckRecoveryReason(ctx context.Context, h *firmware.Helper, saveEventLogPath string) error {
-	testing.ContextLog(ctx, "Checking expected recovery reasons in event log")
-	if err := testing.Poll(ctx, func(ctx context.Context) error {
-		events, err := h.Reporter.EventlogList(ctx)
-		if err != nil {
-			return errors.Wrap(err, "failed to get event log")
-		}
-		if !h.Reporter.CheckRecoveryEventExists(ctx, events, reporters.RecoveryReasonROInvalidRW) {
-			return errors.Errorf("did not find expected recovery reasons in event log. Events: %v", events)
-		}
-		return nil
-	}, &testing.PollOptions{Timeout: 1 * time.Minute}); err != nil {
-		if err := h.SaveEventLog(ctx, saveEventLogPath); err != nil {
-			err = errors.Wrap(err, "failed to save event log")
-		}
-		return err
-	}
-	return nil
 }
 
 // flashCorruptEC flashes a corrupted firmware file to the EC. The corrupted file must already be present on the DUT.
