@@ -18052,38 +18052,6 @@ func (p *UserBorealisAllowed) Equal(iface interface{}) bool {
 }
 
 // ****************************************************************************
-// 832. LacrosSecondaryProfilesAllowed
-// This policy has a default value of False.
-// This policy can be modified without rebooting.
-// ****************************************************************************
-type LacrosSecondaryProfilesAllowed struct {
-	Stat Status
-	Val  bool
-}
-
-func (p *LacrosSecondaryProfilesAllowed) Name() string          { return "LacrosSecondaryProfilesAllowed" }
-func (p *LacrosSecondaryProfilesAllowed) Scope() Scope          { return ScopeUser }
-func (p *LacrosSecondaryProfilesAllowed) Status() Status        { return p.Stat }
-func (p *LacrosSecondaryProfilesAllowed) UntypedV() interface{} { return p.Val }
-func (p *LacrosSecondaryProfilesAllowed) UnmarshalAs(m json.RawMessage) (interface{}, error) {
-	var v bool
-	if err := json.Unmarshal(m, &v); err != nil {
-		return nil, errors.Wrapf(err, "could not read %s as bool", m)
-	}
-	return v, nil
-}
-func (p *LacrosSecondaryProfilesAllowed) SetProto(m *protoreflect.Message) {
-	SetUserProto(m, p.Name(), p.Val)
-}
-func (p *LacrosSecondaryProfilesAllowed) Equal(iface interface{}) bool {
-	v, ok := iface.(bool)
-	if !ok {
-		return ok
-	}
-	return cmp.Equal(p.Val, v, cmpopts.EquateEmpty())
-}
-
-// ****************************************************************************
 // 833. GaiaLockScreenOfflineSigninTimeLimitDays
 // This policy can be modified without rebooting.
 // ****************************************************************************
@@ -27689,7 +27657,6 @@ func (p *CACertificatesWithConstraints) Equal(iface interface{}) bool {
 // ****************************************************************************
 // 1230. DefaultDirectSocketsSetting
 // This policy can be modified without rebooting.
-// This is a future policy, it is not present in stable builds.
 // ****************************************************************************
 type DefaultDirectSocketsSetting struct {
 	Stat Status
@@ -27721,7 +27688,6 @@ func (p *DefaultDirectSocketsSetting) Equal(iface interface{}) bool {
 // ****************************************************************************
 // 1231. DirectSocketsAllowedForUrls
 // This policy can be modified without rebooting.
-// This is a future policy, it is not present in stable builds.
 // ****************************************************************************
 type DirectSocketsAllowedForUrls struct {
 	Stat Status
@@ -27753,7 +27719,6 @@ func (p *DirectSocketsAllowedForUrls) Equal(iface interface{}) bool {
 // ****************************************************************************
 // 1232. DirectSocketsBlockedForUrls
 // This policy can be modified without rebooting.
-// This is a future policy, it is not present in stable builds.
 // ****************************************************************************
 type DirectSocketsBlockedForUrls struct {
 	Stat Status
@@ -29155,49 +29120,49 @@ func (p *KioskWebAppOfflineEnabled) Equal(iface interface{}) bool {
 }
 
 // ****************************************************************************
-// 1294. GraduationEnablementStatus
+// 1294. ContentTransferEnablementStatus
 // This policy can be modified without rebooting.
 // This is a future policy, it is not present in stable builds.
 // ****************************************************************************
-type GraduationEnablementStatus struct {
+type ContentTransferEnablementStatus struct {
 	Stat Status
-	Val  *GraduationEnablementStatusValue
+	Val  *ContentTransferEnablementStatusValue
 }
 
-type GraduationEnablementStatusValue struct {
-	EndDate   *GraduationEnablementStatusValueEndDate   `json:"end_date"`
-	IsEnabled bool                                      `json:"is_enabled"`
-	StartDate *GraduationEnablementStatusValueStartDate `json:"start_date"`
+type ContentTransferEnablementStatusValue struct {
+	EndDate   *ContentTransferEnablementStatusValueEndDate   `json:"end_date"`
+	IsEnabled bool                                           `json:"is_enabled"`
+	StartDate *ContentTransferEnablementStatusValueStartDate `json:"start_date"`
 }
 
-type GraduationEnablementStatusValueEndDate struct {
+type ContentTransferEnablementStatusValueEndDate struct {
 	Day   int `json:"day"`
 	Month int `json:"month"`
 	Year  int `json:"year"`
 }
 
-type GraduationEnablementStatusValueStartDate struct {
+type ContentTransferEnablementStatusValueStartDate struct {
 	Day   int `json:"day"`
 	Month int `json:"month"`
 	Year  int `json:"year"`
 }
 
-func (p *GraduationEnablementStatus) Name() string          { return "GraduationEnablementStatus" }
-func (p *GraduationEnablementStatus) Scope() Scope          { return ScopeUser }
-func (p *GraduationEnablementStatus) Status() Status        { return p.Stat }
-func (p *GraduationEnablementStatus) UntypedV() interface{} { return p.Val }
-func (p *GraduationEnablementStatus) UnmarshalAs(m json.RawMessage) (interface{}, error) {
-	var v *GraduationEnablementStatusValue
+func (p *ContentTransferEnablementStatus) Name() string          { return "ContentTransferEnablementStatus" }
+func (p *ContentTransferEnablementStatus) Scope() Scope          { return ScopeUser }
+func (p *ContentTransferEnablementStatus) Status() Status        { return p.Stat }
+func (p *ContentTransferEnablementStatus) UntypedV() interface{} { return p.Val }
+func (p *ContentTransferEnablementStatus) UnmarshalAs(m json.RawMessage) (interface{}, error) {
+	var v *ContentTransferEnablementStatusValue
 	if err := json.Unmarshal(m, &v); err != nil {
-		return nil, errors.Wrapf(err, "could not read %s as *GraduationEnablementStatusValue", m)
+		return nil, errors.Wrapf(err, "could not read %s as *ContentTransferEnablementStatusValue", m)
 	}
 	return v, nil
 }
-func (p *GraduationEnablementStatus) SetProto(m *protoreflect.Message) {
+func (p *ContentTransferEnablementStatus) SetProto(m *protoreflect.Message) {
 	SetUserProto(m, p.Name(), p.Val)
 }
-func (p *GraduationEnablementStatus) Equal(iface interface{}) bool {
-	v, ok := iface.(*GraduationEnablementStatusValue)
+func (p *ContentTransferEnablementStatus) Equal(iface interface{}) bool {
+	v, ok := iface.(*ContentTransferEnablementStatusValue)
 	if !ok {
 		return ok
 	}
@@ -29326,6 +29291,202 @@ func (p *DataURLWhitespacePreservationEnabled) SetProto(m *protoreflect.Message)
 }
 func (p *DataURLWhitespacePreservationEnabled) Equal(iface interface{}) bool {
 	v, ok := iface.(bool)
+	if !ok {
+		return ok
+	}
+	return cmp.Equal(p.Val, v, cmpopts.EquateEmpty())
+}
+
+// ****************************************************************************
+// 1299. AllowExcludeDisplayInMirrorMode
+// This policy can be modified without rebooting.
+// ****************************************************************************
+type AllowExcludeDisplayInMirrorMode struct {
+	Stat Status
+	Val  bool
+}
+
+func (p *AllowExcludeDisplayInMirrorMode) Name() string          { return "AllowExcludeDisplayInMirrorMode" }
+func (p *AllowExcludeDisplayInMirrorMode) Scope() Scope          { return ScopeUser }
+func (p *AllowExcludeDisplayInMirrorMode) Status() Status        { return p.Stat }
+func (p *AllowExcludeDisplayInMirrorMode) UntypedV() interface{} { return p.Val }
+func (p *AllowExcludeDisplayInMirrorMode) UnmarshalAs(m json.RawMessage) (interface{}, error) {
+	var v bool
+	if err := json.Unmarshal(m, &v); err != nil {
+		return nil, errors.Wrapf(err, "could not read %s as bool", m)
+	}
+	return v, nil
+}
+func (p *AllowExcludeDisplayInMirrorMode) SetProto(m *protoreflect.Message) {
+	SetUserProto(m, p.Name(), p.Val)
+}
+func (p *AllowExcludeDisplayInMirrorMode) Equal(iface interface{}) bool {
+	v, ok := iface.(bool)
+	if !ok {
+		return ok
+	}
+	return cmp.Equal(p.Val, v, cmpopts.EquateEmpty())
+}
+
+// ****************************************************************************
+// 1300. AutofillPredictionSettings
+// This policy can be modified without rebooting.
+// ****************************************************************************
+type AutofillPredictionSettings struct {
+	Stat Status
+	Val  int
+}
+
+func (p *AutofillPredictionSettings) Name() string          { return "AutofillPredictionSettings" }
+func (p *AutofillPredictionSettings) Scope() Scope          { return ScopeUser }
+func (p *AutofillPredictionSettings) Status() Status        { return p.Stat }
+func (p *AutofillPredictionSettings) UntypedV() interface{} { return p.Val }
+func (p *AutofillPredictionSettings) UnmarshalAs(m json.RawMessage) (interface{}, error) {
+	var v int
+	if err := json.Unmarshal(m, &v); err != nil {
+		return nil, errors.Wrapf(err, "could not read %s as int", m)
+	}
+	return v, nil
+}
+func (p *AutofillPredictionSettings) SetProto(m *protoreflect.Message) {
+	SetUserProto(m, p.Name(), p.Val)
+}
+func (p *AutofillPredictionSettings) Equal(iface interface{}) bool {
+	v, ok := iface.(int)
+	if !ok {
+		return ok
+	}
+	return cmp.Equal(p.Val, v, cmpopts.EquateEmpty())
+}
+
+// ****************************************************************************
+// 1301. ArcOpenLinksInBrowserByDefault
+// This policy has a default value of False.
+// This is a future policy, it is not present in stable builds.
+// ****************************************************************************
+type ArcOpenLinksInBrowserByDefault struct {
+	Stat Status
+	Val  bool
+}
+
+func (p *ArcOpenLinksInBrowserByDefault) Name() string          { return "ArcOpenLinksInBrowserByDefault" }
+func (p *ArcOpenLinksInBrowserByDefault) Scope() Scope          { return ScopeUser }
+func (p *ArcOpenLinksInBrowserByDefault) Status() Status        { return p.Stat }
+func (p *ArcOpenLinksInBrowserByDefault) UntypedV() interface{} { return p.Val }
+func (p *ArcOpenLinksInBrowserByDefault) UnmarshalAs(m json.RawMessage) (interface{}, error) {
+	var v bool
+	if err := json.Unmarshal(m, &v); err != nil {
+		return nil, errors.Wrapf(err, "could not read %s as bool", m)
+	}
+	return v, nil
+}
+func (p *ArcOpenLinksInBrowserByDefault) SetProto(m *protoreflect.Message) {
+	SetUserProto(m, p.Name(), p.Val)
+}
+func (p *ArcOpenLinksInBrowserByDefault) Equal(iface interface{}) bool {
+	v, ok := iface.(bool)
+	if !ok {
+		return ok
+	}
+	return cmp.Equal(p.Val, v, cmpopts.EquateEmpty())
+}
+
+// ****************************************************************************
+// 1303. DefaultDirectSocketsPrivateNetworkAccessSetting
+// This policy can be modified without rebooting.
+// This is a future policy, it is not present in stable builds.
+// ****************************************************************************
+type DefaultDirectSocketsPrivateNetworkAccessSetting struct {
+	Stat Status
+	Val  int
+}
+
+func (p *DefaultDirectSocketsPrivateNetworkAccessSetting) Name() string {
+	return "DefaultDirectSocketsPrivateNetworkAccessSetting"
+}
+func (p *DefaultDirectSocketsPrivateNetworkAccessSetting) Scope() Scope          { return ScopeUser }
+func (p *DefaultDirectSocketsPrivateNetworkAccessSetting) Status() Status        { return p.Stat }
+func (p *DefaultDirectSocketsPrivateNetworkAccessSetting) UntypedV() interface{} { return p.Val }
+func (p *DefaultDirectSocketsPrivateNetworkAccessSetting) UnmarshalAs(m json.RawMessage) (interface{}, error) {
+	var v int
+	if err := json.Unmarshal(m, &v); err != nil {
+		return nil, errors.Wrapf(err, "could not read %s as int", m)
+	}
+	return v, nil
+}
+func (p *DefaultDirectSocketsPrivateNetworkAccessSetting) SetProto(m *protoreflect.Message) {
+	SetUserProto(m, p.Name(), p.Val)
+}
+func (p *DefaultDirectSocketsPrivateNetworkAccessSetting) Equal(iface interface{}) bool {
+	v, ok := iface.(int)
+	if !ok {
+		return ok
+	}
+	return cmp.Equal(p.Val, v, cmpopts.EquateEmpty())
+}
+
+// ****************************************************************************
+// 1304. DirectSocketsPrivateNetworkAccessAllowedForUrls
+// This policy can be modified without rebooting.
+// This is a future policy, it is not present in stable builds.
+// ****************************************************************************
+type DirectSocketsPrivateNetworkAccessAllowedForUrls struct {
+	Stat Status
+	Val  []string
+}
+
+func (p *DirectSocketsPrivateNetworkAccessAllowedForUrls) Name() string {
+	return "DirectSocketsPrivateNetworkAccessAllowedForUrls"
+}
+func (p *DirectSocketsPrivateNetworkAccessAllowedForUrls) Scope() Scope          { return ScopeUser }
+func (p *DirectSocketsPrivateNetworkAccessAllowedForUrls) Status() Status        { return p.Stat }
+func (p *DirectSocketsPrivateNetworkAccessAllowedForUrls) UntypedV() interface{} { return p.Val }
+func (p *DirectSocketsPrivateNetworkAccessAllowedForUrls) UnmarshalAs(m json.RawMessage) (interface{}, error) {
+	var v []string
+	if err := json.Unmarshal(m, &v); err != nil {
+		return nil, errors.Wrapf(err, "could not read %s as []string", m)
+	}
+	return v, nil
+}
+func (p *DirectSocketsPrivateNetworkAccessAllowedForUrls) SetProto(m *protoreflect.Message) {
+	SetUserProto(m, p.Name(), p.Val)
+}
+func (p *DirectSocketsPrivateNetworkAccessAllowedForUrls) Equal(iface interface{}) bool {
+	v, ok := iface.([]string)
+	if !ok {
+		return ok
+	}
+	return cmp.Equal(p.Val, v, cmpopts.EquateEmpty())
+}
+
+// ****************************************************************************
+// 1305. DirectSocketsPrivateNetworkAccessBlockedForUrls
+// This policy can be modified without rebooting.
+// This is a future policy, it is not present in stable builds.
+// ****************************************************************************
+type DirectSocketsPrivateNetworkAccessBlockedForUrls struct {
+	Stat Status
+	Val  []string
+}
+
+func (p *DirectSocketsPrivateNetworkAccessBlockedForUrls) Name() string {
+	return "DirectSocketsPrivateNetworkAccessBlockedForUrls"
+}
+func (p *DirectSocketsPrivateNetworkAccessBlockedForUrls) Scope() Scope          { return ScopeUser }
+func (p *DirectSocketsPrivateNetworkAccessBlockedForUrls) Status() Status        { return p.Stat }
+func (p *DirectSocketsPrivateNetworkAccessBlockedForUrls) UntypedV() interface{} { return p.Val }
+func (p *DirectSocketsPrivateNetworkAccessBlockedForUrls) UnmarshalAs(m json.RawMessage) (interface{}, error) {
+	var v []string
+	if err := json.Unmarshal(m, &v); err != nil {
+		return nil, errors.Wrapf(err, "could not read %s as []string", m)
+	}
+	return v, nil
+}
+func (p *DirectSocketsPrivateNetworkAccessBlockedForUrls) SetProto(m *protoreflect.Message) {
+	SetUserProto(m, p.Name(), p.Val)
+}
+func (p *DirectSocketsPrivateNetworkAccessBlockedForUrls) Equal(iface interface{}) bool {
+	v, ok := iface.([]string)
 	if !ok {
 		return ok
 	}
@@ -30447,8 +30608,6 @@ func newByName(name string) (Policy, error) {
 		return &SuppressDifferentOriginSubframeDialogs{}, nil
 	case "UserBorealisAllowed":
 		return &UserBorealisAllowed{}, nil
-	case "LacrosSecondaryProfilesAllowed":
-		return &LacrosSecondaryProfilesAllowed{}, nil
 	case "GaiaLockScreenOfflineSigninTimeLimitDays":
 		return &GaiaLockScreenOfflineSigninTimeLimitDays{}, nil
 	case "SamlLockScreenOfflineSigninTimeLimitDays":
@@ -31127,8 +31286,8 @@ func newByName(name string) (Policy, error) {
 		return &TabCompareSettings{}, nil
 	case "KioskWebAppOfflineEnabled":
 		return &KioskWebAppOfflineEnabled{}, nil
-	case "GraduationEnablementStatus":
-		return &GraduationEnablementStatus{}, nil
+	case "ContentTransferEnablementStatus":
+		return &ContentTransferEnablementStatus{}, nil
 	case "HelpMeReadSettings":
 		return &HelpMeReadSettings{}, nil
 	case "GenAiDefaultSettings":
@@ -31137,6 +31296,18 @@ func newByName(name string) (Policy, error) {
 		return &KioskActiveWiFiCredentialsScopeChangeEnabled{}, nil
 	case "DataURLWhitespacePreservationEnabled":
 		return &DataURLWhitespacePreservationEnabled{}, nil
+	case "AllowExcludeDisplayInMirrorMode":
+		return &AllowExcludeDisplayInMirrorMode{}, nil
+	case "AutofillPredictionSettings":
+		return &AutofillPredictionSettings{}, nil
+	case "ArcOpenLinksInBrowserByDefault":
+		return &ArcOpenLinksInBrowserByDefault{}, nil
+	case "DefaultDirectSocketsPrivateNetworkAccessSetting":
+		return &DefaultDirectSocketsPrivateNetworkAccessSetting{}, nil
+	case "DirectSocketsPrivateNetworkAccessAllowedForUrls":
+		return &DirectSocketsPrivateNetworkAccessAllowedForUrls{}, nil
+	case "DirectSocketsPrivateNetworkAccessBlockedForUrls":
+		return &DirectSocketsPrivateNetworkAccessBlockedForUrls{}, nil
 	default:
 		return nil, errors.New("Unknown policy " + name)
 	}
