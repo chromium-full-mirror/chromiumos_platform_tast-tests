@@ -60,7 +60,6 @@ func init() {
 				"uefi_dbx",
 				"uefi_esrt",
 			},
-			ExtraAttr:         []string{"informational", "group:criticalstaging"},
 			ExtraSoftwareDeps: []string{"uefi_firmware"},
 		}},
 	})
