@@ -18,9 +18,10 @@ import (
 
 func init() {
 	testing.AddTest(&testing.Test{
-		Func:         SilencePhone,
-		LacrosStatus: testing.LacrosVariantUnneeded,
-		Desc:         "Checks that toggling Phone Hub's \"Silence phone\" pod will toggle do-not-disturb on the Android phone",
+		Func:           SilencePhone,
+		LacrosStatus:   testing.LacrosVariantUnneeded,
+		LifeCycleStage: testing.LifeCycleOwnerMonitored,
+		Desc:           "Checks that toggling Phone Hub's \"Silence phone\" pod will toggle do-not-disturb on the Android phone",
 		Contacts: []string{
 			"chromeos-cross-device-eng@google.com",
 			"chromeos-sw-engprod@google.com",

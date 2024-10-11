@@ -22,9 +22,10 @@ import (
 
 func init() {
 	testing.AddTest(&testing.Test{
-		Func:         PhoneStatus,
-		LacrosStatus: testing.LacrosVariantUnneeded,
-		Desc:         "Checks that Phone Hub displays the phone's battery and signal levels",
+		Func:           PhoneStatus,
+		LacrosStatus:   testing.LacrosVariantUnneeded,
+		LifeCycleStage: testing.LifeCycleOwnerMonitored,
+		Desc:           "Checks that Phone Hub displays the phone's battery and signal levels",
 		Contacts: []string{
 			"chromeos-cross-device-eng@google.com",
 			"chromeos-sw-engprod@google.com",

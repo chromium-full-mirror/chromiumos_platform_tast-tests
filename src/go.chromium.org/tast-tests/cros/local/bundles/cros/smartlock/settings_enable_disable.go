@@ -20,9 +20,10 @@ import (
 
 func init() {
 	testing.AddTest(&testing.Test{
-		Func:         SettingsEnableDisable,
-		LacrosStatus: testing.LacrosVariantUnneeded,
-		Desc:         "Tests ability to enable/disable Smart Lock with Settings",
+		Func:           SettingsEnableDisable,
+		LacrosStatus:   testing.LacrosVariantUnneeded,
+		LifeCycleStage: testing.LifeCycleOwnerMonitored,
+		Desc:           "Tests ability to enable/disable Smart Lock with Settings",
 		Contacts: []string{
 			"chromeos-cross-device-eng@google.com",
 			"chromeos-sw-engprod@google.com",

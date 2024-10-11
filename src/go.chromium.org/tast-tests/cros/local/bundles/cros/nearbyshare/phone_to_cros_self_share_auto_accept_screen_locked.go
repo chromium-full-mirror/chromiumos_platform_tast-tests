@@ -26,9 +26,10 @@ import (
 
 func init() {
 	testing.AddTest(&testing.Test{
-		Func:         PhoneToCrosSelfShareAutoAcceptScreenLocked,
-		LacrosStatus: testing.LacrosVariantUnneeded,
-		Desc:         "Checks that we can successfully send files from Android to CrOS on the same Gaia without accepting when the Chromebook is locked",
+		Func:           PhoneToCrosSelfShareAutoAcceptScreenLocked,
+		LacrosStatus:   testing.LacrosVariantUnneeded,
+		LifeCycleStage: testing.LifeCycleOwnerMonitored,
+		Desc:           "Checks that we can successfully send files from Android to CrOS on the same Gaia without accepting when the Chromebook is locked",
 		Contacts: []string{
 			"chromeos-cross-device-eng@google.com",
 			"chromeos-sw-engprod@google.com",

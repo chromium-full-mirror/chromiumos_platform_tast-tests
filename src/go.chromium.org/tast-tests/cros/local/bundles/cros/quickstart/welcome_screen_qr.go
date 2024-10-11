@@ -19,9 +19,10 @@ import (
 
 func init() {
 	testing.AddTest(&testing.Test{
-		Func:         WelcomeScreenQR,
-		LacrosStatus: testing.LacrosVariantUnneeded,
-		Desc:         "Test Quick Start starting on the Welcome Screen with QR code verification",
+		Func:           WelcomeScreenQR,
+		LacrosStatus:   testing.LacrosVariantUnneeded,
+		LifeCycleStage: testing.LifeCycleOwnerMonitored,
+		Desc:           "Test Quick Start starting on the Welcome Screen with QR code verification",
 		Contacts: []string{
 			"chromeos-cross-device-eng@google.com",
 			"hansenmichael@google.com",

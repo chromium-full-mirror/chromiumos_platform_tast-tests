@@ -19,9 +19,10 @@ import (
 
 func init() {
 	testing.AddTest(&testing.Test{
-		Func:         LocatePhone,
-		LacrosStatus: testing.LacrosVariantUnneeded,
-		Desc:         "Checks that toggling Phone Hub's \"Locate phone\" pod will toggle the ringer on the Android phone",
+		Func:           LocatePhone,
+		LacrosStatus:   testing.LacrosVariantUnneeded,
+		LifeCycleStage: testing.LifeCycleOwnerMonitored,
+		Desc:           "Checks that toggling Phone Hub's \"Locate phone\" pod will toggle the ringer on the Android phone",
 		Contacts: []string{
 			"chromeos-cross-device-eng@google.com",
 			"chromeos-sw-engprod@google.com",

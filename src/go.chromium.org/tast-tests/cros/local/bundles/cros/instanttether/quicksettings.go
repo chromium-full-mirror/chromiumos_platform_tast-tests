@@ -25,9 +25,10 @@ import (
 
 func init() {
 	testing.AddTest(&testing.Test{
-		Func:         Quicksettings,
-		LacrosStatus: testing.LacrosVariantUnneeded,
-		Desc:         "Checks enabling Instant Tether through Quick Settings",
+		Func:           Quicksettings,
+		LacrosStatus:   testing.LacrosVariantUnneeded,
+		LifeCycleStage: testing.LifeCycleOwnerMonitored,
+		Desc:           "Checks enabling Instant Tether through Quick Settings",
 		Contacts: []string{
 			"chromeos-cross-device-eng@google.com",
 			"chromeos-sw-engprod@google.com",

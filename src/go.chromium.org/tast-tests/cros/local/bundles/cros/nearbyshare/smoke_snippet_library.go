@@ -15,8 +15,9 @@ import (
 
 func init() {
 	testing.AddTest(&testing.Test{
-		Func: SmokeSnippetLibrary,
-		Desc: "Checks that we can successfully run the Nearby Snippet on the Android device",
+		Func:           SmokeSnippetLibrary,
+		LifeCycleStage: testing.LifeCycleOwnerMonitored,
+		Desc:           "Checks that we can successfully run the Nearby Snippet on the Android device",
 		Contacts: []string{
 			"chromeos-cross-device-eng@google.com",
 			"chromeos-sw-engprod@google.com",

@@ -25,9 +25,10 @@ import (
 
 func init() {
 	testing.AddTest(&testing.Test{
-		Func:         MessageNotification,
-		LacrosStatus: testing.LacrosVariantUnneeded,
-		Desc:         "Checks that Android message notifications appear in Phone Hub and that inline reply works",
+		Func:           MessageNotification,
+		LacrosStatus:   testing.LacrosVariantUnneeded,
+		LifeCycleStage: testing.LifeCycleOwnerMonitored,
+		Desc:           "Checks that Android message notifications appear in Phone Hub and that inline reply works",
 		Contacts: []string{
 			"chromeos-cross-device-eng@google.com",
 			"chromeos-sw-engprod@google.com",

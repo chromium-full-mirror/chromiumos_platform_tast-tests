@@ -21,9 +21,10 @@ import (
 
 func init() {
 	testing.AddTest(&testing.Test{
-		Func:         WelcomeScreenPIN,
-		LacrosStatus: testing.LacrosVariantUnneeded,
-		Desc:         "Test Quick Start starting on the Welcome Screen with PIN verification",
+		Func:           WelcomeScreenPIN,
+		LacrosStatus:   testing.LacrosVariantUnneeded,
+		LifeCycleStage: testing.LifeCycleOwnerMonitored,
+		Desc:           "Test Quick Start starting on the Welcome Screen with PIN verification",
 		Contacts: []string{
 			"chromeos-cross-device-eng@google.com",
 			"hansenmichael@google.com",

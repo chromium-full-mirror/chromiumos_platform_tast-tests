@@ -21,9 +21,10 @@ import (
 
 func init() {
 	testing.AddTest(&testing.Test{
-		Func:         GaiaScreenPIN,
-		LacrosStatus: testing.LacrosVariantUnneeded,
-		Desc:         "Test Quick Start starting on the Gaia Screen with PIN verification",
+		Func:           GaiaScreenPIN,
+		LacrosStatus:   testing.LacrosVariantUnneeded,
+		LifeCycleStage: testing.LifeCycleOwnerMonitored,
+		Desc:           "Test Quick Start starting on the Gaia Screen with PIN verification",
 		Contacts: []string{
 			"chromeos-cross-device-eng@google.com",
 			"hansenmichael@google.com",

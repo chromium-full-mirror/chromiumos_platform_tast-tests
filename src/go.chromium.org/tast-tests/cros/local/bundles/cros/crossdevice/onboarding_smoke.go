@@ -13,9 +13,10 @@ import (
 
 func init() {
 	testing.AddTest(&testing.Test{
-		Func:         OnboardingSmoke,
-		LacrosStatus: testing.LacrosVariantUnneeded,
-		Desc:         "Runs the cross device onboarding fixture to prevent its failures from failing other tests in the cross device suite",
+		Func:           OnboardingSmoke,
+		LacrosStatus:   testing.LacrosVariantUnneeded,
+		LifeCycleStage: testing.LifeCycleOwnerMonitored,
+		Desc:           "Runs the cross device onboarding fixture to prevent its failures from failing other tests in the cross device suite",
 		Contacts: []string{
 			"chromeos-cross-device-eng@google.com",
 			"chromeos-sw-engprod@google.com",

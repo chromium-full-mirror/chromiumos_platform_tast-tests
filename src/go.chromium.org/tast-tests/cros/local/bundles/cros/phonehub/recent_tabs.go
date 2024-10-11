@@ -24,8 +24,9 @@ import (
 
 func init() {
 	testing.AddTest(&testing.Test{
-		Func: RecentTabs,
-		Desc: "Checks that recently opened Chrome tabs on Android appear in Phone Hub",
+		Func:           RecentTabs,
+		LifeCycleStage: testing.LifeCycleOwnerMonitored,
+		Desc:           "Checks that recently opened Chrome tabs on Android appear in Phone Hub",
 		Contacts: []string{
 			"chromeos-cross-device-eng@google.com",
 			"chromeos-sw-engprod@google.com",

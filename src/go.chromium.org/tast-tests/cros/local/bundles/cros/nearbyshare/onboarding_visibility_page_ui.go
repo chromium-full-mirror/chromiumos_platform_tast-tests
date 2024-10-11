@@ -16,9 +16,10 @@ import (
 
 func init() {
 	testing.AddTest(&testing.Test{
-		Func:         OnboardingVisibilityPageUI,
-		LacrosStatus: testing.LacrosVariantUnneeded,
-		Desc:         "Checks that Nearby Share can be enabled from the visibility selection page of onboarding workflow",
+		Func:           OnboardingVisibilityPageUI,
+		LacrosStatus:   testing.LacrosVariantUnneeded,
+		LifeCycleStage: testing.LifeCycleOwnerMonitored,
+		Desc:           "Checks that Nearby Share can be enabled from the visibility selection page of onboarding workflow",
 		Contacts: []string{
 			"chromeos-cross-device-eng@google.com",
 			"chromeos-sw-engprod@google.com",

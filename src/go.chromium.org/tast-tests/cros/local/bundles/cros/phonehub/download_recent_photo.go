@@ -30,9 +30,11 @@ const statusAreaOverflowButtonTrayClassName = "StatusAreaOverflowButtonTray"
 
 func init() {
 	testing.AddTest(&testing.Test{
-		Func:         DownloadRecentPhoto,
-		LacrosStatus: testing.LacrosVariantUnneeded,
-		Desc:         "Exercises toggling the Recent Photos feature and downloading a photo from a connected phone",
+		Func:           DownloadRecentPhoto,
+		LacrosStatus:   testing.LacrosVariantUnneeded,
+		LifeCycleStage: testing.LifeCycleOwnerMonitored,
+
+		Desc: "Exercises toggling the Recent Photos feature and downloading a photo from a connected phone",
 		Contacts: []string{
 			"chromeos-cross-device-eng@google.com",
 			"chromeos-sw-engprod@google.com",

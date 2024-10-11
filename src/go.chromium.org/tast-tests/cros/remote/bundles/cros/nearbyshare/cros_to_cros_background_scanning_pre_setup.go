@@ -20,9 +20,10 @@ import (
 
 func init() {
 	testing.AddTest(&testing.Test{
-		Func:         CrosToCrosBackgroundScanningPreSetup,
-		LacrosStatus: testing.LacrosVariantUnneeded,
-		Desc:         "Checks that Nearby Device is trying to share notification shows up, clicking the notification initiates onboarding flow",
+		Func:           CrosToCrosBackgroundScanningPreSetup,
+		LacrosStatus:   testing.LacrosVariantUnneeded,
+		LifeCycleStage: testing.LifeCycleOwnerMonitored,
+		Desc:           "Checks that Nearby Device is trying to share notification shows up, clicking the notification initiates onboarding flow",
 		Contacts: []string{
 			"chromeos-cross-device-eng@google.com",
 			"chromeos-sw-engprod@google.com",
