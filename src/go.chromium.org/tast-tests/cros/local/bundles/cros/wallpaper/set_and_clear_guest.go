@@ -6,10 +6,10 @@ package wallpaper
 
 import (
 	"context"
+	"path/filepath"
 	"time"
 
 	"go.chromium.org/tast-tests/cros/local/chrome"
-	"go.chromium.org/tast-tests/cros/local/chrome/ash"
 	"go.chromium.org/tast-tests/cros/local/chrome/ash/ashproc"
 	"go.chromium.org/tast-tests/cros/local/chrome/uiauto"
 	"go.chromium.org/tast-tests/cros/local/chrome/uiauto/faillog"
@@ -45,7 +45,7 @@ func SetAndClearGuest(ctx context.Context, s *testing.State) {
 	ctx, cancel := ctxutil.Shorten(ctx, 10*time.Second)
 	defer cancel()
 
-	cr, err := chrome.New(ctx, chrome.GuestLogin())
+	cr, err := chrome.New(ctx, chrome.GuestLogin(), chrome.ExtraArgs("--force-tablet-mode=clamshell"))
 	if err != nil {
 		s.Fatal("Failed to create chrome instance: ", err)
 	}
@@ -66,12 +66,13 @@ func SetAndClearGuest(ctx context.Context, s *testing.State) {
 		}
 	}(cleanupCtx)
 
-	// Force Chrome to be in clamshell mode to make sure wallpaper preview is not enabled.
-	cleanup, err := ash.EnsureTabletModeEnabled(ctx, tconn, false)
-	if err != nil {
-		s.Fatal("Failed to ensure DUT is not in tablet mode: ", err)
-	}
-	defer cleanup(cleanupCtx)
+	filename := "first_session_recording.webm"
+	screenRecorder := uiauto.CreateAndStartScreenRecorder(ctx, tconn)
+	// Note that this defer func may be called with the screen recorder from the first guest session or the second guest
+	// session depending on when a fatal error occurs.
+	defer func(ctx context.Context) {
+		uiauto.StopAndSaveOnError(ctx, screenRecorder, filepath.Join(s.OutDir(), filename), s.HasError)
+	}(cleanupCtx)
 
 	ui := uiauto.New(tconn)
 
@@ -104,6 +105,10 @@ func SetAndClearGuest(ctx context.Context, s *testing.State) {
 	if tconn, err = cr.TestAPIConn(ctx); err != nil {
 		s.Fatal("Failed to re-establish test API connection: ", err)
 	}
+
+	filename = "second_session_recording.webm"
+	screenRecorder = uiauto.CreateAndStartScreenRecorder(ctx, tconn)
+
 	ui = uiauto.New(tconn)
 
 	if err := uiauto.NamedAction("Verify default wallpaper after sign-in", verifyDefaultWallpaper(ui))(ctx); err != nil {
