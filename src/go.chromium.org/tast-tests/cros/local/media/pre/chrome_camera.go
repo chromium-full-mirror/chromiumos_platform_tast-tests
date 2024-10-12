@@ -21,6 +21,9 @@ func initChromeCameraPerfFixtures() {
 			return []chrome.Option{
 				chrome.ExtraArgs(chromeBypassPermissionsArgs...),
 				chrome.ExtraArgs(chromeSuppressNotificationsArgs...),
+				chrome.ExtraArgs(
+					"--disable-gpu-driver-bug-workarounds",
+				),
 			}, nil
 		}),
 		Parent:          "gpuWatchDog",
