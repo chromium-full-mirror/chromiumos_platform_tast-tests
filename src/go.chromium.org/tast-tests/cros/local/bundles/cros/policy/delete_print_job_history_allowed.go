@@ -20,7 +20,6 @@ import (
 	"go.chromium.org/tast-tests/cros/local/chrome/uiauto/printmanagementapp"
 	"go.chromium.org/tast-tests/cros/local/chrome/uiauto/printpreview"
 	"go.chromium.org/tast-tests/cros/local/chrome/uiauto/restriction"
-	"go.chromium.org/tast-tests/cros/local/chrome/uiauto/role"
 	"go.chromium.org/tast-tests/cros/local/input"
 	"go.chromium.org/tast-tests/cros/local/policyutil"
 	"go.chromium.org/tast/core/ctxutil"
@@ -149,7 +148,7 @@ func DeletePrintJobHistoryAllowed(ctx context.Context, s *testing.State) {
 
 			// Cancel the print job.
 			if err := uiauto.Combine("Cancel the print job",
-				uia.FocusAndWait(nodewith.Role(role.Button).Ancestor(nodewith.NameContaining("Press enter to cancel the print job").First())),
+				uia.FocusAndWait((nodewith.NameContaining("Press enter to cancel the print job").First())),
 				kb.AccelAction("Enter"),
 			)(ctx); err != nil {
 				s.Fatal("Failed to cancel the print job: ", err)
