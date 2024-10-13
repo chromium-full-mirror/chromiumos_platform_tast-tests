@@ -25,9 +25,10 @@ func init() {
 		},
 		BugComponent: "b:905229", // ChromeOS > Software > Assistive
 		Attr: []string{
-			"group:hw_agnostic",
-			"group:mainline",
-			"informational",
+			// Disabled by TORA.  See:b/331078791.
+			// "group:hw_agnostic",
+			// "group:mainline",
+			// "informational",
 		},
 		SearchFlags: []*testing.StringPair{{
 			Key:   "feature_id",
@@ -40,7 +41,10 @@ func init() {
 			quickanswers.EnabledWithBrowserFixture,
 			quickanswers.VariantSimpleWord,
 		),
-		SoftwareDeps: []string{"gaia"},
+		SoftwareDeps: []string{
+			// Disabled by TORA.  See:b/331078791.
+			// "gaia"
+			},
 	})
 }
 
