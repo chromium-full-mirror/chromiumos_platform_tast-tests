@@ -36,7 +36,10 @@ func init() {
 			"acostinas@google.com",                      // Test author
 		},
 		BugComponent: "b:1000044",
-		Attr:         []string{"group:mainline", "informational"},
+		Attr:         []string{
+			// Disabled by TORA.  See:b/331424761.
+			// "group:mainline", "informational"
+		},
 		Data:         []string{"allowlist_ssl_inspection.json"},
 		ServiceDeps: []string{"tast.cros.network.AllowlistService",
 			"tast.cros.hwsec.OwnershipService",
