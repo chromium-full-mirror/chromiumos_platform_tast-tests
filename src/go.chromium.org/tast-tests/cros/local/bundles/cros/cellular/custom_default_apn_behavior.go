@@ -31,7 +31,7 @@ func init() {
 			"chromeos-connectivity-cienet-external@google.com",
 		},
 		BugComponent: "b:1578688", // ChromeOS > External > Cienet > Manual Test Automation > Test stabilization
-		Attr:         []string{"group:cellular", "cellular_unstable", "cellular_sim_active", "cellular_e2e", "cellular_carrier_dependent", "cellular_carrier_att"},
+		Attr:         []string{"group:cellular", "cellular_unstable", "cellular_sim_active", "cellular_e2e", "cellular_carrier_dependent", "cellular_carrier_amarisoft"},
 		SoftwareDeps: []string{"chrome"},
 		Fixture:      "cellularEnforceConnectionAndResetShillProfile",
 		Timeout:      2*time.Minute + 5*ossettings.WaitForConnectionTimeout, // This case tries to connect to the network 5 times.
