@@ -24,11 +24,17 @@ func init() {
 		},
 		BugComponent: "b:905229", // ChromeOS > Software > Assistive
 		Attr: []string{
-			"group:mainline",
-			"informational",
-			"group:hw_agnostic",
+			// Disabled by TORA.  See:b/332052853.
+			// "group:mainline",
+			// "informational",
+			// "group:hw_agnostic",
 		},
-		SoftwareDeps: []string{"chrome", "chrome_internal", "gaia"},
+		SoftwareDeps: []string{
+			"chrome",
+			"chrome_internal",
+			// Disabled by TORA.  See:b/332052853.
+			// "gaia"
+		},
 		Fixture:      "assistantWithArc",
 		Timeout:      3 * time.Minute,
 		Params: []testing.Param{{
