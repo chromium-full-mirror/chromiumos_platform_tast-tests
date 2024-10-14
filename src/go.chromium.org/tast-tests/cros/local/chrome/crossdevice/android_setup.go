@@ -248,9 +248,10 @@ func ConfigureDevice(ctx context.Context, d *adb.Device, rooted bool) error {
 	if err := d.PressKeyCode(ctx, strconv.Itoa(int(ui.KEYCODE_WAKEUP))); err != nil {
 		return errors.Wrap(err, "failed to wake screen")
 	}
-	// Remove any PIN on the phone that may be left from other tests.
+	// Remove any PIN on the phone that may be left from other tests. Just warn if this fails,
+	// since it will fail if there was already no PIN set.
 	if err := d.ClearPIN(ctx); err != nil {
-		return errors.Wrap(err, "failed to clear PIN")
+		testing.ContextLog(ctx, "Failed to clear PIN: ", err.Error())
 	}
 	if err := d.DisableLockscreen(ctx, true); err != nil {
 		return errors.Wrap(err, "failed to disable lockscreen")
