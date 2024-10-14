@@ -26,15 +26,20 @@ func init() {
 		},
 		BugComponent: "b:905229", // ChromeOS > Software > Assistive
 		Attr: []string{
-			"group:hw_agnostic",
-			"group:mainline",
-			"informational",
+			// Disabled by TORA.  See:b/331956148.
+			// "group:hw_agnostic",
+			// "group:mainline",
+			// "informational",
 		},
 		SearchFlags: []*testing.StringPair{{
 			Key:   "feature_id",
 			Value: "screenplay-2f2657f3-db9a-4fd1-a277-708fb17af8f6",
 		}},
-		SoftwareDeps: []string{"chrome", "gaia"},
+		SoftwareDeps: []string{
+			"chrome",
+			// Disabled by TORA.  See:b/331956148.
+			//"gaia"
+			},
 		Fixture: quickanswers.Parameterize(
 			quickanswers.EnabledWithBrowserFixture,
 			quickanswers.VariantSingleWord,
