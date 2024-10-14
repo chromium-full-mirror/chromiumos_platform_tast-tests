@@ -41,6 +41,7 @@ func init() {
 			"cd1": hwdep.D(hwdep.WifiP2P()),
 		},
 		Requirements: []string{tdreq.WiFiGenSupportWFD},
+		Fixture:      wificell.FixtureID(wificell.TFFeaturesCompanionDUT | wificell.TFFeaturesSelfManagedAP | wificell.TFFeaturesCapture),
 		Params: []testing.Param{
 			{
 				Name: "chromebook_chromebook_same_chan_2g",
@@ -49,7 +50,6 @@ func init() {
 					ap2Config: hostapd.ApConfig{ApOpts: []hostapd.Option{hostapd.Mode(hostapd.Mode80211acPure), hostapd.Channel(48), hostapd.HTCaps(hostapd.HTCapHT20), hostapd.VHTChWidth(hostapd.VHTChWidth20Or40)}},
 					p2pOpts:   []p2p.GroupOption{p2p.SetFreq(2412)},
 				},
-				Fixture: wificell.FixtureID(wificell.TFFeaturesCompanionDUT | wificell.TFFeaturesSelfManagedAP),
 			}, {
 				Name: "chromebook_chromebook_same_chan_5g",
 				Val: p2pConcurrencyRoamTestcase{
@@ -57,7 +57,6 @@ func init() {
 					ap2Config: hostapd.ApConfig{ApOpts: []hostapd.Option{hostapd.Mode(hostapd.Mode80211nPure), hostapd.Channel(1), hostapd.HTCaps(hostapd.HTCapHT20)}},
 					p2pOpts:   []p2p.GroupOption{p2p.SetFreq(5180)},
 				},
-				Fixture: wificell.FixtureID(wificell.TFFeaturesCompanionDUT | wificell.TFFeaturesSelfManagedAP),
 			}, {
 				Name: "chromebook_chromebook_diff_chan_2g",
 				Val: p2pConcurrencyRoamTestcase{
@@ -65,7 +64,6 @@ func init() {
 					ap2Config: hostapd.ApConfig{ApOpts: []hostapd.Option{hostapd.Mode(hostapd.Mode80211acPure), hostapd.Channel(36), hostapd.HTCaps(hostapd.HTCapHT20), hostapd.VHTChWidth(hostapd.VHTChWidth20Or40)}},
 					p2pOpts:   []p2p.GroupOption{p2p.SetFreq(2462)},
 				},
-				Fixture: wificell.FixtureID(wificell.TFFeaturesCompanionDUT | wificell.TFFeaturesSelfManagedAP),
 			}, {
 				Name: "chromebook_chromebook_diff_chan_5g",
 				Val: p2pConcurrencyRoamTestcase{
@@ -73,7 +71,6 @@ func init() {
 					ap2Config: hostapd.ApConfig{ApOpts: []hostapd.Option{hostapd.Mode(hostapd.Mode80211nPure), hostapd.Channel(1), hostapd.HTCaps(hostapd.HTCapHT20)}},
 					p2pOpts:   []p2p.GroupOption{p2p.SetFreq(5180)},
 				},
-				Fixture: wificell.FixtureID(wificell.TFFeaturesCompanionDUT | wificell.TFFeaturesSelfManagedAP),
 			}},
 	})
 }
