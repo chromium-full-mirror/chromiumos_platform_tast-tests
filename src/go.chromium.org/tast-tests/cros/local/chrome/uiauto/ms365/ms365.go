@@ -222,11 +222,17 @@ func Microsoft365WindowFinder(fileName string) *nodewith.Finder {
 	return nodewith.Role(role.Window).NameContaining(fileName).HasClass("WebContentsViewAura")
 }
 
+// Microsoft365WindowFinderWithRegex is a finder for a window of Microsoft 365 (Word, Excel or PowerPoint)
+// opened for the given file name regex.
+func Microsoft365WindowFinderWithRegex(fileNameRegex *regexp.Regexp) *nodewith.Finder {
+	return nodewith.Role(role.Window).NameRegex(fileNameRegex).HasClass("WebContentsViewAura")
+}
+
 // closeMicrosoft365Window finds the Microsoft 365 app window with the specific
 // file name and close it.
 func closeMicrosoft365Window(ctx context.Context, tconn *chrome.TestConn, fileName string) error {
 	w, err := ash.FindWindow(ctx, tconn, func(w *ash.Window) bool {
-		return strings.Contains(w.Title, fileName) && strings.Contains(w.Title, "Microsoft")
+		return strings.Contains(w.Title, fileName) && strings.Contains(w.Title, "Microsoft") && w.WindowType != ash.WindowTypeBrowser
 	})
 	if err != nil {
 		return errors.Wrap(err, "failed to find the MS365 window to close")

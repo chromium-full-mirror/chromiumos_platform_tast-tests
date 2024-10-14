@@ -21,8 +21,8 @@ import (
 	"go.chromium.org/tast/core/testing"
 )
 
-// findEntriesOlderThanHalfAnHour returns files and folders older than 30 minutes in the `dir`.
-func findEntriesOlderThanHalfAnHour(dir string) (infos []os.FileInfo, err error) {
+// FindEntriesOlderThanHalfAnHour returns files and folders older than 30 minutes in the `dir`.
+func FindEntriesOlderThanHalfAnHour(dir string) (infos []os.FileInfo, err error) {
 	dirEntries, err := os.ReadDir(dir)
 	if err != nil {
 		return nil, err
@@ -48,7 +48,7 @@ func DeleteOldRemoteFiles(ctx context.Context, dstFileName string) {
 	}
 	file := dstFile[0]
 	dir := filepath.Dir(file)
-	files, err := findEntriesOlderThanHalfAnHour(dir)
+	files, err := FindEntriesOlderThanHalfAnHour(dir)
 	if err != nil {
 		testing.ContextLog(ctx, "Failed to list old files: ", err)
 		return
