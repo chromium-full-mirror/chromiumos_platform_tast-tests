@@ -138,7 +138,7 @@ func GSCI2CBridge(ctx context.Context, s *testing.State) {
 	i2cBusses := b.GscProperties().GscHostI2cBusses()
 
 	b.ResetWithStraps(ctx, ti50.CCDModeOn)
-	th.MustSucceed(i.WaitUntilBooted(ctx), "GSC revives after reboot")
+	b.WaitUntilCCDConnected(ctx)
 
 	// Set capabilities into their correct states
 	th.MustSucceed(i.CCDOpen(ctx), "Failed to open CCD")
