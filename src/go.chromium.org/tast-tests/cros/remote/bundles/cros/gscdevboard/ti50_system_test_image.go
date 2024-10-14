@@ -22,7 +22,7 @@ func init() {
 	testing.AddTest(&testing.Test{
 		Func:    Ti50SystemTestImage,
 		Desc:    "Ti50 system test",
-		Timeout: 20 * time.Minute,
+		Timeout: 45 * time.Minute,
 		Contacts: []string{
 			"cros-hwsec@google.com", // CrOS GSC Developers
 			"ecgh@chromium.org",
@@ -115,6 +115,14 @@ func waitForTest(ctx context.Context, s *testing.State, b utils.DevboardHelper, 
 	var line string
 	lineTime := time.Now()
 	timeLimit := timeLimit
+	if testName == "tpm" {
+		// Allow additional time as long as we have only software cryptolib.
+		if b.TestbedType == ti50.GscOTShield {
+			timeLimit = 15 * time.Minute
+		} else if b.TestbedType == ti50.GscOpentitanCw310Fpga {
+			timeLimit = 30 * time.Minute
+		}
+	}
 
 	var elapsedTime time.Duration
 	for ; elapsedTime < timeLimit; elapsedTime = time.Since(testTime) {
