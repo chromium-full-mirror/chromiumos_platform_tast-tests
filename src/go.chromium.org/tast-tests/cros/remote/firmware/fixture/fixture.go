@@ -330,6 +330,7 @@ func (i *firmwareBackupAPImpl) SetUp(ctx context.Context, s *testing.FixtState) 
 	if i.disallowSSH {
 		dut = nil
 	} else {
+		i.value.Helper.CloseRPCConnection(ctx)
 		connectTimeout, cancel := context.WithTimeout(ctx, 1*time.Minute)
 		defer cancel()
 		if err := i.value.Helper.WaitConnect(connectTimeout); err != nil {
@@ -415,6 +416,7 @@ func (i *bootModeImpl) SetUp(ctx context.Context, s *testing.FixtState) interfac
 			s.Error("Test did not run")
 			s.Fatal("Failed to connect to servod: ", err)
 		}
+		i.value.Helper.CloseRPCConnection(ctx)
 		connectTimeout, cancel := context.WithTimeout(ctx, 1*time.Minute)
 		defer cancel()
 		if err := i.value.Helper.WaitConnect(connectTimeout); err != nil {
@@ -553,6 +555,7 @@ func (i *impl) PreTest(ctx context.Context, s *testing.FixtTestState) {
 
 	// Only get/check EC crash logs if ssh is allow, has cros EC, and is explicitly enabled..
 	if !i.disallowSSH && supportCrosEC == "yes" && i.checkECCrash {
+		i.value.Helper.CloseRPCConnection(ctx)
 		connectTimeout, cancel := context.WithTimeout(ctx, 5*time.Second)
 		defer cancel()
 		if err := i.value.Helper.WaitConnect(connectTimeout); err != nil {
@@ -595,6 +598,7 @@ func (i *bootModeImpl) PreTest(ctx context.Context, s *testing.FixtTestState) {
 		if err := firmware.PollToSetChargerStatus(ctx, i.value.Helper, true); err != nil {
 			s.Log("Failed to attach charger: ", err)
 		}
+		i.value.Helper.CloseRPCConnection(ctx)
 		connectTimeout, cancel := context.WithTimeout(ctx, i.value.Helper.Config.DelayRebootToPing)
 		defer cancel()
 		if err := i.value.Helper.WaitConnect(connectTimeout, firmware.ResetEthernetDongle); err != nil {
@@ -749,6 +753,7 @@ func (i *impl) PostTest(ctx context.Context, s *testing.FixtTestState) {
 }
 
 func checkAndLogECCrashes(ctx context.Context, s *testing.FixtTestState, i *impl) {
+	i.value.Helper.CloseRPCConnection(ctx)
 	connectTimeout, cancel := context.WithTimeout(ctx, 5*time.Second)
 	defer cancel()
 	if err := i.value.Helper.WaitConnect(connectTimeout); err != nil {
