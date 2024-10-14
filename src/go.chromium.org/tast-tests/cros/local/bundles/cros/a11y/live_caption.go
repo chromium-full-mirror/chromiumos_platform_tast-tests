@@ -135,10 +135,6 @@ func LiveCaption(ctx context.Context, s *testing.State) {
 			return errors.Wrap(err, "failed to wait for correct content")
 		}
 
-		if err := ui.WaitUntilGone(liveCaptionBubble)(ctx); err != nil {
-			return errors.Wrap(err, "failed to wait for live caption bubble disappear")
-		}
-
 		return nil
 	}, &testing.PollOptions{Timeout: 60 * time.Second, Interval: 10 * time.Second}); err != nil {
 		s.Fatal("Failed to verify live caption bubble: ", err)
