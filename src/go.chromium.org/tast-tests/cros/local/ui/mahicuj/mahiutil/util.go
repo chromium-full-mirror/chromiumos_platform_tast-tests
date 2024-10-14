@@ -209,31 +209,35 @@ func DoSummary(
 	)(ctx)
 }
 
-// DoSummaryForGalleryPDFWithConsentUI is similar to DoSummary, but in Gallery
-// app it differs in the following aspects:
-// a) it guarantees a non compact SummarizeButton,
-// b) it needs to pass the consent UI because of the first call to HelpMeRead.
-func DoSummaryForGalleryPDFWithConsentUI(
+// MaybePassConsentFlowForGalleryPDF passes the one-off consent flow if the
+// related elements exists on Gallery PDF surface.
+func MaybePassConsentFlowForGalleryPDF(
 	ctx context.Context,
+	tconn *chrome.TestConn,
+	window *ash.Window,
 	ui *uiauto.Context,
-	expectMockResponse bool,
-) error {
-	expectAction := func() uiauto.Action {
-		if expectMockResponse {
-			return ui.WaitUntilExists(mockSummaryText)
-		}
-		return ui.WaitUntilAnyExists(anySummaryText, mahiErrorStatus)
+	kb *input.KeyboardEventWriter) error {
+	if err := mouse.Click(tconn, window.TargetBounds.CenterPoint(), mouse.RightButton)(ctx); err != nil {
+		return errors.Wrap(err, "failed to right click")
 	}
 
-	// This could happen on the Gallery PDF surface.
-	return uiauto.Combine("Do summary and check the panel exists",
-		ui.WaitUntilExists(SummarizeButton),
-		ui.LeftClick(SummarizeButton),
-		ui.WaitUntilExists(consentGotItButton),
-		ui.LeftClick(consentGotItButton),
-		ui.WaitUntilExists(mahiCloseButton),
-		expectAction(),
-	)(ctx)
+	if err := ui.WaitUntilExists(consentTryItButton)(ctx); err != nil {
+		if err := ui.WaitUntilExists(SummarizeButton)(ctx); err != nil {
+			return errors.Wrap(err, "no consent flow nor summary button")
+		}
+	} else {
+		if err := uiauto.Combine("Do consent flow",
+			ui.Exists(consentTryItButton),
+			ui.LeftClick(consentTryItButton),
+			ui.WaitUntilExists(consentGotItButton),
+			ui.LeftClick(consentGotItButton),
+			ui.WaitUntilGone(consentGotItButton),
+		)(ctx); err != nil {
+			return errors.Wrap(err, "failed to pass the consent flow")
+		}
+	}
+
+	return CleanUIElement(ctx, ui, kb)
 }
 
 // AskQuestionOnMahiPanel sends a question on the result panel

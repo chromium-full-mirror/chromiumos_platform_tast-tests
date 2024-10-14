@@ -117,13 +117,18 @@ func GalleryCUJRun(ctx context.Context, cr *chrome.Chrome, proxyScriptPath, pdfF
 	}
 
 	runGalleryCUJ := func(ctx context.Context) (retErr error) {
+		// Pass the one-off consent.
+		if err := mahiutil.MaybePassConsentFlowForGalleryPDF(ctx, tconn, window, ui, kb); err != nil {
+			return errors.Wrap(err, "failed to pass the consent flow")
+		}
+
 		// Do a summary then send a question on the result panel.
 		if err := mahiutil.RightClickAndMaybeShowMahiWidget(
 			ctx, tconn, window, ui, true /*expectMahiWidget*/); err != nil {
 			return errors.Wrap(err, "failed to do a right click")
 		}
 
-		if err := mahiutil.DoSummaryForGalleryPDFWithConsentUI(ctx, ui, true /*expectMockResponse*/); err != nil {
+		if err := mahiutil.DoSummary(ctx, ui, true /*expectMockResponse*/); err != nil {
 			return errors.Wrap(err, "failed to do a mahi summary")
 		}
 
