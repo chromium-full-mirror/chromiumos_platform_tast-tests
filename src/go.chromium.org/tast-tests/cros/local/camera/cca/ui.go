@@ -47,13 +47,13 @@ const (
 	// BarcodeChipText is chip for text detected from barcode.
 	BarcodeChipText UIComponentName = "barcodeChipText"
 	// BarcodeChipURL is chip for url detected from barcode.
-	BarcodeChipURL UIComponentName = "barcodeChipURL"
+	BarcodeChipURL UIComponentName = "barcodeChipUrl"
 	// BarcodeChipURL is chip for url detected from barcode.
 	BarcodeChipWifi UIComponentName = "barcodeChipWifi"
 	// BarcodeCopyTextButton is button to copy text detected from barcode.
 	BarcodeCopyTextButton UIComponentName = "barcodeCopyTextButton"
 	// BarcodeCopyURLButton is button to copy url detected from barcode.
-	BarcodeCopyURLButton UIComponentName = "barcodeCopyURLButton"
+	BarcodeCopyURLButton UIComponentName = "barcodeCopyUrlButton"
 	// BitrateMultiplierRangeInput is range input for selecting bitrate multiplier.
 	BitrateMultiplierRangeInput UIComponentName = "bitrateMultiplierRangeInput"
 	// CancelResultButton is button for canceling intent review result.
@@ -113,7 +113,7 @@ const (
 	// LowStorageDialogManageButton is the button in LowStorageDialog that navigates users to "Manage storage" page in system settings.
 	LowStorageDialogManageButton UIComponentName = "lowStorageDialogManageButton"
 	// LowStorageDialogOKButton is the button labeled "OK" in LowStorageDialog, used to acknowledge and close the dialog.
-	LowStorageDialogOKButton UIComponentName = "lowStorageDialogOKButton"
+	LowStorageDialogOKButton UIComponentName = "lowStorageDialogOkButton"
 	// LowStorageWarning is the warning nudge displayed while recording on device with low storage.
 	LowStorageWarning UIComponentName = "lowStorageWarning"
 	// MirrorOptionOff is an option to disable mirror preview.
@@ -127,7 +127,7 @@ const (
 	// OpenMirrorPanelButton is the button which is used for opening the mirror state settings panel.
 	OpenMirrorPanelButton UIComponentName = "openMirrorPanelButton"
 	// OpenPTZPanelButton is the button for opening PTZ panel.
-	OpenPTZPanelButton UIComponentName = "openPTZPanelButton"
+	OpenPTZPanelButton UIComponentName = "openPtzPanelButton"
 	// OpenTimerPanelButton is the button which is used for opening the timer type settings panel.
 	OpenTimerPanelButton UIComponentName = "openTimerPanelButton"
 	// PanLeftButton is the button for panning left preview.
@@ -221,7 +221,7 @@ const (
 // Visible returns whether a UIComponent{Name} is visible on the screen.
 func (a *App) Visible(ctx context.Context, ui UIComponentName) (bool, error) {
 	var visible bool
-	if err := a.conn.Call(ctx, &visible, "CCATest.isVisible", ui); err != nil {
+	if err := a.conn.Call(ctx, &visible, "CcaTest.isVisible", ui); err != nil {
 		return false, errors.Wrapf(err, "failed to check the visibility of %v", ui)
 	}
 	return visible, nil
@@ -259,7 +259,7 @@ func (a *App) WaitForVisibleStateFor(ctx context.Context, ui UIComponentName, ex
 // Disabled returns disabled attribute of HTMLElement of |ui|.
 func (a *App) Disabled(ctx context.Context, ui UIComponentName) (bool, error) {
 	var disabled bool
-	if err := a.conn.Call(ctx, &disabled, "CCATest.isDisabled", ui); err != nil {
+	if err := a.conn.Call(ctx, &disabled, "CcaTest.isDisabled", ui); err != nil {
 		return false, errors.Wrapf(err, "failed to get disabled state of %v", ui)
 	}
 	return disabled, nil
@@ -282,7 +282,7 @@ func (a *App) WaitForDisabled(ctx context.Context, ui UIComponentName, expected 
 // CountUI returns number of ui elements.
 func (a *App) CountUI(ctx context.Context, ui UIComponentName) (int, error) {
 	var number int
-	if err := a.conn.Call(ctx, &number, "CCATest.countUI", ui); err != nil {
+	if err := a.conn.Call(ctx, &number, "CcaTest.countUi", ui); err != nil {
 		return 0, errors.Wrapf(err, "failed to count number of %v", ui)
 	}
 	return number, nil
@@ -291,7 +291,7 @@ func (a *App) CountUI(ctx context.Context, ui UIComponentName) (int, error) {
 // AttributeWithIndex returns the attr attribute of the index th ui.
 func (a *App) AttributeWithIndex(ctx context.Context, ui UIComponentName, index int, attr string) (string, error) {
 	var value string
-	if err := a.conn.Call(ctx, &value, "CCATest.getAttribute", ui, attr, index); err != nil {
+	if err := a.conn.Call(ctx, &value, "CcaTest.getAttribute", ui, attr, index); err != nil {
 		return "", errors.Wrapf(err, "failed to get %v attribute of %v th %v", attr, index, ui)
 	}
 	return value, nil
@@ -300,7 +300,7 @@ func (a *App) AttributeWithIndex(ctx context.Context, ui UIComponentName, index 
 // ScreenXYWithIndex returns the screen coordinates of the left-top corner of the |index|'th |ui|.
 func (a *App) ScreenXYWithIndex(ctx context.Context, ui UIComponentName, index int) (*coords.Point, error) {
 	var pt coords.Point
-	if err := a.conn.Call(ctx, &pt, "CCATest.getScreenXY", ui, index); err != nil {
+	if err := a.conn.Call(ctx, &pt, "CcaTest.getScreenXy", ui, index); err != nil {
 		return nil, errors.Wrapf(err, "failed to get sceen coordinates of %v'th %v", index, ui)
 	}
 	return &pt, nil
@@ -309,7 +309,7 @@ func (a *App) ScreenXYWithIndex(ctx context.Context, ui UIComponentName, index i
 // Size returns size of the |ui|.
 func (a *App) Size(ctx context.Context, ui UIComponentName) (*Resolution, error) {
 	var size Resolution
-	if err := a.conn.Call(ctx, &size, "CCATest.getSize", ui); err != nil {
+	if err := a.conn.Call(ctx, &size, "CcaTest.getSize", ui); err != nil {
 		return nil, errors.Wrapf(err, "failed to get size of %v", ui)
 	}
 	return &size, nil
@@ -317,7 +317,7 @@ func (a *App) Size(ctx context.Context, ui UIComponentName) (*Resolution, error)
 
 // Click clicks on UIComponent{Name}.
 func (a *App) Click(ctx context.Context, ui UIComponentName) error {
-	if err := a.conn.Call(ctx, nil, "CCATest.click", ui); err != nil {
+	if err := a.conn.Call(ctx, nil, "CcaTest.click", ui); err != nil {
 		return errors.Wrapf(err, "failed to click on %v", ui)
 	}
 	return nil
@@ -325,7 +325,7 @@ func (a *App) Click(ctx context.Context, ui UIComponentName) error {
 
 // ClickWithIndex clicks nth ui.
 func (a *App) ClickWithIndex(ctx context.Context, ui UIComponentName, index int) error {
-	if err := a.conn.Call(ctx, nil, "CCATest.click", ui, index); err != nil {
+	if err := a.conn.Call(ctx, nil, "CcaTest.click", ui, index); err != nil {
 		return errors.Wrapf(err, "failed to click on %v", ui)
 	}
 	return nil
@@ -333,7 +333,7 @@ func (a *App) ClickWithIndex(ctx context.Context, ui UIComponentName, index int)
 
 // Hold holds on |ui| by sending pointerdown and pointerup for |d| duration.
 func (a *App) Hold(ctx context.Context, ui UIComponentName, d time.Duration) error {
-	if err := a.conn.Call(ctx, nil, "CCATest.hold", ui, d.Milliseconds()); err != nil {
+	if err := a.conn.Call(ctx, nil, "CcaTest.hold", ui, d.Milliseconds()); err != nil {
 		return errors.Wrapf(err, "failed to hold %v", ui)
 	}
 	return nil
@@ -348,7 +348,7 @@ func (a *App) ClickPTZButton(ctx context.Context, ui UIComponentName) error {
 // IsCheckedWithIndex gets checked state of nth ui.
 func (a *App) IsCheckedWithIndex(ctx context.Context, ui UIComponentName, index int) (bool, error) {
 	var checked bool
-	if err := a.conn.Call(ctx, &checked, "CCATest.isChecked", ui, index); err != nil {
+	if err := a.conn.Call(ctx, &checked, "CcaTest.isChecked", ui, index); err != nil {
 		return false, errors.Wrapf(err, "failed to get checked state on %v(th) %v", index, ui)
 	}
 	return checked, nil
@@ -359,7 +359,7 @@ func (a *App) SelectOption(ctx context.Context, ui UIComponentName, value string
 	if err := a.WaitForVisibleState(ctx, ui, true); err != nil {
 		return err
 	}
-	if err := a.conn.Call(ctx, nil, "CCATest.selectOption", ui, value); err != nil {
+	if err := a.conn.Call(ctx, nil, "CcaTest.selectOption", ui, value); err != nil {
 		return errors.Wrapf(err, "failed to select option of %v", ui)
 	}
 	return nil
@@ -371,7 +371,7 @@ func (a *App) InputRange(ctx context.Context, ui UIComponentName) (*Range, error
 		return nil, err
 	}
 	var r Range
-	if err := a.conn.Call(ctx, &r, "CCATest.getInputRange", ui); err != nil {
+	if err := a.conn.Call(ctx, &r, "CcaTest.getInputRange", ui); err != nil {
 		return nil, errors.Wrapf(err, "failed to get input range of %v", ui)
 	}
 	return &r, nil
@@ -382,7 +382,7 @@ func (a *App) SetRangeInput(ctx context.Context, ui UIComponentName, value int) 
 	if err := a.WaitForVisibleState(ctx, ui, true); err != nil {
 		return err
 	}
-	if err := a.conn.Call(ctx, nil, "CCATest.setRangeInputValue", ui, value); err != nil {
+	if err := a.conn.Call(ctx, nil, "CcaTest.setRangeInputValue", ui, value); err != nil {
 		return errors.Wrapf(err, "failed to set range input %v to %v", ui, value)
 	}
 	return nil
@@ -392,7 +392,7 @@ func (a *App) SetRangeInput(ctx context.Context, ui UIComponentName, value int) 
 func (a *App) WaitForSettingMenuState(ctx context.Context, menu SettingMenu, expected bool) error {
 	return testing.Poll(ctx, func(ctx context.Context) error {
 		var actual bool
-		if err := a.conn.Call(ctx, &actual, "CCATest.isSettingMenuOpened", menu); err != nil {
+		if err := a.conn.Call(ctx, &actual, "CcaTest.isSettingMenuOpened", menu); err != nil {
 			return testing.PollBreak(errors.Wrapf(err, "failed to get the state of setting menu %v", menu))
 		}
 		if actual != expected {
@@ -404,7 +404,7 @@ func (a *App) WaitForSettingMenuState(ctx context.Context, menu SettingMenu, exp
 
 // OpenSettingMenu opens the setting menu and waits for it to be opened.
 func (a *App) OpenSettingMenu(ctx context.Context, menu SettingMenu) error {
-	if err := a.conn.Call(ctx, nil, "CCATest.openSettingMenu", menu); err != nil {
+	if err := a.conn.Call(ctx, nil, "CcaTest.openSettingMenu", menu); err != nil {
 		return errors.Wrapf(err, "failed to click to open the setting menu %v", menu)
 	}
 	return a.WaitForSettingMenuState(ctx, menu, true)
@@ -412,7 +412,7 @@ func (a *App) OpenSettingMenu(ctx context.Context, menu SettingMenu) error {
 
 // CloseSettingMenu closes the setting menu.
 func (a *App) CloseSettingMenu(ctx context.Context, menu SettingMenu) error {
-	if err := a.conn.Call(ctx, nil, "CCATest.closeSettingMenu", menu); err != nil {
+	if err := a.conn.Call(ctx, nil, "CcaTest.closeSettingMenu", menu); err != nil {
 		return errors.Wrapf(err, "failed to close the setting menu %v", menu)
 	}
 	return a.WaitForSettingMenuState(ctx, menu, false)
@@ -431,7 +431,7 @@ func (a *App) CloseSettingMenuIfVisible(ctx context.Context, menu SettingMenu) e
 // OptionChecked returns the checked state of the state associated to |option|.
 func (a *App) OptionChecked(ctx context.Context, option Option) (bool, error) {
 	var result bool
-	if err := a.conn.Call(ctx, &result, "CCATest.getOptionState", option); err != nil {
+	if err := a.conn.Call(ctx, &result, "CcaTest.getOptionState", option); err != nil {
 		return false, errors.Wrapf(err, "failed to get the state of %v", option)
 	}
 	return result, nil
@@ -447,7 +447,7 @@ func (a *App) SetOptionChecked(ctx context.Context, option Option, enabled bool)
 		return nil
 	}
 
-	if err := a.conn.Call(ctx, nil, "CCATest.toggleOption", option); err != nil {
+	if err := a.conn.Call(ctx, nil, "CcaTest.toggleOption", option); err != nil {
 		return errors.Wrapf(err, "failed to toggle option %v", option)
 	}
 	if err := testing.Poll(ctx, func(ctx context.Context) error {

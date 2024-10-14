@@ -303,8 +303,8 @@ func Init(ctx context.Context, cr *chrome.Chrome, outDir string, appLauncher tes
 // loadScripts loads the necessary scripts for running tests in CCA.
 func loadScripts(ctx context.Context, conn *chrome.Conn) error {
 	code := `(async function() {
-		const {CCATest} = await import('/js/test/cca_test.js');
-		window.CCATest = CCATest;
+		const {CcaTest} = await import('/js/test/cca_test.js');
+		window.CcaTest = CcaTest;
 	})()`
 	if err := conn.Eval(ctx, code, nil); err != nil {
 		return errors.Wrap(err, "failed to load scripts from CCA")
@@ -429,7 +429,7 @@ func (a *App) Close(ctx context.Context) (retErr error) {
 		a.appWindow = nil
 	}(cleanupCtx)
 
-	if err := a.conn.Eval(ctx, "CCATest.removeCacheData()", nil); err != nil {
+	if err := a.conn.Eval(ctx, "CcaTest.removeCacheData()", nil); err != nil {
 		return errors.Wrap(err, "failed to clear cached data in local storage")
 	}
 
@@ -460,7 +460,7 @@ func (a *App) checkVideoState(ctx context.Context, active bool, duration time.Du
 	ctx, cancel := context.WithTimeout(ctx, duration+10*time.Second)
 	defer cancel()
 
-	code := fmt.Sprintf("CCATest.isVideoActive() === %t", active)
+	code := fmt.Sprintf("CcaTest.isVideoActive() === %t", active)
 	if err := a.conn.WaitForExpr(ctx, code); err != nil {
 		if a.cameraType != testutil.UseFakeVCDCamera {
 			if jobErr := upstart.CheckJob(cleanupCtx, "cros-camera"); jobErr != nil {
@@ -570,49 +570,49 @@ func (a *App) CheckVideoInactive(ctx context.Context) error {
 
 // RestoreWindow restores the window, exiting a maximized, minimized, or fullscreen state.
 func (a *App) RestoreWindow(ctx context.Context) error {
-	return a.conn.Eval(ctx, "CCATest.restoreWindow()", nil)
+	return a.conn.Eval(ctx, "CcaTest.restoreWindow()", nil)
 }
 
 // GetAverageOCRScanningLatency returns the average OCR scanning latency on preview in photo mode in milliseconds.
 func (a *App) GetAverageOCRScanningLatency(ctx context.Context) (float64, error) {
 	var averageLatency float64
-	err := a.conn.Eval(ctx, "CCATest.getAverageOcrScanTime()", &averageLatency)
+	err := a.conn.Eval(ctx, "CcaTest.getAverageOcrScanTime()", &averageLatency)
 	return averageLatency, err
 }
 
 // GetDocumentReviewLastFileLatency returns the latency of saving images as a searchable PDF using OCR in document scanning mode.
 func (a *App) GetDocumentReviewLastFileLatency(ctx context.Context) (float64, error) {
 	var latency float64
-	err := a.conn.Eval(ctx, "CCATest.getDocumentReviewLastFileProcessingTime()", &latency)
+	err := a.conn.Eval(ctx, "CcaTest.getDocumentReviewLastFileProcessingTime()", &latency)
 	return latency, err
 }
 
 // MinimizeWindow minimizes the window.
 func (a *App) MinimizeWindow(ctx context.Context) error {
-	return a.conn.Eval(ctx, "CCATest.minimizeWindow()", nil)
+	return a.conn.Eval(ctx, "CcaTest.minimizeWindow()", nil)
 }
 
 // MaximizeWindow maximizes the window.
 func (a *App) MaximizeWindow(ctx context.Context) error {
-	return a.conn.Eval(ctx, "CCATest.maximizeWindow()", nil)
+	return a.conn.Eval(ctx, "CcaTest.maximizeWindow()", nil)
 }
 
 // FullscreenWindow fullscreens the window.
 func (a *App) FullscreenWindow(ctx context.Context) error {
-	return a.conn.Eval(ctx, "CCATest.fullscreenWindow()", nil)
+	return a.conn.Eval(ctx, "CcaTest.fullscreenWindow()", nil)
 }
 
 // GetNumOfCameras returns number of camera devices.
 func (a *App) GetNumOfCameras(ctx context.Context) (int, error) {
 	var numCameras int
-	err := a.conn.Eval(ctx, "CCATest.getNumOfCameras()", &numCameras)
+	err := a.conn.Eval(ctx, "CcaTest.getNumOfCameras()", &numCameras)
 	return numCameras, err
 }
 
 // GetFacing returns the active camera facing.
 func (a *App) GetFacing(ctx context.Context) (Facing, error) {
 	var facing Facing
-	if err := a.conn.Eval(ctx, "CCATest.getFacing()", &facing); err != nil {
+	if err := a.conn.Eval(ctx, "CcaTest.getFacing()", &facing); err != nil {
 		return "", err
 	}
 	return facing, nil
@@ -630,7 +630,7 @@ func (a *App) GetPreviewViewportSize(ctx context.Context) (Resolution, error) {
 // GetScreenOrientation returns screen orientation.
 func (a *App) GetScreenOrientation(ctx context.Context) (Orientation, error) {
 	var orientation Orientation
-	if err := a.conn.Eval(ctx, "CCATest.getScreenOrientation()", &orientation); err != nil {
+	if err := a.conn.Eval(ctx, "CcaTest.getScreenOrientation()", &orientation); err != nil {
 		return "", errors.Wrap(err, "failed to get screen orientation")
 	}
 	return orientation, nil
@@ -639,7 +639,7 @@ func (a *App) GetScreenOrientation(ctx context.Context) (Orientation, error) {
 // GetDeviceID returns the active camera device id.
 func (a *App) GetDeviceID(ctx context.Context) (DeviceID, error) {
 	var id DeviceID
-	if err := a.conn.Eval(ctx, "CCATest.getDeviceId()", &id); err != nil {
+	if err := a.conn.Eval(ctx, "CcaTest.getDeviceId()", &id); err != nil {
 		return "", err
 	}
 	return id, nil
@@ -649,7 +649,7 @@ func (a *App) GetDeviceID(ctx context.Context) (DeviceID, error) {
 func (a *App) State(ctx context.Context, state string) (bool, error) {
 	// TODO(b/281625728): Remove this function once we change all usages to observe on UI instead.
 	var result bool
-	if err := a.conn.Call(ctx, &result, "CCATest.getState", state); err != nil {
+	if err := a.conn.Call(ctx, &result, "CcaTest.getState", state); err != nil {
 		return false, errors.Wrapf(err, "failed to get state: %v", state)
 	}
 	return result, nil
@@ -661,7 +661,7 @@ func (a *App) PreviewFrame(ctx context.Context) (*Frame, error) {
 		return nil, errors.Wrap(err, "failed to wait for preview active")
 	}
 	var f chrome.JSObject
-	if err := a.conn.Call(ctx, &f, "CCATest.getPreviewFrame"); err != nil {
+	if err := a.conn.Call(ctx, &f, "CcaTest.getPreviewFrame"); err != nil {
 		return nil, errors.Wrap(err, "failed to get preview frame")
 	}
 	return &Frame{&f}, nil
@@ -1111,7 +1111,7 @@ func (a *App) ToggleExpertMode(ctx context.Context) (bool, error) {
 	if err != nil {
 		return false, err
 	}
-	if err := a.conn.Eval(ctx, "CCATest.toggleExpertMode()", nil); err != nil {
+	if err := a.conn.Eval(ctx, "CcaTest.toggleExpertMode()", nil); err != nil {
 		return false, errors.Wrap(err, "failed to toggle expert mode")
 	}
 	if err := a.WaitForState(ctx, "expert", !prev); err != nil {
@@ -1241,7 +1241,7 @@ func (a *App) SwitchMode(ctx context.Context, mode Mode) error {
 	} else if active {
 		return nil
 	}
-	if err := a.conn.Call(ctx, nil, "CCATest.switchMode", modeName); err != nil {
+	if err := a.conn.Call(ctx, nil, "CcaTest.switchMode", modeName); err != nil {
 		return errors.Wrapf(err, "failed to switch to mode %s", mode)
 	}
 	if err := a.WaitForState(ctx, "mode-switching", false); err != nil {
@@ -1263,7 +1263,7 @@ func (a *App) SwitchMode(ctx context.Context, mode Mode) error {
 // WaitForState waits until state become active/inactive.
 func (a *App) WaitForState(ctx context.Context, state string, active bool) error {
 	// TODO(b/281625728): Remove this function once we change all usages to observe on UI instead.
-	code := fmt.Sprintf("CCATest.getState(%q) === %t", state, active)
+	code := fmt.Sprintf("CcaTest.getState(%q) === %t", state, active)
 	if err := a.conn.WaitForExpr(ctx, code); err != nil {
 		return errors.Wrapf(err, "failed to wait for state %s to set to %v", state, active)
 	}
@@ -1371,7 +1371,7 @@ func (a *App) TriggerStateChange(ctx context.Context, state string, expected boo
 	var wrappedPromise chrome.JSObject
 	if err := a.conn.Call(ctx, &wrappedPromise, `
 	  (state, expected) => {
-		const p = CCATest.waitStateChange(state, expected);
+		const p = CcaTest.waitStateChange(state, expected);
 		return () => p;
 	  }
 	  `, state, expected); err != nil {
@@ -1431,7 +1431,7 @@ func (a *App) EnsureTabletModeEnabled(ctx context.Context, enabled bool) (func(c
 // CheckFocusedElementVisited checks if the focused element is already visited by checking a set.
 func (a *App) CheckFocusedElementVisited(ctx context.Context) (bool, error) {
 	var visited bool
-	if err := a.conn.Eval(ctx, "CCATest.checkFocusedElementVisited()", &visited); err != nil {
+	if err := a.conn.Eval(ctx, "CcaTest.checkFocusedElementVisited()", &visited); err != nil {
 		return false, err
 	}
 	return visited, nil
@@ -1440,7 +1440,7 @@ func (a *App) CheckFocusedElementVisited(ctx context.Context) (bool, error) {
 // ReturnFocusedElementAriaLabel returns the aria-label of the focused element.
 func (a *App) ReturnFocusedElementAriaLabel(ctx context.Context) (string, error) {
 	var arialabel string
-	if err := a.conn.Eval(ctx, "CCATest.getFocusedElementAriaLabel()", &arialabel); err != nil {
+	if err := a.conn.Eval(ctx, "CcaTest.getFocusedElementAriaLabel()", &arialabel); err != nil {
 		return arialabel, err
 	}
 	return arialabel, nil
@@ -1448,7 +1448,7 @@ func (a *App) ReturnFocusedElementAriaLabel(ctx context.Context) (string, error)
 
 // Focus sets focus on CCA App window.
 func (a *App) Focus(ctx context.Context) error {
-	return a.conn.Eval(ctx, "CCATest.focusWindow()", nil)
+	return a.conn.Eval(ctx, "CcaTest.focusWindow()", nil)
 }
 
 // Refresh refreshes CCA.
@@ -1545,7 +1545,7 @@ func (a *App) SwitchToTimeLapseMode(ctx context.Context) error {
 // TimeLapseDuration returns the expected duration of time-lapse video recorded for |recordTime|.
 func (a *App) TimeLapseDuration(ctx context.Context, recordTime time.Duration) (time.Duration, error) {
 	var duration float64
-	if err := a.conn.Call(ctx, &duration, "CCATest.getTimeLapseDuration", recordTime.Seconds()); err != nil {
+	if err := a.conn.Call(ctx, &duration, "CcaTest.getTimeLapseDuration", recordTime.Seconds()); err != nil {
 		return 0, nil
 	}
 	return time.Duration(duration * float64(time.Second)), nil
@@ -1554,7 +1554,7 @@ func (a *App) TimeLapseDuration(ctx context.Context, recordTime time.Duration) (
 // FPSObserver returns the FPS observer which can be later used to get average FPS.
 func (a *App) FPSObserver(ctx context.Context) (*FPSObserver, error) {
 	var fpsObserver chrome.JSObject
-	if err := a.conn.Eval(ctx, "CCATest.getFpsObserver()", &fpsObserver); err != nil {
+	if err := a.conn.Eval(ctx, "CcaTest.getFpsObserver()", &fpsObserver); err != nil {
 		return nil, errors.Wrap(err, "failed to get FPS observer")
 	}
 	return &FPSObserver{jsObj: &fpsObserver}, nil
@@ -1572,7 +1572,7 @@ func (f *FPSObserver) AverageFPS(ctx context.Context) (float64, error) {
 // HideFloatingUI hides all toasts, nudges and tooltips from CCA.
 func (a *App) HideFloatingUI(ctx context.Context) error {
 	// TODO(pihsun): Remove the check after Chrome is upreved and the function always exist.
-	if err := a.conn.Eval(ctx, "CCATest.hideFloatingUI?.()", nil); err != nil {
+	if err := a.conn.Eval(ctx, "CcaTest.hideFloatingUi?.()", nil); err != nil {
 		return errors.Wrap(err, "failed to hide floating UI")
 	}
 	return nil
@@ -1581,7 +1581,7 @@ func (a *App) HideFloatingUI(ctx context.Context) error {
 // DisableVideoResolutionFilter disables video resolution filter in CCA.
 func (a *App) DisableVideoResolutionFilter(ctx context.Context) error {
 	// TODO(pihsun): Remove the check after Chrome is upreved and the function always exist.
-	if err := a.conn.Eval(ctx, "CCATest.disableVideoResolutionFilter?.()", nil); err != nil {
+	if err := a.conn.Eval(ctx, "CcaTest.disableVideoResolutionFilter?.()", nil); err != nil {
 		return errors.Wrap(err, "failed to disable video resolution filter")
 	}
 	return nil
@@ -1635,7 +1635,7 @@ func (a *App) SwitchTo60FPS(ctx context.Context) error {
 func (a *App) ChooseVideoResolution(ctx context.Context, facing Facing, resolution Resolution) error {
 	// TODO(kamchonlathorn): Skip configuring if the current video resolution matches the requested one.
 	return a.TriggerConfiguration(ctx, func() error {
-		if err := a.conn.Call(ctx, nil, "CCATest.chooseVideoResolution", facing, resolution); err != nil {
+		if err := a.conn.Call(ctx, nil, "CcaTest.chooseVideoResolution", facing, resolution); err != nil {
 			return errors.Wrapf(err, "failed to switch video resolution to %v on camera facing %v", resolution, facing)
 		}
 		return nil
@@ -1644,16 +1644,8 @@ func (a *App) ChooseVideoResolution(ctx context.Context, facing Facing, resoluti
 
 // GalleryButtonCoverURL gets the cover URL of the gallery button.
 func (a *App) GalleryButtonCoverURL(ctx context.Context) (string, error) {
-	var supportGetGalleryButtonCoverURL bool
-	if err := a.conn.Eval(ctx, "CCATest.getGalleryButtonCoverURL !== undefined", &supportGetGalleryButtonCoverURL); err != nil {
-		return "", err
-	}
-	// TODO(pihsun): Remove this once Chrome is uprev to the newer version.
-	if !supportGetGalleryButtonCoverURL {
-		return a.AttributeWithIndex(ctx, GalleryButtonCover, 0, "src")
-	}
 	var url string
-	if err := a.conn.Call(ctx, &url, "CCATest.getGalleryButtonCoverURL"); err != nil {
+	if err := a.conn.Call(ctx, &url, "CcaTest.getGalleryButtonCoverUrl"); err != nil {
 		return "", err
 	}
 	return url, nil
@@ -1662,7 +1654,7 @@ func (a *App) GalleryButtonCoverURL(ctx context.Context) (string, error) {
 // CurrentPTZSettings returns the current PTZ settings.
 func (a *App) CurrentPTZSettings(ctx context.Context) (*PTZSettings, error) {
 	var settings PTZSettings
-	if err := a.conn.Call(ctx, &settings, "CCATest.getPTZSettings"); err != nil {
+	if err := a.conn.Call(ctx, &settings, "CcaTest.getPtzSettings"); err != nil {
 		return nil, errors.Wrap(err, "failed to get current PTZ settings")
 	}
 	return &settings, nil
@@ -1764,7 +1756,7 @@ func (a *App) DisableSuperResIntroDialog(ctx context.Context) error {
 // GetVidPid returns the active camera vid:pid. Return "" if MIPI.
 func (a *App) GetVidPid(ctx context.Context) (string, error) {
 	var vidPid string
-	if err := a.conn.Eval(ctx, "CCATest.getVidPid()", &vidPid); err != nil {
+	if err := a.conn.Eval(ctx, "CcaTest.getVidPid()", &vidPid); err != nil {
 		return "", err
 	}
 	return vidPid, nil
