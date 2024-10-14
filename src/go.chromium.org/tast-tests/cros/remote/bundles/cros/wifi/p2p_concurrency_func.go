@@ -38,7 +38,7 @@ func init() {
 		Attr:         []string{"group:wificell_cross_device", "wificell_cross_device_p2p", "wificell_cross_device_unstable"},
 		TestBedDeps:  []string{tbdep.Wificell, tbdep.PeripheralWifiStateWorking},
 		ServiceDeps:  []string{wificell.ShillServiceName},
-		Fixture:      wificell.FixtureID(wificell.TFFeaturesCompanionDUT | wificell.TFFeaturesSelfManagedAP),
+		Fixture:      wificell.FixtureID(wificell.TFFeaturesCompanionDUT | wificell.TFFeaturesSelfManagedAP | wificell.TFFeaturesCapture),
 		HardwareDepsForAll: map[string]hwdep.Deps{
 			"":    hwdep.D(hwdep.WifiP2P()),
 			"cd1": hwdep.D(hwdep.WifiP2P()),
@@ -63,7 +63,7 @@ func init() {
 				// Verifies that DUT can connect to AP and p2p client on same channel on the 2GHz band.
 				Name: "same_channel_2ghz",
 				Val: []p2pConcurrencyTestcase{{
-					p2pOpts: []p2p.GroupOption{p2p.SetFreq(2462)},
+					p2pOpts: []p2p.GroupOption{p2p.SetFreq(2412)},
 					apOpts:  []ap.Option{ap.Mode(ap.Mode80211nPure), ap.Channel(1), ap.HTCaps(ap.HTCapHT20)},
 				}},
 			}, {
