@@ -29,13 +29,10 @@ func init() {
 			"shurst@google.com",        // Test author
 		},
 		BugComponent: "b:792402", // ChromeOS > Platform > Enablement > Firmware > FAFT
-		// TODO: When stable, move to firmware_pd.
 		Data:         []string{firmware.ConfigFile},
 		Vars:         []string{"servo"},
 		SoftwareDeps: []string{"chrome"},
 		ServiceDeps: []string{
-			"tast.cros.ui.PowerMenuService",
-			"tast.cros.browser.ChromeService",
 			"tast.cros.power.BatteryService",
 		},
 		Fixture:      fixture.NormalMode,
