@@ -214,10 +214,6 @@ var openvinoParam = testingParam{
 		// precision loss.
 		"*MultiDimBroadcastSubshard*",
 
-		// TODO(b/357500388): Openvino delegate dequantizes TensorType_FLOAT16 to
-		// TensorType_FLOAT32 wrongly.
-		"DequantizeOpTest.Float16",
-
 		// TODO(b/357498049): Openvino delegate didn't properly handle resize
 		// bilinear operators, which results in weird result.
 		"ResizeBilinearOpTest/ResizeBilinearOpTest.VerticalResize/0",
