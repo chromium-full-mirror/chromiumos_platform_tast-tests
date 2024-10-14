@@ -47,8 +47,16 @@ func init() {
 		Contacts:     []string{"arc-commercial@google.com", "batoon@google.com"},
 		// ChromeOS > Software > ARC++ > Commercial > Tast Tests
 		BugComponent: "b:1487630",
-		Attr:         []string{"group:mainline"},
-		SoftwareDeps: []string{"chrome", "play_store", "gaia"},
+		Attr:         []string{
+			// Disabled by TORA.  See:b/332563290.
+			// "group:mainline"
+			},
+		SoftwareDeps: []string{
+			"chrome",
+			"play_store",
+			// Disabled by TORA.  See:b/332563290.
+			// "gaia"
+		},
 		Timeout:      arcApkCacheTestTimeout,
 		VarDeps:      []string{tape.ServiceAccountVar, arcCommon.ManagedAccountPoolVarName},
 		SearchFlags: []*testing.StringPair{
@@ -57,17 +65,20 @@ func init() {
 		Params: []testing.Param{
 			{
 				ExtraSoftwareDeps: []string{"android_container"},
-				ExtraAttr:         []string{"informational"},
+				// Disabled by TORA.  See:b/332563290.
+				//ExtraAttr:         []string{"informational"},
 			},
 			{
 				Name:              "vm",
 				ExtraSoftwareDeps: []string{"android_vm", "no_qemu"},
-				ExtraAttr:         []string{"informational"},
+				// Disabled by TORA.  See:b/332563290.
+				// ExtraAttr:         []string{"informational"},
 			},
 			{
 				Name:              "betty_vm",
 				ExtraSoftwareDeps: []string{"android_vm", "qemu"},
-				ExtraAttr:         []string{"informational", "group:hw_agnostic"},
+				// Disabled by TORA.  See:b/332563290.
+				// ExtraAttr:         []string{"informational", "group:hw_agnostic"},
 			}},
 		Fixture: fixture.CleanOwnership,
 	})
