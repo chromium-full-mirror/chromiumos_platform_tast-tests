@@ -30,8 +30,15 @@ func init() {
 			"mattlui@google.com",
 		},
 		BugComponent: "b:1203766",
-		Attr:         []string{"group:mainline", "informational"},
-		SoftwareDeps: []string{"chrome", "gaia"},
+		Attr:         []string{
+			// Disabled by TORA.  See:b/331956003.
+			// "group:mainline", "informational"
+			},
+		SoftwareDeps: []string{
+			"chrome",
+			// Disabled by TORA.  See:b/331956003.
+			//"gaia"
+			},
 		Params: []testing.Param{
 			{
 				// Promise Icons requires Android R+ (android_container which includes pi will not work).
