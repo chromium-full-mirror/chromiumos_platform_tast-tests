@@ -32,8 +32,15 @@ func init() {
 		Contacts:     []string{"arc-core@google.com"},
 		// ChromeOS > Software > ARC++ > Core > Play Store Setup
 		BugComponent: "b:1131344",
-		Attr:         []string{"group:mainline", "informational"},
-		SoftwareDeps: []string{"chrome", "gaia"},
+		Attr:         []string{
+			// Disabled by TORA.  See:b/331360350.
+			// "group:mainline", "informational"
+			},
+		SoftwareDeps: []string{
+			"chrome",
+			// Disabled by TORA.  See:b/331360350.
+			// "gaia"
+		},
 		Timeout:      chrome.LoginTimeout + arc.BootTimeout + 3*time.Minute,
 		Params: []testing.Param{{
 			ExtraSoftwareDeps: []string{"android_container"},
