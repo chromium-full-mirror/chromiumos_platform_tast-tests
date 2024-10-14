@@ -52,7 +52,7 @@ const (
 	// oneGB is data storage capacity equivalent to one GigaByte.
 	oneGB = 1024 * 1024 * 1024
 	// typeAKeyboard is evtestPattern for type-A keyboard event.
-	typeAKeyboard = `(?i)/dev/input/event([0-9]+):.*USB.*Keyboard.*`
+	typeAKeyboard = `(?i)/dev/input/event([0-9]+):.*USB.*Keyboard`
 	// mediaRemovable is removable media path.
 	mediaRemovable = "/media/removable/"
 )
