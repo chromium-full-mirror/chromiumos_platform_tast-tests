@@ -2463,21 +2463,18 @@ func (h *Helper) ReturnToDeveloperScreen(ctx context.Context) error {
 // Since there are multiple files with the same name/different extensions,
 // it maps the base name (without ext) to all filepaths with that base name.
 func (h *Helper) GetAllECCrashFiles(ctx context.Context) (map[string][]string, error) {
-	if err := h.RequireRPCClient(ctx); err != nil {
-		return nil, errors.Wrap(err, "failed to connect to the RPC service on the DUT")
-	}
-	fs := dutfs.NewClient(h.RPCClient.Conn)
-
-	files, err := fs.ReadDir(ctx, ECCrashBaseDir)
+	out, err := h.DUT.Conn().CommandContext(ctx, "ls", "-1t", ECCrashBaseDir).Output(ssh.DumpLogOnError)
 	if err != nil {
-		return nil, errors.Wrapf(err, "failed to list files at %s", ECCrashBaseDir)
+		return nil, errors.Wrapf(err, "failed to read %s dir on DUT", ECCrashBaseDir)
 	}
+	files := strings.Split(string(out), "\n")
 
 	var fileMap = make(map[string][]string)
 	for _, f := range files {
-		if strings.HasPrefix(f.Name(), "embedded_controller") {
-			fileWithoutExt := strings.TrimSuffix(f.Name(), filepath.Ext(f.Name()))
-			filePath := ECCrashBaseDir + f.Name()
+		file := strings.TrimSpace(f)
+		if strings.HasPrefix(file, "embedded_controller") {
+			fileWithoutExt := strings.TrimSuffix(file, filepath.Ext(file))
+			filePath := ECCrashBaseDir + file
 			if _, ok := fileMap[fileWithoutExt]; ok {
 				fileMap[fileWithoutExt] = append(fileMap[fileWithoutExt], filePath)
 			} else {
