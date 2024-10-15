@@ -6,6 +6,7 @@ package usb
 
 import (
 	"context"
+	"fmt"
 	"io/ioutil"
 	"path/filepath"
 
@@ -35,6 +36,12 @@ func GatherPortsData(ctx context.Context, s *testing.State) {
 	gatherInfo(ctx, s, "lsusb -t", "output_lsusb_t")
 	gatherInfo(ctx, s, "usb-devices", "output_usb_devices")
 	gatherInfo(ctx, s, "cat /proc/cpuinfo", "output_cpu_info")
+
+	for port := 0; port <= 8; port++ {
+		cmd := fmt.Sprintf("ectool typecstatus %d 2>/dev/null || break;", port)
+		outputFile := fmt.Sprintf("ectool_typecstatus_%d", port)
+		gatherInfo(ctx, s, cmd, outputFile)
+	}
 }
 
 func gatherInfo(ctx context.Context, s *testing.State, command, filenName string) {
