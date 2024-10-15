@@ -295,17 +295,17 @@ func WifiReconnectOnUserChange(ctx context.Context, s *testing.State) {
 			s.Fatalf("%s: Failed to get router addrs: %v", tag, err)
 		}
 		for _, ip := range routerAddrs.All() {
-			if err := ping.ExpectPingSuccessWithTimeout(ctx, ip.String(), "chronos", 5*time.Second); err != nil {
-				s.Fatalf("%s: Failed to verify ping reachability to %s: %v", tag, ip, err)
+			// b/369774809#comment5: There seems to be transient issue with the test
+			// setup. Use a relatively long timeout here.
+			if err := ping.ExpectPingSuccessWithTimeout(ctx, ip.String(), "chronos", 20*time.Second); err != nil {
+				s.Fatalf("%s: Failed to verify ping reachability to %s (gateway): %v", tag, ip, err)
 			}
 		}
 
 		s.Log("Verifying pinging the server IP addresses")
 		for _, ip := range []net.IP{serverIPv4, serverIPv6} {
-			// b/369774809#comment5: There seems to be transient issue with the test
-			// setup. Use a relatively long timeout here.
-			if err := ping.ExpectPingSuccessWithTimeout(ctx, ip.String(), "chronos", 20*time.Second); err != nil {
-				s.Fatalf("%s: Failed to verify ping reachability to %s: %v", tag, ip, err)
+			if err := ping.ExpectPingSuccessWithTimeout(ctx, ip.String(), "chronos", 5*time.Second); err != nil {
+				s.Fatalf("%s: Failed to verify ping reachability to %s (server): %v", tag, ip, err)
 			}
 		}
 	}
