@@ -109,7 +109,7 @@ func EnsureClamshellMode(ctx context.Context, tconn *chrome.TestConn) (func(ctx 
 	// Use ash.EnsureTabletModeDisabledWithKeyboardEnabled, which uses ectool to
 	// control the behavior.
 	// See b/365033439.
-	workaroundModels := []string{"storo360", "kohaku", "joxer", "quandiso360", "foob360"}
+	workaroundModels := []string{"storo360", "kohaku", "joxer", "quandiso360", "foob360", "kracko360"}
 	if slices.Contains(workaroundModels, model) {
 		return ash.EnsureTabletModeDisabledWithKeyboardEnabled(ctx)
 	}
