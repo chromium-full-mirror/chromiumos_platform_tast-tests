@@ -395,8 +395,8 @@ type VersionInfo struct {
 	// Vendor Specific Information.
 	VendorSpecific string
 
-	// GSC Version.
-	GscVersion string
+	// GSC Device.
+	GscDevice string
 
 	// RW Version.
 	RWVersion string
@@ -411,11 +411,11 @@ func parseVersionInfo(ctx context.Context, checkStatus bool, msg string) (info *
 		TpmModelPrefix        = "  tpm_model: "
 		FirmwareVersionPrefix = "  firmware_version: "
 		VendorSpecificPrefix  = "  vendor_specific: "
-		GscVersionPrefix      = "  gsc_version: "
+		GscDevicePrefix       = "  gsc_device: "
 		RWVersionPrefix       = "  rw_version: "
 		StatusPrefix          = "  status: "
 	)
-	prefixes := []string{FamilyPrefix, SpecLevelPrefix, ManufacturerPrefix, TpmModelPrefix, FirmwareVersionPrefix, VendorSpecificPrefix, GscVersionPrefix, RWVersionPrefix, StatusPrefix}
+	prefixes := []string{FamilyPrefix, SpecLevelPrefix, ManufacturerPrefix, TpmModelPrefix, FirmwareVersionPrefix, VendorSpecificPrefix, GscDevicePrefix, RWVersionPrefix, StatusPrefix}
 
 	parsed, err := parseStringMap(ctx, msg, checkStatus, prefixes)
 	if err != nil {
@@ -461,9 +461,27 @@ func parseVersionInfo(ctx context.Context, checkStatus bool, msg string) (info *
 		return nil, errors.Wrapf(err, "vendorSpecific doesn't start with a valid string %q", parsed[VendorSpecificPrefix])
 	}
 
-	gscVersion := ""
-	if _, err := fmt.Sscanf(parsed[GscVersionPrefix], "%s", &gscVersion); err != nil {
-		return nil, errors.Wrapf(err, "gscVersion doesn't start with a valid string %q", parsed[GscVersionPrefix])
+	gscDevice := ""
+	if _, err := fmt.Sscanf(parsed[GscDevicePrefix], "%s", &gscDevice); err != nil {
+		// Perform temporary conversion from gsc_version to gsc_device.
+		// TODO(b/373640432): Remove this after rename has been stable for a few
+		// builds
+		gscVersion := ""
+		const gscVersionPrefix = "  gsc_version: "
+		if _, err := fmt.Sscanf(parsed[gscVersionPrefix], "%s", &gscVersion); err != nil {
+			return nil, errors.Wrapf(err, "gscDevice and gscVersion don't start with a valid string %q %q", parsed[GscDevicePrefix], parsed[gscVersionPrefix])
+		}
+		switch gscVersion {
+		case "Cr50":
+			gscDevice = "H1"
+		case "Ti50":
+			gscDevice = "Dt"
+		case "NotGsc":
+			gscDevice = "NotGsc"
+		}
+		if gscDevice == "" {
+			return nil, errors.Wrapf(err, "gscDevice doesn't start with a valid string %q or gscVersion invalid %q", parsed[GscDevicePrefix], gscVersion)
+		}
 	}
 
 	rwVersion := ""
@@ -478,12 +496,12 @@ func parseVersionInfo(ctx context.Context, checkStatus bool, msg string) (info *
 		TpmModel:        tpmModel,
 		FirmwareVersion: firmwareVersion,
 		VendorSpecific:  vendorSpecific,
-		GscVersion:      gscVersion,
+		GscDevice:       gscDevice,
 		RWVersion:       rwVersion,
 	}, nil
 }
 
-// GetVersionInfo retrieves the gsc_version, family, spec_level, manufacturer, tpm_model, firmware_version, and vendor_specific information.
+// GetVersionInfo retrieves the gsc_device, family, spec_level, manufacturer, tpm_model, firmware_version, and vendor_specific information.
 // The returned err is nil if the operation is successful.
 func (u *TPMManagerClient) GetVersionInfo(ctx context.Context) (info *VersionInfo, returnedError error) {
 	binaryMsg, err := u.binary.getVersionInfo(ctx)

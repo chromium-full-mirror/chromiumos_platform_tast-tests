@@ -69,8 +69,10 @@ func fillTpmRegexMap() (map[string]*regexp.Regexp, error) {
 		}
 	}
 
-	// gsc_version and vendor_specific follow different pattern.
-	if tpmRegexMap["gsc_version"], err = regexp.Compile(`gsc_version: (.*)`); err != nil {
+	// gsc_device and vendor_specific follow different pattern.
+	// TODO(b/373640432): Convert `(?:gsc_device|gsc_version)` to `gsc_device`
+	// after rename CL has been stable for a few builds.
+	if tpmRegexMap["gsc_device"], err = regexp.Compile(`(?:gsc_device|gsc_version): (.*)`); err != nil {
 		return nil, err
 	}
 	if tpmRegexMap["vendor_specific"], err = regexp.Compile("vendor_specific" + `: ([\dA-F]+)`); err != nil {
@@ -138,13 +140,22 @@ func fillTpmInformation(ctx context.Context, tcb *xdr.TcbAttributes) error {
 		return err
 	}
 
-	re := tpmRegexMap["gsc_version"]
+	re := tpmRegexMap["gsc_device"]
 	gsc := re.FindStringSubmatch(tpmInfo)[1]
 
-	if gsc == "GSC_VERSION_NOT_GSC" {
+	switch gsc {
+	case "GSC_DEVICE_NOT_GSC":
 		chip.Kind = xdr.TcbAttributes_SecurityChip_TPM.Enum()
-	} else if gsc == "GSC_VERSION_CR50" || gsc == "GSC_VERSION_TI50" {
+	case "GSC_DEVICE_H1", "GSC_DEVICE_DT":
 		chip.Kind = xdr.TcbAttributes_SecurityChip_GOOGLE_SECURITY_CHIP.Enum()
+	// TODO(b/373640432) Remove GSC_VERSION arms after rename CL has been stable
+	// for a few builds.
+	case "GSC_VERSION_NOT_GSC":
+		chip.Kind = xdr.TcbAttributes_SecurityChip_TPM.Enum()
+	case "GSC_VERSION_CR50", "GSC_VERSION_TI50":
+		chip.Kind = xdr.TcbAttributes_SecurityChip_GOOGLE_SECURITY_CHIP.Enum()
+	default:
+		return errors.Errorf("Unrecognized gsc_device: %q", gsc)
 	}
 
 	family, err := getTpmValue("family", tpmInfo, true, tpmRegexMap)
