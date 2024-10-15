@@ -10,7 +10,6 @@ import (
 	"time"
 
 	"go.chromium.org/tast-tests/cros/local/chrome"
-	"go.chromium.org/tast-tests/cros/local/chrome/ash"
 	"go.chromium.org/tast-tests/cros/local/chrome/uiauto"
 	"go.chromium.org/tast-tests/cros/local/chrome/uiauto/faillog"
 	"go.chromium.org/tast-tests/cros/local/personalization"
@@ -38,7 +37,7 @@ func init() {
 		}},
 		SoftwareDeps: []string{"chrome"},
 		Timeout:      5 * time.Minute,
-		Fixture:      personalization.BaseFixture,
+		Fixture:      personalization.ClamshellFixture,
 	})
 }
 
@@ -55,14 +54,6 @@ func SwitchOnlineWallpapers(ctx context.Context, s *testing.State) {
 	if err != nil {
 		s.Fatal("Failed to create Test API connection: ", err)
 	}
-
-	// Force Chrome to be in clamshell mode to make sure wallpaper view is clearly
-	// visible for us to compare it with the given rgba color.
-	cleanup, err := ash.EnsureTabletModeEnabled(ctx, tconn, false)
-	if err != nil {
-		s.Fatal("Failed to ensure DUT is not in tablet mode: ", err)
-	}
-	defer cleanup(cleanupCtx)
 
 	defer faillog.DumpUITreeOnError(cleanupCtx, s.OutDir(), s.HasError, tconn)
 
@@ -89,7 +80,7 @@ func SwitchOnlineWallpapers(ctx context.Context, s *testing.State) {
 		}
 	}
 
-	if err := wallpaper.MinimizeWallpaperPicker(ui)(ctx); err != nil {
+	if err := wallpaper.CloseAllWindows(tconn)(ctx); err != nil {
 		s.Fatal("Failed to minimize wallpaper picker: ", err)
 	}
 

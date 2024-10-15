@@ -10,7 +10,6 @@ import (
 	"time"
 
 	"go.chromium.org/tast-tests/cros/local/chrome"
-	"go.chromium.org/tast-tests/cros/local/chrome/ash"
 	"go.chromium.org/tast-tests/cros/local/chrome/uiauto"
 	"go.chromium.org/tast-tests/cros/local/chrome/uiauto/faillog"
 	"go.chromium.org/tast-tests/cros/local/chrome/uiauto/nodewith"
@@ -21,7 +20,6 @@ import (
 	"go.chromium.org/tast-tests/cros/local/wallpaper"
 	"go.chromium.org/tast-tests/cros/local/wallpaper/constants"
 	"go.chromium.org/tast/core/ctxutil"
-	"go.chromium.org/tast/core/errors"
 	"go.chromium.org/tast/core/fsutil"
 	"go.chromium.org/tast/core/testing"
 )
@@ -49,15 +47,6 @@ func init() {
 		// visible for us to compare it with the given rgba color.
 		Fixture: personalization.ClamshellFixture,
 	})
-}
-
-func closeAllWindows(tconn *chrome.TestConn) uiauto.Action {
-	return func(ctx context.Context) error {
-		if err := ash.CloseAllWindows(ctx, tconn); err != nil {
-			return errors.Wrap(err, "failed to close all windows")
-		}
-		return nil
-	}
 }
 
 func SetLocalWallpaper(ctx context.Context, s *testing.State) {
@@ -92,7 +81,7 @@ func SetLocalWallpaper(ctx context.Context, s *testing.State) {
 		wallpaper.SelectCollection(ui, constants.LocalWallpaperCollection),
 		wallpaper.SelectImage(ui, constants.LocalWallpaperFilename),
 		ui.LeftClick(nodewith.Name("Fill").Role(role.ToggleButton)),
-		closeAllWindows(tconn),
+		wallpaper.CloseAllWindows(tconn),
 	)(ctx); err != nil {
 		s.Fatal("Failed to set new wallpaper: ", err)
 	}
@@ -112,7 +101,7 @@ func SetLocalWallpaper(ctx context.Context, s *testing.State) {
 		wallpaper.OpenWallpaperPicker(ui),
 		wallpaper.SelectCollection(ui, constants.LocalWallpaperCollection),
 		ui.LeftClick(nodewith.Name("Center").Role(role.ToggleButton)),
-		closeAllWindows(tconn),
+		wallpaper.CloseAllWindows(tconn),
 	)(ctx); err != nil {
 		s.Fatal("Failed to crop wallpaper to center: ", err)
 	}

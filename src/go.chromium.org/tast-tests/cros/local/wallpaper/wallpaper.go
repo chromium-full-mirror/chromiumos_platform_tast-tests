@@ -16,6 +16,7 @@ import (
 	"time"
 
 	"go.chromium.org/tast-tests/cros/local/chrome"
+	"go.chromium.org/tast-tests/cros/local/chrome/ash"
 	"go.chromium.org/tast-tests/cros/local/chrome/uiauto"
 	"go.chromium.org/tast-tests/cros/local/chrome/uiauto/nodewith"
 	"go.chromium.org/tast-tests/cros/local/chrome/uiauto/role"
@@ -117,6 +118,16 @@ func MinimizeWallpaperPicker(ui *uiauto.Context) uiauto.Action {
 	minimizeBtn := nodewith.Name("Minimize").Role(role.Button).Ancestor(personalization.PersonalizationHubWindow)
 	// Minimize window to get the view of wallpaper image.
 	return ui.LeftClickUntil(minimizeBtn, ui.Gone(minimizeBtn))
+}
+
+// CloseAllWindows closes all existing windows.
+func CloseAllWindows(tconn *chrome.TestConn) uiauto.Action {
+	return func(ctx context.Context) error {
+		if err := ash.CloseAllWindows(ctx, tconn); err != nil {
+			return errors.Wrap(err, "failed to close all windows")
+		}
+		return nil
+	}
 }
 
 // CloseWallpaperPicker returns an action to close the wallpaper picker via the Ctrl+W shortcut.
