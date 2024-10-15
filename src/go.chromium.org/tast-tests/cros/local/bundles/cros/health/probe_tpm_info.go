@@ -139,16 +139,16 @@ func verifyTPMVersion(ctx context.Context, tpmManager *hwsec.TPMManagerClient, v
 	if verifyGscDevice(tpmManagerVersionInfo.GscDevice, version.GscDevice) != true {
 		return errors.Errorf("GscDevice not matched, %v from healthd, %v from TPMManager", version.GscDevice, tpmManagerVersionInfo.GscDevice)
 	}
-	if tpmManagerVersionInfo.Family != int(version.Family) {
+	if tpmManagerVersionInfo.Family != uint(version.Family) {
 		return errors.Errorf("Family not matched, %v from healthd, %v from TPMManager", version.Family, tpmManagerVersionInfo.Family)
 	}
 	if tpmManagerVersionInfo.SpecLevel != uint64(version.SpecLevel) {
 		return errors.Errorf("SpecLevel not matched, %v from healthd, %v from TPMManager", version.SpecLevel, tpmManagerVersionInfo.SpecLevel)
 	}
-	if tpmManagerVersionInfo.Manufacturer != int(version.Manufacturer) {
+	if tpmManagerVersionInfo.Manufacturer != uint(version.Manufacturer) {
 		return errors.Errorf("Manufacturer not matched, %v from healthd, %v from TPMManager", version.Manufacturer, tpmManagerVersionInfo.Manufacturer)
 	}
-	if tpmManagerVersionInfo.TpmModel != int(version.TpmModel) {
+	if tpmManagerVersionInfo.TpmModel != uint(version.TpmModel) {
 		return errors.Errorf("TpmModel not matched, %v from healthd, %v from TPMManager", version.TpmModel, tpmManagerVersionInfo.TpmModel)
 	}
 	if tpmManagerVersionInfo.FirmwareVersion != uint64(version.FirmwareVersion) {

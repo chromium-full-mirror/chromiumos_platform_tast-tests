@@ -378,16 +378,16 @@ func (u *TPMManagerClient) GetNonsensitiveStatusIgnoreCache(ctx context.Context)
 // VersionInfo contains the version related information.
 type VersionInfo struct {
 	// TPM Family. Represented in TPM 2.0 style encoding.
-	Family int
+	Family uint
 
 	// TPM Spec Level.
 	SpecLevel uint64
 
 	// Manufacturer code.
-	Manufacturer int
+	Manufacturer uint
 
 	// TPM Model Number.
-	TpmModel int
+	TpmModel uint
 
 	// Firmware Version.
 	FirmwareVersion uint64
@@ -429,7 +429,7 @@ func parseVersionInfo(ctx context.Context, checkStatus bool, msg string) (info *
 		}
 	}
 
-	family := -1
+	family := uint(0)
 	if _, err := fmt.Sscanf(parsed[FamilyPrefix], "%d", &family); err != nil {
 		return nil, errors.Wrapf(err, "family doesn't start with a valid integer %q", parsed[FamilyPrefix])
 	}
@@ -440,12 +440,12 @@ func parseVersionInfo(ctx context.Context, checkStatus bool, msg string) (info *
 	}
 	specLevel, _ := strconv.ParseUint(specLevelStr, 10, 64)
 
-	manufacturer := -1
+	manufacturer := uint(0)
 	if _, err := fmt.Sscanf(parsed[ManufacturerPrefix], "%d", &manufacturer); err != nil {
 		return nil, errors.Wrapf(err, "manufacturer doesn't start with a valid integer %q", parsed[ManufacturerPrefix])
 	}
 
-	tpmModel := -1
+	tpmModel := uint(0)
 	if _, err := fmt.Sscanf(parsed[TpmModelPrefix], "%d", &tpmModel); err != nil {
 		return nil, errors.Wrapf(err, "tpmModel doesn't start with a valid integer %q", parsed[TpmModelPrefix])
 	}
