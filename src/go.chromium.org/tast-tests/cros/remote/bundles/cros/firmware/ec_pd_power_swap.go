@@ -98,7 +98,7 @@ func init() {
 const (
 	pdStatePollTimeout  time.Duration = 10 * time.Second
 	pdStatePollInterval time.Duration = 500 * time.Millisecond
-	pdSettleTime        time.Duration = 2 * time.Second
+	pdSettleTime        time.Duration = 3 * time.Second
 )
 
 func ECPDPowerSwap(ctx context.Context, s *testing.State) {
