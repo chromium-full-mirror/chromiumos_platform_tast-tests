@@ -91,8 +91,9 @@ async function testWebCameraApp(durationSec) {
           cameraResolution.dispatchEvent(new Event('change'));
           await waitForElementDisplay('web-loader', false);
           throwIfError("Fail to change resolution: ");
-          document.getElementById('take-picture-button').click();
-          throwIfError("Fail to take a picture: ");
+
+          document.getElementById('take-snapshot-button').click();
+          throwIfError("Fail to take a snapshot: ");
 
           document.getElementById('start-button').click();
           await waitForElementDisplay('video-output', false);

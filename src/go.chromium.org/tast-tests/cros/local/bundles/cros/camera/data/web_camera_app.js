@@ -16,7 +16,9 @@ class CameraApp {
     this.cameraSelector = document.getElementById('change-camera-selection');
     this.frameRateInput = document.getElementById('frame-rate-input');
     this.frameRateOutout = document.getElementById('frame-rate-value');
-    this.takePictureButton = document.getElementById('take-picture-button');
+    this.takeStillCapturingButton =
+        document.getElementById('take-still-capturing-button');
+    this.takeSnapShotButton = document.getElementById('take-snapshot-button');
     this.recordingTimer = document.getElementById("recording-timer-display");
     this.recordingTimerIntervalId = null;
     this.startButton = document.getElementById('start-button');
@@ -114,7 +116,19 @@ class CameraApp {
     return blob;
   }
 
-  async takePictureButtonEventHandler() {
+  async takeStillCapturingButtonEventHandler() {
+    const caps = await this.cameraCapture.getPhotoCapabilities();
+    const photoSettings = {
+      imageWidth: caps.imageWidth.max,
+      imageHeight: caps.imageHeight.max,
+    };
+    const blob = await this.cameraCapture.takePhoto(photoSettings);
+    const img = await createImageBitmap(blob);
+    this.drawCanvas(this.photoOutput, img);
+    this.downloadBlob(blob, 'IMG_');
+  }
+
+  async takeSnapShotButtonEventHandler() {
     const img = await this.cameraCapture.grabFrame();
     this.drawCanvas(this.photoOutput, img);
     const blob = await this.bitmapToBlob(img);
@@ -214,8 +228,10 @@ class CameraApp {
   }
 
   async start() {
-    this.takePictureButton.addEventListener(
-        'click', () => this.takePictureButtonEventHandler());
+    this.takeStillCapturingButton.addEventListener(
+      'click', () => this.takeStillCapturingButtonEventHandler());
+  this.takeSnapShotButton.addEventListener(
+      'click', () => this.takeSnapShotButtonEventHandler());
     this.startButton.addEventListener(
         'click', () => this.startButtonEventHandler());
     this.stopButton.addEventListener(
