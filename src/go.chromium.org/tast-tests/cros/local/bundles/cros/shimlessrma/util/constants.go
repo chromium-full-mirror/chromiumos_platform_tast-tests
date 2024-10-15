@@ -78,6 +78,7 @@ var ShimlessRmaEnabledModelsCritical = []string{
 	"chinchou",
 	"chinchou360",
 	"kyogre",
+	"voltorb",
 	// dedede
 	"bookem",
 	"boten",
@@ -144,6 +145,7 @@ var ShimlessRmaEnabledModelsCritical = []string{
 
 // ShimlessRmaEnabledModelsStaging are models with Shimless RMA support and pending to be enlisted to critical model list.
 var ShimlessRmaEnabledModelsStaging = []string{
-	// corsola
-	"voltorb",
+	// nissa
+	"craasneto",
+	"craaskino",
 }
