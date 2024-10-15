@@ -6,12 +6,20 @@ package recorderapp
 
 import (
 	"context"
+	"os"
+	"path/filepath"
 	"time"
 
+	"go.chromium.org/tast-tests/cros/common/action"
 	"go.chromium.org/tast-tests/cros/local/apps"
 	"go.chromium.org/tast-tests/cros/local/chrome"
 	"go.chromium.org/tast-tests/cros/local/chrome/ash"
 	"go.chromium.org/tast-tests/cros/local/chrome/uiauto"
+	"go.chromium.org/tast-tests/cros/local/chrome/uiauto/checked"
+	"go.chromium.org/tast-tests/cros/local/chrome/uiauto/nodewith"
+	"go.chromium.org/tast-tests/cros/local/chrome/uiauto/restriction"
+	"go.chromium.org/tast-tests/cros/local/chrome/uiauto/role"
+	"go.chromium.org/tast-tests/cros/local/cryptohome"
 	"go.chromium.org/tast/core/ctxutil"
 	"go.chromium.org/tast/core/errors"
 	"go.chromium.org/tast/core/testing"
@@ -205,4 +213,101 @@ func (a *App) GoBackToMainPage() uiauto.Action {
 // timeout should be greater than the audio duration.
 func (a *App) WaitUntilPlaybackFinished(timeout time.Duration) uiauto.Action {
 	return a.WaitUntilGoneFor(PlaybackPauseButton, timeout)
+}
+
+// SaveRecordingFiles downloads audio or transcript files based on requirement and
+// returns the file paths. This function assumes that Recorder App is already shown.
+func (a *App) SaveRecordingFiles(ctx context.Context, exportAudio, exportTranscript bool, username string) (dumpFilePaths []string, err error) {
+	downloadsPath, err := cryptohome.DownloadsPath(ctx, username)
+	if err != nil {
+		return nil, errors.Wrap(err, "failed to get Downloads path")
+	}
+
+	dumpStartTime := time.Now()
+	if err := a.exportRecording(ctx, exportAudio, exportTranscript); err != nil {
+		return nil, errors.Wrap(err, "failed to export recording")
+	}
+
+	// Assume Recorder dump file name should start with "Audio recording".
+	const (
+		recorderFileName    = "Audio recording*.*"
+		transcriptExtension = ".txt"
+		audioExtension      = ".webm"
+	)
+	downloadStartTime := time.Now()
+	if err := testing.Poll(ctx, func(ctx context.Context) error {
+		files, err := filepath.Glob(filepath.Join(downloadsPath, recorderFileName))
+		if err != nil {
+			return errors.Wrap(err, "failed to glob recorder file")
+		}
+		if len(files) == 0 {
+			return errors.New("file not found")
+		}
+		for _, file := range files {
+			ext := filepath.Ext(file)
+			if ext != transcriptExtension && ext != audioExtension {
+				continue
+			}
+
+			fState, err := os.Stat(file)
+			if err != nil {
+				continue
+			}
+			if fState.ModTime().After(dumpStartTime) {
+				dumpFilePaths = append(dumpFilePaths, file)
+			}
+		}
+		if len(dumpFilePaths) == 0 {
+			return errors.Errorf("cannot find file modified after %v", dumpStartTime)
+		}
+		return nil
+	}, &testing.PollOptions{Timeout: 2 * time.Minute, Interval: 3 * time.Second}); err != nil {
+		return nil, errors.Wrap(err, "failed to find recorder dump file in Downloads folder")
+	}
+	testing.ContextLog(ctx, "Downloaded recorder recording file in ", time.Since(downloadStartTime))
+
+	return dumpFilePaths, nil
+}
+
+// exportRecording exports the audio or the transcript files based on requirement.
+func (a *App) exportRecording(ctx context.Context, exportAudio, exportTranscript bool) error {
+	if !exportAudio && !exportTranscript {
+		return errors.New("must export either the audio or the transcript file")
+	}
+
+	recorderWebArea := nodewith.Name("Recorder").Role(role.RootWebArea)
+	moreOptionsButton := nodewith.Name("More options").Role(role.PopUpButton).Ancestor(recorderWebArea)
+	exportButton := nodewith.Name("Export").Role(role.MenuItem).Ancestor(recorderWebArea)
+	exportAudioButton := nodewith.Name("Export audio").Role(role.CheckBox).Ancestor(recorderWebArea)
+	exportTranscriptButton := nodewith.Name("Export transcript").Role(role.CheckBox).Ancestor(recorderWebArea)
+	saveButton := nodewith.NameContaining("Save").Role(role.Button).Ancestor(recorderWebArea)
+
+	ui := uiauto.New(a.tconn)
+	clickCheckBox := func(checkBoxFinder *nodewith.Finder, expectedCheckedStatus bool) action.Action {
+		return func(ctx context.Context) error {
+			nodeInfo, err := ui.Info(ctx, checkBoxFinder)
+			if err != nil {
+				return err
+			}
+			expectedChecked := checked.False
+			if expectedCheckedStatus {
+				expectedChecked = checked.True
+			}
+			if expectedChecked != nodeInfo.Checked {
+				if nodeInfo.Restriction != restriction.None {
+					return errors.Errorf("the checkbox %q can not be checked", checkBoxFinder.Pretty())
+				}
+				return ui.DoDefault(checkBoxFinder)(ctx)
+			}
+			return nil
+		}
+	}
+
+	return uiauto.Combine("export recording",
+		ui.DoDefaultUntil(moreOptionsButton, ui.Exists(exportButton)),
+		ui.DoDefaultUntil(exportButton, ui.Exists(exportAudioButton)),
+		clickCheckBox(exportAudioButton, exportAudio),
+		clickCheckBox(exportTranscriptButton, exportTranscript),
+		ui.DoDefault(saveButton),
+	)(ctx)
 }

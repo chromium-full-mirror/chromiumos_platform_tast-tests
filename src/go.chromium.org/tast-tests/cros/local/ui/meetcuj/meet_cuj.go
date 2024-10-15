@@ -65,17 +65,17 @@ const (
 	FakeCameraVideoFile720p = "camera_video_720p.y4m"
 )
 
-// fakeCameraHALCfg defines parameters that are used to generate the fake
+// FakeCameraHALCfg defines parameters that are used to generate the fake
 // camera HAL config.
-type fakeCameraHALCfg struct {
-	// videoFileName is the video used by the fake HAL to simulate the
+type FakeCameraHALCfg struct {
+	// VideoFileName is the video used by the fake HAL to simulate the
 	// real camera input.
-	videoFileName string
-	// formats defines the supported resolution / frame rates of the fake
+	VideoFileName string
+	// Formats defines the supported resolution / frame rates of the fake
 	// camera HAL. Fake HAL will use whatever resolution / frame rates passed
 	// down from upper layer, and this config only affects what's reported in
 	// the camera static metadata.
-	formats []*testutil.FakeCameraFormatsConfig
+	Formats []*testutil.FakeCameraFormatsConfig
 }
 
 // MeetTest specifies the setting of a Google Meet journey. More info at go/cros-meet-tests.
@@ -108,17 +108,17 @@ type MeetTest struct {
 	TypingDuration      time.Duration           // Duration of typing on Google Docs. Must be less than the duration of the meet call. If |typingDuration| is not given, it defaults to |meetTimeout|.
 	BrowserType         browser.Type            // Ash Chrome browser or Lacros.
 	BotsOptions         []bond.AddBotsOption    // Customizes the meeting participant bots.
-	FakeCamHALCfg       *fakeCameraHALCfg       // Enable Fake Camera HAL if the config is present.
+	FakeCamHALCfg       *FakeCameraHALCfg       // Enable Fake Camera HAL if the config is present.
 	MeasureEcho         bool                    // Whether to measure the echo RMS. The number of meeting participant bot must be one and should be enabled with human speech as the only audio source (no other noise) to accurately evaluate the echo RMS.
 	DisabledExperiments []string                // List of experiments to disable with the e= parameter in the Meet URL.
 }
 
 // FakeCamHALCfg720p is the fake camera HAL used in MeetCUJ.
-var FakeCamHALCfg720p = &fakeCameraHALCfg{
+var FakeCamHALCfg720p = &FakeCameraHALCfg{
 	// The video file used to simulate camera input.
-	videoFileName: FakeCameraVideoFile720p,
+	VideoFileName: FakeCameraVideoFile720p,
 	// Resolutions / frame rates that the fake HAL supports.
-	formats: []*testutil.FakeCameraFormatsConfig{{
+	Formats: []*testutil.FakeCameraFormatsConfig{{
 		Width:      320,
 		Height:     180,
 		FrameRates: []int{30}}, {
@@ -212,7 +212,7 @@ func Run(ctx context.Context, meet MeetTest, cr *chrome.Chrome, testCaseVar func
 		defer testutil.RemoveTestConfig(closeCtx)
 
 		// Copy the fake camera video to where the camera module can access.
-		dutFakeHALPath, err := testutil.CopyFakeHALFrameImage(dataPath(meet.FakeCamHALCfg.videoFileName))
+		dutFakeHALPath, err := testutil.CopyFakeHALFrameImage(dataPath(meet.FakeCamHALCfg.VideoFileName))
 		if err != nil {
 			return pv, errors.Wrap(err, "failed to copy fake camera input")
 		}
@@ -225,7 +225,7 @@ func Run(ctx context.Context, meet MeetTest, cr *chrome.Chrome, testCaseVar func
 			Frames: &testutil.FakeCameraImageConfig{
 				Path: dutFakeHALPath,
 			},
-			SupportedFormats: meet.FakeCamHALCfg.formats,
+			SupportedFormats: meet.FakeCamHALCfg.Formats,
 		}
 		fakeHALConfig := testutil.FakeHALConfig{
 			Cameras: []testutil.FakeCameraConfig{fakeCameraConfig},
@@ -1468,7 +1468,7 @@ func Run(ctx context.Context, meet MeetTest, cr *chrome.Chrome, testCaseVar func
 			return pv, errors.Wrap(err, "failed to write WebRTC internals dump to test results folder")
 		}
 		enterpriseEffects := meet.Enterprise && meet.Effects
-		webRTCInternalsPV, err := reportWebRTCInternals(ctx, dump, meetingCode, meet.Bots[len(meet.Bots)-1], enterpriseEffects, meet.Present)
+		webRTCInternalsPV, err := ReportWebRTCInternals(ctx, dump, meetingCode, meet.Bots[len(meet.Bots)-1], enterpriseEffects, meet.Present)
 		if err != nil {
 			return pv, errors.Wrap(err, "failed to report info from WebRTC internals dump to performance metrics")
 		}
@@ -1725,8 +1725,8 @@ func generateMetrics(ctx context.Context, conn *chrome.Conn, tconn *chrome.TestC
 	return nil
 }
 
-// reportWebRTCInternals reports info from a WebRTC internals dump to performance metrics.
-func reportWebRTCInternals(ctx context.Context, dump []byte, meetingCode string, numBots int, enterpriseEffects, present bool) (*perf.Values, error) {
+// ReportWebRTCInternals reports info from a WebRTC internals dump to performance metrics.
+func ReportWebRTCInternals(ctx context.Context, dump []byte, meetingCode string, numBots int, enterpriseEffects, present bool) (*perf.Values, error) {
 	var webRTC webrtcinternals.Dump
 	if err := json.Unmarshal(dump, &webRTC); err != nil {
 		return nil, errors.Wrap(err, "failed to unmarshal WebRTC internals dump")

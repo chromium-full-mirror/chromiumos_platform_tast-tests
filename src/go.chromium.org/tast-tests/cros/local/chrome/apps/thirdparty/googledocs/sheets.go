@@ -16,6 +16,7 @@ import (
 	"go.chromium.org/tast-tests/cros/local/chrome/uiauto/nodewith"
 	"go.chromium.org/tast-tests/cros/local/chrome/uiauto/role"
 	"go.chromium.org/tast-tests/cros/local/chrome/webutil"
+	"go.chromium.org/tast-tests/cros/local/input"
 	"go.chromium.org/tast/core/ctxutil"
 	"go.chromium.org/tast/core/errors"
 )
@@ -86,6 +87,20 @@ func DeleteCellValue(ctx context.Context, tconn *chrome.TestConn) error {
 	return nil
 }
 
+// EditSheet returns an action that edits google sheet.
+func EditSheet(tconn *chrome.TestConn, kb *input.KeyboardEventWriter, text string) action.Action {
+	return uiauto.NamedCombine("edit sheet",
+		kb.TypeAction(text),
+		kb.AccelAction("Enter"),
+		waitForSheetSaved(tconn),
+	)
+}
+
+// waitForSheetSaved waits for the sheet document state to be saved.
+func waitForSheetSaved(tconn *chrome.TestConn) action.Action {
+	return waitForDocumentSaved(tconn, sheetsName)
+}
+
 // ChangeSheetFontSize returns an action to change sheet font size to specific font size.
 func ChangeSheetFontSize(tconn *chrome.TestConn, size string) action.Action {
 	ui := uiauto.New(tconn)
@@ -105,4 +120,11 @@ func ChangeSheetFontSize(tconn *chrome.TestConn, size string) action.Action {
 func ClickOnSheetsWebArea(tconn *chrome.TestConn) action.Action {
 	ui := uiauto.New(tconn)
 	return ui.LeftClick(sheetsWebArea)
+}
+
+// ClickOnSheetsCanvas clicks on sheets's canvas to focus on the sheet cell.
+func ClickOnSheetsCanvas(tconn *chrome.TestConn) action.Action {
+	ui := uiauto.New(tconn)
+	sheetsCanvas := nodewith.Role(role.Canvas).Ancestor(sheetsWebArea)
+	return ui.LeftClick(sheetsCanvas)
 }

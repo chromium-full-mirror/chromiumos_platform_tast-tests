@@ -30,3 +30,37 @@ func ScrollDownFor(ctx context.Context, tpw *input.TrackpadEventWriter, tw *inpu
 	}
 	return tw.End()
 }
+
+// RepeatScrollDownFor two-finger swipes on the trackpad to scroll down repeatedly for
+// a specified number of times, with a scrollDelay between each swipe.
+func RepeatScrollDownFor(ctx context.Context, tpw *input.TrackpadEventWriter, tw *input.TouchEventWriter, scrollDelay time.Duration, scrollTimes int) error {
+	return repeatScrollFor(ctx, tpw, tw, scrollDelay, scrollTimes, false /* scrollUp */)
+}
+
+// RepeatScrollUpFor two-finger swipes on the trackpad to scroll up repeatedly for
+// a specified number of times, with a scrollDelay between each swipe.
+func RepeatScrollUpFor(ctx context.Context, tpw *input.TrackpadEventWriter, tw *input.TouchEventWriter, scrollDelay time.Duration, scrollTimes int) error {
+	return repeatScrollFor(ctx, tpw, tw, scrollDelay, scrollTimes, true /* scrollUp */)
+}
+
+func repeatScrollFor(ctx context.Context, tpw *input.TrackpadEventWriter, tw *input.TouchEventWriter, scrollDelay time.Duration, scrollTimes int, scrollUp bool) error {
+	fingerHorizontalSpacing := tpw.Width() / 4
+	fingerVerticalSpacing := input.TouchCoord(0)
+	xCoord := tpw.Width() / 2
+	fingerNum := 2
+
+	var startY, endY input.TouchCoord
+	startY, endY = 1, tpw.Height()-1
+	if scrollUp {
+		startY, endY = tpw.Height()-1, 1
+	}
+
+	for i := 0; i < scrollTimes; i++ {
+		// Double swipe from the middle top to the middle bottom of the touchpad.
+		if err := tw.Swipe(ctx, xCoord, startY, xCoord, endY, fingerHorizontalSpacing,
+			fingerVerticalSpacing, fingerNum, scrollDelay); err != nil {
+			return err
+		}
+	}
+	return tw.End()
+}

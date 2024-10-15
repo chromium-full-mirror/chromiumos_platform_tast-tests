@@ -1106,6 +1106,41 @@ func init() {
 		TearDownTimeout: resetTimeout,
 		PostTestTimeout: postTestTimeout,
 	})
+
+	testing.AddFixture(&testing.Fixture{
+		Name: "loggedInToCUJUserWithWebRTCAndMlbenchmarkAndVCEffectsAndRecorderApp",
+		Desc: "CUJ fixture with WebRTC event logging, mlbenchmark data directory, VC platform effects enabled and Recorder App enabled",
+		Contacts: []string{
+			"vivian.chen@cienet.com",
+			"cros-sw-perf@google.com",
+		},
+		BugComponent: "b:1045832", // ChromeOS > Software > Performance > TPS
+		Impl: &loggedInToCUJUserFixture{
+			chromeExtraOpts: []chrome.Option{
+				chrome.ExtraArgs(
+					webRTCEventLogCommandFlag,
+				),
+				chrome.EnableFeatures(
+					"PreferConstantFrameRate",
+					"CrOSLateBootAudioAPNoiseCancellation",
+					"ShowLiveCaptionInVideoConferenceTray",
+					"SystemLiveCaption",
+					"VideoConference",
+					"FeatureManagementVideoConference",
+				),
+				chrome.DisableFeatures("CrOSLateBootAudioStyleTransfer"),
+			},
+			bt:                       browser.TypeAsh,
+			disableARC:               true,
+			mlbenchmarkDataDirectory: true,
+		},
+		Parent:          "prepareForCUJ",
+		SetUpTimeout:    setUpTimeout,
+		ResetTimeout:    resetTimeout,
+		TearDownTimeout: resetTimeout,
+		PreTestTimeout:  CPUStablizationTimeout,
+		PostTestTimeout: postTestTimeout,
+	})
 	testing.AddFixture(&testing.Fixture{
 		Name: "loggedInToCUJUserWithImageOCR",
 		Desc: "CUJ fixture that adds 50MB background memory load",
@@ -1685,6 +1720,7 @@ func (f *loggedInToCUJUserFixture) SetUp(ctx context.Context, s *testing.FixtSta
 			}
 			opts = append(opts, chrome.ExtraArgs(fakeCameraOpts...))
 		}
+
 		cr, err = chrome.New(ctx, opts...)
 
 		if err != nil {
