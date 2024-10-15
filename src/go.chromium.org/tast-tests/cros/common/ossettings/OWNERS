@@ -14,7 +14,6 @@ hsuregan@chromium.org
 jiajunz@google.com
 khorimoto@chromium.org
 nikhilcn@google.com
-tjohnsonkanu@google.com
 
 # ChromeOS Connectivity (EngProd)
 include chromiumos/owners:v1:/engprod/OWNERS.connectivity
