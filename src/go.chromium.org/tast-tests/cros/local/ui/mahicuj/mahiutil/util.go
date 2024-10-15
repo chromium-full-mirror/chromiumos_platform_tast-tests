@@ -40,7 +40,7 @@ var (
 	mahiMenuView               = nodewith.ClassName("MahiMenuView")
 	mahiPanelView              = nodewith.ClassName("MahiPanelView")
 	mahiQAView                 = nodewith.ClassName("MahiQuestionAnswerView").Ancestor(mahiPanelView)
-	compactSummaryButton       = nodewith.Name("Help me read this page").ClassName("MahiCondensedMenuButton")
+	compactSummaryButton       = nodewith.Name("Summarize with Help me read").ClassName("MahiCondensedMenuButton")
 	summaryOutlinesSection     = nodewith.ClassName("SummaryOutlinesSection").Ancestor(mahiPanelView)
 	anySummaryText             = nodewith.NameRegex(regexp.MustCompile(`^.{20,}$`)).ClassName("Label").Role("staticText").Ancestor(summaryOutlinesSection)
 	mockSummaryText            = nodewith.Name(mockResponseString).ClassName("Label").Role("staticText").Ancestor(summaryOutlinesSection)
