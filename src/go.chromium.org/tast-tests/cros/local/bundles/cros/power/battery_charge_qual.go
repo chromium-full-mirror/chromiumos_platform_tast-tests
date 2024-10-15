@@ -15,16 +15,30 @@ import (
 	"go.chromium.org/tast/core/testing/hwdep"
 )
 
-var qualChargeParam = power.ChargeParams{
-	MinChargePercentage:   99.0,
-	MaxChargePercentage:   100.0,
-	DischargeOnCompletion: false,
-	IsCustomized:          false,
-	IsPowerQual:           true,
+var chargeQualPrepChargeParam = power.ChargeParams{
+	// In general, it shouldn't take 5 hours long to drain
+	// the battery to ~8%.
+	MaxBatteryPreparationTime: 5 * time.Hour,
+	MinChargePercentage:       7.5,
+	MaxChargePercentage:       8.0,
+	DischargeOnCompletion:     true,
+	IsCustomized:              false,
+	IsPowerQual:               false,
 }
 
-// Battery should be drained to at least this percentage.
-const chargePrepThreshold = 8.0
+var qualChargeParam = power.ChargeParams{
+	MaxBatteryPreparationTime: 4 * time.Hour,
+	MinChargePercentage:       99.0,
+	MaxChargePercentage:       100.0,
+	DischargeOnCompletion:     false,
+	IsCustomized:              false,
+	IsPowerQual:               true,
+}
+
+const (
+	// metricCollectionInterval is the interval for collecting power metrics.
+	metricCollectionInterval = 20 * time.Second
+)
 
 func init() {
 	testing.AddTest(&testing.Test{
@@ -37,9 +51,9 @@ func init() {
 			hwdep.Battery(), // Test doesn't run on ChromeOS devices without a battery.
 		),
 		Fixture: "powerAsh",
-		// Battery should be drained before the test gets started and usually we expect it
-		// to finish within 3 hours and at most 4 hours.
-		Timeout: 4 * time.Hour,
+		// Timeout is set to the sum of maximum time to prepare the battery and
+		// maximum time to charge the battery.
+		Timeout: chargeQualPrepChargeParam.MaxBatteryPreparationTime + qualChargeParam.MaxBatteryPreparationTime,
 	})
 }
 
@@ -54,19 +68,24 @@ func BatteryChargeQual(ctx context.Context, s *testing.State) {
 		s.Fatal("Failed to obtain DUT power status: ", err)
 	}
 
-	if status.BatteryPercent > chargePrepThreshold {
-		s.Fatalf("Battery should be drained below %.2f%% before the test", chargePrepThreshold)
+	if status.BatteryPercent > chargeQualPrepChargeParam.MaxChargePercentage {
+		testing.ContextLogf(ctx, "Discharging battery to around %.1f%% prior to test",
+			chargeQualPrepChargeParam.MaxChargePercentage)
+		if err := setup.PrepareBattery(ctx, chargeQualPrepChargeParam); err != nil {
+			s.Fatal("Failed to discharge DUT battery to predefined state: ", err)
+		}
 	}
 
-	if restartPowerd, err := setup.DisableService(ctx, "powerd"); err == nil {
-		if restartPowerd != nil {
-			defer restartPowerd(ctx)
-		}
-	} else {
+	restartPowerd, err := setup.DisableService(ctx, "powerd")
+	if err != nil {
 		s.Fatal("Failed to stop powerd: ", err)
 	}
+	if restartPowerd != nil {
+		// Use cleanupCtx to ensure powerd restarts even if test times out.
+		defer restartPowerd(cleanupCtx)
+	}
 
-	r := power.NewRecorder(ctx, 20*time.Second, s.OutDir(), s.TestName())
+	r := power.NewRecorder(ctx, metricCollectionInterval, s.OutDir(), s.TestName())
 	defer r.Close(cleanupCtx)
 	if err := r.Start(ctx); err != nil {
 		s.Fatal("Cannot start collecting power metrics: ", err)
