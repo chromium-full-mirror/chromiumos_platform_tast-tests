@@ -45,7 +45,6 @@ var PreparedArchives = []string{
 	"Nested.rar",
 	"Nested.zip",
 	"Nested.tar.gz",
-	"Romeo.xz.zip",
 	"Smile 😀.txt.bz2",
 	"Smile 😀.txt.gz",
 	"Smile 😀.txt.lz",
@@ -376,10 +375,11 @@ func testStrictPasswordInArchives(ctx context.Context, s *testing.State, cd *cro
 // testUnsupportedCompressionMethod checks that a ZIP containing a file with an
 // unsupported compression method is not accepted (https://crbug.com/1360291).
 func testUnsupportedCompressionMethod(ctx context.Context, s *testing.State, cd *crosdisks.CrosDisks, dataDir string) {
-	archivePath := filepath.Join(dataDir, "Romeo.xz.zip")
-	if err := verifyMountStatus(ctx, cd, archivePath, filepath.Ext(archivePath), nil, crosdisks.MountErrorMountProgramFailed); err != nil {
-		s.Errorf("Test failed for %q: %v", archivePath, err)
-	}
+	// TODO(b/255703574) Use a ZIP archive with an unsupported compression method.
+	// archivePath := filepath.Join(dataDir, "LZMA.zip")
+	// if err := verifyMountStatus(ctx, cd, archivePath, filepath.Ext(archivePath), nil, crosdisks.MountErrorMountProgramFailed); err != nil {
+	// 	s.Errorf("Test failed for %q: %v", archivePath, err)
+	// }
 }
 
 func testDuplicateFilenamesInArchives(ctx context.Context, s *testing.State, cd *crosdisks.CrosDisks, dataDir string) {
