@@ -62,8 +62,8 @@ def _plot_cdfs(pair: analysis_results.PairwiseResult) -> figure.Figure:
 
 def _plot_box(pair: analysis_results.PairwiseResult) -> figure.Figure:
     fig, ax = plt.subplots()
-    before_values = pair.before.sample.values()
-    after_values = pair.after.sample.values()
+    before_values = list(pair.before.sample.values())
+    after_values = list(pair.after.sample.values())
     sns.boxplot(
         data={
             pair.before.label(): before_values,
