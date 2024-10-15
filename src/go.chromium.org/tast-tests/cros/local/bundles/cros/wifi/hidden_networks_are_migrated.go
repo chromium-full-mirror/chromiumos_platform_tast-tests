@@ -38,7 +38,7 @@ func init() {
 		Desc:           "Tests that hidden networks are migrated, for more details see go/cros-hidden-ssid-dd-software",
 		Contacts:       []string{"cros-device-enablement@google.com", "chadduffin@google.com"},
 		BugComponent:   "b:1131912", // ChromeOS > Software > System Services > Connectivity > WiFi
-		Attr:           []string{"group:mainline", "informational", "group:wificell", "wificell_e2e"},
+		Attr:           []string{"group:mainline", "informational", "group:wificell", "wificell_e2e", "group:release-health", "release-health_wifi"},
 		SoftwareDeps:   []string{"chrome"},
 		TestBedDeps:    []string{tbdep.WifiStateNormal},
 		Fixture:        "hiddenNetworkMigration",

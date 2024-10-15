@@ -31,7 +31,7 @@ func init() {
 			"cros-networking@google.com", // Platform networking team: owner/maintainer
 			"michaelrygiel@google.com",   // Test author
 		},
-		Attr: []string{"group:mainline", "group:hw_agnostic"},
+		Attr: []string{"group:mainline", "group:hw_agnostic", "group:release-health", "release-health_network"},
 	})
 }
 

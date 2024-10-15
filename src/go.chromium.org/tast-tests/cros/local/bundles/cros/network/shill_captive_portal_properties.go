@@ -27,7 +27,7 @@ func init() {
 			"cros-networking@google.com", // Platform networking team: owner/maintainer
 			"michaelrygiel@google.com",   // Test author
 		},
-		Attr: []string{"group:mainline"},
+		Attr: []string{"group:mainline", "group:release-health", "release-health_network"},
 		Params: []testing.Param{{
 			Name: "ethernet_online_with_no_captive_portal",
 			Val: &captivePortalProperties{

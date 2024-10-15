@@ -105,6 +105,8 @@ func init() {
 			"group:hw_agnostic",
 			"group:network",
 			"network_e2e",
+			"group:release-health",
+			"release-health_network",
 		},
 		SoftwareDeps: []string{"chrome"},
 		Fixture:      fixture.ChromeLoggedInDisableSearchEngineChoice,

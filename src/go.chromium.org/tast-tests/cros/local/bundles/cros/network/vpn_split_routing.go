@@ -28,7 +28,7 @@ func init() {
 		// ChromeOS > Platform > System > Networking > Continuous Maintenance
 		BugComponent: "b:1493959",
 		SoftwareDeps: []string{"chrome"},
-		Attr:         []string{"group:mainline", "informational"},
+		Attr:         []string{"group:mainline", "informational", "group:release-health", "release-health_network"},
 		Fixture:      "vpnEnvWithCerts",
 		Params: []testing.Param{{
 			Name: "openvpn",
