@@ -30,7 +30,7 @@ func init() {
 		Timeout:      10 * time.Minute,
 		Attr:         []string{"group:storage-qual", "storage-qual_avl_v3"},
 		Params: []testing.Param{{
-			Name: "nvme_seq_write",
+			Name: "0000_nvme_seq_write",
 			Val: perfTestCase{
 				DataPath: "seq_write",
 				Bounds: []bounds.MetricBounds{{
@@ -44,7 +44,7 @@ func init() {
 			ExtraHardwareDeps: hwdep.D(hwdep.Nvme()),
 			ExtraRequirements: []string{tdreq.NvmeStorageSeqWriteTp, tdreq.NvmeStorageSeqWriteLatency},
 		}, {
-			Name: "nvme_seq_read",
+			Name: "0001_nvme_seq_read",
 			Val: perfTestCase{
 				DataPath: "seq_read",
 				Bounds: []bounds.MetricBounds{{
@@ -58,7 +58,7 @@ func init() {
 			ExtraHardwareDeps: hwdep.D(hwdep.Nvme()),
 			ExtraRequirements: []string{tdreq.NvmeStorageSeqReadTp, tdreq.NvmeStorageSeqReadLatency},
 		}, {
-			Name: "emmc_seq_write",
+			Name: "0000_emmc_seq_write",
 			Val: perfTestCase{
 				DataPath: "seq_write",
 				Bounds: []bounds.MetricBounds{{
@@ -72,7 +72,7 @@ func init() {
 			ExtraHardwareDeps: hwdep.D(hwdep.EmmcOrBridge()),
 			ExtraRequirements: []string{tdreq.EmmcStorageSeqWriteTp, tdreq.EmmcStorageSeqWriteLatency},
 		}, {
-			Name: "emmc_seq_read",
+			Name: "0001_emmc_seq_read",
 			Val: perfTestCase{
 				DataPath: "seq_read",
 				Bounds: []bounds.MetricBounds{{
@@ -86,7 +86,7 @@ func init() {
 			ExtraHardwareDeps: hwdep.D(hwdep.EmmcOrBridge()),
 			ExtraRequirements: []string{tdreq.EmmcStorageSeqReadTp, tdreq.EmmcStorageSeqReadLatency},
 		}, {
-			Name: "ufs_seq_write",
+			Name: "0000_ufs_seq_write",
 			Val: perfTestCase{
 				DataPath: "seq_write",
 				Bounds: []bounds.MetricBounds{{
@@ -100,7 +100,7 @@ func init() {
 			ExtraHardwareDeps: hwdep.D(hwdep.Ufs()),
 			ExtraRequirements: []string{tdreq.UfsStorageSeqWriteTp, tdreq.UfsStorageSeqWriteLatency},
 		}, {
-			Name: "ufs_seq_read",
+			Name: "0001_ufs_seq_read",
 			Val: perfTestCase{
 				DataPath: "seq_read",
 				Bounds: []bounds.MetricBounds{{
@@ -114,7 +114,7 @@ func init() {
 			ExtraHardwareDeps: hwdep.D(hwdep.Ufs()),
 			ExtraRequirements: []string{tdreq.UfsStorageSeqReadTp, tdreq.UfsStorageSeqReadLatency},
 		}, {
-			Name: "16k_write_iops",
+			Name: "0002_16k_write_iops",
 			Val: perfTestCase{
 				DataPath: "16k_write",
 				Bounds: []bounds.MetricBounds{{
@@ -124,7 +124,7 @@ func init() {
 			},
 			ExtraRequirements: []string{tdreq.Storage16kWriteIOPs},
 		}, {
-			Name: "16k_read_iops",
+			Name: "0003_16k_read_iops",
 			Val: perfTestCase{
 				DataPath: "16k_read",
 				Bounds: []bounds.MetricBounds{{
@@ -134,7 +134,7 @@ func init() {
 			},
 			ExtraRequirements: []string{tdreq.Storage16kReadIOPs},
 		}, {
-			Name: "nvme_16k_write",
+			Name: "0004_nvme_16k_write",
 			Val: perfTestCase{
 				DataPath: "16k_write",
 				Bounds: []bounds.MetricBounds{{
@@ -145,7 +145,7 @@ func init() {
 			ExtraHardwareDeps: hwdep.D(hwdep.Nvme()),
 			ExtraRequirements: []string{tdreq.NvmeStorage16kWriteLatency},
 		}, {
-			Name: "nvme_16k_read",
+			Name: "0005_nvme_16k_read",
 			Val: perfTestCase{
 				DataPath: "16k_read",
 				Bounds: []bounds.MetricBounds{{
@@ -156,7 +156,7 @@ func init() {
 			ExtraHardwareDeps: hwdep.D(hwdep.Nvme()),
 			ExtraRequirements: []string{tdreq.NvmeStorage16kReadLatency},
 		}, {
-			Name: "emmc_16k_write",
+			Name: "0004_emmc_16k_write",
 			Val: perfTestCase{
 				DataPath: "16k_write",
 				Bounds: []bounds.MetricBounds{{
@@ -167,7 +167,7 @@ func init() {
 			ExtraHardwareDeps: hwdep.D(hwdep.EmmcOrBridge()),
 			ExtraRequirements: []string{tdreq.EmmcStorage16kWriteLatency},
 		}, {
-			Name: "emmc_16k_read",
+			Name: "0005_emmc_16k_read",
 			Val: perfTestCase{
 				DataPath: "16k_read",
 				Bounds: []bounds.MetricBounds{{
@@ -178,7 +178,7 @@ func init() {
 			ExtraHardwareDeps: hwdep.D(hwdep.EmmcOrBridge()),
 			ExtraRequirements: []string{tdreq.EmmcStorage16kReadLatency},
 		}, {
-			Name: "ufs_16k_write",
+			Name: "0004_ufs_16k_write",
 			Val: perfTestCase{
 				DataPath: "16k_write",
 				Bounds: []bounds.MetricBounds{{
@@ -189,7 +189,7 @@ func init() {
 			ExtraHardwareDeps: hwdep.D(hwdep.Ufs()),
 			ExtraRequirements: []string{tdreq.UfsStorage16kWriteLatency},
 		}, {
-			Name: "ufs_16k_read",
+			Name: "0005_ufs_16k_read",
 			Val: perfTestCase{
 				DataPath: "16k_read",
 				Bounds: []bounds.MetricBounds{{
@@ -200,7 +200,7 @@ func init() {
 			ExtraHardwareDeps: hwdep.D(hwdep.Ufs()),
 			ExtraRequirements: []string{tdreq.UfsStorage16kReadLatency},
 		}, {
-			Name: "nvme_4k_write",
+			Name: "0006_nvme_4k_write",
 			Val: perfTestCase{
 				DataPath: "4k_write",
 				Bounds: []bounds.MetricBounds{{
@@ -211,7 +211,7 @@ func init() {
 			ExtraHardwareDeps: hwdep.D(hwdep.Nvme()),
 			ExtraRequirements: []string{tdreq.NvmeStorage4kWriteLatency},
 		}, {
-			Name: "nvme_4k_read",
+			Name: "0007_nvme_4k_read",
 			Val: perfTestCase{
 				DataPath: "4k_read",
 				Bounds: []bounds.MetricBounds{{
@@ -222,7 +222,7 @@ func init() {
 			ExtraHardwareDeps: hwdep.D(hwdep.Nvme()),
 			ExtraRequirements: []string{tdreq.NvmeStorage4kReadLatency},
 		}, {
-			Name: "emmc_4k_write",
+			Name: "0006_emmc_4k_write",
 			Val: perfTestCase{
 				DataPath: "4k_write",
 				Bounds: []bounds.MetricBounds{{
@@ -233,7 +233,7 @@ func init() {
 			ExtraHardwareDeps: hwdep.D(hwdep.EmmcOrBridge()),
 			ExtraRequirements: []string{tdreq.EmmcStorage4kWriteLatency},
 		}, {
-			Name: "emmc_4k_read",
+			Name: "0007_emmc_4k_read",
 			Val: perfTestCase{
 				DataPath: "4k_read",
 				Bounds: []bounds.MetricBounds{{
@@ -244,7 +244,7 @@ func init() {
 			ExtraHardwareDeps: hwdep.D(hwdep.EmmcOrBridge()),
 			ExtraRequirements: []string{tdreq.EmmcStorage4kReadLatency},
 		}, {
-			Name: "ufs_4k_write",
+			Name: "0006_ufs_4k_write",
 			Val: perfTestCase{
 				DataPath: "4k_write",
 				Bounds: []bounds.MetricBounds{{
@@ -255,7 +255,7 @@ func init() {
 			ExtraHardwareDeps: hwdep.D(hwdep.Ufs()),
 			ExtraRequirements: []string{tdreq.UfsStorage4kWriteLatency},
 		}, {
-			Name: "ufs_4k_read",
+			Name: "0007_ufs_4k_read",
 			Val: perfTestCase{
 				DataPath: "4k_read",
 				Bounds: []bounds.MetricBounds{{
@@ -266,7 +266,7 @@ func init() {
 			ExtraHardwareDeps: hwdep.D(hwdep.Ufs()),
 			ExtraRequirements: []string{tdreq.UfsStorage4kReadLatency},
 		}, {
-			Name: "nvme_4k_write_qd4",
+			Name: "0008_nvme_4k_write_qd4",
 			Val: perfTestCase{
 				DataPath: "4k_write_qd4",
 				Bounds: []bounds.MetricBounds{{
@@ -277,7 +277,7 @@ func init() {
 			ExtraHardwareDeps: hwdep.D(hwdep.Nvme()),
 			ExtraRequirements: []string{tdreq.NvmeStorage4kQD4WriteLatency},
 		}, {
-			Name: "nvme_4k_read_qd4",
+			Name: "0009_nvme_4k_read_qd4",
 			Val: perfTestCase{
 				DataPath: "4k_read_qd4",
 				Bounds: []bounds.MetricBounds{{
@@ -288,7 +288,7 @@ func init() {
 			ExtraHardwareDeps: hwdep.D(hwdep.Nvme()),
 			ExtraRequirements: []string{tdreq.NvmeStorage4kQD4ReadLatency},
 		}, {
-			Name: "emmc_4k_write_qd4",
+			Name: "0008_emmc_4k_write_qd4",
 			Val: perfTestCase{
 				DataPath: "4k_write_qd4",
 				Bounds: []bounds.MetricBounds{{
@@ -299,7 +299,7 @@ func init() {
 			ExtraHardwareDeps: hwdep.D(hwdep.EmmcOrBridge()),
 			ExtraRequirements: []string{tdreq.EmmcStorage4kQD4WriteLatency},
 		}, {
-			Name: "emmc_4k_read_qd4",
+			Name: "0009_emmc_4k_read_qd4",
 			Val: perfTestCase{
 				DataPath: "4k_read_qd4",
 				Bounds: []bounds.MetricBounds{{
@@ -310,7 +310,7 @@ func init() {
 			ExtraHardwareDeps: hwdep.D(hwdep.EmmcOrBridge()),
 			ExtraRequirements: []string{tdreq.EmmcStorage4kQD4ReadLatency},
 		}, {
-			Name: "ufs_4k_write_qd4",
+			Name: "0008_ufs_4k_write_qd4",
 			Val: perfTestCase{
 				DataPath: "4k_write_qd4",
 				Bounds: []bounds.MetricBounds{{
@@ -321,7 +321,7 @@ func init() {
 			ExtraHardwareDeps: hwdep.D(hwdep.Ufs()),
 			ExtraRequirements: []string{tdreq.UfsStorage4kQD4WriteLatency},
 		}, {
-			Name: "ufs_4k_read_qd4",
+			Name: "0009_ufs_4k_read_qd4",
 			Val: perfTestCase{
 				DataPath: "4k_read_qd4",
 				Bounds: []bounds.MetricBounds{{
@@ -332,7 +332,7 @@ func init() {
 			ExtraHardwareDeps: hwdep.D(hwdep.Ufs()),
 			ExtraRequirements: []string{tdreq.UfsStorage4kQD4ReadLatency},
 		}, {
-			Name: "nvme_surfing",
+			Name: "0010_nvme_surfing",
 			Val: perfTestCase{
 				DataPath: "surfing",
 				Bounds: []bounds.MetricBounds{{
@@ -346,7 +346,7 @@ func init() {
 			ExtraHardwareDeps: hwdep.D(hwdep.Nvme()),
 			ExtraRequirements: []string{tdreq.NvmeStorageUserSimReadLatency, tdreq.NvmeStorageUserSimWriteLatency},
 		}, {
-			Name: "emmc_surfing",
+			Name: "0010_emmc_surfing",
 			Val: perfTestCase{
 				DataPath: "surfing",
 				Bounds: []bounds.MetricBounds{{
@@ -360,7 +360,7 @@ func init() {
 			ExtraHardwareDeps: hwdep.D(hwdep.EmmcOrBridge()),
 			ExtraRequirements: []string{tdreq.EmmcStorageUserSimReadLatency, tdreq.EmmcStorageUserSimWriteLatency},
 		}, {
-			Name: "ufs_surfing",
+			Name: "0010_ufs_surfing",
 			Val: perfTestCase{
 				DataPath: "surfing",
 				Bounds: []bounds.MetricBounds{{
