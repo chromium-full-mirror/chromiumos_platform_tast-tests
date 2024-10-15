@@ -21,7 +21,7 @@ const (
 func init() {
 	testing.AddTest(&testing.Test{
 		Func: StressWrite,
-		Desc: "Compares performance of the storage device after a stressful workload",
+		Desc: "Runs a stressful workload on the storage device",
 		Contacts: []string{
 			"chromeos-storage@google.com",
 			"asavery@google.com", // Test author
