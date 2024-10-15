@@ -13,6 +13,7 @@ import (
 
 	"go.chromium.org/tast-tests/cros/local/bundles/cros/power/socialapp"
 	"go.chromium.org/tast-tests/cros/local/chrome/browser"
+	"go.chromium.org/tast-tests/cros/local/chrome/display"
 	"go.chromium.org/tast-tests/cros/local/chrome/lacros"
 	"go.chromium.org/tast-tests/cros/local/chrome/uiauto"
 	"go.chromium.org/tast-tests/cros/local/chrome/uiauto/faillog"
@@ -64,9 +65,16 @@ func SocialApp(ctx context.Context, s *testing.State) {
 		s.Fatal("Failed to connect to test API connection: ", err)
 	}
 
-	closeCtx := ctx
-	ctx, cancel := ctxutil.Shorten(ctx, 30*time.Second)
+	cleanupCtx := ctx
+	ctx, cancel := ctxutil.Shorten(ctx, time.Minute)
 	defer cancel()
+
+	// Minimize the zoom factor to ensure all the objects in the apps can be shown on the screen.
+	revertZoom, err := display.MinimizePrimaryDisplayZoomFactor(ctx, tconn)
+	if err != nil {
+		s.Fatal("Failed to set the zoom factor of the primary display to minimum: ", err)
+	}
+	defer revertZoom(cleanupCtx, tconn)
 
 	d, err := a.NewUIDevice(ctx)
 	if err != nil {
@@ -78,13 +86,13 @@ func SocialApp(ctx context.Context, s *testing.State) {
 		if d.Alive(ctx) {
 			d.Close(ctx)
 		}
-	}(closeCtx)
+	}(cleanupCtx)
 
 	kb, err := input.Keyboard(ctx)
 	if err != nil {
 		s.Fatal("Failed to initialize keyboard: ", err)
 	}
-	defer kb.Close(closeCtx)
+	defer kb.Close(cleanupCtx)
 
 	splitAccount := strings.Split(cr.Creds().User, "@")
 	if len(splitAccount) < 1 {
@@ -109,7 +117,7 @@ func SocialApp(ctx context.Context, s *testing.State) {
 		if err != nil {
 			s.Fatal("Failed to launch lacros: ", err)
 		}
-		defer l.Close(closeCtx)
+		defer l.Close(cleanupCtx)
 	}
 
 	if err := setup.Battery(ctx, socialAppOperatingTimeout, discharge); err != nil {
@@ -119,10 +127,10 @@ func SocialApp(ctx context.Context, s *testing.State) {
 	if err := app.Install(ctx); err != nil {
 		s.Fatal("Failed to install app: ", err)
 	}
-	defer app.Uninstall(closeCtx)
+	defer app.Uninstall(cleanupCtx)
 
 	recorder := power.NewRecorder(ctx, socialAppMeasurementInterval, s.OutDir(), s.TestName(), power.DischargeWatchdogOption(discharge))
-	defer recorder.Close(closeCtx)
+	defer recorder.Close(cleanupCtx)
 
 	if err := power.Cooldown(ctx); err != nil {
 		s.Error("Failed to cool down the device: ", err)
@@ -163,7 +171,7 @@ func SocialApp(ctx context.Context, s *testing.State) {
 		if err := app.Close(ctx); err != nil {
 			s.Log("Failed to close the app: ", err)
 		}
-	}(closeCtx)
+	}(cleanupCtx)
 
 	if err := app.SetUp(ctx); err != nil {
 		s.Fatal("Failed to setup app for testing: ", err)

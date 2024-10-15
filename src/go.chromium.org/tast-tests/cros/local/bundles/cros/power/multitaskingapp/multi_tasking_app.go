@@ -22,6 +22,7 @@ import (
 	"go.chromium.org/tast-tests/cros/local/chrome/ash"
 	"go.chromium.org/tast-tests/cros/local/chrome/browser"
 	"go.chromium.org/tast-tests/cros/local/chrome/cuj"
+	"go.chromium.org/tast-tests/cros/local/chrome/display"
 	"go.chromium.org/tast-tests/cros/local/chrome/uiauto"
 	"go.chromium.org/tast-tests/cros/local/chrome/uiauto/faillog"
 	"go.chromium.org/tast-tests/cros/local/chrome/uiauto/prompts"
@@ -103,9 +104,16 @@ func Run(ctx context.Context, resources *TestResources, params *TestParams) (ret
 		uiHandler     = resources.UIHandler
 	)
 
-	closeCtx := ctx
-	ctx, cancel := ctxutil.Shorten(ctx, 30*time.Second)
+	cleanupCtx := ctx
+	ctx, cancel := ctxutil.Shorten(ctx, time.Minute)
 	defer cancel()
+
+	// Minimize the zoom factor to ensure all the objects in the apps can be shown on the screen.
+	revertZoom, err := display.MinimizePrimaryDisplayZoomFactor(ctx, tconn)
+	if err != nil {
+		return errors.Wrap(err, "failed to set the zoom factor of the primary display to minimum")
+	}
+	defer revertZoom(cleanupCtx, tconn)
 
 	browserApp, err := apps.PrimaryBrowser(ctx, tconn)
 	if err != nil {
@@ -122,7 +130,7 @@ func Run(ctx context.Context, resources *TestResources, params *TestParams) (ret
 			testing.ContextLog(ctx, "UI device is still alive")
 			d.Close(ctx)
 		}
-	}(closeCtx)
+	}(cleanupCtx)
 
 	splitAccount := strings.Split(cr.Creds().User, "@")
 	if len(splitAccount) < 1 {
@@ -133,13 +141,13 @@ func Run(ctx context.Context, resources *TestResources, params *TestParams) (ret
 	if err := socialApp.Install(ctx); err != nil {
 		return errors.Wrap(err, "failed to install social app")
 	}
-	defer socialApp.Uninstall(closeCtx)
+	defer socialApp.Uninstall(cleanupCtx)
 
 	videoApp := arcvideoplayback.NewExoPlayerApp(cr, tconn, kb, a, d, dataPath).(*arcvideoplayback.ExoPlayerApp)
 	if err := videoApp.Install(ctx); err != nil {
 		return errors.Wrap(err, "failed to install video app")
 	}
-	defer videoApp.Uninstall(closeCtx)
+	defer videoApp.Uninstall(cleanupCtx)
 	cleanupFile, err := videoApp.CopyFileToFolder(ctx, VideoSrc)
 	if err != nil {
 		return errors.Wrap(err, "failed to copy video file to Downloads folder")
@@ -148,7 +156,7 @@ func Run(ctx context.Context, resources *TestResources, params *TestParams) (ret
 
 	const recordInterval = 5 * time.Second
 	recorder := power.NewRecorder(ctx, recordInterval, outDir, testName, power.DischargeWatchdogOption(discharge))
-	defer recorder.Close(closeCtx)
+	defer recorder.Close(cleanupCtx)
 	if err := recorder.Cooldown(ctx); err != nil {
 		return errors.Wrap(err, "failed to cool down the device")
 	}
@@ -157,7 +165,7 @@ func Run(ctx context.Context, resources *TestResources, params *TestParams) (ret
 	if err := socialApp.Launch(ctx); err != nil {
 		return errors.Wrap(err, "failed to open Element")
 	}
-	defer socialApp.Close(closeCtx)
+	defer socialApp.Close(cleanupCtx)
 
 	isSocialAppSetup := false
 	defer func(ctx context.Context) {
@@ -185,7 +193,7 @@ func Run(ctx context.Context, resources *TestResources, params *TestParams) (ret
 				testing.ContextLog(ctx, "Failed to clean up social app: ", err)
 			}
 		}
-	}(closeCtx)
+	}(cleanupCtx)
 
 	if err := socialApp.SetUp(ctx); err != nil {
 		return errors.Wrap(err, "failed to set up social app for testing")
@@ -199,7 +207,7 @@ func Run(ctx context.Context, resources *TestResources, params *TestParams) (ret
 	if err := videoApp.Launch(ctx); err != nil {
 		return errors.Wrap(err, "failed to launch video app")
 	}
-	defer videoApp.Close(closeCtx)
+	defer videoApp.Close(cleanupCtx)
 
 	if err := arrangeWindow(ctx, tconn, videoApp.ID(), ash.WindowStateNormal, params.TabletMode); err != nil {
 		return errors.Wrap(err, "failed to set video app window state and wait")
@@ -217,7 +225,7 @@ func Run(ctx context.Context, resources *TestResources, params *TestParams) (ret
 		return errors.Wrap(err, "failed to set browser window state and wait")
 	}
 
-	cleanupCtx := ctx
+	closeCtx := ctx
 	// Given time to close apps.
 	ctx, cancel = ctxutil.Shorten(ctx, 20*time.Second)
 	defer cancel()
@@ -233,7 +241,7 @@ func Run(ctx context.Context, resources *TestResources, params *TestParams) (ret
 				testing.ContextLog(ctx, "Failed to clear leave site prompt: ", err)
 			}
 		}
-	}(cleanupCtx)
+	}(closeCtx)
 
 	defer func(ctx context.Context) {
 		if retErr != nil {
@@ -243,7 +251,7 @@ func Run(ctx context.Context, resources *TestResources, params *TestParams) (ret
 			a.DumpUIHierarchyOnError(ctx, filepath.Join(outDir, "arc"), func() bool { return retErr != nil })
 			faillog.DumpUITreeWithScreenshotOnError(ctx, outDir, func() bool { return retErr != nil }, cr, "ui_tree")
 		}
-	}(cleanupCtx)
+	}(closeCtx)
 
 	if err := recorder.Start(ctx); err != nil {
 		return errors.Wrap(err, "failed to start collecting power metrics")
