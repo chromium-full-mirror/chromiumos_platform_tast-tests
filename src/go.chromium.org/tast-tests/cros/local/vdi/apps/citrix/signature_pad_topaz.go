@@ -85,12 +85,14 @@ func (t *TopazSignaturePad) LoadSignature(fileName string) uiauto.Action {
 	// Sometimes "Load Sig" will detect the wrong coordinate, just use "Load".
 	loadSigText := uidetection.Word("Load").First()
 	nameText := uidetection.Word("Name").First()
-	fileNameText := uidetection.Word(fileName).Below(nameText).First()
 	signaturesText := uidetection.Word("Signatures").First()
 	openText := uidetection.Word("Open").Below(signaturesText).First()
+	fileNameText := uidetection.Word(fileName).Below(nameText).Above(openText).First()
+	signatureText := uidetection.Word("Signatures").First()
+	defaultText := uidetection.Word("*.SIG").LeftOf(signatureText).First()
 	return uiauto.NamedCombine("load signature",
-		ud.LeftClick(loadSigText),
-		ud.LeftClick(fileNameText),
+		ud.LeftClickUntil(loadSigText, ud.Exists(openText)),
+		ud.LeftClickUntil(fileNameText, ud.Gone(defaultText)),
 		ud.LeftClickUntil(openText, ud.Gone(openText)),
 	)
 }
