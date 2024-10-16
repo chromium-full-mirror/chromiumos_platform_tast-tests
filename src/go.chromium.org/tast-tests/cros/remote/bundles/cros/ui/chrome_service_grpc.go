@@ -27,7 +27,6 @@ const (
 func init() {
 	testing.AddTest(&testing.Test{
 		Func:         ChromeServiceGRPC,
-		LacrosStatus: testing.LacrosVariantExists,
 		Desc:         "Check basic functionality of ChromeService",
 		Contacts:     []string{"chromeos-sw-engprod@google.com", "jonfan@google.com"},
 		BugComponent: "b:1034649",
@@ -82,18 +81,6 @@ func init() {
 			},
 			ExtraAttr:         []string{"group:mainline", "informational"},
 			ExtraSoftwareDeps: []string{"gaia"},
-		}, {
-			Name: "default_fake_login_lacros",
-			Val: &pb.NewRequest{
-				// Default to using Rootfs Lacros.
-				Lacros: &pb.Lacros{Selection: pb.Lacros_SELECTION_ROOTFS}},
-			ExtraAttr:         []string{"group:mainline", "informational"},
-			ExtraSoftwareDeps: []string{"lacros"},
-		}, {
-			Name:              "disabled_lacros",
-			Val:               &pb.NewRequest{},
-			ExtraAttr:         []string{"group:mainline", "informational"},
-			ExtraSoftwareDeps: []string{"lacros"},
 		}},
 	})
 }

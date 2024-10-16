@@ -44,6 +44,7 @@ service ChromeService {
 // NewRequest to login to Chrome with configurable features, arguments and GAIA
 // credentials.
 message NewRequest {
+  reserved 8 to 11, 16 to 17; // Removed fields related to lacros.
   LoginMode login_mode = 1;
 
   // Credentials is login credentials.
@@ -63,15 +64,6 @@ message NewRequest {
 
   // TryReuseSession controls whether to try reusing a current user session.
   bool try_reuse_session = 7;
-
-  // LacrosEnableFeatures extra Lacros features to enable.
-  repeated string lacros_enable_features = 8;
-
-  // LacrosDisableFeatures contains extra Lacros features to disable.
-  repeated string lacros_disable_features = 9;
-
-  // LacrosExtraArgs contains arguments to be passed through to Lacros.
-  repeated string lacros_extra_args = 10;
 
   message Credentials {
     // Username is the user name of a user account. It is typically an email
@@ -101,10 +93,6 @@ message NewRequest {
     string parent_password = 6;
   }
 
-  // If |lacros| is set, Lacros browser will be enabled.
-  // If |lacros| is unset, Lacros browser will not be enabled.
-  Lacros lacros = 11;
-
   // Describes the availability of ARC, e.g. enabled / disabled.
   ArcMode arc_mode = 12;
 
@@ -120,13 +108,6 @@ message NewRequest {
   // Pass directories of unpacked extensions to be loaded by Ash Chrome.
   repeated string unpacked_extensions = 15;
 
-  // Pass directories of unpacked extensions to be loaded by Lacros Chrome.
-  repeated string lacros_unpacked_extensions = 16;
-
-  // If true, Lacros will be launched with KeepAlive enabled. This means Lacros
-  // will keep running even after all windows are closed.
-  bool lacros_keep_alive = 17;
-
   // If true, stay in OOBE after user login.
   bool dont_skip_oobe_after_login = 18;
 
@@ -141,23 +122,6 @@ enum LoginMode {
   LOGIN_MODE_FAKE_LOGIN = 2;  // fake login with no authentication
   LOGIN_MODE_GAIA_LOGIN = 3;  // real network-based login using GAIA backend
   LOGIN_MODE_GUEST_LOGIN = 4; // sign in as ephemeral guest user
-}
-
-// Lacros to enable Lacros browser with configurable selection of whether rootfs
-// or stateful is used.
-message Lacros {
-  // This field used to specify the mode of Lacros. Nowadays there is only one
-  // mode.
-  reserved 1;
-
-  // Selection is where to locate a Lacros browser.
-  // TODO(b/246961327): Support locally deployed Lacros binary when needed.
-  enum Selection {
-    SELECTION_UNSPECIFIED = 0; // let the system choose
-    SELECTION_ROOTFS = 1;
-    SELECTION_OMAHA = 2;
-  }
-  Selection selection = 2;
 }
 
 // ArcMode describes how ARC is supported.

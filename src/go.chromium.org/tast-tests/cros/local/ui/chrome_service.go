@@ -6,7 +6,6 @@ package ui
 
 import (
 	"context"
-	"time"
 
 	"github.com/golang/protobuf/ptypes/empty"
 	"google.golang.org/grpc"
@@ -14,9 +13,6 @@ import (
 	"go.chromium.org/tast-tests/cros/local/chrome"
 	"go.chromium.org/tast-tests/cros/local/chrome/browser"
 	"go.chromium.org/tast-tests/cros/local/chrome/browser/browserfixt"
-	"go.chromium.org/tast-tests/cros/local/chrome/lacros"
-	"go.chromium.org/tast-tests/cros/local/chrome/lacros/lacrosfixt"
-	"go.chromium.org/tast-tests/cros/local/chrome/lacros/lacrosinfo"
 	"go.chromium.org/tast-tests/cros/local/common"
 	"go.chromium.org/tast-tests/cros/local/cryptohome"
 	"go.chromium.org/tast-tests/cros/services/cros/ui"
@@ -56,20 +52,6 @@ func (svc *ChromeService) New(ctx context.Context, req *pb.NewRequest) (_ *empty
 		return nil, errors.Wrap(err, "failed to convert to chrome options")
 	}
 
-	var lcfg *lacrosfixt.Config
-	var bt browser.Type
-	// Enable Lacros iff |req.Lacros| is set.
-	if req.GetLacros() != nil {
-		bt = browser.TypeLacros
-		lcfg, err = toLacrosConfig(req)
-		if err != nil {
-			return nil, errors.Wrap(err, "failed to convert to lacros config")
-		}
-	} else {
-		bt = browser.TypeAsh
-		opts = append(opts, chrome.DisableFeatures("LacrosOnly"))
-	}
-
 	switch req.GetArcMode() {
 	case pb.ArcMode_ARC_MODE_UNSPECIFIED:
 		// Do nothing.
@@ -84,7 +66,7 @@ func (svc *ChromeService) New(ctx context.Context, req *pb.NewRequest) (_ *empty
 	// By default, this will always create a new chrome session even when there is an existing one.
 	// This gives full control of the lifecycle to the end users.
 	// Users can use TryReuseSessions if they want to potentially reuse the session.
-	cr, err := browserfixt.NewChrome(ctx, bt, lcfg, opts...)
+	cr, err := browserfixt.NewChrome(ctx, browser.TypeAsh, nil, opts...)
 	if err != nil {
 		testing.ContextLog(ctx, "Failed to start Chrome")
 		return nil, err
@@ -94,26 +76,6 @@ func (svc *ChromeService) New(ctx context.Context, req *pb.NewRequest) (_ *empty
 			cr.Close(ctx)
 		}
 	}()
-
-	// Check that Lacros is enabled only if requested.
-	if bt == browser.TypeLacros {
-		tconn, err := cr.TestAPIConn(ctx)
-		if err != nil {
-			return nil, errors.Wrap(err, "failed to create test API connection")
-		}
-		if err := testing.Poll(ctx, func(ctx context.Context) error {
-			info, err := lacrosinfo.Snapshot(ctx, tconn)
-			if err != nil {
-				return testing.PollBreak(errors.Wrap(err, "failed to get lacros info"))
-			}
-			if len(info.LacrosPath) == 0 {
-				return errors.Wrap(err, "lacros is not yet enabled (received empty LacrosPath)")
-			}
-			return nil
-		}, &testing.PollOptions{Interval: 2 * time.Second}); err != nil {
-			return nil, errors.Wrapf(err, "lacros is not enabled but requested in %v", req)
-		}
-	}
 
 	// Store the newly created chrome sessions in the shared object so other services can use it.
 	svc.sharedObject.Chrome = cr
@@ -239,28 +201,11 @@ func toOptions(req *pb.NewRequest) ([]chrome.Option, error) {
 	}
 
 	if len(req.EnableFeatures) > 0 {
-		for _, feature := range req.EnableFeatures {
-			if feature == "LacrosOnly" {
-				return nil, errors.Errorf("To enable Lacros, define `lacros` field in request, but got: [%v]", req)
-			}
-		}
 		options = append(options, chrome.EnableFeatures(req.EnableFeatures...))
 	}
 
 	if len(req.DisableFeatures) > 0 {
 		options = append(options, chrome.DisableFeatures(req.DisableFeatures...))
-	}
-
-	if len(req.LacrosExtraArgs) > 0 {
-		options = append(options, chrome.LacrosExtraArgs(req.LacrosExtraArgs...))
-	}
-
-	if len(req.LacrosEnableFeatures) > 0 {
-		options = append(options, chrome.LacrosEnableFeatures(req.LacrosEnableFeatures...))
-	}
-
-	if len(req.LacrosDisableFeatures) > 0 {
-		options = append(options, chrome.LacrosDisableFeatures(req.LacrosDisableFeatures...))
 	}
 
 	if len(req.SigninProfileTestExtensionId) > 0 {
@@ -270,12 +215,6 @@ func toOptions(req *pb.NewRequest) ([]chrome.Option, error) {
 	if len(req.UnpackedExtensions) > 0 {
 		for _, extDir := range req.UnpackedExtensions {
 			options = append(options, chrome.UnpackedExtension(extDir))
-		}
-	}
-
-	if len(req.LacrosUnpackedExtensions) > 0 {
-		for _, extDir := range req.LacrosUnpackedExtensions {
-			options = append(options, chrome.LacrosUnpackedExtension(extDir))
 		}
 	}
 
@@ -291,25 +230,4 @@ func toCreds(c *pb.NewRequest_Credentials) chrome.Creds {
 		ParentUser: c.ParentUsername,
 		ParentPass: c.ParentPassword,
 	}
-}
-
-func toLacrosConfig(req *pb.NewRequest) (lcfg *lacrosfixt.Config, err error) {
-	if req.GetLacros() == nil {
-		return nil, errors.Errorf("lacros should be set in NewRequest: %v", req)
-	}
-
-	var selection lacros.Selection
-	switch req.GetLacros().GetSelection() {
-	case pb.Lacros_SELECTION_UNSPECIFIED:
-		selection = lacros.NotSelected
-	case pb.Lacros_SELECTION_ROOTFS:
-		selection = lacros.Rootfs
-	case pb.Lacros_SELECTION_OMAHA:
-		selection = lacros.Omaha
-	default:
-		return nil, errors.Errorf("unsupported selection: %v", req.GetLacros().GetSelection())
-	}
-
-	lcfg = lacrosfixt.NewConfig(lacrosfixt.Selection(selection), lacrosfixt.KeepAlive(req.LacrosKeepAlive))
-	return lcfg, nil
 }
