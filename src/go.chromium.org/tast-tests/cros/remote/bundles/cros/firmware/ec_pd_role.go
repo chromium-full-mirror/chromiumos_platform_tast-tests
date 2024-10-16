@@ -57,6 +57,12 @@ func ECPDRole(ctx context.Context, s *testing.State) {
 		s.Fatal("Failed to get config: ", err)
 	}
 
+	testParams := firmware.PDTestParams{}
+
+	if err := firmware.SetupPDTester(ctx, h, testParams); err != nil {
+		s.Fatal("Failed to configure Servo for PD testing: ", err)
+	}
+
 	s.Log("Rebooting the DUT with hard reset")
 	if err := h.Servo.SetPowerState(ctx, servo.PowerStateReset); err != nil {
 		s.Fatal("Failed to EC reset DUT: ", err)
