@@ -17,12 +17,9 @@ import (
 	"go.chromium.org/tast/core/testing/hwdep"
 )
 
-type testParams struct {
-	chromeRequest *ui.NewRequest
-	browserID     string
-}
-
 var disableFeatures = []string{"DefaultWebAppInstallation"}
+
+const browserID = "mgndgikekgjfcpckkfioiadnlibdjbkf" // See Chrome.ID in local/apps/apps.go.
 
 func init() {
 	testing.AddTest(&testing.Test{
@@ -36,23 +33,11 @@ func init() {
 		Attr:         []string{"group:mainline", "informational"},
 		SoftwareDeps: []string{"chrome"},
 		HardwareDeps: hwdep.D(hwdep.Model("betty")),
-		LacrosStatus: testing.LacrosVariantExists,
-		Params: []testing.Param{
-			{
-				Name: "ash",
-				Val: testParams{
-					chromeRequest: &ui.NewRequest{DisableFeatures: disableFeatures},
-					browserID:     "mgndgikekgjfcpckkfioiadnlibdjbkf", // See Chrome.ID in local/apps/apps.go.
-				},
-			},
-		},
 	})
 }
 
 // AppsServiceGRPC tests basic functionalities of UI AppsService.
 func AppsServiceGRPC(ctx context.Context, s *testing.State) { // NOLINT
-	variant := s.Param().(testParams)
-
 	cl, err := crosserverutil.GetGRPCClient(ctx, s.DUT())
 	if err != nil {
 		s.Fatal("Failed to connect to the RPC service on the DUT: ", err)
@@ -61,7 +46,7 @@ func AppsServiceGRPC(ctx context.Context, s *testing.State) { // NOLINT
 
 	// Start Chrome on the DUT.
 	cs := ui.NewChromeServiceClient(cl.Conn)
-	if _, err := cs.New(ctx, variant.chromeRequest, grpc.WaitForReady(true)); err != nil {
+	if _, err := cs.New(ctx, &ui.NewRequest{DisableFeatures: disableFeatures}, grpc.WaitForReady(true)); err != nil {
 		s.Fatal("Failed to start Chrome: ", err)
 	}
 	defer cs.Close(ctx, &empty.Empty{})
@@ -97,9 +82,9 @@ func AppsServiceGRPC(ctx context.Context, s *testing.State) { // NOLINT
 	if err != nil {
 		s.Fatal("Failed to launch primary browser: ", err)
 	}
-	// We compare the app IDs rather than the names because in the LacrosOnly configuration Lacros is called "Chrome".
-	if browser.Id != variant.browserID {
-		s.Fatalf("Incorrect browser ID: got %v; want %v", browser.Id, variant.browserID)
+
+	if browser.Id != browserID {
+		s.Fatalf("Incorrect browser ID: got %v; want %v", browser.Id, browserID)
 	}
 
 	browserWindowFinder := &ui.Finder{
