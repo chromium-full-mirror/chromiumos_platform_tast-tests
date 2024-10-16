@@ -267,7 +267,7 @@ func testPipDoubleTapToEnlarge(ctx context.Context, tconn *chrome.TestConn, ac *
 
 	// Confirm that the window has been enlarged via the double-tap-to-resize feature.
 	return testing.Poll(ctx, func(ctx context.Context) error {
-		if err := waitUntilPipWindowIsEnlargedByDoubleTap(ctx, tconn); err != nil {
+		if err := resizePipWindowByDoubleTapAndWait(ctx, tconn); err != nil {
 			return errors.Wrap(err, "failed to wait until the pip window is enlarged")
 		}
 
@@ -301,7 +301,7 @@ func testPipDoubleTapToOriginalSize(ctx context.Context, tconn *chrome.TestConn,
 	beforeBounds := window.BoundsInRoot
 
 	// Double tap to enlarge the PiP window to the max size.
-	if err := waitUntilPipWindowIsEnlargedByDoubleTap(ctx, tconn); err != nil {
+	if err := resizePipWindowByDoubleTapAndWait(ctx, tconn); err != nil {
 		return errors.Wrap(err, "failed to wait until the pip window is enlarged")
 	}
 
@@ -519,7 +519,7 @@ func testPipHotKeyToEnlarge(ctx context.Context, tconn *chrome.TestConn, ac *uia
 	}
 	beforeBounds := window.BoundsInRoot
 
-	if err := waitUntilPipWindowIsResizedByHotKey(ctx, tconn); err != nil {
+	if err := resizePipWindowByAcceleratorAndWait(ctx, tconn); err != nil {
 		return errors.Wrap(err, "failed to wait until the pip window is enlarged")
 	}
 
@@ -556,12 +556,12 @@ func testPipHotKeyToOriginalSize(ctx context.Context, tconn *chrome.TestConn, ac
 	beforeBounds := window.BoundsInRoot
 
 	// Press the Hotkey to make the PiP the max size.
-	if err := waitUntilPipWindowIsResizedByHotKey(ctx, tconn); err != nil {
+	if err := resizePipWindowByAcceleratorAndWait(ctx, tconn); err != nil {
 		return errors.Wrap(err, "failed to wait until the pip window is enlarged")
 	}
 
 	// Press the Hotkey to make the PiP the original size.
-	if err := waitUntilPipWindowIsResizedByHotKey(ctx, tconn); err != nil {
+	if err := resizePipWindowByAcceleratorAndWait(ctx, tconn); err != nil {
 		return errors.Wrap(err, "failed to wait until the pip window is enlarged")
 	}
 
@@ -720,8 +720,8 @@ func waitUntilPipWindowIsGone(ctx context.Context, tconn *chrome.TestConn) error
 	}, &testing.PollOptions{Timeout: 10 * time.Second})
 }
 
-// waitUntilPipWindowIsEnlargedByDoubleTap makes double-tapping and waits for the PiP become the max size.
-func waitUntilPipWindowIsEnlargedByDoubleTap(ctx context.Context, tconn *chrome.TestConn) error {
+// resizePipWindowByDoubleTapAndWait makes double-tapping and waits for the PiP become the max size.
+func resizePipWindowByDoubleTapAndWait(ctx context.Context, tconn *chrome.TestConn) error {
 	window, err := getPIPWindow(ctx, tconn)
 	if err != nil {
 		return errors.Wrap(err, "failed to get PiP window")
@@ -773,8 +773,8 @@ func waitUntilPipWindowIsEnlargedByDoubleTap(ctx context.Context, tconn *chrome.
 	}, &testing.PollOptions{Timeout: 10 * time.Second, Interval: 100 * time.Millisecond})
 }
 
-// waitUntilPipWindowIsResizedByHotKey makes shortcut pressed and waits for the PiP become the max size.
-func waitUntilPipWindowIsResizedByHotKey(ctx context.Context, tconn *chrome.TestConn) error {
+// resizePipWindowByAcceleratorAndWait makes shortcut pressed and waits for the PiP become the max size.
+func resizePipWindowByAcceleratorAndWait(ctx context.Context, tconn *chrome.TestConn) error {
 	kb, err := input.Keyboard(ctx)
 	if err != nil {
 		return errors.Wrap(err, "failed to initialize keyboard")
