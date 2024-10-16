@@ -19,9 +19,8 @@ import (
 
 func init() {
 	testing.AddTest(&testing.Test{
-		Func:         SyncFloatingWorkspace,
-		LacrosStatus: testing.LacrosVariantExists,
-		Desc:         "Check if we can create a template on one device and receive it on another one when desk template sync is enabled",
+		Func: SyncFloatingWorkspace,
+		Desc: "Check if we can create a template on one device and receive it on another one when desk template sync is enabled",
 		Contacts: []string{
 			"cros-commercial-productivity-eng@google.com",
 			"zhumatthew@google.com",
