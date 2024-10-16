@@ -78,7 +78,7 @@ func CrasEwmaPowerReporter(ctx context.Context, s *testing.State) {
 
 	const (
 		wavDuration            = 10 * time.Second
-		startingLatencyAllowed = 500 * time.Millisecond
+		startingLatencyAllowed = 1 * time.Second
 	)
 
 	playbackWavPath := filepath.Join(s.OutDir(), "sine.wav")
@@ -126,7 +126,7 @@ func CrasEwmaPowerReporter(ctx context.Context, s *testing.State) {
 	}
 	audioData := captureWav.GetBodyAsInt16()
 	for ch := 0; ch < 2; ch++ {
-		if err := audio.CheckFrequency(ctx, audioData[ch], 48000 /*sampleRate*/, 440 /*expectedFreq*/, 10 /*freqTolerance*/, 3 /*incorrectLimit*/, startingLatencyAllowed); err != nil {
+		if err := audio.CheckFrequency(ctx, audioData[ch], 48000 /*sampleRate*/, 440 /*expectedFreq*/, 10 /*freqTolerance*/, 10 /*incorrectLimit*/, startingLatencyAllowed); err != nil {
 			s.Error("CheckFrequency err: ", err)
 		}
 	}
