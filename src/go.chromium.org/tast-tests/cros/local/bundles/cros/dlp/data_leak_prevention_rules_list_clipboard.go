@@ -20,7 +20,6 @@ import (
 	"go.chromium.org/tast-tests/cros/local/chrome"
 	"go.chromium.org/tast-tests/cros/local/chrome/browser"
 	"go.chromium.org/tast-tests/cros/local/chrome/browser/browserfixt"
-	"go.chromium.org/tast-tests/cros/local/chrome/lacros"
 	"go.chromium.org/tast-tests/cros/local/chrome/uiauto"
 	"go.chromium.org/tast-tests/cros/local/chrome/uiauto/faillog"
 	"go.chromium.org/tast-tests/cros/local/chrome/uiauto/nodewith"
@@ -30,7 +29,6 @@ import (
 	"go.chromium.org/tast-tests/cros/local/input"
 	"go.chromium.org/tast-tests/cros/local/policyutil"
 	"go.chromium.org/tast/core/ctxutil"
-	"go.chromium.org/tast/core/errors"
 	"go.chromium.org/tast/core/testing"
 )
 
@@ -43,9 +41,8 @@ type clipboardTestParams struct {
 
 func init() {
 	testing.AddTest(&testing.Test{
-		Func:         DataLeakPreventionRulesListClipboard,
-		LacrosStatus: testing.LacrosVariantExists,
-		Desc:         "Test behavior of DataLeakPreventionRulesList policy with clipboard warning/block restriction by copy and paste",
+		Func: DataLeakPreventionRulesListClipboard,
+		Desc: "Test behavior of DataLeakPreventionRulesList policy with clipboard warning/block restriction by copy and paste",
 		Contacts: []string{
 			"chromeos-dlp@google.com",
 			"accorsi@google.com",
@@ -154,12 +151,7 @@ func DataLeakPreventionRulesListClipboard(ctx context.Context, s *testing.State)
 	if err != nil {
 		s.Fatal("Failed to open the browser: ", err)
 	}
-	defer func(ctx context.Context) {
-		if err := closeBrowser(ctx); errors.Is(err, lacros.ErrAlreadyStoppedBeforeClose) {
-			// The Lacros browser is not closed in other places in the test.
-			s.Error("The Lacros browser probably crashed: ", err)
-		}
-	}(cleanupCtx)
+	defer closeBrowser(cleanupCtx)
 
 	defer faillog.DumpUITreeWithScreenshotOnError(cleanupCtx, s.OutDir(), s.HasError, cr, "ui_tree_"+params.name)
 
