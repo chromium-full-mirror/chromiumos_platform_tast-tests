@@ -23,15 +23,13 @@ import (
 )
 
 type webauthnU2fModeParam struct {
-	browserType webauthnpb.BrowserType
 	isSimulator bool
 }
 
 func init() {
 	testing.AddTest(&testing.Test{
-		Func:         WebauthnU2fMode,
-		LacrosStatus: testing.LacrosVariantExists,
-		Desc:         "Checks that WebAuthn under u2f mode succeeds in different configurations",
+		Func: WebauthnU2fMode,
+		Desc: "Checks that WebAuthn under u2f mode succeeds in different configurations",
 		Contacts: []string{
 			"cros-hwsec@google.com",
 			"hcyang@google.com",
@@ -52,15 +50,6 @@ func init() {
 			ExtraAttr:         []string{"group:firmware", "firmware_cr50"},
 			ExtraSoftwareDeps: []string{"no_tpm2_simulator"},
 			Val: webauthnU2fModeParam{
-				browserType: webauthnpb.BrowserType_ASH,
-				isSimulator: false,
-			},
-		}, {
-			Name:              "lacros",
-			ExtraAttr:         []string{"group:firmware", "firmware_cr50"},
-			ExtraSoftwareDeps: []string{"no_tpm2_simulator", "lacros"},
-			Val: webauthnU2fModeParam{
-				browserType: webauthnpb.BrowserType_LACROS,
 				isSimulator: false,
 			},
 		}, {
@@ -68,15 +57,6 @@ func init() {
 			ExtraAttr:         []string{"group:mainline", "informational", "group:u2fd"},
 			ExtraSoftwareDeps: []string{"tpm2_simulator"},
 			Val: webauthnU2fModeParam{
-				browserType: webauthnpb.BrowserType_ASH,
-				isSimulator: true,
-			},
-		}, {
-			Name:              "vm_lacros",
-			ExtraAttr:         []string{"group:mainline", "informational", "group:u2fd"},
-			ExtraSoftwareDeps: []string{"tpm2_simulator", "lacros"},
-			Val: webauthnU2fModeParam{
-				browserType: webauthnpb.BrowserType_LACROS,
 				isSimulator: true,
 			},
 		}},
@@ -131,13 +111,10 @@ func WebauthnU2fMode(ctx context.Context, s *testing.State) {
 		s.Fatal("Failed to put files to remote")
 	}
 
-	bt := s.Param().(webauthnU2fModeParam).browserType
-
 	// u2fd reads files from the user's home dir, so we need to log in.
 	client := webauthnpb.NewWebauthnServiceClient(cl.Conn)
 	if _, err := client.New(ctx, &webauthnpb.NewRequest{
-		BrowserType: bt,
-		DataPath:    dataPath,
+		DataPath: dataPath,
 	}); err != nil {
 		s.Fatal("Failed to start Chrome: ", err)
 	}

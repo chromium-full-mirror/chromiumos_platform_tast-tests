@@ -82,10 +82,6 @@ func (c *WebauthnService) New(ctx context.Context, req *hwsec.NewRequest) (*empt
 		}
 	}(ctxForCleanUp)
 
-	if req.GetBrowserType() != hwsec.BrowserType_ASH {
-		return nil, errors.Errorf("unsupported browser type %v", req.GetBrowserType())
-	}
-
 	keyboard, err := input.VirtualKeyboard(ctx)
 	if err != nil {
 		return nil, errors.Wrap(err, "failed to get keyboard")

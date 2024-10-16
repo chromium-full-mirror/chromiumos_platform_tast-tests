@@ -29,10 +29,7 @@ type webauthnAttestationParam struct {
 func init() {
 	testing.AddTest(&testing.Test{
 		Func: WebauthnAttestation,
-		// Lacros testing of similar behavior is already covered in
-		// hwsec.WebauthnU2fMode.*.
-		LacrosStatus: testing.LacrosVariantUnneeded,
-		Desc:         "Checks that WebAuthn under each mode provides correct attestation",
+		Desc: "Checks that WebAuthn under each mode provides correct attestation",
 		Contacts: []string{
 			"cros-hwsec@google.com",
 			"hcyang@google.com",
@@ -114,12 +111,9 @@ func WebauthnAttestation(ctx context.Context, s *testing.State) {
 		s.Fatal("Failed to put files to remote")
 	}
 
-	bt := webauthnpb.BrowserType_ASH
-
 	// u2fd reads files from the user's home dir, so we need to log in.
 	cr := webauthnpb.NewWebauthnServiceClient(cl.Conn)
 	if _, err := cr.New(ctx, &webauthnpb.NewRequest{
-		BrowserType:                bt,
 		DataPath:                   dataPath,
 		AllowEnterpriseAttestation: true,
 	}); err != nil {

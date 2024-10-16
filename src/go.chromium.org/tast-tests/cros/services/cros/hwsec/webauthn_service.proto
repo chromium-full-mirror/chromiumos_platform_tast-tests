@@ -13,31 +13,28 @@ option go_package = "go.chromium.org/tast-tests/cros/services/cros/hwsec";
 service WebauthnService {
   // New logs into a Chrome session as a fake user. Close must be called later
   // to clean up the associated resources.
-  rpc New (NewRequest) returns (google.protobuf.Empty) {}
+  rpc New(NewRequest) returns (google.protobuf.Empty) {}
 
   // Close releases the resources obtained by New.
-  rpc Close (google.protobuf.Empty) returns (google.protobuf.Empty) {}
+  rpc Close(google.protobuf.Empty) returns (google.protobuf.Empty) {}
 
-  rpc StartWebauthn (StartWebauthnRequest) returns (google.protobuf.Empty) {}
+  rpc StartWebauthn(StartWebauthnRequest) returns (google.protobuf.Empty) {}
 
-  rpc StartMakeCredential (google.protobuf.Empty) returns (WebAuthnCredential) {}
+  rpc StartMakeCredential(google.protobuf.Empty) returns (WebAuthnCredential) {}
 
-  rpc EndMakeCredential (google.protobuf.Empty) returns (google.protobuf.Empty) {}
+  rpc EndMakeCredential(google.protobuf.Empty) returns (google.protobuf.Empty) {
+  }
 
-  rpc DoMakeCredential (google.protobuf.Empty) returns (google.protobuf.Empty) {}
+  rpc DoMakeCredential(google.protobuf.Empty) returns (google.protobuf.Empty) {}
 
-  rpc StartGetAssertion (StartGetAssertionRequest) returns (google.protobuf.Empty) {}
+  rpc StartGetAssertion(StartGetAssertionRequest)
+      returns (google.protobuf.Empty) {}
 
-  rpc DoGetAssertion (google.protobuf.Empty) returns (google.protobuf.Empty) {}
+  rpc DoGetAssertion(google.protobuf.Empty) returns (google.protobuf.Empty) {}
 
-  rpc EndGetAssertion (google.protobuf.Empty) returns (google.protobuf.Empty) {}
+  rpc EndGetAssertion(google.protobuf.Empty) returns (google.protobuf.Empty) {}
 
-  rpc EnterPassword (EnterPasswordRequest) returns (google.protobuf.Empty) {}
-}
-
-enum BrowserType {
-  ASH = 0;
-  LACROS = 1;
+  rpc EnterPassword(EnterPasswordRequest) returns (google.protobuf.Empty) {}
 }
 
 enum UserVerification {
@@ -57,12 +54,11 @@ enum AttestationType {
   NONE = 1;
   INDIRECT = 2;
   DIRECT = 3;
-  ENTERPRISE= 4;
+  ENTERPRISE = 4;
 }
 
 message NewRequest {
-  reserved 1 to 3;
-  BrowserType browser_type = 4;
+  reserved 1 to 4;
   // KeepState controls whether to keep existing user profiles.
   bool keep_state = 5;
   // DataPath is the path that contains data files that the test needs.
@@ -74,9 +70,7 @@ message NewRequest {
   bool allow_enterprise_attestation = 7;
 }
 
-message EnterPasswordRequest {
-  string password = 1;
-}
+message EnterPasswordRequest { string password = 1; }
 
 message StartWebauthnRequest {
   UserVerification user_verification = 1;
@@ -96,6 +90,4 @@ message WebAuthnCredential {
   string serial_number_b64 = 3;
 }
 
-message StartGetAssertionRequest {
-  WebAuthnCredential cred = 1;
-}
+message StartGetAssertionRequest { WebAuthnCredential cred = 1; }
