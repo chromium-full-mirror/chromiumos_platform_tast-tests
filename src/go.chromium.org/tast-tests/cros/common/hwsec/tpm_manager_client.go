@@ -520,16 +520,16 @@ func (u *TPMManagerClient) GetVersionInfo(ctx context.Context) (info *VersionInf
 // DAInfo contains the dictionary attack related information.
 type DAInfo struct {
 	// Counter is the dictionary attack lockout counter.
-	Counter int
+	Counter uint
 
 	// Threshold is the dictionary attack lockout threshold.
-	Threshold int
+	Threshold uint
 
 	// InEffect indicates if dictionary attack lockout is in effect.
 	InEffect bool
 
 	// Remaining is the seconds remaining until we can reset the lockout.
-	Remaining int
+	Remaining uint
 }
 
 // parseDAInfo tries to parse the output of GetDAInfo from msg, if checkStatus is true, then we'll verify that the output of the command contains a success message.
@@ -555,12 +555,12 @@ func parseDAInfo(ctx context.Context, checkStatus bool, msg string) (info *DAInf
 		}
 	}
 
-	counter := -1
+	counter := uint(0)
 	if _, err := fmt.Sscanf(parsed[CounterPrefix], "%d", &counter); err != nil {
 		return nil, errors.Wrapf(err, "counter doesn't start with a valid integer %q", parsed[CounterPrefix])
 	}
 
-	threshold := -1
+	threshold := uint(0)
 	if _, err := fmt.Sscanf(parsed[ThresholdPrefix], "%d", &threshold); err != nil {
 		return nil, errors.Wrapf(err, "threshold doesn't start with a valid integer %q", parsed[ThresholdPrefix])
 	}
@@ -570,7 +570,7 @@ func parseDAInfo(ctx context.Context, checkStatus bool, msg string) (info *DAInf
 		return nil, errors.Wrapf(err, "in effect doesn't start with a valid boolean %q", parsed[InEffectPrefix])
 	}
 
-	remaining := -1
+	remaining := uint(0)
 	if _, err := fmt.Sscanf(parsed[RemainingPrefix], "%d", &remaining); err != nil {
 		return nil, errors.Wrapf(err, "remaining doesn't start with a valid integer %q", parsed[RemainingPrefix])
 	}

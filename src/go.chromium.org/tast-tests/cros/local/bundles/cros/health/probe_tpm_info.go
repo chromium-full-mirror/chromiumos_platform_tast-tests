@@ -180,16 +180,16 @@ func verifyTPMDictionaryAttack(ctx context.Context, tpmManager *hwsec.TPMManager
 	if err != nil {
 		return errors.Wrap(err, "failed to get dictionary attack from TPMManager")
 	}
-	if tpmManagerDAInfo.Counter != int(tpmDA.Counter) {
+	if tpmManagerDAInfo.Counter != uint(tpmDA.Counter) {
 		return errors.Errorf("Counter not matched, %v from healthd, %v from TPMManager", tpmDA.Counter, tpmManagerDAInfo.Counter)
 	}
-	if tpmManagerDAInfo.Threshold != int(tpmDA.Threshold) {
+	if tpmManagerDAInfo.Threshold != uint(tpmDA.Threshold) {
 		return errors.Errorf("Threshold not matched, %v from healthd, %v from TPMManager", tpmDA.Threshold, tpmManagerDAInfo.Threshold)
 	}
 	if tpmManagerDAInfo.InEffect != tpmDA.LockoutInEffect {
 		return errors.Errorf("LockoutInEffect not matched, %v from healthd, %v from TPMManager", tpmDA.LockoutInEffect, tpmManagerDAInfo.InEffect)
 	}
-	if tpmManagerDAInfo.Remaining != int(tpmDA.LockoutSecondsRemaining) {
+	if tpmManagerDAInfo.Remaining != uint(tpmDA.LockoutSecondsRemaining) {
 		return errors.Errorf("LockoutSecondsRemaining not matched, %v from healthd, %v from TPMManager", tpmDA.LockoutSecondsRemaining, tpmManagerDAInfo.Remaining)
 	}
 	return nil

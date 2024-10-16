@@ -32,7 +32,7 @@ import (
 
 const varLogMsgPath = "/var/log/messages"
 
-func hwsecGetDACounter(ctx context.Context, s *testing.TestHookState) (int, error) {
+func hwsecGetDACounter(ctx context.Context, s *testing.TestHookState) (uint, error) {
 	cmdRunner := hwsecremote.NewLoglessCmdRunner(s.DUT())
 	tpmManager := hwsec.NewTPMManagerClient(cmdRunner)
 
@@ -56,7 +56,7 @@ func hwsecGetTPMStatus(ctx context.Context, s *testing.TestHookState) (*hwsec.No
 	return status, nil
 }
 
-func hwsecCheckTPMState(ctx context.Context, s *testing.TestHookState, origStatus *hwsec.NonsensitiveStatusInfo, origCounter int) error {
+func hwsecCheckTPMState(ctx context.Context, s *testing.TestHookState, origStatus *hwsec.NonsensitiveStatusInfo, origCounter uint) error {
 	if err := s.DUT().Conn().CommandContext(ctx, "which", "tpm_manager_client").Run(); err != nil {
 		return nil
 	}
@@ -111,7 +111,7 @@ func testHookRemote(ctx context.Context, s *testing.TestHookState) func(ctx cont
 	s *testing.TestHookState) {
 
 	const primaryDUTRole = "" // "" is the name of the role of primary DUT.
-	hwsecDACounter := 0
+	hwsecDACounter := uint(0)
 	var err error
 	var hwsecTpmStatus *hwsec.NonsensitiveStatusInfo
 

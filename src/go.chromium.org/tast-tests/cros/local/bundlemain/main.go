@@ -65,7 +65,7 @@ func ensureDiskSpace(ctx context.Context, purgeable []string) (uint64, error) {
 	return disk.FreeSpace(statefulPartition)
 }
 
-func hwsecGetDACounter(ctx context.Context) (int, error) {
+func hwsecGetDACounter(ctx context.Context) (uint, error) {
 	cmdRunner := hwseclocal.NewLoglessCmdRunner()
 	tpmManager := hwsec.NewTPMManagerClient(cmdRunner)
 
@@ -89,7 +89,7 @@ func hwsecGetTPMStatus(ctx context.Context) (*hwsec.NonsensitiveStatusInfo, erro
 	return status, nil
 }
 
-func hwsecCheckTPMState(ctx context.Context, origStatus *hwsec.NonsensitiveStatusInfo, origCounter int) error {
+func hwsecCheckTPMState(ctx context.Context, origStatus *hwsec.NonsensitiveStatusInfo, origCounter uint) error {
 	cmdRunner := hwseclocal.NewLoglessCmdRunner()
 	fwType, err := cmdRunner.Run(ctx, "crossystem", "mainfw_type")
 	if err != nil {
@@ -166,7 +166,7 @@ func testHookLocal(ctx context.Context, s *testing.TestHookState) func(ctx conte
 	if err != nil {
 		s.Log("Failed to get TPM DA counter: ", err)
 		// Assume the counter value is zero when we failed to get the DA counter.
-		hwsecDACounter = 0
+		hwsecDACounter = uint(0)
 	}
 
 	// Store current TPM status before running the tast.
