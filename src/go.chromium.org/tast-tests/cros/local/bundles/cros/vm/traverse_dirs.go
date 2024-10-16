@@ -36,6 +36,21 @@ const (
 
 type testParam struct {
 	device deviceType
+	dax    bool
+}
+
+// String returns a string representation of testParam to pass into the test script.
+func (tp testParam) String() string {
+	switch tp.device {
+	case pmemExt2:
+		if tp.dax {
+			return "pmem-ext2-dax"
+		}
+		return "pmem-ext2"
+	case virtioFs:
+		return "virtiofs"
+	}
+	return "unknown"
 }
 
 func init() {
@@ -55,6 +70,13 @@ func init() {
 				Name: "pmem_ext2",
 				Val: testParam{
 					device: pmemExt2,
+				},
+			},
+			{
+				Name: "pmem_ext2_dax",
+				Val: testParam{
+					device: pmemExt2,
+					dax:    true,
 				},
 			},
 			{
@@ -100,11 +122,11 @@ func TraverseDirs(ctx context.Context, s *testing.State) {
 	// Directory path shared with the guest
 	sharedDir := "/usr/lib64"
 
-	devType := s.Param().(testParam).device
+	tp := s.Param().(testParam)
 
 	var storageOpt vm.Option
 	var scriptArgs []string
-	switch devType {
+	switch tp.device {
 	case pmemExt2:
 		storageOpt = vm.PmemExt2(vm.PmemExt2Param{
 			Path:           sharedDir,
@@ -115,7 +137,7 @@ func TraverseDirs(ctx context.Context, s *testing.State) {
 		})
 		scriptArgs = []string{
 			"--kind",
-			"pmem-ext2",
+			tp.String(),
 			"--mount-src",
 			"/dev/pmem0",
 			"--working-dir",
@@ -134,14 +156,14 @@ func TraverseDirs(ctx context.Context, s *testing.State) {
 		})
 		scriptArgs = []string{
 			"--kind",
-			"virtiofs",
+			tp.String(),
 			"--mount-src",
 			tag,
 			"--working-dir",
 			td,
 		}
 	default:
-		s.Fatal("Unexpected test name: ", devType)
+		s.Fatal("Unexpected test name: ", tp.String())
 	}
 	params, err := storage.GenCrosvmCmdFromStorageOpt(
 		td, s.OutDir(), kernelPath,

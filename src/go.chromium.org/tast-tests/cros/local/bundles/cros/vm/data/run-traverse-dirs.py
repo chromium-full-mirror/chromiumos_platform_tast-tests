@@ -18,7 +18,9 @@ def main():
         description="Run test accessing many files"
     )
     parser.add_argument(
-        "--kind", choices=["pmem-ext2", "virtiofs"], required=True
+        "--kind",
+        choices=["pmem-ext2", "pmem-ext2-dax", "virtiofs"],
+        required=True,
     )
     parser.add_argument(
         "--mount-src", metavar="PATH", required=True, help="path to mount from"
@@ -38,7 +40,10 @@ def main():
     # Mount guest's procfs on `/proc` to overload the host's procfs shared via virtiofs.
     command(["mount", "-t", "proc", "proc", "/proc"])
 
-    if args.kind == "pmem-ext2":
+    if args.kind == "pmem-ext2" or args.kind == "pmem-ext2-dax":
+        options = "rw,noatime,nosuid,nodev"
+        if args.kind == "pmem-ext2-dax":
+            options += ",dax"
         # Use the same mount options as `/device/google/bertha/fstab.bertha`
         command(
             [
@@ -46,7 +51,7 @@ def main():
                 "-t",
                 "ext2",
                 "-o",
-                "rw,noatime,nosuid,nodev",
+                options,
                 args.mount_src,
                 mount_dir,
             ]
