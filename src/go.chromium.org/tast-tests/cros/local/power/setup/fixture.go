@@ -1077,6 +1077,9 @@ func (f *powerUIFixture) SetUp(ctx context.Context, s *testing.FixtState) interf
 		chrome.DisableFeatures("FirmwareUpdaterApp"),
 		// Hide privacy sandbox dialog.
 		chrome.EnableFeatures("PrivacySandboxSettings4"),
+		// Prevents media provider from scanning external volumes which causes
+		// high CPU usage for a long period of time.
+		chrome.DisableFeatures("ArcExternalStorageAccess"),
 	}
 	opts = append(opts, f.powerFixtureOption.BrowserExtraOpts...)
 
