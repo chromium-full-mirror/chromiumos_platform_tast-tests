@@ -48,7 +48,6 @@ func init() {
 		BugComponent: "b:776546",
 		Attr: []string{
 			"group:mainline",
-			"informational", "group:criticalstaging",
 		},
 		Timeout:      1 * time.Minute,
 		HardwareDeps: hwdep.D(hwdep.SOFAudioDSP()),
