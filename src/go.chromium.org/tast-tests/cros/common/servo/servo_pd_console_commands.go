@@ -73,6 +73,20 @@ func (s *Servo) ServoSendDataSwapRequest(ctx context.Context) (pdControlMsgType,
 	return PDCtrlReserved, errors.Errorf("unknown PD control message value %q", replyValue)
 }
 
+// ServoSetDataSwapReject sets servo policy of acceptance of Data Role Swap Requests
+func (s *Servo) ServoSetDataSwapReject(ctx context.Context, RejectSwap bool) error {
+	action := 1
+	if RejectSwap {
+		action = 0
+	}
+
+	if err := s.RunServoCommand(ctx, "usbc_action drswap "+strconv.Itoa(action)); err != nil {
+		return errors.Wrap(err, "failed to set action for servo drswap")
+	}
+
+	return nil
+}
+
 // ServoSendPowerSwapRequest sends power swap request to be initiated by the Servo.
 func (s *Servo) ServoSendPowerSwapRequest(ctx context.Context) (pdControlMsgType, error) {
 	// Enable PD message so we can check the response from the DUT.
