@@ -6,7 +6,6 @@ package ossettings
 
 import (
 	"context"
-	"fmt"
 	"regexp"
 	"strings"
 	"time"
@@ -250,76 +249,6 @@ func SelectPreRevampOtherAPN(ctx context.Context, tconn *chrome.TestConn, apn st
 		ui.LeftClick(apnMenuItem),
 	)(ctx); err != nil {
 		return errors.Wrap(err, "failed to select other menu item")
-	}
-
-	return nil
-}
-
-// VerifyOnlyThisAPNEnabled verifies that only the specified |apn| is enabled.
-func VerifyOnlyThisAPNEnabled(ctx context.Context, tconn *chrome.TestConn, cr *chrome.Chrome, apn string) error {
-	ui := uiauto.New(tconn)
-
-	moreActionsButtonOfAPNFinder := nodewith.NameContaining(apn).NameRegex(regexp.MustCompile("APN is (connected|enabled)")).Role(role.Button).HasClass("icon-more-vert")
-	moreOptionsButtons, err := ui.NodesInfo(ctx, moreActionsButtonOfAPNFinder)
-	if err != nil {
-		return errors.Wrap(err, "failed to find more options button")
-	}
-
-	if len(moreOptionsButtons) == 0 {
-		return errors.Wrap(err, "failed to find an enabled or connected APN")
-	}
-	if len(moreOptionsButtons) > 1 {
-		return errors.Wrap(err, "failed to find exactly one enabled or connected APN")
-	}
-
-	return nil
-}
-
-// OpenDiscoverAPNDialogFromAPNSubpage opens the discover new APNs dialog when in the APN subpage
-func OpenDiscoverAPNDialogFromAPNSubpage(ctx context.Context, tconn *chrome.TestConn) error {
-	ui := uiauto.New(tconn)
-
-	if err := uiauto.Combine("Open discover APNs dialog",
-		ui.LeftClick(MoreApnActionsTridot),
-		ui.WithTimeout(10*time.Second).WaitUntilExists(ShowKnownApnsMenuBtn),
-		ui.LeftClick(ShowKnownApnsMenuBtn),
-	)(ctx); err != nil {
-		return errors.Wrap(err, "failed to open discover APNs dialog")
-	}
-	return nil
-}
-
-// SelectAPNFromDialog selects the provided |apnName| when the discover new APNs dialog is open.
-func SelectAPNFromDialog(ctx context.Context, tconn *chrome.TestConn, apnName string) error {
-	chooseApnDialog := nodewith.Name("Choose an APN").Role(role.Dialog)
-	// The operator may provide multiple similar APNs, so the finder needs to be specific to the name.
-	// There might be a space before and after the node's name of the APN.
-	// Example of a the flaky circumstance where the failure occurs due to multiple nodes being matched:
-	// - Existing APN nodes: ` internet`, ` internet ipv4`, ` internet ipv6`.
-	// - The target APN name: `internet`.
-	nameReg := regexp.MustCompile(fmt.Sprintf(`^[\s]?%s[\s]?$`, apnName))
-	apnSelection := nodewith.NameRegex(nameReg).Role(role.StaticText).Ancestor(chooseApnDialog)
-
-	ui := uiauto.New(tconn)
-	if err := ui.WithTimeout(3 * time.Second).WaitUntilExists(apnSelection)(ctx); err != nil {
-		return errors.Wrapf(err, "%q does does not show as a known APN", apnName)
-	}
-
-	if err := uiauto.Combine("Add known APN",
-		ui.LeftClick(apnSelection),
-		ui.LeftClick(ConfirmButton.Ancestor(chooseApnDialog)),
-		ui.WithTimeout(3*time.Second).WaitUntilGone(ConfirmButton.Ancestor(chooseApnDialog)),
-		ui.EnsureGoneFor(ConfirmButton.Ancestor(chooseApnDialog), 5*time.Second),
-	)(ctx); err != nil {
-		return errors.Wrapf(err, "failed to  known APN %q", apnName)
-	}
-
-	if err := ui.WaitUntilGone(nodewith.Name("Automatically detected").Role(role.StaticText))(ctx); err != nil {
-		return errors.Wrap(err, "failed to remove automatically detected APN")
-	}
-
-	if err := ui.EnsureGoneFor(nodewith.Name("Automatically detected").Role(role.StaticText), 3*time.Second)(ctx); err != nil {
-		return errors.Wrap(err, "failed to remove automatically detected APN")
 	}
 
 	return nil

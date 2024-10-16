@@ -387,6 +387,39 @@ func (s *OSSettings) ClickMoreActionButtonOfAnAPN(apn *ApnConfig, apnState ApnSt
 	)
 }
 
+// OpenDiscoverAPNDialogFromAPNSubpage opens the discover new APNs dialog when in the APN subpage.
+func (s *OSSettings) OpenDiscoverAPNDialogFromAPNSubpage() uiauto.Action {
+	chooseApnDialog := nodewith.Name("Choose an APN").Role(role.Dialog)
+	return uiauto.Combine("open discover APNs dialog",
+		s.LeftClickUntil(MoreApnActionsTridot, s.WithTimeout(5*time.Second).WaitUntilExists(ShowKnownApnsMenuBtn)),
+		s.MakeVisible(ShowKnownApnsMenuBtn),
+		s.LeftClickUntil(ShowKnownApnsMenuBtn, s.WithTimeout(5*time.Second).WaitUntilExists(chooseApnDialog)),
+	)
+}
+
+// SelectAPNFromDialog selects the provided |apnName| when the discover new APNs dialog is open.
+func (s *OSSettings) SelectAPNFromDialog(apnName string) uiauto.Action {
+	chooseApnDialog := nodewith.Name("Choose an APN").Role(role.Dialog)
+	// The operator may provide multiple similar APNs, so the finder needs to be specific to the name.
+	// There might be a space before and after the node's name of the APN.
+	// Example of a the flaky circumstance where the failure occurs due to multiple nodes being matched:
+	// - Existing APN nodes: ` internet`, ` internet ipv4`, ` internet ipv6`.
+	// - The target APN name: `internet`.
+	nameReg := regexp.MustCompile(fmt.Sprintf(`^[\s]?%s[\s]?$`, apnName))
+	apnSelection := nodewith.NameRegex(nameReg).Role(role.StaticText).Ancestor(chooseApnDialog)
+	autoDetectedText := nodewith.Name("Automatically detected").Role(role.StaticText)
+
+	return uiauto.Combine("add known APN",
+		s.WithTimeout(3*time.Second).WaitUntilExists(apnSelection),
+		s.LeftClick(apnSelection),
+		s.LeftClick(ConfirmButton.Ancestor(chooseApnDialog)),
+		s.WithTimeout(3*time.Second).WaitUntilGone(ConfirmButton.Ancestor(chooseApnDialog)),
+		s.EnsureGoneFor(ConfirmButton.Ancestor(chooseApnDialog), 5*time.Second),
+		s.WaitUntilGone(autoDetectedText),
+		s.EnsureGoneFor(autoDetectedText, 3*time.Second),
+	)
+}
+
 func apnMoreActionButtonFinder(apn *ApnConfig, apnState ApnState) *nodewith.Finder {
 	stateName := fmt.Sprintf(`APN is %s`, regexp.QuoteMeta(strings.ToLower(string(apnState))))
 	if apnState == ApnEnabled {

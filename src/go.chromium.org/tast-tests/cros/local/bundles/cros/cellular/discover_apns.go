@@ -7,6 +7,8 @@ package cellular
 import (
 	"context"
 	"fmt"
+	"regexp"
+	"strings"
 	"time"
 
 	"go.chromium.org/tast-tests/cros/common/shillconst"
@@ -40,7 +42,7 @@ func init() {
 
 func DiscoverApns(ctx context.Context, s *testing.State) {
 	cleanupCtx := ctx
-	ctx, cancel := ctxutil.Shorten(ctx, 30*time.Second)
+	ctx, cancel := ctxutil.Shorten(ctx, 10*time.Second)
 	defer cancel()
 
 	// In case roaming is required for the SIM on the device.
@@ -69,7 +71,7 @@ func DiscoverApns(ctx context.Context, s *testing.State) {
 
 	knownAPNs, err := cellular.GetKnownApns(ctx)
 	if err != nil {
-		s.Fatal("Error getting known APNs: ", knownAPNs)
+		s.Fatal("Error getting known APNs: ", err)
 	}
 
 	cr, err := chrome.New(ctx, chrome.EnableFeatures("ApnRevamp"))
@@ -83,42 +85,33 @@ func DiscoverApns(ctx context.Context, s *testing.State) {
 		s.Fatal("Failed to create Test API connection: ", err)
 	}
 
-	mdp, err := ossettings.OpenMobileDataSubpage(ctx, tconn, cr)
+	settings, err := ossettings.LaunchAtMobileData(ctx, tconn, cr)
 	if err != nil {
 		s.Fatal("Failed to open mobile data subpage: ", err)
 	}
-	defer mdp.Close(cleanupCtx)
+	defer settings.Close(cleanupCtx)
 	defer faillog.DumpUITreeWithScreenshotOnError(cleanupCtx, s.OutDir(), s.HasError, cr, "ossettings")
 
-	if err := ossettings.GoToActiveNetworkApnSubpage(ctx, tconn, true /*isFromMobileDataSubpage*/); err != nil {
+	if err := uiauto.Combine("go to APN page of the active cellular network",
+		settings.NavigateToMobileNetworkDetailsPage(cr, ossettings.ActiveCellularBtn),
+		settings.NavigateToApnPage(cr),
+	)(ctx); err != nil {
 		s.Fatal("Failed to go to apn subpage: ", err)
 	}
 
-	if err := ossettings.OpenDiscoverAPNDialogFromAPNSubpage(ctx, tconn); err != nil {
+	if err := uiauto.Combine("select and verify the first APN",
+		settings.OpenDiscoverAPNDialogFromAPNSubpage(),
+		settings.SelectAPNFromDialog(firstAPNName),
+		settings.VerifyApnConnected(cr, firstAPNName, "ui"),
+		verifyOnlyThisAPNEnabled(settings, firstAPNName),
+	)(ctx); err != nil {
+		s.Fatal("Failed to verify the first APN is the only APN: ", err)
+	}
+
+	if err := settings.OpenDiscoverAPNDialogFromAPNSubpage()(ctx); err != nil {
 		s.Fatal("Failed to open discover APN dialog: ", err)
 	}
 
-	if err := ossettings.SelectAPNFromDialog(ctx, tconn, firstAPNName); err != nil {
-		s.Fatal("Failed to add known APN: ", err)
-	}
-
-	if err := navigateFromNetworkMainOrCellularDetailsIfNeeded(ctx, tconn); err != nil {
-		s.Fatal("Failed to navigate from network or main cellular details pages: ", err)
-	}
-
-	if err := mdp.VerifyAPNSubpageConnectedApnUI(ctx, tconn, cr, firstAPNName, "ui"); err != nil {
-		s.Fatal("Error to verify APN subpage connected status: ", err)
-	}
-
-	if err := ossettings.VerifyOnlyThisAPNEnabled(ctx, tconn, cr, firstAPNName); err != nil {
-		s.Fatal("Error to verify there is only one enabled APN: ", err)
-	}
-
-	if err := ossettings.OpenDiscoverAPNDialogFromAPNSubpage(ctx, tconn); err != nil {
-		s.Fatal("Failed to open discover APN dialog: ", err)
-	}
-
-	ui := uiauto.New(tconn)
 	secondAPNName := firstAPNName
 	for _, knownAPN := range knownAPNs {
 		apnName := fmt.Sprintf("%v", knownAPN.APNInfo[shillconst.DevicePropertyCellularAPNInfoApnName])
@@ -127,46 +120,46 @@ func DiscoverApns(ctx context.Context, s *testing.State) {
 			continue
 		}
 		apnSelection := nodewith.NameContaining(apnName).Role(role.StaticText)
-		if err := ui.WaitUntilExists(apnSelection)(ctx); err != nil {
+		if err := settings.WaitUntilExists(apnSelection)(ctx); err != nil {
 			continue
 		}
 		secondAPNName = apnName
 		break
 	}
 
-	if err := ossettings.SelectAPNFromDialog(ctx, tconn, secondAPNName); err != nil {
-		s.Fatal("Failed to add known APN: ", err)
-	}
-
-	if err := navigateFromNetworkMainOrCellularDetailsIfNeeded(ctx, tconn); err != nil {
-		s.Fatal("Failed to navigate from network or main cellular details pages: ", err)
-	}
-
-	if err := ui.WithTimeout(5 * time.Second).WaitUntilExists(nodewith.NameContaining(secondAPNName).NameContaining("connected").Role(role.Button))(ctx); err != nil {
-		s.Fatal("Error to show added APN status: ", err)
-	}
-
-	if err := ossettings.VerifyOnlyThisAPNEnabled(ctx, tconn, cr, secondAPNName); err != nil {
-		s.Fatal("Error to verify there is only one enabled APN: ", err)
+	if err := uiauto.Combine("select and verify the second APN",
+		settings.SelectAPNFromDialog(secondAPNName),
+		verifyOnlyThisAPNEnabled(settings, secondAPNName),
+	)(ctx); err != nil {
+		s.Fatal("Failed to verify the second APN is the only APN: ", err)
 	}
 }
 
-func navigateFromNetworkMainOrCellularDetailsIfNeeded(ctx context.Context, tconn *chrome.TestConn) error {
-	ui := uiauto.New(tconn)
-	mobileButton := nodewith.Name("Mobile data").Role(role.Button)
-	if err := ui.WithTimeout(5 * time.Second).WaitUntilExists(mobileButton.Focusable())(ctx); err == nil {
-		testing.ContextLog(ctx, "Currently at all network settings")
-		if err := ui.LeftClick(mobileButton.Focusable())(ctx); err != nil {
-			return errors.Wrap(err, "failed to go to from Network subpage to mobile data subpage")
+// verifyOnlyThisAPNEnabled verifies that only the specified |apn| is enabled.
+func verifyOnlyThisAPNEnabled(settings *ossettings.OSSettings, apn string) uiauto.Action {
+	return func(ctx context.Context) error {
+		moreActionsButtonOfAPNFinder := nodewith.NameRegex(regexp.MustCompile("APN is (connected|enabled)")).Role(role.Button).HasClass("icon-more-vert")
+		// Ensure the page is loaded.
+		if err := settings.WaitUntilExists(moreActionsButtonOfAPNFinder.First())(ctx); err != nil {
+			return errors.Wrap(err, "failed to wait until node exits")
 		}
-		if err := ossettings.GoToActiveNetworkApnSubpage(ctx, tconn /*isFromMobileDataSubpage=*/, true); err != nil {
-			return errors.Wrap(err, "failed to go to from Network subpage to active network's APN settings")
+		moreOptionsButtons, err := settings.NodesInfo(ctx, moreActionsButtonOfAPNFinder)
+		if err != nil {
+			return errors.Wrap(err, "failed to find more options button")
 		}
-	} else if err := ui.WithTimeout(5 * time.Second).WaitUntilExists(ossettings.APNSubpageButton.Focusable())(ctx); err == nil {
-		testing.ContextLog(ctx, "Currently at cellular details page")
-		if err := ui.LeftClick(ossettings.APNSubpageButton.Focusable())(ctx); err != nil {
-			return errors.Wrap(err, "failed to go to from Network subpage to mobile data settings")
+
+		if len(moreOptionsButtons) == 0 {
+			return errors.Wrap(err, "failed to find an enabled or connected APN")
 		}
+		if len(moreOptionsButtons) > 1 {
+			return errors.Wrap(err, "failed to find exactly one enabled or connected APN")
+		}
+
+		// Check if the only enabled APN is the expected APN.
+		if !strings.Contains(moreOptionsButtons[0].Name, apn) {
+			return errors.Errorf("unexpected enabled APN, got: %q; want: %q", moreOptionsButtons[0].Name, apn)
+		}
+
+		return nil
 	}
-	return nil
 }
