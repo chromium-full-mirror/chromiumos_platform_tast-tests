@@ -50,26 +50,30 @@ func init() {
 			{
 				ExtraAttr:         []string{"group:input-tools-upstream"},
 				ExtraHardwareDeps: hwdep.D(hwdep.Model(pre.StableModels...)),
-				Fixture:           fixture.ClamshellNonVK,
+				// TODO: b:354660409 - Use ClamshellNonVK fixture once the fix to make this tast test compatible with multiword suggest is finished.
+				Fixture: fixture.ClamshellNonVKWithoutMultiwordSuggest,
 			},
 			{
 				Name:              "guest",
 				ExtraAttr:         []string{"group:input-tools-upstream"},
 				ExtraHardwareDeps: hwdep.D(hwdep.Model(pre.StableModels...)),
-				Fixture:           fixture.ClamshellNonVKInGuest,
+				// TODO: b:354660409 - Use ClamshellNonVKInGuest fixture once the fix to make this tast test compatible with multiword suggest is finished.
+				Fixture: fixture.ClamshellNonVKInGuestWithoutMultiwordSuggest,
 			},
 			{
 				Name:              "incognito",
 				ExtraAttr:         []string{"group:input-tools-upstream"},
 				ExtraHardwareDeps: hwdep.D(hwdep.Model(pre.StableModels...)),
-				Fixture:           fixture.ClamshellNonVK,
+				// TODO: b:354660409 - Use ClamshellNonVK fixture once the fix to make this tast test compatible with multiword suggest is finished.
+				Fixture: fixture.ClamshellNonVKWithoutMultiwordSuggest,
 			},
 			{
 				// Only run informational tests in consumer mode.
 				Name:              "informational",
 				ExtraAttr:         []string{"informational"},
 				ExtraHardwareDeps: hwdep.D(pre.InputsUnstableModels),
-				Fixture:           fixture.ClamshellNonVK,
+				// TODO: b:354660409 - Use ClamshellNonVK fixture once the fix to make this tast test compatible with multiword suggest is finished.
+				Fixture: fixture.ClamshellNonVKWithoutMultiwordSuggest,
 			},
 		},
 	})

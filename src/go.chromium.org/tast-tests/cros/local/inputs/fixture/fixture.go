@@ -48,6 +48,7 @@ const (
 	altClickAndSixPackCustomization
 	orca
 	picker
+	withoutAssistMultiword
 )
 
 // List of fixture names for inputs.
@@ -62,12 +63,14 @@ const (
 	ClamshellNonVKWithFirstPartyVietnamese            = "clamshellNonVKWithFirstPartyVietnamese"
 	ClamshellNonVK                                    = "clamshellNonVK"
 	ClamshellNonVKStereoAloopLoaded                   = "clamshellNonVKStereoAloopLoaded"
+	ClamshellNonVKInGAIA                              = "clamshellNonVKInGAIA"
 	ClamshellNonVKInGuest                             = "clamshellNonVKInGuest"
+	ClamshellNonVKInGuestWithoutMultiwordSuggest      = "clamshellNonVKInGuestWithoutMultiwordSuggest"
 	ClamshellNonVKRestart                             = "clamshellNonVKRestart"
 	ClamshellNonVKWithMultiwordSuggest                = "clamshellNonVKWithMultiwordSuggest"
 	ClamshellNonVKWithOrca                            = "clamshellNonVKWithOrca"
 	ClamshellNonVKWithPicker                          = "clamshellNonVKWithPicker"
-	ClamshellNonVKInGAIA                              = "clamshellNonVKInGAIA"
+	ClamshellNonVKWithoutMultiwordSuggest             = "clamshellNonVKWithoutMultiwordSuggest"
 	TabletVK                                          = "tabletVK"
 	TabletVKStereoAloopLoaded                         = "tabletVKStereoAloopLoaded"
 	TabletVKRestart                                   = "tabletVKRestart"
@@ -251,6 +254,20 @@ func init() {
 		TearDownTimeout: chrome.ResetTimeout,
 	})
 	testing.AddFixture(&testing.Fixture{
+		Name: ClamshellNonVKWithoutMultiwordSuggest,
+		Desc: "Clamshell mode with VK disabled and multiword suggest disabled",
+		Contacts: []string{
+			"hdchuong@google.com",
+			"essential-inputs-team@google.com",
+		},
+		Impl:            inputsFixture(clamshellMode, false, false, browser.TypeAsh, withoutAssistMultiword),
+		SetUpTimeout:    chrome.LoginTimeout,
+		PreTestTimeout:  preTestTimeout,
+		PostTestTimeout: postTestTimeout,
+		ResetTimeout:    resetTimeout,
+		TearDownTimeout: chrome.ResetTimeout,
+	})
+	testing.AddFixture(&testing.Fixture{
 		Name: ClamshellNonVKWithOrca,
 		Desc: "Clamshell mode with VK disabled and Orca enabled",
 		Contacts: []string{
@@ -315,6 +332,20 @@ func init() {
 			"essential-inputs-team@google.com",
 		},
 		Impl:            inputsFixture(clamshellMode, false, false, browser.TypeAsh, guestLogin, emojiPickerGifSupport),
+		SetUpTimeout:    chrome.LoginTimeout,
+		PreTestTimeout:  preTestTimeout,
+		PostTestTimeout: postTestTimeout,
+		ResetTimeout:    resetTimeout,
+		TearDownTimeout: chrome.ResetTimeout,
+	})
+	testing.AddFixture(&testing.Fixture{
+		Name: ClamshellNonVKInGuestWithoutMultiwordSuggest,
+		Desc: "Clamshell mode in guest login with VK disabled and multiword suggest disabled",
+		Contacts: []string{
+			"hdchuong@google.com",
+			"essential-inputs-team@google.com",
+		},
+		Impl:            inputsFixture(clamshellMode, false, false, browser.TypeAsh, guestLogin, withoutAssistMultiword),
 		SetUpTimeout:    chrome.LoginTimeout,
 		PreTestTimeout:  preTestTimeout,
 		PostTestTimeout: postTestTimeout,
@@ -701,6 +732,8 @@ func (f *inputsFixtureImpl) SetUp(ctx context.Context, s *testing.FixtState) int
 			opts = append(opts, chrome.ExtraArgs("--enable-features=Picker,PickerGrid"))
 			opts = append(opts, chrome.ExtraArgs("--picker-feature-key="+s.RequiredVar("inputs.Picker.pickerFeatureTestKey")))
 			opts = append(opts, chrome.ExtraArgs("--disable-sync"))
+		case withoutAssistMultiword:
+			opts = append(opts, chrome.ExtraArgs("--disable-features=AssistMultiWord"))
 		}
 	}
 
