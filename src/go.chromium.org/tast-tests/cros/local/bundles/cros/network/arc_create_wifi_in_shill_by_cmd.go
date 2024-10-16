@@ -125,7 +125,9 @@ func ARCCreateWifiInShillByCmd(ctx context.Context, s *testing.State) {
 
 	failReg := regexp.MustCompile(`.*Save failed.*`)
 	if failReg.Match(out) {
-		s.Fatal("Failed to add network, output is: ", string(out))
+		// This may be caused by the ARC main internal handler is blocked, so the call is timeout.
+		// See detail: b/356289753
+		s.Fatal("Failed to add network, output is: ", string(out), ", might be caused by that the call is timeout")
 	}
 
 	services, _, err := m.ServicesByTechnology(ctx, shill.TechnologyWifi)
