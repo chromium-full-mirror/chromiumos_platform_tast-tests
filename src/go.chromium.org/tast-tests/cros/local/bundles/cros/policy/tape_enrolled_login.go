@@ -48,7 +48,7 @@ func TAPEEnrolledLogin(ctx context.Context, s *testing.State) {
 	ctx, cancel := ctxutil.Shorten(ctx, 15*time.Second)
 	defer cancel()
 
-	tapeClient, err := tape.NewClient(ctx, []byte(s.RequiredVar(tape.ServiceAccountVar)))
+	tapeClient, _ := tape.NewClient(ctx, []byte(s.RequiredVar(tape.ServiceAccountVar)))
 
 	tapePolicies := &tape.AllowDinosaurEasterEggUsers{
 		AllowDinosaurEasterEgg: tape.NULLABLEBOOLEAN_FALSE,

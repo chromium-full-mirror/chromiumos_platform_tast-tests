@@ -146,6 +146,7 @@ func ReportingLoginLogoutPolicy(ctx context.Context, s *testing.State) {
 		if record == nil {
 			s.Errorf("Record %d is nil", i)
 		}
+		//lint:ignore SA5011 record is actually checked right above
 		if *record.Record.Destination == rep.Destination_LOCK_UNLOCK_EVENTS {
 			lockUnlockEvents++
 		} else if *record.Record.Destination == rep.Destination_LOGIN_LOGOUT_EVENTS {

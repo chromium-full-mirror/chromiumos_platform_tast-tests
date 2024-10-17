@@ -231,8 +231,10 @@ func HeartbeatReporting(ctx context.Context, s *testing.State) {
 			// If the test uses the autopush server then query the autopush server for the events.
 			// Otherwise query the prod server.
 			if params.Autopush {
+				//lint:ignore SA4006 False positive, err is actually checked a few lines below
 				events, err = reportingutil.LookupEvents(ctx, customerID, clientID, APIKey, "HEARTBEAT_EVENTS", testStartTime)
-			} else {
+				} else {
+				//lint:ignore SA4006 False positive, err is actually checked a few lines below
 				events, err = reportingutil.LookupProdEvents(ctx, customerID, clientID, ProdAPIKey, "HEARTBEAT_EVENTS", testStartTime)
 			}
 		} else {

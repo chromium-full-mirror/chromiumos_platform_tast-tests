@@ -185,6 +185,7 @@ func ReportingNetworkTelemetry(ctx context.Context, s *testing.State) {
 			s.Errorf("Record %d is nil", i)
 		}
 		var m reporting.MetricData
+		//lint:ignore SA5011 record is actually checked right above
 		if err := proto.Unmarshal(record.Record.Data, &m); err != nil {
 			s.Errorf("Could not parse telemetry metric record %d: %s", i, err)
 		}

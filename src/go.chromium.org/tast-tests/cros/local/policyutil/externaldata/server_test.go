@@ -41,7 +41,7 @@ func TestServeURL(t *testing.T) {
 		t.Fatal("Failed to read response body: ", err)
 	}
 
-	if bytes.Compare(testData, body) != 0 {
+	if !bytes.Equal(testData, body) {
 		t.Errorf("Unexpected response: want %q; got %q", testData, body)
 	}
 }

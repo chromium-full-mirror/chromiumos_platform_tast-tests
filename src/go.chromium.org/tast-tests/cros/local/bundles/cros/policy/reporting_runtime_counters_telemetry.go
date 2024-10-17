@@ -218,6 +218,7 @@ func ReportingRuntimeCountersTelemetry(ctx context.Context, s *testing.State) {
 		s.Fatal("Record is nil")
 	}
 	var m reporting.MetricData
+	//lint:ignore SA5011 record is actually checked right above
 	if err := proto.Unmarshal(record.Record.Data, &m); err != nil {
 		s.Fatalf("Could not parse telemetry metric record: %s", err)
 	}

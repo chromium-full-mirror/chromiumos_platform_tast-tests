@@ -83,7 +83,7 @@ func TriggerRemoteSupportRegistration(ctx context.Context, params networkrequest
 		return errors.Errorf("unexpected success status of remote desktop launch: got %t want %t", didCRDLaunchSucceed, policyParam.ShouldCRDLaunchSucceed)
 	}
 
-	if !policyParam.ShouldCRDLaunchSucceed && errContainsRemoteSupportBlockedMessage == false {
+	if !policyParam.ShouldCRDLaunchSucceed && !errContainsRemoteSupportBlockedMessage {
 		return errors.Wrap(err, "remote desktop failure message did not include connections blocked")
 	}
 

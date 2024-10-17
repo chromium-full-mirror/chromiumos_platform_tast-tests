@@ -118,7 +118,7 @@ func TriggerCalendarIntegration(ctx context.Context, params networkrequestmonito
 	beforeOpeningCalendarYearLabel := nodewith.Name(strconv.Itoa(beforeOpeningCalendarYear)).HasClass("Label").Onscreen()
 	if found, err := ui.IsNodeFound(ctx, beforeOpeningCalendarYearLabel); err != nil {
 		return errors.Wrap(err, "failed to check beforeOpeningCalendarYearLabel after clicking on the date tray")
-	} else if found != true {
+	} else if !found {
 		yearInt = time.Now().Year()
 	}
 
@@ -167,18 +167,18 @@ func TriggerCalendarIntegration(ctx context.Context, params networkrequestmonito
 		}
 		if found, err := ui.IsNodeFound(ctx, eventCloseButtonView); err != nil {
 			return errors.Wrap(err, "failed to check event list view close button while finding the first monday cell")
-		} else if found == true {
+		} else if found {
 			didFindEventListView = true
 			break
 		}
 	}
 
 	// Check for event list.
-	if policyParam.ShouldFindEventListView && didFindEventListView == false {
+	if policyParam.ShouldFindEventListView && !didFindEventListView {
 		return errors.New("did not find expected event list view")
 	}
 
-	if !policyParam.ShouldFindEventListView && didFindEventListView == true {
+	if !policyParam.ShouldFindEventListView && didFindEventListView {
 		return errors.New("found unexpected event list view")
 	}
 

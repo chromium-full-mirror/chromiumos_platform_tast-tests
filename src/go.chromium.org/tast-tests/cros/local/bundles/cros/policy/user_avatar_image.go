@@ -111,7 +111,7 @@ func UserAvatarImage(ctx context.Context, s *testing.State) {
 				if err := ui.WithTimeout(time.Second).LeftClick(avatarSubpageButton)(ctx); err != nil {
 					s.Fatal("Failed to continue clicking avatar subpage button: ", err)
 				}
-				if found, err := ui.IsNodeFound(ctx, breadcrumbAvatar); found != false {
+				if found, err := ui.IsNodeFound(ctx, breadcrumbAvatar); found {
 					s.Fatal("Failed to verify that avatar subpage is disabled: ", err)
 				}
 			} else {

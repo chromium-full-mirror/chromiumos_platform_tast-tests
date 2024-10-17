@@ -13,7 +13,6 @@ import (
 	"net/http"
 	"os"
 	"path/filepath"
-	"regexp"
 	"time"
 
 	empb "go.chromium.org/chromiumos/policy/chromium/policy/enterprise_management_proto"
@@ -44,10 +43,6 @@ const EnrollmentFakeDMSDirRoot = "/var/enrolling-fdms"
 
 // fakeDMServerPath is the path where the executable binary of the fake_dmserver is located.
 var fakeDMServerPath = "/usr/local/libexec/chrome-binary-tests/fake_dmserver"
-
-// Regular expression to match any characters in the policy selector that must
-// be sanitized prior to this selector being as as part of the file name.
-var selectorSanitizeRE = regexp.MustCompile("[^A-Za-z0-9.@-]")
 
 // A FakeDMS struct contains information about a running policy_testserver instance.
 type FakeDMS struct {

@@ -19,6 +19,7 @@ import (
 	"go.chromium.org/tast-tests/cros/remote/updateutil"
 	"go.chromium.org/tast-tests/cros/services/cros/autoupdate"
 	"go.chromium.org/tast-tests/cros/services/cros/nebraska"
+	//lint:ignore ST1019 multiple imports with different identifiers help code readability
 	policypkg "go.chromium.org/tast-tests/cros/services/cros/policy"
 	pspb "go.chromium.org/tast-tests/cros/services/cros/policy"
 

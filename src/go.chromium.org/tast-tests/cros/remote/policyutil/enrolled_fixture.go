@@ -155,7 +155,7 @@ func (e *enrolledFixt) SetUp(ctx context.Context, s *testing.FixtState) interfac
 	// if it is closer than the SetUp timeout.
 	if deadline, ok := ctx.Deadline(); !ok {
 		s.Fatal("Missing deadline for context: ", ctx)
-	} else if diff := deadline.Sub(time.Now()); diff < (enrollmentSetupTimeout - time.Minute) {
+	} else if diff := time.Until(deadline); diff < (enrollmentSetupTimeout - time.Minute) {
 		s.Fatalf("Not enough time until global timeout: have %s; need %s", diff, enrollmentSetupTimeout)
 	}
 
@@ -212,7 +212,7 @@ func (e *enrolledFixt) SetUp(ctx context.Context, s *testing.FixtState) interfac
 		// This helps differentiate real issues from timeout hitting different components.
 		if deadline, ok := ctx.Deadline(); !ok {
 			s.Log("Missing deadline for context: ", ctx)
-		} else if diff := deadline.Sub(time.Now()); diff < enrollmentRunTimeout {
+		} else if diff := time.Until(deadline); diff < enrollmentRunTimeout {
 			s.Logf("Not enough time to perform setup and enrollment: have %s; need %s", diff, enrollmentRunTimeout)
 		}
 

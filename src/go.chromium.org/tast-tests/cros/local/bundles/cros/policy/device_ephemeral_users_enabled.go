@@ -83,10 +83,10 @@ func DeviceEphemeralUsersEnabled(ctx context.Context, s *testing.State) {
 				opts = append(opts, chrome.EphemeralUser())
 			}
 			cr, err := chrome.New(ctx, opts...)
-			defer cr.Close(ctx)
 			if err != nil {
 				s.Fatal("Failed to start Chrome: ", err)
 			}
+			defer cr.Close(ctx)
 
 			tconn, err := cr.SigninProfileTestAPIConn(ctx)
 			if err != nil {

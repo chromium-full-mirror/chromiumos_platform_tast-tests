@@ -157,7 +157,7 @@ func ReportingDisplayDbus(ctx context.Context, s *testing.State) {
 	} else {
 		// Not expecting any events.
 		select {
-		case ev, _ := <-ew.Events():
+		case ev := <-ew.Events():
 			s.Fatal("Found event with policy disabled, event: ", ev)
 		case <-time.After(findEventTimeout):
 			testing.ContextLog(ctx, "findEventTimeout passed and no event found")

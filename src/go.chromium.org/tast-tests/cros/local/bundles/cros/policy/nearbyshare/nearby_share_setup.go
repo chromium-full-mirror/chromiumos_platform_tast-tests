@@ -95,7 +95,3 @@ func VerifyNearbySharePermissions(ctx context.Context, params networkrequestmoni
 	}
 	return nil
 }
-
-func selectorFinder(name, class string) *nodewith.Finder {
-	return nodewith.Role(role.ListBoxOption).Name(name).HasClass(class)
-}

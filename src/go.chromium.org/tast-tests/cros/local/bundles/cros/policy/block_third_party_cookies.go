@@ -119,7 +119,7 @@ func BlockThirdPartyCookies(ctx context.Context, s *testing.State) {
 	// Serve the modified HTML content instead of the original file.
 	IPConfiguration.HandleFunc("/third_party_cookies.html", func(w http.ResponseWriter, req *http.Request) {
 		w.WriteHeader(200)
-		fmt.Fprintf(w, htmlContent)
+		fmt.Fprint(w, htmlContent)
 	})
 
 	// Serve the unmodified js content and set the third-party cookie.
@@ -135,7 +135,7 @@ func BlockThirdPartyCookies(ctx context.Context, s *testing.State) {
 		}
 		http.SetCookie(w, cookie)
 		w.WriteHeader(200)
-		fmt.Fprintf(w, jsContent)
+		fmt.Fprint(w, jsContent)
 	})
 
 	// Start both servers.

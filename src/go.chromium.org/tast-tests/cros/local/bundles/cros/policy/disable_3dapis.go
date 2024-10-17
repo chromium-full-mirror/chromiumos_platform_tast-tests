@@ -102,7 +102,7 @@ func Disable3DAPIs(ctx context.Context, s *testing.State) {
 				s.Fatal("Could not get webgl status: ", err)
 			}
 
-			expectEnabled := param.value.Stat == policy.StatusUnset || param.value.Val == false
+			expectEnabled := param.value.Stat == policy.StatusUnset || !param.value.Val
 
 			if !expectEnabled && enabled {
 				s.Error("WebGL not blocked")

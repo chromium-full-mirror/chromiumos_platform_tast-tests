@@ -7,11 +7,8 @@ package autofillpayments
 
 import (
 	"context"
-	"crypto/tls"
 	"fmt"
 	"net"
-	"net/http"
-	"net/http/httptest"
 	"time"
 
 	"go.chromium.org/tast-tests/cros/common/policy"
@@ -91,25 +88,6 @@ func GetTestCases() map[networkrequestmonitor.PolicySetting]testCase {
 			TrafficShouldNotFind: []string{},
 		},
 	}
-}
-
-func newLocalHTTPSTestServer(htmlFile, certFile, keyFile string) (*httptest.Server, error) {
-	server := httptest.NewUnstartedServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-		switch r.Method {
-		case "GET":
-			http.ServeFile(w, r, htmlFile)
-		case "POST":
-			fmt.Fprintf(w, "Thanks for filling in your credit card details.")
-		}
-	}))
-
-	cert, err := tls.LoadX509KeyPair(certFile, keyFile)
-	if err != nil {
-		return nil, err
-	}
-	server.TLS = &tls.Config{Certificates: []tls.Certificate{cert}}
-	server.StartTLS()
-	return server, nil
 }
 
 // TriggerAutofillCreditCardEnabled triggers autofill for credit card

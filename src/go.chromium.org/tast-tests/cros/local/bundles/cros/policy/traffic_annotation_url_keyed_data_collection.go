@@ -27,8 +27,6 @@ import (
 	"go.chromium.org/tast/core/testing"
 )
 
-const ukmTestURL = "https://www.google.com"
-
 func init() {
 	testing.AddTest(&testing.Test{
 		Func: TrafficAnnotationURLKeyedDataCollection,

@@ -155,7 +155,7 @@ func EditBookmarksEnabled(ctx context.Context, s *testing.State) {
 
 			if allowed, err := canOpenInitiallyAddedBookmark(ctx, browserUI); err != nil {
 				s.Fatal("Encountered error when executing test logic for opening existing bookmark, Err: ", err)
-			} else if allowed != true { // Opening already bookmarked pages is always allowed.
+			} else if !allowed { // Opening already bookmarked pages is always allowed.
 				s.Errorf("Unexpected result for opening existing bookmark; got %t, want true", allowed)
 			}
 		})
@@ -176,7 +176,7 @@ func addInitialBookmark(ctx context.Context, tconn *chrome.TestConn, cr *chrome.
 
 	if addedBm, err := canAddBookmark(ctx, browserUI, keyboard); err != nil {
 		return errors.Wrap(err, "encountered error when adding bookmark")
-	} else if addedBm != true {
+	} else if !addedBm {
 		return errors.New("could not add bookmark")
 	}
 	return nil
@@ -191,7 +191,7 @@ func canAddBookmark(ctx context.Context, browserUI *browser.Browser, keyboard *i
 	// is related to bookmark functionality being enabled.
 	if canSeeBookmarkIcon, err := browserUI.IsBookmarkStarIconVisible(ctx); err != nil {
 		return false, errors.Wrap(err, "could not check if bookmark icon was visible")
-	} else if canSeeBookmarkIcon != true {
+	} else if !canSeeBookmarkIcon {
 		return false, nil
 	}
 
@@ -230,7 +230,7 @@ func canRenameBookmark(ctx context.Context, browserUI *browser.Browser, keyboard
 	// is related to bookmark functionality being enabled.
 	if canSeeBookmarkIcon, err := browserUI.IsBookmarkStarIconVisible(ctx); err != nil {
 		return false, errors.Wrap(err, "could not check if bookmark icon was visible")
-	} else if canSeeBookmarkIcon != true {
+	} else if !canSeeBookmarkIcon {
 		return false, nil
 	}
 
@@ -259,7 +259,7 @@ func canRemoveBookmark(ctx context.Context, browserUI *browser.Browser, keyboard
 	// is related to bookmark functionality being enabled.
 	if canSeeBookmarkIcon, err := browserUI.IsBookmarkStarIconVisible(ctx); err != nil {
 		return false, errors.Wrap(err, "could not check if bookmark icon was visible")
-	} else if canSeeBookmarkIcon != true {
+	} else if !canSeeBookmarkIcon {
 		return false, nil
 	}
 
@@ -278,7 +278,7 @@ func canRemoveBookmark(ctx context.Context, browserUI *browser.Browser, keyboard
 	if err != nil {
 		return false, errors.Wrapf(err, "could not check existence of bookmark %s", bookmarkName)
 	}
-	if visibleAfterRemoving == true {
+	if visibleAfterRemoving {
 		return false, errors.New("unexpected visibility of the bookmark after removing it")
 	}
 	return true, nil

@@ -55,16 +55,15 @@ func CheckTBTDevice(expected bool) error {
 	}
 
 	found := ""
+	// Check for retimers.
+	// They are of the form "0-0:1.1" or "0-0:3.1".
+	re := regexp.MustCompile(`[\d\-\:]+\.\d`)
 	for _, file := range files {
 		if BuiltInTBTDevice(file.Name()) {
 			continue
 		}
 
-		// Check for retimers.
-		// They are of the form "0-0:1.1" or "0-0:3.1".
-		if matched, err := regexp.MatchString(`[\d\-\:]+\.\d`, file.Name()); err != nil {
-			return errors.Wrap(err, "couldn't execute retimer regexp")
-		} else if matched {
+		if re.MatchString(file.Name()) {
 			continue
 		}
 
@@ -93,14 +92,10 @@ func FindConnectedDPMonitor(ctx context.Context, tc *chrome.TestConn) error {
 	}
 
 	foundConnected := false
+	// We're only interested in DP connectors.
+	re := regexp.MustCompile(`^DP-\d`)
 	for _, connector := range connectors {
-		// We're only interested in DP connectors.
-		matched, err := regexp.MatchString(`^DP-\d`, connector.Name)
-		if err != nil {
-			return err
-		}
-
-		if matched && connector.Connected {
+		if re.MatchString(connector.Name) && connector.Connected {
 			foundConnected = true
 			break
 		}

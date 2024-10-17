@@ -6,7 +6,6 @@ package policy
 
 import (
 	"context"
-	"math/rand"
 	"time"
 
 	"go.chromium.org/tast-tests/cros/common/fixture"
@@ -227,7 +226,7 @@ func WebauthnFactors(ctx context.Context, s *testing.State) {
 				}
 
 				// Delete the PIN so upcoming tests don't get affected.
-				settingsPage = policyutil.OSSettingsPageWithPassword(ctx, cr, "osPrivacy/lockScreen", fixtures.Password)
+				_ = policyutil.OSSettingsPageWithPassword(ctx, cr, "osPrivacy/lockScreen", fixtures.Password)
 				if err := uiauto.Combine("delete PIN",
 					ui.DoDefault(nodewith.HasClass("icon-more-vert").Ancestor(ossettings.WindowFinder).Role(role.PopUpButton)),
 					ui.DoDefault(nodewith.Name("Remove").Ancestor(ossettings.WindowFinder).Role(role.MenuItem)))(ctx); err != nil {
@@ -290,16 +289,4 @@ func verifyInSessionAuthDialog(ctx context.Context, conn *chrome.Conn, tconn *ch
 	}
 
 	return nil
-}
-
-// randomUsername generates a random username of length 20.
-func randomUsername() string {
-	const letters = "abcdefghijklmnopqrstuvwxyz0123456789"
-
-	ret := make([]byte, 20)
-	for i := range ret {
-		ret[i] = letters[rand.Intn(len(letters))]
-	}
-
-	return string(ret)
 }

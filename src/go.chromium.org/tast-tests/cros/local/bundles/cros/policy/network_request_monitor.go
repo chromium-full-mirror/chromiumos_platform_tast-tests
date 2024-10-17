@@ -411,7 +411,7 @@ func NetworkRequestMonitor(ctx context.Context, s *testing.State) {
 	if err != nil {
 		s.Fatal("Chrome login failed: ", err)
 	}
-	tconn, err = cr.TestAPIConn(ctx)
+	_, err = cr.TestAPIConn(ctx)
 	if err != nil {
 		s.Fatal("Failed to create Test API connection: ", err)
 	}

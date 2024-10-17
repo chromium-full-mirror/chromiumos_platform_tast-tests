@@ -22,10 +22,6 @@ import (
 	"go.chromium.org/tast/core/testing"
 )
 
-const (
-	tapeFixturetotalRunTime = 30 * time.Minute
-)
-
 func init() {
 	testing.AddFixture(&testing.Fixture{
 		Name:            fixture.ChromeTAPELoggedIn,

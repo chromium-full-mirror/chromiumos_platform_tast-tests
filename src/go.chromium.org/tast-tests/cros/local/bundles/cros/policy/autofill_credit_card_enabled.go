@@ -22,15 +22,11 @@ import (
 	"go.chromium.org/tast-tests/cros/local/chrome"
 	"go.chromium.org/tast-tests/cros/local/chrome/browser"
 	"go.chromium.org/tast-tests/cros/local/chrome/browser/browserfixt"
-	"go.chromium.org/tast-tests/cros/local/chrome/uiauto"
 	"go.chromium.org/tast-tests/cros/local/chrome/uiauto/faillog"
-	"go.chromium.org/tast-tests/cros/local/chrome/uiauto/nodewith"
-	"go.chromium.org/tast-tests/cros/local/chrome/uiauto/role"
 	"go.chromium.org/tast-tests/cros/local/netexport"
 	"go.chromium.org/tast-tests/cros/local/policyutil"
 	"go.chromium.org/tast-tests/cros/local/testenv/proxy"
 	"go.chromium.org/tast/core/ctxutil"
-	"go.chromium.org/tast/core/errors"
 	"go.chromium.org/tast/core/testing"
 )
 
@@ -181,19 +177,4 @@ func AutofillCreditCardEnabled(ctx context.Context, s *testing.State) {
 			}
 		})
 	}
-}
-
-func openCreditCardPage(ctx context.Context, br *browser.Browser, tconn *chrome.TestConn, urlToOpen string) (*chrome.Conn, error) {
-	ui := uiauto.New(tconn)
-	conn, err := br.NewConn(ctx, urlToOpen)
-	if err != nil {
-		return nil, errors.Wrap(err, "failed to open credit card page")
-	}
-
-	// Ensure the page is open.
-	if err := ui.WaitUntilExists(nodewith.Name("OK").Role(role.Button).ClassName("test-target-button"))(ctx); err != nil {
-		return nil, errors.Wrap(err, "expected to find the OK button on the credit card page")
-	}
-
-	return conn, nil
 }
