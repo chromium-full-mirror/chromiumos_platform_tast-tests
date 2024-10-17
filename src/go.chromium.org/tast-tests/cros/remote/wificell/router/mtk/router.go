@@ -26,15 +26,6 @@ import (
 	"go.chromium.org/tast/core/timing"
 )
 
-const (
-	readyStatusFile = "/tmp/cros/status/ready"
-	buildInfoFile   = "/etc/board.json"
-)
-
-var (
-	buildInfoDeviceName string
-)
-
 // Router controls an MTK router and stores the router state.
 type Router struct {
 	host             *ssh.Conn
@@ -51,10 +42,7 @@ type Router struct {
 
 // activeServices keeps a record of what services have been started and not yet
 // stopped manually so that they can be stopped during Router.Close.
-type activeServices struct {
-	capture    []*pcap.Capturer
-	rawCapture []*pcap.Capturer
-}
+type activeServices struct {}
 
 // NewRouter prepares initial test AP state (e.g., initializing wiphy/wdev).
 // ctx is the deadline for the step and daemonCtx is the lifetime for background
@@ -293,28 +281,4 @@ func HostIsMtkRouter(ctx context.Context, host *ssh.Conn) (bool, error) {
 		return false, errors.Wrapf(err, "failed to check if remote file %q contents match %q", deviceInfoPath, deviceInfoMatchIfOpenWrt)
 	}
 	return matches, nil
-}
-
-// iface finds a suitable wifi iface for the given channel, opclass.
-// The selected iface name is returned.
-func (r *Router) iface(freq int) string {
-	if freq < 5000 {
-		return wireless.WiFiIface2G
-	} else if freq > 5900 {
-		return wireless.WiFiIface6G
-	} else {
-		return wireless.WiFiIface5G
-	}
-}
-
-// phy finds a suitable wifi phy for the given channel, opclass.
-// The selected phy name is returned.
-func (r *Router) phy(freq int) string {
-	if freq < 5000 {
-		return wireless.WiFiPhy2G
-	} else if freq > 5900 {
-		return wireless.WiFiPhy5G
-	} else {
-		return wireless.WiFiPhy6G
-	}
 }

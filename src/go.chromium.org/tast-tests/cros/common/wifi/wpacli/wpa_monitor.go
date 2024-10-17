@@ -100,7 +100,6 @@ type ANQPQueryDoneEvent struct {
 // WPAMonitor holds internal context of the WPA monitor.
 type WPAMonitor struct {
 	stdin         io.WriteCloser
-	stdout        io.ReadCloser
 	stdoutScanner *bufio.Scanner
 	cmd           cmd.Runner
 	lines         chan string

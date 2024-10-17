@@ -66,7 +66,7 @@ func MARSSIDRoam(ctx context.Context, s *testing.State) {
 	if err != nil {
 		s.Fatalf("Failed to set MAC randomization to: %t, err %v", true, err)
 	}
-	if resp.OldSetting != true {
+	if !resp.OldSetting {
 		testing.ContextLog(ctx, "Switched MAC randomization for scans to: true")
 		// Restore the setting on leaving.
 		defer func(ctx context.Context) {

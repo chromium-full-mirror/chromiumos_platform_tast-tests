@@ -122,7 +122,7 @@ func MBOAssocDisallow(ctx context.Context, s *testing.State) {
 		pcap.Dot11FCSValid(),
 		pcap.AnyOfTypesFilter([]gopacket.LayerType{layers.LayerTypeDot11MgmtProbeResp, layers.LayerTypeDot11MgmtBeacon}, nil),
 	}
-	pac, err := pcap.ReadPackets(pcapPath, filters...)
+	pac, _ := pcap.ReadPackets(pcapPath, filters...)
 	numPac := len(pac)
 	if numPac == 0 {
 		s.Fatal("No probe response or beacon frames collected")
@@ -141,7 +141,7 @@ func MBOAssocDisallow(ctx context.Context, s *testing.State) {
 			// 3. OUI is 0x50-6F-9A
 			// 4. OUI type is 0x16
 			if !ok || int(element.Length) < 7 || element.ID != 0xDD ||
-				bytes.Compare(element.OUI[:3], []byte{0x50, 0x6F, 0x9A}) != 0 ||
+				!bytes.Equal(element.OUI[:3], []byte{0x50, 0x6F, 0x9A}) ||
 				element.OUI[3] != 0x16 {
 				continue
 			}
@@ -212,7 +212,7 @@ func MBOAssocDisallow(ctx context.Context, s *testing.State) {
 		pcap.TransmitterAddress(mac),
 		pcap.TypeFilter(layers.LayerTypeDot11MgmtAssociationReq, nil),
 	}
-	assocPackets, err := pcap.ReadPackets(pcapPath, filters...)
+	assocPackets, _ := pcap.ReadPackets(pcapPath, filters...)
 	if len(assocPackets) > 0 {
 		s.Fatal("DUT sent assoc requests to the AP when it shouldn't have")
 	}

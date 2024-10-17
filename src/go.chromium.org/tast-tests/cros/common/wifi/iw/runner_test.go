@@ -39,14 +39,10 @@ func (r *stubCmdRunner) Output(ctx context.Context, cmd string, args ...string) 
 }
 
 // CreateCmd is a mock function which does nothing.
-func (r *stubCmdRunner) CreateCmd(ctx context.Context, cmd string, args ...string) {
-	return
-}
+func (r *stubCmdRunner) CreateCmd(ctx context.Context, cmd string, args ...string) { }
 
 // SetStdOut is a mock function which does nothing.
-func (r *stubCmdRunner) SetStdOut(stdoutFile *os.File) {
-	return
-}
+func (r *stubCmdRunner) SetStdOut(stdoutFile *os.File) { }
 
 // StdinPipe is a stub function which always returns nil.
 func (r *stubCmdRunner) StdinPipe() (io.WriteCloser, error) {
@@ -84,9 +80,7 @@ func (r *stubCmdRunner) ReleaseProcess() error {
 }
 
 // ResetCmd is a mock function which does nothing.
-func (r *stubCmdRunner) ResetCmd() {
-	return
-}
+func (r *stubCmdRunner) ResetCmd() { }
 
 func TestAllLinkKeys(t *testing.T) {
 	const testStr = `Connected to 74:e5:43:10:4f:c0 (on wlan0)

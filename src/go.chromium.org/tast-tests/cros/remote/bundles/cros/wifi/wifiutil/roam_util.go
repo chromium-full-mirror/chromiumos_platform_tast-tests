@@ -203,7 +203,7 @@ func (rt *RoamTest) SendBSSTMReqAndWaitConnected(ctx context.Context, dut wifice
 	// Set up a watcher for the Shill WiFi BSSID property.
 	waitCtx, cancel := context.WithTimeout(ctx, BSSTMRequestTimeout)
 	defer cancel()
-	waitForProps, err := rt.tf.DUTWifiClient(dut).GenerateRoamPropertyWatcher(waitCtx, toBSSID, servicePath)
+	waitForProps, _ := rt.tf.DUTWifiClient(dut).GenerateRoamPropertyWatcher(waitCtx, toBSSID, servicePath)
 	// Send BSS Transition Management Request to client.
 	testing.ContextLogf(ctx, "Sending BSS Transition Management Request from AP %s to DUT %s", fromBSSID, dutMAC)
 	if err := fromAP.SendBSSTMRequest(ctx, dutMAC, req); err != nil {

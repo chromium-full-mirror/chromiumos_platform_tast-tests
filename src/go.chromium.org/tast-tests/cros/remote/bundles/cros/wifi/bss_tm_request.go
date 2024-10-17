@@ -228,7 +228,7 @@ func BSSTMRequest(ctx context.Context, s *testing.State) {
 			if err := rt.SendBSSTMReqAndWaitConnected(ctx, wificell.DefaultDUT, roamBSSID, fromBSSID, rt.AP2(), rt.AP1(), hostapd.BSSTMReqParams{Neighbors: []string{fromBSSID}}, rt.ServicePathOfDUT(wificell.DefaultDUT), true); err != nil {
 				s.Fatal("DUT: failed to roam and wait for connection: ", err)
 			}
-			if sleepDur := requestParams.ReassocDelay + bssTMReassocBuffer - time.Now().Sub(t); sleepDur > 0 {
+			if sleepDur := requestParams.ReassocDelay + bssTMReassocBuffer - time.Since(t); sleepDur > 0 {
 				s.Log("Sleeping for ", sleepDur)
 				// GoBigSleepLint this sleep is the part of the test design.
 				if err := testing.Sleep(ctx, sleepDur); err != nil {

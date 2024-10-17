@@ -808,7 +808,7 @@ func NetworkWifiPerf(ctx context.Context, s *testing.State) {
 			}
 			return nil
 		}(ctx)
-		ctx, cancel = ctxutil.Shorten(ctx, 2*time.Second)
+		ctx, _ = ctxutil.Shorten(ctx, 2*time.Second)
 
 		iwr := remoteiw.NewRemoteRunner(s.DUT().Conn())
 		psMode, err := iwr.PowersaveMode(ctx, clientIface)

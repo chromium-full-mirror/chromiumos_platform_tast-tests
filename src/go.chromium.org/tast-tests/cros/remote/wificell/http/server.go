@@ -122,7 +122,7 @@ func (d *Server) start(fullCtx context.Context) (err error) {
 
 	b := &bytes.Buffer{}
 	template.Must(template.New("").Parse(serverScript)).Execute(b, nil)
-	if err := linuxssh.WriteFile(ctx, d.host, d.pyPath(), []byte(b.String()), 0644); err != nil {
+	if err := linuxssh.WriteFile(ctx, d.host, d.pyPath(), b.Bytes(), 0644); err != nil {
 		return errors.Wrap(err, "failed to write python script")
 	}
 	cmd := d.host.CommandContext(ctx, pythonCmd, d.pyPath(), strconv.Itoa(d.port), strconv.Itoa(d.statusCode), d.redirectAddr)

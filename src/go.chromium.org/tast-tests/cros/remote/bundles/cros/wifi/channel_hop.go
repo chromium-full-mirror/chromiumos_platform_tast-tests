@@ -89,6 +89,7 @@ func ChannelHop(ctx context.Context, s *testing.State) {
 		defer func(ctx context.Context) {
 			if servicePath == "" {
 				// Not connected, just return.
+				return
 			}
 			if err := wifiutil.WaitServiceIdle(ctx, tf, servicePath); err != nil {
 				utils.CollectFirstErr(ctx, &retErr, errors.Wrap(err, "failed to wait for DUT leaving initial AP"))

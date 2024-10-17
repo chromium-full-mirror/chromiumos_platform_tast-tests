@@ -280,9 +280,7 @@ func (s *ShillService) connectService(ctx context.Context, service *shill.Servic
 
 	// Prepare the state list for ExpectIn.
 	var connectedStates []interface{}
-	for _, s := range shillconst.ServiceConnectedStates {
-		connectedStates = append(connectedStates, s)
-	}
+	connectedStates = append(connectedStates, shillconst.ServiceConnectedStates...)
 	associatedStates := append(connectedStates, shillconst.ServiceStateConfiguration)
 
 	testing.ContextLog(ctx, "Associating with ", service)
@@ -558,7 +556,7 @@ func (s *ShillService) GetServicePath(ctx context.Context, request *wifi.Service
 	if err != nil {
 		return nil, errors.Wrap(err, "failed to create a manager object")
 	}
-	props, err := protoutil.DecodeFromShillValMap(request.Props)
+	props, _ := protoutil.DecodeFromShillValMap(request.Props)
 	var servicePath string
 	if err := m.Call(ctx, "FindMatchingService", props).Store(&servicePath); err != nil {
 		return nil, err
@@ -2334,6 +2332,9 @@ func (s *ShillService) SuspendAssertConnect(ctx context.Context, req *wifi.Suspe
 		return nil, errors.Wrap(err, "failed to create a new shill service")
 	}
 	pw, err := service.CreateWatcher(ctx)
+	if err != nil {
+		return nil, errors.Wrap(err, "failed to create watcher")
+	}
 	defer pw.Close(ctx)
 
 	if _, err := suspend(ctx, time.Duration(req.WakeUpTimeout), true /* checkEarlyWake */); err != nil {
@@ -3292,7 +3293,7 @@ func (s *ShillService) p2pGroupCreateShillAPI(ctx context.Context, request *wifi
 	if err != nil {
 		return nil, err
 	}
-	if p2pSupported != true {
+	if !p2pSupported {
 		return nil, errors.New("no support for P2P on this device")
 	}
 
@@ -3407,7 +3408,7 @@ func (s *ShillService) p2pGroupConnectShillAPI(ctx context.Context, request *wif
 	if err != nil {
 		return nil, err
 	}
-	if p2pSupported != true {
+	if !p2pSupported {
 		return nil, errors.New("no support for P2P on this device")
 	}
 
@@ -4228,7 +4229,7 @@ func (s *ShillService) GetWiFiNetworksForGeolocation(ctx context.Context, _ *emp
 	if err != nil {
 		return nil, errors.Wrap(err, "failed to create a manager object")
 	}
-	p, err := m.GetWiFiNetworksForGeolocation(ctx)
+	p, _ := m.GetWiFiNetworksForGeolocation(ctx)
 	response := wifi.GetWiFiNetworksForGeolocationResponse{Networks: map[string]*wifi.NetworksForGeolocation{}}
 
 	pt, err := p.Get(shillconst.GeoWifiAccessPointsProperty)

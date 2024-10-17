@@ -596,6 +596,9 @@ func CheckIntelSARTable(ctx context.Context, s *testing.State) {
 
 	// Write the decoded SSDT table to an output file.
 	ssdtOut, err := os.Create(filepath.Join(s.OutDir(), "decodedSSDT"))
+	if err != nil {
+		s.Fatal("Could not create output SSDT file: ", err)
+	}
 	defer ssdtOut.Close()
 	ssdtOut.Write(decodedSSDT)
 

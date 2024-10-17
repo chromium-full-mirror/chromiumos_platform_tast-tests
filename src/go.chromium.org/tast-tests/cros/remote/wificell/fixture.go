@@ -368,7 +368,7 @@ func (f *tastFixtureImpl) takeIdleWiFiMeasurement(ctx context.Context, s *testin
 		return errors.New("no power recorder client available")
 	}
 
-	ctx, restore, err := f.tf.RemoveWiFiInterfaces(ctx, DefaultDUT)
+	ctx, restore, _ := f.tf.RemoveWiFiInterfaces(ctx, DefaultDUT)
 
 	if _, err := f.tf.powerRecorderClient.Cooldown(ctx, &empty.Empty{}); err != nil {
 		return errors.Wrap(err, "failed to cooldown device")
@@ -633,7 +633,7 @@ func (f *tastFixtureImpl) SetUp(ctx context.Context, s *testing.FixtState) inter
 				// This helps differentiate real issues from timeout hitting different components.
 				if deadline, ok := ctx.Deadline(); !ok {
 					s.Fatal("Missing deadline for context: ", ctx)
-				} else if diff := deadline.Sub(time.Now()); diff < enrollmentRunTimeout {
+				} else if diff := time.Until(deadline); diff < enrollmentRunTimeout {
 					s.Fatalf("Not enough time to perform setup and enrollment: have %s; need %s", diff, enrollmentRunTimeout)
 				}
 

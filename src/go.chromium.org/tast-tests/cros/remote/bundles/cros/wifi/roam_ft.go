@@ -40,10 +40,7 @@ type roamFTparam struct {
 	expectedNonFtKeyMgmt string
 }
 
-var (
-	roamFTCert1 = certificate.TestCert1()
-	roamFTCert2 = certificate.TestCert2()
-)
+var roamFTCert1 = certificate.TestCert1()
 
 func init() {
 	testing.AddTest(&testing.Test{

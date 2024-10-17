@@ -19,7 +19,7 @@ import (
 
 // isBroadcastMAC checks if MAC Address is a broadcast one.
 func isBroadcastMAC(mac net.HardwareAddr) bool {
-	return bytes.Compare(mac, []byte{0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF}) == 0
+	return bytes.Equal(mac, []byte{0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF})
 }
 
 // findWrongPackets is a simple filter returning all packets from capture

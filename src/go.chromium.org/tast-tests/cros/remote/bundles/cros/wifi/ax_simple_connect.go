@@ -385,7 +385,7 @@ func AxSimpleConnect(ctx context.Context, s *testing.State) {
 				s.Error("Failed to disconnect WiFi, err: ", err)
 			}
 		}(ctx)
-		ctx, cancel = tf.ReserveForDisconnect(ctx)
+		_, cancel = tf.ReserveForDisconnect(ctx)
 		defer cancel()
 
 		if expectedFailure {

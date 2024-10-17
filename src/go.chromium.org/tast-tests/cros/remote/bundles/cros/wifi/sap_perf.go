@@ -31,12 +31,6 @@ import (
 	"go.chromium.org/tast/core/testing/hwdep"
 )
 
-type sapPerfTestThreshold struct {
-	throughput iperf.BitRate
-	jitter     time.Duration
-	lost       float64
-}
-
 type sapPerfTestcase struct {
 	tetheringOpts []tethering.Option
 	secConfFac    security.ConfigFactory
@@ -287,7 +281,7 @@ func SAPPerf(ctx context.Context, s *testing.State) {
 			}
 			return nil
 		}(ctx)
-		ctx, cancel = ctxutil.Shorten(ctx, 2*time.Second)
+		ctx, _ = ctxutil.Shorten(ctx, 2*time.Second)
 
 		doRun := func(ctx context.Context) error {
 			for _, testType := range perfTestTypes {

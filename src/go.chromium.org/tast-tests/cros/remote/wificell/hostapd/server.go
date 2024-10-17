@@ -138,11 +138,6 @@ func (s *Server) confPathServerIface(ifaceName string) string {
 	return path.Join(s.workDir, s.filenameIface(ifaceName, "conf"))
 }
 
-// confPathOutDir returns the path of the default iface's stored config file under OutDir.
-func (s *Server) confPathOutDir() string {
-	return s.filenameIface(s.ifaces[0].name, "conf")
-}
-
 // confPathOutDirIface returns the path of ifaceName's stored config file under OutDir.
 func (s *Server) confPathOutDirIface(ifaceName string) string {
 	return s.filenameIface(ifaceName, "conf")

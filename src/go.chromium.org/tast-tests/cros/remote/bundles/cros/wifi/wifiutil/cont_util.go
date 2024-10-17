@@ -26,7 +26,6 @@ import (
 	"go.chromium.org/tast-tests/cros/remote/wificell/router"
 	"go.chromium.org/tast-tests/cros/remote/wificell/router/common/support"
 	"go.chromium.org/tast-tests/cros/services/cros/wifi"
-	"go.chromium.org/tast/core/ctxutil"
 	"go.chromium.org/tast/core/errors"
 	"go.chromium.org/tast/core/ssh"
 	"go.chromium.org/tast/core/testing"
@@ -57,8 +56,6 @@ type ContTest struct {
 	servicePath    string
 }
 
-var apID int
-
 var (
 	serverIP    = net.IPv4(192, 168, 0, 254)
 	startIP     = net.IPv4(192, 168, 0, 1)
@@ -70,9 +67,6 @@ var (
 // Cert1 defines a certificate used for testing.
 var Cert1 = certificate.TestCert1()
 
-func reserveForRelease(ctx context.Context) (context.Context, func()) {
-	return ctxutil.Shorten(ctx, 10*time.Second)
-}
 
 func hasFTSupport(ctx context.Context, conn *ssh.Conn) (bool, error) {
 	phys, _, err := iw.NewRemoteRunner(conn).ListPhys(ctx)

@@ -303,7 +303,7 @@ func MTBF(ctx context.Context, s *testing.State) {
 		runOnceCtx, cancel := context.WithTimeout(ctx, runOnceTimeout)
 		defer cancel()
 		succeeded := runOnce(runOnceCtx)
-		mtbf := time.Now().Sub(startTS)
+		mtbf := time.Since(startTS)
 		if !succeeded {
 			s.Log("MTBF failed, mean time=", mtbf)
 			return

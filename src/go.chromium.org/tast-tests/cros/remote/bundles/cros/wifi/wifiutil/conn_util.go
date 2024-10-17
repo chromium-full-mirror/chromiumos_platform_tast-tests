@@ -37,6 +37,7 @@ func TryConnect(ctx context.Context, tf *wificell.TestFixture, ops []hostapd.Opt
 	defer func(ctx context.Context) {
 		if servicePath == "" {
 			// Not connected, just return.
+			return
 		}
 		if err := WaitServiceIdle(ctx, tf, servicePath); err != nil {
 			collectErr(errors.Wrap(err, "failed to wait for DUT leaving the AP"))

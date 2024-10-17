@@ -1485,22 +1485,6 @@ func (c *Config) vhtCapsString() string {
 	return strings.Join(caps, "")
 }
 
-func (c *Config) heCapsString() string {
-	caps := make([]string, len(c.HECaps))
-	for i, v := range c.HECaps {
-		caps[i] = string(v)
-	}
-	return strings.Join(caps, "")
-}
-
-func (c *Config) ehtCapsString() string {
-	caps := make([]string, len(c.EHTCaps))
-	for i, v := range c.EHTCaps {
-		caps[i] = string(v)
-	}
-	return strings.Join(caps, "")
-}
-
 func (c *Config) validateVHTChWidth() error {
 	switch c.VHTChWidth {
 	case VHTChWidth20Or40, VHTChWidth80, VHTChWidth160, VHTChWidth80Plus80:

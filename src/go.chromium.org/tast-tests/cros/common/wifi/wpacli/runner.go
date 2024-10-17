@@ -42,10 +42,7 @@ func (r *Runner) sudoWPACLI(args ...string) []string {
 	if r.iface != "" {
 		ret = append(ret, "-i", r.iface)
 	}
-	for _, arg := range args {
-		ret = append(ret, arg)
-	}
-	return ret
+	return append(ret, args...)
 }
 
 // Ping runs "wpa_cli -i iface ping" command and expects to see PONG.

@@ -443,11 +443,6 @@ func (impl *settingsImpl) uiRoot() *ui.Finder {
 	return ui.Node().NameRegex(`^Settings`).Role(ui.Role_ROLE_ROOT_WEB_AREA).Finder()
 }
 
-func (impl *settingsImpl) networkItemFinder(testData *connectToWifiWithUITestData) *ui.Finder {
-	networkRegex := fmt.Sprintf(`^Network \d+ of \d+, %s.*`, testData.ssid)
-	return ui.Node().NameRegex(networkRegex).Role(ui.Role_ROLE_GENERIC_CONTAINER).Nth(0).Finder()
-}
-
 func (impl *settingsImpl) connectedLabel() *ui.Finder {
 	return ui.Node().NameRegex(`^Connected`).Role(ui.Role_ROLE_STATIC_TEXT).Nth(0).Ancestor(impl.uiRoot()).Finder()
 }

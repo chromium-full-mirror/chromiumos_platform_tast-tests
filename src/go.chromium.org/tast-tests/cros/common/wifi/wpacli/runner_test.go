@@ -92,14 +92,10 @@ func (r *cmdRunner) Run(ctx context.Context, cmd string, args ...string) error {
 }
 
 // CreateCmd is a mock function which does nothing.
-func (r *cmdRunner) CreateCmd(ctx context.Context, cmd string, args ...string) {
-	return
-}
+func (r *cmdRunner) CreateCmd(ctx context.Context, cmd string, args ...string) { }
 
 // SetStdOut is a mock function which does nothing.
-func (r *cmdRunner) SetStdOut(stdoutFile *os.File) {
-	return
-}
+func (r *cmdRunner) SetStdOut(stdoutFile *os.File) { }
 
 // StdinPipe is a stub function which always returns nil.
 func (r *cmdRunner) StdinPipe() (io.WriteCloser, error) {
@@ -137,9 +133,7 @@ func (r *cmdRunner) ReleaseProcess() error {
 }
 
 // ResetCmd is a mock function which does nothing.
-func (r *cmdRunner) ResetCmd() {
-	return
-}
+func (r *cmdRunner) ResetCmd() { }
 
 func TestPing(t *testing.T) {
 	cr := newCmdRunner()

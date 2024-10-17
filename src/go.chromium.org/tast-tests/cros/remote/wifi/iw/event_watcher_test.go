@@ -100,10 +100,7 @@ func TestParseEvent(t *testing.T) {
 			return false
 		}
 		const accuracyInMilliseconds = 1e6 // Let's check accuracy to millisecond (i.e. 1e6 nano).
-		if math.Abs(float64(actual.Timestamp.UnixNano()-want.Timestamp.UnixNano())) > accuracyInMilliseconds {
-			return false
-		}
-		return true
+		return math.Abs(float64(actual.Timestamp.UnixNano()-want.Timestamp.UnixNano())) <= accuracyInMilliseconds
 	}
 
 	for i, tc := range testcases {

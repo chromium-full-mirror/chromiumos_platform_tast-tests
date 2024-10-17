@@ -76,10 +76,10 @@ func (m mtcl) Validate() error {
 		return errors.Errorf("unsupported support59g state: %v", m.Support59g)
 	}
 	// Reserved values MUST be 0
-	if bytes.Compare(m.Reserved[:], []byte{0x00, 0x00}) != 0 {
+	if !bytes.Equal(m.Reserved[:], []byte{0x00, 0x00}) {
 		return errors.Errorf("unsupported first reserved segment: %v", m.Reserved)
 	}
-	if bytes.Compare(m.Reserved2[:], []byte{0x00, 0x00}) != 0 {
+	if !bytes.Equal(m.Reserved2[:], []byte{0x00, 0x00}) {
 		return errors.Errorf("unsupported first reserved segment: %v", m.Reserved2)
 	}
 	return nil
@@ -158,12 +158,12 @@ func verifyMTCLString(method string) (mtcl, error) {
 	var rv mtcl
 
 	// Verify that the method signature is correct
-	if strings.Contains(method, "Method(MTCL,0,Serialized)") == false {
+	if !strings.Contains(method, "Method(MTCL,0,Serialized)") {
 		return rv, errors.New("MTCL exists, but method signature is malformed")
 	}
 
 	// Verify that the method returns the correct value
-	if strings.Contains(method, "Return(LIST)") == false {
+	if !strings.Contains(method, "Return(LIST)") {
 		return rv, errors.New("Method does not return the list value")
 	}
 
@@ -254,6 +254,9 @@ func CheckMtkMTCL(ctx context.Context, s *testing.State) {
 
 	// Write the decoded SSDT table to an output file.
 	ssdtOut, err := os.Create(filepath.Join(s.OutDir(), "decodedSSDT"))
+	if err != nil {
+		s.Fatal("Could not create output SSDT file: ", err)
+	}
 	defer ssdtOut.Close()
 	ssdtOut.Write(decodedSSDT)
 
@@ -278,6 +281,9 @@ func CheckMtkMTCL(ctx context.Context, s *testing.State) {
 			s.Fatal("Could not get coreboot logs: ", err)
 		}
 		cbOut, err := os.Create(filepath.Join(s.OutDir(), "coreboot.log"))
+		if err != nil {
+			s.Fatal("Could not create coreboot log file: ", err)
+		}
 		defer cbOut.Close()
 		cbOut.Write(cbl)
 		s.Fatal("No MTCL function found in SSDT; check coreboot.log for errors")

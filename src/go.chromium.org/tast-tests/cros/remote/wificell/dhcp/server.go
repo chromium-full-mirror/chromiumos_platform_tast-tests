@@ -188,7 +188,7 @@ func (d *Server) start(fullCtx context.Context) (err error) {
 
 	b := &bytes.Buffer{}
 	template.Must(template.New("").Parse(confTemplate)).Execute(b, confVals)
-	if err := linuxssh.WriteFile(ctx, d.host, d.confPath(), []byte(b.String()), 0644); err != nil {
+	if err := linuxssh.WriteFile(ctx, d.host, d.confPath(), b.Bytes(), 0644); err != nil {
 		return errors.Wrap(err, "failed to write config")
 	}
 	testing.ContextLogf(ctx, "Starting dnsmasq %s on interface %s", d.name, d.iface)

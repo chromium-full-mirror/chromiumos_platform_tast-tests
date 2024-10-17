@@ -104,7 +104,7 @@ func (r *Router) ApplyRouterSettings(ctx context.Context, cfg *Config) error {
 
 // Close cleans the resource used by Router.
 func (r *Router) Close(ctx context.Context) error {
-	ctx, st := timing.Start(ctx, "router.Close")
+	_, st := timing.Start(ctx, "router.Close")
 	defer st.End()
 	return nil
 }

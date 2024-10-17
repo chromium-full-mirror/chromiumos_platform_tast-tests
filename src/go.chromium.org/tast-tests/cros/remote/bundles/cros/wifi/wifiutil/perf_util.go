@@ -66,7 +66,7 @@ func runPerf(ctx, cleanUpCtx context.Context, wd1, wd2, wd3 wificell.WiFiDevice,
 	ifaceType wificell.IfaceType, outDir, tag string, testType perfmanager.TestType,
 	version iperf.Version, port int) (_ *iperf.Result, err error) {
 
-	staIface, err := wd1.IfName(ctx, wificell.StaIfaceType)
+	staIface, _ := wd1.IfName(ctx, wificell.StaIfaceType)
 
 	var peerIfaceType wificell.IfaceType
 	switch ifaceType {

@@ -187,6 +187,7 @@ func ScanAndConnect6GHz(ctx context.Context, s *testing.State) {
 		if conf == nil {
 			s.Fatal("Failed to get the Config of the 6 GHz AP")
 		}
+		//lint:ignore SA5011 conf is actually checked right above
 		_, err = tf.ConnectWifiFromDUT(ctx, wificell.DefaultDUT, conf.SSID, dutcfg.ConnSecurity(conf.SecurityConfig))
 		if err != nil {
 			return nil, errors.Wrap(err, "failed to connect to WiFi")
@@ -196,7 +197,7 @@ func ScanAndConnect6GHz(ctx context.Context, s *testing.State) {
 				s.Error("Failed to disconnect WiFi: ", err)
 			}
 		}(ctx)
-		ctx, cancel = tf.ReserveForDisconnect(ctx)
+		_, cancel = tf.ReserveForDisconnect(ctx)
 		defer cancel()
 		s.Log("Connected to the 6 GHz AP")
 		// The AP may have two capturers for both 5 GHz and 6 GHz BSSs

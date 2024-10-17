@@ -21,12 +21,12 @@ type AuthAlgo int
 
 // IEEE 802.11 authentication algorithms.
 const (
-	AuthAlgoOpen      AuthAlgo = 0
-	AuthAlgoShared             = 1
-	AuthAlgoFT                 = 2
-	AuthAlgoSAE                = 3
-	AuthAlgoSAEExtKey          = 4
-	AuthAlgoInvalid            = -1
+	AuthAlgoOpen      AuthAlgo = iota
+	AuthAlgoShared
+	AuthAlgoFT
+	AuthAlgoSAE
+	AuthAlgoSAEExtKey
+	AuthAlgoInvalid   AuthAlgo = -1
 )
 
 // A PSK should be a string composed with 64 hex digits, or a ASCII passphrase whose length is between 8 and 63 (inclusive).

@@ -546,7 +546,7 @@ func expectBlockedJoinWiFiOSSettings(ctx context.Context, conn *grpc.ClientConn,
 	if err != nil {
 		return errors.Wrap(err, "error during finding text about disabled network")
 	}
-	if exists != true {
+	if !exists {
 		return errors.New("failed to find text about disabled network")
 	}
 
@@ -687,7 +687,7 @@ func openNetworkSettingPage(ctx context.Context, conn *grpc.ClientConn, ssid str
 		if err != nil {
 			return cleanup, errors.Wrap(err, "error during searching page header on network setting page")
 		}
-		if correctPage == true {
+		if correctPage {
 			return cleanup, nil
 		}
 	}
@@ -778,7 +778,7 @@ func openJoinWiFiDialogFromOneClick(ctx context.Context, rpcClient *grpc.ClientC
 	if settings == quickSettings {
 		settingsSvc := quicksettings.NewQuickSettingsServiceClient(rpcClient)
 		if _, err := settingsSvc.NavigateToNetworkDetailedView(ctx, &emptypb.Empty{}); err != nil {
-			return func(ctx context.Context) { return }, errors.Wrap(err, "failed to navigate to network detailed view within the Quick Settings")
+			return func(ctx context.Context) { }, errors.Wrap(err, "failed to navigate to network detailed view within the Quick Settings")
 		}
 		cleanup = func(ctx context.Context) { settingsSvc.Hide(ctx, &emptypb.Empty{}) }
 
@@ -786,7 +786,7 @@ func openJoinWiFiDialogFromOneClick(ctx context.Context, rpcClient *grpc.ClientC
 	} else if settings == osSettings {
 		settingsSvc := ossettings.NewOsSettingsServiceClient(rpcClient)
 		if _, err := settingsSvc.LaunchAtWifiPage(ctx, &emptypb.Empty{}); err != nil {
-			return func(ctx context.Context) { return }, errors.Wrap(err, "error during opening OS WiFi setting page")
+			return func(ctx context.Context) { }, errors.Wrap(err, "error during opening OS WiFi setting page")
 		}
 		cleanup = func(ctx context.Context) { settingsSvc.Close(ctx, &emptypb.Empty{}) }
 		connectToSsidButton = &ui.Finder{

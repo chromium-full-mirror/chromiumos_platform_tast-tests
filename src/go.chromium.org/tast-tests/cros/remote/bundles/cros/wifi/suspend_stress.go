@@ -295,8 +295,8 @@ func SuspendStress(ctx context.Context, s *testing.State) {
 		// duration of the test so that the regulatory domain is set to US upon
 		// each suspend-resume.
 		if (apMain.Config().Is6GHz) && !isColocated {
-			ap5GHzOpts := append([]hostapd.Option{hostapd.Mode(hostapd.Mode80211acPure),
-				hostapd.HTCaps(hostapd.HTCapHT20), hostapd.Channel(40), hostapd.SpectrumManagement()})
+			ap5GHzOpts := []hostapd.Option{hostapd.Mode(hostapd.Mode80211acPure),
+				hostapd.HTCaps(hostapd.HTCapHT20), hostapd.Channel(40), hostapd.SpectrumManagement()}
 			ap5GHz, err := tf.ConfigureAP(ctx, ap5GHzOpts, nil)
 			if err != nil {
 				s.Fatal("Failed to configure the 5 GHz AP: ", err)

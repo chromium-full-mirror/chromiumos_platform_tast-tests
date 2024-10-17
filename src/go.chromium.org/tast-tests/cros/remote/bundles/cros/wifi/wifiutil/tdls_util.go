@@ -50,7 +50,7 @@ func Scan(ctx context.Context, conn *ssh.Conn, ifName, ssid string) error {
 }
 
 func macEqual(a1, a2 net.HardwareAddr) bool {
-	return bytes.Compare(a1, a2) == 0
+	return bytes.Equal(a1, a2)
 }
 
 type flagPair struct{ f1, f2 bool }

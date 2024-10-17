@@ -34,12 +34,6 @@ import (
 	"go.chromium.org/tast/core/timing"
 )
 
-// Used hostapd environment variable keys.
-const (
-	envKeyOpenSslConf                            = "OPENSSL_CONF"
-	envKeyOpenSslChromiumSkipTrustedPurposeCheck = "OPENSSL_CHROMIUM_SKIP_TRUSTED_PURPOSE_CHECK"
-)
-
 const lsbReleasePath = "/etc/lsb-release"
 
 // logsToCollect is the list of files on router to collect.
@@ -53,7 +47,6 @@ type Router struct {
 	name          string
 	routerType    support.RouterType
 	routerModel   string
-	board         string
 	phys          map[int]*iw.Phy // map from phy idx to iw.Phy.
 	im            *common.IfaceManager
 	nextBridgeID  int

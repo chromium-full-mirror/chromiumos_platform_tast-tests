@@ -85,7 +85,7 @@ func NewRouter(ctx, daemonCtx context.Context, host *ssh.Conn, name string) (*Ro
 	shortCtx, cancel := ctxutil.Shorten(ctx, common.RouterCloseContextDuration)
 	defer cancel()
 
-	ctx, st := timing.Start(shortCtx, "initialize")
+	_, st := timing.Start(shortCtx, "initialize")
 	defer st.End()
 
 	board, err := hostBoard(shortCtx, r.host)

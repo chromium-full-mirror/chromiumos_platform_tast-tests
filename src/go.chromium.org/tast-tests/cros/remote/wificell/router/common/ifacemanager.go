@@ -57,12 +57,8 @@ func (im *IfaceManager) Remove(ctx context.Context, iface string) error {
 	if err := im.iwr.RemoveInterface(ctx, iface); err != nil {
 		return err
 	}
-	if _, ok := im.Available[iface]; ok {
-		delete(im.Available, iface)
-	}
-	if _, ok := im.Busy[iface]; ok {
-		delete(im.Busy, iface)
-	}
+	delete(im.Available, iface)
+	delete(im.Busy, iface)
 	return nil
 }
 

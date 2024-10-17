@@ -879,10 +879,10 @@ func simpleConnectWPA() []*simpleConnectParams {
 		Val: []simpleConnectParamsVal{{
 			APConfigs: []apConfigVal{{
 				APOpts: simpleConnectCommonSecApOpts + ", ap.PMF(ap.PMFRequired)",
-				SecConfFac: fmt.Sprintf(`wpa.NewConfigFactory(
+				SecConfFac: `wpa.NewConfigFactory(
 					"chromeos", wpa.Mode(wpa.ModePureWPA2), wpa.KeyMgmt([]string{wpa.KeyMgmtWPAPSKSHA256}),
 					wpa.Ciphers2(wpa.CipherCCMP),
-				)`),
+				)`,
 			}},
 			ExpectedSecurity: wpaModeToShillSecurity(`PureWPA2`),
 		}, {

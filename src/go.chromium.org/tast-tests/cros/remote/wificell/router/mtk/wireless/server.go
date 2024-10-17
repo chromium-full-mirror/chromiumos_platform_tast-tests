@@ -6,7 +6,6 @@ package wireless
 
 import (
 	"context"
-	"os"
 	"strconv"
 	"strings"
 	"time"
@@ -23,10 +22,7 @@ type Server struct {
 	host       *ssh.Conn
 	name       string
 	config     *Config
-	workDir    string
 	uci        *uci.Runner
-	stdoutFile *os.File
-	stderrFile *os.File
 }
 
 // StartServer creates a new Server object of wireless configuration the given host.

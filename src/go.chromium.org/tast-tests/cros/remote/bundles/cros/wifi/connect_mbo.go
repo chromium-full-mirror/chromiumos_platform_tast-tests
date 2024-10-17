@@ -125,7 +125,7 @@ func ConnectMBO(ctx context.Context, s *testing.State) {
 			}
 			if element.ID == layers.Dot11InformationElementIDVendor {
 				if int(element.Length) < 7 ||
-					bytes.Compare(element.OUI[:3], []byte{0x50, 0x6F, 0x9A}) != 0 ||
+					!bytes.Equal(element.OUI[:3], []byte{0x50, 0x6F, 0x9A}) ||
 					element.OUI[3] != 0x16 {
 					continue
 				}

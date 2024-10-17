@@ -211,7 +211,7 @@ func P2PConcurrencyFunc(ctx context.Context, s *testing.State) {
 				APIsConnected = false
 			}
 		}(ctx)
-		ctx, cancel = tf.ReserveForDisconnect(ctx)
+		_, cancel = tf.ReserveForDisconnect(ctx)
 		defer cancel()
 		successfulRun = true
 	}

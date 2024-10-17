@@ -39,6 +39,7 @@ import (
 	"go.chromium.org/tast-tests/cros/remote/wificell/attenuator"
 	"go.chromium.org/tast-tests/cros/remote/wificell/dutcfg"
 	"go.chromium.org/tast-tests/cros/remote/wificell/framesender"
+	//lint:ignore ST1019 multiple imports with different identifiers help code readability
 	"go.chromium.org/tast-tests/cros/remote/wificell/hostapd"
 	ap "go.chromium.org/tast-tests/cros/remote/wificell/hostapd"
 	"go.chromium.org/tast-tests/cros/remote/wificell/pcap"
@@ -333,9 +334,7 @@ func (tf *TestFixture) initializeDuts(ctx, daemonCtx context.Context) error {
 			return errors.Wrap(err, "failed to InitDUT")
 		}
 
-		info, err := d.wifiClient.GetDeviceInfo(ctx, &empty.Empty{})
-		if err == nil {
-		}
+		info, _ := d.wifiClient.GetDeviceInfo(ctx, &empty.Empty{})
 		testing.ContextLogf(ctx, "DUT#%d added: %+v", idx, info.Name)
 		d.chipset = wlan.DeviceID(info.Id)
 
@@ -757,9 +756,7 @@ func (tf *TestFixture) ReinitRouters(ctx context.Context, doPcapReboot bool) err
 	if doPcapReboot && !tf.pcapIsRouter {
 		routersToReboot = append(routersToReboot, tf.pcap)
 	}
-	for _, rd := range tf.routers {
-		routersToReboot = append(routersToReboot, rd)
-	}
+	routersToReboot = append(routersToReboot, tf.routers...)
 	if len(routersToReboot) > 0 {
 		testing.ContextLogf(ctx, "Rebooting %d routers", len(routersToReboot))
 		for _, rd := range routersToReboot {
@@ -1154,11 +1151,9 @@ func (tf *TestFixture) DeconfigAP(ctx context.Context, ap *APIface) (firstErr er
 	if err := ap.Stop(ctx); err != nil {
 		utils.CollectFirstErr(ctx, &firstErr, errors.Wrap(err, "failed to stop APIface"))
 	}
-	if capturers != nil {
-		for _, capturer := range capturers {
-			if err := tf.PcapRouter().StopCapture(ctx, capturer); err != nil {
-				utils.CollectFirstErr(ctx, &firstErr, errors.Wrap(err, "failed to stop capturer"))
-			}
+	for _, capturer := range capturers {
+		if err := tf.PcapRouter().StopCapture(ctx, capturer); err != nil {
+			utils.CollectFirstErr(ctx, &firstErr, errors.Wrap(err, "failed to stop capturer"))
 		}
 	}
 	return firstErr
@@ -1572,7 +1567,6 @@ func (tf *TestFixture) P2PAssertNoDisconnect(ctx context.Context, dutIdx DutIdx,
 		return err
 	}
 
-	const wpaMonitorStopTimeout = 10 * time.Second
 	wpaMonitor := remotewpacli.NewRemoteWPAMonitorOnIface(tf.duts[dutIdx].dut.Conn(), ifaceName)
 	if err := wpaMonitor.Start(ctx); err != nil {
 		return errors.Wrap(err, "failed to start wpa monitor")

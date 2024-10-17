@@ -5,10 +5,6 @@
 // Package p2p contains p2p-related utility functions.
 package p2p
 
-const (
-	p2pDefaultFreq int = 2462
-)
-
 // setP2PGOAddConf contains the optional information for "p2pGroupAdd" function.
 type setP2PGroupAddConf struct {
 	freq      int
