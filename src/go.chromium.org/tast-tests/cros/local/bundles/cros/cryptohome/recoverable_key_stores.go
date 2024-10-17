@@ -136,7 +136,7 @@ func RecoverableKeyStores(ctx context.Context, s *testing.State) {
 		if _, err := client.AuthenticateAuthFactor(ctx, authSessionID, passwordLabelNoKeyStore, userPassword); err != nil {
 			return errors.Wrap(err, "failed to authenticate password auth factor")
 		}
-		keyStores, err := getRecoverableKeyStoresAndCheckSize(ctx, client, userName, 0)
+		_, err = getRecoverableKeyStoresAndCheckSize(ctx, client, userName, 0)
 		if err != nil {
 			return errors.Wrap(err, "failed to get recoverable key stores with correct size")
 		}
@@ -145,7 +145,7 @@ func RecoverableKeyStores(ctx context.Context, s *testing.State) {
 		if err := client.AddAuthFactorWithHashInfo(ctx, authSessionID, passwordLabel2, userPassword2, &hashInfo2); err != nil {
 			return errors.Wrap(err, "failed to add password auth factor")
 		}
-		keyStores, err = getRecoverableKeyStoresAndCheckSize(ctx, client, userName, 1)
+		keyStores, err := getRecoverableKeyStoresAndCheckSize(ctx, client, userName, 1)
 		if err != nil {
 			return errors.Wrap(err, "failed to get recoverable key stores with correct size")
 		}
@@ -180,7 +180,7 @@ func RecoverableKeyStores(ctx context.Context, s *testing.State) {
 		if err := client.ReplacePasswordAuthFactor(ctx, authSessionID, passwordLabel3, passwordLabel2, userPassword2); err != nil {
 			return errors.Wrap(err, "failed to replace auth factor")
 		}
-		keyStores, err = getRecoverableKeyStoresAndCheckSize(ctx, client, userName, 0)
+		_, err = getRecoverableKeyStoresAndCheckSize(ctx, client, userName, 0)
 		if err != nil {
 			return errors.Wrap(err, "failed to get recoverable key stores with correct size")
 		}

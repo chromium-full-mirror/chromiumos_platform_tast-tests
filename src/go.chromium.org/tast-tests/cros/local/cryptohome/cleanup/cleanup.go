@@ -93,10 +93,6 @@ func ForceAutomaticCleanup(ctx context.Context) error {
 // 2. Trigger cleanup to clear all users.
 // 3. If any cleanup was performed repeat 2.
 func RunOnExistingUsers(ctx context.Context) error {
-	const (
-		temporaryUser = "cleanup-removal-user"
-		password      = "1234"
-	)
 	removalLogMessages := []string{
 		"Deleting Cache",
 		"Deleting GCache",

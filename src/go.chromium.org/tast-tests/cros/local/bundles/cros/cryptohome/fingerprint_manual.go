@@ -75,7 +75,7 @@ func FingerprintManual(ctx context.Context, s *testing.State) {
 
 	cmdRunner := hwseclocal.NewCmdRunner()
 	client := hwsec.NewCryptohomeClient(cmdRunner)
-	helper, err := hwseclocal.NewHelper(cmdRunner)
+	helper, _ := hwseclocal.NewHelper(cmdRunner)
 
 	fpLoginCleanup, err := helper.EnableFingerprintLogin(ctx)
 	if err != nil {

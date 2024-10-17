@@ -34,9 +34,6 @@ const (
 	// KioskUser is the name representing a kiosk user account.
 	KioskUser = hwsec.KioskUser
 
-	// userCleanupWaitTime is the time we wait to cleanup a user post user creation.
-	userCleanupWaitTime = 5 * time.Second
-
 	// defaultGaiaPasswordLabel is the default label used to sign into chromebook using their GAIA account.
 	defaultGaiaPasswordLabel = "gaia"
 
@@ -361,7 +358,7 @@ func VerifyFileForPersistence(ctx context.Context, username string) error {
 	// Verify that file is still there.
 	if content, err := os.ReadFile(filePath); err != nil {
 		return errors.Wrap(err, "failed to read test file")
-	} else if bytes.Compare(content, []byte(persistentTestFileContent)) != 0 {
+	} else if !bytes.Equal(content, []byte(persistentTestFileContent)) {
 		return errors.Wrap(err, "incorrect tests file content")
 	}
 	return nil

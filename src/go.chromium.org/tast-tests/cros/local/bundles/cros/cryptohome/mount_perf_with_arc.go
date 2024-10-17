@@ -127,7 +127,7 @@ func MountPerfWithArc(ctx context.Context, s *testing.State) {
 		cr.Close(ctx)
 		// Needed so defer does not cause issue above.
 		cr = nil
-		duration := time.Now().Sub(startTs)
+		duration := time.Since(startTs)
 
 		value.Append(perf.Metric{
 			Name:      "normal_login_duration",

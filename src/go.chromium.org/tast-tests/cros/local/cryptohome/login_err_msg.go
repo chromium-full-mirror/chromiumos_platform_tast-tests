@@ -128,32 +128,26 @@ func newLoginSignal(ctx context.Context, member string) (*loginSignal, error) {
 	signal.found = false
 
 	go func() {
-		for {
-			select {
-			case sig, ok := <-watcher.Signals:
-				if !ok {
-					return
-				}
-				if member == authenticateAuthFactorCompleted {
-					errorCode, errorInfo, err := parseAuthenticateAuthFactorCompleted(sig)
-					if err != nil {
-						signal.errorInfo = fmt.Sprintf("Failed to parse AuthenticateAuthFactorCompleted: %s", err)
-					}
-					signal.errorCode = errorCode
-					signal.errorInfo = errorInfo.String()
-				} else if member == mountCompleted {
-					errorCode, errorInfo, err := parseMountCompleted(sig)
-					if err != nil {
-						signal.errorInfo = fmt.Sprintf("Failed to parse MountCompleted: %s", err)
-					}
-					signal.errorCode = errorCode
-					signal.errorInfo = errorInfo.String()
-				}
-				signal.found = true
-				return
-			}
+		sig, ok := <-watcher.Signals
+		if !ok {
+			return
 		}
-
+		if member == authenticateAuthFactorCompleted {
+			errorCode, errorInfo, err := parseAuthenticateAuthFactorCompleted(sig)
+			if err != nil {
+				signal.errorInfo = fmt.Sprintf("Failed to parse AuthenticateAuthFactorCompleted: %s", err)
+			}
+			signal.errorCode = errorCode
+			signal.errorInfo = errorInfo.String()
+		} else if member == mountCompleted {
+			errorCode, errorInfo, err := parseMountCompleted(sig)
+			if err != nil {
+				signal.errorInfo = fmt.Sprintf("Failed to parse MountCompleted: %s", err)
+			}
+			signal.errorCode = errorCode
+			signal.errorInfo = errorInfo.String()
+		}
+		signal.found = true
 	}()
 
 	return signal, nil

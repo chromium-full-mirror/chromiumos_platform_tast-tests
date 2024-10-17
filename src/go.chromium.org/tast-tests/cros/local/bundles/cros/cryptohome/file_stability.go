@@ -114,7 +114,7 @@ func FileStability(ctx context.Context, s *testing.State) {
 		// Immediately attempt a read.
 		if contents, err := ioutil.ReadFile(fileName); err != nil {
 			s.Fatal("Could not immediately re-read ", fileName, ": ", err)
-		} else if bytes.Compare(contents, []byte(fileContents[i])) != 0 {
+		} else if !bytes.Equal(contents, []byte(fileContents[i])) {
 			s.Fatalf("Immediate re-read of %s did not get expected result: Expect %q, got %q", fileName, fileContents[i], contents)
 		}
 	}
@@ -128,7 +128,7 @@ func FileStability(ctx context.Context, s *testing.State) {
 			fileName := fileNames[i]
 			if contents, err := ioutil.ReadFile(fileName); err != nil {
 				return testing.PollBreak(errors.Wrapf(err, "could not later re-read %s", fileName))
-			} else if bytes.Compare(contents, []byte(fileContents[i])) != 0 {
+			} else if !bytes.Equal(contents, []byte(fileContents[i])) {
 				return testing.PollBreak(errors.Errorf("later re-read of %s did not get expected result: Expect %q, got %q", fileName, fileContents[i], contents))
 			}
 		}

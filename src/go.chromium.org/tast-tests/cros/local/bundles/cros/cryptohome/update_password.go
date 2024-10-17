@@ -101,7 +101,7 @@ func UpdatePassword(ctx context.Context, s *testing.State) {
 		// Verify that the test file is still there.
 		if content, err := ioutil.ReadFile(filePath); err != nil {
 			return authSessionID, errors.Wrap(err, "failed to read back test file")
-		} else if bytes.Compare(content, []byte(testFileContent)) != 0 {
+		} else if !bytes.Equal(content, []byte(testFileContent)) {
 			return authSessionID, errors.Errorf("incorrect tests file content. got: %q, want: %q", content, testFileContent)
 		}
 		return authSessionID, nil
