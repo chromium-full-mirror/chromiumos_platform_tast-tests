@@ -17,12 +17,6 @@ import (
 
 var consoleUpdateTooSoonRegexp = regexp.MustCompile("Attempted update too soon")
 var gsctoolUpdateTooSoonRegexp = regexp.MustCompile(`Error: status 0x9`)
-var gsctoolUpdateSuccessRegexp = regexp.MustCompile(`image updated`)
-var activeTi50Version = `\* ([0-9.]+/ti50_common[^:]*:v\S*)`
-var inactiveTi50Version = `  ([0-9.]+/ti50_common[^:]*:v\S*)`
-var versionRwARegexp = regexp.MustCompile(`RW_A:  ` + activeTi50Version)
-var versionRwBRegexp = regexp.MustCompile(`RW_B:  ` + activeTi50Version)
-var versionRwAInactiveRegexp = regexp.MustCompile(`RW_A:  ` + inactiveTi50Version)
 
 func init() {
 	testing.AddTest(&testing.Test{

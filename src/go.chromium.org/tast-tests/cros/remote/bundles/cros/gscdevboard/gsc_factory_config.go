@@ -6,8 +6,6 @@ package gscdevboard
 
 import (
 	"context"
-	"regexp"
-	"strconv"
 	"time"
 
 	"go.chromium.org/tast-tests/cros/common/firmware/ti50"
@@ -18,7 +16,6 @@ import (
 )
 
 var (
-	gsctoolFactoryConfigRE = regexp.MustCompile(`raw value: ([0-9a-fA-F]+)`)
 	// BID type - 'FCFG'
 	testFactoryConfigBIDType  = ti50.BIDField(0x46434647)
 	testFactoryConfigBIDFlags = ti50.BIDField(0x3ffff)
@@ -134,20 +131,6 @@ func GSCFactoryConfig(ctx context.Context, s *testing.State) {
 	if config != testFactoryConfig {
 		s.Fatalf("Factory config mismatch: expected %x got %x", testFactoryConfig, config)
 	}
-}
-
-// gSCToolFactoryConfig reads the factory config with gsctool over ccd.
-func gSCToolFactoryConfig(ctx context.Context, b ti50.DevBoard) (uint64, error) {
-	out, err := b.GSCToolCommand(ctx, "", "--factory_config")
-	if err != nil {
-		return 0, errors.Wrap(err, "failed to run GSCTool factory config")
-	}
-	match := gsctoolFactoryConfigRE.FindStringSubmatch(string(out))
-	config, err := strconv.ParseUint(match[1], 16, 64)
-	if err != nil {
-		return 0, errors.Errorf("failed to parse GSCTool factory config value from %s: %s", match[1], err)
-	}
-	return config, nil
 }
 
 // getFactoryConfig returns the current factory config. It reads the factory

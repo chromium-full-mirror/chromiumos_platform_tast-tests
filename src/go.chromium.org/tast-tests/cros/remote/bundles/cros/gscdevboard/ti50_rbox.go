@@ -110,22 +110,22 @@ func ti50RBOXBox(ctx context.Context, s *testing.State, b utils.DevboardHelper, 
 	s.Log("Verifying Recovery Button is passed through when power button not pressed")
 	b.GpioSet(ctx, ti50.GpioTi50PowerBtnL, true)
 	b.GpioSet(ctx, ti50.GpioTi50RecoveryIn, true)
-	if b.GpioGet(ctx, ti50.GpioTi50RecoveryOut) != true {
+	if !b.GpioGet(ctx, ti50.GpioTi50RecoveryOut) {
 		s.Errorf("GSC should forward high from %s to %s", ti50.GpioTi50RecoveryIn, ti50.GpioTi50RecoveryOut)
 	}
 	b.GpioSet(ctx, ti50.GpioTi50RecoveryIn, false)
-	if b.GpioGet(ctx, ti50.GpioTi50RecoveryOut) != false {
+	if b.GpioGet(ctx, ti50.GpioTi50RecoveryOut) {
 		s.Errorf("GSC should forward low from %s to %s", ti50.GpioTi50RecoveryIn, ti50.GpioTi50RecoveryOut)
 	}
 
 	s.Log("Verifying Recovery Button is held high when power button pressed")
 	b.GpioSet(ctx, ti50.GpioTi50PowerBtnL, false)
 	b.GpioSet(ctx, ti50.GpioTi50RecoveryIn, true)
-	if b.GpioGet(ctx, ti50.GpioTi50RecoveryOut) != true {
+	if !b.GpioGet(ctx, ti50.GpioTi50RecoveryOut) {
 		s.Error("GSC should keep Recovery Button high if power button pressed")
 	}
 	b.GpioSet(ctx, ti50.GpioTi50RecoveryIn, false)
-	if b.GpioGet(ctx, ti50.GpioTi50RecoveryOut) != true {
+	if !b.GpioGet(ctx, ti50.GpioTi50RecoveryOut) {
 		s.Error("GSC should not forward Recovery Button press with Power button pressed")
 	}
 
@@ -164,18 +164,18 @@ func ti50RBOXClamshell(ctx context.Context, s *testing.State, b utils.DevboardHe
 	s.Log("Verifying KSO is passed through when power button not pressed")
 	b.GpioSet(ctx, ti50.GpioTi50PowerBtnL, true)
 	b.GpioSet(ctx, ti50.GpioTi50EcKso2Inv, true)
-	if b.GpioGet(ctx, ti50.GpioTi50Kso2) != false {
+	if b.GpioGet(ctx, ti50.GpioTi50Kso2) {
 		s.Error("GSC should forward asserted GpioTi50EcKso2Inv")
 	}
 
 	b.GpioSet(ctx, ti50.GpioTi50EcKso2Inv, false)
-	if b.GpioGet(ctx, ti50.GpioTi50Kso2) != true {
+	if !b.GpioGet(ctx, ti50.GpioTi50Kso2) {
 		s.Error("GSC should forward de-asserted GpioTi50EcKso2Inv")
 	}
 
 	s.Log("Verifying KSO is always asserted when power button pressed")
 	b.GpioSet(ctx, ti50.GpioTi50PowerBtnL, false)
-	if b.GpioGet(ctx, ti50.GpioTi50Kso2) != false {
+	if b.GpioGet(ctx, ti50.GpioTi50Kso2) {
 		s.Error("GSC should be asserting KSO low when power button is pressed")
 	}
 	b.GpioSet(ctx, ti50.GpioTi50PowerBtnL, true)
@@ -200,7 +200,7 @@ func ti50RBOXClamshell(ctx context.Context, s *testing.State, b utils.DevboardHe
 	if err := i.WaitUntilRoBoot(ctx, clamshellGscResetHoldDelay+time.Second*5); err != nil {
 		s.Error("GSC did not reset with reset key combo after 10 seconds")
 	} else {
-		timeForReset := time.Now().Sub(beforeReset)
+		timeForReset := time.Since(beforeReset)
 		if !withinTolerance(clamshellGscResetHoldDelay, timeForReset) {
 			s.Error("GSC reset before 10s minimum hold time: ", timeForReset)
 		} else {
@@ -290,7 +290,7 @@ func ti50RBOXTablet(ctx context.Context, s *testing.State, b utils.DevboardHelpe
 	if err := i.WaitUntilRoBoot(ctx, tabletGscResetHoldDelay+time.Second*5); err != nil {
 		s.Error("GSC did not reset with reset key combo after 25 seconds")
 	} else {
-		timeForReset := time.Now().Sub(beforeReset)
+		timeForReset := time.Since(beforeReset)
 		if !withinTolerance(tabletGscResetHoldDelay, timeForReset) {
 			s.Error("GSC reset before 20s minimum hold time: ", timeForReset)
 		} else {
@@ -314,7 +314,7 @@ func ti50RBOXTablet(ctx context.Context, s *testing.State, b utils.DevboardHelpe
 	if err := i.WaitUntilRoBoot(ctx, tabletGscResetHoldDelay+time.Second*5); err != nil {
 		s.Log("GSC did not reset (which is correct) after 25 seconds with Volume Up also pushed")
 	} else {
-		timeForReset := time.Now().Sub(beforeReset)
+		timeForReset := time.Since(beforeReset)
 		s.Error("GSC reset incorrectly after ", timeForReset)
 	}
 
@@ -338,7 +338,7 @@ func verifyEcResetWithKeysInOrder(ctx context.Context, s *testing.State, b utils
 
 	s.Log("Start gpio monitoring")
 	gpioMonitor := b.GpioMonitorStart(ctx, ti50.GpioTi50EcRstL)
-	if gpioMonitor.InitialValues[ti50.GpioTi50EcRstL] != true {
+	if !gpioMonitor.InitialValues[ti50.GpioTi50EcRstL] {
 		s.Error("EC_RST_L not de-asserted before pressing EC Refresh combo")
 	}
 
@@ -395,7 +395,7 @@ func verifyBatteryDisconnect(ctx context.Context, s *testing.State, b utils.Devb
 	b.GpioSet(ctx, ti50.GpioTi50ACPresent, true)
 
 	gpioMonitor := b.GpioMonitorStart(ctx, ti50.GpioTi50BattDisableL, ti50.GpioTi50ACPresent)
-	if gpioMonitor.InitialValues[ti50.GpioTi50BattDisableL] != true {
+	if !gpioMonitor.InitialValues[ti50.GpioTi50BattDisableL] {
 		s.Errorf("%s not de-asserted before battery disconnect combo", ti50.GpioTi50BattDisableL)
 	}
 
@@ -425,6 +425,7 @@ func verifyBatteryDisconnect(ctx context.Context, s *testing.State, b utils.Devb
 		if acRemovedEdge == nil {
 			s.Fatal("Could not find AC_PRESENT falling edge")
 		}
+		//lint:ignore SA5011 acRemovedEdge is actually checked right above
 		delayTime := assertBattDisable.TimestampUS - acRemovedEdge.TimestampUS
 		// Allow 1% measurement error.
 		if delayTime < uint64(float64(battDisconnectMinimum.Microseconds())*0.99) {
@@ -445,7 +446,7 @@ func verifyBatteryDisconnectCancelled(ctx context.Context, s *testing.State, b u
 	// Start with AC connected
 	b.GpioSet(ctx, ti50.GpioTi50ACPresent, true)
 	gpioMonitor := b.GpioMonitorStart(ctx, ti50.GpioTi50BattDisableL, ti50.GpioTi50ACPresent)
-	if gpioMonitor.InitialValues[ti50.GpioTi50BattDisableL] != true {
+	if !gpioMonitor.InitialValues[ti50.GpioTi50BattDisableL] {
 		s.Errorf("%s not de-asserted before battery disconnect combo", ti50.GpioTi50BattDisableL)
 	}
 
@@ -481,6 +482,7 @@ func verifyBatteryDisconnectCancelled(ctx context.Context, s *testing.State, b u
 		if acRemovedEdge == nil {
 			s.Fatal("Could not find AC_PRESENT falling edge")
 		}
+		//lint:ignore SA5011 acRemovedEdge is actually checked right above
 		delayTime := assertBattDisable.TimestampUS - acRemovedEdge.TimestampUS
 		s.Errorf("Battery disconnect after %dus when it should have been canceled", delayTime)
 	}
@@ -490,11 +492,11 @@ func verifyBatteryDisconnectCancelled(ctx context.Context, s *testing.State, b u
 // level high and low
 func verifyPassthrough(ctx context.Context, s *testing.State, b utils.DevboardHelper, from, to ti50.GpioName) {
 	b.GpioSet(ctx, from, true)
-	if b.GpioGet(ctx, to) != true {
+	if !b.GpioGet(ctx, to) {
 		s.Errorf("GSC should forward high from %s to %s", from, to)
 	}
 	b.GpioSet(ctx, from, false)
-	if b.GpioGet(ctx, to) != false {
+	if b.GpioGet(ctx, to) {
 		s.Errorf("GSC should forward low from %s to %s", from, to)
 	}
 }

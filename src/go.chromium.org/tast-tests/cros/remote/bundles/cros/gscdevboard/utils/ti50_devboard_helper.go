@@ -662,7 +662,7 @@ func (h DevboardHelper) WaitUntilCCDConnectedAndUARTTXEnabled(ctx context.Contex
 	// Further, wait until Ti50 drives EC UART TX high, indicating that CCD UART forwarding is
 	// active.
 	startTime := time.Now()
-	for h.GpioGet(ctx, ti50.GpioTi50UartDbgTxEcRx) != true {
+	for !h.GpioGet(ctx, ti50.GpioTi50UartDbgTxEcRx) {
 		if time.Since(startTime) > 5*time.Second {
 			testing.ContextLog(ctx, "GSC not driving EC UART high on CCD connection")
 			return

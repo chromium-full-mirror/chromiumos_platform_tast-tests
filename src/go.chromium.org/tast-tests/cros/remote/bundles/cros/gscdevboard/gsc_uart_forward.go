@@ -57,7 +57,7 @@ func GSCUARTForward(ctx context.Context, s *testing.State) {
 	b.ResetWithStraps(ctx, ti50.CCDModeOff, ti50.ServoMicroDisconnected)
 	th.MustSucceed(i.WaitUntilBooted(ctx), "GSC revives after reboot")
 
-	if b.GpioGet(ctx, ti50.GpioTi50UartDbgTxEcRx) != false {
+	if b.GpioGet(ctx, ti50.GpioTi50UartDbgTxEcRx) {
 		s.Error("GSC driving EC UART high before CCD connection")
 	}
 
@@ -87,7 +87,7 @@ func GSCUARTForward(ctx context.Context, s *testing.State) {
 	b.GpioApplyStrap(ctx, ti50.CCDModeOff)
 
 	startTime := time.Now()
-	for b.GpioGet(ctx, ti50.GpioTi50UartDbgTxEcRx) == true {
+	for b.GpioGet(ctx, ti50.GpioTi50UartDbgTxEcRx) {
 		if time.Since(startTime) > 5*time.Second {
 			s.Error("GSC driving EC UART high after CCD disconnection")
 			break

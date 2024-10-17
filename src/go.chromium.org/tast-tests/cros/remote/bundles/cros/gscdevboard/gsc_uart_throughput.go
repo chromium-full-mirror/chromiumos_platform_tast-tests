@@ -83,7 +83,6 @@ type consoleChannel struct {
 }
 
 func GSCUARTThroughput(ctx context.Context, s *testing.State) {
-	const crLf = "\r\n"
 	const ecMagic byte = 0xEC
 	const apMagic byte = 0xA5
 	const fpmcuMagic byte = 0xF5

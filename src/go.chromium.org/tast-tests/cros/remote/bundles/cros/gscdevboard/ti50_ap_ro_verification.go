@@ -51,7 +51,6 @@ const (
 const todoWpSenseCausesReset = false
 
 var (
-	gsctoolApRoPassed  = regexp.MustCompile(`apro result\s*\(20\)\s*:\s*pass`)
 	verificationResult = regexp.MustCompile(`AP RO verification result: [^(]+ \(0x(\w+)\)`)
 )
 

@@ -133,6 +133,7 @@ func verifyEcResetOnTpmvRebootCmd(ctx context.Context, s *testing.State, b utils
 		// Must be fatal so we don't dereference nil below
 		s.Fatal("EC not put in reset with GSC reboot TPMV command")
 	}
+	//lint:ignore SA5011 ecReset is actually checked right above
 	ecResetReleased := events.FindFirstAfter(*ecReset, ti50.GpioTi50EcRstL)
 	if ecResetReleased == nil {
 		s.Error("EC not released from reset after GSC reboot TPMV command")
@@ -159,6 +160,7 @@ func verifyEcResetOnConsoleRebootCmd(ctx context.Context, s *testing.State, b ut
 		// Must be fatal so we don't dereference nil below
 		s.Fatal("EC not put in reset with GSC reboot console command")
 	}
+	//lint:ignore SA5011 ecReset is actually checked right above
 	ecResetReleased := events.FindFirstAfter(*ecReset, ti50.GpioTi50EcRstL)
 	if ecResetReleased == nil {
 		s.Error("EC not released from reset after GSC reboot console command")

@@ -61,7 +61,7 @@ func verifyWpDisabledWithFwmp(ctx context.Context, s *testing.State, b utils.Dev
 	}
 
 	// Ensure write protect is disabled
-	if b.GpioGet(ctx, ti50.GpioTi50WriteProtectL) != true {
+	if !b.GpioGet(ctx, ti50.GpioTi50WriteProtectL) {
 		s.Fatal("WP signal not disable after `wp disable` console command")
 	}
 
@@ -102,7 +102,7 @@ func verifyWpDisabledWithFwmp(ctx context.Context, s *testing.State, b utils.Dev
 	}
 
 	// Ensure Write protect is disabled
-	if b.GpioGet(ctx, ti50.GpioTi50WriteProtectL) != false {
+	if b.GpioGet(ctx, ti50.GpioTi50WriteProtectL) {
 		s.Fatal("WP signal not enabled after policy gets written to NVmem with FWMP unlocked disabled")
 	}
 
@@ -113,7 +113,7 @@ func verifyWpDisabledWithFwmp(ctx context.Context, s *testing.State, b utils.Dev
 	}
 
 	// Ensure Write protect is still enabled since wp command should have been blocked
-	if b.GpioGet(ctx, ti50.GpioTi50WriteProtectL) != false {
+	if b.GpioGet(ctx, ti50.GpioTi50WriteProtectL) {
 		s.Fatal("WP signal not enabled after `wp disable` command, but should be blocked")
 	}
 }

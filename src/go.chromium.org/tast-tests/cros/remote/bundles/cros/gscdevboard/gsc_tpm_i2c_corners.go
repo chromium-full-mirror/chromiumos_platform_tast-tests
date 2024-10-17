@@ -145,7 +145,7 @@ func testWedgedData(ctx context.Context, b utils.DevboardHelper, tpmHandle *util
 	// ACK
 	b.GpioSet(ctx, ti50.GpioTi50DeviceI2cSda, true)
 	b.GpioSet(ctx, ti50.GpioTi50DeviceI2cScl, true)
-	if b.GpioGet(ctx, ti50.GpioTi50DeviceI2cSda) != false {
+	if b.GpioGet(ctx, ti50.GpioTi50DeviceI2cSda) {
 		s.Error("No ack")
 	}
 	b.GpioSet(ctx, ti50.GpioTi50DeviceI2cScl, false)
@@ -185,14 +185,14 @@ func testWedgedDataAck(ctx context.Context, b utils.DevboardHelper, tpmHandle *u
 	// Address ACK
 	b.GpioSet(ctx, ti50.GpioTi50DeviceI2cSda, true)
 	b.GpioSet(ctx, ti50.GpioTi50DeviceI2cScl, true)
-	if b.GpioGet(ctx, ti50.GpioTi50DeviceI2cSda) != false {
+	if b.GpioGet(ctx, ti50.GpioTi50DeviceI2cSda) {
 		s.Error("No ack")
 	}
 	b.GpioSet(ctx, ti50.GpioTi50DeviceI2cScl, false)
 
 	for i := 0; i < 8; i++ {
 		b.GpioSet(ctx, ti50.GpioTi50DeviceI2cScl, true)
-		if b.GpioGet(ctx, ti50.GpioTi50DeviceI2cSda) != true {
+		if !b.GpioGet(ctx, ti50.GpioTi50DeviceI2cSda) {
 			s.Error("Unexpected driving of SDA by GSC")
 		}
 		b.GpioSet(ctx, ti50.GpioTi50DeviceI2cScl, false)
@@ -245,12 +245,12 @@ func verifyUnwedge(ctx context.Context, b utils.DevboardHelper, s *testing.State
 	b.GpioSet(ctx, ti50.GpioTi50DeviceI2cScl, true)
 	testTime := time.Now()
 
-	if b.GpioGet(ctx, ti50.GpioTi50DeviceI2cSda) != false {
+	if b.GpioGet(ctx, ti50.GpioTi50DeviceI2cSda) {
 		s.Errorf("%s: I2C device did not pull SDA low", testcase)
 	}
 	var elapsedTime time.Duration
 	for ; elapsedTime < 5*time.Second; elapsedTime = time.Since(testTime) {
-		if b.GpioGet(ctx, ti50.GpioTi50DeviceI2cSda) == true {
+		if b.GpioGet(ctx, ti50.GpioTi50DeviceI2cSda) {
 			s.Logf("%s: Wedge ended after %d ms", testcase, int64(elapsedTime/time.Millisecond))
 			return
 		}

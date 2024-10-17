@@ -75,6 +75,7 @@ func GSCFactoryUpdate(ctx context.Context, s *testing.State) {
 	th.MustSucceed(err, "failed to find gsc factory image")
 
 	factoryImage, err := fixture.DownloadToTempFile(ctx, "factory image", factoryImageURL)
+	th.MustSucceed(err, "failed to download gsc factory image")
 	factoryImage, err = fixture.ExtractGSCQualImageFromTarball(ctx, factoryImage)
 	th.MustSucceed(err, "failed to extract gsc factory image")
 

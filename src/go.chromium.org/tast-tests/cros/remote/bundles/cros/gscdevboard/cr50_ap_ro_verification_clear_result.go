@@ -182,7 +182,7 @@ func Cr50APROVerificationClearResult(ctx context.Context, s *testing.State) {
 		s.Fatal("APRO result was not cleared")
 	}
 
-	clearedTime := time.Now().Sub(startTime)
+	clearedTime := time.Since(startTime)
 	s.Log("APRO result was cleared in ", clearedTime)
 	if clearedTime < aPROHashClearedDelay {
 		s.Fatal("APRO result was cleared too soon ", clearedTime)

@@ -117,7 +117,7 @@ func testDefaultBootMode(ctx context.Context, s *testing.State, b utils.Devboard
 
 	s.Log("Start gpio monitoring to ensure EC doesn't reset unexpectedly")
 	gpioMonitor := b.GpioMonitorStart(ctx, ti50.GpioTi50EcRstL)
-	if gpioMonitor.InitialValues[ti50.GpioTi50EcRstL] != true {
+	if !gpioMonitor.InitialValues[ti50.GpioTi50EcRstL] {
 		s.Error("EC_RST_L not de-asserted before when starting monitoring")
 	}
 	checkApBootMode(ctx, s, tpm, utils.Efs2BootModeTrustedRo)
@@ -146,7 +146,7 @@ func testNoBootMode(ctx context.Context, s *testing.State, b utils.DevboardHelpe
 
 	s.Log("Start gpio monitoring to ensure EC doesn't reset unexpectedly")
 	gpioMonitor := b.GpioMonitorStart(ctx, ti50.GpioTi50EcRstL)
-	if gpioMonitor.InitialValues[ti50.GpioTi50EcRstL] != true {
+	if !gpioMonitor.InitialValues[ti50.GpioTi50EcRstL] {
 		s.Error("EC_RST_L not de-asserted before when starting monitoring")
 	}
 
@@ -197,7 +197,7 @@ func testNoBootMode(ctx context.Context, s *testing.State, b utils.DevboardHelpe
 
 	s.Log("Start gpio monitoring to ensure EC resets with trying to set TrustedRO")
 	gpioMonitor = b.GpioMonitorStart(ctx, ti50.GpioTi50EcRstL)
-	if gpioMonitor.InitialValues[ti50.GpioTi50EcRstL] != true {
+	if !gpioMonitor.InitialValues[ti50.GpioTi50EcRstL] {
 		s.Error("EC_RST_L not de-asserted before when starting monitoring")
 	}
 	if err := utils.SendEcPacketNoResponse(ctx,
@@ -227,7 +227,7 @@ func testVerifiedMode(ctx context.Context, s *testing.State, b utils.DevboardHel
 
 	s.Log("Start gpio monitoring to ensure EC doesn't reset unexpectedly")
 	gpioMonitor := b.GpioMonitorStart(ctx, ti50.GpioTi50EcRstL)
-	if gpioMonitor.InitialValues[ti50.GpioTi50EcRstL] != true {
+	if !gpioMonitor.InitialValues[ti50.GpioTi50EcRstL] {
 		s.Error("EC_RST_L not de-asserted before when starting monitoring")
 	}
 
@@ -332,7 +332,7 @@ func testVerifiedMode(ctx context.Context, s *testing.State, b utils.DevboardHel
 	s.Log("EC sends TrustedRO as Mode. Should be Trigger EC reset")
 	setTrustedRo := utils.CreateEcPacket(utils.Efs2CmdSetBootMode, []byte{utils.Efs2BootModeTrustedRo})
 	gpioMonitor = b.GpioMonitorStart(ctx, ti50.GpioTi50EcRstL)
-	if gpioMonitor.InitialValues[ti50.GpioTi50EcRstL] != true {
+	if !gpioMonitor.InitialValues[ti50.GpioTi50EcRstL] {
 		s.Error("EC_RST_L not de-asserted before when starting monitoring")
 	}
 	if err := utils.SendEcPacketNoResponse(ctx,
@@ -362,7 +362,7 @@ func testErrorCases(ctx context.Context, s *testing.State, b utils.DevboardHelpe
 
 	s.Log("Start gpio monitoring to ensure EC doesn't reset unexpectedly")
 	gpioMonitor := b.GpioMonitorStart(ctx, ti50.GpioTi50EcRstL)
-	if gpioMonitor.InitialValues[ti50.GpioTi50EcRstL] != true {
+	if !gpioMonitor.InitialValues[ti50.GpioTi50EcRstL] {
 		s.Error("EC_RST_L not de-asserted before when starting monitoring")
 	}
 
@@ -437,7 +437,7 @@ func testErrorCases(ctx context.Context, s *testing.State, b utils.DevboardHelpe
 
 	// Restart EC_RST_L monitoring
 	gpioMonitor = b.GpioMonitorStart(ctx, ti50.GpioTi50EcRstL)
-	if gpioMonitor.InitialValues[ti50.GpioTi50EcRstL] != true {
+	if !gpioMonitor.InitialValues[ti50.GpioTi50EcRstL] {
 		s.Error("EC_RST_L not de-asserted before when starting monitoring")
 	}
 
@@ -555,7 +555,7 @@ func testKernelFileOverwritten(ctx context.Context, s *testing.State, b utils.De
 
 	s.Log("Start gpio monitoring to ensure EC doesn't reset unexpectedly")
 	gpioMonitor := b.GpioMonitorStart(ctx, ti50.GpioTi50EcRstL)
-	if gpioMonitor.InitialValues[ti50.GpioTi50EcRstL] != true {
+	if !gpioMonitor.InitialValues[ti50.GpioTi50EcRstL] {
 		s.Error("EC_RST_L not de-asserted before when starting monitoring")
 	}
 
@@ -656,7 +656,7 @@ func testPreambleLengths(ctx context.Context, s *testing.State, b utils.Devboard
 
 	s.Log("Start gpio monitoring to ensure EC doesn't reset unexpectedly")
 	gpioMonitor := b.GpioMonitorStart(ctx, ti50.GpioTi50EcRstL)
-	if gpioMonitor.InitialValues[ti50.GpioTi50EcRstL] != true {
+	if !gpioMonitor.InitialValues[ti50.GpioTi50EcRstL] {
 		s.Error("EC_RST_L not de-asserted before when starting monitoring")
 	}
 

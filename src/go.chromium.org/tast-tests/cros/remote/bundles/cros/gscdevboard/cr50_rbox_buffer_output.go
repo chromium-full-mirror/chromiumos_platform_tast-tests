@@ -107,7 +107,6 @@ func init() {
 }
 
 type rboxConfig struct {
-	name              string
 	input             ti50.GpioName
 	inputAssertedVal  bool
 	output            ti50.GpioName

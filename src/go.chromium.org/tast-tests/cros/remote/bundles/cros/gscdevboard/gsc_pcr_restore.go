@@ -126,7 +126,7 @@ func GSCPCRRestore(ctx context.Context, s *testing.State) {
 	if err != nil {
 		s.Fatal("PCRRead failed: ", err)
 	}
-	if bytes.Compare(read0.PCRValues.Digests[0].Buffer, zeroPcr) != 0 {
+	if !bytes.Equal(read0.PCRValues.Digests[0].Buffer, zeroPcr) {
 		s.Error("PCR not zero on reset: ", read0.PCRValues)
 	}
 
@@ -199,11 +199,11 @@ func GSCPCRRestore(ctx context.Context, s *testing.State) {
 	}
 
 	if testParams.startupType == tpm2.TPMSUState {
-		if bytes.Compare(read1.PCRValues.Digests[0].Buffer, read2.PCRValues.Digests[0].Buffer) != 0 {
+		if !bytes.Equal(read1.PCRValues.Digests[0].Buffer, read2.PCRValues.Digests[0].Buffer) {
 			s.Error("PCRs not reloaded properly: ", read1.PCRValues, read2.PCRValues)
 		}
 	} else {
-		if bytes.Compare(read2.PCRValues.Digests[0].Buffer, zeroPcr) != 0 {
+		if !bytes.Equal(read2.PCRValues.Digests[0].Buffer, zeroPcr) {
 			s.Error("PCRs not cleared: ", read2.PCRValues)
 		}
 	}

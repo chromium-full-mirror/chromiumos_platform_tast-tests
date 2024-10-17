@@ -176,10 +176,10 @@ func GSCI2CBridge(ctx context.Context, s *testing.State) {
 			runI2CTransaction(ctx, index, i2cBus.BusName, byte(addr), true, true, r, b, s)
 			b.GpioMultiSet(ctx, i2cBus.DataPin, true, utils.GpioModeOpenDrain, utils.GpioPullUp)
 			b.GpioMultiSet(ctx, i2cBus.ClockPin, true, utils.GpioModeOpenDrain, utils.GpioPullUp)
-			if b.GpioGet(ctx, i2cBus.DataPin) != true {
+			if !b.GpioGet(ctx, i2cBus.DataPin) {
 				s.Fatalf("GSC keeps SDA low on bus %s", i2cBus.BusName)
 			}
-			if b.GpioGet(ctx, i2cBus.ClockPin) != true {
+			if !b.GpioGet(ctx, i2cBus.ClockPin) {
 				s.Fatalf("GSC keeps SCL low on bus %s", i2cBus.BusName)
 			}
 
