@@ -29,7 +29,7 @@ func init() {
 		},
 		BugComponent:   "b:1131774", // ChromeOS > Software > System Services > Connectivity > Cellular
 		LifeCycleStage: testing.LifeCycleOwnerMonitored,
-		Attr:           []string{"group:cellular", "cellular_sim_active", "cellular_e2e", "cellular_carrier_dependent", "cellular_carrier_softbank"},
+		Attr:           []string{"group:cellular", "cellular_sim_active", "cellular_e2e"},
 		SoftwareDeps:   []string{"chrome"},
 		Fixture:        "cellularEnforceConnectionAndResetShillProfile",
 		Timeout:        9 * time.Minute,
