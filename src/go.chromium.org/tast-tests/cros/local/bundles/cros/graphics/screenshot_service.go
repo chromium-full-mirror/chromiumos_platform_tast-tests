@@ -14,6 +14,7 @@ import (
 
 	"go.chromium.org/tast-tests/cros/local/power"
 	"go.chromium.org/tast-tests/cros/local/screenshot"
+	//lint:ignore ST1019 multiple imports with different identifiers help code readability
 	"go.chromium.org/tast-tests/cros/services/cros/graphics"
 	pb "go.chromium.org/tast-tests/cros/services/cros/graphics"
 	"go.chromium.org/tast/core/errors"

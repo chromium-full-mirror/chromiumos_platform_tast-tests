@@ -60,7 +60,7 @@ type SystemInfo struct {
 // PowerTestVars struct contains all runtime variables used by tests that interact with
 // the graphics_Power test via IPC
 type PowerTestVars struct {
-	IsValid              bool   `json:"IsValid,bool"`
+	IsValid              bool   `json:"IsValid"`
 	ResultDir            string `json:"ResultDir,string"`
 	SignalRunningFile    string `json:"SignalRunningFile,string"`
 	SignalCheckpointFile string `json:"SignalCheckpointFile,string"`

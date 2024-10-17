@@ -93,5 +93,4 @@ func KernelConfig(ctx context.Context, s *testing.State) {
 			s.Errorf("Expecting %v = m in kernel configuration", configKey)
 		}
 	}
-	return
 }

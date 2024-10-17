@@ -55,10 +55,10 @@ func MakeFilterCmd(filters CaseListFilters, tmpDir string) ([]string, error) {
 		{filters.Skips, "/skips.txt", "--skips"},
 	} {
 		file, err := os.Create(tmpDir + t.filename)
-		defer file.Close()
 		if err != nil {
 			return outCommand, errors.Wrapf(err, "couldn't create file %v", t.filename)
 		}
+		defer file.Close()
 		file.WriteString(strings.Join(t.tests, "\n"))
 		if err != nil {
 			return outCommand, errors.New("could not write to file " + t.filename)

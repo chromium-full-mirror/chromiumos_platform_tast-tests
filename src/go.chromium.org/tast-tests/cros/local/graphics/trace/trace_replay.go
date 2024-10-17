@@ -148,9 +148,9 @@ func setTCPPortState(ctx context.Context, port int, open bool) error {
 		return errors.Wrap(err, "failed to query iptable settings")
 	}
 	var iptablesActionArg string
-	if open == true && exitCode != 0 {
+	if open && exitCode != 0 {
 		iptablesActionArg = "-I"
-	} else if open == false && exitCode == 0 {
+	} else if !open && exitCode == 0 {
 		iptablesActionArg = "-D"
 	} else {
 		return nil
@@ -165,15 +165,6 @@ type graphicsPowerInterface struct {
 	signalRunningFile string
 	// signalCheckpointFile is a file that the graphics_Power test listens to for creating new checkpoints.
 	signalCheckpointFile string
-}
-
-// stop deletes signalRunningFile monitored by the graphics_Power process, informing it to shutdown gracefully
-func (gpi *graphicsPowerInterface) stop(ctx context.Context) error {
-	if err := os.Remove(gpi.signalRunningFile); err != nil {
-		testing.ContextLogf(ctx, "Failed to remove stop signal file %s to shutdown graphics_Power test process", gpi.signalRunningFile)
-		return err
-	}
-	return nil
 }
 
 // finishCheckpointWithStartTime writes to signalCheckpointFile monitored by the graphics_Power process, informing it to save a checkpoint.
@@ -334,16 +325,16 @@ func (s *fileServer) serveUploadRequest(ctx context.Context, wr http.ResponseWri
 			return errors.Wrapf(err, "serveUploadRequest: Failed os.MkdirAll %v", filepath.Dir(outFileName))
 		}
 		body, err := fileHeader.Open()
-		defer body.Close()
 		if err != nil {
 			return errors.Wrap(err, "serveUploadRequest: Failed fileHeader.Open()")
 		}
+		defer body.Close()
 
 		file, err := os.Create(outFileName)
-		defer file.Close()
 		if err != nil {
 			return errors.Wrap(err, "serveUploadRequest: Failed os.Create()")
 		}
+		defer file.Close()
 
 		copied, err := io.Copy(file, body)
 		if err != nil {
@@ -723,8 +714,8 @@ func RunTraceReplayTest(ctx context.Context, resultDir string, cloudStorage *tes
 	shortCtx, shortCancel := ctxutil.Shorten(ctx, 15*time.Second)
 	defer shortCancel()
 
-	if deadline, ok := shortCtx.Deadline(); ok == true {
-		seconds := deadline.Sub(time.Now()).Seconds() - 15
+	if deadline, ok := shortCtx.Deadline(); ok {
+		seconds := time.Until(deadline).Seconds() - 15
 		if seconds < 0 {
 			return errors.New("there is no time left to perform the test due to context deadline already exceeded")
 		}

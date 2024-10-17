@@ -599,7 +599,6 @@ func deqpParallel(ctx context.Context, s *testing.State, opts deqpParams) {
 		defer pv.Save(s.OutDir())
 		s.Fatal(result.Summary)
 	}
-	return
 }
 
 func DEQP(ctx context.Context, s *testing.State) {

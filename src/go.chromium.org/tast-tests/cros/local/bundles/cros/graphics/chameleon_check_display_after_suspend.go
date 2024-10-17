@@ -188,7 +188,7 @@ func ChameleonCheckDisplayAfterSuspend(ctx context.Context, s *testing.State) {
 		s.Fatal("Failed to reconnect to Chrome: ", err)
 	}
 	testing.ContextLog(ctx, "Reconnecting to our browser tab")
-	conn, err = cr.NewConnForTarget(ctx, chrome.MatchAllPages())
+	_, err = cr.NewConnForTarget(ctx, chrome.MatchAllPages())
 	if err != nil {
 		s.Fatal("Failed to reconnect to browser tab")
 	}

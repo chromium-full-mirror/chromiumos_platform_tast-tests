@@ -66,8 +66,6 @@ func (i *gpuRemoteWatcherImpl) SetUp(ctx context.Context, s *testing.FixtState) 
 
 	// Do not reboot if rebootRequested is set as it indicates Reset stage has already rebooted the DUT and fixture is reconstructing.
 	if (i.rebootLevel&rebootSetup) != 0 && !i.rebootRequested {
-		if i.rebootRequested {
-		}
 		if err := i.d.Reboot(ctx); err != nil {
 			s.Fatal("Failed to reboot the DUT")
 		}

@@ -83,6 +83,9 @@ func RoundedDisplay(ctx context.Context, s *testing.State) {
 			// mask textures are always promoted. See b/331664214.
 			"--enable-hardware-overlays=single-on-top",
 		))
+	if err != nil {
+		s.Fatal("Failed to create chrome instance: ", err)
+	}
 
 	tconn, err := cr.TestAPIConn(ctx)
 	if err != nil {

@@ -222,7 +222,7 @@ func collectAMDBusyCounter(ctx context.Context, interval time.Duration) (counter
 	// Check if context deadline allows collecting data for the given interval.
 	deadLine, ok := ctx.Deadline()
 	if ok {
-		contextInteval := deadLine.Sub(time.Now())
+		contextInteval := time.Until(deadLine)
 		if contextInteval < interval {
 			return nil, 0, errors.Errorf("context interval %v is less than the collecting interval %v", contextInteval, interval)
 		}
@@ -240,7 +240,7 @@ func collectAMDBusyCounter(ctx context.Context, interval time.Duration) (counter
 	for i := 0; i < numSamples; i++ {
 		// Check if enough time is left for the next sampling cycle before reaching the ctx deadline.
 		deadLine, ok := ctx.Deadline()
-		if ok && deadLine.Sub(time.Now()) <= samplePeriod {
+		if ok && time.Until(deadLine) <= samplePeriod {
 			testing.ContextLog(ctx, "Complete AMD gpu counter collecting because context deadline is about to reach")
 			break
 		}
@@ -740,7 +740,7 @@ func MeasureSystemPowerConsumption(ctx context.Context, c *chrome.TestConn, t ti
 	numSamples := int(t / samplePeriod)
 	for i := 0; i < numSamples; i++ {
 		// Check whether enough time is left for the next sampling cycle before reaching the ctx deadline.
-		if deadLine, ok := ctx.Deadline(); ok && deadLine.Sub(time.Now()) <= samplePeriod {
+		if deadLine, ok := ctx.Deadline(); ok && time.Until(deadLine) <= samplePeriod {
 			testing.ContextLog(ctx, "Finishing system power consumption measurement because context deadline is about to reach")
 			break
 		}
@@ -830,7 +830,7 @@ func MeasureSteadyStateSystemPowerConsumption(ctx context.Context, c *chrome.Tes
 	for currentIndex := 0; !full || (maxSample-minSample)/minSample > tolerance; currentIndex = (currentIndex + 1) % numSamples {
 		// Check whether enough time is left for the next sampling cycle before
 		// reaching the context deadline.
-		if deadLine, ok := ctx.Deadline(); ok && deadLine.Sub(time.Now()) <= samplePeriod {
+		if deadLine, ok := ctx.Deadline(); ok && time.Until(deadLine) <= samplePeriod {
 			testing.ContextLogf(ctx, "Context deadline reached before the system "+
 				"power consumption converged: full = %v, minSample = %fW, maxSample = %fW", full, minSample, maxSample)
 			return nil

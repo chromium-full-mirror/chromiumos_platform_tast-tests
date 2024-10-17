@@ -118,17 +118,6 @@ func getValidDir(paths []string) (string, error) {
 	return "", errors.Errorf("none of %v exist", paths)
 }
 
-// getValidPath search the list of paths and return the path which exists.
-func getValidPath(paths []string) (string, error) {
-	for _, path := range paths {
-		if _, err := os.Stat(path); err != nil {
-			continue
-		}
-		return path, nil
-	}
-	return "", errors.Errorf("none of %v exist", paths)
-}
-
 // dvfs checks that we get into the lowest clock frequency.
 func dvfs(ctx context.Context) error {
 	node, err := getValidDir([]string{
@@ -280,7 +269,7 @@ func psr(ctx context.Context) error {
 		}
 		var re *regexp.Regexp
 		if kernelVersion.IsOrLater(4, 4) {
-			re = regexp.MustCompile("PSR status: .* \\[SRDENT")
+			re = regexp.MustCompile(`PSR status: .* \[SRDENT`)
 		} else if kernelVersion.Is(3, 18) {
 			re = regexp.MustCompile("Performance_Counter: 0")
 		}

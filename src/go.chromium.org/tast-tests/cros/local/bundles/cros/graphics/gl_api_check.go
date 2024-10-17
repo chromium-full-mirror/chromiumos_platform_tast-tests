@@ -85,5 +85,4 @@ func GLAPICheck(ctx context.Context, s *testing.State) {
 	if eglMajor < 1 || (eglMajor == 1 && eglMinor < 3) {
 		s.Fatalf("eglversion 1.3 or greater required, current version %d.%d", eglMajor, eglMinor)
 	}
-	return
 }

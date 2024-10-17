@@ -20,7 +20,7 @@ func newReader(t *testing.T, messages []string) *syslog.Reader {
 		t.Fatal("TempFile failed: ", err)
 	}
 	defer tf.Close()
-	opts := append([]syslog.Option{syslog.SourcePath(tf.Name())})
+	opts := []syslog.Option{syslog.SourcePath(tf.Name())}
 	r, err := syslog.NewReader(context.Background(), opts...)
 	if err != nil {
 		t.Fatal("NewReader failed: ", err)

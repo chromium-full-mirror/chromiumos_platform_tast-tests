@@ -60,7 +60,6 @@ func HardwareProbe(ctx context.Context, s *testing.State) {
 			s.Fatal("Failed to verify values in hardware_probe result: ", err)
 		}
 	}
-	return
 }
 
 func checkValueIsSet(ctx context.Context, result hardwareprobe.Result) error {

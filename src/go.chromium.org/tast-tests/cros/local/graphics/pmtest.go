@@ -21,11 +21,11 @@ type PmTestMode string
 // The list is sorted from less invasive mode to most invasive mode"
 const (
 	PmTestNone       PmTestMode = "none"       // PmTestNone is the mode by default
-	PmTestFreezer               = "freezer"    // PmTestFreezer tests the freezing of processes
-	PmTestDevices               = "devices"    // PmTestDevices tests PmTestFreezer + suspending of devices
-	PmTestPlatform              = "platform"   // PmTestPlatform tests PmTestDevices + platform global control methods(*)
-	PmTestProcessors            = "processors" // PmTestProcessors tests PmTestPlatform + the disabling of nonboot CPUs
-	PmTestCore                  = "core"       // PmTestCore tests PmTestProcessors + suspending of platform/system devices
+	PmTestFreezer    PmTestMode = "freezer"    // PmTestFreezer tests the freezing of processes
+	PmTestDevices    PmTestMode = "devices"    // PmTestDevices tests PmTestFreezer + suspending of devices
+	PmTestPlatform   PmTestMode = "platform"   // PmTestPlatform tests PmTestDevices + platform global control methods(*)
+	PmTestProcessors PmTestMode = "processors" // PmTestProcessors tests PmTestPlatform + the disabling of nonboot CPUs
+	PmTestCore       PmTestMode = "core"       // PmTestCore tests PmTestProcessors + suspending of platform/system devices
 )
 
 type pmTestStatus struct {
@@ -88,7 +88,7 @@ type SuspendMode int
 // Supported modes cited in https://chromium.googlesource.com/chromiumos/platform2/+/HEAD/power_manager/docs/suspend_stress_test.md.
 const (
 	SuspendS3   SuspendMode = 0
-	SuspendS0ix             = 1
+	SuspendS0ix SuspendMode = 1
 )
 
 func (m SuspendMode) String() string {

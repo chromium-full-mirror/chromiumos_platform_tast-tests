@@ -21,7 +21,7 @@ type CrostiniConfig struct {
 
 // IsHasty returns true if the given run should run in hasty mode.
 func (config *CrostiniConfig) IsHasty() bool {
-	return config.Hasty == true
+	return config.Hasty
 }
 
 // SetUp initialized the environment to run glbench in Crostini.

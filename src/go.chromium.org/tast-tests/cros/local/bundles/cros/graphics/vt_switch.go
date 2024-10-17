@@ -82,10 +82,10 @@ func isPerceptuallySame(ctx context.Context, file1, file2 string, thresholdRatio
 	isSame := false
 
 	fs, err := os.Open(file1)
-	defer fs.Close()
 	if err != nil {
 		return isSame, numPix, errors.Wrap(err, "failed to open vt1 file to compare")
 	}
+	defer fs.Close()
 
 	img, _, err := image.Decode(fs)
 	if err != nil {
@@ -216,7 +216,6 @@ func VTSwitch(ctx context.Context, s *testing.State) {
 			s.Errorf("Failed to switch from VT %d terminal in iteration %d", vt, id)
 			maxDifferenceRatio[vt] = max(maxDifferenceRatio[vt], diffPixelsRatio)
 		}
-		return
 	}
 	// Repeatedly switch between VT1 and VT2 images.
 	for i := 0; i < iterations; i++ {

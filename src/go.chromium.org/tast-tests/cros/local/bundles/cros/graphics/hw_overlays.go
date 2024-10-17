@@ -192,7 +192,7 @@ func HwOverlays(ctx context.Context, s *testing.State) {
 	if err != nil {
 		s.Fatalf("Failed to get number of modetest planes: %s", err)
 	}
-	if ans := checkIfNumPlanesGreaterThan(ctx, out, minNumOfPlanes); ans == false {
+	if !checkIfNumPlanesGreaterThan(ctx, out, minNumOfPlanes) {
 		s.Fatalf("Need at least %v planes to run the test on this device", minNumOfPlanes)
 	}
 	params := s.Param().(pageTestParams)

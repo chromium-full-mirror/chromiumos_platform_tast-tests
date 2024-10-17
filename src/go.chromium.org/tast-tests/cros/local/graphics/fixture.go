@@ -412,21 +412,6 @@ func modifyHangCheckTimer(ctx context.Context) (func(context.Context) error, err
 	}, nil
 }
 
-func modifyDrmLogVerbosity(ctx context.Context) (func(context.Context) error, error) {
-	// 0xe should contains DRM_UT_DRIVER, DRM_UT_KMS, DRM_UT_PRIME but no DRM_UT_CORE as it is too spammy.
-	setDrmCommand := "echo 0xe > /sys/module/drm/parameters/debug"
-	if err := testexec.CommandContext(ctx, "sh", "-c", setDrmCommand).Run(); err != nil {
-		return nil, errors.Wrap(err, "failed to set drm debug verbosity")
-	}
-	return func(ctx context.Context) error {
-		unsetDrmCommand := "echo 0 > /sys/module/drm/parameters/debug"
-		if err := testexec.CommandContext(ctx, "sh", "-c", unsetDrmCommand).Run(); err != nil {
-			return errors.Wrap(err, "failed to unset drm debug verbosity")
-		}
-		return nil
-	}, nil
-}
-
 func modifyDrmTraceVerbosity(ctx context.Context) (func(context.Context) error, error) {
 	d, err := debugd.New(ctx)
 	if err != nil {

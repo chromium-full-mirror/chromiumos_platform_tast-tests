@@ -40,7 +40,7 @@ func init() {
 }
 
 func SwapBench(ctx context.Context, s *testing.State) {
-	targetRefreshRate, refreshMs, width, height, err := swapbench.GetRefreshRateArgs(ctx)
+	targetRefreshRate, refreshMs, width, height, _ := swapbench.GetRefreshRateArgs(ctx)
 	args := []string{
 		targetRefreshRate,
 		"--width", width,

@@ -18,7 +18,6 @@ import (
 
 	"go.chromium.org/tast-tests/cros/common/perf"
 	"go.chromium.org/tast-tests/cros/local/cpu"
-	"go.chromium.org/tast-tests/cros/local/faillog"
 	"go.chromium.org/tast-tests/cros/local/graphics/glbench"
 	"go.chromium.org/tast/core/ctxutil"
 	"go.chromium.org/tast/core/errors"
@@ -186,12 +185,4 @@ func analyzeSummary(summary, resultPath string, pv *perf.Values) ([]string, erro
 		return nil, errors.New("failed to find end marker")
 	}
 	return failedTests, nil
-}
-
-func saveFailLog(ctx context.Context, dir string) {
-	// Create the directory if it is not exist.
-	if _, err := os.Stat(dir); os.IsNotExist(err) {
-		os.Mkdir(dir, 0755)
-	}
-	faillog.SaveToDir(ctx, dir)
 }

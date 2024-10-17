@@ -20,7 +20,7 @@ type CrosConfig struct {
 
 // IsHasty returns true if the given run should run in hasty mode.
 func (config *CrosConfig) IsHasty() bool {
-	return config.Hasty == true
+	return config.Hasty
 }
 
 // SetUp initialized the environment to run glbench in ChromeOS.

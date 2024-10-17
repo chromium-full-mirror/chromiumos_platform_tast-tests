@@ -296,7 +296,7 @@ func readStableObjectCount(ctx context.Context, backend Backend, width, height i
 		objectCount, err = waitForStableReadings(ctx, backend, width, height, timeout, pollingInterval, idlePercent)
 		if err == nil {
 			testing.ContextLogf(ctx, "Waiting for object count stabilisation took %v (value %d, threshold: %.1f%%)",
-				time.Now().Sub(startTime).Round(time.Second), objectCount, idlePercent)
+				time.Since(startTime).Round(time.Second), objectCount, idlePercent)
 			return objectCount, nil
 		}
 	}
@@ -308,6 +308,7 @@ func readStableObjectCount(ctx context.Context, backend Backend, width, height i
 func waitForStableReadings(ctx context.Context, backend Backend, width, height int, timeout, interval time.Duration, threshold float64) (reading int, err error) {
 	// Keep the last numReadings for moving average purposes. Make it half the
 	// size that the current timeout and interval would allow.
+	//lint:ignore SA4015 the operation can result in a float, making the call to Floor() useful
 	numReadings := int(math.Floor(float64(timeout / (2.0 * interval))))
 
 	var currentNumReadings int

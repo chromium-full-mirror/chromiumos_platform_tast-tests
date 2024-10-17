@@ -183,7 +183,7 @@ func SwitchDisplayMode(ctx context.Context, cr *chrome.Chrome, setMirrorMode boo
 	}
 
 	displayParams := nodewith.Name("Mirror Built-in display").Role(role.CheckBox).Ancestor(ossettings.WindowFinder)
-	nodeInfo, err := ui.Info(ctx, displayParams)
+	nodeInfo, _ := ui.Info(ctx, displayParams)
 
 	if (setMirrorMode && nodeInfo.Checked == "false") || (!setMirrorMode && nodeInfo.Checked == "true") {
 		if err = ui.LeftClick(displayParams)(ctx); err != nil {
