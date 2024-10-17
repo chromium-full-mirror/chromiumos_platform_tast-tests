@@ -11,7 +11,6 @@ import (
 	"syscall"
 	"time"
 
-	"golang.org/x/sync/errgroup"
 	"golang.org/x/sys/unix"
 
 	"go.chromium.org/tast/core/errors"
@@ -45,8 +44,6 @@ type testServer struct {
 	sendConn   *net.UDPConn
 	packets    []*dhcpPacket
 }
-
-type testFunction func(context.Context) error
 
 // The standard DHCP ports.
 const (
@@ -221,22 +218,6 @@ func (s *testServer) cleanUp(ctx context.Context) {
 			testing.ContextLog(ctx, "Failed to close send socket: ", err)
 		}
 	}
-}
-
-// runTest runs testFunc against a server with the given handling rules.
-func (s *testServer) runTest(ctx context.Context, rules []HandlingRule, testFunc testFunction) error {
-	if err := s.setupAndBindSocket(ctx); err != nil {
-		return err
-	}
-	defer s.cleanUp(ctx)
-	g, ctx := errgroup.WithContext(ctx)
-	g.Go(func() error {
-		return s.runLoop(ctx, rules)
-	})
-	g.Go(func() error {
-		return testFunc(ctx)
-	})
-	return g.Wait()
 }
 
 // Packets returns all the DHCP packets received by the server.

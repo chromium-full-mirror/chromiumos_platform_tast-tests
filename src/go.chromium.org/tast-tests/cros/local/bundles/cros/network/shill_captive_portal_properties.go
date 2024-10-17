@@ -38,7 +38,7 @@ func init() {
 }
 
 func ShillCaptivePortalProperties(ctx context.Context, s *testing.State) {
-	manager, err := shill.NewManager(ctx)
+	manager, _ := shill.NewManager(ctx)
 
 	// Get Service Properties.
 	params := s.Param().(*captivePortalProperties)

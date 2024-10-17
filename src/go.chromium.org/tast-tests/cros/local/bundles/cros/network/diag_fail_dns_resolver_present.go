@@ -20,10 +20,6 @@ type dnsResolverPresentProblem uint32
 const (
 	// problemNoNameServersFound - IP config has no name servers available
 	problemNoNameServersFound dnsResolverPresentProblem = 0
-	// problemMalformedNameServers - IP config has at least one malformed name server
-	problemMalformedNameServers = 1
-	// problemEmptyNameServers - IP config has an empty list of name servers
-	problemEmptyNameServers = 2
 )
 
 type dnsResolverPresentParams struct {

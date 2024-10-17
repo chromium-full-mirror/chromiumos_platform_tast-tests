@@ -83,7 +83,7 @@ func Ping(ctx context.Context, s *testing.State) {
 		if err := ping.ExpectPingSuccessWithTimeout(ctx, domain, "chronos", pingTimeout); err != nil {
 			return err
 		}
-		elapsed := time.Now().Sub(start)
+		elapsed := time.Since(start)
 
 		pv.Set(perf.Metric{
 			Name:      "latency",
@@ -100,7 +100,7 @@ func Ping(ctx context.Context, s *testing.State) {
 	}
 
 	// Only log metrics if successful.
-	totalDuration := time.Now().Sub(start)
+	totalDuration := time.Since(start)
 	pv.Set(perf.Metric{
 		Name:      "time_to_success",
 		Unit:      "milliseconds",

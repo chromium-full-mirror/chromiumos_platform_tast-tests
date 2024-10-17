@@ -25,10 +25,10 @@ import (
 )
 
 const (
-	problemSecurityTypeNone     uint32 = 0
-	problemSecurityTypeWep8021x        = 1
-	problemSecurityTypeWepPsk          = 2
-	problemUnknownSecurityType         = 3
+	problemSecurityTypeNone     uint32 = iota
+	problemSecurityTypeWep8021x
+	problemSecurityTypeWepPsk
+	problemUnknownSecurityType
 )
 
 type secureWiFiParams struct {

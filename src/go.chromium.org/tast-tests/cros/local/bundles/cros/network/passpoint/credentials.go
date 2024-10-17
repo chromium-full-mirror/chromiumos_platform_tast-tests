@@ -226,10 +226,7 @@ func (pc *Credentials) preparePPSMOHomeSP() (string, error) {
 			Required: "TRUE",
 		})
 	}
-	var roamingOIs []string
-	for _, oi := range pc.RoamingOIs {
-		roamingOIs = append(roamingOIs, oi)
-	}
+	roamingOIs := pc.RoamingOIs
 
 	// Nodes are starting at index 1, we need a helper to fill the template.
 	funcs := template.FuncMap{

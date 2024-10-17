@@ -103,7 +103,7 @@ func ConfigBaseline(ctx context.Context, s *testing.State) {
 	defer func(ctx context.Context) {
 		if success, err := api.ForgetNetwork(ctx, guid); err != nil {
 			s.Fatalf("Failed to forget network with guid %s: %v", guid, err)
-		} else if success != true {
+		} else if !success {
 			s.Fatalf("Request to forget network with guid %s was not successful", guid)
 		}
 	}(cleanupCtx)

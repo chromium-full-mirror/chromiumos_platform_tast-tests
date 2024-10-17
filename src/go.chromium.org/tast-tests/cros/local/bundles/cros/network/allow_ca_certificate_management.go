@@ -32,12 +32,6 @@ const userCaCertName = "TEST_CA_ORG"
 // userCaOrg is a name for the org which has issued users CA certificate provided by user, it is visible in the list of Authorities.
 const userCaOrg = "org-TEST_CA_ORG"
 
-// providedCaCertName is a name for the CA certificate provided by OS, usually it is CN or OU in certificate.
-const providedCaCertName = "GTS Root R1"
-
-// providedCaOrg is a name for the org which has issued CA certificate provided by OS, it is visible in the list of Authorities.
-const providedCaOrg = "org-Google Trust Services LLC"
-
 // policyProvidedCaCertName is a name for the CA certificate provided by policy, usually it is CN or OU in certificate.
 const policyProvidedCaCertName = "root_ca_cert"
 
@@ -123,14 +117,14 @@ func isUIElementFound(ctx context.Context, ui *uiauto.Context, uiElement *nodewi
 
 // assertUIElementNotPresent confirms that provided UI element can no be found.
 func assertUIElementNotPresent(ctx context.Context, s *testing.State, ui *uiauto.Context, uiElement *nodewith.Finder) {
-	if isUIElementFound(ctx, ui, uiElement) != false {
+	if isUIElementFound(ctx, ui, uiElement) {
 		s.Error("Unexpected existence of UI element: ", uiElement)
 	}
 }
 
 // assertUIElementPresent confirms that provided UI element can be found.
 func assertUIElementPresent(ctx context.Context, s *testing.State, ui *uiauto.Context, uiElement *nodewith.Finder) {
-	if isUIElementFound(ctx, ui, uiElement) != true {
+	if !isUIElementFound(ctx, ui, uiElement) {
 		s.Error("Unexpected miss of UI element: ", uiElement)
 	}
 }
@@ -192,17 +186,6 @@ func expectEditTrustUserCACertSuccess(ctx context.Context, s *testing.State, ui 
 	}
 }
 
-// expectEditTrustProvidedCACertSuccess testing that trust bit for the provided CA certificate can be turned off.
-func expectEditTrustProvidedCACertSuccess(ctx context.Context, s *testing.State, ui *uiauto.Context, conn *chrome.Conn) {
-	if err := utils.SetCACertTrust(ctx, ui, conn, checked.False /*targetState*/, providedCaOrg, providedCaCertName); err != nil {
-		s.Fatal("Failed to set CA trust: ", err)
-	}
-	// Return trust value back to original state.
-	if err := utils.SetCACertTrust(ctx, ui, conn, checked.True /*targetState*/, providedCaOrg, providedCaCertName); err != nil {
-		s.Fatal("Failed to set CA trust: ", err)
-	}
-}
-
 // expectManagePolicyProvidedCACertNotPossible testing that it is not possible to manage CA certificate provided by policy.
 // It will select CA org, then it will select specific CA certificate and open action menu for it. Then
 // it will check that "Edit" and "Delete" buttons are not shown while "View" and "Export" buttons are shown.
@@ -260,7 +243,7 @@ func expectManageCACertNotPossible(ctx context.Context, s *testing.State, ui *ui
 // expectCACertNotImported checks that CA certificate's org is not present in the list of known orgs for CA certificates .
 // We are checking only org and not checking exact certificates, because even org should not exist.
 func expectCACertNotImported(ctx context.Context, s *testing.State, ui *uiauto.Context) {
-	if status := utils.IsCACertOrgExists(ctx, ui, userCaOrg); status == true {
+	if status := utils.IsCACertOrgExists(ctx, ui, userCaOrg); status {
 		s.Fatal("CA Org is already present in system")
 	}
 }
@@ -284,10 +267,10 @@ func AllowCACertificateManagement(ctx context.Context, s *testing.State) {
 	}
 
 	kb, err := input.Keyboard(ctx)
-	defer kb.Close(ctx)
 	if err != nil {
 		s.Fatal("Can not use keyboard: ", err)
 	}
+	defer kb.Close(ctx)
 	ctx = context.WithValue(ctx, utils.KeyboardKey, kb)
 
 	// Copy all required for test certificates to Download.

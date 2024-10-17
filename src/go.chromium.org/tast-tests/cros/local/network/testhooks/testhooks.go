@@ -85,7 +85,6 @@ func (h *hookEnv) TearDownWithLogFailures(ctx context.Context, hasError hasError
 	if err := h.TearDown(ctx, hasError); err != nil {
 		testing.ContextLog(ctx, "Failed to run tear down network test hooks: ", err)
 	}
-	return
 }
 
 // OnErrorHandler runs the onError handlers of the hooks in the reverse order.

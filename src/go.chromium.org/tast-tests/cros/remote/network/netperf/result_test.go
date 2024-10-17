@@ -5,6 +5,7 @@
 package netperf
 
 import (
+	"context"
 	"math"
 	"testing"
 	"time"
@@ -64,7 +65,7 @@ bytes  Bytes  bytes    bytes   secs.    per sec
 	}
 
 	for tc, testcase := range testcases {
-		ret, err := parseNetperfOutput(nil, testcase.testType, testcase.output, 10*time.Second)
+		ret, err := parseNetperfOutput(context.TODO(), testcase.testType, testcase.output, 10*time.Second)
 		if !testcase.errorRet && (err != nil) {
 			t.Errorf("tc %d:Unexpected error %v", tc, err)
 		}

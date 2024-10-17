@@ -124,7 +124,7 @@ func LoadGAIA(ctx context.Context, s *testing.State) {
 		s.Fatal("Login screen not found: ", err)
 	}
 
-	elapsed := time.Now().Sub(start)
+	elapsed := time.Since(start)
 
 	pv.Set(perf.Metric{
 		Name:      "time_to_load",

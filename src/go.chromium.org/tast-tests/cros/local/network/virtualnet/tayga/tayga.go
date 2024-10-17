@@ -29,11 +29,6 @@ const (
 	confPath        = "/tmp/tayga.conf"
 )
 
-type addrMap struct {
-	ipv4 string
-	ipv6 string
-}
-
 type tayga struct {
 	env *env.Env
 	cmd *testexec.Cmd

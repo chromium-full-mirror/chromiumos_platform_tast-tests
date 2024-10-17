@@ -27,13 +27,6 @@ type hook interface {
 	OnFatal(errMsg string)
 }
 
-// noopSetUpMixin is a mixin struct for a struct implements the hook interface.
-// It does nothing in setUp.
-type noopSetUpMixin struct {
-}
-
-func (n *noopSetUpMixin) setUp(ctx context.Context) error { return nil }
-
 // noopTearDownMixin is a mixin struct for a struct implements the hook
 // interface. It does nothing in TearDown.
 type noopTearDownMixin struct {

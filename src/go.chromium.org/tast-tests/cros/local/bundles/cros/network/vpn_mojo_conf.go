@@ -278,7 +278,7 @@ func VPNMojoConf(ctx context.Context, s *testing.State) {
 			}
 			for k, v := range tc.providerProperties {
 				got := provider.(map[string]interface{})[k]
-				if reflect.DeepEqual(v, got) == false {
+				if !reflect.DeepEqual(v, got) {
 					s.Errorf("Value mismatched for %s: expect %v, got %v", k, v, got)
 				}
 			}

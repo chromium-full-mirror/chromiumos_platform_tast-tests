@@ -275,7 +275,7 @@ func waitUntilNATIptablesConfigured(ctx context.Context) error {
 		if err != nil {
 			return errors.Wrap(err, "failed to execute ip6tables")
 		}
-		if bytes.Compare(lastRules, rules) != 0 || bytes.Compare(lastRules6, rules6) != 0 {
+		if !bytes.Equal(lastRules, rules) || !bytes.Equal(lastRules6, rules6) {
 			lastRules = rules
 			lastRules6 = rules6
 			return errors.New("iptables NAT rules are still being configured")

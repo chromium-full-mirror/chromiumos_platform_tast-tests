@@ -8,7 +8,6 @@ import (
 	"bytes"
 	"encoding/binary"
 	"fmt"
-	"math/rand"
 	"net"
 	"strings"
 
@@ -735,16 +734,6 @@ var (
 		release,
 		inform,
 	}
-
-	defaultParameterRequestList = []uint8{
-		requestedIP.number(),
-		ipLeaseTime.number(),
-		serverID.number(),
-		subnetMask.number(),
-		routers.number(),
-		dnsServers.number(),
-		hostName.number(),
-	}
 )
 
 func getDHCPOptionByNumber(number uint8) option {
@@ -772,38 +761,6 @@ type dhcpPacket struct {
 	fields  FieldMap
 }
 
-// createDiscovery creates a discovery packet.
-// Fill in fields of a DHCP packet as if it were being sent from macAddr.
-// Requests subnet masks, broadcast addresses, router addresses, DNS addresses,
-// domain search lists, client host name, and NTP server addresses. Note that
-// the offer packet received in response to this packet will probably not
-// contain all of that information.
-func createDiscovery(macAddr []byte) (*dhcpPacket, error) {
-	// MAC addresses are actually only 6 bytes long, however, for whatever reason,
-	// DHCP allocated 12 bytes to this field.  Ease the burden on developers and
-	// hide this detail.
-	macAddr = append(append([]byte{}, macAddr...), bytes.Repeat([]byte{optionPad}, 12-len(macAddr))...)
-	packet, err := newDHCPPacket(nil)
-	if err != nil {
-		return nil, err
-	}
-	packet.setField(op, opClientRequest)
-	packet.setField(hwType, hwType10MBEth)
-	packet.setField(hwAddrLen, hwAddrLen10MBEth)
-	packet.setField(relayHops, uint8(0))
-	packet.setField(transactionID, rand.Uint32())
-	packet.setField(timeSinceStart, uint16(0))
-	packet.setField(flags, uint16(0))
-	packet.setField(clientIP, ipv4Null)
-	packet.setField(yourIP, ipv4Null)
-	packet.setField(serverIP, ipv4Null)
-	packet.setField(gatewayIP, ipv4Null)
-	packet.setField(clientHWAddr, macAddr)
-	packet.setField(magicCookie, magicCookieVal)
-	packet.setOption(dhcpMessageType, discovery.optionVal)
-	return packet, nil
-}
-
 // createOffer creates an offer packet, given some fields that tie the
 // packet to a particular offer.
 func createOffer(txnID uint32, macAddr []byte, offerIP, svrIP string) (*dhcpPacket, error) {
@@ -825,28 +782,6 @@ func createOffer(txnID uint32, macAddr []byte, offerIP, svrIP string) (*dhcpPack
 	packet.setField(clientHWAddr, macAddr)
 	packet.setField(magicCookie, magicCookieVal)
 	packet.setOption(dhcpMessageType, offer.optionVal)
-	return packet, nil
-}
-
-func createRequest(txnID uint32, macAddr []byte) (*dhcpPacket, error) {
-	packet, err := newDHCPPacket(nil)
-	if err != nil {
-		return nil, err
-	}
-	packet.setField(op, opClientRequest)
-	packet.setField(hwType, hwType10MBEth)
-	packet.setField(hwAddrLen, hwAddrLen10MBEth)
-	packet.setField(relayHops, uint8(0))
-	packet.setField(transactionID, txnID)
-	packet.setField(timeSinceStart, uint16(0))
-	packet.setField(flags, uint16(0))
-	packet.setField(clientIP, ipv4Null)
-	packet.setField(yourIP, ipv4Null)
-	packet.setField(serverIP, ipv4Null)
-	packet.setField(gatewayIP, ipv4Null)
-	packet.setField(clientHWAddr, macAddr)
-	packet.setField(magicCookie, magicCookieVal)
-	packet.setOption(dhcpMessageType, request.optionVal)
 	return packet, nil
 }
 

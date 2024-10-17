@@ -106,7 +106,7 @@ func (n *serverRunner) writeConfigs() error {
 	for configFile, fileTemplate := range n.netConfigFileTemplates {
 		b := &bytes.Buffer{}
 		template.Must(template.New("").Parse(fileTemplate)).Execute(b, n.netConfigFileValues)
-		err := ioutil.WriteFile(n.virtualNetEnv.ChrootPath(configFile), []byte(b.String()), 0644)
+		err := ioutil.WriteFile(n.virtualNetEnv.ChrootPath(configFile), b.Bytes(), 0644)
 		if err != nil {
 			return err
 		}

@@ -340,7 +340,7 @@ func (d *dnsmasq) Start(ctx context.Context, env *env.Env) error {
 	}
 	b := &bytes.Buffer{}
 	template.Must(template.New("").Parse(confTemplate)).Execute(b, confVals)
-	if err := os.WriteFile(d.env.ChrootPath(d.confPath), []byte(b.String()), 0644); err != nil {
+	if err := os.WriteFile(d.env.ChrootPath(d.confPath), b.Bytes(), 0644); err != nil {
 		return errors.Wrap(err, "failed to write config file")
 	}
 

@@ -15,8 +15,6 @@ import (
 	"go.chromium.org/tast/core/ssh"
 )
 
-const logName = "cmdOutput.txt"
-
 // RemoteCmdRunner is the object used for running remote commands.
 type RemoteCmdRunner struct {
 	Host         *ssh.Conn

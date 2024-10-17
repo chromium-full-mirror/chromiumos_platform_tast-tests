@@ -387,10 +387,10 @@ func CertSettingsPage(ctx context.Context, s *testing.State) {
 	// Virtual kb initiation in tablet mode takes 1 sec, so initiating it once
 	// and passing it from here.
 	kb, err := input.Keyboard(ctx)
-	defer kb.Close(ctx)
 	if err != nil {
 		s.Fatal("Failed to setup keyboard: ", err)
 	}
+	defer kb.Close(ctx)
 
 	s.Logf("Opening a new tab in %v browser", browserType)
 	conn, err := browser.NewConn(ctx, "chrome://settings/certificates")

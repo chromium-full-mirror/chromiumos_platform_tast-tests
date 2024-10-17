@@ -32,14 +32,10 @@ func (r *stubCmdRunner) Output(ctx context.Context, cmd string, args ...string) 
 }
 
 // CreateCmd is a stub function which does nothing.
-func (r *stubCmdRunner) CreateCmd(ctx context.Context, cmd string, args ...string) {
-	return
-}
+func (r *stubCmdRunner) CreateCmd(ctx context.Context, cmd string, args ...string) { }
 
 // SetStdOut is a stub function which does nothing.
-func (r *stubCmdRunner) SetStdOut(stdoutFile *os.File) {
-	return
-}
+func (r *stubCmdRunner) SetStdOut(stdoutFile *os.File) { }
 
 // StdinPipe is a stub function which always returns nil.
 func (r *stubCmdRunner) StdinPipe() (io.WriteCloser, error) {
@@ -77,9 +73,7 @@ func (r *stubCmdRunner) ReleaseProcess() error {
 }
 
 // ResetCmd is a stub function which does nothing.
-func (r *stubCmdRunner) ResetCmd() {
-	return
-}
+func (r *stubCmdRunner) ResetCmd() { }
 
 func TestGetMAC(t *testing.T) {
 	testcases := []struct {

@@ -142,7 +142,7 @@ func ARCCreateWifiInShillByCmd(ctx context.Context, s *testing.State) {
 		}
 
 		// Get the SSID of current wifi service.
-		hexSSID, err := p.GetString(shillconst.ServicePropertyWiFiHexSSID)
+		hexSSID, _ := p.GetString(shillconst.ServicePropertyWiFiHexSSID)
 		decodeSSID, err := hex.DecodeString(hexSSID)
 		if err != nil {
 			s.Error("Failed to decode SSID: ", err)

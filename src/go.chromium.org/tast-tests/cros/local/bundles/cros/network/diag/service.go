@@ -31,7 +31,6 @@ type NetDiagService struct {
 
 	cr   *chrome.Chrome
 	conn *chrome.Conn
-	app  *conndiag.App
 	api  *MojoAPI
 }
 

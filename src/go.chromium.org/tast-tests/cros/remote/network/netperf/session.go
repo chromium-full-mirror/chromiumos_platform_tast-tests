@@ -30,7 +30,6 @@ const (
 type Session struct {
 	client         RunnerHost
 	server         RunnerHost
-	ignoreFailures bool
 	// runs counts number of runs to limit excess of netserv stops.
 	runs int
 }
@@ -164,7 +163,7 @@ func (s *Session) warmupWifiPart(ctx context.Context, cfg Config) error {
 			if err != nil {
 				return errors.Wrap(err, "error calculating throughput")
 			}
-			recentResult, err := AggregateSamples(ctx, warmupHistory[middle:])
+			recentResult, _ := AggregateSamples(ctx, warmupHistory[middle:])
 			if recentResult.Measurements[CategoryThroughput] <
 				(pastResult.Measurements[CategoryThroughput] +
 					pastResult.Measurements[CategoryThroughputDev]) {

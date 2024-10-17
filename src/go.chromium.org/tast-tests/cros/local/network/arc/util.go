@@ -90,6 +90,9 @@ func HideUnusedEthernet(ctx context.Context, manager *shill.Manager) (action.Act
 			continue
 		}
 		ifname, err := p.GetString(shillconst.DevicePropertyName)
+		if err != nil {
+			return nil, err
+		}
 		toBeHidden = append(toBeHidden, ifname)
 	}
 

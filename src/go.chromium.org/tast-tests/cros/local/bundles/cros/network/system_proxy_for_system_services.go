@@ -159,6 +159,9 @@ func waitForSignal(ctx context.Context) error {
 		Member:    "WorkerActive",
 	}
 	signal, err := dbusutil.NewSignalWatcherForSystemBus(ctx, match)
+	if err != nil {
+		return errors.Errorf("Failed to create DBus signal watcher: %s", err)
+	}
 	defer signal.Close(ctx)
 
 	return err

@@ -94,7 +94,7 @@ func expectImportClientCertSuccess(ctx context.Context, s *testing.State, ui *ui
 
 // expectClientCertNotImported checks that client certificate is not present in the list of imported certificates.
 func expectClientCertNotImported(ctx context.Context, s *testing.State, ui *uiauto.Context) {
-	if status := utils.IsClientCertImported(ctx, ui, clientCertificateOrg); status == true {
+	if status := utils.IsClientCertImported(ctx, ui, clientCertificateOrg); status {
 		s.Fatal("Clients certificate is already present in system")
 	}
 }

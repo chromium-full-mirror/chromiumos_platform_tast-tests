@@ -152,9 +152,6 @@ var ARCQueryRCodeRE = regexp.MustCompile(`rcode: .* \(([0-9]+)\)`)
 // ARC R+: "... DnsAddresses: [ /100.115.92.138,/2a00:79e1:abc:f605:7078:8fff:fed5:f010 ] ..."
 var ARCNameserversRE = regexp.MustCompile(`Combined LinkProperties:.*DnsAddresses: \[ ?(?:(?:[a-zA-Z0-9\-\.]*\/)?([0-9a-f\.\:]+))?(?:,(?:[a-zA-Z0-9\-\.]*\/)?([0-9a-f\.\:]+))*,? ?\]`)
 
-// DNS proxy run path, contains resolv.conf.
-const proxyRunPath = "/run/dns-proxy"
-
 // ResolvConfPath points to the resolv.conf file for name resolution.
 const ResolvConfPath = "/etc/resolv.conf"
 
@@ -214,7 +211,6 @@ func SetDoHModeViaUI(ctx context.Context, cr *chrome.Chrome, tconn *chrome.TestC
 		if err := toggleSecureDNS(ctx, checked.False); err != nil {
 			return err
 		}
-		break
 	case DoHAutomatic:
 		if err := toggleSecureDNS(ctx, checked.True); err != nil {
 			return err
@@ -236,7 +232,6 @@ func SetDoHModeViaUI(ctx context.Context, cr *chrome.Chrome, tconn *chrome.TestC
 		)(ctx); err != nil {
 			return err
 		}
-		break
 	case DoHAlwaysOn:
 		if err := toggleSecureDNS(ctx, checked.True); err != nil {
 			return err

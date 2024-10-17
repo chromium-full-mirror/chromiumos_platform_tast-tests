@@ -262,8 +262,7 @@ func startServersInRouter(ctx context.Context, router *Env, pool *subnet.Pool, o
 
 		// Set up a fix address in the subnet for the router
 		ipv6Addr := v6Prefix.IP.To16()
-		var selfIPv6Addr net.IP
-		selfIPv6Addr = append([]byte{}, ipv6Addr...)
+		var selfIPv6Addr net.IP = append([]byte{}, ipv6Addr...)
 		selfIPv6Addr[14] = 16 // (prefix)::1000
 		if err := router.ConfigureInterface(ctx, router.VethInName, selfIPv6Addr, v6Prefix); err != nil {
 			return errors.Wrapf(err, "failed to configure static IPv6 address on %s", router.VethInName)

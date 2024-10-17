@@ -112,7 +112,7 @@ func (r *Runner) listAllLinks(ctx context.Context, isUp bool, iface string) ([]*
 	content := strings.Split(strings.TrimSpace(string(output)), "\n")
 	for line := 0; line < len(content); line++ {
 		// Find the lines that start like "2: iface:" or "2: iface@alias:".
-		ifaceNameMatcher := regexp.MustCompile("^\\d+:\\s+([^@:]+)@?[^:]*:")
+		ifaceNameMatcher := regexp.MustCompile(`^\d+:\s+([^@:]+)@?[^:]*:`)
 		ifaceNameMatch := ifaceNameMatcher.FindStringSubmatch(content[line])
 		if ifaceNameMatch == nil {
 			// This line does not have an iface name, so move on.
