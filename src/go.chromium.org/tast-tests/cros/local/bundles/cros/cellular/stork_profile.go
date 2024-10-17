@@ -23,7 +23,7 @@ func init() {
 			"pholla@google.com",
 		},
 		BugComponent: "b:167157", // ChromeOS > Platform > Connectivity > Cellular
-		Attr:         []string{"group:cellular", "cellular_sim_test_esim"},
+		Attr:         []string{"group:cellular", "cellular_sim_test_esim", "group:release-health", "release-health_cellular"},
 		Timeout:      5 * time.Minute,
 	})
 }

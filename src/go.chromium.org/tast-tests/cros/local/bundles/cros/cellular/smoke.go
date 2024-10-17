@@ -24,7 +24,7 @@ func init() {
 		Desc:         "Verifies that traffic can be sent over the Cellular network",
 		Contacts:     []string{"chromeos-cellular-team@google.com", "ejcaruso@google.com"},
 		BugComponent: "b:167157", // ChromeOS > Platform > Connectivity > Cellular
-		Attr:         []string{"group:cellular", "cellular_sim_active", "cellular_cq", "cellular_carrier_dependent"},
+		Attr:         []string{"group:cellular", "cellular_sim_active", "cellular_cq", "cellular_carrier_dependent", "group:release-health", "release-health_cellular"},
 		Fixture:      "cellularDUTCheckLocal",
 		Timeout:      5 * time.Minute,
 		Requirements: []string{"cell-gen-0013-v01"},

@@ -20,7 +20,7 @@ func init() {
 		Desc:         "Verifies that the cellular device SIM PIN can be changed",
 		Contacts:     []string{"chromeos-cellular-team@google.com", "srikanthkumar@google.com"},
 		BugComponent: "b:167157", // ChromeOS > Platform > Connectivity > Cellular
-		Attr:         []string{"group:cellular", "cellular_sim_pinlock"},
+		Attr:         []string{"group:cellular", "cellular_sim_pinlock", "group:release-health", "release-health_cellular"},
 		Fixture:      "cellularSIMLockCleared",
 		Timeout:      5 * time.Minute,
 		TestBedDeps:  []string{"sim_state:WORKING"},

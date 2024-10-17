@@ -24,7 +24,7 @@ func init() {
 		},
 		BugComponent:   "b:1131774", // ChromeOS > Software > System Services > Connectivity > Cellular
 		LifeCycleStage: testing.LifeCycleOwnerMonitored,
-		Attr:           []string{"group:cellular", "cellular_sim_test_esim"},
+		Attr:           []string{"group:cellular", "cellular_sim_test_esim", "group:release-health", "release-health_cellular"},
 		SoftwareDeps:   []string{"chrome"},
 		Fixture:        "chromeLoggedInWithMojoTestEuicc",
 		Timeout:        5 * time.Minute,

@@ -30,7 +30,7 @@ func init() {
 		BugComponent:   "b:1131774", // ChromeOS > Software > System Services > Connectivity > Cellular
 		LifeCycleStage: testing.LifeCycleOwnerMonitored,
 		SoftwareDeps:   []string{"chrome"},
-		Attr:           []string{"group:cellular", "cellular_sim_test_esim"},
+		Attr:           []string{"group:cellular", "cellular_sim_test_esim", "group:release-health", "release-health_cellular"},
 		Fixture:        "cellularTestESIM",
 		Timeout:        9 * time.Minute,
 	})

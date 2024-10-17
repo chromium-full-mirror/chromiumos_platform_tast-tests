@@ -26,7 +26,7 @@ func init() {
 		Desc:           "Verifies that Modem Manager supports multiple concurrent APN connections(multiplex)",
 		Contacts:       []string{"chromeos-cellular-team@google.com", "andrewlassalle@google.com"},
 		BugComponent:   "b:167157", // ChromeOS > Platform > Connectivity > Cellular
-		Attr:           []string{"group:cellular", "cellular_amari_callbox"},
+		Attr:           []string{"group:cellular", "cellular_amari_callbox", "group:release-health", "release-health_cellular"},
 		Fixture:        "cellularModemManager",
 	})
 }

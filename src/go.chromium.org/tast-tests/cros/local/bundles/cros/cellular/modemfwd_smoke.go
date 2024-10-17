@@ -20,7 +20,7 @@ func init() {
 		Desc:         "Verifies that modemfwd initializes without errors",
 		Contacts:     []string{"chromeos-cellular-team@google.com", "andrewlassalle@google.com"},
 		BugComponent: "b:167157", // ChromeOS > Platform > Connectivity > Cellular
-		Attr:         []string{"group:cellular", "cellular_sim_active"},
+		Attr:         []string{"group:cellular", "cellular_sim_active", "group:release-health", "release-health_cellular"},
 		Fixture:      "cellular",
 		SoftwareDeps: []string{"modemfwd"},
 		Timeout:      7 * time.Minute,

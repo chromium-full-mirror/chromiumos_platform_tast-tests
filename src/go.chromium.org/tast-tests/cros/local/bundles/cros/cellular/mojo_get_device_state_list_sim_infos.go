@@ -27,7 +27,7 @@ func init() {
 		Contacts:       []string{"chromeos-cellular-team@google.com", "cros-network-health-team@google.com", "khegde@google.com"},
 		BugComponent:   "b:1131774", // ChromeOS > Software > System Services > Connectivity > Cellular
 		SoftwareDeps:   []string{"chrome"},
-		Attr:           []string{"group:cellular", "cellular_sim_active"},
+		Attr:           []string{"group:cellular", "cellular_sim_active", "group:release-health", "release-health_cellular"},
 		Fixture:        "cellularE2ELocal",
 		Timeout:        10 * time.Minute,
 	})

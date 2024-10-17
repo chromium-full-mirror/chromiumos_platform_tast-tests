@@ -20,7 +20,7 @@ func init() {
 			"chromeos-cellular-team@google.com",
 		},
 		BugComponent: "b:167157", // ChromeOS > Platform > Connectivity > Cellular
-		Attr:         []string{"group:cellular", "cellular_sim_active", "cellular_cq", "cellular_carrier_dependent"},
+		Attr:         []string{"group:cellular", "cellular_sim_active", "cellular_cq", "cellular_carrier_dependent", "group:release-health", "release-health_cellular"},
 		Fixture:      "cellularDUTCheckLocal",
 		Timeout:      5 * time.Minute,
 		Params: []testing.Param{

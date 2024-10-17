@@ -36,7 +36,7 @@ func init() {
 		BugComponent:   "b:1131774", // ChromeOS > Software > System Services > Connectivity > Cellular
 		LifeCycleStage: testing.LifeCycleOwnerMonitored,
 		SoftwareDeps:   []string{"chrome"},
-		Attr:           []string{"group:cellular", "cellular_sim_test_esim", "cellular_e2e"},
+		Attr:           []string{"group:cellular", "cellular_sim_test_esim", "cellular_e2e", "group:release-health", "release-health_cellular"},
 		Fixture:        "cellularWithFakeDMSEnrolledAndTestSIM",
 		SearchFlags: []*testing.StringPair{
 			pci.SearchFlag(&policy.DeviceOpenNetworkConfiguration{}, pci.VerifiedFunctionalityOS),

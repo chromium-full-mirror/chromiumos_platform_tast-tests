@@ -23,7 +23,7 @@ func init() {
 		Desc:           "Verifies that the modem is accessible after reset",
 		Contacts:       []string{"chromeos-cellular-team@google.com", "madhavadas@google.com"},
 		BugComponent:   "b:167157", // ChromeOS > Platform > Connectivity > Cellular
-		Attr:           []string{"group:cellular", "cellular_sim_active"},
+		Attr:           []string{"group:cellular", "cellular_sim_active", "group:release-health", "release-health_cellular"},
 		Fixture:        "cellularStressLocal",
 		HardwareDeps:   hwdep.D(hwdep.CellularModemType(cellularconst.ModemTypeSC7180, cellularconst.ModemTypeSC7280)),
 		Timeout:        3 * time.Minute,

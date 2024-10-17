@@ -29,7 +29,7 @@ func init() {
 		Desc:         "Verifies that the cellular device can connect with different APN configurations",
 		Contacts:     []string{"chromeos-cellular-team@google.com", "andrewlassalle@google.com"},
 		BugComponent: "b:167157", // ChromeOS > Platform > Connectivity > Cellular
-		Attr:         []string{"group:cellular", "cellular_amari_callbox"},
+		Attr:         []string{"group:cellular", "cellular_amari_callbox", "group:release-health", "release-health_cellular"},
 		Params: []testing.Param{{
 			Name:      "round_robin_attach_apn",
 			Val:       apnTestParam{"callbox_round_robin_attach.pbf", "callbox-ipv4", "callbox-ipv4"},

@@ -27,7 +27,7 @@ func init() {
 		Desc:         "Verifies that Shill can connect to a service in a different slot",
 		Contacts:     []string{"chromeos-cellular-team@google.com", "cros-network-health-team@google.com", "ejcaruso@google.com", "pholla@google.com"},
 		BugComponent: "b:167157", // ChromeOS > Platform > Connectivity > Cellular
-		Attr:         []string{"group:cellular", "cellular_sim_dual_active", "cellular_ota_avl"},
+		Attr:         []string{"group:cellular", "cellular_sim_dual_active", "cellular_ota_avl", "group:release-health", "release-health_cellular"},
 		Fixture:      "cellularWithChrome",
 	})
 }

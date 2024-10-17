@@ -19,7 +19,7 @@ func init() {
 		Desc:         "Iterates over profiles in an eUICC and enables them. At least 1 profile must be preinstalled",
 		Contacts:     []string{"chromeos-cellular-team@google.com", "pholla@google.com"},
 		BugComponent: "b:167157", // ChromeOS > Platform > Connectivity > Cellular
-		Attr:         []string{"group:cellular", "cellular_sim_prod_esim"},
+		Attr:         []string{"group:cellular", "cellular_sim_prod_esim", "group:release-health", "release-health_cellular"},
 		Fixture:      "cellular",
 		Timeout:      10 * time.Minute,
 	})

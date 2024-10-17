@@ -32,7 +32,7 @@ func init() {
 		},
 		BugComponent: "b:1578688", // ChromeOS > External > Cienet > Manual Test Automation > Test stabilization
 		SoftwareDeps: []string{"chrome"},
-		Attr:         []string{"group:cellular"},
+		Attr:         []string{"group:cellular", "group:release-health", "release-health_cellular"},
 		Params: []testing.Param{
 			{
 				Name:      "on_roaming_sim",

@@ -18,7 +18,7 @@ func init() {
 		Desc:         "Verifies that modemmanager reports multiple SIM slots",
 		Contacts:     []string{"chromeos-cellular-team@google.com", "cros-network-health-team@google.com", "ejcaruso@google.com"},
 		BugComponent: "b:167157", // ChromeOS > Platform > Connectivity > Cellular
-		Attr:         []string{"group:cellular", "cellular_sim_active", "cellular_cq"},
+		Attr:         []string{"group:cellular", "cellular_sim_active", "cellular_cq", "group:release-health", "release-health_cellular"},
 		Fixture:      "cellularModemManager",
 	})
 }

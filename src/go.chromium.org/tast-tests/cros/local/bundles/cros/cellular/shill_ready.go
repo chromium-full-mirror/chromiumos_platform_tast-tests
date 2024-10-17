@@ -19,7 +19,7 @@ func init() {
 		Desc:         "Verifies that Shill is running and that a Cellular Device and connectable Service are present",
 		Contacts:     []string{"chromeos-cellular-team@google.com", "cros-network-health-team@google.com", "ejcaruso@google.com"},
 		BugComponent: "b:167157", // ChromeOS > Platform > Connectivity > Cellular
-		Attr:         []string{"group:cellular", "cellular_sim_active", "cellular_cq", "cellular_ota_avl"},
+		Attr:         []string{"group:cellular", "cellular_sim_active", "cellular_cq", "cellular_ota_avl", "group:release-health", "release-health_cellular"},
 		Fixture:      "cellular",
 	})
 }

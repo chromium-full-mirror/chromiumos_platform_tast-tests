@@ -31,7 +31,7 @@ func init() {
 		Desc:           "Verifies that cellular maintains autoconnect state around Suspend/Resume",
 		Contacts:       []string{"chromeos-cellular-team@google.com", "danielwinkler@google.com"},
 		BugComponent:   "b:167157", // ChromeOS > Platform > Connectivity > Cellular
-		Attr:           []string{"group:cellular", "cellular_sim_active"},
+		Attr:           []string{"group:cellular", "cellular_sim_active", "group:release-health", "release-health_cellular"},
 		Fixture:        "cellularSuspendLocal",
 		Timeout:        4 * time.Minute,
 		// TODO(b/217106877): Skip on herobrine as S/R is unstable
