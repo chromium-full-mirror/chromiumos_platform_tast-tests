@@ -117,7 +117,7 @@ func VirtualKeyboardTypingOmnibox(ctx context.Context, s *testing.State) {
 				s.Fatalf("%s did not appear in shelf after launch: %s", br.Name, err)
 			}
 
-			omniboxFinder := nodewith.Role(role.TextField).Attribute("inputType", "url")
+			omniboxFinder := nodewith.Role(role.TextField).ClassName("OmniboxViewViews")
 
 			validateAction := uiauto.Combine("verify virtual keyboard input on omnibox",
 				vkbCtx.ClickUntilVKShown(omniboxFinder),
