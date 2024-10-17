@@ -43,7 +43,7 @@ func EntryFromLSBRelease(ctx context.Context, dut *dut.DUT, rpcHint *testing.RPC
 // FillFromLSBRelease fills map[string]string it gets as input with values
 // form the /etc/lsb-realse file based on matching keys.
 func FillFromLSBRelease(ctx context.Context, dut *dut.DUT, rpcHint *testing.RPCHint, req map[string]string) error {
-	if req == nil || len(req) == 0 {
+	if len(req) == 0 {
 		return errors.New("request map should contain at least one key")
 	}
 

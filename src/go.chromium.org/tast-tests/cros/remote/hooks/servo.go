@@ -264,11 +264,7 @@ func (sc *sshConnector) servoRunning(ctx context.Context) bool {
 	}
 	var err error
 	sc.proxy, err = servo.NewProxy(ctx, sc.servoHost, sc.keyFile, sc.keyDir)
-	if err == nil {
-		// if we can create a proxy, it means that the servod is running.
-		return true
-	}
-	return false
+	return err == nil
 }
 
 func (sc *sshConnector) servoPort() int {
@@ -344,13 +340,6 @@ func (cc *containerConnector) startServo(ctx context.Context) (err error) {
 		testing.ContextLogf(ctx, "Failed to create proxy with container %s: %v", cc.servoHost, err)
 	}
 	return nil
-}
-
-func (cc *containerConnector) getFile(ctx context.Context, src, dst string, startLine int64) error {
-	if !proxyRunning(ctx, cc.proxy) {
-		return errors.New("cannot get file because no proxy is running")
-	}
-	return cc.proxy.GetFile(ctx, false, src, dst)
 }
 
 func (cc *containerConnector) servoRunning(ctx context.Context) bool {

@@ -73,9 +73,8 @@ func ValidatePrevSleepState(ctx context.Context, dut *dut.DUT, sleepStateValue i
 	
 	if len(out_ufs) != 0 {
 		got_ufs := strings.TrimSpace(string(out_ufs))
-		want_ufs := fmt.Sprintf("Disabling UFS")
 
-		if strings.Contains(got_ufs, want_ufs) {
+		if strings.Contains(got_ufs, "Disabling UFS") {
 			sleepStateValue = 0
 			testing.ContextLog(ctx, "Warm reboot has happened after cold reboot to disable UFS controller.")
 		}

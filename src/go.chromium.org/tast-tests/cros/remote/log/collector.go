@@ -99,8 +99,8 @@ func BuildLogFilename(nameParts ...string) string {
 	timestamp := time.Now().Format("20060102-150405")
 	// Join and sanitize name parts.
 	name := strings.Join(nameParts, "_")
-	name = regexp.MustCompile("\\W").ReplaceAllString(name, "_")
-	name = regexp.MustCompile("_+").ReplaceAllString(name, "_")
+	name = regexp.MustCompile(`\W`).ReplaceAllString(name, "_")
+	name = regexp.MustCompile(`_+`).ReplaceAllString(name, "_")
 	// Combine timestamp, name, and extension.
 	if name != "" {
 		name = "_" + name

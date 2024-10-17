@@ -274,11 +274,6 @@ func (m *RemoteMemoryPressure) getDiscardedTabIDs(ctx context.Context) ([]int, e
 	return m.queryTestConnTabIDs(ctx, `discarded: true`)
 }
 
-// getAllTabIDs returns a list of all tab IDs.
-func (m *RemoteMemoryPressure) getAllTabIDs(ctx context.Context) ([]int, error) {
-	return m.queryTestConnTabIDs(ctx, ``)
-}
-
 // getCurrentActiveTabID returns the current active tab ID.
 func (m *RemoteMemoryPressure) getCurrentActiveTabID(ctx context.Context) (int, error) {
 	out, err := m.queryTestConnTabIDs(ctx, `active: true, currentWindow: true`)

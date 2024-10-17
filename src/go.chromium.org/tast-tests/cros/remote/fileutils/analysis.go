@@ -34,6 +34,9 @@ func HostFileContentsMatch(ctx context.Context, host *ssh.Conn, remoteFilePath, 
 		return false, errors.Wrapf(err, "failed to compile regex string %q", matchRegex)
 	}
 	fileContents, err := linuxssh.ReadFile(ctx, host, remoteFilePath)
+	if err != nil {
+		return false, errors.Wrapf(err, "failed to read remote file %q", remoteFilePath)
+	}
 	return matcher.Match(fileContents), nil
 }
 

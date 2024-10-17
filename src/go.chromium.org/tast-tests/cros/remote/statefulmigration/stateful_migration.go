@@ -7,16 +7,10 @@ package statefulmigration
 import (
 	"context"
 	"strings"
-	"time"
 
 	"go.chromium.org/tast/core/dut"
 	"go.chromium.org/tast/core/errors"
 	"go.chromium.org/tast/core/testing"
-)
-
-const (
-	powerwashTimeout = 2 * time.Minute
-	migrationTimeout = 5 * time.Minute
 )
 
 // Operations define the functions that are supposed to be run prior and post migration.
@@ -28,14 +22,7 @@ type Operations struct {
 func isLvmStatefulPartition(ctx context.Context, dut *dut.DUT) bool {
 	// Create command to get volume group name
 	output, _ := dut.Conn().CommandContext(ctx, "sh", "-c", `/sbin/vgs -o vg_name --noheadings`).Output()
-	if strings.TrimSpace(string(output)) != "" {
-		return true
-	}
-	return false
-}
-
-func isExt4StatefulPartition(ctx context.Context, dut *dut.DUT) bool {
-	return !isLvmStatefulPartition(ctx, dut)
+	return strings.TrimSpace(string(output)) != ""
 }
 
 func markForPowerwash(ctx context.Context, dut *dut.DUT, rpcHint *testing.RPCHint) error {
