@@ -18,71 +18,11 @@ import (
 
 	"github.com/google/go-cmp/cmp"
 	"github.com/google/go-cmp/cmp/cmpopts"
-
+	"go.chromium.org/tast-tests/cros/local/bundles/cros/health/types"
 	"go.chromium.org/tast-tests/cros/local/croshealthd"
-	"go.chromium.org/tast-tests/cros/local/jsontypes"
 	"go.chromium.org/tast/core/errors"
 	"go.chromium.org/tast/core/testing"
 )
-
-type temperatureChannelInfo struct {
-	Label              *string `json:"label"`
-	TemperatureCelsius int32   `json:"temperature_celsius"`
-}
-
-type cStateInfo struct {
-	Name                       string           `json:"name"`
-	TimeInStateSinceLastBootUs jsontypes.Uint64 `json:"time_in_state_since_last_boot_us"`
-}
-
-type logicalCPUInfo struct {
-	UserTimeUserHz             jsontypes.Uint64 `json:"user_time_user_hz"`
-	SystemTimeUserHz           jsontypes.Uint64 `json:"system_time_user_hz"`
-	MaxClockSpeedKhz           jsontypes.Uint32 `json:"max_clock_speed_khz"`
-	ScalingMaxFrequencyKhz     jsontypes.Uint32 `json:"scaling_max_frequency_khz"`
-	ScalingCurrentFrequencyKhz jsontypes.Uint32 `json:"scaling_current_frequency_khz"`
-	IdleTimeUserHz             jsontypes.Uint64 `json:"idle_time_user_hz"`
-	CStates                    []cStateInfo     `json:"c_states"`
-	CoreID                     jsontypes.Uint32 `json:"core_id"`
-}
-
-type cpuVirtualizationInfo struct {
-	Type      string `json:"type"`
-	IsEnabled bool   `json:"is_enabled"`
-	IsLocked  bool   `json:"is_locked"`
-}
-
-type physicalCPUInfo struct {
-	ModelName         *string                `json:"model_name"`
-	LogicalCPUs       []logicalCPUInfo       `json:"logical_cpus"`
-	Flags             []string               `json:"flags"`
-	CPUVirtualization *cpuVirtualizationInfo `json:"cpu_virtualization"`
-}
-
-type keylockerinfo struct {
-	KeylockerConfigured bool `json:"keylocker_configured"`
-}
-
-type virtualizationInfo struct {
-	HasKvmDevice bool   `json:"has_kvm_device"`
-	IsSmtActive  bool   `json:"is_smt_active"`
-	SmtControl   string `json:"smt_control"`
-}
-
-type vulnerabilityInfo struct {
-	Status  string `json:"status"`
-	Message string `json:"message"`
-}
-
-type cpuInfo struct {
-	Architecture        string                       `json:"architecture"`
-	NumTotalThreads     jsontypes.Uint32             `json:"num_total_threads"`
-	TemperatureChannels []temperatureChannelInfo     `json:"temperature_channels"`
-	PhysicalCPUs        []physicalCPUInfo            `json:"physical_cpus"`
-	KeylockerInfo       *keylockerinfo               `json:"keylocker_info"`
-	Virtualization      virtualizationInfo           `json:"virtualization"`
-	Vulnerabilities     map[string]vulnerabilityInfo `json:"vulnerabilities"`
-}
 
 func init() {
 	testing.AddTest(&testing.Test{
@@ -156,8 +96,8 @@ func getFlags() (map[string]bool, error) {
 	return nil, errors.New("no flags found in /proc/cpuinfo")
 }
 
-func getExpectedCPUVirtualization(flags map[string]bool) (*cpuVirtualizationInfo, error) {
-	var cpuVirtualization cpuVirtualizationInfo
+func getExpectedCPUVirtualization(flags map[string]bool) (*types.CPUVirtualizationInfo, error) {
+	var cpuVirtualization types.CPUVirtualizationInfo
 
 	const (
 		ia32FeatureLocked              = 1 << 0
@@ -202,7 +142,7 @@ func getExpectedCPUVirtualization(flags map[string]bool) (*cpuVirtualizationInfo
 	return nil, nil
 }
 
-func verifyPhysicalCPU(physicalCPU *physicalCPUInfo) error {
+func verifyPhysicalCPU(physicalCPU *types.PhysicalCPUInfo) error {
 	if len(physicalCPU.LogicalCPUs) < 1 {
 		return errors.Errorf("invalid LogicalCPUs, got %d; want 1+", len(physicalCPU.LogicalCPUs))
 	}
@@ -243,7 +183,7 @@ func verifyPhysicalCPU(physicalCPU *physicalCPUInfo) error {
 	return nil
 }
 
-func verifyLogicalCPU(logicalCPU *logicalCPUInfo) error {
+func verifyLogicalCPU(logicalCPU *types.LogicalCPUInfo) error {
 	for _, cState := range logicalCPU.CStates {
 		if err := verifyCState(cState); err != nil {
 			return errors.Wrap(err, "failed to verify c_state")
@@ -253,7 +193,7 @@ func verifyLogicalCPU(logicalCPU *logicalCPUInfo) error {
 	return nil
 }
 
-func verifyCState(cState cStateInfo) error {
+func verifyCState(cState types.CStateInfo) error {
 	if cState.Name == "" {
 		return errors.New("empty name")
 	}
@@ -261,7 +201,7 @@ func verifyCState(cState cStateInfo) error {
 	return nil
 }
 
-func validateCPUData(info *cpuInfo) error {
+func validateCPUData(info *types.CPUInfo) error {
 	// Every board should have at least one physical CPU
 	if len(info.PhysicalCPUs) < 1 {
 		return errors.Errorf("invalid PhysicalCPUs, got %d; want 1+", len(info.PhysicalCPUs))
@@ -292,15 +232,15 @@ func validateCPUData(info *cpuInfo) error {
 	return nil
 }
 
-func validateKeyLocker(keylocker *keylockerinfo) error {
+func validateKeyLocker(keylocker *types.Keylockerinfo) error {
 	if !keylocker.KeylockerConfigured {
 		return errors.Errorf("failed to configure keylocker: %t", keylocker)
 	}
 	return nil
 }
 
-func getExpectedVirtualization() (virtualizationInfo, error) {
-	var virtualization virtualizationInfo
+func getExpectedVirtualization() (types.VirtualizationInfo, error) {
+	var virtualization types.VirtualizationInfo
 
 	virtualization.HasKvmDevice = true
 	if _, err := os.Stat("/dev/kvm"); err != nil {
@@ -343,7 +283,7 @@ func getExpectedVirtualization() (virtualizationInfo, error) {
 	return virtualization, nil
 }
 
-func validateVirtualization(gotVirtualization virtualizationInfo) error {
+func validateVirtualization(gotVirtualization types.VirtualizationInfo) error {
 	expectedVirtualization, err := getExpectedVirtualization()
 	if err != nil {
 		return errors.Wrap(err, "failed to get virtualization")
@@ -354,8 +294,8 @@ func validateVirtualization(gotVirtualization virtualizationInfo) error {
 	return nil
 }
 
-func validateVulnerabilities(gotVulnerabilities map[string]vulnerabilityInfo) error {
-	expectedVulnerabilities := make(map[string]vulnerabilityInfo)
+func validateVulnerabilities(gotVulnerabilities map[string]types.VulnerabilityInfo) error {
+	expectedVulnerabilities := make(map[string]types.VulnerabilityInfo)
 	vulnerabilityFiles, err := ioutil.ReadDir("/sys/devices/system/cpu/vulnerabilities")
 	if err != nil && !os.IsNotExist(err) {
 		return errors.Wrap(err, "failed to read vulnerabilities directory")
@@ -368,11 +308,11 @@ func validateVulnerabilities(gotVulnerabilities map[string]vulnerabilityInfo) er
 				return errors.Wrapf(err, "failed to read vulnerability: %s", name)
 			}
 			expectedVulnerabilities[name] =
-				vulnerabilityInfo{Message: strings.TrimSpace(string(out))}
+				types.VulnerabilityInfo{Message: strings.TrimSpace(string(out))}
 		}
 	}
 
-	ignoreOpt := cmpopts.IgnoreFields(vulnerabilityInfo{}, "Status")
+	ignoreOpt := cmpopts.IgnoreFields(types.VulnerabilityInfo{}, "Status")
 	if diff := cmp.Diff(gotVulnerabilities, expectedVulnerabilities, ignoreOpt); diff != "" {
 		return errors.Errorf("Vulnerability reported differently: (-got +want) %s", diff)
 	}
@@ -386,7 +326,7 @@ func validateVulnerabilities(gotVulnerabilities map[string]vulnerabilityInfo) er
 	return nil
 }
 
-func validateCPUEquality(physicalCPUs []physicalCPUInfo) error {
+func validateCPUEquality(physicalCPUs []types.PhysicalCPUInfo) error {
 	// Compare each physical CPU for equality of flag and virtualization.
 	if len(physicalCPUs) < 1 {
 		return errors.New("no physical CPU present on the device")
@@ -411,7 +351,7 @@ func validateCPUEquality(physicalCPUs []physicalCPUInfo) error {
 func ProbeCPUInfo(ctx context.Context, s *testing.State) {
 	params := croshealthd.TelemParams{Category: croshealthd.TelemCategoryCPU}
 
-	var info cpuInfo
+	var info types.CPUInfo
 	if err := croshealthd.RunAndParseJSONTelem(ctx, params, s.OutDir(), &info); err != nil {
 		s.Fatal("Failed to run telem command: ", err)
 	}

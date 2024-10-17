@@ -5,6 +5,10 @@
 // Package types provides interface types shared by healthd tast files.
 package types
 
+import (
+	"go.chromium.org/tast-tests/cros/local/jsontypes"
+)
+
 // BusDevice represents the BusDevice in cros-healthd mojo interface.
 type BusDevice struct {
 	VendorName  string  `json:"vendor_name"`
@@ -79,4 +83,72 @@ type ThunderboltInterfaceInfo struct {
 type ThunderboltBusInfo struct {
 	SecurityLevel         string                     `json:"security_level"`
 	ThunderboltInterfaces []ThunderboltInterfaceInfo `json:"thunderbolt_interfaces"`
+}
+
+// CPUInfo represents the CpuInfo in cros-healthd mojo interface.
+type CPUInfo struct {
+	Architecture        string                       `json:"architecture"`
+	NumTotalThreads     jsontypes.Uint32             `json:"num_total_threads"`
+	TemperatureChannels []TemperatureChannelInfo     `json:"temperature_channels"`
+	PhysicalCPUs        []PhysicalCPUInfo            `json:"physical_cpus"`
+	KeylockerInfo       *Keylockerinfo               `json:"keylocker_info"`
+	Virtualization      VirtualizationInfo           `json:"virtualization"`
+	Vulnerabilities     map[string]VulnerabilityInfo `json:"vulnerabilities"`
+}
+
+// TemperatureChannelInfo represents the CpuTemperatureChannel in cros-healthd mojo interface.
+type TemperatureChannelInfo struct {
+	Label              *string `json:"label"`
+	TemperatureCelsius int32   `json:"temperature_celsius"`
+}
+
+// CStateInfo represents the CpuCStateInfo in cros-healthd mojo interface.
+type CStateInfo struct {
+	Name                       string           `json:"name"`
+	TimeInStateSinceLastBootUs jsontypes.Uint64 `json:"time_in_state_since_last_boot_us"`
+}
+
+// LogicalCPUInfo represents the LogicalCpuInfo in cros-healthd mojo interface.
+type LogicalCPUInfo struct {
+	UserTimeUserHz             jsontypes.Uint64 `json:"user_time_user_hz"`
+	SystemTimeUserHz           jsontypes.Uint64 `json:"system_time_user_hz"`
+	MaxClockSpeedKhz           jsontypes.Uint32 `json:"max_clock_speed_khz"`
+	ScalingMaxFrequencyKhz     jsontypes.Uint32 `json:"scaling_max_frequency_khz"`
+	ScalingCurrentFrequencyKhz jsontypes.Uint32 `json:"scaling_current_frequency_khz"`
+	IdleTimeUserHz             jsontypes.Uint64 `json:"idle_time_user_hz"`
+	CStates                    []CStateInfo     `json:"c_states"`
+	CoreID                     jsontypes.Uint32 `json:"core_id"`
+}
+
+// CPUVirtualizationInfo represents the CpuVirtualizationInfo in cros-healthd mojo interface.
+type CPUVirtualizationInfo struct {
+	Type      string `json:"type"`
+	IsEnabled bool   `json:"is_enabled"`
+	IsLocked  bool   `json:"is_locked"`
+}
+
+// PhysicalCPUInfo represents the PhysicalCpuInfo in cros-healthd mojo interface.
+type PhysicalCPUInfo struct {
+	ModelName         *string                `json:"model_name"`
+	LogicalCPUs       []LogicalCPUInfo       `json:"logical_cpus"`
+	Flags             []string               `json:"flags"`
+	CPUVirtualization *CPUVirtualizationInfo `json:"cpu_virtualization"`
+}
+
+// Keylockerinfo represents the KeylockerInfo in cros-healthd mojo interface.
+type Keylockerinfo struct {
+	KeylockerConfigured bool `json:"keylocker_configured"`
+}
+
+// VirtualizationInfo represents the VirtualizationInfo in cros-healthd mojo interface.
+type VirtualizationInfo struct {
+	HasKvmDevice bool   `json:"has_kvm_device"`
+	IsSmtActive  bool   `json:"is_smt_active"`
+	SmtControl   string `json:"smt_control"`
+}
+
+// VulnerabilityInfo represents the VulnerabilityInfo in cros-healthd mojo interface.
+type VulnerabilityInfo struct {
+	Status  string `json:"status"`
+	Message string `json:"message"`
 }
