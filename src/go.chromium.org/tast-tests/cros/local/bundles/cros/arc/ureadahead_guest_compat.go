@@ -31,8 +31,8 @@ func init() {
 		},
 		// ChromeOS > Software > ARC++ > Performance
 		BugComponent: "b:168382",
-		// TODO(b/360082273): informational until fix the ureadahead-0.100.2's incompatibility with the SELinux policy
-		Attr:         []string{"group:mainline", "group:arc-functional", "informational"},
+		// TODO(b/360082273): removing from mainline until fixing the SELinux incompatibility
+		// Attr:         []string{"group:mainline", "group:arc-functional", "informational"},
 		SoftwareDeps: []string{"chrome", "no_arc_userdebug"},
 		Params: []testing.Param{{
 			Name:              "vm",
