@@ -20,7 +20,6 @@ import (
 	"go.chromium.org/tast-tests/cros/local/chrome/ash"
 	"go.chromium.org/tast-tests/cros/local/chrome/browser"
 	"go.chromium.org/tast-tests/cros/local/chrome/browser/browserfixt"
-	"go.chromium.org/tast-tests/cros/local/chrome/lacros"
 	"go.chromium.org/tast-tests/cros/local/chrome/uiauto"
 	"go.chromium.org/tast-tests/cros/local/chrome/uiauto/nodewith"
 	"go.chromium.org/tast-tests/cros/local/chrome/uiauto/prompts"
@@ -98,14 +97,7 @@ func NewFromTarget(ctx context.Context, cr *chrome.Chrome, br browser.Type, tm c
 	}
 
 	var conn *chrome.Conn
-	var l *lacros.Lacros
-	switch br {
-	case browser.TypeLacros:
-		l, err = lacros.Connect(ctx, tconn)
-		conn, err = l.NewConnForTarget(ctx, tm)
-	default:
-		conn, err = cr.NewConnForTarget(ctx, tm)
-	}
+	conn, err = cr.NewConnForTarget(ctx, tm)
 	if err != nil {
 		return nil, err
 	}
