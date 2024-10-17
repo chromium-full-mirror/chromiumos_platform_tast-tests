@@ -123,8 +123,7 @@ func DevBootInvalidUSB(ctx context.Context, s *testing.State) {
 		s.Fatal("Failed to turn on internal keyboard: ", err)
 	}
 
-	var state firmware.CheckAndSetServoCharger
-	state = h.CheckServoChargerBeforeBootingFromUSB(ctx)
+	var state firmware.CheckAndSetServoCharger = h.CheckServoChargerBeforeBootingFromUSB(ctx)
 
 	testOpt := s.Param().(*devBootInvalidUSBParams)
 	s.Log("Setting up the USB key")

@@ -403,7 +403,10 @@ func ParseSections(fmap string) (map[ImageSection]SectionInfo, error) {
 			return nil, errors.Wrapf(err, "could not parse section start %v", line)
 		}
 		length, err := strconv.ParseUint(cols[2], 10, 32)
-		ret[ImageSection(cols[0])] = SectionInfo{uint(start), uint(length)}
+		if err != nil {
+			return nil, errors.Wrapf(err, "could not parse section length %v", line)
+		}
+		ret[ImageSection(cols[0])] = SectionInfo{Start: uint(start), Length: uint(length)}
 	}
 	return ret, nil
 }

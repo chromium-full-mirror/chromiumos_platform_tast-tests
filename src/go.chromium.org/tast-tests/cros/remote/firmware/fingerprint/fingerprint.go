@@ -424,7 +424,7 @@ func FlashFirmware(ctx context.Context, d *rpcdut.RPCDUT, fpFirmwarePath string,
 
 	if ctxutil.DeadlineBefore(ctx, time.Now().Add(flashFpMcuTimeout)) {
 		d, _ := ctx.Deadline()
-		t := d.Sub(time.Now())
+		t := time.Until(d)
 		return errors.Errorf("insufficient time remaining before the context reaches its deadline. Need at least %v, only %v remain", flashFpMcuTimeout, t)
 	}
 
@@ -698,7 +698,7 @@ Failed to get FP sensor frame
 		return errors.New("command to read raw frame succeeded")
 	}
 
-	stderr := string(stderrBuf.Bytes())
+	stderr := stderrBuf.String()
 	if !strings.Contains(stderr, fpFrameRawAccessDeniedError) {
 		return errors.Errorf("raw fpframe command returned unexpected value, expected: %q, actual: %q", fpFrameRawAccessDeniedError, stderr)
 	}

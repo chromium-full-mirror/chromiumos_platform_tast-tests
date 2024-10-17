@@ -192,8 +192,7 @@ func CorruptBothKernelCopies(ctx context.Context, s *testing.State) {
 		s.Fatal("Failed to prioritize KERN-A: ", err)
 	}
 
-	var state firmware.CheckAndSetServoCharger
-	state = h.CheckServoChargerBeforeBootingFromUSB(ctx)
+	var state firmware.CheckAndSetServoCharger = h.CheckServoChargerBeforeBootingFromUSB(ctx)
 	defer func(ctx context.Context) {
 		if s.HasError() {
 			if state.RemoveServoChargerRequired && !state.IsServoChargerConnected {

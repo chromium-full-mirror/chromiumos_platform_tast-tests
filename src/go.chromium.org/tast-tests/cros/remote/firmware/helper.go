@@ -819,7 +819,7 @@ func (h *Helper) WaitConnect(ctx context.Context, opts ...WaitConnectOption) err
 
 	deadline, ok := ctx.Deadline()
 	if ok {
-		totalWaitTime := deadline.Sub(time.Now())
+		totalWaitTime := time.Until(deadline)
 		if totalWaitTime < 2*time.Second {
 			// There isn't enough time to connect
 			return errors.Errorf("context timeout too short, need at least %s, got %s", 2*time.Second, totalWaitTime)
@@ -847,7 +847,7 @@ func (h *Helper) WaitConnect(ctx context.Context, opts ...WaitConnectOption) err
 	for {
 		deadline, ok := ctx.Deadline()
 		if ok {
-			remainingTime := deadline.Sub(time.Now())
+			remainingTime := time.Until(deadline)
 			if remainingTime < 2*time.Second {
 				// There isn't enough time to connect
 				return context.DeadlineExceeded
@@ -883,7 +883,6 @@ func (h *Helper) WaitConnect(ctx context.Context, opts ...WaitConnectOption) err
 
 		select {
 		case <-time.After(reconnectRetryDelay):
-			break
 		case <-ctx.Done():
 			if err.Error() == ctx.Err().Error() {
 				return err
@@ -1478,70 +1477,6 @@ func (h *Helper) getUSBModelAndSerial(ctx context.Context, usbdev string) (strin
 		serial = foundSerial[1]
 	}
 	return model, serial, nil
-}
-
-// validateUSBConn checks for usb connection stability by comparing
-// the before and after outputs of 'lsusb' on DUT.
-func (h *Helper) validateUSBConn(ctx context.Context) error {
-	// From Stainless logs, one repetitive error was about not being able to open the USB.
-	// When we ssh'ed into their DUTs, it appeared that some USBs would drop connection
-	// after a short period of time. Run validateUSBConn to verify if the usb device disappears
-	// without any intervention.
-	defer func() error {
-		// Ensure that the usb is powered on at the end.
-		if err := h.Servo.SetString(ctx, "usb3_pwr_en", "on"); err != nil {
-			return errors.Wrap(err, "failed to power on USB")
-		}
-		return nil
-	}()
-	testing.ContextLog(ctx, "Enabling USB connection to DUT")
-	if err := h.Servo.SetUSBMuxState(ctx, servo.USBMuxDUT); err != nil {
-		return errors.Wrap(err, "failed to set USBMuxDUT")
-	}
-	testing.ContextLog(ctx, "Power cycling the USB")
-	if err := h.Servo.SetString(ctx, "usb3_pwr_en", "off"); err != nil {
-		return errors.Wrap(err, "failed to power off USB")
-	}
-	if err := h.Servo.SetString(ctx, "usb3_pwr_en", "on"); err != nil {
-		return errors.Wrap(err, "failed to power on USB")
-	}
-	testing.ContextLog(ctx, "Waiting for a short delay")
-	// GoBigSleepLint: It takes some time for usb mux state to take effect.
-	if err := testing.Sleep(ctx, UsbVisibleTime); err != nil {
-		return errors.Wrap(err, "failed to sleep")
-	}
-	// The bash commands would attempt steps as follows:
-	// 1. Save the lsusb result to a temporary file.
-	// 2. Sleep for 2 minutes.
-	// 3. Compare the current lsusb output with the previous file.
-	testing.ContextLog(ctx, "Attempting to validate USB connection")
-	workPath := "/tmp/lsusb.1"
-	checkUSBCmd := fmt.Sprintf(
-		"lsusb > %[1]s && "+
-			"sleep 120s && "+
-			"echo $(lsusb | diff - %[1]s -c | grep -h '^[+-][[:blank:]]') && "+
-			"rm %[1]s",
-		workPath)
-	out, err := h.DUT.Conn().CommandContext(ctx, "bash", "-c", checkUSBCmd).Output(ssh.DumpLogOnError)
-	if err != nil {
-		return errors.Wrap(err, "failed to check for lsusb")
-	}
-	deviceDiff := strings.TrimSpace(string(out))
-	if strings.Contains(deviceDiff, "+") {
-		return errors.Errorf("Device %s disappeared after a short delay", strings.TrimPrefix(deviceDiff, "+ "))
-	}
-	reUSBDriverName := regexp.MustCompile(`Driver=usb-storage`)
-	testing.ContextLog(ctx, "Checking if usb driver really exists")
-	driverOutput, err := h.DUT.Conn().CommandContext(ctx, "bash", "-c", "lsusb -t").Output(ssh.DumpLogOnError)
-	if err != nil {
-		return errors.Wrap(err, "failed to check for lsusb")
-	}
-	matches := reUSBDriverName.FindAllStringSubmatch(string(driverOutput), -1)
-	if len(matches) == 0 {
-		return errors.New("usb device does not exist")
-	}
-	testing.ContextLogf(ctx, "%d usb device(s) found", len(matches))
-	return nil
 }
 
 // WaitDUTConnectDuringBootFromUSB will check if the DUT boots from USB or not.
@@ -2475,11 +2410,7 @@ func (h *Helper) GetAllECCrashFiles(ctx context.Context) (map[string][]string, e
 		if strings.HasPrefix(file, "embedded_controller") {
 			fileWithoutExt := strings.TrimSuffix(file, filepath.Ext(file))
 			filePath := ECCrashBaseDir + file
-			if _, ok := fileMap[fileWithoutExt]; ok {
-				fileMap[fileWithoutExt] = append(fileMap[fileWithoutExt], filePath)
-			} else {
-				fileMap[fileWithoutExt] = []string{filePath}
-			}
+			fileMap[fileWithoutExt] = append(fileMap[fileWithoutExt], filePath)
 		}
 	}
 

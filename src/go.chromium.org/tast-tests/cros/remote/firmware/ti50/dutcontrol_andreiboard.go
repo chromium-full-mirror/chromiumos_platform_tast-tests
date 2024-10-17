@@ -19,6 +19,7 @@ import (
 
 	"google.golang.org/grpc"
 
+	//lint:ignore ST1019 multiple imports with different identifiers help code readability
 	"go.chromium.org/tast-tests/cros/common/firmware/ti50"
 	common "go.chromium.org/tast-tests/cros/common/firmware/ti50"
 	"go.chromium.org/tast-tests/cros/remote/firmware/ti50/dutcontrol"
@@ -38,14 +39,7 @@ const (
 	startSessionTrys = 3
 )
 
-var (
-	// gpioOutput specifies the output format of OpenTitanTool. Quotes are part of the output
-	// after we started passing in --format=json flag. The ? for the quotes could be dropped once
-	// the newer docker images are used everywhere
-	gpioOutput = regexp.MustCompile("\"?value\"?: (true|false)")
-
-	reGsctoolUpdateSuccess = regexp.MustCompile(`image updated`)
-)
+var reGsctoolUpdateSuccess = regexp.MustCompile(`image updated`)
 
 // DUTControlAndreiboard controls an Andreiboard through dutcontrol grpc..
 type DUTControlAndreiboard struct {
@@ -541,16 +535,12 @@ func (a *DUTControlAndreiboard) CcdSerialInterfaceWithBaud(name common.UartName,
 	switch name {
 	case common.UartAP:
 		ep = dutcontrol.CCDSerialEndPoint_AP
-		break
 	case common.UartEC:
 		ep = dutcontrol.CCDSerialEndPoint_EC
-		break
 	case common.UartFPMCU:
 		ep = dutcontrol.CCDSerialEndPoint_FPMCU
-		break
 	default:
 		ep = dutcontrol.CCDSerialEndPoint_UNKNOWN_SERIAL
-		break
 	}
 	uartOpener := &DUTControlCCDPortOpener{
 		Client:      a.client,

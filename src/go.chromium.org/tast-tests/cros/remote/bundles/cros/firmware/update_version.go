@@ -284,8 +284,7 @@ func UpdateVersion(ctx context.Context, s *testing.State) {
 		s.Fatal("Failed to use futility to autoupdate inactive firmware (RWB): ", err)
 	}
 
-	var state firmware.CheckAndSetServoCharger
-	state = h.CheckServoChargerBeforeBootingFromUSB(ctx)
+	var state firmware.CheckAndSetServoCharger = h.CheckServoChargerBeforeBootingFromUSB(ctx)
 	fwidAfterAutoUpdate := new(string)
 
 	defer func(ctx context.Context, fwidAfterAutoUpdate *string) {

@@ -383,28 +383,6 @@ func hashAlg(algBytes string) option {
 	}
 }
 
-// ecdsaOp returns an option that can be passed to newECDSA to
-// set a supported ECDSA operation to its associated trunks command values.
-// Trunks operations values are:
-// TEST_SIGN = 0, TEST_VERIFY = 1, TEST_KEYGEN = 2, TEST_KEYDERIVE = 3, TEST_POINT = 4, TEST_VERIFY_ANY = 5
-func ecdsaOp(op string) option {
-	return func(e *ecdsa) error {
-		switch op {
-		case "keyGen":
-			e.op = tpmKeyGen
-		case "keyVer":
-			e.op = tpmKeyVer
-		case "sigGen":
-			e.op = tpmSigGen
-		case "sigVer":
-			e.op = tpmSigVer
-		default:
-			return errors.Errorf("unsupported ECDSA operation: %q", op)
-		}
-		return nil
-	}
-}
-
 // digest returns an option that can be passed to newECDSA to
 // compute and set the digest of an ECDSA message.
 func digest(msg string) option {

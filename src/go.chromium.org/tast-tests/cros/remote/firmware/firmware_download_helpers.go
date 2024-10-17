@@ -177,7 +177,6 @@ func DownloadFirmwareFiles(ctx context.Context, cs *testing.CloudStorage, h *Hel
 // UntarUnknownFileName will try to untar the respective fw bin file from the downloaded tar file.
 func UntarUnknownFileName(ctx context.Context, tmpDir, fwidModel string, fwType FWType) (string, string, error) {
 	// List of possible formats for the binary file found in a downloaded tar file.
-	const ecMonitorFileName = "npcx_monitor.bin"
 	ecMonitorFile := ""
 	filenamePool, ecMonitorFileNamePool := getFileNamePools(ctx, fwidModel, fwType)
 	if fwType == ECFirmware {

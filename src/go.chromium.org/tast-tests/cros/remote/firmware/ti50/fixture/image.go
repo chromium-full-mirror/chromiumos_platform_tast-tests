@@ -15,7 +15,6 @@ import (
 	"sort"
 	"strconv"
 	"strings"
-	"time"
 
 	"go.chromium.org/tast-tests/cros/common/firmware/ti50"
 	remoteTi50 "go.chromium.org/tast-tests/cros/remote/firmware/ti50"
@@ -69,10 +68,10 @@ const (
 	gsPrefix = "gs://"
 
 	// ToTBranch is the Tip-of-Tree branch having artifacts at postSubmitArtifactsBuilder.
-	ToTBranch                  string = "tot"
-	postSubmitArtifactsBuilder        = "chromeos-image-archive/firmware-ti50-postsubmit"
+	ToTBranch                    string = "tot"
+	postSubmitArtifactsBuilder   string = "chromeos-image-archive/firmware-ti50-postsubmit"
 	// b/352341481: Move back to postSubmit location once OT signing works.
-	otPostSubmitArtifactsBuilder = "chromeos-localmirror-private/ot-nightly-test"
+	otPostSubmitArtifactsBuilder string = "chromeos-localmirror-private/ot-nightly-test"
 
 	// Cr50QualBranch is the latest qual candidate for Cr50
 	Cr50QualBranch string = "cr50qual"
@@ -96,9 +95,6 @@ const (
 	// Ti50 changed formats. This works with old and new versions.
 	ti50Release          = "ti50.r*w*%s.tar.xz"
 	ti50BIDLockedRelease = "ti50.r*w*%s_%s_%08x_%08x.tar.xz"
-
-	imageDownloadTimeout = 30 * time.Second
-	imageDeleteTimeout   = 5 * time.Second
 )
 
 // ImageType declarations, please update AllTi50ImageTypes() after editing.

@@ -12,6 +12,7 @@ import (
 	"strings"
 	"time"
 
+	//lint:ignore ST1019 multiple imports with different identifiers help code readability
 	common "go.chromium.org/tast-tests/cros/common/firmware"
 	fwCommon "go.chromium.org/tast-tests/cros/common/firmware"
 	"go.chromium.org/tast-tests/cros/common/flashrom"
@@ -133,8 +134,7 @@ func RecoveryCacheBootKeys(ctx context.Context, s *testing.State) {
 
 	// Boot to recovery mode once and back to make sure the memory training cache was created
 	// so the first part of the test can verify the cache gets used.
-	var state firmware.CheckAndSetServoCharger
-	state = h.CheckServoChargerBeforeBootingFromUSB(ctx)
+	var state firmware.CheckAndSetServoCharger = h.CheckServoChargerBeforeBootingFromUSB(ctx)
 
 	s.Log("Rebooting to recovery mode")
 	if err := h.BootToRecoveryMode(ctx, &state, false); err != nil {

@@ -64,8 +64,6 @@ var (
 	scannKeyboard    *bufio.Scanner
 	scannTouchpad    *bufio.Scanner
 	scannTouchscreen *bufio.Scanner
-	scannDisplay     *bufio.Scanner
-	scannPowerBtn    *bufio.Scanner
 )
 
 // Note: while in tablet mode, some models were observed to still have their keyboards seen

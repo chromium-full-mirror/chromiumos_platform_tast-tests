@@ -69,8 +69,7 @@ func RecScreenInvalidUSB(ctx context.Context, s *testing.State) {
 		s.Fatal("Failed to clear event log: ", err)
 	}
 
-	var state firmware.CheckAndSetServoCharger
-	state = h.CheckServoChargerBeforeBootingFromUSB(ctx)
+	var state firmware.CheckAndSetServoCharger = h.CheckServoChargerBeforeBootingFromUSB(ctx)
 
 	defer func() {
 		// The dut might have booted from the usb.

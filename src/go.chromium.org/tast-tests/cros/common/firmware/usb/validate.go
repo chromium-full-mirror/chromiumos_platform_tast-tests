@@ -45,7 +45,7 @@ func ValidateUSBImage(ctx context.Context, usbdev, mountPath string, runner Comm
 	err = func() error {
 		if output, err := runner.OutputCommand(ctx, true, "dd", fmt.Sprintf("if=%s", kernelPart), "bs=8", "count=1"); err != nil {
 			return errors.Wrap(err, "failed to read kernel magic")
-		} else if bytes.Compare(output, []byte("CHROMEOS")) != 0 {
+		} else if !bytes.Equal(output, []byte("CHROMEOS")) {
 			return errors.Errorf("incorrect kernel magic string got %v want %v", output, []byte("CHROMEOS"))
 		}
 		if err = runner.RunCommand(ctx, true, "mount", "-o", "ro", mountSrc, mountPath); err != nil {

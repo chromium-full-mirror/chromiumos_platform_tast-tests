@@ -210,8 +210,6 @@ func doECRebootEFS2Iteration(ctx context.Context, s *testing.State, h *firmware.
 		return ecOutput.String(), errors.Wrap(err, "failed to get boot id")
 	} else if newBootID == bootID {
 		return ecOutput.String(), errors.New("boot id did not change")
-	} else {
-		bootID = newBootID
 	}
 	return ecOutput.String(), nil
 }

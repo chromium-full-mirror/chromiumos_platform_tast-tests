@@ -33,7 +33,7 @@ func FlashromWriteProtect(ctx context.Context, s *testing.State) {
 	// to check the flash IC is supported
 
 	var flashromConfig flashrom.Config
-	flashromInstance, ctx, shutdown, out, err := flashromConfig.
+	flashromInstance, ctx, shutdown, _, err := flashromConfig.
 		FlashromInit(flashrom.VerbosityInfo).
 		ProgrammerInit(flashrom.ProgrammerHost, "").
 		Probe(ctx)

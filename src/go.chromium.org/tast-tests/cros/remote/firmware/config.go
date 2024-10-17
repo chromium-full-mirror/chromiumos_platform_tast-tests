@@ -8,9 +8,7 @@ package firmware
 
 import (
 	"encoding/json"
-	"fmt"
 	"io/ioutil"
-	"path/filepath"
 	"regexp"
 	"strings"
 	"time"
@@ -163,16 +161,6 @@ func CfgPlatformFromLSBBoard(board string) string {
 	// If the board name is given as board_variant, take just the variant: ex. "veyron_minnie" becomes "minnie"
 	board = strings.Split(board, "_")[strings.Count(board, "_")]
 	return board
-}
-
-// loadBytes reads '${platform}.json' from configDataDir and returns it as a slice of bytes.
-func loadBytes(configDataDir, platform string) ([]byte, error) {
-	fp := filepath.Join(configDataDir, fmt.Sprintf("%s.json", platform))
-	b, err := ioutil.ReadFile(fp)
-	if err != nil {
-		return nil, errors.Wrapf(err, "reading datafile %s", fp)
-	}
-	return b, nil
 }
 
 // parentFromBytes finds the name of the parent platform referenced by a config's JSON bytes.

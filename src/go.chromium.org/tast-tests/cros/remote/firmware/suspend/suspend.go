@@ -25,8 +25,6 @@ import (
 const (
 	// Default timeout while waiting for DUT to reconnect after wake
 	wakeTimeout = 20 * time.Second
-	// Default interval to check for DUT reconnection after wake
-	wakeInterval = time.Second
 	// Default delay for suspend in seconds
 	suspendDelaySeconds = 3
 	// Default location to mount power manager control directory

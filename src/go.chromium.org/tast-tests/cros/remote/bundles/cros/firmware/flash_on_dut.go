@@ -44,7 +44,6 @@ func FlashOnDUT(ctx context.Context, s *testing.State) {
 		s.Fatal("Failed to switch usb to dut: ", err)
 	}
 	var localhostServers []string
-	var remoteServers []string
 	for _, devserver := range s.CloudStorage().Devservers() {
 		if strings.HasPrefix(devserver, "http://127.0.0.1:") {
 			localHostPort := strings.TrimPrefix(devserver, "http://")
@@ -54,8 +53,6 @@ func FlashOnDUT(ctx context.Context, s *testing.State) {
 			}
 			defer remoteHostPort.Close()
 			localhostServers = append(localhostServers, "http://"+remoteHostPort.ListenAddr().String())
-		} else {
-			remoteServers = append(remoteServers, devserver)
 		}
 	}
 	if _, err := h.RPCUtils.FlashUSBDrive(ctx, &firmware.FlashUSBDriveRequest{

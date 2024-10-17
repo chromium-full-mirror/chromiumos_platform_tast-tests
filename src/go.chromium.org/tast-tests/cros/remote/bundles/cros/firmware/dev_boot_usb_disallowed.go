@@ -70,8 +70,7 @@ func DevBootUSBDisallowed(ctx context.Context, s *testing.State) {
 	if err := h.Servo.SetOnOff(ctx, servo.InitKeyboard, servo.On); err != nil {
 		s.Fatal("Failed to turn on internal keyboard: ", err)
 	}
-	var state firmware.CheckAndSetServoCharger
-	state = h.CheckServoChargerBeforeBootingFromUSB(ctx)
+	var state firmware.CheckAndSetServoCharger = h.CheckServoChargerBeforeBootingFromUSB(ctx)
 
 	s.Log("Removing USB")
 	if err := h.Servo.SetUSBMuxState(ctx, servo.USBMuxOff); err != nil {

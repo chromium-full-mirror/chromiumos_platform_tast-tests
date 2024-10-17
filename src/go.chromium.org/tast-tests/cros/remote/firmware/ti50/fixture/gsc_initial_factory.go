@@ -19,11 +19,6 @@ const (
 	// each tests
 	GSCInitialFactory = "gscInitialFactory"
 
-	// gsEfiLocation specifies the GS bucket location with %s placeholders for dev ids
-	gsEfiLocation = "gs://chromeos-localmirror-private/distfiles/chromeos-ti50-debug/dt_shield/ti50_Unknown_NodeLocked-%s_ti50-accessory-mp.bin"
-	// tmpEfiLocation specifies the format of temporary file for EFI images
-	tmpEfiLocation = "ti50-efi-%s.*.bin"
-
 	rescueTwiceTimeout = 10 * time.Minute
 )
 

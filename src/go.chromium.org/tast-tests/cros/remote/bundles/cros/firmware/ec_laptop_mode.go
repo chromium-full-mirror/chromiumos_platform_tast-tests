@@ -451,8 +451,7 @@ func ECLaptopMode(ctx context.Context, s *testing.State) {
 			}
 		}
 
-		var whiteScreenPwrDur time.Duration
-		whiteScreenPwrDur = h.Config.WhiteScreenPowerPressTime
+		var whiteScreenPwrDur time.Duration = h.Config.WhiteScreenPowerPressTime
 		s.Logf("Pressing and holding the power button for %s seconds", whiteScreenPwrDur)
 		if err := h.Servo.KeypressWithDuration(ctx, servo.PowerKey, servo.Dur(whiteScreenPwrDur)); err != nil {
 			s.Fatalf("Failed to press and hold on the power button for %s: %v", whiteScreenPwrDur, err)

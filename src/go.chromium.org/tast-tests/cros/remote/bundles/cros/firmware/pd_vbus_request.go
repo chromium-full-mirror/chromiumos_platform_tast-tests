@@ -208,7 +208,7 @@ func PDVbusRequest(ctx context.Context, s *testing.State) {
 	dutPowerLimit := h.Config.MaxChargingPower
 
 	isOverride = h.Config.ChargerProfileOverride
-	if isOverride == true {
+	if isOverride {
 		s.Log("*** Custom charger profile takes over, which may cause voltage-not-matched. It is OK to fail. *** ")
 	}
 

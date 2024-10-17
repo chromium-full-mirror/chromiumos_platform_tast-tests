@@ -144,7 +144,7 @@ func SuspendStress(ctx context.Context, s *testing.State) {
 
 	for i := 0; i < numIters; i++ {
 		if i > 0 {
-			estimatedTimeRemaining := time.Now().Sub(startTime) / time.Duration(i) * time.Duration(numIters-i)
+			estimatedTimeRemaining := time.Since(startTime) / time.Duration(i) * time.Duration(numIters-i)
 			s.Logf("------ Running iteration %d out of %d (%d failures) Time remaining: %s ------", i+1, numIters, failureCount, estimatedTimeRemaining.Round(time.Minute))
 		} else {
 			s.Logf("------ Running iteration %d out of %d ------", i+1, numIters)

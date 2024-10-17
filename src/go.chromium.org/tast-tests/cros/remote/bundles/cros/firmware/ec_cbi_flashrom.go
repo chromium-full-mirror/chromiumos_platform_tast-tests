@@ -325,8 +325,8 @@ func getSectionInfo(ctx context.Context, h *firmware.Helper, workPath, section s
 	if sectionMatch == nil {
 		return 0, 0, errors.Errorf("failed to find section %q", section)
 	}
-	sectionOffset, err = strconv.Atoi(string(sectionMatch[1]))
-	sectionSize, err = strconv.Atoi(string(sectionMatch[2]))
+	sectionOffset, _ = strconv.Atoi(string(sectionMatch[1]))
+	sectionSize, _ = strconv.Atoi(string(sectionMatch[2]))
 	testing.ContextLogf(ctx, "Section %q offset: %d size: %d", section, sectionOffset, sectionSize)
 
 	return sectionOffset, sectionSize, nil

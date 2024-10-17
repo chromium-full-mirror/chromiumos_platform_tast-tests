@@ -160,10 +160,7 @@ func checkFirmwareVbootInfo(eventMessage string) bool {
 		reFirmwareVbootInfo *regexp.Regexp = regexp.MustCompile(`(?i)Firmware vboot info`)
 	)
 	firmwareVbootInfo := reFirmwareVbootInfo.FindStringSubmatch(eventMessage)
-	if firmwareVbootInfo != nil {
-		return true
-	}
-	return false
+	return firmwareVbootInfo != nil
 }
 
 // findBootModeFromEvents takes a slice of events and returns a single

@@ -204,8 +204,6 @@ func doDevBootKeyboardStressIteration(ctx context.Context, s *testing.State, h *
 		return ecOutput.String(), errors.Wrap(err, "failed to get boot id")
 	} else if newBootID == bootID {
 		return ecOutput.String(), errors.New("boot id did not change")
-	} else {
-		bootID = newBootID
 	}
 
 	out, err = h.GetECConsoleOutputWithComment(ctx, "done waiting for connect")

@@ -158,8 +158,7 @@ func FWCorruptRecoveryCache(ctx context.Context, s *testing.State) {
 		s.Fatal("Failed to corrupt RECOVERY_MRC_CACHE section: ", err)
 	}
 
-	var state firmware.CheckAndSetServoCharger
-	state = h.CheckServoChargerBeforeBootingFromUSB(ctx)
+	var state firmware.CheckAndSetServoCharger = h.CheckServoChargerBeforeBootingFromUSB(ctx)
 
 	defer func(ctx context.Context) {
 		s.Log("Rebooting out of recovery")

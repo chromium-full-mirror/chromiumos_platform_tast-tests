@@ -53,8 +53,7 @@ func CorruptBothMiniOSAB(ctx context.Context, s *testing.State) {
 		s.Fatal("Creating mode switcher: ", err)
 	}
 
-	var state firmware.CheckAndSetServoCharger
-	state = h.CheckServoChargerBeforeBootingFromUSB(ctx)
+	var state firmware.CheckAndSetServoCharger = h.CheckServoChargerBeforeBootingFromUSB(ctx)
 
 	cs := s.CloudStorage()
 	if err := h.SetupUSBKey(ctx, cs); err != nil {

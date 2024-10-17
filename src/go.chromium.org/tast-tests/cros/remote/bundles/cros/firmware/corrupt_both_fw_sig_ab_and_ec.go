@@ -114,8 +114,7 @@ func CorruptBothFWSigABAndEC(ctx context.Context, s *testing.State) {
 		s.Fatal("Failed to write flash script: ", err)
 	}
 
-	var state firmware.CheckAndSetServoCharger
-	state = h.CheckServoChargerBeforeBootingFromUSB(ctx)
+	var state firmware.CheckAndSetServoCharger = h.CheckServoChargerBeforeBootingFromUSB(ctx)
 	defer func(ctx context.Context) {
 		if state.RemoveServoChargerRequired && !state.IsServoChargerConnected {
 			if err := h.SetDUTPower(ctx, true); err != nil {

@@ -38,7 +38,7 @@ func FwupdInstallRemoteCLI(ctx context.Context, s *testing.State) {
 	fwd := s.FixtValue().(*fwupd.FixtData).Fwupd
 
 	// Find FakeCamera device ID by GUID.
-	device, err := fwd.DeviceByGUID(ctx, fwupd.FakeWebcamGUID)
+	device, _ := fwd.DeviceByGUID(ctx, fwupd.FakeWebcamGUID)
 	// Ensure that fake device have correct base version.
 	if strings.Compare(device.Version, fwupd.FakeWebcamBaseVersion) != 0 {
 		s.Error("Unexpected device version: ", device.Version)

@@ -47,8 +47,6 @@ const (
 	postTestTimeout = rescueTwiceTimeout
 )
 
-type extraPreTestMethod func(ctx context.Context, board ti50.DevBoard) error
-
 func init() {
 	testing.AddFixture(&testing.Fixture{
 		Name:            SystemDevboard,
@@ -154,7 +152,6 @@ type devboardFixture struct {
 	imageValue *ImageValue
 	hostPort   string
 	v          *Value
-	preTest    extraPreTestMethod
 	resultInfo ResultInfoTags
 }
 

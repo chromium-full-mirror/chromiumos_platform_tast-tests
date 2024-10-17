@@ -25,8 +25,7 @@ func TestWriteSectionData(t *testing.T) {
 	s := map[ImageSection]SectionInfo{GBBImageSection: {1, 16}}
 	i := Image{[]byte{1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18}, s}
 
-	var flag uint32
-	flag = 0x04030201
+	var flag uint32 = 0x04030201
 	if err := i.WriteSectionData(GBBImageSection, 12, flag); err != nil {
 		t.Fatal(err)
 	}

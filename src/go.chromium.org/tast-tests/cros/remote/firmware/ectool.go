@@ -274,7 +274,7 @@ func (ec *ECTool) I2CLookup(ctx context.Context) (*I2CLookupInfo, error) {
 		return nil, errors.Wrap(err, "running 'ectool locatechip 0 0' on DUT")
 	}
 	match := reI2CLookup.FindSubmatch(out)
-	if match == nil || len(match) == 0 {
+	if len(match) == 0 {
 		return nil, errors.Wrapf(err, "lookup for I2C failed, got %q", string(out))
 	}
 

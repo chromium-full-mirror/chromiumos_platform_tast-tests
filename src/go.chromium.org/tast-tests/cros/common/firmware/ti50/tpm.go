@@ -94,7 +94,6 @@ type TpmHandle struct {
 	b        DevBoard
 	Ctx      context.Context
 	Bus      TpmBus
-	response []byte // Contains the response to the last issued request.
 }
 
 // NewTpmHandle create a new TpmHandle that can be used with tpm2 library

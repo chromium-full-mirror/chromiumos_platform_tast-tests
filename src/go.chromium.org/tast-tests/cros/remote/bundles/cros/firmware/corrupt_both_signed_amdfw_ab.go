@@ -81,7 +81,7 @@ func CorruptSignedAMDFWSection(ctx context.Context, s *testing.State, h *firmwar
 
 	// - Create corrupt bodies for A & B
 	for _, m := range sections {
-		out, err = h.DUT.Conn().CommandContext(ctx, "dd", fmt.Sprintf("of=%s/%s_corrupt.bin", remoteTempDir, m.Name), "if=/dev/random", fmt.Sprintf("bs=%d", m.Size), "count=1").Output(ssh.DumpLogOnError)
+		_, err = h.DUT.Conn().CommandContext(ctx, "dd", fmt.Sprintf("of=%s/%s_corrupt.bin", remoteTempDir, m.Name), "if=/dev/random", fmt.Sprintf("bs=%d", m.Size), "count=1").Output(ssh.DumpLogOnError)
 		if err != nil {
 			s.Error("Failed creating corrupt file: ", err)
 			return err

@@ -87,8 +87,7 @@ func DevBootUSB(ctx context.Context, s *testing.State) {
 	}
 	testOpt := s.Param().(*devBootUSBParam)
 
-	var state firmware.CheckAndSetServoCharger
-	state = h.CheckServoChargerBeforeBootingFromUSB(ctx)
+	var state firmware.CheckAndSetServoCharger = h.CheckServoChargerBeforeBootingFromUSB(ctx)
 
 	// Set up USB when there is one present, and
 	// for cases that depend on it.

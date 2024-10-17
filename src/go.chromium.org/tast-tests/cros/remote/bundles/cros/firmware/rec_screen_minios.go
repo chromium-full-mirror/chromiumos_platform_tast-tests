@@ -93,8 +93,7 @@ func RecScreenMiniOS(ctx context.Context, s *testing.State) {
 		}
 	}
 
-	var state firmware.CheckAndSetServoCharger
-	state = h.CheckServoChargerBeforeBootingFromUSB(ctx)
+	var state firmware.CheckAndSetServoCharger = h.CheckServoChargerBeforeBootingFromUSB(ctx)
 
 	cleanupCtx := ctx
 	ctx, cancel := ctxutil.Shorten(ctx, 4*time.Minute)

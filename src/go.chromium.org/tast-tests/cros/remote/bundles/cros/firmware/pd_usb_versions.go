@@ -196,7 +196,7 @@ func PDUsbVersions(ctx context.Context, s *testing.State) {
 			}
 		}
 
-		if foundUsb3 == false {
+		if !foundUsb3 {
 			return errors.Wrap(err, "could not find usb 3 connection when it should be enabled")
 		}
 

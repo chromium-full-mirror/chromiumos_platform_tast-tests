@@ -163,7 +163,7 @@ func ECCbiBcfg(ctx context.Context, s *testing.State) {
 	}
 	defer cl.Close(ctx)
 
-	fs = dutfs.NewClient(cl.Conn)
+	_ = dutfs.NewClient(cl.Conn)
 
 	updatedBcfgData, err := getBcfg(ctx, h, "0")
 	if err != nil {
@@ -196,7 +196,6 @@ func ECCbiBcfg(ctx context.Context, s *testing.State) {
 	if !bytes.Equal(bcfg.bytes, updatedBcfgBytes) {
 		s.Fatal("Expected BCFG output match: ", string(bcfg.bytes), string(updatedBcfgBytes))
 	}
-	return
 }
 
 func getManufacturerAndDeviceName(ctx context.Context, h *firmware.Helper) (string, string, error) {

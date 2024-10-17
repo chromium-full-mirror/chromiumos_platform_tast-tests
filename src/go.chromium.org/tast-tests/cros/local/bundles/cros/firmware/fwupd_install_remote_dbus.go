@@ -13,11 +13,6 @@ import (
 	"go.chromium.org/tast/core/testing"
 )
 
-const (
-	installCli = iota
-	installDbus
-)
-
 func init() {
 	testing.AddTest(&testing.Test{
 		Func: FwupdInstallRemoteDBus,

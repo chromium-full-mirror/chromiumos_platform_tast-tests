@@ -98,8 +98,7 @@ func SelfSignedBoot(ctx context.Context, s *testing.State) {
 		s.Fatalf("DUT did not boot from the internal device: got %v, want false", bootedFromRemovableDevice)
 	}
 
-	var state firmware.CheckAndSetServoCharger
-	state = h.CheckServoChargerBeforeBootingFromUSB(ctx)
+	var state firmware.CheckAndSetServoCharger = h.CheckServoChargerBeforeBootingFromUSB(ctx)
 
 	if err := h.BootToRecoveryMode(ctx, &state, false); err != nil {
 		s.Fatal("Failed to boot to recovery mode: ", err)
@@ -207,10 +206,8 @@ func lsblkGrepUSBPaths(ctx context.Context, h *firmware.Helper) ([]string, error
 	var usbPathSlice []string
 	usbRegex := regexp.MustCompile(`sd\w`)
 	disableMatches := usbRegex.FindAllSubmatch(outRaw, -1)
-	if disableMatches != nil {
-		for _, match := range disableMatches {
-			usbPathSlice = append(usbPathSlice, string(match[0]))
-		}
+	for _, match := range disableMatches {
+		usbPathSlice = append(usbPathSlice, string(match[0]))
 	}
 	return usbPathSlice, nil
 }

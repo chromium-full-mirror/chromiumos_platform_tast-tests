@@ -9,7 +9,6 @@ import (
 	"time"
 
 	"github.com/golang/protobuf/ptypes/empty"
-	"go.chromium.org/tast-tests/cros/common/servo"
 	"go.chromium.org/tast-tests/cros/remote/firmware"
 	"go.chromium.org/tast-tests/cros/remote/firmware/fixture"
 	"go.chromium.org/tast-tests/cros/services/cros/power"
@@ -63,8 +62,6 @@ const (
 	fullBatteryPercent     = 95.0
 	targetDischargePercent = 90.0
 	fullChargePollTimeout  = 110 * time.Minute
-	// alarmMask is a mask ignoring expected battery alarms like terminate charge and over charged.
-	alarmMask = (0xFF00 & ^firmware.ECTerminateChargeAlarm & ^firmware.ECOverChargedAlarm)
 )
 
 func ECChargingState(ctx context.Context, s *testing.State) {
@@ -167,80 +164,5 @@ func testFullChargeAlarm(ctx context.Context, h *firmware.Helper) error {
 	}, &testing.PollOptions{Timeout: time.Minute, Interval: time.Second}); err != nil {
 		return errors.Wrap(err, "failed to poll for fully charged state from kernel")
 	}
-	return nil
-}
-
-func compareKernelAndECBatteryStatus(ctx context.Context, h *firmware.Helper, battery *firmware.ECBatteryState) error {
-	testing.ContextLog(ctx, "Verify kernel reports same state as EC")
-	if err := testing.Poll(ctx, func(ctx context.Context) error {
-		kernelBatteryState, err := firmware.GetKernelBatteryState(ctx, h)
-		if err != nil {
-			return errors.Wrap(err, "failed to get kernel battery state")
-		}
-
-		switch kernelBatteryState {
-		case firmware.KernelFullyCharged:
-			if battery.StatusCode&firmware.ECFullyCharged == 0 && battery.Display < fullBatteryPercent {
-				return errors.Errorf("Kernel reports battery status to be fully charged, but ec status was %v instead (expect fully charged or not charging)", battery.Status)
-			}
-			return nil
-		case firmware.KernelCharging:
-			if battery.StatusCode&firmware.ECDischarging != 0 {
-				return errors.Errorf("Kernel reports battery status to be charging, but ec status was %v instead (expect charging)", battery.Status)
-			}
-			return nil
-		case firmware.KernelDischarging, firmware.KernelNotCharging:
-			// EC might report the battery is not discharging if its fully charged, so raise error only if not discharging and not fully charged.
-			if battery.StatusCode&firmware.ECDischarging == 0 && battery.StatusCode&firmware.ECFullyCharged == 0 && battery.Display < fullBatteryPercent {
-				return errors.Errorf("Kernel reports battery status to be discharging, but ec status was %v instead (expect discharging and/or full charged)", battery.Status)
-			}
-			return nil
-		default:
-			return errors.Errorf("unexpected battery state %q from kernel", kernelBatteryState)
-		}
-	}, &testing.PollOptions{Timeout: time.Minute, Interval: time.Second}); err != nil {
-		return errors.Wrap(err, "failed to poll for matching ec and kernel battery state")
-	}
-	return nil
-}
-
-func suspendDUTAndCheckCharger(ctx context.Context, h *firmware.Helper, expectChargerAttached bool) error {
-	testing.ContextLog(ctx, "Suspending DUT")
-
-	if err := h.DUT.Conn().CommandContext(ctx, "pgrep", "powerd").Run(); err != nil {
-		return errors.Wrap(err, "powerd is not running. Need that to run suspend cmds")
-	}
-
-	// Use Start because run will never return (we are suspending).
-	cmd := h.DUT.Conn().CommandContext(ctx, "powerd_dbus_suspend", "--delay=3")
-	if err := cmd.Start(); err != nil {
-		return errors.Wrap(err, "failed to suspend DUT")
-	}
-
-	testing.ContextLog(ctx, "Checking for S0ix or S3 powerstate")
-	if err := h.WaitForPowerStates(ctx, firmware.PowerStateInterval, firmware.PowerStateTimeout, "S0ix", "S3"); err != nil {
-		return errors.Wrap(err, "failed to get S0ix or S3 powerstate")
-	}
-
-	testing.ContextLog(ctx, "Setting charger connected to ", expectChargerAttached)
-	if err := firmware.PollToSetChargerStatus(ctx, h, expectChargerAttached); err != nil {
-		return errors.Wrap(err, "failed to set charger status")
-	}
-
-	testing.ContextLog(ctx, "Power on DUT with power key")
-	if err := h.Servo.KeypressWithDuration(ctx, servo.PowerKey, servo.DurTab); err != nil {
-		return errors.Wrap(err, "failed to press power key on DUT")
-	}
-
-	testing.ContextLog(ctx, "Wait for DUT to reach S0 powerstate")
-	if err := h.WaitForPowerStates(ctx, firmware.PowerStateInterval, firmware.PowerStateTimeout, "S0"); err != nil {
-		return errors.Wrap(err, "DUT failed to reach S0 after power button pressed")
-	}
-
-	testing.ContextLog(ctx, "Wait for DUT to connect")
-	if err := h.WaitConnect(ctx, firmware.FromHibernation, firmware.ResetEthernetDongle); err != nil {
-		return errors.Wrap(err, "failed to connect to DUT")
-	}
-
 	return nil
 }

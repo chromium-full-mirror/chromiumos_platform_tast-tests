@@ -171,11 +171,17 @@ func TestNewConfigModelOverride(t *testing.T) {
 	}
 	// Test with model-specific override
 	cfg, err := NewConfig(cfgFilepath, myBoardName, myModelName)
+	if err != nil {
+		t.Fatal(err)
+	}
 	if cfg.FirmwareScreen != myModelDuration {
 		t.Errorf("unexpected FirmwareScreen value; got %s, want %s // %+v", cfg.FirmwareScreen, myModelDuration, cfg)
 	}
 	// Test with no model-specific override
 	cfg, err = NewConfig(cfgFilepath, myBoardName, myOtherModelName)
+	if err != nil {
+		t.Fatal(err)
+	}
 	if cfg.FirmwareScreen != myBoardDuration {
 		t.Errorf("unexpected FirmwareScreen value; got %s, want %s", cfg.FirmwareScreen, myModelDuration)
 	}

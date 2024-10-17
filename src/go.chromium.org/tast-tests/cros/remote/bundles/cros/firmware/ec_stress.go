@@ -9,7 +9,6 @@ import (
 	"fmt"
 	"os"
 	"path/filepath"
-	"regexp"
 	"strconv"
 	"strings"
 	"sync"
@@ -399,9 +398,6 @@ const iioBasePath = "/sys/bus/iio/devices"
 const crashDir = "/var/spool/crash"
 const keyboardWakeupPath = "/sys/devices/platform/i8042/serio0/power/wakeup"
 
-var watchdogPanicReason = regexp.MustCompile(`(?i)dead6664`)
-var watchdogWarnPanicReason = regexp.MustCompile(`(?i)dead6668`)
-
 // errNoDeviceFound is returned by parser function when no device matches.
 var errNoDeviceFound = errors.New("no Device found")
 
@@ -420,18 +416,6 @@ type sensor struct {
 	MinFrequency  int
 	MaxFrequency  int
 	OldSysfsStyle bool
-}
-
-// SensorReading is one reading from a sensor.
-type sensorReading struct {
-	// Data contains all values read from the sensor.
-	// Its length depends on the type of sensor being used.
-	Data  []float64
-	ID    uint
-	Flags uint8
-	// Timestamp is the duration from the boot time of the DUT to the time the
-	// reading was taken
-	Timestamp time.Duration
 }
 
 const (
@@ -464,15 +448,6 @@ const (
 	none string = "none"
 )
 
-// cros ec data flags from ec_commands.h
-const (
-	flushFlag      = 0x01
-	timestampFlag  = 0x02
-	wakeupFlag     = 0x04
-	tabletModeFlag = 0x08
-	odrFlag        = 0x10
-)
-
 var sensorNames = map[string]struct{}{
 	accel:    {},
 	baro:     {},
@@ -493,16 +468,6 @@ var sensorLegacyLocationConverters = map[string]string{
 	"base":   base,
 	"lid":    lid,
 	"camera": camera,
-}
-
-// readingNames is a map from the type of sensor to the sensor specific part of the
-// sysfs filename for reading raw sensor values. For example the x axis can be read
-// from in_accel_x_raw for an accelerometer and in_anglvel_x_raw for a gyroscope.
-var readingNames = map[string]string{
-	accel: "accel",
-	gyro:  "anglvel",
-	mag:   "magn",
-	light: "illuminance",
 }
 
 func getBoolVar(s *testing.State, varName string) *bool {
@@ -776,7 +741,7 @@ func parseSensor(ctx context.Context, fs *dutfs.Client, devName string) (*sensor
 	} else if loc, err := sensor.ReadAttr(ctx, fs, "location"); err == nil {
 		// |location| attribute is for older kernels.
 		var ok bool
-		location, ok = sensorLegacyLocationConverters[loc]
+		_, ok = sensorLegacyLocationConverters[loc]
 		if !ok {
 			return nil, errors.Errorf("unknown sensor location %q", loc)
 		}

@@ -128,6 +128,9 @@ func WriteRemoteFlashrom(ctx context.Context, runner ServoHostCommandRunner, pro
 	if err1 := f.Close(); err == nil {
 		err = err1
 	}
+	if err != nil {
+		return err
+	}
 
 	remoteTmpFile, err := runner.OutputCommand(ctx, true, "mktemp", "-u", "-p", "/var/tmp", "-t", "fwimgXXXXXX")
 	if err != nil {

@@ -7,7 +7,6 @@ package fingerprint
 import (
 	"context"
 	"encoding/binary"
-	"os/exec"
 	"path/filepath"
 	"strconv"
 	"strings"
@@ -94,11 +93,6 @@ type firmwareImageGenerator struct {
 	roVersion            *fmapSectionValue
 }
 
-func hostCommand(ctx context.Context, name string, arg ...string) *exec.Cmd {
-	testing.ContextLogf(ctx, "Command: %s %s", name, strings.Join(arg, " "))
-	return exec.CommandContext(ctx, name, arg...)
-}
-
 func signFirmware(ctx context.Context, futilityInstance *futility.Instance, privateKeyFile, firmwareFile string) error {
 	opt := futility.NewSignRWSigOptions(firmwareFile).WithPrivateKeyPath(privateKeyFile).WithVersion(1)
 
@@ -140,12 +134,10 @@ func fmapSectionInfo(ctx context.Context, futilityInstance *futility.Instance, f
 }
 
 func readFileAtOffset(ctx context.Context, d *rpcdut.RPCDUT, fileName string, data []byte, offset int64) error {
-	out, err := dutfs.NewClient(d.RPC().Conn).ReadFileAtOffset(ctx, fileName, offset, int64(len(data)))
-	if err != nil {
+	if _, err := dutfs.NewClient(d.RPC().Conn).ReadFileAtOffset(ctx, fileName, offset, int64(len(data))); err != nil {
 		return errors.Wrapf(err, "failed to read from offset: %v", offset)
 	}
 
-	data = out
 	return nil
 }
 

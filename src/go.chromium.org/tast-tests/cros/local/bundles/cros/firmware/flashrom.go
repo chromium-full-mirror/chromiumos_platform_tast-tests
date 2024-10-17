@@ -35,7 +35,7 @@ func Flashrom(ctx context.Context, s *testing.State) {
 	// This test intentionally avoids SPI ROM read and write operations, so as not
 	// to stress devices-under-test.
 	var flashromConfig flashrom.Config
-	_, ctx, shutdown, out, err := flashromConfig.
+	_, _, shutdown, out, err := flashromConfig.
 		FlashromInit(flashrom.VerbosityDebug).
 		ProgrammerInit(flashrom.ProgrammerHost, "").
 		Probe(ctx)
