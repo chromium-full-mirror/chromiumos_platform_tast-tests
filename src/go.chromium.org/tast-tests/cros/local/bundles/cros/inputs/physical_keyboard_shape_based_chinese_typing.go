@@ -29,7 +29,6 @@ type pkShapeBasedChineseTestCase struct {
 	inputMethod       ime.InputMethod
 	typingKeys        string
 	expectedResult    string
-	expectedCandidate string
 }
 
 func init() {

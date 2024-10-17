@@ -19,12 +19,6 @@ import (
 	"go.chromium.org/tast/core/testing"
 )
 
-type citrixTestCase struct {
-	TestName             string
-	typingKeys           string
-	expectedTypingResult string
-}
-
 func init() {
 	testing.AddTest(&testing.Test{
 		Func:         PhysicalKeyboardAppCompatCitrix,

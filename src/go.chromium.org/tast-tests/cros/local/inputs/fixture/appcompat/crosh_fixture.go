@@ -26,7 +26,6 @@ const Crosh = "crosh"
 // croshFixtureImpl implements testing.FixtureImpl.
 type croshFixtureImpl struct {
 	tconn      *chrome.TestConn
-	conn       *chrome.Conn
 	cr         *chrome.Chrome
 	kb         *input.KeyboardEventWriter
 	uc         *useractions.UserContext

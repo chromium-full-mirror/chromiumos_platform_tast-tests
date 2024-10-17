@@ -66,7 +66,7 @@ func WaitForFieldTextToBe(tconn *chrome.TestConn, finder *nodewith.Finder, expec
 // The text is case insensitive.
 func WaitForFieldTextToBeIgnoringCase(tconn *chrome.TestConn, finder *nodewith.Finder, expectedText string) uiauto.Action {
 	return WaitForFieldTextToSatisfy(tconn, finder, fmt.Sprintf("%s (ignoring case)", expectedText), func(actualText string) bool {
-		return strings.ToLower(expectedText) == strings.ToLower(actualText)
+		return strings.EqualFold(expectedText, actualText)
 	})
 }
 

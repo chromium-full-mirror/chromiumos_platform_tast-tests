@@ -64,7 +64,7 @@ func VirtualKeyboardLoginScreen(ctx context.Context, s *testing.State) {
 	defer cancel()
 
 	// Use GAIA login otherwise user profile does not exist after restart UI.
-	cr, err := chrome.New(ctx, chrome.GAIALoginPool(dma.CredsFromPool(ui.GaiaPoolDefaultVarName)))
+	_, err := chrome.New(ctx, chrome.GAIALoginPool(dma.CredsFromPool(ui.GaiaPoolDefaultVarName)))
 	if err != nil {
 		s.Fatal("Failed to start Chrome via GAIA login: ", err)
 	}
@@ -82,7 +82,7 @@ func VirtualKeyboardLoginScreen(ctx context.Context, s *testing.State) {
 	} else {
 		chromeOpts = append(chromeOpts, chrome.ExtraArgs("--force-tablet-mode=clamshell"))
 	}
-	cr, err = chrome.New(ctx, chromeOpts...)
+	cr, err := chrome.New(ctx, chromeOpts...)
 	if err != nil {
 		s.Fatal("Failed to start Chrome after restart: ", err)
 	}

@@ -25,7 +25,6 @@ import (
 type testParameters struct {
 	regionCode             string
 	defaultInputMethodID   string
-	defaultInputMethodName string
 }
 
 func init() {

@@ -91,7 +91,6 @@ func PhysicalKeyboardInputFields(ctx context.Context, s *testing.State) {
 				ExpectedText: "qwertyuiopasdfghjklzxcvbnmQWERTYUIOPASDFGHJKLZXCVBNM",
 			},
 		}
-		break
 	default:
 		s.Fatalf("%s is not supported", im)
 	}

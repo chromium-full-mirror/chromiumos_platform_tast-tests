@@ -131,7 +131,7 @@ func (svc *TouchService) getDisplayDimensions(ctx context.Context) (int, int, er
 		return -1, -1, errors.New("Chrome is not instantiated")
 	}
 
-	tconn, err := cr.TestAPIConn(ctx)
+	tconn, _ := cr.TestAPIConn(ctx)
 	info, err := display.GetInternalInfo(ctx, tconn)
 	if err != nil {
 		return -1, -1, errors.Wrap(err, "failed to get display")

@@ -35,7 +35,6 @@ const (
 // arcFixtureImpl implements testing.FixtureImpl.
 type arcFixtureImpl struct {
 	tconn      *chrome.TestConn
-	conn       *chrome.Conn
 	cr         *chrome.Chrome
 	kb         *input.KeyboardEventWriter
 	uc         *useractions.UserContext

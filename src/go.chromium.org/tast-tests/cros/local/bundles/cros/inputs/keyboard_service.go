@@ -119,10 +119,8 @@ func (svc *KeyboardService) initKeyboard(ctx context.Context) error {
 
 		// Ensure that the keyboard is closed when the service is shut down.
 		go func(ctx context.Context) {
-			select {
-			case <-ctx.Done():
-				svc.closeKeyboard(ctx)
-			}
+			<-ctx.Done()
+			svc.closeKeyboard(ctx)
 		}(svc.s.ServiceContext())
 	}
 	return nil

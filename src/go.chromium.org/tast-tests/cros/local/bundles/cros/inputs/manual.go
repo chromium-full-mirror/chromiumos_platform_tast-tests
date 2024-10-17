@@ -283,8 +283,6 @@ func Manual(ctx context.Context, s *testing.State) {
 		const (
 			apk = "ArcKeyboardTest.apk"
 			pkg = "org.chromium.arc.testapp.keyboard"
-
-			fieldID = "org.chromium.arc.testapp.keyboard:id/text"
 		)
 
 		s.Log("Installing ArcKeyboardTest app")

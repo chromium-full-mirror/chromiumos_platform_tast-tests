@@ -6,15 +6,11 @@ package inputs
 
 import (
 	"context"
-	"fmt"
-	"io/ioutil"
-	"strings"
 	"time"
 
 	"go.chromium.org/tast-tests/cros/local/chrome/ash"
 	"go.chromium.org/tast-tests/cros/local/input"
 	"go.chromium.org/tast/core/ctxutil"
-	"go.chromium.org/tast/core/errors"
 	"go.chromium.org/tast/core/testing"
 	"go.chromium.org/tast/core/testing/hwdep"
 )
@@ -62,23 +58,4 @@ func TabletModeCheck(ctx context.Context, s *testing.State) {
 		s.Fatal("Failed to put DUT in tablet mode: ", err)
 	}
 	defer cleanUp(cleanupCtx)
-}
-
-// inputDeviceDetectionCheck verifies input device eventPath has expectedDetectionStatus.
-func inputDeviceDetectionCheck(ctx context.Context, eventPath, expectedDetectionStatus string) error {
-	wakeSourceFile := fmt.Sprintf("/sys/class/%s/device/device/power/wakeup", eventPath)
-	if err := testing.Poll(ctx, func(ctx context.Context) error {
-		sourceOut, err := ioutil.ReadFile(wakeSourceFile)
-		if err != nil {
-			return errors.Wrapf(err, "failed to read %q file", wakeSourceFile)
-		}
-		got := strings.TrimSpace(string(sourceOut))
-		if !strings.Contains(got, expectedDetectionStatus) {
-			return errors.Errorf("unexpected detection status: got %q; want %q", got, expectedDetectionStatus)
-		}
-		return nil
-	}, &testing.PollOptions{Timeout: 15 * time.Second}); err != nil {
-		return err
-	}
-	return nil
 }
