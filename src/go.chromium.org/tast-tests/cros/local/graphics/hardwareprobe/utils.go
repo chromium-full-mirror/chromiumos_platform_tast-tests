@@ -36,6 +36,10 @@ type disk struct {
 	SizeGb int `json:"size_gb"`
 }
 
+type dmi struct {
+	ProductName string `json:"ProductName"`
+}
+
 // Result is the result of the hardware_probe binary.
 type Result struct {
 	VGADevice       []pciDevice       `json:"VGA_Devices"`
@@ -44,6 +48,7 @@ type Result struct {
 	Memory          int               `json:"Memory"`
 	Disk            *disk             `json:"Disk"`
 	LabelsReporting map[string]string `json:"LabelsReporting"`
+	DMI             dmi               `json:"DMI"`
 }
 
 // GetHardwareProbeResult saves the information to path and returns detailed information gathered by hardware_probe binaries in the DUT.

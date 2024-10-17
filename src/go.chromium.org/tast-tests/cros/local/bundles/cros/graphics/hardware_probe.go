@@ -12,7 +12,13 @@ import (
 	"go.chromium.org/tast-tests/cros/local/graphics/hardwareprobe"
 	"go.chromium.org/tast/core/errors"
 	"go.chromium.org/tast/core/testing"
+	"go.chromium.org/tast/core/testing/hwdep"
 )
+
+type testParams struct {
+	checkResult bool
+	checkDMI    bool
+}
 
 func init() {
 	testing.AddTest(&testing.Test{
@@ -26,12 +32,18 @@ func init() {
 		Attr:         []string{"group:graphics", "graphics_perbuild", "group:mainline"},
 		Fixture:      "gpuWatchHangs",
 		Params: []testing.Param{{
-			Val:       false,
+			Val:       testParams{false, false},
 			ExtraAttr: []string{"group:cq-medium", "group:crosbolt", "crosbolt_fsi_check"},
 		}, {
-			Name:      "verify",
-			Val:       true,
-			ExtraAttr: []string{"group:cq-medium", "group:crosbolt", "crosbolt_fsi_check"},
+			Name:              "verify",
+			Val:               testParams{true, false},
+			ExtraAttr:         []string{"group:cq-medium", "group:crosbolt", "crosbolt_fsi_check"},
+			ExtraHardwareDeps: hwdep.D(hwdep.SkipOnModel("reven")),
+		}, {
+			Name:              "verify_flex",
+			Val:               testParams{true, true},
+			ExtraAttr:         []string{"group:cq-medium", "group:crosbolt", "crosbolt_fsi_check"},
+			ExtraHardwareDeps: hwdep.D(hwdep.Model("reven")),
 		}},
 	})
 }
@@ -54,15 +66,15 @@ func HardwareProbe(ctx context.Context, s *testing.State) {
 	}
 	s.Log("CPU_Family: ", result.CPUFamily)
 
-	check := s.Param().(bool)
-	if check {
-		if err := checkValueIsSet(ctx, result); err != nil {
+	p := s.Param().(testParams)
+	if p.checkResult {
+		if err := checkValueIsSet(ctx, result, p.checkDMI); err != nil {
 			s.Fatal("Failed to verify values in hardware_probe result: ", err)
 		}
 	}
 }
 
-func checkValueIsSet(ctx context.Context, result hardwareprobe.Result) error {
+func checkValueIsSet(ctx context.Context, result hardwareprobe.Result, checkDMI bool) error {
 	var resultErr error
 
 	// Check if fields are valid.
@@ -90,7 +102,11 @@ func checkValueIsSet(ctx context.Context, result hardwareprobe.Result) error {
 	if result.Memory == 0 {
 		resultErr = errors.Wrap(resultErr, "failed to get platform memory size")
 	}
-
+	if checkDMI {
+		if result.DMI.ProductName == "" {
+			resultErr = errors.Wrap(resultErr, "failed to get DMI product_name")
+		}
+	}
 	// Check the labels reporting exists for infra.
 	for _, s := range []struct {
 		name     string // Name of the labels.
