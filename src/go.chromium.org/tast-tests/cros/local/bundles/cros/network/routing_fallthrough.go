@@ -53,7 +53,7 @@ func init() {
 				primaryFamily: primaryIPv4Only,
 				useChrome:     true,
 			},
-			ExtraAttr:         []string{"informational"},
+			ExtraAttr:         []string{"informational", "group:criticalstaging"},
 			ExtraSoftwareDeps: []string{"chrome"},
 			Fixture:           fixture.ChromeLoggedIn,
 		}, {
@@ -62,7 +62,7 @@ func init() {
 				primaryFamily: primaryIPv6Only,
 				useChrome:     true,
 			},
-			ExtraAttr:         []string{"informational"},
+			ExtraAttr:         []string{"informational", "group:criticalstaging"},
 			ExtraSoftwareDeps: []string{"chrome"},
 			Fixture:           fixture.ChromeLoggedIn,
 		}},

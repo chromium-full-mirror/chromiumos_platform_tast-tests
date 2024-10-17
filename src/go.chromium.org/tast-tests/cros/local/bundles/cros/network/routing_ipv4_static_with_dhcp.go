@@ -42,7 +42,7 @@ func init() {
 				Val:               true,
 				Fixture:           fixture.ChromeLoggedIn,
 				ExtraSoftwareDeps: []string{"chrome"},
-				ExtraAttr:         []string{"informational"},
+				ExtraAttr:         []string{"informational", "group:criticalstaging"},
 			},
 		},
 	})

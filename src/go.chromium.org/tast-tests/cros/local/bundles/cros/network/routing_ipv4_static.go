@@ -54,7 +54,7 @@ func init() {
 				applyWhenConnecting: false,
 				useChrome:           true,
 			},
-			ExtraAttr:         []string{"informational"},
+			ExtraAttr:         []string{"informational", "group:criticalstaging"},
 			ExtraSoftwareDeps: []string{"chrome"},
 			Fixture:           "chromeLoggedIn.ehide",
 		}, {
@@ -63,7 +63,7 @@ func init() {
 				applyWhenConnecting: true,
 				useChrome:           true,
 			},
-			ExtraAttr:         []string{"informational"},
+			ExtraAttr:         []string{"informational", "group:criticalstaging"},
 			ExtraSoftwareDeps: []string{"chrome"},
 			Fixture:           "chromeLoggedIn.ehide",
 		}},
