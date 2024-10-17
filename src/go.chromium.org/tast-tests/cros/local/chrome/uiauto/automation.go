@@ -610,11 +610,6 @@ func (ac *Context) Select(startNodeFinder *nodewith.Finder, startOffset int, end
 	}
 }
 
-func ctxDeadline(ctx context.Context) time.Time {
-	deadline, _ := ctx.Deadline()
-	return deadline
-}
-
 // Exists returns a function that returns nil if a node exists.
 // If any node in the chain is not found, it will return an error.
 func (ac *Context) Exists(finder *nodewith.Finder) Action {

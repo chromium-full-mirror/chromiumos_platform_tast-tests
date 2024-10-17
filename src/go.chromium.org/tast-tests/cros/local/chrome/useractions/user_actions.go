@@ -52,10 +52,8 @@ type UserAction struct {
 // NewUserContext returns a new user context.
 func NewUserContext(testName string, cr *chrome.Chrome, tconn *chrome.TestConn, outputDir string, attributes map[string]string, tags []ActionTag) *UserContext {
 	tagsMap := make(map[ActionTag]struct{})
-	if tags != nil {
-		for _, tag := range tags {
-			tagsMap[tag] = struct{}{}
-		}
+	for _, tag := range tags {
+		tagsMap[tag] = struct{}{}
 	}
 
 	if attributes == nil {
@@ -271,12 +269,12 @@ func (ar *actionResult) stringArray() ([]string, error) {
 	return []string{
 		ar.actionName,
 		ar.testName,
-		fmt.Sprintf("%s", attrStr),
-		fmt.Sprintf("%s", strings.Join(tags, ", ")),
-		fmt.Sprintf("%s", ar.startTime.Format(actionTimeFormat)),
-		fmt.Sprintf("%s", ar.endTime.Format(actionTimeFormat)),
-		fmt.Sprintf("%s", strconv.FormatBool(ar.pass)),
-		fmt.Sprintf("%s", errMessage),
+		string(attrStr),
+		strings.Join(tags, ", "),
+		ar.startTime.Format(actionTimeFormat),
+		ar.endTime.Format(actionTimeFormat),
+		strconv.FormatBool(ar.pass),
+		errMessage,
 	}, nil
 }
 

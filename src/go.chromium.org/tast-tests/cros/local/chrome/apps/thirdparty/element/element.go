@@ -60,11 +60,6 @@ const (
 	swipeDuration    = time.Second
 )
 
-var (
-	elementID      = apps.Element.ID
-	elementAppName = apps.Element.Name
-)
-
 // Element represents a type of Element instance.
 type Element struct {
 	tconn  *chrome.TestConn

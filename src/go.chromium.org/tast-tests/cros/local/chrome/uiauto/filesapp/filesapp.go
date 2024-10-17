@@ -393,7 +393,6 @@ func (f *FilesApp) IsFileSelected(fileSelector interface{}) uiauto.Action {
 		switch t := fileSelector.(type) {
 		case string:
 			nodeMatcher = nodewith.Role(role.ListBoxOption).NameStartingWith(fileSelector.(string) + " Size")
-			break
 		case *regexp.Regexp:
 			re := fileSelector.(*regexp.Regexp)
 			pattern := fmt.Sprintf("%s.* Size", re.String())
@@ -424,7 +423,6 @@ func (f *FilesApp) SelectFile(fileSelector interface{}) uiauto.Action {
 	switch t := fileSelector.(type) {
 	case string:
 		nodeMatcher = file(fileSelector.(string))
-		break
 	case *regexp.Regexp:
 		re := fileSelector.(*regexp.Regexp)
 		nodeMatcher = fileRegex(re)
@@ -449,7 +447,6 @@ func (f *FilesApp) OpenFile(fileSelector interface{}) uiauto.Action {
 	switch t := fileSelector.(type) {
 	case string:
 		nodeMatcher = file(fileSelector.(string))
-		break
 	case *regexp.Regexp:
 		nodeMatcher = fileRegex(fileSelector.(*regexp.Regexp))
 	default:
@@ -647,7 +644,6 @@ func (f *FilesApp) DeleteFileOrFolder(kb *input.KeyboardEventWriter, fileSelecto
 	case string:
 		fileName = fileSelector.(string)
 		nodeMatcher = file(fileName)
-		break
 	case *regexp.Regexp:
 		re := fileSelector.(*regexp.Regexp)
 		fileName = re.String()

@@ -113,7 +113,7 @@ func (t *TabConn) WaitForQuiescence(ctx context.Context, timeout time.Duration) 
 	if err := webutil.WaitForQuiescence(ctx, t.Conn, timeout); err != nil {
 		testing.ContextLogf(ctx, "Ignoring tab quiesce timeout (%v): %v", timeout, err)
 	} else {
-		testing.ContextLog(ctx, "Tab quiescence time: ", time.Now().Sub(start))
+		testing.ContextLog(ctx, "Tab quiescence time: ", time.Since(start))
 	}
 }
 

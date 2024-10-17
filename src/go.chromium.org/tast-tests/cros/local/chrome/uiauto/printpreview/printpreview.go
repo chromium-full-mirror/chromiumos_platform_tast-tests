@@ -391,16 +391,16 @@ func SetAdvancedSetting(ctx context.Context, tconn *chrome.TestConn, name string
 		return nil
 	}
 
-	switch value.(type) {
+	switch value := value.(type) {
 	case bool:
 		checkbox := nodewith.Role(role.CheckBox).Ancestor(advancedSettingsDialog)
-		if err := SetCheckboxStateInternal(ctx, tconn, checkbox, value.(bool)); err != nil {
+		if err := SetCheckboxStateInternal(ctx, tconn, checkbox, value); err != nil {
 			return errors.Wrap(err, "failed to set checkbox value")
 		}
 	case string:
 		// Open the dropdown menu and select the desired option.
 		dropdown := nodewith.HasClass("md-select").Ancestor(advancedSettingsDialog)
-		if err := setDropdownInternal(ui, dropdown, value.(string))(ctx); err != nil {
+		if err := setDropdownInternal(ui, dropdown, value)(ctx); err != nil {
 			return errors.Wrap(err, "failed to select dropdown option")
 		}
 	default:

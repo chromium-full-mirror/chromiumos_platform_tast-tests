@@ -233,10 +233,10 @@ type ShelfAlignment string
 // https://cs.chromium.org/chromium/src/ash/public/cpp/shelf_types.h
 const (
 	ShelfAlignmentBottom       ShelfAlignment = "Bottom"
-	ShelfAlignmentLeft                        = "Left"
-	ShelfAlignmentRight                       = "Right"
-	ShelfAlignmentBottomLocked                = "BottomLocked"
-	ShelfAlignmentInvalid                     = "Invalid"
+	ShelfAlignmentLeft         ShelfAlignment = "Left"
+	ShelfAlignmentRight        ShelfAlignment = "Right"
+	ShelfAlignmentBottomLocked ShelfAlignment = "BottomLocked"
+	ShelfAlignmentInvalid      ShelfAlignment = "Invalid"
 )
 
 // SetShelfAlignment sets the shelf alignment.

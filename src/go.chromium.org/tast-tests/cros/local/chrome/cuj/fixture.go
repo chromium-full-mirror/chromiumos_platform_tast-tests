@@ -75,9 +75,6 @@ const (
 	// batterySaverTimeout is the time to enable or disable battery saver.
 	batterySaverTimeout = 10 * time.Second
 
-	// scxTimeout is the time to load or unload scx scheduler.
-	scxTimeout = 3 * time.Second
-
 	webRTCEventLogCommandFlag = "--webrtc-event-logging=/tmp"
 	webRTCEventLogFilePattern = "/tmp/event_log_*.log"
 
@@ -1897,13 +1894,11 @@ func (f *loggedInToCUJUserFixture) SetUp(ctx context.Context, s *testing.FixtSta
 
 	if f.mlbenchmarkDataDirectory {
 		go func() {
-			select {
-			case <-s.FixtContext().Done():
-				// Make sure mlbenchmark data directory is removed when fixture is done.
-				if _, err := os.Stat(mlbenchmark.DataDirectory); !os.IsNotExist(err) {
-					if err := os.RemoveAll(mlbenchmark.DataDirectory); err != nil {
-						s.Logf("Failed to clear data directory %s: %v", mlbenchmark.DataDirectory, err)
-					}
+			<-s.FixtContext().Done()
+			// Make sure mlbenchmark data directory is removed when fixture is done.
+			if _, err := os.Stat(mlbenchmark.DataDirectory); !os.IsNotExist(err) {
+				if err := os.RemoveAll(mlbenchmark.DataDirectory); err != nil {
+					s.Logf("Failed to clear data directory %s: %v", mlbenchmark.DataDirectory, err)
 				}
 			}
 		}()

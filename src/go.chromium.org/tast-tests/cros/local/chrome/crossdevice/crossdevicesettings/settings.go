@@ -93,7 +93,7 @@ func WaitForConnectedDevice(ctx context.Context, tconn *chrome.TestConn, cr *chr
 	// for more than 5 minutes, attempt to force a sync through the debug page.
 	if ctxutil.DeadlineBefore(ctx, time.Now().Add(5*time.Minute)) {
 		d, _ := ctx.Deadline()
-		t := d.Sub(time.Now())
+		t := time.Until(d)
 		return errors.Errorf("insufficient time remaining before the context reaches its deadline. need at least 5 minutes, only %v remain", t)
 	}
 	testing.ContextLog(ctx, "Waiting up to 5 minutes for the devices to be paired")

@@ -374,7 +374,7 @@ func ExpandMenu(tconn *chrome.TestConn, button, menu *nodewith.Finder, height in
 			}
 			// Examine this log regularly to see how fast the menu is expanded and determine if
 			// we still need to keep this ExpandMenu() function.
-			testing.ContextLog(ctx, "Menu expanded to full height in ", time.Now().Sub(startTime))
+			testing.ContextLog(ctx, "Menu expanded to full height in ", time.Since(startTime))
 			return nil
 		}, &testing.PollOptions{Timeout: time.Minute, Interval: time.Second})
 	}

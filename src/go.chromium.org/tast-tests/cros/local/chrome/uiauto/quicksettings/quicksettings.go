@@ -39,38 +39,6 @@ func findStatusArea(ctx context.Context, tconn *chrome.TestConn) (*nodewith.Find
 	return statusArea, ui.WithTimeout(uiTimeout).WaitUntilExists(statusArea)(ctx)
 }
 
-// clickAndWaitForAnimation clicks the node found with the provided finder and
-// waits until the Quick Settings is no longer animating. The node provided is
-// expected to be, but not enforced to be, either the expand or collapse
-// button.
-func clickAndWaitForAnimation(ctx context.Context, tconn *chrome.TestConn, node *nodewith.Finder) error {
-	initialBounds, err := Rect(ctx, tconn)
-
-	if err != nil {
-		return err
-	}
-
-	previousBounds := initialBounds
-	checkIfAnimating := func(ctx context.Context) error {
-		if currentBounds, err := Rect(ctx, tconn); err != nil {
-			return testing.PollBreak(err)
-		} else if currentBounds != previousBounds {
-			previousBounds = currentBounds
-			return errors.New("the Quick Settings is still animating")
-		}
-		return nil
-	}
-
-	if err := uiauto.New(tconn).LeftClick(node)(ctx); err != nil {
-		errors.Wrap(err, "failed to click the node")
-	}
-
-	if err := testing.Poll(ctx, checkIfAnimating, &testing.PollOptions{Interval: 500 * time.Millisecond, Timeout: uiTimeout}); err != nil {
-		return errors.Wrap(err, "the Quick Settings did not stop animating")
-	}
-	return nil
-}
-
 // Rect returns a coords.Rect struct for the Quick Settings area, which contains
 // coordinate information about the rectangular region it occupies on the screen.
 // As clients of this function generally expect the bounds of the window, not the
@@ -699,10 +667,10 @@ func MicEnabled(ctx context.Context, tconn *chrome.TestConn) (bool, error) {
 	ui := uiauto.New(tconn)
 	// Scroll the mic toggle into view.
 	kb, err := input.Keyboard(ctx)
-	defer kb.Close(ctx)
 	if err != nil {
 		return false, errors.Wrap(err, "failed to setup keyboard")
 	}
+	defer kb.Close(ctx)
 	if err := kb.Accel(ctx, "Tab"); err != nil {
 		return false, errors.Wrap(err, "failed to press Tab to bring focus into Quick Settings")
 	}

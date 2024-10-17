@@ -184,7 +184,7 @@ func EnterPreRevampOtherAPNDetails(ctx context.Context, tconn *chrome.TestConn, 
 	settings := New(tconn)
 	if toggleInfo, err := settings.Info(ctx, AttachAPNToggle); err != nil {
 		return errors.Wrap(err, "failed to get toggle button info")
-	} else if (toggleInfo.Checked == checked.True && attach == false) || (toggleInfo.Checked == checked.False && attach == true) {
+	} else if (toggleInfo.Checked == checked.True && !attach) || (toggleInfo.Checked == checked.False && attach) {
 		if ui.LeftClick(AttachAPNToggle)(ctx); err != nil {
 			return errors.Wrap(err, "failed to click attach APN toggle")
 		}

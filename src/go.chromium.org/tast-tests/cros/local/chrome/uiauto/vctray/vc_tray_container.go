@@ -22,8 +22,8 @@ type DevType string
 // Available options of DevType.
 const (
 	DevMicrophone DevType = "Microphone"
-	DevCamera             = "Camera"
-	DevScreen             = "Screen"
+	DevCamera     DevType = "Camera"
+	DevScreen     DevType = "Screen"
 )
 
 // AVState represents the state of VC device state indicated in vcTray.
@@ -32,10 +32,10 @@ type AVState string
 // Available options of AVState.
 const (
 	DeviceDisabled     AVState = "disabled"
-	DeviceAvailable            = "available"
-	DeviceInUse                = "in use"
-	DeviceHidden               = "hidden"
-	DeviceUnknownState         = "unknown" // Should only be used on error.
+	DeviceAvailable    AVState = "available"
+	DeviceInUse        AVState = "in use"
+	DeviceHidden       AVState = "hidden"
+	DeviceUnknownState AVState = "unknown" // Should only be used on error.
 )
 
 func devFinder(devName DevType) *nodewith.Finder {

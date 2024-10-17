@@ -37,10 +37,6 @@ var (
 // NewGoogleSlides returns an action that creates a new google slides from web.
 func NewGoogleSlides(ctx context.Context, tconn *chrome.TestConn, br *browser.Browser, uiHandler cuj.UIActionHandler, newWindow bool) error {
 	ui := uiauto.New(tconn)
-	var opts []browser.CreateTargetOption
-	if newWindow {
-		opts = append(opts, browser.WithNewWindow())
-	}
 	testing.ContextLog(ctx, "Start to create google slide")
 	conn, err := uiHandler.NewChromeTab(ctx, br, cuj.NewGoogleSlidesURL, newWindow)
 	if err != nil {

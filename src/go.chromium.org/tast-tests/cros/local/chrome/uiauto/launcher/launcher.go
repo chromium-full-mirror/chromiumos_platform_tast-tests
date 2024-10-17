@@ -351,7 +351,7 @@ func SetupContinueSectionFiles(ctx context.Context, tconn *chrome.TestConn,
 	defer filesApp.Close(ctx)
 
 	// Files need to be opened for them to get picked up for the Continue Section.
-	chromeApp, err := apps.ChromeOrChromium(ctx, tconn)
+	chromeApp, _ := apps.ChromeOrChromium(ctx, tconn)
 	for i, filePath := range testDocFileNames {
 		if err := uiauto.Combine("Open file",
 			filesApp.OpenDownloads(),
@@ -941,7 +941,6 @@ func DragIconAfterIcon(ctx context.Context, tconn *chrome.TestConn, srcIndex, de
 // DragItemAfterItem drags an app list item returned by src node finder to a location after the app
 // list item node returned by dest node finder.
 func DragItemAfterItem(tconn *chrome.TestConn, src, dest *nodewith.Finder) uiauto.Action {
-	const duration = time.Second
 	return func(ctx context.Context) error {
 		ui := uiauto.New(tconn)
 		start, err := ui.Location(ctx, src)

@@ -183,7 +183,7 @@ func startMeeting(ctx context.Context, cr *chrome.Chrome, br *browser.Browser, c
 		}
 	}
 
-	if urlParams != nil && len(urlParams) > 0 {
+	if len(urlParams) > 0 {
 		values := url.Values{}
 		for k, v := range urlParams {
 			values.Add(k, v)

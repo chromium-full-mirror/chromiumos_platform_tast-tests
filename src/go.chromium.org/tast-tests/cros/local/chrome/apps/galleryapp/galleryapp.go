@@ -155,7 +155,7 @@ func (g *Gallery) Play(ctx context.Context) error {
 
 	if playing, err := g.IsPlaying(ctx); err != nil {
 		return err
-	} else if playing != true {
+	} else if !playing {
 		return errors.New("the media is not playing")
 	}
 	return nil
@@ -169,7 +169,7 @@ func (g *Gallery) Pause(ctx context.Context) error {
 
 	if paused, err := g.IsPaused(ctx); err != nil {
 		return err
-	} else if paused != true {
+	} else if !paused {
 		return errors.New("the media is not paused")
 	}
 	return nil
@@ -198,7 +198,7 @@ func (g *Gallery) WaitUntilPlaying(ctx context.Context) error {
 	return testing.Poll(ctx, func(ctx context.Context) error {
 		if isPlaying, err := g.IsPlaying(ctx); err != nil {
 			return err
-		} else if isPlaying != true {
+		} else if !isPlaying {
 			return errors.New("gallery is not playing")
 		}
 		return nil
@@ -210,7 +210,7 @@ func (g *Gallery) WaitUntilPaused(ctx context.Context) error {
 	return testing.Poll(ctx, func(ctx context.Context) error {
 		if isPaused, err := g.IsPaused(ctx); err != nil {
 			return err
-		} else if isPaused != true {
+		} else if !isPaused {
 			return errors.New("gallery is not paused")
 		}
 		return nil

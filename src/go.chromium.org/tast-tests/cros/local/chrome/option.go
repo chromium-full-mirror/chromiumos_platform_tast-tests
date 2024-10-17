@@ -6,7 +6,6 @@ package chrome
 
 import (
 	"encoding/hex"
-	"math/rand"
 	"time"
 
 	"go.chromium.org/tast-tests/cros/common/chrome/credconfig"
@@ -139,8 +138,6 @@ func UseGaiaConfig(path string) Option {
 		return nil
 	}
 }
-
-var random = rand.New(rand.NewSource(time.Now().UnixNano()))
 
 // GAIALoginPool returns an Option that can be passed to New to perform a real
 // GAIA-based login with a pool of GAIA account credentials.

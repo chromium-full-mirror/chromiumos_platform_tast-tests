@@ -14,7 +14,6 @@ import (
 
 // Class names.
 const downloadsSectionClassName = "DownloadsSection"
-const filesAppChipClassName = "FilesAppChip"
 const holdingSpaceItemChipViewClassName = "HoldingSpaceItemChipView"
 const holdingSpaceItemScreenCaptureViewClassName = "HoldingSpaceItemScreenCaptureView"
 const holdingSpaceTrayClassName = "HoldingSpaceTray"

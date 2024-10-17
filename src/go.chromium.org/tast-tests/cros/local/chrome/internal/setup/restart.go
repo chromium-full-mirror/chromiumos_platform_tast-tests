@@ -252,7 +252,7 @@ func RestartChromeForTesting(ctx context.Context, cfg *config.Config, extArgs []
 		}
 	}
 
-	if cfg.ARCMode() == config.ARCEnabled && cfg.ARCUseHugePages() == true {
+	if cfg.ARCMode() == config.ARCEnabled && cfg.ARCUseHugePages() {
 		args = append(args,
 			// Enable huge pages for guest memory
 			"--arcvm-use-hugepages")

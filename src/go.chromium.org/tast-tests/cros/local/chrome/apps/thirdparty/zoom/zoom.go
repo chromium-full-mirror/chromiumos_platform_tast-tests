@@ -53,7 +53,6 @@ var (
 	// There may be multiple "sign in" links, so add First() here.
 	signInLink          = nodewith.NameRegex(regexp.MustCompile("(?i)sign in")).Role(role.Link).Ancestor(zoomMainWebArea).First()
 	agreeToTermsArea    = nodewith.NameContaining("Agree to the Terms of Service").Role(role.RootWebArea)
-	launchMeetingWindow = nodewith.Name("Launch Meeting - Zoom").Role(role.Window)
 
 	// The main canvas of the meeting, it can be used to identify whether if it is in a meeting.
 	mainLayoutCanvas = nodewith.HasClass("main-layout__canvas").Role(role.Canvas).First()
@@ -353,21 +352,6 @@ func InstallPWA(ctx context.Context, cr *chrome.Chrome, br *browser.Browser) err
 func (zm *Zoom) ShowInterface(ctx context.Context) error {
 	return zm.ui.LeftClickUntil(zoomMainWebArea,
 		zm.ui.WaitForLocation(moreOptionsButton))(ctx)
-}
-
-// hideInterface moves mouse to the center point of canvas.
-func (zm *Zoom) hideInterface(ctx context.Context) error {
-	isNodeFound, err := zm.ui.IsNodeFound(ctx, moreOptionsButton)
-	if err != nil {
-		return err
-	} else if !isNodeFound {
-		return nil
-	}
-
-	return zm.ui.RetryUntil(
-		zm.ui.MouseMoveTo(mainLayoutCanvas, 10*time.Millisecond),
-		zm.ui.WaitUntilGone(moreOptionsButton),
-	)(ctx)
 }
 
 // WaitParticipantsNum waits for the number of participants to reach the expected number.

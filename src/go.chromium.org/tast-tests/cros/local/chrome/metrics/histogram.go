@@ -324,7 +324,7 @@ func SaveHistogramsMeanValue(ctx context.Context, pv *perf.Values, histograms []
 			return errors.Wrapf(err, "failed to get mean for histogram %s", h.Name)
 		}
 
-		metric.Name = fmt.Sprintf("%s", h.Name)
+		metric.Name = h.Name
 		pv.Set(metric, mean)
 	}
 

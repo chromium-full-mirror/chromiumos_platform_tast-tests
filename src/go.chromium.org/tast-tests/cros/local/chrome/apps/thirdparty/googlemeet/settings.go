@@ -89,10 +89,10 @@ type ResolutionOption string
 // Available options of resolutions in Google Meet.
 const (
 	ResolutionAuto        ResolutionOption = "Auto"
-	ResolutionFullHD1080P                  = "Full high definition (1080p)"
-	ResolutionHD720P                       = "High definition (720p)"
-	ResolutionSD360P                       = "Standard definition (360p)"
-	ResolutionLD180P                       = "Low definition (180p)"
+	ResolutionFullHD1080P ResolutionOption = "Full high definition (1080p)"
+	ResolutionHD720P      ResolutionOption = "High definition (720p)"
+	ResolutionSD360P      ResolutionOption = "Standard definition (360p)"
+	ResolutionLD180P      ResolutionOption = "Low definition (180p)"
 )
 
 // SetSendResolution sets the option of "Send Resolution" in "Video" Tab.

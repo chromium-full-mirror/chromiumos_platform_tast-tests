@@ -5,7 +5,6 @@
 package ossettings
 
 import (
-	"fmt"
 	"regexp"
 
 	"go.chromium.org/tast-tests/cros/local/apps"
@@ -129,7 +128,7 @@ var DoneButton = nodewith.NameContaining("Done").Role(role.Button)
 var SearchNoResults = nodewith.Name("No search results found").Role(role.StaticText)
 
 // SearchResultFinder is a finder of all possible search results if they exist.
-var SearchResultFinder = nodewith.NameRegex(regexp.MustCompile(fmt.Sprintf(`(Search result \d+ of \d+: .*)`))).Onscreen()
+var SearchResultFinder = nodewith.NameRegex(regexp.MustCompile(`(Search result \d+ of \d+: .*)`)).Onscreen()
 
 // SearchFeedbackButton is a button for sending feedback when a search result doesn't exist.
 var SearchFeedbackButton = nodewith.Name("Report this search result").Role(role.Button)

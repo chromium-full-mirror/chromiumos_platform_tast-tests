@@ -79,10 +79,8 @@ func newFakeConn(ctx context.Context, addr string) (io.ReadWriteCloser, error) {
 	ctx, cancel := context.WithCancel(ctx)
 	dc := &fakeConn{done: make(chan struct{}), cancel: cancel}
 	go func() {
-		select {
-		case <-ctx.Done():
-			close(dc.done)
-		}
+		<-ctx.Done()
+		close(dc.done)
 	}()
 	return dc, nil
 }

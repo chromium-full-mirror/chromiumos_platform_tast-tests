@@ -287,10 +287,10 @@ func performAutoReEnrollment(ctx context.Context, cfg *config.Config, sess *driv
 // automatic enrollment and end on the enrollment success screen.
 func proceedThroughOOBEAndExpectAutomaticEnrollment(ctx context.Context, cfg *config.Config, sess *driver.Session) error {
 	oobeConn, err := WaitForOOBEConnection(ctx, sess)
-	defer oobeConn.Close()
 	if err != nil {
 		return errors.Wrap(err, "could not find OOBE connection")
 	}
+	defer oobeConn.Close()
 
 	if err := oobeConn.WaitForExpr(ctx, "OobeAPI.screens.WelcomeScreen.isVisible()"); err != nil {
 		return errors.Wrap(err, "failed to wait for the OOBE Welcome Screen")

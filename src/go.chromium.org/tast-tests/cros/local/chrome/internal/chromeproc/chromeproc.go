@@ -17,15 +17,6 @@ import (
 	"go.chromium.org/tast/core/testing"
 )
 
-const (
-	chromeExe = "chrome"
-
-	// crashpadHandlerExe is the name of executable. Though it is not
-	// the same executable as Chrome, it is spawned from Chrome and we consider as
-	// one of the Chrome processes.
-	crashpadHandlerExe = "chrome_crashpad_handler"
-)
-
 // processes returns an array of Chrome Processes at execPath that satisfies the given filter.
 func processes(execPath string, filter func(p *process.Process) bool) ([]*process.Process, error) {
 	if !filepath.IsAbs(execPath) {
@@ -59,7 +50,7 @@ var (
 
 // Root returns Process instance for Chrome's root process (i.e. Browser process).
 func Root(execPath string) (*process.Process, error) {
-	return RootWithContext(nil, execPath)
+	return RootWithContext(context.TODO(), execPath)
 }
 
 // RootWithContext is almost same as Root, but takes context.Context for logging purpose.

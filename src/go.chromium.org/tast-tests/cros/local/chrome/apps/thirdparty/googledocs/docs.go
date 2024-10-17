@@ -36,10 +36,6 @@ var (
 
 // NewGoogleDocs returns an action to create a new Google document.
 func NewGoogleDocs(ctx context.Context, tconn *chrome.TestConn, br *browser.Browser, uiHandler cuj.UIActionHandler, newWindow bool) error {
-	var opts []browser.CreateTargetOption
-	if newWindow {
-		opts = append(opts, browser.WithNewWindow())
-	}
 	testing.ContextLog(ctx, "Start to create Google document")
 	// If there is an account sign-out issue when navigating to a Google Docs page,
 	// it will continue to evaluate the JS expression in br.NewConn until

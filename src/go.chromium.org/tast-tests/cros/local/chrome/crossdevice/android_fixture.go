@@ -191,7 +191,6 @@ type crossdeviceAndroidFixture struct {
 	adbDevice     *adb.Device
 	androidDevice *AndroidDevice
 	feature       Feature
-	phoneIP       string
 }
 
 func (f *crossdeviceAndroidFixture) SetUp(ctx context.Context, s *testing.FixtState) interface{} {

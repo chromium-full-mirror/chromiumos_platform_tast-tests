@@ -27,10 +27,6 @@ import (
 	"go.chromium.org/tast/core/testing"
 )
 
-const uiTimeout = 15 * time.Second
-
-var defaultPollOpts = &testing.PollOptions{Timeout: 10 * time.Second, Interval: 1 * time.Second}
-
 const urlPrefix = "chrome://os-settings/"
 
 // OSSettings represents an instance of the Settings app.

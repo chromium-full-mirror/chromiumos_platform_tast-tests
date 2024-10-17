@@ -40,7 +40,7 @@ func waitForDocumentSaved(tconn *chrome.TestConn, appName string) action.Action 
 			}
 			testing.ContextLog(ctx, "Failed to wait for document saved within ", saveToDriveTimeout)
 		} else {
-			testing.ContextLog(ctx, "Saved to drive in ", time.Now().Sub(startTime))
+			testing.ContextLog(ctx, "Saved to drive in ", time.Since(startTime))
 		}
 		return nil
 	}

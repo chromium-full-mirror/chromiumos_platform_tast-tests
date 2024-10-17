@@ -163,7 +163,6 @@ func TestHistogramDiff(t *testing.T) {
 }
 
 func TestHistogramPercentile(t *testing.T) {
-	const expectErr = "err"
 	for _, tc := range []struct {
 		hist       string
 		percentile int

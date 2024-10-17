@@ -214,7 +214,7 @@ func NewTabRecorder(ctx context.Context, tconn *chrome.TestConn, tabIndex int) (
 // Start creates a new media recorder and starts to record the screen. As long as ScreenRecorder
 // is not recording, it can start to record again.
 func (r *ScreenRecorder) Start(ctx context.Context, tconn *chrome.TestConn) error {
-	if r.isRecording == true {
+	if r.isRecording {
 		return errors.New("recorder already started")
 	}
 
@@ -235,7 +235,7 @@ func (r *ScreenRecorder) Start(ctx context.Context, tconn *chrome.TestConn) erro
 
 // Stop ends the screen recording and stores the encoded base64 string.
 func (r *ScreenRecorder) Stop(ctx context.Context) error {
-	if r.isRecording == false {
+	if !r.isRecording {
 		return errors.New("recorder hasn't started yet")
 	}
 

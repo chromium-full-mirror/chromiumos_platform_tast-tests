@@ -33,7 +33,7 @@ import (
 var WindowFinder *nodewith.Finder = nodewith.Name(apps.Scan.Name).HasClass("BrowserFrame").Role(role.Window)
 
 // Matches "Scan" or "Scan page 1".
-var scanButtonFinder *nodewith.Finder = nodewith.NameRegex(regexp.MustCompile("(Scan)(\\spage\\s1)?")).Role(role.Button)
+var scanButtonFinder *nodewith.Finder = nodewith.NameRegex(regexp.MustCompile(`(Scan)(\spage\s1)?`)).Role(role.Button)
 
 var doneButtonFinder *nodewith.Finder = nodewith.Name("Done").Role(role.Button)
 var failedDialogFinder *nodewith.Finder = nodewith.Name("Couldn't complete scan").Role(role.Dialog)

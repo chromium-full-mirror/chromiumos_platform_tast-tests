@@ -991,7 +991,7 @@ func checkInternetConnectivityInBackground(ctx context.Context, timeout time.Dur
 				return errors.Wrap(err, "Background checking DUT no internet connectivity")
 			}
 
-			duration := time.Now().Sub(checkInternetConnectivityStart)
+			duration := time.Since(checkInternetConnectivityStart)
 			testing.ContextLog(ctx, "Background DUT network checking finished in: ", duration)
 			return nil
 		}, &testing.PollOptions{Timeout: timeout}); err != nil {

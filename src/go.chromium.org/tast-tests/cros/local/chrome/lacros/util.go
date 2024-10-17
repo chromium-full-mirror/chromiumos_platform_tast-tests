@@ -19,8 +19,6 @@ import (
 	"go.chromium.org/tast/core/testing"
 )
 
-var pollOptions = &testing.PollOptions{Timeout: 10 * time.Second}
-
 // WaitForLacrosWindow waits for a Lacros window to be open and have the title to be visible if it is specified as a param.
 func WaitForLacrosWindow(ctx context.Context, tconn *chrome.TestConn, title string) error {
 	if err := ash.WaitForCondition(ctx, tconn, func(w *ash.Window) bool {

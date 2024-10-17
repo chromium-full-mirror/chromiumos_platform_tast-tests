@@ -176,7 +176,7 @@ func CheckSmartLockVisibilityOnLockScreen(ctx context.Context, expectVisible boo
 
 // goToLoginScreen signs out of the current session a couple of times so that
 // signin screen settings have a chance to take effect.
-func goToLoginScreen(ctx context.Context, cr *chrome.Chrome, tconn *chrome.TestConn, kb *input.KeyboardEventWriter, loginOpts, noLoginOpts []chrome.Option) (*chrome.Chrome, *chrome.TestConn, error) {
+func goToLoginScreen(ctx context.Context, cr *chrome.Chrome, _ *chrome.TestConn, kb *input.KeyboardEventWriter, loginOpts, noLoginOpts []chrome.Option) (*chrome.Chrome, *chrome.TestConn, error) {
 	if err := testing.Sleep(ctx, 10*time.Second); err != nil {
 		return nil, nil, errors.Wrap(err, "failed to sleep before SignOut")
 	}
@@ -193,7 +193,7 @@ func goToLoginScreen(ctx context.Context, cr *chrome.Chrome, tconn *chrome.TestC
 	if err != nil {
 		return nil, nil, errors.Wrap(err, "failed to start chrome")
 	}
-	tconn, err = cr.SigninProfileTestAPIConn(ctx)
+	tconn, err := cr.SigninProfileTestAPIConn(ctx)
 	if err != nil {
 		return nil, nil, errors.Wrap(err, "getting API connection failed")
 	}
@@ -201,7 +201,7 @@ func goToLoginScreen(ctx context.Context, cr *chrome.Chrome, tconn *chrome.TestC
 	return cr, tconn, nil
 }
 
-func signInWithPassword(ctx context.Context, cr *chrome.Chrome, tconn *chrome.TestConn, loginOpts []chrome.Option) (*chrome.Chrome, *chrome.TestConn, error) {
+func signInWithPassword(ctx context.Context, _ *chrome.Chrome, _ *chrome.TestConn, loginOpts []chrome.Option) (*chrome.Chrome, *chrome.TestConn, error) {
 	cr, err := chrome.New(
 		ctx,
 		loginOpts...,
@@ -210,7 +210,7 @@ func signInWithPassword(ctx context.Context, cr *chrome.Chrome, tconn *chrome.Te
 		return nil, nil, errors.Wrap(err, "failed to login to Chrome")
 	}
 
-	tconn, err = cr.TestAPIConn(ctx)
+	tconn, err := cr.TestAPIConn(ctx)
 	if err != nil {
 		return nil, nil, errors.Wrap(err, "creating test API connection failed")
 	}

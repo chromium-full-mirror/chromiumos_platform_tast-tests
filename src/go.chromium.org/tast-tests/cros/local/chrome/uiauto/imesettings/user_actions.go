@@ -379,7 +379,7 @@ func SetJapaneseKeyboardSettings(uc *useractions.UserContext, ui *uiauto.Context
 		&useractions.UserActionCfg{
 			Attributes: map[string]string{
 				useractions.AttributeFeature:      useractions.FeatureIMESpecific,
-				useractions.AttributeTestScenario: fmt.Sprintf("Change Japanese keyboard settings"),
+				useractions.AttributeTestScenario: "Change Japanese keyboard settings",
 			},
 			Tags: []useractions.ActionTag{useractions.ActionTagEssentialInputs},
 		},
