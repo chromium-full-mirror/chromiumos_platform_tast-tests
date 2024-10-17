@@ -24,7 +24,6 @@ const aquariumURL = "https://webglsamples.org/aquarium/aquarium.html"
 func init() {
 	testing.AddTest(&testing.Test{
 		Func:         ExampleRemoteUI,
-		LacrosStatus: testing.LacrosVariantExists,
 		Desc:         "Setting up a DUT remotely for power test with UI",
 		BugComponent: "b:1361410",
 		Contacts: []string{
