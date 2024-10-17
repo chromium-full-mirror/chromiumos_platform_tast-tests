@@ -107,7 +107,7 @@ func EnablePresence(hctx *HpsContext, feature string) (time.Duration, error) {
 		return 0, err
 	}
 
-	return time.Now().Sub(start), nil
+	return time.Since(start), nil
 }
 
 func pollStatus(hctx *HpsContext, register, pattern string) error {

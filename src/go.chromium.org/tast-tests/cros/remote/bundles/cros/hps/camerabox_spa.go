@@ -86,7 +86,7 @@ func CameraboxSPA(ctx context.Context, s *testing.State) {
 
 	// Connecting to the chart tablet that will render the picture.
 	ctxForCleanupDisplayChart := ctx
-	ctx, cancel := ctxutil.Shorten(ctx, time.Minute)
+	ctx, _ = ctxutil.Shorten(ctx, time.Minute)
 	hostPaths, displayChart, err := utils.SetupDisplay(ctx, s)
 	if err != nil {
 		s.Fatal("Error setting up display: ", err)
@@ -95,7 +95,7 @@ func CameraboxSPA(ctx context.Context, s *testing.State) {
 
 	// Connecting to Taeko.
 	cleanupCtx := ctx
-	ctx, cancel = ctxutil.Shorten(ctx, time.Minute)
+	ctx, cancel := ctxutil.Shorten(ctx, time.Minute)
 	defer cancel()
 	cl, err := rpc.Dial(ctx, dut, s.RPCHint())
 	if err != nil {

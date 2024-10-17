@@ -100,11 +100,9 @@ func Powerlog(ctx context.Context, csvFilename, boardFilename, scenarioFilename 
 
 		done := false
 		for !done {
-			select {
-			case <-quit:
-				testing.ContextLog(ctx, "quitting powerlog")
-				done = true
-			}
+			<-quit
+			testing.ContextLog(ctx, "quitting powerlog")
+			done = true
 		}
 
 		testing.ContextLog(ctx, "quit powerlog")

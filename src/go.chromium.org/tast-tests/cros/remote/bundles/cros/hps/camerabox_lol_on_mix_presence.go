@@ -77,7 +77,7 @@ func CameraboxLoLOnMixPresence(ctx context.Context, s *testing.State) {
 	}
 
 	ctxForCleanupDisplayChart := ctx
-	ctx, cancel := ctxutil.Shorten(ctx, time.Minute)
+	ctx, _ = ctxutil.Shorten(ctx, time.Minute)
 	hostPaths, displayChart, err := utils.SetupDisplay(ctx, s)
 	if err != nil {
 		s.Fatal("Error setting up display: ", err)
@@ -88,7 +88,7 @@ func CameraboxLoLOnMixPresence(ctx context.Context, s *testing.State) {
 
 	// Connecting to Taeko.
 	cleanupCtx := ctx
-	ctx, cancel = ctxutil.Shorten(ctx, time.Minute)
+	ctx, cancel := ctxutil.Shorten(ctx, time.Minute)
 	defer cancel()
 	cl, err := rpc.Dial(ctx, dut, s.RPCHint())
 	if err != nil {
@@ -156,7 +156,7 @@ func CameraboxLoLOnMixPresence(ctx context.Context, s *testing.State) {
 		s.Fatal("Error when polling for brightness: ", err)
 	}
 
-	dimmedBrightness, err := utils.GetBrightness(hctx.Ctx, dut.Conn())
+	dimmedBrightness, _ := utils.GetBrightness(hctx.Ctx, dut.Conn())
 
 	// Expect screen will undim quickly after showing a face.
 	startTime := time.Now()

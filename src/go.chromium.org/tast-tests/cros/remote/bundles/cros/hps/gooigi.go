@@ -211,12 +211,12 @@ func Gooigi(ctx context.Context, s *testing.State) {
 			}
 
 			// Record results from HPS unit.
-			result, err := utils.RetrieveHpsSenseSignal(ctx, client)
+			result, _ := utils.RetrieveHpsSenseSignal(ctx, client)
 			testing.ContextLog(ctx, "sense: ", result)
 
 			status.sense = result
 
-			result, err = utils.RetrieveHpsNotifySignal(ctx, client)
+			result, _ = utils.RetrieveHpsNotifySignal(ctx, client)
 			testing.ContextLog(ctx, "notify: ", result)
 
 			status.notify = result
@@ -227,15 +227,15 @@ func Gooigi(ctx context.Context, s *testing.State) {
 			}
 
 			// Compare sense and notify signals with enclosure configuration.
-			if status.sense != true && (tc.main || tc.secondary) {
+			if !status.sense && (tc.main || tc.secondary) {
 				s.Fatal("Failed to detect person")
 			}
 
-			if status.notify != false && (tc.main || tc.secondary) && !(tc.main && tc.secondary) {
+			if status.notify && (tc.main || tc.secondary) && !(tc.main && tc.secondary) {
 				s.Fatal("Incorrectly identified extra people")
 			}
 
-			if status.notify != true && (tc.main && tc.secondary) {
+			if !status.notify && (tc.main && tc.secondary) {
 				s.Fatal("Failed to detect both people")
 			}
 
