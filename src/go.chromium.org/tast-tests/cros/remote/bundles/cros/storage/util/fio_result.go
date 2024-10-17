@@ -6,20 +6,13 @@ package util
 
 import (
 	"context"
-	"fmt"
-	"os"
-	"path/filepath"
-	"sort"
 	"strconv"
 	"strings"
 	"sync"
 
 	"go.chromium.org/tast-tests/cros/common/perf"
-	"go.chromium.org/tast/core/errors"
 	"go.chromium.org/tast/core/testing"
 )
-
-const keyValFileName = "keyval"
 
 // fioResult is a serializable structure representing fio results output.
 type fioResult struct {
@@ -41,13 +34,6 @@ type fioResult struct {
 type fioResultReport struct {
 	group  string
 	result *fioResult
-}
-
-// fioDiskUsageReport is a report of disk lifetime usage.
-type fioDiskUsageReport struct {
-	name           string
-	percentageUsed int64
-	bytesWritten   int64
 }
 
 // FioResultWriter is a serial processor of fio results.
@@ -190,34 +176,6 @@ func (f *FioResultWriter) reportJobRWResult(ctx context.Context, testRes map[str
 			f.internalResults[key] = delta
 		}
 	}
-}
-
-// writeKeyVals writes given key value data to an external file in output directory.
-func writeKeyVals(outDir string, keyVals map[string]float64) error {
-	if keyVals == nil {
-		return errors.New("invalid data to write to keyval file")
-	}
-
-	filename := filepath.Join(outDir, keyValFileName)
-	f, err := os.OpenFile(filename, os.O_APPEND|os.O_CREATE|os.O_WRONLY, 0644)
-	if err != nil {
-		return errors.Wrapf(err, "failed to open file: %s", filename)
-	}
-	defer f.Close()
-
-	// Sorting all results by name before writing to file.
-	keys := make([]string, 0, len(keyVals))
-	for k := range keyVals {
-		keys = append(keys, k)
-	}
-	sort.Strings(keys)
-
-	for _, key := range keys {
-		if _, err := fmt.Fprintf(f, "%s=%v\n", key, keyVals[key]); err != nil {
-			return errors.Wrap(err, "failed to write keyval file")
-		}
-	}
-	return nil
 }
 
 // flattenNestedResults flattens nested structures to the root level.

@@ -76,7 +76,7 @@ func kernelArguments(ctx context.Context, dut *dut.DUT, partNum int64) (string, 
 
 	args := string(argBytes)
 
-	if strings.Index(args, "init") == -1 {
+	if !strings.Contains(args, "init") {
 		return "", errors.Wrapf(err, "failed validity check for kernel argumets: %q", args)
 	}
 

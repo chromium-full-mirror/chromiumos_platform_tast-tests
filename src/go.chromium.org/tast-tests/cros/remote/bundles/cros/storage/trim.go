@@ -54,8 +54,7 @@ func Trim(ctx context.Context, s *testing.State) {
 	// Run Trim
 	// Make file size multiple of 4 * chunk size to account for all passes,
 	// i.e. 25% = 1/4, 75% = 3/4.
-	var filesize uint64
-	filesize = util.TrimFileSize - util.TrimFileSize%(4*util.TrimChunkSize)
+	filesize := uint64(util.TrimFileSize - util.TrimFileSize%(4*util.TrimChunkSize))
 	s.Log("Running initial trim")
 	if err = util.RunTrim(ctx, s.DUT(), disk.Path, 0, filesize); err != nil {
 		s.Fatal("Error running trim command: ", err)

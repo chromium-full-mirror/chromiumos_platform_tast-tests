@@ -90,7 +90,7 @@ func (t TestConfig) fioArgList() []string {
 		result = append(result, "--runtime="+strconv.Itoa(t.RunTimeSec)+"s")
 	}
 
-	if t.VerifyOnly == true {
+	if t.VerifyOnly {
 		result = append(result, "--verify_only")
 	}
 

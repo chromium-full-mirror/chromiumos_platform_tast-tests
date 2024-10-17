@@ -108,7 +108,3 @@ func sha256String(buf []byte) string {
 	sha := sha256.Sum256(buf)
 	return hex.EncodeToString(sha[:])
 }
-
-func random(min, max int) int {
-	return rand.Intn(max-min) + min
-}

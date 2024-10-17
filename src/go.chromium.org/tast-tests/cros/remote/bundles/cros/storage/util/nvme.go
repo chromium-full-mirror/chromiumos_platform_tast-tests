@@ -107,19 +107,3 @@ func getNvmePowerState(ctx context.Context, disk *Disk) (DiskPowerState, error) 
 	}
 	return DiskLowPowerState, nil
 }
-
-func debugPrintNvmePowerConfig(ctx context.Context, c *NvmePowerConfig) {
-	testing.ContextLog(ctx, "NVMe power config")
-	testing.ContextLog(ctx, "Power States")
-	for id, ps := range c.States {
-		testing.ContextLogf(
-			ctx,
-			"%d %v %f %f %d %d",
-			id, ps.Operational, ps.MaxPower,
-			ps.IdlePower, ps.EntryLat, ps.ExitLat)
-	}
-	testing.ContextLog(ctx, "APST Enabled: ", c.ApstEnabled)
-	for id, apste := range c.Apst {
-		testing.ContextLogf(ctx, "%d %d %d", id, apste.Target, apste.Delay)
-	}
-}
