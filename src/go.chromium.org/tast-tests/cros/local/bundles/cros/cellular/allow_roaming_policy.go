@@ -60,7 +60,7 @@ func AllowRoamingPolicy(ctx context.Context, s *testing.State) {
 		s.Fatal("Failed to reset chrome: ", err)
 	}
 
-	tconn, err := cr.TestAPIConn(ctx)
+	tconn, _ := cr.TestAPIConn(ctx)
 
 	cellularONC := &policy.ONCCellular{
 		AllowRoaming: false,

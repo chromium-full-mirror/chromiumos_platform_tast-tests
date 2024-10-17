@@ -9,7 +9,6 @@ import (
 	"context"
 	"fmt"
 	"net"
-	"regexp"
 	"strconv"
 	"strings"
 	"time"
@@ -26,8 +25,6 @@ import (
 )
 
 const deviceID = "18d1:5020"
-
-var portRE = regexp.MustCompile(`port:\s+(\d+)`)
 
 // Config represents a set of power measurement configuration options.
 type Config struct {

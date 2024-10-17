@@ -101,7 +101,7 @@ func StressDisconnectConnect(ctx context.Context, s *testing.State) {
 		}
 
 		cleanupCtx := ctx
-		ctx, cancel := runner.ReserveForClose(ctx)
+		_, cancel := runner.ReserveForClose(ctx)
 		defer cancel()
 		defer func(cleanupCtx context.Context) {
 			runner.Close(cleanupCtx)

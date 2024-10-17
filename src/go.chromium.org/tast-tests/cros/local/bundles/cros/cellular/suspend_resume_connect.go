@@ -91,10 +91,10 @@ func SuspendResumeConnect(ctx context.Context, s *testing.State) {
 	}
 
 	mdp, err := ossettings.OpenNetworkDetailPage(ctx, tconn, cr, profileName, netconfigtypes.Cellular)
-	defer mdp.Close(ctx)
 	if err != nil {
 		s.Fatal("Failed to open cellular details subpage: ", err)
 	}
+	defer mdp.Close(ctx)
 
 	if err := mdp.WithTimeout(15 * time.Second).WaitUntilExists(ossettings.ConnectedStatus)(ctx); err != nil {
 		s.Fatal("Failed to verify network is connected: ", err)
@@ -124,7 +124,7 @@ func SuspendResumeConnect(ctx context.Context, s *testing.State) {
 		s.Fatal("Failed to re-establish the Test API connection: ", err)
 	}
 
-	mdp, err = ossettings.OpenMobileDataSubpage(ctx, tconn, cr)
+	_, err = ossettings.OpenMobileDataSubpage(ctx, tconn, cr)
 	if err != nil {
 		s.Fatal("Failed to open mobile data page: ", err)
 	}
@@ -159,7 +159,7 @@ func SuspendResumeConnect(ctx context.Context, s *testing.State) {
 		s.Fatal("Failed to re-establish the Test API connection: ", err)
 	}
 
-	mdp, err = ossettings.OpenMobileDataSubpage(ctx, tconn, cr)
+	_, err = ossettings.OpenMobileDataSubpage(ctx, tconn, cr)
 	if err != nil {
 		s.Fatal("Failed to open mobile data page: ", err)
 	}
@@ -208,7 +208,7 @@ func getConnectedProfileNickname(ctx context.Context, helper *cellular.Helper) (
 	}
 
 	for _, profile := range profiles {
-		props, err := dbusutil.NewDBusProperties(ctx, profile.DBusObject)
+		props, _ := dbusutil.NewDBusProperties(ctx, profile.DBusObject)
 
 		iccid, err := props.GetString(hermesconst.ProfilePropertyIccid)
 		if err != nil {

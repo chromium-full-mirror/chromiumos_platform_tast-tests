@@ -518,7 +518,7 @@ func (h *Helper) WaitForModemRegisteredAfterReset(ctx context.Context, timeout t
 			registeredTime = time.Now()
 		}
 
-		if time.Now().Sub(registeredTime) < window {
+		if time.Since(registeredTime) < window {
 			return isRegistered, errors.New("modem not yet registered for enough time")
 		}
 		return isRegistered, nil
@@ -1129,7 +1129,6 @@ func (h *Helper) GetCellularSIMLockStatus(ctx context.Context) (map[string]inter
 		return nil, errors.Wrap(err, "failed to get device cellularsimlockstatus property")
 	}
 
-	simLockStatus := make(map[string]interface{})
 	simLockStatus, ok := info.(map[string]interface{})
 	if !ok {
 		return nil, errors.Wrap(err, "invalid format for device cellularsimlockstatus")
@@ -1193,13 +1192,13 @@ func (h *Helper) PukLockSim(ctx context.Context, currentPin string) error {
 	}
 
 	locked := h.IsSimPinLocked(ctx)
-	if locked == true {
+	if locked {
 		testing.ContextLog(ctx, "pinlocked with: ", currentPin)
 	}
 	locked = false
 	retriesCnt := 0
 	// Max incorrect retries before SIM card becomes PUK locked is usually 3
-	for retriesCnt < 10 && locked == false {
+	for retriesCnt < 10 && !locked {
 		retriesCnt++
 		if err := h.EnterIncorrectPin(ctx, currentPin); err != nil {
 			testing.ContextLog(ctx, "Failed to enter incorrect pin: ", err.Error())
@@ -1528,7 +1527,7 @@ func (h *Helper) GetNetworkProvisionedCellularIPTypes(ctx context.Context) (ipv4
 			ipv6Present = true
 		}
 	}
-	if ipv4Present == false && ipv6Present == false {
+	if !ipv4Present && !ipv6Present {
 		return false, false, errors.New("no IP networks provisioned")
 	}
 	return ipv4Present, ipv6Present, nil
@@ -1713,7 +1712,7 @@ func GetProfileNickNameForIccid(ctx context.Context, iccid string) (string, erro
 	}
 
 	for _, profile := range profiles {
-		props, err := dbusutil.NewDBusProperties(ctx, profile.DBusObject)
+		props, _ := dbusutil.NewDBusProperties(ctx, profile.DBusObject)
 
 		currentIccid, err := props.GetString(hermesconst.ProfilePropertyIccid)
 		if err != nil {
@@ -1756,7 +1755,7 @@ func (h *Helper) CreateCarrierLockCsvFile(ctx context.Context, profile string) (
 	}
 	manufacturer := string(bmanufacturer)
 
-	conf := []byte("")
+	var conf []byte
 	csvFileName := "carrier_lock_" + imei + ".csv"
 
 	if profile == "0" {

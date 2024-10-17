@@ -100,7 +100,7 @@ func (c *CallboxIperfClient) Start(ctx context.Context, config *iperf.Config) (*
 	}
 
 	// Wait for endTime even if polling is complete as attempting to stop callbox Iperf client early may prevent server from terminating.
-	if err := testing.Sleep(ctx, endTime.Sub(time.Now())); err != nil {
+	if err := testing.Sleep(ctx, time.Until(endTime)); err != nil {
 		return nil, errors.Wrap(err, "failed to sleep while waiting for server to stop")
 	}
 

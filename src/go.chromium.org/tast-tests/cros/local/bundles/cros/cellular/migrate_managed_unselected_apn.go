@@ -238,10 +238,10 @@ func MigrateManagedUnselectedApn(ctx context.Context, s *testing.State) {
 	}
 
 	mdp, err := ossettings.OpenMobileDataSubpage(ctx, tconn, cr)
-	defer mdp.Close(ctx)
 	if err != nil {
 		s.Fatal("Failed to open mobile data subpage: ", err)
 	}
+	defer mdp.Close(ctx)
 
 	if err := ossettings.GoToCellularNetworkDetailPageWithNickName(ctx, tconn, networkName); err != nil {
 		s.Fatal("Failed to go to the cellular network detail page view: ", err)

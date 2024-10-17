@@ -127,8 +127,7 @@ func AssertUISignalQuality(ctx context.Context, s *testing.State) {
 		}
 		sDiff := float64(strength - serviceResp.Strength)
 		strength = serviceResp.Strength
-		var expectedCount int32
-		expectedCount = barCount(ctx, float64(strength))
+		expectedCount := barCount(ctx, float64(strength))
 		s.Logf("Power: %f, strength: %d %%, offset: %f dBm", pMeas, strength, calibrationOffset)
 		resultedCount, err := getShillBasedBarCnt(ctx, tf.RemoteCellularClient)
 		if err != nil {

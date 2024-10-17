@@ -105,7 +105,7 @@ func RenameESimProfileNickname(ctx context.Context, s *testing.State) {
 	hasConnectedProfile := false
 	hasDisconnectedProfile := false
 	for _, profilex := range profiles {
-		propsx, err := dbusutil.NewDBusProperties(ctx, profilex.DBusObject)
+		propsx, _ := dbusutil.NewDBusProperties(ctx, profilex.DBusObject)
 
 		iccid, err := propsx.GetString(hermesconst.ProfilePropertyIccid)
 		if err != nil {

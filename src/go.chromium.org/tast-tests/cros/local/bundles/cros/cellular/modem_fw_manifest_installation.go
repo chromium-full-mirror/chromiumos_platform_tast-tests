@@ -147,7 +147,7 @@ func ModemFWManifestInstallation(ctx context.Context, s *testing.State) {
 			options := map[string]interface{}{"carrier_uuid": carrierID, "use_modems_fw_info": useModemsFwInfo}
 			useModemsFwInfo = true
 			if err := m.ForceFlash(ctx, deviceID, options); err != nil {
-				if i < minNumberOfRetries || time.Now().Sub(startTime) < minTimeForRetries {
+				if i < minNumberOfRetries || time.Since(startTime) < minTimeForRetries {
 					s.Logf("Failed to flash fw: %q. Retrying same FW", err)
 				} else {
 					s.Fatal("Failed to flash fw: ", err)

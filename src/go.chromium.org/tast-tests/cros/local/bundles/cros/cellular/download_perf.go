@@ -130,7 +130,7 @@ func DownloadPerf(ctx context.Context, s *testing.State) {
 			if err := downloadFile(ctx, st); err != nil {
 				s.Error("Failed to download file: ", err)
 			}
-			downloadTime := time.Now().Sub(startTime)
+			downloadTime := time.Since(startTime)
 			perfValues.Set(perf.Metric{
 				Name:      "download_time_" + st.name,
 				Unit:      "seconds",

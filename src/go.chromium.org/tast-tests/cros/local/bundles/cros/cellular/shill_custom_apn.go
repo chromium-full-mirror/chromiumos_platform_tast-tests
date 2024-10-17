@@ -216,7 +216,7 @@ func ShillCustomApn(ctx context.Context, s *testing.State) {
 			}
 			s.Fatal("Modem is not registered")
 		}
-		service, err = helper.ConnectWithTimeout(ctx, 10*time.Second)
+		_, err = helper.ConnectWithTimeout(ctx, 10*time.Second)
 		if err != nil {
 			if knownAPN.Optional {
 				continue

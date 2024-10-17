@@ -32,7 +32,7 @@ func init() {
 }
 
 func ESimNetworkName(ctx context.Context, s *testing.State) {
-	cr, err := chrome.New(ctx)
+	cr, _ := chrome.New(ctx)
 
 	helper := s.FixtValue().(*cellular.FixtData).Helper
 	if _, err := helper.Connect(ctx); err != nil {
@@ -44,7 +44,7 @@ func ESimNetworkName(ctx context.Context, s *testing.State) {
 		s.Fatal("Error fetching the current network name: ", err)
 	}
 
-	tconn, err := cr.TestAPIConn(ctx)
+	tconn, _ := cr.TestAPIConn(ctx)
 
 	app, err := ossettings.OpenMobileDataSubpage(ctx, tconn, cr)
 	if err != nil {

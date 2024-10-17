@@ -468,10 +468,6 @@ func (f *cellularFixture) setDaemonUptimeBeforeTest(value time.Duration) *cellul
 	f.daemonUptimeBeforeTest = value
 	return f
 }
-func (f *cellularFixture) setSystemUptimeBeforeTest(value time.Duration) *cellularFixture {
-	f.systemUptimeBeforeTest = value
-	return f
-}
 func (f *cellularFixture) setDisableCellularInShill(value bool) *cellularFixture {
 	f.disableCellularInShill = value
 	return f
@@ -595,7 +591,7 @@ func (f *cellularFixture) SetUp(ctx context.Context, s *testing.FixtState) inter
 			s.Fatalf("Failed to stop %q: %s", modemfwd.JobName, err)
 		}
 		// On starfish setups, PSIM being the active sim slot is required
-		if modem, err = modem.EnsureValidSIM(ctx, true); err != nil {
+		if _, err = modem.EnsureValidSIM(ctx, true); err != nil {
 			s.Fatal("Failed to switch to PSIM on a starfish setup: ", err)
 		}
 		// Do a SIM insert on starfish
@@ -605,7 +601,7 @@ func (f *cellularFixture) SetUp(ctx context.Context, s *testing.FixtState) inter
 		testing.ContextLog(ctx, "starfish configured for ", sfCarrier, " at slot index: ", sfIndex)
 		// if a starfish v0 (regular starfish), a modem restart is required
 		if f.sf.GetModuleVersion(ctx) == starfish.ModuleVersion0 {
-			if modem, err = RestartModemWithHelper(ctx); err != nil {
+			if _, err = RestartModemWithHelper(ctx); err != nil {
 				s.Fatal("Failed to restart modem: ", err)
 			}
 		}
@@ -615,7 +611,7 @@ func (f *cellularFixture) SetUp(ctx context.Context, s *testing.FixtState) inter
 		}
 		// modemfwd might get the indication that the modem is ready with the correct firmware above
 		// polling the dbus modem object, just in case.
-		if modem, err = waitForModemToBeExported(ctx); err != nil {
+		if _, err = waitForModemToBeExported(ctx); err != nil {
 			s.Fatal("Could not find modem after starting modemfwd: ", err)
 		}
 	}

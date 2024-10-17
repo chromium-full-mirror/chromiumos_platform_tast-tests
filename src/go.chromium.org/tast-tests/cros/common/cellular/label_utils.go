@@ -97,10 +97,7 @@ func GetStarfishMappingFromHostInfoLabels(ctx context.Context, labels []string) 
 func GetDevicePoolFromHostInfoLabels(ctx context.Context, labels []string) []string {
 	var pools []string
 	d := getLabelMap(labels)
-	for _, v := range d["pool"] {
-		pools = append(pools, v)
-	}
-	return pools
+	return append(pools, d["pool"]...)
 }
 
 // GetModemInfoFromHostInfoLabels populate Modem info from host_info_labels

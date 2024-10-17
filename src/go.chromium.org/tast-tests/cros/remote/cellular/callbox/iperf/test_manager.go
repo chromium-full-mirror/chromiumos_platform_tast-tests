@@ -134,6 +134,9 @@ func (c *TestManager) RunOnce(ctx context.Context, testType TestType, interfaceN
 	if testType == TestTypeUDPTx || testType == TestTypeTCPTx {
 		// Test is Tx/upload so DUT is client and callbox is server
 		cfg, err = iperf.NewConfig(protocolMap[testType], interfaceIP, ipResp.IP, options...)
+		if err != nil {
+			return nil, errors.Wrap(err, "failed ot create Iperf config")
+		}
 		client, err := iperf.NewRemoteClient(ctx, c.conn)
 		if err != nil {
 			return nil, errors.Wrap(err, "failed ot create Iperf client")
@@ -149,6 +152,9 @@ func (c *TestManager) RunOnce(ctx context.Context, testType TestType, interfaceN
 		windowParam = maxTxSizeParam
 	} else {
 		cfg, err = iperf.NewConfig(protocolMap[testType], ipResp.IP, interfaceIP, options...)
+		if err != nil {
+			return nil, errors.Wrap(err, "failed ot create Iperf config")
+		}
 		client, err := NewCallboxIperfClient(c.callbox, c.client)
 		if err != nil {
 			return nil, errors.Wrap(err, "failed ot create Iperf client")

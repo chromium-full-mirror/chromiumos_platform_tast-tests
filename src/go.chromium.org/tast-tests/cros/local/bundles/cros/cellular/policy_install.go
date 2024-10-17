@@ -54,9 +54,6 @@ var tridots = nodewith.Name("More actions").Role(role.Button)
 // removeMenu is the finder for the Remove Profile menu item UI when click on the More actions menu.
 var removeMenu = nodewith.Name("Remove Profile").Role(role.MenuItem)
 
-// removeButton is the finder for the Remove eSIM Profile button UI when click on the "Remove Profile".
-var removeButton = nodewith.NameStartingWith("Remove eSIM profile").Role(role.Button)
-
 // renameButton is the finder for the Rename Profile menu item UI when click on the More action menu.
 var renameMenu = nodewith.Name("Rename Profile").Role(role.MenuItem)
 

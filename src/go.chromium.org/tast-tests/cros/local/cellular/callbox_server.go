@@ -28,16 +28,8 @@ type CallboxServer struct {
 	Interface string
 	IsIPv6    bool
 }
-type dnsAddress struct {
-	url string
-	ip  string
-}
 
 const serverPort = 9920
-
-var (
-	callboxUrls = []string{"server-callbox.cros"}
-)
 
 // NewCallboxServer creates a CallboxServer object.
 func NewCallboxServer(ctx context.Context) (*CallboxServer, error) {

@@ -43,10 +43,8 @@ func (s CallboxManagerClient) sendRequest(ctx context.Context, method, pathFromB
 		}
 		req.URL.RawQuery = q.Encode()
 	}
-	if headers != nil {
-		for key, value := range headers {
-			req.Header.Set(key, value)
-		}
+	for key, value := range headers {
+		req.Header.Set(key, value)
 	}
 
 	resp, err := http.DefaultClient.Do(req)

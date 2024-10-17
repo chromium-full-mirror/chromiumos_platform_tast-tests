@@ -13,13 +13,7 @@ import (
 	"go.chromium.org/tast-tests/cros/local/modemmanager"
 	"go.chromium.org/tast/core/ctxutil"
 	"go.chromium.org/tast/core/errors"
-	"go.chromium.org/tast/core/testing"
 )
-
-var uiPollOptions = testing.PollOptions{
-	Timeout:  60 * time.Second,
-	Interval: 500 * time.Millisecond,
-}
 
 // SetRoamingPolicy configures the roaming policy
 func SetRoamingPolicy(ctx context.Context, allowRoaming, autoConnect bool) (_ func(ctx context.Context) error, retErr error) {

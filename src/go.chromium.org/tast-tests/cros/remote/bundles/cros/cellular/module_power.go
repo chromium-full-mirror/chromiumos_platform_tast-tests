@@ -26,8 +26,6 @@ import (
 	"go.chromium.org/tast/core/testing/hwdep"
 )
 
-const runIterations = 5
-
 type modulePowerTestCase struct {
 	connectionOptions *manager.ConfigureCallboxRequestBody
 	initState         initFunction

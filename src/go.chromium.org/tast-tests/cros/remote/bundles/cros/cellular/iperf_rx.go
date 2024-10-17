@@ -20,7 +20,6 @@ import (
 
 type iperfTestCaseConfiguration1 struct {
 	testType          cbiperf.TestType
-	additionalOptions []iperf.ConfigOption
 }
 
 type iperfTestCase1 struct {

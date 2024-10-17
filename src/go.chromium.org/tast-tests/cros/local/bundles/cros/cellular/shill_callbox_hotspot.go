@@ -111,7 +111,7 @@ func validateExpectedBearers(ctx context.Context, s *testing.State, modem *modem
 		if err != nil {
 			s.Fatal("Failed to get tethering bearer: ", err)
 		}
-		if tetheringBearer.Connected() != true {
+		if !tetheringBearer.Connected() {
 			s.Fatal("Tethering bearer is not connected")
 		}
 		tetheringBearerApn, err := tetheringBearer.GetAPN(ctx)
@@ -135,7 +135,7 @@ func validateExpectedBearers(ctx context.Context, s *testing.State, modem *modem
 			}
 			s.Fatal("Failed to get default bearer: ", err)
 		}
-		if defaultBearer.Connected() != true {
+		if !defaultBearer.Connected() {
 			s.Fatal("Default bearer is not connected")
 		}
 		defaultBearerApn, err := defaultBearer.GetAPN(ctx)

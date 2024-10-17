@@ -119,7 +119,7 @@ func PerformSmdsOperationsWithMojo(ctx context.Context, s *testing.State) {
 			s.Fatalf("Installed unexpected profile, got %v, want %v", ep.Iccid, p.Iccid)
 		}
 
-		result, err := ep.UninstallProfile(ctx)
+		result, _ := ep.UninstallProfile(ctx)
 		if result != mojo.ESimOperationSuccess {
 			s.Fatal("Failed to uninstall profile ", ep.Iccid)
 		}

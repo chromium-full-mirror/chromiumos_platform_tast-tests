@@ -163,7 +163,7 @@ func (s *serverPollingSession) fetchResult(ctx context.Context) (*iperf.Result, 
 	}
 
 	// wait until end time to give poller a chance to stop naturally and avoid killing a fetch prematurely
-	if err := testing.Sleep(ctx, s.endTime.Sub(time.Now())); err != nil {
+	if err := testing.Sleep(ctx, time.Until(s.endTime)); err != nil {
 		return nil, errors.Wrap(err, "failed to sleep while waiting for server to stop")
 	}
 

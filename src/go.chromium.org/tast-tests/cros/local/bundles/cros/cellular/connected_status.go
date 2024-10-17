@@ -80,7 +80,7 @@ func ConnectedStatus(ctx context.Context, s *testing.State) {
 	}
 
 	// Ensure mobile data page is open as it may have navigated away.
-	mdp, err = ossettings.OpenMobileDataSubpage(ctx, tconn, cr)
+	_, err = ossettings.OpenMobileDataSubpage(ctx, tconn, cr)
 	if err != nil {
 		s.Fatal("Failed to open mobile data subpage: ", err)
 	}

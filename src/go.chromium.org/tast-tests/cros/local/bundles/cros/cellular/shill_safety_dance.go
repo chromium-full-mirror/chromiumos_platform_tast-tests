@@ -65,10 +65,10 @@ func ShillSafetyDance(ctx context.Context, s *testing.State) {
 
 	// Define the list of possible states and which are the allowed actions in each
 	const (
-		Disabled     int = 0
-		Enabled          = 1
-		Connected        = 2
-		Disconnected     = 3
+		Disabled     int = iota
+		Enabled
+		Connected
+		Disconnected
 	)
 	nextStates := [][]int{
 		Disabled:     {Enabled},
