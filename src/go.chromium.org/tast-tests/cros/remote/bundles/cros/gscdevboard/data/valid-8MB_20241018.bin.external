@@ -1,0 +1,5 @@
+{
+    "url": "gs://chromiumos-test-assets-public/tast/cros/firmware/ap_ro_verify/valid-8MB_20241018.bin",
+    "size": 8388608,
+    "sha256sum": "cd67e3e94629846c6d56949101dd4bc8d4b01582d677a383695f1424d35f1ed7"
+}

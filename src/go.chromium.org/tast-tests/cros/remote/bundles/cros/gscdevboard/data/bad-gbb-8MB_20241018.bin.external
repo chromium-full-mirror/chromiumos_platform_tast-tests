@@ -1,0 +1,5 @@
+{
+    "url": "gs://chromiumos-test-assets-public/tast/cros/firmware/ap_ro_verify/bad-gbb-8MB_20241018.bin",
+    "size": 8388608,
+    "sha256sum": "35ceda80f8205e942fb0ed5cb7c5949adc401c3eceabc01f64fbd377ddfa47b2"
+}
