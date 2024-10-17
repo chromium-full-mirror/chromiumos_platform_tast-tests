@@ -227,7 +227,7 @@ func ARCMulticastForwarder(ctx context.Context, s *testing.State) {
 
 	}
 
-	s.Log("Sending IPv4 multicast packets")
+	s.Log("Sending IPv4 outbound multicast packets")
 	if err := multicast.SetIPv6Enabled(ctx, d, false); err != nil {
 		s.Error("Failed to toggle IPv6: ", err)
 	}
@@ -240,11 +240,35 @@ func ARCMulticastForwarder(ctx context.Context, s *testing.State) {
 	if err := multicast.SetTextsAndClick(ctx, d, multicast.LegacyMDNSHostnameOut, multicast.MdnsButtonID, multicast.LegacyMDNSPort); err != nil {
 		s.Error("Failed starting outbound legacy mDNS test: ", err)
 	}
-	// Run SSDP query
+	// Run SSDP query.
 	if err := multicast.SetTextsAndClick(ctx, d, multicast.SsdpUserAgentOut, multicast.SsdpButtonID, multicast.SsdpPort); err != nil {
 		s.Error("Failed starting outbound SSDP test: ", err)
 	}
 
+	s.Log("Sending IPv6 outbound multicast packets")
+	if err := multicast.SetIPv6Enabled(ctx, d, true); err != nil {
+		s.Error("Failed to toggle IPv6: ", err)
+	}
+	// Send outbound multicast packets from ARC.
+	// Run IPv6 mDNS query.
+	if err := multicast.SetTextsAndClick(ctx, d, multicast.MdnsHostnameOutIPv6, multicast.MdnsButtonID, multicast.MdnsPort); err != nil {
+		s.Error("Failed starting outbound IPv6 mDNS test: ", err)
+	}
+	// Run IPv6 legacy mDNS query.
+	if err := multicast.SetTextsAndClick(ctx, d, multicast.LegacyMDNSHostnameOutIPv6, multicast.MdnsButtonID, multicast.LegacyMDNSPort); err != nil {
+		s.Error("Failed starting outbound IPv6 legacy mDNS test: ", err)
+	}
+	// Run IPv6 SSDP query.
+	if err := multicast.SetTextsAndClick(ctx, d, multicast.SsdpUserAgentOutIPv6, multicast.SsdpButtonID, multicast.SsdpPort); err != nil {
+		s.Error("Failed starting outbound IPv6 SSDP test: ", err)
+	}
+
+	// (b/366129072) the race between outbound and inbound packets can result
+	// in failure of inbound tests. Add a 5s sleep here to isolate the outbound
+	// traffic and inbound traffic.
+	// GoBigSleepLint: Wait for all the outbound packets to be received.
+	testing.Sleep(ctx, 5*time.Second)
+	s.Log("Sending IPv4 inbound multicast packets")
 	// Set up multicast destination addresses for IPv4 multicast.
 	mdnsDst := &net.UDPAddr{IP: net.IPv4(224, 0, 0, 251), Port: 5353}
 	ssdpDst := &net.UDPAddr{IP: net.IPv4(239, 255, 255, 250), Port: 1900}
@@ -259,30 +283,13 @@ func ARCMulticastForwarder(ctx context.Context, s *testing.State) {
 		if err := multicast.SendMDNS(ctx, multicast.LegacyMDNSHostnameIn, ifname, multicast.LegacyMDNSPort, mdnsDst); err != nil {
 			s.Error("Failed starting inbound legacy mDNS test: ", err)
 		}
-		// Run SSDP query
+		// Run SSDP query.
 		if err := multicast.SendSSDP(ctx, multicast.SsdpUserAgentIn, ifname, multicast.SsdpPort, ssdpDst); err != nil {
 			s.Error("Failed starting inbound SSDP test: ", err)
 		}
 	}
 
-	s.Log("Sending IPv6 multicast packets")
-	if err := multicast.SetIPv6Enabled(ctx, d, true); err != nil {
-		s.Error("Failed to toggle IPv6: ", err)
-	}
-	// Send outbound multicast packets from ARC.
-	// Run IPv6 mDNS query.
-	if err := multicast.SetTextsAndClick(ctx, d, multicast.MdnsHostnameOutIPv6, multicast.MdnsButtonID, multicast.MdnsPort); err != nil {
-		s.Error("Failed starting outbound IPv6 mDNS test: ", err)
-	}
-	// Run IPv6 legacy mDNS query.
-	if err := multicast.SetTextsAndClick(ctx, d, multicast.LegacyMDNSHostnameOutIPv6, multicast.MdnsButtonID, multicast.LegacyMDNSPort); err != nil {
-		s.Error("Failed starting outbound IPv6 legacy mDNS test: ", err)
-	}
-	// Run IPv6 SSDP query
-	if err := multicast.SetTextsAndClick(ctx, d, multicast.SsdpUserAgentOutIPv6, multicast.SsdpButtonID, multicast.SsdpPort); err != nil {
-		s.Error("Failed starting outbound IPv6 SSDP test: ", err)
-	}
-
+	s.Log("Sending IPv6 inbound multicast packets")
 	// Set up multicast destination addresses for IPv6 multicast.
 	mdnsDst = &net.UDPAddr{IP: net.ParseIP("ff02::fb"), Port: 5353}
 	ssdpDst = &net.UDPAddr{IP: net.ParseIP("ff02::c"), Port: 1900}
@@ -297,7 +304,7 @@ func ARCMulticastForwarder(ctx context.Context, s *testing.State) {
 		if err := multicast.SendMDNS(ctx, multicast.LegacyMDNSHostnameInIPv6, ifname, multicast.LegacyMDNSPort, mdnsDst); err != nil {
 			s.Error("Failed starting inbound IPv6 legacy mDNS test: ", err)
 		}
-		// Run IPv6 SSDP query
+		// Run IPv6 SSDP query.
 		if err := multicast.SendSSDP(ctx, multicast.SsdpUserAgentInIPv6, ifname, multicast.SsdpPort, ssdpDst); err != nil {
 			s.Error("Failed starting inbound IPv6 SSDP test: ", err)
 		}
