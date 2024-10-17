@@ -99,7 +99,7 @@ func MinijailLandlock(ctx context.Context, s *testing.State) {
 		{
 			"landlock-refer-allowed",
 			[]string{renameatTestPath},
-			append(landlockArgs),
+			landlockArgs,
 			true,
 		},
 	} {

@@ -13,8 +13,6 @@ import (
 	"go.chromium.org/tast/core/testing"
 )
 
-const domainIsolationErrorMessage = "THIS IS A SECURITY BUG. Follow steps 1~3 of https://chromium.googlesource.com/chromiumos/docs/+/HEAD/security/selinux.md#Writing-SELinux-policy-for-a-daemon to create a permissive domain for the daemon."
-
 // ProcessesTestInternal runs the test suite for SELinuxProcesses.
 func ProcessesTestInternal(ctx context.Context, s *testing.State) {
 	type processSearchType int

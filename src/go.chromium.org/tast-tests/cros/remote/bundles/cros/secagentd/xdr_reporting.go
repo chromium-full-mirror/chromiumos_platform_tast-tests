@@ -204,7 +204,7 @@ func XdrReporting(ctx context.Context, s *testing.State) {
 			} else if len(events) == 1 {
 				return errors.New("no heartbeat events found")
 			}
-			agentStartTime, err = strconv.ParseInt(events[0].APIEvent.ReportingRecordEvent.Time, 0, 64)
+			agentStartTime, _ = strconv.ParseInt(events[0].APIEvent.ReportingRecordEvent.Time, 0, 64)
 		}
 		return nil
 	}, &testing.PollOptions{
@@ -232,7 +232,7 @@ func XdrReporting(ctx context.Context, s *testing.State) {
 			if len(events) < 1 {
 				return errors.New("no process event found")
 			}
-			firstProcessTime, err = strconv.ParseInt(events[0].APIEvent.ReportingRecordEvent.Time, 0, 64)
+			firstProcessTime, _ = strconv.ParseInt(events[0].APIEvent.ReportingRecordEvent.Time, 0, 64)
 		}
 		return nil
 	}, &testing.PollOptions{

@@ -238,49 +238,45 @@ func ProcessEvents(ctx context.Context, s *testing.State) {
 	execFound, terminateFound, coalescedTerminate := false, false, false
 	for {
 		bExecs, bTerminates := checkProcessEventWatcher(s, ew)
-		if bExecs != nil {
-			for _, exec := range bExecs {
-				if exec != nil && exec.GetSpawnProcess() != nil && exec.GetSpawnProcess().GetCanonicalPid() == expPid {
-					execFound = true
-					// Copy the random UUIDs so that proto.Equal() is happy.
-					copyUUID(exec.GetSpawnProcess(), expExec.SpawnProcess)
-					copyUUID(exec.GetProcess(), expExec.Process)
-					copyUUID(exec.GetParentProcess(), expExec.ParentProcess)
-					// Copy over the terminate timestamp if present.
-					if exec.TerminateTimestampUs != nil {
-						coalescedTerminate = true
-						expExec.TerminateTimestampUs = proto.Int64(exec.GetTerminateTimestampUs())
-					}
-					// The spawned process is guaranteed to be seen for the first
-					// time. The rest of the hierarchy depends on tast
-					// implementation details so we skip checking those.
-					expExec.GetSpawnProcess().MetaFirstAppearance = proto.Bool(true)
-					expExec.GetProcess().MetaFirstAppearance = exec.GetProcess().MetaFirstAppearance
-					expExec.GetParentProcess().MetaFirstAppearance = exec.GetParentProcess().MetaFirstAppearance
-					if !proto.Equal(&expExec, exec) {
-						s.Log("Actual ProcessExec: ", exec.String())
-						s.Log("Expected ProcessExec: ", expExec.String())
-						s.Errorf("Found a ProcessExec event for pid %d but its contents failed to match", expPid)
-					}
+		for _, exec := range bExecs {
+			if exec != nil && exec.GetSpawnProcess() != nil && exec.GetSpawnProcess().GetCanonicalPid() == expPid {
+				execFound = true
+				// Copy the random UUIDs so that proto.Equal() is happy.
+				copyUUID(exec.GetSpawnProcess(), expExec.SpawnProcess)
+				copyUUID(exec.GetProcess(), expExec.Process)
+				copyUUID(exec.GetParentProcess(), expExec.ParentProcess)
+				// Copy over the terminate timestamp if present.
+				if exec.TerminateTimestampUs != nil {
+					coalescedTerminate = true
+					expExec.TerminateTimestampUs = proto.Int64(exec.GetTerminateTimestampUs())
+				}
+				// The spawned process is guaranteed to be seen for the first
+				// time. The rest of the hierarchy depends on tast
+				// implementation details so we skip checking those.
+				expExec.GetSpawnProcess().MetaFirstAppearance = proto.Bool(true)
+				expExec.GetProcess().MetaFirstAppearance = exec.GetProcess().MetaFirstAppearance
+				expExec.GetParentProcess().MetaFirstAppearance = exec.GetParentProcess().MetaFirstAppearance
+				if !proto.Equal(&expExec, exec) {
+					s.Log("Actual ProcessExec: ", exec.String())
+					s.Log("Expected ProcessExec: ", expExec.String())
+					s.Errorf("Found a ProcessExec event for pid %d but its contents failed to match", expPid)
 				}
 			}
 		}
 
-		if bTerminates != nil {
-			for _, terminate := range bTerminates {
-				if terminate != nil && terminate.GetProcess() != nil && terminate.GetProcess().GetCanonicalPid() == expPid {
-					terminateFound = true
-					copyUUID(terminate.GetProcess(), expTerm.Process)
-					copyUUID(terminate.GetParentProcess(), expTerm.ParentProcess)
-					// We definitely saw the exec events already so this isn't the
-					// first appearance of either process.
-					expTerm.GetProcess().MetaFirstAppearance = proto.Bool(false)
-					expTerm.GetParentProcess().MetaFirstAppearance = proto.Bool(false)
-					if !proto.Equal(&expTerm, terminate) {
-						s.Log("Actual ProcessTerminate: ", terminate.String())
-						s.Log("Expected ProcessTerminate: ", expTerm.String())
-						s.Errorf("Found a ProcessTerminate event for pid %d but its contents failed to match", expPid)
-					}
+		for _, terminate := range bTerminates {
+			if terminate != nil && terminate.GetProcess() != nil && terminate.GetProcess().GetCanonicalPid() == expPid {
+				terminateFound = true
+				copyUUID(terminate.GetProcess(), expTerm.Process)
+				copyUUID(terminate.GetParentProcess(), expTerm.ParentProcess)
+				// We definitely saw the exec events already so this isn't the
+				// first appearance of either process.
+				expTerm.GetProcess().MetaFirstAppearance = proto.Bool(false)
+				expTerm.GetParentProcess().MetaFirstAppearance = proto.Bool(false)
+				if !proto.Equal(&expTerm, terminate) {
+					s.Log("Actual ProcessTerminate: ", terminate.String())
+					s.Log("Expected ProcessTerminate: ", expTerm.String())
+					s.Errorf("Found a ProcessTerminate event for pid %d but its contents failed to match", expPid)
 				}
 			}
 		}

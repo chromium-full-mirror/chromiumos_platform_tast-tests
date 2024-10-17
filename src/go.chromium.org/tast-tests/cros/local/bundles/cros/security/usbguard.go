@@ -52,8 +52,6 @@ func USBGuard(ctx context.Context, s *testing.State) {
 		usbguardUID          = 20123
 		usbguardGID          = 20123
 
-		seccompPolicyFilename = "usbguard.policy"
-
 		jobTimeout = 10 * time.Second
 	)
 

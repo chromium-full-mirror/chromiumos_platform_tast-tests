@@ -46,9 +46,9 @@ func init() {
 }
 
 func Microcode(ctx context.Context, s *testing.State) {
-	vmlinuz, err := os.CreateTemp("/tmp", "vmlinuz")
+	vmlinuz, _ := os.CreateTemp("/tmp", "vmlinuz")
 	defer os.Remove(vmlinuz.Name())
-	err = readKernelImage(ctx, vmlinuz)
+	err := readKernelImage(ctx, vmlinuz)
 	if err != nil {
 		s.Fatal("Failed to read kernel image: ", err)
 	}
@@ -246,9 +246,9 @@ echo "Cannot find vmlinux." >&2
 exit 1
 `
 
-	extractedVmlinux, err := os.CreateTemp("/tmp", "vmlinux")
+	extractedVmlinux, _ := os.CreateTemp("/tmp", "vmlinux")
 	defer os.Remove(extractedVmlinux.Name())
-	_, err = testexec.CommandContext(
+	_, err := testexec.CommandContext(
 		ctx,
 		"bash",
 		"-c",

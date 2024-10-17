@@ -41,18 +41,18 @@ const (
 )
 
 var (
-	procNsRe     = regexp.MustCompile("(?m)^[a-z]+:\\[(?P<nsId>[[:digit:]]+)\\]")
+	procNsRe     = regexp.MustCompile(`(?m)^[a-z]+:\[(?P<nsId>[[:digit:]]+)\]`)
 	procStatusRe = regexp.MustCompile(
-		"(?m)^Name:[[:blank:]]+(?P<name>[A-Za-z0-9_-]+)[[:blank:]]*[\\n\\r]+" +
-			"^Umask:[[:blank:]]+(?P<umask>[[:digit:]]+)[[:blank:]]*[\\n\\r]+" +
-			"^State:[[:blank:]]+(?P<state>[[:alpha:]]).*[\\n\\r]+" +
-			"^Tgid:.*[\\n\\r]+" +
-			"^Ngid:.*[\\n\\r]+" +
-			"^Pid:[[:blank:]]+(?P<pid>[[:digit:]]+)[[:blank:]]*[\\n\\r]+" +
-			"^PPid:[[:blank:]]+(?P<ppid>[[:digit:]]+)[[:blank:]]*[\\n\\r]+" +
-			"^TracerPid:.*[\\n\\r]+" +
-			"^Uid:[[:blank:]]+(?P<real_uid>[[:digit:]]+)[[:blank:]]*.*[\\n\\r]+" +
-			"^Gid:[[:blank:]]+(?P<real_gid>[[:digit:]]+)[[:blank:]]*.*[\\n\\r]+")
+		`(?m)^Name:[[:blank:]]+(?P<name>[A-Za-z0-9_-]+)[[:blank:]]*[\n\r]+` +
+			`^Umask:[[:blank:]]+(?P<umask>[[:digit:]]+)[[:blank:]]*[\n\r]+` +
+			`^State:[[:blank:]]+(?P<state>[[:alpha:]]).*[\n\r]+` +
+			`^Tgid:.*[\n\r]+` +
+			`^Ngid:.*[\n\r]+` +
+			`^Pid:[[:blank:]]+(?P<pid>[[:digit:]]+)[[:blank:]]*[\n\r]+` +
+			`^PPid:[[:blank:]]+(?P<ppid>[[:digit:]]+)[[:blank:]]*[\n\r]+` +
+			`^TracerPid:.*[\n\r]+` +
+			`^Uid:[[:blank:]]+(?P<real_uid>[[:digit:]]+)[[:blank:]]*.*[\n\r]+` +
+			`^Gid:[[:blank:]]+(?P<real_gid>[[:digit:]]+)[[:blank:]]*.*[\n\r]+`)
 )
 
 // GetCmdLineParts returns a list of cmdline arguments for the given pid.

@@ -33,15 +33,15 @@ func PtraceThread(ctx context.Context, s *testing.State) {
 	// See the thread-prctl executable installed by the security_tests package for details.
 	type behavior int
 	const (
-		tracerForksTracee                   behavior = 0
-		traceeCallsPrctlFromMainProcess              = 1
-		traceeCallsPrctlFromNonLeaderThread          = 2
+		tracerForksTracee                   behavior = iota
+		traceeCallsPrctlFromMainProcess
+		traceeCallsPrctlFromNonLeaderThread
 	)
 
 	type source int
 	const (
-		ptraceFromNonLeaderThread source = 0
-		ptraceFromMainProcess            = 1
+		ptraceFromNonLeaderThread source = iota
+		ptraceFromMainProcess
 	)
 
 	runThreadTest := func(desc string, bh behavior, src source) {

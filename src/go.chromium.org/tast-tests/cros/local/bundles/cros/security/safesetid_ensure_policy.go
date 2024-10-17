@@ -153,7 +153,7 @@ func transitionSetID(ctx context.Context, parent, child string, giveCapSetID, ex
 		}
 		return nil
 	}
-	if expectSuccess == false {
+	if !expectSuccess {
 		return errors.Errorf("%q allowed to transition without permission to %q", parent, child)
 	}
 	return nil

@@ -271,6 +271,7 @@ func testBody(s *testing.State, testType string, ignoredAncestorNames, exclusion
 	numInitChecked := 0
 	var initSharedMounts []string
 	var unexpectedInitSharedMounts []string
+	//lint:ignore SA5011 initInfo is actually checked right above
 	for _, mountInfo := range initInfo.MountInfos {
 		// Filter out mounts that we expect and would like to ignore.
 		if strings.Contains(mountInfo.MountPoint, ignoreDaemonstore) {

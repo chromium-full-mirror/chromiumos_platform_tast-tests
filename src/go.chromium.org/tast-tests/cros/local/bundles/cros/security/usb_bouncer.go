@@ -133,11 +133,6 @@ func testUsbBouncer(ctx context.Context, s *testing.State, m *seccomp.PolicyGene
 }
 
 func USBBouncer(ctx context.Context, s *testing.State) {
-	const (
-		defaultUser = "testuser@gmail.com"
-		defaultPass = "testpass"
-	)
-
 	d, err := pathOfTestDevice()
 	if err != nil {
 		s.Fatal("Unable to find a suitable test USB device: ", err)
@@ -171,7 +166,7 @@ func USBBouncer(ctx context.Context, s *testing.State) {
 			return os.Remove(path)
 		} else if info.Name() == "device-db" {
 			// Chmod to 770 to trigger brillo::SafeFD::Rmdir at least once for seccomp coverage.
-			os.Chmod(path, 770)
+			os.Chmod(path, 0770)
 		}
 		return nil
 	}); err != nil {

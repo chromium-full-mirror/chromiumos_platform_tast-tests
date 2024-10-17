@@ -41,10 +41,6 @@ type fileEventType string
 const (
 	userFiles testName = "USER_FILES"
 	rootfs    testName = "ROOTFS"
-	// test hardlink behavior
-	hardlink testName = "HARDLINK"
-	// mounts a folder/archive from user directory to /media/archive/test/
-	mountedUserArchive testName = "MOUNTED_USER_ARCHIVE"
 	// mounts r/w folder from /tmp to /media/removable/usb_test/
 	massStorageUSB  testName      = "USB_MASS_STORAGE"
 	cookies         testName      = "COOKIES"
@@ -84,7 +80,6 @@ type expectedResult struct {
 	process             *xdr.Process
 	processTimeUs       uint64
 	parentProcess       *xdr.Process
-	parentProcessTimeUs uint64
 	beforeStat          *syscall.Stat_t // stat taken before the command executes
 	afterStat           *syscall.Stat_t // stat taken after the command executes
 	filePath            string
@@ -203,10 +198,10 @@ func FileEvents(ctx context.Context, s *testing.State) {
 
 	cr := s.FixtValue().(chrome.HasChrome).Chrome()
 	normalizedUser := cr.NormalizedUser()
-	downloadsPath, err := cryptohome.DownloadsPath(ctx, cr.NormalizedUser())
-	systemPath, err := cryptohome.SystemPath(ctx, normalizedUser)
-	userPath, err := cryptohome.UserPath(ctx, normalizedUser)
-	mountedVaultPath, err := cryptohome.MountedVaultPath(ctx, normalizedUser)
+	downloadsPath, _ := cryptohome.DownloadsPath(ctx, cr.NormalizedUser())
+	systemPath, _ := cryptohome.SystemPath(ctx, normalizedUser)
+	userPath, _ := cryptohome.UserPath(ctx, normalizedUser)
+	mountedVaultPath, _ := cryptohome.MountedVaultPath(ctx, normalizedUser)
 	hashedUser, _ := cryptohome.UserHash(ctx, normalizedUser)
 
 	s.Log("chrome normalized user:", normalizedUser)
@@ -278,7 +273,6 @@ func FileEvents(ctx context.Context, s *testing.State) {
 				return r
 			}, filepath.Base(fileDetails.name))
 
-			filepath.Base(fileDetails.name)
 			tempFile, err := os.CreateTemp(tempDir, filepath.Base(tempFileName))
 			if err != nil {
 				s.Fatalf("Unable to create temp file to save off %q:%v",
@@ -376,7 +370,7 @@ func FileEvents(ctx context.Context, s *testing.State) {
 		s.Fatal("Failed to sleep: ", err)
 	}
 
-	bFileEvents, err := collectFileDbusMessages(ctx, s, expectedResults,
+	bFileEvents, _ := collectFileDbusMessages(ctx, s, expectedResults,
 		stopDbusMonitoring)
 
 	// Check to make sure we see file events with the proper process ID
@@ -410,7 +404,7 @@ func FileEvents(ctx context.Context, s *testing.State) {
 		ok := false
 		var expectedResult *expectedResult
 		pid := process.GetCanonicalPid()
-		if expectedResult, ok = expectedResults[pid]; ok == false {
+		if expectedResult, ok = expectedResults[pid]; !ok {
 			continue
 		}
 		eInfo := fmt.Sprintf("[%d] cmd %q ", pid, expectedResult.command)
@@ -628,9 +622,7 @@ func recursiveGetFiles(dirName string) ([]string, error) {
 			if err != nil {
 				return nil, err
 			}
-			for _, fileName := range subFileNames {
-				fileNames = append(fileNames, fileName)
-			}
+			fileNames = append(fileNames, subFileNames...)
 			continue
 		}
 		fileNames = append(fileNames, filepath.Join(dirName, dirEntry.Name()))

@@ -20,7 +20,7 @@ import (
 // GetAffiliationStatus returns if the user is affiliated and the corresponding username (user's name or UUID).
 func GetAffiliationStatus(deviceUser, hash string) (bool, string, error) {
 	userAffiliatedPath := fmt.Sprintf("/var/lib/secagentd/%s/affiliated", hash)
-	buff, err := os.ReadFile(userAffiliatedPath)
+	_, err := os.ReadFile(userAffiliatedPath)
 	if err != nil {
 		if !strings.Contains(err.Error(), "no such file or directory") {
 			return false, "", errors.Wrap(err, "failed to read affiliation file")
@@ -30,7 +30,7 @@ func GetAffiliationStatus(deviceUser, hash string) (bool, string, error) {
 	}
 
 	userUnaffiliatedPath := fmt.Sprintf("/var/lib/secagentd/%s/unaffiliated", hash)
-	buff, err = os.ReadFile(userUnaffiliatedPath)
+	buff, err := os.ReadFile(userUnaffiliatedPath)
 	if err != nil {
 		if !strings.Contains(err.Error(), "no such file or directory") {
 			return false, "", errors.Wrap(err, "failed to read unaffiliated file")
@@ -75,7 +75,7 @@ func GetSessionManagerReady(ctx context.Context, startTime time.Time) (bool, err
 	}
 
 	// Verify secagentd is listening for session manager changes.
-	secagentdLog := fmt.Sprint("/var/log/secagentd.log")
+	secagentdLog := "/var/log/secagentd.log"
 	file, err := os.ReadFile(secagentdLog)
 	if err != nil {
 		return false, errors.Wrap(err, "failed to open secagentd.log")

@@ -211,7 +211,7 @@ func NetworkEvents(ctx context.Context, s *testing.State) {
 	// Restart with default parameter.
 	defer secagentdupstart.RestartSecagentd(cleanupCtx, false)
 	localAddrs := map[string]bool{}
-	addrs, err := net.InterfaceAddrs()
+	addrs, _ := net.InterfaceAddrs()
 	for _, addr := range addrs {
 		if ipnet, ok := addr.(*net.IPNet); ok {
 			localAddrs[ipnet.IP.String()] = true
