@@ -6,14 +6,10 @@ package hwsec
 
 import (
 	"context"
-	"encoding/base64"
 	"encoding/hex"
 	"strings"
 
 	uda "go.chromium.org/chromiumos/system_api/user_data_auth_proto"
-
-	"go.chromium.org/tast/core/errors"
-	"go.chromium.org/tast/core/shutil"
 )
 
 // cryptohomeBinary is used to interact with the cryptohomed process over
@@ -39,46 +35,9 @@ func (c *cryptohomeBinary) callTestTool(ctx context.Context, args ...string) ([]
 	return c.runner.Run(ctx, "cryptohome-test-tool", args...)
 }
 
-func (c *cryptohomeBinary) tempFile(ctx context.Context, prefix string) (string, error) {
-	out, err := c.runner.Run(ctx, "mktemp", "/tmp/"+prefix+".XXXXX")
-	if err != nil {
-		return "", err
-	}
-	return strings.TrimSpace(string(out)), err
-}
-
-func (c *cryptohomeBinary) readFile(ctx context.Context, filename string) ([]byte, error) {
-	return c.runner.Run(ctx, "cat", "--", filename)
-}
-
-func (c *cryptohomeBinary) writeFile(ctx context.Context, filename string, data []byte) error {
-	tmpFile, err := c.tempFile(ctx, "tast_cryptohome_write")
-	if err != nil {
-		return errors.Wrap(err, "failed to create temp file")
-	}
-	defer c.removeFile(ctx, tmpFile)
-	b64String := base64.StdEncoding.EncodeToString(data)
-	if _, err := c.runner.Run(ctx, "sh", "-c", "echo "+shutil.Escape(b64String)+">"+tmpFile); err != nil {
-		return errors.Wrap(err, "failed to echo string")
-	}
-	_, err = c.runner.Run(ctx, "sh", "-c", "base64 -d "+tmpFile+">"+filename)
-	return err
-}
-
-func (c *cryptohomeBinary) removeFile(ctx context.Context, filename string) error {
-	_, err := c.runner.Run(ctx, "rm", "-f", "--", filename)
-	return err
-}
-
 // isMounted calls "cryptohome --action=is_mounted".
 func (c *cryptohomeBinary) isMounted(ctx context.Context) ([]byte, error) {
 	return c.call(ctx, "--action=is_mounted")
-}
-
-// mountGuestEx calls "cryptohome --action=mount_guest_ex".
-func (c *cryptohomeBinary) mountGuestEx(ctx context.Context) ([]byte, error) {
-	args := []string{"--action=mount_guest_ex"}
-	return c.call(ctx, args...)
 }
 
 // getSanitizedUsername calls "cryptohome --action=obfuscate_user".
@@ -104,16 +63,6 @@ func (c *cryptohomeBinary) remove(ctx context.Context, username string) ([]byte,
 	return c.call(ctx, "--action=remove", "--user="+username, "--force")
 }
 
-// unmount calls "cryptohome --action=unmount".
-func (c *cryptohomeBinary) unmount(ctx context.Context, username string) ([]byte, error) {
-	return c.call(ctx, "--action=unmount", "--user="+username)
-}
-
-// unmountAll calls "cryptohome --action=unmount", but without the username.
-func (c *cryptohomeBinary) unmountAll(ctx context.Context) ([]byte, error) {
-	return c.call(ctx, "--action=unmount")
-}
-
 // lockToSingleUserMountUntilReboot calls "cryptohome --action=lock_to_single_user_mount_until_reboot"
 func (c *cryptohomeBinary) lockToSingleUserMountUntilReboot(ctx context.Context, username string) ([]byte, error) {
 	return c.call(ctx, "--action=lock_to_single_user_mount_until_reboot", "--user="+username)
@@ -134,11 +83,6 @@ func (c *cryptohomeBinary) pkcs11SystemTokenInfo(ctx context.Context) ([]byte, e
 func (c *cryptohomeBinary) pkcs11UserTokenInfo(ctx context.Context, username string) ([]byte, error) {
 	out, err := c.call(ctx, "--action=pkcs11_get_user_token_info", "--user="+username)
 	return out, err
-}
-
-// pkcs11Terminate calls "cryptohome --action=pkcs11_terminate"
-func (c *cryptohomeBinary) pkcs11Terminate(ctx context.Context, username string) ([]byte, error) {
-	return c.call(ctx, "--action=pkcs11_terminate", "--user="+username)
 }
 
 // getAccountDiskUsage calls "cryptohome --action=get_account_disk_usage".

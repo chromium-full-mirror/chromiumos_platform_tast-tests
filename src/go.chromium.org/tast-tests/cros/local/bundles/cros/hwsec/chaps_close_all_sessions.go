@@ -29,10 +29,6 @@ func init() {
 	})
 }
 
-const (
-	delayForLoopRoutine = 700 * time.Millisecond
-)
-
 // ChapsCloseAllSessions verifies the behaviour of C_CloseAllSessions() in libchaps is correct.
 func ChapsCloseAllSessions(ctx context.Context, s *testing.State) {
 	// This test works by running --check_close_all_sessions and --use_sessions_loop part of p11_replay concurrently.

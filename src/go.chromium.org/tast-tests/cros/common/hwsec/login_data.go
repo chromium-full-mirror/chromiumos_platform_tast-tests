@@ -98,7 +98,7 @@ func (h *CmdHelper) decompressData(ctx context.Context, src string) error {
 func (h *CmdHelper) compressData(ctx context.Context, dst string, paths, ignorePaths []string) error {
 	// Use the "tar" program as it takes care of recursive packing,
 	// preserving ownership, permissions and SELinux attributes.
-	args := append([]string{
+	args := []string{
 		"--acls",               // save the ACLs to the archive
 		"--create",             // create a new archive
 		"--gzip",               // filter the archive through gzip
@@ -106,7 +106,7 @@ func (h *CmdHelper) compressData(ctx context.Context, dst string, paths, ignoreP
 		"--xattrs",             // save the user/root xattrs to the archive
 		"--ignore-failed-read", // Ignore the read failure
 		"--file",               // write to the file specified in the next argument
-		dst})
+		dst}
 	for _, p := range ignorePaths {
 		// Exclude the specified patterns from archiving.
 		args = append(args, "--exclude", p)
@@ -225,7 +225,7 @@ func (h *CmdHelper) CapturePinWeaverAndTpmSnapShot(ctx context.Context, index in
 		return err
 	}
 	cleanupCtx := ctx
-	ctx, cancel := ctxutil.Shorten(ctx, 20*time.Second)
+	_, cancel := ctxutil.Shorten(ctx, 20*time.Second)
 	defer cancel()
 	defer h.ensureDaemons(cleanupCtx, true /* includeTpm */)
 
@@ -268,7 +268,7 @@ func (h *CmdHelper) RestoreTpmNVChipSnapShot(ctx context.Context, index int) err
 		return err
 	}
 	cleanupCtx := ctx
-	ctx, cancel := ctxutil.Shorten(ctx, 20*time.Second)
+	_, cancel := ctxutil.Shorten(ctx, 20*time.Second)
 	defer cancel()
 	defer h.ensureDaemons(cleanupCtx, true /* includeTpm */)
 

@@ -310,9 +310,7 @@ func doCreateKeyTurn(ctx context.Context, state *chapsStressState, pkcs11Util *p
 	k := viableKeys[state.rand.Intn(len(viableKeys))]
 	username := state.usernames[k/state.keysPerUser]
 
-	createKeyFunc := func(label, keyID string) (*pkcs11.KeyInfo, error) {
-		return nil, errors.New("unused create key function called")
-	}
+	var createKeyFunc func(string, string) (*pkcs11.KeyInfo, error)
 	if round == createImportedKeyRound {
 		createKeyFunc = func(label, keyID string) (*pkcs11.KeyInfo, error) {
 			return pkcs11Util.CreateRSASoftwareKey(ctx, scratchpadPath, username, label, keyID, false, checkSoftwareBacked)

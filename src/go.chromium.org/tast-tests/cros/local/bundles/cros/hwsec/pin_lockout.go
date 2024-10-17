@@ -81,10 +81,6 @@ func (helper realTimerHelper) Sleep(ctx context.Context, duration time.Duration)
 }
 
 func PinLockout(ctx context.Context, s *testing.State) {
-	const (
-		legacyPinLockoutAttempts = 5
-	)
-
 	ctxForCleanup := ctx
 	ctx, cancel := ctxutil.Shorten(ctx, 10*time.Second)
 	defer cancel()
@@ -189,7 +185,6 @@ func PinLockout(ctx context.Context, s *testing.State) {
 }
 
 func checkPinLockout(ctx context.Context, client *hwsec.CryptohomeClient, timerHelper hwsec.TimerHelper, userName string, schedule pinLockoutSchedule) error {
-	const wrongPin = util.SecondPin
 	return client.WithAuthSession(ctx, userName, false, uda.AuthIntent_AUTH_INTENT_DECRYPT, func(authSessionID string) error {
 		// Ensure that before any wrong attempts, correct PIN authenticates successfully.
 		if _, err := client.AuthenticatePinAuthFactor(ctx, authSessionID, util.PinLabel, util.FirstPin); err != nil {

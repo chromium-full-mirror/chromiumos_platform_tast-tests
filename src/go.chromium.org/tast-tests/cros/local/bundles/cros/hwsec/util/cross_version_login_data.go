@@ -13,7 +13,6 @@ import (
 	"io/ioutil"
 	"math/rand"
 	"os"
-	"path"
 
 	cpb "go.chromium.org/chromiumos/system_api/cryptohome_proto"
 	uda "go.chromium.org/chromiumos/system_api/user_data_auth_proto"
@@ -60,24 +59,6 @@ func NewChallengeAuthCrossVersionLoginConfig(authConfig *hwsec.AuthConfig, keyLa
 		RsaKey:     rsaKey,
 	}
 	return config
-}
-
-// removeAllChildren deletes all files and folders from the specified directory.
-func removeAllChildren(dirPath string) error {
-	dir, err := ioutil.ReadDir(dirPath)
-	if err != nil {
-		return errors.Wrap(err, "failed to read dir")
-	}
-	firstErr := error(nil)
-	for _, f := range dir {
-		fullPath := path.Join([]string{dirPath, f.Name()}...)
-		if err := os.RemoveAll(fullPath); err != nil {
-			// Continue even after seeing an error, to at least attempt
-			// deleting other files.
-			firstErr = errors.Wrapf(err, "failed to remove %s", f)
-		}
-	}
-	return firstErr
 }
 
 func createChallengeResponseData(ctx context.Context, lf hwsec.LogFunc, cryptohome *hwsec.CryptohomeClient) (*CrossVersionLoginConfig, error) {

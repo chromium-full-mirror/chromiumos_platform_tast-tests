@@ -65,8 +65,6 @@ func init() {
 }
 
 func WebauthnAttestation(ctx context.Context, s *testing.State) {
-	const password = "testpass"
-
 	// Create hwsec helper.
 	cmdRunner := hwsecremote.NewCmdRunner(s.DUT())
 	helper, err := hwsecremote.NewFullHelper(cmdRunner, s.DUT(), s.RPCHint())

@@ -30,16 +30,6 @@ func init() {
 	})
 }
 
-func creatDirWithPerms(ctx context.Context, path string, perm os.FileMode, uid, gid int) error {
-	if err := os.Mkdir(path, perm); err != nil {
-		return errors.Wrapf(err, "failed to create %s", path)
-	}
-	if err := os.Chown(path, uid, gid); err != nil {
-		return errors.Wrapf(err, "failed to chown %s", path)
-	}
-	return nil
-}
-
 // CryptohomeBadPerms checks that cryptohome could detect directories with bad permissions or ownership in the mount path of a home directory.
 func CryptohomeBadPerms(ctx context.Context, s *testing.State) {
 	cmdRunner := hwseclocal.NewCmdRunner()

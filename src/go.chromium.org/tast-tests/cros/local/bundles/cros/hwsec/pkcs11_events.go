@@ -35,7 +35,6 @@ func Pkcs11Events(ctx context.Context, s *testing.State) {
 	r := libhwseclocal.NewCmdRunner()
 
 	const numOfTokens = 2
-	const numofEvents = 20
 
 	var tokenList [numOfTokens]string
 	// Setup token directories for testing.

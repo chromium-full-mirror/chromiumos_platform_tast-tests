@@ -6,7 +6,6 @@ package hwsec
 
 import (
 	"fmt"
-	"strings"
 	"testing"
 
 	"go.chromium.org/tast-tests/cros/common/genparams"
@@ -16,11 +15,6 @@ import (
 type crossVersionParam struct {
 	Name, Fixture                string
 	ExtraAttr, ExtraSoftwareDeps []string
-}
-
-type milestoneConfig struct {
-	critical bool
-	ignore   bool
 }
 
 var ignoreMilestone = map[int]bool{
@@ -44,7 +38,6 @@ type tpmVersion struct {
 	softwareDeps   []string
 	milestoneBegin int
 	milestoneEnd   int
-	dataPrefix     map[int]string
 }
 
 var tpmVersions = []tpmVersion{
@@ -72,14 +65,6 @@ const defaultMinMilestone = 88
 
 // We didn't prepare InstallAttrs data until M118.
 const installAttrsMinMilestone = 118
-
-func toCamelCase(s string) string {
-	var ret []string
-	for _, token := range strings.Split(s, "_") {
-		ret = append(ret, strings.ToUpper(token[0:1])+strings.ToLower(token[1:]))
-	}
-	return strings.Join(ret, "")
-}
 
 func max(a, b int) int {
 	if a > b {

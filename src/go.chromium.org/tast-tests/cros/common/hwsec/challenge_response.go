@@ -135,7 +135,7 @@ func handleChallengeKey(
 		return nil, errors.Errorf("wrong signature_algorithm: expected one of %s, got %s",
 			keyAlgs, sigReqData.SignatureAlgorithm)
 	}
-	hashFunction, err := getHashFunction(*sigReqData.SignatureAlgorithm)
+	hashFunction, _ := getHashFunction(*sigReqData.SignatureAlgorithm)
 	hash := hashFunction.New()
 	hash.Write(sigReqData.DataToSign)
 	sig, err := rsa.SignPKCS1v15(nil, rsaKey, hashFunction, hash.Sum(nil))

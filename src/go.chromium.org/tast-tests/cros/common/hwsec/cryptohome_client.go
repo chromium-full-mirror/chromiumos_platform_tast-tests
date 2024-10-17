@@ -31,23 +31,9 @@ const (
 	shadowHome                    = "/home/.shadow"
 )
 
-var (
-	// userHashRegexp extracts the hash from a cryptohome dir's path.
-	// Example: "/home/.shadow/118c4648065f5cd3660e17a53533ec7bc924d01f"
-	userHashRegexp = regexp.MustCompile("^/home/user/([[:xdigit:]]+)$")
-
-	// recoveryRequestRegexp matches the recovery request value.
-	// It would match "recovery_request:*"
-	recoveryRequestRegexp = regexp.MustCompile(`recovery_request:(.+)\n`)
-)
-
-func getLastLine(s string) string {
-	lines := strings.Split(strings.TrimSpace(s), "\n")
-	if len(lines) == 0 {
-		return ""
-	}
-	return lines[len(lines)-1]
-}
+// userHashRegexp extracts the hash from a cryptohome dir's path.
+// Example: "/home/.shadow/118c4648065f5cd3660e17a53533ec7bc924d01f"
+var userHashRegexp = regexp.MustCompile("^/home/user/([[:xdigit:]]+)$")
 
 // parseDelimitedBinaryProtos parses the binaryMsg that is written in delimited-binary-protobuf format. These types of messages are formatted as |4-byte size||data||4-byte size||data|....
 func parseDelimitedBinaryProtos(ctx context.Context, binaryMsg []byte) [][]byte {
@@ -640,7 +626,7 @@ func (u *CryptohomeClient) FetchStatusUpdateSignal(ctx context.Context, broadcas
 	if err != nil {
 		return reply, errors.Wrap(err, "failed to receive AuthFactorStatusUpdate Signal")
 	}
-	if bytes.Equal(reply.BroadcastId, broadcastID) == false {
+	if !bytes.Equal(reply.BroadcastId, broadcastID) {
 		return nil, errors.Wrap(err, "the broadcast id doesn't match between auth_session and AuthFactorStatusUpdateSignal")
 	}
 	return reply, nil
@@ -669,7 +655,7 @@ func (u *CryptohomeClient) StartAuthSessionWithStatusUpdate(ctx context.Context,
 	if unmarshErr := proto.Unmarshal(replies[1], statusUpdateReply); unmarshErr != nil {
 		return startAuthSessionReply, nil, errors.Wrap(unmarshErr, "failed to unmarshal AuthFactorStatusUpdate reply")
 	}
-	if bytes.Equal(statusUpdateReply.BroadcastId, startAuthSessionReply.BroadcastId) == false {
+	if !bytes.Equal(statusUpdateReply.BroadcastId, startAuthSessionReply.BroadcastId) {
 		return startAuthSessionReply, nil, errors.Wrap(err, "the broadcast id doesn't match between auth_session and AuthFactorStatusUpdateSignal")
 	}
 	return startAuthSessionReply, statusUpdateReply, nil
@@ -693,7 +679,7 @@ func (u *CryptohomeClient) FailAuthenticatePinAuthFactorAndFetchStatusUpdate(ctx
 	if unmarshErr := proto.Unmarshal(replies[1], statusUpdateReply); unmarshErr != nil {
 		return nil, errors.Wrap(unmarshErr, "failed to unmarshal AuthFactorStatusUpdate reply")
 	}
-	if bytes.Equal(statusUpdateReply.BroadcastId, broadcastID) == false {
+	if !bytes.Equal(statusUpdateReply.BroadcastId, broadcastID) {
 		return nil, errors.Wrap(err, "the broadcast id doesn't match between auth_session and AuthFactorStatusUpdateSignal")
 	}
 	if err == nil {

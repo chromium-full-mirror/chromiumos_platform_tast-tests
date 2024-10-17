@@ -30,8 +30,7 @@ import (
 
 // SendPostRequestTo sends POST request with body to serverURL.
 func SendPostRequestTo(ctx context.Context, body, serverURL string) (string, error) {
-	req, err := http.NewRequest("POST", serverURL, strings.NewReader(body))
-	req.WithContext(ctx)
+	req, err := http.NewRequestWithContext(ctx, "POST", serverURL, strings.NewReader(body))
 	if err != nil {
 		return "", err
 	}
@@ -41,8 +40,7 @@ func SendPostRequestTo(ctx context.Context, body, serverURL string) (string, err
 
 // SendGetRequestTo sends GET request to serverURL
 func SendGetRequestTo(ctx context.Context, serverURL string) (string, error) {
-	req, err := http.NewRequest("GET", serverURL, strings.NewReader(""))
-	req.WithContext(ctx)
+	req, err := http.NewRequestWithContext(ctx, "GET", serverURL, strings.NewReader(""))
 	if err != nil {
 		return "", err
 	}
