@@ -7,9 +7,9 @@ package audio
 import (
 	"context"
 
-	"go.chromium.org/tast-tests/cros/common/fixture"
 	audiofixture "go.chromium.org/tast-tests/cros/local/audio/fixture"
 	"go.chromium.org/tast-tests/cros/local/bundles/cros/audio/loopback/lifecycle"
+	"go.chromium.org/tast-tests/cros/local/chrome"
 	"go.chromium.org/tast/core/testing"
 )
 
@@ -18,9 +18,30 @@ func init() {
 		Func:         CrasPlaybackUnderLoad,
 		Desc:         "Verifies CRAS playback function works correctly",
 		Contacts:     []string{"chromeos-audio-bugs@google.com", "htcheong@chromium.org"},
-		Fixture:      audiofixture.AloopLoaded{Channels: 2, Parent: fixture.FakeCrasClient}.Instance(),
 		BugComponent: "b:776546",
 		Attr:         []string{"group:mainline", "informational", "group:hw_agnostic", "group:release-health"},
+		Params: []testing.Param{
+			{
+				Name: "fieldtrial_enable",
+				Fixture: audiofixture.AloopLoaded{
+					Channels: 2,
+					Parent: audiofixture.Chrome(
+						chrome.FieldTrialConfig(chrome.FieldTrialConfigEnable),
+						chrome.ExtraArgs("--use-fake-cras-audio-client-for-dbus"),
+					),
+				}.Instance(),
+			},
+			{
+				Name: "fieldtrial_disable",
+				Fixture: audiofixture.AloopLoaded{
+					Channels: 2,
+					Parent: audiofixture.Chrome(
+						chrome.FieldTrialConfig(chrome.FieldTrialConfigDisable),
+						chrome.ExtraArgs("--use-fake-cras-audio-client-for-dbus"),
+					),
+				}.Instance(),
+			},
+		},
 	})
 }
 
