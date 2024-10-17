@@ -41,7 +41,7 @@ func ComplianceSmoke(ctx context.Context, s *testing.State) {
 	// they can end up with additional escapes which aren't interpreted correctly on
 	// the Windows host machines, so it's easier to just use normal concat.
 	message := "Hello " + time.Now().Format(time.UnixDate)
-	if err := controller.Host.Run(ctx, "echo", message, ">", temp+"\\date.txt"); err != nil {
+	if _, err := controller.Host.Run(ctx, "echo", message, ">", temp+"\\date.txt"); err != nil {
 		s.Fatal("Failed to write to temp directory: ", err)
 	}
 
