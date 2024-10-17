@@ -97,8 +97,8 @@ func VirtualDesksBasic(ctx context.Context, s *testing.State) {
 	defer ash.CleanUpDesks(cleanupCtx, tconn)
 	defer faillog.DumpUITreeOnError(cleanupCtx, s.OutDir(), s.HasError, tconn)
 
-	// Ensure there is no window open before test starts. (Except we should have one lacros window open in lacros)
-	if err := ash.CloseAllButOneLacrosWindow(ctx, tconn); err != nil {
+	// Ensure there is no window open before test starts.
+	if err := ash.CloseAllWindows(ctx, tconn); err != nil {
 		s.Fatal("Failed to ensure no unexpected windows are open: ", err)
 	}
 

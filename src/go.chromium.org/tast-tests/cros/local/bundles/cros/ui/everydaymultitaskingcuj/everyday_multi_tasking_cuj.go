@@ -434,7 +434,7 @@ func openAndSwitchTabs(ctx context.Context, br *browser.Browser, tconn *chrome.T
 			if err != nil {
 				return errors.Wrap(err, "failed to get active window")
 			}
-			if w.WindowType != ash.WindowTypeBrowser && w.WindowType != ash.WindowTypeLacros {
+			if w.WindowType != ash.WindowTypeBrowser {
 				continue
 			}
 			browserWinIdx++
@@ -445,17 +445,6 @@ func openAndSwitchTabs(ctx context.Context, br *browser.Browser, tconn *chrome.T
 		return nil
 	}
 
-	if resources.browserApp.ID == apps.Lacros.ID {
-		activeWindow, err := ash.GetActiveWindow(ctx, tconn)
-		if err != nil {
-			return errors.Wrap(err, "failed to get the active window")
-		}
-		if activeWindow.WindowType != ash.WindowTypeLacros {
-			if err := resources.uiHandler.SwitchToAppWindow(resources.browserApp.Name)(ctx); err != nil {
-				return errors.Wrap(err, "failed to switch to lacros window")
-			}
-		}
-	}
 	for _, list := range pageList {
 		if err := openBrowserWithTabs(list); err != nil {
 			return errors.Wrap(err, "failed to open browser with tabs")

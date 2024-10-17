@@ -11,7 +11,6 @@ import (
 	"time"
 
 	"go.chromium.org/tast-tests/cros/local/chrome"
-	"go.chromium.org/tast-tests/cros/local/chrome/browser"
 	"go.chromium.org/tast/core/testing"
 )
 
@@ -22,7 +21,7 @@ func init() {
 		Name:            "install100Apps",
 		Desc:            "Install 100 fake apps in a temporary directory",
 		Contacts:        []string{"mukai@chromium.org"},
-		Impl:            &fakeAppsFixture{numApps: 100, bt: browser.TypeAsh},
+		Impl:            &fakeAppsFixture{numApps: 100},
 		SetUpTimeout:    fixtureTimeout,
 		TearDownTimeout: fixtureTimeout,
 	})
@@ -31,27 +30,7 @@ func init() {
 		Name:            "install2Apps",
 		Desc:            "Install 2 fake apps in a temporary directory",
 		Contacts:        []string{"mukai@chromium.org"},
-		Impl:            &fakeAppsFixture{numApps: 2, bt: browser.TypeAsh},
-		SetUpTimeout:    fixtureTimeout,
-		TearDownTimeout: fixtureTimeout,
-	})
-
-	testing.AddFixture(&testing.Fixture{
-		Name:            "install100LacrosApps",
-		Desc:            "Install 100 fake apps from lacros extensions in a temporary directory",
-		Contacts:        []string{"hyungtaekim@chromium.org"},
-		BugComponent:    "b:1088267",
-		Impl:            &fakeAppsFixture{numApps: 100, bt: browser.TypeLacros},
-		SetUpTimeout:    fixtureTimeout,
-		TearDownTimeout: fixtureTimeout,
-	})
-
-	testing.AddFixture(&testing.Fixture{
-		Name:            "install2LacrosApps",
-		Desc:            "Install 2 fake apps from lacros extensions in a temporary directory",
-		Contacts:        []string{"hyungtaekim@chromium.org"},
-		BugComponent:    "b:1088267",
-		Impl:            &fakeAppsFixture{numApps: 2, bt: browser.TypeLacros},
+		Impl:            &fakeAppsFixture{numApps: 2},
 		SetUpTimeout:    fixtureTimeout,
 		TearDownTimeout: fixtureTimeout,
 	})
@@ -60,7 +39,6 @@ func init() {
 type fakeAppsFixture struct {
 	extDirBase string
 	numApps    int
-	bt         browser.Type
 }
 
 func (f *fakeAppsFixture) SetUp(ctx context.Context, s *testing.FixtState) interface{} {
@@ -76,11 +54,7 @@ func (f *fakeAppsFixture) SetUp(ctx context.Context, s *testing.FixtState) inter
 	}
 	opts := make([]chrome.Option, 0, f.numApps)
 	for _, dir := range dirs {
-		if f.bt == browser.TypeLacros {
-			opts = append(opts, chrome.LacrosUnpackedExtension(dir))
-		} else {
-			opts = append(opts, chrome.UnpackedExtension(dir))
-		}
+		opts = append(opts, chrome.UnpackedExtension(dir))
 	}
 	return opts
 }

@@ -385,7 +385,7 @@ func MaximizeBrowserWindow(ctx context.Context, tconn *chrome.TestConn, tabletMo
 	if !tabletMode {
 		// Find the specific browser window.
 		window, err := ash.FindWindow(ctx, tconn, func(w *ash.Window) bool {
-			return (w.WindowType == ash.WindowTypeBrowser || w.WindowType == ash.WindowTypeLacros) && strings.Contains(w.Title, title)
+			return w.WindowType == ash.WindowTypeBrowser && strings.Contains(w.Title, title)
 		})
 		if err != nil {
 			return errors.Wrapf(err, "failed to find the %q window", title)

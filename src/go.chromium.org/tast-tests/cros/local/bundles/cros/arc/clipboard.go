@@ -68,17 +68,10 @@ type copyFunc func(context.Context) error
 type pasteFunc func(context.Context) (string, error)
 
 // bringChromeCopyPasteWindowToFront moves the Chrome window to the front.
-// This works for both Ash and Lacros window, but assumes that only one of these window exists.
 func bringChromeCopyPasteWindowToFront(ctx context.Context, tconn *chrome.TestConn) error {
-	const windowTitle = "ClipboardTestPage"
+	const windowTitle = "Chrome - ClipboardTestPage"
 	w, err := ash.FindWindow(ctx, tconn, func(w *ash.Window) bool {
-		if w.WindowType == ash.WindowTypeBrowser {
-			return w.Title == "Chrome - "+windowTitle
-		} else if w.WindowType == ash.WindowTypeLacros {
-			return w.Title == windowTitle
-		} else {
-			return false
-		}
+		return w.WindowType == ash.WindowTypeBrowser && w.Title == windowTitle
 	})
 	if err != nil {
 		return errors.Wrap(err, "failed to find ClipboardTest window")
