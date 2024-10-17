@@ -179,7 +179,7 @@ func ExternalStorageFormat(ctx context.Context, s *testing.State) {
 		// Mount device.
 		if dirExists, err := fs.Exists(ctx, mountPoint); err != nil {
 			s.Fatal("Failed to check the existence of the USB device's original mount point: ", err)
-		} else if dirExists == false {
+		} else if !dirExists {
 			if err := fs.MkDir(ctx, mountPoint, os.FileMode(0750)); err != nil {
 				s.Fatalf("Failed to mkdir %s: %v", mountPoint, err)
 			}

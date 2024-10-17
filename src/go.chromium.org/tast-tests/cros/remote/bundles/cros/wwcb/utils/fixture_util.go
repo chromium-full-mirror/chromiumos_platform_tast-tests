@@ -45,21 +45,6 @@ var (
 		"XXRJ45SW_X00_01": "j45sw01",
 	}
 
-	fixtureIsDisplay = map[string]bool{
-		"1912901": true,
-		"1912902": true,
-		"2007901": true,
-		"2007902": true,
-		"2001901": false,
-		"2001902": false,
-		"2001903": false,
-		"2001904": false,
-		"2001905": false,
-		"2109001": true,
-		"2109002": true,
-		"j45sw01": false,
-	}
-
 	fixtureCmd = map[string]map[string]string{
 		"1912901": {"off": "0", "on": "1", "flip": "2"},
 		"1912902": {"off": "0", "on": "1", "flip": "2"},

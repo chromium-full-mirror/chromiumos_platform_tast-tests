@@ -259,7 +259,7 @@ func CheckSpecialKeys(ctx context.Context, s *testing.State, cl *rpc.Client, app
 func CheckTopRowkeys(ctx context.Context, s *testing.State, device string) error {
 	getVolume := func() (int64, error) {
 		cmd := "cras_test_client | grep INTERNAL_SPEAKER | awk '{print $3}'"
-		out, err := s.DUT().Conn().CommandContext(ctx, "sh", "-c", cmd).Output(testexec.DumpLogOnError)
+		out, _ := s.DUT().Conn().CommandContext(ctx, "sh", "-c", cmd).Output(testexec.DumpLogOnError)
 		volume, err := strconv.ParseInt(strings.TrimSpace(string(out)), 10, 64)
 		if err != nil {
 			return 0, errors.Wrap(err, "string conversion to int64 failed")
@@ -285,7 +285,7 @@ func CheckTopRowkeys(ctx context.Context, s *testing.State, device string) error
 	}
 	for _, testKey := range testKeyArr {
 		testing.ContextLog(ctx, "Pressing key ", testKey)
-		volumeBefore, err := getVolume()
+		volumeBefore, _ := getVolume()
 		brightnessBefore, err := getBrightness()
 		if err != nil {
 			errors.Wrap(err, "unable to obtain the before volume")

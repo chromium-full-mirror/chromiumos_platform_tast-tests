@@ -84,7 +84,7 @@ func DaisyChain(ctx context.Context, s *testing.State) {
 
 	tf := s.FixtValue().(*topology.TestFixture)
 	// Connect a display whose connection path passes through another display.
-	extDispID2, extDispID1, err := tf.Helper.ActivateDeviceByTypeVia(ctx, topology.DeviceTypeMonitor, topology.DeviceTypeMonitor)
+	extDispID2, _, err := tf.Helper.ActivateDeviceByTypeVia(ctx, topology.DeviceTypeMonitor, topology.DeviceTypeMonitor)
 	if err != nil {
 		s.Fatal("Failed to activate monitor: ", err)
 	}
@@ -129,11 +129,6 @@ func DaisyChain(ctx context.Context, s *testing.State) {
 		s.Fatal("Failed to get display ID after connect second external display: ", err)
 	} else if len(threeDisplays.DisplayIds) < 3 {
 		s.Fatal("Failed to get display ID;it must be greater than or equal to 3 after connect second external display")
-	}
-
-	// Rearrange input parameters if different with display sequence in DUT.
-	if twoDisplays.DisplayIds[1] != threeDisplays.DisplayIds[1] {
-		extDispID1, extDispID2 = extDispID2, extDispID1
 	}
 
 	// GoBigSleepLint: Wait for external display screen to show up.

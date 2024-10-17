@@ -157,7 +157,7 @@ func ExternalStorageBootWithMediaConnect(ctx context.Context, s *testing.State) 
 	}
 
 	// Compare the files between DUT and storage media.
-	if mountPointStatus == true {
+	if mountPointStatus {
 		usbTextPath := filepath.Join(mountPoint, "sample.txt")
 		if err := utils.CompareTwoFiles(ctx, dut, remoteTXTPath, usbTextPath); err != nil {
 			s.Fatal("Failed to compare files between DUT and USB due to an error after copy file to storage media: ", err)

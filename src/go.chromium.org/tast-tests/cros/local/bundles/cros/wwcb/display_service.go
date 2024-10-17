@@ -422,7 +422,7 @@ func (ds *DisplayService) ChangeRelativePosition(ctx context.Context, req *empty
 
 		// Poll is required as completion of display.SetDisplayProperties.
 		if err := testing.Poll(ctx, func(ctx context.Context) error {
-			extDispInfo, err := display.FindInfo(ctx, tconn, func(info *display.Info) bool { return info.IsInternal == false })
+			extDispInfo, err := display.FindInfo(ctx, tconn, func(info *display.Info) bool { return !info.IsInternal })
 			if err != nil {
 				return errors.Wrap(err, "failed to find external display")
 			}
@@ -470,7 +470,7 @@ func (ds *DisplayService) VerifyAfterLidClose(ctx context.Context, req *empty.Em
 	}
 	defer files.Close(cleanupCtx)
 
-	before, err := display.FindInfo(ctx, tconn, func(info *display.Info) bool { return info.IsInternal == false })
+	before, err := display.FindInfo(ctx, tconn, func(info *display.Info) bool { return !info.IsInternal })
 	if err != nil {
 		return nil, errors.Wrap(err, "failed to find external display info")
 	}
@@ -483,7 +483,7 @@ func (ds *DisplayService) VerifyAfterLidClose(ctx context.Context, req *empty.Em
 	// Poll is required as display response and window jump.
 	if err := testing.Poll(ctx, func(ctx context.Context) error {
 		// Compare external display resolution before and after lid close.
-		after, err := display.FindInfo(ctx, tconn, func(info *display.Info) bool { return info.IsInternal == false })
+		after, err := display.FindInfo(ctx, tconn, func(info *display.Info) bool { return !info.IsInternal })
 		if err != nil {
 			return errors.Wrap(err, "failed to find external display info after lid close")
 		}

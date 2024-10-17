@@ -53,7 +53,7 @@ func VerifyPowerStatus(ctx context.Context, dut *dut.DUT, isBatteryCharging bool
 // VerifyUSBAudioConnection verifies whether the USB audio are connected or not.
 func VerifyUSBAudioConnection(ctx context.Context, dut *dut.DUT, isConnected bool) error {
 	return testing.Poll(ctx, func(ctx context.Context) error {
-		cmd := fmt.Sprint("cras_test_client | awk '$8==\"USB\" {print $5}'")
+		cmd := "cras_test_client | awk '$8==\"USB\" {print $5}'"
 		out, err := dut.Conn().CommandContext(ctx, "sh", "-c", cmd).Output()
 		if err != nil {
 			return errors.Wrap(err, "retrieve audio info with USB type from DUT")
@@ -75,7 +75,7 @@ func VerifyUSBAudioConnection(ctx context.Context, dut *dut.DUT, isConnected boo
 // VerifyDisplayCount verifies the number of dislpays is as expected.
 func VerifyDisplayCount(ctx context.Context, dut *dut.DUT, want int) error {
 	return testing.Poll(ctx, func(ctx context.Context) error {
-		cmd := fmt.Sprintf("ls /sys/class/drm | grep card'[0-9]'-")
+		cmd := "ls /sys/class/drm | grep card'[0-9]'-"
 		out, err := dut.Conn().CommandContext(ctx, "sh", "-c", cmd).Output()
 		if err != nil {
 			return errors.Wrap(err, "list display from DUT")
@@ -231,7 +231,7 @@ func ListNetworks(ctx context.Context, dut *dut.DUT) ([]string, error) {
 func ListEthernets(ctx context.Context, dut *dut.DUT) ([]string, error) {
 	eths := ""
 	if err := testing.Poll(ctx, func(ctx context.Context) error {
-		cmd := fmt.Sprint(`ifconfig -s`)
+		cmd := `ifconfig -s`
 		out, err := dut.Conn().CommandContext(ctx, "sh", "-c", cmd).Output()
 		if err != nil {
 			return errors.New("execute ifconfig command")
@@ -306,7 +306,7 @@ func FindDifference(a, b []string) []string {
 // FindInterface finds the certain interface name from ifconfig.
 func FindInterface(ctx context.Context, dut *dut.DUT, ifName string) error {
 	return testing.Poll(ctx, func(ctx context.Context) error {
-		cmd := fmt.Sprint(`ifconfig -s`)
+		cmd := `ifconfig -s`
 		out, err := dut.Conn().CommandContext(ctx, "sh", "-c", cmd).Output()
 		if err != nil {
 			return errors.Wrap(err, "find interfaces")
@@ -409,7 +409,7 @@ func FormatStorageToFAT(ctx context.Context, mountPoint string, dut *dut.DUT, fs
 	// Mount device.
 	if dirExists, err := fs.Exists(ctx, mountPoint); err != nil {
 		return errors.Wrap(err, "check mount point exists")
-	} else if dirExists == false {
+	} else if !dirExists {
 		if err := fs.MkDir(ctx, mountPoint, os.FileMode(0750)); err != nil {
 			return errors.Wrap(err, "create mount point")
 		}
@@ -476,9 +476,9 @@ func CopyFileToExternalStorage(ctx context.Context, dut *dut.DUT, mountPoint, re
 	// Copy file to USB.
 	copyCmd := fmt.Sprintf("cp '%s' '%s'", remoteTextPath, usbTextPath)
 	err = dut.Conn().CommandContext(ctx, "sh", "-c", copyCmd).Run(testexec.DumpLogOnError)
-	if mountPointStatus == true && err != nil {
+	if mountPointStatus && err != nil {
 		return errors.Wrap(err, "an error occurred while copying the file to the USB")
-	} else if mountPointStatus == false && err == nil {
+	} else if !mountPointStatus && err == nil {
 		return errors.Wrap(err, "should not successfully copy the file to the device")
 	}
 	return nil
@@ -832,7 +832,7 @@ func RemovableMountPoints(ctx context.Context, dut *dut.DUT) ([]string, error) {
 			return nil
 		}
 		return errors.New("Have not found removable mount points")
-	}, &testing.PollOptions{Timeout: 30 * time.Second, Interval: 1 * time.Second}); nonPollingError == true {
+	}, &testing.PollOptions{Timeout: 30 * time.Second, Interval: 1 * time.Second}); nonPollingError {
 		return nil, err
 	}
 	return mountPoints, nil

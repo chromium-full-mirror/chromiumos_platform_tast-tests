@@ -36,7 +36,6 @@ var (
 	redColor   = Pixel{240, 80, 80, 255}   // RGBA
 	greenColor = Pixel{80, 240, 80, 255}   // RGBA
 	blueColor  = Pixel{80, 80, 240, 255}   // RGBA
-	whiteColor = Pixel{250, 250, 250, 255} // RGBA
 	grayColor  = Pixel{120, 120, 120, 255} // RGBA
 
 	detectVideoColor = [3]string{"red", "green", "blue"}
@@ -46,9 +45,6 @@ var (
 
 	// max webcam length
 	maxWebcamLen = 20
-
-	// webcam limit score
-	webcamMappingDisplayFixtureLimitScore = 40.0
 
 	// webcam limit score
 	webcamMappingLimitScore = 160
@@ -443,13 +439,6 @@ func detectColor(p Pixel) string {
 	return "red"
 }
 
-// distScore is for get the score from two Pixels.
-// score more high means two pixels more difference.
-func distScore(s1, s2 Pixel) float64 {
-	score := (math.Abs(float64(s1.R-s2.R)) + math.Abs(float64(s1.G-s2.G)) + math.Abs(float64(s1.B-s2.B)))
-	return score
-}
-
 // scalarScore is for get the score from two Pixels.
 // score more high means two pixels more similar.
 func scalarScore(s1, s2 Pixel) float64 {
@@ -474,10 +463,8 @@ func getAvgPixelColor(file io.Reader) (Pixel, error) {
 	var greenSum float64
 	var blueSum float64
 	for y := 0; y < height; y++ {
-		var row []Pixel
 		for x := 0; x < width; x++ {
 			pixelXY := rgbaToPixel(img.At(x, y).RGBA())
-			row = append(row, pixelXY)
 			redSum += float64(pixelXY.R)
 			greenSum += float64(pixelXY.G)
 			blueSum += float64(pixelXY.B)

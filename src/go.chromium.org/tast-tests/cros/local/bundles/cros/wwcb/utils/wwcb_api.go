@@ -55,8 +55,7 @@ func HTTPGet(ctx context.Context, api string) (string, error) {
 
 // CloseAll disconnects all fixtures.
 func CloseAll(ctx context.Context) error {
-	api := fmt.Sprintf("api/closeall")
-	if _, err := HTTPGet(ctx, api); err != nil {
+	if _, err := HTTPGet(ctx, "api/closeall"); err != nil {
 		return errors.Wrap(err, "failed to disconnect all fixtures")
 	}
 	return nil
@@ -95,8 +94,7 @@ func GetPiColor(ctx context.Context, fixtureID, interval string) (string, error)
 
 // GetPiColorResult returns color that stored on WWCB server from the last execution of GetPiColor api.
 func GetPiColorResult(ctx context.Context) (string, error) {
-	api := fmt.Sprint("api/getpicolor_result")
-	return HTTPGet(ctx, api)
+	return HTTPGet(ctx, "api/getpicolor_result")
 }
 
 // VideoRecord returns filepath that WWCB server control camera to record video.
