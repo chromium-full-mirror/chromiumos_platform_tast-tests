@@ -24,7 +24,7 @@ func init() {
 		Func:         ScreenPinning,
 		LacrosStatus: testing.LacrosVariantUnneeded,
 		Desc:         "Checks that screen pinning is entered and exits correctly",
-		Contacts:     []string{"arc-framework+tast@google.com", "brpol@chromium.org"},
+		Contacts:     []string{"arc-framework+tast@google.com", "yhanada@chromium.org"},
 		// ChromeOS > Software > ARC++ > Framework > Window Management
 		BugComponent: "b:537272",
 		SoftwareDeps: []string{"chrome"},
@@ -51,16 +51,26 @@ func ScreenPinning(ctx context.Context, s *testing.State) {
 	cr := s.FixtValue().(*arc.PreData).Chrome
 	d := s.FixtValue().(*arc.PreData).UIDevice
 
-	vk, err := input.VirtualKeyboard(ctx)
+	cleanupCtx := ctx
+	ctx, cancel := ctxutil.Shorten(ctx, 5*time.Second)
+	defer cancel()
+
+	keyboard, err := input.Keyboard(ctx)
 	if err != nil {
 		s.Fatal("Failed to get instance of keyboard: ", err)
 	}
-	defer vk.Close(ctx)
+	defer keyboard.Close(cleanupCtx)
 
 	tconn, err := cr.TestAPIConn(ctx)
 	if err != nil {
 		s.Fatal("Failed to create Test API connection: ", err)
 	}
+
+	cleanup, err := ash.EnsureTabletModeEnabled(ctx, tconn, false)
+	if err != nil {
+		s.Fatal("Failed to set device to clamshell mode: ", err)
+	}
+	defer cleanup(cleanupCtx)
 
 	// Install both needed apks.
 	s.Log("Installing apps")
@@ -71,20 +81,16 @@ func ScreenPinning(ctx context.Context, s *testing.State) {
 		s.Fatal("Failed installing app: ", err)
 	}
 
-	ctxForCleanup := ctx
-	ctx, cancel := ctxutil.Shorten(ctx, 5*time.Second)
-	defer cancel()
-
 	act, err := arc.NewActivity(a, wm.Pkg24, wm.MainActivity)
 	if err != nil {
 		s.Fatal(err, "failed to create a new MainActivity")
 	}
-	defer act.Close(ctxForCleanup)
+	defer act.Close(cleanupCtx)
 
 	if err := act.StartWithDefaultOptions(ctx, tconn); err != nil {
 		s.Fatal("Failed to start the MainActivity: ", err)
 	}
-	defer act.Stop(ctxForCleanup, tconn)
+	defer act.Stop(cleanupCtx, tconn)
 
 	// Ensure can start and stop other activities before pinning.
 	if err := ensureCanNowStartAnotherActivity(ctx, a, tconn, activityTimeout); err != nil {
@@ -118,7 +124,7 @@ func ScreenPinning(ctx context.Context, s *testing.State) {
 	s.Log("Exiting pinned mode")
 	// UNPIN accelerator as defined by
 	// http://cs/h/chrome-internal/codesearch/chrome/src/+/main:ash/public/cpp/accelerators.cc?l=145
-	if err := vk.AccelPress(ctx, "Shift+Search+Esc"); err != nil {
+	if err := keyboard.AccelPress(ctx, "Shift+Search+Esc"); err != nil {
 		s.Fatal("Keyboard combination of Shift+Search+Esc failed to be pressed: ", err)
 	}
 
