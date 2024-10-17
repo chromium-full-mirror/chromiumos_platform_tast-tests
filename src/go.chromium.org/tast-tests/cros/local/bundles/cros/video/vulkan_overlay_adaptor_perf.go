@@ -55,7 +55,7 @@ func VulkanOverlayAdaptorPerf(ctx context.Context, s *testing.State) {
 		gtest.ExtraArgs("--output_directory="+s.OutDir()),
 		gtest.UID(int(sysutil.ChronosUID)))
 
-	command, err := t.Args()
+	command, _ := t.Args()
 	testing.ContextLogf(ctx, "Running %s", shutil.EscapeSlice(command))
 	if report, err := t.Run(ctx); err != nil {
 		if report != nil {

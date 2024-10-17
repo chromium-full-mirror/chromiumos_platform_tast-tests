@@ -82,7 +82,6 @@ func ImageProcessorPerf(ctx context.Context, s *testing.State) {
 	// Run the same test case on repeat for a while and collect CPU and power
 	// usage.
 	const measureDuration = 5 * time.Second
-	const cleanupTime = 5 * time.Second
 	p := perf.NewValues()
 
 	// Measure GPU Performance

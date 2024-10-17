@@ -73,7 +73,7 @@ func suspendSystem(ctx context.Context, cr *chrome.Chrome, reader *syslog.Reader
 	if err := cmd.Run(testexec.DumpLogOnError); err != nil {
 		return errors.Wrapf(err, "suspend to %v failed", config.SuspendSetting.SuspendMode)
 	}
-	conn, err := reconnectToBrowser(ctx, cr, config.BrowserType)
+	conn, _ := reconnectToBrowser(ctx, cr, config.BrowserType)
 	// Check |currentTime| variable is changing.
 	originalPlayingTime, err := getPlayingTime(ctx, conn)
 	if err != nil {

@@ -966,7 +966,7 @@ func PlatformEncoding(ctx context.Context, s *testing.State) {
 		defer os.Remove(encodedFile)
 	}
 
-	timeDelta := time.Now().Sub(startTime)
+	timeDelta := time.Since(startTime)
 	var energyDiff *pm.RAPLValues
 	var energyErr error
 	if raplErr == nil && energy != nil {

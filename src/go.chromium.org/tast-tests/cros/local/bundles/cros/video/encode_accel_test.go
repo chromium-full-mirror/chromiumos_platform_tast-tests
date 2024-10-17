@@ -228,11 +228,6 @@ func TestEncodeAccelParams(t *testing.T) {
 		ExtraSoftwareDeps []string
 		ExtraData         []string
 	}
-	type testPatterns struct {
-		title    string
-		testType string
-		heights  []int
-	}
 
 	basicHeights := []int{135, 180, 270, 360, 720, 1080, 2160}
 	testVideos := map[int]string{
@@ -314,7 +309,7 @@ func TestEncodeAccelParams(t *testing.T) {
 				PSNRThreshold:     psnrThresholdSVC(codec, height, svcMode),
 				SVCMode:           strings.ToUpper(svcMode),
 				BitrateMode:       "cbr",
-				ExtraSoftwareDeps: append(encodeSoftwareDeps(codec, height, false)),
+				ExtraSoftwareDeps: encodeSoftwareDeps(codec, height, false),
 				ExtraHardwareDep:  "hwdep.D(hwdep.SupportsSVCEncoding(\"" + codec + "\", \"" + svcMode + "\"))",
 				ExtraData:         []string{webMFile, webMJSONFile},
 			}
