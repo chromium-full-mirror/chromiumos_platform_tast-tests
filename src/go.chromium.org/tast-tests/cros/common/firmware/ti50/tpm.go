@@ -431,3 +431,26 @@ func (t *TpmHandle) TpmvSetSNBits(sn []byte) error {
 	}
 	return nil
 }
+
+// TpmvFactoryModeDisable sends the vendor command to disable factory mode
+func (t *TpmHandle) TpmvFactoryModeDisable() error {
+	var tpmvFactoryDisable, err = hex.DecodeString("8001" + // tag: TPM_ST_NO_SESSIONS
+		"0000000c" +
+		"20000000" + // ordinal vendor
+		"0020") // subcommand: Factory Disable
+	if err != nil {
+		return err
+	}
+	response, err := t.Send(tpmvFactoryDisable)
+	if err != nil {
+		return err
+	}
+	errorCode, err := getTPMVResponseStatus(response)
+	if err != nil {
+		return err
+	}
+	if errorCode != 0 {
+		return errors.Errorf("FactoryModeDisable command returned error: 0x%x", errorCode)
+	}
+	return nil
+}
