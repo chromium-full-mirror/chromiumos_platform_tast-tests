@@ -16,7 +16,6 @@ import (
 // Agent is a dbus client for bluez agents.
 type Agent struct {
 	dbus     *dbusutil.DBusObject
-	delegate AgentDelegate
 }
 
 // NewAgent creates a new bluetooth Agent from the passed D-Bus object path.

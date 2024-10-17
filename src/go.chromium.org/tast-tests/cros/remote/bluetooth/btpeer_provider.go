@@ -128,7 +128,6 @@ func (m *BtpeerProvider) registerBtpeerHost(ctx context.Context, sshOptions *ssh
 	defer (func() {
 		if registrationError != nil {
 			testing.ContextLogf(ctx, "WARNING: Failed to register btpeer host %q: %v", btpeerHost, registrationError)
-			m.hostsThatFailedRegistration = append(m.hostsThatFailedRegistration)
 		} else {
 			// Register for later use.
 			m.registeredBtpeers = append(m.registeredBtpeers, btpeer)
@@ -230,17 +229,6 @@ func (m *BtpeerProvider) DisconnectAll(ctx context.Context) {
 	for _, btpeer := range m.registeredBtpeers {
 		btpeer.Disconnect(ctx)
 	}
-}
-
-// connectedBtpeers collects all registered btpeers that are connected.
-func (m *BtpeerProvider) connectedBtpeers() []*BtpeerClient {
-	var btpeers []*BtpeerClient
-	for _, btpeer := range m.registeredBtpeers {
-		if btpeer.IsConnected() {
-			btpeers = append(btpeers, btpeer)
-		}
-	}
-	return btpeers
 }
 
 // Reset calls BtpeerClient.Reset for each btpeer to return them to their normal

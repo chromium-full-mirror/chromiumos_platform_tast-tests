@@ -52,13 +52,12 @@ func PairNewDeviceFromBluetoothSettings(ctx context.Context, s *testing.State) {
 	bt := s.FixtValue().(bluetooth.HasBluetoothImpl).BluetoothImpl()
 
 	app, err := ossettings.NavigateToBluetoothSettingsSubpage(ctx, tconn, bt)
-	defer app.Close(cleanupCtx)
-
-	defer faillog.DumpUITreeWithScreenshotOnError(cleanupCtx, s.OutDir(), s.HasError, cr, "ui_tree")
-
 	if err != nil {
 		s.Fatal("Failed to show the Bluetooth Settings sub-page: ", err)
 	}
+	defer app.Close(cleanupCtx)
+
+	defer faillog.DumpUITreeWithScreenshotOnError(cleanupCtx, s.OutDir(), s.HasError, cr, "ui_tree")
 
 	ui := uiauto.New(tconn)
 

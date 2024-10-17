@@ -47,10 +47,6 @@ func NewFlossManagerDBusObject(ctx context.Context, objIface string, path dbus.O
 	return dbusutil.NewDBusObject(ctx, DBusFlossManagerService, objIface, path)
 }
 
-func collectExistingFlossServiceObjectPaths(ctx context.Context, objIface string) ([]dbus.ObjectPath, error) {
-	return dbusutil.CollectExistingServiceObjectPaths(ctx, DBusFlossService, objIface)
-}
-
 func collectExistingFlossManagerServiceObjectPaths(ctx context.Context, objIface string) ([]dbus.ObjectPath, error) {
 	return dbusutil.CollectExistingServiceObjectPaths(ctx, DBusFlossManagerService, objIface)
 }

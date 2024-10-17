@@ -61,9 +61,7 @@ func (e *exportedBluetoothConnectionCallback) AddObserver(name string, observer 
 // RemoveObserver removes a named observer. If an observer does not exist with
 // the provided name, no observer will be removed nor will an error occur.
 func (e *exportedBluetoothConnectionCallback) RemoveObserver(name string) {
-	if _, ok := e.observers[name]; ok {
-		delete(e.observers, name)
-	}
+	delete(e.observers, name)
 }
 
 // HasObservers returns true if there is at least one observer.

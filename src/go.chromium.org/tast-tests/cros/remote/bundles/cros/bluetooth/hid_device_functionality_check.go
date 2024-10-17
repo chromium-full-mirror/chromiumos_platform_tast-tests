@@ -118,7 +118,7 @@ func HIDDeviceFunctionalityCheck(ctx context.Context, s *testing.State) {
 		if _, err := bluetoothService.WaitForConnectState(ctx, &bts.WaitForConnectStateRequest{
 			DeviceAddress:        device.LocalBluetoothAddress(),
 			ExpectedConnectState: false,
-			Timeout:              durationpb.New(deadline.Sub(time.Now())),
+			Timeout:              durationpb.New(time.Until(deadline)),
 		}); err != nil {
 			if errors.As(err, &context.Canceled) {
 				return

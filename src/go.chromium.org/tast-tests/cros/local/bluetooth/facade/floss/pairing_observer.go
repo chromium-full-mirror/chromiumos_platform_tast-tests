@@ -194,7 +194,6 @@ func (o *pairingObserver) WaitForBondedAndConnected(timeout time.Duration) error
 		case <-waitCtx.Done():
 			err = waitCtx.Err()
 		case <-o.checkForBondedAndConnected:
-			break
 		}
 		if o.IsBondedAndConnected() {
 			break

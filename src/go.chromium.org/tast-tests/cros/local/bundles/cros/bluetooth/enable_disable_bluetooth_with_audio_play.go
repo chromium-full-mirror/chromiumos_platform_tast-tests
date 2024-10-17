@@ -155,7 +155,7 @@ func EnableDisableBluetoothWithAudioPlay(ctx context.Context, s *testing.State) 
 		// Remove audio file at cleanup.
 		audioFilePath := filepath.Join(downloadsPath, "AudioFile.wav")
 		if _, err := os.Stat(audioFilePath); err == nil {
-			if err := os.Chmod(audioFilePath, 777); err == nil {
+			if err := os.Chmod(audioFilePath, 0777); err == nil {
 				if err := os.Remove(audioFilePath); err != nil {
 					s.Error("Failed to remove audio file at cleanup: ", err)
 				}

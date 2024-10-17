@@ -148,7 +148,7 @@ func SimpleBTPeerPair(ctx context.Context, s *testing.State) {
 
 	// Validate device properties from DUT end.
 	testing.ContextLog(ctx, "Validating paired device properties")
-	resp, err := fv.BluetoothService.DeviceProperties(ctx, &bts.DevicePropertiesRequest{
+	resp, _ := fv.BluetoothService.DeviceProperties(ctx, &bts.DevicePropertiesRequest{
 		DeviceAddress: device.LocalBluetoothAddress(),
 	})
 	if resp.DeviceProperties.Address != device.LocalBluetoothAddress() {

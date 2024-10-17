@@ -53,18 +53,6 @@ func init() {
 	})
 }
 
-func isDeviceConnected(ctx context.Context, dev *bluetooth.EmulatedBTPeerDevice, btSvc bts.BluetoothServiceClient) (bool, error) {
-	connected, err := btSvc.DeviceIsConnected(ctx, &bts.DeviceIsConnectedRequest{
-		DeviceAddress: dev.LocalBluetoothAddress(),
-	})
-
-	if err != nil {
-		return false, errors.Wrap(err, "failed to check if device is connected")
-	}
-
-	return connected.GetDeviceIsConnected(), nil
-}
-
 func selectInternalMic(ctx context.Context, qsSvc qs.QuickSettingsServiceClient) error {
 	_, err := qsSvc.SelectNthAudioOption(
 		ctx, &qs.SelectNthAudioOptionRequest{

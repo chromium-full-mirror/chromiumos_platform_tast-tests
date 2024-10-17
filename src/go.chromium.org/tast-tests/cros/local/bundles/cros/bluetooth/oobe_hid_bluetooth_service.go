@@ -17,6 +17,7 @@ import (
 	"go.chromium.org/tast-tests/cros/local/chrome/uiauto/faillog"
 	"go.chromium.org/tast-tests/cros/local/chrome/uiauto/quicksettings"
 	"go.chromium.org/tast-tests/cros/local/input"
+	//lint:ignore ST1019 multiple imports with different identifiers help code readability
 	"go.chromium.org/tast-tests/cros/local/oobe"
 	oobeHelper "go.chromium.org/tast-tests/cros/local/oobe"
 	pb "go.chromium.org/tast-tests/cros/services/cros/bluetooth"

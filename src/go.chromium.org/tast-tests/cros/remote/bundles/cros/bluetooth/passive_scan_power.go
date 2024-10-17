@@ -121,7 +121,7 @@ func PassiveScanPower(ctx context.Context, s *testing.State) {
 	s.Log("Successfully paired btpeer0")
 
 	// Check if peer is connected.
-	resp, err := fv.BluetoothService.DeviceProperties(ctx, &bts.DevicePropertiesRequest{
+	resp, _ := fv.BluetoothService.DeviceProperties(ctx, &bts.DevicePropertiesRequest{
 		DeviceAddress: device0.LocalBluetoothAddress(),
 	})
 	if !resp.DeviceProperties.Connected {
@@ -134,7 +134,7 @@ func PassiveScanPower(ctx context.Context, s *testing.State) {
 	}
 
 	// Check if peer is disconnected
-	resp, err = fv.BluetoothService.DeviceProperties(ctx, &bts.DevicePropertiesRequest{
+	resp, _ = fv.BluetoothService.DeviceProperties(ctx, &bts.DevicePropertiesRequest{
 		DeviceAddress: device0.LocalBluetoothAddress(),
 	})
 	if resp.DeviceProperties.Connected {

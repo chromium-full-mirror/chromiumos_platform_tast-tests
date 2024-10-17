@@ -132,7 +132,7 @@ func findPairedDevice(ctx context.Context, bluetoothUIService bts.BluetoothUISer
 
 		// The OS-Settings may display the incorrect connection status of the Bluetooth
 		// device for a while after the connection status changes.
-		if device.GetIsConnected() != true {
+		if !device.GetIsConnected() {
 			return errors.New("Bluetooth device is not connected")
 		}
 		return nil
