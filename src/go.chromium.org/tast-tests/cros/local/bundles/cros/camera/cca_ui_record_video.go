@@ -444,20 +444,6 @@ func startRecordAndPause(ctx context.Context, app *cca.App) (*video, error) {
 	return v, nil
 }
 
-func testStopInPause(ctx context.Context, app *cca.App) error {
-	v, err := startRecordAndPause(ctx, app)
-	if err != nil {
-		return errors.Wrap(err, "failed to start and pause recording")
-	}
-
-	// GoBigSleepLint: Pause the video for 1 second.
-	if err := testing.Sleep(ctx, time.Second); err != nil {
-		return err
-	}
-
-	return v.stop(ctx, app)
-}
-
 func testPauseResume(ctx context.Context, app *cca.App) error {
 	v, err := startRecordAndPause(ctx, app)
 	if err != nil {

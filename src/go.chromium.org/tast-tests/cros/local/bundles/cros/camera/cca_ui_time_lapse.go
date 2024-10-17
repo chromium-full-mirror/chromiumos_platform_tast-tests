@@ -112,7 +112,7 @@ func testPauseResumeTimeLapse(ctx context.Context, app *cca.App) error {
 	}
 	// Pauses the recording for 10 seconds.
 	// TODO(b/281625728): Observe on the button UI instead of the state.
-	pausedTime, err := app.TriggerStateChange(ctx, "recording-paused", true, func() error {
+	pausedTime, _ := app.TriggerStateChange(ctx, "recording-paused", true, func() error {
 		if err := app.Click(ctx, cca.VideoPauseResumeButton); err != nil {
 			return errors.Wrap(err, "failed to pause the recording")
 		}
@@ -122,7 +122,7 @@ func testPauseResumeTimeLapse(ctx context.Context, app *cca.App) error {
 		return err
 	}
 	// Resumes the recording for 5 more seconds.
-	resumedTime, err := app.TriggerStateChange(ctx, "recording-paused", false, func() error {
+	resumedTime, _ := app.TriggerStateChange(ctx, "recording-paused", false, func() error {
 		if err := app.Click(ctx, cca.VideoPauseResumeButton); err != nil {
 			return errors.Wrap(err, "failed to resume the recording")
 		}

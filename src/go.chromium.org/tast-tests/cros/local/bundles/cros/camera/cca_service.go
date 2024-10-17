@@ -6,7 +6,6 @@ package camera
 
 import (
 	"context"
-	"os"
 	"time"
 
 	"github.com/golang/protobuf/ptypes/empty"
@@ -44,21 +43,6 @@ var modeMap = map[camera.CameraMode]cca.Mode{
 var cameraFacingMap = map[camera.Facing]cca.Facing{
 	camera.Facing_FACING_BACK:  cca.FacingBack,
 	camera.Facing_FACING_FRONT: cca.FacingFront,
-}
-
-// tempFilePathForScript creates a temp file and writes the camera JS script in that file.
-func tempFilePathForScript(ctx context.Context, script []byte) (string, error) {
-	tempFile, err := os.CreateTemp("", "Script_*")
-	if err != nil {
-		return "", errors.Wrap(err, "failed to create temp file for script")
-	}
-	defer tempFile.Close()
-
-	_, err = tempFile.Write(script)
-	if err != nil {
-		return "", errors.Wrap(err, "failed to write script into temp file")
-	}
-	return tempFile.Name(), nil
 }
 
 // NewChrome logs into a Chrome session as a user. CloseChrome must be called later

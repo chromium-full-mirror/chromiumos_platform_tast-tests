@@ -157,16 +157,6 @@ func New(ctx context.Context, d *dut.DUT, altHostname, outDir string, chartPaths
 	return SetUp(ctx, c, outDir, chartPaths)
 }
 
-// copyChart copies the chart from local to host chart tablet.
-func copyChart(ctx context.Context, conn *ssh.Conn, chartLocalPath, chartHostDir string) error {
-	chartHostPath := filepath.Join(chartHostDir, filepath.Base(chartLocalPath))
-	if _, err := linuxssh.PutFiles(
-		ctx, conn, map[string]string{chartLocalPath: chartHostPath}, linuxssh.DereferenceSymlinks); err != nil {
-		return errors.Wrapf(err, "failed to send chart file in path %v to chart tablet", chartLocalPath)
-	}
-	return nil
-}
-
 // SetUp sets up the chart with the given ssh connection, prepares all chart
 // files to be displayed from |chartPaths| and returns a new |Chart| instance
 // and the |NamePath| for each input chart for further be displayed with.  It

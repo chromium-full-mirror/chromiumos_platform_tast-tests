@@ -5,14 +5,11 @@
 package pre
 
 import (
-	"archive/zip"
 	"context"
 	"fmt"
-	"io"
 	"io/ioutil"
 	"os"
 	"path"
-	"path/filepath"
 	"strings"
 	"time"
 
@@ -78,22 +75,12 @@ type bundleAbi string
 type androidCodeName string
 
 const (
-	x86      bundleAbi = "x86"
-	arm                = "arm"
-	androidP           = "androidP"
-	androidR           = "androidR"
-	androidT           = "androidT"
+	x86            bundleAbi = "x86"
+	arm            bundleAbi = "arm"
+	androidP androidCodeName = "androidP"
+	androidR androidCodeName = "androidR"
+	androidT androidCodeName = "androidT"
 )
-
-func (abi bundleAbi) bundlePath() (string, error) {
-	switch abi {
-	case x86:
-		return CtsVerifierX86Zip, nil
-	case arm:
-		return CtsVerifierArmZip, nil
-	}
-	return "", errors.Errorf("cannot get bundle path of unknown abi %v", abi)
-}
 
 // itsPreImpl implements testing.Precondition.
 type itsPreImpl struct {
@@ -106,7 +93,6 @@ type itsPreImpl struct {
 	adbDevice       *adb.Device
 	prepared        bool
 	androidCodeName androidCodeName
-	defaultPy3Path  string
 }
 
 // ITSHelper provides helper functions accessing ITS package and mandating ARC.
@@ -141,39 +127,6 @@ func copyFile(src, dst string, perm os.FileMode) error {
 		return err
 	}
 	return ioutil.WriteFile(dst, content, perm)
-}
-
-func itsUnzip(ctx context.Context, zipPath, outDir string) error {
-	r, err := zip.OpenReader(zipPath)
-	if err != nil {
-		return errors.Wrap(err, "failed to open ITS zip file")
-	}
-	defer r.Close()
-
-	for _, f := range r.File {
-		if f.FileInfo().IsDir() {
-			continue
-		}
-		src, err := f.Open()
-		if err != nil {
-			return errors.Wrapf(err, "failed to open file %v in ITS zip", f.Name)
-		}
-		defer src.Close()
-		dstPath := path.Join(outDir, f.Name)
-		if err := os.MkdirAll(filepath.Dir(dstPath), 0755); err != nil {
-			return errors.Wrapf(err, "failed to create directory for unzipped ITS file %v", f.Name)
-		}
-		dst, err := os.Create(dstPath)
-		if err != nil {
-			return errors.Wrapf(err, "failed to create file for copying ITS file %v", f.Name)
-		}
-		defer dst.Close()
-
-		if _, err := io.Copy(dst, src); err != nil {
-			return errors.Wrapf(err, "failed to copy ITS file %v", f.Name)
-		}
-	}
-	return nil
 }
 
 func (p *itsPreImpl) Prepare(ctx context.Context, s *testing.PreState) interface{} {

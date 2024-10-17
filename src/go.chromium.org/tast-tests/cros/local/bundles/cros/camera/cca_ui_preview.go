@@ -237,7 +237,7 @@ func testGridOption(ctx context.Context, app *cca.App) error {
 		}
 		if state, err := app.State(ctx, "grid-golden"); err != nil {
 			return errors.Wrap(err, "failed to get state of the grid")
-		} else if state != true {
+		} else if !state {
 			return errors.Wrap(err, "failed to preserve the grid state after switching camera")
 		}
 	}
@@ -267,7 +267,7 @@ func testTimerOption(ctx context.Context, app *cca.App) error {
 		}
 		if state, err := app.State(ctx, "timer-10s"); err != nil {
 			return errors.Wrap(err, "failed to get state of the timer")
-		} else if state != true {
+		} else if !state {
 			return errors.Wrap(err, "failed to preserve the timer state after switching camera")
 		}
 	}

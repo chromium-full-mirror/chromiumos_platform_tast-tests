@@ -459,10 +459,10 @@ func checkCaptureResult(ctx context.Context, app *cca.App, mode cca.Mode, startT
 		if err := os.Remove(filepath.Join(dir, fileInfo.Name())); err != nil {
 			return errors.Wrap(err, "failed to remove file after confirmation")
 		}
-	} else {
-		// TODO(b/139650048): We should verify if the temporary file is deleted
-		// after clicking cancel button.
 	}
+	// TODO(b/139650048): We should verify if the temporary file is deleted
+	// after clicking cancel button.
+
 	return nil
 }
 

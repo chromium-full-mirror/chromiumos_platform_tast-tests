@@ -115,7 +115,7 @@ func CCAUIRecordVideoPerf(ctx context.Context, s *testing.State) {
 			Direction: perf.BiggerIsBetter,
 		}, fps)
 
-		cpu, _ := usage["cpu"]
+		cpu := usage["cpu"]
 		cpuMetric := fmt.Sprintf("%dfps-cpu-facing-%s", targetFps, facing)
 		perfValues.Set(perf.Metric{
 			Name:      cpuMetric,

@@ -56,7 +56,7 @@ func WFCOrientation(ctx context.Context, s *testing.State) {
 	defer cl.Close(ctx)
 
 	// Prepare data path on DUT.
-	tempdir, err := d.Conn().CommandContext(ctx, "mktemp", "-d", "/tmp/camerabox_align_XXXXXX").Output()
+	tempdir, _ := d.Conn().CommandContext(ctx, "mktemp", "-d", "/tmp/camerabox_align_XXXXXX").Output()
 	dataPath := strings.TrimSpace(string(tempdir))
 	defer d.Conn().CommandContext(ctx, "rm", "-r", dataPath).Output()
 	if _, err := linuxssh.PutFiles(

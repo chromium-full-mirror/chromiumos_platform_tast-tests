@@ -190,7 +190,6 @@ func takeActionsRandomly(ctx context.Context, s *testing.State, app *cca.App) er
 
 	const defaultSkipIterations = 0
 	const actionTimeout = 30 * time.Second
-	const cleanupTimeout = 20 * time.Second
 
 	iterations := intVar(s, "iterations", defaultIterations)
 	skipIterations := intVar(s, "skip_iterations", defaultSkipIterations)

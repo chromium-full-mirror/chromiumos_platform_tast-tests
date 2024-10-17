@@ -555,30 +555,6 @@ func (c *zoomControl) getConstraintsBySettings(s *mediaTrackSettings) mediaTrack
 	return c.getConstraints(s.Zoom)
 }
 
-type exposureModeControl struct {
-	defaultControl
-}
-
-func (c *exposureModeControl) getName() string {
-	return "exposureMode"
-}
-
-type focusModeControl struct {
-	defaultControl
-}
-
-func (c *focusModeControl) getName() string {
-	return "focusMode"
-}
-
-type whiteBalanceModeControl struct {
-	defaultControl
-}
-
-func (c *whiteBalanceModeControl) getName() string {
-	return "whiteBalanceMode"
-}
-
 // getMediaTrackCapabilities gets |MediaTrackCapabilities| from preview video track.
 func getMediaTrackCapabilities(ctx context.Context, conn *chrome.Conn) (mediaTrackCapabilities, error) {
 	var capabilities mediaTrackCapabilities
@@ -706,8 +682,7 @@ func verifyControl(ctx context.Context, s *testing.State, conn *chrome.Conn, con
 		if err != nil {
 			s.Fatal("Can't get settings: ", err)
 		}
-		var origValue float64
-		origValue = control.getValue(&settings)
+		var origValue float64 = control.getValue(&settings)
 		err = applyMediaTrackConstraints(ctx, conn, control.getConstraints(&value))
 		if err != nil {
 			if isValid || !strings.Contains(err.Error(), "OverconstrainedError") {
@@ -718,8 +693,7 @@ func verifyControl(ctx context.Context, s *testing.State, conn *chrome.Conn, con
 		if err != nil {
 			s.Fatal("Can't get settings: ", err)
 		}
-		var getValue float64
-		getValue = control.getValue(&settings)
+		var getValue float64 = control.getValue(&settings)
 		if isValid {
 			if !control.isEqual(value, getValue) {
 				s.Errorf("Failed to apply %v control, want %v; got %v with tolerance %v", control.getName(), value, getValue, control.getTolerance())

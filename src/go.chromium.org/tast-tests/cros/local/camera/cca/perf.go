@@ -20,13 +20,7 @@ import (
 	"go.chromium.org/tast/core/testing"
 )
 
-const (
-	// Time reserved for cleanup.
-	cleanupTime = 10 * time.Second
-
-	// Duration to wait for CPU to be stabalized.
-	stabilizationDuration time.Duration = 5 * time.Second
-)
+const stabilizationDuration time.Duration = 5 * time.Second
 
 type metricValuePair struct {
 	metric perf.Metric

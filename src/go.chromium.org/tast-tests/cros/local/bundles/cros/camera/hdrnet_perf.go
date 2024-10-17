@@ -65,8 +65,8 @@ func HDRnetPerf(ctx context.Context, s *testing.State) {
 	// The feature controls that we want to override in the test.
 	const (
 		hdrnetEnable        string = "hdrnet_enable"
-		gcamAEEnable               = "gcam_ae_enable"
-		faceDetectionEnable        = "face_detection_enable"
+		gcamAEEnable        string = "gcam_ae_enable"
+		faceDetectionEnable string = "face_detection_enable"
 	)
 
 	var featureDesc = map[string]struct {

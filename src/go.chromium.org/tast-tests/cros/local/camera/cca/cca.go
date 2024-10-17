@@ -968,7 +968,7 @@ func (a *App) SaveCameraFolder(ctx context.Context) error {
 		return errors.Wrap(err, "failed to stat camera folder")
 	}
 
-	targetFolderPath := filepath.Join(a.outDir, fmt.Sprintf("cameraFolder"))
+	targetFolderPath := filepath.Join(a.outDir, "cameraFolder")
 	if err := os.MkdirAll(targetFolderPath, 0755); err != nil {
 		return errors.Wrap(err, "failed to make folder to save camera folder")
 	}
@@ -1327,7 +1327,7 @@ func (a *App) OutputCodeCoverage(ctx context.Context) error {
 		return err
 	}
 
-	coverageDirPath := filepath.Join(a.outDir, fmt.Sprintf("coverage"))
+	coverageDirPath := filepath.Join(a.outDir, "coverage")
 	if _, err := os.Stat(coverageDirPath); os.IsNotExist(err) {
 		if err := os.MkdirAll(coverageDirPath, 0755); err != nil {
 			return err

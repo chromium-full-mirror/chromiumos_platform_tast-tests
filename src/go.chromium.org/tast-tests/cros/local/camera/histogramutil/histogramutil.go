@@ -44,7 +44,7 @@ func (ht HistogramTests) wait(ctx context.Context, tconn *chrome.TestConn, recor
 	// It takes time for Chrome to refresh the histograms. Leave 3 seconds
 	// for the clean-up tasks in case of error.
 	ctxDeadline, _ := ctx.Deadline()
-	histTimeout := ctxDeadline.Sub(time.Now()) - 3*time.Second
+	histTimeout := time.Until(ctxDeadline) - 3*time.Second
 	return recorder.WaitAll(ctx, tconn, histTimeout)
 }
 

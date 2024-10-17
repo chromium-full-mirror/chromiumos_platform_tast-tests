@@ -163,19 +163,14 @@ func getV4L2ListControlInfo(ctx context.Context, videoNode string) (map[string]*
 				switch detailMatch[1] {
 				case "min":
 					control.min, err = strconv.Atoi(detailMatch[2])
-					break
 				case "max":
 					control.max, err = strconv.Atoi(detailMatch[2])
-					break
 				case "step":
 					control.step, err = strconv.Atoi(detailMatch[2])
-					break
 				case "default":
 					control.defaultValue, err = strconv.Atoi(detailMatch[2])
-					break
 				case "value":
 					control.value, err = strconv.Atoi(detailMatch[2])
-					break
 				default:
 					return nil, errors.Wrapf(err, "unknown key of a control: %s", detailMatch[1])
 				}

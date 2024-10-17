@@ -537,7 +537,6 @@ func RunTest(ctx context.Context, cfg TestConfig) (retErr error) {
 
 		for i, path := range paths {
 			cameraCfg.cameraHALPath = path
-			filepath.Base(path)
 			if cfg.GeneratePerfLog {
 				cameraCfg.perfLog = filepath.Join(outDir, fmt.Sprintf("perf_%d.log", i))
 			}

@@ -154,7 +154,7 @@ func PNPDirectOffUSBCameraPower(ctx context.Context, s *testing.State) {
 
 	testing.ContextLog(ctx, "[Start Work Phase]")
 	for _, videoNode := range usbCameraList {
-		usbCameraVersion, err := testutil.GetUsbCameraVersion(ctx, videoNode)
+		usbCameraVersion, _ := testutil.GetUsbCameraVersion(ctx, videoNode)
 		vidPid := usbCameraVersion.IDVendor + ":" + usbCameraVersion.IDProduct
 
 		captureMetadatas, err := parseYavtaEnumFormats(ctx, videoNode)
@@ -182,8 +182,7 @@ func PNPDirectOffUSBCameraPower(ctx context.Context, s *testing.State) {
 
 			// Nbufs is set to 4 to align with ChromeOS Camera USB HAL params.
 			cmd := testexec.CommandContext(
-				ctx, "yavta", "-Bcapture", "-c",
-				fmt.Sprintf("--nbufs=4"),
+				ctx, "yavta", "-Bcapture", "-c", "--nbufs=4",
 				fmt.Sprintf("-f%s", captureMetadata.format),
 				fmt.Sprintf("-s%dx%d", captureMetadata.width, captureMetadata.height),
 				videoNode)

@@ -45,9 +45,9 @@ type ProfilerType string
 // The name of the available profilers.
 const (
 	CPU        ProfilerType = "cpu"
-	GPU                     = "gpu"
-	PerfRecord              = "perf_record"
-	Top                     = "top"
+	GPU        ProfilerType = "gpu"
+	PerfRecord ProfilerType = "perf_record"
+	Top        ProfilerType = "top"
 )
 
 // ProfilerContext holds the settings and results of a set of profiler tasks.
@@ -111,10 +111,10 @@ func Start(ctx context.Context, sDur, mDur time.Duration, outPrefix, outdir stri
 			return pv, nil
 		},
 		PerfRecord: func() (*perf.Values, error) {
-			return runProfiler(ctx, &pctx, PerfRecord, profiler.Perf(profiler.PerfRecordOpts("", nil, profiler.PerfRecordCallgraph)))
+			return runProfiler(ctx, &pctx, string(PerfRecord), profiler.Perf(profiler.PerfRecordOpts("", nil, profiler.PerfRecordCallgraph)))
 		},
 		Top: func() (*perf.Values, error) {
-			return runProfiler(ctx, &pctx, Top, profiler.Top(nil))
+			return runProfiler(ctx, &pctx, string(Top), profiler.Top(nil))
 		},
 	}
 

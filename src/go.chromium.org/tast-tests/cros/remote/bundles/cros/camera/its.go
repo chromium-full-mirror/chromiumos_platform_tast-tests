@@ -69,7 +69,7 @@ func init() {
 			{
 				Name:              "t_scene0_back_x86",
 				ExtraAttr:         []string{"camerabox_facing_back"},
-				ExtraData:         append([]string{pre.CtsTVerifierX86Zip, pre.ConfigYml}),
+				ExtraData:         []string{pre.CtsTVerifierX86Zip, pre.ConfigYml},
 				ExtraHardwareDeps: hwdep.D(hwdep.X86()),
 				Pre:               pre.TITSX86Pre,
 				Val:               itsParam{0, pb.Facing_FACING_BACK, pre.ChartPath},
@@ -78,7 +78,7 @@ func init() {
 			{
 				Name:              "t_scene0_front_x86",
 				ExtraAttr:         []string{"camerabox_facing_front"},
-				ExtraData:         append([]string{pre.CtsTVerifierX86Zip, pre.ConfigYml}),
+				ExtraData:         []string{pre.CtsTVerifierX86Zip, pre.ConfigYml},
 				ExtraHardwareDeps: hwdep.D(hwdep.X86()),
 				Pre:               pre.TITSX86Pre,
 				Val:               itsParam{0, pb.Facing_FACING_FRONT, pre.ChartPath},

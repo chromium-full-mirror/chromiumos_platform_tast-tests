@@ -145,7 +145,7 @@ func CCAUIVolumeShutter(ctx context.Context, s *testing.State) {
 		s.Fatal("Failed to create the volumeHelper: ", err)
 	}
 
-	originalVolume, err := vh.refreshVolume(ctx)
+	originalVolume, _ := vh.refreshVolume(ctx)
 	if err := vh.setVolume(ctx, 50); err != nil {
 		s.Fatal("Failed to set volume to 50 percents: ", err)
 	}

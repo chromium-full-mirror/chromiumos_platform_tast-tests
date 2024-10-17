@@ -37,7 +37,7 @@ func USBCameraInfo(ctx context.Context, s *testing.State) {
 	}
 
 	for _, videoNode := range usbCameraList {
-		usbCameraVersion, err := testutil.GetUsbCameraVersion(ctx, videoNode)
+		usbCameraVersion, _ := testutil.GetUsbCameraVersion(ctx, videoNode)
 		vidPid := usbCameraVersion.IDVendor + ":" + usbCameraVersion.IDProduct
 		vidPidBcd := vidPid + ":" + usbCameraVersion.BcdDevice
 		videoNodeNum := path.Base(videoNode)

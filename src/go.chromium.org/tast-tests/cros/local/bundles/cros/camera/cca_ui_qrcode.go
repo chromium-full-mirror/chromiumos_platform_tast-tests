@@ -21,7 +21,6 @@ import (
 
 type qrcodeTestParams struct {
 	format      string
-	scene       string
 	barcodeChip *barcodeChip
 	copyButton  *copyButton
 	wifiConfig  *wifiConfig

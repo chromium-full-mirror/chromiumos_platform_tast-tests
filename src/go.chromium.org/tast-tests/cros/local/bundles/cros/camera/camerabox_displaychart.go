@@ -79,7 +79,7 @@ func CameraboxDisplaychart(ctx context.Context, s *testing.State) {
 	if err := scanner.Err(); err != nil {
 		s.Fatal("stderr scanner error: ", err)
 	}
-	if found == false {
+	if !found {
 		s.Fatal("Can not find  ", chart.ChartReadyMsg)
 	}
 

@@ -82,7 +82,7 @@ func ManualControlUSBCamera(ctx context.Context, s *testing.State) {
 	}
 
 	// Prepare data on DUT.
-	tempdir, err := dut.Conn().CommandContext(ctx, "mktemp", "-d", "/tmp/camerabox_align_XXXXXX").Output()
+	tempdir, _ := dut.Conn().CommandContext(ctx, "mktemp", "-d", "/tmp/camerabox_align_XXXXXX").Output()
 	tempdirPath := strings.TrimSpace(string(tempdir))
 	cameraUserControlValidateScriptPath := filepath.Join(tempdirPath, cameraUserControlValidateScriptName)
 	manualControlImageConfigProtoPythonPath := filepath.Join(tempdirPath, manualControlImageConfigProtoPythonName)
