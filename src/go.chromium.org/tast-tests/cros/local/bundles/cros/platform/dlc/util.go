@@ -133,12 +133,10 @@ func verifyDlcContent(path, id string) error {
 				if err := checkSHA2Sum(path); err != nil {
 					return errors.Wrap(err, "check sum failed")
 				}
-				break
 			case ".perms":
 				if err := checkPerms(path); err != nil {
 					return errors.Wrap(err, "permissions check failed")
 				}
-				break
 			}
 			return nil
 		}); err != nil {

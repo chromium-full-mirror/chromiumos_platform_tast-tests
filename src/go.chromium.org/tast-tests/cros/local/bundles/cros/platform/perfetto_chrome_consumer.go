@@ -36,12 +36,6 @@ func init() {
 	})
 }
 
-// systemTracer defines functions for collecting a system trace.
-type systemTracer interface {
-	StartSystemTracing(ctx context.Context, perfettoConfig []byte) error
-	StopTracing(ctx context.Context) (*perfetto_proto.Trace, error)
-}
-
 // PerfettoChromeConsumer tests Chrome as a perfetto trace consumer.
 // The test enables the "EnablePerfettoSystemTracing" feature flag for Chrome and then collects a system-wide trace using the system backend connected to traced, the system tracing service daemon.
 func PerfettoChromeConsumer(ctx context.Context, s *testing.State) {

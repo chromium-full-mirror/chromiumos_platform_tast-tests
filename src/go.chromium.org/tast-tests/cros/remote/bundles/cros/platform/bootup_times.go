@@ -132,7 +132,7 @@ func BootupTimes(ctx context.Context, s *testing.State) {
 	if !ok {
 		s.Log("Default Boot Time for validation: ", bootTime)
 	} else {
-		btime, err := strconv.ParseFloat(bootupTime, 8)
+		btime, err := strconv.ParseFloat(bootupTime, 32)
 		if err != nil {
 			s.Fatal("Failed to convert boot time: ", err)
 		}
@@ -144,7 +144,7 @@ func BootupTimes(ctx context.Context, s *testing.State) {
 	if !ok {
 		s.Log("Default Cbmem Timeout for validation: ", cbmemTimeout)
 	} else {
-		cbmtime, err := strconv.ParseFloat(cbmemtime, 8)
+		cbmtime, err := strconv.ParseFloat(cbmemtime, 32)
 		if err != nil {
 			s.Fatal("Failed to convert cbmemtime: ", err)
 		}
@@ -395,7 +395,7 @@ func verifyCBMem(ctx context.Context, dut *dut.DUT) (float64, error) {
 	if len(match) > 1 {
 		cbmemTotalTime = strings.Replace(match[1], ",", "", -1)
 	}
-	totalCbmemTime, err := strconv.ParseFloat(cbmemTotalTime, 8)
+	totalCbmemTime, err := strconv.ParseFloat(cbmemTotalTime, 32)
 	if err != nil {
 		return 0.0, errors.Wrap(err, "failed to convert string value to floating point value")
 	}

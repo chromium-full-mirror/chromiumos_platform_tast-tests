@@ -58,7 +58,7 @@ func processCPUMetric(cpuMetric *perfetto_proto.AndroidCpuMetric, s *testing.Sta
 		}
 	}
 
-	if foundTarget == false {
+	if !foundTarget {
 		s.Error("Failed to find the target process: ", targetProcessName)
 	}
 }
@@ -80,7 +80,7 @@ func processMemMetric(memMetric *perfetto_proto.AndroidMemoryMetric, s *testing.
 		}
 	}
 
-	if foundTarget == false {
+	if !foundTarget {
 		s.Error("Failed to find the target process: ", targetProcessName)
 	}
 }

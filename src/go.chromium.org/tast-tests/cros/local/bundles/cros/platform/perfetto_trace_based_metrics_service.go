@@ -16,11 +16,6 @@ import (
 	"go.chromium.org/tast/core/testing"
 )
 
-const (
-	tracedJobExec       = "traced"
-	tracedProbesJobExec = "traced_probes"
-)
-
 func init() {
 	testing.AddService(&testing.Service{
 		Register: func(srv *grpc.Server, s *testing.ServiceState) {

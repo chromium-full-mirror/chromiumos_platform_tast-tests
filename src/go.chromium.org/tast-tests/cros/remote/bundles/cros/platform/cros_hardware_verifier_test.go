@@ -59,7 +59,7 @@ func TestDecodeResult(t *testing.T) {
 	} {
 		decoded, err := decodeResult(tc.encoded)
 		hasError := err != nil
-		if bytes.Compare(decoded, tc.decoded) != 0 || hasError != tc.hasError {
+		if !bytes.Equal(decoded, tc.decoded) || hasError != tc.hasError {
 			t.Errorf("testcase %d failed; input: %q; decoded (got: %v; want: %v); hasError (got: %v; want: %v)",
 				i, tc.encoded, decoded, tc.decoded, hasError, tc.hasError)
 		}
