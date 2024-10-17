@@ -12,9 +12,7 @@ import (
 	"go.chromium.org/tast-tests/cros/local/crostini"
 	"go.chromium.org/tast-tests/cros/local/crostini/ui/settings"
 	"go.chromium.org/tast-tests/cros/local/terminalapp"
-	"go.chromium.org/tast-tests/cros/local/vm"
 	"go.chromium.org/tast/core/ctxutil"
-	"go.chromium.org/tast/core/errors"
 	"go.chromium.org/tast/core/testing"
 )
 
@@ -101,39 +99,4 @@ func ResizeRestart(ctx context.Context, s *testing.State) {
 	if err := st.VerifyResizeResults(ctx, cont, sizeOnSlider, size); err != nil {
 		s.Fatal("Failed to verify resize results: ", err)
 	}
-}
-
-func verifyResults(ctx context.Context, st *settings.Settings, cont *vm.Container, sizeOnSlider string, size uint64) error {
-	// Check the disk size on the Settings app.
-	sizeOnSettings, err := st.GetDiskSize(ctx)
-	if err != nil {
-		return errors.Wrap(err, "failed to get the disk size from the Settings app after resizing")
-	}
-	if sizeOnSlider != sizeOnSettings {
-		return errors.Wrapf(err, "failed to verify the disk size on the Settings app, got %s, want %s", sizeOnSettings, sizeOnSlider)
-	}
-	// Check the disk size of the container.
-	if err := testing.Poll(ctx, func(ctx context.Context) error {
-		disk, err := cont.VM.Concierge.GetVMDiskInfo(ctx, vm.DefaultVMName)
-		if err != nil {
-			return errors.Wrap(err, "failed to get VM disk info")
-		}
-		contSize := disk.GetSize()
-
-		// Allow some gap.
-		var diff uint64
-		if size > contSize {
-			diff = size - contSize
-		} else {
-			diff = contSize - size
-		}
-		if diff > settings.SizeMB {
-			return errors.Errorf("failed to verify disk size after resizing, got %d, want approximately %d", contSize, size)
-		}
-		return nil
-	}, &testing.PollOptions{Timeout: 20 * time.Second}); err != nil {
-		return errors.Wrap(err, "failed to verify the disk size of the container after resizing")
-	}
-
-	return nil
 }

@@ -32,7 +32,6 @@ import (
 	"go.chromium.org/tast/core/testing"
 )
 
-const uiTimeout = 30 * time.Second
 const installationTimeout = 14 * time.Minute
 
 // InstallWindow is the finder for Crostini install window.

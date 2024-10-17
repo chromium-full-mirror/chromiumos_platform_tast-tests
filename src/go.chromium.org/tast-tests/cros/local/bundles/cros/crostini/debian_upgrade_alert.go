@@ -172,10 +172,10 @@ func DebianUpgradeAlert(ctx context.Context, s *testing.State) {
 	}
 
 	st, err := settings.OpenLinuxSettings(ctx, tconn, cr)
-	defer st.Close(ctx)
 	if err != nil {
 		s.Fatal("Failed to open Linux Settings: ", err)
 	}
+	defer st.Close(ctx)
 
 	if err := st.WaitForUI(settings.DebianUpgradeText)(ctx); err != nil {
 		s.Fatal("Failed to see upgrade alert text in Linux settings: ", err)

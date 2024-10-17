@@ -235,7 +235,7 @@ func dragFromFilesApp(ctx context.Context, pre crostini.FixtureData, files *file
 	if err = cmd.Wait(testexec.DumpLogOnError); err != nil {
 		return err
 	}
-	output := string(buf.Bytes())
+	output := buf.String()
 	if output != expected {
 		return errors.Errorf("unexpected drop output: got %q, want %q", output, expected)
 	}

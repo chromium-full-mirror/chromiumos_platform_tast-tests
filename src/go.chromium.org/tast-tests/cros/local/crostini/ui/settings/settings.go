@@ -41,7 +41,6 @@ const (
 	SizeTB = 1024 * 1024 * 1024 * 1024
 )
 
-const uiTimeout = 15 * time.Second
 const shortUITimeout = 5 * time.Second
 
 // Sub settings name.
@@ -148,13 +147,13 @@ func OpenLinuxSettings(ctx context.Context, tconn *chrome.TestConn, cr *chrome.C
 // with the ManageSharedFolders subsettings param fails on a few boards.
 func OpenLinuxManagedSharedFoldersSetting(ctx context.Context, tconn *chrome.TestConn, cr *chrome.Chrome) (*Settings, error) {
 	// Open linux settings.
-	s, err := OpenLinuxSettings(ctx, tconn, cr)
+	_, err := OpenLinuxSettings(ctx, tconn, cr)
 	if err != nil {
 		return nil, errors.Wrap(err, "failed to open linux subpage on Settings app")
 	}
 
 	// Open linux settings with the ManageSharedFolders param passed.
-	s, err = OpenLinuxSettings(ctx, tconn, cr, ManageSharedFolders)
+	s, err := OpenLinuxSettings(ctx, tconn, cr, ManageSharedFolders)
 	if err != nil {
 		return nil, errors.Wrap(err, "failed to open linux Manage Shared Folder sub-settings page")
 	}

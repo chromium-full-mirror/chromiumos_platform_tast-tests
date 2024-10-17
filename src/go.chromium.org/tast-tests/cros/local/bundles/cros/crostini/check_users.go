@@ -53,7 +53,6 @@ var (
 	usersWithInvalidStart  = []string{"UCapitialized", "9number", "-dash", " space", "\\slash", "@"}
 	usersWithInvaidLetters = []string{"user@gmail.com", "space ", "space space", "upperO"}
 	truncatedUser          = longUser[0:32]
-	validUser              = "validuser"
 )
 
 func init() {
@@ -155,7 +154,7 @@ func CheckUsers(ctx context.Context, s *testing.State) {
 	}
 
 	// Check empty user.
-	if err := uiauto.Combine(fmt.Sprintf("check empty user"),
+	if err := uiauto.Combine("check empty user",
 		clearUserField(),
 		ui.CheckRestriction(installButton, restriction.Disabled),
 	)(ctx); err != nil {

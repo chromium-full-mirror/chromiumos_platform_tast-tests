@@ -59,7 +59,7 @@ func RestartIcon(ctx context.Context, s *testing.State) {
 		s.Fatal("Failed to shutdown crostini: ", err)
 	}
 
-	terminalApp, err = terminalapp.LaunchThroughIcon(ctx, tconn)
+	_, err = terminalapp.LaunchThroughIcon(ctx, tconn)
 	if err != nil {
 		s.Fatal("Failed to launch terminal after shutdown: ", err)
 	}

@@ -62,8 +62,6 @@ const (
 	freqTolerance        = 20
 )
 
-var expectedFreq = [audioChannels]float64{220, 440}
-
 func AppVLC(ctx context.Context, s *testing.State) {
 	tconn := s.FixtValue().(crostini.FixtureData).Tconn
 	cr := s.FixtValue().(crostini.FixtureData).Chrome

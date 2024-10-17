@@ -53,8 +53,6 @@ var (
 	toastNode          = nodewith.Role(role.Alert).ClassName("container")
 )
 
-const uiTimeout = 15 * time.Second
-
 type shareConfirmDialogStruct struct {
 	Dialog       *nodewith.Finder
 	Msg          *nodewith.Finder

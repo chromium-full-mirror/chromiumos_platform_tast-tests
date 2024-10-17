@@ -83,10 +83,6 @@ func ShareFolders(ctx context.Context, s *testing.State) {
 		// Shared folder name displayed on Settings page. It is actually a path, e.g, "My files › Downloads › foldername".
 		sharedFolder1 = sharedfolders.SharedDownloads + " › " + folder1
 		sharedFolder2 = sharedfolders.SharedDownloads + " › " + folder2
-
-		// This folder is not shared.
-		// It is created to test that non-shared folders should not be shared while other folders are shared.
-		sharedFolder3 = sharedfolders.SharedDownloads + " › " + folder3
 	)
 	downloadsPath, err := cryptohome.DownloadsPath(ctx, cr.NormalizedUser())
 	if err != nil {

@@ -85,7 +85,7 @@ func MousePerf(ctx context.Context, s *testing.State) {
 			if err := testing.Sleep(ctx, 1*time.Millisecond); err != nil {
 				return err
 			}
-			sendTimes = append(sendTimes, float64(time.Now().Sub(startTime))/float64(time.Millisecond))
+			sendTimes = append(sendTimes, float64(time.Since(startTime))/float64(time.Millisecond))
 		}
 		return nil
 	}

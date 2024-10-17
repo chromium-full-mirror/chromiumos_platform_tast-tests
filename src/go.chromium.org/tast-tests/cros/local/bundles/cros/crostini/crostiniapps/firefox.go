@@ -38,7 +38,6 @@ const testPageName = "test_page.html"
 
 var firefoxWindow = nodewith.NameRegex(regexp.MustCompile(`.*Mozilla Firefox`)).Role(role.Window).First()
 var testPageTab = uidetection.TextBlock([]string{"Crostini", "Firefox", "Input", "Test", "Page"}).WithinA11yNode(firefoxWindow).First()
-var maximizeButton = nodewith.Name("Maximize").Role(role.Button).Ancestor(firefoxWindow)
 
 // LaunchFirefoxWithTestPage creates a test webpage and launches it with the Firefox app.
 func LaunchFirefoxWithTestPage(ctx context.Context, tconn *chrome.TestConn, uda *uidetection.Context, ui *uiauto.Context, cont *vm.Container, terminalApp *terminalapp.TerminalApp, keyboard *input.KeyboardEventWriter) error {
