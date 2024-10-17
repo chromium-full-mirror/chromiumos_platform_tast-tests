@@ -25,16 +25,19 @@ import (
 
 func init() {
 	testing.AddTest(&testing.Test{
-		Func:         SetDLThemeQuickSettings,
-		LacrosStatus: testing.LacrosVariantUnneeded,
-		Desc:         "Test setting dark light theme from quick settings",
+		Func: SetDLThemeQuickSettings,
+		// Disabled by TORA. See: b/351190048
+		LifeCycleStage: testing.LifeCycleOwnerMonitored,
+		LacrosStatus:   testing.LacrosVariantUnneeded,
+		Desc:           "Test setting dark light theme from quick settings",
 		Contacts: []string{
 			"cros-p13n-eng@google.com",
 			"chromeos-consumer-engprod@google.com",
 		},
 		// ChromeOS > Software > Personalization
 		BugComponent: "b:1006527",
-		Attr:         []string{"group:mainline", "informational", "group:hw_agnostic"},
+		// Disabled by TORA. See: b/351190048
+		// Attr:         []string{"group:mainline", "informational", "group:hw_agnostic"},
 		SearchFlags: []*testing.StringPair{{
 			Key:   "feature_id",
 			Value: "screenplay-47bb4826-69df-4c03-aaf2-e9a8a0f0f636",
