@@ -31,33 +31,6 @@ const (
 	quickRetry     = 0 // No retry on failure.
 )
 
-var basicTests = []string{
-	"ui.TabSwitchCUJ2.basic_noproxy",
-	"ui.QuickCheckCUJ2.basic_wakeup",
-	"ui.QuickCheckCUJ2.basic_unlock",
-	"ui.EverydayMultiTaskingCUJ.basic_ytmusic",
-	"ui.VideoCUJ2.basic_youtube_web",
-	"ui.VideoCUJ2.basic_youtube_app",
-	"ui.GoogleMeetCUJ.basic_two",
-	"ui.GoogleMeetCUJ.basic_small",
-	"ui.GoogleMeetCUJ.basic_large",
-	"ui.GoogleMeetCUJ.basic_class",
-}
-var plusTests = append(basicTests,
-	"ui.TabSwitchCUJ2.plus_noproxy",
-	"ui.EverydayMultiTaskingCUJ.plus_ytmusic",
-	"ui.GoogleMeetCUJ.plus_large",
-	"ui.GoogleMeetCUJ.plus_class",
-	"ui.ExtendedDisplayCUJ.plus_video_youtube_web",
-)
-var premiumTests = append(plusTests,
-	"ui.TabSwitchCUJ2.premium_noproxy",
-	"ui.VideoCUJ2.premium_youtube_web",
-	"ui.VideoCUJ2.premium_youtube_app",
-	"ui.GoogleMeetCUJ.premium_large",
-	"ui.ExtendedDisplayCUJ.premium_meet_large",
-)
-
 func init() {
 	testing.AddTest(&testing.Test{
 		Func:         RunCUJ,

@@ -134,7 +134,7 @@ func run(ctx context.Context, s *testing.State, cl *rpc.Client, extDir, hostExtD
 	s.Log("Completed the benchmark")
 
 	resMap := resRun.AsInterface().(map[string]interface{})
-	jsonString, err := json.Marshal(resMap)
+	jsonString, _ := json.Marshal(resMap)
 	info := tabOpenLatencyTestRawResult{}
 
 	if err = json.Unmarshal(jsonString, &info); err != nil {

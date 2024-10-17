@@ -505,30 +505,6 @@ func (uiHelper *UIHelper) readStateFile(ctx context.Context, filename string) ([
 	return uiHelper.Dut.Conn().CommandContext(ctx, "sh", "-c", fmt.Sprintf("jq . %s", filename)).Output()
 }
 
-func (uiHelper *UIHelper) deleteLogsIfExisting(ctx context.Context) error {
-	// Output is supposed to be something like /dev/sda1.
-	usb, err := uiHelper.findUSBName(ctx)
-	if err != nil {
-		return errors.Wrap(err, "fail to get USB")
-	}
-	testing.ContextLogf(ctx, "USB is %s", usb)
-
-	if err = uiHelper.mountUSB(ctx, usb); err != nil {
-		return errors.Wrap(err, "fail to mount USB")
-	}
-
-	// Ignore the error since rma log may not exist at all.
-	if err = uiHelper.Dut.Conn().CommandContext(ctx, "sh", "-c", fmt.Sprintf("rm -r %s/rma-*", usbTempMountDir)).Run(); err != nil {
-		testing.ContextLogf(ctx, "Fail to delete rma log because %s", err)
-	}
-
-	if err = uiHelper.umountUSB(ctx); err != nil {
-		return errors.Wrap(err, "fail to umount USB")
-	}
-
-	return nil
-}
-
 func (uiHelper *UIHelper) findUSBName(ctx context.Context) (string, error) {
 	output, err := uiHelper.Dut.Conn().CommandContext(ctx, "sh", "-c", "ls /dev/sd[a-z]1").Output()
 
@@ -619,12 +595,6 @@ func createShimlessClient(ctx context.Context, dut *dut.DUT, firmwareHelper *fir
 	}
 
 	return cl, client, nil
-}
-
-func (uiHelper *UIHelper) changeWriteProtectStatus(status servo.FWWPStateValue) action.Action {
-	return func(ctx context.Context) error {
-		return uiHelper.FirmwareHelper.Servo.SetFWWPState(ctx, status)
-	}
 }
 
 func (uiHelper *UIHelper) changeFactoryMode(status string) action.Action {
@@ -765,12 +735,6 @@ func (uiHelper *UIHelper) enterIntoTextInput(content, textInputName string) acti
 func (uiHelper *UIHelper) disconnectBatteryByCr50() action.Action {
 	return func(ctx context.Context) error {
 		return servoutil.SetBatteryState(ctx, uiHelper.FirmwareHelper, servoutil.BatteryStateOff)
-	}
-}
-
-func (uiHelper *UIHelper) connectBatteryByCr50() action.Action {
-	return func(ctx context.Context) error {
-		return servoutil.SetBatteryState(ctx, uiHelper.FirmwareHelper, servoutil.BatteryStateFollow)
 	}
 }
 

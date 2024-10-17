@@ -16,6 +16,7 @@ import (
 	"go.chromium.org/tast-tests/cros/common/policy/reportingutil"
 	"go.chromium.org/tast-tests/cros/common/tape"
 	"go.chromium.org/tast-tests/cros/remote/policyutil"
+	//lint:ignore ST1019 multiple imports with different identifiers help code readability
 	ps "go.chromium.org/tast-tests/cros/services/cros/policy"
 	pspb "go.chromium.org/tast-tests/cros/services/cros/policy"
 	"go.chromium.org/tast/core/errors"

@@ -30,6 +30,7 @@ import (
 	"go.chromium.org/tast-tests/cros/remote/wificell/pcap"
 	"go.chromium.org/tast-tests/cros/services/cros/debugd"
 	policypb "go.chromium.org/tast-tests/cros/services/cros/policy"
+	//lint:ignore ST1019 multiple imports with different identifiers help code readability
 	"go.chromium.org/tast-tests/cros/services/cros/ui"
 	uipb "go.chromium.org/tast-tests/cros/services/cros/ui"
 	"go.chromium.org/tast/core/ctxutil"
@@ -173,7 +174,7 @@ func PacketCaptureWifi(ctx context.Context, s *testing.State) {
 
 			packetCaptureFile := filepath.Join(s.OutDir(), fmt.Sprintf("output_%s.pcap", params.name))
 
-			wg, streamingCtx := errgroup.WithContext(streamingCtx)
+			wg, _ := errgroup.WithContext(streamingCtx)
 			wg.Go(func() error { return saveStreamingDataToFile(stream, packetCaptureFile) })
 
 			// notificationID is notification ID of the packet capture notification. It is hard-coded in Chrome as

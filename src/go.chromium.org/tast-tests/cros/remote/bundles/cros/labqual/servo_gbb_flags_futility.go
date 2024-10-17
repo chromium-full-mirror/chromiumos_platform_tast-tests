@@ -16,8 +16,6 @@ import (
 	"go.chromium.org/tast/core/testing"
 )
 
-type setGbbFlagsFunc func(string)
-
 func init() {
 	testing.AddTest(&testing.Test{
 		Func: ServoGBBFlagsFutility,

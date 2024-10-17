@@ -126,7 +126,7 @@ func CrosToCrosRanging(ctx context.Context, s *testing.State) {
 	}
 
 	// Listen and store Fira ranging reports from the main DUT
-	reports, err := mainDutClient.GetFiraRangingReports(ctx, &us.FiraReportRequest{
+	reports, _ := mainDutClient.GetFiraRangingReports(ctx, &us.FiraReportRequest{
 		SessionID:     sessionID,
 		TimeInSeconds: 60,
 	})
@@ -135,7 +135,7 @@ func CrosToCrosRanging(ctx context.Context, s *testing.State) {
 	dut1Address := uwb.ByteSliceToInt(controleeReq.Params.DeviceMacAddress)
 
 	// Get ranging summary for main DUT's ranging session with CrOS 1
-	summary, err := uwb.GetRangingSessionSummary(reports.RangingResults[dut1Address], &bounds, true, false)
+	summary, _ := uwb.GetRangingSessionSummary(reports.RangingResults[dut1Address], &bounds, true, false)
 	s.Logf("Ranging summary: %v ", *summary)
 
 	// Report error if insufficient percentage of Status_OK reports

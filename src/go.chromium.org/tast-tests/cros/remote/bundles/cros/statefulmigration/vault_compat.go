@@ -19,10 +19,6 @@ import (
 
 type vaultType int64
 
-type params struct {
-	VaultType vaultType
-}
-
 const (
 	noneVaultType vaultType = iota
 	ecryptfsVaultType

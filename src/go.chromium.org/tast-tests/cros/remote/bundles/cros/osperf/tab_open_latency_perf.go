@@ -14,14 +14,12 @@ import (
 	"time"
 
 	"google.golang.org/protobuf/types/known/emptypb"
-	"google.golang.org/protobuf/types/known/structpb"
 
 	"go.chromium.org/tast-tests/cros/common/chrome/extension"
 	"go.chromium.org/tast-tests/cros/common/perf"
 	"go.chromium.org/tast-tests/cros/remote/dutfs"
 	"go.chromium.org/tast-tests/cros/remote/osperf"
 	"go.chromium.org/tast-tests/cros/services/cros/ui"
-	"go.chromium.org/tast/core/errors"
 	"go.chromium.org/tast/core/rpc"
 	"go.chromium.org/tast/core/ssh/linuxssh"
 	"go.chromium.org/tast/core/testing"
@@ -92,26 +90,6 @@ func TabOpenLatencyPerf(ctx context.Context, s *testing.State) {
 	defer cr.Close(ctx, &emptypb.Empty{})
 }
 
-// queryTestConnTabIDs queries the tab IDs which is used for TconnService.
-func queryTestConnTabIDs(ctx context.Context, tconn ui.TconnServiceClient, condition string) ([]int, error) {
-	res, err := tconn.Call(ctx, &ui.CallRequest{
-		Fn: `async () => {
-			let tabs = await tast.promisify(chrome.tabs.query)({` + condition + `});
-			return tabs.map((tab) => tab.id);
-		  }`,
-		Args: []*structpb.Value{},
-	})
-	if err != nil {
-		return nil, errors.Wrap(err, "cannot query tab list")
-	}
-	ids := res.AsInterface().([]interface{})
-	out := make([]int, len(ids))
-	for i, id := range ids {
-		out[i] = int(id.(float64))
-	}
-	return out, nil
-}
-
 type tabOpenLatencyTestResult struct {
 	TabOpenLatencyMean float64   `json:"tab_open_latency_mean"`
 	TabOpenLatencyMax  float64   `json:"tab_open_latency_max"`
@@ -163,7 +141,7 @@ func runBluebench(ctx context.Context, s *testing.State, cl *rpc.Client, extDir,
 	s.Log("Completed the benchmark")
 
 	resMap := resRun.AsInterface().(map[string]interface{})
-	jsonString, err := json.Marshal(resMap)
+	jsonString, _ := json.Marshal(resMap)
 	info := tabOpenLatencyTestResult{}
 	if err = json.Unmarshal(jsonString, &info); err != nil {
 		s.Fatal("Failed to parse tabOpenLatencyTestResult: ", err)

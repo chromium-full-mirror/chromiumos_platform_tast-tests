@@ -49,8 +49,8 @@ type state string
 
 const (
 	notStarted      state = "Not Started"
-	waitForDebugger       = "Waiting for debugger"
-	connected             = "Connected"
+	waitForDebugger state = "Waiting for debugger"
+	connected       state = "Connected"
 )
 const debuggerWaitString = "Waiting for debugger on port "
 

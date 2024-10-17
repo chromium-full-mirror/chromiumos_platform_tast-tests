@@ -192,7 +192,7 @@ func UpdateDutFirmware(ctx context.Context, s *testing.State) {
 	fwidModel := strings.ToLower(match[1])
 	initialRwFwid = match[2]
 	s.Logf("FWID Model : %s", fwidModel)
-	fwTargets, err := firmware.ReadFirmwareTargets(ctx, s.DUT().Conn(), h.Model, fwidModel)
+	fwTargets, _ := firmware.ReadFirmwareTargets(ctx, s.DUT().Conn(), h.Model, fwidModel)
 	s.Logf("Found AP Target: %s and EC Target: %s", fwTargets.APTarget, fwTargets.ECTarget)
 
 	// Get the RO firmware version ID available on the DUT.
@@ -334,7 +334,7 @@ func flashECFirmware(ctx context.Context, s *testing.State, h *firmware.Helper, 
 
 // flashAPFirmware flashes the provided AP firmware on the DUT and restores the original AP firmware in the end.
 func flashAPFirmware(ctx context.Context, s *testing.State, h *firmware.Helper, servoTmpDir, firmwarePathVal, localFirmwarePathVal, ecChip, initialROFwid, initialRwFwid string) {
-	futilityInstance, err := futility.NewRemoteBuilder(h.ServoProxy).Build()
+	futilityInstance, _ := futility.NewRemoteBuilder(h.ServoProxy).Build()
 	s.Log("Backing up AP firmware")
 	backupFirmwareFile := fmt.Sprintf("%s/%s", servoTmpDir, backupFirmwareFile)
 	readOpts := futility.NewReadAPOptions(backupFirmwareFile)
@@ -402,7 +402,7 @@ func flashAPFirmware(ctx context.Context, s *testing.State, h *firmware.Helper, 
 
 // flashAPFirmwareFromDut flashes the provided AP firmware on the DUT and restores the original AP firmware in the end.
 func flashAPFirmwareFromDut(ctx context.Context, s *testing.State, h *firmware.Helper, dutTmpDir, localTmpDir, firmwarePathVal, localFirmwarePathVal, initialROFwid, initialRwFwid string) {
-	futilityInstance, err := futility.NewLocalBuilder(h.DUT).Build()
+	futilityInstance, _ := futility.NewLocalBuilder(h.DUT).Build()
 	s.Log("Backing up AP firmware")
 	readOpts := futility.NewReadAPOptions(fmt.Sprintf("%s/%s", dutTmpDir, backupFirmwareFile))
 	log, err := futilityInstance.ReadAP(ctx, readOpts)

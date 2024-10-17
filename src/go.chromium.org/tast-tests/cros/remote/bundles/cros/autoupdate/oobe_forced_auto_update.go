@@ -69,6 +69,9 @@ func OobeForcedAutoUpdate(ctx context.Context, s *testing.State) {
 	builderPath := lsbContent[lsbrelease.BuilderPath]
 
 	cl, err := rpc.Dial(ctx, s.DUT(), s.RPCHint())
+	if err != nil {
+		s.Fatal("Failed to set up RPC connection: ", err)
+	}
 
 	// Create and set up a Nebraska client for an in-place update.
 	nebraskaClient, _, err := updateutil.ConfigureNebraskaFromGS(ctx, cl.Conn, s.DUT(), s.OutDir(), builderPath)
