@@ -6,7 +6,6 @@ package ui
 
 import (
 	"context"
-	"fmt"
 	"math"
 	"regexp"
 	"strconv"
@@ -215,14 +214,6 @@ func systemBrightness(ctx context.Context) (float64, error) {
 	return math.Round(b*100) / 100, nil
 }
 
-// setSystemBrightness sets the brightness of the system.
-func setSystemBrightness(ctx context.Context, percent float64) error {
-	if err := testexec.CommandContext(ctx, "backlight_tool", fmt.Sprintf("--set_brightness_percent=%f", percent)).Run(); err != nil {
-		return errors.Wrapf(err, "failed to set %f%% brightness", percent)
-	}
-	return nil
-}
-
 // decreaseBrightness performs brightness decrease with keyboard keypress.
 func decreaseBrightness(ctx context.Context, topRow *input.TopRowLayout, kb *input.KeyboardEventWriter) error {
 	for {
@@ -267,28 +258,6 @@ func increaseBrightness(ctx context.Context, topRow *input.TopRowLayout, kb *inp
 		}
 	}
 	return nil
-}
-
-// waitForExternalDisplayName will returns connected external display name.
-func waitForExternalDisplayName(ctx context.Context, tconn *chrome.TestConn) (string, error) {
-	var displayName string
-	if err := testing.Poll(ctx, func(ctx context.Context) error {
-		displayInfo, err := display.GetInfo(ctx, tconn)
-		if err != nil {
-			return errors.Wrap(err, "failed to get external display info")
-		}
-		if len(displayInfo) < 2 {
-			return errors.New("failed please connect external 4K monitor")
-		}
-		displayName = displayInfo[1].Name
-		if displayName == "" {
-			return errors.New("external display name is empty")
-		}
-		return nil
-	}, &testing.PollOptions{Timeout: 20 * time.Second}); err != nil {
-		return "", errors.Wrap(err, "failed to get external display info")
-	}
-	return displayName, nil
 }
 
 // waitForSettingsApp will check for availability of settings app.

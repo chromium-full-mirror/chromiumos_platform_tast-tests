@@ -123,7 +123,6 @@ func LauncherPageSwitchPerf(ctx context.Context, s *testing.State) {
 
 	runner := perfutil.NewRunner(cr.Browser(), perfutil.RunnerOptions{IgnoreFirstRun: true, DropMinMaxValues: true})
 
-	const pageSwitchTimeout = 2 * time.Second
 	clickPageButtonAndWait := func(idx int) action.Action {
 		return ac.WaitForEvent(pageSwitcher, event.Alert, pc.Click(pageButtons.Nth(idx)))
 	}

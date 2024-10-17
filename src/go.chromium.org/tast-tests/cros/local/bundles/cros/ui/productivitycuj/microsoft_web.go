@@ -12,8 +12,6 @@ import (
 	"strings"
 	"time"
 
-	"github.com/mafredri/cdp/protocol/target"
-
 	"go.chromium.org/tast-tests/cros/common/action"
 	"go.chromium.org/tast-tests/cros/local/chrome"
 	"go.chromium.org/tast-tests/cros/local/chrome/browser"
@@ -34,19 +32,13 @@ import (
 const (
 	// myFiles indicates the "My files" item name in the navigation bar.
 	myFiles = "My files"
-	// recent indicates the "Recent" item label in the navigation bar.
-	recent = "Recent"
 
 	// oneDriveTab indicates the suffix of the tab name.
 	oneDriveTab = "OneDrive"
 	// myFiles indicates the tab name of the "My files - OneDrive".
 	myFilesTab = "My files - OneDrive"
-	// recentTab indicates the tab name of the "Recent - OneDrive".
-	recentTab = "Recent - OneDrive"
 	// wordTab indicates the tab name of the "Microsoft Word".
 	wordTab = "Microsoft Word Online"
-	// powerpointTab indicates the tab name of the "Microsoft PowerPoint".
-	powerpointTab = "Microsoft PowerPoint Online"
 	// excelTab indicates the tab name of the "Microsoft Excel".
 	excelTab = "Microsoft Excel Online"
 
@@ -1225,24 +1217,6 @@ func (app *MicrosoftWebOffice) turnOnDictation(ctx context.Context) error {
 		uiauto.IfSuccessThen(app.ui.Exists(featureBrokenContainer), app.uiHdl.Click(retryButton)),
 		app.checkDictation,
 	)(ctx)
-}
-
-// closeTab closes the tab with the title of the specified name.
-func (app *MicrosoftWebOffice) closeTab(title string) action.Action {
-	return func(ctx context.Context) error {
-		matcher := func(t *target.Info) bool {
-			return strings.Contains(t.Title, title) && t.Type == "page"
-		}
-
-		conn, err := app.br.NewConnForTarget(ctx, matcher)
-		if err != nil {
-			return err
-		}
-		conn.CloseTarget(ctx)
-		conn.Close()
-
-		return nil
-	}
 }
 
 // renameDocument renames the document with the specified file name.

@@ -251,7 +251,7 @@ func Run(ctx context.Context, cr *chrome.Chrome, outDir string, dataPath func(st
 	}); err != nil {
 		return errors.Wrap(err, "failed to conduct the recorder task")
 	}
-	testing.ContextLogf(ctx, "Recorder took %v to execute the test", time.Now().Sub(startTime))
+	testing.ContextLogf(ctx, "Recorder took %v to execute the test", time.Since(startTime))
 
 	if err := recorder.Record(ctx, pv); err != nil {
 		return errors.Wrap(err, "failed to report")

@@ -140,7 +140,7 @@ func KeyboardBinding(ctx context.Context, s *testing.State) {
 
 	// Go to the "Customize keyboard keys" subpage.
 	rows := nodewith.Name(customizeKeyboardRowLabel).Role(role.Link).Ancestor(ossettings.WindowFinder)
-	nodes, err := res.ui.NodesInfo(ctx, rows)
+	nodes, _ := res.ui.NodesInfo(ctx, rows)
 	rowCount := len(nodes)
 	entryFinder := rows.Nth(rowCount - 1)
 	if _, err := ossettings.LaunchAtPageURL(ctx, tconn, cr, customizeKeyboardSettingsPageURL, res.ui.Exists(entryFinder)); err != nil {

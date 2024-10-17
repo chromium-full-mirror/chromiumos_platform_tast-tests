@@ -6,7 +6,6 @@ package ui
 
 import (
 	"context"
-	"path/filepath"
 	"time"
 
 	"github.com/golang/protobuf/ptypes/empty"
@@ -18,7 +17,6 @@ import (
 	"go.chromium.org/tast-tests/cros/local/chrome/lacros/lacrosfixt"
 	"go.chromium.org/tast-tests/cros/local/chrome/uiauto"
 	"go.chromium.org/tast-tests/cros/local/chrome/uiauto/browser/browserui"
-	"go.chromium.org/tast-tests/cros/local/chrome/uiauto/faillog"
 	"go.chromium.org/tast-tests/cros/local/chrome/uiauto/launcher"
 	"go.chromium.org/tast-tests/cros/local/chrome/uiauto/nodewith"
 	"go.chromium.org/tast-tests/cros/local/chrome/uiauto/ossettings"
@@ -178,16 +176,6 @@ func (cvk *CheckVirtualKeyboardService) CloseChrome(ctx context.Context, req *em
 	// Clear the chrome in the shared object so UtilsService or other services can no longer refer to it.
 	cvk.sharedObject.Chrome = nil
 	return &empty.Empty{}, err
-}
-
-func saveLogsOnError(ctx context.Context, cvk *CheckVirtualKeyboardService, hasError func() bool, msg string) error {
-	outDir, ok := testing.ContextOutDir(ctx)
-	if !ok {
-		return errors.New("no output directory")
-	}
-	faillog.DumpUITreeOnError(ctx, filepath.Join(outDir, "CheckVirtualKeyboardService-"+msg), hasError, cvk.tconn)
-	faillog.SaveScreenshotOnError(ctx, cvk.cr, filepath.Join(outDir, "CheckVirtualKeyboardService-"+msg), hasError)
-	return nil
 }
 
 // ClickSearchBar left-clicks on the search bar when tablet mode if off,

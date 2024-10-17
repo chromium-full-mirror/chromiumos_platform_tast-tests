@@ -58,11 +58,6 @@ func Run(ctx context.Context, cr *chrome.Chrome, testParam TestParam, outDir, sy
 
 	individualScrollTimeout := overallScrollTimeout / 4
 
-	const (
-		timeout              = 10 * time.Second
-		imageCopyRepeatTimes = 150
-	)
-
 	sampleSheetURL, err := cuj.GetTestSheetsURL(ctx)
 	if err != nil {
 		return nil, errors.Wrap(err, "failed to get Google Sheets URL")

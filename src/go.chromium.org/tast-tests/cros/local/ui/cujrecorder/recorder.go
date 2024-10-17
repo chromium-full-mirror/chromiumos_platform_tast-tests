@@ -100,6 +100,7 @@ const (
 	// different sources equally. Used for metrics such as latency, smoothness
 	// where samples does not happen on top of each other and average represents
 	// overall system status.
+	//lint:ignore U1000 this constant is still useful as the first of its group
 	metricRecordMethodNeutral = iota
 	// metricRecordMethodSumAverageBySource records metrics from different sources
 	// by adding up the average of the samples from each source. Used for metrics
@@ -333,8 +334,6 @@ type Recorder struct {
 	// Metric name mapped to metric record.
 	records map[string]*record
 
-	traceDir        string
-	perfettoCfgPath string
 	// The active or inactive tracing sessions.
 	// Key is the full path of the directory where the
 	// trace file will be saved, and value is the corresponding
@@ -705,7 +704,7 @@ func (r *Recorder) Reset(ctx context.Context) error {
 			return errors.Wrap(err, "failed to create ZramInfoTracker")
 		}
 
-		if r.chromeosFlexTesting != true {
+		if !r.chromeosFlexTesting {
 			r.memInfoTracker = perfSrc.NewMemoryTracker(r.arc)
 		}
 
@@ -1309,7 +1308,7 @@ func (r *Recorder) stopRecording(ctx, runCtx context.Context) (e error) {
 		return errors.New("Stop requested but recorder was not fully started: " + fmt.Sprintf(" mr=%v, r.cleanup=%p", r.mr, r.cleanup))
 	}
 
-	r.duration += time.Now().Sub(r.startedAtTm)
+	r.duration += time.Since(r.startedAtTm)
 	r.pv.Set(perf.Metric{Name: "TestMetrics.StartedAtTime", Variant: "summary", Unit: "Unix"}, float64(r.startedAtTm.Unix()))
 	r.startedAtTm = time.Time{} // Reset to zero.
 
@@ -1339,7 +1338,7 @@ func (r *Recorder) stopRecording(ctx, runCtx context.Context) (e error) {
 		return errors.Wrap(err, "failed to get boot and shutdown metric names")
 	}
 
-	if r.chromeosFlexTesting != true && len(bootAndShutdownMetrics) > 0 {
+	if !r.chromeosFlexTesting && len(bootAndShutdownMetrics) > 0 {
 		// Some BootTime.* metrics are only reported once after
 		// a reboot. We forced them to be reported again after
 		// the recorder started, but ChromeOS metrics are
@@ -1946,6 +1945,9 @@ func addExtraChromeTraceCategories(
 	}
 
 	f, err := os.CreateTemp("", "perfetto_config.pbtxt")
+	if err != nil {
+		testing.ContextLog(ctx, "Failed to create the perfetto config tmp file")
+	}
 	perfettoTmpConfigCleanup := func(ctx context.Context) {
 		if err := os.Remove(f.Name()); err != nil {
 			testing.ContextLog(ctx, "Failed to remove the perfetto config tmp file")

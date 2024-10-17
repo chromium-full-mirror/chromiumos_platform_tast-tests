@@ -151,20 +151,6 @@ func scrollByMouse(mw *input.MouseEventWriter, duration time.Duration) action.Ac
 	return runActionFor(duration, scroll)
 }
 
-// scrollByKeyboard returns a function that repeatedly scrolls down and
-// up through the keyboard for |duration|.
-func scrollByKeyboard(kb *input.KeyboardEventWriter, duration time.Duration) action.Action {
-	scroll := func(ctx context.Context) error {
-		for _, key := range []string{"Down", "Up"} {
-			if err := inputsimulations.RepeatKeyPress(ctx, kb, key, 50*time.Millisecond, 40); err != nil {
-				return errors.Wrapf(err, "failed to repeatedly key press %q", key)
-			}
-		}
-		return nil
-	}
-	return runActionFor(duration, scroll)
-}
-
 // runActionFor repeats action |a| until |minDuration| has passed.
 func runActionFor(minDuration time.Duration, a action.Action) action.Action {
 	return func(ctx context.Context) error {

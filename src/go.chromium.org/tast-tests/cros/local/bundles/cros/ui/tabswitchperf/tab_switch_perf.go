@@ -213,32 +213,6 @@ func waitUntilAllTabsLoaded(ctx context.Context, tconn *chrome.TestConn, timeout
 	}, &testing.PollOptions{Timeout: timeout})
 }
 
-func retrieveAllTabs(ctx context.Context, tconn *chrome.TestConn, timeout time.Duration) ([]map[string]interface{}, error) {
-	emptyQuery := map[string]interface{}{}
-
-	// Get all tabs
-	var tabs []map[string]interface{}
-	ctx, cancel := context.WithTimeout(ctx, timeout)
-	defer cancel()
-	err := tconn.Call(ctx, &tabs, `tast.promisify(chrome.tabs.query)`, emptyQuery)
-	return tabs, err
-}
-
-func focusTab(ctx context.Context, tconn *chrome.TestConn, tabs *[]map[string]interface{}, tabIndexWithinWindow int, timeout time.Duration) error {
-	// Define parameters for API calls
-	activateTabProperties := map[string]interface{}{
-		"active": true,
-	}
-
-	// Find id of tab with positional index.
-	tabID := int((*tabs)[tabIndexWithinWindow]["id"].(float64))
-
-	// Switch to this tab as the active window
-	ctx, cancel := context.WithTimeout(ctx, timeout)
-	defer cancel()
-	return tconn.Call(ctx, nil, `tast.promisify(chrome.tabs.update)`, tabID, activateTabProperties)
-}
-
 func testBody(ctx context.Context, test *tabSwitchVariables) error {
 	const (
 		numPages         = 7

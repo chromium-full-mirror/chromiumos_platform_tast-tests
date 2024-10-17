@@ -126,7 +126,7 @@ func (r *CUJRunner) Run(ctx context.Context, s *testing.State, conf string) erro
 		}
 
 		expectedStart := st.Add(t.st)
-		sleepTime := expectedStart.Sub(time.Now())
+		sleepTime := time.Until(expectedStart)
 		testing.ContextLogf(ctx, "Scheduling action %s, delay=%v", t.a.Name, sleepTime)
 		if sleepTime > 0 {
 			if err := testing.Sleep(ctx, sleepTime); err != nil {
@@ -143,7 +143,7 @@ func (r *CUJRunner) Run(ctx context.Context, s *testing.State, conf string) erro
 		}
 
 		if t.blocked != nil {
-			t.blocked.st = time.Now().Sub(st) + t.blocked.rt
+			t.blocked.st = time.Since(st) + t.blocked.rt
 			r.q = append(r.q, t.blocked)
 			r.sortTask()
 		}

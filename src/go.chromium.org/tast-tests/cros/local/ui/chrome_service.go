@@ -15,6 +15,7 @@ import (
 	"go.chromium.org/tast-tests/cros/local/chrome/browser/browserfixt"
 	"go.chromium.org/tast-tests/cros/local/common"
 	"go.chromium.org/tast-tests/cros/local/cryptohome"
+	//lint:ignore ST1019 multiple imports with different identifiers help code readability
 	"go.chromium.org/tast-tests/cros/services/cros/ui"
 	pb "go.chromium.org/tast-tests/cros/services/cros/ui"
 	"go.chromium.org/tast/core/errors"

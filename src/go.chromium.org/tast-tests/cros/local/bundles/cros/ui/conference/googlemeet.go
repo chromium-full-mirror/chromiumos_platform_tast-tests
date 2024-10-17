@@ -70,10 +70,7 @@ const (
 	retryTimes = 3
 )
 
-var (
-	meetWebArea = nodewith.NameContaining(meetTitle).Role(role.RootWebArea)
-	youText     = nodewith.Name("You").Role(role.StaticText).Ancestor(meetWebArea)
-)
+var meetWebArea = nodewith.NameContaining(meetTitle).Role(role.RootWebArea)
 
 // Join joins a new conference room.
 func (conf *GoogleMeetConference) Join(ctx context.Context, room string, toBlur bool) (err error) {
@@ -238,7 +235,7 @@ func (conf *GoogleMeetConference) getStableGrids(ctx context.Context) (grids []u
 			count++
 		} else {
 			lastQuantity = currentQuantity
-			loadingTime = time.Now().Sub(startTime)
+			loadingTime = time.Since(startTime)
 			count = 0
 		}
 		if count > 5 {
@@ -339,7 +336,7 @@ func (conf *GoogleMeetConference) changeLayout(layoutOption googlemeet.LayoutOpt
 				}, &testing.PollOptions{Timeout: longUITimeout}); err != nil {
 					return errors.Wrapf(err, "failed to wait for grids more than %v grids within %v", expectedGrid, longUITimeout)
 				}
-				testing.ContextLogf(ctx, "Get stable grids took %v to appear", time.Now().Sub(startTime))
+				testing.ContextLogf(ctx, "Get stable grids took %v to appear", time.Since(startTime))
 				return nil
 			}
 		}

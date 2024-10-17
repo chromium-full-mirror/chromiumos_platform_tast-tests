@@ -789,7 +789,7 @@ func testFunction(
 			return errors.Wrap(err, "failed to await login animation")
 		}
 
-		sleepSeconds := 10 * time.Second
+		sleepTime := 10 * time.Second
 		if stopTracing != nil {
 			// Stopping tracing before the full 10 seconds have
 			// elapsed reduces the trace file size by approximately
@@ -802,12 +802,12 @@ func testFunction(
 			if err := stopTracing(ctx); err != nil {
 				return errors.Wrap(err, "failed to stop tracing")
 			}
-			sleepSeconds = 5 * time.Second
+			sleepTime = 5 * time.Second
 		}
-		s.Logf("Sleep for %f seconds to let session settle and save restore data", sleepSeconds.Seconds())
+		s.Logf("Sleep for %f seconds to let session settle and save restore data", sleepTime.Seconds())
 		// GoBigSleepLint: Give session time to settle and save restore data.
-		if err := testing.Sleep(ctx, sleepSeconds); err != nil {
-			return errors.Wrapf(err, "failed to sleep for %f seconds", sleepSeconds.Seconds())
+		if err := testing.Sleep(ctx, sleepTime); err != nil {
+			return errors.Wrapf(err, "failed to sleep for %f seconds", sleepTime.Seconds())
 		}
 		// boot metrics have likely been already reported and wiped
 		// away while we were waiting for the cpu to cool down before

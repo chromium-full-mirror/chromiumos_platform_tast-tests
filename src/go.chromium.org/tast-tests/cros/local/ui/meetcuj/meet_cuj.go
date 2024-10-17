@@ -1057,7 +1057,6 @@ func Run(ctx context.Context, meet MeetTest, cr *chrome.Chrome, testCaseVar func
 					testing.ContextLog(ctx, "add_bots: Background signaled to stop")
 					addBotsErr = errors.Errorf("failed to complete phase %d, background signaled to stop", currentPhase)
 					addingMoreBots = false
-					break
 				}
 			}
 		}, "increasing bot count during test")
@@ -1412,7 +1411,7 @@ func Run(ctx context.Context, meet MeetTest, cr *chrome.Chrome, testCaseVar func
 			}
 		}
 
-		moveMouseTimeout := meetEndTime.Sub(time.Now())
+		moveMouseTimeout := time.Until(meetEndTime)
 		// Ensures that meet session is long enough. graphics.MeasureGPUCounters
 		// exits early without errors on ARM where there is no i915 counters.
 		if err := inputsimulations.MoveMouseFor(ctx, tconn, moveMouseTimeout); err != nil {

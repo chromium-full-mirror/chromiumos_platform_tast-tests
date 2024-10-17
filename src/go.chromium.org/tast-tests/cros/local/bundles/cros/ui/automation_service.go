@@ -457,6 +457,7 @@ func (svc *AutomationService) CaptureScreenshot(ctx context.Context, req *pb.Cap
 		if err != nil {
 			return nil, err
 		}
+		//lint:ignore SA4006 this err is checked right after the if { } else { } block
 		img, err = screenshot.GrabAndCropScreenshot(ctx, cr, nodeInfo.Location)
 	} else {
 		img, err = screenshot.GrabScreenshot(ctx, cr)

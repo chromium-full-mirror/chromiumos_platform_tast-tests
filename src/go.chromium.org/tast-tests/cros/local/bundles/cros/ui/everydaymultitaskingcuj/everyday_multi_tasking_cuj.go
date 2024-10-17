@@ -141,6 +141,9 @@ func Run(ctx context.Context, cr *chrome.Chrome, bt browser.Type, a *arc.ARC, pa
 		return errors.Wrap(err, "failed to create the volumeHelper")
 	}
 	originalVolume, err := vh.GetVolume(ctx)
+	if err != nil {
+		return errors.Wrap(err, "failed to get the volume")
+	}
 	defer vh.SetVolume(cleanupCtx, originalVolume)
 
 	isMuted, err := vh.IsMuted(ctx)

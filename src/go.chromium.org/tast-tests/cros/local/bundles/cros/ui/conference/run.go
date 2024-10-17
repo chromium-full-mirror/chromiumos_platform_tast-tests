@@ -311,7 +311,7 @@ func RunWithGoogleConfig(ctx context.Context, tconn *chrome.TestConn, meetConfig
 	startTime := time.Now()
 	if err := testing.Poll(ctx, func(ctx context.Context) error {
 		if err := runWithMeetLinkViaBond(ctx); err != nil {
-			elapsedTime := time.Now().Sub(startTime)
+			elapsedTime := time.Since(startTime)
 			if elapsedTime < meetConfig.RetryTimeout {
 				// Record the complete run result if the failure is not because of timeout.
 				lastError = err
@@ -364,7 +364,7 @@ func generateMeetLinkViaBond(ctx context.Context, meet GoogleMeetConfig, roomTyp
 	botsDuration := 60 * time.Minute // one hour long by default.
 	deadline, ok := ctx.Deadline()
 	if ok {
-		botsDuration = deadline.Add(90 * time.Second).Sub(time.Now())
+		botsDuration = time.Until(deadline.Add(90 * time.Second))
 	}
 	numBots := GoogleMeetRoomParticipants[roomType] - 1 // one of participants is the test itself
 	bondMeetingCode, numFailures, err = bondConn.CreateConferenceWithBots(ctx, numBots, botsDuration)

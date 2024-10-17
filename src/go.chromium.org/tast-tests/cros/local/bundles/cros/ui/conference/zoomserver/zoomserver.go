@@ -52,7 +52,7 @@ func CreateConference(ctx context.Context, roomSize int, sessionToken, host stri
 		// Use the remaining time of the case to set the existence time of the room.
 		deadline, ok := ctx.Deadline()
 		if ok {
-			maxDuration = int(math.Ceil(deadline.Sub(time.Now()).Minutes()))
+			maxDuration = int(math.Ceil(time.Until(deadline).Minutes()))
 		}
 		parameterString := fmt.Sprintf("?count=%d&max_duration=%v", roomSize, maxDuration)
 		testing.ContextLogf(ctx, "Create a %d-person zoom room that can exist for %v minutes", roomSize, maxDuration)

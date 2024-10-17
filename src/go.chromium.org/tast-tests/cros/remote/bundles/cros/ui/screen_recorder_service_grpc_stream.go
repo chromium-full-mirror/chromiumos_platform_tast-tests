@@ -177,7 +177,7 @@ func writeStreamToFile(ctx context.Context, errCh chan error,
 			return
 		}
 		length := value.GetLength()
-		if length >= 0 {
+		if length > 0 {
 			if _, err := fRecording.Write(value.GetData()); err != nil {
 				fRecording.Close()
 				errCh <- err

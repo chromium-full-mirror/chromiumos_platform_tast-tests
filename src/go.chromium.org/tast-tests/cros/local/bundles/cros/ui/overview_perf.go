@@ -118,7 +118,7 @@ func OverviewPerf(ctx context.Context, s *testing.State) {
 			}
 		})
 	canSplitScreen, err := func(ctx context.Context) (bool, error) {
-		if originalTabletMode != true {
+		if !originalTabletMode {
 			// The tests also run on devices that do not support tablet mode. Thus,
 			// in case of an error, just log it and return false.
 			if err := ash.SetTabletModeEnabled(ctx, tconn, true); err != nil {

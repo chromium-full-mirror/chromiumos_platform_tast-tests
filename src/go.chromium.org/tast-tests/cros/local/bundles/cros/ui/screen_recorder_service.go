@@ -351,7 +351,7 @@ func requestScreenShare(ctx context.Context, tconn *chrome.TestConn, interval ui
 
 // start creates a new media recorder and starts to record the screen.
 func (r *streamScreenRecorder) start(ctx context.Context, tconn *chrome.TestConn) error {
-	if r.isRecording == true {
+	if r.isRecording {
 		return errors.New("recorder already started")
 	}
 
@@ -373,7 +373,7 @@ func (r *streamScreenRecorder) start(ctx context.Context, tconn *chrome.TestConn
 
 // stop stops the screen recording.
 func (r *streamScreenRecorder) stop(ctx context.Context) error {
-	if r.isRecording == false {
+	if !r.isRecording {
 		return errors.New("recorder hasn't started yet")
 	}
 	if err := r.videoRecorder.Call(ctx, nil, `function() {return this.stop();}`); err != nil {

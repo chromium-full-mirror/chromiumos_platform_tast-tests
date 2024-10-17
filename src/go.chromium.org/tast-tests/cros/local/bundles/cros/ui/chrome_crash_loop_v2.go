@@ -121,7 +121,7 @@ func ChromeCrashLoopV2(ctx context.Context, s *testing.State) {
 
 	params := s.Param().(chromeCrashLoopV2Params)
 	opt := crash.WithMockConsent()
-	extraArgs := append(chromecrash.GetExtraArgs(params.handler, params.consent))
+	extraArgs := chromecrash.GetExtraArgs(params.handler, params.consent)
 	// For real consent, we need to first open a non-crashing version of Chrome
 	// long enough to log in and set up consent.
 	if params.consent == crash.RealConsent {
