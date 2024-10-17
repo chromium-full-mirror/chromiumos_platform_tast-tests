@@ -31,7 +31,7 @@ func TestIperf(t *testing.T) {
 			dep := ""
 			fixture := ""
 
-			protocolName := fmt.Sprintf("%s", protocol)
+			protocolName := protocol.String()
 			if protocol == udpReverse {
 				protocolName = "udp_reverse"
 			}

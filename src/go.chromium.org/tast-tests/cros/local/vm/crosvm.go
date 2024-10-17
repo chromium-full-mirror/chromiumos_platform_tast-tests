@@ -424,15 +424,11 @@ func (vm *Crosvm) WaitForOutput(ctx context.Context, re *regexp.Regexp) (string,
 		}
 	}()
 
-	select {
-	case r := <-ch:
-		if os.IsTimeout(r.err) {
+	r := <-ch
+	if os.IsTimeout(r.err) {
 			// If the read times out, this means the deadline has passed
-			select {
-			case <-ctx.Done():
-				return "", errors.Wrap(ctx.Err(), "timeout out waiting for output")
-			}
-		}
-		return r.line, r.err
+		<-ctx.Done()
+		return "", errors.Wrap(ctx.Err(), "timeout out waiting for output")
 	}
+	return r.line, r.err
 }

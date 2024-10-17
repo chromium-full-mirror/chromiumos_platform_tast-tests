@@ -568,6 +568,9 @@ func Fio(ctx context.Context, s *testing.State) {
 		s.Fatal("Failed to get the cryptohome directory: ", err)
 	}
 	ud, err := ioutil.TempDir(rootCryptDir, "tast.vm.Fio.")
+	if err != nil {
+		s.Fatal("Failed to create temporary directory: ", err)
+	}
 	defer os.RemoveAll(ud)
 
 	p := s.Param().(param)

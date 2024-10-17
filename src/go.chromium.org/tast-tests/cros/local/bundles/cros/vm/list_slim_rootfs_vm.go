@@ -50,13 +50,11 @@ func ListSlimRootfsVM(ctx context.Context, s *testing.State) {
 
 	defer vm.TrySaveAllVMLogs(cleanupCtx, user, s.OutDir())
 
-	var vms []*vm.VM
 	for _, vmName := range vmNames {
 		vm := vm.NewGenericVM(concierge, false, slimrootfsutils.StatefulDiskSizeBytes, kernel, rootfs, vmName)
 		if err := vm.Start(ctx); err != nil {
 			s.Fatal("Failed to start the VM: ", err)
 		}
-		vms = append(vms, vm)
 	}
 
 	runningVms, err := concierge.ListVms(ctx)

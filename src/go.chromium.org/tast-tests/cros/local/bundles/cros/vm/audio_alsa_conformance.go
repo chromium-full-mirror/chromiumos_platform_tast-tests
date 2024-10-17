@@ -19,10 +19,6 @@ import (
 	"go.chromium.org/tast/core/testing"
 )
 
-type alsaConfig struct {
-	deviceArgs []string
-}
-
 const runAlsaConformanceTest string = "run-alsa-conformance-test.sh"
 
 func init() {

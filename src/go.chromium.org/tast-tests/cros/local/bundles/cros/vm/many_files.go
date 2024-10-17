@@ -380,6 +380,9 @@ func ManyFiles(ctx context.Context, s *testing.State) {
 		s.Fatal("Failed to get the cryptohome directory: ", err)
 	}
 	ud, err := ioutil.TempDir(rootCryptDir, "tast.vm.ManyFiles.")
+	if err != nil {
+		s.Fatal("Failed to create temporary directory: ", err)
+	}
 	defer os.RemoveAll(ud)
 
 	opt, err := storage.NewOption(p.kind.String(), p.cache.String(), p.caseFold, p.negativeTimeout)

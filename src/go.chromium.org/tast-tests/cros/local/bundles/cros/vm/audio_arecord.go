@@ -22,7 +22,6 @@ const runAudioArecord string = "run-arecord.sh"
 
 type audioArecordParams struct {
 	crosvmArgs               []string
-	vhostUserArgs            []string
 	expectedCardNames        []string
 	expectedDeviceNames      []string
 	expectedStreamsPerDevice int

@@ -20,7 +20,7 @@ type streamSource string
 
 const (
 	noop streamSource = "noop"
-	cras              = "cras"
+	cras streamSource = "cras"
 )
 
 // audioStreamTestParameters contains all the data needed to run a single test iteration.

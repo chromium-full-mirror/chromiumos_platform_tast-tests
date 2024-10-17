@@ -188,6 +188,9 @@ func (vm *VM) StartLxd(ctx context.Context) error {
 		Interface: ciceroneInterface,
 		Member:    "StartLxdProgress",
 	})
+	if err != nil {
+		return err
+	}
 	defer lxd.Close(ctx)
 
 	resp := &cpb.StartLxdResponse{}

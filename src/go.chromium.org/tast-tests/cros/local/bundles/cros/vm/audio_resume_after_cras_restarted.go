@@ -25,7 +25,6 @@ const runAudioResumeAfterCrasRestarted string = "run-audio-resume-after-cras-res
 
 type audioResumeAfterCrasRestartedParams struct {
 	crosvmArgs    []string
-	vhostUserArgs []string
 }
 
 func init() {

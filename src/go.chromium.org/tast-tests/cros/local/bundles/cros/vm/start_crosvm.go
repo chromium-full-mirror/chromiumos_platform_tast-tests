@@ -62,7 +62,7 @@ func StartCrosvm(ctx context.Context, s *testing.State) {
 	testing.ContextLog(ctx, "Waiting for VM to boot")
 	startCtx, cancel := context.WithTimeout(ctx, 20*time.Second)
 	defer cancel()
-	line, err := cvm.WaitForOutput(startCtx, regexp.MustCompile("localhost\\b.*#"))
+	line, err := cvm.WaitForOutput(startCtx, regexp.MustCompile(`localhost\b.*#`))
 	if err != nil {
 		s.Fatal("Didn't get VM prompt: ", err)
 	}

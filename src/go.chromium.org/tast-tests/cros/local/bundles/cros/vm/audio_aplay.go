@@ -22,7 +22,6 @@ const runAudioAplay string = "run-aplay.sh"
 
 type audioAplayParams struct {
 	crosvmArgs               []string
-	vhostUserArgs            []string
 	expectedCardNames        []string
 	expectedDeviceNames      []string
 	expectedStreamsPerDevice int
