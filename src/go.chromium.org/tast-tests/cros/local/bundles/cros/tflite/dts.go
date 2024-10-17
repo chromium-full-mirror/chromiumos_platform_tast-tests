@@ -159,19 +159,13 @@ var neuronParam = testingParam{
 		// TODO(b/338959718): Neuron delegate failed with all -128 output.
 		"*QuantizeOpTest.Int16ZeroPointInt8*",
 
-		// TODO(b/338963077): The test itself has inconsistent expectation for
-		// negative input values and precision errors that need to be fixed in
-		// upstream.
-		"*RsqrtNanInt8*",
-		"*RsqrtNanInt16*",
-		"*RsqrtInt16*",
+		// TODO(b/338963077): Neuron delegate should return kTfLiteError when seeing
+		// non-positive values.
+		"*RsqrtNegativeInt8*",
+		"*RsqrtNegativeInt16*",
 
 		// TODO(b/351308835): Neuron delegate failed with node_index out ouf range.
 		"StablehloScatterOpTest.PerformsUpdate",
-
-		// TODO(b/364804438): Neuron delegate failed because of precision loss after
-		// turning on --allow_fp16_precision_for_fp32.
-		"StridedSliceOpTest/0.In1D_Int32End",
 
 		// TODO(b/364804438): Neuron delegate failed with incorrect outputs after
 		// turning on --allow_fp16_precision_for_fp32.
