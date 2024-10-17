@@ -57,7 +57,7 @@ func (ad *armData) setValue(val any) error {
 }
 
 func (ad *armData) readFromBytes(dataBytes []byte, start int) (end int, err error) {
-	readFunc := func([]byte) (any, error) { return nil, nil }
+	var readFunc func([]byte) (any, error)
 	switch ad.dataType {
 	case typeUInt8:
 		readFunc = readUint8

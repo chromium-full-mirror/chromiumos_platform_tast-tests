@@ -261,6 +261,7 @@ func (c *Cmd) Wait(opts ...RunOption) error {
 	// Take and release the sigMu in order to wait for the completion
 	// of signal sending which is already in process.
 	c.sigMu.Lock()
+	//lint:ignore SA2001 critical section left empty on purpose
 	c.sigMu.Unlock()
 
 	// Actual wait to collect the subprocess.

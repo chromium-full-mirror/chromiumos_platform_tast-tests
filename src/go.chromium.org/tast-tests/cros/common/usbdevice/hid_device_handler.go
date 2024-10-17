@@ -13,10 +13,6 @@ import (
 	"go.chromium.org/tast/core/testing"
 )
 
-type usbHidDeviceHandler interface {
-	withDevice(device Device) usbHidDeviceHandler
-}
-
 type hidDeviceHandlerImpl struct {
 	device        Device
 	ctx           context.Context

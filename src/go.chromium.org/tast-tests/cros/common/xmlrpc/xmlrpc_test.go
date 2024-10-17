@@ -336,11 +336,11 @@ func TestNewValue(t *testing.T) {
 	type newStringType string
 	var strVal newStringType = "rutabaga"
 	type newBoolType bool
-	var boolVal = true
+	var boolVal newBoolType = true
 	type newFloatType float64
-	var floatVal = -3.14
+	var floatVal newFloatType = -3.14
 	type newIntType int
-	var intVal = -1
+	var intVal newIntType = -1
 
 	mapStrOfInterface := map[string]interface{}{boolKey: boolVal, floatKey: floatVal, intKey: intVal, strKey: strVal}
 	expectedMapStrOfInterface := xmlStruct{Members: []member{

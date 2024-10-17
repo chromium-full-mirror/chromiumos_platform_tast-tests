@@ -11,8 +11,7 @@ import (
 )
 
 func TestErrorChecking(t *testing.T) {
-	var err error
-	err = &TabletModeCmdUnsupportedErr{E: errors.New("Some wrapped error")}
+	var err error = &TabletModeCmdUnsupportedErr{E: errors.New("Some wrapped error")}
 
 	if _, ok := err.(*TabletModeCmdUnsupportedErr); !ok {
 		t.Error("Type cast didn't work")

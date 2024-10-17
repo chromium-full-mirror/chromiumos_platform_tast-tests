@@ -60,11 +60,7 @@ func (c *Checkpoints) IsEmpty() bool {
 // NewSection initialize a new Section with the current timestamp.
 func (c *Checkpoints) NewSection(checkpointName string) *Section {
 	section := NewSection(c.clock.Now())
-	if _, ok := c.checkpoints[checkpointName]; ok {
-		c.checkpoints[checkpointName] = append(c.checkpoints[checkpointName], section)
-	} else {
-		c.checkpoints[checkpointName] = []*Section{section}
-	}
+	c.checkpoints[checkpointName] = append(c.checkpoints[checkpointName], section)
 	return section
 }
 

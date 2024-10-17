@@ -14,12 +14,6 @@ var resultReportConfigAzimuthOn = ResultReportConfig{
 	AoaElevation: true,
 	AoaFom:       true,
 }
-var resultReportConfigAzimuthOff = ResultReportConfig{
-	Tof:          true,
-	AoaAzimuth:   false,
-	AoaElevation: false,
-	AoaFom:       false,
-}
 
 var defaultRangingRoundControl = RangingRoundControl{
 	RangingResultReportMessage: true,

@@ -22,7 +22,6 @@ const ServiceAccountVar = "tape.service_account_key"
 type clientOption struct {
 	client      *client
 	credsJSON   []byte
-	requestOpts []RequestAccountOption
 }
 
 // ClientOption provides options for getting a client for an account manager.
@@ -40,28 +39,6 @@ func WithClient(client *client) ClientOption {
 	return func(opt *clientOption) {
 		opt.client = client
 	}
-}
-
-func getClient(ctx context.Context, opts ...ClientOption) (*client, error) {
-	// Copy over all options.
-	options := clientOption{}
-	for _, opt := range opts {
-		opt(&options)
-	}
-
-	var client *client
-	var err error
-	if options.client != nil {
-		client = options.client
-	} else if len(options.credsJSON) > 0 {
-		client, err = NewClient(ctx, options.credsJSON)
-		if err != nil {
-			return nil, errors.Wrap(err, "failed to create tape client")
-		}
-	} else {
-		return nil, errors.New("One of tape.client or credsJSON must be set")
-	}
-	return client, nil
 }
 
 // GenericAccountManager holds the client and the generic accounts data.

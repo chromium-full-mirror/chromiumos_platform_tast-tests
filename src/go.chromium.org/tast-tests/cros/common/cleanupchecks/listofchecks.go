@@ -53,21 +53,6 @@ func checkIfTastBundlesLocalFileExists(ctx context.Context, data *cs.PreTestData
 
 // CheckIfRootfsVerificationIsTurnedOn.
 
-// recordIfRootfsVerificationIsTurnedOn checks whether rootfs verification is turned
-// on after a test.
-func recordIfRootfsVerificationIsTurnedOn(ctx context.Context) *cs.PreTestData {
-	rootfsVerificationEnabled, err := getRootfsVerificationState()
-	if err != nil {
-		return &cs.PreTestData{Error: err.Error()}
-	}
-	data := &cs.PreTestData{
-		Data: &cs.PreTestData_BoolData{
-			BoolData: rootfsVerificationEnabled,
-		},
-	}
-	return data
-}
-
 // checkIfRootfsVerificationIsTurnedOn checks whether rootfs verification is turned
 // on after a test.
 func checkIfRootfsVerificationIsTurnedOn(ctx context.Context, data *cs.PreTestData) error {

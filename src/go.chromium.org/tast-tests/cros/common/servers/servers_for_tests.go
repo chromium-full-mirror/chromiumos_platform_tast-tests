@@ -102,7 +102,7 @@ func Servers(serverType ServerType) (map[string]string, error) {
 		return nil, err
 	}
 	result := make(map[string]string)
-	src, _ := allServer[serverType]
+	src := allServer[serverType]
 	for role, host := range src {
 		result[role] = host
 	}

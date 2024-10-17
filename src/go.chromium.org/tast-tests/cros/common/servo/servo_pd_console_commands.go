@@ -212,7 +212,7 @@ func (s *Servo) ServoSetDPConfigs(ctx context.Context, config *TypeCInfo, mfPref
 		if err != nil {
 			testing.ContextLog(ctx, "GetChargerAttached failed: ", err)
 			return errors.Wrap(err, "error checking whether charger is attached")
-		} else if ok == false {
+		} else if !ok {
 			testing.ContextLogf(ctx, "GetChargerAttached got %v, want %v", ok, true)
 			return errors.Errorf("expected charger attached state: %v", true)
 		}
@@ -229,7 +229,7 @@ func (s *Servo) ServoSetDPConfigs(ctx context.Context, config *TypeCInfo, mfPref
 func (s *Servo) ServoSetUSBVersion3(ctx context.Context, USBVersion3 bool) error {
 	enableVersion3 := "disable"
 
-	if USBVersion3 == true {
+	if USBVersion3 {
 		enableVersion3 = "enable"
 	}
 

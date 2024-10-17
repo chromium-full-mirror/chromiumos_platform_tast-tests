@@ -365,7 +365,7 @@ func (c *Config) Probe(ctx context.Context) (*Instance, context.Context, func() 
 
 	re := regexp.MustCompile(chipFoundMessage)
 	chipsFound := re.FindAllString(string(out), -1)
-	if chipsFound == nil || len(chipsFound) == 0 {
+	if len(chipsFound) == 0 {
 		return nil, ctx, shutdown, out, errors.Errorf("Flashrom probe fails to find a chip, cmdArgs=%v", cmdArgs)
 	}
 	if len(chipsFound) > 1 && chipsFound[0] != chipsFound[1] {

@@ -238,7 +238,6 @@ type sshOrLocal interface {
 
 // TestCast verifies the return value of CommandContext can be assigned to an interface that also works for ssh Cmd.
 func TestCast(t *gotesting.T) {
-	var cmd sshOrLocal
-	cmd = CommandContext(context.Background(), "true")
+	var cmd sshOrLocal = CommandContext(context.Background(), "true")
 	cmd.Run()
 }

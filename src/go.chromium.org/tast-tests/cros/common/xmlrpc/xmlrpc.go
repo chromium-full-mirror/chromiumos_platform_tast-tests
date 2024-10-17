@@ -325,7 +325,7 @@ func serializeMethodCall(cl Call) ([]byte, error) {
 func getTimeout(ctx context.Context, cl Call) time.Duration {
 	timeout := cl.timeout
 	if dl, ok := ctx.Deadline(); ok {
-		newTimeout := dl.Sub(time.Now())
+		newTimeout := time.Until(dl)
 		if newTimeout < timeout {
 			timeout = newTimeout
 		}
@@ -619,6 +619,9 @@ func (r *XMLRpc) Run(ctx context.Context, cl Call, out ...interface{}) error {
 
 	// Read body and unmarshal XML.
 	bodyBytes, err := ioutil.ReadAll(resp.Body)
+	if err != nil {
+		return err
+	}
 	res := methodResponse{}
 	if err = xml.Unmarshal(bodyBytes, &res); err != nil {
 		return err

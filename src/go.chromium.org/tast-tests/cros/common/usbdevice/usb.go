@@ -97,16 +97,6 @@ const (
 	RequestRecipientOther RequestRecipient = 0x03
 )
 
-// direction returns direction of SetupPacket.
-func (setup *SetupPacket) direction() Direction {
-	return Direction((setup.BmRequestType >> 7) & 1)
-}
-
-// requestClass returns request class of SetupPacket.
-func (setup *SetupPacket) requestClass() RequestClass {
-	return RequestClass((setup.BmRequestType >> 5) & 0b11)
-}
-
 // recipient returns recipient of SetupPacket.
 func (setup *SetupPacket) recipient() RequestRecipient {
 	return RequestRecipient(setup.BmRequestType & 0b1111)

@@ -13,23 +13,3 @@ const (
 	DistanceMinAcceptablePercent  = 95
 	AngleMinAcceptablePercent     = 95
 )
-
-const (
-	moblyPackage                      = "com.google.snippet.uwb"
-	uwbApkName                        = "uwb_snippet.apk"
-	isUwbEnabled                      = "isUwbEnabled"
-	setUwbEnabled                     = "setUwbEnabled"
-	openFiraRangingSession            = "openFiraRangingSession"
-	startFiraRangingSession           = "startFiraRangingSession"
-	reconfigureFiraRangingSession     = "reconfigureFIraRangingSession"
-	addControleeFiraRangingSession    = "addControleeFiraRangingSession"
-	removeControleeFiraRangingSession = "removeControleeFiraRangingSession"
-	isUwbPeerFound                    = "isUwbPeerFound"
-	getDistanceMeasurement            = "getDistanceMeasurement"
-	getAoAAzimuthMeasurement          = "getAoAAzimuthMeasurement"
-	getAoAAltitudeMeasurement         = "getAoAAltitudeMeasurement"
-	getRssiDbmMeasurement             = "getRssiDbmMeasurement"
-	stopRangingSession                = "stopRangingSession"
-	closeRangingSession               = "closeRangingSession"
-	rangingSessionCallback            = "RangingSessionCallback"
-)
