@@ -40,11 +40,11 @@ func deviceTypeFromString(s string) CoolingDevType {
 		return CoolingDevTypeProcessor
 	}
 
-	if strings.Index(s, "TFN1") >= 0 {
+	if strings.Contains(s, "TFN1") {
 		return CoolingDevTypeFan
 	}
 
-	if strings.Index(s, "TCHG") >= 0 {
+	if strings.Contains(s, "TCHG") {
 		return CoolingDevTypeCharger
 	}
 

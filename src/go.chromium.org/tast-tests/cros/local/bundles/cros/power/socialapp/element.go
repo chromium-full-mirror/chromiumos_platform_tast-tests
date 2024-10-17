@@ -41,7 +41,6 @@ const (
 var (
 	// ElementAppName represents the name of the Element app.
 	ElementAppName AppName = apps.Element.Name
-	elementID              = apps.Element.ID
 
 	// ElementApkURLVars contains all variable names of the element apk.
 	ElementApkURLVars = []string{

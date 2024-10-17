@@ -132,12 +132,11 @@ func VideoSuspend(ctx context.Context, s *testing.State) {
 
 	testing.ContextLog(ctx, "Reconnecting to our browser tab")
 	conn, err = cr.NewConnForTarget(ctx, chrome.MatchTargetURL(connURL))
-	defer conn.Close()
-	defer conn.CloseTarget(ctx)
-
 	if err != nil {
 		s.Fatal("Failed to reconnect to browser tab")
 	}
+	defer conn.Close()
+	defer conn.CloseTarget(ctx)
 
 	testing.ContextLog(ctx, "Checking if video is still playing")
 	if err := checkVideoIsPlaying(ctx, conn); err != nil {

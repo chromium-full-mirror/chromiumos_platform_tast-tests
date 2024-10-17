@@ -29,8 +29,6 @@ const (
 	varDuration = "duration"
 	varNoGsc    = "no_gsc"
 
-	reconnectTimeout = 20 * time.Second
-
 	gsc1V8Rail = "pp1800_gsc_z1"
 	gsc3V3Rail = "pp3300_gsc_z1"
 )

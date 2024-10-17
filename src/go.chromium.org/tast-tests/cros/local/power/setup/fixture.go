@@ -849,47 +849,6 @@ func init() {
 	})
 }
 
-type powerSetUpFixture struct {
-	cleanup func(context.Context) error
-}
-
-func (f *powerSetUpFixture) SetUp(ctx context.Context, s *testing.FixtState) interface{} {
-	sup, cleanup := New("powerSetUpFixture")
-
-	// Stop UI in order to minimize the number of factors that could influence the results.
-	sup.Add(DisableService(ctx, "ui"))
-
-	sup.Add(PowerTest(ctx, nil, PowerTestOptions{
-		Wifi: DisableWifiInterfaces,
-		// Since we stop the UI disabling the Night Light is redundant.
-		NightLight: DoNotDisableNightLight,
-	}, NewBatteryDischarge(false /*discharge*/, true /*ignoreErr*/, DefaultDischargeThreshold)))
-
-	if err := sup.Check(ctx); err != nil {
-		s.Fatal("Power setup failed: ", err)
-	}
-
-	f.cleanup = cleanup
-
-	return nil
-}
-
-func (f *powerSetUpFixture) TearDown(ctx context.Context, s *testing.FixtState) {
-	if err := f.cleanup(ctx); err != nil {
-		testing.ContextLog(ctx, "Power cleanup failed: ", err)
-	}
-}
-
-func (f *powerSetUpFixture) PreTest(ctx context.Context, s *testing.FixtTestState) {
-}
-
-func (f *powerSetUpFixture) PostTest(ctx context.Context, s *testing.FixtTestState) {
-}
-
-func (f *powerSetUpFixture) Reset(ctx context.Context) error {
-	return nil
-}
-
 type powerNoUIFixture struct {
 	powerTestOptions *PowerTestOptions
 	logRecorder      *power.LogRecorder

@@ -25,7 +25,7 @@ func disableBluezAdapter(ctx context.Context) (CleanupCallback, error) {
 		testing.ContextLog(ctx, "Failed to create bluetooth facade")
 		return func(ctx context.Context) error { return nil }, err
 	}
-	if state, err := b.IsPoweredOn(ctx); err == nil && state == false {
+	if state, err := b.IsPoweredOn(ctx); err == nil && !state {
 		testing.ContextLog(ctx, "Bluetooth adapter is powered off")
 		return func(ctx context.Context) error { return nil }, nil
 	}
@@ -40,7 +40,7 @@ func disableBluezAdapter(ctx context.Context) (CleanupCallback, error) {
 }
 
 func disableFlossAdapter(ctx context.Context) (CleanupCallback, error) {
-	if state, err := floss.GetFlossEnabled(ctx); err == nil && state == false {
+	if state, err := floss.GetFlossEnabled(ctx); err == nil && !state {
 		testing.ContextLog(ctx, "Bluetooth adapter is missing or disabled")
 		return func(ctx context.Context) error { return nil }, nil
 	}

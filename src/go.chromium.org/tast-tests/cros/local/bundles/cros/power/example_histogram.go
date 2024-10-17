@@ -146,7 +146,7 @@ func ExampleHistogram(ctx context.Context, s *testing.State) {
 		// To demonstrate that the "average" metric works when metric snapshot
 		// interval is smaller than metric generation interval, do the mouse
 		// click less frequently at a larger interval.
-		if time.Now().Sub(lastMouseClickTime) <= 2*interval {
+		if time.Since(lastMouseClickTime) <= 2*interval {
 			clickFunc = func(ctx context.Context) error { return nil }
 		} else {
 			clickFunc = clearAndClick

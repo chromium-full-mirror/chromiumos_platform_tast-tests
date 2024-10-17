@@ -587,13 +587,6 @@ func GetScreenSize(ctx context.Context) string {
 	return strings.Join([]string{strconv.Itoa(int(width)), strconv.Itoa(int(height))}, "x")
 }
 
-func min(a, b int) int {
-	if a < b {
-		return a
-	}
-	return b
-}
-
 // GetScreenRefreshRate returns the screen refresh rate in Hz.
 func GetScreenRefreshRate(ctx context.Context) int32 {
 	connectors, err := modetest.Connectors(ctx)

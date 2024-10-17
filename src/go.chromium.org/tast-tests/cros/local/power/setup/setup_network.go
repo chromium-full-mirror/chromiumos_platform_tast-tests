@@ -101,7 +101,7 @@ func DisableNetworkInterfaces(ctx context.Context, pattern *regexp.Regexp) (Clea
 // DisableWiFiAdaptors disables all WiFi adapters and returns a callback to
 // re-enable them.
 func DisableWiFiAdaptors(ctx context.Context) (CleanupCallback, error) {
-	var wifiInterfacePattern = regexp.MustCompile(".*wlan\\d+")
+	var wifiInterfacePattern = regexp.MustCompile(`.*wlan\d+`)
 	return DisableNetworkInterfaces(ctx, wifiInterfacePattern)
 }
 

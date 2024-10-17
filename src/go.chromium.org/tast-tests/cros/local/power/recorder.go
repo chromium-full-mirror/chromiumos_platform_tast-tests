@@ -195,10 +195,8 @@ func (r *Recorder) Finish(ctx context.Context, vs ...*perf.Values) error {
 		r.AddOptionalRecorderArg("pdash_note", strings.TrimSpace(pdashNoteVar.Value()))
 	}
 
-	if vs != nil {
-		for _, customValue := range vs {
-			r.AddOptionalRecorderArg(cp.OptionalRecorderArgCustomPerfKey, customValue)
-		}
+	for _, customValue := range vs {
+		r.AddOptionalRecorderArg(cp.OptionalRecorderArgCustomPerfKey, customValue)
 	}
 
 	if err := GeneratePowerLogAndSaveToCrosbolt(ctx, r.outDir, r.testName, r.perfValues, r.checkpoints, r.optionalArgs...); err != nil {
@@ -312,7 +310,6 @@ func (r *Recorder) StartDischargeWatchdog(ctx context.Context) {
 			// GoBigSleepLint: Sleep this thread that aims to do periodic check.
 			testing.Sleep(ctx, checkInterval)
 		}
-		return
 	}()
 }
 

@@ -300,7 +300,7 @@ func convertPowerDict(p *PowerDict) map[string]interface{} {
 // dictionary and start ts, and updates perf.Values.
 func convertPerfValuesToPowerDicts(ctx context.Context, values *perf.Values, checkpoints *perf.Checkpoints, metrics *pb.OneTimeMetrics) ([]map[string]interface{}, time.Time, error) {
 	measurement := values.GetValues()
-	if measurement == nil || len(measurement) == 0 {
+	if len(measurement) == 0 {
 		return nil, time.Time{}, errors.New("invalid power measurement")
 	}
 

@@ -76,6 +76,9 @@ func charge(ctx context.Context, displayPercentage float64) error {
 		return errors.Wrap(err, "failed to create a PowerManager object")
 	}
 	brightness, err := pm.GetScreenBrightnessPercent(ctx)
+	if err != nil {
+		return errors.Wrap(err, "failed to get screen brightness")
+	}
 	if err := pm.SetScreenBrightness(ctx, 10); err != nil {
 		return errors.Wrap(err, "failed to update screen brightness")
 	}
@@ -123,6 +126,9 @@ func drain(ctx context.Context, cr *chrome.Chrome, desiredPercentage float64) er
 		return errors.Wrap(err, "failed to create a PowerManager object")
 	}
 	brightness, err := pm.GetScreenBrightnessPercent(ctx)
+	if err != nil {
+		return errors.Wrap(err, "failed to get screen brightness")
+	}
 	if err := pm.SetScreenBrightness(ctx, 100); err != nil {
 		return errors.Wrap(err, "failed to update screen brightness")
 	}

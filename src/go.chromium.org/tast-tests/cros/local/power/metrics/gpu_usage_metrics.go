@@ -237,7 +237,6 @@ func NewGPUUsageDataSource() *GPUUsageDataSource {
 
 // Close does nothing.
 func (ds *GPUUsageDataSource) Close() {
-	return
 }
 
 // Setup implements perf.TimelineDatasource.Setup.
@@ -367,7 +366,7 @@ func (ds *GPUUsageDataSource) Snapshot(ctx context.Context, values *perf.Values)
 	}
 
 	ds.lastTime = samplingTime
-	ds.snapshotTime = append(ds.snapshotTime, time.Now().Sub(startTime))
+	ds.snapshotTime = append(ds.snapshotTime, time.Since(startTime))
 	return nil
 }
 
@@ -597,7 +596,6 @@ type gpuInfo struct {
 	file         string    // The file path where the usage info is read from.
 	samplingTime time.Time // When the GPU usage info is read.
 	drmClient    string    // The id of the DRM client that is using the GPU.
-	procName     string    // The process name.
 
 	utilization gpuUtilization // GPU Utilization.
 	memory      gpuMemory      // Memory utilization.
@@ -701,13 +699,13 @@ func (ds *GPUUsageDataSource) gpuClientProcesses(ctx context.Context) (map[strin
 	}
 	// A map keyed by the process id with value to be the process name.
 	clients := make(map[string]string)
+	re := regexp.MustCompile(`\d+`)
 	for _, d := range driDebugDir {
 		// Each DRM has its own directory under the driDebugPath.
 		if !d.IsDir() {
 			continue
 		}
-		match, _ := regexp.MatchString(`\d+`, d.Name())
-		if !match {
+		if !re.MatchString(d.Name()) {
 			continue
 		}
 		// Read the "clients" file under each DRM's directory.
@@ -789,14 +787,15 @@ func (ds *GPUUsageDataSource) gpuClientProcesses(ctx context.Context) (map[strin
 // if it uses GPU.
 func analyzeProc(procs []fs.FileInfo, results chan *procInfo, errs chan error, wg *sync.WaitGroup) {
 	defer wg.Done()
+	pidRE := regexp.MustCompile(`\d+`)
+	contentRE := regexp.MustCompile(`^\d+\s+\((.*)\)`)
 	for _, proc := range procs {
 		if !proc.IsDir() {
 			continue
 		}
 		pid := proc.Name() // File name is the process id.
 		// Matches directories with numeric names.
-		match, _ := regexp.MatchString(`\d+`, pid)
-		if !match {
+		if !pidRE.MatchString(pid) {
 			continue
 		}
 		result := &procInfo{pid: pid, logs: make(logs)}
@@ -810,8 +809,7 @@ func analyzeProc(procs []fs.FileInfo, results chan *procInfo, errs chan error, w
 		// The stat file has content like:
 		// 25013 (chrome) S 24952 ...
 		// We'll get the process name in the parentheses.
-		reg := regexp.MustCompile(`^\d+\s+\((.*)\)`)
-		matches := reg.FindStringSubmatch(string(content))
+		matches := contentRE.FindStringSubmatch(string(content))
 		if matches == nil {
 			continue
 		}

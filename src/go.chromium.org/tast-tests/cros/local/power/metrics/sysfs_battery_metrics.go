@@ -158,7 +158,6 @@ func WaitForCharge(ctx context.Context, devPath string, charge float64, timeout 
 			chargeAtTimeout := now + remainingT*rate
 
 			// Don't fail if we're within 5% of succeeding.
-			const failEarlyChargeMargin = 0.05
 			if chargeAtTimeout < (charge-0.05)*full {
 				percentAtTimeout := 100.0 * chargeAtTimeout / full
 				return errors.Errorf("charging will only restore battery to %0.2f%% before timeout", percentAtTimeout)
@@ -516,10 +515,10 @@ func (b *SysfsBatteryMetrics) Stop(ctx context.Context, values *perf.Values) err
 		testing.ContextLog(ctx, "Failed to read system power: ", err)
 		return err
 	}
-	b.powerIntegral += time.Now().Sub(b.lastTime).Seconds() * power
+	b.powerIntegral += time.Since(b.lastTime).Seconds() * power
 
 	// Change energy(J) to energy(mWh).
 	values.Set(b.dischargeMetric, 1000*b.powerIntegral/3600)
-	values.Set(b.testDurationMetric, time.Now().Sub(b.startTime).Minutes())
+	values.Set(b.testDurationMetric, time.Since(b.startTime).Minutes())
 	return nil
 }

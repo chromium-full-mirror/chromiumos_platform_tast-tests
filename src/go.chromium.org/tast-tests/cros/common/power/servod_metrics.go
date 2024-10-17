@@ -103,7 +103,7 @@ func (m *ServodMetrics) Stop(_ context.Context, _ *perf.Values) error {
 
 func (m *ServodMetrics) trimRailName(name string) string {
 	if m.cpd {
-		name = name[len(CpdPrefix)+1 : len(name)]
+		name = name[len(CpdPrefix)+1 : ]
 	}
 	return name[:len(name)-len(servoAccumSuffix)]
 }

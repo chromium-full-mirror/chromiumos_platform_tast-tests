@@ -199,23 +199,6 @@ func levelToNonLinear(ctx context.Context, level uint) (float64, error) {
 	return float64(percent), nil
 }
 
-// linearToNonlinear converts the provided linear brightness percent to nonlinear.
-func linearToNonlinear(ctx context.Context, percent float64) (float64, error) {
-	percentArg := fmt.Sprintf("--linear_to_nonlinear=%f", percent)
-
-	output, err := testexec.CommandContext(ctx, "backlight_tool", percentArg).Output(testexec.DumpLogOnError)
-	if err != nil {
-		return 0, errors.Wrap(err, "unable to convert linear to nonlinear percentage")
-	}
-
-	nonlinear, err := strconv.ParseFloat(strings.TrimSpace(string(output)), 64)
-	if err != nil {
-		return 0, errors.Wrapf(err, "unable to parse current nonlinear percentage from %q", output)
-	}
-
-	return nonlinear, nil
-}
-
 // nonlinearToLinear converts the provided nonlinear brightness percent to linear.
 func nonlinearToLinear(ctx context.Context, percent float64) (float64, error) {
 	percentArg := fmt.Sprintf("--nonlinear_to_linear=%f", percent)

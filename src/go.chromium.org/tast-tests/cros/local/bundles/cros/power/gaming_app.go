@@ -21,7 +21,6 @@ import (
 
 type gamingAppParams struct {
 	game       func(ctx context.Context, kb *input.KeyboardEventWriter, tconn *chrome.TestConn, a *arc.ARC, d *androidui.Device, dataPath func(string) string) gameapp.GameApp
-	playTime   time.Duration
 	timeParams power.TimeParams
 }
 

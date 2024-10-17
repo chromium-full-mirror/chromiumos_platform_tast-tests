@@ -42,11 +42,11 @@ func computeCpuidleStateFiles(ctx context.Context) (map[string][]cpuidleTimeFile
 		return nil, 0, errors.Wrap(err, "failed to find cpus")
 	}
 
+	cpuInfoRE := regexp.MustCompile(`^cpu\d+$`)
+	cpuIdleRE := regexp.MustCompile(`^state\d+$`)
 	for _, cpuInfo := range cpuInfos {
 		// Match files with name cpu0, cpu1, ....
-		if match, err := regexp.MatchString(`^cpu\d+$`, cpuInfo.Name()); err != nil {
-			return nil, 0, errors.Wrap(err, "error trying to match cpu name")
-		} else if !match {
+		if !cpuInfoRE.MatchString(cpuInfo.Name()) {
 			continue
 		}
 		numCpus++
@@ -60,9 +60,7 @@ func computeCpuidleStateFiles(ctx context.Context) (map[string][]cpuidleTimeFile
 
 		for _, cpuidle := range cpuidles {
 			// Match files with name state0, state1, ....
-			if match, err := regexp.MatchString(`^state\d+$`, cpuidle.Name()); err != nil {
-				return nil, 0, errors.Wrap(err, "error trying to match idle state name")
-			} else if !match {
+			if !cpuIdleRE.MatchString(cpuidle.Name()) {
 				continue
 			}
 

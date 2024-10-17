@@ -27,8 +27,6 @@ func ChargeControlV2Support(ctx context.Context) bool {
 	return testexec.CommandContext(ctx, "ectool", "chargecontrol").Run() == nil
 }
 
-const chargeLimitEnabledPrefPath = "/var/lib/power_manager/charge_limit_enabled"
-
 func waitForChargeLimit(ctx context.Context) error {
 	var state string
 	if ChargeLimitEnabled(ctx) {

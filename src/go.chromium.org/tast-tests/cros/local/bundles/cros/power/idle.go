@@ -26,7 +26,6 @@ import (
 var idleTimeParams = power.TimeParams{Interval: 5 * time.Second, Total: 10 * time.Minute}
 var idleTracingTimeParams = power.TimeParams{Interval: 5 * time.Second, Total: 20 * time.Minute}
 var idleFastTimeParams = power.TimeParams{Interval: 10 * time.Second, Total: 1 * time.Minute}
-var idleLongTimeParams = power.TimeParams{Interval: 20 * time.Second, Total: 10 * time.Minute}
 
 var displayOffBTOff = power.IdleParams{
 	DisplayPower:   false,
