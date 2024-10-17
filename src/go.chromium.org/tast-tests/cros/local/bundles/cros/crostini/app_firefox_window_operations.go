@@ -75,6 +75,11 @@ func AppFirefoxWindowOperations(ctx context.Context, s *testing.State) {
 		s.Fatal("Failed to disable client-side decorations: ", err)
 	}
 
+	// Disable wayland, which is now default.
+	if err := crostiniapps.DisableFirefoxWayland(ctx, cont); err != nil {
+		s.Fatal("Failed to disable wayland: ", err)
+	}
+
 	if err := apps.TestWindowOperation(ctx, op, "Firefox ESR", "Mozilla Firefox", "Firefox", keyboard, tconn, d, false); err != nil {
 		s.Fatal("Window operation failed: ", err)
 	}

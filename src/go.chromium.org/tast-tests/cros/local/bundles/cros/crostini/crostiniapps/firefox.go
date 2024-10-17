@@ -136,6 +136,15 @@ func VerifyFirefoxLaunchAndClose(ctx context.Context, tconn *chrome.TestConn, ke
 	return nil
 }
 
+// DisableFirefoxWayland forces Firefox to use X11.
+func DisableFirefoxWayland(ctx context.Context, cont *vm.Container) error {
+	if err := cont.Command(ctx, "sudo", "sed", "-i", "-e", "s/Exec=/Exec=env MOZ_ENABLE_WAYLAND=0 /", "/usr/share/applications/firefox-esr.desktop").Run(testexec.DumpLogOnError); err != nil {
+		return errors.Wrap(err, "failed to adjust .desktop file for firefox-esr")
+	}
+
+	return nil
+}
+
 // DisableFirefoxCSD forces Firefox to use server-side decorations.
 func DisableFirefoxCSD(ctx context.Context, cont *vm.Container) error {
 	if err := cont.WriteFile(ctx, "titlebar.js", `pref("browser.tabs.inTitlebar", 0);`); err != nil {
