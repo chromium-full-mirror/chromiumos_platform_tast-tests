@@ -12,11 +12,12 @@ import (
 	"go.chromium.org/tast-tests/cros/common/policy/fakedms"
 	"go.chromium.org/tast-tests/cros/local/arc"
 	"go.chromium.org/tast-tests/cros/local/chrome"
+	"go.chromium.org/tast-tests/cros/local/policyutil"
 	"go.chromium.org/tast/core/errors"
 )
 
 // SetUpFakePolicyServer sets up a fake policy server for unicorn account.
-func SetUpFakePolicyServer(ctx context.Context, outDir, policyUser string, policies []policy.Policy) (fdms *fakedms.FakeDMS, retErr error) {
+func SetUpFakePolicyServer(ctx context.Context, outDir string) (fdms *fakedms.FakeDMS, retErr error) {
 	fdms, err := fakedms.New(ctx, outDir)
 	if err != nil {
 		return nil, errors.Wrap(err, "failed to create fakedms")
@@ -27,17 +28,25 @@ func SetUpFakePolicyServer(ctx context.Context, outDir, policyUser string, polic
 		}
 	}()
 
+	return fdms, nil
+}
+
+// SetupPolicies sets policies for the unicorn users' session.
+func SetupPolicies(ctx context.Context, fdms *fakedms.FakeDMS, cr *chrome.Chrome, policyUser string, policies []policy.Policy) error {
 	pb := policy.NewBlob()
 	pb.UseUniversalSigningKeys = true
 	pb.PolicyUser = policyUser
 	if err := pb.AddPolicies(policies); err != nil {
-		return nil, errors.Wrap(err, "failed to add policy to policy blob")
+		return errors.Wrap(err, "failed to add policy to policy blob")
 	}
 	if err := fdms.WritePolicyBlob(pb); err != nil {
-		return nil, errors.Wrap(err, "failed to write policy blob to fdms")
+		return errors.Wrap(err, "failed to write policy blob to fdms")
 	}
 
-	return fdms, nil
+	if err := policyutil.ServeBlobAndRefresh(ctx, fdms, cr, pb); err != nil {
+		return errors.Wrap(err, "failed to serve policies")
+	}
+	return nil
 }
 
 // StartChromeWithARC starts Chrome with child account and ARC enabled.

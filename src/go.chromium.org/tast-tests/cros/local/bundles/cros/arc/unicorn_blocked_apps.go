@@ -91,7 +91,7 @@ func UnicornBlockedApps(ctx context.Context, s *testing.State) {
 	ctx, cancel := ctxutil.Shorten(ctx, time.Minute)
 	defer cancel()
 
-	fdms, err := unicorn.SetUpFakePolicyServer(ctx, s.OutDir(), childUser, policies)
+	fdms, err := unicorn.SetUpFakePolicyServer(ctx, s.OutDir())
 	if err != nil {
 		s.Fatal("Failed to setup fake policy server: ", err)
 	}
@@ -109,9 +109,8 @@ func UnicornBlockedApps(ctx context.Context, s *testing.State) {
 		}
 		defer cr.Close(cleanupCtx)
 
-		tconn, err := cr.TestAPIConn(ctx)
-		if err != nil {
-			return rl.Retry("create test API Connection", err)
+		if err := unicorn.SetupPolicies(ctx, fdms, cr, childUser, policies); err != nil {
+			return rl.Exit("setup the policies", err)
 		}
 
 		a, err := arc.NewWithTimeout(ctx, s.OutDir(), bootTimeout, cr.NormalizedUser())
@@ -141,6 +140,11 @@ func UnicornBlockedApps(ctx context.Context, s *testing.State) {
 			return rl.Exit("initialize UI Automator", err)
 		}
 		defer d.Close(cleanupCtx)
+
+		tconn, err := cr.TestAPIConn(ctx)
+		if err != nil {
+			return rl.Retry("create test API Connection", err)
+		}
 
 		// Blocked app should either not install or immediately uninstall after installation.
 		if err := arcent.ValidateBlockedAppInstall(ctx, tconn, a, d, blockedPackage, 5*time.Minute); err != nil {

@@ -94,7 +94,7 @@ func UnicornDisabledApps(ctx context.Context, s *testing.State) {
 	ctx, cancel := ctxutil.Shorten(ctx, time.Minute)
 	defer cancel()
 
-	fdms, err := unicorn.SetUpFakePolicyServer(ctx, s.OutDir(), childUser, policies)
+	fdms, err := unicorn.SetUpFakePolicyServer(ctx, s.OutDir())
 	if err != nil {
 		s.Fatal("Failed to setup fake policy server: ", err)
 	}
@@ -111,6 +111,10 @@ func UnicornDisabledApps(ctx context.Context, s *testing.State) {
 			return rl.Retry("start Chrome", err)
 		}
 		defer cr.Close(cleanupCtx)
+
+		if err := unicorn.SetupPolicies(ctx, fdms, cr, childUser, policies); err != nil {
+			return rl.Exit("setup the policies", err)
+		}
 
 		a, err := arc.NewWithTimeout(ctx, s.OutDir(), bootTimeout, cr.NormalizedUser())
 		if err != nil {
