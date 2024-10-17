@@ -201,11 +201,11 @@ func startTestPWAServer(ctx context.Context, wm *webapk.Manager, filesystem http
 		result.files = make([]string, len(r.MultipartForm.File["received_file"]))
 		for i, f := range r.MultipartForm.File["received_file"] {
 			filecontents, err := f.Open()
-			defer filecontents.Close()
 			if err != nil {
 				shareChan <- shareResult{err: errors.Wrap(err, "failed to open file")}
 				return
 			}
+			defer filecontents.Close()
 			bytes, err := ioutil.ReadAll(filecontents)
 			if err != nil {
 				shareChan <- shareResult{err: errors.Wrap(err, "failed to read file")}

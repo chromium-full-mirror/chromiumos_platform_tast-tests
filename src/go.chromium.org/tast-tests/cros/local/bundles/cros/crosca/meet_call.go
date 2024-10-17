@@ -51,7 +51,6 @@ const (
 
 var (
 	meetRootWebArea   = nodewith.NameContaining("Meet").Role(role.RootWebArea)
-	histogramsWebArea = nodewith.Name("Histograms").Role(role.RootWebArea)
 
 	// meetCallHistograms records histograms of MeetCall performance comparisons.
 	meetCallHistograms = []string{
@@ -452,7 +451,7 @@ func MeetCall(ctx context.Context, s *testing.State) {
 		pinSelf = true
 	}
 
-	if pinSelf == true {
+	if pinSelf {
 		if err := pinToScreen(ui, kb)(ctx); err != nil {
 			s.Fatal("Failed to pin yourself to screen: ", err)
 		}
@@ -552,7 +551,6 @@ func MeetCall(ctx context.Context, s *testing.State) {
 					strCounter = "00" + strCounter
 				} else if counter <= 99 {
 					strCounter = "0" + strCounter
-				} else {
 				}
 				// Type counter value to chat window to show progress to user.
 				msgWithCounter := msg + "-" + strCounter + "-c-count"

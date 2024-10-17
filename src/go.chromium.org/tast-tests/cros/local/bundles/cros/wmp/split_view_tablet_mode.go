@@ -226,7 +226,7 @@ func SplitViewTabletMode(ctx context.Context, s *testing.State) {
 	defer ash.SetOverviewModeAndWait(cleanupCtx, tconn, false)
 
 	// 1. Test dragging a window to snap to primary-snapped position.
-	window1, err := ash.FindFirstWindowInOverview(ctx, tconn)
+	window1, _ := ash.FindFirstWindowInOverview(ctx, tconn)
 	workArea := info.WorkArea
 	primarySnappedPoint := coords.NewPoint(workArea.Left, workArea.CenterPoint().Y)
 	if portrait {

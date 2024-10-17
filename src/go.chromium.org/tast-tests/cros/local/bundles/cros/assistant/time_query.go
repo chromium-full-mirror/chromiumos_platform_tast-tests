@@ -162,9 +162,9 @@ func parseTimeNearNow(ctx context.Context, html string, now time.Time) ([]time.T
 func interpretTimeNearNow(now time.Time, hrs, min int) time.Time {
 	t := time.Date(now.Year(), now.Month(), now.Day(), hrs, min, 0, 0, now.Location())
 	if diff := t.Sub(now); diff > 12*time.Hour {
-		t.AddDate(0, 0, -1)
+		t = t.AddDate(0, 0, -1)
 	} else if diff < -12*time.Hour {
-		t.AddDate(0, 0, 1)
+		t = t.AddDate(0, 0, 1)
 	}
 	return t
 }

@@ -21,11 +21,6 @@ import (
 	"go.chromium.org/tast/core/testing"
 )
 
-type dtTestParams struct {
-	testApps       []apps.App
-	closePlayStore bool
-}
-
 func init() {
 	testing.AddTest(&testing.Test{
 		Func:         DesksTemplatesLaunch,

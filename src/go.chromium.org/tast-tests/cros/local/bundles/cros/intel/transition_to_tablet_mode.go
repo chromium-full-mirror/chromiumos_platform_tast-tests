@@ -7,10 +7,8 @@ package intel
 import (
 	"context"
 	"fmt"
-	"io/ioutil"
 	"os/exec"
 	"regexp"
-	"strings"
 	"time"
 
 	pmpb "go.chromium.org/chromiumos/system_api/power_manager_proto"
@@ -190,25 +188,6 @@ func TransitionToTabletMode(ctx context.Context, s *testing.State) {
 			s.Fatalf("Failed to rotate to %v angle: %v", angle, err)
 		}
 	}
-}
-
-// inputDeviceDetectionCheck verifies input device eventPath has expectedDetectionStatus.
-func inputDeviceDetectionCheck(ctx context.Context, eventPath, expectedDetectionStatus string) error {
-	wakeSourceFile := fmt.Sprintf("/sys/class/%s/device/device/power/wakeup", eventPath)
-	if err := testing.Poll(ctx, func(ctx context.Context) error {
-		sourceOut, err := ioutil.ReadFile(wakeSourceFile)
-		if err != nil {
-			return errors.Wrapf(err, "failed to read %q file", wakeSourceFile)
-		}
-		got := strings.TrimSpace(string(sourceOut))
-		if !strings.Contains(got, expectedDetectionStatus) {
-			return errors.Errorf("unexpected detection status: got %q; want %q", got, expectedDetectionStatus)
-		}
-		return nil
-	}, &testing.PollOptions{Timeout: 15 * time.Second}); err != nil {
-		return errors.Wrap(err, "failed to verify input device detection check")
-	}
-	return nil
 }
 
 // volumeButtonEvents verifies whether volume button events are performed or not.

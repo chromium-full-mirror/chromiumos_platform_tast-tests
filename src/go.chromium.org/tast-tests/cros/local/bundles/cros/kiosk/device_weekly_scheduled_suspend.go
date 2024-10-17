@@ -105,6 +105,9 @@ func DeviceWeeklyScheduledSuspend(ctx context.Context, s *testing.State) {
 
 	// Start a reader for Chrome logs (with device events).
 	reader, err := syslog.NewChromeReader(ctx, "/var/log/chrome/chrome")
+	if err != nil {
+		s.Fatal("Failed to start log reader: ", err)
+	}
 	defer reader.Close()
 
 	// Schedule sleep intervals shortly after Kiosk has launched.

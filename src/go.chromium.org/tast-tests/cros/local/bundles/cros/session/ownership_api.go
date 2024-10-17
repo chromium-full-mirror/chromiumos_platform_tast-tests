@@ -6,9 +6,7 @@ package session
 
 import (
 	"context"
-	"crypto"
 	"crypto/rsa"
-	"crypto/sha1"
 	"crypto/x509"
 	"io/ioutil"
 	"os"
@@ -133,14 +131,6 @@ func setupOwnerKey(der []byte) error {
 		return errors.Wrapf(err, "failed to write to %s", ownerKeyPath)
 	}
 	return nil
-}
-
-// sign signs the blob with the given key, and returns the signature.
-func sign(key *rsa.PrivateKey, blob []byte) ([]byte, error) {
-	h := sha1.New()
-	h.Write(blob)
-	digest := h.Sum(nil)
-	return rsa.SignPKCS1v15(nil, key, crypto.SHA1, digest)
 }
 
 func OwnershipAPI(ctx context.Context, s *testing.State) {

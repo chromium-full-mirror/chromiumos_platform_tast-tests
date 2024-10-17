@@ -65,13 +65,16 @@ func DeviceSimulateRightClick(ctx context.Context, s *testing.State) {
 	defer cancel()
 
 	tconn, err := cr.TestAPIConn(ctx)
-	s.Log("Creating a virtual trackpad")
-	tp, err := input.Trackpad(ctx)
-	defer tp.Close(cleanupCtx)
-
 	if err != nil {
 		s.Fatal("Failed to connect to Test API: ", err)
 	}
+	s.Log("Creating a virtual trackpad")
+	tp, err := input.Trackpad(ctx)
+	if err != nil {
+		s.Fatal("Failed to create virtual trackpad: ", err)
+	}
+	defer tp.Close(cleanupCtx)
+
 	defer faillog.DumpUITreeWithScreenshotOnError(cleanupCtx, s.OutDir(), s.HasError, cr,
 		"ui_dump")
 

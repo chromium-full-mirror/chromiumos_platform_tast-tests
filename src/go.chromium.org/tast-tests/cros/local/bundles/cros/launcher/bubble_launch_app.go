@@ -22,13 +22,6 @@ import (
 	"go.chromium.org/tast/core/testing"
 )
 
-type bubbleLaunchAppTestType string
-
-const (
-	enableLauncherAppSort  bubbleLaunchAppTestType = "EnableLauncherAppSort"  // Enable "LauncherAppSort" feature in the test
-	disableLauncherAppSort bubbleLaunchAppTestType = "DisableLauncherAppSort" // Disable "LauncherAppSort" feature in the test
-)
-
 func init() {
 	testing.AddTest(&testing.Test{
 		Func:         BubbleLaunchApp,

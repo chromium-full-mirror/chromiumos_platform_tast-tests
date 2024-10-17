@@ -7,7 +7,6 @@
 package ptsworld
 
 import (
-	"bytes"
 	"context"
 	"fmt"
 	"io"
@@ -196,22 +195,6 @@ func (c *CrosFixture) Prepare(ctx context.Context, s *testing.FixtState) error {
 	}
 
 	return nil
-}
-
-// getPtsSystemProperties gets the system properties by PTS command
-// `/phoronix-test-suite/phoronix-test-suite system-properties`.
-func getPtsSystemProperties(ctx context.Context) (string, string, error) {
-	ptsWorldCmd := testexec.CommandContext(ctx, "env", "-i", "/usr/bin/chroot", CrosChroot, "/usr/bin/bash", "-c", "/phoronix-test-suite/phoronix-test-suite system-properties")
-	stdoutBuf := new(bytes.Buffer)
-	stderrBuf := new(bytes.Buffer)
-	ptsWorldCmd.Stdout = stdoutBuf
-	ptsWorldCmd.Stderr = stderrBuf
-
-	if err := ptsWorldCmd.Run(); err != nil {
-		return stdoutBuf.String(), stderrBuf.String(), errors.Wrap(err, "failed to start PTSWorld shell command to get system-properties")
-	}
-
-	return stdoutBuf.String(), stderrBuf.String(), nil
 }
 
 // allocateInstalledImageFile allocates a image file for installing benchmark tools

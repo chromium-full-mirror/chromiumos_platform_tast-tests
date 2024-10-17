@@ -67,7 +67,7 @@ func FeatureAwareDevice(ctx context.Context, s *testing.State) {
 
 	defer cr.Close(clearUpCtx)
 
-	tconn, err := cr.TestAPIConn(ctx)
+	tconn, _ := cr.TestAPIConn(ctx)
 	defer faillog.DumpUITreeOnError(clearUpCtx, s.OutDir(), s.HasError, tconn)
 
 	const appPath = "/run/imageloader/demo-mode-app"
@@ -76,7 +76,7 @@ func FeatureAwareDevice(ctx context.Context, s *testing.State) {
 		s.Fatal("Failed to find the mounted app component directory: ", err)
 	}
 
-	versionRegexp, _ := regexp.Compile("1\\.[0-9]+\\.2\\.[0-9]+")
+	versionRegexp, _ := regexp.Compile(`1\.[0-9]+\.2\.[0-9]+`)
 	hasMatch := false
 	for _, e := range entries {
 		if versionRegexp.MatchString(e.Name()) {

@@ -77,7 +77,7 @@ func extensionID(ctx context.Context, br *browser.Browser) (string, error) {
 		return "", errors.Wrap(err, "failed to connect to browser test API connection")
 	}
 
-	installApps, err := ash.ExtensionApps(ctx, bTconn)
+	installApps, _ := ash.ExtensionApps(ctx, bTconn)
 	for _, app := range installApps {
 		if app.Name == common.VcAppName {
 			return app.ID, nil

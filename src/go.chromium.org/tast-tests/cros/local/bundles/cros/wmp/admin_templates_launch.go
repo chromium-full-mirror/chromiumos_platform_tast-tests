@@ -74,6 +74,9 @@ func AdminTemplatesLaunch(ctx context.Context, s *testing.State) {
 	defer cleanup(cleanupCtx)
 	// Open admin desk template for view.
 	templateJSON, err := getJSONFileFromFilePath(s.DataPath("admin_desk_template.json"))
+	if err != nil {
+		s.Fatal("Failed to open admin desk template: ", err)
+	}
 
 	eds, err := externaldata.NewServer(ctx)
 	if err != nil {

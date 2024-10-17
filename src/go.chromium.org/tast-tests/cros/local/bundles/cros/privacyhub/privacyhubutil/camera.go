@@ -108,7 +108,7 @@ func LaunchCameraAndTakeScreenshot(ctx context.Context, cr *chrome.Chrome,
 	}
 
 	// Get rect in px of camera app.
-	rectPX, err := getRectPXForUIElement(ctx, cr, tconn, cameraFrame)
+	rectPX, _ := getRectPXForUIElement(ctx, cr, tconn, cameraFrame)
 
 	// We need to have a subRectPX, as the rectPX holds
 	// the entire viewing area of the camera app
@@ -120,7 +120,7 @@ func LaunchCameraAndTakeScreenshot(ctx context.Context, cr *chrome.Chrome,
 	// Polling at most 10 sec till camera will start showing a stream
 	// (as the camera takes 1-2 sec to start capturing
 	// the real picture, or will keep showing black if camera is off).
-	if err = testing.Poll(ctx, func(ctx context.Context) error {
+	if err := testing.Poll(ctx, func(ctx context.Context) error {
 
 		img, err := screenshot.GrabAndCropScreenshot(ctx, cr, subRectPX)
 		if err != nil {
@@ -151,7 +151,7 @@ func LaunchCameraAndTakeScreenshot(ctx context.Context, cr *chrome.Chrome,
 
 	// Grab and return the camera stream.
 	var sshot image.Image
-	sshot, err = screenshot.GrabAndCropScreenshot(ctx, cr, subRectPX)
+	sshot, err := screenshot.GrabAndCropScreenshot(ctx, cr, subRectPX)
 	if err != nil {
 		return nil, errors.Wrap(err, "failed to create camera feed image")
 	}

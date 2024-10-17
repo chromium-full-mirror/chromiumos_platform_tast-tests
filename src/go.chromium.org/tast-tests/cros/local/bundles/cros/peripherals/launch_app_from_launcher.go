@@ -22,7 +22,6 @@ import (
 type testParams struct {
 	app         apps.App
 	query       string
-	featureFlag string
 }
 
 func init() {

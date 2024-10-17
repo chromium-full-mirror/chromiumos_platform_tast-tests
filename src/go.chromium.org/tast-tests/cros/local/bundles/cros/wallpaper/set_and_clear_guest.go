@@ -143,10 +143,10 @@ func logOutWithKeyboardShortcut() uiauto.Action {
 		}
 
 		kb, err := input.Keyboard(ctx)
-		defer kb.Close(ctx)
 		if err != nil {
 			return errors.Wrap(err, "failed to get keyboard")
 		}
+		defer kb.Close(ctx)
 		if err := kb.Accel(ctx, "Ctrl+Shift+Q"); err != nil {
 			return errors.Wrap(err, "failed to send first Ctrl+Shift+Q")
 		}

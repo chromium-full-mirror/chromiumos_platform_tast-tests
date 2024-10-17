@@ -115,8 +115,6 @@ func (u *UpdateService) PeriodicCheckForUpdate(ctx context.Context, e *empty.Emp
 		} else if checkTime > 0 && status.LastCheckedTime > checkTime {
 			return testing.PollBreak(errors.New("another update check happened while waiting for update to complete"))
 		} else {
-			checkTime = status.LastCheckedTime
-
 			switch status.CurrentOperation {
 			case string(ue.UpdateStatusIdle):
 				return testing.PollBreak(errors.New("update status changed to IDLE unexpectedly"))

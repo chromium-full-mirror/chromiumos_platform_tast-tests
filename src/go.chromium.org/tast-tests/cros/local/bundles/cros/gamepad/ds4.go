@@ -87,7 +87,7 @@ func handleGetReportDS4(ctx context.Context, d *uhid.Device, buf []byte) error {
 	processRNum := func(rnum uhid.RNumType) ([]byte, error) {
 		const (
 			macAddressRequest       uhid.RNumType = 0x81
-			motionSensorCalibration               = 0x02
+			motionSensorCalibration uhid.RNumType = 0x02
 		)
 		switch rnum {
 		case macAddressRequest:

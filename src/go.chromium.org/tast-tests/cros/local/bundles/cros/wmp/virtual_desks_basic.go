@@ -212,10 +212,10 @@ func VirtualDesksBasic(ctx context.Context, s *testing.State) {
 	}
 	// Checks that Files App is in the new desk. The new desk is inactive.
 	if err := ash.ForEachWindow(ctx, tconn, func(w *ash.Window) error {
-		if (w.Title == "Files - My files") && w.OnActiveDesk == true {
+		if (w.Title == "Files - My files") && w.OnActiveDesk {
 			return errors.New("Files app should be in the inactive desk")
 		}
-		if (w.Title == "Chrome - New Tab") && w.OnActiveDesk == false {
+		if (w.Title == "Chrome - New Tab") && !w.OnActiveDesk {
 			return errors.New("Chrome app should be in the active desk")
 		}
 		return nil

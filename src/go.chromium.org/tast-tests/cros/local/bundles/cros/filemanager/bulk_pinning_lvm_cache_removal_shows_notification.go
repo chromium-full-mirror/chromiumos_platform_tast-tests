@@ -97,7 +97,7 @@ func BulkPinningLvmCacheRemovalShowsNotification(ctx context.Context, s *testing
 	}
 
 	// Create chrome again and reuse the existing session.
-	cr, tconn, _, err = createChromeAndDriveFs(ctx, creds, true)
+	_, tconn, _, err = createChromeAndDriveFs(ctx, creds, true)
 	if err != nil {
 		s.Fatal("Failed to create Chrome instance: ", err)
 	}

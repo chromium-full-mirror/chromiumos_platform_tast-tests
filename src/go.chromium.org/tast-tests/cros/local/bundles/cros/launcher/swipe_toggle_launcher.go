@@ -112,7 +112,7 @@ func SwipeToggleLauncher(ctx context.Context, s *testing.State) {
 		s.Fatal("Failed to wait for bubble launcher: ", err)
 	}
 
-	startStatusArea, err := ui.Location(ctx, nodewith.HasClass("UnifiedSystemTray").First())
+	startStatusArea, _ := ui.Location(ctx, nodewith.HasClass("UnifiedSystemTray").First())
 	startStatusAreaInset := startStatusArea.WithInset(1, 1)
 
 	// Swipe on the status area should not show the bubble launcher.

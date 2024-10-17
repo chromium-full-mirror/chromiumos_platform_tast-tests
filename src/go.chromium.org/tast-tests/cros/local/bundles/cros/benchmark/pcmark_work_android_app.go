@@ -234,16 +234,6 @@ func findUIObj(ctx context.Context, obj *ui.Object) bool {
 	return obj.WaitForExists(ctx, 10*time.Second) == nil
 }
 
-func clickUIObj(ctx context.Context, obj *ui.Object) error {
-	if found := findUIObj(ctx, obj); !found {
-		return errors.New("failed to find ui object")
-	}
-	if err := obj.Click(ctx); err != nil {
-		return errors.Wrap(err, "failed to click ui object")
-	}
-	return nil
-}
-
 func clickUIObjIfExists(ctx context.Context, obj *ui.Object) error {
 	if found := findUIObj(ctx, obj); !found {
 		return nil

@@ -106,7 +106,7 @@ func PrintToPDF(ctx context.Context, s *testing.State) {
 	}()
 
 	ui := uiauto.New(tconn)
-	kb, err := input.Keyboard(ctx)
+	kb, _ := input.Keyboard(ctx)
 	if err := uiauto.Combine("Save file as PDF and verify presence in holding space",
 		// Open print preview using the Ctrl+P shortcut.
 		kb.AccelAction("Ctrl+P"),

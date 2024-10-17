@@ -43,7 +43,6 @@ type Service struct {
 	scriptOut     string
 	stopped       bool
 	deleteOnClose bool
-	background    bool
 }
 
 const (

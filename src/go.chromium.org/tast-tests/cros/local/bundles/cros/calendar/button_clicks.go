@@ -83,7 +83,7 @@ func ButtonClicks(ctx context.Context, s *testing.State) {
 	beforeOpeningCalendarYearLabel := nodewith.Name(strconv.Itoa(beforeOpeningCalendarYear)).ClassName("Label").Onscreen()
 	if found, err := ui.IsNodeFound(ctx, beforeOpeningCalendarYearLabel); err != nil {
 		s.Fatal("Failed to check beforeOpeningCalendarYearLabel after clicking on the date tray: ", err)
-	} else if found != true {
+	} else if !found {
 		yearInt = time.Now().Year()
 	}
 
@@ -125,7 +125,7 @@ func ButtonClicks(ctx context.Context, s *testing.State) {
 	todayYearLabel = nodewith.Name(year).ClassName("Label").Onscreen()
 	if found, err := ui.IsNodeFound(ctx, todayYearLabel); err != nil {
 		s.Fatal("Failed to check today year label with beforeClickingTodayYear after clicking on the today button: ", err)
-	} else if found != true {
+	} else if !found {
 		yearInt = time.Now().Year()
 		year = strconv.Itoa(yearInt)
 		todayYearLabel = nodewith.Name(year).ClassName("Label").Onscreen()

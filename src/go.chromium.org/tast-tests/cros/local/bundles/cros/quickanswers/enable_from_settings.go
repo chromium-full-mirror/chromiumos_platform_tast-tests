@@ -79,13 +79,13 @@ func EnableFromSettings(ctx context.Context, s *testing.State) {
 	}
 
 	conn, err := cr.NewConn(ctx, quickanswers.BuildDataURL(queryWord))
+	if err != nil {
+		s.Fatal("Failed to open a browser: ", err)
+	}
 	// defer is last-in-first-out. Execution order needs to be:
 	// ui tree dump -> close browser -> close conn.
 	defer conn.Close()
 	defer faillog.DumpUITreeWithScreenshotOnError(ctx, s.OutDir(), s.HasError, cr, "browser_ui")
-	if err != nil {
-		s.Fatal("Failed to open a browser: ", err)
-	}
 
 	query, err := quickanswers.SelectQueryWord(ctx, tconn, queryWord)
 	if err != nil {

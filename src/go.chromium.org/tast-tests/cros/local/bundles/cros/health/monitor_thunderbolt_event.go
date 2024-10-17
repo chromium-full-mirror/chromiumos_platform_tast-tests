@@ -64,12 +64,12 @@ func MonitorThunderboltEvent(ctx context.Context, s *testing.State) {
 			if err := testexec.CommandContext(ctx, "udevadm", "trigger", "-s", "thunderbolt", "-c", udevAction).Run(); err != nil {
 				return errors.Wrap(err, "failed to trigger thunderbolt add event")
 			}
-			stderr := string(stderrBuf.Bytes())
+			stderr := stderrBuf.String()
 			if stderr != "" {
 				return errors.New("failed to detect thunderbolt event, stderr")
 			}
 
-			stdout = string(stdoutBuf.Bytes())
+			stdout = stdoutBuf.String()
 			if !strings.Contains(stdout, udevAction) {
 				return errors.New("failed to get command output")
 			}

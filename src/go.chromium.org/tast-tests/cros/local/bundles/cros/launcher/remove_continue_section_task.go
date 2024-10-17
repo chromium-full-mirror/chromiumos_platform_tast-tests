@@ -124,7 +124,7 @@ func RemoveContinueSectionTask(ctx context.Context, s *testing.State) {
 	defer keyboard.Close(ctx)
 
 	// Files need to be opened for them to get picked up for the Continue Section.
-	chromeApp, err := apps.ChromeOrChromium(ctx, tconn)
+	chromeApp, _ := apps.ChromeOrChromium(ctx, tconn)
 	for i, filePath := range testDocFileNames {
 		if err := uiauto.Combine("Open file",
 			filesApp.OpenDownloads(),

@@ -245,11 +245,12 @@ func setupBrowser(ctx context.Context, s *testing.State, tconn *chrome.TestConn,
 		return nil, errors.New("Attempted to populate browser with fewer than one tab")
 	}
 	b := cr.Browser()
-	conn, err := b.NewConn(ctx, urls[0], browser.WithNewWindow())
-	window, err := ash.FindOnlyWindow(ctx, tconn, func(w *ash.Window) bool {
+	conn, _ := b.NewConn(ctx, urls[0], browser.WithNewWindow())
+	window, _ := ash.FindOnlyWindow(ctx, tconn, func(w *ash.Window) bool {
 		return w.WindowType == ash.WindowTypeBrowser && w.IsActive
 	})
 	for _, url := range urls[1:] {
+		var err error
 		if conn, err = b.NewConn(ctx, url); err != nil {
 			return nil, err
 		}

@@ -102,7 +102,7 @@ func OverviewDragWindowToNewDesk(ctx context.Context, s *testing.State) {
 	// goes back to zero state, even when dropping the window
 	// outside of the new desk button.
 
-	ws, err := ash.GetAllWindows(ctx, tconn)
+	ws, _ := ash.GetAllWindows(ctx, tconn)
 	if len(ws) != 1 {
 		s.Fatalf("Unexpected number of windows; got %d window(s), expected 1 window", len(ws))
 	}
@@ -208,7 +208,7 @@ func OverviewDragWindowToNewDesk(ctx context.Context, s *testing.State) {
 	}
 
 	// Checks that the browser window is in the new desk. The new desk is inactive.
-	ws, err = ash.GetAllWindows(ctx, tconn)
+	ws, _ = ash.GetAllWindows(ctx, tconn)
 	if len(ws) != 1 {
 		s.Fatalf("Unexpected number of windows; got %d window(s), expected 1 window", len(ws))
 	}

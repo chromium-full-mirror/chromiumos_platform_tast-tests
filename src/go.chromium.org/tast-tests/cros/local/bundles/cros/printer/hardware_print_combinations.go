@@ -342,11 +342,11 @@ type checkboxSetting struct {
 func setDependencies(ctx context.Context, tconn *chrome.TestConn, dependencies map[string]interface{}) error {
 	for name, value := range dependencies {
 		var err error
-		switch value.(type) {
+		switch value := value.(type) {
 		case bool:
-			err = printpreview.SetCheckboxState(ctx, tconn, name, value.(bool))
+			err = printpreview.SetCheckboxState(ctx, tconn, name, value)
 		case string:
-			err = printpreview.SetDropdown(ctx, tconn, name, value.(string))
+			err = printpreview.SetDropdown(ctx, tconn, name, value)
 		default:
 			err = errors.Errorf("unknown dependency type %T", value)
 		}

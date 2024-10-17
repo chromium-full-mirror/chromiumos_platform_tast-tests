@@ -227,15 +227,6 @@ func createFiles(ctx context.Context, driveFsClient *drivefs.DriveFs, testName, 
 	return testFiles, nil
 }
 
-// removeFiles removes all files created by this test.
-func removeFiles(ctx context.Context, apiClient *drivefs.APIClient, fileIDs []string) {
-	for _, fileID := range fileIDs {
-		if err := apiClient.RemoveFileByID(ctx, fileID); err != nil {
-			testing.ContextLog(ctx, "Failed to remove file by ID: ", err)
-		}
-	}
-}
-
 // makeOffline does the following things:
 // 1. enable bulk pinning from settings page.
 // 2. check every file available offline and pinned.

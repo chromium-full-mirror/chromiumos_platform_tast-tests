@@ -31,8 +31,6 @@ func init() {
 }
 
 func SuspendFailure(ctx context.Context, s *testing.State) {
-	const suspendFailureName = "suspend-failure"
-
 	cleanupCtx := ctx
 	ctx, cancel := ctxutil.Shorten(ctx, 5*time.Second)
 	defer cancel()

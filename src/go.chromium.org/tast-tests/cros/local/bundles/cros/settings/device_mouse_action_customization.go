@@ -134,7 +134,7 @@ func DeviceMouseActionCustomization(ctx context.Context, s *testing.State) {
 	mouse.Close(ctx)
 
 	// Relaunching settings app.
-	settings, err = ossettings.LaunchAtPage(ctx, tconn, ossettings.Device)
+	_, err = ossettings.LaunchAtPage(ctx, tconn, ossettings.Device)
 	if err != nil {
 		s.Fatal("Failed to open setting page at the end of test: ", err)
 	}

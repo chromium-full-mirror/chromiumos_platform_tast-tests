@@ -78,7 +78,7 @@ func Sender(ctx context.Context, s *testing.State) {
 	// Check that the scheduled upload time is reasonable.
 	if len(got) == 1 {
 		r := got[0]
-		d := r.Schedule.Sub(time.Now())
+		d := time.Until(r.Schedule)
 		const limit = time.Hour
 		if d >= limit {
 			s.Errorf("Scheduled time was too late: got %v, want <%v", d, limit)

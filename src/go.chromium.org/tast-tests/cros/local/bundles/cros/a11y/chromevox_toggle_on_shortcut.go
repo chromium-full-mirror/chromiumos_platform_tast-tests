@@ -34,7 +34,7 @@ func init() {
 
 func ChromevoxToggleOnShortcut(ctx context.Context, s *testing.State) {
 	cr := s.PreValue().(*chrome.Chrome)
-	tconn, err := cr.TestAPIConn(ctx)
+	tconn, _ := cr.TestAPIConn(ctx)
 
 	// Mute the device to avoid noisiness.
 	if err := crastestclient.Mute(ctx); err != nil {

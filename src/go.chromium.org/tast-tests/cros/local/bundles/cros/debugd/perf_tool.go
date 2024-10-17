@@ -290,7 +290,7 @@ func testStopEarly(ctx context.Context, s *testing.State, d *debugd.Debugd) {
 			s.Fatal("Failed to read perf output: ", err)
 		}
 
-		rt := time.Now().Sub(start)
+		rt := time.Since(start)
 		if rt >= time.Duration(durationSec)*time.Second {
 			s.Errorf("Failed to stop perf after %d seconds", stop)
 		}
@@ -394,7 +394,7 @@ func testRestoreCPUIdle(ctx context.Context, s *testing.State, d *debugd.Debugd)
 			if len(new) == 0 {
 				return errors.New("debugd process has not respawned yet")
 			}
-			if bytes.Compare(new, old) == 0 {
+			if bytes.Equal(new, old) {
 				return errors.New("debugd process has not been killed")
 			}
 			return nil

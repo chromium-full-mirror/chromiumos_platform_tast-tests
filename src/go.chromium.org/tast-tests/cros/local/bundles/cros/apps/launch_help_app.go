@@ -229,8 +229,3 @@ func assertHelpAppLaunched(ctx context.Context, s *testing.State, tconn *chrome.
 	}
 	return nil
 }
-
-// shouldLaunchHelp returns a result to launch help app or not.
-func shouldLaunchHelp(isTabletMode, isOOBE bool) bool {
-	return !isOOBE || !isTabletMode
-}

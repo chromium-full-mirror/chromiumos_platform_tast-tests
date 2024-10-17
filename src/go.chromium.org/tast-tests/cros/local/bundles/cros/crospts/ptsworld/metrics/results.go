@@ -392,7 +392,7 @@ func (r *ResultsParser) ConvertMetrics(suiteName, outDir string) error {
 		}
 	}
 	r.pv.Save(outDir)
-	if found != true {
+	if !found {
 		return errors.Errorf("no matched test suite (%s) results be found", suiteName)
 	}
 	return nil
@@ -405,7 +405,7 @@ func (r *ResultsParser) SaveArtifacts(outDir string) error {
 		return errors.New("failed to get latest result directory")
 	}
 	// Walk the latest result directory and copy all files recursively to outDir
-	err = filepath.Walk(latestResultDir, func(path string, info os.FileInfo, err error) error {
+	_ = filepath.Walk(latestResultDir, func(path string, info os.FileInfo, err error) error {
 		if err != nil {
 			return err
 		}

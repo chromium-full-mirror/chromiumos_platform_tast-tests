@@ -23,7 +23,6 @@ import (
 type scannerInfo struct {
 	name            string
 	options         []usbprinter.Option
-	platenImage     string
 	shouldEnumerate bool
 }
 

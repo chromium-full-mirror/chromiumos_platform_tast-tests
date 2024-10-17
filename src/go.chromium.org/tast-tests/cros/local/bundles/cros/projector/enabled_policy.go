@@ -99,7 +99,7 @@ func EnabledPolicy(ctx context.Context, s *testing.State) {
 			}
 			defer cr.Close(cleanupCtx)
 			defer policyutil.ResetChrome(cleanupCtx, fdms, cr)
-			tconn, err := cr.TestAPIConn(ctx)
+			tconn, _ := cr.TestAPIConn(ctx)
 			defer faillog.DumpUITreeOnError(cleanupCtx, s.OutDir(), s.HasError, tconn)
 
 			if err := policyutil.Refresh(ctx, tconn); err != nil {

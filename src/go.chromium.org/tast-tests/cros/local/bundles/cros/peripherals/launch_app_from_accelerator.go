@@ -21,7 +21,6 @@ import (
 type accelTestParams struct {
 	app         apps.App
 	keystroke   string
-	featureFlag string
 }
 
 func init() {

@@ -136,7 +136,7 @@ func DeviceMouseKeyboardEventCustomization(ctx context.Context, s *testing.State
 	mouse.Close(cleanupCtx)
 
 	// Relaunching settings app
-	settings, err = ossettings.LaunchAtPage(ctx, tconn, ossettings.Device)
+	_, err = ossettings.LaunchAtPage(ctx, tconn, ossettings.Device)
 	if err != nil {
 		s.Fatal("Failed to open setting page again: ", err)
 	}

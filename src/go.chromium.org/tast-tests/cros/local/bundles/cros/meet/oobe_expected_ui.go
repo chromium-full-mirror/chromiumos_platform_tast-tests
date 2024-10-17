@@ -32,20 +32,6 @@ func init() {
 }
 
 func OOBEExpectedUI(ctx context.Context, s *testing.State) {
-
-	tags := []string{
-		"login_display_host*=4",
-		"oobe_ui=4",
-	}
-
-	opts := append([]chrome.Option{
-		chrome.ExtraArgs("--enable-logging", "--vmodule="+strings.Join(tags, ","))},
-		chrome.NoLogin())
-
-	opts = append(opts, chrome.DontSkipOOBEAfterLogin(),
-		chrome.RemoveNotification(false),
-		chrome.DontWaitForCryptohome())
-
 	cr, err := chrome.New(
 		ctx,
 		chrome.NoLogin())

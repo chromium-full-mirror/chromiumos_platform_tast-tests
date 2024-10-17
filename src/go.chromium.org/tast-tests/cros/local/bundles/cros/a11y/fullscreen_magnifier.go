@@ -42,7 +42,7 @@ func FullscreenMagnifier(ctx context.Context, s *testing.State) {
 
 	cr := s.FixtValue().(chrome.HasChrome).Chrome()
 
-	tconn, err := cr.TestAPIConn(ctx)
+	tconn, _ := cr.TestAPIConn(ctx)
 	defer a11y.ClearFeature(cleanupCtx, tconn, a11y.ScreenMagnifier)
 
 	// Make sure the feature starts disabled.

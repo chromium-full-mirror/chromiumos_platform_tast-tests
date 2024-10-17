@@ -127,7 +127,7 @@ func ScreenshotOnedrive(ctx context.Context, s *testing.State) {
 	}
 
 	// Verify that the screenshot is saved to OneDrive.
-	filename, err := files.WaitForFileByPattern(ctx, regexp.MustCompile("^Screenshot.*\\.png$"))
+	filename, err := files.WaitForFileByPattern(ctx, regexp.MustCompile(`^Screenshot.*\.png$`))
 	if err != nil {
 		s.Fatal("Screenshot not found on OneDrive: ", err)
 	}

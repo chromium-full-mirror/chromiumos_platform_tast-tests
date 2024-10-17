@@ -31,7 +31,6 @@ func init() {
 }
 
 const secPerHour = 3600
-const minPerHour = 60
 const secPerMin = 60
 
 func OobeTimezone(ctx context.Context, s *testing.State) {

@@ -141,6 +141,6 @@ func GenerateMeetCode(ctx context.Context, s *testing.State) {
 	s.Log("MeetingCode: ", meetingCode, " Number of bots: ", botsInCall)
 
 	// Shorten context to allow for cleanup. Reserve one minute in case of power test.
-	ctx, cancel = ctxutil.Shorten(ctx, time.Minute)
+	_, cancel = ctxutil.Shorten(ctx, time.Minute)
 	defer cancel()
 }

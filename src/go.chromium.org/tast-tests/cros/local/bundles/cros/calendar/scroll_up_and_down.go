@@ -97,7 +97,7 @@ func ScrollUpAndDown(ctx context.Context, s *testing.State) {
 	beforeOpeningCalendarYearLabel := nodewith.Name(strconv.Itoa(beforeOpeningCalendarYear)).ClassName("Label").Onscreen()
 	if found, err := ui.IsNodeFound(ctx, beforeOpeningCalendarYearLabel); err != nil {
 		s.Fatal("Failed to check beforeOpeningCalendarYearLabel after clicking on the date tray: ", err)
-	} else if found != true {
+	} else if !found {
 		yearInt = time.Now().Year()
 	}
 
@@ -134,7 +134,7 @@ func ScrollUpAndDown(ctx context.Context, s *testing.State) {
 		}
 		if found, err := ui.IsNodeFound(ctx, previousYearLabel); err != nil {
 			s.Fatal("Failed to check previous year while scrolling: ", err)
-		} else if found == true {
+		} else if found {
 			break
 		}
 	}
@@ -157,7 +157,7 @@ func ScrollUpAndDown(ctx context.Context, s *testing.State) {
 	todayYearLabel = nodewith.Name(year).ClassName("Label").Onscreen()
 	if found, err := ui.IsNodeFound(ctx, todayYearLabel); err != nil {
 		s.Fatal("Failed to check today year label with beforeClickingTodayYear after clicking on the today button: ", err)
-	} else if found != true {
+	} else if !found {
 		yearInt = time.Now().Year()
 		year = strconv.Itoa(yearInt)
 		todayYearLabel = nodewith.Name(year).ClassName("Label").Onscreen()
@@ -175,7 +175,7 @@ func ScrollUpAndDown(ctx context.Context, s *testing.State) {
 		}
 		if found, err := ui.IsNodeFound(ctx, nextYearLabel); err != nil {
 			s.Fatal("Failed to check next year while scrolling: ", err)
-		} else if found == true {
+		} else if found {
 			break
 		}
 	}

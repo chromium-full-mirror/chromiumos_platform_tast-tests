@@ -141,7 +141,7 @@ func DataLeakPreventionRulesListPrivacyScreen(ctx context.Context, s *testing.St
 		s.Fatal("Failed to sleep: ", err)
 	}
 
-	value, err = privacyScreenValue(ctx)
+	value, _ = privacyScreenValue(ctx)
 	// Privacy screen should be disabled.
 	if value {
 		s.Errorf("Privacy screen prop value: got %v; want false", value)

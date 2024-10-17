@@ -61,7 +61,6 @@ type WebauthnService struct {
 	fakeDMSDir string
 
 	cfg      webauthnConfig
-	password string
 }
 
 func (c *WebauthnService) New(ctx context.Context, req *hwsec.NewRequest) (*empty.Empty, error) {

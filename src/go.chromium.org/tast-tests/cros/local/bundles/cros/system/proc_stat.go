@@ -59,6 +59,7 @@ loop:
 		select {
 		case <-until:
 			break loop
+		//lint:ignore SA5004 this loop is spinning on purpose
 		default:
 		}
 	}

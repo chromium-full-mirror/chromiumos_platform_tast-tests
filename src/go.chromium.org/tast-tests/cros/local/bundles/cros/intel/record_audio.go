@@ -99,7 +99,7 @@ func RecordAudio(ctx context.Context, s *testing.State) {
 			fmt.Sprintf("-Dhw:%s,%s", cardNo, deviceNo),
 			"-d", "30", // duration
 			"-f", "S32_LE", // format
-			"-c", fmt.Sprintf("%s", number),
+			"-c", number,
 			"-r", "48000", // sample rate
 			recWavFile, // output file
 		}

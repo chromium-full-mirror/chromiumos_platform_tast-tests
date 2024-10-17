@@ -43,11 +43,6 @@ func init() {
 }
 
 func SelectKeyboardBacklight(ctx context.Context, s *testing.State) {
-	const (
-		backlightColor1 = "Blue"
-		backlightColor2 = "Rainbow"
-		backlightColor3 = "Wallpaper color"
-	)
 	cr := s.FixtValue().(chrome.HasChrome).Chrome()
 
 	cleanupCtx := ctx

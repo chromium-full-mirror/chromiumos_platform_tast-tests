@@ -122,7 +122,7 @@ func (c *KioskService) StartKiosk(ctx context.Context, req *empty.Empty) (_ *emp
 		return nil, errors.Wrap(err, "failed to ping FakeDMS")
 	}
 	emptyPb := policy.NewBlob()
-	emptyJSON, err := json.Marshal(emptyPb)
+	emptyJSON, _ := json.Marshal(emptyPb)
 	if err := fdms.WritePolicyBlobRaw(emptyJSON); err != nil {
 		return nil, errors.Wrap(err, "failed to write policy blob")
 	}
@@ -131,7 +131,7 @@ func (c *KioskService) StartKiosk(ctx context.Context, req *empty.Empty) (_ *emp
 	defer cancel()
 
 	// Enroll the device.
-	cr, err := chrome.New(
+	_, err = chrome.New(
 		ctx,
 		chrome.FakeEnterpriseEnroll(chrome.Creds{User: "tast-user@managedchrome.com", Pass: "test0000"}),
 		chrome.NoLogin(),

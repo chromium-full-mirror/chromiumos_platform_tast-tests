@@ -73,11 +73,6 @@ func AppPermissionOsSettings(ctx context.Context, s *testing.State) {
 		title2 = "new title!"
 		text   = "hi from Tast"
 		msgID  = "12345"
-
-		// Notification ID on Android is composed of many components.
-		// This is the substring to match the notification generated
-		// earlier.
-		notificationID = "|" + pkg + "|" + msgID + "|"
 	)
 
 	// Install the "Arc Notification Test" app.

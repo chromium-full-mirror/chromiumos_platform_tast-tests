@@ -110,7 +110,7 @@ func Oobe(ctx context.Context, s *testing.State) {
 	beforeOpeningCalendarYearLabel := nodewith.Name(strconv.Itoa(beforeOpeningCalendarYear)).ClassName("Label").Onscreen()
 	if found, err := ui.IsNodeFound(ctx, beforeOpeningCalendarYearLabel); err != nil {
 		s.Fatal("Failed to check beforeOpeningCalendarYearLabel after clicking on the date tray: ", err)
-	} else if found != true {
+	} else if !found {
 		yearInt = time.Now().Year()
 	}
 
@@ -153,7 +153,7 @@ func Oobe(ctx context.Context, s *testing.State) {
 		}
 		if found, err := ui.IsNodeFound(ctx, eventCloseButtonContentView); err != nil {
 			s.Fatal("Failed to check event list view close button while finding the first Monday cell: ", err)
-		} else if found == true {
+		} else if found {
 			// If it shows the event list view, it's a bug.
 			s.Fatal("Should not open event list after clicking on a Monday date cell: ", err)
 			break

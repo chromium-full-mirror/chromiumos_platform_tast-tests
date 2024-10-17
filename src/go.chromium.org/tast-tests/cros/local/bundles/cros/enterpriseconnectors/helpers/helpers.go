@@ -7,7 +7,6 @@ package helpers
 
 import (
 	"context"
-	"fmt"
 	"net/http/httptest"
 	"os"
 	"path/filepath"
@@ -187,6 +186,9 @@ func checkFCMTokenRegistered(ctx context.Context, br *browser.Browser, tconnAsh 
 	defer dconnSafebrowsing.CloseTarget(cleanupCtx)
 
 	dconn, err := br.NewConn(ctx, server.URL+"/download.html")
+	if err != nil {
+		return false, errors.Wrap(err, "failed to connect to download page")
+	}
 	defer dconn.Close()
 	defer dconn.CloseTarget(cleanupCtx)
 
@@ -460,7 +462,7 @@ func GetCleanDconnSafebrowsing(ctx context.Context, cr *chrome.Chrome, br *brows
 			if !ok {
 				testing.ContextLog(ctx, "Couldn't get the output dir: ", err)
 			} else {
-				path := filepath.Join(outputDir, fmt.Sprintf("screenshot-clean-safe-browsing-page-verdict-exists.png"))
+				path := filepath.Join(outputDir, "screenshot-clean-safe-browsing-page-verdict-exists.png")
 				if err := screenshot.CaptureChrome(ctx, cr, path); err != nil {
 					testing.ContextLog(ctx, "Failed to capture screenshot: ", err)
 				}

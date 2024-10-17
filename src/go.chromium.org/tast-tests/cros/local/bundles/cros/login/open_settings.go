@@ -17,29 +17,6 @@ import (
 	"go.chromium.org/tast/core/testing"
 )
 
-// configuredAuthType represents the configured authentication factor(s) during OOBE.
-type configuredAuthType int
-
-const (
-	setupWithPassword configuredAuthType = iota
-	setupWithPasswordAndPin
-)
-
-// settingsAuthType represents the used authentication factor to enter the authentication requested page.
-type settingsAuthType int
-
-const (
-	authWithPassword settingsAuthType = iota
-	authWithPin
-	authCancel // this option is closing the authentication widget.
-)
-
-type openSettingsParam struct {
-	configuredAuth configuredAuthType
-	settingsAuth   settingsAuthType
-	useAuthPanel   bool
-}
-
 func init() {
 	testing.AddTest(&testing.Test{
 		Func:         OpenSettings,

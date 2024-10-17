@@ -140,7 +140,7 @@ func OpenPasswordManager(ctx context.Context, s *testing.State) {
 		s.Fatal("Failed to close the password manager tab: ", err)
 	}
 
-	tabs, err := browser.CurrentTabs(ctx, tconn)
+	tabs, _ := browser.CurrentTabs(ctx, tconn)
 	s.Log("ISCSI currently opened tabs: ", len(tabs))
 
 	// Try to open the previously stored example account password manager subpage.

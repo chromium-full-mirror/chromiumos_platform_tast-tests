@@ -174,7 +174,7 @@ func OdfsStayInM365Pwa(ctx context.Context, s *testing.State) {
 			s.Log("Failed to list old files: ", err)
 		}
 
-		presentationRegex := regexp.MustCompile("^Presentation.*\\.pptx$")
+		presentationRegex := regexp.MustCompile(`^Presentation.*\.pptx$`)
 		for _, f := range dirEntries {
 			if !presentationRegex.MatchString(f.Name()) {
 				continue
@@ -210,7 +210,7 @@ func OdfsStayInM365Pwa(ctx context.Context, s *testing.State) {
 	}
 
 	// Verify that the document was opened within the M365 PWA and close the window.
-	presentationWindowRegex := regexp.MustCompile("^Presentation.*\\.pptx")
+	presentationWindowRegex := regexp.MustCompile(`^Presentation.*\.pptx`)
 	fileInfo, err := ui.Info(ctx, ms365.Microsoft365WindowFinderWithRegex(presentationWindowRegex))
 	if err != nil || fileInfo == nil {
 		s.Fatal("Failed to find the new presentation: ", err)

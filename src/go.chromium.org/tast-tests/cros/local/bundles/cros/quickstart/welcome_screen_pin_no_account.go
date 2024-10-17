@@ -46,6 +46,7 @@ func WelcomeScreenPINNoAccount(ctx context.Context, s *testing.State) {
 		s.Fatal("Fixture not associated with an android device")
 	}
 	// Remove Gaia accounts from the Android device
+	//lint:ignore SA5011 androidDevice is actually checked right above
 	if err := crossdevice.RemoveAccounts(ctx, androidDevice.Device); err != nil {
 		s.Fatal("Failed to remove accounts from Android device: ", err)
 	}

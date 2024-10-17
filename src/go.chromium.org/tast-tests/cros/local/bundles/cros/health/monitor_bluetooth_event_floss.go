@@ -57,7 +57,7 @@ func MonitorBluetoothEventFloss(ctx context.Context, s *testing.State) {
 	}
 
 	if err := testing.Poll(ctx, func(ctx context.Context) error {
-		stdout := string(stdoutBuf.Bytes())
+		stdout := stdoutBuf.String()
 		if !strings.Contains(stdout, "Subscribe to bluetooth events successfully") {
 			return errors.Errorf("failed to subscirbe Bluetooth event, stdout: %s", stdout)
 		}
@@ -81,11 +81,11 @@ func MonitorBluetoothEventFloss(ctx context.Context, s *testing.State) {
 		s.Fatal("Failed to wait healthd monitor command: ", err)
 	}
 
-	if stderr := string(stderrBuf.Bytes()); stderr != "" {
+	if stderr := stderrBuf.String(); stderr != "" {
 		s.Fatal("Failed to detect Bluetooth on event, stderr: ", stderr)
 	}
 
-	if stdout := string(stdoutBuf.Bytes()); !strings.Contains(stdout, "Bluetooth event received") {
+	if stdout := stdoutBuf.String(); !strings.Contains(stdout, "Bluetooth event received") {
 		s.Fatal("Failed to detect Bluetooth on event, event output: ", stdout)
 	}
 }

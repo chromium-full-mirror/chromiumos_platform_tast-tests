@@ -42,8 +42,6 @@ var (
 	perfOutputFile            = "/var/log/perf_output.txt"
 	videoSettingH264Dash60Fps = "H264 DASH 60 FPS"
 
-	video = nodewith.Role(role.Video)
-
 	// videoStreamingHistograms records histograms of Video Streaming performance comparisons.
 	videoStreamingHistograms = []string{
 		"Graphics.Smoothness.PercentDroppedFrames3.AllSequences",
@@ -195,7 +193,7 @@ func VideoStreaming(ctx context.Context, s *testing.State) {
 	}
 	defer vh.SetVolume(ctx, originalVolume)
 
-	isBtEnabled, err := bluetooth.IsEnabled(ctx)
+	isBtEnabled, _ := bluetooth.IsEnabled(ctx)
 	if isBtEnabled {
 		testing.ContextLog(ctx, "Start to disable bluetooth")
 		if err := bluetooth.Disable(ctx); err != nil {
@@ -221,7 +219,7 @@ func VideoStreaming(ctx context.Context, s *testing.State) {
 	pv := perf.NewValues()
 
 	startVideoStreaming := func(ctx context.Context) error {
-		playBackTimeInteger, err := readPlayBackTimeInteger(s)
+		playBackTimeInteger, _ := readPlayBackTimeInteger(s)
 		playbackTime = time.Duration(playBackTimeInteger) * time.Minute
 
 		rows, err := ui.NodesInfo(ctx, nodewith.Role(role.Row))
@@ -264,7 +262,7 @@ func VideoStreaming(ctx context.Context, s *testing.State) {
 		}
 
 		showCountingDown := isManualPowerMeasurement()
-		if showCountingDown == true {
+		if showCountingDown {
 			for i := 0; i < 3; i++ {
 				s.Log("Play the video for started for ", playbackTime)
 				// GoBigSleepLint: A brief delay to allow user to get ready to start power measuring
@@ -287,7 +285,7 @@ func VideoStreaming(ctx context.Context, s *testing.State) {
 			s.Fatal("Failed to run video streaming and mouse action: ", err)
 		}
 
-		if showCountingDown == true {
+		if showCountingDown {
 			for i := 0; i < 3; i++ {
 				s.Log("completed video playback")
 				// GoBigSleepLint: A brief delay to allow user to get ready to stop power measuring
@@ -341,25 +339,8 @@ func VideoStreaming(ctx context.Context, s *testing.State) {
 	}
 }
 
-func enterFullScreen(ui *uiauto.Context, kb *input.KeyboardEventWriter, tconn *chrome.TestConn) uiauto.Action {
-	return uiauto.NamedCombine("press the Tab key three times to go to full screen",
-		ui.LeftClick(video),
-		kb.AccelAction("Tab"),
-		kb.AccelAction("Tab"),
-		kb.AccelAction("Tab"),
-		kb.AccelAction("Tab"),
-		kb.AccelAction("Enter"),
-		func(ctx context.Context) error {
-			return ash.WaitForFullScreen(ctx, tconn)
-		},
-	)
-}
-
 func isManualPowerMeasurement() bool {
-	if strings.ToLower(manualPowerMeasurementVarString.Value()) != "true" {
-		return true
-	}
-	return false
+	return strings.ToLower(manualPowerMeasurementVarString.Value()) != "true"
 }
 
 func readPlayBackTimeInteger(s *testing.State) (int, error) {
@@ -442,7 +423,7 @@ func startVideoStreamingAndMouseAction(ctx context.Context, s *testing.State, ui
 			}
 		}
 
-		dt := time.Now().Sub(st).Seconds()
+		dt := time.Since(st).Seconds()
 		// Add a short and consistent delay to match corresponding operations in
 		// Windows testing.
 		if err := uiauto.Combine("press the Tab key to stop video playback",

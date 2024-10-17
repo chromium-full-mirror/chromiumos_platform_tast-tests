@@ -65,8 +65,6 @@ func init() {
 	})
 }
 
-var googleDocsBrowserTabFinder = nodewith.Role(role.Tab).NameContaining("Google Docs")
-
 func BulkPinningHostedAvailableOffline(ctx context.Context, s *testing.State) {
 	fixt := s.FixtValue().(*drivefs.FixtureData)
 	apiClient := fixt.APIClient

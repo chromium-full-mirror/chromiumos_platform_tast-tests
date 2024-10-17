@@ -97,7 +97,7 @@ func DrivefsBlobDownloadOffline(ctx context.Context, s *testing.State) {
 				s.Error("Expected to fail to checksum file")
 			}
 			s.Logf("Read finished after: %+v with: %+v",
-				time.Now().Sub(startTime), err)
+				time.Since(startTime), err)
 		case <-time.After(2 * time.Minute):
 			s.Error("Expected read to fail before timeout")
 		case <-ctx.Done():

@@ -121,46 +121,6 @@ func VideoQuality(ctx context.Context, s *testing.State) {
 	}
 }
 
-// displayOriginalFrame print a canvas to the provided connection given frame data
-func displayOriginalFrame(ctx context.Context, originalFrames []byte, height, width int, conn *chrome.Conn, s *testing.State) {
-	rgbArr := getColorData(originalFrames, height, width)
-	rgbStr := strings.Join(rgbArr, ", ")
-
-	exp := fmt.Sprintf(`
-		const arr = [%s];
-		const pixels = new Uint8ClampedArray(arr);
-		const printCanvas = document.createElement("canvas");
-		const printCtx = print_canvas.getContext('2d');
-		printCtx.canvas.width  = %d;
-		printCtx.canvas.height = %d;
-		var imageData = printCtx.createImageData(printCtx.canvas.width, printCtx.canvas.height);
-		for(var i = 0; i < imageData.data.length; i++) {
-			imageData.data[i] = pixels[i];
-		}
-		printCtx.putImageData(imageData, 0, 0);
-		document.body.appendChild(printCanvas);`,
-		rgbStr, width, height)
-
-	if err := conn.Eval(ctx, exp, nil); err != nil {
-		s.Fatal("Failed to read cfm frames: ", err)
-	}
-}
-
-// getColorData returns a RGBA color data array given a frame from a y4m file
-func getColorData(y4m []byte, height, width int) []string {
-	numPixels := height * width
-	colorData := make([]string, numPixels*4)
-
-	for i := 0; i < numPixels; i++ {
-		r, g, b := convertPixelColor(y4m, height, width, i)
-		colorData[i*4] = fmt.Sprint(r)
-		colorData[i*4+1] = fmt.Sprint(g)
-		colorData[i*4+2] = fmt.Sprint(b)
-		colorData[i*4+3] = "255"
-	}
-	return colorData
-}
-
 // getOutputFrames returns frames from the video stream in the cfm
 func getOutputFrames(ctx context.Context, s *testing.State, conn *chrome.Conn, height, width int) []byte {
 	exp := fmt.Sprintf(`

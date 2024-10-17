@@ -79,7 +79,7 @@ func testTraceStart(ctx context.Context, s *testing.State) error {
 	}
 	if err := verifyAnyMethodCall(calledMethods[:2],
 		expectedMethodCall{
-			drmTraceSetSize, []argumentVerifierFunc{makeCheckEqArgument(debugd.DRMTraceSizeDebug)},
+			drmTraceSetSize, []argumentVerifierFunc{makeCheckEqArgument(uint32(debugd.DRMTraceSizeDebug))},
 		}); err != nil {
 		return err
 	}

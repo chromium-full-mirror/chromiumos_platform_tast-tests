@@ -93,7 +93,7 @@ func MonitorEventStartup(ctx context.Context, s *testing.State) {
 	}
 
 	elapsed := time.Since(start)
-	stderr := string(stderrBuf.Bytes())
+	stderr := stderrBuf.String()
 	// It's possible that cros_healthd can't find the evdev target. In this case, "can't find target" will be reported.
 	// This test focuses on catching the seccomp policy error or other crash, so "can't find target" is fine.
 	if !strings.Contains(stderr, "can't find target") && elapsed < testParam.duration {

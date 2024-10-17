@@ -170,7 +170,7 @@ func NightLightSchedule(ctx context.Context, s *testing.State) {
 // extractTimeFromString extracts the time from the given string and returns the time data in 24 hours format.
 func extractTimeFromString(ctx context.Context, stringWithTime string) (timeData, error) {
 	// Get time string with format HH:MM A/PM from string.
-	reg := regexp.MustCompile("\\d+:\\d\\d.[A|P]M")
+	reg := regexp.MustCompile(`\d+:\d\d.[A|P]M`)
 	timeString := reg.FindString(stringWithTime)
 
 	data := timeData{hour: 0, minute: 0}

@@ -25,9 +25,7 @@ import (
 type searchAutocompleteTestCase struct {
 	TabletMode             bool
 	searchKeyword          string
-	category               string
 	result                 string
-	expectedSearchBoxText  string
 	expectedGhostGhostText string
 }
 

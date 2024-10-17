@@ -88,7 +88,7 @@ func ShowEvents(ctx context.Context, s *testing.State) {
 	beforeOpeningCalendarYearLabel := nodewith.Name(strconv.Itoa(beforeOpeningCalendarYear)).HasClass("Label").Onscreen()
 	if found, err := ui.IsNodeFound(ctx, beforeOpeningCalendarYearLabel); err != nil {
 		s.Fatal("Failed to check beforeOpeningCalendarYearLabel after clicking on the date tray: ", err)
-	} else if found != true {
+	} else if !found {
 		yearInt = time.Now().Year()
 	}
 
@@ -133,7 +133,7 @@ func ShowEvents(ctx context.Context, s *testing.State) {
 		}
 		if found, err := ui.IsNodeFound(ctx, eventCloseButtonView); err != nil {
 			s.Fatal("Failed to check event list view close button while finding the first Monday cell: ", err)
-		} else if found == true {
+		} else if found {
 			break
 		}
 	}
@@ -174,8 +174,8 @@ func ShowEvents(ctx context.Context, s *testing.State) {
 	// TODO(b/234673735): Should click on the finder directly after this bug is fixed.
 	// Currently the vertical location of the event close button fetched from |ui.Location| is not correct.
 	// Uses the CenterY() for the view containing the close button as the vertical location for the close button.
-	eventCloseButtonBounds, err := ui.Location(ctx, eventCloseButtonView)
-	eventCloseButtonViewContainerBounds, err := ui.Location(ctx, eventCloseButtonViewContainer)
+	eventCloseButtonBounds, _ := ui.Location(ctx, eventCloseButtonView)
+	eventCloseButtonViewContainerBounds, _ := ui.Location(ctx, eventCloseButtonViewContainer)
 	eventCloseButtonPt := coords.NewPoint(eventCloseButtonBounds.CenterX(), eventCloseButtonViewContainerBounds.CenterY())
 	if err := mouse.Click(tconn, eventCloseButtonPt, mouse.LeftButton)(ctx); err != nil {
 		s.Fatal("Failed to click the close button in calendar event list view after opening Monday's event list: ", err)
@@ -196,7 +196,7 @@ func ShowEvents(ctx context.Context, s *testing.State) {
 		}
 		if found, err := ui.IsNodeFound(ctx, eventCloseButtonView); err != nil {
 			s.Fatal("Failed to check event list view close button while finding the first Tuesday cell: ", err)
-		} else if found == true {
+		} else if found {
 			break
 		}
 	}

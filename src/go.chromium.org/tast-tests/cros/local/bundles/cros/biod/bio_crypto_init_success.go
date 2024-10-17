@@ -51,7 +51,7 @@ func BioCryptoInitSuccess(ctx context.Context, s *testing.State) {
 	}
 	rx := regexp.MustCompile(`WARNING.*bio_crypto_init`)
 	for _, l := range upstartlogs {
-		if rx.MatchString(l) != false {
+		if rx.MatchString(l) {
 			s.Fatal("bio_crypto_init string found in upstart.log: ", l)
 		}
 	}

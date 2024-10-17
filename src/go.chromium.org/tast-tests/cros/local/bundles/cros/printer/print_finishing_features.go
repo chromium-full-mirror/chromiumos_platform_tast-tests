@@ -194,7 +194,7 @@ func PrintFinishingFeatures(ctx context.Context, s *testing.State) {
 	}
 
 	cmd := testexec.CommandContext(ctx, "ipptool", "-tv", printer.IppURI(), s.DataPath("get-jobs-finishings-info.test"))
-	stdout, _, err := cmd.SeparatedOutput()
+	stdout, _, _ := cmd.SeparatedOutput()
 	// ippeveprinter cleans up print jobs after 60 seconds, so we should be able to see information about the job sent in this test
 	if !strings.Contains(string(stdout), "finishings (1setOf enum) = fold-double-gate,punch-dual-left,staple-top-right") {
 		s.Fatal("Job description message doesn't contain info about finishing options: ", string(stdout))

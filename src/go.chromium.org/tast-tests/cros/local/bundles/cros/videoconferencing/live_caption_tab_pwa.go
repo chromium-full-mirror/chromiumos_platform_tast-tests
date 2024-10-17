@@ -17,7 +17,6 @@ import (
 	"go.chromium.org/tast-tests/cros/local/chrome/uiauto"
 	"go.chromium.org/tast-tests/cros/local/chrome/uiauto/faillog"
 	"go.chromium.org/tast-tests/cros/local/chrome/uiauto/nodewith"
-	"go.chromium.org/tast-tests/cros/local/chrome/uiauto/role"
 	"go.chromium.org/tast-tests/cros/local/chrome/uiauto/vctray"
 	"go.chromium.org/tast-tests/cros/local/videoconferencing/fixture"
 
@@ -26,7 +25,6 @@ import (
 
 var (
 	liveCaptionBubble  = nodewith.ClassName("CaptionBubbleFrameView")
-	liveCaptionContent = nodewith.Name("Hello").Role(role.StaticText)
 )
 
 func init() {
@@ -94,6 +92,7 @@ func LiveCaptionTabPwa(cleanupCtx context.Context, s *testing.State) {
 
 	ui := uiauto.New(tconn)
 
+	//lint:ignore SA4006 this call doubles as a variable declaration for playAudioAction
 	playAudioAction := ui.DoDefault(nil)
 
 	vcTesterFullURL := srvURL + data.VcAppHTML

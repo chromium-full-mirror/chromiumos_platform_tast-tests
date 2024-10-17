@@ -348,9 +348,7 @@ func terminateAndVerify(ctx context.Context, test endProcessTest, res *endProces
 	case *nonPluginTest:
 		processesToBeVerified = append(processesToBeVerified, p)
 	case *groupedTabsTest:
-		for _, process := range test.getProcesses() {
-			processesToBeVerified = append(processesToBeVerified, process)
-		}
+		processesToBeVerified = append(processesToBeVerified, test.getProcesses()...)
 	default:
 		return errors.New("unexpected test type")
 	}

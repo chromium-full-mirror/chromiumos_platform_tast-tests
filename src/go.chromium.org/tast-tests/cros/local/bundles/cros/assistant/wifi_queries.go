@@ -124,7 +124,7 @@ func expectWifiEnabled(ctx context.Context, expectEnabled bool) error {
 	defer watcher.Close(ctx)
 
 	for {
-		prop, err := m.GetProperties(ctx)
+		prop, _ := m.GetProperties(ctx)
 		technologies, err := prop.GetStrings(shillconst.ManagerPropertyEnabledTechnologies)
 		if err != nil {
 			return errors.Wrap(err, "failed to get enabled technologies")

@@ -138,7 +138,7 @@ func PrintExtension(ctx context.Context, s *testing.State) {
 	for _, printer := range printers {
 		if printer.Description == printerDesc &&
 			printer.ID == printerID &&
-			printer.IsDefault == false &&
+			!printer.IsDefault &&
 			printer.Name == printerName &&
 			printer.Source == "USER" &&
 			printer.URI == "socket://"+printerURI {

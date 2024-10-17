@@ -45,18 +45,6 @@ func test2(name, ppdFile, expectedFile string, options ...string) base {
 	return base{PrintFile: "2page.pdf", Name: name, PPDFile: ppdFile, ExpectedFile: expectedFile, Options: options}
 }
 
-// iTest2 adds informational parameterized tests (one proxy, one regular)
-// that use "2page.pdf" for printing.
-func iTest2(name, ppdFile, expectedFile string, options ...string) base {
-	return base{ExtraAttr: []string{"informational"}, PrintFile: "2page.pdf", Name: name, PPDFile: ppdFile, ExpectedFile: expectedFile, Options: options}
-}
-
-// testCustomInput adds non-informational parameterized tests (one proxy, one
-// regular) that use "testFile" for printing.
-func testCustomInput(name, ppdFile, testFile, expectedFile string, options ...string) base {
-	return base{PrintFile: testFile, Name: name, PPDFile: ppdFile, ExpectedFile: expectedFile, Options: options}
-}
-
 // iTestCustomInput adds informational parameterized tests (one proxy, one
 // regular) that use "testFile" for printing.
 func iTestCustomInput(name, ppdFile, testFile, expectedFile string, options ...string) base {

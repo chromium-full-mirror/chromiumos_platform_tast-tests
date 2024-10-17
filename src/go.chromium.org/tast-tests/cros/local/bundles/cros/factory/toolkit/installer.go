@@ -5,10 +5,8 @@
 package toolkit
 
 import (
-	"archive/zip"
 	"context"
 	"encoding/json"
-	"io"
 	"io/ioutil"
 	"os"
 	"path/filepath"
@@ -75,25 +73,6 @@ func (i *Installer) installFactoryToolKitFromToolkitInstaller(ctx context.Contex
 	return version, err
 }
 
-// installFactoryToolKitFromFactoryImage retrieves installer from the zip image,
-// then executes the installation.
-func (i *Installer) installFactoryToolKitFromFactoryImage(ctx context.Context) (version string, err error) {
-	// Create an temp directory.
-	tempDir, err := ioutil.TempDir("", "")
-	if err != nil {
-		return "", errors.Wrap(err, "failed to create temp dir")
-	}
-	defer os.RemoveAll(tempDir)
-
-	const installerPath = "toolkit/install_factory_toolkit.run"
-	extractedInstallerPath := filepath.Join(tempDir, filepath.Base(installerPath))
-	if err := unzipFile(extractedInstallerPath, i.ImagePath, installerPath); err != nil {
-		return "", errors.Wrap(err, "failed to unzip toolkit installer")
-	}
-
-	return i.installFactoryToolKitFromToolkitInstaller(ctx, extractedInstallerPath)
-}
-
 // configureToolkitWithLabEnvironment sets up configurations for factory toolkit
 // so that it can run with tast and does not break other tests due to side
 // effects of the toolkit itself.
@@ -134,32 +113,4 @@ func (i *Installer) configureToolkitWithLabEnvironment(ctx context.Context) erro
 func UninstallFactoryToolKit(ctx context.Context) error {
 	uninstallCmd := testexec.CommandContext(ctx, "factory_uninstall", "--yes")
 	return uninstallCmd.Run(testexec.DumpLogOnError)
-}
-
-func unzipFile(dstPath, zipFilePath, srcPathInZip string) error {
-	archive, err := zip.OpenReader(zipFilePath)
-	if err != nil {
-		return err
-	}
-	defer archive.Close()
-
-	targetFile, err := archive.Open(srcPathInZip)
-	if err != nil {
-		return err
-	}
-	defer targetFile.Close()
-
-	targetFileInfo, err := targetFile.Stat()
-	if err != nil {
-		return err
-	}
-
-	dstFile, err := os.OpenFile(dstPath, os.O_WRONLY|os.O_CREATE, targetFileInfo.Mode())
-	if err != nil {
-		return err
-	}
-	defer dstFile.Close()
-
-	_, err = io.Copy(dstFile, targetFile)
-	return err
 }

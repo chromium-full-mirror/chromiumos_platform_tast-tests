@@ -103,7 +103,7 @@ func InstallDLC(ctx context.Context, s *testing.State) {
 		LocalOnly:      true,
 		PreferredOnly:  false,
 	}
-	_, err = l.StartScannerDiscovery(ctx, startDiscoveryRequest)
+	_, _ = l.StartScannerDiscovery(ctx, startDiscoveryRequest)
 
 	s.Log("Waiting for Chrome notification of installed scanner DLCs")
 	if err = <-notificationChannel; err != nil {

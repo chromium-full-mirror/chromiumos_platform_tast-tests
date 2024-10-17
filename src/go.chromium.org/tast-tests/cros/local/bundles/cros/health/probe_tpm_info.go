@@ -136,7 +136,7 @@ func verifyTPMVersion(ctx context.Context, tpmManager *hwsec.TPMManagerClient, v
 			version.GscDevice = "GSC_DEVICE_NOT_GSC"
 		}
 	}
-	if verifyGscDevice(tpmManagerVersionInfo.GscDevice, version.GscDevice) != true {
+	if !verifyGscDevice(tpmManagerVersionInfo.GscDevice, version.GscDevice) {
 		return errors.Errorf("GscDevice not matched, %v from healthd, %v from TPMManager", version.GscDevice, tpmManagerVersionInfo.GscDevice)
 	}
 	if tpmManagerVersionInfo.Family != uint(version.Family) {

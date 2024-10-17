@@ -37,20 +37,12 @@ var (
 	AfterEffectsImageName = "after_effects.png"
 )
 
-// UIObject represents the fake HTML page UI.
-type UIObject struct {
-	tconn *chrome.TestConn
-	ui    *uiauto.Context
-}
-
 const (
 	// PageTitle is the page title.
 	PageTitle = "Simple Meeting"
 	// PageURL is the page base URL.
 	PageURL = "/effects_video_script.html?resolution="
 )
-
-var rootWebArea = nodewith.Role(role.RootWebArea).Name(PageTitle)
 
 // VideoNode is the node showing camera.
 var VideoNode = nodewith.Role(role.Video)

@@ -136,8 +136,6 @@ func init() {
 var (
 	menuOption         = holdingspace.FindContextMenuItem()
 	cancelOption       = menuOption.Name("Cancel")
-	copyOption         = menuOption.Name("Copy")
-	pasteOption        = menuOption.Name("Paste")
 	pauseOption        = menuOption.Name("Pause")
 	pinOption          = menuOption.Name("Pin")
 	removeOption       = menuOption.Name("Remove")

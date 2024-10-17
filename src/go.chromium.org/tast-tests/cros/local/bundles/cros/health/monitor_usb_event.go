@@ -47,12 +47,12 @@ func MonitorUsbEvent(ctx context.Context, s *testing.State) {
 
 	monitorCmd.Wait()
 
-	stderr := string(stderrBuf.Bytes())
+	stderr := stderrBuf.String()
 	if stderr != "" {
 		s.Fatal("Failed to detect USB event, stderr: ", stderr)
 	}
 
-	stdout := string(stdoutBuf.Bytes())
+	stdout := stdoutBuf.String()
 	deviceAddedPattern := regexp.MustCompile(`"event": "Add"`)
 	if !deviceAddedPattern.MatchString(stdout) {
 		s.Fatal("Failed to detect USB event, event output: ", stdout)

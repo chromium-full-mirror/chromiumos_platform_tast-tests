@@ -74,7 +74,7 @@ func ChromeosReadAloudPower(ctx context.Context, s *testing.State) {
 
 	defer faillog.DumpUITreeWithScreenshotOnError(cleanupCtx, s.OutDir(), s.HasError, cr, "ui_tree")
 
-	tconn, err := cr.TestAPIConn(ctx)
+	tconn, _ := cr.TestAPIConn(ctx)
 	ui := uiauto.New(tconn)
 
 	// Get keyboard.

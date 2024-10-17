@@ -6,7 +6,6 @@ package a11y
 
 import (
 	"context"
-	"fmt"
 	"time"
 
 	"go.chromium.org/tast-tests/cros/local/apps"
@@ -95,7 +94,7 @@ func Smoke(ctx context.Context, s *testing.State) {
 	s.Log("Asserting that mouse click works on the close button in browser")
 	closeButton := nodewith.HasClass("FrameCaptionButton").Name("Close").Role(role.Button).Ancestor(topLevelWindow)
 	if err := uiauto.Combine(
-		fmt.Sprint("Click the close button in the browser"),
+		"Click the close button in the browser",
 		ui.WaitUntilExists(closeButton),
 		ui.LeftClick(closeButton),
 	)(ctx); err != nil {

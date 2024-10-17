@@ -372,7 +372,7 @@ func parseTrigger(devName string) (*Trigger, error) {
 
 func (s *Sensor) readRaw(attr string) (float64, error) {
 	possiblePostfix := []string{"raw", "input"}
-	rName, _ := readingNames[s.Name]
+	rName := readingNames[s.Name]
 	for _, postfix := range possiblePostfix {
 		var file string
 		if attr != "" {

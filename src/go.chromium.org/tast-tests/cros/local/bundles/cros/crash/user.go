@@ -679,10 +679,10 @@ func testMaxEnqueuedCrash(ctx context.Context, s *testing.State) {
 		username              = "root"
 	)
 	reader, err := syslog.NewReader(ctx)
-	defer reader.Close()
 	if err != nil {
 		s.Fatal("Failed to create watcher: ", err)
 	}
+	defer reader.Close()
 	crashDir, err := localcrash.GetCrashDir(ctx, username)
 	if err != nil {
 		s.Fatal("Failed before queueing: ", err)

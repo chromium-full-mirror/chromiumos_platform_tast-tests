@@ -19,8 +19,6 @@ import (
 	"go.chromium.org/tast/core/testing"
 )
 
-const answerCardFinderTimeout = 3 * time.Second
-
 // searchTestCase describes modes in which the launcher UI can be shown, and by which launcher test should generally be parameterized.
 // It additionally provides a search query and the expected result.
 // Use a struct because it makes the individual test cases more readable.

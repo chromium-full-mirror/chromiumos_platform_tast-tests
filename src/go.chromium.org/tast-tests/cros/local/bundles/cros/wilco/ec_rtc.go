@@ -114,7 +114,7 @@ func ECRTC(ctx context.Context, s *testing.State) {
 	s.Log("RTC end time:", rtcEndTime)
 
 	rtcElapsed := rtcEndTime.Sub(rtcStartTime)
-	realElapsed := time.Now().Sub(realStartTime)
+	realElapsed := time.Since(realStartTime)
 
 	if rtcElapsed < realElapsed-tolerance || rtcElapsed > realElapsed+tolerance {
 		s.Fatalf("RTC did not update properly: got %v; want in [%v, %v]", rtcElapsed, realElapsed-tolerance, realElapsed+tolerance)

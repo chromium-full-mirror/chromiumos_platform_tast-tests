@@ -303,7 +303,7 @@ func VerifyVideoContents(ctx context.Context, s *testing.State) {
 			if err := cras.SetActiveNodeByType(ctx, expectedAudioNode); err != nil {
 				s.Fatalf("Failed to select active device %s: %v", expectedAudioNode, err)
 			}
-			_, deviceType, err = cras.SelectedOutputDevice(ctx)
+			_, _, err = cras.SelectedOutputDevice(ctx)
 			if err != nil {
 				s.Fatal("Failed to get the selected audio device: ", err)
 			}

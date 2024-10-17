@@ -118,34 +118,3 @@ func handleGetReportDS3(ctx context.Context, d *uhid.Device, buf []byte) error {
 	}
 	return dualshock.HandleGetReport(ctx, processRNum, d, buf)
 }
-
-// processRNumDS3 returns the data that will be written in the get report
-// reply depending on the rnum that was sent.
-func processRNumDS3(rnum uhid.RNumType) ([]byte, error) {
-	const (
-		// macAddressRequest info can be found in the Kernel's sony_check_add method:
-		// https://source.chromium.org/chromiumos/chromiumos/codesearch/+/HEAD:src/third_party/kernel/v4.4/drivers/hid/hid-sony.c;l=2360;drc=06f3916ea36fe570d428a8373ccd49142518545c
-		macAddressRequest uhid.RNumType = 0xf2
-		// operationalModeRequest info can be found in the Kernel's sixaxis_set_operational_usb method:
-		// https://source.chromium.org/chromiumos/chromiumos/codesearch/+/HEAD:src/third_party/kernel/v4.4/drivers/hid/hid-sony.c;l=1413;drc=06f3916ea36fe570d428a8373ccd49142518545c
-		// This request is made to switch the controller to operational
-		// mode. Only in this mode does the controller report events.
-		operationalModeRequest = 0xf5
-	)
-	switch rnum {
-	case macAddressRequest:
-		// This is a hardcoded array based on the uniq constant defined
-		// in dualshock.Uniq.
-		// Undocumented report in the HID report descriptor:
-		// the MAC address of the device is stored in the bytes 4-9
-		// rest has been dumped on a Sixaxis controller
-		return []byte{0xf2, 0xff, 0xff, 0x00, 0x01, 0x23, 0x45, 0x67, 0x89, 0xAB, 0x00, 0x03, 0x40, 0x80, 0x18, 0x01, 0x8a}, nil
-	case operationalModeRequest:
-		// getReportRequests by the kernel are done after an operational
-		// mode request. We end the communication here.
-		jstest.KernelCommunicationDone = true
-		return []byte{0x01, 0x00, 0x18, 0x5e, 0x0f, 0x71, 0xa4, 0xbb}, nil
-	default:
-		return []byte{}, errors.Errorf("unsupported request type: 0x%02x", rnum)
-	}
-}

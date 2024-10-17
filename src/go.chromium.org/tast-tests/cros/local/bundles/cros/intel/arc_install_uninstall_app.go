@@ -85,7 +85,7 @@ func ARCInstallUninstallApp(ctx context.Context, s *testing.State) {
 	if err != nil {
 		s.Fatal("Failed to check Google Play Store State: ", err)
 	}
-	if playStoreState["enabled"] == true {
+	if playStoreState["enabled"] {
 		s.Fatal("Failed as Play Store is still enabled")
 	}
 

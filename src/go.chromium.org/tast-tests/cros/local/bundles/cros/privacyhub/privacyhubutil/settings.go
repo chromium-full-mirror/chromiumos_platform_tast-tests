@@ -15,16 +15,8 @@ import (
 	"go.chromium.org/tast-tests/cros/local/chrome/uiauto/nodewith"
 	"go.chromium.org/tast-tests/cros/local/chrome/uiauto/ossettings"
 	"go.chromium.org/tast-tests/cros/local/chrome/uiauto/role"
-	"go.chromium.org/tast-tests/cros/local/chrome/uiauto/state"
 	"go.chromium.org/tast/core/errors"
 )
-
-func hasState(toggleInfo *uiauto.NodeInfo, state state.State) bool {
-	if val, present := toggleInfo.State[state]; present {
-		return val
-	}
-	return false
-}
 
 func privacyAndSecurityLink() *nodewith.Finder {
 	return nodewith.NameStartingWith("Privacy and security").Role("link")

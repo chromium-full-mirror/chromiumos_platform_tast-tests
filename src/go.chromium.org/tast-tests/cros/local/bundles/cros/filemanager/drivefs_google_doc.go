@@ -69,7 +69,7 @@ func DrivefsGoogleDoc(ctx context.Context, s *testing.State) {
 
 	testFileNameWithExt := fmt.Sprintf("%s.gdoc", testDocFileName)
 	testFilePath := dfs.MyDrivePath(testFileNameWithExt)
-	testFile, err := dfs.NewFile(testFilePath)
+	testFile, _ := dfs.NewFile(testFilePath)
 
 	// Wait 4 minutes for the file to appear.
 	if err = action.RetrySilently(48, testFile.ExistsAction(), 5*time.Second)(ctx); err != nil {

@@ -145,7 +145,7 @@ func LaunchAppFromSettings(ctx context.Context, s *testing.State) {
 	}
 
 	// Scroll the entry into view.
-	kb, err := input.Keyboard(ctx)
+	kb, _ := input.Keyboard(ctx)
 	if err := uiauto.Combine("click entry",
 		// Scroll down once to make sure the entry is fully in view and clickable.
 		uiauto.Repeat(5, kb.AccelAction("Down")),

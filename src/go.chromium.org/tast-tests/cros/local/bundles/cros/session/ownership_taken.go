@@ -32,11 +32,6 @@ func init() {
 }
 
 func OwnershipTaken(ctx context.Context, s *testing.State) {
-	const (
-		testUser = "ownership_test@chromium.org"
-		testPass = "testme"
-	)
-
 	if err := session.SetUpDevice(ctx); err != nil {
 		s.Fatal("Failed to reset device ownership: ", err)
 	}

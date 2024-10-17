@@ -89,6 +89,7 @@ func USBStorage(ctx context.Context, s *testing.State) {
 	// This command must be run by chronos user due to permission reason
 	cmd, err := testexec.CommandContextUser(ctx, "chronos",
 		"vmc", "usb-attach", vm.DefaultBruschettaVMName,
+		//lint:ignore SA5011 device is actually checked right above
 		device.BusNumber+":"+device.DevNumber)
 	if err != nil {
 		s.Fatal("Failed to create command: ", err)

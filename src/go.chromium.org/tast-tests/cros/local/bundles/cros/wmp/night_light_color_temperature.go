@@ -156,7 +156,7 @@ func modetestCTM(ctx context.Context) (string, error) {
 	// The CTM contents are the numbers in value.
 	ctmPattern := regexp.MustCompile("CTM:")
 	ctmValuePattern := regexp.MustCompile("value:")
-	ctmContentPattern := regexp.MustCompile("[\\d|\\w]+")
+	ctmContentPattern := regexp.MustCompile(`[\d|\w]+`)
 	ctmEndPattern := regexp.MustCompile("GAMMA_LUT:")
 
 	findCTM := 1
