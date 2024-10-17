@@ -102,7 +102,7 @@ func VMBattery(ctx context.Context, s *testing.State) {
 	// Check charged percentage is the same.
 	// Note: there are "percentage" and "display percentage". The latter one is
 	// passed to ARCVM.
-	batLevel, serr := strconv.ParseFloat(batInfo["display percentage"], 10)
+	batLevel, serr := strconv.ParseFloat(batInfo["display percentage"], 32)
 	if serr != nil {
 		s.Fatalf("Failed to convert percentage %s: %q", batInfo["display percentage"], serr)
 	}

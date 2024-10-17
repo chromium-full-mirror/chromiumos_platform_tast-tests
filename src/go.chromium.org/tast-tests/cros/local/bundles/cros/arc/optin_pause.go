@@ -54,11 +54,6 @@ func init() {
 
 // OptinPause tests pause and resume of optin flow.
 func OptinPause(ctx context.Context, s *testing.State) {
-	const (
-		appLauncherPkg           = "org.chromium.arc.applauncher"
-		resumeProvisioningIntent = "org.chromium.arc.applauncher.RESUME_PROVISIONING"
-	)
-
 	cleanupCtx := ctx
 	ctx, cancel := ctxutil.Shorten(ctx, 10*time.Second)
 	defer cancel()

@@ -18,6 +18,7 @@ import (
 	"go.chromium.org/tast-tests/cros/common/testexec"
 	"go.chromium.org/tast-tests/cros/remote/bundles/cros/arc/cache"
 	"go.chromium.org/tast-tests/cros/remote/bundles/cros/arc/dututils"
+	//lint:ignore ST1019 multiple imports with different identifiers help code readability
 	"go.chromium.org/tast-tests/cros/services/cros/arc"
 	arcpb "go.chromium.org/tast-tests/cros/services/cros/arc"
 	"go.chromium.org/tast/core/ctxutil"
@@ -163,7 +164,7 @@ func CacheValidation(ctx context.Context, s *testing.State) {
 		return newCache, genCache, layout, subDir
 	}
 
-	withCache, genCache, withCacheLayout, withCacheDir := getCaches(true)
+	withCache, _, withCacheLayout, withCacheDir := getCaches(true)
 	withoutCache, genCache, withoutCacheLayout, withoutCacheDir := getCaches(false)
 
 	// saveOutput runs the command specified by name with args as arguments, and saves

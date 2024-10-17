@@ -216,7 +216,7 @@ func attemptOptIn(ctx context.Context, username, password string, args []string,
 	testing.ContextLog(ctx, "Check Play Store state")
 	if playStoreState, err := optin.GetPlayStoreState(ctx, tconn); err != nil {
 		return false, errors.Wrap(err, "failed to check Play Store state")
-	} else if playStoreState["allowed"] == false {
+	} else if !playStoreState["allowed"] {
 		// Validity check in case Play Store account settings or accounts changed.
 		return false, errors.New("invalid response with Play Store state set to not allowed")
 	}

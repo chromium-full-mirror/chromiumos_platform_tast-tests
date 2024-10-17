@@ -63,7 +63,7 @@ func (d *Display) Close() {
 
 // FirstDisplayIDByType returns first ARC display id for specific display type.
 func FirstDisplayIDByType(ctx context.Context, a *ARC, displayType DisplayType) (int, error) {
-	sdkVersion, err := SDKVersion()
+	sdkVersion, _ := SDKVersion()
 
 	// Return default value of displayID for old ARC version.
 	if sdkVersion == SDKP {
@@ -114,7 +114,7 @@ func FirstDisplayIDByType(ctx context.Context, a *ARC, displayType DisplayType) 
 
 // DisplaysIds returns the list of all display ids in the ARC system.
 func DisplaysIds(ctx context.Context, a *ARC) ([]int, error) {
-	sdkVersion, err := SDKVersion()
+	sdkVersion, _ := SDKVersion()
 
 	if sdkVersion == SDKP {
 		return nil, errors.Errorf("can only enumerate displays on ARC R or higher, currently %d", sdkVersion)
@@ -196,7 +196,7 @@ func (d *Display) CaptionHeight(ctx context.Context) (h int, err error) {
 		if err != nil {
 			return -1, errors.Wrap(err, "failed to execute 'dumpsys Wayland'")
 		}
-		scaleFactor, err := scrapeScaleFactor(waylandOutput, uniqueID)
+		scaleFactor, _ := scrapeScaleFactor(waylandOutput, uniqueID)
 		return int(math.Round(CaptionHeightR * scaleFactor)), nil
 	default:
 		return -1, errors.Errorf("unsupported Android version %d", version)

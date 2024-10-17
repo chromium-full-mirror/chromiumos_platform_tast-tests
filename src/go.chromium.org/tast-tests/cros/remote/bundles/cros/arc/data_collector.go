@@ -20,6 +20,7 @@ import (
 	"go.chromium.org/tast-tests/cros/common/testexec"
 	"go.chromium.org/tast-tests/cros/remote/bundles/cros/arc/cache"
 	"go.chromium.org/tast-tests/cros/remote/bundles/cros/arc/dututils"
+	//lint:ignore ST1019 multiple imports with different identifiers help code readability
 	"go.chromium.org/tast-tests/cros/services/cros/arc"
 	arcpb "go.chromium.org/tast-tests/cros/services/cros/arc"
 
@@ -397,7 +398,7 @@ func DataCollector(ctx context.Context, s *testing.State) {
 			if err != nil {
 				return errors.Wrap(err, "ureadaheadPackService.CheckMinMemory returned an error")
 			}
-			if response.Result == false {
+			if !response.Result {
 				testing.ContextLog(shortCtx, "Did not meet minimum memory requirement for ureadahead, skipping generate")
 				return nil
 			}

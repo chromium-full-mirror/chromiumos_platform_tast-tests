@@ -261,7 +261,7 @@ func CopyGmsCoreCaches(ctx context.Context, a *arc.ARC, outputDir string) error 
 		numBlocks    string // Obtained by "stat -c %b"
 	}
 	var statResults []statResult
-	filepath.Walk(chimeraPath, func(path string, info os.FileInfo, err error) error {
+	filepath.Walk(chimeraPath, func(path string, _ os.FileInfo, err error) error {
 		if err != nil {
 			return err
 		}
@@ -269,7 +269,7 @@ func CopyGmsCoreCaches(ctx context.Context, a *arc.ARC, outputDir string) error 
 		// Strip "/home/root/${USER_HASH}/android-data" prefix from the path.
 		androidPath := strings.Replace(path, androidDataDir, "", 1)
 
-		info, err = os.Lstat(path)
+		info, err := os.Lstat(path)
 		if err != nil {
 			return errors.Wrapf(err, "failed to stat %q", path)
 		}
@@ -516,7 +516,7 @@ func waitForPathStabilized(ctx context.Context, path string) error {
 			return arc.PollBreakIfNotEUCLEANOnVirtioBlkData(ctx, errors.Wrapf(err, "failed to stat  %s", path))
 		}
 
-		stableDuration := time.Now().Sub(statInfo.ModTime())
+		stableDuration := time.Since(statInfo.ModTime())
 		if stableDuration < minStableDuration {
 			return errors.Errorf("path %q is not yet stable. Time since modified: %s", path, stableDuration.String())
 		}

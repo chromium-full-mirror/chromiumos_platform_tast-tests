@@ -261,7 +261,7 @@ func bootARCCachePerf(ctx context.Context, s *testing.State, mode cacheMode) (ti
 		return 0, 0, errors.Wrap(err, "failed to wait Play Store shown")
 	}
 
-	duration := time.Now().Sub(startTime)
+	duration := time.Since(startTime)
 	energy := float64(0)
 	if energyBefore != nil {
 		energyDif, err := energyBefore.DiffWithCurrentRAPL()

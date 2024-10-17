@@ -339,7 +339,7 @@ func runTest(ctx context.Context, s *testing.State, apkName, appPkgName, appActi
 					s.Fatal("Failed to find the display: ", err)
 				}
 
-				if isResizeLockTest == false {
+				if !isResizeLockTest {
 					// Adjust the window to fill up most of the screen.
 					newBounds := wInfo.Bounds.WithInset(80, 80)
 					if _, _, err := ash.SetWindowBounds(workCtx, tconn, w.ID, newBounds, w.DisplayID); err != nil {
@@ -401,7 +401,6 @@ func TouchscreenTap(ctx context.Context, testParameters TestFuncParams, selector
 			return errors.Wrap(err, "Unable to perform a long tap")
 		}
 
-		break
 	case ShortTouchscreenTap:
 		// Move to the given point and end the write to simulate a click.
 		if err := touchScreenSingleEventWriter.Move(*x, *y); err != nil {
@@ -412,7 +411,6 @@ func TouchscreenTap(ctx context.Context, testParameters TestFuncParams, selector
 			return errors.Wrap(err, "Unable to end tap")
 		}
 
-		break
 	default:
 		return errors.Errorf("invalid tap type: %v", tapType)
 	}
@@ -443,14 +441,12 @@ func TouchscreenScroll(ctx context.Context, touchScreen *StandardizedTouchscreen
 
 	// Calculate where to scroll to based on the provided direction.
 	scrollToX := *x
-	scrollToY := *y
+	var scrollToY input.TouchCoord
 	switch scrollDirection {
 	case DownScroll:
 		scrollToY = *y - VerticalScrollAmount
-		break
 	case UpScroll:
 		scrollToY = *y + VerticalScrollAmount
-		break
 	default:
 		return errors.Errorf("invalid scroll direction; got: %v", scrollDirection)
 	}
@@ -579,19 +575,15 @@ func TouchscreenSwipe(ctx context.Context, testParameters TestFuncParams, select
 	case UpTouchscreenSwipe:
 		endX = *x
 		endY = *y - swipeDistance
-		break
 	case DownTouchscreenSwipe:
 		endX = *x
 		endY = *y + swipeDistance
-		break
 	case LeftTouchscreenSwipe:
 		endX = *x - swipeDistance
 		endY = *y
-		break
 	case RightTouchscreenSwipe:
 		endX = *x + swipeDistance
 		endY = *y
-		break
 	default:
 		return errors.Errorf("invalid direction provided: %v", swipeDirection)
 	}
@@ -658,13 +650,11 @@ func MouseClickObject(ctx context.Context, testParameters TestFuncParams, select
 			return errors.Wrap(err, "unable to perform left mouse click")
 		}
 
-		break
 	case RightPointerButton:
 		if err := mew.RightClick(); err != nil {
 			return errors.Wrap(err, "unable to perform right mouse click")
 		}
 
-		break
 	default:
 		return errors.Errorf("invalid button provided: %v", mouseButton)
 	}
@@ -699,12 +689,10 @@ func MouseScroll(ctx context.Context, testParameters TestFuncParams, scrollDirec
 		if err := mew.ScrollUp(); err != nil {
 			return errors.Wrap(err, "unable to scroll up")
 		}
-		break
 	case DownScroll:
 		if err := mew.ScrollDown(); err != nil {
 			return errors.Wrap(err, "unable to scroll down")
 		}
-		break
 	default:
 		return errors.Errorf("invalid scroll direction: %v", scrollDirection)
 	}
@@ -762,11 +750,9 @@ func TrackpadClickObject(ctx context.Context, testParameters TestFuncParams, sel
 	case LeftPointerButton:
 		// A left click only requires a single touch.
 		stw.SetIsBtnToolFinger(true)
-		break
 	case RightPointerButton:
 		// A left click only requires a double tap.
 		stw.SetIsBtnToolDoubleTap(true)
-		break
 	default:
 		return errors.Errorf("invalid button provided: %v", pointerButton)
 	}

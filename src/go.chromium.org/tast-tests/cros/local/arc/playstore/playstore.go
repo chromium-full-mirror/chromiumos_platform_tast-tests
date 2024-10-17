@@ -33,7 +33,7 @@ const (
 	beginAppInstall operation = "beginAppInstall"
 	// Update an app from the Play Store and wait for it to complete.
 	updateApp        operation = "update"
-	playStorePackage           = "com.android.vending"
+	playStorePackage    string = "com.android.vending"
 )
 
 // Options contains options used when installing or updating an app.

@@ -1024,8 +1024,6 @@ type resizeability string
 const (
 	// Resizeable
 	resizeable resizeability = "Resizeable"
-	// Non-resizeable
-	nonResizeable resizeability = "NonResizeable"
 	// Non-resizeable + specifying orientation
 	sizeCompat resizeability = "SizeCompat"
 )
@@ -1616,13 +1614,6 @@ func (cursor *cursorOnDisplay) moveTo(ctx context.Context, tconn *chrome.TestCon
 	cursor.currentDisp = dstDisp
 	cursor.currentDispType = dstDispType
 	return nil
-}
-
-var classNameReg = regexp.MustCompile("[^.]+$")
-
-// simpleClassName removes package from class name
-func simpleClassName(act string) string {
-	return classNameReg.FindString(act)
 }
 
 // runOrFatal runs body as subtest, then invokes s.Fatal if it returns an error

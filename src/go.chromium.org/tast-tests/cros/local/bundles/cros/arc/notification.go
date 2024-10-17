@@ -71,9 +71,6 @@ func Notification(ctx context.Context, s *testing.State) {
 		sendID   = idPrefix + "send_button"
 		removeID = idPrefix + "remove_button"
 
-		// Button id of GrantPermissionsActivity's "ALLOW" button
-		permissionAllowBtnID = "com.android.permissioncontroller:id/permission_allow_button"
-
 		// Testing data.
 		title  = "title!"
 		title2 = "new title!"

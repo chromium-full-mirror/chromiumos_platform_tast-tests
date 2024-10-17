@@ -121,7 +121,7 @@ func CheckAndroidVersion(ctx context.Context, s *testing.State) {
 	}
 
 	// Confirm that the board exists in allowedBoardsListMap.
-	if _, exists := allowedBoardsListMap[boardName]; exists != true {
+	if _, exists := allowedBoardsListMap[boardName]; !exists {
 		s.Logf("Board - %v must be explicitly allowed to pass this test", boardName)
 		s.Fatalf("Board is running %v kernel, but Android is %v", kernelVersion, abi)
 	}

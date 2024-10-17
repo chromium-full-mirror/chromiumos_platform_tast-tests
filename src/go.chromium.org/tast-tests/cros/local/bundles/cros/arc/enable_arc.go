@@ -78,7 +78,7 @@ func EnableArc(ctx context.Context, s *testing.State) {
 	if err != nil {
 		s.Fatal("Failed to check GooglePlayStore State: ", err)
 	}
-	if playStoreState["enabled"] == false {
+	if !playStoreState["enabled"] {
 		s.Fatal("Playstore Disabled ")
 	}
 

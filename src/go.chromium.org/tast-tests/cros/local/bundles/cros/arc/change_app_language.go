@@ -89,7 +89,7 @@ func ChangeAppLanguage(ctx context.Context, s *testing.State) {
 		s.Fatal("Failed to start ARC: ", err)
 	}
 	defer a.Close(cleanupCtx)
-	d, err := a.NewUIDevice(ctx)
+	d, _ := a.NewUIDevice(ctx)
 	ui := uiauto.New(tconn).WithTimeout(30 * time.Second)
 
 	// Install and start activity.

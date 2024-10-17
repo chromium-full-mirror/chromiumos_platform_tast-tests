@@ -648,7 +648,7 @@ func testCaptionButton(ctx context.Context, _ *arc.ARC, _ *chrome.Chrome, tconn 
 			if err != nil {
 				return errors.Wrap(err, "could not get the checkbox statement")
 			}
-			if checked != false {
+			if checked {
 				testing.ContextLogf(ctx, "CaptionButton: Clean %s checkbox statements", checkboxID)
 				if err := d.Object(ui.ID(checkboxID)).Click(ctx); err != nil {
 					return err
@@ -1056,11 +1056,6 @@ func testPopupWindow(ctx context.Context, a *arc.ARC, cr *chrome.Chrome, tconn *
 
 // testWindowState verifies that change window state by ChromeOS companion library works as expected.
 func testWindowState(ctx context.Context, _ *arc.ARC, _ *chrome.Chrome, tconn *chrome.TestConn, act *arc.Activity, d *ui.Device) error {
-	const (
-		setWindowStateButtonID = companionLibDemoPkg + ":id/set_task_window_state_button"
-		getWindowStateButtonID = companionLibDemoPkg + ":id/get_task_window_state_button"
-	)
-
 	for _, test := range []struct {
 		windowStateStr string
 		windowStateExp ash.WindowStateType
@@ -1166,8 +1161,6 @@ func testMaximize(ctx context.Context, _ *arc.ARC, _ *chrome.Chrome, tconn *chro
 
 // testWindowBounds verifies that the window bounds related API works as expected in ChromeOS Companion Lib.
 func testWindowBounds(ctx context.Context, _ *arc.ARC, _ *chrome.Chrome, tconn *chrome.TestConn, act *arc.Activity, d *ui.Device) error {
-	const getWindowBoundsButtonID = companionLibDemoPkg + ":id/get_window_bounds_button"
-
 	physicalDisplayDensity, err := act.DisplayDensity(ctx)
 	if err != nil {
 		return errors.Wrap(err, "failed to get physical display density")
@@ -1276,7 +1269,7 @@ func testWindowBounds(ctx context.Context, _ *arc.ARC, _ *chrome.Chrome, tconn *
 	// Check that app-controlled state is not modified by bounds change.
 	if appControlled, err := isAppControlled(ctx, d); err != nil {
 		return err
-	} else if appControlled == true {
+	} else if appControlled {
 		return errors.New("unexpectedly changed app controlled state to true")
 	}
 
@@ -1291,7 +1284,7 @@ func testWindowBounds(ctx context.Context, _ *arc.ARC, _ *chrome.Chrome, tconn *
 
 	if appControlled, err := isAppControlled(ctx, d); err != nil {
 		return err
-	} else if appControlled == false {
+	} else if !appControlled {
 		return errors.New("unexpectedly changed app controlled state to true")
 	}
 
@@ -1521,15 +1514,6 @@ func getLastJSONMessage(ctx context.Context, d *ui.Device) (*companionLibMessage
 		return nil, nil
 	}
 	return &messages[len(messages)-1], nil
-}
-
-// setWallpaper setting given URL as ChromeOS wallpaper.
-func setWallpaper(ctx context.Context, tconn *chrome.TestConn, wallpaperURL string) error {
-	return tconn.Call(ctx, nil, `(url) => tast.promisify(chrome.wallpaper.setWallpaper)({
-		  url: url,
-		  layout: 'STRETCH',
-		  filename: 'test_wallpaper'
-		})`, wallpaperURL)
 }
 
 // getWindowCaptionScreenshot returns a screenshot image of window caption bar.

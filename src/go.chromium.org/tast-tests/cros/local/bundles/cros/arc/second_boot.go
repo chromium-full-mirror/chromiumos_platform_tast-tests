@@ -47,7 +47,7 @@ func SecondBoot(ctx context.Context, s *testing.State) {
 	ctx, cancel := ctxutil.Shorten(ctx, 30*time.Second)
 	defer cancel()
 
-	creds, err := credconfig.PickRandomCreds(dma.CredsFromPool(ui.GaiaPoolDefaultVarName))
+	creds, _ := credconfig.PickRandomCreds(dma.CredsFromPool(ui.GaiaPoolDefaultVarName))
 	options := []chrome.Option{
 		chrome.FakeLogin(creds),
 		chrome.UnRestrictARCCPU(),

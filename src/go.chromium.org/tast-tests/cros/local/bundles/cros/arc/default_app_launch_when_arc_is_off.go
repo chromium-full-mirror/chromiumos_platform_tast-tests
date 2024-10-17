@@ -48,10 +48,6 @@ func init() {
 }
 
 func DefaultAppLaunchWhenArcIsOff(ctx context.Context, s *testing.State) {
-	const (
-		defaultTimeout = 20 * time.Second
-	)
-
 	cr, err := chrome.New(ctx,
 		chrome.GAIALoginPool(dma.CredsFromPool(ui.GaiaPoolDefaultVarName)),
 		chrome.ARCSupported(),

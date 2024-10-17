@@ -258,7 +258,7 @@ func checkAndroidSettings(ctx context.Context, arcDevice *androidui.Device) erro
 	}
 	locationToggle := arcDevice.Object(androidui.ID(locationID))
 
-	if locationStatus == true {
+	if locationStatus {
 		// Turn Location Off.
 		if err := locationToggle.Click(ctx); err != nil {
 			return errors.Wrap(err, "failed to click Location toggle")
@@ -281,7 +281,7 @@ func checkAndroidSettings(ctx context.Context, arcDevice *androidui.Device) erro
 	if err != nil {
 		return err
 	}
-	if locationStatus == false {
+	if !locationStatus {
 		return errors.New("Unable to Turn Location ON")
 	}
 
@@ -325,7 +325,7 @@ func testBackupToggle(ctx context.Context, arcDevice *androidui.Device) error {
 		oldBackupUI = true
 	}
 
-	if backupStatus == true {
+	if backupStatus {
 		// Turn Backup OFF.
 		if err := backupToggle.Click(ctx); err != nil {
 			return errors.Wrap(err, "failed to click backup toggle")
@@ -374,7 +374,7 @@ func testBackupToggle(ctx context.Context, arcDevice *androidui.Device) error {
 	if err != nil {
 		return err
 	}
-	if backupStatus == false {
+	if !backupStatus {
 		return errors.New("unable to Turn Backup ON")
 	}
 	return nil

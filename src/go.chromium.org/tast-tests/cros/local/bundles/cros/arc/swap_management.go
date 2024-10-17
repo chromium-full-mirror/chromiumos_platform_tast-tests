@@ -107,6 +107,7 @@ func SwapManagement(ctx context.Context, s *testing.State) {
 		s.Fatal("ARC swap area is missing on boot")
 	}
 	s.Logf("Swap info on boot: %s", swapInfoOnBoot)
+	//lint:ignore SA5011 swapInfoOnBoot is actually checked right above
 	if swapInfoOnBoot.name != testParams.swapAreaName {
 		s.Fatalf("Failed to verify swap area name. Expected %s, but found %s", testParams.swapAreaName, swapInfoOnBoot.name)
 	}
@@ -156,6 +157,7 @@ func SwapManagement(ctx context.Context, s *testing.State) {
 	s.Logf("Swap info after memory reclaim: %s", swapInfoAfterReclaim)
 
 	swapMemDiffThreshold := int64(float64(memoryToAllocate) * swapMemDiffThresholdRatio)
+	//lint:ignore SA5011 swapInfoAfterReclaim is actually checked right above
 	if swapInfoAfterReclaim.used-swapInfoOnBoot.used < swapMemDiffThreshold {
 		s.Fatalf("Swap usage did not increase as expected after per process memory reclaim."+
 			" Swap used before: %d, after: %d, allocated memory to reclaim: %d",

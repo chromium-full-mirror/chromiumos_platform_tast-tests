@@ -262,7 +262,7 @@ func runNVConversionByOrientation(ctx context.Context, tconn *chrome.TestConn, a
 		return err
 	}
 	if err := ash.WaitForCondition(ctx, tconn, func(w *ash.Window) bool {
-		return w.ID == windowID && w.IsFrameVisible == false
+		return w.ID == windowID && !w.IsFrameVisible
 	}, &testing.PollOptions{Timeout: 5 * time.Second}); err != nil {
 		return errors.Wrap(err, "failed to wait for frame to get hidden")
 	}
@@ -301,7 +301,7 @@ func runNVConversionByOrientation(ctx context.Context, tconn *chrome.TestConn, a
 	}
 
 	if err := ash.WaitForCondition(ctx, tconn, func(w *ash.Window) bool {
-		return w.ID == windowID && w.IsFrameVisible == true
+		return w.ID == windowID && w.IsFrameVisible
 	}, &testing.PollOptions{Timeout: 5 * time.Second}); err != nil {
 		return errors.Wrap(err, "failed to wait for frame to become visible")
 	}

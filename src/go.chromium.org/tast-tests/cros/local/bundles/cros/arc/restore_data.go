@@ -235,7 +235,7 @@ func restoreDataRegularBoot(ctx context.Context, testDir string, creds *chrome.C
 		return errors.Wrapf(err, "failed to get %s histogram", statusMetricName)
 	}
 
-	duration := time.Now().Sub(timeStart)
+	duration := time.Since(timeStart)
 
 	if metric.TotalCount() != 1 {
 		return errors.Wrapf(err, "unexpected histogram count for %s, got: %d, want: 1", statusMetricName, metric.TotalCount())

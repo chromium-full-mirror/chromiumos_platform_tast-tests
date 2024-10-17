@@ -126,7 +126,7 @@ func performTest(ctx context.Context, testParameters standardizedtestutil.TestFu
 	}
 
 	// Error out if the test did not pass.
-	if testPassed == false {
+	if !testPassed {
 		errors.Errorf("unable to scroll the content past the threshold after %v iterations", maxNumScrollIterations)
 	}
 

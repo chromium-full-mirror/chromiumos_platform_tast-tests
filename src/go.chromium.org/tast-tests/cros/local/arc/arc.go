@@ -662,15 +662,6 @@ func IsVirtioBlkDataEnabled(ctx context.Context) (bool, error) {
 	return strings.TrimSpace(string(out)) == "1", nil
 }
 
-// chromeArgs returns command line arguments of the Chrome browser process.
-func chromeArgs() ([]string, error) {
-	proc, err := ashproc.Root()
-	if err != nil {
-		return nil, err
-	}
-	return proc.CmdlineSlice()
-}
-
 func chromeArgsWithContext(ctx context.Context) ([]string, error) {
 	proc, err := ashproc.RootWithContext(ctx)
 	if err != nil {

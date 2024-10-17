@@ -17,7 +17,6 @@ import (
 	"go.chromium.org/tast-tests/cros/local/chrome/ash"
 	"go.chromium.org/tast-tests/cros/local/chrome/uiauto"
 	"go.chromium.org/tast-tests/cros/local/chrome/uiauto/faillog"
-	"go.chromium.org/tast-tests/cros/local/chrome/uiauto/launcher"
 	"go.chromium.org/tast-tests/cros/local/chrome/uiauto/lockscreen"
 	"go.chromium.org/tast-tests/cros/local/chrome/uiauto/nodewith"
 	"go.chromium.org/tast-tests/cros/local/chrome/uiauto/ossettings"
@@ -209,101 +208,6 @@ func testLaunchFromFullRestorePlayStoreInTabletMode(ctx context.Context, s *test
 
 	if err := restoreAndVerifyGhostWindow(ctx, s, cr, false, apps.PlayStore.ID); err != nil {
 		s.Fatal("Failed to launch ghost window: ", err)
-	}
-}
-
-func testShelfLaunchPlayStore(ctx context.Context, s *testing.State) {
-	cleanupCtx := ctx
-	ctx, cancel := ctxutil.Shorten(ctx, 10*time.Second)
-	defer cancel()
-
-	// Test ghost window in logout case.
-	cr, err := loginChrome(ctx, s, nil)
-	if err != nil {
-		s.Fatal("Failed to optin: ", err)
-	}
-	defer cr.Close(cleanupCtx)
-
-	creds := cr.Creds()
-	if err := optinAndLaunchPlayStore(ctx, cr); err != nil {
-		s.Fatal("Failed to initial optin: ", err)
-	}
-
-	// Re-login to make sure the ARC has not finish boot when launch request sent.
-	if err := logoutChrome(ctx, cr); err != nil {
-		s.Fatal("Failed to logout chrome: ", err)
-	}
-	cr, err = loginChrome(ctx, s, &creds)
-	if err != nil {
-		s.Fatal("Failed to login again: ", err)
-	}
-	defer cr.Close(cleanupCtx)
-
-	tconn, err := cr.TestAPIConn(ctx)
-	if err != nil {
-		s.Fatal("Failed to create Test API connection: ", err)
-	}
-	defer faillog.DumpUITreeOnError(cleanupCtx, s.OutDir(), s.HasError, tconn)
-
-	if err := ash.WaitForShelf(ctx, tconn, 30*time.Second); err != nil {
-		s.Fatal("Shelf did not appear after logging in: ", err)
-	}
-
-	// Launch from shelf require th app exist on the shelf, or pinned on the shelf.
-	if err := ash.PinApp(ctx, tconn, apps.PlayStore.ID); err != nil {
-		s.Fatal("Failed to pin PlayStore to the shelf: ", err)
-	}
-
-	if err = ash.LaunchAppFromShelf(ctx, tconn, apps.PlayStore.Name, apps.PlayStore.ID); err != nil {
-		s.Fatal("Failed to launch PlayStore from shelf: ", err)
-	}
-
-	// Make sure ARC Ghost Window of PlayStore has popup.
-	if err := waitGhostWindowShown(ctx, tconn, time.Minute, apps.PlayStore.ID, defaultGhostWindowMessagePrefix+apps.PlayStore.Name); err != nil {
-		s.Fatal("Failed to wait for Ghost Window of PlayStore: ", err)
-	}
-}
-
-func testLauncherLaunchPlayStore(ctx context.Context, s *testing.State) {
-	cleanupCtx := ctx
-	ctx, cancel := ctxutil.Shorten(ctx, 10*time.Second)
-	defer cancel()
-
-	// Test ghost window in logout case.
-	cr, err := loginChrome(ctx, s, nil)
-	if err != nil {
-		s.Fatal("Failed to optin: ", err)
-	}
-	defer cr.Close(cleanupCtx)
-
-	creds := cr.Creds()
-	if err := optinAndLaunchPlayStore(ctx, cr); err != nil {
-		s.Fatal("Failed to initial optin: ", err)
-	}
-
-	// Re-login to make sure the ARC has not finish boot when launch request sent.
-	if err := logoutChrome(ctx, cr); err != nil {
-		s.Fatal("Failed to logout chrome: ", err)
-	}
-	cr, err = loginChrome(ctx, s, &creds)
-	if err != nil {
-		s.Fatal("Failed to login again: ", err)
-	}
-	defer cr.Close(cleanupCtx)
-
-	tconn, err := cr.TestAPIConn(ctx)
-	if err != nil {
-		s.Fatal("Failed to create Test API connection: ", err)
-	}
-	defer faillog.DumpUITreeOnError(cleanupCtx, s.OutDir(), s.HasError, tconn)
-
-	if err := launcher.LaunchApp(tconn, apps.PlayStore.ShortName())(ctx); err != nil {
-		s.Fatal("Failed to launch PlayStore from launcher: ", err)
-	}
-
-	// Make sure ARC Ghost Window of PlayStore has popup.
-	if err := waitGhostWindowShown(ctx, tconn, time.Minute, apps.PlayStore.ID, defaultGhostWindowMessagePrefix+apps.PlayStore.Name); err != nil {
-		s.Fatal("Failed to wait for Ghost Window of PlayStore: ", err)
 	}
 }
 

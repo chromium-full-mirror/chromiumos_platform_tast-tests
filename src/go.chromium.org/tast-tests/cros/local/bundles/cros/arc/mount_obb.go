@@ -157,8 +157,8 @@ func MountOBB(ctx context.Context, s *testing.State) {
 	type fatType string
 	const (
 		FAT12 fatType = "12"
-		FAT16         = "16"
-		FAT32         = "32"
+		FAT16 fatType = "16"
+		FAT32 fatType = "32"
 	)
 
 	setUpImage := func(variant fatType, tempdir, path string) (retErr error) {

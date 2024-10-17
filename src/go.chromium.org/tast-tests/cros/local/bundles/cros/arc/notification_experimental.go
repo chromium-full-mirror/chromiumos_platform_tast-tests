@@ -43,9 +43,9 @@ type closeMethod string
 
 const (
 	closeMethodSwipeOut       closeMethod = "swipeOut"
-	closeMethodClickEvent                 = "clickEvent"
-	closeMethodClearAllButton             = "clearAllButton"
-	closeMethodCloseButton                = "closeButton"
+	closeMethodClickEvent     closeMethod = "clickEvent"
+	closeMethodClearAllButton closeMethod = "clearAllButton"
+	closeMethodCloseButton    closeMethod = "closeButton"
 )
 
 var (

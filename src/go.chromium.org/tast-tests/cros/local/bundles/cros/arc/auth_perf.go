@@ -419,7 +419,7 @@ func bootARC(ctx context.Context, s *testing.State, cr *chrome.Chrome, tconn *ch
 
 	var sess *tracing.Session
 	if tracingEnabled {
-		hostTraceOut := filepath.Join(s.OutDir(), fmt.Sprintf("host_perfetto.trace"))
+		hostTraceOut := filepath.Join(s.OutDir(), "host_perfetto.trace")
 		var err error
 		sess, err = tracing.StartSession(ctx, s.DataPath("perfetto_config.pbtxt"), tracing.WithTraceDataPath(hostTraceOut), tracing.WithCompression())
 		if err != nil {
@@ -485,7 +485,7 @@ func bootARC(ctx context.Context, s *testing.State, cr *chrome.Chrome, tconn *ch
 		return v, err
 	}
 
-	v.playStoreShownTime = time.Now().Sub(startTime).Seconds() * 1000
+	v.playStoreShownTime = time.Since(startTime).Seconds() * 1000
 
 	// Collect disk stats immediately after Play Store is shown to reduce the
 	// impact of further disk access.

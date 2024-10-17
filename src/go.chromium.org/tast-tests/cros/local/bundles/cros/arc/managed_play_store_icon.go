@@ -139,6 +139,9 @@ func ManagedPlayStoreIcon(ctx context.Context, s *testing.State) {
 	// Sync needs to be disabled for shelf icons to show. See b/303237403#comment12
 	policies := []policy.Policy{args.arcEnabled, &policy.SyncDisabled{Val: true}}
 	fdms, err := policyutil.SetUpFakePolicyServer(ctx, s.OutDir(), creds.User, policies)
+	if err != nil {
+		s.Fatal("Fake policy server setup failed: ", err)
+	}
 	defer fdms.Stop(cleanupCtx)
 
 	// Start a Chrome instance that will fetch policies from the FakeDMS.

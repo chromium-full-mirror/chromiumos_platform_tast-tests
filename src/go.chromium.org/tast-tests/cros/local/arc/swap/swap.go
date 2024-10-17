@@ -52,11 +52,7 @@ const (
 	daemonStoreBase     = "/run/daemon-store/crosvm"
 )
 
-var (
-	errCrosvmNotFound = errors.New("crosvm process not found")
-	errEnableSwap     = errors.New("crosvm failed to enable vmm-swap")
-	errSwapInProgress = errors.New("crosvm swap-out in progress")
-)
+var errEnableSwap  = errors.New("crosvm failed to enable vmm-swap")
 
 // CurrentStatus fetches the current swap status from a running crosvm instance.
 // socketPath should be the absolute path of a crosvm control socket.

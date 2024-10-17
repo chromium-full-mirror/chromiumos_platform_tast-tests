@@ -433,15 +433,6 @@ func createDirWithPROJINHERIT(ctx context.Context, androidDataDir string) error 
 	return filesystem.SetInodeFlags(path, inodeFlagPROJINHERIT|flags)
 }
 
-func setQuotaProjectIDForTestImageFile(ctx context.Context, username string) error {
-	androidDataDir, err := arc.AndroidDataDir(ctx, username)
-	if err != nil {
-		return errors.Wrap(err, "failed to get android-data dir")
-	}
-	imageFilePath := filepath.Join(androidDataDir, "data/media/0/Pictures", vmDataMigrationTestImageFilename)
-	return filesystem.SetQuotaProjectID(ctx, imageFilePath, arc.ProjectIDExtMediaImage)
-}
-
 func enterMigrationScreen(ctx context.Context, cr *chrome.Chrome, tconn *chrome.TestConn) error {
 	// UX strings for the pre-migration-screen phase.
 	const (
@@ -552,16 +543,6 @@ func reSignInChrome(ctx context.Context, creds chrome.Creds) (*chrome.Chrome, er
 		chrome.RemoveNotification(false),
 		chrome.ExtraArgs(arc.DisableSyncFlags()...),
 	)
-}
-
-func verifyPreMigrationAndroidData(ctx context.Context, a *arc.ARC, username, expectedImageDataPath string) error {
-	if err := verifyAndroidImageFileContent(ctx, a, expectedImageDataPath); err != nil {
-		return errors.Wrap(err, "failed to verify the content of the image file")
-	}
-	if err := verifyAndroidFileXattr(ctx, username); err != nil {
-		return errors.Wrap(err, "failed to verify the xattr of the file")
-	}
-	return nil
 }
 
 func verifyMigratedFileAttributes(ctx context.Context, s *testing.State, username string, attrs vmDataMigrationFileAttributes) {

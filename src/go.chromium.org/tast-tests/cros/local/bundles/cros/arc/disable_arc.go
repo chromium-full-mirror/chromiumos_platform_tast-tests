@@ -114,7 +114,7 @@ func DisableArc(ctx context.Context, s *testing.State) {
 		if err != nil {
 			return errors.Wrap(err, "failed to get some playstore state")
 		}
-		if playStoreState["enabled"] == true {
+		if playStoreState["enabled"] {
 			return errors.New("Playstore is On Still")
 		}
 		return nil

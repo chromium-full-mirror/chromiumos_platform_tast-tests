@@ -10,6 +10,7 @@ import (
 	"path/filepath"
 	"time"
 
+	//lint:ignore ST1019 multiple imports with different identifiers help code readability
 	"go.chromium.org/tast-tests/cros/common/android/ui"
 	androidui "go.chromium.org/tast-tests/cros/common/android/ui"
 	"go.chromium.org/tast-tests/cros/common/testexec"

@@ -15,7 +15,6 @@ import (
 
 	"go.chromium.org/tast-tests/cros/local/chrome"
 	"go.chromium.org/tast-tests/cros/local/chrome/ash"
-	"go.chromium.org/tast-tests/cros/local/chrome/uiauto/mouse"
 	"go.chromium.org/tast-tests/cros/local/coords"
 	"go.chromium.org/tast-tests/cros/local/input"
 	"go.chromium.org/tast/core/errors"
@@ -897,30 +896,6 @@ func (ac *Activity) Focus(ctx context.Context, tconn *chrome.TestConn) error {
 		return errors.Wrap(err, "failed to call setArcAppWindowFocus")
 	}
 	return nil
-}
-
-// dragWithPause performs a regular mouse drag with a brief pause before pressing and moving.
-func dragWithPause(ctx context.Context, tconn *chrome.TestConn, from, to coords.Point, t time.Duration) (firstErr error) {
-	if firstErr := mouse.Move(tconn, from, 0)(ctx); firstErr != nil {
-		return firstErr
-	}
-	// GoBigSleepLint: sleeping to prevent unexpected drag events
-	if firstErr := testing.Sleep(ctx, time.Second); firstErr != nil {
-		return firstErr
-	}
-	if firstErr := mouse.Press(tconn, mouse.LeftButton)(ctx); firstErr != nil {
-		return firstErr
-	}
-	defer func() {
-		if err := mouse.Release(tconn, mouse.LeftButton)(ctx); err != nil {
-			if firstErr == nil {
-				firstErr = err
-			} else {
-				testing.ContextLog(ctx, "Failed to release mouse left button: ", err)
-			}
-		}
-	}()
-	return mouse.Move(tconn, to, t)(ctx)
 }
 
 // Close all windows of this activity

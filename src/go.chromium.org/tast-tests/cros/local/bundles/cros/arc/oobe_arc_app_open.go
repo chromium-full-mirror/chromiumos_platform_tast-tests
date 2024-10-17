@@ -65,7 +65,7 @@ func OobeArcAppOpen(ctx context.Context, s *testing.State) {
 		s.Fatal("Failed to get parent account: ", err)
 	}
 
-	cr, err := chrome.New(ctx,
+	cr, _ := chrome.New(ctx,
 		chrome.DontSkipOOBEAfterLogin(),
 		chrome.ARCSupported(),
 		chrome.GAIALogin(chrome.Creds{User: username, Pass: password}),

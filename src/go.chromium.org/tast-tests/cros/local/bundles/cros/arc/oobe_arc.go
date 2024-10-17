@@ -105,7 +105,7 @@ func OobeArc(ctx context.Context, s *testing.State) {
 		if err != nil {
 			return errors.Wrap(err, "failed to get some playstore state")
 		}
-		if playStoreState["enabled"] == false {
+		if !playStoreState["enabled"] {
 			return errors.New("playstore is off")
 		}
 		return nil

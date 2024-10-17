@@ -45,7 +45,7 @@ func Preopt(ctx context.Context, s *testing.State) {
 }
 
 func performBootAndWaitForDexOpt(ctx context.Context, outDir string) error {
-	args := append(arc.DisableSyncFlags())
+	args := arc.DisableSyncFlags()
 	cr, err := chrome.New(ctx, chrome.ARCEnabled(), chrome.UnRestrictARCCPU(),
 		chrome.ExtraArgs(args...))
 	if err != nil {

@@ -57,7 +57,7 @@ const InstallationTimeout = 5 * time.Minute
 // Install installs the ARC app with the package name.
 func (app *App) Install(ctx context.Context) error {
 	deadLine, ok := ctx.Deadline()
-	if ok && deadLine.Sub(time.Now()) < InstallationTimeout {
+	if ok && time.Until(deadLine) < InstallationTimeout {
 		return errors.Errorf("there are no time to install ARC app %q", app.AppName)
 	}
 

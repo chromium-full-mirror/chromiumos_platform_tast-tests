@@ -668,8 +668,5 @@ func clearDisplayRotation(ctx context.Context, tconn *chrome.TestConn) error {
 
 // isPortraitRect returns true if width is greater than height.
 func isPortraitRect(rect coords.Rect) bool {
-	if rect.Width < rect.Height {
-		return true
-	}
-	return false
+	return rect.Width < rect.Height
 }

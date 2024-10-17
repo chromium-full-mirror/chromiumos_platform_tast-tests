@@ -339,7 +339,3 @@ func (p *preImplWithPvSchedEnabled) Close(ctx context.Context, s *testing.PreSta
 
 	p.preImpl.Close(ctx, s)
 }
-
-func (p *preImplWithPvSchedEnabled) closeInternal(ctx context.Context, s *testing.PreState) {
-	p.preImpl.closeInternal(ctx, s)
-}

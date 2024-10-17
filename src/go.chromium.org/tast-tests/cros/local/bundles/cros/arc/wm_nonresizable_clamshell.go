@@ -86,26 +86,6 @@ func WMNonresizableClamshell(ctx context.Context, s *testing.State) {
 	})
 }
 
-// wmNC01 covers non-resizable/clamshell default launch behavior (with unresizable multi-window mode off).
-// Expected behavior is defined in: go/arc-wm-r NC01: non-resizable/clamshell: default launch behavior.
-func wmNC01(ctx context.Context, tconn *chrome.TestConn, a *arc.ARC, d *ui.Device) error {
-	launchActivityTestCases := []wm.CheckCase{
-		{
-			Name: wm.NonResizablePortraitActivity,
-			Func: wm.CheckMaximizeNonResizable,
-		},
-		{
-			Name: wm.NonResizableUnspecifiedActivity,
-			Func: wm.CheckMaximizeNonResizable,
-		},
-		{
-			Name: wm.NonResizableLandscapeActivity,
-			Func: wm.CheckMaximizeNonResizable,
-		},
-	}
-	return wmNC01Inner(ctx, tconn, a, d, launchActivityTestCases)
-}
-
 // wmNC01a covers non-resizable/clamshell default launch behavior (with unresizable multi-window mode on).
 // Expected behavior is defined in: go/arc-wm-r NC01a: non-resizable/clamshell: default launch behavior.
 func wmNC01a(ctx context.Context, tconn *chrome.TestConn, a *arc.ARC, d *ui.Device) error {
@@ -151,12 +131,6 @@ func wmNC01Inner(ctx context.Context, tconn *chrome.TestConn, a *arc.ARC, d *ui.
 		}
 	}
 	return nil
-}
-
-// wmNC04 covers non-resizable/clamshell: user immerse portrait app (pillarbox) behavior.
-// Expected behavior is defined in: go/arc-wm-r NC04: non-resizable/clamshell: user immerse portrait app (pillarbox).
-func wmNC04(ctx context.Context, tconn *chrome.TestConn, a *arc.ARC, d *ui.Device) error {
-	return checkMaxActivityToFullscreen(ctx, tconn, a, d, wm.NonResizablePortraitActivity)
 }
 
 // wmNC04a covers non-resizable/clamshell: user immerse portrait app (pillarbox) behavior.

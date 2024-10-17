@@ -40,7 +40,7 @@ func GuestMemorySize(ctx context.Context, s *testing.State) {
 		s.Fatal("Failed to get guest meminfo: ", err)
 	}
 
-	re := regexp.MustCompile("MemTotal:\\s*(\\d*) kB")
+	re := regexp.MustCompile(`MemTotal:\s*(\d*) kB`)
 	groups := re.FindStringSubmatch(string(output))
 	if len(groups) != 2 {
 		s.Fatal("Failed to find MemTotal")

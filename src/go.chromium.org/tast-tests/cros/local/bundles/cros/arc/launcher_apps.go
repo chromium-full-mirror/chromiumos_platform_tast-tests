@@ -115,7 +115,7 @@ func LauncherApps(ctx context.Context, s *testing.State) {
 	if err != nil {
 		s.Fatal("Failed to check Google PlayStore State: ", err)
 	}
-	if playStoreState["enabled"] == true {
+	if playStoreState["enabled"] {
 		s.Fatal("Playstore Still Enabled")
 	}
 

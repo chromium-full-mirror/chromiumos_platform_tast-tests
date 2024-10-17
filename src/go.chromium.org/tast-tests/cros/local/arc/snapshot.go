@@ -65,7 +65,7 @@ func (s *Snapshot) checkUsable(ctx context.Context, a *ARC, cur *Snapshot) error
 	ctx, st := timing.Start(ctx, "check_arc")
 	defer st.End()
 
-	ctx, cancel := context.WithTimeout(ctx, 5*time.Second)
+	_, cancel := context.WithTimeout(ctx, 5*time.Second)
 	defer cancel()
 
 	// Check that the init process is the same as before. Otherwise, ARC was probably restarted.

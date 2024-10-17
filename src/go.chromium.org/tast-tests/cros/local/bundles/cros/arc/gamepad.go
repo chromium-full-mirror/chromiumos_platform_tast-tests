@@ -155,7 +155,6 @@ func verifyGamepadDeviceInfo(s *testing.State, gp *input.GamepadEventWriter, d *
 			s.Errorf("Keycode support doesn't match %s", diff)
 		}
 	}
-	return
 }
 
 type gamepadKeyEvent struct {

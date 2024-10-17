@@ -173,7 +173,7 @@ func loginAndWaitForARC(ctx, cleanupCtx context.Context, s *testing.State, enrol
 		chrome.ARCSupported(),
 		chrome.UnRestrictARCCPU(),
 		chrome.DMSPolicy(fdms.URL),
-		chrome.ExtraArgs(append(arc.DisableSyncFlags())...))
+		chrome.ExtraArgs(arc.DisableSyncFlags()...))
 	if err != nil {
 		return nil, nil, rl.Retry("connect to Chrome", err)
 	}

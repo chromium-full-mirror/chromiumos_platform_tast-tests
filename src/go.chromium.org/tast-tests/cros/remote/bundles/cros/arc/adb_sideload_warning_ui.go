@@ -9,6 +9,7 @@ import (
 	"context"
 	"time"
 
+	//lint:ignore ST1019 multiple imports with different identifiers help code readability
 	"go.chromium.org/tast-tests/cros/services/cros/arc"
 	arcpb "go.chromium.org/tast-tests/cros/services/cros/arc"
 	"go.chromium.org/tast-tests/cros/services/cros/security"

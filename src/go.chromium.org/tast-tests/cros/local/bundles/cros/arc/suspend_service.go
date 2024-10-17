@@ -73,7 +73,7 @@ func (c *SuspendService) Prepare(ctx context.Context, req *empty.Empty) (*arcpb.
 	if err != nil {
 		return nil, errors.Wrap(err, "failed to check whether ARCVM is enabled")
 	}
-	if vmEnabled == false {
+	if !vmEnabled {
 		return nil, errors.Wrap(err, "this test is only for VMs")
 	}
 

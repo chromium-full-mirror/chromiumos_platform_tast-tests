@@ -114,7 +114,7 @@ func performTrackpadScrollTest(ctx context.Context, testParameters standardizedt
 	}
 
 	// Error out if the test did not pass.
-	if testPassed == false {
+	if !testPassed {
 		return errors.Errorf("failed to scroll the content past the threshold after %v iterations", maxNumScrollIterations)
 	}
 

@@ -138,7 +138,7 @@ func runStandardizedKeyboardKeysTest(ctx context.Context, testParameters standar
 		return errors.Wrap(err, "failed to check focus of the layout")
 	}
 
-	if isFocused == false {
+	if !isFocused {
 		return errors.Wrap(err, "failed to focus the layout")
 	}
 
