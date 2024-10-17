@@ -82,14 +82,6 @@ var tabURLs = []string{
 	"https://chrome.google.com/webstore/category/extensions",
 }
 
-// tabSwitchMetric holds tab switch times.
-var tabSwitchMetric = perf.Metric{
-	Name:      "tast_tab_switch_times",
-	Unit:      "second",
-	Multiple:  true,
-	Direction: perf.SmallerIsBetter,
-}
-
 // mean returns the mean of time.Duration values.
 func mean(values []time.Duration) time.Duration {
 	var sum float64
@@ -189,7 +181,7 @@ func (t *tab) waitForQuiescence(ctx context.Context, timeout time.Duration) erro
 	if err := webutil.WaitForQuiescence(ctx, t.conn, timeout); err != nil {
 		testing.ContextLogf(ctx, "Failed to wait for tab quiesce (%v), error: %v", timeout, err)
 	} else {
-		testing.ContextLog(ctx, "Tab quiescence time: ", time.Now().Sub(start))
+		testing.ContextLog(ctx, "Tab quiescence time: ", time.Since(start))
 	}
 	return nil
 }
@@ -231,7 +223,7 @@ func (t *tab) activate(ctx context.Context) (time.Duration, error) {
 		return 0, err
 	}
 
-	elapsed := time.Now().Sub(startTime)
+	elapsed := time.Since(startTime)
 	testing.ContextLogf(ctx, "Tab switch time for tab %3d: %7.2f ms", t.id, elapsed.Seconds()*1000)
 	return elapsed, nil
 }
@@ -459,10 +451,10 @@ func logTabSwitchTimesToFile(ctx context.Context, switchTimes []time.Duration, o
 	defer allFile.Close()
 	for _, t := range switchTimes {
 		str := fmt.Sprintf("%7.2f\n", t.Seconds()*1000)
-		if _, err = fmt.Fprintf(f, str); err != nil {
+		if _, err = fmt.Fprint(f, str); err != nil {
 			return errors.Wrap(err, "failed to write switch times to file")
 		}
-		if _, err = fmt.Fprintf(allFile, str); err != nil {
+		if _, err = fmt.Fprint(allFile, str); err != nil {
 			return errors.Wrap(err, "failed to write switch times to file")
 		}
 	}

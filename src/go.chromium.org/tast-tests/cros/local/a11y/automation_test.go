@@ -62,7 +62,7 @@ func TestFindParamsRawAttributesRegexp(t *testing.T) {
 	}
 
 	want := []byte(`{"className":/ab+c/}`)
-	if bytes.Compare(got, want) != 0 {
+	if !bytes.Equal(got, want) {
 		t.Fatalf("rawAttributes() = %+v; want %+v", string(got), string(want))
 	}
 }
@@ -82,7 +82,7 @@ func TestFindParamsRawBytes(t *testing.T) {
 	}
 
 	want := []byte(`{"attributes":{"name":"Hello World"},"role":"staticText","state":{"focused":true}}`)
-	if bytes.Compare(got, want) != 0 {
+	if !bytes.Equal(got, want) {
 		t.Fatalf("rawBytes() = %+v; want %+v", string(got), string(want))
 	}
 }

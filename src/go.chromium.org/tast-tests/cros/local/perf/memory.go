@@ -6,15 +6,11 @@ package perf
 
 import (
 	"context"
-	"time"
 
 	"github.com/shirou/gopsutil/v3/mem"
 
 	"go.chromium.org/tast-tests/cros/common/perf"
 )
-
-// diffWait is the default duration to measure the baseline of memoryDataSource.
-const diffWait = 5 * time.Second
 
 // memoryDataSource is a perf.TimelineDatasource reporting the memory usage and its diff from certain point.
 type memoryDataSource struct {

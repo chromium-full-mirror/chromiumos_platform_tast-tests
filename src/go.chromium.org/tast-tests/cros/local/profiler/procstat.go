@@ -88,9 +88,6 @@ type procStat struct {
 	// Process ID to profile.
 	pid int
 
-	// Options for the profiler.
-	*procStatOpts
-
 	// The Snapshot taken on the start of the profile.
 	startSnapshot *statSnapshot
 	// Cached value of sysconf(_SC_CLK_TCK).
@@ -98,9 +95,6 @@ type procStat struct {
 }
 
 var _ instance = &procStat{}
-
-type procStatOpts struct {
-}
 
 // ProcStatOutput stores the output of ProfStat.
 type ProcStatOutput struct {

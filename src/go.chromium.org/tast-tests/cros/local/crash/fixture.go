@@ -337,7 +337,7 @@ func SetConsent(ctx context.Context, cr *chrome.Chrome, consent bool) error {
 	// For example, if the system clock were 12:34:56.700, the cache would be purged no later than 12:34:57.000.
 	end := time.Unix(time.Now().Add(1*time.Second).Unix(), 0)
 	// GoBigSleepLint: crash_reporter keeps a 1-second-long cache of the consent status. We need to wait for it to refresh.
-	testing.Sleep(ctx, end.Sub(time.Now()))
+	testing.Sleep(ctx, time.Until(end))
 
 	// If a test wants consent to be turned off, make sure mock consent doesn't
 	// interfere.

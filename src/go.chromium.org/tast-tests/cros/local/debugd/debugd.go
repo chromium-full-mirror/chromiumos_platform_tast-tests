@@ -111,7 +111,7 @@ type DRMTraceSize uint32
 // This must match the DRMTraceSize enum defined in org.chromium.debugd.xml.
 const (
 	DRMTraceSizeDefault DRMTraceSize = 0
-	DRMTraceSizeDebug                = 1
+	DRMTraceSizeDebug   DRMTraceSize = 1
 )
 
 // DRMTraceSnapshotType is an enumeration used as an argument to the DRMTraceSnapshot method.
@@ -129,15 +129,15 @@ type DRMTraceCategories uint32
 // This must match the DRMTraceCategories flags defined in org.chromium.debugd.xml.
 const (
 	DRMTraceCategoryCore   DRMTraceCategories = 0x001
-	DRMTraceCategoryDriver                    = 0x002
-	DRMTraceCategoryKMS                       = 0x004
-	DRMTraceCategoryPrime                     = 0x008
-	DRMTraceCategoryAtomic                    = 0x010
-	DRMTraceCategoryVBL                       = 0x020
-	DRMTraceCategoryState                     = 0x040
-	DRMTraceCategoryLease                     = 0x080
-	DRMTraceCategoryDP                        = 0x100
-	DRMTraceCategoryDRMRes                    = 0x200
+	DRMTraceCategoryDriver DRMTraceCategories = 0x002
+	DRMTraceCategoryKMS    DRMTraceCategories = 0x004
+	DRMTraceCategoryPrime  DRMTraceCategories = 0x008
+	DRMTraceCategoryAtomic DRMTraceCategories = 0x010
+	DRMTraceCategoryVBL    DRMTraceCategories = 0x020
+	DRMTraceCategoryState  DRMTraceCategories = 0x040
+	DRMTraceCategoryLease  DRMTraceCategories = 0x080
+	DRMTraceCategoryDP     DRMTraceCategories = 0x100
+	DRMTraceCategoryDRMRes DRMTraceCategories = 0x200
 )
 
 // FeedbackBinaryLogType is an enumeration used as the key to the map argument |binaryLogs| to the GetFeedbackBinaryLogs method.

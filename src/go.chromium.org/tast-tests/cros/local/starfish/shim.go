@@ -25,7 +25,6 @@ const cmdNotFound = ": command not found"
 const logPrefix = "inf"
 const warnPrefix = "wrn"
 const errPrefix = "err"
-const drvPrefix = "usb_cdc_acm: " //unused as of now
 const consPrefix = "console: "
 const simPrefix = "sim: "
 

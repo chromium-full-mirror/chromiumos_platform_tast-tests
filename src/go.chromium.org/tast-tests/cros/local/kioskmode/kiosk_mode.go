@@ -71,8 +71,6 @@ const (
 	// kioskLaunchSucceededDuration is the time estimate to emit a kioskLaunchSucceededLog after
 	// kioskReadyToLaunchLog was emitted.
 	kioskLaunchSucceededDuration = 60 * time.Second
-	// kioskClosingSplashScreenLog is reported by Chrome once the splash screen is closing.
-	kioskClosingSplashScreenLog = "App window created, closing splash screen."
 
 	// policyPersistDuration is the time estimate for Chrome to store policies after a refresh.
 	policyPersistDuration = 15 * time.Second

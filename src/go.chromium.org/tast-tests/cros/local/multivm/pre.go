@@ -145,13 +145,6 @@ func ArcStartedVMMMS() testing.Precondition {
 	return arcStartedVMMMSPre
 }
 
-var arcStartedVMMMSTabManagerDelegatePre = NewMultiVMPrecondition(
-	"multivm_arc_vmmms_tmd",
-	NewStateManager(
-		TabManagerDelegateChromeOptionsVMMMS,
-		DefaultARCOptions,
-	).SetForceActivate(true))
-
 // ArcStartedVMMMSTabManagerDelegate returns a Precondition that logs into
 // Chrome with VMMMS enabled and using TabManagerDelegate to discard tabs and
 // starts ARCVM.

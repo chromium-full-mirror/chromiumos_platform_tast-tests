@@ -261,13 +261,13 @@ func waitForSTAAssociationEvent(ctx context.Context, m *Monitor, client string, 
 			return ErrAssociationTimeout
 		}
 		if e, ok := event.(*ApStaConnectedEvent); ok && association {
-			if bytes.Compare(iface.HardwareAddr, e.Addr) != 0 {
+			if !bytes.Equal(iface.HardwareAddr, e.Addr) {
 				return errors.Errorf("unexpected station association: got %v want %v", e.Addr, iface.HardwareAddr)
 			}
 			return nil
 		}
 		if e, ok := event.(*ApStaDisconnectedEvent); ok && !association {
-			if bytes.Compare(iface.HardwareAddr, e.Addr) != 0 {
+			if !bytes.Equal(iface.HardwareAddr, e.Addr) {
 				return errors.Errorf("unexpected station disassociation: got %v want %v", e.Addr, iface.HardwareAddr)
 			}
 			return nil

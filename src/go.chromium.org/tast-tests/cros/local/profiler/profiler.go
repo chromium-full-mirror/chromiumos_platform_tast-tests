@@ -22,13 +22,6 @@ import (
 	"context"
 
 	"go.chromium.org/tast/core/errors"
-	"go.chromium.org/tast/core/testing"
-)
-
-var profilerMode = testing.RegisterVarString(
-	"profiler.profilerMode",
-	"",
-	"A comma seperated string of a combination of the keywords stat, record, sched, or statrecord. Example: --var=profiler.profilerMode=record,stat",
 )
 
 type instance interface {

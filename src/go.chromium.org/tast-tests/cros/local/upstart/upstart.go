@@ -168,10 +168,7 @@ func JobExists(ctx context.Context, job string) bool {
 	// For non-existing jobname, it fails with error message:
 	//   initctl: Unknown job: ${jobname}
 	if err != nil {
-		if strings.HasPrefix(string(stderr), "initctl: Unknown parameter") {
-			return true
-		}
-		return false
+		return strings.HasPrefix(string(stderr), "initctl: Unknown parameter")
 	}
 
 	return true

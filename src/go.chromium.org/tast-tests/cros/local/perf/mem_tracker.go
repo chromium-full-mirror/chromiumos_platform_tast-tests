@@ -25,7 +25,6 @@ const (
 // MemoryInfoTracker is a helper to collect zram info.
 type MemoryInfoTracker struct {
 	base          *metrics.BaseMemoryStats
-	lastslicebase *metrics.BaseMemoryStats
 	arc           *arc.ARC
 	stopc         chan struct{}
 	stopackc      chan struct{}

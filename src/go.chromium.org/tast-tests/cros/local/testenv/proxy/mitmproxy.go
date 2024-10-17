@@ -363,7 +363,7 @@ func (mp *MitmProxy) generateAddon(name, script string) (string, error) {
 		return "", errors.Wrapf(err, "failed to create %s Addon", name)
 	}
 
-	err = os.WriteFile(file, []byte(script), 755)
+	err = os.WriteFile(file, []byte(script), 0755)
 	if err != nil {
 		return "", errors.Wrapf(err, "failed to write %s Addon", name)
 	}

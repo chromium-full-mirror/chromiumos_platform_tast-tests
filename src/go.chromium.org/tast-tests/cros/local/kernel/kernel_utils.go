@@ -223,7 +223,7 @@ func GetCgptTable(ctx context.Context, rootDevWithoutPart string) (map[string]*p
 }
 
 // RestoreCgptAttributes restores CGPT partition attributes directly dumped from GetCgptTable.
-func RestoreCgptAttributes(ctx context.Context, rootDevWithoutPart string, cgptTable map[string]*pb.CgptPartition) error {
+func RestoreCgptAttributes(ctx context.Context, rootDevWithoutPart string, _ map[string]*pb.CgptPartition) error {
 	cgptTable, err := GetCgptTable(ctx, rootDevWithoutPart)
 	if err != nil {
 		return errors.Wrap(err, "failed to get current cgpt table")

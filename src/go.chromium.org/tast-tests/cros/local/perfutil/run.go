@@ -243,7 +243,7 @@ func (r *Runner) RunMultiple(ctx context.Context, name string, scenario Scenario
 	}
 
 	const traceCleanupDuration = 2 * time.Second
-	if deadline, ok := ctx.Deadline(); ok && deadline.Sub(time.Now()) < traceCleanupDuration {
+	if deadline, ok := ctx.Deadline(); ok && time.Until(deadline) < traceCleanupDuration {
 		testing.ContextLog(ctx, "There are no time to conduct a tracing run. Skipping")
 		return runErrors, nil
 	}

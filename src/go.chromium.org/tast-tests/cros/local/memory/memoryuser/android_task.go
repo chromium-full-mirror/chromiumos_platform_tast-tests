@@ -39,7 +39,7 @@ func (at *AndroidTask) Run(ctx context.Context, testEnv *TestEnv) error {
 	if err := testEnv.arc.Command(ctx, "am", "start", "-W", at.Pkg+"/"+at.ActivityName).Run(); err != nil {
 		return errors.Wrapf(err, "failed starting app %s", at.APK)
 	}
-	loadingTime := time.Now().Sub(startTime)
+	loadingTime := time.Since(startTime)
 	testing.ContextLogf(ctx, "App install/start time for %s: %v", at.APK, loadingTime)
 	at.TestFunc(testEnv.arc)
 	return nil

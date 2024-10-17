@@ -108,7 +108,7 @@ func New(ctx context.Context, fdms *fakedms.FakeDMS, opts ...Option) (*MGS, *chr
 		}
 
 		// Handle the AutoLaunch setup.
-		if cfg.m.AutoLaunch == true {
+		if cfg.m.AutoLaunch {
 			policies = append(policies, &policy.DeviceLocalAccountAutoLoginId{
 				Val: *cfg.m.AutoLaunchMGSAppID,
 			})

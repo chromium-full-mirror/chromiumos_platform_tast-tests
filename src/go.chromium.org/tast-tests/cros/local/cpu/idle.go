@@ -80,7 +80,7 @@ func WaitUntilIdleWithConfig(ctx context.Context, config IdleConfig) error {
 		var usage float64
 		if usage, err = waitUntilIdleStep(ctx, timeout, idlePercent); err == nil {
 			testing.ContextLogf(ctx, "Waiting for idle CPU took %v (usage: %.1f%%, threshold: %.1f%%)",
-				time.Now().Sub(startTime).Round(time.Second), usage, idlePercent)
+				time.Since(startTime).Round(time.Second), usage, idlePercent)
 			return nil
 		}
 	}
@@ -144,7 +144,7 @@ func WaitUntilPkgStateIdleWithConfig(ctx context.Context, config IdleConfig) err
 		var usage float64
 		if usage, err = waitUntilPkgStateIdleStep(ctx, timeout, idlePercent); err == nil {
 			testing.ContextLogf(ctx, "Waiting for idle CPU package c-state took %v (usage: %.1f%%, threshold: %.1f%%)",
-				time.Now().Sub(startTime).Round(time.Second), usage, idlePercent)
+				time.Since(startTime).Round(time.Second), usage, idlePercent)
 			return nil
 		}
 	}

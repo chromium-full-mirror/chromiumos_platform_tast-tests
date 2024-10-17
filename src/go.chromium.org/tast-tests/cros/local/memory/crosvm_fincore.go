@@ -110,7 +110,7 @@ var fincoreArcVMDiskArgRe = regexp.MustCompile("^(--disk|--rwdisk|--root|--rwroo
 // are written.
 func CrosvmFincoreMetrics(ctx context.Context, p *perf.Values, outdir, suffix string) error {
 	// Look for crosvm processes with
-	processes, err := process.Processes()
+	processes, _ := process.Processes()
 	const crosvmPath = "/usr/bin/crosvm"
 	const conciergePath = "/usr/bin/vm_concierge"
 	disks := make(map[string]bool)

@@ -174,7 +174,7 @@ func (c *CrosNetworkConfig) SetNetworkTypeEnabledState(ctx context.Context, netw
 		"function(networkType, enable) { return this.setNetworkTypeEnabledState(networkType, enable)}", networkType, enable); err != nil {
 		return errors.Wrap(err, "failed to run setNetworkTypeEnabledState")
 	}
-	if result.Success != true {
+	if !result.Success{
 		return errors.New("setNetworkTypeEnabledState failed")
 	}
 

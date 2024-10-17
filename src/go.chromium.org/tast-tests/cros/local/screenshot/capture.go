@@ -8,8 +8,7 @@ import (
 	"context"
 	"encoding/base64"
 	"image"
-	"image/png"
-	_ "image/png" // PNG decoder
+	"image/png" // PNG decoder
 	"io"
 	"io/ioutil"
 	"os"

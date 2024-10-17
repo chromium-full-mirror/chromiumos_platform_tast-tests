@@ -240,7 +240,7 @@ readSignalChannel:
 
 				for _, report := range signal.RangeData.TwowayRangingMeasurements {
 					// if buffer hasn't expired and bufferCheck is false, check if status_ok
-					if !bufferTimer.Stop() && bufferCheck == false {
+					if !bufferTimer.Stop() && !bufferCheck {
 						// if status_ok, set boolean to true indicating that the buffer is no longer necessary and proceed
 						if report.Status == uwb.StatusCode_UCI_STATUS_OK {
 							bufferCheck = true

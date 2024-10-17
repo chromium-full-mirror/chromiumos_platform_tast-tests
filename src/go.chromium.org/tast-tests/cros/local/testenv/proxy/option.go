@@ -20,9 +20,7 @@ type Option func(*MitmProxy) error
 // ScriptPath is an option to set scriptPaths in MitmProxy.
 func ScriptPath(paths ...string) Option {
 	return func(mp *MitmProxy) error {
-		for _, p := range paths {
-			mp.scriptPaths = append(mp.scriptPaths, p)
-		}
+		mp.scriptPaths = append(mp.scriptPaths, paths...)
 		return nil
 	}
 }

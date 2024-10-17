@@ -251,7 +251,6 @@ type localParamVal struct {
 	featureA bool
 	featureB bool
 }
-type remoteParamFixture struct{}
 
 type localParamFixture struct{}
 

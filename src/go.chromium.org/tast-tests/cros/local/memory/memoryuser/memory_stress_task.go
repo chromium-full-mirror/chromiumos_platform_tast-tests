@@ -29,7 +29,7 @@ type MemoryStressUnit struct {
 func (st *MemoryStressUnit) Run(ctx context.Context, br *browser.Browser, p *perf.Values) error {
 	startTime := time.Now()
 	conn, err := br.NewConn(ctx, st.url)
-	openLatency := time.Now().Sub(startTime)
+	openLatency := time.Since(startTime)
 	if err != nil {
 		return errors.New("failed to open MemoryStressUnit page")
 	}
@@ -62,7 +62,7 @@ func (st *MemoryStressUnit) Run(ctx context.Context, br *browser.Browser, p *per
 	if err := conn.WaitForExprFailOnErr(ctx, expr); err != nil {
 		return errors.Wrap(err, "unexpected error waiting for allocation")
 	}
-	memoryAllocateLatency := time.Now().Sub(startTime)
+	memoryAllocateLatency := time.Since(startTime)
 	if st.cooldown > 0 {
 		// GoBigSleepLint we sleep here to throttle allocation of memory. Allocating
 		// as fast as possible can cause instability.

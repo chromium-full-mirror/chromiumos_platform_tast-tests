@@ -103,7 +103,6 @@ func (f *accountManagerTestFixture) SetUp(ctx context.Context, s *testing.FixtSt
 		s.Error("Failed to start the log saver: ", err)
 	}
 
-	const playStorePackageName = "com.android.vending"
 	optinCtx, cancel := context.WithTimeout(ctx, optin.OptinTimeout+time.Minute)
 	defer cancel()
 

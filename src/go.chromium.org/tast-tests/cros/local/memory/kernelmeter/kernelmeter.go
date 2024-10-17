@@ -217,7 +217,7 @@ func (v *vmStatsMeter) stats() (*VMStatsData, error) {
 	v.mutex.Lock()
 	defer v.mutex.Unlock()
 
-	interval := time.Now().Sub(v.startSample.time)
+	interval := time.Since(v.startSample.time)
 	if interval.Seconds() == 0.0 {
 		return nil, errors.New("calling VMCounterStats too soon")
 	}
@@ -471,38 +471,6 @@ func MemInfo() (data *MemInfoFields, err error) {
 		KernelStack: info["KernelStack"],
 		VmallocUsed: info["VmallocUsed"],
 	}, nil
-}
-
-// readIntFromFile returns the numeric value of the content of filename, which
-// is typically a sysfs or procfs entry.
-func readIntFromFile(filename string) (int, error) {
-	b, err := ioutil.ReadFile(filename)
-	if err != nil {
-		return 0, err
-	}
-	x, err := strconv.Atoi(strings.TrimSpace(string(b)))
-	if err != nil {
-		return 0, errors.Wrapf(err, "bad integer: %q", b)
-	}
-	return x, nil
-}
-
-// readFirstIntFromFile assumes filename contains one or more space-separated
-// items, and returns the value of the first item which must be an integer.
-func readFirstIntFromFile(filename string) (int, error) {
-	b, err := ioutil.ReadFile(filename)
-	if err != nil {
-		return 0, err
-	}
-	f := strings.Fields(string(b))
-	if len(f) == 0 {
-		return 0, errors.Wrapf(err, "no fields in file %v", filename)
-	}
-	x, err := strconv.Atoi(f[0])
-	if err != nil {
-		return 0, errors.Wrapf(err, "bad integer: %q", f[0])
-	}
-	return x, nil
 }
 
 // ProcessMemory returns the approximate amount of virtual memory (swapped or

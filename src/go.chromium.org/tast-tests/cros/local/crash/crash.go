@@ -61,9 +61,6 @@ const (
 	ClobberCrashDir = "/mnt/stateful_partition/reboot_vault/crash"
 	// clobberCrashStash is a directory used to stash pre-existing crash reports after an FS clobber. Used in crash tests.
 	clobberCrashStash = "/mnt/stateful_partition/reboot_vault/crash.real"
-	// userCrashDirs is used for finding the directory name containing a hash for current logged-in user,
-	// in order to compare it with crash reporter log.
-	userCrashDirs = "/home/chronos/u-*/crash"
 	// FilterInPath is the path to the filter-in file.
 	FilterInPath = "/run/crash_reporter/filter-in"
 	// FilterOutPath is the path to the filter-out file.

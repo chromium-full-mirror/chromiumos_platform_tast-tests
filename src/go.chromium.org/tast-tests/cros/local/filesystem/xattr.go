@@ -22,7 +22,7 @@ func GetXattr(path, name string, value interface{}) error {
 	if size == 0 {
 		return nil
 	}
-	size, err = unix.Getxattr(path, name, data)
+	_, err = unix.Getxattr(path, name, data)
 	if err != nil {
 		return err
 	}

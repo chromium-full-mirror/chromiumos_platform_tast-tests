@@ -81,11 +81,6 @@ var (
 		fakeCameraInput: fakeHALImageInput,
 	}
 
-	internalCameraWithPlatformEffectsEnabled = cameraConfig{
-		cameraType:     testutil.UseRealCamera,
-		platformEffect: platformEffectEnabled,
-	}
-
 	internalCameraWithPlatformEffectsDisabled = cameraConfig{
 		cameraType:     testutil.UseRealCamera,
 		platformEffect: platformEffectDisabled,
@@ -272,20 +267,20 @@ func (f *mediaFixtureImpl) SetUp(ctx context.Context, s *testing.FixtState) inte
 	var fixtData FixtData
 	parentVal := s.ParentValue()
 
-	switch parentVal.(type) {
+	switch parentVal := parentVal.(type) {
 	case *baseSetupFixtData:
-		f.cr = parentVal.(*baseSetupFixtData).cr
+		f.cr = parentVal.cr
 		fixtData = FixtData{
 			cr: f.cr,
-			bt: parentVal.(*baseSetupFixtData).bt,
+			bt: parentVal.bt,
 		}
 	case *arc.PreData:
-		f.cr = parentVal.(*arc.PreData).Chrome
+		f.cr = parentVal.Chrome
 		fixtData = FixtData{
 			cr:  f.cr,
 			bt:  browser.TypeAsh,
-			arc: parentVal.(*arc.PreData).ARC,
-			dev: parentVal.(*arc.PreData).UIDevice,
+			arc: parentVal.ARC,
+			dev: parentVal.UIDevice,
 		}
 	default:
 		s.Fatalf("Base fixture %T is not supported", parentVal)

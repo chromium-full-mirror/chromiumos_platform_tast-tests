@@ -387,13 +387,6 @@ func evIOCGAbs(ev uint) uint {
 	return ior('E', 0x40+ev, sizeofAbsInfo)
 }
 
-// evIOCSAbs sets an encoded Event-Ioctl-Set-Absolute value to be used for ioctl().
-// Similar to the EVIOCSABS found in include/uapi/linux/input.h
-func evIOCSAbs(ev uint) uint {
-	const sizeofAbsInfo = 0x24
-	return iow('E', 0xc0+ev, sizeofAbsInfo)
-}
-
 type kernelEventEntry struct {
 	et  EventType
 	ec  EventCode

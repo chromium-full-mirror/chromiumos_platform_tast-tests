@@ -73,7 +73,7 @@ type MountInfo struct {
 
 // lineRe is the regex to be matched with a line entry in /proc/${PID}/mountinfo.
 var lineRe = regexp.MustCompile(
-	"^(\\d+) (\\d+) (\\d+):(\\d+) (\\S+) (\\S+) (\\S+)(?: shared:(\\d+))?(?: master:(\\d+))?(?: propagate_from:(\\d+))?(?: (unbindable))? - (\\S+) (\\S+) (\\S+)$")
+	`^(\d+) (\d+) (\d+):(\d+) (\S+) (\S+) (\S+)(?: shared:(\d+))?(?: master:(\d+))?(?: propagate_from:(\d+))?(?: (unbindable))? - (\S+) (\S+) (\S+)$`)
 
 // String components has escaped characters for ' ', Tab, LF and '\'.
 var unescapeRe = regexp.MustCompile(`\\040|\\011|\\012|\\134`)

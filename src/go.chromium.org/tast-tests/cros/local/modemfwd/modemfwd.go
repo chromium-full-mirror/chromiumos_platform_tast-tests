@@ -197,7 +197,7 @@ func GetAutoUpdatePrefValue(ctx context.Context) bool {
 	if err != nil {
 		return false
 	}
-	if bytes.Compare(pref, []byte("1")) == 0 {
+	if bytes.Equal(pref, []byte("1")) {
 		return true
 	}
 	return false
@@ -291,9 +291,9 @@ func WaitForUsbDevice(ctx context.Context, usbID string, maxWaitTime time.Durati
 type qmiService int
 
 const (
-	qmiWirelessDataService     qmiService = 1
-	qmiDeviceManagementService            = 2
-	qmiNetworkAccessService               = 3
+	qmiWirelessDataService     qmiService = iota + 1
+	qmiDeviceManagementService
+	qmiNetworkAccessService
 )
 
 // requiredQmiServices are the QMI services required for a QRTR node to represent a modem

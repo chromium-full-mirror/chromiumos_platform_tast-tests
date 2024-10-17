@@ -823,7 +823,7 @@ func SwitchSlot(ctx context.Context) (uint32, error) {
 	if primary == setSlot {
 		setSlot = 2
 	}
-	modem, err = modem.SetPrimarySimSlot(ctx, setSlot)
+	_, err = modem.SetPrimarySimSlot(ctx, setSlot)
 	if err != nil {
 		return math.MaxUint32, err
 	}
@@ -1003,28 +1003,11 @@ func (m *Modem) GetFirstConnectedDataBearer(ctx context.Context, apnType mmconst
 			continue
 		}
 
-		if bearer.Connected() == true {
+		if bearer.Connected() {
 			return bearer, nil
 		}
 	}
 	return nil, errors.New("no bearers are connected")
-}
-
-// getPropertiesValueOfBearer gets the |Properties| value of the bearer.
-func (i Properties) getPropertiesValueOfBearer() (map[string]interface{}, error) {
-	if i.err != nil {
-		return nil, i.err
-	}
-	propsGet := i.Get(mmconst.BearerPropertyProperties)
-	if propsGet.err != nil {
-		return nil, errors.Wrap(propsGet.err, "failed to read bearer properties")
-	}
-	// The bearer's |Properties| value mostly contains the APN information.
-	props, ok := propsGet.iface.(map[string]interface{})
-	if !ok {
-		return nil, errors.New("failed to parse bearer properties")
-	}
-	return props, nil
 }
 
 // DeleteAllBearers deletes all data bearers.

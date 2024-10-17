@@ -85,16 +85,6 @@ type EncodeTestOptions struct {
 	BatteryDischargeMode setup.BatteryDischargeMode
 }
 
-// testMode represents the test's running mode.
-type testMode int
-
-const (
-	// functionalTest indicates a functional test.
-	functionalTest testMode = iota
-	// performanceTest indicates a performance test. CPU scaling should be adujst to performance.
-	performanceTest
-)
-
 // runARCVideoEncoderTest runs arcvideoencoder_test in ARC.
 // It pushes the binary files with different ABI and testing video data into ARC, and runs each binary for each binArgs.
 // pv is optional value, passed when we run performance test and record measurement value.

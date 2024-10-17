@@ -589,7 +589,7 @@ func TestCleanupDevcoredump(t *gotesting.T) {
 		t.Fatalf("Devcoredump data file doesn't exist in %s/", dirCD1)
 	}
 	// nothing but a single '0' is expected
-	if bytes.Compare(data, []byte("0")) != 0 {
+	if !bytes.Equal(data, []byte("0")) {
 		t.Fatalf("cleanupDevcoredump failed to write '0' to %s/data", dirCD1)
 	}
 }

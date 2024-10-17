@@ -89,7 +89,7 @@ func saveScreenshotCDP(ctx context.Context, dir string) error {
 	}
 
 	bgURL := chrome.ExtensionBackgroundPageURL(chrome.TestExtensionID)
-	all, err := sm.FindTargets(ctx, chrome.MatchTargetURL(bgURL))
+	all, _ := sm.FindTargets(ctx, chrome.MatchTargetURL(bgURL))
 	if len(all) == 0 {
 		// Target not found.
 		return errors.New("the background page of the test extension not found")

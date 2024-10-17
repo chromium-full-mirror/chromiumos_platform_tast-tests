@@ -89,7 +89,6 @@ func (ds *GPUDataSource) Start(ctx context.Context) error {
 			case <-ctx.Done():
 				return
 			default:
-				break
 			}
 
 			for bt, recorder := range recorders {

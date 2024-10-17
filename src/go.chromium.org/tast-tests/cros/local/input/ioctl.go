@@ -12,9 +12,9 @@ import (
 type iocDir uint
 
 const (
-	iocNone  iocDir = 0
-	iocWrite        = 1
-	iocRead         = 2
+	iocNone  iocDir = iota
+	iocWrite
+	iocRead
 )
 
 // ioctl-related constants and functions taken from Linux kernel:
@@ -27,12 +27,6 @@ const (
 	// In the rest, including Intel and ARM it is defined as a 14-bit constant.
 	// See https://elixir.bootlin.com/linux/latest/ident/_IOC_SIZEBITS
 	iocSizeBits = 14
-	iocDirBits  = 2
-
-	iocNrMask   = (1 << iocNrBits) - 1
-	iocTypeMask = (1 << iocTypeBits) - 1
-	iocSizeMask = (1 << iocSizeBits) - 1
-	iocDirMask  = (1 << iocDirBits) - 1
 
 	iocNrShift   = 0
 	iocTypeShift = iocNrShift + iocNrBits

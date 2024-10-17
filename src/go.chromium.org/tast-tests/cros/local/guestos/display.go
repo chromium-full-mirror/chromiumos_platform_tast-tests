@@ -151,5 +151,5 @@ func RunWindowedApp(ctx context.Context, tconn *chrome.TestConn, guest vm.Guest,
 		return "", errors.Wrapf(err, "command %v failed to terminate properly", cmdline)
 	}
 
-	return string(buf.Bytes()), nil
+	return buf.String(), nil
 }

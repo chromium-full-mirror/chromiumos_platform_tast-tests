@@ -18,7 +18,6 @@ import (
 
 // TestApp represents the Play Billing test PWA and ARC Payments Overlay.
 type TestApp struct {
-	cr          *chrome.Chrome
 	pbconn      *chrome.Conn
 	uiAutomator *ui.Device
 	wm          *webapk.Manager

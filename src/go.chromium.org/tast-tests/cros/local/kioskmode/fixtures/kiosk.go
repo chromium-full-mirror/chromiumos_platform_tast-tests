@@ -141,6 +141,9 @@ func (k *kioskFixture) SetUp(ctx context.Context, s *testing.FixtState) interfac
 
 	if k.lacros {
 		testConn, err := cr.TestAPIConn(ctx)
+		if err != nil {
+			s.Fatal("Failed to create TestAPI connection: ", err)
+		}
 		_, err = lacrosproc.Root(ctx, testConn)
 		if err != nil {
 			s.Fatal("Failed to get lacros proc: ", err)

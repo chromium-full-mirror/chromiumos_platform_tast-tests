@@ -103,7 +103,7 @@ func (s *Service) GetIPConfigs(ctx context.Context) ([]*IPConfig, error) {
 	if err != nil {
 		return nil, errors.Wrapf(err, "failed to get Device properties for %s", s.ObjectPath())
 	}
-	paths, err := props.GetObjectPaths(shillconst.DevicePropertyIPConfigs)
+	paths, _ := props.GetObjectPaths(shillconst.DevicePropertyIPConfigs)
 	var ret []*IPConfig
 	for _, path := range paths {
 		ipconfig, err := NewIPConfig(ctx, path)

@@ -40,9 +40,6 @@ const (
 
 	// VideoFeatureGTFO avoids using the Chrome GPU process as a proxy in between renderers and video decoder utility processes (go/oopvd-gtfo-dd).
 	VideoFeatureGTFO
-
-	// This must be defined last.
-	numChromeVideoFeatures = iota
 )
 
 func initChromeVideoFixtures() {

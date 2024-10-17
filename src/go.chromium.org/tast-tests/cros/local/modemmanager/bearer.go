@@ -38,7 +38,6 @@ type BearerProperties struct {
 	multiplex      uint32
 	password       string
 	profile        *BearerProperties
-	profileEnabled bool
 	profileID      int32
 	profileName    string
 	profileSource  uint32
@@ -149,31 +148,31 @@ func parseIPConfig(props *dbusutil.Properties, propertyName string) (*IPConfig, 
 	}
 	value, ok = ipConfigMap[mmconst.BearerPropertyIPAddress]
 	if ok {
-		ipConfig.Address, ok = value.(string)
+		ipConfig.Address, _ = value.(string)
 	}
 	value, ok = ipConfigMap[mmconst.BearerPropertyIPPrefix]
 	if ok {
-		ipConfig.Prefix, ok = value.(uint32)
+		ipConfig.Prefix, _ = value.(uint32)
 	}
 	value, ok = ipConfigMap[mmconst.BearerPropertyIPDns1]
 	if ok {
-		ipConfig.DNS1, ok = value.(string)
+		ipConfig.DNS1, _ = value.(string)
 	}
 	value, ok = ipConfigMap[mmconst.BearerPropertyIPDns2]
 	if ok {
-		ipConfig.DNS2, ok = value.(string)
+		ipConfig.DNS2, _ = value.(string)
 	}
 	value, ok = ipConfigMap[mmconst.BearerPropertyIPDns3]
 	if ok {
-		ipConfig.DNS3, ok = value.(string)
+		ipConfig.DNS3, _ = value.(string)
 	}
 	value, ok = ipConfigMap[mmconst.BearerPropertyIPGateway]
 	if ok {
-		ipConfig.Gateway, ok = value.(string)
+		ipConfig.Gateway, _ = value.(string)
 	}
 	value, ok = ipConfigMap[mmconst.BearerPropertyIPMtu]
 	if ok {
-		ipConfig.Mtu, ok = value.(uint32)
+		ipConfig.Mtu, _ = value.(uint32)
 	}
 	return &ipConfig, nil
 }

@@ -105,7 +105,7 @@ func ResolveAssistantHotkey(dutFeatures *protocol.DUTFeatures) (Accelerator, err
 
 // SendTextQuery sends text query to Assistant and returns the query status.
 func SendTextQuery(ctx context.Context, tconn *chrome.TestConn, query string) (QueryStatus, error) {
-	regexp := regexp.MustCompile("^Error: Session state must be ACTIVE to send a text query\\.")
+	regexp := regexp.MustCompile(`^Error: Session state must be ACTIVE to send a text query\.`)
 
 	var status QueryStatus
 	if err := testing.Poll(ctx, func(ctx context.Context) error {

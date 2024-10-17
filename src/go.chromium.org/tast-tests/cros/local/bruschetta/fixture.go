@@ -379,7 +379,6 @@ func (f *bruschettaFixture) Reset(ctx context.Context) error {
 }
 
 func (f *bruschettaFixture) PreTest(ctx context.Context, s *testing.FixtTestState) {
-	return
 }
 
 func (f *bruschettaFixture) PostTest(ctx context.Context, s *testing.FixtTestState) {

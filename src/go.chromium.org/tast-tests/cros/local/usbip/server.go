@@ -80,7 +80,7 @@ func (s *Server) AddDevice(device usbdevice.Device) AttachFn {
 		// 	   3-1 -> usbip://localhost:3240/1-1.0
 		// 		   -> remote bus/dev 000/002
 		var assignedPort string
-		re := regexp.MustCompile("(?sm)^Port (\\d+).*?-> usbip:.*?(\\d+-\\d+\\.\\d+)$")
+		re := regexp.MustCompile(`(?sm)^Port (\d+).*?-> usbip:.*?(\d+-\d+\.\d+)$`)
 		if err := testing.Poll(ctx, func(ctx context.Context) error {
 			portCmd := testexec.CommandContext(ctx, "usbip", "port")
 			output, err := portCmd.CombinedOutput()

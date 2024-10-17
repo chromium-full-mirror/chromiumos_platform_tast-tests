@@ -31,7 +31,6 @@ const (
 
 var (
 	videoPlayer = nodewith.NameStartingWith("YouTube Video Player").Role(role.GenericContainer)
-	video       = nodewith.Role(role.Video).Ancestor(videoPlayer)
 	videoButton = nodewith.Role(role.Button).Ancestor(videoPlayer).NameRegex(regexp.MustCompile("^(Pause|Play).*"))
 )
 

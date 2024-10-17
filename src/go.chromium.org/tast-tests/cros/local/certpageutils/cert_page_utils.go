@@ -38,9 +38,6 @@ const TrustCheckboxText = "Trust this certificate for identifying websites"
 // failedToSetupKeyboardErr is error message for not successful keyboard initialization.
 const failedToSetupKeyboardErr = "failed to setup keyboard"
 
-// failedToUseKeyboardErr is error message for failed keyboard usage.
-const failedToUseKeyboardErr = "failed to use keyboard"
-
 // failedToDeleteCertErr is error message for certificate deletion failure.
 const failedToDeleteCertErr = "failed to delete cert"
 
@@ -50,8 +47,13 @@ const failedToPressOkErr = "failed to press OK button"
 // failedToSelectNextUIElementErr is error message for failed interaction next UI element.
 const failedToSelectNextUIElementErr = "failed to select next UI element"
 
-// KeyboardKey is a key name for the keyboard in ctx if it is provided.
-const KeyboardKey = "keyboard"
+// Define a custom type for context keys to avoid collisions
+type ContextKey string
+
+const (
+	// KeyboardKey is a key name for the keyboard in ctx if it is provided.
+	KeyboardKey ContextKey = "keyboard"
+)
 
 // ManageCertSettingsWebArea is UI element finder for "Settings - Manage certificates" root web area.
 var ManageCertSettingsWebArea = nodewith.Name("Settings - Manage certificates").Role("rootWebArea")
@@ -355,26 +357,6 @@ func getKeyboard(ctx context.Context) (*input.KeyboardEventWriter, func(context.
 	}
 	cleanup := func(ctx context.Context) { kb.Close(ctx) }
 	return kb, cleanup, nil
-}
-
-// pressTabsThenPressEnter will press "Tab" on keyboard according to "tabsToPress" parameter and then press "Enter" on the focused element.
-// Function can be used when it is difficult or not possible to create UI element Finder and use DoDefault().
-func pressTabsThenPressEnter(ctx context.Context, tabsToPress int) (retErr error) {
-	kb, kbCleanup, err := getKeyboard(ctx)
-	defer kbCleanup(ctx)
-	if err != nil {
-		return errors.Wrap(err, failedToSetupKeyboardErr)
-	}
-	for i := 0; i < tabsToPress; i++ {
-		if err := kb.Accel(ctx, "tab"); err != nil {
-			return errors.Wrap(err, failedToUseKeyboardErr)
-		}
-	}
-
-	if err := kb.Accel(ctx, "enter"); err != nil {
-		return errors.Wrap(err, failedToUseKeyboardErr)
-	}
-	return nil
 }
 
 // expandCertOrganizationBox expands the certificate list of the organization.

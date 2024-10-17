@@ -228,7 +228,7 @@ func ParseSmapsData(data []byte) ([]SharedMapping, error) {
 // SwapPss, we parse smaps for all shared mappings in all processes, and then
 // divide their "Swap" value by the number of times the shared memory is mapped.
 func makeSharedInfoMap(ctx context.Context, processes []*process.Process) (SharedInfoMap, error) {
-	g, ctx := errgroup.WithContext(ctx)
+	g, _ := errgroup.WithContext(ctx)
 	procSwaps := make([][]SharedMapping, len(processes))
 	for index, process := range processes {
 		i := index

@@ -20,11 +20,6 @@ import (
 	"go.chromium.org/tast/core/testing"
 )
 
-const (
-	timeout  = 30 * time.Second
-	interval = time.Second
-)
-
 // VerifyWindowCount verifies that there are `windowCount` app windows.
 func VerifyWindowCount(ctx context.Context, tconn *chrome.TestConn, windowCount int) error {
 	ws, err := ash.GetAllWindows(ctx, tconn)

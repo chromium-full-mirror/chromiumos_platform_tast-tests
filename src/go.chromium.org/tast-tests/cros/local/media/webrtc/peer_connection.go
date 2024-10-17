@@ -17,13 +17,6 @@ import (
 	"go.chromium.org/tast/core/testing"
 )
 
-type peerConnectionType bool
-
-const (
-	localPeerConnection  peerConnectionType = false
-	remotePeerConnection peerConnectionType = true
-)
-
 // WebRTC Stats collected on transmission side.
 type txMeas struct {
 	// https://www.w3.org/TR/webrtc-stats/#outboundrtpstats-dict*

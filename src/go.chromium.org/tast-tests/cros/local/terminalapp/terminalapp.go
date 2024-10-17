@@ -32,8 +32,6 @@ import (
 	"go.chromium.org/tast/core/testing"
 )
 
-const uiTimeout = 15 * time.Second
-
 // LaunchTerminalTimeout is the timeout for launching Terminal. It normally
 // takes a few seconds after running Crostini. However, on some devices
 // launching Terminal when restarting Crostini is unexpectedly slow, which
@@ -49,11 +47,9 @@ var (
 	linuxTab            = nodewith.NameContaining("@penguin: ").Role(role.Window).ClassName("BrowserFrame")
 	bruschettaTab       = nodewith.NameContaining("chronos@refvm: ").Role(role.Window).ClassName("BrowserFrame")
 	sshTab              = nodewith.NameContaining("chronos@localhost:").Role(role.Window).ClassName("BrowserFrame")
-	homeTab             = nodewith.Name("Terminal").Role(role.Window).ClassName("BrowserFrame")
 	terminalLeaveButton = nodewith.Name("Leave").Role(role.Button).HasClass("MdTextButton")
 	terminalTextField   = nodewith.Name("Terminal input").Role(role.TextField)
 
-	webArea = nodewith.NameRegex(regexp.MustCompile(`\@penguin\: `)).Role(role.RootWebArea)
 	// Prompt is the input prefix.
 	Prompt = AsRow(nodewith.NameRegex(regexp.MustCompile(`\$\s*$`)))
 

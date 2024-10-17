@@ -26,8 +26,6 @@ const (
 
 const tmpPathPattern = "nebraska-"
 
-const logFileName = "nebraska.log"
-
 const statefulLSBRelease = "/mnt/stateful_partition/etc/lsb-release"
 
 // runInTmpDir creates a temporary directory to run Nebraska in.

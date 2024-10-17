@@ -456,9 +456,7 @@ func parseStatFileInstructions(path string) ([]valueWithTimestamp, error) {
 			return nil, errors.Errorf("unexpected output: %q", l)
 		}
 
-		t, err := time.ParseDuration(m[1] + "s")
-		if err != nil {
-		}
+		t, _ := time.ParseDuration(m[1] + "s")
 
 		instructions, err := strconv.ParseInt(m[2], 0, 64)
 		if err != nil {

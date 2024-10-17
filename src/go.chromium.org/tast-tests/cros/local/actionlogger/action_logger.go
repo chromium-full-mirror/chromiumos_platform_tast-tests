@@ -33,18 +33,18 @@ type ActionName string
 // The list of supported actions.
 const (
 	KeyAccel             ActionName = "key_accel"
-	KeyPress                        = "key_press"
-	KeyRelease                      = "key_release"
-	KeyCodeType                     = "key_code_type"
-	MouseClick                      = "mouse_click"
-	MouseDoubleClick                = "mouse_double_click"
-	TouchscreenTap                  = "touchscreen_tap"
-	TouchscreenLongPress            = "touchscreen_tap"
-	TextEntry                       = "text_entry"
-	WaitUIExist                     = "wait_ui_exist"
-	WaitUIGone                      = "wait_ui_gone"
-	WaitUIEnabled                   = "wait_ui_enabled"
-	WaitUIFocused                   = "wait_ui_Focused"
+	KeyPress             ActionName = "key_press"
+	KeyRelease           ActionName = "key_release"
+	KeyCodeType          ActionName = "key_code_type"
+	MouseClick           ActionName = "mouse_click"
+	MouseDoubleClick     ActionName = "mouse_double_click"
+	TouchscreenTap       ActionName = "touchscreen_tap"
+	TouchscreenLongPress ActionName = "touchscreen_tap"
+	TextEntry            ActionName = "text_entry"
+	WaitUIExist          ActionName = "wait_ui_exist"
+	WaitUIGone           ActionName = "wait_ui_gone"
+	WaitUIEnabled        ActionName = "wait_ui_enabled"
+	WaitUIFocused        ActionName = "wait_ui_Focused"
 )
 
 // ClickInput keeps the info needed for a mouse click.
