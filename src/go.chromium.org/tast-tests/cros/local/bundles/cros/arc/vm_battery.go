@@ -110,7 +110,9 @@ func VMBattery(ctx context.Context, s *testing.State) {
 	if serr2 != nil {
 		s.Fatalf("Failed to convert vm percentage %s: %q", vmInfo["level"], serr2)
 	}
-	if int(math.Round(batLevel)) != vmLevel {
-		s.Fatalf("The charged percentage does not match: %d vs %d", int(math.Round(batLevel)), vmLevel)
+	// Display percentage logic is stateful and can return slightly different
+	// values when queried from different sources. Allow 3% of variance.
+	if math.Abs(batLevel-float64(vmLevel)) > 3.0 {
+		s.Fatalf("The charged percentage does not match: %f vs %d", batLevel, vmLevel)
 	}
 }
