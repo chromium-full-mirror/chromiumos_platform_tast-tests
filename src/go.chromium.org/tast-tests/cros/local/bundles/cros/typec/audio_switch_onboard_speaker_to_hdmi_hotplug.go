@@ -82,9 +82,6 @@ func AudioSwitchOnboardSpeakerToHDMIHotplug(ctx context.Context, s *testing.Stat
 	}
 	defer faillog.DumpUITreeOnError(cleanupCtx, s.OutDir(), s.HasError, tconn)
 
-	// Config file which contains expected values of USB4/TBT parameters.
-	const testConfig = "test_config.json"
-
 	// The Type-C HDMI is connected to C-Switch in P1 as per the intel_cswitch_set1 suite setup.
 	cswitchVar := "1"
 	if cswitchON, ok := s.Var("typec.cSwitchPort"); ok {

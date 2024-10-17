@@ -35,10 +35,9 @@ func SymlinkToUsb(ctx context.Context, s *testing.State) {
 		s.Fatal("Could not read typec directory: ", err)
 	}
 
+	re := regexp.MustCompile(`^port\d+$`)
 	for _, port := range ls {
-		if matched, err := regexp.MatchString(`^port\d+$`, port.Name()); err != nil {
-			s.Fatalf("Could not match regex with %s: %v", port.Name(), err)
-		} else if !matched {
+		if !re.MatchString(port.Name()) {
 			s.Logf("Skipping %s since it is not a port", port.Name())
 		} else if err := checkTypecPortDir(filepath.Join(typecPath, port.Name())); err != nil {
 			s.Fatalf("Failed to verify proper symlink within %s: %v", port.Name(), err)
@@ -59,10 +58,9 @@ func checkTypecPortDir(typecPortPath string) error {
 	}
 
 	var usbPorts []string
+	re := regexp.MustCompile(`^usb\d+(-|_)port\d+`)
 	for _, file := range ls {
-		if matched, err := regexp.MatchString(`^usb\d+(-|_)port\d+`, file.Name()); err != nil {
-			return errors.Wrapf(err, "could not match regex with %s", file.Name())
-		} else if matched {
+		if re.MatchString(file.Name()) {
 			usbPorts = append(usbPorts, file.Name())
 		}
 	}

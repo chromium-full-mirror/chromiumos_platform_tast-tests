@@ -55,8 +55,6 @@ func HotplugUSBHeadsetAudioPlayback(ctx context.Context, s *testing.State) {
 	defer cancel()
 
 	cr := s.FixtValue().(chrome.HasChrome).Chrome()
-	// Config file which contains expected values of USB4/TBT parameters.
-	const testConfig = "test_config.json"
 	// The Type-C Headset is connected to C-Switch in P3 as per the intel_cswitch_set1 suite setup.
 	cswitchVar := "3"
 	if cswitchON, ok := s.Var("typec.cSwitchPort"); ok {

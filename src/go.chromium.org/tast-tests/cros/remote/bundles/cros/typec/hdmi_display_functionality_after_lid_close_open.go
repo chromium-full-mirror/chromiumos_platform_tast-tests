@@ -31,7 +31,6 @@ import (
 
 type displayParams struct {
 	displayType        string
-	displayDetectionRe string
 	iterationValue     int
 }
 

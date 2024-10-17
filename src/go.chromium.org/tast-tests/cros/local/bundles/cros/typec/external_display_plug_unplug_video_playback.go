@@ -68,9 +68,6 @@ func ExternalDisplayPlugUnplugVideoPlayback(ctx context.Context, s *testing.Stat
 	// Test Params.
 	testParms := s.Param().(displayFunctionalities)
 
-	// Config file which contains expected values of USB4 parameters.
-	const jsonTestConfig = "test_config.json"
-
 	cswitchVar := testParms.cSwitchON
 	if cswitchON, ok := s.Var("typec.cSwitchPort"); ok {
 		cswitchVar = cswitchON
@@ -176,7 +173,7 @@ func ExternalDisplayPlugUnplugVideoPlayback(ctx context.Context, s *testing.Stat
 	}
 
 	// Get current audio output device info.
-	deviceName, deviceType, err = cras.SelectedOutputDevice(ctx)
+	_, deviceType, err = cras.SelectedOutputDevice(ctx)
 	if err != nil {
 		s.Fatal("Failed to get the selected audio device: ", err)
 	}

@@ -260,6 +260,9 @@ func CheckTBTDevice(ctx context.Context, d *dut.DUT, expected bool, gen int) err
 	}
 
 	found := ""
+	// Check for retimers.
+	// They are of the form "0-0:1.1" or "0-0:3.1".
+	re := regexp.MustCompile(`[\d\-\:]+\.\d`)
 	for _, device := range strings.Split(string(out), "\n") {
 		if device == "" {
 			continue
@@ -269,11 +272,7 @@ func CheckTBTDevice(ctx context.Context, d *dut.DUT, expected bool, gen int) err
 			continue
 		}
 
-		// Check for retimers.
-		// They are of the form "0-0:1.1" or "0-0:3.1".
-		if matched, err := regexp.MatchString(`[\d\-\:]+\.\d`, device); err != nil {
-			return errors.Wrap(err, "couldn't execute retimer regexp")
-		} else if matched {
+		if re.MatchString(device) {
 			continue
 		}
 

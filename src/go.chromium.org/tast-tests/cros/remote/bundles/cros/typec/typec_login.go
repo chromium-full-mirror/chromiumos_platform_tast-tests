@@ -73,7 +73,7 @@ func TypecLogin(ctx context.Context, s *testing.State) {
 	client := typec.NewServiceClient(cl.Conn)
 
 	peripheralDataEnableReq := s.Param().(bool)
-	if peripheralDataEnableReq == true {
+	if peripheralDataEnableReq {
 		_, err = client.NewChromeLoginWithPeripheralDataAccess(ctx, &typec.KeyPath{Path: keyPath})
 		if err != nil {
 			s.Fatal("Failed to start Chrome: ", err)

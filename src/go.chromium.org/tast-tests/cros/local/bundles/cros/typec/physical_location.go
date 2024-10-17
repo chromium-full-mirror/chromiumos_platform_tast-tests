@@ -35,12 +35,9 @@ func PhysicalLocation(ctx context.Context, s *testing.State) {
 		s.Fatal("Could not read typec directory")
 	}
 
+	re := regexp.MustCompile(`^port\d+$`)
 	for _, port := range ports {
-		matched, err := regexp.MatchString(`^port\d+$`, port.Name())
-		if err != nil {
-			s.Fatalf("Could not match regex with %s: %v", port.Name(), err)
-		}
-		if !matched {
+		if !re.MatchString(port.Name()) {
 			s.Logf("Skipping %s since it is not a port", port.Name())
 			continue
 		}

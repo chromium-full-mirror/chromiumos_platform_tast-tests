@@ -18,11 +18,6 @@ import (
 	"go.chromium.org/tast/core/errors"
 )
 
-// Default device path at which the MCCI switch serial device is always mounted.
-const (
-	mcciPortPath = "/dev/ttyACM0"
-)
-
 // Switch is the external facing struct that represents an MCCI switch.
 type Switch struct {
 	sPort serial.Port
