@@ -30,6 +30,10 @@ func ForgetNetwork(ctx context.Context, a *arc.ARC, ssid string) error {
 		}
 		netInfos := strings.Split(network, " ")
 
+		if len(netInfos) < 2 {
+			return errors.New("list-networks result is not valid: " + network)
+		}
+
 		netInfoSplit := strings.Split(string(netInfos[1]), "\"")
 		if len(netInfoSplit) < 2 {
 			return errors.New("list-networks result is not valid: " + network)
