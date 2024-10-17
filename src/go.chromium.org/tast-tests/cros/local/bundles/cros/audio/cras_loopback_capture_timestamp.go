@@ -38,7 +38,7 @@ func CrasLoopbackCaptureTimestamp(ctx context.Context, s *testing.State) {
 		s.Fatal("Failed to set internal device as selected device: ", err)
 	}
 
-	floopDev, err := crastestclient.RequestFloopMask(ctx, 255)
+	floopDev, _ := crastestclient.RequestFloopMask(ctx, 255)
 	defer audio.RestartCras(ctx)
 
 	// Add 5 second buffer.

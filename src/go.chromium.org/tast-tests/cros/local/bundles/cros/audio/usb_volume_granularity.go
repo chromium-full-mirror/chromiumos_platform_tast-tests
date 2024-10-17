@@ -43,7 +43,7 @@ func countOfVolumeChanges(ctx context.Context, kb *input.KeyboardEventWriter) (i
 	if err != nil {
 		return -1, errors.Wrap(err, "failed to create the volumeHelper")
 	}
-	originalVolume, err := vh.ActiveNodeVolume(ctx)
+	originalVolume, _ := vh.ActiveNodeVolume(ctx)
 
 	defer func() {
 		if err := vh.SetVolume(ctxForCleanUp, originalVolume); err != nil {
@@ -62,7 +62,7 @@ func countOfVolumeChanges(ctx context.Context, kb *input.KeyboardEventWriter) (i
 
 	testing.ContextLog(ctx, "Press 'VolumeUp' to make sure unmute")
 
-	audioVh, err := audio.NewVolumeHelper(ctx)
+	audioVh, _ := audio.NewVolumeHelper(ctx)
 	muted, err := audioVh.IsMuted(ctx)
 	if err != nil {
 		return -1, errors.Wrap(err, "failed to check audio mute status after pressing volumeup")

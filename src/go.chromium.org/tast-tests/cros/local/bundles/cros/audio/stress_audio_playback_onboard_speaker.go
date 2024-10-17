@@ -179,7 +179,7 @@ func StressAudioPlaybackOnboardSpeaker(ctx context.Context, s *testing.State) {
 			}
 			// Sleep for 2 minutes if remainingTime is greater or equal to 2 minutes.
 			// Otherwise sleep for remainingTime.
-			sleepingDuration := endTime.Sub(time.Now())
+			sleepingDuration := time.Until(endTime)
 			testing.ContextLog(ctx, "Checking audio routing, test remaining time: ", sleepingDuration)
 			if sleepingDuration >= 2*time.Minute {
 				sleepingDuration = 2 * time.Minute

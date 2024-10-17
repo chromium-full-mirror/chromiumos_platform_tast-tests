@@ -130,7 +130,7 @@ func LockUnlockPlayback(ctx context.Context, s *testing.State) {
 	// GoBigSleepLint: Make sure the test capture enough audio samples before lock
 	// And add some time to make sure the segment fully contains audio.
 	testing.Sleep(ctx, segmentLength+7*time.Second)
-	lockTime := time.Now().Sub(captureTimestamp)
+	lockTime := time.Since(captureTimestamp)
 	if err := lockscreen.Lock(ctx, tconn); err != nil {
 		s.Fatal("Failed to lock the screen: ", err)
 	}
@@ -146,11 +146,11 @@ func LockUnlockPlayback(ctx context.Context, s *testing.State) {
 	s.Log("Ready to unlock")
 	// GoBigSleepLint: Make sure the test capture enough audio samples before unlock
 	testing.Sleep(ctx, segmentLength)
-	err = lockscreen.UnlockWithPassword(ctx, tconn, cr.Creds().User, cr.Creds().Pass, kb, 30*time.Second, 30*time.Second)
-	unlockTime := time.Now().Sub(captureTimestamp)
+	_ = lockscreen.UnlockWithPassword(ctx, tconn, cr.Creds().User, cr.Creds().Pass, kb, 30*time.Second, 30*time.Second)
+	unlockTime := time.Since(captureTimestamp)
 	// GoBigSleepLint: Make sure the test capture enough audio samples after unlock
 	testing.Sleep(ctx, segmentLength)
-	finishTime = time.Now().Sub(captureTimestamp)
+	finishTime = time.Since(captureTimestamp)
 
 	s.Log("lock time: ", lockTime.Seconds())
 	s.Log("unlock time: ", unlockTime.Seconds())

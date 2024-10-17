@@ -26,10 +26,6 @@ import (
 	"go.chromium.org/tast/core/testing/hwdep"
 )
 
-type audioFormatParams struct {
-	verifyPendrive bool
-}
-
 func init() {
 	testing.AddTest(&testing.Test{
 		Func:         CheckingAudioFormats,

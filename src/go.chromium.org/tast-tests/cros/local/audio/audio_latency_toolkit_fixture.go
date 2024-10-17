@@ -56,6 +56,7 @@ func (f LatencyToolkitFixture) SetUp(ctx context.Context, s *testing.FixtState) 
 		s.Fatal("Teensy not connected to DUT")
 	}
 
+	//lint:ignore SA5011 teensyDevice is actually checked right above
 	f.Device = *teensyDevice
 
 	return f

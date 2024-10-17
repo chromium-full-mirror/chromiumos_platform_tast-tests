@@ -58,9 +58,8 @@ func RemoveCalibFiles(ctx context.Context, soundCardID string, count uint) error
 // CreateCalibFiles creates CalibFiles.
 func CreateCalibFiles(ctx context.Context, soundCardID string, count uint) error {
 	for i := 0; i < int(count); i++ {
-		s := fmt.Sprintf(calibYamlFile)
 		calib := fmt.Sprintf(CalibFiles, soundCardID, i)
-		if err := os.WriteFile(calib, []byte(s), 0644); err != nil {
+		if err := os.WriteFile(calib, []byte(calibYamlFile), 0644); err != nil {
 			return errors.Wrapf(err, "failed to create %s", calib)
 		}
 	}
@@ -123,7 +122,7 @@ func GetSoundCardID(ctx context.Context) (string, error) {
 		if str == "" {
 			return errors.New("no sound card")
 		}
-		soundCardID = strings.Trim(strings.TrimLeft(str, "card 0: "), " ")
+		soundCardID = strings.Trim(strings.TrimPrefix(str, "card 0: "), " ")
 		return nil
 	}, &testing.PollOptions{Timeout: 3 * time.Second}); err != nil {
 		return "", err

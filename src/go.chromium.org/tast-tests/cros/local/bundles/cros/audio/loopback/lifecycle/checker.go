@@ -115,7 +115,7 @@ const (
 // soxStats is parsed result from `sox -n stats`
 type soxStats struct {
 	rmsLevelDB [numChannels]float64 // "RMS lev dB"
-	lengthSec  time.Duration        // "Length s"
+	length     time.Duration        // "Length s"
 }
 
 func getSoxStats(ctx context.Context, file string, startSec, endSec int) (stats soxStats, err error) {
@@ -158,7 +158,7 @@ func getSoxStats(ctx context.Context, file string, startSec, endSec int) (stats 
 	if err != nil {
 		return
 	}
-	stats.lengthSec = time.Duration(lengthFloat * float64(time.Second))
+	stats.length = time.Duration(lengthFloat * float64(time.Second))
 	return
 }
 

@@ -36,10 +36,6 @@ var (
 		"audio.chameleon_port",
 		"9992",
 		"Port for chameleond on Chameleon (optional/used)")
-	chameleonHostname = testing.RegisterVarString(
-		"audio.chameleon_hostname",
-		"",
-		"Hostname for Chameleon (optional/not currently used)")
 )
 
 // ChameleonAudioTestbedFixture is a fixture to use chameleond XMLRPC service

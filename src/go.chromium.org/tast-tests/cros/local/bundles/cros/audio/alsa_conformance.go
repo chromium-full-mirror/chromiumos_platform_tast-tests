@@ -177,8 +177,10 @@ func ALSAConformance(ctx context.Context, s *testing.State) {
 			s.Fatal("Failed to find selected device: ", err)
 		}
 
-		s.Logf("Selected %s device: %s", stream, node.DeviceName)
-		alsaDev := "hw:" + strings.Split(node.DeviceName, ":")[2]
+		//lint:ignore SA5011 node is actually checked right above
+		devName := node.DeviceName
+		s.Logf("Selected %s device: %s", stream, devName)
+		alsaDev := "hw:" + strings.Split(devName, ":")[2]
 		s.Logf("Running alsa_conformance_test on %s device %s", stream, alsaDev)
 
 		var arg string

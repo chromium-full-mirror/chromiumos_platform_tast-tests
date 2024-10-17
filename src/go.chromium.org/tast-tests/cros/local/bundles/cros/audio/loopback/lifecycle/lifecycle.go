@@ -217,11 +217,10 @@ func (t *tester) logAction(ctx context.Context, targetSec int, msg string, sleep
 		// GoBigSleepLint: Sleep to make sure we start the log and action at targetSec seconds after starting time.
 		testing.Sleep(
 			ctx,
-			t.t0.Add(time.Duration(targetSec)*time.Second).
-				Sub(time.Now()),
+			time.Until(t.t0.Add(time.Duration(targetSec)*time.Second)),
 		)
 	}
-	dt := time.Now().Sub(t.t0)
+	dt := time.Since(t.t0)
 	overdue := dt - time.Duration(targetSec)*time.Second
 	overdueMsg := "on schedule"
 	if overdue > logTimingTolerance {

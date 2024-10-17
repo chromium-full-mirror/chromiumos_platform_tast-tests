@@ -53,6 +53,9 @@ func CrasRecordingCorrectness(ctx context.Context, s *testing.State) {
 	defer cancel()
 
 	cr, err := chrome.New(ctx)
+	if err != nil {
+		s.Fatal("Cannot create chrome instance: ", err)
+	}
 	defer cr.Close(cleanupCtx)
 
 	defer func(ctx context.Context) {

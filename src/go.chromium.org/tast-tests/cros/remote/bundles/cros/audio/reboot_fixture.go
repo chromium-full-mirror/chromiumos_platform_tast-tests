@@ -44,7 +44,7 @@ func getMEStatus(ctx context.Context, s *testing.FixtState, board string) (uint3
 		return 0, errors.New("failed to parse ME status from cbmem -1")
 	}
 	hexValue := match[1]
-	MEStatus, err := strconv.ParseUint(hexValue, 0, 32)
+	MEStatus, _ := strconv.ParseUint(hexValue, 0, 32)
 	s.Logf("ME status: 0x%X", MEStatus)
 
 	return uint32(MEStatus), nil

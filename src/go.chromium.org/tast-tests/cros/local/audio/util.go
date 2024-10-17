@@ -100,7 +100,7 @@ func CheckRecordingNotZero(ctx context.Context, fileName string) error {
 		return errors.Wrap(err, "sox failed")
 	}
 
-	re := regexp.MustCompile("RMS Pk dB +\\S+ +(\\S+) +(\\S+)")
+	re := regexp.MustCompile(`RMS Pk dB +\S+ +(\S+) +(\S+)`)
 	rms := re.FindStringSubmatch(string(out))
 	if rms == nil {
 		testing.ContextLog(ctx, "sox stats: ", string(out))
@@ -136,7 +136,7 @@ func getRmsAmplitude(ctx context.Context, inputArgs []string) (float64, error) {
 	}
 	stderr := string(bstderr)
 
-	re := regexp.MustCompile("RMS\\s+amplitude:\\s+(\\S+)")
+	re := regexp.MustCompile(`RMS\s+amplitude:\s+(\S+)`)
 	match := re.FindStringSubmatch(stderr)
 	if match == nil {
 		testing.ContextLog(ctx, "sox stat: ", stderr)

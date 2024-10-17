@@ -14,8 +14,8 @@ import (
 type postMixType int
 
 const (
-	preDSP  postMixType = 0
-	postDSP             = 1
+	preDSP  postMixType = iota
+	postDSP
 )
 
 type capturePostMixLoopbackAction struct {
