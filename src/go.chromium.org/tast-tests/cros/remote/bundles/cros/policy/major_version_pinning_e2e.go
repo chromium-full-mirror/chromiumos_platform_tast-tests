@@ -78,12 +78,12 @@ func init() {
 			Timeout: majorVersionPinningE2ETimeout,
 			Val: majorVersionPinningE2ETestParam{
 				releaseChannelPolicy: tape.RELEASECHANNELWITHLTSENUM_RELEASE_CHANNEL_WITH_LTS_ENUM_LTS_CHANNEL,
-				targetMilestone:      "120.* (long-term support)",
+				targetMilestone:      "126.* (long-term support)",
 				expectedPolicies: []policy.Policy{
 					&policy.ChromeOsReleaseChannel{Stat: policy.StatusSet, Val: "lts-channel"},
-					&policy.DeviceTargetVersionPrefix{Stat: policy.StatusSet, Val: "15662."},
+					&policy.DeviceTargetVersionPrefix{Stat: policy.StatusSet, Val: "15886."},
 				},
-				expectedParameters: []string{"targetversionprefix=\"15662.\""},
+				expectedParameters: []string{"targetversionprefix=\"15886.\""},
 			},
 			// TODO(b/346725308): Refactor to use utility and known dependency list.
 			ExtraSearchFlags: []*testing.StringPair{
@@ -94,12 +94,12 @@ func init() {
 			Timeout: majorVersionPinningE2ETimeout,
 			Val: majorVersionPinningE2ETestParam{
 				releaseChannelPolicy: tape.RELEASECHANNELWITHLTSENUM_RELEASE_CHANNEL_WITH_LTS_ENUM_STABLE_CHANNEL,
-				targetMilestone:      "124.*",
+				targetMilestone:      "129.*",
 				expectedPolicies: []policy.Policy{
 					&policy.ChromeOsReleaseChannel{Stat: policy.StatusSet, Val: "stable-channel"},
-					&policy.DeviceTargetVersionPrefix{Stat: policy.StatusSet, Val: "15823."},
+					&policy.DeviceTargetVersionPrefix{Stat: policy.StatusSet, Val: "16002."},
 				},
-				expectedParameters: []string{"targetversionprefix=\"15823.\""},
+				expectedParameters: []string{"targetversionprefix=\"16002.\""},
 			},
 			// TODO(b/346725308): Refactor to use utility and known dependency list.
 			ExtraSearchFlags: []*testing.StringPair{
@@ -110,16 +110,16 @@ func init() {
 			Timeout: majorVersionPinningE2ETimeout + pinningOmahaUpdateE2ETimeout,
 			Val: majorVersionPinningE2ETestParam{
 				releaseChannelPolicy: tape.RELEASECHANNELWITHLTSENUM_RELEASE_CHANNEL_WITH_LTS_ENUM_LTS_CHANNEL,
-				targetMilestone:      "120.* (long-term support)",
+				targetMilestone:      "126.* (long-term support)",
 				expectedPolicies: []policy.Policy{
 					&policy.ChromeOsReleaseChannel{Stat: policy.StatusSet, Val: "lts-channel"},
-					&policy.DeviceTargetVersionPrefix{Stat: policy.StatusSet, Val: "15662."},
+					&policy.DeviceTargetVersionPrefix{Stat: policy.StatusSet, Val: "15886."},
 				},
-				expectedParameters: []string{"targetversionprefix=\"15662.\""},
+				expectedParameters: []string{"targetversionprefix=\"15886.\""},
 				testOmaha:          true,
 				expectedLSBReleaseRegex: map[string]string{
 					"CHROMEOS_RELEASE_TRACK":   "^lts-channel$",
-					"CHROMEOS_RELEASE_VERSION": "^15662[.].+[.].+$",
+					"CHROMEOS_RELEASE_VERSION": "^15886[.].+[.].+$",
 				},
 			},
 			// TODO(b/346725308): Refactor to use utility and known dependency list.
@@ -132,16 +132,16 @@ func init() {
 			Timeout: majorVersionPinningE2ETimeout + pinningOmahaUpdateE2ETimeout,
 			Val: majorVersionPinningE2ETestParam{
 				releaseChannelPolicy: tape.RELEASECHANNELWITHLTSENUM_RELEASE_CHANNEL_WITH_LTS_ENUM_STABLE_CHANNEL,
-				targetMilestone:      "124.*",
+				targetMilestone:      "129.*",
 				expectedPolicies: []policy.Policy{
 					&policy.ChromeOsReleaseChannel{Stat: policy.StatusSet, Val: "stable-channel"},
-					&policy.DeviceTargetVersionPrefix{Stat: policy.StatusSet, Val: "15823."},
+					&policy.DeviceTargetVersionPrefix{Stat: policy.StatusSet, Val: "16002."},
 				},
-				expectedParameters: []string{"targetversionprefix=\"15823.\""},
+				expectedParameters: []string{"targetversionprefix=\"16002.\""},
 				testOmaha:          true,
 				expectedLSBReleaseRegex: map[string]string{
 					"CHROMEOS_RELEASE_TRACK":   "^stable-channel$",
-					"CHROMEOS_RELEASE_VERSION": "^15823[.].+[.].+$",
+					"CHROMEOS_RELEASE_VERSION": "^16002[.].+[.].+$",
 				},
 			},
 			// TODO(b/346725308): Refactor to use utility and known dependency list.
