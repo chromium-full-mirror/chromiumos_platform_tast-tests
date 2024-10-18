@@ -7,6 +7,7 @@ package vpn
 import (
 	"fmt"
 	"net"
+	"strings"
 
 	"go.chromium.org/tast-tests/cros/local/network/virtualnet/subnet"
 )
@@ -51,6 +52,8 @@ type Config struct {
 	ipv6Subnet *subnet.IPv6Subnet
 
 	includedRoutesV4 []net.IPNet
+	includedRoutesV6 []net.IPNet
+	excludedRoutes   []net.IPNet
 
 	allowReachUnderlayIPFromVPN bool
 
@@ -342,10 +345,35 @@ func WithIPv6Subnet(n *subnet.IPv6Subnet) Option {
 	}
 }
 
-// WithIPv4IncludedRoute sets up the VPN as split-routed. This option can be used multiple times to set up multiple included routes.
+// WithIPv4IncludedRoute sets up the VPN as split-routed for IPv4. This option
+// can be used multiple times to set up multiple included routes. If this option
+// is not specified and IP type contains IPv4, it indicates an IPv4 default
+// route. This option only takes effect for ARC VPN (toy VPN server), IKEv2,
+// OpenVPN, and WireGuard.
 func WithIPv4IncludedRoute(route *net.IPNet) Option {
 	return func(c *Config) {
 		c.includedRoutesV4 = append(c.includedRoutesV4, *route)
+	}
+}
+
+// WithIPv6IncludedRoute sets up the VPN as split-routed for IPv6. This option
+// can be used multiple times to set up multiple included routes. If this option
+// is not specified and IP type contains IPv6, it indicates an IPv6 default
+// route. This option only takes effect for ARC VPN (toy VPN server).
+// TODO(b/282889498): Support other VPN types.
+func WithIPv6IncludedRoute(route *net.IPNet) Option {
+	return func(c *Config) {
+		c.includedRoutesV6 = append(c.includedRoutesV6, *route)
+	}
+}
+
+// WithExcludedRoute configures additional excluded routes for VPN. This option
+// can be used multiple time. This option only takes effect for ARC VPN (toy VPN
+// server). Unlike included routes, we don't separate IPv4 and IPv6 here since
+// it's not needed.
+func WithExcludedRoute(route *net.IPNet) Option {
+	return func(c *Config) {
+		c.excludedRoutes = append(c.excludedRoutes, *route)
 	}
 }
 
@@ -432,13 +460,37 @@ const (
 // OverlayConfig contains a subset of properties of Config that can be used to
 // config overlay datapath. This will mainly be used by the ARC VPN test app.
 type OverlayConfig struct {
-	ClientIPv4 string
+	ClientIPAddrs  string
+	ExcludedRoutes string
+	IncludedRoutes string
 }
 
 // GetOverlayConfig returns OverlayConfig of this Config.
 func (c *Config) GetOverlayConfig() *OverlayConfig {
+	ipNetsToCSV := func(routes []net.IPNet) string {
+		var strs []string
+		for _, route := range routes {
+			strs = append(strs, route.String())
+		}
+		return strings.Join(strs, ",")
+	}
+
+	getClientAddrs := func() string {
+		switch c.IPType {
+		case IPTypeIPv4:
+			return c.ipv4Subnet.GetAddrEndWith(2).String()
+		case IPTypeIPv6:
+			return c.ipv6Subnet.GetAddrEndWith(2).String()
+		case IPTypeIPv4AndIPv6:
+			return c.ipv4Subnet.GetAddrEndWith(2).String() + "," + c.ipv6Subnet.GetAddrEndWith(2).String()
+		}
+		return ""
+	}
+
 	return &OverlayConfig{
-		ClientIPv4: c.ipv4Subnet.GetAddrEndWith(2).String(),
+		ClientIPAddrs:  getClientAddrs(),
+		ExcludedRoutes: ipNetsToCSV(c.excludedRoutes),
+		IncludedRoutes: ipNetsToCSV(append(c.includedRoutesV4, c.includedRoutesV6...)),
 	}
 }
 

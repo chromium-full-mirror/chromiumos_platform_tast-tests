@@ -128,13 +128,22 @@ func StartARCVPNAndSetupSocket(ctx context.Context, a *arc.ARC, family l4server.
 // vpnServer, by broadcasting an intent that the ArcVpnTestApp BroadcastReceiver
 // receives.
 func StartARCVPNWithToyServer(ctx context.Context, a *arc.ARC, arcIfname string, vpnServer *vpn.Server) error {
+	overlayConfig := vpnServer.Config.GetOverlayConfig()
 	args := []string{
 		"--es", "interface", arcIfname,
 		"--es", "address", vpnServer.UnderlayIP,
 		"--ei", "port", strconv.Itoa(vpn.ToyVPNServerPort),
-		"--es", "overlay_addresses", vpnServer.Config.GetOverlayConfig().ClientIPv4,
+		"--es", "overlay_addresses", overlayConfig.ClientIPAddrs,
 		"--es", "dns_server", vpnServer.OverlayIPv4,
-		"--ei", "mtu", strconv.Itoa(vpnServer.Config.MTU),
+	}
+	if overlayConfig.ExcludedRoutes != "" {
+		args = append(args, "--es", "excluded_routes", overlayConfig.ExcludedRoutes)
+	}
+	if overlayConfig.IncludedRoutes != "" {
+		args = append(args, "--es", "included_routes", overlayConfig.IncludedRoutes)
+	}
+	if vpnServer.Config.MTU != 0 {
+		args = append(args, "--ei", "mtu", strconv.Itoa(vpnServer.Config.MTU))
 	}
 	return broadcastLaunchVPNIntent(ctx, a, args...)
 }
