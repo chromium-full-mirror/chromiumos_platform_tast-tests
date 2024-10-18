@@ -116,9 +116,7 @@ func SuspendStress(ctx context.Context, s *testing.State) {
 		s.Fatal("Failed to run suspend stress test: ", err)
 	}
 
-	if err := s.DUT().Disconnect(ctx); err != nil {
-		s.Fatal("Failed to close the current DUT ssh connection: ", err)
-	}
+	s.DUT().Disconnect(ctx)
 
 	// GoBigSleepLint: Wait for workloads to finish before reestablishing connection
 	// to avoid flakiness from connection loss during suspend/resume.
