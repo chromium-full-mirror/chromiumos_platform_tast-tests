@@ -98,7 +98,7 @@ func WebauthnUsingPassword(ctx context.Context, s *testing.State) {
 
 	authCallback := func(ctx context.Context, ui *uiauto.Context) error {
 		// Check if the UI is correct.
-		if err := ui.Exists(nodewith.ClassName("LoginPasswordView"))(ctx); err != nil {
+		if err := ui.Exists(nodewith.ClassName("AuthTextfield"))(ctx); err != nil {
 			return errors.Wrap(err, "failed to find the password input field")
 		}
 		// Type password into ChromeOS WebAuthn dialog.

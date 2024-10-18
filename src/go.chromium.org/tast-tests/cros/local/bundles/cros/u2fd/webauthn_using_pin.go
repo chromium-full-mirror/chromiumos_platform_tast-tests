@@ -109,18 +109,26 @@ func WebauthnUsingPIN(ctx context.Context, s *testing.State) {
 	}
 
 	authCallback := func(ctx context.Context, ui *uiauto.Context) error {
-		// Check if the UI is correct.
-		var node *nodewith.Finder
-		// The accessibility namings of these two corresponding fields are different: one uses specific class name,
-		// another uses normal "Views" classname with explicitly set name.
-		if autosubmit {
-			node = nodewith.Name("Enter your PIN")
-		} else {
-			node = nodewith.ClassName("LoginPasswordView")
+
+		var switchButton = nodewith.HasClass("PillButton").Name("Switch to PIN")
+
+		var passwordField = nodewith.ClassName("AuthTextfield").Name("Password")
+
+		var pinField = nodewith.ClassName("AuthTextfield").Name("PIN")
+
+		if err := ui.Exists(passwordField)(ctx); err != nil {
+			s.Fatal(err, "password field is not found")
+		} else if err = ui.Exists(switchButton)(ctx); err != nil {
+			s.Fatal(err, "switch button is not found")
+		} else if err := ui.LeftClick(switchButton)(ctx); err != nil {
+			s.Fatal(err, "switch button click failed")
 		}
-		if err := ui.Exists(node)(ctx); err != nil {
-			return errors.Wrap(err, "failed to find the pin input field")
+
+		// Wait for the field to be focused before entering the password.
+		if err := ui.WithTimeout(6 * time.Second).WaitUntilExists(pinField)(ctx); err != nil {
+			return errors.Wrap(err, "pin input is not visible")
 		}
+
 		// Type PIN into ChromeOS WebAuthn dialog. Optionally autosubmitted.
 		pinString := PIN
 		if !autosubmit {

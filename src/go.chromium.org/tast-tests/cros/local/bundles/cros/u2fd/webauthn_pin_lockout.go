@@ -80,7 +80,7 @@ func WebauthnPINLockout(ctx context.Context, s *testing.State) {
 		PIN                = "123456"
 		IncorrectPIN       = "000000"
 		autosubmit         = false
-		pinLockoutAttempts = 5
+		pinLockoutAttempts = 4
 	)
 
 	pinPolicies := []policy.Policy{
@@ -111,18 +111,27 @@ func WebauthnPINLockout(ctx context.Context, s *testing.State) {
 	}
 
 	authCallback := func(ctx context.Context, ui *uiauto.Context) error {
+
 		// Check if the UI is correct.
-		var pinInputNode *nodewith.Finder
-		// The accessibility namings of these two corresponding fields are different: one uses specific class name,
-		// another uses normal "Views" classname with explicitly set name.
-		if autosubmit {
-			pinInputNode = nodewith.Name("Enter your PIN")
-		} else {
-			pinInputNode = nodewith.ClassName("LoginPasswordView")
+		var switchButton = nodewith.HasClass("PillButton").Name("Switch to PIN")
+
+		var passwordField = nodewith.ClassName("AuthTextfield").Name("Password")
+
+		var pinField = nodewith.ClassName("AuthTextfield").Name("PIN")
+
+		if err := ui.Exists(passwordField)(ctx); err != nil {
+			s.Fatal(err, "password input field is not found")
+		} else if err = ui.Exists(switchButton)(ctx); err != nil {
+			s.Fatal(err, "switchButton is not found")
+		} else if err := ui.LeftClick(switchButton)(ctx); err != nil {
+			s.Fatal(err, "switchButton click failed")
 		}
-		if err := ui.Exists(pinInputNode)(ctx); err != nil {
-			return errors.Wrap(err, "failed to find the pin input field")
+
+		// Wait for the field to be focused before entering the password.
+		if err := ui.WithTimeout(6 * time.Second).WaitUntilExists(pinField)(ctx); err != nil {
+			return errors.Wrap(err, "pin input is not found")
 		}
+
 		// Type incorrect PIN into ChromeOS WebAuthn dialog. Optionally autosubmitted.
 		pinString := IncorrectPIN
 		if !autosubmit {
@@ -132,20 +141,32 @@ func WebauthnPINLockout(ctx context.Context, s *testing.State) {
 			if err := keyboard.Type(ctx, pinString); err != nil {
 				return errors.Wrap(err, "failed to type PIN into ChromeOS auth dialog")
 			}
-			var errorMsg string
 			if i != pinLockoutAttempts {
-				errorMsg = "Incorrect PIN"
+				node := nodewith.ClassName("Label").Name("Incorrect PIN")
+				if err := ui.WithTimeout(3 * time.Second).WaitUntilExists(node)(ctx); err != nil {
+					return errors.Wrap(err, "failed to wait for Incorrect PIN message")
+				}
+
+				// After the first three failed attempts the pin should be still available
+				if err := ui.Exists(pinField)(ctx); err != nil {
+					s.Fatal(err, "PIN input field is not found")
+				}
 			} else {
-				errorMsg = "Too many attempts"
-			}
-			node := nodewith.Name(errorMsg)
-			if err := ui.WithTimeout(3 * time.Second).WaitUntilExists(node)(ctx); err != nil {
-				return errors.Wrapf(err, "failed to wait for %v message", errorMsg)
+				node := nodewith.ClassName("Label").NameStartingWith("Too many PIN attempts.")
+				if err := ui.WithTimeout(3 * time.Second).WaitUntilExists(node)(ctx); err != nil {
+					return errors.Wrap(err, "failed to wait for Incorrect PIN message")
+				}
+
+				// After the fourth attempt the pin should be locked out for 30 sec,
+				// and automatically the password field should be visible.
+				if err := ui.WithTimeout(6 * time.Second).WaitUntilExists(passwordField)(ctx); err != nil {
+					return errors.Wrap(err, "PIN input field is not visible")
+				}
 			}
 		}
 
 		// Cancel the WebAuthn dialog.
-		node := nodewith.Role(role.Button).Name("Cancel")
+		node := nodewith.Role(role.Button).ClassName("IconButton").Name("Close dialog")
 		if err = ui.DoDefault(node)(ctx); err != nil {
 			return errors.Wrap(err, "failed to cancel the WebAuthn dialog")
 		}
@@ -177,13 +198,11 @@ func WebauthnPINLockout(ctx context.Context, s *testing.State) {
 		}
 
 		// Password input field should exist, PIN shouldn't because it's locked out.
-		passwordInputNode := nodewith.ClassName("LoginPasswordView")
-		if err := ui.Exists(passwordInputNode)(ctx); err != nil {
+		if err := ui.Exists(passwordField)(ctx); err != nil {
 			return errors.Wrap(err, "failed to find the password input field")
 		}
-		pinPadNode := nodewith.ClassName("LoginPinView")
-		if err := ui.Exists(pinPadNode)(ctx); err == nil {
-			return errors.Wrap(err, "failed to check the pin pad doesn't exist")
+		if err := ui.Exists(switchButton)(ctx); err == nil {
+			return errors.Wrap(err, "the switch button shouldn't be exist")
 		}
 
 		// Type password into ChromeOS WebAuthn dialog.
