@@ -24,13 +24,13 @@ func init() {
 	testing.AddTest(&testing.Test{
 		Func:           HotspotUpdateConfiguration,
 		LacrosStatus:   testing.LacrosVariantUnneeded,
-		LifeCycleStage: testing.LifeCycleInDevelopment,
+		LifeCycleStage: testing.LifeCycleOwnerMonitored,
 		Desc:           "Test hotspot configuration can be updated correctly when hotspot is off",
 		Contacts: []string{
-			"alfredyu@cienet.com",
-			"chromeos-connectivity-cienet-external@google.com",
+			"cros-device-enablement@google.com",
+			"chromeos-connectivity-engprod@google.com",
 		},
-		BugComponent: "b:1578688", // ChromeOS > External > Cienet > Manual Test Automation > Test stabilization
+		BugComponent: "b:1281224", // ChromeOS > Software > Fundamentals > Device Enablement > Connectivity > Hotspot
 		Attr:         []string{"group:cellular", "cellular_sim_active", "cellular_carrier_dependent"},
 		HardwareDeps: hwdep.D(hwdep.WifiSAP()),
 		SoftwareDeps: []string{"chrome", "hotspot"},
