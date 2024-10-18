@@ -45,6 +45,7 @@ func configFiles() []string {
 		"kernel_smoke_mipi/ciri-LT7757.yaml",
 		"kernel_smoke_mipi/craask-TC0002.yaml",
 		"kernel_smoke_mipi/craaskbowl-TC0003.yaml",
+		"kernel_smoke_mipi/domilly-TC0001.yaml",
 		"kernel_smoke_mipi/drawcia-LV0001.yaml",
 		"kernel_smoke_mipi/dru.yaml",
 		"kernel_smoke_mipi/kano-CH0001.yaml",
