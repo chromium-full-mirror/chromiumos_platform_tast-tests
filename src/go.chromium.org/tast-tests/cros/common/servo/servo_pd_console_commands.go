@@ -16,6 +16,17 @@ import (
 	"go.chromium.org/tast/core/testing"
 )
 
+// HPDLevelValue is a type for storing a type-c alt state hpd level
+type HPDLevelValue string
+
+// Supported hpd levels
+const (
+	HPDHigh HPDLevelValue = "h"
+	HPDLow  HPDLevelValue = "l"
+	HPDExt  HPDLevelValue = "ext"
+	HPDirq  HPDLevelValue = "irq"
+)
+
 const (
 	servoPDStatePollTimeout  time.Duration = 5 * time.Second
 	servoPDStatePollInterval time.Duration = 500 * time.Millisecond
@@ -220,6 +231,15 @@ func (s *Servo) ServoSetDPConfigs(ctx context.Context, config *TypeCInfo, mfPref
 		return nil
 	}, &testing.PollOptions{Timeout: 300 * time.Second, Interval: 10 * time.Second}); err != nil {
 		return errors.Wrap(err, "failed to check if charger is attached")
+	}
+
+	return nil
+}
+
+// SetHPD sets the HPD value for an active dp-alt connection
+func (s *Servo) SetHPD(ctx context.Context, HPDLevel HPDLevelValue) error {
+	if err := s.RunServoCommand(ctx, fmt.Sprintf("usbc_action dp hpd %s", HPDLevel)); err != nil {
+		return errors.Wrap(err, "failed to set hpd level")
 	}
 
 	return nil

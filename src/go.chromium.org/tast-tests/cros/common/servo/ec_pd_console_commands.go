@@ -56,9 +56,6 @@ type DUTPDInfo struct {
 // DPModeValue is a type for storing a type-c alt state dp status
 type DPModeValue int
 
-// HPDLevelValue is a type for storing a type-c alt state hpd level
-type HPDLevelValue int
-
 // MultiFunctionPref is a type for storing a type-c alt state mf pref
 type MultiFunctionPref int
 
@@ -72,15 +69,6 @@ const (
 const (
 	DPEnable  DPModeValue = 1
 	DPDisable DPModeValue = 0
-)
-
-// Supported hpd levels
-const (
-	HPDHigh HPDLevelValue = 1
-	HPDLow  HPDLevelValue = 0
-
-	// For assigning hpd value only, reading the hpd value will only return high or low.
-	HPDExt HPDLevelValue = -1
 )
 
 // TypeCInfo stores information retrieved from probing a type-c connection by the DUT.
