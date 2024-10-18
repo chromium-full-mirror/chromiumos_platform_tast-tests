@@ -12,8 +12,6 @@ import (
 	uiperf "go.chromium.org/tast-tests/cros/local/bundles/cros/ui/perf"
 	"go.chromium.org/tast-tests/cros/local/chrome"
 	"go.chromium.org/tast-tests/cros/local/chrome/ash"
-	"go.chromium.org/tast-tests/cros/local/chrome/browser"
-	"go.chromium.org/tast-tests/cros/local/chrome/browser/browserfixt"
 	"go.chromium.org/tast-tests/cros/local/chrome/uiauto"
 	"go.chromium.org/tast-tests/cros/local/chrome/uiauto/event"
 	"go.chromium.org/tast-tests/cros/local/chrome/uiauto/nodewith"
@@ -58,11 +56,10 @@ func OverviewWithExpandedDesksBarPerf(ctx context.Context, s *testing.State) {
 
 	cr := s.FixtValue().(chrome.HasChrome).Chrome()
 
-	blankConn, br, closeBrowser, err := browserfixt.SetUpWithURL(ctx, cr, browser.TypeAsh, chrome.BlankURL)
+	blankConn, err := cr.NewConn(ctx, chrome.BlankURL)
 	if err != nil {
 		s.Fatal("Failed to set up the browser: ", err)
 	}
-	defer closeBrowser(cleanupCtx)
 	defer blankConn.Close()
 
 	tconn, err := cr.TestAPIConn(ctx)
@@ -74,7 +71,7 @@ func OverviewWithExpandedDesksBarPerf(ctx context.Context, s *testing.State) {
 	defer ash.CleanUpDesks(cleanupCtx, tconn)
 
 	const numWindows = 16
-	if err := ash.CreateWindows(ctx, tconn, br, ui.PerftestURL, numWindows-1); err != nil {
+	if err := ash.CreateWindows(ctx, tconn, cr.Browser(), ui.PerftestURL, numWindows-1); err != nil {
 		s.Fatal("Failed to open browser windows: ", err)
 	}
 

@@ -10,8 +10,6 @@ import (
 
 	"go.chromium.org/tast-tests/cros/local/camera/pnp"
 	"go.chromium.org/tast-tests/cros/local/chrome/ash"
-	"go.chromium.org/tast-tests/cros/local/chrome/browser"
-	"go.chromium.org/tast-tests/cros/local/chrome/browser/browserfixt"
 	"go.chromium.org/tast-tests/cros/local/power"
 	powersetup "go.chromium.org/tast-tests/cros/local/power/setup"
 	"go.chromium.org/tast/core/ctxutil"
@@ -67,11 +65,10 @@ func PNPIdle(ctx context.Context, s *testing.State) {
 		cr := s.FixtValue().(powersetup.PowerUIFixtureData).Cr
 
 		// Open a window with about:blank tab on the target browser.
-		conn, _, cleanup, err := browserfixt.SetUpWithURL(ctx, cr, browser.TypeAsh, "about:blank")
+		conn, err := cr.NewConn(ctx, "about:blank")
 		if err != nil {
 			s.Fatal("Failed to open a blank new tab: ", err)
 		}
-		defer cleanup(cleanupCtx)
 		defer conn.Close()
 
 		tconn, err := cr.TestAPIConn(ctx)

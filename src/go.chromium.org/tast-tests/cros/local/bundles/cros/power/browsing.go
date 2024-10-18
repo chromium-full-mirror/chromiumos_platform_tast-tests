@@ -20,7 +20,6 @@ import (
 	"go.chromium.org/tast-tests/cros/local/apps"
 	"go.chromium.org/tast-tests/cros/local/chrome"
 	"go.chromium.org/tast-tests/cros/local/chrome/ash"
-	"go.chromium.org/tast-tests/cros/local/chrome/browser/browserfixt"
 	"go.chromium.org/tast-tests/cros/local/chrome/cuj"
 	"go.chromium.org/tast-tests/cros/local/power"
 	"go.chromium.org/tast-tests/cros/local/power/setup"
@@ -157,15 +156,13 @@ func Browsing(ctx context.Context, s *testing.State) {
 	defer cancel()
 
 	discharge := s.FixtValue().(setup.PowerUIFixtureData).Discharge
-	bt := s.FixtValue().(setup.PowerUIFixtureData).Bt
 	cr := s.FixtValue().(setup.PowerUIFixtureData).Cr
 
 	// Open a window with about:blank tab on the target browser.
-	conn, br, cleanup, err := browserfixt.SetUpWithURL(ctx, cr, bt, "about:blank")
+	conn, err := cr.NewConn(ctx, "about:blank")
 	if err != nil {
 		s.Fatal("Failed to open a blank new tab: ", err)
 	}
-	defer cleanup(cleanupCtx)
 	defer conn.Close()
 	defer conn.CloseTarget(cleanupCtx)
 
@@ -244,6 +241,7 @@ func Browsing(ctx context.Context, s *testing.State) {
 	// Create Window A with tab 1 & 2 in foreground
 	// Window B with tab 3 & 4 & 5 in background
 	if multiTab {
+		br := cr.Browser()
 		// tab1 was already created above
 		conn2, err := uiHandler.NewChromeTab(ctx, br, "about:blank", false)
 		if err != nil {

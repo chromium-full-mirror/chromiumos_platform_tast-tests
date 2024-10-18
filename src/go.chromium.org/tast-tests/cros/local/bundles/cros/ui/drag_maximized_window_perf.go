@@ -12,7 +12,6 @@ import (
 	"go.chromium.org/tast-tests/cros/local/chrome"
 	"go.chromium.org/tast-tests/cros/local/chrome/ash"
 	"go.chromium.org/tast-tests/cros/local/chrome/browser"
-	"go.chromium.org/tast-tests/cros/local/chrome/browser/browserfixt"
 	"go.chromium.org/tast-tests/cros/local/chrome/cuj"
 	"go.chromium.org/tast-tests/cros/local/chrome/display"
 	"go.chromium.org/tast-tests/cros/local/chrome/uiauto/mouse"
@@ -73,12 +72,12 @@ func DragMaximizedWindowPerf(ctx context.Context, s *testing.State) {
 	const numWindows = 5
 	const url = ui.PerftestURL
 	// Open a first browser.
-	conn, br, closeBrowser, err := browserfixt.SetUpWithURL(ctx, cr, s.Param().(browser.Type), url)
+	conn, err := cr.NewConn(ctx, url)
 	if err != nil {
 		s.Fatal("Failed to open the browser: ", err)
 	}
-	defer closeBrowser(ctx)
 	defer conn.Close()
+	br := cr.Browser()
 	if err := ash.CreateWindows(ctx, tconn, br, url, numWindows-1); err != nil {
 		s.Fatal("Failed to open browser windows: ", err)
 	}

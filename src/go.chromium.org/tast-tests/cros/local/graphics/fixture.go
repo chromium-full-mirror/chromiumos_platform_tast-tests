@@ -333,12 +333,13 @@ func (f *graphicsWebContentFixture) SetUp(ctx context.Context, s *testing.FixtSt
 	}
 
 	url := filepath.Join(f.server.URL, val.url)
-	conn, _, closeBrowser, err := browserfixt.SetUpWithURL(ctx, f.cr, browser.TypeAsh, url)
+	conn, err := f.cr.NewConn(ctx, url)
 	if err != nil {
 		s.Fatal("Failed to set up browser: ", err)
 	}
 	f.conn = conn
-	f.closeBrowser = closeBrowser
+	// TODO(b/375087595): Delete closeBrowser field in graphicsWebContentFixture.
+	f.closeBrowser = func(context.Context) error { return nil }
 
 	if err = f.conn.WaitForExpr(ctx, "document.readyState === 'complete'"); err != nil {
 		s.Fatal("Page failed to load: ", err)

@@ -10,7 +10,6 @@ import (
 
 	"go.chromium.org/tast-tests/cros/local/chrome"
 	"go.chromium.org/tast-tests/cros/local/chrome/browser"
-	"go.chromium.org/tast-tests/cros/local/chrome/browser/browserfixt"
 	"go.chromium.org/tast-tests/cros/local/chrome/uiauto"
 	"go.chromium.org/tast-tests/cros/local/chrome/uiauto/faillog"
 	"go.chromium.org/tast-tests/cros/local/chrome/uiauto/nodewith"
@@ -78,11 +77,10 @@ func WebauthnUsingPassword(ctx context.Context, s *testing.State) {
 		s.Fatal("Failed to wait until u2fd is initialized: ", err)
 	}
 
-	conn, _, closeBrowser, err := browserfixt.SetUpWithURL(ctx, cr, browser.TypeAsh, server.URL+"/webauthn.html")
+	conn, err := cr.NewConn(ctx, server.URL+"/webauthn.html")
 	if err != nil {
 		s.Fatal("Failed to open the browser: ", err)
 	}
-	defer closeBrowser(cleanupCtx)
 	defer conn.Close()
 
 	tconn, err := cr.TestAPIConn(ctx)

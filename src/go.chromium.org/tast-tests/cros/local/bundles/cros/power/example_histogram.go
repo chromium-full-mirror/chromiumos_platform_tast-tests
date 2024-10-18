@@ -12,7 +12,6 @@ import (
 	"go.chromium.org/tast/core/testing"
 
 	"go.chromium.org/tast-tests/cros/local/chrome/ash"
-	"go.chromium.org/tast-tests/cros/local/chrome/browser/browserfixt"
 	"go.chromium.org/tast-tests/cros/local/chrome/uiauto"
 	"go.chromium.org/tast-tests/cros/local/chrome/uiauto/nodewith"
 	"go.chromium.org/tast-tests/cros/local/chrome/uiauto/role"
@@ -47,26 +46,23 @@ func ExampleHistogram(ctx context.Context, s *testing.State) {
 	defer cancel()
 
 	discharge := s.FixtValue().(setup.PowerUIFixtureData).Discharge
-	bt := s.FixtValue().(setup.PowerUIFixtureData).Bt
 	cr := s.FixtValue().(setup.PowerUIFixtureData).Cr
 	interval := s.Param().(power.TimeParams).Interval
 	total := s.Param().(power.TimeParams).Total
 
 	// Open a Google search window.
 	url := "https://www.google.com/search?q=chromium"
-	conn, br, cleanup, err := browserfixt.SetUpWithURL(ctx, cr, bt, url)
+	conn, err := cr.NewConn(ctx, url)
 	if err != nil {
 		s.Fatal("Failed to open a new tab: ", err)
 	}
-	defer cleanup(cleanupCtx)
 	defer conn.Close()
-	defer conn.CloseTarget(cleanupCtx)
 
 	tconn, err := cr.TestAPIConn(ctx)
 	if err != nil {
 		s.Fatal("Failed to get ash tconn: ", err)
 	}
-	bTconn, err := br.TestAPIConn(ctx)
+	bTconn, err := cr.Browser().TestAPIConn(ctx)
 	if err != nil {
 		s.Fatal("Failed to get browser tconn: ", err)
 	}

@@ -14,8 +14,6 @@ import (
 	"go.chromium.org/tast-tests/cros/common/policy/fakedms"
 	"go.chromium.org/tast-tests/cros/local/bundles/cros/u2fd/util"
 	"go.chromium.org/tast-tests/cros/local/chrome"
-	"go.chromium.org/tast-tests/cros/local/chrome/browser"
-	"go.chromium.org/tast-tests/cros/local/chrome/browser/browserfixt"
 	"go.chromium.org/tast-tests/cros/local/chrome/uiauto"
 	"go.chromium.org/tast-tests/cros/local/chrome/uiauto/faillog"
 	"go.chromium.org/tast-tests/cros/local/chrome/uiauto/nodewith"
@@ -212,11 +210,10 @@ func WebauthnPINLockout(ctx context.Context, s *testing.State) {
 		return nil
 	}
 
-	conn, _, closeBrowser, err := browserfixt.SetUpWithURL(ctx, cr, browser.TypeAsh, server.URL+"/webauthn.html")
+	conn, err := cr.NewConn(ctx, server.URL+"/webauthn.html")
 	if err != nil {
 		s.Fatal("Failed to open the browser: ", err)
 	}
-	defer closeBrowser(cleanupCtx)
 	defer conn.Close()
 
 	if err := u2fd.WebAuthnInLocalSite(ctx, conn, tconn, authCallback); err != nil {

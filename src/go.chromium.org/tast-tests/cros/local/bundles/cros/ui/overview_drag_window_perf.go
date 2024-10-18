@@ -14,7 +14,6 @@ import (
 	"go.chromium.org/tast-tests/cros/local/chrome"
 	"go.chromium.org/tast-tests/cros/local/chrome/ash"
 	"go.chromium.org/tast-tests/cros/local/chrome/browser"
-	"go.chromium.org/tast-tests/cros/local/chrome/browser/browserfixt"
 	"go.chromium.org/tast-tests/cros/local/chrome/cuj"
 	"go.chromium.org/tast-tests/cros/local/chrome/display"
 	"go.chromium.org/tast-tests/cros/local/input"
@@ -362,13 +361,12 @@ func OverviewDragWindowPerf(ctx context.Context, s *testing.State) {
 		// Open a first window using browserfixt to get a Browser instance, then use the browser instance for other windows.
 		if currentWindows == 0 {
 			var conn *browser.Conn
-			var closeBrowser func(ctx context.Context) error
-			conn, br, closeBrowser, err = browserfixt.SetUpWithURL(ctx, cr, drag.bt, url)
+			conn, err = cr.NewConn(ctx, url)
 			if err != nil {
 				s.Fatal("Failed to open chrome: ", err)
 			}
-			defer closeBrowser(cleanupCtx)
 			defer conn.Close()
+			br = cr.Browser()
 			currentWindows++
 		}
 		if err := ash.CreateWindows(ctx, tconn, br, url, windows-currentWindows); err != nil {

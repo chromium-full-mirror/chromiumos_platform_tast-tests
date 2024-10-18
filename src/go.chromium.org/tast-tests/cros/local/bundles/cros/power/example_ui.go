@@ -12,7 +12,6 @@ import (
 	"go.chromium.org/tast/core/testing"
 
 	"go.chromium.org/tast-tests/cros/local/chrome/ash"
-	"go.chromium.org/tast-tests/cros/local/chrome/browser/browserfixt"
 	"go.chromium.org/tast-tests/cros/local/power"
 	"go.chromium.org/tast-tests/cros/local/power/setup"
 )
@@ -70,7 +69,6 @@ func ExampleUI(ctx context.Context, s *testing.State) {
 	defer cancel()
 
 	discharge := s.FixtValue().(setup.PowerUIFixtureData).Discharge
-	bt := s.FixtValue().(setup.PowerUIFixtureData).Bt
 	cr := s.FixtValue().(setup.PowerUIFixtureData).Cr
 	interval := s.Param().(power.TimeParams).Interval
 	total := s.Param().(power.TimeParams).Total
@@ -85,11 +83,10 @@ func ExampleUI(ctx context.Context, s *testing.State) {
 		</html>`
 
 	// Render an entirely white or black blank page in the browser in accordance with the OS theme.
-	conn, _, cleanup, err := browserfixt.SetUpWithURL(ctx, cr, bt, blankPageContents)
+	conn, err := cr.NewConn(ctx, blankPageContents)
 	if err != nil {
 		s.Fatal("Failed to open a blank new tab: ", err)
 	}
-	defer cleanup(cleanupCtx)
 	defer conn.Close()
 	defer conn.CloseTarget(cleanupCtx)
 

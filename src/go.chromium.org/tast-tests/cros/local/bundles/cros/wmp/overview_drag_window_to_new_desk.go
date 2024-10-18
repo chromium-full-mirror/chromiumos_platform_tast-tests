@@ -10,8 +10,6 @@ import (
 
 	"go.chromium.org/tast-tests/cros/local/chrome"
 	"go.chromium.org/tast-tests/cros/local/chrome/ash"
-	"go.chromium.org/tast-tests/cros/local/chrome/browser"
-	"go.chromium.org/tast-tests/cros/local/chrome/browser/browserfixt"
 	"go.chromium.org/tast-tests/cros/local/chrome/uiauto"
 	"go.chromium.org/tast-tests/cros/local/chrome/uiauto/faillog"
 	"go.chromium.org/tast-tests/cros/local/chrome/uiauto/mouse"
@@ -84,11 +82,10 @@ func OverviewDragWindowToNewDesk(ctx context.Context, s *testing.State) {
 		s.Fatal("Failed to ensure no window is open: ", err)
 	}
 
-	blankConn, _, closeBrowser, err := browserfixt.SetUpWithURL(ctx, cr, browser.TypeAsh, chrome.BlankURL)
+	blankConn, err := cr.NewConn(ctx, chrome.BlankURL)
 	if err != nil {
 		s.Fatal("Failed to set up Chrome: ", err)
 	}
-	defer closeBrowser(cleanupCtx)
 	defer blankConn.Close()
 
 	// Enter overview mode.

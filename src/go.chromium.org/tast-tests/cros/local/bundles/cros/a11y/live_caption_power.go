@@ -11,8 +11,6 @@ import (
 	"time"
 
 	"go.chromium.org/tast-tests/cros/local/a11y"
-	"go.chromium.org/tast-tests/cros/local/chrome/browser"
-	"go.chromium.org/tast-tests/cros/local/chrome/browser/browserfixt"
 	"go.chromium.org/tast-tests/cros/local/chrome/uiauto"
 	"go.chromium.org/tast-tests/cros/local/chrome/uiauto/nodewith"
 	"go.chromium.org/tast-tests/cros/local/chrome/uiauto/ossettings"
@@ -88,11 +86,10 @@ func LiveCaptionPower(ctx context.Context, s *testing.State) {
 	}
 
 	// Open the test page and play the audio.
-	conn, _, closeBrowser, err := browserfixt.SetUpWithURL(ctx, cr, browser.TypeAsh, server.URL+"/live_caption_power.html")
+	conn, err := cr.NewConn(ctx, server.URL+"/live_caption_power.html")
 	if err != nil {
 		s.Fatal("Failed to open test web page: ", err)
 	}
-	defer closeBrowser(cleanupCtx)
 	defer conn.Close()
 
 	// Cool down test device.

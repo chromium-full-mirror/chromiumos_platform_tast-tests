@@ -11,8 +11,6 @@ import (
 	uiperf "go.chromium.org/tast-tests/cros/local/bundles/cros/ui/perf"
 	"go.chromium.org/tast-tests/cros/local/chrome"
 	"go.chromium.org/tast-tests/cros/local/chrome/ash"
-	"go.chromium.org/tast-tests/cros/local/chrome/browser"
-	"go.chromium.org/tast-tests/cros/local/chrome/browser/browserfixt"
 	"go.chromium.org/tast-tests/cros/local/chrome/uiauto/mouse"
 	"go.chromium.org/tast-tests/cros/local/coords"
 	"go.chromium.org/tast-tests/cros/local/input"
@@ -74,11 +72,10 @@ func WindowControl(ctx context.Context, s *testing.State) {
 	// Set up the browser, open a first window.
 	const numWindows = 8
 	const url = chrome.BlankURL
-	conn, br, closeBrowser, err := browserfixt.SetUpWithURL(ctx, cr, browser.TypeAsh, url)
+	conn, err := cr.NewConn(ctx, url)
 	if err != nil {
 		s.Fatal("Failed to open the browser: ", err)
 	}
-	defer closeBrowser(cleanupCtx)
 	defer conn.Close()
 
 	cleanup, err := ash.EnsureTabletModeEnabled(ctx, tconn, false)
@@ -86,6 +83,7 @@ func WindowControl(ctx context.Context, s *testing.State) {
 		s.Fatal("Failed to ensure into clamshell mode: ", err)
 	}
 	defer cleanup(cleanupCtx)
+	br := cr.Browser()
 	// Open the rest of the new windows alongside the one that was already opened above.
 	if err := ash.CreateWindows(ctx, tconn, br, url, numWindows-1); err != nil {
 		s.Fatal("Failed to create new windows: ", err)

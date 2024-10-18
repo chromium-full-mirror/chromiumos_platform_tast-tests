@@ -12,7 +12,6 @@ import (
 	uiperf "go.chromium.org/tast-tests/cros/local/bundles/cros/ui/perf"
 	"go.chromium.org/tast-tests/cros/local/chrome"
 	"go.chromium.org/tast-tests/cros/local/chrome/browser"
-	"go.chromium.org/tast-tests/cros/local/chrome/browser/browserfixt"
 	"go.chromium.org/tast-tests/cros/local/chrome/cuj"
 	"go.chromium.org/tast-tests/cros/local/chrome/webutil"
 	localPerf "go.chromium.org/tast-tests/cros/local/perf"
@@ -57,19 +56,19 @@ func PageLoadPerf(ctx context.Context, s *testing.State) {
 
 	cr := s.FixtValue().(chrome.HasChrome).Chrome()
 
-	conn, br, closeBrowser, err := browserfixt.SetUpWithURL(ctx, cr, s.Param().(browser.Type), chrome.BlankURL)
+	conn, err := cr.NewConn(ctx, chrome.BlankURL)
 	if err != nil {
 		s.Fatal("Failed to set up Chrome: ", err)
 	}
-	defer closeBrowser(closeCtx)
 	defer conn.Close()
+	br := cr.Browser()
 
 	bTconn, err := br.TestAPIConn(ctx)
 	if err != nil {
 		s.Fatal("Failed to connect to browser test API connection: ", err)
 	}
 
-	runner := perfutil.NewRunner(cr.Browser(), perfutil.RunnerOptions{
+	runner := perfutil.NewRunner(br, perfutil.RunnerOptions{
 		IgnoreFirstRun:   true,
 		DropMinMaxValues: true,
 	})

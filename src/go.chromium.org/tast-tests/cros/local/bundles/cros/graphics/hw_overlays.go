@@ -17,7 +17,6 @@ import (
 	"go.chromium.org/tast-tests/cros/local/chrome"
 	"go.chromium.org/tast-tests/cros/local/chrome/ash"
 	"go.chromium.org/tast-tests/cros/local/chrome/browser"
-	"go.chromium.org/tast-tests/cros/local/chrome/browser/browserfixt"
 	"go.chromium.org/tast-tests/cros/local/graphics/modetest"
 	"go.chromium.org/tast/core/errors"
 	"go.chromium.org/tast/core/testing"
@@ -200,12 +199,10 @@ func HwOverlays(ctx context.Context, s *testing.State) {
 	defer server.Close()
 	cr := s.FixtValue().(chrome.HasChrome).Chrome()
 	url := path.Join(server.URL, params.file)
-	conn, _, closeBrowser, err := browserfixt.SetUpWithURL(
-		ctx, s.FixtValue().(chrome.HasChrome).Chrome(), s.Param().(pageTestParams).browserType, url)
+	conn, err := s.FixtValue().(chrome.HasChrome).Chrome().NewConn(ctx, url)
 	if err != nil {
 		s.Fatalf("Failed to open %v: %v", url, err)
 	}
-	defer closeBrowser(ctx)
 	defer conn.Close()
 	ctconn, err := cr.TestAPIConn(ctx)
 	if err != nil {

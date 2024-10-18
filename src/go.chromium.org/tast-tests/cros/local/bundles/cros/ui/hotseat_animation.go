@@ -271,12 +271,11 @@ func HotseatAnimation(ctx context.Context, s *testing.State) {
 	}
 
 	// Add a new tab.
-	conn, _, closeBrowser, err := browserfixt.SetUpWithURL(ctx, cr, bt, ui.PerftestURL)
+	conn, err := cr.NewConn(ctx, ui.PerftestURL)
 	if err != nil {
 		s.Fatal("Failed to create a new tab: ", err)
 	}
 	conn.Close()
-	defer closeBrowser(cleanupCtx)
 
 	displayInfo, err := display.GetInternalInfo(ctx, tconn)
 	if err != nil {

@@ -14,7 +14,6 @@ import (
 	"go.chromium.org/tast-tests/cros/local/arc"
 	"go.chromium.org/tast-tests/cros/local/chrome"
 	"go.chromium.org/tast-tests/cros/local/chrome/browser"
-	"go.chromium.org/tast-tests/cros/local/chrome/browser/browserfixt"
 	"go.chromium.org/tast-tests/cros/local/chrome/cuj"
 	"go.chromium.org/tast-tests/cros/local/chrome/uiauto/quicksettings"
 	"go.chromium.org/tast-tests/cros/local/cpu"
@@ -144,11 +143,10 @@ func IdlePerf(ctx context.Context, s *testing.State) {
 
 	switch idleTest.testType {
 	case testTypeBrowser:
-		conn, _, closeBrowser, err := browserfixt.SetUpWithURL(ctx, cr, browser.TypeAsh, emptyWindowURL)
+		conn, err := cr.NewConn(ctx, emptyWindowURL)
 		if err != nil {
 			s.Fatalf("Failed to open %s: %v", emptyWindowURL, err)
 		}
-		defer closeBrowser(closeCtx)
 		defer conn.Close()
 	case testTypeFaceGaze:
 		metric := []cujrecorder.MetricConfig{

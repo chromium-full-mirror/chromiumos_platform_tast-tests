@@ -102,11 +102,10 @@ func LiveCaption(ctx context.Context, s *testing.State) {
 	}
 
 	// Open the test page and play the audio.
-	conn, _, closeBrowser, err := browserfixt.SetUpWithURL(ctx, cr, browser.TypeAsh, server.URL+"/live_caption.html")
+	conn, err := cr.NewConn(ctx, server.URL+"/live_caption.html")
 	if err != nil {
 		s.Fatal("Failed to open test web page: ", err)
 	}
-	defer closeBrowser(cleanupCtx)
 	defer conn.Close()
 	defer faillog.DumpUITreeWithScreenshotOnError(cleanupCtx, s.OutDir(), s.HasError, cr, "ui_tree")
 

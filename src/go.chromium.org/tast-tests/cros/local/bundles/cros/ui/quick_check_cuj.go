@@ -12,7 +12,6 @@ import (
 	"go.chromium.org/tast-tests/cros/local/chrome"
 	"go.chromium.org/tast-tests/cros/local/chrome/ash"
 	"go.chromium.org/tast-tests/cros/local/chrome/browser"
-	"go.chromium.org/tast-tests/cros/local/chrome/browser/browserfixt"
 	"go.chromium.org/tast-tests/cros/local/chrome/cuj"
 	"go.chromium.org/tast-tests/cros/local/chrome/cuj/inputsimulations"
 	"go.chromium.org/tast-tests/cros/local/chrome/display"
@@ -67,11 +66,10 @@ func QuickCheckCUJ(ctx context.Context, s *testing.State) {
 
 	cr := s.FixtValue().(chrome.HasChrome).Chrome()
 
-	conn, br, closeBrowser, err := browserfixt.SetUpWithURL(ctx, cr, s.Param().(browser.Type), chrome.BlankURL)
+	conn, err := cr.NewConn(ctx, chrome.BlankURL)
 	if err != nil {
 		s.Fatal("Failed to setup Chrome: ", err)
 	}
-	defer closeBrowser(closeCtx)
 	defer conn.Close()
 
 	tconn, err := cr.TestAPIConn(ctx)
@@ -79,7 +77,7 @@ func QuickCheckCUJ(ctx context.Context, s *testing.State) {
 		s.Fatal("Failed to connect to test API connection: ", err)
 	}
 
-	bTconn, err := br.TestAPIConn(ctx)
+	bTconn, err := cr.Browser().TestAPIConn(ctx)
 	if err != nil {
 		s.Fatal("Failed to connect to browser test API connection: ", err)
 	}

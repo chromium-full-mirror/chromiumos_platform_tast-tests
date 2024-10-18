@@ -14,7 +14,6 @@ import (
 
 	"go.chromium.org/tast-tests/cros/local/chrome"
 	"go.chromium.org/tast-tests/cros/local/chrome/browser"
-	"go.chromium.org/tast-tests/cros/local/chrome/browser/browserfixt"
 	"go.chromium.org/tast-tests/cros/local/chrome/uiauto/faillog"
 	"go.chromium.org/tast/core/ctxutil"
 	"go.chromium.org/tast/core/testing"
@@ -34,11 +33,11 @@ func Setup(cleanupCtx context.Context, s *testing.State) (context.Context, *chro
 	}
 
 	// For browser.
-	bt := s.FixtValue().(browser.HasBrowserType).BrowserType()
-	conn, br, closeBrowser, err := browserfixt.SetUpWithURL(ctx, cr, bt, chrome.NewTabURL)
+	conn, err := cr.NewConn(ctx, chrome.NewTabURL)
 	if err != nil {
 		s.Fatal("Failed to launch browser: ", err)
 	}
+	br := cr.Browser()
 
 	// Lacros browser won't work with ash TestConn tconn, instead we need the TestConn from the browser.
 	brTconn, err := br.TestAPIConn(ctx)
@@ -64,7 +63,6 @@ func Setup(cleanupCtx context.Context, s *testing.State) (context.Context, *chro
 		browser.CloseAllTabs(ctx, brTconn)
 
 		cancel()
-		closeBrowser(cleanupCtx)
 		conn.Close()
 		conn.CloseTarget(cleanupCtx)
 		srv.Close()

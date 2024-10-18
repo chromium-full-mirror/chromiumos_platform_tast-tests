@@ -14,7 +14,6 @@ import (
 	"go.chromium.org/tast-tests/cros/local/chrome"
 	"go.chromium.org/tast-tests/cros/local/chrome/ash"
 	"go.chromium.org/tast-tests/cros/local/chrome/browser"
-	"go.chromium.org/tast-tests/cros/local/chrome/browser/browserfixt"
 	"go.chromium.org/tast-tests/cros/local/chrome/cuj"
 	"go.chromium.org/tast-tests/cros/local/chrome/display"
 	"go.chromium.org/tast-tests/cros/local/perfutil"
@@ -82,27 +81,23 @@ func ScreenRotationPerf(ctx context.Context, s *testing.State) {
 
 	defer ash.SetOverviewModeAndWait(closeCtx, tconn, false)
 
-	bt := s.Param().(browser.Type)
 	url := ui.PerftestURL
 	currentWindows := 0
 	// Use `cr` from ash-chrome for the metrics that are recorded in ash-chrome.
 	runner := perfutil.NewRunner(cr.Browser(), perfutil.RunnerOptions{IgnoreFirstRun: true, DropMinMaxValues: true})
 	// Run the screen rotation in overview mode with 2 or 8 windows.
-	var br *browser.Browser
 	for _, windows := range []int{2, 8} {
 		// Open the first window using browserfixt to get a Browser instance, then use the browser instance to open the others.
 		if currentWindows == 0 {
 			var conn *browser.Conn
-			var closeBrowser func(ctx context.Context) error
-			conn, br, closeBrowser, err = browserfixt.SetUpWithURL(ctx, cr, bt, url)
+			conn, err := cr.NewConn(ctx, url)
 			if err != nil {
 				s.Fatal("Failed to open chrome: ", err)
 			}
-			defer closeBrowser(closeCtx)
 			defer conn.Close()
 			currentWindows++
 		}
-		if err := ash.CreateWindows(ctx, tconn, br, url, windows-currentWindows); err != nil {
+		if err := ash.CreateWindows(ctx, tconn, cr.Browser(), url, windows-currentWindows); err != nil {
 			s.Fatal("Failed to create browser windows: ", err)
 		}
 		currentWindows = windows

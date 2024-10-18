@@ -15,7 +15,6 @@ import (
 	"go.chromium.org/tast-tests/cros/common/media/caps"
 	"go.chromium.org/tast-tests/cros/local/chrome/ash"
 	"go.chromium.org/tast-tests/cros/local/chrome/browser"
-	"go.chromium.org/tast-tests/cros/local/chrome/browser/browserfixt"
 	"go.chromium.org/tast-tests/cros/local/chrome/uiauto"
 	"go.chromium.org/tast-tests/cros/local/chrome/uiauto/faillog"
 	"go.chromium.org/tast-tests/cros/local/chrome/uiauto/nodewith"
@@ -72,7 +71,6 @@ func VideoCall(ctx context.Context, s *testing.State) {
 	defer cancel()
 
 	discharge := s.FixtValue().(setup.PowerUIFixtureData).Discharge
-	bt := s.FixtValue().(setup.PowerUIFixtureData).Bt
 	cr := s.FixtValue().(setup.PowerUIFixtureData).Cr
 	interval := s.Param().(power.TimeParams).Interval
 	total := s.Param().(power.TimeParams).Total
@@ -100,13 +98,13 @@ func VideoCall(ctx context.Context, s *testing.State) {
 	)
 
 	// Open a VideoWindow and snap to the left
-	videoConn, br, cleanup, err := browserfixt.SetUpWithURL(ctx, cr, bt, "about:blank")
+	videoConn, err := cr.NewConn(ctx, "about:blank")
 	if err != nil {
 		s.Fatal("Failed to setup a new tab for video: ", err)
 	}
-	defer cleanup(cleanupCtx)
 	defer videoConn.Close()
 	defer videoConn.CloseTarget(cleanupCtx)
+	br := cr.Browser()
 
 	bTconn, err := br.TestAPIConn(ctx)
 	if err != nil {

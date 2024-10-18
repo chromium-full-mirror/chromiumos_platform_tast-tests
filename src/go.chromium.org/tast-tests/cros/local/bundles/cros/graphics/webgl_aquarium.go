@@ -19,7 +19,6 @@ import (
 	"go.chromium.org/tast-tests/cros/common/testexec"
 	"go.chromium.org/tast-tests/cros/local/chrome"
 	"go.chromium.org/tast-tests/cros/local/chrome/browser"
-	"go.chromium.org/tast-tests/cros/local/chrome/browser/browserfixt"
 	"go.chromium.org/tast-tests/cros/local/chrome/cuj"
 	"go.chromium.org/tast-tests/cros/local/cpu"
 	"go.chromium.org/tast-tests/cros/local/graphics"
@@ -119,13 +118,11 @@ func WebGLAquarium(ctx context.Context, s *testing.State) {
 	s.Logf("Extracted %s", webGlAquarium)
 
 	url := path.Join(server.URL, "aquarium/aquarium.html"+fmt.Sprintf("?numFish=%d", numFish))
-	browserType := s.Param().(aquariumParamData).browserType
 	cr := s.FixtValue().(chrome.HasChrome).Chrome()
-	conn, _, closeBrowser, err := browserfixt.SetUpWithURL(ctx, cr, browserType, url)
+	conn, err := cr.NewConn(ctx, url)
 	if err != nil {
 		s.Fatal("Failed to set up browser: ", err)
 	}
-	defer closeBrowser(ctx)
 	defer conn.Close()
 
 	// Dump debug files and take a screenshot if test fails.

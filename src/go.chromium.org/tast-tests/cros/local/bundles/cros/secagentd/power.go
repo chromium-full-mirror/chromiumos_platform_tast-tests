@@ -19,7 +19,6 @@ import (
 	"go.chromium.org/tast-tests/cros/local/bundles/cros/secagentd/secagentdupstart"
 	"go.chromium.org/tast-tests/cros/local/chrome"
 	"go.chromium.org/tast-tests/cros/local/chrome/ash"
-	"go.chromium.org/tast-tests/cros/local/chrome/browser/browserfixt"
 	"go.chromium.org/tast-tests/cros/local/chrome/uiauto"
 	"go.chromium.org/tast-tests/cros/local/chrome/uiauto/nodewith"
 	"go.chromium.org/tast-tests/cros/local/chrome/uiauto/printpreview"
@@ -94,7 +93,6 @@ func Power(ctx context.Context, s *testing.State) {
 	}
 	fv := s.FixtValue().(setup.PowerUIFixtureData)
 	discharge := fv.Discharge
-	bt := fv.Bt
 	cr := fv.Cr // Chrome
 
 	powerMeasureInterval := 5 * time.Second
@@ -112,11 +110,10 @@ func Power(ctx context.Context, s *testing.State) {
 		</html>`
 
 	// Render an entirely white or black blank page in the browser in accordance with the OS theme.
-	conn, _, cleanup, err := browserfixt.SetUpWithURL(ctx, cr, bt, blankPageContents)
+	conn, err := cr.NewConn(ctx, blankPageContents)
 	if err != nil {
 		s.Fatal("Failed to open a blank new tab: ", err)
 	}
-	defer cleanup(cleanupCtx)
 	defer conn.Close()
 	defer conn.CloseTarget(cleanupCtx)
 

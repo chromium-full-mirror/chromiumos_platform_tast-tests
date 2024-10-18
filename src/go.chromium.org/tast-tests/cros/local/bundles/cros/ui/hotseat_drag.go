@@ -12,7 +12,6 @@ import (
 	"go.chromium.org/tast-tests/cros/local/chrome"
 	"go.chromium.org/tast-tests/cros/local/chrome/ash"
 	"go.chromium.org/tast-tests/cros/local/chrome/browser"
-	"go.chromium.org/tast-tests/cros/local/chrome/browser/browserfixt"
 	"go.chromium.org/tast-tests/cros/local/chrome/cuj"
 	"go.chromium.org/tast-tests/cros/local/chrome/display"
 	"go.chromium.org/tast-tests/cros/local/input"
@@ -90,11 +89,10 @@ func HotseatDrag(ctx context.Context, s *testing.State) {
 	defer stw.Close()
 
 	// Open a browser window depending on the given browser type.
-	conn, _, closeBrowser, err := browserfixt.SetUpWithURL(ctx, cr, s.Param().(browser.Type), ui.PerftestURL)
+	conn, err := cr.NewConn(ctx, ui.PerftestURL)
 	if err != nil {
 		s.Fatal("Failed to open browser window: ", err)
 	}
-	defer closeBrowser(cleanupCtx)
 	defer conn.Close()
 
 	// Note that ash-chrome `cr` and `tconn` is passed in to take traces and metrics from ash-chrome.

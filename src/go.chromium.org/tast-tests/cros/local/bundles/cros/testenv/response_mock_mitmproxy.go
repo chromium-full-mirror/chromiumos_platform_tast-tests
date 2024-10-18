@@ -11,8 +11,6 @@ import (
 
 	"go.chromium.org/tast-tests/cros/common/fixture"
 	"go.chromium.org/tast-tests/cros/local/chrome"
-	"go.chromium.org/tast-tests/cros/local/chrome/browser"
-	"go.chromium.org/tast-tests/cros/local/chrome/browser/browserfixt"
 	"go.chromium.org/tast-tests/cros/local/testenv/proxy"
 	"go.chromium.org/tast/core/ctxutil"
 	"go.chromium.org/tast/core/errors"
@@ -60,13 +58,12 @@ func ResponseMockMitmproxy(ctx context.Context, s *testing.State) {
 	}
 
 	// Execute test logic.
-	conn, br, closeBrowser, err := browserfixt.SetUpWithURL(ctx, cr, browser.TypeAsh, "https://www.example.com")
+	conn, err := cr.NewConn(ctx, "https://www.example.com")
 	if err != nil {
 		s.Fatal("Failed to open test page: ", err)
 	}
-	defer closeBrowser(cleanupCtx)
 	defer conn.Close()
-	br.ReloadActiveTab(ctx)
+	cr.Browser().ReloadActiveTab(ctx)
 
 	// Verify.
 	expected := "Content injected by proxy"

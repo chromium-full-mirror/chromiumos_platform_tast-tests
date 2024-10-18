@@ -12,7 +12,6 @@ import (
 	"go.chromium.org/tast-tests/cros/local/chrome"
 	"go.chromium.org/tast-tests/cros/local/chrome/ash"
 	"go.chromium.org/tast-tests/cros/local/chrome/browser"
-	"go.chromium.org/tast-tests/cros/local/chrome/browser/browserfixt"
 	"go.chromium.org/tast-tests/cros/local/chrome/cuj"
 	"go.chromium.org/tast-tests/cros/local/perfutil"
 	"go.chromium.org/tast-tests/cros/local/power"
@@ -55,11 +54,10 @@ func SnapPerf(ctx context.Context, s *testing.State) {
 
 	// Set up the browser.
 	cr := s.FixtValue().(chrome.HasChrome).Chrome()
-	conn, _, closeBrowser, err := browserfixt.SetUpWithURL(ctx, cr, s.Param().(browser.Type), ui.PerftestURL)
+	conn, err := cr.NewConn(ctx, ui.PerftestURL)
 	if err != nil {
 		s.Fatal("Failed to open a new connection: ", err)
 	}
-	defer closeBrowser(cleanupCtx)
 	defer conn.Close()
 
 	tconn, err := cr.TestAPIConn(ctx)

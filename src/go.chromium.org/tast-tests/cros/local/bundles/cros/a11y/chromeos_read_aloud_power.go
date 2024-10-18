@@ -8,8 +8,6 @@ import (
 	"context"
 	"time"
 
-	"go.chromium.org/tast-tests/cros/local/chrome/browser"
-	"go.chromium.org/tast-tests/cros/local/chrome/browser/browserfixt"
 	"go.chromium.org/tast-tests/cros/local/chrome/uiauto"
 	"go.chromium.org/tast-tests/cros/local/chrome/uiauto/faillog"
 	"go.chromium.org/tast-tests/cros/local/chrome/uiauto/nodewith"
@@ -64,11 +62,10 @@ func ChromeosReadAloudPower(ctx context.Context, s *testing.State) {
 
 	cr := s.FixtValue().(setup.PowerUIFixtureData).Cr
 
-	conn, _, cleanup, err := browserfixt.SetUpWithURL(ctx, cr, browser.TypeAsh, "https://en.wikipedia.org/wiki/ChromeOS")
+	conn, err := cr.NewConn(ctx, "https://en.wikipedia.org/wiki/ChromeOS")
 	if err != nil {
 		s.Fatal("Failed to open wiki page: ", err)
 	}
-	defer cleanup(cleanupCtx)
 	defer conn.Close()
 	defer conn.CloseTarget(cleanupCtx)
 

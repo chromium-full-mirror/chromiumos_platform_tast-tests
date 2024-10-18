@@ -12,7 +12,6 @@ import (
 	"go.chromium.org/tast-tests/cros/local/chrome"
 	"go.chromium.org/tast-tests/cros/local/chrome/ash"
 	"go.chromium.org/tast-tests/cros/local/chrome/browser"
-	"go.chromium.org/tast-tests/cros/local/chrome/browser/browserfixt"
 	"go.chromium.org/tast-tests/cros/local/chrome/cuj"
 	"go.chromium.org/tast-tests/cros/local/chrome/display"
 	"go.chromium.org/tast-tests/cros/local/input"
@@ -99,16 +98,15 @@ func DragWindowFromShelfPerf(ctx context.Context, s *testing.State) {
 	// Set up the browser, open a first window.
 	const numWindows = 8
 	const url = ui.PerftestURL
-	conn, br, closeBrowser, err := browserfixt.SetUpWithURL(ctx, cr, s.Param().(browser.Type), url)
+	conn, err := cr.NewConn(ctx, url)
 	if err != nil {
 		s.Fatal("Failed to open the browser: ", err)
 	}
-	defer closeBrowser(cleanupCtx)
 	if err := conn.Close(); err != nil {
 		s.Fatalf("Failed to close connection to url %v: %v", url, err)
 	}
 	// Open the rest of the windows.
-	if err := ash.CreateWindows(ctx, tconn, br, url, numWindows-1); err != nil {
+	if err := ash.CreateWindows(ctx, tconn, cr.Browser(), url, numWindows-1); err != nil {
 		s.Fatal("Failed to open browser windows: ", err)
 	}
 

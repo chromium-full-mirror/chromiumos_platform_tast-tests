@@ -14,7 +14,6 @@ import (
 	"go.chromium.org/tast-tests/cros/common/ui"
 	"go.chromium.org/tast-tests/cros/local/chrome"
 	"go.chromium.org/tast-tests/cros/local/chrome/browser"
-	"go.chromium.org/tast-tests/cros/local/chrome/browser/browserfixt"
 	"go.chromium.org/tast-tests/cros/local/chrome/lacros/lacrosfixt"
 	"go.chromium.org/tast-tests/cros/local/chrome/uiauto"
 	"go.chromium.org/tast-tests/cros/local/chrome/uiauto/faillog"
@@ -455,13 +454,12 @@ func (f *withBrowserFixture) SetUp(ctx context.Context, s *testing.FixtState) in
 }
 
 func (f *withBrowserFixture) PreTest(ctx context.Context, s *testing.FixtTestState) {
-	conn, _, closeBrowser, err := browserfixt.SetUpWithURL(
-		ctx, f.cr, f.bt, BuildDataURL(f.queryWord))
+	conn, err := f.cr.NewConn(ctx, BuildDataURL(f.queryWord))
 	if err != nil {
 		s.Fatal("Failed to open a browser: ", err)
 	}
 	f.conn = conn
-	f.closeBrowser = closeBrowser
+	f.closeBrowser = func(context.Context) error { return nil }
 }
 
 func (f *withBrowserFixture) PostTest(ctx context.Context, s *testing.FixtTestState) {

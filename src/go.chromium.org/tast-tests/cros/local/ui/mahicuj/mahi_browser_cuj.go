@@ -14,8 +14,6 @@ import (
 	"go.chromium.org/tast-tests/cros/local/a11y"
 	"go.chromium.org/tast-tests/cros/local/chrome"
 	"go.chromium.org/tast-tests/cros/local/chrome/ash"
-	"go.chromium.org/tast-tests/cros/local/chrome/browser"
-	"go.chromium.org/tast-tests/cros/local/chrome/browser/browserfixt"
 	"go.chromium.org/tast-tests/cros/local/chrome/uiauto"
 	"go.chromium.org/tast-tests/cros/local/dlc"
 	"go.chromium.org/tast-tests/cros/local/input"
@@ -52,11 +50,10 @@ func BrowserCUJRun(ctx context.Context, cr *chrome.Chrome, proxyScriptPath, loca
 	}
 
 	// Set up an about:blank page
-	conn, br, closeBrowser, err := browserfixt.SetUpWithURL(ctx, cr, browser.TypeAsh, chrome.BlankURL)
+	conn, err := cr.NewConn(ctx, chrome.BlankURL)
 	if err != nil {
 		return nil, errors.Wrap(err, "failed to setup Chrome")
 	}
-	defer closeBrowser(closeCtx)
 	defer conn.Close()
 
 	tconn, err := cr.TestAPIConn(ctx)
@@ -64,7 +61,7 @@ func BrowserCUJRun(ctx context.Context, cr *chrome.Chrome, proxyScriptPath, loca
 		return nil, errors.Wrap(err, "failed to connect to test API connection")
 	}
 
-	bTconn, err := br.TestAPIConn(ctx)
+	bTconn, err := cr.Browser().TestAPIConn(ctx)
 	if err != nil {
 		return nil, errors.Wrap(err, "failed to connect to browser test API connection")
 	}

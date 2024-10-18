@@ -15,7 +15,6 @@ import (
 	"go.chromium.org/tast-tests/cros/local/chrome"
 	"go.chromium.org/tast-tests/cros/local/chrome/ash"
 	"go.chromium.org/tast-tests/cros/local/chrome/browser"
-	"go.chromium.org/tast-tests/cros/local/chrome/browser/browserfixt"
 	"go.chromium.org/tast-tests/cros/local/chrome/cuj"
 	"go.chromium.org/tast-tests/cros/local/input"
 	localPerf "go.chromium.org/tast-tests/cros/local/perf"
@@ -67,11 +66,10 @@ func WindowCyclePerf(ctx context.Context, s *testing.State) {
 
 	cr := s.FixtValue().(chrome.HasChrome).Chrome()
 
-	blankConn, br, closeBrowser, err := browserfixt.SetUpWithURL(ctx, cr, s.Param().(browser.Type), chrome.BlankURL)
+	blankConn, err := cr.NewConn(ctx, chrome.BlankURL)
 	if err != nil {
 		s.Fatal("Failed to set up the browser: ", err)
 	}
-	defer closeBrowser(cleanupCtx)
 	defer blankConn.Close()
 
 	tconn, err := cr.TestAPIConn(ctx)
@@ -79,6 +77,7 @@ func WindowCyclePerf(ctx context.Context, s *testing.State) {
 		s.Fatal("Failed to connect to test API: ", err)
 	}
 
+	br := cr.Browser()
 	bTconn, err := br.TestAPIConn(ctx)
 	if err != nil {
 		s.Fatal("Failed to get browser test API connection: ", err)

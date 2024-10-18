@@ -169,11 +169,10 @@ func testChromeLogin(ctx context.Context, s *testing.State, sm *session.SessionM
 	}
 
 	// Opening single web content.
-	conn, _, closeBrowser, err := browserfixt.SetUpWithURL(ctx, cr, params.bt, url)
+	conn, err := cr.NewConn(ctx, url)
 	if err != nil {
 		s.Fatal("Failed to open a new connection: ", err)
 	}
-	defer closeBrowser(cleanupCtx)
 	defer conn.Close()
 
 	if err := conn.WaitForExpr(ctx, "document.readyState === 'complete'"); err != nil {

@@ -12,7 +12,6 @@ import (
 	"go.chromium.org/tast-tests/cros/local/chrome"
 	"go.chromium.org/tast-tests/cros/local/chrome/ash"
 	"go.chromium.org/tast-tests/cros/local/chrome/browser"
-	"go.chromium.org/tast-tests/cros/local/chrome/browser/browserfixt"
 	"go.chromium.org/tast-tests/cros/local/chrome/display"
 	"go.chromium.org/tast-tests/cros/local/chrome/uiauto/faillog"
 	"go.chromium.org/tast-tests/cros/local/chrome/uiauto/filesapp"
@@ -107,12 +106,10 @@ func WindowSnapAndRotate(ctx context.Context, s *testing.State) {
 	}
 
 	// Open two windows, a browser and a File app.
-	bt := s.Param().(windowSnapAndRotateTestParam).bt
-	conn, _, closeBrowser, err := browserfixt.SetUpWithURL(ctx, cr, bt, chrome.NewTabURL)
+	conn, err := cr.NewConn(ctx, chrome.NewTabURL)
 	if err != nil {
 		s.Fatal("Failed to start browser: ", err)
 	}
-	defer closeBrowser(cleanupCtx)
 	defer conn.Close()
 
 	if _, err := filesapp.Launch(ctx, tconn); err != nil {

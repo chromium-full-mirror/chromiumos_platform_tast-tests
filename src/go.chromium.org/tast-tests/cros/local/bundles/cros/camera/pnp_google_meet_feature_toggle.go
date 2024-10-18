@@ -15,8 +15,6 @@ import (
 	"go.chromium.org/tast-tests/cros/local/chrome"
 	"go.chromium.org/tast-tests/cros/local/chrome/apps/thirdparty/googlemeet"
 	"go.chromium.org/tast-tests/cros/local/chrome/ash"
-	"go.chromium.org/tast-tests/cros/local/chrome/browser"
-	"go.chromium.org/tast-tests/cros/local/chrome/browser/browserfixt"
 	"go.chromium.org/tast-tests/cros/local/chrome/uiauto"
 	"go.chromium.org/tast-tests/cros/local/chrome/uiauto/vctray"
 	"go.chromium.org/tast-tests/cros/local/power"
@@ -90,12 +88,12 @@ func PNPGoogleMeetFeatureToggle(ctx context.Context, s *testing.State) {
 	cr := s.FixtValue().(powersetup.PowerUIFixtureData).Cr
 
 	testing.ContextLog(ctx, "Opening Meet")
-	conn, br, cleanup, err := browserfixt.SetUpWithURL(ctx, cr, browser.TypeAsh, chrome.NewTabURL)
+	conn, err := cr.NewConn(ctx, chrome.NewTabURL)
 	if err != nil {
 		s.Fatal("Failed to launch browser: ", err)
 	}
-	defer cleanup(cleanupCtx)
 	defer conn.Close()
+	br := cr.Browser()
 
 	tconn, err := cr.TestAPIConn(ctx)
 	if err != nil {

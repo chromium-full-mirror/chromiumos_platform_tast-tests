@@ -22,7 +22,6 @@ import (
 	"go.chromium.org/tast-tests/cros/local/chrome"
 	"go.chromium.org/tast-tests/cros/local/chrome/ash"
 	"go.chromium.org/tast-tests/cros/local/chrome/browser"
-	"go.chromium.org/tast-tests/cros/local/chrome/browser/browserfixt"
 	"go.chromium.org/tast-tests/cros/local/chrome/display"
 	"go.chromium.org/tast-tests/cros/local/chrome/metrics"
 	"go.chromium.org/tast-tests/cros/local/coords"
@@ -107,15 +106,14 @@ func RunTest(ctx context.Context, s *testing.State, tconn *chrome.TestConn, conf
 
 	cr := s.FixtValue().(chrome.HasChrome).Chrome()
 	url := server.URL + "/video.html"
-	conn, br, browserCleanup, err := browserfixt.SetUpWithURL(ctx, cr, config.BrowserType, url)
+	conn, err := cr.NewConn(ctx, url)
 	if err != nil {
 		s.Fatal("Failed to setup browser: ", err)
 	}
-	bTconn, err := br.TestAPIConn(ctx)
+	bTconn, err := cr.Browser().TestAPIConn(ctx)
 	if err != nil {
 		s.Fatal("Failed to connect to browser test API: ", err)
 	}
-	defer browserCleanup(cleanupCtx)
 	// Close the tab and release the resource.
 	defer func(ctx context.Context) {
 		// Connection maybe tampered (e.g. suspend/resume) and we need to re-establish connection.

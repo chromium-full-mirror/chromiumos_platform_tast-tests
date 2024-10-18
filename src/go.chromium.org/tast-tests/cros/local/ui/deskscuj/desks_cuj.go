@@ -14,7 +14,6 @@ import (
 	"go.chromium.org/tast-tests/cros/local/chrome"
 	"go.chromium.org/tast-tests/cros/local/chrome/ash"
 	"go.chromium.org/tast-tests/cros/local/chrome/browser"
-	"go.chromium.org/tast-tests/cros/local/chrome/browser/browserfixt"
 	"go.chromium.org/tast-tests/cros/local/chrome/cuj"
 	"go.chromium.org/tast-tests/cros/local/chrome/uiauto"
 	"go.chromium.org/tast-tests/cros/local/chrome/uiauto/faillog"
@@ -61,11 +60,10 @@ func Run(ctx context.Context, cr *chrome.Chrome, testParam TestParam, args func(
 		return nil, errors.Wrap(err, "failed to capture device snapshot")
 	}
 
-	blankConn, br, closeBrowser, err := browserfixt.SetUpWithURL(ctx, cr, testParam.BrowserType, chrome.BlankURL)
+	blankConn, err := cr.NewConn(ctx, chrome.BlankURL)
 	if err != nil {
 		return nil, errors.Wrap(err, "failed to set up Chrome")
 	}
-	defer closeBrowser(cleanupCtx)
 	defer blankConn.Close()
 
 	tconn, err := cr.TestAPIConn(ctx)
@@ -73,6 +71,7 @@ func Run(ctx context.Context, cr *chrome.Chrome, testParam TestParam, args func(
 		return nil, errors.Wrap(err, "failed to connect to test API connection")
 	}
 
+	br := cr.Browser()
 	bTconn, err := br.TestAPIConn(ctx)
 	if err != nil {
 		return nil, errors.Wrap(err, "failed to connect to browser test API connection")

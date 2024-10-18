@@ -25,7 +25,6 @@ import (
 	"go.chromium.org/tast-tests/cros/local/chrome"
 	"go.chromium.org/tast-tests/cros/local/chrome/ash"
 	"go.chromium.org/tast-tests/cros/local/chrome/browser"
-	"go.chromium.org/tast-tests/cros/local/chrome/browser/browserfixt"
 	"go.chromium.org/tast-tests/cros/local/chrome/uiauto"
 	"go.chromium.org/tast-tests/cros/local/imagehelpers"
 	"go.chromium.org/tast-tests/cros/local/policyutil"
@@ -164,17 +163,17 @@ func init() {
 				ExtraAttr:         []string{"informational", "group:mainline"},
 			},
 			{
-				Name:              "enabled_system_app_package_names_vm",
-				Val:               policyEnabledSystemAppPackageNames,
+				Name: "enabled_system_app_package_names_vm",
+				Val:  policyEnabledSystemAppPackageNames,
 				ExtraSoftwareDeps: []string{
 					"android_vm",
 					// Disabled by TORA.  See:b/346157268.
 					// "gaia"
 				},
-				ExtraAttr:         []string{
+				ExtraAttr: []string{
 					// Disabled by TORA.  See:b/346157268.
 					// "informational", "group:mainline"
-					},
+				},
 			},
 			{
 				Name:              "install_unknown_sources_disabled",
@@ -488,11 +487,10 @@ func generateCorpUsageCert(ctx context.Context, cr *chrome.Chrome, bt browser.Ty
 	)
 
 	// open the extension
-	conn, _, closeBrowser, err := browserfixt.SetUpWithURL(ctx, cr, bt, extensionURL)
+	conn, err := cr.NewConn(ctx, extensionURL)
 	if err != nil {
 		return errors.Wrap(err, "failed to open the browser")
 	}
-	defer closeBrowser(ctx)
 	defer conn.Close()
 
 	clickAndWaitForStatus := func(buttonId string) error {

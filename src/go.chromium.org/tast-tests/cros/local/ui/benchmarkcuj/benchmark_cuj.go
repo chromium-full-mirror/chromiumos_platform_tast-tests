@@ -13,7 +13,6 @@ import (
 	"go.chromium.org/tast-tests/cros/local/chrome"
 	"go.chromium.org/tast-tests/cros/local/chrome/ash"
 	"go.chromium.org/tast-tests/cros/local/chrome/browser"
-	"go.chromium.org/tast-tests/cros/local/chrome/browser/browserfixt"
 	"go.chromium.org/tast-tests/cros/local/chrome/uiauto"
 	"go.chromium.org/tast-tests/cros/local/chrome/uiauto/faillog"
 	localPerf "go.chromium.org/tast-tests/cros/local/perf"
@@ -65,12 +64,10 @@ func Run(ctx context.Context, cr *chrome.Chrome, testParam BenchmarkTest, cmdLin
 
 	benchmarkParam := testParam.BenchmarkInfo
 
-	benchmarkConn, br, closeBrowser, err := browserfixt.SetUpWithURL(ctx, cr,
-		testParam.BrowserType, benchmarkParam.benchmarkURL)
+	benchmarkConn, err := cr.NewConn(ctx, benchmarkParam.benchmarkURL)
 	if err != nil {
 		return nil, errors.Wrapf(err, "failed to setup Chrome with %s", benchmarkParam.benchmarkURL)
 	}
-	defer closeBrowser(closeCtx)
 	defer benchmarkConn.Close()
 
 	tconn, err := cr.TestAPIConn(ctx)
@@ -78,7 +75,7 @@ func Run(ctx context.Context, cr *chrome.Chrome, testParam BenchmarkTest, cmdLin
 		return nil, errors.Wrap(err, "failed to connect to the test API connection")
 	}
 
-	bTconn, err := br.TestAPIConn(ctx)
+	bTconn, err := cr.Browser().TestAPIConn(ctx)
 	if err != nil {
 		return nil, errors.Wrap(err, "falied to connect to browser test API connection")
 	}

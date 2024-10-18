@@ -17,7 +17,6 @@ import (
 	"go.chromium.org/tast-tests/cros/local/chrome/apps/thirdparty/googledocs"
 	"go.chromium.org/tast-tests/cros/local/chrome/ash"
 	"go.chromium.org/tast-tests/cros/local/chrome/browser"
-	"go.chromium.org/tast-tests/cros/local/chrome/browser/browserfixt"
 	"go.chromium.org/tast-tests/cros/local/chrome/cuj"
 	"go.chromium.org/tast-tests/cros/local/chrome/cuj/inputsimulations"
 	"go.chromium.org/tast-tests/cros/local/chrome/display"
@@ -68,11 +67,10 @@ func Run(ctx context.Context, cr *chrome.Chrome, testParam TestParam, outDir, sy
 	ctx, cancel := ctxutil.Shorten(ctx, 10*time.Second)
 	defer cancel()
 
-	sheetConn, br, closeBrowser, err := browserfixt.SetUpWithURL(ctx, cr, testParam.BrowserType, chrome.BlankURL)
+	sheetConn, err := cr.NewConn(ctx, chrome.BlankURL)
 	if err != nil {
 		return nil, errors.Wrap(err, "failed to setup Chrome")
 	}
-	defer closeBrowser(closeCtx)
 	defer sheetConn.Close()
 
 	tconn, err := cr.TestAPIConn(ctx)
@@ -80,6 +78,7 @@ func Run(ctx context.Context, cr *chrome.Chrome, testParam TestParam, outDir, sy
 		return nil, errors.Wrap(err, "failed to connect to test API connection")
 	}
 
+	br := cr.Browser()
 	bTconn, err := br.TestAPIConn(ctx)
 	if err != nil {
 		return nil, errors.Wrap(err, "failed to connect to browser test API connection")

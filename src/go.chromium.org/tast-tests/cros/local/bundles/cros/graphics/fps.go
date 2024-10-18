@@ -13,7 +13,6 @@ import (
 
 	"go.chromium.org/tast-tests/cros/local/chrome"
 	"go.chromium.org/tast-tests/cros/local/chrome/browser"
-	"go.chromium.org/tast-tests/cros/local/chrome/browser/browserfixt"
 	"go.chromium.org/tast-tests/cros/local/chrome/display"
 	"go.chromium.org/tast-tests/cros/local/graphics"
 	"go.chromium.org/tast-tests/cros/local/graphics/modetest"
@@ -64,13 +63,12 @@ func FPS(ctx context.Context, s *testing.State) {
 	defer server.Close()
 	testURL := server.URL + "/fps.html"
 
-	conn, br, closeBrowser, err := browserfixt.SetUpWithURL(
-		ctx, s.FixtValue().(chrome.HasChrome).Chrome(), s.Param().(browser.Type), testURL)
+	conn, err := s.FixtValue().(chrome.HasChrome).Chrome().NewConn(ctx, testURL)
 	if err != nil {
 		s.Fatal("Failed to set up browser: ", err)
 	}
-	defer closeBrowser(ctx)
 	defer conn.Close()
+	br := s.FixtValue().(chrome.HasChrome).Chrome().Browser()
 
 	tconn, err := br.TestAPIConn(ctx)
 	if err != nil {

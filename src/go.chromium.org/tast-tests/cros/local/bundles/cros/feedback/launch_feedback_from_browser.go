@@ -9,8 +9,6 @@ import (
 	"time"
 
 	"go.chromium.org/tast-tests/cros/local/chrome"
-	"go.chromium.org/tast-tests/cros/local/chrome/browser"
-	"go.chromium.org/tast-tests/cros/local/chrome/browser/browserfixt"
 	"go.chromium.org/tast-tests/cros/local/chrome/uiauto"
 	"go.chromium.org/tast-tests/cros/local/chrome/uiauto/faillog"
 	"go.chromium.org/tast-tests/cros/local/chrome/uiauto/nodewith"
@@ -62,11 +60,10 @@ func LaunchFeedbackFromBrowser(ctx context.Context, s *testing.State) {
 
 	ui := uiauto.New(tconn)
 
-	conn, _, closeBrowser, err := browserfixt.SetUpWithURL(ctx, cr, browser.TypeAsh, settingLinkAddress)
+	conn, err := cr.NewConn(ctx, settingLinkAddress)
 	if err != nil {
 		s.Fatal("Failed to setup chrome: ", err)
 	}
-	defer closeBrowser(cleanupCtx)
 	defer conn.Close()
 
 	link := nodewith.Name("Report an issue").Role(role.Link)

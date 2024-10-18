@@ -17,7 +17,6 @@ import (
 	"go.chromium.org/tast-tests/cros/common/testexec"
 	"go.chromium.org/tast-tests/cros/local/chrome"
 	"go.chromium.org/tast-tests/cros/local/chrome/browser"
-	"go.chromium.org/tast-tests/cros/local/chrome/browser/browserfixt"
 	"go.chromium.org/tast-tests/cros/local/graphics"
 	"go.chromium.org/tast/core/ctxutil"
 	"go.chromium.org/tast/core/testing"
@@ -78,7 +77,6 @@ func findMean(data []float64) float64 {
 }
 
 func WebGLManyPlanetsDeep(ctx context.Context, s *testing.State) {
-	cleanupCtx := ctx
 	ctx, cancel := ctxutil.Shorten(ctx, cleanupTime)
 	defer cancel()
 
@@ -92,11 +90,10 @@ func WebGLManyPlanetsDeep(ctx context.Context, s *testing.State) {
 	defer server.Close()
 
 	url := path.Join(server.URL, "ManyPlanetsDeep.html")
-	conn, _, closeBrowser, err := browserfixt.SetUpWithURL(ctx, s.FixtValue().(chrome.HasChrome).Chrome(), s.Param().(browser.Type), url)
+	conn, err := s.FixtValue().(chrome.HasChrome).Chrome().NewConn(ctx, url)
 	if err != nil {
 		s.Fatal("Failed to set up browser: ", err)
 	}
-	defer closeBrowser(cleanupCtx)
 	defer conn.Close()
 
 	if err = conn.WaitForExpr(ctx, "document.readyState === 'complete'"); err != nil {

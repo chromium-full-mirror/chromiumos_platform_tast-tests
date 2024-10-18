@@ -21,8 +21,6 @@ import (
 	"go.chromium.org/tast-tests/cros/common/hwsec/util"
 	"go.chromium.org/tast-tests/cros/common/u2fd"
 	"go.chromium.org/tast-tests/cros/local/chrome"
-	"go.chromium.org/tast-tests/cros/local/chrome/browser"
-	"go.chromium.org/tast-tests/cros/local/chrome/browser/browserfixt"
 	"go.chromium.org/tast-tests/cros/local/chrome/uiauto"
 	"go.chromium.org/tast-tests/cros/local/chrome/uiauto/nodewith"
 	"go.chromium.org/tast-tests/cros/local/dbusutil"
@@ -136,11 +134,10 @@ func createChallengeResponseData(ctx context.Context, lf hwsec.LogFunc, cryptoho
 }
 
 func addWebAuthnData(ctx context.Context, cr *chrome.Chrome, webauthnURL, password string, config *CrossVersionLoginConfig) error {
-	conn, _, closeBrowser, err := browserfixt.SetUpWithURL(ctx, cr, browser.TypeAsh, webauthnURL)
+	conn, err := cr.NewConn(ctx, webauthnURL)
 	if err != nil {
 		return errors.Wrap(err, "failed to open the browser")
 	}
-	defer closeBrowser(ctx)
 	defer conn.Close()
 
 	tconn, err := cr.TestAPIConn(ctx)

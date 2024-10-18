@@ -13,8 +13,6 @@ import (
 	"time"
 
 	"go.chromium.org/tast-tests/cros/local/chrome"
-	"go.chromium.org/tast-tests/cros/local/chrome/browser"
-	"go.chromium.org/tast-tests/cros/local/chrome/browser/browserfixt"
 	"go.chromium.org/tast/core/fsutil"
 	"go.chromium.org/tast/core/testing"
 )
@@ -114,12 +112,12 @@ func SysInfoPII(ctx context.Context, s *testing.State) {
 	cr := s.FixtValue().(chrome.HasChrome).Chrome()
 
 	// Set up a browser.
-	conn, br, closeBrowser, err := browserfixt.SetUpWithURL(ctx, cr, browser.TypeAsh, sensitiveURL)
+	conn, err := cr.NewConn(ctx, sensitiveURL)
 	if err != nil {
 		s.Fatal("Failed to create new browser window: ", err)
 	}
-	defer closeBrowser(ctx)
 	defer conn.Close()
+	br := cr.Browser()
 
 	// Get a test API connection to active browser.
 	bTconn, err := br.TestAPIConn(ctx)

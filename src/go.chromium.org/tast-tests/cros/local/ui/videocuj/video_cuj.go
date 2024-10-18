@@ -16,8 +16,6 @@ import (
 	"go.chromium.org/tast-tests/cros/local/audio/crastestclient"
 	"go.chromium.org/tast-tests/cros/local/chrome"
 	"go.chromium.org/tast-tests/cros/local/chrome/ash"
-	"go.chromium.org/tast-tests/cros/local/chrome/browser"
-	"go.chromium.org/tast-tests/cros/local/chrome/browser/browserfixt"
 	"go.chromium.org/tast-tests/cros/local/chrome/cuj"
 	"go.chromium.org/tast-tests/cros/local/chrome/cuj/inputsimulations"
 	"go.chromium.org/tast-tests/cros/local/chrome/display"
@@ -76,11 +74,10 @@ func Run(ctx context.Context, s *testing.State) *perf.Values {
 
 	// Set up an about:blank page, so that we can use the given
 	// connection to navigate to CrosVideo within the recorder.
-	videoConn, br, closeBrowser, err := browserfixt.SetUpWithURL(ctx, cr, s.Param().(browser.Type), chrome.BlankURL)
+	videoConn, err := cr.NewConn(ctx, chrome.BlankURL)
 	if err != nil {
 		s.Fatal("Failed to set up Chrome: ", err)
 	}
-	defer closeBrowser(closeCtx)
 	defer videoConn.Close()
 
 	tconn, err := cr.TestAPIConn(ctx)
@@ -88,7 +85,7 @@ func Run(ctx context.Context, s *testing.State) *perf.Values {
 		s.Fatal("Failed to connect to test API connection: ", err)
 	}
 
-	bTconn, err := br.TestAPIConn(ctx)
+	bTconn, err := cr.Browser().TestAPIConn(ctx)
 	if err != nil {
 		s.Fatal("Failed to connect to browser test API connection: ", err)
 	}

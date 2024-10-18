@@ -12,7 +12,6 @@ import (
 	"go.chromium.org/tast-tests/cros/local/chrome"
 	"go.chromium.org/tast-tests/cros/local/chrome/ash"
 	"go.chromium.org/tast-tests/cros/local/chrome/browser"
-	"go.chromium.org/tast-tests/cros/local/chrome/browser/browserfixt"
 	"go.chromium.org/tast-tests/cros/local/chrome/cuj/inputsimulations"
 	"go.chromium.org/tast-tests/cros/local/chrome/display"
 	"go.chromium.org/tast-tests/cros/local/chrome/uiauto"
@@ -65,13 +64,11 @@ func ExampleCUJ(ctx context.Context, s *testing.State) {
 	// implements the chrome.HasChrome interface.
 	cr := s.FixtValue().(chrome.HasChrome).Chrome()
 
-	// Use browserfixt.Setup to setup either Lacros or Ash, based on
-	// the browser type set by the test variant parameters.
-	conn, br, closeBrowser, err := browserfixt.SetUpWithURL(ctx, cr, s.Param().(browser.Type), "about:blank")
+	// Use browserfixt.Setup to setup ash.
+	conn, err := cr.NewConn(ctx, "about:blank")
 	if err != nil {
 		s.Fatal("Failed to setup Chrome: ", err)
 	}
-	defer closeBrowser(closeCtx)
 	defer conn.Close()
 
 	// tconn is the Ash-chrome test connection.
@@ -82,7 +79,7 @@ func ExampleCUJ(ctx context.Context, s *testing.State) {
 
 	// bTconn is the browser test connection. This could either be a
 	// connection to Ash or Lacros, depending on the test variant.
-	bTconn, err := br.TestAPIConn(ctx)
+	bTconn, err := cr.Browser().TestAPIConn(ctx)
 	if err != nil {
 		s.Fatal("Falied to connect to browser test API connection: ", err)
 	}

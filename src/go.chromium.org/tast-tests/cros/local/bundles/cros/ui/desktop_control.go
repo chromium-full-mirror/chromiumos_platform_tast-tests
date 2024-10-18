@@ -12,7 +12,6 @@ import (
 	"go.chromium.org/tast-tests/cros/local/chrome"
 	"go.chromium.org/tast-tests/cros/local/chrome/ash"
 	"go.chromium.org/tast-tests/cros/local/chrome/browser"
-	"go.chromium.org/tast-tests/cros/local/chrome/browser/browserfixt"
 	"go.chromium.org/tast-tests/cros/local/chrome/display"
 	"go.chromium.org/tast-tests/cros/local/chrome/metrics"
 	"go.chromium.org/tast-tests/cros/local/chrome/uiauto"
@@ -71,11 +70,10 @@ func DesktopControl(ctx context.Context, s *testing.State) {
 
 	cr := s.FixtValue().(chrome.HasChrome).Chrome()
 	const url = chrome.BlankURL
-	conn1, br, closeBrowser, err := browserfixt.SetUpWithURL(ctx, cr, browser.TypeAsh, url)
+	conn1, err := cr.NewConn(ctx, url)
 	if err != nil {
 		s.Fatal("Failed to open the browser: ", err)
 	}
-	defer closeBrowser(ctx)
 	defer conn1.Close()
 
 	tconn, err := cr.TestAPIConn(ctx)
@@ -88,7 +86,7 @@ func DesktopControl(ctx context.Context, s *testing.State) {
 		s.Fatal("Failed to ensure into the clamshell mode: ", err)
 	}
 	defer cleanup(ctx)
-
+	br := cr.Browser()
 	defer faillog.DumpUITreeOnError(ctx, s.OutDir(), s.HasError, tconn)
 
 	// Open one extra new window.
@@ -120,7 +118,7 @@ func DesktopControl(ctx context.Context, s *testing.State) {
 		s.Fatal("Failed to set all windows as normal state: ", err)
 	}
 
-	r := perfutil.NewRunner(br, perfutil.RunnerOptions{IgnoreFirstRun: true, DropMinMaxValues: true})
+	r := perfutil.NewRunner(cr.Browser(), perfutil.RunnerOptions{IgnoreFirstRun: true, DropMinMaxValues: true})
 	r.SetRunsNumber(perfutil.RunnerCyclesOptions{MaxRuns: 3, MinSuccessfulRuns: 3})
 	r.RunTracing = false
 

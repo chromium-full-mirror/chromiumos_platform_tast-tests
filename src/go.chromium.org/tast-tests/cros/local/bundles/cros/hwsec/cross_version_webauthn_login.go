@@ -14,8 +14,6 @@ import (
 	"go.chromium.org/tast-tests/cros/local/bundles/cros/hwsec/fixture"
 	"go.chromium.org/tast-tests/cros/local/bundles/cros/hwsec/util"
 	"go.chromium.org/tast-tests/cros/local/chrome"
-	"go.chromium.org/tast-tests/cros/local/chrome/browser"
-	"go.chromium.org/tast-tests/cros/local/chrome/browser/browserfixt"
 	"go.chromium.org/tast-tests/cros/local/chrome/uiauto"
 	"go.chromium.org/tast-tests/cros/local/chrome/uiauto/nodewith"
 	hwseclocal "go.chromium.org/tast-tests/cros/local/hwsec"
@@ -263,7 +261,6 @@ func init() {
 // testWebauthnLogin verifies the WebAuthn GetAssertion operation succeeds.
 func testWebauthnLogin(ctx context.Context, config *util.CrossVersionLoginConfig, webauthnURL string) error {
 	// Reserve ten seconds for cleanup.
-	cleanupCtx := ctx
 	ctx, cancel := ctxutil.Shorten(ctx, 10*time.Second)
 	defer cancel()
 
@@ -294,11 +291,10 @@ func testWebauthnLogin(ctx context.Context, config *util.CrossVersionLoginConfig
 		return errors.Wrap(err, "failed to wait until u2fd is initialized")
 	}
 
-	conn, _, closeBrowser, err := browserfixt.SetUpWithURL(ctx, cr, browser.TypeAsh, webauthnURL)
+	conn, err := cr.NewConn(ctx, webauthnURL)
 	if err != nil {
 		return errors.Wrap(err, "failed to open the browser")
 	}
-	defer closeBrowser(cleanupCtx)
 	defer conn.Close()
 
 	tconn, err := cr.TestAPIConn(ctx)

@@ -10,8 +10,6 @@ import (
 	"time"
 
 	"go.chromium.org/tast-tests/cros/local/chrome"
-	"go.chromium.org/tast-tests/cros/local/chrome/browser"
-	"go.chromium.org/tast-tests/cros/local/chrome/browser/browserfixt"
 	"go.chromium.org/tast/core/testing"
 )
 
@@ -38,11 +36,10 @@ func ChromeSandboxed(ctx context.Context, s *testing.State) {
 	)
 
 	cr := s.FixtValue().(chrome.HasChrome).Chrome()
-	conn, _, closeBrowser, err := browserfixt.SetUpWithURL(ctx, cr, browser.TypeAsh, url)
+	conn, err := cr.NewConn(ctx, url)
 	if err != nil {
 		s.Fatal("Failed to create a new connection: ", err)
 	}
-	defer closeBrowser(ctx)
 	defer conn.Close()
 
 	{

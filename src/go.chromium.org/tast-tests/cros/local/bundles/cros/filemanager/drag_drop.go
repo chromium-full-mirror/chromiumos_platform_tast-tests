@@ -15,8 +15,6 @@ import (
 	"time"
 
 	"go.chromium.org/tast-tests/cros/local/chrome/ash"
-	"go.chromium.org/tast-tests/cros/local/chrome/browser"
-	"go.chromium.org/tast-tests/cros/local/chrome/browser/browserfixt"
 	"go.chromium.org/tast-tests/cros/local/input"
 	"go.chromium.org/tast/core/ctxutil"
 	"go.chromium.org/tast/core/errors"
@@ -90,11 +88,10 @@ func DragDrop(ctx context.Context, s *testing.State) {
 		}
 	}(cleanupCtx)
 
-	conn, _, closeBrowser, err := browserfixt.SetUpWithURL(ctx, cr, browser.TypeAsh, "http://localhost:8080/drag_drop_pwa_window.html")
+	conn, err := cr.NewConn(ctx, "http://localhost:8080/drag_drop_pwa_window.html")
 	if err != nil {
 		s.Fatal("Failed to load PWA for URL: ", err)
 	}
-	defer closeBrowser(cleanupCtx)
 	defer conn.Close()
 
 	window, err := ash.WaitForAnyWindowWithTitle(ctx, tconn, "awaiting drop.")

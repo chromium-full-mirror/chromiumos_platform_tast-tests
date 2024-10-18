@@ -15,9 +15,7 @@ import (
 	"go.chromium.org/tast-tests/cros/local/chrome"
 	"go.chromium.org/tast-tests/cros/local/chrome/ash"
 	"go.chromium.org/tast-tests/cros/local/chrome/browser"
-	"go.chromium.org/tast-tests/cros/local/chrome/browser/browserfixt"
 	"go.chromium.org/tast-tests/cros/local/chrome/cuj"
-	"go.chromium.org/tast-tests/cros/local/chrome/lacros/lacrosfixt"
 	"go.chromium.org/tast-tests/cros/local/chrome/metrics"
 	"go.chromium.org/tast-tests/cros/local/chrome/uiauto"
 	"go.chromium.org/tast-tests/cros/local/chrome/uiauto/faillog"
@@ -103,16 +101,8 @@ func BubbleLauncherAnimationPerf(ctx context.Context, s *testing.State) {
 	}
 
 	// Set up the browser without opening a new window yet.
-	bt := s.Param().(browser.Type)
 	// Options for fake apps.
 	opts := s.FixtValue().([]chrome.Option)
-	if bt == browser.TypeLacros {
-		var err error
-		opts, err = lacrosfixt.NewConfig(lacrosfixt.ChromeOptions(opts...)).Opts()
-		if err != nil {
-			s.Fatal("Failed to get lacros options: ", err)
-		}
-	}
 	cr, err := chrome.New(ctx, opts...)
 	if err != nil {
 		s.Fatal("Failed to start chrome: ", err)
@@ -175,14 +165,13 @@ func BubbleLauncherAnimationPerf(ctx context.Context, s *testing.State) {
 	// Open 2 browser windows with web contents playing an animation.
 	const numWindows = 2
 	// Open a first window using browserfixt to get a Browser instance.
-	conn, br, closeBrowser, err := browserfixt.SetUpWithURL(ctx, cr, bt, url)
+	conn, err := cr.NewConn(ctx, url)
 	if err != nil {
 		s.Fatal("Failed to open chrome: ", err)
 	}
-	defer closeBrowser(cleanupCtx)
 	defer conn.Close()
 	// Then open the rest of the windows alongside the one already opened.
-	if err := ash.CreateWindows(ctx, tconn, br, url, numWindows-1); err != nil {
+	if err := ash.CreateWindows(ctx, tconn, cr.Browser(), url, numWindows-1); err != nil {
 		s.Fatal("Failed to create browser windows: ", err)
 	}
 	// Maximize all windows to ensure a consistent state.

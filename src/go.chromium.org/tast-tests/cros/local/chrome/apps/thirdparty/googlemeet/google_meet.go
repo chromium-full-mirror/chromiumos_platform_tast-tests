@@ -19,7 +19,6 @@ import (
 	chromeApps "go.chromium.org/tast-tests/cros/local/chrome/apps"
 	"go.chromium.org/tast-tests/cros/local/chrome/ash"
 	"go.chromium.org/tast-tests/cros/local/chrome/browser"
-	"go.chromium.org/tast-tests/cros/local/chrome/browser/browserfixt"
 	"go.chromium.org/tast-tests/cros/local/chrome/uiauto"
 	"go.chromium.org/tast-tests/cros/local/chrome/uiauto/nodewith"
 	"go.chromium.org/tast-tests/cros/local/chrome/uiauto/prompts"
@@ -90,7 +89,7 @@ func New(conn *chrome.Conn, tconn *chrome.TestConn) *GoogleMeet {
 }
 
 // NewFromTarget creates a new GoogleMeet meeting instance from an existing web target.
-func NewFromTarget(ctx context.Context, cr *chrome.Chrome, br browser.Type, tm chrome.TargetMatcher) (*GoogleMeet, error) {
+func NewFromTarget(ctx context.Context, cr *chrome.Chrome, tm chrome.TargetMatcher) (*GoogleMeet, error) {
 	tconn, err := cr.TestAPIConn(ctx)
 	if err != nil {
 		return nil, err
@@ -109,7 +108,7 @@ func NewFromTarget(ctx context.Context, cr *chrome.Chrome, br browser.Type, tm c
 // The caller should explicitly call cleanup function to release resources and close Chrome browser.
 // Example:
 //
-//	gm, cleanup, err := googlemeet.StartNewMeeting(ctx, cr, browserType, nil, true)
+//	gm, cleanup, err := googlemeet.StartNewMeeting(ctx, cr, nil, true)
 //	if err != nil {
 //	     s.Fatal("Failed to start meeting: ", err)
 //	}
@@ -124,12 +123,12 @@ func StartNewMeeting(ctx context.Context, cr *chrome.Chrome, br *browser.Browser
 }
 
 // StartNewMeetingUsingBrowser launches browser and starts a new meeting.
-func StartNewMeetingUsingBrowser(ctx context.Context, cr *chrome.Chrome, browserType browser.Type, urlParams map[string]string, permissionOption PermissionOption, opts ...browser.CreateTargetOption) (*GoogleMeet, error) {
-	conn, br, _, err := browserfixt.SetUpWithURL(ctx, cr, browserType, chrome.NewTabURL)
+func StartNewMeetingUsingBrowser(ctx context.Context, cr *chrome.Chrome, urlParams map[string]string, permissionOption PermissionOption, opts ...browser.CreateTargetOption) (*GoogleMeet, error) {
+	conn, err := cr.NewConn(ctx, chrome.NewTabURL)
 	if err != nil {
 		return nil, errors.Wrap(err, "failed to launch browser")
 	}
-	return StartNewMeeting(ctx, cr, br, conn, urlParams, permissionOption, opts...)
+	return StartNewMeeting(ctx, cr, cr.Browser(), conn, urlParams, permissionOption, opts...)
 }
 
 // JoinMeeting joins an existing meeting using given browser.
@@ -143,12 +142,12 @@ func JoinMeeting(ctx context.Context, cr *chrome.Chrome, br *browser.Browser, co
 }
 
 // JoinMeetingUsingBrowser launches browser and joins a meeting.
-func JoinMeetingUsingBrowser(ctx context.Context, cr *chrome.Chrome, browserType browser.Type, meetingCode string, urlParams map[string]string, permissionOption PermissionOption, opts ...browser.CreateTargetOption) (*GoogleMeet, error) {
-	conn, br, _, err := browserfixt.SetUpWithURL(ctx, cr, browserType, chrome.NewTabURL)
+func JoinMeetingUsingBrowser(ctx context.Context, cr *chrome.Chrome, meetingCode string, urlParams map[string]string, permissionOption PermissionOption, opts ...browser.CreateTargetOption) (*GoogleMeet, error) {
+	conn, err := cr.NewConn(ctx, chrome.NewTabURL)
 	if err != nil {
 		return nil, errors.Wrap(err, "failed to launch browser")
 	}
-	return JoinMeeting(ctx, cr, br, conn, meetingCode, urlParams, permissionOption, opts...)
+	return JoinMeeting(ctx, cr, cr.Browser(), conn, meetingCode, urlParams, permissionOption, opts...)
 }
 
 // JoinMeetingWithEffect selects specific effect and joins an existing meeting using given browser.
@@ -216,13 +215,13 @@ func startMeeting(ctx context.Context, cr *chrome.Chrome, br *browser.Browser, c
 // The caller should explicitly call cleanup function to release resources and close the app.
 // Example:
 //
-//	gm, cleanup, err := googlemeet.StartNewMeetingUsingPWA(ctx, cr, browserType, true)
+//	gm, cleanup, err := googlemeet.StartNewMeetingUsingPWA(ctx, cr, true)
 //	if err != nil {
 //	     s.Fatal("Failed to start meeting: ", err)
 //	}
 //	defer cleanup(cleanupCtx)
-func StartNewMeetingUsingPWA(ctx context.Context, cr *chrome.Chrome, browserType browser.Type, permissionOption PermissionOption) (*GoogleMeet, error) {
-	gm, err := startMeetingUsingPWA(ctx, cr, browserType, newMeetingURL, permissionOption)
+func StartNewMeetingUsingPWA(ctx context.Context, cr *chrome.Chrome, permissionOption PermissionOption) (*GoogleMeet, error) {
+	gm, err := startMeetingUsingPWA(ctx, cr, newMeetingURL, permissionOption)
 	if err != nil {
 		return gm, err
 	}
@@ -230,16 +229,16 @@ func StartNewMeetingUsingPWA(ctx context.Context, cr *chrome.Chrome, browserType
 }
 
 // JoinMeetingUsingPWA joins an existing meeting using PWA.
-func JoinMeetingUsingPWA(ctx context.Context, cr *chrome.Chrome, browserType browser.Type, meetingCode string, permissionOption PermissionOption) (*GoogleMeet, error) {
-	gm, err := startMeetingUsingPWA(ctx, cr, browserType, homePageURL+meetingCode, permissionOption)
+func JoinMeetingUsingPWA(ctx context.Context, cr *chrome.Chrome, meetingCode string, permissionOption PermissionOption) (*GoogleMeet, error) {
+	gm, err := startMeetingUsingPWA(ctx, cr, homePageURL+meetingCode, permissionOption)
 	if err != nil {
 		return gm, err
 	}
 	return gm, gm.joinConference(ctx)
 }
 
-func startMeetingUsingPWA(ctx context.Context, cr *chrome.Chrome, browserType browser.Type, meetingURL string, permissionOption PermissionOption) (*GoogleMeet, error) {
-	if err := EnsurePWAInstalled(ctx, cr, browserType, permissionOption); err != nil {
+func startMeetingUsingPWA(ctx context.Context, cr *chrome.Chrome, meetingURL string, permissionOption PermissionOption) (*GoogleMeet, error) {
+	if err := EnsurePWAInstalled(ctx, cr, permissionOption); err != nil {
 		return nil, err
 	}
 
@@ -272,7 +271,7 @@ func startMeetingUsingPWA(ctx context.Context, cr *chrome.Chrome, browserType br
 		}
 	}
 
-	gm, err := NewFromTarget(ctx, cr, browserType, pwaTargetMatcher)
+	gm, err := NewFromTarget(ctx, cr, pwaTargetMatcher)
 	if err != nil {
 		return nil, errors.Wrap(err, "failed to connect to Meet PWA")
 	}
@@ -478,7 +477,7 @@ func (gm *GoogleMeet) ApplyVideoEffects(actions ...action.Action) action.Action 
 
 // EnsurePWAInstalled installs Google Meet PWA if it is not installed yet.
 // It also grants media permissions.
-func EnsurePWAInstalled(ctx context.Context, cr *chrome.Chrome, browserType browser.Type, permissionOption PermissionOption) error {
+func EnsurePWAInstalled(ctx context.Context, cr *chrome.Chrome, permissionOption PermissionOption) error {
 	tconn, err := cr.TestAPIConn(ctx)
 	if err != nil {
 		return err
@@ -505,10 +504,11 @@ func EnsurePWAInstalled(ctx context.Context, cr *chrome.Chrome, browserType brow
 	// install button in the popup to confirm installation.
 	installButton := nodewith.Name("Install").Role(role.Button)
 
-	conn, br, _, err := browserfixt.SetUpWithURL(ctx, cr, browserType, homePageURL)
+	conn, err := cr.NewConn(ctx, homePageURL)
 	if err != nil {
 		return errors.Wrap(err, "failed to launch browser")
 	}
+	br := cr.Browser()
 	defer func(ctx context.Context) {
 		// After a successful installation, conn points to the PWA window,
 		// while another new tab is opened in the browser with no connection.
