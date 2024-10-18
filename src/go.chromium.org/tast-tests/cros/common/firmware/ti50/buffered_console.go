@@ -139,16 +139,8 @@ func (c *BufferedConsole) WriteSerial(ctx context.Context, b []byte) error {
 	if c.port == nil {
 		return errors.New("BufferedConsole not open")
 	}
-	n, err := c.port.Write(ctx, b)
-
-	if err != nil {
-		return err
-	}
-
-	if n != len(b) {
-		return errors.Errorf("not all bytes written, got %d, want %d", n, len(b))
-	}
-	return nil
+	_, err := c.port.Write(ctx, b)
+	return err
 }
 
 // FlushSerial flushes un-read/written chars.
