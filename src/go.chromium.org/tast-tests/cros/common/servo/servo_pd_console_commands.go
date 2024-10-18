@@ -190,22 +190,6 @@ func (s *Servo) ServoSetDPConfigs(ctx context.Context, config *TypeCInfo, mfPref
 		}
 	}
 
-	hpdLevel := ""
-	switch config.HPDLevel {
-	case HPDHigh:
-		hpdLevel = "h"
-		break
-	case HPDLow:
-		hpdLevel = "l"
-		break
-	default:
-		hpdLevel = "ext"
-	}
-
-	if err := s.RunServoCommand(ctx, fmt.Sprintf("usbc_action dp hpd %s", hpdLevel)); err != nil {
-		return errors.Wrap(err, "failed to set hpd level")
-	}
-
 	if err := s.RunServoCommand(ctx, fmt.Sprintf("usbc_action dp pins %s", config.PinsCDEF)); err != nil {
 		return errors.Wrap(err, "failed to set pin assignments")
 	}

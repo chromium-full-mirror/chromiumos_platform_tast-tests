@@ -78,7 +78,6 @@ func PDPinNegotiation(ctx context.Context, s *testing.State) {
 		s.Fatal("Failed to configure Servo for PD testing: ", err)
 	}
 
-	hpdRange := []servo.HPDLevelValue{servo.HPDLow, servo.HPDHigh}
 	pinsRange := []pinsMF{
 		pinsMF{"C", servo.MFPrefDisable},
 		pinsMF{"D", servo.MFPrefEnable},
@@ -86,26 +85,24 @@ func PDPinNegotiation(ctx context.Context, s *testing.State) {
 		pinsMF{"CD", servo.MFPrefEnable},
 	}
 
-	for _, hpd := range hpdRange {
-		for _, pins := range pinsRange {
-			testing.ContextLogf(ctx, "testing DP mode: hpd=%d, pins=%s, MF pref=%d", int(hpd), pins.pinsCDEF, int(pins.mfPref))
-			input := servo.TypeCInfo{DPMode: servo.DPEnable, HPDLevel: hpd, PinsCDEF: pins.pinsCDEF}
+	for _, pins := range pinsRange {
+		testing.ContextLogf(ctx, "testing DP mode: pins=%s, MF pref=%d", pins.pinsCDEF, int(pins.mfPref))
+		input := servo.TypeCInfo{DPMode: servo.DPEnable, PinsCDEF: pins.pinsCDEF}
 
-			if err := h.Servo.ServoSetDPConfigs(ctx, &input, pins.mfPref); err != nil {
-				s.Fatal("Failed to set DP alt-mode: ", err)
-			}
-			testing.ContextLog(ctx, "retrieving type-c information")
-			typecInfo, err := h.Servo.GetTypeCInfo(ctx, h.DUT)
-			if err != nil {
-				s.Fatal("Failed to retrieve type-c information: ", err)
-			}
-			if err := h.Servo.VerifyPins(&input, typecInfo, pins.mfPref); err != nil {
-				s.Fatal("Could not retrieve assigned DP setting: ", err)
-			}
+		if err := h.Servo.ServoSetDPConfigs(ctx, &input, pins.mfPref); err != nil {
+			s.Fatal("Failed to set DP alt-mode: ", err)
+		}
+		testing.ContextLog(ctx, "retrieving type-c information")
+		typecInfo, err := h.Servo.GetTypeCInfo(ctx, h.DUT)
+		if err != nil {
+			s.Fatal("Failed to retrieve type-c information: ", err)
+		}
+		if err := h.Servo.VerifyPins(&input, typecInfo, pins.mfPref); err != nil {
+			s.Fatal("Could not retrieve assigned DP setting: ", err)
 		}
 	}
 
-	input := servo.TypeCInfo{DPMode: servo.DPDisable, HPDLevel: servo.HPDExt, PinsCDEF: "C"}
+	input := servo.TypeCInfo{DPMode: servo.DPDisable, PinsCDEF: "C"}
 
 	if err := h.Servo.ServoSetDPConfigs(ctx, &input, servo.MFPrefDisable); err != nil {
 		s.Fatal("Failed to set DP alt-mode: ", err)

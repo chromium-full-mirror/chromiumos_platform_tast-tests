@@ -86,7 +86,6 @@ const (
 // TypeCInfo stores information retrieved from probing a type-c connection by the DUT.
 type TypeCInfo struct {
 	DPMode   DPModeValue
-	HPDLevel HPDLevelValue
 	PinsCDEF string
 }
 
@@ -732,11 +731,7 @@ func (s *Servo) getTypeCByDUTCommand(ctx context.Context, dut *dut.DUT) (*TypeCI
 		if err != nil {
 			return nil, errors.Wrap(err, "failed to get dp mode value")
 		}
-		hpd, err := strconv.Atoi(typeCInfo[3])
-		if err != nil {
-			return nil, errors.Wrap(err, "failed to get hpd value")
-		}
-		ret = &TypeCInfo{DPModeValue(dp), HPDLevelValue(hpd), ""}
+		ret = &TypeCInfo{DPModeValue(dp), ""}
 	}
 
 	return ret, nil
@@ -754,11 +749,7 @@ func (s *Servo) getTypeCByECCommand(ctx context.Context) (*TypeCInfo, error) {
 	if err != nil {
 		return nil, errors.Wrap(err, "failed to get dp mode value")
 	}
-	hpd, err := strconv.Atoi(typeCOutput[0][3])
-	if err != nil {
-		return nil, errors.Wrap(err, "failed to get hpd value")
-	}
-	ret := &TypeCInfo{DPModeValue(dp), HPDLevelValue(hpd), ""}
+	ret := &TypeCInfo{DPModeValue(dp), ""}
 
 	return ret, nil
 }
@@ -792,9 +783,6 @@ func (s *Servo) GetTypeCInfo(ctx context.Context, dut *dut.DUT) (*TypeCInfo, err
 func (s *Servo) VerifyPins(input, output *TypeCInfo, mfPref MultiFunctionPref) error {
 	if input.DPMode != output.DPMode {
 		return errors.Errorf("incorrect DP activity, expected %d, got %d", input.DPMode, output.DPMode)
-	}
-	if input.HPDLevel != output.HPDLevel {
-		return errors.Errorf("incorrect hpd level, expected %d, got %d", input.HPDLevel, output.HPDLevel)
 	}
 
 	// TODO: b/371041395 track which pin is supposed to be selected in cases where multiple are supported.
