@@ -85,8 +85,8 @@ func ChromeosReadAloudPower(ctx context.Context, s *testing.State) {
 
 	moreToolsItem := nodewith.Name("More tools").ClassName("MenuItemView")
 	readingModeItem := nodewith.Name("Reading mode").ClassName("MenuItemView")
-	playAudioButton := nodewith.Name("Play keyboard shortcut k").Role(role.Button).ClassName("toolbar-button audio-controls")
-	pauseAudioButton := nodewith.Name("Pause keyboard shortcut k").Role(role.Button).ClassName("toolbar-button audio-controls")
+	playAudioButton := nodewith.Name("Play / pause, keyboard shortcut k").Role(role.Button).ClassName("toolbar-button audio-controls")
+	pauseAudioButton := nodewith.Name("Play / pause, keyboard shortcut k").Role(role.Button).ClassName("toolbar-button audio-controls")
 
 	r := power.NewRecorder(ctx, 10*time.Second, s.OutDir(), s.TestName())
 
