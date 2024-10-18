@@ -2,42 +2,16 @@
 # Use of this source code is governed by a BSD-style license that can be
 # found in the LICENSE file.
 
-import dataclasses
-import enum
+
 import logging
 import pathlib
 
 from analyzer.analysis import analysis_results
+from analyzer.frontend import output
+from analyzer.frontend import plot
 from matplotlib import figure
 from matplotlib import pyplot as plt
 import seaborn as sns
-
-
-class PlotKind(enum.StrEnum):
-    """Kind of plot to create."""
-
-    PLOT_CDF = "plot-cdf"
-    """Plots the cumulative distribution function."""
-
-    PLOT_BOX = "plot-box"
-    """Plots the box plot."""
-
-    def description(self) -> str:
-        """Returns the description of this PlotKind."""
-        if self == PlotKind.PLOT_CDF:
-            return "Empirical Cumulative Distribution Function (eCDF)"
-        if self == PlotKind.PLOT_BOX:
-            return "Box plot"
-        raise ValueError("Unknown plot kind")
-
-
-@dataclasses.dataclass(frozen=True, kw_only=True, order=True)
-class PlotData:
-    kind: PlotKind
-    """The plot kind of this data."""
-
-    figure: figure.Figure
-    """The figure of the plot."""
 
 
 def init_plotting() -> None:
@@ -49,8 +23,8 @@ def init_plotting() -> None:
 def _create_plot_data_for_pair(
     pair: analysis_results.PairwiseResult,
     fig: figure.Figure,
-    kind: PlotKind,
-) -> PlotData:
+    kind: plot.PlotKind,
+) -> plot.PlotData:
     """Creates PlotData for the given pairwise result.
 
     Args:
@@ -69,7 +43,7 @@ def _create_plot_data_for_pair(
     )
     fig.tight_layout()
 
-    return PlotData(kind=kind, figure=fig)
+    return plot.PlotData(kind=kind, figure=fig)
 
 
 def _plot_cdfs(pair: analysis_results.PairwiseResult) -> figure.Figure:
@@ -113,57 +87,69 @@ def _plot_box(pair: analysis_results.PairwiseResult) -> figure.Figure:
 def create_plots(
     *,
     results: list[analysis_results.AnalysisResult],
-    plots: set[PlotKind],
-) -> dict[str, list[PlotData]]:
+    plot_kinds: set[plot.PlotKind],
+) -> list[output.AnalysisResultForOutput]:
     """Creates plots for the given results and plot kinds.
 
     Args:
         results: The results to plot.
-        plots: The kinds of plots to create.
+        plot_kinds: The kinds of plots to create.
 
     Returns:
-        A mapping from pairwise result identifiers to their plot data.
+        A list of analysis results with their output data.
     """
     logging.info("Creating plots...")
-    pairwise_result_plots_map: dict[str, list[PlotData]] = {}
+    results_for_output: list[output.AnalysisResultForOutput] = []
     for result in results:
+        pairs_for_output: list[output.PairwiseResultForOutput] = []
         for pair in result.pairs:
             logging.info(f"Creating plots for {pair.identifier()}")
-            pairwise_result_plots: list[PlotData] = []
-            for plot_kind in plots:
-                if plot_kind == PlotKind.PLOT_CDF:
+            pairwise_result_plots: list[plot.PlotData] = []
+            for kind in plot_kinds:
+                if kind == plot.PlotKind.PLOT_CDF:
                     fig = _plot_cdfs(pair)
-                elif plot_kind == PlotKind.PLOT_BOX:
+                elif kind == plot.PlotKind.PLOT_BOX:
                     fig = _plot_box(pair)
                 else:
-                    raise ValueError(f"Unknown plot kind: {plot_kind}")
+                    raise ValueError(f"Unknown plot kind: {kind}")
                 pairwise_result_plots.append(
-                    _create_plot_data_for_pair(pair, fig, plot_kind)
+                    _create_plot_data_for_pair(pair, fig, kind)
                 )
-            pairwise_result_plots_map[pair.identifier()] = pairwise_result_plots
+            pairs_for_output.append(
+                output.PairwiseResultForOutput(
+                    result=pair, plots=pairwise_result_plots
+                )
+            )
 
-    return pairwise_result_plots_map
+        results_for_output.append(
+            output.AnalysisResultForOutput(
+                groups=result.groups, pairs=pairs_for_output
+            )
+        )
+
+    return results_for_output
 
 
 def save_plots(
     *,
-    identifier_to_plots_map: dict[str, list[PlotData]],
-    plots: set[PlotKind],
+    results_for_output: list[output.AnalysisResultForOutput],
+    plot_kinds: set[plot.PlotKind],
     plot_dir: pathlib.Path,
 ) -> None:
     """Saves plots in the given map.
 
     Args:
-        identifier_to_plots_map: A mapping from result identifiers to their
-            plot data.
-        plots: The kinds of plots to save.
+        results_for_output: A list of AnalysisResultForOutput to save.
+        plot_kinds: The kinds of plots to save.
         plot_dir: The directory to save the plots to.
     """
     logging.info("Saving plots...")
     plot_dir.mkdir(parents=True, exist_ok=True)
-    for identifier, plot_data_list in identifier_to_plots_map.items():
-        for plot_data in plot_data_list:
-            if plot_data.kind in plots:
-                name = f"{identifier}_{plot_data.kind.value}"
-                save_path = plot_dir.joinpath(f"{name}.png")
-                plot_data.figure.savefig(save_path, bbox_inches="tight")
+    for result in results_for_output:
+        for pair in result.pairs:
+            identifier = pair.result.identifier()
+            for plot_data in pair.plots:
+                if plot_data.kind in plot_kinds:
+                    name = f"{identifier}_{plot_data.kind.value}"
+                    save_path = plot_dir.joinpath(f"{name}.png")
+                    plot_data.figure.savefig(save_path, bbox_inches="tight")

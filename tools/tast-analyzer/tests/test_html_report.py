@@ -8,7 +8,8 @@ import unittest
 from analyzer.analysis import analysis_cfg
 from analyzer.analysis import analysis_results
 from analyzer.analysis import stats_util
-from analyzer.frontend import plot_util
+from analyzer.frontend import output
+from analyzer.frontend import plot
 from analyzer.frontend.report import html_report
 from matplotlib import figure
 from tests import test_util
@@ -46,26 +47,29 @@ class HtmlReportTest(unittest.TestCase):
             samples, analysis_cfg.AnalysisCfg(experiment_cfg=experiment_cfg)
         )
         results = [
-            analysis_results.AnalysisResult(
+            output.AnalysisResultForOutput(
                 groups=groups_list[0],
                 pairs=[
-                    analysis_results.PairwiseResult(
-                        before=analysis_results.ExperimentGroup(
-                            sample=samples_by_id[
-                                f"before|{before_test_name}|Test.One.average"
-                            ]
+                    output.PairwiseResultForOutput(
+                        result=analysis_results.PairwiseResult(
+                            before=analysis_results.ExperimentGroup(
+                                sample=samples_by_id[
+                                    f"before|{before_test_name}|Test.One.average"
+                                ]
+                            ),
+                            after=analysis_results.ExperimentGroup(
+                                sample=samples_by_id[
+                                    f"after|{after_test_name}|Test.One.average"
+                                ]
+                            ),
+                            hypothesis_result=stats_util.HypothesisTestResult(
+                                statistic_kind=stats_util.TestStatisticKind.RANK_SUM,
+                                u=0.0,
+                                p=1.0,
+                            ),
                         ),
-                        after=analysis_results.ExperimentGroup(
-                            sample=samples_by_id[
-                                f"after|{after_test_name}|Test.One.average"
-                            ]
-                        ),
-                        hypothesis_result=stats_util.HypothesisTestResult(
-                            statistic_kind=stats_util.TestStatisticKind.RANK_SUM,
-                            u=0.0,
-                            p=1.0,
-                        ),
-                    )
+                        plots=[],
+                    ),
                 ],
             )
         ]
@@ -74,7 +78,6 @@ class HtmlReportTest(unittest.TestCase):
             results=results,
             template_dir=TEMPLATE_DIR,
             cfg=analysis_cfg.AnalysisCfg(),
-            identifier_to_plots_map={},
         )
         self.assertEqual(
             report._test_names(), [after_test_name, before_test_name]
@@ -90,26 +93,29 @@ class HtmlReportTest(unittest.TestCase):
             samples, analysis_cfg.AnalysisCfg()
         )
         results = [
-            analysis_results.AnalysisResult(
+            output.AnalysisResultForOutput(
                 groups=groups_list[0],
                 pairs=[
-                    analysis_results.PairwiseResult(
-                        before=analysis_results.ExperimentGroup(
-                            sample=samples_by_id[
-                                "before|ui.OverviewPerf|Test.One.average"
-                            ]
+                    output.PairwiseResultForOutput(
+                        result=analysis_results.PairwiseResult(
+                            before=analysis_results.ExperimentGroup(
+                                sample=samples_by_id[
+                                    "before|ui.OverviewPerf|Test.One.average"
+                                ]
+                            ),
+                            after=analysis_results.ExperimentGroup(
+                                sample=samples_by_id[
+                                    "after|ui.OverviewPerf|Test.One.average"
+                                ]
+                            ),
+                            hypothesis_result=stats_util.HypothesisTestResult(
+                                statistic_kind=stats_util.TestStatisticKind.RANK_SUM,
+                                u=0.0,
+                                p=1.0,
+                            ),
                         ),
-                        after=analysis_results.ExperimentGroup(
-                            sample=samples_by_id[
-                                "after|ui.OverviewPerf|Test.One.average"
-                            ]
-                        ),
-                        hypothesis_result=stats_util.HypothesisTestResult(
-                            statistic_kind=stats_util.TestStatisticKind.RANK_SUM,
-                            u=0.0,
-                            p=1.0,
-                        ),
-                    )
+                        plots=[],
+                    ),
                 ],
             )
         ]
@@ -117,7 +123,6 @@ class HtmlReportTest(unittest.TestCase):
             results=results,
             template_dir=TEMPLATE_DIR,
             cfg=analysis_cfg.AnalysisCfg(),
-            identifier_to_plots_map={},
         )
         self.assertEqual(report._labels(), ["after", "before"])
 
@@ -145,22 +150,29 @@ class HtmlReportTest(unittest.TestCase):
             samples, analysis_cfg.AnalysisCfg(experiment_cfg=experiment_cfg)
         )
         results = [
-            analysis_results.AnalysisResult(
+            output.AnalysisResultForOutput(
                 groups=groups_list[0],
                 pairs=[
-                    analysis_results.PairwiseResult(
-                        before=analysis_results.ExperimentGroup(
-                            sample=samples_by_id[f"before|{before_metric_path}"]
+                    output.PairwiseResultForOutput(
+                        result=analysis_results.PairwiseResult(
+                            before=analysis_results.ExperimentGroup(
+                                sample=samples_by_id[
+                                    f"before|{before_metric_path}"
+                                ]
+                            ),
+                            after=analysis_results.ExperimentGroup(
+                                sample=samples_by_id[
+                                    f"after|{after_metric_path}"
+                                ]
+                            ),
+                            hypothesis_result=stats_util.HypothesisTestResult(
+                                statistic_kind=stats_util.TestStatisticKind.RANK_SUM,
+                                u=0.0,
+                                p=1.0,
+                            ),
                         ),
-                        after=analysis_results.ExperimentGroup(
-                            sample=samples_by_id[f"after|{after_metric_path}"]
-                        ),
-                        hypothesis_result=stats_util.HypothesisTestResult(
-                            statistic_kind=stats_util.TestStatisticKind.RANK_SUM,
-                            u=0.0,
-                            p=1.0,
-                        ),
-                    )
+                        plots=[],
+                    ),
                 ],
             )
         ]
@@ -168,7 +180,6 @@ class HtmlReportTest(unittest.TestCase):
             results=results,
             template_dir=TEMPLATE_DIR,
             cfg=analysis_cfg.AnalysisCfg(),
-            identifier_to_plots_map={},
         )
         self.assertEqual(
             report._metric_paths(), [before_metric_path, after_metric_path]
@@ -194,26 +205,29 @@ class HtmlReportTest(unittest.TestCase):
             samples, analysis_cfg.AnalysisCfg(experiment_cfg=experiment_cfg)
         )
         results = [
-            analysis_results.AnalysisResult(
+            output.AnalysisResultForOutput(
                 groups=groups_list[0],
                 pairs=[
-                    analysis_results.PairwiseResult(
-                        before=analysis_results.ExperimentGroup(
-                            sample=samples_by_id[
-                                f"before|{before_test_name}|Test.One.average"
-                            ]
+                    output.PairwiseResultForOutput(
+                        result=analysis_results.PairwiseResult(
+                            before=analysis_results.ExperimentGroup(
+                                sample=samples_by_id[
+                                    f"before|{before_test_name}|Test.One.average"
+                                ]
+                            ),
+                            after=analysis_results.ExperimentGroup(
+                                sample=samples_by_id[
+                                    f"after|{after_test_name}|Test.One.average"
+                                ]
+                            ),
+                            hypothesis_result=stats_util.HypothesisTestResult(
+                                statistic_kind=stats_util.TestStatisticKind.RANK_SUM,
+                                u=0.0,
+                                p=1.0,
+                            ),
                         ),
-                        after=analysis_results.ExperimentGroup(
-                            sample=samples_by_id[
-                                f"after|{after_test_name}|Test.One.average"
-                            ]
-                        ),
-                        hypothesis_result=stats_util.HypothesisTestResult(
-                            statistic_kind=stats_util.TestStatisticKind.RANK_SUM,
-                            u=0.0,
-                            p=1.0,
-                        ),
-                    )
+                        plots=[],
+                    ),
                 ],
             )
         ]
@@ -221,7 +235,6 @@ class HtmlReportTest(unittest.TestCase):
             results=results,
             template_dir=TEMPLATE_DIR,
             cfg=analysis_cfg.AnalysisCfg(),
-            identifier_to_plots_map={},
         )
         report._set_title()
 
@@ -242,22 +255,25 @@ class HtmlReportTest(unittest.TestCase):
             samples, analysis_cfg.AnalysisCfg()
         )
         results = [
-            analysis_results.AnalysisResult(
+            output.AnalysisResultForOutput(
                 groups=groups_list[0],
                 pairs=[
-                    analysis_results.PairwiseResult(
-                        before=analysis_results.ExperimentGroup(
-                            sample=samples_by_id[f"before|{metric_path}"]
+                    output.PairwiseResultForOutput(
+                        result=analysis_results.PairwiseResult(
+                            before=analysis_results.ExperimentGroup(
+                                sample=samples_by_id[f"before|{metric_path}"]
+                            ),
+                            after=analysis_results.ExperimentGroup(
+                                sample=samples_by_id[f"after|{metric_path}"]
+                            ),
+                            hypothesis_result=stats_util.HypothesisTestResult(
+                                statistic_kind=stats_util.TestStatisticKind.RANK_SUM,
+                                u=0.0,
+                                p=1.0,
+                            ),
                         ),
-                        after=analysis_results.ExperimentGroup(
-                            sample=samples_by_id[f"after|{metric_path}"]
-                        ),
-                        hypothesis_result=stats_util.HypothesisTestResult(
-                            statistic_kind=stats_util.TestStatisticKind.RANK_SUM,
-                            u=0.0,
-                            p=1.0,
-                        ),
-                    )
+                        plots=[],
+                    ),
                 ],
             )
         ]
@@ -265,7 +281,6 @@ class HtmlReportTest(unittest.TestCase):
             results=results,
             template_dir=TEMPLATE_DIR,
             cfg=analysis_cfg.AnalysisCfg(),
-            identifier_to_plots_map={},
         )
         table = report._create_sample_size_table()
 
@@ -281,7 +296,6 @@ class HtmlReportTest(unittest.TestCase):
             results=[],
             template_dir=TEMPLATE_DIR,
             cfg=analysis_cfg.AnalysisCfg(),
-            identifier_to_plots_map={},
         )
         report._append_summary()
 
@@ -315,13 +329,15 @@ class HtmlReportTest(unittest.TestCase):
             ),
         )
         results = [
-            analysis_results.AnalysisResult(groups=groups_list[0], pairs=[pair])
+            output.AnalysisResultForOutput(
+                groups=groups_list[0],
+                pairs=[output.PairwiseResultForOutput(result=pair, plots=[])],
+            ),
         ]
         report = html_report.HtmlReport(
             results=results,
             template_dir=TEMPLATE_DIR,
             cfg=analysis_cfg.AnalysisCfg(),
-            identifier_to_plots_map={},
         )
         report._append_summary()
 
@@ -357,33 +373,36 @@ class HtmlReportTest(unittest.TestCase):
             samples, analysis_cfg.AnalysisCfg(experiment_cfg=experiment_cfg)
         )
         results = [
-            analysis_results.AnalysisResult(
+            output.AnalysisResultForOutput(
                 groups=groups_list[0],
                 pairs=[
-                    analysis_results.PairwiseResult(
-                        before=analysis_results.ExperimentGroup(
-                            sample=samples_by_id[
-                                f"before|{before_test_name}|{before_metric_name}"
-                            ],
-                        ),
-                        after=analysis_results.ExperimentGroup(
-                            sample=samples_by_id[
-                                f"after|{after_test_name}|{after_metric_name}"
-                            ],
-                            bootstrap=stats_util.BootstrapResult(
-                                statistic_kind=stats_util.TestStatisticKind.MEAN,
-                                confidence_interval=stats_util.ConfidenceInterval(
-                                    low=0, high=1, confidence=0.95
+                    output.PairwiseResultForOutput(
+                        result=analysis_results.PairwiseResult(
+                            before=analysis_results.ExperimentGroup(
+                                sample=samples_by_id[
+                                    f"before|{before_test_name}|{before_metric_name}"
+                                ],
+                            ),
+                            after=analysis_results.ExperimentGroup(
+                                sample=samples_by_id[
+                                    f"after|{after_test_name}|{after_metric_name}"
+                                ],
+                                bootstrap=stats_util.BootstrapResult(
+                                    statistic_kind=stats_util.TestStatisticKind.MEAN,
+                                    confidence_interval=stats_util.ConfidenceInterval(
+                                        low=0, high=1, confidence=0.95
+                                    ),
+                                    bias_estimate=0,
                                 ),
-                                bias_estimate=0,
+                            ),
+                            hypothesis_result=stats_util.HypothesisTestResult(
+                                statistic_kind=stats_util.TestStatisticKind.MEAN,
+                                u=0.0,
+                                p=1.0,
                             ),
                         ),
-                        hypothesis_result=stats_util.HypothesisTestResult(
-                            statistic_kind=stats_util.TestStatisticKind.MEAN,
-                            u=0.0,
-                            p=1.0,
-                        ),
-                    )
+                        plots=[],
+                    ),
                 ],
             )
         ]
@@ -391,10 +410,9 @@ class HtmlReportTest(unittest.TestCase):
             results=results,
             template_dir=TEMPLATE_DIR,
             cfg=analysis_cfg.AnalysisCfg(),
-            identifier_to_plots_map={},
         )
         pair = results[0].pairs[0]
-        table = report._create_pairwise_result_table(pair)
+        table = report._create_pairwise_result_table(pair.result)
 
         expected_table = test_util.load_html(
             HTML_DIR / "pairwise_result_table.html"
@@ -441,20 +459,24 @@ class HtmlReportTest(unittest.TestCase):
                 p=1.0,
             ),
         )
-        results = [
-            analysis_results.AnalysisResult(groups=groups_list[0], pairs=[pair])
-        ]
-
-        plot_data = plot_util.PlotData(
-            kind=plot_util.PlotKind.PLOT_BOX, figure=figure.Figure()
+        plot_data = plot.PlotData(
+            kind=plot.PlotKind.PLOT_BOX, figure=figure.Figure()
         )
-        pairwise_result_plots_map = {pair.identifier(): [plot_data]}
+        results = [
+            output.AnalysisResultForOutput(
+                groups=groups_list[0],
+                pairs=[
+                    output.PairwiseResultForOutput(
+                        result=pair, plots=[plot_data]
+                    )
+                ],
+            )
+        ]
 
         report = html_report.HtmlReport(
             results=results,
             template_dir=TEMPLATE_DIR,
             cfg=analysis_cfg.AnalysisCfg(),
-            identifier_to_plots_map=pairwise_result_plots_map,
         )
         figure_element = report._create_pairwise_result_figure(
             pair=pair, plot_data=plot_data
@@ -477,26 +499,29 @@ class HtmlReportTest(unittest.TestCase):
             samples, analysis_cfg.AnalysisCfg()
         )
         results = [
-            analysis_results.AnalysisResult(
+            output.AnalysisResultForOutput(
                 groups=groups_list[0],
                 pairs=[
-                    analysis_results.PairwiseResult(
-                        before=analysis_results.ExperimentGroup(
-                            sample=samples_by_id[
-                                "before|ui.OverviewPerf|Test.One.average"
-                            ]
+                    output.PairwiseResultForOutput(
+                        result=analysis_results.PairwiseResult(
+                            before=analysis_results.ExperimentGroup(
+                                sample=samples_by_id[
+                                    "before|ui.OverviewPerf|Test.One.average"
+                                ]
+                            ),
+                            after=analysis_results.ExperimentGroup(
+                                sample=samples_by_id[
+                                    "after|ui.OverviewPerf|Test.One.average"
+                                ]
+                            ),
+                            hypothesis_result=stats_util.HypothesisTestResult(
+                                statistic_kind=stats_util.TestStatisticKind.RANK_SUM,
+                                u=0.0,
+                                p=1.0,
+                            ),
                         ),
-                        after=analysis_results.ExperimentGroup(
-                            sample=samples_by_id[
-                                "after|ui.OverviewPerf|Test.One.average"
-                            ]
-                        ),
-                        hypothesis_result=stats_util.HypothesisTestResult(
-                            statistic_kind=stats_util.TestStatisticKind.RANK_SUM,
-                            u=0.0,
-                            p=1.0,
-                        ),
-                    )
+                        plots=[],
+                    ),
                 ],
             )
         ]
@@ -507,7 +532,6 @@ class HtmlReportTest(unittest.TestCase):
                 results=results,
                 template_dir=TEMPLATE_DIR,
                 cfg=analysis_cfg.AnalysisCfg(),
-                identifier_to_plots_map={},
             )
             report.write(output_dir=output_dir)
             self.assertTrue(output_dir.joinpath("index.html").exists())

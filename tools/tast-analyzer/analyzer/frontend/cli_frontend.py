@@ -13,7 +13,8 @@ from analyzer.analysis import analysis_cfg
 from analyzer.analysis import analysis_results
 from analyzer.analysis import analyze_results
 from analyzer.analysis import stats_util
-from analyzer.frontend import output_kind
+from analyzer.frontend import output
+from analyzer.frontend import plot
 from analyzer.frontend import plot_util
 from analyzer.frontend.report import report_util
 import click
@@ -115,7 +116,7 @@ def _compare_results(
 )
 @click.option(
     "--outputs",
-    type=click.Choice(list(output_kind.OutputKind)),
+    type=click.Choice(list(output.OutputKind)),
     help="outputs to generate",
     default=[],
     multiple=True,
@@ -223,7 +224,7 @@ def _compare_results(
 def print_results(
     sample_paths: list[pathlib.Path],
     analyses: list[_CliAnalysis],
-    outputs: list[output_kind.OutputKind],
+    outputs: list[output.OutputKind],
     output_dir: pathlib.Path | None,
     skip_all_zero: bool,
     minimum_sample_size: int,
@@ -278,44 +279,34 @@ def print_results(
     if outputs:
         assert output_dir, "must specify an output directory for given outputs"
 
-        save_plots, reports = output_kind.sort_output_kind(outputs)
+        save_plot_kinds, report_kinds = output.sort_output_kind(outputs)
 
         # Currently, all available plots are used for the report
-        report_plots: set[plot_util.PlotKind] = (
-            set(plot_util.PlotKind) if reports else set()
+        report_plot_kinds: set[plot.PlotKind] = (
+            set(plot.PlotKind) if report_kinds else set()
         )
 
         logging.info("Creating plots (this may take a long time)...")
         plot_util.init_plotting()
-        identifier_to_plots_map = plot_util.create_plots(
-            results=results,
-            plots=save_plots | report_plots,
+        results_for_output = plot_util.create_plots(
+            results=results, plot_kinds=save_plot_kinds | report_plot_kinds
         )
         plot_util.save_plots(
-            identifier_to_plots_map=identifier_to_plots_map,
-            plots=save_plots,
+            results_for_output=results_for_output,
+            plot_kinds=save_plot_kinds,
             plot_dir=output_dir,
         )
 
-        if reports:
+        if report_kinds:
             # Meant to be the project root (tast-analyzer/)
             root = pathlib.Path(__file__).parent.parent.parent
             template_dir = root / "configs" / "report" / "templates"
 
-            report_plots_map = {
-                pair_id: [
-                    plot_data
-                    for plot_data in plot_data_list
-                    if plot_data.kind in report_plots
-                ]
-                for pair_id, plot_data_list in identifier_to_plots_map.items()
-            }
             logging.info("Creating a summary report...")
             report_util.create_reports(
-                results=results,
-                reports=reports,
+                results=results_for_output,
+                kinds=report_kinds,
                 template_dir=template_dir,
-                identifier_to_plots_map=report_plots_map,
                 cfg=cfg,
                 output_dir=output_dir,
             )

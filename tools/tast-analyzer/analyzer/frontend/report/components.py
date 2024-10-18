@@ -6,7 +6,7 @@ import base64
 import io
 import xml.etree.ElementTree as ET
 
-from analyzer.frontend import plot_util
+from analyzer.frontend import plot
 
 
 def create_element_with_text(
@@ -28,7 +28,7 @@ def create_element_with_text(
 
 
 def create_figure(
-    plot_data: plot_util.PlotData,
+    plot_data: plot.PlotData,
     caption: str = "",
     attributes: dict[str, str] | None = None,
 ) -> ET.Element:

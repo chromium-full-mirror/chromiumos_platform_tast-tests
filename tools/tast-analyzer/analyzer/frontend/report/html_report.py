@@ -8,13 +8,14 @@ import xml.etree.ElementTree as ET
 
 from analyzer.analysis import analysis_cfg
 from analyzer.analysis import analysis_results
-from analyzer.frontend import plot_util
+from analyzer.frontend import output
+from analyzer.frontend import plot
 from analyzer.frontend.report import components
 from analyzer.frontend.report import html_tree
 
 
 class HtmlReport:
-    results: list[analysis_results.AnalysisResult]
+    results: list[output.AnalysisResultForOutput]
     """The results to make a report for."""
 
     template_dir: pathlib.Path
@@ -22,9 +23,6 @@ class HtmlReport:
 
     cfg: analysis_cfg.AnalysisCfg
     """The configuration for the statistical analysis."""
-
-    identifier_to_plots_map: dict[str, list[plot_util.PlotData]]
-    """The mapping from pairwise result identifiers to lists of their plot data."""
 
     html: html_tree.HtmlTree
     """The HTML structure of the report."""
@@ -37,15 +35,13 @@ class HtmlReport:
 
     def __init__(
         self,
-        results: list[analysis_results.AnalysisResult],
+        results: list[output.AnalysisResultForOutput],
         template_dir: pathlib.Path,
         cfg: analysis_cfg.AnalysisCfg,
-        identifier_to_plots_map: dict[str, list[plot_util.PlotData]],
     ) -> None:
         self.results = results
         self.template_dir = template_dir
         self.cfg = cfg
-        self.identifier_to_plots_map = identifier_to_plots_map
         self.html = html_tree.HtmlTree(template_dir / "index.html")
         self.num_tables = 0
         self.num_figures = 0
@@ -55,7 +51,7 @@ class HtmlReport:
         test_names: set[str] = set()
         for result in self.results:
             for pair in result.pairs:
-                test_names |= set(pair.test_names())
+                test_names |= set(pair.result.test_names())
 
         return sorted(test_names)
 
@@ -64,7 +60,10 @@ class HtmlReport:
         labels: set[str] = set()
         for result in self.results:
             for pair in result.pairs:
-                labels |= {pair.before.label(), pair.after.label()}
+                labels |= {
+                    pair.result.before.label(),
+                    pair.result.after.label(),
+                }
 
         return sorted(labels)
 
@@ -74,8 +73,8 @@ class HtmlReport:
         for result in self.results:
             for pair in result.pairs:
                 metric_paths |= {
-                    pair.before.metric_path(),
-                    pair.after.metric_path(),
+                    pair.result.before.metric_path(),
+                    pair.result.after.metric_path(),
                 }
 
         return sorted(metric_paths)
@@ -176,7 +175,7 @@ class HtmlReport:
 
         pair_identifiers = sorted(
             [
-                pair.identifier()
+                pair.result.identifier()
                 for result in self.results
                 for pair in result.pairs
             ]
@@ -282,7 +281,7 @@ class HtmlReport:
     def _create_pairwise_result_figure(
         self,
         pair: analysis_results.PairwiseResult,
-        plot_data: plot_util.PlotData,
+        plot_data: plot.PlotData,
     ) -> ET.Element:
         """Creates a `<figure>` element from the given plot data for the given
         pairwise result.
@@ -304,7 +303,7 @@ class HtmlReport:
         )
 
     def _append_pairwise_result_summary(
-        self, pair: analysis_results.PairwiseResult
+        self, pair: output.PairwiseResultForOutput
     ) -> None:
         """Appends a summary of the given pairwise result to the HTML.
 
@@ -313,13 +312,13 @@ class HtmlReport:
         """
 
         self.html.body.append(
-            components.create_element_with_text("h2", pair.identifier())
+            components.create_element_with_text("h2", pair.result.identifier())
         )
-        self.html.body.append(self._create_pairwise_result_table(pair))
+        self.html.body.append(self._create_pairwise_result_table(pair.result))
 
-        for plot in self.identifier_to_plots_map[pair.identifier()]:
+        for plot_data in pair.plots:
             self.html.body.append(
-                self._create_pairwise_result_figure(pair, plot)
+                self._create_pairwise_result_figure(pair.result, plot_data)
             )
 
     def make(self) -> None:
