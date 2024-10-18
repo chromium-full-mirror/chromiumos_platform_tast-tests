@@ -221,3 +221,13 @@ func (a *Attenuator) MinTotalAttenuation(channel int) (float64, error) {
 func (a *Attenuator) MaximumAttenuation() float64 {
 	return a.maxAtten
 }
+
+// Reset resets the attenuation on all channels
+func (a *Attenuator) Reset(ctx context.Context) error {
+	for i := 0; i < a.channels; i++ {
+		if err := a.SetAttenuation(ctx, i, 0); err != nil {
+			return errors.Wrapf(err, "failed to set attenutation on channel %d", i)
+		}
+	}
+	return nil
+}

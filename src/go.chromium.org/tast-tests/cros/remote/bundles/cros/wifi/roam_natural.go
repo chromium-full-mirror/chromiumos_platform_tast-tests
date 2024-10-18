@@ -185,10 +185,8 @@ func executeRoamNaturalTest(ctx context.Context, s *testing.State, apAllParams [
 	tf := s.FixtValue().(*wificell.TestFixture)
 
 	attenuator := tf.Attenuator()
-	for i := 0; i < 4; i++ {
-		if err := attenuator.SetAttenuation(ctx, i, 0); err != nil {
-			s.Fatal("Failed to set attenutation: ", err)
-		}
+	if err := attenuator.Reset(ctx); err != nil {
+		s.Fatal("Failed to set attenutation: ", err)
 	}
 
 	iface, err := tf.ClientInterface(ctx)
@@ -334,7 +332,7 @@ func executeRoamNaturalTest(ctx context.Context, s *testing.State, apAllParams [
 				// that it wouldn't happen even at full attenuation for
 				// properly calibrated cells, but this is apparently not
 				// always a good assumption).
-				if err := attenuator.SetAttenuation(ctx, 0, 0); err != nil {
+				if err := attenuator.Reset(ctx); err != nil {
 					s.Fatal("Failed to set attenutation: ", err)
 				}
 
