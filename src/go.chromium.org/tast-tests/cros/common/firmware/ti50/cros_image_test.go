@@ -917,7 +917,7 @@ Chip:        g Ti50 D3C1
 RO keyid:    0xc7d40497
 RW keyid:    0xfba25ca9
 DEV_ID:      0x14820030 0x4c2ac261
-Rollback:    0.3/0.3/0.3 4.0/?.?/4.0
+Rollback:    0.3/0.3/0.3 128.128/?.?/4.4
 TPM MODE:    disabled (3)
 Key Ladder:  prod
 EK Cert:     Compliant
@@ -932,7 +932,7 @@ EK Cert:     Compliant
 	expectedMap["rwKeyid"] = "0xfba25ca9"
 	expectedMap["devid"] = "0x14820030 0x4c2ac261"
 	expectedMap["roRollback"] = "0.3/0.3/0.3"
-	expectedMap["rwRollback"] = "4.0/?.?/4.0"
+	expectedMap["rwRollback"] = "128.128/?.?/4.4"
 	expectedMap["tpmMode"] = "disabled"
 	expectedMap["tpmModeStatus"] = "3"
 	expectedMap["keyladder"] = "prod"
@@ -950,7 +950,12 @@ EK Cert:     Compliant
 	expected.RWKeyid = "0xfba25ca9"
 	expected.Devid = "0x14820030 0x4c2ac261"
 	expected.RORollback = "0.3/0.3/0.3"
-	expected.RWRollback = "4.0/?.?/4.0"
+	expected.RWRollback = "128.128/?.?/4.4"
+	expected.RWRollbackBits = SysinfoRollbackBits{
+		SlotA: SysinfoRollbackSlot{Bits: 128, Valid: true},
+		SlotB: SysinfoRollbackSlot{Bits: InvalidBits, Valid: false},
+		Flash: SysinfoRollbackSlot{Bits: 4, Valid: true},
+	}
 	expected.TpmMode = "disabled"
 	expected.TpmModeStatus = 3
 	expected.Keyladder = "prod"
@@ -973,7 +978,7 @@ Chip:        g Ti50 D3C1
 RO keyid:    0xc7d40497
 RW keyid:    0xfba25ca9
 DEV_ID:      0x14820030 0x4c2ac261
-Rollback:    0.3/0.3/0.3 4.0/?.?/4.0
+Rollback:    3/3/3 4/?/5
 TPM MODE:    disabled (3)
 Key Ladder:  prod
 EK Cert:     Compliant
@@ -988,8 +993,8 @@ Chip factory mode.
 	expectedMap["roKeyid"] = "0xc7d40497"
 	expectedMap["rwKeyid"] = "0xfba25ca9"
 	expectedMap["devid"] = "0x14820030 0x4c2ac261"
-	expectedMap["roRollback"] = "0.3/0.3/0.3"
-	expectedMap["rwRollback"] = "4.0/?.?/4.0"
+	expectedMap["roRollback"] = "3/3/3"
+	expectedMap["rwRollback"] = "4/?/5"
 	expectedMap["tpmMode"] = "disabled"
 	expectedMap["tpmModeStatus"] = "3"
 	expectedMap["keyladder"] = "prod"
@@ -1006,8 +1011,13 @@ Chip factory mode.
 	expected.ROKeyid = "0xc7d40497"
 	expected.RWKeyid = "0xfba25ca9"
 	expected.Devid = "0x14820030 0x4c2ac261"
-	expected.RORollback = "0.3/0.3/0.3"
-	expected.RWRollback = "4.0/?.?/4.0"
+	expected.RORollback = "3/3/3"
+	expected.RWRollback = "4/?/5"
+	expected.RWRollbackBits = SysinfoRollbackBits{
+		Flash: SysinfoRollbackSlot{Bits: 4, Valid: true},
+		SlotA: SysinfoRollbackSlot{Bits: InvalidBits, Valid: false},
+		SlotB: SysinfoRollbackSlot{Bits: 5, Valid: true},
+	}
 	expected.TpmMode = "disabled"
 	expected.TpmModeStatus = 3
 	expected.Keyladder = "prod"
@@ -1028,7 +1038,7 @@ Chip:        g cr50 B2-D
 RO keyid:    0xaa66150f
 RW keyid:    0x87b73b67
 DEV_ID:      0x12345678 0x12345678
-Rollback:    1/1/2 4/4/4
+Rollback:    1/1/2 4/4/2
 TPM MODE:    disabled (2)
 Key Ladder:  dev
 `
@@ -1042,7 +1052,7 @@ Key Ladder:  dev
 	expectedMap["roKeyid"] = "0xaa66150f"
 	expectedMap["devid"] = "0x12345678 0x12345678"
 	expectedMap["roRollback"] = "1/1/2"
-	expectedMap["rwRollback"] = "4/4/4"
+	expectedMap["rwRollback"] = "4/4/2"
 	expectedMap["tpmMode"] = "disabled"
 	expectedMap["tpmModeStatus"] = "2"
 	expectedMap["keyladder"] = "dev"
@@ -1060,7 +1070,12 @@ Key Ladder:  dev
 	expected.ROKeyid = "0xaa66150f"
 	expected.Devid = "0x12345678 0x12345678"
 	expected.RORollback = "1/1/2"
-	expected.RWRollback = "4/4/4"
+	expected.RWRollback = "4/4/2"
+	expected.RWRollbackBits = SysinfoRollbackBits{
+		SlotA: SysinfoRollbackSlot{Bits: 4, Valid: true},
+		SlotB: SysinfoRollbackSlot{Bits: 2, Valid: true},
+		Flash: SysinfoRollbackSlot{Bits: 4, Valid: true},
+	}
 	expected.TpmMode = "disabled"
 	expected.TpmModeStatus = 2
 	expected.Keyladder = "dev"
@@ -1115,6 +1130,11 @@ Key Ladder:  prod
 	expected.Devid = "0x12345678 0x12345678"
 	expected.RORollback = "1/1/2"
 	expected.RWRollback = "4/4/4"
+	expected.RWRollbackBits = SysinfoRollbackBits{
+		SlotA: SysinfoRollbackSlot{Bits: 4, Valid: true},
+		SlotB: SysinfoRollbackSlot{Bits: 4, Valid: true},
+		Flash: SysinfoRollbackSlot{Bits: 4, Valid: true},
+	}
 	expected.TpmMode = "enabled"
 	expected.TpmModeStatus = 0
 	expected.Keyladder = "prod"
@@ -1169,6 +1189,11 @@ Key Ladder:  prod
 	expected.Devid = "0x12345678 0x12345678"
 	expected.RORollback = "1/1/2"
 	expected.RWRollback = "4/4/4"
+	expected.RWRollbackBits = SysinfoRollbackBits{
+		SlotA: SysinfoRollbackSlot{Bits: 4, Valid: true},
+		SlotB: SysinfoRollbackSlot{Bits: 4, Valid: true},
+		Flash: SysinfoRollbackSlot{Bits: 4, Valid: true},
+	}
 	expected.TpmMode = "enabled"
 	expected.TpmModeStatus = 0
 	expected.Keyladder = "prod"
@@ -1223,6 +1248,11 @@ Key Ladder:  prod
 	expected.Devid = "0x11111111 0xaaaaaaaa"
 	expected.RORollback = "2/2/2"
 	expected.RWRollback = "4/4/4"
+	expected.RWRollbackBits = SysinfoRollbackBits{
+		SlotA: SysinfoRollbackSlot{Bits: 4, Valid: true},
+		SlotB: SysinfoRollbackSlot{Bits: 4, Valid: true},
+		Flash: SysinfoRollbackSlot{Bits: 4, Valid: true},
+	}
 	expected.TpmMode = "enabled"
 	expected.TpmModeStatus = 0
 	expected.Keyladder = "prod"

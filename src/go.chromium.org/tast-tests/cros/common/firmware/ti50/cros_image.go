@@ -78,6 +78,23 @@ var (
 	rmaAuthChallengeRE = regexp.MustCompile(`([A-Z0-9]{80})|(RMA Auth error)|(Must wait)`)
 	// regex to find the chip type in H1 sysinfo output
 	h1SysinfoChipRE = regexp.MustCompile(`B2-(D|C)`)
+	// Rollback Bits are printed Flash/SlotA/SlotB
+	// ? is used when the image has been invalidated and the number of
+	// rollback bits is unknown
+	// ex: 4/2/3
+	// 4 bits are blown in flash
+	// 2 bits are blown in the slot A image
+	// 3 bits are blown in the slot B image
+	SysinfoRollbackRE = regexp.MustCompile(`(?P<flash>[\d\?]*)/(?P<slotA>[\d\?]*)/(?P<slotB>[\d\?]*)`)
+	// Old Ti50 image print the rollback bits SlotA/SlotB/Flash
+	// each field is numBits.0 in RW and 0.numBits in RO.
+	// If 128 bits are erased in a region, it shows up as 128.128
+	// Ti50 prints "?.?" when the slot contents are invalid
+	// ex: 128.128/?.?/4.0
+	// 128 bits are blown in slot A
+	// an unknown number of bits are blown in slot B
+	// 4 bits are blown in flash
+	legacyTi50SysinfoRollbackRE = regexp.MustCompile(`(?P<slotA>[\d\?]*).\S+/(?P<slotB>[\d\?]*).\S+/(?P<flash>[\d\?]*).\S+`)
 
 	// regex expectation for output of `ccd lock`
 	CCDLockedRE = regexp.MustCompile(`CCD [Ll]ocked`)
@@ -1170,6 +1187,31 @@ func parseSysinfo(output string) (map[string]string, error) {
 	return result, nil
 }
 
+const (
+	// InvalidBits is used when the bit value is set to "?"
+	InvalidBits uint8 = 255
+)
+
+// SysinfoRollbackSlot contains structured information about the rollback bits
+type SysinfoRollbackSlot struct {
+	// Bits is the number of bits blown
+	Bits uint8
+	// Some boards wipe inactive slots. The rollback bits may not be valid
+	// in one of the image regions
+	// Valid is True if the rollback bits are valid
+	Valid bool
+}
+
+// SysinfoRollbackBits contains structured information about the rollback bits
+type SysinfoRollbackBits struct {
+	// SlotA is the rollback information for slot A
+	SlotA SysinfoRollbackSlot
+	// SlotB is the rollback information for slot B
+	SlotB SysinfoRollbackSlot
+	// Flash is the rollback information for the bits currently blown in flash
+	Flash SysinfoRollbackSlot
+}
+
 // Sysinfo contains structured information returned from the GSC
 // `sysinfo` command.
 type Sysinfo struct {
@@ -1195,6 +1237,8 @@ type Sysinfo struct {
 	RORollback string
 	// RWRollback is a string describing the rollback bits blown in the chip and the RW A/B image
 	RWRollback string
+	// RWRollbackBits is a SysinfoRollbackBits with number of bits blown in each RW section
+	RWRollbackBits SysinfoRollbackBits
 	// TpmMode is the tpm mode state string
 	TpmMode string
 	// TpmEnabled is True if the tpm is enabled
@@ -1259,6 +1303,60 @@ func convertCr50ResetFlags(flags int64) uint32 {
 	return res
 }
 
+// parseSysinfoRollbackBits converts the sysinfo output into a map
+func parseSysinfoRollbackBits(output string) (map[string]uint8, error) {
+	result := make(map[string]uint8)
+	rollbackRE := SysinfoRollbackRE
+	match := rollbackRE.FindStringSubmatch(output)
+	if match == nil {
+		rollbackRE = legacyTi50SysinfoRollbackRE
+		match = rollbackRE.FindStringSubmatch(output)
+		if match == nil {
+			return result, errors.Errorf("could not extract rollback bits %s", output)
+		}
+	}
+	for i, name := range rollbackRE.SubexpNames() {
+		if i != 0 && name != "" {
+
+			// If rollback bits are set to "?", the image is
+			// invalid, but this is not a error. It's part of
+			// normal operation.
+			if match[i] == "?" {
+				// GSCs have a max of 128 bits. Tests should
+				// check the Valid state. Make the Bits state
+				// obviously wrong.
+				result[name] = InvalidBits
+				continue
+			}
+			bits, err := strconv.ParseUint(match[i], 10, 8)
+			if err != nil {
+				return result, errors.Wrapf(err, "could not parse %s rollback bits %s", name, match[i])
+			}
+			result[name] = uint8(bits)
+		}
+	}
+	return result, nil
+}
+
+// FindSysinfoRollbackBits returns the full sysinfoRollback structure
+func FindSysinfoRollbackBits(input string) (SysinfoRollbackBits, error) {
+	result := SysinfoRollbackBits{}
+	rollbackMap, err := parseSysinfoRollbackBits(input)
+	if err != nil {
+		return SysinfoRollbackBits{}, errors.Wrap(err, "unable to parse rollback output")
+	}
+	result.SlotA.Bits = rollbackMap["slotA"]
+	result.SlotA.Valid = result.SlotA.Bits != InvalidBits
+	result.SlotB.Bits = rollbackMap["slotB"]
+	result.SlotB.Valid = result.SlotB.Bits != InvalidBits
+	result.Flash.Bits = rollbackMap["flash"]
+	result.Flash.Valid = result.Flash.Bits != InvalidBits
+	if !result.Flash.Valid {
+		return SysinfoRollbackBits{}, errors.New("The number of bits blown in flash was unreadable " + input)
+	}
+	return result, nil
+}
+
 // getSysinfoStruct returns the full sysinfo structure
 func getSysinfoStruct(input map[string]string) (Sysinfo, error) {
 	result := Sysinfo{}
@@ -1268,6 +1366,7 @@ func getSysinfoStruct(input map[string]string) (Sysinfo, error) {
 	result.ROKeyid = input["roKeyid"]
 	result.RWKeyid = input["rwKeyid"]
 	result.Devid = input["devid"]
+
 	result.RORollback = input["roRollback"]
 	result.RWRollback = input["rwRollback"]
 	result.TpmMode = input["tpmMode"]
@@ -1281,6 +1380,12 @@ func getSysinfoStruct(input map[string]string) (Sysinfo, error) {
 	result.ProdKeyladder = result.Keyladder == "prod"
 
 	isCr50 := result.ChipName == "cr50"
+
+	rollbackBits, err := FindSysinfoRollbackBits(result.RWRollback)
+	if err != nil {
+		return Sysinfo{}, err
+	}
+	result.RWRollbackBits = rollbackBits
 
 	res, err := strconv.ParseInt(input["resetCount"], 10, 32)
 	if err != nil {
