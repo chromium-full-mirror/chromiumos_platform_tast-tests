@@ -229,7 +229,9 @@ func SetDoHModeViaUI(ctx context.Context, cr *chrome.Chrome, tconn *chrome.TestC
 		if err := uiauto.Combine("enable secure DNS automatic mode",
 			ac.WithTimeout(10*time.Second).WaitUntilExists(selectNode),
 			ac.MakeVisible(selectNode),
-			ac.WithInterval(3*time.Second).LeftClickUntil(selectNode, ac.Exists(selectNode.Expanded())),
+			// LeftClick does not work on staryu/wugtrio (b/374130988).
+			ac.WithInterval(3*time.Second).DoDefaultUntil(selectNode, ac.Exists(selectNode.Expanded())),
+			// Note: DoDefault does not work for this action.
 			ac.WithInterval(3*time.Second).LeftClickUntil(optionNode, ac.Exists(selectNode.Collapsed())),
 		)(ctx); err != nil {
 			return err
