@@ -17,19 +17,22 @@ import (
 
 func init() {
 	testing.AddTest(&testing.Test{
-		Func:         SettingsButton,
-		LacrosStatus: testing.LacrosVariantUnneeded,
-		Desc:         "Test Quick Answers settings button",
+		Func: SettingsButton,
+		// Disabled by TORA. See: b/340910339
+		LifeCycleStage: testing.LifeCycleOwnerMonitored,
+		LacrosStatus:   testing.LacrosVariantUnneeded,
+		Desc:           "Test Quick Answers settings button",
 		Contacts: []string{
 			"cros-assistive@google.com",
 			"chromeos-consumer-engprod@google.com",
 		},
 		BugComponent: "b:905229", // ChromeOS > Software > Assistive
-		Attr: []string{
-			"group:hw_agnostic",
-			"group:mainline",
-			"informational",
-		},
+		// Disabled by TORA. See: b/340910339
+		// Attr: []string{
+		// 	"group:hw_agnostic",
+		// 	"group:mainline",
+		// 	"informational",
+		// },
 		SoftwareDeps: []string{"chrome", "gaia"},
 		Fixture: quickanswers.Parameterize(
 			quickanswers.EnabledWithBrowserFixture,
