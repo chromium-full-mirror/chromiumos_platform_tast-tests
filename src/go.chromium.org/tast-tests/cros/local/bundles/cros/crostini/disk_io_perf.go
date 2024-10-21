@@ -36,7 +36,6 @@ func init() {
 		LacrosStatus: testing.LacrosVariantUnneeded,
 		Desc:         "Tests Crostini Disk IO Performance",
 		Contacts:     []string{"clumptini+oncall@google.com"},
-		Attr:         []string{"group:crosbolt", "crosbolt_weekly"},
 		Data:         fioFiles(),
 		SoftwareDeps: []string{"chrome", "vm_host"},
 		HardwareDeps: hwdep.D(hwdep.MinStorage(32)),

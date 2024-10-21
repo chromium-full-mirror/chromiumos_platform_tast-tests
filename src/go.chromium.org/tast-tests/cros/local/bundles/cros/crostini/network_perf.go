@@ -33,7 +33,6 @@ func init() {
 		LacrosStatus: testing.LacrosVariantUnneeded,
 		Desc:         "Tests Crostini network performance",
 		Contacts:     []string{"clumptini@google.com", "cylee@chromium.org"},
-		Attr:         []string{"group:crosbolt", "crosbolt_perbuild"},
 		SoftwareDeps: []string{"chrome", "vm_host"},
 		HardwareDeps: crostini.CrostiniMinDiskSize,
 		BugComponent: "b:1122570",

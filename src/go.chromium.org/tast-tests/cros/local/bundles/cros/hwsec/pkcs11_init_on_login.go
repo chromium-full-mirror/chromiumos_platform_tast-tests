@@ -26,7 +26,6 @@ func init() {
 	testing.AddTest(&testing.Test{
 		Func: Pkcs11InitOnLogin,
 		Desc: "Tests if initialization of a user PKCS #11 token succeeds during login and if objects stored in the token persist through to a subsequent login",
-		Attr: []string{"group:crosbolt", "crosbolt_perbuild"},
 		Contacts: []string{
 			"cros-hwsec@google.com",
 			"chenyian@google.com",

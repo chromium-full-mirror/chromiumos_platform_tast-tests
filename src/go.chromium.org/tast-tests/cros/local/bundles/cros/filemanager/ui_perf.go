@@ -53,7 +53,6 @@ func init() {
 		},
 		Timeout:      4 * time.Minute,
 		SoftwareDeps: []string{"chrome"},
-		Attr:         []string{"group:crosbolt", "crosbolt_perbuild"},
 		Params: []testing.Param{
 			{
 				Name: "directory_list",
@@ -63,7 +62,8 @@ func init() {
 					umaName:     "FileBrowser.DirectoryListLoad.my_files.%d",
 					installPwas: false,
 				},
-				Fixture: "openFilesApp",
+				ExtraAttr: []string{"group:crosbolt", "crosbolt_perbuild"},
+				Fixture:   "openFilesApp",
 			},
 			{
 				Name: "list_apps",

@@ -30,7 +30,7 @@ func init() {
 		Desc:         "Measures loopback latency of different audio devices in crosvm",
 		Contacts:     []string{"chromeos-audio-bugs@google.com", "normanbt@chromium.org"},
 		BugComponent: "b:1332660",
-		Attr:         []string{"group:crosbolt", "crosbolt_perbuild", "group:audio", "group:sw_gates_virt", "sw_gates_virt_enabled"},
+		Attr:         []string{"group:audio", "group:sw_gates_virt", "sw_gates_virt_enabled"},
 		Data:         []string{runLoopbackLatency},
 		Timeout:      8 * time.Minute,
 		SoftwareDeps: []string{"vm_host", "chrome", "dlc"},

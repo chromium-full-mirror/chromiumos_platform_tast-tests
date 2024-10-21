@@ -54,7 +54,6 @@ func init() {
 		Attr: []string{
 			"group:camera_dependent",
 			"group:cbx", "cbx_feature_enabled", "cbx_unstable",
-			"group:crosbolt", "crosbolt_perbuild",
 		},
 		TestBedDeps:  []string{tbdep.Cbx(true)},
 		SoftwareDeps: []string{"chrome", "camera_feature_effects"},
@@ -85,6 +84,7 @@ func init() {
 					retouchEnabled:   false,
 					inferenceBackend: effects.KInferenceGpu,
 				},
+				ExtraAttr: []string{"group:crosbolt", "crosbolt_perbuild"},
 			},
 			{
 				Name: "relight_only",
@@ -94,6 +94,7 @@ func init() {
 					retouchEnabled:   false,
 					inferenceBackend: effects.KInferenceGpu,
 				},
+				ExtraAttr: []string{"group:crosbolt", "crosbolt_perbuild"},
 			},
 			{
 				Name: "replace_only",
@@ -121,6 +122,7 @@ func init() {
 					retouchEnabled:   false,
 					inferenceBackend: effects.KInferenceGpu,
 				},
+				ExtraAttr: []string{"group:crosbolt", "crosbolt_perbuild"},
 			},
 			{
 				Name: "relight_and_retouch",
@@ -159,6 +161,7 @@ func init() {
 					retouchEnabled:   false,
 					inferenceBackend: effects.KInferenceNpu,
 				},
+				ExtraAttr: []string{"group:crosbolt", "crosbolt_perbuild"},
 			},
 			{
 				Name:              "npu_relight_only",
@@ -169,6 +172,7 @@ func init() {
 					retouchEnabled:   false,
 					inferenceBackend: effects.KInferenceNpu,
 				},
+				ExtraAttr: []string{"group:crosbolt", "crosbolt_perbuild"},
 			},
 			{
 				Name:              "npu_replace_only",
@@ -179,6 +183,7 @@ func init() {
 					retouchEnabled:   false,
 					inferenceBackend: effects.KInferenceNpu,
 				},
+				ExtraAttr: []string{"group:crosbolt", "crosbolt_perbuild"},
 			},
 			{
 				Name:              "npu_retouch_only",
@@ -189,6 +194,7 @@ func init() {
 					retouchEnabled:   true,
 					inferenceBackend: effects.KInferenceNpu,
 				},
+				ExtraAttr: []string{"group:crosbolt", "crosbolt_perbuild"},
 			},
 			{
 				Name:              "npu_blur_and_relight",
@@ -199,6 +205,7 @@ func init() {
 					retouchEnabled:   false,
 					inferenceBackend: effects.KInferenceNpu,
 				},
+				ExtraAttr: []string{"group:crosbolt", "crosbolt_perbuild"},
 			},
 			{
 				Name:              "npu_relight_and_retouch",
@@ -209,6 +216,7 @@ func init() {
 					retouchEnabled:   true,
 					inferenceBackend: effects.KInferenceNpu,
 				},
+				ExtraAttr: []string{"group:crosbolt", "crosbolt_perbuild"},
 			},
 			{
 				Name:              "npu_blur_relight_retouch",
@@ -219,6 +227,7 @@ func init() {
 					retouchEnabled:   true,
 					inferenceBackend: effects.KInferenceNpu,
 				},
+				ExtraAttr: []string{"group:crosbolt", "crosbolt_perbuild"},
 			},
 		},
 	})

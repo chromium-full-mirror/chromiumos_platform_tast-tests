@@ -31,7 +31,6 @@ func init() {
 		},
 		//  ChromeOS > Software > Window Management > Virtual Desks
 		BugComponent: "b:1238200",
-		Attr:         []string{"group:crosbolt", "crosbolt_perbuild"},
 		SoftwareDeps: []string{"chrome"},
 		HardwareDeps: hwdep.D(hwdep.InternalDisplay()),
 		Fixture:      "chromeLoggedIn",

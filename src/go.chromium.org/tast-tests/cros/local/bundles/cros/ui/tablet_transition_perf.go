@@ -29,7 +29,6 @@ func init() {
 		Contacts:     []string{"cros-sw-perf@google.com", "chromeos-wm@google.com", "sammiequon@chromium.org"},
 		// ChromeOS > Software > Window Management > TabletMode
 		BugComponent: "b:1253116",
-		Attr:         []string{"group:crosbolt", "crosbolt_perbuild"},
 		SoftwareDeps: []string{"chrome"},
 		HardwareDeps: hwdep.D(hwdep.InternalDisplay()),
 		Timeout:      3 * time.Minute,

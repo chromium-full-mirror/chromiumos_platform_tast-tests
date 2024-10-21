@@ -54,7 +54,6 @@ func init() {
 			"chromeos-wm@google.com",
 		},
 		BugComponent: "b:1045832", // ChromeOS > Software > Performance > TPS
-		Attr:         []string{"group:crosbolt", "crosbolt_perbuild"},
 		SoftwareDeps: []string{"chrome"},
 		HardwareDeps: hwdep.D(hwdep.InternalDisplay()),
 		Timeout:      4 * time.Minute,
@@ -67,6 +66,7 @@ func init() {
 				df: normalDrag,
 				bt: browser.TypeAsh,
 			},
+			ExtraAttr: []string{"group:crosbolt", "crosbolt_perbuild"},
 		}, {
 			Name:    "drag_to_snap",
 			Fixture: "chromeLoggedIn",
@@ -85,6 +85,7 @@ func init() {
 				df: dragToClose,
 				bt: browser.TypeAsh,
 			},
+			ExtraAttr: []string{"group:crosbolt", "crosbolt_perbuild"},
 		}},
 	})
 }

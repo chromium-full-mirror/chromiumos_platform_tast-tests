@@ -379,9 +379,8 @@ func init() {
 				},
 			},
 			{
-				Name:      "rr12_1thread_10ms_small_core",
-				ExtraAttr: []string{"group:crosbolt", "crosbolt_perbuild"},
-				Timeout:   15 * time.Minute,
+				Name:    "rr12_1thread_10ms_small_core",
+				Timeout: 15 * time.Minute,
 				Val: cyclicTestParameters{
 					Config: schedConfig{
 						Policy:   rrSched,

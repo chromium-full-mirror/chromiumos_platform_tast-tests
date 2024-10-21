@@ -26,7 +26,7 @@ func init() {
 		Desc:         "Benchmarks for scheduling latency with cyclictest binary",
 		Contacts:     []string{"chromeos-audio-bugs@google.com", "eddyhsu@chromium.org", "cychiang@chromium.org"},
 		BugComponent: "b:1332660",
-		Attr:         []string{"group:crosbolt", "crosbolt_perbuild", "group:audio", "group:sw_gates_virt", "sw_gates_virt_enabled"},
+		Attr:         []string{"group:audio", "group:sw_gates_virt", "sw_gates_virt_enabled"},
 		Data:         []string{runCyclicTest},
 		SoftwareDeps: []string{"cras", "vm_host", "chrome", "dlc"},
 		Timeout:      6 * time.Minute,
@@ -47,6 +47,7 @@ func init() {
 					StressConfig:        nil,
 					StressOutOfVMConfig: nil,
 				},
+				ExtraAttr: []string{"group:crosbolt", "crosbolt_perbuild"},
 			},
 			{
 				Name: "rr10_1thread_10ms",
@@ -82,6 +83,7 @@ func init() {
 					},
 					StressOutOfVMConfig: nil,
 				},
+				ExtraAttr: []string{"group:crosbolt", "crosbolt_perbuild"},
 			},
 			{
 				Name: "nice_p0_1thread_10ms",
@@ -98,6 +100,7 @@ func init() {
 					StressConfig:        nil,
 					StressOutOfVMConfig: nil,
 				},
+				ExtraAttr: []string{"group:crosbolt", "crosbolt_perbuild"},
 			},
 			{
 				Name: "nice_n20_1thread_10ms",
@@ -114,6 +117,7 @@ func init() {
 					StressConfig:        nil,
 					StressOutOfVMConfig: nil,
 				},
+				ExtraAttr: []string{"group:crosbolt", "crosbolt_perbuild"},
 			},
 			{
 				Name: "nice_p19_1thread_10ms",
@@ -130,6 +134,7 @@ func init() {
 					StressConfig:        nil,
 					StressOutOfVMConfig: nil,
 				},
+				ExtraAttr: []string{"group:crosbolt", "crosbolt_perbuild"},
 			},
 			{
 				Name: "nice_p0_1thread_10ms_stress_nice_p0_2workers_per_cpu",
@@ -149,6 +154,7 @@ func init() {
 					},
 					StressOutOfVMConfig: nil,
 				},
+				ExtraAttr: []string{"group:crosbolt", "crosbolt_perbuild"},
 			},
 			{
 				Name: "rr12_1thread_10ms_stress_out_of_vm_nice_p0_2workers_per_cpu",
@@ -168,6 +174,7 @@ func init() {
 						Priority: 0,
 					},
 				},
+				ExtraAttr: []string{"group:crosbolt", "crosbolt_perbuild"},
 			},
 		},
 	})

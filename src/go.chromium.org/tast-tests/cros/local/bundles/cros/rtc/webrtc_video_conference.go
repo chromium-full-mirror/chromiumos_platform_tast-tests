@@ -109,7 +109,6 @@ func init() {
 				},
 				Fixture:           pre.ChromeRTCFixture(),
 				ExtraSoftwareDeps: []string{"camera_feature_effects"},
-				ExtraAttr:         []string{"group:crosbolt", "crosbolt_perbuild"},
 			},
 			{
 				Name: "4p_relight",
@@ -119,7 +118,6 @@ func init() {
 				},
 				Fixture:           pre.ChromeRTCFixture(),
 				ExtraSoftwareDeps: []string{"camera_feature_effects"},
-				ExtraAttr:         []string{"group:crosbolt", "crosbolt_perbuild"},
 			},
 			{
 				Name: "4p_blur_relight",
@@ -130,7 +128,6 @@ func init() {
 				},
 				Fixture:           pre.ChromeRTCFixture(),
 				ExtraSoftwareDeps: []string{"camera_feature_effects"},
-				ExtraAttr:         []string{"group:crosbolt", "crosbolt_perbuild"},
 			},
 			{
 				Name: "4p_present",
@@ -202,7 +199,6 @@ func init() {
 				},
 				Fixture:           pre.ChromeRTCFixture(),
 				ExtraSoftwareDeps: []string{"camera_feature_effects"},
-				ExtraAttr:         []string{"group:crosbolt", "crosbolt_perbuild"},
 			},
 			{
 				Name: "4p_mouse",
@@ -245,7 +241,6 @@ func init() {
 				},
 				Fixture:           pre.ChromeRTCFixture(),
 				ExtraSoftwareDeps: []string{"camera_feature_effects"},
-				ExtraAttr:         []string{"group:crosbolt", "crosbolt_perbuild"},
 			},
 			{
 				Name: "4p_vsync_decoding",
@@ -284,8 +279,7 @@ func init() {
 				Val: webrtc.VCTestParams{
 					NumPeople: 9,
 				},
-				Fixture:   pre.ChromeRTCFixture(pre.RTCFeatureVsyncDecoding, pre.RTCFeatureVsyncEncoding),
-				ExtraAttr: []string{"group:crosbolt", "crosbolt_perbuild"},
+				Fixture: pre.ChromeRTCFixture(pre.RTCFeatureVsyncDecoding, pre.RTCFeatureVsyncEncoding),
 			},
 		},
 	})

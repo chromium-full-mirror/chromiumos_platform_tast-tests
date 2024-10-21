@@ -79,12 +79,12 @@ func init() {
 		SoftwareDeps: []string{"vm_host"},
 		Fixture:      "uiStopped",
 		BugComponent: "b:1332660",
-		Attr:         []string{"group:crosbolt", "crosbolt_perbuild", "group:mainline", "informational"},
+		Attr:         []string{"group:mainline", "informational"},
 		Timeout:      4 * time.Minute,
 		Params: []testing.Param{
 			{
 				Name:      "noop",
-				ExtraAttr: []string{"group:sw_gates_virt", "sw_gates_virt_enabled"},
+				ExtraAttr: []string{"group:crosbolt", "crosbolt_perbuild", "group:sw_gates_virt", "sw_gates_virt_enabled"},
 				Val: audioStreamTestParameters{
 					StreamSource:               noop,
 					RateCriteria:               0.0005,

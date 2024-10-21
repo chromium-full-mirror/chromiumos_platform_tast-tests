@@ -203,7 +203,7 @@ func init() {
 			}, {
 				Name:      "docs_no_effects_npu",
 				Timeout:   meetcuj.DefaultTestTimeout,
-				ExtraAttr: []string{"group:cuj", "group:crosbolt", "crosbolt_perbuild"},
+				ExtraAttr: []string{"group:cuj"},
 				// Platform VC effects become available at feature level 1. Refer to
 				// the feature database in platform/feature-management{,-private}.
 				ExtraHardwareDeps: hwdep.D(hwdep.FeatureLevel(1)),
@@ -245,7 +245,7 @@ func init() {
 			}, {
 				Name:              "docs_audio_effects_studio_mic",
 				Timeout:           meetcuj.DefaultTestTimeout,
-				ExtraAttr:         []string{"group:cuj", "group:crosbolt", "crosbolt_perbuild"},
+				ExtraAttr:         []string{"group:cuj"},
 				ExtraHardwareDeps: hwdep.D(hwdep.FeatureLevel(1)),
 				Val: meetcuj.MeetTest{
 					Bots:          []int{1, 3, 15},
@@ -397,7 +397,7 @@ func init() {
 			}, {
 				Name:              "docs_adjust_lighting_npu",
 				Timeout:           meetcuj.DefaultTestTimeout,
-				ExtraAttr:         []string{"group:cuj", "group:crosbolt", "crosbolt_perbuild"},
+				ExtraAttr:         []string{"group:cuj"},
 				ExtraHardwareDeps: hwdep.D(hwdep.FeatureLevel(1)),
 				ExtraSoftwareDeps: []string{"tflite_intel_openvino"},
 				Val: meetcuj.MeetTest{

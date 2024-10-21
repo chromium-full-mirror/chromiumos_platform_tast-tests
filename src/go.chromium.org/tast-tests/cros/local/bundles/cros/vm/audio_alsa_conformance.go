@@ -28,7 +28,7 @@ func init() {
 		Desc:         "Tests different audio devices in crosvm with alsa conformance test",
 		Contacts:     []string{"chromeos-audio-bugs@google.com", "normanbt@chromium.org"},
 		BugComponent: "b:1332660",
-		Attr:         []string{"group:crosbolt", "crosbolt_perbuild", "group:audio", "group:sw_gates_virt", "sw_gates_virt_enabled"},
+		Attr:         []string{"group:audio", "group:sw_gates_virt", "sw_gates_virt_enabled"},
 		Data:         []string{runAlsaConformanceTest},
 		Timeout:      12 * time.Minute,
 		SoftwareDeps: []string{"vm_host", "chrome", "dlc"},
@@ -38,6 +38,7 @@ func init() {
 			Val: audioutils.Config{
 				CrosvmArgs: []string{"--virtio-snd", "capture=false,backend=null"},
 			},
+			ExtraAttr: []string{"group:crosbolt", "crosbolt_perbuild"},
 		}, {
 			Name: "virtio_cras_snd",
 			Val: audioutils.Config{

@@ -23,7 +23,6 @@ func init() {
 	testing.AddTest(&testing.Test{
 		Func: Pkcs11LoadPerf,
 		Desc: "Test pkcs11 load performance",
-		Attr: []string{"group:crosbolt", "crosbolt_perbuild"},
 		Contacts: []string{
 			"cros-hwsec@google.com",
 			"chenyian@google.com",
