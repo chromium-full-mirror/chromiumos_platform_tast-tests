@@ -38,8 +38,8 @@ func init() {
 		Func:     PasspointSubscriptionDetailUI,
 		Desc:     "Wi-Fi Passpoint subscription detail UI test",
 		Contacts: []string{"cros-networking@google.com", "damiendejean@google.com", "nikhilcn@google.com"},
-		// ChromeOS > Platform > System > Networking
-		BugComponent: "b:156085",
+		// ChromeOS > Platform > System > Networking > Continuous Maintenance
+		BugComponent: "b:1493959",
 		Fixture:      "shillSimulatedWiFi",
 		Attr:         []string{"group:mainline", "informational"},
 		SoftwareDeps: []string{"wifi", "chrome"},
@@ -167,10 +167,12 @@ func PasspointSubscriptionDetailUI(ctx context.Context, s *testing.State) {
 		s.Fatal("Failed to verify the cert provider name on the subscription detail page: ", err)
 	}
 
+	domGroup := nodewith.ClassName("iron-collapse-opened").Role(role.Group)
 	if err := uiauto.Combine("Navigate to subscription detailed page",
+		ui.MakeVisible(nodewith.Name("Show domains").Role(role.Button)),
 		ui.LeftClick(nodewith.Name("Show domains").Role(role.Button)),
-		ui.WaitUntilExists(nodewith.NameContaining(tc.credentials.Domains[0]).Role(role.InlineTextBox)),
-		ui.WaitUntilExists(nodewith.NameContaining(tc.credentials.Domains[1]).Role(role.InlineTextBox)),
+		ui.WaitUntilExists(nodewith.NameContaining(tc.credentials.Domains[0]).Role(role.InlineTextBox).Ancestor(domGroup)),
+		ui.WaitUntilExists(nodewith.NameContaining(tc.credentials.Domains[1]).Role(role.InlineTextBox).Ancestor(domGroup)),
 	)(ctx); err != nil {
 		s.Fatal("Failed to click on the passpoint subscription: ", err)
 	}
