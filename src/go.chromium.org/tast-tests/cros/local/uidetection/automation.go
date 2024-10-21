@@ -294,6 +294,29 @@ func (uda *Context) DoubleClick(s *Finder) uiauto.Action {
 	}, uda.options.RetryInterval)
 }
 
+// DoubleClickUntilGone repeatedly attempts to locate and double click
+// on an element until it is gone.
+func (uda *Context) DoubleClickUntilGone(s *Finder) uiauto.Action {
+	return action.Retry(uda.options.Retries, func(ctx context.Context) error {
+		return testing.Poll(ctx, func(ctx context.Context) error {
+			loc, err := uda.Location(ctx, s)
+			if err != nil {
+				return errors.Wrapf(err, "failed to find the location of %q", s.desc)
+			}
+			actionlogger.RecordClickAction(ctx, uda.tconn, actionlogger.MouseDoubleClick, s.desc, loc.Rect, loc.CenterPoint(), mouse.LeftButton)
+			if err := mouse.Move(uda.tconn, loc.CenterPoint(), 250*time.Millisecond)(ctx); err != nil {
+				return errors.Wrap(err, "failed to move the mouse into position")
+			}
+
+			if err := mouse.DoubleClick(uda.tconn, loc.CenterPoint(), 50*time.Millisecond)(ctx); err != nil {
+				return errors.Wrapf(err, "failed to double-click %q", s.desc)
+			}
+
+			return uda.Gone(s)(ctx)
+		}, &uda.pollOpts)
+	}, uda.options.RetryInterval)
+}
+
 // Tap performs a single touchscreen tap.
 func (uda *Context) Tap(s *Finder) uiauto.Action {
 	return action.Retry(uda.options.Retries, func(ctx context.Context) error {
