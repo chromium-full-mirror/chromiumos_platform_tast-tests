@@ -158,7 +158,7 @@ func expectDeleteClientCertNotPossible(ctx context.Context, s *testing.State, ui
 
 // expectDeleteClientCertSuccess uses the Chrome's cert settings page to delete the client cert.
 func expectDeleteClientCertSuccess(ctx context.Context, s *testing.State, ui *uiauto.Context) {
-	if err := utils.DeleteClientCert(ctx, ui, clientCertificateOrg); err != nil {
+	if err := utils.DeleteClientCertWithRetry(ctx, ui, clientCertificateOrg); err != nil {
 		s.Fatal("Failed to delete client certificate: ", err)
 	}
 }

@@ -340,7 +340,7 @@ func checkCertInSystemSettings(ctx context.Context, s *testing.State,
 
 // deleteClientCert uses the Chrome's cert settings page to delete the client cert.
 func deleteClientCert(ctx context.Context, s *testing.State, ui *uiauto.Context, ignoreErrors bool) {
-	if err := utils.DeleteClientCert(ctx, ui, clientOrg); err != nil && !ignoreErrors {
+	if err := utils.DeleteClientCertWithRetry(ctx, ui, clientOrg); err != nil && !ignoreErrors {
 		s.Fatal("Failed to delete client certificate: ", err)
 	}
 }

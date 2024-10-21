@@ -288,6 +288,30 @@ func DeleteClientCert(ctx context.Context, ui *uiauto.Context, clientOrg string)
 	return nil
 }
 
+// DeleteClientCertWithRetry calls DeleteClientCert for multiple times and tries
+// to dismiss the "Certificate Delete Error" popup on failures, which
+// occasionally happens on entry-level platforms.
+func DeleteClientCertWithRetry(ctx context.Context, ui *uiauto.Context, clientOrg string) (retErr error) {
+	// If a "Certificate Delete Error" dialog pops off, the UI could be stuck in a
+	// weird state and not responding. Somehow it works for the 3rd attempt.
+	maxAttempts := 3
+	lastError := error(nil)
+	for i := 0; i < maxAttempts; i++ {
+		if err := DeleteClientCert(ctx, ui, clientOrg); err != nil {
+			lastError = err
+			// Dismiss the potential "Certificate Delete Error" popup.
+			if err := PressOkButton(ctx, ui, ManageCertSettingsWebArea); err != nil {
+				// Continue on errors to workaounrd the UI issue mentioned above.
+				lastError = errors.Wrap(err, failedToPressOkErr)
+			}
+			continue
+		}
+		return nil
+	}
+
+	return lastError
+}
+
 // DeleteCACert selects and deletes specific CA certificate on CA tab.
 func DeleteCACert(ctx context.Context, ui *uiauto.Context, conn *chrome.Conn, caOrg, caCertName string) (retErr error) {
 	if err := SelectCACertificate(ctx, ui, conn, caOrg, caCertName); err != nil {
