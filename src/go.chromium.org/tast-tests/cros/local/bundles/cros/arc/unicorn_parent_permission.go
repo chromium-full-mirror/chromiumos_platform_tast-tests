@@ -28,10 +28,12 @@ import (
 
 func init() {
 	testing.AddTest(&testing.Test{
-		Func:         UnicornParentPermission,
-		LacrosStatus: testing.LacrosVariantUnneeded,
-		Desc:         "Checks if App Install Triggers Parent Permission For Unicorn Account",
-		Contacts:     []string{"arc-commercial@google.com", "cros-arc-te@google.com", "jinrongwu@google.com"},
+		Func: UnicornParentPermission,
+		// Disabled by TORA. See: b/352944886
+		LifeCycleStage: testing.LifeCycleOwnerMonitored,
+		LacrosStatus:   testing.LacrosVariantUnneeded,
+		Desc:           "Checks if App Install Triggers Parent Permission For Unicorn Account",
+		Contacts:       []string{"arc-commercial@google.com", "cros-arc-te@google.com", "jinrongwu@google.com"},
 		// ChromeOS > Software > ARC++ > Commercial > Tast Tests
 		BugComponent: "b:1487630",
 		Attr:         []string{"group:mainline", "group:arc-functional"},
@@ -39,15 +41,16 @@ func init() {
 		Timeout:      10 * time.Minute,
 		VarDeps:      []string{arcCommon.ParentAccountVarName},
 		Params: []testing.Param{
-			{
-				ExtraSoftwareDeps: []string{"android_container"},
-				ExtraAttr:         []string{"informational"},
-			},
-			{
-				Name:              "vm",
-				ExtraSoftwareDeps: []string{"android_vm", "no_qemu"},
-				ExtraAttr:         []string{"informational"},
-			},
+			// Disabled by TORA. See: b/352944886
+			// {
+			// 	ExtraSoftwareDeps: []string{"android_container"},
+			// 	ExtraAttr:         []string{"informational"},
+			// },
+			// {
+			// 	Name:              "vm",
+			// 	ExtraSoftwareDeps: []string{"android_vm", "no_qemu"},
+			// 	ExtraAttr:         []string{"informational"},
+			// },
 			{
 				Name:              "betty_vm",
 				ExtraSoftwareDeps: []string{"android_vm", "qemu"},
