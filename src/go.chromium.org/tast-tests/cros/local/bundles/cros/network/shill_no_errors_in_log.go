@@ -21,12 +21,13 @@ import (
 
 func init() {
 	testing.AddTest(&testing.Test{
-		BugComponent: "b:1166446",
+		// ChromeOS > Platform > System > Networking > Continuous Maintenance
+		BugComponent: "b:1493959",
 		Func:         ShillNoErrorsInLog,
-		Desc:         "Checks that Shill does not produce any unexpected error logs",
+		Desc:         "Checks that there are no unexpected error logs in net.log when shill restarts and becomes online",
 		Contacts: []string{
-			"cros-network-health-team@google.com", // Network Health team
-			"stevenjb@google.com",                 // Test author
+			"cros-networking@google.com",
+			"jiejiang@google.com",
 		},
 		Attr: []string{"group:mainline", "informational", "group:release-health", "release-health_network"},
 	})
