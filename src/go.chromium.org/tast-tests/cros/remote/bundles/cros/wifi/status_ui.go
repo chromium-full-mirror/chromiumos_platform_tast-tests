@@ -7,7 +7,6 @@ package wifi
 import (
 	"context"
 	"fmt"
-	"path/filepath"
 	"time"
 
 	"go.chromium.org/tast-tests/cros/common/tbdep"
@@ -22,7 +21,6 @@ import (
 	"go.chromium.org/tast/core/ctxutil"
 	"go.chromium.org/tast/core/errors"
 	"go.chromium.org/tast/core/rpc"
-	"go.chromium.org/tast/core/ssh/linuxssh"
 	"go.chromium.org/tast/core/testing"
 )
 
@@ -47,7 +45,6 @@ func init() {
 			"tast.cros.chrome.uiauto.ossettings.OsSettingsService",
 			"tast.cros.chrome.uiauto.quicksettings.QuickSettingsService",
 			wifiutil.FaillogServiceName,
-			"tast.cros.ui.ScreenRecorderService",
 		},
 		SoftwareDeps: []string{"chrome"},
 		Fixture:      wificell.FixtureID(wificell.TFFeaturesNone),
@@ -80,27 +77,6 @@ func StatusUI(ctx context.Context, s *testing.State) {
 		s.Fatal("Failed to start Chrome: ", err)
 	}
 	defer cr.Close(cleanupCtx, &emptypb.Empty{})
-
-	screenRecordSvc := ui.NewScreenRecorderServiceClient(rpcClient.Conn)
-	if _, err := screenRecordSvc.Start(ctx, &ui.StartRequest{}); err != nil {
-		s.Fatal("Failed to start screen recording: ", err)
-	}
-	defer func(ctx context.Context) {
-		res, err := screenRecordSvc.Stop(ctx, &emptypb.Empty{})
-		if err != nil {
-			s.Log("Failed to stop the screen recording: ", err)
-			return
-		}
-
-		if !s.HasError() {
-			return
-		}
-		destPath := filepath.Join(s.OutDir(), "record.webm")
-		if err := linuxssh.GetFile(ctx, s.DUT().Conn(), res.FileName, destPath, linuxssh.DereferenceSymlinks); err != nil {
-			s.Log("Failed to fetch the screen recording from dut: ", err)
-
-		}
-	}(cleanupCtx)
 
 	wifiClient := tf.DUTWifiClient(wificell.DefaultDUT)
 	// Toggling the WiFi is one of the criteria of this test,
