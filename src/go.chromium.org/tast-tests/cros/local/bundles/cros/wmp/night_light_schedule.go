@@ -29,16 +29,19 @@ type timeData struct {
 
 func init() {
 	testing.AddTest(&testing.Test{
-		Func:         NightLightSchedule,
-		LacrosStatus: testing.LacrosVariantUnneeded,
-		Desc:         "Tests the adjustment of night light schedule",
+		Func: NightLightSchedule,
+		// Disabled by TORA. See: b/351561732
+		LifeCycleStage: testing.LifeCycleOwnerMonitored,
+		LacrosStatus:   testing.LacrosVariantUnneeded,
+		Desc:           "Tests the adjustment of night light schedule",
 		Contacts: []string{
 			"chromeos-wm@google.com",
 			"chromeos-consumer-engprod@google.com",
 		},
 		// ChromeOS > Software > Nightlight
 		BugComponent: "b:1252585",
-		Attr:         []string{"group:mainline", "informational", "group:hw_agnostic"},
+		// Disabled by TORA. See: b/351561732
+		// Attr:         []string{"group:mainline", "informational", "group:hw_agnostic"},
 		SoftwareDeps: []string{"chrome"},
 		Fixture:      "chromeLoggedIn",
 	})
