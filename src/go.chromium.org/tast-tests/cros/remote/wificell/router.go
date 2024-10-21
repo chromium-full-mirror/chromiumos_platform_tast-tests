@@ -50,7 +50,9 @@ func (rd *RouterData) findManagedInterface(ctx context.Context) (string, []net.I
 	for _, name := range names {
 		ips, err := ipr.IPAddr(ctx, name)
 		if err != nil {
-			return "", nil, err
+			// Interface may be down.
+			testing.ContextLogf(ctx, "Interface %q does not contain valid IPv4 address, reason: %v", name, err)
+			continue
 		}
 		var ret []net.IP
 		for _, ip := range ips {
@@ -62,7 +64,7 @@ func (rd *RouterData) findManagedInterface(ctx context.Context) (string, []net.I
 			return name, ret, nil
 		}
 	}
-	return "", nil, errors.Errorf("IPs: %+v don't contain managed", names)
+	return "", nil, errors.Errorf("Interfaces: %+v don't contain any active managed interface", names)
 }
 
 // IfName returns interface name of a particular type (STA/AP/P2P)
