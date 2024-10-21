@@ -212,6 +212,13 @@ func CorruptBothFWSigABAndEC(ctx context.Context, s *testing.State) {
 		if err := h.RebootWithSSHCommand(ctx, pv.BootMode); err != nil {
 			s.Error("Failed to reboot with VT2 command: ", err)
 		}
+		// The DUT takes longer to reboot than expected.
+		s.Log("Waiting longer to see if the DUT can reconnect")
+		waitConnectCtx, cancelWaitConnect := context.WithTimeout(ctx, 5*time.Minute)
+		defer cancelWaitConnect()
+		if err := h.WaitConnect(waitConnectCtx, firmware.ResetEthernetDongle); err != nil {
+			s.Error("Failed to reconnect to the DUT during the extended waiting period: ", err)
+		}
 	}(ctx)
 
 	if err := h.RequireBiosServiceClient(ctx); err != nil {
