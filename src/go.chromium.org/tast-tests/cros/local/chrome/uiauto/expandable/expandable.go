@@ -20,7 +20,7 @@ func EnsureExpandableSectionOpened(tconn *chrome.TestConn, section *nodewith.Fin
 		uiauto.Combine("expand the section",
 			ui.WaitUntilExists(section),
 			ui.EnsureFocused(section),
-			ui.LeftClick(section),
+			ui.DoDefault(section),
 		),
 		ui.WithTimeout(3*time.Second).WaitUntilExists(section.Expanded()),
 	)
