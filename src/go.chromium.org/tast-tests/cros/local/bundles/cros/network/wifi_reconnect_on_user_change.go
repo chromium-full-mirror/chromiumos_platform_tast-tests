@@ -36,7 +36,7 @@ func init() {
 		Contacts: []string{"cros-networking@google.com", "jiejiang@google.com"},
 		// ChromeOS > Platform > System > Networking > Continuous Maintenance
 		BugComponent: "b:1493959",
-		Attr:         []string{"group:mainline", "informational"},
+		Attr:         []string{"group:network", "network_platform", "group:release-health", "release-health_network"},
 		SoftwareDeps: []string{"wifi", "chrome"},
 		Fixture:      "shillSimulatedWiFi.ehide",
 		// This test performs multiple login and logout. Thus use a long timeout
