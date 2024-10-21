@@ -37,6 +37,7 @@ var PreparedArchives = []string{
 	"Invalid.zip",
 	"Format V4.rar",
 	"Format V5.rar",
+	"LZMA.zip",
 	"Multipart Old Style.rar",
 	"Multipart Old Style.r00",
 	"Multipart New Style 01.rar",
@@ -372,14 +373,15 @@ func testStrictPasswordInArchives(ctx context.Context, s *testing.State, cd *cro
 	}
 }
 
-// testUnsupportedCompressionMethod checks that a ZIP containing a file with an
-// unsupported compression method is not accepted (https://crbug.com/1360291).
-func testUnsupportedCompressionMethod(ctx context.Context, s *testing.State, cd *crosdisks.CrosDisks, dataDir string) {
-	// TODO(b/255703574) Use a ZIP archive with an unsupported compression method.
-	// archivePath := filepath.Join(dataDir, "LZMA.zip")
-	// if err := verifyMountStatus(ctx, cd, archivePath, filepath.Ext(archivePath), nil, crosdisks.MountErrorMountProgramFailed); err != nil {
-	// 	s.Errorf("Test failed for %q: %v", archivePath, err)
-	// }
+// testLZMA checks that a ZIP containing an LZMA-compressed file is correctly
+// mounted and decompressed.
+func testLZMA(ctx context.Context, s *testing.State, cd *crosdisks.CrosDisks, dataDir string) {
+	want := DirectoryContents{
+		"lzma.txt": {1635852332, []byte("This file is compressed with LZMA.\n")},
+	}
+	if err := VerifyArchiveContent(ctx, cd, filepath.Join(dataDir, "LZMA.zip"), nil, want); err != nil {
+		s.Error("Test failed: ", err)
+	}
 }
 
 func testDuplicateFilenamesInArchives(ctx context.Context, s *testing.State, cd *crosdisks.CrosDisks, dataDir string) {
@@ -573,8 +575,8 @@ func RunArchiveTests(ctx context.Context, s *testing.State) {
 			s.Run(ctx, "StrictPassword", func(ctx context.Context, state *testing.State) {
 				testStrictPasswordInArchives(ctx, state, cd, mountPath)
 			})
-			s.Run(ctx, "UnsupportedCompressionMethod", func(ctx context.Context, state *testing.State) {
-				testUnsupportedCompressionMethod(ctx, state, cd, mountPath)
+			s.Run(ctx, "LZMA", func(ctx context.Context, state *testing.State) {
+				testLZMA(ctx, state, cd, mountPath)
 			})
 			s.Run(ctx, "DuplicateFilenames", func(ctx context.Context, state *testing.State) {
 				testDuplicateFilenamesInArchives(ctx, state, cd, mountPath)
