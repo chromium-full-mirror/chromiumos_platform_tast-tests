@@ -16,9 +16,11 @@ import (
 
 func init() {
 	testing.AddTest(&testing.Test{
-		Func:         AppCrash,
-		LacrosStatus: testing.LacrosVariantUnneeded,
-		Desc:         "Test handling of a local app crash",
+		Func: AppCrash,
+		// Disabled by TORA. See: b/349914087
+		LifeCycleStage: testing.LifeCycleOwnerMonitored,
+		LacrosStatus:   testing.LacrosVariantUnneeded,
+		Desc:           "Test handling of a local app crash",
 		Contacts: []string{
 			// ARC
 			"arc-core@google.com",
@@ -31,25 +33,31 @@ func init() {
 		Attr:         []string{"group:mainline", "informational"},
 		SoftwareDeps: []string{"chrome"},
 		Fixture:      "arcBooted",
-		Params: []testing.Param{{
-			Name:              "mock_consent",
-			ExtraSoftwareDeps: []string{"android_container"},
-			Val:               crash.MockConsent,
-		}, {
-			Name:              "real_consent",
-			ExtraSoftwareDeps: []string{"android_container", "metrics_consent"},
-			Val:               crash.RealConsent,
-		}, {
-			Name:              "vm_mock_consent",
-			ExtraAttr:         []string{"group:hw_agnostic"},
-			ExtraSoftwareDeps: []string{"android_vm"},
-			Val:               crash.MockConsent,
-		}, {
-			Name:              "vm_real_consent",
-			ExtraAttr:         []string{"group:hw_agnostic"},
-			ExtraSoftwareDeps: []string{"android_vm", "metrics_consent"},
-			Val:               crash.RealConsent,
-		}},
+		Params: []testing.Param{
+			{
+				Name:              "mock_consent",
+				ExtraSoftwareDeps: []string{"android_container"},
+				Val:               crash.MockConsent,
+			},
+			{
+				Name:              "real_consent",
+				ExtraSoftwareDeps: []string{"android_container", "metrics_consent"},
+				Val:               crash.RealConsent,
+			},
+			// Disabled by TORA. See: b/349914087
+			// {
+			// 	Name:              "vm_mock_consent",
+			// 	ExtraAttr:         []string{"group:hw_agnostic"},
+			// 	ExtraSoftwareDeps: []string{"android_vm"},
+			// 	Val:               crash.MockConsent,
+			// },
+			// {
+			// 	Name:              "vm_real_consent",
+			// 	ExtraAttr:         []string{"group:hw_agnostic"},
+			// 	ExtraSoftwareDeps: []string{"android_vm", "metrics_consent"},
+			// 	Val:               crash.RealConsent,
+			// }
+		},
 	})
 }
 
