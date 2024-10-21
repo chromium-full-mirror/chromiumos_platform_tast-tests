@@ -109,7 +109,7 @@ func ZeroTouchEnrollment(ctx context.Context, s *testing.State) {
 		s.Fatal("Failed to pre-provision device: ", err)
 	}
 	defer func(ctx context.Context) {
-		if !enrolled {
+		if !enrolled && name != "" {
 			if err := deletePreProvisioningRecord(ctx, name, batchKey); err != nil {
 				s.Log("Failed to delete pre-provisioning record: ", err)
 			}
@@ -261,12 +261,19 @@ func preProvisionDevice(ctx context.Context, serialNumber, hardwareModel, device
 	if err != nil {
 		return "", errors.Wrap(err, "failed to read response")
 	}
-	type preProvisionedDevice struct {
-		Name string
+	type errorDetails struct {
+		Status string
 	}
-	var parsedResponse preProvisionedDevice
+	type preProvisionedDeviceOrError struct {
+		Name  string
+		Error errorDetails
+	}
+	var parsedResponse preProvisionedDeviceOrError
 	if err := json.Unmarshal(respBytes, &parsedResponse); err != nil {
 		return "", errors.Wrapf(err, "failed to parse response (status code %d): %s", resp.StatusCode, string(respBytes))
+	}
+	if resp.StatusCode == http.StatusConflict && parsedResponse.Error.Status == "ALREADY_EXISTS" {
+		return "", nil
 	}
 	if resp.StatusCode != http.StatusOK || len(parsedResponse.Name) == 0 || !strings.HasPrefix(parsedResponse.Name, "preProvisionedDevices/") {
 		return "", errors.Errorf("unsuccessful response (status code %d): %s", resp.StatusCode, string(respBytes))
