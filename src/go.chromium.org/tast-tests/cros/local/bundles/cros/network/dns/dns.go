@@ -136,11 +136,15 @@ const ExampleDoHProvider = "https://www.example.com/dns-query"
 // ExampleDoHProvider in a DNS query. This maps to "3www7example3com0".
 const ExampleDoHProviderHexString = "03777777076578616d706c6503636f6d00"
 
-// DNSProxyIPv4Prefix is the prefix used for DNS proxy's namespaces.
-const DNSProxyIPv4Prefix = "100.115.92"
+// DNSProxyIPv4RE is the regular expression of DNS proxy IPv4 listening address.
+// DNS proxy IPv4 address can be:
+// - 100.115.92.\d+: proxy processes address inside network space.
+// - 127.0.0.2: system proxy process address on root namespace.
+// - 127.0.0.3: default proxy process address on root namespace.
+var DNSProxyIPv4RE = regexp.MustCompile(`100.115.92.\d+|127.0.0.2|127.0.0.3`)
 
 // DigProxyIPRE is the regular expressions for DNS proxy IP inside dig output.
-var DigProxyIPRE = regexp.MustCompile(`SERVER: 100.115.92.\d+#53`)
+var DigProxyIPRE = regexp.MustCompile(`SERVER: (100.115.92.\d+|127.0.0.2)#53`)
 
 // ARCQueryRCodeRE is the regular expression to get the return code of ARC DNS query.
 // RCode output is in the form of: "rcode: No error (0)"
@@ -923,7 +927,7 @@ func expectedNameserversWithDNSProxy(ctx context.Context, config Config) []templ
 	// template.HTML to avoid the regex to be escaped.
 	var nssRE []template.HTML
 	if len(config.IPv4Nameservers) > 0 {
-		nssRE = append(nssRE, DNSProxyIPv4Prefix+".\\d+")
+		nssRE = append(nssRE, template.HTML(DNSProxyIPv4RE.String()))
 	}
 	if len(config.IPv6Nameservers) > 0 {
 		nssRE = append(nssRE, "([a-f0-9:]+:+)+[a-f0-9]+")
@@ -946,7 +950,7 @@ func VerifyARCNameservers(ctx context.Context, a *arc.ARC) error {
 		f := false
 		// Index 0 contains the full match, start from index 1.
 		for i := 1; i < len(m); i++ {
-			if strings.Contains(m[i], DNSProxyIPv4Prefix) {
+			if DNSProxyIPv4RE.FindString(m[i]) != "" {
 				f = true
 				break
 			}
