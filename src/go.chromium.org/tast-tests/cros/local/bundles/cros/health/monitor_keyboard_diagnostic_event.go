@@ -62,15 +62,14 @@ func init() {
 				forceClamshellMode: true,
 			},
 			// The keyboard diagnostics is disabled for split modifier keyboard.
-			ExtraHardwareDeps: hwdep.D(hwdep.FormFactor(hwdep.Convertible, hwdep.Detachable), hwdep.NoSplitModifierKeyboard(), hwdep.SkipOnModel("quandiso360", "foob360", "kracko360")),
+			ExtraHardwareDeps: hwdep.D(hwdep.FormFactor(hwdep.Convertible, hwdep.Detachable), hwdep.NoSplitModifierKeyboard(), hwdep.SkipOnModel("kracko360")),
 		}, {
-			// TODO(b/365033439): Promote to critical after quandiso360 and foob360 are stable.
 			// TODO(b/363140028): fix the failures on kracko360.
 			Name: "tablet_mode_form_factors_unstable",
 			Val: keyboardEventTestParams{
 				forceClamshellMode: true,
 			},
-			ExtraHardwareDeps: hwdep.D(hwdep.FormFactor(hwdep.Convertible, hwdep.Detachable), hwdep.Model("quandiso360", "foob360", "kracko360")),
+			ExtraHardwareDeps: hwdep.D(hwdep.FormFactor(hwdep.Convertible, hwdep.Detachable), hwdep.Model("kracko360")),
 			ExtraAttr:         []string{"informational", "group:criticalstaging"},
 		}},
 	})
