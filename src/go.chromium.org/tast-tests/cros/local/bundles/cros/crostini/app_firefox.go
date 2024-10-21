@@ -44,6 +44,7 @@ func init() {
 func AppFirefox(ctx context.Context, s *testing.State) {
 	tconn := s.FixtValue().(crostini.FixtureData).Tconn
 	keyboard := s.FixtValue().(crostini.FixtureData).KB
+	cont := s.FixtValue().(crostini.FixtureData).Cont
 
 	// Use a shortened context for test operations to reserve time for cleanup.
 	cleanupCtx := ctx
@@ -51,6 +52,11 @@ func AppFirefox(ctx context.Context, s *testing.State) {
 	defer cancel()
 	handler := faillog.DumpUITreeWithScreenshotHandler(cleanupCtx, tconn, "ui_tree")
 	s.AttachErrorHandlers(handler, handler)
+
+	// Disable wayland, which is now default.
+	if err := crostiniapps.DisableFirefoxWayland(ctx, cont); err != nil {
+		s.Fatal("Failed to disable wayland: ", err)
+	}
 
 	if err := launcher.SearchAndLaunchWithQuery(tconn, keyboard, "firefox", "Firefox ESR")(ctx); err != nil {
 		s.Fatal("Failed to launch Firefox from launcher: ", err)
