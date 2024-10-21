@@ -22538,6 +22538,7 @@ type IsolatedWebAppInstallForceList struct {
 }
 
 type IsolatedWebAppInstallForceListValue struct {
+	PinnedVersion     string `json:"pinned_version"`
 	UpdateChannel     string `json:"update_channel"`
 	UpdateManifestUrl string `json:"update_manifest_url"`
 	WebBundleId       string `json:"web_bundle_id"`
@@ -24621,39 +24622,6 @@ func (p *DataUrlInSvgUseEnabled) SetProto(m *protoreflect.Message) {
 	SetUserProto(m, p.Name(), p.Val)
 }
 func (p *DataUrlInSvgUseEnabled) Equal(iface interface{}) bool {
-	v, ok := iface.(bool)
-	if !ok {
-		return ok
-	}
-	return cmp.Equal(p.Val, v, cmpopts.EquateEmpty())
-}
-
-// ****************************************************************************
-// 1111. BeforeunloadEventCancelByPreventDefaultEnabled
-// This policy can be modified without rebooting.
-// ****************************************************************************
-type BeforeunloadEventCancelByPreventDefaultEnabled struct {
-	Stat Status
-	Val  bool
-}
-
-func (p *BeforeunloadEventCancelByPreventDefaultEnabled) Name() string {
-	return "BeforeunloadEventCancelByPreventDefaultEnabled"
-}
-func (p *BeforeunloadEventCancelByPreventDefaultEnabled) Scope() Scope          { return ScopeUser }
-func (p *BeforeunloadEventCancelByPreventDefaultEnabled) Status() Status        { return p.Stat }
-func (p *BeforeunloadEventCancelByPreventDefaultEnabled) UntypedV() interface{} { return p.Val }
-func (p *BeforeunloadEventCancelByPreventDefaultEnabled) UnmarshalAs(m json.RawMessage) (interface{}, error) {
-	var v bool
-	if err := json.Unmarshal(m, &v); err != nil {
-		return nil, errors.Wrapf(err, "could not read %s as bool", m)
-	}
-	return v, nil
-}
-func (p *BeforeunloadEventCancelByPreventDefaultEnabled) SetProto(m *protoreflect.Message) {
-	SetUserProto(m, p.Name(), p.Val)
-}
-func (p *BeforeunloadEventCancelByPreventDefaultEnabled) Equal(iface interface{}) bool {
 	v, ok := iface.(bool)
 	if !ok {
 		return ok
@@ -28326,7 +28294,6 @@ func (p *KioskVisionTelemetryEnabled) Equal(iface interface{}) bool {
 // ****************************************************************************
 // 1263. GenAIWallpaperSettings
 // This policy can be modified without rebooting.
-// This is a future policy, it is not present in stable builds.
 // ****************************************************************************
 type GenAIWallpaperSettings struct {
 	Stat Status
@@ -28358,7 +28325,6 @@ func (p *GenAIWallpaperSettings) Equal(iface interface{}) bool {
 // ****************************************************************************
 // 1264. GenAIVcBackgroundSettings
 // This policy can be modified without rebooting.
-// This is a future policy, it is not present in stable builds.
 // ****************************************************************************
 type GenAIVcBackgroundSettings struct {
 	Stat Status
@@ -29361,8 +29327,6 @@ func (p *AutofillPredictionSettings) Equal(iface interface{}) bool {
 
 // ****************************************************************************
 // 1301. ArcOpenLinksInBrowserByDefault
-// This policy has a default value of False.
-// This is a future policy, it is not present in stable builds.
 // ****************************************************************************
 type ArcOpenLinksInBrowserByDefault struct {
 	Stat Status
@@ -29487,6 +29451,68 @@ func (p *DirectSocketsPrivateNetworkAccessBlockedForUrls) SetProto(m *protorefle
 }
 func (p *DirectSocketsPrivateNetworkAccessBlockedForUrls) Equal(iface interface{}) bool {
 	v, ok := iface.([]string)
+	if !ok {
+		return ok
+	}
+	return cmp.Equal(p.Val, v, cmpopts.EquateEmpty())
+}
+
+// ****************************************************************************
+// 1306. SelectParserRelaxationEnabled
+// ****************************************************************************
+type SelectParserRelaxationEnabled struct {
+	Stat Status
+	Val  bool
+}
+
+func (p *SelectParserRelaxationEnabled) Name() string          { return "SelectParserRelaxationEnabled" }
+func (p *SelectParserRelaxationEnabled) Scope() Scope          { return ScopeUser }
+func (p *SelectParserRelaxationEnabled) Status() Status        { return p.Stat }
+func (p *SelectParserRelaxationEnabled) UntypedV() interface{} { return p.Val }
+func (p *SelectParserRelaxationEnabled) UnmarshalAs(m json.RawMessage) (interface{}, error) {
+	var v bool
+	if err := json.Unmarshal(m, &v); err != nil {
+		return nil, errors.Wrapf(err, "could not read %s as bool", m)
+	}
+	return v, nil
+}
+func (p *SelectParserRelaxationEnabled) SetProto(m *protoreflect.Message) {
+	SetUserProto(m, p.Name(), p.Val)
+}
+func (p *SelectParserRelaxationEnabled) Equal(iface interface{}) bool {
+	v, ok := iface.(bool)
+	if !ok {
+		return ok
+	}
+	return cmp.Equal(p.Val, v, cmpopts.EquateEmpty())
+}
+
+// ****************************************************************************
+// 1307. ClassManagementEnabled
+// This policy can be modified without rebooting.
+// This is a future policy, it is not present in stable builds.
+// ****************************************************************************
+type ClassManagementEnabled struct {
+	Stat Status
+	Val  string
+}
+
+func (p *ClassManagementEnabled) Name() string          { return "ClassManagementEnabled" }
+func (p *ClassManagementEnabled) Scope() Scope          { return ScopeUser }
+func (p *ClassManagementEnabled) Status() Status        { return p.Stat }
+func (p *ClassManagementEnabled) UntypedV() interface{} { return p.Val }
+func (p *ClassManagementEnabled) UnmarshalAs(m json.RawMessage) (interface{}, error) {
+	var v string
+	if err := json.Unmarshal(m, &v); err != nil {
+		return nil, errors.Wrapf(err, "could not read %s as string", m)
+	}
+	return v, nil
+}
+func (p *ClassManagementEnabled) SetProto(m *protoreflect.Message) {
+	SetUserProto(m, p.Name(), p.Val)
+}
+func (p *ClassManagementEnabled) Equal(iface interface{}) bool {
+	v, ok := iface.(string)
 	if !ok {
 		return ok
 	}
@@ -31012,8 +31038,6 @@ func newByName(name string) (Policy, error) {
 		return &PdfUseSkiaRendererEnabled{}, nil
 	case "DataUrlInSvgUseEnabled":
 		return &DataUrlInSvgUseEnabled{}, nil
-	case "BeforeunloadEventCancelByPreventDefaultEnabled":
-		return &BeforeunloadEventCancelByPreventDefaultEnabled{}, nil
 	case "PolicyTestPageEnabled":
 		return &PolicyTestPageEnabled{}, nil
 	case "UrlKeyedMetricsAllowed":
@@ -31308,6 +31332,10 @@ func newByName(name string) (Policy, error) {
 		return &DirectSocketsPrivateNetworkAccessAllowedForUrls{}, nil
 	case "DirectSocketsPrivateNetworkAccessBlockedForUrls":
 		return &DirectSocketsPrivateNetworkAccessBlockedForUrls{}, nil
+	case "SelectParserRelaxationEnabled":
+		return &SelectParserRelaxationEnabled{}, nil
+	case "ClassManagementEnabled":
+		return &ClassManagementEnabled{}, nil
 	default:
 		return nil, errors.New("Unknown policy " + name)
 	}
