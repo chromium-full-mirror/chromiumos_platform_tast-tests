@@ -28,15 +28,18 @@ import (
 
 func init() {
 	testing.AddTest(&testing.Test{
-		Func:         BubbleScroll,
-		LacrosStatus: testing.LacrosVariantUnneeded,
-		Desc:         "Tests scrolling in the bubble launcher",
+		Func: BubbleScroll,
+		// Disabled by TORA. See: b/350058015
+		LifeCycleStage: testing.LifeCycleOwnerMonitored,
+		LacrosStatus:   testing.LacrosVariantUnneeded,
+		Desc:           "Tests scrolling in the bubble launcher",
 		Contacts: []string{
 			"chromeos-launcher@google.com",
 			"chromeos-sw-engprod@google.com",
 		},
 		BugComponent: "b:1288350",
-		Attr:         []string{"group:mainline", "informational"},
+		// Disabled by TORA. See: b/350058015
+		// Attr:         []string{"group:mainline", "informational"},
 		HardwareDeps: hwdep.D(hwdep.InternalDisplay()),
 		SoftwareDeps: []string{"chrome"},
 		SearchFlags: []*testing.StringPair{{
