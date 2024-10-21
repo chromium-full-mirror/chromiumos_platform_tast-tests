@@ -56,17 +56,17 @@ func init() {
 		HardwareDeps: hwdep.D(pre.InputsStableModels),
 		Timeout:      time.Duration(5 * time.Minute),
 		Params: []testing.Param{
-			{
-				Name:      "tablet_docked",
-				Fixture:   fixture.TabletVK,
-				ExtraAttr: []string{"group:input-tools-upstream"},
-				Val: glideTypingTestParam{
-					floatLayout: false,
-					inputMethod: ime.EnglishUS,
-				},
-				ExtraSearchFlags: util.IMESearchFlags([]ime.InputMethod{ime.EnglishUS}),
-			},
 			// Disabled by TORA. See: b/340909892
+			// {
+			// 	Name:      "tablet_docked",
+			// 	Fixture:   fixture.TabletVK,
+			// 	ExtraAttr: []string{"group:input-tools-upstream"},
+			// 	Val: glideTypingTestParam{
+			// 		floatLayout: false,
+			// 		inputMethod: ime.EnglishUS,
+			// 	},
+			// 	ExtraSearchFlags: util.IMESearchFlags([]ime.InputMethod{ime.EnglishUS}),
+			// },
 			// {
 			// 	Name:      "tablet_floating",
 			// 	Fixture:   fixture.TabletVK,
