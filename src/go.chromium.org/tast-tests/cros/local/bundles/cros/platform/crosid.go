@@ -15,7 +15,7 @@ func init() {
 	testing.AddTest(&testing.Test{
 		Func:         CrosID,
 		Desc:         "Tests that unibuild devices are able to probe identity via crosid",
-		Contacts:     []string{"chromeos-config@google.com", "jrosenth@chromium.org", "chromeos-faft@google.com"},
+		Contacts:     []string{"chromeos-config@google.com", "chromeos-faft@google.com"},
 		BugComponent: "b:970794", // ChromeOS > Platform > Enablement > Firmware > unibuild
 		SoftwareDeps: []string{"unibuild"},
 		Attr:         []string{"group:mainline", "group:firmware", "firmware_ec"},
