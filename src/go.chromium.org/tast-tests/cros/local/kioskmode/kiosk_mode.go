@@ -71,6 +71,17 @@ const (
 	// kioskLaunchSucceededDuration is the time estimate to emit a kioskLaunchSucceededLog after
 	// kioskReadyToLaunchLog was emitted.
 	kioskLaunchSucceededDuration = 60 * time.Second
+	// kioskClosingSplashScreenLog is reported by Chrome once the app launch splash screen is closing.
+	kioskClosingSplashScreenLog = "App window created, closing splash screen."
+	// kioskClosingSplashScreenDuration is time estimate to emit kioskClosingSplashScreenLog after
+	// after kiosk launch is succeeded,
+	kioskClosingSplashScreenDuration = 30 * time.Second
+	// kioskCrashRecoveryStarted is reported by Chrome once kiosk recovery is started.
+	kioskCrashRecoveryStarted = "Starting crash recovery flow for app"
+	// kioskCrashRecoveryLog is reported by Chrome once kiosk crash recovery launched successfully.
+	kioskCrashRecoveryLog = "Crash recovery flow succeeded"
+	// kioskCrashRecoveryDuration is the time estimate to emit a kioskCrashRecoveryLog after a crash.
+	kioskCrashRecoveryDuration = 60 * time.Second
 
 	// policyPersistDuration is the time estimate for Chrome to store policies after a refresh.
 	policyPersistDuration = 15 * time.Second
@@ -267,6 +278,29 @@ func (k *Kiosk) PolicyBlob() *policy.Blob {
 // This avoids the caveats of creating the reader at the right time, and should be preferred.
 func (k *Kiosk) WaitLaunchLogs(ctx context.Context) error {
 	return WaitLaunchLogsWithReader(ctx, k.reader)
+}
+
+// WaitForSplashScreenClosed uses the reader stored in this Kiosk struct to check if the splash screen
+// closed log to be present.
+func (k *Kiosk) WaitForSplashScreenClosed(ctx context.Context) error {
+	if err := waitLog(ctx, k.reader, kioskClosingSplashScreenLog, kioskClosingSplashScreenDuration); err != nil {
+		return errors.Wrap(err, "Kiosk splash screen was not closed")
+	}
+
+	return nil
+}
+
+// WaitForCrashRecoveryLogs uses the reader stored in this Kiosk struct to check if the crash
+// recovery logs are present.
+func (k *Kiosk) WaitForCrashRecoveryLogs(ctx context.Context) error {
+	if err := waitLog(ctx, k.reader, kioskCrashRecoveryStarted, kioskCrashRecoveryDuration); err != nil {
+		return errors.Wrap(err, "Kiosk crash recovery flow did not start successfully")
+	}
+	if err := waitLog(ctx, k.reader, kioskCrashRecoveryLog, kioskCrashRecoveryDuration); err != nil {
+		return errors.Wrap(err, "Kiosk crash recovery flow did not end successfully")
+	}
+
+	return nil
 }
 
 // WaitLaunchLogsWithReader uses reader to look for logs that confirm Kiosk mode launched successfully.
