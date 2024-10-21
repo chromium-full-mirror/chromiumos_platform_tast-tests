@@ -10,6 +10,7 @@ import (
 	"strings"
 	"time"
 
+	"go.chromium.org/tast-tests/cros/local/chrome/browser"
 	"go.chromium.org/tast-tests/cros/local/chrome/uiauto"
 	"go.chromium.org/tast-tests/cros/local/chrome/uiauto/nodewith"
 	"go.chromium.org/tast-tests/cros/local/chrome/uiauto/vkb"
@@ -25,7 +26,6 @@ import (
 func init() {
 	testing.AddTest(&testing.Test{
 		Func:         VirtualKeyboardHeaderBar,
-		LacrosStatus: testing.LacrosVariantUnneeded,
 		Desc:         "Checks virtual keyboard header bar works properly",
 		Contacts:     []string{"essential-inputs-gardener-oncall@google.com", "essential-inputs-team@google.com"},
 		BugComponent: "b:95887",
@@ -54,26 +54,6 @@ func init() {
 				Val:     true,
 				Fixture: fixture.ClamshellVK,
 			},
-			{
-				Name:    "tablet_dock_lacros",
-				Val:     false,
-				Fixture: fixture.LacrosTabletVK,
-			},
-			{
-				Name:    "tablet_float_lacros",
-				Val:     true,
-				Fixture: fixture.LacrosTabletVK,
-			},
-			{
-				Name:    "clamshell_dock_lacros",
-				Val:     false,
-				Fixture: fixture.LacrosClamshellVK,
-			},
-			{
-				Name:    "clamshell_float_lacros",
-				Val:     true,
-				Fixture: fixture.LacrosClamshellVK,
-			},
 		},
 	})
 }
@@ -88,7 +68,7 @@ func VirtualKeyboardHeaderBar(ctx context.Context, s *testing.State) {
 	ctx, cancel := ctxutil.Shorten(ctx, 5*time.Second)
 	defer cancel()
 
-	its, err := testserver.LaunchBrowser(ctx, s.FixtValue().(fixture.FixtData).BrowserType, cr, tconn)
+	its, err := testserver.LaunchBrowser(ctx, browser.TypeAsh, cr, tconn)
 	if err != nil {
 		s.Fatal("Failed to launch inputs test server: ", err)
 	}

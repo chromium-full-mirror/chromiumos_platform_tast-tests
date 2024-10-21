@@ -18,7 +18,6 @@ import (
 	"go.chromium.org/tast-tests/cros/local/chrome/browser"
 	"go.chromium.org/tast-tests/cros/local/chrome/browser/browserfixt"
 	"go.chromium.org/tast-tests/cros/local/chrome/ime"
-	"go.chromium.org/tast-tests/cros/local/chrome/lacros/lacrosfixt"
 	"go.chromium.org/tast-tests/cros/local/chrome/uiauto"
 	"go.chromium.org/tast-tests/cros/local/chrome/uiauto/vkb"
 	"go.chromium.org/tast-tests/cros/local/chrome/useractions"
@@ -75,25 +74,6 @@ const (
 	TabletVKStereoAloopLoaded                         = "tabletVKStereoAloopLoaded"
 	TabletVKRestart                                   = "tabletVKRestart"
 	TabletVKInGuest                                   = "tabletVKInGuest"
-	// Lacros fixtures.
-	LacrosAnyVK                                             = "lacrosAnyVK"
-	LacrosAnyVKInGuest                                      = "lacrosAnyVKInGuest"
-	LacrosAnyVKInGAIA                                       = "lacrosAnyVKInGaia"
-	LacrosClamshellVK                                       = "lacrosClamshellVK"
-	LacrosClamshellNonVK                                    = "lacrosClamshellNonVK"
-	LacrosClamshellNonVKStereoAloopLoaded                   = "lacrosClamshellNonVKStereoAloopLoaded"
-	LacrosClamshellNonVKInGuest                             = "lacrosClamshellNonVKInGuest"
-	LacrosClamshellNonVKInGAIA                              = "lacrosClamshellNonVKInGaia"
-	LacrosClamshellNonVKRestart                             = "lacrosClamshellNonVKRestart"
-	LacrosClamshellNonVKWithAltClickAndSixPackCustomization = "lacrosClamshellNonVKWithAltClickAndSixPackCustomization"
-	LacrosClamshellNonVKWithMultiwordSuggest                = "lacrosClamshellNonVKWithMultiwordSuggest"
-	LacrosClamshellNonVKWithOrca                            = "lacrosClamshellNonVKWithOrca"
-	LacrosClamshellNonVKWithDiacriticsOnPKLongpress         = "lacrosClamshellWithDiacriticsOnPKLongpress"
-	LacrosClamshellNonVKWithFirstPartyVietnamese            = "lacrosClamshellNonVKWithFirstPartyVietnamese"
-	LacrosTabletVK                                          = "lacrosTabletVK"
-	LacrosTabletVKStereoAloopLoaded                         = "lacrosTabletVKStereoAloopLoaded"
-	LacrosTabletVKInGuest                                   = "lacrosTabletVKInGuest"
-	LacrosTabletVKRestart                                   = "lacrosTabletVKRestart"
 )
 
 func init() {
@@ -104,7 +84,7 @@ func init() {
 			"xiuwen@google.com",
 			"essential-inputs-team@google.com",
 		},
-		Impl:            inputsFixture(notForced, true, false, browser.TypeAsh),
+		Impl:            inputsFixture(notForced, true, false),
 		SetUpTimeout:    chrome.LoginTimeout,
 		PreTestTimeout:  preTestTimeout,
 		PostTestTimeout: postTestTimeout,
@@ -118,7 +98,7 @@ func init() {
 			"xiuwen@google.com",
 			"essential-inputs-team@google.com",
 		},
-		Impl:            inputsFixture(notForced, true, false, browser.TypeAsh, guestLogin),
+		Impl:            inputsFixture(notForced, true, false, guestLogin),
 		SetUpTimeout:    chrome.LoginTimeout,
 		PreTestTimeout:  preTestTimeout,
 		PostTestTimeout: postTestTimeout,
@@ -132,7 +112,7 @@ func init() {
 			"xiuwen@google.com",
 			"essential-inputs-team@google.com",
 		},
-		Impl:            inputsFixture(notForced, true, false, browser.TypeAsh, gaiaLogin),
+		Impl:            inputsFixture(notForced, true, false, gaiaLogin),
 		SetUpTimeout:    chrome.LoginTimeout,
 		PreTestTimeout:  preTestTimeout,
 		PostTestTimeout: postTestTimeout,
@@ -146,7 +126,7 @@ func init() {
 			"essential-inputs-team@google.com",
 			"xiuwen@google.com",
 		},
-		Impl:            inputsFixture(clamshellMode, false, false, browser.TypeAsh, gaiaLogin),
+		Impl:            inputsFixture(clamshellMode, false, false, gaiaLogin),
 		SetUpTimeout:    chrome.LoginTimeout,
 		PreTestTimeout:  preTestTimeout,
 		PostTestTimeout: postTestTimeout,
@@ -160,7 +140,7 @@ func init() {
 			"xiuwen@google.com",
 			"essential-inputs-team@google.com",
 		},
-		Impl:            inputsFixture(clamshellMode, true, false, browser.TypeAsh),
+		Impl:            inputsFixture(clamshellMode, true, false),
 		SetUpTimeout:    chrome.LoginTimeout,
 		PreTestTimeout:  preTestTimeout,
 		PostTestTimeout: postTestTimeout,
@@ -174,7 +154,7 @@ func init() {
 			"xiuwen@google.com",
 			"essential-inputs-team@google.com",
 		},
-		Impl:            inputsFixture(clamshellMode, true, true, browser.TypeAsh),
+		Impl:            inputsFixture(clamshellMode, true, true),
 		SetUpTimeout:    chrome.LoginTimeout,
 		PreTestTimeout:  preTestTimeout,
 		PostTestTimeout: postTestTimeout,
@@ -188,7 +168,7 @@ func init() {
 			"xiuwen@google.com",
 			"essential-inputs-team@google.com",
 		},
-		Impl:            inputsFixture(clamshellMode, false, false, browser.TypeAsh, autocorrectToggle, emojiPickerGifSupport),
+		Impl:            inputsFixture(clamshellMode, false, false, autocorrectToggle, emojiPickerGifSupport),
 		SetUpTimeout:    chrome.LoginTimeout,
 		PreTestTimeout:  preTestTimeout,
 		PostTestTimeout: postTestTimeout,
@@ -202,7 +182,7 @@ func init() {
 			"essential-inputs-team@google.com",
 			"xiuwen@google.com",
 		},
-		Impl: inputsFixture(clamshellMode, false, false, browser.TypeAsh, autocorrectToggle, emojiPickerGifSupport),
+		Impl: inputsFixture(clamshellMode, false, false, autocorrectToggle, emojiPickerGifSupport),
 		// Need aloop for route playback to capture.
 		Parent:          fixture.AloopLoaded{Channels: 2}.Instance(),
 		SetUpTimeout:    chrome.LoginTimeout,
@@ -218,7 +198,7 @@ func init() {
 			"xiuwen@google.com",
 			"essential-inputs-team@google.com",
 		},
-		Impl:            inputsFixture(clamshellMode, false, true, browser.TypeAsh),
+		Impl:            inputsFixture(clamshellMode, false, true),
 		SetUpTimeout:    chrome.LoginTimeout,
 		PreTestTimeout:  preTestTimeout,
 		PostTestTimeout: postTestTimeout,
@@ -232,7 +212,7 @@ func init() {
 			"jhtin@chromium.org",
 			"essential-inputs-team@google.com",
 		},
-		Impl:            inputsFixture(clamshellMode, false, false, browser.TypeAsh, altClickAndSixPackCustomization),
+		Impl:            inputsFixture(clamshellMode, false, false, altClickAndSixPackCustomization),
 		SetUpTimeout:    chrome.LoginTimeout,
 		PreTestTimeout:  preTestTimeout,
 		PostTestTimeout: postTestTimeout,
@@ -246,7 +226,7 @@ func init() {
 			"xiuwen@google.com",
 			"essential-inputs-team@google.com",
 		},
-		Impl:            inputsFixture(clamshellMode, false, false, browser.TypeAsh, assistMultiWord),
+		Impl:            inputsFixture(clamshellMode, false, false, assistMultiWord),
 		SetUpTimeout:    chrome.LoginTimeout,
 		PreTestTimeout:  preTestTimeout,
 		PostTestTimeout: postTestTimeout,
@@ -260,7 +240,7 @@ func init() {
 			"hdchuong@google.com",
 			"essential-inputs-team@google.com",
 		},
-		Impl:            inputsFixture(clamshellMode, false, false, browser.TypeAsh, withoutAssistMultiword),
+		Impl:            inputsFixture(clamshellMode, false, false, withoutAssistMultiword),
 		SetUpTimeout:    chrome.LoginTimeout,
 		PreTestTimeout:  preTestTimeout,
 		PostTestTimeout: postTestTimeout,
@@ -274,7 +254,7 @@ func init() {
 			"xiuwen@google.com",
 			"essential-inputs-team@google.com",
 		},
-		Impl:            inputsFixture(clamshellMode, false, true, browser.TypeAsh, orca),
+		Impl:            inputsFixture(clamshellMode, false, true, orca),
 		SetUpTimeout:    chrome.LoginTimeout,
 		PreTestTimeout:  preTestTimeout,
 		PostTestTimeout: postTestTimeout,
@@ -288,7 +268,7 @@ func init() {
 			"shend@chromium.org",
 			"essential-inputs-team@google.com",
 		},
-		Impl:            inputsFixture(clamshellMode, false, false, browser.TypeAsh, picker, gaiaLogin, orca),
+		Impl:            inputsFixture(clamshellMode, false, false, picker, gaiaLogin, orca),
 		SetUpTimeout:    chrome.LoginTimeout,
 		PreTestTimeout:  preTestTimeout,
 		PostTestTimeout: postTestTimeout,
@@ -303,7 +283,7 @@ func init() {
 			"jhtin@chromium.org",
 			"essential-inputs-team@google.com",
 		},
-		Impl:            inputsFixture(clamshellMode, false, false, browser.TypeAsh, diacriticsOnPhysicalKeyboardLongpress),
+		Impl:            inputsFixture(clamshellMode, false, false, diacriticsOnPhysicalKeyboardLongpress),
 		SetUpTimeout:    chrome.LoginTimeout,
 		PreTestTimeout:  preTestTimeout,
 		PostTestTimeout: postTestTimeout,
@@ -317,7 +297,7 @@ func init() {
 			"jhtin@chromium.org",
 			"essential-inputs-team@google.com",
 		},
-		Impl:            inputsFixture(clamshellMode, false, false, browser.TypeAsh, firstPartyVietnameseInput),
+		Impl:            inputsFixture(clamshellMode, false, false, firstPartyVietnameseInput),
 		SetUpTimeout:    chrome.LoginTimeout,
 		PreTestTimeout:  preTestTimeout,
 		PostTestTimeout: postTestTimeout,
@@ -331,7 +311,7 @@ func init() {
 			"xiuwen@google.com",
 			"essential-inputs-team@google.com",
 		},
-		Impl:            inputsFixture(clamshellMode, false, false, browser.TypeAsh, guestLogin, emojiPickerGifSupport),
+		Impl:            inputsFixture(clamshellMode, false, false, guestLogin, emojiPickerGifSupport),
 		SetUpTimeout:    chrome.LoginTimeout,
 		PreTestTimeout:  preTestTimeout,
 		PostTestTimeout: postTestTimeout,
@@ -345,7 +325,7 @@ func init() {
 			"hdchuong@google.com",
 			"essential-inputs-team@google.com",
 		},
-		Impl:            inputsFixture(clamshellMode, false, false, browser.TypeAsh, guestLogin, withoutAssistMultiword),
+		Impl:            inputsFixture(clamshellMode, false, false, guestLogin, withoutAssistMultiword),
 		SetUpTimeout:    chrome.LoginTimeout,
 		PreTestTimeout:  preTestTimeout,
 		PostTestTimeout: postTestTimeout,
@@ -359,7 +339,7 @@ func init() {
 			"xiuwen@google.com",
 			"essential-inputs-team@google.com",
 		},
-		Impl:            inputsFixture(tabletMode, true, false, browser.TypeAsh),
+		Impl:            inputsFixture(tabletMode, true, false),
 		SetUpTimeout:    chrome.LoginTimeout,
 		PreTestTimeout:  preTestTimeout,
 		PostTestTimeout: postTestTimeout,
@@ -373,7 +353,7 @@ func init() {
 			"xiuwen@google.com",
 			"essential-inputs-team@google.com",
 		},
-		Impl: inputsFixture(tabletMode, true, false, browser.TypeAsh),
+		Impl: inputsFixture(tabletMode, true, false),
 		// Need aloop for route playback to capture.
 		Parent:          fixture.AloopLoaded{Channels: 2}.Instance(),
 		SetUpTimeout:    chrome.LoginTimeout,
@@ -389,7 +369,7 @@ func init() {
 			"xiuwen@google.com",
 			"essential-inputs-team@google.com",
 		},
-		Impl:            inputsFixture(tabletMode, true, true, browser.TypeAsh),
+		Impl:            inputsFixture(tabletMode, true, true),
 		SetUpTimeout:    chrome.LoginTimeout,
 		PreTestTimeout:  preTestTimeout,
 		PostTestTimeout: postTestTimeout,
@@ -403,265 +383,7 @@ func init() {
 			"xiuwen@google.com",
 			"essential-inputs-team@google.com",
 		},
-		Impl:            inputsFixture(tabletMode, true, false, browser.TypeAsh, guestLogin),
-		SetUpTimeout:    chrome.LoginTimeout,
-		PreTestTimeout:  preTestTimeout,
-		PostTestTimeout: postTestTimeout,
-		ResetTimeout:    resetTimeout,
-		TearDownTimeout: chrome.ResetTimeout,
-	})
-
-	//--------------Lacros Fixtures--------------------------------------------
-	testing.AddFixture(&testing.Fixture{
-		Name: LacrosAnyVK,
-		Desc: "Lacros variant: any mode with VK enabled",
-		Contacts: []string{
-			"xiuwen@google.com",
-			"essential-inputs-team@google.com",
-		},
-		Impl:            inputsFixture(notForced, true, false, browser.TypeLacros),
-		SetUpTimeout:    chrome.LoginTimeout,
-		PreTestTimeout:  preTestTimeout,
-		PostTestTimeout: postTestTimeout,
-		ResetTimeout:    resetTimeout,
-		TearDownTimeout: chrome.ResetTimeout,
-	})
-	testing.AddFixture(&testing.Fixture{
-		Name: LacrosAnyVKInGuest,
-		Desc: "Lacros variant: any mode in guest login with VK enabled",
-		Contacts: []string{
-			"xiuwen@google.com",
-			"essential-inputs-team@google.com",
-		},
-		Impl:            inputsFixture(notForced, true, false, browser.TypeLacros, guestLogin),
-		SetUpTimeout:    chrome.LoginTimeout,
-		PreTestTimeout:  preTestTimeout,
-		PostTestTimeout: postTestTimeout,
-		ResetTimeout:    resetTimeout,
-		TearDownTimeout: chrome.ResetTimeout,
-	})
-	testing.AddFixture(&testing.Fixture{
-		Name: LacrosClamshellVK,
-		Desc: "Lacros variant: clamshell mode with A11y VK enabled",
-		Contacts: []string{
-			"xiuwen@google.com",
-			"essential-inputs-team@google.com",
-		},
-		Impl:            inputsFixture(clamshellMode, true, false, browser.TypeLacros),
-		SetUpTimeout:    chrome.LoginTimeout,
-		PreTestTimeout:  preTestTimeout,
-		PostTestTimeout: postTestTimeout,
-		ResetTimeout:    resetTimeout,
-		TearDownTimeout: chrome.ResetTimeout,
-	})
-	testing.AddFixture(&testing.Fixture{
-		Name: LacrosClamshellNonVK,
-		Desc: "Lacros variant: clamshell mode with VK disabled",
-		Contacts: []string{
-			"xiuwen@google.com",
-			"essential-inputs-team@google.com",
-		},
-		Impl:            inputsFixture(clamshellMode, false, false, browser.TypeLacros, autocorrectToggle, emojiPickerGifSupport),
-		SetUpTimeout:    chrome.LoginTimeout,
-		PreTestTimeout:  preTestTimeout,
-		PostTestTimeout: postTestTimeout,
-		ResetTimeout:    resetTimeout,
-		TearDownTimeout: chrome.ResetTimeout,
-	})
-	testing.AddFixture(&testing.Fixture{
-		Name: LacrosClamshellNonVKStereoAloopLoaded,
-		Desc: "Lacros variant: clamshell mode with VK disabled and stereo aloop loaded",
-		Contacts: []string{
-			"essential-inputs-team@google.com",
-			"xiuwen@google.com",
-		},
-		Impl: inputsFixture(clamshellMode, false, false, browser.TypeLacros, autocorrectToggle, emojiPickerGifSupport),
-		// Need aloop for route playback to capture.
-		Parent:          fixture.AloopLoaded{Channels: 2}.Instance(),
-		SetUpTimeout:    chrome.LoginTimeout,
-		PreTestTimeout:  preTestTimeout,
-		PostTestTimeout: postTestTimeout,
-		ResetTimeout:    resetTimeout,
-		TearDownTimeout: chrome.ResetTimeout,
-	})
-	testing.AddFixture(&testing.Fixture{
-		Name: LacrosClamshellNonVKRestart,
-		Desc: "Lacros variant: clamshell mode with VK disabled, restarting chrome session for every test",
-		Contacts: []string{
-			"xiuwen@google.com",
-			"essential-inputs-team@google.com",
-		},
-		Impl:            inputsFixture(clamshellMode, false, true, browser.TypeLacros),
-		SetUpTimeout:    chrome.LoginTimeout,
-		PreTestTimeout:  preTestTimeout,
-		PostTestTimeout: postTestTimeout,
-		ResetTimeout:    resetTimeout,
-		TearDownTimeout: chrome.ResetTimeout,
-	})
-	testing.AddFixture(&testing.Fixture{
-		Name: LacrosClamshellNonVKWithAltClickAndSixPackCustomization,
-		Desc: "Lacros variant: Clamshell mode with alt-click and six pack customization",
-		Contacts: []string{
-			"jhtin@chromium.org",
-			"essential-inputs-team@google.com",
-		},
-		Impl:            inputsFixture(clamshellMode, false, false, browser.TypeLacros, altClickAndSixPackCustomization),
-		SetUpTimeout:    chrome.LoginTimeout,
-		PreTestTimeout:  preTestTimeout,
-		PostTestTimeout: postTestTimeout,
-		ResetTimeout:    resetTimeout,
-		TearDownTimeout: chrome.ResetTimeout,
-	})
-	testing.AddFixture(&testing.Fixture{
-		Name: LacrosClamshellNonVKWithMultiwordSuggest,
-		Desc: "Lacros variant: clamshell mode with VK disabled and multiword suggest",
-		Contacts: []string{
-			"xiuwen@google.com",
-			"essential-inputs-team@google.com",
-		},
-		Impl:            inputsFixture(clamshellMode, false, false, browser.TypeLacros, assistMultiWord),
-		SetUpTimeout:    chrome.LoginTimeout,
-		PreTestTimeout:  preTestTimeout,
-		PostTestTimeout: postTestTimeout,
-		ResetTimeout:    resetTimeout,
-		TearDownTimeout: chrome.ResetTimeout,
-	})
-	testing.AddFixture(&testing.Fixture{
-		Name: LacrosClamshellNonVKWithOrca,
-		Desc: "Lacros variant: clamshell mode with VK disabled and Orca enabled",
-		Contacts: []string{
-			"xiuwen@google.com",
-			"essential-inputs-team@google.com",
-		},
-		Impl:            inputsFixture(clamshellMode, false, true, browser.TypeLacros, orca),
-		SetUpTimeout:    chrome.LoginTimeout,
-		PreTestTimeout:  preTestTimeout,
-		PostTestTimeout: postTestTimeout,
-		ResetTimeout:    resetTimeout,
-		TearDownTimeout: chrome.ResetTimeout,
-	})
-	testing.AddFixture(&testing.Fixture{
-		Name: LacrosClamshellNonVKWithDiacriticsOnPKLongpress,
-		Desc: "Lacros variant: clamshell mode with VK disabled and diacritics on PK longpress",
-		Contacts: []string{
-			"xiuwen@google.com",
-			"essential-inputs-team@google.com",
-		},
-		Impl:            inputsFixture(clamshellMode, false, false, browser.TypeLacros, diacriticsOnPhysicalKeyboardLongpress),
-		SetUpTimeout:    chrome.LoginTimeout,
-		PreTestTimeout:  preTestTimeout,
-		PostTestTimeout: postTestTimeout,
-		ResetTimeout:    resetTimeout,
-		TearDownTimeout: chrome.ResetTimeout,
-	})
-	testing.AddFixture(&testing.Fixture{
-		Name: LacrosClamshellNonVKWithFirstPartyVietnamese,
-		Desc: "Lacros variant: clamshell mode with VK disabled and first party Vietnamese input enabled",
-		Contacts: []string{
-			"jhtin@google.com",
-			"essential-inputs-team@google.com",
-		},
-		Impl:            inputsFixture(clamshellMode, false, false, browser.TypeLacros, firstPartyVietnameseInput),
-		SetUpTimeout:    chrome.LoginTimeout,
-		PreTestTimeout:  preTestTimeout,
-		PostTestTimeout: postTestTimeout,
-		ResetTimeout:    resetTimeout,
-		TearDownTimeout: chrome.ResetTimeout,
-	})
-	testing.AddFixture(&testing.Fixture{
-		Name: LacrosClamshellNonVKInGuest,
-		Desc: "Lacros variant: clamshell mode in guest login with VK disabled",
-		Contacts: []string{
-			"xiuwen@google.com",
-			"essential-inputs-team@google.com",
-		},
-		Impl:            inputsFixture(clamshellMode, false, false, browser.TypeLacros, guestLogin, emojiPickerGifSupport),
-		SetUpTimeout:    chrome.LoginTimeout,
-		PreTestTimeout:  preTestTimeout,
-		PostTestTimeout: postTestTimeout,
-		ResetTimeout:    resetTimeout,
-		TearDownTimeout: chrome.ResetTimeout,
-	})
-	testing.AddFixture(&testing.Fixture{
-		Name: LacrosTabletVK,
-		Desc: "Lacros variant: tablet mode with VK enabled",
-		Contacts: []string{
-			"xiuwen@google.com",
-			"essential-inputs-team@google.com",
-		},
-		Impl:            inputsFixture(tabletMode, true, false, browser.TypeLacros),
-		SetUpTimeout:    chrome.LoginTimeout,
-		PreTestTimeout:  preTestTimeout,
-		PostTestTimeout: postTestTimeout,
-		ResetTimeout:    resetTimeout,
-		TearDownTimeout: chrome.ResetTimeout,
-	})
-	testing.AddFixture(&testing.Fixture{
-		Name: LacrosTabletVKStereoAloopLoaded,
-		Desc: "Lacros variant: tablet mode with VK enabled and stereo aloop loaded",
-		Contacts: []string{
-			"xiuwen@google.com",
-			"essential-inputs-team@google.com",
-		},
-		Impl: inputsFixture(tabletMode, true, false, browser.TypeLacros),
-		// Need aloop for route playback to capture.
-		Parent:          fixture.AloopLoaded{Channels: 2}.Instance(),
-		SetUpTimeout:    chrome.LoginTimeout,
-		PreTestTimeout:  preTestTimeout,
-		PostTestTimeout: postTestTimeout,
-		ResetTimeout:    resetTimeout,
-		TearDownTimeout: chrome.ResetTimeout,
-	})
-	testing.AddFixture(&testing.Fixture{
-		Name: LacrosTabletVKInGuest,
-		Desc: "Lacros variant: tablet mode in guest login with VK enabled",
-		Contacts: []string{
-			"xiuwen@google.com",
-			"essential-inputs-team@google.com",
-		},
-		Impl:            inputsFixture(tabletMode, true, false, browser.TypeLacros, guestLogin),
-		SetUpTimeout:    chrome.LoginTimeout,
-		PreTestTimeout:  preTestTimeout,
-		PostTestTimeout: postTestTimeout,
-		ResetTimeout:    resetTimeout,
-		TearDownTimeout: chrome.ResetTimeout,
-	})
-	testing.AddFixture(&testing.Fixture{
-		Name: LacrosTabletVKRestart,
-		Desc: "Lacros variant: tablet mode with VK enabled restarting chrome session for every test",
-		Contacts: []string{
-			"xiuwen@google.com",
-			"essential-inputs-team@google.com",
-		},
-		Impl:            inputsFixture(tabletMode, true, true, browser.TypeLacros),
-		SetUpTimeout:    chrome.LoginTimeout,
-		PreTestTimeout:  preTestTimeout,
-		PostTestTimeout: postTestTimeout,
-		ResetTimeout:    resetTimeout,
-		TearDownTimeout: chrome.ResetTimeout,
-	})
-	testing.AddFixture(&testing.Fixture{
-		Name: LacrosClamshellNonVKInGAIA,
-		Desc: "Lacros variant: clamshell mode in gaia login with VK disabled",
-		Contacts: []string{
-			"essential-inputs-team@google.com",
-			"xiuwen@google.com",
-		},
-		Impl:            inputsFixture(clamshellMode, false, false, browser.TypeLacros, gaiaLogin),
-		SetUpTimeout:    chrome.LoginTimeout,
-		PreTestTimeout:  preTestTimeout,
-		PostTestTimeout: postTestTimeout,
-		ResetTimeout:    resetTimeout,
-		TearDownTimeout: chrome.ResetTimeout,
-	})
-	testing.AddFixture(&testing.Fixture{
-		Name: LacrosAnyVKInGAIA,
-		Desc: "Lacros variant: Any mode with VK in gaia login",
-		Contacts: []string{
-			"essential-inputs-team@google.com",
-			"xiuwen@google.com",
-		},
-		Impl:            inputsFixture(notForced, true, false, browser.TypeLacros, gaiaLogin),
+		Impl:            inputsFixture(tabletMode, true, false, guestLogin),
 		SetUpTimeout:    chrome.LoginTimeout,
 		PreTestTimeout:  preTestTimeout,
 		PostTestTimeout: postTestTimeout,
@@ -675,7 +397,6 @@ type FixtData struct {
 	Chrome      *chrome.Chrome
 	TestAPIConn *chrome.TestConn
 	UserContext *useractions.UserContext
-	BrowserType browser.Type
 }
 
 // deviceMode describes the device UI mode it boots in.
@@ -689,15 +410,14 @@ const (
 
 // inputsFixtureImpl implements testing.FixtureImpl.
 type inputsFixtureImpl struct {
-	cr          *chrome.Chrome // Underlying Chrome instance
-	dm          deviceMode     // Device ui mode to test
-	vkEnabled   bool           // Whether virtual keyboard is force enabled
-	restart     bool           // Whether restart the fixture after each test
-	browserType browser.Type   // Whether Ash or Lacros is used for test
-	fOpts       []chromeOpts   // Options that are passed to chrome.New
-	tconn       *chrome.TestConn
-	recorder    *uiauto.ScreenRecorder
-	uc          *useractions.UserContext
+	cr        *chrome.Chrome // Underlying Chrome instance
+	dm        deviceMode     // Device ui mode to test
+	vkEnabled bool           // Whether virtual keyboard is force enabled
+	restart   bool           // Whether restart the fixture after each test
+	fOpts     []chromeOpts   // Options that are passed to chrome.New
+	tconn     *chrome.TestConn
+	recorder  *uiauto.ScreenRecorder
+	uc        *useractions.UserContext
 }
 
 func (f *inputsFixtureImpl) SetUp(ctx context.Context, s *testing.FixtState) interface{} {
@@ -727,7 +447,6 @@ func (f *inputsFixtureImpl) SetUp(ctx context.Context, s *testing.FixtState) int
 			opts = append(opts, chrome.ExtraArgs("--enable-features=AltClickAndSixPackCustomization"))
 		case orca:
 			opts = append(opts, chrome.ExtraArgs("--enable-features=OrcaDogfood,MantaService"))
-			opts = append(opts, chrome.LacrosEnableFeatures("OrcaDogfood"))
 		case picker:
 			opts = append(opts, chrome.ExtraArgs("--enable-features=Picker,PickerGrid"))
 			opts = append(opts, chrome.ExtraArgs("--picker-feature-key="+s.RequiredVar("inputs.Picker.pickerFeatureTestKey")))
@@ -749,7 +468,7 @@ func (f *inputsFixtureImpl) SetUp(ctx context.Context, s *testing.FixtState) int
 		opts = append(opts, chrome.VKEnabled())
 	}
 
-	cr, err := browserfixt.NewChrome(ctx, f.browserType, lacrosfixt.NewConfig(), opts...)
+	cr, err := browserfixt.NewChrome(ctx, browser.TypeAsh, nil, opts...)
 	if err != nil {
 		s.Fatal("Failed to start Chrome: ", err)
 	}
@@ -779,7 +498,7 @@ func (f *inputsFixtureImpl) SetUp(ctx context.Context, s *testing.FixtState) int
 	f.uc = uc
 
 	chrome.Lock()
-	return FixtData{f.cr, f.tconn, f.uc, f.browserType}
+	return FixtData{f.cr, f.tconn, f.uc}
 }
 
 func (f *inputsFixtureImpl) PreTest(ctx context.Context, s *testing.FixtTestState) {
@@ -836,13 +555,12 @@ func (f *inputsFixtureImpl) TearDown(ctx context.Context, s *testing.FixtState) 
 	f.tconn = nil
 }
 
-func inputsFixture(dm deviceMode, vkEnabled, restart bool, browserType browser.Type, opts ...chromeOpts) testing.FixtureImpl {
+func inputsFixture(dm deviceMode, vkEnabled, restart bool, opts ...chromeOpts) testing.FixtureImpl {
 	return &inputsFixtureImpl{
-		dm:          dm,
-		vkEnabled:   vkEnabled,
-		restart:     restart,
-		browserType: browserType,
-		fOpts:       opts,
+		dm:        dm,
+		vkEnabled: vkEnabled,
+		restart:   restart,
+		fOpts:     opts,
 	}
 }
 
