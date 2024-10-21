@@ -62,8 +62,6 @@ func init() {
 				BluetoothRoutineType: croshealthd.RoutineBluetoothPower,
 			},
 			Fixture: "crosHealthdRunningAndBluetoothEnabledWithFloss",
-			// TODO(b/363888266): Promote tast to critical
-			ExtraAttr: []string{"informational", "group:criticalstaging"},
 		}, {
 			Name: "v1_discovery_floss",
 			Val: bluetoothRoutineTestParams{
@@ -85,8 +83,6 @@ func init() {
 			},
 			// Bluetooth v2 routines are only supported when Floss is enabled.
 			Fixture: "crosHealthdRunningAndBluetoothEnabledWithFloss",
-			// TODO(b/363888266): Promote tast to critical
-			ExtraAttr: []string{"informational", "group:criticalstaging"},
 		}, {
 			Name: "v2_discovery",
 			Val: bluetoothRoutineTestParams{
