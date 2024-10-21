@@ -155,7 +155,7 @@ func GAIALogin(ctx context.Context, d *adb.Device, accountUtilZipPath, username,
 	}
 
 	// Install the GoogleAccountUtil APK.
-	if err := d.Install(ctx, filepath.Join(tempDir, AccountUtilApk), adb.InstallOptionGrantPermissions); err != nil {
+	if err := d.Install(ctx, filepath.Join(tempDir, AccountUtilApk), adb.InstallOptionGrantPermissions, adb.InstallOptionBypassLowTargetSDKBlock); err != nil {
 		return errors.Wrap(err, "failed to install GoogleAccountUtil APK on the device")
 	}
 

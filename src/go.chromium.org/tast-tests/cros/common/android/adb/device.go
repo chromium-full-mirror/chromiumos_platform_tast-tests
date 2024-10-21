@@ -218,15 +218,16 @@ type InstallOption string
 
 // ADB install options listed in "adb help".
 const (
-	InstallOptionLockApp               InstallOption = "-l"
-	InstallOptionReplaceApp            InstallOption = "-r"
-	InstallOptionAllowTestPackage      InstallOption = "-t"
-	InstallOptionSDCard                InstallOption = "-s"
-	InstallOptionAllowVersionDowngrade InstallOption = "-d"
-	InstallOptionGrantPermissions      InstallOption = "-g"
-	InstallOptionEphemeralInstall      InstallOption = "--instant"
-	InstallOptionFromPlayStore         InstallOption = "-i com.android.vending"
-	InstallOptionForceArm64            InstallOption = "--abi arm64-v8a"
+	InstallOptionLockApp                 InstallOption = "-l"
+	InstallOptionReplaceApp              InstallOption = "-r"
+	InstallOptionAllowTestPackage        InstallOption = "-t"
+	InstallOptionSDCard                  InstallOption = "-s"
+	InstallOptionAllowVersionDowngrade   InstallOption = "-d"
+	InstallOptionGrantPermissions        InstallOption = "-g"
+	InstallOptionEphemeralInstall        InstallOption = "--instant"
+	InstallOptionFromPlayStore           InstallOption = "-i com.android.vending"
+	InstallOptionForceArm64              InstallOption = "--abi arm64-v8a"
+	InstallOptionBypassLowTargetSDKBlock InstallOption = "--bypass-low-target-sdk-block"
 )
 
 var showAPKPathWarningOnce sync.Once
