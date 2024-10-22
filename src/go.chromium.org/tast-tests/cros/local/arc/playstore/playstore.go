@@ -219,16 +219,17 @@ func installOrUpdate(ctx context.Context, a *arc.ARC, d *ui.Device, pkgName stri
 		incompatibleText      = "This Chromebook isn't compatible with this app."
 		linkPaypalAccountText = "Want to link your PayPal account.*"
 
-		acceptButtonText   = "accept"
-		continueButtonText = "continue"
-		installButtonText  = "install"
-		updateButtonText   = "update"
-		openButtonText     = "open"
-		playButtonText     = "play"
-		retryButtonText    = "retry"
-		tryAgainButtonText = "try again"
-		skipButtonText     = "skip"
-		noThanksButtonText = "No thanks"
+		acceptButtonText    = "accept"
+		continueButtonText  = "continue"
+		installButtonText   = "install"
+		uninstallButtonText = "uninstall"
+		updateButtonText    = "update"
+		openButtonText      = "open"
+		playButtonText      = "play"
+		retryButtonText     = "retry"
+		tryAgainButtonText  = "try again"
+		skipButtonText      = "skip"
+		noThanksButtonText  = "No thanks"
 	)
 
 	o := *opt
@@ -401,6 +402,16 @@ func installOrUpdate(ctx context.Context, a *arc.ARC, d *ui.Device, pkgName stri
 		}
 		if !installed {
 			return errors.New("app not yet installed")
+		}
+
+		// Make sure necessary contents are installed.
+		// Some apps have a two-stage installation process where it downloads the barebone
+		// app first and then the actual app content for it to work properly. Waiting for
+		// the `Uninstall`button to appear means it has finished installing all of the
+		// necessary content.
+		testing.ContextLog(ctx, "Checking if the app content is installed")
+		if _, err := FindActionButton(ctx, d, uninstallButtonText, defaultUITimeout); err != nil {
+			return errors.New("additional app content is still installing")
 		}
 
 		return nil
