@@ -67,10 +67,11 @@ func Backup(ctx context.Context, s *testing.State) {
 	)
 
 	// Setup Chrome.
+	args := append(arc.DisableSyncFlags(), "--disable-sync")
 	cr, err := chrome.New(ctx,
 		chrome.GAIALoginPool(dma.CredsFromPool(uiCommon.GaiaPoolDefaultVarName)),
 		chrome.ARCSupported(),
-		chrome.ExtraArgs(arc.DisableSyncFlags()...))
+		chrome.ExtraArgs(args...))
 	if err != nil {
 		s.Fatal("Failed to start Chrome: ", err)
 	}
@@ -83,6 +84,7 @@ func Backup(ctx context.Context, s *testing.State) {
 	if err := optin.PerformAndClose(ctx, cr, tconn); err != nil {
 		s.Fatal("Failed to optin to Play Store and Close: ", err)
 	}
+
 	// Setup ARC.
 	a, err := arc.New(ctx, s.OutDir(), cr.NormalizedUser())
 	if err != nil {
@@ -108,12 +110,12 @@ func Backup(ctx context.Context, s *testing.State) {
 	filename := fmt.Sprintf("%v", time.Now().UnixNano())
 	s.Log("Filename: ", filename)
 
-	s.Log("Installing app")
+	s.Log("Installing the test app (ArcBackupTest)")
 	if err := a.Install(ctx, arc.APKPath(apk)); err != nil {
 		s.Fatal("Failed installing app: ", err)
 	}
 
-	s.Log("Starting app")
+	s.Log("Launching the test app")
 	act, err := arc.NewActivity(a, pkg, cls)
 	if err != nil {
 		s.Fatal("Failed to create a new activity: ", err)
@@ -123,9 +125,10 @@ func Backup(ctx context.Context, s *testing.State) {
 	if err := act.StartWithDefaultOptions(ctx, tconn); err != nil {
 		s.Fatal("Failed to start the activity: ", err)
 	}
-	defer act.Stop(ctx, tconn)
+	// To capture a screenshot of the UI, we keep the activiy open after the test completes (or fails)
+	// instead of calling `defer act.Stop()`.
 
-	// Save and load.
+	s.Logf("Having the test app save a file named %s", filename)
 	editMessage := d.Object(ui.ID(editMessageID))
 	if err := editMessage.WaitForExists(ctx, defaultTimeout); err != nil {
 		s.Fatal("Failed to wait for edit message to exist: ", err)
@@ -133,7 +136,6 @@ func Backup(ctx context.Context, s *testing.State) {
 	if err := editMessage.SetText(ctx, filename); err != nil {
 		s.Fatal("Failed to set edit message text: ", err)
 	}
-
 	save := d.Object(ui.ID(saveID))
 	if err := save.Click(ctx); err != nil {
 		s.Fatal("Failed to click save: ", err)
@@ -146,7 +148,7 @@ func Backup(ctx context.Context, s *testing.State) {
 	// Ensure success.
 	successContent := d.Object(ui.ID(fileContentID), ui.TextContains("Success"))
 	if err := successContent.WaitForExists(ctx, defaultTimeout); err != nil {
-		s.Fatal("Failed to wait for success file content to exist: ", err)
+		s.Fatal("Failed to wait for success file content to exist (before running backup): ", err)
 	}
 
 	// Get previous backup count.
@@ -155,7 +157,7 @@ func Backup(ctx context.Context, s *testing.State) {
 		s.Fatal("Failed to check if ever backed up: ", err)
 	}
 
-	// Run a backup.
+	s.Log("Running backup")
 	if err := a.Command(ctx, "bmgr", "backupnow", pkg).Run(testexec.DumpLogOnError); err != nil {
 		s.Fatal("Failed to run backup command: ", err)
 	}
@@ -193,19 +195,19 @@ func Backup(ctx context.Context, s *testing.State) {
 		s.Fatalf("Another backup happened concurrently: (got: %d, want: %d)", backupCount, startingBackupCount+1)
 	}
 
-	// Relaunch the application because it closes during backup.
+	s.Log("Relaunching the test app (closed during backup)")
 	if err := act.StartWithDefaultOptions(ctx, tconn); err != nil {
 		s.Fatal("Failed to start the activity: ", err)
 	}
 
 	// Clear and load.
+	s.Log("Having the test app clear the test file")
 	if err := editMessage.WaitForExists(ctx, defaultTimeout); err != nil {
 		s.Fatal("Failed to wait for edit message to exist: ", err)
 	}
 	if err := editMessage.SetText(ctx, filename); err != nil {
 		s.Fatal("Failed to set edit message text: ", err)
 	}
-
 	clear := d.Object(ui.ID(clearID))
 	if err := clear.Click(ctx); err != nil {
 		s.Fatal("Failed to click save: ", err)
@@ -217,10 +219,10 @@ func Backup(ctx context.Context, s *testing.State) {
 	// Ensure failure.
 	failContent := d.Object(ui.ID(fileContentID), ui.TextContains(failureText))
 	if err := failContent.WaitForExists(ctx, 30*time.Second); err != nil {
-		s.Fatal("Failed to wait for failure file content to exist: ", err)
+		s.Fatal("Failed to wait for failure file content to exist (after running backup): ", err)
 	}
 
-	// Restore from backup.
+	s.Log("Running restore")
 	if err := a.Command(ctx, "bmgr", "restore", restoreToken, pkg).Run(testexec.DumpLogOnError); err != nil {
 		s.Fatal("Failed to run backup command: ", err)
 	}
@@ -230,24 +232,23 @@ func Backup(ctx context.Context, s *testing.State) {
 		s.Fatal("Restore failed to complete: ", err)
 	}
 
-	// Relaunch the application because it closes during restore.
+	s.Log("Relaunching the test app (closed during restore)")
 	if err := act.StartWithDefaultOptions(ctx, tconn); err != nil {
 		s.Fatal("Failed to start the activity: ", err)
 	}
 
-	// Load and ensure success.
+	s.Logf("Having the test app load a file named %s", filename)
 	if err := editMessage.WaitForExists(ctx, defaultTimeout); err != nil {
 		s.Fatal("Failed to wait for edit message to exist: ", err)
 	}
 	if err := editMessage.SetText(ctx, filename); err != nil {
 		s.Fatal("Failed to set edit message text: ", err)
 	}
-
 	if err := load.Click(ctx); err != nil {
 		s.Fatal("Failed to click load: ", err)
 	}
 	if err := successContent.WaitForExists(ctx, 30*time.Second); err != nil {
-		s.Fatal("Failed to wait for success file content to exist: ", err)
+		s.Fatal("Failed to wait for success file content to exist (after running restore): ", err)
 	}
 }
 
