@@ -206,6 +206,30 @@ func init() {
 			"drivefs.extensionClientID",
 		},
 	})
+
+	testing.AddFixture(&testing.Fixture{
+		Name:         "driveFsManagedWithSkyVaultGA",
+		Desc:         "Ensures DriveFS is mounted with managed user account and SkyVault GA enabled",
+		Contacts:     []string{"poromov@chromium.org", "cros-commercial-clippy-eng@google.com"},
+		BugComponent: "b:1533988",
+		Impl: &fixture{
+			chromeOptions: []chrome.Option{chrome.EnableFeatures("SkyVault", "SkyVaultV2")},
+			accountPool:   policy.ManagedUserAccountPoolVarName,
+			policies: []policy.Policy{
+				&policy.DownloadDirectory{Val: "${google_drive}"},
+				&policy.ScreenCaptureLocation{Val: "${google_drive}"},
+				&policy.LocalUserFilesAllowed{Val: false},
+				&policy.LocalUserFilesMigrationDestination{Val: "google_drive"},
+				&policy.DriveDisabled{Val: false},
+			},
+		},
+		SetUpTimeout:    chrome.GAIALoginTimeout + DriveFsSetupAndTearDownTimeout,
+		ResetTimeout:    DriveFsSetupAndTearDownTimeout,
+		TearDownTimeout: time.Hour,
+		Vars: []string{
+			"drivefs.extensionClientID",
+		},
+	})
 }
 
 // FixtureData is the struct available for tests.
