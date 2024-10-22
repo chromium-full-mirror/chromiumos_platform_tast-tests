@@ -18,7 +18,6 @@ import (
 	"go.chromium.org/tast-tests/cros/remote/policyutil"
 	"go.chromium.org/tast-tests/cros/services/cros/network"
 	"go.chromium.org/tast-tests/cros/services/cros/networkui"
-	pspb "go.chromium.org/tast-tests/cros/services/cros/policy"
 	"go.chromium.org/tast/core/ctxutil"
 	"go.chromium.org/tast/core/rpc"
 	"go.chromium.org/tast/core/testing"
@@ -40,7 +39,7 @@ func init() {
 			// Disabled by TORA.  See:b/331424761.
 			// "group:mainline", "informational"
 		},
-		Data:         []string{"allowlist_ssl_inspection.json"},
+		Data: []string{"allowlist_ssl_inspection.json"},
 		ServiceDeps: []string{"tast.cros.network.AllowlistService",
 			"tast.cros.hwsec.OwnershipService",
 			"tast.cros.networkui.ProxyService",
@@ -116,11 +115,10 @@ func ArcConnectivity(ctx context.Context, s *testing.State) {
 	}
 
 	al := network.NewAllowlistServiceClient(cl.Conn)
+	defer al.Close(ctx)
 	if _, err := al.SetupFirewall(ctx, &network.SetupFirewallRequest{AllowedPort: uint32(port)}); err != nil {
 		s.Fatal("Failed to setup a firewall on the DUT: ", err)
 	}
-
-	policyClient := pspb.NewPolicyServiceClient(cl.Conn)
 
 	tapeClient, err := tape.NewClient(ctx, []byte(s.RequiredVar(tape.ServiceAccountVar)))
 	if err != nil {
@@ -170,7 +168,9 @@ func ArcConnectivity(ctx context.Context, s *testing.State) {
 		s.Fatal("Failed to login through the proxy: ", err)
 	}
 
-	defer policyClient.StopChrome(ctx, &empty.Empty{})
+	if _, err := al.VerifyFirewallWorks(ctx); err != nil {
+		s.Fatal("Failed to verify that firewall works: ", err)
+	}
 
 	// The user account allowlist.username/allowlist.password belongs to the OU
 	// allowlist-tast-test on the production DMServer.

@@ -422,6 +422,8 @@ type AllowlistServiceClient interface {
 	// connections through the default ports (80,443). Only http/s connections
 	// coming from a specified port are allowed.
 	SetupFirewall(ctx context.Context, in *SetupFirewallRequest, opts ...grpc.CallOption) (*emptypb.Empty, error)
+	// VerifyFirewallWorks verifies that firewall blocks not allowed websites or hosts.
+	VerifyFirewallWorks(ctx context.Context, opts ...grpc.CallOption) (*emptypb.Empty, error)
 	// GaiaLogin starts a new Chrome instance behind a proxy and performs
 	// ChromeOS login using the specified credentials.
 	GaiaLogin(ctx context.Context, in *GaiaLoginRequest, opts ...grpc.CallOption) (*emptypb.Empty, error)
@@ -429,6 +431,8 @@ type AllowlistServiceClient interface {
 	CheckArcAppInstalled(ctx context.Context, in *CheckArcAppInstalledRequest, opts ...grpc.CallOption) (*emptypb.Empty, error)
 	// CheckExtensionInstalled verifies that specified extension is installed.
 	CheckExtensionInstalled(ctx context.Context, in *CheckExtensionInstalledRequest, opts ...grpc.CallOption) (*emptypb.Empty, error)
+	// Close releases all used resources and close the Chrome.
+	Close(ctx context.Context, opts ...grpc.CallOption) (*emptypb.Empty, error)
 }
 
 type allowlistServiceClient struct {
@@ -442,6 +446,26 @@ func NewAllowlistServiceClient(cc grpc.ClientConnInterface) AllowlistServiceClie
 func (c *allowlistServiceClient) SetupFirewall(ctx context.Context, in *SetupFirewallRequest, opts ...grpc.CallOption) (*emptypb.Empty, error) {
 	out := new(emptypb.Empty)
 	err := c.cc.Invoke(ctx, "/tast.cros.network.AllowlistService/SetupFirewall", in, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+func (c *allowlistServiceClient) VerifyFirewallWorks(ctx context.Context, opts ...grpc.CallOption) (*emptypb.Empty, error) {
+	out := new(emptypb.Empty)
+	in := new(emptypb.Empty)
+	err := c.cc.Invoke(ctx, "/tast.cros.network.AllowlistService/VerifyFirewallWorks", in, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+func (c *allowlistServiceClient) Close(ctx context.Context, opts ...grpc.CallOption) (*emptypb.Empty, error) {
+	out := new(emptypb.Empty)
+	in := new(emptypb.Empty)
+	err := c.cc.Invoke(ctx, "/tast.cros.network.AllowlistService/Close", in, out, opts...)
 	if err != nil {
 		return nil, err
 	}
@@ -481,6 +505,8 @@ type AllowlistServiceServer interface {
 	// connections through the default ports (80,443). Only http/s connections
 	// coming from a specified port are allowed.
 	SetupFirewall(context.Context, *SetupFirewallRequest) (*emptypb.Empty, error)
+	// VerifyFirewallWorks verifies that firewall blocks not allowed websites or hosts.
+	VerifyFirewallWorks(context.Context) (*emptypb.Empty, error)
 	// GaiaLogin starts a new Chrome instance behind a proxy and performs
 	// ChromeOS login using the specified credentials.
 	GaiaLogin(context.Context, *GaiaLoginRequest) (*emptypb.Empty, error)
@@ -488,6 +514,8 @@ type AllowlistServiceServer interface {
 	CheckArcAppInstalled(context.Context, *CheckArcAppInstalledRequest) (*emptypb.Empty, error)
 	// CheckExtensionInstalled verifies that specified extension is installed.
 	CheckExtensionInstalled(context.Context, *CheckExtensionInstalledRequest) (*emptypb.Empty, error)
+	// Close releases all used resources and close the Chrome.
+	Close(context.Context) (*emptypb.Empty, error)
 }
 
 // UnimplementedAllowlistServiceServer can be embedded to have forward compatible implementations.
@@ -496,6 +524,12 @@ type UnimplementedAllowlistServiceServer struct {
 
 func (*UnimplementedAllowlistServiceServer) SetupFirewall(context.Context, *SetupFirewallRequest) (*emptypb.Empty, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method SetupFirewall not implemented")
+}
+func (*UnimplementedAllowlistServiceServer) VerifyFirewallWorks(context.Context) (*emptypb.Empty, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method VerifyFirewallWorks not implemented")
+}
+func (*UnimplementedAllowlistServiceServer) Close(context.Context) (*emptypb.Empty, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method Close not implemented")
 }
 func (*UnimplementedAllowlistServiceServer) GaiaLogin(context.Context, *GaiaLoginRequest) (*emptypb.Empty, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method GaiaLogin not implemented")
@@ -527,6 +561,34 @@ func _AllowlistService_SetupFirewall_Handler(srv interface{}, ctx context.Contex
 		return srv.(AllowlistServiceServer).SetupFirewall(ctx, req.(*SetupFirewallRequest))
 	}
 	return interceptor(ctx, in, info, handler)
+}
+
+func _AllowlistService_VerifyFirewallWorks_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	if interceptor == nil {
+		return srv.(AllowlistServiceServer).VerifyFirewallWorks(ctx)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: "/tast.cros.network.AllowlistService/VerifyFirewallWorks",
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(AllowlistServiceServer).VerifyFirewallWorks(ctx)
+	}
+	return interceptor(ctx, nil, info, handler)
+}
+
+func _AllowlistService_Close_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	if interceptor == nil {
+		return srv.(AllowlistServiceServer).Close(ctx)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: "/tast.cros.network.AllowlistService/Close",
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(AllowlistServiceServer).Close(ctx)
+	}
+	return interceptor(ctx, nil, info, handler)
 }
 
 func _AllowlistService_GaiaLogin_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
@@ -592,6 +654,10 @@ var _AllowlistService_serviceDesc = grpc.ServiceDesc{
 			Handler:    _AllowlistService_SetupFirewall_Handler,
 		},
 		{
+			MethodName: "VerifyFirewallWorks",
+			Handler:    _AllowlistService_VerifyFirewallWorks_Handler,
+		},
+		{
 			MethodName: "GaiaLogin",
 			Handler:    _AllowlistService_GaiaLogin_Handler,
 		},
@@ -602,6 +668,10 @@ var _AllowlistService_serviceDesc = grpc.ServiceDesc{
 		{
 			MethodName: "CheckExtensionInstalled",
 			Handler:    _AllowlistService_CheckExtensionInstalled_Handler,
+		},
+		{
+			MethodName: "Close",
+			Handler:    _AllowlistService_Close_Handler,
 		},
 	},
 	Streams:  []grpc.StreamDesc{},

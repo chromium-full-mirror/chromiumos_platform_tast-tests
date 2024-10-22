@@ -7,21 +7,22 @@ package network
 import (
 	"context"
 	"fmt"
+	"regexp"
 	"time"
 
 	"github.com/golang/protobuf/ptypes/empty"
 	"google.golang.org/grpc"
 
-	"go.chromium.org/tast-tests/cros/local/arc"
+	"go.chromium.org/tast-tests/cros/local/apps"
 	"go.chromium.org/tast-tests/cros/local/bundles/cros/network/firewall"
 	"go.chromium.org/tast-tests/cros/local/chrome"
+	"go.chromium.org/tast-tests/cros/local/chrome/ash"
 	"go.chromium.org/tast-tests/cros/local/chrome/uiauto"
 	"go.chromium.org/tast-tests/cros/local/chrome/uiauto/nodewith"
 	"go.chromium.org/tast-tests/cros/local/chrome/uiauto/role"
 	"go.chromium.org/tast-tests/cros/services/cros/network"
 	"go.chromium.org/tast/core/errors"
 	"go.chromium.org/tast/core/testing"
-	"go.chromium.org/tast/core/timing"
 )
 
 func init() {
@@ -47,10 +48,36 @@ func (a *AllowlistService) SetupFirewall(ctx context.Context, req *network.Setup
 		// Drop http and https traffic.
 		BlockPorts:     []string{"80", "443"},
 		BlockProtocols: []string{"tcp", "udp"},
+		Timeout:        3 * time.Second,
 	}
 	if err := firewall.CreateFirewall(ctx, params); err != nil {
 		return nil, err
 	}
+	return &empty.Empty{}, nil
+}
+
+func (a *AllowlistService) VerifyFirewallWorks(ctx context.Context) (*empty.Empty, error) {
+	if a.cr == nil {
+		return nil, errors.New("Please start a new Chrome instance that uses the firewall by calling GaiaLogin()")
+	}
+	tconn, err := a.cr.TestAPIConn(ctx)
+	if err != nil {
+		testing.ContextLog(ctx, "Failed to create test API connection: ", err)
+	}
+
+	blockedWebsiteExample := "https://www.example.org/"
+	conn, err := a.cr.NewConn(ctx, blockedWebsiteExample)
+	if err != nil {
+		return nil, errors.Wrapf(err, "error when testing connection to %s", blockedWebsiteExample)
+	}
+	defer conn.Close()
+
+	ui := uiauto.New(tconn)
+	if err := ui.WaitUntilExists(nodewith.NameRegex(regexp.MustCompile("NET::ERR_CERT_AUTH")).First())(ctx); err != nil {
+		testing.ContextLog(ctx, "Expected error on webpage due to firewall was not found: ", err)
+		return nil, err
+	}
+
 	return &empty.Empty{}, nil
 }
 
@@ -60,11 +87,14 @@ func (a *AllowlistService) GaiaLogin(ctx context.Context, req *network.GaiaLogin
 		chrome.GAIAEnterpriseEnroll(chrome.Creds{User: req.Username, Pass: req.Password}),
 		chrome.GAIALogin(chrome.Creds{User: req.Username, Pass: req.Password}),
 		chrome.ARCSupported(),
+		chrome.RemoveNotification(false),
 		chrome.ExtraArgs("--proxy-server=http://"+req.ProxyHostAndPort))
 	if err != nil {
 		return nil, err
 	}
 	a.cr = cr
+
+	testing.ContextLog(ctx, "Login finished")
 	return &empty.Empty{}, nil
 }
 
@@ -74,32 +104,29 @@ func (a *AllowlistService) CheckArcAppInstalled(ctx context.Context, req *networ
 		return nil, errors.New("Please start a new Chrome instance that uses the firewall by calling GaiaLogin()")
 	}
 
-	td, _ := testing.ContextOutDir(ctx)
-	arc, err := arc.New(ctx, td, a.cr.NormalizedUser())
+	tconn, err := a.cr.TestAPIConn(ctx)
 	if err != nil {
-		return nil, errors.Wrap(err, "failed to start ARC")
-	}
-	defer arc.Close(ctx)
-
-	// Ensure that Android packages are force-installed by ARC policy.
-	ctx, st := timing.Start(ctx, "wait_packages")
-	defer st.End()
-
-	testing.ContextLog(ctx, "Waiting for packages to be installed")
-	if err = testing.Poll(ctx, func(ctx context.Context) error {
-		pkgs, err := arc.InstalledPackages(ctx)
-		if err != nil {
-			return testing.PollBreak(err)
-		}
-
-		if _, appFound := pkgs[req.AppName]; appFound {
-			return nil
-		}
-		return errors.New("failed to install 3rd party app")
-	}, &testing.PollOptions{Interval: 1 * time.Second, Timeout: 2 * time.Minute}); err != nil {
+		testing.ContextLog(ctx, "Failed to create test API connection: ", err)
 		return nil, err
 	}
 
+	var isGmailInstalled bool
+	if isGmailInstalled, err = ash.ChromeAppInstalled(ctx, tconn, apps.Gmail.ID); err != nil {
+		testing.ContextLog(ctx, "Error requesting gmail install status")
+		return nil, err
+	}
+	if isGmailInstalled == true {
+		testing.ContextLog(ctx, "Gmail app is already installed, failing test")
+		return nil, errors.New("Gmail app is already installed")
+	}
+
+	testing.ContextLog(ctx, "Waiting for app store and gmail app")
+	if err := ash.WaitForChromeAppInstalled(ctx, tconn, apps.Gmail.ID, 3*time.Minute); err != nil {
+		testing.ContextLog(ctx, "Failed to wait for app to install: ", err)
+		return nil, err
+	}
+
+	testing.ContextLog(ctx, "Gmail app was found")
 	return &empty.Empty{}, nil
 }
 
@@ -126,5 +153,12 @@ func (a *AllowlistService) CheckExtensionInstalled(ctx context.Context, req *net
 		return nil, err
 	}
 
+	return &empty.Empty{}, nil
+}
+
+func (a *AllowlistService) Close(ctx context.Context) (*empty.Empty, error) {
+	if a.cr != nil {
+		a.cr.Close(ctx)
+	}
 	return &empty.Empty{}, nil
 }
