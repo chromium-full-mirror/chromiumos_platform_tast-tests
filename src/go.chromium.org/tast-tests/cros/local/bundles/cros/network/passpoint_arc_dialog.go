@@ -161,6 +161,16 @@ func PasspointARCDialog(ctx context.Context, s *testing.State) {
 		}
 	}()
 
+	// Start screen recording, to help with debugging errors.
+	recorder, err := uiauto.NewScreenRecorder(ctx, tconn)
+	if err != nil {
+		s.Fatal("Failed to create screen recorder: ", err)
+	}
+	if recorder.Start(ctx, tconn); err != nil {
+		s.Fatal("Failed to start screen recorder: ", err)
+	}
+	defer recorder.StopAndSaveOnError(cleanupCtx, filepath.Join(s.OutDir(), "record.webm"), s.HasError)
+
 	// Provision Passpoint credentials from ARC.
 	creds := passpoint.Credentials{
 		Domains: []string{fqdn},
