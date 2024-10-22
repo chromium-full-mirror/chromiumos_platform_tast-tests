@@ -120,8 +120,8 @@ func SetGooglePhotosWallpaper(ctx context.Context, s *testing.State) {
 				return err
 			}
 			if isShared {
-				sharedText := nodewith.Name("Shared").ClassName("secondary-text")
-				if err := ui.WaitUntilExists(sharedText)(ctx); err != nil {
+				sharedAlbumNode := nodewith.HasClass("album").NameStartingWith("Shared Album")
+				if err := ui.WaitUntilExists(sharedAlbumNode)(ctx); err != nil {
 					return err
 				}
 			}
