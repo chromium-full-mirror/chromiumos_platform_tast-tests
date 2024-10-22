@@ -24,10 +24,8 @@ func init() {
 			"cros-tdm-tpe-eng@google.com",
 		},
 		// ChromeOS > Platform > Enablement > Health
-		BugComponent: "b:982097",
-		Impl: newDiagnosticsPrepFixture(func(ctx context.Context, s *testing.FixtState) ([]chrome.Option, error) {
-			return nil, nil
-		}, false /*disableTabletMode*/),
+		BugComponent:    "b:982097",
+		Impl:            newDiagnosticsPrepFixture( /*disableTabletMode*/ false),
 		SetUpTimeout:    chrome.LoginTimeout + 15*time.Second,
 		ResetTimeout:    chrome.ResetTimeout,
 		TearDownTimeout: chrome.ResetTimeout,
@@ -43,10 +41,8 @@ func init() {
 			"cros-tdm-tpe-eng@google.com",
 		},
 		// ChromeOS > Platform > Enablement > Health
-		BugComponent: "b:982097",
-		Impl: newDiagnosticsPrepFixture(func(ctx context.Context, s *testing.FixtState) ([]chrome.Option, error) {
-			return []chrome.Option{chrome.EnableFeatures("EnableInputInDiagnosticsApp")}, nil
-		}, true /*disableTabletMode*/),
+		BugComponent:    "b:982097",
+		Impl:            newDiagnosticsPrepFixture( /*disableTabletMode*/ true),
 		SetUpTimeout:    chrome.LoginTimeout + 15*time.Second,
 		ResetTimeout:    chrome.ResetTimeout,
 		TearDownTimeout: chrome.ResetTimeout,
@@ -70,23 +66,17 @@ type diagnosticsPrepFixture struct {
 	cr                *chrome.Chrome
 	api               *MojoAPI
 	tconn             *chrome.TestConn
-	fopt              chrome.OptionsCallback
 	disableTabletMode bool
 }
 
-func newDiagnosticsPrepFixture(fopt chrome.OptionsCallback, disableTabletMode bool) testing.FixtureImpl {
-	return &diagnosticsPrepFixture{fopt: fopt, disableTabletMode: disableTabletMode}
+func newDiagnosticsPrepFixture(disableTabletMode bool) testing.FixtureImpl {
+	return &diagnosticsPrepFixture{disableTabletMode: disableTabletMode}
 }
 
 func (f *diagnosticsPrepFixture) SetUp(ctx context.Context, s *testing.FixtState) interface{} {
 	success := false
 
-	opts, err := f.fopt(ctx, s)
-	if err != nil {
-		s.Fatal("Failed to obtain Chrome options: ", err)
-	}
-
-	cr, err := chrome.New(ctx, opts...)
+	cr, err := chrome.New(ctx)
 	if err != nil {
 		s.Fatal("Failed to start Chrome: ", err)
 	}
