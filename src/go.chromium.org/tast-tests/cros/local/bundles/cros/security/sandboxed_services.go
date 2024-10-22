@@ -72,7 +72,6 @@ func SandboxedServices(ctx context.Context, s *testing.State) {
 		{"powerd", "power", "power", restrictCaps},
 		{"ModemManager", "modem", "modem", restrictCaps | noNewPrivs},
 		{"dhcpcd", "dhcp", "dhcp", restrictCaps},
-		{"memd", "root", "root", pidNS | mntNS | noNewPrivs | seccomp},
 		{"metrics_daemon", "metrics", "metrics", 0},
 		{"disks", "cros-disks", "cros-disks", restrictCaps | noNewPrivs},
 		{"update_engine", "root", "root", 0},
