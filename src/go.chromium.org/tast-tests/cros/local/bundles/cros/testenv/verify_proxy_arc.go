@@ -57,8 +57,9 @@ func VerifyProxyArc(ctx context.Context, s *testing.State) {
 	defer cancel()
 
 	bootParams := []string{
-		"--params=androidboot.pause_provisioning=1",     // to pause/resume provisioning
-		"--params=androidboot.verifiedbootstate=orange", // to enable adb root on user image
+		"--params=androidboot.pause_provisioning=1", // to pause/resume provisioning
+		// Pre-append the verifiedbootstate parameter while starting ARCVM.
+		"^--params=androidboot.verifiedbootstate=orange", // to enable adb root on user image
 	}
 
 	if err := arc.WriteArcvmDevConf(ctx, strings.Join(bootParams, "\n")); err != nil {

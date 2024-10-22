@@ -192,7 +192,8 @@ func Fio(ctx context.Context, s *testing.State) {
 
 	// Enable adb root on user builds, and remove --serial to disable
 	// virtio-console. This needs to be done before starting ARCVM.
-	if err := arc.WriteArcvmDevConf(ctx, "--params=androidboot.verifiedbootstate=orange"); err != nil {
+	// Pre-append the verifiedbootstate parameter while starting ARCVM.
+	if err := arc.WriteArcvmDevConf(ctx, "^--params=androidboot.verifiedbootstate=orange"); err != nil {
 		s.Fatal("Failed to set arcvm_dev.conf: ", err)
 	}
 	defer arc.RestoreArcvmDevConf(cleanupCtx)
