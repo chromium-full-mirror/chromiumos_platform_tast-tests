@@ -117,6 +117,7 @@ var neuronSettings = stableDelegateSettings{
 }
 
 // TODO(b/338910179): MediaTek to provide the proper config.
+// TODO(b/338910179): Use separate AccelConf for neuron pilot in different versions.
 const neuronAccelConfig = "neuron_accel_test.conf"
 
 var neuronParam = testingParam{
