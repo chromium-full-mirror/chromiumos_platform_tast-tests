@@ -98,7 +98,7 @@ func ClickOnPlayButton(ctx context.Context, uiautoSvc ui.AutomationServiceClient
 	if _, err := uiautoSvc.EnsureFocused(ctx, &ui.EnsureFocusedRequest{Finder: galleryPlayButtonFinder}); err != nil {
 		return errors.Wrap(err, "failed to ensure play button is focused")
 	}
-	if _, err := uiautoSvc.LeftClick(ctx, &ui.LeftClickRequest{Finder: galleryPlayButtonFinder}); err != nil {
+	if _, err := uiautoSvc.DoDefault(ctx, &ui.DoDefaultRequest{Finder: galleryPlayButtonFinder}); err != nil {
 		return errors.Wrap(err, "failed to click on play button")
 	}
 
