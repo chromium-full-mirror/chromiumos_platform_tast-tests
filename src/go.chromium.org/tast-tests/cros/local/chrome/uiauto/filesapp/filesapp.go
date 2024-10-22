@@ -396,7 +396,7 @@ func (f *FilesApp) IsFileSelected(fileSelector interface{}) uiauto.Action {
 		case *regexp.Regexp:
 			re := fileSelector.(*regexp.Regexp)
 			pattern := fmt.Sprintf("%s.* Size", re.String())
-			nodeMatcher = nodewith.Role(role.ListBoxOption).NameRegex(regexp.MustCompile(pattern))
+			nodeMatcher = nodewith.Role(role.ListBoxOption).NameRegex(regexp.MustCompile(pattern)).First()
 		default:
 			return errors.Errorf("unsupported fileSelector type %s", t)
 		}
@@ -653,11 +653,13 @@ func (f *FilesApp) DeleteFileOrFolder(kb *input.KeyboardEventWriter, fileSelecto
 			return errors.Errorf("unsupported fileSelector type %s", t)
 		}
 	}
+	deleteButton := nodewith.NameRegex(regexp.MustCompile("^Delete( forever)?$")).HasClass("cr-dialog-ok").Role(role.Button)
 
 	return uiauto.Combine(fmt.Sprintf("DeleteFileOrFolder(%s)", fileName),
 		f.SelectFile(fileSelector),
 		kb.AccelAction("Alt+Shift+Backspace"),
-		f.LeftClick(nodewith.NameRegex(regexp.MustCompile("^Delete( forever)?$")).HasClass("cr-dialog-ok").Role(role.Button)),
+		f.LeftClick(deleteButton),
+		f.WaitUntilGone(deleteButton),
 		f.WaitUntilGone(nodeMatcher),
 	)
 }

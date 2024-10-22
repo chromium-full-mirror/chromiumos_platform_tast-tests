@@ -162,13 +162,14 @@ func MigrationOnedrive(ctx context.Context, s *testing.State) {
 // in the Files app.
 func deleteAllUploadFolders(ctx context.Context, files *filesapp.FilesApp, kb *input.KeyboardEventWriter, cloudFolderName *regexp.Regexp) error {
 	for {
-		if err := files.FileExists(cloudFolderName)(ctx); err != nil {
+		filename, err := files.WithTimeout(5*time.Second).WaitForFileByPattern(ctx, cloudFolderName)
+		if err != nil {
 			// No folders matching the pattern exist, exit the loop
 			break
 		}
-		if err := uiauto.Combine("Delete all uploads",
+		if err := uiauto.Combine("Delete upload folder",
 			files.OpenOneDrive(),
-			files.DeleteFileOrFolder(kb, cloudFolderName),
+			files.DeleteFileOrFolder(kb, filename),
 		)(ctx); err != nil {
 			return errors.Wrap(err, "failed to delete the uploads folder")
 		}
