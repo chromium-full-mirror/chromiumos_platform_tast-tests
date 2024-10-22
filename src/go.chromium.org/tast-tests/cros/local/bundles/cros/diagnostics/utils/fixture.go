@@ -12,7 +12,6 @@ import (
 	"go.chromium.org/tast-tests/cros/local/chrome/ash"
 	"go.chromium.org/tast-tests/cros/local/chrome/uiauto/diagnosticsapp"
 	"go.chromium.org/tast-tests/cros/local/chrome/uiauto/faillog"
-	"go.chromium.org/tast-tests/cros/local/upstart"
 	"go.chromium.org/tast/core/errors"
 	"go.chromium.org/tast/core/testing"
 )
@@ -34,6 +33,7 @@ func init() {
 		TearDownTimeout: chrome.ResetTimeout,
 		PreTestTimeout:  15 * time.Second,
 		PostTestTimeout: 5 * time.Second,
+		Parent:          "crosHealthdRunning",
 	})
 
 	testing.AddFixture(&testing.Fixture{
@@ -52,6 +52,7 @@ func init() {
 		TearDownTimeout: chrome.ResetTimeout,
 		PreTestTimeout:  15 * time.Second,
 		PostTestTimeout: 5 * time.Second,
+		Parent:          "crosHealthdRunning",
 	})
 }
 
@@ -94,10 +95,6 @@ func (f *diagnosticsPrepFixture) SetUp(ctx context.Context, s *testing.FixtState
 			cr.Close(ctx)
 		}
 	}()
-
-	if err := upstart.EnsureJobRunning(ctx, "cros_healthd"); err != nil {
-		s.Fatal(err, "failed to start cros_healthd")
-	}
 
 	tconn, err := cr.TestAPIConn(ctx)
 	if err != nil {
