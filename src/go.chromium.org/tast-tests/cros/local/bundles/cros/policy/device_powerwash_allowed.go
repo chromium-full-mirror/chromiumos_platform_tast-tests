@@ -19,6 +19,7 @@ import (
 	"go.chromium.org/tast-tests/cros/local/input"
 	"go.chromium.org/tast-tests/cros/local/policyutil"
 	"go.chromium.org/tast/core/ctxutil"
+	"go.chromium.org/tast/core/errors"
 	"go.chromium.org/tast/core/testing"
 )
 
@@ -56,6 +57,7 @@ func init() {
 				Value: "screenplay-f24882e3-7c5b-44fa-a55f-9e2e03b8cd9a",
 			},
 		},
+		Timeout: 3 * time.Minute,
 		VarDeps: []string{"ui.signinProfileTestExtensionManifestKey"},
 	})
 }
@@ -90,26 +92,47 @@ func DevicePowerwashAllowed(ctx context.Context, s *testing.State) {
 		s.Fatal("Failed to get keyboard: ", err)
 	}
 	defer kb.Close(cleanupCtx)
-	if err := kb.Accel(ctx, "Ctrl+Shift+Alt+R"); err != nil {
-		s.Fatal("Failed to initiate powerwash via hotkeys: ", err)
-	}
 
 	tconn, err := cr.SigninProfileTestAPIConn(ctx)
 	if err != nil {
 		s.Fatal("Failed to create Test API connection: ", err)
 	}
-
 	ui := uiauto.New(tconn)
 
-	// TODO(b/312727434): Currently there is no testAPI to verify that
-	// the ResetScreen shows up after pressing powerwash hotkeys.
-	// Relying on "Browse as Guest" button on the LoginScreen,
-	// since the ResetScreen doesn't have this button.
+	// TODO(b/312727434): Currently there is no testAPI to verify, which
+	// screen is currently active.
+	// Rely on the "Browse as Guest" button to differentiate between
+	// the login screen and the powerwash screen.
+	//
+	// Before trying to use the powerwash hotkey, make sure that we are
+	// on the login screen.
+	uiPollCtx, cancel := context.WithTimeout(ctx, 10*time.Second)
+	defer cancel()
 	browseAsGuestNode := nodewith.Name("Browse as Guest").First()
-	uiError := ui.WaitUntilExists(browseAsGuestNode)(ctx)
-	if policyValue && uiError == nil {
-		s.Fatal("Still on login screen after powerwash initiation when powerwash is allowed")
-	} else if !policyValue && uiError != nil {
-		s.Fatal("Not on login screen after powerwash initiation when powerwash is disallowed: ", uiError)
+	if err := ui.WaitUntilExists(browseAsGuestNode)(uiPollCtx); err != nil {
+		s.Fatal("Not on login screen after enrollment: ", err)
+	}
+	// Poll in case if the hotkey does not get registered.
+	if err := testing.Poll(ctx, func(ctx context.Context) error {
+		if err := kb.Accel(ctx, "Ctrl+Shift+Alt+R"); err != nil {
+			return testing.PollBreak(errors.Wrap(err, "failed to initiate powerwash via hotkeys"))
+		}
+
+		uiPollCtx, cancel := context.WithTimeout(ctx, 10*time.Second)
+		defer cancel()
+
+		err := ui.WaitUntilExists(browseAsGuestNode)(uiPollCtx)
+		if policyValue && err == nil {
+			return errors.New("Still on login screen after powerwash initiation when powerwash is allowed")
+		} else if !policyValue && err != nil {
+			return errors.Wrap(err, "not on login screen after powerwash initiation when powerwash is disallowed")
+		}
+
+		return nil
+	}, &testing.PollOptions{
+		Timeout:  1 * time.Minute,
+		Interval: 1 * time.Second,
+	}); err != nil {
+		s.Fatal("Failed to initiate and verify powerwash: ", err)
 	}
 }
