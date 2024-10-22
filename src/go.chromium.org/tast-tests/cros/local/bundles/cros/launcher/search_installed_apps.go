@@ -19,14 +19,15 @@ import (
 	"go.chromium.org/tast/core/ctxutil"
 	"go.chromium.org/tast/core/errors"
 	"go.chromium.org/tast/core/testing"
-	"go.chromium.org/tast/core/testing/hwdep"
 )
 
 func init() {
 	testing.AddTest(&testing.Test{
-		Func:         SearchInstalledApps,
-		LacrosStatus: testing.LacrosVariantUnneeded,
-		Desc:         "Install apps from CWS and verify that it appears in the launcher",
+		Func: SearchInstalledApps,
+		// Disabled by TORA. See: b/343060877
+		LifeCycleStage: testing.LifeCycleOwnerMonitored,
+		LacrosStatus:   testing.LacrosVariantUnneeded,
+		Desc:           "Install apps from CWS and verify that it appears in the launcher",
 		Contacts: []string{
 			"chromeos-launcher@google.com",
 			"chromeos-sw-engprod@google.com",
@@ -42,19 +43,19 @@ func init() {
 			Value: "screenplay-90e4fecc-d2ea-40dc-b9db-eb9d61089e22",
 		}},
 		Timeout: 3*time.Minute + cws.InstallationTimeout,
-		Params: []testing.Param{
+		Params:  []testing.Param{
 			// Disabled by TORA. See: b/343060877
 			// {
 			// 	Name:    "clamshell_mode",
 			// 	Val:     launcher.TestCase{TabletMode: false},
 			// 	Fixture: "chromeLoggedInWithGaia",
 			// },
-			{
-				Name:              "tablet_mode",
-				Val:               launcher.TestCase{TabletMode: true},
-				Fixture:           "chromeLoggedInWithGaia",
-				ExtraHardwareDeps: hwdep.D(hwdep.InternalDisplay()),
-			},
+			// {
+			// 	Name:              "tablet_mode",
+			// 	Val:               launcher.TestCase{TabletMode: true},
+			// 	Fixture:           "chromeLoggedInWithGaia",
+			// 	ExtraHardwareDeps: hwdep.D(hwdep.InternalDisplay()),
+			// },
 		},
 	})
 }
