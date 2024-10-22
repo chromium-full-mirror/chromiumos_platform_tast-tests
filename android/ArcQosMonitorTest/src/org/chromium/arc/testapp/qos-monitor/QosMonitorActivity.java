@@ -105,6 +105,7 @@ public class QosMonitorActivity extends Activity {
             public void onReceive(Context context, Intent intent) {
                 // Setup socket by given protocol, address and port.
                 if (SETUP_SOCKET.equals(intent.getAction())) {
+                    Log.d(TAG, "Get intent: SETUP_SOCKET");
                     String proto = intent.getStringExtra(PROTOCOL_KEY);
                     mAddress = intent.getStringExtra(ADDRESS_KEY);
                     if (mAddress == null) {
@@ -136,6 +137,7 @@ public class QosMonitorActivity extends Activity {
                 }
                 // Send out socket message through last setup socket.
                 if (SEND_SOCKET_MESSAGE.equals(intent.getAction())) {
+                    Log.d(TAG, "Get intent: SEND_SOCKET_MESSAGE");
                     String message = intent.getStringExtra(MESSAGE_KEY);
                     if (message == null) {
                         Log.e(TAG, "Message is not correctly set, send message failed.");
@@ -144,10 +146,12 @@ public class QosMonitorActivity extends Activity {
                     sendMessage(message);
                 }
                 if (START_RECORDING.equals(intent.getAction())) {
+                    Log.d(TAG, "Get intent: START_RECORDING");
                     startRecording();
                     return;
                 }
                 if (STOP_RECORDING.equals(intent.getAction())) {
+                    Log.d(TAG, "Get intent: STOP_RECORDING");
                     stopRecording();
                     return;
                 }
@@ -157,6 +161,7 @@ public class QosMonitorActivity extends Activity {
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
+        Log.d(TAG, "onCreate called");
         super.onCreate(savedInstanceState);
 
         mFileName = getExternalCacheDir().getAbsolutePath() + "/qosmonitor.3gp";
@@ -179,6 +184,7 @@ public class QosMonitorActivity extends Activity {
      * {@code SOCK_DGRAM} for UDP socket.
      */
     private void setupSocket(int family, int type) {
+        Log.d(TAG, "setupSocket called");
         new Thread(() -> {
             InetAddress target;
             try {
@@ -195,6 +201,7 @@ public class QosMonitorActivity extends Activity {
                     Os.setsockoptInt(mFd, IPPROTO_IPV6, IPV6_V6ONLY, 0);
                 }
                 Os.connect(mFd, target, mPort);
+                Log.d(TAG, "Socket is setup successfully");
             } catch (ErrnoException | SocketException e) {
                 Log.e(TAG, "Failed to open and connect socket: ", e);
                 try {
@@ -216,6 +223,7 @@ public class QosMonitorActivity extends Activity {
      * @param message payload of the message to be sent.
      */
     private void sendMessage(String message) {
+        Log.d(TAG, "sendMessage called");
         if (mFd == null || !mFd.valid()) {
             Log.e(TAG, "File descriptor is not valid, send message failed");
             return;
@@ -226,6 +234,7 @@ public class QosMonitorActivity extends Activity {
                 ByteBuffer buffer = ByteBuffer.wrap(message.getBytes());
                 Os.sendto(mFd, buffer, /* flags= */0,
                         InetAddress.getByName(mAddress), mPort);
+                Log.d(TAG, "Message sent successfully");
             } catch (UnknownHostException |  ErrnoException | SocketException e) {
                 Log.e(TAG, "Send message failed", e);
             }
@@ -237,6 +246,7 @@ public class QosMonitorActivity extends Activity {
      * test app is productivity/social app.
      */
     private void startRecording() {
+        Log.d(TAG, "startRecording called");
         mRecorder = new MediaRecorder();
         mRecorder.setAudioSource(MediaRecorder.AudioSource.MIC);
         mRecorder.setOutputFormat(MediaRecorder.OutputFormat.THREE_GPP);
@@ -249,6 +259,7 @@ public class QosMonitorActivity extends Activity {
             return;
         }
         mRecorder.start();
+        Log.d(TAG, "Started recorder successfully");
     }
 
     /**
@@ -256,6 +267,7 @@ public class QosMonitorActivity extends Activity {
      * test app is productivity/social app.
      */
     private void stopRecording() {
+        Log.d(TAG, "stopRecording called");
         if (mRecorder == null) {
             return;
         }
@@ -272,18 +284,34 @@ public class QosMonitorActivity extends Activity {
         if (recordFile.exists()) {
             recordFile.delete();
         }
+        Log.d(TAG, "Stopped recorder successfully");
     }
 
     @Override
     public void onDestroy(){
+        Log.d(TAG, "onDestroy called");
         super.onDestroy();
+        unregisterReceiver(mReceiver);
         stopRecording();
         try {
             if (mFd != null && mFd.valid()) {
                 Os.close(mFd);
+                Log.d(TAG, "fd is closed");
             }
         } catch (ErrnoException e) {
             Log.e(TAG, "failed to close file descriptor", e);
         }
+    }
+
+    @Override
+    public void onPause(){
+        Log.d(TAG, "onPause called");
+        super.onPause();
+    }
+
+    @Override
+    public void onStop(){
+        Log.d(TAG, "onStop called");
+        super.onStop();
     }
 }
