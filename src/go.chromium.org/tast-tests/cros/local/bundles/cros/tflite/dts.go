@@ -31,17 +31,20 @@ func init() {
 		SoftwareDeps: []string{"ml_service"},
 		Vars:         []string{"settings", "accel_config"},
 		Params: []testing.Param{{
-			Name: "sample",
-			Val:  sampleParam,
+			Name:      "sample",
+			Val:       sampleParam,
+			ExtraData: []string{sampleAccelConfig},
 		}, {
 			Name:              "neuron",
 			Val:               neuronParam,
 			Timeout:           5 * time.Minute,
 			ExtraSoftwareDeps: []string{"tflite_mtk_neuron"},
+			ExtraData:         []string{neuronAccelConfig},
 		}, {
 			Name:              "openvino",
 			Val:               openvinoParam,
 			ExtraSoftwareDeps: []string{"tflite_intel_openvino"},
+			ExtraData:         []string{openvinoAccelConfig},
 		}},
 	})
 }
@@ -92,30 +95,7 @@ var sampleSettings = stableDelegateSettings{
 	},
 }
 
-// The config format comment is adapted from
-// https://github.com/tensorflow/tensorflow/blob/d55ac19510f7f80b0bb92aa1c63c531ec8e64605/tensorflow/lite/delegates/utils/experimental/stable_delegate/kernel_test_main.cc
-const sampleAccelConfig = `
-## Config Format
-# Every Test can be allowlisted or denylisted using a regexp on its test_id.
-# To denylist an element simply add - before the test_id regex.
-# Acceleration validation will only be checked on allowlisted tests.
-
-## test_id
-#
-# The test_id is "test_suite_name/test_name", this differs from the
-# name used by the build because of the / separator instead of .
-
-## Rules Evaluation
-#
-# Rules are checked in order, the first matching wins.
-# Put more specific rules first and generic default ones below.
-
-# The sample stable delegate supports static-sized addition and subtraction.
-FloatAddOpModel/NoActivation
-FloatAddOpModel/VariousInputShapes
-FloatSubOpModel/NoActivation
-FloatSubOpModel/VariousInputShapes
-`
+const sampleAccelConfig = "sample_accel_test.conf"
 
 var sampleParam = testingParam{
 	Settings:    sampleSettings,
@@ -137,10 +117,7 @@ var neuronSettings = stableDelegateSettings{
 }
 
 // TODO(b/338910179): MediaTek to provide the proper config.
-const neuronAccelConfig = `
-# Disable acceleration validation temporarily.
--.*
-`
+const neuronAccelConfig = "neuron_accel_test.conf"
 
 var neuronParam = testingParam{
 	Settings:    neuronSettings,
@@ -182,18 +159,15 @@ var neuronParam = testingParam{
 	AllowFp16PrecisionForFp32: true,
 }
 
-// TODO(b/332423167): Intel to provide the proper config.
-const openvinoAccelConfig = `
-# Disable acceleration validation temporarily.
--.*
-`
-
 var openvinoSettings = stableDelegateSettings{
 	StableDelegateLoaderSettings: stableDelegateLoaderSettings{
 		DelegatePath: "/usr/lib64/libtensorflowlite_intel_openvino_delegate.so",
 		DelegateName: "intel_openvino_delegate",
 	},
 }
+
+// TODO(b/332423167): Intel to provide the proper config.
+const openvinoAccelConfig = "openvino_accel_test.conf"
 
 var openvinoParam = testingParam{
 	Settings:    openvinoSettings,
@@ -253,8 +227,8 @@ func DTS(ctx context.Context, s *testing.State) {
 			s.Fatal("Failed to copy accel_config file: ", err)
 		}
 	} else {
-		if err := os.WriteFile(accelConfigPath, []byte(param.AccelConfig), 0644); err != nil {
-			s.Fatal("Failed to write accel.conf: ", err)
+		if err := fsutil.CopyFile(s.DataPath(param.AccelConfig), accelConfigPath); err != nil {
+			s.Fatal("Failed to copy default accel_config file: ", err)
 		}
 	}
 
