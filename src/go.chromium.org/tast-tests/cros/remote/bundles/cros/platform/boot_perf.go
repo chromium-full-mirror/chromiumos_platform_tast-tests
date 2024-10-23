@@ -17,12 +17,14 @@ import (
 
 	empty "github.com/golang/protobuf/ptypes/empty"
 
+	"go.chromium.org/chromiumos/config/go/api"
 	"go.chromium.org/tast-tests/cros/common/bounds"
 	"go.chromium.org/tast-tests/cros/common/perf"
 	"go.chromium.org/tast-tests/cros/common/servo"
 	tdreq "go.chromium.org/tast-tests/cros/common/testdevicerequirements"
 	"go.chromium.org/tast-tests/cros/remote/firmware"
 	"go.chromium.org/tast-tests/cros/remote/firmware/fixture"
+	"go.chromium.org/tast-tests/cros/remote/firmware/reporters"
 	"go.chromium.org/tast-tests/cros/services/cros/arc"
 	"go.chromium.org/tast-tests/cros/services/cros/platform"
 	"go.chromium.org/tast-tests/cros/services/cros/security"
@@ -446,8 +448,9 @@ func collectExtraDebugInfo(ctx context.Context, s *testing.State) (bool, error) 
 	return true, nil
 }
 
-func bootPerfMetricBounds(ctx context.Context, features *protocol.DUTFeatures) []bounds.MetricBounds {
+func bootPerfMetricBounds(ctx context.Context, features *protocol.DUTFeatures, board string) []bounds.MetricBounds {
 	maxSecondsPowerOnToKernel := 1.0
+	maxSecondsPowerOnToLogin := 8.0
 
 	// Intel MeteorLake and newer always have FW splash screen, and get +0.35s
 	if ok, _, _ := hwdep.IsIntelUarchEqualOrNewerThan(hwdep.IntelUarchs{IntelBigCoreOrderList: []hwdep.IntelBigCoreOrder{hwdep.MeteorLake}}).Satisfied(features.GetHardware()); ok {
@@ -459,11 +462,40 @@ func bootPerfMetricBounds(ctx context.Context, features *protocol.DUTFeatures) [
 			maxSecondsPowerOnToKernel += 0.25
 		}
 	}
+
+	// Board specific waivers
+	if board == "atlas" { // b/122563096#comment5
+		testing.ContextLogf(ctx, "atlas waiver: Adjusting maxSecondsPowerOnToKernel from %f to 1.52", maxSecondsPowerOnToKernel)
+		maxSecondsPowerOnToKernel = 1.52
+	} else if board == "coral" { // b/177845648#comment30
+		testing.ContextLogf(ctx, "coral waiver: Adjusting maxSecondsPowerOnToKernel from %f to 1.3", maxSecondsPowerOnToKernel)
+		maxSecondsPowerOnToKernel = 1.3
+	} else if board == "dedede" { // b/177845648#comment30
+		testing.ContextLogf(ctx, "dedede waiver: Adjusting maxSecondsPowerOnToKernel from %f to 1.3", maxSecondsPowerOnToKernel)
+		maxSecondsPowerOnToKernel = 1.3
+	} else if board == "zork" { // go/zork-waiver-b2k -> deck 5
+		testing.ContextLogf(ctx, "zork waiver: Adjusting maxSecondsPowerOnToKernel from %f to 1.8", maxSecondsPowerOnToKernel)
+		maxSecondsPowerOnToKernel = 1.8
+	} else if board == "skyrim" { // ROW 135 in go/cros-waivers
+		testing.ContextLogf(ctx, "skyrim waiver: Adjusting maxSecondsPowerOnToKernel from %f to 1.3", maxSecondsPowerOnToKernel)
+		maxSecondsPowerOnToKernel = 1.3
+	} else if features.GetHardware().GetDeprecatedDeviceConfig().GetId().GetModel() == "gladios" &&
+		features.GetHardware().GetHardwareFeatures().GetStorage().GetStorageType() == api.Component_Storage_EMMC &&
+		features.GetHardware().GetHardwareFeatures().GetStorage().GetSizeGb() <= 64 {
+		// ROW 139, go/cros-waivers - gladios comes in several sizes and 64GB is the smallest, the detected size will be slightly smaller than 64GB
+		testing.ContextLogf(ctx, "gladios eMMC-64GB waiver: Adjusting maxSecondsPowerOnToLogin from %f to 10.57", maxSecondsPowerOnToLogin)
+		maxSecondsPowerOnToLogin = 10.57
+	} else if features.GetHardware().GetDeprecatedDeviceConfig().GetId().GetModel() == "omnigul" || features.GetHardware().GetDeprecatedDeviceConfig().GetId().GetModel() == "omniknight" {
+		// ROW 151 in go/cros-waivers
+		testing.ContextLogf(ctx, "%s waiver: Adjusting maxSecondsPowerOnToKernel from %f to 1.7", features.GetHardware().GetDeprecatedDeviceConfig().GetId().GetModel(), maxSecondsPowerOnToKernel)
+		maxSecondsPowerOnToKernel = 1.7
+	}
+
 	return []bounds.MetricBounds{
 		{
 			Test:   bounds.MatchRegexp(`(from_.._bounds|warm_reboot_bounds|default_bounds)$`),
 			Metric: bounds.MatchRegexp(`seconds_power_on_to_login$`),
-			Bounds: bounds.Max(8.0),
+			Bounds: bounds.Max(maxSecondsPowerOnToLogin),
 		},
 		{
 			Test:   bounds.MatchRegexp(`(from_.._bounds|warm_reboot_bounds|default_bounds)$`),
@@ -478,7 +510,7 @@ func bootPerfMetricBounds(ctx context.Context, features *protocol.DUTFeatures) [
 		{
 			Test:   bounds.MatchRegexp(`ec_reboot_bounds$`),
 			Metric: bounds.MatchRegexp(`seconds_power_on_to_login$`),
-			Bounds: bounds.Max(8.0 + 0.5),
+			Bounds: bounds.Max(maxSecondsPowerOnToLogin + 0.5),
 		},
 	}
 }
@@ -487,7 +519,15 @@ func bootPerfMetricBounds(ctx context.Context, features *protocol.DUTFeatures) [
 func BootPerf(ctx context.Context, s *testing.State) {
 	d := s.DUT()
 
-	var bootPerfMetricBounds = bootPerfMetricBounds(ctx, s.Features(""))
+	reporter := reporters.New(d)
+	board, err := reporter.Board(ctx)
+	if err != nil {
+		s.Fatal("Failed to get board name: ", err)
+	}
+	// Remove hyphenated suffixes: ex. "samus-kernelnext" becomes "samus"
+	board = strings.SplitN(board, "-", 2)[0]
+
+	var bootPerfMetricBounds = bootPerfMetricBounds(ctx, s.Features(""), board)
 
 	// Parse test options.
 	skipRootfsCheck := defaultSkipRootfsCheck
