@@ -23,7 +23,7 @@
 
     async fetchSystemInfo() {
       const provider = await this.getSystemDataProvider();
-      const result = provider.getSystemInfo();
+      const result = await provider.getSystemInfo();
       // Log for debug purpose.
       console.log("result.systemInfo from tast: ", result.systemInfo);
       return result.systemInfo;
