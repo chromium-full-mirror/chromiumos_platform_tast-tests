@@ -334,7 +334,7 @@ func init() {
 			}, {
 				Name:              "edid_private",
 				Fixture:           fixture.DecryptProbeConfig,
-				ExtraHardwareDeps: common.UnreleasedDeviceDeps(),
+				ExtraHardwareDeps: common.UnreleasedDeviceDeps(hwdep.SkipOnModel("domilly")),
 				Val: probeFunctionTestParam{
 					categories:           []string{"display_panel"},
 					allowExtraComponents: false,
