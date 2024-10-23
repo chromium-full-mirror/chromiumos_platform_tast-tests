@@ -9,6 +9,7 @@ import (
 	"path/filepath"
 	"time"
 
+	"go.chromium.org/tast-tests/cros/common/testexec"
 	facade "go.chromium.org/tast-tests/cros/local/bluetooth/facade"
 	facadecommon "go.chromium.org/tast-tests/cros/local/bluetooth/facade/common"
 	"go.chromium.org/tast-tests/cros/local/chrome/ash"
@@ -215,6 +216,12 @@ func Idle(ctx context.Context, s *testing.State) {
 		defer session.Finalize(cleanupCtx)
 		defer session.Stop(cleanupCtx)
 	}
+
+	// Double the netdev budget to mitigate network noise.
+	if err := testexec.CommandContext(ctx, "sysctl", "net.core.netdev_budget_usecs=4000", "net.core.netdev_budget=600").Run(); err != nil {
+		s.Fatal("Can't set netdev budget: ", err)
+	}
+	defer testexec.CommandContext(cleanupCtx, "sysctl", "net.core.netdev_budget_usecs=2000", "net.core.netdev_budget=300").Run()
 
 	if err := r.Start(ctx); err != nil {
 		s.Fatal("Cannot start collecting power metrics: ", err)
