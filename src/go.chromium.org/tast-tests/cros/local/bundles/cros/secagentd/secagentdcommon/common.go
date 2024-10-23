@@ -84,7 +84,8 @@ func GetSecagentdLogSize() (int64, error) {
 // The file should be cleared prior to restarting the daemon via ClearSecagentdLog
 // prior to waiting for a string. Failure to do so means that strings from
 // past runs may abort the wait prematurely.
-func WaitForStringInLog(ctx context.Context, text string, startingOffset int64, s *testing.State) error {
+func WaitForStringInLog(ctx context.Context, text string, startingOffset int64,
+	logf func(format string, args ...interface{})) error {
 	offset := startingOffset
 	return testing.Poll(ctx, func(ctx context.Context) error {
 		logReader, err := os.Open(secagentdLogFile)
@@ -99,7 +100,7 @@ func WaitForStringInLog(ctx context.Context, text string, startingOffset int64, 
 		for logScanner.Scan() {
 			if strings.Contains(logScanner.Text(), text) {
 				foundAt, _ := logReader.Seek(0, io.SeekCurrent)
-				s.Logf("Found %q in line %q at offset %v", text, logScanner.Text(), foundAt)
+				logf("Found %q in line %q at offset %v", text, logScanner.Text(), foundAt)
 				return nil
 			}
 		}
