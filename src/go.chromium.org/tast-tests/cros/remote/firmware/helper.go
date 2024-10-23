@@ -1777,6 +1777,21 @@ func (h *Helper) WaitFirmwareScreen(ctx context.Context, timeout time.Duration) 
 	return nil
 }
 
+// DetectFirmwareScreen detects the firmware screen from the ec console.
+// Make sure to enable ec uart capture before reboot and close it
+// after finishing reboot.
+func (h *Helper) DetectFirmwareScreen(ctx context.Context, timeout time.Duration, screen fwCommon.FwScreenID) error {
+	screenID := strconv.FormatInt(int64(screen), 16)
+	var fwScreenRe *regexp.Regexp = regexp.MustCompile(`AP_FW ` + screenID)
+	if found, err := h.Servo.PollForRegexp(ctx, servo.ECUARTStream, fwScreenRe, timeout); err != nil {
+		return errors.Wrap(err, "gsc output parsing failed")
+	} else if !found {
+		return errors.Errorf("failed to find pattern %s in the output", fwScreenRe)
+	}
+	testing.ContextLog(ctx, "Found AP_FW ", screenID)
+	return nil
+}
+
 // ECTabletLaptopModeCtrl contains the control name for setting DUT in tablet,
 // or laptop mode.
 type ECTabletLaptopModeCtrl int
