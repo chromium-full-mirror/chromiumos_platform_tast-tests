@@ -10,6 +10,7 @@ import (
 
 	"go.chromium.org/tast-tests/cros/local/kernel"
 	"go.chromium.org/tast/core/testing"
+	"go.chromium.org/tast/core/testing/hwdep"
 )
 
 var (
@@ -32,6 +33,13 @@ var (
 		"FB_SYS_IMAGEBLIT",
 		"FB_VIRTUAL",
 	}
+	isDisabledOnFlex = []string{
+		"DRM_KMS_FB_HELPER",
+		"DRM_VGEM",
+		"FB_CFB_REV_PIXELS_IN_BYTE",
+		"FB_SIMPLE",
+		"FB_VIRTUAL",
+	}
 	// Kernel configuration items that should be a module i.e. MODULE = m
 	isModule = []string{}
 )
@@ -50,8 +58,22 @@ func init() {
 		},
 		Fixture: "gpuWatchDog",
 		Timeout: 2 * time.Minute,
+		Params: []testing.Param{{
+			ExtraHardwareDeps: hwdep.D(hwdep.SkipOnModel("reven")),
+			Val:               nonFlex,
+		}, {
+			Name: "flex",
+			Val:  flex,
+		}},
 	})
 }
+
+type crosFlavor string
+
+const (
+	flex    crosFlavor = "flex"
+	nonFlex crosFlavor = "nonFlex"
+)
 
 func mapGet(dataMap map[string]string, key string) string {
 	value, exists := dataMap[key]
@@ -62,6 +84,7 @@ func mapGet(dataMap map[string]string, key string) string {
 }
 
 func KernelConfig(ctx context.Context, s *testing.State) {
+	flavor := s.Param().(crosFlavor)
 	kernelConfigMap, err := kernel.ReadKernelConfig(ctx)
 	if err != nil {
 		s.Fatal("Failed to read kernel configuration: ", err)
@@ -75,7 +98,13 @@ func KernelConfig(ctx context.Context, s *testing.State) {
 		}
 	}
 	// Check if any unwanted config is enabled in the kernel.
-	for _, configKey := range isDisabled {
+	var disabledValues []string
+	if flavor == flex {
+		disabledValues = isDisabledOnFlex
+	} else {
+		disabledValues = isDisabled
+	}
+	for _, configKey := range disabledValues {
 		if mapGet(kernelConfigMap, configKey) != "n" {
 			s.Errorf("Expecting %v = n in kernel configuration", configKey)
 		}
