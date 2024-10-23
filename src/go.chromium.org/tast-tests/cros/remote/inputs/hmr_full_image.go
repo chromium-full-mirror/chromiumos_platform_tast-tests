@@ -183,6 +183,7 @@ func extractResultsPaths(resultPoints []*hmrNode, referencePaths [][]*hmrNode, r
 func matchReferencePathToResultPath(resultPoints []*hmrNode, referencePaths [][]*hmrNode, epsilon float64) [][]*hmrNode {
 	var resultPaths [][]*hmrNode
 	var path []*hmrNode
+	hoverStart := -1
 	// Keep track of the next reference path that we're trying to match.
 	referencePathIdx := 0
 	// Iterate through all results points.
@@ -191,6 +192,14 @@ func matchReferencePathToResultPath(resultPoints []*hmrNode, referencePaths [][]
 	for i := range resultPoints {
 		if resultPoints[i].pressure > 0 {
 			if len(path) > 0 {
+				// If a hover had been occurring on this path. Add those pressure == 0 points to the path first.
+				if hoverStart != -1 {
+					for hoverStart < i {
+						path = append(path, resultPoints[hoverStart])
+						hoverStart++
+					}
+					hoverStart = -1
+				}
 				// If pressure > 0 and a path exists, add this point to the path.
 				path = append(path, resultPoints[i])
 			} else {
@@ -204,16 +213,21 @@ func matchReferencePathToResultPath(resultPoints []*hmrNode, referencePaths [][]
 			if len(path) > 0 {
 				// If pressure == 0, and the previous point's pressure > 0, and the previous point was within epsilon of the next reference points end point. Close the path.
 				referencePathEndPoint := referencePaths[referencePathIdx][len(referencePaths[referencePathIdx])-1]
-				if resultPoints[i-1].pressure > 0 && euclideanDistance(resultPoints[i-1], referencePathEndPoint) <= epsilon {
-					resultPaths = append(resultPaths, path)
-					path = []*hmrNode{}
-					referencePathIdx++
-					if referencePathIdx >= len(referencePaths) {
-						break
+				if resultPoints[i-1].pressure > 0 {
+					if euclideanDistance(resultPoints[i-1], referencePathEndPoint) <= epsilon {
+						resultPaths = append(resultPaths, path)
+						path = []*hmrNode{}
+						referencePathIdx++
+						if referencePathIdx >= len(referencePaths) {
+							break
+						}
+					} else {
+						// If pressure == 0 and an open path exists. This point should be added to the path.
+						// Note: We do not want to include pressure == 0 points if they occur at the end of the results points dataset,
+						// as they could be occurring due to the HMR returning to its starting point for the next run.
+						// Therefore we keep track of the first point in the pressure == 0 hover, and only add points in the hover to the path when a pressure > 0 point is detected on this path.
+						hoverStart = i
 					}
-				} else {
-					// If pressure == 0 and an open path exists. Add this point to it.
-					path = append(path, resultPoints[i])
 				}
 			}
 		}
