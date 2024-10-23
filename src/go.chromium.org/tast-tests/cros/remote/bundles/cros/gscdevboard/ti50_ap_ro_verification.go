@@ -533,14 +533,15 @@ func probeSPIFlashChip(ctx context.Context, s *testing.State, b utils.DevboardHe
 			s.Fatalf("Could not get ap flash info: %s", err)
 		}
 		flashInfo = nil
-		for _, f := range apFlashInfos {
-			if f.name == chipInfo.Name {
+		for i := range apFlashInfos {
+			if apFlashInfos[i].name == chipInfo.Name {
 				// Enable SW WP on the AP SPI chip so the status registers are as expected.
 				// This range represents the RO section of the AP flash.
-				if err := flash.EnableApWriteProtect(ctx, 0, f.wpSize); err != nil {
+				if err := flash.EnableApWriteProtect(ctx, 0, apFlashInfos[i].wpSize); err != nil {
 					s.Fatal("setting AP flash write protect: ", err)
 				}
-				flashInfo = &f
+				flashInfo = &apFlashInfos[i]
+				s.Log("Recognized AP SPI flash chip: ", flashInfo)
 			}
 		}
 		if flashInfo == nil {
