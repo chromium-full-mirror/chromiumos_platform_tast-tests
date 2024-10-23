@@ -49,6 +49,34 @@ type AutomationService struct {
 	sharedObject *common.SharedObjectsForService
 }
 
+// ResetAutomation implements ui.AutomationServiceServer.
+func (svc *AutomationService) ResetAutomation(ctx context.Context, req *pb.ResetAutomationRequest) (*empty.Empty, error) {
+	svc.sharedObject.ChromeMutex.Lock()
+	defer svc.sharedObject.ChromeMutex.Unlock()
+
+	cr := svc.sharedObject.Chrome
+	if cr == nil {
+		return nil, errors.New("Chrome is not instantiated")
+	}
+
+	// When in OOBE, use SigninProfileTestAPIConn to create the test connection.
+	var tconn *chrome.TestConn
+	var err error
+	if cr.LoginMode() == "NoLogin" {
+		tconn, err = cr.SigninProfileTestAPIConn(ctx)
+	} else {
+		tconn, err = cr.TestAPIConn(ctx)
+	}
+	if err != nil {
+		return nil, errors.Wrap(err, "failed to create test API connection")
+	}
+
+	if err := tconn.ResetAutomation(ctx); err != nil {
+		return nil, errors.Wrap(err, "failed to reset automation")
+	}
+	return &empty.Empty{}, nil
+}
+
 // Info returns the information for the node found by the input finder.
 func (svc *AutomationService) Info(ctx context.Context, req *pb.InfoRequest) (*pb.InfoResponse, error) {
 	svc.sharedObject.ChromeMutex.Lock()

@@ -88,6 +88,10 @@ service AutomationService {
   // DoDefault calls doDefault() JS method on the node found by the input
   // finder.
   rpc DoDefault(DoDefaultRequest) returns (google.protobuf.Empty) {}
+
+  // ResetAutomation resets the automation API feature and helps to reset the
+  // UI tree.
+  rpc ResetAutomation(ResetAutomationRequest) returns (google.protobuf.Empty) {}
 }
 
 message LeftClickRequest { Finder finder = 1; }
@@ -148,6 +152,8 @@ message CaptureScreenshotResponse { bytes png_base64 = 1; }
 message GetUITreeRequest {}
 
 message GetUITreeResponse { string ui_tree = 1; }
+
+message ResetAutomationRequest {}
 
 message SelectDropDownOptionRequest {
   Finder finder = 1;
