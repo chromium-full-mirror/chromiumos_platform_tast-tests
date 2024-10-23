@@ -227,60 +227,75 @@ func temperatureThreshold(ctx context.Context, config CoolDownConfig) (int, erro
 // of the power.IdleTemperature test. If the 95th percentile temperature is less
 // than the default threshold of 46 degrees, it is not listed in here.
 var modelTemperatureThresholds = map[string]int{
-	"galith":     54000,
-	"screebo4es": 54000, // based on b/308581508#comment1
-	"rex4es":     54000, // based on b/308581508#comment1
-	"jelboz":     53800,
-	"jelboz360":  53800,
-	"berknip":    53800,
-	"screebo":    53000, // based on b/337618192#comment6
-	"magneto":    53000,
-	"galtic360":  53000,
-	"chronicler": 53000,
-	"hana":       52609,
-	"metaknight": 52000,
-	"pirette":    52000,
-	"drawman":    52000,
-	"lantis":     51000,
-	"anahera":    51000,
-	"pasara":     51000,
-	"pirika":     51000,
-	"galith360":  51000,
-	"blipper":    51000,
-	"ezkinil":    50800,
-	"elm":        50673,
-	"magma":      50000,
-	"magister":   50000,
-	"drawcia":    50000,
+	// atlas
+	"atlas": 49000,
+	// brask
+	"gladios": 53000, // based on b/340958936#comment5
+	"lisbon":  53000, // based on b/340958936#comment5
+	// brya
+	"anahera": 51000,
+	// dedede
 	"beetley":    50000,
-	"kracko360":  50000,
-	"maglith":    50000,
-	"magpie":     50000,
-	"drawlat":    50000,
-	"dirinboz":   49800,
-	"gallop":     49000,
-	"lalala":     49000,
-	"maglia":     49000,
-	"cret":       48000,
-	"magolor":    48000,
-	"duffy":      48000,
-	"cret360":    48000,
-	"maglet":     48000,
-	"eldrid":     48000,
-	"gooey":      48000,
-	"kracko":     48000,
+	"blipper":    51000,
 	"boten":      48000,
-	"sion":       48000,
-	"vilboz":     47800,
-	"ampton":     47000,
-	"sasukette":  47000,
-	"galtic":     47000,
 	"bugzzy":     47000,
-	"bobba360":   47000,
-	"foob360":    47000,
+	"cret":       48000,
+	"cret360":    48000,
+	"drawcia":    50000,
+	"drawlat":    50000,
+	"drawman":    52000,
+	"galith":     54000,
+	"galith360":  51000,
+	"gallop":     49000,
 	"galnat":     47000,
-	"vilboz360":  46800,
-	"vilboz14":   46800,
-	"lisbon":     53000, // based on b/340958936#comment5
-	"gladios":    53000, // based on b/340958936#comment5
+	"galtic":     47000,
+	"galtic360":  53000,
+	"kracko":     48000,
+	"kracko360":  50000,
+	"lantis":     51000,
+	"magister":   50000,
+	"maglet":     48000,
+	"maglia":     49000,
+	"maglith":    50000,
+	"magma":      50000,
+	"magneto":    53000,
+	"magolor":    48000,
+	"magpie":     50000,
+	"metaknight": 52000,
+	"pasara":     51000,
+	"pirette":    52000,
+	"pirika":     51000,
+	"sasukette":  47000,
+	// elm
+	"elm": 50673,
+	// fizz
+	"sion": 48000,
+	// hana
+	"hana": 52609,
+	// keeby
+	"gooey":  48000,
+	"lalala": 49000,
+	// octopus
+	"ampton":   47000,
+	"bobba360": 47000,
+	"foob360":  47000,
+	// puff
+	"duffy": 48000,
+	// rex
+	"rex4es":     54000, // based on b/308581508#comment1
+	"screebo":    53000, // based on b/337618192#comment6
+	"screebo4es": 54000, // based on b/308581508#comment1
+	// volteer
+	"chronicler": 53000,
+	"eldrid":     48000,
+	// zork
+	"berknip":   53800,
+	"dirinboz":  49800,
+	"ezkinil":   50800,
+	"gumboz":    54000,
+	"jelboz":    53800,
+	"jelboz360": 53800,
+	"vilboz":    47800,
+	"vilboz14":  46800,
+	"vilboz360": 46800,
 }
