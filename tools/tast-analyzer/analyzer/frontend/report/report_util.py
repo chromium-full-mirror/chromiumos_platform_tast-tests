@@ -35,6 +35,7 @@ def create_reports(
         template_dir: The directory to load the template from.
         identifier_to_plots_map: The mapping from pairwise result identifiers
             to their plots.
+        cfg: The analysis configuration.
         output_dir: The directory to save the reports to.
     """
 
