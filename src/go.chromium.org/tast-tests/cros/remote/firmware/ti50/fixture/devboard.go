@@ -175,6 +175,12 @@ type ResultInfoTags struct {
 	TagCCDSerial string `json:"gsc_ccd_serial"`
 	// TagServiceVersion is the container version of the devboard service.
 	TagServiceVersion string `json:"gsc_devboardservice_version"`
+	// TagOpenTitanToolVersion is the opentitantool version.
+	TagOpenTitanToolVersion string `json:"gsc_opentitantool_version"`
+	// TagHyperdebugVersion is the Hyperdebug firmware version.
+	TagHyperdebugVersion string `json:"gsc_hyperdebug_version"`
+	// TagHyperdebugSerial is the Hyperdebug USB serial number.
+	TagHyperdebugSerial string `json:"gsc_hyperdebug_serial"`
 }
 
 func (i *devboardFixture) SetUp(ctx context.Context, s *testing.FixtState) interface{} {
@@ -192,12 +198,6 @@ func (i *devboardFixture) SetUp(ctx context.Context, s *testing.FixtState) inter
 	// Create devboard controller used for remainder of tests
 	i.v.devboard = remoteTi50.NewDUTControlAndreiboard(i.v.grpcConn)
 
-	if p, err := i.v.devboard.Query(ctx); err != nil {
-		s.Fatal("querying testbed: ", err)
-	} else {
-		i.v.TestbedProperties = p
-	}
-
 	serviceVersion, err := i.v.devboard.ServiceVersionInfo(ctx)
 	if err != nil {
 		s.Log("Could not get service version info: ", err)
@@ -205,8 +205,17 @@ func (i *devboardFixture) SetUp(ctx context.Context, s *testing.FixtState) inter
 		i.resultInfo.TagServiceVersion = serviceVersion.ContainerVersion
 	}
 
+	if p, err := i.v.devboard.Query(ctx); err != nil {
+		s.Fatal("querying testbed: ", err)
+	} else {
+		i.v.TestbedProperties = p
+	}
+
 	i.resultInfo.TagTestbedType = string(i.v.TestbedProperties.TestbedType)
 	i.resultInfo.TagCCDSerial = i.v.TestbedProperties.UsbSerial
+	i.resultInfo.TagOpenTitanToolVersion = i.v.TestbedProperties.OpentitantoolVersion
+	i.resultInfo.TagHyperdebugVersion = i.v.TestbedProperties.HyperdebugVersion
+	i.resultInfo.TagHyperdebugSerial = i.v.TestbedProperties.HyperdebugSerial
 	burl, _ := s.Var(BuildURL)
 	i.resultInfo.TagBuildURL = burl
 

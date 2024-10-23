@@ -57,8 +57,11 @@ func NewDUTControlAndreiboard(grpcConn *grpc.ClientConn) *DUTControlAndreiboard 
 // TestbedProperties states aspects of the testbed controlled by this instance of devboardservice,
 // such as what kind of board/chip it has.
 type TestbedProperties struct {
-	TestbedType common.TestbedType
-	UsbSerial   string
+	TestbedType          common.TestbedType
+	UsbSerial            string
+	OpentitantoolVersion string
+	HyperdebugVersion    string
+	HyperdebugSerial     string
 }
 
 func writeServerLogs(ctx context.Context, logs string) {
@@ -87,8 +90,11 @@ func (a *DUTControlAndreiboard) Query(ctx context.Context) (props TestbedPropert
 		return TestbedProperties{}, errors.Errorf("Query operation failed: %s", resp.Err)
 	}
 	return TestbedProperties{
-		TestbedType: common.TestbedType(resp.TestbedType),
-		UsbSerial:   resp.UsbSerial,
+		TestbedType:          common.TestbedType(resp.TestbedType),
+		UsbSerial:            resp.UsbSerial,
+		OpentitantoolVersion: resp.OpentitantoolVersion,
+		HyperdebugVersion:    resp.HyperdebugVersion,
+		HyperdebugSerial:     resp.HyperdebugSerial,
 	}, nil
 }
 

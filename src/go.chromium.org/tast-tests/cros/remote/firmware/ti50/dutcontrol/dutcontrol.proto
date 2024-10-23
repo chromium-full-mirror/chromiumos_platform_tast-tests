@@ -118,9 +118,18 @@ message QueryResponse {
   // tast test cases.
   string testbed_type = 2;
 
-  // The usb serial string. For Cr50 and Ti50, this is in the form
+  // The CCD usb serial string. For Cr50 and Ti50, this is in the form
   // "12345678-9abcdef0".
   string usb_serial = 3;
+
+  // The opentitantool version string.
+  string opentitantool_version = 4;
+
+  // The Hyperdebug firmware version.
+  string hyperdebug_version = 5;
+
+  // The Hyperdebug USB serial number.
+  string hyperdebug_serial = 6;
 }
 
 message File {
