@@ -23,6 +23,7 @@ type param struct {
 	wp          rmaweb.WriteProtectDisableOption
 	enroll      bool
 	destination rmaweb.DestinationOption
+	bypassRacc  bool
 }
 
 func init() {
@@ -55,6 +56,7 @@ func init() {
 				wp:          rmaweb.Manual,
 				enroll:      false,
 				destination: rmaweb.SameUser,
+				bypassRacc:  false,
 			},
 		}, {
 			ExtraAttr: []string{"shimless_rma_nodelocked"},
@@ -63,6 +65,7 @@ func init() {
 				wp:          rmaweb.Rsu,
 				enroll:      false,
 				destination: rmaweb.SameUser,
+				bypassRacc:  false,
 			},
 		}, {
 			ExtraAttr: []string{"shimless_rma_nodelocked"},
@@ -71,6 +74,7 @@ func init() {
 				wp:          rmaweb.Rsu,
 				enroll:      false,
 				destination: rmaweb.DifferentUser,
+				bypassRacc:  false,
 			},
 		}, {
 			ExtraAttr: []string{"shimless_rma_nodelocked"},
@@ -79,6 +83,7 @@ func init() {
 				wp:          rmaweb.Rsu,
 				enroll:      true,
 				destination: rmaweb.DifferentUser,
+				bypassRacc:  false,
 			},
 		}, {
 			ExtraAttr: []string{"shimless_rma_pretest"},
@@ -87,6 +92,7 @@ func init() {
 				wp:          rmaweb.Manual,
 				enroll:      false,
 				destination: rmaweb.SameUser,
+				bypassRacc:  true,
 			},
 		}},
 	})
@@ -99,11 +105,11 @@ func DisableHWWP(ctx context.Context, s *testing.State) {
 
 	firmwareHelper := s.FixtValue().(*fixture.Value).Helper
 	dut := firmwareHelper.DUT
-	key := s.RequiredVar("ui.signinProfileTestExtensionManifestKey")
 	p := s.Param().(param)
 	wpOption := p.wp
 	enroll := p.enroll
 	destination := p.destination
+	bypassRacc := p.bypassRacc
 
 	// TODO(b/349959175): Test firmware update from rootfs.
 	firmwareUpdateOption := rmaweb.FirmwareUpdateOptionSkip
@@ -114,7 +120,10 @@ func DisableHWWP(ctx context.Context, s *testing.State) {
 		s.Fatal("Fail to init servo: ", err)
 	}
 
-	uiHelper, err := rmaweb.NewUIHelper(ctx, dut, firmwareHelper, s.RPCHint(), key, true)
+	uiHelper, err := rmaweb.NewUIHelper(ctx, s, &rmaweb.UIHelperOptions{
+		KeepState:  true,
+		BypassRacc: bypassRacc,
+	})
 	if err != nil {
 		s.Fatal("Fail to initialize RMA Helper: ", err)
 	}
@@ -126,7 +135,10 @@ func DisableHWWP(ctx context.Context, s *testing.State) {
 		s.Fatal("Fail to setup init status: ", err)
 	}
 
-	uiHelper, err = rmaweb.NewUIHelper(ctx, dut, firmwareHelper, s.RPCHint(), key, false)
+	uiHelper, err = rmaweb.NewUIHelper(ctx, s, &rmaweb.UIHelperOptions{
+		KeepState:  false,
+		BypassRacc: bypassRacc,
+	})
 	if err != nil {
 		s.Fatal("Fail to initialize RMA Helper: ", err)
 	}
@@ -147,7 +159,10 @@ func DisableHWWP(ctx context.Context, s *testing.State) {
 		s.Error("Fail to sleep: ", err)
 	}
 
-	uiHelper, err = rmaweb.NewUIHelper(ctx, dut, firmwareHelper, s.RPCHint(), key, true)
+	uiHelper, err = rmaweb.NewUIHelper(ctx, s, &rmaweb.UIHelperOptions{
+		KeepState:  true,
+		BypassRacc: bypassRacc,
+	})
 	if err != nil {
 		s.Fatal("Fail to initialize RMA Helper: ", err)
 	}
@@ -159,7 +174,10 @@ func DisableHWWP(ctx context.Context, s *testing.State) {
 		}
 	}
 
-	uiHelper, err = rmaweb.NewUIHelper(ctx, dut, firmwareHelper, s.RPCHint(), key, true)
+	uiHelper, err = rmaweb.NewUIHelper(ctx, s, &rmaweb.UIHelperOptions{
+		KeepState:  true,
+		BypassRacc: bypassRacc,
+	})
 	if err != nil {
 		s.Fatal("Fail to initialize RMA Helper: ", err)
 	}
@@ -174,7 +192,10 @@ func DisableHWWP(ctx context.Context, s *testing.State) {
 		s.Error("Fail to sleep: ", err)
 	}
 
-	uiHelper, err = rmaweb.NewUIHelper(ctx, dut, firmwareHelper, s.RPCHint(), key, true)
+	uiHelper, err = rmaweb.NewUIHelper(ctx, s, &rmaweb.UIHelperOptions{
+		KeepState:  true,
+		BypassRacc: bypassRacc,
+	})
 	if err != nil {
 		s.Fatal("Fail to initialize RMA Helper: ", err)
 	}
@@ -207,7 +228,10 @@ func DisableHWWP(ctx context.Context, s *testing.State) {
 		s.Fatal("Fail to enable HWWP: ", err)
 	}
 
-	uiHelper, err = rmaweb.NewUIHelper(ctx, dut, firmwareHelper, s.RPCHint(), key, true)
+	uiHelper, err = rmaweb.NewUIHelper(ctx, s, &rmaweb.UIHelperOptions{
+		KeepState:  true,
+		BypassRacc: bypassRacc,
+	})
 	if err != nil {
 		s.Fatal("Fail to initialize RMA Helper: ", err)
 	}
@@ -224,7 +248,10 @@ func DisableHWWP(ctx context.Context, s *testing.State) {
 		s.Error("Fail to sleep: ", err)
 	}
 
-	uiHelper, err = rmaweb.NewUIHelper(ctx, dut, firmwareHelper, s.RPCHint(), key, true)
+	uiHelper, err = rmaweb.NewUIHelper(ctx, s, &rmaweb.UIHelperOptions{
+		KeepState:  true,
+		BypassRacc: bypassRacc,
+	})
 	if err != nil {
 		s.Fatal("Fail to initialize RMA Helper: ", err)
 	}

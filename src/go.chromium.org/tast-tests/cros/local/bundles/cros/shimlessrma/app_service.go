@@ -33,6 +33,7 @@ const (
 	testFile              = "/var/lib/rmad/.test"
 	bypassCalibrationFile = "/var/lib/rmad/.disable_calibration"
 	bypassPowerwashFile   = "/var/lib/rmad/.disable_powerwash"
+	bypassRaccFile        = "/var/lib/rmad/.disable_racc"
 	offlineLogFile        = "/var/lib/rmad/offline.log"
 	offlineExecuteSuccess = "Success"
 	googleURL             = "google.com"
@@ -63,8 +64,9 @@ func (shimlessRMA *AppService) NewShimlessRMA(ctx context.Context,
 		return nil, errors.Wrap(err, "failed to stop rmad")
 	}
 
-	// If Reconnect is true, it means UI restarting during Shimless RMA testing.
-	if !req.Reconnect {
+	// If KeepState is true, it could be an UI restarting during Shimless RMA testing
+	// and the state file should be kept. Otherwise, clear the state file.
+	if !req.KeepState {
 		// Create a valid empty rmad state file.
 		if err := shimlessrmaapp.CreateEmptyStateFile(); err != nil {
 			return nil, errors.Wrap(err, "failed to create rmad state file")
@@ -79,6 +81,12 @@ func (shimlessRMA *AppService) NewShimlessRMA(ctx context.Context,
 
 	if _, err := os.Create(bypassPowerwashFile); err != nil {
 		return nil, errors.Wrap(err, "failed to create .disable_powerwash file")
+	}
+
+	if req.BypassRacc {
+		if _, err := os.Create(bypassRaccFile); err != nil {
+			return nil, errors.Wrap(err, "failed to create .disable_racc file")
+		}
 	}
 
 	cr, err := chrome.New(ctx, chrome.EnableFeatures("ShimlessRMAFlow"),

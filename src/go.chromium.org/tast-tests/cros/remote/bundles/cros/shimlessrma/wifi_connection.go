@@ -50,7 +50,6 @@ func init() {
 func WifiConnection(ctx context.Context, s *testing.State) {
 	firmwareHelper := s.FixtValue().(*fixture.Value).Helper
 	dut := firmwareHelper.DUT
-	key := s.RequiredVar("ui.signinProfileTestExtensionManifestKey")
 	if err := firmwareHelper.RequireServo(ctx); err != nil {
 		s.Fatal("Fail to init servo: ", err)
 	}
@@ -113,7 +112,10 @@ func WifiConnection(ctx context.Context, s *testing.State) {
 		}
 	}(cleanupCtx)
 
-	uiHelper, err := rmaweb.NewUIHelper(ctx, dut, firmwareHelper, s.RPCHint(), key, false)
+	uiHelper, err := rmaweb.NewUIHelper(ctx, s, &rmaweb.UIHelperOptions{
+		KeepState:  false,
+		BypassRacc: false,
+	})
 	if err != nil {
 		s.Fatal("Fail to initialize RMA Helper: ", err)
 	}
@@ -134,7 +136,10 @@ func WifiConnection(ctx context.Context, s *testing.State) {
 
 	s.Log("Offline time is completed")
 
-	uiHelper, err = rmaweb.NewUIHelper(ctx, dut, firmwareHelper, s.RPCHint(), key, false)
+	uiHelper, err = rmaweb.NewUIHelper(ctx, s, &rmaweb.UIHelperOptions{
+		KeepState:  false,
+		BypassRacc: false,
+	})
 	if err != nil {
 		s.Fatal("Fail to initialize RMA Helper: ", err)
 	}

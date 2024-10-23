@@ -21,6 +21,7 @@ import (
 	"go.chromium.org/tast-tests/cros/common/servo"
 	"go.chromium.org/tast-tests/cros/remote/bundles/cros/shimlessrma/servoutil"
 	"go.chromium.org/tast-tests/cros/remote/firmware"
+	"go.chromium.org/tast-tests/cros/remote/firmware/fixture"
 	"go.chromium.org/tast-tests/cros/services/cros/graphics"
 	pb "go.chromium.org/tast-tests/cros/services/cros/shimlessrma"
 
@@ -96,13 +97,40 @@ type UIHelper struct {
 	RPCClient      *rpc.Client
 }
 
+// UIHelperOptions contains options to create a UIhelper.
+type UIHelperOptions struct {
+	KeepState  bool
+	BypassRacc bool
+}
+
 // NewUIHelper creates UIHelper.
-func NewUIHelper(ctx context.Context, dut *dut.DUT, firmwareHelper *firmware.Helper, rpcHint *testing.RPCHint, key string, reconnect bool) (*UIHelper, error) {
-	cl, client, err := createShimlessClient(ctx, dut, firmwareHelper, rpcHint, key, reconnect)
+func NewUIHelper(ctx context.Context, s *testing.State, opts *UIHelperOptions) (*UIHelper, error) {
+	firmwareHelper := s.FixtValue().(*fixture.Value).Helper
+	dut := firmwareHelper.DUT
+	key := s.RequiredVar("ui.signinProfileTestExtensionManifestKey")
+	rpcHint := s.RPCHint()
+
+	if err := firmwareHelper.WaitConnect(ctx); err != nil {
+		return nil, err
+	}
+
+	// Setup rpc.
+	rpcClient, err := rpc.Dial(ctx, dut, rpcHint)
 	if err != nil {
 		return nil, err
 	}
-	uiHelper := &UIHelper{client, dut, firmwareHelper, cl}
+
+	request := &pb.NewShimlessRMARequest{
+		ManifestKey: key,
+		KeepState:   opts.KeepState,
+		BypassRacc:  opts.BypassRacc,
+	}
+	client := pb.NewAppServiceClient(rpcClient.Conn)
+	if _, err := client.NewShimlessRMA(ctx, request, grpc.WaitForReady(true)); err != nil {
+		return nil, err
+	}
+
+	uiHelper := &UIHelper{client, dut, firmwareHelper, rpcClient}
 
 	return uiHelper, nil
 }
@@ -572,29 +600,6 @@ func (uiHelper *UIHelper) openCCDIfNotOpen() action.Action {
 		}
 		return nil
 	}
-}
-
-func createShimlessClient(ctx context.Context, dut *dut.DUT, firmwareHelper *firmware.Helper, rpcHint *testing.RPCHint, key string, reconnect bool) (*rpc.Client, pb.AppServiceClient, error) {
-	if err := firmwareHelper.WaitConnect(ctx); err != nil {
-		return nil, nil, err
-	}
-
-	// Setup rpc.
-	cl, err := rpc.Dial(ctx, dut, rpcHint)
-	if err != nil {
-		return nil, nil, err
-	}
-
-	request := &pb.NewShimlessRMARequest{
-		ManifestKey: key,
-		Reconnect:   reconnect,
-	}
-	client := pb.NewAppServiceClient(cl.Conn)
-	if _, err := client.NewShimlessRMA(ctx, request, grpc.WaitForReady(true)); err != nil {
-		return nil, nil, err
-	}
-
-	return cl, client, nil
 }
 
 func (uiHelper *UIHelper) changeFactoryMode(status string) action.Action {

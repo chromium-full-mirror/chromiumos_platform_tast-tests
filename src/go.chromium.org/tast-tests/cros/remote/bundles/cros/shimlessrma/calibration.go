@@ -74,7 +74,6 @@ func Calibration(ctx context.Context, s *testing.State) {
 
 	firmwareHelper := s.FixtValue().(*fixture.Value).Helper
 	dut := firmwareHelper.DUT
-	key := s.RequiredVar("ui.signinProfileTestExtensionManifestKey")
 
 	defer rmaweb.CleanupShimlessFiles(cleanupCtx, dut)
 
@@ -82,7 +81,10 @@ func Calibration(ctx context.Context, s *testing.State) {
 		s.Fatal("Fail to init servo: ", err)
 	}
 
-	uiHelper, err := rmaweb.NewUIHelper(ctx, dut, firmwareHelper, s.RPCHint(), key, true)
+	uiHelper, err := rmaweb.NewUIHelper(ctx, s, &rmaweb.UIHelperOptions{
+		KeepState:  true,
+		BypassRacc: false,
+	})
 	if err != nil {
 		s.Fatal("Fail to initialize RMA Helper: ", err)
 	}
@@ -93,7 +95,10 @@ func Calibration(ctx context.Context, s *testing.State) {
 		s.Fatal("Fail to setup init status: ", err)
 	}
 
-	uiHelper, err = rmaweb.NewUIHelper(ctx, dut, firmwareHelper, s.RPCHint(), key, false)
+	uiHelper, err = rmaweb.NewUIHelper(ctx, s, &rmaweb.UIHelperOptions{
+		KeepState:  false,
+		BypassRacc: false,
+	})
 	if err != nil {
 		s.Fatal("Fail to initialize RMA Helper: ", err)
 	}
@@ -108,7 +113,10 @@ func Calibration(ctx context.Context, s *testing.State) {
 		s.Fatal("Fail to sleep to wait for reboot to enter factory mode: ", err)
 	}
 
-	uiHelper, err = rmaweb.NewUIHelper(ctx, dut, firmwareHelper, s.RPCHint(), key, true)
+	uiHelper, err = rmaweb.NewUIHelper(ctx, s, &rmaweb.UIHelperOptions{
+		KeepState:  true,
+		BypassRacc: false,
+	})
 	if err != nil {
 		s.Fatal("Fail to initialize RMA Helper: ", err)
 	}
@@ -133,7 +141,10 @@ func Calibration(ctx context.Context, s *testing.State) {
 		s.Fatal("Fail to sleep to wait for reboot start: ", err)
 	}
 
-	uiHelper, err = rmaweb.NewUIHelper(ctx, dut, firmwareHelper, s.RPCHint(), key, true)
+	uiHelper, err = rmaweb.NewUIHelper(ctx, s, &rmaweb.UIHelperOptions{
+		KeepState:  true,
+		BypassRacc: false,
+	})
 	if err != nil {
 		s.Fatal("Fail to initialize RMA Helper: ", err)
 	}
