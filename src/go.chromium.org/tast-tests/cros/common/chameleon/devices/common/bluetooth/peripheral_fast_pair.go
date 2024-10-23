@@ -30,6 +30,10 @@ type FastPairPeripheral interface {
 	// SetAdvertiseNameAndHID calls the Chameleond RPC method of the same name.
 	// Adds name and HID UUID to device advertisement.
 	SetAdvertiseNameAndHID(ctx context.Context, enabled bool) error
+
+	// SetPasskey calls the Chameleond RPC method of the same name.
+	// Sets the passkey needed for keyboard pairing.
+	SetPasskey(ctx context.Context, passkey int) error
 }
 
 // CommonFastPairPeripheral is a base implementation of FastPairPeripheral that
@@ -64,4 +68,10 @@ func (c *CommonFastPairPeripheral) AddAccountKey(ctx context.Context, accountKey
 // This implements FastPairPeripheral.SetAdvertiseNameAndHID, see that for more details.
 func (c *CommonFastPairPeripheral) SetAdvertiseNameAndHID(ctx context.Context, enabled bool) error {
 	return c.RPC("SetAdvertiseNameAndHID").Args(enabled).Call(ctx)
+}
+
+// SetPasskey calls the Chameleond RPC method of the same name.
+// This implements FastPairPeripheral.SetPasskey, see that for more details.
+func (c *CommonFastPairPeripheral) SetPasskey(ctx context.Context, passkey int) error {
+	return c.RPC("SetPasskey").Args(passkey).Call(ctx)
 }

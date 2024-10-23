@@ -735,3 +735,29 @@ func (b *BluetoothFlossFacade) IsSWBSupported(ctx context.Context) (bool, error)
 	}
 	return b.adapterClient.IsSwbSupported(ctx)
 }
+
+// GetPasskey monitors the bonding process for specified address and returns passkey
+// for keyboard pairing.
+//
+// This blocks until the passkey is returned or timeout is hit.
+func (b *BluetoothFlossFacade) GetPasskey(ctx context.Context, address string) (uint32, error) {
+	if err := b.assertEnabled(); err != nil {
+		return 0, err
+	}
+	if address == "" {
+		return 0, errors.New("non-empty address is required")
+	}
+
+	pairingObserver, err := newPairingObserver(ctx, b.adapterClient, address)
+	if err != nil {
+		return 0, errors.Wrap(err, "failed to initialize pairing observer")
+	}
+	defer func() {
+		if err := pairingObserver.Close(ctx); err != nil {
+			testing.ContextLogf(ctx, "Failed to Close pairingObserver for device with address %q: %v", address, err)
+		}
+	}()
+
+	testing.ContextLogf(ctx, "Monitoring bluetooth device with address %q for passkey with the floss bluetooth adapter", address)
+	return pairingObserver.WaitForPasskey(1 * time.Minute)
+}

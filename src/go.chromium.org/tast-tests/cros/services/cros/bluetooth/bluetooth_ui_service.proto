@@ -73,7 +73,10 @@ enum FastPairProtocol {
   FAST_PAIR_PROTOCOL_RETROACTIVE = 3;
 }
 
-message PairWithFastPairNotificationRequest { FastPairProtocol protocol = 1; }
+message PairWithFastPairNotificationRequest {
+  FastPairProtocol protocol = 1;
+  bool is_keyboard = 2;
+}
 
 message ConfirmSavedDevicesStateRequest { repeated string device_names = 1; }
 

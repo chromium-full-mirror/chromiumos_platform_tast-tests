@@ -29,4 +29,7 @@ const (
 	// NotificationIDFastPairError is the ID of the fast pair notification
 	// displayed when a pairing error has occurred.
 	NotificationIDFastPairError = "cros_fast_pair_error_notification_id"
+
+	// NotificationIDFastPairDisplayPasskey is the ID of the fast pair display passkey notification.
+	NotificationIDFastPairDisplayPasskey = "cros_fast_pair_display_passkey_notification_id"
 )

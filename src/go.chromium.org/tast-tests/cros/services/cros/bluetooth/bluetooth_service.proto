@@ -167,6 +167,12 @@ service BluetoothService {
 
   // IsSWBSupported returns true if the adapter supports SWB.
   rpc IsSWBSupported(google.protobuf.Empty) returns (IsSWBSupportedResponse) {}
+
+  // GetPasskey monitors the bonding process for specified address and return
+  // passkey for keyboard pairing.
+  //
+  // This blocks until the passkey is returned or timeout is hit.
+  rpc GetPasskey(GetPasskeyRequest) returns (GetPasskeyResponse) {}
 }
 
 enum BluetoothStackType {
@@ -311,3 +317,7 @@ message SetDebugLogLevelsRequest { uint32 level = 1; }
 message IsWBSSupportedResponse { bool wbs_supported = 1; }
 
 message IsSWBSupportedResponse { bool swb_supported = 1; }
+
+message GetPasskeyRequest { string deviceAddress = 1; }
+
+message GetPasskeyResponse { uint32 passkey = 1; }

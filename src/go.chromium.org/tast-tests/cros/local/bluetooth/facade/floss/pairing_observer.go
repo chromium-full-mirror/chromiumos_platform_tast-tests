@@ -24,6 +24,7 @@ type pairingObserver struct {
 	targetDeviceConnected      bool
 	stateMutex                 sync.Mutex
 	checkForBondedAndConnected chan interface{}
+	checkForPasskey            chan uint32
 }
 
 // newPairingObserver initializes and registers a new pairingObserver.
@@ -34,6 +35,7 @@ func newPairingObserver(ctx context.Context, adapterClient *floss.AdapterClient,
 		observerName:               "PairingObserver_" + address,
 		targetDeviceAddress:        address,
 		checkForBondedAndConnected: make(chan interface{}),
+		checkForPasskey:            make(chan uint32),
 		targetDeviceBondStatus:     floss.BtStatusSuccess,
 	}
 	if err := o.adapterClient.RegisterCallbackObserver(ctx, o.observerName, o); err != nil {
@@ -95,6 +97,8 @@ func (o *pairingObserver) OnSspRequest(remoteDevice *floss.BluetoothDevice, clas
 		if err := o.adapterClient.SetPairingConfirmation(o.ctx, device, true); err != nil {
 			return err
 		}
+	} else if variant == floss.BtSspVariantPasskeyNotification {
+		o.checkForPasskey <- passkey
 	}
 	return nil
 }
@@ -205,4 +209,19 @@ func (o *pairingObserver) WaitForBondedAndConnected(timeout time.Duration) error
 	}
 	cancelWaitCtx()
 	return err
+}
+
+// WaitForPasskey will block until OnSspRequest or timeout is reached. Passkey
+// will be returned
+func (o *pairingObserver) WaitForPasskey(timeout time.Duration) (uint32, error) {
+	waitCtx, cancelWaitCtx := context.WithTimeout(o.ctx, timeout)
+	defer cancelWaitCtx()
+	for {
+		select {
+		case <-waitCtx.Done():
+			return 0, waitCtx.Err()
+		case passkey := <-o.checkForPasskey:
+			return passkey, nil
+		}
+	}
 }

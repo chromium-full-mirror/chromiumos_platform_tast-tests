@@ -121,6 +121,7 @@ const (
 	chromeFeatureFastPair                   = "FastPair"
 	chromeFeatureFastPairSavedDevices       = "FastPairSavedDevices"
 	chromeFeatureFastPairHID                = "FastPairHID"
+	chromeFeatureFastPairKeyboards          = "FastPairKeyboards"
 	chromeFeatureBluetoothDisconnectWarning = "BluetoothDisconnectWarning"
 
 	// chromeFeatureFloss is enabled when FlossEnabled fixture feature is true,

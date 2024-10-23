@@ -774,6 +774,7 @@ func init() {
 				chromeFeatureFastPair,
 				chromeFeatureFastPairSavedDevices,
 				chromeFeatureFastPairHID,
+				chromeFeatureFastPairKeyboards,
 			},
 			DisableFeatures:        []string{},
 			LoginMode:              ui.LoginMode_LOGIN_MODE_GAIA_LOGIN,

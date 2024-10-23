@@ -583,3 +583,20 @@ func (b *BtService) IsSWBSupported(ctx context.Context, empty *emptypb.Empty) (*
 		SwbSupported: supported,
 	}, nil
 }
+
+// GetPasskey monitors the bonding process for specified address and returns passkey
+// for keyboard pairing.
+//
+// This blocks until the passkey is returned or timeout is hit.
+func (b *BtService) GetPasskey(ctx context.Context, request *pb.GetPasskeyRequest) (*pb.GetPasskeyResponse, error) {
+	if err := b.assertHasFacade(); err != nil {
+		return nil, err
+	}
+	passkey, err := b.facade.GetPasskey(ctx, request.DeviceAddress)
+	if err != nil {
+		return nil, err
+	}
+	return &pb.GetPasskeyResponse{
+		Passkey: passkey,
+	}, nil
+}

@@ -221,6 +221,12 @@ type BluetoothFacade interface {
 
 	// IsSWBSupported returns true if the adapter supports Super Wide-Band (SWB).
 	IsSWBSupported(ctx context.Context) (bool, error)
+
+	// GetPasskey monitors the bonding process for specified address and returns passkey
+	// for keyboard pairing.
+	//
+	// This blocks until the passkey is returned or timeout is hit.
+	GetPasskey(ctx context.Context, address string) (uint32, error)
 }
 
 // DiscoverDevice will start discovery, wait until a device is found, and then

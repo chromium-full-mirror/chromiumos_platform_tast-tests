@@ -608,3 +608,8 @@ func (b *BluetoothBluezFacade) IsWBSSupported(ctx context.Context) (bool, error)
 func (b *BluetoothBluezFacade) IsSWBSupported(ctx context.Context) (bool, error) {
 	return false, nil
 }
+
+// GetPasskey is currently not supported on BlueZ
+func (b *BluetoothBluezFacade) GetPasskey(ctx context.Context, address string) (uint32, error) {
+	return 0, errors.New("GetPasskey is not supported on BlueZ")
+}

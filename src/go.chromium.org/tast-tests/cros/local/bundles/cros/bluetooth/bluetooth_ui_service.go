@@ -120,6 +120,27 @@ func (bui *BtUIService) PairWithFastPairNotification(ctx context.Context, reques
 		return nil, errors.Wrap(err, "failed to wait for fast pair pairing notification to disappear")
 	}
 
+	// For keyboards, we also expect a passkey notification
+	if request.IsKeyboard {
+		_, err = ash.WaitForNotification(
+			ctx,
+			tConn,
+			1*time.Minute,
+			ash.WaitIDContains(bluetooth.NotificationIDFastPairDisplayPasskey),
+		)
+		if err != nil {
+			return nil, errors.Wrap(err, "failed to wait for fast pair display passkey notification to appear")
+		}
+		if err := ash.WaitUntilNotificationGone(
+			ctx,
+			tConn,
+			1*time.Minute,
+			ash.WaitIDContains(bluetooth.NotificationIDFastPairDisplayPasskey),
+		); err != nil {
+			return nil, errors.Wrap(err, "failed to wait for fast pair display passkey notification to disappear")
+		}
+	}
+
 	// Check to make sure error notification does not appear.
 	fastPairErrorNotification, err := ash.WaitForNotification(
 		ctx,
