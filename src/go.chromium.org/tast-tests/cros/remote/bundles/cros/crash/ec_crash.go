@@ -175,6 +175,9 @@ func ECCrash(ctx context.Context, s *testing.State) {
 		}
 		s.Fatal("Failed to find crash files: " + err.Error())
 	}
+	if err := h.UpdateECCrashCache(ctx); err != nil {
+		s.Fatal("Failed to update EC crash file cache after test: ", err)
+	}
 
 	// Verify that parsed EC crash does not contain WARNING/ERROR
 	failureRegexp := regexp.MustCompile(`^(ERROR|WARNING):.*$`)
