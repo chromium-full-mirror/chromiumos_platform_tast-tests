@@ -234,7 +234,8 @@ func ChannelScanDwellTime(ctx context.Context, s *testing.State) {
 			s.Logf("Scan found %d APs", len(bssList))
 			return bssList, capturer, nil
 		}(ctx)
-		if errFailedToPerformTest != nil {
+		if err != nil {
+			errFailedToPerformTest = err
 			s.Fatal("Failed to perform test: ", err)
 		}
 
