@@ -23,16 +23,18 @@ import (
 	"go.chromium.org/tast-tests/cros/local/chrome/uiauto/office"
 	"go.chromium.org/tast-tests/cros/local/chrome/uiauto/role"
 	"go.chromium.org/tast-tests/cros/local/filemanager"
+	"go.chromium.org/tast-tests/cros/local/input"
 	"go.chromium.org/tast-tests/cros/local/onedrive"
 	"go.chromium.org/tast-tests/cros/local/policyutil"
 	"go.chromium.org/tast/core/ctxutil"
+	"go.chromium.org/tast/core/errors"
 	"go.chromium.org/tast/core/testing"
 )
 
 type userParamStayInM365 struct {
-	username       string
-	password       string
-	useAccountPool bool
+	username            string
+	password            string
+	isConsumerMicrosoft bool
 }
 
 func init() {
@@ -65,14 +67,14 @@ func init() {
 		Params: []testing.Param{{
 			Name: "consumer",
 			Val: userParamStayInM365{
-				useAccountPool: true,
+				isConsumerMicrosoft: true,
 			},
 		}, {
 			Name: "commercial",
 			Val: userParamStayInM365{
-				useAccountPool: false,
-				username:       "onedrive.managedusernamemicrosoft",
-				password:       "onedrive.managedpassword",
+				isConsumerMicrosoft: false,
+				username:            "onedrive.managedusernamemicrosoft",
+				password:            "onedrive.managedpassword",
 			},
 		}},
 		SearchFlags: []*testing.StringPair{
@@ -82,6 +84,57 @@ func init() {
 			pci.SearchFlag(&policy.MicrosoftOfficeCloudUpload{}, pci.Served),
 		},
 	})
+}
+
+// maybeDismissOneDriveAd will close any potential ad which might pop up when the user opens their files in OneDrive.
+func maybeDismissOneDriveAd(ui *uiauto.Context, oneDriveUIAncestor *nodewith.Finder) uiauto.Action {
+	oneDriveAdDialog := nodewith.Role(role.AlertDialog).Ancestor(oneDriveUIAncestor)
+	oneDriveCloseAdButton := nodewith.Role(role.Button).Name("Close").Ancestor(oneDriveAdDialog)
+
+	return func(ctx context.Context) error {
+		if err := ui.WaitUntilExists(oneDriveUIAncestor)(ctx); err != nil {
+			return errors.Wrap(err, "failed to find the OneDrive context")
+		}
+
+		if err := ui.EnsureGoneFor(oneDriveAdDialog, 5*time.Second)(ctx); err != nil {
+			return ui.LeftClickUntil(oneDriveCloseAdButton, ui.Gone(oneDriveAdDialog))(ctx)
+		}
+		return nil
+	}
+}
+
+// findFile will first search & select a file row in the list of files and will
+// then go through the list by clicking the down button until the target file
+// was found.
+func findFile(ui *uiauto.Context, oneDriveUIAncestor, targetFile *nodewith.Finder) uiauto.Action {
+	myFileList := nodewith.Role(role.Grid).Name("My files").Ancestor(oneDriveUIAncestor)
+	fileItem := nodewith.Role(role.Row).Ancestor(myFileList).Offscreen().First()
+
+	return func(ctx context.Context) error {
+		if err := ui.WaitUntilExists(myFileList)(ctx); err != nil {
+			return errors.Wrap(err, "failed to find my files")
+		}
+
+		if err := ui.Exists(targetFile)(ctx); err == nil {
+			return nil
+		}
+
+		// Set up keyboard.
+		kb, err := input.VirtualKeyboard(ctx)
+		if err != nil {
+			return errors.Wrap(err, "failed to get keyboard")
+		}
+		defer kb.Close(ctx)
+
+		if err = ui.DoDefault(fileItem)(ctx); err != nil {
+			return errors.Wrap(err, "failed to select a file in the list of files")
+		}
+
+		if err = ui.RetryUntil(kb.AccelAction("down"), ui.Exists(targetFile))(ctx); err != nil {
+			return errors.Wrap(err, "failed to find target file")
+		}
+		return nil
+	}
 }
 
 // OdfsStayInM365Pwa verifies that the user stays within the M365 PWA when they
@@ -128,7 +181,7 @@ func OdfsStayInM365Pwa(ctx context.Context, s *testing.State) {
 		&policy.MicrosoftOfficeCloudUpload{Val: "allowed"}})
 
 	param := s.Param().(userParamStayInM365)
-	if param.useAccountPool {
+	if param.isConsumerMicrosoft {
 		accountPool := s.RequiredVar("onedrive.accountPool")
 		msCreds, err := credconfig.PickRandomCreds(accountPool)
 		if err != nil {
@@ -200,11 +253,12 @@ func OdfsStayInM365Pwa(ctx context.Context, s *testing.State) {
 
 	ui := uiauto.New(tconn).WithTimeout(30 * time.Second)
 	if err := uiauto.Combine("Create a new PowerPoint presentation in M365",
-		ui.WaitUntilExists(m365Window),
 		ui.WaitUntilExists(appsButton),
-		ui.LeftClickUntil(appsButton, ui.Exists(powerPointLink)),
-		ui.LeftClickUntil(powerPointLink, ui.Exists(newPresentationLink)),
-		ui.LeftClick(newPresentationLink),
+		ui.DoDefault(appsButton),
+		ui.WaitUntilExists(powerPointLink),
+		ui.DoDefault(powerPointLink),
+		ui.WaitUntilExists(newPresentationLink),
+		ui.DoDefault(newPresentationLink),
 	)(ctx); err != nil {
 		s.Fatal("Failed to create a new PowerPoint presentation from M365: ", err)
 	}
@@ -238,17 +292,24 @@ func OdfsStayInM365Pwa(ctx context.Context, s *testing.State) {
 		s.Fatal("Failed to launch Microsoft 365: ", err)
 	}
 
+	oneDriveUIAncestor := m365Context
+	if param.isConsumerMicrosoft {
+		oneDriveUIAncestor = nodewith.Role(role.Window).NameRegex(regexp.MustCompile("Microsoft 365.*OneDrive")).ClassName("BrowserFrame")
+	}
 	oneDriveButton := nodewith.Role(role.ToggleButton).NameContaining("OneDrive").Ancestor(m365Context).First()
-	myFilesButton := nodewith.Role(role.Link).NameContaining("My files").Ancestor(m365Context)
-	fileNameButton := nodewith.Role(role.Button).Name(fileName).Ancestor(m365Context)
-	if err := uiauto.Combine("Re-open the PowerPoint presentation in M365",
-		ui.WaitUntilExists(m365Window),
+	myFilesButton := nodewith.Role(role.Link).NameContaining("My files").Ancestor(oneDriveUIAncestor)
+	fileNameButton := nodewith.Role(role.StaticText).Name(fileName).Ancestor(oneDriveUIAncestor)
+	if err := uiauto.Combine("Open my files in OneDrive",
 		ui.WaitUntilExists(oneDriveButton),
-		ui.LeftClickUntil(oneDriveButton, ui.Exists(myFilesButton)),
-		ui.LeftClickUntil(myFilesButton, ui.Exists(fileNameButton)),
-		ui.LeftClick(fileNameButton),
+		ui.DoDefault(oneDriveButton),
+		maybeDismissOneDriveAd(ui, oneDriveUIAncestor),
+		ui.WaitUntilExists(myFilesButton),
+		ui.DoDefault(myFilesButton),
+		findFile(ui, oneDriveUIAncestor, fileNameButton),
+		ui.ScrollToVisible(fileNameButton),
+		ui.DoDefault(fileNameButton),
 	)(ctx); err != nil {
-		s.Fatal("Failed to re-open the PowerPoint presentation in M365: ", err)
+		s.Fatal("Failed to open the just created file in OneDrive: ", err)
 	}
 
 	if err := ms365App.WaitForMicrosoft365EditorWindowAndClose(tconn, fileName)(ctx); err != nil {
