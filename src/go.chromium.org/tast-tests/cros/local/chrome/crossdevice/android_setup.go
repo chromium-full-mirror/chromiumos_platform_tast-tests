@@ -155,7 +155,19 @@ func GAIALogin(ctx context.Context, d *adb.Device, accountUtilZipPath, username,
 	}
 
 	// Install the GoogleAccountUtil APK.
-	if err := d.Install(ctx, filepath.Join(tempDir, AccountUtilApk), adb.InstallOptionGrantPermissions, adb.InstallOptionBypassLowTargetSDKBlock); err != nil {
+	var installOptions []adb.InstallOption = []adb.InstallOption{adb.InstallOptionGrantPermissions}
+	if versionProp, err := d.GetProp(ctx, "ro.build.version.release"); err != nil {
+		testing.ContextLog(ctx, "Failed to get Android version prop: ", err.Error())
+	} else if versionNumber, err := strconv.Atoi(versionProp); err != nil {
+		testing.ContextLog(ctx, "Failed to get Android version: ", err.Error())
+	} else {
+		testing.ContextLog(ctx, "Android version: ", versionNumber)
+		// If Android version is 14 or higher, bypass the low target SDK block.
+		if versionNumber >= 14 {
+			installOptions = append(installOptions, adb.InstallOptionBypassLowTargetSDKBlock)
+		}
+	}
+	if err := d.Install(ctx, filepath.Join(tempDir, AccountUtilApk), installOptions...); err != nil {
 		return errors.Wrap(err, "failed to install GoogleAccountUtil APK on the device")
 	}
 
