@@ -19,6 +19,7 @@ import (
 
 	rep "go.chromium.org/chromiumos/reporting"
 	xdr "go.chromium.org/chromiumos/xdr/secagentd"
+	pb "go.chromium.org/tast-tests/cros/services/cros/secagentd"
 
 	"go.chromium.org/tast-tests/cros/common/testexec"
 	"go.chromium.org/tast-tests/cros/local/chrome"
@@ -40,31 +41,11 @@ type TestName string
 type fileEventType string
 
 const (
-	// UserFiles - test that writes to user file area generates file events.
-	UserFiles TestName = "USER_FILES"
-	// Rootfs - test that writes to the rootfs generates a file event.
-	Rootfs TestName = "ROOTFS"
-	// Hardlink - tests that file operations on a hardlink that points to a
-	// sensitive location generates the correct events.
-	Hardlink TestName = "HARDLINK"
-	// MassStorageUSB - test a file being written to USB mass storage.
-	MassStorageUSB TestName = "USB_MASS_STORAGE"
-	// Cookies - tests that read/write to cookies generates file events.
-	Cookies TestName = "COOKIES"
-	// UserCredential - tests that read/writes to user credentials generates file events.
-	UserCredential TestName = "ENCRYPTED_USER_CREDENTIAL"
-	// DevicePolicy - tests that writes to the device policy generates file events.
-	DevicePolicy TestName = "DEVICE_POLICY"
-	// DevicePolicyKey - tests that writes to the policy key generates file events.
-	DevicePolicyKey TestName = "DEVICE_POLICY_KEY"
-	// TpmKey - tests that writing to the TPM key generates a file events.
-	TpmKey TestName = "TPM_KEY"
-	// AuthFactors - tests that modification of auth factors meta data generates file events.
-	AuthFactors TestName = "USER_AUTH_FACTORS_FILE"
-
 	modifyEvent fileEventType = "MODIFY"
 	readEvent   fileEventType = "READ"
+)
 
+const (
 	tempDir        string = "/usr/local/tmp"
 	synchLogString string = "File plugin activated"
 )
@@ -73,7 +54,7 @@ type restoreFile struct {
 	name     string
 	copyIsAt string
 }
-type testCase struct {
+type testDetails struct {
 	filesToRestore []*restoreFile
 	commandDetails []*commandDetail
 }
@@ -139,7 +120,7 @@ type FileEvent struct {
 // In the case where the context is a remote test execution,
 // errorsList will be populated with log messages, error messages
 // and fatal messages.
-func (f FileEvent) DoTest(ctx context.Context, tc *testCase) {
+func (f FileEvent) DoTest(ctx context.Context, tc *testDetails) {
 	cleanupCtx := ctx
 	ctx, cancel := ctxutil.Shorten(cleanupCtx, 15*time.Second)
 	defer cancel()
@@ -455,7 +436,7 @@ func matchAttributes(actualImage *xdr.FileImage, expectedStats *syscall.Stat_t) 
 
 // GetFileEventDetails - based on a test case name, generate a test case which can
 // be passed into DoTest to run the test.
-func GetFileEventDetails(ctx context.Context, testCaseName TestName, cr *chrome.Chrome) (*testCase, error) {
+func GetFileEventDetails(ctx context.Context, testCase pb.TestCase, cr *chrome.Chrome) (*testDetails, error) {
 	sysCmds := map[string]string{
 		"dd":      "bad",
 		"touch":   "bad",
@@ -473,25 +454,33 @@ func GetFileEventDetails(ctx context.Context, testCaseName TestName, cr *chrome.
 			return nil, errors.Wrap(err, "failed to get command details")
 		}
 	}
+	var normalizedUser string
+	if testCase != pb.TestCase_ROOT_FS {
+		if cr == nil { // cr should only be nil for remote test and the only
+			// remote test is the root_fs test.
+			return nil, errors.New(testCase.String() +
+				" is a local only test and was attempted to be executed as a " +
+				"remote test")
+		}
+		normalizedUser = cr.NormalizedUser()
+	}
 
-	normalizedUser := cr.NormalizedUser()
-
-	switch testCaseName {
-	case AuthFactors:
+	switch testCase {
+	case pb.TestCase_AUTH_FACTORS:
 		hashedUser, _ := cryptohome.UserHash(ctx, cr.NormalizedUser())
 		authFactorsDir := "/home/.shadow/" + hashedUser + "/auth_factors"
 		return generateWriteTestCaseForAllFilesUnderDir(ctx, authFactorsDir,
-			AuthFactors, &sysCmds,
+			testCase, &sysCmds,
 			xdr.SensitiveFileType_USER_AUTH_FACTORS_FILE)
 
-	case UserCredential:
+	case pb.TestCase_USER_CREDENTIAL:
 		hashedUser, _ := cryptohome.UserHash(ctx, cr.NormalizedUser())
 		secretStashDir := "/home/.shadow/" + hashedUser + "/user_secret_stash"
 		return generateRwTestCaseForAllFilesUnderDir(ctx, secretStashDir,
-			UserCredential, &sysCmds,
+			testCase, &sysCmds,
 			xdr.SensitiveFileType_USER_ENCRYPTED_CREDENTIAL)
 
-	case Rootfs:
+	case pb.TestCase_ROOT_FS:
 		outputFile := "/bin/testcase"
 		// Test setup, remount rootfs as rw then on exit remount it when test is
 		// done.
@@ -509,9 +498,9 @@ func GetFileEventDetails(ctx context.Context, testCaseName TestName, cr *chrome.
 		})
 		cmds = appendDDCommand(ctx, cmds, outputFile, &sysCmds, xdr.SensitiveFileType_ROOT_FS)
 		cmds = appendModifyAttributeCommand(ctx, cmds, outputFile, &sysCmds, xdr.SensitiveFileType_ROOT_FS)
-		return &testCase{commandDetails: cmds}, nil
+		return &testDetails{commandDetails: cmds}, nil
 
-	case UserFiles:
+	case pb.TestCase_USER_FILES:
 		downloadsPath, err := cryptohome.DownloadsPath(ctx, normalizedUser)
 		if err != nil {
 			return nil, errors.Wrap(err, "failed to generate command list ")
@@ -519,11 +508,11 @@ func GetFileEventDetails(ctx context.Context, testCaseName TestName, cr *chrome.
 		}
 		outputFile := filepath.Join(downloadsPath, "file_events_test")
 		cmds = appendRWCommandDetails(ctx, cmds, outputFile, &sysCmds, xdr.SensitiveFileType_USER_FILE)
-		return &testCase{commandDetails: cmds}, nil
+		return &testDetails{commandDetails: cmds}, nil
 
-	case Cookies:
+	case pb.TestCase_COOKIES:
 		userPath, _ := cryptohome.UserPath(ctx, normalizedUser)
-		rv := testCase{}
+		rv := testDetails{}
 		cookieNames := []string{"Cookies", "Cookies-journal", "Safe Browsing Cookies", "Safe Browsing Cookies-journal"}
 		for _, fileName := range cookieNames {
 			outputFile := filepath.Join(userPath, fileName)
@@ -532,8 +521,8 @@ func GetFileEventDetails(ctx context.Context, testCaseName TestName, cr *chrome.
 		}
 		return &rv, nil
 
-	case TpmKey:
-		rv := testCase{}
+	case pb.TestCase_TPM_KEY:
+		rv := testDetails{}
 		secretNames := []string{"cryptohome.key", "cryptohome.ecc.key"}
 		for _, fileName := range secretNames {
 			outputFile := filepath.Join("/home/.shadow/", fileName)
@@ -542,15 +531,15 @@ func GetFileEventDetails(ctx context.Context, testCaseName TestName, cr *chrome.
 		}
 		return &rv, nil
 	}
-	return nil, errors.New("could not generate a command detail for " + string(testCaseName) + ", not supported")
+	return nil, errors.New("could not generate a command detail for " + testCase.String() + ", not supported")
 }
 
-func generateRwTestCaseForAllFilesUnderDir(ctx context.Context, dirName string, testCaseName TestName, sysCmds *map[string]string, fileType xdr.SensitiveFileType) (*testCase, error) {
+func generateRwTestCaseForAllFilesUnderDir(ctx context.Context, dirName string, testCase pb.TestCase, sysCmds *map[string]string, fileType xdr.SensitiveFileType) (*testDetails, error) {
 	files, err := recursiveGetFiles(dirName)
 	if err != nil {
-		return nil, errors.Wrapf(err, "failed to generate %q test vector, error listing files in %q", testCaseName, dirName)
+		return nil, errors.Wrapf(err, "failed to generate %q test vector, error listing files in %q", testCase.String(), dirName)
 	}
-	var rv testCase
+	var rv testDetails
 	for _, file := range files {
 		rv.commandDetails = appendRWCommandDetails(ctx, rv.commandDetails, file, sysCmds, fileType)
 		rv.filesToRestore = append(rv.filesToRestore, &restoreFile{name: file})
@@ -558,12 +547,12 @@ func generateRwTestCaseForAllFilesUnderDir(ctx context.Context, dirName string, 
 	return &rv, nil
 }
 
-func generateWriteTestCaseForAllFilesUnderDir(ctx context.Context, dirName string, testCaseName TestName, sysCmds *map[string]string, fileType xdr.SensitiveFileType) (*testCase, error) {
+func generateWriteTestCaseForAllFilesUnderDir(ctx context.Context, dirName string, testCase pb.TestCase, sysCmds *map[string]string, fileType xdr.SensitiveFileType) (*testDetails, error) {
 	files, err := recursiveGetFiles(dirName)
 	if err != nil {
-		return nil, errors.Wrapf(err, "failed to generate %q test vector, error listing files in %q", testCaseName, dirName)
+		return nil, errors.Wrapf(err, "failed to generate %q test vector, error listing files in %q", testCase.String(), dirName)
 	}
-	var rv testCase
+	var rv testDetails
 	for _, file := range files {
 		rv.commandDetails = appendDDCommand(ctx, rv.commandDetails, file, sysCmds, fileType)
 		rv.commandDetails = appendModifyAttributeCommand(ctx, rv.commandDetails, file, sysCmds, fileType)

@@ -14,6 +14,7 @@ import (
 	fe "go.chromium.org/tast-tests/cros/local/bundles/cros/secagentd/fileeventsimpl"
 	"go.chromium.org/tast-tests/cros/local/bundles/cros/secagentd/fixture"
 	"go.chromium.org/tast-tests/cros/local/cryptohome"
+	pb "go.chromium.org/tast-tests/cros/services/cros/secagentd"
 	"go.chromium.org/tast/core/testing"
 )
 
@@ -34,49 +35,32 @@ func init() {
 		LacrosStatus: testing.LacrosVariantUnneeded,
 		Fixture:      fixture.LoggedInWithFileEventsEnabled,
 		Params: []testing.Param{{
-			Name: "user_fs",
-			Val: fileTypeParams{
-				TestType: fe.UserFiles,
-			},
+			Name:      "user_fs",
+			Val:       pb.TestCase_USER_FILES,
 			ExtraAttr: []string{"group:mainline", "informational"},
 		}, {
-			Name: "root_fs",
-			Val: fileTypeParams{
-				TestType: fe.Rootfs,
-			},
+			Name:      "root_fs",
+			Val:       pb.TestCase_ROOT_FS,
 			ExtraAttr: []string{"group:mainline", "informational"},
 		}, {
-			Name: "user_credential",
-			Val: fileTypeParams{
-				TestType: fe.UserCredential,
-			},
+			Name:      "user_credential",
+			Val:       pb.TestCase_USER_CREDENTIAL,
 			ExtraAttr: []string{"group:mainline", "informational"},
 		}, {
-			Name: "cookies",
-			Val: fileTypeParams{
-				TestType: fe.Cookies,
-			},
+			Name:      "cookies",
+			Val:       pb.TestCase_COOKIES,
 			ExtraAttr: []string{"group:mainline", "informational"},
 		}, {
-			Name: "tpm_key",
-			Val: fileTypeParams{
-				TestType: fe.TpmKey,
-			},
+			Name:      "tpm_key",
+			Val:       pb.TestCase_TPM_KEY,
 			ExtraAttr: []string{"group:mainline", "informational"},
 		}, {
-			Name: "auth_factors",
-			Val: fileTypeParams{
-				TestType: fe.AuthFactors,
-			},
+			Name:      "auth_factors",
+			Val:       pb.TestCase_AUTH_FACTORS,
 			ExtraAttr: []string{"group:mainline", "informational"},
 		},
 		},
 	})
-}
-
-// FileTypeParams
-type fileTypeParams struct {
-	TestType fe.TestName
 }
 
 // FileEvents triggers various file events in different monitored sensitive areas and verifies that the
@@ -96,7 +80,7 @@ func FileEvents(ctx context.Context, s *testing.State) {
 	s.Log("cryptohome userpath:", userPath)
 	s.Log("cryptohome mountedVaultPath:", mountedVaultPath)
 	s.Log("cryptohome hashed user:", hashedUser)
-	testCase, err := fe.GetFileEventDetails(ctx, s.Param().(fileTypeParams).TestType, cr)
+	testCase, err := fe.GetFileEventDetails(ctx, s.Param().(pb.TestCase), cr)
 	if err != nil {
 		s.Fatal("Invalid test case: ", err)
 	}

@@ -1,0 +1,28 @@
+syntax = "proto3";
+
+package tast.cros.secagentd;
+
+import "google/protobuf/empty.proto";
+
+option go_package = "go.chromium.org/tast-tests/cros/services/cros/secagentd";
+
+// Follow instructions documented in gen.go after making changes to the proto.
+
+// FileEventService runs the file event test on the DUT.
+service FileEventService {
+  rpc TestFileEvents(TestFileEventsRequest) returns (google.protobuf.Empty) {}
+}
+
+enum TestCase {
+  UNKNOWN = 0;
+  ROOT_FS = 1;
+  USB = 2;
+  COOKIES = 3;
+  USER_CREDENTIAL = 4;
+  DEVICE_POLICY = 5;
+  TPM_KEY = 6;
+  AUTH_FACTORS = 7;
+  USER_FILES = 8;
+}
+
+message TestFileEventsRequest { optional TestCase name = 1; }
