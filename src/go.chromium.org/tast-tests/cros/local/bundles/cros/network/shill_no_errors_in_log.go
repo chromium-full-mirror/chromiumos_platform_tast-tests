@@ -13,9 +13,11 @@ import (
 
 	"go.chromium.org/tast-tests/cros/common/shillconst"
 	"go.chromium.org/tast-tests/cros/local/network"
+	"go.chromium.org/tast-tests/cros/local/network/testhooks"
 	"go.chromium.org/tast-tests/cros/local/shill"
 	"go.chromium.org/tast-tests/cros/local/syslog"
 	"go.chromium.org/tast-tests/cros/local/upstart"
+	"go.chromium.org/tast/core/ctxutil"
 	"go.chromium.org/tast/core/testing"
 )
 
@@ -77,6 +79,12 @@ func startShillAndWaitForNetworks(ctx context.Context, s *testing.State) {
 }
 
 func ShillNoErrorsInLog(ctx context.Context, s *testing.State) {
+	// If the main body of the test times out, we still want to reserve a few
+	// seconds to allow for our cleanup code to run.
+	cleanupCtx := ctx
+	ctx, cancel := ctxutil.Shorten(cleanupCtx, 10*time.Second)
+	defer cancel()
+
 	// We lose connectivity along the way here, and if that races with the
 	// recover_duts network-recovery hooks, it may interrupt us. Lock the hook
 	// before shill restarted.
@@ -89,7 +97,17 @@ func ShillNoErrorsInLog(ctx context.Context, s *testing.State) {
 	if err := upstart.StopJob(ctx, shillJob); err != nil {
 		s.Fatal("Failed stopping shill: ", err)
 	}
-	defer upstart.RestartJob(ctx, shillJob)
+	defer upstart.RestartJob(cleanupCtx, shillJob)
+
+	// Save the net.log into the test folder to make debugging easier.
+	hookEnv, err := testhooks.RunNetworkTestHooks(ctx,
+		testhooks.NewSaveNetLogHook(),
+	)
+	if err != nil {
+		s.Fatal("Failed to run network test hooks: ", err)
+	}
+	s.AttachErrorHandlers(hookEnv.OnErrorHandler, hookEnv.OnFatalHandler)
+	defer hookEnv.TearDownWithLogFailures(cleanupCtx, s.HasError)
 
 	sr, err := syslog.NewReader(ctx, syslog.SourcePath(syslog.NetLogFile), syslog.Severities(syslog.Err))
 	if err != nil {
