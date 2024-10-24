@@ -14,8 +14,6 @@ import (
 	"go.chromium.org/tast-tests/cros/common/policy/fakedms"
 	"go.chromium.org/tast-tests/cros/common/u2fd"
 	"go.chromium.org/tast-tests/cros/local/chrome"
-	"go.chromium.org/tast-tests/cros/local/chrome/browser"
-	"go.chromium.org/tast-tests/cros/local/chrome/browser/browserfixt"
 	"go.chromium.org/tast-tests/cros/local/chrome/uiauto"
 	"go.chromium.org/tast-tests/cros/local/chrome/uiauto/faillog"
 	"go.chromium.org/tast-tests/cros/local/chrome/uiauto/nodewith"
@@ -214,11 +212,10 @@ func WebauthnFactors(ctx context.Context, s *testing.State) {
 					s.Fatal("Failed to set up PIN: ", err)
 				}
 
-				conn, _, closeBrowser, err := browserfixt.SetUpWithURL(ctx, cr, browser.TypeAsh, server.URL+"/webauthn/webauthn.html")
+				conn, err := cr.NewConn(ctx, server.URL+"/webauthn/webauthn.html")
 				if err != nil {
 					s.Fatal("Failed to open the browser: ", err)
 				}
-				defer closeBrowser(cleanupCtx)
 				defer conn.Close()
 
 				if err := verifyInSessionAuthDialog(ctx, conn, tconn, pinCapabilities.webAuthn); err != nil {
