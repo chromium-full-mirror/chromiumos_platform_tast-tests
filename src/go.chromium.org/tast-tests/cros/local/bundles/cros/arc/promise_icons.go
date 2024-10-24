@@ -30,15 +30,14 @@ func init() {
 			"mattlui@google.com",
 		},
 		BugComponent: "b:1203766",
-		Attr:         []string{
-			// Disabled by TORA.  See:b/331956003.
-			// "group:mainline", "informational"
-			},
+		Attr: []string{
+			"group:mainline",
+			"informational",
+		},
 		SoftwareDeps: []string{
 			"chrome",
-			// Disabled by TORA.  See:b/331956003.
-			//"gaia"
-			},
+			"gaia",
+		},
 		Params: []testing.Param{
 			{
 				// Promise Icons requires Android R+ (android_container which includes pi will not work).
@@ -57,9 +56,13 @@ func init() {
 // PromiseIcons test checks for the presence of a promise icon in the Launcher when a Play Store installation starts.
 func PromiseIcons(ctx context.Context, s *testing.State) {
 	const (
-		packageName     = "com.supercell.brawlstars"
-		waitingLabel    = "Brawl Stars, waiting"
-		installingLabel = "Brawl Stars, installing"
+		// The test app must be:
+		// 1. Compatible with all devices, including the Betty VM and devices
+		// without touchscreens, or the Play Store will have a "This Chromebook
+		// isn't compatible with this app" error instead of an install button.
+		// 2. Large enough that install is not less than 20 seconds.
+		packageName     = "com.kingsgroup.sos"
+		installingLabel = "State of Survival: Zombie War, installing"
 	)
 
 	cr := s.FixtValue().(*arc.PreData).Chrome
@@ -93,11 +96,7 @@ func PromiseIcons(ctx context.Context, s *testing.State) {
 		s.Fatal("Failed to open launcher: ", err)
 	}
 
-	s.Log("Search for the Waiting status promise icon")
-	if err := ui.WaitUntilExists(launcher.AppItemViewFinder(waitingLabel))(ctx); err != nil {
-		s.Log("Waiting status promise icon not found. Search for Installing status promise icon instead")
-		if err := ui.WaitUntilExists(launcher.AppItemViewFinder(installingLabel))(ctx); err != nil {
-			s.Fatal("Failed to find item with correct label in Launcher: ", err)
-		}
+	if err := ui.WaitUntilExists(launcher.AppItemViewFinder(installingLabel))(ctx); err != nil {
+		s.Fatal("Failed to find item with correct label in Launcher: ", err)
 	}
 }
