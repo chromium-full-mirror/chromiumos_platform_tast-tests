@@ -127,11 +127,6 @@ func (c *CitrixService) LoginCitrix(ctx context.Context, req *empty.Empty) (*emp
 		return nil, errors.Wrap(err, "failed to wait for desktop")
 	}
 
-	// Set the resolution to ensure that uidetection can detect the following UI.
-	if err := citrix.SwitchResolution(c.ud, citrix.ResolutionAutoFitScreen, c.dataPath)(ctx); err != nil {
-		return nil, errors.Wrap(err, "failed to switch resolution")
-	}
-
 	return &empty.Empty{}, nil
 }
 
