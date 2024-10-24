@@ -147,13 +147,27 @@ func CheckKeyboardBacklightFunctionality(ctx context.Context, s *testing.State) 
 		}(cleanupCtx)
 	}
 
-	kbLightUp, kbLightDown := getKeyForKbLightUpAndDown(h)
+	if err := h.RequirePlatform(ctx); err != nil {
+		s.Error("Could not read platform: ", err)
+	}
+	keyboardMapping, _, err := firmware.GetKeyboardMappings(ctx, h.DUT, h.Model, s.Features("").Hardware.HardwareFeatures)
+	if err != nil {
+		s.Fatal("Failed to get keyboard mappings: ", err)
+	}
+
+	kbLightUp, ok := keyboardMapping[firmware.LogicalKeyBrightnessUp]
+	if !ok {
+		s.Fatal("There is no key mapping for LogicalKeyBrightnessUp")
+	}
+	kbLightDown, ok := keyboardMapping[firmware.LogicalKeyBrightnessDown]
+	if !ok {
+		s.Fatal("There is no key mapping for LogicalKeyBrightnessDown")
+	}
 	// Press the keyboard to increase the backlight, creating a record in the powerd log.
 	if err := h.Servo.PressKeys(ctx, []string{"<alt_l>", kbLightUp}, servo.DurTab); err != nil {
 		s.Fatal("Failed to increase keyboard backlight: ", err)
 	}
 	var currKBLight float64
-	var err error
 	if err := testing.Poll(ctx, func(ctx context.Context) error {
 		currKBLight, err = func() (float64, error) {
 			matches, err := getKBLightValFromPowerd(ctx, h)
@@ -358,28 +372,4 @@ func getKBLightValFromPowerd(ctx context.Context, h *firmware.Helper) ([]float64
 		kbLightVals = append(kbLightVals, found)
 	}
 	return kbLightVals, nil
-}
-
-// getKeyForKbLightUpAndDown checks for the respective shortcuts to increase
-// and decrease keyboard backlight brightness.
-func getKeyForKbLightUpAndDown(h *firmware.Helper) (string, string) {
-	kbLightUp := "<f7>"
-	kbLightDown := "<f6>"
-	modelsWithShiftedShortcuts := []string{"atlas", "eve"}
-	// Some models use <f6> and <f5> instead for adjusting the kb light.
-	for _, model := range modelsWithShiftedShortcuts {
-		if h.Model == model {
-			kbLightUp = "<f6>"
-			kbLightDown = "<f5>"
-		}
-	}
-	modelsWithShiftedShortcutsF11F12 := []string{"greenbayupoc"}
-	// Some models use <f12> and <f11> instead for adjusting the kb light.
-	for _, model := range modelsWithShiftedShortcutsF11F12 {
-		if h.Model == model {
-			kbLightUp = "<f12>"
-			kbLightDown = "<f11>"
-		}
-	}
-	return kbLightUp, kbLightDown
 }

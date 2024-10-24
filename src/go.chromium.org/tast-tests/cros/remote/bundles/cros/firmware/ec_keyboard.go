@@ -6,11 +6,8 @@ package firmware
 
 import (
 	"bufio"
-	"bytes"
 	"context"
-	"fmt"
 	"regexp"
-	"strconv"
 	"strings"
 	"time"
 
@@ -36,7 +33,7 @@ const (
 func init() {
 	testing.AddTest(&testing.Test{
 		Func: ECKeyboard,
-		Desc: "Test EC Keyboard interface",
+		Desc: "Verifies that the emulated keyboard works for all important keys",
 		Contacts: []string{
 			"chromeos-faft@google.com",
 			"tij@google.com",
@@ -67,6 +64,7 @@ const (
 	keyPressDur = 100 * time.Millisecond // Equivalent to DurTab keypress.
 )
 
+// ECKeyboard tests the emulated keyboard works. If this test fails, you may need to edit the keymapping in src/go.chromium.org/tast-tests/cros/remote/firmware/keyboard.go
 func ECKeyboard(ctx context.Context, s *testing.State) {
 	h := s.FixtValue().(*fixture.Value).Helper
 	if err := h.RequireServo(ctx); err != nil {
@@ -105,6 +103,7 @@ func ECKeyboard(ctx context.Context, s *testing.State) {
 	var device string
 	var testKeyMap map[string]string
 	var keyPressFunc func(context.Context, string) error
+	expectedKeyMap := map[string]string{}
 
 	switch testType {
 	case servoUSBKeyboard:
@@ -113,7 +112,7 @@ func ECKeyboard(ctx context.Context, s *testing.State) {
 		}
 		// Only usb_keyboard_enter_key uses the usb keyboard handler in servo.
 		testKeyMap = map[string]string{
-			"usb_keyboard_enter_key": "KEY_ENTER",
+			"KEY_ENTER": "usb_keyboard_enter_key",
 		}
 		keyPressFunc = func(ctx context.Context, keyStr string) error {
 			key := servo.KeypressControl(keyStr)
@@ -133,128 +132,14 @@ func ECKeyboard(ctx context.Context, s *testing.State) {
 				s.Fatal("Failed to disable usb keyboard: ", err)
 			}
 		}
-		testKeyMap = map[string]string{
-			"0":        "KEY_0",
-			"b":        "KEY_B",
-			"e":        "KEY_E",
-			"o":        "KEY_O",
-			"r":        "KEY_R",
-			"s":        "KEY_S",
-			"t":        "KEY_T",
-			"<enter>":  "KEY_ENTER",
-			"<ctrl_l>": "KEY_LEFTCTRL",
-			"<alt_l>":  "KEY_LEFTALT",
-			"<esc>":    "KEY_ESC",
-			"<tab>":    "KEY_TAB",
-			" ":        "KEY_SPACE",
+		if err := h.RequirePlatform(ctx); err != nil {
+			s.Error("Could not read platform: ", err)
 		}
-		// Run ectool to get vivaldi keys (requires OS >= R123-15775.0.0)
-		out, err := h.DUT.Conn().CommandContext(ctx, "ectool", "kbgetconfig").CombinedOutput()
+		var err error
+		testKeyMap, expectedKeyMap, err = firmware.GetKeyboardMappings(ctx, h.DUT, h.Model, s.Features("").Hardware.HardwareFeatures)
 		if err != nil {
-			// Host command not implemented: EC result 1 (INVALID_COMMAND)
-			// Vivaldi keyboard not enabled: EC result 2 (ERROR)
-			if strings.Contains(string(out), "EC result 1 (INVALID_COMMAND)") || strings.Contains(string(out), "EC result 2 (ERROR)") {
-				// Non-vivaldi devices that have key mappings
-				// 13577 trogdor/pazquel360: F5=KEY_SYSRQ F6=KEY_BRIGHTNESSDOWN F7=KEY_BRIGHTNESSUP
-				// 13885 asurada/spherion:   F5=KEY_SYSRQ F6=KEY_BRIGHTNESSDOWN F7=KEY_BRIGHTNESSUP
-				// 14454 cherry/tomato:      F5=KEY_SYSRQ F6=KEY_BRIGHTNESSDOWN F7=KEY_BRIGHTNESSUP
-				// 15194 corsola/steelix:    F5=KEY_BRIGHTNESSDOWN F6=KEY_BRIGHTNESSUP F7=KEY_MICMUTE
-				if err := h.RequirePlatform(ctx); err != nil {
-					s.Error("Could not read platform: ", err)
-				}
-				if h.Model == "steelix" || h.Model == "rusty" {
-					s.Log("Testing steelix keys: KEY_BRIGHTNESSDOWN, KEY_BRIGHTNESSUP, KEY_MICMUTE")
-					testKeyMap["<f5>"] = "KEY_BRIGHTNESSDOWN"
-					testKeyMap["<f6>"] = "KEY_BRIGHTNESSUP"
-					testKeyMap["<f7>"] = "KEY_MICMUTE"
-				} else if h.Model == "hayato" {
-					s.Log("Testing non-vivaldi keys: KEY_SCALE, KEY_RIGHTNESSDOWN, KEY_BRIGHTNESSUP")
-					testKeyMap["<f5>"] = "KEY_SCALE"
-					testKeyMap["<f6>"] = "KEY_BRIGHTNESSDOWN"
-					testKeyMap["<f7>"] = "KEY_BRIGHTNESSUP"
-				} else if s.Features("").Hardware.HardwareFeatures.FwConfig.FwRoVersion.MajorVersion >= 13885 || h.Model == "pompom" || h.Model == "kingoftown" || h.Model == "pazquel" || h.Model == "pazquel360" {
-					s.Log("Testing non-vivaldi keys: KEY_SYSRQ, KEY_BRIGHTNESSDOWN, KEY_BRIGHTNESSUP")
-					testKeyMap["<f5>"] = "KEY_SYSRQ"
-					testKeyMap["<f6>"] = "KEY_BRIGHTNESSDOWN"
-					testKeyMap["<f7>"] = "KEY_BRIGHTNESSUP"
-				} else {
-					// This is a legacy device
-					// 13577 trogdor/lazor
-					s.Log("Testing legacy keys: F5, F6, F7")
-					testKeyMap["<f5>"] = "KEY_F5"
-					testKeyMap["<f6>"] = "KEY_F6"
-					testKeyMap["<f7>"] = "KEY_F7"
-				}
-			} else {
-				s.Fatalf("ectool kbgetconfig failed: %v, %s", err, string(out))
-			}
-		} else {
-			// Servo can't press F11+, see src/third_party/hdctools/servo/drv/keyboard_handlers.py
-			s.Log("Testing vivaldi keys F1-F10")
-			sc := bufio.NewScanner(bytes.NewReader(out))
-			re := regexp.MustCompile(`^\s*(\d+): (\S[^\(]*) \(`)
-			for sc.Scan() {
-				m := re.FindStringSubmatch(sc.Text())
-				if m != nil {
-					idx, err := strconv.Atoi(m[1])
-					if err != nil {
-						s.Fatalf("Failed to parse %q in %q", m[1], sc.Text())
-					}
-					key := fmt.Sprintf("<f%d>", idx+1)
-					if idx >= 10 {
-						s.Logf("%s: %s IGNORED", key, m[2])
-						continue
-					}
-
-					// From src/third_party/coreboot/src/acpi/acpigen_ps2_keybd.c
-					switch m[2] {
-					case "Back":
-						testKeyMap[key] = "KEY_BACK"
-					case "Refresh":
-						testKeyMap[key] = "KEY_REFRESH"
-					case "Forward":
-						testKeyMap[key] = "KEY_FORWARD"
-					case "Fullscreen":
-						testKeyMap[key] = "KEY_ZOOM"
-					case "Overview":
-						testKeyMap[key] = "KEY_SCALE"
-					case "Brightness Down":
-						testKeyMap[key] = "KEY_BRIGHTNESSDOWN"
-					case "Brightness Up":
-						testKeyMap[key] = "KEY_BRIGHTNESSUP"
-					case "Volume Mute":
-						testKeyMap[key] = "KEY_MUTE"
-					case "Volume Down":
-						testKeyMap[key] = "KEY_VOLUMEDOWN"
-					case "Volume Up":
-						testKeyMap[key] = "KEY_VOLUMEUP"
-					case "Snapshot":
-						testKeyMap[key] = "KEY_SYSRQ"
-					case "Privacy Screen Toggle":
-						testKeyMap[key] = "KEY_PRIVACY_SCREEN_TOGGLE"
-					case "Keyboard Backlight Down":
-						testKeyMap[key] = "KEY_KBDILLUMDOWN"
-					case "Keyboard Backlight Up":
-						testKeyMap[key] = "KEY_KBDILLUMUP"
-					case "Play/Pause":
-						testKeyMap[key] = "KEY_PLAYPAUSE"
-					case "Next Track":
-						testKeyMap[key] = "KEY_NEXTSONG"
-					case "Previous Track":
-						testKeyMap[key] = "KEY_PREVIOUSSONG"
-					case "Keyboard Backlight Toggle":
-						testKeyMap[key] = "KEY_KBDILLUMTOGGLE"
-					case "Microphone Mute":
-						testKeyMap[key] = "KEY_MICMUTE"
-					case "Menu":
-						testKeyMap[key] = "KEY_CONTROLPANEL"
-					default:
-						s.Logf("%s: %s IGNORED", key, m[2])
-					}
-				}
-			}
+			s.Fatal("Failed to get keyboard mappings: ", err)
 		}
-
 		keyPressFunc = func(ctx context.Context, key string) error {
 			if err := h.Servo.PressKey(ctx, key, servo.Dur(keyPressDur)); err != nil {
 				return errors.Wrap(err, "failed to type key")
@@ -286,7 +171,12 @@ func ECKeyboard(ctx context.Context, s *testing.State) {
 		}
 	}()
 
-	for key, keyCode := range testKeyMap {
+	// Servo can't press F11+ on most devices, see src/third_party/hdctools/servo/drv/keyboard_handlers.py
+	// If one of the important keys is on F11 or F12, edit the keyboard matrix in keyboard_handlers.py.
+	for keyCode, key := range testKeyMap {
+		if alt, ok := expectedKeyMap[key]; ok {
+			keyCode = alt
+		}
 		s.Logf("Pressing key %q, expecting to read keycode %q", key, keyCode)
 		if err := readKeyPress(ctx, h, text, key, keyCode, keyPressFunc); err != nil {
 			s.Errorf("Failed to read key %q: %v", keyCode, err)
