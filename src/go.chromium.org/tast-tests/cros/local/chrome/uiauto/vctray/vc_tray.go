@@ -34,22 +34,22 @@ var (
 var (
 	bubleView = nodewith.NameContaining("Video Call Controls").HasClass("BubbleView").Role(role.Window)
 
-	studioLookButton        = nodewith.NameStartingWith("Toggle Appearance effects").Role(role.ToggleButton).Ancestor(bubleView)
-	liveCaptionButton       = nodewith.NameStartingWith("Toggle Live Caption").Role(role.ToggleButton).Ancestor(bubleView)
-	adjustCameraFraming     = nodewith.NameStartingWith("Toggle Camera framing").Role(role.ToggleButton).Ancestor(bubleView)
-	noiseCancellationButton = nodewith.NameStartingWith("Toggle Noise cancellation").Role(role.ToggleButton).Ancestor(bubleView)
-	settingsButton          = nodewith.Name("Settings").Role(role.Button).Ancestor(bubleView)
+	studioLookButton        = nodewith.NameStartingWith("Toggle Appearance effects").Role(role.ToggleButton)
+	liveCaptionButton       = nodewith.NameStartingWith("Toggle Live Caption").Role(role.ToggleButton)
+	adjustCameraFraming     = nodewith.NameStartingWith("Toggle Camera framing").Role(role.ToggleButton)
+	noiseCancellationButton = nodewith.NameStartingWith("Toggle Noise cancellation").Role(role.ToggleButton)
+	settingsButton          = nodewith.Name("Settings").Role(role.Button)
 	adjustLightingPref      = nodewith.NameStartingWith("Appearance effects preferences, Improve lighting").Role(role.MenuItem)
 	faceRetouchPref         = nodewith.NameStartingWith("Appearance effects preferences, Portrait touch-up").Role(role.MenuItem)
 
 	buttonNameRegexp           = regexp.MustCompile(`.*Button.*`)
-	bgBlurOffButton            = nodewith.NameContaining("Off").ClassNameRegex(buttonNameRegexp).Ancestor(bubleView)
-	bgBlurLightButton          = nodewith.NameContaining("Light").ClassNameRegex(buttonNameRegexp).Ancestor(bubleView)
-	bgBlurFullButton           = nodewith.NameContaining("Full").ClassNameRegex(buttonNameRegexp).Ancestor(bubleView)
-	bgBlurImageButton          = nodewith.NameContaining("Image").ClassNameRegex(buttonNameRegexp).Ancestor(bubleView)
-	createwWithAiButton        = nodewith.NameContaining("Create with AI").Role(role.Button).Ancestor(bubleView)
+	bgBlurOffButton            = nodewith.NameContaining("Off").ClassNameRegex(buttonNameRegexp)
+	bgBlurLightButton          = nodewith.NameContaining("Light").ClassNameRegex(buttonNameRegexp)
+	bgBlurFullButton           = nodewith.NameContaining("Full").ClassNameRegex(buttonNameRegexp)
+	bgBlurImageButton          = nodewith.NameContaining("Image").ClassNameRegex(buttonNameRegexp)
+	createwWithAiButton        = nodewith.NameContaining("Create with AI").Role(role.Button)
 	firstBackgroundImageButton = nodewith.ClassName("RecentlyUsedImageButton").Role(role.ListItem).First()
-	showAppsButton             = nodewith.NameContaining("Used by").Role(role.Button).Ancestor(bubleView)
+	showAppsButton             = nodewith.NameContaining("Used by").Role(role.Button)
 )
 
 // VCTray represents the type of video conference tray.

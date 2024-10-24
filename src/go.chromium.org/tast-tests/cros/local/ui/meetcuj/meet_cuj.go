@@ -728,8 +728,8 @@ func Run(ctx context.Context, meet MeetTest, cr *chrome.Chrome, testCaseVar func
 		}
 		if err := vct.ChangeSettingsInPanel(
 			vct.SetLiveCaption(meet.LiveCaptions),
-			vct.SetStudioLookEffects(meet.AdjustLighting, meet.Retouch),
 			vct.SetBackgroundBlur(blur),
+			vct.SetStudioLookEffects(meet.AdjustLighting, meet.Retouch),
 		)(ctx); err != nil {
 			return pv, errors.Wrap(err, "failed to configure platform VC effects")
 		}
