@@ -52,12 +52,12 @@ func startShillAndWaitForNetworks(ctx context.Context, s *testing.State) {
 		s.Fatal("Failed creating shill manager proxy: ", err)
 	}
 
-	// Wait until a service is connected.
+	// Wait until a service is online.
 	expectProps := map[string]interface{}{
-		shillconst.ServicePropertyIsConnected: true,
+		shillconst.ServicePropertyState: shillconst.ServiceStateOnline,
 	}
 	if _, err := manager.WaitForServiceProperties(ctx, expectProps, resetShillTimeout); err != nil {
-		s.Fatal("Failed to wait for connected service: ", err)
+		s.Fatal("Failed to wait for online service: ", err)
 	}
 
 	if ethernetAvailable, err := manager.IsAvailable(ctx, shill.TechnologyEthernet); err != nil {
