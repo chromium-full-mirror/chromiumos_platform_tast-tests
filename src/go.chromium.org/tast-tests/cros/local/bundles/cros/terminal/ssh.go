@@ -103,7 +103,9 @@ func SSH(ctx context.Context, s *testing.State) {
 	if err := uiauto.Combine("exit ssh1",
 		ui.LeftClick(nodewith.NameRegex(regexp.MustCompile(`^ssh1\$ ?$`)).Role(role.StaticText).Onscreen()),
 		ui.WaitUntilExists(nodewith.Name("Terminal input").Role(role.TextField).Focused()),
-		ta1.ExitSSH(),
+		// TODO(crbug.com/391227056): ExitSSH() should be enough to close the session and the tab,
+		// but wasm hangs when using port forwarding, and we must force the window with Close().
+		uiauto.IfFailThen(ta1.ExitSSH(), ta1.Close()),
 	)(ctx); err != nil {
 		s.Fatal("Failed to exit ssh1: ", err)
 	}

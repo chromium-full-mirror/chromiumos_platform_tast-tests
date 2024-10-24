@@ -180,7 +180,7 @@ func LaunchSSH(ctx context.Context, tconn *chrome.TestConn, sshArgs string) (*Te
 	return ta, nil
 }
 
-// dismissLeaveAppDialogIfShown dimisses the "Leave app?" dialog if shown.
+// dismissLeaveAppDialogIfShown dismisses the "Leave app?" dialog if shown.
 func (ta *TerminalApp) dismissLeaveAppDialogIfShown() uiauto.Action {
 	return uiauto.IfSuccessThen(
 		ta.ui.WithTimeout(time.Second).WaitUntilExists(terminalLeaveButton),
@@ -194,7 +194,7 @@ func (ta *TerminalApp) dismissLeaveAppDialogIfShown() uiauto.Action {
 // SetUpSSHConnection sets up a ssh connection to chronos@localhost.
 func (ta *TerminalApp) SetUpSSHConnection(sshArgs string) uiauto.Action {
 	cmd := "chronos@localhost -o StrictHostKeyChecking=no " + sshArgs
-	relay := "--ssh-client-version=pnacl"
+	relay := "--ssh-client-version=wasm"
 	addSSH := uiauto.Combine("input ssh information",
 		ta.ui.LeftClick(nodewith.Name("Add SSH").Role(role.Button)),
 		ta.ui.LeftClickUntilFocused(nodewith.Name("Command").Role(role.TextField)),
@@ -221,7 +221,7 @@ func (ta *TerminalApp) SetUpSSHConnection(sshArgs string) uiauto.Action {
 func (ta *TerminalApp) OpenSSHConnection() uiauto.Action {
 	return uiauto.Combine("open the ssh connection",
 		ta.ui.LeftClick(nodewith.Name("chronos@localhost").Role(role.Link)),
-		ta.ui.LeftClick(nodewith.Name("(chronos@localhost) Password:").Role(role.TextField)),
+		ta.ui.LeftClick(nodewith.NameRegex(regexp.MustCompile(`^\(chronos@(localhost|::1)\) Password:$`)).Role(role.TextField)),
 		ta.Kb.TypeAction("test0000"),
 		ta.Kb.AccelAction("Enter"),
 		ta.ui.WaitUntilExists(nodewith.NameRegex(sshPromptRegex).Role(role.StaticText).First()),
