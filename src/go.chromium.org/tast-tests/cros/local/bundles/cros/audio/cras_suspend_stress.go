@@ -37,8 +37,6 @@ var suspendStressUnstableModels = []string{
 	"apel", "bloog", "blooglet", "blooguard", "bobba", "bobba360", "casta", "dood", "foob",
 	"foob360", "garfour", "garg", "garg360", "grabbiter", "meep", "orbatrix", "phaser360",
 	"sparky", "sparky360", "vorticon", "vortininja",
-	// TODO(b/349281352): Undo kano and zavala after fix.
-	"kano", "zavala",
 }
 
 func init() {
