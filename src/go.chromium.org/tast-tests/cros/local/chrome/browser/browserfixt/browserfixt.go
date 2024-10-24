@@ -39,36 +39,6 @@ func SetUp(ctx context.Context, cr *chrome.Chrome, bt browser.Type) (*browser.Br
 	}
 }
 
-// SetUpWithURL can be thought of as a combination of SetUp and NewConn that
-// avoids the extra default new tab page in the case of Lacros. The caller is
-// responsible for closing the returned connection via its Close() method prior
-// to calling the returned closure.
-func SetUpWithURL(ctx context.Context, cr *chrome.Chrome, bt browser.Type, url string) (*chrome.Conn, *browser.Browser, func(ctx context.Context) error, error) {
-	switch bt {
-	case browser.TypeAsh:
-		conn, err := cr.NewConn(ctx, url)
-		if err != nil {
-			return nil, nil, nil, errors.Wrap(err, "failed to connect to ash-chrome")
-		}
-		return conn, cr.Browser(), func(context.Context) error { return nil }, nil
-
-	case browser.TypeLacros:
-		tconn, err := cr.TestAPIConn(ctx)
-		if err != nil {
-			return nil, nil, nil, errors.Wrap(err, "failed to connect to test API")
-		}
-
-		l, conn, err := lacros.LaunchWithURL(ctx, tconn, url)
-		if err != nil {
-			return nil, nil, nil, errors.Wrap(err, "failed to launch lacros-chrome")
-		}
-		return conn, l.Browser(), l.Close, nil
-
-	default:
-		return nil, nil, nil, errors.Errorf("unrecognized browser type %s", string(bt))
-	}
-}
-
 // SetUpWithNewChrome returns a new ash-chrome instance and a Browser instance as well.
 // This is useful when no fixture is used but the new chrome needs to be instantiated in test for a fresh UI restart between tests.
 // It also returns a closure to be called in order to close the browser instance.
