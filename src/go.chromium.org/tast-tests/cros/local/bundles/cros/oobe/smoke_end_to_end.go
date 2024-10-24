@@ -177,7 +177,8 @@ func SmokeEndToEnd(ctx context.Context, s *testing.State) {
 		chrome.EnableFeatures("OobeAiIntro"),
 		chrome.DisableFeatures("OobePersonalizedOnboarding"),
 		chrome.DisableFeatures("OobePerksDiscovery"),
-		chrome.DisableFeatures("AllowPasswordlessSetup"),
+		// TODO(b/375339793): Remove this as a part of post-launch cleanup.
+		chrome.EnableFeatures("AllowPasswordlessSetup"),
 	}
 	// Keep the user that was previously added for the 'AddPerson' flow.
 	if isAddPersonFlow {
@@ -310,6 +311,24 @@ func SmokeEndToEnd(ctx context.Context, s *testing.State) {
 		}
 	}
 
+	cmdRunner := hwseclocal.NewCmdRunner()
+	cryptohome := hwsec.NewCryptohomeClient(cmdRunner)
+	supportsLE := false
+	if supportsLE, err = cryptohome.SupportsLECredentials(ctx); err != nil {
+		s.Fatal("Failed to get supported policies: ", err)
+	}
+
+	if supportsLE {
+		s.Log("Waiting for the pin setup screen")
+		pinSetupSkipButton := nodewith.Name("Use password instead").Role(role.Button)
+		if err := uiauto.Combine("click 'Use password instead' button on the pin setup screen",
+			ui.WaitUntilEnabled(pinSetupSkipButton),
+			ui.LeftClick(pinSetupSkipButton),
+		)(ctx); err != nil {
+			s.Fatal("Failed to click 'Use password instead' button: ", err)
+		}
+	}
+
 	s.Log("Waiting for the password selection screen")
 	if err := oobeConn.WaitForExprFailOnErr(ctx, "OobeAPI.screens.PasswordSelectionScreen.isVisible()"); err != nil {
 		s.Fatal("Failed to wait for the password selection screen to be visible: ", err)
@@ -346,13 +365,6 @@ func SmokeEndToEnd(ctx context.Context, s *testing.State) {
 		)(ctx); err != nil {
 			s.Fatal("Failed to skip on the fingerprint screen: ", err)
 		}
-	}
-
-	cmdRunner := hwseclocal.NewCmdRunner()
-	cryptohome := hwsec.NewCryptohomeClient(cmdRunner)
-	supportsLE := false
-	if supportsLE, err = cryptohome.SupportsLECredentials(ctx); err != nil {
-		s.Fatal("Failed to get supported policies: ", err)
 	}
 
 	isInTabletMode := false
