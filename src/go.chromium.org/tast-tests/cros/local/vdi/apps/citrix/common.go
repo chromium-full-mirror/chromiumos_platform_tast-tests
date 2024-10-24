@@ -79,7 +79,7 @@ func ConnectUSBDevice(kb *input.KeyboardEventWriter, ud *uidetection.Context, da
 		uiauto.Repeat(3, kb.AccelAction("Down")),
 	)
 	connect := uiauto.NamedAction("connect",
-		ud.LeftClickUntil(connectText, ud.WithTimeout(5*time.Second).WaitUntilGone(connectText)),
+		ud.LeftClickUntil(connectText, ud.WithTimeout(15*time.Second).WaitUntilGone(connectText)),
 	)
 
 	return uiauto.NamedCombine("connect USB device",
