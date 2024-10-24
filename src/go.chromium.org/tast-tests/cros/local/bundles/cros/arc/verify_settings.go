@@ -129,30 +129,13 @@ func checkAndroidSettings(ctx context.Context, arcDevice *androidui.Device) erro
 	if err := scrollLayout.WaitForExists(ctx, timeoutUI); err == nil {
 		scrollLayout.ScrollTo(ctx, system)
 	}
-	t, ok := arc.Type()
-	if !ok {
-		return errors.New("Unable to determine arc type")
-	}
-	// If ARC-P, check for About Device in System.
-	if t == arc.Container {
-		// Verify System settings in ARC++.
-		if err := system.WaitForExists(ctx, timeoutUI); err != nil {
-			return errors.Wrap(err, "failed finding System Text View")
-		}
-
-		if err := system.Click(ctx); err != nil {
-			return errors.Wrap(err, "failed to click on System")
-		}
-	}
 
 	aboutDevice := arcDevice.Object(androidui.ClassName("android.widget.TextView"), androidui.TextMatches("(?i)about device"), androidui.Enabled(true))
-	if t == arc.VM {
-		scrollLayout := arcDevice.Object(androidui.ClassName(scrollClassName), androidui.Scrollable(true))
-		if err := scrollLayout.WaitForExists(ctx, timeoutUI); err == nil {
-			testing.ContextLog(ctx, "Scroll to About device")
-			if err := scrollLayout.ScrollTo(ctx, aboutDevice); err != nil {
-				return errors.Wrap(err, "failed to scroll to About device")
-			}
+	scrollLayout = arcDevice.Object(androidui.ClassName(scrollClassName), androidui.Scrollable(true))
+	if err := scrollLayout.WaitForExists(ctx, timeoutUI); err == nil {
+		testing.ContextLog(ctx, "Scroll to About device")
+		if err := scrollLayout.ScrollTo(ctx, aboutDevice); err != nil {
+			return errors.Wrap(err, "failed to scroll to About device")
 		}
 	}
 
@@ -184,15 +167,12 @@ func checkAndroidSettings(ctx context.Context, arcDevice *androidui.Device) erro
 		return errors.Wrap(err, "failed to click Back Button")
 	}
 
-	// If ARCVM, navigate back into System.
-	if t == arc.VM {
-		if err := system.WaitForExists(ctx, timeoutUI); err != nil {
-			return errors.Wrap(err, "failed finding System Text View")
-		}
+	if err := system.WaitForExists(ctx, timeoutUI); err != nil {
+		return errors.Wrap(err, "failed finding System Text View")
+	}
 
-		if err := system.Click(ctx); err != nil {
-			return errors.Wrap(err, "failed to click on System")
-		}
+	if err := system.Click(ctx); err != nil {
+		return errors.Wrap(err, "failed to click on System")
 	}
 
 	developerOptions := arcDevice.Object(androidui.ClassName("android.widget.TextView"), androidui.TextMatches("(?i)developer options"), androidui.Enabled(true))
@@ -216,19 +196,6 @@ func checkAndroidSettings(ctx context.Context, arcDevice *androidui.Device) erro
 	for i := 0; i < 2; i++ {
 		if err := backButton.Click(ctx); err != nil {
 			return errors.Wrap(err, "failed to click Back Button")
-		}
-	}
-
-	// If ARC-P, navigate to Security & Location.
-	if t == arc.Container {
-		testing.ContextLog(ctx, "Toggle Location Settings")
-		security := arcDevice.Object(androidui.ClassName("android.widget.TextView"), androidui.TextMatches("(?i)security & location"), androidui.Enabled(true))
-		if err := security.WaitForExists(ctx, timeoutUI); err != nil {
-			return errors.Wrap(err, "failed finding Security & location TextView")
-		}
-
-		if err := security.Click(ctx); err != nil {
-			return errors.Wrap(err, "failed to click Security & Location")
 		}
 	}
 
