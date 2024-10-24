@@ -262,10 +262,9 @@ type graphicsWebContentFixture struct {
 	cr   *chrome.Chrome
 	fOpt []chrome.Option // Function to generate Chrome Options
 
-	server       *httptest.Server            // Server instance to serve the local data file.
-	conn         *chrome.Conn                // chrome connection to the opened web content.
-	closeBrowser func(context.Context) error // function to close the browser.
-	tempDir      string
+	server  *httptest.Server // Server instance to serve the local data file.
+	conn    *chrome.Conn     // chrome connection to the opened web content.
+	tempDir string
 }
 
 type graphicsWebContentVal struct {
@@ -338,8 +337,6 @@ func (f *graphicsWebContentFixture) SetUp(ctx context.Context, s *testing.FixtSt
 		s.Fatal("Failed to set up browser: ", err)
 	}
 	f.conn = conn
-	// TODO(b/375087595): Delete closeBrowser field in graphicsWebContentFixture.
-	f.closeBrowser = func(context.Context) error { return nil }
 
 	if err = f.conn.WaitForExpr(ctx, "document.readyState === 'complete'"); err != nil {
 		s.Fatal("Page failed to load: ", err)
@@ -356,9 +353,6 @@ func (f *graphicsWebContentFixture) TearDown(ctx context.Context, s *testing.Fix
 
 	f.conn.Close()
 	f.conn = nil
-
-	f.closeBrowser(ctx)
-	f.closeBrowser = nil
 
 	chrome.Unlock()
 	if err := f.cr.Close(ctx); err != nil {
