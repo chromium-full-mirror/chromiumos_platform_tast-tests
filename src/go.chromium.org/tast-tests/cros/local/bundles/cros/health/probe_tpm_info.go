@@ -109,7 +109,7 @@ func verifyGscDevice(tpmManagerGscDevice, healthGscDevice string) bool {
 	if healthGscDevice == "H1" && tpmManagerGscDevice == "GSC_DEVICE_H1" {
 		return true
 	}
-	if healthGscDevice == "Dt" && tpmManagerGscDevice == "GSC_DEVICE_DT" {
+	if healthGscDevice == "DT" && tpmManagerGscDevice == "GSC_DEVICE_DT" {
 		return true
 	}
 	if healthGscDevice == "NotGsc" && tpmManagerGscDevice == "GSC_DEVICE_NOT_GSC" {
@@ -122,19 +122,6 @@ func verifyTPMVersion(ctx context.Context, tpmManager *hwsec.TPMManagerClient, v
 	tpmManagerVersionInfo, err := tpmManager.GetVersionInfo(ctx)
 	if err != nil {
 		return errors.Wrap(err, "failed to get version info from TPMManager")
-	}
-	// Perform temporary conversion from gsc_version to gsc_device.
-	// TODO(b/373640432): Remove this after rename has been stable for a few
-	// builds
-	if version.GscDevice == "" {
-		switch version.GscVersion {
-		case "GSC_VERSION_CR50":
-			version.GscDevice = "GSC_DEVICE_H1"
-		case "GSC_VERSION_TI50":
-			version.GscDevice = "GSC_DEVICE_DT"
-		case "GSC_VERSION_NOT_GSC":
-			version.GscDevice = "GSC_DEVICE_NOT_GSC"
-		}
 	}
 	if !verifyGscDevice(tpmManagerVersionInfo.GscDevice, version.GscDevice) {
 		return errors.Errorf("GscDevice not matched, %v from healthd, %v from TPMManager", version.GscDevice, tpmManagerVersionInfo.GscDevice)
