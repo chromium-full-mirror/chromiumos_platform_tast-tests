@@ -32,12 +32,7 @@ type crasSuspendStressParam struct {
 	rounds   int
 }
 
-var suspendStressUnstableModels = []string{
-	// TODO(b/352295088): Undo octopus board after fix.
-	"apel", "bloog", "blooglet", "blooguard", "bobba", "bobba360", "casta", "dood", "foob",
-	"foob360", "garfour", "garg", "garg360", "grabbiter", "meep", "orbatrix", "phaser360",
-	"sparky", "sparky360", "vorticon", "vortininja",
-}
+var suspendStressUnstableModels = []string{}
 
 func init() {
 	testing.AddTest(&testing.Test{
