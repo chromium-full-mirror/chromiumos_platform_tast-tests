@@ -17,7 +17,6 @@ import (
 	"go.chromium.org/tast-tests/cros/local/chrome/browser"
 	"go.chromium.org/tast-tests/cros/local/chrome/browser/browserfixt"
 	"go.chromium.org/tast-tests/cros/local/chrome/display"
-	"go.chromium.org/tast-tests/cros/local/chrome/lacros/lacrosfixt"
 	"go.chromium.org/tast-tests/cros/local/chrome/uiauto"
 	"go.chromium.org/tast-tests/cros/local/chrome/uiauto/faillog"
 	"go.chromium.org/tast-tests/cros/local/chrome/uiauto/mouse"
@@ -44,7 +43,6 @@ type pipType int
 
 const (
 	ashPip pipType = iota
-	lacrosPip
 	arcPip
 )
 
@@ -73,23 +71,6 @@ var ashPipTests = pipTestParams{
 	pipClassName:  "PictureInPictureWindow",
 }
 
-var lacrosPipTests = pipTestParams{
-	pipType: lacrosPip,
-	tests: []pipTestFunc{
-		testPipPinchResize,
-		testPipDoubleTapToEnlarge,
-		testPipDoubleTapToOriginalSize,
-		testPipTuck,
-		testPipMove,
-		testPipExpandViaMenu,
-		testPipHotKeyToEnlarge,
-		testPipHotKeyToOriginalSize,
-	},
-	browserType:   browser.TypeLacros,
-	pipWindowName: "Picture in picture",
-	pipClassName:  "Widget",
-}
-
 var arcPipTests = pipTestParams{
 	pipType: arcPip,
 	tests: []pipTestFunc{
@@ -110,9 +91,8 @@ var arcPipTests = pipTestParams{
 
 func init() {
 	testing.AddTest(&testing.Test{
-		Func:         Pip,
-		LacrosStatus: testing.LacrosVariantUnneeded,
-		Desc:         "Tests window behavior of PiP windows",
+		Func: Pip,
+		Desc: "Tests window behavior of PiP windows",
 		Contacts: []string{
 			"chromeos-wm@google.com",
 			"chromeos-sw-engprod@google.com",
@@ -148,12 +128,6 @@ func Pip(ctx context.Context, s *testing.State) {
 	switch testParams.pipType {
 	case arcPip:
 		opts = append(opts, chrome.ARCEnabled())
-	case lacrosPip:
-		lacrosOpts, err := lacrosfixt.NewConfig().Opts()
-		if err != nil {
-			s.Fatal("Failed to get default Lacros options: ", err)
-		}
-		opts = append(opts, lacrosOpts...)
 	}
 
 	cr, err := chrome.New(ctx, opts...)
@@ -374,7 +348,6 @@ func testPipTuck(ctx context.Context, tconn *chrome.TestConn, ac *uiauto.Context
 	if err != nil {
 		return errors.Wrap(err, "failed to get PiP window")
 	}
-	// Lacros PiP can't be drag resized by grabbing one of the buttons on the menu.
 	// Grab the left part of PiP, where no UI can be placed on PiP menu.
 	startPoint := window.BoundsInRoot.CenterPoint().Sub(coords.NewPoint(window.BoundsInRoot.Width/4, 0))
 	beforeX, beforeY := tcc.ConvertLocation(startPoint)
@@ -458,7 +431,6 @@ func testPipMove(ctx context.Context, tconn *chrome.TestConn, ac *uiauto.Context
 	tcc := tsw.NewTouchCoordConverter(dispInfo.Bounds.Size())
 	offset := coords.NewPoint(dispInfo.Bounds.Width/2, 0)
 
-	// Lacros PiP can't be drag resized by grabbing one of the buttons on the menu.
 	// Grab the upper part of PiP, where no UI can be placed on PiP menu.
 	start := coords.Point{X: beforeBounds.CenterX(), Y: beforeBounds.Top + beforeBounds.Height/5}
 	startX, startY := tcc.ConvertLocation(start)
