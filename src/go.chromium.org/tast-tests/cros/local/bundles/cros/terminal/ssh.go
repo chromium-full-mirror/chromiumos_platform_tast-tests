@@ -63,7 +63,7 @@ func SSH(ctx context.Context, s *testing.State) {
 	}
 	defer cleanup()
 
-	cr, err := chrome.New(ctx, chrome.EnableFeatures("TerminalAlternativeEmulator"))
+	cr, err := chrome.New(ctx, chrome.EnableFeatures("TerminalAlternativeEmulator","NaclAllow"))
 	if err != nil {
 		s.Fatal("Cannot start Chrome: ", err)
 	}

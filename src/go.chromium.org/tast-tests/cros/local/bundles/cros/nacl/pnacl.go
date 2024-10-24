@@ -71,7 +71,10 @@ func Pnacl(ctx context.Context, s *testing.State) {
 		s.Fatalf("Failed to compute extension ID for %v: %v", extDir, err)
 	}
 
-	cr, br, closeBrowser, err := browserfixt.SetUpWithNewChrome(ctx, browser.TypeAsh, nil, chrome.UnpackedExtension(extDir))
+	var opts []chrome.Option
+	opts = append(opts, chrome.UnpackedExtension(extDir))
+	opts = append(opts, chrome.EnableFeatures("NaclAllow"))
+	cr, br, closeBrowser, err := browserfixt.SetUpWithNewChrome(ctx, browser.TypeAsh, nil, opts...)
 
 	if err != nil {
 		s.Fatal("Chrome login failed: ", err)
