@@ -8,6 +8,7 @@ package setup
 import (
 	"context"
 
+	"go.chromium.org/tast-tests/cros/common/testexec"
 	"go.chromium.org/tast-tests/cros/local/chrome"
 	"go.chromium.org/tast-tests/cros/local/power"
 	"go.chromium.org/tast-tests/cros/local/power/metrics"
@@ -412,6 +413,9 @@ func PowerTest(ctx context.Context, c *chrome.TestConn, options PowerTestOptions
 			s.Add(prefs.InitTmpPrefs(ctx))
 			s.Add(StopChargeLimit(ctx, &prefs))
 		}
+		if batteryDischarge != nil {
+			batteryDischarge.fulfill(ctx, s)
+		}
 		if options.Powerd == DisablePowerd {
 			startPowerdFn, err := DisableService(ctx, "powerd")
 			s.Add(func(ctx context.Context) error {
@@ -431,6 +435,15 @@ func PowerTest(ctx context.Context, c *chrome.TestConn, options PowerTestOptions
 				}
 				return nil
 			}, err)
+			if err != nil {
+				testing.ContextLog(ctx, "Failed to disable powerd service: ", err)
+			}
+			if batteryDischarge.discharge {
+				if err := testexec.CommandContext(ctx, "sudo", "-u", "power", "send_debug_power_status", "--external_power=2").Run(); err != nil {
+					testing.ContextLog(ctx, "Failed to send power status: ", err)
+					return err
+				}
+			}
 		}
 		if options.UpdateEngine == DisableUpdateEngine {
 			s.Add(DisableServiceIfExists(ctx, "update-engine"))
@@ -469,9 +482,6 @@ func PowerTest(ctx context.Context, c *chrome.TestConn, options PowerTestOptions
 		}
 		if options.Wifi == DisableWifiInterfaces {
 			s.Add(DisableWiFiAdaptors(ctx))
-		}
-		if batteryDischarge != nil {
-			batteryDischarge.fulfill(ctx, s)
 		}
 		if options.Bluetooth == DisableBluetoothInterfaces {
 			s.Add(DisableBluetooth(ctx))

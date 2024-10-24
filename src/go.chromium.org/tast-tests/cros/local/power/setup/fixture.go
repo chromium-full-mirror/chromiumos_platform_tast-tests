@@ -12,7 +12,6 @@ import (
 	"unicode"
 
 	cp "go.chromium.org/tast-tests/cros/common/power"
-	"go.chromium.org/tast-tests/cros/common/testexec"
 	"go.chromium.org/tast-tests/cros/common/utils"
 	"go.chromium.org/tast-tests/cros/local/arc"
 	"go.chromium.org/tast-tests/cros/local/arc/optin"
@@ -1117,11 +1116,6 @@ func (f *powerUIFixture) SetUp(ctx context.Context, s *testing.FixtState) interf
 			cleanup(cleanupCtx)
 		}
 	}()
-	if discharge {
-		if err := testexec.CommandContext(ctx, "sudo", "-u", "power", "send_debug_power_status", "--external_power=2").Run(); err != nil {
-			s.Fatal("Failed to send power status: ", err)
-		}
-	}
 
 	chrome.Lock()
 	f.cr = cr
