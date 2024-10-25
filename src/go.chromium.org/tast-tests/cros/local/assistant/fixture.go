@@ -135,22 +135,6 @@ func init() {
 	})
 
 	testing.AddFixture(&testing.Fixture{
-		Name: "assistantOOBEUsedVMReady",
-		Desc: "Assistant OOBE screen with a GAIA which has used Assistant before and whose Voice Match is ready",
-		Contacts: []string{
-			"assitive-eng@google.com",
-			"yawano@google.com",
-		},
-		// ChromeOS > Software > Assistive
-		BugComponent:    "b:905229",
-		Vars:            []string{"ui.signinProfileTestExtensionManifestKey"},
-		Impl:            NewOOBEFixture(),
-		SetUpTimeout:    30 * time.Second,
-		PostTestTimeout: 30 * time.Second,
-		PreTestTimeout:  chrome.GAIALoginTimeout + 3*time.Minute,
-	})
-
-	testing.AddFixture(&testing.Fixture{
 		Name: "assistantBaseWithHotword",
 		Desc: "Chrome session for assistant testing with Hotword enabled",
 		Contacts: []string{
@@ -211,21 +195,6 @@ func init() {
 	})
 
 	testing.AddFixture(&testing.Fixture{
-		Name: "assistantClamshell",
-		Desc: "Assistant is enabled in Clamshell mode",
-		Contacts: []string{
-			"assitive-eng@google.com",
-			"yawano@google.com",
-		},
-		// ChromeOS > Software > Assistive
-		BugComponent:    "b:905229",
-		Parent:          "assistant",
-		Impl:            newTabletFixture(false),
-		SetUpTimeout:    setUpTimeout,
-		TearDownTimeout: tearDownTimeout,
-	})
-
-	testing.AddFixture(&testing.Fixture{
 		Name: "assistantWithArc",
 		Desc: "Assistant is enabled with Arc",
 		Contacts: []string{
@@ -244,34 +213,6 @@ func init() {
 		}),
 		PreTestTimeout:  preTestTimeout,
 		PostTestTimeout: postTestTimeout,
-	})
-
-	testing.AddFixture(&testing.Fixture{
-		Name: "assistantClamshellPerf",
-		Desc: "Assistant clamshell fixture for running performance test",
-		Contacts: []string{
-			"assitive-eng@google.com",
-			"yawano@google.com",
-		},
-		// ChromeOS > Software > Assistive
-		BugComponent:   "b:905229",
-		Parent:         "assistantClamshell",
-		Impl:           newPerfFixture(),
-		PreTestTimeout: perfFixturePreTestTimeout,
-	})
-
-	testing.AddFixture(&testing.Fixture{
-		Name: "assistantPerf",
-		Desc: "Assistant fixture for running performance test",
-		Contacts: []string{
-			"assitive-eng@google.com",
-			"yawano@google.com",
-		},
-		// ChromeOS > Software > Assistive
-		BugComponent:   "b:905229",
-		Parent:         "assistant",
-		Impl:           newPerfFixture(),
-		PreTestTimeout: perfFixturePreTestTimeout,
 	})
 
 	testing.AddFixture(&testing.Fixture{
