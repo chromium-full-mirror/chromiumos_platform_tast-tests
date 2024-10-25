@@ -7,6 +7,7 @@ package vctray
 
 import (
 	"context"
+	"fmt"
 	"regexp"
 	"strings"
 	"time"
@@ -34,7 +35,7 @@ var (
 var (
 	bubleView = nodewith.NameContaining("Video Call Controls").HasClass("BubbleView").Role(role.Window)
 
-	studioLookButton        = nodewith.NameStartingWith("Toggle Appearance effects").Role(role.ToggleButton)
+	studioLookButton        = nodewith.NameContaining("Appearance effects").Role(role.ToggleButton)
 	liveCaptionButton       = nodewith.NameStartingWith("Toggle Live Caption").Role(role.ToggleButton)
 	adjustCameraFraming     = nodewith.NameStartingWith("Toggle Camera framing").Role(role.ToggleButton)
 	noiseCancellationButton = nodewith.NameStartingWith("Toggle Noise cancellation").Role(role.ToggleButton)
@@ -43,10 +44,6 @@ var (
 	faceRetouchPref         = nodewith.NameStartingWith("Appearance effects preferences, Portrait touch-up").Role(role.MenuItem)
 
 	buttonNameRegexp           = regexp.MustCompile(`.*Button.*`)
-	bgBlurOffButton            = nodewith.NameContaining("Off").ClassNameRegex(buttonNameRegexp)
-	bgBlurLightButton          = nodewith.NameContaining("Light").ClassNameRegex(buttonNameRegexp)
-	bgBlurFullButton           = nodewith.NameContaining("Full").ClassNameRegex(buttonNameRegexp)
-	bgBlurImageButton          = nodewith.NameContaining("Image").ClassNameRegex(buttonNameRegexp)
 	createwWithAiButton        = nodewith.NameContaining("Create with AI").Role(role.Button)
 	firstBackgroundImageButton = nodewith.ClassName("RecentlyUsedImageButton").Role(role.ListItem).First()
 	showAppsButton             = nodewith.NameContaining("Used by").Role(role.Button)
@@ -133,40 +130,36 @@ func (vcTray VCTray) CollapsePanel(ctx context.Context) error {
 }
 
 // BackgroundBlurLevel represents the type of background blur option.
-type BackgroundBlurLevel int
+type BackgroundBlurLevel string
 
 // Available options of background blur settings.
 const (
-	BackgroundBlurOff BackgroundBlurLevel = iota
-	BackgroundBlurLight
-	BackgroundBlurFull
-	BackgroundBlurImage
+	BackgroundBlurOff   BackgroundBlurLevel = "Off"
+	BackgroundBlurLight BackgroundBlurLevel = "Light"
+	BackgroundBlurFull  BackgroundBlurLevel = "Full"
+	BackgroundBlurImage BackgroundBlurLevel = "Image"
 )
 
 // SetBackgroundBlur selects desired background blur option.
 func (vcTray VCTray) SetBackgroundBlur(blurLevel BackgroundBlurLevel) action.Action {
-	switch blurLevel {
-	case BackgroundBlurLight:
-		return vcTray.ui.DoDefault(bgBlurLightButton)
-	case BackgroundBlurFull:
-		return vcTray.ui.DoDefault(bgBlurFullButton)
-	case BackgroundBlurOff:
-		return vcTray.ui.DoDefault(bgBlurOffButton)
-	case BackgroundBlurImage:
-		return uiauto.Combine("ApplyBackgroundReplaceFromUi",
+	bgButton := nodewith.NameContaining(string(blurLevel)).ClassNameRegex(buttonNameRegexp).Ancestor(bubleView)
+	setBackgroundAction := vcTray.ui.DoDefault(bgButton)
+	if blurLevel == BackgroundBlurImage {
+		setBackgroundAction = uiauto.Combine("ApplyBackgroundReplaceFromUi",
 			// TODO(b/340352012):remove the sleep after the bug is fixed.
 			// GoBigSleepLint: wait for 1 second for the background images being loaded
 			// in the background. Note that we can't wait for the
 			// firstBackgroundImageButton because they are hidden after loaded.
 			uiauto.Sleep(time.Second),
-			vcTray.ui.DoDefault(bgBlurImageButton),
+			vcTray.ui.DoDefault(bgButton),
 			vcTray.ui.DoDefault(firstBackgroundImageButton),
 		)
-	default:
-		return func(context.Context) error {
-			return errors.Errorf("background blur level %q is not supported", blurLevel)
-		}
 	}
+
+	return uiauto.NamedCombine(fmt.Sprintf("set background to %s", blurLevel),
+		vcTray.ExpandPanel,
+		setBackgroundAction,
+	)
 }
 
 // featureEnabled returns whether the specified feature is enabled.
@@ -320,6 +313,7 @@ func (vcTray VCTray) ReturnToAppForWindow(appName string, tconn *chrome.TestConn
 
 // OpenVcBackgroundApp clicks on the Create with AI button and opens the VcBackgroundApp.
 func (vcTray VCTray) OpenVcBackgroundApp() action.Action {
+	bgBlurImageButton := nodewith.NameContaining(string(BackgroundBlurImage)).ClassNameRegex(buttonNameRegexp).Ancestor(bubleView)
 	actionsToPerform := []action.Action{vcTray.ExpandPanel}
 	actionsToPerform = append(actionsToPerform, vcTray.ui.DoDefault(bgBlurImageButton))
 	actionsToPerform = append(actionsToPerform, vcTray.ui.DoDefault(createwWithAiButton))
