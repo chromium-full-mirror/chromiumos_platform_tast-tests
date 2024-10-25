@@ -56,8 +56,9 @@ func init() {
 		Impl: NewNearbyShareAndroid(nearbysnippet.NearbySharingDataUsage_DATA_USAGE_OFFLINE, nearbysnippet.NearbySharingVisibility_VISIBILITY_ALL_CONTACTS, modulefood),
 		Data: []string{nearbysnippet.ZipName, crossdevice.AccountUtilZip},
 		Contacts: []string{
-			"chromeos-sw-engprod@google.com",
+			"chromeos-cross-device-eng@google.com",
 			"hansenmichael@google.com",
+			"joaquinmarquez@google.com",
 		},
 		BugComponent: "b:1131838", // ChromeOS > Software > System Services > Cross Device > Nearby Share
 		Vars: []string{
@@ -78,8 +79,9 @@ func init() {
 		Impl: NewNearbyShareAndroid(nearbysnippet.NearbySharingDataUsage_DATA_USAGE_OFFLINE, nearbysnippet.NearbySharingVisibility_VISIBILITY_ALL_CONTACTS, dev),
 		Data: []string{nearbysnippet.ZipName, crossdevice.AccountUtilZip},
 		Contacts: []string{
-			"chromeos-sw-engprod@google.com",
+			"chromeos-cross-device-eng@google.com",
 			"hansenmichael@google.com",
+			"joaquinmarquez@google.com",
 		},
 		BugComponent: "b:1131838", // ChromeOS > Software > System Services > Cross Device > Nearby Share
 		Vars: []string{
@@ -100,8 +102,9 @@ func init() {
 		Impl: NewNearbyShareAndroid(nearbysnippet.NearbySharingDataUsage_DATA_USAGE_OFFLINE, nearbysnippet.NearbySharingVisibility_VISIBILITY_ALL_CONTACTS, prod),
 		Data: []string{nearbysnippet.ZipName, crossdevice.AccountUtilZip},
 		Contacts: []string{
-			"chromeos-sw-engprod@google.com",
+			"chromeos-cross-device-eng@google.com",
 			"hansenmichael@google.com",
+			"joaquinmarquez@google.com",
 		},
 		BugComponent: "b:1131838", // ChromeOS > Software > System Services > Cross Device > Nearby Share
 		Vars: []string{

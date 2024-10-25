@@ -30,8 +30,11 @@ func addFlossModulefoodAndroidFixtures() {
 			crosSelectAndroidAsContact: false,
 		}),
 		Contacts: []string{
-			"chromeos-sw-engprod@google.com",
+			"chromeos-cross-device-eng@google.com",
+			"hansenmichael@google.com",
+			"joaquinmarquez@google.com",
 		},
+		BugComponent:    "b:1131838", // ChromeOS > Software > System Services > Cross Device > Nearby Share
 		Parent:          "nearbyShareGAIALoginFloss",
 		SetUpTimeout:    3*time.Minute + crossdevice.BugReportDuration,
 		ResetTimeout:    resetTimeout,
@@ -52,8 +55,11 @@ func addFlossModulefoodAndroidFixtures() {
 			crosSelectAndroidAsContact: false,
 		}),
 		Contacts: []string{
-			"chromeos-sw-engprod@google.com",
+			"chromeos-cross-device-eng@google.com",
+			"hansenmichael@google.com",
+			"joaquinmarquez@google.com",
 		},
+		BugComponent:    "b:1131838", // ChromeOS > Software > System Services > Cross Device > Nearby Share
 		SetUpTimeout:    3*time.Minute + crossdevice.BugReportDuration,
 		ResetTimeout:    resetTimeout,
 		TearDownTimeout: resetTimeout,
@@ -74,8 +80,11 @@ func addFlossModulefoodAndroidFixtures() {
 			crosSelectAndroidAsContact: false,
 		}),
 		Contacts: []string{
-			"chromeos-sw-engprod@google.com",
+			"chromeos-cross-device-eng@google.com",
+			"hansenmichael@google.com",
+			"joaquinmarquez@google.com",
 		},
+		BugComponent:    "b:1131838", // ChromeOS > Software > System Services > Cross Device > Nearby Share
 		SetUpTimeout:    3*time.Minute + crossdevice.BugReportDuration,
 		ResetTimeout:    resetTimeout,
 		TearDownTimeout: resetTimeout,
@@ -94,8 +103,11 @@ func addFlossModulefoodAndroidFixtures() {
 			crosSelectAndroidAsContact: false,
 		}),
 		Contacts: []string{
-			"chromeos-sw-engprod@google.com",
+			"chromeos-cross-device-eng@google.com",
+			"hansenmichael@google.com",
+			"joaquinmarquez@google.com",
 		},
+		BugComponent:    "b:1131838", // ChromeOS > Software > System Services > Cross Device > Nearby Share
 		Parent:          "nearbyShareGAIALoginFloss",
 		SetUpTimeout:    3*time.Minute + crossdevice.BugReportDuration,
 		ResetTimeout:    resetTimeout,
@@ -116,9 +128,12 @@ func addFlossModulefoodAndroidFixtures() {
 			crosSelectAndroidAsContact: true,
 		}),
 		Contacts: []string{
-			"chromeos-sw-engprod@google.com",
+			"chromeos-cross-device-eng@google.com",
+			"hansenmichael@google.com",
+			"joaquinmarquez@google.com",
 		},
-		Parent: "nearbyShareGAIALoginFloss",
+		BugComponent: "b:1131838", // ChromeOS > Software > System Services > Cross Device > Nearby Share
+		Parent:       "nearbyShareGAIALoginFloss",
 		Vars: []string{
 			customAndroidUsername,
 		},
@@ -141,8 +156,11 @@ func addFlossModulefoodAndroidFixtures() {
 			crosSelectAndroidAsContact: true,
 		}),
 		Contacts: []string{
-			"chromeos-sw-engprod@google.com",
+			"chromeos-cross-device-eng@google.com",
+			"hansenmichael@google.com",
+			"joaquinmarquez@google.com",
 		},
+		BugComponent: "b:1131838", // ChromeOS > Software > System Services > Cross Device > Nearby Share
 		Vars: []string{
 			customAndroidUsername,
 		},
@@ -168,8 +186,11 @@ func addFlossModulefoodAndroidFixtures() {
 			customAndroidUsername,
 		},
 		Contacts: []string{
-			"chromeos-sw-engprod@google.com",
+			"chromeos-cross-device-eng@google.com",
+			"hansenmichael@google.com",
+			"joaquinmarquez@google.com",
 		},
+		BugComponent:    "b:1131838", // ChromeOS > Software > System Services > Cross Device > Nearby Share
 		SetUpTimeout:    3*time.Minute + crossdevice.BugReportDuration,
 		ResetTimeout:    resetTimeout,
 		TearDownTimeout: resetTimeout,
@@ -189,8 +210,11 @@ func addFlossModulefoodAndroidFixtures() {
 			crosSelectAndroidAsContact: false,
 		}),
 		Contacts: []string{
-			"chromeos-sw-engprod@google.com",
+			"chromeos-cross-device-eng@google.com",
+			"hansenmichael@google.com",
+			"joaquinmarquez@google.com",
 		},
+		BugComponent:    "b:1131838", // ChromeOS > Software > System Services > Cross Device > Nearby Share
 		SetUpTimeout:    3*time.Minute + crossdevice.BugReportDuration,
 		ResetTimeout:    resetTimeout,
 		TearDownTimeout: resetTimeout,
@@ -210,8 +234,11 @@ func addFlossModulefoodAndroidFixtures() {
 			crosSelectAndroidAsContact: false,
 		}),
 		Contacts: []string{
-			"chromeos-sw-engprod@google.com",
+			"chromeos-cross-device-eng@google.com",
+			"hansenmichael@google.com",
+			"joaquinmarquez@google.com",
 		},
+		BugComponent:    "b:1131838", // ChromeOS > Software > System Services > Cross Device > Nearby Share
 		SetUpTimeout:    3*time.Minute + crossdevice.BugReportDuration,
 		ResetTimeout:    resetTimeout,
 		TearDownTimeout: resetTimeout,
@@ -233,8 +260,11 @@ func addFlossModulefoodAndroidFixtures() {
 			crosSelectAndroidAsContact: false,
 		}),
 		Contacts: []string{
-			"chromeos-sw-engprod@google.com",
+			"chromeos-cross-device-eng@google.com",
+			"hansenmichael@google.com",
+			"joaquinmarquez@google.com",
 		},
+		BugComponent:    "b:1131838", // ChromeOS > Software > System Services > Cross Device > Nearby Share
 		SetUpTimeout:    3*time.Minute + crossdevice.BugReportDuration,
 		ResetTimeout:    resetTimeout,
 		TearDownTimeout: resetTimeout,
@@ -254,8 +284,11 @@ func addFlossModulefoodAndroidFixtures() {
 			crosSelectAndroidAsContact: false,
 		}),
 		Contacts: []string{
-			"chromeos-sw-engprod@google.com",
+			"chromeos-cross-device-eng@google.com",
+			"hansenmichael@google.com",
+			"joaquinmarquez@google.com",
 		},
+		BugComponent:    "b:1131838", // ChromeOS > Software > System Services > Cross Device > Nearby Share
 		SetUpTimeout:    3*time.Minute + crossdevice.BugReportDuration,
 		ResetTimeout:    resetTimeout,
 		TearDownTimeout: resetTimeout,

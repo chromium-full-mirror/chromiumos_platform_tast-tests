@@ -85,10 +85,13 @@ func init() {
 		Name: "nearbyShareGAIALogin",
 		Desc: "CrOS login with GAIA and Nearby Share flags enabled",
 		Contacts: []string{
-			"chromeos-sw-engprod@google.com",
+			"chromeos-cross-device-eng@google.com",
+			"hansenmichael@google.com",
+			"joaquinmarquez@google.com",
 		},
-		Parent: "nearbyShareAndroidSetup",
-		Impl:   NewNearbyShareLogin(false, false, false, defaultMediums, nil),
+		BugComponent: "b:1131838", // ChromeOS > Software > System Services > Cross Device > Nearby Share
+		Parent:       "nearbyShareAndroidSetup",
+		Impl:         NewNearbyShareLogin(false, false, false, defaultMediums, nil),
 		Vars: []string{
 			customCrOSUsername,
 			customCrOSPassword,
@@ -105,10 +108,13 @@ func init() {
 		Name: "nearbyShareGAIALoginFloss",
 		Desc: "CrOS login with GAIA and Nearby Share flags enabled (floss)",
 		Contacts: []string{
-			"chromeos-sw-engprod@google.com",
+			"chromeos-cross-device-eng@google.com",
+			"hansenmichael@google.com",
+			"joaquinmarquez@google.com",
 		},
-		Parent: "nearbyShareAndroidSetup",
-		Impl:   NewNearbyShareLogin(false, false, false, defaultMediums, flossOpt),
+		BugComponent: "b:1131838", // ChromeOS > Software > System Services > Cross Device > Nearby Share
+		Parent:       "nearbyShareAndroidSetup",
+		Impl:         NewNearbyShareLogin(false, false, false, defaultMediums, flossOpt),
 		Vars: []string{
 			customCrOSUsername,
 			customCrOSPassword,
@@ -125,10 +131,13 @@ func init() {
 		Name: "nearbyShareGAIALoginAndroidAccount",
 		Desc: "CrOS login with Android nearby share account and Nearby Share enabled",
 		Contacts: []string{
-			"chromeos-sw-engprod@google.com",
+			"chromeos-cross-device-eng@google.com",
+			"hansenmichael@google.com",
+			"joaquinmarquez@google.com",
 		},
-		Parent: "nearbyShareAndroidSetup",
-		Impl:   NewNearbyShareLogin(false, false, true, defaultMediums, selfShareOpt),
+		BugComponent: "b:1131838", // ChromeOS > Software > System Services > Cross Device > Nearby Share
+		Parent:       "nearbyShareAndroidSetup",
+		Impl:         NewNearbyShareLogin(false, false, true, defaultMediums, selfShareOpt),
 		Vars: []string{
 			customCrOSUsername,
 			customCrOSPassword,
@@ -145,10 +154,13 @@ func init() {
 		Name: "nearbyShareGAIALoginAndroidAccountFloss",
 		Desc: "CrOS login with Android nearby share account and Nearby Share enabled (floss)",
 		Contacts: []string{
-			"chromeos-sw-engprod@google.com",
+			"chromeos-cross-device-eng@google.com",
+			"hansenmichael@google.com",
+			"joaquinmarquez@google.com",
 		},
-		Parent: "nearbyShareAndroidSetup",
-		Impl:   NewNearbyShareLogin(false, false, true, defaultMediums, append(flossOpt, selfShareOpt...)),
+		BugComponent: "b:1131838", // ChromeOS > Software > System Services > Cross Device > Nearby Share
+		Parent:       "nearbyShareAndroidSetup",
+		Impl:         NewNearbyShareLogin(false, false, true, defaultMediums, append(flossOpt, selfShareOpt...)),
 		Vars: []string{
 			customCrOSUsername,
 			customCrOSPassword,
@@ -166,10 +178,13 @@ func init() {
 		Name: "nearbyShareGAIALoginProd",
 		Desc: "CrOS login with GAIA and Nearby Share flags enabled",
 		Contacts: []string{
-			"chromeos-sw-engprod@google.com",
+			"chromeos-cross-device-eng@google.com",
+			"hansenmichael@google.com",
+			"joaquinmarquez@google.com",
 		},
-		Parent: "nearbyShareAndroidSetupProd",
-		Impl:   NewNearbyShareLogin(false, false, false, defaultMediums, nil),
+		BugComponent: "b:1131838", // ChromeOS > Software > System Services > Cross Device > Nearby Share
+		Parent:       "nearbyShareAndroidSetupProd",
+		Impl:         NewNearbyShareLogin(false, false, false, defaultMediums, nil),
 		Vars: []string{
 			customCrOSUsername,
 			customCrOSPassword,
@@ -186,10 +201,13 @@ func init() {
 		Name: "nearbyShareGAIALoginAndroidAccountProd",
 		Desc: "CrOS login with Android nearby share account and Nearby Share enabled",
 		Contacts: []string{
-			"chromeos-sw-engprod@google.com",
+			"chromeos-cross-device-eng@google.com",
+			"hansenmichael@google.com",
+			"joaquinmarquez@google.com",
 		},
-		Parent: "nearbyShareAndroidSetupProd",
-		Impl:   NewNearbyShareLogin(false, false, true, defaultMediums, selfShareOpt),
+		BugComponent: "b:1131838", // ChromeOS > Software > System Services > Cross Device > Nearby Share
+		Parent:       "nearbyShareAndroidSetupProd",
+		Impl:         NewNearbyShareLogin(false, false, true, defaultMediums, selfShareOpt),
 		Vars: []string{
 			customCrOSUsername,
 			customCrOSPassword,
@@ -207,10 +225,13 @@ func init() {
 		Name: "nearbyShareGAIALoginDev",
 		Desc: "CrOS login with GAIA and Nearby Share flags enabled",
 		Contacts: []string{
-			"chromeos-sw-engprod@google.com",
+			"chromeos-cross-device-eng@google.com",
+			"hansenmichael@google.com",
+			"joaquinmarquez@google.com",
 		},
-		Parent: "nearbyShareAndroidSetupDev",
-		Impl:   NewNearbyShareLogin(false, false, false, defaultMediums, nil),
+		BugComponent: "b:1131838", // ChromeOS > Software > System Services > Cross Device > Nearby Share
+		Parent:       "nearbyShareAndroidSetupDev",
+		Impl:         NewNearbyShareLogin(false, false, false, defaultMediums, nil),
 		Vars: []string{
 			customCrOSUsername,
 			customCrOSPassword,
@@ -227,10 +248,13 @@ func init() {
 		Name: "nearbyShareGAIALoginAndroidAccountDev",
 		Desc: "CrOS login with Android nearby share account and Nearby Share enabled",
 		Contacts: []string{
-			"chromeos-sw-engprod@google.com",
+			"chromeos-cross-device-eng@google.com",
+			"hansenmichael@google.com",
+			"joaquinmarquez@google.com",
 		},
-		Parent: "nearbyShareAndroidSetupDev",
-		Impl:   NewNearbyShareLogin(false, false, true, defaultMediums, selfShareOpt),
+		BugComponent: "b:1131838", // ChromeOS > Software > System Services > Cross Device > Nearby Share
+		Parent:       "nearbyShareAndroidSetupDev",
+		Impl:         NewNearbyShareLogin(false, false, true, defaultMediums, selfShareOpt),
 		Vars: []string{
 			customCrOSUsername,
 			customCrOSPassword,
@@ -248,10 +272,13 @@ func init() {
 		Name: "nearbyShareGAIALoginBackgroundScanningEnabled",
 		Desc: "CrOS login with GAIA; Nearby Share and Background scanning flags enabled",
 		Contacts: []string{
-			"chromeos-sw-engprod@google.com",
+			"chromeos-cross-device-eng@google.com",
+			"hansenmichael@google.com",
+			"joaquinmarquez@google.com",
 		},
-		Parent: "nearbyShareAndroidSetup",
-		Impl:   NewNearbyShareLogin(false, true, false, defaultMediums, nil),
+		BugComponent: "b:1131838", // ChromeOS > Software > System Services > Cross Device > Nearby Share
+		Parent:       "nearbyShareAndroidSetup",
+		Impl:         NewNearbyShareLogin(false, true, false, defaultMediums, nil),
 		Vars: []string{
 			customCrOSUsername,
 			customCrOSPassword,
@@ -268,10 +295,13 @@ func init() {
 		Name: "nearbyShareGAIALoginBackgroundScanningEnabledFloss",
 		Desc: "CrOS login with GAIA; Nearby Share and Background scanning flags enabled (floss)",
 		Contacts: []string{
-			"chromeos-sw-engprod@google.com",
+			"chromeos-cross-device-eng@google.com",
+			"hansenmichael@google.com",
+			"joaquinmarquez@google.com",
 		},
-		Parent: "nearbyShareAndroidSetup",
-		Impl:   NewNearbyShareLogin(false, true, false, defaultMediums, flossOpt),
+		BugComponent: "b:1131838", // ChromeOS > Software > System Services > Cross Device > Nearby Share
+		Parent:       "nearbyShareAndroidSetup",
+		Impl:         NewNearbyShareLogin(false, true, false, defaultMediums, flossOpt),
 		Vars: []string{
 			customCrOSUsername,
 			customCrOSPassword,
@@ -312,10 +342,13 @@ func init() {
 		Name: "nearbyShareGAIALoginWebRTCAndWLAN",
 		Desc: "CrOS login with GAIA; use WebRTC and WLAN upgrade mediums",
 		Contacts: []string{
-			"chromeos-sw-engprod@google.com",
+			"chromeos-cross-device-eng@google.com",
+			"hansenmichael@google.com",
+			"joaquinmarquez@google.com",
 		},
-		Parent: "nearbyShareAndroidSetup",
-		Impl:   NewNearbyShareLogin(false, false, false, webRTCAndWLAN, nil),
+		BugComponent: "b:1131838", // ChromeOS > Software > System Services > Cross Device > Nearby Share
+		Parent:       "nearbyShareAndroidSetup",
+		Impl:         NewNearbyShareLogin(false, false, false, webRTCAndWLAN, nil),
 		Vars: []string{
 			customCrOSUsername,
 			customCrOSPassword,
@@ -332,10 +365,13 @@ func init() {
 		Name: "nearbyShareGAIALoginWebRTCAndWLANFloss",
 		Desc: "CrOS login with GAIA; use WebRTC and WLAN upgrade mediums (floss)",
 		Contacts: []string{
-			"chromeos-sw-engprod@google.com",
+			"chromeos-cross-device-eng@google.com",
+			"hansenmichael@google.com",
+			"joaquinmarquez@google.com",
 		},
-		Parent: "nearbyShareAndroidSetup",
-		Impl:   NewNearbyShareLogin(false, false, false, webRTCAndWLAN, flossOpt),
+		BugComponent: "b:1131838", // ChromeOS > Software > System Services > Cross Device > Nearby Share
+		Parent:       "nearbyShareAndroidSetup",
+		Impl:         NewNearbyShareLogin(false, false, false, webRTCAndWLAN, flossOpt),
 		Vars: []string{
 			customCrOSUsername,
 			customCrOSPassword,
@@ -352,10 +388,13 @@ func init() {
 		Name: "nearbyShareGAIALoginWebRTCOnly",
 		Desc: "CrOS login with GAIA; only use WebRTC upgrade medium",
 		Contacts: []string{
-			"chromeos-sw-engprod@google.com",
+			"chromeos-cross-device-eng@google.com",
+			"hansenmichael@google.com",
+			"joaquinmarquez@google.com",
 		},
-		Parent: "nearbyShareAndroidSetup",
-		Impl:   NewNearbyShareLogin(false, false, false, webRTCOnly, nil),
+		BugComponent: "b:1131838", // ChromeOS > Software > System Services > Cross Device > Nearby Share
+		Parent:       "nearbyShareAndroidSetup",
+		Impl:         NewNearbyShareLogin(false, false, false, webRTCOnly, nil),
 		Vars: []string{
 			customCrOSUsername,
 			customCrOSPassword,
@@ -372,10 +411,13 @@ func init() {
 		Name: "nearbyShareGAIALoginWebRTCOnlyFloss",
 		Desc: "CrOS login with GAIA; only use WebRTC upgrade medium (floss)",
 		Contacts: []string{
-			"chromeos-sw-engprod@google.com",
+			"chromeos-cross-device-eng@google.com",
+			"hansenmichael@google.com",
+			"joaquinmarquez@google.com",
 		},
-		Parent: "nearbyShareAndroidSetup",
-		Impl:   NewNearbyShareLogin(false, false, false, webRTCOnly, flossOpt),
+		BugComponent: "b:1131838", // ChromeOS > Software > System Services > Cross Device > Nearby Share
+		Parent:       "nearbyShareAndroidSetup",
+		Impl:         NewNearbyShareLogin(false, false, false, webRTCOnly, flossOpt),
 		Vars: []string{
 			customCrOSUsername,
 			customCrOSPassword,
@@ -392,10 +434,13 @@ func init() {
 		Name: "nearbyShareGAIALoginWLANOnly",
 		Desc: "CrOS login with GAIA; only use WLAN upgrade medium",
 		Contacts: []string{
-			"chromeos-sw-engprod@google.com",
+			"chromeos-cross-device-eng@google.com",
+			"hansenmichael@google.com",
+			"joaquinmarquez@google.com",
 		},
-		Parent: "nearbyShareAndroidSetup",
-		Impl:   NewNearbyShareLogin(false, false, false, wlanOnly, nil),
+		BugComponent: "b:1131838", // ChromeOS > Software > System Services > Cross Device > Nearby Share
+		Parent:       "nearbyShareAndroidSetup",
+		Impl:         NewNearbyShareLogin(false, false, false, wlanOnly, nil),
 		Vars: []string{
 			customCrOSUsername,
 			customCrOSPassword,
@@ -412,10 +457,13 @@ func init() {
 		Name: "nearbyShareGAIALoginWLANOnlyFloss",
 		Desc: "CrOS login with GAIA; only use WLAN upgrade medium (floss)",
 		Contacts: []string{
-			"chromeos-sw-engprod@google.com",
+			"chromeos-cross-device-eng@google.com",
+			"hansenmichael@google.com",
+			"joaquinmarquez@google.com",
 		},
-		Parent: "nearbyShareAndroidSetup",
-		Impl:   NewNearbyShareLogin(false, false, false, wlanOnly, flossOpt),
+		BugComponent: "b:1131838", // ChromeOS > Software > System Services > Cross Device > Nearby Share
+		Parent:       "nearbyShareAndroidSetup",
+		Impl:         NewNearbyShareLogin(false, false, false, wlanOnly, flossOpt),
 		Vars: []string{
 			customCrOSUsername,
 			customCrOSPassword,
@@ -434,10 +482,13 @@ func init() {
 		Name: "nearbyShareGAIALoginBleV2",
 		Desc: "CrOS login with GAIA; enable BLE V2 as discovery medium",
 		Contacts: []string{
-			"chromeos-sw-engprod@google.com",
+			"chromeos-cross-device-eng@google.com",
+			"hansenmichael@google.com",
+			"joaquinmarquez@google.com",
 		},
-		Parent: "nearbyShareAndroidSetup",
-		Impl:   NewNearbyShareLogin(false, false, false, defaultMediums, bleV2Opt),
+		BugComponent: "b:1131838", // ChromeOS > Software > System Services > Cross Device > Nearby Share
+		Parent:       "nearbyShareAndroidSetup",
+		Impl:         NewNearbyShareLogin(false, false, false, defaultMediums, bleV2Opt),
 		Vars: []string{
 			customCrOSUsername,
 			customCrOSPassword,
@@ -454,10 +505,13 @@ func init() {
 		Name: "nearbyShareGAIALoginBleV2Floss",
 		Desc: "CrOS login with GAIA; enable BLE V2 as discovery medium (floss)",
 		Contacts: []string{
-			"chromeos-sw-engprod@google.com",
+			"chromeos-cross-device-eng@google.com",
+			"hansenmichael@google.com",
+			"joaquinmarquez@google.com",
 		},
-		Parent: "nearbyShareAndroidSetup",
-		Impl:   NewNearbyShareLogin(false, false, false, defaultMediums, append(flossOpt, bleV2Opt...)),
+		BugComponent: "b:1131838", // ChromeOS > Software > System Services > Cross Device > Nearby Share
+		Parent:       "nearbyShareAndroidSetup",
+		Impl:         NewNearbyShareLogin(false, false, false, defaultMediums, append(flossOpt, bleV2Opt...)),
 		Vars: []string{
 			customCrOSUsername,
 			customCrOSPassword,

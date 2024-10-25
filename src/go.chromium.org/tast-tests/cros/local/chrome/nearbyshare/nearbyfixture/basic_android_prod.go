@@ -29,8 +29,11 @@ func addProdAndroidFixtures() {
 			crosSelectAndroidAsContact: false,
 		}),
 		Contacts: []string{
-			"chromeos-sw-engprod@google.com",
+			"chromeos-cross-device-eng@google.com",
+			"hansenmichael@google.com",
+			"joaquinmarquez@google.com",
 		},
+		BugComponent:    "b:1131838", // ChromeOS > Software > System Services > Cross Device > Nearby Share
 		Parent:          "nearbyShareGAIALoginProd",
 		SetUpTimeout:    3*time.Minute + crossdevice.BugReportDuration,
 		ResetTimeout:    resetTimeout,
@@ -52,8 +55,11 @@ func addProdAndroidFixtures() {
 			crosSelectAndroidAsContact: false,
 		}),
 		Contacts: []string{
-			"chromeos-sw-engprod@google.com",
+			"chromeos-cross-device-eng@google.com",
+			"hansenmichael@google.com",
+			"joaquinmarquez@google.com",
 		},
+		BugComponent:    "b:1131838", // ChromeOS > Software > System Services > Cross Device > Nearby Share
 		SetUpTimeout:    3*time.Minute + crossdevice.BugReportDuration,
 		ResetTimeout:    resetTimeout,
 		TearDownTimeout: resetTimeout,
@@ -72,8 +78,11 @@ func addProdAndroidFixtures() {
 			crosSelectAndroidAsContact: false,
 		}),
 		Contacts: []string{
-			"chromeos-sw-engprod@google.com",
+			"chromeos-cross-device-eng@google.com",
+			"hansenmichael@google.com",
+			"joaquinmarquez@google.com",
 		},
+		BugComponent:    "b:1131838", // ChromeOS > Software > System Services > Cross Device > Nearby Share
 		Parent:          "nearbyShareGAIALoginProd",
 		SetUpTimeout:    3*time.Minute + crossdevice.BugReportDuration,
 		ResetTimeout:    resetTimeout,
