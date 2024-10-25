@@ -461,7 +461,7 @@ func ReportVideoStreams(pv *perf.Values, byID webrtcinternals.StatsIndexByStatsI
 	for _, config := range metrics {
 		// Create a metric in the form:
 		// WebRTCInternals.Video.{Inbound, Outbound}.{title-cased metric name}
-		if aggregate, ok := aggregates[config.attribute]; ok {
+		if aggregate, ok := aggregates[config.attribute]; ok && aggregate > 0 {
 			pv.Set(perf.Metric{
 				Name:      fmt.Sprintf("WebRTCInternals.Video%s.%s", directionSuffix, cases.Title(language.Und, cases.NoLower).String(config.attribute)),
 				Unit:      config.unit,
