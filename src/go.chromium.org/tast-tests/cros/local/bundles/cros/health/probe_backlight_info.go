@@ -39,11 +39,11 @@ func init() {
 		SoftwareDeps: []string{"diagnostics"},
 		Fixture:      "crosHealthdRunning",
 		Params: []testing.Param{{
-			ExtraHardwareDeps: hwdep.D(hwdep.SkipOnModel("nuc11")),
+			ExtraHardwareDeps: hwdep.D(hwdep.SkipDMIProductName("NUC11TNKv5")),
 		}, {
 			// TODO(b/369455834): Fix the failure.
 			Name:              "unstable",
-			ExtraHardwareDeps: hwdep.D(hwdep.Model("nuc11")),
+			ExtraHardwareDeps: hwdep.D(hwdep.SkipDMIProductName("NUC11TNKv5")),
 			ExtraAttr:         []string{"informational"},
 		}},
 	})
