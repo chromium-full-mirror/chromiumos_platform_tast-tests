@@ -23,7 +23,6 @@ import (
 	"go.chromium.org/tast-tests/cros/common/wifi/wpacli"
 	"go.chromium.org/tast-tests/cros/remote/bundles/cros/wifi/wifiutil"
 	"go.chromium.org/tast-tests/cros/remote/network/cmd"
-	"go.chromium.org/tast-tests/cros/remote/wifi/iw"
 	"go.chromium.org/tast-tests/cros/remote/wificell"
 	"go.chromium.org/tast-tests/cros/remote/wificell/dutcfg"
 	"go.chromium.org/tast-tests/cros/remote/wificell/hostapd"
@@ -385,25 +384,6 @@ func RoamFT(ctx context.Context, s *testing.State) {
 			s.Fatalf("Unexpected BSSID: got %s, want %s", dutState.Wifi.Bssid, mac1)
 		}
 	}
-	hasFTSupport := func(ctx context.Context) bool {
-		phys, _, err := iw.NewRemoteRunner(s.DUT().Conn()).ListPhys(ctx)
-		if err != nil {
-			s.Fatal("Failed to check SME capability: ", err)
-		}
-		for _, p := range phys {
-			for _, c := range p.Commands {
-				// A DUT which has SME capability should support FT.
-				if c == "authenticate" {
-					return true
-				}
-				// A full-mac driver that supports update_ft_ies functions also supports FT.
-				if c == "update_ft_ies" {
-					return true
-				}
-			}
-		}
-		return false
-	}
 
 	ctx, restoreBgAndFg, err := tf.WifiClient().TurnOffBgAndFgscan(ctx)
 	if err != nil {
@@ -448,7 +428,11 @@ func RoamFT(ctx context.Context, s *testing.State) {
 		s.Fatal("Failed to turn on the global FT property: ", err)
 	}
 	// Expect failure if we are running pure FT test and the DUT is not supporting SME.
-	runOnce(ctx, param.apOpts, param.secConfFac, !param.mixed && !hasFTSupport(ctx), param.expectedFtKeyMgmt)
+	hasFTSupport, err := wifiutil.HasFTSupport(ctx, s.DUT().Conn())
+	if err != nil {
+		s.Fatal("Failed to check SME capability: ", err)
+	}
+	runOnce(ctx, param.apOpts, param.secConfFac, !param.mixed && !hasFTSupport, param.expectedFtKeyMgmt)
 	// Run the test without global FT. It should pass iff we configured the AP in mixed mode.
 	if _, err := tf.WifiClient().SetGlobalFTProperty(ctx, &wifi.SetGlobalFTPropertyRequest{Enabled: false}); err != nil {
 		s.Fatal("Failed to turn off the global FT property: ", err)

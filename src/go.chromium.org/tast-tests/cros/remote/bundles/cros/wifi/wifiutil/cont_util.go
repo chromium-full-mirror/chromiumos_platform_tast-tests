@@ -17,7 +17,6 @@ import (
 	"go.chromium.org/tast-tests/cros/common/network/ping"
 	"go.chromium.org/tast-tests/cros/common/shillconst"
 	"go.chromium.org/tast-tests/cros/common/wifi/security"
-	"go.chromium.org/tast-tests/cros/remote/wifi/iw"
 	"go.chromium.org/tast-tests/cros/remote/wificell"
 	"go.chromium.org/tast-tests/cros/remote/wificell/dhcp"
 	"go.chromium.org/tast-tests/cros/remote/wificell/dutcfg"
@@ -27,7 +26,6 @@ import (
 	"go.chromium.org/tast-tests/cros/remote/wificell/router/common/support"
 	"go.chromium.org/tast-tests/cros/services/cros/wifi"
 	"go.chromium.org/tast/core/errors"
-	"go.chromium.org/tast/core/ssh"
 	"go.chromium.org/tast/core/testing"
 )
 
@@ -67,26 +65,6 @@ var (
 // Cert1 defines a certificate used for testing.
 var Cert1 = certificate.TestCert1()
 
-
-func hasFTSupport(ctx context.Context, conn *ssh.Conn) (bool, error) {
-	phys, _, err := iw.NewRemoteRunner(conn).ListPhys(ctx)
-	if err != nil {
-		return false, errors.Wrap(err, "failed to check SME capability")
-	}
-	for _, p := range phys {
-		for _, c := range p.Commands {
-			// A DUT which has SME capability should support FT.
-			if c == "authenticate" {
-				return true, nil
-			}
-			// A full-mac driver that supports update_ft_ies functions also supports FT.
-			if c == "update_ft_ies" {
-				return true, nil
-			}
-		}
-	}
-	return false, nil
-}
 
 func setupPcapOnRouter(ctx context.Context, r support.Capture,
 	apName string, apConf *hostapd.Config, ds *destructorStack) error {
@@ -140,7 +118,7 @@ func ContinuityTestInitialSetup(ctx context.Context, tf *wificell.TestFixture, p
 
 	// TODO(b/190630644): Add HWDeps to cover such devices.
 	if param.EnableFT {
-		supported, err := hasFTSupport(ctx, tf.DUTConn(wificell.DefaultDUT))
+		supported, err := HasFTSupport(ctx, tf.DUTConn(wificell.DefaultDUT))
 		if err != nil {
 			return ctx, nil, nil, errors.Wrap(err, "failed to check FT support")
 		}

@@ -10,10 +10,12 @@ import (
 
 	"github.com/golang/protobuf/ptypes/empty"
 
+	"go.chromium.org/tast-tests/cros/remote/wifi/iw"
 	"go.chromium.org/tast-tests/cros/remote/wificell"
 	"go.chromium.org/tast-tests/cros/remote/wificell/hostapd"
 	"go.chromium.org/tast-tests/cros/services/cros/wifi"
 	"go.chromium.org/tast/core/errors"
+	"go.chromium.org/tast/core/ssh"
 	"go.chromium.org/tast/core/testing"
 )
 
@@ -30,6 +32,27 @@ type RoamTest struct {
 	roamSucceeded  bool
 	ap1            *wificell.APIface
 	ap2            *wificell.APIface
+}
+
+// HasFTSupport returns whether the DUT supports FT.
+func HasFTSupport(ctx context.Context, conn *ssh.Conn) (bool, error) {
+	phys, _, err := iw.NewRemoteRunner(conn).ListPhys(ctx)
+	if err != nil {
+		return false, errors.Wrap(err, "failed to check SME capability")
+	}
+	for _, p := range phys {
+		for _, c := range p.Commands {
+			// A DUT which has SME capability should support FT.
+			if c == "authenticate" {
+				return true, nil
+			}
+			// A full-mac driver that supports update_ft_ies functions also supports FT.
+			if c == "update_ft_ies" {
+				return true, nil
+			}
+		}
+	}
+	return false, nil
 }
 
 // SimpleRoamInitialSetup sets up AP1, connects DUTs to it, then sets up AP2.
