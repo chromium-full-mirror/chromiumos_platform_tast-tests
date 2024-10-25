@@ -1,0 +1,5 @@
+{
+  "url": "gs://chromiumos-test-assets-public/tast/cros/printer/printer_add_brother_printer_20200805.ppd",
+  "size": 27125,
+  "sha256sum": "e300105124a22f165d7d1970bb0d3d46fe3e3b697d5158ea0279488e7cf8733d"
+}

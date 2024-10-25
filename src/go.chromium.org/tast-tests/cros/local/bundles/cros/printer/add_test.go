@@ -39,6 +39,12 @@ func x86Test(name, ppdFile, expectedFile string, options ...string) base {
 	return base{ExtraAttr: []string{"informational"}, PrintFile: "to_print.pdf", ExtraSoftwareDeps: []string{"amd64"}, Name: name, PPDFile: ppdFile, ExpectedFile: expectedFile, Options: options}
 }
 
+// intTest adds non-informational parameterized tests (one proxy, one regular)
+// that use "to_print.pdf" for printing and require cros_internal.
+func intTest(name, ppdFile, expectedFile string, options ...string) base {
+	return base{PrintFile: "to_print.pdf", ExtraSoftwareDeps: []string{"cros_internal"}, Name: name, PPDFile: ppdFile, ExpectedFile: expectedFile, Options: options}
+}
+
 // test2 adds non-informational parameterized tests (one proxy, one regular)
 // that use "2page.pdf" for printing.
 func test2(name, ppdFile, expectedFile string, options ...string) base {
@@ -77,6 +83,9 @@ func TestAddParams(t *testing.T) {
 		test2("epson_hardware_uncollated", "printer_EpsonWFC20590.ppd", "printer_collate_epson_hardware_uncollated_golden.ps", ippprint.WithCopies(2)),
 
 		// Resolution
+		intTest("brother_300dpi", "printer_add_brother_printer.ppd", "printer_resolution_brother_300dpi_golden.bin", ippprint.WithResolution("300dpi")),
+		intTest("brother_1200dpi", "printer_add_brother_printer.ppd", "printer_resolution_brother_1200dpi_golden.bin", ippprint.WithResolution("1200dpi")),
+		intTest("brother_2400x600dpi", "printer_add_brother_printer.ppd", "printer_resolution_brother_2400x600dpi_golden.bin", ippprint.WithResolution("2400x600dpi")),
 		test("lexmark_600dpi", "printer_Lexmark.ppd", "printer_resolution_lexmark_600dpi_golden.ps", ippprint.WithResolution("600dpi")),
 		test("lexmark_1200dpi", "printer_Lexmark.ppd", "printer_resolution_lexmark_1200dpi_golden.ps", ippprint.WithResolution("1200dpi")),
 		test("lexmark_2400x600dpi", "printer_Lexmark.ppd", "printer_resolution_lexmark_2400x600dpi_golden.ps", ippprint.WithResolution("2400x600dpi")),
@@ -89,6 +98,7 @@ func TestAddParams(t *testing.T) {
 		test("oki_tray4", "printer_add_oki.ppd.gz", "printer_add_oki_tray4_golden.ps", "media-source=tray-4"),
 
 		// Add
+		intTest("brother_mlaser", "printer_add_brother_printer.ppd", "printer_add_brother_printer_golden.bin"),
 		test2("canon", "printer_add_canonmg2900.ppd", "printer_add_canonmg2900_golden.bin", "print-color-mode=rgb"),
 		test("dymo_lw", "printer_add_dymo_printer_lw450.ppd", "printer_add_dymo_lw_printer_golden.bin"),
 		test("dymo_lm", "printer_add_dymo_printer_lm450.ppd", "printer_add_dymo_lm_printer_golden.bin"),

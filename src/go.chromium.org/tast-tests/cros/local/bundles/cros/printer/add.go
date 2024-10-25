@@ -67,6 +67,36 @@ func init() {
 				},
 				ExtraData: []string{"2page.pdf", "printer_EpsonWFC20590.ppd", "printer_collate_epson_hardware_uncollated_golden.ps"},
 			}, {
+				Name: "brother_300dpi",
+				Val: &ippprint.Params{
+					PPDFile:      "printer_add_brother_printer.ppd",
+					PrintFile:    "to_print.pdf",
+					ExpectedFile: "printer_resolution_brother_300dpi_golden.bin",
+					Options:      []string{"printer-resolution=300dpi"},
+				},
+				ExtraData:         []string{"to_print.pdf", "printer_add_brother_printer.ppd", "printer_resolution_brother_300dpi_golden.bin"},
+				ExtraSoftwareDeps: []string{"cros_internal"},
+			}, {
+				Name: "brother_1200dpi",
+				Val: &ippprint.Params{
+					PPDFile:      "printer_add_brother_printer.ppd",
+					PrintFile:    "to_print.pdf",
+					ExpectedFile: "printer_resolution_brother_1200dpi_golden.bin",
+					Options:      []string{"printer-resolution=1200dpi"},
+				},
+				ExtraData:         []string{"to_print.pdf", "printer_add_brother_printer.ppd", "printer_resolution_brother_1200dpi_golden.bin"},
+				ExtraSoftwareDeps: []string{"cros_internal"},
+			}, {
+				Name: "brother_2400x600dpi",
+				Val: &ippprint.Params{
+					PPDFile:      "printer_add_brother_printer.ppd",
+					PrintFile:    "to_print.pdf",
+					ExpectedFile: "printer_resolution_brother_2400x600dpi_golden.bin",
+					Options:      []string{"printer-resolution=2400x600dpi"},
+				},
+				ExtraData:         []string{"to_print.pdf", "printer_add_brother_printer.ppd", "printer_resolution_brother_2400x600dpi_golden.bin"},
+				ExtraSoftwareDeps: []string{"cros_internal"},
+			}, {
 				Name: "lexmark_600dpi",
 				Val: &ippprint.Params{
 					PPDFile:      "printer_Lexmark.ppd",
@@ -120,6 +150,15 @@ func init() {
 					Options:      []string{"media-source=tray-4"},
 				},
 				ExtraData: []string{"to_print.pdf", "printer_add_oki.ppd.gz", "printer_add_oki_tray4_golden.ps"},
+			}, {
+				Name: "brother_mlaser",
+				Val: &ippprint.Params{
+					PPDFile:      "printer_add_brother_printer.ppd",
+					PrintFile:    "to_print.pdf",
+					ExpectedFile: "printer_add_brother_printer_golden.bin",
+				},
+				ExtraData:         []string{"to_print.pdf", "printer_add_brother_printer.ppd", "printer_add_brother_printer_golden.bin"},
+				ExtraSoftwareDeps: []string{"cros_internal"},
 			}, {
 				Name: "canon",
 				Val: &ippprint.Params{

@@ -1,0 +1,5 @@
+{
+  "url": "gs://chromiumos-test-assets-public/tast/cros/printer/printer_resolution_brother_1200dpi_golden_20240228.ps",
+  "size": 17178,
+  "sha256sum": "0bc334c6d3c657e46be287712b9467bb8c63196115e21f0504ee2a4ca37aa091"
+}
