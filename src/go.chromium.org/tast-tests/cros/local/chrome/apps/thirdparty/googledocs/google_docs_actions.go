@@ -50,19 +50,28 @@ func UpdateTitle(ctx context.Context, pc pointer.Context, ac *uiauto.Context, kw
 
 // EnablePageNumbers enables page numbers for the active Google Doc.
 func EnablePageNumbers(ctx context.Context, pc pointer.Context, ac *uiauto.Context) error {
-	format := nodewith.Name("Format").Role(role.MenuItem)
-	pageNumbers := nodewith.NameStartingWith("Page numbers").Role(role.MenuItem)
-	apply := nodewith.Name("Apply").Role(role.Button)
-	return uiauto.Combine(
+	formatItem := nodewith.Name("Format").Role(role.MenuItem)
+	pageNumbersItem := nodewith.NameStartingWith("Page numbers").Role(role.MenuItem)
+	switchToPagesFormatItem := nodewith.NameStartingWith("Switch to Pages format").Role(role.MenuItem)
+	openFormatMenu := ac.RetryUntil(
+		pc.Click(formatItem),
+		ac.WithTimeout(5*time.Second).WaitUntilAnyExists(pageNumbersItem, switchToPagesFormatItem),
+	)
+	applyButton := nodewith.Name("Apply").Role(role.Button)
+	return uiauto.NamedCombine(
 		"enable page numbers in Google Docs",
+		openFormatMenu,
+		uiauto.IfSuccessThen(ac.Exists(switchToPagesFormatItem),
+			uiauto.NamedCombine("switch to pages format and open format menu",
+				pc.Click(switchToPagesFormatItem),
+				openFormatMenu,
+			)),
+		pc.Click(pageNumbersItem),
+		ac.WaitUntilExists(applyButton),
 		ac.RetryUntil(
-			pc.Click(format),
-			ac.WithTimeout(5*time.Second).WaitUntilExists(pageNumbers),
+			pc.Click(applyButton),
+			ac.WithTimeout(5*time.Second).WaitUntilGone(applyButton),
 		),
-		pc.Click(pageNumbers),
-		ac.WaitUntilExists(apply),
-		pc.Click(apply),
-		ac.WaitUntilGone(apply),
 	)(ctx)
 }
 
