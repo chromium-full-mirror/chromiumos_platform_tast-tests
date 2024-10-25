@@ -98,7 +98,7 @@ var (
 	DxDefocusingMsg = nodewith.Name("Keys aren't tested when you're using another window").Role(role.StaticText)
 
 	// DxKeyboardTester export is used to find the keyboard tester on the input page.
-	DxKeyboardTester = nodewith.HasClass("body-container").Role(role.GenericContainer)
+	DxKeyboardTester = nodewith.Attribute("htmlId", "diagram-border").Role(role.GenericContainer)
 
 	// DxNarrowMenuButton export is used to find the navigation menu on narrow views.
 	DxNarrowMenuButton = nodewith.NameContaining("Diagnostics").Role(role.Button)
