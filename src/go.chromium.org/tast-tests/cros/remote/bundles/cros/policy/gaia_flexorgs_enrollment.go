@@ -36,7 +36,16 @@ func init() {
 		},
 		BugComponent: "b:1111632",
 		Attr:         []string{"group:dpanel-end2end", "group:dmserver-enrollment-daily"},
-		SoftwareDeps: []string{"reboot", "chrome"},
+		SoftwareDeps: []string{
+			"reboot",
+			"chrome",
+			// Disable on Flex devices as this test doesn't (and currently can't) deprovision
+			// during cleanup, which interferes with token-based enrollment tests in the same
+			// suite on Flex.
+			// TODO(b/375651979): Find a way to deprovision during cleanup so we can run this
+			// test on Flex.
+			"non_flex_device",
+		},
 		ServiceDeps: []string{
 			"tast.cros.hwsec.OwnershipService",
 			"tast.cros.policy.PolicyService",
