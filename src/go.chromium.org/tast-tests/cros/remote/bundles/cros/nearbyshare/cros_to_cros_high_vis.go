@@ -324,22 +324,6 @@ func init() {
 					Filename: "big_txt.zip", TransferTimeout: nearbycommon.LargeFileOnlineTransferTimeout},
 				Timeout: nearbycommon.DetectionTimeout + nearbycommon.LargeFileOnlineTransferTimeout,
 			},
-
-			// BLE V2 enabled tests
-			// TODO(b/333602803): Remove tests after BLE V2 is launched.
-			{
-				Name:    "ble_v2",
-				Fixture: "nearbyShareNoOneBleV2",
-				Val:     nearbycommon.TestData{Filename: "small_png.zip", TransferTimeout: nearbycommon.SmallFileTransferTimeout},
-				Timeout: nearbycommon.DetectionTimeout + nearbycommon.SmallFileTransferTimeout,
-			},
-			{
-				Name:      "ble_v2_floss",
-				Fixture:   "nearbyShareNoOneBleV2Floss",
-				Val:       nearbycommon.TestData{Filename: "small_png.zip", TransferTimeout: nearbycommon.SmallFileTransferTimeout},
-				ExtraAttr: []string{"cross-device-remote_floss"},
-				Timeout:   nearbycommon.DetectionTimeout + nearbycommon.SmallFileTransferTimeout,
-			},
 		},
 	})
 }
