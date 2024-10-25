@@ -233,13 +233,23 @@ func ARCVPNSplitRouting(ctx context.Context, s *testing.State) {
 	case arcVPNSplitRoutingTestCaseExcludedRoutes:
 		reachableIPs = append(reachableIPs, ipAndRole{physicalAddrs.IPv4Addr.String(), "physical IPv4"})
 		reachableIPs = append(reachableIPs, ipAndRole{physicalAddrs.IPv6Addrs[0].String(), "physical IPv6"})
-		reachableIPs = append(reachableIPs, ipAndRole{server.OverlayIPv4, "VPN IPv4"})
-		// Skip VPN IPv6 check since it won't be reachable by any chance.
+		reachableIPs = append(reachableIPs, ipAndRole{server.OverlayIPv4, "VPN overlay IPv4"})
+		// Skip VPN overlay IPv6 check since it won't be reachable by any chance.
+		// Check the VPN underlay IPv6 to verify is blackhole route is applied properly.
+		vpnUnderlayAddrs, err := vpnEnv.GetVethInAddrs(ctx)
+		if err != nil {
+			s.Fatal("Failed to get addrs in VPN env: ", err)
+		}
+		if tc == arcVPNSplitRoutingTestCaseIncludedRoutes {
+			reachableIPs = append(unreachableIPs, ipAndRole{vpnUnderlayAddrs.IPv6Addrs[0].String(), "VPN underlay IPv6"})
+		} else {
+			unreachableIPs = append(unreachableIPs, ipAndRole{vpnUnderlayAddrs.IPv6Addrs[0].String(), "VPN underlay IPv6"})
+		}
 	case arcVPNSplitRoutingTestCaseDefaultRoutes:
 		unreachableIPs = append(reachableIPs, ipAndRole{physicalAddrs.IPv4Addr.String(), "physical IPv4"})
 		unreachableIPs = append(unreachableIPs, ipAndRole{physicalAddrs.IPv6Addrs[0].String(), "physical IPv6"})
-		reachableIPs = append(reachableIPs, ipAndRole{server.OverlayIPv4, "VPN IPv4"})
-		// Skip VPN IPv6 check since it won't be reachable by any chance.
+		reachableIPs = append(reachableIPs, ipAndRole{server.OverlayIPv4, "VPN overlay IPv4"})
+		// Skip VPN overlay IPv6 check since it won't be reachable by any chance.
 	}
 
 	for _, ip := range reachableIPs {
