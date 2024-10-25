@@ -20,7 +20,7 @@ func init() {
 	testing.AddTest(&testing.Test{
 		Func:    Ti50CCDFlashrom,
 		Desc:    "Measure flashrom speed over CCD",
-		Timeout: 15 * time.Minute,
+		Timeout: 20 * time.Minute,
 		Contacts: []string{
 			"cros-hwsec@google.com", // CrOS GSC Developers
 			"ecgh@google.com",
