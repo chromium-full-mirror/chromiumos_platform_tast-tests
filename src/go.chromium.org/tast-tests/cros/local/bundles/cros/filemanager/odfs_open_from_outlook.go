@@ -13,6 +13,7 @@ import (
 	"go.chromium.org/tast-tests/cros/common/chrome/credconfig"
 	"go.chromium.org/tast-tests/cros/common/pci"
 	"go.chromium.org/tast-tests/cros/common/policy"
+	"go.chromium.org/tast-tests/cros/local/apps"
 	"go.chromium.org/tast-tests/cros/local/chrome/uiauto"
 	"go.chromium.org/tast-tests/cros/local/chrome/uiauto/faillog"
 	"go.chromium.org/tast-tests/cros/local/chrome/uiauto/filesapp"
@@ -31,6 +32,10 @@ import (
 const (
 	outlookURL = "https://outlook.office.com/"
 )
+
+type outlookPWAParam struct {
+	outlookAsPWA bool
+}
 
 func init() {
 	testing.AddTest(&testing.Test{
@@ -58,6 +63,16 @@ func init() {
 			"onedrive.managedpassword",
 		},
 		Fixture: "onedriveManaged",
+		Params: []testing.Param{{
+			Val: outlookPWAParam{
+				outlookAsPWA: false,
+			},
+		}, {
+			Name: "pwa",
+			Val: outlookPWAParam{
+				outlookAsPWA: true,
+			},
+		}},
 		SearchFlags: []*testing.StringPair{
 			pci.SearchFlag(&policy.WebAppInstallForceList{}, pci.Served),
 			pci.SearchFlag(&policy.MicrosoftOneDriveMount{}, pci.VerifiedFunctionalityOS),
@@ -111,22 +126,38 @@ func OdfsOpenFromOutlook(ctx context.Context, s *testing.State) {
 	ctx, cancel := ctxutil.Shorten(ctx, 5*time.Second)
 	defer cancel()
 
+	param := s.Param().(outlookPWAParam)
+	webAppInstallForceListValue := []*policy.WebAppInstallForceListValue{
+		{
+			Url:                    "https://www.microsoft365.com/?from=Homescreen",
+			DefaultLaunchContainer: "window",
+			CreateDesktopShortcut:  true,
+			CustomName:             "",
+			FallbackAppName:        "",
+			CustomIcon: &policy.WebAppInstallForceListValueCustomIcon{
+				Hash: "",
+				Url:  "",
+			},
+		},
+	}
+	if param.outlookAsPWA {
+		webAppInstallForceListValue = append(webAppInstallForceListValue, &policy.WebAppInstallForceListValue{
+			Url:                    "https://outlook.office.com/mail/",
+			DefaultLaunchContainer: "window",
+			CreateDesktopShortcut:  true,
+			CustomName:             "",
+			FallbackAppName:        "",
+			CustomIcon: &policy.WebAppInstallForceListValueCustomIcon{
+				Hash: "",
+				Url:  "",
+			},
+		})
+	}
+
 	// Force-install the M365 PWA and set all Clippy policies appropriately.
 	if err := policyutil.ServeAndRefresh(ctx, fdms, cr, []policy.Policy{
 		&policy.WebAppInstallForceList{
-			Val: []*policy.WebAppInstallForceListValue{
-				{
-					Url:                    "https://www.microsoft365.com/?from=Homescreen",
-					DefaultLaunchContainer: "window",
-					CreateDesktopShortcut:  true,
-					CustomName:             "",
-					FallbackAppName:        "",
-					CustomIcon: &policy.WebAppInstallForceListValueCustomIcon{
-						Hash: "",
-						Url:  "",
-					},
-				},
-			},
+			Val: webAppInstallForceListValue,
 		},
 		&policy.MicrosoftOneDriveAccountRestrictions{Val: []string{"common"}},
 		&policy.MicrosoftOneDriveMount{Val: "automated"},
@@ -160,12 +191,20 @@ func OdfsOpenFromOutlook(ctx context.Context, s *testing.State) {
 	}
 
 	// Open Outlook.
-	conn, err := cr.Browser().NewConn(ctx, outlookURL)
-	if err != nil {
-		s.Fatal("Failed to open office website: ", err)
+	if param.outlookAsPWA {
+		if err := apps.Launch(ctx, tconn, apps.Outlook.ID); err != nil {
+			s.Fatal("Failed to launch Outlook: ", err)
+		}
+		defer apps.Close(ctx, tconn, apps.Outlook.ID)
+
+	} else {
+		conn, err := cr.Browser().NewConn(ctx, outlookURL)
+		if err != nil {
+			s.Fatal("Failed to open office website: ", err)
+		}
+		defer conn.Close()
+		defer conn.CloseTarget(cleanupCtx)
 	}
-	defer conn.Close()
-	defer conn.CloseTarget(cleanupCtx)
 	defer faillog.DumpUITreeWithScreenshotOnError(cleanupCtx, s.OutDir(), s.HasError, cr, "ui_open_from_outlook")
 
 	// Open the most recent Mail from the Inbox which should contain 3 links to Office files.
@@ -215,7 +254,7 @@ func OdfsOpenFromOutlook(ctx context.Context, s *testing.State) {
 	attachmentEmail := nodewith.Role(role.ListBoxOption).NameContaining("Tast Test Outlook Files").Ancestor(messageList)
 	attachmentEmailText := nodewith.Role(role.StaticText).Name("Tast Test Outlook Files:").Ancestor(outlookContext)
 
-	if err := uiauto.Combine("Open the attachment email in Outlook",
+	if err := uiauto.Combine("Open the attachment email in Outlooks",
 		ui.WaitUntilExists(outlookContext),
 		ui.WaitUntilExists(attachmentEmail),
 		ui.DoDefault(attachmentEmail),

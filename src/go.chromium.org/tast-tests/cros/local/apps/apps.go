@@ -417,6 +417,12 @@ var Microsoft365 = App{
 	Name: "Microsoft 365",
 }
 
+// Outlook has details about the Outlook PWA app.
+var Outlook = App{
+	ID:   "faolnafnngnfdaknnbpnkhgohbobgegn",
+	Name: "Outlook (PWA)",
+}
+
 // MxPlayer has details about the Mx Player app.
 var MxPlayer = App{
 	ID:   "jhjhbhgfiiaobdfgpehmfopeepmgceob",
