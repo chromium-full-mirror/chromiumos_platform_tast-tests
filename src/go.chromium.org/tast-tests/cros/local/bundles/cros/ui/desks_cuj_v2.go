@@ -34,6 +34,7 @@ func init() {
 			"vivian.chen@cienet.com",
 		},
 		BugComponent: "b:1045832", // ChromeOS > Software > Performance > TPS
+		Attr:         []string{"group:cuj"},
 		SoftwareDeps: []string{"chrome"},
 		HardwareDeps: hwdep.D(hwdep.InternalDisplay()),
 		Data: []string{
