@@ -132,6 +132,7 @@ func (service *DeviceTrustService) ConnectToFakeIdP(ctx context.Context, req *pb
 		chrome.DMSPolicy(policy.DMServerAlphaURL),
 		chrome.GAIALogin(chrome.Creds{User: req.User, Pass: req.Pass}),
 		chrome.EnableFeatures(devicetrust.DeviceTrustFeature),
+		chrome.RemoveNotification(false),
 	)
 	if err != nil {
 		return nil, errors.Wrap(err, "Chrome login failed")

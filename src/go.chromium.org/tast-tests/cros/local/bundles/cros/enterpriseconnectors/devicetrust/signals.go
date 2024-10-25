@@ -16,8 +16,7 @@ import (
 type serverSignals struct {
 	CustomerID        *string
 	DevicePermanentID *string
-	DeviceSignal      *string
-	DeviceSignals     *clientSignals
+	DeviceSignals     *string
 	KeyTrustLevel     *string
 }
 
@@ -94,6 +93,20 @@ func parseServerSignals(signalsString []byte) (*serverSignals, error) {
 	// json.Unmarshal verifies that signals have the right data type, if they do exist.
 	if err := json.Unmarshal(signalsString, &signals); err != nil {
 		return nil, errors.Wrap(err, "failed to marshal the server signals")
+	}
+
+	return &signals, nil
+}
+
+func parseClientSignals(signalsString []byte) (*clientSignals, error) {
+	if !json.Valid(signalsString) {
+		return nil, errors.New("signals json invalid")
+	}
+
+	var signals clientSignals
+	// json.Unmarshal verifies that signals have the right data type, if they do exist.
+	if err := json.Unmarshal(signalsString, &signals); err != nil {
+		return nil, errors.Wrap(err, "failed to marshal the client signals")
 	}
 
 	return &signals, nil
@@ -256,12 +269,17 @@ func Verify(serverSignalsString, clientSignalsString []byte, isInSession, isDevi
 		return errors.Wrap(err, "failed to parse server signals")
 	}
 
+	parsedClientSignals, err := parseClientSignals(clientSignalsString)
+	if err != nil {
+		return errors.Wrap(err, "failed to parse client signals")
+	}
+
 	if isDeviceManaged {
-		if err = verifySignalValuesManagedDevice(*parsedServerSignals, *parsedServerSignals.DeviceSignals, isInSession); err != nil {
+		if err = verifySignalValuesManagedDevice(*parsedServerSignals, *parsedClientSignals, isInSession); err != nil {
 			return errors.Wrap(err, "failed to verify signal values for a managed device")
 		}
 	} else {
-		if err = verifySignalValuesUnmanagedDevice(*parsedServerSignals, *parsedServerSignals.DeviceSignals, isInSession); err != nil {
+		if err = verifySignalValuesUnmanagedDevice(*parsedServerSignals, *parsedClientSignals, isInSession); err != nil {
 			return errors.Wrap(err, "failed to verify signal values for an unmanaged device")
 		}
 	}
