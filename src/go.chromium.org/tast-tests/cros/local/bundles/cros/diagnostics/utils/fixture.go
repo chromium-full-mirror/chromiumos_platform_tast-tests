@@ -118,21 +118,16 @@ func (f *diagnosticsPrepFixture) Reset(ctx context.Context) error {
 }
 
 func (f *diagnosticsPrepFixture) PreTest(ctx context.Context, s *testing.FixtTestState) {
-	success := false
-
 	if _, err := diagnosticsapp.Launch(ctx, f.tconn); err != nil {
 		s.Fatal("Failed to launch diagnostics app: ", err)
 	}
 
-	conn, err := f.cr.NewConnForTarget(ctx, chrome.MatchTargetURL(appURL))
-	if err != nil {
-		s.Fatal("Failed to match the diagnostics chrome connection: ", err)
-	}
-
 	// Make sure mojo API is connected.
+	success := false
 	var api *MojoAPI
 	if err := testing.Poll(ctx, func(ctx context.Context) error {
-		if api, err = SystemDataProviderMojoAPI(ctx, conn); err != nil {
+		var err error
+		if api, err = SystemDataProviderMojoAPI(ctx, f.cr); err != nil {
 			return errors.Wrap(err, "unable to get systemDataProvider mojo API")
 		}
 

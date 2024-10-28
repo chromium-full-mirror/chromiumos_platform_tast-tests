@@ -27,7 +27,12 @@ type MojoAPI struct {
 
 // SystemDataProviderMojoAPI returns a MojoAPI object that is connected to a SystemDataProvider
 // mojo remote instance on success, or an error.
-func SystemDataProviderMojoAPI(ctx context.Context, conn *chrome.Conn) (*MojoAPI, error) {
+func SystemDataProviderMojoAPI(ctx context.Context, cr *chrome.Chrome) (*MojoAPI, error) {
+	conn, err := cr.NewConnForTarget(ctx, chrome.MatchTargetURL(appURL))
+	if err != nil {
+		return nil, errors.Wrap(err, "failed to match the diagnostics chrome connection")
+	}
+
 	var mojoRemote chrome.JSObject
 	if err := conn.Call(ctx, &mojoRemote, systemDataProviderJs); err != nil {
 		return nil, errors.Wrap(err, "failed to set up the SystemDataProvider mojo API")
@@ -48,5 +53,13 @@ func (m *MojoAPI) RunFetchSystemInfo(ctx context.Context) error {
 
 // Release frees the resources help by the internal MojoAPI components.
 func (m *MojoAPI) Release(ctx context.Context) error {
-	return m.mojoRemote.Release(ctx)
+	if err := m.conn.Close(); err != nil {
+		return errors.Wrap(err, "failed to close connection")
+	}
+
+	if err := m.mojoRemote.Release(ctx); err != nil {
+		return errors.Wrap(err, "failed to release mojo remote")
+	}
+
+	return nil
 }
