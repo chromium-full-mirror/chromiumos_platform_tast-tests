@@ -80,6 +80,14 @@ func RecToDevUntrusted(ctx context.Context, s *testing.State) {
 
 	s.Log("Rebooting the DUT with a warm reset")
 	if err := h.Servo.SetPowerState(ctx, servo.PowerStateWarmReset); err != nil {
+		// Log the current power state when warm_reset fails.
+		if h.Config.ChromeEC {
+			currPowerState, powerStateErr := h.Servo.GetECSystemPowerState(ctx)
+			if powerStateErr != nil {
+				s.Error("Failed to check powerstate: ", powerStateErr)
+			}
+			s.Fatalf("Failed to warm reset the DUT: %d, the current power state is %q", err, currPowerState)
+		}
 		s.Fatal("Failed to warm reset the DUT: ", err)
 	}
 
