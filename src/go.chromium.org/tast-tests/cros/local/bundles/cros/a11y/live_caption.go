@@ -47,6 +47,9 @@ func init() {
 			{
 				Name: "fieldtrial_testing_config_off",
 				Val:  liveCaptionParams{chrome.FieldTrialConfigDisable, ""},
+			}, {
+				Name: "fieldtrial_testing_config_on",
+				Val:  liveCaptionParams{chrome.FieldTrialConfigEnable, ""},
 			}},
 		Data: []string{
 			"live_caption.html",
