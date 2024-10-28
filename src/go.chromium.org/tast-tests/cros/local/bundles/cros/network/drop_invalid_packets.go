@@ -11,6 +11,7 @@ import (
 	"strings"
 	"time"
 
+	"go.chromium.org/tast-tests/cros/local/bundles/cros/network/socketutil"
 	"go.chromium.org/tast-tests/cros/local/network/hwsim"
 	"go.chromium.org/tast-tests/cros/local/network/ping"
 	"go.chromium.org/tast-tests/cros/local/network/testhooks"
@@ -153,15 +154,7 @@ func DropInvalidPackets(ctx context.Context, s *testing.State) {
 		if err != nil {
 			return errors.Wrap(err, "failed to connect")
 		}
-		bytes := []byte("hello")
-		udpConn.SetDeadline(time.Now().Add(1 * time.Second))
-		if _, err := udpConn.Write(bytes); err != nil {
-			return errors.Wrap(err, "failed to write")
-		}
-		if _, err := udpConn.Read(bytes); err != nil {
-			return errors.Wrap(err, "failed to read")
-		}
-		return nil
+		return socketutil.IOTest(udpConn)
 	}
 	for _, env := range []*virtualnet.Env{ethEnv, wifiEnv.Router} {
 		envAddrs, err := env.GetVethInAddrs(ctx)

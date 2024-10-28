@@ -9,12 +9,12 @@ import (
 	"fmt"
 	"net"
 	"os"
-	"runtime"
 	"strings"
 	"syscall"
 	"time"
 
 	"go.chromium.org/tast-tests/cros/common/shillconst"
+	"go.chromium.org/tast-tests/cros/local/bundles/cros/network/socketutil"
 	patchpanel "go.chromium.org/tast-tests/cros/local/network/patchpanel_client"
 	"go.chromium.org/tast-tests/cros/local/network/permissionbroker"
 	"go.chromium.org/tast-tests/cros/local/network/routing"
@@ -367,7 +367,7 @@ func testConnect(ctx context.Context, tc routingTagSocketAPITestCase, getPort fu
 		return errors.Wrap(err, "failed to create patchpanel client")
 	}
 
-	switchToRootFunc, err := switchUser(ctx, tc.uid)
+	switchToRootFunc, err := socketutil.SwitchUser(ctx, tc.uid)
 	if err != nil {
 		return errors.Wrap(err, "failed to switch uid in setup")
 	}
@@ -469,7 +469,7 @@ func testListen(ctx context.Context, tc routingTagSocketAPITestCase, getPort fun
 			l4server.WithListenConfig(&net.ListenConfig{Control: createControlFunc(ctx, pp, tc.tagSocketOpts...)}),
 		)
 		routineSetup := func(ctx context.Context) (func() error, error) {
-			return switchUser(ctx, tc.uid)
+			return socketutil.SwitchUser(ctx, tc.uid)
 		}
 		if err := server.StartWithServerRoutineSetup(ctx, routineSetup); err != nil {
 			return errors.Wrap(err, "failed to start l4server locally")
@@ -540,36 +540,6 @@ func createControlFunc(ctx context.Context, pp *patchpanel.Client, tagSocketOpts
 	}
 }
 
-// switchUser calls setreuid to switch the euid to uid, and returns a callback
-// to switch the user back to root.
-func switchUser(ctx context.Context, uid int) (cleanupFunc func() error, retErr error) {
-	// Lock the goroutine to a thread at first since setreuid() only affects the
-	// current thread.
-	runtime.LockOSThread()
-	defer func() {
-		// Make sure to unlock if this function return error.
-		if retErr != nil {
-			runtime.UnlockOSThread()
-		}
-	}()
-
-	// Note that we only need to change euid instead of ruid, otherwise we won't
-	// be able to switch back. The following code assumes we are running as root
-	// now.
-	if err := unix.Setreuid(0, uid); err != nil {
-		return nil, errors.Wrapf(err, "failed to setuid to %d", uid)
-	}
-
-	return func() error {
-		var setUIDErr error
-		if err := unix.Setreuid(0, 0); err != nil {
-			setUIDErr = errors.Wrap(err, "failed to reset uid to root")
-		}
-		runtime.UnlockOSThread()
-		return setUIDErr
-	}, nil
-}
-
 // triggerSocketIO performs the following operations:
 // 1. Use dialer to connect to address on network.
 // 2. Send a message via the connection.
@@ -583,26 +553,5 @@ func triggerSocketIO(ctx context.Context, dialer *net.Dialer, network, address s
 		return errors.Wrapf(err, "failed to dial to %s %s", network, address)
 	}
 
-	const msg = "hello"
-	if err := conn.SetWriteDeadline(time.Now().Add(2 * time.Second)); err != nil {
-		return errors.Wrap(err, "failed to set write deadline on connection")
-	}
-	if _, err := conn.Write([]byte(msg)); err != nil {
-		return errors.Wrap(err, "failed to write")
-	}
-
-	in := make([]byte, len(msg))
-	if err := conn.SetReadDeadline(time.Now().Add(2 * time.Second)); err != nil {
-		return errors.Wrap(err, "failed to set read deadline on connection")
-	}
-	if _, err := conn.Read(in); err != nil {
-		return errors.Wrap(err, "failed to read")
-	}
-
-	inStr := string(in)
-	if string(in) != msg {
-		return errors.Errorf("received msg does not match the sent one: got %s, expect %s", inStr, msg)
-	}
-
-	return nil
+	return socketutil.IOTest(conn)
 }

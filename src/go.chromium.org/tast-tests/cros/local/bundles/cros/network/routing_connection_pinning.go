@@ -10,11 +10,11 @@ import (
 	"net"
 	"time"
 
+	"go.chromium.org/tast-tests/cros/local/bundles/cros/network/socketutil"
 	"go.chromium.org/tast-tests/cros/local/network/routing"
 	"go.chromium.org/tast-tests/cros/local/network/virtualnet"
 	"go.chromium.org/tast-tests/cros/local/network/virtualnet/l4server"
 	"go.chromium.org/tast/core/ctxutil"
-	"go.chromium.org/tast/core/errors"
 	"go.chromium.org/tast/core/testing"
 )
 
@@ -95,18 +95,8 @@ func RoutingConnectionPinning(ctx context.Context, s *testing.State) {
 
 	verifyConns := func() error {
 		for _, conn := range conns {
-			if _, err = conn.Write([]byte(msg)); err != nil {
-				return errors.Wrapf(err, "failed to write msg to %s", conn.RemoteAddr())
-			}
-
-			in := make([]byte, msgLen)
-			if _, err = conn.Read(in); err != nil {
-				return errors.Wrapf(err, "failed to read msg from %s", conn.RemoteAddr())
-			}
-
-			inStr := string(in)
-			if inStr != msg {
-				return errors.Errorf("msg does not match for %s: got %s, want %s", conn.RemoteAddr(), inStr, msg)
+			if err := socketutil.IOTest(conn); err != nil {
+				return err
 			}
 		}
 		return nil
