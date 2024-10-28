@@ -99,7 +99,7 @@ func ClearPotentialPrompts(tconn *chrome.TestConn, idleDuration time.Duration, p
 		}
 
 		var promptFinders = []*nodewith.Finder{}
-		for _, prompt := range promptCandidates {
+		for _, prompt := range candidates {
 			promptFinders = append(promptFinders, prompt.PromptFinder)
 		}
 
