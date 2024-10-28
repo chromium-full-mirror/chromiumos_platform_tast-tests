@@ -89,6 +89,10 @@ var cyclicBenchUnstableModels = []string{
 	"dru",
 	// hana(b/363946752)
 	"hana",
+	// taniks(b/346722131),
+	"taniks",
+	// brask(b/358316489),
+	"aurash", "gladios", "kinox", "kuldax", "lisbon", "moli",
 }
 
 func init() {
