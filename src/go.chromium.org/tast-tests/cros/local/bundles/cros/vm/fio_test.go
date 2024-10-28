@@ -14,13 +14,33 @@ import (
 	"go.chromium.org/tast-tests/cros/common/genparams"
 )
 
+// runOnCrosbolt returns whether the test with the given job and kind should run on crosbolt.
+func runOnCrosbolt(kind, job string) bool {
+	// Disable scsi tests
+	if kind == "scsi" {
+		return false
+	}
+	// Disable virtio-fs DAX
+	if kind == "virtiofs_dax" {
+		return false
+	}
+	// Disable write tests for pmem
+	if kind == "pmem" {
+		if job != "randread" && job != "seqread" {
+			return false
+		}
+	}
+	return true
+}
+
 func TestFio(t *testing.T) {
 	type paramData struct {
-		Name   string
-		Kind   string
-		Job    string
-		DepDax string
-		DepLvm string
+		Name      string
+		Kind      string
+		Job       string
+		DepDax    string
+		DepLvm    string
+		ExtraAttr []string
 	}
 
 	jobs := []string{"randread", "randwrite", "randrw", "seqread", "seqwrite", "stress_rw", "randwrite_verify", "seqwrite_verify"}
@@ -38,12 +58,18 @@ func TestFio(t *testing.T) {
 				DepLvm = "lvm_stateful_partition"
 			}
 
+			var extraAttr []string
+			if runOnCrosbolt(kind, job) {
+				extraAttr = []string{"group:crosbolt", "crosbolt_weekly"}
+			}
+
 			params = append(params, paramData{
-				Name:   fmt.Sprintf("%s_%s", kind, job),
-				Kind:   kind,
-				Job:    fmt.Sprintf("fio_%s.job", job),
-				DepDax: depDax,
-				DepLvm: DepLvm,
+				Name:      fmt.Sprintf("%s_%s", kind, job),
+				Kind:      kind,
+				Job:       fmt.Sprintf("fio_%s.job", job),
+				DepDax:    depDax,
+				DepLvm:    DepLvm,
+				ExtraAttr: extraAttr,
 			})
 		}
 	}
@@ -51,6 +77,11 @@ func TestFio(t *testing.T) {
 	code := genparams.Template(t,
 		`{{ range . }}{
 			Name: {{ .Name | fmt }},
+			{{ if .ExtraAttr }}
+			ExtraAttr: {{ .ExtraAttr | fmt }},
+			{{ else }}
+			// No ExtraAttr; this test is disabled on crosbolt.
+			{{ end }}
 			ExtraData: []string{ {{ .Job | fmt }} },
 			Val: param{
 				kind: {{ .Kind | fmt }},
