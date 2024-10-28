@@ -317,10 +317,11 @@ func createL2TPIPsecProperties(server *Server) (*ShillProperties, error) {
 func createIKEv2Properties(server *Server) (*ShillProperties, error) {
 	config := &server.Config
 	properties := map[string]interface{}{
-		"Name":          "test-ikev2-vpn",
-		"Provider.Host": server.UnderlayIP,
-		"Provider.Type": "ikev2",
-		"Type":          "vpn",
+		"Name":            "test-ikev2-vpn",
+		"Provider.Host":   server.UnderlayIP,
+		"Provider.Type":   "ikev2",
+		"Type":            "vpn",
+		"SaveCredentials": true,
 	}
 
 	// TestCert1 is the one we really use in the test. Put it in the middle to
