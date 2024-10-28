@@ -18,6 +18,7 @@ import (
 	"go.chromium.org/tast-tests/cros/local/chrome/uiauto/launcher"
 	"go.chromium.org/tast/core/ctxutil"
 	"go.chromium.org/tast/core/testing"
+	"go.chromium.org/tast/core/testing/hwdep"
 )
 
 func init() {
@@ -33,11 +34,13 @@ func init() {
 		Attr: []string{
 			"group:mainline",
 			"informational",
+			"group:hw_agnostic",
 		},
 		SoftwareDeps: []string{
 			"chrome",
 			"gaia",
 		},
+		HardwareDeps: hwdep.D(hwdep.MinStorage(16)),
 		Params: []testing.Param{
 			{
 				// Promise Icons requires Android R+ (android_container which includes pi will not work).
