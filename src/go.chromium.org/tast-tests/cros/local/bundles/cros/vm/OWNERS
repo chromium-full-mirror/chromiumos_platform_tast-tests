@@ -1,0 +1,5 @@
+include /src/go.chromium.org/tast-tests/cros/local/vm/OWNERS
+
+# Add audio OWNERS for VM audio tests
+per-file audio_*=file:/src/go.chromium.org/tast-tests/cros/common/audio/OWNERS
+per-file audioutils/*=file:/src/go.chromium.org/tast-tests/cros/common/audio/OWNERS

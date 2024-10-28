@@ -1,1 +1,7 @@
+set noparent
+
+# Tast team for bulk/emergencies
+include /OWNERS.tast
+
 include chromiumos/owners:v1:/guestos/OWNERS.all
+include chromiumos/owners:v1:/platform/OWNERS.vm
