@@ -71,10 +71,9 @@ const (
 	hwEnc encoderImpl = "hw_enc"
 	oopVE encoderImpl = "hw_oopve"
 
-	swDec  decoderImpl = "sw_dec"
-	hwDec  decoderImpl = "hw_dec"
-	inpVD  decoderImpl = "hw_inpvd"
-	gtfoVD decoderImpl = "hw_dec_gtfo"
+	swDec decoderImpl = "sw_dec"
+	hwDec decoderImpl = "hw_dec"
+	inpVD decoderImpl = "hw_inpvd"
 )
 
 func isHardwareEncoderImpl(enc encoderImpl) bool {
@@ -91,7 +90,7 @@ func isHardwareDecoderImpl(dec decoderImpl) bool {
 	switch dec {
 	case swDec:
 		return false
-	case hwDec, inpVD, gtfoVD:
+	case hwDec, inpVD:
 		return true
 	}
 	panic(fmt.Sprintf("unknown decoder: %v", dec))
@@ -128,7 +127,7 @@ func softwareCodecsDeps(codec string, enc encoderImpl, dec decoderImpl) []string
 			deps = append(deps, caps.HWEncodeAV1)
 		}
 	}
-	if dec == hwDec || dec == inpVD || dec == gtfoVD {
+	if dec == hwDec || dec == inpVD {
 		switch codec {
 		case "h264":
 			deps = append(deps, caps.HWDecodeH264)
@@ -147,11 +146,6 @@ func skipTest(codec string, stream streamType, enc encoderImpl, dec decoderImpl)
 	if isHardwareEncoderImpl(enc) && !isHardwareDecoderImpl(dec) {
 		// There is no device that has a hardware encoder but no hardware decoder for any codec.
 		return true
-	}
-
-	if dec == gtfoVD {
-		// This just limits the number of GTFO OOP-VD variants.
-		return codec != "h264" || stream != vanilla || enc != hwEnc
 	}
 
 	switch stream {
@@ -198,8 +192,6 @@ func toFixture(enc encoderImpl, dec decoderImpl, stream streamType) string {
 			return "chromeVideoWithFakeWebcam"
 		case inpVD:
 			return "chromeVideoINPVDWithFakeWebcam"
-		case gtfoVD:
-			return "chromeVideoGTFOWithFakeWebcam"
 		}
 	case oopVE:
 		if stream == s3t3 {
@@ -223,7 +215,7 @@ func TestRTCPeerConnectionPerfParams(t *testing.T) {
 		for _, resolution := range []graphics.Size{k720p, k1080p} {
 			for _, stream := range []streamType{vanilla, l1t3, l2t3key, l3t3key, s3t3, simulcast} {
 				for _, enc := range []encoderImpl{swEnc, hwEnc} {
-					for _, dec := range []decoderImpl{swDec, hwDec, gtfoVD} {
+					for _, dec := range []decoderImpl{swDec, hwDec} {
 						if skipTest(codec, stream, enc, dec) {
 							continue
 						}

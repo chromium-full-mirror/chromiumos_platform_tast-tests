@@ -96,18 +96,6 @@ func init() {
 				Fixture:           "chromeVideo",
 				Timeout:           5 * time.Minute,
 			},
-
-			{
-				Name: "crosvideo_h264_cycle_1minute_gtfo",
-				Val: playURLParams{
-					url:      crosAppspotH264ChangingResolutionURL,
-					duration: 1 * time.Minute,
-				},
-				ExtraSoftwareDeps: []string{"proprietary_codecs", caps.HWDecodeH264},
-				ExtraAttr:         []string{"group:graphics", "graphics_video", "graphics_perbuild"},
-				Fixture:           "chromeVideoGTFO",
-				Timeout:           5 * time.Minute,
-			},
 			{
 				Name: "crosvideo_vp9_cycle_1minute",
 				Val: playURLParams{

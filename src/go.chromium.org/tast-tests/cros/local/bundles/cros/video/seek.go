@@ -60,17 +60,6 @@ func init() {
 			ExtraSoftwareDeps: []string{caps.HWDecodeH264, "proprietary_codecs"},
 			Fixture:           "chromeVideo",
 		}, {
-			Name: "h264_gtfo",
-			Val: seekTest{
-				filename:    "720_h264.mp4",
-				numSeeks:    25,
-				browserType: browser.TypeAsh,
-			},
-			ExtraAttr:         []string{"group:graphics", "graphics_video", "graphics_perbuild"},
-			ExtraData:         []string{"720_h264.mp4"},
-			ExtraSoftwareDeps: []string{caps.HWDecodeH264, "proprietary_codecs"},
-			Fixture:           "chromeVideoGTFO",
-		}, {
 			Name: "h264_inpvd",
 			Val: seekTest{
 				filename:    "720_h264.mp4",
@@ -137,17 +126,6 @@ func init() {
 			ExtraData:         []string{"smpte_bars_resolution_ladder.h264.mp4"},
 			ExtraSoftwareDeps: []string{caps.HWDecodeH264, "proprietary_codecs"},
 			Fixture:           "chromeVideo",
-		}, {
-			Name: "switch_h264_gtfo",
-			Val: seekTest{
-				filename:    "smpte_bars_resolution_ladder.h264.mp4",
-				numSeeks:    25,
-				browserType: browser.TypeAsh,
-			},
-			ExtraAttr:         []string{"group:graphics", "graphics_video", "graphics_perbuild"},
-			ExtraData:         []string{"smpte_bars_resolution_ladder.h264.mp4"},
-			ExtraSoftwareDeps: []string{caps.HWDecodeH264, "proprietary_codecs"},
-			Fixture:           "chromeVideoGTFO",
 		}, {
 			Name: "switch_h264_inpvd",
 			Val: seekTest{
@@ -241,18 +219,6 @@ func init() {
 			ExtraSoftwareDeps: []string{caps.HWDecodeH264, "proprietary_codecs"},
 			Timeout:           20 * time.Minute,
 			Fixture:           "chromeVideo",
-		}, {
-			Name: "stress_h264_gtfo",
-			Val: seekTest{
-				filename:    "720_h264.mp4",
-				numSeeks:    1000,
-				browserType: browser.TypeAsh,
-			},
-			ExtraAttr:         []string{"group:graphics", "graphics_video", "graphics_weekly"},
-			ExtraData:         []string{"720_h264.mp4"},
-			ExtraSoftwareDeps: []string{caps.HWDecodeH264, "proprietary_codecs"},
-			Timeout:           20 * time.Minute,
-			Fixture:           "chromeVideoGTFO",
 		}, {
 			Name: "stress_hevc",
 			Val: seekTest{
