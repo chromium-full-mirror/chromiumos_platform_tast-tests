@@ -24,6 +24,9 @@
     async fetchSystemInfo() {
       const provider = await this.getSystemDataProvider();
       const result = await provider.getSystemInfo();
+      if (result.systemInfo === undefined) {
+        throw new Error('Got undefined result from mojo service');
+      }
       // Log for debug purpose.
       console.log("result.systemInfo from tast: ", result.systemInfo);
       return result.systemInfo;
