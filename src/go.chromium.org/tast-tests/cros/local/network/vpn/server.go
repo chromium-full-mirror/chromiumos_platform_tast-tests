@@ -880,3 +880,8 @@ func (s *Server) Exit(ctx context.Context) error {
 
 	return lastErr
 }
+
+// Env returns the virtualnet Env where the VPN server is running in.
+func (s *Server) Env() *virtualnet.Env {
+	return s.env
+}
