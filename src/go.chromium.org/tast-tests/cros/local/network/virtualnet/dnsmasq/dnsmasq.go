@@ -95,6 +95,7 @@ type dnsmasq struct {
 	dnsIncludeGateway     bool
 	searchList            []string
 	enableDNS             bool
+	useLocalResolvConf    bool
 	ifname                string
 	noIfname              bool
 	wpad                  string
@@ -195,7 +196,7 @@ func WithAllInterfaces() Option {
 	}
 }
 
-// WithResolveHost will enables the DNS server function in dnsmasq, which will
+// WithResolveHost enables DNS server functionality in dnsmasq, which will
 // response the DNS request to resolve host to ip. If host is empty, all hosts
 // will be resolved to ip. If ip is nil, host will be resolved to the gateway
 // address is DHCP server function is enabled, or loopback address (127.0.0.1)
@@ -204,6 +205,15 @@ func WithResolveHost(host string, ip net.IP) Option {
 	return func(d *dnsmasq) {
 		d.enableDNS = true
 		d.resolvedHosts = append(d.resolvedHosts, ResolvedHost{Domain: host, ToIP: ip})
+	}
+}
+
+// WithLocalResolvConf enables DNS server functionality in dnsmasq, which reads
+// the config in /etc/resolv.conf in chroot as the upstream name servers.
+func WithLocalResolvConf() Option {
+	return func(d *dnsmasq) {
+		d.enableDNS = true
+		d.useLocalResolvConf = true
 	}
 }
 
@@ -350,9 +360,11 @@ func (d *dnsmasq) Start(ctx context.Context, env *env.Env) error {
 		"--keep-in-foreground",
 		"-C", d.confPath,
 		"--log-facility=" + d.logPath,
-		"--no-resolv",
 		"--no-hosts",
 		"--dhcp-leasefile=" + d.leaseFilePath,
+	}
+	if !d.useLocalResolvConf {
+		cmd = append(cmd, "--no-resolv")
 	}
 	d.cmd = d.env.CreateCommand(ctx, cmd...)
 
