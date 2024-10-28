@@ -753,7 +753,6 @@ func (i *impl) PostTest(ctx context.Context, s *testing.FixtTestState) {
 }
 
 func checkAndLogECCrashes(ctx context.Context, s *testing.FixtTestState, i *impl) {
-	i.value.Helper.CloseRPCConnection(ctx)
 	connectTimeout, cancel := context.WithTimeout(ctx, 5*time.Second)
 	defer cancel()
 	if err := i.value.Helper.WaitConnect(connectTimeout); err != nil {
