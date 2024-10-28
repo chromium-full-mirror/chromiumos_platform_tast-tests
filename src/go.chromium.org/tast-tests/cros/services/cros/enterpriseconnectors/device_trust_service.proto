@@ -9,15 +9,16 @@ option go_package = "go.chromium.org/tast-tests/cros/services/cros/enterprisecon
 message EnrollRequest {
   string user = 1;
   string pass = 2;
-  string expectedIdPURL = 3;
-  string signinProfileTestExtensionManifestKey = 4;
+  string signinProfileTestExtensionManifestKey = 3;
 }
 
-message LoginWithFakeIdPRequest {
+message VerifyDeviceTrustPolicyRequest { string expectedIdPURL = 1; }
+
+message InitiateSamlLoginRequest {
   string signinProfileTestExtensionManifestKey = 1;
 }
 
-message ConnectToFakeIdPRequest {
+message GaiaLoginRequest {
   string user = 1;
   string pass = 2;
 }
@@ -27,11 +28,18 @@ message CheckFakeIdPStatusRequest {
   bool isInSession = 2;
 }
 
-// DeviceTrustService provides RPC methods to run device trust related operations
+// DeviceTrustService provides RPC methods to run device trust related
+// operations
 service DeviceTrustService {
   rpc Enroll(EnrollRequest) returns (google.protobuf.Empty) {}
-  rpc LoginWithFakeIdP(LoginWithFakeIdPRequest) returns (google.protobuf.Empty) {}
-  rpc ConnectToFakeIdP(ConnectToFakeIdPRequest) returns (google.protobuf.Empty) {}
-  rpc CheckFakeIdPStatus(CheckFakeIdPStatusRequest) returns (google.protobuf.Empty) {}
+  rpc VerifyDeviceTrustPolicy(VerifyDeviceTrustPolicyRequest)
+      returns (google.protobuf.Empty) {}
+  rpc InitiateSamlLogin(InitiateSamlLoginRequest)
+      returns (google.protobuf.Empty) {}
+  rpc GaiaLogin(GaiaLoginRequest) returns (google.protobuf.Empty) {}
+  rpc StartAttestationFlow(google.protobuf.Empty)
+      returns (google.protobuf.Empty) {}
+  rpc CheckFakeIdPStatus(CheckFakeIdPStatusRequest)
+      returns (google.protobuf.Empty) {}
   rpc StopChrome(google.protobuf.Empty) returns (google.protobuf.Empty) {}
 }

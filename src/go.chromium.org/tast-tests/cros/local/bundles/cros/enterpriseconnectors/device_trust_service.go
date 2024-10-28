@@ -47,9 +47,17 @@ func (service *DeviceTrustService) Enroll(ctx context.Context, req *pb.EnrollReq
 	if err != nil {
 		return nil, errors.Wrap(err, "failed to connect to Chrome")
 	}
-	defer cr.Close(ctx)
+	service.cr = cr
+	return &empty.Empty{}, nil
+}
 
-	tconn, err := cr.SigninProfileTestAPIConn(ctx)
+// VerifyDeviceTrustPolicy verifies that the Device Trust device policy contains the expected IdP URL.
+func (service *DeviceTrustService) VerifyDeviceTrustPolicy(ctx context.Context, req *pb.VerifyDeviceTrustPolicyRequest) (_ *empty.Empty, retErr error) {
+	if service.cr == nil {
+		return nil, errors.New("Device Trust service is not set up properly")
+	}
+
+	tconn, err := service.cr.SigninProfileTestAPIConn(ctx)
 	if err != nil {
 		return nil, errors.Wrap(err, "creating login test API connection failed")
 	}
@@ -91,8 +99,8 @@ func (service *DeviceTrustService) Enroll(ctx context.Context, req *pb.EnrollReq
 	return &empty.Empty{}, nil
 }
 
-// LoginWithFakeIdP uses the fake user credentials to get a SAML redirection to a Fake IdP, where the Device Trust attestation flow is tested.
-func (service *DeviceTrustService) LoginWithFakeIdP(ctx context.Context, req *pb.LoginWithFakeIdPRequest) (_ *empty.Empty, retErr error) {
+// InitiateSamlLogin uses fake user credentials to get a SAML redirection to a Fake IdP, where the Device Trust attestation flow can be tested.
+func (service *DeviceTrustService) InitiateSamlLogin(ctx context.Context, req *pb.InitiateSamlLoginRequest) (_ *empty.Empty, retErr error) {
 	var fakeCreds chrome.Creds
 	fakeCreds.User = "tast-test-device-trust@managedchrome.com"
 
@@ -124,8 +132,8 @@ func (service *DeviceTrustService) LoginWithFakeIdP(ctx context.Context, req *pb
 	return &empty.Empty{}, nil
 }
 
-// ConnectToFakeIdP does a real GAIA login and connects to a Fake IdP inside a session, where the Device Trust inline attestation flow is tested.
-func (service *DeviceTrustService) ConnectToFakeIdP(ctx context.Context, req *pb.ConnectToFakeIdPRequest) (_ *empty.Empty, retErr error) {
+// GaiaLogin does a real GAIA login, fetches real policy information for the corresponding user and navigates to the URL of the fake IdP.
+func (service *DeviceTrustService) GaiaLogin(ctx context.Context, req *pb.GaiaLoginRequest) (_ *empty.Empty, retErr error) {
 	cr, err := chrome.New(
 		ctx,
 		chrome.KeepEnrollment(),
@@ -144,19 +152,25 @@ func (service *DeviceTrustService) ConnectToFakeIdP(ctx context.Context, req *pb
 		return nil, errors.Wrap(err, "creating test API connection failed")
 	}
 	ui := uiauto.New(tconn).WithTimeout(devicetrust.DefaultUITimeout)
+	service.ui = ui
 
-	conn, err := cr.NewConn(ctx, devicetrust.FakeIdPURL)
+	_, err = service.cr.NewConn(ctx, devicetrust.FakeIdPURL)
 	if err != nil {
 		return nil, errors.Wrap(err, "connecting to URL failed")
 	}
-	defer conn.Close()
 
-	if err := devicetrust.StartAttestationFlowWithFakeIdP(ctx, ui); err != nil {
-		return nil, errors.Wrap(err, "Device Trust failed")
+	return &empty.Empty{}, nil
+}
+
+// StartAttestationFlow connects to a Fake IdP, where the Device Trust inline attestation flow can be tested.
+func (service *DeviceTrustService) StartAttestationFlow(ctx context.Context, req *empty.Empty) (_ *empty.Empty, retErr error) {
+	if service.cr == nil || service.ui == nil {
+		return nil, errors.New("Device Trust service is not set up properly")
 	}
 
-	service.ui = ui
-
+	if err := devicetrust.StartAttestationFlowWithFakeIdP(ctx, service.ui); err != nil {
+		return nil, errors.Wrap(err, "Device Trust failed")
+	}
 	return &empty.Empty{}, nil
 }
 

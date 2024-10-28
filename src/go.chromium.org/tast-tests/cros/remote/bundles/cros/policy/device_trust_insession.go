@@ -129,14 +129,25 @@ func DeviceTrustInsession(ctx context.Context, s *testing.State) {
 		}
 	}(cleanupCtx)
 
-	s.Log("Enrolling device")
-	if _, err = service.Enroll(ctx, &enterpriseconnectors.EnrollRequest{User: acc.Username, Pass: acc.Password, ExpectedIdPURL: expectedIDPURL, SigninProfileTestExtensionManifestKey: signinProfileTestExtensionManifestKey}); err != nil {
+	if _, err = service.Enroll(ctx, &enterpriseconnectors.EnrollRequest{User: acc.Username, Pass: acc.Password, SigninProfileTestExtensionManifestKey: signinProfileTestExtensionManifestKey}); err != nil {
 		s.Fatal("Remote call Enroll() failed: ", err)
+	}
+
+	if _, err = service.VerifyDeviceTrustPolicy(ctx, &enterpriseconnectors.VerifyDeviceTrustPolicyRequest{ExpectedIdPURL: expectedIDPURL}); err != nil {
+		s.Fatal("Remote call VerifyDeviceTrustPolicy() failed: ", err)
+	}
+
+	if _, err = service.StopChrome(ctx, &empty.Empty{}); err != nil {
+		s.Fatal("Remote call StopChrome() after enrollment failed: ", err)
+	}
+
+	if _, err := service.GaiaLogin(ctx, &enterpriseconnectors.GaiaLoginRequest{User: acc.Username, Pass: acc.Password}); err != nil {
+		s.Fatal("Remote call GaiaLogin() failed: ", err)
 	}
 	defer service.StopChrome(cleanupCtx, &empty.Empty{})
 
-	if _, err := service.ConnectToFakeIdP(ctx, &enterpriseconnectors.ConnectToFakeIdPRequest{User: acc.Username, Pass: acc.Password}); err != nil {
-		s.Fatal("Remote call ConnectToFakeIdP() failed: ", err)
+	if _, err := service.StartAttestationFlow(ctx, &empty.Empty{}); err != nil {
+		s.Fatal("Remote call StartAttestationFlow() failed: ", err)
 	}
 
 	if _, err = service.CheckFakeIdPStatus(ctx, &enterpriseconnectors.CheckFakeIdPStatusRequest{Expected: param.loginPossible, IsInSession: true}); err != nil {
