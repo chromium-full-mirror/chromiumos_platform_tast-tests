@@ -13,7 +13,27 @@ import (
 
 	"go.chromium.org/tast/core/errors"
 	"go.chromium.org/tast/core/testing"
+	"go.chromium.org/tast/core/testing/hwdep"
 )
+
+var unsupportedReferenceModels = []string{
+	// There are no plans to add touch firmware updaters to these reference
+	// models.
+	"brox",
+}
+
+var unstableModels = []string{
+	// TODO: b/311252896 - Undo skip after fix.
+	"ciri",
+	// TODO: b/376054949 - Undo skip after fix.
+	"cozmo",
+	"fennel14",
+	"juniper",
+	"kenzo",
+	"willow",
+	// TODO: b/376055193 - Undo skip after fix.
+	"wugtrio",
+}
 
 func init() {
 	testing.AddTest(&testing.Test{
@@ -25,6 +45,12 @@ func init() {
 		},
 		Attr:         []string{"group:mainline", "informational"},
 		BugComponent: "b:167253", // ChromeOS > Platform > baseOS > Input > Touchpad
+		// Skip form factors that do not have built-in touchpads or touchscreens.
+		HardwareDeps: hwdep.D(hwdep.SkipOnFormFactor(hwdep.Chromebit, hwdep.Chromebox),
+			// Skip unsupported/unstable models.
+			hwdep.SkipOnModel(append(unsupportedReferenceModels, unstableModels...)...)),
+		// Skip vms since this test is for functionality that is not available in VMs.
+		SoftwareDeps: []string{"chrome", "chrome_internal", "no_qemu"},
 	})
 }
 
