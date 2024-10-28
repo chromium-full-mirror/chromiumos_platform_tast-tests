@@ -2,7 +2,6 @@ set noparent
 
 # ChromeOS Kernel Memory
 bgeffon@chromium.org
-ctshao@google.com
 vovoy@chromium.org
 
 # ChromeOS ARC Memory
