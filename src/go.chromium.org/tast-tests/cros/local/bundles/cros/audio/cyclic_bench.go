@@ -574,8 +574,8 @@ func CyclicBench(ctx context.Context, s *testing.State) {
 		}()
 	}
 
-	//GoBigSleepLint: Wait for the system being stablized.
 	testing.ContextLog(ctx, "Sleep 60 seconds")
+	//GoBigSleepLint: Wait for the system being stablized.
 	testing.Sleep(ctx, 60*time.Second)
 
 	if param.Tracer {
