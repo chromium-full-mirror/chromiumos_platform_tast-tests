@@ -288,7 +288,7 @@ func (rf *rootFixture) PreTest(ctx context.Context, s *testing.FixtTestState) {
 		startTime := time.Now()
 		if err := h.Impl.PreTest(ctx, hs); err != nil {
 			s.Errorf("Failed to run PreTest for hook %s before running test %s: %v",
-				s.TestName(), h.Name, err)
+				h.Name, s.TestName(), err)
 		}
 		s.Logf("Remote root fixture hook %s completed PreTest for %s in %dms",
 			h.Name, s.TestName(), time.Since(startTime).Milliseconds())
