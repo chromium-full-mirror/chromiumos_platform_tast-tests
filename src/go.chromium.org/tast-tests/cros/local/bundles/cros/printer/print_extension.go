@@ -196,7 +196,7 @@ func PrintExtension(ctx context.Context, s *testing.State) {
 	if err := tconn.Eval(ctx, `tast.promisify(chrome.printing.submitJob)({
 	  job: {
 	    contentType: "application/pdf",
-	    document: new Blob([atob("JVBERi0xLjAKMSAwIG9iajw8L1BhZ2VzIDIgMCBSPj5lbmRvYmogMiAwIG9iajw8L0tpZHNbMyAw\nIFJdL0NvdW50IDE+PmVuZG9iaiAzIDAgb2JqPDwvTWVkaWFCb3hbMCAwIDMgM10+PmVuZG9iagp0\ncmFpbGVyPDwvUm9vdCAxIDAgUj4+Cg==")]),
+		document: new Blob([atob("JVBERi0xLjAKMSAwIG9iajw8L1R5cGUgL0NhdGFsb2cgL1BhZ2VzIDIgMCBSPj5lbmRvYmoKMiAw\nIG9iajw8L1R5cGUgL1BhZ2VzIC9LaWRzWzMgMCBSXS9Db3VudCAxPj5lbmRvYmoKMyAwIG9iajw8\nL1R5cGUgL1BhZ2UgL1BhcmVudCAyIDAgUi9NZWRpYUJveFswIDAgNTk1IDg0Ml0+PmVuZG9iagp0\ncmFpbGVyPDwvU2l6ZSAzL1Jvb3QgMSAwIFI+PgolJUVPRgo=")]),
 	    printerId: "`+printerID+`",
 	    ticket: {
 	      version: "1.0",
