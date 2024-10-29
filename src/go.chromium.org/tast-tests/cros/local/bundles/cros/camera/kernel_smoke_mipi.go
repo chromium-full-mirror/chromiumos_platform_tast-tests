@@ -65,6 +65,8 @@ func configFiles() []string {
 		"kernel_smoke_mipi/skolas-KC4eb5.yaml",
 		"kernel_smoke_mipi/soraka.yaml",
 		"kernel_smoke_mipi/storo360-KC0001.yaml",
+		"kernel_smoke_mipi/teliks360-LC6ace.yaml",
+		"kernel_smoke_mipi/teliks360-TXfc2c.yaml",
 		"kernel_smoke_mipi/vell-TCf939.yaml",
 		"kernel_smoke_mipi/voema-CH0001.yaml",
 		"kernel_smoke_mipi/xivu360-KC0001.yaml",

@@ -127,6 +127,14 @@
     "bus_info": "pci:pci0000:00",
     "out_entity": "Intel IPU6 BE SOC capture 0"
   },
+  "teliks360-LC6ace": {
+    "bus_info": "pci:pci0000:00",
+    "out_entity": "Intel IPU6 BE SOC capture 0"
+  },
+  "teliks360-TXfc2c": {
+    "bus_info": "pci:pci0000:00",
+    "out_entity": "Intel IPU6 BE SOC capture 0"
+  },
   "vell-TCf939": {
     "bus_info": "pci:pci0000:00",
     "out_entity": "Intel IPU6 BE SOC capture 1"
