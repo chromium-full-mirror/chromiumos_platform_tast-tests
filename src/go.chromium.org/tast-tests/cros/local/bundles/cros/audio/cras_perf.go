@@ -51,7 +51,6 @@ func init() {
 		Desc:         "Performance measurement of CRAS",
 		Contacts:     []string{"chromeos-audio-bugs@google.com", "yuhsuan@chromium.org", "cychiang@chromium.org"},
 		BugComponent: "b:776546",
-		Attr:         []string{"group:crosbolt", "crosbolt_perbuild"},
 		Timeout:      5 * time.Minute,
 		Params: []testing.Param{
 			{
@@ -83,6 +82,7 @@ func init() {
 				},
 				Fixture:           fixture.UIStopped{Parent: "rebootForAudioDSPFixture"}.Instance(),
 				ExtraHardwareDeps: hwdep.D(hwdep.Microphone(), hwdep.Speaker(), hwdep.SkipOnModel(unstableModelsPlaybackCapture...)),
+				ExtraAttr:         []string{"group:crosbolt", "crosbolt_perbuild"},
 			},
 			{
 				Name: "playback_capture_cras_aec",
@@ -113,6 +113,7 @@ func init() {
 				},
 				Fixture:           "powerAshPlatformAudioNoDSPOffload",
 				ExtraHardwareDeps: hwdep.D(hwdep.Speaker(), hwdep.Model(internal.DSPOffloadDRCEQModels...), hwdep.SkipOnModel(unstableModelsPlaybackCapture...)),
+				ExtraAttr:         []string{"group:crosbolt", "crosbolt_perbuild"},
 			},
 			{
 				Name: "playback_dsp_offload",
@@ -123,6 +124,7 @@ func init() {
 				},
 				Fixture:           "powerAshPlatformAudioDSPOffload",
 				ExtraHardwareDeps: hwdep.D(hwdep.Speaker(), hwdep.Model(internal.DSPOffloadDRCEQModels...), hwdep.SkipOnModel(unstableModelsPlaybackCapture...)),
+				ExtraAttr:         []string{"group:crosbolt", "crosbolt_perbuild"},
 			},
 		},
 	})

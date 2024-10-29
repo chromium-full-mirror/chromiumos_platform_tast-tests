@@ -31,7 +31,6 @@ func init() {
 		SoftwareDeps: []string{"chrome"},
 		// TODO(b/312097873): remove "brya" when b/309904720 is fixed.
 		HardwareDeps: hwdep.D(hwdep.Microphone(), hwdep.Speaker(), hwdep.SkipOnModel("brya")),
-		Attr:         []string{"group:crosbolt", "crosbolt_perbuild"},
 		Timeout:      10*time.Minute + power.RecorderTimeout,
 		Params: []testing.Param{
 			{
@@ -51,7 +50,8 @@ func init() {
 					},
 					extraCrasClientArgs: nil,
 				},
-				Fixture: "powerAshPlatformAudioNoiseCancellation",
+				Fixture:   "powerAshPlatformAudioNoiseCancellation",
+				ExtraAttr: []string{"group:crosbolt", "crosbolt_perbuild"},
 			},
 			{
 				Name: "aec",
@@ -73,7 +73,8 @@ func init() {
 					},
 					extraCrasClientArgs: []string{"--effects=aec"},
 				},
-				Fixture: "powerAshPlatformAudioNoiseCancellation",
+				Fixture:   "powerAshPlatformAudioNoiseCancellation",
+				ExtraAttr: []string{"group:crosbolt", "crosbolt_perbuild"},
 			},
 			{
 				Name: "aec_nc",
@@ -104,7 +105,8 @@ func init() {
 					},
 					extraCrasClientArgs: []string{"--effects=aec"},
 				},
-				Fixture: "powerAshPlatformAudioNoiseCancellation",
+				Fixture:   "powerAshPlatformAudioNoiseCancellation",
+				ExtraAttr: []string{"group:crosbolt", "crosbolt_perbuild"},
 			},
 			{
 				Name: "aec_nc_ast",
@@ -135,7 +137,8 @@ func init() {
 					},
 					extraCrasClientArgs: []string{"--effects=aec"},
 				},
-				Fixture: "powerAshPlatformAudioStyleTransfer",
+				Fixture:   "powerAshPlatformAudioStyleTransfer",
+				ExtraAttr: []string{"group:crosbolt", "crosbolt_perbuild"},
 			},
 			{
 				Name: "dsp_aec",
@@ -179,6 +182,7 @@ func init() {
 				},
 				ExtraHardwareDeps: hwdep.D(hwdepDSPModels),
 				Fixture:           "powerAshPlatformAudioNoiseCancellation",
+				ExtraAttr:         []string{"group:crosbolt", "crosbolt_perbuild"},
 			},
 		},
 	})
