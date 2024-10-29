@@ -40,7 +40,7 @@ func init() {
 		},
 		BugComponent:    "b:1131776", // ChromeOS > Software > System Services > Connectivity > Bluetooth
 		LifeCycleStage:  testing.LifeCycleOwnerMonitored,
-		Attr:            []string{"group:bluetooth"},
+		Attr:            []string{"group:bluetooth", "bluetooth_floss"},
 		SoftwareDeps:    []string{"chrome", "arc"},
 		TestBedDeps:     []string{tbdep.BluetoothStateNormal},
 		Data:            []string{apkName},
