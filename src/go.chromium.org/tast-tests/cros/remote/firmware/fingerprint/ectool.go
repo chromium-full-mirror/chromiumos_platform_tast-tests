@@ -234,3 +234,12 @@ func FpInfoCommand(ctx context.Context, d *dut.DUT) (*fp.FpInfo, error) {
 	}
 	return fp.ParseFpInfo(string(out))
 }
+
+// ChipInfoCommand returns the ssh command for running fpinfo.
+func ChipInfoCommand(ctx context.Context, d *dut.DUT) (map[string]string, error) {
+	out, err := EctoolCommand(ctx, d, "chipinfo").Output(ssh.DumpLogOnError)
+	if err != nil {
+		return nil, err
+	}
+	return fp.ParseColonDelimitedOutput(string(out)), nil
+}
