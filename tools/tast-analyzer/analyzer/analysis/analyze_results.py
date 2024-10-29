@@ -80,7 +80,7 @@ def _load_samples_from_test_results(
     return list(samples_by_id.values())
 
 
-def _load_samples_from_paths(
+def load_samples_from_paths(
     paths: list[pathlib.Path],
 ) -> list[metric_sample.MetricSample]:
     all_samples: list[metric_sample.MetricSample] = []
@@ -222,12 +222,10 @@ def _prune_minimum_sample_size(
 
 
 def analyze_results(
-    sample_paths: list[pathlib.Path],
+    samples: list[metric_sample.MetricSample],
     cfg: analysis_cfg.AnalysisCfg,
 ) -> list[analysis_results.AnalysisResult]:
     """Returns AnalysisResults for the given saved sample data paths."""
-    samples = _load_samples_from_paths(sample_paths)
-
     if cfg.remove_outliers:
         samples = _prune_outliers(samples)
 

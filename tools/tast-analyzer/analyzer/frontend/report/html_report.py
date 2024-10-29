@@ -2,7 +2,10 @@
 # Use of this source code is governed by a BSD-style license that can be
 # found in the LICENSE file.
 
+import base64
 from collections import defaultdict
+import gzip
+import json
 import pathlib
 import xml.etree.ElementTree as ET
 
@@ -16,6 +19,9 @@ from analyzer.frontend.report import html_tree
 
 
 class HtmlReport:
+    raw_samples: list[analysis_results.MetricSample]
+    """The unpruned raw data used for the statistical analysis."""
+
     results: list[output.AnalysisResultForOutput]
     """The results to make a report for."""
 
@@ -36,10 +42,12 @@ class HtmlReport:
 
     def __init__(
         self,
+        raw_samples: list[analysis_results.MetricSample],
         results: list[output.AnalysisResultForOutput],
         template_dir: pathlib.Path,
         cfg: analysis_cfg.AnalysisCfg,
     ) -> None:
+        self.raw_samples = raw_samples
         self.results = results
         self.template_dir = template_dir
         self.cfg = cfg
@@ -377,6 +385,19 @@ class HtmlReport:
         for pair in result.pairs:
             self._append_pairwise_result_summary(pair)
 
+    def _embed_raw_data(self) -> None:
+        """Embeds raw data in the report."""
+        script = ET.SubElement(
+            self.html.html,
+            "script",
+            {"id": "raw-data", "type": "application/octet-stream"},
+        )
+        raw_data_str = json.dumps(
+            [sample.to_dict() for sample in self.raw_samples]
+        )
+        compressed = gzip.compress(raw_data_str.encode())
+        script.text = base64.b64encode(compressed).decode()
+
     def make(self) -> None:
         """Makes a report."""
 
@@ -389,6 +410,8 @@ class HtmlReport:
 
         for result in self.results:
             self._append_groups_summary(result=result)
+
+        self._embed_raw_data()
 
     def write(self, output_dir: pathlib.Path) -> None:
         """Writes the report."""

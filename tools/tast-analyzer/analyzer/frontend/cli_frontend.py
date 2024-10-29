@@ -270,7 +270,8 @@ def print_results(
     )
 
     clicfg = _CliFrontendCfg(cfg=cfg, analyses=analyses)
-    results = analyze_results.analyze_results(sample_paths, clicfg.cfg)
+    samples = analyze_results.load_samples_from_paths(sample_paths)
+    results = analyze_results.analyze_results(samples, clicfg.cfg)
     _compare_results(
         results=results,
         analyses=clicfg.analyses,
@@ -315,6 +316,7 @@ def print_results(
 
             logging.info("Creating a summary report...")
             report_util.create_reports(
+                raw_samples=samples,
                 results=results_for_output,
                 kinds=report_kinds,
                 template_dir=template_dir,

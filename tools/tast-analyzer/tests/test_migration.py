@@ -16,7 +16,7 @@ FILES_DIR: pathlib.Path = (
 class MigrationTest(unittest.TestCase):
     def test_results_v1_migration(self) -> None:
         # Test that the label is set to the filename.
-        samples = analyze_results._load_samples_from_paths(
+        samples = analyze_results.load_samples_from_paths(
             [FILES_DIR.joinpath("data-migration-results-v1.json")]
         )
         self.assertEqual(

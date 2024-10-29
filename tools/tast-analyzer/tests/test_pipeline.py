@@ -28,26 +28,20 @@ class PipelineTest(unittest.TestCase):
     def _test_analyze_results_pruning_with_cfg(
         self, cfg: analysis_cfg.AnalysisCfg
     ) -> None:
-        results_unpruned = analyze_results.analyze_results(
+        samples = analyze_results.load_samples_from_paths(
             [
                 FILES_DIR.joinpath("data-complex1.json"),
                 FILES_DIR.joinpath("data-complex2.json"),
-            ],
-            cfg,
+            ]
         )
+        results_unpruned = analyze_results.analyze_results(samples, cfg)
         cfg_pruned = dataclasses.replace(
             cfg,
             metric_exclude_regex="2windows",
             metric_include_regex="TabletMode",
             remove_outliers=True,
         )
-        results_pruned = analyze_results.analyze_results(
-            [
-                FILES_DIR.joinpath("data-complex1.json"),
-                FILES_DIR.joinpath("data-complex2.json"),
-            ],
-            cfg_pruned,
-        )
+        results_pruned = analyze_results.analyze_results(samples, cfg_pruned)
         self.assertLess(len(results_pruned), len(results_unpruned))
 
         for result in results_pruned:
@@ -99,10 +93,12 @@ class PipelineTest(unittest.TestCase):
             multiple_test_cfg=analysis_cfg.MultipleTestCfg.FWER,
         )
         results = analyze_results.analyze_results(
-            [
-                FILES_DIR.joinpath("data-complex1.json"),
-                FILES_DIR.joinpath("data-complex2.json"),
-            ],
+            analyze_results.load_samples_from_paths(
+                [
+                    FILES_DIR.joinpath("data-complex1.json"),
+                    FILES_DIR.joinpath("data-complex2.json"),
+                ]
+            ),
             cfg,
         )
 
@@ -141,12 +137,10 @@ class PipelineTest(unittest.TestCase):
             ),
             multiple_test_cfg=analysis_cfg.MultipleTestCfg.NONE,
         )
-        results = analyze_results.analyze_results(
-            [
-                FILES_DIR.joinpath("data-complex1.json"),
-            ],
-            cfg,
+        samples = analyze_results.load_samples_from_paths(
+            [FILES_DIR.joinpath("data-complex1.json")]
         )
+        results = analyze_results.analyze_results(samples, cfg)
         self.assertEqual(len(results), 0)
 
         # Test that explicitly specifying experiment groups by metric paths
@@ -165,12 +159,7 @@ class PipelineTest(unittest.TestCase):
                 ]
             ),
         )
-        results = analyze_results.analyze_results(
-            [
-                FILES_DIR.joinpath("data-complex1.json"),
-            ],
-            cfg,
-        )
+        results = analyze_results.analyze_results(samples, cfg)
         self.assertEqual(
             [
                 [
@@ -201,12 +190,7 @@ class PipelineTest(unittest.TestCase):
                 ]
             ),
         )
-        results = analyze_results.analyze_results(
-            [
-                FILES_DIR.joinpath("data-complex1.json"),
-            ],
-            cfg,
-        )
+        results = analyze_results.analyze_results(samples, cfg)
         # There is one ui.Test.variant sample.
         self.assertEqual(
             [
@@ -236,12 +220,7 @@ class PipelineTest(unittest.TestCase):
             ),
         )
         with self.assertRaises(AssertionError):
-            analyze_results.analyze_results(
-                [
-                    FILES_DIR.joinpath("data-complex1.json"),
-                ],
-                cfg,
-            )
+            analyze_results.analyze_results(samples, cfg)
 
         # Test that explicitly specifying experiment groups with test names does
         # not bucket metric paths with the same variant in their `TestResultKey`
@@ -259,12 +238,7 @@ class PipelineTest(unittest.TestCase):
                 ]
             ),
         )
-        results = analyze_results.analyze_results(
-            [
-                FILES_DIR.joinpath("data-complex1.json"),
-            ],
-            cfg,
-        )
+        results = analyze_results.analyze_results(samples, cfg)
         self.assertEqual(
             [
                 [
@@ -286,13 +260,13 @@ class PipelineTest(unittest.TestCase):
             experiment_cfg=analysis_cfg.ExperimentCfg(per_test_cfgs=[]),
             multiple_test_cfg=analysis_cfg.MultipleTestCfg.NONE,
         )
-        results = analyze_results.analyze_results(
+        samples = analyze_results.load_samples_from_paths(
             [
                 FILES_DIR.joinpath("data-complex1.json"),
                 FILES_DIR.joinpath("data-complex2.json"),
-            ],
-            cfg,
+            ]
         )
+        results = analyze_results.analyze_results(samples, cfg)
         self.assertEqual(len(results), 43)
 
         cfg = dataclasses.replace(
@@ -308,20 +282,16 @@ class PipelineTest(unittest.TestCase):
                 ]
             ),
         )
-        results = analyze_results.analyze_results(
-            [
-                FILES_DIR.joinpath("data-complex1.json"),
-                FILES_DIR.joinpath("data-complex2.json"),
-            ],
-            cfg,
-        )
+        results = analyze_results.analyze_results(samples, cfg)
         self.assertEqual(len(results), 22)
 
     def test_analyze_results_empty(self) -> None:
         analyze_results.analyze_results(
-            [
-                FILES_DIR.joinpath("data-empty.json"),
-                FILES_DIR.joinpath("data-empty.json"),
-            ],
+            analyze_results.load_samples_from_paths(
+                [
+                    FILES_DIR.joinpath("data-empty.json"),
+                    FILES_DIR.joinpath("data-empty.json"),
+                ]
+            ),
             analysis_cfg.AnalysisCfg(),
         )
