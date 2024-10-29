@@ -25,18 +25,18 @@ import (
 
 func init() {
 	testing.AddTest(&testing.Test{
-		Func:           UnlockPinLockedSim,
-		LacrosStatus:   testing.LacrosVariantUnneeded,
-		LifeCycleStage: testing.LifeCycleInDevelopment,
-		Desc:           "Verifies that a PIN locked SIM can only be unlocked by the correct PIN, and then subsequently connected to",
+		Func:         UnlockPinLockedSim,
+		LacrosStatus: testing.LacrosVariantUnneeded,
+		Desc:         "Verifies that a PIN locked SIM can only be unlocked by the correct PIN, and then subsequently connected to",
 		Contacts: []string{
-			"alfredyu@cienet.com",
-			"chromeos-connectivity-cienet-external@google.com",
+			"cros-device-enablement@google.com",
+			"chromeos-connectivity-engprod@google.com",
 		},
-		BugComponent: "b:1578688", // ChromeOS > External > Cienet > Manual Test Automation > Test stabilization
-		SoftwareDeps: []string{"chrome"},
+		BugComponent:   "b:1131774", // ChromeOS > Software > Fundamentals > Device Enablement > Connectivity > Cellular
+		LifeCycleStage: testing.LifeCycleOwnerMonitored,
+		SoftwareDeps:   []string{"chrome"},
 		// Run test only on cellular capable devices that only have one active SIM.
-		Attr:        []string{"group:cellular", "cellular_unstable", "cellular_sim_pinlock", "cellular_e2e"},
+		Attr:        []string{"group:cellular", "cellular_sim_pinlock", "cellular_e2e"},
 		Fixture:     "cellularSIMLockCleared",
 		Timeout:     8 * time.Minute,
 		TestBedDeps: []string{"sim_state:WORKING"},

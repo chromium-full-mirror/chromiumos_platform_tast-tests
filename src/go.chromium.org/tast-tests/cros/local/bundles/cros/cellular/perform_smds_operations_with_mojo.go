@@ -23,19 +23,19 @@ type testConfig struct {
 
 func init() {
 	testing.AddTest(&testing.Test{
-		Func:           PerformSmdsOperationsWithMojo,
-		LacrosStatus:   testing.LacrosVariantUnneeded,
-		LifeCycleStage: testing.LifeCycleInDevelopment,
-		Desc:           "An API test that performs SMDS eSIM operations on a test eSIM to validate the logic for the subset of functions in the esim_manager Mojo API (RequestAvailableProfiles, InstallProfileFromActivationCode)",
+		Func:         PerformSmdsOperationsWithMojo,
+		LacrosStatus: testing.LacrosVariantUnneeded,
+		Desc:         "Ensures that eSIM operations work with a Stork server when accessed via Mojo",
 		Contacts: []string{
-			"alfredyu@cienet.com",
-			"chromeos-connectivity-cienet-external@google.com",
+			"cros-device-enablement@google.com",
+			"chromeos-connectivity-engprod@google.com",
 		},
-		BugComponent: "b:1578688", // ChromeOS > External > Cienet > Manual Test Automation > Test stabilization
-		Attr:         []string{"group:cellular", "cellular_unstable", "cellular_sim_test_esim"},
-		SoftwareDeps: []string{"chrome"},
-		Fixture:      "chromeLoggedInWithMojoTestEuicc",
-		Timeout:      10 * time.Minute,
+		BugComponent:   "b:1131774", // ChromeOS > Software > Fundamentals > Device Enablement > Connectivity > Cellular
+		LifeCycleStage: testing.LifeCycleOwnerMonitored,
+		Attr:           []string{"group:cellular", "cellular_sim_test_esim"},
+		SoftwareDeps:   []string{"chrome"},
+		Fixture:        "chromeLoggedInWithMojoTestEuicc",
+		Timeout:        10 * time.Minute,
 		Params: []testing.Param{{
 			// Ensures non-empty activation codes.
 			Name: "refresh",

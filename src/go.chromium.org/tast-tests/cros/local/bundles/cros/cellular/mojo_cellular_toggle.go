@@ -20,14 +20,15 @@ func init() {
 		LacrosStatus: testing.LacrosVariantUnneeded,
 		Desc:         "Enable/disable Cellular service using Mojo and confirms using shill",
 		Contacts: []string{
-			"chromeos-connectivity-cienet-external@google.com",
-			"alfred.yu@cienet.com",
+			"cros-device-enablement@google.com",
+			"chromeos-connectivity-engprod@google.com",
 		},
-		BugComponent: "b:1578688", // ChromeOS > External > Cienet > Manual Test Automation > Test stabilization
-		SoftwareDeps: []string{"chrome"},
-		Attr:         []string{"group:cellular", "cellular_sim_active"},
-		Timeout:      10 * time.Minute,
-		Fixture:      "cellularWithChrome",
+		BugComponent:   "b:1131774", // ChromeOS > Software > Fundamentals > Device Enablement > Connectivity > Cellular
+		LifeCycleStage: testing.LifeCycleOwnerMonitored,
+		SoftwareDeps:   []string{"chrome"},
+		Attr:           []string{"group:cellular", "cellular_sim_active"},
+		Timeout:        10 * time.Minute,
+		Fixture:        "cellularWithChrome",
 	})
 }
 
