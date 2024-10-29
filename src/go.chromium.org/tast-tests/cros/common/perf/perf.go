@@ -89,6 +89,10 @@ import (
 var (
 	// nameRe defines valid names (Name and Variant).
 	nameRe = regexp.MustCompile("^[a-zA-Z0-9._-]{1,256}$")
+	// InvalidNameRe derived from nameRe defines invalid characters in GPU
+	// usage metrics names.
+	InvalidNameRe = regexp.MustCompile("[^a-zA-Z0-9._-]")
+
 	// unitRe defines valid units.
 	unitRe = regexp.MustCompile("^[a-zA-Z0-9._-]{1,32}$")
 	// intervalRe defines valid intervals. Interval can either be a metric

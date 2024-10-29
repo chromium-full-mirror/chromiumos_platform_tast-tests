@@ -503,13 +503,18 @@ func (ds *GPUUsageDataSource) Stop(ctx context.Context, values *perf.Values) err
 					}
 				}
 			}
+
+			// Replace any invalid characters in the proces name with '_'.
+			modProcName := perf.InvalidNameRe.ReplaceAllString(procName, "_")
+
 			// Add per-process metric values.
 			for engine := range drm.allEngines {
 				if !processHasEngineUtilization[engine] {
 					continue
 				}
+
 				values.Set(perf.Metric{
-					Name:      fmt.Sprintf("%s%sDRM_%s.Utilization.%s.%s", ds.prefix, cp.GPUUsageMetricType, drmRank, engine, procName),
+					Name:      fmt.Sprintf("%s%sDRM_%s.Utilization.%s.%s", ds.prefix, cp.GPUUsageMetricType, drmRank, engine, modProcName),
 					Unit:      cp.GPUUsageMetricTypeUnit,
 					Direction: perf.SmallerIsBetter,
 					Multiple:  true,
@@ -522,7 +527,7 @@ func (ds *GPUUsageDataSource) Stop(ctx context.Context, values *perf.Values) err
 					continue
 				}
 				values.Set(perf.Metric{
-					Name:      fmt.Sprintf("%s%sDRM_%s.Memory.%s.%s", ds.prefix, cp.GPUMemoryMetricType, drmRank, kind, procName),
+					Name:      fmt.Sprintf("%s%sDRM_%s.Memory.%s.%s", ds.prefix, cp.GPUMemoryMetricType, drmRank, kind, modProcName),
 					Unit:      cp.GPUMemoryMetricTypeUnit,
 					Direction: perf.SmallerIsBetter,
 					Multiple:  true,
