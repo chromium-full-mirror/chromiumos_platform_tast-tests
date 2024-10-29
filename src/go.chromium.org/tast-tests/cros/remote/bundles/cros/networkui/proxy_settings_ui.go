@@ -23,17 +23,17 @@ import (
 
 func init() {
 	testing.AddTest(&testing.Test{
-		Func:           ProxySettingsUI,
-		LacrosStatus:   testing.LacrosVariantUnneeded,
-		LifeCycleStage: testing.LifeCycleInDevelopment,
-		Desc:           "Verify the UI for proxy settings",
+		Func:         ProxySettingsUI,
+		LacrosStatus: testing.LacrosVariantUnneeded,
+		Desc:         "Verify the UI for proxy settings",
 		Contacts: []string{
-			"alfredyu@cienet.com",
-			"chromeos-connectivity-cienet-external@google.com",
+			"cros-device-enablement@google.com",
+			"chromeos-connectivity-engprod@google.com",
 		},
-		BugComponent: "b:1578688", // ChromeOS > External > Cienet > Manual Test Automation > Test stabilization
-		Attr:         []string{"group:wificell", "wificell_e2e", "group:release-health", "release-health_network"},
-		TestBedDeps:  []string{tbdep.Wificell, tbdep.WifiStateNormal, tbdep.BluetoothStateNormal, tbdep.PeripheralWifiStateWorking},
+		BugComponent:   "b:1131775", // ChromeOS > Software > Fundamentals > Device Enablement > Connectivity > General
+		LifeCycleStage: testing.LifeCycleOwnerMonitored,
+		Attr:           []string{"group:wificell", "wificell_e2e", "group:release-health", "release-health_network"},
+		TestBedDeps:    []string{tbdep.Wificell, tbdep.WifiStateNormal, tbdep.BluetoothStateNormal, tbdep.PeripheralWifiStateWorking},
 		ServiceDeps: []string{
 			wificell.ProxyFixtServiceDepsProxySetting,
 			wificell.ProxyFixtServiceDepsChromeBrowser,
