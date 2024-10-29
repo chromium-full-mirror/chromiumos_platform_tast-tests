@@ -42,7 +42,6 @@ var ghostWindowFeatureFlags = []string{
 	"FullRestore",
 	"ArcGhostWindow",
 	"ArcWindowPredictor",
-	"ArcGhostWindowNewStyle",
 }
 
 var fullrestoreGwTests = []gwTestParams{
