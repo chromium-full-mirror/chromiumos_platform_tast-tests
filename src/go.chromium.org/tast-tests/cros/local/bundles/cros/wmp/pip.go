@@ -65,10 +65,47 @@ var ashPipTests = pipTestParams{
 		testPipTuck,
 		testPipMove,
 		testPipExpandViaMenu,
+		testPipHotKeyToEnlarge,
+		testPipHotKeyToOriginalSize,
 	},
 	browserType:   browser.TypeAsh,
 	pipWindowName: "Picture in picture",
 	pipClassName:  "PictureInPictureWindow",
+}
+
+var lacrosPipTests = pipTestParams{
+	pipType: lacrosPip,
+	tests: []pipTestFunc{
+		testPipPinchResize,
+		testPipDoubleTapToEnlarge,
+		testPipDoubleTapToOriginalSize,
+		testPipTuck,
+		testPipMove,
+		testPipExpandViaMenu,
+		testPipHotKeyToEnlarge,
+		testPipHotKeyToOriginalSize,
+	},
+	browserType:   browser.TypeLacros,
+	pipWindowName: "Picture in picture",
+	pipClassName:  "Widget",
+}
+
+var arcPipTests = pipTestParams{
+	pipType: arcPip,
+	tests: []pipTestFunc{
+		testPipPinchResize,
+		testPipDoubleTapToEnlarge,
+		testPipDoubleTapToOriginalSize,
+		testPipTuck,
+		testPipMove,
+		testPipExpandViaMenu,
+		testPipHotKeyToEnlarge,
+		testPipHotKeyToOriginalSize,
+		testPipExpandViaShelfIcon,
+	},
+	browserType:   browser.TypeAsh,
+	pipWindowName: arcPipAppName,
+	pipClassName:  "Widget",
 }
 
 func init() {
@@ -496,6 +533,94 @@ func testPipExpandViaMenu(ctx context.Context, tconn *chrome.TestConn, ac *uiaut
 	}, &testing.PollOptions{Timeout: 10 * time.Second})
 }
 
+// testPipHotKeyToEnlarge verifies that PiP gets enlarged as expected via the hotkey.
+func testPipHotKeyToEnlarge(ctx context.Context, tconn *chrome.TestConn, ac *uiauto.Context, dispInfo *display.Info, tsw *input.TouchscreenEventWriter) error {
+	kb, err := input.Keyboard(ctx)
+	if err != nil {
+		return errors.Wrap(err, "failed to initialize keyboard")
+	}
+	defer kb.Close(ctx)
+
+	window, err := getPIPWindow(ctx, tconn)
+	if err != nil {
+		return errors.Wrap(err, "failed to get PiP window")
+	}
+	beforeBounds := window.BoundsInRoot
+
+	if err := waitUntilPipWindowIsResizedByHotKey(ctx, tconn); err != nil {
+		return errors.Wrap(err, "failed to wait until the pip window is enlarged")
+	}
+
+	window, err = getPIPWindow(ctx, tconn)
+	if err != nil {
+		return errors.Wrap(err, "failed to get PiP window")
+	}
+	afterBounds := window.BoundsInRoot
+
+	// Confirm that the window has been enlarged via the hotkey.
+	if beforeBounds.Width >= afterBounds.Width || beforeBounds.Height >= afterBounds.Height {
+		return errors.Wrapf(err, "the PiP window size is not enlarged: original %vx%v, current %vx%v", beforeBounds.Width, beforeBounds.Height, afterBounds.Width, afterBounds.Height)
+	}
+	return nil
+}
+
+// testPipHotKeyToOriginalSize verifies that PiP gets shrunk to the original size via the Hotkey feature.
+func testPipHotKeyToOriginalSize(ctx context.Context, tconn *chrome.TestConn, ac *uiauto.Context, dispInfo *display.Info, tsw *input.TouchscreenEventWriter) error {
+	kb, err := input.Keyboard(ctx)
+	if err != nil {
+		return errors.Wrap(err, "failed to initialize keyboard")
+	}
+	defer kb.Close(ctx)
+
+	// First, change the PiP window size using pinch.
+	if err := pinchPipWindowToEnlarge(ctx, tconn, dispInfo); err != nil {
+		return errors.Wrap(err, "failed to pinch PiP window")
+	}
+
+	window, err := getPIPWindow(ctx, tconn)
+	if err != nil {
+		return errors.Wrap(err, "failed to get PiP window")
+	}
+	beforeBounds := window.BoundsInRoot
+
+	// Press the Hotkey to make the PiP the max size.
+	if err := waitUntilPipWindowIsResizedByHotKey(ctx, tconn); err != nil {
+		return errors.Wrap(err, "failed to wait until the pip window is enlarged")
+	}
+
+	// Press the Hotkey to make the PiP the original size.
+	if err := waitUntilPipWindowIsResizedByHotKey(ctx, tconn); err != nil {
+		return errors.Wrap(err, "failed to wait until the pip window is enlarged")
+	}
+
+	window, err = getPIPWindow(ctx, tconn)
+	if err != nil {
+		return errors.Wrap(err, "failed to get PiP window")
+	}
+	afterBounds := window.BoundsInRoot
+
+	// Confirm that the window has been changed via the hotkey.
+	if beforeBounds.Width != afterBounds.Width || beforeBounds.Height != afterBounds.Height {
+		return errors.Wrapf(err, "the PiP window size is not correct: original %vx%v, current %vx%v", beforeBounds.Width, beforeBounds.Height, afterBounds.Width, afterBounds.Height)
+	}
+	return nil
+}
+
+// testPipExpandViaShelfIcon verifies that PiP can be expanded by pressing the shelf icon of the app.
+func testPipExpandViaShelfIcon(ctx context.Context, tconn *chrome.TestConn, ac *uiauto.Context, _ *display.Info, _ *input.TouchscreenEventWriter) error {
+	return expandPipViaShelfIcon(ctx, tconn, ac)
+}
+
+// expandPipViaShelfIcon expands the PiP window by pressing the shelf icon of the app.
+// Note that this behavior is currently supported only by ARC PiP.
+func expandPipViaShelfIcon(ctx context.Context, tconn *chrome.TestConn, ac *uiauto.Context) error {
+	pipShelfIcon := nodewith.Name(arcPipAppName).ClassName(ash.ShelfAppButtonClassName)
+	if err := ac.WithTimeout(10 * time.Second).LeftClick(pipShelfIcon)(ctx); err != nil {
+		return errors.Wrapf(err, "failed to click on the shelf icon of %s", arcPipAppName)
+	}
+	return waitUntilPipWindowIsGone(ctx, tconn)
+}
+
 func createArcPip(ctx context.Context, cr *chrome.Chrome, tconn *chrome.TestConn, a *arc.ARC, dispInfo *display.Info, test pipTestParams) (*arc.Activity, error) {
 	pipAct, err := arc.NewActivity(a, arcPipTestPkgName, ".PipActivity")
 	if err != nil {
@@ -607,6 +732,22 @@ func cleanUpArcTest(ctx context.Context, tconn *chrome.TestConn, pipAct *arc.Act
 	return nil
 }
 
+// waitUntilPipWindowIsGone keeps looking for a PiP window until it gets gone.
+func waitUntilPipWindowIsGone(ctx context.Context, tconn *chrome.TestConn) error {
+	return testing.Poll(ctx, func(ctx context.Context) error {
+		ws, err := ash.GetAllWindows(ctx, tconn)
+		if err != nil {
+			return testing.PollBreak(errors.Wrap(err, "failed to get the window list"))
+		}
+		for _, window := range ws {
+			if window.State == ash.WindowStatePIP {
+				return errors.New("PiP still exists")
+			}
+		}
+		return nil
+	}, &testing.PollOptions{Timeout: 10 * time.Second})
+}
+
 // waitUntilPipWindowIsEnlargedByDoubleTap makes double-tapping and waits for the PiP become the max size.
 func waitUntilPipWindowIsEnlargedByDoubleTap(ctx context.Context, tconn *chrome.TestConn) error {
 	window, err := getPIPWindow(ctx, tconn)
@@ -621,8 +762,27 @@ func waitUntilPipWindowIsEnlargedByDoubleTap(ctx context.Context, tconn *chrome.
 		return errors.Wrap(err, "failed to double-click PiP")
 	}
 
+	// Wait for the first change of a PiP window size.
+	testing.Poll(ctx, func(ctx context.Context) error {
+		window, err := getPIPWindow(ctx, tconn)
+		if err != nil {
+			return testing.PollBreak(errors.Wrap(err, "failed to get PiP window"))
+		}
+		afterBounds := window.BoundsInRoot
+
+		if beforeBounds.Width == afterBounds.Width || beforeBounds.Height == afterBounds.Height {
+			return errors.New("the pip window is not changed yet")
+		}
+		beforeBounds.Width = afterBounds.Width
+		beforeBounds.Height = afterBounds.Height
+		return nil
+	}, &testing.PollOptions{Timeout: 3 * time.Second, Interval: 100 * time.Millisecond})
+
 	//GoBigSleepLint: Waiting needed for first comparison
-	testing.Sleep(ctx, 100*time.Millisecond)
+	if err := testing.Sleep(ctx, 100*time.Millisecond); err != nil {
+		return errors.Wrap(err, "failed to sleep")
+	}
+
 	return testing.Poll(ctx, func(ctx context.Context) error {
 		window, err := getPIPWindow(ctx, tconn)
 		if err != nil {
@@ -635,12 +795,69 @@ func waitUntilPipWindowIsEnlargedByDoubleTap(ctx context.Context, tconn *chrome.
 		if beforeBounds.Width != afterBounds.Width || beforeBounds.Height != afterBounds.Height {
 			beforeBounds.Width = afterBounds.Width
 			beforeBounds.Height = afterBounds.Height
-			return errors.Wrapf(err, "the PiP window is not enlarged enough")
+			return errors.Wrap(err, "the PiP window is not enlarged enough")
 		}
 		return nil
 	}, &testing.PollOptions{Timeout: 10 * time.Second, Interval: 100 * time.Millisecond})
 }
 
+// waitUntilPipWindowIsResizedByHotKey makes shortcut pressed and waits for the PiP become the max size.
+func waitUntilPipWindowIsResizedByHotKey(ctx context.Context, tconn *chrome.TestConn) error {
+	kb, err := input.Keyboard(ctx)
+	if err != nil {
+		return errors.Wrap(err, "failed to initialize keyboard")
+	}
+	defer kb.Close(ctx)
+
+	window, err := getPIPWindow(ctx, tconn)
+	if err != nil {
+		return errors.Wrap(err, "failed to get PiP window")
+	}
+	beforeBounds := window.BoundsInRoot
+
+	if err := kb.Accel(ctx, "Search+X"); err != nil {
+		return errors.Wrap(err, "failed to input the Hotkey")
+	}
+
+	// Wait for the first change of a PiP window size.
+	testing.Poll(ctx, func(ctx context.Context) error {
+		window, err := getPIPWindow(ctx, tconn)
+		if err != nil {
+			return testing.PollBreak(errors.Wrap(err, "failed to get PiP window"))
+		}
+		afterBounds := window.BoundsInRoot
+
+		if beforeBounds.Width == afterBounds.Width || beforeBounds.Height == afterBounds.Height {
+			return errors.New("the pip window is not changed yet")
+		}
+		beforeBounds.Width = afterBounds.Width
+		beforeBounds.Height = afterBounds.Height
+		return nil
+	}, &testing.PollOptions{Timeout: 3 * time.Second, Interval: 100 * time.Millisecond})
+
+	//GoBigSleepLint: Waiting needed for first comparison
+	if err := testing.Sleep(ctx, 100*time.Millisecond); err != nil {
+		return errors.Wrap(err, "failed to sleep")
+	}
+
+	// Then check the size change of the PiP window.
+	return testing.Poll(ctx, func(ctx context.Context) error {
+		window, err := getPIPWindow(ctx, tconn)
+		if err != nil {
+			return errors.Wrap(err, "failed to get PiP window")
+		}
+		afterBounds := window.BoundsInRoot
+
+		// Check a difference of the previous bound and the new bound.
+		// If there's no more difference, the PiP should already be at the stable size.
+		if beforeBounds.Width != afterBounds.Width || beforeBounds.Height != afterBounds.Height {
+			beforeBounds.Width = afterBounds.Width
+			beforeBounds.Height = afterBounds.Height
+			return errors.Wrap(err, "the PiP window is not stable size")
+		}
+		return nil
+	}, &testing.PollOptions{Timeout: 3 * time.Second, Interval: 100 * time.Millisecond})
+}
 
 // pinchPipWindowToEnlarge pinch the PiP window to enlarge.
 func pinchPipWindowToEnlarge(ctx context.Context, tconn *chrome.TestConn, dispInfo *display.Info) error {
