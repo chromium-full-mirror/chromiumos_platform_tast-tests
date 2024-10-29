@@ -177,6 +177,7 @@ func SmokeEndToEnd(ctx context.Context, s *testing.State) {
 		chrome.EnableFeatures("OobeAiIntro"),
 		chrome.DisableFeatures("OobePersonalizedOnboarding"),
 		chrome.DisableFeatures("OobePerksDiscovery"),
+		chrome.DisableFeatures("AllowPasswordlessSetup"),
 	}
 	// Keep the user that was previously added for the 'AddPerson' flow.
 	if isAddPersonFlow {
