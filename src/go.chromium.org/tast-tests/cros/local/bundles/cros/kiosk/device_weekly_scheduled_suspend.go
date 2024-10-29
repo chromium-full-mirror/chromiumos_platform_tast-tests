@@ -23,6 +23,7 @@ import (
 	"go.chromium.org/tast/core/ctxutil"
 	"go.chromium.org/tast/core/errors"
 	"go.chromium.org/tast/core/testing"
+	"go.chromium.org/tast/core/testing/hwdep"
 )
 
 // Common terminology used in this file:
@@ -64,6 +65,7 @@ func init() {
 		// This test can be limited to the golden tier, since it's only meant to cover the
 		// integration of the policy with powerd, and powerd is well covered by other tests.
 		Attr:         []string{"group:golden_tier"},
+		HardwareDeps: hwdep.D(hwdep.SkipOnModel("betty")),
 		SoftwareDeps: []string{"reboot", "chrome"},
 		VarDeps:      []string{"ui.signinProfileTestExtensionManifestKey"},
 		Fixture:      fixture.FakeDMSEnrolled,
