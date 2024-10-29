@@ -93,6 +93,7 @@ func PromiseIcons(ctx context.Context, s *testing.State) {
 	if err := playstore.BeginAppInstall(ctx, arcDevice, uiAutomator, packageName, &playstore.Options{TryLimit: -1}); err != nil {
 		s.Fatal("Failed to start app installation in Play Store: ", err)
 	}
+	defer arcDevice.Uninstall(ctx, packageName)
 
 	s.Log("Open the Launcher")
 	if err := launcher.Open(tconn)(ctx); err != nil {
