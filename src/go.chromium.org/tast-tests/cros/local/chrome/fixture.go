@@ -226,6 +226,8 @@ func init() {
 		Name:     fixture.ChromeLoggedInWithOsFeedback,
 		Desc:     "Logged into a user session with OS Feedback enabled",
 		Contacts: []string{"michaelcheco@google.com"},
+		// ChromeOS > Data > Engineering > Feedback
+		BugComponent: "b:1033360",
 		Impl: NewLoggedInFixture(func(ctx context.Context, s *testing.FixtState) ([]Option, error) {
 			return []Option{EnableFeatures("SkipSendingFeedbackReportInTastTests")}, nil
 		}),
