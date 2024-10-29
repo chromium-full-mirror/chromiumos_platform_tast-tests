@@ -176,16 +176,16 @@ Tast-analyzer can also generate graphs. For example, it can generate CDF graphs:
 To generate graphs, provide the `--outputs` and `--output-dir` option.
 
 `python3 -m analyzer.run print-results before_change.json after_change.json
---outputs plot-cdf --output-dir plots`
+--outputs pairwise-plot-cdf --output-dir plots`
 
 Similarly, a summary report can be generated with `--outputs report`:
 
 `python3 -m analyzer.run print-results before_change.json after_change.json
---outputs report --output-dir report`
+--outputs report-html --output-dir report`
 
 Generating both graphs and a summary report is also possible by simply using
-the `--output` option multiple times (e.g., `--outputs plot-cdf --outputs
-report`).
+the `--output` option multiple times (e.g., `--outputs pairwise-plot-cdf --outputs
+report-html`).
 
 
 ## Statistical methodology
