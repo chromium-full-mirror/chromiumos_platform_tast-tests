@@ -21,6 +21,7 @@ import (
 // `chrome.GAIALogin`).
 func SetupUserWithLocalPassword(ctx context.Context, password string, opts ...chrome.Option) (c *chrome.Chrome, retErr error) {
 	opts = append(opts, chrome.DisableFeatures("CryptohomeRecoveryBeforeFlowSplit"))
+	opts = append(opts, chrome.DisableFeatures("AllowPasswordlessSetup"))
 	opts = append(opts, chrome.DontSkipOOBEAfterLogin())
 
 	cr, err := chrome.New(ctx, opts...)
@@ -33,6 +34,10 @@ func SetupUserWithLocalPassword(ctx context.Context, password string, opts ...ch
 		return cr, errors.Wrap(err, "failed to wait for OOBE connection")
 	}
 	defer oobeConn.Close()
+
+	if err := WaitForRecoverySetup(ctx, oobeConn); err != nil {
+		return cr, errors.Wrap(err, "failed to wait for recovery setup to be finished")
+	}
 
 	if err := SetupLocalPassword(ctx, oobeConn, password); err != nil {
 		return cr, errors.Wrap(err, "failed to setup local password")
@@ -56,6 +61,7 @@ func SetupUserWithLocalPassword(ctx context.Context, password string, opts ...ch
 // (e.g. using `chrome.FakeLogin`, `chrome.GAIALogin`).
 func SetupUserWithLocalPasswordAndPin(ctx context.Context, password, pin string, opts ...chrome.Option) (c *chrome.Chrome, retErr error) {
 	opts = append(opts, chrome.DisableFeatures("CryptohomeRecoveryBeforeFlowSplit"))
+	opts = append(opts, chrome.DisableFeatures("AllowPasswordlessSetup"))
 	opts = append(opts, chrome.DontSkipOOBEAfterLogin())
 
 	cr, err := chrome.New(ctx, opts...)
@@ -68,6 +74,10 @@ func SetupUserWithLocalPasswordAndPin(ctx context.Context, password, pin string,
 		return cr, errors.Wrap(err, "failed to wait for OOBE connection")
 	}
 	defer oobeConn.Close()
+
+	if err := WaitForRecoverySetup(ctx, oobeConn); err != nil {
+		return cr, errors.Wrap(err, "failed to wait for recovery setup to be finished")
+	}
 
 	if err := SetupLocalPassword(ctx, oobeConn, password); err != nil {
 		return cr, errors.Wrap(err, "failed to setup local password")
@@ -150,6 +160,22 @@ func SetupPin(ctx context.Context, oobeConn *chrome.Conn, pin string) error {
 
 	if err := oobeConn.WaitForExprFailOnErr(ctx, "document.querySelector('#pin-setup').uiStep === 'done'"); err != nil {
 		return errors.Wrap(err, "failed to wait for the done step")
+	}
+
+	return nil
+}
+
+// WaitForRecoverySetup navigates to the recovery setup screen and waits until
+// it's not shown anymore.
+func WaitForRecoverySetup(ctx context.Context, oobeConn *chrome.Conn) error {
+	if err := oobeConn.Eval(ctx, "OobeAPI.advanceToScreen('cryptohome-recovery-setup')", nil); err != nil {
+		return errors.Wrap(err, "failed to advance to the cryptohome-recovery-setup screen")
+	}
+	if err := oobeConn.WaitForExprFailOnErr(ctx, "OobeAPI.screens.CryptohomeRecoverySetupScreen.isVisible()"); err != nil {
+		return errors.Wrap(err, "failed to wait for the recovery setup screen to be visible")
+	}
+	if err := oobeConn.WaitForExprFailOnErr(ctx, "!OobeAPI.screens.CryptohomeRecoverySetupScreen.isVisible()"); err != nil {
+		return errors.Wrap(err, "failed to wait for the recovery setup screen to not be visible")
 	}
 
 	return nil
