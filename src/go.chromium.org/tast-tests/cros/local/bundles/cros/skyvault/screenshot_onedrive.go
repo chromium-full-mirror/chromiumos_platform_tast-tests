@@ -122,6 +122,11 @@ func ScreenshotOnedrive(ctx context.Context, s *testing.State) {
 		s.Errorf("Failed to wait for notification with title \"%q\": %v", "capture_mode_notification", err)
 	}
 
+	// Close all notifications.
+	if err := ash.CloseNotifications(ctx, tconn); err != nil {
+		s.Fatal("Failed to close notifications: ", err)
+	}
+
 	if err := files.OpenOneDrive()(ctx); err != nil {
 		s.Fatal("Failed to open OneDrive: ", err)
 	}
