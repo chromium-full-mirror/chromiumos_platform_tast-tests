@@ -37,7 +37,7 @@ func init() {
 				Fixture:           fixture.TelemetryExtensionSkipOEMNameCheck,
 				ExtraHardwareDeps: hwdep.D(hwdep.InternalKeyboard(), hwdep.NoSplitModifierKeyboard()),
 				Val:               true, // keyboardTesterSupported
-				ExtraAttr:         []string{"informational", "group:criticalstaging"},
+				ExtraAttr:         []string{"informational"},
 			},
 			{
 				// The keyboard tester is not supported on split modifier keyboard.
@@ -45,7 +45,7 @@ func init() {
 				Fixture:           fixture.TelemetryExtensionSkipOEMNameCheck,
 				ExtraHardwareDeps: hwdep.D(hwdep.InternalKeyboard(), hwdep.SplitModifierKeyboard()),
 				Val:               false, // keyboardTesterSupported
-				ExtraAttr:         []string{"informational", "group:criticalstaging"},
+				ExtraAttr:         []string{"informational"},
 			},
 			{
 				Name:              "no_keyboard",
