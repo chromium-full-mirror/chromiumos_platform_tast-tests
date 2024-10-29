@@ -230,6 +230,21 @@ def create_plots(
     return results_for_output
 
 
+def _save_plot(
+    identifier: str, plot_data: plot.PlotData, plot_dir: pathlib.Path
+) -> None:
+    """Saves a plot to the given directory.
+
+    Args:
+        identifier: The identifier of the plot.
+        plot_data: The plot data to save.
+        plot_dir: The directory to save the plot to.
+    """
+    name = f"{identifier}_{plot_data.kind.value}"
+    save_path = plot_dir.joinpath(f"{name}.png")
+    plot_data.figure.savefig(save_path, bbox_inches="tight")
+
+
 def save_plots(
     *,
     results_for_output: list[output.AnalysisResultForOutput],
@@ -250,6 +265,9 @@ def save_plots(
             identifier = pair.result.identifier()
             for plot_data in pair.plots:
                 if plot_data.kind in plot_kinds:
-                    name = f"{identifier}_{plot_data.kind.value}"
-                    save_path = plot_dir.joinpath(f"{name}.png")
-                    plot_data.figure.savefig(save_path, bbox_inches="tight")
+                    _save_plot(identifier, plot_data, plot_dir)
+        for plot_data in result.groups_plots:
+            if plot_data.kind in plot_kinds:
+                _save_plot(
+                    get_groups_name_for_plot(result.groups), plot_data, plot_dir
+                )
