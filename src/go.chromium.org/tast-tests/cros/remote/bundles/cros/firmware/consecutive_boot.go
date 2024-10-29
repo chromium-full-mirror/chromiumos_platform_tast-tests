@@ -160,15 +160,19 @@ func ConsecutiveBoot(ctx context.Context, s *testing.State) {
 	}
 
 	getTime := func(ctx context.Context) (int64, error) {
-		result, err := h.Servo.RunECCommandGetOutputNoConsoleLogs(ctx, "gettime", []string{`Time:\s+0x(\S+)\s`})
-		if err != nil {
-			return 0, errors.Wrap(err, "failed to get ec time")
-		}
-		time, err := strconv.ParseInt(result[0][1], 16, 64)
-		if err != nil {
-			return 0, errors.Wrap(err, "could not parse")
-		}
-		return time, nil
+		var ecTime int64
+		err := testing.Poll(ctx, func(ctx context.Context) error {
+			result, err := h.Servo.RunECCommandGetOutputNoConsoleLogs(ctx, "gettime", []string{`Time:\s+0x(\S+)\s`})
+			if err != nil {
+				return errors.Wrap(err, "failed to get ec time")
+			}
+			ecTime, err = strconv.ParseInt(result[0][1], 16, 64)
+			if err != nil {
+				return errors.Wrap(err, "could not parse")
+			}
+			return nil
+		}, &testing.PollOptions{Timeout: 30 * time.Second})
+		return ecTime, err
 	}
 	priorECTime, err := getTime(ctx)
 	if err != nil {
