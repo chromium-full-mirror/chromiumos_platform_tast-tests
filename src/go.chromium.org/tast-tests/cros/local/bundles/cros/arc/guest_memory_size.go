@@ -24,7 +24,7 @@ func init() {
 		},
 		// ChromeOS > Platform > baseOS > Virtualization
 		BugComponent: "b:882513",
-		Attr:         []string{"group:mainline", "informational", "group:hw_agnostic", "group:criticalstaging"},
+		Attr:         []string{"group:mainline", "informational", "group:hw_agnostic"},
 		SoftwareDeps: []string{"chrome", "android_vm"},
 		Fixture:      "arcBooted",
 		Timeout:      time.Minute,
