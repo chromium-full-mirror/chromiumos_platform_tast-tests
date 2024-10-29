@@ -53,7 +53,7 @@ func init() {
 			}, {
 				Name:              "stable_fieldtrial_testing_config_on",
 				Fixture:           fixture.LoggedInFieldTrialConfigEnable,
-				ExtraAttr:         []string{"group:criticalstaging", "group:mainline", "informational"},
+				ExtraAttr:         []string{"group:mainline", "informational"},
 				ExtraHardwareDeps: hwdep.D(pre.AppsStableModels),
 			},
 		},
