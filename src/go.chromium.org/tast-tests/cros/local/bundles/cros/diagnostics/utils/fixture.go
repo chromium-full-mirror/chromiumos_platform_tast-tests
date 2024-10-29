@@ -24,8 +24,27 @@ func init() {
 			"cros-tdm-tpe-eng@google.com",
 		},
 		// ChromeOS > Platform > Enablement > Health
-		BugComponent:    "b:982097",
-		Impl:            newDiagnosticsPrepFixture( /*disableTabletMode*/ false),
+		BugComponent: "b:982097",
+		Impl: newDiagnosticsPrepFixture( /*disableTabletMode*/ false,
+			/*checkMojoConnection*/ true),
+		SetUpTimeout:    chrome.LoginTimeout + 15*time.Second,
+		ResetTimeout:    chrome.ResetTimeout,
+		TearDownTimeout: chrome.ResetTimeout,
+		PreTestTimeout:  15 * time.Second,
+		PostTestTimeout: 5 * time.Second,
+		Parent:          "crosHealthdRunning",
+	})
+
+	testing.AddFixture(&testing.Fixture{
+		Name: "diagnosticsPrepWithoutMojoCheck",
+		Desc: "Ensure relevant service is running before diagnostics ui test",
+		Contacts: []string{
+			"cros-tdm-tpe-eng@google.com",
+		},
+		// ChromeOS > Platform > Enablement > Health
+		BugComponent: "b:982097",
+		Impl: newDiagnosticsPrepFixture( /*disableTabletMode*/ false,
+			/*checkMojoConnection*/ false),
 		SetUpTimeout:    chrome.LoginTimeout + 15*time.Second,
 		ResetTimeout:    chrome.ResetTimeout,
 		TearDownTimeout: chrome.ResetTimeout,
@@ -41,8 +60,9 @@ func init() {
 			"cros-tdm-tpe-eng@google.com",
 		},
 		// ChromeOS > Platform > Enablement > Health
-		BugComponent:    "b:982097",
-		Impl:            newDiagnosticsPrepFixture( /*disableTabletMode*/ true),
+		BugComponent: "b:982097",
+		Impl: newDiagnosticsPrepFixture( /*disableTabletMode*/ true,
+			/*checkMojoConnection*/ true),
 		SetUpTimeout:    chrome.LoginTimeout + 15*time.Second,
 		ResetTimeout:    chrome.ResetTimeout,
 		TearDownTimeout: chrome.ResetTimeout,
@@ -63,14 +83,15 @@ type FixtureData struct {
 // diagnosticsPrepFixture is a fixture to ensure relevant service is running
 // before diagnostics ui test.
 type diagnosticsPrepFixture struct {
-	cr                *chrome.Chrome
-	api               *MojoAPI
-	tconn             *chrome.TestConn
-	disableTabletMode bool
+	cr                  *chrome.Chrome
+	api                 *MojoAPI
+	tconn               *chrome.TestConn
+	disableTabletMode   bool
+	checkMojoConnection bool
 }
 
-func newDiagnosticsPrepFixture(disableTabletMode bool) testing.FixtureImpl {
-	return &diagnosticsPrepFixture{disableTabletMode: disableTabletMode}
+func newDiagnosticsPrepFixture(disableTabletMode, checkMojoConnection bool) testing.FixtureImpl {
+	return &diagnosticsPrepFixture{disableTabletMode: disableTabletMode, checkMojoConnection: checkMojoConnection}
 }
 
 func (f *diagnosticsPrepFixture) SetUp(ctx context.Context, s *testing.FixtState) interface{} {
@@ -122,6 +143,10 @@ func (f *diagnosticsPrepFixture) PreTest(ctx context.Context, s *testing.FixtTes
 		s.Fatal("Failed to launch diagnostics app: ", err)
 	}
 
+	if !f.checkMojoConnection {
+		return
+	}
+
 	// Make sure mojo API is connected.
 	success := false
 	var api *MojoAPI
@@ -153,13 +178,14 @@ func (f *diagnosticsPrepFixture) PreTest(ctx context.Context, s *testing.FixtTes
 func (f *diagnosticsPrepFixture) PostTest(ctx context.Context, s *testing.FixtTestState) {
 	faillog.DumpUITreeWithScreenshotOnError(ctx, s.OutDir(), s.HasError, f.cr, "ui_dump")
 
-	if err := f.api.Release(ctx); err != nil {
-		s.Log("Error releasing systemDataProvider mojo API: ", err)
+	if f.checkMojoConnection {
+		if err := f.api.Release(ctx); err != nil {
+			s.Log("Error releasing systemDataProvider mojo API: ", err)
+		}
+		f.api = nil
 	}
 
 	if err := diagnosticsapp.Close(ctx, f.tconn); err != nil {
 		s.Log("Failed to close diagnostics app: ", err)
 	}
-
-	f.api = nil
 }

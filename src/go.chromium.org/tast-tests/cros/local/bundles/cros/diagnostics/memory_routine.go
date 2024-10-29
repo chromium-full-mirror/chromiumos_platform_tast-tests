@@ -31,12 +31,19 @@ func init() {
 			"cros-tdm-tpe-eng@google.com",
 			"weiluanwang@google.com",
 		},
-		Attr: []string{"group:mainline", "informational", "group:criticalstaging",
+		Attr: []string{"group:mainline",
 			// TODO(b/362930919): Remove the below attributes after the test is stable on all boards.
 			"group:healthd", "healthd_perbuild"},
 		SoftwareDeps: []string{"chrome"},
-		Fixture:      "diagnosticsPrep",
 		Timeout:      2 * time.Minute,
+		Params: []testing.Param{{
+			Fixture:   "diagnosticsPrep",
+			ExtraAttr: []string{"informational", "group:criticalstaging"},
+		}, {
+			Name:      "no_mojo_check",
+			Fixture:   "diagnosticsPrepWithoutMojoCheck",
+			ExtraAttr: []string{"informational", "group:criticalstaging"},
+		}},
 	})
 }
 

@@ -27,10 +27,17 @@ func init() {
 			"cros-tdm-tpe-eng@google.com",
 			"menghuan@google.com",
 		},
-		Attr:         []string{"group:mainline", "informational", "group:hw_agnostic"},
+		Attr:         []string{"group:mainline", "group:hw_agnostic"},
 		SoftwareDeps: []string{"chrome"},
-		Fixture:      "diagnosticsPrep",
 		Timeout:      10 * time.Minute,
+		Params: []testing.Param{{
+			Fixture:   "diagnosticsPrep",
+			ExtraAttr: []string{"informational", "group:criticalstaging"},
+		}, {
+			Name:      "no_mojo_check",
+			Fixture:   "diagnosticsPrepWithoutMojoCheck",
+			ExtraAttr: []string{"informational", "group:criticalstaging"},
+		}},
 	})
 }
 
