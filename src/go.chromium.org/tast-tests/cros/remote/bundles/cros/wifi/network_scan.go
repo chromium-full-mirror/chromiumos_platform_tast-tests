@@ -35,14 +35,12 @@ func init() {
 		LacrosStatus: testing.LacrosVariantUnneeded,
 		Desc:         "Verify that the WiFi UIs will scan for networks periodically",
 		Contacts: []string{
-			//"cros-device-enablement@google.com",
-			//"chromeos-connectivity-engprod@google.com",
-			"vivian.chen@cienet.com",
-			"chromeos-connectivity-cienet-external@google.com",
+			"cros-device-enablement@google.com",
+			"chromeos-connectivity-engprod@google.com",
 		},
-		BugComponent:   "b:1578688", // ChromeOS > External > Cienet > Manual Test Automation > Test stabilization
-		LifeCycleStage: testing.LifeCycleInDevelopment,
-		Attr:           []string{"group:wificell", "wificell_e2e_unstable"},
+		BugComponent:   "b:1131912", // ChromeOS > Software > Fundamentals > Device Enablement > Connectivity > WiFi
+		LifeCycleStage: testing.LifeCycleOwnerMonitored,
+		Attr:           []string{"group:wificell", "wificell_e2e"},
 		TestBedDeps:    []string{tbdep.Wificell, tbdep.WifiStateNormal, tbdep.PeripheralWifiStateWorking, tbdep.BluetoothStateNormal},
 		Vars:           []string{"ui.signinProfileTestExtensionManifestKey"},
 		ServiceDeps: []string{
