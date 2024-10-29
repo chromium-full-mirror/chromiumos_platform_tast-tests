@@ -7,6 +7,7 @@ package cellular
 
 import (
 	"context"
+	"math/rand"
 	"strings"
 
 	labapi "go.chromium.org/chromiumos/config/go/test/lab/api"
@@ -113,4 +114,40 @@ func (d *DUTInfo) GetSlotForStarfishCarrier(carrier string) (int32, error) {
 		}
 	}
 	return 0, errors.Errorf("failed to find SIM with carrier name %q", find)
+}
+
+// StarfishSlotWithWithFeatures searches all SIM profiles to find a random slot
+// that supports the requested feature.
+//
+// Note: Assumes that starfish only has one profile per SIM since we're returning
+// just the slot number.
+func (d *DUTInfo) StarfishSlotWithWithFeatures(features []labapi.SIMProfileInfo_Feature) (int32, error) {
+	var slots []int32
+	for _, s := range d.SimInfo {
+		for _, p := range s.ProfileInfo {
+			requiredFeatures := make(map[labapi.SIMProfileInfo_Feature]bool)
+			for _, f := range features {
+				requiredFeatures[f] = true
+			}
+			for _, f := range p.GetFeatures() {
+				if requiredFeatures[f] {
+					delete(requiredFeatures, f)
+				}
+			}
+
+			// Check that all requiredFeatures are in intersection.
+			if len(requiredFeatures) == 0 {
+				slots = append(slots, s.GetSlotId()-1)
+				break
+			}
+		}
+	}
+
+	if len(slots) == 0 {
+		return 0, errors.Errorf("failed to find SIM with features %v", features)
+	}
+
+	// Just randomly select one of the matching slots to avoid always picking the same one.
+	n := rand.Intn(len(slots))
+	return slots[n], nil
 }

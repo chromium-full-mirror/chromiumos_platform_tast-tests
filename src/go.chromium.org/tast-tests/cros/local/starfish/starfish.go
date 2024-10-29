@@ -12,6 +12,8 @@ import (
 	"strconv"
 	"strings"
 
+	labapi "go.chromium.org/chromiumos/config/go/test/lab/api"
+
 	"go.chromium.org/tast-tests/cros/common/cellular"
 	"go.chromium.org/tast/core/errors"
 	"go.chromium.org/tast/core/testing"
@@ -61,6 +63,12 @@ var StarfishIndexVar = testing.RegisterVarString(
 	"starfish.index",
 )
 
+var simFeaturesArg = testing.RegisterVarString(
+	"starfish.simFeatures",
+	"",
+	"A comma separated list of strings with additional features required when using starfish.carrier='ANY'.",
+)
+
 // Various string used to parse responses
 const (
 	simStr     = "SIM "
@@ -91,7 +99,7 @@ type Starfish struct {
 }
 
 // NewStarfish creates a Starfish object and ensures that it is configured properly.
-func NewStarfish(ctx context.Context, di *cellular.DUTInfo) (*Starfish, int, string, error) {
+func NewStarfish(ctx context.Context, di *cellular.DUTInfo, features []labapi.SIMProfileInfo_Feature) (*Starfish, int, string, error) {
 	ctx, st := timing.Start(ctx, "Starfish.NewStarfish")
 	defer st.End()
 
@@ -100,6 +108,20 @@ func NewStarfish(ctx context.Context, di *cellular.DUTInfo) (*Starfish, int, str
 	if carrier == "" {
 		testing.ContextLog(ctx, "No starfish carrier provided")
 		return nil, -1, StarfishNotFound, nil
+	}
+
+	// If additional SIM features have been provided by commandline beyond what the test requires,
+	// then append them to the list. This allows for additional overrides when scheduling.
+	var requiredFeatures []labapi.SIMProfileInfo_Feature
+	requiredFeatures = append(requiredFeatures, features...)
+	if simFeaturesArg.Value() != "" {
+		for _, feature := range strings.Split(simFeaturesArg.Value(), ",") {
+			value, ok := labapi.SIMProfileInfo_Feature_value["FEATURE_"+feature]
+			if !ok {
+				return nil, -1, StarfishNotFound, errors.Errorf("unknown feature: %q", feature)
+			}
+			requiredFeatures = append(requiredFeatures, labapi.SIMProfileInfo_Feature(value))
+		}
 	}
 
 	var sfVersionStr string
@@ -134,6 +156,15 @@ func NewStarfish(ctx context.Context, di *cellular.DUTInfo) (*Starfish, int, str
 		testing.ContextLogf(ctx, "using starfish index: %d from cmdline var", index)
 	} else if di == nil {
 		return nil, -1, StarfishNotFound, errors.Errorf("failed to find starfish index for carrier %q, no dutinfo provided", carrier)
+	} else if strings.EqualFold(carrier, "ANY") {
+		// If carrier is "ANY" then we should chose a carrier based on feature and not
+		// based on the carrier name.
+		i, err := di.StarfishSlotWithWithFeatures(requiredFeatures)
+		if err != nil {
+			return nil, -1, StarfishNotFound, errors.Wrapf(err, "failed to find starfish index with features: %q", requiredFeatures)
+		}
+		index = int(i)
+		testing.ContextLogf(ctx, "using starfish index: %d from dut config with features: %v", index, features)
 	} else if i, err := di.GetSlotForStarfishCarrier(carrier); err == nil {
 		index = int(i)
 		testing.ContextLogf(ctx, "using starfish index: %d from dut config", index)

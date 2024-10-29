@@ -47,7 +47,7 @@ func (f *starfishFixture) SetUp(ctx context.Context, s *testing.FixtState) inter
 		s.Fatal("Failed to get SIM info labels: ", err)
 	}
 
-	sfish, _, _, err := starfish.NewStarfish(ctx, dutInfo)
+	sfish, _, _, err := starfish.NewStarfish(ctx, dutInfo, nil /*features*/)
 	if err != nil {
 		s.Fatal("Failed to setup starfish module on supported setup: ", err)
 	}

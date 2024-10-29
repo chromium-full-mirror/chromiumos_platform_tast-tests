@@ -13,6 +13,8 @@ import (
 
 	"golang.org/x/exp/slices"
 
+	labapi "go.chromium.org/chromiumos/config/go/test/lab/api"
+
 	"go.chromium.org/tast-tests/cros/common/cellular"
 	"go.chromium.org/tast-tests/cros/common/fixture"
 	"go.chromium.org/tast-tests/cros/common/policy/fakedms"
@@ -365,7 +367,6 @@ func init() {
 		Impl: newCellularFixture().setRestartOnFailure([]string{}),
 		Vars: []string{"autotest_host_info_labels"},
 	})
-
 	testing.AddFixture(&testing.Fixture{
 		Name: "cellularEnforceConnectionAndResetShillProfile",
 		Desc: "Cellular fixture that resets shill after each test and enforces DUT is in a connectable state",
@@ -414,6 +415,7 @@ type cellularFixture struct {
 	// Per-test logging marker
 	logMarker       *logsaver.Marker
 	cleanupPolicies func(ctx context.Context) error
+	simFeatures     []labapi.SIMProfileInfo_Feature
 }
 
 func newCellularFixture() *cellularFixture {
@@ -454,6 +456,10 @@ func (f *cellularFixture) setUseTestESIM(value bool) *cellularFixture {
 }
 func (f *cellularFixture) setStopUI(value bool) *cellularFixture {
 	f.stopUI = value
+	return f
+}
+func (f *cellularFixture) setSIMFeatures(value ...labapi.SIMProfileInfo_Feature) *cellularFixture {
+	f.simFeatures = value
 	return f
 }
 func (f *cellularFixture) setResetShillProfileOnPostTest(value bool) *cellularFixture {
@@ -541,7 +547,7 @@ func (f *cellularFixture) SetUp(ctx context.Context, s *testing.FixtState) inter
 	}
 
 	// Initialize Starfish.
-	sfish, sfIndex, sfCarrier, err := starfish.NewStarfish(ctx, dutInfo)
+	sfish, sfIndex, sfCarrier, err := starfish.NewStarfish(ctx, dutInfo, f.simFeatures)
 	if err != nil {
 		s.Fatal("Failed to setup starfish module on supported setup: ", err)
 	}
