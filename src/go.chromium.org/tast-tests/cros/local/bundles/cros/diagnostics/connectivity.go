@@ -19,7 +19,7 @@ func init() {
 		Func:         Connectivity,
 		LacrosStatus: testing.LacrosVariantUnneeded,
 		Desc:         "Can successfully navigate to the Connectivity page",
-		// ChromeOS > Platform > Enablement > Health
+		// ChromeOS > Platform > Enablement > Serviceability > Diagnostic & Health
 		BugComponent: "b:982097",
 		Contacts: []string{
 			"cros-tdm-tpe-eng@google.com",

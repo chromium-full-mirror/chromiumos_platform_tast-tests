@@ -22,6 +22,7 @@ func init() {
 			"kerker@google.com",           // Fixture maintainer
 			"yycheng@google.com",          // Fixture maintainer
 		},
+		// ChromeOS > Platform > Enablement > Serviceability > Diagnostic & Health
 		BugComponent: "b:982097",
 		SetUpTimeout: 5 * time.Minute,
 		Impl:         rebootDUT{},

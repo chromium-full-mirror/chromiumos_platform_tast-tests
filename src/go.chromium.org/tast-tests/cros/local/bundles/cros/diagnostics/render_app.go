@@ -19,7 +19,7 @@ func init() {
 		Func:         RenderApp,
 		LacrosStatus: testing.LacrosVariantUnneeded,
 		Desc:         "Diagnostics app launches and renders components",
-		// ChromeOS > Platform > Enablement > Health
+		// ChromeOS > Platform > Enablement > Serviceability > Diagnostic & Health
 		BugComponent: "b:982097",
 		Contacts: []string{
 			"cros-tdm-tpe-eng@google.com",

@@ -19,7 +19,8 @@ func init() {
 		LacrosStatus: testing.LacrosVariantUnneeded,
 		Desc:         "Tests that the cros_healthd diagnostic routines V2 can pass",
 		Contacts:     []string{"cros-tdm-tpe-eng@google.com"},
-		BugComponent: "b:982097", // ChromeOS > Platform > Enablement > Health
+		// ChromeOS > Platform > Enablement > Serviceability > Diagnostic & Health
+		BugComponent: "b:982097",
 		SoftwareDeps: []string{"diagnostics"},
 		Attr:         []string{"group:mainline"},
 		Params: []testing.Param{{

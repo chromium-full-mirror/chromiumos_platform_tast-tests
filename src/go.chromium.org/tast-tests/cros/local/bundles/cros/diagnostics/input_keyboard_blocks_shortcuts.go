@@ -22,7 +22,7 @@ func init() {
 		Func:         InputKeyboardBlocksShortcuts,
 		LacrosStatus: testing.LacrosVariantUnneeded,
 		Desc:         "Keyboard input tester blocks all shortcuts only when open",
-		// ChromeOS > Platform > Enablement > Health
+		// ChromeOS > Platform > Enablement > Serviceability > Diagnostic & Health
 		BugComponent: "b:982097",
 		Contacts: []string{
 			"cros-tdm-tpe-eng@google.com",

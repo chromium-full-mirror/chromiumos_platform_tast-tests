@@ -21,7 +21,7 @@ func init() {
 		Func:         InputCheckKeyState,
 		LacrosStatus: testing.LacrosVariantUnneeded,
 		Desc:         "Input page shows expected key states when keys are pressed and released",
-		// ChromeOS > Platform > Enablement > Health
+		// ChromeOS > Platform > Enablement > Serviceability > Diagnostic & Health
 		BugComponent: "b:982097",
 		Contacts: []string{
 			"cros-tdm-tpe-eng@google.com",

@@ -34,7 +34,8 @@ func init() {
 			"cros-tdm-tpe-eng@google.com",
 			"byronlee@google.com",
 		},
-		BugComponent: "b:982097", // ChromeOS > Platform > Enablement > Health
+		// ChromeOS > Platform > Enablement > Serviceability > Diagnostic & Health
+		BugComponent: "b:982097",
 		SoftwareDeps: []string{"diagnostics"},
 		Attr:         []string{"group:mainline"},
 		TestBedDeps:  []string{tbdep.BluetoothStateNormal},

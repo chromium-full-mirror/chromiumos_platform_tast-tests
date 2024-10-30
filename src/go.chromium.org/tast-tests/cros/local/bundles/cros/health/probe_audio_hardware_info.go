@@ -38,7 +38,8 @@ func init() {
 			"cros-tdm-tpe-eng@google.com",
 			"chungsheng@google.com",
 		},
-		BugComponent: "b:982097", // ChromeOS > Platform > Enablement > Health
+		// ChromeOS > Platform > Enablement > Serviceability > Diagnostic & Health
+		BugComponent: "b:982097",
 		Attr:         []string{"group:mainline"},
 		SoftwareDeps: []string{"diagnostics"},
 		Fixture:      "crosHealthdRunning",

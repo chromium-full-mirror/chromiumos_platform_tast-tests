@@ -39,7 +39,8 @@ func init() {
 			"chungsheng@google.com",
 			"moises.veleta@intel.com",
 		},
-		BugComponent: "b:982097", // ChromeOS > Platform > Enablement > Health
+		// ChromeOS > Platform > Enablement > Serviceability > Diagnostic & Health
+		BugComponent: "b:982097",
 		Attr:         []string{"group:mainline"},
 		SoftwareDeps: []string{"chrome", "diagnostics"},
 		Fixture:      "crosHealthdRunning",

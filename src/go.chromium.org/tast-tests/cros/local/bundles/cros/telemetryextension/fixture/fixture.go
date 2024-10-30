@@ -46,9 +46,10 @@ const (
 
 func init() {
 	testing.AddFixture(&testing.Fixture{
-		Name:            TelemetryExtension,
-		Desc:            "Telemetry Extension fixture with running PWA and companion Telemetry Extension",
-		Contacts:        []string{"chromeos-oem-services@google.com"},
+		Name:     TelemetryExtension,
+		Desc:     "Telemetry Extension fixture with running PWA and companion Telemetry Extension",
+		Contacts: []string{"chromeos-oem-services@google.com"},
+		// ChromeOS > Platform > Enablement > Serviceability > Diagnostic & Health
 		BugComponent:    "b:982097",
 		Impl:            newTelemetryExtensionFixture(),
 		SetUpTimeout:    setUpTimeout,
@@ -58,9 +59,10 @@ func init() {
 		Data:            extFiles(),
 	})
 	testing.AddFixture(&testing.Fixture{
-		Name:            TelemetryExtensionSkipOEMNameCheck,
-		Desc:            "Telemetry Extension fixture with running PWA and companion Telemetry Extension on devices that are not officially supported yet",
-		Contacts:        []string{"chromeos-oem-services@google.com"},
+		Name:     TelemetryExtensionSkipOEMNameCheck,
+		Desc:     "Telemetry Extension fixture with running PWA and companion Telemetry Extension on devices that are not officially supported yet",
+		Contacts: []string{"chromeos-oem-services@google.com"},
+		// ChromeOS > Platform > Enablement > Serviceability > Diagnostic & Health
 		BugComponent:    "b:982097",
 		Impl:            newTelemetryExtensionFixture(skipOEMNameCheck()),
 		SetUpTimeout:    setUpTimeout,

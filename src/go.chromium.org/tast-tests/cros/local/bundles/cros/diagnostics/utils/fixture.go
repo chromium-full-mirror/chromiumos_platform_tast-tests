@@ -23,7 +23,7 @@ func init() {
 		Contacts: []string{
 			"cros-tdm-tpe-eng@google.com",
 		},
-		// ChromeOS > Platform > Enablement > Health
+		// ChromeOS > Platform > Enablement > Serviceability > Diagnostic & Health
 		BugComponent: "b:982097",
 		Impl: newDiagnosticsPrepFixture( /*disableTabletMode*/ false,
 			/*checkMojoConnection*/ true),
@@ -41,7 +41,7 @@ func init() {
 		Contacts: []string{
 			"cros-tdm-tpe-eng@google.com",
 		},
-		// ChromeOS > Platform > Enablement > Health
+		// ChromeOS > Platform > Enablement > Serviceability > Diagnostic & Health
 		BugComponent: "b:982097",
 		Impl: newDiagnosticsPrepFixture( /*disableTabletMode*/ false,
 			/*checkMojoConnection*/ false),
@@ -59,7 +59,7 @@ func init() {
 		Contacts: []string{
 			"cros-tdm-tpe-eng@google.com",
 		},
-		// ChromeOS > Platform > Enablement > Health
+		// ChromeOS > Platform > Enablement > Serviceability > Diagnostic & Health
 		BugComponent: "b:982097",
 		Impl: newDiagnosticsPrepFixture( /*disableTabletMode*/ true,
 			/*checkMojoConnection*/ true),

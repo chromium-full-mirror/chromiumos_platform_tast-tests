@@ -29,6 +29,7 @@ func init() {
 			"kerker@google.com",           // Fixture maintainer
 			"menghuan@google.com",         // Fixture maintainer
 		},
+		// ChromeOS > Platform > Enablement > Serviceability > Diagnostic & Health
 		BugComponent:    "b:982097",
 		SetUpTimeout:    30 * time.Second,
 		ResetTimeout:    5 * time.Second,
@@ -45,6 +46,7 @@ func init() {
 			"kerker@google.com",           // Fixture maintainer
 			"yycheng@google.com",          // Fixture maintainer
 		},
+		// ChromeOS > Platform > Enablement > Serviceability > Diagnostic & Health
 		BugComponent:    "b:982097",
 		SetUpTimeout:    30 * time.Second,
 		ResetTimeout:    5 * time.Second,
@@ -66,6 +68,7 @@ func init() {
 			"cros-tdm-tpe-eng@google.com", // Team mailing list
 			"byronlee@google.com",         // Fixture maintainer
 		},
+		// ChromeOS > Platform > Enablement > Serviceability > Diagnostic & Health
 		BugComponent:    "b:982097",
 		SetUpTimeout:    30 * time.Second,
 		ResetTimeout:    5 * time.Second,
@@ -82,6 +85,7 @@ func init() {
 			"cros-tdm-tpe-eng@google.com", // Team mailing list
 			"byronlee@google.com",         // Fixture maintainer
 		},
+		// ChromeOS > Platform > Enablement > Serviceability > Diagnostic & Health
 		BugComponent:    "b:982097",
 		SetUpTimeout:    30 * time.Second,
 		ResetTimeout:    5 * time.Second,
@@ -98,6 +102,7 @@ func init() {
 			"cros-tdm-tpe-eng@google.com", // Team mailing list
 			"weiluanwang@google.com",      // Fixture maintainer
 		},
+		// ChromeOS > Platform > Enablement > Serviceability > Diagnostic & Health
 		BugComponent:    "b:982097",
 		SetUpTimeout:    30 * time.Second,
 		ResetTimeout:    5 * time.Second,
@@ -113,6 +118,7 @@ func init() {
 		Contacts: []string{
 			"cros-tdm-tpe-eng@google.com", // Team mailing list
 		},
+		// ChromeOS > Platform > Enablement > Serviceability > Diagnostic & Health
 		BugComponent:    "b:982097",
 		SetUpTimeout:    30 * time.Second,
 		ResetTimeout:    5 * time.Second,
