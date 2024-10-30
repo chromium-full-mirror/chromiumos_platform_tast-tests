@@ -230,6 +230,7 @@ func CompleteOnboardingFlow(ctx context.Context, ui *uiauto.Context) error {
 		nodewith.Name("Turn on sync").First().Role(role.Button).Onscreen(),
 		nodewith.Name("Get started").First().Role(role.Button).Onscreen(),
 		nodewith.Name("Close").First().Role(role.Button).Onscreen(),
+		nodewith.Name("Use password instead").First().Role(role.Button).Onscreen(),
 		nextButton,
 	}
 
