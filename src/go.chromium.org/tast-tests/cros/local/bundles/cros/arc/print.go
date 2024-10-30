@@ -16,8 +16,11 @@ import (
 	"go.chromium.org/tast-tests/cros/local/arc"
 	"go.chromium.org/tast-tests/cros/local/chrome"
 	"go.chromium.org/tast-tests/cros/local/chrome/ash"
+	"go.chromium.org/tast-tests/cros/local/chrome/uiauto"
 	"go.chromium.org/tast-tests/cros/local/chrome/uiauto/faillog"
+	"go.chromium.org/tast-tests/cros/local/chrome/uiauto/nodewith"
 	"go.chromium.org/tast-tests/cros/local/chrome/uiauto/printpreview"
+	"go.chromium.org/tast-tests/cros/local/chrome/uiauto/role"
 	"go.chromium.org/tast-tests/cros/local/printing/document"
 	"go.chromium.org/tast-tests/cros/local/printing/usbprinter"
 	"go.chromium.org/tast/core/ctxutil"
@@ -180,10 +183,8 @@ func Print(ctx context.Context, s *testing.State) {
 
 	s.Log("Changing print settings")
 
-	// Set layout to landscape.
-	if err = printpreview.SetLayout(ctx, tconn, printpreview.Landscape); err != nil {
-		s.Fatal("Failed to set layout: ", err)
-	}
+	// TODO(b/364139654): Restore print settings once keyboard support
+	// in Chrome custom tabs is fixed.
 
 	// Hide all notifications to prevent them from covering the print button.
 	if err := ash.CloseNotifications(ctx, tconn); err != nil {
@@ -198,7 +199,12 @@ func Print(ctx context.Context, s *testing.State) {
 
 	// Click the print button to start the print job.
 	s.Log("Clicking print button")
-	if err = printpreview.Print(ctx, tconn); err != nil {
+	printButton := nodewith.Name("Print").Role(role.Button).Ancestor(printpreview.PrintPreviewNode)
+	ui := uiauto.New(tconn)
+	if err := uiauto.Combine("click print button",
+		ui.WithTimeout(10*time.Second).WaitUntilExists(printButton),
+		ui.LeftClick(printButton),
+	)(ctx); err != nil {
 		s.Fatal("Failed to print: ", err)
 	}
 
