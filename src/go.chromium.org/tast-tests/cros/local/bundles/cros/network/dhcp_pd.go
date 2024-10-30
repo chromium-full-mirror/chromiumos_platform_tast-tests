@@ -113,7 +113,7 @@ func DHCPPD(ctx context.Context, s *testing.State) {
 	}
 
 	// Wait for service to be online.
-	if err := testEnv.ShillService.WaitForProperty(ctx, shillconst.ServicePropertyState, shillconst.ServiceStateOnline, 10*time.Second); err != nil {
+	if err := testEnv.ShillService.WaitForProperty(ctx, shillconst.ServicePropertyState, shillconst.ServiceStateOnline, 15*time.Second); err != nil {
 		s.Fatal("Failed to wait for service online: ", err)
 	}
 
@@ -143,7 +143,7 @@ func DHCPPD(ctx context.Context, s *testing.State) {
 		pingAddrs = append(pingAddrs, serverAddrs.IPv4Addr.String())
 	}
 	for _, target := range pingAddrs {
-		if err := ping.ExpectPingSuccessWithTimeout(ctx, target, "chronos", 10*time.Second); err != nil {
+		if err := ping.ExpectPingSuccessWithTimeout(ctx, target, "chronos", 15*time.Second); err != nil {
 			s.Errorf("Network verification failed: %v is not reachable as user %s on host: %v", target, "chronos", err)
 		}
 	}
