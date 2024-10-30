@@ -188,6 +188,14 @@ func WaitUntilColorModeNudgeGoneIfExists(ctx context.Context, tconn *chrome.Test
 	return nil
 }
 
+// CloseAllNotifications will close all existing notifications
+func CloseAllNotifications(ctx context.Context, tconn *chrome.TestConn) error {
+	if err := ash.CloseNotifications(ctx, tconn); err != nil {
+		return errors.Wrap(err, "failed to close notifications")
+	}
+	return nil
+}
+
 // ClickNavigationMenuButton will click the hamburger menu button in the
 // Diagnostics app to toggle the navigation view on narrow views.
 func ClickNavigationMenuButton(ctx context.Context, tconn *chrome.TestConn) error {

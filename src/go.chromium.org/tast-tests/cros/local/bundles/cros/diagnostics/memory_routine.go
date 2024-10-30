@@ -92,6 +92,12 @@ func MemoryRoutine(ctx context.Context, s *testing.State) {
 
 	// Test memory routine.
 	pollOpts := testing.PollOptions{Interval: time.Second, Timeout: 20 * time.Second}
+
+	// Close notifications to avoid them blocking the memory test button
+	if err := diagnosticsapp.CloseAllNotifications(ctx, tconn); err != nil {
+		s.Fatal("Failed to close notifications before clicking memory test button: ", err)
+	}
+
 	if err := ui.WithPollOpts(pollOpts).LeftClick(memoryButton)(ctx); err != nil {
 		s.Fatal("Could not click the memory test button: ", err)
 	}
@@ -122,6 +128,11 @@ func MemoryRoutine(ctx context.Context, s *testing.State) {
 	// time.
 	if err := testing.Sleep(ctx, 10*time.Second); err != nil {
 		s.Error("Failed to sleep after the memtester starts running")
+	}
+
+	// Close notifications to avoid them blocking the cancel test button
+	if err := diagnosticsapp.CloseAllNotifications(ctx, tconn); err != nil {
+		s.Fatal("Failed to close notifications before clicking cancel test button: ", err)
 	}
 
 	// Cancel the test.
