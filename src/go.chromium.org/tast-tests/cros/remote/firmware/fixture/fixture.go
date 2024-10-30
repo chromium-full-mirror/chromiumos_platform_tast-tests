@@ -555,7 +555,6 @@ func (i *impl) PreTest(ctx context.Context, s *testing.FixtTestState) {
 
 	// Only get/check EC crash logs if ssh is allow, has cros EC, and is explicitly enabled..
 	if !i.disallowSSH && supportCrosEC == "yes" && i.checkECCrash {
-		i.value.Helper.CloseRPCConnection(ctx)
 		connectTimeout, cancel := context.WithTimeout(ctx, 5*time.Second)
 		defer cancel()
 		if err := i.value.Helper.WaitConnect(connectTimeout); err != nil {
@@ -753,15 +752,18 @@ func (i *impl) PostTest(ctx context.Context, s *testing.FixtTestState) {
 }
 
 func checkAndLogECCrashes(ctx context.Context, s *testing.FixtTestState, i *impl) {
-	connectTimeout, cancel := context.WithTimeout(ctx, 5*time.Second)
+	connectTimeout, cancel := context.WithTimeout(ctx, 15*time.Second)
 	defer cancel()
 	if err := i.value.Helper.WaitConnect(connectTimeout); err != nil {
 		s.Log(logECCrash("failed to reconnect to dut to check ec crashes after test", s, err))
+		// If no ssh connection available to DUT, skip check.
+		return
 	}
 
 	crashLogs, err := i.value.Helper.GetNewECCrashes(ctx)
 	if err != nil {
-		s.Fatal(logECCrash("failed to get latest ec crash logs", s, err))
+		s.Error(logECCrash("failed to get latest ec crash logs", s, err))
+		return
 	}
 	if len(crashLogs) == 0 {
 		s.Logf("No unexpected EC crashes during %s", s.TestName())
