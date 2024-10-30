@@ -106,17 +106,19 @@ func init() {
 	})
 }
 
-func verifyGscDevice(tpmManagerGscDevice, healthGscDevice string) bool {
-	if healthGscDevice == "H1" && tpmManagerGscDevice == "GSC_DEVICE_H1" {
-		return true
+// convertGscDevice coverts raw value from TPM manager to value of GSC device enum
+// from Healthd.
+func convertGscDevice(tpmManagerGscDevice string) string {
+	switch tpmManagerGscDevice {
+	case "GSC_DEVICE_H1":
+		return "H1"
+	case "GSC_DEVICE_DT":
+		return "DT"
+	case "GSC_DEVICE_NOT_GSC":
+		return "NotGSC"
+	default:
+		return "Unknown"
 	}
-	if healthGscDevice == "DT" && tpmManagerGscDevice == "GSC_DEVICE_DT" {
-		return true
-	}
-	if healthGscDevice == "NotGsc" && tpmManagerGscDevice == "GSC_DEVICE_NOT_GSC" {
-		return true
-	}
-	return false
 }
 
 func verifyTPMVersion(ctx context.Context, tpmManager *hwsec.TPMManagerClient, version tpmVersion) error {
@@ -124,7 +126,7 @@ func verifyTPMVersion(ctx context.Context, tpmManager *hwsec.TPMManagerClient, v
 	if err != nil {
 		return errors.Wrap(err, "failed to get version info from TPMManager")
 	}
-	if !verifyGscDevice(tpmManagerVersionInfo.GscDevice, version.GscDevice) {
+	if convertGscDevice(tpmManagerVersionInfo.GscDevice) != version.GscDevice {
 		return errors.Errorf("GscDevice not matched, %v from healthd, %v from TPMManager", version.GscDevice, tpmManagerVersionInfo.GscDevice)
 	}
 	if tpmManagerVersionInfo.Family != uint(version.Family) {
