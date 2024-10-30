@@ -62,8 +62,9 @@ func init() {
 			ExtraHardwareDeps: hwdep.D(hwdep.SkipOnModel("reven")),
 			Val:               nonFlex,
 		}, {
-			Name: "flex",
-			Val:  flex,
+			ExtraHardwareDeps: hwdep.D(hwdep.Model("reven")),
+			Name:              "flex",
+			Val:               flex,
 		}},
 	})
 }
