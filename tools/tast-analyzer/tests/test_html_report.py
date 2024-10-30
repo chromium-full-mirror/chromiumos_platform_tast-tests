@@ -293,7 +293,7 @@ class HtmlReportTest(unittest.TestCase):
             template_dir=TEMPLATE_DIR,
             cfg=analysis_cfg.AnalysisCfg(),
         )
-        table = report._create_sample_size_table()
+        table = report._create_sample_size_table(table_id=1)
 
         expected_table = test_util.load_html(
             HTML_DIR / "sample_size_table.html"
@@ -428,7 +428,7 @@ class HtmlReportTest(unittest.TestCase):
             cfg=analysis_cfg.AnalysisCfg(),
         )
         pair = results[0].pairs[0]
-        table = report._create_pairwise_result_table(pair.result)
+        table = report._create_pairwise_result_table(pair.result, table_id=1)
 
         expected_table = test_util.load_html(
             HTML_DIR / "pairwise_result_table.html"
@@ -497,7 +497,9 @@ class HtmlReportTest(unittest.TestCase):
             cfg=analysis_cfg.AnalysisCfg(),
         )
         figure_element = report._create_pairwise_result_figure(
-            pair=pair, plot_data=plot_data
+            pair=pair,
+            plot_data=plot_data,
+            figure_id=1,
         )
 
         expected_figure = test_util.load_html(
@@ -507,7 +509,7 @@ class HtmlReportTest(unittest.TestCase):
             self, figure_element, expected_figure
         )
 
-    def test_append_groups_result_figure(self) -> None:
+    def test_create_groups_result_figure(self) -> None:
         samples = (
             test_util.load_before_samples() + test_util.load_after_samples()
         )
@@ -538,11 +540,11 @@ class HtmlReportTest(unittest.TestCase):
             template_dir=TEMPLATE_DIR,
             cfg=analysis_cfg.AnalysisCfg(),
         )
-        report._append_groups_result_figure(
+        figure_element = report._create_groups_result_figure(
             groups_id=plot_util.get_groups_name_for_plot(groups_list[0]),
             plot_data=plot_data,
+            figure_id=1,
         )
-        figure_element = report.html.body.findall("figure")[0]
 
         expected_figure = test_util.load_html(
             HTML_DIR / "groups_result_figure.html"

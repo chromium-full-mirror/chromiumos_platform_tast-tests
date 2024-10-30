@@ -91,12 +91,33 @@ class HtmlReport:
 
         return sorted(metric_paths)
 
-    def _create_sample_size_table(self) -> ET.Element:
+    def _append_table(self, table: ET.Element) -> None:
+        """Appends a table to the HTML body.
+
+        Args:
+            table: The table to append.
+        """
+        self.num_tables += 1
+        self.html.body.append(table)
+
+    def _append_figure(self, figure: ET.Element) -> None:
+        """Appends a figure to the HTML body.
+
+        Args:
+            figure: The figure to append.
+        """
+        self.num_figures += 1
+        self.html.body.append(figure)
+
+    def _create_sample_size_table(self, table_id: int) -> ET.Element:
         """Creates a table of sample sizes by label and metric path.
 
         This method generates an HTML table with a column for each label and
         a row for each metric. The table displays the sample size of each
         metric within each label.
+
+        Args:
+            table_id: The id of the table.
 
         Returns:
             A `<table>` element.
@@ -112,10 +133,8 @@ class HtmlReport:
                     sample.label
                 ] = sample.size()
 
-        self.num_tables += 1
-
         caption = components.create_element_with_text(
-            "caption", f"Table {self.num_tables}. Sample sizes."
+            "caption", f"Table {table_id}. Sample sizes."
         )
 
         thead = ET.Element("thead")
@@ -150,7 +169,7 @@ class HtmlReport:
                     )
                 )
 
-        table = ET.Element("table", {"id": f"table-{self.num_tables}"})
+        table = ET.Element("table", {"id": f"table-{table_id}"})
         table.append(caption)
         table.append(thead)
         table.append(tbody)
@@ -205,22 +224,22 @@ class HtmlReport:
                 )
 
     def _create_pairwise_result_table(
-        self, pair: analysis_results.PairwiseResult
+        self, pair: analysis_results.PairwiseResult, table_id: int
     ) -> ET.Element:
         """Creates a summary table for the given pairwise result.
 
         Args:
             pair: The pairwise result to make a summary table for.
+            table_id: The id of the table.
 
         Returns:
             A `<table>` element.
         """
         metric_names = pair.metric_names()
 
-        self.num_tables += 1
         caption = components.create_element_with_text(
             "caption",
-            f"Table {self.num_tables}. Change in the mean of "
+            f"Table {table_id}. Change in the mean of "
             f"{'/'.join(metric_names)} in {pair.units()}. "
             f"{'Higher' if pair.is_up_better() else 'Lower'} is better.",
         )
@@ -290,7 +309,7 @@ class HtmlReport:
         tbody.append(before_row)
         tbody.append(after_row)
 
-        table = ET.Element("table", {"id": f"table-{self.num_tables}"})
+        table = ET.Element("table", {"id": f"table-{table_id}"})
         table.append(caption)
         table.append(thead)
         table.append(tbody)
@@ -301,6 +320,7 @@ class HtmlReport:
         self,
         pair: analysis_results.PairwiseResult,
         plot_data: plot.PlotData,
+        figure_id: int,
     ) -> ET.Element:
         """Creates a `<figure>` element from the given plot data for the given
         pairwise result.
@@ -308,17 +328,16 @@ class HtmlReport:
         Args:
             pair: The pairwise result to make a `<figure>` element for.
             plot_data: The plot data used to create the `<figure>` element.
+            figure_id: The id of the figure.
 
         Returns:
             A `<figure>` element.
         """
-        self.num_figures += 1
-
         return components.create_figure(
             plot_data=plot_data,
-            caption=f"Figure {self.num_figures}. "
+            caption=f"Figure {figure_id}. "
             f"{plot_data.kind.description()} of {'/'.join(pair.metric_names())}.",
-            attributes={"id": f"figure-{self.num_figures}"},
+            attributes={"id": f"figure-{figure_id}"},
         )
 
     def _append_pairwise_result_summary(
@@ -334,32 +353,39 @@ class HtmlReport:
         self.html.body.append(
             components.create_element_with_text("h3", pair_id, {"id": pair_id})
         )
-        self.html.body.append(self._create_pairwise_result_table(pair.result))
+        self._append_table(
+            self._create_pairwise_result_table(pair.result, self.num_tables + 1)
+        )
 
         for plot_data in pair.plots:
-            self.html.body.append(
-                self._create_pairwise_result_figure(pair.result, plot_data)
+            self._append_figure(
+                self._create_pairwise_result_figure(
+                    pair.result, plot_data, self.num_figures + 1
+                )
             )
 
-    def _append_groups_result_figure(
+    def _create_groups_result_figure(
         self,
         groups_id: str,
         plot_data: plot.PlotData,
-    ) -> None:
-        """Appends a `<figure>` element of the groups level plot to the HTML body.
+        figure_id: int,
+    ) -> ET.Element:
+        """Creates a `<figure>` element from the given plot data for the given
+        groups.
 
         Args:
-            groups_id: The groups ID of the plot.
+            groups_id: The groups ID to make a `<figure>` element for.
             plot_data: The plot data used to create the `<figure>` element.
+            figure_id: The id of the figure.
+
+        Returns:
+            A `<figure>` element.
         """
-        self.num_figures += 1
-        self.html.body.append(
-            components.create_figure(
-                plot_data=plot_data,
-                caption=f"Figure {self.num_figures}. "
-                f"{plot_data.kind.description()} of {groups_id}.",
-                attributes={"id": f"figure-{self.num_figures}"},
-            )
+        return components.create_figure(
+            plot_data=plot_data,
+            caption=f"Figure {figure_id}. "
+            f"{plot_data.kind.description()} of {groups_id}.",
+            attributes={"id": f"figure-{figure_id}"},
         )
 
     def _append_groups_summary(
@@ -383,7 +409,11 @@ class HtmlReport:
         # level figures only if there are more than two samples.
         if len(result.groups) > 2:
             for result_plot in result.groups_plots:
-                self._append_groups_result_figure(groups_name, result_plot)
+                self._append_figure(
+                    self._create_groups_result_figure(
+                        groups_name, result_plot, self.num_figures + 1
+                    )
+                )
 
         for pair in result.pairs:
             self._append_pairwise_result_summary(pair)
@@ -408,8 +438,10 @@ class HtmlReport:
 
         self._append_summary()
         table_container = ET.Element("div", {"class": "table-container"})
-        table_container.append(self._create_sample_size_table())
-        self.html.body.append(table_container)
+        table_container.append(
+            self._create_sample_size_table(self.num_tables + 1)
+        )
+        self._append_table(table_container)
 
         for result in self.results:
             self._append_groups_summary(result=result)
