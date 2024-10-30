@@ -20,8 +20,8 @@ import (
 	"go.chromium.org/tast-tests/cros/local/chrome"
 	"go.chromium.org/tast-tests/cros/local/chrome/ash"
 	"go.chromium.org/tast-tests/cros/local/chrome/display"
-	"go.chromium.org/tast-tests/cros/local/cpu"
 	"go.chromium.org/tast-tests/cros/local/graphics"
+	"go.chromium.org/tast-tests/cros/local/power"
 	"go.chromium.org/tast-tests/cros/local/power/metrics"
 	"go.chromium.org/tast/core/ctxutil"
 	"go.chromium.org/tast/core/errors"
@@ -84,8 +84,8 @@ func RunGetDisplayMediaPerf(ctx context.Context, fileSystem http.FileSystem, cs 
 		return errors.Wrap(err, "failed to maximize the window with the title GetDisplayMedia test")
 	}
 
-	if err := cpu.Cooldown(ctx); err != nil {
-		return errors.Wrap(err, "failed waiting for CPU to cool down")
+	if err := power.Cooldown(ctx); err != nil {
+		return errors.Wrap(err, "failed waiting for DUT to cool down")
 	}
 	testing.ContextLog(ctx, "Starting GetDisplayMedia()")
 	if err := conn.Call(ctx, nil, "start", surfaceType); err != nil {

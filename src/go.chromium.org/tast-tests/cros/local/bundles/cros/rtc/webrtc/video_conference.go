@@ -20,7 +20,6 @@ import (
 	"go.chromium.org/tast-tests/cros/local/chrome/ash"
 	"go.chromium.org/tast-tests/cros/local/chrome/display"
 	"go.chromium.org/tast-tests/cros/local/chrome/metrics"
-	"go.chromium.org/tast-tests/cros/local/cpu"
 	"go.chromium.org/tast-tests/cros/local/graphics"
 	"go.chromium.org/tast-tests/cros/local/power"
 	pm "go.chromium.org/tast-tests/cros/local/power/metrics"
@@ -349,8 +348,8 @@ func runVCPerf(ctx context.Context, tconn, bTconn *chrome.TestConn, s *testing.S
 	if err := wm.setupWindowView(ctx, tconn); err != nil {
 		return err
 	}
-	if err := cpu.Cooldown(ctx); err != nil {
-		return errors.Wrap(err, "failed waiting for CPU to cool down")
+	if err := power.Cooldown(ctx); err != nil {
+		return errors.Wrap(err, "failed waiting for DUT to cool down")
 	}
 	if params.Step {
 		return runStep(ctx, conn, r)
