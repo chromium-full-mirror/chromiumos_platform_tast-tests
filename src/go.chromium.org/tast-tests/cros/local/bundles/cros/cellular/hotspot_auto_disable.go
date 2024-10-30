@@ -11,7 +11,6 @@ import (
 	"go.chromium.org/tast-tests/cros/local/cellular"
 	"go.chromium.org/tast-tests/cros/local/chrome"
 	"go.chromium.org/tast-tests/cros/local/chrome/ash"
-	"go.chromium.org/tast-tests/cros/local/chrome/uiauto"
 	"go.chromium.org/tast-tests/cros/local/chrome/uiauto/faillog"
 	"go.chromium.org/tast-tests/cros/local/chrome/uiauto/ossettings"
 	"go.chromium.org/tast/core/ctxutil"
@@ -177,8 +176,7 @@ func HotspotAutoDisable(ctx context.Context, s *testing.State) {
 		s.Fatal("Failed to wait for the notification with title: Hotspot is off, err: ", err)
 	}
 
-	ui := uiauto.New(tconn)
-	if err := ui.WaitUntilExists(ossettings.HotspotOffSublabel)(ctx); err != nil {
+	if err := hs.WaitUntilCheckedState(ossettings.HotspotToggle, false)(ctx); err != nil {
 		s.Fatal("Failed to verify hotspot is turned off: ", err)
 	}
 }
