@@ -9,12 +9,9 @@ import (
 	"path/filepath"
 	"time"
 
-	"go.chromium.org/tast-tests/cros/common/dma"
 	"go.chromium.org/tast-tests/cros/common/fixture"
-	"go.chromium.org/tast-tests/cros/common/ui"
 	"go.chromium.org/tast-tests/cros/local/chrome"
 	"go.chromium.org/tast-tests/cros/local/chrome/browser"
-	"go.chromium.org/tast-tests/cros/local/chrome/lacros/lacrosfixt"
 	"go.chromium.org/tast-tests/cros/local/chrome/uiauto"
 	"go.chromium.org/tast-tests/cros/local/chrome/uiauto/faillog"
 	"go.chromium.org/tast-tests/cros/local/network/ping"
@@ -26,17 +23,10 @@ const (
 	// EnabledWithBrowserFixture is a fixture with a browser opened with a
 	// query.
 	EnabledWithBrowserFixture = "enabledWithBrowserFixture"
-	// EnabledWithBrowserLacrosFixture is a lacros fixture with a browser
-	// opened with a query.
-	EnabledWithBrowserLacrosFixture = "enabledWithBrowserLacrosFixture"
 	// NotEnabledWithBrowserFixture is a fixture with a browser opened with
 	// a query but quick answers is not enabled. Note that not-enabled is not
 	// disabled, i.e., quick answers show a consent UI.
 	NotEnabledWithBrowserFixture = "notEnabledWithBrowserFixture"
-	// NotEnabledWithBrowserLacrosFixture is a lacros fixture with a browser
-	// opened with a query but quick answers is not enabled.
-	NotEnabledWithBrowserLacrosFixture = "notEnabledWithBrowserLacrosFixture"
-
 	// VariantSingleWord is a name of WithBrowserFixture variant with a single
 	// English word.
 	VariantSingleWord = "singleWord"
@@ -72,17 +62,9 @@ const (
 	// TODO(b/339097439): Make this a private. All tests should use
 	// WithBrowserFixture.
 	BaseFixture = "quickAnswersFixture"
-	// BaseLacrosFixture is a lacros fixture with specified quick answers
-	// pref state.
-	// TODO(b/339097439): Make this a private. All tests should use
-	// WithBrowserFixture.
-	BaseLacrosFixture = "quickAnswersLacrosFixture"
-
 	// VariantNotEnabled is a variant where Quick Answers prefs are default state,
 	// i.e., not enabled.
 	VariantNotEnabled = "notEnabled"
-
-	lacrosFixtureInternal = "quickAnswersLoggedInFixtureLacros"
 
 	networkConnectionTimeout = time.Minute
 	setUpTimeout             = 10 * time.Second
@@ -214,21 +196,6 @@ func init() {
 		PostTestTimeout: postTestTimeout,
 	})
 	testing.AddFixture(&testing.Fixture{
-		Name: EnabledWithBrowserLacrosFixture,
-		Desc: "A lacros fixture with a test query page",
-		Contacts: []string{
-			"assitive-eng@google.com",
-			"yawano@google.com",
-		},
-		BugComponent:    "b:905229", // ChromeOS > Software > Assistive
-		Parent:          BaseLacrosFixture,
-		Impl:            &withBrowserFixture{},
-		Params:          withBrowserFixtureParams(),
-		SetUpTimeout:    setUpTimeout,
-		PreTestTimeout:  preTestTimeout,
-		PostTestTimeout: postTestTimeout,
-	})
-	testing.AddFixture(&testing.Fixture{
 		Name: NotEnabledWithBrowserFixture,
 		Desc: "A quick answers not enabled fixture with a test query page",
 		Contacts: []string{
@@ -244,22 +211,6 @@ func init() {
 		PostTestTimeout: postTestTimeout,
 	})
 	testing.AddFixture(&testing.Fixture{
-		Name: NotEnabledWithBrowserLacrosFixture,
-		Desc: "A quick answers not enabled lacros fixture with a test query page",
-		Contacts: []string{
-			"assitive-eng@google.com",
-			"yawano@google.com",
-		},
-		BugComponent:    "b:905229", // ChromeOS > Software > Assistive
-		Parent:          Parameterize(BaseLacrosFixture, VariantNotEnabled),
-		Impl:            &withBrowserFixture{},
-		Params:          withBrowserFixtureParams(),
-		SetUpTimeout:    setUpTimeout,
-		PreTestTimeout:  preTestTimeout,
-		PostTestTimeout: postTestTimeout,
-	})
-
-	testing.AddFixture(&testing.Fixture{
 		Name: BaseFixture,
 		Desc: "A base fixture for Quick Answers test",
 		Contacts: []string{
@@ -274,40 +225,6 @@ func init() {
 		PostTestTimeout: postTestTimeout,
 		Params:          quickAnswersFixtureParams(browser.TypeAsh),
 	})
-	testing.AddFixture(&testing.Fixture{
-		Name: BaseLacrosFixture,
-		Desc: "A base lacros fixture for a Quick Answers test",
-		Contacts: []string{
-			"assistive-eng@google.com",
-			"yawano@google.com",
-		},
-		BugComponent:    "b:905229", // ChromeOS > Software > Assistive
-		Parent:          lacrosFixtureInternal,
-		Impl:            &quickAnswersFixture{},
-		SetUpTimeout:    setUpTimeout + networkConnectionTimeout,
-		PreTestTimeout:  preTestTimeout,
-		PostTestTimeout: postTestTimeout,
-		Params:          quickAnswersFixtureParams(browser.TypeLacros),
-	})
-
-	testing.AddFixture(&testing.Fixture{
-		Name: lacrosFixtureInternal,
-		Desc: "Lacros Chrome session logged in with OTA for Quick answers testing",
-		Contacts: []string{
-			"assistive-eng@google.com",
-		},
-		BugComponent: "b:905229", // ChromeOS > Software > Assistive
-		Impl: chrome.NewLoggedInFixture(func(ctx context.Context, s *testing.FixtState) ([]chrome.Option, error) {
-			opts := []chrome.Option{
-				chrome.GAIALoginPool(dma.CredsFromPool(ui.GaiaPoolDefaultVarName)),
-			}
-			return lacrosfixt.NewConfig(lacrosfixt.ChromeOptions(opts...)).Opts()
-		}),
-		SetUpTimeout:    chrome.FixtureSetUpTimeout,
-		ResetTimeout:    chrome.ResetTimeout,
-		TearDownTimeout: chrome.ResetTimeout,
-	})
-
 }
 
 // HasBrowserType is an interface for getting a browser type tied to a fixture.
