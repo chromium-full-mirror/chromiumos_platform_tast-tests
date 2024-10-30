@@ -1,9 +1,14 @@
 # Copyright 2024 The ChromiumOS Authors
 # Use of this source code is governed by a BSD-style license that can be
 # found in the LICENSE file.
+import base64
 import dataclasses
 from enum import StrEnum
+import gzip
 import json
+import xml.etree.ElementTree as ET
+
+from analyzer.backend import html_util
 
 
 DELIM = "|"
@@ -144,3 +149,23 @@ class TestResults:
         }
         d["metadata"] = TestResultsMetadata.from_dict(d["metadata"])
         return TestResults(**d)
+
+    @classmethod
+    def from_html(cls, s: str) -> list["TestResults"]:
+        """Loads a list of TestResults, embedded by the HtmlReport class, from
+        an HTML string.
+
+        Args:
+            s: An HTML string.
+
+        Returns:
+            A list of TestResults object.
+        """
+        html = ET.fromstring(html_util.escape_text_in_style(s))
+        scripts = html.findall(".//script[@id='raw-data']")
+        assert len(scripts) == 1
+        script = scripts[0]
+        assert script.text is not None
+        decoded = base64.b64decode(script.text)
+        uncompressed = gzip.decompress(decoded).decode()
+        return [cls.from_json(item) for item in json.loads(uncompressed)]

@@ -1,9 +1,6 @@
 # Copyright 2024 The ChromiumOS Authors
 # Use of this source code is governed by a BSD-style license that can be
 # found in the LICENSE file.
-import base64
-import gzip
-import json
 import pathlib
 import tempfile
 import unittest
@@ -591,64 +588,10 @@ class HtmlReportTest(unittest.TestCase):
             cfg=analysis_cfg.AnalysisCfg(),
         )
         report._embed_raw_data()
-
-        script = report.html.html.findall(".//script[@id='raw-data']")[0]
-        self.assertEqual(script.get("type"), "application/octet-stream")
-        self.assertIsNotNone(script.text)
-        assert script.text is not None
-        decoded = base64.b64decode(script.text)
-        uncompressed = gzip.decompress(decoded).decode()
-        loaded_data = [
-            test_result.TestResults.from_json(item)
-            for item in json.loads(uncompressed)
-        ]
-        self.assertEqual(raw_test_results, loaded_data)
-
-    def test_write(self) -> None:
-        samples = (
-            test_util.load_before_samples() + test_util.load_after_samples()
-        )
-        samples_by_id = test_util.samples_by_id(samples)
-
-        groups_list = analysis_results.construct_experiment_groups_list(
-            samples, analysis_cfg.AnalysisCfg()
-        )
-        results = [
-            output.AnalysisResultForOutput(
-                groups=groups_list[0],
-                pairs=[
-                    output.PairwiseResultForOutput(
-                        result=analysis_results.PairwiseResult(
-                            before=analysis_results.ExperimentGroup(
-                                sample=samples_by_id[
-                                    "before|ui.OverviewPerf|Test.One.average"
-                                ]
-                            ),
-                            after=analysis_results.ExperimentGroup(
-                                sample=samples_by_id[
-                                    "after|ui.OverviewPerf|Test.One.average"
-                                ]
-                            ),
-                            hypothesis_result=stats_util.HypothesisTestResult(
-                                statistic_kind=stats_util.TestStatisticKind.RANK_SUM,
-                                u=0.0,
-                                p=1.0,
-                            ),
-                        ),
-                        plots=[],
-                    ),
-                ],
-                groups_plots=[],
-            )
-        ]
-
         with tempfile.TemporaryDirectory() as temp:
             output_dir = pathlib.Path(temp)
-            report = html_report.HtmlReport(
-                raw_test_results=[],
-                results=results,
-                template_dir=TEMPLATE_DIR,
-                cfg=analysis_cfg.AnalysisCfg(),
-            )
             report.write(output_dir=output_dir)
-            self.assertTrue(output_dir.joinpath("index.html").exists())
+            loaded_test_results = test_result.TestResults.from_html(
+                (output_dir / "index.html").read_text()
+            )
+            self.assertEqual(raw_test_results, loaded_test_results)

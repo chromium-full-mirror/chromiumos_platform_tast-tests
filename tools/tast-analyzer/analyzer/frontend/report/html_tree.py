@@ -2,11 +2,12 @@
 # Use of this source code is governed by a BSD-style license that can be
 # found in the LICENSE file.
 
-import pathlib
 import re
 import xml.dom.minidom
 import xml.etree.ElementTree as ET
 from xml.sax import saxutils
+
+from analyzer.backend import html_util
 
 
 class HtmlTree:
@@ -22,11 +23,10 @@ class HtmlTree:
     body: ET.Element
     """The <body> element in this HTML."""
 
-    def __init__(self, path: pathlib.Path) -> None:
-        if not path.exists():
-            raise FileNotFoundError(f"{path} not found.")
-
-        self.html = ET.fromstring(path.read_text())
+    def __init__(self, text: str) -> None:
+        # When the loaded HTML contains special characters, ET.fromstring throws an
+        # error unless they are escaped. This happens when nested CSS uses &.
+        self.html = ET.fromstring(html_util.escape_text_in_style(text))
 
         self.head = self._find_or_create_element("head", self.html)
         self.title = self._find_or_create_element("title", self.head)

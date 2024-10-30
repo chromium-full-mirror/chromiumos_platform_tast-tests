@@ -52,7 +52,9 @@ class HtmlReport:
         self.results = results
         self.template_dir = template_dir
         self.cfg = cfg
-        self.html = html_tree.HtmlTree(template_dir / "index.html")
+        self.html = html_tree.HtmlTree(
+            (template_dir / "index.html").read_text()
+        )
         self.num_tables = 0
         self.num_figures = 0
 

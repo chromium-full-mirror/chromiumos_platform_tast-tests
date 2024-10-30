@@ -82,3 +82,10 @@ class MetricSample:
 
     def to_dict(self) -> dict:
         return dataclasses.asdict(self)
+
+    @classmethod
+    def from_dict(cls, d: dict) -> "MetricSample":
+        d["improvement_direction"] = ImprovementDirection(
+            d["improvement_direction"]
+        )
+        return MetricSample(**d)

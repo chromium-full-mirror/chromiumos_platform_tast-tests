@@ -23,6 +23,53 @@ def _convert_value(val: int | float) -> float:
     assert False, f"Unknown value type: {val}"
 
 
+def _migrate_results(
+    results: test_result.TestResults, path: pathlib.Path | None
+) -> test_result.TestResults:
+    if results.metadata.results_version >= 2:
+        return results
+
+    assert path is not None
+
+    # Set labels to the filename if the results version is old.
+    migrated_results = {}
+    for result_key, result_value in results.results.items():
+        assert result_key.label == ""
+        migrated_key = dataclasses.replace(result_key, label=path.name)
+        migrated_results[migrated_key] = result_value
+    return dataclasses.replace(results, results=migrated_results)
+
+
+def _load_test_results_from_json(
+    path: pathlib.Path,
+) -> list[test_result.TestResults]:
+    """Loads test results from a JSON file.
+
+    Args:
+        path: Path to the JSON file.
+
+    Returns:
+        A list of TestResults objects.
+    """
+    results = test_result.TestResults.from_json(path.read_text())
+    return [_migrate_results(results, path)]
+
+
+def _load_test_results_from_html(
+    path: pathlib.Path,
+) -> list[test_result.TestResults]:
+    """Loads test results from a HTML file.
+
+    Args:
+        path: Path to the HTML file.
+
+    Returns:
+        A list of TestResults objects.
+    """
+    results_list = test_result.TestResults.from_html(path.read_text())
+    return [_migrate_results(results, path) for results in results_list]
+
+
 def load_test_results(
     paths: list[pathlib.Path],
 ) -> list[test_result.TestResults]:
@@ -36,18 +83,14 @@ def load_test_results(
     """
     test_results: list[test_result.TestResults] = []
     for path in paths:
-        results = test_result.TestResults.from_json(path.read_text())
+        if path.suffix == ".json":
+            results = _load_test_results_from_json(path)
+        elif path.suffix == ".html":
+            results = _load_test_results_from_html(path)
+        else:
+            raise ValueError(f"Unsupported input type: {path.suffix}.")
 
-        # Set labels to the filename if the results version is old.
-        if results.metadata.results_version < 2:
-            migrated_results = {}
-            for result_key, result_value in results.results.items():
-                assert result_key.label == ""
-                migrated_key = dataclasses.replace(result_key, label=path.name)
-                migrated_results[migrated_key] = result_value
-            results = dataclasses.replace(results, results=migrated_results)
-
-        test_results.append(results)
+        test_results += results
 
     return test_results
 
