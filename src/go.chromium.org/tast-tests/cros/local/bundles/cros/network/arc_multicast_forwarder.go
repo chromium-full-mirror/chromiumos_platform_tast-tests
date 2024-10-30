@@ -42,7 +42,7 @@ func init() {
 		Contacts:     []string{"cros-networking@google.com", "chuweih@google.com"},
 		// ChromeOS > Platform > System > Networking > Continuous Maintenance
 		BugComponent: "b:1493959",
-		Attr:         []string{"group:mainline", "informational"},
+		Attr:         []string{"group:network", "network_platform"},
 		SoftwareDeps: []string{"chrome", "wifi"},
 		Timeout:      chrome.LoginTimeout + arc.BootTimeout + 30*time.Second,
 		Fixture:      "shillSimulatedWiFiWithArcBooted",
