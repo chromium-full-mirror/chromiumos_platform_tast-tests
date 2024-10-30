@@ -91,6 +91,7 @@ func TestPlatformDecodingPerfParams(t *testing.T) {
 		}
 	}
 
+	// TODO(b/298491419): Remove ExtraHardwareDeps when zork is uprev'd to 6.6.
 	code := genparams.Template(t, `{{ range . }}{
 		Name: {{ .Name | fmt }},
 		Val:  platformDecodingPerfParams{
@@ -100,8 +101,9 @@ func TestPlatformDecodingPerfParams(t *testing.T) {
 		},
 		Timeout: {{ .Timeout | fmt }},
 		{{ if .SoftwareDeps }}
-		ExtraSoftwareDeps: {{ .SoftwareDeps | fmt }},
+    ExtraSoftwareDeps: {{ .SoftwareDeps | fmt }},
 		{{ end }}
+    ExtraHardwareDeps: hwdep.D(hwdep.SkipGPUFamily("picasso")),
 		ExtraData: {{ .Metadata | fmt }},
 		{{ if .Attr }}
 		ExtraAttr: {{ .Attr | fmt }},
