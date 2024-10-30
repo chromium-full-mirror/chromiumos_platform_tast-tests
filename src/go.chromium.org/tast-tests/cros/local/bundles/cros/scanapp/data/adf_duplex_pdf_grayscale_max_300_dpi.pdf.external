@@ -1,5 +1,5 @@
 {
-  "url": "gs://chromiumos-test-assets-public/tast/cros/scanapp/adf_duplex_pdf_grayscale_max_300_dpi_20241025.pdf",
-  "size": 236679,
-  "sha256sum": "bf411780180359feb3e88f24d8374dd99beb40c3e79d9cdab10883ef917316e8"
+  "url": "gs://chromiumos-test-assets-public/tast/cros/scanapp/adf_duplex_pdf_grayscale_max_300_dpi_20241014.pdf",
+  "size": 236965,
+  "sha256sum": "c3df7e32835b196e063231d93471572fde2ea90850c46eb05c34c6ff1052f1c1"
 }
