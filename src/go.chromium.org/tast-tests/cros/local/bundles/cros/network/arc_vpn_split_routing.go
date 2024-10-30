@@ -62,6 +62,8 @@ func init() {
 			}, {
 				Name: "excluded",
 				Val:  arcVPNSplitRoutingTestCaseExcludedRoutes,
+				// Excluded route API is only supported on ARC T+.
+				ExtraSoftwareDeps: []string{"no_android_r"},
 			}, {
 				Name: "default",
 				Val:  arcVPNSplitRoutingTestCaseDefaultRoutes,
