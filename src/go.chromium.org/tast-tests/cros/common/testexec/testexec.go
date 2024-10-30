@@ -84,12 +84,17 @@ type RunOption = tastexec.RunOption
 const DumpLogOnError = tastexec.DumpLogOnError
 
 var (
+	// ErrNotStarted is the error returned when the process has not yet started.
+	ErrNotStarted = errors.New("Start was not yet called")
+	// ErrAlreadyWaited is the error returned when the process has been waited
+	// and also returned.
+	// Please see https://pkg.go.dev/os/exec#Cmd.ProcessState.
+	ErrAlreadyWaited = errors.New("Wait was already called and the process has returned")
+
 	errStdoutSet      = errors.New("Stdout was already set")
 	errStderrSet      = errors.New("Stderr was already set")
 	errAlreadyStarted = errors.New("Start was already called")
-	errNotStarted     = errors.New("Start was not yet called")
-	errAlreadyWaited  = errors.New("Wait was already called")
-	errNotWaited      = errors.New("Wait was not yet called")
+	errNotWaited      = errors.New("Wait was not yet called or the process hasn't returned")
 )
 
 // CommandContext prepares to run an external command.
@@ -236,10 +241,10 @@ func (c *Cmd) Start() error {
 // See os/exec package for details.
 func (c *Cmd) Wait(opts ...RunOption) error {
 	if c.Process == nil {
-		return errNotStarted
+		return ErrNotStarted
 	}
 	if c.ProcessState != nil {
-		return errAlreadyWaited
+		return ErrAlreadyWaited
 	}
 
 	// Wait for the process to be terminated, without collecting the
@@ -321,7 +326,7 @@ func (c *Cmd) done() bool {
 // Wait to release all associated resources.
 func (c *Cmd) Signal(signal unix.Signal) error {
 	if c.Process == nil {
-		return errNotStarted
+		return ErrNotStarted
 	}
 
 	// ProcessState may be set in another go-routine calling Wait(),
@@ -330,7 +335,7 @@ func (c *Cmd) Signal(signal unix.Signal) error {
 	// is checked below with sync mechanism, there should be not
 	// a problem.
 	if c.ProcessState != nil {
-		return errAlreadyWaited
+		return ErrAlreadyWaited
 	}
 
 	// Guard by a lock so that the signal won't be sent to the process
@@ -338,7 +343,7 @@ func (c *Cmd) Signal(signal unix.Signal) error {
 	c.sigMu.RLock()
 	defer c.sigMu.RUnlock()
 	if c.done() {
-		return errAlreadyWaited
+		return ErrAlreadyWaited
 	}
 
 	// Negative PID means the process group led by the process.
