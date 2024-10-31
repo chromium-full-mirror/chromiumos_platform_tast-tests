@@ -344,6 +344,13 @@ func collectMaliPerformanceCounters(ctx context.Context, interval time.Duration)
 func parseTransStatFile(transStatFileName string) (freqs map[float64]time.Duration, err error) {
 	out, err := ioutil.ReadFile(transStatFileName)
 	if err != nil {
+
+		// the output of `trans_stat` might be larger than `PAGE_SIZE` can handle
+		// if the devfreq device has many frequency states.
+		// https://elixir.bootlin.com/linux/v6.6.58/source/drivers/devfreq/devfreq.c#L1771
+		if strings.Contains(err.Error(), "file too large") {
+			return make(map[float64]time.Duration), nil
+		}
 		return nil, errors.Wrap(err, "problem reading DevFreq trans_stat file")
 	}
 	// Sample out:
