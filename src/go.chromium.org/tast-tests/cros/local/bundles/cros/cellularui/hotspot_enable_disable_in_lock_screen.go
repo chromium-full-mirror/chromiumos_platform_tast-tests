@@ -10,6 +10,7 @@ import (
 
 	"go.chromium.org/tast-tests/cros/local/cellular"
 	"go.chromium.org/tast-tests/cros/local/chrome"
+	"go.chromium.org/tast-tests/cros/local/chrome/ash"
 	"go.chromium.org/tast-tests/cros/local/chrome/uiauto"
 	"go.chromium.org/tast-tests/cros/local/chrome/uiauto/faillog"
 	"go.chromium.org/tast-tests/cros/local/chrome/uiauto/lockscreen"
@@ -152,6 +153,13 @@ func HotspotEnableDisableInLockScreen(ctx context.Context, s *testing.State) {
 	if err != nil {
 		s.Fatal("Failed to create Test API connection: ", err)
 	}
+
+	// Making sure DUT is in clamshell mode to prevent virtual keyboard from popping up in lock screen.
+	cleanUp, err := ash.EnsureTabletModeDisabledWithKeyboardEnabled(ctx)
+	if err != nil {
+		s.Fatal("Failed to ensure DUT in clamshell mode: ", err)
+	}
+	defer cleanUp(cleanupCtx)
 
 	hs, err := ossettings.LaunchAtHotspotSubpage(ctx, tconn, cr)
 	if err != nil {
