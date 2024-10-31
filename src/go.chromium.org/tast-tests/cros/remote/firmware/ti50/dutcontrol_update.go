@@ -6,6 +6,7 @@ package ti50
 
 import (
 	"context"
+	"strings"
 	"time"
 
 	common "go.chromium.org/tast-tests/cros/common/firmware/ti50"
@@ -202,7 +203,9 @@ func (b *DUTControlAndreiboard) CheckEqualConsoleVersions(ctx context.Context, i
 		return errors.Wrap(err, "wait image to boot")
 	}
 
-	matched, err := i.CheckRunningVersion(ctx, imageVer.String(), false, true)
+	// DBG images use 1 for the epoch
+	isDBG := strings.HasPrefix(imageVer.String(), "1.")
+	matched, err := i.CheckRunningVersion(ctx, imageVer.String(), isDBG, true)
 	if err != nil {
 		return err
 	}
