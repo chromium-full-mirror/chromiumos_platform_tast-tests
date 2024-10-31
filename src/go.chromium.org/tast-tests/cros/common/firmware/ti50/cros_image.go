@@ -124,15 +124,18 @@ var (
 	//    TPM MODE:    disabled (3)
 	//    Key Ladder:  prod
 	//    EK Cert:     Compliant
-	sysinfoFactoryMode   = `Chip factory mode.`
-	sysinfoResetFlagRE   = `Reset flags:\s+0x(?P<resetFlags>` + hexRE + `)\s+\([^)]*\)\s*`
-	sysinfoResetCountRE  = `Reset count:\s+(?P<resetCount>\d*)\s*`
-	sysinfoBreadcrumbRE  = `(Breadcrumbs:\s+0x(?P<breadcrumbs>` + hexRE + `))?\s*`
-	sysinfoChipRE        = `Chip:\s+g\s+(?P<chipName>Ti50|cr50) (?P<chipSKU>\S+)\s*`
-	sysinfoROKeyidRE     = `RO keyid:\s+(?P<roKeyid>0x` + hexRE + `)\s*`
-	sysinfoRWKeyidRE     = `RW keyid:\s+(?P<rwKeyid>0x` + hexRE + `)\s*`
-	sysinfoDevidRE       = `DEV_ID:\s+(?P<devid>0x` + hexRE + ` 0x` + hexRE + `)\s*`
-	sysinfoRollbackRE    = `Rollback:\s+(?P<roRollback>\S+) (?P<rwRollback>\S+)\s*`
+	sysinfoFactoryMode  = `Chip factory mode.`
+	sysinfoResetFlagRE  = `Reset flags:\s+0x(?P<resetFlags>` + hexRE + `)\s+\([^)]*\)\s*`
+	sysinfoResetCountRE = `Reset count:\s+(?P<resetCount>\d*)\s*`
+	sysinfoBreadcrumbRE = `(Breadcrumbs:\s+0x(?P<breadcrumbs>` + hexRE + `))?\s*`
+	sysinfoChipRE       = `Chip:\s+g\s+(?P<chipName>Ti50|cr50) (?P<chipSKU>\S+)\s*`
+	// Old Cr50 sysinfo output may print "(prod|dev)" after the keyids. Ignore it.
+	// ex: RO keyid:    0xaa66150f(prod)
+	sysinfoROKeyidRE = `RO keyid:\s+(?P<roKeyid>0x` + hexRE + `)(?:\(\S+\))?\s*`
+	sysinfoRWKeyidRE = `RW keyid:\s+(?P<rwKeyid>0x` + hexRE + `)(?:\(\S+\))?\s*`
+	sysinfoDevidRE   = `DEV_ID:\s+(?P<devid>0x` + hexRE + ` 0x` + hexRE + `)\s*`
+	// Old Cr50 sysinfo output does not print the RO rollback info. Accept an empty string on cr50.
+	sysinfoRollbackRE    = `Rollback:\s+(?P<roRollback>\S+)? (?P<rwRollback>\S+)\s*`
 	sysinfoTPMModeRE     = `TPM [ModeODE]+:\s+(?P<tpmMode>enabled|disabled) \((?P<tpmModeStatus>[0-9])\)\s*`
 	sysinfoKeyladderRE   = `Key Ladder:\s+(?P<keyladder>\S*)\s*`
 	sysinfoEKCertRE      = `(EK Cert:\s+(?P<ekCert>\S+))?\s*`
@@ -1377,9 +1380,13 @@ func getSysinfoStruct(input map[string]string) (Sysinfo, error) {
 	result.FactoryModeValid = false
 
 	result.TpmEnabled = result.TpmMode == "enabled"
-	result.ProdKeyladder = result.Keyladder == "prod"
+	result.ProdKeyladder = result.Keyladder == "prod" || result.Keyladder == "enabled"
 
 	isCr50 := result.ChipName == "cr50"
+
+	if result.RORollback == "" && !isCr50 {
+		return Sysinfo{}, errors.New("Did not find RO Rollback info on Ti50")
+	}
 
 	rollbackBits, err := FindSysinfoRollbackBits(result.RWRollback)
 	if err != nil {
