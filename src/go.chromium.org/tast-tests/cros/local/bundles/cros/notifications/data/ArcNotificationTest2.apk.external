@@ -1,5 +1,5 @@
 {
-  "url": "gs://chromiumos-test-assets-public/tast/cros/arc/ArcNotificationTest2_20220308.apk",
-  "size": 4321972,
-  "sha256sum": "7db08a9cfb441c2521315650b40939e8468e03e72cb0e0b551e49a763ba5200f"
+  "url": "gs://chromiumos-test-assets-public/tast/cros/arc/ArcNotificationTest2_20241030.apk",
+  "size": 5109218,
+  "sha256sum": "a229c271da8102d3f950181950a2ad4767de96af24d8afbc63508e4a254639a6"
 }

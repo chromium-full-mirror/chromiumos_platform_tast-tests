@@ -52,6 +52,8 @@ var (
 	arcNotificationSurface = nodewith.HasClass("ArcNotificationSurface")
 )
 
+type testedStyles []string
+
 func init() {
 	testing.AddTest(&testing.Test{
 		Func:         NotificationExperimental,
@@ -67,15 +69,22 @@ func init() {
 		// TODO (b/369917409): Add test back to mainline.
 		Data:         []string{arcNotificationTest2ApkFilename},
 		SoftwareDeps: []string{"chrome"},
-		Timeout:      4 * time.Minute,
+		Timeout:      10 * time.Minute,
 		Params: []testing.Param{{
-			Fixture:           "arcBooted",
+			Val:               testedStyles{"basic", "big_text", "big_picture", "inbox", "messaging"},
 			ExtraSoftwareDeps: []string{"android_container"},
 		}, {
-			Name:              "vm",
+			Name:              "standard_vm",
+			Val:               testedStyles{"basic", "big_text", "big_picture", "inbox", "messaging"},
 			Fixture:           "arcBooted",
 			ExtraSoftwareDeps: []string{"android_vm"},
 			ExtraAttr:         []string{"group:hw_agnostic"},
+		}, {
+			Name:              "custom_vm",
+			Val:               testedStyles{"custom"},
+			Fixture:           "arcBooted",
+			ExtraSoftwareDeps: []string{"android_vm"},
+			ExtraAttr:         []string{"group:mainline", "informational", "group:hw_agnostic"},
 		}},
 	})
 }
@@ -279,7 +288,8 @@ func NotificationExperimental(ctx context.Context, s *testing.State) {
 	hasTouchSupport := info.HasTouchSupport
 
 	// Test notification closing.
-	for _, style := range []string{"basic", "big_text", "big_picture", "inbox", "messaging"} {
+	styles := s.Param().(testedStyles)
+	for _, style := range styles {
 		for _, close := range []closeMethod{closeMethodSwipeOut, closeMethodClickEvent, closeMethodClearAllButton, closeMethodCloseButton} {
 			s.Run(ctx, fmt.Sprintf("Close notification (style=%s closeMethod=%s)", style, close), func(ctx context.Context, s *testing.State) {
 				if close == closeMethodSwipeOut && !hasTouchSupport {
@@ -298,7 +308,7 @@ func NotificationExperimental(ctx context.Context, s *testing.State) {
 	}
 
 	// Test notification expanding.
-	for _, style := range []string{"big_text", "big_picture", "inbox"} {
+	for _, style := range styles {
 		s.Run(ctx, fmt.Sprintf("Expand notification (style=%s)", style), func(ctx context.Context, s *testing.State) {
 			// Cleanup
 			defer ash.CloseNotifications(cleanupCtx, tconn)
