@@ -30,6 +30,8 @@ func init() {
 			"group:medium_low_tier",
 			"group:hardware",
 			"group:complementary",
+			"group:release-health",
+			"release-health_enterprise",
 		},
 		SoftwareDeps: []string{"reboot", "chrome"},
 		ServiceDeps: []string{

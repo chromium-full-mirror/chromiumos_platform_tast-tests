@@ -34,6 +34,8 @@ func init() {
 			"group:hardware",
 			"group:complementary",
 			"group:hw_agnostic",
+			"group:release-health",
+			"release-health_enterprise",
 		},
 		Fixture: fixture.FakeDMSEnrolled,
 		Timeout: 5 * time.Minute,

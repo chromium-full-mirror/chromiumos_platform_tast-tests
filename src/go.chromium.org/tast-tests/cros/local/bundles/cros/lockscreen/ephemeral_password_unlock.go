@@ -41,6 +41,8 @@ func init() {
 			"group:medium_low_tier",
 			"group:hardware",
 			"group:complementary",
+			"group:release-health",
+			"release-health_enterprise",
 		},
 		Fixture: fixture.FakeDMSEnrolled,
 		// It is needed as serving policies on SignIn screen will talk to

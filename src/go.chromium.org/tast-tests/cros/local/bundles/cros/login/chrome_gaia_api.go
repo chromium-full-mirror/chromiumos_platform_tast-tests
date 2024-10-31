@@ -41,6 +41,8 @@ func init() {
 			"group:hw_agnostic",
 			"group:mainline",
 			"informational",
+			"group:release-health",
+			"release-health_enterprise",
 		},
 		VarDeps: []string{
 			ui.GaiaPoolDefaultVarName,

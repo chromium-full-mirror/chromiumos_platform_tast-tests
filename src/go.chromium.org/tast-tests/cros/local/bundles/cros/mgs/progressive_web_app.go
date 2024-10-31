@@ -39,6 +39,8 @@ func init() {
 			"group:hardware",
 			"group:complementary",
 			"group:hw_agnostic",
+			"group:release-health",
+			"release-health_enterprise",
 		},
 		Data:    []string{"pwa_manifest.json", "pwa_service.js", "pwa_index.html", "pwa_icon.png"},
 		Fixture: fixture.FakeDMSEnrolled,

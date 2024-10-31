@@ -33,6 +33,8 @@ func init() {
 			"group:complementary",
 			"group:cryptohome",
 			"group:hw_agnostic",
+			"group:release-health",
+			"release-health_enterprise",
 		},
 		Fixture: "ussAuthSessionFixture",
 		// For "no_tpm_dynamic" - see http://b/251789202.

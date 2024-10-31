@@ -33,7 +33,11 @@ func init() {
 			"mpolzer@google.com",
 		},
 		BugComponent: "b:1031231",
-		Attr:         []string{"group:autoupdate"},
+		Attr: []string{
+			"group:autoupdate",
+			"group:release-health",
+			"release-health_enterprise",
+		},
 		SoftwareDeps: []string{"reboot", "chrome", "auto_update_stable"},
 		ServiceDeps: []string{
 			"tast.cros.nebraska.Service",

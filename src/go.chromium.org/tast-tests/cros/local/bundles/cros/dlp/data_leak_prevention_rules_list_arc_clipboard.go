@@ -33,10 +33,14 @@ func init() {
 		},
 		BugComponent: "b:892101",
 		SoftwareDeps: []string{"chrome", "android_vm"},
-		Attr:         []string{"group:golden_tier"},
-		Data:         []string{"text_1.html", "text_2.html", "editable_text_box.html"},
-		Fixture:      "fakeDMS",
-		Timeout:      4 * time.Minute,
+		Attr: []string{
+			"group:golden_tier",
+			"group:release-health",
+			"release-health_enterprise",
+		},
+		Data:    []string{"text_1.html", "text_2.html", "editable_text_box.html"},
+		Fixture: "fakeDMS",
+		Timeout: 4 * time.Minute,
 	},
 	)
 }

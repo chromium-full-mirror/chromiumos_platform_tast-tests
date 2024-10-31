@@ -33,6 +33,8 @@ func init() {
 			"group:hardware",
 			"group:complementary",
 			"group:hw_agnostic",
+			"group:release-health",
+			"release-health_enterprise",
 		},
 		SoftwareDeps: []string{"reboot", "chrome"},
 		Timeout:      1 * time.Minute,

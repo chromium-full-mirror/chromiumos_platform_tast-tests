@@ -46,6 +46,8 @@ func init() {
 			"group:hardware",
 			"group:complementary",
 			"group:hw_agnostic",
+			"group:release-health",
+			"release-health_enterprise",
 		},
 		Timeout:      kioskmode.SetupDuration + kioskmode.LaunchDuration + kioskmode.CleanupDuration + verifyPixelsTimeout,
 		SoftwareDeps: []string{"reboot", "chrome"},

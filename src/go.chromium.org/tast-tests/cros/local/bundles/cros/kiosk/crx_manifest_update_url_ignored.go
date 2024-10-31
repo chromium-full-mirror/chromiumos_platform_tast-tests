@@ -38,6 +38,8 @@ func init() {
 			"group:medium_low_tier",
 			"group:complementary",
 			"group:hw_agnostic",
+			"group:release-health",
+			"release-health_enterprise",
 		},
 		SoftwareDeps: []string{"reboot", "chrome"},
 		Fixture:      fixture.FakeDMSEnrolled,

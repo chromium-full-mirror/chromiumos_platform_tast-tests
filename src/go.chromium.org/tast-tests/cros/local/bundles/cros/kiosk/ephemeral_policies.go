@@ -35,6 +35,8 @@ func init() {
 			"group:hardware",
 			"group:complementary",
 			"group:hw_agnostic",
+			"group:release-health",
+			"release-health_enterprise",
 		},
 		SearchFlags: []*testing.StringPair{
 			pci.SearchFlag(&policy.DeviceEphemeralUsersEnabled{}, pci.VerifiedFunctionalityOS),

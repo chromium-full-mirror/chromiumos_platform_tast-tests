@@ -36,6 +36,8 @@ func init() {
 			"group:golden_tier",
 			"group:medium_low_tier",
 			"group:hardware",
+			"group:release-health",
+			"release-health_enterprise",
 		},
 		Params: []testing.Param{
 			{

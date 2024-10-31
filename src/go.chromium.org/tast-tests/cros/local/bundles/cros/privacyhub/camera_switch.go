@@ -43,7 +43,12 @@ func init() {
 		BugComponent: "b:1178745",
 		SoftwareDeps: []string{"chrome"},
 		Timeout:      5 * time.Minute,
-		Attr:         []string{"group:mainline", "informational"},
+		Attr: []string{
+			"group:mainline",
+			"informational",
+			"group:release-health",
+			"release-health_enterprise",
+		},
 		HardwareDeps: hwdep.D(hwdep.Model(goldenCameraModels...)),
 	})
 }
