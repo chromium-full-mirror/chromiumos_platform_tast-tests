@@ -25,11 +25,11 @@ func init() {
 		LacrosStatus: testing.LacrosVariantUnneeded,
 		Desc:         "Verify that the connected/disconnected Bluetooth device can be renamed and the edited name is persisted after re-login",
 		Contacts: []string{
-			"alfredyu@cienet.com",
-			"chromeos-connectivity-cienet-external@google.com",
+			"cros-device-enablement@google.com",
+			"chromeos-connectivity-engprod@google.com",
 		},
-		BugComponent:   "b:1578688", // ChromeOS > External > Cienet > Manual Test Automation > Test stabilization
-		LifeCycleStage: testing.LifeCycleInDevelopment,
+		BugComponent:   "b:1131776", // ChromeOS > Software > Fundamentals > Device Enablement > Connectivity > Bluetooth
+		LifeCycleStage: testing.LifeCycleOwnerMonitored,
 		Attr:           []string{"group:bluetooth", "bluetooth_floss"},
 		SoftwareDeps:   []string{"chrome"},
 		Fixture:        "chromeLoggedInWith1BTPeerFlossEnabled",

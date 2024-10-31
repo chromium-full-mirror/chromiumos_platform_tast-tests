@@ -29,15 +29,15 @@ import (
 
 func init() {
 	testing.AddTest(&testing.Test{
-		Func:           HIDDeviceFunctionalityCheck,
-		LacrosStatus:   testing.LacrosVariantUnneeded,
-		LifeCycleStage: testing.LifeCycleInDevelopment,
-		Desc:           "Verify that the user is able to use Bluetooth HID keyboard/mouse for input",
+		Func:         HIDDeviceFunctionalityCheck,
+		LacrosStatus: testing.LacrosVariantUnneeded,
+		Desc:         "Verify that the user is able to use Bluetooth HID keyboard/mouse for input",
 		Contacts: []string{
-			"edgar.change@cienet.com",
-			"chromeos-connectivity-cienet-external@google.com",
+			"cros-device-enablement@google.com",
+			"chromeos-connectivity-engprod@google.com",
 		},
-		BugComponent:    "b:1578688", // ChromeOS > External > Cienet > Manual Test Automation > Test stabilization
+		BugComponent:    "b:1131776", // ChromeOS > Software > Fundamentals > Device Enablement > Connectivity > Bluetooth
+		LifeCycleStage:  testing.LifeCycleOwnerMonitored,
 		Attr:            []string{"group:bluetooth", "bluetooth_floss"},
 		SoftwareDeps:    []string{"chrome"},
 		Fixture:         "chromeLoggedInWith1BTPeerFlossEnabled",

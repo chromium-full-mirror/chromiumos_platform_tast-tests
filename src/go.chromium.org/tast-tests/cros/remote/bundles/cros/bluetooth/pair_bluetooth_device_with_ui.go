@@ -17,16 +17,16 @@ import (
 
 func init() {
 	testing.AddTest(&testing.Test{
-		Func:           PairBluetoothDeviceWithUI,
-		LacrosStatus:   testing.LacrosVariantUnneeded,
-		LifeCycleStage: testing.LifeCycleInDevelopment,
-		Desc:           "Tests that we can pair a Bluetooth device with the UI",
+		Func:         PairBluetoothDeviceWithUI,
+		LacrosStatus: testing.LacrosVariantUnneeded,
+		Desc:         "Tests that we can pair a Bluetooth device with the UI",
 		Contacts: []string{
-			"alfredyu@cienet.com",
-			"chromeos-connectivity-cienet-external@google.com",
+			"cros-device-enablement@google.com",
+			"chromeos-connectivity-engprod@google.com",
 		},
-		BugComponent:    "b:1578688", // ChromeOS > External > Cienet > Manual Test Automation > Test stabilization
-		Attr:            []string{"group:bluetooth"},
+		BugComponent:    "b:1131776", // ChromeOS > Software > Fundamentals > Device Enablement > Connectivity > Bluetooth
+		LifeCycleStage:  testing.LifeCycleOwnerMonitored,
+		Attr:            []string{"group:bluetooth", "bluetooth_floss"},
 		TestBedDeps:     []string{tbdep.Wificell, tbdep.BluetoothStateNormal, tbdep.WorkingBluetoothPeers(1)},
 		SoftwareDeps:    []string{"chrome"},
 		ServiceDeps:     []string{"tast.cros.bluetooth.BluetoothUIService"},
@@ -34,16 +34,14 @@ func init() {
 		VariantCategory: `{"name": "BT_Chipset_Kernel"}`,
 		Params: []testing.Param{
 			{
-				Name:      "floss_disabled__le_mouse",
-				Fixture:   "chromeLoggedInWith1BTPeerFlossDisabled",
-				ExtraAttr: []string{"bluetooth_flaky"},
-				Val:       cbt.DeviceTypeLEMouse,
+				Name:    "floss_disabled__le_mouse",
+				Fixture: "chromeLoggedInWith1BTPeerFlossDisabled",
+				Val:     cbt.DeviceTypeLEMouse,
 			},
 			{
-				Name:      "floss_enabled__le_mouse",
-				Fixture:   "chromeLoggedInWith1BTPeerFlossEnabled",
-				ExtraAttr: []string{"bluetooth_floss"},
-				Val:       cbt.DeviceTypeLEMouse,
+				Name:    "floss_enabled__le_mouse",
+				Fixture: "chromeLoggedInWith1BTPeerFlossEnabled",
+				Val:     cbt.DeviceTypeLEMouse,
 			},
 		},
 	})
