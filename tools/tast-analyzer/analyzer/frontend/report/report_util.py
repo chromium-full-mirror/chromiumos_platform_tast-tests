@@ -40,6 +40,6 @@ def create_reports(
                 cfg=cfg,
             )
             report.make()
-            report.write(output_dir=output_dir)
+            (output_dir / "index.html").write_text(f"{report}")
         else:
             raise ValueError(f"Unknown report kind: {kind}")

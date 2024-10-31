@@ -416,11 +416,9 @@ class HtmlReport:
 
         self._embed_raw_data()
 
-    def write(self, output_dir: pathlib.Path) -> None:
-        """Writes the report."""
-        output_dir.mkdir(parents=True, exist_ok=True)
-
         styles = [path.read_text() for path in self.template_dir.glob("*.css")]
         style = components.create_element_with_text("style", "".join(styles))
         self.html.head.append(style)
-        (output_dir / "index.html").write_text(str(self.html))
+
+    def __str__(self) -> str:
+        return f"{self.html}"

@@ -2,7 +2,6 @@
 # Use of this source code is governed by a BSD-style license that can be
 # found in the LICENSE file.
 import pathlib
-import tempfile
 import unittest
 
 from analyzer.analysis import analysis_cfg
@@ -588,10 +587,5 @@ class HtmlReportTest(unittest.TestCase):
             cfg=analysis_cfg.AnalysisCfg(),
         )
         report._embed_raw_data()
-        with tempfile.TemporaryDirectory() as temp:
-            output_dir = pathlib.Path(temp)
-            report.write(output_dir=output_dir)
-            loaded_test_results = test_result.TestResults.from_html(
-                (output_dir / "index.html").read_text()
-            )
-            self.assertEqual(raw_test_results, loaded_test_results)
+        loaded_test_results = test_result.TestResults.from_html(f"{report}")
+        self.assertEqual(raw_test_results, loaded_test_results)
