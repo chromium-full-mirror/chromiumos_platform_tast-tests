@@ -13,8 +13,6 @@ import (
 	"go.chromium.org/tast-tests/cros/common/testexec"
 	"go.chromium.org/tast-tests/cros/local/bundles/cros/ui/chromecrash"
 	"go.chromium.org/tast-tests/cros/local/chrome"
-	"go.chromium.org/tast-tests/cros/local/chrome/browser"
-	"go.chromium.org/tast-tests/cros/local/chrome/browser/browserfixt"
 	"go.chromium.org/tast-tests/cros/local/crash"
 	"go.chromium.org/tast/core/ctxutil"
 	"go.chromium.org/tast/core/testing"
@@ -214,7 +212,7 @@ func ChromeCrashLoggedIn(ctx context.Context, s *testing.State) {
 	defer cancel()
 
 	params := s.Param().(chromeCrashLoggedInParams)
-	ct, err := chromecrash.NewCrashTester(ctx, params.ptype, browser.TypeAsh, chromecrash.MetaFile)
+	ct, err := chromecrash.NewCrashTester(ctx, params.ptype, chromecrash.MetaFile)
 	if err != nil {
 		s.Fatal("NewCrashTester failed: ", err)
 	}
@@ -227,14 +225,12 @@ func ChromeCrashLoggedIn(ctx context.Context, s *testing.State) {
 	}
 	// In theory it would nice to rewrite this to use fixtures "correctly" but
 	// there's significant engineering work for that (b/292145636).
-	cr, _, closeBrowser, err := browserfixt.SetUpWithNewChrome(ctx, browser.TypeAsh,
-		nil, chromeOpts...)
+	cr, err := chrome.New(ctx, chromeOpts...)
 	if err != nil {
 		s.Fatal("Chrome login failed: ", err)
 	}
 	defer func() {
 		if cr != nil {
-			closeBrowser(cleanupCtx)
 			cr.Close(cleanupCtx)
 		}
 	}()
@@ -249,20 +245,14 @@ func ChromeCrashLoggedIn(ctx context.Context, s *testing.State) {
 	defer crash.TearDownCrashTest(cleanupCtx)
 
 	if params.restartChrome {
-		closeBrowser(ctx)
 		cr.Close(ctx)
 		// Need to KeepState to avoid erasing the consent we just set up.
 		restartOpts := append(chromeOpts, chrome.KeepState())
-		cr, _, closeBrowser, err = browserfixt.SetUpWithNewChrome(ctx, browser.TypeAsh,
-			nil, restartOpts...)
+		cr, err = chrome.New(ctx, restartOpts...)
 		if err != nil {
 			cr = nil
 			s.Fatal("Chrome login failed: ", err)
 		}
-	}
-
-	if err := ct.AssociateWithChrome(ctx, cr); err != nil {
-		s.Fatal("Failed to associate chrome with the crash tester: ", err)
 	}
 
 	files, err := ct.KillAndGetCrashFiles(ctx)

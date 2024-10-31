@@ -23,10 +23,7 @@ import (
 
 	"go.chromium.org/tast-tests/cros/local/chrome"
 	"go.chromium.org/tast-tests/cros/local/chrome/ash/ashproc"
-	"go.chromium.org/tast-tests/cros/local/chrome/browser"
 	"go.chromium.org/tast-tests/cros/local/chrome/chromeproc"
-	"go.chromium.org/tast-tests/cros/local/chrome/lacros/lacrosinfo"
-	"go.chromium.org/tast-tests/cros/local/chrome/lacros/lacrosproc"
 	"go.chromium.org/tast-tests/cros/local/crash"
 	"go.chromium.org/tast/core/errors"
 	"go.chromium.org/tast/core/testing"
@@ -61,9 +58,6 @@ const (
 
 	// ashChromeCrashpadExecPath is the path to the ash-Chrome crashpad binary.
 	ashChromeCrashpadExecPath = "/opt/google/chrome/chrome_crashpad_handler"
-
-	// lacrosCrashpadExecName is the name of the crashpad binary in the Lacros directory.
-	lacrosCrashpadExecName = "chrome_crashpad_handler"
 
 	// chromeCrashFilePatternWithPid contains fmt.Sprintf format string that
 	// expects an integer PID of a chrome process. fmt.Sprintf will return a regex
@@ -195,60 +189,28 @@ func crashReporterRunning(ctx context.Context) (bool, error) {
 // It should be created (via NewCrashTester) before chrome.New is called. Close should be
 // called at the end of the test.
 type CrashTester struct {
-	ptype       ProcessType
-	browserType browser.Type
-	waitFor     CrashFileType
-	tconn       *chrome.TestConn
-	lacrosPath  string
-	killedPID   int32
+	ptype     ProcessType
+	waitFor   CrashFileType
+	tconn     *chrome.TestConn
+	killedPID int32
 }
 
 // NewCrashTester returns a CrashTester. This must be called before chrome.New.
 // ptype indicates the type of process the KillAndGetCrashFiles will kill. For
 // some process types, we wait for the crash file to appear. In these cases,
 // waitFor indicates the type of file we are waiting for.
-func NewCrashTester(ctx context.Context, ptype ProcessType, browserType browser.Type, waitFor CrashFileType) (*CrashTester, error) {
+func NewCrashTester(ctx context.Context, ptype ProcessType, waitFor CrashFileType) (*CrashTester, error) {
 	if ptype < Browser || ptype > Broker {
 		return nil, errors.Errorf("ptype out of range: %v", ptype)
-	}
-	if browserType != browser.TypeAsh && browserType != browser.TypeLacros {
-		return nil, errors.Errorf("browserType %v unknown", browserType)
 	}
 	if waitFor < MetaFile || waitFor > NoCrashFile {
 		return nil, errors.Errorf("waitFor out of range: %v", waitFor)
 	}
 
 	return &CrashTester{
-		ptype:       ptype,
-		browserType: browserType,
-		waitFor:     waitFor,
+		ptype:   ptype,
+		waitFor: waitFor,
 	}, nil
-}
-
-// AssociateWithChrome should be called once a stable ash-Chrome connection is
-// created via chrome.New and (if applicable) Lacros has been launched. (Or after
-// browserfixt,SetUpWithNewChrome has been called.) It is not needed if
-// ash-Chrome won't be up long enough to make a stable connection.
-func (ct *CrashTester) AssociateWithChrome(ctx context.Context, cr *chrome.Chrome) error {
-	if ct.browserType == browser.TypeAsh {
-		return nil
-	}
-
-	var err error
-	ct.tconn, err = cr.TestAPIConn(ctx)
-	if err != nil {
-		return errors.Wrap(err, "could not associate with chrome: could not get test API")
-	}
-
-	info, err := lacrosinfo.Snapshot(ctx, ct.tconn)
-	if err != nil {
-		return errors.Wrap(err, "failed to retrieve lacrosinfo")
-	}
-	if len(info.LacrosPath) == 0 {
-		return errors.New("lacros is not running (received empty LacrosPath)")
-	}
-	ct.lacrosPath = info.LacrosPath
-	return nil
 }
 
 // Close closes a CrashTester. It must be called on all CrashTesters returned from NewCrashTester.
@@ -359,11 +321,7 @@ func (ct *CrashTester) waitForChromeProcesses(ctx context.Context) ([]*process.P
 	var procs []*process.Process
 	if err := testing.Poll(ctx, func(ctx context.Context) error {
 		var err error
-		if ct.browserType == browser.TypeAsh {
-			procs, err = ashproc.Processes()
-		} else {
-			procs, err = lacrosproc.ProcsFromPath(ctx, ct.lacrosPath)
-		}
+		procs, err = ashproc.Processes()
 		if err != nil {
 			return testing.PollBreak(err)
 		}
@@ -393,19 +351,12 @@ func (ct *CrashTester) crashpadHandlerProcesses() ([]*process.Process, error) {
 		return nil, errors.Wrap(err, "failed to obtain processes")
 	}
 
-	var crashpadExecPath string
-	if ct.browserType == browser.TypeAsh {
-		crashpadExecPath = ashChromeCrashpadExecPath
-	} else {
-		crashpadExecPath = filepath.Join(ct.lacrosPath, lacrosCrashpadExecName)
-	}
-
 	var ret []*process.Process
 	for _, p := range ps {
 		// Identify by exec path. Ignore errors.
 		// Because of timing issue, the process may be gone between the
 		// Process instance creation and Exe invocation.
-		if exe, err := p.Exe(); err != nil || exe != crashpadExecPath {
+		if exe, err := p.Exe(); err != nil || exe != ashChromeCrashpadExecPath {
 			continue
 		}
 		ret = append(ret, p)
@@ -422,11 +373,7 @@ func (ct *CrashTester) getNonBrowserProcess(ctx context.Context) (*process.Proce
 	var processes []*process.Process
 	switch ct.ptype {
 	case GPUProcess:
-		if ct.browserType == browser.TypeAsh {
-			processes, err = chromeproc.GetGPUProcesses()
-		} else {
-			processes, err = lacrosproc.GPUProcesses(ctx, ct.tconn)
-		}
+		processes, err = chromeproc.GetGPUProcesses()
 		if err != nil {
 			return nil, errors.Wrapf(err, "error looking for Chrome %s", ct.ptype)
 		}
@@ -435,11 +382,7 @@ func (ct *CrashTester) getNonBrowserProcess(ctx context.Context) (*process.Proce
 		}
 		return processes[0], nil
 	case Broker:
-		if ct.browserType == browser.TypeAsh {
-			processes, err = chromeproc.GetBrokerProcesses()
-		} else {
-			processes, err = lacrosproc.BrokerProcesses(ctx, ct.tconn)
-		}
+		processes, err = chromeproc.GetBrokerProcesses()
 		if err != nil {
 			return nil, errors.Wrapf(err, "error looking for Chrome %s", ct.ptype)
 		}
@@ -615,11 +558,7 @@ func (ct *CrashTester) killBrowser(ctx context.Context) error {
 	// as its parent) is the browser process. It's not sandboxed, so it should be able
 	// to write a minidump file when it crashes.
 	var rp *process.Process
-	if ct.browserType == browser.TypeAsh {
-		rp, err = ashproc.Root()
-	} else {
-		rp, err = lacrosproc.Root(ctx, ct.tconn)
-	}
+	rp, err = ashproc.Root()
 	if err != nil {
 		return errors.Wrap(err, "failed to get Chrome root process")
 	}
@@ -694,11 +633,7 @@ func metaFileContains(ctx context.Context, metaFile string, expectedValues map[s
 // values in |metaFile|. Return nil if each value is found.
 func (ct *CrashTester) validateComputedSeverity(ctx context.Context, metaFile string) error {
 	expectedValues := map[string]string{}
-	if ct.browserType == browser.TypeAsh {
-		expectedValues["computed_product"] = "Ui"
-	} else {
-		expectedValues["computed_product"] = "Lacros"
-	}
+	expectedValues["computed_product"] = "Ui"
 	// TODO(crbug.com/1466932): Set computed_severity to "INFO" for Broker after
 	// Broker process crashes are reported with ptype=broker.
 	if ct.ptype == Browser {
@@ -708,28 +643,6 @@ func (ct *CrashTester) validateComputedSeverity(ctx context.Context, metaFile st
 	}
 
 	return metaFileContains(ctx, metaFile, expectedValues)
-}
-
-// validateBuildTime ensures that the meta files from Lacros crashes have valid
-// upload_var_build_time_millis in them. Lacros needs to populate
-// upload_var_build_time_millis because crash_sender's
-// SenderBase::EvaluateMetaFileMinimal() relies on it for age checks.
-func (ct *CrashTester) validateBuildTime(ctx context.Context, metaFile string) error {
-	if ct.browserType == browser.TypeAsh {
-		// Only Lacros has build time included in crash reports.
-		return nil
-	}
-
-	contents, err := ioutil.ReadFile(metaFile)
-	if err != nil {
-		return errors.Wrapf(err, "couldn't read meta file %s contents", metaFile)
-	}
-
-	re := regexp.MustCompile("upload_var_build_time_millis=[0-9]+\n")
-	if re.Find(contents) == nil {
-		return errors.Errorf("Did not find upload_var_build_time_millis in %q", contents)
-	}
-	return nil
 }
 
 // getCorrespondingFile returns the file in the filelist |files| that corresponds
@@ -798,11 +711,7 @@ func (ct *CrashTester) KillAndGetCrashFiles(ctx context.Context) ([]string, erro
 		logs := fmt.Sprintf(chromeCrashFilePatternWithPid+"chrome.txt.gz", ct.killedPID)
 		i915 := fmt.Sprintf(chromeCrashFilePatternWithPid+"i915_error_state.log.xz", ct.killedPID)
 		opts = append(opts, crash.OptionalRegexes([]string{logs, i915}))
-		if ct.browserType == browser.TypeAsh {
-			opts = append(opts, crash.MetaString("upload_var_prod=Chrome_ChromeOS"))
-		} else {
-			opts = append(opts, crash.MetaString("upload_var_prod=Chrome_Lacros"))
-		}
+		opts = append(opts, crash.MetaString("upload_var_prod=Chrome_ChromeOS"))
 	}
 
 	var matches map[string][]string
@@ -846,23 +755,6 @@ func (ct *CrashTester) KillAndGetCrashFiles(ctx context.Context) ([]string, erro
 		var severityErr error
 		foundCorrectMeta := false
 		for _, metaFile := range metaFiles {
-			if buildTimeErr := ct.validateBuildTime(ctx, metaFile); buildTimeErr != nil {
-				// All crashes, from SEGV or DumpWithoutCrashing or JavaScript, should
-				// have correct build time, so fail out here regardless of which of the
-				// crash reports this is.
-				if outDir, outDirExists := testing.ContextOutDir(ctx); outDirExists {
-					if moveErr := crash.MoveFilesToOut(ctx, outDir, metaFiles...); moveErr != nil {
-						testing.ContextLog(ctx, "Failed to save the meta files: ", moveErr)
-					}
-					// The dmp file contains the CrashKeys records as well, so it is useful
-					// for debugging missing CrashKeys.
-					if moveErr := crash.MoveFilesToOut(ctx, outDir, dmpFiles...); moveErr != nil {
-						testing.ContextLog(ctx, "Failed to save the .dmp files: ", moveErr)
-					}
-				}
-				return nil, errors.Wrap(buildTimeErr, "failed to validate build time in meta file")
-			}
-
 			// See if this is the correct meta file.
 			if severityErr = ct.validateComputedSeverity(ctx, metaFile); severityErr == nil {
 				// This one should have a .dmp file. (The others might not because they were
@@ -896,10 +788,7 @@ func (ct *CrashTester) KillAndGetCrashFiles(ctx context.Context) ([]string, erro
 	return files, nil
 }
 
-// KillCrashpad kills all chrome_crashpad_handler processes running
-// in the system (for either ash-Chrome or Lacros, depending on ct.browser). It
-// returns when there are no more chrome_crashpad_handler processes running for
-// the indicated browser type.
+// KillCrashpad kills all chrome_crashpad_handler processes running in the system and waits until they are gone.
 func (ct *CrashTester) KillCrashpad(ctx context.Context) error {
 	testing.ContextLog(ctx, "Hunting and killing chrome_crashpad_handler processes")
 	return testing.Poll(ctx, func(ctx context.Context) error {

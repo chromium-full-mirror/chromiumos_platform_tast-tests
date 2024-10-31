@@ -10,8 +10,6 @@ import (
 
 	"go.chromium.org/tast-tests/cros/local/bundles/cros/ui/chromecrash"
 	"go.chromium.org/tast-tests/cros/local/chrome"
-	"go.chromium.org/tast-tests/cros/local/chrome/browser"
-	"go.chromium.org/tast-tests/cros/local/chrome/browser/browserfixt"
 	"go.chromium.org/tast-tests/cros/local/crash"
 	"go.chromium.org/tast/core/ctxutil"
 	"go.chromium.org/tast/core/testing"
@@ -71,20 +69,18 @@ func ChromeCrashLoggedInDirect(ctx context.Context, s *testing.State) {
 	defer cancel()
 
 	params := s.Param().(chromeCrashLoggedInDirectParams)
-	ct, err := chromecrash.NewCrashTester(ctx, chromecrash.GPUProcess, browser.TypeAsh, params.fileType)
+	ct, err := chromecrash.NewCrashTester(ctx, chromecrash.GPUProcess, params.fileType)
 	if err != nil {
 		s.Fatal("NewCrashTester failed: ", err)
 	}
 	defer ct.Close()
 
 	// TODO(b/292145636): Use fixtures for ChromeCrash tast tests instead.
-	cr, _, closeBrowser, err := browserfixt.SetUpWithNewChrome(ctx, browser.TypeAsh,
-		nil, chrome.ExtraArgs(chromecrash.GetExtraArgs(params.handler, crash.MockConsent)...))
+	cr, err := chrome.New(ctx, chrome.ExtraArgs(chromecrash.GetExtraArgs(params.handler, crash.MockConsent)...))
 	if err != nil {
 		s.Fatal("Chrome login failed: ", err)
 	}
 	defer cr.Close(cleanupCtx)
-	defer closeBrowser(cleanupCtx)
 
 	// We use crash.DevImage() here because this test still uses the testing
 	// command-line flags on crash_reporter to bypass metrics consent and such.
@@ -94,9 +90,6 @@ func ChromeCrashLoggedInDirect(ctx context.Context, s *testing.State) {
 		s.Fatal("SetUpCrashTest failed: ", err)
 	}
 	defer crash.TearDownCrashTest(ctx)
-	if err := ct.AssociateWithChrome(ctx, cr); err != nil {
-		s.Fatal("Failed to associate chrome with the crash tester: ", err)
-	}
 
 	var files []string
 	if files, err = ct.KillAndGetCrashFiles(ctx); err != nil {
