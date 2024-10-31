@@ -61,7 +61,7 @@ func init() {
 		BugComponent: "b:1271043", // Chrome OS Server Projects > Enterprise Management >> Chrome Commercial Backend >> Onboarding >> Enterprise Enrollment
 		Fixture:      fixture.CleanOwnership,
 		Attr:         []string{"group:dmserver-enrollment-daily"},
-		SoftwareDeps: []string{"reven_oobe_config", "chrome"},
+		SoftwareDeps: []string{"flex_device", "chrome"},
 		ServiceDeps: []string{
 			"tast.cros.policy.PolicyService",
 			dutfs.ServiceName,
