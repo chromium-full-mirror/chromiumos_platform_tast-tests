@@ -124,11 +124,12 @@ var (
 	//    TPM MODE:    disabled (3)
 	//    Key Ladder:  prod
 	//    EK Cert:     Compliant
-	sysinfoFactoryMode  = `Chip factory mode.`
-	sysinfoResetFlagRE  = `Reset flags:\s+0x(?P<resetFlags>` + hexRE + `)\s+\([^)]*\)\s*`
-	sysinfoResetCountRE = `Reset count:\s+(?P<resetCount>\d*)\s*`
-	sysinfoBreadcrumbRE = `(Breadcrumbs:\s+0x(?P<breadcrumbs>` + hexRE + `))?\s*`
-	sysinfoChipRE       = `Chip:\s+g\s+(?P<chipName>Ti50|cr50) (?P<chipSKU>\S+)\s*`
+	sysinfoFactoryMode        = `Chip factory mode.`
+	sysinfoResetFlagRE        = `Reset flags:\s+0x(?P<resetFlags>` + hexRE + `)\s+\([^)]*\)\s*`
+	sysinfoRollbackDetectedRE = `(Rollback detected)?\s*`
+	sysinfoResetCountRE       = `Reset count:\s+(?P<resetCount>\d*)\s*`
+	sysinfoBreadcrumbRE       = `(Breadcrumbs:\s+0x(?P<breadcrumbs>` + hexRE + `))?\s*`
+	sysinfoChipRE             = `Chip:\s+g\s+(?P<chipName>Ti50|cr50) (?P<chipSKU>\S+)\s*`
 	// Old Cr50 sysinfo output may print "(prod|dev)" after the keyids. Ignore it.
 	// ex: RO keyid:    0xaa66150f(prod)
 	sysinfoROKeyidRE = `RO keyid:\s+(?P<roKeyid>0x` + hexRE + `)(?:\(\S+\))?\s*`
@@ -141,7 +142,7 @@ var (
 	sysinfoEKCertRE      = `(EK Cert:\s+(?P<ekCert>\S+))?\s*`
 	sysinfoFactoryModeRE = `(?P<factoryMode>` + sysinfoFactoryMode + `)?`
 
-	sysinfoRE = regexp.MustCompile(sysinfoResetFlagRE + sysinfoResetCountRE + sysinfoBreadcrumbRE + sysinfoChipRE + sysinfoROKeyidRE + sysinfoRWKeyidRE + sysinfoDevidRE + sysinfoRollbackRE + sysinfoTPMModeRE + sysinfoKeyladderRE + sysinfoEKCertRE + sysinfoFactoryModeRE)
+	sysinfoRE = regexp.MustCompile(sysinfoResetFlagRE + sysinfoRollbackDetectedRE + sysinfoResetCountRE + sysinfoBreadcrumbRE + sysinfoChipRE + sysinfoROKeyidRE + sysinfoRWKeyidRE + sysinfoDevidRE + sysinfoRollbackRE + sysinfoTPMModeRE + sysinfoKeyladderRE + sysinfoEKCertRE + sysinfoFactoryModeRE)
 	// regex to parse the chip bid output
 	// ex Cr50 output: Board ID: ffffffff:00000000, flags 00000010
 	// ex Ti50 output: Board ID: ffffffff:00000000, flags: 00000010
