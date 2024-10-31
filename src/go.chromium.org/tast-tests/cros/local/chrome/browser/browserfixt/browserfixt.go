@@ -11,8 +11,6 @@ import (
 
 	"go.chromium.org/tast-tests/cros/local/chrome"
 	"go.chromium.org/tast-tests/cros/local/chrome/browser"
-	"go.chromium.org/tast-tests/cros/local/chrome/lacros"
-	"go.chromium.org/tast-tests/cros/local/chrome/lacros/lacrosfaillog"
 	"go.chromium.org/tast-tests/cros/local/chrome/lacros/lacrosfixt"
 	"go.chromium.org/tast/core/errors"
 )
@@ -24,16 +22,6 @@ func SetUp(ctx context.Context, cr *chrome.Chrome, bt browser.Type) (*browser.Br
 	switch bt {
 	case browser.TypeAsh:
 		return cr.Browser(), func(context.Context) error { return nil }, nil
-	case browser.TypeLacros:
-		tconn, err := cr.TestAPIConn(ctx)
-		if err != nil {
-			return nil, nil, errors.Wrap(err, "failed to connect to test API")
-		}
-		l, err := lacros.Launch(ctx, tconn)
-		if err != nil {
-			return nil, nil, errors.Wrap(err, "failed to launch lacros-chrome")
-		}
-		return l.Browser(), l.Close, nil
 	default:
 		return nil, nil, errors.Errorf("unrecognized browser type %s", string(bt))
 	}
@@ -53,36 +41,6 @@ func SetUpWithNewChrome(ctx context.Context, bt browser.Type, cfg *lacrosfixt.Co
 			return nil, nil, nil, errors.Wrap(err, "failed to connect to ash-chrome")
 		}
 		return cr, cr.Browser(), func(context.Context) error { return nil }, nil
-
-	case browser.TypeLacros:
-		lacrosOpts, err := cfg.Opts()
-		if err != nil {
-			return nil, nil, nil, errors.Wrap(err, "failed to get default options")
-		}
-		opts = append(opts, lacrosOpts...)
-
-		cr, err := chrome.New(ctx, opts...)
-		if err != nil {
-			return nil, nil, nil, errors.Wrap(err, "failed to connect to ash-chrome")
-		}
-		defer func() {
-			if errRet != nil {
-				cr.Close(ctx)
-			}
-		}()
-
-		tconn, err := cr.TestAPIConn(ctx)
-		if err != nil {
-			return nil, nil, nil, errors.Wrap(err, "failed to connect to ash-chrome test API")
-		}
-
-		l, err := lacros.Launch(ctx, tconn)
-		if err != nil {
-			lacrosfaillog.Save(ctx, tconn)
-			return nil, nil, nil, errors.Wrap(err, "failed to launch lacros-chrome")
-		}
-		return cr, l.Browser(), l.Close, nil
-
 	default:
 		return nil, nil, nil, errors.Errorf("unrecognized browser type %s", string(bt))
 	}
@@ -95,11 +53,7 @@ func SetUpWithNewChrome(ctx context.Context, bt browser.Type, cfg *lacrosfixt.Co
 // launched via some UI interaction, for example.
 func NewChrome(ctx context.Context, bt browser.Type, cfg *lacrosfixt.Config, opts ...chrome.Option) (*chrome.Chrome, error) {
 	if bt == browser.TypeLacros {
-		lacrosOpts, err := cfg.Opts()
-		if err != nil {
-			return nil, errors.Wrap(err, "failed to get Lacros options")
-		}
-		opts = append(opts, lacrosOpts...)
+		return nil, errors.Errorf("unrecognized browser type %s", string(bt))
 	}
 	cr, err := chrome.New(ctx, opts...)
 	if err != nil {
@@ -115,42 +69,6 @@ func Connect(ctx context.Context, cr *chrome.Chrome, bt browser.Type) (*browser.
 	switch bt {
 	case browser.TypeAsh:
 		return cr.Browser(), func(context.Context) {}, nil
-	case browser.TypeLacros:
-		tconn, err := cr.TestAPIConn(ctx)
-		if err != nil {
-			return nil, nil, errors.Wrap(err, "failed to connect to ash-chrome test API")
-		}
-		l, err := lacros.Connect(ctx, tconn)
-		if err != nil {
-			return nil, nil, errors.Wrap(err, "failed to connect to lacros-chrome")
-		}
-		cleanUp := func(ctx context.Context) {
-			l.CloseResources(ctx) // Ignore error.
-		}
-		return l.Browser(), cleanUp, nil
-	default:
-		return nil, nil, errors.Errorf("unrecognized Chrome type %s", string(bt))
-	}
-}
-
-// ConnectAndOwn is like Connect but the returned closure also closes the browser (just like SetUp's).
-func ConnectAndOwn(ctx context.Context, cr *chrome.Chrome, bt browser.Type) (*browser.Browser, func(ctx context.Context), error) {
-	switch bt {
-	case browser.TypeAsh:
-		return cr.Browser(), func(context.Context) {}, nil
-	case browser.TypeLacros:
-		tconn, err := cr.TestAPIConn(ctx)
-		if err != nil {
-			return nil, nil, errors.Wrap(err, "failed to connect to ash-chrome test API")
-		}
-		l, err := lacros.Connect(ctx, tconn)
-		if err != nil {
-			return nil, nil, errors.Wrap(err, "failed to connect to lacros-chrome")
-		}
-		brClose := func(ctx context.Context) {
-			l.Close(ctx) // Ignore error.
-		}
-		return l.Browser(), brClose, nil
 	default:
 		return nil, nil, errors.Errorf("unrecognized Chrome type %s", string(bt))
 	}
