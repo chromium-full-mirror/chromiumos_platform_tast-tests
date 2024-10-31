@@ -111,8 +111,8 @@ func (vlc *Vlc) Install(ctx context.Context, cr *chrome.Chrome) error {
 		return errors.Wrap(err, "failed to get apk name")
 	}
 
-	// Downloading the APK by "curl" rather than UI (e.g. Chrome browser) so that
-	// this package doesn't need the lacros variant.
+	// Downloading the APK by "curl" rather than UI (e.g. Chrome browser)
+	// for historical reasons only (could be changed now).
 	// The apk download link in "https://get.videolan.org/vlc-android" is redirected.
 	// To address this, the -LO argument needs to be specified to ensure the download
 	// of the complete original file along with the filename.

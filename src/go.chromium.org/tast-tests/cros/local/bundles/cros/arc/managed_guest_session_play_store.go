@@ -26,9 +26,8 @@ import (
 
 func init() {
 	testing.AddTest(&testing.Test{
-		Func:         ManagedGuestSessionPlayStore,
-		LacrosStatus: testing.LacrosVariantNeeded,
-		Desc:         "Verifies that Play Store is not available in Managed Guest Session",
+		Func: ManagedGuestSessionPlayStore,
+		Desc: "Verifies that Play Store is not available in Managed Guest Session",
 		Contacts: []string{
 			"arc-commercial@google.com",
 			"mhasank@chromium.org",

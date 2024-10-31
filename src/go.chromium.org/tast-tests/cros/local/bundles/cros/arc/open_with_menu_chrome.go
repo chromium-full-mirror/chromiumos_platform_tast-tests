@@ -29,7 +29,7 @@ func init() {
 		Func:         OpenWithMenuChrome,
 		LacrosStatus: testing.LacrosVariantUnneeded,
 		Desc:         "Test ARC's open with menu show up in Chrome's right click menu",
-		Contacts:     []string{"cros-arc-te@google.com", "lacros-fundamentals@google.com", "elkurin@chromium.org"},
+		Contacts:     []string{"cros-arc-te@google.com", "elkurin@chromium.org"},
 		// ChromeOS > Software > ARC++ > Core
 		BugComponent: "b:488493",
 		Attr:         []string{"group:mainline", "informational", "group:hw_agnostic"},

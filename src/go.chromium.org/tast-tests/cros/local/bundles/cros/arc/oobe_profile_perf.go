@@ -30,9 +30,8 @@ import (
 
 func init() {
 	testing.AddTest(&testing.Test{
-		Func:         OOBEProfilePerf,
-		LacrosStatus: testing.LacrosVariantNeeded,
-		Desc:         "Profile OOBE and post-login",
+		Func: OOBEProfilePerf,
+		Desc: "Profile OOBE and post-login",
 		Contacts: []string{
 			"baseos-perf@google.com",
 			"cwd@google.com",

@@ -11,9 +11,6 @@ import (
 	"go.chromium.org/tast-tests/cros/common/android/ui"
 	"go.chromium.org/tast-tests/cros/local/arc/optin"
 	"go.chromium.org/tast-tests/cros/local/chrome"
-	"go.chromium.org/tast-tests/cros/local/chrome/browser"
-	"go.chromium.org/tast-tests/cros/local/chrome/browser/browserfixt"
-	"go.chromium.org/tast-tests/cros/local/chrome/lacros/lacrosfixt"
 	"go.chromium.org/tast-tests/cros/local/pvsched"
 	"go.chromium.org/tast/core/errors"
 	"go.chromium.org/tast/core/testing"
@@ -64,18 +61,12 @@ var bootedPre = &preImpl{
 
 // NewPrecondition creates a new arc precondition for tests that need different args.
 func NewPrecondition(name string, gaia *GaiaVars, gaiaPool *GaiaLoginPoolVars, rootfsODirect bool, extraArgs ...string) testing.Precondition {
-	return NewPreconditionWithBrowserType(name, browser.TypeAsh, gaia, gaiaPool, rootfsODirect, extraArgs...)
-}
-
-// NewPreconditionWithBrowserType creates a new arc precondition for tests that need different args and browser types.
-func NewPreconditionWithBrowserType(name string, browserType browser.Type, gaia *GaiaVars, gaiaPool *GaiaLoginPoolVars, rootfsODirect bool, extraArgs ...string) testing.Precondition {
 	timeout := ResetTimeout + chrome.LoginTimeout + BootTimeout
 	if gaia != nil || gaiaPool != nil {
 		timeout = ResetTimeout + chrome.GAIALoginTimeout + BootTimeout + optin.OptinTimeout
 	}
 	pre := &preImpl{
 		name:          name,
-		browserType:   browserType,
 		timeout:       timeout,
 		gaia:          gaia,
 		gaiaPool:      gaiaPool,
@@ -89,21 +80,12 @@ func NewPreconditionWithBrowserType(name string, browserType browser.Type, gaia 
 // Similar to NewPrecondition, but enabled paravirt sched feature.
 // TODO(b/325918094): Remove when paravirt sched is fully enabled on chromeos
 func NewPreconditionWithPvSchedEnabled(name string, gaia *GaiaVars, gaiaPool *GaiaLoginPoolVars, rootfsODirect bool, extraArgs ...string) testing.Precondition {
-	return NewPreconditionWithBrowserTypePvSchedEnabled(name, browser.TypeAsh, gaia, gaiaPool, rootfsODirect, extraArgs...)
-}
-
-// NewPreconditionWithBrowserTypePvSchedEnabled creates a new arc precondition for tests that need different args and browser types.
-// Similar to NewPreconditionWithBrowserType. Code is duplicated instead of
-// refactoring so that revert is potentially conflict free.
-// TODO(b/325918094): Remove when paravirt sched is fully enabled on chromeos
-func NewPreconditionWithBrowserTypePvSchedEnabled(name string, browserType browser.Type, gaia *GaiaVars, gaiaPool *GaiaLoginPoolVars, rootfsODirect bool, extraArgs ...string) testing.Precondition {
 	timeout := ResetTimeout + chrome.LoginTimeout + BootTimeout
 	if gaia != nil || gaiaPool != nil {
 		timeout = ResetTimeout + chrome.GAIALoginTimeout + BootTimeout + optin.OptinTimeout
 	}
 	pre := preImpl{
 		name:          name,
-		browserType:   browserType,
 		timeout:       timeout,
 		gaia:          gaia,
 		gaiaPool:      gaiaPool,
@@ -128,8 +110,7 @@ type GaiaLoginPoolVars struct {
 
 // preImpl implements testing.Precondition.
 type preImpl struct {
-	name        string       // testing.Precondition.String
-	browserType browser.Type // type of browser to use
+	name string // testing.Precondition.String
 
 	timeout time.Duration // testing.Precondition.Timeout
 
@@ -212,27 +193,21 @@ func (p *preImpl) Prepare(ctx context.Context, s *testing.PreState) interface{} 
 			username := s.RequiredVar(p.gaia.UserVar)
 			password := s.RequiredVar(p.gaia.PassVar)
 
-			p.cr, err = browserfixt.NewChrome(
+			p.cr, err = chrome.New(
 				ctx,
-				p.browserType,
-				lacrosfixt.NewConfig(),
 				chrome.GAIALogin(chrome.Creds{User: username, Pass: password}),
 				chrome.ARCSupported(),
 				chrome.ExtraArgs(extraArgs...))
 		} else if p.gaiaPool != nil {
 			// Login into the device, using GAIA login pool.
-			p.cr, err = browserfixt.NewChrome(
+			p.cr, err = chrome.New(
 				ctx,
-				p.browserType,
-				lacrosfixt.NewConfig(),
 				chrome.GAIALoginPool(s.RequiredVar(p.gaiaPool.PoolVar)),
 				chrome.ARCSupported(),
 				chrome.ExtraArgs(extraArgs...))
 		} else {
-			p.cr, err = browserfixt.NewChrome(
+			p.cr, err = chrome.New(
 				ctx,
-				p.browserType,
-				lacrosfixt.NewConfig(),
 				chrome.ARCEnabled(),
 				chrome.ExtraArgs(extraArgs...))
 		}

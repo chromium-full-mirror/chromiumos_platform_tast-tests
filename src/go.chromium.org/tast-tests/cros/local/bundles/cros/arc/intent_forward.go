@@ -17,17 +17,14 @@ import (
 	"go.chromium.org/tast-tests/cros/common/testexec"
 	"go.chromium.org/tast-tests/cros/local/arc"
 	"go.chromium.org/tast-tests/cros/local/chrome"
-	"go.chromium.org/tast-tests/cros/local/chrome/browser"
-	"go.chromium.org/tast-tests/cros/local/chrome/browser/browserfixt"
 	"go.chromium.org/tast/core/testing"
 )
 
 func init() {
 	testing.AddTest(&testing.Test{
-		Func:         IntentForward,
-		LacrosStatus: testing.LacrosVariantUnneeded,
-		Desc:         "Checks Android intents are forwarded to Chrome",
-		Contacts:     []string{"arc-core@google.com", "djacobo@google.com"},
+		Func:     IntentForward,
+		Desc:     "Checks Android intents are forwarded to Chrome",
+		Contacts: []string{"arc-core@google.com", "djacobo@google.com"},
 		// ChromeOS > Software > ARC++ > Core
 		BugComponent: "b:488493",
 		SoftwareDeps: []string{"chrome"},
@@ -35,13 +32,11 @@ func init() {
 		Attr:         []string{"group:mainline", "group:arc-functional"},
 		Params: []testing.Param{{
 			ExtraSoftwareDeps: []string{"android_container"},
-			Val:               browser.TypeAsh,
 			Fixture:           "arcBooted",
 		}, {
 			Name:              "vm",
 			ExtraAttr:         []string{"group:hw_agnostic"},
 			ExtraSoftwareDeps: []string{"android_vm"},
-			Val:               browser.TypeAsh,
 			Fixture:           "arcBooted",
 		}},
 	})
@@ -71,7 +66,7 @@ func IntentForward(ctx context.Context, s *testing.State) {
 	defer server.Close()
 	localWebURL := server.URL + "/" // Must end with a slash
 
-	checkIntent := func(action, data, url string, bt browser.Type) {
+	checkIntent := func(action, data, url string) {
 		ctx, cancel := context.WithTimeout(ctx, time.Minute)
 		defer cancel()
 
@@ -82,18 +77,12 @@ func IntentForward(ctx context.Context, s *testing.State) {
 			return
 		}
 
-		br, brCleanUp, err := browserfixt.Connect(ctx, cr, bt)
-		if err != nil {
-			s.Error("Failed to connect to browser: ", err)
-			return
-		}
-		defer brCleanUp(ctx)
 		urlMatcher := func(t *target.Info) bool {
 			matched, _ := regexp.MatchString(url, t.URL)
 			return matched
 		}
 
-		conn, err := br.NewConnForTarget(ctx, urlMatcher)
+		conn, err := cr.NewConnForTarget(ctx, urlMatcher)
 		if err != nil {
 			s.Errorf("%s(%s) -> %s: %v", action, data, url, err)
 			return
@@ -101,7 +90,7 @@ func IntentForward(ctx context.Context, s *testing.State) {
 		defer conn.Close()
 	}
 
-	checkIntent(viewAction, localWebURL, localWebURL, s.Param().(browser.Type))
-	checkIntent(setWallpaperAction, "", wallpaperPickerURL, browser.TypeAsh)
-	checkIntent(viewDownloadsAction, "", filesAppURL, browser.TypeAsh)
+	checkIntent(viewAction, localWebURL, localWebURL)
+	checkIntent(setWallpaperAction, "", wallpaperPickerURL)
+	checkIntent(viewDownloadsAction, "", filesAppURL)
 }
