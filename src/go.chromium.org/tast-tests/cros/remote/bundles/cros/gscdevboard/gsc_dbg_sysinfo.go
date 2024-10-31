@@ -15,6 +15,14 @@ import (
 	"go.chromium.org/tast/core/testing"
 )
 
+const (
+	// All 128 bits should be erased in the DBG rollback infomask
+	dbgImageRollbackBits = 128
+	// DBG images should be signed with 1 as the epoch, so tests can update
+	// to them even when we increment minor versions.
+	dbgImageEpoch = "1"
+)
+
 func init() {
 	testing.AddTest(&testing.Test{
 		Func:    GSCDBGSysinfo,
@@ -34,6 +42,7 @@ func GSCDBGSysinfo(ctx context.Context, s *testing.State) {
 	i := ti50.MustOpenCrOSImage(ctx, b, s, b.TestbedType)
 	defer i.Close(ctx)
 
+	f := s.FixtValue().(*fixture.Value)
 	th := utils.FirmwareTestingHelper{FirmwareTestingHelperDelegate: s}
 
 	s.Log("(Re)starting GSC")
@@ -42,9 +51,7 @@ func GSCDBGSysinfo(ctx context.Context, s *testing.State) {
 
 	// Simulate the typing of "sysinfo" command on GSC console.
 	sysinfo, err := i.Sysinfo(ctx)
-	if err != nil {
-		s.Fatal("Error communicating with GSC: ", err)
-	}
+	th.MustSucceed(err, "failed to run sysinfo")
 
 	// Rudimentary validation of output: find and print "DEV_ID:" line.
 	s.Log("DEV_ID: ", sysinfo.Devid)
@@ -53,17 +60,78 @@ func GSCDBGSysinfo(ctx context.Context, s *testing.State) {
 	if err != nil {
 		s.Fatal("Unable to get version output: ", err)
 	}
-	rwVersion := version.ActiveRw().Version
-	s.Log("RW_VER: ", rwVersion)
-	epoch := strings.Split(rwVersion, ".")[0]
+	activeRW := version.ActiveRw()
+	s.Log("RW_VER: ", activeRW.Version)
+	epoch := strings.Split(activeRW.Version, ".")[0]
 	s.Log("epoch: ", epoch)
+	s.Log("Rollback info: ", sysinfo.RWRollback)
 
+	if !activeRW.Debug {
+		s.Fatal("Test is only valid on DBG images")
+	}
 	if sysinfo.ProdKeyladder {
 		s.Errorf("Found prod Key Ladder in a DBG image: %+v", sysinfo)
 	}
-	if epoch != "1" {
-		s.Errorf("Epoch is not 1 in RW version %s", rwVersion)
+	if epoch != dbgImageEpoch {
+		s.Errorf("Epoch is not %s in RW version %s", dbgImageEpoch, activeRW.Version)
 	}
 
-	// TODO(b/374809074): check that 128 rollback bits are blown in the image.
+	if version.RwA.Debug && sysinfo.RWRollbackBits.SlotA.Bits != dbgImageRollbackBits {
+		s.Errorf("Slot A reporting incorrect number of rollback bits: wanted %d got %d", dbgImageRollbackBits, sysinfo.RWRollbackBits.SlotA.Bits)
+	}
+	if version.RwB.Debug && sysinfo.RWRollbackBits.SlotB.Bits != dbgImageRollbackBits {
+		s.Errorf("Slot B reporting incorrect number of rollback bits: wanted %d got %d", dbgImageRollbackBits, sysinfo.RWRollbackBits.SlotB.Bits)
+	}
+	startBits := sysinfo.RWRollbackBits.Flash.Bits
+	if startBits == dbgImageRollbackBits {
+		s.Fatal("128 bits blown in flash")
+	}
+
+	// This is dangerous. If the DBG image is incorrectly built and it
+	// erases all of the rollback bits, then it'll lock out all prod
+	// releases and EFI images. It might not be possible to recover this
+	// device. It's still better to explicitly test it on one board while
+	// qualifying DBG images instead of accidentally hitting it on all
+	// faft-gsc devices.
+	tpm := b.ResetAndTpmStartup(ctx, i, ti50.CCDModeOn, ti50.FfClamshell)
+	err = tpm.TpmvInvalidateInactiveRW()
+	th.MustSucceed(err, "failed to send invalidate RW")
+
+	// The DBG image should not let you blow bits
+	if sysinfo.RWRollbackBits.Flash.Bits != startBits {
+		s.Fatal("DBG image updated rollback bits")
+	}
+	if sysinfo.RWRollbackBits.Flash.Bits == dbgImageRollbackBits {
+		s.Fatal("128 bits blown in flash after second update")
+	}
+	s.Log("Rollback info: ", sysinfo.RWRollback)
+	debugImage := f.ImagePath
+	if debugImage == "" {
+		s.Log("No image path given. Cannot flash it twice")
+		return
+	}
+	_, debugVer, _, _, err := b.GSCToolBinVersion(ctx, debugImage)
+	th.MustSucceed(err, "failed to get debug image version")
+
+	// Flash the DBG image into the inactive region. Verify it doesn't
+	// blow all rollback bits.
+	if err = b.UpdateOnce(ctx, i, debugImage, debugVer); err != nil {
+		s.Fatal("Failed to flash inactive slot: ", err)
+	}
+	th.MustSucceed(i.WaitUntilBooted(ctx), "GSC revives after reboot")
+	// Simulate the typing of "sysinfo" command on GSC console.
+	sysinfo, err = i.Sysinfo(ctx)
+	th.MustSucceed(err, "failed to run sysinfo")
+	s.Log("Flashed DBG image in inactive slot")
+	s.Log("Rollback info: ", sysinfo.RWRollback)
+
+	if sysinfo.RWRollbackBits.SlotA.Bits != dbgImageRollbackBits {
+		s.Errorf("Slot A reporting incorrect number of rollback bits after second update: wanted %d got %d", dbgImageRollbackBits, sysinfo.RWRollbackBits.SlotA.Bits)
+	}
+	if sysinfo.RWRollbackBits.SlotB.Bits != dbgImageRollbackBits {
+		s.Errorf("Slot B reporting incorrect number of rollback bits after second update: wanted %d got %d", dbgImageRollbackBits, sysinfo.RWRollbackBits.SlotB.Bits)
+	}
+	if sysinfo.RWRollbackBits.Flash.Bits == dbgImageRollbackBits {
+		s.Fatal("128 bits blown in flash after second update")
+	}
 }
