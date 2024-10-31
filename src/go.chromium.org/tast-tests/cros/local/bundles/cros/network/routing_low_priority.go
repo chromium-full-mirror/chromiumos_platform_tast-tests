@@ -25,16 +25,8 @@ func init() {
 		// ChromeOS > Platform > System > Networking > Continuous Maintenance
 		BugComponent: "b:1493959",
 		Attr:         []string{"group:mainline", "group:release-health", "release-health_network"},
-		LacrosStatus: testing.LacrosVariantUnneeded,
-		Params: []testing.Param{{
-			Val: false,
-		}, {
-			Name:              "chrome",
-			Val:               true,
-			Fixture:           fixture.ChromeLoggedIn,
-			ExtraSoftwareDeps: []string{"chrome"},
-			ExtraAttr:         []string{"informational", "group:criticalstaging"},
-		}},
+		Fixture:      fixture.ChromeLoggedIn,
+		SoftwareDeps: []string{"chrome"},
 	})
 }
 
@@ -58,11 +50,7 @@ func RoutingLowPriority(ctx context.Context, s *testing.State) {
 	s.AttachErrorHandlers(hookEnv.OnErrorHandler, hookEnv.OnFatalHandler)
 	defer hookEnv.TearDownWithLogFailures(cleanupCtx, s.HasError)
 
-	var cr *chrome.Chrome
-	if s.Param().(bool) {
-		cr = s.FixtValue().(chrome.HasChrome).Chrome()
-	}
-
+	cr := s.FixtValue().(chrome.HasChrome).Chrome()
 	testEnv := routing.NewTestEnv(cr)
 	if err := testEnv.SetUp(ctx); err != nil {
 		s.Fatal("Failed to set up routing test env: ", err)

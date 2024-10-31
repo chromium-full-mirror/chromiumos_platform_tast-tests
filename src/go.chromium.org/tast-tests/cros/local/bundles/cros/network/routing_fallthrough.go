@@ -24,7 +24,6 @@ const (
 
 type routingFallthroughTestCase struct {
 	primaryFamily string
-	useChrome     bool
 }
 
 func init() {
@@ -34,38 +33,19 @@ func init() {
 		Contacts: []string{"cros-networking@google.com", "jiejiang@google.com"},
 		// ChromeOS > Platform > System > Networking > Continuous Maintenance
 		BugComponent: "b:1493959",
-		Attr:         []string{"group:mainline"},
-		LacrosStatus: testing.LacrosVariantUnneeded,
+		Attr:         []string{"group:mainline", "group:network", "network_cq"},
+		SoftwareDeps: []string{"chrome"},
+		Fixture:      fixture.ChromeLoggedIn,
 		Params: []testing.Param{{
 			Name: "ipv4_only_primary",
 			Val: routingFallthroughTestCase{
 				primaryFamily: primaryIPv4Only,
 			},
-			ExtraAttr: []string{"group:network", "network_cq"},
 		}, {
 			Name: "ipv6_only_primary",
 			Val: routingFallthroughTestCase{
 				primaryFamily: primaryIPv6Only,
 			},
-			ExtraAttr: []string{"group:network", "network_cq"},
-		}, {
-			Name: "ipv4_only_primary_chrome",
-			Val: routingFallthroughTestCase{
-				primaryFamily: primaryIPv4Only,
-				useChrome:     true,
-			},
-			ExtraAttr:         []string{"informational", "group:criticalstaging"},
-			ExtraSoftwareDeps: []string{"chrome"},
-			Fixture:           fixture.ChromeLoggedIn,
-		}, {
-			Name: "ipv6_only_primary_chrome",
-			Val: routingFallthroughTestCase{
-				primaryFamily: primaryIPv6Only,
-				useChrome:     true,
-			},
-			ExtraAttr:         []string{"informational", "group:criticalstaging"},
-			ExtraSoftwareDeps: []string{"chrome"},
-			Fixture:           fixture.ChromeLoggedIn,
 		}},
 	})
 }
@@ -91,11 +71,7 @@ func RoutingFallthrough(ctx context.Context, s *testing.State) {
 
 	tc := s.Param().(routingFallthroughTestCase)
 
-	var cr *chrome.Chrome
-	if tc.useChrome {
-		cr = s.FixtValue().(chrome.HasChrome).Chrome()
-	}
-
+	cr := s.FixtValue().(chrome.HasChrome).Chrome()
 	testEnv := routing.NewTestEnv(cr)
 	if err := testEnv.SetUp(ctx); err != nil {
 		s.Fatal("Failed to set up routing test env: ", err)
