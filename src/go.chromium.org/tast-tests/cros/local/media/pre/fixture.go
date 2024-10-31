@@ -8,7 +8,6 @@ import (
 	"strings"
 
 	"go.chromium.org/tast-tests/cros/local/chrome"
-	"go.chromium.org/tast-tests/cros/local/chrome/browser"
 )
 
 func init() {
@@ -23,10 +22,7 @@ func init() {
 // getChromeVideoOptions returns the base chrome.Options that Chrome is started with
 // in most video-related tests (whether that happens or not depends on the specific
 // fixture in use) plus extraOpts.
-func getChromeVideoOptions(bt browser.Type, extraOpts ...chrome.Option) []chrome.Option {
-	// IMPORTANT: do not add --enable-features or --disable-features to chromeVideoBaseArgs
-	// as doing so may be problematic for lacros-chrome (see b/337315335). Instead, use
-	// chromeVideoBaseEnabledFeatures and chromeVideoBaseDisabledFeatures.
+func getChromeVideoOptions(extraOpts ...chrome.Option) []chrome.Option {
 	chromeVideoBaseArgs := []string{
 		// Enable verbose log messages for video components.
 		"--vmodule=" + strings.Join([]string{
@@ -71,13 +67,6 @@ func getChromeVideoOptions(bt browser.Type, extraOpts ...chrome.Option) []chrome
 		chrome.ExtraArgs(chromeVideoBaseArgs...),
 		chrome.EnableFeatures(chromeVideoBaseEnabledFeatures...),
 		chrome.DisableFeatures(chromeVideoBaseDisabledFeatures...),
-	}
-	if bt == browser.TypeLacros {
-		options = append(options,
-			chrome.LacrosExtraArgs(chromeVideoBaseArgs...),
-			chrome.LacrosEnableFeatures(chromeVideoBaseEnabledFeatures...),
-			chrome.LacrosDisableFeatures(chromeVideoBaseDisabledFeatures...),
-		)
 	}
 	return append(options, extraOpts...)
 }

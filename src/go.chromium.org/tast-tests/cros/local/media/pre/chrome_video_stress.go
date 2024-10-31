@@ -11,9 +11,7 @@ import (
 	"go.chromium.org/tast-tests/cros/local/audio/crastestclient"
 	"go.chromium.org/tast-tests/cros/local/chrome"
 	"go.chromium.org/tast-tests/cros/local/chrome/ash"
-	"go.chromium.org/tast-tests/cros/local/chrome/browser"
 	"go.chromium.org/tast-tests/cros/local/chrome/display"
-	"go.chromium.org/tast-tests/cros/local/chrome/lacros/lacrosfixt"
 	"go.chromium.org/tast-tests/cros/local/logsaver"
 	"go.chromium.org/tast-tests/cros/local/media/logging"
 	"go.chromium.org/tast/core/errors"
@@ -28,35 +26,10 @@ func initChromeVideoStressFixtures() {
 		Contacts:     []string{"chromeos-gfx-video@google.com"},
 		BugComponent: "b:168352", // ChromeOS > Platform > Graphics > Video.
 		Impl: &chromeVideoStressImpl{
-			browserType: browser.TypeAsh,
 			fOpt: func(ctx context.Context, s *testing.FixtState) ([]chrome.Option, error) {
 				return getChromeVideoOptions(
-					browser.TypeAsh,
 					chrome.ExtraArgs(chromeBypassPermissionsArgs...),
 				), nil
-			},
-		},
-		Parent:          "gpuWatchDog",
-		SetUpTimeout:    chrome.FixtureSetUpTimeout,
-		ResetTimeout:    chrome.ResetTimeout,
-		TearDownTimeout: chrome.ResetTimeout,
-	})
-	// Same as chromeVideoLacros but used for stress testing.
-	testing.AddFixture(&testing.Fixture{
-		Name:         "chromeVideoStressLacros",
-		Desc:         "Logged into a user session with logging enabled (lacros)",
-		Contacts:     []string{"chromeos-gfx-video@google.com"},
-		BugComponent: "b:168352", // ChromeOS > Platform > Graphics > Video.
-		Impl: &chromeVideoStressImpl{
-			browserType: browser.TypeLacros,
-			fOpt: func(ctx context.Context, s *testing.FixtState) ([]chrome.Option, error) {
-				return lacrosfixt.NewConfig(lacrosfixt.ChromeOptions(
-					getChromeVideoOptions(
-						browser.TypeLacros,
-						chrome.ExtraArgs(chromeBypassPermissionsArgs...),
-						chrome.LacrosExtraArgs(chromeBypassPermissionsArgs...),
-					)...,
-				)).Opts()
 			},
 		},
 		Parent:          "gpuWatchDog",
@@ -67,7 +40,6 @@ func initChromeVideoStressFixtures() {
 }
 
 type chromeVideoStressImpl struct {
-	browserType             browser.Type
 	fOpt                    chrome.OptionsCallback
 	resetChromeBetweenTests bool
 

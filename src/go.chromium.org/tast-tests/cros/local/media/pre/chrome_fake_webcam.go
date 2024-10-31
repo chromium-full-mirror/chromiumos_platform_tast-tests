@@ -8,17 +8,10 @@ import (
 	"context"
 
 	"go.chromium.org/tast-tests/cros/local/chrome"
-	"go.chromium.org/tast-tests/cros/local/chrome/browser"
-	"go.chromium.org/tast-tests/cros/local/chrome/lacros/lacrosfixt"
 	"go.chromium.org/tast/core/testing"
 )
 
 func initChromeFakeWebCamFixtures() {
-	initChromeFakeWebCamBaseFixtures()
-	initChromeFakeWebCamFixturesLacros()
-}
-
-func initChromeFakeWebCamBaseFixtures() {
 	testing.AddFixture(&testing.Fixture{
 		Name:         "chromeVideoWithFakeWebcam",
 		Desc:         "Similar to chromeVideo fixture but supplementing it with the use of a fake video/audio capture device (a.k.a. 'fake webcam'), see https://webrtc.org/testing/",
@@ -26,7 +19,6 @@ func initChromeFakeWebCamBaseFixtures() {
 		BugComponent: "b:168352", // ChromeOS > Platform > Graphics > Video.
 		Impl: chrome.NewLoggedInFixture(func(ctx context.Context, s *testing.FixtState) ([]chrome.Option, error) {
 			return getChromeVideoOptions(
-				browser.TypeAsh,
 				chrome.ExtraArgs(chromeFakeWebcamArgs...),
 				chrome.ExtraArgs(chromeWebRTCEncodedFrameArgs...),
 			), nil
@@ -44,7 +36,6 @@ func initChromeFakeWebCamBaseFixtures() {
 		BugComponent: "b:168352", // ChromeOS > Platform > Graphics > Video.
 		Impl: chrome.NewLoggedInFixture(func(ctx context.Context, s *testing.FixtState) ([]chrome.Option, error) {
 			return getChromeVideoOptions(
-				browser.TypeAsh,
 				chrome.ExtraArgs(chromeFakeWebcamArgs...),
 				chrome.DisableFeatures("UseOutOfProcessVideoDecoding"),
 			), nil
@@ -61,7 +52,6 @@ func initChromeFakeWebCamBaseFixtures() {
 		BugComponent: "b:168352", // ChromeOS > Platform > Graphics > Video.
 		Impl: chrome.NewLoggedInFixture(func(ctx context.Context, s *testing.FixtState) ([]chrome.Option, error) {
 			return getChromeVideoOptions(
-				browser.TypeAsh,
 				chrome.ExtraArgs(chromeFakeWebcamArgs...),
 				chrome.EnableFeatures("V4L2FlatStatefulVideoDecoder"),
 				chrome.EnableFeatures("UseChromeOSDirectVideoDecoder"),
@@ -81,7 +71,6 @@ func initChromeFakeWebCamBaseFixtures() {
 		BugComponent: "b:168352", // ChromeOS > Platform > Graphics > Video.
 		Impl: chrome.NewLoggedInFixture(func(ctx context.Context, s *testing.FixtState) ([]chrome.Option, error) {
 			return getChromeVideoOptions(
-				browser.TypeAsh,
 				chrome.ExtraArgs(chromeFakeWebcamArgs...),
 				chrome.EnableFeatures("UseOutOfProcessVideoEncoding"),
 			), nil
@@ -100,7 +89,6 @@ func initChromeFakeWebCamBaseFixtures() {
 		BugComponent: "b:168352", // ChromeOS > Platform > Graphics > Video.
 		Impl: chrome.NewLoggedInFixture(func(ctx context.Context, s *testing.FixtState) ([]chrome.Option, error) {
 			return getChromeVideoOptions(
-				browser.TypeAsh,
 				chrome.ExtraArgs(chromeFakeWebcamArgs...),
 				chrome.DisableFeatures("UseOutOfProcessVideoDecoding"),
 				chrome.EnableFeatures("UseOutOfProcessVideoEncoding"),
@@ -119,7 +107,6 @@ func initChromeFakeWebCamBaseFixtures() {
 		BugComponent: "b:168352", // ChromeOS > Platform > Graphics > Video.
 		Impl: chrome.NewLoggedInFixture(func(ctx context.Context, s *testing.FixtState) ([]chrome.Option, error) {
 			return getChromeVideoOptions(
-				browser.TypeAsh,
 				chrome.ExtraArgs(chromeFakeWebcamArgs...),
 				chrome.ExtraArgs(chromeWebRTCEncodedFrameArgs...),
 				chrome.ExtraArgs("--disable-accelerated-video-decode"),
@@ -139,7 +126,6 @@ func initChromeFakeWebCamBaseFixtures() {
 		BugComponent: "b:168352", // ChromeOS > Platform > Graphics > Video.
 		Impl: chrome.NewLoggedInFixture(func(ctx context.Context, s *testing.FixtState) ([]chrome.Option, error) {
 			return getChromeVideoOptions(
-				browser.TypeAsh,
 				chrome.ExtraArgs(chromeFakeWebcamArgs...),
 				chrome.ExtraArgs(chromeWebRTCEncodedFrameArgs...),
 				chrome.ExtraArgs("--disable-accelerated-video-encode"),
@@ -158,7 +144,6 @@ func initChromeFakeWebCamBaseFixtures() {
 		Contacts: []string{"chromeos-gfx-video@google.com"},
 		Impl: chrome.NewLoggedInFixture(func(ctx context.Context, s *testing.FixtState) ([]chrome.Option, error) {
 			return getChromeVideoOptions(
-				browser.TypeAsh,
 				chrome.ExtraArgs(chromeFakeWebcamArgs...),
 				chrome.ExtraArgs(chromeWebRTCEncodedFrameArgs...),
 				// Disable the 360p resolution guards.
@@ -181,7 +166,6 @@ func initChromeFakeWebCamBaseFixtures() {
 		BugComponent: "b:168352", // ChromeOS > Platform > Graphics > Video.
 		Impl: chrome.NewLoggedInFixture(func(ctx context.Context, s *testing.FixtState) ([]chrome.Option, error) {
 			return getChromeVideoOptions(
-				browser.TypeAsh,
 				chrome.ExtraArgs(chromeFakeWebcamArgs...),
 				chrome.ExtraArgs("--disable-features=GlobalVaapiLock"),
 			), nil
@@ -199,32 +183,9 @@ func initChromeFakeWebCamBaseFixtures() {
 		BugComponent: "b:168352", // ChromeOS > Platform > Graphics > Video.
 		Impl: chrome.NewLoggedInFixture(func(ctx context.Context, s *testing.FixtState) ([]chrome.Option, error) {
 			return getChromeVideoOptions(
-				browser.TypeAsh,
 				chrome.ExtraArgs(chromeFakeWebcam60fpsArgs...),
 				chrome.ExtraArgs("--disable-rtc-smoothness-algorithm"),
 			), nil
-		}),
-		Parent:          "gpuWatchDog",
-		SetUpTimeout:    chrome.FixtureSetUpTimeout,
-		ResetTimeout:    chrome.ResetTimeout,
-		TearDownTimeout: chrome.ResetTimeout,
-	})
-}
-
-func initChromeFakeWebCamFixturesLacros() {
-	testing.AddFixture(&testing.Fixture{
-		Name:         "chromeVideoLacrosWithFakeWebcam",
-		Desc:         "Similar to chromeVideo fixture but supplementing it with the use of a fake video/audio capture device (a.k.a. 'fake webcam'), see https://webrtc.org/testing/ (lacros)",
-		Contacts:     []string{"chromeos-gfx-video@google.com"},
-		BugComponent: "b:168352", // ChromeOS > Platform > Graphics > Video.
-		Impl: chrome.NewLoggedInFixture(func(ctx context.Context, s *testing.FixtState) ([]chrome.Option, error) {
-			return lacrosfixt.NewConfig(lacrosfixt.ChromeOptions(
-				getChromeVideoOptions(
-					browser.TypeLacros,
-					chrome.ExtraArgs(chromeFakeWebcamArgs...),
-					chrome.LacrosExtraArgs(chromeBypassPermissionsArgs...),
-				)...,
-			)).Opts()
 		}),
 		Parent:          "gpuWatchDog",
 		SetUpTimeout:    chrome.FixtureSetUpTimeout,

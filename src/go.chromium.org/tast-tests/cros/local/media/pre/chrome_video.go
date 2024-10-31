@@ -6,11 +6,8 @@ package pre
 
 import (
 	"context"
-	"time"
 
 	"go.chromium.org/tast-tests/cros/local/chrome"
-	"go.chromium.org/tast-tests/cros/local/chrome/browser"
-	"go.chromium.org/tast-tests/cros/local/chrome/lacros/lacrosfixt"
 	"go.chromium.org/tast/core/testing"
 )
 
@@ -32,19 +29,11 @@ const (
 	// VideoFeatureAshComposited disables HW overlays in ash-chrome entirely in order to force video to be composited by ash-chrome.
 	VideoFeatureAshComposited
 
-	// VideoFeatureLacrosComposited disables HW overlays in lacros-chrome entirely in order to force video to be composited by lacros-chrome.
-	VideoFeatureLacrosComposited
-
 	// VideoFeatureDistinctiveIdentifier allows for a distinctive identifier with DRM playback.
 	VideoFeatureDistinctiveIdentifier
 )
 
 func initChromeVideoFixtures() {
-	initChromeVideoBaseFixtures()
-	initChromeVideoLacrosFixtures()
-}
-
-func initChromeVideoBaseFixtures() {
 	testing.AddFixture(&testing.Fixture{
 		Name:         "chromeVideo",
 		Desc:         "Logged into a user session with logging enabled",
@@ -52,7 +41,6 @@ func initChromeVideoBaseFixtures() {
 		BugComponent: "b:168352", // ChromeOS > Platform > Graphics > Video.
 		Impl: chrome.NewLoggedInFixture(func(ctx context.Context, s *testing.FixtState) ([]chrome.Option, error) {
 			return getChromeVideoOptions(
-				browser.TypeAsh,
 				chrome.ExtraArgs(chromeBypassPermissionsArgs...),
 			), nil
 		}),
@@ -69,7 +57,6 @@ func initChromeVideoBaseFixtures() {
 		BugComponent: "b:168352", // ChromeOS > Platform > Graphics > Video.
 		Impl: chrome.NewLoggedInFixture(func(ctx context.Context, s *testing.FixtState) ([]chrome.Option, error) {
 			return getChromeVideoOptions(
-				browser.TypeAsh,
 				chrome.ExtraArgs(chromeBypassPermissionsArgs...),
 				chrome.DisableFeatures("UseOutOfProcessVideoDecoding"),
 			), nil
@@ -87,7 +74,6 @@ func initChromeVideoBaseFixtures() {
 		BugComponent: "b:168352", // ChromeOS > Platform > Graphics > Video.
 		Impl: chrome.NewLoggedInFixture(func(ctx context.Context, s *testing.FixtState) ([]chrome.Option, error) {
 			return getChromeVideoOptions(
-				browser.TypeAsh,
 				chrome.ExtraArgs(chromeBypassPermissionsArgs...),
 				chrome.ExtraArgs("--enable-nacl"),
 			), nil
@@ -105,7 +91,6 @@ func initChromeVideoBaseFixtures() {
 		BugComponent: "b:168352", // ChromeOS > Platform > Graphics > Video.
 		Impl: chrome.NewLoggedInFixture(func(ctx context.Context, s *testing.FixtState) ([]chrome.Option, error) {
 			return getChromeVideoOptions(
-				browser.TypeAsh,
 				chrome.ExtraArgs(chromeBypassPermissionsArgs...),
 				chrome.ExtraArgs("--enable-nacl"),
 				chrome.EnableFeatures("UseMojoVideoDecoderForPepper"),
@@ -126,7 +111,6 @@ func initChromeVideoBaseFixtures() {
 		BugComponent: "b:168352", // ChromeOS > Platform > Graphics > Video.
 		Impl: chrome.NewLoggedInFixture(func(ctx context.Context, s *testing.FixtState) ([]chrome.Option, error) {
 			return getChromeVideoOptions(
-				browser.TypeAsh,
 				chrome.ExtraArgs(chromeBypassPermissionsArgs...),
 				chrome.EnableFeatures("UseOutOfProcessVideoEncoding"),
 			), nil
@@ -144,7 +128,6 @@ func initChromeVideoBaseFixtures() {
 		BugComponent: "b:168352", // ChromeOS > Platform > Graphics > Video.
 		Impl: chrome.NewLoggedInFixture(func(ctx context.Context, s *testing.FixtState) ([]chrome.Option, error) {
 			return getChromeVideoOptions(
-				browser.TypeAsh,
 				chrome.GuestLogin(),
 			), nil
 		}),
@@ -160,7 +143,6 @@ func initChromeVideoBaseFixtures() {
 		BugComponent: "b:168352", // ChromeOS > Platform > Graphics > Video.
 		Impl: chrome.NewLoggedInFixture(func(ctx context.Context, s *testing.FixtState) ([]chrome.Option, error) {
 			return getChromeVideoOptions(
-				browser.TypeAsh,
 				chrome.DisableFeatures("UseOutOfProcessVideoDecoding"),
 				chrome.GuestLogin(),
 			), nil
@@ -178,7 +160,6 @@ func initChromeVideoBaseFixtures() {
 		BugComponent: "b:168352", // ChromeOS > Platform > Graphics > Video.
 		Impl: chrome.NewLoggedInFixture(func(ctx context.Context, s *testing.FixtState) ([]chrome.Option, error) {
 			return getChromeVideoOptions(
-				browser.TypeAsh,
 				chrome.EnableFeatures("UseHDRTransferFunction"),
 			), nil
 		}),
@@ -195,7 +176,6 @@ func initChromeVideoBaseFixtures() {
 		BugComponent: "b:168352", // ChromeOS > Platform > Graphics > Video.
 		Impl: chrome.NewLoggedInFixture(func(ctx context.Context, s *testing.FixtState) ([]chrome.Option, error) {
 			return getChromeVideoOptions(
-				browser.TypeAsh,
 				chrome.ExtraArgs("--enable-hardware-overlays=\"\""),
 			), nil
 		}),
@@ -211,7 +191,6 @@ func initChromeVideoBaseFixtures() {
 		BugComponent: "b:168352", // ChromeOS > Platform > Graphics > Video.
 		Impl: chrome.NewLoggedInFixture(func(ctx context.Context, s *testing.FixtState) ([]chrome.Option, error) {
 			return getChromeVideoOptions(
-				browser.TypeAsh,
 				chrome.ExtraArgs("--disable-accelerated-video-decode"),
 			), nil
 		}),
@@ -229,7 +208,6 @@ func initChromeVideoBaseFixtures() {
 		BugComponent: "b:168352", // ChromeOS > Platform > Graphics > Video.
 		Impl: chrome.NewLoggedInFixture(func(ctx context.Context, s *testing.FixtState) ([]chrome.Option, error) {
 			return getChromeVideoOptions(
-				browser.TypeAsh,
 				chrome.ExtraArgs("--disable-accelerated-video-decode"),
 				chrome.EnableFeatures("UseHDRTransferFunction"),
 			), nil
@@ -246,7 +224,6 @@ func initChromeVideoBaseFixtures() {
 		BugComponent: "b:168352", // ChromeOS > Platform > Graphics > Video.
 		Impl: chrome.NewLoggedInFixture(func(ctx context.Context, s *testing.FixtState) ([]chrome.Option, error) {
 			return getChromeVideoOptions(
-				browser.TypeAsh,
 				chrome.ExtraArgs(chromeBypassPermissionsArgs...),
 				chrome.ExtraArgs(chromeAllowDistinctiveIdentifierArgs...),
 			), nil
@@ -263,7 +240,6 @@ func initChromeVideoBaseFixtures() {
 		BugComponent: "b:168352", // ChromeOS > Platform > Graphics > Video.
 		Impl: chrome.NewLoggedInFixture(func(ctx context.Context, s *testing.FixtState) ([]chrome.Option, error) {
 			return getChromeVideoOptions(
-				browser.TypeAsh,
 				chrome.ExtraArgs(chromeBypassPermissionsArgs...),
 				chrome.ExtraArgs(chromeAllowDistinctiveIdentifierArgs...),
 				chrome.DisableFeatures("UseOutOfProcessVideoDecoding"),
@@ -281,7 +257,6 @@ func initChromeVideoBaseFixtures() {
 		BugComponent: "b:168352", // ChromeOS > Platform > Graphics > Video.
 		Impl: chrome.NewLoggedInFixture(func(ctx context.Context, s *testing.FixtState) ([]chrome.Option, error) {
 			return getChromeVideoOptions(
-				browser.TypeAsh,
 				chrome.ExtraArgs(chromeBypassPermissionsArgs...),
 				chrome.EnableFeatures("VideoDecodeBatching"),
 			), nil
@@ -298,7 +273,6 @@ func initChromeVideoBaseFixtures() {
 		BugComponent: "b:978428", // ChromeOS > Platform > Technologies > Camera > App & Framework
 		Impl: chrome.NewLoggedInFixture(func(ctx context.Context, s *testing.FixtState) ([]chrome.Option, error) {
 			return getChromeVideoOptions(
-				browser.TypeAsh,
 				chrome.ExtraArgs(chromeBypassPermissionsArgs...),
 				chrome.DisableFeatures("RunVideoCaptureServiceInBrowserProcess"),
 			), nil
@@ -315,7 +289,6 @@ func initChromeVideoBaseFixtures() {
 		BugComponent: "b:168352", // ChromeOS > Platform > Graphics > Video.
 		Impl: chrome.NewLoggedInFixture(func(ctx context.Context, s *testing.FixtState) ([]chrome.Option, error) {
 			return getChromeVideoOptions(
-				browser.TypeAsh,
 				chrome.ExtraArgs(chromeBypassPermissionsArgs...),
 				chrome.EnableFeatures("ReduceHardwareVideoDecoderBuffers"),
 			), nil
@@ -332,7 +305,6 @@ func initChromeVideoBaseFixtures() {
 		BugComponent: "b:168352", // ChromeOS > Platform > Graphics > Video.
 		Impl: chrome.NewLoggedInFixture(func(ctx context.Context, s *testing.FixtState) ([]chrome.Option, error) {
 			return getChromeVideoOptions(
-				browser.TypeAsh,
 				chrome.ExtraArgs(chromeBypassPermissionsArgs...),
 				chrome.EnableFeatures("V4L2H264TemporalLayerHWEncoding"),
 			), nil
@@ -342,49 +314,4 @@ func initChromeVideoBaseFixtures() {
 		ResetTimeout:    chrome.ResetTimeout,
 		TearDownTimeout: chrome.ResetTimeout,
 	})
-}
-
-var chromeVideoLacrosFixtureGenerator = fixtureGenerator{
-	name: "chromeVideoLacros",
-}
-
-func initChromeVideoLacrosFixtures() {
-	combos := []featureComboType{
-		comb(chromeVideo, VideoFeatureFakeMediaStreamUI),
-	}
-
-	featureMap := map[featureType]featureInfo{
-		chromeVideo: {
-			"_",
-			getChromeVideoOptions(browser.TypeLacros),
-		},
-		VideoFeatureFakeMediaStreamUI: {
-			"FakeMediaStreamUI",
-			[]chrome.Option{
-				chrome.ExtraArgs(chromeBypassPermissionsArgs...),
-				chrome.LacrosExtraArgs(chromeBypassPermissionsArgs...),
-			},
-		},
-	}
-
-	chromeVideoLacrosFixtureGenerator.initialize(combos, featureMap)
-	testing.AddFixture(&testing.Fixture{
-		Name:            chromeVideoLacrosFixtureGenerator.name,
-		Desc:            "Logged into a LaCrOS session",
-		Contacts:        []string{"chromeos-gfx-video@google.com"},
-		BugComponent:    "b:168352", // ChromeOS > Platform > Graphics > Video.
-		Parent:          "gpuWatchDog",
-		SetUpTimeout:    chrome.FixtureSetUpTimeout + 7*time.Minute,
-		ResetTimeout:    chrome.ResetTimeout,
-		TearDownTimeout: chrome.ResetTimeout,
-		Impl: chrome.NewLoggedInFixture(func(ctx context.Context, s *testing.FixtState) ([]chrome.Option, error) {
-			return lacrosfixt.NewConfig(lacrosfixt.ChromeOptions(s.Param().([]chrome.Option)...)).Opts()
-		}),
-		Params: chromeVideoLacrosFixtureGenerator.genParams(),
-	})
-}
-
-// ChromeVideoLacrosFixture returns the name of the LaCrOS video fixture corresponding to features.
-func ChromeVideoLacrosFixture(features ...featureType) string {
-	return chromeVideoLacrosFixtureGenerator.getFixture(add(comb(features...), chromeVideo))
 }
