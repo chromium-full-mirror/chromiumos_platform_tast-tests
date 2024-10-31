@@ -29,16 +29,16 @@ func init() {
 			Name:              "real",
 			ExtraSoftwareDeps: []string{caps.BuiltinCamera},
 			Fixture:           "ccaLaunched",
-			ExtraAttr:         []string{"informational", "group:camera-libcamera"},
+			ExtraAttr:         []string{"informational", "group:criticalstaging", "group:camera-libcamera"},
 		}, {
 			Name:              "vivid",
 			ExtraSoftwareDeps: []string{caps.VividCamera},
 			Fixture:           "ccaLaunched",
-			ExtraAttr:         []string{"group:camera-postsubmit", "informational"},
+			ExtraAttr:         []string{"group:camera-postsubmit"},
 		}, {
 			Name:      "fake_vcd",
 			Fixture:   "ccaLaunchedWithFakeVCDCamera",
-			ExtraAttr: []string{"informational"},
+			ExtraAttr: []string{"informational", "group:criticalstaging"},
 		}, {
 			Name:      "fake_hal",
 			Fixture:   "ccaLaunchedWithFakeHALCamera",
