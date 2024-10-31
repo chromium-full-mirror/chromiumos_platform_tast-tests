@@ -20,7 +20,7 @@ func init() {
 	testing.AddTest(&testing.Test{
 		Func:         ARCVPNCrash,
 		Desc:         "When ARC VPN crashes, host VPN is still reachable in ARC",
-		Contacts:     []string{"cros-networking@google.com", "cassiewang@google.com"},
+		Contacts:     []string{"cros-networking@google.com", "jiejiang@google.com"},
 		BugComponent: "b:1493959",
 		Attr:         []string{"group:mainline"},
 		Fixture:      "vpnEnvWithArcBooted",

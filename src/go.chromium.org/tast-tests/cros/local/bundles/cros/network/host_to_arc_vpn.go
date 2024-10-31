@@ -21,7 +21,7 @@ func init() {
 	testing.AddTest(&testing.Test{
 		Func:         HostToARCVPN,
 		Desc:         "Switch from a host VPN to an ARC VPN",
-		Contacts:     []string{"cros-networking@google.com", "cassiewang@google.com"},
+		Contacts:     []string{"cros-networking@google.com", "jiejiang@google.com"},
 		BugComponent: "b:1493959",
 		Attr:         []string{"group:mainline"},
 		Fixture:      "arcBooted",

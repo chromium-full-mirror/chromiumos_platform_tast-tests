@@ -85,7 +85,7 @@ func init() {
 		Name: "vpnEnvWithArcBooted",
 		Desc: "A fixture that sets up the environment for VPN connections, including resetting shill states, starting Chrome session, and also booting ARC",
 		Contacts: []string{
-			"cassiewang@google.com",      // fixture maintainer
+			"jiejiang@google.com",        // fixture maintainer
 			"cros-networking@google.com", // platform networking team
 		},
 		// ChromeOS > Platform > System > Networking > Continuous Maintenance
