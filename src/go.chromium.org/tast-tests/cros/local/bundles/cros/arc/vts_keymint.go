@@ -6,11 +6,14 @@ package arc
 
 import (
 	"context"
+	"reflect"
 	"time"
 
+	"go.chromium.org/tast-tests/cros/common/testexec"
 	"go.chromium.org/tast-tests/cros/common/ui"
 	"go.chromium.org/tast-tests/cros/local/arc"
 	"go.chromium.org/tast-tests/cros/local/chrome"
+	"go.chromium.org/tast/core/ctxutil"
 	"go.chromium.org/tast/core/testing"
 )
 
@@ -49,7 +52,45 @@ func init() {
 }
 
 func VTSKeymint(ctx context.Context, s *testing.State) {
+	cleanupCtx := ctx
+	ctx, cancel := ctxutil.Shorten(ctx, 30*time.Second)
+	defer cancel()
+
 	a := s.FixtValue().(*arc.PreData).ARC
+
+	// Pre-append the verifiedbootstate parameter while starting ARCVM.
+	if err := arc.WriteArcvmDevConf(ctx, "^--params=androidboot.verifiedbootstate=orange"); err != nil {
+		s.Fatal("Failed to set arcvm_dev.conf: ", err)
+	}
+	defer arc.RestoreArcvmDevConf(cleanupCtx)
+
+	testing.ContextLog(ctx, "Restarting adbd as root")
+	if err := a.Root(ctx); err != nil {
+		s.Fatal("Failed to start adb root: ", err)
+	}
+
+	// Ensure SELinux in ARC is in Permissive mode.
+	res, error := a.ShellCommand(ctx, "getenforce").Output(testexec.DumpLogOnError)
+	if error != nil {
+		s.Fatal("Failed to get SELinux state inside ARC: ", error)
+	}
+
+	// Check if SELinux is in Enforcing mode.
+	if reflect.DeepEqual(res, []byte("Enforcing\n")) {
+		// Attempt to set SELinux to Permissive mode.
+		if _, err := a.ShellCommand(ctx, "setenforce", "0").Output(testexec.DumpLogOnError); err != nil {
+			s.Fatal("Failed to set SELinux to Permissive mode: ", err)
+		}
+
+		// Defer restoring SELinux to Enforcing mode.
+		defer func() {
+			if _, err := a.ShellCommand(ctx, "setenforce", "1").Output(testexec.DumpLogOnError); err != nil {
+				// Handle the error appropriately (e.g., log an error message)
+				s.Fatal("Failed to restore SELinux to Enforcing mode: ", err)
+			}
+		}()
+	}
+
 	testExecName := s.Param().(string)
 	cleanup, err := arc.RunVtsTests(ctx, a, s.DataPath(testExecName), s.OutDir())
 	if err != nil {

@@ -1,5 +1,5 @@
 {
-  "url": "gs://chromiumos-test-assets-public/tast/cros/arc/VtsAidlKeyMintTargetTest_arm64_20230920",
-  "size": 3109856,
-  "sha256sum": "9f2af7fbbea1245b5bd8d3dc0feaef0d38d974fefdf89e82b86676ce87b1aa25"
+  "url": "gs://chromiumos-test-assets-public/tast/cros/arc/VtsAidlKeyMintTargetTest_arm64_20241030",
+  "size": 3213752,
+  "sha256sum": "0195415b7c7cebcc1e4a5af0771bd7a27299b668a9754ecaa18131c5560392c0"
 }
