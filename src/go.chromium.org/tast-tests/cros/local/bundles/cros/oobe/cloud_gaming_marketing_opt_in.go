@@ -26,7 +26,7 @@ func init() {
 			"bohdanty@google.com",
 		},
 		BugComponent: "b:1263090", // ChromeOS > Software > OOBE
-		Attr:         []string{"group:mainline", "informational"},
+		Attr:         []string{"group:mainline", "informational", "group:release-health"},
 		SoftwareDeps: []string{"chrome"},
 		Timeout:      3 * time.Minute,
 		// This test should run only on gaming models.

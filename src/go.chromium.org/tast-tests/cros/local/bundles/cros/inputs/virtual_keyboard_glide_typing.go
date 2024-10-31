@@ -80,7 +80,7 @@ func init() {
 			{
 				Name:      "clamshell_a11y_docked",
 				Fixture:   fixture.ClamshellVK,
-				ExtraAttr: []string{"group:input-tools-upstream"},
+				ExtraAttr: []string{"group:input-tools-upstream", "group:release-health"},
 				Val: glideTypingTestParam{
 					floatLayout: false,
 					inputMethod: ime.EnglishUS,
@@ -90,7 +90,7 @@ func init() {
 			{
 				Name:      "clamshell_a11y_floating",
 				Fixture:   fixture.ClamshellVK,
-				ExtraAttr: []string{"group:input-tools-upstream"},
+				ExtraAttr: []string{"group:input-tools-upstream", "group:release-health"},
 				Val: glideTypingTestParam{
 					floatLayout: true,
 					inputMethod: ime.EnglishUS,

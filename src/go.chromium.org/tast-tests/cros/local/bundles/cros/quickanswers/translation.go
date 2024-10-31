@@ -28,6 +28,7 @@ func init() {
 			"group:hw_agnostic",
 			"group:mainline",
 			"informational",
+			"group:release-health",
 		},
 		SearchFlags: []*testing.StringPair{{
 			Key:   "feature_id",

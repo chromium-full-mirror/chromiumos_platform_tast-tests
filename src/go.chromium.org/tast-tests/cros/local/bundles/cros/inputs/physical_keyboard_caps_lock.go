@@ -42,7 +42,7 @@ func init() {
 		Params: []testing.Param{
 			{
 				Fixture:           fixture.ClamshellNonVK,
-				ExtraAttr:         []string{"group:input-tools-upstream"},
+				ExtraAttr:         []string{"group:input-tools-upstream", "group:release-health"},
 				ExtraHardwareDeps: hwdep.D(pre.InputsStableModels),
 			},
 			{

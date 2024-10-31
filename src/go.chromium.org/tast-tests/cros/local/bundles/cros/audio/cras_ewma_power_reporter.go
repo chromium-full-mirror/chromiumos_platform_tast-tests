@@ -26,6 +26,7 @@ func init() {
 		Attr: []string{
 			"group:mainline",
 			"informational",
+			"group:release-health",
 		},
 		Fixture: fixture.AloopLoaded{
 			Channels: 2,

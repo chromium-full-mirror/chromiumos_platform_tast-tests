@@ -40,6 +40,7 @@ func init() {
 				Fixture:           "crossdeviceOnboardedAllFeaturesRerun",
 				ExtraHardwareDeps: hwdep.D(hwdep.SkipOnModel(cdcommon.UnstableModels...)),
 				Val:               browser.TypeAsh,
+				ExtraAttr:         []string{"group:release-health"},
 			},
 			{
 				Name:              "unstable",

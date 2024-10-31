@@ -31,7 +31,7 @@ func init() {
 		},
 		// ChromeOS > Software > Personalization
 		BugComponent: "b:1006527",
-		Attr:         []string{"group:mainline", "informational", "group:hw_agnostic"},
+		Attr:         []string{"group:mainline", "informational", "group:hw_agnostic", "group:release-health"},
 		SoftwareDeps: []string{"chrome"},
 		Timeout:      3 * time.Minute,
 		Fixture:      personalization.BaseFixture,

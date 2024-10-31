@@ -36,7 +36,7 @@ func init() {
 			"kimjae@chromium.org",
 		},
 		BugComponent: "b:908319",
-		Attr:         []string{"group:mainline"},
+		Attr:         []string{"group:mainline", "group:release-health"},
 		SoftwareDeps: []string{"reboot", "chrome", "auto_update_stable"},
 		ServiceDeps: []string{
 			"tast.cros.nebraska.Service",

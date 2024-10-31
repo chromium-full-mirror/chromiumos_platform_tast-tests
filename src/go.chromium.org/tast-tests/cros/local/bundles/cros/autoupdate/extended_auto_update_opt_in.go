@@ -31,7 +31,7 @@ func init() {
 		Desc:         "Triggers extended auto update consumer opt in UI, opts in through the UI, and verifies the correct flag is sent on update request",
 		Contacts:     []string{"mpolzer@google.com", "artyomchen@google.com"},
 		BugComponent: "b:1031231", // ChromeOS > Software > Commercial (Enterprise) > Remote Management > Version Control
-		Attr:         []string{"group:mainline", "informational"},
+		Attr:         []string{"group:mainline", "informational", "group:release-health"},
 		SoftwareDeps: []string{"chrome"},
 		Fixture:      fixture.UpdateEngine, // Need a clean instance of update engine.
 	})

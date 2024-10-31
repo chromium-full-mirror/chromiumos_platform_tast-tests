@@ -25,7 +25,7 @@ func init() {
 		Desc:         "Test to verify the layout of Chrome Camera App",
 		Contacts:     []string{"chromeos-camera-app-eng@google.com", "wtlee@chromium.org"},
 		BugComponent: "b:978428", // ChromeOS > Platform > Technologies > Camera > App & Framework
-		Attr:         []string{"informational", "group:mainline"},
+		Attr:         []string{"informational", "group:mainline", "group:release-health"},
 		SoftwareDeps: []string{"camera_app", "chrome"},
 		Data:         []string{"blank_1280x720.mjpeg"},
 		Timeout:      3 * time.Minute,

@@ -23,8 +23,8 @@ import (
 
 // testParameters contains all the data needed to run a single test iteration.
 type testParameters struct {
-	regionCode             string
-	defaultInputMethodID   string
+	regionCode           string
+	defaultInputMethodID string
 }
 
 func init() {
@@ -43,7 +43,7 @@ func init() {
 			{
 				Name:              "es",
 				ExtraHardwareDeps: hwdep.D(pre.InputsStableModels),
-				ExtraAttr:         []string{"group:input-tools-upstream", "group:hw_agnostic"},
+				ExtraAttr:         []string{"group:input-tools-upstream", "group:hw_agnostic", "group:release-health"},
 				Val: testParameters{
 					regionCode:           "es",
 					defaultInputMethodID: ime.SpanishSpain.ID,
@@ -61,7 +61,7 @@ func init() {
 			}, {
 				Name:              "fr",
 				ExtraHardwareDeps: hwdep.D(pre.InputsStableModels),
-				ExtraAttr:         []string{"group:input-tools-upstream"},
+				ExtraAttr:         []string{"group:input-tools-upstream", "group:release-health"},
 				Val: testParameters{
 					regionCode:           "fr",
 					defaultInputMethodID: ime.FrenchFrance.ID,
@@ -79,7 +79,7 @@ func init() {
 			}, {
 				Name:              "jp",
 				ExtraHardwareDeps: hwdep.D(pre.InputsStableModels),
-				ExtraAttr:         []string{"group:input-tools-upstream", "group:hw_agnostic"},
+				ExtraAttr:         []string{"group:input-tools-upstream", "group:hw_agnostic", "group:release-health"},
 				Val: testParameters{
 					regionCode:           "jp",
 					defaultInputMethodID: ime.AlphanumericWithJapaneseKeyboard.ID,

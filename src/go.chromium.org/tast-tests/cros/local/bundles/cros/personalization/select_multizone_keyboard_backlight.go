@@ -31,7 +31,7 @@ func init() {
 		},
 		// ChromeOS > Software > Personalization
 		BugComponent: "b:1006527",
-		Attr:         []string{"group:mainline", "informational"},
+		Attr:         []string{"group:mainline", "informational", "group:release-health"},
 		SoftwareDeps: []string{"chrome"},
 		HardwareDeps: hwdep.D(hwdep.Model(personalization.RgbSupportedModels...)),
 		Timeout:      3 * time.Minute,

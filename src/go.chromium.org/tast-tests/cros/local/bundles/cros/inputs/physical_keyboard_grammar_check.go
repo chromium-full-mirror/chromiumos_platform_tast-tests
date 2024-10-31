@@ -33,7 +33,7 @@ func init() {
 		Desc:         "Checks on device grammar check with physical keyboard typing",
 		Contacts:     []string{"essential-inputs-gardener-oncall@google.com", "essential-inputs-team@google.com"},
 		BugComponent: "b:95887",
-		Attr:         []string{"group:mainline", "group:input-tools", "group:input-tools-upstream"},
+		Attr:         []string{"group:mainline", "group:input-tools", "group:input-tools-upstream", "group:release-health"},
 		SearchFlags: util.SearchFlagsWithIMEAndScreenPlay(
 			[]ime.InputMethod{ime.EnglishUS},
 			[]string{

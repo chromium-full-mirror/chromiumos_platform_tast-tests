@@ -43,7 +43,7 @@ func init() {
 		},
 		// ChromeOS > Platform > Graphics > GPU
 		BugComponent: "b:995569",
-		Attr:         []string{"graphics_nightly", "group:graphics", "group:mainline", "informational"},
+		Attr:         []string{"graphics_nightly", "group:graphics", "group:mainline", "informational", "group:release-health"},
 		Data:         []string{webGLManyPlanetsDeep},
 		Timeout:      2 * time.Minute,
 		SoftwareDeps: []string{"chrome"},

@@ -39,7 +39,7 @@ func init() {
 		Timeout:      3 * time.Minute,
 		Params: []testing.Param{{
 			ExtraHardwareDeps: hwdep.D(pre.InputsStableModels),
-			ExtraAttr:         []string{"group:input-tools-upstream"},
+			ExtraAttr:         []string{"group:input-tools-upstream", "group:release-health"},
 		}, {
 			Name:              "informational",
 			ExtraHardwareDeps: hwdep.D(pre.InputsUnstableModels),

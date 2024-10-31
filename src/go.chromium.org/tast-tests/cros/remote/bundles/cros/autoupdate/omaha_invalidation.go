@@ -51,7 +51,7 @@ func init() {
 		},
 		Fixture:      fixture.Autoupdate,
 		BugComponent: "b:1031231", // ChromeOS > Software > Commercial (Enterprise) > Remote Management > Version Control
-		Attr:         []string{"group:autoupdate"},
+		Attr:         []string{"group:autoupdate", "group:release-health"},
 		SoftwareDeps: []string{"reboot", "chrome", "crossystem"},
 		ServiceDeps: []string{
 			"tast.cros.baserpc.FileSystem",

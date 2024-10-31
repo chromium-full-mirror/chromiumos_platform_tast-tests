@@ -36,7 +36,7 @@ func init() {
 			"newcomer@google.com",
 		},
 		BugComponent: "b:1246021", // ChromeOS > Software > System UI Surfaces > Notifications
-		Attr:         []string{"group:mainline", "informational", "group:hw_agnostic"},
+		Attr:         []string{"group:mainline", "informational", "group:hw_agnostic", "group:release-health"},
 		SoftwareDeps: []string{"chrome"},
 		SearchFlags: []*testing.StringPair{{
 			Key:   "feature_id",

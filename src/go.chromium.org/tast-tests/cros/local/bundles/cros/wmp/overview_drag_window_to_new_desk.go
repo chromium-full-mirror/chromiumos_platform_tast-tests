@@ -37,7 +37,7 @@ func init() {
 		},
 		// ChromeOS > Software > Window Management > OverviewMode
 		BugComponent: "b:1252584",
-		Attr:         []string{"group:mainline", "informational", "group:hw_agnostic"},
+		Attr:         []string{"group:mainline", "informational", "group:hw_agnostic", "group:release-health"},
 		SearchFlags: []*testing.StringPair{
 			{
 				Key:   "feature_id",

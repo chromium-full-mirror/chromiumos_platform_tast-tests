@@ -29,7 +29,7 @@ func init() {
 		Desc:         "Checks that the accessibility keyboard displays correctly",
 		Contacts:     []string{"essential-inputs-gardener-oncall@google.com", "essential-inputs-team@google.com"},
 		BugComponent: "b:95887",
-		Attr:         []string{"group:mainline", "group:input-tools", "group:hw_agnostic"},
+		Attr:         []string{"group:mainline", "group:input-tools", "group:hw_agnostic", "group:release-health"},
 		SoftwareDeps: []string{"inputs_deps", "chrome", "google_virtual_keyboard"},
 		SearchFlags:  util.IMESearchFlags([]ime.InputMethod{ime.EnglishUS}),
 		Fixture:      fixture.ClamshellVK,

@@ -58,6 +58,7 @@ func init() {
 					isTabletMode: false,
 					hasBattery:   true,
 				},
+				ExtraAttr: []string{"group:release-health"},
 			},
 			{
 				Name: "no_battery",

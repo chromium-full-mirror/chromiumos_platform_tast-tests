@@ -28,6 +28,7 @@ func init() {
 			"group:hw_agnostic",
 			"group:mainline",
 			"informational",
+			"group:release-health",
 		},
 		Fixture: quickanswers.Parameterize(
 			quickanswers.NotEnabledWithBrowserFixture,

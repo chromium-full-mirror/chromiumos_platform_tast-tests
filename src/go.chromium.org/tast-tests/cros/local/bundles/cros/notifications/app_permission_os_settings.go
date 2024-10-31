@@ -37,6 +37,7 @@ func init() {
 		Fixture: "arcBooted",
 		Params: []testing.Param{{
 			ExtraSoftwareDeps: []string{"android_p"},
+			ExtraAttr:         []string{"group:release-health"},
 		}, {
 			Name:              "arcvm",
 			ExtraSoftwareDeps: []string{"android_vm"},

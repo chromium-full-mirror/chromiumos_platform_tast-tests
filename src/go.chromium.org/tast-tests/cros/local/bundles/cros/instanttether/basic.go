@@ -40,8 +40,9 @@ func init() {
 		Params: []testing.Param{
 			{
 				// Test connecting to Instant Tether exclusively through OS settings.
-				Val:     false,
-				Fixture: "crossdeviceOnboardedAllFeatures",
+				Val:       false,
+				Fixture:   "crossdeviceOnboardedAllFeatures",
+				ExtraAttr: []string{"group:release-health"},
 			},
 			{
 				// Test connecting to Instant Tether with the "Wi-Fi available via phone"

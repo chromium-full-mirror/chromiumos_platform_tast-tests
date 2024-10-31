@@ -41,7 +41,7 @@ func init() {
 		// ChromeOS > Software > Nightlight
 		BugComponent: "b:1252585",
 		// Disabled by TORA. See: b/351561732
-		// Attr:         []string{"group:mainline", "informational", "group:hw_agnostic"},
+		// Attr:         []string{"group:mainline", "informational", "group:hw_agnostic", "group:release-health"},
 		SoftwareDeps: []string{"chrome"},
 		Fixture:      "chromeLoggedIn",
 	})

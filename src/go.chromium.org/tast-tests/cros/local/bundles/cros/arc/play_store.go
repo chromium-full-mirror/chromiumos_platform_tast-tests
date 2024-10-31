@@ -43,7 +43,7 @@ func init() {
 		SoftwareDeps: []string{"play_store", "chrome", "gaia"},
 		Params: []testing.Param{
 			{
-				ExtraAttr:         []string{"group:arc-functional", "group:mainline"},
+				ExtraAttr:         []string{"group:arc-functional", "group:mainline", "group:release-health"},
 				ExtraSoftwareDeps: []string{"android_container"},
 				Val:               playStoreTestArgs{preprod: false, fieldTrialConfig: chrome.FieldTrialConfigDefault},
 			},
@@ -61,7 +61,7 @@ func init() {
 			},
 			{
 				Name:              "vm",
-				ExtraAttr:         []string{"group:arc-functional", "group:mainline"},
+				ExtraAttr:         []string{"group:arc-functional", "group:mainline", "group:release-health"},
 				ExtraSoftwareDeps: []string{"android_vm", "no_qemu"},
 				Val:               playStoreTestArgs{preprod: false, fieldTrialConfig: chrome.FieldTrialConfigDefault},
 			},

@@ -31,6 +31,7 @@ func init() {
 			"group:hw_agnostic",
 			"group:mainline",
 			"informational",
+			"group:release-health",
 		},
 		SoftwareDeps: []string{"chrome", "gaia"},
 		Fixture: quickanswers.Parameterize(

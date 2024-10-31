@@ -25,7 +25,7 @@ func init() {
 			"bohdanty@google.com",
 		},
 		BugComponent: "b:1263090", // ChromeOS > Software > OOBE
-		Attr:         []string{"group:mainline", "informational"},
+		Attr:         []string{"group:mainline", "informational", "group:release-health"},
 		SoftwareDeps: []string{"chrome", "non_meet_device"},
 		Fixture:      fixture.UpdateEngine, // Ensure to update engine status is idle and to reset between tests (b/263421799).
 		SearchFlags: []*testing.StringPair{{

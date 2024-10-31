@@ -45,6 +45,7 @@ func init() {
 			// Disabled by TORA. See: b/341684403
 			// "group:mainline",
 			// "informational",
+			// "group:release-health",
 		},
 		Data:         []string{bundlingNotificationApkFileName},
 		SoftwareDeps: []string{"chrome", "arc"},

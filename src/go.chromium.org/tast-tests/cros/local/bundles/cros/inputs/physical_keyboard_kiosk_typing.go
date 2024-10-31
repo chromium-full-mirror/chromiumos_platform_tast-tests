@@ -35,6 +35,7 @@ func init() {
 			"group:medium_low_tier",
 			"group:hardware",
 			"group:complementary",
+			"group:release-health",
 		},
 		SoftwareDeps: []string{"reboot", "inputs_deps", "chrome", "chrome_internal"},
 		HardwareDeps: hwdep.D(pre.InputsStableModels),

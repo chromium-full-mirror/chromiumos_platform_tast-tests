@@ -40,7 +40,7 @@ func init() {
 		},
 		// ChromeOS > Software > Window Management > Virtual Desks
 		BugComponent: "b:1238200",
-		Attr:         []string{"group:mainline", "informational"},
+		Attr:         []string{"group:mainline", "informational", "group:release-health"},
 		SoftwareDeps: []string{"chrome", "android_vm", "gaia"},
 		Timeout:      chrome.GAIALoginTimeout + arc.BootTimeout + 120*time.Second,
 		SearchFlags: []*testing.StringPair{

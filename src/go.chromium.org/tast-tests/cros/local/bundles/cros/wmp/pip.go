@@ -106,7 +106,8 @@ func init() {
 		VarDeps:      []string{ui.GaiaPoolDefaultVarName},
 		Timeout:      chrome.GAIALoginTimeout + arc.BootTimeout + 2*time.Minute,
 		Params: []testing.Param{{
-			Val: ashPipTests,
+			Val:       ashPipTests,
+			ExtraAttr: []string{"group:release-health"},
 		},
 		// Disabled by TORA. See: b/346822601
 		// {

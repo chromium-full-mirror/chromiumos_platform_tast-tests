@@ -72,7 +72,7 @@ func init() {
 				ExtraHardwareDeps: hwdep.D(pre.InputsStableModels),
 				Fixture:           fixture.ClamshellNonVK,
 				Val:               pkTypingTestIMEs,
-				ExtraAttr:         []string{"group:input-tools-upstream"},
+				ExtraAttr:         []string{"group:input-tools-upstream", "group:release-health"},
 			},
 			{
 				Name:              "informational",
@@ -86,6 +86,7 @@ func init() {
 				ExtraHardwareDeps: hwdep.D(pre.InputsStableModels),
 				Fixture:           fixture.ClamshellNonVKWithFirstPartyVietnamese,
 				Val:               []ime.InputMethod{ime.VietnameseTelex, ime.VietnameseVNI},
+				ExtraAttr:         []string{"group:release-health"},
 			},
 		},
 	})

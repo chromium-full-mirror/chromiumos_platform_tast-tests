@@ -33,7 +33,7 @@ func init() {
 		},
 		// ChromeOS > Software > Window Management > Immersive
 		BugComponent: "b:1252580",
-		Attr:         []string{"group:mainline", "informational", "group:hw_agnostic"},
+		Attr:         []string{"group:mainline", "informational", "group:hw_agnostic", "group:release-health"},
 		SoftwareDeps: []string{"chrome"},
 		Fixture:      "chromeLoggedIn",
 	})

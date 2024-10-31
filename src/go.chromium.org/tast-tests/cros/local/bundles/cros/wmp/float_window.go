@@ -32,7 +32,7 @@ func init() {
 		},
 		// ChromeOS > Software > Window Management > FloatingWindow
 		BugComponent: "b:1252568",
-		Attr:         []string{"group:mainline", "informational", "group:hw_agnostic"},
+		Attr:         []string{"group:mainline", "informational", "group:hw_agnostic", "group:release-health"},
 		SoftwareDeps: []string{"chrome", "arc", "gaia"},
 		Timeout:      chrome.GAIALoginTimeout + arc.BootTimeout + 2*time.Minute,
 		VarDeps:      []string{ui.GaiaPoolDefaultVarName},

@@ -29,7 +29,7 @@ func init() {
 			"bohdanty@google.com",
 		},
 		BugComponent: "b:1263090", // ChromeOS > Software > OOBE
-		Attr:         []string{"group:mainline", "informational", "group:hw_agnostic"},
+		Attr:         []string{"group:mainline", "informational", "group:hw_agnostic", "group:release-health"},
 		SoftwareDeps: []string{"chrome"},
 		Timeout:      chrome.LoginTimeout + 3*time.Minute,
 	})

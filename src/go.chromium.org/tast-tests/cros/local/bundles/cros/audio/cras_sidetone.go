@@ -40,6 +40,7 @@ func init() {
 					backgroundCapture:  false,
 					backgroundPlayback: false,
 				},
+				ExtraAttr: []string{"group:release-health"},
 			},
 			{
 				Name: "with_background_capture_and_playback",

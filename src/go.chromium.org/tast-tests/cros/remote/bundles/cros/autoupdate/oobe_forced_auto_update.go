@@ -33,7 +33,7 @@ func init() {
 			"dkuzmin@google.com", // Test owner
 		},
 		BugComponent: "b:1263090", // ChromeOS > Software > OOBE
-		Attr:         []string{"group:autoupdate"},
+		Attr:         []string{"group:autoupdate", "group:release-health"},
 		SoftwareDeps: []string{"reboot", "chrome", "auto_update_stable"},
 		VarDeps:      []string{"ui.signinProfileTestExtensionManifestKey"},
 		ServiceDeps: []string{

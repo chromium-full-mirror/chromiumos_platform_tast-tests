@@ -47,6 +47,7 @@ func init() {
 			{
 				Fixture:           "crossdeviceOnboardedAllFeaturesRerun",
 				ExtraHardwareDeps: hwdep.D(hwdep.SkipOnModel(cdcommon.UnstableModels...)),
+				ExtraAttr:         []string{"group:release-health"},
 			},
 			{
 				Name:              "unstable",

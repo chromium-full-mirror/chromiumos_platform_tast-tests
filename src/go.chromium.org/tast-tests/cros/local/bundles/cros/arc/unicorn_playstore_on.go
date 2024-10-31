@@ -29,12 +29,12 @@ func init() {
 		Params: []testing.Param{
 			{
 				ExtraSoftwareDeps: []string{"android_container"},
-				ExtraAttr:         []string{"informational"},
+				ExtraAttr:         []string{"informational", "group:release-health"},
 			},
 			{
 				Name:              "vm",
 				ExtraSoftwareDeps: []string{"android_vm", "no_qemu"},
-				ExtraAttr:         []string{"informational"},
+				ExtraAttr:         []string{"informational", "group:release-health"},
 			},
 			{
 				Name:              "betty_vm",

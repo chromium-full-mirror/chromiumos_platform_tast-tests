@@ -588,7 +588,7 @@ func init() {
 		Desc:         "Verifies the MediaTrack advanced controls",
 		Contacts:     []string{"chromeos-camera-app-eng@google.com", "wtlee@chromium.org"},
 		BugComponent: "b:978428", // ChromeOS > Platform > Technologies > Camera > App & Framework
-		Attr:         []string{"group:mainline", "informational"},
+		Attr:         []string{"group:mainline", "informational", "group:release-health"},
 		SoftwareDeps: []string{"chrome", caps.BuiltinOrVividCamera},
 		Data:         []string{"media_track_advanced_controls.html", "media_track_advanced_controls.js"},
 		Fixture:      "chromeVideo",

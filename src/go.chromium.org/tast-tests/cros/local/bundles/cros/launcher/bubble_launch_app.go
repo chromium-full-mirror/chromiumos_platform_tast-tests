@@ -32,7 +32,7 @@ func init() {
 			"chromeos-sw-engprod@google.com",
 		},
 		BugComponent: "b:1288350",
-		Attr:         []string{"group:mainline", "informational", "group:hw_agnostic"},
+		Attr:         []string{"group:mainline", "informational", "group:hw_agnostic", "group:release-health"},
 		SoftwareDeps: []string{"chrome"},
 		SearchFlags: []*testing.StringPair{{
 			Key:   "feature_id",

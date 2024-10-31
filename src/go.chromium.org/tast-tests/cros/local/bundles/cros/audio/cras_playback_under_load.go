@@ -20,7 +20,7 @@ func init() {
 		Contacts:     []string{"chromeos-audio-bugs@google.com", "htcheong@chromium.org"},
 		Fixture:      audiofixture.AloopLoaded{Channels: 2, Parent: fixture.FakeCrasClient}.Instance(),
 		BugComponent: "b:776546",
-		Attr:         []string{"group:mainline", "informational", "group:hw_agnostic"},
+		Attr:         []string{"group:mainline", "informational", "group:hw_agnostic", "group:release-health"},
 	})
 }
 

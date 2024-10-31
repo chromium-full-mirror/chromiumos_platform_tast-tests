@@ -45,7 +45,7 @@ func init() {
 			{
 				Fixture:           fixture.TabletVKRestart,
 				ExtraHardwareDeps: hwdep.D(pre.InputsStableModels),
-				ExtraAttr:         []string{"group:input-tools-upstream"},
+				ExtraAttr:         []string{"group:input-tools-upstream", "group:release-health"},
 			},
 			{
 				Name:              "informational",

@@ -39,7 +39,7 @@ func init() {
 		// Chrome OS Server Projects > Enterprise Management > Demo Mode
 		BugComponent: "b:812312",
 		Fixture:      fixture.PostDemoModeOOBECloudGaming,
-		Attr:         []string{"group:mainline", "informational"},
+		Attr:         []string{"group:mainline", "informational", "group:release-health"},
 		// Demo Mode uses Zero Touch Enrollment for enterprise enrollment, which
 		// requires a real TPM.
 		// We require "arc" and "chrome_internal" because the ARC TOS screen

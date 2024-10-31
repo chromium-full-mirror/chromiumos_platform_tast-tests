@@ -49,7 +49,7 @@ func init() {
 			"dlunev@google.com", // Test author
 		},
 		BugComponent: "b:974567",
-		Attr:         []string{"group:autoupdate"},
+		Attr:         []string{"group:autoupdate", "group:release-health"},
 		SoftwareDeps: []string{"tpm", "reboot", "chrome", "auto_update_stable"},
 		ServiceDeps: []string{
 			"tast.cros.nebraska.Service",

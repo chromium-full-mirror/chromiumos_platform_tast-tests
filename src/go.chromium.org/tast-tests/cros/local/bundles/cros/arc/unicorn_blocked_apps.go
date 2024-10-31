@@ -45,12 +45,12 @@ func init() {
 			// Disabled by TORA. See: b/336400628
 			// {
 			// 	ExtraSoftwareDeps: []string{"android_container"},
-			// 	ExtraAttr:         []string{"informational"},
+			// 	ExtraAttr:         []string{"informational", "group:release-health"},
 			// },
 			// {
 			// 	Name:              "vm",
 			// 	ExtraSoftwareDeps: []string{"android_vm", "no_qemu"},
-			// 	ExtraAttr:         []string{"informational"},
+			// 	ExtraAttr:         []string{"informational", "group:release-health"},
 			// },
 			{
 				Name:              "betty_vm",

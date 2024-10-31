@@ -33,7 +33,7 @@ func init() {
 			"chromeos-sw-engprod@google.com",
 		},
 		BugComponent: "b:1288350", // ChromeOS > Software > System UI Surfaces > Launcher
-		Attr:         []string{"group:mainline", "informational"},
+		Attr:         []string{"group:mainline", "informational", "group:release-health"},
 		SoftwareDeps: []string{"chrome"},
 		HardwareDeps: hwdep.D(hwdep.TouchScreen()),
 		Timeout:      3*time.Minute + cws.InstallationTimeout,

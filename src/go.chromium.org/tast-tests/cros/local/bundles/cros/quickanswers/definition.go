@@ -29,6 +29,7 @@ func init() {
 			"group:mainline",
 			"hw_agnostic_vm_stable",
 			"informational",
+			"group:release-health",
 		},
 		SearchFlags: []*testing.StringPair{{
 			Key:   "feature_id",

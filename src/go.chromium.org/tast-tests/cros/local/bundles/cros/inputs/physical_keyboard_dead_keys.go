@@ -37,7 +37,7 @@ func init() {
 		Desc:         "Checks that dead keys on the physical keyboard work",
 		Contacts:     []string{"essential-inputs-gardener-oncall@google.com", "essential-inputs-team@google.com"},
 		BugComponent: "b:95887",
-		Attr:         []string{"group:mainline", "group:input-tools"},
+		Attr:         []string{"group:mainline", "group:input-tools", "group:release-health"},
 		SoftwareDeps: []string{"inputs_deps", "chrome", "chrome_internal"},
 		SearchFlags: []*testing.StringPair{
 			{

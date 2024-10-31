@@ -32,7 +32,7 @@ func init() {
 		Desc:         "Checks diacritics on long-press with physical keyboard typing",
 		Contacts:     []string{"essential-inputs-gardener-oncall@google.com", "essential-inputs-team@google.com"},
 		BugComponent: "b:95887",
-		Attr:         []string{"group:mainline", "group:input-tools", "group:hw_agnostic", "group:input-tools-upstream"},
+		Attr:         []string{"group:mainline", "group:input-tools", "group:hw_agnostic", "group:input-tools-upstream", "group:release-health"},
 		SoftwareDeps: []string{"inputs_deps", "chrome", "chrome_internal"},
 		Timeout:      2 * time.Minute,
 		SearchFlags: util.SearchFlagsWithIMEAndScreenPlay(

@@ -85,7 +85,8 @@ func init() {
 					caseType:    browserCase,
 					browserType: browser.TypeAsh,
 				},
-				Timeout: resizeTimeout, // 1 resize timeout for 1 app (i.e., Chrome browser)
+				Timeout:   resizeTimeout, // 1 resize timeout for 1 app (i.e., Chrome browser)
+				ExtraAttr: []string{"group:release-health"},
 			},
 			{
 				Name: "apps",

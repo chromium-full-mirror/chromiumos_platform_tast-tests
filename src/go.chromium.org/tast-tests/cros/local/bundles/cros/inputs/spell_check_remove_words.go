@@ -34,7 +34,7 @@ func init() {
 			"essential-inputs-team@google.com",
 		},
 		BugComponent: "b:95887",
-		Attr:         []string{"group:mainline", "informational", "group:input-tools"},
+		Attr:         []string{"group:mainline", "informational", "group:input-tools", "group:release-health"},
 		SoftwareDeps: []string{"inputs_deps", "chrome"},
 		HardwareDeps: hwdep.D(pre.InputsStableModels),
 		Fixture:      fixture.ClamshellNonVK,

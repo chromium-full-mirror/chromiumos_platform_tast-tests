@@ -28,7 +28,7 @@ func init() {
 		},
 		//  ChromeOS > Software > ScreenCapture
 		BugComponent: "b:1253115",
-		Attr:         []string{"group:mainline", "informational", "group:hw_agnostic"},
+		Attr:         []string{"group:mainline", "informational", "group:hw_agnostic", "group:release-health"},
 		SoftwareDeps: []string{"chrome"},
 		Fixture:      "chromeLoggedIn",
 		SearchFlags: []*testing.StringPair{{

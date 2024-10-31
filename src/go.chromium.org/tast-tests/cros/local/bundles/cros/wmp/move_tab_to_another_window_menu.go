@@ -34,7 +34,7 @@ func init() {
 		},
 		// ChromeOS > Software > Window Management
 		BugComponent: "b:1238037",
-		Attr:         []string{"group:mainline", "informational", "group:hw_agnostic"},
+		Attr:         []string{"group:mainline", "informational", "group:hw_agnostic", "group:release-health"},
 		SoftwareDeps: []string{"chrome"},
 		Timeout:      chrome.GAIALoginTimeout + arc.BootTimeout + 120*time.Second,
 		VarDeps:      []string{ui.GaiaPoolDefaultVarName},

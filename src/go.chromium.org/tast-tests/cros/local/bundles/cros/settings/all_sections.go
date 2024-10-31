@@ -38,6 +38,7 @@ func init() {
 			"group:hardware",
 			"group:complementary",
 			"group:hw_agnostic",
+			"group:release-health",
 		},
 		SoftwareDeps: []string{"chrome"},
 		Fixture:      "chromeLoggedIn",

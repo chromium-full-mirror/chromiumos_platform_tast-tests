@@ -39,7 +39,7 @@ func init() {
 		},
 		BugComponent: "b:1288350",
 		// Disabled by TORA. See: b/350058015
-		// Attr:         []string{"group:mainline", "informational"},
+		// Attr:         []string{"group:mainline", "informational", "group:release-health"},
 		HardwareDeps: hwdep.D(hwdep.InternalDisplay()),
 		SoftwareDeps: []string{"chrome"},
 		SearchFlags: []*testing.StringPair{{

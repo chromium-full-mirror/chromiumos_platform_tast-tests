@@ -34,7 +34,7 @@ func init() {
 		Desc:         "Checks that auto shift feature of virtual keyboard",
 		Contacts:     []string{"essential-inputs-gardener-oncall@google.com", "essential-inputs-team@google.com"},
 		BugComponent: "b:95887",
-		Attr:         []string{"group:mainline", "group:input-tools", "group:hw_agnostic", "group:input-tools-upstream"},
+		Attr:         []string{"group:mainline", "group:input-tools", "group:hw_agnostic", "group:input-tools-upstream", "group:release-health"},
 		SoftwareDeps: []string{"inputs_deps", "chrome", "google_virtual_keyboard"},
 		HardwareDeps: hwdep.D(pre.InputsStableModels),
 		SearchFlags: util.SearchFlagsWithIMEAndScreenPlay(

@@ -36,7 +36,7 @@ func init() {
 			{
 				ExtraHardwareDeps: hwdep.D(pre.InputsStableModels),
 				Fixture:           fixture.ClamshellNonVK,
-				ExtraAttr:         []string{"group:input-tools-upstream"},
+				ExtraAttr:         []string{"group:input-tools-upstream", "group:release-health"},
 			},
 			{
 				Name:              "informational",
@@ -48,7 +48,7 @@ func init() {
 				Name:              "guest",
 				Fixture:           fixture.ClamshellNonVKInGuest,
 				ExtraHardwareDeps: hwdep.D(pre.InputsStableModels),
-				ExtraAttr:         []string{"group:input-tools-upstream"},
+				ExtraAttr:         []string{"group:input-tools-upstream", "group:release-health"},
 			},
 			{
 				Name:              "guest_informational",

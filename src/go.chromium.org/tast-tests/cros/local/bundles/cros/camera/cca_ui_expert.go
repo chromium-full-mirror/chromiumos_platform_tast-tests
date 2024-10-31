@@ -21,11 +21,12 @@ func init() {
 		Desc:         "Opens CCA and verifies the expert options",
 		Contacts:     []string{"chromeos-camera-app-eng@google.com", "dorahkim@chromium.org", "shik@chromium.org"},
 		BugComponent: "b:978428", // ChromeOS > Platform > Technologies > Camera > App & Framework
-		Attr:         []string{
+		Attr: []string{
 			"group:mainline",
 			"informational",
 			"group:release-health",
 			"release-health_camera",
+			"group:release-health",
 		},
 		SoftwareDeps: []string{"camera_app", "chrome", "arc_camera3"},
 		Fixture:      "ccaLaunchedWithFakeHALCamera",

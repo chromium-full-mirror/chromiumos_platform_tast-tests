@@ -29,7 +29,7 @@ func init() {
 		Contacts:     []string{"chromeos-audio-bugs@google.com", "normanbt@google.com"},
 		BugComponent: "b:776546",
 		Attr: []string{
-			"group:mainline", "informational",
+			"group:mainline", "informational", "group:release-health",
 		},
 		Fixture:      fixture.AloopLoaded{Channels: 2, Parent: "chromeLoggedIn"}.Instance(),
 		Timeout:      5 * time.Minute,

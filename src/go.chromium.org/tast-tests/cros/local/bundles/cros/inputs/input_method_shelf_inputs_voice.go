@@ -55,7 +55,7 @@ func init() {
 		Params: []testing.Param{
 			{
 				Fixture:           fixture.ClamshellNonVKStereoAloopLoaded,
-				ExtraAttr:         []string{"informational"},
+				ExtraAttr:         []string{"informational", "group:release-health"},
 				ExtraHardwareDeps: hwdep.D(pre.InputsStableModels),
 			},
 			{

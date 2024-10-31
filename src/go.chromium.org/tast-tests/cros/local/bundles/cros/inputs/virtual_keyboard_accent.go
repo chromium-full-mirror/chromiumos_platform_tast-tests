@@ -33,7 +33,7 @@ func init() {
 		Desc:         "Checks that long pressing keys pop up accent window",
 		Contacts:     []string{"essential-inputs-gardener-oncall@google.com", "essential-inputs-team@google.com"},
 		BugComponent: "b:95887",
-		Attr:         []string{"group:mainline", "group:input-tools"},
+		Attr:         []string{"group:mainline", "group:input-tools", "group:release-health"},
 		SoftwareDeps: []string{"inputs_deps", "chrome", "google_virtual_keyboard"},
 		SearchFlags:  util.SearchFlagsWithIMEAndScreenPlay([]ime.InputMethod{ime.FrenchFrance}, []string{"screenplay-379978c8-df8e-4d52-91a2-38246640a340"}),
 		Timeout:      5 * time.Minute,

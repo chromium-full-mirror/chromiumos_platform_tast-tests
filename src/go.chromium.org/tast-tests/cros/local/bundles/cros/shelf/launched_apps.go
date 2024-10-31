@@ -40,7 +40,7 @@ func init() {
 				Fixture:           "chromeLoggedInDisableSync",
 				Val:               false,
 				ExtraSoftwareDeps: []string{"no_tablet_form_factor"},
-				ExtraAttr:         []string{"informational"},
+				ExtraAttr:         []string{"informational", "group:release-health"},
 			},
 			{
 				// Primary form factor is tablet.

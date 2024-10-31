@@ -42,7 +42,7 @@ func init() {
 		},
 		// ChromeOS > Software > Window Management > Tablet Mode
 		BugComponent: "b:1253116",
-		Attr:         []string{"group:mainline", "informational", "group:hw_agnostic"},
+		Attr:         []string{"group:mainline", "informational", "group:hw_agnostic", "group:release-health"},
 		SoftwareDeps: []string{"chrome"},
 		Params: []testing.Param{{
 			Fixture: "chromeLoggedIn",

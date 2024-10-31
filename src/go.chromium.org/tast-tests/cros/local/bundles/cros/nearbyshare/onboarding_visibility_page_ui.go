@@ -29,7 +29,7 @@ func init() {
 		// Use this variable to preserve user accounts on the DUT when running locally,
 		// i.e. tast run -var=keepState=true <dut> nearbyshare.OnboardingSinglePageUI
 		Vars:         []string{nearbycommon.KeepStateVar},
-		Attr:         []string{"group:cross-device", "cross-device_nearbyshare"},
+		Attr:         []string{"group:cross-device", "cross-device_nearbyshare", "group:release-health"},
 		SoftwareDeps: []string{"chrome"},
 	})
 }

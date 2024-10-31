@@ -113,7 +113,7 @@ func init() {
 		Contacts:     []string{"arc-framework+tast@google.com", "toshikikikuchi@chromium.org"},
 		// ChromeOS > Software > ARC++ > Framework > Window Management
 		BugComponent: "b:537272",
-		Attr:         []string{"group:mainline", "informational"},
+		Attr:         []string{"group:mainline", "informational", "group:release-health"},
 		SoftwareDeps: []string{"chrome", "android_vm"},
 		Data:         []string{wm.WhiteWallpaperFileName},
 		Timeout:      5 * time.Minute,
