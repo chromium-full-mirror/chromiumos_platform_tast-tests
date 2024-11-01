@@ -36,7 +36,6 @@ type rtcTestParamsData struct {
 	Simulcasts                            int
 	SimulcastHWEncs                       []bool
 	DisplayMediaType                      string
-	BrowserType                           string
 	VerifyOutOfProcessVideoEncodingIsUsed bool
 	TraceChromeEvents                     bool
 }
@@ -226,7 +225,6 @@ func TestRTCPeerConnectionPerfParams(t *testing.T) {
 							Profile:           strings.ToUpper(codec),
 							StreamWidth:       resolution.Width,
 							StreamHeight:      resolution.Height,
-							BrowserType:       "browser.TypeAsh",
 							TraceChromeEvents: isHardwareDecoderImpl(dec) || isHardwareEncoderImpl(enc),
 						}
 						var streamTypeStr string
@@ -308,7 +306,6 @@ func TestRTCPeerConnectionPerfParams(t *testing.T) {
 					StreamWidth:       k1080p.Width,
 					StreamHeight:      k1080p.Height,
 					DisplayMediaType:  displayMediaTypeStr,
-					BrowserType:       "browser.TypeAsh",
 					TraceChromeEvents: true,
 				}
 
@@ -350,7 +347,6 @@ func TestRTCPeerConnectionPerfParams(t *testing.T) {
 			StreamWidth:       k1080p.Width,
 			StreamHeight:      k1080p.Height,
 			DisplayMediaType:  "peerconnection.CaptureTab",
-			BrowserType:       "browser.TypeAsh",
 			TraceChromeEvents: true,
 		}
 		fixture := "chromeZeroCopyTabCapture"
@@ -382,7 +378,6 @@ func TestRTCPeerConnectionPerfParams(t *testing.T) {
 					Profile:           strings.ToUpper(codec),
 					StreamWidth:       resolution.Width,
 					StreamHeight:      resolution.Height,
-					BrowserType:       "browser.TypeAsh",
 					TraceChromeEvents: true,
 				}
 
@@ -418,7 +413,6 @@ func TestRTCPeerConnectionPerfParams(t *testing.T) {
 				Profile:           strings.ToUpper(codec),
 				StreamWidth:       k720p.Width,
 				StreamHeight:      k720p.Height,
-				BrowserType:       "browser.TypeAsh",
 				TraceChromeEvents: false,
 			}
 			if enc == oopVE {
@@ -443,7 +437,6 @@ func TestRTCPeerConnectionPerfParams(t *testing.T) {
 		StreamHeight:      k1080p.Height,
 		Svc:               "L1T3",
 		DisplayMediaType:  "peerconnection.CaptureTab",
-		BrowserType:       "browser.TypeAsh",
 		TraceChromeEvents: false,
 	}
 	tabCaptureINPVDSourceData := rtcPerfTestSourceData{
@@ -465,7 +458,6 @@ func TestRTCPeerConnectionPerfParams(t *testing.T) {
 			Profile:           strings.ToUpper(codec),
 			StreamWidth:       k720p.Width,
 			StreamHeight:      k720p.Height,
-			BrowserType:       "browser.TypeAsh",
 			TraceChromeEvents: true,
 		}
 		swDeps := softwareCodecsDeps(codec, enc, dec)
@@ -498,7 +490,6 @@ func TestRTCPeerConnectionPerfParams(t *testing.T) {
 				{{ if .ParamData.SimulcastHWEncs }}
 				SimulcastHWEncs: {{ .ParamData.SimulcastHWEncs | fmt }},
 				{{ end }}
-				BrowserType: {{ .ParamData.BrowserType }},
 				{{ if .ParamData.VerifyOutOfProcessVideoEncodingIsUsed }}
 				VerifyOutOfProcessVideoEncodingIsUsed: {{ .ParamData.VerifyOutOfProcessVideoEncodingIsUsed }},
 				{{ end }}

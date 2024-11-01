@@ -35,7 +35,7 @@ const (
 )
 
 // RunGetDisplayMediaPerf drives the code verifying the getDisplayMedia functionality and collects performance data.
-func RunGetDisplayMediaPerf(ctx context.Context, fileSystem http.FileSystem, cs ash.ConnSource, tconn, bTconn *chrome.TestConn, surfaceType string) error {
+func RunGetDisplayMediaPerf(ctx context.Context, fileSystem http.FileSystem, cs ash.ConnSource, tconn *chrome.TestConn, surfaceType string) error {
 	cleanupCtx := ctx
 	ctx, cancel := ctxutil.Shorten(ctx, 3*time.Second)
 	defer cancel()
@@ -132,7 +132,7 @@ func RunGetDisplayMediaPerf(ctx context.Context, fileSystem http.FileSystem, cs 
 	}()
 	go func() {
 		defer wg.Done()
-		wakeupErr = graphics.MeasureThreadPoolUnnecessaryWakeups(ctx, bTconn, measurementDuration, p)
+		wakeupErr = graphics.MeasureThreadPoolUnnecessaryWakeups(ctx, tconn, measurementDuration, p)
 	}()
 
 	wg.Wait()

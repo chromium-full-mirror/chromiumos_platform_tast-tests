@@ -9,16 +9,14 @@ import (
 	"time"
 
 	"go.chromium.org/tast-tests/cros/local/bundles/cros/webrtc/capturefromelement"
-	"go.chromium.org/tast-tests/cros/local/chrome/browser"
-	"go.chromium.org/tast-tests/cros/local/chrome/lacros"
+	"go.chromium.org/tast-tests/cros/local/chrome"
 	"go.chromium.org/tast/core/testing"
 )
 
 func init() {
 	testing.AddTest(&testing.Test{
-		Func:         CaptureFromElement,
-		LacrosStatus: testing.LacrosVariantUnneeded,
-		Desc:         "Verifies that WebRTC captureStream() (canvas, video) works",
+		Func: CaptureFromElement,
+		Desc: "Verifies that WebRTC captureStream() (canvas, video) works",
 		Contacts: []string{
 			"chromeos-gfx-video@google.com",
 			"hiroh@chromium.org",
@@ -31,14 +29,12 @@ func init() {
 			Name: "canvas",
 			Val: capturefromelement.TestParam{
 				CanvasSource: capturefromelement.UseGlClearColor,
-				BrowserType:  browser.TypeAsh,
 			},
 			Fixture: "chromeVideo",
 		}, {
 			Name: "canvas_from_video",
 			Val: capturefromelement.TestParam{
 				CanvasSource: capturefromelement.UseVideo,
-				BrowserType:  browser.TypeAsh,
 			},
 			Fixture: "chromeVideoWithFakeWebcam",
 		}},
@@ -48,16 +44,11 @@ func init() {
 
 // CaptureFromElement verifies that the homonymous API works as expected.
 func CaptureFromElement(ctx context.Context, s *testing.State) {
+	cr := s.FixtValue().(chrome.HasChrome).Chrome()
 	testParam := s.Param().(capturefromelement.TestParam)
-	_, l, cs, err := lacros.Setup(ctx, s.FixtValue(), testParam.BrowserType)
-	if err != nil {
-		s.Fatal("Failed to initialize test: ", err)
-	}
-	defer lacros.CloseLacros(ctx, l)
 
 	const noMeasurement = 0 * time.Second
-
-	if err := capturefromelement.RunCaptureStream(ctx, s, cs, testParam.CanvasSource, noMeasurement); err != nil {
+	if err := capturefromelement.RunCaptureStream(ctx, s, cr, testParam.CanvasSource, noMeasurement); err != nil {
 		s.Fatal("RunCaptureStream failed: ", err)
 	}
 }

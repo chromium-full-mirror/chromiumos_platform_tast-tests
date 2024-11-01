@@ -16,7 +16,6 @@ import (
 	"time"
 
 	"go.chromium.org/tast-tests/cros/local/chrome/ash"
-	"go.chromium.org/tast-tests/cros/local/chrome/browser"
 	"go.chromium.org/tast-tests/cros/local/graphics"
 	"go.chromium.org/tast/core/errors"
 	"go.chromium.org/tast/core/testing"
@@ -41,9 +40,6 @@ const (
 type TestParam struct {
 	// CanvasSource indicates what is fed to the <canvas> that we can capture from.
 	CanvasSource CanvasSource
-	// BrowserType indicates the type of Chrome browser to be used,
-	// Ash Chrome or Lacros Chrome.
-	BrowserType browser.Type
 }
 
 // RunCaptureStream drives the code verifying the captureStream() functionality.

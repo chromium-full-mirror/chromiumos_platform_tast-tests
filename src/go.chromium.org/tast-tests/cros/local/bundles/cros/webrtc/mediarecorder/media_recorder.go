@@ -113,7 +113,7 @@ func codecProfileMime(profile videotype.CodecProfile) (string, error) {
 }
 
 // MeasurePerf measures the frame processing time and CPU usage while recording and report the results.
-func MeasurePerf(ctx context.Context, cs ash.ConnSource, tconn, bTconn *chrome.TestConn, fileSystem http.FileSystem, outDir string, profile videotype.CodecProfile, resolution graphics.Size, hwAccelEnabled bool) error {
+func MeasurePerf(ctx context.Context, cs ash.ConnSource, tconn *chrome.TestConn, fileSystem http.FileSystem, outDir string, profile videotype.CodecProfile, resolution graphics.Size, hwAccelEnabled bool) error {
 	codecMeme, err := codecProfileMime(profile)
 	if err != nil {
 		return err
@@ -144,7 +144,7 @@ func MeasurePerf(ctx context.Context, cs ash.ConnSource, tconn, bTconn *chrome.T
 	server := httptest.NewServer(http.FileServer(fileSystem))
 	defer server.Close()
 
-	initHistogram, err := metrics.GetHistogram(ctx, bTconn, mediaRecorderCodec)
+	initHistogram, err := metrics.GetHistogram(ctx, tconn, mediaRecorderCodec)
 	if err != nil {
 		return errors.Wrap(err, "failed to get initial histogram")
 	}
@@ -190,7 +190,7 @@ func MeasurePerf(ctx context.Context, cs ash.ConnSource, tconn, bTconn *chrome.T
 		return errors.Wrap(err, "failed to stop recording")
 	}
 
-	if err := checkCodecAndImplementation(ctx, bTconn, initHistogram, profile, hwAccelEnabled); err != nil {
+	if err := checkCodecAndImplementation(ctx, tconn, initHistogram, profile, hwAccelEnabled); err != nil {
 		return err
 	}
 
@@ -276,7 +276,7 @@ VideoTrackNumLoop:
 }
 
 // VerifyMediaRecorderUsesEncodeAccelerator checks whether MediaRecorder uses HW encoder for codec and resolution
-func VerifyMediaRecorderUsesEncodeAccelerator(ctx context.Context, cs ash.ConnSource, tconn, bTconn *chrome.TestConn, fileSystem http.FileSystem, profile videotype.CodecProfile, resolution graphics.Size, recordTime time.Duration) error {
+func VerifyMediaRecorderUsesEncodeAccelerator(ctx context.Context, cs ash.ConnSource, tconn *chrome.TestConn, fileSystem http.FileSystem, profile videotype.CodecProfile, resolution graphics.Size, recordTime time.Duration) error {
 	server := httptest.NewServer(http.FileServer(fileSystem))
 	defer server.Close()
 
@@ -319,7 +319,7 @@ func VerifyMediaRecorderUsesEncodeAccelerator(ctx context.Context, cs ash.ConnSo
 		return err
 	}
 
-	initHistogram, err := metrics.GetHistogram(ctx, bTconn, mediaRecorderCodec)
+	initHistogram, err := metrics.GetHistogram(ctx, tconn, mediaRecorderCodec)
 	if err != nil {
 		return errors.Wrap(err, "failed to get initial histogram")
 	}
@@ -346,7 +346,7 @@ func VerifyMediaRecorderUsesEncodeAccelerator(ctx context.Context, cs ash.ConnSo
 		return errors.Wrapf(err, "failed to evaluate startRecordingForResult(%q, %d)", profile, recordTime.Milliseconds())
 	}
 
-	if err := checkCodecAndImplementation(ctx, bTconn, initHistogram, profile, true); err != nil {
+	if err := checkCodecAndImplementation(ctx, tconn, initHistogram, profile, true); err != nil {
 		return err
 	}
 

@@ -15,7 +15,6 @@ import (
 	"time"
 
 	"go.chromium.org/tast-tests/cros/local/chrome"
-	"go.chromium.org/tast-tests/cros/local/chrome/ash"
 	"go.chromium.org/tast-tests/cros/local/chrome/display"
 	"go.chromium.org/tast-tests/cros/local/cpu"
 	"go.chromium.org/tast-tests/cros/local/graphics"
@@ -177,7 +176,7 @@ func measurePerformance(ctx context.Context, s *testing.State, conn *chrome.Conn
 // statistics. If |params.videoGridDimension| is larger than 1, then the real time <video>
 // is plugged into a |params.videoGridDimension| x |params.videoGridDimension| grid with copies
 // of videoURL being played, similar to a mosaic video call.
-func peerConnectionPerf(ctx context.Context, cs ash.ConnSource, cr *chrome.Chrome,
+func peerConnectionPerf(ctx context.Context, cr *chrome.Chrome,
 	s *testing.State, loopbackURL, videoURL string, params RTCTestParams, p *graphics.ThreadSafePerfValues) error {
 	tconn, err := cr.TestAPIConn(ctx)
 	if err != nil {
@@ -191,7 +190,7 @@ func peerConnectionPerf(ctx context.Context, cs ash.ConnSource, cr *chrome.Chrom
 
 	// The page repeatedly plays a loopback video stream.
 	// To stop it, we defer conn.CloseTarget() to close the tab.
-	conn, err := cs.NewConn(ctx, loopbackURL)
+	conn, err := cr.NewConn(ctx, loopbackURL)
 	if err != nil {
 		return errors.Wrapf(err, "failed to open %s", loopbackURL)
 	}
@@ -244,7 +243,7 @@ func encoderResolutions(width, height, simulcasts int, svc string) ([]graphics.S
 
 // RunRTCPeerConnectionPerf starts a Chrome instance (with or without hardware video decoder and encoder),
 // opens a WebRTC loopback page and collects performance measures in p.
-func RunRTCPeerConnectionPerf(ctx context.Context, cs ash.ConnSource, cr *chrome.Chrome,
+func RunRTCPeerConnectionPerf(ctx context.Context, cr *chrome.Chrome,
 	s *testing.State, params RTCTestParams) error {
 	// Time reserved for cleanup.
 	const cleanupTime = 5 * time.Second
@@ -268,7 +267,7 @@ func RunRTCPeerConnectionPerf(ctx context.Context, cs ash.ConnSource, cr *chrome
 		videoGridURL = server.URL + "/" + params.VideoGridFile
 	}
 	p := graphics.NewThreadSafePerfValues()
-	if err := peerConnectionPerf(ctx, cs, cr, s, loopbackURL, videoGridURL, params, p); err != nil {
+	if err := peerConnectionPerf(ctx, cr, s, loopbackURL, videoGridURL, params, p); err != nil {
 		return err
 	}
 

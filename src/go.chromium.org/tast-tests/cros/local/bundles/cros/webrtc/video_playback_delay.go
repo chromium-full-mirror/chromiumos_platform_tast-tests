@@ -13,22 +13,19 @@ import (
 
 	"go.chromium.org/tast-tests/cros/common/media/caps"
 	"go.chromium.org/tast-tests/cros/common/perf"
-	"go.chromium.org/tast-tests/cros/local/chrome/browser"
-	"go.chromium.org/tast-tests/cros/local/chrome/lacros"
+	"go.chromium.org/tast-tests/cros/local/chrome"
 	"go.chromium.org/tast-tests/cros/local/chrome/metrics"
 	"go.chromium.org/tast-tests/cros/local/graphics"
 	"go.chromium.org/tast/core/testing"
 )
 
 type videoPlaybackDelayParams struct {
-	profile     string
-	browserType browser.Type
+	profile string
 }
 
 func init() {
 	testing.AddTest(&testing.Test{
 		Func:         VideoPlaybackDelay,
-		LacrosStatus: testing.LacrosVariantUnneeded,
 		Desc:         "Runs a webrtc playback-only connection to get performance numbers",
 		BugComponent: "b:168352", // ChromeOS > Platform > Graphics > Video
 		Contacts: []string{
@@ -40,17 +37,17 @@ func init() {
 		Data:         []string{"webrtc_video_display_perf_test.html", "third_party/munge_sdp.js"},
 		Params: []testing.Param{{
 			Name:              "vp8",
-			Val:               videoPlaybackDelayParams{profile: "VP8", browserType: browser.TypeAsh},
+			Val:               videoPlaybackDelayParams{profile: "VP8"},
 			ExtraSoftwareDeps: []string{caps.HWDecodeVP8},
 			Fixture:           "chromeVideoWithFakeWebcamAndZeroLatencyRtc",
 		}, {
 			Name:              "vp9",
-			Val:               videoPlaybackDelayParams{profile: "VP9", browserType: browser.TypeAsh},
+			Val:               videoPlaybackDelayParams{profile: "VP9"},
 			ExtraSoftwareDeps: []string{caps.HWDecodeVP9},
 			Fixture:           "chromeVideoWithFakeWebcamAndZeroLatencyRtc",
 		}, {
 			Name:              "h264",
-			Val:               videoPlaybackDelayParams{profile: "H264", browserType: browser.TypeAsh},
+			Val:               videoPlaybackDelayParams{profile: "H264"},
 			ExtraSoftwareDeps: []string{caps.HWDecodeH264, "proprietary_codecs"},
 			Fixture:           "chromeVideoWithFakeWebcamAndZeroLatencyRtc",
 		}},
@@ -62,14 +59,10 @@ func VideoPlaybackDelay(ctx context.Context, s *testing.State) {
 	defer server.Close()
 	testURL := path.Join(server.URL, "webrtc_video_display_perf_test.html")
 
+	cr := s.FixtValue().(chrome.HasChrome).Chrome()
 	testOpt := s.Param().(videoPlaybackDelayParams)
-	cr, l, cs, err := lacros.Setup(ctx, s.FixtValue(), testOpt.browserType)
-	if err != nil {
-		s.Fatal("Failed to initialize test: ", err)
-	}
-	defer lacros.CloseLacros(ctx, l)
 
-	conn, err := cs.NewConn(ctx, testURL)
+	conn, err := cr.NewConn(ctx, testURL)
 	if err != nil {
 		s.Fatalf("Failed to open %s: %v", testURL, err)
 	}
@@ -85,25 +78,13 @@ func VideoPlaybackDelay(ctx context.Context, s *testing.State) {
 		s.Fatal("Failed to connect to test API: ", err)
 	}
 
-	var br *browser.Browser
-	switch testOpt.browserType {
-	case browser.TypeAsh:
-		br = cr.Browser()
-	case browser.TypeLacros:
-		br = l.Browser()
-	}
-	bTconn, err := br.TestAPIConn(ctx)
-	if err != nil {
-		s.Fatal("Failed to connect to browser test API: ", err)
-	}
-
 	const presentationsHistogramName = "Media.VideoFrameSubmitter"
-	initPresentationHistogram, err := metrics.GetHistogram(ctx, bTconn, presentationsHistogramName)
+	initPresentationHistogram, err := metrics.GetHistogram(ctx, tconn, presentationsHistogramName)
 	if err != nil {
 		s.Fatal("Failed to get initial histogram: ", err)
 	}
 	const decodeHistogramName = "Media.MojoVideoDecoder.Decode"
-	initDecodeHistogram, err := metrics.GetHistogram(ctx, bTconn, decodeHistogramName)
+	initDecodeHistogram, err := metrics.GetHistogram(ctx, tconn, decodeHistogramName)
 	if err != nil {
 		s.Fatal("Failed to get initial histogram: ", err)
 	}
@@ -158,10 +139,10 @@ func VideoPlaybackDelay(ctx context.Context, s *testing.State) {
 	}
 
 	perfValues := perf.NewValues()
-	if err := graphics.UpdatePerfMetricFromHistogram(ctx, bTconn, presentationsHistogramName, initPresentationHistogram, perfValues, "tast_graphics_webrtc_video_playback_delay"); err != nil {
+	if err := graphics.UpdatePerfMetricFromHistogram(ctx, tconn, presentationsHistogramName, initPresentationHistogram, perfValues, "tast_graphics_webrtc_video_playback_delay"); err != nil {
 		s.Fatal("Failed to calculate Presentation perf metric: ", err)
 	}
-	if err := graphics.UpdatePerfMetricFromHistogram(ctx, bTconn, decodeHistogramName, initDecodeHistogram, perfValues, "tast_graphics_webrtc_video_decode_delay"); err != nil {
+	if err := graphics.UpdatePerfMetricFromHistogram(ctx, tconn, decodeHistogramName, initDecodeHistogram, perfValues, "tast_graphics_webrtc_video_decode_delay"); err != nil {
 		s.Fatal("Failed to calculate Decode perf metric: ", err)
 	}
 	if err := graphics.UpdatePerfMetricFromHistogram(ctx, tconn, platformDecodeHistogramName, initPlatformDecodeHistogramName, perfValues, "tast_graphics_webrtc_platform_video_decode_delay"); err != nil {

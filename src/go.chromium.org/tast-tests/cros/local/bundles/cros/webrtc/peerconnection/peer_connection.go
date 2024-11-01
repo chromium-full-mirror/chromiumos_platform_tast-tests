@@ -16,7 +16,6 @@ import (
 
 	"go.chromium.org/tast-tests/cros/local/chrome"
 	"go.chromium.org/tast-tests/cros/local/chrome/ash"
-	"go.chromium.org/tast-tests/cros/local/chrome/browser"
 	"go.chromium.org/tast-tests/cros/local/chrome/display"
 	"go.chromium.org/tast-tests/cros/local/graphics"
 	"go.chromium.org/tast-tests/cros/local/graphics/modetest"
@@ -94,9 +93,6 @@ type RTCTestParams struct {
 	VideoGridFile      string // Name of the video file to fill up the grid with, if needed.
 	// The array each element of which is true iff -th smaller resolution should be a hardware encoder implementation.
 	SimulcastHWEncs []bool
-	// BrowserType indicates the type of Chrome browser to be used,
-	// Ash Chrome or Lacros Chrome.
-	BrowserType browser.Type
 	// VerifyOutOfProcessVideoEncodingIsUsed denotes if we should verify that a utility encoder process was started.
 	VerifyOutOfProcessVideoEncodingIsUsed bool
 	TraceChromeEvents                     bool
@@ -167,7 +163,7 @@ func numSpatialLayers(scalabilityMode string) (int, error) {
 
 // RunRTCPeerConnection launches a loopback RTCPeerConnection and inspects that the
 // VerifyHWAcceleratorMode codec is hardware accelerated if profile is not NoVerifyHWAcceleratorUsed.
-func RunRTCPeerConnection(ctx context.Context, cs ash.ConnSource, cr *chrome.Chrome, fileSystem http.FileSystem, params RTCTestParams) error {
+func RunRTCPeerConnection(ctx context.Context, cr *chrome.Chrome, fileSystem http.FileSystem, params RTCTestParams) error {
 	if params.Simulcasts > 1 {
 		// In simulcast encoding, Svc must be specified and Svc is temporal scalability only such as L1T1, L1T2 and L1T3.
 		if params.Svc == "" {
@@ -206,7 +202,7 @@ func RunRTCPeerConnection(ctx context.Context, cs ash.ConnSource, cr *chrome.Chr
 	server := httptest.NewServer(http.FileServer(fileSystem))
 	defer server.Close()
 
-	conn, err := cs.NewConn(ctx, server.URL+"/"+LoopbackFile)
+	conn, err := cr.NewConn(ctx, server.URL+"/"+LoopbackFile)
 	if err != nil {
 		return errors.Wrap(err, "failed to open video page")
 	}

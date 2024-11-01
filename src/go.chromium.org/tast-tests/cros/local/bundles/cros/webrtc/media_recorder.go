@@ -10,8 +10,7 @@ import (
 
 	"go.chromium.org/tast-tests/cros/common/media/caps"
 	"go.chromium.org/tast-tests/cros/local/bundles/cros/webrtc/mediarecorder"
-	"go.chromium.org/tast-tests/cros/local/chrome/browser"
-	"go.chromium.org/tast-tests/cros/local/chrome/lacros"
+	"go.chromium.org/tast-tests/cros/local/chrome"
 	"go.chromium.org/tast-tests/cros/local/graphics"
 	"go.chromium.org/tast-tests/cros/local/media/videotype"
 	"go.chromium.org/tast/core/testing"
@@ -19,17 +18,15 @@ import (
 
 // mediaRecorderTest is used to describe the config used to run each test case.
 type mediaRecorderTest struct {
-	profile     videotype.CodecProfile
-	browserType browser.Type
+	profile videotype.CodecProfile
 	// Capture resolution. 720p if it is not filled.
 	resolution graphics.Size
 }
 
 func init() {
 	testing.AddTest(&testing.Test{
-		Func:         MediaRecorder,
-		LacrosStatus: testing.LacrosVariantUnneeded,
-		Desc:         "Verifies that MediaRecorder uses video encode acceleration",
+		Func: MediaRecorder,
+		Desc: "Verifies that MediaRecorder uses video encode acceleration",
 		Contacts: []string{
 			"bchoobineh@google.com",
 			"chromeos-gfx-video@google.com",
@@ -40,52 +37,52 @@ func init() {
 		Attr:         []string{"group:graphics", "graphics_video", "graphics_perbuild"},
 		Params: []testing.Param{{
 			Name:              "h264",
-			Val:               mediaRecorderTest{profile: videotype.H264BaselineProf, browserType: browser.TypeAsh},
+			Val:               mediaRecorderTest{profile: videotype.H264BaselineProf},
 			ExtraSoftwareDeps: []string{caps.HWEncodeH264, "proprietary_codecs"},
 			Fixture:           "chromeVideoWithFakeWebcam",
 		}, {
 			Name:              "h264_high",
-			Val:               mediaRecorderTest{profile: videotype.H264HighProf, browserType: browser.TypeAsh, resolution: graphics.Size{Width: 1920, Height: 1080}},
+			Val:               mediaRecorderTest{profile: videotype.H264HighProf, resolution: graphics.Size{Width: 1920, Height: 1080}},
 			ExtraSoftwareDeps: []string{caps.HWEncodeH264, "proprietary_codecs"},
 			Fixture:           "chromeVideoWithFakeWebcam",
 		}, {
 			Name:              "h264_high_1080p",
-			Val:               mediaRecorderTest{profile: videotype.H264HighProf, browserType: browser.TypeAsh, resolution: graphics.Size{Width: 1920, Height: 1080}},
+			Val:               mediaRecorderTest{profile: videotype.H264HighProf, resolution: graphics.Size{Width: 1920, Height: 1080}},
 			ExtraSoftwareDeps: []string{caps.HWEncodeH264, "proprietary_codecs"},
 			Fixture:           "chromeVideoWithFakeWebcam",
 		}, {
 			Name:              "vp8",
-			Val:               mediaRecorderTest{profile: videotype.VP8Prof, browserType: browser.TypeAsh},
+			Val:               mediaRecorderTest{profile: videotype.VP8Prof},
 			ExtraSoftwareDeps: []string{caps.HWEncodeVP8},
 			Fixture:           "chromeVideoWithFakeWebcam",
 		}, {
 			Name:              "vp8_1080p",
-			Val:               mediaRecorderTest{profile: videotype.VP8Prof, browserType: browser.TypeAsh, resolution: graphics.Size{Width: 1920, Height: 1080}},
+			Val:               mediaRecorderTest{profile: videotype.VP8Prof, resolution: graphics.Size{Width: 1920, Height: 1080}},
 			ExtraSoftwareDeps: []string{caps.HWEncodeVP8},
 			Fixture:           "chromeVideoWithFakeWebcam",
 		}, {
 			Name:              "vp8_cam",
-			Val:               mediaRecorderTest{profile: videotype.VP8Prof, browserType: browser.TypeAsh},
+			Val:               mediaRecorderTest{profile: videotype.VP8Prof},
 			ExtraSoftwareDeps: []string{caps.BuiltinCamera, caps.HWEncodeVP8},
 			Fixture:           "chromeCameraPerf",
 		}, {
 			Name:              "vp9",
-			Val:               mediaRecorderTest{profile: videotype.VP9Prof, browserType: browser.TypeAsh},
+			Val:               mediaRecorderTest{profile: videotype.VP9Prof},
 			ExtraSoftwareDeps: []string{caps.HWEncodeVP9},
 			Fixture:           "chromeVideoWithFakeWebcam",
 		}, {
 			Name:              "vp9_1080p",
-			Val:               mediaRecorderTest{profile: videotype.VP9Prof, browserType: browser.TypeAsh, resolution: graphics.Size{Width: 1920, Height: 1080}},
+			Val:               mediaRecorderTest{profile: videotype.VP9Prof, resolution: graphics.Size{Width: 1920, Height: 1080}},
 			ExtraSoftwareDeps: []string{caps.HWEncodeVP9},
 			Fixture:           "chromeVideoWithFakeWebcam",
 		}, {
 			Name:              "av1",
-			Val:               mediaRecorderTest{profile: videotype.AV1MainProf, browserType: browser.TypeAsh},
+			Val:               mediaRecorderTest{profile: videotype.AV1MainProf},
 			ExtraSoftwareDeps: []string{caps.HWEncodeAV1},
 			Fixture:           "chromeVideoWithFakeWebcam",
 		}, {
 			Name:              "av1_1080p",
-			Val:               mediaRecorderTest{profile: videotype.AV1MainProf, browserType: browser.TypeAsh, resolution: graphics.Size{Width: 1920, Height: 1080}},
+			Val:               mediaRecorderTest{profile: videotype.AV1MainProf, resolution: graphics.Size{Width: 1920, Height: 1080}},
 			ExtraSoftwareDeps: []string{caps.HWEncodeAV1},
 			Fixture:           "chromeVideoWithFakeWebcam",
 		}},
@@ -99,29 +96,13 @@ func MediaRecorder(ctx context.Context, s *testing.State) {
 		// receive just bits and pieces of the container header.
 		recordDuration = 100 * time.Millisecond
 	)
-	params := s.Param().(mediaRecorderTest)
 
-	cr, l, cs, err := lacros.Setup(ctx, s.FixtValue(), params.browserType)
-	if err != nil {
-		s.Fatal("Failed to initialize test: ", err)
-	}
-	defer lacros.CloseLacros(ctx, l)
+	cr := s.FixtValue().(chrome.HasChrome).Chrome()
+	params := s.Param().(mediaRecorderTest)
 
 	tconn, err := cr.TestAPIConn(ctx)
 	if err != nil {
 		s.Fatal("Failed to connect to test API: ", err)
-	}
-
-	var br *browser.Browser
-	switch params.browserType {
-	case browser.TypeAsh:
-		br = cr.Browser()
-	case browser.TypeLacros:
-		br = l.Browser()
-	}
-	bTconn, err := br.TestAPIConn(ctx)
-	if err != nil {
-		s.Fatal("Failed to connect to browser test API: ", err)
 	}
 
 	// If resolution is not filled, then 720p is set.
@@ -129,7 +110,7 @@ func MediaRecorder(ctx context.Context, s *testing.State) {
 		params.resolution = graphics.Size{Width: 1280, Height: 720}
 	}
 
-	if err := mediarecorder.VerifyMediaRecorderUsesEncodeAccelerator(ctx, cs, tconn, bTconn, s.DataFileSystem(), params.profile, params.resolution, recordDuration); err != nil {
+	if err := mediarecorder.VerifyMediaRecorderUsesEncodeAccelerator(ctx, cr, tconn, s.DataFileSystem(), params.profile, params.resolution, recordDuration); err != nil {
 		s.Error("Failed to run VerifyMediaRecorderUsesEncodeAccelerator: ", err)
 	}
 }

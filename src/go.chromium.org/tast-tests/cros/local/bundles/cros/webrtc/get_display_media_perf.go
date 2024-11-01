@@ -10,8 +10,6 @@ import (
 
 	"go.chromium.org/tast-tests/cros/local/bundles/cros/webrtc/getdisplaymedia"
 	"go.chromium.org/tast-tests/cros/local/chrome"
-	"go.chromium.org/tast-tests/cros/local/chrome/browser"
-	"go.chromium.org/tast-tests/cros/local/chrome/lacros"
 	"go.chromium.org/tast-tests/cros/local/power/setup"
 	"go.chromium.org/tast/core/ctxutil"
 	"go.chromium.org/tast/core/testing"
@@ -20,14 +18,12 @@ import (
 
 type getDisplayMediaTestParams struct {
 	surfaceType string
-	browserType browser.Type
 }
 
 func init() {
 	testing.AddTest(&testing.Test{
-		Func:         GetDisplayMediaPerf,
-		LacrosStatus: testing.LacrosVariantUnneeded,
-		Desc:         "Verifies that WebRTC getDisplayMedia() (screen, window, tab capture) works and collects performance data",
+		Func: GetDisplayMediaPerf,
+		Desc: "Verifies that WebRTC getDisplayMedia() (screen, window, tab capture) works and collects performance data",
 		Contacts: []string{
 			"chromeos-gfx-video@google.com",
 			"hiroh@chromium.org",
@@ -45,29 +41,29 @@ func init() {
 		// TODO(crbug.com/1063449): add other cases when the adequate precondition is ready.
 		Params: []testing.Param{{
 			Name:              "monitor",
-			Val:               getDisplayMediaTestParams{surfaceType: "monitor", browserType: browser.TypeAsh},
+			Val:               getDisplayMediaTestParams{surfaceType: "monitor"},
 			Fixture:           "chromeScreenCapture",
 			ExtraHardwareDeps: hwdep.D(hwdep.InternalDisplay(), hwdep.NoExternalDisplay()),
 		}, {
 			Name:    "window",
-			Val:     getDisplayMediaTestParams{surfaceType: "window", browserType: browser.TypeAsh},
+			Val:     getDisplayMediaTestParams{surfaceType: "window"},
 			Fixture: "chromeWindowCapture",
 		}, {
 			Name:    "tab",
-			Val:     getDisplayMediaTestParams{surfaceType: "browser", browserType: browser.TypeAsh},
+			Val:     getDisplayMediaTestParams{surfaceType: "browser"},
 			Fixture: "chromeTabCapture",
 		}, {
 			Name:              "monitor_zero_copy",
-			Val:               getDisplayMediaTestParams{surfaceType: "monitor", browserType: browser.TypeAsh},
+			Val:               getDisplayMediaTestParams{surfaceType: "monitor"},
 			Fixture:           "chromeZeroCopyScreenCapture",
 			ExtraHardwareDeps: hwdep.D(hwdep.InternalDisplay(), hwdep.NoExternalDisplay()),
 		}, {
 			Name:    "window_zero_copy",
-			Val:     getDisplayMediaTestParams{surfaceType: "window", browserType: browser.TypeAsh},
+			Val:     getDisplayMediaTestParams{surfaceType: "window"},
 			Fixture: "chromeZeroCopyWindowCapture",
 		}, {
 			Name:    "tab_zero_copy",
-			Val:     getDisplayMediaTestParams{surfaceType: "browser", browserType: browser.TypeAsh},
+			Val:     getDisplayMediaTestParams{surfaceType: "browser"},
 			Fixture: "chromeZeroCopyTabCapture",
 		}},
 	})
@@ -79,7 +75,10 @@ func GetDisplayMediaPerf(ctx context.Context, s *testing.State) {
 	ctx, cancel := ctxutil.Shorten(ctx, 2*time.Second)
 	defer cancel()
 
-	tconn, err := s.FixtValue().(chrome.HasChrome).Chrome().TestAPIConn(ctx)
+	cr := s.FixtValue().(chrome.HasChrome).Chrome()
+	params := s.Param().(getDisplayMediaTestParams)
+
+	tconn, err := cr.TestAPIConn(ctx)
 	if err != nil {
 		s.Fatal("Failed to create Test API connection: ", err)
 	}
@@ -95,26 +94,7 @@ func GetDisplayMediaPerf(ctx context.Context, s *testing.State) {
 	}
 	defer cleanup(cleanupCtx)
 
-	params := s.Param().(getDisplayMediaTestParams)
-	cr, l, cs, err := lacros.Setup(ctx, s.FixtValue(), params.browserType)
-	if err != nil {
-		s.Fatal("Failed to initialize test: ", err)
-	}
-	defer lacros.CloseLacros(ctx, l)
-
-	var br *browser.Browser
-	switch params.browserType {
-	case browser.TypeAsh:
-		br = cr.Browser()
-	case browser.TypeLacros:
-		br = l.Browser()
-	}
-	bTconn, err := br.TestAPIConn(ctx)
-	if err != nil {
-		s.Fatal("Failed to connect to browser test API: ", err)
-	}
-
-	if err := getdisplaymedia.RunGetDisplayMediaPerf(ctx, s.DataFileSystem(), cs, tconn, bTconn, params.surfaceType); err != nil {
+	if err := getdisplaymedia.RunGetDisplayMediaPerf(ctx, s.DataFileSystem(), cr, tconn, params.surfaceType); err != nil {
 		s.Fatal("TestPlay failed: ", err)
 	}
 }
