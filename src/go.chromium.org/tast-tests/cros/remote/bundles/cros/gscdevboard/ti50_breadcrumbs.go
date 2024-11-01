@@ -48,7 +48,7 @@ func init() {
 func Ti50Breadcrumbs(ctx context.Context, s *testing.State) {
 	b := utils.NewDevboardHelper(s)
 	th := utils.FirmwareTestingHelper{FirmwareTestingHelperDelegate: s}
-	i := ti50.MustOpenCrOSImage(ctx, b, s)
+	i := ti50.MustOpenCrOSImage(ctx, b, s, b.TestbedType)
 	defer i.Close(ctx)
 
 	var expected []int

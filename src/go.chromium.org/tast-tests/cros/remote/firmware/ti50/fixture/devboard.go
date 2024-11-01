@@ -262,20 +262,20 @@ func setupImage(ctx context.Context, v *Value, s TestingState) {
 			s.Fatal("Setup: ", err)
 		}
 
-		if needsUpdate(ctx, s, v.devboard, v.ImagePath, false) {
+		if needsUpdate(ctx, s, v.devboard, v.ImagePath, false, v.TestbedProperties.TestbedType) {
 			testing.ContextLog(ctx, "Image is already running")
 			return
 		}
 	}
 	testing.ContextLog(ctx, "Setting up image: ", v.ImagePath)
 	if v.TestbedProperties.TestbedType == ti50.GscH1Shield {
-		setupCr50Image(ctx, s, v.devboard, v.ImagePath, v.FwConfigJsons, v.TestbedProperties, false)
+		setupCr50Image(ctx, s, v.devboard, v.ImagePath, v.FwConfigJsons, v.TestbedProperties, false, v.TestbedProperties.TestbedType)
 	} else if err := v.devboard.Setup(ctx, v.ImagePath, v.FwConfigJsons); err != nil {
 		s.Fatal("Setup: ", err)
 	}
 }
 
-func needsUpdate(ctx context.Context, s TestingState, board *remoteTi50.DUTControlAndreiboard, imagePath string, checkInfoSpace bool) bool {
+func needsUpdate(ctx context.Context, s TestingState, board *remoteTi50.DUTControlAndreiboard, imagePath string, checkInfoSpace bool, testbed ti50.TestbedType) bool {
 	if imagePath == "" {
 		testing.ContextLog(ctx, "No image given. Nothing to do")
 		return true
@@ -298,7 +298,7 @@ func needsUpdate(ctx context.Context, s TestingState, board *remoteTi50.DUTContr
 
 	gscConsole := board.PhysicalUart(ti50.UartConsole)
 
-	i, err := ti50.OpenCrOSImage(ctx, gscConsole)
+	i, err := ti50.OpenCrOSImage(ctx, gscConsole, testbed)
 	if err != nil {
 		s.Fatal("Unable to open gsc console: ", err)
 	}
@@ -366,7 +366,7 @@ func needsUpdate(ctx context.Context, s TestingState, board *remoteTi50.DUTContr
 // The GSC UART must be closed before calling this method since it opens it to issue commands to the board.
 // TODO(b/140534392): Support changing the board id.
 func setupCr50Image(ctx context.Context, s TestingState, board *remoteTi50.DUTControlAndreiboard, imagePath string, fwConfigJsons []string,
-	testbedProperties remoteTi50.TestbedProperties, runEraseFlashInfo bool) {
+	testbedProperties remoteTi50.TestbedProperties, runEraseFlashInfo bool, testbed ti50.TestbedType) {
 	if err := board.StartSession(ctx, ti50.StrapReset); err != nil {
 		s.Fatal("StartSession: ", err)
 	}
@@ -395,7 +395,7 @@ func setupCr50Image(ctx context.Context, s TestingState, board *remoteTi50.DUTCo
 	mustSucceed(s, err, "get current fwver")
 
 	gscConsole := board.PhysicalUart(ti50.UartConsole)
-	i, err := ti50.OpenCrOSImage(ctx, gscConsole)
+	i, err := ti50.OpenCrOSImage(ctx, gscConsole, testbed)
 	if err != nil {
 		s.Fatal("Unable to open gsc console: ", err)
 	}

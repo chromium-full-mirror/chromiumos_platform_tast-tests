@@ -152,7 +152,7 @@ func waitForPulse(ctx context.Context, b utils.DevboardHelper, gpioMonitor utils
 func Cr50RBOXBufferOutput(ctx context.Context, s *testing.State) {
 	b := utils.NewDevboardHelper(s)
 	th := utils.FirmwareTestingHelper{FirmwareTestingHelperDelegate: s}
-	i := ti50.MustOpenCrOSImage(ctx, b, s)
+	i := ti50.MustOpenCrOSImage(ctx, b, s, b.TestbedType)
 	defer i.Close(ctx)
 
 	testSignal := s.Param().(ti50.GpioName)

@@ -102,7 +102,7 @@ func init() {
 func GSCBIDRejectUpdate(ctx context.Context, s *testing.State) {
 	th := utils.FirmwareTestingHelper{FirmwareTestingHelperDelegate: s}
 	b := utils.NewDevboardHelper(s)
-	i := ti50.MustOpenCrOSImage(ctx, b, s)
+	i := ti50.MustOpenCrOSImage(ctx, b, s, b.TestbedType)
 	defer i.Close(ctx)
 
 	f := s.FixtValue().(*fixture.Value)

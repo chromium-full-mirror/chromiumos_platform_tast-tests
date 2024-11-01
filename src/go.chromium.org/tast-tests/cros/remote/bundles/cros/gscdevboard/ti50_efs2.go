@@ -42,7 +42,7 @@ func Ti50EFS2(ctx context.Context, s *testing.State) {
 	th.MustSucceed(ecUart.Open(ctx), "Open EC UART")
 	defer ecUart.Close(ctx)
 
-	i := ti50.MustOpenCrOSImage(ctx, b, s)
+	i := ti50.MustOpenCrOSImage(ctx, b, s, b.TestbedType)
 	defer i.Close(ctx)
 
 	tpm := b.ResetAndTpmStartup(ctx, i, ti50.CCDModeOn, ti50.FfClamshell)

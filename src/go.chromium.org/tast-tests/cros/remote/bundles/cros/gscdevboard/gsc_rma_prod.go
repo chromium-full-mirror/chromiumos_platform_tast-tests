@@ -38,7 +38,7 @@ func init() {
 
 func GSCRMAProd(ctx context.Context, s *testing.State) {
 	b := utils.NewDevboardHelper(s)
-	i := ti50.MustOpenCrOSImage(ctx, b, s)
+	i := ti50.MustOpenCrOSImage(ctx, b, s, b.TestbedType)
 	defer i.Close(ctx)
 
 	s.Log("(Re)starting GSC")

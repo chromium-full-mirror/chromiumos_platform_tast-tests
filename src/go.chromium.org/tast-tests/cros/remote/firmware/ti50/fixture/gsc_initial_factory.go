@@ -72,7 +72,7 @@ func eraseInfoPage(ctx context.Context, v *Value, s TestingState) {
 	defer b.EndSession(ctx)
 
 	gscConsole := b.PhysicalUart(ti50.UartConsole)
-	i := ti50.MustOpenCrOSImage(ctx, gscConsole, s)
+	i := ti50.MustOpenCrOSImage(ctx, gscConsole, s, v.TestbedProperties.TestbedType)
 	defer i.Close(ctx)
 
 	mustSucceed(s, b.Reset(ctx), "Reset gsc console for EFI")
@@ -108,7 +108,7 @@ func eraseAPROVerificationSettings(ctx context.Context, v *Value, s TestingState
 	defer b.EndSession(ctx)
 
 	gscConsole := b.PhysicalUart(ti50.UartConsole)
-	i := ti50.MustOpenCrOSImage(ctx, gscConsole, s)
+	i := ti50.MustOpenCrOSImage(ctx, gscConsole, s, v.TestbedProperties.TestbedType)
 	defer i.Close(ctx)
 
 	mustSucceed(s, b.Reset(ctx), "Reset gsc console")
@@ -132,14 +132,14 @@ func setupImageAndEraseInfo(ctx context.Context, v *Value, s TestingState) {
 	}
 
 	b := v.devboard
-	if needsUpdate(ctx, s, b, v.ImagePath, true) {
+	if needsUpdate(ctx, s, b, v.ImagePath, true, v.TestbedProperties.TestbedType) {
 		testing.ContextLog(ctx, "Image is already running and info1 is erased")
 		return
 	}
 
 	testing.ContextLog(ctx, "Setting up image and running eraseflashinfo: ", v.ImagePath)
 	if v.TestbedProperties.TestbedType == ti50.GscH1Shield {
-		setupCr50Image(ctx, s, b, v.ImagePath, v.FwConfigJsons, v.TestbedProperties, true)
+		setupCr50Image(ctx, s, b, v.ImagePath, v.FwConfigJsons, v.TestbedProperties, true, v.TestbedProperties.TestbedType)
 	} else {
 		testing.ContextLog(ctx, "Flashing EFI image")
 		efiImagePath, _ := v.EfiImagePath(ctx)

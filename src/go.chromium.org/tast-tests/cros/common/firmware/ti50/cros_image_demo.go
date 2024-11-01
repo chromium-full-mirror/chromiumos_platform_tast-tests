@@ -19,7 +19,7 @@ const (
 
 // Demo uses some of the CrOSImage to control the board.
 func Demo(ctx context.Context, console SerialChannel) error {
-	i, err := OpenCrOSImage(ctx, console)
+	i, err := OpenCrOSImage(ctx, console, GscDTShield)
 	if err != nil {
 		return err
 	}

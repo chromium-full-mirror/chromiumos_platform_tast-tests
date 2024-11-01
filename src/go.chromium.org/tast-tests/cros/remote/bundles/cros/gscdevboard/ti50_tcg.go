@@ -570,7 +570,7 @@ func init() {
 
 func Ti50TCG(ctx context.Context, s *testing.State) {
 	b := utils.NewDevboardHelper(s)
-	i := ti50.MustOpenCrOSImage(ctx, b, s)
+	i := ti50.MustOpenCrOSImage(ctx, b, s, b.TestbedType)
 	defer i.Close(ctx)
 
 	th := utils.FirmwareTestingHelper{FirmwareTestingHelperDelegate: s}

@@ -295,7 +295,7 @@ func Ti50Sleep(ctx context.Context, s *testing.State) {
 	testParams := s.Param().(ti50SleepParam)
 	b := utils.NewDevboardHelper(s)
 	th := utils.FirmwareTestingHelper{FirmwareTestingHelperDelegate: s}
-	i := ti50.MustOpenCrOSImage(ctx, b, s)
+	i := ti50.MustOpenCrOSImage(ctx, b, s, b.TestbedType)
 	defer i.Close(ctx)
 	pv := perf.NewValues()
 

@@ -87,7 +87,7 @@ func Ti50ValidStraps(ctx context.Context, s *testing.State) {
 	userParams := s.Param().(ti50ValidStrapsParam)
 	b := utils.NewDevboardHelper(s)
 	th := utils.FirmwareTestingHelper{FirmwareTestingHelperDelegate: s}
-	i := ti50.MustOpenCrOSImage(ctx, b, s)
+	i := ti50.MustOpenCrOSImage(ctx, b, s, b.TestbedType)
 	defer i.Close(ctx)
 
 	s.Log("Restarting ti50 with " + string(userParams.tpmCommunication) + " transport straps and " + string(userParams.formFactor) + " rbox straps")

@@ -93,7 +93,7 @@ func GSCUARTThroughput(ctx context.Context, s *testing.State) {
 	gscProps := b.GscProperties()
 	testOption := s.Param().(throughputTest)
 	th := utils.FirmwareTestingHelper{FirmwareTestingHelperDelegate: s}
-	i := ti50.MustOpenCrOSImage(ctx, b, s)
+	i := ti50.MustOpenCrOSImage(ctx, b, s, b.TestbedType)
 	defer i.Close(ctx)
 
 	s.Log("(Re)starting ti50")

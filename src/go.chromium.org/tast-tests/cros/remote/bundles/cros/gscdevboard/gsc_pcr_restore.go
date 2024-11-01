@@ -106,7 +106,7 @@ func GSCPCRRestore(ctx context.Context, s *testing.State) {
 	testParams := s.Param().(ti50PcrParam)
 	b := utils.NewDevboardHelper(s)
 	th := utils.FirmwareTestingHelper{FirmwareTestingHelperDelegate: s}
-	i := ti50.MustOpenCrOSImage(ctx, b, s)
+	i := ti50.MustOpenCrOSImage(ctx, b, s, b.TestbedType)
 	defer i.Close(ctx)
 
 	s.Log("Restarting ti50 with appropriate straps")

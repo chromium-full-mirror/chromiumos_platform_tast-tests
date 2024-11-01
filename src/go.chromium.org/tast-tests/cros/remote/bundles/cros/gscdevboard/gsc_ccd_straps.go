@@ -163,7 +163,7 @@ func eventsMustBe(events utils.GpioEvents, expected []utils.GpioEdge, caseStr st
 func GSCCCDStraps(ctx context.Context, s *testing.State) {
 	userParams := s.Param().(gSCCCDStrapsParam)
 	b := utils.NewDevboardHelper(s)
-	i := ti50.MustOpenCrOSImage(ctx, b, s)
+	i := ti50.MustOpenCrOSImage(ctx, b, s, b.TestbedType)
 	defer i.Close(ctx)
 
 	// Run test with voltages "in the middle" of the allowed ranges.

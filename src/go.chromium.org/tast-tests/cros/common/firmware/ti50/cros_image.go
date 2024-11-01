@@ -286,6 +286,7 @@ type BuildInfo struct {
 // CrOSImage interacts with a board running ti50.
 type CrOSImage struct {
 	*CommandImage
+	TestbedType TestbedType
 }
 
 // Fatal facilitates failing a test or test fixture.
@@ -294,18 +295,18 @@ type Fatal interface {
 }
 
 // OpenCrOSImage creates a new CrOSImage. This must be closed to free connection.
-func OpenCrOSImage(ctx context.Context, console SerialChannel) (*CrOSImage, error) {
+func OpenCrOSImage(ctx context.Context, console SerialChannel, testbed TestbedType) (*CrOSImage, error) {
 	i, err := OpenCommandImage(ctx, console, "\n", "^(\\[[ 0-9.]+.\\] )?> ")
 	if err != nil {
 		return nil, err
 	}
 	// Allow for timestamp to be present before prompt "[ 999999.999 C] > " or just "> "
-	return &CrOSImage{CommandImage: i}, nil
+	return &CrOSImage{CommandImage: i, TestbedType: testbed}, nil
 }
 
 // MustOpenCrOSImage is shorthand for OpenCrOSImage that will Fatalf the test/fixture if failed.
-func MustOpenCrOSImage(ctx context.Context, console SerialChannel, failWith Fatal) *CrOSImage {
-	i, err := OpenCrOSImage(ctx, console)
+func MustOpenCrOSImage(ctx context.Context, console SerialChannel, failWith Fatal, testbed TestbedType) *CrOSImage {
+	i, err := OpenCrOSImage(ctx, console, testbed)
 	if err != nil {
 		failWith.Fatalf("New CrOS Image: %v", err)
 	}
@@ -507,17 +508,19 @@ func (i *CrOSImage) runCommand(ctx context.Context, cmd string) error {
 // safeCommand restricts the console channel before running the requested
 // command to prevent the output from being broken up.
 func (i *CrOSImage) safeCommand(ctx context.Context, cmd string) (string, error) {
-	if err := i.runCommand(ctx, "chan save"); err != nil {
-		return "", errors.Wrap(err, "failed to save the channel")
-	}
+	if i.TestbedType == GscH1Shield {
+		if err := i.runCommand(ctx, "chan save"); err != nil {
+			return "", errors.Wrap(err, "failed to save the channel")
+		}
 
-	// Restore the channel when finished
-	defer func() {
-		_ = i.runCommand(ctx, "chan restore")
-	}()
+		// Restore the channel when finished
+		defer func() {
+			_ = i.runCommand(ctx, "chan restore")
+		}()
 
-	if err := i.runCommand(ctx, "chan 1"); err != nil {
-		return "", errors.Wrap(err, "failed to set the channel to 1")
+		if err := i.runCommand(ctx, "chan 1"); err != nil {
+			return "", errors.Wrap(err, "failed to set the channel to 1")
+		}
 	}
 	return i.Command(ctx, cmd)
 }

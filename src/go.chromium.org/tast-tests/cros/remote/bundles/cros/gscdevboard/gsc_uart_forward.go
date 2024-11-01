@@ -40,7 +40,7 @@ func GSCUARTForward(ctx context.Context, s *testing.State) {
 	b := utils.NewDevboardHelper(s)
 	gscProps := b.GscProperties()
 	th := utils.FirmwareTestingHelper{FirmwareTestingHelperDelegate: s}
-	i := ti50.MustOpenCrOSImage(ctx, b, s)
+	i := ti50.MustOpenCrOSImage(ctx, b, s, b.TestbedType)
 	defer i.Close(ctx)
 
 	seed := time.Now().UnixNano()

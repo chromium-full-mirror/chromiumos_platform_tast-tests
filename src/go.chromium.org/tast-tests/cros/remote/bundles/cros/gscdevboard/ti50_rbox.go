@@ -96,7 +96,7 @@ func Ti50RBOX(ctx context.Context, s *testing.State) {
 	params := s.Param().(ti50ValidRBOXParam)
 	b := utils.NewDevboardHelper(s)
 	th := utils.FirmwareTestingHelper{FirmwareTestingHelperDelegate: s}
-	i := ti50.MustOpenCrOSImage(ctx, b, s)
+	i := ti50.MustOpenCrOSImage(ctx, b, s, b.TestbedType)
 	defer i.Close(ctx)
 
 	s.Logf("Restarting ti50 with %s straps and CCD enabled", string(params.formFactor))

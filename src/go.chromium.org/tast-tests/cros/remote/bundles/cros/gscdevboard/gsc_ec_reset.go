@@ -46,7 +46,7 @@ func GSCECReset(ctx context.Context, s *testing.State) {
 	subTest := s.Param().(func(context.Context, *testing.State, utils.DevboardHelper, *ti50.CrOSImage, utils.FirmwareTestingHelper))
 	b := utils.NewDevboardHelper(s)
 	th := utils.FirmwareTestingHelper{FirmwareTestingHelperDelegate: s}
-	i := ti50.MustOpenCrOSImage(ctx, b, s)
+	i := ti50.MustOpenCrOSImage(ctx, b, s, b.TestbedType)
 	defer i.Close(ctx)
 
 	b.Reset(ctx)

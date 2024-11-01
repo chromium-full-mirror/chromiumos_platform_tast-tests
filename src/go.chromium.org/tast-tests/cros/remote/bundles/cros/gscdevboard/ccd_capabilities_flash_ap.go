@@ -62,7 +62,7 @@ func init() {
 func CCDCapabilitiesFlashAP(ctx context.Context, s *testing.State) {
 	userParams := s.Param().(cCDCapabilitiesFlashAP)
 	b := utils.NewDevboardHelper(s)
-	i := ti50.MustOpenCrOSImage(ctx, b, s)
+	i := ti50.MustOpenCrOSImage(ctx, b, s, b.TestbedType)
 	defer i.Close(ctx)
 
 	_ = b.ResetAndTpmStartup(ctx, i, ti50.CCDModeOn, ti50.FfClamshell)

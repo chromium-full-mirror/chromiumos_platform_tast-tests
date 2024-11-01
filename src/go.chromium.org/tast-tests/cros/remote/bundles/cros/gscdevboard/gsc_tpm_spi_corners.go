@@ -36,7 +36,7 @@ func init() {
 
 func GSCTPMSPICorners(ctx context.Context, s *testing.State) {
 	b := utils.NewDevboardHelper(s)
-	i := ti50.MustOpenCrOSImage(ctx, b, s)
+	i := ti50.MustOpenCrOSImage(ctx, b, s, b.TestbedType)
 	defer i.Close(ctx)
 
 	tpmHandle := b.ResetAndTpmStartupForBus(ctx, i, ti50.TpmBusSpi, ti50.CCDModeOff, ti50.FfClamshell)
