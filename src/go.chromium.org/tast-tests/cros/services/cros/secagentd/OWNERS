@@ -1,0 +1,6 @@
+set noparent
+# Tast team for bulk/emergencies
+include /OWNERS.tast
+
+# XDR security team
+include chromiumos/owners:v1:/security/OWNERS.xdr
