@@ -976,11 +976,11 @@ func (ms *ModeSwitcher) PowerOff(ctx context.Context) error {
 		// If Chrome EC exists, check power state reaches G3,
 		// otherwise wait for DUT unreachable.
 		if h.Config.ChromeEC {
-			return h.WaitForPowerStates(ctx, PowerStateInterval, h.Config.ShutdownTimeout, "G3")
+			return h.WaitForPowerStates(ctx, PowerStateInterval, PowerStateTimeout, "G3")
 		}
-		offCtx, cancel := context.WithTimeout(ctx, h.Config.ShutdownTimeout)
+		offCtx, cancel := context.WithTimeout(ctx, offTimeout)
 		defer cancel()
-		return ms.waitUnreachable(offCtx)
+		return ms.Helper.DUT.WaitUnreachable(offCtx)
 	}
 	if h.DUT.Connected(ctx) {
 		// Since the DUT will power off, deadline exceeded is expected here.
@@ -1002,15 +1002,6 @@ func (ms *ModeSwitcher) PowerOff(ctx context.Context) error {
 		return errors.Wrap(err, "set power_state:off")
 	}
 	return waitForPowerOff(ctx)
-}
-
-func (ms *ModeSwitcher) waitUnreachable(ctx context.Context) error {
-	offCtx, cancel := context.WithTimeout(ctx, offTimeout)
-	defer cancel()
-	if err := ms.Helper.DUT.WaitUnreachable(offCtx); err != nil {
-		return errors.Wrap(err, "waiting for DUT to be unreachable after powering off")
-	}
-	return nil
 }
 
 // RunBypasser contains information about how to run a bypasser
