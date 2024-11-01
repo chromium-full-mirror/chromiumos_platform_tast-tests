@@ -9,6 +9,7 @@ package scx
 import (
 	"context"
 	"fmt"
+	"os"
 	"path"
 
 	"go.chromium.org/tast-tests/cros/common/testexec"
@@ -35,15 +36,20 @@ const (
 )
 
 func scxBinPath(scheduler Type) string {
-	return path.Join("/usr/local/bin", string(scheduler))
+	return path.Join("/usr/bin", string(scheduler))
 }
 
 // Load loads scx scheduler to switch to eBPF scheduler.
 func Load(ctx context.Context, outdir string, scheduler Type) error {
 	logFile := path.Join(outdir, string(scheduler))
 
+	schedBin := scxBinPath(scheduler)
+	if _, err := os.Stat(schedBin); err != nil {
+		return err
+	}
+
 	// Run scx scheduler as a background process and save log files.
-	script := fmt.Sprintf("nohup %s > %s.log 2>%s.err &", scxBinPath(scheduler), logFile, logFile)
+	script := fmt.Sprintf("nohup %s > %s.log 2>%s.err &", schedBin, logFile, logFile)
 	testing.ContextLog(ctx, "Starting scx: ", script)
 	cmd := testexec.CommandContext(ctx, "/bin/sh", "-e", "-c", script)
 	cmd.SysProcAttr.Setpgid = false
