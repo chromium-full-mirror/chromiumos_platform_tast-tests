@@ -13,7 +13,6 @@ import (
 	"google.golang.org/grpc"
 
 	"go.chromium.org/tast-tests/cros/local/chrome"
-	"go.chromium.org/tast-tests/cros/local/chrome/browser"
 	"go.chromium.org/tast-tests/cros/local/chrome/localstate"
 	arcpb "go.chromium.org/tast-tests/cros/services/cros/arc"
 	"go.chromium.org/tast/core/ctxutil"
@@ -60,7 +59,7 @@ func (*AdbSideloadService) SetRequestAdbSideloadFlag(ctx context.Context, reques
 	// TODO : Convert the polling function to an Explicit write to the DUT's disk
 	testing.ContextLog(ctx, "Waiting for Enable ADB Sideloading flag to be written on DUT's Local State json")
 	testing.Poll(ctx, func(ctx context.Context) error {
-		if _, err := localstate.UnmarshalPref(browser.TypeAsh, "EnableAdbSideloadingRequested"); err != nil {
+		if _, err := localstate.UnmarshalPref("EnableAdbSideloadingRequested"); err != nil {
 			return err
 		}
 		return nil

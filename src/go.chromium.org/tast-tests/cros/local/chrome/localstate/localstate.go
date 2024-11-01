@@ -12,22 +12,16 @@ import (
 	"os"
 	"strings"
 
-	"go.chromium.org/tast-tests/cros/local/chrome/browser"
 	"go.chromium.org/tast/core/errors"
 )
 
 const (
-	localStatePathAsh    = "/home/chronos/Local State"
-	localStatePathLacros = "/home/chronos/user/lacros/Local State"
+	localStatePath = "/home/chronos/Local State"
 )
 
 // Unmarshal performs json.Unmarshal on the contents of the browser's Local
 // State file.
-func Unmarshal(bt browser.Type, out interface{}) error {
-	var localStatePath = localStatePathAsh
-	if bt == browser.TypeLacros {
-		localStatePath = localStatePathLacros
-	}
+func Unmarshal(out interface{}) error {
 	b, err := ioutil.ReadFile(localStatePath)
 	if err != nil {
 		return errors.Wrap(err, "failed to read Local State file")
@@ -41,10 +35,10 @@ func Unmarshal(bt browser.Type, out interface{}) error {
 // UnmarshalPref returns the unmarshaled value of a preference from the
 // browser's Local State file. The preference name is a string such as
 // "foo.bar.baz".
-func UnmarshalPref(bt browser.Type, pref string) (interface{}, error) {
+func UnmarshalPref(pref string) (interface{}, error) {
 	path := strings.Split(pref, ".")
 	var localState interface{}
-	if err := Unmarshal(bt, &localState); err != nil {
+	if err := Unmarshal(&localState); err != nil {
 		return nil, errors.Wrap(err, "failed to retrieve Local State contents")
 	}
 	for i, key := range path {
@@ -69,16 +63,12 @@ func UnmarshalPref(bt browser.Type, pref string) (interface{}, error) {
 // localState includes pref names and pref values that will be written to local state.
 // pref name with dot format "foo.bar.baz" is not allowed in localState interface.
 // localState could include nested map type {"foo":{"bar":{"baz": 1234}}}.
-func Marshal(bt browser.Type, localState interface{}) error {
-	path := localStatePathAsh
-	if bt == browser.TypeLacros {
-		path = localStatePathLacros
-	}
+func Marshal(localState interface{}) error {
 	s, err := json.Marshal(localState)
 	if err != nil {
 		return errors.Wrap(err, "failed to marshal Local State")
 	}
-	if err := ioutil.WriteFile(path, s, 0644); err != nil {
+	if err := ioutil.WriteFile(localStatePath, s, 0644); err != nil {
 		return errors.Wrap(err, "failed to write Local State")
 	}
 	return nil
@@ -87,17 +77,13 @@ func Marshal(bt browser.Type, localState interface{}) error {
 // MarshalPref will update the pref with val in local state.
 // pref name could have format "foo.bar.baz". Each component separated by '.' will
 // be used as key of the dict. pref must not be an empty string.
-func MarshalPref(bt browser.Type, pref string, val interface{}) error {
+func MarshalPref(pref string, val interface{}) error {
 	if pref == "" {
 		return errors.New("perf name cannot be empty, use Marshal if you're overwriting the entire file content")
 	}
-	var localStatePath = localStatePathAsh
-	if bt == browser.TypeLacros {
-		localStatePath = localStatePathLacros
-	}
 	var localState interface{}
 	if _, err := os.Stat(localStatePath); err == nil {
-		if err := Unmarshal(bt, &localState); err != nil {
+		if err := Unmarshal(&localState); err != nil {
 			return errors.Wrap(err, "failed to retrieve Local State contents")
 		}
 	} else if errors.Is(err, os.ErrNotExist) {
@@ -124,7 +110,7 @@ func MarshalPref(bt browser.Type, pref string, val interface{}) error {
 		}
 	}
 	dict[keys[len(keys)-1]] = val
-	if err := Marshal(bt, localState); err != nil {
+	if err := Marshal(localState); err != nil {
 		return errors.Wrap(err, "failed to wirte Local State contents")
 	}
 	return nil

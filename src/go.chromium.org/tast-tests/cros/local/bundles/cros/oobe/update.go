@@ -13,7 +13,6 @@ import (
 
 	"go.chromium.org/tast-tests/cros/common/fixture"
 	"go.chromium.org/tast-tests/cros/common/testexec"
-	"go.chromium.org/tast-tests/cros/local/chrome/browser"
 	"go.chromium.org/tast-tests/cros/local/chrome/localstate"
 	"go.chromium.org/tast-tests/cros/local/nebraska"
 	"go.chromium.org/tast-tests/cros/local/updateengine"
@@ -71,7 +70,7 @@ func Update(ctx context.Context, s *testing.State) {
 		ignoreNonCriticalUpdateLogEntry = "Ignoring a non-critical Omaha update before OOBE completion."
 	)
 
-	if err := localstate.MarshalPref(browser.TypeAsh, "IsConsumerSegment", isConsumerSegment); err != nil {
+	if err := localstate.MarshalPref("IsConsumerSegment", isConsumerSegment); err != nil {
 		s.Fatal("Failed to set local state: ", err)
 	}
 

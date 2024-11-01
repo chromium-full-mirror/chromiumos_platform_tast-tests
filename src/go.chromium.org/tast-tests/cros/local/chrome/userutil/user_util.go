@@ -10,7 +10,6 @@ import (
 	"time"
 
 	"go.chromium.org/tast-tests/cros/local/chrome"
-	"go.chromium.org/tast-tests/cros/local/chrome/browser"
 	"go.chromium.org/tast-tests/cros/local/chrome/localstate"
 	"go.chromium.org/tast-tests/cros/local/chrome/uiauto"
 	"go.chromium.org/tast-tests/cros/local/chrome/uiauto/nodewith"
@@ -82,7 +81,7 @@ func GetKnownEmailsFromLocalState() (map[string]bool, error) {
 		Emails []string `json:"LoggedInUsers"`
 	}
 	var localState LocalState
-	if err := localstate.Unmarshal(browser.TypeAsh, &localState); err != nil {
+	if err := localstate.Unmarshal(&localState); err != nil {
 		return nil, errors.Wrap(err, "failed to extract Local State")
 	}
 	knownEmails := make(map[string]bool)

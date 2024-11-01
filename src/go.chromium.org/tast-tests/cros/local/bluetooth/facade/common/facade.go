@@ -10,7 +10,6 @@ import (
 	"time"
 
 	"go.chromium.org/tast-tests/cros/local/chrome"
-	"go.chromium.org/tast-tests/cros/local/chrome/browser"
 	"go.chromium.org/tast-tests/cros/local/chrome/localstate"
 	localCommon "go.chromium.org/tast-tests/cros/local/common"
 
@@ -318,7 +317,7 @@ func SetEnabledOnBoot(ctx context.Context, adapterEnabled bool) error {
 		return errors.Errorf("failed to set boot preference (%s) to %t", ashSystemBluetoothAdapterEnabled, adapterEnabled)
 	}
 	if err := testing.Poll(ctx, func(ctx context.Context) error {
-		enabledSettingValue, err := localstate.UnmarshalPref(browser.TypeAsh, "ash.system.bluetooth.adapter_enabled")
+		enabledSettingValue, err := localstate.UnmarshalPref("ash.system.bluetooth.adapter_enabled")
 		if err != nil {
 			return errors.Wrap(err, "failed to extract bluetooth status from Local State")
 		}
