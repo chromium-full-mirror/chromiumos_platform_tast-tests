@@ -117,7 +117,7 @@ func ECTabletMode(ctx context.Context, s *testing.State) {
 	skipWarmResetList := []string{"jacuzzi", "hatch", "strongbad"}
 	skipWarmReset := func(dutPlatform string, knownList []string) bool {
 		for _, name := range knownList {
-			if name == dutPlatform {
+			if strings.HasPrefix(dutPlatform, name) {
 				return true
 			}
 		}
