@@ -2461,3 +2461,25 @@ func (h *Helper) GetNewECCrashes(ctx context.Context) (map[string][]string, erro
 
 	return crashFiles, err
 }
+
+// SupportAPFwState checks whether DUT supports the host command EC_CMD_AP_FW_STATE.
+func (h *Helper) SupportAPFwState(ctx context.Context) (bool, error) {
+	roVersion, err := h.Reporter.GetFWVersion(ctx, reporters.CrossystemParamRoFwid)
+	if err != nil {
+		return false, errors.Wrap(err, "failed to get RO firmware version")
+	}
+	splitout := strings.Split(roVersion, ".")
+	if len(splitout) < 3 {
+		return false, errors.Wrapf(err, "got invalid firmware version: %v", roVersion)
+	}
+	roMajorVersion, err := strconv.Atoi(splitout[0])
+	if err != nil {
+		return false, errors.Wrap(err, "failed to convert firmware major version value to integer value")
+	}
+	// CL:5020949 laned in 15683.0.0
+	if roMajorVersion >= 15683 {
+		return true, nil
+	}
+
+	return false, nil
+}
