@@ -10,10 +10,8 @@ import (
 	"time"
 
 	"go.chromium.org/tast-tests/cros/local/apps"
+	"go.chromium.org/tast-tests/cros/local/chrome"
 	"go.chromium.org/tast-tests/cros/local/chrome/ash"
-	"go.chromium.org/tast-tests/cros/local/chrome/browser"
-	"go.chromium.org/tast-tests/cros/local/chrome/browser/browserfixt"
-	"go.chromium.org/tast-tests/cros/local/chrome/lacros/lacrosfixt"
 	"go.chromium.org/tast-tests/cros/local/chrome/uiauto"
 	"go.chromium.org/tast-tests/cros/local/chrome/uiauto/faillog"
 	"go.chromium.org/tast-tests/cros/local/chrome/uiauto/mouse"
@@ -75,13 +73,11 @@ func VirtualDesksBasic(ctx context.Context, s *testing.State) {
 	ctx, cancel := ctxutil.Shorten(ctx, 5*time.Second)
 	defer cancel()
 
-	bt := browser.TypeAsh
-	cr, _, closeBrowser, err := browserfixt.SetUpWithNewChrome(ctx, bt, lacrosfixt.NewConfig())
+	cr, err := chrome.New(ctx)
 	if err != nil {
 		s.Fatal("Failed to start Chrome: ", err)
 	}
 	defer cr.Close(cleanupCtx)
-	defer closeBrowser(cleanupCtx)
 
 	tconn, err := cr.TestAPIConn(ctx)
 	if err != nil {
@@ -111,18 +107,16 @@ func VirtualDesksBasic(ctx context.Context, s *testing.State) {
 	pc := pointer.NewMouse(tconn)
 	defer pc.Close(cleanupCtx)
 
-	// Opens Files and Chrome. (In lacros we should already have an open browser window)
-	if bt != browser.TypeLacros {
-		browserApp, err := apps.PrimaryBrowser(ctx, tconn)
-		if err != nil {
-			s.Fatal("Could not find browser app info: ", err)
-		}
-		if err := apps.Launch(ctx, tconn, browserApp.ID); err != nil {
-			s.Fatal("Failed to open browser window: ", err)
-		}
-		if err := ash.WaitForApp(ctx, tconn, browserApp.ID, time.Minute); err != nil {
-			s.Fatal("Browser window did not appear in shelf after launch: ", err)
-		}
+	// Opens Files and Chrome.
+	browserApp, err := apps.ChromeOrChromium(ctx, tconn)
+	if err != nil {
+		s.Fatal("Could not find browser app info: ", err)
+	}
+	if err := apps.Launch(ctx, tconn, browserApp.ID); err != nil {
+		s.Fatal("Failed to open browser window: ", err)
+	}
+	if err := ash.WaitForApp(ctx, tconn, browserApp.ID, time.Minute); err != nil {
+		s.Fatal("Browser window did not appear in shelf after launch: ", err)
 	}
 	if err := apps.Launch(ctx, tconn, apps.FilesSWA.ID); err != nil {
 		s.Fatal("Failed to open Files app: ", err)

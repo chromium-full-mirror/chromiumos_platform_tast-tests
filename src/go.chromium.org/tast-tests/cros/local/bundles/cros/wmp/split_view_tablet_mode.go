@@ -16,10 +16,7 @@ import (
 	"go.chromium.org/tast-tests/cros/local/arc/optin"
 	"go.chromium.org/tast-tests/cros/local/chrome"
 	"go.chromium.org/tast-tests/cros/local/chrome/ash"
-	"go.chromium.org/tast-tests/cros/local/chrome/browser"
-	"go.chromium.org/tast-tests/cros/local/chrome/browser/browserfixt"
 	"go.chromium.org/tast-tests/cros/local/chrome/display"
-	"go.chromium.org/tast-tests/cros/local/chrome/lacros/lacrosfixt"
 	"go.chromium.org/tast-tests/cros/local/chrome/uiauto"
 	"go.chromium.org/tast-tests/cros/local/chrome/uiauto/faillog"
 	"go.chromium.org/tast-tests/cros/local/chrome/uiauto/nodewith"
@@ -33,8 +30,7 @@ import (
 )
 
 type splitViewTabletModeTestParam struct {
-	portrait    bool
-	browserType browser.Type
+	portrait bool
 }
 
 func init() {
@@ -53,10 +49,10 @@ func init() {
 		HardwareDeps: hwdep.D(hwdep.InternalDisplay()),
 		Params: []testing.Param{{
 			Name: "portrait",
-			Val:  splitViewTabletModeTestParam{true, browser.TypeAsh},
+			Val:  splitViewTabletModeTestParam{true},
 		}, {
 			Name: "landscape",
-			Val:  splitViewTabletModeTestParam{false, browser.TypeAsh},
+			Val:  splitViewTabletModeTestParam{false},
 		}},
 		Timeout: chrome.GAIALoginTimeout + arc.BootTimeout + 120*time.Second,
 		VarDeps: []string{ui.GaiaPoolDefaultVarName},
@@ -75,8 +71,7 @@ func SplitViewTabletMode(ctx context.Context, s *testing.State) {
 	ctx, cancel := ctxutil.Shorten(ctx, 10*time.Second)
 	defer cancel()
 
-	bt := param.browserType
-	cr, br, closeBrowser, err := browserfixt.SetUpWithNewChrome(ctx, bt, lacrosfixt.NewConfig(),
+	cr, err := chrome.New(ctx,
 		chrome.GAIALoginPool(dma.CredsFromPool(ui.GaiaPoolDefaultVarName)),
 		chrome.ARCSupported(),
 		chrome.ExtraArgs(arc.DisableSyncFlags()...))
@@ -84,7 +79,6 @@ func SplitViewTabletMode(ctx context.Context, s *testing.State) {
 		s.Fatal("Failed to start Chrome: ", err)
 	}
 	defer cr.Close(cleanupCtx)
-	defer closeBrowser(cleanupCtx)
 
 	tconn, err := cr.TestAPIConn(ctx)
 	if err != nil {
@@ -160,11 +154,7 @@ func SplitViewTabletMode(ctx context.Context, s *testing.State) {
 	const numWindows = 4
 	appsList := []apps.App{apps.FilesSWA, apps.PlayStore}
 	numBrowserWindowsToOpen := numWindows - len(appsList)
-	if bt == browser.TypeLacros {
-		// For Lacros browserfixt.SetUp already opens an extra blank window, so create one less new windows.
-		numBrowserWindowsToOpen--
-	}
-	if err := ash.CreateWindows(ctx, tconn, br, "", numBrowserWindowsToOpen); err != nil {
+	if err := ash.CreateWindows(ctx, tconn, cr.Browser(), "", numBrowserWindowsToOpen); err != nil {
 		s.Fatal("Failed to create new windows: ", err)
 	}
 

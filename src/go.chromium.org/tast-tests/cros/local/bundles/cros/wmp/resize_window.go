@@ -8,7 +8,6 @@ import (
 	"context"
 	"fmt"
 	"path/filepath"
-	"regexp"
 	"strings"
 	"time"
 
@@ -21,9 +20,6 @@ import (
 	"go.chromium.org/tast-tests/cros/local/bundles/cros/wmp/wmputils"
 	"go.chromium.org/tast-tests/cros/local/chrome"
 	"go.chromium.org/tast-tests/cros/local/chrome/ash"
-	"go.chromium.org/tast-tests/cros/local/chrome/browser"
-	"go.chromium.org/tast-tests/cros/local/chrome/browser/browserfixt"
-	"go.chromium.org/tast-tests/cros/local/chrome/lacros/lacrosfixt"
 	"go.chromium.org/tast-tests/cros/local/chrome/uiauto"
 	"go.chromium.org/tast-tests/cros/local/chrome/uiauto/cws"
 	"go.chromium.org/tast-tests/cros/local/chrome/uiauto/faillog"
@@ -62,8 +58,6 @@ const (
 type resizeWindowTestParams struct {
 	// caseType indicates the type of sub test.
 	caseType subTestType
-	// browserType is the type of browser to be used in the test.
-	browserType browser.Type
 }
 
 func init() {
@@ -82,8 +76,7 @@ func init() {
 		Params: []testing.Param{
 			{
 				Val: resizeWindowTestParams{
-					caseType:    browserCase,
-					browserType: browser.TypeAsh,
+					caseType: browserCase,
 				},
 				Timeout:   resizeTimeout, // 1 resize timeout for 1 app (i.e., Chrome browser)
 				ExtraAttr: []string{"group:release-health"},
@@ -91,8 +84,7 @@ func init() {
 			{
 				Name: "apps",
 				Val: resizeWindowTestParams{
-					caseType:    appCase,
-					browserType: browser.TypeAsh,
+					caseType: appCase,
 				},
 				Timeout:           2*resizeTimeout + cws.InstallationTimeout, // 2 resize timeout for 2 apps (i.e., Files and CWS)
 				ExtraSoftwareDeps: []string{"gaia"},
@@ -100,8 +92,7 @@ func init() {
 			{
 				Name: "arc",
 				Val: resizeWindowTestParams{
-					caseType:    arcCase,
-					browserType: browser.TypeAsh,
+					caseType: arcCase,
 				},
 				ExtraSoftwareDeps: []string{"arc"},
 				ExtraData:         []string{resizeWindowArcAppApkFileName},
@@ -137,7 +128,7 @@ func ResizeWindow(ctx context.Context, s *testing.State) {
 		s.Fatal("Unknown case type: ", param.caseType)
 	}
 
-	cr, err := browserfixt.NewChrome(ctx, param.browserType, lacrosfixt.NewConfig(), opts...)
+	cr, err := chrome.New(ctx, opts...)
 	if err != nil {
 		s.Fatal("Failed to restart Chrome: ", err)
 	}
@@ -157,13 +148,7 @@ func ResizeWindow(ctx context.Context, s *testing.State) {
 			s.Fatal("Failed to find Chrome or Chromium app: ", err)
 		}
 
-		var browserRoot *nodewith.Finder
-		if param.browserType == browser.TypeLacros {
-			classNameRegexp := regexp.MustCompile(`^ExoShellSurface(-\d+)?$`)
-			browserRoot = nodewith.Role(role.Window).ClassNameRegex(classNameRegexp).NameContaining("New Tab")
-		} else {
-			browserRoot = nodewith.Role(role.Window).HasClass("BrowserFrame")
-		}
+		browserRoot := nodewith.Role(role.Window).HasClass("BrowserFrame")
 
 		appList = []*wmputils.ResizeApp{
 			{
