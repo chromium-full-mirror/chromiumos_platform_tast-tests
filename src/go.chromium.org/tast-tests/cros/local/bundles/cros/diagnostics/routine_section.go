@@ -8,6 +8,8 @@ import (
 	"context"
 	"time"
 
+	"github.com/shirou/gopsutil/v3/process"
+
 	"go.chromium.org/tast-tests/cros/local/bundles/cros/diagnostics/utils"
 	"go.chromium.org/tast-tests/cros/local/chrome/uiauto"
 	"go.chromium.org/tast-tests/cros/local/chrome/uiauto/diagnosticsapp"
@@ -93,14 +95,20 @@ func RoutineSection(ctx context.Context, s *testing.State) {
 	}
 
 	// Detect CPU stress test launched using process lookup.
-	proc, err := procutil.FindUnique(procutil.ByExe(cpuStressTestExecPath))
-	if err != nil {
+	var stressTestProc *process.Process
+	if err := testing.Poll(ctx, func(ctx context.Context) error {
+		proc, err := procutil.FindUnique(procutil.ByExe(cpuStressTestExecPath))
+		if err == nil {
+			stressTestProc = proc
+		}
+		return err
+	}, &testing.PollOptions{Interval: 500 * time.Millisecond, Timeout: 3 * time.Second}); err != nil {
 		s.Fatal("Stress test did not start: ", err)
 	}
-	s.Log("Stress test running at ", proc)
+	s.Log("Stress test running at ", stressTestProc)
 
 	// Detect CPU stress test process terminated.
-	if err := procutil.WaitForTerminated(ctx, proc, 2*time.Minute); err != nil {
+	if err := procutil.WaitForTerminated(ctx, stressTestProc, 2*time.Minute); err != nil {
 		s.Fatal("Stress test did not stop: ", err)
 	}
 	s.Log("Stress test process no longer running")
