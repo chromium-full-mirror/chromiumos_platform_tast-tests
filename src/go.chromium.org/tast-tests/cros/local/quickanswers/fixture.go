@@ -11,7 +11,6 @@ import (
 
 	"go.chromium.org/tast-tests/cros/common/fixture"
 	"go.chromium.org/tast-tests/cros/local/chrome"
-	"go.chromium.org/tast-tests/cros/local/chrome/browser"
 	"go.chromium.org/tast-tests/cros/local/chrome/uiauto"
 	"go.chromium.org/tast-tests/cros/local/chrome/uiauto/faillog"
 	"go.chromium.org/tast-tests/cros/local/network/ping"
@@ -149,19 +148,17 @@ func withBrowserFixtureParams() []testing.FixtureParam {
 	}
 }
 
-func quickAnswersFixtureParams(browserType browser.Type) []testing.FixtureParam {
+func quickAnswersFixtureParams() []testing.FixtureParam {
 	return []testing.FixtureParam{
 		{
 			Val: quickAnswersFixtureParam{
-				state:       StateEnabled,
-				browserType: browserType,
+				state: StateEnabled,
 			},
 		},
 		{
 			Name: VariantNotEnabled,
 			Val: quickAnswersFixtureParam{
-				state:       StateNotEnabled,
-				browserType: browserType,
+				state: StateNotEnabled,
 			},
 		},
 	}
@@ -223,13 +220,8 @@ func init() {
 		SetUpTimeout:    setUpTimeout + networkConnectionTimeout,
 		PreTestTimeout:  preTestTimeout,
 		PostTestTimeout: postTestTimeout,
-		Params:          quickAnswersFixtureParams(browser.TypeAsh),
+		Params:          quickAnswersFixtureParams(),
 	})
-}
-
-// HasBrowserType is an interface for getting a browser type tied to a fixture.
-type HasBrowserType interface {
-	BrowserType() browser.Type
 }
 
 // State is a state of quick answers pref.
@@ -244,20 +236,14 @@ const (
 )
 
 type quickAnswersFixtureParam struct {
-	state       State
-	browserType browser.Type
+	state State
 }
 
 type quickAnswersFixture struct {
 	tconn    *chrome.TestConn
 	recorder *uiauto.ScreenRecorder
 	cr       *chrome.Chrome
-	bt       browser.Type
 	state    State
-}
-
-func (f *quickAnswersFixture) BrowserType() browser.Type {
-	return f.bt
 }
 
 func (f *quickAnswersFixture) Chrome() *chrome.Chrome {
@@ -267,7 +253,6 @@ func (f *quickAnswersFixture) Chrome() *chrome.Chrome {
 func (f *quickAnswersFixture) SetUp(ctx context.Context, s *testing.FixtState) interface{} {
 	param := s.Param().(quickAnswersFixtureParam)
 	f.state = param.state
-	f.bt = param.browserType
 
 	f.cr = s.ParentValue().(chrome.HasChrome).Chrome()
 	tconn, err := f.cr.TestAPIConn(ctx)
@@ -325,7 +310,6 @@ type withBrowserFixtureParam struct {
 
 type withBrowserFixture struct {
 	queryWord     string
-	bt            browser.Type
 	cr            *chrome.Chrome
 	conn          *chrome.Conn
 	tconn         *chrome.TestConn
@@ -354,7 +338,6 @@ func (f *withBrowserFixture) SetUp(ctx context.Context, s *testing.FixtState) in
 	param := s.Param().(withBrowserFixtureParam)
 	f.queryWord = param.queryWord
 	f.languageCodes = param.languageCodes
-	f.bt = s.ParentValue().(HasBrowserType).BrowserType()
 	f.cr = s.ParentValue().(chrome.HasChrome).Chrome()
 
 	tconn, err := f.cr.TestAPIConn(ctx)
