@@ -10,7 +10,6 @@ import (
 
 	"go.chromium.org/tast-tests/cros/local/arc"
 	"go.chromium.org/tast-tests/cros/local/chrome"
-	"go.chromium.org/tast-tests/cros/local/chrome/browser"
 	"go.chromium.org/tast-tests/cros/local/input"
 	"go.chromium.org/tast-tests/cros/local/vm"
 	"go.chromium.org/tast/core/testing"
@@ -18,8 +17,7 @@ import (
 
 // DefaultChromeOptions defines the default options for creating Chrome.
 var DefaultChromeOptions = ChromeOptions{
-	Timeout:     chrome.LoginTimeout,
-	BrowserType: browser.TypeAsh,
+	Timeout: chrome.LoginTimeout,
 }
 
 // DefaultChromeOptionsVMMMS defines the default options for creating Chrome with
@@ -27,7 +25,6 @@ var DefaultChromeOptions = ChromeOptions{
 var DefaultChromeOptionsVMMMS = ChromeOptions{
 	EnableFeatures: []string{"CrOSLateBootVmMemoryManagementService"},
 	Timeout:        chrome.LoginTimeout,
-	BrowserType:    browser.TypeAsh,
 }
 
 // TabManagerDelegateChromeOptionsVMMMS defines the default options for creating
@@ -36,27 +33,12 @@ var TabManagerDelegateChromeOptionsVMMMS = ChromeOptions{
 	EnableFeatures: []string{"CrOSLateBootVmMemoryManagementService"},
 	ExtraArgs:      []string{"--disable-features=AshUrgentDiscardingFromPerformanceManager"},
 	Timeout:        chrome.LoginTimeout,
-	BrowserType:    browser.TypeAsh,
 }
 
 // NoSyncChromeOptions defines special chrome options that prevent background sync.
 var NoSyncChromeOptions = ChromeOptions{
-	Timeout:     chrome.LoginTimeout,
-	BrowserType: browser.TypeAsh,
-	ExtraArgs:   arc.DisableSyncFlags(),
-}
-
-// LacrosChromeOptions creates Lacros Chrome.
-var LacrosChromeOptions = ChromeOptions{
-	Timeout:     chrome.LoginTimeout,
-	BrowserType: browser.TypeLacros,
-}
-
-// LacrosChromeOptionsVmms creates Lacros Chrome with VMMMS enabled.
-var LacrosChromeOptionsVmms = ChromeOptions{
-	EnableFeatures: []string{"CrOSLateBootVmMemoryManagementService"},
-	Timeout:        chrome.LoginTimeout,
-	BrowserType:    browser.TypeLacros,
+	Timeout:   chrome.LoginTimeout,
+	ExtraArgs: arc.DisableSyncFlags(),
 }
 
 // DefaultARCOptions defines the default options for starting ARC VM.
@@ -80,18 +62,6 @@ func NoVMStarted() testing.Precondition {
 	return noVMStartedPre
 }
 
-var noVMLacrosStartedPre = NewMultiVMPrecondition(
-	"multivm_no_vm_lacros",
-	NewStateManager(
-		LacrosChromeOptions,
-	).SetForceActivate(true))
-
-// NoVMLacrosStarted returns a Precondition that logs into Lacros Chrome without
-// starting any VMs.
-func NoVMLacrosStarted() testing.Precondition {
-	return noVMLacrosStartedPre
-}
-
 var arcCrostiniStartedPre = NewMultiVMPrecondition(
 	"multivm_arc_crostini",
 	NewStateManager(
@@ -104,20 +74,6 @@ var arcCrostiniStartedPre = NewMultiVMPrecondition(
 // ARCVM an Crostini.
 func ArcCrostiniStarted() testing.Precondition {
 	return arcCrostiniStartedPre
-}
-
-var arcCrostiniLacrosStartedPre = NewMultiVMPrecondition(
-	"multivm_arc_crostini_lacros",
-	NewStateManager(
-		LacrosChromeOptions,
-		DefaultARCOptions,
-		DefaultCrostiniOptions,
-	))
-
-// ArcCrostiniLacrosStarted returns a Precondition that logs into Lacros Chrome
-// and starts ARCVM an Crostini.
-func ArcCrostiniLacrosStarted() testing.Precondition {
-	return arcCrostiniLacrosStartedPre
 }
 
 var arcStartedPre = NewMultiVMPrecondition(
@@ -164,32 +120,6 @@ func ArcStartedNoSync() testing.Precondition {
 	return arcStartedNoSyncPre
 }
 
-var arcLacrosStartedPre = NewMultiVMPrecondition(
-	"multivm_arc_lacros",
-	NewStateManager(
-		LacrosChromeOptions,
-		DefaultARCOptions,
-	).SetForceActivate(true))
-
-// ArcLacrosStarted returns a Precondition that logs into Lacros Chrome and
-// starts ARCVM.
-func ArcLacrosStarted() testing.Precondition {
-	return arcLacrosStartedPre
-}
-
-var arcLacrosStartedVMMMSPre = NewMultiVMPrecondition(
-	"multivm_arc_lacros_vmmms",
-	NewStateManager(
-		LacrosChromeOptionsVmms,
-		DefaultARCOptions,
-	).SetForceActivate(true))
-
-// ArcLacrosStartedVMMMS returns a Precondition that logs into Lacros Chrome
-// with VMMMS enabled and starts ARCVM.
-func ArcLacrosStartedVMMMS() testing.Precondition {
-	return arcLacrosStartedVMMMSPre
-}
-
 var crostiniStartedPre = NewMultiVMPrecondition(
 	"multivm_crostini",
 	NewStateManager(
@@ -201,19 +131,6 @@ var crostiniStartedPre = NewMultiVMPrecondition(
 // Crostini.
 func CrostiniStarted() testing.Precondition {
 	return crostiniStartedPre
-}
-
-var crostiniLacrosStartedPre = NewMultiVMPrecondition(
-	"multivm_crostini_lacros",
-	NewStateManager(
-		LacrosChromeOptions,
-		DefaultCrostiniOptions,
-	))
-
-// CrostiniLacrosStarted returns a Precondition that logs into Lacros Chrome and
-// starts Crostini.
-func CrostiniLacrosStarted() testing.Precondition {
-	return crostiniLacrosStartedPre
 }
 
 type preImpl struct {
