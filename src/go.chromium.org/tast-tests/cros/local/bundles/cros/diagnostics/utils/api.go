@@ -25,6 +25,15 @@ type MojoAPI struct {
 	mojoRemote *chrome.JSObject
 }
 
+type systemInfo struct {
+	BoardName           string `json:"boardName"`
+	MarketingName       string `json:"marketingName"`
+	CPUModelName        string `json:"cpuModelName"`
+	TotalMemoryKib      uint32 `json:"totalMemoryKib"`
+	CPUThreadsCount     uint16 `json:"cpuThreadsCount"`
+	CPUMaxClockSpeedKhz uint32 `json:"cpuMaxClockSpeedKhz"`
+}
+
 // SystemDataProviderMojoAPI returns a MojoAPI object that is connected to a SystemDataProvider
 // mojo remote instance on success, or an error.
 func SystemDataProviderMojoAPI(ctx context.Context, cr *chrome.Chrome) (*MojoAPI, error) {
@@ -44,8 +53,14 @@ func SystemDataProviderMojoAPI(ctx context.Context, cr *chrome.Chrome) (*MojoAPI
 // RunFetchSystemInfo calls into the injected SystemDataProvider mojo API.
 func (m *MojoAPI) RunFetchSystemInfo(ctx context.Context) error {
 	jsWrap := "function() { return this.fetchSystemInfo() }"
-	if err := m.mojoRemote.Call(ctx, nil, jsWrap); err != nil {
+	var result systemInfo
+	if err := m.mojoRemote.Call(ctx, &result, jsWrap); err != nil {
 		return errors.Wrap(err, "failed to run fetchSystemInfo")
+	}
+
+	if result.BoardName == "" || result.MarketingName == "" ||
+		result.CPUModelName == "" {
+		return errors.New("failed to get valid system info")
 	}
 
 	return nil
