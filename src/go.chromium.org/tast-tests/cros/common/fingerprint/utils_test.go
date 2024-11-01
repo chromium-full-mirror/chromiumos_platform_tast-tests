@@ -7,6 +7,8 @@ package fingerprint
 import (
 	"reflect"
 	"testing"
+
+	"github.com/stretchr/testify/assert"
 )
 
 func TestParseColonDelimitedOutput(t *testing.T) {
@@ -99,4 +101,50 @@ func TestParseSpaceDelimitedOutput(t *testing.T) {
 			}
 		})
 	}
+}
+
+func TestParseFpInfo(t *testing.T) {
+	t.Run("Valid input", func(t *testing.T) {
+		input := `Fingerprint sensor: vendor 20435046 product 9 model 1401 version 1
+		Image: size 56x192 bpp 8
+		Error flags:
+		Dead pixels: UNKNOWN
+		Templates: version 4 size 47616 count 0/5 dirty bitmap 0`
+		expected := &FpInfo{
+			FingerprintSensor: map[string]string{
+				"vendor":  "20435046",
+				"product": "9",
+				"model":   "1401",
+				"version": "1",
+			},
+			Image: map[string]string{
+				"size": "56x192",
+				"bpp":  "8",
+			},
+		}
+		result, err := ParseFpInfo(input)
+		assert.NoError(t, err)
+		assert.Equal(t, expected, result)
+	})
+
+	t.Run("Missing Fingerprint sensor field", func(t *testing.T) {
+		input := `Image: width:1080 height:1920`
+		_, err := ParseFpInfo(input)
+		assert.Error(t, err)
+		assert.EqualError(t, err, "input does not have Fingerprint sensor field")
+	})
+
+	t.Run("Invalid Fingerprint sensor format", func(t *testing.T) {
+		input := `Fingerprint sensor: name:goodix:invalid
+Image: width:1080 height:1920`
+		_, err := ParseFpInfo(input)
+		assert.Error(t, err) // Assuming ParseSpaceDelimitedOutput returns an error for invalid format
+	})
+
+	t.Run("Invalid Image format", func(t *testing.T) {
+		input := `Fingerprint sensor: name:goodix area:100
+Image: width:1080:invalid`
+		_, err := ParseFpInfo(input)
+		assert.Error(t, err) // Assuming ParseSpaceDelimitedOutput returns an error for invalid format
+	})
 }

@@ -10,6 +10,12 @@ import (
 	"go.chromium.org/tast/core/errors"
 )
 
+// FpInfo is a struct that contains the information returned by running fpinfo.
+type FpInfo struct {
+	FingerprintSensor map[string]string
+	Image             map[string]string
+}
+
 // ParseColonDelimitedOutput parses colon delimited information to a map.
 func ParseColonDelimitedOutput(output string) map[string]string {
 	ret := map[string]string{}
@@ -38,5 +44,28 @@ func ParseSpaceDelimitedOutput(output string) (map[string]string, error) {
 	for i := 0; i < len(fields); i += 2 {
 		ret[fields[i]] = fields[i+1]
 	}
+	return ret, nil
+}
+
+// ParseFpInfo returns a FpInfo struct of the information returned by running fpinfo.
+func ParseFpInfo(input string) (*FpInfo, error) {
+	outparse := ParseColonDelimitedOutput(input)
+	// TODO(b/378254619): make this into a forloop which maps all fields of fpinfo.
+	if outparse["Fingerprint sensor"] == "" {
+		return nil, errors.New("input does not have Fingerprint sensor field")
+	}
+	ret := &FpInfo{}
+	val, err := ParseSpaceDelimitedOutput(outparse["Fingerprint sensor"])
+	if err != nil {
+		return nil, err
+	}
+	ret.FingerprintSensor = val
+
+	val, err = ParseSpaceDelimitedOutput(outparse["Image"])
+	if err != nil {
+		return nil, err
+	}
+	ret.Image = val
+
 	return ret, nil
 }
