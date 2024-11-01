@@ -16,7 +16,7 @@ import (
 
 func init() {
 	testing.AddTest(&testing.Test{
-		Func:         Input,
+		Func:         NavigateInputPage,
 		LacrosStatus: testing.LacrosVariantUnneeded,
 		Desc:         "Can successfully navigate to the Input page",
 		// ChromeOS > Platform > Enablement > Serviceability > Diagnostic & Health
@@ -24,14 +24,15 @@ func init() {
 		Contacts: []string{
 			"cros-tdm-tpe-eng@google.com",
 		},
-		Fixture:      "diagnosticsPrepForInputDiagnostics",
-		Attr:         []string{"group:mainline", "informational", "group:hw_agnostic"},
+		Fixture: "diagnosticsPrepForInputDiagnostics",
+		Attr: []string{"group:mainline", "informational", "group:criticalstaging",
+			"group:hw_agnostic"},
 		SoftwareDeps: []string{"chrome"},
 	})
 }
 
-// Input verifies that the Input page can be navigated to.
-func Input(ctx context.Context, s *testing.State) {
+// NavigateInputPage verifies that the Input page can be navigated to.
+func NavigateInputPage(ctx context.Context, s *testing.State) {
 	tconn := s.FixtValue().(*utils.FixtureData).Tconn
 
 	// Since virtual keyboard with BUS_USB (0x03) doesn't work yet, use BUS_I2C (0x18).

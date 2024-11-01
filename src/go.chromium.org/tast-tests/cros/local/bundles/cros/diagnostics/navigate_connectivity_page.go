@@ -16,7 +16,7 @@ import (
 
 func init() {
 	testing.AddTest(&testing.Test{
-		Func:         Connectivity,
+		Func:         NavigateConnectivityPage,
 		LacrosStatus: testing.LacrosVariantUnneeded,
 		Desc:         "Can successfully navigate to the Connectivity page",
 		// ChromeOS > Platform > Enablement > Serviceability > Diagnostic & Health
@@ -25,14 +25,16 @@ func init() {
 			"cros-tdm-tpe-eng@google.com",
 			"menghuan@google.com",
 		},
-		Attr:         []string{"group:mainline", "informational", "group:hw_agnostic"},
+		Attr: []string{"group:mainline", "informational", "group:criticalstaging",
+			"group:hw_agnostic"},
 		SoftwareDeps: []string{"chrome"},
 		Fixture:      "diagnosticsPrep",
 	})
 }
 
-// Connectivity verifies that the Connectivity page can be navigated to.
-func Connectivity(ctx context.Context, s *testing.State) {
+// NavigateConnectivityPage verifies that the Connectivity page can be navigated
+// to.
+func NavigateConnectivityPage(ctx context.Context, s *testing.State) {
 	tconn := s.FixtValue().(*utils.FixtureData).Tconn
 	ui := uiauto.New(tconn).WithTimeout(20 * time.Second)
 
