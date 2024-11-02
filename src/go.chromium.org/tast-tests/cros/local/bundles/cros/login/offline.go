@@ -44,10 +44,6 @@ func init() {
 }
 
 func Offline(ctx context.Context, s *testing.State) {
-	cleanUpCtx := ctx
-	ctx, cancel := ctxutil.Shorten(ctx, 30*time.Second)
-	defer cancel()
-
 	var creds chrome.Creds
 	cr, err := chrome.New(ctx)
 	if err != nil {
@@ -59,6 +55,10 @@ func Offline(ctx context.Context, s *testing.State) {
 	}
 
 	loginAgain := func(ctx context.Context) error {
+		cleanUpCtx := ctx
+		ctx, cancel := ctxutil.Shorten(ctx, 30*time.Second)
+		defer cancel()
+
 		cr, err := chrome.New(ctx,
 			chrome.ExtraArgs("--skip-force-online-signin-for-testing"),
 			chrome.NoLogin(),
