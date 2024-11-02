@@ -177,7 +177,7 @@ func (e *ehideEnv) setUp(ctx context.Context, pool *subnet.Pool) error {
 func (e *ehideEnv) Cleanup(ctx context.Context) error {
 	var errs []error
 
-	iptablesCmd := []string{"iptables", "-F", "-t", "nat"}
+	iptablesCmd := []string{"iptables", "-F", "-t", "nat", "-w"}
 	if err := runCmdInEhideNetNS(ctx, iptablesCmd...); err != nil {
 		errs = append(errs, errors.Wrap(err, "failed to flush iptables for cleanup"))
 	}
@@ -219,7 +219,7 @@ func findIPv4DefaultRouteIfaceInEhide(ctx context.Context) (string, error) {
 // assertNATTableEmptyInEhide checks if the POSTROUTING chain of the nat table
 // of iptables is empty.
 func assertNATTableEmptyInEhide(ctx context.Context) error {
-	const cmdStr = "iptables -t nat -S POSTROUTING"
+	const cmdStr = "iptables -t nat -S POSTROUTING -w"
 	cmd := createCmdInEhideNetNS(ctx, strings.Fields(cmdStr)...)
 	output, err := cmd.Output(testexec.DumpLogOnError)
 	if err != nil {
