@@ -98,7 +98,11 @@ func EhideInternetConnectivity(ctx context.Context, s *testing.State) {
 	expectProps := map[string]interface{}{
 		shillconst.ServicePropertyState: shillconst.ServiceStateOnline,
 	}
-	if _, err := m.WaitForServiceProperties(ctx, expectProps, 10*time.Second); err != nil {
+	// In the lab network, there is a chance that the first http(s) request for
+	// portal detection fails. Since it will take 10 seconds for the timeout, make
+	// sure that the timeout here is longer than 10 seconds so that the retry can
+	// happen.
+	if _, err := m.WaitForServiceProperties(ctx, expectProps, 20*time.Second); err != nil {
 		s.Fatal("Failed to wait for shill online: ", err)
 	}
 
