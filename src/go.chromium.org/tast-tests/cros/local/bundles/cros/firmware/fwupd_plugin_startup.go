@@ -39,7 +39,7 @@ func init() {
 				"dfu",
 				"emmc",
 				// "nvme", // Not enough permissions.
-				"parade_lspcon",
+				// "parade_lspcon", // Disabled until b/344440772 is fixed
 				"pixart_rf",
 				// "powerd", // Missing on hana: b/366483164
 				"realtek_mst",
