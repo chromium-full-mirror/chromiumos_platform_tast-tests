@@ -12,6 +12,7 @@ import (
 	da "go.chromium.org/tast-tests/cros/local/chrome/uiauto/diagnosticsapp"
 	"go.chromium.org/tast-tests/cros/local/input"
 	"go.chromium.org/tast/core/testing"
+	"go.chromium.org/tast/core/testing/hwdep"
 )
 
 func init() {
@@ -28,6 +29,7 @@ func init() {
 		Attr: []string{"group:mainline", "informational", "group:criticalstaging",
 			"group:hw_agnostic"},
 		SoftwareDeps: []string{"chrome"},
+		HardwareDeps: hwdep.D(hwdep.InternalKeyboard(), hwdep.NoSplitModifierKeyboard()),
 	})
 }
 
