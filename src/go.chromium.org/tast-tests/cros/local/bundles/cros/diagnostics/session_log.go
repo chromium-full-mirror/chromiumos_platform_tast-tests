@@ -10,10 +10,10 @@ import (
 	"path"
 	"time"
 
+	"go.chromium.org/tast-tests/cros/local/bundles/cros/diagnostics/utils"
 	"go.chromium.org/tast-tests/cros/local/chrome"
 	"go.chromium.org/tast-tests/cros/local/chrome/uiauto"
 	"go.chromium.org/tast-tests/cros/local/chrome/uiauto/diagnosticsapp"
-	"go.chromium.org/tast-tests/cros/local/chrome/uiauto/faillog"
 	"go.chromium.org/tast-tests/cros/local/chrome/uiauto/nodewith"
 	"go.chromium.org/tast-tests/cros/local/chrome/uiauto/restriction"
 	"go.chromium.org/tast-tests/cros/local/chrome/uiauto/role"
@@ -33,13 +33,14 @@ func init() {
 			"cros-tdm-tpe-eng@google.com",
 			"menghuan@google.comcom",
 		},
-		Attr:         []string{"group:mainline", "informational", "group:hw_agnostic"},
+		Attr:         []string{"group:mainline", "informational", "group:criticalstaging", "group:hw_agnostic"},
 		SoftwareDeps: []string{"chrome"},
+		Fixture:      "diagnosticsPrep",
 	})
 }
 
 func attemptToSaveSessionLog(ctx context.Context, tconn *chrome.TestConn) error {
-	if err := saveButtonDisabled(ctx, tconn); err != nil {
+	if err := ensureSaveButtonEnabled(ctx, tconn); err != nil {
 		return err
 	}
 
@@ -62,7 +63,7 @@ func clickSaveButton(ctx context.Context, tconn *chrome.TestConn) error {
 	return nil
 }
 
-func saveButtonDisabled(ctx context.Context, tconn *chrome.TestConn) error {
+func ensureSaveButtonEnabled(ctx context.Context, tconn *chrome.TestConn) error {
 	saveButton := nodewith.Name("Save").Role(role.Button)
 	ui := uiauto.New(tconn)
 	if err := ui.WithTimeout(10 * time.Second).WaitUntilExists(saveButton)(ctx); err != nil {
@@ -114,26 +115,11 @@ func verifySessionLogFile(ctx context.Context, filePath string) error {
 
 // SessionLog verifies session log functionality.
 func SessionLog(ctx context.Context, s *testing.State) {
-	cr, err := chrome.New(ctx, chrome.EnableFeatures("DiagnosticsApp"))
-	if err != nil {
-		s.Fatal("Failed to start Chrome: ", err)
-	}
-	defer cr.Close(ctx) // Close our own chrome instance
-
-	tconn, err := cr.TestAPIConn(ctx)
-	if err != nil {
-		s.Fatal("Failed to connect Test API: ", err)
-	}
-	defer faillog.DumpUITreeOnError(ctx, s.OutDir(), s.HasError, tconn)
+	tconn := s.FixtValue().(*utils.FixtureData).Tconn
 
 	// Ensure `DarkLightModeNudge` dismissed before launching app.
 	if err := diagnosticsapp.WaitUntilColorModeNudgeGoneIfExists(ctx, tconn); err != nil {
 		s.Fatal("Failed to dismiss nudge: ", err)
-	}
-
-	dxRootnode, err := diagnosticsapp.Launch(ctx, tconn)
-	if err != nil {
-		s.Fatal("Failed to launch diagnostics app: ", err)
 	}
 
 	// Open navigation if device is narrow view.
@@ -143,7 +129,7 @@ func SessionLog(ctx context.Context, s *testing.State) {
 
 	// Find session log button. If needed, scroll down to make the session log visible and Click session log button.
 	ui := uiauto.New(tconn)
-	sessionLogButton := diagnosticsapp.DxLogButton.Ancestor(dxRootnode)
+	sessionLogButton := diagnosticsapp.DxLogButton.Ancestor(diagnosticsapp.DxRootNode)
 	if err := uiauto.Combine("find and click session log button",
 		ui.WithTimeout(20*time.Second).WaitUntilExists(sessionLogButton),
 		ui.MakeVisible(sessionLogButton),
@@ -156,6 +142,7 @@ func SessionLog(ctx context.Context, s *testing.State) {
 		s.Fatal("Failed to save session log: ", err)
 	}
 
+	cr := s.FixtValue().(*utils.FixtureData).Cr
 	sessionLogPath, err := getSessionLogPath(ctx, cr.NormalizedUser())
 	if err != nil {
 		s.Fatal("Failed to get session log path for user: ", err)
@@ -164,5 +151,4 @@ func SessionLog(ctx context.Context, s *testing.State) {
 	if err := verifySessionLogFile(ctx, sessionLogPath); err != nil {
 		s.Fatal("Failed to verify that session log file was not empty: ", err)
 	}
-
 }
