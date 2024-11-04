@@ -134,11 +134,9 @@ func ClickFullScreenButton(ctx context.Context, uiautoSvc ui.AutomationServiceCl
 		return errors.Wrap(err, "failed to wait for fullscreen button to show")
 	}
 
-	if _, err := uiautoSvc.LeftClick(
-		ctx, &ui.LeftClickRequest{Finder: connectButtonNode}); err != nil {
+	if _, err := uiautoSvc.DoDefault(ctx, &ui.DoDefaultRequest{Finder: connectButtonNode}); err != nil {
 		return errors.Wrap(err, "failed to click the connect button")
 	}
-
 	return nil
 }
 

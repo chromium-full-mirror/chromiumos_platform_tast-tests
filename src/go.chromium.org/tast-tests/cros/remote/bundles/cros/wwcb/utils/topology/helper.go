@@ -139,6 +139,19 @@ func (t *Helper) ActivateDeviceByTypeViaId(ctx context.Context, deviceType labap
 	return deviceID, nil
 }
 
+// DeviceByTypeVia finds the first component of the specified type whose path travels through another device of type "via".
+func (t *Helper) DeviceByTypeVia(ctx context.Context, deviceType, viaType labapi.PasitHost_Device_Type) (string, string, error) {
+	predicate := func(device *labapi.PasitHost_Device) bool {
+		return device.GetType() == viaType
+	}
+	path, deviceID, viaID, err := t.pathToDeviceVia(deviceType, predicate)
+	if err != nil {
+		return "", "", errors.Wrapf(err, "failed to find path to device of type: %v via: %v", deviceType, viaType)
+	}
+	testing.ContextLogf(ctx, "Found path to device: %q: %v", deviceID, path)
+	return deviceID, viaID, nil
+}
+
 // ActivateDeviceByTypeVia enables the first found component of the specified type whose path travels through another device of type "via".
 func (t *Helper) ActivateDeviceByTypeVia(ctx context.Context, deviceType, viaType labapi.PasitHost_Device_Type) (string, string, error) {
 	predicate := func(device *labapi.PasitHost_Device) bool {

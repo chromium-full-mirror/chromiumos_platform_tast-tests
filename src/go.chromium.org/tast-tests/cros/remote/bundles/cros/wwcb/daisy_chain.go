@@ -83,13 +83,14 @@ func DaisyChain(ctx context.Context, s *testing.State) {
 	fs := dutfs.NewClient(cl.Conn)
 
 	tf := s.FixtValue().(*topology.TestFixture)
-	// Connect a display whose connection path passes through another display.
-	extDispID2, _, err := tf.Helper.ActivateDeviceByTypeVia(ctx, topology.DeviceTypeMonitor, topology.DeviceTypeMonitor)
+	// Find a display whose connection path passes through another display.
+	extDispID2, extDispID1, err := tf.Helper.DeviceByTypeVia(ctx, topology.DeviceTypeMonitor, topology.DeviceTypeMonitor)
 	if err != nil {
 		s.Fatal("Failed to activate monitor: ", err)
 	}
 
-	if err := tf.Helper.DeactivateDeviceByID(ctx, extDispID2); err != nil {
+	// Connect the first display and verify.
+	if err := tf.Helper.ActivateDeviceByID(ctx, extDispID1); err != nil {
 		s.Fatal("Failed to deactivate monitor: ", err)
 	}
 
@@ -105,6 +106,7 @@ func DaisyChain(ctx context.Context, s *testing.State) {
 		}
 	}(ctx)
 
+	// Connect the second display and verify.
 	if _, err := displaySvc.VerifyDisplayCount(ctx, &wwcb.QueryRequest{DisplayCount: 2}); err != nil {
 		s.Fatal("Failed to verify display count after connect first external display: ", err)
 	}
@@ -170,12 +172,12 @@ func DaisyChain(ctx context.Context, s *testing.State) {
 			s.Fatal("Failed to switch Gallery window to the external display: ", err)
 		}
 
-		if err := utils.ClickOnPlayButton(ctx, uiautoSvc); err != nil {
-			s.Fatal("Failed to click on play button on the Gallery: ", err)
-		}
-
 		if err := utils.ClickFullScreenButton(ctx, uiautoSvc); err != nil {
 			s.Fatal("Failed to click on fullscreen on the Gallery: ", err)
+		}
+
+		if err := utils.ClickOnPlayButton(ctx, uiautoSvc); err != nil {
+			s.Fatal("Failed to click on play button on the Gallery: ", err)
 		}
 
 		if err := utils.VerifyVideo(ctx, s, test.extDispID, 30); err != nil {
