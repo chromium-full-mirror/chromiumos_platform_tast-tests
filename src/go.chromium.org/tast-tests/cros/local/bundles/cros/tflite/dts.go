@@ -164,9 +164,6 @@ var neuronParam = testingParam{
 		"*RsqrtNegativeInt8*",
 		"*RsqrtNegativeInt16*",
 
-		// TODO(b/351308835): Neuron delegate failed with node_index out ouf range.
-		"StablehloScatterOpTest.PerformsUpdate",
-
 		// TODO(b/364804438): Neuron delegate failed with incorrect outputs after
 		// turning on --allow_fp16_precision_for_fp32.
 		"SoftmaxOpTest/SoftmaxOpTest.Softmax4D/0",
