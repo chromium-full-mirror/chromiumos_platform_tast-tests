@@ -22,7 +22,7 @@ func init() {
 		Desc:           "Verifies that Shill auto-connects to a Cellular Service correctly",
 		Contacts:       []string{"chromeos-cellular-team@google.com", "ejcaruso@google.com"},
 		BugComponent:   "b:167157", // ChromeOS > Platform > Connectivity > Cellular
-		Attr:           []string{"group:cellular", "cellular_sim_active", "cellular_unstable", "cellular_cq"},
+		Attr:           []string{"group:cellular", "cellular_sim_active", "cellular_carrier_agnostic", "cellular_unstable", "cellular_cq"},
 		Fixture:        "cellularAutoconnectLocal",
 		Timeout:        2 * time.Minute,
 	})

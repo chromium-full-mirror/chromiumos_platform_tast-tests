@@ -27,7 +27,7 @@ func init() {
 		Desc:         "Verifies that modemfwd can fallback to the rootfs FW images when it fails to install the DLC",
 		Contacts:     []string{"chromeos-cellular-team@google.com", "andrewlassalle@google.com"},
 		BugComponent: "b:167157", // ChromeOS > Platform > Connectivity > Cellular
-		Attr:         []string{"group:cellular", "cellular_sim_active", "cellular_modem_verification", "group:release-health", "release-health_cellular"},
+		Attr:         []string{"group:cellular", "cellular_sim_active", "cellular_carrier_agnostic", "cellular_modem_verification", "group:release-health", "release-health_cellular"},
 		Fixture:      "cellular",
 		SoftwareDeps: []string{"modemfwd", "cellular_modem_dlcs_present"},
 		Timeout:      4 * time.Minute,

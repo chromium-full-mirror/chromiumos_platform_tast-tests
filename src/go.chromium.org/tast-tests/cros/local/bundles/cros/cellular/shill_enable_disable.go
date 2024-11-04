@@ -20,7 +20,7 @@ func init() {
 		Desc:         "Verifies that Shill can enable, and disable a cellular device",
 		Contacts:     []string{"chromeos-cellular-team@google.com"},
 		BugComponent: "b:167157", // ChromeOS > Platform > Connectivity > Cellular
-		Attr:         []string{"group:cellular", "cellular_sim_active", "cellular_cq", "group:release-health", "release-health_cellular"},
+		Attr:         []string{"group:cellular", "cellular_sim_active", "cellular_carrier_agnostic", "cellular_cq", "group:release-health", "release-health_cellular"},
 		HardwareDeps: hwdep.D(hwdep.Cellular()),
 		Timeout:      5 * time.Minute,
 		Fixture:      "cellularAutoconnectLocal",

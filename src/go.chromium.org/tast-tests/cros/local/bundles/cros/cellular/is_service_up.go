@@ -20,7 +20,7 @@ func init() {
 		Desc:         "Verifies that Cellular Device and Service properties match ModemManager SIM properties",
 		Contacts:     []string{"chromeos-cellular-team@google.com", "ejcaruso@google.com", "pholla@google.com"},
 		BugComponent: "b:167157", // ChromeOS > Platform > Connectivity > Cellular
-		Attr:         []string{"group:cellular", "cellular_sim_active", "cellular_cq", "cellular_ota_avl", "group:release-health", "release-health_cellular"},
+		Attr:         []string{"group:cellular", "cellular_sim_active", "cellular_carrier_agnostic", "cellular_cq", "cellular_ota_avl", "group:release-health", "release-health_cellular"},
 		Fixture:      "cellular",
 	})
 }

@@ -26,7 +26,7 @@ func init() {
 		BugComponent:   "b:1131774", // ChromeOS > Software > Fundamentals > Device Enablement > Connectivity > Cellular
 		LifeCycleStage: testing.LifeCycleOwnerMonitored,
 		SoftwareDeps:   []string{"chrome"},
-		Attr:           []string{"group:cellular", "cellular_sim_active"},
+		Attr:           []string{"group:cellular", "cellular_sim_active", "cellular_carrier_agnostic"},
 		Timeout:        10 * time.Minute,
 		Fixture:        "cellularWithChrome",
 	})

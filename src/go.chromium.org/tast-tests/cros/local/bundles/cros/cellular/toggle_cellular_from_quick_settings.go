@@ -29,7 +29,7 @@ func init() {
 		},
 		BugComponent: "b:1578688", // ChromeOS > External > Cienet > Manual Test Automation > Test stabilization
 		SoftwareDeps: []string{"chrome"},
-		Attr:         []string{"group:cellular", "cellular_sim_active"},
+		Attr:         []string{"group:cellular", "cellular_sim_active", "cellular_carrier_agnostic"},
 		Fixture:      "cellularEnforceConnectionLocal",
 	})
 }

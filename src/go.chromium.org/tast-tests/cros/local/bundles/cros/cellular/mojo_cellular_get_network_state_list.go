@@ -25,7 +25,7 @@ func init() {
 		Contacts:       []string{"chromeos-cellular-team@google.com", "cros-device-enablement@google.com"},
 		BugComponent:   "b:1166446",
 		SoftwareDeps:   []string{"chrome"},
-		Attr:           []string{"group:cellular", "cellular_unstable", "cellular_sim_active"},
+		Attr:           []string{"group:cellular", "cellular_unstable", "cellular_sim_active", "cellular_carrier_agnostic"},
 		Fixture:        "cellularE2ELocal",
 		Timeout:        10 * time.Minute,
 	})
