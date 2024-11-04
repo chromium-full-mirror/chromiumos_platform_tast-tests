@@ -22,8 +22,7 @@ func init() {
 			"chromeos-fwupd@google.com", // CrOS FWUPD
 			"pmarheine@chromium.org",    // Test Author
 		},
-		// Do not schedule this in the lab; b/322823645
-		Attr:         []string{},
+		Attr:         []string{"group:mainline"},
 		SoftwareDeps: []string{"fwupd"},
 		HardwareDeps: hwdep.D(
 			hwdep.DisplayPortConverter("PS175"),
