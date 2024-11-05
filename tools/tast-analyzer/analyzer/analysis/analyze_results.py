@@ -23,6 +23,35 @@ def _convert_value(val: int | float) -> float:
     assert False, f"Unknown value type: {val}"
 
 
+def load_test_results(
+    paths: list[pathlib.Path],
+) -> list[test_result.TestResults]:
+    """Loads a list of test results from the given paths.
+
+    Args:
+        paths: A list of paths to the test results JSON files.
+
+    Returns:
+        A list of TestResults.
+    """
+    test_results: list[test_result.TestResults] = []
+    for path in paths:
+        results = test_result.TestResults.from_json(path.read_text())
+
+        # Set labels to the filename if the results version is old.
+        if results.metadata.results_version < 2:
+            migrated_results = {}
+            for result_key, result_value in results.results.items():
+                assert result_key.label == ""
+                migrated_key = dataclasses.replace(result_key, label=path.name)
+                migrated_results[migrated_key] = result_value
+            results = dataclasses.replace(results, results=migrated_results)
+
+        test_results.append(results)
+
+    return test_results
+
+
 def _load_samples_from_test_results(
     results: test_result.TestResults,
 ) -> list[metric_sample.MetricSample]:
@@ -80,24 +109,12 @@ def _load_samples_from_test_results(
     return list(samples_by_id.values())
 
 
-def load_samples_from_paths(
-    paths: list[pathlib.Path],
+def load_samples_from_test_results(
+    test_results: list[test_result.TestResults],
 ) -> list[metric_sample.MetricSample]:
     all_samples: list[metric_sample.MetricSample] = []
     sample_ids: set[str] = set()
-    for path in paths:
-        results = test_result.TestResults.from_json(path.read_text())
-
-        # Set labels to the filename if the results version is old.
-        if results.metadata.results_version < 2:
-            migrated_results = {}
-            for result_key in list(results.results.keys()):
-                assert result_key.label == ""
-                migrated_key = dataclasses.replace(result_key, label=path.name)
-                migrated_results[migrated_key] = results.results[result_key]
-                del results.results[result_key]
-            results.results.update(migrated_results)
-
+    for results in test_results:
         samples = _load_samples_from_test_results(results)
         for sample in samples:
             # Warn if there are multiple samples with the same ID. This could

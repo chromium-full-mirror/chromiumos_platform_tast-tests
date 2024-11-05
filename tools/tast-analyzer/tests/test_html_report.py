@@ -10,7 +10,6 @@ import unittest
 
 from analyzer.analysis import analysis_cfg
 from analyzer.analysis import analysis_results
-from analyzer.analysis import metric_sample
 from analyzer.analysis import stats_util
 from analyzer.backend import test_result
 from analyzer.frontend import output
@@ -82,7 +81,7 @@ class HtmlReportTest(unittest.TestCase):
         ]
 
         report = html_report.HtmlReport(
-            raw_samples=[],
+            raw_test_results=[],
             results=results,
             template_dir=TEMPLATE_DIR,
             cfg=analysis_cfg.AnalysisCfg(),
@@ -129,7 +128,7 @@ class HtmlReportTest(unittest.TestCase):
             )
         ]
         report = html_report.HtmlReport(
-            raw_samples=[],
+            raw_test_results=[],
             results=results,
             template_dir=TEMPLATE_DIR,
             cfg=analysis_cfg.AnalysisCfg(),
@@ -188,7 +187,7 @@ class HtmlReportTest(unittest.TestCase):
             )
         ]
         report = html_report.HtmlReport(
-            raw_samples=[],
+            raw_test_results=[],
             results=results,
             template_dir=TEMPLATE_DIR,
             cfg=analysis_cfg.AnalysisCfg(),
@@ -245,7 +244,7 @@ class HtmlReportTest(unittest.TestCase):
             )
         ]
         report = html_report.HtmlReport(
-            raw_samples=[],
+            raw_test_results=[],
             results=results,
             template_dir=TEMPLATE_DIR,
             cfg=analysis_cfg.AnalysisCfg(),
@@ -293,7 +292,7 @@ class HtmlReportTest(unittest.TestCase):
             )
         ]
         report = html_report.HtmlReport(
-            raw_samples=[],
+            raw_test_results=[],
             results=results,
             template_dir=TEMPLATE_DIR,
             cfg=analysis_cfg.AnalysisCfg(),
@@ -309,7 +308,7 @@ class HtmlReportTest(unittest.TestCase):
 
     def test_append_summary_empty_results(self) -> None:
         report = html_report.HtmlReport(
-            raw_samples=[],
+            raw_test_results=[],
             results=[],
             template_dir=TEMPLATE_DIR,
             cfg=analysis_cfg.AnalysisCfg(),
@@ -353,7 +352,7 @@ class HtmlReportTest(unittest.TestCase):
             ),
         ]
         report = html_report.HtmlReport(
-            raw_samples=[],
+            raw_test_results=[],
             results=results,
             template_dir=TEMPLATE_DIR,
             cfg=analysis_cfg.AnalysisCfg(),
@@ -427,7 +426,7 @@ class HtmlReportTest(unittest.TestCase):
             )
         ]
         report = html_report.HtmlReport(
-            raw_samples=[],
+            raw_test_results=[],
             results=results,
             template_dir=TEMPLATE_DIR,
             cfg=analysis_cfg.AnalysisCfg(),
@@ -496,7 +495,7 @@ class HtmlReportTest(unittest.TestCase):
         ]
 
         report = html_report.HtmlReport(
-            raw_samples=[],
+            raw_test_results=[],
             results=results,
             template_dir=TEMPLATE_DIR,
             cfg=analysis_cfg.AnalysisCfg(),
@@ -538,7 +537,7 @@ class HtmlReportTest(unittest.TestCase):
             kind=plot.GroupsPlotKind.PLOT_BOX, figure=figure.Figure()
         )
         report = html_report.HtmlReport(
-            raw_samples=[],
+            raw_test_results=[],
             results=results,
             template_dir=TEMPLATE_DIR,
             cfg=analysis_cfg.AnalysisCfg(),
@@ -557,30 +556,36 @@ class HtmlReportTest(unittest.TestCase):
         )
 
     def test_embed_raw_data(self) -> None:
-        raw_samples = [
-            metric_sample.MetricSample(
-                label="label1",
-                sample_id="sample1",
-                test_name="test1",
-                metric_name="metric_name1",
-                metric_path="metric_path1",
-                units="units1",
-                improvement_direction=test_result.ImprovementDirection.UP,
-                _value_map={},
-            ),
-            metric_sample.MetricSample(
-                label="label2",
-                sample_id="sample2",
-                test_name="test2",
-                metric_name="metric_name2",
-                metric_path="metric_path2",
-                units="units2",
-                improvement_direction=test_result.ImprovementDirection.DOWN,
-                _value_map={},
-            ),
+        raw_test_results = [
+            test_result.TestResults(
+                results={
+                    test_result.TestResultKey(
+                        run_id="run1",
+                        test_name="test1",
+                        metric_name="metric1",
+                        variant="variant1",
+                        label="before",
+                    ): test_result.TestResult(
+                        units="units1",
+                        improvement_direction=test_result.ImprovementDirection.UP,
+                        value=1,
+                    ),
+                    test_result.TestResultKey(
+                        run_id="run2",
+                        test_name="test2",
+                        metric_name="metric2",
+                        variant="variant2",
+                        label="after",
+                    ): test_result.TestResult(
+                        units="units2",
+                        improvement_direction=test_result.ImprovementDirection.DOWN,
+                        value=2,
+                    ),
+                }
+            )
         ]
         report = html_report.HtmlReport(
-            raw_samples=raw_samples,
+            raw_test_results=raw_test_results,
             results=[],
             template_dir=TEMPLATE_DIR,
             cfg=analysis_cfg.AnalysisCfg(),
@@ -593,11 +598,11 @@ class HtmlReportTest(unittest.TestCase):
         assert script.text is not None
         decoded = base64.b64decode(script.text)
         uncompressed = gzip.decompress(decoded).decode()
-        loaded_samples = [
-            metric_sample.MetricSample(**item)
+        loaded_data = [
+            test_result.TestResults.from_json(item)
             for item in json.loads(uncompressed)
         ]
-        self.assertEqual(raw_samples, loaded_samples)
+        self.assertEqual(raw_test_results, loaded_data)
 
     def test_write(self) -> None:
         samples = (
@@ -640,7 +645,7 @@ class HtmlReportTest(unittest.TestCase):
         with tempfile.TemporaryDirectory() as temp:
             output_dir = pathlib.Path(temp)
             report = html_report.HtmlReport(
-                raw_samples=[],
+                raw_test_results=[],
                 results=results,
                 template_dir=TEMPLATE_DIR,
                 cfg=analysis_cfg.AnalysisCfg(),

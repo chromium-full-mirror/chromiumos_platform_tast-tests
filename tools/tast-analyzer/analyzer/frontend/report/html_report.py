@@ -11,6 +11,7 @@ import xml.etree.ElementTree as ET
 
 from analyzer.analysis import analysis_cfg
 from analyzer.analysis import analysis_results
+from analyzer.backend import test_result
 from analyzer.frontend import output
 from analyzer.frontend import plot
 from analyzer.frontend import plot_util
@@ -19,8 +20,8 @@ from analyzer.frontend.report import html_tree
 
 
 class HtmlReport:
-    raw_samples: list[analysis_results.MetricSample]
-    """The unpruned raw data used for the statistical analysis."""
+    raw_test_results: list[test_result.TestResults]
+    """The raw data before statistical processing."""
 
     results: list[output.AnalysisResultForOutput]
     """The results to make a report for."""
@@ -42,12 +43,12 @@ class HtmlReport:
 
     def __init__(
         self,
-        raw_samples: list[analysis_results.MetricSample],
+        raw_test_results: list[test_result.TestResults],
         results: list[output.AnalysisResultForOutput],
         template_dir: pathlib.Path,
         cfg: analysis_cfg.AnalysisCfg,
     ) -> None:
-        self.raw_samples = raw_samples
+        self.raw_test_results = raw_test_results
         self.results = results
         self.template_dir = template_dir
         self.cfg = cfg
@@ -393,7 +394,7 @@ class HtmlReport:
             {"id": "raw-data", "type": "application/octet-stream"},
         )
         raw_data_str = json.dumps(
-            [sample.to_dict() for sample in self.raw_samples]
+            [data.to_json() for data in self.raw_test_results]
         )
         compressed = gzip.compress(raw_data_str.encode())
         script.text = base64.b64encode(compressed).decode()
