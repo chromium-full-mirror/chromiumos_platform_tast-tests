@@ -93,6 +93,7 @@ def _plot_box_for_groups(
     )
     sns.stripplot(data=label_to_values, ax=ax, order=order)
     ax.set_ylabel(result.units())
+    ax.tick_params(axis="x", labelrotation=45)
 
     CONTROL_BORDER = "black"
     BETTER_BACKGROUND = "#13acff3b"
