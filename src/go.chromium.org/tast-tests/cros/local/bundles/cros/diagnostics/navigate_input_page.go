@@ -9,8 +9,7 @@ import (
 
 	"go.chromium.org/tast-tests/cros/local/bundles/cros/diagnostics/utils"
 	"go.chromium.org/tast-tests/cros/local/chrome/uiauto"
-	da "go.chromium.org/tast-tests/cros/local/chrome/uiauto/diagnosticsapp"
-	"go.chromium.org/tast-tests/cros/local/input"
+	"go.chromium.org/tast-tests/cros/local/chrome/uiauto/diagnosticsapp"
 	"go.chromium.org/tast/core/testing"
 	"go.chromium.org/tast/core/testing/hwdep"
 )
@@ -37,22 +36,14 @@ func init() {
 func NavigateInputPage(ctx context.Context, s *testing.State) {
 	tconn := s.FixtValue().(*utils.FixtureData).Tconn
 
-	// Since virtual keyboard with BUS_USB (0x03) doesn't work yet, use BUS_I2C (0x18).
-	// See https://crrev.com/c/1407138 for more discussion.
-	vkb, err := input.VirtualKeyboardWithBusType(ctx, 0x18)
-	if err != nil {
-		s.Fatal("Failed to create a virtual keyboard: ", err)
-	}
-	defer vkb.Close(ctx)
-
-	if err := da.OpenInputPage(ctx, tconn); err != nil {
+	if err := diagnosticsapp.OpenInputPage(ctx, tconn); err != nil {
 		s.Fatal("Could not click the menu button: ", err)
 	}
 
 	// Find the Input navigation item and the keyboard list heading.
 	ui := uiauto.New(tconn)
-	inputTab := da.DxKeyboardTab.Ancestor(da.DxRootNode)
-	keyboardListHeading := da.DxKeyboardHeading.Ancestor(da.DxRootNode)
+	inputTab := diagnosticsapp.DxKeyboardTab.Ancestor(diagnosticsapp.DxRootNode)
+	keyboardListHeading := diagnosticsapp.DxKeyboardHeading.Ancestor(diagnosticsapp.DxRootNode)
 	if err := uiauto.Combine("find the keyboard list heading",
 		ui.WaitUntilExists(inputTab),
 		ui.WaitUntilExists(keyboardListHeading),
