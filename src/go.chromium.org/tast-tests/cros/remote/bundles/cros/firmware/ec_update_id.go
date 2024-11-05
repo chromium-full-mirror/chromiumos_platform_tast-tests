@@ -185,6 +185,11 @@ func ECUpdateID(ctx context.Context, s *testing.State) {
 		s.Fatal("Failed to test changing active copy after corruption: ", err)
 	}
 	s.Log("Current active copy: ", string(activeCopy))
+
+	// This test causes spurious crashes. In the servo log there are no unexpected reboots, and yet there are crashes with no useful data created.
+	if err := h.UpdateECCrashCache(ctx); err != nil {
+		s.Fatal("Failed to update EC crash file cache after test: ", err)
+	}
 }
 
 func testCorruptActiveSectionAndReboot(ctx context.Context, h *firmware.Helper, d *dut.DUT, initHash string) (string, error) {
