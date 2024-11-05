@@ -260,7 +260,7 @@ func (s *OSSettings) OpenNewAPNDialogAndPopulateFields(ctx context.Context, apn 
 				return errors.Wrapf(err, "failed to check checkbox %q", name)
 			}
 			if expected != (info.Checked == checked.True) {
-				if err := s.LeftClick(node)(ctx); err != nil {
+				if err := s.DoDefault(node)(ctx); err != nil {
 					return errors.Wrapf(err, "failed to click checkbox %q", name)
 				}
 			}
@@ -279,9 +279,9 @@ func (s *OSSettings) OpenNewAPNDialogAndPopulateFields(ctx context.Context, apn 
 		ipTypeMenuItem := nodewith.Name(apn.IPType).Role(role.MenuListOption).Ancestor(IPTypeDropdown)
 
 		if err := uiauto.Combine("Select IP menu item",
-			s.LeftClick(IPTypeDropdown),
+			s.DoDefault(IPTypeDropdown),
 			s.WaitUntilExists(ipTypeMenuItem),
-			s.LeftClick(ipTypeMenuItem),
+			s.DoDefault(ipTypeMenuItem),
 		)(ctx); err != nil {
 			return errors.Wrapf(err, "failed to select IP menu item: %s", apn.IPType)
 		}
