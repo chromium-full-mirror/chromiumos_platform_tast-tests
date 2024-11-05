@@ -160,3 +160,14 @@ func (w *WindowsHost) GetFileNames(ctx context.Context, directory string) (strin
 	trimmed := strings.TrimSpace(string(out))
 	return trimmed, err
 }
+
+// Connected returns true if a usable connection to the WindowsHost is held.
+func (w *WindowsHost) Connected(ctx context.Context) bool {
+	if w == nil || w.Host == nil {
+		return false
+	}
+	if err := w.Host.Ping(ctx, 3*time.Second); err != nil {
+		return false
+	}
+	return true
+}
