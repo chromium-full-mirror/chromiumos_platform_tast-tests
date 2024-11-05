@@ -18,6 +18,7 @@ import (
 	fwCommon "go.chromium.org/tast-tests/cros/common/firmware"
 	"go.chromium.org/tast-tests/cros/common/firmware/bios"
 	"go.chromium.org/tast-tests/cros/common/firmware/futility"
+	"go.chromium.org/tast-tests/cros/remote/firmware"
 	"go.chromium.org/tast-tests/cros/remote/firmware/fixture"
 	"go.chromium.org/tast-tests/cros/remote/firmware/reporters"
 	fwpb "go.chromium.org/tast-tests/cros/services/cros/firmware"
@@ -117,7 +118,7 @@ func performCseSync(ctx context.Context, s *testing.State) (bool, error) {
 		return false, errors.Wrap(err, "failed to send AP firmware backup to DUT")
 	}
 
-	fwName, err := getFwName(ctx, h.Reporter)
+	fwName, err := getFwName(ctx, h)
 	if err != nil {
 		return false, errors.Wrap(err, "failed to get firmware name")
 	}
@@ -241,19 +242,25 @@ func performForcedCseSync(ctx context.Context, s *testing.State) error {
 	return nil
 }
 
-func getFwName(ctx context.Context, reporter *reporters.Reporter) (string, error) {
-	fwName, err := reporter.CrossystemParam(ctx, reporters.CrossystemParamFwid)
+func getFwName(ctx context.Context, h *firmware.Helper) (string, error) {
+	fwName, err := h.Reporter.CrossystemParam(ctx, reporters.CrossystemParamFwid)
 	if err != nil {
 		return "", errors.Wrap(err, "cannot obtain FWID from crossystem params")
 	}
-	re := regexp.MustCompile(`Google_([a-z-A-Z-0-9]*)(_Ufs)?\.(\d*)\.\d*.\d*`)
+	re := regexp.MustCompile(`Google_([a-z-A-Z-0-9]*)(_)?[a-z-A-Z-0-9]*\.(\d*)\.\d*.\d*`)
 	match := re.FindStringSubmatch(fwName)
 	if len(match) < 3 {
 		return "", errors.Errorf("unexpected fw id format from crossystem %v, got: %s", reporters.CrossystemParamFwid, fwName)
 	}
 	fwName = strings.ToLower(match[1])
-	testing.ContextLog(ctx, "Firmware Version: ", fwName)
-	return fwName, nil
+	testing.ContextLog(ctx, "Firmware Model Name: ", fwName)
+
+	fwTargets, err := firmware.ReadFirmwareTargets(ctx, h.DUT.Conn(), h.Model, fwName)
+	if err != nil {
+		return "", err
+	}
+	testing.ContextLog(ctx, "Firmware Manifest: ", fwTargets.APTarget)
+	return fwTargets.APTarget, nil
 }
 
 func getDowngradeBiosImage(ctx context.Context, dut *dut.DUT, fwName, workDir string) (string, error) {
