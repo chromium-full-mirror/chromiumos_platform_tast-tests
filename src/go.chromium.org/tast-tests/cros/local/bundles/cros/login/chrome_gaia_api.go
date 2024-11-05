@@ -109,4 +109,11 @@ func ChromeGaiaAPI(ctx context.Context, s *testing.State) {
 			s.Fatal("Found error in the Chrome log: ", entry.Content)
 		}
 	}
+
+	// Navigate to chrome internal page to ensure we started a user session.
+	conn, err := cr.NewConn(ctx, "chrome://version")
+	if err != nil {
+		s.Fatal("Failed connecting to chrome://version: ", err)
+	}
+	defer conn.Close()
 }
