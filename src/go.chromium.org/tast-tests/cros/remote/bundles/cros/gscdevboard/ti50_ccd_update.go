@@ -67,7 +67,7 @@ func Ti50CCDUpdate(ctx context.Context, s *testing.State) {
 	th.MustSucceed(i.WaitUntilBooted(ctx), "GSC revives after reboot")
 
 	// Perform a GSC reset to ensure that the rate limiting is engaged
-	th.MustSucceed(tpm.TpmvReboot(20), "Reboot GSC through TPMV")
+	th.MustSucceed(tpm.TpmvReboot(500), "Reboot GSC through TPMV")
 	th.MustSucceed(i.WaitUntilBooted(ctx), "GSC revives after reboot")
 	b.WaitUntilCCDConnected(ctx)
 
