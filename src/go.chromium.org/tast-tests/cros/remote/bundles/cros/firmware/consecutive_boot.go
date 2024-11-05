@@ -201,6 +201,7 @@ func ConsecutiveBoot(ctx context.Context, s *testing.State) {
 	customCmdFailed := 0
 	powerdFailed := 0
 	numFails := 0
+	ecCrashes := 0
 
 	failures := make(map[int][]error, numIters)
 	for i := 0; i < numIters; i++ {
@@ -225,6 +226,12 @@ func ConsecutiveBoot(ctx context.Context, s *testing.State) {
 			s.Logf("------ Running iteration %d out of %d ------", i+1, numIters)
 		}
 		h.Servo.Echo(ctx, fmt.Sprintf("%s iteration %d out of %d", s.TestName(), i+1, numIters))
+
+		checkCrash := true
+		if err := h.UpdateECCrashCache(ctx); err != nil {
+			s.Log("Failed to cache ec crashes before starting iteration ", i+1)
+			checkCrash = false
+		}
 
 		if err := shutdownFunc(); err != nil {
 			logFailure(errors.Wrap(err, "error in shutdown func"), i, &shutdownFuncFailed)
@@ -315,6 +322,25 @@ func ConsecutiveBoot(ctx context.Context, s *testing.State) {
 				logFailure(errors.Wrap(err, "failed to wait for powerd to start"), i, &powerdFailed)
 			}
 		}
+
+		if checkCrash {
+			s.Log("Checking for unexpected EC crashes over reboot")
+			crashes, err := h.GetNewECCrashes(ctx)
+			if err != nil {
+				s.Log("Failed to check for new ec crashes on iteration ", i+1)
+			}
+			if len(crashes) != 0 {
+				logFailure(errors.New("caught unexpected EC crash"), i, &ecCrashes)
+				for crashName := range crashes {
+					logPath := firmware.ECCrashBaseDir + crashName + ".eccrash"
+					out, err := h.Reporter.CatFile(ctx, logPath)
+					if err != nil {
+						s.Logf("Failed to read .eccrash file %s to print in log", logPath)
+					}
+					s.Logf("!!!WARNING: Detected unexpected EC crash on iteration %d!!!: %v", i+1, string(out))
+				}
+			}
+		}
 	}
 
 	if numFails > 0 {
@@ -329,6 +355,7 @@ func ConsecutiveBoot(ctx context.Context, s *testing.State) {
 		s.Logf("\tUnexpected EC reboot:......%d", unexpectedECReboot)
 		s.Logf("\tCustom cmd failed:.........%d", customCmdFailed)
 		s.Logf("\tPowerd was not running:....%d", powerdFailed)
+		s.Logf("\tUnexpected EC crashes:.....%d", ecCrashes)
 		for iter, errors := range failures {
 			if len(errors) > 0 {
 				s.Logf("Iter %d: Had the following failures:", iter+1)
