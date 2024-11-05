@@ -12833,39 +12833,6 @@ func (p *PrintingBackgroundGraphicsDefault) Equal(iface interface{}) bool {
 }
 
 // ****************************************************************************
-// 624. LegacySameSiteCookieBehaviorEnabledForDomainList
-// This policy can be modified without rebooting.
-// ****************************************************************************
-type LegacySameSiteCookieBehaviorEnabledForDomainList struct {
-	Stat Status
-	Val  []string
-}
-
-func (p *LegacySameSiteCookieBehaviorEnabledForDomainList) Name() string {
-	return "LegacySameSiteCookieBehaviorEnabledForDomainList"
-}
-func (p *LegacySameSiteCookieBehaviorEnabledForDomainList) Scope() Scope          { return ScopeUser }
-func (p *LegacySameSiteCookieBehaviorEnabledForDomainList) Status() Status        { return p.Stat }
-func (p *LegacySameSiteCookieBehaviorEnabledForDomainList) UntypedV() interface{} { return p.Val }
-func (p *LegacySameSiteCookieBehaviorEnabledForDomainList) UnmarshalAs(m json.RawMessage) (interface{}, error) {
-	var v []string
-	if err := json.Unmarshal(m, &v); err != nil {
-		return nil, errors.Wrapf(err, "could not read %s as []string", m)
-	}
-	return v, nil
-}
-func (p *LegacySameSiteCookieBehaviorEnabledForDomainList) SetProto(m *protoreflect.Message) {
-	SetUserProto(m, p.Name(), p.Val)
-}
-func (p *LegacySameSiteCookieBehaviorEnabledForDomainList) Equal(iface interface{}) bool {
-	v, ok := iface.([]string)
-	if !ok {
-		return ok
-	}
-	return cmp.Equal(p.Val, v, cmpopts.EquateEmpty())
-}
-
-// ****************************************************************************
 // 625. PrintJobHistoryExpirationPeriod
 // This policy can be modified without rebooting.
 // ****************************************************************************
@@ -22244,36 +22211,6 @@ func (p *TabDiscardingExceptions) Equal(iface interface{}) bool {
 }
 
 // ****************************************************************************
-// 1012. LacrosDataBackwardMigrationMode
-// ****************************************************************************
-type LacrosDataBackwardMigrationMode struct {
-	Stat Status
-	Val  string
-}
-
-func (p *LacrosDataBackwardMigrationMode) Name() string          { return "LacrosDataBackwardMigrationMode" }
-func (p *LacrosDataBackwardMigrationMode) Scope() Scope          { return ScopeUser }
-func (p *LacrosDataBackwardMigrationMode) Status() Status        { return p.Stat }
-func (p *LacrosDataBackwardMigrationMode) UntypedV() interface{} { return p.Val }
-func (p *LacrosDataBackwardMigrationMode) UnmarshalAs(m json.RawMessage) (interface{}, error) {
-	var v string
-	if err := json.Unmarshal(m, &v); err != nil {
-		return nil, errors.Wrapf(err, "could not read %s as string", m)
-	}
-	return v, nil
-}
-func (p *LacrosDataBackwardMigrationMode) SetProto(m *protoreflect.Message) {
-	SetUserProto(m, p.Name(), p.Val)
-}
-func (p *LacrosDataBackwardMigrationMode) Equal(iface interface{}) bool {
-	v, ok := iface.(string)
-	if !ok {
-		return ok
-	}
-	return cmp.Equal(p.Val, v, cmpopts.EquateEmpty())
-}
-
-// ****************************************************************************
 // 1013. StrictMimetypeCheckForWorkerScriptsEnabled
 // This policy can be modified without rebooting.
 // ****************************************************************************
@@ -29088,7 +29025,6 @@ func (p *KioskWebAppOfflineEnabled) Equal(iface interface{}) bool {
 // ****************************************************************************
 // 1294. ContentTransferEnablementStatus
 // This policy can be modified without rebooting.
-// This is a future policy, it is not present in stable builds.
 // ****************************************************************************
 type ContentTransferEnablementStatus struct {
 	Stat Status
@@ -29297,6 +29233,7 @@ func (p *AllowExcludeDisplayInMirrorMode) Equal(iface interface{}) bool {
 // ****************************************************************************
 // 1300. AutofillPredictionSettings
 // This policy can be modified without rebooting.
+// This is a future policy, it is not present in stable builds.
 // ****************************************************************************
 type AutofillPredictionSettings struct {
 	Stat Status
@@ -29490,7 +29427,6 @@ func (p *SelectParserRelaxationEnabled) Equal(iface interface{}) bool {
 // ****************************************************************************
 // 1307. ClassManagementEnabled
 // This policy can be modified without rebooting.
-// This is a future policy, it is not present in stable builds.
 // ****************************************************************************
 type ClassManagementEnabled struct {
 	Stat Status
@@ -29513,6 +29449,143 @@ func (p *ClassManagementEnabled) SetProto(m *protoreflect.Message) {
 }
 func (p *ClassManagementEnabled) Equal(iface interface{}) bool {
 	v, ok := iface.(string)
+	if !ok {
+		return ok
+	}
+	return cmp.Equal(p.Val, v, cmpopts.EquateEmpty())
+}
+
+// ****************************************************************************
+// 1308. EnterpriseSearchAggregatorSettings
+// This policy can be modified without rebooting.
+// This is a future policy, it is not present in stable builds.
+// ****************************************************************************
+type EnterpriseSearchAggregatorSettings struct {
+	Stat Status
+	Val  *EnterpriseSearchAggregatorSettingsValue
+}
+
+type EnterpriseSearchAggregatorSettingsValue struct {
+	IconUrl    string `json:"icon_url"`
+	Name       string `json:"name"`
+	SearchUrl  string `json:"search_url"`
+	Shortcut   string `json:"shortcut"`
+	SuggestUrl string `json:"suggest_url"`
+}
+
+func (p *EnterpriseSearchAggregatorSettings) Name() string {
+	return "EnterpriseSearchAggregatorSettings"
+}
+func (p *EnterpriseSearchAggregatorSettings) Scope() Scope          { return ScopeUser }
+func (p *EnterpriseSearchAggregatorSettings) Status() Status        { return p.Stat }
+func (p *EnterpriseSearchAggregatorSettings) UntypedV() interface{} { return p.Val }
+func (p *EnterpriseSearchAggregatorSettings) UnmarshalAs(m json.RawMessage) (interface{}, error) {
+	var v *EnterpriseSearchAggregatorSettingsValue
+	if err := json.Unmarshal(m, &v); err != nil {
+		return nil, errors.Wrapf(err, "could not read %s as *EnterpriseSearchAggregatorSettingsValue", m)
+	}
+	return v, nil
+}
+func (p *EnterpriseSearchAggregatorSettings) SetProto(m *protoreflect.Message) {
+	SetUserProto(m, p.Name(), p.Val)
+}
+func (p *EnterpriseSearchAggregatorSettings) Equal(iface interface{}) bool {
+	v, ok := iface.(*EnterpriseSearchAggregatorSettingsValue)
+	if !ok {
+		return ok
+	}
+	return cmp.Equal(p.Val, v, cmpopts.EquateEmpty())
+}
+
+// ****************************************************************************
+// 1310. WebAudioOutputBufferingEnabled
+// This policy can be modified without rebooting.
+// ****************************************************************************
+type WebAudioOutputBufferingEnabled struct {
+	Stat Status
+	Val  bool
+}
+
+func (p *WebAudioOutputBufferingEnabled) Name() string          { return "WebAudioOutputBufferingEnabled" }
+func (p *WebAudioOutputBufferingEnabled) Scope() Scope          { return ScopeUser }
+func (p *WebAudioOutputBufferingEnabled) Status() Status        { return p.Stat }
+func (p *WebAudioOutputBufferingEnabled) UntypedV() interface{} { return p.Val }
+func (p *WebAudioOutputBufferingEnabled) UnmarshalAs(m json.RawMessage) (interface{}, error) {
+	var v bool
+	if err := json.Unmarshal(m, &v); err != nil {
+		return nil, errors.Wrapf(err, "could not read %s as bool", m)
+	}
+	return v, nil
+}
+func (p *WebAudioOutputBufferingEnabled) SetProto(m *protoreflect.Message) {
+	SetUserProto(m, p.Name(), p.Val)
+}
+func (p *WebAudioOutputBufferingEnabled) Equal(iface interface{}) bool {
+	v, ok := iface.(bool)
+	if !ok {
+		return ok
+	}
+	return cmp.Equal(p.Val, v, cmpopts.EquateEmpty())
+}
+
+// ****************************************************************************
+// 1311. NTPOutlookCardVisible
+// This policy can be modified without rebooting.
+// This is a future policy, it is not present in stable builds.
+// ****************************************************************************
+type NTPOutlookCardVisible struct {
+	Stat Status
+	Val  bool
+}
+
+func (p *NTPOutlookCardVisible) Name() string          { return "NTPOutlookCardVisible" }
+func (p *NTPOutlookCardVisible) Scope() Scope          { return ScopeUser }
+func (p *NTPOutlookCardVisible) Status() Status        { return p.Stat }
+func (p *NTPOutlookCardVisible) UntypedV() interface{} { return p.Val }
+func (p *NTPOutlookCardVisible) UnmarshalAs(m json.RawMessage) (interface{}, error) {
+	var v bool
+	if err := json.Unmarshal(m, &v); err != nil {
+		return nil, errors.Wrapf(err, "could not read %s as bool", m)
+	}
+	return v, nil
+}
+func (p *NTPOutlookCardVisible) SetProto(m *protoreflect.Message) {
+	SetUserProto(m, p.Name(), p.Val)
+}
+func (p *NTPOutlookCardVisible) Equal(iface interface{}) bool {
+	v, ok := iface.(bool)
+	if !ok {
+		return ok
+	}
+	return cmp.Equal(p.Val, v, cmpopts.EquateEmpty())
+}
+
+// ****************************************************************************
+// 1312. NTPSharepointCardVisible
+// This policy can be modified without rebooting.
+// This is a future policy, it is not present in stable builds.
+// ****************************************************************************
+type NTPSharepointCardVisible struct {
+	Stat Status
+	Val  bool
+}
+
+func (p *NTPSharepointCardVisible) Name() string          { return "NTPSharepointCardVisible" }
+func (p *NTPSharepointCardVisible) Scope() Scope          { return ScopeUser }
+func (p *NTPSharepointCardVisible) Status() Status        { return p.Stat }
+func (p *NTPSharepointCardVisible) UntypedV() interface{} { return p.Val }
+func (p *NTPSharepointCardVisible) UnmarshalAs(m json.RawMessage) (interface{}, error) {
+	var v bool
+	if err := json.Unmarshal(m, &v); err != nil {
+		return nil, errors.Wrapf(err, "could not read %s as bool", m)
+	}
+	return v, nil
+}
+func (p *NTPSharepointCardVisible) SetProto(m *protoreflect.Message) {
+	SetUserProto(m, p.Name(), p.Val)
+}
+func (p *NTPSharepointCardVisible) Equal(iface interface{}) bool {
+	v, ok := iface.(bool)
 	if !ok {
 		return ok
 	}
@@ -30318,8 +30391,6 @@ func newByName(name string) (Policy, error) {
 		return &PrintingAllowedBackgroundGraphicsModes{}, nil
 	case "PrintingBackgroundGraphicsDefault":
 		return &PrintingBackgroundGraphicsDefault{}, nil
-	case "LegacySameSiteCookieBehaviorEnabledForDomainList":
-		return &LegacySameSiteCookieBehaviorEnabledForDomainList{}, nil
 	case "PrintJobHistoryExpirationPeriod":
 		return &PrintJobHistoryExpirationPeriod{}, nil
 	case "DeviceLoginScreenScreenMagnifierType":
@@ -30890,8 +30961,6 @@ func newByName(name string) (Policy, error) {
 		return &BatterySaverModeAvailability{}, nil
 	case "TabDiscardingExceptions":
 		return &TabDiscardingExceptions{}, nil
-	case "LacrosDataBackwardMigrationMode":
-		return &LacrosDataBackwardMigrationMode{}, nil
 	case "StrictMimetypeCheckForWorkerScriptsEnabled":
 		return &StrictMimetypeCheckForWorkerScriptsEnabled{}, nil
 	case "RecoveryFactorBehavior":
@@ -31336,6 +31405,14 @@ func newByName(name string) (Policy, error) {
 		return &SelectParserRelaxationEnabled{}, nil
 	case "ClassManagementEnabled":
 		return &ClassManagementEnabled{}, nil
+	case "EnterpriseSearchAggregatorSettings":
+		return &EnterpriseSearchAggregatorSettings{}, nil
+	case "WebAudioOutputBufferingEnabled":
+		return &WebAudioOutputBufferingEnabled{}, nil
+	case "NTPOutlookCardVisible":
+		return &NTPOutlookCardVisible{}, nil
+	case "NTPSharepointCardVisible":
+		return &NTPSharepointCardVisible{}, nil
 	default:
 		return nil, errors.New("Unknown policy " + name)
 	}
