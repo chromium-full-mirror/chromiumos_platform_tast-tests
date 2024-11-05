@@ -859,7 +859,10 @@ func (f *cellularFixture) restartJobsAndWaitOnFailure(ctx context.Context) {
 		}
 		restartOnFailure = append(restartOnFailure, p)
 	}
+	f.restartJobs(ctx, restartOnFailure)
+}
 
+func (f *cellularFixture) restartJobs(ctx context.Context, restartOnFailure []string) {
 	// stop and start jobs instead of upstart.Restart to emulate a reboot.
 	for _, p := range restartOnFailure {
 		testing.ContextLogf(ctx, "Fixture detected a test failure, restarting %s", p)
@@ -1007,6 +1010,12 @@ func (f *cellularFixture) TearDown(ctx context.Context, s *testing.FixtState) {
 			s.Fatalf("Failed to teardown starfish: %s", err)
 		}
 	}
+
+	if f.fixtureFailure {
+		testing.ContextLog(ctx, "Fixture failure detected. Restarting all daemons")
+		f.restartJobs(ctx, []string{hermes.JobName, modemmanager.JobName, shill.JobName})
+	}
+
 	if err := modemmanager.SetModemmanagerLogLevel(ctx, "INFO"); err != nil {
 		s.Fatal("Failed to set Modemmanager log level to INFO: ", err)
 	}
