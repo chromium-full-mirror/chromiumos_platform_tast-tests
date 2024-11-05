@@ -638,6 +638,15 @@ func init() {
 				},
 				ExtraData: []string{"receipt_70mmx80mm.pdf", "printer_add_hwasung_printer_rastertohwasung.ppd.gz", "printer_add_hwasung_printer_rastertohwasung.bin"},
 				ExtraAttr: []string{"informational"},
+			}, {
+				Name: "tsc",
+				Val: &ippprint.Params{
+					PPDFile:      "printer_add_tsc_printer_rastertobarcodetspl.ppd.gz",
+					PrintFile:    "receipt_70mmx80mm.pdf",
+					ExpectedFile: "printer_add_tsc_printer_rastertobarcodetspl.bin",
+				},
+				ExtraData: []string{"receipt_70mmx80mm.pdf", "printer_add_tsc_printer_rastertobarcodetspl.ppd.gz", "printer_add_tsc_printer_rastertobarcodetspl.bin"},
+				ExtraAttr: []string{"informational"},
 			},
 		},
 	})

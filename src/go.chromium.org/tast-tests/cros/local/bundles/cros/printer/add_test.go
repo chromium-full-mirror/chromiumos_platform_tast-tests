@@ -160,6 +160,7 @@ func TestAddParams(t *testing.T) {
 		iTestCustomInput("epson_thermal_receipt", "printer_add_epson_thermal_receipt.ppd", "receipt_70mmx80mm.pdf", "receipt_70mmx80mm.bin"),
 		iTestCustomInput("generic_escpos_receipt", "printer_add_generic_escpos_receipt.ppd", "receipt_70mmx80mm.pdf", "printer_add_generic_escpos_receipt.bin"),
 		iTestCustomInput("hwasung", "printer_add_hwasung_printer_rastertohwasung.ppd.gz", "receipt_70mmx80mm.pdf", "printer_add_hwasung_printer_rastertohwasung.bin"),
+		iTestCustomInput("tsc", "printer_add_tsc_printer_rastertobarcodetspl.ppd.gz", "receipt_70mmx80mm.pdf", "printer_add_tsc_printer_rastertobarcodetspl.bin"),
 	})
 	genparams.Ensure(t, "add.go", code)
 	genparams.Ensure(t, "add_printscanmgr.go", code)

@@ -1,0 +1,5 @@
+{
+  "url": "gs://chromiumos-test-assets-public/tast/cros/printer/printer_add_tsc_printer_rastertobarcodetspl_20241202.ppd.gz",
+  "size": 3298,
+  "sha256sum": "1981bf8606819e84ee4fd000ca55f273d8de9a0308bd80d0898f1e863c239281"
+}
