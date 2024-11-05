@@ -11,6 +11,7 @@ import (
 	"time"
 
 	"go.chromium.org/tast-tests/cros/local/a11y"
+	"go.chromium.org/tast-tests/cros/local/audio"
 	"go.chromium.org/tast-tests/cros/local/chrome"
 	"go.chromium.org/tast-tests/cros/local/chrome/uiauto"
 	"go.chromium.org/tast-tests/cros/local/chrome/uiauto/faillog"
@@ -99,6 +100,17 @@ func LiveCaption(ctx context.Context, s *testing.State) {
 	// Wait until dlc libsoda and libsoda-model-en-us are installed.
 	if err := testing.Poll(ctx, a11y.VerifySodaInstalled, &testing.PollOptions{Timeout: 2 * time.Minute, Interval: 10 * time.Second}); err != nil {
 		s.Fatal("Failed to wait for libsoda dlc to be installed: ", err)
+	}
+
+	// No need for loud volume for this test. Turn it down for more comfortable local debugging.
+	vh, err := audio.NewVolumeHelper(ctx)
+	if err != nil {
+		s.Log("Non-fatal error: Failed to create new a volume helper (are you running on a VM?): ", err)
+	} else {
+		err = vh.SetVolume(ctx, 15)
+		if err != nil {
+			s.Fatal("Failed to set volume: ", err)
+		}
 	}
 
 	// Open the test page and play the audio.
