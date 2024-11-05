@@ -15,6 +15,13 @@ import (
 	"golang.org/x/sys/unix"
 )
 
+// uids used in the socket tests.
+const (
+	RootUID    = 0
+	ShillUID   = 20104
+	ChronosUID = 1000
+)
+
 // SwitchUser calls setreuid to switch the euid to uid, and returns a callback
 // to switch the user back to root.
 func SwitchUser(ctx context.Context, uid int) (cleanupFunc func() error, retErr error) {

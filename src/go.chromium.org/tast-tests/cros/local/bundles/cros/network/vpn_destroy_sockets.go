@@ -15,7 +15,6 @@ import (
 	"go.chromium.org/tast-tests/cros/local/network/testhooks"
 	"go.chromium.org/tast-tests/cros/local/network/virtualnet/l4server"
 	"go.chromium.org/tast-tests/cros/local/network/vpn"
-	"go.chromium.org/tast-tests/cros/local/sysutil"
 	"go.chromium.org/tast/core/ctxutil"
 	"go.chromium.org/tast/core/testing"
 )
@@ -85,15 +84,17 @@ func VPNDestroySockets(ctx context.Context, s *testing.State) {
 	}
 
 	// Set up socket connections.
-	var sockConns []net.Conn
-
 	env := vpnConn.Server.Env()
 	addrs, err := env.GetVethInAddrs(ctx)
 	if err != nil {
 		s.Fatal("Failed to get addrs in VPN env: ", err)
 	}
-	for _, family := range []l4server.Family{l4server.TCP4, l4server.TCP6, l4server.UDP4, l4server.UDP6} {
-		port := 10000 + int(family)
+
+	nextPort := 10000
+	createSockConnForUID := func(uid int, family l4server.Family) net.Conn {
+		port := nextPort
+		nextPort++
+
 		server := l4server.New(family, port, l4server.WithMsgHandler(l4server.Reflector()))
 		if err := env.StartServer(ctx, server.String(), server); err != nil {
 			s.Fatalf("Failed to start %s server: %v", server.String(), err)
@@ -107,31 +108,33 @@ func VPNDestroySockets(ctx context.Context, s *testing.State) {
 			addr = fmt.Sprintf("[%s]:%d", addrs.IPv6Addrs[0], port)
 		}
 
-		// Connect to the l4server from the chronos user. Note that the function
-		// closure here is for making sure that the deferred function can be called
-		// properly.
-		conn := func() net.Conn {
-			backToRoot, err := socketutil.SwitchUser(ctx, int(sysutil.ChronosUID))
-			if err != nil {
-				s.Fatal("Failed to switch user to chronos: ", err)
+		backToRoot, err := socketutil.SwitchUser(ctx, uid)
+		if err != nil {
+			s.Fatalf("Failed to switch user to %v: %v", uid, err)
+		}
+		defer func() {
+			if err := backToRoot(); err != nil {
+				s.Fatal("Failed to switch back to root: ", err)
 			}
-			defer func() {
-				if err := backToRoot(); err != nil {
-					s.Fatal("Failed to switch back to root: ", err)
-				}
-			}()
-
-			conn, err := net.Dial(family.String(), addr)
-			if err != nil {
-				s.Fatalf("Failed to connect to %s: %v", server.String(), err)
-			}
-			if err := socketutil.IOTest(conn); err != nil {
-				s.Fatalf("Failed to do IO test with %s: %v", server.String(), err)
-			}
-			return conn
 		}()
 
-		sockConns = append(sockConns, conn)
+		conn, err := net.Dial(family.String(), addr)
+		if err != nil {
+			s.Fatalf("Failed to connect to %s: %v", server.String(), err)
+		}
+		if err := socketutil.IOTest(conn); err != nil {
+			s.Fatalf("Failed to do IO test with %s: %v", server.String(), err)
+		}
+		return conn
+	}
+
+	var rootSockConns []net.Conn
+	var shillSockConns []net.Conn
+	var chronosSockConns []net.Conn
+	for _, family := range []l4server.Family{l4server.TCP4, l4server.TCP6, l4server.UDP4, l4server.UDP6} {
+		rootSockConns = append(rootSockConns, createSockConnForUID(socketutil.RootUID, family))
+		shillSockConns = append(rootSockConns, createSockConnForUID(socketutil.ShillUID, family))
+		chronosSockConns = append(chronosSockConns, createSockConnForUID(socketutil.ChronosUID, family))
 	}
 
 	// Connect the VPN service. Socket should be destroyed if the VPN is not
@@ -146,18 +149,31 @@ func VPNDestroySockets(ctx context.Context, s *testing.State) {
 		expectedUDPErr = "destination address required"
 	)
 
-	for _, conn := range sockConns {
+	// Sockets owned by root or shill should not be destroyed.
+	for _, conn := range rootSockConns {
+		if err := socketutil.IOTest(conn); err != nil {
+			s.Fatal("Failed to do socket IO for root socket: ", err)
+		}
+	}
+	for _, conn := range shillSockConns {
+		if err := socketutil.IOTest(conn); err != nil {
+			s.Fatal("Failed to do socket IO for shill socket: ", err)
+		}
+	}
+
+	// Sockets owned by chronos should only be destroyed if the VPN is not
+	// split-routing.
+	for _, conn := range chronosSockConns {
 		err := socketutil.IOTest(conn)
 		if splitRouting {
-			// Socket should still be able to use in the split-routing case.
 			if err != nil {
-				s.Fatal("Failed to do socket IO: ", err)
+				s.Fatal("Failed to do socket IO for chronos socket: ", err)
 			}
 		} else {
 			if err == nil {
-				s.Fatal("Unexpected socket IO success")
+				s.Fatal("Unexpected socket IO success for chronos socket")
 			} else if !strings.Contains(err.Error(), expectedTCPErr) && !strings.Contains(err.Error(), expectedUDPErr) {
-				s.Fatal("Unexpected socket IO failure: ", err)
+				s.Fatal("Unexpected socket IO failure for chronos socket: ", err)
 			}
 		}
 	}
