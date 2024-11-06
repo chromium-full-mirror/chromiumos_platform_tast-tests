@@ -15,8 +15,6 @@ import (
 	"go.chromium.org/tast-tests/cros/common/media/caps"
 	"go.chromium.org/tast-tests/cros/local/camera/cca"
 	"go.chromium.org/tast-tests/cros/local/chrome"
-	"go.chromium.org/tast-tests/cros/local/chrome/browser"
-	"go.chromium.org/tast-tests/cros/local/chrome/browser/browserfixt"
 	"go.chromium.org/tast-tests/cros/local/chrome/uiauto"
 	"go.chromium.org/tast-tests/cros/local/chrome/uiauto/faillog"
 	"go.chromium.org/tast-tests/cros/local/chrome/uiauto/mouse"
@@ -104,7 +102,6 @@ func CCAUIDocumentScanning(ctx context.Context, s *testing.State) {
 	runTestWithApp := s.FixtValue().(cca.FixtureData).RunTestWithApp
 	switchScene := s.FixtValue().(cca.FixtureData).SwitchScene
 	cr := s.FixtValue().(cca.FixtureData).Chrome
-	bt := s.FixtValue().(cca.FixtureData).BrowserType
 	s.FixtValue().(cca.FixtureData).SetDebugParams(cca.DebugParams{SaveCameraFolderWhenFail: true})
 
 	subTestTimeout := 30 * time.Second
@@ -125,7 +122,7 @@ func CCAUIDocumentScanning(ctx context.Context, s *testing.State) {
 	}, {
 		name: "testPDFOCR",
 		run: func(ctx context.Context, app *cca.App) error {
-			return testPDFOCR(ctx, app, cr, bt, "hello.", s.OutDir())
+			return testPDFOCR(ctx, app, cr, "hello.", s.OutDir())
 		},
 		scene: "ocr_one_line_3264x2448.jpg",
 	}} {
@@ -378,7 +375,7 @@ func testFixCropArea(ctx context.Context, app *cca.App, cr *chrome.Chrome) error
 }
 
 // testPDFOCR verifies if the saved PDF has `expectedText`.
-func testPDFOCR(ctx context.Context, app *cca.App, cr *chrome.Chrome, bt browser.Type, expectedText, outDirForUITreeDump string) (retErr error) {
+func testPDFOCR(ctx context.Context, app *cca.App, cr *chrome.Chrome, expectedText, outDirForUITreeDump string) (retErr error) {
 	if err := clickShutterAndWaitFor(ctx, app, cca.DocumentReview); err != nil {
 		return errors.Wrap(err, "failed to wait for review UI to show")
 	}
@@ -408,18 +405,12 @@ func testPDFOCR(ctx context.Context, app *cca.App, cr *chrome.Chrome, bt browser
 	testing.ContextLog(ctx, "File path: ", path)
 	testing.ContextLog(ctx, "URL: ", url)
 
-	br, brCleanUp, err := browserfixt.Connect(ctx, cr, bt)
-	if err != nil {
-		return errors.Wrap(err, "failed to set up browser")
-	}
-	defer brCleanUp(ctx)
-
 	// Open `url` in the browser.
-	conn, err := br.NewConn(ctx, url)
+	conn, err := cr.NewConn(ctx, url)
 	if err != nil {
 		return errors.Wrap(err, "failed to open url")
 	}
-	defer br.CloseTarget(ctx, conn.TargetID)
+	defer cr.CloseTarget(ctx, conn.TargetID)
 	defer conn.Close()
 
 	// Connect to Test API to use it with the UI library.

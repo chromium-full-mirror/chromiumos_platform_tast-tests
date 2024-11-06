@@ -13,8 +13,6 @@ import (
 
 	"go.chromium.org/tast-tests/cros/local/camera/cca"
 	"go.chromium.org/tast-tests/cros/local/chrome"
-	"go.chromium.org/tast-tests/cros/local/chrome/browser"
-	"go.chromium.org/tast-tests/cros/local/chrome/browser/browserfixt"
 	"go.chromium.org/tast/core/ctxutil"
 	"go.chromium.org/tast/core/errors"
 	"go.chromium.org/tast/core/testing"
@@ -26,7 +24,7 @@ func init() {
 		Desc:         "Opens CCA and verifies the settings menu behavior",
 		Contacts:     []string{"chromeos-camera-app-eng@google.com", "wtlee@chromium.org"},
 		BugComponent: "b:978428", // ChromeOS > Platform > Technologies > Camera > App & Framework
-		Attr:         []string{
+		Attr: []string{
 			"group:mainline",
 			"informational",
 			"group:release-health",
@@ -40,13 +38,12 @@ func init() {
 // CCAUISettings verifies settings menu behavior.
 func CCAUISettings(ctx context.Context, s *testing.State) {
 	cr := s.FixtValue().(cca.FixtureData).Chrome
-	bt := s.FixtValue().(cca.FixtureData).BrowserType
 	runTestWithApp := s.FixtValue().(cca.FixtureData).RunTestWithApp
 
 	subTestTimeout := 40 * time.Second
 	for _, tst := range []struct {
 		name     string
-		testFunc func(context.Context, *chrome.Chrome, browser.Type, *cca.App) error
+		testFunc func(context.Context, *chrome.Chrome, *cca.App) error
 	}{{
 		"testFeedback",
 		testFeedback,
@@ -66,7 +63,7 @@ func CCAUISettings(ctx context.Context, s *testing.State) {
 				}
 				defer app.CloseSettingMenu(cleanupCtx, cca.MainMenu)
 
-				return tst.testFunc(ctx, cr, bt, app)
+				return tst.testFunc(ctx, cr, app)
 			}, cca.TestWithAppParams{}); err != nil {
 				s.Errorf("Failed to pass %v subtest: %v", tst.name, err)
 			}
@@ -76,7 +73,7 @@ func CCAUISettings(ctx context.Context, s *testing.State) {
 }
 
 // testFeedback checks feedback button functionality.
-func testFeedback(ctx context.Context, cr *chrome.Chrome, _ browser.Type, app *cca.App) error {
+func testFeedback(ctx context.Context, cr *chrome.Chrome, app *cca.App) error {
 	cleanupCtx := ctx
 	ctx, cancel := ctxutil.Shorten(ctx, 10*time.Second)
 	defer cancel()
@@ -101,7 +98,7 @@ func testFeedback(ctx context.Context, cr *chrome.Chrome, _ browser.Type, app *c
 }
 
 // testHelp checks help button functionality.
-func testHelp(ctx context.Context, cr *chrome.Chrome, bt browser.Type, app *cca.App) error {
+func testHelp(ctx context.Context, cr *chrome.Chrome, app *cca.App) error {
 	cleanupCtx := ctx
 	ctx, cancel := ctxutil.Shorten(ctx, 10*time.Second)
 	defer cancel()
@@ -109,15 +106,10 @@ func testHelp(ctx context.Context, cr *chrome.Chrome, bt browser.Type, app *cca.
 	if err := app.Click(ctx, cca.HelpButton); err != nil {
 		return errors.Wrap(err, "failed to click help button")
 	}
-	br, brCleanUp, err := browserfixt.Connect(ctx, cr, bt)
-	if err != nil {
-		return errors.Wrap(err, "failed to connect to browser")
-	}
-	defer brCleanUp(ctx)
 	matcher := func(t *target.Info) bool {
 		return strings.Contains(t.URL, "support.google.com") && t.Type == "page"
 	}
-	hConn, err := br.NewConnForTarget(ctx, matcher)
+	hConn, err := cr.NewConnForTarget(ctx, matcher)
 	if err != nil {
 		return errors.Wrap(err, "failed to open help app")
 	}
