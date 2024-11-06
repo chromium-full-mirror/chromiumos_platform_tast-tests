@@ -74,6 +74,7 @@ func WithNoiseCancellation(
 	if err := cras.WaitUntilFeatureFlagHasValue(ctx, "CrOSLateBootAudioStyleTransfer", config.StyleTransferAllowed); err != nil {
 		return errors.Wrap(err, "feature flag not propagated to CRAS")
 	}
+	// b/377736374: This doesn't work reliably because Chrome may overwrite it.
 	if err := cras.SetVoiceIsolationUIEnabled(ctx, config.VoiceIsolation); err != nil {
 		return errors.Wrap(err, "failed to SetVoiceIsolationUIEnabled")
 	}
