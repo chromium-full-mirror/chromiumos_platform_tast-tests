@@ -76,6 +76,7 @@ func initChromeVideoFixtures() {
 			return getChromeVideoOptions(
 				chrome.ExtraArgs(chromeBypassPermissionsArgs...),
 				chrome.ExtraArgs("--enable-nacl"),
+				chrome.EnableFeatures("NaclAllow"),
 			), nil
 		}),
 		Parent:          "gpuWatchDog",
@@ -93,6 +94,7 @@ func initChromeVideoFixtures() {
 			return getChromeVideoOptions(
 				chrome.ExtraArgs(chromeBypassPermissionsArgs...),
 				chrome.ExtraArgs("--enable-nacl"),
+				chrome.EnableFeatures("NaclAllow"),
 				chrome.EnableFeatures("UseMojoVideoDecoderForPepper"),
 				chrome.ExtraArgs("--disable-accelerated-video-decode"),
 			), nil
