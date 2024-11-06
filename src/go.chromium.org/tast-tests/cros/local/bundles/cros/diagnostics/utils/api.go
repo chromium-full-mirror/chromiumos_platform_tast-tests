@@ -58,8 +58,7 @@ func (m *MojoAPI) RunFetchSystemInfo(ctx context.Context) error {
 		return errors.Wrap(err, "failed to run fetchSystemInfo")
 	}
 
-	if result.BoardName == "" || result.MarketingName == "" ||
-		result.CPUModelName == "" {
+	if result.CPUModelName == "" {
 		return errors.New("failed to get valid system info")
 	}
 
