@@ -191,6 +191,10 @@ func PlayAudioWithDisplayOff(ctx context.Context, s *testing.State) {
 	if err := plugUnplugCharger(ctx, h, true); err != nil {
 		s.Fatal("Failed to plug charger: ", err)
 	} else {
+		accelKeys := &ui.AudioServiceRequest{Expr: "Ctrl+W"}
+		if _, err := audioService.KeyboardAccel(ctx, accelKeys); err != nil {
+			s.Fatal("Failed to close music player: ", err)
+		}
 		performTest()
 	}
 }
