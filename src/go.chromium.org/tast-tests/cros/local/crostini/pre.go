@@ -168,6 +168,10 @@ var LowPerfModels = []string{
 	"katsu",
 	"kodama",
 	"krane",
+	// board nami
+	// TODO(b/349069601): Remove nami devices from low performance models
+	"akali",
+	"bard",
 	// board nautilus
 	"nautilus",
 	"nautiluslte",
