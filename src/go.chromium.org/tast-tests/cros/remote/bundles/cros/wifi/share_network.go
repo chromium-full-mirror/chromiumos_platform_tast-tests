@@ -6,6 +6,8 @@ package wifi
 
 import (
 	"context"
+	"fmt"
+	"path/filepath"
 	"regexp"
 	"time"
 
@@ -28,6 +30,7 @@ import (
 	"go.chromium.org/tast/core/dut"
 	"go.chromium.org/tast/core/errors"
 	"go.chromium.org/tast/core/rpc"
+	"go.chromium.org/tast/core/ssh"
 	"go.chromium.org/tast/core/ssh/linuxssh"
 	"go.chromium.org/tast/core/testing"
 	"go.chromium.org/tast/core/testing/hwdep"
@@ -66,6 +69,13 @@ type shareNetworkTestNetworkConfigs struct {
 	ssidPrefix     string
 	options        []hostapd.Option
 	securityConfig security.ConfigFactory
+}
+
+type screenRecordUtil struct {
+	outDir          string
+	outFileName     string
+	dutConn         *ssh.Conn
+	screenRecordSvc ui.ScreenRecorderServiceClient
 }
 
 const (
@@ -189,6 +199,7 @@ func init() {
 			"tast.cros.chrome.uiauto.quicksettings.QuickSettingsService",
 			"tast.cros.chrome.uiauto.ossettings.OsSettingsService",
 			"tast.cros.ui.AutomationService",
+			"tast.cros.ui.ScreenRecorderService",
 			wifiutil.FaillogServiceName,
 		},
 		VarDeps:      []string{"ui.signinProfileTestExtensionManifestKey"},
@@ -376,10 +387,16 @@ func ShareNetwork(ctx context.Context, s *testing.State) {
 	}
 
 	rpcClient := tf.DUTRPC(wificell.DefaultDUT)
+	recordUtil := screenRecordUtil{
+		outDir:          s.OutDir(),
+		dutConn:         s.DUT().Conn(),
+		screenRecordSvc: ui.NewScreenRecorderServiceClient(rpcClient.Conn),
+	}
 	// Creating user pods, in a fixed order and skipping the guest user since
 	// a user is device owner iff it's added first and there's no need to create guest user pod.
 	for _, user := range []shareNetworkTestUser{deviceOwner, normalUser} {
-		if err := loginAndPerformActions(ctx, rpcClient, loginReqs[user]); err != nil {
+		recordUtil.setOutFileName("record_creating_pods.webm")
+		if err := loginAndPerformActions(ctx, rpcClient, loginReqs[user], recordUtil); err != nil {
 			s.Fatal("Failed to confirm network is available for owner users: ", err)
 		}
 		// Reuse user data once the user pod has created.
@@ -392,7 +409,9 @@ func ShareNetwork(ctx context.Context, s *testing.State) {
 	for _, test := range testScenario {
 		if len(test.networksToJoin) > 0 {
 			user := test.loginAs
-			if err := loginAndPerformActions(ctx, rpcClient, loginReqs[user], configureNetworks(tf, test.networksToJoin)); err != nil {
+
+			recordUtil.setOutFileName("record_configuring_networks.webm")
+			if err := loginAndPerformActions(ctx, rpcClient, loginReqs[user], recordUtil, configureNetworks(tf, test.networksToJoin)); err != nil {
 				s.Fatalf("Failed to configure networks under user %d: %v", user, err)
 			}
 
@@ -416,7 +435,7 @@ func ShareNetwork(ctx context.Context, s *testing.State) {
 		}
 	}(cleanupCtx)
 
-	for _, test := range testScenario {
+	for idx, test := range testScenario {
 		user := test.loginAs
 		var actions []action.Action
 
@@ -431,14 +450,15 @@ func ShareNetwork(ctx context.Context, s *testing.State) {
 			actions = append(actions, verification(rpcClient))
 		}
 
-		if err := loginAndPerformActions(ctx, rpcClient, loginReqs[user], actions...); err != nil {
+		recordUtil.setOutFileName(fmt.Sprintf("record_scenerio_%d.webm", idx))
+		if err := loginAndPerformActions(ctx, rpcClient, loginReqs[user], recordUtil, actions...); err != nil {
 			s.Fatal("Failed to perform test scenario: ", err)
 		}
 	}
 }
 
 // loginAndPerformActions logs in and perform test steps or verifications.
-func loginAndPerformActions(ctx context.Context, rpcClient *rpc.Client, startCrRequest *ui.NewRequest, actions ...action.Action) (retErr error) {
+func loginAndPerformActions(ctx context.Context, rpcClient *rpc.Client, startCrRequest *ui.NewRequest, screenRecorder screenRecordUtil, actions ...action.Action) (retErr error) {
 	cleanupCtx := ctx
 	ctx, cancel := ctxutil.Shorten(ctx, 10*time.Second)
 	defer cancel()
@@ -449,6 +469,12 @@ func loginAndPerformActions(ctx context.Context, rpcClient *rpc.Client, startCrR
 	}
 	defer crSvc.Close(cleanupCtx, &emptypb.Empty{})
 	defer wifiutil.DumpUITreeWithScreenshotToFile(cleanupCtx, rpcClient.Conn, func() bool { return retErr != nil }, "ui_tree")
+
+	// TODO(b/353732727): Remove this function once we no longer need it for debugging.
+	if startCrRequest.LoginMode != ui.LoginMode_LOGIN_MODE_NO_LOGIN {
+		screenRecorder.start(ctx)
+		defer screenRecorder.stopAndSaveVideoOnError(cleanupCtx, func() bool { return retErr != nil })
+	}
 
 	for _, action := range actions {
 		if err := action(ctx); err != nil {
@@ -489,6 +515,33 @@ func joinNetworks(rpcClient *rpc.Client, networks []*shareNetworkTestNetwork, sh
 			}
 		}
 		return nil
+	}
+}
+
+func (s *screenRecordUtil) setOutFileName(fileName string) {
+	s.outFileName = fileName
+}
+
+func (s *screenRecordUtil) start(ctx context.Context) {
+	if _, err := s.screenRecordSvc.Start(ctx, &ui.StartRequest{}); err != nil {
+		testing.ContextLog(ctx, "Dailed to start screen recording: ", err)
+	}
+}
+
+func (s *screenRecordUtil) stopAndSaveVideoOnError(ctx context.Context, hasError func() bool) {
+	resp, err := s.screenRecordSvc.Stop(ctx, &emptypb.Empty{})
+	if err != nil {
+		testing.ContextLog(ctx, "Failed to stop screen recording: ", err)
+		return
+	}
+
+	if !hasError() {
+		return
+	}
+
+	outFilePath := filepath.Join(s.outDir, s.outFileName)
+	if err := linuxssh.GetFile(ctx, s.dutConn, resp.GetFileName(), outFilePath, linuxssh.DereferenceSymlinks); err != nil {
+		testing.ContextLog(ctx, "Failed to fetch the screen recording from DUT: ", err)
 	}
 }
 
