@@ -22,7 +22,7 @@ func init() {
 		Desc:         "Checks that we can run the action without crash",
 		Contacts: []string{
 			"cros-tdm-tpe-eng@google.com",
-			"kerker@google.com",
+			"byronlee@chromium.org",
 		},
 		// ChromeOS > Platform > Enablement > Serviceability > Diagnostic & Health
 		BugComponent: "b:982097",

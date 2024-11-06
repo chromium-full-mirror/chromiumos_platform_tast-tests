@@ -20,7 +20,7 @@ func init() {
 		Desc:         "Monitors the USB event detected properly or not",
 		Contacts: []string{
 			"cros-tdm-tpe-eng@google.com",
-			"kerker@google.com",
+			"chungsheng@google.com",
 		},
 		// ChromeOS > Platform > Enablement > Serviceability > Diagnostic & Health
 		BugComponent: "b:982097",

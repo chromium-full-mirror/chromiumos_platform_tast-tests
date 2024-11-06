@@ -31,7 +31,7 @@ func init() {
 		Desc:         "Check that we can probe cros_healthd for display info",
 		Contacts: []string{
 			"cros-tdm-tpe-eng@google.com",
-			"kerker@google.com",
+			"yycheng@google.com",
 		},
 		// ChromeOS > Platform > Enablement > Serviceability > Diagnostic & Health
 		BugComponent: "b:982097",

@@ -27,7 +27,7 @@ func init() {
 		Desc:         "Checks if cros_healthd can start up an event monitor for a period of time",
 		Contacts: []string{
 			"cros-tdm-tpe-eng@google.com",
-			"kerker@google.com",
+			"weiluanwang@google.com",
 		},
 		// ChromeOS > Platform > Enablement > Serviceability > Diagnostic & Health
 		BugComponent: "b:982097",

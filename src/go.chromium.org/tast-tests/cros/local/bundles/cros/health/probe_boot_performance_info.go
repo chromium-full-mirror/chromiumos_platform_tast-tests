@@ -35,7 +35,7 @@ func init() {
 		Desc:         "Check that we can probe cros_healthd for boot performance info",
 		Contacts: []string{
 			"cros-tdm-tpe-eng@google.com",
-			"kerker@google.com",
+			"byronlee@chromium.org",
 		},
 		// ChromeOS > Platform > Enablement > Serviceability > Diagnostic & Health
 		BugComponent: "b:982097",

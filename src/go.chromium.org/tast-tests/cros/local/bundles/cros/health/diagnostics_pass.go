@@ -84,13 +84,13 @@ func init() {
 			Val:     croshealthd.NewRoutineParams(croshealthd.RoutineMemory),
 			Fixture: "crosHealthdRunningAndRebootDUT",
 		}, {
-			// Contact: kerker@google.com
+			// Contact: chungsheng@google.com
 			Name:              "fingerprint",
 			Val:               croshealthd.NewRoutineParams(croshealthd.RoutineFingerprint),
 			Fixture:           "crosHealthdRunning",
 			ExtraHardwareDeps: hwdep.D(hwdep.FingerprintDiagSupported()),
 		}, {
-			// Contact: kerker@google.com
+			// Contact: chungsheng@google.com
 			Name:              "fingerprint_alive",
 			Val:               croshealthd.NewRoutineParams(croshealthd.RoutineFingerprintAlive),
 			Fixture:           "crosHealthdRunning",

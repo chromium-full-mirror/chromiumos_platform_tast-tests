@@ -34,7 +34,7 @@ func init() {
 			Val:     croshealthd.RoutineParamsV2{Routine: croshealthd.RoutineCPUStressV2},
 			Fixture: "crosHealthdRunningAndRebootDUT",
 		}, {
-			// Contact: kerker@google.com
+			// Contact: yycheng@google.com
 			Name:    "audio_driver",
 			Val:     croshealthd.RoutineParamsV2{Routine: croshealthd.RoutineAudioDriver},
 			Fixture: "crosHealthdRunning",

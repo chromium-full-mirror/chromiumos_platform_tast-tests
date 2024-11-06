@@ -26,7 +26,6 @@ func init() {
 		Desc: "The croshealthd daemon is available and running",
 		Contacts: []string{
 			"cros-tdm-tpe-eng@google.com", // Team mailing list
-			"kerker@google.com",           // Fixture maintainer
 			"menghuan@google.com",         // Fixture maintainer
 		},
 		// ChromeOS > Platform > Enablement > Serviceability > Diagnostic & Health
@@ -43,7 +42,6 @@ func init() {
 		Desc: "The croshealthd daemon is available and running after reboot",
 		Contacts: []string{
 			"cros-tdm-tpe-eng@google.com", // Team mailing list
-			"kerker@google.com",           // Fixture maintainer
 			"yycheng@google.com",          // Fixture maintainer
 		},
 		// ChromeOS > Platform > Enablement > Serviceability > Diagnostic & Health

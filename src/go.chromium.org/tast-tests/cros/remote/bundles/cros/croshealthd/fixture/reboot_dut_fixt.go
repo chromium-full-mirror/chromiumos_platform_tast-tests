@@ -19,7 +19,6 @@ func init() {
 		Desc: "Reboots the DUT",
 		Contacts: []string{
 			"cros-tdm-tpe-eng@google.com", // Team mailing list
-			"kerker@google.com",           // Fixture maintainer
 			"yycheng@google.com",          // Fixture maintainer
 		},
 		// ChromeOS > Platform > Enablement > Serviceability > Diagnostic & Health

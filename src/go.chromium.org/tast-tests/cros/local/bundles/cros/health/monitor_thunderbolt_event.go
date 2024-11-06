@@ -23,7 +23,7 @@ func init() {
 		Desc:         "Monitors the Thunderbolt event detected properly or not",
 		Contacts: []string{
 			"cros-tdm-tpe-eng@google.com",
-			"kerker@google.com",
+			"chungsheng@google.com",
 			"intel.chrome.automation.team@intel.com",
 			"pathan.jilani@intel.com",
 		},

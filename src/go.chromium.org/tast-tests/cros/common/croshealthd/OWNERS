@@ -2,7 +2,6 @@ set noparent
 
 # cros_healthd team:
 menghuan@chromium.org #{LAST_RESORT_SUGGESTION}
-kerker@chromium.org
 chungsheng@google.com
 dennyh@google.com
 weiluanwang@google.com
