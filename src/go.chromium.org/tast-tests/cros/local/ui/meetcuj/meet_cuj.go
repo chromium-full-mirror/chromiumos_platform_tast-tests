@@ -525,8 +525,14 @@ func Run(ctx context.Context, meet MeetTest, cr *chrome.Chrome, testCaseVar func
 		return pv, errors.Wrap(err, "failed to start recording WebRTC metrics")
 	}
 
-	if err := meetHelper.JoinMeetingWithDisabledExperiments(ctx, meetingCode, meet.DisabledExperiments, browser.WithNewWindow()); err != nil {
-		return pv, errors.Wrap(err, "failed to open the hangout meet website")
+	if len(meet.DisabledExperiments) == 0 {
+		if err := meetHelper.JoinMeeting(ctx, meetingCode, browser.WithNewWindow()); err != nil {
+			return pv, errors.Wrap(err, "failed to open the hangout meet website")
+		}
+	} else {
+		if err := meetHelper.JoinMeetingWithDisabledExperiments(ctx, meetingCode, meet.DisabledExperiments, browser.WithNewWindow()); err != nil {
+			return pv, errors.Wrap(err, "failed to open the hangout meet website with disabled experiments")
+		}
 	}
 	defer meetHelper.Close(closeCtx)
 

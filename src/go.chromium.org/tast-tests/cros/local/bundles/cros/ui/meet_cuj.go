@@ -6,6 +6,7 @@ package ui
 
 import (
 	"context"
+	"strconv"
 
 	"go.chromium.org/tast-tests/cros/common/bond"
 	"go.chromium.org/tast-tests/cros/common/media/caps"
@@ -41,6 +42,9 @@ func init() {
 		Vars: []string{
 			"mute",
 			"ui.MeetCUJ.doc",
+
+			// Boolean string to disable experiments.
+			"ui.MeetCUJ.skipDisableExperiments",
 
 			// Parsable test duration, like 10m or 60s, to run the Meet call.
 			// Values can be added over 10 minutes, but this duration flag
@@ -731,12 +735,25 @@ func MeetCUJ(ctx context.Context, s *testing.State) {
 	// Ensure that the Meet test parameters are properly formed.
 	meet := s.Param().(meetcuj.MeetTest)
 
-	if meet.DisabledExperiments == nil {
-		disabledExperiments, err := meetcuj.GetDisabledExperiments(ctx, s.CloudStorage())
+	var skipDisableExperiments bool
+	skipDisableExperimentsStr, ok := s.Var("ui.MeetCUJ.skipDisableExperiments")
+	if ok {
+		var err error
+		skipDisableExperiments, err = strconv.ParseBool(skipDisableExperimentsStr)
 		if err != nil {
-			s.Fatal("Failed to get disabled experiments: ", err)
+			s.Fatal("Failed to parse ui.MeetCUJ.skipDisableExperiments: ", err)
 		}
-		meet.DisabledExperiments = disabledExperiments
+	}
+
+	// Disable experiments if the skipDisableExperiments flag isn't set.
+	if !skipDisableExperiments {
+		if meet.DisabledExperiments == nil {
+			disabledExperiments, err := meetcuj.GetDisabledExperiments(ctx, s.CloudStorage())
+			if err != nil {
+				s.Fatal("Failed to get disabled experiments (if you don't care about disabling Meet experiments, rerun this test with -var=ui.MeetCUJ.skipDisableExperiments=true): ", err)
+			}
+			meet.DisabledExperiments = disabledExperiments
+		}
 	}
 
 	cr := s.FixtValue().(chrome.HasChrome).Chrome()
