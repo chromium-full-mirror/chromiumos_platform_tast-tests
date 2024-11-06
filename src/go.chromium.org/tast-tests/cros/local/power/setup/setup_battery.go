@@ -238,6 +238,8 @@ func chargeBattery(ctx context.Context, batteryPreparationTimeout time.Duration,
 		if !power.IsLinePowerConnected(status) {
 			return testing.PollBreak(errors.Wrap(err, "power source is not connected while charging"))
 		}
+		testing.ContextLogf(ctx, "Current battery percentage is %v%%", status.BatteryPercent)
+		testing.ContextLogf(ctx, "Current display battery percentage is %v%%", status.BatteryDisplayPercent)
 		if status.BatteryPercent < targetPercentage {
 			return errors.New("failed to reach target battery charge")
 		}
