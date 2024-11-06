@@ -266,6 +266,8 @@ func Fio(ctx context.Context, s *testing.State) {
 		if err := a.Command(ctx, fioGuestPath, "--name=create_file", "--create_only=1", "--size=1G", "--filename="+params.readTestFilePath).Run(testexec.DumpLogOnError); err != nil {
 			s.Fatal("Failed to create test file to read: ", err)
 		}
+
+		defer a.Command(ctx, "rm", params.readTestFilePath).Run()
 	}
 
 	var resultLogs = []string{}
