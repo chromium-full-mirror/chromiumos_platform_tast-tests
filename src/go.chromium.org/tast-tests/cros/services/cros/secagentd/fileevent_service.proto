@@ -23,6 +23,7 @@ enum TestCase {
   TPM_KEY = 6;
   AUTH_FACTORS = 7;
   USER_FILES = 8;
+  SYSTEM_PASSWORD = 9;
 }
 
 message TestFileEventsRequest { optional TestCase name = 1; }

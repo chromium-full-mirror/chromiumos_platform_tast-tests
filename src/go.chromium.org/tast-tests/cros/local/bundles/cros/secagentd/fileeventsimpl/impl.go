@@ -500,6 +500,11 @@ func GetFileEventDetails(ctx context.Context, testCase pb.TestCase, cr *chrome.C
 		cmds = appendModifyAttributeCommand(ctx, cmds, outputFile, &sysCmds, xdr.SensitiveFileType_ROOT_FS)
 		return &testDetails{commandDetails: cmds}, nil
 
+	case pb.TestCase_SYSTEM_PASSWORD:
+		fileToRead := "/etc/passwd"
+		cmds = appendHexDumpCommand(ctx, cmds, fileToRead, &sysCmds, xdr.SensitiveFileType_ROOT_FS)
+		return &testDetails{commandDetails: cmds}, nil
+
 	case pb.TestCase_USER_FILES:
 		downloadsPath, err := cryptohome.DownloadsPath(ctx, normalizedUser)
 		if err != nil {
@@ -616,6 +621,20 @@ func appendModifyAttributeCommand(ctx context.Context, cmdDetails []*commandDeta
 		cleanup:  nil})
 	return cmdDetails
 }
+
+func appendHexDumpCommand(ctx context.Context, cmdDetails []*commandDetail, fileName string, sysCmds *map[string]string, fileType xdr.SensitiveFileType) []*commandDetail {
+	cmdDetails = append(cmdDetails, &commandDetail{
+		cmd:      testexec.CommandContext(ctx, (*sysCmds)["hexdump"], fileName),
+		filePath: fileName,
+		cleanup:  nil,
+		expected: &expectedResult{
+			eventType: readEvent,
+			filePath:  fileName,
+			fileType:  fileType},
+	})
+	return cmdDetails
+}
+
 func appendRWCommandDetails(ctx context.Context, cmdDetails []*commandDetail, fileName string, sysCmds *map[string]string, fileType xdr.SensitiveFileType) []*commandDetail {
 	cmdDetails = appendDDCommand(ctx, cmdDetails, fileName, sysCmds, fileType)
 	cmdDetails = appendModifyAttributeCommand(ctx, cmdDetails, fileName, sysCmds, fileType)
