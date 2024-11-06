@@ -13,9 +13,6 @@ import (
 	"go.chromium.org/tast-tests/cros/local/audio"
 	"go.chromium.org/tast-tests/cros/local/audio/crastestclient"
 	"go.chromium.org/tast-tests/cros/local/chrome"
-	"go.chromium.org/tast-tests/cros/local/chrome/browser"
-	"go.chromium.org/tast-tests/cros/local/chrome/browser/browserfixt"
-	"go.chromium.org/tast-tests/cros/local/chrome/lacros/lacrosfixt"
 	"go.chromium.org/tast-tests/cros/local/chrome/uiauto"
 	"go.chromium.org/tast-tests/cros/local/chrome/uiauto/nodewith"
 	"go.chromium.org/tast-tests/cros/local/chrome/uiauto/role"
@@ -142,7 +139,7 @@ func SetUp(ctx context.Context, html, className string) (d driver, e error) {
 		return nil
 	})
 
-	cr, err := browserfixt.NewChrome(ctx, browser.TypeAsh, lacrosfixt.NewConfig(),
+	cr, err := chrome.New(ctx,
 		// Enforce on-device speech recognition.
 		chrome.EnableFeatures("OnDeviceSpeechRecognition"),
 	)
@@ -187,23 +184,14 @@ func SetUp(ctx context.Context, html, className string) (d driver, e error) {
 		return newNoOpDriver(tdh), errors.Wrap(err, "failed to create Test API connection")
 	}
 
-	// Setup a browser.
-	br, closeBrowser, err := browserfixt.SetUp(ctx, cr, browser.TypeAsh)
-	if err != nil {
-		return newNoOpDriver(tdh), errors.Wrap(err, "failed to setup browser")
-	}
-	tdh.Append(func() error {
-		return closeBrowser(cleanUpCtx)
-	})
-
-	brConn, err := a11y.NewTabWithURL(ctx, br, a11y.URLFromHTML(html))
+	brConn, err := a11y.NewTabWithURL(ctx, cr.Browser(), a11y.URLFromHTML(html))
 	if err != nil {
 		return newNoOpDriver(tdh), errors.Wrapf(err, "failed to open a new tab with HTML: %q", html)
 	}
 	tdh.Append(brConn.Close)
 
 	// Close the extra new tab page.
-	if err := br.CloseWithURL(ctx, chrome.NewTabURL); err != nil {
+	if err := cr.Browser().CloseWithURL(ctx, chrome.NewTabURL); err != nil {
 		return newNoOpDriver(tdh), errors.Wrap(err, "failed to close new tab page")
 	}
 

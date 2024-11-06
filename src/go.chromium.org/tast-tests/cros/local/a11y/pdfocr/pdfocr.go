@@ -20,9 +20,6 @@ import (
 	"go.chromium.org/tast-tests/cros/local/a11y"
 	"go.chromium.org/tast-tests/cros/local/a11y/tts"
 	"go.chromium.org/tast-tests/cros/local/chrome"
-	"go.chromium.org/tast-tests/cros/local/chrome/browser"
-	"go.chromium.org/tast-tests/cros/local/chrome/browser/browserfixt"
-	"go.chromium.org/tast-tests/cros/local/chrome/lacros/lacrosfixt"
 	"go.chromium.org/tast-tests/cros/local/dlc"
 	"go.chromium.org/tast-tests/cros/local/shill"
 	"go.chromium.org/tast-tests/cros/local/upstart"
@@ -200,7 +197,7 @@ func RefreshDlc(ctx context.Context, backupDir string) error {
 }
 
 // SetUpHTTPServer sets up a HTTP server that enables file loading and starts a Chrome browser.
-func SetUpHTTPServer(ctx, cleanupCtx context.Context, dataFS http.FileSystem, bt browser.Type) (SetUpData, error) {
+func SetUpHTTPServer(ctx, cleanupCtx context.Context, dataFS http.FileSystem) (SetUpData, error) {
 	setupData := SetUpData{nil, nil, nil, &a11y.TearDownHelper{}}
 
 	// Setup test HTTP server.
@@ -211,10 +208,9 @@ func SetUpHTTPServer(ctx, cleanupCtx context.Context, dataFS http.FileSystem, bt
 		return nil
 	})
 
-	// Launch browser with the PDF OCR feature flag for both Ash and Lacros Chrome.
+	// Launch Chrome with the PDF OCR feature flag.
 	opts := []chrome.Option{chrome.EnableFeatures("PdfOcr", "MediaAppPdfA11yOcr")}
-	lacrosConfig := lacrosfixt.NewConfig(lacrosfixt.ChromeOptions(chrome.LacrosEnableFeatures("PdfOcr")))
-	cr, err := browserfixt.NewChrome(ctx, bt, lacrosConfig, opts...)
+	cr, err := chrome.New(ctx, opts...)
 	if err != nil {
 		return SetUpData{}, errors.Wrap(err, "failed to start Chrome")
 	}

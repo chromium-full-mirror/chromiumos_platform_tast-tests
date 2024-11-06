@@ -16,7 +16,6 @@ import (
 	"go.chromium.org/tast-tests/cros/local/a11y/chromevox"
 	"go.chromium.org/tast-tests/cros/local/a11y/pdfocr"
 	"go.chromium.org/tast-tests/cros/local/a11y/tts"
-	"go.chromium.org/tast-tests/cros/local/chrome/browser"
 	"go.chromium.org/tast-tests/cros/local/chrome/uiauto"
 	"go.chromium.org/tast-tests/cros/local/chrome/uiauto/nodewith"
 	"go.chromium.org/tast-tests/cros/local/chrome/uiauto/role"
@@ -50,7 +49,7 @@ func PDFOCRMultiPage(ctx context.Context, s *testing.State) {
 
 	// TODO(b/289009784): Create a new helper function that sets up a test environment
 	// for PDF OCR using `chromevox.SetUpWithURLWithoutFocusWaiter()`.
-	data, err := pdfocr.SetUpHTTPServer(ctx, cleanupCtx, s.DataFileSystem(), browser.TypeAsh)
+	data, err := pdfocr.SetUpHTTPServer(ctx, cleanupCtx, s.DataFileSystem())
 	if err != nil {
 		s.Fatal("Failed to setup PDF OCR test: ", err)
 	}
