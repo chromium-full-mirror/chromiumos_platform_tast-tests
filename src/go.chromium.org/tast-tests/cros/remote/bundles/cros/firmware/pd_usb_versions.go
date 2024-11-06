@@ -32,7 +32,10 @@ func init() {
 		SoftwareDeps: []string{"chrome"},
 		HardwareDeps: hwdep.D(hwdep.ChromeEC()),
 		Timeout:      20 * time.Minute,
-		Attr:         []string{"group:firmware", "firmware_pd_unstable"},
+		// TODO(b/298675713): This test can cause DUT to permanently lose ethernet,
+		//                    which prevents all subsequent tests from running.
+		//					  Add back attrs after fixing.
+		// Attr:         []string{"group:firmware", "firmware_pd_unstable"},
 		Params: []testing.Param{{
 			Name: "normal",
 			Val:  firmware.PDTestParams{},
