@@ -96,7 +96,7 @@ func init() {
 			Fixture:           "crosHealthdRunning",
 			ExtraHardwareDeps: hwdep.D(hwdep.FingerprintDiagSupported()),
 		}, {
-			// Contact: byronlee@google.com
+			// Contact: byronlee@chromium.org
 			Name:    "disk_read",
 			Val:     croshealthd.NewRoutineParams(croshealthd.RoutineDiskRead),
 			Fixture: "crosHealthdRunning",

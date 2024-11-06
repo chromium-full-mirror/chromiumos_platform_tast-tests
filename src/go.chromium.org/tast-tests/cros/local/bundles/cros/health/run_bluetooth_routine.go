@@ -32,7 +32,7 @@ func init() {
 		Desc:         "Checks that cros_healthd can run Bluetooth routines",
 		Contacts: []string{
 			"cros-tdm-tpe-eng@google.com",
-			"byronlee@google.com",
+			"byronlee@chromium.org",
 		},
 		// ChromeOS > Platform > Enablement > Serviceability > Diagnostic & Health
 		BugComponent: "b:982097",

@@ -26,13 +26,13 @@ func init() {
 		SoftwareDeps: []string{"diagnostics"},
 		Attr:         []string{"group:mainline"},
 		Params: []testing.Param{{
-			// Contact: byronlee@google.com
+			// Contact: byronlee@chromium.org
 			Name:              "battery_capacity",
 			Val:               croshealthd.NewRoutineParams(croshealthd.RoutineBatteryCapacity),
 			Fixture:           "crosHealthdRunning",
 			ExtraHardwareDeps: hwdep.D(hwdep.Battery()),
 		}, {
-			// Contact: byronlee@google.com
+			// Contact: byronlee@chromium.org
 			Name:              "battery_health",
 			Val:               croshealthd.NewRoutineParams(croshealthd.RoutineBatteryHealth),
 			Fixture:           "crosHealthdRunning",

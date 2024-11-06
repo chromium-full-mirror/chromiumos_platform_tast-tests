@@ -44,7 +44,7 @@ func init() {
 		Desc:         "Check that we can probe cros_healthd for battery metrics",
 		Contacts: []string{
 			"cros-tdm-tpe-eng@google.com",
-			"byronlee@google.com",
+			"byronlee@chromium.org",
 		},
 		// ChromeOS > Platform > Enablement > Serviceability > Diagnostic & Health
 		BugComponent: "b:982097",

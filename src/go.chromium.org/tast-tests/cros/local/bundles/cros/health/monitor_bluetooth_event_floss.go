@@ -24,7 +24,7 @@ func init() {
 		Desc:         "Monitors whether Bluetooth events are detected properly when the system is using Floss",
 		Contacts: []string{
 			"cros-tdm-tpe-eng@google.com",
-			"byronlee@google.com",
+			"byronlee@chromium.org",
 		},
 		// ChromeOS > Platform > Enablement > Serviceability > Diagnostic & Health
 		BugComponent: "b:982097",

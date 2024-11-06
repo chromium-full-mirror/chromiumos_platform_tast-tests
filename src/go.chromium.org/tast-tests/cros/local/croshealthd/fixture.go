@@ -66,7 +66,7 @@ func init() {
 		Desc: "The croshealthd daemon is running and the Bluetooth is using BlueZ",
 		Contacts: []string{
 			"cros-tdm-tpe-eng@google.com", // Team mailing list
-			"byronlee@google.com",         // Fixture maintainer
+			"byronlee@chromium.org",       // Fixture maintainer
 		},
 		// ChromeOS > Platform > Enablement > Serviceability > Diagnostic & Health
 		BugComponent:    "b:982097",
@@ -83,7 +83,7 @@ func init() {
 		Desc: "The croshealthd daemon is running and the Bluetooth is using Floss",
 		Contacts: []string{
 			"cros-tdm-tpe-eng@google.com", // Team mailing list
-			"byronlee@google.com",         // Fixture maintainer
+			"byronlee@chromium.org",       // Fixture maintainer
 		},
 		// ChromeOS > Platform > Enablement > Serviceability > Diagnostic & Health
 		BugComponent:    "b:982097",
