@@ -27,6 +27,16 @@ const (
 	HPDirq  HPDLevelValue = "irq"
 )
 
+// USBCCurrentAdvertisement is a type for storing values of current advertisement without pd comm
+type USBCCurrentAdvertisement string
+
+// Supported usbc current advertisement
+const (
+	USBC3A0 USBCCurrentAdvertisement = "3A0"
+	USBC1A5 USBCCurrentAdvertisement = "1A5"
+	USBCusb USBCCurrentAdvertisement = "USB"
+)
+
 const (
 	servoPDStatePollTimeout  time.Duration = 5 * time.Second
 	servoPDStatePollInterval time.Duration = 500 * time.Millisecond
@@ -101,10 +111,9 @@ func (s *Servo) ServoGetDualRoleState(ctx context.Context) (USBPdDualRoleValue, 
 	cmd := fmt.Sprintf("pd %d dualrole", port)
 	out, err := s.RunServoCommandGetOutput(ctx, cmd, matchList)
 	if err != nil {
-		testing.ContextLogf(
-			ctx, "EC command %q failed. Trying older version. (%q)",
-			cmd, err,
-		)
+		testing.ContextLogf(ctx, "EC command %q failed. Trying older version. (%q)",
+			cmd, err)
+
 		// Older DUTs running firmware from before cl:1096654 don't have per-port
 		// dualrole settings. Fall back to the old command.
 		out, err = s.RunServoCommandGetOutput(ctx, "pd dualrole", matchList)
@@ -168,10 +177,9 @@ func (s *Servo) ServoSetDualRole(ctx context.Context, val USBPdDualRoleValue) er
 		cmd := fmt.Sprintf("pd 1 dualrole %s", action)
 		testing.ContextLogf(ctx, "PD Tester running: %s", cmd)
 		if err := s.RunServoCommand(ctx, cmd); err != nil {
-			testing.ContextLogf(
-				ctx, "EC command %q failed. Trying older version. (%q)",
-				cmd, err,
-			)
+			testing.ContextLogf(ctx, "EC command %q failed. Trying older version. (%q)",
+				cmd, err)
+
 			cmd := fmt.Sprintf("pd dualrole %s", action)
 
 			if err := s.RunServoCommand(ctx, cmd); err != nil {
@@ -614,6 +622,37 @@ func (s *Servo) ServoCcDac(ctx context.Context, cc int, param string) error {
 	}
 
 	return err
+}
+
+// ServoCCNoPD connects the servo to the DUT as a source without PD communication
+func (s *Servo) ServoCCNoPD(ctx context.Context, dts bool, connectionType USBCCurrentAdvertisement) error {
+	dtsString := ""
+	if dts {
+		dtsString = "dts"
+	}
+	cmd := fmt.Sprintf("cc nopdsrc%s%s", dtsString, string(connectionType))
+
+	if err := s.RunServoCommand(ctx, cmd); err != nil {
+		testing.ContextLog(ctx, "Could not run servo command, are you on the right version?")
+		testing.ContextLog(ctx, "Try updating servo \"servo_updater --updater_channel latest -- -b servo_v4p1 -c alpha\"")
+		return errors.Wrap(err, "could not run command to enable connection without pd, try verifying servo FW version")
+	}
+
+	if err := testing.Poll(ctx, func(ctx context.Context) error {
+		if chargeSupport, err := s.GetChargeSupport(ctx); err == nil {
+			if chargeSupport.PDType != "USBC" {
+				return errors.Wrap(err, "connection is not USBC")
+			}
+		} else {
+			return errors.Wrap(err, "failed to get charging connection")
+		}
+
+		return nil
+	}, &testing.PollOptions{Timeout: servoPDStatePollTimeout, Interval: servoPDStatePollInterval}); err != nil {
+		return errors.Wrap(err, "expected usbc sink connection")
+	}
+
+	return nil
 }
 
 // ServoGetConnectedStateAfterCCReconnect get the connected state after disconnect/reconnect using PDTester

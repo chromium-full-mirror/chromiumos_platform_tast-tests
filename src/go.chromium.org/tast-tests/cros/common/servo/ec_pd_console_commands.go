@@ -77,6 +77,14 @@ type TypeCInfo struct {
 	PinsCDEF string
 }
 
+// ChargeSupport stores the current DUT's charging information
+type ChargeSupport struct {
+	Port         int
+	PDType       string
+	CurrentLimit int
+	VoltageLimit int
+}
+
 func (pdInfo *DUTPDInfo) getVersionString() string {
 	switch pdInfo.version {
 	case 0:
@@ -105,12 +113,11 @@ func (s *Servo) RequireDUTPDInfo(ctx context.Context) error {
 	}
 
 	if ver, err := strconv.Atoi(out[0][1]); err != nil {
-		testing.ContextLog(
-			ctx,
+		testing.ContextLog(ctx,
 			"PD Version command is not supported. This test is likely running "+
 				"against an old version of the EC. The test will assume the "+
-				" DUT is running the TCPMv1 stack. This may cause errors.",
-		)
+				" DUT is running the TCPMv1 stack. This may cause errors.")
+
 		pdInfo.version = TCPMv1
 	} else {
 		switch ver {
@@ -791,4 +798,54 @@ func (s *Servo) VerifyPins(input, output *TypeCInfo, mfPref MultiFunctionPref) e
 	}
 
 	return nil
+}
+
+// GetChargeSupport returns the DUT's charge information
+func (s *Servo) GetChargeSupport(ctx context.Context) (*ChargeSupport, error) {
+	reEcChgSup := ""
+
+	if s.dutPDInfo.version == PDC {
+		reEcChgSup = `Port[\s]*--Supplier--[\s]*Prio[\s]*-Available Power-.*\s.*P(\d)[\s]+([a-z|A-Z]*)[\s]*[\d]*[\s]*([\d]*)mA[\s]*([\d]*)mV`
+	} else if s.dutPDInfo.version == TCPMv1 || s.dutPDInfo.version == TCPMv2 {
+		reEcChgSup = `port=(\d), type=(\d), cur=([\d]+)mA, vtg=([\d]+)mV`
+	} else {
+		return nil, errors.Errorf("unknown TCPM version (%d)", s.dutPDInfo.version)
+	}
+
+	chgSupOutput, err := s.RunECCommandGetOutput(ctx, "chgsup", []string{reEcChgSup})
+	if err != nil {
+		return nil, errors.Wrap(err, "EC chgsup command failed")
+	}
+
+	port, err := strconv.Atoi(chgSupOutput[0][1])
+	if err != nil {
+		return nil, errors.Wrap(err, "failed to get charge port")
+	}
+
+	pdType := ""
+	if s.dutPDInfo.version == PDC {
+		pdType = chgSupOutput[0][2]
+	} else if s.dutPDInfo.version == TCPMv1 || s.dutPDInfo.version == TCPMv2 {
+		if chgSupOutput[0][2] == "0" {
+			pdType = "PD"
+		} else {
+			pdType = "USBC"
+		}
+	} else {
+		return nil, errors.Errorf("unknown TCPM version (%d)", s.dutPDInfo.version)
+	}
+
+	mA, err := strconv.Atoi(chgSupOutput[0][3])
+	if err != nil {
+		return nil, errors.Wrap(err, "failed to get charge current")
+	}
+
+	mV, err := strconv.Atoi(chgSupOutput[0][4])
+	if err != nil {
+		return nil, errors.Wrap(err, "failed to get charge voltage")
+	}
+
+	ret := &ChargeSupport{port, pdType, mA, mV}
+
+	return ret, nil
 }
