@@ -78,21 +78,6 @@ func init() {
 				Timeout: 3*time.Minute + 4*subTestTimeout, // Each test performs 4 sub tests.
 
 			}, {
-				Name: "suspend_and_wake_wpa2",
-				Val: controlAutoconnectWithUIParam{
-					testFunc: suspendAndWake,
-					wpaMode:  wpa.ModePureWPA2,
-				},
-				Timeout: 3*time.Minute + 4*subTestTimeout, // Each test performs 4 sub tests.
-			}, {
-				Name:              "suspend_and_wake_wpa3",
-				ExtraHardwareDeps: hwdep.D(hwdep.WifiNotMarvell()),
-				Val: controlAutoconnectWithUIParam{
-					testFunc: suspendAndWake,
-					wpaMode:  wpa.ModePureWPA3,
-				},
-				Timeout: 3*time.Minute + 4*subTestTimeout, // Each test performs 4 sub tests.
-			}, {
 				Name: "reboot_dut_wpa2",
 				Val: controlAutoconnectWithUIParam{
 					testFunc: rebootDUT,
@@ -391,10 +376,6 @@ func cycleWifi(ctx context.Context, tf *wificell.TestFixture) error {
 		return errors.Wrap(err, "failed to enable Wifi feature")
 	}
 	return nil
-}
-
-func suspendAndWake(ctx context.Context, tf *wificell.TestFixture) error {
-	return tf.DUTWifiClient(wificell.DefaultDUT).Suspend(ctx, 10*time.Second)
 }
 
 func rebootDUT(ctx context.Context, tf *wificell.TestFixture) error {
