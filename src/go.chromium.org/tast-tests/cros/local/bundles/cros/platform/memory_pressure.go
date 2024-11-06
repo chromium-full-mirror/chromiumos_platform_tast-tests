@@ -9,7 +9,6 @@ import (
 	"strconv"
 	"time"
 
-	"go.chromium.org/tast-tests/cros/local/chrome/browser"
 	"go.chromium.org/tast-tests/cros/local/memory/mempressure"
 	"go.chromium.org/tast/core/testing"
 )
@@ -80,7 +79,7 @@ func MemoryPressure(ctx context.Context, s *testing.State) {
 		s.Fatalf("Failed to parse %s: %v", forceTabVarName, err)
 	}
 
-	testEnv, err := mempressure.NewTestEnv(ctx, s.OutDir(), enableARC, useHugePages, useVulkan, browser.TypeAsh, s.DataPath(mempressure.WPRArchiveName))
+	testEnv, err := mempressure.NewTestEnv(ctx, s.OutDir(), enableARC, useHugePages, useVulkan, s.DataPath(mempressure.WPRArchiveName))
 	if err != nil {
 		s.Fatal("Failed creating the test environment: ", err)
 	}

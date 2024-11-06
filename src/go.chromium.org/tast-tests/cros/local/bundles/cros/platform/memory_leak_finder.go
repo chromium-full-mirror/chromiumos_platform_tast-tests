@@ -8,7 +8,6 @@ import (
 	"context"
 	"time"
 
-	"go.chromium.org/tast-tests/cros/local/chrome/browser"
 	"go.chromium.org/tast-tests/cros/local/memory/mempressure"
 	"go.chromium.org/tast/core/testing"
 )
@@ -34,7 +33,7 @@ func init() {
 
 // MemoryLeakFinder is the main test function.
 func MemoryLeakFinder(ctx context.Context, s *testing.State) {
-	testEnv, err := mempressure.NewTestEnv(ctx, s.OutDir(), false, false, false, browser.TypeAsh, s.DataPath(mempressure.WPRArchiveName))
+	testEnv, err := mempressure.NewTestEnv(ctx, s.OutDir(), false, false, false, s.DataPath(mempressure.WPRArchiveName))
 	if err != nil {
 		s.Fatal("Failed creating the test environment: ", err)
 	}

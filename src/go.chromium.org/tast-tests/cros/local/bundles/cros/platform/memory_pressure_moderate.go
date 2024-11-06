@@ -9,7 +9,6 @@ import (
 	"strconv"
 	"time"
 
-	"go.chromium.org/tast-tests/cros/local/chrome/browser"
 	"go.chromium.org/tast-tests/cros/local/memory/kernelmeter"
 	"go.chromium.org/tast-tests/cros/local/memory/mempressure"
 	"go.chromium.org/tast/core/testing"
@@ -96,7 +95,7 @@ func MemoryPressureModerate(ctx context.Context, s *testing.State) {
 	}
 	s.Log("useHugePages: ", useHugePages)
 
-	testEnv, err := mempressure.NewTestEnv(ctx, s.OutDir(), enableARC, useHugePages, false, browser.TypeAsh, s.DataPath(mempressure.WPRArchiveName))
+	testEnv, err := mempressure.NewTestEnv(ctx, s.OutDir(), enableARC, useHugePages, false, s.DataPath(mempressure.WPRArchiveName))
 	if err != nil {
 		s.Fatal("Failed creating the test environment: ", err)
 	}

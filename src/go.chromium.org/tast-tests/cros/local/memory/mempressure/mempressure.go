@@ -20,10 +20,7 @@ import (
 	"go.chromium.org/tast-tests/cros/common/perf"
 	"go.chromium.org/tast-tests/cros/local/arc"
 	"go.chromium.org/tast-tests/cros/local/chrome"
-	"go.chromium.org/tast-tests/cros/local/chrome/browser"
-	"go.chromium.org/tast-tests/cros/local/chrome/browser/browserfixt"
 	"go.chromium.org/tast-tests/cros/local/chrome/display"
-	"go.chromium.org/tast-tests/cros/local/chrome/lacros/lacrosfixt"
 	hist "go.chromium.org/tast-tests/cros/local/chrome/metrics"
 	"go.chromium.org/tast-tests/cros/local/chrome/webutil"
 	"go.chromium.org/tast-tests/cros/local/memory/kernelmeter"
@@ -131,12 +128,12 @@ type tab struct {
 	conn *chrome.Conn
 
 	// tconn is a connection to the Tast test extension.
-	tconn *browser.TestConn
+	tconn *chrome.TestConn
 }
 
 // newTab opens a new tab which loads the url, and return a tab instance.
-func newTab(ctx context.Context, br *browser.Browser, url string) (*tab, error) {
-	conn, err := br.NewConn(ctx, url)
+func newTab(ctx context.Context, cr *chrome.Chrome, url string) (*tab, error) {
+	conn, err := cr.NewConn(ctx, url)
 	if err != nil {
 		return nil, errors.Wrap(err, "cannot create new renderer")
 	}
@@ -149,7 +146,7 @@ func newTab(ctx context.Context, br *browser.Browser, url string) (*tab, error) 
 	// Because chrome.tabs is not available on the conn, query active tabs
 	// assuming there's only one window so only one active tab, and the active tab is
 	// the newly created tab, in order to get its TabID.
-	tconn, err := br.TestAPIConn(ctx)
+	tconn, err := cr.TestAPIConn(ctx)
 	if err != nil {
 		return nil, errors.Wrap(err, "failed to get the connection to the test extension")
 	}
@@ -262,7 +259,7 @@ func (t *tab) pin(ctx context.Context) error {
 }
 
 // getValidTabIDs returns a list of non-discarded tab IDs.
-func getValidTabIDs(ctx context.Context, tconn *browser.TestConn) ([]int, error) {
+func getValidTabIDs(ctx context.Context, tconn *chrome.TestConn) ([]int, error) {
 	var out []int
 	if err := tconn.Call(ctx, &out, `async () => {
 	  let tabs = await tast.promisify(chrome.tabs.query)({discarded: false});
@@ -274,7 +271,7 @@ func getValidTabIDs(ctx context.Context, tconn *browser.TestConn) ([]int, error)
 }
 
 // getDiscardedTabIDs returns a list of discarded tab IDs.
-func getDiscardedTabIDs(ctx context.Context, tconn *browser.TestConn) ([]int, error) {
+func getDiscardedTabIDs(ctx context.Context, tconn *chrome.TestConn) ([]int, error) {
 	var out []int
 	if err := tconn.Call(ctx, &out, `async () => {
 	  let tabs = await tast.promisify(chrome.tabs.query)({discarded: true});
@@ -286,7 +283,7 @@ func getDiscardedTabIDs(ctx context.Context, tconn *browser.TestConn) ([]int, er
 }
 
 // getAllTabIDs returns a list of all tab IDs.
-func getAllTabIDs(ctx context.Context, tconn *browser.TestConn) ([]int, error) {
+func getAllTabIDs(ctx context.Context, tconn *chrome.TestConn) ([]int, error) {
 	var out []int
 	if err := tconn.Call(ctx, &out, `async () => {
 	  let tabs = await tast.promisify(chrome.tabs.query)({});
@@ -298,7 +295,7 @@ func getAllTabIDs(ctx context.Context, tconn *browser.TestConn) ([]int, error) {
 }
 
 // removeAllTabs physically closes all opened tabs.
-func removeAllTabs(ctx context.Context, tconn *browser.TestConn) error {
+func removeAllTabs(ctx context.Context, tconn *chrome.TestConn) error {
 	// Loop in case something changes as we're closing. Tab seem to get
 	// assigned a new ID when they are discarded so if a discard happens
 	// as we're going then we may end up needing a second time through the
@@ -546,9 +543,9 @@ func closeTabs(ctx context.Context, tabs []*tab) (errRet error) {
 
 // runPhase1 runs the first phase of the test, creating a memory pressure situation by loading multiple tabs
 // into Chrome until the first tab discard occurs. Various measurements are taken as the pressure increases.
-func runPhase1(ctx context.Context, outDir string, br *browser.Browser, p *RunParameters, initialTabSetSize, recentTabSetSize, tabSwitchRepeatCount int, fullMeter *kernelmeter.Meter, rm *resourced.Client, perfValues *perf.Values, tag string) (
+func runPhase1(ctx context.Context, outDir string, cr *chrome.Chrome, p *RunParameters, initialTabSetSize, recentTabSetSize, tabSwitchRepeatCount int, fullMeter *kernelmeter.Meter, rm *resourced.Client, perfValues *perf.Values, tag string) (
 	pinnedTabs, workTabs []*tab, numOpenedTabs, numLostTabs int, errRet error) {
-	tconn, err := br.TestAPIConn(ctx)
+	tconn, err := cr.TestAPIConn(ctx)
 	if err != nil {
 		return nil, nil, 0, 0, errors.Wrap(err, "cannot get TetsConn")
 	}
@@ -596,7 +593,7 @@ func runPhase1(ctx context.Context, outDir string, br *browser.Browser, p *RunPa
 	}
 	urlIndex := 0
 	for i := 0; i < initialTabSetSize; i++ {
-		t, err := newTab(ctx, br, tabURLs[urlIndex])
+		t, err := newTab(ctx, cr, tabURLs[urlIndex])
 		urlIndex = (1 + urlIndex) % len(tabURLs)
 		if err != nil {
 			return nil, nil, 0, 0, errors.Wrap(err, "cannot add initial tab from list")
@@ -696,7 +693,7 @@ func runPhase1(ctx context.Context, outDir string, br *browser.Browser, p *RunPa
 			}
 		}
 
-		t, err := newTab(ctx, br, tabURLs[urlIndex])
+		t, err := newTab(ctx, cr, tabURLs[urlIndex])
 		urlIndex = (1 + urlIndex) % len(tabURLs)
 		if err != nil {
 			return nil, nil, 0, 0, errors.Wrap(err, "cannot add tab from list")
@@ -809,20 +806,20 @@ func runPhase3(ctx context.Context, outDir string, pinnedTabs []*tab, tabSwitchR
 }
 
 // runPhase1SeveralTimes runs phase1 p.OpenCloseRepeatCount times in a row, manually closing tabs between runs.
-func runPhase1SeveralTimes(ctx context.Context, outDir string, br *browser.Browser, p *RunParameters, initialTabSetSize, recentTabSetSize, tabSwitchRepeatCount int, fullMeter *kernelmeter.Meter, rm *resourced.Client, perfValues *perf.Values, basemem *metrics.BaseMemoryStats, arc *arc.ARC) (
+func runPhase1SeveralTimes(ctx context.Context, outDir string, cr *chrome.Chrome, p *RunParameters, initialTabSetSize, recentTabSetSize, tabSwitchRepeatCount int, fullMeter *kernelmeter.Meter, rm *resourced.Client, perfValues *perf.Values, basemem *metrics.BaseMemoryStats, arc *arc.ARC) (
 	errRet error) {
 	var openedTabCounts []int
 	totalOpenedTabs := 0
 	totalLostTabs := 0
 
-	tconn, err := br.TestAPIConn(ctx)
+	tconn, err := cr.TestAPIConn(ctx)
 	if err != nil {
 		return errors.Wrap(err, "cannot get TestConn")
 	}
 
 	for i := 0; i < p.OpenCloseRepeatCount; i++ {
 		tag := fmt.Sprintf("_loop%d", i)
-		pinnedTabs, workTabs, numOpenedTabs, numLostTabs, err := runPhase1(ctx, outDir, br, p, initialTabSetSize, recentTabSetSize, tabSwitchRepeatCount, fullMeter, rm, perfValues, tag)
+		pinnedTabs, workTabs, numOpenedTabs, numLostTabs, err := runPhase1(ctx, outDir, cr, p, initialTabSetSize, recentTabSetSize, tabSwitchRepeatCount, fullMeter, rm, perfValues, tag)
 		if err != nil {
 			return err
 		}
@@ -914,7 +911,7 @@ type RunParameters struct {
 // until the first tab discard occurs.  It takes various measurements as the
 // pressure increases (phase 1) and afterwards (phase 2).
 // Parameter arc is optional - if nil, VM-dependent metrics will be omitted.
-func Run(ctx context.Context, outDir string, br *browser.Browser, arc *arc.ARC, p *RunParameters) (errRet error) {
+func Run(ctx context.Context, outDir string, cr *chrome.Chrome, arc *arc.ARC, p *RunParameters) (errRet error) {
 	const (
 		initialTabSetSize    = 5
 		recentTabSetSize     = 5
@@ -970,7 +967,7 @@ func Run(ctx context.Context, outDir string, br *browser.Browser, arc *arc.ARC, 
 	}
 
 	// Log display size.
-	tconn, err := br.TestAPIConn(ctx)
+	tconn, err := cr.TestAPIConn(ctx)
 	if err != nil {
 		return errors.Wrap(err, "cannot get TestConn")
 	}
@@ -982,7 +979,7 @@ func Run(ctx context.Context, outDir string, br *browser.Browser, arc *arc.ARC, 
 	}
 
 	if p.OpenCloseRepeatCount != 0 {
-		return runPhase1SeveralTimes(ctx, outDir, br, p, initialTabSetSize, recentTabSetSize, tabSwitchRepeatCount, fullMeter, rm, perfValues, basemem, arc)
+		return runPhase1SeveralTimes(ctx, outDir, cr, p, initialTabSetSize, recentTabSetSize, tabSwitchRepeatCount, fullMeter, rm, perfValues, basemem, arc)
 	}
 
 	// -----------------
@@ -990,7 +987,7 @@ func Run(ctx context.Context, outDir string, br *browser.Browser, arc *arc.ARC, 
 	// until a tab is discarded, or until it hits MaxTabCount if IgnoreDiscard
 	// is set.
 	// -----------------
-	pinnedTabs, workTabs, _, _, err := runPhase1(ctx, outDir, br, p, initialTabSetSize, recentTabSetSize, tabSwitchRepeatCount, fullMeter, rm, perfValues, "")
+	pinnedTabs, workTabs, _, _, err := runPhase1(ctx, outDir, cr, p, initialTabSetSize, recentTabSetSize, tabSwitchRepeatCount, fullMeter, rm, perfValues, "")
 
 	defer func() {
 		tabs := append(pinnedTabs, workTabs...)
@@ -1039,15 +1036,13 @@ func Run(ctx context.Context, outDir string, br *browser.Browser, arc *arc.ARC, 
 
 // TestEnv is a struct containing the common setup data for memory pressure tests.
 type TestEnv struct {
-	arc          *arc.ARC
-	cr           *chrome.Chrome
-	br           *browser.Browser
-	closeBrowser func(ctx context.Context) error
-	wpr          *wpr.WPR
+	arc *arc.ARC
+	cr  *chrome.Chrome
+	wpr *wpr.WPR
 }
 
 // NewTestEnv creates a new TestEnv, creating new WPR, Chrome, and ARC instances to use.
-func NewTestEnv(ctx context.Context, outDir string, enableARC, useHugePages, useVulkan bool, bt browser.Type, archive string) (_ *TestEnv, errRet error) {
+func NewTestEnv(ctx context.Context, outDir string, enableARC, useHugePages, useVulkan bool, archive string) (_ *TestEnv, errRet error) {
 	te := &TestEnv{}
 
 	success := false
@@ -1079,13 +1074,12 @@ func NewTestEnv(ctx context.Context, outDir string, enableARC, useHugePages, use
 		opts = append(opts, chrome.EnableFeatures("Vulkan", "DefaultANGLEVulkan", "VulkanFromANGLE"))
 	}
 
-	te.cr, te.br, te.closeBrowser, err = browserfixt.SetUpWithNewChrome(ctx, bt, lacrosfixt.NewConfig(), opts...)
+	te.cr, err = chrome.New(ctx, opts...)
 	if err != nil {
 		return nil, errors.Wrap(err, "cannot start chrome")
 	}
 	defer func() {
 		if errRet != nil {
-			te.closeBrowser(ctx)
 			te.cr.Close(ctx)
 		}
 	}()
@@ -1107,10 +1101,6 @@ func (te *TestEnv) Close(ctx context.Context) {
 		te.arc.Close(ctx)
 		te.arc = nil
 	}
-	if te.closeBrowser != nil {
-		te.closeBrowser(ctx)
-		te.closeBrowser = nil
-	}
 	if te.cr != nil {
 		te.cr.Close(ctx)
 		te.cr = nil
@@ -1122,8 +1112,8 @@ func (te *TestEnv) Close(ctx context.Context) {
 }
 
 // Browser returns the initialized Chrome object in TestEnv.
-func (te *TestEnv) Browser() *browser.Browser {
-	return te.br
+func (te *TestEnv) Browser() *chrome.Chrome {
+	return te.cr
 }
 
 // ARC returns the initialized ARC object in TestEnv (may be nil when no VM).
