@@ -18,9 +18,8 @@ import (
 
 func init() {
 	testing.AddTest(&testing.Test{
-		Func:         IntegrationTestsARC,
-		LacrosStatus: testing.LacrosVariantUnneeded,
-		Desc:         "Verifies ARCVM/ARC++ hardware decode acceleration using a media::VideoDecoder by running the c2_e2e_test APK",
+		Func: IntegrationTestsARC,
+		Desc: "Verifies ARCVM/ARC++ hardware decode acceleration using a media::VideoDecoder by running the c2_e2e_test APK",
 		Contacts: []string{
 			"chromeos-gfx-video@google.com",
 			"pmolinalopez@chromium.org",

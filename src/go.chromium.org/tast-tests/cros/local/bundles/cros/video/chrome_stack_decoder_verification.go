@@ -57,9 +57,8 @@ type chromeStackDecoderVerificationTestParam struct {
 
 func init() {
 	testing.AddTest(&testing.Test{
-		Func:         ChromeStackDecoderVerification,
-		LacrosStatus: testing.LacrosVariantUnneeded,
-		Desc:         "Verifies video decoding using Chrome's stack (via the video_decode_accelerator_tests binary) and either MD5 or SSIM criteria",
+		Func: ChromeStackDecoderVerification,
+		Desc: "Verifies video decoding using Chrome's stack (via the video_decode_accelerator_tests binary) and either MD5 or SSIM criteria",
 		Contacts: []string{
 			"chromeos-gfx-video@google.com",
 			"hiroh@chromium.org",

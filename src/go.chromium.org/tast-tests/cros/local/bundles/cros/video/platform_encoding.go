@@ -65,9 +65,8 @@ type testParam struct {
 
 func init() {
 	testing.AddTest(&testing.Test{
-		Func:         PlatformEncoding,
-		LacrosStatus: testing.LacrosVariantUnknown,
-		Desc:         "Verifies platform encoding by using the libva-utils encoder binaries",
+		Func: PlatformEncoding,
+		Desc: "Verifies platform encoding by using the libva-utils encoder binaries",
 		Contacts: []string{
 			"chromeos-gfx-video@google.com",
 			"hiroh@chromium.org",

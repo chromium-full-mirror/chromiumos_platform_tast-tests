@@ -10,26 +10,22 @@ import (
 
 	"go.chromium.org/tast-tests/cros/common/media/caps"
 	"go.chromium.org/tast-tests/cros/local/bundles/cros/video/play"
-	"go.chromium.org/tast-tests/cros/local/chrome/browser"
-	"go.chromium.org/tast-tests/cros/local/chrome/lacros"
+	"go.chromium.org/tast-tests/cros/local/chrome"
 	"go.chromium.org/tast-tests/cros/local/graphics"
-	"go.chromium.org/tast-tests/cros/local/mountns"
 	"go.chromium.org/tast/core/testing"
 	"go.chromium.org/tast/core/testing/hwdep"
 )
 
 type memCheckParams struct {
-	fileName    string
-	sizes       []graphics.Size
-	videoType   play.VideoType
-	browserType browser.Type
+	fileName  string
+	sizes     []graphics.Size
+	videoType play.VideoType
 }
 
 func init() {
 	testing.AddTest(&testing.Test{
-		Func:         MemCheck,
-		LacrosStatus: testing.LacrosVariantUnneeded,
-		Desc:         "Checks video playback in Chrome has no leaks",
+		Func: MemCheck,
+		Desc: "Checks video playback in Chrome has no leaks",
 		Contacts: []string{
 			"chromeos-gfx-video@google.com",
 			"hiroh@chromium.org",
@@ -41,7 +37,7 @@ func init() {
 		Data:         []string{"video.html", "playback.js"},
 		Params: []testing.Param{{
 			Name:              "av1_hw",
-			Val:               memCheckParams{fileName: "720_av1.mp4", sizes: []graphics.Size{{Width: 1280, Height: 720}}, videoType: play.NormalVideo, browserType: browser.TypeAsh},
+			Val:               memCheckParams{fileName: "720_av1.mp4", sizes: []graphics.Size{{Width: 1280, Height: 720}}, videoType: play.NormalVideo},
 			ExtraAttr:         []string{"group:graphics", "graphics_video", "graphics_nightly"},
 			ExtraData:         []string{"720_av1.mp4"},
 			ExtraSoftwareDeps: []string{"video_overlays", caps.HWDecodeAV1},
@@ -49,7 +45,7 @@ func init() {
 			Timeout:           10 * time.Minute,
 		}, {
 			Name:              "h264_hw",
-			Val:               memCheckParams{fileName: "720_h264.mp4", sizes: []graphics.Size{{Width: 1280, Height: 720}}, videoType: play.NormalVideo, browserType: browser.TypeAsh},
+			Val:               memCheckParams{fileName: "720_h264.mp4", sizes: []graphics.Size{{Width: 1280, Height: 720}}, videoType: play.NormalVideo},
 			ExtraAttr:         []string{"group:graphics", "graphics_video", "graphics_nightly"},
 			ExtraData:         []string{"720_h264.mp4"},
 			ExtraSoftwareDeps: []string{"video_overlays", caps.HWDecodeH264, "proprietary_codecs"},
@@ -57,7 +53,7 @@ func init() {
 			Timeout:           10 * time.Minute,
 		}, {
 			Name:              "h264_hw_inpvd",
-			Val:               memCheckParams{fileName: "720_h264.mp4", sizes: []graphics.Size{{Width: 1280, Height: 720}}, videoType: play.NormalVideo, browserType: browser.TypeAsh},
+			Val:               memCheckParams{fileName: "720_h264.mp4", sizes: []graphics.Size{{Width: 1280, Height: 720}}, videoType: play.NormalVideo},
 			ExtraAttr:         []string{"group:graphics", "graphics_video", "graphics_nightly"},
 			ExtraData:         []string{"720_h264.mp4"},
 			ExtraSoftwareDeps: []string{"video_overlays", caps.HWDecodeH264, "proprietary_codecs"},
@@ -65,7 +61,7 @@ func init() {
 			Timeout:           10 * time.Minute,
 		}, {
 			Name:              "hevc_hw",
-			Val:               memCheckParams{fileName: "720_hevc.mp4", sizes: []graphics.Size{{Width: 1280, Height: 720}}, videoType: play.NormalVideo, browserType: browser.TypeAsh},
+			Val:               memCheckParams{fileName: "720_hevc.mp4", sizes: []graphics.Size{{Width: 1280, Height: 720}}, videoType: play.NormalVideo},
 			ExtraAttr:         []string{"group:graphics", "graphics_video", "graphics_nightly"},
 			ExtraData:         []string{"720_hevc.mp4"},
 			ExtraHardwareDeps: hwdep.D(hwdep.SupportsHEVCVideoDecodingInChrome()),
@@ -74,7 +70,7 @@ func init() {
 			Timeout:           10 * time.Minute,
 		}, {
 			Name:              "vp8_hw",
-			Val:               memCheckParams{fileName: "720_vp8.webm", sizes: []graphics.Size{{Width: 1280, Height: 720}}, videoType: play.NormalVideo, browserType: browser.TypeAsh},
+			Val:               memCheckParams{fileName: "720_vp8.webm", sizes: []graphics.Size{{Width: 1280, Height: 720}}, videoType: play.NormalVideo},
 			ExtraAttr:         []string{"group:graphics", "graphics_video", "graphics_nightly"},
 			ExtraData:         []string{"720_vp8.webm"},
 			ExtraSoftwareDeps: []string{"video_overlays", caps.HWDecodeVP8},
@@ -82,7 +78,7 @@ func init() {
 			Timeout:           10 * time.Minute,
 		}, {
 			Name:              "vp9_hw",
-			Val:               memCheckParams{fileName: "720_vp9.webm", sizes: []graphics.Size{{Width: 1280, Height: 720}}, videoType: play.NormalVideo, browserType: browser.TypeAsh},
+			Val:               memCheckParams{fileName: "720_vp9.webm", sizes: []graphics.Size{{Width: 1280, Height: 720}}, videoType: play.NormalVideo},
 			ExtraAttr:         []string{"group:graphics", "graphics_video", "graphics_nightly"},
 			ExtraData:         []string{"720_vp9.webm"},
 			ExtraSoftwareDeps: []string{"video_overlays", caps.HWDecodeVP9},
@@ -90,7 +86,7 @@ func init() {
 			Timeout:           10 * time.Minute,
 		}, {
 			Name:              "av1_hw_switch",
-			Val:               memCheckParams{fileName: "dash_smpte_av1.mp4.mpd", sizes: []graphics.Size{{Width: 256, Height: 144}, {Width: 426, Height: 240}}, videoType: play.MSEVideo, browserType: browser.TypeAsh},
+			Val:               memCheckParams{fileName: "dash_smpte_av1.mp4.mpd", sizes: []graphics.Size{{Width: 256, Height: 144}, {Width: 426, Height: 240}}, videoType: play.MSEVideo},
 			ExtraAttr:         []string{"group:graphics", "graphics_video", "graphics_nightly"},
 			ExtraData:         append(play.MSEDataFiles(), "dash_smpte_av1.mp4.mpd", "dash_smpte_144.av1.mp4", "dash_smpte_240.av1.mp4"),
 			ExtraSoftwareDeps: []string{"video_overlays", caps.HWDecodeAV1},
@@ -98,7 +94,7 @@ func init() {
 			Timeout:           10 * time.Minute,
 		}, {
 			Name:              "h264_hw_switch",
-			Val:               memCheckParams{fileName: "cars_dash_mp4.mpd", sizes: []graphics.Size{{Width: 256, Height: 144}, {Width: 426, Height: 240}}, videoType: play.MSEVideo, browserType: browser.TypeAsh},
+			Val:               memCheckParams{fileName: "cars_dash_mp4.mpd", sizes: []graphics.Size{{Width: 256, Height: 144}, {Width: 426, Height: 240}}, videoType: play.MSEVideo},
 			ExtraAttr:         []string{"group:graphics", "graphics_video", "graphics_weekly"},
 			ExtraData:         append(play.MSEDataFiles(), "cars_dash_mp4.mpd", "cars_144_h264.mp4", "cars_240_h264.mp4"),
 			ExtraSoftwareDeps: []string{"video_overlays", caps.HWDecodeH264, "proprietary_codecs"},
@@ -106,7 +102,7 @@ func init() {
 			Timeout:           10 * time.Minute,
 		}, {
 			Name:              "hevc_hw_switch",
-			Val:               memCheckParams{fileName: "cars_dash_hevc.mpd", sizes: []graphics.Size{{Width: 256, Height: 144}, {Width: 426, Height: 240}}, videoType: play.MSEVideo, browserType: browser.TypeAsh},
+			Val:               memCheckParams{fileName: "cars_dash_hevc.mpd", sizes: []graphics.Size{{Width: 256, Height: 144}, {Width: 426, Height: 240}}, videoType: play.MSEVideo},
 			ExtraAttr:         []string{"group:graphics", "graphics_video", "graphics_weekly"},
 			ExtraData:         append(play.MSEDataFiles(), "cars_dash_hevc.mpd", "cars_144_hevc.mp4", "cars_240_hevc.mp4"),
 			ExtraHardwareDeps: hwdep.D(hwdep.SupportsHEVCVideoDecodingInChrome()),
@@ -117,31 +113,15 @@ func init() {
 	})
 }
 
-func MemCheck(ctx context.Context, s *testing.State) {
-	// In order for the lacros variants to work correctly, we need to
-	// run the test body in the user mount namespace. See b/244513681.
-	if err := mountns.WithUserSessionMountNS(ctx, func(ctx context.Context) error {
-		memCheck(ctx, s)
-		return nil
-	}); err != nil {
-		s.Fatal("Failed to run test in correct mount namespace: ", err)
-	}
-}
-
-// memCheck plays a given fileName in Chrome and verifies there are no graphics
+// MemCheck plays a given fileName in Chrome and verifies there are no graphics
 // memory leaks by comparing its usage before, during and after.
-func memCheck(ctx context.Context, s *testing.State) {
+func MemCheck(ctx context.Context, s *testing.State) {
+	cr := s.FixtValue().(chrome.HasChrome).Chrome()
 	testOpt := s.Param().(memCheckParams)
 	const unmutePlayer = false
 
-	cr, l, cs, err := lacros.Setup(ctx, s.FixtValue(), testOpt.browserType)
-	if err != nil {
-		s.Fatal("Failed to initialize test: ", err)
-	}
-	defer lacros.CloseLacros(ctx, l)
-
 	testPlay := func() error {
-		return play.TestPlay(ctx, s, cs, cr, testOpt.fileName, testOpt.videoType, play.VerifyHWAcceleratorUsed, unmutePlayer)
+		return play.TestPlay(ctx, s, cr, testOpt.fileName, testOpt.videoType, play.VerifyHWAcceleratorUsed, unmutePlayer)
 	}
 
 	backend, err := graphics.GetBackend()

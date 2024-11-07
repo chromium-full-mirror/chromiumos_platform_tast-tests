@@ -10,7 +10,6 @@ import (
 
 	"go.chromium.org/tast-tests/cros/local/bundles/cros/video/playback"
 	"go.chromium.org/tast-tests/cros/local/chrome"
-	"go.chromium.org/tast-tests/cros/local/chrome/browser"
 	"go.chromium.org/tast-tests/cros/local/graphics"
 	"go.chromium.org/tast/core/testing"
 	"go.chromium.org/tast/core/testing/hwdep"
@@ -18,9 +17,8 @@ import (
 
 func init() {
 	testing.AddTest(&testing.Test{
-		Func:         PlaybackStress,
-		LacrosStatus: testing.LacrosVariantUnneeded,
-		Desc:         "Playback in Chrome browser with system goes to suspend/resume cycle",
+		Func: PlaybackStress,
+		Desc: "Playback in Chrome browser with system goes to suspend/resume cycle",
 		Contacts: []string{
 			"chromeos-gfx-video@google.com",
 			"hiroh@chromium.org",
@@ -42,7 +40,6 @@ func init() {
 				Val: playback.Config{
 					FileName:    "perf/h264/720p_30fps_300frames.h264.mp4",
 					DecoderType: 0,
-					BrowserType: browser.TypeAsh,
 					Duration:    2 * time.Minute,
 				},
 				ExtraSoftwareDeps: []string{"proprietary_codecs", "autotest-capability:hw_dec_h264_1080_30"},
@@ -56,7 +53,6 @@ func init() {
 				Val: playback.Config{
 					FileName:      "perf/h264/720p_30fps_300frames.h264.mp4",
 					DecoderType:   0,
-					BrowserType:   browser.TypeAsh,
 					SuspendResume: true,
 					SuspendSetting: playback.SuspendSetting{
 						PmTestMode:  "none",
@@ -76,7 +72,6 @@ func init() {
 				Val: playback.Config{
 					FileName:      "perf/h264/1080p_30fps_300frames.h264.mp4",
 					DecoderType:   0,
-					BrowserType:   browser.TypeAsh,
 					SuspendResume: true,
 					SuspendSetting: playback.SuspendSetting{
 						PmTestMode:  "none",
@@ -96,7 +91,6 @@ func init() {
 				Val: playback.Config{
 					FileName:      "perf/hevc/720p_30fps_300frames.hevc.mp4",
 					DecoderType:   0,
-					BrowserType:   browser.TypeAsh,
 					SuspendResume: true,
 					SuspendSetting: playback.SuspendSetting{
 						PmTestMode:  "none",
@@ -116,7 +110,6 @@ func init() {
 				Val: playback.Config{
 					FileName:      "perf/hevc/1080p_30fps_300frames.hevc.mp4",
 					DecoderType:   0,
-					BrowserType:   browser.TypeAsh,
 					SuspendResume: true,
 					SuspendSetting: playback.SuspendSetting{
 						PmTestMode:  "none",
@@ -136,7 +129,6 @@ func init() {
 				Val: playback.Config{
 					FileName:      "perf/vp8/720p_30fps_300frames.vp8.webm",
 					DecoderType:   0,
-					BrowserType:   browser.TypeAsh,
 					SuspendResume: true,
 					SuspendSetting: playback.SuspendSetting{
 						PmTestMode:  "none",
@@ -156,7 +148,6 @@ func init() {
 				Val: playback.Config{
 					FileName:      "perf/vp8/1080p_30fps_300frames.vp8.webm",
 					DecoderType:   0,
-					BrowserType:   browser.TypeAsh,
 					SuspendResume: true,
 					SuspendSetting: playback.SuspendSetting{
 						PmTestMode:  "none",
@@ -176,7 +167,6 @@ func init() {
 				Val: playback.Config{
 					FileName:      "perf/vp9/720p_30fps_300frames.vp9.webm",
 					DecoderType:   0,
-					BrowserType:   browser.TypeAsh,
 					SuspendResume: true,
 					SuspendSetting: playback.SuspendSetting{
 						PmTestMode:  "none",
@@ -196,7 +186,6 @@ func init() {
 				Val: playback.Config{
 					FileName:      "perf/vp9/1080p_30fps_300frames.vp9.webm",
 					DecoderType:   0,
-					BrowserType:   browser.TypeAsh,
 					SuspendResume: true,
 					SuspendSetting: playback.SuspendSetting{
 						PmTestMode:  "none",
@@ -216,7 +205,6 @@ func init() {
 				Val: playback.Config{
 					FileName:      "perf/av1/720p_30fps_300frames.av1.mp4",
 					DecoderType:   0,
-					BrowserType:   browser.TypeAsh,
 					SuspendResume: true,
 					SuspendSetting: playback.SuspendSetting{
 						PmTestMode:  "none",
@@ -236,7 +224,6 @@ func init() {
 				Val: playback.Config{
 					FileName:      "perf/av1/1080p_30fps_300frames.av1.mp4",
 					DecoderType:   0,
-					BrowserType:   browser.TypeAsh,
 					SuspendResume: true,
 					SuspendSetting: playback.SuspendSetting{
 						PmTestMode:  "none",
@@ -256,7 +243,6 @@ func init() {
 				Val: playback.Config{
 					FileName:      "perf/h264/720p_30fps_300frames.h264.mp4",
 					DecoderType:   0,
-					BrowserType:   browser.TypeAsh,
 					SuspendResume: true,
 					SuspendSetting: playback.SuspendSetting{
 						PmTestMode:  "none",
@@ -276,7 +262,6 @@ func init() {
 				Val: playback.Config{
 					FileName:      "perf/h264/1080p_30fps_300frames.h264.mp4",
 					DecoderType:   0,
-					BrowserType:   browser.TypeAsh,
 					SuspendResume: true,
 					SuspendSetting: playback.SuspendSetting{
 						PmTestMode:  "none",
@@ -296,7 +281,6 @@ func init() {
 				Val: playback.Config{
 					FileName:      "perf/hevc/720p_30fps_300frames.hevc.mp4",
 					DecoderType:   0,
-					BrowserType:   browser.TypeAsh,
 					SuspendResume: true,
 					SuspendSetting: playback.SuspendSetting{
 						PmTestMode:  "none",
@@ -316,7 +300,6 @@ func init() {
 				Val: playback.Config{
 					FileName:      "perf/hevc/1080p_30fps_300frames.hevc.mp4",
 					DecoderType:   0,
-					BrowserType:   browser.TypeAsh,
 					SuspendResume: true,
 					SuspendSetting: playback.SuspendSetting{
 						PmTestMode:  "none",
@@ -336,7 +319,6 @@ func init() {
 				Val: playback.Config{
 					FileName:      "perf/vp8/720p_30fps_300frames.vp8.webm",
 					DecoderType:   0,
-					BrowserType:   browser.TypeAsh,
 					SuspendResume: true,
 					SuspendSetting: playback.SuspendSetting{
 						PmTestMode:  "none",
@@ -356,7 +338,6 @@ func init() {
 				Val: playback.Config{
 					FileName:      "perf/vp8/1080p_30fps_300frames.vp8.webm",
 					DecoderType:   0,
-					BrowserType:   browser.TypeAsh,
 					SuspendResume: true,
 					SuspendSetting: playback.SuspendSetting{
 						PmTestMode:  "none",
@@ -376,7 +357,6 @@ func init() {
 				Val: playback.Config{
 					FileName:      "perf/vp9/720p_30fps_300frames.vp9.webm",
 					DecoderType:   0,
-					BrowserType:   browser.TypeAsh,
 					SuspendResume: true,
 					SuspendSetting: playback.SuspendSetting{
 						PmTestMode:  "none",
@@ -396,7 +376,6 @@ func init() {
 				Val: playback.Config{
 					FileName:      "perf/vp9/1080p_30fps_300frames.vp9.webm",
 					DecoderType:   0,
-					BrowserType:   browser.TypeAsh,
 					SuspendResume: true,
 					SuspendSetting: playback.SuspendSetting{
 						PmTestMode:  "none",
@@ -416,7 +395,6 @@ func init() {
 				Val: playback.Config{
 					FileName:      "perf/av1/720p_30fps_300frames.av1.mp4",
 					DecoderType:   0,
-					BrowserType:   browser.TypeAsh,
 					SuspendResume: true,
 					SuspendSetting: playback.SuspendSetting{
 						PmTestMode:  "none",
@@ -436,7 +414,6 @@ func init() {
 				Val: playback.Config{
 					FileName:      "perf/av1/1080p_30fps_300frames.av1.mp4",
 					DecoderType:   0,
-					BrowserType:   browser.TypeAsh,
 					SuspendResume: true,
 					SuspendSetting: playback.SuspendSetting{
 						PmTestMode:  "none",
@@ -456,7 +433,6 @@ func init() {
 				Val: playback.Config{
 					FileName:      "perf/h264/720p_30fps_300frames.h264.mp4",
 					DecoderType:   0,
-					BrowserType:   browser.TypeAsh,
 					SuspendResume: true,
 					SuspendSetting: playback.SuspendSetting{
 						PmTestMode:  "freezer",
@@ -476,7 +452,6 @@ func init() {
 				Val: playback.Config{
 					FileName:      "perf/h264/1080p_30fps_300frames.h264.mp4",
 					DecoderType:   0,
-					BrowserType:   browser.TypeAsh,
 					SuspendResume: true,
 					SuspendSetting: playback.SuspendSetting{
 						PmTestMode:  "freezer",
@@ -496,7 +471,6 @@ func init() {
 				Val: playback.Config{
 					FileName:      "perf/hevc/720p_30fps_300frames.hevc.mp4",
 					DecoderType:   0,
-					BrowserType:   browser.TypeAsh,
 					SuspendResume: true,
 					SuspendSetting: playback.SuspendSetting{
 						PmTestMode:  "freezer",
@@ -516,7 +490,6 @@ func init() {
 				Val: playback.Config{
 					FileName:      "perf/hevc/1080p_30fps_300frames.hevc.mp4",
 					DecoderType:   0,
-					BrowserType:   browser.TypeAsh,
 					SuspendResume: true,
 					SuspendSetting: playback.SuspendSetting{
 						PmTestMode:  "freezer",
@@ -536,7 +509,6 @@ func init() {
 				Val: playback.Config{
 					FileName:      "perf/vp8/720p_30fps_300frames.vp8.webm",
 					DecoderType:   0,
-					BrowserType:   browser.TypeAsh,
 					SuspendResume: true,
 					SuspendSetting: playback.SuspendSetting{
 						PmTestMode:  "freezer",
@@ -556,7 +528,6 @@ func init() {
 				Val: playback.Config{
 					FileName:      "perf/vp8/1080p_30fps_300frames.vp8.webm",
 					DecoderType:   0,
-					BrowserType:   browser.TypeAsh,
 					SuspendResume: true,
 					SuspendSetting: playback.SuspendSetting{
 						PmTestMode:  "freezer",
@@ -576,7 +547,6 @@ func init() {
 				Val: playback.Config{
 					FileName:      "perf/vp9/720p_30fps_300frames.vp9.webm",
 					DecoderType:   0,
-					BrowserType:   browser.TypeAsh,
 					SuspendResume: true,
 					SuspendSetting: playback.SuspendSetting{
 						PmTestMode:  "freezer",
@@ -596,7 +566,6 @@ func init() {
 				Val: playback.Config{
 					FileName:      "perf/vp9/1080p_30fps_300frames.vp9.webm",
 					DecoderType:   0,
-					BrowserType:   browser.TypeAsh,
 					SuspendResume: true,
 					SuspendSetting: playback.SuspendSetting{
 						PmTestMode:  "freezer",
@@ -616,7 +585,6 @@ func init() {
 				Val: playback.Config{
 					FileName:      "perf/av1/720p_30fps_300frames.av1.mp4",
 					DecoderType:   0,
-					BrowserType:   browser.TypeAsh,
 					SuspendResume: true,
 					SuspendSetting: playback.SuspendSetting{
 						PmTestMode:  "freezer",
@@ -636,7 +604,6 @@ func init() {
 				Val: playback.Config{
 					FileName:      "perf/av1/1080p_30fps_300frames.av1.mp4",
 					DecoderType:   0,
-					BrowserType:   browser.TypeAsh,
 					SuspendResume: true,
 					SuspendSetting: playback.SuspendSetting{
 						PmTestMode:  "freezer",
@@ -656,7 +623,6 @@ func init() {
 				Val: playback.Config{
 					FileName:      "perf/h264/720p_30fps_300frames.h264.mp4",
 					DecoderType:   0,
-					BrowserType:   browser.TypeAsh,
 					SuspendResume: true,
 					SuspendSetting: playback.SuspendSetting{
 						PmTestMode:  "freezer",
@@ -676,7 +642,6 @@ func init() {
 				Val: playback.Config{
 					FileName:      "perf/h264/1080p_30fps_300frames.h264.mp4",
 					DecoderType:   0,
-					BrowserType:   browser.TypeAsh,
 					SuspendResume: true,
 					SuspendSetting: playback.SuspendSetting{
 						PmTestMode:  "freezer",
@@ -696,7 +661,6 @@ func init() {
 				Val: playback.Config{
 					FileName:      "perf/hevc/720p_30fps_300frames.hevc.mp4",
 					DecoderType:   0,
-					BrowserType:   browser.TypeAsh,
 					SuspendResume: true,
 					SuspendSetting: playback.SuspendSetting{
 						PmTestMode:  "freezer",
@@ -716,7 +680,6 @@ func init() {
 				Val: playback.Config{
 					FileName:      "perf/hevc/1080p_30fps_300frames.hevc.mp4",
 					DecoderType:   0,
-					BrowserType:   browser.TypeAsh,
 					SuspendResume: true,
 					SuspendSetting: playback.SuspendSetting{
 						PmTestMode:  "freezer",
@@ -736,7 +699,6 @@ func init() {
 				Val: playback.Config{
 					FileName:      "perf/vp8/720p_30fps_300frames.vp8.webm",
 					DecoderType:   0,
-					BrowserType:   browser.TypeAsh,
 					SuspendResume: true,
 					SuspendSetting: playback.SuspendSetting{
 						PmTestMode:  "freezer",
@@ -756,7 +718,6 @@ func init() {
 				Val: playback.Config{
 					FileName:      "perf/vp8/1080p_30fps_300frames.vp8.webm",
 					DecoderType:   0,
-					BrowserType:   browser.TypeAsh,
 					SuspendResume: true,
 					SuspendSetting: playback.SuspendSetting{
 						PmTestMode:  "freezer",
@@ -776,7 +737,6 @@ func init() {
 				Val: playback.Config{
 					FileName:      "perf/vp9/720p_30fps_300frames.vp9.webm",
 					DecoderType:   0,
-					BrowserType:   browser.TypeAsh,
 					SuspendResume: true,
 					SuspendSetting: playback.SuspendSetting{
 						PmTestMode:  "freezer",
@@ -796,7 +756,6 @@ func init() {
 				Val: playback.Config{
 					FileName:      "perf/vp9/1080p_30fps_300frames.vp9.webm",
 					DecoderType:   0,
-					BrowserType:   browser.TypeAsh,
 					SuspendResume: true,
 					SuspendSetting: playback.SuspendSetting{
 						PmTestMode:  "freezer",
@@ -816,7 +775,6 @@ func init() {
 				Val: playback.Config{
 					FileName:      "perf/av1/720p_30fps_300frames.av1.mp4",
 					DecoderType:   0,
-					BrowserType:   browser.TypeAsh,
 					SuspendResume: true,
 					SuspendSetting: playback.SuspendSetting{
 						PmTestMode:  "freezer",
@@ -836,7 +794,6 @@ func init() {
 				Val: playback.Config{
 					FileName:      "perf/av1/1080p_30fps_300frames.av1.mp4",
 					DecoderType:   0,
-					BrowserType:   browser.TypeAsh,
 					SuspendResume: true,
 					SuspendSetting: playback.SuspendSetting{
 						PmTestMode:  "freezer",
@@ -856,7 +813,6 @@ func init() {
 				Val: playback.Config{
 					FileName:      "perf/h264/720p_30fps_300frames.h264.mp4",
 					DecoderType:   0,
-					BrowserType:   browser.TypeAsh,
 					SuspendResume: true,
 					SuspendSetting: playback.SuspendSetting{
 						PmTestMode:  "devices",
@@ -876,7 +832,6 @@ func init() {
 				Val: playback.Config{
 					FileName:      "perf/h264/1080p_30fps_300frames.h264.mp4",
 					DecoderType:   0,
-					BrowserType:   browser.TypeAsh,
 					SuspendResume: true,
 					SuspendSetting: playback.SuspendSetting{
 						PmTestMode:  "devices",
@@ -896,7 +851,6 @@ func init() {
 				Val: playback.Config{
 					FileName:      "perf/hevc/720p_30fps_300frames.hevc.mp4",
 					DecoderType:   0,
-					BrowserType:   browser.TypeAsh,
 					SuspendResume: true,
 					SuspendSetting: playback.SuspendSetting{
 						PmTestMode:  "devices",
@@ -916,7 +870,6 @@ func init() {
 				Val: playback.Config{
 					FileName:      "perf/hevc/1080p_30fps_300frames.hevc.mp4",
 					DecoderType:   0,
-					BrowserType:   browser.TypeAsh,
 					SuspendResume: true,
 					SuspendSetting: playback.SuspendSetting{
 						PmTestMode:  "devices",
@@ -936,7 +889,6 @@ func init() {
 				Val: playback.Config{
 					FileName:      "perf/vp8/720p_30fps_300frames.vp8.webm",
 					DecoderType:   0,
-					BrowserType:   browser.TypeAsh,
 					SuspendResume: true,
 					SuspendSetting: playback.SuspendSetting{
 						PmTestMode:  "devices",
@@ -956,7 +908,6 @@ func init() {
 				Val: playback.Config{
 					FileName:      "perf/vp8/1080p_30fps_300frames.vp8.webm",
 					DecoderType:   0,
-					BrowserType:   browser.TypeAsh,
 					SuspendResume: true,
 					SuspendSetting: playback.SuspendSetting{
 						PmTestMode:  "devices",
@@ -976,7 +927,6 @@ func init() {
 				Val: playback.Config{
 					FileName:      "perf/vp9/720p_30fps_300frames.vp9.webm",
 					DecoderType:   0,
-					BrowserType:   browser.TypeAsh,
 					SuspendResume: true,
 					SuspendSetting: playback.SuspendSetting{
 						PmTestMode:  "devices",
@@ -996,7 +946,6 @@ func init() {
 				Val: playback.Config{
 					FileName:      "perf/vp9/1080p_30fps_300frames.vp9.webm",
 					DecoderType:   0,
-					BrowserType:   browser.TypeAsh,
 					SuspendResume: true,
 					SuspendSetting: playback.SuspendSetting{
 						PmTestMode:  "devices",
@@ -1016,7 +965,6 @@ func init() {
 				Val: playback.Config{
 					FileName:      "perf/av1/720p_30fps_300frames.av1.mp4",
 					DecoderType:   0,
-					BrowserType:   browser.TypeAsh,
 					SuspendResume: true,
 					SuspendSetting: playback.SuspendSetting{
 						PmTestMode:  "devices",
@@ -1036,7 +984,6 @@ func init() {
 				Val: playback.Config{
 					FileName:      "perf/av1/1080p_30fps_300frames.av1.mp4",
 					DecoderType:   0,
-					BrowserType:   browser.TypeAsh,
 					SuspendResume: true,
 					SuspendSetting: playback.SuspendSetting{
 						PmTestMode:  "devices",
@@ -1056,7 +1003,6 @@ func init() {
 				Val: playback.Config{
 					FileName:      "perf/h264/720p_30fps_300frames.h264.mp4",
 					DecoderType:   0,
-					BrowserType:   browser.TypeAsh,
 					SuspendResume: true,
 					SuspendSetting: playback.SuspendSetting{
 						PmTestMode:  "devices",
@@ -1076,7 +1022,6 @@ func init() {
 				Val: playback.Config{
 					FileName:      "perf/h264/1080p_30fps_300frames.h264.mp4",
 					DecoderType:   0,
-					BrowserType:   browser.TypeAsh,
 					SuspendResume: true,
 					SuspendSetting: playback.SuspendSetting{
 						PmTestMode:  "devices",
@@ -1096,7 +1041,6 @@ func init() {
 				Val: playback.Config{
 					FileName:      "perf/hevc/720p_30fps_300frames.hevc.mp4",
 					DecoderType:   0,
-					BrowserType:   browser.TypeAsh,
 					SuspendResume: true,
 					SuspendSetting: playback.SuspendSetting{
 						PmTestMode:  "devices",
@@ -1116,7 +1060,6 @@ func init() {
 				Val: playback.Config{
 					FileName:      "perf/hevc/1080p_30fps_300frames.hevc.mp4",
 					DecoderType:   0,
-					BrowserType:   browser.TypeAsh,
 					SuspendResume: true,
 					SuspendSetting: playback.SuspendSetting{
 						PmTestMode:  "devices",
@@ -1136,7 +1079,6 @@ func init() {
 				Val: playback.Config{
 					FileName:      "perf/vp8/720p_30fps_300frames.vp8.webm",
 					DecoderType:   0,
-					BrowserType:   browser.TypeAsh,
 					SuspendResume: true,
 					SuspendSetting: playback.SuspendSetting{
 						PmTestMode:  "devices",
@@ -1156,7 +1098,6 @@ func init() {
 				Val: playback.Config{
 					FileName:      "perf/vp8/1080p_30fps_300frames.vp8.webm",
 					DecoderType:   0,
-					BrowserType:   browser.TypeAsh,
 					SuspendResume: true,
 					SuspendSetting: playback.SuspendSetting{
 						PmTestMode:  "devices",
@@ -1176,7 +1117,6 @@ func init() {
 				Val: playback.Config{
 					FileName:      "perf/vp9/720p_30fps_300frames.vp9.webm",
 					DecoderType:   0,
-					BrowserType:   browser.TypeAsh,
 					SuspendResume: true,
 					SuspendSetting: playback.SuspendSetting{
 						PmTestMode:  "devices",
@@ -1196,7 +1136,6 @@ func init() {
 				Val: playback.Config{
 					FileName:      "perf/vp9/1080p_30fps_300frames.vp9.webm",
 					DecoderType:   0,
-					BrowserType:   browser.TypeAsh,
 					SuspendResume: true,
 					SuspendSetting: playback.SuspendSetting{
 						PmTestMode:  "devices",
@@ -1216,7 +1155,6 @@ func init() {
 				Val: playback.Config{
 					FileName:      "perf/av1/720p_30fps_300frames.av1.mp4",
 					DecoderType:   0,
-					BrowserType:   browser.TypeAsh,
 					SuspendResume: true,
 					SuspendSetting: playback.SuspendSetting{
 						PmTestMode:  "devices",
@@ -1236,7 +1174,6 @@ func init() {
 				Val: playback.Config{
 					FileName:      "perf/av1/1080p_30fps_300frames.av1.mp4",
 					DecoderType:   0,
-					BrowserType:   browser.TypeAsh,
 					SuspendResume: true,
 					SuspendSetting: playback.SuspendSetting{
 						PmTestMode:  "devices",
@@ -1256,7 +1193,6 @@ func init() {
 				Val: playback.Config{
 					FileName:      "perf/h264/720p_30fps_300frames.h264.mp4",
 					DecoderType:   0,
-					BrowserType:   browser.TypeAsh,
 					SuspendResume: true,
 					SuspendSetting: playback.SuspendSetting{
 						PmTestMode:  "platform",
@@ -1276,7 +1212,6 @@ func init() {
 				Val: playback.Config{
 					FileName:      "perf/h264/1080p_30fps_300frames.h264.mp4",
 					DecoderType:   0,
-					BrowserType:   browser.TypeAsh,
 					SuspendResume: true,
 					SuspendSetting: playback.SuspendSetting{
 						PmTestMode:  "platform",
@@ -1296,7 +1231,6 @@ func init() {
 				Val: playback.Config{
 					FileName:      "perf/hevc/720p_30fps_300frames.hevc.mp4",
 					DecoderType:   0,
-					BrowserType:   browser.TypeAsh,
 					SuspendResume: true,
 					SuspendSetting: playback.SuspendSetting{
 						PmTestMode:  "platform",
@@ -1316,7 +1250,6 @@ func init() {
 				Val: playback.Config{
 					FileName:      "perf/hevc/1080p_30fps_300frames.hevc.mp4",
 					DecoderType:   0,
-					BrowserType:   browser.TypeAsh,
 					SuspendResume: true,
 					SuspendSetting: playback.SuspendSetting{
 						PmTestMode:  "platform",
@@ -1336,7 +1269,6 @@ func init() {
 				Val: playback.Config{
 					FileName:      "perf/vp8/720p_30fps_300frames.vp8.webm",
 					DecoderType:   0,
-					BrowserType:   browser.TypeAsh,
 					SuspendResume: true,
 					SuspendSetting: playback.SuspendSetting{
 						PmTestMode:  "platform",
@@ -1356,7 +1288,6 @@ func init() {
 				Val: playback.Config{
 					FileName:      "perf/vp8/1080p_30fps_300frames.vp8.webm",
 					DecoderType:   0,
-					BrowserType:   browser.TypeAsh,
 					SuspendResume: true,
 					SuspendSetting: playback.SuspendSetting{
 						PmTestMode:  "platform",
@@ -1376,7 +1307,6 @@ func init() {
 				Val: playback.Config{
 					FileName:      "perf/vp9/720p_30fps_300frames.vp9.webm",
 					DecoderType:   0,
-					BrowserType:   browser.TypeAsh,
 					SuspendResume: true,
 					SuspendSetting: playback.SuspendSetting{
 						PmTestMode:  "platform",
@@ -1396,7 +1326,6 @@ func init() {
 				Val: playback.Config{
 					FileName:      "perf/vp9/1080p_30fps_300frames.vp9.webm",
 					DecoderType:   0,
-					BrowserType:   browser.TypeAsh,
 					SuspendResume: true,
 					SuspendSetting: playback.SuspendSetting{
 						PmTestMode:  "platform",
@@ -1416,7 +1345,6 @@ func init() {
 				Val: playback.Config{
 					FileName:      "perf/av1/720p_30fps_300frames.av1.mp4",
 					DecoderType:   0,
-					BrowserType:   browser.TypeAsh,
 					SuspendResume: true,
 					SuspendSetting: playback.SuspendSetting{
 						PmTestMode:  "platform",
@@ -1436,7 +1364,6 @@ func init() {
 				Val: playback.Config{
 					FileName:      "perf/av1/1080p_30fps_300frames.av1.mp4",
 					DecoderType:   0,
-					BrowserType:   browser.TypeAsh,
 					SuspendResume: true,
 					SuspendSetting: playback.SuspendSetting{
 						PmTestMode:  "platform",
@@ -1456,7 +1383,6 @@ func init() {
 				Val: playback.Config{
 					FileName:      "perf/h264/720p_30fps_300frames.h264.mp4",
 					DecoderType:   0,
-					BrowserType:   browser.TypeAsh,
 					SuspendResume: true,
 					SuspendSetting: playback.SuspendSetting{
 						PmTestMode:  "platform",
@@ -1476,7 +1402,6 @@ func init() {
 				Val: playback.Config{
 					FileName:      "perf/h264/1080p_30fps_300frames.h264.mp4",
 					DecoderType:   0,
-					BrowserType:   browser.TypeAsh,
 					SuspendResume: true,
 					SuspendSetting: playback.SuspendSetting{
 						PmTestMode:  "platform",
@@ -1496,7 +1421,6 @@ func init() {
 				Val: playback.Config{
 					FileName:      "perf/hevc/720p_30fps_300frames.hevc.mp4",
 					DecoderType:   0,
-					BrowserType:   browser.TypeAsh,
 					SuspendResume: true,
 					SuspendSetting: playback.SuspendSetting{
 						PmTestMode:  "platform",
@@ -1516,7 +1440,6 @@ func init() {
 				Val: playback.Config{
 					FileName:      "perf/hevc/1080p_30fps_300frames.hevc.mp4",
 					DecoderType:   0,
-					BrowserType:   browser.TypeAsh,
 					SuspendResume: true,
 					SuspendSetting: playback.SuspendSetting{
 						PmTestMode:  "platform",
@@ -1536,7 +1459,6 @@ func init() {
 				Val: playback.Config{
 					FileName:      "perf/vp8/720p_30fps_300frames.vp8.webm",
 					DecoderType:   0,
-					BrowserType:   browser.TypeAsh,
 					SuspendResume: true,
 					SuspendSetting: playback.SuspendSetting{
 						PmTestMode:  "platform",
@@ -1556,7 +1478,6 @@ func init() {
 				Val: playback.Config{
 					FileName:      "perf/vp8/1080p_30fps_300frames.vp8.webm",
 					DecoderType:   0,
-					BrowserType:   browser.TypeAsh,
 					SuspendResume: true,
 					SuspendSetting: playback.SuspendSetting{
 						PmTestMode:  "platform",
@@ -1576,7 +1497,6 @@ func init() {
 				Val: playback.Config{
 					FileName:      "perf/vp9/720p_30fps_300frames.vp9.webm",
 					DecoderType:   0,
-					BrowserType:   browser.TypeAsh,
 					SuspendResume: true,
 					SuspendSetting: playback.SuspendSetting{
 						PmTestMode:  "platform",
@@ -1596,7 +1516,6 @@ func init() {
 				Val: playback.Config{
 					FileName:      "perf/vp9/1080p_30fps_300frames.vp9.webm",
 					DecoderType:   0,
-					BrowserType:   browser.TypeAsh,
 					SuspendResume: true,
 					SuspendSetting: playback.SuspendSetting{
 						PmTestMode:  "platform",
@@ -1616,7 +1535,6 @@ func init() {
 				Val: playback.Config{
 					FileName:      "perf/av1/720p_30fps_300frames.av1.mp4",
 					DecoderType:   0,
-					BrowserType:   browser.TypeAsh,
 					SuspendResume: true,
 					SuspendSetting: playback.SuspendSetting{
 						PmTestMode:  "platform",
@@ -1636,7 +1554,6 @@ func init() {
 				Val: playback.Config{
 					FileName:      "perf/av1/1080p_30fps_300frames.av1.mp4",
 					DecoderType:   0,
-					BrowserType:   browser.TypeAsh,
 					SuspendResume: true,
 					SuspendSetting: playback.SuspendSetting{
 						PmTestMode:  "platform",
@@ -1656,7 +1573,6 @@ func init() {
 				Val: playback.Config{
 					FileName:      "perf/h264/720p_30fps_300frames.h264.mp4",
 					DecoderType:   0,
-					BrowserType:   browser.TypeAsh,
 					SuspendResume: true,
 					SuspendSetting: playback.SuspendSetting{
 						PmTestMode:  "processors",
@@ -1676,7 +1592,6 @@ func init() {
 				Val: playback.Config{
 					FileName:      "perf/h264/1080p_30fps_300frames.h264.mp4",
 					DecoderType:   0,
-					BrowserType:   browser.TypeAsh,
 					SuspendResume: true,
 					SuspendSetting: playback.SuspendSetting{
 						PmTestMode:  "processors",
@@ -1696,7 +1611,6 @@ func init() {
 				Val: playback.Config{
 					FileName:      "perf/hevc/720p_30fps_300frames.hevc.mp4",
 					DecoderType:   0,
-					BrowserType:   browser.TypeAsh,
 					SuspendResume: true,
 					SuspendSetting: playback.SuspendSetting{
 						PmTestMode:  "processors",
@@ -1716,7 +1630,6 @@ func init() {
 				Val: playback.Config{
 					FileName:      "perf/hevc/1080p_30fps_300frames.hevc.mp4",
 					DecoderType:   0,
-					BrowserType:   browser.TypeAsh,
 					SuspendResume: true,
 					SuspendSetting: playback.SuspendSetting{
 						PmTestMode:  "processors",
@@ -1736,7 +1649,6 @@ func init() {
 				Val: playback.Config{
 					FileName:      "perf/vp8/720p_30fps_300frames.vp8.webm",
 					DecoderType:   0,
-					BrowserType:   browser.TypeAsh,
 					SuspendResume: true,
 					SuspendSetting: playback.SuspendSetting{
 						PmTestMode:  "processors",
@@ -1756,7 +1668,6 @@ func init() {
 				Val: playback.Config{
 					FileName:      "perf/vp8/1080p_30fps_300frames.vp8.webm",
 					DecoderType:   0,
-					BrowserType:   browser.TypeAsh,
 					SuspendResume: true,
 					SuspendSetting: playback.SuspendSetting{
 						PmTestMode:  "processors",
@@ -1776,7 +1687,6 @@ func init() {
 				Val: playback.Config{
 					FileName:      "perf/vp9/720p_30fps_300frames.vp9.webm",
 					DecoderType:   0,
-					BrowserType:   browser.TypeAsh,
 					SuspendResume: true,
 					SuspendSetting: playback.SuspendSetting{
 						PmTestMode:  "processors",
@@ -1796,7 +1706,6 @@ func init() {
 				Val: playback.Config{
 					FileName:      "perf/vp9/1080p_30fps_300frames.vp9.webm",
 					DecoderType:   0,
-					BrowserType:   browser.TypeAsh,
 					SuspendResume: true,
 					SuspendSetting: playback.SuspendSetting{
 						PmTestMode:  "processors",
@@ -1816,7 +1725,6 @@ func init() {
 				Val: playback.Config{
 					FileName:      "perf/av1/720p_30fps_300frames.av1.mp4",
 					DecoderType:   0,
-					BrowserType:   browser.TypeAsh,
 					SuspendResume: true,
 					SuspendSetting: playback.SuspendSetting{
 						PmTestMode:  "processors",
@@ -1836,7 +1744,6 @@ func init() {
 				Val: playback.Config{
 					FileName:      "perf/av1/1080p_30fps_300frames.av1.mp4",
 					DecoderType:   0,
-					BrowserType:   browser.TypeAsh,
 					SuspendResume: true,
 					SuspendSetting: playback.SuspendSetting{
 						PmTestMode:  "processors",
@@ -1856,7 +1763,6 @@ func init() {
 				Val: playback.Config{
 					FileName:      "perf/h264/720p_30fps_300frames.h264.mp4",
 					DecoderType:   0,
-					BrowserType:   browser.TypeAsh,
 					SuspendResume: true,
 					SuspendSetting: playback.SuspendSetting{
 						PmTestMode:  "core",
@@ -1876,7 +1782,6 @@ func init() {
 				Val: playback.Config{
 					FileName:      "perf/h264/1080p_30fps_300frames.h264.mp4",
 					DecoderType:   0,
-					BrowserType:   browser.TypeAsh,
 					SuspendResume: true,
 					SuspendSetting: playback.SuspendSetting{
 						PmTestMode:  "core",
@@ -1896,7 +1801,6 @@ func init() {
 				Val: playback.Config{
 					FileName:      "perf/hevc/720p_30fps_300frames.hevc.mp4",
 					DecoderType:   0,
-					BrowserType:   browser.TypeAsh,
 					SuspendResume: true,
 					SuspendSetting: playback.SuspendSetting{
 						PmTestMode:  "core",
@@ -1916,7 +1820,6 @@ func init() {
 				Val: playback.Config{
 					FileName:      "perf/hevc/1080p_30fps_300frames.hevc.mp4",
 					DecoderType:   0,
-					BrowserType:   browser.TypeAsh,
 					SuspendResume: true,
 					SuspendSetting: playback.SuspendSetting{
 						PmTestMode:  "core",
@@ -1936,7 +1839,6 @@ func init() {
 				Val: playback.Config{
 					FileName:      "perf/vp8/720p_30fps_300frames.vp8.webm",
 					DecoderType:   0,
-					BrowserType:   browser.TypeAsh,
 					SuspendResume: true,
 					SuspendSetting: playback.SuspendSetting{
 						PmTestMode:  "core",
@@ -1956,7 +1858,6 @@ func init() {
 				Val: playback.Config{
 					FileName:      "perf/vp8/1080p_30fps_300frames.vp8.webm",
 					DecoderType:   0,
-					BrowserType:   browser.TypeAsh,
 					SuspendResume: true,
 					SuspendSetting: playback.SuspendSetting{
 						PmTestMode:  "core",
@@ -1976,7 +1877,6 @@ func init() {
 				Val: playback.Config{
 					FileName:      "perf/vp9/720p_30fps_300frames.vp9.webm",
 					DecoderType:   0,
-					BrowserType:   browser.TypeAsh,
 					SuspendResume: true,
 					SuspendSetting: playback.SuspendSetting{
 						PmTestMode:  "core",
@@ -1996,7 +1896,6 @@ func init() {
 				Val: playback.Config{
 					FileName:      "perf/vp9/1080p_30fps_300frames.vp9.webm",
 					DecoderType:   0,
-					BrowserType:   browser.TypeAsh,
 					SuspendResume: true,
 					SuspendSetting: playback.SuspendSetting{
 						PmTestMode:  "core",
@@ -2016,7 +1915,6 @@ func init() {
 				Val: playback.Config{
 					FileName:      "perf/av1/720p_30fps_300frames.av1.mp4",
 					DecoderType:   0,
-					BrowserType:   browser.TypeAsh,
 					SuspendResume: true,
 					SuspendSetting: playback.SuspendSetting{
 						PmTestMode:  "core",
@@ -2036,7 +1934,6 @@ func init() {
 				Val: playback.Config{
 					FileName:      "perf/av1/1080p_30fps_300frames.av1.mp4",
 					DecoderType:   0,
-					BrowserType:   browser.TypeAsh,
 					SuspendResume: true,
 					SuspendSetting: playback.SuspendSetting{
 						PmTestMode:  "core",

@@ -16,9 +16,8 @@ import (
 
 func init() {
 	testing.AddTest(&testing.Test{
-		Func:         EncodeAccelPerf,
-		LacrosStatus: testing.LacrosVariantUnneeded,
-		Desc:         "Measures hardware video encode performance by running the video_encode_accelerator_perf_tests binary",
+		Func: EncodeAccelPerf,
+		Desc: "Measures hardware video encode performance by running the video_encode_accelerator_perf_tests binary",
 		Contacts: []string{
 			"chromeos-gfx-video@google.com",
 			"hiroh@chromium.org",

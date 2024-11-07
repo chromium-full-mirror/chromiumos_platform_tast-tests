@@ -85,7 +85,6 @@ func genPlaybackStressParam(param playbackStressParam) playback.ParamData {
 	testName := strings.Join(nameSuffices, "_")
 
 	fixture := "chromeVideoStress"
-	brwType := "browser.TypeAsh"
 	deps := append(playback.GenSwDeps(param.codec, param.resolution, param.fps, "hw"), param.extendDeps...)
 
 	var extraAttr []string
@@ -115,7 +114,6 @@ func genPlaybackStressParam(param playbackStressParam) playback.ParamData {
 		Name:          testName,
 		File:          param.file,
 		DecoderType:   playback.Hardware,
-		BrowserType:   brwType,
 		SoftwareDeps:  deps,
 		HardwareDeps:  hwdeps,
 		Data:          []string{param.file},
@@ -137,7 +135,6 @@ func TestPlaybackStressConfig(t *testing.T) {
 		Name:          "h264_720p_30fps_smoke",
 		File:          playback.GenDataPath("h264", 720, 30),
 		DecoderType:   playback.Hardware,
-		BrowserType:   "browser.TypeAsh",
 		SoftwareDeps:  playback.GenSwDeps("h264", 720, 30, "hw"),
 		Data:          []string{playback.GenDataPath("h264", 720, 30)},
 		Fixture:       "chromeVideoStress",
@@ -210,7 +207,6 @@ func TestPlaybackStressConfig(t *testing.T) {
 		Val:  playback.Config{
 			FileName: {{ .File | fmt }},
 			DecoderType: {{ .DecoderType }},
-			BrowserType: {{ .BrowserType }},
 			{{ if or (ne .Grid.Width 0) (ne .Grid.Height 0) }}
 			Grid: coords.Size{
 				Width: {{ .Grid.Width | fmt }},

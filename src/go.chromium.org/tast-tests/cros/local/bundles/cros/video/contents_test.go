@@ -130,7 +130,6 @@ func TestContentsConfig(t *testing.T) {
 		Val: contentsParams{
 			fileName: "{{ .FilePrefix }}.mp4",
 			refFileName: "{{ .FilePrefix }}.ref.png",
-			browserType: browser.TypeAsh,
 		},
 		ExtraData: []string{
 			"{{ .FilePrefix }}.mp4",

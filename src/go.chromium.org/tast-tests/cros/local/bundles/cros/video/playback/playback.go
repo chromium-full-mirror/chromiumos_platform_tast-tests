@@ -21,7 +21,6 @@ import (
 	"go.chromium.org/tast-tests/cros/common/perf"
 	"go.chromium.org/tast-tests/cros/local/chrome"
 	"go.chromium.org/tast-tests/cros/local/chrome/ash"
-	"go.chromium.org/tast-tests/cros/local/chrome/browser"
 	"go.chromium.org/tast-tests/cros/local/chrome/display"
 	"go.chromium.org/tast-tests/cros/local/chrome/metrics"
 	"go.chromium.org/tast-tests/cros/local/coords"
@@ -78,7 +77,6 @@ type PerfSetting struct {
 type Config struct {
 	FileName    string
 	DecoderType DecoderType
-	BrowserType browser.Type
 	// Creates a layout of |Grid.Width| x |Grid.Height| videos for playback. Values less than 1 are clamped to a grid of 1x1.
 	Grid coords.Size
 	// If set, run performance measurement while playing the video.
@@ -110,14 +108,14 @@ func RunTest(ctx context.Context, s *testing.State, tconn *chrome.TestConn, conf
 	if err != nil {
 		s.Fatal("Failed to setup browser: ", err)
 	}
-	bTconn, err := cr.Browser().TestAPIConn(ctx)
+	bTconn, err := cr.TestAPIConn(ctx)
 	if err != nil {
 		s.Fatal("Failed to connect to browser test API: ", err)
 	}
 	// Close the tab and release the resource.
 	defer func(ctx context.Context) {
 		// Connection maybe tampered (e.g. suspend/resume) and we need to re-establish connection.
-		conn, err := reconnectToBrowser(ctx, cr, config.BrowserType)
+		conn, err := reconnectToBrowser(ctx, cr)
 		if err != nil {
 			s.Fatal("Failed to reconnect to browser: ", err)
 		}

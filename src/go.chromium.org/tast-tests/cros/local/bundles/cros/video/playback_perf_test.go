@@ -54,7 +54,6 @@ func genPlaybackPerfParam(codec, file string, resolution, fps int, dec, nameSuff
 		}
 	}
 
-	brwType := "browser.TypeAsh"
 	deps := playback.GenSwDeps(codec, resolution, fps, dec)
 	if len(extendDeps) > 0 {
 		deps = append(deps, extendDeps...)
@@ -72,7 +71,6 @@ func genPlaybackPerfParam(codec, file string, resolution, fps int, dec, nameSuff
 		Name:            testName,
 		File:            file,
 		DecoderType:     decType,
-		BrowserType:     brwType,
 		SoftwareDeps:    deps,
 		HardwareDeps:    hwDeps,
 		Data:            []string{file},
@@ -255,7 +253,6 @@ func TestPlaybackPerfConfig(t *testing.T) {
 		Val:  playback.Config{
 			FileName: {{ .File | fmt }},
 			DecoderType: {{ .DecoderType }},
-			BrowserType: {{ .BrowserType }},
 			{{ if or (ne .Grid.Width 0) (ne .Grid.Height 0) }}
 			Grid: coords.Size{
 				Width: {{ .Grid.Width | fmt }},

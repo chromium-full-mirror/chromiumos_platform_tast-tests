@@ -24,9 +24,8 @@ type chromeStackDecoderPerfParams struct {
 
 func init() {
 	testing.AddTest(&testing.Test{
-		Func:         ChromeStackDecoderPerf,
-		LacrosStatus: testing.LacrosVariantUnneeded,
-		Desc:         "Measures hardware video decode performance of media::VideoDecoders by running the video_decode_accelerator_perf_tests binary (see go/vd-migration)",
+		Func: ChromeStackDecoderPerf,
+		Desc: "Measures hardware video decode performance of media::VideoDecoders by running the video_decode_accelerator_perf_tests binary (see go/vd-migration)",
 		Contacts: []string{
 			"chromeos-gfx-video@google.com",
 			"hiroh@chromium.org",

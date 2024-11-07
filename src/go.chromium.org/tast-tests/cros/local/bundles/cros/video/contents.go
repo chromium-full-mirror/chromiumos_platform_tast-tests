@@ -9,8 +9,7 @@ import (
 
 	"go.chromium.org/tast-tests/cros/common/media/caps"
 	"go.chromium.org/tast-tests/cros/local/bundles/cros/video/play"
-	"go.chromium.org/tast-tests/cros/local/chrome/browser"
-	"go.chromium.org/tast-tests/cros/local/chrome/lacros"
+	"go.chromium.org/tast-tests/cros/local/chrome"
 	"go.chromium.org/tast/core/testing"
 	"go.chromium.org/tast/core/testing/hwdep"
 )
@@ -18,14 +17,12 @@ import (
 type contentsParams struct {
 	fileName    string
 	refFileName string
-	browserType browser.Type
 }
 
 func init() {
 	testing.AddTest(&testing.Test{
-		Func:         Contents,
-		LacrosStatus: testing.LacrosVariantUnneeded,
-		Desc:         "Verifies that a screenshot of a full screen is valid",
+		Func: Contents,
+		Desc: "Verifies that a screenshot of a full screen is valid",
 		Contacts: []string{
 			"chromeos-gfx-video@google.com",
 			"andrescj@chromium.org",
@@ -43,7 +40,6 @@ func init() {
 				Val: contentsParams{
 					fileName:    "still-colors-360p-bt601-limited-srgb.h264.mp4",
 					refFileName: "still-colors-360p-bt601-limited-srgb.h264.ref.png",
-					browserType: browser.TypeAsh,
 				},
 				ExtraData: []string{
 					"still-colors-360p-bt601-limited-srgb.h264.mp4",
@@ -57,7 +53,6 @@ func init() {
 				Val: contentsParams{
 					fileName:    "still-colors-360p-bt601-limited-srgb.h264.mp4",
 					refFileName: "still-colors-360p-bt601-limited-srgb.h264.ref.png",
-					browserType: browser.TypeAsh,
 				},
 				ExtraData: []string{
 					"still-colors-360p-bt601-limited-srgb.h264.mp4",
@@ -70,7 +65,6 @@ func init() {
 				Val: contentsParams{
 					fileName:    "still-colors-480p-bt601-limited-srgb.h264.mp4",
 					refFileName: "still-colors-480p-bt601-limited-srgb.h264.ref.png",
-					browserType: browser.TypeAsh,
 				},
 				ExtraData: []string{
 					"still-colors-480p-bt601-limited-srgb.h264.mp4",
@@ -84,7 +78,6 @@ func init() {
 				Val: contentsParams{
 					fileName:    "still-colors-480p-bt601-limited-srgb.h264.mp4",
 					refFileName: "still-colors-480p-bt601-limited-srgb.h264.ref.png",
-					browserType: browser.TypeAsh,
 				},
 				ExtraData: []string{
 					"still-colors-480p-bt601-limited-srgb.h264.mp4",
@@ -97,7 +90,6 @@ func init() {
 				Val: contentsParams{
 					fileName:    "still-colors-720p-bt601-limited-srgb.h264.mp4",
 					refFileName: "still-colors-720p-bt601-limited-srgb.h264.ref.png",
-					browserType: browser.TypeAsh,
 				},
 				ExtraData: []string{
 					"still-colors-720p-bt601-limited-srgb.h264.mp4",
@@ -111,7 +103,6 @@ func init() {
 				Val: contentsParams{
 					fileName:    "still-colors-720p-bt601-limited-srgb.h264.mp4",
 					refFileName: "still-colors-720p-bt601-limited-srgb.h264.ref.png",
-					browserType: browser.TypeAsh,
 				},
 				ExtraData: []string{
 					"still-colors-720p-bt601-limited-srgb.h264.mp4",
@@ -124,7 +115,6 @@ func init() {
 				Val: contentsParams{
 					fileName:    "still-colors-720p-bt601-full-srgb.h264.mp4",
 					refFileName: "still-colors-720p-bt601-full-srgb.h264.ref.png",
-					browserType: browser.TypeAsh,
 				},
 				ExtraData: []string{
 					"still-colors-720p-bt601-full-srgb.h264.mp4",
@@ -138,7 +128,6 @@ func init() {
 				Val: contentsParams{
 					fileName:    "still-colors-720p-bt601-full-srgb.h264.mp4",
 					refFileName: "still-colors-720p-bt601-full-srgb.h264.ref.png",
-					browserType: browser.TypeAsh,
 				},
 				ExtraData: []string{
 					"still-colors-720p-bt601-full-srgb.h264.mp4",
@@ -151,7 +140,6 @@ func init() {
 				Val: contentsParams{
 					fileName:    "still-colors-720p-bt709-limited-srgb.h264.mp4",
 					refFileName: "still-colors-720p-bt709-limited-srgb.h264.ref.png",
-					browserType: browser.TypeAsh,
 				},
 				ExtraData: []string{
 					"still-colors-720p-bt709-limited-srgb.h264.mp4",
@@ -165,7 +153,6 @@ func init() {
 				Val: contentsParams{
 					fileName:    "still-colors-720p-bt709-limited-srgb.h264.mp4",
 					refFileName: "still-colors-720p-bt709-limited-srgb.h264.ref.png",
-					browserType: browser.TypeAsh,
 				},
 				ExtraData: []string{
 					"still-colors-720p-bt709-limited-srgb.h264.mp4",
@@ -178,7 +165,6 @@ func init() {
 				Val: contentsParams{
 					fileName:    "still-colors-720p-bt709-full-srgb.h264.mp4",
 					refFileName: "still-colors-720p-bt709-full-srgb.h264.ref.png",
-					browserType: browser.TypeAsh,
 				},
 				ExtraData: []string{
 					"still-colors-720p-bt709-full-srgb.h264.mp4",
@@ -192,7 +178,6 @@ func init() {
 				Val: contentsParams{
 					fileName:    "still-colors-720p-bt709-full-srgb.h264.mp4",
 					refFileName: "still-colors-720p-bt709-full-srgb.h264.ref.png",
-					browserType: browser.TypeAsh,
 				},
 				ExtraData: []string{
 					"still-colors-720p-bt709-full-srgb.h264.mp4",
@@ -205,7 +190,6 @@ func init() {
 				Val: contentsParams{
 					fileName:    "still-colors-720p-bt2020-limited-srgb.h264.mp4",
 					refFileName: "still-colors-720p-bt2020-limited-srgb.h264.ref.png",
-					browserType: browser.TypeAsh,
 				},
 				ExtraData: []string{
 					"still-colors-720p-bt2020-limited-srgb.h264.mp4",
@@ -219,7 +203,6 @@ func init() {
 				Val: contentsParams{
 					fileName:    "still-colors-720p-bt2020-limited-srgb.h264.mp4",
 					refFileName: "still-colors-720p-bt2020-limited-srgb.h264.ref.png",
-					browserType: browser.TypeAsh,
 				},
 				ExtraData: []string{
 					"still-colors-720p-bt2020-limited-srgb.h264.mp4",
@@ -232,7 +215,6 @@ func init() {
 				Val: contentsParams{
 					fileName:    "still-colors-720p-bt2020-full-srgb.h264.mp4",
 					refFileName: "still-colors-720p-bt2020-full-srgb.h264.ref.png",
-					browserType: browser.TypeAsh,
 				},
 				ExtraData: []string{
 					"still-colors-720p-bt2020-full-srgb.h264.mp4",
@@ -246,7 +228,6 @@ func init() {
 				Val: contentsParams{
 					fileName:    "still-colors-720p-bt2020-full-srgb.h264.mp4",
 					refFileName: "still-colors-720p-bt2020-full-srgb.h264.ref.png",
-					browserType: browser.TypeAsh,
 				},
 				ExtraData: []string{
 					"still-colors-720p-bt2020-full-srgb.h264.mp4",
@@ -259,7 +240,6 @@ func init() {
 				Val: contentsParams{
 					fileName:    "still-colors-720x480-cropped-to-640x360-bt601-limited-srgb.h264.mp4",
 					refFileName: "still-colors-720x480-cropped-to-640x360-bt601-limited-srgb.h264.ref.png",
-					browserType: browser.TypeAsh,
 				},
 				ExtraData: []string{
 					"still-colors-720x480-cropped-to-640x360-bt601-limited-srgb.h264.mp4",
@@ -273,7 +253,6 @@ func init() {
 				Val: contentsParams{
 					fileName:    "still-colors-720x480-cropped-to-640x360-bt601-limited-srgb.h264.mp4",
 					refFileName: "still-colors-720x480-cropped-to-640x360-bt601-limited-srgb.h264.ref.png",
-					browserType: browser.TypeAsh,
 				},
 				ExtraData: []string{
 					"still-colors-720x480-cropped-to-640x360-bt601-limited-srgb.h264.mp4",
@@ -287,20 +266,15 @@ func init() {
 
 // Contents starts playing a video, takes a screenshot, and checks a few interesting pixels.
 func Contents(ctx context.Context, s *testing.State) {
+	cr := s.FixtValue().(chrome.HasChrome).Chrome()
 	testOpt := s.Param().(contentsParams)
-
-	cr, l, cs, err := lacros.Setup(ctx, s.FixtValue(), testOpt.browserType)
-	if err != nil {
-		s.Fatal("Failed to initialize test: ", err)
-	}
-	defer lacros.CloseLacros(ctx, l)
 
 	tconn, err := cr.TestAPIConn(ctx)
 	if err != nil {
 		s.Fatal("Failed to connect to test API: ", err)
 	}
 
-	if err := play.TestPlayAndScreenshot(ctx, s, tconn, cs, testOpt.fileName, testOpt.refFileName); err != nil {
+	if err := play.TestPlayAndScreenshot(ctx, s, tconn, cr, testOpt.fileName, testOpt.refFileName); err != nil {
 		s.Fatal("TestPlayAndScreenshot failed: ", err)
 	}
 }

@@ -30,9 +30,8 @@ type chromeStackDecoderLegacyTestParam struct {
 
 func init() {
 	testing.AddTest(&testing.Test{
-		Func:         ChromeStackDecoderLegacy,
-		LacrosStatus: testing.LacrosVariantUnneeded,
-		Desc:         "Verifies hardware decode acceleration by running the video_decode_accelerator_tests binary with the legacy implementation",
+		Func: ChromeStackDecoderLegacy,
+		Desc: "Verifies hardware decode acceleration by running the video_decode_accelerator_tests binary with the legacy implementation",
 		Contacts: []string{
 			"chromeos-gfx-video@google.com",
 			"frkoenig@chromium.org",

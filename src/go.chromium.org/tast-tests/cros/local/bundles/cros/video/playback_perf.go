@@ -12,7 +12,6 @@ import (
 	"go.chromium.org/tast-tests/cros/local/bundles/cros/video/playback"
 	"go.chromium.org/tast-tests/cros/local/chrome"
 	"go.chromium.org/tast-tests/cros/local/chrome/ash"
-	"go.chromium.org/tast-tests/cros/local/chrome/browser"
 	"go.chromium.org/tast-tests/cros/local/chrome/display"
 	"go.chromium.org/tast-tests/cros/local/coords"
 	"go.chromium.org/tast-tests/cros/local/media/logging"
@@ -23,9 +22,8 @@ import (
 
 func init() {
 	testing.AddTest(&testing.Test{
-		Func:         PlaybackPerf,
-		LacrosStatus: testing.LacrosVariantUnneeded,
-		Desc:         "Measures video playback performance in Chrome browser with/without HW acceleration",
+		Func: PlaybackPerf,
+		Desc: "Measures video playback performance in Chrome browser with/without HW acceleration",
 		Contacts: []string{
 			"chromeos-gfx-video@google.com",
 			"hiroh@chromium.org",
@@ -48,7 +46,6 @@ func init() {
 				Val: playback.Config{
 					FileName:        "perf/h264/720p_30fps_300frames.h264.mp4",
 					DecoderType:     0,
-					BrowserType:     browser.TypeAsh,
 					PerfMeasurement: true,
 					PerfSetting:     playback.PerfSetting{},
 					Duration:        25 * time.Second,
@@ -63,7 +60,6 @@ func init() {
 				Val: playback.Config{
 					FileName:        "perf/h264/720p_30fps_300frames.h264.mp4",
 					DecoderType:     1,
-					BrowserType:     browser.TypeAsh,
 					PerfMeasurement: true,
 					PerfSetting:     playback.PerfSetting{},
 					Duration:        25 * time.Second,
@@ -78,7 +74,6 @@ func init() {
 				Val: playback.Config{
 					FileName:        "perf/h264/1080p_30fps_300frames.h264.mp4",
 					DecoderType:     0,
-					BrowserType:     browser.TypeAsh,
 					PerfMeasurement: true,
 					PerfSetting:     playback.PerfSetting{},
 					Duration:        25 * time.Second,
@@ -93,7 +88,6 @@ func init() {
 				Val: playback.Config{
 					FileName:        "perf/h264/1080p_30fps_300frames.h264.mp4",
 					DecoderType:     1,
-					BrowserType:     browser.TypeAsh,
 					PerfMeasurement: true,
 					PerfSetting:     playback.PerfSetting{},
 					Duration:        25 * time.Second,
@@ -108,7 +102,6 @@ func init() {
 				Val: playback.Config{
 					FileName:        "perf/h264/1080p_60fps_600frames.h264.mp4",
 					DecoderType:     0,
-					BrowserType:     browser.TypeAsh,
 					PerfMeasurement: true,
 					PerfSetting:     playback.PerfSetting{},
 					Duration:        25 * time.Second,
@@ -124,7 +117,6 @@ func init() {
 				Val: playback.Config{
 					FileName:        "perf/h264/1080p_60fps_600frames.h264.mp4",
 					DecoderType:     1,
-					BrowserType:     browser.TypeAsh,
 					PerfMeasurement: true,
 					PerfSetting:     playback.PerfSetting{},
 					Duration:        25 * time.Second,
@@ -139,7 +131,6 @@ func init() {
 				Val: playback.Config{
 					FileName:        "perf/h264/1080p_120fps_1200frames.h264.mp4",
 					DecoderType:     0,
-					BrowserType:     browser.TypeAsh,
 					PerfMeasurement: true,
 					PerfSetting:     playback.PerfSetting{},
 					Duration:        25 * time.Second,
@@ -154,7 +145,6 @@ func init() {
 				Val: playback.Config{
 					FileName:        "perf/h264/1080p_120fps_1200frames.h264.mp4",
 					DecoderType:     1,
-					BrowserType:     browser.TypeAsh,
 					PerfMeasurement: true,
 					PerfSetting:     playback.PerfSetting{},
 					Duration:        25 * time.Second,
@@ -169,7 +159,6 @@ func init() {
 				Val: playback.Config{
 					FileName:        "perf/h264/2160p_30fps_300frames.h264.mp4",
 					DecoderType:     0,
-					BrowserType:     browser.TypeAsh,
 					PerfMeasurement: true,
 					PerfSetting:     playback.PerfSetting{},
 					Duration:        25 * time.Second,
@@ -184,7 +173,6 @@ func init() {
 				Val: playback.Config{
 					FileName:        "perf/h264/2160p_30fps_300frames.h264.mp4",
 					DecoderType:     1,
-					BrowserType:     browser.TypeAsh,
 					PerfMeasurement: true,
 					PerfSetting:     playback.PerfSetting{},
 					Duration:        25 * time.Second,
@@ -199,7 +187,6 @@ func init() {
 				Val: playback.Config{
 					FileName:        "perf/h264/2160p_60fps_600frames.h264.mp4",
 					DecoderType:     0,
-					BrowserType:     browser.TypeAsh,
 					PerfMeasurement: true,
 					PerfSetting:     playback.PerfSetting{},
 					Duration:        25 * time.Second,
@@ -214,7 +201,6 @@ func init() {
 				Val: playback.Config{
 					FileName:        "perf/h264/2160p_60fps_600frames.h264.mp4",
 					DecoderType:     1,
-					BrowserType:     browser.TypeAsh,
 					PerfMeasurement: true,
 					PerfSetting:     playback.PerfSetting{},
 					Duration:        25 * time.Second,
@@ -229,7 +215,6 @@ func init() {
 				Val: playback.Config{
 					FileName:        "perf/vp8/720p_30fps_300frames.vp8.webm",
 					DecoderType:     0,
-					BrowserType:     browser.TypeAsh,
 					PerfMeasurement: true,
 					PerfSetting:     playback.PerfSetting{},
 					Duration:        25 * time.Second,
@@ -244,7 +229,6 @@ func init() {
 				Val: playback.Config{
 					FileName:        "perf/vp8/720p_30fps_300frames.vp8.webm",
 					DecoderType:     1,
-					BrowserType:     browser.TypeAsh,
 					PerfMeasurement: true,
 					PerfSetting:     playback.PerfSetting{},
 					Duration:        25 * time.Second,
@@ -258,7 +242,6 @@ func init() {
 				Val: playback.Config{
 					FileName:        "perf/vp8/1080p_30fps_300frames.vp8.webm",
 					DecoderType:     0,
-					BrowserType:     browser.TypeAsh,
 					PerfMeasurement: true,
 					PerfSetting:     playback.PerfSetting{},
 					Duration:        25 * time.Second,
@@ -273,7 +256,6 @@ func init() {
 				Val: playback.Config{
 					FileName:        "perf/vp8/1080p_30fps_300frames.vp8.webm",
 					DecoderType:     1,
-					BrowserType:     browser.TypeAsh,
 					PerfMeasurement: true,
 					PerfSetting:     playback.PerfSetting{},
 					Duration:        25 * time.Second,
@@ -287,7 +269,6 @@ func init() {
 				Val: playback.Config{
 					FileName:        "perf/vp8/1080p_60fps_600frames.vp8.webm",
 					DecoderType:     0,
-					BrowserType:     browser.TypeAsh,
 					PerfMeasurement: true,
 					PerfSetting:     playback.PerfSetting{},
 					Duration:        25 * time.Second,
@@ -302,7 +283,6 @@ func init() {
 				Val: playback.Config{
 					FileName:        "perf/vp8/1080p_60fps_600frames.vp8.webm",
 					DecoderType:     1,
-					BrowserType:     browser.TypeAsh,
 					PerfMeasurement: true,
 					PerfSetting:     playback.PerfSetting{},
 					Duration:        25 * time.Second,
@@ -316,7 +296,6 @@ func init() {
 				Val: playback.Config{
 					FileName:        "perf/vp8/2160p_30fps_300frames.vp8.webm",
 					DecoderType:     0,
-					BrowserType:     browser.TypeAsh,
 					PerfMeasurement: true,
 					PerfSetting:     playback.PerfSetting{},
 					Duration:        25 * time.Second,
@@ -331,7 +310,6 @@ func init() {
 				Val: playback.Config{
 					FileName:        "perf/vp8/2160p_30fps_300frames.vp8.webm",
 					DecoderType:     1,
-					BrowserType:     browser.TypeAsh,
 					PerfMeasurement: true,
 					PerfSetting:     playback.PerfSetting{},
 					Duration:        25 * time.Second,
@@ -345,7 +323,6 @@ func init() {
 				Val: playback.Config{
 					FileName:        "perf/vp8/2160p_60fps_600frames.vp8.webm",
 					DecoderType:     0,
-					BrowserType:     browser.TypeAsh,
 					PerfMeasurement: true,
 					PerfSetting:     playback.PerfSetting{},
 					Duration:        25 * time.Second,
@@ -360,7 +337,6 @@ func init() {
 				Val: playback.Config{
 					FileName:        "perf/vp8/2160p_60fps_600frames.vp8.webm",
 					DecoderType:     1,
-					BrowserType:     browser.TypeAsh,
 					PerfMeasurement: true,
 					PerfSetting:     playback.PerfSetting{},
 					Duration:        25 * time.Second,
@@ -374,7 +350,6 @@ func init() {
 				Val: playback.Config{
 					FileName:        "perf/vp9/720p_30fps_300frames.vp9.webm",
 					DecoderType:     0,
-					BrowserType:     browser.TypeAsh,
 					PerfMeasurement: true,
 					PerfSetting:     playback.PerfSetting{},
 					Duration:        25 * time.Second,
@@ -389,7 +364,6 @@ func init() {
 				Val: playback.Config{
 					FileName:        "perf/vp9/720p_30fps_300frames.vp9.webm",
 					DecoderType:     1,
-					BrowserType:     browser.TypeAsh,
 					PerfMeasurement: true,
 					PerfSetting:     playback.PerfSetting{},
 					Duration:        25 * time.Second,
@@ -403,7 +377,6 @@ func init() {
 				Val: playback.Config{
 					FileName:        "perf/vp9/1080p_30fps_300frames.vp9.webm",
 					DecoderType:     0,
-					BrowserType:     browser.TypeAsh,
 					PerfMeasurement: true,
 					PerfSetting:     playback.PerfSetting{},
 					Duration:        25 * time.Second,
@@ -418,7 +391,6 @@ func init() {
 				Val: playback.Config{
 					FileName:        "perf/vp9/1080p_30fps_300frames.vp9.webm",
 					DecoderType:     1,
-					BrowserType:     browser.TypeAsh,
 					PerfMeasurement: true,
 					PerfSetting:     playback.PerfSetting{},
 					Duration:        25 * time.Second,
@@ -432,7 +404,6 @@ func init() {
 				Val: playback.Config{
 					FileName:        "perf/vp9/1080p_60fps_600frames.vp9.webm",
 					DecoderType:     0,
-					BrowserType:     browser.TypeAsh,
 					PerfMeasurement: true,
 					PerfSetting:     playback.PerfSetting{},
 					Duration:        25 * time.Second,
@@ -448,7 +419,6 @@ func init() {
 				Val: playback.Config{
 					FileName:        "perf/vp9/1080p_60fps_600frames.vp9.webm",
 					DecoderType:     1,
-					BrowserType:     browser.TypeAsh,
 					PerfMeasurement: true,
 					PerfSetting:     playback.PerfSetting{},
 					Duration:        25 * time.Second,
@@ -462,7 +432,6 @@ func init() {
 				Val: playback.Config{
 					FileName:        "perf/vp9/1080p_120fps_1200frames.vp9.webm",
 					DecoderType:     0,
-					BrowserType:     browser.TypeAsh,
 					PerfMeasurement: true,
 					PerfSetting:     playback.PerfSetting{},
 					Duration:        25 * time.Second,
@@ -477,7 +446,6 @@ func init() {
 				Val: playback.Config{
 					FileName:        "perf/vp9/1080p_120fps_1200frames.vp9.webm",
 					DecoderType:     1,
-					BrowserType:     browser.TypeAsh,
 					PerfMeasurement: true,
 					PerfSetting:     playback.PerfSetting{},
 					Duration:        25 * time.Second,
@@ -491,7 +459,6 @@ func init() {
 				Val: playback.Config{
 					FileName:        "perf/vp9/2160p_30fps_300frames.vp9.webm",
 					DecoderType:     0,
-					BrowserType:     browser.TypeAsh,
 					PerfMeasurement: true,
 					PerfSetting:     playback.PerfSetting{},
 					Duration:        25 * time.Second,
@@ -506,7 +473,6 @@ func init() {
 				Val: playback.Config{
 					FileName:        "perf/vp9/2160p_30fps_300frames.vp9.webm",
 					DecoderType:     1,
-					BrowserType:     browser.TypeAsh,
 					PerfMeasurement: true,
 					PerfSetting:     playback.PerfSetting{},
 					Duration:        25 * time.Second,
@@ -520,7 +486,6 @@ func init() {
 				Val: playback.Config{
 					FileName:        "perf/vp9/2160p_60fps_600frames.vp9.webm",
 					DecoderType:     0,
-					BrowserType:     browser.TypeAsh,
 					PerfMeasurement: true,
 					PerfSetting:     playback.PerfSetting{},
 					Duration:        25 * time.Second,
@@ -535,7 +500,6 @@ func init() {
 				Val: playback.Config{
 					FileName:        "perf/vp9/2160p_60fps_600frames.vp9.webm",
 					DecoderType:     1,
-					BrowserType:     browser.TypeAsh,
 					PerfMeasurement: true,
 					PerfSetting:     playback.PerfSetting{},
 					Duration:        25 * time.Second,
@@ -549,7 +513,6 @@ func init() {
 				Val: playback.Config{
 					FileName:        "perf/vp9/4320p_30fps_300frames.vp9.webm",
 					DecoderType:     0,
-					BrowserType:     browser.TypeAsh,
 					PerfMeasurement: true,
 					PerfSetting:     playback.PerfSetting{},
 					Duration:        25 * time.Second,
@@ -564,7 +527,6 @@ func init() {
 				Val: playback.Config{
 					FileName:        "perf/vp9/4320p_60fps_600frames.vp9.webm",
 					DecoderType:     0,
-					BrowserType:     browser.TypeAsh,
 					PerfMeasurement: true,
 					PerfSetting:     playback.PerfSetting{},
 					Duration:        25 * time.Second,
@@ -579,7 +541,6 @@ func init() {
 				Val: playback.Config{
 					FileName:        "perf/av1/720p_30fps_300frames.av1.mp4",
 					DecoderType:     0,
-					BrowserType:     browser.TypeAsh,
 					PerfMeasurement: true,
 					PerfSetting:     playback.PerfSetting{},
 					Duration:        25 * time.Second,
@@ -594,7 +555,6 @@ func init() {
 				Val: playback.Config{
 					FileName:        "perf/av1/720p_30fps_300frames.av1.mp4",
 					DecoderType:     1,
-					BrowserType:     browser.TypeAsh,
 					PerfMeasurement: true,
 					PerfSetting:     playback.PerfSetting{},
 					Duration:        25 * time.Second,
@@ -608,7 +568,6 @@ func init() {
 				Val: playback.Config{
 					FileName:        "perf/av1/1080p_30fps_300frames.av1.mp4",
 					DecoderType:     0,
-					BrowserType:     browser.TypeAsh,
 					PerfMeasurement: true,
 					PerfSetting:     playback.PerfSetting{},
 					Duration:        25 * time.Second,
@@ -623,7 +582,6 @@ func init() {
 				Val: playback.Config{
 					FileName:        "perf/av1/1080p_30fps_300frames.av1.mp4",
 					DecoderType:     1,
-					BrowserType:     browser.TypeAsh,
 					PerfMeasurement: true,
 					PerfSetting:     playback.PerfSetting{},
 					Duration:        25 * time.Second,
@@ -637,7 +595,6 @@ func init() {
 				Val: playback.Config{
 					FileName:        "perf/av1/1080p_60fps_600frames.av1.mp4",
 					DecoderType:     0,
-					BrowserType:     browser.TypeAsh,
 					PerfMeasurement: true,
 					PerfSetting:     playback.PerfSetting{},
 					Duration:        25 * time.Second,
@@ -652,7 +609,6 @@ func init() {
 				Val: playback.Config{
 					FileName:        "perf/av1/1080p_60fps_600frames.av1.mp4",
 					DecoderType:     1,
-					BrowserType:     browser.TypeAsh,
 					PerfMeasurement: true,
 					PerfSetting:     playback.PerfSetting{},
 					Duration:        25 * time.Second,
@@ -666,7 +622,6 @@ func init() {
 				Val: playback.Config{
 					FileName:        "perf/av1/1080p_120fps_1200frames.av1.mp4",
 					DecoderType:     0,
-					BrowserType:     browser.TypeAsh,
 					PerfMeasurement: true,
 					PerfSetting:     playback.PerfSetting{},
 					Duration:        25 * time.Second,
@@ -681,7 +636,6 @@ func init() {
 				Val: playback.Config{
 					FileName:        "perf/av1/1080p_120fps_1200frames.av1.mp4",
 					DecoderType:     1,
-					BrowserType:     browser.TypeAsh,
 					PerfMeasurement: true,
 					PerfSetting:     playback.PerfSetting{},
 					Duration:        25 * time.Second,
@@ -695,7 +649,6 @@ func init() {
 				Val: playback.Config{
 					FileName:        "perf/av1/2160p_30fps_300frames.av1.mp4",
 					DecoderType:     0,
-					BrowserType:     browser.TypeAsh,
 					PerfMeasurement: true,
 					PerfSetting:     playback.PerfSetting{},
 					Duration:        25 * time.Second,
@@ -710,7 +663,6 @@ func init() {
 				Val: playback.Config{
 					FileName:        "perf/av1/2160p_30fps_300frames.av1.mp4",
 					DecoderType:     1,
-					BrowserType:     browser.TypeAsh,
 					PerfMeasurement: true,
 					PerfSetting:     playback.PerfSetting{},
 					Duration:        25 * time.Second,
@@ -724,7 +676,6 @@ func init() {
 				Val: playback.Config{
 					FileName:        "perf/av1/2160p_60fps_600frames.av1.mp4",
 					DecoderType:     0,
-					BrowserType:     browser.TypeAsh,
 					PerfMeasurement: true,
 					PerfSetting:     playback.PerfSetting{},
 					Duration:        25 * time.Second,
@@ -739,7 +690,6 @@ func init() {
 				Val: playback.Config{
 					FileName:        "perf/av1/2160p_60fps_600frames.av1.mp4",
 					DecoderType:     1,
-					BrowserType:     browser.TypeAsh,
 					PerfMeasurement: true,
 					PerfSetting:     playback.PerfSetting{},
 					Duration:        25 * time.Second,
@@ -753,7 +703,6 @@ func init() {
 				Val: playback.Config{
 					FileName:        "perf/hevc/720p_30fps_300frames.hevc.mp4",
 					DecoderType:     0,
-					BrowserType:     browser.TypeAsh,
 					PerfMeasurement: true,
 					PerfSetting:     playback.PerfSetting{},
 					Duration:        25 * time.Second,
@@ -769,7 +718,6 @@ func init() {
 				Val: playback.Config{
 					FileName:        "perf/hevc/1080p_30fps_300frames.hevc.mp4",
 					DecoderType:     0,
-					BrowserType:     browser.TypeAsh,
 					PerfMeasurement: true,
 					PerfSetting:     playback.PerfSetting{},
 					Duration:        25 * time.Second,
@@ -785,7 +733,6 @@ func init() {
 				Val: playback.Config{
 					FileName:        "perf/hevc/1080p_60fps_600frames.hevc.mp4",
 					DecoderType:     0,
-					BrowserType:     browser.TypeAsh,
 					PerfMeasurement: true,
 					PerfSetting:     playback.PerfSetting{},
 					Duration:        25 * time.Second,
@@ -801,7 +748,6 @@ func init() {
 				Val: playback.Config{
 					FileName:        "perf/hevc/1080p_120fps_1200frames.hevc.mp4",
 					DecoderType:     0,
-					BrowserType:     browser.TypeAsh,
 					PerfMeasurement: true,
 					PerfSetting:     playback.PerfSetting{},
 					Duration:        25 * time.Second,
@@ -817,7 +763,6 @@ func init() {
 				Val: playback.Config{
 					FileName:        "perf/hevc/2160p_30fps_300frames.hevc.mp4",
 					DecoderType:     0,
-					BrowserType:     browser.TypeAsh,
 					PerfMeasurement: true,
 					PerfSetting:     playback.PerfSetting{},
 					Duration:        25 * time.Second,
@@ -833,7 +778,6 @@ func init() {
 				Val: playback.Config{
 					FileName:        "perf/hevc/2160p_60fps_600frames.hevc.mp4",
 					DecoderType:     0,
-					BrowserType:     browser.TypeAsh,
 					PerfMeasurement: true,
 					PerfSetting:     playback.PerfSetting{},
 					Duration:        25 * time.Second,
@@ -849,7 +793,6 @@ func init() {
 				Val: playback.Config{
 					FileName:        "perf/hevc/4320p_30fps_300frames.hevc.mp4",
 					DecoderType:     0,
-					BrowserType:     browser.TypeAsh,
 					PerfMeasurement: true,
 					PerfSetting:     playback.PerfSetting{},
 					Duration:        25 * time.Second,
@@ -865,7 +808,6 @@ func init() {
 				Val: playback.Config{
 					FileName:        "perf/hevc/4320p_60fps_600frames.hevc.mp4",
 					DecoderType:     0,
-					BrowserType:     browser.TypeAsh,
 					PerfMeasurement: true,
 					PerfSetting:     playback.PerfSetting{},
 					Duration:        25 * time.Second,
@@ -881,7 +823,6 @@ func init() {
 				Val: playback.Config{
 					FileName:        "perf/hevc10/2160p_30fps_300frames.hevc10.mp4",
 					DecoderType:     0,
-					BrowserType:     browser.TypeAsh,
 					PerfMeasurement: true,
 					PerfSetting:     playback.PerfSetting{},
 					Duration:        25 * time.Second,
@@ -897,7 +838,6 @@ func init() {
 				Val: playback.Config{
 					FileName:        "perf/hevc10/4320p_30fps_300frames.hevc10.mp4",
 					DecoderType:     0,
-					BrowserType:     browser.TypeAsh,
 					PerfMeasurement: true,
 					PerfSetting:     playback.PerfSetting{},
 					Duration:        25 * time.Second,
@@ -913,7 +853,6 @@ func init() {
 				Val: playback.Config{
 					FileName:        "perf/hevc10/2160p_60fps_600frames.hevc10.mp4",
 					DecoderType:     0,
-					BrowserType:     browser.TypeAsh,
 					PerfMeasurement: true,
 					PerfSetting:     playback.PerfSetting{},
 					Duration:        25 * time.Second,
@@ -929,7 +868,6 @@ func init() {
 				Val: playback.Config{
 					FileName:        "perf/hevc10/4320p_60fps_600frames.hevc10.mp4",
 					DecoderType:     0,
-					BrowserType:     browser.TypeAsh,
 					PerfMeasurement: true,
 					PerfSetting:     playback.PerfSetting{},
 					Duration:        25 * time.Second,
@@ -945,7 +883,6 @@ func init() {
 				Val: playback.Config{
 					FileName:        "crosvideo/1080.mp4",
 					DecoderType:     0,
-					BrowserType:     browser.TypeAsh,
 					PerfMeasurement: true,
 					PerfSetting: playback.PerfSetting{
 						MeasureRoughness: true,
@@ -963,7 +900,6 @@ func init() {
 				Val: playback.Config{
 					FileName:        "crosvideo/1080.mp4",
 					DecoderType:     1,
-					BrowserType:     browser.TypeAsh,
 					PerfMeasurement: true,
 					PerfSetting: playback.PerfSetting{
 						MeasureRoughness: true,
@@ -981,7 +917,6 @@ func init() {
 				Val: playback.Config{
 					FileName:        "crosvideo/1080-5-frag.mp4",
 					DecoderType:     0,
-					BrowserType:     browser.TypeAsh,
 					PerfMeasurement: true,
 					PerfSetting: playback.PerfSetting{
 						MeasureRoughness: true,
@@ -999,7 +934,6 @@ func init() {
 				Val: playback.Config{
 					FileName:        "crosvideo/1080_vp8.webm",
 					DecoderType:     0,
-					BrowserType:     browser.TypeAsh,
 					PerfMeasurement: true,
 					PerfSetting: playback.PerfSetting{
 						MeasureRoughness: true,
@@ -1017,7 +951,6 @@ func init() {
 				Val: playback.Config{
 					FileName:        "crosvideo/1080_vp8.webm",
 					DecoderType:     1,
-					BrowserType:     browser.TypeAsh,
 					PerfMeasurement: true,
 					PerfSetting: playback.PerfSetting{
 						MeasureRoughness: true,
@@ -1035,7 +968,6 @@ func init() {
 				Val: playback.Config{
 					FileName:        "crosvideo/1080.webm",
 					DecoderType:     0,
-					BrowserType:     browser.TypeAsh,
 					PerfMeasurement: true,
 					PerfSetting: playback.PerfSetting{
 						MeasureRoughness: true,
@@ -1053,7 +985,6 @@ func init() {
 				Val: playback.Config{
 					FileName:        "crosvideo/1080.webm",
 					DecoderType:     1,
-					BrowserType:     browser.TypeAsh,
 					PerfMeasurement: true,
 					PerfSetting: playback.PerfSetting{
 						MeasureRoughness: true,
@@ -1071,7 +1002,6 @@ func init() {
 				Val: playback.Config{
 					FileName:        "crosvideo/av1_1080p_30fps.mp4",
 					DecoderType:     0,
-					BrowserType:     browser.TypeAsh,
 					PerfMeasurement: true,
 					PerfSetting: playback.PerfSetting{
 						MeasureRoughness: true,
@@ -1089,7 +1019,6 @@ func init() {
 				Val: playback.Config{
 					FileName:        "crosvideo/av1_1080p_30fps.mp4",
 					DecoderType:     1,
-					BrowserType:     browser.TypeAsh,
 					PerfMeasurement: true,
 					PerfSetting: playback.PerfSetting{
 						MeasureRoughness: true,
@@ -1107,7 +1036,6 @@ func init() {
 				Val: playback.Config{
 					FileName:        "perf/h264/720p_30fps_300frames.h264.mp4",
 					DecoderType:     0,
-					BrowserType:     browser.TypeAsh,
 					PerfMeasurement: true,
 					PerfSetting:     playback.PerfSetting{},
 					Duration:        25 * time.Second,
@@ -1122,7 +1050,6 @@ func init() {
 				Val: playback.Config{
 					FileName:        "perf/h264/1080p_30fps_300frames.h264.mp4",
 					DecoderType:     0,
-					BrowserType:     browser.TypeAsh,
 					PerfMeasurement: true,
 					PerfSetting: playback.PerfSetting{
 						PerfTracing:               true,
@@ -1140,7 +1067,6 @@ func init() {
 				Val: playback.Config{
 					FileName:        "perf/h264/1080p_60fps_600frames.h264.mp4",
 					DecoderType:     0,
-					BrowserType:     browser.TypeAsh,
 					PerfMeasurement: true,
 					PerfSetting:     playback.PerfSetting{},
 					Duration:        25 * time.Second,
@@ -1155,7 +1081,6 @@ func init() {
 				Val: playback.Config{
 					FileName:        "perf/h264/2160p_30fps_300frames.h264.mp4",
 					DecoderType:     0,
-					BrowserType:     browser.TypeAsh,
 					PerfMeasurement: true,
 					PerfSetting:     playback.PerfSetting{},
 					Duration:        25 * time.Second,
@@ -1170,7 +1095,6 @@ func init() {
 				Val: playback.Config{
 					FileName:        "perf/h264/2160p_60fps_600frames.h264.mp4",
 					DecoderType:     0,
-					BrowserType:     browser.TypeAsh,
 					PerfMeasurement: true,
 					PerfSetting:     playback.PerfSetting{},
 					Duration:        25 * time.Second,
@@ -1185,7 +1109,6 @@ func init() {
 				Val: playback.Config{
 					FileName:        "crosvideo/1080.mp4",
 					DecoderType:     0,
-					BrowserType:     browser.TypeAsh,
 					PerfMeasurement: true,
 					PerfSetting: playback.PerfSetting{
 						MeasureSteadyStateMetrics: true,
@@ -1204,7 +1127,6 @@ func init() {
 				Val: playback.Config{
 					FileName:        "crosvideo/1080-5-frag.mp4",
 					DecoderType:     0,
-					BrowserType:     browser.TypeAsh,
 					PerfMeasurement: true,
 					PerfSetting: playback.PerfSetting{
 						MeasureRoughness: true,
@@ -1222,7 +1144,6 @@ func init() {
 				Val: playback.Config{
 					FileName:        "crosvideo/1080.webm",
 					DecoderType:     0,
-					BrowserType:     browser.TypeAsh,
 					PerfMeasurement: true,
 					PerfSetting: playback.PerfSetting{
 						MeasureRoughness: true,
@@ -1240,7 +1161,6 @@ func init() {
 				Val: playback.Config{
 					FileName:        "crosvideo/av1_1080p_30fps.mp4",
 					DecoderType:     0,
-					BrowserType:     browser.TypeAsh,
 					PerfMeasurement: true,
 					PerfSetting: playback.PerfSetting{
 						MeasureRoughness: true,
@@ -1258,7 +1178,6 @@ func init() {
 				Val: playback.Config{
 					FileName:    "perf/h264/1080p_30fps_300frames.h264.mp4",
 					DecoderType: 0,
-					BrowserType: browser.TypeAsh,
 					Grid: coords.Size{
 						Width:  2,
 						Height: 1,
@@ -1278,7 +1197,6 @@ func init() {
 				Val: playback.Config{
 					FileName:    "perf/h264/720p_30fps_300frames.h264.mp4",
 					DecoderType: 0,
-					BrowserType: browser.TypeAsh,
 					Grid: coords.Size{
 						Width:  2,
 						Height: 2,
@@ -1297,7 +1215,6 @@ func init() {
 				Val: playback.Config{
 					FileName:    "perf/h264/480p_30fps_300frames.h264.mp4",
 					DecoderType: 0,
-					BrowserType: browser.TypeAsh,
 					Grid: coords.Size{
 						Width:  3,
 						Height: 3,
@@ -1317,7 +1234,6 @@ func init() {
 				Val: playback.Config{
 					FileName:    "perf/h264/360p_30fps_300frames.h264.mp4",
 					DecoderType: 0,
-					BrowserType: browser.TypeAsh,
 					Grid: coords.Size{
 						Width:  4,
 						Height: 4,
@@ -1338,7 +1254,6 @@ func init() {
 				Val: playback.Config{
 					FileName:    "perf/hevc/1080p_30fps_300frames.hevc.mp4",
 					DecoderType: 0,
-					BrowserType: browser.TypeAsh,
 					Grid: coords.Size{
 						Width:  2,
 						Height: 1,
@@ -1359,7 +1274,6 @@ func init() {
 				Val: playback.Config{
 					FileName:    "perf/hevc/720p_30fps_300frames.hevc.mp4",
 					DecoderType: 0,
-					BrowserType: browser.TypeAsh,
 					Grid: coords.Size{
 						Width:  2,
 						Height: 2,
@@ -1379,7 +1293,6 @@ func init() {
 				Val: playback.Config{
 					FileName:    "perf/vp8/1080p_30fps_300frames.vp8.webm",
 					DecoderType: 0,
-					BrowserType: browser.TypeAsh,
 					Grid: coords.Size{
 						Width:  2,
 						Height: 1,
@@ -1399,7 +1312,6 @@ func init() {
 				Val: playback.Config{
 					FileName:    "perf/vp8/720p_30fps_300frames.vp8.webm",
 					DecoderType: 0,
-					BrowserType: browser.TypeAsh,
 					Grid: coords.Size{
 						Width:  2,
 						Height: 2,
@@ -1418,7 +1330,6 @@ func init() {
 				Val: playback.Config{
 					FileName:    "perf/vp8/480p_30fps_300frames.vp8.webm",
 					DecoderType: 0,
-					BrowserType: browser.TypeAsh,
 					Grid: coords.Size{
 						Width:  3,
 						Height: 3,
@@ -1438,7 +1349,6 @@ func init() {
 				Val: playback.Config{
 					FileName:    "perf/vp8/360p_30fps_300frames.vp8.webm",
 					DecoderType: 0,
-					BrowserType: browser.TypeAsh,
 					Grid: coords.Size{
 						Width:  4,
 						Height: 4,
@@ -1459,7 +1369,6 @@ func init() {
 				Val: playback.Config{
 					FileName:    "perf/vp9/1080p_30fps_300frames.vp9.webm",
 					DecoderType: 0,
-					BrowserType: browser.TypeAsh,
 					Grid: coords.Size{
 						Width:  2,
 						Height: 1,
@@ -1479,7 +1388,6 @@ func init() {
 				Val: playback.Config{
 					FileName:    "perf/vp9/720p_30fps_300frames.vp9.webm",
 					DecoderType: 0,
-					BrowserType: browser.TypeAsh,
 					Grid: coords.Size{
 						Width:  2,
 						Height: 2,
@@ -1498,7 +1406,6 @@ func init() {
 				Val: playback.Config{
 					FileName:    "perf/vp9/480p_30fps_300frames.vp9.webm",
 					DecoderType: 0,
-					BrowserType: browser.TypeAsh,
 					Grid: coords.Size{
 						Width:  3,
 						Height: 3,
@@ -1518,7 +1425,6 @@ func init() {
 				Val: playback.Config{
 					FileName:    "perf/vp9/360p_30fps_300frames.vp9.webm",
 					DecoderType: 0,
-					BrowserType: browser.TypeAsh,
 					Grid: coords.Size{
 						Width:  4,
 						Height: 4,
@@ -1539,7 +1445,6 @@ func init() {
 				Val: playback.Config{
 					FileName:    "perf/av1/1080p_30fps_300frames.av1.mp4",
 					DecoderType: 0,
-					BrowserType: browser.TypeAsh,
 					Grid: coords.Size{
 						Width:  2,
 						Height: 1,
@@ -1559,7 +1464,6 @@ func init() {
 				Val: playback.Config{
 					FileName:    "perf/av1/720p_30fps_300frames.av1.mp4",
 					DecoderType: 0,
-					BrowserType: browser.TypeAsh,
 					Grid: coords.Size{
 						Width:  2,
 						Height: 2,
@@ -1578,7 +1482,6 @@ func init() {
 				Val: playback.Config{
 					FileName:        "perf/h264/1080p_30fps_300frames.h264.mp4",
 					DecoderType:     0,
-					BrowserType:     browser.TypeAsh,
 					PerfMeasurement: true,
 					PerfSetting:     playback.PerfSetting{},
 					Duration:        25 * time.Second,
@@ -1594,7 +1497,6 @@ func init() {
 				Val: playback.Config{
 					FileName:        "perf/h264/1080p_60fps_600frames.h264.mp4",
 					DecoderType:     0,
-					BrowserType:     browser.TypeAsh,
 					PerfMeasurement: true,
 					PerfSetting:     playback.PerfSetting{},
 					Duration:        25 * time.Second,
@@ -1610,7 +1512,6 @@ func init() {
 				Val: playback.Config{
 					FileName:        "perf/vp8/1080p_30fps_300frames.vp8.webm",
 					DecoderType:     0,
-					BrowserType:     browser.TypeAsh,
 					PerfMeasurement: true,
 					PerfSetting:     playback.PerfSetting{},
 					Duration:        25 * time.Second,
@@ -1626,7 +1527,6 @@ func init() {
 				Val: playback.Config{
 					FileName:        "perf/vp8/1080p_60fps_600frames.vp8.webm",
 					DecoderType:     0,
-					BrowserType:     browser.TypeAsh,
 					PerfMeasurement: true,
 					PerfSetting:     playback.PerfSetting{},
 					Duration:        25 * time.Second,
@@ -1642,7 +1542,6 @@ func init() {
 				Val: playback.Config{
 					FileName:        "perf/vp9/1080p_30fps_300frames.vp9.webm",
 					DecoderType:     0,
-					BrowserType:     browser.TypeAsh,
 					PerfMeasurement: true,
 					PerfSetting:     playback.PerfSetting{},
 					Duration:        25 * time.Second,
@@ -1658,7 +1557,6 @@ func init() {
 				Val: playback.Config{
 					FileName:        "perf/vp9/1080p_60fps_600frames.vp9.webm",
 					DecoderType:     0,
-					BrowserType:     browser.TypeAsh,
 					PerfMeasurement: true,
 					PerfSetting:     playback.PerfSetting{},
 					Duration:        25 * time.Second,
@@ -1674,7 +1572,6 @@ func init() {
 				Val: playback.Config{
 					FileName:        "perf/av1/1080p_30fps_300frames.av1.mp4",
 					DecoderType:     0,
-					BrowserType:     browser.TypeAsh,
 					PerfMeasurement: true,
 					PerfSetting:     playback.PerfSetting{},
 					Duration:        25 * time.Second,
@@ -1690,7 +1587,6 @@ func init() {
 				Val: playback.Config{
 					FileName:        "perf/av1/1080p_60fps_600frames.av1.mp4",
 					DecoderType:     0,
-					BrowserType:     browser.TypeAsh,
 					PerfMeasurement: true,
 					PerfSetting:     playback.PerfSetting{},
 					Duration:        25 * time.Second,
@@ -1706,7 +1602,6 @@ func init() {
 				Val: playback.Config{
 					FileName:        "perf/h264/1080p_30fps_300frames.h264.mp4",
 					DecoderType:     0,
-					BrowserType:     browser.TypeAsh,
 					PerfMeasurement: true,
 					PerfSetting:     playback.PerfSetting{},
 					Duration:        25 * time.Second,
@@ -1721,7 +1616,6 @@ func init() {
 				Val: playback.Config{
 					FileName:        "perf/h264/1080p_60fps_600frames.h264.mp4",
 					DecoderType:     0,
-					BrowserType:     browser.TypeAsh,
 					PerfMeasurement: true,
 					PerfSetting:     playback.PerfSetting{},
 					Duration:        25 * time.Second,
@@ -1736,7 +1630,6 @@ func init() {
 				Val: playback.Config{
 					FileName:        "perf/vp9/1080p_30fps_300frames.vp9.webm",
 					DecoderType:     0,
-					BrowserType:     browser.TypeAsh,
 					PerfMeasurement: true,
 					PerfSetting:     playback.PerfSetting{},
 					Duration:        25 * time.Second,
@@ -1751,7 +1644,6 @@ func init() {
 				Val: playback.Config{
 					FileName:        "perf/vp9/1080p_60fps_600frames.vp9.webm",
 					DecoderType:     0,
-					BrowserType:     browser.TypeAsh,
 					PerfMeasurement: true,
 					PerfSetting:     playback.PerfSetting{},
 					Duration:        25 * time.Second,
@@ -1766,7 +1658,6 @@ func init() {
 				Val: playback.Config{
 					FileName:        "perf/av1/1080p_30fps_300frames.av1.mp4",
 					DecoderType:     0,
-					BrowserType:     browser.TypeAsh,
 					PerfMeasurement: true,
 					PerfSetting:     playback.PerfSetting{},
 					Duration:        25 * time.Second,
@@ -1781,7 +1672,6 @@ func init() {
 				Val: playback.Config{
 					FileName:        "perf/av1/1080p_60fps_600frames.av1.mp4",
 					DecoderType:     0,
-					BrowserType:     browser.TypeAsh,
 					PerfMeasurement: true,
 					PerfSetting:     playback.PerfSetting{},
 					Duration:        25 * time.Second,
@@ -1808,8 +1698,6 @@ func PlaybackPerf(ctx context.Context, s *testing.State) {
 	// Setup the device for power testing. This includes setting the battery to discharge mode in
 	// order to be able to collect system power usage numbers.
 	//
-	// Note that we do this before possibly launching LaCrOS so that setup.PowerTest() doesn't
-	// get confused with multiple windows.
 	// Devices not supporting Chrome EC (e.g. drallion and sarien) fail to set the battery to discharge mode.
 	// We ignore the error as this is expected. We simply won't collect the system power consumption metrics if the battery
 	// is not set to discharge and the device does not support Chrome EC.

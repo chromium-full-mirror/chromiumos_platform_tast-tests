@@ -20,7 +20,6 @@ type ParamData struct {
 	// playback.Config
 	File                      string
 	DecoderType               DecoderType
-	BrowserType               string
 	Grid                      coords.Size
 	PerfMeasurement           bool
 	PerfTracing               bool

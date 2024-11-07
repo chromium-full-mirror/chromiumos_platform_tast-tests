@@ -17,9 +17,8 @@ import (
 
 func init() {
 	testing.AddTest(&testing.Test{
-		Func:         WebCodecsEncode,
-		LacrosStatus: testing.LacrosVariantUnneeded,
-		Desc:         "Verifies that WebCodecs encoding API works, maybe verifying use of a hardware accelerator",
+		Func: WebCodecsEncode,
+		Desc: "Verifies that WebCodecs encoding API works, maybe verifying use of a hardware accelerator",
 		Contacts: []string{
 			"greenjustin@google.com",
 			"chromeos-gfx-video@google.com",

@@ -11,24 +11,21 @@ import (
 
 	"go.chromium.org/tast-tests/cros/common/media/caps"
 	"go.chromium.org/tast-tests/cros/local/bundles/cros/video/play"
-	"go.chromium.org/tast-tests/cros/local/chrome/browser"
-	"go.chromium.org/tast-tests/cros/local/chrome/lacros"
+	"go.chromium.org/tast-tests/cros/local/chrome"
 	"go.chromium.org/tast/core/testing"
 	"go.chromium.org/tast/core/testing/hwdep"
 )
 
 // seekTest is used to describe the config used to run each Seek test.
 type seekTest struct {
-	filename    string // File name to play back.
-	numSeeks    int    // Amount of times to seek into the <video>.
-	browserType browser.Type
+	filename string // File name to play back.
+	numSeeks int    // Amount of times to seek into the <video>.
 }
 
 func init() {
 	testing.AddTest(&testing.Test{
-		Func:         Seek,
-		LacrosStatus: testing.LacrosVariantUnneeded,
-		Desc:         "Verifies that seeking works in Chrome, either with or without resolution changes",
+		Func: Seek,
+		Desc: "Verifies that seeking works in Chrome, either with or without resolution changes",
 		Contacts: []string{
 			"chromeos-gfx-video@google.com",
 			"hiroh@chromium.org",
@@ -40,9 +37,8 @@ func init() {
 		Params: []testing.Param{{
 			Name: "av1",
 			Val: seekTest{
-				filename:    "720_av1.mp4",
-				numSeeks:    25,
-				browserType: browser.TypeAsh,
+				filename: "720_av1.mp4",
+				numSeeks: 25,
 			},
 			ExtraAttr:         []string{"group:graphics", "graphics_video", "graphics_perbuild"},
 			ExtraData:         []string{"720_av1.mp4"},
@@ -51,9 +47,8 @@ func init() {
 		}, {
 			Name: "h264",
 			Val: seekTest{
-				filename:    "720_h264.mp4",
-				numSeeks:    25,
-				browserType: browser.TypeAsh,
+				filename: "720_h264.mp4",
+				numSeeks: 25,
 			},
 			ExtraAttr:         []string{"group:graphics", "graphics_video", "graphics_perbuild"},
 			ExtraData:         []string{"720_h264.mp4"},
@@ -62,9 +57,8 @@ func init() {
 		}, {
 			Name: "h264_inpvd",
 			Val: seekTest{
-				filename:    "720_h264.mp4",
-				numSeeks:    25,
-				browserType: browser.TypeAsh,
+				filename: "720_h264.mp4",
+				numSeeks: 25,
 			},
 			ExtraAttr:         []string{"group:graphics", "graphics_video", "graphics_perbuild"},
 			ExtraData:         []string{"720_h264.mp4"},
@@ -73,9 +67,8 @@ func init() {
 		}, {
 			Name: "hevc",
 			Val: seekTest{
-				filename:    "720_hevc.mp4",
-				numSeeks:    25,
-				browserType: browser.TypeAsh,
+				filename: "720_hevc.mp4",
+				numSeeks: 25,
 			},
 			ExtraAttr:         []string{"group:graphics", "graphics_video", "graphics_perbuild"},
 			ExtraData:         []string{"720_hevc.mp4"},
@@ -85,9 +78,8 @@ func init() {
 		}, {
 			Name: "vp8",
 			Val: seekTest{
-				filename:    "720_vp8.webm",
-				numSeeks:    25,
-				browserType: browser.TypeAsh,
+				filename: "720_vp8.webm",
+				numSeeks: 25,
 			},
 			ExtraAttr:         []string{"group:graphics", "graphics_video", "graphics_perbuild"},
 			ExtraData:         []string{"720_vp8.webm"},
@@ -96,9 +88,8 @@ func init() {
 		}, {
 			Name: "vp9",
 			Val: seekTest{
-				filename:    "720_vp9.webm",
-				numSeeks:    25,
-				browserType: browser.TypeAsh,
+				filename: "720_vp9.webm",
+				numSeeks: 25,
 			},
 			ExtraAttr:         []string{"group:graphics", "graphics_video", "graphics_perbuild"},
 			ExtraData:         []string{"720_vp9.webm"},
@@ -107,9 +98,8 @@ func init() {
 		}, {
 			Name: "switch_av1",
 			Val: seekTest{
-				filename:    "smpte_bars_resolution_ladder.av1.webm",
-				numSeeks:    25,
-				browserType: browser.TypeAsh,
+				filename: "smpte_bars_resolution_ladder.av1.webm",
+				numSeeks: 25,
 			},
 			ExtraAttr:         []string{"group:graphics", "graphics_video", "graphics_perbuild"},
 			ExtraData:         []string{"smpte_bars_resolution_ladder.av1.webm"},
@@ -118,9 +108,8 @@ func init() {
 		}, {
 			Name: "switch_h264",
 			Val: seekTest{
-				filename:    "smpte_bars_resolution_ladder.h264.mp4",
-				numSeeks:    25,
-				browserType: browser.TypeAsh,
+				filename: "smpte_bars_resolution_ladder.h264.mp4",
+				numSeeks: 25,
 			},
 			ExtraAttr:         []string{"group:graphics", "graphics_video", "graphics_perbuild"},
 			ExtraData:         []string{"smpte_bars_resolution_ladder.h264.mp4"},
@@ -129,9 +118,8 @@ func init() {
 		}, {
 			Name: "switch_h264_inpvd",
 			Val: seekTest{
-				filename:    "smpte_bars_resolution_ladder.h264.mp4",
-				numSeeks:    25,
-				browserType: browser.TypeAsh,
+				filename: "smpte_bars_resolution_ladder.h264.mp4",
+				numSeeks: 25,
 			},
 			ExtraAttr:         []string{"group:graphics", "graphics_video", "graphics_perbuild"},
 			ExtraData:         []string{"smpte_bars_resolution_ladder.h264.mp4"},
@@ -140,9 +128,8 @@ func init() {
 		}, {
 			Name: "switch_hevc",
 			Val: seekTest{
-				filename:    "smpte_bars_resolution_ladder.hevc.mp4",
-				numSeeks:    25,
-				browserType: browser.TypeAsh,
+				filename: "smpte_bars_resolution_ladder.hevc.mp4",
+				numSeeks: 25,
 			},
 			ExtraAttr:         []string{"group:graphics", "graphics_video", "graphics_perbuild"},
 			ExtraData:         []string{"smpte_bars_resolution_ladder.hevc.mp4"},
@@ -152,9 +139,8 @@ func init() {
 		}, {
 			Name: "switch_vp8",
 			Val: seekTest{
-				filename:    "smpte_bars_resolution_ladder.vp8.webm",
-				numSeeks:    25,
-				browserType: browser.TypeAsh,
+				filename: "smpte_bars_resolution_ladder.vp8.webm",
+				numSeeks: 25,
 			},
 			ExtraAttr:         []string{"group:graphics", "graphics_video", "graphics_perbuild"},
 			ExtraData:         []string{"smpte_bars_resolution_ladder.vp8.webm"},
@@ -163,9 +149,8 @@ func init() {
 		}, {
 			Name: "switch_vp9",
 			Val: seekTest{
-				filename:    "smpte_bars_resolution_ladder.vp9.webm",
-				numSeeks:    25,
-				browserType: browser.TypeAsh,
+				filename: "smpte_bars_resolution_ladder.vp9.webm",
+				numSeeks: 25,
 			},
 			ExtraAttr:         []string{"group:graphics", "graphics_video", "graphics_perbuild"},
 			ExtraData:         []string{"smpte_bars_resolution_ladder.vp9.webm"},
@@ -174,9 +159,8 @@ func init() {
 		}, {
 			Name: "stress_av1",
 			Val: seekTest{
-				filename:    "720_av1.mp4",
-				numSeeks:    1000,
-				browserType: browser.TypeAsh,
+				filename: "720_av1.mp4",
+				numSeeks: 1000,
 			},
 			ExtraAttr:         []string{"group:graphics", "graphics_video", "graphics_weekly"},
 			ExtraData:         []string{"720_av1.mp4"},
@@ -186,9 +170,8 @@ func init() {
 		}, {
 			Name: "stress_vp8",
 			Val: seekTest{
-				filename:    "720_vp8.webm",
-				numSeeks:    1000,
-				browserType: browser.TypeAsh,
+				filename: "720_vp8.webm",
+				numSeeks: 1000,
 			},
 			ExtraAttr:         []string{"group:graphics", "graphics_video", "graphics_weekly"},
 			ExtraData:         []string{"720_vp8.webm"},
@@ -198,9 +181,8 @@ func init() {
 		}, {
 			Name: "stress_vp9",
 			Val: seekTest{
-				filename:    "720_vp9.webm",
-				numSeeks:    1000,
-				browserType: browser.TypeAsh,
+				filename: "720_vp9.webm",
+				numSeeks: 1000,
 			},
 			ExtraAttr:         []string{"group:graphics", "graphics_video", "graphics_weekly"},
 			ExtraData:         []string{"720_vp9.webm"},
@@ -210,9 +192,8 @@ func init() {
 		}, {
 			Name: "stress_h264",
 			Val: seekTest{
-				filename:    "720_h264.mp4",
-				numSeeks:    1000,
-				browserType: browser.TypeAsh,
+				filename: "720_h264.mp4",
+				numSeeks: 1000,
 			},
 			ExtraAttr:         []string{"group:graphics", "graphics_video", "graphics_weekly"},
 			ExtraData:         []string{"720_h264.mp4"},
@@ -222,9 +203,8 @@ func init() {
 		}, {
 			Name: "stress_hevc",
 			Val: seekTest{
-				filename:    "720_hevc.mp4",
-				numSeeks:    1000,
-				browserType: browser.TypeAsh,
+				filename: "720_hevc.mp4",
+				numSeeks: 1000,
 			},
 			ExtraAttr:         []string{"group:graphics", "graphics_video", "graphics_weekly"},
 			ExtraData:         []string{"720_hevc.mp4"},
@@ -238,15 +218,10 @@ func init() {
 
 // Seek plays a file with Chrome and checks that it can safely be seeked into.
 func Seek(ctx context.Context, s *testing.State) {
+	cr := s.FixtValue().(chrome.HasChrome).Chrome()
 	testOpt := s.Param().(seekTest)
 
-	_, l, cs, err := lacros.Setup(ctx, s.FixtValue(), testOpt.browserType)
-	if err != nil {
-		s.Fatal("Failed to initialize test: ", err)
-	}
-	defer lacros.CloseLacros(ctx, l)
-
-	if err := play.TestSeek(ctx, http.FileServer(s.DataFileSystem()), cs, testOpt.filename, s.OutDir(), testOpt.numSeeks); err != nil {
+	if err := play.TestSeek(ctx, http.FileServer(s.DataFileSystem()), cr, testOpt.filename, s.OutDir(), testOpt.numSeeks); err != nil {
 		s.Fatal("TestSeek failed: ", err)
 	}
 }

@@ -39,7 +39,6 @@ var intelGen9AndEarlierGPUSoCs = []string{"pinetrail", "broadwell", "apollolake"
 func init() {
 	testing.AddTest(&testing.Test{
 		Func:         PlatformOverlays,
-		LacrosStatus: testing.LacrosVariantUnneeded,
 		Desc:         "Checks that certain configurations of primary and overlay planes are indeed supported",
 		BugComponent: "b:168352", // ChromeOS > Platform > Graphics > Video
 		Contacts: []string{

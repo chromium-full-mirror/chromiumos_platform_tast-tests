@@ -41,9 +41,8 @@ var regExpFFMPEGMD5 = regexp.MustCompile(`^\d+, *\d+, *\d+, *\d+, *\d+, *(\S+)$`
 
 func init() {
 	testing.AddTest(&testing.Test{
-		Func:         PlatformInterop,
-		LacrosStatus: testing.LacrosVariantUnneeded,
-		Desc:         "Verifies interoperability of sw/hw encoder/decoder combinations at the platform (i.e. ChromeOS drivers) level",
+		Func: PlatformInterop,
+		Desc: "Verifies interoperability of sw/hw encoder/decoder combinations at the platform (i.e. ChromeOS drivers) level",
 		Contacts: []string{
 			"chromeos-gfx-video@google.com",
 			"hiroh@chromium.org",

@@ -14,8 +14,6 @@ import (
 	"go.chromium.org/tast-tests/cros/common/media/caps"
 	"go.chromium.org/tast-tests/cros/local/chrome"
 	"go.chromium.org/tast-tests/cros/local/chrome/ash"
-	"go.chromium.org/tast-tests/cros/local/chrome/browser"
-	"go.chromium.org/tast-tests/cros/local/chrome/browser/browserfixt"
 	"go.chromium.org/tast-tests/cros/local/chrome/metrics"
 	"go.chromium.org/tast-tests/cros/local/media/constants"
 	"go.chromium.org/tast-tests/cros/local/media/histogram"
@@ -33,15 +31,13 @@ const (
 )
 
 type pepperVideoDecodeTestParam struct {
-	browserType  browser.Type
 	verifyHWMode verifyHWAcceleratorMode
 }
 
 func init() {
 	testing.AddTest(&testing.Test{
-		Func:         PepperVideoDecode,
-		LacrosStatus: testing.LacrosVariantUnneeded,
-		Desc:         "Checks that simple video playback in Pepper (NaCl) is working",
+		Func: PepperVideoDecode,
+		Desc: "Checks that simple video playback in Pepper (NaCl) is working",
 		Contacts: []string{
 			"chromeos-gfx-video@google.com",
 			"pmolinalopez@chromium.org",
@@ -56,12 +52,12 @@ func init() {
 		Attr:         []string{"group:graphics", "graphics_video", "graphics_perbuild"},
 		Params: []testing.Param{{
 			Name:              "h264_hw",
-			Val:               pepperVideoDecodeTestParam{browserType: browser.TypeAsh, verifyHWMode: verifyMojoVDPathWasUsed},
+			Val:               pepperVideoDecodeTestParam{verifyHWMode: verifyMojoVDPathWasUsed},
 			ExtraSoftwareDeps: []string{caps.HWDecodeH264, "proprietary_codecs"},
 			Fixture:           "chromeVideoNaCl",
 		}, {
 			Name:              "h264_sw",
-			Val:               pepperVideoDecodeTestParam{browserType: browser.TypeAsh, verifyHWMode: verifySWPathWasUsed},
+			Val:               pepperVideoDecodeTestParam{verifyHWMode: verifySWPathWasUsed},
 			ExtraSoftwareDeps: []string{"proprietary_codecs"},
 			Fixture:           "chromeVideoNaClWithSWDecoding",
 		}},
@@ -72,7 +68,6 @@ func PepperVideoDecode(ctx context.Context, s *testing.State) {
 	params := s.Param().(pepperVideoDecodeTestParam)
 
 	// Reserve ten seconds for cleanup.
-	cleanupCtx := ctx
 	ctx, cancel := ctxutil.Shorten(ctx, 10*time.Second)
 	defer cancel()
 
@@ -86,13 +81,7 @@ func PepperVideoDecode(ctx context.Context, s *testing.State) {
 		s.Fatal("Failed to connect to test API: ", err)
 	}
 
-	br, closeBrowser, err := browserfixt.SetUp(ctx, cr, params.browserType)
-	if err != nil {
-		s.Fatal("Failed to open the browser: ", err)
-	}
-	defer closeBrowser(cleanupCtx)
-
-	bTconn, err := br.TestAPIConn(ctx)
+	bTconn, err := cr.TestAPIConn(ctx)
 	if err != nil {
 		s.Fatal("Failed to connect to browser test API: ", err)
 	}
@@ -104,7 +93,7 @@ func PepperVideoDecode(ctx context.Context, s *testing.State) {
 	}
 
 	url := path.Join(server.URL, "pepper/video_decode/video_decode.html")
-	conn, err := br.NewConn(ctx, url)
+	conn, err := cr.NewConn(ctx, url)
 	if err != nil {
 		s.Fatalf("Failed to open %v: %v", url, err)
 	}

@@ -132,13 +132,13 @@ func playClearVideo(ctx context.Context, cs ash.ConnSource, functionName, resour
 // playDRMVideo plays a DRM-protected MSE video stream via Shaka player, and
 // checks its play progress. After it's done, it goes full screen and takes a
 // screenshot and verifies the contents are all black.
-// mpdFile is the name of MPD file for the video stream.cs ash.ConnSource,
+// mpdFile is the name of MPD file for the video stream.
 // url is the URL of the shaka player webpage.
-func playDRMVideo(ctx context.Context, s *testing.State, cs ash.ConnSource, cr *chrome.Chrome, mpdFile, url string) (bool, error) {
+func playDRMVideo(ctx context.Context, s *testing.State, cr *chrome.Chrome, mpdFile, url string) (bool, error) {
 	ctx, st := timing.Start(ctx, "play_drm_video")
 	defer st.End()
 
-	conn, err := loadPage(ctx, cs, url)
+	conn, err := loadPage(ctx, cr, url)
 	if err != nil {
 		return false, err
 	}
@@ -409,7 +409,7 @@ func isVideoPadding(c color.Color) bool {
 // videotype represents a type of a given video. If it is MSEVideo, filename is a name
 // of MPD file.
 // If mode is VerifyHWAcceleratorUsed, this function also checks if hardware accelerator was used.
-func TestPlay(ctx context.Context, s *testing.State, cs ash.ConnSource, cr *chrome.Chrome,
+func TestPlay(ctx context.Context, s *testing.State, cr *chrome.Chrome,
 	filename string, videotype VideoType, mode VerifyHWAcceleratorMode, unmutePlayer bool) error {
 	if unmutePlayer && videotype != NormalVideo {
 		return errors.New("got unmutePlayer = true, expected false: unmutePlayer " +
@@ -435,13 +435,13 @@ func TestPlay(ctx context.Context, s *testing.State, cs ash.ConnSource, cr *chro
 	switch videotype {
 	case NormalVideo:
 		url = server.URL + "/video.html"
-		usesPlatformVideoDecoder, playErr = playClearVideo(ctx, cs, "startPlaying", filename, url, unmutePlayer)
+		usesPlatformVideoDecoder, playErr = playClearVideo(ctx, cr, "startPlaying", filename, url, unmutePlayer)
 	case MSEVideo:
 		url = server.URL + "/shaka.html"
-		usesPlatformVideoDecoder, playErr = playClearVideo(ctx, cs, "startPlayingShaka", filename, url)
+		usesPlatformVideoDecoder, playErr = playClearVideo(ctx, cr, "startPlayingShaka", filename, url)
 	case DRMVideo:
 		url = server.URL + "/shaka_drm.html"
-		isHwDrmPipeline, playErr = playDRMVideo(ctx, s, cs, cr, filename, url)
+		isHwDrmPipeline, playErr = playDRMVideo(ctx, s, cr, filename, url)
 	}
 	if playErr != nil {
 		return errors.Wrapf(err, "failed to play %v (%v): %v", filename, url, playErr)

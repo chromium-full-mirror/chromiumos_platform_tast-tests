@@ -13,8 +13,6 @@ import (
 
 	"go.chromium.org/tast-tests/cros/common/testexec"
 	"go.chromium.org/tast-tests/cros/local/chrome"
-	"go.chromium.org/tast-tests/cros/local/chrome/browser"
-	"go.chromium.org/tast-tests/cros/local/chrome/browser/browserfixt"
 	"go.chromium.org/tast-tests/cros/local/graphics"
 	"go.chromium.org/tast-tests/cros/local/syslog"
 	"go.chromium.org/tast/core/errors"
@@ -41,18 +39,13 @@ type SuspendSetting struct {
 	interval time.Duration // interval is the time between each suspendSystem function call.
 }
 
-func reconnectToBrowser(ctx context.Context, cr *chrome.Chrome, browserType browser.Type) (*chrome.Conn, error) {
+func reconnectToBrowser(ctx context.Context, cr *chrome.Chrome) (*chrome.Conn, error) {
 	// Reconnect to Chrome.
 	testing.ContextLog(ctx, "Reconnect to browser connection")
 	if err := cr.Reconnect(ctx); err != nil {
 		return nil, errors.Wrap(err, "failed to reconnect to Chrome")
 	}
-	// Reconnect to browser.
-	br, _, err := browserfixt.Connect(ctx, cr, browserType)
-	if err != nil {
-		return nil, errors.Wrap(err, "failed to reconnect to browser")
-	}
-	conn, err := br.NewConnForTarget(ctx, func(t *chrome.Target) bool {
+	conn, err := cr.NewConnForTarget(ctx, func(t *chrome.Target) bool {
 		return strings.HasSuffix(t.URL, "video.html")
 	})
 	if err != nil {
@@ -73,7 +66,7 @@ func suspendSystem(ctx context.Context, cr *chrome.Chrome, reader *syslog.Reader
 	if err := cmd.Run(testexec.DumpLogOnError); err != nil {
 		return errors.Wrapf(err, "suspend to %v failed", config.SuspendSetting.SuspendMode)
 	}
-	conn, _ := reconnectToBrowser(ctx, cr, config.BrowserType)
+	conn, _ := reconnectToBrowser(ctx, cr)
 	// Check |currentTime| variable is changing.
 	originalPlayingTime, err := getPlayingTime(ctx, conn)
 	if err != nil {

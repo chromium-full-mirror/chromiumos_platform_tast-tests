@@ -25,7 +25,6 @@ type decoderConfig struct {
 func init() {
 	testing.AddTest(&testing.Test{
 		Func:         VAAPIUnittest,
-		LacrosStatus: testing.LacrosVariantUnneeded,
 		Desc:         "Verifies VA-API utility and image decode acceleration functionality",
 		BugComponent: "b:168352", // ChromeOS > Platform > Graphics > Video
 		Contacts: []string{
