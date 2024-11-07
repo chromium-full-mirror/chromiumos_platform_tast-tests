@@ -1342,8 +1342,8 @@ func parseSysinfoRollbackBits(output string) (map[string]uint8, error) {
 	return result, nil
 }
 
-// FindSysinfoRollbackBits returns the full sysinfoRollback structure
-func FindSysinfoRollbackBits(input string) (SysinfoRollbackBits, error) {
+// findSysinfoRollbackBits returns the full sysinfoRollback structure
+func findSysinfoRollbackBits(input string, isOT bool) (SysinfoRollbackBits, error) {
 	result := SysinfoRollbackBits{}
 	rollbackMap, err := parseSysinfoRollbackBits(input)
 	if err != nil {
@@ -1355,7 +1355,11 @@ func FindSysinfoRollbackBits(input string) (SysinfoRollbackBits, error) {
 	result.SlotB.Valid = result.SlotB.Bits != InvalidBits
 	result.Flash.Bits = rollbackMap["flash"]
 	result.Flash.Valid = result.Flash.Bits != InvalidBits
-	if !result.Flash.Valid {
+	if isOT {
+		// On OT the number of bits blown in flash is unreadable: ?.?/?.?/?.?.
+		// Ignore the error, otherwise it will cause most tests to fail.
+		result.Flash.Bits = 0
+	} else if !result.Flash.Valid {
 		return SysinfoRollbackBits{}, errors.New("The number of bits blown in flash was unreadable " + input)
 	}
 	return result, nil
@@ -1384,12 +1388,13 @@ func getSysinfoStruct(input map[string]string) (Sysinfo, error) {
 	result.ProdKeyladder = result.Keyladder == "prod" || result.Keyladder == "enabled"
 
 	isCr50 := result.ChipName == "cr50"
+	isOT := strings.HasPrefix(input["chipSKU"], "NT")
 
 	if result.RORollback == "" && !isCr50 {
 		return Sysinfo{}, errors.New("Did not find RO Rollback info on Ti50")
 	}
 
-	rollbackBits, err := FindSysinfoRollbackBits(result.RWRollback)
+	rollbackBits, err := findSysinfoRollbackBits(result.RWRollback, isOT)
 	if err != nil {
 		return Sysinfo{}, err
 	}

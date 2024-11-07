@@ -1030,6 +1030,68 @@ Chip factory mode.
 	testSysinfo(t, input, expectedMap, expected)
 }
 
+func TestTi50Sysinfo3(t *testing.T) {
+	input := `
+> sysinfo
+sysinfo
+Reset flags: 0x00000001 (Cold)
+Reset count: 0
+Breadcrumbs: 0x0000000000001234
+Chip:        g Ti50 NTZ1
+RO keyid:         0x0
+RW keyid:         0x0
+DEV_ID:      0x315a0000 0x30430054
+Rollback:    ?.?/?.?/?.? ?.?/?.?/?.?
+TPM MODE:    disabled (3)
+Key Ladder:  dev
+EK Cert:     NotFound
+`
+	expectedMap := make(map[string]string)
+	expectedMap["resetFlags"] = "00000001"
+	expectedMap["resetCount"] = "0"
+	expectedMap["chipName"] = "Ti50"
+	expectedMap["chipSKU"] = "NTZ1"
+	expectedMap["breadcrumbs"] = "0000000000001234"
+	expectedMap["roKeyid"] = "0x0"
+	expectedMap["rwKeyid"] = "0x0"
+	expectedMap["devid"] = "0x315a0000 0x30430054"
+	expectedMap["roRollback"] = "?.?/?.?/?.?"
+	expectedMap["rwRollback"] = "?.?/?.?/?.?"
+	expectedMap["tpmMode"] = "disabled"
+	expectedMap["tpmModeStatus"] = "3"
+	expectedMap["keyladder"] = "dev"
+	expectedMap["ekCert"] = "NotFound"
+	expectedMap["factoryMode"] = ""
+
+	expected := Sysinfo{}
+	expected.ResetFlags = 0x00000001
+	expected.OriginalResetFlags = 0x00000001
+	expected.ResetCount = 0
+	expected.ChipName = "Ti50"
+	expected.ChipSKU = SKUDT
+	expected.Breadcrumbs = "0000000000001234"
+	expected.ROKeyid = "0x0"
+	expected.RWKeyid = "0x0"
+	expected.Devid = "0x315a0000 0x30430054"
+	expected.RORollback = "?.?/?.?/?.?"
+	expected.RWRollback = "?.?/?.?/?.?"
+	expected.RWRollbackBits = SysinfoRollbackBits{
+		Flash: SysinfoRollbackSlot{Bits: 0, Valid: false},
+		SlotA: SysinfoRollbackSlot{Bits: InvalidBits, Valid: false},
+		SlotB: SysinfoRollbackSlot{Bits: InvalidBits, Valid: false},
+	}
+	expected.TpmMode = "disabled"
+	expected.TpmModeStatus = 3
+	expected.Keyladder = "dev"
+	expected.TpmEnabled = false
+	expected.ProdKeyladder = false
+	expected.InFactoryMode = false
+	expected.FactoryModeValid = true
+	expected.EKCert = "NotFound"
+
+	testSysinfo(t, input, expectedMap, expected)
+}
+
 func TestCr50Sysinfo1(t *testing.T) {
 	input := `
 Reset flags: 0x00000008 (power-on)
