@@ -14,7 +14,6 @@ import (
 	"go.chromium.org/tast-tests/cros/local/arc"
 	"go.chromium.org/tast-tests/cros/local/arc/optin"
 	"go.chromium.org/tast-tests/cros/local/chrome"
-	"go.chromium.org/tast-tests/cros/local/chrome/lacros/lacrosfixt"
 	"go.chromium.org/tast-tests/cros/local/logsaver"
 	"go.chromium.org/tast-tests/cros/local/screenshot"
 	"go.chromium.org/tast/core/ctxutil"
@@ -52,9 +51,8 @@ func (f FixtureData) Chrome() *chrome.Chrome {
 }
 
 type accountManagerTestFixture struct {
-	cr       *chrome.Chrome
-	arc      *arc.ARC
-	isLacros bool
+	cr  *chrome.Chrome
+	arc *arc.ARC
 	// Marker for per-test log.
 	logMarker *logsaver.Marker
 }
@@ -82,15 +80,6 @@ func (f *accountManagerTestFixture) SetUp(ctx context.Context, s *testing.FixtSt
 		chrome.ARCSupported(),
 		chrome.UnRestrictARCCPU(),
 		chrome.ExtraArgs(arc.DisableSyncFlags()...),
-	}
-
-	if f.isLacros {
-		opts = append(opts, chrome.DisableFeatures("SecondaryAccountAllowedInArcPolicy"))
-		var err error
-		opts, err = lacrosfixt.NewConfig(lacrosfixt.ChromeOptions(opts...)).Opts()
-		if err != nil {
-			s.Fatal("Failed to get lacros options: ", err)
-		}
 	}
 
 	cr, err := chrome.New(chromeLoginCtx, opts...)

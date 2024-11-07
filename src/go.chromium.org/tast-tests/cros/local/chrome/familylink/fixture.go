@@ -18,7 +18,6 @@ import (
 	"go.chromium.org/tast-tests/cros/common/ui"
 	"go.chromium.org/tast-tests/cros/local/arc"
 	"go.chromium.org/tast-tests/cros/local/chrome"
-	"go.chromium.org/tast-tests/cros/local/chrome/lacros/lacrosfixt"
 	"go.chromium.org/tast-tests/cros/local/policyutil"
 	"go.chromium.org/tast-tests/cros/local/upstart"
 
@@ -36,18 +35,6 @@ func NewFamilyLinkFixture(parentAccountVar, childAccountVar string, isOwner bool
 		parentAccountVar: parentAccountVar,
 		childAccountVar:  childAccountVar,
 		isOwner:          isOwner,
-		isLacros:         false,
-	}
-}
-
-// NewFamilyLinkFixtureLacros creates a new implementation of the Family Link fixture for Lacros.
-func NewFamilyLinkFixtureLacros(parentAccountVar, childAccountVar string, isOwner bool, opts ...chrome.Option) testing.FixtureImpl {
-	return &familyLinkFixture{
-		opts:             opts,
-		parentAccountVar: parentAccountVar,
-		childAccountVar:  childAccountVar,
-		isOwner:          isOwner,
-		isLacros:         true,
 	}
 }
 
@@ -61,22 +48,6 @@ func init() {
 		},
 		BugComponent:    "b:1079167", // ChromeOS > Software > Family
 		Impl:            NewFamilyLinkFixture(family.ParentAccountVarName, family.UnicornAccountVarName, true),
-		SetUpTimeout:    chrome.GAIALoginChildTimeout,
-		ResetTimeout:    resetTimeout,
-		TearDownTimeout: resetTimeout,
-		PreTestTimeout:  resetTimeout,
-		PostTestTimeout: resetTimeout,
-	})
-
-	testing.AddFixture(&testing.Fixture{
-		Name: "familyLinkUnicornLoginWithLacros",
-		Desc: "Supervised Family Link user login with Unicorn account",
-		Contacts: []string{
-			"cros-families-eng+test@google.com",
-			"agawronska@chromium.org",
-		},
-		BugComponent:    "b:1079167", // ChromeOS > Software > Family
-		Impl:            NewFamilyLinkFixtureLacros(family.ParentAccountVarName, family.UnicornAccountVarName, true),
 		SetUpTimeout:    chrome.GAIALoginChildTimeout,
 		ResetTimeout:    resetTimeout,
 		TearDownTimeout: resetTimeout,
@@ -101,22 +72,6 @@ func init() {
 	})
 
 	testing.AddFixture(&testing.Fixture{
-		Name: "familyLinkUnicornWebAllowlistLoginWithLacros",
-		Desc: "This fixture enables LaCrOS and logs in Unicorn account with 'Only allow approved sites' website filtering setting",
-		Contacts: []string{
-			"cros-families-eng+test@google.com",
-			"agawronska@chromium.org",
-		},
-		BugComponent:    "b:1079167", // ChromeOS > Software > Family
-		Impl:            NewFamilyLinkFixtureLacros(family.ParentAccountVarName, family.UnicornAllowlistAccountVarName, true),
-		SetUpTimeout:    chrome.GAIALoginChildTimeout,
-		ResetTimeout:    resetTimeout,
-		TearDownTimeout: resetTimeout,
-		PreTestTimeout:  resetTimeout,
-		PostTestTimeout: resetTimeout,
-	})
-
-	testing.AddFixture(&testing.Fixture{
 		Name: "familyLinkUnicornLoginNonOwner",
 		Desc: "Supervised Family Link user login with Unicorn account as second user on device",
 		Contacts: []string{
@@ -133,23 +88,6 @@ func init() {
 	})
 
 	testing.AddFixture(&testing.Fixture{
-		Name: "familyLinkUnicornLoginNonOwnerWithLacros",
-		Desc: "Supervised Family Link user login with Unicorn account as second user on device",
-		Contacts: []string{
-			"cros-families-eng+test@google.com",
-			"hyungtaekim@chromium.org",
-			"agawronska@chromium.org",
-		},
-		BugComponent:    "b:1079167", // ChromeOS > Software > Family
-		Impl:            NewFamilyLinkFixtureLacros(family.ParentAccountVarName, family.UnicornAccountVarName, false),
-		SetUpTimeout:    chrome.GAIALoginChildTimeout,
-		ResetTimeout:    resetTimeout,
-		TearDownTimeout: resetTimeout,
-		PreTestTimeout:  resetTimeout,
-		PostTestTimeout: resetTimeout,
-	})
-
-	testing.AddFixture(&testing.Fixture{
 		Name: "familyLinkGellerLogin",
 		Desc: "Supervised Family Link user login with Geller account",
 		Contacts: []string{
@@ -158,23 +96,6 @@ func init() {
 		},
 		BugComponent:    "b:1079167", // ChromeOS > Software > Family
 		Impl:            NewFamilyLinkFixture(family.ParentAccountVarName, family.GellerAccountVarName, true),
-		SetUpTimeout:    chrome.GAIALoginChildTimeout,
-		ResetTimeout:    resetTimeout,
-		TearDownTimeout: resetTimeout,
-		PreTestTimeout:  resetTimeout,
-		PostTestTimeout: resetTimeout,
-	})
-
-	testing.AddFixture(&testing.Fixture{
-		Name: "familyLinkGellerLoginWithLacros",
-		Desc: "Supervised Family Link user login with Geller account on Lacros",
-		Contacts: []string{
-			"cros-families-eng+test@google.com",
-			"hyungtaekim@chromium.org",
-			"agawronska@chromium.org",
-		},
-		BugComponent:    "b:1079167", // ChromeOS > Software > Family
-		Impl:            NewFamilyLinkFixtureLacros(family.ParentAccountVarName, family.GellerAccountVarName, true),
 		SetUpTimeout:    chrome.GAIALoginChildTimeout,
 		ResetTimeout:    resetTimeout,
 		TearDownTimeout: resetTimeout,
@@ -214,21 +135,6 @@ func init() {
 		PostTestTimeout: resetTimeout,
 	})
 
-	testing.AddFixture(&testing.Fixture{
-		Name: "familyLinkGriffinLoginWithLacros",
-		Desc: "Supervised Family Link user login with Griffin account on Lacros",
-		Contacts: []string{
-			"cros-families-eng+test@google.com",
-			"agawronska@chromium.org",
-		},
-		BugComponent:    "b:1079167", // ChromeOS > Software > Family
-		Impl:            NewFamilyLinkFixtureLacros(family.ParentAccountVarName, family.GriffinAccountVarName, true),
-		SetUpTimeout:    chrome.GAIALoginChildTimeout,
-		ResetTimeout:    resetTimeout,
-		TearDownTimeout: resetTimeout,
-		PreTestTimeout:  resetTimeout,
-		PostTestTimeout: resetTimeout,
-	})
 	testing.AddFixture(&testing.Fixture{
 		Name: "familyLinkParentArcLogin",
 		Desc: "Non-supervised Family Link user login with regular parent account and ARC support",
@@ -309,7 +215,6 @@ type familyLinkFixture struct {
 	childUser        string
 	childPassword    string
 	isOwner          bool
-	isLacros         bool
 }
 
 // FixtData holds information made available to tests that specify this Fixture.
@@ -443,15 +348,6 @@ func (f *familyLinkFixture) SetUp(ctx context.Context, s *testing.FixtState) int
 		// key verification doesn't work for gmail users,
 		// disable it.
 		f.opts = append(f.opts, chrome.DisablePolicyKeyVerification())
-	}
-
-	if f.isLacros {
-		var err error
-		f.opts, err = lacrosfixt.NewConfig(lacrosfixt.ChromeOptions(f.opts...)).Opts()
-		if err != nil {
-			s.Fatal("Failed to get lacros options: ", err)
-		}
-		f.opts = append(f.opts, chrome.EnableFeatures("LacrosForSupervisedUsers"))
 	}
 
 	if !f.isOwner {

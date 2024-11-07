@@ -21,7 +21,6 @@ import (
 	"go.chromium.org/tast-tests/cros/local/chrome/ash"
 	"go.chromium.org/tast-tests/cros/local/chrome/crossdevice/crossdevicesettings"
 	"go.chromium.org/tast-tests/cros/local/chrome/crossdevice/phonehub"
-	"go.chromium.org/tast-tests/cros/local/chrome/lacros/lacrosfixt"
 	"go.chromium.org/tast-tests/cros/local/chrome/uiauto"
 	"go.chromium.org/tast-tests/cros/local/chrome/uiauto/faillog"
 	"go.chromium.org/tast-tests/cros/local/cryptohome"
@@ -187,31 +186,6 @@ func init() {
 		BugComponent:    "b:1108889", // ChromeOS > Software > System Services > Cross Device
 	})
 
-	// lacros fixtures
-	testing.AddFixture(&testing.Fixture{
-		Name: "lacrosCrossdeviceOnboardedAllFeatures",
-		Desc: "User is signed in (with GAIA) to CrOS and paired with an Android phone with all Cross Device features enabled with lacros enabled",
-		Contacts: []string{
-			"chromeos-cross-device-eng@google.com",
-			"hansenmichael@google.com",
-		},
-		Parent: "crossdeviceAndroidSetupPhoneHub",
-		Impl: NewCrossDeviceOnboarded(FixtureOptions{true, true, true, false, true}, func(ctx context.Context, s *testing.FixtState) ([]chrome.Option, error) {
-			return lacrosfixt.NewConfig().Opts()
-		}),
-		Vars: []string{
-			customCrOSUsername,
-			customCrOSPassword,
-			KeepStateVar,
-		},
-		SetUpTimeout:    10*time.Minute + BugReportDuration,
-		ResetTimeout:    resetTimeout,
-		TearDownTimeout: resetTimeout,
-		PreTestTimeout:  resetTimeout,
-		PostTestTimeout: postTestTimeout,
-		BugComponent:    "b:1108889", // ChromeOS > Software > System Services > Cross Device
-	})
-
 	// Floss fixtures - these are duplicates of all the above fixtures
 	// but modified to use the Floss bluetooth stack.
 	testing.AddFixture(&testing.Fixture{
@@ -319,34 +293,6 @@ func init() {
 		Parent: "crossdeviceAndroidSetupSmartLock",
 		Impl: NewCrossDeviceOnboarded(FixtureOptions{false, false, false, false, false}, func(ctx context.Context, s *testing.FixtState) ([]chrome.Option, error) {
 			return []chrome.Option{chrome.EnableFeatures("Floss")}, nil
-		}),
-		Vars: []string{
-			customCrOSUsername,
-			customCrOSPassword,
-			KeepStateVar,
-		},
-		SetUpTimeout:    10*time.Minute + BugReportDuration,
-		ResetTimeout:    resetTimeout,
-		TearDownTimeout: resetTimeout,
-		PreTestTimeout:  resetTimeout,
-		PostTestTimeout: postTestTimeout,
-		BugComponent:    "b:1108889", // ChromeOS > Software > System Services > Cross Device
-	})
-
-	testing.AddFixture(&testing.Fixture{
-		Name: "lacrosCrossdeviceOnboardedAllFeaturesFloss",
-		Desc: "User is signed in (with GAIA) to CrOS and paired with an Android phone with all Cross Device features enabled with lacros enabled (floss)",
-		Contacts: []string{
-			"chromeos-cross-device-eng@google.com",
-			"hansenmichael@google.com",
-		},
-		Parent: "crossdeviceAndroidSetupPhoneHub",
-		Impl: NewCrossDeviceOnboarded(FixtureOptions{true, true, true, false, true}, func(ctx context.Context, s *testing.FixtState) ([]chrome.Option, error) {
-			lacrosOpts, err := lacrosfixt.NewConfig().Opts()
-			if err != nil {
-				return nil, err
-			}
-			return append(lacrosOpts, chrome.EnableFeatures("Floss")), nil
 		}),
 		Vars: []string{
 			customCrOSUsername,

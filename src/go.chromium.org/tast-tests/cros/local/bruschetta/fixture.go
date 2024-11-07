@@ -56,8 +56,6 @@ const (
 	BruschettaFixture = "bruschettaReferenceVM"
 	// BruschettaFixtureClamshell is the name of the fixture with ash, only in clamshell mode.
 	BruschettaFixtureClamshell = "bruschettaReferenceVMClamshell"
-	// BruschettaFixtureWithLacros is the name of the fixture with lacros.
-	BruschettaFixtureWithLacros = "bruschettaReferenceVMWithLacros"
 	// BruschettaFixtureWithFieldtrialConfig is the name of the fixture with ash
 	// and fieldtrial config enabled.
 	BruschettaFixtureWithFieldtrialConfig = "bruschettaReferenceVMWithFieldtrialConfig"
@@ -110,19 +108,6 @@ func init() {
 		TearDownTimeout: uninstallationTimeout,
 		Data:            []string{referenceVMInstaller, referenceVMInstallerHash, referenceVMPflash, referenceVMPflashHash},
 		Parent:          BruschettaFixture,
-	})
-	testing.AddFixture(&testing.Fixture{
-		Name:            BruschettaFixtureWithLacros,
-		Desc:            "Set up reference VM with Lacros",
-		Contacts:        []string{"clumptini+oncall@google.com"},
-		BugComponent:    "b:658562", // ChromeOS > Software > GuestOS
-		Impl:            &bruschettaFixture{},
-		SetUpTimeout:    installationTimeout + uninstallationTimeout,
-		ResetTimeout:    resetTimeout,
-		PostTestTimeout: postTestTimeout,
-		TearDownTimeout: uninstallationTimeout,
-		Data:            []string{referenceVMInstaller, referenceVMInstallerHash, referenceVMPflash, referenceVMPflashHash},
-		Parent:          fixture.LacrosPolicyLoggedInBruschetta,
 	})
 	testing.AddFixture(&testing.Fixture{
 		Name:            BruschettaFixtureWithFieldtrialConfig,
