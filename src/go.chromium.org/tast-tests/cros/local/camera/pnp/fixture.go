@@ -14,7 +14,6 @@ import (
 	"go.chromium.org/tast-tests/cros/common/perf"
 	"go.chromium.org/tast-tests/cros/local/camera/testutil"
 	"go.chromium.org/tast-tests/cros/local/chrome"
-	"go.chromium.org/tast-tests/cros/local/chrome/browser"
 	"go.chromium.org/tast-tests/cros/local/chrome/uiauto/vctray"
 	"go.chromium.org/tast-tests/cros/local/power"
 	powersetup "go.chromium.org/tast-tests/cros/local/power/setup"
@@ -130,7 +129,6 @@ func init() {
 		Impl: powersetup.NewPowerUIFixture(
 			MinPowerTestOptions,
 			powersetup.PowerFixtureOptions{
-				BrowserType:     browser.TypeAsh,
 				EnableGAIALogin: false,
 			}),
 		Parent:          cameraService,
@@ -148,7 +146,6 @@ func init() {
 		Impl: powersetup.NewPowerUIFixture(
 			MinPowerTestOptions,
 			powersetup.PowerFixtureOptions{
-				BrowserType:     browser.TypeAsh,
 				EnableGAIALogin: true,
 			}),
 		Parent:          cameraService,

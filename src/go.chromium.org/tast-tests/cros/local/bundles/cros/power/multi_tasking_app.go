@@ -12,7 +12,6 @@ import (
 	"go.chromium.org/tast-tests/cros/local/bundles/cros/power/multitaskingapp"
 	"go.chromium.org/tast-tests/cros/local/bundles/cros/power/socialapp"
 	"go.chromium.org/tast-tests/cros/local/chrome/ash"
-	"go.chromium.org/tast-tests/cros/local/chrome/browser/browserfixt"
 	"go.chromium.org/tast-tests/cros/local/chrome/cuj"
 	"go.chromium.org/tast-tests/cros/local/input"
 	"go.chromium.org/tast-tests/cros/local/power"
@@ -88,7 +87,6 @@ func init() {
 // MultiTaskingApp collects power related data when device do multi tasking with several apps.
 func MultiTaskingApp(ctx context.Context, s *testing.State) {
 	discharge := s.FixtValue().(setup.PowerUIFixtureData).Discharge
-	bt := s.FixtValue().(setup.PowerUIFixtureData).Bt
 	cr := s.FixtValue().(setup.PowerUIFixtureData).Cr
 	a := s.FixtValue().(setup.PowerUIFixtureData).ARC
 	param := s.Param().(multiTaskingParam)
@@ -108,13 +106,7 @@ func MultiTaskingApp(ctx context.Context, s *testing.State) {
 	}
 	defer kb.Close(cleanupCtx)
 
-	br, closeBrowser, err := browserfixt.SetUp(ctx, cr, bt)
-	if err != nil {
-		s.Fatal("Failed to setup browser: ", err)
-	}
-	defer closeBrowser(cleanupCtx)
-
-	bTconn, err := br.TestAPIConn(ctx)
+	bTconn, err := cr.TestAPIConn(ctx)
 	if err != nil {
 		s.Fatal("Failed to connect to the TestAPIConn: ", err)
 	}
@@ -150,7 +142,6 @@ func MultiTaskingApp(ctx context.Context, s *testing.State) {
 		Tconn:     tconn,
 		Btconn:    bTconn,
 		A:         a,
-		Br:        br,
 	}
 
 	elementAPKURL, err := socialapp.ParseElementAPKURL(ctx, s.Var)
@@ -162,7 +153,6 @@ func MultiTaskingApp(ctx context.Context, s *testing.State) {
 	}
 
 	params := &multitaskingapp.TestParams{
-		BrowserType:   bt,
 		OutDir:        s.OutDir(),
 		WebSource:     cuj.GoogleWebSource,
 		TestName:      s.TestName(),

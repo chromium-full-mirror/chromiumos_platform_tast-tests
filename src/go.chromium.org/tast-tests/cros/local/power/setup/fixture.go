@@ -19,9 +19,6 @@ import (
 	"go.chromium.org/tast-tests/cros/local/audio/fixture"
 	"go.chromium.org/tast-tests/cros/local/chrome"
 	"go.chromium.org/tast-tests/cros/local/chrome/ash"
-	"go.chromium.org/tast-tests/cros/local/chrome/browser"
-	"go.chromium.org/tast-tests/cros/local/chrome/browser/browserfixt"
-	"go.chromium.org/tast-tests/cros/local/chrome/lacros/lacrosfixt"
 	"go.chromium.org/tast-tests/cros/local/power"
 	"go.chromium.org/tast/core/ctxutil"
 	"go.chromium.org/tast/core/errors"
@@ -92,7 +89,6 @@ const (
 
 // PowerFixtureOptions describes options used by the fixture only.
 type PowerFixtureOptions struct {
-	BrowserType      browser.Type
 	BrowserExtraOpts []chrome.Option
 	ExtraOptsFunc    chrome.OptionsCallback
 	EnableGAIALogin  bool
@@ -247,7 +243,7 @@ func init() {
 			NightLight:         DisableNightLight,
 			DarkTheme:          EnableLightTheme,
 			KeyboardBrightness: SetKbBrightness,
-		}, PowerFixtureOptions{BrowserType: browser.TypeAsh}),
+		}, PowerFixtureOptions{}),
 		SetUpTimeout:    SetUpTimeout,
 		ResetTimeout:    ResetTimeout,
 		TearDownTimeout: TearDownTimeout,
@@ -267,7 +263,7 @@ func init() {
 			NightLight:         DisableNightLight,
 			DarkTheme:          EnableLightTheme,
 			KeyboardBrightness: SetKbBrightnessToZero,
-		}, PowerFixtureOptions{BrowserType: browser.TypeAsh}),
+		}, PowerFixtureOptions{}),
 		SetUpTimeout:    SetUpTimeout,
 		ResetTimeout:    ResetTimeout,
 		TearDownTimeout: TearDownTimeout,
@@ -288,7 +284,6 @@ func init() {
 			DarkTheme:          EnableLightTheme,
 			KeyboardBrightness: SetKbBrightnessToZero,
 		}, PowerFixtureOptions{
-			BrowserType: browser.TypeAsh,
 			BrowserExtraOpts: []chrome.Option{
 				// Force refresh rate throttling to be active
 				chrome.ExtraArgs("--force-refresh-rate-throttle"),
@@ -316,7 +311,6 @@ func init() {
 			DarkTheme:          EnableLightTheme,
 			KeyboardBrightness: SetKbBrightnessToZero,
 		}, PowerFixtureOptions{
-			BrowserType: browser.TypeAsh,
 			BrowserExtraOpts: []chrome.Option{
 				// Feature flags.
 				chrome.DisableFeatures("SeamlessRefreshRateSwitching"),
@@ -342,7 +336,6 @@ func init() {
 			DarkTheme:          EnableLightTheme,
 			KeyboardBrightness: SetKbBrightnessToZero,
 		}, PowerFixtureOptions{
-			BrowserType: browser.TypeAsh,
 			BrowserExtraOpts: []chrome.Option{
 				// Feature flags.
 				chrome.DisableFeatures("SeamlessRefreshRateSwitching"),
@@ -369,7 +362,6 @@ func init() {
 			DarkTheme:          EnableLightTheme,
 			KeyboardBrightness: SetKbBrightnessToZero,
 		}, PowerFixtureOptions{
-			BrowserType:     browser.TypeAsh,
 			EnableGAIALogin: true,
 		}),
 		SetUpTimeout:    chrome.GAIALoginTimeout + SetUpTimeout,
@@ -392,7 +384,6 @@ func init() {
 			DarkTheme:          EnableLightTheme,
 			KeyboardBrightness: SetKbBrightnessToZero,
 		}, PowerFixtureOptions{
-			BrowserType:     browser.TypeAsh,
 			EnableGAIALogin: true,
 			EnableARC:       true,
 		}),
@@ -416,7 +407,7 @@ func init() {
 			DarkTheme:          EnableLightTheme,
 			KeyboardBrightness: SetKbBrightnessToZero,
 			Ramfs:              SetupRamfs,
-		}, PowerFixtureOptions{BrowserType: browser.TypeAsh, EnableHDR: true}),
+		}, PowerFixtureOptions{EnableHDR: true}),
 		SetUpTimeout:    SetUpTimeout,
 		ResetTimeout:    ResetTimeout,
 		TearDownTimeout: TearDownTimeout,
@@ -438,7 +429,6 @@ func init() {
 			KeyboardBrightness: SetKbBrightnessToZero,
 			Ramfs:              SetupRamfs,
 		}, PowerFixtureOptions{
-			BrowserType:     browser.TypeAsh,
 			EnableGAIALogin: true,
 			EnableARC:       true,
 			EnableHDR:       true}),
@@ -462,7 +452,7 @@ func init() {
 			NightLight:         DisableNightLight,
 			DarkTheme:          EnableDarkTheme,
 			KeyboardBrightness: SetKbBrightnessToZero,
-		}, PowerFixtureOptions{BrowserType: browser.TypeAsh}),
+		}, PowerFixtureOptions{}),
 		SetUpTimeout:    SetUpTimeout,
 		ResetTimeout:    ResetTimeout,
 		TearDownTimeout: TearDownTimeout,
@@ -483,7 +473,7 @@ func init() {
 			NightLight:         EnableNightLight,
 			DarkTheme:          EnableLightTheme,
 			KeyboardBrightness: SetKbBrightnessToZero,
-		}, PowerFixtureOptions{BrowserType: browser.TypeAsh}),
+		}, PowerFixtureOptions{}),
 		SetUpTimeout:    SetUpTimeout,
 		ResetTimeout:    ResetTimeout,
 		TearDownTimeout: TearDownTimeout,
@@ -516,7 +506,6 @@ func init() {
 				DarkTheme:  EnableLightTheme,
 			},
 			PowerFixtureOptions{
-				BrowserType: browser.TypeAsh,
 				BrowserExtraOpts: []chrome.Option{
 					// Prevent interference of audio preferences.
 					// See go/tast-fakecrasaudioclient.
@@ -559,7 +548,6 @@ func init() {
 				DarkTheme:  EnableLightTheme,
 			},
 			PowerFixtureOptions{
-				BrowserType: browser.TypeAsh,
 				BrowserExtraOpts: []chrome.Option{
 					// Prevent interference of audio preferences.
 					// See go/tast-fakecrasaudioclient.
@@ -601,7 +589,6 @@ func init() {
 				DarkTheme:  EnableLightTheme,
 			},
 			PowerFixtureOptions{
-				BrowserType: browser.TypeAsh,
 				BrowserExtraOpts: []chrome.Option{
 					// Prevent interference of audio preferences.
 					// See go/tast-fakecrasaudioclient.
@@ -644,7 +631,6 @@ func init() {
 				DarkTheme:  EnableLightTheme,
 			},
 			PowerFixtureOptions{
-				BrowserType: browser.TypeAsh,
 				BrowserExtraOpts: []chrome.Option{
 					// Prevent interference of audio preferences.
 					// See go/tast-fakecrasaudioclient.
@@ -678,7 +664,6 @@ func init() {
 			Wifi:               DisableWifiInterfaces,
 			Audio:              DoNotChangeAudio, // Uses audio.
 		}, PowerFixtureOptions{
-			BrowserType: browser.TypeAsh,
 			BrowserExtraOpts: []chrome.Option{
 				chrome.EnableFeatures("CrosPrivacyHub"),
 				chrome.EnableFeatures("VideoConference"),
@@ -705,7 +690,6 @@ func init() {
 			ChargeLimit: DisableChargeLimit,
 			Powerd:      DoNotChangePowerd,
 		}, PowerFixtureOptions{
-			BrowserType: browser.TypeAsh,
 			BrowserExtraOpts: []chrome.Option{
 				chrome.EnableFeatures("AdaptiveCharging"),
 			},
@@ -750,7 +734,7 @@ func init() {
 			NightLight:         DisableNightLight,
 			DarkTheme:          EnableLightTheme,
 			KeyboardBrightness: SetKbBrightnessToZero,
-		}, PowerFixtureOptions{BrowserType: browser.TypeAsh,
+		}, PowerFixtureOptions{
 			BrowserExtraOpts: []chrome.Option{
 				chrome.EnableFeatures("ProductivityLauncherImageSearch"),
 				chrome.EnableFeatures("LauncherImageSearch"),
@@ -776,7 +760,7 @@ func init() {
 			NightLight:         DisableNightLight,
 			DarkTheme:          EnableLightTheme,
 			KeyboardBrightness: SetKbBrightnessToZero,
-		}, PowerFixtureOptions{BrowserType: browser.TypeAsh,
+		}, PowerFixtureOptions{
 			BrowserExtraOpts: []chrome.Option{
 				chrome.EnableFeatures("ReadAnythingWebUIToolbar"),
 				chrome.EnableFeatures("ReadAnythingReadAloud"),
@@ -800,7 +784,7 @@ func init() {
 			NightLight:         DisableNightLight,
 			DarkTheme:          EnableLightTheme,
 			KeyboardBrightness: SetKbBrightnessToZero,
-		}, PowerFixtureOptions{BrowserType: browser.TypeAsh,
+		}, PowerFixtureOptions{
 			BrowserExtraOpts: []chrome.Option{
 				// Options for allowing L1 playback in dev mode
 				chrome.ExtraArgs("--allow-ra-in-dev-mode"),
@@ -829,7 +813,6 @@ func init() {
 			DarkTheme:          EnableLightTheme,
 			KeyboardBrightness: SetKbBrightnessToZero,
 		}, PowerFixtureOptions{
-			BrowserType: browser.TypeAsh,
 			BrowserExtraOpts: []chrome.Option{
 				chrome.EnableFeatures("Mahi"),
 			},
@@ -996,7 +979,6 @@ type powerUIFixture struct {
 // PowerUIFixtureData is return back to tests.
 type PowerUIFixtureData struct {
 	Discharge bool
-	Bt        browser.Type
 	Cr        *chrome.Chrome
 	ARC       *arc.ARC
 }
@@ -1004,12 +986,6 @@ type PowerUIFixtureData struct {
 // Chrome returns Chrome. This adds support for chrome.HasChrome interface.
 func (fd PowerUIFixtureData) Chrome() *chrome.Chrome {
 	return fd.Cr
-}
-
-// BrowserType returns the browser type setup in fixture. This adds support for
-// browser.HasBrowserType interface.
-func (fd PowerUIFixtureData) BrowserType() browser.Type {
-	return fd.Bt
 }
 
 // NewPowerUIFixture returns a FixtureImpl to set device to use the specified
@@ -1092,8 +1068,7 @@ func (f *powerUIFixture) SetUp(ctx context.Context, s *testing.FixtState) interf
 		opts = append(opts, chrome.DisableFeatures(strings.Split(disabledFeatures, ",")...))
 	}
 
-	bt := f.powerFixtureOption.BrowserType
-	cr, err := browserfixt.NewChrome(ctx, bt, lacrosfixt.NewConfig(), opts...)
+	cr, err := chrome.New(ctx, opts...)
 	if err != nil {
 		s.Fatal("Failed to login session: ", err)
 	}
@@ -1153,7 +1128,7 @@ func (f *powerUIFixture) SetUp(ctx context.Context, s *testing.FixtState) interf
 	f.arc = a
 	f.cleanup = cleanup
 
-	return PowerUIFixtureData{Discharge: discharge, Bt: bt, Cr: f.cr, ARC: f.arc}
+	return PowerUIFixtureData{Discharge: discharge, Cr: f.cr, ARC: f.arc}
 }
 
 func (f *powerUIFixture) TearDown(ctx context.Context, s *testing.FixtState) {

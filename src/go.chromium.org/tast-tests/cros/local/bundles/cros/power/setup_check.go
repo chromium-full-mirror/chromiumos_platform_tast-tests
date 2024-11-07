@@ -8,9 +8,7 @@ import (
 	"context"
 	"time"
 
-	"go.chromium.org/tast-tests/cros/local/chrome/browser"
-	"go.chromium.org/tast-tests/cros/local/chrome/browser/browserfixt"
-	"go.chromium.org/tast-tests/cros/local/chrome/lacros/lacrosfixt"
+	"go.chromium.org/tast-tests/cros/local/chrome"
 	pm "go.chromium.org/tast-tests/cros/local/power/metrics"
 	"go.chromium.org/tast-tests/cros/local/power/setup"
 	"go.chromium.org/tast/core/ctxutil"
@@ -42,7 +40,7 @@ func SetupCheck(ctx context.Context, s *testing.State) {
 	defer cancel()
 
 	// Only Ash tconn is used by some setups.
-	cr, err := browserfixt.NewChrome(ctx, browser.TypeAsh, lacrosfixt.NewConfig())
+	cr, err := chrome.New(ctx)
 	if err != nil {
 		s.Fatal("Failed to login session: ", err)
 	}

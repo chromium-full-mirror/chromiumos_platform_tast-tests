@@ -12,12 +12,10 @@ import (
 	"go.chromium.org/tast-tests/cros/common/action"
 	"go.chromium.org/tast-tests/cros/common/android/ui"
 	upstartcommon "go.chromium.org/tast-tests/cros/common/upstart"
-	"go.chromium.org/tast-tests/cros/local/apps"
 	"go.chromium.org/tast-tests/cros/local/arc"
 	"go.chromium.org/tast-tests/cros/local/camera/testutil"
 	"go.chromium.org/tast-tests/cros/local/chrome"
 	"go.chromium.org/tast-tests/cros/local/chrome/ash"
-	"go.chromium.org/tast-tests/cros/local/chrome/browser"
 	"go.chromium.org/tast-tests/cros/local/chrome/display"
 	"go.chromium.org/tast-tests/cros/local/chrome/uiauto"
 	"go.chromium.org/tast-tests/cros/local/power/setup"
@@ -198,7 +196,6 @@ func init() {
 			KeyboardBrightness: setup.SetKbBrightnessToZero,
 			Wifi:               setup.DisableWifiInterfaces,
 		}, setup.PowerFixtureOptions{
-			BrowserType: browser.TypeAsh,
 			BrowserExtraOpts: []chrome.Option{
 				chrome.EnableFeatures("VCBackgroundReplace"),
 			},
@@ -233,7 +230,6 @@ type mediaFixtureImpl struct {
 // FixtData is the data returned by SetUp and passed to tests.
 type FixtData struct {
 	cr *chrome.Chrome
-	bt browser.Type
 	// ARC enables interaction with an already-started ARC environment.
 	// It cannot be closed by tests.
 	arc *arc.ARC
@@ -245,12 +241,6 @@ type FixtData struct {
 // Chrome returns Chrome. This adds support for chrome.HasChrome interface.
 func (fd FixtData) Chrome() *chrome.Chrome {
 	return fd.cr
-}
-
-// BrowserType returns the browser type setup in fixture. This adds support for
-// browser.HasBrowserType interface.
-func (fd FixtData) BrowserType() browser.Type {
-	return fd.bt
 }
 
 // ARC returns the ARC instance setup in fixture.
@@ -272,13 +262,11 @@ func (f *mediaFixtureImpl) SetUp(ctx context.Context, s *testing.FixtState) inte
 		f.cr = parentVal.cr
 		fixtData = FixtData{
 			cr: f.cr,
-			bt: parentVal.bt,
 		}
 	case *arc.PreData:
 		f.cr = parentVal.Chrome
 		fixtData = FixtData{
 			cr:  f.cr,
-			bt:  browser.TypeAsh,
 			arc: parentVal.ARC,
 			dev: parentVal.UIDevice,
 		}
@@ -338,16 +326,6 @@ func (f *mediaFixtureImpl) PreTest(ctx context.Context, s *testing.FixtTestState
 
 	if !f.disableScreenRecorder {
 		f.recorder = uiauto.CreateAndStartScreenRecorderWithAutoSelect(ctx, f.tconn)
-	}
-
-	// Clean up lacros browser b:324957897
-	isAppRunning, err := ash.AppRunning(ctx, f.tconn, apps.Lacros.ID)
-	if err != nil {
-		s.Logf("Failed to check app %s running", apps.Lacros.ID)
-	}
-
-	if isAppRunning {
-		apps.Close(ctx, f.tconn, apps.Lacros.ID)
 	}
 }
 

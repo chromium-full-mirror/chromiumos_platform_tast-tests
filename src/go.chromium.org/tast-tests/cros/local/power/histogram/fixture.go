@@ -7,10 +7,8 @@ package histogram
 
 import (
 	"context"
-	"time"
 
 	"go.chromium.org/tast-tests/cros/local/chrome"
-	"go.chromium.org/tast-tests/cros/local/chrome/lacros/lacrosfixt"
 	"go.chromium.org/tast/core/testing"
 )
 
@@ -48,19 +46,4 @@ func init() {
 		ResetTimeout:    chrome.ResetTimeout,
 		TearDownTimeout: chrome.ResetTimeout,
 	})
-
-	testing.AddFixture(&testing.Fixture{
-		Name:     "lacrosFastHistogramsAndBuiltinSmartDimModel",
-		Desc:     "Similar to chromeFastHistogramsAndBuiltinSmartDimModel but on lacros",
-		Contacts: []string{"alanlxl@google.com"},
-		Impl: chrome.NewLoggedInFixture(func(ctx context.Context, s *testing.FixtState) ([]chrome.Option, error) {
-			return lacrosfixt.NewConfig(lacrosfixt.ChromeOptions(
-				chrome.ExtraArgs(chromeQuickMetricsCollectionArg),
-				chrome.ExtraArgs(chromeSmartDimBuiltinModelArg))).Opts()
-		}),
-		SetUpTimeout:    chrome.LoginTimeout + 7*time.Minute,
-		ResetTimeout:    chrome.ResetTimeout,
-		TearDownTimeout: chrome.ResetTimeout,
-	})
-
 }

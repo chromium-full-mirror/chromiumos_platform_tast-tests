@@ -12,9 +12,7 @@ import (
 	"time"
 
 	"go.chromium.org/tast-tests/cros/local/bundles/cros/power/socialapp"
-	"go.chromium.org/tast-tests/cros/local/chrome/browser"
 	"go.chromium.org/tast-tests/cros/local/chrome/display"
-	"go.chromium.org/tast-tests/cros/local/chrome/lacros"
 	"go.chromium.org/tast-tests/cros/local/chrome/uiauto"
 	"go.chromium.org/tast-tests/cros/local/chrome/uiauto/faillog"
 	"go.chromium.org/tast-tests/cros/local/input"
@@ -108,17 +106,6 @@ func SocialApp(ctx context.Context, s *testing.State) {
 		s.Log("Failed to parse Element APK URL: ", err)
 	}
 	app := socialapp.NewElement(tconn, kb, a, d, username, apkURL)
-
-	bt := s.FixtValue().(setup.PowerUIFixtureData).Bt
-	if bt == browser.TypeLacros {
-		// The Element app uses a web page to log in with a Google account.
-		// Launch the lacros browser to allow the app to open the web page.
-		l, err := lacros.Launch(ctx, tconn)
-		if err != nil {
-			s.Fatal("Failed to launch lacros: ", err)
-		}
-		defer l.Close(cleanupCtx)
-	}
 
 	if err := setup.Battery(ctx, socialAppOperatingTimeout, discharge); err != nil {
 		s.Fatal("Setup battery failed: ", err)

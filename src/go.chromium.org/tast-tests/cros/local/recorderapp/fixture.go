@@ -11,7 +11,6 @@ import (
 
 	audiofixture "go.chromium.org/tast-tests/cros/local/audio/fixture"
 	"go.chromium.org/tast-tests/cros/local/chrome"
-	"go.chromium.org/tast-tests/cros/local/chrome/browser"
 	"go.chromium.org/tast-tests/cros/local/power"
 	powersetup "go.chromium.org/tast-tests/cros/local/power/setup"
 	"go.chromium.org/tast/core/testing"
@@ -57,7 +56,6 @@ func init() {
 		Contacts:     []string{"chromeos-recorder-app@google.com", "kamchonlathorn@chromium.org"},
 		BugComponent: "b:1522466", // ChromeOS > Platform > Technologies > Audio > Recorder App
 		Impl: powersetup.NewPowerUIFixture(recorderAppPowerTestOptions, powersetup.PowerFixtureOptions{
-			BrowserType: browser.TypeAsh,
 			BrowserExtraOpts: []chrome.Option{
 				chrome.EnableFeatures("Conch"),
 			},
@@ -77,7 +75,6 @@ func init() {
 		Contacts:     []string{"chromeos-recorder-app@google.com", "kamchonlathorn@chromium.org"},
 		BugComponent: "b:1522466", // ChromeOS > Platform > Technologies > Audio > Recorder App
 		Impl: powersetup.NewPowerUIFixture(recorderAppPowerTestOptions, powersetup.PowerFixtureOptions{
-			BrowserType:      browser.TypeAsh,
 			BrowserExtraOpts: []chrome.Option{chrome.EnableFeatures("Conch")},
 			EnableGAIALogin:  true,
 			ExtraOptsFunc:    resolveConchKey,

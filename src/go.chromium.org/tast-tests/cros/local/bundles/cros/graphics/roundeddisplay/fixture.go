@@ -6,7 +6,6 @@ package roundeddisplay
 
 import (
 	"go.chromium.org/tast-tests/cros/local/chrome"
-	"go.chromium.org/tast-tests/cros/local/chrome/browser"
 	powersetup "go.chromium.org/tast-tests/cros/local/power/setup"
 	"go.chromium.org/tast/core/testing"
 )
@@ -30,7 +29,6 @@ func init() {
 			DarkTheme:          powersetup.EnableLightTheme,
 			KeyboardBrightness: powersetup.SetKbBrightnessToZero,
 		}, powersetup.PowerFixtureOptions{
-			BrowserType: browser.TypeAsh,
 			BrowserExtraOpts: []chrome.Option{
 				chrome.ExtraArgs(
 					// By only allowing SingleOnTop strategy, we insure that
@@ -59,7 +57,6 @@ func init() {
 			DarkTheme:          powersetup.EnableLightTheme,
 			KeyboardBrightness: powersetup.SetKbBrightnessToZero,
 		}, powersetup.PowerFixtureOptions{
-			BrowserType: browser.TypeAsh,
 			BrowserExtraOpts: []chrome.Option{
 				chrome.ExtraArgs(FormatDisplayPropertiesAsSwitch(PanelRadii{
 					TopLeft:     18,
