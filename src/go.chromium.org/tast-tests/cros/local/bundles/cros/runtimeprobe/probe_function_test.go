@@ -22,6 +22,18 @@ func TestNormalizeComponentName(t *testing.T) {
 			input:    "model_category_1234_5678#12345",
 			expected: "model_category_1234_{Any}",
 		},
+		{ // match name policy (with CID only)
+			model:    "model",
+			category: "category",
+			input:    "model_category_1234",
+			expected: "model_category_1234_{Any}",
+		},
+		{ // match name policy (with CID only and seq appended)
+			model:    "model",
+			category: "category",
+			input:    "model_category_1234#12345",
+			expected: "model_category_1234_{Any}",
+		},
 		{ // not match name policy
 			model:    "model",
 			category: "category",

@@ -161,7 +161,7 @@ func normalizeComponentName(model, category, compName string) string {
 	for _, alias := range aliases {
 		aliasPatterns = append(aliasPatterns, regexp.QuoteMeta(alias))
 	}
-	pattern := regexp.MustCompile("^(" + regexp.QuoteMeta(model) + "_" + "(?:" + strings.Join(aliasPatterns, "|") + ")" + `_\d+)_\d+(?:#.*)?$`)
+	pattern := regexp.MustCompile("^(" + regexp.QuoteMeta(model) + "_" + "(?:" + strings.Join(aliasPatterns, "|") + ")" + `_\d+)(?:_\d+)?(?:#.*)?$`)
 	if matches := pattern.FindStringSubmatch(compName); len(matches) > 0 {
 		return matches[1] + "_{Any}"
 	}
