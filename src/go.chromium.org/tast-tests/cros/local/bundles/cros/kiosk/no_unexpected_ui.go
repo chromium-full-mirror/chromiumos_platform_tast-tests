@@ -15,8 +15,6 @@ import (
 	"go.chromium.org/tast-tests/cros/common/fixture"
 	"go.chromium.org/tast-tests/cros/common/policy/fakedms"
 	"go.chromium.org/tast-tests/cros/local/chrome"
-	"go.chromium.org/tast-tests/cros/local/chrome/lacros/lacrosfaillog"
-	"go.chromium.org/tast-tests/cros/local/chrome/lacros/lacrosproc"
 	"go.chromium.org/tast-tests/cros/local/chrome/uiauto"
 	"go.chromium.org/tast-tests/cros/local/chrome/uiauto/faillog"
 	"go.chromium.org/tast-tests/cros/local/chrome/uiauto/nodewith"
@@ -116,22 +114,7 @@ func verifyScreenIsAllGreen(ctx context.Context, screenshotPath string) error {
 	}, &testing.PollOptions{Interval: time.Second, Timeout: verifyPixelsTimeout})
 }
 
-func verifyExpectedBrowser(ctx context.Context, cr *chrome.Chrome, isLacros bool) error {
-	testing.ContextLog(ctx, "Verifying expected browser")
-	tconn, err := cr.TestAPIConn(ctx)
-	if err != nil {
-		return errors.Wrap(err, "failed to create Test API connection")
-	}
-	_, err = lacrosproc.Root(ctx, tconn)
-	if isLacros && err != nil {
-		return errors.Wrap(err, "expected lacros but failed to get lacros process")
-	} else if !isLacros && err == nil {
-		return errors.New("expected ash but found lacros process")
-	}
-	return nil
-}
-
-func saveTestArtifacts(ctx context.Context, cr *chrome.Chrome, hasError bool, outDir string, isLacros bool) error {
+func saveTestArtifacts(ctx context.Context, cr *chrome.Chrome, hasError bool, outDir string) error {
 	tconn, err := cr.TestAPIConn(ctx)
 	if err != nil {
 		return errors.Wrap(err, "failed to create Test API connection")
@@ -141,9 +124,6 @@ func saveTestArtifacts(ctx context.Context, cr *chrome.Chrome, hasError bool, ou
 		if err := screenshot.Capture(ctx, filepath.Join(outDir, "NoUnexpectedUI_error.png")); err != nil {
 			return errors.Wrap(err, "failed to take screenshot")
 		}
-	}
-	if isLacros {
-		lacrosfaillog.Save(ctx, tconn)
 	}
 	return nil
 }
@@ -173,7 +153,7 @@ func NoUnexpectedUI(ctx context.Context, s *testing.State) {
 		s.Fatal("Failed to create Chrome in Kiosk mode: ", err)
 	}
 	defer func(ctx context.Context) {
-		if err := saveTestArtifacts(ctx, cr, s.HasError(), s.OutDir(), false /* is Lacros*/); err != nil {
+		if err := saveTestArtifacts(ctx, cr, s.HasError(), s.OutDir()); err != nil {
 			s.Error("Failed to save test artifacts: ", err)
 		}
 		if err := kiosk.Close(ctx); err != nil {
@@ -191,9 +171,5 @@ func NoUnexpectedUI(ctx context.Context, s *testing.State) {
 
 	if err := verifyScreenIsAllGreen(ctx, filepath.Join(s.OutDir(), "GreenApp.png")); err != nil {
 		s.Fatal("Failed to verify Kiosk is all green: ", err)
-	}
-
-	if err := verifyExpectedBrowser(ctx, cr, false /* is Lacros*/); err != nil {
-		s.Fatal("Failed to verify expected browser: ", err)
 	}
 }

@@ -19,7 +19,6 @@ import (
 	"go.chromium.org/tast-tests/cros/common/policy/fakedms"
 	"go.chromium.org/tast-tests/cros/local/chrome"
 	"go.chromium.org/tast-tests/cros/local/chrome/ash/ashproc"
-	"go.chromium.org/tast-tests/cros/local/chrome/lacros/lacrosproc"
 	"go.chromium.org/tast-tests/cros/local/kioskmode"
 	"go.chromium.org/tast-tests/cros/local/policyutil"
 	"go.chromium.org/tast-tests/cros/local/screenshot"
@@ -63,8 +62,6 @@ type kioskFixture struct {
 	proc *process.Process
 	// kiosk is a reference to the Kiosk intstance.
 	kiosk *kioskmode.Kiosk
-	// lacros is a flag indicating whether fixture implementation suppose to run Lacros.
-	lacros bool
 	// signinTestExtensionManifestKey is the manifest key of the test extension used to interact with
 	// Chrome in the sign in screen.
 	signinTestExtensionManifestKey string
@@ -137,17 +134,6 @@ func (k *kioskFixture) SetUp(ctx context.Context, s *testing.FixtState) interfac
 
 	if err := kiosk.WaitLaunchLogs(ctx); err != nil {
 		s.Fatal("Failed to launch Kiosk: ", err)
-	}
-
-	if k.lacros {
-		testConn, err := cr.TestAPIConn(ctx)
-		if err != nil {
-			s.Fatal("Failed to create TestAPI connection: ", err)
-		}
-		_, err = lacrosproc.Root(ctx, testConn)
-		if err != nil {
-			s.Fatal("Failed to get lacros proc: ", err)
-		}
 	}
 
 	proc, err := ashproc.Root()

@@ -15,7 +15,6 @@ import (
 	"go.chromium.org/tast-tests/cros/common/policy"
 	"go.chromium.org/tast-tests/cros/common/policy/fakedms"
 	"go.chromium.org/tast-tests/cros/local/chrome"
-	"go.chromium.org/tast-tests/cros/local/chrome/lacros/lacrosproc"
 	"go.chromium.org/tast-tests/cros/local/chrome/useractions"
 	"go.chromium.org/tast-tests/cros/local/inputs/inputactions"
 	"go.chromium.org/tast-tests/cros/local/inputs/testserver"
@@ -30,12 +29,8 @@ import (
 const (
 	// KioskNonVK is the fixture for physical keyboard in Kiosk mode for ash.
 	KioskNonVK = "kioskNonVK"
-	// KioskNonVK is the fixture for physical keyboard in Kiosk mode for lacros.
-	LacrosKioskNonVK = "lacrosKioskNonVK"
 	// KioskNonVK is the fixture for virtual keyboard in Kiosk mode for ash.
 	KioskVK = "kioskVK"
-	// KioskNonVK is the fixture for virtual keyboard in Kiosk mode for lacros.
-	LacrosKioskVK = "lacrosKioskVK"
 )
 
 func init() {
@@ -47,25 +42,6 @@ func init() {
 			"alt-modalities-stability@google.com",
 		},
 		Impl:            &inputsKioskFixture{},
-		SetUpTimeout:    kioskmode.SetupDuration + kioskmode.LaunchDuration,
-		TearDownTimeout: 5*time.Second + kioskmode.CleanupDuration, // Chrome unlock time + kiosk clean up time.
-		ResetTimeout:    chrome.ResetTimeout,
-		Parent:          fixture.FakeDMSEnrolled,
-		Vars:            []string{"ui.signinProfileTestExtensionManifestKey"},
-	})
-	testing.AddFixture(&testing.Fixture{
-		Name: LacrosKioskNonVK,
-		Desc: "Fixture should be used to test physical keyboard typing in kiosk mode (lacros chrome) with e14s-test page loaded",
-		Contacts: []string{
-			"jhtin@chromium.org",
-			"alt-modalities-stability@google.com",
-		},
-		Impl: &inputsKioskFixture{
-			extraPublicAccountPolicies: []policy.Policy{
-				&policy.LacrosAvailability{Val: "lacros_only"},
-			},
-			lacros: true,
-		},
 		SetUpTimeout:    kioskmode.SetupDuration + kioskmode.LaunchDuration,
 		TearDownTimeout: 5*time.Second + kioskmode.CleanupDuration, // Chrome unlock time + kiosk clean up time.
 		ResetTimeout:    chrome.ResetTimeout,
@@ -88,26 +64,6 @@ func init() {
 		Parent:          fixture.FakeDMSEnrolled,
 		Vars:            []string{"ui.signinProfileTestExtensionManifestKey"},
 	})
-	testing.AddFixture(&testing.Fixture{
-		Name: LacrosKioskVK,
-		Desc: "Fixture should be used to test virtual keyboard typing in kiosk mode (lacros chrome) with e14s-test page loaded",
-		Contacts: []string{
-			"jhtin@chromium.org",
-			"alt-modalities-stability@google.com",
-		},
-		Impl: &inputsKioskFixture{
-			extraOpts: []chrome.Option{chrome.VKEnabled(), chrome.ExtraArgs("--force-tablet-mode=touch_view")},
-			extraPublicAccountPolicies: []policy.Policy{
-				&policy.LacrosAvailability{Val: "lacros_only"},
-			},
-			lacros: true,
-		},
-		SetUpTimeout:    kioskmode.SetupDuration + kioskmode.LaunchDuration,
-		TearDownTimeout: 5*time.Second + kioskmode.CleanupDuration, // Chrome unlock time + kiosk clean up time.
-		ResetTimeout:    chrome.ResetTimeout,
-		Parent:          fixture.FakeDMSEnrolled,
-		Vars:            []string{"ui.signinProfileTestExtensionManifestKey"},
-	})
 }
 
 type inputsKioskFixture struct {
@@ -116,11 +72,9 @@ type inputsKioskFixture struct {
 	kiosk      *kioskmode.Kiosk
 	extraOpts  []chrome.Option
 	// extraPublicAccountPolicies holds a policies that will be applied.
-	extraPublicAccountPolicies []policy.Policy
-	tconn                      *chrome.TestConn
-	uc                         *useractions.UserContext
-	// lacros is a flag indicating whether fixture implementation suppose to run Lacros.
-	lacros                         bool
+	extraPublicAccountPolicies     []policy.Policy
+	tconn                          *chrome.TestConn
+	uc                             *useractions.UserContext
 	signinTestExtensionManifestKey string
 }
 
@@ -203,12 +157,6 @@ func (k *inputsKioskFixture) SetUp(ctx context.Context, s *testing.FixtState) in
 	k.tconn, err = k.cr.TestAPIConn(ctx)
 	if err != nil {
 		return errors.Wrap(err, "failed to get test API connection")
-	}
-
-	if k.lacros {
-		if _, err = lacrosproc.Root(ctx, k.tconn); err != nil {
-			s.Fatal("Failed to get lacros proc: ", err)
-		}
 	}
 
 	uc, err := inputactions.NewInputsUserContextWithoutState(ctx, "", s.OutDir(), k.cr, k.tconn, nil)
