@@ -87,7 +87,7 @@ func PersistenceWifiSansBluetooth(ctx context.Context, s *testing.State) {
 			s.Fatal("Failed to set bluetooth enabled on boot: ", err)
 		}
 		s.Log("Re-enabling bluetooth on DUT")
-		if _, err := bluetoothService.Enable(ctx, &empty.Empty{}); err != nil {
+		if _, err := bluetoothService.SetPowered(ctx, &bluetooth.SetPoweredRequest{Powered: true}); err != nil {
 			s.Fatal("Failed to re-enable bluetooth: ", err)
 		}
 	}(ctx)
@@ -152,7 +152,7 @@ func PersistenceWifiSansBluetooth(ctx context.Context, s *testing.State) {
 			s.Fatal("Failed to set bluetooth disabled on boot: ", err)
 		}
 		s.Log("Disabling bluetooth")
-		if _, err := bluetoothService.Disable(ctx, &empty.Empty{}); err != nil {
+		if _, err := bluetoothService.SetPowered(ctx, &bluetooth.SetPoweredRequest{Powered: false}); err != nil {
 			s.Fatal("Failed to disable bluetooth: ", err)
 		}
 		if err := wifiutil.AssertBluetoothEnabledState(ctx, bluetoothService, false); err != nil {

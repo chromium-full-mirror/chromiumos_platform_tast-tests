@@ -30,8 +30,7 @@ var bluetoothFacadeSingleton common.BluetoothFacade = nil
 // same stack.
 //
 // If the last initialized bluetooth stack is differs from the desired stack,
-// the previous BluetoothFacade instance will be disabled prior to creating
-// a new instance with the desired stack.
+// the bluetooth stack is switched and a new facade instance is created.
 //
 // Note: Even if you do not need to use the facade, this method is also intended
 // to be the way to configure the DUT to use a given stack. So for example, if
@@ -45,25 +44,13 @@ func NewBluetoothFacade(ctx context.Context, stackType common.BluetoothStackType
 			testing.ContextLogf(ctx, "Reusing existing %s bluetooth facade", currentStackType)
 			return bluetoothFacadeSingleton, nil
 		}
-
-		if alive, err := bluetoothFacadeSingleton.IsAlive(ctx); err != nil {
-			// Only logs the error, assuming the existing bluetooth facade is not alive if the method fails,
-			// continue on creating a new instance with the desired stack as it can still be initiated anyway.
-			testing.ContextLogf(ctx, "Failed to check if existing %s bluetooth facade is alive: %v", currentStackType, err)
-		} else if alive {
-			testing.ContextLogf(ctx, "Disabling existing %s bluetooth facade", currentStackType)
-			if err := bluetoothFacadeSingleton.Disable(ctx); err != nil {
-				bluetoothFacadeSingleton = nil
-				return nil, errors.Wrapf(err, "failed to disable existing %s bluetooth facade", currentStackType)
-			}
-		}
 		bluetoothFacadeSingleton = nil
 	}
 	var facade common.BluetoothFacade
 	switch stackType {
 	case common.BluetoothStackTypeBluez:
 		if err := floss.SetFlossEnabled(ctx, false); err != nil {
-			return nil, errors.Wrap(err, "failed to disable floss prior to enabling bluez")
+			return nil, errors.Wrap(err, "failed to disable floss prior to initializing bluez facade")
 		}
 		testing.ContextLog(ctx, "Initializing new bluez bluetooth facade")
 		if err := testing.Poll(ctx, func(ctx context.Context) error {
@@ -77,6 +64,9 @@ func NewBluetoothFacade(ctx context.Context, stackType common.BluetoothStackType
 			return nil, errors.Wrap(err, "failed to initialize new bluez bluetooth facade")
 		}
 	case common.BluetoothStackTypeFloss:
+		if err := floss.SetFlossEnabled(ctx, true); err != nil {
+			return nil, errors.Wrap(err, "failed to enable floss prior to initializing floss facade")
+		}
 		testing.ContextLog(ctx, "Initializing new floss bluetooth facade")
 		var err error
 		facade, err = floss.NewBluetoothFlossFacade(ctx)

@@ -67,7 +67,7 @@ func BluetoothXorWifi(ctx context.Context, s *testing.State) {
 		if err != nil {
 			s.Error("Failed to create new bluetooth service client: ", err)
 		} else {
-			if _, err := bluetoothService.Enable(ctx, &empty.Empty{}); err != nil {
+			if _, err := bluetoothService.SetPowered(ctx, &bluetooth.SetPoweredRequest{Powered: true}); err != nil {
 				s.Error("Failed to re-enable bluetooth: ", err)
 			}
 		}
@@ -167,7 +167,7 @@ func setAssertBluetooth(ctx context.Context, bluetoothService bluetooth.Bluetoot
 	if enabled {
 		// Enable Bluetooth and assert Bluetooth is up.
 		testing.ContextLog(ctx, "Enabling bluetooth")
-		if _, err := bluetoothService.Enable(ctx, &empty.Empty{}); err != nil {
+		if _, err := bluetoothService.SetPowered(ctx, &bluetooth.SetPoweredRequest{Powered: true}); err != nil {
 			return errors.Wrap(err, "failed to enable bluetooth")
 		}
 		testing.ContextLog(ctx, "Verifying that bluetooth has been enabled")
@@ -180,7 +180,7 @@ func setAssertBluetooth(ctx context.Context, bluetoothService bluetooth.Bluetoot
 	} else {
 		// Disable Bluetooth and assert Bluetooth is down.
 		testing.ContextLog(ctx, "Disabling bluetooth")
-		if _, err := bluetoothService.Disable(ctx, &empty.Empty{}); err != nil {
+		if _, err := bluetoothService.SetPowered(ctx, &bluetooth.SetPoweredRequest{Powered: false}); err != nil {
 			return errors.Wrap(err, "failed to disable bluetooth")
 		}
 		testing.ContextLog(ctx, "Verifying that bluetooth has been disabled")

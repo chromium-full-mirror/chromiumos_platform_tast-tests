@@ -105,15 +105,6 @@ type BluetoothFacade interface {
 	// StackType returns the BluetoothStackType the facade uses.
 	StackType() BluetoothStackType
 
-	// IsAlive checks if the bluetooth is alive by checking relative job/service.
-	IsAlive(ctx context.Context) (bool, error)
-
-	// Enable will turn on the bluetooth daemons and power on adapter.
-	Enable(ctx context.Context) error
-
-	// Disable will turn off the bluetooth daemons and power off adapter.
-	Disable(ctx context.Context) error
-
 	// Reset resets the default adapter and turns it back on if powerOn is true.
 	Reset(ctx context.Context, powerOn bool) error
 

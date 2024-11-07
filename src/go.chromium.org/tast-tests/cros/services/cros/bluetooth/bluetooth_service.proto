@@ -40,12 +40,6 @@ service BluetoothService {
   // StackType returns the BluetoothStackType the facade uses.
   rpc StackType(google.protobuf.Empty) returns (StackTypeResponse) {}
 
-  // Enable will turn on the bluetooth daemons and power on adapter.
-  rpc Enable(google.protobuf.Empty) returns (google.protobuf.Empty) {}
-
-  // Disable will turn off the bluetooth daemons and power off adapter.
-  rpc Disable(google.protobuf.Empty) returns (google.protobuf.Empty) {}
-
   // Reset resets the default adapter and turns it back on if powerOn is true.
   rpc Reset(ResetRequest) returns (google.protobuf.Empty) {}
 

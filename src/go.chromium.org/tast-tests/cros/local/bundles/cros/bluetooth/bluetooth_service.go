@@ -111,28 +111,6 @@ func (b *BtService) StackType(ctx context.Context, request *emptypb.Empty) (*pb.
 	return response, nil
 }
 
-// Enable will turn on the bluetooth daemons and power on adapter.
-func (b *BtService) Enable(ctx context.Context, request *emptypb.Empty) (*emptypb.Empty, error) {
-	if err := b.assertHasFacade(); err != nil {
-		return nil, err
-	}
-	if err := b.facade.Enable(ctx); err != nil {
-		return nil, err
-	}
-	return &emptypb.Empty{}, nil
-}
-
-// Disable will turn off the bluetooth daemons and power off adapter.
-func (b *BtService) Disable(ctx context.Context, request *emptypb.Empty) (*emptypb.Empty, error) {
-	if err := b.assertHasFacade(); err != nil {
-		return nil, err
-	}
-	if err := b.facade.Disable(ctx); err != nil {
-		return nil, err
-	}
-	return &emptypb.Empty{}, nil
-}
-
 // Reset resets the default adapter and turns it back on if powerOn is true.
 func (b *BtService) Reset(ctx context.Context, request *pb.ResetRequest) (*emptypb.Empty, error) {
 	if err := b.assertHasFacade(); err != nil {

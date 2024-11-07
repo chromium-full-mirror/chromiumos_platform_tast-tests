@@ -326,7 +326,7 @@ func (tf *TestFixture) initializeDuts(ctx, daemonCtx context.Context) error {
 		if _, err := d.bluetoothClient.SetupBluetoothFacade(ctx, &empty.Empty{}); err != nil {
 			return errors.Wrap(err, "failed to setup bluetooth facade on DUT")
 		}
-		if _, err := d.bluetoothClient.Enable(ctx, &empty.Empty{}); err != nil {
+		if _, err := d.bluetoothClient.SetPowered(ctx, &bluetooth.SetPoweredRequest{Powered: true}); err != nil {
 			return errors.Wrap(err, "failed to enable bluetooth on DUT")
 		}
 

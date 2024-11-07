@@ -44,29 +44,6 @@ func (b *BluetoothBluezFacade) StackType() common.BluetoothStackType {
 	return common.BluetoothStackTypeBluez
 }
 
-// IsAlive checks if the bluetooth is alive by checking relative job/service.
-func (b *BluetoothBluezFacade) IsAlive(ctx context.Context) (bool, error) {
-	if !upstart.JobExists(ctx, bluezDaemonJob) {
-		return false, nil
-	}
-	return upstart.IsServiceAvailable(ctx, bluez.DBusBluezService)
-}
-
-// Enable will turn on the bluetooth daemons and power on adapter.
-func (b *BluetoothBluezFacade) Enable(ctx context.Context) error {
-	if b.cachedDefaultAdapter == nil {
-		if err := b.initializeAdapter(ctx); err != nil {
-			return err
-		}
-	}
-
-	// Power on the adapter.
-	if err := b.SetPowered(ctx, true); err != nil {
-		return errors.Wrap(err, "failed to power on adapter")
-	}
-	return nil
-}
-
 func (b *BluetoothBluezFacade) initializeAdapter(ctx context.Context) error {
 	// Ensure daemon is running.
 	if err := upstart.CheckJob(ctx, bluezDaemonJob); err != nil {
@@ -81,15 +58,6 @@ func (b *BluetoothBluezFacade) initializeAdapter(ctx context.Context) error {
 	}
 	b.cachedDefaultAdapter = defaultAdapter
 	return nil
-}
-
-// Disable will turn off the bluetooth daemons and power off adapter.
-func (b *BluetoothBluezFacade) Disable(ctx context.Context) error {
-	if err := b.SetPowered(ctx, false); err != nil {
-		return errors.Wrap(err, "failed to disable bluez adapter")
-	}
-	b.cachedDefaultAdapter = nil
-	return upstart.StopJob(ctx, bluezDaemonJob)
 }
 
 func (b *BluetoothBluezFacade) defaultAdapter() (*bluez.Adapter, error) {

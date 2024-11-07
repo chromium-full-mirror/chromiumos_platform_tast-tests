@@ -99,7 +99,6 @@ func SetFlossEnabled(ctx context.Context, enabled bool) error {
 // BluetoothFlossFacade is an implementation of the BluetoothFacade interface
 // for the floss bluetooth stack.
 type BluetoothFlossFacade struct {
-	flossEnabled      bool
 	adapterEnabled    bool
 	adapterHCI        int
 	managerClient     *floss.ManagerClient
@@ -108,13 +107,9 @@ type BluetoothFlossFacade struct {
 	mockIsPairable    bool
 }
 
-// NewBluetoothFlossFacade initializes a new BluetoothFlossFacade and enables
-// the floss bluetooth stack.
+// NewBluetoothFlossFacade initializes a new BluetoothFlossFacade.
 func NewBluetoothFlossFacade(ctx context.Context) (*BluetoothFlossFacade, error) {
 	b := &BluetoothFlossFacade{}
-	if err := SetFlossEnabled(ctx, true); err != nil {
-		return nil, errors.Wrap(err, "failed to set floss as enabled")
-	}
 	if err := b.initializeManagerClient(ctx); err != nil {
 		return nil, err
 	}
@@ -124,33 +119,6 @@ func NewBluetoothFlossFacade(ctx context.Context) (*BluetoothFlossFacade, error)
 // StackType returns the BluetoothStackType the facade uses.
 func (b *BluetoothFlossFacade) StackType() common.BluetoothStackType {
 	return common.BluetoothStackTypeFloss
-}
-
-// IsAlive checks if the bluetooth is alive by checking relative job/service.
-func (b *BluetoothFlossFacade) IsAlive(ctx context.Context) (bool, error) {
-	if !upstart.JobExists(ctx, flossManagerDaemonJob) {
-		return false, nil
-	}
-	return upstart.IsServiceAvailable(ctx, floss.DBusFlossManagerService)
-}
-
-// Enable will turn on the bluetooth daemons and power on adapter.
-func (b *BluetoothFlossFacade) Enable(ctx context.Context) error {
-	b.flossEnabled = false
-	if err := SetFlossEnabled(ctx, true); err != nil {
-		return errors.Wrap(err, "failed to set floss as enabled")
-	}
-	if err := b.initializeManagerClient(ctx); err != nil {
-		return err
-	}
-	if err := b.SetPowered(ctx, true); err != nil {
-		testing.ContextLog(ctx, "Failed to enable floss adapter on first attempt after enabling floss: ", err)
-		if err := b.SetPowered(ctx, true); err != nil {
-			return errors.Wrap(err, "failed to enable floss adapter on second attempt after enabling floss")
-		}
-	}
-	b.flossEnabled = true
-	return nil
 }
 
 func (b *BluetoothFlossFacade) initializeManagerClient(ctx context.Context) error {
@@ -175,27 +143,6 @@ func (b *BluetoothFlossFacade) initializeAdapterSpecificDBusClients(ctx context.
 	return nil
 }
 
-// Disable will turn off the bluetooth daemons and power off adapter.
-func (b *BluetoothFlossFacade) Disable(ctx context.Context) error {
-	// Power off adapter.
-	if err := b.SetPowered(ctx, false); err != nil {
-		return errors.Wrap(err, "failed to disable floss adapter")
-	}
-
-	// Clear enabled state and clients.
-	b.flossEnabled = false
-	b.adapterEnabled = false
-	b.managerClient = nil
-	b.adapterClient = nil
-
-	// Configure DUT to not use Floss.
-	if err := SetFlossEnabled(ctx, false); err != nil {
-		return errors.Wrap(err, "failed to set floss as not enabled")
-	}
-
-	return nil
-}
-
 func (b *BluetoothFlossFacade) assertManagerClientExists() error {
 	if b.managerClient == nil {
 		return errors.New("Enable must be called again prior to using this method")
@@ -204,9 +151,6 @@ func (b *BluetoothFlossFacade) assertManagerClientExists() error {
 }
 
 func (b *BluetoothFlossFacade) assertEnabled() error {
-	if !b.flossEnabled {
-		return errors.New("Enable must be called prior to using this method")
-	}
 	if !b.adapterEnabled {
 		return errors.New("SetPowered must be called to power on adapter prior to using this method")
 	}

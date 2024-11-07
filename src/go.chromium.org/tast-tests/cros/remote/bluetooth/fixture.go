@@ -543,9 +543,9 @@ type fixture struct {
 	fastPairEnabled bool
 	btStack         bts.BluetoothStackType
 	// Initial BT stack, for recover at clean up.
-	initBtStack     bts.BluetoothStackType
+	initBtStack bts.BluetoothStackType
 	// Initial BT power status, for recover at clean up.
-	initPower       bool
+	initPower bool
 
 	// Stateful vars which are initialized during SetUp.
 	fv *FixtValue
@@ -894,7 +894,7 @@ func (tf *fixture) setUpDut(ctx context.Context, dutConfig *DUTConfig) error {
 	}); err != nil {
 		return errors.Wrapf(err, "failed to set DUT bluetooth stack as %q", tf.btStack)
 	}
-	if _, err := dutConfig.BluetoothService.Enable(ctx, &emptypb.Empty{}); err != nil {
+	if _, err := dutConfig.BluetoothService.SetPowered(ctx, &bts.SetPoweredRequest{Powered: true}); err != nil {
 		return errors.Wrapf(err, "failed to enable bluetooth on DUT with stack %q", tf.btStack)
 	}
 	if _, err := dutConfig.BluetoothService.Reset(ctx, &bts.ResetRequest{

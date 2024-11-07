@@ -8,10 +8,9 @@ import (
 	"context"
 	"time"
 
-	"google.golang.org/protobuf/types/known/emptypb"
-
 	"go.chromium.org/tast-tests/cros/common/tbdep"
 	"go.chromium.org/tast-tests/cros/remote/bluetooth"
+	sbt "go.chromium.org/tast-tests/cros/services/cros/bluetooth"
 	"go.chromium.org/tast/core/testing"
 	"go.chromium.org/tast/core/testing/hwdep"
 )
@@ -59,7 +58,9 @@ func IdlePower(ctx context.Context, s *testing.State) {
 	interval := 5 * time.Minute // Power measurement interval in minutes
 
 	// Disable Bluetooth
-	fv.BluetoothService.Disable(ctx, &emptypb.Empty{})
+	if _, err := fv.BluetoothService.SetPowered(ctx, &sbt.SetPoweredRequest{Powered: false}); err != nil {
+		s.Fatal("Failed to disable Bluetooth")
+	}
 
 	if err := fv.PowerCooldown(ctx); err != nil {
 		s.Fatal("Failed to cooldown for power measurement: ", err)
@@ -81,7 +82,9 @@ func IdlePower(ctx context.Context, s *testing.State) {
 	s.Log("Measured power [W]: ", pOff)
 
 	// Enable Bluetooth
-	fv.BluetoothService.Enable(ctx, &emptypb.Empty{})
+	if _, err := fv.BluetoothService.SetPowered(ctx, &sbt.SetPoweredRequest{Powered: true}); err != nil {
+		s.Fatal("Failed to enable Bluetooth")
+	}
 
 	if err := fv.PowerCooldown(ctx); err != nil {
 		s.Fatal("Failed to cooldown for power measurement: ", err)

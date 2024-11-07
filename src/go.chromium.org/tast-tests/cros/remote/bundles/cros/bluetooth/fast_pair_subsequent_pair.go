@@ -72,9 +72,7 @@ func FastPairSubsequentPair(ctx context.Context, s *testing.State) {
 	// this we prevent the Companion from receiving an advertisement until after the primary
 	// DUT has finished pairing successfully.
 	testing.ContextLog(ctx, "Powering off bluetooth on the Companion DUT")
-	if _, err := companionDUTConfig.BluetoothService.SetPowered(ctx, &bts.SetPoweredRequest{
-		Powered: false,
-	}); err != nil {
+	if _, err := companionDUTConfig.BluetoothService.SetPowered(ctx, &bts.SetPoweredRequest{Powered: false}); err != nil {
 		s.Fatal("Failed to power off bluetooth adapter on the companion DUT: ", err)
 	}
 
@@ -115,9 +113,7 @@ func FastPairSubsequentPair(ctx context.Context, s *testing.State) {
 
 	// Enable Bluetooth on the Companion DUT.
 	testing.ContextLog(ctx, "Powering on bluetooth on the Companion DUT")
-	if _, err := companionDUTConfig.BluetoothService.SetPowered(ctx, &bts.SetPoweredRequest{
-		Powered: true,
-	}); err != nil {
+	if _, err := companionDUTConfig.BluetoothService.SetPowered(ctx, &bts.SetPoweredRequest{Powered: true}); err != nil {
 		s.Fatal("Failed to power on bluetooth adapter on the companion DUT: ", err)
 	}
 

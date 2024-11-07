@@ -97,7 +97,7 @@ func WarningDialogFromQuickSettings(ctx context.Context, s *testing.State) {
 	}
 
 	// Enable Bluetooth
-	if _, err := fv.BluetoothService.Enable(ctx, &emptypb.Empty{}); err != nil {
+	if _, err := fv.BluetoothService.SetPowered(ctx, &bts.SetPoweredRequest{Powered: true}); err != nil {
 		s.Fatal("Failed to enable Bluetooth: ", err)
 	}
 
