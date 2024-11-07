@@ -19,6 +19,7 @@ import (
 	"go.chromium.org/tast-tests/cros/local/arc"
 	"go.chromium.org/tast-tests/cros/local/arc/optin"
 	"go.chromium.org/tast-tests/cros/local/chrome"
+	"go.chromium.org/tast-tests/cros/local/chrome/uiauto/vkb"
 	"go.chromium.org/tast/core/errors"
 	"go.chromium.org/tast/core/testing"
 )
@@ -128,13 +129,24 @@ func Backup(ctx context.Context, s *testing.State) {
 	// To capture a screenshot of the UI, we keep the activiy open after the test completes (or fails)
 	// instead of calling `defer act.Stop()`.
 
-	s.Logf("Having the test app save a file named %s", filename)
 	editMessage := d.Object(ui.ID(editMessageID))
-	if err := editMessage.WaitForExists(ctx, defaultTimeout); err != nil {
-		s.Fatal("Failed to wait for edit message to exist: ", err)
+	vkbCtx := vkb.NewContext(cr, tconn)
+
+	enterTextOnApp := func(inputText string) error {
+		if err := editMessage.WaitForExists(ctx, defaultTimeout); err != nil {
+			return errors.Wrap(err, "failed to wait for edit message to exist")
+		}
+		if err := editMessage.SetText(ctx, inputText); err != nil {
+			return errors.Wrap(err, "failed to set edit message text")
+		}
+		// Ensure to hide the virtual keyboard if shown.
+		vkbCtx.HideVirtualKeyboard()(ctx)
+		return nil
 	}
-	if err := editMessage.SetText(ctx, filename); err != nil {
-		s.Fatal("Failed to set edit message text: ", err)
+
+	s.Logf("Having the test app save a file named %s", filename)
+	if err := enterTextOnApp(filename); err != nil {
+		s.Fatal("Failed to enter text: ", err)
 	}
 	save := d.Object(ui.ID(saveID))
 	if err := save.Click(ctx); err != nil {
@@ -156,6 +168,7 @@ func Backup(ctx context.Context, s *testing.State) {
 	if err != nil {
 		s.Fatal("Failed to check if ever backed up: ", err)
 	}
+	act.Close(ctx)
 
 	s.Log("Running backup")
 	if err := a.Command(ctx, "bmgr", "backupnow", pkg).Run(testexec.DumpLogOnError); err != nil {
@@ -202,11 +215,8 @@ func Backup(ctx context.Context, s *testing.State) {
 
 	// Clear and load.
 	s.Log("Having the test app clear the test file")
-	if err := editMessage.WaitForExists(ctx, defaultTimeout); err != nil {
-		s.Fatal("Failed to wait for edit message to exist: ", err)
-	}
-	if err := editMessage.SetText(ctx, filename); err != nil {
-		s.Fatal("Failed to set edit message text: ", err)
+	if err := enterTextOnApp(filename); err != nil {
+		s.Fatal("Failed to enter text: ", err)
 	}
 	clear := d.Object(ui.ID(clearID))
 	if err := clear.Click(ctx); err != nil {
@@ -221,6 +231,7 @@ func Backup(ctx context.Context, s *testing.State) {
 	if err := failContent.WaitForExists(ctx, 30*time.Second); err != nil {
 		s.Fatal("Failed to wait for failure file content to exist (after running backup): ", err)
 	}
+	act.Close(ctx)
 
 	s.Log("Running restore")
 	if err := a.Command(ctx, "bmgr", "restore", restoreToken, pkg).Run(testexec.DumpLogOnError); err != nil {
@@ -238,11 +249,8 @@ func Backup(ctx context.Context, s *testing.State) {
 	}
 
 	s.Logf("Having the test app load a file named %s", filename)
-	if err := editMessage.WaitForExists(ctx, defaultTimeout); err != nil {
-		s.Fatal("Failed to wait for edit message to exist: ", err)
-	}
-	if err := editMessage.SetText(ctx, filename); err != nil {
-		s.Fatal("Failed to set edit message text: ", err)
+	if err := enterTextOnApp(filename); err != nil {
+		s.Fatal("Failed to enter text: ", err)
 	}
 	if err := load.Click(ctx); err != nil {
 		s.Fatal("Failed to click load: ", err)
