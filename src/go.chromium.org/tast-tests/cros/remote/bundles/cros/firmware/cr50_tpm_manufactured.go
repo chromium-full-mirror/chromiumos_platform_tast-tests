@@ -28,7 +28,7 @@ func init() {
 		Attr:         []string{"group:firmware", "firmware_cr50"},
 		Fixture:      fixture.DevMode,
 		Timeout:      5 * time.Minute,
-		HardwareDeps: hwdep.D(hwdep.ChromeEC(), hwdep.GSCRWKeyIDProd(), hwdep.GSCUART()),
+		HardwareDeps: hwdep.D(hwdep.ChromeEC(), hwdep.GSCRWKeyIDProd(), hwdep.GSCUART(), hwdep.HasGSCCr50()),
 		SoftwareDeps: []string{"gsc"},
 		LacrosStatus: testing.LacrosVariantUnneeded,
 	})
