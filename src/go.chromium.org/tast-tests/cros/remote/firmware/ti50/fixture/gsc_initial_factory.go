@@ -173,6 +173,7 @@ func (c *initialFactoryImpl) PreTest(ctx context.Context, s *testing.FixtTestSta
 	mustSucceed(s, c.v.ImageMayBeUpdatedByTest(), "Failed to mark image as possibly updated")
 
 	c.UpdateAndRunEraseFlashInfo(ctx, s)
+	EnableTestlabAndWipeTpmAndOpenCcd(ctx, s, c.v.TestbedProperties.TestbedType, c.v.devboard)
 
 	testing.ContextLog(ctx, "Board ready for test")
 }

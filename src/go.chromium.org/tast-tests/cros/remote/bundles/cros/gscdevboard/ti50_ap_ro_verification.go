@@ -155,9 +155,6 @@ func Ti50APROVerification(ctx context.Context, s *testing.State) {
 		s.Fatal("Could not set wpsr: ", wpsrSet)
 	}
 
-	// Ensure testlab mode is enabled before testing, otherwise we can get locked
-	// out of ccd open when we verify that FWMP prevents bypass key sequence.
-	fixture.EnsureTestLabEnabled(ctx, s, b.DUTControlAndreiboard, i)
 	th.MustSucceed(i.TestlabOpen(ctx), "testlab open")
 	th.MustSucceed(i.CCDResetFactory(ctx), "reset factory")
 	s.Log("Setting AllowUnverifiedRo to never")
