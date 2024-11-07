@@ -78,7 +78,7 @@ func VideoPlaybackDelay(ctx context.Context, s *testing.State) {
 		s.Fatal("Failed to connect to test API: ", err)
 	}
 
-	const presentationsHistogramName = "Media.VideoFrameSubmitter"
+	const presentationsHistogramName = "Media.VideoFrameSubmitter.Rtc.PresentationDelay"
 	initPresentationHistogram, err := metrics.GetHistogram(ctx, tconn, presentationsHistogramName)
 	if err != nil {
 		s.Fatal("Failed to get initial histogram: ", err)
