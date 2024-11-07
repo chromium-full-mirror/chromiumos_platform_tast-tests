@@ -161,8 +161,8 @@ func ResizeBackupRestore(ctx context.Context, s *testing.State) {
 	// Log a listing of dir.
 	logFiles := func(dir string) {
 		const lslRFile = "/tmp/lslR.txt"
-		if err := runInTerminal("sudo ls -lR "+dir, lslRFile); err != nil {
-			s.Fatal("Failed to ls -lR in container: ", err)
+		if err := runInTerminal("sudo ls -lRa "+dir, lslRFile); err != nil {
+			s.Fatal("Failed to ls -lRa in container: ", err)
 		}
 		lslR, err := cont.ReadFile(ctx, lslRFile)
 		if err != nil {
