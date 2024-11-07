@@ -14,7 +14,6 @@ import (
 	"go.chromium.org/tast-tests/cros/local/chrome"
 	"go.chromium.org/tast-tests/cros/local/chrome/ash"
 	"go.chromium.org/tast-tests/cros/local/chrome/browser"
-	"go.chromium.org/tast-tests/cros/local/chrome/browser/browserfixt"
 	"go.chromium.org/tast-tests/cros/local/chrome/uiauto"
 	"go.chromium.org/tast-tests/cros/local/chrome/uiauto/nodewith"
 	"go.chromium.org/tast-tests/cros/local/perfutil"
@@ -87,45 +86,39 @@ func NotificationClosePerf(ctx context.Context, s *testing.State) {
 		initArcOpt = []chrome.Option{chrome.ARCEnabled()}
 	}
 
-	cr, br, closeBrowser, err := browserfixt.SetUpWithNewChrome(ctx, browser.TypeAsh, nil, initArcOpt...)
+	cr, err := chrome.New(ctx, initArcOpt...)
 	if err != nil {
-		s.Fatal("Failed to set up browser: ", err)
+		s.Fatal("Failed to restart Chrome: ", err)
 	}
 	defer cr.Close(cleanupCtx)
-	defer closeBrowser(cleanupCtx)
 
-	atconn, err := cr.TestAPIConn(ctx)
+	tconn, err := cr.TestAPIConn(ctx)
 	if err != nil {
-		s.Fatal("Failed to connect to test API from ash: ", err)
-	}
-	btconn, err := br.TestAPIConn(ctx)
-	if err != nil {
-		s.Fatal("Failed to connect to test API from browser: ", err)
+		s.Fatal("Failed to connect to test API: ", err)
 	}
 
 	// Minimize opened windows (if exists) to reduce background noise during the measurement.
-	if err := ash.ForEachWindow(ctx, atconn, func(w *ash.Window) error {
-		return ash.SetWindowStateAndWait(ctx, atconn, w.ID, ash.WindowStateMinimized)
+	if err := ash.ForEachWindow(ctx, tconn, func(w *ash.Window) error {
+		return ash.SetWindowStateAndWait(ctx, tconn, w.ID, ash.WindowStateMinimized)
 	}); err != nil {
 		s.Fatal("Failed to set window states: ", err)
 	}
 
 	var arcclient *notification.ARCClient
 	if isArc {
-		// Note that ARC uses the test API from ash-chrome to manage notifications.
-		arcclient, err = notification.NewARCClient(ctx, atconn, cr, s.OutDir())
+		arcclient, err = notification.NewARCClient(ctx, tconn, cr, s.OutDir())
 		if err != nil {
 			s.Fatal("Failed to start ARCClient: ", err)
 		}
-		defer arcclient.Close(cleanupCtx, atconn)
+		defer arcclient.Close(cleanupCtx, tconn)
 	}
 
-	automationController := uiauto.New(atconn)
+	automationController := uiauto.New(tconn)
 	statusArea := nodewith.ClassName(ash.StatusAreaClassName)
 	collapseButton := nodewith.ClassName("CollapseButton")
 
 	// Ensure no notifications currently exist.
-	if err := ash.CloseNotifications(ctx, atconn); err != nil {
+	if err := ash.CloseNotifications(ctx, tconn); err != nil {
 		s.Fatal("Failed to clear all notifications prior to adding notifications")
 	}
 
@@ -154,12 +147,12 @@ func NotificationClosePerf(ctx context.Context, s *testing.State) {
 
 	// Create 12 notifications (3 groups of 4 different notifications) with 3 ARC notifications if applicable,
 	// close them all via either the ClearAll button or one at a time, and record performance metrics.
-	// Note that ash-chrome (cr and atconn) is passed in to take traces and metrics from ash-chrome.
-	if err := perfutil.RunMultipleAndSave(ctx, s.OutDir(), cr.Browser(), uiperf.Run(s, perfutil.RunAndWaitAll(atconn, func(ctx context.Context) error {
+	// Note that ash-chrome (cr and tconn) is passed in to take traces and metrics from ash-chrome.
+	if err := perfutil.RunMultipleAndSave(ctx, s.OutDir(), cr.Browser(), uiperf.Run(s, perfutil.RunAndWaitAll(tconn, func(ctx context.Context) error {
 		ids := make([]string, n*len(notificationTypes))
 		for i := 0; i <= n-1; i++ {
 			for idx, t := range notificationTypes {
-				if id, err := browser.CreateTestNotification(ctx, btconn, t, fmt.Sprintf("Test%sNotification%d", t, i), "test message"); err != nil {
+				if id, err := browser.CreateTestNotification(ctx, tconn, t, fmt.Sprintf("Test%sNotification%d", t, i), "test message"); err != nil {
 					s.Fatalf("Failed to create %d-th %s notification: %v", i, t, err)
 				} else {
 					var index = i*len(notificationTypes) + idx
@@ -167,7 +160,7 @@ func NotificationClosePerf(ctx context.Context, s *testing.State) {
 					// Wait for each notification to post. This is faster than waiting for
 					// the final notification at the end, because sometimes posting 12
 					// notifications at once can result in a very long wait.
-					if _, err := ash.WaitForNotification(ctx, atconn, uiTimeout, ash.WaitTitle(fmt.Sprintf("Test%sNotification%d", t, i))); err != nil {
+					if _, err := ash.WaitForNotification(ctx, tconn, uiTimeout, ash.WaitTitle(fmt.Sprintf("Test%sNotification%d", t, i))); err != nil {
 						s.Fatal("Failed waiting for notification: ", err)
 					}
 				}
@@ -175,7 +168,7 @@ func NotificationClosePerf(ctx context.Context, s *testing.State) {
 
 			// Create an ARC notification.
 			if isArc {
-				if err := arcclient.CreateOrUpdateTestNotification(ctx, atconn, fmt.Sprintf("TestARCNotification%d", i), "test message", fmt.Sprintf("%d", i)); err != nil {
+				if err := arcclient.CreateOrUpdateTestNotification(ctx, tconn, fmt.Sprintf("TestARCNotification%d", i), "test message", fmt.Sprintf("%d", i)); err != nil {
 					s.Fatalf("Failed to create %d-th ARC notification: %v", i, err)
 				}
 			}
@@ -206,7 +199,7 @@ func NotificationClosePerf(ctx context.Context, s *testing.State) {
 				// Clear the notifications one at a time.
 				for i := len(ids) - 1; i >= 0; i-- {
 					if err := testing.Poll(ctx, func(ctx context.Context) error {
-						if err := browser.ClearNotification(ctx, btconn, ids[i]); err != nil {
+						if err := browser.ClearNotification(ctx, tconn, ids[i]); err != nil {
 							return errors.Wrap(err, "failed to clear notification")
 						}
 						// GoBigSleepLint: Wait for stabilization / animation completion, otherwise all
@@ -226,7 +219,7 @@ func NotificationClosePerf(ctx context.Context, s *testing.State) {
 					// Clear ARC notifications.
 					for i := n - 1; i >= 0; i-- {
 						if err := testing.Poll(ctx, func(ctx context.Context) error {
-							if err := arcclient.RemoveNotification(ctx, atconn, fmt.Sprintf("%d", i)); err != nil {
+							if err := arcclient.RemoveNotification(ctx, tconn, fmt.Sprintf("%d", i)); err != nil {
 								return errors.Wrap(err, "failed to remove notification")
 							}
 							// GoBigSleepLint: Wait for stabilization / animation completion.

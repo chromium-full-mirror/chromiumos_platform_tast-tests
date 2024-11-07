@@ -19,8 +19,6 @@ import (
 	"go.chromium.org/tast-tests/cros/common/policy"
 	"go.chromium.org/tast-tests/cros/common/policy/fakedms"
 	"go.chromium.org/tast-tests/cros/local/chrome"
-	"go.chromium.org/tast-tests/cros/local/chrome/browser"
-	"go.chromium.org/tast-tests/cros/local/chrome/browser/browserfixt"
 	"go.chromium.org/tast-tests/cros/local/input"
 	"go.chromium.org/tast-tests/cros/local/policyutil"
 	"go.chromium.org/tast-tests/cros/local/policyutil/fixtures"
@@ -89,16 +87,16 @@ func DisableScreenshotsExtension(ctx context.Context, s *testing.State) {
 	server := httptest.NewServer(http.FileServer(s.DataFileSystem()))
 	defer server.Close()
 
-	// Setup browser based on the chrome type.
 	chromeOpts := []chrome.Option{
-		chrome.DMSPolicy(fdms.URL), chrome.FakeLogin(chrome.Creds{User: fixtures.Username, Pass: fixtures.Password}), chrome.UnpackedExtension(extDir),
+		chrome.DMSPolicy(fdms.URL),
+		chrome.FakeLogin(chrome.Creds{User: fixtures.Username, Pass: fixtures.Password}),
+		chrome.UnpackedExtension(extDir),
 	}
-	cr, br, closeBrowser, err := browserfixt.SetUpWithNewChrome(ctx, browser.TypeAsh, nil, chromeOpts...)
+	cr, err := chrome.New(ctx, chromeOpts...)
 	if err != nil {
 		s.Fatal("Failed to start Chrome: ", err)
 	}
 	defer cr.Close(ctx)
-	defer closeBrowser(ctx)
 
 	for _, tc := range []struct {
 		name      string
@@ -149,7 +147,7 @@ func DisableScreenshotsExtension(ctx context.Context, s *testing.State) {
 				s.Fatal("Failed to serve and verify: ", err)
 			}
 
-			conn, err := br.NewConn(ctx, server.URL+"/"+disableScreenshotsExtensionHTML)
+			conn, err := cr.NewConn(ctx, server.URL+"/"+disableScreenshotsExtensionHTML)
 			if err != nil {
 				s.Fatal("Failed to create a tab: ", err)
 			}

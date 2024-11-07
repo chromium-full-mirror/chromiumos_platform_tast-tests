@@ -13,8 +13,6 @@ import (
 	"go.chromium.org/tast-tests/cros/common/family"
 	"go.chromium.org/tast-tests/cros/local/chrome"
 	"go.chromium.org/tast-tests/cros/local/chrome/ash"
-	"go.chromium.org/tast-tests/cros/local/chrome/browser"
-	"go.chromium.org/tast-tests/cros/local/chrome/browser/browserfixt"
 	"go.chromium.org/tast-tests/cros/local/chrome/uiauto"
 	"go.chromium.org/tast-tests/cros/local/chrome/uiauto/faillog"
 	"go.chromium.org/tast-tests/cros/local/chrome/uiauto/nodewith"
@@ -116,12 +114,11 @@ func RequestMobileSiteTablet(ctx context.Context, s *testing.State) {
 			defer cancel()
 
 			s.Log("Logging in as ", user)
-			cr, br, closeBrowser, err := browserfixt.SetUpWithNewChrome(ctx, browser.TypeAsh, nil, opts...)
+			cr, err := chrome.New(ctx, opts...)
 			if err != nil {
 				s.Fatal("Failed to sign in: ", err)
 			}
 			defer cr.Close(cleanupCtx)
-			defer closeBrowser(cleanupCtx)
 
 			tconn, err := cr.TestAPIConn(ctx)
 			if err != nil {
@@ -140,7 +137,7 @@ func RequestMobileSiteTablet(ctx context.Context, s *testing.State) {
 
 			// Guest has no left off setting.
 			if user != guest {
-				if err := ensureLeftOffSettingEnabled(ctx, br, res); err != nil {
+				if err := ensureLeftOffSettingEnabled(ctx, cr, res); err != nil {
 					s.Fatal("Failed to turn on left off setting: ", err)
 				}
 			}
@@ -148,7 +145,7 @@ func RequestMobileSiteTablet(ctx context.Context, s *testing.State) {
 			for websiteName, url := range websites {
 				browserRoot := nodewith.Role(role.Window).HasClass("BrowserFrame").NameContaining(websiteName)
 				res.threeDotMenuBtn = nodewith.HasClass("BrowserAppMenuButton").Role(role.PopUpButton).Ancestor(nodewith.HasClass("ToolbarView").Role(role.Toolbar).Ancestor(browserRoot))
-				if err := mobileSiteTest(ctx, br, res, websiteName, url); err != nil {
+				if err := mobileSiteTest(ctx, cr, res, websiteName, url); err != nil {
 					s.Fatalf("Failed to run mobileSiteTest on website %q: %v", websiteName, err)
 				}
 			}
@@ -158,12 +155,12 @@ func RequestMobileSiteTablet(ctx context.Context, s *testing.State) {
 
 // mobileSiteTest verifies the expected mobile site status when "request mobile site" is on and off,
 // then revisits the website to verify that "request mobile site" is still on.
-func mobileSiteTest(ctx context.Context, br *browser.Browser, res *mobileTestResources, websiteName, url string) (retErr error) {
+func mobileSiteTest(ctx context.Context, cr *chrome.Chrome, res *mobileTestResources, websiteName, url string) (retErr error) {
 	cleanupCtx := ctx
 	ctx, cancel := ctxutil.Shorten(ctx, 10*time.Second)
 	defer cancel()
 
-	conn, err := br.NewConn(ctx, url)
+	conn, err := cr.NewConn(ctx, url)
 	if err != nil {
 		return errors.Wrapf(err, "failed to open page %q", url)
 	}
@@ -243,13 +240,13 @@ func verifyMobileSite(ctx context.Context, conn *chrome.Conn, res *mobileTestRes
 
 // ensureLeftOffSettingEnabled opens chrome://settings/onStartup, ensures that "continue
 // where you left off" is turned on, and then closes chrome://settings/onStartup.
-func ensureLeftOffSettingEnabled(ctx context.Context, br *browser.Browser, res *mobileTestResources) (retErr error) {
+func ensureLeftOffSettingEnabled(ctx context.Context, cr *chrome.Chrome, res *mobileTestResources) (retErr error) {
 	cleanupCtx := ctx
 	ctx, cancel := ctxutil.Shorten(ctx, 10*time.Second)
 	defer cancel()
 
 	const startupPage = "chrome://settings/onStartup"
-	conn, err := br.NewConn(ctx, startupPage)
+	conn, err := cr.NewConn(ctx, startupPage)
 	if err != nil {
 		return errors.Wrapf(err, "failed to open %q", startupPage)
 	}

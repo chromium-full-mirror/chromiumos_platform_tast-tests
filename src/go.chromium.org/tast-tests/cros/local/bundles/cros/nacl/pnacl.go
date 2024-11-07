@@ -13,8 +13,6 @@ import (
 	"go.chromium.org/tast-tests/cros/common/chrome/extension"
 	"go.chromium.org/tast-tests/cros/common/tbdep"
 	"go.chromium.org/tast-tests/cros/local/chrome"
-	"go.chromium.org/tast-tests/cros/local/chrome/browser"
-	"go.chromium.org/tast-tests/cros/local/chrome/browser/browserfixt"
 	"go.chromium.org/tast/core/fsutil"
 	"go.chromium.org/tast/core/testing"
 	"go.chromium.org/tast/core/testing/hwdep"
@@ -74,17 +72,16 @@ func Pnacl(ctx context.Context, s *testing.State) {
 	var opts []chrome.Option
 	opts = append(opts, chrome.UnpackedExtension(extDir))
 	opts = append(opts, chrome.EnableFeatures("NaclAllow"))
-	cr, br, closeBrowser, err := browserfixt.SetUpWithNewChrome(ctx, browser.TypeAsh, nil, opts...)
 
+	cr, err := chrome.New(ctx, opts...)
 	if err != nil {
 		s.Fatal("Chrome login failed: ", err)
 	}
 	defer cr.Close(ctx)
-	defer closeBrowser(ctx)
 
 	s.Log("Connecting to background page")
 	bgURL := chrome.ExtensionBackgroundPageURL(extID)
-	conn, err := br.NewConnForTarget(ctx, chrome.MatchTargetURL(bgURL))
+	conn, err := cr.NewConnForTarget(ctx, chrome.MatchTargetURL(bgURL))
 	if err != nil {
 		s.Fatalf("Failed to connect to background page at %v: %v", bgURL, err)
 	}

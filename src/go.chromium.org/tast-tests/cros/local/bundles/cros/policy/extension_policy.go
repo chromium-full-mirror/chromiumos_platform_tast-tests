@@ -18,8 +18,6 @@ import (
 	"go.chromium.org/tast-tests/cros/common/policy"
 	"go.chromium.org/tast-tests/cros/common/policy/fakedms"
 	"go.chromium.org/tast-tests/cros/local/chrome"
-	"go.chromium.org/tast-tests/cros/local/chrome/browser"
-	"go.chromium.org/tast-tests/cros/local/chrome/browser/browserfixt"
 	"go.chromium.org/tast-tests/cros/local/policyutil"
 	"go.chromium.org/tast-tests/cros/local/policyutil/fixtures"
 	"go.chromium.org/tast-tests/cros/local/sysutil"
@@ -117,14 +115,11 @@ func ExtensionPolicy(ctx context.Context, s *testing.State) {
 		chrome.UnpackedExtension(extDir),
 	}
 
-	cr, br, closeBrowser, err := browserfixt.SetUpWithNewChrome(
-		ctx, browser.TypeAsh, nil, chromeOptions...,
-	)
+	cr, err := chrome.New(ctx, chromeOptions...)
 	if err != nil {
 		s.Fatal("Failed to setup chrome: ", err)
 	}
 	defer cr.Close(cleanupCtx)
-	defer closeBrowser(cleanupCtx)
 
 	tconn, err := cr.TestAPIConn(ctx)
 	if err != nil {
@@ -137,7 +132,7 @@ func ExtensionPolicy(ctx context.Context, s *testing.State) {
 
 	// Connect to the extension and read the set values.
 	bgURL := chrome.ExtensionBackgroundPageURL(extID)
-	if err := checkExtension(ctx, br, bgURL, providedPolicy); err != nil {
+	if err := checkExtension(ctx, cr, bgURL, providedPolicy); err != nil {
 		s.Error("Failed to check extension: ", err)
 	}
 }
@@ -188,8 +183,8 @@ func checkPolicies(ctx context.Context, tconn *chrome.TestConn, extID string, pr
 	return nil
 }
 
-func checkExtension(ctx context.Context, br *browser.Browser, bgURL string, providedPolicy extensionPolicies) error {
-	conn, err := br.NewConnForTarget(ctx, chrome.MatchTargetURL(bgURL))
+func checkExtension(ctx context.Context, cr *chrome.Chrome, bgURL string, providedPolicy extensionPolicies) error {
+	conn, err := cr.NewConnForTarget(ctx, chrome.MatchTargetURL(bgURL))
 	if err != nil {
 		return errors.Wrapf(err, "failed to connect to background page at %q", bgURL)
 	}

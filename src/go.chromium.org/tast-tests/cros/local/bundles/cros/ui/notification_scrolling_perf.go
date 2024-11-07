@@ -14,7 +14,6 @@ import (
 	"go.chromium.org/tast-tests/cros/local/chrome"
 	"go.chromium.org/tast-tests/cros/local/chrome/ash"
 	"go.chromium.org/tast-tests/cros/local/chrome/browser"
-	"go.chromium.org/tast-tests/cros/local/chrome/browser/browserfixt"
 	"go.chromium.org/tast-tests/cros/local/chrome/uiauto"
 	"go.chromium.org/tast-tests/cros/local/chrome/uiauto/nodewith"
 	"go.chromium.org/tast-tests/cros/local/input"
@@ -67,38 +66,31 @@ func NotificationScrollingPerf(ctx context.Context, s *testing.State) {
 		initArcOpt = []chrome.Option{chrome.ARCEnabled()}
 	}
 
-	// Set up the browser.
-	cr, br, closeBrowser, err := browserfixt.SetUpWithNewChrome(ctx, browser.TypeAsh, nil, initArcOpt...)
+	cr, err := chrome.New(ctx, initArcOpt...)
 	if err != nil {
-		s.Fatal("Failed to set up browser: ", err)
+		s.Fatal("Failed to restart Chrome: ", err)
 	}
 	defer cr.Close(cleanupCtx)
-	defer closeBrowser(cleanupCtx)
 
-	atconn, err := cr.TestAPIConn(ctx)
+	tconn, err := cr.TestAPIConn(ctx)
 	if err != nil {
-		s.Fatal("Failed to connect to test API from ash: ", err)
-	}
-	btconn, err := br.TestAPIConn(ctx)
-	if err != nil {
-		s.Fatal("Failed to connect to test API from browser: ", err)
+		s.Fatal("Failed to connect to test API: ", err)
 	}
 
 	// Minimize opened windows (if exists) to reduce background noise during the measurement.
-	if err := ash.ForEachWindow(ctx, atconn, func(w *ash.Window) error {
-		return ash.SetWindowStateAndWait(ctx, atconn, w.ID, ash.WindowStateMinimized)
+	if err := ash.ForEachWindow(ctx, tconn, func(w *ash.Window) error {
+		return ash.SetWindowStateAndWait(ctx, tconn, w.ID, ash.WindowStateMinimized)
 	}); err != nil {
 		s.Fatal("Failed to set window states: ", err)
 	}
 
 	var arcclient *notification.ARCClient
 	if isArc {
-		// Note that ARC uses the test API from ash-chrome to manage notifications.
-		arcclient, err = notification.NewARCClient(ctx, atconn, cr, s.OutDir())
+		arcclient, err = notification.NewARCClient(ctx, tconn, cr, s.OutDir())
 		if err != nil {
 			s.Fatal("Failed to start ARCClient: ", err)
 		}
-		defer arcclient.Close(cleanupCtx, atconn)
+		defer arcclient.Close(cleanupCtx, tconn)
 	}
 
 	// Add some notifications so that notification centre shows up when opening Quick Settings.
@@ -114,18 +106,18 @@ func NotificationScrollingPerf(ctx context.Context, s *testing.State) {
 	for i := 0; i <= n; i++ {
 		for _, t := range ts {
 			title := fmt.Sprintf("Test%sNotification%d", t, i)
-			if _, err := browser.CreateTestNotification(ctx, btconn, t, title, "test message"); err != nil {
+			if _, err := browser.CreateTestNotification(ctx, tconn, t, title, "test message"); err != nil {
 				s.Fatalf("Failed to create %d-th %s notification: %v", i, t, err)
 			}
 			// Wait for the notification to finish creating, making sure that it is created.
-			if _, err := ash.WaitForNotification(ctx, atconn, uiTimeout, ash.WaitTitle(title)); err != nil {
+			if _, err := ash.WaitForNotification(ctx, tconn, uiTimeout, ash.WaitTitle(title)); err != nil {
 				s.Fatalf("Failed to wait for %d-th %s notification: %v", i, t, err)
 			}
 		}
 
 		// Create an ARC notification.
 		if isArc {
-			if err := arcclient.CreateOrUpdateTestNotification(ctx, atconn, fmt.Sprintf("TestARCNotification%d", i), "test message", fmt.Sprintf("%d", i)); err != nil {
+			if err := arcclient.CreateOrUpdateTestNotification(ctx, tconn, fmt.Sprintf("TestARCNotification%d", i), "test message", fmt.Sprintf("%d", i)); err != nil {
 				s.Fatalf("Failed to create %d-th ARC notification: %v", i, err)
 			}
 		}
@@ -168,12 +160,12 @@ func NotificationScrollingPerf(ctx context.Context, s *testing.State) {
 		return nil
 	}
 
-	ac := uiauto.New(atconn)
+	ac := uiauto.New(tconn)
 	notificationCenterTray := nodewith.ClassName("NotificationCenterTray")
 	messageCenter := nodewith.ClassName("NotificationCenterView")
 
-	// Note that ash-chrome (cr and atconn) is passed in to take traces and metrics from ash-chrome.
-	if err := perfutil.RunMultipleAndSave(ctx, s.OutDir(), cr.Browser(), uiperf.Run(s, perfutil.RunAndWaitAll(atconn, func(ctx context.Context) error {
+	// Note that ash-chrome (cr and tconn) is passed in to take traces and metrics from ash-chrome.
+	if err := perfutil.RunMultipleAndSave(ctx, s.OutDir(), cr.Browser(), uiperf.Run(s, perfutil.RunAndWaitAll(tconn, func(ctx context.Context) error {
 		if err := uiauto.Combine(
 			"open the notification bubble, scroll up and down the notification list, then close it",
 			ac.LeftClick(notificationCenterTray),

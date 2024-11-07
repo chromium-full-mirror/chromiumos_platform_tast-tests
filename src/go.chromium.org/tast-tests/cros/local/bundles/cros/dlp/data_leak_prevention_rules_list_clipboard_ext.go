@@ -20,8 +20,6 @@ import (
 	"go.chromium.org/tast-tests/cros/local/bundles/cros/dlp/clipboard"
 	"go.chromium.org/tast-tests/cros/local/bundles/cros/dlp/policy"
 	"go.chromium.org/tast-tests/cros/local/chrome"
-	"go.chromium.org/tast-tests/cros/local/chrome/browser"
-	"go.chromium.org/tast-tests/cros/local/chrome/browser/browserfixt"
 	"go.chromium.org/tast-tests/cros/local/chrome/uiauto"
 	"go.chromium.org/tast-tests/cros/local/chrome/uiauto/faillog"
 	"go.chromium.org/tast-tests/cros/local/chrome/uiauto/nodewith"
@@ -87,16 +85,14 @@ func DataLeakPreventionRulesListClipboardExt(ctx context.Context, s *testing.Sta
 
 	// Start a Chrome instance that will fetch policies from the FakeDMS.
 	// Policies are only updated after Chrome startup.
-	cr, br, closeBrowser, err := browserfixt.SetUpWithNewChrome(ctx, browser.TypeAsh, nil,
-		chromeOpts...)
+	cr, err := chrome.New(ctx, chromeOpts...)
 	if err != nil {
 		s.Fatal("Chrome login failed: ", err)
 	}
 	defer cr.Close(ctx)
-	defer closeBrowser(ctx)
 
 	bgURL := chrome.ExtensionBackgroundPageURL(extID)
-	targetConn, err := br.NewConnForTarget(ctx, chrome.MatchTargetURL(bgURL))
+	targetConn, err := cr.NewConnForTarget(ctx, chrome.MatchTargetURL(bgURL))
 	if err != nil {
 		s.Fatalf("Failed to connect to background page at %v: %v", bgURL, err)
 	}
@@ -132,7 +128,7 @@ func DataLeakPreventionRulesListClipboardExt(ctx context.Context, s *testing.Sta
 	// Check extension access with a restricted site.
 	// See RestrictiveDLPPolicyForClipboard function in policy package for more details.
 	sourceURL := blockedServer.URL + "/text_1.html"
-	sourceConn, err := br.NewConn(ctx, sourceURL)
+	sourceConn, err := cr.NewConn(ctx, sourceURL)
 	if err != nil {
 		s.Fatalf("Failed to open page %q: %v", sourceURL, err)
 	}
@@ -150,7 +146,7 @@ func DataLeakPreventionRulesListClipboardExt(ctx context.Context, s *testing.Sta
 	}
 
 	destURL := destServer.URL + "/editable_text_box.html"
-	destConn, err := br.NewConn(ctx, destURL)
+	destConn, err := cr.NewConn(ctx, destURL)
 	if err != nil {
 		s.Fatal("Failed to open page: ", err)
 	}

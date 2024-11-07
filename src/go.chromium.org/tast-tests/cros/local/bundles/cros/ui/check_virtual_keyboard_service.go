@@ -12,9 +12,6 @@ import (
 	"google.golang.org/grpc"
 
 	"go.chromium.org/tast-tests/cros/local/chrome"
-	"go.chromium.org/tast-tests/cros/local/chrome/browser"
-	"go.chromium.org/tast-tests/cros/local/chrome/browser/browserfixt"
-	"go.chromium.org/tast-tests/cros/local/chrome/lacros/lacrosfixt"
 	"go.chromium.org/tast-tests/cros/local/chrome/uiauto"
 	"go.chromium.org/tast-tests/cros/local/chrome/uiauto/browser/browserui"
 	"go.chromium.org/tast-tests/cros/local/chrome/uiauto/launcher"
@@ -42,9 +39,7 @@ func init() {
 // CheckVirtualKeyboardService implements the methods defined in CheckVirtualKeyboardServiceServer.
 type CheckVirtualKeyboardService struct {
 	cr           *chrome.Chrome
-	br           *browser.Browser
-	closeBrowser uiauto.Action
-	tconn        *chrome.TestConn // from ash-chrome
+	tconn        *chrome.TestConn
 	sharedObject *common.SharedObjectsForService
 	uia          *uiauto.Context
 }
@@ -58,26 +53,17 @@ func (cvk *CheckVirtualKeyboardService) NewChromeLoggedIn(ctx context.Context, r
 		return nil, errors.New("Chrome already available")
 	}
 
-	bt := browser.TypeLacros
-	cfg := lacrosfixt.NewConfig()
-	if req.BrowserType == pb.NewBrowserRequest_ASH {
-		bt = browser.TypeAsh
-		cfg = nil
-	}
-	cr, br, closeBrowser, err := browserfixt.SetUpWithNewChrome(ctx, bt, cfg)
+	cr, err := chrome.New(ctx)
 	if err != nil {
 		return nil, err
 	}
 	defer func() {
 		if errRet != nil {
-			closeBrowser(ctx)
 			cr.Close(ctx)
 		}
 	}()
 
 	cvk.cr = cr
-	cvk.br = br
-	cvk.closeBrowser = closeBrowser
 	tconn, err := cvk.cr.TestAPIConn(ctx)
 	if err != nil {
 		return nil, err
@@ -95,7 +81,7 @@ func (cvk *CheckVirtualKeyboardService) OpenChromePage(ctx context.Context, req 
 		return nil, errors.New("Chrome not available")
 	}
 	// Open an empty page.
-	conn, err := cvk.br.NewConn(ctx, "chrome://newtab/")
+	conn, err := cvk.cr.NewConn(ctx, "chrome://newtab/")
 	if err != nil {
 		return nil, errors.Wrap(err, "failed to open empty Chrome page")
 	}
@@ -164,10 +150,6 @@ func (cvk *CheckVirtualKeyboardService) CheckVirtualKeyboardIsPresent(ctx contex
 func (cvk *CheckVirtualKeyboardService) CloseChrome(ctx context.Context, req *empty.Empty) (*empty.Empty, error) {
 	cvk.sharedObject.ChromeMutex.Lock()
 	defer cvk.sharedObject.ChromeMutex.Unlock()
-	if cvk.closeBrowser != nil {
-		cvk.closeBrowser(ctx)
-		cvk.closeBrowser = nil
-	}
 	if cvk.cr == nil {
 		return nil, errors.New("Chrome not available")
 	}

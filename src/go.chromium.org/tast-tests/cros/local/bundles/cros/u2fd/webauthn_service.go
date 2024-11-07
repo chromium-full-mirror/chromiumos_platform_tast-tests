@@ -18,8 +18,6 @@ import (
 	"go.chromium.org/tast-tests/cros/common/policy/fakedms"
 	"go.chromium.org/tast-tests/cros/common/u2fd"
 	"go.chromium.org/tast-tests/cros/local/chrome"
-	"go.chromium.org/tast-tests/cros/local/chrome/browser"
-	"go.chromium.org/tast-tests/cros/local/chrome/browser/browserfixt"
 	"go.chromium.org/tast-tests/cros/local/chrome/uiauto"
 	"go.chromium.org/tast-tests/cros/local/input"
 	localu2fd "go.chromium.org/tast-tests/cros/local/u2fd"
@@ -50,7 +48,6 @@ type WebauthnService struct {
 	s *testing.ServiceState
 
 	cr           *chrome.Chrome
-	br           *browser.Browser
 	closeBrowser uiauto.Action
 	// Keeping keyboard in state instead of creating it each time because it takes about 5 seconds to create a keyboard.
 	keyboard *input.KeyboardEventWriter
@@ -60,7 +57,7 @@ type WebauthnService struct {
 	fakeDMS    *fakedms.FakeDMS
 	fakeDMSDir string
 
-	cfg      webauthnConfig
+	cfg webauthnConfig
 }
 
 func (c *WebauthnService) New(ctx context.Context, req *hwsec.NewRequest) (*empty.Empty, error) {
@@ -136,22 +133,19 @@ func (c *WebauthnService) New(ctx context.Context, req *hwsec.NewRequest) (*empt
 		opts = append(opts, chrome.FakeLogin(chrome.Creds{User: "tast-user@managedchrome.com", Pass: "testpass"}))
 	}
 
-	cr, br, closeBrowser, err := browserfixt.SetUpWithNewChrome(ctx, browser.TypeAsh, nil, opts...)
+	cr, err := chrome.New(ctx, opts...)
 	if err != nil {
 		return nil, errors.Wrap(err, "failed to log in by Chrome")
 	}
 	defer func(ctx context.Context) {
 		if !ok {
-			if err := closeBrowser(ctx); err != nil {
-				testing.ContextLog(ctx, "Failed to close browser")
-			}
 			if err := cr.Close(ctx); err != nil {
 				testing.ContextLog(ctx, "Failed to close Chrome")
 			}
 		}
 	}(ctxForCleanUp)
 
-	conn, err := br.NewConn(ctx, srv.URL+"/webauthn.html")
+	conn, err := cr.NewConn(ctx, srv.URL+"/webauthn.html")
 	if err != nil {
 		return nil, errors.Wrap(err, "failed to navigate to test website")
 	}
@@ -164,8 +158,6 @@ func (c *WebauthnService) New(ctx context.Context, req *hwsec.NewRequest) (*empt
 	}(ctxForCleanUp)
 
 	c.cr = cr
-	c.br = br
-	c.closeBrowser = closeBrowser
 	c.keyboard = keyboard
 	c.conn = conn
 	c.srv = srv
@@ -183,13 +175,6 @@ func (c *WebauthnService) Close(ctx context.Context, req *empty.Empty) (*empty.E
 			lastErr = err
 		}
 		c.conn = nil
-	}
-	if c.closeBrowser != nil {
-		if err := c.closeBrowser(ctx); err != nil {
-			testing.ContextLog(ctx, "Failed to close browser: ", err)
-			lastErr = err
-		}
-		c.br = nil
 	}
 	if c.cr != nil {
 		if err := c.cr.Close(ctx); err != nil {

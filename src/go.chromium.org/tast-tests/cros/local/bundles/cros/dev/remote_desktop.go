@@ -14,8 +14,6 @@ import (
 	"go.chromium.org/tast-tests/cros/common/dma"
 	"go.chromium.org/tast-tests/cros/local/arc"
 	"go.chromium.org/tast-tests/cros/local/chrome"
-	"go.chromium.org/tast-tests/cros/local/chrome/browser"
-	"go.chromium.org/tast-tests/cros/local/chrome/browser/browserfixt"
 	"go.chromium.org/tast-tests/cros/local/chrome/uiauto/crd"
 	"go.chromium.org/tast/core/ctxutil"
 	"go.chromium.org/tast/core/errors"
@@ -231,8 +229,7 @@ func RemoteDesktop(ctx context.Context, s *testing.State) {
 		opts = append(opts, chrome.ExtraArgs(vars.extraArgs...))
 	}
 
-	// Set up the browser.
-	cr, br, closeBrowser, err := browserfixt.SetUpWithNewChrome(ctx, browser.TypeAsh, nil, opts...)
+	cr, err := chrome.New(ctx, opts...)
 	if err != nil {
 		// In case of authentication error, provide a more informative message to the user.
 		if strings.Contains(err.Error(), "chrome.Auth") {
@@ -243,14 +240,13 @@ func RemoteDesktop(ctx context.Context, s *testing.State) {
 		s.Fatal("Failed to start Chrome: ", err)
 	}
 	defer cr.Close(ctx)
-	defer closeBrowser(cleanupCtx)
 
 	tconn, err := cr.TestAPIConn(ctx)
 	if err != nil {
 		s.Fatal("Failed to connect Test API: ", err)
 	}
 
-	if err := crd.Launch(ctx, br, tconn); err != nil {
+	if err := crd.Launch(ctx, cr.Browser(), tconn); err != nil {
 		s.Fatal("Failed to Launch: ", err)
 	}
 

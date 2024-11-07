@@ -12,8 +12,6 @@ import (
 	"time"
 
 	"go.chromium.org/tast-tests/cros/local/chrome"
-	"go.chromium.org/tast-tests/cros/local/chrome/browser"
-	"go.chromium.org/tast-tests/cros/local/chrome/browser/browserfixt"
 	"go.chromium.org/tast-tests/cros/local/chrome/uiauto/faillog"
 	"go.chromium.org/tast-tests/cros/local/crash"
 	"go.chromium.org/tast-tests/cros/local/input"
@@ -242,13 +240,11 @@ func WebUIJSErrors(ctx context.Context, s *testing.State) {
 	if params.fieldTrialConfigMode != chrome.FieldTrialConfigDefault {
 		chromeOpts = append(chromeOpts, chrome.FieldTrialConfig(params.fieldTrialConfigMode))
 	}
-	cr, br, closeBrowser, err := browserfixt.SetUpWithNewChrome(ctx, browser.TypeAsh, nil,
-		chromeOpts...)
+	cr, err := chrome.New(ctx, chromeOpts...)
 	if err != nil {
 		s.Fatal("Chrome login failed: ", err)
 	}
 	defer cr.Close(cleanupCtx)
-	defer closeBrowser(cleanupCtx)
 
 	// Grab a screenshot and a ui tree dump *before* the browser is closed by the
 	// defer's. This helps debug issues where it seems like the page closes too
@@ -267,7 +263,7 @@ func WebUIJSErrors(ctx context.Context, s *testing.State) {
 	}
 	defer crash.TearDownCrashTest(cleanupCtx)
 
-	conn, err := br.NewConn(ctx, "chrome://webuijserror")
+	conn, err := cr.NewConn(ctx, "chrome://webuijserror")
 	if err != nil {
 		s.Fatal("Chrome navigation failed: ", err)
 	}

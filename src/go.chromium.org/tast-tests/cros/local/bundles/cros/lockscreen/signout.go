@@ -11,8 +11,6 @@ import (
 
 	"go.chromium.org/tast-tests/cros/local/chrome"
 	"go.chromium.org/tast-tests/cros/local/chrome/ash/ashproc"
-	"go.chromium.org/tast-tests/cros/local/chrome/browser"
-	"go.chromium.org/tast-tests/cros/local/chrome/browser/browserfixt"
 	"go.chromium.org/tast-tests/cros/local/chrome/uiauto"
 	"go.chromium.org/tast-tests/cros/local/chrome/uiauto/faillog"
 	"go.chromium.org/tast-tests/cros/local/chrome/uiauto/lockscreen"
@@ -48,7 +46,7 @@ func init() {
 			// Disabled by TORA.  See:b/332640463.
 			// "group:golden_tier", "group:medium_low_tier", "group:hardware", "group:complementary", "group:hw_agnostic"
 		},
-		VarDeps:      []string{"ui.signinProfileTestExtensionManifestKey"},
+		VarDeps: []string{"ui.signinProfileTestExtensionManifestKey"},
 		Params: []testing.Param{{
 			Val: testParam{false, false},
 		}, {
@@ -75,24 +73,22 @@ func Signout(ctx context.Context, s *testing.State) {
 
 	// Separate function for the first chrome run to isolate from the second run. For example so it does not generate UI tree two times on error.
 	func() {
-		cr, br, closeBrowser, err := browserfixt.SetUpWithNewChrome(ctx, browser.TypeAsh, nil,
-			chrome.ExtraArgs("--force-tablet-mode=clamshell", "--disable-virtual-keyboard"))
+		cr, err := chrome.New(ctx, chrome.ExtraArgs("--force-tablet-mode=clamshell", "--disable-virtual-keyboard"))
 		if err != nil {
-			s.Fatalf("Chrome login failed with %v browser: %v", browser.TypeAsh, err)
+			s.Fatal("Chrome login failed: ", err)
 		}
 		defer cr.Close(cleanupCtx)
-		defer closeBrowser(cleanupCtx)
 
 		tconn, err := cr.TestAPIConn(ctx)
 		if err != nil {
 			s.Fatal("Getting test API connection failed: ", err)
 		}
 
-		_, err = br.NewConn(ctx, "chrome://settings")
+		_, err = cr.NewConn(ctx, "chrome://settings")
 		if err != nil {
 			s.Fatal("Failed to open a tab: ", err)
 		}
-		_, err = br.NewConn(ctx, "chrome://version")
+		_, err = cr.NewConn(ctx, "chrome://version")
 		if err != nil {
 			s.Fatal("Failed to open a tab: ", err)
 		}
