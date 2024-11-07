@@ -290,7 +290,7 @@ func init() {
 			"clarkchung@google.com",
 		},
 		BugComponent: "b:606088",
-		Attr:         []string{"group:racc", "racc_config_installed"},
+		Attr:         []string{"group:racc"},
 		SoftwareDeps: []string{"racc"},
 		VarDeps:      []string{"autotesthostinfolabels"},
 		Params: []testing.Param{
@@ -301,6 +301,7 @@ func init() {
 					categories:           []string{"battery"},
 					allowExtraComponents: false,
 				},
+				ExtraAttr: []string{"racc_config_installed"},
 			}, {
 				Name:              "battery_private",
 				Fixture:           fixture.DecryptProbeConfig,
@@ -309,6 +310,7 @@ func init() {
 					categories:           []string{"battery"},
 					allowExtraComponents: false,
 				},
+				ExtraAttr: []string{"racc_encrypted_config_installed"},
 			}, {
 				Name:              "camera",
 				ExtraHardwareDeps: common.ReleasedDeviceDeps(hwdep.SkipOnModel("blacktip360")),
@@ -316,6 +318,7 @@ func init() {
 					categories:           []string{"camera"},
 					allowExtraComponents: false,
 				},
+				ExtraAttr: []string{"racc_config_installed"},
 			}, {
 				Name:              "camera_private",
 				Fixture:           fixture.DecryptProbeConfig,
@@ -324,6 +327,7 @@ func init() {
 					categories:           []string{"camera"},
 					allowExtraComponents: false,
 				},
+				ExtraAttr: []string{"racc_encrypted_config_installed"},
 			}, {
 				Name:              "edid",
 				ExtraHardwareDeps: common.ReleasedDeviceDeps(),
@@ -331,6 +335,7 @@ func init() {
 					categories:           []string{"display_panel"},
 					allowExtraComponents: false,
 				},
+				ExtraAttr: []string{"racc_config_installed"},
 			}, {
 				Name:              "edid_private",
 				Fixture:           fixture.DecryptProbeConfig,
@@ -339,6 +344,7 @@ func init() {
 					categories:           []string{"display_panel"},
 					allowExtraComponents: false,
 				},
+				ExtraAttr: []string{"racc_encrypted_config_installed"},
 			}, {
 				Name:              "input_device",
 				ExtraHardwareDeps: common.ReleasedDeviceDeps(),
@@ -346,6 +352,7 @@ func init() {
 					categories:           []string{"stylus", "touchpad", "touchscreen"},
 					allowExtraComponents: true,
 				},
+				ExtraAttr: []string{"racc_config_installed"},
 			}, {
 				Name:              "input_device_private",
 				Fixture:           fixture.DecryptProbeConfig,
@@ -354,6 +361,7 @@ func init() {
 					categories:           []string{"stylus", "touchpad", "touchscreen"},
 					allowExtraComponents: true,
 				},
+				ExtraAttr: []string{"racc_encrypted_config_installed"},
 			}, {
 				Name:              "memory",
 				ExtraHardwareDeps: common.ReleasedDeviceDeps(),
@@ -361,6 +369,7 @@ func init() {
 					categories:           []string{"dram"},
 					allowExtraComponents: false,
 				},
+				ExtraAttr: []string{"racc_config_installed"},
 			}, {
 				Name:              "memory_private",
 				Fixture:           fixture.DecryptProbeConfig,
@@ -369,6 +378,7 @@ func init() {
 					categories:           []string{"dram"},
 					allowExtraComponents: false,
 				},
+				ExtraAttr: []string{"racc_encrypted_config_installed"},
 			}, {
 				Name:              "network",
 				ExtraHardwareDeps: common.ReleasedDeviceDeps(),
@@ -377,6 +387,7 @@ func init() {
 					categories:           []string{"cellular", "ethernet", "wireless"},
 					allowExtraComponents: true,
 				},
+				ExtraAttr: []string{"racc_config_installed"},
 			}, {
 				Name:              "network_private",
 				Fixture:           fixture.DecryptProbeConfig,
@@ -386,6 +397,7 @@ func init() {
 					categories:           []string{"cellular", "ethernet", "wireless"},
 					allowExtraComponents: true,
 				},
+				ExtraAttr: []string{"racc_encrypted_config_installed"},
 			}, {
 				Name:              "storage",
 				ExtraHardwareDeps: common.ReleasedDeviceDeps(),
@@ -393,6 +405,7 @@ func init() {
 					categories:           []string{"storage"},
 					allowExtraComponents: false,
 				},
+				ExtraAttr: []string{"racc_config_installed"},
 			}, {
 				Name:              "storage_private",
 				Fixture:           fixture.DecryptProbeConfig,
@@ -401,6 +414,7 @@ func init() {
 					categories:           []string{"storage"},
 					allowExtraComponents: false,
 				},
+				ExtraAttr: []string{"racc_encrypted_config_installed"},
 			},
 		},
 	})
