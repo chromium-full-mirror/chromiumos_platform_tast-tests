@@ -46,8 +46,7 @@ const (
 )
 
 const (
-	tempDir        string = "/usr/local/tmp"
-	synchLogString string = "File plugin activated"
+	tempDir string = "/usr/local/tmp"
 )
 
 type restoreFile struct {
@@ -57,6 +56,7 @@ type restoreFile struct {
 type testDetails struct {
 	filesToRestore []*restoreFile
 	commandDetails []*commandDetail
+	syncText       string
 }
 
 type commandDetail struct {
@@ -124,6 +124,9 @@ func (f FileEvent) DoTest(ctx context.Context, tc *testDetails) {
 	cleanupCtx := ctx
 	ctx, cancel := ctxutil.Shorten(cleanupCtx, 15*time.Second)
 	defer cancel()
+	if len(tc.syncText) == 0 {
+		f.Fatal("a non empty string must be provided to wait on")
+	}
 
 	// Restart with default parameter.
 	defer func(clnupCtx context.Context) {
@@ -157,11 +160,11 @@ func (f FileEvent) DoTest(ctx context.Context, tc *testDetails) {
 	}
 
 	f.Logf("Waiting for the string %q to appear in secagentd.log,"+
-		" starting search at offset=%v", synchLogString, initialOffset)
-	if err := secagentdcommon.WaitForStringInLog(ctx, synchLogString, initialOffset, f.Logf); err != nil {
-		f.Logf("Failed to find %q in logfile, continuing anyways: %v", synchLogString, err)
+		" starting search at offset=%v", tc.syncText, initialOffset)
+	if err := secagentdcommon.WaitForStringInLog(ctx, tc.syncText, initialOffset, f.Logf); err != nil {
+		f.Fatalf("Failed to find %q in logfile, continuing anyways: %v", tc.syncText, err)
 	} else {
-		f.Logf("Detected %q in log file, file plugin should be activated..starting test", synchLogString)
+		f.Logf("Detected %q in log file, file plugin should be activated..starting test", tc.syncText)
 	}
 
 	stopDbusMonitoring, err := secagentddbusmonitor.SetupDbusMonitor(ctx, agentPid)
@@ -454,6 +457,9 @@ func GetFileEventDetails(ctx context.Context, testCase pb.TestCase, cr *chrome.C
 			return nil, errors.Wrap(err, "failed to get command details")
 		}
 	}
+	makeWaitString := func(sensitiveFileType xdr.SensitiveFileType) string {
+		return fmt.Sprintf("FileEvents: Now monitoring TYPE: %s", sensitiveFileType.String())
+	}
 	var normalizedUser string
 	if testCase != pb.TestCase_ROOT_FS {
 		if cr == nil { // cr should only be nil for remote test and the only
@@ -469,16 +475,20 @@ func GetFileEventDetails(ctx context.Context, testCase pb.TestCase, cr *chrome.C
 	case pb.TestCase_AUTH_FACTORS:
 		hashedUser, _ := cryptohome.UserHash(ctx, cr.NormalizedUser())
 		authFactorsDir := "/home/.shadow/" + hashedUser + "/auth_factors"
-		return generateWriteTestCaseForAllFilesUnderDir(ctx, authFactorsDir,
+		rv, err := generateWriteTestCaseForAllFilesUnderDir(ctx, authFactorsDir,
 			testCase, &sysCmds,
 			xdr.SensitiveFileType_USER_AUTH_FACTORS_FILE)
+		rv.syncText = makeWaitString(xdr.SensitiveFileType_USER_AUTH_FACTORS_FILE)
+		return rv, err
 
 	case pb.TestCase_USER_CREDENTIAL:
 		hashedUser, _ := cryptohome.UserHash(ctx, cr.NormalizedUser())
 		secretStashDir := "/home/.shadow/" + hashedUser + "/user_secret_stash"
-		return generateRwTestCaseForAllFilesUnderDir(ctx, secretStashDir,
+		rv, err := generateRwTestCaseForAllFilesUnderDir(ctx, secretStashDir,
 			testCase, &sysCmds,
 			xdr.SensitiveFileType_USER_ENCRYPTED_CREDENTIAL)
+		rv.syncText = makeWaitString(xdr.SensitiveFileType_USER_ENCRYPTED_CREDENTIAL)
+		return rv, err
 
 	case pb.TestCase_ROOT_FS:
 		outputFile := "/bin/testcase"
@@ -498,7 +508,7 @@ func GetFileEventDetails(ctx context.Context, testCase pb.TestCase, cr *chrome.C
 		})
 		cmds = appendDDCommand(ctx, cmds, outputFile, &sysCmds, xdr.SensitiveFileType_ROOT_FS)
 		cmds = appendModifyAttributeCommand(ctx, cmds, outputFile, &sysCmds, xdr.SensitiveFileType_ROOT_FS)
-		return &testDetails{commandDetails: cmds}, nil
+		return &testDetails{commandDetails: cmds, syncText: makeWaitString(xdr.SensitiveFileType_ROOT_FS)}, nil
 
 	case pb.TestCase_SYSTEM_PASSWORD:
 		fileToRead := "/etc/passwd"
@@ -513,11 +523,11 @@ func GetFileEventDetails(ctx context.Context, testCase pb.TestCase, cr *chrome.C
 		}
 		outputFile := filepath.Join(downloadsPath, "file_events_test")
 		cmds = appendRWCommandDetails(ctx, cmds, outputFile, &sysCmds, xdr.SensitiveFileType_USER_FILE)
-		return &testDetails{commandDetails: cmds}, nil
+		return &testDetails{commandDetails: cmds, syncText: makeWaitString(xdr.SensitiveFileType_USER_FILE)}, nil
 
 	case pb.TestCase_COOKIES:
 		userPath, _ := cryptohome.UserPath(ctx, normalizedUser)
-		rv := testDetails{}
+		rv := testDetails{syncText: makeWaitString(xdr.SensitiveFileType_USER_WEB_COOKIE)}
 		cookieNames := []string{"Cookies", "Cookies-journal", "Safe Browsing Cookies", "Safe Browsing Cookies-journal"}
 		for _, fileName := range cookieNames {
 			outputFile := filepath.Join(userPath, fileName)
@@ -527,7 +537,7 @@ func GetFileEventDetails(ctx context.Context, testCase pb.TestCase, cr *chrome.C
 		return &rv, nil
 
 	case pb.TestCase_TPM_KEY:
-		rv := testDetails{}
+		rv := testDetails{syncText: makeWaitString(xdr.SensitiveFileType_SYSTEM_TPM_PUBLIC_KEY)}
 		secretNames := []string{"cryptohome.key", "cryptohome.ecc.key"}
 		for _, fileName := range secretNames {
 			outputFile := filepath.Join("/home/.shadow/", fileName)
