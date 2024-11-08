@@ -19,6 +19,19 @@ import (
 	"go.chromium.org/tast/core/testing"
 )
 
+// ShowDesktop shows desktop.
+func ShowDesktop(ud *uidetection.Context, dataPath func(string) string) uiauto.Action {
+	startBtn := uidetection.CustomIcon(dataPath(startBtnIcon))
+	shutText := uidetection.Word("Shut").First()
+	desktopText := uidetection.Word("Desktop").Below(shutText).First()
+	return uiauto.Retry(3,
+		uiauto.NamedCombine("show desktop",
+			ud.RightClick(startBtn),
+			ud.LeftClick(desktopText),
+			WaitForDesktop(ud, dataPath),
+		))
+}
+
 // WaitForDesktop waits for desktop to be visible.
 func WaitForDesktop(ud *uidetection.Context, dataPath func(string) string) uiauto.Action {
 	topBtn := uidetection.CustomIcon(dataPath(topBtnIcon))
@@ -33,6 +46,7 @@ func LogOff(ud *uidetection.Context, dataPath func(string) string) uiauto.Action
 	moreOptionBtn := uidetection.CustomIcon(dataPath(moreOptionBtnIcon))
 	logOffText := uidetection.TextBlockFromSentence("Log Off").First()
 	return uiauto.NamedCombine("log off from Citrix desktop",
+		uiauto.IfFailThen(ud.Exists(topBtn), ShowDesktop(ud, dataPath)),
 		ud.LeftClick(topBtn),
 		ud.LeftClick(moreOptionBtn),
 		ud.LeftClick(logOffText),
@@ -156,7 +170,7 @@ func SwitchResolution(ud *uidetection.Context, resolutionOption citrixResolution
 }
 
 // DeleteFile deletes the file with given name.
-func DeleteFile(ud *uidetection.Context, fileName string) uiauto.Action {
+func DeleteFile(ud *uidetection.Context, dataPath func(string) string, fileName string) uiauto.Action {
 	fileNameText := uidetection.Word(fileName).First()
 	deleteText := uidetection.Word("Delete").First()
 	return uiauto.NamedCombine(fmt.Sprintf("delete file %q", fileName),
@@ -166,9 +180,9 @@ func DeleteFile(ud *uidetection.Context, fileName string) uiauto.Action {
 }
 
 // DeleteFileIfExists deletes the file with given name if it exists.
-func DeleteFileIfExists(ud *uidetection.Context, fileName string) uiauto.Action {
+func DeleteFileIfExists(ud *uidetection.Context, dataPath func(string) string, fileName string) uiauto.Action {
 	fileNameText := uidetection.Word(fileName).First()
 	return uiauto.NamedAction(fmt.Sprintf("delete file %q if exists", fileName),
-		uiauto.IfSuccessThen(ud.Exists(fileNameText), DeleteFile(ud, fileName)),
+		uiauto.IfSuccessThen(ud.Exists(fileNameText), DeleteFile(ud, dataPath, fileName)),
 	)
 }

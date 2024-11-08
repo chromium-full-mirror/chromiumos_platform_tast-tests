@@ -19,6 +19,7 @@ const (
 )
 
 const (
+	startBtnIcon         = "citrix/start_btn.png"
 	topBtnIcon           = "citrix/top_btn.png"
 	usbDeviceBtnIcon     = "citrix/usb_device_btn.png"
 	closeDialogBtnIcon   = "citrix/close_dialog_btn.png"
@@ -29,6 +30,7 @@ const (
 // CitrixData holds the UI fragments that are used by Citrix connector. Use
 // this as a data dependency when connecting to Citrix.
 var CitrixData = []string{
+	startBtnIcon,
 	topBtnIcon,
 	usbDeviceBtnIcon,
 	closeDialogBtnIcon,

@@ -235,12 +235,6 @@ func performSignatureOperations(ctx context.Context, cl *rpc.Client, citrixSvc v
 	}
 	isSavedAlready := false
 	defer func(ctx context.Context) {
-		citrix.DumpUITreeWithScreenshotToFile(ctx, cl.Conn, func() bool { return retErr != nil }, "ui_dump_citrix_app_close")
-		if _, err := citrixSvc.CloseCitrixApp(ctx, &vdi.CloseCitrixAppRequest{
-			AppTitle: appTitle,
-		}); err != nil {
-			testing.ContextLogf(ctx, "Failed to close Citrix app %v: %v", appName, err)
-		}
 		if isSavedAlready {
 			if _, err := citrixSvc.DeleteFile(ctx, deleteFileRequest); err != nil {
 				testing.ContextLog(ctx, "Failed to delete file: ", err)
@@ -329,13 +323,6 @@ func performSignatureOperations(ctx context.Context, cl *rpc.Client, citrixSvc v
 			return errors.Wrapf(err, "signatures %s and %s are different and expected to be the same", loadFileName, signFileName)
 		}
 	case citrix.ScriptelAppName:
-		defer func(ctx context.Context) {
-			if _, err := citrixSvc.CloseCitrixApp(ctx, &vdi.CloseCitrixAppRequest{
-				AppTitle: fileName + " - Paint",
-			}); err != nil {
-				testing.ContextLogf(ctx, "Failed to close Citrix app %s: %v", "Paint", err)
-			}
-		}(cleanupCtx)
 		if _, err := citrixSvc.WaitUntilIconExists(ctx, &vdi.WaitUntilIconExistsRequest{IconName: signFileName}); err != nil {
 			return errors.Wrap(err, "failed to verify that the signature has been loaded")
 		}

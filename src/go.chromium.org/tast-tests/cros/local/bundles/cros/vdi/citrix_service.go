@@ -14,6 +14,7 @@ import (
 	"go.chromium.org/tast-tests/cros/local/apps"
 	"go.chromium.org/tast-tests/cros/local/chrome"
 	"go.chromium.org/tast-tests/cros/local/chrome/ash"
+	"go.chromium.org/tast-tests/cros/local/chrome/uiauto"
 	"go.chromium.org/tast-tests/cros/local/common"
 	"go.chromium.org/tast-tests/cros/local/coords"
 	"go.chromium.org/tast-tests/cros/local/input"
@@ -209,9 +210,12 @@ func (c *CitrixService) CloseCitrixApp(ctx context.Context, req *vdi.CloseCitrix
 	return &empty.Empty{}, nil
 }
 
-// DeleteFile deletes file in Citrix.
+// DeleteFile deletes file in Citrix desktop.
 func (c *CitrixService) DeleteFile(ctx context.Context, req *vdi.DeleteFileRequest) (*empty.Empty, error) {
-	if err := citrix.DeleteFile(c.ud, req.FileName)(ctx); err != nil {
+	if err := uiauto.Combine("delete file",
+		citrix.ShowDesktop(c.ud, c.dataPath),
+		citrix.DeleteFile(c.ud, c.dataPath, req.FileName),
+	)(ctx); err != nil {
 		return nil, errors.Wrap(err, "failed to delete file")
 	}
 
@@ -220,7 +224,7 @@ func (c *CitrixService) DeleteFile(ctx context.Context, req *vdi.DeleteFileReque
 
 // DeleteFileIfExists deletes file in Citrix if it exists.
 func (c *CitrixService) DeleteFileIfExists(ctx context.Context, req *vdi.DeleteFileRequest) (*empty.Empty, error) {
-	if err := citrix.DeleteFileIfExists(c.ud, req.FileName)(ctx); err != nil {
+	if err := citrix.DeleteFileIfExists(c.ud, c.dataPath, req.FileName)(ctx); err != nil {
 		return nil, errors.Wrap(err, "failed to delete file")
 	}
 

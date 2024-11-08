@@ -163,14 +163,6 @@ func FootPedal(ctx context.Context, s *testing.State) {
 	}); err != nil {
 		s.Fatalf("Failed to open Citrix app %v: %v", appName, err)
 	}
-	defer func(ctx context.Context) {
-		citrix.DumpUITreeWithScreenshotToFile(ctx, cl.Conn, s.HasError, "ui_dump_citrix_app_close")
-		if _, err := citrixSvc.CloseCitrixApp(ctx, &vdi.CloseCitrixAppRequest{
-			AppTitle: appTitle,
-		}); err != nil {
-			s.Logf("Failed to close Citrix app %v: %v", appName, err)
-		}
-	}(cleanupCtx)
 
 	if _, err := citrixSvc.SetupFootPedalTest(ctx, &empty.Empty{}); err != nil {
 		s.Fatal("Failed to set up foot pedal test: ", err)

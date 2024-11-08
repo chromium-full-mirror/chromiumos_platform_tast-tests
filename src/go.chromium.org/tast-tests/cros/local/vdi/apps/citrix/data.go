@@ -14,6 +14,7 @@ var CitrixData = []string{
 }
 
 const (
+	startBtnIcon         = "citrix/start_btn.png"
 	topBtnIcon           = "citrix/top_btn.png"
 	usbDeviceBtnIcon     = "citrix/usb_device_btn.png"
 	closeDialogBtnIcon   = "citrix/close_dialog_btn.png"
