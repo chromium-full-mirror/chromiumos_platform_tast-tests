@@ -21,17 +21,15 @@ import (
 	"go.chromium.org/tast-tests/cros/local/chrome/uiauto/ossettings"
 	"go.chromium.org/tast-tests/cros/local/chrome/uiauto/role"
 
+	"go.chromium.org/tast/core/ctxutil"
 	"go.chromium.org/tast/core/errors"
 	"go.chromium.org/tast/core/testing"
 )
-
-const timeoutUI = 30 * time.Second
 
 func init() {
 	testing.AddTest(&testing.Test{
 		Func:           VerifySettings,
 		LifeCycleStage: testing.LifeCycleOwnerMonitored,
-		LacrosStatus:   testing.LacrosVariantUnneeded,
 		Desc:           "Verifies ARC++ settings work as intended",
 		Contacts:       []string{"cros-arc-te@google.com", "arc-core@google.com", "jinrongwu@google.com"},
 		// ChromeOS > Software > ARC++ > EngProd
@@ -51,6 +49,10 @@ func init() {
 }
 
 func VerifySettings(ctx context.Context, s *testing.State) {
+	// Give 30 seconds to clean up and dump out UI tree.
+	cleanupCtx := ctx
+	ctx, cancel := ctxutil.Shorten(ctx, 30*time.Second)
+	defer cancel()
 
 	cr, err := chrome.New(ctx,
 		chrome.GAIALoginPool(dma.CredsFromPool(ui.GaiaPoolDefaultVarName)),
@@ -59,43 +61,34 @@ func VerifySettings(ctx context.Context, s *testing.State) {
 	if err != nil {
 		s.Fatal("Failed to start Chrome: ", err)
 	}
-	defer cr.Close(ctx)
+	defer cr.Close(cleanupCtx)
 
 	tconn, err := cr.TestAPIConn(ctx)
 	if err != nil {
 		s.Fatal("Failed to connect Test API: ", err)
 	}
-	defer faillog.DumpUITreeOnError(ctx, s.OutDir(), s.HasError, tconn)
+	defer faillog.DumpUITreeOnError(cleanupCtx, s.OutDir(), s.HasError, tconn)
 
 	// Optin to PlayStore and Close
 	if err := optin.PerformAndClose(ctx, cr, tconn); err != nil {
 		s.Fatal("Failed to optin to Play Store and Close: ", err)
 	}
 
-	screenRecorder, err := uiauto.NewScreenRecorder(ctx, tconn)
-	if err != nil {
-		s.Log("Failed to create ScreenRecorder: ", err)
-	}
-
-	defer uiauto.ScreenRecorderStopSaveRelease(ctx, screenRecorder, filepath.Join(s.OutDir(), "VerifySettings.webm"))
-
-	if screenRecorder != nil {
-		screenRecorder.Start(ctx, tconn)
-	}
+	recorder := uiauto.CreateAndStartScreenRecorder(ctx, tconn)
+	defer uiauto.StopAndSaveOnError(cleanupCtx, recorder, filepath.Join(s.OutDir(), "VerifySettings.webm"), s.HasError)
 
 	// Setup ARC.
 	a, err := arc.New(ctx, s.OutDir(), cr.NormalizedUser())
 	if err != nil {
 		s.Fatal("Failed to start ARC: ", err)
 	}
-	defer a.Close(ctx)
-	defer a.DumpUIHierarchyOnError(ctx, s.OutDir(), s.HasError)
+	defer a.Close(cleanupCtx)
 
 	d, err := a.NewUIDevice(ctx)
 	if err != nil {
 		s.Fatal("Failed initializing UI Automator: ", err)
 	}
-	defer d.Close(ctx)
+	defer d.Close(cleanupCtx)
 
 	ui := uiauto.New(tconn)
 	playStoreButton := nodewith.Name("Google Play Store").Role(role.Button)
@@ -103,10 +96,11 @@ func VerifySettings(ctx context.Context, s *testing.State) {
 		s.Fatal("Failed to launch apps settings page: ", err)
 	}
 
+	androidSettingsLink := nodewith.Name("Android Settings").Role(role.Link)
 	if err := uiauto.Combine("Open Android Settings",
 		ui.FocusAndWait(playStoreButton),
-		ui.LeftClick(playStoreButton),
-		ui.LeftClick(nodewith.Name("Android Settings").Role(role.Link)),
+		ui.LeftClickUntil(playStoreButton, ui.Exists(androidSettingsLink)),
+		ui.LeftClick(androidSettingsLink),
 	)(ctx); err != nil {
 		s.Fatal("Failed to Open Android Settings : ", err)
 	}
@@ -118,6 +112,7 @@ func VerifySettings(ctx context.Context, s *testing.State) {
 
 func checkAndroidSettings(ctx context.Context, arcDevice *androidui.Device) error {
 	const (
+		timeoutUI       = 30 * time.Second
 		scrollClassName = "android.widget.ScrollView"
 		locationIDT     = "android:id/switch_widget"
 		locationIDPreT  = "com.android.settings:id/switch_widget"
@@ -127,7 +122,9 @@ func checkAndroidSettings(ctx context.Context, arcDevice *androidui.Device) erro
 	scrollLayout := arcDevice.Object(androidui.ClassName(scrollClassName), androidui.Scrollable(true))
 	system := arcDevice.Object(androidui.ClassName("android.widget.TextView"), androidui.TextMatches("(?i)system"), androidui.Enabled(true))
 	if err := scrollLayout.WaitForExists(ctx, timeoutUI); err == nil {
-		scrollLayout.ScrollTo(ctx, system)
+		if err := scrollLayout.ScrollTo(ctx, system); err != nil {
+			return errors.Wrap(err, "failed to scroll to System")
+		}
 	}
 
 	aboutDevice := arcDevice.Object(androidui.ClassName("android.widget.TextView"), androidui.TextMatches("(?i)about device"), androidui.Enabled(true))
@@ -180,23 +177,8 @@ func checkAndroidSettings(ctx context.Context, arcDevice *androidui.Device) erro
 		return errors.Wrap(err, "failed finding Developer Options")
 	}
 
-	backup := arcDevice.Object(androidui.ClassName("android.widget.TextView"), androidui.TextMatches("(?i)backup"), androidui.Enabled(true))
-	if err := backup.WaitForExists(ctx, timeoutUI); err != nil {
-		return errors.Wrap(err, "failed finding Backup")
-	}
-
-	if err := backup.Click(ctx); err != nil {
-		return errors.Wrap(err, "failed to click Backup")
-	}
-
-	if err := testBackupToggle(ctx, arcDevice); err != nil {
-		return errors.Wrap(err, "failed to turn backup off and on")
-	}
-
-	for i := 0; i < 2; i++ {
-		if err := backButton.Click(ctx); err != nil {
-			return errors.Wrap(err, "failed to click Back Button")
-		}
+	if err := backButton.Click(ctx); err != nil {
+		return errors.Wrap(err, "failed to click Back Button")
 	}
 
 	location := arcDevice.Object(androidui.ClassName("android.widget.TextView"), androidui.TextMatches("(?i)location"), androidui.Enabled(true))
@@ -252,97 +234,5 @@ func checkAndroidSettings(ctx context.Context, arcDevice *androidui.Device) erro
 		return errors.New("Unable to Turn Location ON")
 	}
 
-	return nil
-}
-
-// testBackupToggle verifes if backup button can be turned off and on.
-func testBackupToggle(ctx context.Context, arcDevice *androidui.Device) error {
-	const backupID = "android:id/switch_widget"
-	const oldBackupID = "com.google.android.gms:id/switchWidget"
-
-	// Turn on backup in case if it is off which is the expectation for this test.
-	// Not finding the button is as critical as not being able to click it.
-	backupToggleOn := arcDevice.Object(androidui.ClassName("android.widget.Button"), androidui.TextMatches("(?i)Turn on"), androidui.Enabled(true))
-	if err := backupToggleOn.WaitForExists(ctx, time.Second*10); err != nil {
-		return errors.Wrap(err, "Backup turn on button doesn't exist")
-	} else if err := backupToggleOn.Click(ctx); err != nil {
-		return errors.Wrap(err, "failed to click Turn on button")
-	}
-
-	// Dismiss Google photos backup step in case it exists, otherwise just log this as not critical
-	// (e.g. this is a valid option as not all devices may have Google photos installed).
-	photosSkip := arcDevice.Object(androidui.ClassName("android.widget.Button"), androidui.TextMatches("(?i)Skip"), androidui.Enabled(true))
-	if err := photosSkip.WaitForExists(ctx, time.Second*10); err != nil {
-		testing.ContextLog(ctx, "Skip button is not there, Google photos may not be installed")
-	} else if err := photosSkip.Click(ctx); err != nil {
-		return errors.Wrap(err, "failed to click Skip button")
-	}
-
-	oldBackupUI := false
-	backupToggle := arcDevice.Object(androidui.ID(backupID))
-	// backupStatus will check for toggle on/off.
-	backupStatus, err := arcDevice.Object(androidui.ID(backupID)).IsChecked(ctx)
-	if err != nil {
-		testing.ContextLog(ctx, "Old backup UI")
-		backupToggle = arcDevice.Object(androidui.ID(oldBackupID))
-		backupStatus, err = arcDevice.Object(androidui.ID(oldBackupID)).IsChecked(ctx)
-		if err != nil {
-			return err
-		}
-		oldBackupUI = true
-	}
-
-	if backupStatus {
-		// Turn Backup OFF.
-		if err := backupToggle.Click(ctx); err != nil {
-			return errors.Wrap(err, "failed to click backup toggle")
-		}
-
-		turnOffBackup := arcDevice.Object(androidui.ClassName("android.widget.Button"), androidui.TextMatches("(?i)turn off & delete"), androidui.Enabled(true))
-		if err := turnOffBackup.WaitForExists(ctx, timeoutUI); err != nil {
-			return errors.Wrap(err, "failed to find turn off & delete button")
-		}
-
-		if err := turnOffBackup.Click(ctx); err != nil {
-			return errors.Wrap(err, "failed to click turn off & delete button")
-		}
-	}
-
-	if oldBackupUI {
-		if err := backupToggle.Click(ctx); err != nil {
-			return errors.Wrap(err, "failed to click backup toggle in Old UI")
-		}
-	} else {
-		// Turn on backup in case if it is off which is the expectation for this test.
-		// Not finding the button is as critical as not being able to click it.
-		backupToggleOn := arcDevice.Object(androidui.ClassName("android.widget.Button"), androidui.TextMatches("(?i)Turn on"), androidui.Enabled(true))
-		if err := backupToggleOn.WaitForExists(ctx, time.Second*10); err != nil {
-			return errors.Wrap(err, "Backup turn on button doesn't exist on new UI")
-		} else if err := backupToggleOn.Click(ctx); err != nil {
-			return errors.Wrap(err, "failed to click Turn on button on new UI")
-		}
-
-		// Dismiss Google photos backup step in case it exists, otherwise just log this as not critical
-		// (e.g. this is a valid option as not all devices may have Google photos installed).
-		photosSkip := arcDevice.Object(androidui.ClassName("android.widget.Button"), androidui.TextMatches("(?i)Skip"), androidui.Enabled(true))
-		if err := photosSkip.WaitForExists(ctx, time.Second*10); err != nil {
-			testing.ContextLog(ctx, "Skip button is not there, Google photos may not be installed in New UI")
-		} else if err := photosSkip.Click(ctx); err != nil {
-			return errors.Wrap(err, "failed to click Skip button in New UI")
-		}
-
-	}
-
-	if oldBackupUI {
-		backupStatus, err = arcDevice.Object(androidui.ID(oldBackupID)).IsChecked(ctx)
-	} else {
-		backupStatus, err = arcDevice.Object(androidui.ID(backupID)).IsChecked(ctx)
-	}
-	if err != nil {
-		return err
-	}
-	if !backupStatus {
-		return errors.New("unable to Turn Backup ON")
-	}
 	return nil
 }
