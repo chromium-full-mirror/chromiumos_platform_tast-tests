@@ -36,9 +36,8 @@ func init() {
 			Fixture:   "diagnosticsPrep",
 			ExtraAttr: []string{"informational", "group:criticalstaging"},
 		}, {
-			Name:      "no_mojo_check",
-			Fixture:   "diagnosticsPrepWithoutMojoCheck",
-			ExtraAttr: []string{"informational", "group:criticalstaging"},
+			Name:    "no_mojo_check",
+			Fixture: "diagnosticsPrepWithoutMojoCheck",
 		}},
 	})
 }
