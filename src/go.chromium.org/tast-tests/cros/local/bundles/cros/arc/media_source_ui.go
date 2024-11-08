@@ -16,6 +16,7 @@ import (
 	"go.chromium.org/tast-tests/cros/local/arc/apputil"
 	"go.chromium.org/tast-tests/cros/local/arc/apputil/vlc"
 	"go.chromium.org/tast-tests/cros/local/chrome"
+	"go.chromium.org/tast-tests/cros/local/chrome/ash"
 	"go.chromium.org/tast-tests/cros/local/chrome/uiauto"
 	"go.chromium.org/tast-tests/cros/local/chrome/uiauto/faillog"
 	"go.chromium.org/tast-tests/cros/local/chrome/uiauto/filesapp"
@@ -24,6 +25,7 @@ import (
 	"go.chromium.org/tast-tests/cros/local/cryptohome"
 	"go.chromium.org/tast-tests/cros/local/input"
 	"go.chromium.org/tast/core/ctxutil"
+	"go.chromium.org/tast/core/errors"
 	"go.chromium.org/tast/core/fsutil"
 	"go.chromium.org/tast/core/testing"
 )
@@ -247,6 +249,22 @@ func (vp *vlcPlayer) Play(ctx context.Context, media *apputil.Media) error {
 	if err := vp.EnterDownloadFolder(ctx); err != nil {
 		return err
 	}
+	// Ensuring the player widget is not in full-screen mode.
+	// This test interacts with the status area, but a full-screen widget
+	// would cover/hide the status area, causing the test to fail.
+	// Notes:
+	// - Whether the widget enters full-screen mode might depend on the screen size or resolution.
+	// - This configuration does not impact other tests, so restoration is unnecessary.
+	w, err := ash.FindOnlyWindow(ctx, vp.res.tconn, func(w *ash.Window) bool {
+		return w.ARCPackageName == vlc.PackageName
+	})
+	if err != nil {
+		return errors.Wrapf(err, "failed to find %s window", vlc.PackageName)
+	}
+	if err := ash.SetWindowStateAndWait(ctx, vp.res.tconn, w.ID, ash.WindowStateNormal); err != nil {
+		return errors.Wrapf(err, "failed to normal %s", vlc.PackageName)
+	}
+
 	return vp.Vlc.Play(ctx, &vlc.MediaInfo{
 		FileName: media.Query,
 		FileType: vlc.Video,
