@@ -29,7 +29,7 @@ func TestPowerQualBounds(t *testing.T) {
 	if err := os.WriteFile(path.Join(outDir, "results-chart.json"), []byte(resultsChart), 0666); err != nil {
 		t.Fatalf("failed to write results-chart.json to temp dir: %s", err)
 	}
-	var bootPerfMetricBounds = bootPerfMetricBounds(context.Background(), &protocol.DUTFeatures{}, "someboard")
+	var bootPerfMetricBounds = bootPerfMetricBounds(context.Background(), &protocol.DUTFeatures{}, "someboard", nil)
 	if err := bounds.EvaluateResults(context.Background(), bootPerfMetricBounds, outDir); err != nil {
 		t.Fatalf("EvaluateResults() returned error: %s", err)
 	}

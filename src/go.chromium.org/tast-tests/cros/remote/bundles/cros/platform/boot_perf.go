@@ -448,7 +448,7 @@ func collectExtraDebugInfo(ctx context.Context, s *testing.State) (bool, error) 
 	return true, nil
 }
 
-func bootPerfMetricBounds(ctx context.Context, features *protocol.DUTFeatures, board string) []bounds.MetricBounds {
+func bootPerfMetricBounds(ctx context.Context, features *protocol.DUTFeatures, board string, dut *dut.DUT) []bounds.MetricBounds {
 	maxSecondsPowerOnToKernel := 1.0
 	maxSecondsPowerOnToLogin := 8.0
 
@@ -479,6 +479,15 @@ func bootPerfMetricBounds(ctx context.Context, features *protocol.DUTFeatures, b
 	} else if board == "skyrim" { // ROW 135 in go/cros-waivers
 		testing.ContextLogf(ctx, "skyrim waiver: Adjusting maxSecondsPowerOnToKernel from %f to 1.3", maxSecondsPowerOnToKernel)
 		maxSecondsPowerOnToKernel = 1.3
+	} else if board == "guybrush" { // ROW 96 in go/cros-waivers
+		testing.ContextLogf(ctx, "guybrush waiver: Adjusting maxSecondsPowerOnToKernel from %f to 1.47", maxSecondsPowerOnToKernel)
+		maxSecondsPowerOnToKernel = 1.47
+	} else if board == "brya" || board == "brask" { // ROW 115 in go/cros-waivers
+		err := dut.Conn().CommandContext(ctx, "bash", "-c", "lscpu | grep '^Model name:\\s*Intel(R) Celeron(R)'").Run()
+		if err == nil {
+			testing.ContextLogf(ctx, "brya/brask Celeron waiver: Adjusting maxSecondsPowerOnToLogin from %f to 8.5", maxSecondsPowerOnToLogin)
+			maxSecondsPowerOnToLogin = 8.5
+		}
 	} else if features.GetHardware().GetDeprecatedDeviceConfig().GetId().GetModel() == "gladios" &&
 		features.GetHardware().GetHardwareFeatures().GetStorage().GetStorageType() == api.Component_Storage_EMMC &&
 		features.GetHardware().GetHardwareFeatures().GetStorage().GetSizeGb() <= 64 {
@@ -527,7 +536,7 @@ func BootPerf(ctx context.Context, s *testing.State) {
 	// Remove hyphenated suffixes: ex. "samus-kernelnext" becomes "samus"
 	board = strings.SplitN(board, "-", 2)[0]
 
-	var bootPerfMetricBounds = bootPerfMetricBounds(ctx, s.Features(""), board)
+	var bootPerfMetricBounds = bootPerfMetricBounds(ctx, s.Features(""), board, d)
 
 	// Parse test options.
 	skipRootfsCheck := defaultSkipRootfsCheck
