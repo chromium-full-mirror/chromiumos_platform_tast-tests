@@ -18,6 +18,7 @@ import (
 )
 
 const ffmpegMD5Path = "/usr/local/graphics/ffmpeg_md5sum"
+const ccdecPath = "/usr/bin/ccdec"
 
 // NB: If modifying any of the files or test specifications, be sure to
 // regenerate the test parameters by running the following in a chroot:
@@ -27,22 +28,36 @@ func genDecoderArgsBuilder(prefix, codec string) string {
 	if strings.Contains(prefix, "ffmpeg") {
 		return "platform.FFMPEGMD5DecodeVAAPIArgs"
 	}
+
+	ret := "platform."
+
 	if codec == "vp8" {
-		return "platform.VP8DecodeVAAPIargs"
+		ret += "VP8"
 	}
 	if codec == "vp9" {
-		return "platform.VP9DecodeVAAPIargs"
+		ret += "VP9"
 	}
 	if codec == "h264" {
-		return "platform.H264DecodeVAAPIargs"
+		ret += "H264"
 	}
 	if codec == "h265" || codec == "hevc" {
-		return "platform.HEVCDecodeVAAPIargs"
+		ret += "HEVC"
 	}
 	if codec == "av1" {
-		return "platform.AV1DecodeVAAPIargs"
+		ret += "AV1"
 	}
-	return ""
+
+	ret += "Decode"
+
+	if strings.Contains(prefix, "cros_codecs") {
+		ret += "CrosCodecs"
+	} else {
+		ret += "VAAPI"
+	}
+
+	ret += "args"
+
+	return ret
 }
 
 func TestPlatformDecodingParams(t *testing.T) {
@@ -75,6 +90,7 @@ func TestPlatformDecodingParams(t *testing.T) {
 		frequency      string
 	}{
 		{filepath.Join(chrome.BinTestDir, "decode_test"), "", "graphics_perbuild"},
+		{ccdecPath, "cros_codecs_", "graphics_perbuild"},
 		{ffmpegMD5Path, "ffmpeg_", "graphics_nightly"},
 	}
 
