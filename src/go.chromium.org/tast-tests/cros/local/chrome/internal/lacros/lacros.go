@@ -7,7 +7,6 @@
 //   - ResetState and related code for resetting the Lacros state. (These are reexported
 //     as part of the public packages lacros and lacrosinfo. Moving them there would cause
 //     an import cycle.)
-//   - SaveLogsAfter and related code for collecting per-test Lacros log files.
 package lacros
 
 import (
