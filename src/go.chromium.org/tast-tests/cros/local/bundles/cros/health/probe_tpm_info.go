@@ -6,7 +6,6 @@ package health
 
 import (
 	"context"
-	"encoding/hex"
 
 	"go.chromium.org/tast-tests/cros/common/hwsec"
 	"go.chromium.org/tast-tests/cros/local/croshealthd"
@@ -144,19 +143,13 @@ func verifyTPMVersion(ctx context.Context, tpmManager *hwsec.TPMManagerClient, v
 	if tpmManagerVersionInfo.FirmwareVersion != uint64(version.FirmwareVersion) {
 		return errors.Errorf("FirmwareVersion not matched, %v from healthd, %v from TPMManager", version.FirmwareVersion, tpmManagerVersionInfo.FirmwareVersion)
 	}
-	tpmManagerVendorSpecificStringByteStream, err := hex.DecodeString(tpmManagerVersionInfo.VendorSpecific)
-	if err != nil {
-		return errors.Wrap(err, "failed to decode VendorSpecific from TPMManager")
-	}
-	tpmManagerVendorSpecificString := string(tpmManagerVendorSpecificStringByteStream)
-
 	// `VendorSpecific` would be nil if the `vendor_specfic` string is an empty string.
 	if version.VendorSpecific == nil {
-		if tpmManagerVendorSpecificString != "" {
-			return errors.Errorf("VendorSpecific not matched, empty string from healthd, %v from TPMManager", tpmManagerVendorSpecificString)
+		if tpmManagerVersionInfo.VendorSpecific != "" {
+			return errors.Errorf("VendorSpecific not matched, empty string from healthd, %v from TPMManager", tpmManagerVersionInfo.VendorSpecific)
 		}
-	} else if tpmManagerVendorSpecificString != *version.VendorSpecific {
-		return errors.Errorf("VendorSpecific not matched, %v from healthd, %v from TPMManager", version.VendorSpecific, tpmManagerVendorSpecificString)
+	} else if tpmManagerVersionInfo.VendorSpecific != *version.VendorSpecific {
+		return errors.Errorf("VendorSpecific not matched, %v from healthd, %v from TPMManager", *version.VendorSpecific, tpmManagerVersionInfo.VendorSpecific)
 	}
 	return nil
 }
