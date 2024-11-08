@@ -72,6 +72,8 @@ type fioTestParams struct {
 	readJobs []string
 	// writeJobs is the set of jobs to be tested that performs write.
 	writeJobs []string
+	// needsFreeSpaceCheck specifies whether a free-space check is required.
+	needsFreeSpaceCheck bool
 }
 
 type fioJob struct {
@@ -139,21 +141,24 @@ func init() {
 				// Because the target file (PrebuiltGmsCoreArcRelease.apk) is
 				// not so large (~ 150 MiB), repeat the test 10 times to
 				// stabilize the result.
-				numRepeat: 10,
+				numRepeat:           10,
+				needsFreeSpaceCheck: false,
 			},
 		}, {
 			Name: "data",
 			Val: fioTestParams{
-				directory: "/data/local/tmp",
-				readJobs:  defaultFioReadJobs,
-				writeJobs: defaultFioWriteJobs,
+				directory:           "/data/local/tmp",
+				readJobs:            defaultFioReadJobs,
+				writeJobs:           defaultFioWriteJobs,
+				needsFreeSpaceCheck: true,
 			},
 		}, {
 			Name: "data_media_download",
 			Val: fioTestParams{
-				directory: "/data/media/0/Download",
-				readJobs:  defaultFioReadJobs,
-				writeJobs: defaultFioWriteJobs,
+				directory:           "/data/media/0/Download",
+				readJobs:            defaultFioReadJobs,
+				writeJobs:           defaultFioWriteJobs,
+				needsFreeSpaceCheck: true,
 			},
 		}, {
 			Name: "download",
@@ -162,6 +167,7 @@ func init() {
 				readJobs:               defaultFioReadJobs,
 				writeJobs:              defaultFioWriteJobs,
 				needsARCSystemServices: true,
+				needsFreeSpaceCheck:    true,
 			},
 		}, {
 			Name: "emulated",
@@ -170,6 +176,7 @@ func init() {
 				readJobs:               defaultFioReadJobs,
 				writeJobs:              defaultFioWriteJobs,
 				needsARCSystemServices: true,
+				needsFreeSpaceCheck:    true,
 			},
 		}},
 	})
@@ -215,6 +222,30 @@ func Fio(ctx context.Context, s *testing.State) {
 		s.Fatal("Failed to start ARC: ", err)
 	}
 	defer a.Close(cleanupCtx)
+
+	if params.needsFreeSpaceCheck {
+		// Require 2.5GiB (1GiB for read test, 1GiB for write test, 0.5GiB for
+		// filesystem metadata and buffer).
+		const requiredSpaceInKb = int(2.5 * 1024 * 1024)
+
+		// Check the free space in ARC /data from the ARC side with `df /data`.
+		// This should be done before running adb root, as the available space
+		// obtained with `df /data` on adb root includes the space reserved by
+		// storage balloon.
+		// Always use /data regardless of the test case instead of running df on
+		// `params.directory`, because adb shell doesn't have access to it in
+		// data_media_download test case, and the available space returned by
+		// `df /data` and `df /storage/emulated/0/Download` seems to be the same.
+		availableSpaceInKb, err := getArcFreeSpaceInKb(ctx, a)
+		if err != nil {
+			s.Fatal("Failed to get free disk space in ARC /data: ", err)
+		}
+
+		if availableSpaceInKb < requiredSpaceInKb {
+			s.Fatalf("Not enough space to start fio test (required %d KiB, got %d KiB)",
+				requiredSpaceInKb, availableSpaceInKb)
+		}
+	}
 
 	testing.ContextLog(ctx, "Restarting adbd as root")
 	if err := a.Root(ctx); err != nil {
@@ -316,6 +347,35 @@ func Fio(ctx context.Context, s *testing.State) {
 	if err := perfValues.Save(s.OutDir()); err != nil {
 		s.Fatal("Failed to save final perf metrics: ", err)
 	}
+}
+
+// getArcFreeSpaceInKb returns available disk space in ARC /data in KiB.
+func getArcFreeSpaceInKb(ctx context.Context, a *arc.ARC) (int, error) {
+	outBytes, err := a.Command(ctx, "df", "/data").Output(testexec.DumpLogOnError)
+	if err != nil {
+		return 0, errors.Wrap(err, "failed to run `df` command on ARC side")
+	}
+
+	out := string(outBytes)
+	testing.ContextLog(ctx, "Output of `df` command: "+out)
+
+	// `out` should be in the following form:
+	// Filesystem     1K-blocks  Used Available Use% Mounted on
+	// /dev/block/vde 107423368 39752  96083808   1% /storage/emulated/0/Android/obb
+	lines := strings.Split(out, "\n")
+	if len(lines) < 2 {
+		return 0, errors.New("failed to parse the lines of `df` output")
+	}
+	words := strings.Fields(lines[1])
+	if len(words) != 6 {
+		return 0, errors.New("failed to parse the second line of `df` output")
+	}
+	availableSpaceInKb, err := strconv.Atoi(words[3])
+	if err != nil {
+		return 0, errors.Wrap(err, "failed to parse the available space from `df` output")
+	}
+
+	return availableSpaceInKb, nil
 }
 
 // fioBinNameForArch gets the name of the fio executable to install on the DUT.
