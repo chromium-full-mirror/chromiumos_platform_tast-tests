@@ -91,7 +91,7 @@ func ResizeBackupRestore(ctx context.Context, s *testing.State) {
 	}
 
 	checksumFiles := func(outputFile string) error {
-		const md5cmd = "for d in /home /etc /usr; do echo $d; sudo find $d -type f -a '!' -name '.*' -exec md5sum {} + | LC_ALL=c sort | md5sum; done"
+		const md5cmd = "for d in /home /etc /usr; do echo $d; sudo find $d -type f -a '!' -path '*/.*' -exec md5sum {} + | LC_ALL=c sort | md5sum; done"
 		return runInTerminal(md5cmd, outputFile)
 	}
 
