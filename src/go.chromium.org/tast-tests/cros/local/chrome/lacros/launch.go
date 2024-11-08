@@ -27,7 +27,6 @@ import (
 	"path/filepath"
 	"time"
 
-	"go.chromium.org/tast-tests/cros/local/apps"
 	"go.chromium.org/tast-tests/cros/local/chrome"
 	"go.chromium.org/tast-tests/cros/local/chrome/ash"
 	"go.chromium.org/tast-tests/cros/local/chrome/browser"
@@ -121,34 +120,7 @@ func Connect(ctx context.Context, tconn *chrome.TestConn) (l *Lacros, retErr err
 // Launch launches lacros. Note that this function expects lacros to be closed
 // as a precondition.
 func Launch(ctx context.Context, tconn *chrome.TestConn) (l *Lacros, retErr error) {
-	// Reserve a few seconds for faillog capture.
-	faillogCtx := ctx
-	ctx, cancel := ctxutil.Shorten(ctx, 10*time.Second)
-	defer cancel()
-	defer lacrosfaillog.SaveIf(faillogCtx, tconn, func() bool { return retErr != nil })
-
-	// Make sure Lacros app is not running before launch.
-	if running, err := ash.AppRunning(ctx, tconn, apps.Lacros.ID); err != nil {
-		return nil, errors.Wrap(err, "failed to check if app is not running before launch")
-	} else if running {
-		return nil, errors.New("failed to launch lacros since app is already running. close before launch")
-	}
-
-	testing.ContextLog(ctx, "Launch lacros")
-	if err := apps.Launch(ctx, tconn, apps.Lacros.ID); err != nil {
-		return nil, errors.Wrap(err, "failed to launch lacros")
-	}
-
-	testing.ContextLog(ctx, "Wait for Lacros window")
-	if err := WaitForLacrosWindow(ctx, tconn, ""); err != nil {
-		return nil, errors.Wrap(err, "failed to wait for lacros")
-	}
-
-	l, err := connect(ctx, tconn, false)
-	if err != nil {
-		return nil, errors.Wrap(err, "failed to connect to lacros")
-	}
-	return l, nil
+	return nil, errors.New("unsupported")
 }
 
 // LaunchWithURL launches lacros-chrome and ensures there is one page open

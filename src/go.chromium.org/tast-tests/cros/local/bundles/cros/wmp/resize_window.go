@@ -62,9 +62,8 @@ type resizeWindowTestParams struct {
 
 func init() {
 	testing.AddTest(&testing.Test{
-		Func:         ResizeWindow,
-		LacrosStatus: testing.LacrosVariantUnneeded,
-		Desc:         "Resize different windows by dragging 4 corners and 4 sides",
+		Func: ResizeWindow,
+		Desc: "Resize different windows by dragging 4 corners and 4 sides",
 		Contacts: []string{
 			"chromeos-wm@google.com",
 			"chromeos-consumer-engprod@google.com",
@@ -360,9 +359,6 @@ func waitUntilWindowStable(ctx context.Context, tconn *chrome.TestConn, resizeAp
 			case "":
 				// For Play Store, we use exact string "Google Play Store" to find the window.
 				return w.Title == "Google Play Store"
-			case apps.Lacros.ID:
-				// For browser, we use exact string "New Tab" to find the window.
-				return strings.Contains(w.Title, "New Tab")
 			default:
 				// For regular apps(i.e., apps with valid ID), we use app name to find the correct window.
 				return strings.Contains(w.Title, resizeApp.Name)

@@ -9,7 +9,6 @@ import (
 	"strings"
 	"time"
 
-	"go.chromium.org/tast-tests/cros/local/apps"
 	"go.chromium.org/tast-tests/cros/local/chrome"
 	"go.chromium.org/tast-tests/cros/local/chrome/ash"
 	internal "go.chromium.org/tast-tests/cros/local/chrome/internal/lacros"
@@ -43,17 +42,6 @@ func CloseLacros(ctx context.Context, l *Lacros) {
 	if l != nil {
 		l.Close(ctx) // Ignore error.
 	}
-}
-
-// IsLacrosRunning checks if Lacros is running or not.
-// NOTE: The notion of "running" here corresponds to the ChromeOS shelf indication,
-// so it is false when Lacros is running in the background (without windows).
-func IsLacrosRunning(ctx context.Context, cr *chrome.Chrome) (bool, error) {
-	tconn, err := cr.TestAPIConn(ctx)
-	if err != nil {
-		return false, errors.Wrap(err, "failed to get TestConn to check Lacros")
-	}
-	return ash.AppRunning(ctx, tconn, apps.Lacros.ID)
 }
 
 // WaitForLacrosNotRunning waits for the Lacros is not running.
