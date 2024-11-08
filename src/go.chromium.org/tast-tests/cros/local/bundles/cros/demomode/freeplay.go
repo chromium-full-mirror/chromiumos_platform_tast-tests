@@ -19,7 +19,6 @@ import (
 	"go.chromium.org/tast/core/ctxutil"
 	"go.chromium.org/tast/core/errors"
 	"go.chromium.org/tast/core/testing"
-	"go.chromium.org/tast/core/testing/hwdep"
 )
 
 type freeplayTestParams struct {
@@ -34,13 +33,10 @@ func init() {
 		Func:         Freeplay,
 		LacrosStatus: testing.LacrosVariantNeeded,
 		Desc:         "Verify that all preinstalled sample apps are present in Demo Mode freeplay",
-		Contacts:     []string{"cros-demo-mode-eng@google.com", "jacksontadie@google.com"},
+		Contacts:     []string{"cros-demo-mode-eng@google.com", "wanghaifan@google.com"},
 		// Chrome OS Server Projects > Enterprise Management > Demo Mode
 		BugComponent: "b:812312",
-		Attr:         []string{
-			// Disabled by TORA.  See:b/332563840.
-			//"group:mainline", "informational"
-			},
+		Attr:         []string{"group:mainline", "informational"},
 		// Demo Mode uses Zero Touch Enrollment for enterprise enrollment, which
 		// requires a real TPM.
 		// We require "arc" and "chrome_internal" because the ARC TOS screen
@@ -49,42 +45,6 @@ func init() {
 		SoftwareDeps: []string{"chrome", "chrome_internal", "arc", "tpm2", "crossystem"},
 		Timeout:      5 * time.Minute,
 		Params: []testing.Param{{
-			/* TODO(b/348069332): Re-enable "alpha" nd "prod" once the Oamaha component
-								  error is fixed.
-				Name: "alpha",
-				Val: freeplayTestParams{
-					dmServerURL:                        policy.DMServerAlphaURL,
-					downloadDemoModeAppComponent:       true,
-					downloadDemoModeResourcesComponent: true,
-					verifyWebApps:                      true,
-				},
-				// Exclude the bronze tier (RAM memory <= 3GB) devices from the android
-				// apps tast test because their demo mode resources component does not
-				// contain android app APKs.
-				ExtraHardwareDeps: hwdep.D(hwdep.MinMemory(3073)),
-				Fixture:           fixture.PostDemoModeOOBEAlpha,
-				// TODO (b/346725308): Refactor to use utility and known dependency list.
-				ExtraSearchFlags: []*testing.StringPair{{
-					Key: "external_dependency", Value: "DMServerAlpha",
-				}},
-			}, {
-				Name: "prod",
-				Val: freeplayTestParams{
-					dmServerURL:                        policy.DMServerProdURL,
-					downloadDemoModeAppComponent:       true,
-					downloadDemoModeResourcesComponent: true,
-					verifyWebApps:                      true,
-				},
-				// Exclude the bronze tier (RAM memory <= 3GB) devices from the android
-				// apps tast test because their demo mode resources component does not
-				// contain android app APKs.
-				ExtraHardwareDeps: hwdep.D(hwdep.MinMemory(3073)),
-				Fixture:           fixture.PostDemoModeOOBEProd,
-				// TODO (b/346725308): Refactor to use utility and known dependency list.
-				ExtraSearchFlags: []*testing.StringPair{{
-					Key: "external_dependency", Value: "DMServerProd",
-				}},
-			}, {*/
 			Name: "web_apps_prod",
 			Val: freeplayTestParams{
 				dmServerURL: policy.DMServerProdURL,
@@ -96,26 +56,6 @@ func init() {
 				verifyWebApps:                      true,
 			},
 			Fixture: fixture.PostDemoModeOOBESkipBothComponentsProd,
-			// TODO (b/346725308): Refactor to use utility and known dependency list.
-			ExtraSearchFlags: []*testing.StringPair{{
-				Key: "external_dependency", Value: "DMServerProd",
-			}},
-		}, {
-			Name: "android_apps_prod",
-			Val: freeplayTestParams{
-				dmServerURL: policy.DMServerProdURL,
-				// --demo-mode-swa-content-directory and --demo-mode-resource-directory
-				// were used to skip the demo mode app and resources component download
-				// and install process.
-				downloadDemoModeAppComponent:       false,
-				downloadDemoModeResourcesComponent: true,
-				verifyWebApps:                      false,
-			},
-			// Exclude the bronze tier (RAM memory <= 3GB) devices from the android
-			// apps tast test because their demo mode resources component does not
-			// contain android app APKs.
-			ExtraHardwareDeps: hwdep.D(hwdep.MinMemory(3073)),
-			Fixture:           fixture.PostDemoModeOOBESkipAppComponentsProd,
 			// TODO (b/346725308): Refactor to use utility and known dependency list.
 			ExtraSearchFlags: []*testing.StringPair{{
 				Key: "external_dependency", Value: "DMServerProd",
