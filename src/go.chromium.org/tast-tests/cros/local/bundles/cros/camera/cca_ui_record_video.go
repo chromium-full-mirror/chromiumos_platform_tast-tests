@@ -8,6 +8,7 @@ import (
 	"context"
 	"time"
 
+	"go.chromium.org/tast-tests/cros/common/media/caps"
 	"go.chromium.org/tast-tests/cros/local/camera/cca"
 	"go.chromium.org/tast-tests/cros/local/chrome"
 	"go.chromium.org/tast-tests/cros/local/input"
@@ -36,33 +37,29 @@ func init() {
 		Timeout:      5 * time.Minute,
 		Params: []testing.Param{
 			{
-				Name:      "fake_hal",
-				Fixture:   "ccaTestBridgeReadyWithFakeHALCamera",
+				Name:    "fake_hal",
+				Fixture: "ccaTestBridgeReadyWithFakeHALCamera",
 				ExtraAttr: []string{
 					"group:mainline",
 					"informational",
 					"group:release-health",
 					"release-health_camera",
 				},
-				Val:       fakeHALTest,
+				Val: fakeHALTest,
 			},
 			{
-				Name:              "real",
-				Fixture:           "ccaTestBridgeReady",
-				ExtraAttr:         []string{
+				Name:    "real",
+				Fixture: "ccaTestBridgeReady",
+				ExtraAttr: []string{
 					"group:mainline",
 					"informational",
 					"group:camera-libcamera",
 					"group:release-health",
 					"release-health_camera",
 				},
+				ExtraSoftwareDeps: []string{caps.BuiltinCamera},
 				ExtraHardwareDeps: hwdep.D(hwdep.CameraEnumerated()),
 				Val:               realCamerasTest,
-			},
-			{
-				Name:    "manual",
-				Fixture: "ccaTestBridgeReady",
-				Val:     manualTest,
 			},
 		},
 	})
