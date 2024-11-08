@@ -18,6 +18,7 @@ import (
 	"go.chromium.org/tast-tests/cros/local/chrome/uiauto/role"
 	"go.chromium.org/tast-tests/cros/local/chrome/uiauto/state"
 	hwseclocal "go.chromium.org/tast-tests/cros/local/hwsec"
+	"go.chromium.org/tast-tests/cros/local/input"
 	"go.chromium.org/tast-tests/cros/local/nebraska"
 	"go.chromium.org/tast-tests/cros/local/oobe"
 	"go.chromium.org/tast-tests/cros/local/testenv"
@@ -32,6 +33,7 @@ type oobeTestArgs struct {
 	preprod               bool // whether to run against preprod versions of dependencies (default: false)
 	gaiaSandbox           bool // whether to run against GAIA sandbox (default: false)
 	isMetricsClientIDTest bool
+	setupAsPinOnly        bool // Whether to setup a PIN as the main factor instead of a password
 }
 
 func init() {
@@ -54,37 +56,41 @@ func init() {
 		Timeout: chrome.GAIALoginTimeout + 5*time.Minute,
 		Params: []testing.Param{{
 			ExtraAttr: []string{"group:mainline", "informational", "group:criticalstaging", "group:release-health"},
-			Val:       oobeTestArgs{isAddPersonFlow: false, preprod: false, gaiaSandbox: false, isMetricsClientIDTest: false},
+			Val:       oobeTestArgs{isAddPersonFlow: false, preprod: false, gaiaSandbox: false, isMetricsClientIDTest: false, setupAsPinOnly: false},
 		}, {
 			Name:      "add_person_flow",
 			ExtraAttr: []string{"group:mainline", "informational"},
-			Val:       oobeTestArgs{isAddPersonFlow: true, preprod: false, gaiaSandbox: false, isMetricsClientIDTest: false},
+			Val:       oobeTestArgs{isAddPersonFlow: true, preprod: false, gaiaSandbox: false, isMetricsClientIDTest: false, setupAsPinOnly: false},
+		}, {
+			Name:      "pin_only",
+			ExtraAttr: []string{"group:mainline", "informational"},
+			Val:       oobeTestArgs{isAddPersonFlow: false, preprod: false, gaiaSandbox: false, isMetricsClientIDTest: false, setupAsPinOnly: true},
 		}, {
 			Name:             "preprod",
 			ExtraAttr:        []string{"group:external-dependency", "group:hw_agnostic"},
 			ExtraSearchFlags: []*testing.StringPair{testenv.SearchFlag(testenv.GFEPreprod)},
-			Val:              oobeTestArgs{isAddPersonFlow: false, preprod: true, gaiaSandbox: false, isMetricsClientIDTest: false},
+			Val:              oobeTestArgs{isAddPersonFlow: false, preprod: true, gaiaSandbox: false, isMetricsClientIDTest: false, setupAsPinOnly: false},
 		}, {
 			Name:             "preprod_add_person_flow",
 			ExtraAttr:        []string{"group:external-dependency", "group:hw_agnostic"},
 			ExtraSearchFlags: []*testing.StringPair{testenv.SearchFlag(testenv.GFEPreprod)},
-			Val:              oobeTestArgs{isAddPersonFlow: true, preprod: true, gaiaSandbox: false, isMetricsClientIDTest: false},
+			Val:              oobeTestArgs{isAddPersonFlow: true, preprod: true, gaiaSandbox: false, isMetricsClientIDTest: false, setupAsPinOnly: false},
 		}, {
 			Name:      "metrics_client_id",
 			ExtraAttr: []string{"group:mainline", "informational"},
-			Val:       oobeTestArgs{isAddPersonFlow: false, preprod: false, gaiaSandbox: false, isMetricsClientIDTest: true},
+			Val:       oobeTestArgs{isAddPersonFlow: false, preprod: false, gaiaSandbox: false, isMetricsClientIDTest: true, setupAsPinOnly: false},
 		}, {
 			Name:             "gaia_sandbox",
 			ExtraAttr:        []string{"group:external-dependency", "group:hw_agnostic"},
 			ExtraSearchFlags: []*testing.StringPair{testenv.SearchFlag(testenv.GAIASandbox)},
 			ExtraData:        []string{"gaia_sandbox_config.json"}, // symlinked to the external data file in chrome internal, then to the sandbox config in the private gs bucket
-			Val:              oobeTestArgs{isAddPersonFlow: false, preprod: false, gaiaSandbox: true, isMetricsClientIDTest: false},
+			Val:              oobeTestArgs{isAddPersonFlow: false, preprod: false, gaiaSandbox: true, isMetricsClientIDTest: false, setupAsPinOnly: false},
 		}, {
 			Name:             "gaia_sandbox_add_person_flow",
 			ExtraAttr:        []string{"group:external-dependency", "group:hw_agnostic"},
 			ExtraSearchFlags: []*testing.StringPair{testenv.SearchFlag(testenv.GAIASandbox)},
 			ExtraData:        []string{"gaia_sandbox_config.json"}, // symlinked to the external data file in chrome internal, then to the sandbox config in the private gs bucket
-			Val:              oobeTestArgs{isAddPersonFlow: true, preprod: false, gaiaSandbox: true, isMetricsClientIDTest: false},
+			Val:              oobeTestArgs{isAddPersonFlow: true, preprod: false, gaiaSandbox: true, isMetricsClientIDTest: false, setupAsPinOnly: false},
 		}},
 	})
 }
@@ -318,32 +324,83 @@ func SmokeEndToEnd(ctx context.Context, s *testing.State) {
 		s.Fatal("Failed to get supported policies: ", err)
 	}
 
-	if supportsLE {
-		s.Log("Waiting for the pin setup screen")
-		pinSetupSkipButton := nodewith.Name("Use password instead").Role(role.Button)
-		if err := uiauto.Combine("click 'Use password instead' button on the pin setup screen",
-			ui.WaitUntilEnabled(pinSetupSkipButton),
-			ui.LeftClick(pinSetupSkipButton),
-		)(ctx); err != nil {
-			s.Fatal("Failed to click 'Use password instead' button: ", err)
+	setupAsPinOnly := s.Param().(oobeTestArgs).setupAsPinOnly
+	if setupAsPinOnly && supportsLE {
+		// Add a PIN as the main authentication factor. The flow continues into the fingerprint setup screen.
+		pinInputField := nodewith.Role(role.TextField)
+		pinSetupNextButton := nodewith.Name("Next").Role(role.Button)
+		pinSetupDoneButton := nodewith.Name("Done").Role(role.Button)
+		keyboard, err := input.Keyboard(ctx)
+		if err != nil {
+			s.Fatal(err, "failed to get keyboard")
 		}
-	}
+		defer keyboard.Close(ctx)
 
-	s.Log("Waiting for the password selection screen")
-	if err := oobeConn.WaitForExprFailOnErr(ctx, "OobeAPI.screens.PasswordSelectionScreen.isVisible()"); err != nil {
-		s.Fatal("Failed to wait for the password selection screen to be visible: ", err)
-	}
+		// The steps below cannot be easily combined together because it results in sporadic errors
+		// when attempting to do so. The instructions become flaky and it has been observed that the
+		// steps transitions might modify the caret location. Therefore we use a PIN with equal digits
+		// even when the instructions are not combined.
+		if err := uiauto.Combine("Insert PIN into input field",
+			ui.WaitUntilEnabled(pinInputField),
+			ui.LeftClick(pinInputField),
+			keyboard.TypeAction(`111111`),
+		)(ctx); err != nil {
+			s.Fatal("Failed to insert the PIN: ", err)
+		}
 
-	if err := oobeConn.Eval(ctx, "OobeAPI.screens.PasswordSelectionScreen.selectGaiaPassword()", nil); err != nil {
-		s.Fatal("Failed to select GAIA password: ", err)
-	}
+		if err := uiauto.Combine("Click 'Next' button on the pin setup screen",
+			ui.WaitUntilEnabled(pinSetupNextButton),
+			ui.LeftClick(pinSetupNextButton),
+		)(ctx); err != nil {
+			s.Fatal("Failed to click on the 'Next' button: ", err)
+		}
 
-	nextButton := nodewith.Name("Next").Role(role.Button)
-	if err := uiauto.Combine("click next on the password selection screen",
-		ui.WaitUntilEnabled(nextButton),
-		ui.LeftClick(nextButton),
-	)(ctx); err != nil {
-		s.Fatal("Failed to click password selection screen next button: ", err)
+		if err := uiauto.Combine("Insert PIN into input field",
+			ui.WaitUntilEnabled(pinInputField),
+			ui.LeftClick(pinInputField),
+			keyboard.TypeAction(`111111`),
+		)(ctx); err != nil {
+			s.Fatal("Failed to insert the PIN: ", err)
+		}
+
+		if err := uiauto.Combine("Click 'Next' and then 'Done' on the pin setup screen",
+			ui.WaitUntilEnabled(pinSetupNextButton),
+			ui.LeftClick(pinSetupNextButton),
+			ui.WaitUntilEnabled(pinSetupDoneButton),
+			ui.LeftClick(pinSetupDoneButton),
+		)(ctx); err != nil {
+			s.Fatal("Failed to comfirm the PIN by clicking on the Next and Done buttons: ", err)
+		}
+
+	} else {
+		// Skip the PIN as main factor offering and add the Gaia password as the authentication factor.
+		if supportsLE {
+			s.Log("Waiting for the pin setup screen")
+			pinSetupSkipButton := nodewith.Name("Use password instead").Role(role.Button)
+			if err := uiauto.Combine("click 'Use password instead' button on the pin setup screen",
+				ui.WaitUntilEnabled(pinSetupSkipButton),
+				ui.LeftClick(pinSetupSkipButton),
+			)(ctx); err != nil {
+				s.Fatal("Failed to click 'Use password instead' button: ", err)
+			}
+		}
+
+		s.Log("Waiting for the password selection screen")
+		if err := oobeConn.WaitForExprFailOnErr(ctx, "OobeAPI.screens.PasswordSelectionScreen.isVisible()"); err != nil {
+			s.Fatal("Failed to wait for the password selection screen to be visible: ", err)
+		}
+
+		if err := oobeConn.Eval(ctx, "OobeAPI.screens.PasswordSelectionScreen.selectGaiaPassword()", nil); err != nil {
+			s.Fatal("Failed to select GAIA password: ", err)
+		}
+
+		nextButton := nodewith.Name("Next").Role(role.Button)
+		if err := uiauto.Combine("click next on the password selection screen",
+			ui.WaitUntilEnabled(nextButton),
+			ui.LeftClick(nextButton),
+		)(ctx); err != nil {
+			s.Fatal("Failed to click password selection screen next button: ", err)
+		}
 	}
 
 	shouldSkipFingerprint := false
