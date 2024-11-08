@@ -11,8 +11,6 @@ import (
 
 	cdcommon "go.chromium.org/tast-tests/cros/common/cros/crossdevice"
 	"go.chromium.org/tast-tests/cros/local/chrome"
-	"go.chromium.org/tast-tests/cros/local/chrome/browser"
-	"go.chromium.org/tast-tests/cros/local/chrome/browser/browserfixt"
 	"go.chromium.org/tast-tests/cros/local/chrome/crossdevice"
 	"go.chromium.org/tast-tests/cros/local/chrome/crossdevice/phonehub"
 	"go.chromium.org/tast-tests/cros/local/chrome/uiauto"
@@ -39,19 +37,16 @@ func init() {
 			{
 				Fixture:           "crossdeviceOnboardedAllFeaturesRerun",
 				ExtraHardwareDeps: hwdep.D(hwdep.SkipOnModel(cdcommon.UnstableModels...)),
-				Val:               browser.TypeAsh,
 				ExtraAttr:         []string{"group:release-health"},
 			},
 			{
 				Name:              "unstable",
 				Fixture:           "crossdeviceOnboardedAllFeaturesRerun",
 				ExtraHardwareDeps: hwdep.D(hwdep.Model(cdcommon.UnstableModels...)),
-				Val:               browser.TypeAsh,
 			},
 			{
 				Name:      "floss",
 				Fixture:   "crossdeviceOnboardedAllFeaturesFlossRerun",
-				Val:       browser.TypeAsh,
 				ExtraAttr: []string{"cross-device_floss"},
 			},
 		},
@@ -115,7 +110,6 @@ func RecentTabs(ctx context.Context, s *testing.State) {
 	if err != nil {
 		s.Fatal("Failed to get recent tab chips: ", err)
 	}
-	bt := s.Param().(browser.Type)
 	for _, chip := range chips {
 		if err := phonehub.Show(ctx, tconn); err != nil {
 			s.Fatal("Failed to open Phone Hub: ", err)
@@ -123,12 +117,7 @@ func RecentTabs(ctx context.Context, s *testing.State) {
 		if err := ui.LeftClick(chip.Finder)(ctx); err != nil {
 			s.Fatalf("Failed to click chip for %v: %v", chip.URL, err)
 		}
-		br, brCleanUp, err := browserfixt.Connect(ctx, cr, bt)
-		if err != nil {
-			s.Fatalf("Failed to connect to active browser for %v: %v", chip.URL, err)
-		}
-		defer brCleanUp(ctx)
-		c, err := br.NewConnForTarget(ctx, chrome.MatchTargetURL(chip.URL))
+		c, err := cr.NewConnForTarget(ctx, chrome.MatchTargetURL(chip.URL))
 		if err != nil {
 			s.Fatalf("Failed to find browser window for %v: %v", chip.URL, err)
 		}

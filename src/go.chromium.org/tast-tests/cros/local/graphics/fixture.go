@@ -22,9 +22,6 @@ import (
 	graphics_common "go.chromium.org/tast-tests/cros/common/graphics"
 	"go.chromium.org/tast-tests/cros/common/testexec"
 	"go.chromium.org/tast-tests/cros/local/chrome"
-	"go.chromium.org/tast-tests/cros/local/chrome/browser"
-	"go.chromium.org/tast-tests/cros/local/chrome/browser/browserfixt"
-	"go.chromium.org/tast-tests/cros/local/chrome/lacros/lacrosfixt"
 	"go.chromium.org/tast-tests/cros/local/cpu"
 	"go.chromium.org/tast-tests/cros/local/crash"
 	"go.chromium.org/tast-tests/cros/local/debugd"
@@ -122,36 +119,6 @@ func init() {
 			}, nil
 		}),
 		SetUpTimeout:    chrome.LoginTimeout,
-		ResetTimeout:    chrome.ResetTimeout,
-		TearDownTimeout: chrome.ResetTimeout,
-	})
-
-	testing.AddFixture(&testing.Fixture{
-		Name:         "chromeGraphicsLacros",
-		Desc:         "Logged into a user session for graphics testing (lacros)",
-		BugComponent: "b:1457249",
-		Contacts:     []string{"lacros-team@google.com"},
-		Parent:       "gpuWatchDog",
-		Impl: chrome.NewLoggedInFixture(func(ctx context.Context, s *testing.FixtState) ([]chrome.Option, error) {
-			opt, err := lacrosfixt.NewConfig().Opts()
-			return append(opt, disableFirmwareUpdater), err
-		}),
-		SetUpTimeout:    chrome.LoginTimeout + 7*time.Minute,
-		ResetTimeout:    chrome.ResetTimeout,
-		TearDownTimeout: chrome.ResetTimeout,
-	})
-
-	testing.AddFixture(&testing.Fixture{
-		Name:         "chromeGraphicsHwOverlaysLacros",
-		Desc:         "Logged into a user session for graphics testing for HwOverlays (lacros)",
-		BugComponent: "b:885255", // ChromeOS > Platform > Graphics
-		Contacts:     []string{"chromeos-gfx@chromium.org"},
-		Parent:       "gpuWatchDog",
-		Impl: chrome.NewLoggedInFixture(func(ctx context.Context, s *testing.FixtState) ([]chrome.Option, error) {
-			opt, err := lacrosfixt.NewConfig(lacrosfixt.ChromeOptions(chrome.ExtraArgs("--ash-no-nudges"))).Opts()
-			return append(opt, disableFirmwareUpdater), err
-		}),
-		SetUpTimeout:    chrome.LoginTimeout + 7*time.Minute,
 		ResetTimeout:    chrome.ResetTimeout,
 		TearDownTimeout: chrome.ResetTimeout,
 	})
@@ -279,12 +246,7 @@ func (f *graphicsWebContentFixture) Reset(ctx context.Context) error {
 		if err := f.cr.Reconnect(ctx); err != nil {
 			return errors.Wrap(err, "failed to reconnect to Chrome")
 		}
-		// Reconnect to browser.
-		br, _, err := browserfixt.Connect(ctx, f.cr, browser.TypeAsh)
-		if err != nil {
-			return errors.Wrap(err, "failed to reconnect to browser")
-		}
-		conn, err := br.NewConnForTarget(ctx, func(t *chrome.Target) bool {
+		conn, err := f.cr.NewConnForTarget(ctx, func(t *chrome.Target) bool {
 			return strings.HasSuffix(t.URL, "aquarium.html")
 		})
 		if err != nil {
