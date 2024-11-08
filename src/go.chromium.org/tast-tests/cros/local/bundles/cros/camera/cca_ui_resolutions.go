@@ -33,7 +33,7 @@ func init() {
 			Name:              "real",
 			ExtraSoftwareDeps: []string{caps.BuiltinOrVividCamera},
 			Fixture:           "ccaTestBridgeReady",
-			ExtraAttr:         []string{
+			ExtraAttr: []string{
 				"group:intel-nda",
 				"group:camera-libcamera",
 				"group:release-health",
@@ -272,12 +272,12 @@ func clickThroughAllPhotoResolutionOptions(ctx context.Context, app *cca.App, fa
 
 	numOptions, err := app.CountUI(ctx, photoResolutionOptions)
 	if err != nil {
-		return errors.Wrap(err, "failed to count the aspect ratio options")
+		return errors.Wrap(err, "failed to count the photo resolution options")
 	}
 
 	for index := 0; index < numOptions; index++ {
 		if err := selectOptionAndWaitConfiguration(ctx, app, cca.PhotoResolutionMenu, photoResolutionOptions, index); err != nil {
-			return errors.Wrap(err, "failed to click the aspect ratio option and wait for the configration done")
+			return errors.Wrap(err, "failed to click the photo resolution option and wait for the configration done")
 		}
 
 		// Ensure preview viewport has correct aspect ratio.
@@ -328,7 +328,7 @@ func testVideoResolutionAndFPS(ctx context.Context, app *cca.App) error {
 
 		for index := 0; index < numOptions; index++ {
 			if err := selectOptionAndWaitConfiguration(ctx, app, cca.VideoResolutionMenu, videoResolutionOptions, index); err != nil {
-				return errors.Wrap(err, "failed to click the aspect ratio option and wait for the configration done")
+				return errors.Wrap(err, "failed to click the video resolution option and wait for the configration done")
 			}
 
 			width, err := attributeValueOfOption(ctx, app, videoResolutionOptions, index, "data-width")
