@@ -80,7 +80,6 @@ func TestCases() map[networkrequestmonitor.PolicySetting]testCase {
 func TriggerUploadForScanning(ctx context.Context, params networkrequestmonitor.OptionalServiceParams) (err error) {
 	cr := params.Chrome
 	server := params.Server
-	br := params.Browser
 	tconn, err := cr.TestAPIConn(ctx)
 	if err != nil {
 		errors.Wrap(err, "failed to create Test API connection")
@@ -88,7 +87,7 @@ func TriggerUploadForScanning(ctx context.Context, params networkrequestmonitor.
 
 	// Open the browser and download the test suspicious file from the local file
 	// server.
-	conn, err := br.NewConn(ctx, "")
+	conn, err := cr.NewConn(ctx, "")
 	if err != nil {
 		return errors.Wrap(err, "failed to open the browser")
 	}
@@ -103,7 +102,7 @@ func TriggerUploadForScanning(ctx context.Context, params networkrequestmonitor.
 	// Open the Chrome downloads page. Note: There is usually also a popup dialog
 	// with the same info, but this dialog can be different on ash vs lacros. The
 	// downloads page is more consistent, so we prefer it here.
-	downloadsConn, err := br.NewConn(ctx, "chrome://downloads")
+	downloadsConn, err := cr.NewConn(ctx, "chrome://downloads")
 	if err != nil {
 		return errors.Wrap(err, "failed to open chrome://downloads")
 	}

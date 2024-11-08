@@ -89,7 +89,6 @@ func TriggerDefaultSearchProvider(ctx context.Context, params networkrequestmoni
 	if err != nil {
 		errors.Wrap(err, "failed to create Test API connection")
 	}
-	br := params.Browser
 
 	addressBarNode := browserui.AddressBarFinder
 
@@ -102,7 +101,7 @@ func TriggerDefaultSearchProvider(ctx context.Context, params networkrequestmoni
 
 	// Open an empty page.
 	// Use chrome://newtab to open new tab page (see https://crbug.com/1188362#c19).
-	conn, err := br.NewConn(ctx, "chrome://newtab/")
+	conn, err := cr.NewConn(ctx, "chrome://newtab/")
 	if err != nil {
 		return errors.Wrap(err, "failed to create new Chrome connection")
 	}
@@ -110,18 +109,9 @@ func TriggerDefaultSearchProvider(ctx context.Context, params networkrequestmoni
 
 	uiauto := uiauto.New(tconn)
 
-	// Connect to Test API of the used browser to clear the browser
-	// history. We need a second connection as the clearing of the
-	// history has to be executed from the used browser while the
-	// uiauto package needs a connection to the ash browser.
-	tconn2, err := br.TestAPIConn(ctx)
-	if err != nil {
-		errors.Wrap(err, "failed to create Test API connection")
-	}
-
 	// Clear the browser history, otherwise the previous search results can
 	// interfere with the test.
-	if err := tconn2.Eval(ctx, `tast.promisify(chrome.browsingData.removeHistory({"since": 0}))`, nil); err != nil {
+	if err := tconn.Eval(ctx, `tast.promisify(chrome.browsingData.removeHistory({"since": 0}))`, nil); err != nil {
 		errors.Wrap(err, "failed to clear browsing history")
 	}
 

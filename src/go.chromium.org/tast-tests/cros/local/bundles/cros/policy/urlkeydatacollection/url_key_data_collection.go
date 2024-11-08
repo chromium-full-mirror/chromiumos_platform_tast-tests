@@ -14,7 +14,6 @@ import (
 	"go.chromium.org/tast-tests/cros/local/bundles/cros/policy/networkrequestmonitor"
 	policyannotations "go.chromium.org/tast-tests/cros/local/bundles/cros/policy/policy_annotations"
 	"go.chromium.org/tast-tests/cros/local/chrome"
-	"go.chromium.org/tast-tests/cros/local/chrome/browser"
 	"go.chromium.org/tast/core/errors"
 	"go.chromium.org/tast/core/testing"
 )
@@ -95,19 +94,19 @@ func UmbrellaTestCases() map[networkrequestmonitor.PolicySetting]policyannotatio
 
 // TriggerAndVerifyUkmAppFromIndex triggers and verifies the appearance
 // of logs in chrome://ukm using index of the test case.
-func TriggerAndVerifyUkmAppFromIndex(ctx context.Context, br *browser.Browser, paramIndex int) error {
-	return triggerAndVerifyUkmApp(ctx, br, TestCases()[paramIndex])
+func TriggerAndVerifyUkmAppFromIndex(ctx context.Context, cr *chrome.Chrome, paramIndex int) error {
+	return triggerAndVerifyUkmApp(ctx, cr, TestCases()[paramIndex])
 }
 
 // TriggerAndVerifyUkmAppFromPolicySetting triggers and verifies the appearance
 // of logs in chrome://ukm using the policy setting enum.
 func TriggerAndVerifyUkmAppFromPolicySetting(ctx context.Context, params networkrequestmonitor.OptionalServiceParams) (err error) {
-	br := params.Browser
-	return triggerAndVerifyUkmApp(ctx, br, UmbrellaTestCases()[params.PolicySetting])
+	cr := params.Chrome
+	return triggerAndVerifyUkmApp(ctx, cr, UmbrellaTestCases()[params.PolicySetting])
 }
 
-func triggerAndVerifyUkmApp(ctx context.Context, br *browser.Browser, param policyannotations.AnnotationTestParams) error {
-	ukmAppConn, err := navigateToPageAndLogElement(ctx, br,
+func triggerAndVerifyUkmApp(ctx context.Context, cr *chrome.Chrome, param policyannotations.AnnotationTestParams) error {
+	ukmAppConn, err := navigateToPageAndLogElement(ctx, cr,
 		"chrome://ukm", `document.getElementsByClassName("ukm-collection-status")[0]`)
 	if err != nil {
 		return errors.Wrap(err, "failed to open website")
@@ -115,7 +114,7 @@ func triggerAndVerifyUkmApp(ctx context.Context, br *browser.Browser, param poli
 	defer ukmAppConn.Close()
 
 	// Open the website to log to ukm.
-	conn, err := br.NewConn(ctx, ukmTestURL)
+	conn, err := cr.NewConn(ctx, ukmTestURL)
 	if err != nil {
 		return errors.Wrap(err, "failed to open website")
 	}
@@ -160,8 +159,8 @@ func verifyOnUkmApp(ctx context.Context, ukmAppConn *chrome.Conn, param policyan
 
 // navigateToPageAndLogElement navigates to a page and log the contents
 // of an element on it.
-func navigateToPageAndLogElement(ctx context.Context, br *browser.Browser, url, element string) (newConn *chrome.Conn, err error) {
-	conn, err := br.NewConn(ctx, url)
+func navigateToPageAndLogElement(ctx context.Context, cr *chrome.Chrome, url, element string) (newConn *chrome.Conn, err error) {
+	conn, err := cr.NewConn(ctx, url)
 	if err != nil {
 		return nil, errors.Wrap(err, "failed to open url app "+url)
 	}

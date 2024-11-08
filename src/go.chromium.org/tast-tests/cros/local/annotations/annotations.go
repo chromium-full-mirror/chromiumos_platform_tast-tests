@@ -15,9 +15,7 @@ import (
 	"time"
 
 	"go.chromium.org/tast-tests/cros/local/chrome"
-	"go.chromium.org/tast-tests/cros/local/chrome/browser"
 	"go.chromium.org/tast-tests/cros/local/chrome/uiauto"
-	"go.chromium.org/tast-tests/cros/local/chrome/uiauto/browser/browserui"
 	"go.chromium.org/tast-tests/cros/local/chrome/uiauto/nodewith"
 	"go.chromium.org/tast-tests/cros/local/chrome/uiauto/role"
 	"go.chromium.org/tast-tests/cros/local/chrome/uiauto/state"
@@ -34,23 +32,16 @@ const (
 
 	// DownloadName is the file name for the default netlog.
 	DownloadName string = "chrome-net-export-log.json"
-	// OsDownloadName is a custom file name used for the OS netlog in lacros. This
-	// prevents naming conflicts when using both OS and browser netlogs in the
-	// same lacros session.
-	OsDownloadName string = "chrome-os-net-export-log.json"
-
-	// OsNetExportURL is the URL for the OS net-export app in lacros.
-	OsNetExportURL string = "os://net-export"
 )
 
 // StartLogging clicks the "Start logging" button on the net export page.
-func StartLogging(ctx context.Context, cr *chrome.Chrome, br *browser.Browser, logRawBytes bool) error {
+func StartLogging(ctx context.Context, cr *chrome.Chrome, logRawBytes bool) error {
 	tconn, err := cr.TestAPIConn(ctx)
 	if err != nil {
 		return errors.Wrap(err, "failed to create Test API connection")
 	}
 
-	netConn, err := NewNetExportConn(ctx, br)
+	netConn, err := NewNetExportConn(ctx, cr)
 	if err != nil {
 		return errors.Wrap(err, "failed to load chrome://net-export")
 	}
@@ -107,54 +98,6 @@ func StartLogging(ctx context.Context, cr *chrome.Chrome, br *browser.Browser, l
 	return nil
 }
 
-// StartOSLogging starts a net export session via the os://net-export app. This
-// creates a JSON file in the user's Downloads folder which contains network
-// activity that is observed from the system's NetworkService while the session
-// is active. This should only be used in lacros mode, since lacros splits the
-// browser NetworkService from the OS (Ash) NetworkService. Annotations present
-// in the browser (Lacros) binary, and all annotations while running in Ash
-// mode, should be checked using `StartLogging(...)` instead.
-func StartOSLogging(ctx context.Context, cr *chrome.Chrome, br *browser.Browser, kb *input.KeyboardEventWriter) error {
-	tconn, err := cr.TestAPIConn(ctx)
-	if err != nil {
-		return errors.Wrap(err, "failed to create Test API connection")
-	}
-
-	netConn, err := NewOSNetExportConn(ctx, br, tconn, kb)
-	if err != nil {
-		return errors.Wrap(err, "failed to load "+OsNetExportURL)
-	}
-	defer netConn.Close()
-
-	netExportWindow := nodewith.Name("ChromeOS-URLs - Network Log Export").Role(role.Window)
-	resetButton := nodewith.Name("Start Over").Role(role.Button)
-	startButton := nodewith.Name("Start Logging to Disk").Role(role.Button)
-	saveButton := nodewith.Name("Save").Role(role.Button)
-	ui := uiauto.New(tconn)
-	if err := uiauto.Combine("Start net export session",
-		ui.WaitUntilExists(netExportWindow),
-		// Click 'Start over' button if present. This is necessary to start any
-		// net export session other than the first one in a single chrome session.
-		uiauto.IfSuccessThen(
-			ui.WithTimeout(3*time.Second).WaitUntilExists(resetButton),
-			ui.DoDefault(resetButton)),
-		// Click 'Start' button to begin net export session.
-		ui.WaitUntilExists(startButton),
-		ui.DoDefault(startButton),
-		// Set file name for netlog file.
-		setFileName(OsDownloadName, ui, kb),
-		// Click 'Save' button in file app.
-		ui.WaitUntilExists(saveButton),
-		ui.WaitUntilEnabled(saveButton),
-		ui.DoDefault(saveButton),
-		ui.WaitUntilGone(saveButton),
-	)(ctx); err != nil {
-		return errors.Wrap(err, "failed to start net export session")
-	}
-
-	return nil
-}
-
 // PrintAnnotationsAndCounts prints all the unique annotation hash codes
 // and number of times that annotation occurred.
 func PrintAnnotationsAndCounts(ctx context.Context, logFile []byte) {
@@ -180,9 +123,9 @@ func PrintAnnotationsAndCounts(ctx context.Context, logFile []byte) {
 }
 
 // StopLoggingCheckLogs clicks the "Stop logging" button on the net export page and checks logs for given annotation.
-func StopLoggingCheckLogs(ctx context.Context, cr *chrome.Chrome, br *browser.Browser, annotation string) (foundAnnotation bool, err error) {
+func StopLoggingCheckLogs(ctx context.Context, cr *chrome.Chrome, annotation string) (foundAnnotation bool, err error) {
 	// Open the net-export page.
-	netConn, err := NewNetExportConn(ctx, br)
+	netConn, err := NewNetExportConn(ctx, cr)
 	if err != nil {
 		return false, errors.Wrap(err, "failed to load chrome://net-export")
 	}
@@ -220,39 +163,10 @@ func StopLoggingCheckLogs(ctx context.Context, cr *chrome.Chrome, br *browser.Br
 	return isExist, nil
 }
 
-// StopOSLoggingCheckLogs stops a previously started OS net export session via
-// the os://net-export app, and returns true if the given network annotation was
-// present in the net log file.
-func StopOSLoggingCheckLogs(ctx context.Context, cr *chrome.Chrome, br *browser.Browser, kb *input.KeyboardEventWriter, annotation string) (foundAnnotation bool, err error) {
-	if err := stopOSLogging(ctx, cr, br, kb); err != nil {
-		return false, errors.Wrap(err, "failed to stop logging")
-	}
-
-	// Get the net export log file.
-	downloadsPath, err := cryptohome.DownloadsPath(ctx, cr.NormalizedUser())
-	if err != nil {
-		return false, errors.Wrap(err, "failed to get user's Download path")
-	}
-	downloadLocation := filepath.Join(downloadsPath, OsDownloadName)
-
-	// Check file for annotation.
-	foundAnnotation, err = CheckLogsFromFile(ctx, cr, annotation, downloadLocation)
-	if err != nil {
-		return false, errors.Wrap(err, "failed to check net log file for annotation")
-	}
-
-	// Clean up file after reading.
-	if err := os.Remove(downloadLocation); err != nil {
-		return false, errors.Wrapf(err, "failed to remove file: %s", downloadLocation)
-	}
-
-	return foundAnnotation, nil
-}
-
 // StopLoggingVerifyAnnotationSet clicks the "Stop logging" button on the net export page and verifies that either none or all of the annotation hash codes in the given list are present in the logs.
-func StopLoggingVerifyAnnotationSet(ctx context.Context, cr *chrome.Chrome, br *browser.Browser, annotationsShouldBePresent bool, annotationHashCodes []string) (foundAnnotation bool, err error) {
+func StopLoggingVerifyAnnotationSet(ctx context.Context, cr *chrome.Chrome, annotationsShouldBePresent bool, annotationHashCodes []string) (foundAnnotation bool, err error) {
 	// Open the net-export page.
-	netConn, err := NewNetExportConn(ctx, br)
+	netConn, err := NewNetExportConn(ctx, cr)
 	if err != nil {
 		return false, errors.Wrap(err, "failed to load chrome://net-export")
 	}
@@ -311,54 +225,14 @@ func verifyAnnotationSet(downloadLocation string, annotationsShouldBePresent boo
 	return oneAnnotationFound, nil
 }
 
-// StopOSLoggingVerifyAnnotationSet clicks the "Stop logging" button on the net
-// export page and verifies that either none or all of the annotation hash codes
-// in the given list are present in the logs.
-func StopOSLoggingVerifyAnnotationSet(ctx context.Context, cr *chrome.Chrome, br *browser.Browser, kb *input.KeyboardEventWriter, annotationsShouldBePresent bool, annotationHashCodes []string) (foundAnnotation bool, err error) {
-	if err := stopOSLogging(ctx, cr, br, kb); err != nil {
-		return false, errors.Wrap(err, "failed to stop logging")
-	}
-
-	// Get the net export log file.
-	downloadsPath, err := cryptohome.DownloadsPath(ctx, cr.NormalizedUser())
-	if err != nil {
-		return false, errors.Wrap(err, "failed to get user's Download path")
-	}
-	downloadLocation := filepath.Join(downloadsPath, OsDownloadName)
-
-	return verifyAnnotationSet(downloadLocation, annotationsShouldBePresent, annotationHashCodes)
-}
-
 // NewNetExportConn navigates to chrome://net-export.
-func NewNetExportConn(ctx context.Context, br *browser.Browser) (conn *chrome.Conn, err error) {
+func NewNetExportConn(ctx context.Context, cr *chrome.Chrome) (conn *chrome.Conn, err error) {
 	// Open the net-export page.
-	netConn, err := br.NewConn(ctx, "chrome://net-export")
+	netConn, err := cr.NewConn(ctx, "chrome://net-export")
 	if err != nil {
 		return nil, errors.Wrap(err, "failed to load chrome://net-export")
 	}
 	return netConn, nil
-}
-
-// NewOSNetExportConn navigates to os://net-export. Note: This app only exists
-// in Lacros mode.
-func NewOSNetExportConn(ctx context.Context, br *browser.Browser, tconn *chrome.TestConn, kb *input.KeyboardEventWriter) (conn *chrome.Conn, err error) {
-	// Connect to a new tab.
-	conn, err = br.NewConn(ctx, chrome.NewTabURL)
-	if err != nil {
-		return nil, errors.Wrap(err, "failed to find a new tab page")
-	}
-	defer conn.Close()
-
-	// We cannot use "conn.Navigate(ctx, url)" here, as that does not use the
-	// omnibox navigation which should be used to get re-routed. As such we have
-	// to enter the navigation into the omnibox to navigate.
-	// Source: lacros.URLRedirect
-	ui := uiauto.New(tconn)
-	return conn, uiauto.Combine("open target "+OsNetExportURL,
-		ui.LeftClick(browserui.AddressBarFinder),
-		kb.AccelAction("ctrl+a"),
-		kb.TypeAction(OsNetExportURL),
-		kb.AccelAction("Enter"))(ctx)
 }
 
 // CheckLogs checks logs for given annotation.
@@ -369,18 +243,6 @@ func CheckLogs(ctx context.Context, cr *chrome.Chrome, annotation string) (found
 		return false, errors.Wrap(err, "failed to get user's Download path")
 	}
 	downloadLocation := filepath.Join(downloadsPath, DownloadName)
-
-	return CheckLogsFromFile(ctx, cr, annotation, downloadLocation)
-}
-
-// CheckOSLogs checks OS logs for given annotation.
-func CheckOSLogs(ctx context.Context, cr *chrome.Chrome, annotation string) (foundAnnotation bool, err error) {
-	// Get the net export log file.
-	downloadsPath, err := cryptohome.DownloadsPath(ctx, cr.NormalizedUser())
-	if err != nil {
-		return false, errors.Wrap(err, "failed to get user's Download path")
-	}
-	downloadLocation := filepath.Join(downloadsPath, OsDownloadName)
 
 	return CheckLogsFromFile(ctx, cr, annotation, downloadLocation)
 }
@@ -402,9 +264,9 @@ func CheckLogsFromFile(ctx context.Context, cr *chrome.Chrome, annotation, logFi
 }
 
 // StopLogging clicks the "Stop logging" button and deletes the logs.
-func StopLogging(ctx context.Context, cr *chrome.Chrome, br *browser.Browser) error {
+func StopLogging(ctx context.Context, cr *chrome.Chrome) error {
 	// Open the net-export page.
-	netConn, err := NewNetExportConn(ctx, br)
+	netConn, err := NewNetExportConn(ctx, cr)
 	if err != nil {
 		return errors.Wrap(err, "failed to load chrome://net-export")
 	}
@@ -425,52 +287,6 @@ func StopLogging(ctx context.Context, cr *chrome.Chrome, br *browser.Browser) er
 	// Clean up file after reading
 	if err := os.Remove(downloadLocation); err != nil {
 		return errors.Wrap(err, "failed to Clean file")
-	}
-
-	return nil
-}
-
-// StopOSLogging clicks the "Stop logging" button and deletes the logs.
-func StopOSLogging(ctx context.Context, cr *chrome.Chrome, br *browser.Browser, kb *input.KeyboardEventWriter) error {
-	if err := stopOSLogging(ctx, cr, br, kb); err != nil {
-		return errors.Wrap(err, "failed to stop OS logging")
-	}
-
-	// Get the net export log file.
-	downloadsPath, err := cryptohome.DownloadsPath(ctx, cr.NormalizedUser())
-	if err != nil {
-		return errors.Wrap(err, "failed to get user's Download path")
-	}
-	downloadLocation := filepath.Join(downloadsPath, OsDownloadName)
-
-	// Clean up file after reading.
-	if err := os.Remove(downloadLocation); err != nil {
-		return errors.Wrap(err, "failed to Clean file")
-	}
-
-	return nil
-}
-
-func stopOSLogging(ctx context.Context, cr *chrome.Chrome, br *browser.Browser, kb *input.KeyboardEventWriter) error {
-	tconn, err := cr.TestAPIConn(ctx)
-	if err != nil {
-		return errors.Wrap(err, "failed to create Test API connection")
-	}
-
-	// Open the net-export page.
-	netConn, err := NewOSNetExportConn(ctx, br, tconn, kb)
-	if err != nil {
-		return errors.Wrap(err, "failed to load "+OsNetExportURL)
-	}
-	defer netConn.Close()
-
-	stopButton := nodewith.Name("Stop Logging").Role(role.Button)
-	ui := uiauto.New(tconn)
-	if err := uiauto.Combine("Stop net export session",
-		ui.WaitUntilExists(stopButton),
-		ui.DoDefault(stopButton),
-	)(ctx); err != nil {
-		return errors.Wrap(err, "failed to stop net export session")
 	}
 
 	return nil

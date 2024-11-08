@@ -17,8 +17,6 @@ import (
 	"go.chromium.org/tast-tests/cros/local/bundles/cros/policy/networkrequestmonitor"
 	"go.chromium.org/tast-tests/cros/local/bundles/cros/policy/passwordleakdetection"
 	"go.chromium.org/tast-tests/cros/local/chrome"
-	"go.chromium.org/tast-tests/cros/local/chrome/browser"
-	"go.chromium.org/tast-tests/cros/local/chrome/browser/browserfixt"
 	"go.chromium.org/tast-tests/cros/local/chrome/uiauto/faillog"
 	"go.chromium.org/tast-tests/cros/local/netexport"
 	"go.chromium.org/tast-tests/cros/local/policyutil"
@@ -99,15 +97,8 @@ func PasswordLeakDetectionEnabled(ctx context.Context, s *testing.State) {
 				s.Fatal("Failed to update policies: ", err)
 			}
 
-			// Setup a browser.
-			br, closeBrowser, err := browserfixt.SetUp(ctx, cr, browser.TypeAsh)
-			if err != nil {
-				s.Fatal("Failed to open the browser: ", err)
-			}
-			defer closeBrowser(cleanupCtx)
-
 			// Open the net-export page and start logging.
-			netExport, err := netexport.Start(ctx, cr, br, browser.TypeAsh)
+			netExport, err := netexport.Start(ctx, cr)
 			if err != nil {
 				s.Fatal("Failed to start net export: ", err)
 			}
@@ -116,9 +107,8 @@ func PasswordLeakDetectionEnabled(ctx context.Context, s *testing.State) {
 
 			if err := passwordleakdetection.TriggerPasswordLeakDetection(ctx,
 				networkrequestmonitor.OptionalServiceParams{
-					Chrome:  cr,
-					Browser: br,
-					Server:  server}); err != nil {
+					Chrome: cr,
+					Server: server}); err != nil {
 				s.Fatal("Failed to trigger password leak detection: ", err)
 			}
 

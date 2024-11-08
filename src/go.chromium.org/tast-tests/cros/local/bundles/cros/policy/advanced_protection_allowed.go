@@ -18,8 +18,6 @@ import (
 	"go.chromium.org/tast-tests/cros/local/bundles/cros/policy/advancedprotection"
 	"go.chromium.org/tast-tests/cros/local/bundles/cros/policy/networkrequestmonitor"
 	"go.chromium.org/tast-tests/cros/local/chrome"
-	"go.chromium.org/tast-tests/cros/local/chrome/browser"
-	"go.chromium.org/tast-tests/cros/local/chrome/browser/browserfixt"
 	"go.chromium.org/tast-tests/cros/local/chrome/uiauto"
 	"go.chromium.org/tast-tests/cros/local/chrome/uiauto/faillog"
 	"go.chromium.org/tast-tests/cros/local/netexport"
@@ -93,20 +91,13 @@ func AdvancedProtectionAllowed(ctx context.Context, s *testing.State) {
 				s.Fatal("Failed to update policies: ", err)
 			}
 
-			// Setup browser based on the chrome type.
-			br, closeBrowser, err := browserfixt.SetUp(ctx, cr, browser.TypeAsh)
-			if err != nil {
-				s.Fatal("Failed to open the browser: ", err)
-			}
-			defer closeBrowser(cleanupCtx)
-
 			recorder := uiauto.CreateAndStartScreenRecorder(ctx, tconn)
 			defer uiauto.StopAndSaveOnError(cleanupCtx, recorder, filepath.Join(s.OutDir(), "screen_recording_"+param.Name+".webm"), s.HasError)
 
 			defer faillog.DumpUITreeWithScreenshotOnError(ctx, s.OutDir(), s.HasError, cr, "ui_tree_"+param.Name)
 
 			// Open the net-export page and start logging.
-			netExport, err := netexport.Start(ctx, cr, br, browser.TypeAsh)
+			netExport, err := netexport.Start(ctx, cr)
 			if err != nil {
 				s.Fatal("Failed to start net export: ", err)
 			}
@@ -118,7 +109,6 @@ func AdvancedProtectionAllowed(ctx context.Context, s *testing.State) {
 			if err := advancedprotection.TriggerUploadForScanning(ctx,
 				networkrequestmonitor.OptionalServiceParams{
 					Chrome:        cr,
-					Browser:       br,
 					PolicySetting: key,
 					Server:        server}); err != nil {
 				s.Fatal("Failed to trigger upload for scanning: ", err)

@@ -14,7 +14,6 @@ import (
 	"go.chromium.org/tast-tests/cros/common/policy/fakedms"
 	"go.chromium.org/tast-tests/cros/local/bundles/cros/policy/webrtclogupload"
 	"go.chromium.org/tast-tests/cros/local/chrome"
-	"go.chromium.org/tast-tests/cros/local/chrome/browser"
 	"go.chromium.org/tast-tests/cros/local/chrome/uiauto/faillog"
 	"go.chromium.org/tast/core/ctxutil"
 	"go.chromium.org/tast/core/testing"
@@ -60,7 +59,6 @@ func WebrtcEventLogCollectionAllowed(ctx context.Context, s *testing.State) {
 		s.Run(ctx, param.Name, func(ctx context.Context, s *testing.State) {
 			runParam := webrtclogupload.AnnotationTestParam{
 				AnnotationHashCode: webrtclogupload.EventLogCollectionHashID,
-				Bt:                 browser.TypeAsh,
 				Creds:              bondCreds,
 				Tc:                 param,
 				Timeout:            2 * time.Minute,

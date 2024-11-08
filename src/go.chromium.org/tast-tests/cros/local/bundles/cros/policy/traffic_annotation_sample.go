@@ -15,8 +15,6 @@ import (
 	"go.chromium.org/tast-tests/cros/common/policy"
 	"go.chromium.org/tast-tests/cros/common/policy/fakedms"
 	"go.chromium.org/tast-tests/cros/local/chrome"
-	"go.chromium.org/tast-tests/cros/local/chrome/browser"
-	"go.chromium.org/tast-tests/cros/local/chrome/browser/browserfixt"
 	"go.chromium.org/tast-tests/cros/local/chrome/uiauto/checked"
 	"go.chromium.org/tast-tests/cros/local/chrome/uiauto/faillog"
 	"go.chromium.org/tast-tests/cros/local/chrome/uiauto/restriction"
@@ -82,23 +80,17 @@ func TrafficAnnotationSample(ctx context.Context, s *testing.State) {
 			if err := policyutil.ServeAndVerify(ctx, fdms, cr, []policy.Policy{param.policy}); err != nil {
 				s.Fatal("Failed to update policies: ", err)
 			}
-			// Setup browser based on the chrome type.
-			br, closeBrowser, err := browserfixt.SetUp(ctx, cr, browser.TypeAsh)
-			if err != nil {
-				s.Fatal("Failed to open the browser: ", err)
-			}
-			defer closeBrowser(cleanupCtx)
 
 			defer faillog.DumpUITreeWithScreenshotOnError(ctx, s.OutDir(), s.HasError, cr, "ui_tree_"+param.name)
 
 			// Open the net-export page and start logging.
-			netExport, err := netexport.Start(ctx, cr, br, browser.TypeAsh)
+			netExport, err := netexport.Start(ctx, cr)
 			if err != nil {
 				s.Fatal("Failed to start net export: ", err)
 			}
 			defer netExport.Cleanup(cleanupCtx)
 			// Open the website with the address form.
-			conn, err := br.NewConn(ctx, server.URL+"/"+"autofill_address_enabled.html")
+			conn, err := cr.NewConn(ctx, server.URL+"/"+"autofill_address_enabled.html")
 			if err != nil {
 				s.Fatal("Failed to open website: ", err)
 			}

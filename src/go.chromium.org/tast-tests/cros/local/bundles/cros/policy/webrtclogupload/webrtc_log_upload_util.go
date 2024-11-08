@@ -18,7 +18,6 @@ import (
 	"go.chromium.org/tast-tests/cros/local/chrome/apps/thirdparty/googlemeet"
 	"go.chromium.org/tast-tests/cros/local/chrome/ash"
 	"go.chromium.org/tast-tests/cros/local/chrome/browser"
-	"go.chromium.org/tast-tests/cros/local/chrome/lacros"
 	"go.chromium.org/tast-tests/cros/local/chrome/uiauto"
 	"go.chromium.org/tast-tests/cros/local/chrome/uiauto/nodewith"
 	"go.chromium.org/tast-tests/cros/local/chrome/uiauto/prompts"
@@ -48,7 +47,6 @@ type TestCase struct {
 // AnnotationTestParam contains objects from test setup.
 type AnnotationTestParam struct {
 	AnnotationHashCode string
-	Bt                 browser.Type
 	Creds              string
 	Tc                 TestCase
 	Timeout            time.Duration
@@ -107,7 +105,6 @@ func TestCases() map[networkrequestmonitor.PolicySetting]TestCase {
 func NetLogAnnotationTest(ctx context.Context, fdms *fakedms.FakeDMS, cr *chrome.Chrome,
 	tconn *chrome.TestConn, runParam AnnotationTestParam) (err error) {
 	testCase := runParam.Tc
-	closeCtx := ctx
 
 	cleanupCtx := ctx
 	ctx, cancel := ctxutil.Shorten(ctx, 10*time.Second)
@@ -123,36 +120,18 @@ func NetLogAnnotationTest(ctx context.Context, fdms *fakedms.FakeDMS, cr *chrome
 		return errors.Wrap(err, "failed to update policies")
 	}
 
-	// Setup browser and connSource by type of browser.
-	var br *browser.Browser
-	switch runParam.Bt {
-	case browser.TypeLacros:
-		// Launch lacros.
-		l, err := lacros.Launch(ctx, tconn)
-		if err != nil {
-			return errors.Wrap(err, "failed to launch lacros")
-		}
-		defer l.Close(closeCtx)
-		connSource = l
-		br = l.Browser()
-	case browser.TypeAsh:
-		connSource = cr
-		br = cr.Browser()
-	}
-
+	connSource = cr
 	SetBondCredentials(runParam.Creds)
 
 	// Open the net-export page and start logging.
-	netExport, err := netexport.Start(ctx, cr, br, runParam.Bt)
+	netExport, err := netexport.Start(ctx, cr)
 	if err != nil {
 		return errors.Wrap(err, "failed to start net export")
 	}
 	defer netExport.Cleanup(cleanupCtx)
 
 	if err := TriggerWebRTCLogUploads(ctx,
-		networkrequestmonitor.OptionalServiceParams{
-			Chrome:  cr,
-			Browser: br}); err != nil {
+		networkrequestmonitor.OptionalServiceParams{Chrome: cr}); err != nil {
 		return errors.Wrap(err, "failed to launch Meet client")
 	}
 

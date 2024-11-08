@@ -20,8 +20,6 @@ import (
 	"go.chromium.org/tast-tests/cros/local/bundles/cros/policy/networkrequestmonitor"
 	"go.chromium.org/tast-tests/cros/local/bundles/cros/policy/remotedesktop"
 	"go.chromium.org/tast-tests/cros/local/chrome"
-	"go.chromium.org/tast-tests/cros/local/chrome/browser"
-	"go.chromium.org/tast-tests/cros/local/chrome/browser/browserfixt"
 	"go.chromium.org/tast-tests/cros/local/chrome/uiauto/faillog"
 	"go.chromium.org/tast-tests/cros/local/input"
 	"go.chromium.org/tast-tests/cros/local/policyutil"
@@ -111,18 +109,11 @@ func RemoteSupportRegistration(ctx context.Context, s *testing.State) {
 				s.Fatal("Failed to verify updated policies: ", err)
 			}
 
-			// Setup browser.
-			br, closeBrowser, err := browserfixt.SetUp(ctx, cr, browser.TypeAsh)
-			if err != nil {
-				s.Fatal("Failed to open the browser: ", err)
-			}
-			defer closeBrowser(cleanupCtx)
 			defer faillog.DumpUITreeWithScreenshotOnError(ctx, s.OutDir(), s.HasError, cr, "ui_tree_"+param.Name)
 
 			if err := remotedesktop.TriggerRemoteSupportRegistration(ctx,
 				networkrequestmonitor.OptionalServiceParams{
 					Chrome:        cr,
-					Browser:       br,
 					PolicySetting: key}); err != nil {
 				s.Fatal("Failure during CRD launch: ", err)
 			}

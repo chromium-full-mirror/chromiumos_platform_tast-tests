@@ -71,7 +71,6 @@ func TestCases() map[networkrequestmonitor.PolicySetting]TestCase {
 
 // TriggerSearchSuggestion verifies suggestions are not shown when policy is off.
 func TriggerSearchSuggestion(ctx context.Context, params networkrequestmonitor.OptionalServiceParams) (err error) {
-	br := params.Browser
 	cr := params.Chrome
 	tconn, err := cr.TestAPIConn(ctx)
 	if err != nil {
@@ -86,7 +85,7 @@ func TriggerSearchSuggestion(ctx context.Context, params networkrequestmonitor.O
 	}
 	defer keyboard.Close(ctx)
 
-	conn, err := br.NewConn(ctx, "")
+	conn, err := cr.NewConn(ctx, "")
 	if err != nil {
 		return errors.Wrap(err, "failed to create new Chrome connection")
 	}

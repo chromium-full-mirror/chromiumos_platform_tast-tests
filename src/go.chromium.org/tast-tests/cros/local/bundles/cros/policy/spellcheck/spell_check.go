@@ -92,7 +92,6 @@ func DataFiles() []string {
 
 // TriggerSpellCheck attempts to trigger spellcheck and verifies if the policy works as defined in the TestCase param.
 func TriggerSpellCheck(ctx context.Context, params networkrequestmonitor.OptionalServiceParams) (err error) {
-	br := params.Browser
 	cr := params.Chrome
 
 	tconn, err := cr.TestAPIConn(ctx)
@@ -125,7 +124,7 @@ func TriggerSpellCheck(ctx context.Context, params networkrequestmonitor.Optiona
 
 	// Open the browser and navigate to a page that contains an input field with the word "missspelled".
 	url := server.URL + "/spell_checking.html"
-	conn, err := br.NewConn(ctx, url)
+	conn, err := cr.NewConn(ctx, url)
 	if err != nil {
 		return errors.Wrap(err, "failed to connect to the browser")
 	}

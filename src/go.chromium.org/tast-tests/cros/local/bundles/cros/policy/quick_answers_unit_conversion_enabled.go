@@ -19,8 +19,6 @@ import (
 	"go.chromium.org/tast-tests/cros/local/bundles/cros/policy/networkrequestmonitor"
 	policyquickanswers "go.chromium.org/tast-tests/cros/local/bundles/cros/policy/quickanswers"
 	"go.chromium.org/tast-tests/cros/local/chrome"
-	"go.chromium.org/tast-tests/cros/local/chrome/browser"
-	"go.chromium.org/tast-tests/cros/local/chrome/browser/browserfixt"
 	"go.chromium.org/tast-tests/cros/local/chrome/uiauto"
 	"go.chromium.org/tast-tests/cros/local/netexport"
 	"go.chromium.org/tast-tests/cros/local/policyutil"
@@ -118,15 +116,8 @@ func QuickAnswersUnitConversionEnabled(ctx context.Context, s *testing.State) {
 				filepath.Join(s.OutDir(), fmt.Sprintf("screen_recording_%s.webm", param.Name)),
 				s.HasError)
 
-			// Setup a browser.
-			br, closeBrowser, err := browserfixt.SetUp(ctx, cr, browser.TypeAsh)
-			if err != nil {
-				s.Fatal("Failed to open the browser: ", err)
-			}
-			defer closeBrowser(cleanupCtx)
-
 			// Open the net-export page and start logging.
-			netExport, err := netexport.Start(ctx, cr, br, browser.TypeAsh)
+			netExport, err := netexport.Start(ctx, cr)
 			if err != nil {
 				s.Fatal("Failed to start net export: ", err)
 			}
@@ -135,7 +126,6 @@ func QuickAnswersUnitConversionEnabled(ctx context.Context, s *testing.State) {
 			if err := policyquickanswers.TriggerQuickAnswersUnitConversion(ctx,
 				networkrequestmonitor.OptionalServiceParams{
 					Chrome:        cr,
-					Browser:       br,
 					Server:        server,
 					PolicySetting: key}); err != nil {
 				s.Fatal("Failed to trigger and verify quick answers unit conversion: ", err)

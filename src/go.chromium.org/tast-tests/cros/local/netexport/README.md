@@ -14,7 +14,7 @@ There are two key parts to implementing this in a tast test:
 *Option 1: Browser (recommended)*
 ```go
 // Open the net-export page and start logging.
-netExport, err := netexport.Start(ctx, cr, br, s.Param().(browser.Type))
+netExport, err := netexport.Start(ctx, cr)
 if err != nil {
   s.Fatal("Failed to start net export: ", err)
 }
@@ -34,7 +34,7 @@ The only way to reset the network log using this method is to restart Chrome.
 
 ```go
 // Create Chrome opts with network logging enabled on startup.
-opts = append(opts, netexport.CommandLineArgs(browser.TypeAsh)...)
+opts = append(opts, netexport.CommandLineArgs()...)
 
 // Start Chrome.
 cr, err := chrome.New(ctx, opts...)
@@ -44,7 +44,7 @@ if err != nil {
 defer cr.Close(ctx)
 
 // Get netexport session. This is used for log verification later.
-netExport, err := netexport.FromCommandLineArg(browser.TypeAsh)
+netExport, err := netexport.FromCommandLineArg()
 ```
 
 ## Verification: Code Examples

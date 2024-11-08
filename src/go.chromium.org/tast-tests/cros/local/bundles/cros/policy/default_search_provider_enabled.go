@@ -15,8 +15,6 @@ import (
 	"go.chromium.org/tast-tests/cros/local/bundles/cros/policy/defaultsearchprovider"
 	"go.chromium.org/tast-tests/cros/local/bundles/cros/policy/networkrequestmonitor"
 	"go.chromium.org/tast-tests/cros/local/chrome"
-	"go.chromium.org/tast-tests/cros/local/chrome/browser"
-	"go.chromium.org/tast-tests/cros/local/chrome/browser/browserfixt"
 	"go.chromium.org/tast-tests/cros/local/netexport"
 	"go.chromium.org/tast-tests/cros/local/policyutil"
 	"go.chromium.org/tast-tests/cros/local/testenv/proxy"
@@ -76,14 +74,8 @@ func DefaultSearchProviderEnabled(ctx context.Context, s *testing.State) {
 				s.Fatal("Failed to update policies: ", err)
 			}
 
-			br, closeBrowser, err := browserfixt.SetUp(ctx, cr, browser.TypeAsh)
-			if err != nil {
-				s.Fatal("Failed to setup chrome: ", err)
-			}
-			defer closeBrowser(cleanupCtx)
-
 			// Open the net-export page and start logging.
-			netExport, err := netexport.Start(ctx, cr, br, browser.TypeAsh)
+			netExport, err := netexport.Start(ctx, cr)
 			if err != nil {
 				s.Fatal("Failed to start net export: ", err)
 			}
@@ -93,7 +85,6 @@ func DefaultSearchProviderEnabled(ctx context.Context, s *testing.State) {
 			if err := defaultsearchprovider.TriggerDefaultSearchProvider(ctx,
 				networkrequestmonitor.OptionalServiceParams{
 					Chrome:        cr,
-					Browser:       br,
 					PolicySetting: key}); err != nil {
 				s.Fatal("Failed to trigger default search provider: ", err)
 			}

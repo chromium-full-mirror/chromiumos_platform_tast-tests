@@ -38,7 +38,6 @@ import (
 	"go.chromium.org/tast-tests/cros/local/bundles/cros/policy/wallpapergooglephotos"
 	webrtc "go.chromium.org/tast-tests/cros/local/bundles/cros/policy/webrtclogupload"
 	"go.chromium.org/tast-tests/cros/local/chrome"
-	"go.chromium.org/tast-tests/cros/local/chrome/browser"
 	"go.chromium.org/tast-tests/cros/local/chrome/uiauto/faillog"
 	"go.chromium.org/tast-tests/cros/local/input"
 	"go.chromium.org/tast-tests/cros/local/netexport"
@@ -349,7 +348,7 @@ func NetworkRequestMonitor(ctx context.Context, s *testing.State) {
 	}
 
 	// Add args to start net export on startup.
-	opts = append(opts, netexport.CommandLineArgs(browser.TypeAsh)...)
+	opts = append(opts, netexport.CommandLineArgs()...)
 
 	cr, err := chrome.New(ctx, opts...)
 	if err != nil {
@@ -436,7 +435,6 @@ func NetworkRequestMonitor(ctx context.Context, s *testing.State) {
 		s.Run(ctx, service.name, func(ctx context.Context, s *testing.State) {
 			params := networkrequestmonitor.OptionalServiceParams{
 				Chrome:        cr,
-				Browser:       cr.Browser(),
 				Server:        server,
 				PolicySetting: tcs.PolicyStatus}
 
@@ -448,7 +446,7 @@ func NetworkRequestMonitor(ctx context.Context, s *testing.State) {
 	}
 
 	// Get net export session.
-	netExport, err := netexport.FromCommandLineArg(browser.TypeAsh)
+	netExport, err := netexport.FromCommandLineArg()
 	if err != nil {
 		s.Fatal("Failed to get net export session: ", err)
 	}

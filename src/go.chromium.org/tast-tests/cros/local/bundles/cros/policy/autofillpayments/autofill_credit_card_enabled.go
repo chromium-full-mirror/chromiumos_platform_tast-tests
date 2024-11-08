@@ -15,7 +15,6 @@ import (
 	"go.chromium.org/tast-tests/cros/local/bundles/cros/policy/networkrequestmonitor"
 	"go.chromium.org/tast-tests/cros/local/chrome"
 
-	"go.chromium.org/tast-tests/cros/local/chrome/browser"
 	"go.chromium.org/tast-tests/cros/local/chrome/uiauto"
 	"go.chromium.org/tast-tests/cros/local/chrome/uiauto/checked"
 	"go.chromium.org/tast-tests/cros/local/chrome/uiauto/nodewith"
@@ -99,7 +98,6 @@ func TriggerAutofillCreditCardEnabled(ctx context.Context, params networkrequest
 		errors.Wrap(err, "failed to create Test API connection")
 	}
 	server := params.Server
-	br := params.Browser
 	creditCardFields := []struct {
 		fieldValue  string
 		htmlFieldID string
@@ -119,7 +117,7 @@ func TriggerAutofillCreditCardEnabled(ctx context.Context, params networkrequest
 	}
 
 	// Ensure saving payment methods toggle is accordingly enabled/disabled.
-	if err := policyutil.SettingsPage(ctx, cr, br, "payments").
+	if err := policyutil.SettingsPage(ctx, cr, cr, "payments").
 		SelectNode(ctx, nodewith.
 			Name("Save and fill payment methods").
 			Role(role.ToggleButton)).
@@ -150,7 +148,7 @@ func TriggerAutofillCreditCardEnabled(ctx context.Context, params networkrequest
 		}
 
 		// Save the certificate in chrome's certificate settings.
-		if err := https.ConfigureChromeToAcceptCertificate(ctx, serverConfiguration, cr, br, tconn); err != nil {
+		if err := https.ConfigureChromeToAcceptCertificate(ctx, serverConfiguration, cr, cr.Browser(), tconn); err != nil {
 			return errors.Wrap(err, "failed to set the certificate in Chrome's settings")
 		}
 
@@ -159,7 +157,7 @@ func TriggerAutofillCreditCardEnabled(ctx context.Context, params networkrequest
 		urlToOpen := fmt.Sprintf("https://localhost:%d/%v", port, autofillCreditCardHTMLFile)
 
 		// Open the website with the credit card form.
-		conn, err := openCreditCardPage(ctx, br, tconn, urlToOpen)
+		conn, err := openCreditCardPage(ctx, cr, tconn, urlToOpen)
 		if err != nil {
 			errors.Wrap(err, "failed to open website")
 		}
@@ -190,7 +188,7 @@ func TriggerAutofillCreditCardEnabled(ctx context.Context, params networkrequest
 
 			// Re-open the website with the credit card form.
 			conn.Close()
-			conn, err = openCreditCardPage(ctx, br, tconn, urlToOpen)
+			conn, err = openCreditCardPage(ctx, cr, tconn, urlToOpen)
 			if err != nil {
 				return errors.Wrap(err, "failed to open website")
 			}
@@ -223,9 +221,9 @@ func TriggerAutofillCreditCardEnabled(ctx context.Context, params networkrequest
 
 }
 
-func openCreditCardPage(ctx context.Context, br *browser.Browser, tconn *chrome.TestConn, urlToOpen string) (*chrome.Conn, error) {
+func openCreditCardPage(ctx context.Context, cr *chrome.Chrome, tconn *chrome.TestConn, urlToOpen string) (*chrome.Conn, error) {
 	ui := uiauto.New(tconn)
-	conn, err := br.NewConn(ctx, urlToOpen)
+	conn, err := cr.NewConn(ctx, urlToOpen)
 	if err != nil {
 		return nil, errors.Wrap(err, "failed to open credit card page")
 	}

@@ -30,7 +30,6 @@ const (
 // OptionalServiceParams is a struct to define params to trigger optional services
 type OptionalServiceParams struct {
 	Chrome        *chrome.Chrome
-	Browser       *browser.Browser
 	Server        *httptest.Server
 	BaseDirectory string
 	PolicySetting PolicySetting

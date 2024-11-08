@@ -23,8 +23,6 @@ import (
 	"go.chromium.org/tast-tests/cros/common/policy/fakedms"
 	"go.chromium.org/tast-tests/cros/local/annotations"
 	"go.chromium.org/tast-tests/cros/local/chrome"
-	"go.chromium.org/tast-tests/cros/local/chrome/browser"
-	"go.chromium.org/tast-tests/cros/local/chrome/browser/browserfixt"
 	"go.chromium.org/tast-tests/cros/local/chrome/uiauto"
 	"go.chromium.org/tast-tests/cros/local/chrome/uiauto/faillog"
 	"go.chromium.org/tast-tests/cros/local/chrome/uiauto/nodewith"
@@ -133,13 +131,6 @@ func DefaultNotificationsSettingGcmTrafficAnnotation(ctx context.Context, s *tes
 				s.Fatal("Failed to update policies: ", err)
 			}
 
-			// Setup browser based on the chrome type.
-			br, closeBrowser, err := browserfixt.SetUp(ctx, cr, browser.TypeAsh)
-			if err != nil {
-				s.Fatal("Failed to open the browser: ", err)
-			}
-			defer closeBrowser(cleanupCtx)
-
 			recorder := uiauto.CreateAndStartScreenRecorder(ctx, tconn)
 			defer uiauto.StopAndSaveOnError(cleanupCtx, recorder, filepath.Join(s.OutDir(), "screen_recording_"+param.name+".webm"), s.HasError)
 
@@ -154,11 +145,11 @@ func DefaultNotificationsSettingGcmTrafficAnnotation(ctx context.Context, s *tes
 			defer server.Close()
 
 			// Open the net-export page and start logging with raw bytes.
-			if err := annotations.StartLogging(ctx, cr, br, true); err != nil {
+			if err := annotations.StartLogging(ctx, cr, true); err != nil {
 				s.Fatal("Failed to start logging: ", err)
 			}
 
-			conn, err := br.NewConn(ctx, url)
+			conn, err := cr.NewConn(ctx, url)
 			if err != nil {
 				s.Fatal("Failed to open website: ", err)
 			}
@@ -252,7 +243,7 @@ func DefaultNotificationsSettingGcmTrafficAnnotation(ctx context.Context, s *tes
 			}
 			foundAnnotation := foundAnnotationErr == nil
 
-			if err := annotations.StopLogging(ctx, cr, br); err != nil {
+			if err := annotations.StopLogging(ctx, cr); err != nil {
 				s.Fatal("Failed to stop logging: ", err)
 			}
 			if param.shouldFindAnnotation != foundAnnotation {

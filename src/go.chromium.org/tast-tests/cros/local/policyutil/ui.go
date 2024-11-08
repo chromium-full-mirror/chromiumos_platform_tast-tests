@@ -11,7 +11,6 @@ import (
 
 	"go.chromium.org/tast-tests/cros/local/chrome"
 	"go.chromium.org/tast-tests/cros/local/chrome/ash"
-	"go.chromium.org/tast-tests/cros/local/chrome/browser"
 	"go.chromium.org/tast-tests/cros/local/chrome/uiauto"
 	"go.chromium.org/tast-tests/cros/local/chrome/uiauto/nodewith"
 	"go.chromium.org/tast/core/errors"
@@ -61,8 +60,8 @@ func VerifyNodeState(ctx context.Context, tconn *chrome.TestConn, finder *nodewi
 
 // EnsureCookiesAccepted ensures that cookies page for the given url is accepted and gone.
 // It will open the url and click on the button with the given ID acceptBtnLocator.
-func EnsureCookiesAccepted(ctx context.Context, br *browser.Browser, url, acceptBtnLocator string) error {
-	conn, err := br.NewConn(ctx, url)
+func EnsureCookiesAccepted(ctx context.Context, cr *chrome.Chrome, url, acceptBtnLocator string) error {
+	conn, err := cr.NewConn(ctx, url)
 	if err != nil {
 		return errors.Wrap(err, "failed to open the browser")
 	}
@@ -86,11 +85,11 @@ func EnsureCookiesAccepted(ctx context.Context, br *browser.Browser, url, accept
 
 // EnsureGoogleCookiesAccepted ensures that google related cookies are accepted (i.e. search, translate and extensions).
 // It will open google page then click on Accept button.
-func EnsureGoogleCookiesAccepted(ctx context.Context, br *browser.Browser) error {
+func EnsureGoogleCookiesAccepted(ctx context.Context, cr *chrome.Chrome) error {
 	url := "https://www.google.com/?hl=en"
 	acceptButtonID := "L2AGLb"
 	acceptBtnLocator := fmt.Sprintf("document.getElementById(%q)", acceptButtonID)
-	return EnsureCookiesAccepted(ctx, br, url, acceptBtnLocator)
+	return EnsureCookiesAccepted(ctx, cr, url, acceptBtnLocator)
 }
 
 // MaximizeActiveWindow maximizes the browser active window.

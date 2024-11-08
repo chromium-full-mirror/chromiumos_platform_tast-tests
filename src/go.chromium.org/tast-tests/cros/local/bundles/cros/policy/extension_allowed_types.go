@@ -13,8 +13,6 @@ import (
 	"go.chromium.org/tast-tests/cros/common/policy"
 	"go.chromium.org/tast-tests/cros/common/policy/fakedms"
 	"go.chromium.org/tast-tests/cros/local/chrome"
-	"go.chromium.org/tast-tests/cros/local/chrome/browser"
-	"go.chromium.org/tast-tests/cros/local/chrome/browser/browserfixt"
 	"go.chromium.org/tast-tests/cros/local/chrome/uiauto"
 	"go.chromium.org/tast-tests/cros/local/chrome/uiauto/faillog"
 	"go.chromium.org/tast-tests/cros/local/chrome/uiauto/nodewith"
@@ -99,16 +97,10 @@ func ExtensionAllowedTypes(ctx context.Context, s *testing.State) {
 				s.Fatal("Failed to update policies: ", err)
 			}
 
-			// Setup browser based on the chrome type.
-			br, closeBrowser, err := browserfixt.SetUp(ctx, cr, browser.TypeAsh)
-			if err != nil {
-				s.Fatal("Failed to open the browser: ", err)
-			}
-			defer closeBrowser(cleanupCtx)
 			defer faillog.DumpUITreeWithScreenshotOnError(cleanupCtx, s.OutDir(), s.HasError, cr, "ui_tree_"+param.name)
 
 			// Run actual test.
-			if allowed, err := canInstallExtension(ctx, tconn, br, url); err != nil {
+			if allowed, err := canInstallExtension(ctx, tconn, cr, url); err != nil {
 				s.Fatal("Failed to check if extension can be installed: ", err)
 			} else if allowed != param.wantAllowed {
 				s.Errorf("Unexpected result upon installing the extension: got %t; want %t", allowed, param.wantAllowed)
@@ -117,9 +109,9 @@ func ExtensionAllowedTypes(ctx context.Context, s *testing.State) {
 	}
 }
 
-func canInstallExtension(ctx context.Context, tconn *chrome.TestConn, br *browser.Browser, url string) (bool, error) {
+func canInstallExtension(ctx context.Context, tconn *chrome.TestConn, cr *chrome.Chrome, url string) (bool, error) {
 	// Ensure google cookies are accepted, it appears when we open the extension link.
-	if err := policyutil.EnsureGoogleCookiesAccepted(ctx, br); err != nil {
+	if err := policyutil.EnsureGoogleCookiesAccepted(ctx, cr); err != nil {
 		return false, errors.Wrap(err, "failed to accept cookies")
 	}
 
@@ -128,7 +120,7 @@ func canInstallExtension(ctx context.Context, tconn *chrome.TestConn, br *browse
 	undoButton := nodewith.Name("Undo").ClassName("MdTextButton")
 
 	// Open the Chrome Web Store page of the extension.
-	conn, err := br.NewConn(ctx, url)
+	conn, err := cr.NewConn(ctx, url)
 	if err != nil {
 		return false, errors.Wrap(err, "failed to connect to chrome")
 	}

@@ -14,7 +14,6 @@ import (
 	"go.chromium.org/tast-tests/cros/common/policy/fakedms"
 	"go.chromium.org/tast-tests/cros/local/bundles/cros/policy/extensioninstall"
 	"go.chromium.org/tast-tests/cros/local/chrome"
-	"go.chromium.org/tast-tests/cros/local/chrome/browser"
 	"go.chromium.org/tast-tests/cros/local/chrome/uiauto/faillog"
 	"go.chromium.org/tast-tests/cros/local/netexport"
 	"go.chromium.org/tast-tests/cros/local/policyutil"
@@ -150,14 +149,14 @@ func ExtensionInstallPolicyCheck(ctx context.Context, s *testing.State) {
 			}
 
 			// Open the net-export page and start logging.
-			netExport, err := netexport.Start(ctx, cr, cr.Browser(), browser.TypeAsh)
+			netExport, err := netexport.Start(ctx, cr)
 			if err != nil {
 				s.Fatal("Failed to start net export: ", err)
 			}
 			defer netExport.Cleanup(cleanupCtx)
 
 			// Run actual test.
-			if err := extensioninstall.TriggerExtensionInstall(ctx, tc, tconn, cr.Browser()); err != nil {
+			if err := extensioninstall.TriggerExtensionInstall(ctx, tc, tconn, cr); err != nil {
 				s.Fatal("Test case failed: ", err)
 			}
 

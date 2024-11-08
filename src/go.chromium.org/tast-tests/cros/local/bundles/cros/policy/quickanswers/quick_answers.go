@@ -130,7 +130,6 @@ func DataFiles() []string {
 // TriggerQuickAnswersDefinition attempts to trigger quick answers definition and checks if the policy works as defined in the DefinitionTestCase param.
 func TriggerQuickAnswersDefinition(ctx context.Context, params networkrequestmonitor.OptionalServiceParams) (err error) {
 	server := params.Server
-	br := params.Browser
 	cr := params.Chrome
 	tconn, err := cr.TestAPIConn(ctx)
 	if err != nil {
@@ -139,7 +138,7 @@ func TriggerQuickAnswersDefinition(ctx context.Context, params networkrequestmon
 	policyParam := DefinitionTestCases()[params.PolicySetting]
 
 	// Open page with the query word on it.
-	conn, err := br.NewConn(ctx, server.URL+"/"+testFileName, browser.WithNewWindow())
+	conn, err := cr.NewConn(ctx, server.URL+"/"+testFileName, browser.WithNewWindow())
 	if err != nil {
 		return errors.Wrap(err, "failed to create new chrome connection")
 	}
@@ -194,7 +193,6 @@ func TriggerQuickAnswersDefinition(ctx context.Context, params networkrequestmon
 // TriggerQuickAnswersUnitConversion attempts to trigger quick answers unit conversion and checks if the policy works as defined in the UnitConversionTestCase param.
 func TriggerQuickAnswersUnitConversion(ctx context.Context, params networkrequestmonitor.OptionalServiceParams) (err error) {
 	server := params.Server
-	br := params.Browser
 	cr := params.Chrome
 	tconn, err := cr.TestAPIConn(ctx)
 	if err != nil {
@@ -203,7 +201,7 @@ func TriggerQuickAnswersUnitConversion(ctx context.Context, params networkreques
 	param := UnitConversionTestCases()[params.PolicySetting]
 
 	// Open page with source units on it.
-	conn, err := br.NewConn(ctx, server.URL+"/"+testFileName, browser.WithNewWindow())
+	conn, err := cr.NewConn(ctx, server.URL+"/"+testFileName, browser.WithNewWindow())
 	if err != nil {
 		return errors.Wrap(err, "failed to create new chrome connection")
 	}

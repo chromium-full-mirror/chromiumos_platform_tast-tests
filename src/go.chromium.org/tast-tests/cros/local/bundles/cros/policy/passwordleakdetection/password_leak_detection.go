@@ -81,9 +81,9 @@ func DataFiles() []string {
 // on a test webpage we control.
 func TriggerPasswordLeakDetection(ctx context.Context, params networkrequestmonitor.OptionalServiceParams) (err error) {
 	server := params.Server
-	br := params.Browser
+	cr := params.Chrome
 	// Open a webpage that will trigger password leak detection, when enabled.
-	conn, err := br.NewConn(ctx, server.URL+"/"+testFileName)
+	conn, err := cr.NewConn(ctx, server.URL+"/"+testFileName)
 	if err != nil {
 		return errors.Wrap(err, "failed to create new Chrome connection")
 	}

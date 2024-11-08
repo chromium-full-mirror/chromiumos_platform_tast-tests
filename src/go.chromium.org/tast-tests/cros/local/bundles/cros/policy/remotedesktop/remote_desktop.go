@@ -64,7 +64,6 @@ func TestCases() map[networkrequestmonitor.PolicySetting]testCase {
 // TriggerRemoteSupportRegistration verifies that launching chrome remote
 // desktop works as expected.
 func TriggerRemoteSupportRegistration(ctx context.Context, params networkrequestmonitor.OptionalServiceParams) (err error) {
-	br := params.Browser
 	cr := params.Chrome
 	tconn, err := cr.TestAPIConn(ctx)
 	if err != nil {
@@ -74,7 +73,7 @@ func TriggerRemoteSupportRegistration(ctx context.Context, params networkrequest
 
 	didCRDLaunchSucceed := true
 	errContainsRemoteSupportBlockedMessage := false
-	if err := crd.Launch(ctx, br, tconn); err != nil {
+	if err := crd.Launch(ctx, cr.Browser(), tconn); err != nil {
 		didCRDLaunchSucceed = false
 		errContainsRemoteSupportBlockedMessage = strings.Contains(err.Error(), "Remote support connections blocked")
 	}

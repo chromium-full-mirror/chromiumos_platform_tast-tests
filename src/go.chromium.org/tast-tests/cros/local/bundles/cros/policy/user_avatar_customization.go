@@ -18,7 +18,6 @@ import (
 	"go.chromium.org/tast-tests/cros/local/bundles/cros/policy/useravatar"
 	"go.chromium.org/tast-tests/cros/local/chrome"
 	"go.chromium.org/tast-tests/cros/local/chrome/ash"
-	"go.chromium.org/tast-tests/cros/local/chrome/browser"
 	"go.chromium.org/tast-tests/cros/local/chrome/uiauto/faillog"
 	"go.chromium.org/tast-tests/cros/local/netexport"
 	"go.chromium.org/tast-tests/cros/local/policyutil"
@@ -83,7 +82,7 @@ func UserAvatarCustomization(ctx context.Context, s *testing.State) {
 		chrome.GAIALogin(gaiaCreds), // Real GAIA to enable calendar_get_events call
 	}
 	// Enable netlog on startup, since the profile image is fetched on startup.
-	opts = append(opts, netexport.CommandLineArgs(browser.TypeAsh)...)
+	opts = append(opts, netexport.CommandLineArgs()...)
 
 	for key, param := range useravatar.TestCases() {
 		s.Run(ctx, param.Name, func(ctx context.Context, s *testing.State) {
@@ -111,7 +110,7 @@ func UserAvatarCustomization(ctx context.Context, s *testing.State) {
 			defer faillog.DumpUITreeWithScreenshotOnError(cleanupCtx, s.OutDir(),
 				s.HasError, cr, "ui_tree")
 
-			netExport, err := netexport.FromCommandLineArg(browser.TypeAsh)
+			netExport, err := netexport.FromCommandLineArg()
 			if err != nil {
 				s.Fatal("Failed to get net export session: ", err)
 			}

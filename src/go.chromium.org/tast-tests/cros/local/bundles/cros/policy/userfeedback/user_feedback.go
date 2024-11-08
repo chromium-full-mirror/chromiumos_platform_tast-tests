@@ -72,7 +72,6 @@ func TestCases() map[networkrequestmonitor.PolicySetting]TestCase {
 // TriggerUserFeedback verifies feedback app doesnt send reports when policy is
 // off.
 func TriggerUserFeedback(ctx context.Context, params networkrequestmonitor.OptionalServiceParams) (err error) {
-	br := params.Browser
 	cr := params.Chrome
 	tconn, err := cr.TestAPIConn(ctx)
 	if err != nil {
@@ -83,7 +82,7 @@ func TriggerUserFeedback(ctx context.Context, params networkrequestmonitor.Optio
 	ui := uiauto.New(tconn).WithTimeout(5 * time.Second)
 
 	// Open Chrome to run test.
-	conn, err := br.NewConn(ctx, "")
+	conn, err := cr.NewConn(ctx, "")
 	if err != nil {
 		return errors.Wrap(err, "failed to connect to the browser")
 	}

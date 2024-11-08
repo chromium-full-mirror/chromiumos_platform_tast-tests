@@ -13,7 +13,6 @@ import (
 
 	"go.chromium.org/tast-tests/cros/common/policy"
 	"go.chromium.org/tast-tests/cros/local/chrome"
-	"go.chromium.org/tast-tests/cros/local/chrome/browser"
 	"go.chromium.org/tast-tests/cros/local/chrome/uiauto"
 	"go.chromium.org/tast-tests/cros/local/chrome/uiauto/nodewith"
 	"go.chromium.org/tast-tests/cros/local/chrome/uiauto/role"
@@ -59,9 +58,9 @@ func GetAnnotationsForUmbrellaTest() []string {
 }
 
 // TriggerExtensionInstall invokes the extension install scenario.
-func TriggerExtensionInstall(ctx context.Context, testCase TestCase, tconn *chrome.TestConn, br *browser.Browser) (err error) {
+func TriggerExtensionInstall(ctx context.Context, testCase TestCase, tconn *chrome.TestConn, cr *chrome.Chrome) (err error) {
 	// Run actual test.
-	if allowInstall, err := triggerExtensionInstallReturnStatus(ctx, tconn, br); err != nil {
+	if allowInstall, err := triggerExtensionInstallReturnStatus(ctx, tconn, cr); err != nil {
 		return errors.Wrap(err, "failed to check if extension can be installed")
 	} else if allowInstall != testCase.AllowInstall {
 		return errors.Wrapf(err, "unexpected result when trying to install extension: got %t; want %t", allowInstall, testCase.AllowInstall)
@@ -70,9 +69,9 @@ func TriggerExtensionInstall(ctx context.Context, testCase TestCase, tconn *chro
 }
 
 // triggerExtensionInstallReturnStatus invokes extension install and returns whether the extension install succeeded or failed.
-func triggerExtensionInstallReturnStatus(ctx context.Context, tconn *chrome.TestConn, br *browser.Browser) (bool, error) {
+func triggerExtensionInstallReturnStatus(ctx context.Context, tconn *chrome.TestConn, cr *chrome.Chrome) (bool, error) {
 	// Ensure google cookies are accepted, it appears when we open the extension link.
-	if err := policyutil.EnsureGoogleCookiesAccepted(ctx, br); err != nil {
+	if err := policyutil.EnsureGoogleCookiesAccepted(ctx, cr); err != nil {
 		return false, errors.Wrap(err, "failed to accept cookies")
 	}
 
@@ -80,7 +79,7 @@ func triggerExtensionInstallReturnStatus(ctx context.Context, tconn *chrome.Test
 	blockedfinder := nodewith.Role(role.Button).Name("Blocked by admin")
 
 	// Open the Chrome Web Store page of the extension.
-	conn, err := br.NewConn(ctx, extensionURL)
+	conn, err := cr.NewConn(ctx, extensionURL)
 	if err != nil {
 		return false, errors.Wrap(err, "failed to connect to chrome")
 	}

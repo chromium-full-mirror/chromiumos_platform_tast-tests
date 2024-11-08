@@ -7,7 +7,7 @@
 // tests to track what network calls are made during the test run.
 // Example usage:
 //
-//	netExport := netexport.Start(ctx, cr, br, s.Param().(browser.Type))
+//	netExport := netexport.Start(ctx, cr)
 //	defer netExport.Cleanup(cleanupCtx) // Stop net export and delete logfile.
 //
 //	<your test performs actions to trigger network calls>
@@ -30,46 +30,22 @@ import (
 
 	"go.chromium.org/tast-tests/cros/local/annotations"
 	"go.chromium.org/tast-tests/cros/local/chrome"
-	"go.chromium.org/tast-tests/cros/local/chrome/browser"
 	"go.chromium.org/tast-tests/cros/local/cryptohome"
-	"go.chromium.org/tast-tests/cros/local/input"
 	"go.chromium.org/tast/core/errors"
 	"go.chromium.org/tast/core/testing"
 )
 
-// Start starts a net export session using either:
-//   - chrome://net-export (Ash) or
-//   - chrome://net-export and os://net-export (Lacros).
-func Start(ctx context.Context, cr *chrome.Chrome, br *browser.Browser, bt browser.Type) (NetExport, error) {
+// Start starts a net export session using chrome://net-export.
+func Start(ctx context.Context, cr *chrome.Chrome) (NetExport, error) {
 	// Get user's Download folder path. The net log file is stored in this folder.
 	downloadsPath, err := cryptohome.DownloadsPath(ctx, cr.NormalizedUser())
 	if err != nil {
 		return NetExport{}, errors.Wrap(err, "failed to get user's Download path")
 	}
 
-	var netExport NetExport = NetExport{}
-	if bt == browser.TypeLacros {
-		// Set up keyboard. Cleanup is handled in `osController.Stop()`.
-		kb, err := input.Keyboard(ctx)
-		if err != nil {
-			return NetExport{}, errors.Wrap(err, "failed to setup keyboard")
-		}
-
-		// Use both `os://net-export` and `chrome://net-export`.
-		netExport = NetExport{
-			logFiles: []string{
-				filepath.Join(downloadsPath, annotations.OsDownloadName),
-				filepath.Join(downloadsPath, annotations.DownloadName)},
-			controllers: []controller{
-				osController{ctx, cr, br, kb},
-				chromeController{ctx, cr, br}},
-		}
-	} else {
-		// Use `chrome://net-export`.
-		netExport = NetExport{
-			logFiles:    []string{filepath.Join(downloadsPath, annotations.DownloadName)},
-			controllers: []controller{chromeController{ctx, cr, br}},
-		}
+	netExport := NetExport{
+		logFiles:    []string{filepath.Join(downloadsPath, annotations.DownloadName)},
+		controllers: []controller{chromeController{ctx, cr}},
 	}
 
 	// Perform cleanup in case a previous session was not cleaned up properly.
@@ -98,9 +74,8 @@ func Start(ctx context.Context, cr *chrome.Chrome, br *browser.Browser, bt brows
 // file(s).
 type NetExport struct {
 	// logFiles is a list of file paths to the JSON netlog files created as a
-	// result of the net export session. Note that in lacros mode, there are
-	// two log files, one for each binary. When searching through these files for
-	// network annotations, we read through all files and treat them as one.
+	// result of the net export session. When searching through these files
+	// for network annotations, we read through all files and treat them as one.
 	logFiles []string
 	// controllers is responsible for starting and stopping the net export
 	// session. This is extracted to an interface because different net exports,
@@ -218,7 +193,7 @@ func (ne *NetExport) FindMultipleAnnotationsUntil(ctx context.Context, annotatio
 // should generally be called via a defer function immediately after starting
 // the net export session, and should use the cleanupCtx from the test. Example:
 //
-// netExport := netexport.Start(ctx, cr, br)
+// netExport := netexport.Start(ctx, cr)
 // defer netExport.Cleanup(cleanupCtx) // Stop net export and delete logfile.
 func (ne *NetExport) Cleanup(ctx context.Context) {
 	if ne.controllers == nil {
