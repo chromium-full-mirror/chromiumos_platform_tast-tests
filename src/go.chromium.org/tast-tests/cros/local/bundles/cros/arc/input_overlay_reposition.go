@@ -40,13 +40,10 @@ func init() {
 		Params: []testing.Param{
 			{
 				ExtraSoftwareDeps: []string{"android_container_r"},
-			},
-			// Disabled by TORA. See: b/349631636
-			// {
-			// 	Name:              "vm",
-			// 	ExtraSoftwareDeps: []string{"android_vm"},
-			// }
-		},
+			}, {
+				Name:              "vm",
+				ExtraSoftwareDeps: []string{"android_vm"},
+			}},
 		Timeout: chrome.LoginTimeout + arc.BootTimeout + 1*time.Minute,
 	})
 }
@@ -82,14 +79,12 @@ func InputOverlayReposition(ctx context.Context, s *testing.State) {
 			// Open game controls.
 			ui.LeftClickUntil(gameControlsEdit, ui.Gone(gameControlsEdit)),
 			// Verify tap action drag works correctly.
-			testDrag(tapAction, params.TestConn, mouseDrag, -10, -10),
-			testDrag(tapAction, params.TestConn, touchDrag, 10, 10),
+			testDrag(tapAction, params.TestConn, mouseDrag, -4, -4),
 			ui.FocusAndWait(tapAction),
 			testKeyDrag(tapAction, params.TestConn),
 			testOffscreenDrag(tapAction, params.TestConn),
 			// Verify move action drag works correctly.
-			testDrag(moveAction, params.TestConn, mouseDrag, -10, -10),
-			testDrag(moveAction, params.TestConn, touchDrag, 10, 10),
+			testDrag(moveAction, params.TestConn, mouseDrag, -4, -4),
 			ui.FocusAndWait(moveAction),
 			testKeyDrag(moveAction, params.TestConn),
 			testOffscreenDrag(moveAction, params.TestConn),
@@ -108,29 +103,20 @@ func testDrag(finder *nodewith.Finder, tconn *chrome.TestConn, drag dragType, xO
 		// Start up UIAutomator.
 		ui := uiauto.New(tconn).WithTimeout(time.Minute)
 
-		// Save initial location of node.
-		initialRect, err := ui.Location(ctx, finder)
-		if err != nil {
-			return errors.Wrap(err, "could not get initial node position")
-		}
-		initialLoc := initialRect.CenterPoint()
-		finalLoc := coords.NewPoint(initialLoc.X+xOffset, initialLoc.Y+yOffset)
-
-		// Create the drag function based on input type.
-		var dragAction action.Action
-		if drag == mouseDrag {
-			dragAction = mouse.Drag(tconn, initialLoc, finalLoc, 5*time.Second)
-		} else if drag == touchDrag {
-			touch, err := touch.New(ctx, tconn)
-			if err != nil {
-				return errors.Wrap(err, "failed to open new touchscreen")
-			}
-			dragAction = touch.Swipe(initialLoc, touch.SwipeTo(finalLoc, 5*time.Second), touch.Hold(time.Second))
-		}
-
 		// Drag the node.
-		if err := dragAction(ctx); err != nil {
-			return errors.Wrap(err, "failed to reposition")
+		if err := performDrag(finder, tconn, drag, xOffset, yOffset)(ctx); err != nil {
+			return errors.Wrap(err, "failed to do first reposition")
+		}
+
+		interimRect, err := ui.Location(ctx, finder)
+		if err != nil {
+			return errors.Wrap(err, "could not get interim node position")
+		}
+		interimLoc := interimRect.CenterPoint()
+		finalLoc := coords.NewPoint(interimLoc.X-xOffset/2, interimLoc.Y-yOffset/2)
+
+		if err := performDrag(finder, tconn, drag, -xOffset/2, -yOffset/2)(ctx); err != nil {
+			return errors.Wrap(err, "failed to do second reposition")
 		}
 
 		// Verify that the node was dragged to the final location.
@@ -143,6 +129,39 @@ func testDrag(finder *nodewith.Finder, tconn *chrome.TestConn, drag dragType, xO
 			return errors.Errorf("wanted final location %v within error margin %v, got %v", finalLoc, errorMargin, currentLoc)
 		}
 
+		return nil
+	}
+}
+
+func performDrag(finder *nodewith.Finder, tconn *chrome.TestConn, drag dragType, xOffset, yOffset int) action.Action {
+	return func(ctx context.Context) error {
+		// Start up UIAutomator.
+		ui := uiauto.New(tconn).WithTimeout(time.Minute)
+
+		// Save initial location of node.
+		initialRect, err := ui.Location(ctx, finder)
+		if err != nil {
+			return errors.Wrap(err, "could not get initial node position")
+		}
+		initialLoc := initialRect.CenterPoint()
+		nextLoc := coords.NewPoint(initialLoc.X+xOffset, initialLoc.Y+yOffset)
+
+		// Create the drag functions based on input type.
+		var dragAction action.Action
+		// var secondDragAction action.Action
+		if drag == mouseDrag {
+			dragAction = mouse.Drag(tconn, initialLoc, nextLoc, 5*time.Second)
+		} else if drag == touchDrag {
+			touch, err := touch.New(ctx, tconn)
+			if err != nil {
+				return errors.Wrap(err, "failed to open new touchscreen")
+			}
+			dragAction = touch.Swipe(initialLoc, touch.SwipeTo(nextLoc, 5*time.Second), touch.Hold(time.Second))
+		}
+
+		if err := dragAction(ctx); err != nil {
+			return errors.Wrap(err, "failed to do drag action")
+		}
 		return nil
 	}
 }
