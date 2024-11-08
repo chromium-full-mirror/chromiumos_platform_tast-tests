@@ -32,7 +32,6 @@ func init() {
 		Desc:         "Test that migration of challenge credential factor succeed during user login",
 		Contacts: []string{
 			"cryptohome-core@google.com",
-			"betuls@google.com",
 		},
 		BugComponent: "b:1088399", // ChromeOS > Security > Cryptohome
 		SoftwareDeps: []string{"chrome", "tpm"},

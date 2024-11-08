@@ -31,7 +31,6 @@ func init() {
 		Desc:         "Test that USS migration succeeds during an UpdateAuthFactor operation",
 		Contacts: []string{
 			"cryptohome-core@google.com",
-			"betuls@google.com",
 		},
 		BugComponent: "b:1088399", // ChromeOS > Security > Cryptohome
 		SoftwareDeps: []string{"chrome", "pinweaver"},

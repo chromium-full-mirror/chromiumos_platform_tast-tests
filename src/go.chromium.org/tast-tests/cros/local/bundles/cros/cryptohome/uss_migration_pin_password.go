@@ -30,7 +30,6 @@ func init() {
 		Desc:         "Test that migration of two factors succeed when PIN is migrated first and password is migrated second",
 		Contacts: []string{
 			"cryptohome-core@google.com",
-			"betuls@google.com",
 		},
 		BugComponent: "b:1088399", // ChromeOS > Security > Cryptohome
 		SoftwareDeps: []string{"chrome", "pinweaver"},

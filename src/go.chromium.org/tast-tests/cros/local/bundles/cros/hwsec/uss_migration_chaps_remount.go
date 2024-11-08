@@ -28,7 +28,6 @@ func init() {
 		Desc:         "Verifies chaps works correctly after USS migration",
 		Contacts: []string{
 			"cryptohome-core@google.com",
-			"betuls@google.com",
 		},
 		BugComponent: "b:1088399", // ChromeOS > Security > Cryptohome
 		Timeout:      4 * time.Minute,

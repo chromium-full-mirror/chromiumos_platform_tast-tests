@@ -25,7 +25,6 @@ func init() {
 		Desc: "Test that authenticate recovery factor is disabled if it is locked, but the update recovery factor still works",
 		Contacts: []string{
 			"cryptohome-core@google.com",
-			"betuls@chromium.org",
 		},
 		BugComponent: "b:1148604", // ChromeOS > Security > Cryptohome > Cryptohome Recovery
 		Attr:         []string{"group:mainline", "group:cryptohome"},
