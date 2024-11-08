@@ -6,10 +6,13 @@ package cellular
 
 import (
 	"context"
+	"time"
 
 	"go.chromium.org/tast-tests/cros/local/cellular"
 	"go.chromium.org/tast-tests/cros/local/chrome"
+	"go.chromium.org/tast-tests/cros/local/chrome/uiauto/faillog"
 	"go.chromium.org/tast-tests/cros/local/chrome/uiauto/ossettings"
+	"go.chromium.org/tast/core/ctxutil"
 	"go.chromium.org/tast/core/testing"
 )
 
@@ -33,10 +36,15 @@ func init() {
 // ToggleCellularFromOSSettings tests that a user can successfully toggle the
 // Cellular state using the Cellular toggle on the OS Settings page.
 func ToggleCellularFromOSSettings(ctx context.Context, s *testing.State) {
+	cleanupCtx := ctx
+	ctx, cancel := ctxutil.Shorten(ctx, 10*time.Second)
+	defer cancel()
+
 	cr, err := chrome.New(ctx)
 	if err != nil {
 		s.Fatal("Failed to create a new instance of Chrome: ", err)
 	}
+	defer cr.Close(cleanupCtx)
 
 	tconn, err := cr.TestAPIConn(ctx)
 	if err != nil {
@@ -53,7 +61,8 @@ func ToggleCellularFromOSSettings(ctx context.Context, s *testing.State) {
 		s.Fatal("Failed to launch OS Settings: ", err)
 	}
 
-	defer app.Close(ctx)
+	defer app.Close(cleanupCtx)
+	defer faillog.DumpUITreeWithScreenshotOnError(cleanupCtx, s.OutDir(), s.HasError, cr, "ui_tree")
 
 	if err := app.SetToggleOption(cr, "Mobile data enable", true)(ctx); err != nil {
 		s.Fatal("Failed to enable mobile data in UI: ", err)
