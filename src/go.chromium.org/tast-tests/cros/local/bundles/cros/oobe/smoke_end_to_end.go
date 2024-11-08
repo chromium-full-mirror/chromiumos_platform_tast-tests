@@ -372,7 +372,9 @@ func SmokeEndToEnd(ctx context.Context, s *testing.State) {
 		s.Fatal("Failed to evaluate whether the device in the table mode: ", err)
 	}
 
-	if supportsLE || isInTabletMode {
+	// If the device does not support low entropy credentials, it has not been shown the PIN setup screen yet.
+	// Additionally, only tablet devices get to setup a PIN without having low entropy credentials support.
+	if !supportsLE && isInTabletMode {
 		s.Log("Waiting for the pin setup screen")
 		var pinSkipButton string
 		if err := oobeConn.Eval(ctx, "OobeAPI.screens.PinSetupScreen.getSkipButtonName()", &pinSkipButton); err != nil {
