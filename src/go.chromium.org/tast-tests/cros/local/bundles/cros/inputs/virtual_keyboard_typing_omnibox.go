@@ -89,7 +89,7 @@ func VirtualKeyboardTypingOmnibox(ctx context.Context, s *testing.State) {
 			ctx, shortCancel := ctxutil.Shorten(ctx, 10*time.Second)
 			defer shortCancel()
 
-			br, err := apps.PrimaryBrowser(ctx, tconn)
+			br, err := apps.ChromeOrChromium(ctx, tconn)
 			if err != nil {
 				s.Fatal("Failed to get browser app: ", err)
 			}

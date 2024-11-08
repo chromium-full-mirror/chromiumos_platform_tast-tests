@@ -8,7 +8,6 @@ import (
 	"context"
 	"time"
 
-	"go.chromium.org/tast-tests/cros/local/chrome/browser"
 	"go.chromium.org/tast-tests/cros/local/chrome/ime"
 	"go.chromium.org/tast-tests/cros/local/chrome/uiauto"
 	"go.chromium.org/tast-tests/cros/local/chrome/useractions"
@@ -72,7 +71,6 @@ func PhysicalKeyboardLayoutChanged(ctx context.Context, s *testing.State) {
 
 	inputTestServer, err := testserver.LaunchBrowserWithHTML(
 		ctx,
-		browser.TypeAsh,
 		false,
 		fixtureData.Chrome,
 		testConn,

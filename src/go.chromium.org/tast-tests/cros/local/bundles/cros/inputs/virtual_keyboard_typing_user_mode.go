@@ -12,7 +12,6 @@ import (
 	"time"
 
 	"go.chromium.org/tast-tests/cros/local/bundles/cros/inputs/testrunner"
-	"go.chromium.org/tast-tests/cros/local/chrome/browser"
 	"go.chromium.org/tast-tests/cros/local/chrome/ime"
 	"go.chromium.org/tast-tests/cros/local/chrome/uiauto/faillog"
 	"go.chromium.org/tast-tests/cros/local/chrome/uiauto/vkb"
@@ -85,7 +84,7 @@ func virtualKeyboardTypingUserMode(ctx context.Context, s *testing.State) {
 	ctx, cancel := ctxutil.Shorten(ctx, 5*time.Second)
 	defer cancel()
 
-	its, err := testserver.LaunchBrowserInMode(ctx, cr, tconn, browser.TypeAsh, strings.Contains(s.TestName(), "incognito"))
+	its, err := testserver.LaunchBrowserInMode(ctx, cr, tconn, strings.Contains(s.TestName(), "incognito"))
 	if err != nil {
 		s.Fatal("Failed to launch inputs test server: ", err)
 	}

@@ -9,7 +9,6 @@ import (
 	"time"
 
 	"go.chromium.org/tast-tests/cros/local/bundles/cros/inputs/spellcheck"
-	"go.chromium.org/tast-tests/cros/local/chrome/browser"
 	"go.chromium.org/tast-tests/cros/local/chrome/uiauto"
 	"go.chromium.org/tast-tests/cros/local/chrome/uiauto/faillog"
 	"go.chromium.org/tast-tests/cros/local/chrome/uiauto/imesettings"
@@ -85,7 +84,7 @@ func SpellCheckRemoveWords(ctx context.Context, s *testing.State) {
 		s.Fatal("Failed to click delete word button: ", err)
 	}
 
-	its, err := testserver.LaunchBrowser(ctx, browser.TypeAsh, cr, tconn)
+	its, err := testserver.LaunchBrowser(ctx, cr, tconn)
 	if err != nil {
 		s.Fatal("Failed to launch inputs test server: ", err)
 	}

@@ -17,9 +17,6 @@ import (
 
 	"go.chromium.org/tast-tests/cros/local/chrome"
 	"go.chromium.org/tast-tests/cros/local/chrome/ash"
-	"go.chromium.org/tast-tests/cros/local/chrome/browser"
-	"go.chromium.org/tast-tests/cros/local/chrome/browser/browserfixt"
-	"go.chromium.org/tast-tests/cros/local/chrome/lacros"
 	"go.chromium.org/tast-tests/cros/local/chrome/uiauto"
 	"go.chromium.org/tast-tests/cros/local/chrome/uiauto/nodewith"
 	"go.chromium.org/tast-tests/cros/local/chrome/uiauto/role"
@@ -184,8 +181,6 @@ type InputsTestServer struct {
 	// It is used for evaluate javascript.
 	pc *chrome.Conn
 	ui *uiauto.Context
-	// Cleanup task for the browser.
-	closeBrowser uiauto.Action
 }
 
 // FieldInputEval encapsulates a function to input text into an input field, and its expected output.
@@ -219,53 +214,19 @@ func LaunchServer(ctx context.Context) (server *httptest.Server) {
 // LaunchBrowserInMode launches a local web server to serve inputs testing on
 // different type of input fields.
 // It can be either normal user mode or incognito mode.
-func LaunchBrowserInMode(ctx context.Context, cr *chrome.Chrome, tconn *chrome.TestConn, browserType browser.Type, incognitoMode bool) (its *InputsTestServer, err error) {
-	return LaunchBrowserWithHTML(ctx, browserType, incognitoMode, cr, tconn, html)
-}
-
-// setUpIncognito launches an incognito browser with shortcut `Ctrl+Shift+N`.
-// NOTE: unfocused environment needs to be set up before calling this.
-func setUpIncognito(ctx context.Context, cr *chrome.Chrome, bt browser.Type) (*browser.Browser, func(ctx context.Context) error, error) {
-	tconn, err := cr.TestAPIConn(ctx)
-	if err != nil {
-		return nil, nil, errors.Wrap(err, "failed to connect to test API")
-	}
-
-	kb, err := input.Keyboard(ctx)
-	if err != nil {
-		return nil, nil, errors.Wrap(err, "failed to connect to a keyboard")
-	}
-	defer kb.Close(ctx)
-
-	if err := kb.Accel(ctx, "Ctrl+Shift+N"); err != nil {
-		return nil, nil, errors.Wrap(err, "failed to launch incognito Chrome browser")
-	}
-
-	switch bt {
-	case browser.TypeAsh:
-		return cr.Browser(), func(context.Context) error { return nil }, nil
-	case browser.TypeLacros:
-		l, err := lacros.Connect(ctx, tconn)
-		if err != nil {
-			return nil, nil, errors.Wrap(err, "failed to launch lacros-chrome")
-		}
-		return l.Browser(), l.Close, nil
-	default:
-		return nil, nil, errors.Errorf("unrecognized browser type %s", string(bt))
-	}
+func LaunchBrowserInMode(ctx context.Context, cr *chrome.Chrome, tconn *chrome.TestConn, incognitoMode bool) (its *InputsTestServer, err error) {
+	return LaunchBrowserWithHTML(ctx, incognitoMode, cr, tconn, html)
 }
 
 // LaunchBrowser launches a local web server with the default html to serve
 // inputs testing on different type of input fields.
-// It opens either a Ash browser or a Lacros browser based on the arguments.
-func LaunchBrowser(ctx context.Context, browserType browser.Type, cr *chrome.Chrome, tconn *chrome.TestConn) (*InputsTestServer, error) {
-	return LaunchBrowserWithHTML(ctx, browserType, false, cr, tconn, html)
+func LaunchBrowser(ctx context.Context, cr *chrome.Chrome, tconn *chrome.TestConn) (*InputsTestServer, error) {
+	return LaunchBrowserWithHTML(ctx, false, cr, tconn, html)
 }
 
 // LaunchBrowserWithHTML launches a local web server with the specified html to
 // serve inputs testing on different type of input fields.
-// It opens either a Ash browser or a Lacros browser based on the arguments.
-func LaunchBrowserWithHTML(ctx context.Context, browserType browser.Type, incognitoMode bool, cr *chrome.Chrome, tconn *chrome.TestConn, rawHTML string) (*InputsTestServer, error) {
+func LaunchBrowserWithHTML(ctx context.Context, incognitoMode bool, cr *chrome.Chrome, tconn *chrome.TestConn, rawHTML string) (*InputsTestServer, error) {
 	// URL path needs to be in the allowlist to enable some features.
 	// https://source.chromium.org/chromium/chromium/src/+/main:chrome/browser/ash/input_method/assistive_suggester.cc.
 	const urlPath = "e14s-test"
@@ -282,7 +243,7 @@ func LaunchBrowserWithHTML(ctx context.Context, browserType browser.Type, incogn
 		}
 	}()
 
-	browserConn, closeBrowser, err := setUpBrowser(ctx, browserType, incognitoMode, cr)
+	browserConn, err := setUpBrowser(ctx, incognitoMode, cr)
 	if err != nil {
 		return nil, errors.Wrap(err, "failed to connect to browser")
 	}
@@ -318,36 +279,30 @@ func LaunchBrowserWithHTML(ctx context.Context, browserType browser.Type, incogn
 
 	hasError = false
 	return &InputsTestServer{
-		server:       server,
-		cr:           cr,
-		tconn:        tconn,
-		pc:           browserConn,
-		ui:           ui,
-		closeBrowser: closeBrowser,
+		server: server,
+		cr:     cr,
+		tconn:  tconn,
+		pc:     browserConn,
+		ui:     ui,
 	}, nil
 }
 
-func setUpBrowser(ctx context.Context, browserType browser.Type, incognitoMode bool, cr *chrome.Chrome) (*chrome.Conn, func(ctx context.Context) error, error) {
-	var br *browser.Browser
-	var closeBrowser func(ctx context.Context) error
-	var err error
-	var browserConn *chrome.Conn
-
+func setUpBrowser(ctx context.Context, incognitoMode bool, cr *chrome.Chrome) (*chrome.Conn, error) {
 	switch incognitoMode {
 	case true:
-		br, closeBrowser, err = setUpIncognito(ctx, cr, browserType)
+		// Launch an incognito browser using keyboard shortcut `Ctrl+Shift+N`.
+		kb, err := input.Keyboard(ctx)
 		if err != nil {
-			return nil, nil, errors.Wrap(err, "failed to set up incognito browser")
+			return nil, errors.Wrap(err, "failed to connect to a keyboard")
 		}
-		browserConn, err = br.NewConnForTarget(ctx, chrome.MatchTargetURL(chrome.NewTabURL))
-	case false:
-		br, closeBrowser, err = browserfixt.SetUp(ctx, cr, browserType)
-		if err != nil {
-			return nil, nil, errors.Wrap(err, "failed to set up browser")
+		defer kb.Close(ctx)
+		if err := kb.Accel(ctx, "Ctrl+Shift+N"); err != nil {
+			return nil, errors.Wrap(err, "failed to launch incognito Chrome browser")
 		}
-		browserConn, err = br.NewConn(ctx, chrome.NewTabURL)
+		return cr.NewConnForTarget(ctx, chrome.MatchTargetURL(chrome.NewTabURL))
+	default:
+		return cr.NewConn(ctx, chrome.NewTabURL)
 	}
-	return browserConn, closeBrowser, err
 }
 
 // CloseAll releasees the connection, stops the local web server, and closees
@@ -357,7 +312,6 @@ func (its *InputsTestServer) CloseAll(ctx context.Context) {
 	if err := its.pc.Close(); err != nil {
 		testing.ContextLog(ctx, "Failed to close browser connection: ", err)
 	}
-	its.closeBrowser(ctx)
 	its.server.Close()
 }
 

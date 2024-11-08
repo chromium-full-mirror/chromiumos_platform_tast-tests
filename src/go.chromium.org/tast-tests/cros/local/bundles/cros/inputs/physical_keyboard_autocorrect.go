@@ -10,7 +10,6 @@ import (
 	"time"
 
 	"go.chromium.org/tast-tests/cros/local/bundles/cros/inputs/autocorrect"
-	"go.chromium.org/tast-tests/cros/local/chrome/browser"
 	"go.chromium.org/tast-tests/cros/local/chrome/ime"
 	"go.chromium.org/tast-tests/cros/local/chrome/uiauto"
 	"go.chromium.org/tast-tests/cros/local/chrome/uiauto/faillog"
@@ -99,7 +98,7 @@ func PhysicalKeyboardAutocorrect(ctx context.Context, s *testing.State) {
 	}
 	defer keyboard.Close(ctx)
 
-	its, err := testserver.LaunchBrowser(ctx, browser.TypeAsh, cr, tconn)
+	its, err := testserver.LaunchBrowser(ctx, cr, tconn)
 	if err != nil {
 		s.Fatal("Failed to launch inputs test server: ", err)
 	}

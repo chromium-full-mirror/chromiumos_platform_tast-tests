@@ -10,7 +10,6 @@ import (
 	"strings"
 	"time"
 
-	"go.chromium.org/tast-tests/cros/local/chrome/browser"
 	"go.chromium.org/tast-tests/cros/local/chrome/ime"
 	"go.chromium.org/tast-tests/cros/local/chrome/uiauto"
 	"go.chromium.org/tast-tests/cros/local/chrome/uiauto/faillog"
@@ -111,7 +110,7 @@ func physicalKeyboardEmojiSuggestion(ctx context.Context, s *testing.State) {
 	}
 	uc.SetAttribute(useractions.AttributeInputMethod, inputMethod.Name)
 
-	its, err := testserver.LaunchBrowserInMode(ctx, cr, tconn, browser.TypeAsh, strings.Contains(s.TestName(), "incognito"))
+	its, err := testserver.LaunchBrowserInMode(ctx, cr, tconn, strings.Contains(s.TestName(), "incognito"))
 	if err != nil {
 		s.Fatal("Failed to launch inputs test server: ", err)
 	}

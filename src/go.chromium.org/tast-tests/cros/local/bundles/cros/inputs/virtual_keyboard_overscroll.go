@@ -8,7 +8,6 @@ import (
 	"context"
 	"time"
 
-	"go.chromium.org/tast-tests/cros/local/chrome/browser"
 	"go.chromium.org/tast-tests/cros/local/chrome/ime"
 	"go.chromium.org/tast-tests/cros/local/chrome/uiauto"
 	"go.chromium.org/tast-tests/cros/local/chrome/uiauto/vkb"
@@ -65,7 +64,7 @@ func VirtualKeyboardOverscroll(ctx context.Context, s *testing.State) {
 
 	// Launch the test server.
 	its, err := testserver.LaunchBrowser(
-		ctx, browser.TypeAsh, cr, tconn)
+		ctx, cr, tconn)
 	if err != nil {
 		s.Fatal("Failed to launch inputs test server: ", err)
 	}

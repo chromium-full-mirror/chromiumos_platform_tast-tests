@@ -9,7 +9,6 @@ import (
 	"time"
 
 	"go.chromium.org/tast-tests/cros/local/bundles/cros/inputs/testrunner"
-	"go.chromium.org/tast-tests/cros/local/chrome/browser"
 	"go.chromium.org/tast-tests/cros/local/chrome/ime"
 	"go.chromium.org/tast-tests/cros/local/chrome/uiauto"
 	"go.chromium.org/tast-tests/cros/local/chrome/uiauto/faillog"
@@ -120,7 +119,7 @@ func VirtualKeyboardGlideTyping(ctx context.Context, s *testing.State) {
 	uc.SetAttribute(useractions.AttributeInputMethod, inputMethod.Name)
 
 	// Launch inputs test web server.
-	its, err := testserver.LaunchBrowser(ctx, browser.TypeAsh, cr, tconn)
+	its, err := testserver.LaunchBrowser(ctx, cr, tconn)
 	if err != nil {
 		s.Fatal("Failed to launch inputs test server: ", err)
 	}
