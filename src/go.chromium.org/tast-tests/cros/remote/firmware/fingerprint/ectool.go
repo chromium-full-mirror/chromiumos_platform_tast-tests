@@ -227,6 +227,10 @@ func rawFPFrameCommand(ctx context.Context, d *dut.DUT) *ssh.Cmd {
 }
 
 // FpInfoCommand returns the ssh command for running fpinfo.
-func FpInfoCommand(ctx context.Context, d *dut.DUT) *ssh.Cmd {
-	return EctoolCommand(ctx, d, "fpinfo")
+func FpInfoCommand(ctx context.Context, d *dut.DUT) (*fp.FpInfo, error) {
+	out, err := EctoolCommand(ctx, d, "fpinfo").Output(ssh.DumpLogOnError)
+	if err != nil {
+		return nil, err
+	}
+	return fp.ParseFpInfo(string(out))
 }
