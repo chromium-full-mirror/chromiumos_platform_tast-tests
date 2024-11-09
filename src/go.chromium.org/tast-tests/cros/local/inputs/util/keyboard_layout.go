@@ -286,6 +286,27 @@ func SingleKeyAction(modifiers ModifiersStatus, key input.EventCode, kb *input.K
 	)
 }
 
+// TwoKeysAction return the action for pressing different modifier with key-1 and key-2.
+func TwoKeysAction(deadkeyModifier, modifiers ModifiersStatus, key1, key2 input.EventCode, kb *input.KeyboardEventWriter) action.Action {
+	return uiauto.Combine("click key based on modifers state",
+		ifModifierThen(deadkeyModifier.Caps, kb.AccelAction("Search+alt")),
+		ifModifierThen(deadkeyModifier.Shift, kb.AccelPressAction("shift")),
+		ifModifierThen(deadkeyModifier.Altgr, kb.AccelPressAction("Altgr")),
+		kb.TypeKeyAction(key1),
+		ifModifierThen(deadkeyModifier.Altgr, kb.AccelReleaseAction("Altgr")),
+		ifModifierThen(deadkeyModifier.Shift, kb.AccelReleaseAction("shift")),
+		ifModifierThen(deadkeyModifier.Caps, kb.AccelAction("Search+alt")),
+
+		ifModifierThen(modifiers.Caps, kb.AccelAction("Search+alt")),
+		ifModifierThen(modifiers.Shift, kb.AccelPressAction("shift")),
+		ifModifierThen(modifiers.Altgr, kb.AccelPressAction("Altgr")),
+		kb.TypeKeyAction(key2),
+		ifModifierThen(modifiers.Altgr, kb.AccelReleaseAction("Altgr")),
+		ifModifierThen(modifiers.Shift, kb.AccelReleaseAction("shift")),
+		ifModifierThen(modifiers.Caps, kb.AccelAction("Search+alt")),
+	)
+}
+
 func ifModifierThen(modifierState bool, action action.Action) uiauto.Action {
 	return uiauto.IfSuccessThen(
 		func(ctx context.Context) error {

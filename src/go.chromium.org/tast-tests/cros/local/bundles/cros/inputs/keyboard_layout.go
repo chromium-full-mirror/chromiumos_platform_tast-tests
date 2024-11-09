@@ -27,6 +27,12 @@ import (
 	"go.chromium.org/tast/core/testing/hwdep"
 )
 
+// keystroke struct represent the potential dead key with it's mofider keys status.
+type keystroke struct {
+	keycode        util.LinuxKeyCode
+	modifierstatus util.ModifiersStatus
+}
+
 func init() {
 	testing.AddTest(&testing.Test{
 		Func:         KeyboardLayout,
@@ -98,6 +104,7 @@ func KeyboardLayout(ctx context.Context, s *testing.State) {
 
 	w := csv.NewWriter(file)
 	w.Write([]string{"key1-shift", "key1-altgr", "key1-caps", "key1-location", "key2-shift", "key2-altgr", "key2-caps", "key2-location", "char", "unicode"})
+	noOpKey1ModifierList := make([]keystroke, 0)
 
 	for _, key1ModifiersStatus := range util.ModifiersStatusCombo {
 		testing.ContextLogf(ctx, "Start single key case with modifer shift: %t + altgr: %t + caps: %t ", key1ModifiersStatus.Shift, key1ModifiersStatus.Altgr, key1ModifiersStatus.Caps)
@@ -118,6 +125,10 @@ func KeyboardLayout(ctx context.Context, s *testing.State) {
 
 			unicode := getUniCode(nodeInfo.Value)
 
+			if unicode == "no-op" {
+				noOpKey1ModifierList = append(noOpKey1ModifierList, keystroke{keycode: key, modifierstatus: key1ModifiersStatus})
+			}
+
 			w.Write([]string{
 				strconv.FormatBool(key1ModifiersStatus.Shift),
 				strconv.FormatBool(key1ModifiersStatus.Altgr),
@@ -129,6 +140,39 @@ func KeyboardLayout(ctx context.Context, s *testing.State) {
 				"n/a",
 				nodeInfo.Value,
 				unicode})
+		}
+	}
+
+	for _, key1keystroke := range noOpKey1ModifierList {
+		for _, key2Modifiers := range util.ModifiersStatusCombo {
+			testing.ContextLogf(ctx, "Start two keys case: key1: %s with modifer shift: %t + altgr: %t + caps: %t, and key2 modifer shift: %t + altgr: %t + caps: %t ", key1keystroke.keycode.KeyName, key1keystroke.modifierstatus.Shift, key1keystroke.modifierstatus.Altgr, key1keystroke.modifierstatus.Caps, key2Modifiers.Shift, key2Modifiers.Altgr, key2Modifiers.Caps)
+
+			for _, key := range util.LinuxKeyCodes {
+				if err := uiauto.Combine("typing key",
+					its.Clear(inputField),
+					its.ClickFieldAndWaitForActive(inputField),
+					util.TwoKeysAction(key1keystroke.modifierstatus, key2Modifiers, key1keystroke.keycode.LinuxKeyCode, key.LinuxKeyCode, kb),
+				)(ctx); err != nil {
+					s.Fatal("Failed to typeing key: ", err)
+				}
+
+				nodeInfo, err := ui.Info(ctx, inputField.Finder())
+				if err != nil {
+					s.Fatal("Failed to get node info: ", err)
+				}
+
+				w.Write([]string{
+					strconv.FormatBool(key1keystroke.modifierstatus.Shift),
+					strconv.FormatBool(key1keystroke.modifierstatus.Altgr),
+					strconv.FormatBool(key1keystroke.modifierstatus.Caps),
+					key1keystroke.keycode.KeyName,
+					strconv.FormatBool(key2Modifiers.Shift),
+					strconv.FormatBool(key2Modifiers.Altgr),
+					strconv.FormatBool(key2Modifiers.Caps),
+					key.KeyName,
+					nodeInfo.Value,
+					getUniCode(nodeInfo.Value)})
+			}
 		}
 	}
 
