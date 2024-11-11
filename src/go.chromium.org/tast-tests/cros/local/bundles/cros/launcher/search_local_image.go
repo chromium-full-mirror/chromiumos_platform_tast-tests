@@ -24,6 +24,8 @@ import (
 	"go.chromium.org/tast/core/testing"
 )
 
+const localImageName = "dog_with_words.jpg"
+
 func init() {
 	testing.AddTest(&testing.Test{
 		Func:         SearchLocalImage,
@@ -36,7 +38,7 @@ func init() {
 		},
 		BugComponent: "b:1281467",
 		SoftwareDeps: []string{"chrome"},
-		Data:         []string{util.ImageSearchLocalPictureName},
+		Data:         []string{localImageName},
 		Timeout:      10 * time.Minute,
 		Params: []testing.Param{
 			{
@@ -44,7 +46,7 @@ func init() {
 				Val: util.ImageSearchTestParam{
 					Name:           "ica",
 					TabletMode:     false,
-					Query:          []string{"paper", "Paper"},
+					Query:          []string{"dog", "Dog"},
 					ExpectedResult: "About",
 					UseIca:         true,
 					UseOcr:         false,
@@ -61,7 +63,7 @@ func init() {
 				Val: util.ImageSearchTestParam{
 					Name:           "ocr",
 					TabletMode:     false,
-					Query:          []string{"Thoughts"},
+					Query:          []string{"Pies"},
 					ExpectedResult: "About",
 					UseIca:         false,
 					UseOcr:         true,
@@ -78,7 +80,7 @@ func init() {
 				Val: util.ImageSearchTestParam{
 					Name:           "ica_ocr",
 					TabletMode:     false,
-					Query:          []string{"Paper", "Thoughts"},
+					Query:          []string{"Dog", "Pies"},
 					ExpectedResult: "About",
 					UseIca:         true,
 					UseOcr:         true,
@@ -114,11 +116,6 @@ func SearchLocalImage(ctx context.Context, s *testing.State) {
 		dlcList = append(dlcList, "screen-ai")
 	}
 
-	// TODO(b/303151432): Change the dlc force install to VerifyDlcInstalled when the bug is fixed.
-	if err := launcher.InstallDlc(ctx, dlcList); err != nil {
-		s.Fatal("Cannot install dlc: ", err)
-	}
-
 	if err := launcher.VerifyDlcInstalled(ctx, dlcList); err != nil {
 		s.Fatal("Cannot find dlc: ", err)
 	}
@@ -128,14 +125,14 @@ func SearchLocalImage(ctx context.Context, s *testing.State) {
 		s.Fatal("Failed to get user's Download path: ", err)
 	}
 
-	localFileLocation := filepath.Join(downloadsPath, util.ImageSearchLocalPictureName)
-	if err := fsutil.CopyFile(s.DataPath(util.ImageSearchLocalPictureName), localFileLocation); err != nil {
+	localFileLocation := filepath.Join(downloadsPath, localImageName)
+	if err := fsutil.CopyFile(s.DataPath(localImageName), localFileLocation); err != nil {
 		s.Fatalf("Failed to copy the test image to %s: %s", localFileLocation, err)
 	}
 	defer os.Remove(localFileLocation)
 
 	ui := uiauto.New(tconn)
-	imageNode := nodewith.Role(role.StaticText).ClassName("Label").Name("search_local_image.png")
+	imageNode := nodewith.Role(role.StaticText).ClassName("Label").Name(localImageName)
 	homeButtonFinder := nodewith.Name("Launcher").Role(role.Button).Ancestor(nodewith.HasClass("ShelfContainer"))
 
 	for _, query := range param.Query {
