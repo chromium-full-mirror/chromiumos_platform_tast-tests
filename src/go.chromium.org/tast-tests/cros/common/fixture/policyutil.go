@@ -80,6 +80,8 @@ const (
 	PersistentProjectorEDU = "persistentProjectorEDU"
 	// PersistentProjectorChild is a fixture name.
 	PersistentProjectorChild = "persistentProjectorChild"
+	// PersistentGraduationEDU is a fixture name.
+	PersistentGraduationEDU = "persistentGraduationEDU"
 )
 
 // Fixture defined in go.chromium.org/tast-tests/cros/remote/policyutil/tape_account.go.

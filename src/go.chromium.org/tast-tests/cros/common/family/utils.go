@@ -24,6 +24,9 @@ const GellerAccountVarName = "family.gellerAccount"
 // GriffinAccountVarName is the family griffin account name.
 const GriffinAccountVarName = "family.griffinAccount"
 
+// EduAccountVarName is the EDU account name with Takeout enabled.
+const EduAccountVarName = "family.eduAccount"
+
 const hohDMAAccountVarName = "family.hohDMAAccount"
 
 const parentDMAAccountVarName = "family.parentDMAAccount"
@@ -35,6 +38,8 @@ const unicornDMAAccountVarName = "family.unicornDMAAccount"
 const gellerDMAAccountVarName = "family.gellerDMAAccount"
 
 const griffinDMAAccountVarName = "family.griffinDMAAccount"
+
+const eduDMAAccountVarName = "family.eduDMAAccount"
 
 var hohAccountVar = testing.RegisterVarString(
 	HohAccountVarName,
@@ -108,6 +113,18 @@ var griffinDMAAccountVar = testing.RegisterVarString(
 	"It contains creds in family.griffinDMAAccount",
 )
 
+var eduAccountVar = testing.RegisterVarString(
+	EduAccountVarName,
+	"",
+	"It contains creds in family.eduEmail",
+)
+
+var eduDMAAccountVar = testing.RegisterVarString(
+	eduDMAAccountVarName,
+	"",
+	"It contains creds in family.eduDMAAccount",
+)
+
 // HohAccountValue returns credentials from family.hohAccount.
 func HohAccountValue() string {
 	return hohAccountVar.Value()
@@ -166,4 +183,14 @@ func GriffinAccountValue() string {
 // GriffinDMAAccountValue returns credentials from family.griffinDMAAccount.
 func GriffinDMAAccountValue() string {
 	return griffinDMAAccountVar.Value()
+}
+
+// EduAccountValue returns credentials from family.eduAccount.
+func EduAccountValue() string {
+	return eduAccountVar.Value()
+}
+
+// EduDMAAccountValue returns credentials from family.eduDMAAccount.
+func EduDMAAccountValue() string {
+	return eduDMAAccountVar.Value()
 }

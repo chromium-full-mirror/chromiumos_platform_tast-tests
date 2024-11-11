@@ -103,6 +103,24 @@ func init() {
 		PostTestTimeout: 5 * time.Second,
 		Parent:          fixture.FakeDMS,
 	})
+	testing.AddFixture(&testing.Fixture{
+		Name:         fixture.PersistentGraduationEDU,
+		Desc:         "Fixture setting persistent policy user for a managed EDU account that has Takeout enabled",
+		Contacts:     []string{"courtneywong@chromium.org", "chromeos-commercial-remote-management@google.com"},
+		BugComponent: "b:1111617", // ChromeOS > Software > Commercial (Enterprise) > Remote Management > Policy Stack
+		Vars: []string{
+			family.EduAccountVarName,
+		},
+		Impl: &persistentFixture{
+			policyAccountVar:                    family.EduAccountVarName,
+			persistentDisableDomainVerification: &[]bool{true}[0],
+		},
+		SetUpTimeout:    5 * time.Second,
+		ResetTimeout:    5 * time.Second,
+		TearDownTimeout: 5 * time.Second,
+		PostTestTimeout: 5 * time.Second,
+		Parent:          fixture.FakeDMS,
+	})
 }
 
 type persistentFixture struct {

@@ -275,6 +275,18 @@ func CreateUsageTimeLimitPolicy() *policy.UsageTimeLimit {
 	}
 }
 
+// CreateGraduationPolicy creates a policy that enables the Graduation policy for the current date.
+func CreateGraduationPolicy() *policy.ContentTransferEnablementStatus {
+	// Set policy to start and end on the current date.
+	return &policy.ContentTransferEnablementStatus{
+		Val: &policy.ContentTransferEnablementStatusValue{
+			EndDate:   &policy.ContentTransferEnablementStatusValueEndDate{Day: time.Now().Day(), Month: int(time.Now().Month()), Year: time.Now().Year()},
+			StartDate: &policy.ContentTransferEnablementStatusValueStartDate{Day: time.Now().Day(), Month: int(time.Now().Month()), Year: time.Now().Year()},
+			IsEnabled: true,
+		},
+	}
+}
+
 // VerifyUserSignedIntoBrowserAsChild creates and opens the browser, then checks that the provided email is signed in and recognized as a child user.
 // Note that `cr` and `tconn` passed in should be from ash-chrome.
 func VerifyUserSignedIntoBrowserAsChild(ctx context.Context, cr *chrome.Chrome, tconn *chrome.TestConn, email, outDir string) (err error) {

@@ -201,6 +201,23 @@ func init() {
 		PostTestTimeout: resetTimeout,
 		Parent:          fixture.PersistentGellerARC,
 	})
+
+	testing.AddFixture(&testing.Fixture{
+		Name: "eduWithTakeoutLogin",
+		Desc: "Managed EDU user account with Takeout enabled login",
+		Contacts: []string{
+			"cros-families-eng+test@google.com",
+			"courtneywong@chromium.org",
+		},
+		BugComponent:    "b:1079167", // ChromeOS > Software > Family
+		Impl:            NewFamilyLinkFixture(family.EduAccountVarName, "", true, chrome.EnableFeatures("Graduation")),
+		SetUpTimeout:    chrome.ManagedUserLoginTimeout,
+		ResetTimeout:    resetTimeout,
+		TearDownTimeout: resetTimeout,
+		PreTestTimeout:  resetTimeout,
+		PostTestTimeout: resetTimeout,
+		Parent:          fixture.PersistentGraduationEDU,
+	})
 }
 
 type familyLinkFixture struct {
