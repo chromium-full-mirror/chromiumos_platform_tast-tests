@@ -30,7 +30,6 @@ import (
 	"go.chromium.org/tast-tests/cros/local/chrome/cuj"
 	"go.chromium.org/tast-tests/cros/local/chrome/cuj/inputsimulations"
 	"go.chromium.org/tast-tests/cros/local/chrome/display"
-	"go.chromium.org/tast-tests/cros/local/chrome/lacros"
 	"go.chromium.org/tast-tests/cros/local/chrome/metrics"
 	"go.chromium.org/tast-tests/cros/local/chrome/uiauto"
 	"go.chromium.org/tast-tests/cros/local/chrome/uiauto/faillog"
@@ -106,7 +105,6 @@ type MeetTest struct {
 	TabSwitchDocs       bool                    // Whether to switch between Docs and Meet. It cannot be true if docs is false.
 	Duration            time.Duration           // Duration of the meet call. Must be less than test timeout.
 	TypingDuration      time.Duration           // Duration of typing on Google Docs. Must be less than the duration of the meet call. If |typingDuration| is not given, it defaults to |meetTimeout|.
-	BrowserType         browser.Type            // Ash Chrome browser or Lacros.
 	BotsOptions         []bond.AddBotsOption    // Customizes the meeting participant bots.
 	FakeCamHALCfg       *FakeCameraHALCfg       // Enable Fake Camera HAL if the config is present.
 	MeasureEcho         bool                    // Whether to measure the echo RMS. The number of meeting participant bot must be one and should be enabled with human speech as the only audio source (no other noise) to accurately evaluate the echo RMS.
@@ -277,29 +275,6 @@ func Run(ctx context.Context, meet MeetTest, cr *chrome.Chrome, testCaseVar func
 		defer revertZoom(closeCtx, tconn)
 	}
 
-	var cs ash.ConnSource
-	var br *browser.Browser
-	var bTconn *chrome.TestConn
-	switch meet.BrowserType {
-	case browser.TypeLacros:
-		// Launch lacros.
-		l, err := lacros.Launch(ctx, tconn)
-		if err != nil {
-			return pv, errors.Wrap(err, "failed to launch lacros")
-		}
-		defer l.Close(closeCtx)
-		cs = l
-		br = l.Browser()
-
-		if bTconn, err = l.TestAPIConn(ctx); err != nil {
-			return pv, errors.Wrap(err, "failed to get lacros TestAPIConn")
-		}
-	case browser.TypeAsh:
-		cs = cr
-		br = cr.Browser()
-		bTconn = tconn
-	}
-
 	bc, err := bond.NewClient(ctx, bond.WithCredsJSON([]byte(creds)))
 	if err != nil {
 		return pv, errors.Wrap(err, "failed to create a bond client")
@@ -376,7 +351,7 @@ func Run(ctx context.Context, meet MeetTest, cr *chrome.Chrome, testCaseVar func
 	}
 	botsInCall += numBotsToAdd
 
-	tabChecker, err := cuj.NewTabCrashChecker(ctx, bTconn)
+	tabChecker, err := cuj.NewTabCrashChecker(ctx, tconn)
 	if err != nil {
 		return pv, errors.Wrap(err, "failed to create TabCrashChecker")
 	}
@@ -401,19 +376,19 @@ func Run(ctx context.Context, meet MeetTest, cr *chrome.Chrome, testCaseVar func
 		return nil
 	}
 
-	meetHelper := googlemeet.NewHRTelemetryHelper(cs, tconn)
-	recorder, err := cujrecorder.NewRecorder(ctx, cr, bTconn, nil, cujrecorder.RecorderOptions{})
+	meetHelper := googlemeet.NewHRTelemetryHelper(cr, tconn)
+	recorder, err := cujrecorder.NewRecorder(ctx, cr, tconn, nil, cujrecorder.RecorderOptions{})
 	if err != nil {
 		return pv, errors.Wrap(err, "failed to create the recorder")
 	}
 
-	if err := recorder.AddCollectedMetrics(bTconn, meet.BrowserType,
+	if err := recorder.AddCollectedMetrics(tconn, browser.TypeAsh,
 		cujrecorder.NewCustomMetricConfig("Cras.MissedCallbackFrequencyInput", "millisecond", perf.SmallerIsBetter),
 		cujrecorder.NewCustomMetricConfig("Cras.MissedCallbackFrequencyOutput", "millisecond", perf.SmallerIsBetter)); err != nil {
 		return pv, errors.Wrap(err, "failed to add metrics to recorder")
 	}
 
-	if err := recorder.AddCommonMetrics(tconn, bTconn); err != nil {
+	if err := recorder.AddCommonMetrics(tconn, tconn); err != nil {
 		return pv, errors.Wrap(err, "failed to add common metrics to recorder")
 	}
 
@@ -430,6 +405,7 @@ func Run(ctx context.Context, meet MeetTest, cr *chrome.Chrome, testCaseVar func
 		}
 	}()
 
+	br := cr.Browser()
 	if err := cuj.WaitForValidAccountInCookieJar(ctx, br, tconn); err != nil {
 		return pv, errors.Wrap(err, "failed to wait for valid account in cookie jar")
 	}
@@ -452,20 +428,6 @@ func Run(ctx context.Context, meet MeetTest, cr *chrome.Chrome, testCaseVar func
 	// TODO(b/255343902): Remove this when the bug is fixed.
 	if err := ash.SetWindowStateAndWait(ctx, tconn, webRTCInternalsWindow.ID, ash.WindowStateMaximized); err != nil {
 		testing.ContextLog(ctx, "Failed to ensure that the WebRTC Internals window is maximized: ", err)
-	}
-
-	// Lacros specific setup.
-	if meet.BrowserType == browser.TypeLacros {
-		// Close "New Tab" window after creating the chrome://webrtc-internals window.
-		w, err := ash.FindWindow(ctx, tconn, func(w *ash.Window) bool {
-			return strings.HasPrefix(w.Title, newTabTitle) && strings.HasPrefix(w.Name, "ExoShellSurface")
-		})
-		if err != nil {
-			return pv, errors.Wrap(err, "failed to find New Tab window")
-		}
-		if err := w.CloseWindow(ctx, tconn); err != nil {
-			return pv, errors.Wrap(err, "failed to close New Tab window")
-		}
 	}
 
 	if meet.Docs {
@@ -493,8 +455,9 @@ func Run(ctx context.Context, meet MeetTest, cr *chrome.Chrome, testCaseVar func
 	defer faillog.DumpUITreeWithScreenshotOnError(closeCtx, outDir, func() bool { return retErr != nil }, cr, "ui_dump")
 
 	// Autorelease the automation tree when it is not used so that excessive
-	// automation events in lacros runs do not consumer too much cpu/power.
-	// See b/278649596.
+	// automation events runs do not consume too much cpu/power.
+	// (This was originally added for Lacros in the context of b/278649596
+	// but removing it now might regress the benchmark.)
 	automationAutoRelease, err := uiauto.NewScopedAutoRelease(ctx, tconn)
 	if err != nil {
 		return pv, errors.Wrap(err, "failed to create automation ScopedAutoRelease")
@@ -520,7 +483,7 @@ func Run(ctx context.Context, meet MeetTest, cr *chrome.Chrome, testCaseVar func
 	for name := range cujrecorder.WebRTCMetricInfo {
 		names = append(names, name)
 	}
-	webRTCMetricsRecorder, err := metrics.StartRecorder(ctx, bTconn, names...)
+	webRTCMetricsRecorder, err := metrics.StartRecorder(ctx, tconn, names...)
 	if err != nil {
 		return pv, errors.Wrap(err, "failed to start recording WebRTC metrics")
 	}
@@ -1304,7 +1267,7 @@ func Run(ctx context.Context, meet MeetTest, cr *chrome.Chrome, testCaseVar func
 					if err := webutil.WaitForQuiescence(ctx, collaborationConn, 15*time.Second); err != nil {
 						testing.ContextLogf(ctx, "Failed to wait for %s to achieve quiescence: %v", chrome.VersionURL, err)
 					}
-					targets, err := br.FindTargets(ctx, chrome.MatchTargetURL(chrome.VersionURL))
+					targets, err := cr.FindTargets(ctx, chrome.MatchTargetURL(chrome.VersionURL))
 					if err != nil || len(targets) == 0 {
 						return errors.Wrapf(err, "failed to find URL %s", chrome.VersionURL)
 					}
@@ -1332,7 +1295,7 @@ func Run(ctx context.Context, meet MeetTest, cr *chrome.Chrome, testCaseVar func
 			if err != nil {
 				return errors.Wrap(err, "failed to get Google Slides URL")
 			}
-			if err := navigate(ctx, collaborationConn, br, slidesURL); err != nil {
+			if err := navigate(ctx, collaborationConn, cr, slidesURL); err != nil {
 				return errors.Wrap(err, "failed to navigate to Google Slides website")
 			}
 			// We stopped presenting before navigating to the Google Slides page.
@@ -1386,7 +1349,7 @@ func Run(ctx context.Context, meet MeetTest, cr *chrome.Chrome, testCaseVar func
 			if err != nil {
 				return errors.Wrap(err, "failed to get Google Sheets URL")
 			}
-			if err := navigate(ctx, collaborationConn, br, sheetsURL); err != nil {
+			if err := navigate(ctx, collaborationConn, cr, sheetsURL); err != nil {
 				return errors.Wrap(err, "failed to navigate to Google Sheets website")
 			}
 			// We stopped presenting before navigating to the Google Sheets page.
@@ -1507,7 +1470,7 @@ func Run(ctx context.Context, meet MeetTest, cr *chrome.Chrome, testCaseVar func
 	if err := ui.WaitUntilGone(nodewith.NameContaining("VideoStream").First())(ctx); err != nil {
 		return pv, errors.Wrap(err, "failed to wait for video stream info to disappear")
 	}
-	hists, err := webRTCMetricsRecorder.Histogram(ctx, bTconn)
+	hists, err := webRTCMetricsRecorder.Histogram(ctx, tconn)
 	if err != nil {
 		return pv, errors.Wrap(err, "failed to gather WebRTC metrics for video streams")
 	}
@@ -1622,7 +1585,7 @@ func ensureElementGetsScrolled(ctx context.Context, conn *chrome.Conn, element s
 
 // navigate navigates to the url and waits for the page to quiesce,
 // and then focus on it.
-func navigate(ctx context.Context, conn *chrome.Conn, br *browser.Browser, url string) error {
+func navigate(ctx context.Context, conn *chrome.Conn, cr *chrome.Chrome, url string) error {
 	if err := conn.Navigate(ctx, url); err != nil {
 		return errors.Wrapf(err, "failed to navigate to %s", url)
 	}
@@ -1637,7 +1600,7 @@ func navigate(ctx context.Context, conn *chrome.Conn, br *browser.Browser, url s
 		testing.ContextLog(ctx, "Loading page took: ", time.Since(startTime))
 	}
 
-	targets, err := br.FindTargets(ctx, chrome.MatchTargetURLPrefix(url))
+	targets, err := cr.FindTargets(ctx, chrome.MatchTargetURLPrefix(url))
 	if err != nil || len(targets) == 0 {
 		return errors.Wrapf(err, "failed to find URL %s", url)
 	}
@@ -1672,8 +1635,7 @@ func startPresenting(ctx context.Context, conn *chrome.Conn, ui *uiauto.Context,
 		return errors.Wrap(err, "failed to start to present a tab")
 	}
 
-	// Select the tab to present. Avoid directly tapping on the screen
-	// due to miscalculated node bounds for Lacros tablet devices.
+	// Select the tab to present.
 	waitForPresentTabFocus := ui.WithTimeout(5 * time.Second).WaitUntilExists(nodewith.NameContaining(presentTabTitle).HasClass("AXVirtualView").Focused())
 	if err := uiauto.NamedCombine(fmt.Sprintf("select tab %q to screenshare", presentTabTitle),
 		ui.EnsureFocused(nodewith.HasClass("TableView").Role(role.ListGrid)),
