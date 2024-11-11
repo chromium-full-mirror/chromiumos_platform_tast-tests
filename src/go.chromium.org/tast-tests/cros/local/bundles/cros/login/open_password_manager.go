@@ -44,35 +44,18 @@ func init() {
 			Val: auth.InSessionParam{
 				ConfiguredAuth: auth.SetupWithPassword,
 				InSessionAuth:  auth.AuthWithPassword,
-				UseAuthPanel:   false,
 			},
 		}, {
-			Name: "auth_panel_with_password",
-			Val: auth.InSessionParam{
-				ConfiguredAuth: auth.SetupWithPassword,
-				InSessionAuth:  auth.AuthWithPassword,
-				UseAuthPanel:   true,
-			},
-		}, {
-			Name: "auth_panel_with_pin",
+			Name: "with_pin",
 			Val: auth.InSessionParam{
 				ConfiguredAuth: auth.SetupWithPasswordAndPin,
 				InSessionAuth:  auth.AuthWithPin,
-				UseAuthPanel:   true,
 			},
 		}, {
 			Name: "cancel",
 			Val: auth.InSessionParam{
 				ConfiguredAuth: auth.SetupWithPassword,
 				InSessionAuth:  auth.AuthCancel,
-				UseAuthPanel:   false,
-			},
-		}, {
-			Name: "auth_panel_cancel",
-			Val: auth.InSessionParam{
-				ConfiguredAuth: auth.SetupWithPassword,
-				InSessionAuth:  auth.AuthCancel,
-				UseAuthPanel:   true,
 			},
 		}},
 	})

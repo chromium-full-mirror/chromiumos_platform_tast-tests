@@ -12,7 +12,6 @@ import (
 	"go.chromium.org/tast-tests/cros/local/chrome"
 	"go.chromium.org/tast-tests/cros/local/chrome/uiauto"
 	"go.chromium.org/tast-tests/cros/local/chrome/uiauto/nodewith"
-	"go.chromium.org/tast-tests/cros/local/chrome/uiauto/role"
 	"go.chromium.org/tast-tests/cros/local/input"
 	"go.chromium.org/tast-tests/cros/local/login"
 	"go.chromium.org/tast/core/errors"
@@ -20,15 +19,8 @@ import (
 
 // Elements of the settings authentication dialog.
 var (
-
 	// The Active Session Auth approach widget name.
 	ActiveSessionWidget = nodewith.ClassName("AuthDialogWidget")
-
-	// The dialog node for the older password dialog in settings.
-	PasswordDialogNode = nodewith.Name("Confirm your password").Role(role.Dialog)
-
-	// The dialog node for the older password dialog in password manager.
-	PasswordManagerDialogNode = nodewith.Name("Verify your identity").Role(role.Dialog).HasClass("RootView")
 )
 
 // ConfiguredAuthType represents the configured authentication factor(s) during OOBE.
@@ -57,30 +49,21 @@ const (
 type InSessionParam struct {
 	ConfiguredAuth ConfiguredAuthType
 	InSessionAuth  InSessionAuthType
-	UseAuthPanel   bool
 }
 
 // SetupUser configures a new chrome with the provided user credentials
 func SetupUser(ctx context.Context, params InSessionParam, username, password, pin string) (*chrome.Chrome, error) {
-	var authPanelState chrome.Option
 
-	if params.UseAuthPanel {
-		authPanelState = chrome.EnableFeatures("UseAuthPanelInSession")
-	} else {
-		authPanelState = chrome.DisableFeatures("UseAuthPanelInSession")
-	}
 	loginOption := chrome.FakeLogin(chrome.Creds{User: username, Pass: ""})
 	chromeArgs := chrome.ExtraArgs("--disable-first-run-ui")
 
 	switch params.ConfiguredAuth {
 	case SetupWithPassword:
 		return login.SetupUserWithLocalPassword(ctx, password,
-			authPanelState,
 			loginOption,
 			chromeArgs)
 	case SetupWithPasswordAndPin:
 		return login.SetupUserWithLocalPasswordAndPin(ctx, password, pin,
-			authPanelState,
 			loginOption,
 			chromeArgs)
 	}
@@ -96,7 +79,7 @@ func ConfirmPassword(ctx context.Context, cr *chrome.Chrome, password string) er
 	}
 
 	uia := uiauto.New(tconn)
-	if err := uia.WaitUntilAnyExists(ActiveSessionWidget, PasswordDialogNode, PasswordManagerDialogNode)(ctx); err != nil {
+	if err := uia.WaitUntilAnyExists(ActiveSessionWidget)(ctx); err != nil {
 		return errors.Wrap(err, "failed to find password dialog")
 	}
 
@@ -112,14 +95,6 @@ func ConfirmPassword(ctx context.Context, cr *chrome.Chrome, password string) er
 
 	if err := uia.WaitUntilGone(ActiveSessionWidget)(ctx); err != nil {
 		return errors.Wrap(err, "ActiveSessionWidget is still present after entering password")
-	}
-
-	if err := uia.WaitUntilGone(PasswordDialogNode)(ctx); err != nil {
-		return errors.Wrap(err, "password dialog is still present after entering password")
-	}
-
-	if err := uia.WaitUntilGone(PasswordManagerDialogNode)(ctx); err != nil {
-		return errors.Wrap(err, "password manager dialog is still present after entering password")
 	}
 
 	return nil
@@ -177,7 +152,7 @@ func CancelPassword(ctx context.Context, cr *chrome.Chrome) error {
 	}
 
 	uia := uiauto.New(tconn)
-	if err := uia.WaitUntilAnyExists(ActiveSessionWidget, PasswordDialogNode, PasswordManagerDialogNode)(ctx); err != nil {
+	if err := uia.WaitUntilAnyExists(ActiveSessionWidget)(ctx); err != nil {
 		return errors.Wrap(err, "failed to find password dialog")
 	}
 
@@ -194,13 +169,6 @@ func CancelPassword(ctx context.Context, cr *chrome.Chrome) error {
 
 	if err := uia.WaitUntilGone(ActiveSessionWidget)(ctx); err != nil {
 		return errors.Wrap(err, "ActiveSessionWidget is still present after cancelling")
-	}
-	if err := uia.WaitUntilGone(PasswordDialogNode)(ctx); err != nil {
-		return errors.Wrap(err, "password dialog is still present after cancelling")
-	}
-
-	if err := uia.WaitUntilGone(PasswordManagerDialogNode)(ctx); err != nil {
-		return errors.Wrap(err, "password manager dialog is still present after entering password")
 	}
 
 	return nil
