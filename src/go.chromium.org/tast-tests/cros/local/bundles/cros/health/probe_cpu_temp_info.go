@@ -30,7 +30,7 @@ func init() {
 		},
 		// ChromeOS > Platform > Enablement > Serviceability > Diagnostic & Health
 		BugComponent: "b:982097",
-		Attr:         []string{"group:mainline", "informational"},
+		Attr:         []string{"group:mainline", "informational", "group:criticalstaging"},
 		SoftwareDeps: []string{"diagnostics"},
 		Fixture:      "crosHealthdRunning",
 		Timeout:      3 * time.Minute,
@@ -40,10 +40,12 @@ func init() {
 // verifyCPUTempRange verifies that all temperatures read from sensors are reasonable.
 func verifyCPUTempRange(tempChannels *[]types.TemperatureChannelInfo) error {
 	for _, tempChannel := range *tempChannels {
-		// Arbitrary value for checking temperature reading is reasonable. Values beyond
+		// Arbitrary value for checking temperature reading is reasonable. Values outside
 		// these limits are most likely caused by sensor failure.
-		if tempChannel.TemperatureCelsius < 0 || tempChannel.TemperatureCelsius > 100 {
-			return errors.Errorf("CPU temperature reading outside threshold of 0-100 Celsius: %d", tempChannel.TemperatureCelsius)
+		if tempChannel.TemperatureCelsius < 30 {
+			return errors.Errorf("CPU temperature reading is lower than the threshold of 30 Celsius: %d", tempChannel.TemperatureCelsius)
+		} else if tempChannel.TemperatureCelsius > 70 {
+			return errors.Errorf("CPU temperature reading is higher than the threshold of 70 Celsius: %d", tempChannel.TemperatureCelsius)
 		}
 	}
 	return nil
