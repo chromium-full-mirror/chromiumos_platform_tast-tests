@@ -6,6 +6,7 @@ package policyutil
 
 import (
 	"context"
+	"time"
 
 	"go.chromium.org/tast-tests/cros/local/apps"
 	"go.chromium.org/tast-tests/cros/local/chrome"
@@ -220,16 +221,21 @@ func CheckCertificateVisibleInSystemSettings(ctx context.Context, tconn *chrome.
 	OSSettingsPage(ctx, cr, "network")
 	ui := uiauto.New(tconn)
 
+	addNetworkButton := nodewith.Name("Add network connection").Role(role.Button)
 	addVpnButton := nodewith.Name("Add built-in VPN…").Role(role.Button)
 	userCertSelector := nodewith.Name("User certificate").ClassName("md-select")
+	certificate := nodewith.Name(certName + " [" + certName + "]").Ancestor(userCertSelector).Role(role.MenuListOption)
+	uiWithTimeout := ui.WithTimeout(7 * time.Second)
 
 	return uiauto.Combine("use system settings",
-		ui.DoDefault(nodewith.Name("Add network connection").Role(role.Button)),
-		ui.WaitUntilExists(addVpnButton),
-		ui.MakeVisible(addVpnButton),
-		ui.DoDefault(addVpnButton),
-		ui.WaitUntilExists(userCertSelector),
-		ui.MakeVisible(userCertSelector),
-		ui.DoDefault(userCertSelector),
-		ui.DoDefault(nodewith.Name(certName+" ["+certName+"]").Ancestor(userCertSelector).Role(role.MenuListOption)))(ctx)
+		uiWithTimeout.WaitUntilExists(addNetworkButton),
+		uiWithTimeout.DoDefault(addNetworkButton),
+		uiWithTimeout.WaitUntilExists(addVpnButton),
+		uiWithTimeout.MakeVisible(addVpnButton),
+		uiWithTimeout.DoDefault(addVpnButton),
+		uiWithTimeout.WaitUntilExists(userCertSelector),
+		uiWithTimeout.MakeVisible(userCertSelector),
+		uiWithTimeout.DoDefault(userCertSelector),
+		uiWithTimeout.WaitUntilExists(certificate),
+		uiWithTimeout.DoDefault(certificate))(ctx)
 }
