@@ -231,7 +231,8 @@ func BootupTimes(ctx context.Context, s *testing.State) {
 		}
 	}(ctx)
 
-	var totalCbmemTime []float64
+	var totalCbmemSeconds []float64
+	var totalPowerOnToLoginSeconds []float64
 	for i := 1; i <= iterValue; i++ {
 		s.Logf("Iteration: %v/%v", i, iterValue)
 		if btType.bootType == "reboot" {
@@ -352,14 +353,17 @@ func BootupTimes(ctx context.Context, s *testing.State) {
 			s.Fatal("Failed to wait connect DUT: ", err)
 		}
 
-		if err := getBootPerf(ctx, dut, s.RPCHint(), bootTime); err != nil {
+		powerOnToLoginSeconds, err := bootPerfValues(ctx, dut, s.RPCHint(), bootTime)
+		if err != nil {
 			s.Fatal("Failed to get boot perf values: ", err)
 		}
-		cbmemTime, err := verifyCBMem(ctx, dut)
+		totalPowerOnToLoginSeconds = append(totalPowerOnToLoginSeconds, powerOnToLoginSeconds)
+
+		cbmemTime, err := verifyCBMem(ctx, dut, cbmemTimeout)
 		if err != nil {
 			s.Fatal("Failed to verify cbmem timeout: ", err)
 		}
-		totalCbmemTime = append(totalCbmemTime, cbmemTime)
+		totalCbmemSeconds = append(totalCbmemSeconds, cbmemTime)
 
 		// Validating prev sleep state for power modes.
 		if btType.bootType == "reboot" || btType.bootType == vt2Reboot {
@@ -373,18 +377,25 @@ func BootupTimes(ctx context.Context, s *testing.State) {
 		}
 	}
 	var sum float64
+	var total float64
 	sum = 0
-	for _, num := range totalCbmemTime {
+	for _, num := range totalCbmemSeconds {
 		sum += num
 	}
-	cbmemTimeAvg := sum / float64(iterValue)
-	if cbmemTimeAvg > cbmemTimeout {
-		s.Logf("Failed to validate cbmem time, actual cbmem time is more than expected cbmem time, got %v; want %v", cbmemTimeAvg, cbmemTimeout)
+
+	for _, time := range totalPowerOnToLoginSeconds {
+		total += time
 	}
+	avgPowerOnToLoginSeconds := total / float64(iterValue)
+	s.Log("**************************Average Calculated Boot Time: ", avgPowerOnToLoginSeconds)
+
+	avgCbmemSeconds := sum / float64(iterValue)
+	s.Log("**************************Average Calculated cbmem Time: ", avgCbmemSeconds)
+
 }
 
 // verifyCBMem verifies cbmem timeout.
-func verifyCBMem(ctx context.Context, dut *dut.DUT) (float64, error) {
+func verifyCBMem(ctx context.Context, dut *dut.DUT, cbmemTimeout float64) (float64, error) {
 	cbmemOutput, err := dut.Conn().CommandContext(ctx, "sh", "-c", "cbmem -t").Output()
 	if err != nil {
 		return 0.0, errors.Wrap(err, "failed to execute cbmem command")
@@ -396,39 +407,46 @@ func verifyCBMem(ctx context.Context, dut *dut.DUT) (float64, error) {
 	if len(match) > 1 {
 		cbmemTotalTime = strings.Replace(match[1], ",", "", -1)
 	}
+	testing.ContextLogf(ctx, "Cbmem total time fetched: %s microseconds", cbmemTotalTime)
 	totalCbmemTime, err := strconv.ParseFloat(cbmemTotalTime, 32)
 	if err != nil {
 		return 0.0, errors.Wrap(err, "failed to convert string value to floating point value")
 	}
+	testing.ContextLog(ctx, "Converting cbmem total time to seconds")
 	totalCbmemTime = totalCbmemTime / 1000000
+
+	testing.ContextLogf(ctx, "The cbmem time expected <= %.1f sec; got %.1f sec", cbmemTimeout, totalCbmemTime)
+	if totalCbmemTime > cbmemTimeout {
+		return 0.0, errors.Wrapf(err, "failed to validate cbmem time, actual cbmem time is more than expected cbmem time, want <=%v; got %v", cbmemTimeout, totalCbmemTime)
+	}
 
 	return totalCbmemTime, nil
 }
 
-// getBootPerf validates seconds power on to login from platform bootperf values.
-func getBootPerf(ctx context.Context, dut *dut.DUT, rpcHint *testing.RPCHint, btime float64) error {
+// bootPerfValues validates seconds power on to login from platform bootperf values.
+func bootPerfValues(ctx context.Context, dut *dut.DUT, rpcHint *testing.RPCHint, btime float64) (float64, error) {
 	cl, err := rpc.Dial(ctx, dut, rpcHint)
 	if err != nil {
 		testing.ContextLog(ctx, "Failed RPC dial. reconnecting to RPC service again: ", err)
 		// Reconnect to DUT if its disconnected.
 		if err := dut.Connect(ctx); err != nil {
-			return errors.Wrap(err, "failed to connect to DUT")
+			return 0.0, errors.Wrap(err, "failed to connect to DUT")
 		}
 		cl, err = rpc.Dial(ctx, dut, rpcHint)
 		if err != nil {
-			return errors.Wrap(err, "failed to connect to the RPC service on the DUT")
+			return 0.0, errors.Wrap(err, "failed to connect to the RPC service on the DUT")
 		}
 	}
 	defer cl.Close(ctx)
 	bootPerfService := platform.NewBootPerfServiceClient(cl.Conn)
 	metrics, err := bootPerfService.GetBootPerfMetrics(ctx, &empty.Empty{})
 	if err != nil {
-		return errors.Wrap(err, "failed to get boot perf metrics")
+		return 0.0, errors.Wrap(err, "failed to get boot perf metrics")
 	}
 	if metrics.Metrics["seconds_power_on_to_login"] > btime {
-		return errors.Wrapf(err, "failed seconds_power_on_to_login is greater than expected, want %v; got %v", btime, metrics.Metrics["seconds_power_on_to_login"])
+		return 0.0, errors.Wrapf(err, "failed seconds_power_on_to_login is greater than expected, want %v; got %v", btime, metrics.Metrics["seconds_power_on_to_login"])
 	}
-	return nil
+	return metrics.Metrics["seconds_power_on_to_login"], nil
 }
 
 // waitForS0State waits for S0 power state
