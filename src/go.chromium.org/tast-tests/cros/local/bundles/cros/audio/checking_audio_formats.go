@@ -110,9 +110,9 @@ func CheckingAudioFormats(ctx context.Context, s *testing.State) {
 			usbDeviceClassName = "Mass Storage"
 			usbSpeed           = "5000M"
 		)
-		got := usbutils.NumberOfUSBDevicesConnected(usbDevicesList, usbDeviceClassName, usbSpeed)
-		if want := 1; got >= want {
-			s.Fatalf("Unexpected number of USB devices connected: got %d, want %d", got, want)
+		connectedDevices := usbutils.NumberOfUSBDevicesConnected(usbDevicesList, usbDeviceClassName, usbSpeed)
+		if minExpectedDevices := 1; connectedDevices < minExpectedDevices {
+			s.Fatalf("Unexpected number of USB devices connected: connectedDevices %d, minExpectedDevices %d", connectedDevices, minExpectedDevices)
 		}
 
 		usbDeviceName := s.RequiredVar("audio.usbDetectionName")
