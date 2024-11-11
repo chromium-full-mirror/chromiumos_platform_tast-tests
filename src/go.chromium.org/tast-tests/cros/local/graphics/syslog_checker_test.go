@@ -127,7 +127,6 @@ var (
 2024-02-06T04:26:01.376942Z WARNING kernel: [   77.983850] RIP: 0010:__i2c_check_suspended+0x63/0x67`
 	mediatekIOMMUSysLog = `2023-09-03T14:32:45.835792Z ERR kernel: [ 4094.326174] mtk-iommu 1401d000.m4u: fault type=0x280 iova=0x1ff000000 pa=0x0 read`
 	mediatekV4L2SysLog  = `2023-04-16T23:06:49.312229Z ERR kernel: [169036.056750] mtk_vcodec_dec_pw_off(),77: [MTK_V4L2][ERROR] pm_runtime_put_sync fail -22`
-	qualcommVideoSysLog = `2023-11-09T14:55:16.022617Z ERR kernel: [  951.666894] qcom-venus-decoder aa00000.video-codec:video-decoder: dec: event session error 0`
 )
 
 func TestDisableSysLogCheck(t *testing.T) {
@@ -177,7 +176,6 @@ func TestCheckSysLog(t *testing.T) {
 		{"kernelSplatsVeryLong", []string{kernelSplatsVeryLong}, "Kernel splats: __i2c_check_suspended+0x63/0x67"},
 		{"mediatekIOMMU", []string{mediatekIOMMUSysLog}, "Mediatek IOMMU fault: mtk-iommu 1401d000.m4u: fault type=0x280 iova=0x1ff000000 pa=0x0 read"},
 		{"mediatekVideo", []string{mediatekV4L2SysLog}, "Mediatek video error: mtk_vcodec_dec_pw_off(),77: [MTK_V4L2][ERROR] pm_runtime_put_sync fail -22"},
-		{"qualcommVideo", []string{qualcommVideoSysLog}, "Qualcomm video error: qcom-venus-decoder aa00000.video-codec:video-decoder: dec: event session error 0"},
 	} {
 		t.Run(tc.testName, func(t *testing.T) {
 			reader := newReader(t, tc.messages)

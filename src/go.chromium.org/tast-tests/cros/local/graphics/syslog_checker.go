@@ -34,8 +34,6 @@ const (
 	SysLogMediatekIOMMUErrors = "Mediatek IOMMU fault"
 	// SysLogMediatekVideoErrors are signatures for mediatek video driver errors.
 	SysLogMediatekVideoErrors = "Mediatek video error"
-	// SysLogQualcommVideoErrors are signatures for qualcomm video driver errors.
-	SysLogQualcommVideoErrors = "Qualcomm video error"
 	// SysLogAll is a metacategory that can be used to ignore all categories. It should not be used in sysLogSignatureMap.
 	SysLogAll SysLogCategory = "*"
 )
@@ -133,13 +131,6 @@ var (
 		re: regexp.MustCompile(strings.Join([]string{
 			`\[MTK_(V4L2|VCODEC)\]\[ERROR\]`,
 			`mtk-vcodec-dec .*.vcodec: dma alloc of size .* failed`,
-		}, "|")),
-	}, {
-		// Checker to check qualcomm video errors.
-		category: SysLogQualcommVideoErrors,
-		re: regexp.MustCompile(strings.Join([]string{
-			`qcom-venus .*video-codec: SFR message from FW:`,
-			`qcom-venus-decoder .*video-codec:video-decoder: dec: event session error`,
 		}, "|")),
 	}}
 	// ignoreCategoriesMap maps testName to a list of SysLogCategory it would like to ignore when calling checkSysLog.
