@@ -28,19 +28,16 @@ import (
 
 func init() {
 	testing.AddTest(&testing.Test{
-		Func: TimezoneEditable,
-		// Disabled by TORA. See: b/350113750
-		LifeCycleStage: testing.LifeCycleOwnerMonitored,
-		LacrosStatus:   testing.LacrosVariantUnneeded,
-		Desc:           "Test that settings about time zone can only be changed by users and not guest",
+		Func:         TimezoneEditable,
+		LacrosStatus: testing.LacrosVariantUnneeded,
+		Desc:         "Test that settings about time zone can only be changed by users and not guest",
 		Contacts: []string{
 			"cros-settings@google.com",
 			"chromeos-sw-engprod@google.com",
 		},
 		// OS > Systems > Settings
 		BugComponent: "b:1246072",
-		// Disabled by TORA. See: b/350113750
-		// Attr:         []string{"group:mainline", "informational", "group:hw_agnostic"},
+		Attr:         []string{"group:mainline", "informational", "group:hw_agnostic"},
 		SoftwareDeps: []string{"chrome"},
 		Timeout:      5 * time.Minute,
 	})
