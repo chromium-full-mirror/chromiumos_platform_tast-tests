@@ -23,6 +23,7 @@ import (
 	"go.chromium.org/tast-tests/cros/local/chrome/uiauto/role"
 	"go.chromium.org/tast-tests/cros/local/cryptohome"
 	"go.chromium.org/tast-tests/cros/local/drivefs"
+	"go.chromium.org/tast-tests/cros/local/policyutil"
 	"go.chromium.org/tast-tests/cros/local/sysutil"
 	"go.chromium.org/tast/core/ctxutil"
 	"go.chromium.org/tast/core/errors"
@@ -66,6 +67,7 @@ func MigrationGoogleDrive(ctx context.Context, s *testing.State) {
 	cr := fixt.Chrome
 	dfs := fixt.DriveFs
 	driveAPIClient := fixt.APIClient
+	fdms := fixt.FakeDMS
 
 	cleanupCtx := ctx
 	ctx, cancel := ctxutil.Shorten(ctx, 5*time.Second)
@@ -91,6 +93,15 @@ func MigrationGoogleDrive(ctx context.Context, s *testing.State) {
 	cloudFolderName := regexp.MustCompile("^ChromeOS device ")
 	if err := deleteAllUploadFoldersGoogleDrive(ctx, files, cloudFolderName, testFile, dfs, driveAPIClient); err != nil {
 		s.Error("Failed to clean up Drive: ", err)
+	}
+
+	// Set OneDrive and SkyVault policies.
+	if err := policyutil.ServeAndRefresh(ctx, fdms, cr, []policy.Policy{
+		&policy.LocalUserFilesAllowed{Val: false},
+		&policy.LocalUserFilesMigrationDestination{Val: "google_drive"},
+		&policy.DriveDisabled{Val: false},
+	}); err != nil {
+		s.Fatal("Failed to update policies: ", err)
 	}
 
 	ui := uiauto.New(tconn)

@@ -13,6 +13,7 @@ import (
 	"go.chromium.org/tast-tests/cros/common/dma"
 	"go.chromium.org/tast-tests/cros/common/drivefs"
 	"go.chromium.org/tast-tests/cros/common/policy"
+	"go.chromium.org/tast-tests/cros/common/policy/fakedms"
 	"go.chromium.org/tast-tests/cros/local/chrome"
 	"go.chromium.org/tast-tests/cros/local/chrome/ash"
 	"go.chromium.org/tast-tests/cros/local/policyutil"
@@ -218,8 +219,6 @@ func init() {
 			policies: []policy.Policy{
 				&policy.DownloadDirectory{Val: "${google_drive}"},
 				&policy.ScreenCaptureLocation{Val: "${google_drive}"},
-				&policy.LocalUserFilesAllowed{Val: false},
-				&policy.LocalUserFilesMigrationDestination{Val: "google_drive"},
 				&policy.DriveDisabled{Val: false},
 			},
 		},
@@ -249,6 +248,9 @@ type FixtureData struct {
 
 	// The DriveFS helper, reused by tests.
 	DriveFs *DriveFs
+
+	// FakeDMS is the running DMS server if any policies are set.
+	FakeDMS *fakedms.FakeDMS
 }
 
 type fixture struct {
@@ -263,6 +265,7 @@ type fixture struct {
 	fieldTrial        chrome.FieldTrialConfigMode
 	accountPool       string
 	policies          []policy.Policy
+	fdms              *fakedms.FakeDMS
 }
 
 func (f *fixture) SetUp(ctx context.Context, s *testing.FixtState) interface{} {
@@ -289,6 +292,7 @@ func (f *fixture) SetUp(ctx context.Context, s *testing.FixtState) interface{} {
 				TestAPIConn: f.tconn,
 				APIClient:   f.APIClient,
 				DriveFs:     f.driveFs,
+				FakeDMS:     f.fdms,
 			}
 		}
 	}
@@ -325,12 +329,11 @@ func (f *fixture) SetUp(ctx context.Context, s *testing.FixtState) interface{} {
 			opts = append(opts, chrome.EnableFeatures("FeatureManagementDriveFsBulkPinning"))
 		}
 		if len(f.policies) > 0 {
-			fdms, err := policyutil.SetUpFakePolicyServer(ctx, s.OutDir(), username, f.policies)
+			f.fdms, err = policyutil.SetUpFakePolicyServer(s.FixtContext(), s.OutDir(), username, f.policies)
 			if err != nil {
 				s.Fatal("Could not set set up fake policy server: ", err)
 			}
-			defer fdms.Stop(cleanupCtx)
-			opts = append(opts, chrome.DMSPolicy(fdms.URL))
+			opts = append(opts, chrome.DMSPolicy(f.fdms.URL))
 		}
 
 		ctx, cancel := context.WithTimeout(ctx, chrome.GAIALoginTimeout)
@@ -395,11 +398,15 @@ func (f *fixture) SetUp(ctx context.Context, s *testing.FixtState) interface{} {
 		TestAPIConn: f.tconn,
 		APIClient:   f.APIClient,
 		DriveFs:     f.driveFs,
+		FakeDMS:     f.fdms,
 	}
 }
 
 // TearDown ensures Chrome is unlocked and closed.
 func (f *fixture) TearDown(ctx context.Context, s *testing.FixtState) {
+	if f.fdms != nil {
+		f.fdms.Stop(ctx)
+	}
 	f.Reset(ctx)
 	chrome.Unlock()
 	f.cleanUp(ctx, s)
