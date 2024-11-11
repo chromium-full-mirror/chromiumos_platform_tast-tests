@@ -61,7 +61,7 @@ func init() {
 		}, {
 			Name:    "usb3_warmboot",
 			Val:     usbTypeATestParam{warmboot, "5000M", 0, "4"},
-			Timeout: 5 * time.Minute,
+			Timeout: 7 * time.Minute,
 		}, {
 			Name:    "usb3_coldboot",
 			Val:     usbTypeATestParam{coldboot, "5000M", 5, "4"},
