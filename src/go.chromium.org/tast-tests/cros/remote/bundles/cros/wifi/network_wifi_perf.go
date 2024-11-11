@@ -63,12 +63,6 @@ func init() {
 				Name: "he20",
 				Val: []networkWifiPerfTestCase{{
 					apOpts:    []ap.Option{ap.Mode(ap.Mode80211axPure), ap.Channel(36), ap.HTCaps(ap.HTCapHT20, ap.HTCapLDPC), ap.HEChWidth(ap.HEChWidth20Or40)},
-					powerSave: false, shouldTputRequired: false,
-				}, {
-					apOpts:    []ap.Option{ap.Mode(ap.Mode80211axPure), ap.Channel(157), ap.HTCaps(ap.HTCapHT20, ap.HTCapLDPC), ap.HEChWidth(ap.HEChWidth20Or40)},
-					powerSave: false, shouldTputRequired: false,
-				}, {
-					apOpts:    []ap.Option{ap.Mode(ap.Mode80211axPure), ap.Channel(36), ap.HTCaps(ap.HTCapHT20, ap.HTCapLDPC), ap.HEChWidth(ap.HEChWidth20Or40)},
 					powerSave: true, shouldTputRequired: false,
 				}, {
 					apOpts:    []ap.Option{ap.Mode(ap.Mode80211axPure), ap.Channel(157), ap.HTCaps(ap.HTCapHT20, ap.HTCapLDPC), ap.HEChWidth(ap.HEChWidth20Or40)},
@@ -84,14 +78,6 @@ func init() {
 				// Network: AES encrypted HE20 802.11ax.
 				Name: "he20_aes",
 				Val: []networkWifiPerfTestCase{{
-					apOpts:     []ap.Option{ap.Mode(ap.Mode80211axPure), ap.Channel(36), ap.HTCaps(ap.HTCapHT20, ap.HTCapLDPC), ap.HEChWidth(ap.HEChWidth20Or40)},
-					secConfFac: wpa.NewConfigFactory("chromeos", wpa.Mode(wpa.ModePureWPA2), wpa.Ciphers(wpa.CipherCCMP)),
-					powerSave:  false, shouldTputRequired: false,
-				}, {
-					apOpts:     []ap.Option{ap.Mode(ap.Mode80211axPure), ap.Channel(157), ap.HTCaps(ap.HTCapHT20, ap.HTCapLDPC), ap.HEChWidth(ap.HEChWidth20Or40)},
-					secConfFac: wpa.NewConfigFactory("chromeos", wpa.Mode(wpa.ModePureWPA2), wpa.Ciphers(wpa.CipherCCMP)),
-					powerSave:  false, shouldTputRequired: false,
-				}, {
 					apOpts:     []ap.Option{ap.Mode(ap.Mode80211axPure), ap.Channel(36), ap.HTCaps(ap.HTCapHT20, ap.HTCapLDPC), ap.HEChWidth(ap.HEChWidth20Or40)},
 					secConfFac: wpa.NewConfigFactory("chromeos", wpa.Mode(wpa.ModePureWPA2), wpa.Ciphers(wpa.CipherCCMP)),
 					powerSave:  true, shouldTputRequired: false,
@@ -111,9 +97,6 @@ func init() {
 				Name: "he40",
 				Val: []networkWifiPerfTestCase{{
 					apOpts:    []ap.Option{ap.Mode(ap.Mode80211axPure), ap.Channel(36), ap.HTCaps(ap.HTCapHT40, ap.HTCapLDPC), ap.HEChWidth(ap.HEChWidth20Or40)},
-					powerSave: false, shouldTputRequired: false,
-				}, {
-					apOpts:    []ap.Option{ap.Mode(ap.Mode80211axPure), ap.Channel(36), ap.HTCaps(ap.HTCapHT40, ap.HTCapLDPC), ap.HEChWidth(ap.HEChWidth20Or40)},
 					powerSave: true, shouldTputRequired: false,
 				}},
 				// TODO(b/347339428): Promote test to stable by removing wificell_unstable attribute.
@@ -128,10 +111,6 @@ func init() {
 				Val: []networkWifiPerfTestCase{{
 					apOpts:     []ap.Option{ap.Mode(ap.Mode80211axPure), ap.Channel(36), ap.HTCaps(ap.HTCapHT40, ap.HTCapLDPC), ap.HEChWidth(ap.HEChWidth20Or40)},
 					secConfFac: wpa.NewConfigFactory("chromeos", wpa.Mode(wpa.ModePureWPA2), wpa.Ciphers(wpa.CipherCCMP)),
-					powerSave:  false, shouldTputRequired: false,
-				}, {
-					apOpts:     []ap.Option{ap.Mode(ap.Mode80211axPure), ap.Channel(36), ap.HTCaps(ap.HTCapHT40, ap.HTCapLDPC), ap.HEChWidth(ap.HEChWidth20Or40)},
-					secConfFac: wpa.NewConfigFactory("chromeos", wpa.Mode(wpa.ModePureWPA2), wpa.Ciphers(wpa.CipherCCMP)),
 					powerSave:  true, shouldTputRequired: false,
 				}},
 				// TODO(b/347339428): Promote test to stable by removing wificell_unstable attribute.
@@ -144,12 +123,6 @@ func init() {
 				// Network: open HE80 802.11ax.
 				Name: "he80",
 				Val: []networkWifiPerfTestCase{{
-					apOpts:    []ap.Option{ap.Mode(ap.Mode80211axMixed), ap.Channel(44), ap.HTCaps(ap.HTCapHT40Plus, ap.HTCapLDPC), ap.VHTCaps(ap.VHTCapSGI80, ap.VHTCapMaxAMPDULenExp6), ap.VHTCenterChannel(42), ap.VHTChWidth(ap.VHTChWidth80), ap.HECenterChannel(42), ap.HEChWidth(ap.HEChWidth80)},
-					powerSave: false, shouldTputRequired: false,
-				}, {
-					apOpts:    []ap.Option{ap.Mode(ap.Mode80211axMixed), ap.Channel(157), ap.HTCaps(ap.HTCapHT40Plus, ap.HTCapLDPC), ap.VHTCaps(ap.VHTCapSGI80, ap.VHTCapMaxAMPDULenExp6), ap.VHTCenterChannel(155), ap.VHTChWidth(ap.VHTChWidth80), ap.HECenterChannel(155), ap.HEChWidth(ap.HEChWidth80)},
-					powerSave: false, shouldTputRequired: false,
-				}, {
 					apOpts:    []ap.Option{ap.Mode(ap.Mode80211axMixed), ap.Channel(44), ap.HTCaps(ap.HTCapHT40Plus, ap.HTCapLDPC), ap.VHTCaps(ap.VHTCapSGI80, ap.VHTCapMaxAMPDULenExp6), ap.VHTCenterChannel(42), ap.VHTChWidth(ap.VHTChWidth80), ap.HECenterChannel(42), ap.HEChWidth(ap.HEChWidth80)},
 					powerSave: true, shouldTputRequired: false,
 				}, {
@@ -166,14 +139,6 @@ func init() {
 				// Network: WPA2/WPA3 mixed and PMF enabled HE80 802.11ax.
 				Name: "he80_pmf",
 				Val: []networkWifiPerfTestCase{{
-					apOpts:     []ap.Option{ap.Mode(ap.Mode80211axMixed), ap.Channel(44), ap.HTCaps(ap.HTCapHT40Plus, ap.HTCapLDPC), ap.VHTCaps(ap.VHTCapSGI80, ap.VHTCapRXLDPC, ap.VHTCapMaxAMPDULenExp6), ap.VHTCenterChannel(42), ap.VHTChWidth(ap.VHTChWidth80), ap.HECenterChannel(42), ap.HEChWidth(ap.HEChWidth80), ap.PMF(ap.PMFRequired)},
-					secConfFac: wpa.NewConfigFactory("chromeos", wpa.Mode(wpa.ModeMixedWPA3), wpa.Ciphers2(wpa.CipherCCMP)),
-					powerSave:  false, shouldTputRequired: false,
-				}, {
-					apOpts:     []ap.Option{ap.Mode(ap.Mode80211axMixed), ap.Channel(157), ap.HTCaps(ap.HTCapHT40Plus, ap.HTCapLDPC), ap.VHTCaps(ap.VHTCapSGI80, ap.VHTCapRXLDPC, ap.VHTCapMaxAMPDULenExp6), ap.VHTCenterChannel(155), ap.VHTChWidth(ap.VHTChWidth80), ap.HECenterChannel(155), ap.HEChWidth(ap.HEChWidth80), ap.PMF(ap.PMFRequired)},
-					secConfFac: wpa.NewConfigFactory("chromeos", wpa.Mode(wpa.ModeMixedWPA3), wpa.Ciphers2(wpa.CipherCCMP)),
-					powerSave:  false, shouldTputRequired: false,
-				}, {
 					apOpts:     []ap.Option{ap.Mode(ap.Mode80211axMixed), ap.Channel(44), ap.HTCaps(ap.HTCapHT40Plus, ap.HTCapLDPC), ap.VHTCaps(ap.VHTCapSGI80, ap.VHTCapRXLDPC, ap.VHTCapMaxAMPDULenExp6), ap.VHTCenterChannel(42), ap.VHTChWidth(ap.VHTChWidth80), ap.HECenterChannel(42), ap.HEChWidth(ap.HEChWidth80), ap.PMF(ap.PMFRequired)},
 					secConfFac: wpa.NewConfigFactory("chromeos", wpa.Mode(wpa.ModeMixedWPA3), wpa.Ciphers2(wpa.CipherCCMP)),
 					powerSave:  true, shouldTputRequired: false,
@@ -196,12 +161,6 @@ func init() {
 						ap.HEChWidth(ap.HEChWidth20Or40), ap.Is6GHz(), ap.PMF(ap.PMFRequired)},
 					secConfFac: wpa.NewConfigFactory("chromeos",
 						wpa.Mode(wpa.ModePureWPA3), wpa.Ciphers2(wpa.CipherCCMP)),
-					powerSave: false, shouldTputRequired: false,
-				}, {
-					apOpts: []ap.Option{ap.Mode(ap.Mode80211axPure), ap.Channel(21), ap.HTCaps(ap.HTCapHT20),
-						ap.HEChWidth(ap.HEChWidth20Or40), ap.Is6GHz(), ap.PMF(ap.PMFRequired)},
-					secConfFac: wpa.NewConfigFactory("chromeos",
-						wpa.Mode(wpa.ModePureWPA3), wpa.Ciphers2(wpa.CipherCCMP)),
 					powerSave: true, shouldTputRequired: false,
 				}},
 				ExtraTestBedDeps:  tbdep.WifiRouterFeatures(labapi.WifiRouterFeature_WIFI_ROUTER_FEATURE_IEEE_802_11_AX_E),
@@ -215,12 +174,6 @@ func init() {
 						ap.HEChWidth(ap.HEChWidth20Or40), ap.Is6GHz(), ap.PMF(ap.PMFRequired)},
 					secConfFac: wpa.NewConfigFactory("chromeos",
 						wpa.Mode(wpa.ModePureWPA3), wpa.Ciphers2(wpa.CipherCCMP)),
-					powerSave: false, shouldTputRequired: false,
-				}, {
-					apOpts: []ap.Option{ap.Mode(ap.Mode80211axPure), ap.Channel(21), ap.HTCaps(ap.HTCapLDPC), ap.HECenterChannel(19),
-						ap.HEChWidth(ap.HEChWidth20Or40), ap.Is6GHz(), ap.PMF(ap.PMFRequired)},
-					secConfFac: wpa.NewConfigFactory("chromeos",
-						wpa.Mode(wpa.ModePureWPA3), wpa.Ciphers2(wpa.CipherCCMP)),
 					powerSave: true, shouldTputRequired: false,
 				}},
 				ExtraTestBedDeps:  tbdep.WifiRouterFeatures(labapi.WifiRouterFeature_WIFI_ROUTER_FEATURE_IEEE_802_11_AX_E),
@@ -230,13 +183,6 @@ func init() {
 				// Network: WPA3-SAE ("pure") HE80 802.11axe.
 				Name: "he80_pure_6ghz",
 				Val: []networkWifiPerfTestCase{{
-					apOpts: []ap.Option{ap.Mode(ap.Mode80211axPure), ap.Channel(5), ap.HTCaps(ap.HTCapLDPC),
-						ap.VHTCaps(ap.VHTCapSGI80), ap.HECenterChannel(7), ap.HEChWidth(ap.HEChWidth80),
-						ap.Is6GHz(), ap.PMF(ap.PMFRequired)},
-					secConfFac: wpa.NewConfigFactory("chromeos",
-						wpa.Mode(wpa.ModePureWPA3), wpa.Ciphers2(wpa.CipherCCMP)),
-					powerSave: false, shouldTputRequired: false,
-				}, {
 					apOpts: []ap.Option{ap.Mode(ap.Mode80211axPure), ap.Channel(5), ap.HTCaps(ap.HTCapLDPC),
 						ap.VHTCaps(ap.VHTCapSGI80), ap.HECenterChannel(7), ap.HEChWidth(ap.HEChWidth80),
 						ap.Is6GHz(), ap.PMF(ap.PMFRequired)},
@@ -256,13 +202,6 @@ func init() {
 						ap.Is6GHz(), ap.PMF(ap.PMFRequired)},
 					secConfFac: wpa.NewConfigFactory("chromeos",
 						wpa.Mode(wpa.ModePureWPA3), wpa.Ciphers2(wpa.CipherCCMP)),
-					powerSave: false, shouldTputRequired: false,
-				}, {
-					apOpts: []ap.Option{ap.Mode(ap.Mode80211axMixed), ap.Channel(5), ap.HTCaps(ap.HTCapLDPC),
-						ap.VHTCaps(ap.VHTCapSGI80), ap.HECenterChannel(7), ap.HEChWidth(ap.HEChWidth80),
-						ap.Is6GHz(), ap.PMF(ap.PMFRequired)},
-					secConfFac: wpa.NewConfigFactory("chromeos",
-						wpa.Mode(wpa.ModePureWPA3), wpa.Ciphers2(wpa.CipherCCMP)),
 					powerSave: true, shouldTputRequired: false,
 				}},
 				ExtraTestBedDeps:  tbdep.WifiRouterFeatures(labapi.WifiRouterFeature_WIFI_ROUTER_FEATURE_IEEE_802_11_AX_E),
@@ -277,13 +216,6 @@ func init() {
 						ap.Is6GHz(), ap.PMF(ap.PMFRequired)},
 					secConfFac: wpa.NewConfigFactory("chromeos",
 						wpa.Mode(wpa.ModePureWPA3), wpa.Ciphers2(wpa.CipherCCMP)),
-					powerSave: false, shouldTputRequired: false,
-				}, {
-					apOpts: []ap.Option{ap.Mode(ap.Mode80211axPure), ap.Channel(5), ap.HTCaps(ap.HTCapLDPC),
-						ap.VHTCaps(ap.VHTCapSGI160), ap.HECenterChannel(15), ap.HEChWidth(ap.HEChWidth160),
-						ap.Is6GHz(), ap.PMF(ap.PMFRequired)},
-					secConfFac: wpa.NewConfigFactory("chromeos",
-						wpa.Mode(wpa.ModePureWPA3), wpa.Ciphers2(wpa.CipherCCMP)),
 					powerSave: true, shouldTputRequired: false,
 				}},
 				ExtraTestBedDeps:  tbdep.WifiRouterFeatures(labapi.WifiRouterFeature_WIFI_ROUTER_FEATURE_IEEE_802_11_AX_E),
@@ -293,13 +225,6 @@ func init() {
 				// Network: WPA3-SAE ("mixed") HE160 802.11axe.
 				Name: "he160_mixed_6ghz",
 				Val: []networkWifiPerfTestCase{{
-					apOpts: []ap.Option{ap.Mode(ap.Mode80211axMixed), ap.Channel(5), ap.HTCaps(ap.HTCapLDPC),
-						ap.VHTCaps(ap.VHTCapSGI160), ap.HECenterChannel(15), ap.HEChWidth(ap.HEChWidth160),
-						ap.Is6GHz(), ap.PMF(ap.PMFRequired)},
-					secConfFac: wpa.NewConfigFactory("chromeos",
-						wpa.Mode(wpa.ModePureWPA3), wpa.Ciphers2(wpa.CipherCCMP)),
-					powerSave: false, shouldTputRequired: false,
-				}, {
 					apOpts: []ap.Option{ap.Mode(ap.Mode80211axMixed), ap.Channel(5), ap.HTCaps(ap.HTCapLDPC),
 						ap.VHTCaps(ap.VHTCapSGI160), ap.HECenterChannel(15), ap.HEChWidth(ap.HEChWidth160),
 						ap.Is6GHz(), ap.PMF(ap.PMFRequired)},
@@ -321,15 +246,6 @@ func init() {
 					},
 					secConfFac: wpa.NewConfigFactory("chromeos",
 						wpa.Mode(wpa.ModePureWPA3), wpa.Ciphers2(wpa.CipherCCMP)),
-					powerSave: false, shouldTputRequired: false,
-				}, {
-					apOpts: []ap.Option{
-						ap.Mode(ap.Mode80211bePure), ap.Channel(40), ap.HTCaps(ap.HTCapHT20),
-						ap.EHTChWidth(ap.EHTChWidth20Or40), ap.EHTCenterChannel(40),
-						ap.PMF(ap.PMFRequired),
-					},
-					secConfFac: wpa.NewConfigFactory("chromeos",
-						wpa.Mode(wpa.ModePureWPA3), wpa.Ciphers2(wpa.CipherCCMP)),
 					powerSave: true, shouldTputRequired: false,
 				}},
 				ExtraTestBedDeps:  tbdep.WifiRouterFeatures(labapi.WifiRouterFeature_WIFI_ROUTER_FEATURE_IEEE_802_11_BE),
@@ -339,15 +255,6 @@ func init() {
 				// Network: WPA3-SAE ("pure") EHT40 802.11be on legacy band.
 				Name: "eht40",
 				Val: []networkWifiPerfTestCase{{
-					apOpts: []ap.Option{
-						ap.Mode(ap.Mode80211bePure), ap.Channel(157), ap.HTCaps(ap.HTCapHT40, ap.HTCapLDPC),
-						ap.EHTChWidth(ap.EHTChWidth20Or40), ap.EHTCenterChannel(159),
-						ap.PMF(ap.PMFRequired),
-					},
-					secConfFac: wpa.NewConfigFactory("chromeos",
-						wpa.Mode(wpa.ModePureWPA3), wpa.Ciphers2(wpa.CipherCCMP)),
-					powerSave: false, shouldTputRequired: false,
-				}, {
 					apOpts: []ap.Option{
 						ap.Mode(ap.Mode80211bePure), ap.Channel(157), ap.HTCaps(ap.HTCapHT40, ap.HTCapLDPC),
 						ap.EHTChWidth(ap.EHTChWidth20Or40), ap.EHTCenterChannel(159),
@@ -372,16 +279,6 @@ func init() {
 					},
 					secConfFac: wpa.NewConfigFactory("chromeos",
 						wpa.Mode(wpa.ModePureWPA3), wpa.Ciphers2(wpa.CipherCCMP)),
-					powerSave: false, shouldTputRequired: false,
-				}, {
-					apOpts: []ap.Option{
-						ap.Mode(ap.Mode80211bePure), ap.Channel(157), ap.HTCaps(ap.HTCapHT40Plus, ap.HTCapLDPC),
-						ap.VHTCaps(ap.VHTCapSGI80), ap.VHTCenterChannel(155), ap.VHTChWidth(ap.VHTChWidth80),
-						ap.EHTCenterChannel(155), ap.EHTChWidth(ap.EHTChWidth80),
-						ap.PMF(ap.PMFRequired),
-					},
-					secConfFac: wpa.NewConfigFactory("chromeos",
-						wpa.Mode(wpa.ModePureWPA3), wpa.Ciphers2(wpa.CipherCCMP)),
 					powerSave: true, shouldTputRequired: false,
 				}},
 				ExtraTestBedDeps:  tbdep.WifiRouterFeatures(labapi.WifiRouterFeature_WIFI_ROUTER_FEATURE_IEEE_802_11_BE),
@@ -391,15 +288,6 @@ func init() {
 				// Network: WPA3-SAE ("mixed") EHT80 802.11be on legacy band.
 				Name: "eht80_mixed",
 				Val: []networkWifiPerfTestCase{{
-					apOpts: []ap.Option{
-						ap.Mode(ap.Mode80211beMixed), ap.Channel(157), ap.HTCaps(ap.HTCapHT40Plus, ap.HTCapLDPC),
-						ap.VHTCaps(ap.VHTCapSGI80), ap.VHTCenterChannel(155), ap.VHTChWidth(ap.VHTChWidth80),
-						ap.EHTCenterChannel(155), ap.EHTChWidth(ap.EHTChWidth80), ap.PMF(ap.PMFRequired),
-					},
-					secConfFac: wpa.NewConfigFactory("chromeos",
-						wpa.Mode(wpa.ModePureWPA3), wpa.Ciphers2(wpa.CipherCCMP)),
-					powerSave: false, shouldTputRequired: false,
-				}, {
 					apOpts: []ap.Option{
 						ap.Mode(ap.Mode80211beMixed), ap.Channel(157), ap.HTCaps(ap.HTCapHT40Plus, ap.HTCapLDPC),
 						ap.VHTCaps(ap.VHTCapSGI80), ap.VHTCenterChannel(155), ap.VHTChWidth(ap.VHTChWidth80),
@@ -421,13 +309,6 @@ func init() {
 						ap.Is6GHz(), ap.PMF(ap.PMFRequired)},
 					secConfFac: wpa.NewConfigFactory("chromeos",
 						wpa.Mode(wpa.ModePureWPA3), wpa.Ciphers2(wpa.CipherCCMP)),
-					powerSave: false, shouldTputRequired: false,
-				}, {
-					apOpts: []ap.Option{ap.Mode(ap.Mode80211bePure), ap.Channel(5), ap.HTCaps(ap.HTCapLDPC),
-						ap.VHTCaps(ap.VHTCapSGI160), ap.EHTCenterChannel(15), ap.EHTChWidth(ap.EHTChWidth160),
-						ap.Is6GHz(), ap.PMF(ap.PMFRequired)},
-					secConfFac: wpa.NewConfigFactory("chromeos",
-						wpa.Mode(wpa.ModePureWPA3), wpa.Ciphers2(wpa.CipherCCMP)),
 					powerSave: true, shouldTputRequired: false,
 				}},
 				ExtraTestBedDeps:  tbdep.WifiRouterFeatures(labapi.WifiRouterFeature_WIFI_ROUTER_FEATURE_IEEE_802_11_BE),
@@ -437,13 +318,6 @@ func init() {
 				// Network: WPA3-SAE ("mixed") EHT160 802.11be on 6GHz band.
 				Name: "eht160_mixed_6ghz",
 				Val: []networkWifiPerfTestCase{{
-					apOpts: []ap.Option{ap.Mode(ap.Mode80211beMixed), ap.Channel(5), ap.HTCaps(ap.HTCapLDPC),
-						ap.VHTCaps(ap.VHTCapSGI160), ap.EHTCenterChannel(15), ap.EHTChWidth(ap.EHTChWidth160),
-						ap.Is6GHz(), ap.PMF(ap.PMFRequired)},
-					secConfFac: wpa.NewConfigFactory("chromeos",
-						wpa.Mode(wpa.ModePureWPA3), wpa.Ciphers2(wpa.CipherCCMP)),
-					powerSave: false, shouldTputRequired: false,
-				}, {
 					apOpts: []ap.Option{ap.Mode(ap.Mode80211beMixed), ap.Channel(5), ap.HTCaps(ap.HTCapLDPC),
 						ap.VHTCaps(ap.VHTCapSGI160), ap.EHTCenterChannel(15), ap.EHTChWidth(ap.EHTChWidth160),
 						ap.Is6GHz(), ap.PMF(ap.PMFRequired)},
@@ -463,13 +337,6 @@ func init() {
 						ap.Is6GHz(), ap.PMF(ap.PMFRequired)},
 					secConfFac: wpa.NewConfigFactory("chromeos",
 						wpa.Mode(wpa.ModePureWPA3), wpa.Ciphers2(wpa.CipherCCMP)),
-					powerSave: false, shouldTputRequired: false,
-				}, {
-					apOpts: []ap.Option{ap.Mode(ap.Mode80211bePure), ap.Channel(5), ap.HTCaps(ap.HTCapLDPC),
-						ap.EHTCenterChannel(31), ap.EHTChWidth(ap.EHTChWidth320),
-						ap.Is6GHz(), ap.PMF(ap.PMFRequired)},
-					secConfFac: wpa.NewConfigFactory("chromeos",
-						wpa.Mode(wpa.ModePureWPA3), wpa.Ciphers2(wpa.CipherCCMP)),
 					powerSave: true, shouldTputRequired: false,
 				}},
 				ExtraTestBedDeps:  tbdep.WifiRouterFeatures(labapi.WifiRouterFeature_WIFI_ROUTER_FEATURE_IEEE_802_11_BE),
@@ -479,12 +346,6 @@ func init() {
 				// Network: WPA3-SAE ("mixed") EHT320 802.11be on 6GHZ band.
 				Name: "eht320_mixed_6ghz",
 				Val: []networkWifiPerfTestCase{{
-					apOpts: []ap.Option{ap.Mode(ap.Mode80211beMixed), ap.Channel(5), ap.HTCaps(ap.HTCapLDPC),
-						ap.EHTCenterChannel(31), ap.EHTChWidth(ap.EHTChWidth320), ap.Is6GHz(), ap.PMF(ap.PMFRequired)},
-					secConfFac: wpa.NewConfigFactory("chromeos",
-						wpa.Mode(wpa.ModePureWPA3), wpa.Ciphers2(wpa.CipherCCMP)),
-					powerSave: false, shouldTputRequired: false,
-				}, {
 					apOpts: []ap.Option{ap.Mode(ap.Mode80211beMixed), ap.Channel(5), ap.HTCaps(ap.HTCapLDPC),
 						ap.EHTCenterChannel(31), ap.EHTChWidth(ap.EHTChWidth320), ap.Is6GHz(), ap.PMF(ap.PMFRequired)},
 					secConfFac: wpa.NewConfigFactory("chromeos",
@@ -499,10 +360,10 @@ func init() {
 				Name: "ht20",
 				Val: []networkWifiPerfTestCase{{
 					apOpts:    []ap.Option{ap.Mode(ap.Mode80211nPure), ap.Channel(1), ap.HTCaps(ap.HTCapHT20)},
-					powerSave: false, shouldTputRequired: false,
+					powerSave: true, shouldTputRequired: false,
 				}, {
 					apOpts:    []ap.Option{ap.Mode(ap.Mode80211nPure), ap.Channel(157), ap.HTCaps(ap.HTCapHT20)},
-					powerSave: false, shouldTputRequired: false,
+					powerSave: true, shouldTputRequired: false,
 				}},
 				ExtraRequirements: []string{tdreq.WiFiTputHT20UDPTx, tdreq.WiFiTputHT20UDPRx, tdreq.WiFiTputHT20UDPRxTx, tdreq.WiFiTputHT20TCPTx, tdreq.WiFiTputHT20TCPRx, tdreq.WiFiTputHT20TCPRxTx},
 			},
@@ -510,14 +371,6 @@ func init() {
 				// Network: AES encrypted HT20 802.11n.
 				Name: "ht20_aes",
 				Val: []networkWifiPerfTestCase{{
-					apOpts:     []ap.Option{ap.Mode(ap.Mode80211nPure), ap.Channel(1), ap.HTCaps(ap.HTCapHT20)},
-					secConfFac: wpa.NewConfigFactory("chromeos", wpa.Mode(wpa.ModePureWPA2), wpa.Ciphers(wpa.CipherCCMP)),
-					powerSave:  false, shouldTputRequired: false,
-				}, {
-					apOpts:     []ap.Option{ap.Mode(ap.Mode80211nPure), ap.Channel(157), ap.HTCaps(ap.HTCapHT20)},
-					secConfFac: wpa.NewConfigFactory("chromeos", wpa.Mode(wpa.ModePureWPA2), wpa.Ciphers(wpa.CipherCCMP)),
-					powerSave:  false, shouldTputRequired: false,
-				}, {
 					apOpts:     []ap.Option{ap.Mode(ap.Mode80211nPure), ap.Channel(1), ap.HTCaps(ap.HTCapHT20)},
 					secConfFac: wpa.NewConfigFactory("chromeos", wpa.Mode(wpa.ModePureWPA2), wpa.Ciphers(wpa.CipherCCMP)),
 					powerSave:  true, shouldTputRequired: false,
@@ -533,12 +386,6 @@ func init() {
 				Name: "ht40",
 				Val: []networkWifiPerfTestCase{{
 					apOpts:    []ap.Option{ap.Mode(ap.Mode80211nPure), ap.Channel(1), ap.HTCaps(ap.HTCapHT40)},
-					powerSave: false, shouldTputRequired: false,
-				}, {
-					apOpts:    []ap.Option{ap.Mode(ap.Mode80211nPure), ap.Channel(157), ap.HTCaps(ap.HTCapHT40Plus)},
-					powerSave: false, shouldTputRequired: false,
-				}, {
-					apOpts:    []ap.Option{ap.Mode(ap.Mode80211nPure), ap.Channel(1), ap.HTCaps(ap.HTCapHT40)},
 					powerSave: true, shouldTputRequired: false,
 				}, {
 					apOpts:    []ap.Option{ap.Mode(ap.Mode80211nPure), ap.Channel(157), ap.HTCaps(ap.HTCapHT40Plus)},
@@ -550,14 +397,6 @@ func init() {
 				// Network: AES encrypted HT40 802.11n.
 				Name: "ht40_aes",
 				Val: []networkWifiPerfTestCase{{
-					apOpts:     []ap.Option{ap.Mode(ap.Mode80211nPure), ap.Channel(1), ap.HTCaps(ap.HTCapHT40)},
-					secConfFac: wpa.NewConfigFactory("chromeos", wpa.Mode(wpa.ModePureWPA2), wpa.Ciphers(wpa.CipherCCMP)),
-					powerSave:  false, shouldTputRequired: false,
-				}, {
-					apOpts:     []ap.Option{ap.Mode(ap.Mode80211nPure), ap.Channel(157), ap.HTCaps(ap.HTCapHT40Plus)},
-					secConfFac: wpa.NewConfigFactory("chromeos", wpa.Mode(wpa.ModePureWPA2), wpa.Ciphers(wpa.CipherCCMP)),
-					powerSave:  false, shouldTputRequired: false,
-				}, {
 					apOpts:     []ap.Option{ap.Mode(ap.Mode80211nPure), ap.Channel(1), ap.HTCaps(ap.HTCapHT40)},
 					secConfFac: wpa.NewConfigFactory("chromeos", wpa.Mode(wpa.ModePureWPA2), wpa.Ciphers(wpa.CipherCCMP)),
 					powerSave:  true, shouldTputRequired: false,
@@ -573,9 +412,6 @@ func init() {
 				Name: "vht20",
 				Val: []networkWifiPerfTestCase{{
 					apOpts:    []ap.Option{ap.Mode(ap.Mode80211acPure), ap.Channel(36), ap.HTCaps(ap.HTCapHT20), ap.VHTChWidth(ap.VHTChWidth20Or40), ap.VHTCaps(ap.VHTCapMaxAMPDULenExp7)},
-					powerSave: false, shouldTputRequired: false,
-				}, {
-					apOpts:    []ap.Option{ap.Mode(ap.Mode80211acPure), ap.Channel(36), ap.HTCaps(ap.HTCapHT20), ap.VHTChWidth(ap.VHTChWidth20Or40), ap.VHTCaps(ap.VHTCapMaxAMPDULenExp7)},
 					powerSave: true, shouldTputRequired: false,
 				}},
 				ExtraRequirements: []string{tdreq.WiFiTputVHT20UDPTx, tdreq.WiFiTputVHT20UDPRx, tdreq.WiFiTputVHT20UDPRxTx, tdreq.WiFiTputVHT20TCPTx, tdreq.WiFiTputVHT20TCPRx, tdreq.WiFiTputVHT20TCPRxTx},
@@ -584,10 +420,6 @@ func init() {
 				// Network: AES encrypted VHT20 802.11ac.
 				Name: "vht20_aes",
 				Val: []networkWifiPerfTestCase{{
-					apOpts:     []ap.Option{ap.Mode(ap.Mode80211acPure), ap.Channel(36), ap.HTCaps(ap.HTCapHT20), ap.VHTChWidth(ap.VHTChWidth20Or40), ap.VHTCaps(ap.VHTCapMaxAMPDULenExp7)},
-					secConfFac: wpa.NewConfigFactory("chromeos", wpa.Mode(wpa.ModePureWPA2), wpa.Ciphers(wpa.CipherCCMP)),
-					powerSave:  false, shouldTputRequired: false,
-				}, {
 					apOpts:     []ap.Option{ap.Mode(ap.Mode80211acPure), ap.Channel(36), ap.HTCaps(ap.HTCapHT20), ap.VHTChWidth(ap.VHTChWidth20Or40), ap.VHTCaps(ap.VHTCapMaxAMPDULenExp7)},
 					secConfFac: wpa.NewConfigFactory("chromeos", wpa.Mode(wpa.ModePureWPA2), wpa.Ciphers(wpa.CipherCCMP)),
 					powerSave:  true, shouldTputRequired: false,
@@ -599,9 +431,6 @@ func init() {
 				Name: "vht40",
 				Val: []networkWifiPerfTestCase{{
 					apOpts:    []ap.Option{ap.Mode(ap.Mode80211acPure), ap.Channel(36), ap.HTCaps(ap.HTCapHT40), ap.VHTChWidth(ap.VHTChWidth20Or40), ap.VHTCaps(ap.VHTCapMaxAMPDULenExp7)},
-					powerSave: false, shouldTputRequired: false,
-				}, {
-					apOpts:    []ap.Option{ap.Mode(ap.Mode80211acPure), ap.Channel(36), ap.HTCaps(ap.HTCapHT40), ap.VHTChWidth(ap.VHTChWidth20Or40), ap.VHTCaps(ap.VHTCapMaxAMPDULenExp7)},
 					powerSave: true, shouldTputRequired: false,
 				}},
 				ExtraRequirements: []string{tdreq.WiFiTputVHT40UDPTx, tdreq.WiFiTputVHT40UDPRx, tdreq.WiFiTputVHT40UDPRxTx, tdreq.WiFiTputVHT40TCPTx, tdreq.WiFiTputVHT40TCPRx, tdreq.WiFiTputVHT40TCPRxTx},
@@ -612,10 +441,6 @@ func init() {
 				Val: []networkWifiPerfTestCase{{
 					apOpts:     []ap.Option{ap.Mode(ap.Mode80211acPure), ap.Channel(36), ap.HTCaps(ap.HTCapHT40), ap.VHTChWidth(ap.VHTChWidth20Or40), ap.VHTCaps(ap.VHTCapMaxAMPDULenExp7)},
 					secConfFac: wpa.NewConfigFactory("chromeos", wpa.Mode(wpa.ModePureWPA2), wpa.Ciphers(wpa.CipherCCMP)),
-					powerSave:  false, shouldTputRequired: false,
-				}, {
-					apOpts:     []ap.Option{ap.Mode(ap.Mode80211acPure), ap.Channel(36), ap.HTCaps(ap.HTCapHT40), ap.VHTChWidth(ap.VHTChWidth20Or40), ap.VHTCaps(ap.VHTCapMaxAMPDULenExp7)},
-					secConfFac: wpa.NewConfigFactory("chromeos", wpa.Mode(wpa.ModePureWPA2), wpa.Ciphers(wpa.CipherCCMP)),
 					powerSave:  true, shouldTputRequired: false,
 				}},
 				ExtraRequirements: []string{tdreq.WiFiTputVHT40UDPTx, tdreq.WiFiTputVHT40UDPRx, tdreq.WiFiTputVHT40UDPRxTx, tdreq.WiFiTputVHT40TCPTx, tdreq.WiFiTputVHT40TCPRx, tdreq.WiFiTputVHT40TCPRxTx},
@@ -624,12 +449,6 @@ func init() {
 				// Network: open HE80 802.11ac.
 				Name: "vht80",
 				Val: []networkWifiPerfTestCase{{
-					apOpts:    []ap.Option{ap.Mode(ap.Mode80211acMixed), ap.Channel(44), ap.HTCaps(ap.HTCapHT40Plus), ap.VHTCaps(ap.VHTCapSGI80, ap.VHTCapMaxAMPDULenExp7), ap.VHTCenterChannel(42), ap.VHTChWidth(ap.VHTChWidth80)},
-					powerSave: false, shouldTputRequired: false,
-				}, {
-					apOpts:    []ap.Option{ap.Mode(ap.Mode80211acMixed), ap.Channel(157), ap.HTCaps(ap.HTCapHT40Plus), ap.VHTCaps(ap.VHTCapSGI80, ap.VHTCapMaxAMPDULenExp7), ap.VHTCenterChannel(155), ap.VHTChWidth(ap.VHTChWidth80)},
-					powerSave: false, shouldTputRequired: false,
-				}, {
 					apOpts:    []ap.Option{ap.Mode(ap.Mode80211acMixed), ap.Channel(44), ap.HTCaps(ap.HTCapHT40Plus), ap.VHTCaps(ap.VHTCapSGI80, ap.VHTCapMaxAMPDULenExp7), ap.VHTCenterChannel(42), ap.VHTChWidth(ap.VHTChWidth80)},
 					powerSave: true, shouldTputRequired: false,
 				}, {
@@ -642,14 +461,6 @@ func init() {
 				// Network: WPA2/WPA3 mixed and PMF enabled VHT80 802.11ac.
 				Name: "vht80_pmf",
 				Val: []networkWifiPerfTestCase{{
-					apOpts:     []ap.Option{ap.Mode(ap.Mode80211acMixed), ap.Channel(44), ap.HTCaps(ap.HTCapHT40Plus), ap.VHTCaps(ap.VHTCapSGI80, ap.VHTCapMaxAMPDULenExp7), ap.VHTCenterChannel(42), ap.VHTChWidth(ap.VHTChWidth80), ap.PMF(ap.PMFRequired)},
-					secConfFac: wpa.NewConfigFactory("chromeos", wpa.Mode(wpa.ModeMixedWPA3), wpa.Ciphers2(wpa.CipherCCMP)),
-					powerSave:  false, shouldTputRequired: false,
-				}, {
-					apOpts:     []ap.Option{ap.Mode(ap.Mode80211acMixed), ap.Channel(157), ap.HTCaps(ap.HTCapHT40Plus), ap.VHTCaps(ap.VHTCapSGI80, ap.VHTCapMaxAMPDULenExp7), ap.VHTCenterChannel(155), ap.VHTChWidth(ap.VHTChWidth80), ap.PMF(ap.PMFRequired)},
-					secConfFac: wpa.NewConfigFactory("chromeos", wpa.Mode(wpa.ModeMixedWPA3), wpa.Ciphers2(wpa.CipherCCMP)),
-					powerSave:  false, shouldTputRequired: false,
-				}, {
 					apOpts:     []ap.Option{ap.Mode(ap.Mode80211acMixed), ap.Channel(44), ap.HTCaps(ap.HTCapHT40Plus), ap.VHTCaps(ap.VHTCapSGI80, ap.VHTCapMaxAMPDULenExp7), ap.VHTCenterChannel(42), ap.VHTChWidth(ap.VHTChWidth80), ap.PMF(ap.PMFRequired)},
 					secConfFac: wpa.NewConfigFactory("chromeos", wpa.Mode(wpa.ModeMixedWPA3), wpa.Ciphers2(wpa.CipherCCMP)),
 					powerSave:  true, shouldTputRequired: false,
