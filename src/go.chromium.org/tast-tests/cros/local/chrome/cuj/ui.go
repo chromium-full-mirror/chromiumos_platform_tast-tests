@@ -18,7 +18,6 @@ import (
 	"go.chromium.org/tast-tests/cros/local/chrome/ash"
 	"go.chromium.org/tast-tests/cros/local/chrome/browser"
 	"go.chromium.org/tast-tests/cros/local/chrome/cuj/inputsimulations"
-	"go.chromium.org/tast-tests/cros/local/chrome/lacros"
 	"go.chromium.org/tast-tests/cros/local/chrome/metrics"
 	"go.chromium.org/tast-tests/cros/local/chrome/uiauto"
 	"go.chromium.org/tast-tests/cros/local/chrome/uiauto/faillog"
@@ -66,28 +65,26 @@ func CloseAllTabs(ctx context.Context, bTconn *chrome.TestConn, bt browser.Type)
 }
 
 // GetBrowserStartTime opens chrome browser and returns the browser start time.
-// If lfixtVal is given, it will open the lacros-Chrome, and return the lacros instance.
 func GetBrowserStartTime(ctx context.Context, tconn *chrome.TestConn,
-	closeTabs, tabletMode bool, bt browser.Type) (*lacros.Lacros, time.Duration, error) {
+	closeTabs, tabletMode bool) (time.Duration, error) {
 	const (
 		retryTimes       = 3
 		appLaunchTimeout = 10 * time.Second
 	)
-	var l *lacros.Lacros
 	chromeApp, err := apps.ChromeOrChromium(ctx, tconn)
 	if err != nil {
-		return nil, -1, errors.Wrap(err, "could not find the Chrome app")
+		return -1, errors.Wrap(err, "could not find the Chrome app")
 	}
 
 	// Make sure the browser hasn't been opened.
 	shown, err := ash.AppShown(ctx, tconn, chromeApp.ID)
 	if err != nil {
-		return nil, -1, errors.Wrap(err, "failed to check if the browser window is shown or not")
+		return -1, errors.Wrap(err, "failed to check if the browser window is shown or not")
 	}
 	if shown {
 		// Close the browser if it is aready opened.
 		if err := apps.Close(ctx, tconn, chromeApp.ID); err != nil {
-			return nil, -1, errors.Wrap(err, "failed to close the opened browser")
+			return -1, errors.Wrap(err, "failed to close the opened browser")
 		}
 	}
 
@@ -104,7 +101,7 @@ func GetBrowserStartTime(ctx context.Context, tconn *chrome.TestConn,
 
 	launchChromeApp := func(ctx context.Context) error {
 		retryCount++
-		startTime, err = launchFunc(ctx, tconn, "Chrome", "Chromium", "Lacros")
+		startTime, err = launchFunc(ctx, tconn, "Chrome", "Chromium")
 		if err != nil {
 			return errors.Wrap(err, "failed to open Chrome")
 		}
@@ -122,11 +119,11 @@ func GetBrowserStartTime(ctx context.Context, tconn *chrome.TestConn,
 		// Expect to take longer than starting straight from the shelf.
 		startTime = time.Now()
 		if err := launcher.LaunchApp(tconn, chromeApp.ShortName())(ctx); err != nil {
-			return nil, -1, errors.Wrap(err, "failed to launch the Chrome app from launcher")
+			return -1, errors.Wrap(err, "failed to launch the Chrome app from launcher")
 		}
 		// Make sure app is launched.
 		if err := ash.WaitForApp(ctx, tconn, chromeApp.ID, appLaunchTimeout); err != nil {
-			return nil, -1, errors.Wrap(err, "failed to wait for the app to be launched")
+			return -1, errors.Wrap(err, "failed to wait for the app to be launched")
 		}
 	} else {
 		testing.ContextLogf(ctx, "Attempts %v to successfully launch the Chrome app", retryCount)
@@ -134,41 +131,23 @@ func GetBrowserStartTime(ctx context.Context, tconn *chrome.TestConn,
 	browserStartTime := time.Since(startTime)
 	totalLaunchTime := time.Since(totalStartTime)
 	testing.ContextLogf(ctx, "It took a total of %v to launch the Chrome app, browser start time is %v", totalLaunchTime, browserStartTime)
-	// If it's ash-Chrome, we will close all existing tabs so the test case will start with a
-	// clean Chrome.
-	closeTabsFunc := browser.CloseAllTabs
-	bTconn := tconn
-	if bt == browser.TypeLacros {
-		// Connect to lacros-Chrome started from UI.
-		l, err = lacros.Connect(ctx, tconn)
-		if err != nil {
-			return nil, -1, errors.Wrap(err, "failed to get lacros instance")
-		}
-		bTconn, err = l.TestAPIConn(ctx)
-		if err != nil {
-			return nil, -1, errors.Wrap(err, "failed to create test API conn")
-		}
-		// For lacros-Chrome, we will close all existing tabs but leave a new tab to keep the Chrome
-		// process alive.
-		closeTabsFunc = browser.ReplaceAllTabsWithSingleNewTab
-	}
 
 	// Maximize all windows to ensure a consistent state.
 	if err := ash.ForEachWindow(ctx, tconn, func(w *ash.Window) error {
 		return ash.SetWindowStateAndWait(ctx, tconn, w.ID, ash.WindowStateMaximized)
 	}); err != nil {
-		return nil, -1, errors.Wrap(err, "failed to maximize windows")
+		return -1, errors.Wrap(err, "failed to maximize windows")
 	}
 
 	// Depending on the settings, Chrome might open all left-off pages automatically from last session.
 	// Close all existing tabs and test can open new pages in the browser.
 	if closeTabs {
-		if err := closeTabsFunc(ctx, bTconn); err != nil {
-			return nil, -1, errors.Wrap(err, "failed to close extra Chrome tabs")
+		if err := browser.CloseAllTabs(ctx, tconn); err != nil {
+			return -1, errors.Wrap(err, "failed to close extra Chrome tabs")
 		}
 	}
 
-	return l, browserStartTime, nil
+	return browserStartTime, nil
 }
 
 // CloseChrome closes Chrome browser application properly.

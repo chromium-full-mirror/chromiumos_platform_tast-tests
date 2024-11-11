@@ -172,17 +172,12 @@ func Run(ctx context.Context, cr *chrome.Chrome, bt browser.Type, a *arc.ARC, pa
 	defer uiHandler.Close(ctx)
 
 	testing.ContextLog(ctx, "Start to get browser start time")
-	l, browserStartTime, err := cuj.GetBrowserStartTime(ctx, tconn, true, params.tabletMode, bt)
+	browserStartTime, err := cuj.GetBrowserStartTime(ctx, tconn, true, params.tabletMode)
 	if err != nil {
 		return errors.Wrap(err, "failed to get browser start time")
 	}
-	if l != nil {
-		defer l.Close(ctx)
-	}
 	br := cr.Browser()
-	if l != nil {
-		br = l.Browser()
-	}
+
 	bTconn, err := br.TestAPIConn(ctx)
 	if err != nil {
 		return errors.Wrapf(err, "failed to create Test API connection for %v browser", bt)

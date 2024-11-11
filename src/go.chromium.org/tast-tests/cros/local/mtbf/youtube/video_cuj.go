@@ -152,19 +152,12 @@ func Run(ctx context.Context, resources TestResources, param TestParams) error {
 	defer cleanupSetting(cleanupSettingsCtx)
 
 	testing.ContextLog(ctx, "Start to get browser start time")
-	l, browserStartTime, err := cuj.GetBrowserStartTime(ctx, tconn, true, tabletMode, browser.TypeAsh)
+	browserStartTime, err := cuj.GetBrowserStartTime(ctx, tconn, true, tabletMode)
 	if err != nil {
 		return errors.Wrap(err, "failed to get browser start time")
 	}
-	// If lacros exists, close lacros finally.
-	if l != nil {
-		defer l.Close(ctx)
-	}
 
 	br := cr.Browser()
-	if l != nil {
-		br = l.Browser()
-	}
 	bTconn, err := br.TestAPIConn(ctx)
 	if err != nil {
 		return errors.Wrap(err, "failed to create Test API connection for the browser")

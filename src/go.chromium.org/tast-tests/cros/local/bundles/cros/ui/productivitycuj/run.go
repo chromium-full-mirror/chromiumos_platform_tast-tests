@@ -31,15 +31,11 @@ func Run(ctx context.Context, cr *chrome.Chrome, app ProductivityApp, tier cuj.T
 	}
 
 	testing.ContextLog(ctx, "Start to get browser start time")
-	l, browserStartTime, err := cuj.GetBrowserStartTime(ctx, tconn, true, tabletMode, bt)
+	browserStartTime, err := cuj.GetBrowserStartTime(ctx, tconn, true, tabletMode)
 	if err != nil {
 		return errors.Wrap(err, "failed to get browser start time")
 	}
 	br := cr.Browser()
-	if l != nil {
-		defer l.Close(ctx)
-		br = l.Browser()
-	}
 	app.SetBrowser(br)
 	bTconn, err := br.TestAPIConn(ctx)
 	if err != nil {

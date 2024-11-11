@@ -65,14 +65,11 @@ func Run(ctx context.Context, params *TestParams) (retErr error) {
 	}
 
 	testing.ContextLog(ctx, "Start to get browser start time")
-	l, browserStartTime, err := cuj.GetBrowserStartTime(ctx, tconn, true, tabletMode, browserType)
+	browserStartTime, err := cuj.GetBrowserStartTime(ctx, tconn, true, tabletMode)
 	if err != nil {
 		return errors.Wrap(err, "failed to get browser start time")
 	}
 	br := cr.Browser()
-	if l != nil {
-		br = l.Browser()
-	}
 	conf.SetBrowser(br)
 
 	bTconn, err := br.TestAPIConn(ctx)
