@@ -203,7 +203,7 @@ func Print(ctx context.Context, s *testing.State) {
 	ui := uiauto.New(tconn)
 	if err := uiauto.Combine("click print button",
 		ui.WithTimeout(10*time.Second).WaitUntilExists(printButton),
-		ui.LeftClick(printButton),
+		ui.DoDefault(printButton),
 	)(ctx); err != nil {
 		s.Fatal("Failed to print: ", err)
 	}
