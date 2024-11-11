@@ -26,18 +26,17 @@ import (
 
 func init() {
 	testing.AddTest(&testing.Test{
-		Func:           StatusUI,
-		LacrosStatus:   testing.LacrosVariantUnneeded,
-		LifeCycleStage: testing.LifeCycleInDevelopment,
-		Desc:           "Verify Wi-Fi status is correctly represented in the Settings and Quick Settings UI",
+		Func:         StatusUI,
+		LacrosStatus: testing.LacrosVariantUnneeded,
+		Desc:         "Verify Wi-Fi status is correctly represented in the Settings and Quick Settings UI",
 		Contacts: []string{
-			"alfredyu@cienet.com",
-			"chromeos-connectivity-cienet-external@google.com",
+			"cros-device-enablement@google.com",
+			"chromeos-connectivity-engprod@google.com",
 		},
-		// ChromeOS > External > Cienet > Manual Test Automation > Test stabilization
-		BugComponent: "b:1578688",
-		Attr:         []string{"group:wificell", "wificell_e2e", "group:release-health", "release-health_wifi"},
-		TestBedDeps:  []string{tbdep.Wificell, tbdep.WifiStateNormal, tbdep.BluetoothStateNormal, tbdep.PeripheralWifiStateWorking},
+		BugComponent:   "b:1131912", // ChromeOS > Software > Fundamentals > Device Enablement > Connectivity > WiFi
+		LifeCycleStage: testing.LifeCycleOwnerMonitored,
+		Attr:           []string{"group:wificell", "wificell_e2e", "group:release-health", "release-health_wifi"},
+		TestBedDeps:    []string{tbdep.Wificell, tbdep.WifiStateNormal, tbdep.BluetoothStateNormal, tbdep.PeripheralWifiStateWorking},
 		ServiceDeps: []string{
 			wificell.ShillServiceName,
 			"tast.cros.browser.ChromeService",
