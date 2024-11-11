@@ -75,7 +75,7 @@ func FlashOSViaUSB(ctx context.Context, s *testing.State) {
 	}
 
 	s.Log("Installing Chrome OS")
-	installOut, err := h.DUT.Conn().CommandContext(ctx, "chromeos-install", "--y").Output(ssh.DumpLogOnError)
+	installOut, err := h.DUT.Conn().CommandContext(ctx, "chromeos-install", "--yes").Output(ssh.DumpLogOnError)
 	if err != nil {
 		s.Fatal("Failed to execute chromeos-install command: ", err)
 	}
