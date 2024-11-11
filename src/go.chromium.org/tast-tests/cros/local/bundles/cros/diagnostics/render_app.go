@@ -27,13 +27,7 @@ func init() {
 		},
 		Attr:         []string{"group:mainline", "group:hw_agnostic"},
 		SoftwareDeps: []string{"chrome"},
-		Params: []testing.Param{{
-			Fixture:   "diagnosticsPrep",
-			ExtraAttr: []string{"informational", "group:criticalstaging"},
-		}, {
-			Name:    "no_mojo_check",
-			Fixture: "diagnosticsPrepWithoutMojoCheck",
-		}},
+		Fixture:      "diagnosticsPrep",
 	})
 }
 
