@@ -70,7 +70,7 @@ func WindowCyclePerDesk(ctx context.Context, s *testing.State) {
 	}
 
 	// Open one browser on the Desk1.
-	browserApp, err := apps.PrimaryBrowser(ctx, tconn)
+	browserApp, err := apps.ChromeOrChromium(ctx, tconn)
 	if err != nil {
 		s.Fatal("Could not find browser app info: ", err)
 	}
@@ -93,7 +93,7 @@ func WindowCyclePerDesk(ctx context.Context, s *testing.State) {
 			s.Fatalf("Failed to activate desk with index %d: %v", i, err)
 		}
 		// Open one browser on the desk.
-		browserApp, err := apps.PrimaryBrowser(ctx, tconn)
+		browserApp, err := apps.ChromeOrChromium(ctx, tconn)
 		if err != nil {
 			s.Fatal("Could not find browser app info: ", err)
 		}

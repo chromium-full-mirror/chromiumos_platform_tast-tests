@@ -96,8 +96,8 @@ func AdminTemplatesLaunch(ctx context.Context, s *testing.State) {
 			faillog.DumpUITreeWithScreenshotOnError(cleanupCtx, s.OutDir(), s.HasError, cr, "ui_tree_fatal")
 		})
 
-	if _, err := apps.PrimaryBrowser(ctx, tconn); err != nil {
-		s.Fatal("Could not find the primary browser app info: ", err)
+	if _, err := apps.ChromeOrChromium(ctx, tconn); err != nil {
+		s.Fatal("Could not find the browser app info: ", err)
 	}
 
 	policiesToServe := []policy.Policy{
@@ -162,9 +162,9 @@ func AdminTemplatesLaunch(ctx context.Context, s *testing.State) {
 				s.Fatal("Failed to launch admin template: ", err)
 			}
 
-			browserApp, err := apps.PrimaryBrowser(ctx, tconn)
+			browserApp, err := apps.ChromeOrChromium(ctx, tconn)
 			if err != nil {
-				s.Fatal("Could not find the primary browser app info: ", err)
+				s.Fatal("Could not find the browser app info: ", err)
 			}
 			appsList := []apps.App{browserApp, browserApp}
 

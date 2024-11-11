@@ -118,7 +118,7 @@ func DeskTemplatesCUJ(ctx context.Context, s *testing.State) {
 		defer recorder.StopTracing(ctx)
 
 		// Open PlayStore, Chrome and Files.
-		browserApp, err := apps.PrimaryBrowser(ctx, tconn)
+		browserApp, err := apps.ChromeOrChromium(ctx, tconn)
 		if err != nil {
 			s.Fatal("Could not find the primary browser app info: ", err)
 		}

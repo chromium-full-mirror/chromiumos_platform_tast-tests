@@ -194,7 +194,7 @@ func setUpDesks(ctx context.Context, tconn, bTconn *chrome.TestConn, cs ash.Conn
 				}
 				defer uiHandler.Close(ctx)
 
-				chromeApp, err := apps.PrimaryBrowser(ctx, tconn)
+				chromeApp, err := apps.ChromeOrChromium(ctx, tconn)
 				if err != nil {
 					return errors.Wrap(err, "failed to find the Chrome app")
 				}

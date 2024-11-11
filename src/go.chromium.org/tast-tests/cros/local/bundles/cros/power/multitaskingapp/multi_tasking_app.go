@@ -115,7 +115,7 @@ func Run(ctx context.Context, resources *TestResources, params *TestParams) (ret
 	}
 	defer revertZoom(cleanupCtx, tconn)
 
-	browserApp, err := apps.PrimaryBrowser(ctx, tconn)
+	browserApp, err := apps.ChromeOrChromium(ctx, tconn)
 	if err != nil {
 		return errors.Wrap(err, "failed to find browser app info")
 	}

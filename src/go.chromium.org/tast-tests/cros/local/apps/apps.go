@@ -557,12 +557,6 @@ func ChromeOrChromium(ctx context.Context, tconn *chrome.TestConn) (App, error) 
 	return App{}, errors.New("Neither Chrome nor Chromium were found in available apps")
 }
 
-// PrimaryBrowser is equivalent to ChromeOrChromium.
-// TODO(b/370886359): Remove this.
-func PrimaryBrowser(ctx context.Context, tconn *chrome.TestConn) (App, error) {
-	return ChromeOrChromium(ctx, tconn)
-}
-
 // InstallPWAForURL navigates to a PWA and attempts to install it.
 // The given TestConn must be a connection to Ash.
 func InstallPWAForURL(ctx context.Context, tconn *chrome.TestConn, br *browser.Browser, pwaURL string, timeout time.Duration) error {

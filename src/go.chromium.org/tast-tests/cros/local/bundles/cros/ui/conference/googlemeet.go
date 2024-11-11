@@ -409,7 +409,7 @@ func (conf *GoogleMeetConference) BackgroundChange(ctx context.Context) error {
 func (conf *GoogleMeetConference) Presenting(ctx context.Context, application googleApplication) (err error) {
 	tconn, uiHandler, roomType, gm := conf.tconn, conf.uiHandler, conf.roomType, conf.gm
 
-	chromeApp, err := apps.PrimaryBrowser(ctx, tconn)
+	chromeApp, err := apps.ChromeOrChromium(ctx, tconn)
 	if err != nil {
 		return errors.Wrap(err, "could not find the Chrome app")
 	}

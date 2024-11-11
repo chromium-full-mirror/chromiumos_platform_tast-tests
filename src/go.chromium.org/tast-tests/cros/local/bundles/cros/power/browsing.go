@@ -222,7 +222,7 @@ func Browsing(ctx context.Context, s *testing.State) {
 	}
 
 	// Get ChromeApp name for window switching
-	chromeApp, err := apps.PrimaryBrowser(ctx, tconn)
+	chromeApp, err := apps.ChromeOrChromium(ctx, tconn)
 	if err != nil {
 		s.Fatal("Failed to find the Chrome app: ", err)
 	}

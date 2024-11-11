@@ -52,7 +52,7 @@ func Smoke(ctx context.Context, s *testing.State) {
 		s.Fatal("Failed to create Test API connection: ", err)
 	}
 
-	app, err := apps.PrimaryBrowser(ctx, tconn)
+	app, err := apps.ChromeOrChromium(ctx, tconn)
 	if err != nil {
 		s.Fatal("Could not determine the correct browser app to use: ", err)
 	}

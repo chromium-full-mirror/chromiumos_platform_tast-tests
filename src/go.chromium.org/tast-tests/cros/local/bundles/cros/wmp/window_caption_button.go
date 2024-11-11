@@ -67,8 +67,8 @@ func WindowCaptionButton(ctx context.Context, s *testing.State) {
 		s.Fatal("Failed to ensure no window is open: ", err)
 	}
 
-	// Open either an ash-chrome or lacros-chrome browser window.
-	browserApp, err := apps.PrimaryBrowser(ctx, tconn)
+	// Open a browser window.
+	browserApp, err := apps.ChromeOrChromium(ctx, tconn)
 	if err != nil {
 		s.Fatal("Could not find browser app info: ", err)
 	}

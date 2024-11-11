@@ -142,7 +142,7 @@ func ResizeWindow(ctx context.Context, s *testing.State) {
 	switch param.caseType {
 	case browserCase:
 		// Find correct Chrome browser app.
-		chromeApp, err := apps.PrimaryBrowser(ctx, tconn)
+		chromeApp, err := apps.ChromeOrChromium(ctx, tconn)
 		if err != nil {
 			s.Fatal("Failed to find Chrome or Chromium app: ", err)
 		}

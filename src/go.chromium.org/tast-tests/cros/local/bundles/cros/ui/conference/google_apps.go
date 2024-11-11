@@ -59,7 +59,7 @@ func presentApps(ctx context.Context, tconn *chrome.TestConn, uiHandler cuj.UIAc
 	defer kb.Close(ctx)
 	ui := uiauto.New(tconn)
 	var presentApplication action.Action
-	chromeApp, err := apps.PrimaryBrowser(ctx, tconn)
+	chromeApp, err := apps.ChromeOrChromium(ctx, tconn)
 	if err != nil {
 		return errors.Wrap(err, "could not find the Chrome app")
 	}

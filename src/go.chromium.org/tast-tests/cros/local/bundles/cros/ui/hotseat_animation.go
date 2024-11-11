@@ -180,7 +180,7 @@ func HotseatAnimation(ctx context.Context, s *testing.State) {
 		s.Fatal("Failed to wait for stable shelf bouds: ", err)
 	}
 
-	browserApp, err := apps.PrimaryBrowser(ctx, tconn)
+	browserApp, err := apps.ChromeOrChromium(ctx, tconn)
 	if err != nil {
 		s.Fatal("Could not find browser app info: ", err)
 	}

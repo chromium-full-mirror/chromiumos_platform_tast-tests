@@ -264,7 +264,7 @@ func (t *TabletActionHandler) NewChromeTab(ctx context.Context, br *browser.Brow
 
 	// If no browser window is opened, create a new one.
 	// This is supposed to work for ash that test case opens a tab without launching chrome beforehand.
-	chromeApp, err := apps.PrimaryBrowser(ctx, t.tconn)
+	chromeApp, err := apps.ChromeOrChromium(ctx, t.tconn)
 	if err != nil {
 		return nil, errors.Wrap(err, "could not find the Chrome app")
 	}
@@ -858,7 +858,7 @@ func (cl *ClamshellActionHandler) SwitchToLRUWindow(opt SwitchWindowOption) acti
 // switchToWindowThroughShelf switch current focus window to another through shelf.
 func (cl *ClamshellActionHandler) switchToWindowThroughShelf(ctx context.Context, appName string, menuItemFinder *nodewith.Finder) error {
 	if strings.Contains(appName, "Chrome") || strings.Contains(appName, "Chromium") || strings.Contains(appName, "Lacros") {
-		browserApp, err := apps.PrimaryBrowser(ctx, cl.tconn)
+		browserApp, err := apps.ChromeOrChromium(ctx, cl.tconn)
 		if err != nil {
 			return errors.Wrap(err, "could not find the Chrome app")
 		}

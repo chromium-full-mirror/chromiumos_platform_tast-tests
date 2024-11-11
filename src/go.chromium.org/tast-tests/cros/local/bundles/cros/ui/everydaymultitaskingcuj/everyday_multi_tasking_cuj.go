@@ -187,7 +187,7 @@ func Run(ctx context.Context, cr *chrome.Chrome, bt browser.Type, a *arc.ARC, pa
 	if err != nil {
 		return errors.Wrapf(err, "failed to create Test API connection for %v browser", bt)
 	}
-	browserApp, err := apps.PrimaryBrowser(ctx, tconn)
+	browserApp, err := apps.ChromeOrChromium(ctx, tconn)
 	if err != nil {
 		return errors.Wrap(err, "could not find the Chrome app")
 	}

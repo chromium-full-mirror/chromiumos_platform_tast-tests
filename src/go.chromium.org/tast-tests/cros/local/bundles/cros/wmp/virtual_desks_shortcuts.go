@@ -163,7 +163,7 @@ func VirtualDesksShortcuts(ctx context.Context, s *testing.State) {
 		s.Fatal("Failed to switch to desk 2: ", err)
 	}
 
-	browserApp, err := apps.PrimaryBrowser(ctx, tconn)
+	browserApp, err := apps.ChromeOrChromium(ctx, tconn)
 	if err != nil {
 		s.Fatal("Could not find browser app info: ", err)
 	}

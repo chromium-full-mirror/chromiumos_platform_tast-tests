@@ -114,9 +114,9 @@ func SavedDeskDelete(ctx context.Context, s *testing.State) {
 		s.Fatal("Failed to exit overview mode: ", err)
 	}
 	// Open PlayStore, Chrome and Files.
-	browserApp, err := apps.PrimaryBrowser(ctx, tconn)
+	browserApp, err := apps.ChromeOrChromium(ctx, tconn)
 	if err != nil {
-		s.Fatal("Could not find the primary browser app info: ", err)
+		s.Fatal("Could not find the browser app info: ", err)
 	}
 	appsList = append(appsList, browserApp)
 	if err := saveddesks.OpenApps(ctx, tconn, ac, appsList); err != nil {

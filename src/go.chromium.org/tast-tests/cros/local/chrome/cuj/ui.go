@@ -74,7 +74,7 @@ func GetBrowserStartTime(ctx context.Context, tconn *chrome.TestConn,
 		appLaunchTimeout = 10 * time.Second
 	)
 	var l *lacros.Lacros
-	chromeApp, err := apps.PrimaryBrowser(ctx, tconn)
+	chromeApp, err := apps.ChromeOrChromium(ctx, tconn)
 	if err != nil {
 		return nil, -1, errors.Wrap(err, "could not find the Chrome app")
 	}
@@ -176,7 +176,7 @@ func GetBrowserStartTime(ctx context.Context, tconn *chrome.TestConn,
 // "leave site" prompt will prevent the tab from closing.
 // This function confirms the "leave site" prompts so browser can be closed.
 func CloseChrome(ctx context.Context, tconn *chrome.TestConn) error {
-	chromeApp, err := apps.PrimaryBrowser(ctx, tconn)
+	chromeApp, err := apps.ChromeOrChromium(ctx, tconn)
 	if err != nil {
 		return errors.Wrap(err, "could not find the Chrome app")
 	}

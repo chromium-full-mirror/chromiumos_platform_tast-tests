@@ -295,7 +295,7 @@ func Run(ctx context.Context, s *testing.State, cr *chrome.Chrome, pauseMode Pau
 			}
 		}
 
-		chromeApp, err := apps.PrimaryBrowser(ctx, tconn)
+		chromeApp, err := apps.ChromeOrChromium(ctx, tconn)
 		if err != nil {
 			return errors.Wrap(err, "failed to find the Chrome app")
 		}

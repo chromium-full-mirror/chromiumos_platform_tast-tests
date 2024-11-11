@@ -386,7 +386,7 @@ func switchToWindow(ctx context.Context, tconn *chrome.TestConn, windowTitle str
 	}
 	defer uiHandler.Close(cleanupCtx)
 
-	chromeApp, err := apps.PrimaryBrowser(ctx, tconn)
+	chromeApp, err := apps.ChromeOrChromium(ctx, tconn)
 	if err != nil {
 		return errors.Wrap(err, "failed to find the Chrome app")
 	}
