@@ -206,7 +206,7 @@ func Run(ctx context.Context, s *testing.State, cr *chrome.Chrome, pauseMode Pau
 		s.Fatal("Failed to create a CUJ recorder: ", err)
 	}
 	defer recorder.Close(cleanupRecorderCtx)
-	if err := cuj.AddPerformanceCUJMetrics(bt, tconn, bTconn, recorder); err != nil {
+	if err := cuj.AddPerformanceCUJMetrics(tconn, recorder); err != nil {
 		s.Fatal("Failed to add metrics to recorder: ", err)
 	}
 

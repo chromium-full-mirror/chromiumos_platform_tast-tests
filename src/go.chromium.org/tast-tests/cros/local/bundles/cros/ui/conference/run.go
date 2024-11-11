@@ -102,7 +102,7 @@ func Run(ctx context.Context, params *TestParams) (retErr error) {
 		return errors.Wrap(err, "failed to create the recorder")
 	}
 	defer recorder.Close(cleanUpRecorderCtx)
-	if err := cuj.AddPerformanceCUJMetrics(browserType, tconn, bTconn, recorder); err != nil {
+	if err := cuj.AddPerformanceCUJMetrics(tconn, recorder); err != nil {
 		return errors.Wrap(err, "failed to add metrics to recorder")
 	}
 	if err := recorder.AddCollectedMetrics(bTconn, browserType, cujrecorder.WebRTCMetrics()...); err != nil {
