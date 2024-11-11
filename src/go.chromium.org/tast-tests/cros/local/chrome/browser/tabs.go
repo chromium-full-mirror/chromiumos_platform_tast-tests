@@ -63,36 +63,6 @@ func CloseAllTabs(ctx context.Context, tconn *TestConn) error {
 // TODO(neis): Put this in a common place.
 const newTabURL = "chrome://new-tab/"
 
-// ReplaceAllTabsWithSingleNewTab replaces the browser tabs of the current window
-// with an empty tab.
-// Leaving one tab is critical to keep the lacros-chrome process running.
-// See crbug.com/1268743 for the chrome arg --disable-lacros-keep-alive.
-// TODO(neis): Try to get rid of this function.
-func ReplaceAllTabsWithSingleNewTab(ctx context.Context, tconn *TestConn) error {
-	tabs, err := AllTabs(ctx, tconn)
-	if err != nil {
-		return errors.Wrap(err, "failed to get browser tabs")
-	}
-	if len(tabs) == 0 {
-		return errors.New("browser has no tabs")
-	}
-	if len(tabs) == 1 && tabs[0].URL == newTabURL {
-		return nil
-	}
-	// Simply create a new tab and close all the others.
-	if err := tconn.Eval(ctx, "tast.promisify(chrome.tabs.create)({})", nil); err != nil {
-		return errors.Wrap(err, "failed to create new tab")
-	}
-	var tabsToClose []int
-	for _, t := range tabs {
-		tabsToClose = append(tabsToClose, t.ID)
-	}
-	if err := CloseTabsByID(ctx, tconn, tabsToClose); err != nil {
-		return errors.Wrap(err, "failed to close other browser tabs")
-	}
-	return nil
-}
-
 // GetTabByTitle gets a single tab that has a tab title that
 // matches |title|. It returns an error if there is not exactly 1 tab
 // that meets the criterion. The browser is given via |tconn|.

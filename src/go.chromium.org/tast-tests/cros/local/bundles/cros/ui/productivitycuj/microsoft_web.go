@@ -158,7 +158,7 @@ func (app *MicrosoftWebOffice) CreateSpreadsheet(ctx context.Context, cr *chrome
 
 	defer func(ctx context.Context) {
 		faillog.DumpUITreeWithScreenshotOnError(ctx, outDir, func() bool { return err != nil }, cr, "ui_tree")
-		cuj.CloseAllTabs(ctx, bTconn, app.browserType)
+		browser.CloseAllTabs(ctx, bTconn)
 		connExcel.Close()
 	}(cleanupCtx)
 

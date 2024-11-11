@@ -226,8 +226,8 @@ func Run(ctx context.Context, resources *TestResources, params *TestParams) (ret
 	defer func(ctx context.Context) {
 		shortCtx, cancel := context.WithTimeout(ctx, 15*time.Second)
 		defer cancel()
-		// Use a short timeout context to prevent getting stuck at "cuj.CloseAllTabs".
-		if err := cuj.CloseAllTabs(shortCtx, bTconn, browser.TypeAsh); err != nil {
+		// Use a short timeout context to prevent getting stuck at "CloseAllTabs".
+		if err := browser.CloseAllTabs(shortCtx, bTconn); err != nil {
 			testing.ContextLog(ctx, "Failed to close all tabs: ", err)
 			// Click the leave button if it exists.
 			if err := prompts.ClearPotentialPrompts(tconn, time.Second, prompts.LeaveSitePrompt)(ctx); err != nil {

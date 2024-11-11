@@ -224,7 +224,7 @@ func Run(ctx context.Context, resources TestResources, param TestParams) error {
 				videoApp.Close(ctx)
 			}
 			closeFunc := func(ctx context.Context) error {
-				if err := cuj.CloseAllTabs(ctx, bTconn, browser.TypeAsh); err != nil {
+				if err := browser.CloseAllTabs(ctx, bTconn); err != nil {
 					testing.ContextLog(ctx, "Failed to close all tabs: ", err)
 				}
 				return nil
@@ -236,7 +236,7 @@ func Run(ctx context.Context, resources TestResources, param TestParams) error {
 			if appName == YoutubeWeb {
 				// Before closing the youtube site outside the recorder, dump the UI tree to capture a screenshot.
 				faillog.DumpUITreeWithScreenshotOnError(ctx, outDir, func() bool { return retErr != nil }, cr, "ui_dump")
-				if err := cuj.CloseAllTabs(ctx, bTconn, browser.TypeAsh); err != nil {
+				if err := browser.CloseAllTabs(ctx, bTconn); err != nil {
 					testing.ContextLog(ctx, "Failed to close all tabs: ", err)
 				}
 			}
