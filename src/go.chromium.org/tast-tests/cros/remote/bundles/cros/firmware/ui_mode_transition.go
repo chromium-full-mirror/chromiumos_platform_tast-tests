@@ -45,6 +45,10 @@ func UIModeTransition(ctx context.Context, s *testing.State) {
 	if err != nil {
 		s.Fatal("Creating mode switcher: ", err)
 	}
+	supportAPFwState, err := h.SupportAPFwState(ctx)
+	if err != nil {
+		s.Fatal("Failed to check if DUT support APFwState: ", err)
+	}
 	var bypassDevMode, triggerDevToNormal, triggerRecToDev func(ctx context.Context) error
 	switch h.Config.ModeSwitcherType {
 	case firmware.KeyboardDevSwitcher:
@@ -85,16 +89,33 @@ func UIModeTransition(ctx context.Context, s *testing.State) {
 			expBootMode:  fwCommon.BootModeNormal,
 		},
 	} {
+		closeUART, err := h.Servo.EnableUARTCapture(ctx, servo.ECUARTCapture)
+		if err != nil {
+			s.Fatal("Failed to enable capture EC UART: ", err)
+		}
+		defer func() {
+			if err := closeUART(ctx); err != nil {
+				s.Error("Failed to cancel capture EC UART: ", err)
+			}
+		}()
 		switch boot.transition {
 		case normalToDev:
 			if err := ms.EnableRecMode(ctx, servo.PowerStateRec, servo.USBMuxHost); err != nil {
 				s.Fatal("Failed to enable recovery mode: ", err)
 			}
-			s.Logf("Waiting for %s (firmware screen)", h.Config.FirmwareScreen)
-			// GoBigSleepLint: Allow time for DUT to reach firmware screen.
-			if err := testing.Sleep(ctx, h.Config.FirmwareScreen); err != nil {
-				s.Fatal("Failed to wait for firmware screen: ", err)
+
+			if supportAPFwState {
+				if err := h.DetectFirmwareScreen(ctx, h.Config.FirmwareScreen, fwCommon.RecoverySelect); err != nil {
+					s.Log("Failed to detect firmware screen: ", err)
+				}
+			} else {
+				s.Logf("Waiting for %s (firmware screen)", h.Config.FirmwareScreen)
+				// GoBigSleepLint: Allow time for DUT to reach firmware screen.
+				if err := testing.Sleep(ctx, h.Config.FirmwareScreen); err != nil {
+					s.Fatal("Failed to wait for firmware screen: ", err)
+				}
 			}
+
 			if err := triggerRecToDev(ctx); err != nil {
 				s.Fatal("Failed to trigger recovery to dev: ", err)
 			}
@@ -103,11 +124,18 @@ func UIModeTransition(ctx context.Context, s *testing.State) {
 				s.Fatal("Faild to reset DUT: ", err)
 			}
 		}
-		s.Logf("Waiting for %s (firmware screen)", h.Config.FirmwareScreen)
-		// GoBigSleepLint: Sleep for model specific time.
-		if err := testing.Sleep(ctx, h.Config.FirmwareScreen); err != nil {
-			s.Fatal("Failed to wait for firmware screen: ", err)
+		if supportAPFwState {
+			if err := h.DetectFirmwareScreen(ctx, h.Config.FirmwareScreen, fwCommon.DeveloperMode); err != nil {
+				s.Log("Failed to detect firmware screen: ", err)
+			}
+		} else {
+			s.Logf("Waiting for %s (firmware screen)", h.Config.FirmwareScreen)
+			// GoBigSleepLint: Sleep for model specific time.
+			if err := testing.Sleep(ctx, h.Config.FirmwareScreen); err != nil {
+				s.Fatal("Failed to wait for firmware screen: ", err)
+			}
 		}
+
 		if err := boot.bypassToBoot(ctx); err != nil {
 			s.Fatal("Failed to bypass firmware screen: ", err)
 		}
@@ -126,6 +154,9 @@ func UIModeTransition(ctx context.Context, s *testing.State) {
 			s.Fatal("Failed to check boot mode: ", err)
 		} else if !isExpMode {
 			s.Fatal("Found unexpected boot mode")
+		}
+		if err := closeUART(ctx); err != nil {
+			s.Fatal("Failed to disable capture EC UART: ", err)
 		}
 	}
 }
