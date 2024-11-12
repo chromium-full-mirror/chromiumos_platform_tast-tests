@@ -104,13 +104,12 @@ func AppParentalControls(ctx context.Context, s *testing.State) {
 		s.Fatal("Failed to click on the Play Store app: ", err)
 	}
 
+	appBlockedDialog := nodewith.NameContaining(playStoreAppBlockedText).Role(role.Dialog)
 	okButton := nodewith.Name(okButtonLabel).Role(role.Button)
-	playStoreAppBlockedHeading := nodewith.NameContaining(playStoreAppBlockedText).Role(role.Heading)
-
 	if err := uiauto.Combine("show Play Store blocked dialog",
-		ui.WaitUntilExists(playStoreAppBlockedHeading),
+		ui.WaitUntilExists(appBlockedDialog),
 		ui.LeftClick(okButton),
-		ui.WaitUntilGone(playStoreAppBlockedHeading),
+		ui.WaitUntilGone(appBlockedDialog),
 	)(ctx); err != nil {
 		s.Fatal("Failed to see and close blocked app dialog: ", err)
 	}
