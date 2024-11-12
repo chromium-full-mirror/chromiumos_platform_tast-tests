@@ -17,8 +17,6 @@ import (
 	"go.chromium.org/tast-tests/cros/local/chrome/userutil"
 	"go.chromium.org/tast-tests/cros/local/input"
 	"go.chromium.org/tast-tests/cros/local/login"
-	"go.chromium.org/tast-tests/cros/local/media/vm"
-	"go.chromium.org/tast-tests/cros/local/network/diag"
 	"go.chromium.org/tast-tests/cros/local/upstart"
 	"go.chromium.org/tast/core/ctxutil"
 	"go.chromium.org/tast/core/testing"
@@ -29,6 +27,7 @@ type passwordType int
 const (
 	gaiaPassword passwordType = iota
 	localPassword
+	pinOnly
 )
 
 func init() {
@@ -55,6 +54,10 @@ func init() {
 				Name:      "local",
 				Val:       localPassword,
 				ExtraAttr: []string{"informational"},
+			}, {
+				Name:      "pin",
+				Val:       pinOnly,
+				ExtraAttr: []string{"informational"},
 			},
 		},
 	})
@@ -62,11 +65,16 @@ func init() {
 
 // ExistingUser logs in to an existing user account from the login screen.
 func ExistingUser(ctx context.Context, s *testing.State) {
+	const (
+		localPass = "testpass"
+		pin       = "123456"
+	)
+
 	cleanupContext := ctx
 	ctx, cancel := ctxutil.Shorten(ctx, time.Minute)
 	defer cancel()
 
-	password := s.Param().(passwordType)
+	authFactor := s.Param().(passwordType)
 	var creds chrome.Creds
 	// Ensure that as the test ends, we cleanup any state.
 	defer userutil.ResetUsers(cleanupContext)
@@ -74,11 +82,13 @@ func ExistingUser(ctx context.Context, s *testing.State) {
 	// Log in and log out to create a user pod on the login screen.
 	func() {
 		var cr *chrome.Chrome
-		switch password {
+		switch authFactor {
 		case gaiaPassword:
 			cr, creds = logInWithGaiaPassword(ctx, s)
 		case localPassword:
-			cr, creds = logInWithLocalPassword(ctx, s)
+			cr, creds = logInWithLocalPassword(ctx, s, localPass)
+		case pinOnly:
+			cr, creds = logInWithPin(ctx, s, pin)
 		}
 		defer cr.Close(ctx)
 
@@ -91,18 +101,13 @@ func ExistingUser(ctx context.Context, s *testing.State) {
 		}
 	}()
 
-	if !vm.IsRunningOnVM() {
-		if err := diag.DUTNetworkCheckAndResolve(ctx); err != nil {
-			s.Fatal("Pre login network connection tests failed: ", err)
-		}
-	}
-
 	// chrome.NoLogin() and chrome.KeepState() are needed to show the login
 	// screen with a user pod (instead of the OOBE login screen).
 	opts := []chrome.Option{
 		chrome.NoLogin(),
 		chrome.KeepState(),
 		chrome.LoadSigninProfileExtension(s.RequiredVar("ui.signinProfileTestExtensionManifestKey")),
+		chrome.ExtraArgs("--skip-force-online-signin-for-testing"),
 	}
 
 	cr, err := chrome.New(ctx, opts...)
@@ -128,9 +133,16 @@ func ExistingUser(ctx context.Context, s *testing.State) {
 	}
 	defer kb.Close(cleanupContext)
 
-	s.Log("Entering password to log in")
-	if err := lockscreen.EnterPassword(ctx, tLoginConn, creds.User, creds.Pass, kb); err != nil {
-		s.Fatal("Failed to enter password: ", err)
+	if authFactor != pinOnly {
+		s.Log("Entering password to log in")
+		if err := lockscreen.EnterPassword(ctx, tLoginConn, creds.User, creds.Pass, kb); err != nil {
+			s.Fatal("Failed to enter password: ", err)
+		}
+	} else {
+		s.Log("Entering pin to log in")
+		if err := lockscreen.EnterPIN(ctx, tLoginConn, kb, pin); err != nil {
+			s.Fatal("Failed to enter pin: ", err)
+		}
 	}
 
 	// Check if the login was successful using the API and also by looking for the shelf in the UI.
@@ -156,18 +168,28 @@ func logInWithGaiaPassword(ctx context.Context, s *testing.State) (c *chrome.Chr
 
 // logInWithLocalPassword logs the fake user in with local password and returns
 // the credentials that can be user for the offline login afterwards.
-func logInWithLocalPassword(ctx context.Context, s *testing.State) (c *chrome.Chrome, creds chrome.Creds) {
-	const (
-		localPassword = "testpass"
-	)
-
+func logInWithLocalPassword(ctx context.Context, s *testing.State, localPassword string) (c *chrome.Chrome, creds chrome.Creds) {
 	cr, err := login.SetupUserWithLocalPassword(ctx,
 		localPassword,
-		chrome.GAIALoginPool(dma.CredsFromPool(floatingworkspace.AccountVarName)),
+		chrome.FakeLogin(chrome.Creds{User: "testuser@gmail.com", Pass: ""}),
 	)
 	if err != nil {
 		s.Fatal("Failed to setup user: ", err)
 	}
 
 	return cr, chrome.Creds{User: cr.Creds().User, Pass: localPassword}
+}
+
+// logInWithPin logs the fake user in with pin and returns
+// the credentials that can be user for the offline login afterwards.
+func logInWithPin(ctx context.Context, s *testing.State, pin string) (c *chrome.Chrome, creds chrome.Creds) {
+	cr, err := login.SetupUserWithPin(ctx,
+		pin,
+		chrome.FakeLogin(chrome.Creds{User: "testuser@gmail.com", Pass: ""}),
+	)
+	if err != nil {
+		s.Fatal("Failed to setup user: ", err)
+	}
+
+	return cr, chrome.Creds{User: cr.Creds().User, Pass: ""}
 }

@@ -44,7 +44,7 @@ func PinUnlockFail(ctx context.Context, s *testing.State) {
 	const (
 		Pin             = "1234567890"
 		wrongPin        = "0123456789"
-		lockoutAttempts = 5
+		lockoutAttempts = 4
 	)
 
 	cleanupCtx := ctx
