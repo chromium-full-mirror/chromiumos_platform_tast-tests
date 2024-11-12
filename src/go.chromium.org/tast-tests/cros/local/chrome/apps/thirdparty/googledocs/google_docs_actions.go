@@ -58,7 +58,7 @@ func EnablePageNumbers(ctx context.Context, pc pointer.Context, ac *uiauto.Conte
 		ac.WithTimeout(5*time.Second).WaitUntilAnyExists(pageNumbersItem, switchToPagesFormatItem),
 	)
 	applyButton := nodewith.Name("Apply").Role(role.Button)
-	return uiauto.NamedCombine(
+	return uiauto.Retry(3, uiauto.NamedCombine(
 		"enable page numbers in Google Docs",
 		openFormatMenu,
 		uiauto.IfSuccessThen(ac.Exists(switchToPagesFormatItem),
@@ -66,13 +66,15 @@ func EnablePageNumbers(ctx context.Context, pc pointer.Context, ac *uiauto.Conte
 				pc.Click(switchToPagesFormatItem),
 				openFormatMenu,
 			)),
-		pc.Click(pageNumbersItem),
-		ac.WaitUntilExists(applyButton),
+		ac.RetryUntil(
+			pc.Click(pageNumbersItem),
+			ac.WithTimeout(5*time.Second).WaitUntilExists(applyButton),
+		),
 		ac.RetryUntil(
 			pc.Click(applyButton),
 			ac.WithTimeout(5*time.Second).WaitUntilGone(applyButton),
 		),
-	)(ctx)
+	))(ctx)
 }
 
 // UpdateTextStyleAction toggles the |style| button.
