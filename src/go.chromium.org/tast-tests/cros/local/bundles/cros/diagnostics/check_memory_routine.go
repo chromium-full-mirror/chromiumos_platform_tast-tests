@@ -22,7 +22,7 @@ import (
 
 func init() {
 	testing.AddTest(&testing.Test{
-		Func:         MemoryRoutine,
+		Func:         CheckMemoryRoutine,
 		LacrosStatus: testing.LacrosVariantUnneeded,
 		Desc:         "Diagnostics app memory routine runs and stops successfully",
 		// ChromeOS > Platform > Enablement > Serviceability > Diagnostic & Health
@@ -41,13 +41,13 @@ func init() {
 }
 
 const (
-	// Full path to stress test launched by diagnostics routine service.
+	// Full path to memory test launched by diagnostics routine service.
 	memtesterExecPath = "/usr/sbin/memtester"
 )
 
-// MemoryRoutine verifies the memory routine can be started, running, and
+// CheckMemoryRoutine verifies the memory routine can be started, running, and
 // cancelled successfully.
-func MemoryRoutine(ctx context.Context, s *testing.State) {
+func CheckMemoryRoutine(ctx context.Context, s *testing.State) {
 	cleanupCtx := ctx
 	ctx, cancel := ctxutil.Shorten(ctx, 15*time.Second)
 	defer cancel()
@@ -72,7 +72,7 @@ func MemoryRoutine(ctx context.Context, s *testing.State) {
 	defer func() {
 		if err := cpu.WaitUntilIdle(cleanupCtx); err != nil {
 			// Do not block test even if we failed to wait cpu idle time.
-			s.Log("Failed to wait cpu idle after running MemoryRoutine test")
+			s.Log("Failed to wait cpu idle after running CheckMemoryRoutine test")
 		}
 	}()
 

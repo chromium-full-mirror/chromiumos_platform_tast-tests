@@ -20,9 +20,9 @@ import (
 
 func init() {
 	testing.AddTest(&testing.Test{
-		Func:         RoutineSection,
+		Func:         CheckCPURoutine,
 		LacrosStatus: testing.LacrosVariantUnneeded,
-		Desc:         "Diagnostics app routines run successfully",
+		Desc:         "Diagnostics app CPU routines run and stop successfully",
 		// ChromeOS > Platform > Enablement > Serviceability > Diagnostic & Health
 		BugComponent: "b:982097",
 		Contacts: []string{
@@ -38,19 +38,19 @@ func init() {
 
 const (
 	// Full path to stress test launched by diagnostics routine service.
-	// See: src/platform2/diagnostics/cros_healthd/routines/cpu_stress/cpu_stress.cc
 	cpuStressTestExecPath = "/usr/bin/stressapptest"
 )
 
-// RoutineSection verifies routine section functionality.
-func RoutineSection(ctx context.Context, s *testing.State) {
+// CheckCPURoutine verifies the CPU routines can be started, running, and cancelled
+// successfully. Also checks if the first CPU routine can be finished.
+func CheckCPURoutine(ctx context.Context, s *testing.State) {
 	tconn := s.FixtValue().(*utils.FixtureData).Tconn
 	ui := uiauto.New(tconn).WithTimeout(5 * time.Second)
 
 	// Wait for CPU idle to reduce likelihood of stressapptest becoming a zombie.
 	if err := cpu.WaitUntilIdle(ctx); err != nil {
 		// Do not block test even if we failed to wait cpu idle time.
-		s.Log("Failed to wait cpu idle before running RoutineSection test. Keep running RoutineSection test")
+		s.Log("Failed to wait cpu idle before running CheckCPURoutine test. Keep running CheckCPURoutine test")
 	}
 
 	// Find the first routine action button.
@@ -69,7 +69,7 @@ func RoutineSection(ctx context.Context, s *testing.State) {
 	defer func() {
 		if err := cpu.WaitUntilIdle(ctx); err != nil {
 			// Do not block test even if we failed to wait cpu idle time.
-			s.Log("Failed to wait cpu idle after running RoutineSection test")
+			s.Log("Failed to wait cpu idle after running CheckCPURoutine test")
 		}
 	}()
 
