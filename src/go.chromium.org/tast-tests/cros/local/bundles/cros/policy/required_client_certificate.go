@@ -24,9 +24,8 @@ import (
 
 func init() {
 	testing.AddTest(&testing.Test{
-		Func:         RequiredClientCertificate,
-		LacrosStatus: testing.LacrosVariantUnneeded,
-		Desc:         "Behavior of RequiredClientCertificateForDevice/User policies, check if a certificate is issued when the respective policy is set",
+		Func: RequiredClientCertificate,
+		Desc: "Behavior of RequiredClientCertificateForDevice/User policies, check if a certificate is issued when the respective policy is set",
 		Contacts: []string{
 			"chromeos-commercial-networking@google.com", // Team
 			"miersh@google.com",                         // Feature owner
@@ -46,7 +45,6 @@ func init() {
 		SearchFlags: []*testing.StringPair{
 			pci.SearchFlag(&policy.RequiredClientCertificateForUser{}, pci.VerifiedFunctionalityUI),
 			pci.SearchFlag(&policy.RequiredClientCertificateForDevice{}, pci.VerifiedFunctionalityUI),
-			pci.SearchFlag(&policy.LacrosAvailability{}, pci.VerifiedValue),
 			{
 				Key: "feature_id",
 				// Test RequiredClientCertificate policy and successful provisioning of client certificate (COM_FOUND_CUJ2_TASK3_WF1).
