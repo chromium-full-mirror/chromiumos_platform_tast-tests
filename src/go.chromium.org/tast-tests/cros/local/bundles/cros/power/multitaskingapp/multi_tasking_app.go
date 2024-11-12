@@ -36,7 +36,6 @@ import (
 
 // TestParams holds the parameters to run the test main logic.
 type TestParams struct {
-	BrowserType   browser.Type
 	WebSource     cuj.WebSourceType
 	TestName      string
 	OutDir        string
@@ -57,7 +56,6 @@ type TestResources struct {
 	Tconn     *chrome.TestConn
 	Btconn    *chrome.TestConn
 	A         *arc.ARC
-	Br        *browser.Browser
 }
 
 // urlData web page for browsing test
@@ -86,7 +84,6 @@ const (
 func Run(ctx context.Context, resources *TestResources, params *TestParams) (retErr error) {
 
 	var (
-		bt            = params.BrowserType
 		outDir        = params.OutDir
 		testName      = params.TestName
 		elementAPKURL = params.ElementAPKURL
@@ -99,7 +96,6 @@ func Run(ctx context.Context, resources *TestResources, params *TestParams) (ret
 		tconn         = resources.Tconn
 		a             = resources.A
 		kb            = resources.Kb
-		br            = resources.Br
 		bTconn        = resources.Btconn
 		uiHandler     = resources.UIHandler
 	)
@@ -214,11 +210,8 @@ func Run(ctx context.Context, resources *TestResources, params *TestParams) (ret
 	}
 
 	// Launch Chrome window and arrange window.
-	// For TypeLacros, there is already an existing Chrome window, so skip launching.
-	if bt != browser.TypeLacros {
-		if _, err := uiHandler.LaunchChrome(ctx); err != nil {
-			return errors.Wrap(err, "failed to launch Chrome window")
-		}
+	if _, err := uiHandler.LaunchChrome(ctx); err != nil {
+		return errors.Wrap(err, "failed to launch Chrome window")
 	}
 
 	if err := arrangeWindow(ctx, tconn, browserApp.ID, ash.WindowStateSecondarySnapped, params.TabletMode); err != nil {
@@ -234,7 +227,7 @@ func Run(ctx context.Context, resources *TestResources, params *TestParams) (ret
 		shortCtx, cancel := context.WithTimeout(ctx, 15*time.Second)
 		defer cancel()
 		// Use a short timeout context to prevent getting stuck at "cuj.CloseAllTabs".
-		if err := cuj.CloseAllTabs(shortCtx, bTconn, bt); err != nil {
+		if err := cuj.CloseAllTabs(shortCtx, bTconn, browser.TypeAsh); err != nil {
 			testing.ContextLog(ctx, "Failed to close all tabs: ", err)
 			// Click the leave button if it exists.
 			if err := prompts.ClearPotentialPrompts(tconn, time.Second, prompts.LeaveSitePrompt)(ctx); err != nil {
@@ -257,6 +250,7 @@ func Run(ctx context.Context, resources *TestResources, params *TestParams) (ret
 		return errors.Wrap(err, "failed to start collecting power metrics")
 	}
 
+	br := cr.Browser()
 	conn, err := uiHandler.NewChromeTab(ctx, br, chrome.BlankURL, true)
 	if err != nil {
 		return errors.Wrap(err, "failed to create new chrome tab")
