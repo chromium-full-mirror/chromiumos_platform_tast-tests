@@ -28,9 +28,11 @@ type ConfiguredAuthType int
 
 // SetupWithPassword - Sets up password factor for the test user during OOBE.
 // SetupWithPasswordAndPin - Sets up password and PIN factors for the test user during OOBE.
+// SetupWithPin - Sets up PIN as only factor for the test user during OOBE.
 const (
 	SetupWithPassword ConfiguredAuthType = iota
 	SetupWithPasswordAndPin
+	SetupWithPin
 )
 
 // InSessionAuthType represents the used authentication factor to enter the authentication requested page.
@@ -66,6 +68,8 @@ func SetupUser(ctx context.Context, params InSessionParam, username, password, p
 		return login.SetupUserWithLocalPasswordAndPin(ctx, password, pin,
 			loginOption,
 			chromeArgs)
+	case SetupWithPin:
+		return login.SetupUserWithPin(ctx, pin, loginOption, chromeArgs)
 	}
 	return nil, errors.New("invalid setup type")
 }
@@ -105,7 +109,7 @@ func ConfirmPassword(ctx context.Context, cr *chrome.Chrome, password string) er
 // configured with a PIN. First it switches the authentication dialog to the
 // PIN input mode, then types the provided PIN, and finally submits it to
 // complete the authentication process.
-func ConfirmPin(ctx context.Context, cr *chrome.Chrome, pin string) error {
+func ConfirmPin(ctx context.Context, cr *chrome.Chrome, pin string, pinOnly bool) error {
 	tconn, err := cr.TestAPIConn(ctx)
 	if err != nil {
 		return errors.Wrap(err, "failed to create Test API connection")
@@ -116,15 +120,17 @@ func ConfirmPin(ctx context.Context, cr *chrome.Chrome, pin string) error {
 		return errors.Wrap(err, "failed to find the ActiveSessionWidget")
 	}
 
-	// Clicking the switch to PIN button.
-	switchToPinButton := nodewith.Name("Switch to PIN").ClassName("PillButton")
+	if !pinOnly {
+		// Clicking the switch to PIN button.
+		switchToPinButton := nodewith.Name("Switch to PIN").ClassName("PillButton")
 
-	if err := uia.WaitUntilExists(switchToPinButton)(ctx); err != nil {
-		return errors.Wrap(err, "failed to find the 'Switch to PIN' button")
-	}
+		if err := uia.WaitUntilExists(switchToPinButton)(ctx); err != nil {
+			return errors.Wrap(err, "failed to find the 'Switch to PIN' button")
+		}
 
-	if err := uia.LeftClick(switchToPinButton)(ctx); err != nil {
-		errors.Wrap(err, "failed to click the switch to pin button")
+		if err := uia.LeftClick(switchToPinButton)(ctx); err != nil {
+			errors.Wrap(err, "failed to click the switch to pin button")
+		}
 	}
 
 	keyboard, err := input.Keyboard(ctx)

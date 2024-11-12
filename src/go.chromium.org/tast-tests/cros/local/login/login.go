@@ -97,6 +97,45 @@ func SetupUserWithLocalPasswordAndPin(ctx context.Context, password, pin string,
 	return cr, nil
 }
 
+// SetupUserWithPin starts chrome, navigates to pin-
+// setup screen in OOBE and sets the pin. The user should be provided in `opts`
+// (e.g. using `chrome.FakeLogin`, `chrome.GAIALogin`).
+func SetupUserWithPin(ctx context.Context, pin string, opts ...chrome.Option) (c *chrome.Chrome, retErr error) {
+	opts = append(opts, chrome.DisableFeatures("CryptohomeRecoveryBeforeFlowSplit"))
+	opts = append(opts, chrome.EnableFeatures("AllowPasswordlessSetup"))
+	opts = append(opts, chrome.DontSkipOOBEAfterLogin())
+
+	cr, err := chrome.New(ctx, opts...)
+	if err != nil {
+		return nil, errors.Wrap(err, "failed to start Chrome")
+	}
+
+	oobeConn, err := cr.WaitForOOBEConnection(ctx)
+	if err != nil {
+		return cr, errors.Wrap(err, "failed to wait for OOBE connection")
+	}
+	defer oobeConn.Close()
+
+	if err := WaitForRecoverySetup(ctx, oobeConn); err != nil {
+		return cr, errors.Wrap(err, "failed to wait for recovery setup to be finished")
+	}
+
+	if err := SetupPin(ctx, oobeConn, pin); err != nil {
+		return cr, errors.Wrap(err, "failed to setup pin")
+	}
+
+	if err := oobeConn.Eval(ctx, "OobeAPI.skipPostLoginScreens()", nil); err != nil {
+		// This is not fatal because sometimes it fails because Oobe shutdowns
+		// too fast after the call - which produces error.
+		testing.ContextLog(ctx, "Failed to call skip post login screens: ", err)
+	}
+	if err := cr.WaitForOOBEConnectionToBeDismissed(ctx); err != nil {
+		return cr, errors.Wrap(err, "failed to wait for OOBE to be dismissed")
+	}
+
+	return cr, nil
+}
+
 // SetupLocalPassword navigates to the local password setup screen in OOBE and
 // submits provided password.
 func SetupLocalPassword(ctx context.Context, oobeConn *chrome.Conn, password string) error {

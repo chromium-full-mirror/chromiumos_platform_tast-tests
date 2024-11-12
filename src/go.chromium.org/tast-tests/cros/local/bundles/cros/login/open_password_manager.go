@@ -52,6 +52,12 @@ func init() {
 				InSessionAuth:  auth.AuthWithPin,
 			},
 		}, {
+			Name: "with_pin_only",
+			Val: auth.InSessionParam{
+				ConfiguredAuth: auth.SetupWithPin,
+				InSessionAuth:  auth.AuthWithPin,
+			},
+		}, {
 			Name: "cancel",
 			Val: auth.InSessionParam{
 				ConfiguredAuth: auth.SetupWithPassword,
@@ -123,9 +129,6 @@ func OpenPasswordManager(ctx context.Context, s *testing.State) {
 		s.Fatal("Failed to close the password manager tab: ", err)
 	}
 
-	tabs, _ := browser.CurrentTabs(ctx, tconn)
-	s.Log("ISCSI currently opened tabs: ", len(tabs))
-
 	// Try to open the previously stored example account password manager subpage.
 	_, err = identitycuj.OpenNewURL(ctx, cr, "chrome://password-manager/passwords/example")
 	if err != nil {
@@ -160,7 +163,7 @@ func OpenPasswordManager(ctx context.Context, s *testing.State) {
 		}
 	case auth.AuthWithPin:
 		// The page is authentication protected, confirm that we can access it with a PIN.
-		if err := auth.ConfirmPin(ctx, cr, pin); err != nil {
+		if err := auth.ConfirmPin(ctx, cr, pin, params.ConfiguredAuth == auth.SetupWithPin); err != nil {
 			s.Fatal("Failed to confirm pin: ", err)
 		}
 

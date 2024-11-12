@@ -21,7 +21,7 @@ func init() {
 	testing.AddTest(&testing.Test{
 		Func:         OpenSettings,
 		LacrosStatus: testing.LacrosVariantUnneeded,
-		Desc:         "Open OS Settings and access them with a password",
+		Desc:         "Open OS Settings and access them with an auth factor",
 		Contacts: []string{
 			"cros-lurs@google.com",
 			"emaamari@google.com",
@@ -47,6 +47,12 @@ func init() {
 			Name: "with_pin",
 			Val: auth.InSessionParam{
 				ConfiguredAuth: auth.SetupWithPasswordAndPin,
+				InSessionAuth:  auth.AuthWithPin,
+			},
+		}, {
+			Name: "with_pin_only",
+			Val: auth.InSessionParam{
+				ConfiguredAuth: auth.SetupWithPin,
 				InSessionAuth:  auth.AuthWithPin,
 			},
 		}, {
@@ -101,7 +107,7 @@ func OpenSettings(ctx context.Context, s *testing.State) {
 		expectedPath = "/osPrivacy/lockScreen"
 	case auth.AuthWithPin:
 		// The page is authentication protected, confirm that we can access it with a PIN.
-		if err := auth.ConfirmPin(ctx, cr, pin); err != nil {
+		if err := auth.ConfirmPin(ctx, cr, pin, params.ConfiguredAuth == auth.SetupWithPin); err != nil {
 			s.Fatal("Failed to confirm pin: ", err)
 		}
 		expectedPath = "/osPrivacy/lockScreen"
