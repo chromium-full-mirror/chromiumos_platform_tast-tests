@@ -153,18 +153,19 @@ func WipeTpmAndOpenCcd(ctx context.Context, s TestingState, b *remoteTi50.DUTCon
 	runCommand(ctx, s, i, "ccd reset factory")
 }
 
-// EnableTestlabAndWipeTpmAndOpenCcd enables testlab and wipes TPM and opens CCD.
-func EnableTestlabAndWipeTpmAndOpenCcd(ctx context.Context, s TestingState, testbed ti50.TestbedType, b *remoteTi50.DUTControlAndreiboard) {
-	if testbed == ti50.GscHostEmulation {
+func (c *ccdOpenImpl) PreTest(ctx context.Context, s *testing.FixtTestState) {
+	if c.v.TestbedProperties.TestbedType == ti50.GscHostEmulation {
 		// TODO(b/283151960): Enabling Testlab mode not yet supported on host emulation
 		// (no SPI).
 		return
 	}
 
+	b := c.v.devboard
+
 	// We can keep the same session that the parent created, but the UART connection must be
 	// closed before going into the main test code
 	gscConsole := b.PhysicalUart(ti50.UartConsole)
-	i := ti50.MustOpenCrOSImage(ctx, gscConsole, s, testbed)
+	i := ti50.MustOpenCrOSImage(ctx, gscConsole, s, c.v.TestbedProperties.TestbedType)
 	defer i.Close(ctx)
 
 	// Allow GSC of reset so we can perform interact on GSC console
@@ -177,10 +178,7 @@ func EnableTestlabAndWipeTpmAndOpenCcd(ctx context.Context, s TestingState, test
 
 	// Hold GSC in reset until test can take is out of reset after first opening a new UART connection
 	gpioApplyStrap(ctx, s, b, ti50.StrapReset)
-}
 
-func (c *ccdOpenImpl) PreTest(ctx context.Context, s *testing.FixtTestState) {
-	EnableTestlabAndWipeTpmAndOpenCcd(ctx, s, c.v.TestbedProperties.TestbedType, c.v.devboard)
 	testing.ContextLog(ctx, "Board ready for test")
 }
 
