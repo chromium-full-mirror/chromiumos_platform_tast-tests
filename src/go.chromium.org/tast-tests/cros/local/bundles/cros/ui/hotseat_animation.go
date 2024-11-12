@@ -14,11 +14,8 @@ import (
 	uiperf "go.chromium.org/tast-tests/cros/local/bundles/cros/ui/perf"
 	"go.chromium.org/tast-tests/cros/local/chrome"
 	"go.chromium.org/tast-tests/cros/local/chrome/ash"
-	"go.chromium.org/tast-tests/cros/local/chrome/browser"
-	"go.chromium.org/tast-tests/cros/local/chrome/browser/browserfixt"
 	"go.chromium.org/tast-tests/cros/local/chrome/cuj"
 	"go.chromium.org/tast-tests/cros/local/chrome/display"
-	"go.chromium.org/tast-tests/cros/local/chrome/lacros/lacrosfixt"
 	"go.chromium.org/tast-tests/cros/local/coords"
 	"go.chromium.org/tast-tests/cros/local/input"
 	"go.chromium.org/tast-tests/cros/local/perfutil"
@@ -38,15 +35,13 @@ const (
 )
 
 type hotseatTestVal struct {
-	TestType    hotseatTestType
-	BrowserType browser.Type
+	TestType hotseatTestType
 }
 
 func init() {
 	testing.AddTest(&testing.Test{
-		Func:         HotseatAnimation,
-		LacrosStatus: testing.LacrosVariantUnneeded,
-		Desc:         "Measures the framerate of the hotseat animation in tablet mode",
+		Func: HotseatAnimation,
+		Desc: "Measures the framerate of the hotseat animation in tablet mode",
 		Contacts: []string{
 			"cros-system-ui-eng@google.com",
 			"tbarzic@chromium.org",
@@ -60,15 +55,15 @@ func init() {
 		Timeout:      3 * time.Minute,
 		Params: []testing.Param{{
 			Name:    "non_overflow_shelf",
-			Val:     hotseatTestVal{nonOverflow, browser.TypeAsh},
+			Val:     hotseatTestVal{nonOverflow},
 			Fixture: "chromeLoggedInWith100FakeApps",
 		}, {
 			Name:    "overflow_shelf",
-			Val:     hotseatTestVal{overflow, browser.TypeAsh},
+			Val:     hotseatTestVal{overflow},
 			Fixture: "chromeLoggedInWith100FakeApps",
 		}, {
 			Name:    "shelf_with_navigation_widget",
-			Val:     hotseatTestVal{showNavigationWidget, browser.TypeAsh},
+			Val:     hotseatTestVal{showNavigationWidget},
 			Fixture: "install100Apps",
 		}},
 	})
@@ -111,14 +106,11 @@ func HotseatAnimation(ctx context.Context, s *testing.State) {
 	var cr *chrome.Chrome
 
 	testType := s.Param().(hotseatTestVal).TestType
-	bt := s.Param().(hotseatTestVal).BrowserType
 	if testType == showNavigationWidget {
 		opts := []chrome.Option{chrome.DisableFeatures("HideShelfControlsInTabletMode")}
 		opts = append(opts, s.FixtValue().([]chrome.Option)...)
 		var err error
-		cr, err = browserfixt.NewChrome(ctx, bt,
-			lacrosfixt.NewConfig(lacrosfixt.KeepAlive(true)), // keep-alive for lacros extension apps. a no-op for ash extensions.
-			opts...)
+		cr, err = chrome.New(ctx, opts...)
 		if err != nil {
 			s.Fatal("Failed to connect to Chrome: ", err)
 		}

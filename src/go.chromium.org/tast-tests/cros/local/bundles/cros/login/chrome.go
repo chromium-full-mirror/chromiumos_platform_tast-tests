@@ -14,9 +14,6 @@ import (
 	"go.chromium.org/tast-tests/cros/common/fixture"
 	"go.chromium.org/tast-tests/cros/common/policy/fakedms"
 	"go.chromium.org/tast-tests/cros/local/chrome"
-	"go.chromium.org/tast-tests/cros/local/chrome/browser"
-	"go.chromium.org/tast-tests/cros/local/chrome/browser/browserfixt"
-	"go.chromium.org/tast-tests/cros/local/chrome/lacros/lacrosfixt"
 	"go.chromium.org/tast-tests/cros/local/session"
 	"go.chromium.org/tast-tests/cros/local/upstart"
 	"go.chromium.org/tast/core/ctxutil"
@@ -26,7 +23,6 @@ import (
 type chromeTestParams struct {
 	numTrial int
 	opts     []chrome.Option
-	bt       browser.Type
 }
 
 func init() {
@@ -43,30 +39,26 @@ func init() {
 		Attr:         []string{"group:hw_agnostic"},
 		Params: []testing.Param{{
 			Val: chromeTestParams{
-				numTrial: 1,
-				bt:       browser.TypeAsh},
+				numTrial: 1},
 			ExtraAttr: []string{"group:mainline"},
 			Timeout:   chrome.LoginTimeout + 45*time.Second,
 		}, {
 			Name: "enrolled",
 			Val: chromeTestParams{
-				numTrial: 1,
-				bt:       browser.TypeAsh},
+				numTrial: 1},
 			ExtraAttr: []string{"group:mainline", "informational"},
 			Fixture:   fixture.FakeDMSEnrolled,
 			Timeout:   chrome.LoginTimeout + 45*time.Second,
 		}, {
 			Name: "stress",
 			Val: chromeTestParams{
-				numTrial: 50,
-				bt:       browser.TypeAsh},
+				numTrial: 50},
 			ExtraAttr: []string{"group:stress"},
 			Timeout:   50*chrome.LoginTimeout + 45*time.Second,
 		}, {
 			Name: "forever",
 			Val: chromeTestParams{
-				numTrial: 1000000,
-				bt:       browser.TypeAsh},
+				numTrial: 1000000},
 			Timeout: 365 * 24 * time.Hour,
 		}},
 	})
@@ -154,9 +146,9 @@ func testChromeLogin(ctx context.Context, s *testing.State, sm *session.SessionM
 		opts = append(opts, chrome.KeepEnrollment(), chrome.DMSPolicy(fdms.URL))
 	}
 
-	cr, err := browserfixt.NewChrome(ctx, params.bt, lacrosfixt.NewConfig(), opts...)
+	cr, err := chrome.New(ctx, opts...)
 	if err != nil {
-		s.Fatalf("Chrome login failed with %v browser: %v", params.bt, err)
+		s.Fatal("Chrome login failed: ", err)
 	}
 	defer cr.Close(cleanupCtx)
 
