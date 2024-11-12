@@ -75,13 +75,11 @@ func Ti50ChassisOpenDelay(ctx context.Context, s *testing.State) {
 	b := utils.NewDevboardHelper(s)
 	i := ti50.MustOpenCrOSImage(ctx, b, s, b.TestbedType)
 	defer i.Close(ctx)
-
 	addDelay := s.Param().(bool)
 
 	b.GpioSet(ctx, ti50.GpioTi50ChassisOpen, false)
-	tpm := b.ResetAndTpmStartup(ctx, i, ti50.FfClamshell, ti50.CCDModeOn)
+	tpm := b.ResetAndTpmStartup(ctx, i, ti50.FfClamshell)
 	th.MustSucceed(i.WaitUntilBooted(ctx), "GSC failed to boot")
-	b.WaitUntilCCDConnected(ctx)
 
 	bid, err := i.ChipBID(ctx)
 	th.MustSucceed(err, "failed to get board id")
@@ -101,10 +99,10 @@ func Ti50ChassisOpenDelay(ctx context.Context, s *testing.State) {
 	}
 
 	// Configure CCD settings so that CCD open will require physical presence.
-	// Open to enable reset.
-	th.MustSucceed(i.CCDOpen(ctx), "Open CCD")
-	// Reset to default CCD caps.
-	i.Command(ctx, "ccd reset")
+	// EnsureTestLabEnabled also does EnsureFWMPDisabled.
+	fixture.EnsureTestLabEnabled(ctx, s, b.DUTControlAndreiboard, i)
+	th.MustSucceed(i.TestlabOpen(ctx), "testlab open")
+	th.MustSucceed(i.CCDReset(ctx), "ccd reset")
 	// Capture caps in log.
 	i.Command(ctx, "ccd")
 	// Lock so we can test open.
