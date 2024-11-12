@@ -735,10 +735,7 @@ func init() {
 			KeyboardBrightness: SetKbBrightnessToZero,
 		}, PowerFixtureOptions{
 			BrowserExtraOpts: []chrome.Option{
-				chrome.EnableFeatures("ProductivityLauncherImageSearch"),
-				chrome.EnableFeatures("LauncherImageSearch"),
-				chrome.EnableFeatures("LauncherImageSearchOcr"),
-				chrome.EnableFeatures("FeatureManagementLocalImageSearch"),
+				chrome.EnableFeatures("LauncherImageSearchIca"),
 			}}),
 		SetUpTimeout:    SetUpTimeout,
 		ResetTimeout:    ResetTimeout,

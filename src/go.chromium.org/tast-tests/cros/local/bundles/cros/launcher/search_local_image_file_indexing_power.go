@@ -18,7 +18,10 @@ import (
 	"go.chromium.org/tast/core/ctxutil"
 	"go.chromium.org/tast/core/fsutil"
 	"go.chromium.org/tast/core/testing"
+	"go.chromium.org/tast/core/testing/hwdep"
 )
+
+const indexingLimit = 500
 
 func init() {
 	testing.AddTest(&testing.Test{
@@ -32,8 +35,9 @@ func init() {
 		Attr:         []string{"group:crosbolt", "crosbolt_perbuild"},
 		Data:         []string{launcher.ImageSearchPowerTestPictureName},
 		BugComponent: "b:1281467",
-		Timeout:      5*time.Minute + power.RecorderTimeout,
-		SoftwareDeps: []string{"chrome"},
+		Timeout:      10*time.Minute + power.RecorderTimeout,
+		SoftwareDeps: []string{"chrome", "ondevice_image_content_annotation"},
+		HardwareDeps: hwdep.D(hwdep.FeatureLevel(1)),
 		Params: []testing.Param{
 			{
 				Name:    "enable",
@@ -74,12 +78,7 @@ func SearchLocalImageFileIndexingPower(ctx context.Context, s *testing.State) {
 
 	localFileLocation := filepath.Join(downloadsPath, launcher.ImageSearchPowerTestPictureName)
 
-	dlcList := []string{"screen-ai"}
-	// TODO(b/303151432): Ensure all required DLCs are installed.
-	if err := launcher.InstallDlc(ctx, dlcList); err != nil {
-		s.Fatal("Cannot install dlc: ", err)
-	}
-
+	dlcList := []string{"screen-ai", "ml-core-dlc"}
 	if err := launcher.VerifyDlcInstalled(ctx, dlcList); err != nil {
 		s.Fatal("Cannot find dlc: ", err)
 	}
@@ -94,7 +93,8 @@ func SearchLocalImageFileIndexingPower(ctx context.Context, s *testing.State) {
 		s.Fatal("Failed to start collecting power metrics: ", err)
 	}
 
-	for i := 0; i < launcher.ImageSearchPowerTestRepeatTimes; i++ {
+	// Index for 500 images, which is the current indexing limit per user session.
+	for i := 0; i < indexingLimit; i++ {
 		imageFile := localFileLocation + fmt.Sprintf("%d.png", i)
 		if err := fsutil.CopyFile(s.DataPath(launcher.ImageSearchPowerTestPictureName), imageFile); err != nil {
 			s.Fatalf("Failed to copy the test image to %s: %v", localFileLocation, err)
@@ -102,8 +102,8 @@ func SearchLocalImageFileIndexingPower(ctx context.Context, s *testing.State) {
 		defer os.Remove(imageFile)
 	}
 
-	//GoBigSleepLint: Need enough time for the indexing to finish.
-	testing.Sleep(ctx, 1*time.Minute)
+	//GoBigSleepLint: Power test should run for at least 5 minutes.
+	testing.Sleep(ctx, 5*time.Minute)
 
 	// Stop power test and clean the environment.
 	if err := r.Finish(ctx); err != nil {

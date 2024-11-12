@@ -21,6 +21,7 @@ import (
 	"go.chromium.org/tast/core/ctxutil"
 	"go.chromium.org/tast/core/fsutil"
 	"go.chromium.org/tast/core/testing"
+	"go.chromium.org/tast/core/testing/hwdep"
 )
 
 func init() {
@@ -36,7 +37,8 @@ func init() {
 		Data:         []string{launcher.ImageSearchPowerTestPictureName},
 		BugComponent: "b:1281467",
 		Timeout:      20*time.Minute + power.RecorderTimeout,
-		SoftwareDeps: []string{"chrome"},
+		SoftwareDeps: []string{"chrome", "ondevice_image_content_annotation"},
+		HardwareDeps: hwdep.D(hwdep.FeatureLevel(1)),
 		Params: []testing.Param{
 			{
 				Name:    "enable",
@@ -84,12 +86,7 @@ func SearchLocalImageSearchingPower(ctx context.Context, s *testing.State) {
 
 	localFileLocation := filepath.Join(downloadsPath, launcher.ImageSearchPowerTestPictureName)
 
-	dlcList := []string{"screen-ai"}
-	// TODO(b/303151432): Ensure all required DLCs are installed.
-	if err := launcher.InstallDlc(ctx, dlcList); err != nil {
-		s.Fatal("Cannot install dlc: ", err)
-	}
-
+	dlcList := []string{"screen-ai", "ml-core-dlc"}
 	if err := launcher.VerifyDlcInstalled(ctx, dlcList); err != nil {
 		s.Fatal("Cannot find dlc: ", err)
 	}
