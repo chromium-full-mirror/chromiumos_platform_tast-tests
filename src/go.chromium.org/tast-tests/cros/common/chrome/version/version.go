@@ -9,8 +9,6 @@ import (
 	"regexp"
 	"strconv"
 	"strings"
-
-	"go.chromium.org/tast/core/errors"
 )
 
 // Version represents a Chrome version in the format of "(major).(minor).(build).(patch)".
@@ -136,26 +134,4 @@ func (v *Version) IsOlderThan(rhs Version) bool {
 // IsEqualTo returns true when the two versions are the same.
 func (v *Version) IsEqualTo(rhs Version) bool {
 	return v.components[0] == rhs.components[0] && v.components[1] == rhs.components[1] && v.components[2] == rhs.components[2] && v.components[3] == rhs.components[3]
-}
-
-// IsSkewValid returns whether Lacros and Ash are within valid supported skews by comparing versions based on the version skew policy.
-func IsSkewValid(lacros, ash Version) error {
-	// Note that this version skew policy should be in line with the production code.
-	// See LacrosInstallerPolicy::ComponentReady at
-	//   https://osscs.corp.google.com/chromium/chromium/src/+/main:chrome/browser/component_updater/cros_component_installer_chromeos.cc
-	// The maximum version skew is now 2 (crbug.com/1258138).
-	const maxMajorVersionSkew = 2
-
-	// a) Lacros should not be older, ignoring the patch level
-	isLacrosTooOld := New(lacros.Major(), lacros.Minor(), lacros.Build(), 0).IsOlderThan(*New(ash.Major(), ash.Minor(), ash.Build(), 0))
-	if isLacrosTooOld {
-		return errors.Errorf("invalid skew as Lacros is older than Ash, got lacros: %v, ash: %v", lacros, ash)
-	}
-
-	// b) Lacros should not be too new
-	isLacrosTooNew := lacros.Major() > ash.Major()+maxMajorVersionSkew
-	if isLacrosTooNew {
-		return errors.Errorf("invalid skew as Lacros is newer than Ash, got lacros: %v, ash: %v", lacros, ash)
-	}
-	return nil
 }

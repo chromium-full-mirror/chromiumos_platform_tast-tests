@@ -59,22 +59,3 @@ func TestBasics(t *testing.T) {
 		t.Error("Decrement should not go less than zero")
 	}
 }
-
-func TestIsSkewValid(t *testing.T) {
-	for _, c := range []struct {
-		lacros *Version
-		ash    *Version
-		valid  bool
-	}{
-		{New(100, 0, 1000, 0), New(100, 0, 1000, 0), true},  // lacros and ash are the same
-		{New(100, 0, 1000, 0), New(100, 0, 1000, 9), true},  // lacros and ash are compatible, ignoring the patch level
-		{New(100, 0, 9999, 0), New(100, 0, 1000, 0), true},  // lacros is newer than ash
-		{New(102, 0, 1000, 0), New(100, 0, 1000, 0), true},  // lacros is newer than ash by 2 milestones
-		{New(103, 0, 1000, 0), New(100, 0, 1000, 0), false}, // lacros should not be newer than ash by 3 milestones (too new)
-		{New(99, 0, 1000, 0), New(100, 0, 9999, 0), false},  // lacros should not be older than ash
-	} {
-		if err := IsSkewValid(*c.lacros, *c.ash); (err == nil) != c.valid {
-			t.Errorf("IsSkewValid, lacros: %s, ash: %s, expected %v", c.lacros, c.ash, c.valid)
-		}
-	}
-}
