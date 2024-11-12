@@ -262,7 +262,7 @@ func setupImage(ctx context.Context, v *Value, s TestingState) {
 			s.Fatal("Setup: ", err)
 		}
 
-		if needsUpdate(ctx, s, v.devboard, v.ImagePath, false, v.TestbedProperties.TestbedType) {
+		if currentImageGood(ctx, s, v.devboard, v.ImagePath, false, v.TestbedProperties.TestbedType) {
 			testing.ContextLog(ctx, "Image is already running")
 			return
 		}
@@ -275,7 +275,7 @@ func setupImage(ctx context.Context, v *Value, s TestingState) {
 	}
 }
 
-func needsUpdate(ctx context.Context, s TestingState, board *remoteTi50.DUTControlAndreiboard, imagePath string, checkInfoSpace bool, testbed ti50.TestbedType) bool {
+func currentImageGood(ctx context.Context, s TestingState, board *remoteTi50.DUTControlAndreiboard, imagePath string, checkInfoSpace bool, testbed ti50.TestbedType) bool {
 	if imagePath == "" {
 		testing.ContextLog(ctx, "No image given. Nothing to do")
 		return true

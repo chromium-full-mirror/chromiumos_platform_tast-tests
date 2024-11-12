@@ -38,7 +38,8 @@ func init() {
 }
 
 type initialFactoryImpl struct {
-	v *Value
+	v                  *Value
+	doneFirstTimeSetup bool
 }
 
 func (c *initialFactoryImpl) SetUp(ctx context.Context, s *testing.FixtState) interface{} {
@@ -57,9 +58,7 @@ func (c *initialFactoryImpl) SetUp(ctx context.Context, s *testing.FixtState) in
 		s.Fatal(err, "failed to download the efi image")
 	}
 	if _, err := c.v.DebugImagePath(ctx); err != nil {
-		if c.v.TestbedProperties.TestbedType == ti50.GscH1Shield {
-			s.Fatal(err, "failed to download the debug image")
-		}
+		s.Fatal(err, "failed to download the debug image")
 	}
 	testing.ContextLog(ctx, "End GSC Initial Factory Setup")
 	return c.v
@@ -97,6 +96,24 @@ func eraseInfoPage(ctx context.Context, v *Value, s TestingState) {
 	testing.ContextLogf(ctx, "version: %+v", version)
 }
 
+func waitUntilDBGBoots(ctx context.Context, v *Value, s TestingState) {
+	b := v.devboard
+
+	mustSucceed(s, b.StartSession(ctx, ti50.StrapReset), "Start DBG session")
+	defer b.EndSession(ctx)
+
+	gscConsole := b.PhysicalUart(ti50.UartConsole)
+	i := ti50.MustOpenCrOSImage(ctx, gscConsole, s, v.TestbedProperties.TestbedType)
+	defer i.Close(ctx)
+
+	mustSucceed(s, b.Reset(ctx), "Reset gsc console for DBG")
+	mustSucceed(s, i.WaitUntilBooted(ctx), "DBG image revives after reboot")
+
+	version, err := i.VersionInfo(ctx)
+	mustSucceed(s, err, "checking version")
+	testing.ContextLogf(ctx, "DBG version: %+v", version)
+}
+
 func eraseAPROVerificationSettings(ctx context.Context, v *Value, s TestingState) {
 	// Haven does not have AP RO verification settings that need to be erased
 	if v.TestbedProperties.TestbedType == ti50.GscH1Shield {
@@ -124,7 +141,7 @@ func eraseAPROVerificationSettings(ctx context.Context, v *Value, s TestingState
 // setupImageAndEraseInfo runs eraseflashinfo and flashes the image under test
 // on the devboard using the image and json files provided in the `Value`
 // parameter.
-func setupImageAndEraseInfo(ctx context.Context, v *Value, s TestingState) {
+func setupImageAndEraseInfo(ctx context.Context, v *Value, s TestingState, force bool) {
 	// Setup the board with the correct jsons. Use an empty string for the image
 	// path so setup doesn't try to flash the image.
 	if err := v.devboard.Setup(ctx, "", v.FwConfigJsons); err != nil {
@@ -132,7 +149,7 @@ func setupImageAndEraseInfo(ctx context.Context, v *Value, s TestingState) {
 	}
 
 	b := v.devboard
-	if needsUpdate(ctx, s, b, v.ImagePath, true, v.TestbedProperties.TestbedType) {
+	if !force && currentImageGood(ctx, s, b, v.ImagePath, true, v.TestbedProperties.TestbedType) {
 		testing.ContextLog(ctx, "Image is already running and info1 is erased")
 		return
 	}
@@ -141,6 +158,11 @@ func setupImageAndEraseInfo(ctx context.Context, v *Value, s TestingState) {
 	if v.TestbedProperties.TestbedType == ti50.GscH1Shield {
 		setupCr50Image(ctx, s, b, v.ImagePath, v.FwConfigJsons, v.TestbedProperties, true, v.TestbedProperties.TestbedType)
 	} else {
+		testing.ContextLog(ctx, "Flashing DBG image to erase filesystem and TPM")
+		debugImagePath, _ := v.DebugImagePath(ctx)
+		mustSucceed(s, b.Setup(ctx, debugImagePath, []string{}), "Setup DBG image")
+		waitUntilDBGBoots(ctx, v, s)
+
 		testing.ContextLog(ctx, "Flashing EFI image")
 		efiImagePath, _ := v.EfiImagePath(ctx)
 		mustSucceed(s, b.Setup(ctx, efiImagePath, []string{}), "Setup EFI image")
@@ -152,17 +174,14 @@ func setupImageAndEraseInfo(ctx context.Context, v *Value, s TestingState) {
 	}
 }
 
-func (c *initialFactoryImpl) UpdateAndRunEraseFlashInfo(ctx context.Context, s TestingState) {
+func (c *initialFactoryImpl) UpdateAndRunEraseFlashInfo(ctx context.Context, s TestingState, force bool) {
 	// Host emulation does not need to erase anything, it always started erased
 	if c.v.TestbedProperties.TestbedType == ti50.GscHostEmulation {
 		return
 	}
 
-	setupImageAndEraseInfo(ctx, c.v, s)
-
-	if c.v.TestbedProperties.TestbedType != ti50.GscH1Shield {
-		eraseAPROVerificationSettings(ctx, c.v, s)
-	}
+	setupImageAndEraseInfo(ctx, c.v, s, force)
+	eraseAPROVerificationSettings(ctx, c.v, s)
 	mustSucceed(s, c.v.devboard.StartSession(ctx, ti50.StrapReset), "Start testing session")
 }
 
@@ -172,7 +191,10 @@ func (c *initialFactoryImpl) PreTest(ctx context.Context, s *testing.FixtTestSta
 	// Inform fixture that this test may replace the firmware image in flash.
 	mustSucceed(s, c.v.ImageMayBeUpdatedByTest(), "Failed to mark image as possibly updated")
 
-	c.UpdateAndRunEraseFlashInfo(ctx, s)
+	// The first update should force a complete reset of filesystem and INFO pages
+	forceUpdate := !c.doneFirstTimeSetup
+	c.doneFirstTimeSetup = true
+	c.UpdateAndRunEraseFlashInfo(ctx, s, forceUpdate)
 
 	testing.ContextLog(ctx, "Board ready for test")
 }
@@ -187,5 +209,5 @@ func (c *initialFactoryImpl) Reset(ctx context.Context) error {
 func (c *initialFactoryImpl) TearDown(ctx context.Context, s *testing.FixtState) {
 	testing.ContextLog(ctx, "Start GSC Initial Factory Fixture TearDown")
 
-	c.UpdateAndRunEraseFlashInfo(ctx, s)
+	c.UpdateAndRunEraseFlashInfo(ctx, s, true)
 }
