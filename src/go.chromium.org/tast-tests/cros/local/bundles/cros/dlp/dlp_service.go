@@ -20,8 +20,6 @@ import (
 	"go.chromium.org/tast-tests/cros/local/bundles/cros/dlp/clipboard"
 	"go.chromium.org/tast-tests/cros/local/bundles/cros/dlp/files"
 	"go.chromium.org/tast-tests/cros/local/chrome"
-	"go.chromium.org/tast-tests/cros/local/chrome/browser"
-	"go.chromium.org/tast-tests/cros/local/chrome/browser/browserfixt"
 	"go.chromium.org/tast-tests/cros/local/chrome/uiauto"
 	"go.chromium.org/tast-tests/cros/local/chrome/uiauto/filesapp"
 	"go.chromium.org/tast-tests/cros/local/chrome/uiauto/nodewith"
@@ -63,7 +61,7 @@ func (service *DataLeakPreventionService) EnrollAndLogin(ctx context.Context, re
 		chrome.CustomLoginTimeout(chrome.EnrollmentAndLoginTimeout),
 	}
 
-	cr, err := browserfixt.NewChrome(ctx, browser.TypeAsh, nil, opts...)
+	cr, err := chrome.New(ctx, opts...)
 	if err != nil {
 		return nil, errors.Wrap(err, "failed to start chrome")
 	}
@@ -170,17 +168,11 @@ func (service *DataLeakPreventionService) ClipboardCopyPaste(ctx context.Context
 		return &empty.Empty{}, errors.Wrap(err, "error while creating the HTML input page")
 	}
 
-	br, closeBrowser, err := browserfixt.SetUp(ctx, service.chrome, browser.TypeAsh)
-	if err != nil {
-		return &empty.Empty{}, errors.Wrap(err, "error while setting up the browser")
-	}
-	defer closeBrowser(ctx)
-
 	sourceServer := httptest.NewServer(http.FileServer(http.Dir(baseDir)))
 	defer sourceServer.Close()
 
 	sourceURL := sourceServer.URL + "/" + textFilename
-	sourceConn, err := br.NewConn(ctx, sourceURL)
+	sourceConn, err := service.chrome.NewConn(ctx, sourceURL)
 	if err != nil {
 		return &empty.Empty{}, errors.Wrap(err, "failed to open the source page")
 	}
@@ -221,7 +213,7 @@ func (service *DataLeakPreventionService) ClipboardCopyPaste(ctx context.Context
 	defer destServer.Close()
 
 	destURL := destServer.URL + "/" + inputFilename
-	destConn, err := br.NewConn(ctx, destURL)
+	destConn, err := service.chrome.NewConn(ctx, destURL)
 	if err != nil {
 		return &empty.Empty{}, errors.Wrap(err, "failed to open the destination page")
 	}
@@ -266,16 +258,10 @@ func (service *DataLeakPreventionService) Print(ctx context.Context, req *pb.Act
 		return &empty.Empty{}, errors.Wrap(err, "error while creating the HTML text page")
 	}
 
-	br, closeBrowser, err := browserfixt.SetUp(ctx, service.chrome, browser.TypeAsh)
-	if err != nil {
-		return &empty.Empty{}, errors.Wrap(err, "error while setting up the browser")
-	}
-	defer closeBrowser(ctx)
-
 	server := httptest.NewServer(http.FileServer(http.Dir(baseDir)))
 	defer server.Close()
 
-	conn, err := br.NewConn(ctx, server.URL+"/"+textFilename)
+	conn, err := service.chrome.NewConn(ctx, server.URL+"/"+textFilename)
 	if err != nil {
 		return &empty.Empty{}, errors.Wrap(err, "failed to open page")
 	}
@@ -310,16 +296,10 @@ func (service *DataLeakPreventionService) Screenshot(ctx context.Context, req *p
 		return &empty.Empty{}, errors.Wrap(err, "error while creating the HTML text page")
 	}
 
-	br, closeBrowser, err := browserfixt.SetUp(ctx, service.chrome, browser.TypeAsh)
-	if err != nil {
-		return &empty.Empty{}, errors.Wrap(err, "error while setting up the browser")
-	}
-	defer closeBrowser(ctx)
-
 	server := httptest.NewServer(http.FileServer(http.Dir(baseDir)))
 	defer server.Close()
 
-	conn, err := br.NewConn(ctx, server.URL+"/"+textFilename)
+	conn, err := service.chrome.NewConn(ctx, server.URL+"/"+textFilename)
 	if err != nil {
 		return &empty.Empty{}, errors.Wrap(err, "failed to open page")
 	}
@@ -368,16 +348,10 @@ func (service *DataLeakPreventionService) Screenshare(ctx context.Context, req *
 		return &empty.Empty{}, errors.Wrap(err, "error while creating the HTML text page")
 	}
 
-	br, closeBrowser, err := browserfixt.SetUp(ctx, service.chrome, browser.TypeAsh)
-	if err != nil {
-		return &empty.Empty{}, errors.Wrap(err, "error while setting up the browser")
-	}
-	defer closeBrowser(ctx)
-
 	server := httptest.NewServer(http.FileServer(http.Dir(baseDir)))
 	defer server.Close()
 
-	conn, err := br.NewConn(ctx, server.URL+"/"+textFilename)
+	conn, err := service.chrome.NewConn(ctx, server.URL+"/"+textFilename)
 	if err != nil {
 		return &empty.Empty{}, errors.Wrap(err, "failed to open page")
 	}
@@ -414,24 +388,20 @@ func (service *DataLeakPreventionService) FilesDriveCopyPaste(ctx context.Contex
 	ctx, cancel := ctxutil.Shorten(ctx, 30*time.Second)
 	defer cancel()
 
-	dfs, err := drivefs.NewDriveFs(ctx, service.chrome.NormalizedUser())
+	cr := service.chrome
+
+	dfs, err := drivefs.NewDriveFs(ctx, cr.NormalizedUser())
 	if err != nil {
 		return nil, errors.Wrap(err, "failed to start DriveFS")
 	}
 
-	br, closeBrowser, err := browserfixt.SetUp(ctx, service.chrome, browser.TypeAsh)
-	if err != nil {
-		return &empty.Empty{}, errors.Wrap(err, "error while setting up the browser")
-	}
-	defer closeBrowser(cleanupCtx)
-
-	tconn, err := service.chrome.TestAPIConn(ctx)
+	tconn, err := cr.TestAPIConn(ctx)
 	if err != nil {
 		return &empty.Empty{}, errors.Wrap(err, "failed to connect to test API")
 	}
 
 	// Download the file.
-	if err := files.DownloadFile(ctx, tconn, br, http.Dir(req.DataPath)); err != nil {
+	if err := files.DownloadFile(ctx, tconn, cr.Browser(), http.Dir(req.DataPath)); err != nil {
 		return &empty.Empty{}, errors.Wrap(err, "failed to download file")
 	}
 
@@ -481,7 +451,7 @@ func (service *DataLeakPreventionService) FilesDriveCopyPaste(ctx context.Contex
 	driveAPIScopes := []string{"https://www.googleapis.com/auth/drive"}
 
 	// Perform Drive API authentication.
-	ts := drivefs.NewChromeOSTokenSourceForAccount(ctx, tconn, driveAPIScopes, service.chrome.Creds().User)
+	ts := drivefs.NewChromeOSTokenSourceForAccount(ctx, tconn, driveAPIScopes, cr.Creds().User)
 	rts := drivefs.RetryTokenSource(ts, drivefs.WithContext(ctx), drivefs.WithDelay(time.Second*5))
 	driveAPIClient, err := drivefs.CreateAPIClient(ctx, rts)
 	if err != nil {

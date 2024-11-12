@@ -11,8 +11,6 @@ import (
 	"go.chromium.org/tast-tests/cros/local/bundles/cros/printer/ppdindex"
 	"go.chromium.org/tast-tests/cros/local/bundles/cros/printer/uitools"
 	"go.chromium.org/tast-tests/cros/local/chrome"
-	"go.chromium.org/tast-tests/cros/local/chrome/browser"
-	"go.chromium.org/tast-tests/cros/local/chrome/browser/browserfixt"
 	"go.chromium.org/tast-tests/cros/local/chrome/uiauto"
 	"go.chromium.org/tast-tests/cros/local/chrome/uiauto/faillog"
 	"go.chromium.org/tast-tests/cros/local/chrome/uiauto/nodewith"
@@ -175,7 +173,7 @@ func ViewPPD(ctx context.Context, s *testing.State) {
 	server.AddEntry(ppdindex.Entry{Manufacturer: manufacturer1, Model: model1})
 	server.AddEntry(ppdindex.Entry{Manufacturer: manufacturer2, Model: model2, License: license2})
 
-	cr, err := browserfixt.NewChrome(ctx, browser.TypeAsh, nil, chrome.ExtraArgs("--printing-ppd-channel=localhost"))
+	cr, err := chrome.New(ctx, chrome.ExtraArgs("--printing-ppd-channel=localhost"))
 	if err != nil {
 		s.Fatal("Failed to create chrome instance: ", err)
 	}

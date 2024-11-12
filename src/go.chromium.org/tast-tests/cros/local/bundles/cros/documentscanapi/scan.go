@@ -16,8 +16,6 @@ import (
 	"go.chromium.org/tast-tests/cros/common/testexec"
 	"go.chromium.org/tast-tests/cros/local/bundles/cros/documentscanapi/setup"
 	"go.chromium.org/tast-tests/cros/local/chrome"
-	"go.chromium.org/tast-tests/cros/local/chrome/browser"
-	"go.chromium.org/tast-tests/cros/local/chrome/browser/browserfixt"
 	"go.chromium.org/tast-tests/cros/local/chrome/uiauto"
 	"go.chromium.org/tast-tests/cros/local/chrome/uiauto/faillog"
 	"go.chromium.org/tast-tests/cros/local/chrome/uiauto/nodewith"
@@ -67,17 +65,11 @@ func Scan(ctx context.Context, s *testing.State) {
 		s.Fatal("Failed setup of Document Scan extension: ", err)
 	}
 
-	cr, err := browserfixt.NewChrome(ctx, browser.TypeAsh, nil, chrome.UnpackedExtension(extDir))
+	cr, err := chrome.New(ctx, chrome.UnpackedExtension(extDir))
 	if err != nil {
 		s.Fatal("Failed to connect to Chrome: ", err)
 	}
 	defer cr.Close(cleanupCtx)
-
-	br, closeBrowser, err := browserfixt.SetUp(ctx, cr, browser.TypeAsh)
-	if err != nil {
-		s.Fatal("Failed to launch browser: ", err)
-	}
-	defer closeBrowser(cleanupCtx)
 
 	// Open the test API.
 	tconn, err := cr.TestAPIConn(ctx)
@@ -109,7 +101,7 @@ func Scan(ctx context.Context, s *testing.State) {
 	}
 
 	extURL := "chrome-extension://" + scanTargetExtID + "/scan.html"
-	conn, err := br.NewConnForTarget(ctx, chrome.MatchTargetURL(extURL))
+	conn, err := cr.NewConnForTarget(ctx, chrome.MatchTargetURL(extURL))
 	if err != nil {
 		s.Fatalf("Failed to connect to extension URL at %v: %v", extURL, err)
 	}

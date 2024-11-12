@@ -13,8 +13,6 @@ import (
 	"go.chromium.org/tast-tests/cros/local/bundles/cros/printer/pre"
 	"go.chromium.org/tast-tests/cros/local/chrome"
 	"go.chromium.org/tast-tests/cros/local/chrome/ash"
-	"go.chromium.org/tast-tests/cros/local/chrome/browser"
-	"go.chromium.org/tast-tests/cros/local/chrome/browser/browserfixt"
 	"go.chromium.org/tast-tests/cros/local/chrome/uiauto"
 	"go.chromium.org/tast-tests/cros/local/chrome/uiauto/checked"
 	"go.chromium.org/tast-tests/cros/local/chrome/uiauto/faillog"
@@ -57,13 +55,12 @@ func BorderlessPrint(ctx context.Context, s *testing.State) {
 	defer cancel()
 
 	opts := []chrome.Option{chrome.EnableFeatures("EnableBorderlessPrinting")}
-	cr, err := browserfixt.NewChrome(ctx, browser.TypeAsh, nil, opts...)
+	cr, err := chrome.New(ctx, opts...)
 	if err != nil {
 		s.Fatal("Failed to start Chrome: ", err)
 	}
 	defer cr.Close(cleanupCtx) // Close our own chrome instance
 
-	// tconn is the ash TestConn.
 	tconn, err := cr.TestAPIConn(ctx)
 	if err != nil {
 		s.Fatal("Failed to connect ash test API: ", err)
@@ -109,14 +106,7 @@ func BorderlessPrint(ctx context.Context, s *testing.State) {
 		s.Fatal("Failed to clear printing history: ", err)
 	}
 
-	// Create a browser.
-	br, closeBrowser, err := browserfixt.SetUp(ctx, cr, browser.TypeAsh)
-	if err != nil {
-		s.Fatal("Failed to launch browser: ", err)
-	}
-	defer closeBrowser(cleanupCtx)
-
-	conn, err := br.NewConn(ctx, "chrome://version/")
+	conn, err := cr.NewConn(ctx, "chrome://version/")
 	if err != nil {
 		s.Fatal("Failed to connect to broswer: ", err)
 	}

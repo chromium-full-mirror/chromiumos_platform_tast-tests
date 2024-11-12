@@ -12,8 +12,7 @@ import (
 
 	"github.com/google/go-cmp/cmp"
 
-	"go.chromium.org/tast-tests/cros/local/chrome/browser"
-	"go.chromium.org/tast-tests/cros/local/chrome/browser/browserfixt"
+	"go.chromium.org/tast-tests/cros/local/chrome"
 	"go.chromium.org/tast/core/testing"
 )
 
@@ -29,7 +28,7 @@ func init() {
 }
 
 func ChromeConnEvalLargeExpr(ctx context.Context, s *testing.State) {
-	cr, err := browserfixt.NewChrome(ctx, browser.TypeAsh, nil)
+	cr, err := chrome.New(ctx)
 	if err != nil {
 		s.Fatal("Failed to connect to Chrome: ", err)
 	}

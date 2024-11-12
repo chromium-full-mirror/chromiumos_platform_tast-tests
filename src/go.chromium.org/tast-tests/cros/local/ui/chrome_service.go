@@ -11,10 +11,9 @@ import (
 	"google.golang.org/grpc"
 
 	"go.chromium.org/tast-tests/cros/local/chrome"
-	"go.chromium.org/tast-tests/cros/local/chrome/browser"
-	"go.chromium.org/tast-tests/cros/local/chrome/browser/browserfixt"
 	"go.chromium.org/tast-tests/cros/local/common"
 	"go.chromium.org/tast-tests/cros/local/cryptohome"
+
 	//lint:ignore ST1019 multiple imports with different identifiers help code readability
 	"go.chromium.org/tast-tests/cros/services/cros/ui"
 	pb "go.chromium.org/tast-tests/cros/services/cros/ui"
@@ -67,7 +66,7 @@ func (svc *ChromeService) New(ctx context.Context, req *pb.NewRequest) (_ *empty
 	// By default, this will always create a new chrome session even when there is an existing one.
 	// This gives full control of the lifecycle to the end users.
 	// Users can use TryReuseSessions if they want to potentially reuse the session.
-	cr, err := browserfixt.NewChrome(ctx, browser.TypeAsh, nil, opts...)
+	cr, err := chrome.New(ctx, opts...)
 	if err != nil {
 		testing.ContextLog(ctx, "Failed to start Chrome")
 		return nil, err

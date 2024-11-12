@@ -12,8 +12,6 @@ import (
 
 	"go.chromium.org/tast-tests/cros/local/a11y"
 	"go.chromium.org/tast-tests/cros/local/chrome"
-	"go.chromium.org/tast-tests/cros/local/chrome/browser"
-	"go.chromium.org/tast-tests/cros/local/chrome/browser/browserfixt"
 	"go.chromium.org/tast-tests/cros/local/chrome/uiauto"
 	"go.chromium.org/tast-tests/cros/local/chrome/uiauto/faillog"
 	"go.chromium.org/tast-tests/cros/local/chrome/uiauto/nodewith"
@@ -69,8 +67,7 @@ func LiveCaption(ctx context.Context, s *testing.State) {
 
 	params := s.Param().(liveCaptionParams)
 
-	// Launch browser.
-	cr, err := browserfixt.NewChrome(ctx, browser.TypeAsh, nil,
+	cr, err := chrome.New(ctx,
 		chrome.ExtraArgs("--autoplay-policy=no-user-gesture-required"), // Allow media autoplay.
 		chrome.EnableFeatures("OnDeviceSpeechRecognition", "LayoutMediaNGContainer", "LiveTranslate"),
 		chrome.FieldTrialConfig(params.fieldTrialConfig),

@@ -14,7 +14,6 @@ import (
 
 	"go.chromium.org/tast-tests/cros/local/audio/fixture"
 	"go.chromium.org/tast-tests/cros/local/chrome"
-	"go.chromium.org/tast-tests/cros/local/chrome/browser"
 
 	"go.chromium.org/tast/core/errors"
 	"go.chromium.org/tast/core/fsutil"
@@ -72,7 +71,7 @@ func init() {
 			"xiuwen@google.com",
 		},
 		BugComponent:    "b:187682",
-		Impl:            baseSetupFixture(browser.TypeAsh, nil),
+		Impl:            &baseSetupFixtureImpl{},
 		Parent:          fixture.AloopLoaded{Channels: 2}.Instance(),
 		SetUpTimeout:    chrome.LoginTimeout,
 		PreTestTimeout:  preTestTimeout,
@@ -90,7 +89,7 @@ func init() {
 		},
 		BugComponent:    "b:187682",
 		Data:            fakeVCExtensionFiles,
-		Impl:            baseSetupFixtureWithFakeExtension(browser.TypeAsh, nil),
+		Impl:            &baseSetupFixtureImpl{installExt: true},
 		Parent:          fixture.AloopLoaded{Channels: 2}.Instance(),
 		SetUpTimeout:    chrome.LoginTimeout,
 		PreTestTimeout:  preTestTimeout,
@@ -107,34 +106,17 @@ var fakeVCExtensionFiles = []string{
 	"fake_vc_extension/popup.js",
 }
 
-func baseSetupFixture(browserType browser.Type, fOpts chrome.OptionsCallback) testing.FixtureImpl {
-	return &baseSetupFixtureImpl{
-		browserType: browserType,
-		fOpts:       fOpts,
-	}
-}
-
-func baseSetupFixtureWithFakeExtension(browserType browser.Type, fOpts chrome.OptionsCallback) testing.FixtureImpl {
-	return &baseSetupFixtureImpl{
-		browserType: browserType,
-		fOpts:       fOpts,
-		installExt:  true,
-	}
-}
-
 // baseSetupFixtData is the data returned by SetUp and passed to tests.
 type baseSetupFixtData struct {
 	cr *chrome.Chrome
-	bt browser.Type
 }
 
 // baseSetupFixtureImpl implements testing.FixtureImpl.
 type baseSetupFixtureImpl struct {
-	cr          *chrome.Chrome         // Underlying Chrome instance
-	browserType browser.Type           // Whether Ash or Lacros is used for test
-	fOpts       chrome.OptionsCallback // Function to return chrome options.
-	tconn       *chrome.TestConn
-	installExt  bool // Whether to install fake VC extension.
+	cr         *chrome.Chrome         // Underlying Chrome instance
+	fOpts      chrome.OptionsCallback // Function to return chrome options.
+	tconn      *chrome.TestConn
+	installExt bool // Whether to install fake VC extension.
 }
 
 func (f *baseSetupFixtureImpl) SetUp(ctx context.Context, s *testing.FixtState) interface{} {
@@ -180,7 +162,6 @@ func (f *baseSetupFixtureImpl) SetUp(ctx context.Context, s *testing.FixtState) 
 
 	opts = append(opts, chrome.DisableFeatures("CrosSodaConchLanguages"))
 
-	// cr, err := browserfixt.NewChrome(ctx, f.browserType, opts...)
 	cr, err := chrome.New(ctx, opts...)
 	if err != nil {
 		s.Fatal("Failed to start Chrome: ", err)
@@ -196,7 +177,7 @@ func (f *baseSetupFixtureImpl) SetUp(ctx context.Context, s *testing.FixtState) 
 		}
 	}
 
-	return &baseSetupFixtData{f.cr, f.browserType}
+	return &baseSetupFixtData{f.cr}
 }
 
 func (f *baseSetupFixtureImpl) PreTest(ctx context.Context, s *testing.FixtTestState) {}
