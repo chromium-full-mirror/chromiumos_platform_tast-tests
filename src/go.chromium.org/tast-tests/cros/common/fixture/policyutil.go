@@ -69,43 +69,8 @@ const (
 	ChromeTAPEEnrolledLoggedIn = "chromeTAPEEnrolledLoggedIn"
 )
 
-// Fixtures defined in go.chromium.org/tast-tests/cros/local/policyutil/fixtures/lacros.go.
-const (
-	// LacrosPolicyLoggedIn is a fixture name.
-	LacrosPolicyLoggedIn = "lacrosPolicyLoggedIn"
-	// LacrosPolicyLoggedInWithKeepAlive is a fixture name.
-	LacrosPolicyLoggedInWithKeepAlive = "lacrosPolicyLoggedInWithKeepAlive"
-	// LacrosPolicyLoggedInFeatureJourneys is a fixture name.
-	LacrosPolicyLoggedInFeatureJourneys = "lacrosPolicyLoggedInFeatureJourneys"
-	// LacrosPolicyLoggedInFeatureChromeLabs is a fixture name.
-	LacrosPolicyLoggedInFeatureChromeLabs = "lacrosPolicyLoggedInFeatureChromeLabs"
-	// LacrosPolicyLoggedInFilesUXEnabled is a fixture name.
-	LacrosPolicyLoggedInFilesUXEnabled = "lacrosPolicyLoggedInFilesUXEnabled"
-	// LacrosPolicyLoggedInRealUser is a fixture name.
-	LacrosPolicyLoggedInRealUser = "lacrosPolicyLoggedInRealUser"
-	// LacrosPolicyRealUserLoggedIn is a fixture name.
-	LacrosPolicyRealUserLoggedIn = "lacrosPolicyRealUserLoggedIn"
-	// LacrosAdminDeskTemplatesLoggedIn is a fixture name.
-	LacrosAdminDeskTemplatesLoggedIn = "lacrosAdminDeskTemplatesLoggedIn"
-	// LacrosEnrolledLoggedIn is a fixture name.
-	LacrosEnrolledLoggedIn = "lacrosEnrolledLoggedIn"
-	// LacrosEnrolledLoggedInShortMetricsInterval is a fixture name.
-	LacrosEnrolledLoggedInShortMetricsInterval = "lacrosEnrolledLoggedInShortMetricsInterval"
-	// LacrosPolicyLoggedInAdvancedProtection is a fixture name.
-	LacrosPolicyLoggedInAdvancedProtection = "lacrosPolicyLoggedInAdvancedProtection"
-	// LacrosPolicyLoggedInBruschettaWithLacros is a fixture name.
-	LacrosPolicyLoggedInBruschetta = "lacrosPolicyLoggedInBruschetta"
-)
-
 // Fixtures defined in go.chromium.org/tast-tests/cros/local/policyutil/fixtures/persistent.go.
 const (
-	// PersistentLacros is a fixture name.
-	PersistentLacros = "persistentLacros"
-	// PersistentLacrosEnrolled is a fixture name.
-	PersistentLacrosEnrolled = "persistentLacrosEnrolled"
-	// PersistentLacrosRealUser is a fixture name.
-	PersistentLacrosRealUser = "persistentLacrosRealUser"
-	// PersistentFamilyLink is a fixture name.
 	PersistentFamilyLink = "persistentFamilyLink"
 	// PersistentFamilyLinkARC is a fixture name.
 	PersistentFamilyLinkARC = "persistentFamilyLinkARC"
@@ -127,12 +92,6 @@ const (
 	EnterpriseConnectorsMGSAshWebProtectEnabledAllowAccount = "enterpriseConnectorsMGSAshWebProtectEnabledAllowAccount"
 	//	EnterpriseConnectorsMGSAshWebProtectEnabledBlockAccount is a fixture name.
 	EnterpriseConnectorsMGSAshWebProtectEnabledBlockAccount = "enterpriseConnectorsMGSAshWebProtectEnabledBlockAccount"
-	//	EnterpriseConnectorsMGSLacrosWebProtectDisabledAccount is a fixture name.
-	EnterpriseConnectorsMGSLacrosWebProtectDisabledAccount = "enterpriseConnectorsMGSLacrosWebProtectDisabledAccount"
-	//	EnterpriseConnectorsMGSLacrosWebProtectEnabledAllowAccount is a fixture name.
-	EnterpriseConnectorsMGSLacrosWebProtectEnabledAllowAccount = "enterpriseConnectorsMGSLacrosWebProtectEnabledAllowAccount"
-	//	EnterpriseConnectorsMGSLacrosWebProtectEnabledBlockAccount is a fixture name.
-	EnterpriseConnectorsMGSLacrosWebProtectEnabledBlockAccount = "enterpriseConnectorsMGSLacrosWebProtectEnabledBlockAccount"
 )
 
 // Fixture defined in go.chromium.org/tast-tests/cros/remote/policyutil/tape_enrolled.go.
@@ -145,12 +104,6 @@ const (
 	EnterpriseConnectorsMGSAshWebProtectEnabledAllowEnrolled = "enterpriseConnectorsMGSAshWebProtectEnabledAllowEnrolled"
 	//	EnterpriseConnectorsMGSAshWebProtectEnabledBlockEnrolled is a fixture name.
 	EnterpriseConnectorsMGSAshWebProtectEnabledBlockEnrolled = "enterpriseConnectorsMGSAshWebProtectEnabledBlockEnrolled"
-	//	EnterpriseConnectorsMGSLacrosWebProtectDisabledEnrolled is a fixture name.
-	EnterpriseConnectorsMGSLacrosWebProtectDisabledEnrolled = "enterpriseConnectorsMGSLacrosWebProtectDisabledEnrolled"
-	//	EnterpriseConnectorsMGSLacrosWebProtectEnabledAllowEnrolled is a fixture name.
-	EnterpriseConnectorsMGSLacrosWebProtectEnabledAllowEnrolled = "enterpriseConnectorsMGSLacrosWebProtectEnabledAllowEnrolled"
-	//	EnterpriseConnectorsMGSLacrosWebProtectEnabledBlockEnrolled is a fixture name.
-	EnterpriseConnectorsMGSLacrosWebProtectEnabledBlockEnrolled = "enterpriseConnectorsMGSLacrosWebProtectEnabledBlockEnrolled"
 )
 
 // TAPEAccountData contains TAPE account data.

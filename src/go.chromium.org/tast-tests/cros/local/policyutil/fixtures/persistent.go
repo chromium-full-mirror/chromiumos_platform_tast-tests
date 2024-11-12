@@ -19,34 +19,6 @@ import (
 
 func init() {
 	testing.AddFixture(&testing.Fixture{
-		Name:         fixture.PersistentLacros,
-		Desc:         "Fixture setting persistent policies needed for Lacros",
-		Contacts:     []string{"vsavu@google.com", "chromeos-commercial-remote-management@google.com"},
-		BugComponent: "b:1111617", // ChromeOS > Software > Commercial (Enterprise) > Remote Management > Policy Stack
-		Impl: &persistentFixture{
-			policies: []policy.Policy{&policy.LacrosAvailability{Val: "lacros_only"}},
-		},
-		SetUpTimeout:    5 * time.Second,
-		ResetTimeout:    5 * time.Second,
-		TearDownTimeout: 5 * time.Second,
-		PostTestTimeout: 5 * time.Second,
-		Parent:          fixture.FakeDMS,
-	})
-	testing.AddFixture(&testing.Fixture{
-		Name:         fixture.PersistentLacrosEnrolled,
-		Desc:         "Fixture setting persistent policies needed for Lacros on enrolled device",
-		Contacts:     []string{"vsavu@google.com", "chromeos-commercial-remote-management@google.com"},
-		BugComponent: "b:1111617", // ChromeOS > Software > Commercial (Enterprise) > Remote Management > Policy Stack
-		Impl: &persistentFixture{
-			policies: []policy.Policy{&policy.LacrosAvailability{Val: "lacros_only"}},
-		},
-		SetUpTimeout:    5 * time.Second,
-		ResetTimeout:    5 * time.Second,
-		TearDownTimeout: 5 * time.Second,
-		PostTestTimeout: 5 * time.Second,
-		Parent:          fixture.FakeDMSEnrolled,
-	})
-	testing.AddFixture(&testing.Fixture{
 		Name:         fixture.PersistentFamilyLink,
 		Desc:         "Fixture setting persistent policy user for a Family Link account",
 		Contacts:     []string{"xiqiruan@chromium.org", "vsavu@google.com", "chromeos-commercial-remote-management@google.com"},
