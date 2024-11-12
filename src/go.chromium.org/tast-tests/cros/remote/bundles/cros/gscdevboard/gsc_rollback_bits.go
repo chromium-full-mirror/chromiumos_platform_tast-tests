@@ -153,9 +153,17 @@ func GSCRollbackBits(ctx context.Context, s *testing.State) {
 		s.Fatal("The release and old image have the same number of bits blown")
 	}
 
-	if oldRollbackBits != sysinfo.RWRollbackBits.Flash.Bits {
-		s.Error("Release image blew all bits after the first update")
+	// For Ti50, only prod signed images should update the rollback bits.
+	if sysinfo.ProdKeyladder || f.TestbedProperties.TestbedType == ti50.GscH1Shield {
+		if oldRollbackBits != sysinfo.RWRollbackBits.Flash.Bits {
+			s.Errorf("Did not erase rollback bits to match previous release. wanted: %d, got: %d", oldRollbackBits, sysinfo.RWRollbackBits.Flash.Bits)
+		}
+		s.Log("Rollback bits erased to match inactive images correctly")
+	} else {
+		s.Log("Skipped check for rollback image for non prod images")
 	}
+
+	previousFlashRollbackBits := sysinfo.RWRollbackBits.Flash.Bits
 
 	if testType == testSecondUpdate {
 		// Run power-on reset to clear update rate limit
@@ -180,8 +188,22 @@ func GSCRollbackBits(ctx context.Context, s *testing.State) {
 	sysinfo, err = i.Sysinfo(ctx)
 	th.MustSucceed(err, "failed to get sysinfo")
 	s.Logf("Rollback bits %+v", sysinfo.RWRollbackBits)
+
+	// For Ti50, only prod signed images should update the rollback bits. If this
+	// is a dev image, verify that rollback bits were not updated, then return as
+	// we can't test that old image won't run since rollback bits were not updated
+	// as expected.
+	if !sysinfo.ProdKeyladder && f.TestbedProperties.TestbedType != ti50.GscH1Shield {
+		if sysinfo.RWRollbackBits.Flash.Bits != previousFlashRollbackBits {
+			s.Fatalf("Rollback bits were updated in flash for dev image. wanted: %d, got: %d", previousFlashRollbackBits, sysinfo.RWRollbackBits.Flash.Bits)
+		}
+		s.Logf("Rollback bits were correctly unmodified with dev image after %s", testType)
+		return
+	}
+
+	// For prod key ladder, ensure that rollback bits were updated correctly
 	if sysinfo.RWRollbackBits.Flash.Bits != releaseRollbackBits {
-		s.Fatal("Rollback bits were not updated in flash")
+		s.Fatalf("Rollback bits were not updated in flash for prod image. wanted: %d, got: %d", releaseRollbackBits, sysinfo.RWRollbackBits.Flash.Bits)
 	}
 	s.Logf("Rollback bits successfully updated after %s", testType)
 
