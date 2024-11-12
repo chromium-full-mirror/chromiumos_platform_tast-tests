@@ -30,13 +30,11 @@ import (
 // GoogleMeetConference implements the Conference interface.
 type GoogleMeetConference struct {
 	cr                         *chrome.Chrome
-	br                         *browser.Browser
 	tconn                      *chrome.TestConn
 	kb                         *input.KeyboardEventWriter
 	ui                         *uiauto.Context
 	uiHandler                  cuj.UIActionHandler
 	displayAllParticipantsTime time.Duration
-	bt                         browser.Type
 	gm                         *googlemeet.GoogleMeet
 	roomType                   RoomType
 	outDir                     string
@@ -49,7 +47,7 @@ var _ Conference = (*GoogleMeetConference)(nil)
 
 // NewGoogleMeetConference creates Google Meet conference room instance which implements Conference interface.
 func NewGoogleMeetConference(cr *chrome.Chrome, tconn *chrome.TestConn, kb *input.KeyboardEventWriter, uiHandler cuj.UIActionHandler,
-	bt browser.Type, roomType RoomType, outDir string, tabletMode, extendedDisplay bool) *GoogleMeetConference {
+	roomType RoomType, outDir string, tabletMode, extendedDisplay bool) *GoogleMeetConference {
 	ui := uiauto.New(tconn)
 	return &GoogleMeetConference{
 		cr:              cr,
@@ -57,7 +55,6 @@ func NewGoogleMeetConference(cr *chrome.Chrome, tconn *chrome.TestConn, kb *inpu
 		kb:              kb,
 		ui:              ui,
 		uiHandler:       uiHandler,
-		bt:              bt,
 		roomType:        roomType,
 		tabletMode:      tabletMode,
 		extendedDisplay: extendedDisplay,
@@ -74,18 +71,18 @@ var meetWebArea = nodewith.NameContaining(meetTitle).Role(role.RootWebArea)
 
 // Join joins a new conference room.
 func (conf *GoogleMeetConference) Join(ctx context.Context, room string, toBlur bool) (err error) {
-	cr, br, tconn, ui, kb := conf.cr, conf.br, conf.tconn, conf.ui, conf.kb
+	cr, tconn, ui, kb := conf.cr, conf.tconn, conf.ui, conf.kb
 	expectedEffect := googlemeet.NoEffect
 	if toBlur {
 		expectedEffect = googlemeet.BlurEffect
 	}
 
-	conn, err := br.NewTab(ctx, "")
+	conn, err := cr.Browser().NewTab(ctx, "")
 	if err != nil {
 		return errors.Wrap(err, "failed to create new tab")
 	}
 
-	conf.gm, err = googlemeet.JoinMeetingWithEffect(ctx, cr, br, conn, room, expectedEffect, nil, googlemeet.WithAllPermissions, browser.WithNewWindow())
+	conf.gm, err = googlemeet.JoinMeetingWithEffect(ctx, cr, cr.Browser(), conn, room, expectedEffect, nil, googlemeet.WithAllPermissions, browser.WithNewWindow())
 	if err != nil {
 		return CheckSignedOutError(ctx, tconn, errors.Wrap(err, "failed to join google meeting"))
 	}
@@ -159,7 +156,7 @@ func (conf *GoogleMeetConference) VideoAudioControl(ctx context.Context) error {
 func (conf *GoogleMeetConference) SwitchTabs(ctx context.Context) error {
 	testing.ContextLog(ctx, "Open wiki page")
 	// Set newWindow to false to make the tab in the same Chrome window.
-	wikiConn, err := conf.uiHandler.NewChromeTab(ctx, conf.br, cuj.WikipediaURL, false)
+	wikiConn, err := conf.uiHandler.NewChromeTab(ctx, conf.cr.Browser(), cuj.WikipediaURL, false)
 	if err != nil {
 		return errors.Wrap(err, "failed to open the wiki url")
 	}
@@ -448,7 +445,7 @@ func (conf *GoogleMeetConference) Presenting(ctx context.Context, application go
 		return gm.StopShareScreen()(ctx)
 	}
 
-	if err := presentApps(ctx, tconn, uiHandler, conf.cr, conf.br, shareScreen, stopPresenting,
+	if err := presentApps(ctx, tconn, uiHandler, conf.cr, shareScreen, stopPresenting,
 		application, conf.outDir, conf.extendedDisplay); err != nil {
 		return errors.Wrapf(err, "failed to present %q", application)
 	}
@@ -459,11 +456,6 @@ func (conf *GoogleMeetConference) Presenting(ctx context.Context, application go
 // End closes all windows in the end.
 func (conf *GoogleMeetConference) End(ctx context.Context) error {
 	return cuj.CloseAllWindows(ctx, conf.tconn)
-}
-
-// SetBrowser sets browser to chrome.
-func (conf *GoogleMeetConference) SetBrowser(br *browser.Browser) {
-	conf.br = br
 }
 
 // checkLostNetwork checks for lost network connections.

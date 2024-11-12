@@ -12,7 +12,6 @@ import (
 	"go.chromium.org/tast-tests/cros/common/action"
 	"go.chromium.org/tast-tests/cros/local/chrome"
 	"go.chromium.org/tast-tests/cros/local/chrome/apps/thirdparty/zoom"
-	"go.chromium.org/tast-tests/cros/local/chrome/browser"
 	"go.chromium.org/tast-tests/cros/local/chrome/cuj"
 	"go.chromium.org/tast-tests/cros/local/chrome/uiauto"
 	"go.chromium.org/tast-tests/cros/local/chrome/webutil"
@@ -25,7 +24,6 @@ import (
 // ZoomConference implements the Conference interface.
 type ZoomConference struct {
 	cr                         *chrome.Chrome
-	br                         *browser.Browser
 	tconn                      *chrome.TestConn
 	kb                         *input.KeyboardEventWriter
 	ui                         *uiauto.Context
@@ -44,13 +42,14 @@ const zoomTitle = "Zoom"
 // Join joins a new conference room.
 func (conf *ZoomConference) Join(ctx context.Context, room string, toBlur bool) (err error) {
 	ui := conf.ui
+	br := conf.cr.Browser()
 
-	conn, err := conf.br.NewTab(ctx, chrome.NewTabURL)
+	conn, err := br.NewTab(ctx, chrome.NewTabURL)
 	if err != nil {
 		return errors.Wrap(err, "failed to create new tab")
 	}
 
-	conf.zm, err = zoom.JoinMeeting(ctx, conf.cr, conf.br, conn, room, zoom.WithAllPermissions)
+	conf.zm, err = zoom.JoinMeeting(ctx, conf.cr, br, conn, room, zoom.WithAllPermissions)
 	if err != nil {
 		return errors.Wrap(err, "failed to join zoom meeting")
 	}
@@ -100,7 +99,7 @@ func (conf *ZoomConference) VideoAudioControl(ctx context.Context) error {
 func (conf *ZoomConference) SwitchTabs(ctx context.Context) error {
 	testing.ContextLog(ctx, "Open wiki page")
 	// Set newWindow to false to make the tab in the same Chrome window.
-	wikiConn, err := conf.uiHandler.NewChromeTab(ctx, conf.br, cuj.WikipediaURL, false)
+	wikiConn, err := conf.uiHandler.NewChromeTab(ctx, conf.cr.Browser(), cuj.WikipediaURL, false)
 	if err != nil {
 		return errors.Wrap(err, "failed to open the wiki url")
 	}
@@ -164,7 +163,7 @@ func (conf *ZoomConference) Presenting(ctx context.Context, application googleAp
 
 	// Present on internal display by default.
 	presentOnExtendedDisplay := false
-	if err := presentApps(ctx, conf.tconn, conf.uiHandler, conf.cr, conf.br, shareScreen, stopPresenting,
+	if err := presentApps(ctx, conf.tconn, conf.uiHandler, conf.cr, shareScreen, stopPresenting,
 		application, conf.outDir, presentOnExtendedDisplay); err != nil {
 		return errors.Wrapf(err, "failed to present %s", appName)
 	}
@@ -180,11 +179,6 @@ func (conf *ZoomConference) End(ctx context.Context) error {
 }
 
 var _ Conference = (*ZoomConference)(nil)
-
-// SetBrowser sets browser to chrome.
-func (conf *ZoomConference) SetBrowser(br *browser.Browser) {
-	conf.br = br
-}
 
 // LostNetworkCount returns the count of lost network connections.
 func (conf *ZoomConference) LostNetworkCount() int {

@@ -29,7 +29,6 @@ type TestParams struct {
 	Cr              *chrome.Chrome
 	Conf            Conference
 	Tier            cuj.Tier
-	BrowserType     browser.Type
 	RoomType        RoomType
 	MeetLink        string
 	OutDir          string
@@ -44,7 +43,6 @@ func Run(ctx context.Context, params *TestParams) (retErr error) {
 		cr              = params.Cr
 		conf            = params.Conf
 		tier            = params.Tier
-		browserType     = params.BrowserType
 		roomType        = params.RoomType
 		meetLink        = params.MeetLink
 		outDir          = params.OutDir
@@ -69,13 +67,7 @@ func Run(ctx context.Context, params *TestParams) (retErr error) {
 	if err != nil {
 		return errors.Wrap(err, "failed to get browser start time")
 	}
-	br := cr.Browser()
-	conf.SetBrowser(br)
 
-	bTconn, err := br.TestAPIConn(ctx)
-	if err != nil {
-		return errors.Wrapf(err, "failed to create Test API connection for %v browser", browserType)
-	}
 	// Give 10 seconds to set initial settings. It is critical to ensure
 	// cleanupSetting can be executed with a valid context so it has its
 	// own cleanup context from other cleanup functions. This is to avoid
@@ -97,7 +89,7 @@ func Run(ctx context.Context, params *TestParams) (retErr error) {
 
 	testing.ContextLog(ctx, "Start recording actions")
 	options := cujrecorder.NewPerformanceCUJOptions()
-	recorder, err := cujrecorder.NewRecorder(ctx, cr, bTconn, nil, options)
+	recorder, err := cujrecorder.NewRecorder(ctx, cr, tconn, nil, options)
 	if err != nil {
 		return errors.Wrap(err, "failed to create the recorder")
 	}
@@ -105,7 +97,7 @@ func Run(ctx context.Context, params *TestParams) (retErr error) {
 	if err := cuj.AddPerformanceCUJMetrics(tconn, recorder); err != nil {
 		return errors.Wrap(err, "failed to add metrics to recorder")
 	}
-	if err := recorder.AddCollectedMetrics(bTconn, browserType, cujrecorder.WebRTCMetrics()...); err != nil {
+	if err := recorder.AddCollectedMetrics(tconn, browser.TypeAsh, cujrecorder.WebRTCMetrics()...); err != nil {
 		return errors.Wrap(err, "failed to add metrics to recorder")
 	}
 	isNoRoom := roomType == NoRoom
@@ -262,7 +254,7 @@ func RunWithGoogleConfig(ctx context.Context, tconn *chrome.TestConn, meetConfig
 
 		// Creates a Google Meet conference instance which implements conference.Conference methods
 		// which provides conference operations.
-		gmcli := NewGoogleMeetConference(p.Cr, tconn, kb, uiHandler, p.BrowserType, p.RoomType, p.OutDir, p.TabletMode, p.ExtendedDisplay)
+		gmcli := NewGoogleMeetConference(p.Cr, tconn, kb, uiHandler, p.RoomType, p.OutDir, p.TabletMode, p.ExtendedDisplay)
 		defer gmcli.End(cleanupGoogleMeetCtx)
 
 		p.Conf = gmcli

@@ -11,7 +11,6 @@ import (
 	"time"
 
 	"go.chromium.org/tast-tests/cros/local/chrome"
-	"go.chromium.org/tast-tests/cros/local/chrome/browser"
 	"go.chromium.org/tast-tests/cros/local/chrome/uiauto"
 	"go.chromium.org/tast-tests/cros/local/chrome/uiauto/nodewith"
 	"go.chromium.org/tast/core/errors"
@@ -35,7 +34,6 @@ type Conference interface {
 	BackgroundChange(ctx context.Context) error
 	Presenting(ctx context.Context, application googleApplication) error
 	End(ctx context.Context) error
-	SetBrowser(br *browser.Browser)
 	GetParticipants(ctx context.Context) (int, error)
 	LostNetworkCount() int
 	DisplayAllParticipantsTime() time.Duration

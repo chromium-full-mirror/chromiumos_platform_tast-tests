@@ -17,7 +17,6 @@ import (
 	"go.chromium.org/tast-tests/cros/local/chrome"
 	"go.chromium.org/tast-tests/cros/local/chrome/apps/thirdparty/googledocs"
 	"go.chromium.org/tast-tests/cros/local/chrome/ash"
-	"go.chromium.org/tast-tests/cros/local/chrome/browser"
 	"go.chromium.org/tast-tests/cros/local/chrome/cuj"
 	"go.chromium.org/tast-tests/cros/local/chrome/uiauto"
 	"go.chromium.org/tast-tests/cros/local/chrome/uiauto/faillog"
@@ -50,7 +49,7 @@ const (
 
 // presentApps creates Google Slides and Google Docs, shares screen and presents
 // the specified application to the conference.
-func presentApps(ctx context.Context, tconn *chrome.TestConn, uiHandler cuj.UIActionHandler, cr *chrome.Chrome, br *browser.Browser,
+func presentApps(ctx context.Context, tconn *chrome.TestConn, uiHandler cuj.UIActionHandler, cr *chrome.Chrome,
 	shareScreen, stopPresenting action.Action, application googleApplication, outDir string, extendedDisplay bool) (err error) {
 	kb, err := input.Keyboard(ctx)
 	if err != nil {
@@ -127,7 +126,7 @@ func presentApps(ctx context.Context, tconn *chrome.TestConn, uiHandler cuj.UIAc
 	ctx, cancel := ctxutil.Shorten(ctx, 10*time.Second)
 	defer cancel()
 
-	if err := googledocs.NewGoogleSlides(ctx, tconn, br, uiHandler, extendedDisplay); err != nil {
+	if err := googledocs.NewGoogleSlides(ctx, tconn, cr.Browser(), uiHandler, extendedDisplay); err != nil {
 		return CheckSignedOutError(ctx, tconn, err)
 	}
 	// Delete slide after presenting.
@@ -166,7 +165,7 @@ func presentApps(ctx context.Context, tconn *chrome.TestConn, uiHandler cuj.UIAc
 		}
 	}
 
-	if err := googledocs.NewGoogleDocs(ctx, tconn, br, uiHandler, extendedDisplay); err != nil {
+	if err := googledocs.NewGoogleDocs(ctx, tconn, cr.Browser(), uiHandler, extendedDisplay); err != nil {
 		return CheckSignedOutError(ctx, tconn, err)
 	}
 	// Delete document after presenting.
