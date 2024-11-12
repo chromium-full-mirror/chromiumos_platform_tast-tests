@@ -16,7 +16,6 @@ import (
 	"time"
 
 	common "go.chromium.org/tast-tests/cros/common/firmware"
-	"go.chromium.org/tast-tests/cros/common/flashrom"
 	"go.chromium.org/tast-tests/cros/common/servo"
 	"go.chromium.org/tast-tests/cros/remote/firmware"
 	pb "go.chromium.org/tast-tests/cros/services/cros/firmware"
@@ -638,43 +637,8 @@ func (i *bootModeImpl) PreTest(ctx context.Context, s *testing.FixtTestState) {
 		s.Log("Pretest setting GBB flags to ", i.value.GBBFlags.Set)
 		if err := common.SetGBBFlags(ctx, i.value.Helper.DUT, i.value.GBBFlags.Set); err != nil {
 			s.Log("Disabling write protect to allow GBB flags to be set")
-			// Read the hardware WP state, and disable if necessary
-			if val, err := i.value.Helper.Servo.GetString(ctx, servo.FWWPState); err != nil {
-				s.Fatal("Failed to query write protect: ", err)
-			} else if val == "on" || val == string(servo.FWWPStateOn) {
-				if err := i.value.Helper.Servo.SetFWWPState(ctx, servo.FWWPStateOff); err != nil {
-					s.Fatal("Failed to disable write protect: ", err)
-				}
-				// A reboot is required after changing the wp state.
-				ms, err := firmware.NewModeSwitcher(ctx, i.value.Helper)
-				if err != nil {
-					s.Fatal("Failed to create mode switcher: ", err)
-				}
-				if err := ms.ModeAwareReboot(ctx, firmware.WarmReset); err != nil {
-					s.Fatal("Failed to warm reboot: ", err)
-				}
-			}
-
-			var flashromConfig flashrom.Config
-			flashromInstance, ctx, shutdown, _, err := flashromConfig.
-				FlashromInit(flashrom.VerbosityInfo).
-				ProgrammerInit(flashrom.ProgrammerHost, "").
-				SetDut(i.value.Helper.DUT).
-				Probe(ctx)
-
-			defer func() {
-				if err := shutdown(); err != nil {
-					s.Error("Failed to shutdown flashromInstance: ", err)
-				}
-			}()
-
-			if err != nil {
-				s.Fatal("Flashrom probe failed, unable to build flashrom instance: ", err)
-			}
-
-			if out, err := flashromInstance.SoftwareWriteProtectDisable(ctx); err != nil {
-				s.Logf("Software WP disable failed with output: %s", string(out))
-				s.Fatal("Failed to disable software WP: ", err)
+			if err := ensureWPDisabled(ctx, i.value.Helper); err != nil {
+				s.Fatal("Failed to ensure WP disabled: ", err)
 			}
 
 			if err := common.SetGBBFlags(ctx, i.value.Helper.DUT, i.value.GBBFlags.Set); err != nil {
@@ -703,14 +667,8 @@ func (i *bootModeImpl) PreTest(ctx context.Context, s *testing.FixtTestState) {
 		}
 
 		if i.value.BootMode == common.BootModeRecovery {
-			// Read the hardware WP state, and disable if necessary
-			if val, err := i.value.Helper.Servo.GetString(ctx, servo.FWWPState); err != nil {
-				s.Fatal("Failed to query write protect: ", err)
-			} else if val == "on" || val == string(servo.FWWPStateOn) {
-				s.Log("Disabling write protect to allow PD negotiation in EC-RO")
-				if err := i.value.Helper.Servo.SetFWWPState(ctx, servo.FWWPStateOff); err != nil {
-					s.Fatal("Failed to disable write protect: ", err)
-				}
+			if err := ensureWPDisabled(ctx, i.value.Helper); err != nil {
+				s.Fatal("Failed to ensure WP disabled: ", err)
 			}
 		}
 
@@ -861,15 +819,9 @@ func (i *bootModeImpl) TearDown(ctx context.Context, s *testing.FixtState) {
 		i.origGBBFlags = nil
 	}(ctx)
 
-	// If we enabled WP during setup, then disable here so we can update GBB flags if needed
-	if i.value.ForceWPEnable {
-		s.Log("Disabling software and hardware write protect")
-		if err := i.value.Helper.Servo.SetFWWPState(ctx, servo.FWWPStateOff); err != nil {
-			s.Fatal("Failed to disable write protect: ", err)
-		}
-		if err := i.value.Helper.DUT.Conn().CommandContext(ctx, "futility", "flash", "--wp-disable").Run(); err != nil {
-			s.Fatal("Failed to disable software write protect: ", err)
-		}
+	// Disable software and hardware write protect here so we can update GBB flags if needed
+	if err := ensureWPDisabled(ctx, i.value.Helper); err != nil {
+		s.Fatal("Failed to ensure WP disabled: ", err)
 	}
 
 	// Close the servo to reset pd role, watchdogs, etc. unless we are booted from USB as resetting the pd role will make the dut reboot.
@@ -1036,6 +988,35 @@ func rebootToMode(ctx context.Context, h *firmware.Helper, mode common.BootMode,
 			return err
 		}
 		return errors.Wrapf(err, "failed to reboot to mode %q, got power state %s", mode, powerState)
+	}
+
+	return nil
+}
+
+// ensureWPDisabled checks the write protect state and disables it if necessary.
+func ensureWPDisabled(ctx context.Context, h *firmware.Helper) error {
+	// Read the hardware WP state, and disable if necessary
+	if val, err := h.Servo.GetString(ctx, servo.FWWPState); err != nil {
+		return errors.Wrap(err, "failed to query write protect")
+	} else if val == "on" || val == string(servo.FWWPStateOn) {
+		testing.ContextLog(ctx, "Ensuring CCD open, testlab enabled, and capabilities set to factory settings")
+		if err := h.OpenCCD(ctx, true, true); err != nil {
+			return errors.Wrap(err, "failed to set CCD open")
+		}
+		if err := h.Servo.SetFWWPState(ctx, servo.FWWPStateOff); err != nil {
+			return errors.Wrap(err, "failed to disable write protect")
+		}
+		if err := h.DUT.Conn().CommandContext(ctx, "futility", "flash", "--wp-disable").Run(); err != nil {
+			return errors.Wrap(err, "failed to disable software write protect")
+		}
+		// A reboot is required after changing the wp state.
+		ms, err := firmware.NewModeSwitcher(ctx, h)
+		if err != nil {
+			return errors.Wrap(err, "failed to create mode switcher")
+		}
+		if err := ms.ModeAwareReboot(ctx, firmware.WarmReset); err != nil {
+			return errors.Wrap(err, "failed to warm reboot")
+		}
 	}
 
 	return nil
