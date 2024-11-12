@@ -5,14 +5,10 @@
 package lacros
 
 import (
-	internal "go.chromium.org/tast-tests/cros/local/chrome/internal/lacros"
 	"go.chromium.org/tast/core/testing"
 )
 
 const (
-	// UserDataDir is the directory that contains the user data of lacros.
-	UserDataDir = internal.UserDataDir
-
 	// LacrosSquashFSPath indicates the location of the rootfs lacros squashfs filesystem.
 	LacrosSquashFSPath = "/opt/google/lacros/lacros.squash"
 )

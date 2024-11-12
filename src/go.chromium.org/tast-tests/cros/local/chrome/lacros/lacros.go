@@ -6,21 +6,13 @@ package lacros
 
 import (
 	"context"
-	"path/filepath"
-	"strings"
-	"time"
-
-	"android.googlesource.com/platform/external/perfetto/protos/perfetto/trace/github.com/google/perfetto/perfetto_proto"
-	"github.com/mafredri/cdp/protocol/target"
 
 	"go.chromium.org/tast-tests/cros/local/chrome"
 	"go.chromium.org/tast-tests/cros/local/chrome/browser"
 	"go.chromium.org/tast-tests/cros/local/chrome/internal/cdputil"
 	"go.chromium.org/tast-tests/cros/local/chrome/internal/driver"
 	"go.chromium.org/tast-tests/cros/local/chrome/jslog"
-	"go.chromium.org/tast-tests/cros/local/chrome/lacros/lacrosinfo"
 	"go.chromium.org/tast/core/errors"
-	"go.chromium.org/tast/core/testing"
 )
 
 // Lacros contains all state associated with a lacros-chrome instance
@@ -31,36 +23,9 @@ type Lacros struct {
 	ctconn *chrome.TestConn // Ash TestConn.
 }
 
-// ErrAlreadyStoppedBeforeClose is an error returned by Close() if the State
-// of Lacros is already Stopped when the function was called.
-var ErrAlreadyStoppedBeforeClose = errors.New("the Lacros browser was already stopped (or crashed)")
-
 // Browser returns a Browser instance.
 func (l *Lacros) Browser() *browser.Browser {
 	return browser.New(l.sess, false)
-}
-
-// StartTracing starts trace events collection for the selected categories. Android
-// categories must be prefixed with "disabled-by-default-android ", e.g. for the
-// gfx category, use "disabled-by-default-android gfx", including the space.
-// This must not be called after Close().
-func (l *Lacros) StartTracing(ctx context.Context, categories []string, opts ...cdputil.TraceOption) error {
-	return l.sess.StartTracing(ctx, categories, opts...)
-}
-
-// StartSystemTracing starts trace events collection from the system tracing
-// service using the marshaled binary protobuf trace config.
-// Note: StopTracing should be called even if StartTracing returns an error.
-// Sometimes, the request to start tracing reaches the browser process, but there
-// is a timeout while waiting for the reply.
-func (l *Lacros) StartSystemTracing(ctx context.Context, perfettoConfig []byte) error {
-	return l.sess.StartSystemTracing(ctx, perfettoConfig)
-}
-
-// StopTracing stops trace collection and returns the collected trace events.
-// This must not be called after Close().
-func (l *Lacros) StopTracing(ctx context.Context) (*perfetto_proto.Trace, error) {
-	return l.sess.StopTracing(ctx)
 }
 
 // CloseResources closes lacros resources without closing targets.
@@ -75,94 +40,7 @@ func (l *Lacros) CloseResources(ctx context.Context) {
 
 // Close closes all lacros chrome targets and the dev session.
 func (l *Lacros) Close(ctx context.Context) (retErr error) {
-	// Things that we want to happen even when returning an error.
-	defer func() {
-		if outDir, ok := testing.ContextOutDir(ctx); ok {
-			l.agg.SaveWithTimestampInPath(filepath.Join(outDir, "jslog-lacros-"), ".txt")
-		} else {
-			testing.ContextLog(ctx, "No output directory exists, not saving Lacros jslog")
-		}
-
-		// The browser may already be terminated by the time we try to close the
-		// dev session, so ignore any error.
-		l.CloseResources(ctx)
-	}()
-
-	info, err := lacrosinfo.Snapshot(ctx, l.ctconn)
-	if err != nil {
-		return errors.Wrap(err, "failed to get lacros info")
-	}
-	if info.State == "Stopped" {
-		testing.ContextLog(ctx, "The Lacros browser was already stopped before Close()")
-		return ErrAlreadyStoppedBeforeClose
-	}
-
-	// Get all pages. Note that we can't get all targets, because one of them
-	// will be the test extension or devtools and we don't want to kill that.
-	// Further note that this will mean pages are not restored, compared to killing
-	// lacros directly.
-	// TODO(crbug.com/1311504): There is similar functionality in chrome.ResetState. Integrate these?
-	// TODO(crbug.com/1312306): For some reason, including t.Type == "other" breaks this.
-	ts, err := l.sess.FindTargets(ctx, func(t *target.Info) bool {
-		return t.Type == "app" || (t.Type == "page" &&
-			// Trying to close the tab strip would just produce an
-			// error. It will disappear automatically with the last tab.
-			!strings.HasPrefix(t.URL, "chrome://tab-strip.top-chrome/"))
-	})
-	if err != nil {
-		testing.ContextLogf(ctx, "Last known Lacros state is %s", info.State)
-		return errors.Wrap(err, "failed to query for all targets")
-	}
-
-	var sessErr error
-	for _, t := range ts {
-		if err := l.sess.CloseTarget(ctx, t.TargetID); err != nil {
-			// CloseTarget should not error if keep-alive is on, since the browser
-			// won't die.
-			if info.KeepAlive {
-				return errors.Wrap(err, "failed to close target")
-			}
-			// Otherwise, ignore the error here, as closing the target may close
-			// lacros and cause an error.
-			if sessErr != nil {
-				sessErr = err
-			}
-		}
-	}
-
-	// If keep-alive is on, then if there was an error closing targets we would
-	// have returned it. If keep-alive is off, then we will expect lacros to be
-	// stopped soon if the error was due to CloseTarget trying to run on a
-	// closed browser. So, poll to make sure lacros actually closes.
-	if !info.KeepAlive {
-		if err := testing.Poll(ctx, func(ctx context.Context) error {
-			info, err := lacrosinfo.Snapshot(ctx, l.ctconn)
-			if err != nil {
-				return testing.PollBreak(errors.Wrap(err, "failed to get lacros info"))
-			}
-			if info.State != lacrosinfo.LacrosStateStopped {
-				return errors.Wrap(err, "lacros not yet stopped")
-			}
-			return nil
-		}, &testing.PollOptions{Timeout: 10 * time.Second}); err != nil {
-			return errors.Wrap(sessErr, "lacros unexpectedly not yet stopped")
-		}
-	}
-
-	return nil
-}
-
-// NewConnForTarget iterates through all available targets and returns a connection to the
-// first one that is matched by tm.
-// This must not be called after Close().
-func (l *Lacros) NewConnForTarget(ctx context.Context, tm chrome.TargetMatcher) (*chrome.Conn, error) {
-	return l.sess.NewConnForTarget(ctx, tm)
-}
-
-// FindTargets returns the info about Targets, which satisfies the given cond condition.
-// This must not be called after Close().
-func (l *Lacros) FindTargets(ctx context.Context, tm chrome.TargetMatcher) ([]*chrome.Target, error) {
-	return l.sess.FindTargets(ctx, tm)
+	return errors.New("unsupported")
 }
 
 // NewConn creates a new Chrome renderer and returns a connection to it.

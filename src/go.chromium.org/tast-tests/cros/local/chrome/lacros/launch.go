@@ -24,20 +24,11 @@ package lacros
 
 import (
 	"context"
-	"path/filepath"
-	"time"
 
 	"go.chromium.org/tast-tests/cros/local/chrome"
 	"go.chromium.org/tast-tests/cros/local/chrome/ash"
 	"go.chromium.org/tast-tests/cros/local/chrome/browser"
-	"go.chromium.org/tast-tests/cros/local/chrome/internal/cdputil"
-	"go.chromium.org/tast-tests/cros/local/chrome/internal/driver"
-	"go.chromium.org/tast-tests/cros/local/chrome/jslog"
-	"go.chromium.org/tast-tests/cros/local/chrome/lacros/lacrosfaillog"
-	"go.chromium.org/tast-tests/cros/local/chrome/lacros/lacrosinfo"
-	"go.chromium.org/tast/core/ctxutil"
 	"go.chromium.org/tast/core/errors"
-	"go.chromium.org/tast/core/testing"
 )
 
 // Setup runs lacros-chrome if indicated by the given browser.Type and returns some objects and interfaces
@@ -68,55 +59,6 @@ func Setup(ctx context.Context, f interface{}, bt browser.Type) (*chrome.Chrome,
 	}
 }
 
-func connect(ctx context.Context, tconn *chrome.TestConn, saveFailLog bool) (l *Lacros, retErr error) {
-	// Reserve a few seconds for faillog capture.
-	faillogCtx := ctx
-	ctx, cancel := ctxutil.Shorten(ctx, 10*time.Second)
-	defer cancel()
-	if saveFailLog {
-		defer lacrosfaillog.SaveIf(faillogCtx, tconn, func() bool { return retErr != nil })
-	}
-
-	agg := jslog.NewAggregator()
-	defer func() {
-		if retErr != nil {
-			agg.Close()
-		}
-	}()
-
-	var execPath string
-	if err := testing.Poll(ctx, func(ctx context.Context) error {
-		info, err := lacrosinfo.Snapshot(ctx, tconn)
-		if err != nil {
-			return testing.PollBreak(errors.Wrap(err, "failed to get lacros info"))
-		}
-		if len(info.LacrosPath) == 0 {
-			return errors.Wrap(err, "lacros is not yet running (received empty LacrosPath)")
-		}
-		execPath = filepath.Join(info.LacrosPath, "chrome")
-		return nil
-	}, nil); err != nil {
-		return nil, errors.Wrap(err, "lacros is not running")
-	}
-
-	debuggingPortPath := filepath.Join(UserDataDir, "DevToolsActivePort")
-	sess, err := driver.NewSession(ctx, execPath, debuggingPortPath, cdputil.WaitPort, agg)
-	if err != nil {
-		return nil, errors.Wrap(err, "failed to connect to debugging port")
-	}
-
-	return &Lacros{
-		agg:    agg,
-		sess:   sess,
-		ctconn: tconn,
-	}, nil
-}
-
-// Connect connects to a running lacros instance (e.g launched by the UI) and returns a Lacros object that can be used to interact with it.
-func Connect(ctx context.Context, tconn *chrome.TestConn) (l *Lacros, retErr error) {
-	return connect(ctx, tconn, true)
-}
-
 // Launch launches lacros. Note that this function expects lacros to be closed
 // as a precondition.
 func Launch(ctx context.Context, tconn *chrome.TestConn) (l *Lacros, retErr error) {
@@ -127,27 +69,5 @@ func Launch(ctx context.Context, tconn *chrome.TestConn) (l *Lacros, retErr erro
 // with the given URL. Note that this function expects lacros to be closed
 // as a precondition.
 func LaunchWithURL(ctx context.Context, tconn *chrome.TestConn, url string) (*Lacros, *chrome.Conn, error) {
-	l, err := Launch(ctx, tconn)
-	if err != nil {
-		return nil, nil, errors.Wrap(err, "failed to launch Lacros")
-	}
-
-	// Get all tabs.
-	tabs, err := l.Browser().CurrentTabs(ctx)
-	if err != nil {
-		return nil, nil, errors.Wrap(err, "failed to get tabs")
-	}
-	if len(tabs) != 1 {
-		return nil, nil, errors.Wrapf(err, "expected only one opened tab, got %v", tabs)
-	}
-
-	conn, err := l.NewConnForTarget(ctx, chrome.MatchTargetURL(tabs[0].URL))
-	if err != nil {
-		return nil, nil, errors.Wrap(err, "failed to connect to target")
-	}
-	if err := conn.Navigate(ctx, url); err != nil {
-		return nil, nil, errors.Wrap(err, "failed to navigate to url")
-	}
-
-	return l, conn, nil
+	return nil, nil, errors.New("unsupported")
 }
