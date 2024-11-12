@@ -23,7 +23,7 @@ const (
 	// YoutubeStadiaGDCVideoURL specifies the URL of the YouTube video for Stadia GDC 2019.
 	YoutubeStadiaGDCVideoURL = "https://youtu.be/nUih5C5rOrA"
 
-	// URLs used by ProductivityCUJ.
+	// URLs originally used by ProductivityCUJ.
 
 	// NewGoogleDocsURL specifies the URL to create new Google Docs.
 	NewGoogleDocsURL = "https://docs.new"
@@ -31,14 +31,6 @@ const (
 	NewGoogleSlidesURL = "https://slide.new"
 	// NewGoogleSheetsURL specifies the URL to create new Google Slide.
 	NewGoogleSheetsURL = "https://sheet.new"
-	// GoogleDocsURL specifies the URL for Google Docs.
-	GoogleDocsURL = "https://docs.google.com/document"
-	// GoogleSlidesURL specifies the URL for Google Slides.
-	GoogleSlidesURL = "http://docs.google.com/slides"
-	// GoogleSheetsURL specifies the URL for Google Sheets.
-	GoogleSheetsURL = "http://docs.google.com/spreadsheets"
-	// Microsoft365URL specifies the URL of Microsoft 365 Home.
-	Microsoft365URL = "https://www.microsoft365.com/"
 
 	// URLs used by FrontlineWorkerCUJ.
 
