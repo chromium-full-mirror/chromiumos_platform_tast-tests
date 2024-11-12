@@ -1032,7 +1032,7 @@ func init() {
 				Name: "cros_codecs_vaapi_vp9_0_group1_buf",
 				Val: platformDecodingParams{
 					filenames:          test_vectors.VP9WebmFiles["profile_0"]["group1"]["buf"],
-					decoder:            "/usr/bin/ccdec",
+					decoder:            "ccdec",
 					decoderArgsBuilder: platform.VP9DecodeCrosCodecsargs,
 				},
 				Timeout:           10 * time.Minute,
@@ -1044,7 +1044,7 @@ func init() {
 				Name: "cros_codecs_vaapi_vp9_0_group1_frm_resize",
 				Val: platformDecodingParams{
 					filenames:          test_vectors.VP9WebmFiles["profile_0"]["group1"]["frm_resize"],
-					decoder:            "/usr/bin/ccdec",
+					decoder:            "ccdec",
 					decoderArgsBuilder: platform.VP9DecodeCrosCodecsargs,
 				},
 				Timeout:           10 * time.Minute,
@@ -1057,7 +1057,7 @@ func init() {
 				Name: "cros_codecs_vaapi_vp9_0_group1_gf_dist",
 				Val: platformDecodingParams{
 					filenames:          test_vectors.VP9WebmFiles["profile_0"]["group1"]["gf_dist"],
-					decoder:            "/usr/bin/ccdec",
+					decoder:            "ccdec",
 					decoderArgsBuilder: platform.VP9DecodeCrosCodecsargs,
 				},
 				Timeout:           10 * time.Minute,
@@ -1069,7 +1069,7 @@ func init() {
 				Name: "cros_codecs_vaapi_vp9_0_group1_odd_size",
 				Val: platformDecodingParams{
 					filenames:          test_vectors.VP9WebmFiles["profile_0"]["group1"]["odd_size"],
-					decoder:            "/usr/bin/ccdec",
+					decoder:            "ccdec",
 					decoderArgsBuilder: platform.VP9DecodeCrosCodecsargs,
 				},
 				Timeout:           10 * time.Minute,
@@ -1081,7 +1081,7 @@ func init() {
 				Name: "cros_codecs_vaapi_vp9_0_group1_sub8x8",
 				Val: platformDecodingParams{
 					filenames:          test_vectors.VP9WebmFiles["profile_0"]["group1"]["sub8x8"],
-					decoder:            "/usr/bin/ccdec",
+					decoder:            "ccdec",
 					decoderArgsBuilder: platform.VP9DecodeCrosCodecsargs,
 				},
 				Timeout:           10 * time.Minute,
@@ -1093,7 +1093,7 @@ func init() {
 				Name: "cros_codecs_vaapi_vp9_0_group1_sub8x8_sf",
 				Val: platformDecodingParams{
 					filenames:          test_vectors.VP9WebmFiles["profile_0"]["group1"]["sub8x8_sf"],
-					decoder:            "/usr/bin/ccdec",
+					decoder:            "ccdec",
 					decoderArgsBuilder: platform.VP9DecodeCrosCodecsargs,
 				},
 				Timeout:           10 * time.Minute,
@@ -1106,7 +1106,7 @@ func init() {
 				Name: "cros_codecs_vaapi_vp9_0_group2_buf",
 				Val: platformDecodingParams{
 					filenames:          test_vectors.VP9WebmFiles["profile_0"]["group2"]["buf"],
-					decoder:            "/usr/bin/ccdec",
+					decoder:            "ccdec",
 					decoderArgsBuilder: platform.VP9DecodeCrosCodecsargs,
 				},
 				Timeout:           10 * time.Minute,
@@ -1118,7 +1118,7 @@ func init() {
 				Name: "cros_codecs_vaapi_vp9_0_group2_frm_resize",
 				Val: platformDecodingParams{
 					filenames:          test_vectors.VP9WebmFiles["profile_0"]["group2"]["frm_resize"],
-					decoder:            "/usr/bin/ccdec",
+					decoder:            "ccdec",
 					decoderArgsBuilder: platform.VP9DecodeCrosCodecsargs,
 				},
 				Timeout:           10 * time.Minute,
@@ -1131,7 +1131,7 @@ func init() {
 				Name: "cros_codecs_vaapi_vp9_0_group2_gf_dist",
 				Val: platformDecodingParams{
 					filenames:          test_vectors.VP9WebmFiles["profile_0"]["group2"]["gf_dist"],
-					decoder:            "/usr/bin/ccdec",
+					decoder:            "ccdec",
 					decoderArgsBuilder: platform.VP9DecodeCrosCodecsargs,
 				},
 				Timeout:           10 * time.Minute,
@@ -1143,7 +1143,7 @@ func init() {
 				Name: "cros_codecs_vaapi_vp9_0_group2_odd_size",
 				Val: platformDecodingParams{
 					filenames:          test_vectors.VP9WebmFiles["profile_0"]["group2"]["odd_size"],
-					decoder:            "/usr/bin/ccdec",
+					decoder:            "ccdec",
 					decoderArgsBuilder: platform.VP9DecodeCrosCodecsargs,
 				},
 				Timeout:           10 * time.Minute,
@@ -1155,7 +1155,7 @@ func init() {
 				Name: "cros_codecs_vaapi_vp9_0_group2_sub8x8",
 				Val: platformDecodingParams{
 					filenames:          test_vectors.VP9WebmFiles["profile_0"]["group2"]["sub8x8"],
-					decoder:            "/usr/bin/ccdec",
+					decoder:            "ccdec",
 					decoderArgsBuilder: platform.VP9DecodeCrosCodecsargs,
 				},
 				Timeout:           10 * time.Minute,
@@ -1167,7 +1167,7 @@ func init() {
 				Name: "cros_codecs_vaapi_vp9_0_group2_sub8x8_sf",
 				Val: platformDecodingParams{
 					filenames:          test_vectors.VP9WebmFiles["profile_0"]["group2"]["sub8x8_sf"],
-					decoder:            "/usr/bin/ccdec",
+					decoder:            "ccdec",
 					decoderArgsBuilder: platform.VP9DecodeCrosCodecsargs,
 				},
 				Timeout:           10 * time.Minute,
@@ -1180,7 +1180,7 @@ func init() {
 				Name: "cros_codecs_vaapi_vp9_0_group3_buf",
 				Val: platformDecodingParams{
 					filenames:          test_vectors.VP9WebmFiles["profile_0"]["group3"]["buf"],
-					decoder:            "/usr/bin/ccdec",
+					decoder:            "ccdec",
 					decoderArgsBuilder: platform.VP9DecodeCrosCodecsargs,
 				},
 				Timeout:           10 * time.Minute,
@@ -1192,7 +1192,7 @@ func init() {
 				Name: "cros_codecs_vaapi_vp9_0_group3_frm_resize",
 				Val: platformDecodingParams{
 					filenames:          test_vectors.VP9WebmFiles["profile_0"]["group3"]["frm_resize"],
-					decoder:            "/usr/bin/ccdec",
+					decoder:            "ccdec",
 					decoderArgsBuilder: platform.VP9DecodeCrosCodecsargs,
 				},
 				Timeout:           10 * time.Minute,
@@ -1205,7 +1205,7 @@ func init() {
 				Name: "cros_codecs_vaapi_vp9_0_group3_gf_dist",
 				Val: platformDecodingParams{
 					filenames:          test_vectors.VP9WebmFiles["profile_0"]["group3"]["gf_dist"],
-					decoder:            "/usr/bin/ccdec",
+					decoder:            "ccdec",
 					decoderArgsBuilder: platform.VP9DecodeCrosCodecsargs,
 				},
 				Timeout:           10 * time.Minute,
@@ -1217,7 +1217,7 @@ func init() {
 				Name: "cros_codecs_vaapi_vp9_0_group3_odd_size",
 				Val: platformDecodingParams{
 					filenames:          test_vectors.VP9WebmFiles["profile_0"]["group3"]["odd_size"],
-					decoder:            "/usr/bin/ccdec",
+					decoder:            "ccdec",
 					decoderArgsBuilder: platform.VP9DecodeCrosCodecsargs,
 				},
 				Timeout:           10 * time.Minute,
@@ -1229,7 +1229,7 @@ func init() {
 				Name: "cros_codecs_vaapi_vp9_0_group3_sub8x8",
 				Val: platformDecodingParams{
 					filenames:          test_vectors.VP9WebmFiles["profile_0"]["group3"]["sub8x8"],
-					decoder:            "/usr/bin/ccdec",
+					decoder:            "ccdec",
 					decoderArgsBuilder: platform.VP9DecodeCrosCodecsargs,
 				},
 				Timeout:           10 * time.Minute,
@@ -1241,7 +1241,7 @@ func init() {
 				Name: "cros_codecs_vaapi_vp9_0_group3_sub8x8_sf",
 				Val: platformDecodingParams{
 					filenames:          test_vectors.VP9WebmFiles["profile_0"]["group3"]["sub8x8_sf"],
-					decoder:            "/usr/bin/ccdec",
+					decoder:            "ccdec",
 					decoderArgsBuilder: platform.VP9DecodeCrosCodecsargs,
 				},
 				Timeout:           10 * time.Minute,
@@ -1254,7 +1254,7 @@ func init() {
 				Name: "cros_codecs_vaapi_vp9_0_group4_buf",
 				Val: platformDecodingParams{
 					filenames:          test_vectors.VP9WebmFiles["profile_0"]["group4"]["buf"],
-					decoder:            "/usr/bin/ccdec",
+					decoder:            "ccdec",
 					decoderArgsBuilder: platform.VP9DecodeCrosCodecsargs,
 				},
 				Timeout:           24 * time.Hour,
@@ -1266,7 +1266,7 @@ func init() {
 				Name: "cros_codecs_vaapi_vp9_0_group4_frm_resize",
 				Val: platformDecodingParams{
 					filenames:          test_vectors.VP9WebmFiles["profile_0"]["group4"]["frm_resize"],
-					decoder:            "/usr/bin/ccdec",
+					decoder:            "ccdec",
 					decoderArgsBuilder: platform.VP9DecodeCrosCodecsargs,
 				},
 				Timeout:           24 * time.Hour,
@@ -1279,7 +1279,7 @@ func init() {
 				Name: "cros_codecs_vaapi_vp9_0_group4_gf_dist",
 				Val: platformDecodingParams{
 					filenames:          test_vectors.VP9WebmFiles["profile_0"]["group4"]["gf_dist"],
-					decoder:            "/usr/bin/ccdec",
+					decoder:            "ccdec",
 					decoderArgsBuilder: platform.VP9DecodeCrosCodecsargs,
 				},
 				Timeout:           24 * time.Hour,
@@ -1291,7 +1291,7 @@ func init() {
 				Name: "cros_codecs_vaapi_vp9_0_group4_odd_size",
 				Val: platformDecodingParams{
 					filenames:          test_vectors.VP9WebmFiles["profile_0"]["group4"]["odd_size"],
-					decoder:            "/usr/bin/ccdec",
+					decoder:            "ccdec",
 					decoderArgsBuilder: platform.VP9DecodeCrosCodecsargs,
 				},
 				Timeout:           24 * time.Hour,
@@ -1303,7 +1303,7 @@ func init() {
 				Name: "cros_codecs_vaapi_vp9_0_group4_sub8x8",
 				Val: platformDecodingParams{
 					filenames:          test_vectors.VP9WebmFiles["profile_0"]["group4"]["sub8x8"],
-					decoder:            "/usr/bin/ccdec",
+					decoder:            "ccdec",
 					decoderArgsBuilder: platform.VP9DecodeCrosCodecsargs,
 				},
 				Timeout:           24 * time.Hour,
@@ -1315,7 +1315,7 @@ func init() {
 				Name: "cros_codecs_vaapi_vp9_0_group4_sub8x8_sf",
 				Val: platformDecodingParams{
 					filenames:          test_vectors.VP9WebmFiles["profile_0"]["group4"]["sub8x8_sf"],
-					decoder:            "/usr/bin/ccdec",
+					decoder:            "ccdec",
 					decoderArgsBuilder: platform.VP9DecodeCrosCodecsargs,
 				},
 				Timeout:           24 * time.Hour,
@@ -1328,7 +1328,7 @@ func init() {
 				Name: "cros_codecs_vaapi_vp9_0_level5_0_buf",
 				Val: platformDecodingParams{
 					filenames:          test_vectors.VP9WebmFiles["profile_0"]["level5_0"]["buf"],
-					decoder:            "/usr/bin/ccdec",
+					decoder:            "ccdec",
 					decoderArgsBuilder: platform.VP9DecodeCrosCodecsargs,
 				},
 				Timeout:           24 * time.Hour,
@@ -1340,7 +1340,7 @@ func init() {
 				Name: "cros_codecs_vaapi_vp9_0_level5_0_frm_resize",
 				Val: platformDecodingParams{
 					filenames:          test_vectors.VP9WebmFiles["profile_0"]["level5_0"]["frm_resize"],
-					decoder:            "/usr/bin/ccdec",
+					decoder:            "ccdec",
 					decoderArgsBuilder: platform.VP9DecodeCrosCodecsargs,
 				},
 				Timeout:           24 * time.Hour,
@@ -1353,7 +1353,7 @@ func init() {
 				Name: "cros_codecs_vaapi_vp9_0_level5_0_gf_dist",
 				Val: platformDecodingParams{
 					filenames:          test_vectors.VP9WebmFiles["profile_0"]["level5_0"]["gf_dist"],
-					decoder:            "/usr/bin/ccdec",
+					decoder:            "ccdec",
 					decoderArgsBuilder: platform.VP9DecodeCrosCodecsargs,
 				},
 				Timeout:           24 * time.Hour,
@@ -1365,7 +1365,7 @@ func init() {
 				Name: "cros_codecs_vaapi_vp9_0_level5_0_odd_size",
 				Val: platformDecodingParams{
 					filenames:          test_vectors.VP9WebmFiles["profile_0"]["level5_0"]["odd_size"],
-					decoder:            "/usr/bin/ccdec",
+					decoder:            "ccdec",
 					decoderArgsBuilder: platform.VP9DecodeCrosCodecsargs,
 				},
 				Timeout:           24 * time.Hour,
@@ -1377,7 +1377,7 @@ func init() {
 				Name: "cros_codecs_vaapi_vp9_0_level5_0_sub8x8",
 				Val: platformDecodingParams{
 					filenames:          test_vectors.VP9WebmFiles["profile_0"]["level5_0"]["sub8x8"],
-					decoder:            "/usr/bin/ccdec",
+					decoder:            "ccdec",
 					decoderArgsBuilder: platform.VP9DecodeCrosCodecsargs,
 				},
 				Timeout:           24 * time.Hour,
@@ -1389,7 +1389,7 @@ func init() {
 				Name: "cros_codecs_vaapi_vp9_0_level5_0_sub8x8_sf",
 				Val: platformDecodingParams{
 					filenames:          test_vectors.VP9WebmFiles["profile_0"]["level5_0"]["sub8x8_sf"],
-					decoder:            "/usr/bin/ccdec",
+					decoder:            "ccdec",
 					decoderArgsBuilder: platform.VP9DecodeCrosCodecsargs,
 				},
 				Timeout:           24 * time.Hour,
@@ -1402,7 +1402,7 @@ func init() {
 				Name: "cros_codecs_vaapi_vp9_0_level5_1_buf",
 				Val: platformDecodingParams{
 					filenames:          test_vectors.VP9WebmFiles["profile_0"]["level5_1"]["buf"],
-					decoder:            "/usr/bin/ccdec",
+					decoder:            "ccdec",
 					decoderArgsBuilder: platform.VP9DecodeCrosCodecsargs,
 				},
 				Timeout:           24 * time.Hour,
@@ -1415,7 +1415,7 @@ func init() {
 				Name: "cros_codecs_vaapi_vp9_0_level5_1_frm_resize",
 				Val: platformDecodingParams{
 					filenames:          test_vectors.VP9WebmFiles["profile_0"]["level5_1"]["frm_resize"],
-					decoder:            "/usr/bin/ccdec",
+					decoder:            "ccdec",
 					decoderArgsBuilder: platform.VP9DecodeCrosCodecsargs,
 				},
 				Timeout:           24 * time.Hour,
@@ -1428,7 +1428,7 @@ func init() {
 				Name: "cros_codecs_vaapi_vp9_0_level5_1_gf_dist",
 				Val: platformDecodingParams{
 					filenames:          test_vectors.VP9WebmFiles["profile_0"]["level5_1"]["gf_dist"],
-					decoder:            "/usr/bin/ccdec",
+					decoder:            "ccdec",
 					decoderArgsBuilder: platform.VP9DecodeCrosCodecsargs,
 				},
 				Timeout:           24 * time.Hour,
@@ -1441,7 +1441,7 @@ func init() {
 				Name: "cros_codecs_vaapi_vp9_0_level5_1_odd_size",
 				Val: platformDecodingParams{
 					filenames:          test_vectors.VP9WebmFiles["profile_0"]["level5_1"]["odd_size"],
-					decoder:            "/usr/bin/ccdec",
+					decoder:            "ccdec",
 					decoderArgsBuilder: platform.VP9DecodeCrosCodecsargs,
 				},
 				Timeout:           24 * time.Hour,
@@ -1454,7 +1454,7 @@ func init() {
 				Name: "cros_codecs_vaapi_vp9_0_level5_1_sub8x8",
 				Val: platformDecodingParams{
 					filenames:          test_vectors.VP9WebmFiles["profile_0"]["level5_1"]["sub8x8"],
-					decoder:            "/usr/bin/ccdec",
+					decoder:            "ccdec",
 					decoderArgsBuilder: platform.VP9DecodeCrosCodecsargs,
 				},
 				Timeout:           24 * time.Hour,
@@ -1467,7 +1467,7 @@ func init() {
 				Name: "cros_codecs_vaapi_vp9_0_level5_1_sub8x8_sf",
 				Val: platformDecodingParams{
 					filenames:          test_vectors.VP9WebmFiles["profile_0"]["level5_1"]["sub8x8_sf"],
-					decoder:            "/usr/bin/ccdec",
+					decoder:            "ccdec",
 					decoderArgsBuilder: platform.VP9DecodeCrosCodecsargs,
 				},
 				Timeout:           24 * time.Hour,
@@ -1480,7 +1480,7 @@ func init() {
 				Name: "cros_codecs_vaapi_av1",
 				Val: platformDecodingParams{
 					filenames:          test_vectors.AV1Files["8bit"],
-					decoder:            "/usr/bin/ccdec",
+					decoder:            "ccdec",
 					decoderArgsBuilder: platform.AV1DecodeCrosCodecsargs,
 				},
 				Timeout:           10 * time.Minute,
@@ -1492,7 +1492,7 @@ func init() {
 				Name: "cros_codecs_vaapi_av1_8bit_quantizer",
 				Val: platformDecodingParams{
 					filenames:          test_vectors.AV1Aom8bitFiles["quantizer"],
-					decoder:            "/usr/bin/ccdec",
+					decoder:            "ccdec",
 					decoderArgsBuilder: platform.AV1DecodeCrosCodecsargs,
 				},
 				Timeout:           10 * time.Minute,
@@ -1504,7 +1504,7 @@ func init() {
 				Name: "cros_codecs_vaapi_av1_8bit_size",
 				Val: platformDecodingParams{
 					filenames:          test_vectors.AV1Aom8bitFiles["size"],
-					decoder:            "/usr/bin/ccdec",
+					decoder:            "ccdec",
 					decoderArgsBuilder: platform.AV1DecodeCrosCodecsargs,
 				},
 				Timeout:           10 * time.Minute,
@@ -1516,7 +1516,7 @@ func init() {
 				Name: "cros_codecs_vaapi_av1_8bit_allintra",
 				Val: platformDecodingParams{
 					filenames:          test_vectors.AV1Aom8bitFiles["allintra"],
-					decoder:            "/usr/bin/ccdec",
+					decoder:            "ccdec",
 					decoderArgsBuilder: platform.AV1DecodeCrosCodecsargs,
 				},
 				Timeout:           10 * time.Minute,
@@ -1528,7 +1528,7 @@ func init() {
 				Name: "cros_codecs_vaapi_av1_8bit_cdfupdate",
 				Val: platformDecodingParams{
 					filenames:          test_vectors.AV1Aom8bitFiles["cdfupdate"],
-					decoder:            "/usr/bin/ccdec",
+					decoder:            "ccdec",
 					decoderArgsBuilder: platform.AV1DecodeCrosCodecsargs,
 				},
 				Timeout:           10 * time.Minute,
@@ -1540,7 +1540,7 @@ func init() {
 				Name: "cros_codecs_vaapi_av1_8bit_motionvec",
 				Val: platformDecodingParams{
 					filenames:          test_vectors.AV1Aom8bitFiles["motionvec"],
-					decoder:            "/usr/bin/ccdec",
+					decoder:            "ccdec",
 					decoderArgsBuilder: platform.AV1DecodeCrosCodecsargs,
 				},
 				Timeout:           10 * time.Minute,
@@ -1552,7 +1552,7 @@ func init() {
 				Name: "cros_codecs_vaapi_hevc_main_part_1",
 				Val: platformDecodingParams{
 					filenames:          test_vectors.HEVCFiles["main_part_1"],
-					decoder:            "/usr/bin/ccdec",
+					decoder:            "ccdec",
 					decoderArgsBuilder: platform.HEVCDecodeCrosCodecsargs,
 				},
 				Timeout:           10 * time.Minute,
@@ -1564,7 +1564,7 @@ func init() {
 				Name: "cros_codecs_vaapi_hevc_main_part_2",
 				Val: platformDecodingParams{
 					filenames:          test_vectors.HEVCFiles["main_part_2"],
-					decoder:            "/usr/bin/ccdec",
+					decoder:            "ccdec",
 					decoderArgsBuilder: platform.HEVCDecodeCrosCodecsargs,
 				},
 				Timeout:           10 * time.Minute,
@@ -1576,7 +1576,7 @@ func init() {
 				Name: "cros_codecs_vaapi_hevc_main_part_3",
 				Val: platformDecodingParams{
 					filenames:          test_vectors.HEVCFiles["main_part_3"],
-					decoder:            "/usr/bin/ccdec",
+					decoder:            "ccdec",
 					decoderArgsBuilder: platform.HEVCDecodeCrosCodecsargs,
 				},
 				Timeout:           10 * time.Minute,
@@ -1588,7 +1588,7 @@ func init() {
 				Name: "cros_codecs_vaapi_hevc_main_part_4",
 				Val: platformDecodingParams{
 					filenames:          test_vectors.HEVCFiles["main_part_4"],
-					decoder:            "/usr/bin/ccdec",
+					decoder:            "ccdec",
 					decoderArgsBuilder: platform.HEVCDecodeCrosCodecsargs,
 				},
 				Timeout:           10 * time.Minute,
@@ -1600,7 +1600,7 @@ func init() {
 				Name: "cros_codecs_hevc_main_part_5_8k",
 				Val: platformDecodingParams{
 					filenames:          test_vectors.HEVCFiles["main_part_5_8K"],
-					decoder:            "/usr/bin/ccdec",
+					decoder:            "ccdec",
 					decoderArgsBuilder: platform.HEVCDecodeCrosCodecsargs,
 				},
 				Timeout:           10 * time.Minute,
@@ -1612,7 +1612,7 @@ func init() {
 				Name: "cros_codecs_vaapi_vp8_inter",
 				Val: platformDecodingParams{
 					filenames:          test_vectors.VP8Files["inter"],
-					decoder:            "/usr/bin/ccdec",
+					decoder:            "ccdec",
 					decoderArgsBuilder: platform.VP8DecodeCrosCodecsargs,
 				},
 				Timeout:           10 * time.Minute,
@@ -1624,7 +1624,7 @@ func init() {
 				Name: "cros_codecs_vaapi_vp8_inter_multi_coeff",
 				Val: platformDecodingParams{
 					filenames:          test_vectors.VP8Files["inter_multi_coeff"],
-					decoder:            "/usr/bin/ccdec",
+					decoder:            "ccdec",
 					decoderArgsBuilder: platform.VP8DecodeCrosCodecsargs,
 				},
 				Timeout:           10 * time.Minute,
@@ -1636,7 +1636,7 @@ func init() {
 				Name: "cros_codecs_vaapi_vp8_inter_segment",
 				Val: platformDecodingParams{
 					filenames:          test_vectors.VP8Files["inter_segment"],
-					decoder:            "/usr/bin/ccdec",
+					decoder:            "ccdec",
 					decoderArgsBuilder: platform.VP8DecodeCrosCodecsargs,
 				},
 				Timeout:           10 * time.Minute,
@@ -1648,7 +1648,7 @@ func init() {
 				Name: "cros_codecs_vaapi_vp8_intra",
 				Val: platformDecodingParams{
 					filenames:          test_vectors.VP8Files["intra"],
-					decoder:            "/usr/bin/ccdec",
+					decoder:            "ccdec",
 					decoderArgsBuilder: platform.VP8DecodeCrosCodecsargs,
 				},
 				Timeout:           10 * time.Minute,
@@ -1660,7 +1660,7 @@ func init() {
 				Name: "cros_codecs_vaapi_vp8_intra_multi_coeff",
 				Val: platformDecodingParams{
 					filenames:          test_vectors.VP8Files["intra_multi_coeff"],
-					decoder:            "/usr/bin/ccdec",
+					decoder:            "ccdec",
 					decoderArgsBuilder: platform.VP8DecodeCrosCodecsargs,
 				},
 				Timeout:           10 * time.Minute,
@@ -1672,7 +1672,7 @@ func init() {
 				Name: "cros_codecs_vaapi_vp8_intra_segment",
 				Val: platformDecodingParams{
 					filenames:          test_vectors.VP8Files["intra_segment"],
-					decoder:            "/usr/bin/ccdec",
+					decoder:            "ccdec",
 					decoderArgsBuilder: platform.VP8DecodeCrosCodecsargs,
 				},
 				Timeout:           10 * time.Minute,
@@ -1684,7 +1684,7 @@ func init() {
 				Name: "cros_codecs_vaapi_vp8_comprehensive",
 				Val: platformDecodingParams{
 					filenames:          test_vectors.VP8Files["comprehensive"],
-					decoder:            "/usr/bin/ccdec",
+					decoder:            "ccdec",
 					decoderArgsBuilder: platform.VP8DecodeCrosCodecsargs,
 				},
 				Timeout:           10 * time.Minute,
@@ -1696,7 +1696,7 @@ func init() {
 				Name: "cros_codecs_vaapi_h264_baseline",
 				Val: platformDecodingParams{
 					filenames:          test_vectors.H264Files["baseline"],
-					decoder:            "/usr/bin/ccdec",
+					decoder:            "ccdec",
 					decoderArgsBuilder: platform.H264DecodeCrosCodecsargs,
 				},
 				Timeout:           10 * time.Minute,
@@ -1708,7 +1708,7 @@ func init() {
 				Name: "cros_codecs_vaapi_h264_main",
 				Val: platformDecodingParams{
 					filenames:          test_vectors.H264Files["main"],
-					decoder:            "/usr/bin/ccdec",
+					decoder:            "ccdec",
 					decoderArgsBuilder: platform.H264DecodeCrosCodecsargs,
 				},
 				Timeout:           10 * time.Minute,
@@ -1720,7 +1720,7 @@ func init() {
 				Name: "cros_codecs_vaapi_h264_first_mb_in_slice",
 				Val: platformDecodingParams{
 					filenames:          test_vectors.H264Files["first_mb_in_slice"],
-					decoder:            "/usr/bin/ccdec",
+					decoder:            "ccdec",
 					decoderArgsBuilder: platform.H264DecodeCrosCodecsargs,
 				},
 				Timeout:           10 * time.Minute,
@@ -1732,7 +1732,7 @@ func init() {
 				Name: "cros_codecs_vaapi_h264_files_from_bugs_149068426",
 				Val: platformDecodingParams{
 					filenames:          []string{"test_vectors/h264/files_from_bugs/b_149068426_invalid_video_layout_mtk_8183_with_direct_videodecoder.h264"},
-					decoder:            "/usr/bin/ccdec",
+					decoder:            "ccdec",
 					decoderArgsBuilder: platform.H264DecodeCrosCodecsargs,
 				},
 				Timeout:           10 * time.Minute,
@@ -1744,7 +1744,7 @@ func init() {
 				Name: "cros_codecs_vaapi_h264_files_from_bugs_172838252",
 				Val: platformDecodingParams{
 					filenames:          []string{"test_vectors/h264/files_from_bugs/b_172838252_pixelated_video_on_rk3399.h264"},
-					decoder:            "/usr/bin/ccdec",
+					decoder:            "ccdec",
 					decoderArgsBuilder: platform.H264DecodeCrosCodecsargs,
 				},
 				Timeout:           10 * time.Minute,
@@ -1756,7 +1756,7 @@ func init() {
 				Name: "cros_codecs_vaapi_h264_files_from_bugs_174733646",
 				Val: platformDecodingParams{
 					filenames:          []string{"test_vectors/h264/files_from_bugs/b_174733646_video_with_out_of_order_frames_mtk_8173.h264"},
-					decoder:            "/usr/bin/ccdec",
+					decoder:            "ccdec",
 					decoderArgsBuilder: platform.H264DecodeCrosCodecsargs,
 				},
 				Timeout:           10 * time.Minute,
@@ -1768,7 +1768,7 @@ func init() {
 				Name: "cros_codecs_vaapi_h264_files_from_bugs_210895987",
 				Val: platformDecodingParams{
 					filenames:          []string{"test_vectors/h264/files_from_bugs/b_210895987_still-colors-360p.h264"},
-					decoder:            "/usr/bin/ccdec",
+					decoder:            "ccdec",
 					decoderArgsBuilder: platform.H264DecodeCrosCodecsargs,
 				},
 				Timeout:           10 * time.Minute,
@@ -1780,7 +1780,7 @@ func init() {
 				Name: "cros_codecs_vaapi_h264_files_from_bugs_276358257",
 				Val: platformDecodingParams{
 					filenames:          []string{"test_vectors/h264/files_from_bugs/b_276358257__amd_gpu_gen3_lockup.h264"},
-					decoder:            "/usr/bin/ccdec",
+					decoder:            "ccdec",
 					decoderArgsBuilder: platform.H264DecodeCrosCodecsargs,
 				},
 				Timeout:           10 * time.Minute,
@@ -1792,7 +1792,7 @@ func init() {
 				Name: "cros_codecs_vaapi_h264_files_from_bugs_299320432",
 				Val: platformDecodingParams{
 					filenames:          []string{"test_vectors/h264/files_from_bugs/b_299320432__amd_skyrim_system_hang.h264"},
-					decoder:            "/usr/bin/ccdec",
+					decoder:            "ccdec",
 					decoderArgsBuilder: platform.H264DecodeCrosCodecsargs,
 				},
 				Timeout:           10 * time.Minute,
@@ -1804,7 +1804,7 @@ func init() {
 				Name: "cros_codecs_vaapi_h264_4k_files_from_bugs_22704778",
 				Val: platformDecodingParams{
 					filenames:          []string{"test_vectors/h264/files_from_bugs/b_227047778_mtk_8195_artifacts.h264"},
-					decoder:            "/usr/bin/ccdec",
+					decoder:            "ccdec",
 					decoderArgsBuilder: platform.H264DecodeCrosCodecsargs,
 				},
 				Timeout:           10 * time.Minute,
@@ -1816,7 +1816,7 @@ func init() {
 				Name: "cros_codecs_vaapi_vp9_files_from_bugs_177839888",
 				Val: platformDecodingParams{
 					filenames:          []string{"test_vectors/vp9/files_from_bugs/b_177839888__rk3399_vp9_artifacts_with_video_decoder_japanews24.ivf"},
-					decoder:            "/usr/bin/ccdec",
+					decoder:            "ccdec",
 					decoderArgsBuilder: platform.VP9DecodeCrosCodecsargs,
 				},
 				Timeout:           10 * time.Minute,
@@ -1828,7 +1828,7 @@ func init() {
 				Name: "cros_codecs_vaapi_vp9_files_from_bugs_251040563",
 				Val: platformDecodingParams{
 					filenames:          []string{"test_vectors/vp9/files_from_bugs/b_251040563_webrtc_libvpx.vp9.ivf"},
-					decoder:            "/usr/bin/ccdec",
+					decoder:            "ccdec",
 					decoderArgsBuilder: platform.VP9DecodeCrosCodecsargs,
 				},
 				Timeout:           10 * time.Minute,
@@ -1840,7 +1840,7 @@ func init() {
 				Name: "cros_codecs_vaapi_av1_files_from_bugs_235138734",
 				Val: platformDecodingParams{
 					filenames:          []string{"test_vectors/av1/files_from_bugs/b_235138734_test-25fps-one-to-four-tiles.av1.ivf"},
-					decoder:            "/usr/bin/ccdec",
+					decoder:            "ccdec",
 					decoderArgsBuilder: platform.AV1DecodeCrosCodecsargs,
 				},
 				Timeout:           10 * time.Minute,
@@ -1852,7 +1852,7 @@ func init() {
 				Name: "cros_codecs_vaapi_av1_files_from_bugs_346405213",
 				Val: platformDecodingParams{
 					filenames:          []string{"test_vectors/av1/files_from_bugs/b_346405213_reference-frame-scaling-test.ivf"},
-					decoder:            "/usr/bin/ccdec",
+					decoder:            "ccdec",
 					decoderArgsBuilder: platform.AV1DecodeCrosCodecsargs,
 				},
 				Timeout:           10 * time.Minute,
@@ -1864,7 +1864,7 @@ func init() {
 				Name: "cros_codecs_vaapi_hevc_files_from_bugs_321622872",
 				Val: platformDecodingParams{
 					filenames:          []string{"test_vectors/hevc/files_from_bugs/b_321622872__bands_across_screen_4k.hevc"},
-					decoder:            "/usr/bin/ccdec",
+					decoder:            "ccdec",
 					decoderArgsBuilder: platform.HEVCDecodeCrosCodecsargs,
 				},
 				Timeout:           10 * time.Minute,
@@ -1876,7 +1876,7 @@ func init() {
 				Name: "cros_codecs_vaapi_hevc_files_from_bugs_239819547",
 				Val: platformDecodingParams{
 					filenames:          test_vectors.HEVCFilesFromBugs["239819547"],
-					decoder:            "/usr/bin/ccdec",
+					decoder:            "ccdec",
 					decoderArgsBuilder: platform.HEVCDecodeCrosCodecsargs,
 				},
 				Timeout:           1 * time.Minute,
@@ -1888,7 +1888,7 @@ func init() {
 				Name: "cros_codecs_vaapi_hevc_files_from_bugs_239927523",
 				Val: platformDecodingParams{
 					filenames:          test_vectors.HEVCFilesFromBugs["239927523"],
-					decoder:            "/usr/bin/ccdec",
+					decoder:            "ccdec",
 					decoderArgsBuilder: platform.HEVCDecodeCrosCodecsargs,
 				},
 				Timeout:           1 * time.Minute,
@@ -1900,7 +1900,7 @@ func init() {
 				Name: "cros_codecs_vaapi_hevc_files_from_bugs_239936640",
 				Val: platformDecodingParams{
 					filenames:          test_vectors.HEVCFilesFromBugs["239936640"],
-					decoder:            "/usr/bin/ccdec",
+					decoder:            "ccdec",
 					decoderArgsBuilder: platform.HEVCDecodeCrosCodecsargs,
 				},
 				Timeout:           1 * time.Minute,
@@ -1912,7 +1912,7 @@ func init() {
 				Name: "cros_codecs_vaapi_hevc_files_from_bugs_241727534",
 				Val: platformDecodingParams{
 					filenames:          test_vectors.HEVCFilesFromBugs["241727534"],
-					decoder:            "/usr/bin/ccdec",
+					decoder:            "ccdec",
 					decoderArgsBuilder: platform.HEVCDecodeCrosCodecsargs,
 				},
 				Timeout:           1 * time.Minute,
@@ -1924,7 +1924,7 @@ func init() {
 				Name: "cros_codecs_vaapi_hevc_files_from_bugs_241731425",
 				Val: platformDecodingParams{
 					filenames:          test_vectors.HEVCFilesFromBugs["241731425"],
-					decoder:            "/usr/bin/ccdec",
+					decoder:            "ccdec",
 					decoderArgsBuilder: platform.HEVCDecodeCrosCodecsargs,
 				},
 				Timeout:           1 * time.Minute,
@@ -1936,7 +1936,7 @@ func init() {
 				Name: "cros_codecs_vaapi_hevc_files_from_bugs_241731431",
 				Val: platformDecodingParams{
 					filenames:          test_vectors.HEVCFilesFromBugs["241731431"],
-					decoder:            "/usr/bin/ccdec",
+					decoder:            "ccdec",
 					decoderArgsBuilder: platform.HEVCDecodeCrosCodecsargs,
 				},
 				Timeout:           1 * time.Minute,
@@ -1948,7 +1948,7 @@ func init() {
 				Name: "cros_codecs_vaapi_hevc_files_from_bugs_241733687",
 				Val: platformDecodingParams{
 					filenames:          test_vectors.HEVCFilesFromBugs["241733687"],
-					decoder:            "/usr/bin/ccdec",
+					decoder:            "ccdec",
 					decoderArgsBuilder: platform.HEVCDecodeCrosCodecsargs,
 				},
 				Timeout:           1 * time.Minute,
@@ -1960,7 +1960,7 @@ func init() {
 				Name: "cros_codecs_vaapi_hevc_files_from_bugs_241772308",
 				Val: platformDecodingParams{
 					filenames:          test_vectors.HEVCFilesFromBugs["241772308"],
-					decoder:            "/usr/bin/ccdec",
+					decoder:            "ccdec",
 					decoderArgsBuilder: platform.HEVCDecodeCrosCodecsargs,
 				},
 				Timeout:           1 * time.Minute,
@@ -1972,7 +1972,7 @@ func init() {
 				Name: "cros_codecs_vaapi_hevc_files_from_bugs_241775056",
 				Val: platformDecodingParams{
 					filenames:          test_vectors.HEVCFilesFromBugs["241775056"],
-					decoder:            "/usr/bin/ccdec",
+					decoder:            "ccdec",
 					decoderArgsBuilder: platform.HEVCDecodeCrosCodecsargs,
 				},
 				Timeout:           1 * time.Minute,
@@ -1984,7 +1984,7 @@ func init() {
 				Name: "cros_codecs_vaapi_hevc_files_from_bugs_242708185",
 				Val: platformDecodingParams{
 					filenames:          test_vectors.HEVCFilesFromBugs["242708185"],
-					decoder:            "/usr/bin/ccdec",
+					decoder:            "ccdec",
 					decoderArgsBuilder: platform.HEVCDecodeCrosCodecsargs,
 				},
 				Timeout:           1 * time.Minute,
@@ -1996,7 +1996,7 @@ func init() {
 				Name: "cros_codecs_vaapi_hevc_files_from_bugs_251179086",
 				Val: platformDecodingParams{
 					filenames:          test_vectors.HEVCFilesFromBugs["251179086"],
-					decoder:            "/usr/bin/ccdec",
+					decoder:            "ccdec",
 					decoderArgsBuilder: platform.HEVCDecodeCrosCodecsargs,
 				},
 				Timeout:           1 * time.Minute,

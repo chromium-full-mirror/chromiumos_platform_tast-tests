@@ -18,7 +18,7 @@ import (
 )
 
 const ffmpegMD5Path = "/usr/local/graphics/ffmpeg_md5sum"
-const ccdecPath = "/usr/bin/ccdec"
+const ccdecPath = "ccdec"
 
 // NB: If modifying any of the files or test specifications, be sure to
 // regenerate the test parameters by running the following in a chroot:
