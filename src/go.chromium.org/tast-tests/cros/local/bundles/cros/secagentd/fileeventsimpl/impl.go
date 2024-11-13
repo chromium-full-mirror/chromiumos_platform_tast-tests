@@ -512,8 +512,8 @@ func GetFileEventDetails(ctx context.Context, testCase pb.TestCase, cr *chrome.C
 
 	case pb.TestCase_SYSTEM_PASSWORD:
 		fileToRead := "/etc/passwd"
-		cmds = appendHexDumpCommand(ctx, cmds, fileToRead, &sysCmds, xdr.SensitiveFileType_ROOT_FS)
-		return &testDetails{commandDetails: cmds}, nil
+		cmds = appendHexDumpCommand(ctx, cmds, fileToRead, &sysCmds, xdr.SensitiveFileType_SYSTEM_PASSWORDS)
+		return &testDetails{commandDetails: cmds, syncText: makeWaitString(xdr.SensitiveFileType_SYSTEM_PASSWORDS)}, nil
 
 	case pb.TestCase_USER_FILES:
 		downloadsPath, err := cryptohome.DownloadsPath(ctx, normalizedUser)
