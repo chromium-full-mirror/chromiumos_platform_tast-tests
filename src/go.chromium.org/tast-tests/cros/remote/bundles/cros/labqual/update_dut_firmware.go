@@ -331,13 +331,20 @@ func untarLocalFirmwareFile(ctx context.Context, s *testing.State, tmpDir, firmw
 // flashECFirmware flashes the provided EC firmware on the DUT and restores the original EC firmware in the end.
 func flashECFirmware(ctx context.Context, s *testing.State, h *firmware.Helper, servoTmpDir, localTmpDir, ecChip string) {
 	if shouldRestoreFW() {
-		backupECFirmware(ctx, s, h, servoTmpDir, ecChip)
+		s.Log("Backing up EC firmware")
+		isBackupEC, err := backupECFirmware(ctx, s, h, servoTmpDir, ecChip)
+		if err != nil {
+			s.Log("Error while taking a backup of existing EC fw: ", err)
+		}
+		s.Log("Completed backup of existing EC fw")
 
 		// Check that the DUT has initial fw in the end
 		defer func() {
-			h.DisconnectDUT(ctx)
-			runECFirmwareFlashServo(ctx, s, h, servoTmpDir, ecChip, backupFirmwareFile)
+			if isBackupEC {
+				h.DisconnectDUT(ctx)
+				runECFirmwareFlashServo(ctx, s, h, servoTmpDir, ecChip, backupFirmwareFile)
 
+			}
 		}()
 	}
 
@@ -352,36 +359,42 @@ func flashAPFirmware(ctx context.Context, s *testing.State, h *firmware.Helper, 
 	futilityInstance, _ := futility.NewRemoteBuilder(h.ServoProxy).Build()
 	if shouldRestoreFW() {
 		s.Log("Backing up AP firmware")
+		isBackupAP := false
 		backupFirmwareFile := fmt.Sprintf("%s/%s", servoTmpDir, backupFirmwareFile)
 		readOpts := futility.NewReadAPOptions(backupFirmwareFile)
 		log, err := futilityInstance.ReadAP(ctx, readOpts)
 		if err != nil {
 			s.Fatalf("Failed to read existing AP firmware: %v, got futility log: %s", err, string(log))
+		} else {
+			isBackupAP = true
+			s.Logf("Completed backup of existing AP fw, command output: %s", log)
+			if err := h.EnsureDUTBooted(ctx); err != nil {
+				s.Fatal("Failed to reconnect to DUT after unsuspending: ", err)
+			}
 		}
-		s.Logf("Completed backup of existing AP fw, command output: %s", log)
-		if err := h.EnsureDUTBooted(ctx); err != nil {
-			s.Fatal("Failed to reconnect to DUT after unsuspending: ", err)
-		}
+
 		// Check that the DUT has initial fw in the end
 		defer func() {
-			s.Log("Flashing DUT with backup AP firmware file")
-			flashOpts := futility.NewUpdateOptions(backupFirmwareFile).
-				WithMode(futility.UpdateModeRecovery).
-				WithGBBFlags(24)
-			out, err := futilityInstance.Update(ctx, flashOpts)
-			if err != nil {
-				s.Logf("Failed to flash firmware bin file: %s, Output:%s", err, string(out))
-			} else {
-				s.Logf("Completed flashing of backup AP fw, command output: %s", string(out))
-			}
-			if err := safeRebootDut(ctx, h); err != nil {
-				s.Fatal("Failed to reboot DUT after flashing: ", err)
-			}
+			if isBackupAP {
+				s.Log("Flashing DUT with backup AP firmware file")
+				flashOpts := futility.NewUpdateOptions(backupFirmwareFile).
+					WithMode(futility.UpdateModeRecovery).
+					WithGBBFlags(24)
+				out, err := futilityInstance.Update(ctx, flashOpts)
+				if err != nil {
+					s.Logf("Failed to flash firmware bin file: %s, Output:%s", err, string(out))
+				} else {
+					s.Logf("Completed flashing of backup AP fw, command output: %s", string(out))
+				}
+				if err := safeRebootDut(ctx, h); err != nil {
+					s.Fatal("Failed to reboot DUT after flashing: ", err)
+				}
 
-			// Verify RO/RW firmware versions are the prior ones after flashing.
-			// This is when RO and RW have the same version ids (i.e., RO_old + RW_old).
-			if err := firmware.VerifyFwIDs(ctx, h, initialROFwid, initialRwFwid); err != nil {
-				s.Log("Failed while verifying firmware IDs after flashing backup fw at the end of test: ", err)
+				// Verify RO/RW firmware versions are the prior ones after flashing.
+				// This is when RO and RW have the same version ids (i.e., RO_old + RW_old).
+				if err := firmware.VerifyFwIDs(ctx, h, initialROFwid, initialRwFwid); err != nil {
+					s.Log("Failed while verifying firmware IDs after flashing backup fw at the end of test: ", err)
+				}
 			}
 		}()
 	}
@@ -422,44 +435,50 @@ func flashAPFirmwareFromDut(ctx context.Context, s *testing.State, h *firmware.H
 	futilityInstance, _ := futility.NewLocalBuilder(h.DUT).Build()
 	if shouldRestoreFW() {
 		s.Log("Backing up AP firmware")
+		isBackupAP := true
 		readOpts := futility.NewReadAPOptions(fmt.Sprintf("%s/%s", dutTmpDir, backupFirmwareFile))
 		log, err := futilityInstance.ReadAP(ctx, readOpts)
 		if err != nil {
-			s.Fatalf("Failed to read existing AP firmware: %v, got futility log: %s", err, string(log))
+			isBackupAP = false
+			s.Logf("Failed to read existing AP firmware: %v, got futility log: %s", err, string(log))
 		}
-		s.Logf("Completed backup of existing AP fw, command output: %s", log)
 		if err := h.EnsureDUTBooted(ctx); err != nil {
 			s.Fatal("Failed to reconnect to DUT after unsuspending: ", err)
 		}
-		// Copy backup file from dut to host
-		err = linuxssh.GetFile(ctx, s.DUT().Conn(), fmt.Sprintf("%s/%s", dutTmpDir, backupFirmwareFile), fmt.Sprintf("%s/%s", localTmpDir, backupFirmwareFile), linuxssh.PreserveSymlinks)
-		if err != nil {
-			s.Fatal("Failed to copy file from DUT to Host: ", err)
+		if isBackupAP {
+			s.Logf("Completed backup of existing AP fw, command output: %s", log)
+
+			// Copy backup file from dut to host
+			err = linuxssh.GetFile(ctx, s.DUT().Conn(), fmt.Sprintf("%s/%s", dutTmpDir, backupFirmwareFile), fmt.Sprintf("%s/%s", localTmpDir, backupFirmwareFile), linuxssh.PreserveSymlinks)
+			if err != nil {
+				s.Fatal("Failed to copy file from DUT to Host: ", err)
+			}
 		}
-		s.Log("Completed backup of existing AP fw")
 
 		// Restore the initial fw to the DUT in the end
 		defer func() {
-			s.Log("Flashing DUT with backup AP firmware file")
-			if _, err := linuxssh.PutFiles(ctx, s.DUT().Conn(),
-				map[string]string{fmt.Sprintf("%s/%s", localTmpDir, backupFirmwareFile): fmt.Sprintf("%s/%s", dutTmpDir, backupFirmwareFile)},
-				linuxssh.PreserveSymlinks); err != nil {
-				s.Fatal("Failed to copy files to dut: ", err)
-			}
-			if err := h.DUT.Conn().CommandContext(ctx, "chromeos-firmwareupdate", "-i", fmt.Sprintf("%s/%s", dutTmpDir, backupFirmwareFile)).Run(); err != nil {
-				s.Log("Failed to flash backup firmware bin file: ", err)
-			} else {
-				s.Log("Completed flashing of backup AP fw")
-			}
+			if isBackupAP {
+				s.Log("Flashing DUT with backup AP firmware file")
+				if _, err := linuxssh.PutFiles(ctx, s.DUT().Conn(),
+					map[string]string{fmt.Sprintf("%s/%s", localTmpDir, backupFirmwareFile): fmt.Sprintf("%s/%s", dutTmpDir, backupFirmwareFile)},
+					linuxssh.PreserveSymlinks); err != nil {
+					s.Fatal("Failed to copy files to dut: ", err)
+				}
+				if err := h.DUT.Conn().CommandContext(ctx, "chromeos-firmwareupdate", "-i", fmt.Sprintf("%s/%s", dutTmpDir, backupFirmwareFile)).Run(); err != nil {
+					s.Log("Failed to flash backup firmware bin file: ", err)
+				} else {
+					s.Log("Completed flashing of backup AP fw")
+				}
 
-			if err := safeRebootDut(ctx, h); err != nil {
-				s.Fatal("Failed to reboot DUT after flashing: ", err)
-			}
+				if err := safeRebootDut(ctx, h); err != nil {
+					s.Fatal("Failed to reboot DUT after flashing: ", err)
+				}
 
-			// Verify RO/RW firmware versions are the prior ones after flashing.
-			// This is when RO and RW have the same version ids (i.e., RO_old + RW_old).
-			if err := firmware.VerifyFwIDs(ctx, h, initialROFwid, initialRwFwid); err != nil {
-				s.Log("Failed while verifying firmware IDs after flashing backup fw at the end of test: ", err)
+				// Verify RO/RW firmware versions are the prior ones after flashing.
+				// This is when RO and RW have the same version ids (i.e., RO_old + RW_old).
+				if err := firmware.VerifyFwIDs(ctx, h, initialROFwid, initialRwFwid); err != nil {
+					s.Log("Failed while verifying firmware IDs after flashing backup fw at the end of test: ", err)
+				}
 			}
 		}()
 	}
@@ -494,25 +513,30 @@ func flashAPFirmwareFromDut(ctx context.Context, s *testing.State, h *firmware.H
 func flashECFirmwareFromDut(ctx context.Context, s *testing.State, h *firmware.Helper, tmpFwDir, localTmpDir, ecBinToFlash, monitorBinToFlash, ecChip string) {
 	if shouldRestoreFW() {
 		s.Log("Backing up EC firmware")
-		backupECFirmware(ctx, s, h, tmpFwDir, ecChip)
+		isBackupEC, err := backupECFirmware(ctx, s, h, tmpFwDir, ecChip)
+		if err != nil {
+			s.Log("Error while taking a backup of existing EC fw: ", err)
+		}
 		s.Log("Completed backup of existing EC fw")
 
 		// Check that the DUT has initial fw in the end
 		defer func() {
 			// Copy backup file from servo to host
-			err := h.ServoProxy.GetFile(ctx, false, fmt.Sprintf("%s/%s", tmpFwDir, backupFirmwareFile), fmt.Sprintf("%s/%s", localTmpDir, backupFirmwareFile))
-			if err != nil {
-				s.Fatal("Failed to copy file from Servo to Host: ", err)
+			if isBackupEC {
+				err := h.ServoProxy.GetFile(ctx, false, fmt.Sprintf("%s/%s", tmpFwDir, backupFirmwareFile), fmt.Sprintf("%s/%s", localTmpDir, backupFirmwareFile))
+				if err != nil {
+					s.Fatal("Failed to copy file from Servo to Host: ", err)
+				}
+				s.Log("Flashing DUT with backup EC firmware file")
+				if err := h.EnsureDUTBooted(ctx); err != nil {
+					s.Fatal("Failed to reconnect to DUT after unsuspending: ", err)
+				}
+				if _, err := linuxssh.PutFiles(ctx, h.DUT.Conn(), map[string]string{fmt.Sprintf("%s/%s", localTmpDir, backupFirmwareFile): fmt.Sprintf("%s/%s", tmpFwDir, backupFirmwareFile)}, linuxssh.PreserveSymlinks); err != nil {
+					s.Fatal("Failed to copy files to dut: ", err)
+				}
+				runECFirmwareFlashDut(ctx, s, h, tmpFwDir, backupFirmwareFile, true)
+				s.Log("Completed flashing of backup EC fw")
 			}
-			s.Log("Flashing DUT with backup EC firmware file")
-			if err := h.EnsureDUTBooted(ctx); err != nil {
-				s.Fatal("Failed to reconnect to DUT after unsuspending: ", err)
-			}
-			if _, err := linuxssh.PutFiles(ctx, h.DUT.Conn(), map[string]string{fmt.Sprintf("%s/%s", localTmpDir, backupFirmwareFile): fmt.Sprintf("%s/%s", tmpFwDir, backupFirmwareFile)}, linuxssh.PreserveSymlinks); err != nil {
-				s.Fatal("Failed to copy files to dut: ", err)
-			}
-			runECFirmwareFlashDut(ctx, s, h, tmpFwDir, backupFirmwareFile, true)
-			s.Log("Completed flashing of backup EC fw")
 		}()
 	}
 
@@ -556,18 +580,19 @@ func safeRebootDut(ctx context.Context, h *firmware.Helper) error {
 }
 
 // backupECFirmware takes a backup of current EC firmware.
-func backupECFirmware(ctx context.Context, s *testing.State, h *firmware.Helper, servoTmpDir, ecChip string) {
+func backupECFirmware(ctx context.Context, s *testing.State, h *firmware.Helper, servoTmpDir, ecChip string) (bool, error) {
 	h.DisconnectDUT(ctx)
 	flashCmd := fmt.Sprintf("cd %s&&flash_ec --port=%d --read=%s/%s", servoTmpDir, h.ServoProxy.GetPort(), servoTmpDir, backupFirmwareFile)
 	if strings.HasPrefix(ecChip, "it8") {
 		flashCmd += " --nouse_i2c_pseudo"
 	}
 	if err := h.ServoProxy.RunCommand(ctx, true, "bash", "-c", flashCmd); err != nil {
-		s.Fatal("Failed to backup EC firmware: ", err)
+		return false, errors.Wrap(err, "failed to backup EC firmware")
 	}
 	if err := safeRebootDut(ctx, h); err != nil {
-		s.Fatal("Failed to reboot DUT after backup EC: ", err)
+		return false, errors.Wrap(err, "failed to reboot DUT after backup EC")
 	}
+	return true, nil
 }
 
 // runECFirmwareFlashServo runs EC firmware flashing from the Servo
