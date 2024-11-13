@@ -11,8 +11,6 @@ import (
 	arcui "go.chromium.org/tast-tests/cros/common/android/ui"
 	"go.chromium.org/tast-tests/cros/local/arc"
 	"go.chromium.org/tast-tests/cros/local/chrome/apps"
-	"go.chromium.org/tast-tests/cros/local/chrome/browser"
-	"go.chromium.org/tast-tests/cros/local/chrome/browser/browserfixt"
 	"go.chromium.org/tast-tests/cros/local/chrome/uiauto"
 	"go.chromium.org/tast-tests/cros/local/chrome/uiauto/faillog"
 	"go.chromium.org/tast-tests/cros/local/chrome/uiauto/nodewith"
@@ -23,9 +21,8 @@ import (
 
 func init() {
 	testing.AddTest(&testing.Test{
-		Func:         ChromeIntentPicker,
-		LacrosStatus: testing.LacrosVariantUnneeded,
-		Desc:         "Verify Chrome Intent Picker can launch ARC app by visiting URL",
+		Func: ChromeIntentPicker,
+		Desc: "Verify Chrome Intent Picker can launch ARC app by visiting URL",
 		Contacts: []string{
 			"chromeos-apps-foundation-team@google.com",
 		},
@@ -35,12 +32,10 @@ func init() {
 		Params: []testing.Param{{
 			ExtraSoftwareDeps: []string{"android_container"},
 			Fixture:           "arcBooted",
-			Val:               browser.TypeAsh,
 		}, {
 			Name:              "vm",
 			ExtraSoftwareDeps: []string{"android_vm"},
 			Fixture:           "arcBooted",
-			Val:               browser.TypeAsh,
 		}},
 		Timeout: 10 * time.Minute,
 	})
@@ -93,14 +88,8 @@ func ChromeIntentPicker(ctx context.Context, s *testing.State) {
 		}
 	}()
 
-	br, closeBrowser, err := browserfixt.SetUp(ctx, cr, s.Param().(browser.Type))
-	if err != nil {
-		s.Fatal("Failed to open browser: ", err)
-	}
-	defer closeBrowser(cleanupCtx)
-
 	// Navigate to URL which ArcChromeIntentPickerTest app has associated an intent.
-	conn, err := br.NewConn(ctx, "https://www.google.com")
+	conn, err := cr.NewConn(ctx, "https://www.google.com")
 	if err != nil {
 		s.Fatal("Failed to create renderer: ", err)
 	}

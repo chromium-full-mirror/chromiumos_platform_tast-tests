@@ -11,8 +11,6 @@ import (
 
 	"go.chromium.org/tast-tests/cros/local/arc"
 	"go.chromium.org/tast-tests/cros/local/chrome"
-	"go.chromium.org/tast-tests/cros/local/chrome/browser"
-	"go.chromium.org/tast-tests/cros/local/chrome/browser/browserfixt"
 	"go.chromium.org/tast-tests/cros/local/chrome/uiauto"
 	"go.chromium.org/tast-tests/cros/local/chrome/uiauto/event"
 	"go.chromium.org/tast-tests/cros/local/chrome/uiauto/faillog"
@@ -26,7 +24,6 @@ import (
 func init() {
 	testing.AddTest(&testing.Test{
 		Func:         SmartSelectionChrome,
-		LacrosStatus: testing.LacrosVariantUnneeded,
 		Desc:         "Test ARC's smart selections show up in Chrome's right click menu",
 		Contacts:     []string{"chromeos-sw-engprod@google.com", "cros-arc-te@google.com", "djacobo@chromium.org", "jorgegil@google.com"},
 		BugComponent: "b:488493",
@@ -39,17 +36,14 @@ func init() {
 		VarDeps:      []string{"arc.SmartSelectionChrome.username", "arc.SmartSelectionChrome.password"},
 		Params: []testing.Param{{
 			ExtraSoftwareDeps: []string{"android_container"},
-			Val:               browser.TypeAsh,
 		}, {
 			Name:              "vm",
 			ExtraSoftwareDeps: []string{"android_vm"},
-			Val:               browser.TypeAsh,
 		}},
 	})
 }
 
 func SmartSelectionChrome(ctx context.Context, s *testing.State) {
-	cleanupCtx := ctx
 	ctx, cancel := ctxutil.Shorten(ctx, 10*time.Second)
 	defer cancel()
 
@@ -80,14 +74,8 @@ func SmartSelectionChrome(ctx context.Context, s *testing.State) {
 
 	ui := uiauto.New(tconn).WithTimeout(30 * time.Second)
 
-	br, closeBrowser, err := browserfixt.SetUp(ctx, cr, s.Param().(browser.Type))
-	if err != nil {
-		s.Fatal("Failed to open the browser: ", err)
-	}
-	defer closeBrowser(cleanupCtx)
-
 	// Open page with an address on it.
-	conn, err := br.NewConn(ctx, "https://google.com/search?q=1600+amphitheatre+parkway")
+	conn, err := cr.NewConn(ctx, "https://google.com/search?q=1600+amphitheatre+parkway")
 	if err != nil {
 		s.Fatal("Failed to create new Chrome connection: ", err)
 	}

@@ -13,8 +13,6 @@ import (
 	"go.chromium.org/tast-tests/cros/local/arc/optin"
 	"go.chromium.org/tast-tests/cros/local/arc/playstore"
 	"go.chromium.org/tast-tests/cros/local/chrome"
-	"go.chromium.org/tast-tests/cros/local/chrome/browser"
-	"go.chromium.org/tast-tests/cros/local/chrome/browser/browserfixt"
 	"go.chromium.org/tast-tests/cros/local/chrome/uiauto"
 	"go.chromium.org/tast-tests/cros/local/chrome/uiauto/faillog"
 	"go.chromium.org/tast-tests/cros/local/chrome/uiauto/nodewith"
@@ -27,7 +25,6 @@ import (
 func init() {
 	testing.AddTest(&testing.Test{
 		Func:         PlayStoreOmnibox,
-		LacrosStatus: testing.LacrosVariantUnneeded,
 		Desc:         "Installs a TWA and WebAPK app via Omnibox in Play Store",
 		Contacts:     []string{"chromeos-apps-foundation-core@google.com", "tsergeant@chromium.org"},
 		BugComponent: "b:1203766",
@@ -36,12 +33,10 @@ func init() {
 		Params: []testing.Param{{
 			ExtraSoftwareDeps: []string{"android_container", "chrome"},
 			Fixture:           "arcBootedWithPlayStore",
-			Val:               browser.TypeAsh,
 		}, {
 			Name:              "vm",
 			ExtraSoftwareDeps: []string{"android_vm", "chrome"},
 			Fixture:           "arcBootedWithPlayStore",
-			Val:               browser.TypeAsh,
 			ExtraAttr:         []string{"group:hw_agnostic"},
 		}},
 		Timeout: chrome.LoginTimeout + arc.BootTimeout + 2*time.Minute,
@@ -65,11 +60,6 @@ func PlayStoreOmnibox(ctx context.Context, s *testing.State) {
 
 	d := s.FixtValue().(*arc.PreData).UIDevice
 
-	br, closeBrowser, err := browserfixt.SetUp(ctx, cr, s.Param().(browser.Type))
-	if err != nil {
-		s.Fatal("Failed to open browser: ", err)
-	}
-	defer closeBrowser(cleanupCtx)
 	defer faillog.DumpUITreeWithScreenshotOnError(cleanupCtx, s.OutDir(), s.HasError, cr, "play_store_omnibox")
 
 	// Jitsi Meet is a PWA which has manifest entries to prefer installation of the app through Play Store.
@@ -80,7 +70,7 @@ func PlayStoreOmnibox(ctx context.Context, s *testing.State) {
 	)
 
 	// Navigate to URL
-	conn, err := br.NewConn(ctx, url)
+	conn, err := cr.NewConn(ctx, url)
 	if err != nil {
 		s.Fatalf("Failed to navigate to the url %s: %s", url, err)
 	}

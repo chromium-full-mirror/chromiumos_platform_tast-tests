@@ -11,8 +11,6 @@ import (
 	"go.chromium.org/tast-tests/cros/local/arc"
 	"go.chromium.org/tast-tests/cros/local/chrome"
 	"go.chromium.org/tast-tests/cros/local/chrome/ash"
-	"go.chromium.org/tast-tests/cros/local/chrome/browser"
-	"go.chromium.org/tast-tests/cros/local/chrome/browser/browserfixt"
 	"go.chromium.org/tast-tests/cros/local/chrome/uiauto"
 	"go.chromium.org/tast-tests/cros/local/chrome/uiauto/nodewith"
 	"go.chromium.org/tast-tests/cros/local/chrome/uiauto/role"
@@ -24,9 +22,8 @@ import (
 
 func init() {
 	testing.AddTest(&testing.Test{
-		Func:         VirtualDesks,
-		LacrosStatus: testing.LacrosVariantUnneeded,
-		Desc:         "Tests the placement of an ARC app in a virtual desk",
+		Func: VirtualDesks,
+		Desc: "Tests the placement of an ARC app in a virtual desk",
 		Contacts: []string{
 			"chromeos-wm@google.com",
 			"dandersson@chromium.org",
@@ -41,12 +38,10 @@ func init() {
 		Params: []testing.Param{{
 			ExtraSoftwareDeps: []string{"android_container"},
 			Fixture:           "arcBooted",
-			Val:               browser.TypeAsh,
 		}, {
 			Name:              "vm",
 			ExtraSoftwareDeps: []string{"android_vm"},
 			Fixture:           "arcBooted",
-			Val:               browser.TypeAsh,
 		}},
 	})
 }
@@ -96,13 +91,7 @@ func VirtualDesks(ctx context.Context, s *testing.State) {
 
 	// Explicitly start a browser window to test that switching to a new desk
 	// doesn't cause it to change desks.
-	br, closeBrowser, err := browserfixt.SetUp(ctx, cr, s.Param().(browser.Type))
-	if err != nil {
-		s.Fatal("Failed to open the browser: ", err)
-	}
-	defer closeBrowser(cleanupCtx)
-
-	conn, err := br.NewConn(ctx, "about:blank")
+	conn, err := cr.NewConn(ctx, "about:blank")
 	if err != nil {
 		s.Fatal("Could not open the browser window: ", err)
 	}

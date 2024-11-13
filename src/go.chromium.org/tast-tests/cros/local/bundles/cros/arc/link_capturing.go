@@ -16,8 +16,6 @@ import (
 	"go.chromium.org/tast-tests/cros/local/arc"
 	"go.chromium.org/tast-tests/cros/local/chrome"
 	"go.chromium.org/tast-tests/cros/local/chrome/apps"
-	"go.chromium.org/tast-tests/cros/local/chrome/browser"
-	"go.chromium.org/tast-tests/cros/local/chrome/browser/browserfixt"
 	"go.chromium.org/tast-tests/cros/local/chrome/uiauto"
 	"go.chromium.org/tast-tests/cros/local/chrome/uiauto/faillog"
 	"go.chromium.org/tast-tests/cros/local/chrome/uiauto/nodewith"
@@ -35,9 +33,8 @@ const (
 
 func init() {
 	testing.AddTest(&testing.Test{
-		Func:         LinkCapturing,
-		LacrosStatus: testing.LacrosVariantUnneeded,
-		Desc:         "Verifies link capturing integration between ARC and the browser",
+		Func: LinkCapturing,
+		Desc: "Verifies link capturing integration between ARC and the browser",
 		Contacts: []string{
 			"chromeos-apps-foundation-team@google.com",
 			"tsergeant@chromium.org",
@@ -48,12 +45,10 @@ func init() {
 		Params: []testing.Param{{
 			ExtraSoftwareDeps: []string{"android_container"},
 			Fixture:           "arcBooted",
-			Val:               browser.TypeAsh,
 		}, {
 			Name:              "vm",
 			ExtraSoftwareDeps: []string{"android_vm"},
 			Fixture:           "arcBooted",
-			Val:               browser.TypeAsh,
 		}},
 		Timeout: chrome.LoginTimeout + arc.BootTimeout + 1*time.Minute,
 		Data: []string{
@@ -170,12 +165,6 @@ func LinkCapturing(ctx context.Context, s *testing.State) {
 	}()
 	defer server.Shutdown(ctx)
 
-	br, closeBrowser, err := browserfixt.SetUp(ctx, cr, s.Param().(browser.Type))
-	if err != nil {
-		s.Fatal("Failed to open browser: ", err)
-	}
-	defer closeBrowser(cleanupCtx)
-
 	for _, tc := range []struct {
 		name    string
 		setting openInSetting
@@ -231,7 +220,7 @@ func LinkCapturing(ctx context.Context, s *testing.State) {
 			}
 
 			if tc.link == clickInBrowser {
-				if err := clickBrowserLinkAndVerify(ctx, tconn, br, verifier); err != nil {
+				if err := clickBrowserLinkAndVerify(ctx, tconn, cr, verifier); err != nil {
 					s.Fatal("Failed to verify link click: ", err)
 				}
 			} else {
@@ -246,10 +235,10 @@ func LinkCapturing(ctx context.Context, s *testing.State) {
 // clickBrowserLinkAndVerify clicks a link in a browser tab, then calls
 // verifier to verify the device state. verifier is passed as an Action to
 // allow cleanup after verification is completed.
-func clickBrowserLinkAndVerify(ctx context.Context, tconn *chrome.TestConn, br *browser.Browser, verifier uiauto.Action) error {
+func clickBrowserLinkAndVerify(ctx context.Context, tconn *chrome.TestConn, cr *chrome.Chrome, verifier uiauto.Action) error {
 	const testPageURL = "http://127.0.0.1:8000/link_capturing/link_capturing_index.html"
 
-	conn, err := br.NewConn(ctx, testPageURL)
+	conn, err := cr.NewConn(ctx, testPageURL)
 	if err != nil {
 		return errors.Wrap(err, "failed to open test page in browser")
 	}
