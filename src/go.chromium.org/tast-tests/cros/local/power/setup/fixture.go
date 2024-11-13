@@ -83,7 +83,8 @@ const (
 	PowerAshProtectedVideo = "powerAshProtectedVideo"
 
 	// Mahi
-	PowerAshMahi = "powerAshMahi"
+	PowerAshMahi            = "powerAshMahi"
+	PowerAshMahiAndSimplify = "powerAshMahiAndSimplify"
 )
 
 // PowerFixtureOptions describes options used by the fixture only.
@@ -825,6 +826,36 @@ func init() {
 		PreTestTimeout:  PreTestTimeout,
 		PostTestTimeout: PostTestTimeout,
 		Vars:            []string{"mahi.featureTestKey"},
+	})
+
+	testing.AddFixture(&testing.Fixture{
+		Name:         PowerAshMahiAndSimplify,
+		Desc:         "Fixture with mahi and pompano flags (for simplify feature) enabled",
+		BugComponent: "b:1673015",
+		Contacts: []string{
+			"alanlxl@google.com",
+			"thanhdng@google.com",
+		},
+		Impl: NewPowerUIFixture(PowerTestOptions{
+			NightLight:         DisableNightLight,
+			DarkTheme:          EnableLightTheme,
+			KeyboardBrightness: SetKbBrightnessToZero,
+		}, PowerFixtureOptions{
+			BrowserExtraOpts: []chrome.Option{
+				chrome.EnableFeatures("Mahi"),
+				chrome.EnableFeatures("Pompano"),
+			},
+			ExtraOptsFunc: func(ctx context.Context, s *testing.FixtState) ([]chrome.Option, error) {
+				return []chrome.Option{
+					chrome.ExtraArgs("--mahi-restrictions-override"),
+				}, nil
+			},
+		}),
+		SetUpTimeout:    SetUpTimeout,
+		ResetTimeout:    ResetTimeout,
+		TearDownTimeout: TearDownTimeout,
+		PreTestTimeout:  PreTestTimeout,
+		PostTestTimeout: PostTestTimeout,
 	})
 }
 

@@ -12,14 +12,17 @@ import (
 	"path"
 	"regexp"
 	"time"
+	"unicode/utf8"
 
 	"go.chromium.org/tast-tests/cros/common/testexec"
 	"go.chromium.org/tast-tests/cros/local/a11y"
 	"go.chromium.org/tast-tests/cros/local/chrome"
 	"go.chromium.org/tast-tests/cros/local/chrome/ash"
 	"go.chromium.org/tast-tests/cros/local/chrome/uiauto"
+	"go.chromium.org/tast-tests/cros/local/chrome/uiauto/event"
 	"go.chromium.org/tast-tests/cros/local/chrome/uiauto/mouse"
 	"go.chromium.org/tast-tests/cros/local/chrome/uiauto/nodewith"
+	"go.chromium.org/tast-tests/cros/local/chrome/uiauto/role"
 	"go.chromium.org/tast-tests/cros/local/chrome/webutil"
 	"go.chromium.org/tast-tests/cros/local/dlc"
 	"go.chromium.org/tast-tests/cros/local/input"
@@ -54,6 +57,9 @@ var (
 	mockQuestion               = nodewith.Name(mockQuestionString).ClassName("Label").Role("staticText").Ancestor(mahiQAView)
 	mockAnswer                 = nodewith.Name(mockResponseString).ClassName("Label").Role("staticText").Ancestor(mahiQAView)
 
+	// SimplifyButton is the button on the normal Mahi widget to request a
+	// simplification for the selected text.
+	SimplifyButton = nodewith.Name("Simplify").ClassName("LabelButton").Ancestor(mahiMenuView)
 	// SummarizeButton is the button on the normal Mahi widget to request a summry.
 	// It helps identify whether a normal widget or a compact one is shown.
 	SummarizeButton = nodewith.Name("Summarize").ClassName("LabelButton").Ancestor(mahiMenuView)
@@ -109,7 +115,10 @@ func CleanUIElement(ctx context.Context, ui *uiauto.Context, kb *input.KeyboardE
 			return errors.Wrap(err, "fail to hide the context menu")
 		}
 
+		// Clicking mahiPanelView first to focus the panel can reduce the flakiness
+		// compared to clicking the close button directly.
 		if err := uiauto.Combine("Hide mahi panel",
+			uiauto.IfSuccessThen(ui.Exists(mahiPanelView), ui.LeftClick(mahiPanelView)),
 			uiauto.IfSuccessThen(ui.Exists(mahiCloseButton), ui.LeftClick(mahiCloseButton)),
 			ui.WaitUntilGone(mahiCloseButton),
 		)(ctx); err != nil {
@@ -274,4 +283,66 @@ func AskQuestionOnMahiWidget(
 		ui.WaitUntilExists(mockQuestion),
 		ui.WaitUntilExists(mockAnswer),
 	)(ctx)
+}
+
+// ReadTextFile reads content from the given textFile as a string.
+func ReadTextFile(textFile string) (string, error) {
+	content, err := os.ReadFile(textFile)
+	if err != nil {
+		return "", errors.Wrapf(err, "failed to read content from file %s", textFile)
+	}
+	return string(content), nil
+}
+
+// SelectContentAndRightClick selects the given content from the webview,
+// righi-clicks it and checks expected_finder exists if not nil.
+func SelectContentAndRightClick(
+	ctx context.Context,
+	ui *uiauto.Context,
+	content string,
+	expectedFinder *nodewith.Finder) error {
+	// This assume the current browser tab is a plain text page with `content`.
+	contentNode := nodewith.Role(role.StaticText).Ancestor(
+		nodewith.Role(role.WebView)).First()
+	if err := ui.WaitUntilExists(contentNode)(ctx); err != nil {
+		return errors.Wrap(err, "failed to wait for content to load")
+	}
+
+	// Select the content and setup watcher to wait for text selection event.
+	if err := ui.WaitForEvent(nodewith.Root(),
+		event.DocumentSelectionChanged,
+		ui.Select(
+			contentNode, 0 /*startOffset*/, contentNode,
+			utf8.RuneCountInString(content) /*endOffset*/))(ctx); err != nil {
+		return errors.Wrap(err, "failed to select query")
+	}
+
+	if err := uiauto.Combine("Right click selected text and do simplify",
+		ui.RightClick(contentNode),
+		ui.WaitUntilExists(contextMenu),
+	)(ctx); err != nil {
+		return errors.Wrap(err, "failed to right click and wait for the context menu")
+	}
+
+	if expectedFinder != nil {
+		if err := ui.WaitUntilExists(expectedFinder)(ctx); err != nil {
+			return errors.Wrapf(err, "failed to wait until expected finder: %v", expectedFinder.Pretty())
+		}
+	}
+
+	return nil
+}
+
+// DoSimplify clicks the simplify button and checks the result panel exists.
+func DoSimplify(
+	ctx context.Context,
+	ui *uiauto.Context) error {
+
+	return uiauto.Combine("Right click selected text and do simplify",
+		ui.WaitUntilExists(SimplifyButton),
+		ui.LeftClick(SimplifyButton),
+		ui.WaitUntilExists(mahiCloseButton),
+		ui.WaitUntilAnyExists(anySummaryText, mahiErrorStatus),
+	)(ctx)
+
 }
