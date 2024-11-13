@@ -751,6 +751,31 @@ func (i *impl) PostTest(ctx context.Context, s *testing.FixtTestState) {
 	}
 }
 
+func checkECCrashType(crashLog string, crashIDs ...string) (bool, error) {
+	var ecCrashID = map[string]string{
+		"divBy0":          "dead6660",
+		"stackOverflow":   "dead6661",
+		"pdCrash":         "dead6662",
+		"assert":          "dead6663",
+		"watchdog":        "dead6664",
+		"badRng":          "dead6665",
+		"pmicFault":       "dead6666",
+		"exit":            "dead6667",
+		"watchdogWarning": "dead6668",
+	}
+
+	for _, crashID := range crashIDs {
+		crashStr, ok := ecCrashID[crashID]
+		if !ok {
+			return false, errors.Errorf("crashID %s not recognized as crash ID in ecCrashID map", crashID)
+		}
+		if strings.Contains(crashLog, crashStr) {
+			return true, nil
+		}
+	}
+	return false, nil
+}
+
 func checkAndLogECCrashes(ctx context.Context, s *testing.FixtTestState, i *impl) {
 	connectTimeout, cancel := context.WithTimeout(ctx, 15*time.Second)
 	defer cancel()
@@ -771,6 +796,20 @@ func checkAndLogECCrashes(ctx context.Context, s *testing.FixtTestState, i *impl
 	}
 
 	for crashName, listOfCrashFiles := range crashLogs {
+		logFilePath := firmware.ECCrashBaseDir + crashName + ".eccrash"
+		out, err := i.value.Helper.Reporter.CatFile(ctx, logFilePath)
+		if err != nil {
+			msg := fmt.Sprintf("failed to read .eccrash file %s to print in log", logFilePath)
+			s.Log(logECCrash(msg, s, err))
+		}
+		crashLog := string(out)
+		if ok, err := checkECCrashType(crashLog, "watchdogWarning"); err != nil {
+			s.Error(logECCrash("failed to parse ec crash log", s, err))
+		} else if ok {
+			s.Log(logECCrash("found watchdog warning (dead6668), not logging crash", s))
+			continue
+		} // Otherwise, crash is important, save logs and raise error.
+
 		crashSaveDir := filepath.Join(s.OutDir(), crashName)
 		if err := os.MkdirAll(crashSaveDir, os.ModePerm); err != nil {
 			s.Fatal(logECCrash("found crashes but failed to create dir to save crash logs", s, err))
@@ -782,15 +821,8 @@ func checkAndLogECCrashes(ctx context.Context, s *testing.FixtTestState, i *impl
 				s.Error(logECCrash(msg, s))
 			}
 		}
-		logFilePath := firmware.ECCrashBaseDir + crashName + ".eccrash"
-		out, err := i.value.Helper.Reporter.CatFile(ctx, logFilePath)
-		if err != nil {
-			msg := fmt.Sprintf("failed to read .eccrash file %s to print in log", logFilePath)
-			s.Log(logECCrash(msg, s, err))
-		}
 		// The .eccrash file is of predictable length (and not too long), just print it out.
-		printStr := string(out)
-		msg := fmt.Sprintf("found unexpected EC Crash, saved ec crash log to %s: %s)", crashSaveDir, printStr)
+		msg := fmt.Sprintf("found unexpected EC Crash, saved ec crash log to %s: %s)", crashSaveDir, crashLog)
 		s.Error(logECCrash(msg, s))
 	}
 }
