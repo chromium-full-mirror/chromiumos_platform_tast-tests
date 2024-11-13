@@ -79,13 +79,6 @@ def _plot_box_for_groups(
         group.label(): list(group.sample.values()) for group in result.groups
     }
 
-    (
-        better_results,
-        worse_results,
-    ) = analysis_results.split_better_and_worse_by_mean(result.pairs)
-    better_labels = {result.after.label() for result in better_results}
-    worse_labels = {result.after.label() for result in worse_results}
-
     fig, ax = plt.subplots()
     order = sorted(label_to_values, key=lambda x: np.mean(label_to_values[x]))
     sns.boxplot(
@@ -95,16 +88,27 @@ def _plot_box_for_groups(
     ax.set_ylabel(result.units())
     ax.tick_params(axis="x", labelrotation=45)
 
-    CONTROL_BORDER = "black"
-    BETTER_BACKGROUND = "#13acff3b"
-    WORSE_BACKGROUND = "#dd1e1e52"
-    for label in ax.get_xticklabels():
-        if label.get_text() == control_label:
-            label.set_bbox({"facecolor": "none", "edgecolor": CONTROL_BORDER})
-        elif label.get_text() in better_labels:
-            label.set_bbox({"facecolor": BETTER_BACKGROUND})
-        elif label.get_text() in worse_labels:
-            label.set_bbox({"facecolor": WORSE_BACKGROUND})
+    if control_label:
+        (
+            better_results,
+            worse_results,
+        ) = analysis_results.split_better_and_worse_by_mean(result.pairs)
+        better_labels = {result.after.label() for result in better_results}
+        worse_labels = {result.after.label() for result in worse_results}
+
+        CONTROL_BORDER = "black"
+        BETTER_BACKGROUND = "#13acff3b"
+        WORSE_BACKGROUND = "#dd1e1e52"
+
+        for label in ax.get_xticklabels():
+            if label.get_text() == control_label:
+                label.set_bbox(
+                    {"facecolor": "none", "edgecolor": CONTROL_BORDER}
+                )
+            elif label.get_text() in better_labels:
+                label.set_bbox({"facecolor": BETTER_BACKGROUND})
+            elif label.get_text() in worse_labels:
+                label.set_bbox({"facecolor": WORSE_BACKGROUND})
 
     return fig
 
