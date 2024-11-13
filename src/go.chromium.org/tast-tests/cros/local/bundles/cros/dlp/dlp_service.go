@@ -401,7 +401,7 @@ func (service *DataLeakPreventionService) FilesDriveCopyPaste(ctx context.Contex
 	}
 
 	// Download the file.
-	if err := files.DownloadFile(ctx, tconn, cr.Browser(), http.Dir(req.DataPath)); err != nil {
+	if err := files.DownloadFile(ctx, tconn, cr, http.Dir(req.DataPath)); err != nil {
 		return &empty.Empty{}, errors.Wrap(err, "failed to download file")
 	}
 
@@ -492,7 +492,7 @@ func (service *DataLeakPreventionService) TestCopyFileToDrive(ctx context.Contex
 	}
 
 	// Download the file.
-	if err := files.DownloadFile(ctx, tconn, service.chrome.Browser(), http.Dir(req.DataPath)); err != nil {
+	if err := files.DownloadFile(ctx, tconn, service.chrome, http.Dir(req.DataPath)); err != nil {
 		return &empty.Empty{}, errors.Wrap(err, "failed to download file")
 	}
 

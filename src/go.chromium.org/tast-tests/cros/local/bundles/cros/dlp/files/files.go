@@ -19,7 +19,6 @@ import (
 	"go.chromium.org/tast-tests/cros/local/apps"
 	"go.chromium.org/tast-tests/cros/local/chrome"
 	"go.chromium.org/tast-tests/cros/local/chrome/ash"
-	"go.chromium.org/tast-tests/cros/local/chrome/browser"
 	"go.chromium.org/tast-tests/cros/local/chrome/uiauto"
 	"go.chromium.org/tast-tests/cros/local/chrome/uiauto/filesapp"
 	"go.chromium.org/tast-tests/cros/local/chrome/uiauto/nodewith"
@@ -58,9 +57,9 @@ func ClearDownloads(ctx context.Context, cr *chrome.Chrome) error {
 
 // InitiateDownload initiates the file download from a local server.
 // The caller should choose the save location and verify the download was successful, as needed.
-func InitiateDownload(ctx context.Context, br *browser.Browser, server *httptest.Server) error {
+func InitiateDownload(ctx context.Context, cr *chrome.Chrome, server *httptest.Server) error {
 	// Open the local page with the file to download.
-	conn, err := br.NewConn(ctx, server.URL+DownloadPage)
+	conn, err := cr.NewConn(ctx, server.URL+DownloadPage)
 	if err != nil {
 		return errors.Wrap(err, "failed to open browser")
 	}
@@ -77,7 +76,7 @@ func InitiateDownload(ctx context.Context, br *browser.Browser, server *httptest
 }
 
 // DownloadFile downloads a file from the local server and verifies it was saved in Downloads directory.
-func DownloadFile(ctx context.Context, tconn *chrome.TestConn, br *browser.Browser, dataFS http.FileSystem) error {
+func DownloadFile(ctx context.Context, tconn *chrome.TestConn, cr *chrome.Chrome, dataFS http.FileSystem) error {
 	cleanupCtx := ctx
 	ctx, cancel := ctxutil.Shorten(ctx, 15*time.Second)
 	defer cancel()
@@ -86,7 +85,7 @@ func DownloadFile(ctx context.Context, tconn *chrome.TestConn, br *browser.Brows
 	server := httptest.NewServer(http.FileServer(dataFS))
 	defer server.Close()
 
-	if err := InitiateDownload(ctx, br, server); err != nil {
+	if err := InitiateDownload(ctx, cr, server); err != nil {
 		return errors.Wrap(err, "failed to initiate download")
 	}
 

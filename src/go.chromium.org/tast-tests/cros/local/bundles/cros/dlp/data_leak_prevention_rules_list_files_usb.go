@@ -18,8 +18,6 @@ import (
 	"go.chromium.org/tast-tests/cros/local/bundles/cros/dlp/restrictionlevel"
 	"go.chromium.org/tast-tests/cros/local/chrome"
 	"go.chromium.org/tast-tests/cros/local/chrome/ash"
-	"go.chromium.org/tast-tests/cros/local/chrome/browser"
-	"go.chromium.org/tast-tests/cros/local/chrome/browser/browserfixt"
 	"go.chromium.org/tast-tests/cros/local/chrome/uiauto"
 	"go.chromium.org/tast-tests/cros/local/chrome/uiauto/faillog"
 	"go.chromium.org/tast-tests/cros/local/chrome/uiauto/filesapp"
@@ -204,48 +202,30 @@ func DataLeakPreventionRulesListFilesUSB(ctx context.Context, s *testing.State) 
 		s.Fatal("Failed to clear Downloads directory: ", err)
 	}
 
-	tconnAsh, err := cr.TestAPIConn(ctx)
+	tconn, err := cr.TestAPIConn(ctx)
 	if err != nil {
 		s.Fatal("Failed to connect to test API: ", err)
 	}
 	// Ensure that there are no windows open.
-	if err := ash.CloseAllWindows(ctx, tconnAsh); err != nil {
+	if err := ash.CloseAllWindows(ctx, tconn); err != nil {
 		s.Fatal("Failed to close all windows: ", err)
 	}
 	// Ensure that all windows are closed after test.
-	defer ash.CloseAllWindows(cleanupCtx, tconnAsh)
-
-	// Create Browser.
-	br, closeBrowser, err := browserfixt.SetUp(ctx, cr, browser.TypeAsh)
-	if err != nil {
-		s.Fatal("Failed to open the browser: ", err)
-	}
-	defer closeBrowser(cleanupCtx)
+	defer ash.CloseAllWindows(cleanupCtx, tconn)
 
 	defer faillog.DumpUITreeWithScreenshotOnError(cleanupCtx, s.OutDir(), s.HasError, cr, "ui_tree_error")
 
-	tconnBrowser, err := br.TestAPIConn(ctx)
-	if err != nil {
-		s.Fatal("Failed to connect to browser's test API: ", err)
-	}
-
-	// The browsers sometimes restore some tabs, so we manually close all unneeded tabs.
-	if err := browser.CloseAllTabs(ctx, tconnBrowser); err != nil {
-		s.Fatal("Failed to close all unneeded tabs: ", err)
-	}
-	defer browser.CloseAllTabs(cleanupCtx, tconnBrowser)
-
 	// Close all prior notifications.
-	if err := ash.CloseNotifications(ctx, tconnAsh); err != nil {
+	if err := ash.CloseNotifications(ctx, tconn); err != nil {
 		s.Fatal("Failed to close notifications: ", err)
 	}
 
-	if err := files.DownloadFile(ctx, tconnAsh, br, s.DataFileSystem()); err != nil {
+	if err := files.DownloadFile(ctx, tconn, cr, s.DataFileSystem()); err != nil {
 		s.Fatal("Failed to download file: ", err)
 	}
 
 	// Open the Files app to cleanup USB devices. Closed at relaunch or Chrome reset.
-	filesApp, err := files.LaunchFilesAppFullscreen(ctx, tconnAsh)
+	filesApp, err := files.LaunchFilesAppFullscreen(ctx, tconn)
 	if err != nil {
 		s.Fatal("Failed to launch the Files App: ", err)
 	}
@@ -266,7 +246,7 @@ func DataLeakPreventionRulesListFilesUSB(ctx context.Context, s *testing.State) 
 	}(cleanupCtx)
 
 	// Re-open the Files app to retrieve the new USB drive, format it and try to copy the file.
-	filesApp, err = filesapp.Relaunch(ctx, tconnAsh, filesApp)
+	filesApp, err = filesapp.Relaunch(ctx, tconn, filesApp)
 	if err != nil {
 		s.Fatal("Failed to relaunch the Files App: ", err)
 	}
@@ -274,7 +254,7 @@ func DataLeakPreventionRulesListFilesUSB(ctx context.Context, s *testing.State) 
 	defer faillog.DumpUITreeWithScreenshotOnError(cleanupCtx, s.OutDir(), s.HasError, cr, "filesapp_ui_dump")
 
 	// Close new notifications again in case they overlap something on screen.
-	if err := ash.CloseNotifications(ctx, tconnAsh); err != nil {
+	if err := ash.CloseNotifications(ctx, tconn); err != nil {
 		s.Fatal("Failed to close notifications: ", err)
 	}
 
@@ -309,13 +289,13 @@ func DataLeakPreventionRulesListFilesUSB(ctx context.Context, s *testing.State) 
 
 	switch appliedRestriction {
 	case restrictionlevel.WarnProceeded:
-		ui := uiauto.New(tconnAsh)
-		if err := files.AcceptWarningAndVerify(ctx, ui, tconnAsh, files.DlFileName); err != nil {
+		ui := uiauto.New(tconn)
+		if err := files.AcceptWarningAndVerify(ctx, ui, tconn, files.DlFileName); err != nil {
 			s.Fatal("Failed to proceed the warning: ", err)
 		}
 	case restrictionlevel.WarnCancelled:
-		ui := uiauto.New(tconnAsh)
-		if err := files.CancelWarningAndVerify(ctx, ui, tconnAsh, files.DlFileName); err != nil {
+		ui := uiauto.New(tconn)
+		if err := files.CancelWarningAndVerify(ctx, ui, tconn, files.DlFileName); err != nil {
 			s.Fatal("Failed to cancel the warning: ", err)
 		}
 	case restrictionlevel.Blocked:

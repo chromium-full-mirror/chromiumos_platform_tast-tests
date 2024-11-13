@@ -20,7 +20,6 @@ import (
 	"go.chromium.org/tast-tests/cros/local/chrome"
 	"go.chromium.org/tast-tests/cros/local/chrome/ash"
 	"go.chromium.org/tast-tests/cros/local/chrome/browser"
-	"go.chromium.org/tast-tests/cros/local/chrome/browser/browserfixt"
 	"go.chromium.org/tast-tests/cros/local/chrome/display"
 	"go.chromium.org/tast-tests/cros/local/chrome/uiauto"
 	"go.chromium.org/tast-tests/cros/local/chrome/uiauto/faillog"
@@ -100,16 +99,10 @@ func DataLeakPreventionRulesListDragdrop(ctx context.Context, s *testing.State) 
 		s.Fatal("Failed to reset the Chrome: ", err)
 	}
 
-	br, closeBrowser, err := browserfixt.SetUp(ctx, cr, browser.TypeAsh)
-	if err != nil {
-		s.Fatal("Failed to open the destination browser: ", err)
-	}
-	defer closeBrowser(cleanupCtx)
-
 	defer faillog.DumpUITreeWithScreenshotOnError(cleanupCtx, s.OutDir(), s.HasError, cr, "ui_tree_error")
 
 	dstURL := dstServer.URL + "/editable_text_box.html"
-	dstConn, err := br.NewConn(ctx, dstURL)
+	dstConn, err := cr.NewConn(ctx, dstURL)
 	if err != nil {
 		s.Fatalf("Failed to open page %q: %v", dstURL, err)
 	}
@@ -119,7 +112,7 @@ func DataLeakPreventionRulesListDragdrop(ctx context.Context, s *testing.State) 
 		s.Fatalf("Failed to wait for %q to achieve quiescence: %v", dstURL, err)
 	}
 
-	srcConn, err := br.NewConn(ctx, srcURL, browser.WithNewWindow())
+	srcConn, err := cr.NewConn(ctx, srcURL, browser.WithNewWindow())
 	if err != nil {
 		s.Fatalf("Failed to open page %q: %v", srcURL, err)
 	}

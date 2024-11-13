@@ -18,8 +18,6 @@ import (
 	"go.chromium.org/tast-tests/cros/local/bundles/cros/dlp/screenshare"
 	"go.chromium.org/tast-tests/cros/local/chrome"
 	"go.chromium.org/tast-tests/cros/local/chrome/ash"
-	"go.chromium.org/tast-tests/cros/local/chrome/browser"
-	"go.chromium.org/tast-tests/cros/local/chrome/browser/browserfixt"
 	"go.chromium.org/tast-tests/cros/local/chrome/uiauto"
 	"go.chromium.org/tast-tests/cros/local/chrome/uiauto/faillog"
 	"go.chromium.org/tast-tests/cros/local/chrome/webutil"
@@ -130,16 +128,10 @@ func DataLeakPreventionRulesListScreenshareWindow(ctx context.Context, s *testin
 	}
 	defer keyboard.Close(ctx)
 
-	br, closeBrowser, err := browserfixt.SetUp(ctx, cr, browser.TypeAsh)
-	if err != nil {
-		s.Fatal("Failed to open the browser: ", err)
-	}
-	defer closeBrowser(cleanupCtx)
-
 	defer faillog.DumpUITreeWithScreenshotOnError(cleanupCtx, s.OutDir(), s.HasError, cr, "ui_tree_"+params.Name)
 
-	var conn *browser.Conn
-	if conn, err = br.NewConn(ctx, unrestrictedURL); err != nil {
+	var conn *chrome.Conn
+	if conn, err = cr.NewConn(ctx, unrestrictedURL); err != nil {
 		s.Fatal("Failed to open page: ", err)
 	}
 
@@ -171,7 +163,7 @@ func DataLeakPreventionRulesListScreenshareWindow(ctx context.Context, s *testin
 		s.Fatal("Failed to check frame status: ", err)
 	}
 
-	if conn, err = br.NewConn(ctx, url); err != nil {
+	if conn, err = cr.NewConn(ctx, url); err != nil {
 		s.Fatal("Failed to open page: ", err)
 	}
 
@@ -215,7 +207,7 @@ func DataLeakPreventionRulesListScreenshareWindow(ctx context.Context, s *testin
 		s.Fatal("Polling the frame status timed out: ", err)
 	}
 
-	if conn, err = br.NewConn(ctx, unrestrictedURL); err != nil {
+	if conn, err = cr.NewConn(ctx, unrestrictedURL); err != nil {
 		s.Fatal("Failed to open page: ", err)
 	}
 
@@ -238,7 +230,7 @@ func DataLeakPreventionRulesListScreenshareWindow(ctx context.Context, s *testin
 
 	// Once the user clicks "Share anyway", returning to the site later should allow for sharing without another prompt.
 	if params.Restriction == restrictionlevel.WarnProceeded {
-		if conn, err = br.NewConn(ctx, url); err != nil {
+		if conn, err = cr.NewConn(ctx, url); err != nil {
 			s.Fatal("Failed to open page: ", err)
 		}
 

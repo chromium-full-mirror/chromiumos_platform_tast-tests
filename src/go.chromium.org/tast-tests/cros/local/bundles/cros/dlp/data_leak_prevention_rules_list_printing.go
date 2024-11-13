@@ -20,8 +20,6 @@ import (
 	"go.chromium.org/tast-tests/cros/local/bundles/cros/dlp/restrictionlevel"
 	"go.chromium.org/tast-tests/cros/local/chrome"
 	"go.chromium.org/tast-tests/cros/local/chrome/ash"
-	"go.chromium.org/tast-tests/cros/local/chrome/browser"
-	"go.chromium.org/tast-tests/cros/local/chrome/browser/browserfixt"
 	"go.chromium.org/tast-tests/cros/local/chrome/uiauto"
 	"go.chromium.org/tast-tests/cros/local/chrome/uiauto/faillog"
 	"go.chromium.org/tast-tests/cros/local/chrome/uiauto/printpreview"
@@ -37,7 +35,6 @@ type printingTestParams struct {
 	name                    string
 	path                    string
 	restriction             restrictionlevel.RestrictionLevel
-	browserType             browser.Type
 	waitTimeSecNotification time.Duration
 	waitTimeSecWarning      time.Duration
 }
@@ -87,7 +84,6 @@ func init() {
 				name:                    "blocked",
 				path:                    dlpPrintingBlockedPath,
 				restriction:             restrictionlevel.Blocked,
-				browserType:             browser.TypeAsh,
 				waitTimeSecNotification: waitTimeSecNotificationAsh,
 				waitTimeSecWarning:      waitTimeSecWarningAsh,
 			},
@@ -99,7 +95,6 @@ func init() {
 				name:                    "warn_proceded",
 				path:                    dlpPrintingWarnPath,
 				restriction:             restrictionlevel.WarnProceeded,
-				browserType:             browser.TypeAsh,
 				waitTimeSecNotification: waitTimeSecNotificationAsh,
 				waitTimeSecWarning:      waitTimeSecWarningAsh,
 			},
@@ -111,7 +106,6 @@ func init() {
 				name:                    "warn_cancelled",
 				path:                    dlpPrintingWarnPath,
 				restriction:             restrictionlevel.WarnCancelled,
-				browserType:             browser.TypeAsh,
 				waitTimeSecNotification: waitTimeSecNotificationAsh,
 				waitTimeSecWarning:      waitTimeSecWarningAsh,
 			},
@@ -213,15 +207,9 @@ func DataLeakPreventionRulesListPrinting(ctx context.Context, s *testing.State) 
 		s.Fatal("Failed to serve and refresh: ", err)
 	}
 
-	br, closeBrowser, err := browserfixt.SetUp(ctx, cr, s.Param().(printingTestParams).browserType)
-	if err != nil {
-		s.Fatal("Failed to open the browser: ", err)
-	}
-	defer closeBrowser(cleanupCtx)
-
 	defer faillog.DumpUITreeWithScreenshotOnError(cleanupCtx, s.OutDir(), s.HasError, cr, "ui_tree_"+s.Param().(printingTestParams).name)
 
-	conn, err := br.NewConn(ctx, testURL.String())
+	conn, err := cr.NewConn(ctx, testURL.String())
 	if err != nil {
 		s.Fatal("Failed to open page: ", err)
 	}

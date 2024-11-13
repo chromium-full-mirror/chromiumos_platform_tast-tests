@@ -18,8 +18,6 @@ import (
 	"go.chromium.org/tast-tests/cros/local/bundles/cros/dlp/policy"
 	"go.chromium.org/tast-tests/cros/local/bundles/cros/dlp/restrictionlevel"
 	"go.chromium.org/tast-tests/cros/local/chrome"
-	"go.chromium.org/tast-tests/cros/local/chrome/browser"
-	"go.chromium.org/tast-tests/cros/local/chrome/browser/browserfixt"
 	"go.chromium.org/tast-tests/cros/local/chrome/uiauto"
 	"go.chromium.org/tast-tests/cros/local/chrome/uiauto/faillog"
 	"go.chromium.org/tast-tests/cros/local/chrome/uiauto/nodewith"
@@ -147,16 +145,10 @@ func DataLeakPreventionRulesListClipboard(ctx context.Context, s *testing.State)
 		s.Fatal("Failed to wait for chrome.clipboard API to become available: ", err)
 	}
 
-	br, closeBrowser, err := browserfixt.SetUp(ctx, cr, browser.TypeAsh)
-	if err != nil {
-		s.Fatal("Failed to open the browser: ", err)
-	}
-	defer closeBrowser(cleanupCtx)
-
 	defer faillog.DumpUITreeWithScreenshotOnError(cleanupCtx, s.OutDir(), s.HasError, cr, "ui_tree_"+params.name)
 
 	sourceURL := sourceServer.URL + path
-	sourceConn, err := br.NewConn(ctx, sourceURL)
+	sourceConn, err := cr.NewConn(ctx, sourceURL)
 	if err != nil {
 		s.Fatalf("Failed to open page %q: %v", path, err)
 	}
@@ -178,7 +170,7 @@ func DataLeakPreventionRulesListClipboard(ctx context.Context, s *testing.State)
 	}
 
 	destURL := destServer.URL + "/editable_text_box.html"
-	destConn, err := br.NewConn(ctx, destURL)
+	destConn, err := cr.NewConn(ctx, destURL)
 	if err != nil {
 		s.Fatalf("Failed to open page %q: %v", destURL, err)
 	}

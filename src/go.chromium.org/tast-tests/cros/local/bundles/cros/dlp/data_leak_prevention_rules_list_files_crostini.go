@@ -108,7 +108,7 @@ func DataLeakPreventionRulesListFilesCrostini(ctx context.Context, s *testing.St
 	}
 
 	// Download the file.
-	if err := files.DownloadFile(ctx, tconn, cr.Browser(), s.DataFileSystem()); err != nil {
+	if err := files.DownloadFile(ctx, tconn, cr, s.DataFileSystem()); err != nil {
 		s.Fatal("Failed to download file: ", err)
 	}
 

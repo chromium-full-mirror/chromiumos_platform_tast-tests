@@ -20,7 +20,6 @@ import (
 	"go.chromium.org/tast-tests/cros/local/bundles/cros/dlp/files"
 	"go.chromium.org/tast-tests/cros/local/chrome"
 	"go.chromium.org/tast-tests/cros/local/chrome/ash"
-	"go.chromium.org/tast-tests/cros/local/chrome/browser"
 	"go.chromium.org/tast-tests/cros/local/chrome/uiauto"
 	"go.chromium.org/tast-tests/cros/local/chrome/uiauto/faillog"
 	"go.chromium.org/tast-tests/cros/local/chrome/uiauto/filesapp"
@@ -43,10 +42,9 @@ const (
 
 func init() {
 	testing.AddTest(&testing.Test{
-		Func:         DataLeakPreventionRulesListFilesExtensive,
-		LacrosStatus: testing.LacrosVariantUnneeded,
-		Desc:         "Test behavior of DataLeakPreventionRulesList policy with different file interactions",
-		Timeout:      3 * time.Minute,
+		Func:    DataLeakPreventionRulesListFilesExtensive,
+		Desc:    "Test behavior of DataLeakPreventionRulesList policy with different file interactions",
+		Timeout: 3 * time.Minute,
 		Contacts: []string{
 			"chromeos-dlp@google.com",
 			"aidazolic@google.com",
@@ -210,7 +208,7 @@ func DataLeakPreventionRulesListFilesExtensive(ctx context.Context, s *testing.S
 	// Start interacting with the UI.
 	ui := uiauto.New(tconn)
 
-	if err := testDownload(ctx, ui, tconn, cr.Browser(), s.DataFileSystem()); err != nil {
+	if err := testDownload(ctx, ui, tconn, cr, s.DataFileSystem()); err != nil {
 		s.Fatal("Failed to testDownload: ", err)
 	}
 
@@ -247,12 +245,12 @@ func DataLeakPreventionRulesListFilesExtensive(ctx context.Context, s *testing.S
 	}
 }
 
-func testDownload(ctx context.Context, ui *uiauto.Context, tconn *chrome.TestConn, br *browser.Browser, dataFS http.FileSystem) error {
+func testDownload(ctx context.Context, ui *uiauto.Context, tconn *chrome.TestConn, cr *chrome.Chrome, dataFS http.FileSystem) error {
 	// Setup test HTTP server.
 	server := httptest.NewServer(http.FileServer(dataFS))
 	defer server.Close()
 
-	if err := files.InitiateDownload(ctx, br, server); err != nil {
+	if err := files.InitiateDownload(ctx, cr, server); err != nil {
 		return errors.Wrap(err, "failed to initiate download")
 	}
 
