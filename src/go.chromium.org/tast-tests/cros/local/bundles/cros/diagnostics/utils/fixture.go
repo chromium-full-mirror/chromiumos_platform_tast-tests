@@ -51,8 +51,6 @@ func init() {
 	})
 }
 
-const appURL = "chrome://diagnostics/"
-
 // FixtureData contains the data available for use in diagnostics tests
 type FixtureData struct {
 	Cr    *chrome.Chrome
@@ -64,7 +62,6 @@ type FixtureData struct {
 type diagnosticsPrepFixture struct {
 	cr                *chrome.Chrome
 	tconn             *chrome.TestConn
-	fopt              chrome.OptionsCallback
 	disableTabletMode bool
 }
 
