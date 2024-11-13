@@ -24864,37 +24864,6 @@ func (p *ColorCorrectionEnabled) Equal(iface interface{}) bool {
 }
 
 // ****************************************************************************
-// 1121. NativeClientForceAllowed
-// This policy has a default value of False.
-// ****************************************************************************
-type NativeClientForceAllowed struct {
-	Stat Status
-	Val  bool
-}
-
-func (p *NativeClientForceAllowed) Name() string          { return "NativeClientForceAllowed" }
-func (p *NativeClientForceAllowed) Scope() Scope          { return ScopeUser }
-func (p *NativeClientForceAllowed) Status() Status        { return p.Stat }
-func (p *NativeClientForceAllowed) UntypedV() interface{} { return p.Val }
-func (p *NativeClientForceAllowed) UnmarshalAs(m json.RawMessage) (interface{}, error) {
-	var v bool
-	if err := json.Unmarshal(m, &v); err != nil {
-		return nil, errors.Wrapf(err, "could not read %s as bool", m)
-	}
-	return v, nil
-}
-func (p *NativeClientForceAllowed) SetProto(m *protoreflect.Message) {
-	SetUserProto(m, p.Name(), p.Val)
-}
-func (p *NativeClientForceAllowed) Equal(iface interface{}) bool {
-	v, ok := iface.(bool)
-	if !ok {
-		return ok
-	}
-	return cmp.Equal(p.Val, v, cmpopts.EquateEmpty())
-}
-
-// ****************************************************************************
 // 1122. EmojiPickerGifSupportEnabled
 // This policy has a default value of False.
 // This policy can be modified without rebooting.
@@ -26585,7 +26554,6 @@ func (p *AlwaysOnVpnPreConnectUrlAllowlist) Equal(iface interface{}) bool {
 // ****************************************************************************
 // 1191. CACertificates
 // This policy can be modified without rebooting.
-// This is a future policy, it is not present in stable builds.
 // ****************************************************************************
 type CACertificates struct {
 	Stat Status
@@ -26617,7 +26585,6 @@ func (p *CACertificates) Equal(iface interface{}) bool {
 // ****************************************************************************
 // 1192. CADistrustedCertificates
 // This policy can be modified without rebooting.
-// This is a future policy, it is not present in stable builds.
 // ****************************************************************************
 type CADistrustedCertificates struct {
 	Stat Status
@@ -26649,7 +26616,6 @@ func (p *CADistrustedCertificates) Equal(iface interface{}) bool {
 // ****************************************************************************
 // 1193. CAHintCertificates
 // This policy can be modified without rebooting.
-// This is a future policy, it is not present in stable builds.
 // ****************************************************************************
 type CAHintCertificates struct {
 	Stat Status
@@ -27520,7 +27486,6 @@ func (p *DevToolsGenAiSettings) Equal(iface interface{}) bool {
 // ****************************************************************************
 // 1229. CACertificatesWithConstraints
 // This policy can be modified without rebooting.
-// This is a future policy, it is not present in stable builds.
 // ****************************************************************************
 type CACertificatesWithConstraints struct {
 	Stat Status
@@ -27646,39 +27611,6 @@ func (p *DirectSocketsBlockedForUrls) SetProto(m *protoreflect.Message) {
 }
 func (p *DirectSocketsBlockedForUrls) Equal(iface interface{}) bool {
 	v, ok := iface.([]string)
-	if !ok {
-		return ok
-	}
-	return cmp.Equal(p.Val, v, cmpopts.EquateEmpty())
-}
-
-// ****************************************************************************
-// 1234. PrefixedVideoFullscreenApiAvailability
-// This policy can be modified without rebooting.
-// ****************************************************************************
-type PrefixedVideoFullscreenApiAvailability struct {
-	Stat Status
-	Val  string
-}
-
-func (p *PrefixedVideoFullscreenApiAvailability) Name() string {
-	return "PrefixedVideoFullscreenApiAvailability"
-}
-func (p *PrefixedVideoFullscreenApiAvailability) Scope() Scope          { return ScopeUser }
-func (p *PrefixedVideoFullscreenApiAvailability) Status() Status        { return p.Stat }
-func (p *PrefixedVideoFullscreenApiAvailability) UntypedV() interface{} { return p.Val }
-func (p *PrefixedVideoFullscreenApiAvailability) UnmarshalAs(m json.RawMessage) (interface{}, error) {
-	var v string
-	if err := json.Unmarshal(m, &v); err != nil {
-		return nil, errors.Wrapf(err, "could not read %s as string", m)
-	}
-	return v, nil
-}
-func (p *PrefixedVideoFullscreenApiAvailability) SetProto(m *protoreflect.Message) {
-	SetUserProto(m, p.Name(), p.Val)
-}
-func (p *PrefixedVideoFullscreenApiAvailability) Equal(iface interface{}) bool {
-	v, ok := iface.(string)
 	if !ok {
 		return ok
 	}
@@ -28420,7 +28352,6 @@ func (p *ExtensionDeveloperModeSettings) Equal(iface interface{}) bool {
 // ****************************************************************************
 // 1272. LocalUserFilesMigrationDestination
 // This policy can be modified without rebooting.
-// This is a future policy, it is not present in stable builds.
 // ****************************************************************************
 type LocalUserFilesMigrationDestination struct {
 	Stat Status
@@ -28931,7 +28862,6 @@ func (p *ShowGeminiIntroScreenEnabled) Equal(iface interface{}) bool {
 // ****************************************************************************
 // 1290. DeviceRestrictionSchedule
 // This policy can be modified without rebooting.
-// This is a future policy, it is not present in stable builds.
 // ****************************************************************************
 type DeviceRestrictionSchedule struct {
 	Stat Status
@@ -29586,6 +29516,97 @@ func (p *NTPSharepointCardVisible) SetProto(m *protoreflect.Message) {
 }
 func (p *NTPSharepointCardVisible) Equal(iface interface{}) bool {
 	v, ok := iface.(bool)
+	if !ok {
+		return ok
+	}
+	return cmp.Equal(p.Val, v, cmpopts.EquateEmpty())
+}
+
+// ****************************************************************************
+// 1313. SharedWorkerBlobURLFixEnabled
+// ****************************************************************************
+type SharedWorkerBlobURLFixEnabled struct {
+	Stat Status
+	Val  bool
+}
+
+func (p *SharedWorkerBlobURLFixEnabled) Name() string          { return "SharedWorkerBlobURLFixEnabled" }
+func (p *SharedWorkerBlobURLFixEnabled) Scope() Scope          { return ScopeUser }
+func (p *SharedWorkerBlobURLFixEnabled) Status() Status        { return p.Stat }
+func (p *SharedWorkerBlobURLFixEnabled) UntypedV() interface{} { return p.Val }
+func (p *SharedWorkerBlobURLFixEnabled) UnmarshalAs(m json.RawMessage) (interface{}, error) {
+	var v bool
+	if err := json.Unmarshal(m, &v); err != nil {
+		return nil, errors.Wrapf(err, "could not read %s as bool", m)
+	}
+	return v, nil
+}
+func (p *SharedWorkerBlobURLFixEnabled) SetProto(m *protoreflect.Message) {
+	SetUserProto(m, p.Name(), p.Val)
+}
+func (p *SharedWorkerBlobURLFixEnabled) Equal(iface interface{}) bool {
+	v, ok := iface.(bool)
+	if !ok {
+		return ok
+	}
+	return cmp.Equal(p.Val, v, cmpopts.EquateEmpty())
+}
+
+// ****************************************************************************
+// 1314. DeviceNativeClientForceAllowed
+// ****************************************************************************
+type DeviceNativeClientForceAllowed struct {
+	Stat Status
+	Val  bool
+}
+
+func (p *DeviceNativeClientForceAllowed) Name() string          { return "DeviceNativeClientForceAllowed" }
+func (p *DeviceNativeClientForceAllowed) Scope() Scope          { return ScopeDevice }
+func (p *DeviceNativeClientForceAllowed) Status() Status        { return p.Stat }
+func (p *DeviceNativeClientForceAllowed) UntypedV() interface{} { return p.Val }
+func (p *DeviceNativeClientForceAllowed) UnmarshalAs(m json.RawMessage) (interface{}, error) {
+	var v bool
+	if err := json.Unmarshal(m, &v); err != nil {
+		return nil, errors.Wrapf(err, "could not read %s as bool", m)
+	}
+	return v, nil
+}
+func (p *DeviceNativeClientForceAllowed) SetProto(m *protoreflect.Message) {
+	SetDeviceProto(m, "DeviceNativeClientForceAllowed", "value", p.Val)
+}
+func (p *DeviceNativeClientForceAllowed) Equal(iface interface{}) bool {
+	v, ok := iface.(bool)
+	if !ok {
+		return ok
+	}
+	return cmp.Equal(p.Val, v, cmpopts.EquateEmpty())
+}
+
+// ****************************************************************************
+// 1315. GenAiLensOverlaySettings
+// This policy can be modified without rebooting.
+// ****************************************************************************
+type GenAiLensOverlaySettings struct {
+	Stat Status
+	Val  int
+}
+
+func (p *GenAiLensOverlaySettings) Name() string          { return "GenAiLensOverlaySettings" }
+func (p *GenAiLensOverlaySettings) Scope() Scope          { return ScopeUser }
+func (p *GenAiLensOverlaySettings) Status() Status        { return p.Stat }
+func (p *GenAiLensOverlaySettings) UntypedV() interface{} { return p.Val }
+func (p *GenAiLensOverlaySettings) UnmarshalAs(m json.RawMessage) (interface{}, error) {
+	var v int
+	if err := json.Unmarshal(m, &v); err != nil {
+		return nil, errors.Wrapf(err, "could not read %s as int", m)
+	}
+	return v, nil
+}
+func (p *GenAiLensOverlaySettings) SetProto(m *protoreflect.Message) {
+	SetUserProto(m, p.Name(), p.Val)
+}
+func (p *GenAiLensOverlaySettings) Equal(iface interface{}) bool {
+	v, ok := iface.(int)
 	if !ok {
 		return ok
 	}
@@ -31125,8 +31146,6 @@ func newByName(name string) (Policy, error) {
 		return &PhysicalKeyboardPredictiveWriting{}, nil
 	case "ColorCorrectionEnabled":
 		return &ColorCorrectionEnabled{}, nil
-	case "NativeClientForceAllowed":
-		return &NativeClientForceAllowed{}, nil
 	case "EmojiPickerGifSupportEnabled":
 		return &EmojiPickerGifSupportEnabled{}, nil
 	case "DeviceChargingSoundsEnabled":
@@ -31293,8 +31312,6 @@ func newByName(name string) (Policy, error) {
 		return &DirectSocketsAllowedForUrls{}, nil
 	case "DirectSocketsBlockedForUrls":
 		return &DirectSocketsBlockedForUrls{}, nil
-	case "PrefixedVideoFullscreenApiAvailability":
-		return &PrefixedVideoFullscreenApiAvailability{}, nil
 	case "PrivacySandboxIpProtectionEnabled":
 		return &PrivacySandboxIpProtectionEnabled{}, nil
 	case "OrcaEnabled":
@@ -31413,6 +31430,12 @@ func newByName(name string) (Policy, error) {
 		return &NTPOutlookCardVisible{}, nil
 	case "NTPSharepointCardVisible":
 		return &NTPSharepointCardVisible{}, nil
+	case "SharedWorkerBlobURLFixEnabled":
+		return &SharedWorkerBlobURLFixEnabled{}, nil
+	case "DeviceNativeClientForceAllowed":
+		return &DeviceNativeClientForceAllowed{}, nil
+	case "GenAiLensOverlaySettings":
+		return &GenAiLensOverlaySettings{}, nil
 	default:
 		return nil, errors.New("Unknown policy " + name)
 	}
