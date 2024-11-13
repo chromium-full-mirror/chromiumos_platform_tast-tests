@@ -12,7 +12,6 @@ import (
 	"go.chromium.org/tast-tests/cros/local/bundles/cros/wmp/wmputils"
 	"go.chromium.org/tast-tests/cros/local/chrome"
 	"go.chromium.org/tast-tests/cros/local/chrome/ash"
-	"go.chromium.org/tast-tests/cros/local/chrome/browser"
 	"go.chromium.org/tast-tests/cros/local/chrome/uiauto"
 	"go.chromium.org/tast-tests/cros/local/chrome/uiauto/faillog"
 	"go.chromium.org/tast-tests/cros/local/chrome/uiauto/filesapp"
@@ -25,9 +24,8 @@ import (
 
 func init() {
 	testing.AddTest(&testing.Test{
-		Func:         WindowCaptionButton,
-		LacrosStatus: testing.LacrosVariantUnneeded,
-		Desc:         "Checks that window caption buttons work properly",
+		Func: WindowCaptionButton,
+		Desc: "Checks that window caption buttons work properly",
 		Contacts: []string{
 			"chromeos-wm@google.com",
 			"chromeos-consumer-engprod@google.com",
@@ -76,9 +74,7 @@ func WindowCaptionButton(ctx context.Context, s *testing.State) {
 		s.Fatal("Failed to launch Chrome: ", err)
 	}
 
-	// Ensure that there is only one open window that is the primary browser.
-	bt := browser.TypeAsh
-	bw, err := wmputils.EnsureOnlyBrowserWindowOpen(ctx, tconn, bt)
+	bw, err := wmputils.EnsureOnlyBrowserWindowOpen(ctx, tconn)
 	if err != nil {
 		s.Fatal("Failed to ensure only one browser window is open: ", err)
 	}

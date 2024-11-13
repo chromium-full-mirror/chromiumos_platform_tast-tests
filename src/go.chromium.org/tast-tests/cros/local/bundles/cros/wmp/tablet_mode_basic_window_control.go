@@ -11,8 +11,6 @@ import (
 	"go.chromium.org/tast-tests/cros/local/bundles/cros/wmp/wmputils"
 	"go.chromium.org/tast-tests/cros/local/chrome"
 	"go.chromium.org/tast-tests/cros/local/chrome/ash"
-	"go.chromium.org/tast-tests/cros/local/chrome/browser"
-	"go.chromium.org/tast-tests/cros/local/chrome/browser/browserfixt"
 	"go.chromium.org/tast-tests/cros/local/chrome/display"
 	"go.chromium.org/tast-tests/cros/local/chrome/uiauto"
 	"go.chromium.org/tast-tests/cros/local/chrome/uiauto/faillog"
@@ -33,9 +31,8 @@ const (
 
 func init() {
 	testing.AddTest(&testing.Test{
-		Func:         TabletModeBasicWindowControl,
-		LacrosStatus: testing.LacrosVariantUnneeded,
-		Desc:         "Tablet basics: Scroll, window controls",
+		Func: TabletModeBasicWindowControl,
+		Desc: "Tablet basics: Scroll, window controls",
 		Contacts: []string{
 			"chromeos-wm@google.com",
 			"chromeos-consumer-engprod@google.com",
@@ -44,11 +41,7 @@ func init() {
 		BugComponent: "b:1253116",
 		Attr:         []string{"group:mainline", "informational", "group:hw_agnostic", "group:release-health"},
 		SoftwareDeps: []string{"chrome"},
-		Params: []testing.Param{{
-			Fixture: "chromeLoggedIn",
-			Val:     browser.TypeAsh,
-		}},
-		// TODO(crbug.com/1374485): lacros-chrome currently failed on this test.
+		Fixture:      "chromeLoggedIn",
 	})
 }
 
@@ -64,16 +57,8 @@ func TabletModeBasicWindowControl(ctx context.Context, s *testing.State) {
 		s.Fatal("Failed to create Test API connection: ", err)
 	}
 
-	// Open a browser window either ash-chrome or lacros-chrome.
-	bt := s.Param().(browser.Type)
-	br, closeBrowser, err := browserfixt.SetUp(ctx, cr, bt)
-	if err != nil {
-		s.Fatal("Failed to set up browser: ", err)
-	}
-	defer closeBrowser(cleanupCtx)
-
-	// Open a new tab on current browser.
-	connYoutube, err := br.NewConn(ctx, "http://youtube.com")
+	// Open YouTube in the browser.
+	connYoutube, err := cr.NewConn(ctx, "http://youtube.com")
 	if err != nil {
 		s.Fatal("Failed to open new tab")
 	}
@@ -92,9 +77,9 @@ func TabletModeBasicWindowControl(ctx context.Context, s *testing.State) {
 	}
 	defer cleanup(cleanupCtx)
 
-	// Ensure that there is only one open window that is the primary browser.
+	// Ensure that there is only one open browser window.
 	// Wait for the browser to be visible to avoid a race that may cause test flakiness.
-	bw, err := wmputils.EnsureOnlyBrowserWindowOpen(ctx, tconn, bt)
+	bw, err := wmputils.EnsureOnlyBrowserWindowOpen(ctx, tconn)
 	if err != nil {
 		s.Fatal("Failed to ensure only browser window open: ", err)
 	}

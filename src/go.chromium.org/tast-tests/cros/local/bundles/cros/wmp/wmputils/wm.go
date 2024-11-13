@@ -11,7 +11,6 @@ import (
 
 	"go.chromium.org/tast-tests/cros/local/chrome"
 	"go.chromium.org/tast-tests/cros/local/chrome/ash"
-	"go.chromium.org/tast-tests/cros/local/chrome/browser"
 	"go.chromium.org/tast-tests/cros/local/chrome/uiauto"
 	"go.chromium.org/tast-tests/cros/local/chrome/uiauto/nodewith"
 	"go.chromium.org/tast-tests/cros/local/chrome/uiauto/role"
@@ -25,9 +24,9 @@ const (
 	interval = time.Second
 )
 
-// EnsureOnlyBrowserWindowOpen ensures that there is only one open window that is the primary browser, and waits for the browser to be visible to avoid a race that may cause test flakiness.
+// EnsureOnlyBrowserWindowOpen ensures that there is only one open browser window, and waits for the browser to be visible to avoid a race that may cause test flakiness.
 // If there is no or more than one browser window(s) open, it throws an error.
-func EnsureOnlyBrowserWindowOpen(ctx context.Context, tconn *chrome.TestConn, bt browser.Type) (*ash.Window, error) {
+func EnsureOnlyBrowserWindowOpen(ctx context.Context, tconn *chrome.TestConn) (*ash.Window, error) {
 	var w *ash.Window
 	if err := testing.Poll(ctx, func(ctx context.Context) error {
 		// Check if there is only one open window.
@@ -42,7 +41,7 @@ func EnsureOnlyBrowserWindowOpen(ctx context.Context, tconn *chrome.TestConn, bt
 		// Check if that is the browser window and visible (!IsAnimating also used as heuristic criteria for readiness to accept inputs).
 		w = ws[0]
 		if !w.IsVisible || w.IsAnimating || !ash.BrowserTypeMatch()(w) {
-			return errors.Errorf("expected %v browser window to become visible, State: %v", bt, w.State)
+			return errors.Errorf("expected browser window to become visible, State: %v", w.State)
 		}
 		return nil
 	}, &testing.PollOptions{Timeout: timeout, Interval: interval}); err != nil {

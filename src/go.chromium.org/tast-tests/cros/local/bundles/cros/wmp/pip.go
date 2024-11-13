@@ -14,8 +14,6 @@ import (
 	"go.chromium.org/tast-tests/cros/local/arc"
 	"go.chromium.org/tast-tests/cros/local/chrome"
 	"go.chromium.org/tast-tests/cros/local/chrome/ash"
-	"go.chromium.org/tast-tests/cros/local/chrome/browser"
-	"go.chromium.org/tast-tests/cros/local/chrome/browser/browserfixt"
 	"go.chromium.org/tast-tests/cros/local/chrome/display"
 	"go.chromium.org/tast-tests/cros/local/chrome/uiauto"
 	"go.chromium.org/tast-tests/cros/local/chrome/uiauto/faillog"
@@ -49,7 +47,6 @@ const (
 type pipTestParams struct {
 	pipType       pipType
 	tests         []pipTestFunc
-	browserType   browser.Type
 	pipWindowName string
 	pipClassName  string
 }
@@ -66,7 +63,6 @@ var ashPipTests = pipTestParams{
 		testPipHotKeyToEnlarge,
 		testPipHotKeyToOriginalSize,
 	},
-	browserType:   browser.TypeAsh,
 	pipWindowName: "Picture in picture",
 	pipClassName:  "PictureInPictureWindow",
 }
@@ -84,7 +80,6 @@ var arcPipTests = pipTestParams{
 		testPipHotKeyToOriginalSize,
 		testPipExpandViaShelfIcon,
 	},
-	browserType:   browser.TypeAsh,
 	pipWindowName: arcPipAppName,
 	pipClassName:  "Widget",
 }
@@ -626,11 +621,6 @@ func createArcPip(ctx context.Context, cr *chrome.Chrome, tconn *chrome.TestConn
 }
 
 func createBrowserPip(ctx context.Context, cr *chrome.Chrome, tconn *chrome.TestConn, ac *uiauto.Context, dataFS http.FileSystem, test pipTestParams) (func(ctx context.Context) error, error) {
-	br, closeBrowser, err := browserfixt.SetUp(ctx, cr, test.browserType)
-	if err != nil {
-		return nil, errors.Wrap(err, "failed to open the browser")
-	}
-
 	kw, err := input.Keyboard(ctx)
 	if err != nil {
 		return nil, errors.Wrap(err, "failed to get keyboard event writer")
@@ -643,7 +633,7 @@ func createBrowserPip(ctx context.Context, cr *chrome.Chrome, tconn *chrome.Test
 	srv := httptest.NewServer(http.FileServer(dataFS))
 	defer srv.Close()
 
-	conn, err := br.NewConn(ctx, srv.URL+"/pip_video.html")
+	conn, err := cr.NewConn(ctx, srv.URL+"/pip_video.html")
 	if err != nil {
 		return nil, errors.Wrap(err, "failed to load pip_video.html")
 	}
@@ -664,9 +654,6 @@ func createBrowserPip(ctx context.Context, cr *chrome.Chrome, tconn *chrome.Test
 	}
 
 	return func(ctx context.Context) error {
-		if err := closeBrowser(ctx); err != nil {
-			return errors.Wrap(err, "failed to close browser window")
-		}
 		if err := ash.CloseAllWindows(ctx, tconn); err != nil {
 			return errors.Wrap(err, "failed to close all windows")
 		}
