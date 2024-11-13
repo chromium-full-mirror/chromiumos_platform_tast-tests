@@ -167,7 +167,6 @@ TEST_PATHS = [
     "arc_youtube_cuj.go",
     "benchmark_cuj.go",
     "desks_cuj.go",
-    "debug_lacros_perf.go",
     "docs_cuj.go",
     "example_cuj.go",
     "google_sheets_cuj.go",
@@ -204,18 +203,6 @@ DESCRIPTION = "description"
 UNGROUPED_GROUP_NAME = "ungrouped"
 
 
-class BrowserType:
-    """Browser type used within the test.
-
-    Attributes:
-      LACROS: A string signifying the Lacros browser.
-      ASH: A string signifying the Ash browser.
-    """
-
-    LACROS = "lacros"
-    ASH = "ash"
-
-
 def get_variant_full_name(test_name: str, variant_name: str) -> str:
     """Get the full name of the test variant.
 
@@ -231,7 +218,6 @@ class Variant:
     Attributes:
       name: A string of the name of this variant.
       fixture: A string of the fixture for this variant found in the test file.
-      browser_type: A BrowserType indicating which browser is used.
       attributes: A string list of test attributes taken from the test file.
       ID: A unique string for this specific variant.
     """
@@ -242,9 +228,7 @@ class Variant:
         Args:
           raw: The raw text to parse the metadata from. If "Name: " is not
             found, the variant name is assumed to be an empty string. If no
-            fixture is found, we default to an empty string. If the word
-            "lacros" is not found in the variant name or fixture, the test is
-            assumed to be an Ash.
+            fixture is found, we default to an empty string.
           attributes: A list of global attributes that should be added to the
             variant. These attributes are usually part of "Attr: " outside of
             "testing.Param", and the individual attributes are part of
@@ -254,7 +238,6 @@ class Variant:
         """
         self.name = self._parse_variant_name(raw)
         self.fixture = self._parse_fixture(raw)
-        self.browser_type = self._parse_browser_type(self.name, self.fixture)
         self.attributes = self._parse_attributes(raw) + attributes
 
         # Set a default ID. This will be overwritten if tests-info.json
@@ -295,23 +278,6 @@ class Variant:
         if fixture_match is not None:
             return fixture_match.group(1)
         return ""
-
-    def _parse_browser_type(self, name: str, fixture: str) -> BrowserType:
-        """Determine the BrowserType of the test variant.
-
-        Args:
-          name: A string name of the test variant.
-          fixture: A string name of the test fixture.
-
-        Returns:
-          Either BrowserType.ASH, or BrowserType.LACROS, depending on if
-          "lacros" is found in the test name or fixture name
-          (case insensitive).
-        """
-        type_match = re.search("(?i)lacros", f"{name} {fixture}")
-        if type_match is not None:
-            return BrowserType.LACROS
-        return BrowserType.ASH
 
     def _parse_attributes(self, raw: str) -> list:
         """Parse the attributes from the raw string of the variant.
@@ -354,7 +320,6 @@ class Variant:
         return {
             "variantName": self.name,
             "fixture": self.fixture,
-            "browserType": self.browser_type,
             "attributes": self.attributes,
             "id": self.ID,
         }
@@ -363,7 +328,6 @@ class Variant:
         return (
             f"Name: {self.name}\n"
             f"Fixture: {self.fixture}\n"
-            f"Type: {self.browser_type}\n"
             f"Attributes: {self.attributes}"
         )
 
