@@ -12,8 +12,6 @@ import (
 
 	"go.chromium.org/tast-tests/cros/common/fixture"
 	"go.chromium.org/tast-tests/cros/local/chrome"
-	"go.chromium.org/tast-tests/cros/local/chrome/browser"
-	"go.chromium.org/tast-tests/cros/local/chrome/browser/browserfixt"
 	"go.chromium.org/tast/core/ctxutil"
 	"go.chromium.org/tast/core/testing"
 	"google.golang.org/protobuf/proto"
@@ -51,13 +49,7 @@ func ChromettoStackProfiling(ctx context.Context, s *testing.State) {
 
 	cr := s.FixtValue().(chrome.HasChrome).Chrome()
 
-	br, closeBrowser, err := browserfixt.SetUp(ctx, cr, browser.TypeAsh)
-	if err != nil {
-		s.Fatal("Failed to set up browser: ", err)
-	}
-	defer closeBrowser(cleanupCtx)
-
-	if err := br.StartTracing(ctx, []string{"disabled-by-default-cpu_profiler"}); err != nil {
+	if err := cr.StartTracing(ctx, []string{"disabled-by-default-cpu_profiler"}); err != nil {
 		s.Fatal("Failed to start tracing: ", err)
 	}
 
@@ -67,11 +59,11 @@ func ChromettoStackProfiling(ctx context.Context, s *testing.State) {
 	// we sleep for a while and hope the profiler has done its work by the time
 	// we wake up.
 	if err := testing.Sleep(ctx, chromettoStackProfilingTracingTime); err != nil {
-		br.StopTracing(cleanupCtx)
+		cr.StopTracing(cleanupCtx)
 		s.Fatal("Failed to wait for profiling: ", err)
 	}
 
-	data, err := br.StopTracing(ctx)
+	data, err := cr.StopTracing(ctx)
 	if err != nil {
 		s.Fatal("Failed to stop tracing: ", err)
 	}

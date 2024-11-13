@@ -13,7 +13,6 @@ import (
 	"go.chromium.org/tast-tests/cros/local/chrome"
 	"go.chromium.org/tast-tests/cros/local/chrome/ash"
 	"go.chromium.org/tast-tests/cros/local/chrome/browser"
-	"go.chromium.org/tast-tests/cros/local/chrome/browser/browserfixt"
 	"go.chromium.org/tast-tests/cros/local/perfutil"
 	"go.chromium.org/tast-tests/cros/local/power"
 	"go.chromium.org/tast/core/errors"
@@ -46,19 +45,8 @@ func NotificationPopupPerf(ctx context.Context, s *testing.State) {
 		s.Fatal("Failed to connect to test API: ", err)
 	}
 
-	// Setup a browser.
-	br, closeBrowser, err := browserfixt.SetUp(ctx, cr, browser.TypeAsh)
-	if err != nil {
-		s.Fatal("Failed to open the browser: ", err)
-	}
-	defer closeBrowser(ctx)
-	bTconn, err := br.TestAPIConn(ctx)
-	if err != nil {
-		s.Fatal("Failed to create Test API connection: ", err)
-	}
-
 	// Pre-add some notifications to show remove animation on the first run.
-	ids, err := addNotifications(ctx, tconn, bTconn)
+	ids, err := addNotifications(ctx, tconn)
 	if err != nil {
 		s.Fatal("Failed to add notifications: ", err)
 	}
@@ -67,13 +55,13 @@ func NotificationPopupPerf(ctx context.Context, s *testing.State) {
 	// then remove notification in reverse order (newer then older) to show fade out and move down animation.
 	if err := perfutil.RunMultipleAndSave(ctx, s.OutDir(), cr.Browser(), uiperf.Run(s, perfutil.RunAndWaitAll(tconn, func(ctx context.Context) error {
 		for _, id := range ids {
-			if err := browser.ClearNotification(ctx, bTconn, id); err != nil {
+			if err := browser.ClearNotification(ctx, tconn, id); err != nil {
 				return errors.Wrapf(err, "failed to clear notification (id: %s): ", id)
 			}
 		}
 		ids = nil
 
-		ids, err = addNotifications(ctx, tconn, bTconn)
+		ids, err = addNotifications(ctx, tconn)
 		if err != nil {
 			return errors.Wrap(err, "failed to add notifications")
 		}
@@ -90,8 +78,7 @@ func NotificationPopupPerf(ctx context.Context, s *testing.State) {
 
 // addNotifications create some test notifications and return the ids of those notifications
 // in reverse order (newer then older).
-// tconn is used for ash to wait notifications on the receiver side, while bTconn is to send notifications on the sender side.
-func addNotifications(ctx context.Context, tconn *chrome.TestConn, bTconn *browser.TestConn) ([]string, error) {
+func addNotifications(ctx context.Context, tconn *chrome.TestConn) ([]string, error) {
 	var ids []string
 	const uiTimeout = 30 * time.Second
 	ts := []browser.NotificationType{
@@ -101,7 +88,7 @@ func addNotifications(ctx context.Context, tconn *chrome.TestConn, bTconn *brows
 		browser.NotificationTypeList,
 	}
 	for _, t := range ts {
-		id, err := browser.CreateTestNotification(ctx, bTconn, t, fmt.Sprintf("Test%sNotification", t), "test message")
+		id, err := browser.CreateTestNotification(ctx, tconn, t, fmt.Sprintf("Test%sNotification", t), "test message")
 		if err != nil {
 			return nil, errors.Wrapf(err, "failed to create %s notification: ", t)
 		}

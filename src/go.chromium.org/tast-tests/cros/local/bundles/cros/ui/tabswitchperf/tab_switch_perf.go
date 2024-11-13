@@ -26,7 +26,6 @@ import (
 	"go.chromium.org/tast-tests/cros/common/action"
 	"go.chromium.org/tast-tests/cros/local/chrome"
 	"go.chromium.org/tast-tests/cros/local/chrome/browser"
-	"go.chromium.org/tast-tests/cros/local/chrome/browser/browserfixt"
 	sim "go.chromium.org/tast-tests/cros/local/chrome/cuj/inputsimulations"
 	"go.chromium.org/tast-tests/cros/local/chrome/display"
 	"go.chromium.org/tast-tests/cros/local/chrome/uiauto"
@@ -51,13 +50,9 @@ const (
 
 // tabSwitchVariables holds all the necessary variables used by the test.
 type tabSwitchVariables struct {
-	webPages []webPage // List of sites to visit
-
+	webPages           []webPage // List of sites to visit
 	cr                 *chrome.Chrome
-	br                 *browser.Browser
-	closeBrowser       func(context.Context) error
 	tconn              *chrome.TestConn
-	bTconn             *chrome.TestConn
 	recorder           *cujrecorder.Recorder
 	outDir             string
 	perfettoConfigPath string
@@ -83,17 +78,7 @@ func runSetup(ctx context.Context, s *testing.State) (*tabSwitchVariables, error
 	}
 
 	var err error
-	vars.br, vars.closeBrowser, err = browserfixt.SetUp(ctx, vars.cr, browser.TypeAsh)
-	if err != nil {
-		return nil, errors.Wrap(err, "failed to open the browser")
-	}
-
-	vars.bTconn, err = vars.br.TestAPIConn(ctx)
-	if err != nil {
-		return nil, errors.Wrap(err, "failed to get browser TestAPIConn")
-	}
-
-	vars.recorder, err = cujrecorder.NewRecorder(ctx, vars.cr, vars.bTconn, nil, cujrecorder.RecorderOptions{
+	vars.recorder, err = cujrecorder.NewRecorder(ctx, vars.cr, vars.tconn, nil, cujrecorder.RecorderOptions{
 		Mode:              cujrecorder.Benchmark,
 		CooldownBeforeRun: true,
 	})
@@ -105,7 +90,6 @@ func runSetup(ctx context.Context, s *testing.State) (*tabSwitchVariables, error
 		if metricsSuccessfullyAdded {
 			return
 		}
-		vars.closeBrowser(ctx)
 		vars.recorder.Close(ctx)
 	}(ctx)
 
@@ -114,7 +98,7 @@ func runSetup(ctx context.Context, s *testing.State) (*tabSwitchVariables, error
 		return nil, errors.Wrap(err, "failed to get ash-chrome test connection")
 	}
 
-	if err := vars.recorder.AddCommonMetrics(vars.tconn, vars.bTconn); err != nil {
+	if err := vars.recorder.AddCommonMetrics(vars.tconn, vars.tconn); err != nil {
 		s.Fatal("Failed to add common metrics to the recorder: ", err)
 	}
 
@@ -243,7 +227,7 @@ func testBody(ctx context.Context, test *tabSwitchVariables) error {
 		conns := make([]*chrome.Conn, 0, numPages)
 		test.recorder.Annotate(ctx, "Start_opening_"+data.name)
 		// Create the homepage of the site.
-		firstPage, err := test.br.NewConn(ctx, data.startURL)
+		firstPage, err := test.cr.NewConn(ctx, data.startURL)
 		if err != nil {
 			return errors.Wrapf(err, "failed to open %s", data.startURL)
 		}
@@ -257,7 +241,7 @@ func testBody(ctx context.Context, test *tabSwitchVariables) error {
 
 		// Open those found URLs as new tabs.
 		for _, url := range urls {
-			newConnection, err := test.br.NewConn(ctx, url)
+			newConnection, err := test.cr.NewConn(ctx, url)
 			if err != nil {
 				return errors.Wrapf(err, "failed to open the URL %s", url)
 			}
@@ -265,7 +249,7 @@ func testBody(ctx context.Context, test *tabSwitchVariables) error {
 		}
 
 		// Ensure that all tabs are properly loaded before starting test.
-		if err := waitUntilAllTabsLoaded(ctx, test.bTconn, time.Minute); err != nil {
+		if err := waitUntilAllTabsLoaded(ctx, test.tconn, time.Minute); err != nil {
 			testing.ContextLog(ctx, "Some tabs are still in loading state, but proceeding with the test: ", err)
 		}
 
@@ -344,7 +328,7 @@ func testBody(ctx context.Context, test *tabSwitchVariables) error {
 		// window before closing it.
 		test.recorder.CustomScreenshot(ctx)
 
-		if err = browser.CloseAllTabs(ctx, test.bTconn); err != nil {
+		if err = browser.CloseAllTabs(ctx, test.tconn); err != nil {
 			return errors.Wrap(err, "failed to close all tabs")
 		}
 	}
@@ -369,7 +353,6 @@ func Run(ctx context.Context, s *testing.State) {
 	if err != nil {
 		s.Fatal("Failed to run setup: ", err)
 	}
-	defer setupVars.closeBrowser(closeCtx)
 	defer setupVars.recorder.Close(closeCtx)
 
 	if err := muteDevice(ctx, s); err != nil {
