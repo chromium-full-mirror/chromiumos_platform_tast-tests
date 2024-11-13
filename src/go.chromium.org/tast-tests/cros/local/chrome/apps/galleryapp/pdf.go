@@ -16,7 +16,7 @@ import (
 )
 
 var (
-	pdfCanvas            = nodewith.Role(role.Canvas).Ancestor(RootFinder).First()
+	pdfRootWebArea       = nodewith.Role(role.RootWebArea).Ancestor(RootFinder).First()
 	drawSignatureCanvas  = nodewith.Name("Draw your signature in this area").Role(role.Canvas).Ancestor(RootFinder)
 	placeSignatureButton = nodewith.Name("Place signature").Role(role.Button).Ancestor(RootFinder)
 )
@@ -28,7 +28,7 @@ func (g *Gallery) DismissPDFDialog() uiauto.Action {
 	okButton := nodewith.Name("OK").Role(role.Button).Ancestor(dialog)
 	return uiauto.Retry(3, uiauto.Combine("dismiss PDF dialog",
 		g.WaitUntilSpinnerGone(),
-		ui.WaitUntilAnyExists(okButton, pdfCanvas),
+		ui.WaitUntilAnyExists(okButton, pdfRootWebArea),
 		uiauto.IfSuccessThen(ui.Exists(okButton),
 			ui.DoDefaultUntil(okButton,
 				ui.WithTimeout(5*time.Second).WaitUntilGone(okButton)),
@@ -40,7 +40,7 @@ func (g *Gallery) DismissPDFDialog() uiauto.Action {
 func (g *Gallery) WaitPDFOpened() uiauto.Action {
 	return uiauto.Combine("wait PDF opened",
 		g.WaitUntilSpinnerGone(),
-		g.ui.WaitUntilExists(pdfCanvas),
+		g.ui.WaitUntilExists(pdfRootWebArea),
 	)
 }
 
@@ -96,13 +96,13 @@ func (g *Gallery) DrawOnPDF(points []coords.Point) uiauto.Action {
 	return uiauto.NamedCombine("draw",
 		uiauto.IfSuccessThen(ui.Gone(penButton), ui.LeftClick(drawButton)),
 		ui.WaitUntilExists(penButton),
-		g.draw(pdfCanvas, points),
+		g.draw(pdfRootWebArea, points),
 	)
 }
 
 // ClickOnPDFCanvas returns a function that clicks on PDF canvas.
 func (g *Gallery) ClickOnPDFCanvas() uiauto.Action {
 	return uiauto.NamedAction("click on PDF canvas",
-		g.ui.LeftClick(pdfCanvas),
+		g.ui.LeftClick(pdfRootWebArea),
 	)
 }
