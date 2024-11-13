@@ -33,6 +33,7 @@ import (
 	"go.chromium.org/tast-tests/cros/local/shill"
 	"go.chromium.org/tast-tests/cros/local/starfish"
 	"go.chromium.org/tast-tests/cros/local/upstart"
+	"go.chromium.org/tast/core/ctxutil"
 	"go.chromium.org/tast/core/errors"
 	"go.chromium.org/tast/core/testing"
 )
@@ -412,6 +413,7 @@ type cellularFixture struct {
 	cr                  *chrome.Chrome
 	netUnlock           func()
 	uiStopped           bool
+	fixtureFailure      bool
 	// Per-test logging marker
 	logMarker       *logsaver.Marker
 	cleanupPolicies func(ctx context.Context) error
@@ -500,6 +502,17 @@ func (fd FixtData) FakeDMS() *fakedms.FakeDMS {
 }
 
 func (f *cellularFixture) SetUp(ctx context.Context, s *testing.FixtState) interface{} {
+	// We use the variable |FixtureFailure| to indicate that there was a failure in the fixture.
+	// We check this variable later in the cleanUp/TearDown to recover the device to a good state.
+	f.fixtureFailure = true
+	// Add a cleanUp function to fix the fixture if it fails, as TearDown is only executed if the
+	// SetUp is successful.
+	cleanupCtx := ctx
+	ctx, cancel := ctxutil.Shorten(ctx, 20*time.Second)
+	defer cancel()
+	// Ensure the test restores the modemfwd state.
+	defer f.fixtureCleanUp(cleanupCtx, s)
+
 	var err error
 	f.crashFilesTracker, err = crash.GetCrashes(crash.DefaultDirs()...)
 	if err != nil {
@@ -754,6 +767,7 @@ func (f *cellularFixture) SetUp(ctx context.Context, s *testing.FixtState) inter
 			s.Fatal("Failed to disconnect for checkSIM: ", err)
 		}
 	}
+	f.fixtureFailure = false
 	return &FixtData{helper, fdms, a, cr}
 }
 
@@ -948,7 +962,17 @@ func (f *cellularFixture) PostTest(ctx context.Context, s *testing.FixtTestState
 
 }
 
+func (f *cellularFixture) fixtureCleanUp(ctx context.Context, s *testing.FixtState) {
+	if f.fixtureFailure {
+		testing.ContextLog(ctx, "Fixture failure. Calling TearDown from fixtureCleanUp")
+		// Call TearDown from here so we can keep all the CleanUp and TearDown
+		// logic in one place.
+		f.TearDown(ctx, s)
+	}
+}
+
 func (f *cellularFixture) TearDown(ctx context.Context, s *testing.FixtState) {
+	testing.ContextLog(ctx, "Teardown")
 	if f.cleanupPolicies != nil {
 		f.cleanupPolicies(ctx)
 	}
