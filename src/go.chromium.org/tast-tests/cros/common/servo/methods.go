@@ -1563,3 +1563,10 @@ func (s *Servo) CheckECActiveCopyMatch(ctx context.Context, expectedCopy string)
 	}
 	return nil
 }
+
+// GetServodVersion gets the version of servod being used.
+func (s *Servo) GetServodVersion(ctx context.Context) (string, error) {
+	var v string
+	err := s.xmlrpc.Run(ctx, xmlrpc.NewCall("servod_version"), &v)
+	return v, err
+}

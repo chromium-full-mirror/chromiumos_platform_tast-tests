@@ -8,6 +8,7 @@ package hooks
 import (
 	"bufio"
 	"context"
+	"encoding/json"
 	"fmt"
 	"net"
 	"os"
@@ -273,7 +274,8 @@ func (sc *sshConnector) servoPort() int {
 
 // collectLogs downloads servo logs to the dest directory.
 func (sc *sshConnector) collectLogs(ctx context.Context, dst string) (retErr error) {
-	// Tast will download log from labstation. Don't need to do anything here.
+	// Tast will download log from labstation.
+	writeServoInfoLog(ctx, sc.proxy.Servo(), dst)
 	return nil
 }
 
@@ -389,6 +391,8 @@ func (cc *containerConnector) collectLogs(ctx context.Context, dst string) (retE
 	// Extract MCU logs from latest.DEBUG.
 	extractServodMCULogs(ctx, destDir)
 
+	writeServoInfoLog(ctx, cc.proxy.Servo(), dst)
+
 	return nil
 }
 
@@ -502,4 +506,54 @@ func proxyRunning(ctx context.Context, proxy *servo.Proxy) bool {
 		return false
 	}
 	return true
+}
+
+type servoInfo struct {
+	ServodVersion string `json:"servod_version"`
+	ServoType     string `json:"servo_type"`
+}
+
+func writeServoInfoLog(ctx context.Context, servo *servo.Servo, outDir string) {
+	testing.ContextLog(ctx, "Writing servo_info.json")
+
+	if err := os.MkdirAll(outDir, 0755); err != nil {
+		testing.ContextLog(ctx, "Failed to create dir: ", err)
+	}
+
+	servodVersion, err := servo.GetServodVersion(ctx)
+	if err != nil {
+		testing.ContextLog(ctx, "Failed to get servod version: ", err)
+	}
+	// The servod version output is multiple lines:
+	//   v1.0.2382+643d2b40
+	//   Date: 2024-10-02 11:54:12
+	//   Builder: 613dcd9ba833
+	//   Hash: +643d2b40
+	//   Branch: hdctools-release-1024.1
+	// Reduce this to just version and date: "v1.0.2382+643d2b40 2024-10-02 11:54:12"
+	verRE := regexp.MustCompile(`^(v\S+)\s+(.*)`)
+	matches := verRE.FindStringSubmatch(servodVersion)
+	if len(matches) == 3 {
+		ver := matches[1]
+		date := strings.ReplaceAll(matches[2], "Date: ", "")
+		servodVersion = ver + " " + date
+	}
+
+	// Servo type is a string like "servo_v4_with_c2d2_and_ccd_gsc".
+	servoType, err := servo.GetServoType(ctx)
+	if err != nil {
+		testing.ContextLog(ctx, "Failed to get servo type: ", err)
+	}
+
+	var si servoInfo
+	si.ServodVersion = servodVersion
+	si.ServoType = servoType
+	jsonData, err := json.Marshal(si)
+	if err != nil {
+		testing.ContextLog(ctx, "Failed to marshal json: ", err)
+	}
+	err = os.WriteFile(filepath.Join(outDir, "servo_info.json"), jsonData, 0666)
+	if err != nil {
+		testing.ContextLog(ctx, "Failed to write file: ", err)
+	}
 }
