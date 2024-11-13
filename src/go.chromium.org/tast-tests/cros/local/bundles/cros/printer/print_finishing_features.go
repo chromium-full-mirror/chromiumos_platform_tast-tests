@@ -15,8 +15,6 @@ import (
 	"go.chromium.org/tast-tests/cros/local/bundles/cros/printer/uitools"
 	"go.chromium.org/tast-tests/cros/local/chrome"
 	"go.chromium.org/tast-tests/cros/local/chrome/ash"
-	"go.chromium.org/tast-tests/cros/local/chrome/browser"
-	"go.chromium.org/tast-tests/cros/local/chrome/browser/browserfixt"
 	"go.chromium.org/tast-tests/cros/local/chrome/uiauto"
 	"go.chromium.org/tast-tests/cros/local/chrome/uiauto/faillog"
 	"go.chromium.org/tast-tests/cros/local/chrome/uiauto/printpreview"
@@ -33,10 +31,9 @@ import (
 
 func init() {
 	testing.AddTest(&testing.Test{
-		Func:         PrintFinishingFeatures,
-		LacrosStatus: testing.LacrosVariantUnneeded,
-		Desc:         "Tests that finishing features are available in the UI and are correctly reeceived by a printer",
-		Contacts:     []string{"chromeos-commercial-printing@google.com", "project-bolton@google.com", "nedol@google.com"},
+		Func:     PrintFinishingFeatures,
+		Desc:     "Tests that finishing features are available in the UI and are correctly reeceived by a printer",
+		Contacts: []string{"chromeos-commercial-printing@google.com", "project-bolton@google.com", "nedol@google.com"},
 		Attr: []string{
 			"group:golden_tier",
 			"group:medium_low_tier",
@@ -72,7 +69,6 @@ func PrintFinishingFeatures(ctx context.Context, s *testing.State) {
 	ctx, cancel := ctxutil.Shorten(ctx, 5*time.Second)
 	defer cancel()
 
-	bt := browser.TypeAsh
 	cr := s.FixtValue().(chrome.HasChrome).Chrome()
 
 	tconn, err := cr.TestAPIConn(ctx)
@@ -81,7 +77,7 @@ func PrintFinishingFeatures(ctx context.Context, s *testing.State) {
 	}
 
 	s.Log("Installing printer")
-	if err := printer.ResetCups(ctx, /*usePrintscanmgr=*/false); err != nil {
+	if err := printer.ResetCups(ctx, false /*usePrintscanmgr*/); err != nil {
 		s.Fatal("Failed to reset cupsd: ", err)
 	}
 
@@ -115,15 +111,9 @@ func PrintFinishingFeatures(ctx context.Context, s *testing.State) {
 		s.Fatal("Failed to close all notifications: ", err)
 	}
 
-	// Create a browser.
-	br, closeBrowser, err := browserfixt.SetUp(ctx, cr, bt)
-	if err != nil {
-		s.Fatal("Failed to launch browser: ", err)
-	}
-	defer closeBrowser(cleanupCtx)
 	defer faillog.DumpUITreeWithScreenshotOnError(cleanupCtx, s.OutDir(), s.HasError, cr, "ui_tree")
 
-	conn, err := br.NewConn(ctx, "chrome://version/")
+	conn, err := cr.NewConn(ctx, "chrome://version/")
 	if err != nil {
 		s.Fatal("Failed to connect to browser: ", err)
 	}

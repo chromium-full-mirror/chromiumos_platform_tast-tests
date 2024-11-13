@@ -13,8 +13,6 @@ import (
 	"go.chromium.org/tast-tests/cros/local/bundles/cros/printer/fake"
 	"go.chromium.org/tast-tests/cros/local/bundles/cros/printer/pre"
 	"go.chromium.org/tast-tests/cros/local/chrome"
-	"go.chromium.org/tast-tests/cros/local/chrome/browser"
-	"go.chromium.org/tast-tests/cros/local/chrome/browser/browserfixt"
 	"go.chromium.org/tast-tests/cros/local/printing/document"
 	"go.chromium.org/tast-tests/cros/local/printing/printer"
 	"go.chromium.org/tast/core/testing"
@@ -89,30 +87,19 @@ func PrintExtension(ctx context.Context, s *testing.State) {
 
 	params := s.Param().(testParams)
 	cr := s.FixtValue().(chrome.HasChrome).Chrome()
-	// ctconn is the ash TestConn
-	ctconn, err := cr.TestAPIConn(ctx)
+	tconn, err := cr.TestAPIConn(ctx)
 	if err != nil {
 		s.Fatal("Failed to connect to ash test API: ", err)
 	}
 
-	br, closeBrowser, err := browserfixt.SetUp(ctx, cr, browser.TypeAsh)
-	if err != nil {
-		s.Fatal("Failed to launch browser: ", err)
-	}
-	defer closeBrowser(ctx)
-	tconn, err := br.TestAPIConn(ctx)
-	if err != nil {
-		s.Fatal("Failed to connect to browser test API: ", err)
-	}
-
 	s.Log("Registering a printer")
 	const printerURI = "localhost:9101"
-	if err := ctconn.Call(ctx, nil, "chrome.autotestPrivate.updatePrinter", map[string]string{"printerName": printerName, "printerId": printerID, "printerDesc": printerDesc, "printerUri": "socket://" + printerURI, "printerPpd": ppdFilePath}); err != nil {
+	if err := tconn.Call(ctx, nil, "chrome.autotestPrivate.updatePrinter", map[string]string{"printerName": printerName, "printerId": printerID, "printerDesc": printerDesc, "printerUri": "socket://" + printerURI, "printerPpd": ppdFilePath}); err != nil {
 		s.Fatal("autotestPrivate.updatePrinter() failed: ", err)
 	}
 
 	defer func() {
-		if err := ctconn.Call(ctx, nil, "chrome.autotestPrivate.removePrinter", printerID); err != nil {
+		if err := tconn.Call(ctx, nil, "chrome.autotestPrivate.removePrinter", printerID); err != nil {
 			s.Fatal("autotestPrivate.removePrinter() failed: ", err)
 		}
 	}()

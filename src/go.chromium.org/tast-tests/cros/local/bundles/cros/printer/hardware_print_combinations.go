@@ -11,8 +11,6 @@ import (
 	"time"
 
 	"go.chromium.org/tast-tests/cros/local/chrome"
-	"go.chromium.org/tast-tests/cros/local/chrome/browser"
-	"go.chromium.org/tast-tests/cros/local/chrome/browser/browserfixt"
 	"go.chromium.org/tast-tests/cros/local/chrome/uiauto"
 	"go.chromium.org/tast-tests/cros/local/chrome/uiauto/faillog"
 	"go.chromium.org/tast-tests/cros/local/chrome/uiauto/nodewith"
@@ -205,16 +203,8 @@ func HardwarePrintCombinations(ctx context.Context, s *testing.State) {
 
 	cr := s.FixtValue().(chrome.HasChrome).Chrome()
 
-	cleanupCtx := ctx
 	ctx, cancel := ctxutil.Shorten(ctx, 10*time.Second)
 	defer cancel()
-
-	br, closeBrowser, err := browserfixt.SetUp(ctx, s.FixtValue().(chrome.HasChrome).Chrome(),
-		browser.TypeAsh)
-	if err != nil {
-		s.Fatal("Failed to open the browser: ", err)
-	}
-	defer closeBrowser(cleanupCtx)
 
 	tconn, err := cr.TestAPIConn(ctx)
 	if err != nil {
@@ -224,7 +214,7 @@ func HardwarePrintCombinations(ctx context.Context, s *testing.State) {
 
 	// Open a new Chrome tab so that there's something to print.
 	ui := uiauto.New(tconn)
-	if _, err := br.NewConn(ctx, chrome.NewTabURL); err != nil {
+	if _, err := cr.NewConn(ctx, chrome.NewTabURL); err != nil {
 		s.Fatal("Failed to open new Chrome tab: ", err)
 	}
 

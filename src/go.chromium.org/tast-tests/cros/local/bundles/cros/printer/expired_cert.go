@@ -15,8 +15,6 @@ import (
 	"go.chromium.org/tast-tests/cros/local/bundles/cros/printer/uitools"
 	"go.chromium.org/tast-tests/cros/local/chrome"
 	"go.chromium.org/tast-tests/cros/local/chrome/ash"
-	"go.chromium.org/tast-tests/cros/local/chrome/browser"
-	"go.chromium.org/tast-tests/cros/local/chrome/browser/browserfixt"
 	"go.chromium.org/tast-tests/cros/local/chrome/uiauto"
 	"go.chromium.org/tast-tests/cros/local/chrome/uiauto/faillog"
 	"go.chromium.org/tast-tests/cros/local/chrome/uiauto/nodewith"
@@ -130,15 +128,9 @@ func ExpiredCert(ctx context.Context, s *testing.State) {
 		s.Fatal("Failed to clear initial printing history: ", err)
 	}
 
-	// Create a browser.
-	br, closeBrowser, err := browserfixt.SetUp(ctx, cr, browser.TypeAsh)
-	if err != nil {
-		s.Fatal("Failed to launch browser: ", err)
-	}
-	defer closeBrowser(cleanupCtx)
 	defer faillog.DumpUITreeWithScreenshotOnError(cleanupCtx, s.OutDir(), s.HasError, cr, "ui_tree")
 
-	conn, err := br.NewConn(ctx, chrome.VersionURL)
+	conn, err := cr.NewConn(ctx, chrome.VersionURL)
 	if err != nil {
 		s.Fatal("Failed to connect to browser: ", err)
 	}

@@ -13,8 +13,6 @@ import (
 	"go.chromium.org/tast-tests/cros/local/bundles/cros/printer/uitools"
 	"go.chromium.org/tast-tests/cros/local/chrome"
 	"go.chromium.org/tast-tests/cros/local/chrome/ash"
-	"go.chromium.org/tast-tests/cros/local/chrome/browser"
-	"go.chromium.org/tast-tests/cros/local/chrome/browser/browserfixt"
 	"go.chromium.org/tast-tests/cros/local/chrome/uiauto"
 	"go.chromium.org/tast-tests/cros/local/chrome/uiauto/faillog"
 	"go.chromium.org/tast-tests/cros/local/chrome/uiauto/printmanagementapp"
@@ -107,14 +105,7 @@ func Print(ctx context.Context, s *testing.State) {
 		s.Fatal("Failed to clear printing history: ", err)
 	}
 
-	// Create a browser.
-	br, closeBrowser, err := browserfixt.SetUp(ctx, cr, browser.TypeAsh)
-	if err != nil {
-		s.Fatal("Failed to launch browser: ", err)
-	}
-	defer closeBrowser(cleanupCtx)
-
-	conn, err := br.NewConn(ctx, "chrome://version/")
+	conn, err := cr.NewConn(ctx, "chrome://version/")
 	if err != nil {
 		s.Fatal("Failed to connect to broswer: ", err)
 	}
