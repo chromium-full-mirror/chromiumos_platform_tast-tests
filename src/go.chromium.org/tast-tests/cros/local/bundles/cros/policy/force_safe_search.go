@@ -13,8 +13,6 @@ import (
 	"go.chromium.org/tast-tests/cros/common/policy"
 	"go.chromium.org/tast-tests/cros/common/policy/fakedms"
 	"go.chromium.org/tast-tests/cros/local/chrome"
-	"go.chromium.org/tast-tests/cros/local/chrome/browser"
-	"go.chromium.org/tast-tests/cros/local/chrome/browser/browserfixt"
 	"go.chromium.org/tast-tests/cros/local/chrome/uiauto/faillog"
 	"go.chromium.org/tast-tests/cros/local/policyutil"
 	"go.chromium.org/tast-tests/cros/local/policyutil/safesearch"
@@ -138,19 +136,13 @@ func ForceSafeSearch(ctx context.Context, s *testing.State) {
 				s.Fatal("Failed to update policies: ", err)
 			}
 
-			br, closeBrowser, err := browserfixt.SetUp(ctx, cr, browser.TypeAsh)
-			if err != nil {
-				s.Fatal("Failed to setup chrome: ", err)
-			}
-			defer closeBrowser(cleanupCtx)
-
 			defer faillog.DumpUITreeWithScreenshotOnError(cleanupCtx, s.OutDir(), s.HasError, cr, "ui_tree_"+param.name)
 
-			if err := safesearch.TestGoogleSafeSearch(ctx, br, param.wantGoogleSafe); err != nil {
+			if err := safesearch.TestGoogleSafeSearch(ctx, cr, param.wantGoogleSafe); err != nil {
 				s.Error("Failed to verify state of Google safe search: ", err)
 			}
 
-			if err := safesearch.TestYouTubeRestrictedMode(ctx, br, param.wantYouTubeSafe, false); err != nil {
+			if err := safesearch.TestYouTubeRestrictedMode(ctx, cr, param.wantYouTubeSafe, false); err != nil {
 				s.Error("Failed to verify YouTube content restriction: ", err)
 			}
 		})

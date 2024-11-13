@@ -13,8 +13,6 @@ import (
 	"go.chromium.org/tast-tests/cros/common/policy"
 	"go.chromium.org/tast-tests/cros/common/policy/fakedms"
 	"go.chromium.org/tast-tests/cros/local/chrome"
-	"go.chromium.org/tast-tests/cros/local/chrome/browser"
-	"go.chromium.org/tast-tests/cros/local/chrome/browser/browserfixt"
 	"go.chromium.org/tast-tests/cros/local/chrome/uiauto"
 	"go.chromium.org/tast-tests/cros/local/chrome/uiauto/checked"
 	"go.chromium.org/tast-tests/cros/local/chrome/uiauto/faillog"
@@ -96,17 +94,10 @@ func AllowDeletingBrowserHistory(ctx context.Context, s *testing.State) {
 				s.Fatal("Failed to update policies: ", err)
 			}
 
-			// Setup browser based on the chrome type.
-			br, closeBrowser, err := browserfixt.SetUp(ctx, cr, browser.TypeAsh)
-			if err != nil {
-				s.Fatal("Failed to open the browser: ", err)
-			}
-			defer closeBrowser(cleanupCtx)
-
 			defer faillog.DumpUITreeWithScreenshotOnError(cleanupCtx, s.OutDir(), s.HasError, cr, "ui_tree_"+param.name)
 
 			// Open settings page where the affected checkboxes can be found.
-			conn, err := br.NewConn(ctx, "chrome://settings/clearBrowserData")
+			conn, err := cr.NewConn(ctx, "chrome://settings/clearBrowserData")
 			if err != nil {
 				s.Fatal("Failed to connect to the settings page: ", err)
 			}

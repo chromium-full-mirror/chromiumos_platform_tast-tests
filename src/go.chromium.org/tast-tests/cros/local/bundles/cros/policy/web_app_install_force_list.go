@@ -15,8 +15,6 @@ import (
 	"go.chromium.org/tast-tests/cros/common/policy/fakedms"
 	"go.chromium.org/tast-tests/cros/local/apps"
 	"go.chromium.org/tast-tests/cros/local/chrome"
-	"go.chromium.org/tast-tests/cros/local/chrome/browser"
-	"go.chromium.org/tast-tests/cros/local/chrome/browser/browserfixt"
 	"go.chromium.org/tast-tests/cros/local/chrome/display"
 	"go.chromium.org/tast-tests/cros/local/chrome/uiauto"
 	"go.chromium.org/tast-tests/cros/local/chrome/uiauto/faillog"
@@ -73,12 +71,6 @@ func WebAppInstallForceList(ctx context.Context, s *testing.State) {
 	cr := s.FixtValue().(chrome.HasChrome).Chrome()
 	fdms := s.FixtValue().(fakedms.HasFakeDMS).FakeDMS()
 
-	br, closeBrowser, err := browserfixt.SetUp(ctx, cr, browser.TypeAsh)
-	if err != nil {
-		s.Fatal("Failed to open the browser: ", err)
-	}
-	defer closeBrowser(ctx)
-
 	tconn, err := cr.TestAPIConn(ctx)
 	if err != nil {
 		s.Fatal("Failed to get TestConn: ", err)
@@ -93,7 +85,7 @@ func WebAppInstallForceList(ctx context.Context, s *testing.State) {
 		HostedFilesBasePath:   baseDirectory,
 	}
 
-	https.ConfigureChromeToAcceptCertificate(ctx, ServerConfiguration, cr, br, tconn)
+	https.ConfigureChromeToAcceptCertificate(ctx, ServerConfiguration, cr, tconn)
 	server := https.StartServer(ServerConfiguration)
 	if server.Error != nil {
 		s.Fatal("Could not start https server: ", err)

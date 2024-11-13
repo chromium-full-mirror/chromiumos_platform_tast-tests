@@ -16,8 +16,6 @@ import (
 	"go.chromium.org/tast-tests/cros/common/policy"
 	"go.chromium.org/tast-tests/cros/common/policy/fakedms"
 	"go.chromium.org/tast-tests/cros/local/chrome"
-	"go.chromium.org/tast-tests/cros/local/chrome/browser"
-	"go.chromium.org/tast-tests/cros/local/chrome/browser/browserfixt"
 	"go.chromium.org/tast-tests/cros/local/chrome/uiauto"
 	"go.chromium.org/tast-tests/cros/local/chrome/uiauto/checked"
 	"go.chromium.org/tast-tests/cros/local/chrome/uiauto/faillog"
@@ -47,13 +45,8 @@ func init() {
 			"group:complementary",
 			"group:hw_agnostic",
 		},
-		Params: []testing.Param{
-			{
-				Fixture: fixture.ChromePolicyLoggedIn,
-				Val:     browser.TypeAsh,
-			},
-		},
-		Data: []string{"print_pdf_as_image_default.pdf"},
+		Fixture: fixture.ChromePolicyLoggedIn,
+		Data:    []string{"print_pdf_as_image_default.pdf"},
 		SearchFlags: []*testing.StringPair{
 			pci.SearchFlag(&policy.PrintPdfAsImageDefault{}, pci.VerifiedFunctionalityUI),
 		},
@@ -66,7 +59,6 @@ func PrintPdfAsImageDefault(ctx context.Context, s *testing.State) {
 	fdms := s.FixtValue().(fakedms.HasFakeDMS).FakeDMS()
 
 	// Reserve 10 seconds for cleanup.
-	cleanupCtx := ctx
 	ctx, cancel := ctxutil.Shorten(ctx, 10*time.Second)
 	defer cancel()
 
@@ -107,14 +99,7 @@ func PrintPdfAsImageDefault(ctx context.Context, s *testing.State) {
 				s.Fatal("Failed to update policies: ", err)
 			}
 
-			// Setup browser based on the chrome type.
-			br, closeBrowser, err := browserfixt.SetUp(ctx, cr, s.Param().(browser.Type))
-			if err != nil {
-				s.Fatal("Failed to open the browser: ", err)
-			}
-			defer closeBrowser(cleanupCtx)
-
-			conn, err := br.NewConn(ctx, url)
+			conn, err := cr.NewConn(ctx, url)
 			if err != nil {
 				s.Fatal("Failed to open url: ", err)
 			}

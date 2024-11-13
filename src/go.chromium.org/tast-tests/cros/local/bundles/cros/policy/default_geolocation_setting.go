@@ -15,8 +15,6 @@ import (
 	"go.chromium.org/tast-tests/cros/common/policy"
 	"go.chromium.org/tast-tests/cros/common/policy/fakedms"
 	"go.chromium.org/tast-tests/cros/local/chrome"
-	"go.chromium.org/tast-tests/cros/local/chrome/browser"
-	"go.chromium.org/tast-tests/cros/local/chrome/browser/browserfixt"
 	"go.chromium.org/tast-tests/cros/local/chrome/uiauto"
 	"go.chromium.org/tast-tests/cros/local/chrome/uiauto/checked"
 	"go.chromium.org/tast-tests/cros/local/chrome/uiauto/faillog"
@@ -127,17 +125,10 @@ func DefaultGeolocationSetting(ctx context.Context, s *testing.State) {
 				s.Fatal("Failed to update policies: ", err)
 			}
 
-			// Setup browser based on the chrome type.
-			br, closeBrowser, err := browserfixt.SetUp(ctx, cr, browser.TypeAsh)
-			if err != nil {
-				s.Fatal("Failed to open the browser: ", err)
-			}
-			defer closeBrowser(cleanupCtx)
-
 			defer faillog.DumpUITreeWithScreenshotOnError(cleanupCtx, s.OutDir(), s.HasError, cr, "ui_tree_"+param.name)
 
 			// Open a website.
-			conn, err := br.NewConn(ctx, server.URL+"/default_geolocation_setting_index.html")
+			conn, err := cr.NewConn(ctx, server.URL+"/default_geolocation_setting_index.html")
 			if err != nil {
 				s.Fatal("Failed to open website: ", err)
 			}
@@ -193,7 +184,7 @@ func DefaultGeolocationSetting(ctx context.Context, s *testing.State) {
 
 			// Check the state of the buttons.
 			for i, radioButtonName := range radioButtonNames {
-				if err := policyutil.SettingsPage(ctx, cr, br, "content/location").
+				if err := policyutil.SettingsPage(ctx, cr, "content/location").
 					SelectNode(ctx, nodewith.
 						Role(role.RadioButton).
 						Name(radioButtonName)).

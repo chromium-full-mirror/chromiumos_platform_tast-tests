@@ -104,6 +104,7 @@ func DeviceLocalAccountPolicyPropagation(ctx context.Context, s *testing.State) 
 			},
 		}
 		pb := policy.NewBlob()
+
 		if err := pb.AddPublicAccountPolicies(mgs.MgsAccountID, []policy.Policy{&policy.ForceGoogleSafeSearch{Val: true}}); err != nil {
 			s.Fatal("Failed to add public account ForceGoogleSafeSearch policy: ", err)
 		}
@@ -114,9 +115,9 @@ func DeviceLocalAccountPolicyPropagation(ctx context.Context, s *testing.State) 
 			s.Fatal("Failed to update policies: ", err)
 		}
 		defer faillog.DumpUITreeWithScreenshotOnError(ctx, s.OutDir(), s.HasError, cr, "ui_tree_")
-		br := cr.Browser()
+
 		// Verify the policy value.
-		if err := safesearch.TestGoogleSafeSearch(ctx, br, true); err != nil {
+		if err := safesearch.TestGoogleSafeSearch(ctx, cr, true); err != nil {
 			s.Error("Failed to verify state of Google safe search: ", err)
 		}
 	})
@@ -137,6 +138,7 @@ func DeviceLocalAccountPolicyPropagation(ctx context.Context, s *testing.State) 
 			},
 		}
 		pb := policy.NewBlob()
+
 		if err := pb.AddPublicAccountPolicies(mgs.MgsAccountID, []policy.Policy{&policy.ForceGoogleSafeSearch{Val: false}}); err != nil {
 			s.Fatal("Failed to add public account ForceGoogleSafeSearch policy: ", err)
 		}
@@ -147,9 +149,9 @@ func DeviceLocalAccountPolicyPropagation(ctx context.Context, s *testing.State) 
 			s.Fatal("Failed to update policies: ", err)
 		}
 		defer faillog.DumpUITreeWithScreenshotOnError(ctx, s.OutDir(), s.HasError, cr, "ui_tree_")
-		br := cr.Browser()
+
 		// Verify the policy value.
-		if err := safesearch.TestGoogleSafeSearch(ctx, br, false); err != nil {
+		if err := safesearch.TestGoogleSafeSearch(ctx, cr, false); err != nil {
 			s.Error("Failed to verify state of Google safe search: ", err)
 		}
 	})

@@ -13,8 +13,6 @@ import (
 	"go.chromium.org/tast-tests/cros/common/policy"
 	"go.chromium.org/tast-tests/cros/common/policy/fakedms"
 	"go.chromium.org/tast-tests/cros/local/chrome"
-	"go.chromium.org/tast-tests/cros/local/chrome/browser"
-	"go.chromium.org/tast-tests/cros/local/chrome/browser/browserfixt"
 	"go.chromium.org/tast-tests/cros/local/chrome/uiauto/checked"
 	"go.chromium.org/tast-tests/cros/local/chrome/uiauto/faillog"
 	"go.chromium.org/tast-tests/cros/local/chrome/uiauto/nodewith"
@@ -48,7 +46,6 @@ func SafeBrowsingProtectionLevel(ctx context.Context, s *testing.State) {
 	fdms := s.FixtValue().(fakedms.HasFakeDMS).FakeDMS()
 
 	// Reserve ten seconds for cleanup.
-	cleanupCtx := ctx
 	ctx, cancel := ctxutil.Shorten(ctx, 10*time.Second)
 	defer cancel()
 
@@ -94,17 +91,10 @@ func SafeBrowsingProtectionLevel(ctx context.Context, s *testing.State) {
 				s.Fatal("Failed to update policies: ", err)
 			}
 
-			// Setup browser based on the chrome type.
-			br, closeBrowser, err := browserfixt.SetUp(ctx, cr, browser.TypeAsh)
-			if err != nil {
-				s.Fatal("Failed to open the browser: ", err)
-			}
-			defer closeBrowser(cleanupCtx)
-
 			defer faillog.DumpUITreeWithScreenshotOnError(ctx, s.OutDir(), s.HasError, cr, "ui_tree_"+param.name)
 
 			// Open the security settings page.
-			if err := policyutil.SettingsPage(ctx, cr, br, "security").
+			if err := policyutil.SettingsPage(ctx, cr, "security").
 				SelectNode(ctx, nodewith.
 					Role(role.RadioButton).
 					Name(param.selectedOption)).

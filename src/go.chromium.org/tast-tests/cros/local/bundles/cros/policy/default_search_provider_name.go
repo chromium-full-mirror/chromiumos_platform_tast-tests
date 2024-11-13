@@ -14,8 +14,6 @@ import (
 	"go.chromium.org/tast-tests/cros/common/policy"
 	"go.chromium.org/tast-tests/cros/common/policy/fakedms"
 	"go.chromium.org/tast-tests/cros/local/chrome"
-	"go.chromium.org/tast-tests/cros/local/chrome/browser"
-	"go.chromium.org/tast-tests/cros/local/chrome/browser/browserfixt"
 	"go.chromium.org/tast-tests/cros/local/chrome/uiauto"
 	"go.chromium.org/tast-tests/cros/local/chrome/uiauto/browser/browserui"
 	"go.chromium.org/tast-tests/cros/local/chrome/uiauto/faillog"
@@ -59,7 +57,6 @@ func DefaultSearchProviderName(ctx context.Context, s *testing.State) {
 	fdms := s.FixtValue().(fakedms.HasFakeDMS).FakeDMS()
 
 	// Reserve ten seconds for cleanup.
-	cleanupCtx := ctx
 	ctx, cancel := ctxutil.Shorten(ctx, 10*time.Second)
 	defer cancel()
 
@@ -115,16 +112,11 @@ func DefaultSearchProviderName(ctx context.Context, s *testing.State) {
 				s.Fatal("Failed to update policies: ", err)
 			}
 
-			br, closeBrowser, err := browserfixt.SetUp(ctx, cr, browser.TypeAsh)
-			if err != nil {
-				s.Fatal("Failed to setup chrome: ", err)
-			}
-			defer closeBrowser(cleanupCtx)
 			defer faillog.DumpUITreeWithScreenshotOnError(ctx, s.OutDir(), s.HasError, cr, "ui_tree_"+param.name)
 
 			// Open an empty page.
 			// Use chrome://newtab to open new tab page (see https://crbug.com/1188362#c19).
-			conn, err := br.NewConn(ctx, "chrome://newtab/")
+			conn, err := cr.NewConn(ctx, "chrome://newtab/")
 			if err != nil {
 				s.Fatal("Failed to connect to chrome: ", err)
 			}

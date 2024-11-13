@@ -10,7 +10,6 @@ import (
 	"fmt"
 
 	"go.chromium.org/tast-tests/cros/local/chrome"
-	"go.chromium.org/tast-tests/cros/local/chrome/browser"
 	"go.chromium.org/tast-tests/cros/local/chrome/uiauto"
 	"go.chromium.org/tast-tests/cros/local/chrome/uiauto/nodewith"
 	"go.chromium.org/tast-tests/cros/local/chrome/uiauto/role"
@@ -31,8 +30,8 @@ const (
 
 // TestSerialPortRequest executes navigator.serial.requestPort() and checks whether
 // the port selection dialog opens according to the `wantSerialDialog` argument.
-func TestSerialPortRequest(ctx context.Context, cr *chrome.Chrome, br *browser.Browser, url string, wantSerialDialog bool) error {
-	conn, err := br.NewConn(ctx, fmt.Sprintf("%s/%s", url, SerialTestPage))
+func TestSerialPortRequest(ctx context.Context, cr *chrome.Chrome, url string, wantSerialDialog bool) error {
+	conn, err := cr.NewConn(ctx, fmt.Sprintf("%s/%s", url, SerialTestPage))
 	if err != nil {
 		return errors.Wrap(err, "failed to open website")
 	}

@@ -15,8 +15,6 @@ import (
 	"go.chromium.org/tast-tests/cros/common/policy"
 	"go.chromium.org/tast-tests/cros/common/policy/fakedms"
 	"go.chromium.org/tast-tests/cros/local/chrome"
-	"go.chromium.org/tast-tests/cros/local/chrome/browser"
-	"go.chromium.org/tast-tests/cros/local/chrome/browser/browserfixt"
 	"go.chromium.org/tast-tests/cros/local/policyutil"
 	"go.chromium.org/tast/core/ctxutil"
 	"go.chromium.org/tast/core/testing"
@@ -46,7 +44,6 @@ func DefaultJavascriptJitSetting(ctx context.Context, s *testing.State) {
 	fdms := s.FixtValue().(fakedms.HasFakeDMS).FakeDMS()
 
 	// Reserve ten seconds for cleanup.
-	cleanupCtx := ctx
 	ctx, cancel := ctxutil.Shorten(ctx, 10*time.Second)
 	defer cancel()
 
@@ -83,13 +80,7 @@ func DefaultJavascriptJitSetting(ctx context.Context, s *testing.State) {
 				s.Error("Failed to serve and verify policies: ", err)
 			}
 
-			br, closeBrowser, err := browserfixt.SetUp(ctx, cr, browser.TypeAsh)
-			if err != nil {
-				s.Error("Failed to setup chrome: ", err)
-			}
-			defer closeBrowser(cleanupCtx)
-
-			conn, err := br.NewConn(ctx, server.URL+"/jit_test.html")
+			conn, err := cr.NewConn(ctx, server.URL+"/jit_test.html")
 			if err != nil {
 				s.Error("Failed to connect to Chrome: ", err)
 			}

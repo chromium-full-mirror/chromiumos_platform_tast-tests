@@ -15,8 +15,6 @@ import (
 	"go.chromium.org/tast-tests/cros/common/policy"
 	"go.chromium.org/tast-tests/cros/common/policy/fakedms"
 	"go.chromium.org/tast-tests/cros/local/chrome"
-	"go.chromium.org/tast-tests/cros/local/chrome/browser"
-	"go.chromium.org/tast-tests/cros/local/chrome/browser/browserfixt"
 	"go.chromium.org/tast-tests/cros/local/chrome/metrics"
 	"go.chromium.org/tast-tests/cros/local/policyutil"
 	"go.chromium.org/tast-tests/cros/local/policyutil/fixtures"
@@ -98,16 +96,9 @@ func RegmonRecordPolicyViolation(ctx context.Context, s *testing.State) {
 		s.Fatal("Failed to update policies: ", err)
 	}
 
-	// Setup browser.
-	br, closeBrowser, err := browserfixt.SetUp(ctx, cr, browser.TypeAsh)
-	if err != nil {
-		s.Fatal("Failed to open the browser: ", err)
-	}
-	defer closeBrowser(cleanupCtx)
-
 	// Open the website with the address form. This will trigger the 'autofill_query' network
 	// annotation.
-	conn, err := br.NewConn(ctx, server.URL+"/"+"autofill_address_enabled.html")
+	conn, err := cr.NewConn(ctx, server.URL+"/"+"autofill_address_enabled.html")
 	if err != nil {
 		s.Fatal("Failed to open website: ", err)
 	}

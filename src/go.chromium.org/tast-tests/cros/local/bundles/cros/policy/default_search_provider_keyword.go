@@ -15,8 +15,6 @@ import (
 	"go.chromium.org/tast-tests/cros/common/policy"
 	"go.chromium.org/tast-tests/cros/common/policy/fakedms"
 	"go.chromium.org/tast-tests/cros/local/chrome"
-	"go.chromium.org/tast-tests/cros/local/chrome/browser"
-	"go.chromium.org/tast-tests/cros/local/chrome/browser/browserfixt"
 	"go.chromium.org/tast-tests/cros/local/chrome/uiauto"
 	"go.chromium.org/tast-tests/cros/local/chrome/uiauto/browser/browserui"
 	"go.chromium.org/tast-tests/cros/local/input"
@@ -57,7 +55,6 @@ func DefaultSearchProviderKeyword(ctx context.Context, s *testing.State) {
 	fdms := s.FixtValue().(fakedms.HasFakeDMS).FakeDMS()
 
 	// Reserve ten seconds for cleanup.
-	cleanupCtx := ctx
 	ctx, cancel := ctxutil.Shorten(ctx, 10*time.Second)
 	defer cancel()
 
@@ -111,30 +108,15 @@ func DefaultSearchProviderKeyword(ctx context.Context, s *testing.State) {
 				s.Fatal("Failed to update policies: ", err)
 			}
 
-			br, closeBrowser, err := browserfixt.SetUp(ctx, cr, browser.TypeAsh)
-			if err != nil {
-				s.Fatal("Failed to setup chrome: ", err)
-			}
-			defer closeBrowser(cleanupCtx)
-
-			// Connect to Test API of the used browser to clear the browser
-			// history. We need a second connection as the clearing of the
-			// history has to be executed from the used browser while the
-			// uiauto package needs a connection to the ash browser.
-			tconn2, err := br.TestAPIConn(ctx)
-			if err != nil {
-				s.Fatal("Failed to create Test API connection: ", err)
-			}
-
 			// Clear the browser history, otherwise the previous search results can
 			// interfere with the test.
-			if err := tconn2.Eval(ctx, `tast.promisify(chrome.browsingData.removeHistory({"since": 0}))`, nil); err != nil {
+			if err := tconn.Eval(ctx, `tast.promisify(chrome.browsingData.removeHistory({"since": 0}))`, nil); err != nil {
 				s.Fatal("Failed to clear browsing history: ", err)
 			}
 
 			// Open an empty page.
 			// Use chrome://newtab to open new tab page (see https://crbug.com/1188362#c19).
-			conn, err := br.NewConn(ctx, "chrome://newtab/")
+			conn, err := cr.NewConn(ctx, "chrome://newtab/")
 			if err != nil {
 				s.Fatal("Failed to connect to chrome: ", err)
 			}

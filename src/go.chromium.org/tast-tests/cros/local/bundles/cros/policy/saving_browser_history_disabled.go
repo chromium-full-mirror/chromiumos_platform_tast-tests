@@ -16,8 +16,6 @@ import (
 	"go.chromium.org/tast-tests/cros/common/policy"
 	"go.chromium.org/tast-tests/cros/common/policy/fakedms"
 	"go.chromium.org/tast-tests/cros/local/chrome"
-	"go.chromium.org/tast-tests/cros/local/chrome/browser"
-	"go.chromium.org/tast-tests/cros/local/chrome/browser/browserfixt"
 	"go.chromium.org/tast-tests/cros/local/chrome/uiauto"
 	"go.chromium.org/tast-tests/cros/local/chrome/uiauto/faillog"
 	"go.chromium.org/tast-tests/cros/local/chrome/uiauto/nodewith"
@@ -51,7 +49,6 @@ func SavingBrowserHistoryDisabled(ctx context.Context, s *testing.State) {
 	fdms := s.FixtValue().(fakedms.HasFakeDMS).FakeDMS()
 
 	// Reserve ten seconds for cleanup.
-	cleanupCtx := ctx
 	ctx, cancel := ctxutil.Shorten(ctx, 10*time.Second)
 	defer cancel()
 
@@ -100,38 +97,21 @@ func SavingBrowserHistoryDisabled(ctx context.Context, s *testing.State) {
 				s.Fatal("Failed to update policies: ", err)
 			}
 
-			// TODO(crbug.com/1254152): Modify browser setup after creating the new browser package.
-			// Setup browser based on the chrome type.
-			br, closeBrowser, err := browserfixt.SetUp(ctx, cr, browser.TypeAsh)
-			if err != nil {
-				s.Fatal("Failed to open the browser: ", err)
-			}
-			defer closeBrowser(cleanupCtx)
-
-			// Connect to Test API of the used browser to clear the browser
-			// history. We need a second connection as the clearing of the
-			// history has to be executed from the used browser while the ui
-			// uiauto package needs a connection to the ash browser.
-			tconn2, err := br.TestAPIConn(ctx)
-			if err != nil {
-				s.Fatal("Failed to create Test API connection: ", err)
-			}
-
 			// Clear the browser history.
-			if err := tconn2.Eval(ctx, `tast.promisify(chrome.browsingData.removeHistory({"since": 0}))`, nil); err != nil {
+			if err := tconn.Eval(ctx, `tast.promisify(chrome.browsingData.removeHistory({"since": 0}))`, nil); err != nil {
 				s.Fatal("Failed to clear browsing history: ", err)
 			}
 
 			defer faillog.DumpUITreeWithScreenshotOnError(ctx, s.OutDir(), s.HasError, cr, "ui_tree_"+param.name)
 
 			// Open a website to create a browsing history entry.
-			conn, err := br.NewConn(ctx, server.URL)
+			conn, err := cr.NewConn(ctx, server.URL)
 			if err != nil {
 				s.Fatal("Failed to connect to the browser: ", err)
 			}
 			defer conn.Close()
 
-			hconn, err := br.NewConn(ctx, "chrome://history")
+			hconn, err := cr.NewConn(ctx, "chrome://history")
 			if err != nil {
 				s.Fatal("Failed to connect to the browser: ", err)
 			}

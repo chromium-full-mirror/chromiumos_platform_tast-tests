@@ -19,8 +19,6 @@ import (
 	"go.chromium.org/tast-tests/cros/common/policy/fakedms"
 	"go.chromium.org/tast-tests/cros/local/apps"
 	"go.chromium.org/tast-tests/cros/local/chrome"
-	"go.chromium.org/tast-tests/cros/local/chrome/browser"
-	"go.chromium.org/tast-tests/cros/local/chrome/browser/browserfixt"
 	"go.chromium.org/tast-tests/cros/local/chrome/uiauto"
 	"go.chromium.org/tast-tests/cros/local/chrome/uiauto/faillog"
 	"go.chromium.org/tast-tests/cros/local/chrome/uiauto/filesapp"
@@ -105,16 +103,8 @@ func AutoOpenAllowedForURLs(ctx context.Context, s *testing.State) {
 			}
 
 			// Reserve 10 seconds for cleanup.
-			cleanupCtx := ctx
 			ctx, cancel := ctxutil.Shorten(ctx, 10*time.Second)
 			defer cancel()
-
-			// Setup browser based on the chrome type.
-			br, closeBrowser, err := browserfixt.SetUp(ctx, cr, browser.TypeAsh)
-			if err != nil {
-				s.Fatal("Failed to open the browser: ", err)
-			}
-			defer closeBrowser(cleanupCtx)
 
 			defer faillog.DumpUITreeWithScreenshotOnError(ctx, s.OutDir(), s.HasError, cr, "ui_tree_"+param.name)
 
@@ -124,7 +114,7 @@ func AutoOpenAllowedForURLs(ctx context.Context, s *testing.State) {
 			// downloading a file. Instead, Chrome continues to show the current page.
 			// To circumvent this problem, we open an HTML file that contains links to
 			// download the file and click them via Eval().
-			conn, err := br.NewConn(ctx, indexURL)
+			conn, err := cr.NewConn(ctx, indexURL)
 			if err != nil {
 				s.Fatal("Failed to open website: ", err)
 			}

@@ -15,8 +15,6 @@ import (
 	"go.chromium.org/tast-tests/cros/common/policy"
 	"go.chromium.org/tast-tests/cros/common/policy/fakedms"
 	"go.chromium.org/tast-tests/cros/local/chrome"
-	"go.chromium.org/tast-tests/cros/local/chrome/browser"
-	"go.chromium.org/tast-tests/cros/local/chrome/browser/browserfixt"
 	"go.chromium.org/tast-tests/cros/local/chrome/uiauto"
 	"go.chromium.org/tast-tests/cros/local/chrome/uiauto/faillog"
 	"go.chromium.org/tast-tests/cros/local/chrome/uiauto/nodewith"
@@ -163,14 +161,7 @@ func RunTestCases(ctx context.Context, s *testing.State, param TestCase) {
 			defer os.Remove(filePath)
 		}
 
-		// Setup browser based on the browser type.
-		br, closeBrowser, err := browserfixt.SetUp(ctx, cr, browser.TypeAsh)
-		if err != nil {
-			s.Fatal("Failed to open the browser: ", err)
-		}
-		defer closeBrowser(cleanupCtx)
-
-		conn, err := br.NewConn(ctx, param.URL)
+		conn, err := cr.NewConn(ctx, param.URL)
 		if err != nil {
 			s.Fatal("Failed to open website: ", err)
 		}

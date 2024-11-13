@@ -13,8 +13,6 @@ import (
 	"go.chromium.org/tast-tests/cros/common/policy"
 	"go.chromium.org/tast-tests/cros/common/policy/fakedms"
 	"go.chromium.org/tast-tests/cros/local/chrome"
-	"go.chromium.org/tast-tests/cros/local/chrome/browser"
-	"go.chromium.org/tast-tests/cros/local/chrome/browser/browserfixt"
 	"go.chromium.org/tast-tests/cros/local/chrome/uiauto"
 	"go.chromium.org/tast-tests/cros/local/chrome/uiauto/faillog"
 	"go.chromium.org/tast-tests/cros/local/chrome/uiauto/printpreview"
@@ -122,23 +120,14 @@ func RunFeatureRestrictionTest(
 				s.Fatal("Failed to update policies: ", err)
 			}
 
-			// Setup browser based on the chrome type.
-			br, closeBrowser, err := browserfixt.SetUp(ctx, cr, s.Param().(browser.Type))
-			if err != nil {
-				s.Fatal("Failed to setup chrome: ", err)
-			}
-			defer closeBrowser(cleanupCtx)
-
-			// Open a new tab. The print dialog fails to open when invoking CTRL+P
-			// directly after calling `browserfixt.SetUp`, likely because the page
-			// isn't fully loaded yet. It also fails to open on about:blank pages, but
-			// works fine on chrome://newtab; see crbug.com/1290797.
-			conn, err := br.NewConn(ctx, chrome.NewTabURL)
+			// Open a new tab. The print dialog fails to open when invoking CTRL+P, likely
+			// because the page isn't fully loaded yet. It also fails to open on about:blank
+			// pages, but works fine on chrome://newtab; see crbug.com/1290797.
+			conn, err := cr.NewConn(ctx, chrome.NewTabURL)
 			if err != nil {
 				s.Fatal("Failed to connect to chrome: ", err)
 			}
 			defer conn.Close()
-			// The UI tree must be dumped before closing the browser.
 			defer faillog.DumpUITreeWithScreenshotOnError(cleanupCtx, s.OutDir(), s.HasError, cr, "ui_tree_"+param.TestName)
 
 			if err := uiauto.Combine("open Print Preview with a shortcut",

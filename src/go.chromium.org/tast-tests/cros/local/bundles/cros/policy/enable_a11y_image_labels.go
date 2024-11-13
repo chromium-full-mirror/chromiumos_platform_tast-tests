@@ -19,8 +19,6 @@ import (
 	"go.chromium.org/tast-tests/cros/local/a11y/tts"
 	"go.chromium.org/tast-tests/cros/local/audio/crastestclient"
 	"go.chromium.org/tast-tests/cros/local/chrome"
-	"go.chromium.org/tast-tests/cros/local/chrome/browser"
-	"go.chromium.org/tast-tests/cros/local/chrome/browser/browserfixt"
 	"go.chromium.org/tast-tests/cros/local/chrome/uiauto"
 	"go.chromium.org/tast-tests/cros/local/chrome/uiauto/faillog"
 	"go.chromium.org/tast-tests/cros/local/chrome/uiauto/nodewith"
@@ -104,14 +102,7 @@ func EnableA11yImageLabels(ctx context.Context, s *testing.State) {
 				s.Fatal("Failed to update policies: ", err)
 			}
 
-			// Open the test web page in a browser.
-			br, closeBrowser, err := browserfixt.SetUp(ctx, cr, browser.TypeAsh)
-			if err != nil {
-				s.Fatal("Failed to open browser: ", err)
-			}
-			defer closeBrowser(cleanupCtx)
-
-			conn, err := br.NewConn(ctx, server.URL+"/enable_a11y_image_labels_index.html")
+			conn, err := cr.NewConn(ctx, server.URL+"/enable_a11y_image_labels_index.html")
 			if err != nil {
 				s.Fatal("Failed to open test webpage: ", err)
 			}

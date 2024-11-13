@@ -17,8 +17,6 @@ import (
 	"go.chromium.org/tast-tests/cros/common/policy/fakedms"
 	"go.chromium.org/tast-tests/cros/common/testexec"
 	"go.chromium.org/tast-tests/cros/local/chrome"
-	"go.chromium.org/tast-tests/cros/local/chrome/browser"
-	"go.chromium.org/tast-tests/cros/local/chrome/browser/browserfixt"
 	"go.chromium.org/tast-tests/cros/local/chrome/uiauto"
 	"go.chromium.org/tast-tests/cros/local/chrome/uiauto/faillog"
 	"go.chromium.org/tast-tests/cros/local/chrome/uiauto/printpreview"
@@ -49,12 +47,7 @@ func init() {
 			"group:complementary",
 			"group:hw_agnostic",
 		},
-		Params: []testing.Param{
-			{
-				Val:     browser.TypeAsh,
-				Fixture: fixture.ChromePolicyLoggedIn,
-			},
-		},
+		Fixture: fixture.ChromePolicyLoggedIn,
 		SearchFlags: []*testing.StringPair{
 			pci.SearchFlag(&policy.ExternalPrintServers{}, pci.VerifiedFunctionalityUI),
 			pci.SearchFlag(&policy.ExternalPrintServersAllowlist{}, pci.VerifiedFunctionalityUI),
@@ -120,7 +113,6 @@ func setupPrinterWithCups(ctx context.Context, printerName, printerURI string) e
 // because of a known bug (b/286878873).
 // TODO(b/293995962): Add test case for the empty allowlist case.
 func ExternalPrintServers(ctx context.Context, s *testing.State) {
-	bt := s.Param().(browser.Type)
 	cr := s.FixtValue().(chrome.HasChrome).Chrome()
 	fdms := s.FixtValue().(fakedms.HasFakeDMS).FakeDMS()
 
@@ -191,15 +183,9 @@ func ExternalPrintServers(ctx context.Context, s *testing.State) {
 		s.Fatal("Failed to update policies: ", err)
 	}
 
-	// Create a browser.
-	br, closeBrowser, err := browserfixt.SetUp(ctx, cr, bt)
-	if err != nil {
-		s.Fatal("Failed to launch browser: ", err)
-	}
-	defer closeBrowser(cleanupCtx)
 	defer faillog.DumpUITreeWithScreenshotOnError(cleanupCtx, s.OutDir(), s.HasError, cr, "ui_tree")
 
-	conn, err := br.NewConn(ctx, "chrome://version/")
+	conn, err := cr.NewConn(ctx, "chrome://version/")
 	if err != nil {
 		s.Fatal("Failed to connect to browser: ", err)
 	}

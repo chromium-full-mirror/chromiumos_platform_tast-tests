@@ -13,8 +13,6 @@ import (
 	"go.chromium.org/tast-tests/cros/common/policy"
 	"go.chromium.org/tast-tests/cros/common/policy/fakedms"
 	"go.chromium.org/tast-tests/cros/local/chrome"
-	"go.chromium.org/tast-tests/cros/local/chrome/browser"
-	"go.chromium.org/tast-tests/cros/local/chrome/browser/browserfixt"
 	"go.chromium.org/tast-tests/cros/local/chrome/uiauto/faillog"
 	"go.chromium.org/tast-tests/cros/local/policyutil"
 	"go.chromium.org/tast/core/ctxutil"
@@ -63,7 +61,7 @@ func init() {
 // reloadPolicies clicks the "Reload policies" button on the chrome://policy
 // page to reload policies. Although we could use `policyutil.Refresh`, we
 // prefer clicking the button to ensure that it works as expected.
-func reloadPolicies(ctx context.Context, conn *browser.Conn, s *testing.State) {
+func reloadPolicies(ctx context.Context, conn *chrome.Conn, s *testing.State) {
 	if err := conn.Eval(ctx, `document.getElementById('reload-policies').click()`, nil); err != nil {
 		s.Fatal("Failed to click Reload policies button: ", err)
 	}
@@ -79,7 +77,7 @@ func reloadPolicies(ctx context.Context, conn *browser.Conn, s *testing.State) {
 // "time-since-last-fetch-attempt", to a field value, e.g. "0 secs ago".
 type statusBoxesMap map[string]map[string]string
 
-func readStatusBoxes(ctx context.Context, conn *browser.Conn, s *testing.State) statusBoxesMap {
+func readStatusBoxes(ctx context.Context, conn *chrome.Conn, s *testing.State) statusBoxesMap {
 	if err := conn.WaitForExpr(ctx, `!document.getElementById('status-section').hidden`); err != nil {
 		s.Fatal("Failed while waiting for status box to appear: ", err)
 	}
@@ -128,21 +126,13 @@ func ChromePolicyPageStatusTimestamps(ctx context.Context, s *testing.State) {
 	params := s.Param().(testParams)
 
 	// Reserve ten seconds for cleanup.
-	cleanupCtx := ctx
 	ctx, cancel := ctxutil.Shorten(ctx, 10*time.Second)
 	defer cancel()
-
-	// Setup browser based on the chrome type.
-	br, closeBrowser, err := browserfixt.SetUp(ctx, cr, browser.TypeAsh)
-	if err != nil {
-		s.Fatal("Failed to open the browser: ", err)
-	}
-	defer closeBrowser(cleanupCtx)
 
 	defer faillog.DumpUITreeWithScreenshotOnError(ctx, s.OutDir(), s.HasError, cr, "ui_tree")
 
 	// Run actual test. Start by opening chrome://policy page.
-	conn, err := br.NewConn(ctx, "chrome://policy")
+	conn, err := cr.NewConn(ctx, "chrome://policy")
 	if err != nil {
 		s.Fatal("Failed to load chrome://policy: ", err)
 	}

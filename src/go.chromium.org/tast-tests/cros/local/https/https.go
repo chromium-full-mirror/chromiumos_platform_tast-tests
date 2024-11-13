@@ -14,7 +14,6 @@ import (
 	"time"
 
 	"go.chromium.org/tast-tests/cros/local/chrome"
-	"go.chromium.org/tast-tests/cros/local/chrome/browser"
 	"go.chromium.org/tast-tests/cros/local/chrome/uiauto"
 	"go.chromium.org/tast-tests/cros/local/chrome/uiauto/nodewith"
 	"go.chromium.org/tast-tests/cros/local/chrome/uiauto/role"
@@ -141,9 +140,9 @@ func StartServer(config ServerConfiguration) Server {
 
 // ConfigureChromeToAcceptCertificate adds the specified CA certificate to the authorities configuration of chrome.
 // The server certificate will then be accepted by chrome without complaining about security.
-func ConfigureChromeToAcceptCertificate(ctx context.Context, config ServerConfiguration, cr *chrome.Chrome, br *browser.Browser, tconn *chrome.TestConn) error {
+func ConfigureChromeToAcceptCertificate(ctx context.Context, config ServerConfiguration, cr *chrome.Chrome, tconn *chrome.TestConn) error {
 	// Don't add certificate if it already exists.
-	if certExists, err := CertificateExists(ctx, cr, br, tconn, caCommonName, caCertificateOrganization); err != nil {
+	if certExists, err := CertificateExists(ctx, cr, tconn, caCommonName, caCertificateOrganization); err != nil {
 		return errors.Wrap(err, "failed to check if certificate exists")
 	} else if certExists {
 		return nil
@@ -162,7 +161,7 @@ func ConfigureChromeToAcceptCertificate(ctx context.Context, config ServerConfig
 	}
 
 	// Add the certificate in the certificate settings.
-	policyutil.SettingsPage(ctx, cr, br, "certificates")
+	policyutil.SettingsPage(ctx, cr, "certificates")
 	ui := uiauto.New(tconn)
 	authorities := nodewith.Name("Authorities").Role(role.Tab)
 	authTabText := nodewith.Name("You have certificates on file that identify these certificate authorities").Role(role.StaticText)
@@ -195,7 +194,7 @@ func ConfigureChromeToAcceptCertificate(ctx context.Context, config ServerConfig
 	}
 
 	// Check if addition was successful.
-	if certExists, err := CertificateExists(ctx, cr, br, tconn, caCommonName, caCertificateOrganization); err != nil {
+	if certExists, err := CertificateExists(ctx, cr, tconn, caCommonName, caCertificateOrganization); err != nil {
 		return errors.Wrap(err, "failed to add certificate")
 	} else if !certExists {
 		return errors.Errorf("failed to add certificate with name %q", caCommonName)
@@ -205,7 +204,7 @@ func ConfigureChromeToAcceptCertificate(ctx context.Context, config ServerConfig
 }
 
 // CertificateExists returns whether the certificate already exists.
-func CertificateExists(ctx context.Context, cr *chrome.Chrome, br *browser.Browser, tconn *chrome.TestConn, certName, authOrgName string) (bool, error) {
+func CertificateExists(ctx context.Context, cr *chrome.Chrome, tconn *chrome.TestConn, certName, authOrgName string) (bool, error) {
 	ui := uiauto.New(tconn)
 
 	kb, err := input.Keyboard(ctx)
@@ -214,7 +213,7 @@ func CertificateExists(ctx context.Context, cr *chrome.Chrome, br *browser.Brows
 	}
 	defer kb.Close(ctx)
 
-	policyutil.SettingsPage(ctx, cr, br, "certificates")
+	policyutil.SettingsPage(ctx, cr, "certificates")
 	authorities := nodewith.Name("Authorities").Role(role.Tab)
 	authTabText := nodewith.Name("You have certificates on file that identify these certificate authorities").Role(role.StaticText)
 

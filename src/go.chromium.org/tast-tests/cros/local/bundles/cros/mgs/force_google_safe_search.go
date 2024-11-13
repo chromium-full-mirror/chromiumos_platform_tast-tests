@@ -110,10 +110,9 @@ func ForceGoogleSafeSearch(ctx context.Context, s *testing.State) {
 				s.Fatal("Failed to update policies: ", err)
 			}
 			defer faillog.DumpUITreeWithScreenshotOnError(ctx, s.OutDir(), s.HasError, cr, "ui_tree_")
-			br := cr.Browser()
 
 			// Run actual test.
-			if err := safesearch.TestGoogleSafeSearch(ctx, br, param.wantSafe); err != nil {
+			if err := safesearch.TestGoogleSafeSearch(ctx, cr, param.wantSafe); err != nil {
 				s.Error("Failed to verify state of Google safe search: ", err)
 			}
 		})

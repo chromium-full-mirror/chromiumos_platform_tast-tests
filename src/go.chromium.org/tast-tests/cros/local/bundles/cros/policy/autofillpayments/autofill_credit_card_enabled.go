@@ -117,7 +117,7 @@ func TriggerAutofillCreditCardEnabled(ctx context.Context, params networkrequest
 	}
 
 	// Ensure saving payment methods toggle is accordingly enabled/disabled.
-	if err := policyutil.SettingsPage(ctx, cr, cr, "payments").
+	if err := policyutil.SettingsPage(ctx, cr, "payments").
 		SelectNode(ctx, nodewith.
 			Name("Save and fill payment methods").
 			Role(role.ToggleButton)).
@@ -148,7 +148,7 @@ func TriggerAutofillCreditCardEnabled(ctx context.Context, params networkrequest
 		}
 
 		// Save the certificate in chrome's certificate settings.
-		if err := https.ConfigureChromeToAcceptCertificate(ctx, serverConfiguration, cr, cr.Browser(), tconn); err != nil {
+		if err := https.ConfigureChromeToAcceptCertificate(ctx, serverConfiguration, cr, tconn); err != nil {
 			return errors.Wrap(err, "failed to set the certificate in Chrome's settings")
 		}
 

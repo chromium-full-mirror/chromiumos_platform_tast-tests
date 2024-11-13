@@ -18,8 +18,6 @@ import (
 	"go.chromium.org/tast-tests/cros/common/policy"
 	"go.chromium.org/tast-tests/cros/common/policy/fakedms"
 	"go.chromium.org/tast-tests/cros/local/chrome"
-	"go.chromium.org/tast-tests/cros/local/chrome/browser"
-	"go.chromium.org/tast-tests/cros/local/chrome/browser/browserfixt"
 	"go.chromium.org/tast-tests/cros/local/chrome/uiauto"
 	"go.chromium.org/tast-tests/cros/local/chrome/uiauto/checked"
 	"go.chromium.org/tast-tests/cros/local/chrome/uiauto/faillog"
@@ -204,20 +202,14 @@ func BlockThirdPartyCookies(ctx context.Context, s *testing.State) {
 				s.Fatal("Failed to update policies: ", err)
 			}
 
-			br, closeBrowser, err := browserfixt.SetUp(ctx, cr, browser.TypeAsh)
-			if err != nil {
-				s.Fatal("Failed to setup chrome: ", err)
-			}
-			defer closeBrowser(cleanupCtx)
-
 			defer faillog.DumpUITreeWithScreenshotOnError(cleanupCtx, s.OutDir(), s.HasError, cr, "ui_tree_"+param.name)
 
-			if err := https.ConfigureChromeToAcceptCertificate(ctx, localhostConfiguration, cr, br, tconn); err != nil {
+			if err := https.ConfigureChromeToAcceptCertificate(ctx, localhostConfiguration, cr, tconn); err != nil {
 				s.Fatal("Failed to set certificate: ", err)
 			}
 
 			// Open cookies settings page.
-			conn, err := br.NewConn(ctx, "chrome://settings/cookies")
+			conn, err := cr.NewConn(ctx, "chrome://settings/cookies")
 			if err != nil {
 				s.Fatal("Failed to open cookies settings: ", err)
 			}
@@ -237,14 +229,14 @@ func BlockThirdPartyCookies(ctx context.Context, s *testing.State) {
 			}
 
 			// Load page that sets one 127.0.0.1 first-party cookie and one localhost third-party cookie.
-			conn2, err := br.NewConn(ctx, "https://127.0.0.1:"+ipPort+"/third_party_cookies.html")
+			conn2, err := cr.NewConn(ctx, "https://127.0.0.1:"+ipPort+"/third_party_cookies.html")
 			if err != nil {
 				s.Fatal("Failed to connect to the browser: ", err)
 			}
 			defer conn2.Close()
 
 			// Check which cookies got created.
-			conn3, err := br.NewConn(ctx, "chrome://settings/content/all")
+			conn3, err := cr.NewConn(ctx, "chrome://settings/content/all")
 			if err != nil {
 				s.Fatal("Failed to connect to the browser: ", err)
 			}

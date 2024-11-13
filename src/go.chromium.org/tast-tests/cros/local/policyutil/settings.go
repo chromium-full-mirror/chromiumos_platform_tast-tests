@@ -10,7 +10,6 @@ import (
 
 	"go.chromium.org/tast-tests/cros/local/apps"
 	"go.chromium.org/tast-tests/cros/local/chrome"
-	"go.chromium.org/tast-tests/cros/local/chrome/ash"
 	"go.chromium.org/tast-tests/cros/local/chrome/uiauto"
 	"go.chromium.org/tast-tests/cros/local/chrome/uiauto/auth"
 	"go.chromium.org/tast-tests/cros/local/chrome/uiauto/checked"
@@ -36,12 +35,12 @@ type openedPage struct {
 
 // SettingsPage opens a settings page with given link (e.g. "content/location" -> "chrome://settings/content/location").
 // The returned openedPage value can be used to select a node from the node tree (not just from the page).
-func SettingsPage(ctx context.Context, cr *chrome.Chrome, br ash.ConnSource, shortLink string) *openedPage {
+func SettingsPage(ctx context.Context, cr *chrome.Chrome, shortLink string) *openedPage {
 	page := &openedPage{
 		cr: cr,
 	}
 
-	conn, err := br.NewConn(ctx, "chrome://settings/"+shortLink)
+	conn, err := cr.NewConn(ctx, "chrome://settings/"+shortLink)
 	if err != nil {
 		page.err = err
 		return page

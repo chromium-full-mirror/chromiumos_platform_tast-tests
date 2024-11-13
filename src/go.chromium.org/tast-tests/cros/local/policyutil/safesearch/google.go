@@ -8,14 +8,14 @@ import (
 	"context"
 	"fmt"
 
-	"go.chromium.org/tast-tests/cros/local/chrome/browser"
+	"go.chromium.org/tast-tests/cros/local/chrome"
 	"go.chromium.org/tast/core/errors"
 )
 
 // TestGoogleSafeSearch checks whether safe search is automatically enabled for
 // Google search.
-func TestGoogleSafeSearch(ctx context.Context, br *browser.Browser, safeSearchExpected bool) error {
-	conn, err := br.NewConn(ctx, "")
+func TestGoogleSafeSearch(ctx context.Context, cr *chrome.Chrome, safeSearchExpected bool) error {
+	conn, err := cr.NewConn(ctx, "")
 	if err != nil {
 		return errors.Wrap(err, "failed to connect to Chrome")
 	}
