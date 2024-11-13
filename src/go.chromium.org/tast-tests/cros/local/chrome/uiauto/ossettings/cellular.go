@@ -21,7 +21,6 @@ import (
 	"go.chromium.org/tast-tests/cros/local/chrome/uiauto/role"
 	"go.chromium.org/tast-tests/cros/local/input"
 	"go.chromium.org/tast/core/errors"
-	"go.chromium.org/tast/core/testing"
 )
 
 // GoToCellularNetworkDetailPageWithNickName will go to the cellular details page with
@@ -426,36 +425,6 @@ func GetUIStringForAuthenticationType(devicePropertyCellularAPNInfoApnAuthentica
 	}
 
 	return "Automatic"
-}
-
-// VerifyErrorToastMessageIsShowing will verify that the "Can't disable or remove this APN..." toast is showing
-func (s *OSSettings) VerifyErrorToastMessageIsShowing(ctx context.Context, tconn *chrome.TestConn, cr *chrome.Chrome) error {
-	expr := `var node = shadowPiercingQuery(
-		'cr-toast#errorToast span#errorToastMessage');
-		if (node == undefined) {
-			throw new Error("APN name not found");
-		}
-		node.innerText;
-		`
-
-	if err := testing.Poll(ctx, func(ctx context.Context) error {
-		var errorMessage string
-		if err := s.EvalJSWithShadowPiercer(ctx, cr, expr, &errorMessage); err != nil {
-			return errors.Wrap(err, "failed to find error message container")
-		}
-
-		if !strings.Contains(errorMessage, "Make sure enabled attach APNs are disabled or removed") {
-			return testing.PollBreak(errors.Errorf("failed to show error toast; shows '%q' instead", errorMessage))
-		}
-		return nil
-	}, &testing.PollOptions{
-		Timeout:  10 * time.Second,
-		Interval: time.Second,
-	}); err != nil {
-		return err
-	}
-
-	return nil
 }
 
 // VerifyAutoconnectStateOfActiveNetwork verifies that the autoconnect toggle of the active network matches the |enabled| state.

@@ -6,6 +6,7 @@ package cellular
 
 import (
 	"context"
+	"strings"
 	"time"
 
 	"go.chromium.org/tast-tests/cros/common/shillconst"
@@ -15,6 +16,7 @@ import (
 	"go.chromium.org/tast-tests/cros/local/chrome/uiauto/faillog"
 	"go.chromium.org/tast-tests/cros/local/chrome/uiauto/ossettings"
 	"go.chromium.org/tast/core/ctxutil"
+	"go.chromium.org/tast/core/errors"
 	"go.chromium.org/tast/core/testing"
 )
 
@@ -51,7 +53,7 @@ func CustomDefaultAttachApnDisableEnableBehavior(ctx context.Context, s *testing
 	if err != nil {
 		s.Fatal("Failed to create a new instance of Chrome: ", err)
 	}
-	defer cr.Close(ctx)
+	defer cr.Close(cleanupCtx)
 
 	helper := s.FixtValue().(*cellular.FixtData).Helper
 
@@ -68,184 +70,170 @@ func CustomDefaultAttachApnDisableEnableBehavior(ctx context.Context, s *testing
 		s.Fatal("Failed to create Test API connection: ", err)
 	}
 
-	mdp, err := ossettings.OpenMobileDataSubpage(ctx, tconn, cr)
+	settings, err := ossettings.LaunchAtMobileData(ctx, tconn, cr)
 	if err != nil {
 		s.Fatal("Failed to open mobile data subpage: ", err)
 	}
-	defer mdp.Close(cleanupCtx)
+	defer settings.Close(cleanupCtx)
 	defer faillog.DumpUITreeWithScreenshotOnError(cleanupCtx, s.OutDir(), s.HasError, cr, "ossettings")
 
-	if err := ossettings.GoToActiveNetworkApnSubpage(ctx, tconn, true /*isFromMobileDataSubpage*/); err != nil {
-		s.Fatal("Failed to go to apn subpage: ", err)
+	if err := uiauto.Combine("go to APN page of the active cellular network",
+		settings.NavigateToMobileNetworkDetailsPage(cr, ossettings.ActiveCellularBtn),
+		settings.NavigateToApnPage(cr),
+	)(ctx); err != nil {
+		s.Fatal("Failed to move to the desired page: ", err)
 	}
 
 	serviceLastGoodAPN, err := helper.GetCellularLastGoodAPN(ctx)
 	if err != nil {
 		s.Fatal("Error getting Service properties: ", err)
 	}
-	apnName := serviceLastGoodAPN[shillconst.DevicePropertyCellularAPNInfoApnName]
-	authenticationType := ossettings.GetUIStringForAuthenticationType(serviceLastGoodAPN[shillconst.DevicePropertyCellularAPNInfoApnAuthentication])
-	username := serviceLastGoodAPN[shillconst.DevicePropertyCellularAPNInfoApnUsername]
-	password := serviceLastGoodAPN[shillconst.DevicePropertyCellularAPNInfoApnPassword]
-	ipType := ossettings.GetUIStringForIPType(serviceLastGoodAPN[shillconst.DevicePropertyCellularAPNInfoApnIPType])
+
+	defaultApnConfig := &ossettings.ApnConfig{
+		Name:               serviceLastGoodAPN[shillconst.DevicePropertyCellularAPNInfoApnName],
+		Username:           serviceLastGoodAPN[shillconst.DevicePropertyCellularAPNInfoApnUsername],
+		Password:           serviceLastGoodAPN[shillconst.DevicePropertyCellularAPNInfoApnPassword],
+		AuthenticationType: ossettings.GetUIStringForAuthenticationType(serviceLastGoodAPN[shillconst.DevicePropertyCellularAPNInfoApnAuthentication]),
+		IPType:             ossettings.GetUIStringForIPType(serviceLastGoodAPN[shillconst.DevicePropertyCellularAPNInfoApnIPType]),
+		ApnType:            ossettings.ApnIsDefault,
+	}
 
 	// Add default-only APN.
-	if err := mdp.CreateCustomAPN(ctx, &ossettings.ApnConfig{
-		Name:               apnName,
-		Username:           username,
-		Password:           password,
-		AuthenticationType: authenticationType,
-		IPType:             ipType,
-		ApnType:            ossettings.ApnIsDefault,
-	}); err != nil {
+	if err := settings.CreateCustomAPN(ctx, defaultApnConfig); err != nil {
 		s.Fatal("Failed to add default custom APN: ", err)
 	}
 
-	if err := ossettings.VerifyAPNStabilized(ctx, tconn, apnName, ossettings.ApnEnabled, false /*isAttach*/, true /*isDefault*/); err != nil {
+	if err := settings.VerifyApnStabilized(defaultApnConfig, ossettings.ApnEnabled)(ctx); err != nil {
 		s.Fatal("Failed to verify Default APN added successfully: ", err)
 	}
 
 	// Add attach-only APN.
-	if err := mdp.CreateCustomAPN(ctx, &ossettings.ApnConfig{
-		Name:               apnName,
-		Username:           username,
-		Password:           password,
-		AuthenticationType: authenticationType,
-		IPType:             ipType,
+	attachApnConfig := &ossettings.ApnConfig{
+		Name:               serviceLastGoodAPN[shillconst.DevicePropertyCellularAPNInfoApnName],
+		Username:           serviceLastGoodAPN[shillconst.DevicePropertyCellularAPNInfoApnUsername],
+		Password:           serviceLastGoodAPN[shillconst.DevicePropertyCellularAPNInfoApnPassword],
+		AuthenticationType: ossettings.GetUIStringForAuthenticationType(serviceLastGoodAPN[shillconst.DevicePropertyCellularAPNInfoApnAuthentication]),
+		IPType:             ossettings.GetUIStringForIPType(serviceLastGoodAPN[shillconst.DevicePropertyCellularAPNInfoApnIPType]),
 		ApnType:            ossettings.ApnIsAttach,
-	}); err != nil {
+	}
+	if err := settings.CreateCustomAPN(ctx, attachApnConfig); err != nil {
 		s.Fatal("Failed to add attach custom APN: ", err)
 	}
 
-	if err := ossettings.VerifyAPNStabilized(ctx, tconn, apnName, ossettings.ApnEnabled, true /*isAttach*/, false /*isDefault*/); err != nil {
-		s.Fatal("Failed to verify Attach APN added successfully: ", err)
-	}
-
-	if err := ossettings.GoConnectIfNotConnectedThenReturnApnSubpage(ctx, tconn); err != nil {
-		s.Fatal("Failed to ensure successful connection: ", err)
-	}
-
-	if err := mdp.VerifyAPNSubpageConnectedApnUI(ctx, tconn, cr, apnName, ""); err != nil {
-		s.Fatal("Failed to verify connected UI: ", err)
+	ui := uiauto.New(tconn)
+	if err := uiauto.Combine("add and verify attach APN added",
+		// Settings app should be at APN page at this point.
+		settings.VerifyApnStabilized(attachApnConfig, ossettings.ApnEnabled),
+		// Back to network details page to connect to the network.
+		settings.DoDefault(ossettings.BackArrowBtn),
+		ui.WithTimeout(ossettings.WaitForConnectionTimeout).RetryUntil(
+			settings.MaybeConnectToApn(cr),
+			settings.WaitUntilExists(ossettings.ConnectedStatus),
+		),
+		// Navigate to the APN page to verify that the APN page UI reports it's connected to the newly added APN correctly.
+		settings.NavigateToApnPage(cr),
+		settings.VerifyApnConnected(cr, attachApnConfig.Name, "" /* source */),
+	)(ctx); err != nil {
+		s.Fatal("Failed to add custom APN and verify it shows in the APN list: ", err)
 	}
 
 	// Attempt to disable default APN that is currently enabled. Should not be possible.
-	if err := ossettings.ClickAPNMoreActionsButtonOfType(ctx, tconn, apnName, ossettings.ApnEnabled, false /*isAttach*/, true /*isDefault*/); err != nil {
-		s.Fatal("Failed to click on more actions button of default APN to disable: ", err)
-	}
-
-	ui := uiauto.New(tconn)
-	if err := ui.LeftClick(ossettings.DisableBtn)(ctx); err != nil {
-		s.Fatal("Failed to click on disable button of default APN: ", err)
-	}
-
-	if err := mdp.VerifyErrorToastMessageIsShowing(ctx, tconn, cr); err != nil {
-		s.Fatal("Failed to verify error toast is showing after attempting to disable default APN: ", err)
-	}
-
-	if err := mdp.VerifyAPNSubpageConnectedApnUI(ctx, tconn, cr, apnName, ""); err != nil {
-		s.Fatal("Failed to verify connected UI: ", err)
+	if err := uiauto.Combine("disable default APN",
+		settings.ClickMoreActionButtonOfAnAPN(defaultApnConfig, ossettings.ApnEnabled),
+		settings.DoDefault(ossettings.DisableBtn),
+		verifyErrorToastMessageIsShowing(cr, settings),
+		settings.VerifyApnConnected(cr, defaultApnConfig.Name, "" /* source */),
+	)(ctx); err != nil {
+		s.Fatal("Failed to verify APN is connected after disabling default APN: ", err)
 	}
 
 	// Attempt to remove default APN that is currently enabled. Should not be possible.
-	if err := ossettings.ClickAPNMoreActionsButtonOfType(ctx, tconn, apnName, ossettings.ApnEnabled, false /*isAttach*/, true /*isDefault*/); err != nil {
-		s.Fatal("Failed to click on more actions button of default APN to disable: ", err)
-	}
-
-	if err := ui.LeftClick(ossettings.RemoveBtn)(ctx); err != nil {
-		s.Fatal("Failed to click on disable button of default APN: ", err)
-	}
-
-	if err := mdp.VerifyErrorToastMessageIsShowing(ctx, tconn, cr); err != nil {
-		s.Fatal("Failed to verify error toast is showing after attempting to delete default APN: ", err)
-	}
-
-	if err := mdp.VerifyAPNSubpageConnectedApnUI(ctx, tconn, cr, apnName, ""); err != nil {
-		s.Fatal("Failed to verify connected UI: ", err)
+	if err := uiauto.Combine("remove default APN",
+		settings.ClickMoreActionButtonOfAnAPN(defaultApnConfig, ossettings.ApnEnabled),
+		settings.DoDefault(ossettings.RemoveBtn),
+		verifyErrorToastMessageIsShowing(cr, settings),
+		settings.VerifyApnConnected(cr, defaultApnConfig.Name, "" /* source */),
+	)(ctx); err != nil {
+		s.Fatal("Failed to verify APN is connected after removing default APN: ", err)
 	}
 
 	// Disable attach APN and verify disconnection.
-	if err := ossettings.ClickAPNMoreActionsButtonOfType(ctx, tconn, apnName, ossettings.ApnEnabled, true /*isAttach*/, false /*isDefault*/); err != nil {
-		s.Fatal("Failed to click on more actions button of attach APN to disable: ", err)
+	if err := uiauto.Combine("disable attach APN",
+		settings.ClickMoreActionButtonOfAnAPN(attachApnConfig, ossettings.ApnEnabled),
+		settings.DoDefault(ossettings.DisableBtn),
+		settings.VerifyApnStabilized(attachApnConfig, ossettings.ApnDisabled),
+		settings.VerifyApnNotConnected(cr, attachApnConfig.Name),
+	)(ctx); err != nil {
+		s.Fatal("Failed to verify APN no longer connected after disabling attach APN: ", err)
 	}
 
-	if err := ui.LeftClick(ossettings.DisableBtn)(ctx); err != nil {
-		s.Fatal("Failed to click on disable button of attach APN: ", err)
+	// Disable and Enable default APN after disabling attach APN.
+	if err := uiauto.Combine("disable/enable default APN",
+		settings.ClickMoreActionButtonOfAnAPN(defaultApnConfig, ossettings.ApnEnabled),
+		settings.DoDefault(ossettings.DisableBtn),
+		settings.VerifyApnStabilized(defaultApnConfig, ossettings.ApnDisabled),
+		settings.ClickMoreActionButtonOfAnAPN(defaultApnConfig, ossettings.ApnDisabled),
+		settings.DoDefault(ossettings.EnableBtn),
+		settings.VerifyApnStabilized(defaultApnConfig, ossettings.ApnEnabled),
+	)(ctx); err != nil {
+		s.Fatal("Failed to verify APN is connected after disabling default APN: ", err)
 	}
 
-	if err := ossettings.VerifyAPNStabilized(ctx, tconn, apnName, ossettings.ApnDisabled, true /*isAttach*/, false /*isDefault*/); err != nil {
-		s.Fatal("Failed to disable default APN: ", err)
+	// Enable currently disabled attach APN and verify connection.
+	if err := uiauto.Combine("enable and verify attach APN",
+		// Settings app should be at APN page at this point.
+		settings.ClickMoreActionButtonOfAnAPN(attachApnConfig, ossettings.ApnDisabled),
+		settings.DoDefault(ossettings.EnableBtn),
+		settings.VerifyApnStabilized(attachApnConfig, ossettings.ApnEnabled),
+		// Back to network details page to connect to the network.
+		settings.DoDefault(ossettings.BackArrowBtn),
+		ui.WithTimeout(ossettings.WaitForConnectionTimeout).RetryUntil(
+			settings.MaybeConnectToApn(cr),
+			settings.WaitUntilExists(ossettings.ConnectedStatus),
+		),
+		// Navigate to the APN page to verify that the APN page UI reports it's connected to the newly added APN correctly.
+		settings.NavigateToApnPage(cr),
+		settings.VerifyApnConnected(cr, attachApnConfig.Name, "" /* source */),
+	)(ctx); err != nil {
+		s.Fatal("Failed to enable attach APN and verify it is connected: ", err)
 	}
 
-	if err := mdp.VerifyAPNSubpageNotConnectedApnUI(ctx, tconn, cr, apnName); err != nil {
-		s.Fatal("Failed to verify APN no longer connected: ", err)
+	if uiauto.Combine("remove both custom APNs",
+		// Delete currently enabled attach APN.
+		settings.ClickMoreActionButtonOfAnAPN(attachApnConfig, ossettings.ApnEnabled),
+		settings.DoDefault(ossettings.RemoveBtn),
+		// Delete currently enabled default APN.
+		settings.ClickMoreActionButtonOfAnAPN(defaultApnConfig, ossettings.ApnEnabled),
+		settings.DoDefault(ossettings.RemoveBtn),
+	)(ctx); err != nil {
+		s.Fatal("Failed to remove both APNs: ", err)
 	}
+}
 
-	defaultApnState := ossettings.ApnEnabled
-	if helper.IsConnected(ctx) != nil {
-		defaultApnState = ossettings.ApnConnected
-	}
-	if err := ossettings.ClickAPNMoreActionsButtonOfType(ctx, tconn, apnName, defaultApnState, false /*isAttach*/, true /*isDefault*/); err != nil {
-		s.Fatal("Failed to click on more actions button of attach APN to disable: ", err)
-	}
+// verifyErrorToastMessageIsShowing will verify that the "Can't disable or remove this APN..." toast is showing
+func verifyErrorToastMessageIsShowing(cr *chrome.Chrome, settings *ossettings.OSSettings) uiauto.Action {
+	return func(ctx context.Context) error {
+		expr := `var node = shadowPiercingQuery(
+			'cr-toast#errorToast span#errorToastMessage');
+			if (node == undefined) {
+				throw new Error("APN name not found");
+			}
+			node.innerText;
+			`
 
-	if err := ui.LeftClick(ossettings.DisableBtn)(ctx); err != nil {
-		s.Fatal("Failed to click on disable button of default APN: ", err)
-	}
+		return testing.Poll(ctx, func(ctx context.Context) error {
+			var errorMessage string
+			if err := settings.EvalJSWithShadowPiercer(ctx, cr, expr, &errorMessage); err != nil {
+				return errors.Wrap(err, "failed to find error message container")
+			}
 
-	if err := ossettings.VerifyAPNStabilized(ctx, tconn, apnName, ossettings.ApnDisabled, false /*isAttach*/, true /*isDefault*/); err != nil {
-		s.Fatal("Failed to disable default APN: ", err)
-	}
-
-	// Enable currently disabled default APN.
-	if err := ossettings.ClickAPNMoreActionsButtonOfType(ctx, tconn, apnName, ossettings.ApnDisabled, false /*isAttach*/, true /*isDefault*/); err != nil {
-		s.Fatal("Failed to click on more actions button of default APN to enable: ", err)
-	}
-
-	if err := ui.LeftClick(ossettings.EnableBtn)(ctx); err != nil {
-		s.Fatal("Failed to click on enable button of default APN: ", err)
-	}
-
-	if err := ossettings.VerifyAPNStabilized(ctx, tconn, apnName, ossettings.ApnEnabled, false /*isAttach*/, true /*isDefault*/); err != nil {
-		s.Fatal("Failed to enable default APN: ", err)
-	}
-
-	// Enable currently enabled attach APN and verify connection.
-	if err := ossettings.ClickAPNMoreActionsButtonOfType(ctx, tconn, apnName, ossettings.ApnDisabled, true /*isAttach*/, false /*isDefault*/); err != nil {
-		s.Fatal("Failed to click on more actions button of attach APN to enable: ", err)
-	}
-
-	if err := ui.LeftClick(ossettings.EnableBtn)(ctx); err != nil {
-		s.Fatal("Failed to click on enable button of attach APN: ", err)
-	}
-
-	if err := ossettings.VerifyAPNStabilized(ctx, tconn, apnName, ossettings.ApnEnabled, true /*isAttach*/, false /*isDefault*/); err != nil {
-		s.Fatal("Failed to enable attach APN: ", err)
-	}
-
-	if err := ossettings.GoConnectIfNotConnectedThenReturnApnSubpage(ctx, tconn); err != nil {
-		s.Fatal("Failed to ensure successful connection: ", err)
-	}
-
-	if err := mdp.VerifyAPNSubpageConnectedApnUI(ctx, tconn, cr, apnName, ""); err != nil {
-		s.Fatal("Failed to verify connected UI: ", err)
-	}
-
-	// Delete currently enabled attach APN.
-	if err := ossettings.ClickAPNMoreActionsButtonOfType(ctx, tconn, apnName, ossettings.ApnEnabled, true /*isAttach*/, false /*isDefault*/); err != nil {
-		s.Fatal("Failed to click on more actions button of default APN to disable: ", err)
-	}
-
-	if err := ui.LeftClick(ossettings.RemoveBtn)(ctx); err != nil {
-		s.Fatal("Failed to click on disable button of default APN: ", err)
-	}
-
-	// Delete currently enabled default APN.
-	if err := ossettings.ClickAPNMoreActionsButtonOfType(ctx, tconn, apnName, ossettings.ApnEnabled, false /*isAttach*/, true /*isDefault*/); err != nil {
-		s.Fatal("Failed to click on more actions button of default APN to disable: ", err)
-	}
-
-	if err := ui.LeftClick(ossettings.RemoveBtn)(ctx); err != nil {
-		s.Fatal("Failed to click on disable button of default APN: ", err)
+			if !strings.Contains(errorMessage, "Make sure enabled attach APNs are disabled or removed") {
+				return testing.PollBreak(errors.Errorf("failed to show error toast; shows %q instead", errorMessage))
+			}
+			return nil
+		}, &testing.PollOptions{
+			Timeout:  10 * time.Second,
+			Interval: time.Second,
+		})
 	}
 }

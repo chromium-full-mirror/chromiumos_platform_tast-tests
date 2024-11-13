@@ -20,7 +20,6 @@ import (
 	"go.chromium.org/tast-tests/cros/local/networkui/netconfig"
 	"go.chromium.org/tast/core/ctxutil"
 	"go.chromium.org/tast/core/errors"
-	"go.chromium.org/tast/core/testing"
 )
 
 const (
@@ -150,18 +149,25 @@ func (s *OSSettings) NavigateToApnPage(cr *chrome.Chrome) uiauto.Action {
 // MaybeConnectToApn clicks the "Connect" button to connect to an APN.
 // Note that settings app must be on the network details page or an error will be thrown.
 func (s *OSSettings) MaybeConnectToApn(cr *chrome.Chrome) uiauto.Action {
-	return uiauto.Combine("clicks connect button if it exists",
-		s.EnsureAtNetworkDetailsPage(cr),
+	return func(ctx context.Context) error {
+		if err := s.EnsureAtNetworkDetailsPage(cr)(ctx); err != nil {
+			return errors.Wrap(err, "failed to ensure the page is at network details page")
+		}
 		// The action will be skipped if the APN is not available to connect to,
 		// such as the APN is already connected, or still connecting.
-		uiauto.IfSuccessThen(
-			uiauto.Combine("ensure connect button exist",
-				s.WaitUntilExists(ConnectButton),
-				s.EnsureExistsFor(ConnectButton, 5*time.Second),
-			),
+		if err := uiauto.IfSuccessThen(
+			s.WaitUntilExists(ConnectButton),
 			s.DoDefault(ConnectButton),
-		),
-	)
+		)(ctx); err != nil {
+			if err := s.WaitUntilExists(ConnectedStatus)(ctx); err != nil {
+				// The network may connect successfully at any time, so that the connect button could disappear.
+				// Return error only when the APN is not connected.
+				return errors.Wrap(err, "failed to connect to APN")
+			}
+			return nil
+		}
+		return nil
+	}
 }
 
 // CreateCustomAPN creates new APN and verifies it is shown in the APN list after.
@@ -246,7 +252,7 @@ func (s *OSSettings) OpenNewAPNDialogAndPopulateFields(ctx context.Context, apn 
 
 	// ChromeOS does not accept an APN with type that is neither default nor attach.
 	if !isDefault && !isAttach {
-		return errors.New("the APN type can't be neither default nor attach")
+		return errors.New("the APN type must be either default or attach")
 	}
 
 	selectCheckboxFunc := func(name string, node *nodewith.Finder, expected bool) uiauto.Action {
@@ -505,68 +511,6 @@ func GoToActiveNetworkApnSubpage(ctx context.Context, tconn *chrome.TestConn, is
 	return nil
 }
 
-// VerifyAPNStabilized verifies that the APN row reflects the |state| consistently.
-// Deprecated: Use `(s *OSSettings) VerifyAPNStabilized` instead.
-func VerifyAPNStabilized(ctx context.Context, tconn *chrome.TestConn, name string, state ApnState, isAttach, isDefault bool) error {
-	apnTypeString, err := getAPNTypeString(isAttach, isDefault)
-	if err != nil {
-		return errors.Wrap(err, "failed to get APN type string")
-	}
-	moreActionsButtonOfAPN := nodewith.NameContaining(name).NameContaining(state.String()).NameContaining(apnTypeString).Role(role.Button).HasClass("icon-more-vert").First()
-	ui := uiauto.New(tconn).WithTimeout(30 * time.Second)
-
-	if err := testing.Poll(ctx, func(ctx context.Context) error {
-		if err := ui.EnsureExistsFor(moreActionsButtonOfAPN, 2*time.Second)(ctx); err != nil {
-			return errors.Wrapf(err, "failed to display APN consistently with name: %s, state: %s, attach: %v, default: %v", name, state, isAttach, isDefault)
-		}
-		return nil
-	}, &testing.PollOptions{
-		Timeout:  10 * time.Second,
-		Interval: time.Second,
-	}); err != nil {
-		return errors.Wrap(err, "failed polling for APN more actions button")
-	}
-	return nil
-}
-
-// GoConnectIfNotConnectedThenReturnApnSubpage navigates back from the APN subpage, connects if not connected, then returns to the APN subpage.
-// Deprecated: Use `(s *OSSettings) MaybeConnectToApn` instead.
-func GoConnectIfNotConnectedThenReturnApnSubpage(ctx context.Context, tconn *chrome.TestConn) error {
-	ui := uiauto.New(tconn)
-
-	if err := ui.EnsureExistsFor(nodewith.NameContaining("Manage network APN settings").Role(role.Link), 5*time.Second)(ctx); err == nil {
-		if err := ui.LeftClick(BackArrowBtn)(ctx); err != nil {
-			return errors.Wrap(err, "failed to navigate back to mobile data subpage from APN subpage")
-		}
-	}
-
-	if err := ui.Exists(ConnectButton)(ctx); err == nil {
-		if err := uiauto.Combine("Connect to network",
-			ui.LeftClick(ConnectButton),
-			ui.WithTimeout(10*time.Second).WaitUntilExists(ConnectedStatus),
-		)(ctx); err != nil {
-			return errors.Wrap(err, "failed to connect")
-		}
-	}
-
-	if err := testing.Poll(ctx, func(ctx context.Context) error {
-		if err := ui.EnsureExistsFor(ConnectedStatus, 2*time.Second)(ctx); err != nil {
-			return errors.Wrap(err, "failed to display connected status consistently")
-		}
-		return nil
-	}, &testing.PollOptions{
-		Timeout:  30 * time.Second,
-		Interval: time.Second,
-	}); err != nil {
-		return errors.Wrap(err, "failed to stay connected")
-	}
-
-	if err := GoToActiveNetworkApnSubpage(ctx, tconn, false /*isFromMobileDataSubpage*/); err != nil {
-		return errors.Wrap(err, "failed to go to apn subpage")
-	}
-	return nil
-}
-
 // VerifyAPNSubpageConnectedApnUI verifies that the UI of the connected APN's row in the APN subpage is correct.
 // Deprecated: Use `(s *OSSettings) VerifyApnConnected` instead.
 func (s *OSSettings) VerifyAPNSubpageConnectedApnUI(ctx context.Context, tconn *chrome.TestConn, cr *chrome.Chrome, apn, source string) error {
@@ -596,33 +540,6 @@ func (s *OSSettings) VerifyAPNSubpageConnectedApnUI(ctx context.Context, tconn *
 	return nil
 }
 
-// ClickAPNMoreActionsButtonOfType will click the 'More Actions' button associated to the APN with the current state |currentState|, and if it is an attach and/or default APN.
-// Deprecated: Use `(s *OSSettings) ClickMoreActionButtonOfAnAPN` instead.
-func ClickAPNMoreActionsButtonOfType(ctx context.Context, tconn *chrome.TestConn, apnName string, currentState ApnState, isAttach, isDefault bool) error {
-	ui := uiauto.New(tconn)
-
-	apnTypeString, err := getAPNTypeString(isAttach, isDefault)
-	if err != nil {
-		return errors.Wrap(err, "failed to get APN type string")
-	}
-	apnMoreActionBtn := nodewith.NameContaining(apnName).NameContaining(currentState.String()).NameContaining(apnTypeString).Role(role.Button).HasClass("icon-more-vert").First()
-
-	// More actions button may be temporarily disabled if cellular is connecting or disconnecting.
-	if err := ui.WithTimeout(30 * time.Second).WaitUntilExists(apnMoreActionBtn.Focusable())(ctx); err != nil {
-		return errors.Wrap(err, "failed to show more actions button")
-	}
-
-	expectedMenuItemBtn := DisableBtn
-	if currentState == ApnDisabled {
-		expectedMenuItemBtn = EnableBtn
-	}
-
-	if err := ui.LeftClickUntil(apnMoreActionBtn, ui.Exists(expectedMenuItemBtn))(ctx); err != nil {
-		return errors.Wrap(err, "failed to click more actions button")
-	}
-	return nil
-}
-
 // VerifyAPNSubpageNotConnectedApnUI verifies the UI for APNs that are not in use in the revamped APN UI.
 // Deprecated: Use `(s *OSSettings) VerifyApnNotConnected` instead.
 func (s *OSSettings) VerifyAPNSubpageNotConnectedApnUI(ctx context.Context, tconn *chrome.TestConn, cr *chrome.Chrome, apn string) error {
@@ -642,18 +559,4 @@ func (s *OSSettings) VerifyAPNSubpageNotConnectedApnUI(ctx context.Context, tcon
 		return errors.Wrap(err, "failed to find not connected APN rows")
 	}
 	return nil
-}
-
-// getAPNTypeString returns the type of the APN.
-// Deprecated: Use `apnMoreActionButtonFinder` instead.
-func getAPNTypeString(isAttach, isDefault bool) (string, error) {
-	if isAttach && isDefault {
-		return "APN is type default and attach.", nil
-	} else if isAttach {
-		return "APN is type attach.", nil
-	} else if isDefault {
-		return "APN is type default.", nil
-	}
-
-	return "", errors.New("Neither Attach nor Default APN")
 }
