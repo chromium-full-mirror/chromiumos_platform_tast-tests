@@ -10,6 +10,7 @@ import (
 
 	"go.chromium.org/tast-tests/cros/common/memory"
 	"go.chromium.org/tast-tests/cros/common/perf"
+	"go.chromium.org/tast-tests/cros/local/chrome"
 	"go.chromium.org/tast-tests/cros/local/chrome/browser"
 	"go.chromium.org/tast/core/errors"
 	"go.chromium.org/tast/core/testing"
@@ -19,16 +20,16 @@ import (
 // platform.MemoryStressBasic test.
 type MemoryStressUnit struct {
 	url      string
-	tconn    *browser.TestConn
+	tconn    *chrome.TestConn
 	cooldown time.Duration
 	tabID    int // ID of new tab, so we can query for liveness later
 }
 
 // Run creates a Chrome tab that allocates memory, then waits for the provided
 // cooldown.
-func (st *MemoryStressUnit) Run(ctx context.Context, br *browser.Browser, p *perf.Values) error {
+func (st *MemoryStressUnit) Run(ctx context.Context, cr *chrome.Chrome, p *perf.Values) error {
 	startTime := time.Now()
-	conn, err := br.NewConn(ctx, st.url)
+	conn, err := cr.NewConn(ctx, st.url)
 	openLatency := time.Since(startTime)
 	if err != nil {
 		return errors.New("failed to open MemoryStressUnit page")
@@ -41,7 +42,7 @@ func (st *MemoryStressUnit) Run(ctx context.Context, br *browser.Browser, p *per
 	// Because chrome.tabs is not available on the conn, query active tabs
 	// assuming there's only one window so only one active tab, and the active tab is
 	// the newly created tab, in order to get its TabID.
-	tconn, err := br.TestAPIConn(ctx)
+	tconn, err := cr.TestAPIConn(ctx)
 	if err != nil {
 		return errors.Wrap(err, "failed to get the connection to the test extension")
 	}
@@ -125,7 +126,7 @@ func (st *MemoryStressUnit) Run(ctx context.Context, br *browser.Browser, p *per
 }
 
 // Close closes the memory stress allocation tab.
-func (st *MemoryStressUnit) Close(ctx context.Context, br *browser.Browser) error {
+func (st *MemoryStressUnit) Close(ctx context.Context, cr *chrome.Chrome) error {
 	if err := st.tconn.Call(ctx, nil, `async (url) => {
 		const query = tast.promisify(chrome.tabs.query);
 		const remove = tast.promisify(chrome.tabs.remove);
@@ -139,7 +140,7 @@ func (st *MemoryStressUnit) Close(ctx context.Context, br *browser.Browser) erro
 }
 
 // StillAlive checks if a tab is still present and undiscarded.
-func (st *MemoryStressUnit) StillAlive(ctx context.Context, br *browser.Browser) bool {
+func (st *MemoryStressUnit) StillAlive(ctx context.Context, cr *chrome.Chrome) bool {
 	// Discarded tab may be reported by "No tab with id" error by JS, or
 	// "discarded" property.
 	var discarded bool
@@ -160,12 +161,12 @@ func (st *MemoryStressUnit) StillAlive(ctx context.Context, br *browser.Browser)
 
 // FillChromeOSMemory launches memory stress tabs until one is killed, filling
 // up memory in ChromeOS.
-func FillChromeOSMemory(ctx context.Context, br *browser.Browser, p *perf.Values, unitMiB int, ratio float32) (func(context.Context) error, error) {
+func FillChromeOSMemory(ctx context.Context, cr *chrome.Chrome, p *perf.Values, unitMiB int, ratio float32) (func(context.Context) error, error) {
 	var units []*MemoryStressUnit
 	cleanup := func(ctx context.Context) error {
 		var res error
 		for _, unit := range units {
-			if err := unit.Close(ctx, br); err != nil {
+			if err := unit.Close(ctx, cr); err != nil {
 				testing.ContextLogf(ctx, "Failed to close MemoryStressUnit: %s", err)
 				if res == nil {
 					res = err
@@ -178,11 +179,11 @@ func FillChromeOSMemory(ctx context.Context, br *browser.Browser, p *perf.Values
 		const tabOpenCooldown = 2 * time.Second
 		unit := NewMemoryStressUnit(unitMiB, ratio, tabOpenCooldown)
 		units = append(units, unit)
-		if err := unit.Run(ctx, br, p); err != nil {
+		if err := unit.Run(ctx, cr, p); err != nil {
 			return cleanup, errors.Wrapf(err, "failed to run MemoryStressUnit %q", unit.url)
 		}
 		for _, unit := range units {
-			if !unit.StillAlive(ctx, br) {
+			if !unit.StillAlive(ctx, cr) {
 				testing.ContextLogf(ctx, "FillChromeOSMemory started %d units of %d MiB before first kill", len(units), unitMiB)
 				return cleanup, nil
 			}
@@ -213,17 +214,17 @@ func (st *MemoryStressTask) NeedVM() bool {
 // Run creates a Chrome tab that allocates memory, then waits for the provided
 // cooldown.
 func (st *MemoryStressTask) Run(ctx context.Context, testEnv *TestEnv) error {
-	return st.MemoryStressUnit.Run(ctx, testEnv.br, testEnv.p)
+	return st.MemoryStressUnit.Run(ctx, testEnv.cr, testEnv.p)
 }
 
 // Close closes the memory stress allocation tab.
 func (st *MemoryStressTask) Close(ctx context.Context, testEnv *TestEnv) {
-	st.MemoryStressUnit.Close(ctx, testEnv.br)
+	st.MemoryStressUnit.Close(ctx, testEnv.cr)
 }
 
 // StillAlive returns false if the tab has been discarded, or was never opened.
 func (st *MemoryStressTask) StillAlive(ctx context.Context, testEnv *TestEnv) bool {
-	return st.MemoryStressUnit.StillAlive(ctx, testEnv.br)
+	return st.MemoryStressUnit.StillAlive(ctx, testEnv.cr)
 }
 
 // NewMemoryStressUnit creates a new MemoryStressUnit.

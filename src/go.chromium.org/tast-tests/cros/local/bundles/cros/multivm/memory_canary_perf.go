@@ -12,8 +12,6 @@ import (
 	"go.chromium.org/tast-tests/cros/common/perf"
 	"go.chromium.org/tast-tests/cros/local/arc"
 	"go.chromium.org/tast-tests/cros/local/chrome"
-	"go.chromium.org/tast-tests/cros/local/chrome/browser"
-	"go.chromium.org/tast-tests/cros/local/chrome/browser/browserfixt"
 	"go.chromium.org/tast-tests/cros/local/chrome/metrics"
 	"go.chromium.org/tast-tests/cros/local/memory"
 	"go.chromium.org/tast-tests/cros/local/memory/kernelmeter"
@@ -24,10 +22,6 @@ import (
 	"go.chromium.org/tast/core/errors"
 	"go.chromium.org/tast/core/testing"
 )
-
-type canaryHealthPerfParam struct {
-	browserType browser.Type
-}
 
 const iterationsVar = "multivm.MemoryCanaryPerf.iterations"
 const throttleVar = "multivm.MemoryCanaryPerf.throttle"
@@ -44,10 +38,7 @@ func init() {
 		BugComponent: "b:882467",
 		Attr:         []string{"group:crosbolt", "crosbolt_nightly"},
 		SoftwareDeps: []string{"chrome", "android_vm"},
-		Params: []testing.Param{{
-			Pre: multivm.ArcStartedVMMMSTabManagerDelegate(),
-			Val: &canaryHealthPerfParam{browser.TypeAsh},
-		}},
+		Pre:          multivm.ArcStartedVMMMSTabManagerDelegate(),
 		Vars: []string{
 			iterationsVar,
 			throttleVar,
@@ -100,7 +91,7 @@ func appendKillLatencyMetric(p *perf.Values, label string, latency time.Duration
 	}, latency.Seconds())
 }
 
-func stressCanary(ctx context.Context, param *canaryHealthPerfParam, allocationMiB int64, allocationPeriod time.Duration, cr *chrome.Chrome, br *browser.Browser, a *arc.ARC, p *perf.Values) error {
+func stressCanary(ctx context.Context, allocationMiB int64, allocationPeriod time.Duration, cr *chrome.Chrome, a *arc.ARC, p *perf.Values) error {
 	allocationKiB := allocationMiB * 1024
 	// Context used by cleanup actions that are deferred.
 	cleanupCtx := ctx
@@ -153,7 +144,7 @@ func stressCanary(ctx context.Context, param *canaryHealthPerfParam, allocationM
 		return errors.Wrap(err, "failed to create LmkdKillsParser")
 	}
 
-	canaryCloser, canaryStillAlive, err := memoryuser.OpenAppTabCanaries(ctx, canaryAllocationMiB, canaryCompressionRatio, br, tconn, a)
+	canaryCloser, canaryStillAlive, err := memoryuser.OpenAppTabCanaries(ctx, canaryAllocationMiB, canaryCompressionRatio, cr, tconn, a)
 	if err != nil {
 		return err
 	}
@@ -395,13 +386,7 @@ func stressCanary(ctx context.Context, param *canaryHealthPerfParam, allocationM
 
 func MemoryCanaryPerf(ctx context.Context, s *testing.State) {
 	pre := s.PreValue().(*multivm.PreData)
-	param := s.Param().(*canaryHealthPerfParam)
 	preARC := multivm.ARCFromPre(pre)
-	br, cleanupBr, err := browserfixt.SetUp(ctx, pre.Chrome.Chrome(), param.browserType)
-	if err != nil {
-		s.Fatal("Failed to get Browser: ", err)
-	}
-	defer cleanupBr(ctx)
 
 	info, err := kernelmeter.MemInfo()
 	if err != nil {
@@ -470,7 +455,7 @@ func MemoryCanaryPerf(ctx context.Context, s *testing.State) {
 
 	for i := 0; i < iterations; i++ {
 		s.Logf("Starting iteration %d of %d", i+1, iterations)
-		if err := stressCanary(ctx, param, allocationMiB, allocationPeriod, pre.Chrome, br, preARC, p); err != nil {
+		if err := stressCanary(ctx, allocationMiB, allocationPeriod, pre.Chrome, preARC, p); err != nil {
 			s.Fatal("Error in the canary stress test: ", err)
 		}
 	}

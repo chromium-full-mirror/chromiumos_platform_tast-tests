@@ -19,8 +19,6 @@ import (
 	"go.chromium.org/tast-tests/cros/common/testexec"
 	"go.chromium.org/tast-tests/cros/local/arc"
 	"go.chromium.org/tast-tests/cros/local/chrome"
-	"go.chromium.org/tast-tests/cros/local/chrome/browser"
-	"go.chromium.org/tast-tests/cros/local/chrome/browser/browserfixt"
 	"go.chromium.org/tast-tests/cros/local/memory/kernelmeter"
 	"go.chromium.org/tast-tests/cros/local/resourced"
 	"go.chromium.org/tast-tests/cros/local/wpr"
@@ -32,12 +30,9 @@ import (
 
 // TestEnv is a struct containing the data to be used across the test.
 type TestEnv struct {
-	wpr       *wpr.WPR
-	cr        *chrome.Chrome
-	br        *browser.Browser
-	brCleanup func(ctx context.Context) error
-	arc       *arc.ARC
-	// tconn is to Ash Chrome.
+	wpr    *wpr.WPR
+	cr     *chrome.Chrome
+	arc    *arc.ARC
 	tconn  *chrome.TestConn
 	p      *perf.Values
 	vm     bool
@@ -242,17 +237,6 @@ func newTestEnv(ctx context.Context, outDir string, p *RunParameters) (*TestEnv,
 		return nil, errors.Wrap(err, "failed to connect to Chrome")
 	}
 
-	if p.BrowserType != "" {
-		br, cleanup, err := browserfixt.SetUp(ctx, te.cr, p.BrowserType)
-		if err != nil {
-			return nil, errors.Wrapf(err, "failed to get %q Browser", p.BrowserType)
-		}
-		te.br = br
-		te.brCleanup = cleanup
-	} else {
-		te.br = te.cr.Browser()
-	}
-
 	var err error
 	if p.UseARC {
 		if p.ExistingARC != nil {
@@ -313,8 +297,6 @@ type RunParameters struct {
 	// ExistingChrome indicates that we should use this Chrome instance instead
 	// of creating a new one.
 	ExistingChrome *chrome.Chrome
-	// BrowserType indicates which browser should be used.
-	BrowserType browser.Type
 	// ExistingARC indicates that we should use this ARC instance instead of
 	// creating a new one. ExistingChrome and UseARC must be set.
 	ExistingARC *arc.ARC
@@ -335,13 +317,6 @@ func (te *TestEnv) Close(ctx context.Context, p *RunParameters) {
 		te.arc.Close(ctx)
 		te.arc = nil
 	}
-	if te.brCleanup != nil {
-		if err := te.brCleanup(ctx); err != nil {
-			testing.ContextLog(ctx, "Running browser.Browser cleanup method failed: ", err)
-		}
-		te.brCleanup = nil
-	}
-	te.br = nil
 	if te.cr != nil && p.ExistingChrome == nil {
 		te.cr.Close(ctx)
 		te.cr = nil

@@ -12,7 +12,6 @@ import (
 
 	"go.chromium.org/tast-tests/cros/common/perf"
 	"go.chromium.org/tast-tests/cros/local/arc"
-	"go.chromium.org/tast-tests/cros/local/chrome/browser"
 	chromeMetrics "go.chromium.org/tast-tests/cros/local/chrome/metrics"
 	"go.chromium.org/tast-tests/cros/local/crostini"
 	"go.chromium.org/tast-tests/cros/local/memory"
@@ -231,7 +230,6 @@ func LifecycleShifting(ctx context.Context, s *testing.State) {
 	rp := &memoryuser.RunParameters{
 		UseARC:             preARC != nil,
 		ExistingChrome:     pre.Chrome,
-		BrowserType:        browser.TypeAsh,
 		ExistingARC:        preARC,
 		ExistingPerfValues: p,
 	}

@@ -11,7 +11,6 @@ import (
 
 	"go.chromium.org/tast-tests/cros/common/perf"
 	"go.chromium.org/tast-tests/cros/local/arc"
-	"go.chromium.org/tast-tests/cros/local/chrome/browser"
 	chromeMetrics "go.chromium.org/tast-tests/cros/local/chrome/metrics"
 	"go.chromium.org/tast-tests/cros/local/crostini"
 	"go.chromium.org/tast-tests/cros/local/memory"
@@ -24,7 +23,6 @@ import (
 
 type lifecycleParam struct {
 	inHost, inARC, inCrostini bool
-	browserType               browser.Type
 }
 
 func init() {
@@ -45,21 +43,21 @@ func init() {
 		Params: []testing.Param{{
 			Name: "host",
 			Pre:  multivm.NoVMStarted(),
-			Val:  &lifecycleParam{inHost: true, browserType: browser.TypeAsh},
+			Val:  &lifecycleParam{inHost: true},
 		}, {
 			Name:              "arc",
 			Pre:               multivm.ArcStarted(),
-			Val:               &lifecycleParam{inARC: true, browserType: browser.TypeAsh},
+			Val:               &lifecycleParam{inARC: true},
 			ExtraSoftwareDeps: []string{"android_vm"},
 		}, {
 			Name:              "arc_vmmms",
 			Pre:               multivm.ArcStartedVMMMS(),
-			Val:               &lifecycleParam{inARC: true, browserType: browser.TypeAsh},
+			Val:               &lifecycleParam{inARC: true},
 			ExtraSoftwareDeps: []string{"android_vm"},
 		}, {
 			Name: "crostini",
 			Pre:  multivm.CrostiniStarted(),
-			Val:  &lifecycleParam{inCrostini: true, browserType: browser.TypeAsh},
+			Val:  &lifecycleParam{inCrostini: true},
 			ExtraData: []string{
 				crostini.GetContainerMetadataArtifact("bullseye", false),
 				crostini.GetContainerRootfsArtifact("bullseye", false),
@@ -69,22 +67,22 @@ func init() {
 		}, {
 			Name:              "arc_host",
 			Pre:               multivm.ArcStarted(),
-			Val:               &lifecycleParam{inARC: true, inHost: true, browserType: browser.TypeAsh},
+			Val:               &lifecycleParam{inARC: true, inHost: true},
 			ExtraSoftwareDeps: []string{"android_vm"},
 		}, {
 			Name:              "host_with_bg_arc",
 			Pre:               multivm.ArcStarted(),
-			Val:               &lifecycleParam{inHost: true, browserType: browser.TypeAsh},
+			Val:               &lifecycleParam{inHost: true},
 			ExtraSoftwareDeps: []string{"android_vm"},
 		}, {
 			Name:              "arc_host_vmmms",
 			Pre:               multivm.ArcStartedVMMMS(),
-			Val:               &lifecycleParam{inARC: true, inHost: true, browserType: browser.TypeAsh},
+			Val:               &lifecycleParam{inARC: true, inHost: true},
 			ExtraSoftwareDeps: []string{"android_vm"},
 		}, {
 			Name:              "host_with_bg_arc_vmmms",
 			Pre:               multivm.ArcStartedVMMMS(),
-			Val:               &lifecycleParam{inHost: true, browserType: browser.TypeAsh},
+			Val:               &lifecycleParam{inHost: true},
 			ExtraSoftwareDeps: []string{"android_vm"},
 		}},
 	})
@@ -227,7 +225,6 @@ func Lifecycle(ctx context.Context, s *testing.State) {
 	rp := &memoryuser.RunParameters{
 		UseARC:             preARC != nil,
 		ExistingChrome:     pre.Chrome,
-		BrowserType:        param.browserType,
 		ExistingARC:        preARC,
 		ExistingPerfValues: p,
 	}

@@ -10,7 +10,6 @@ import (
 
 	"go.chromium.org/tast-tests/cros/local/arc"
 	"go.chromium.org/tast-tests/cros/local/chrome"
-	"go.chromium.org/tast-tests/cros/local/chrome/browser"
 	"go.chromium.org/tast/core/errors"
 	"go.chromium.org/tast/core/testing"
 )
@@ -22,17 +21,17 @@ type CanaryCloser func(ctx context.Context)
 // there are any parts of a canary alive, it returns true.
 type IsCanaryStillAlive func(ctx context.Context) bool
 
-func openTabCanaries(ctx context.Context, allocMiB int, ratio float32, br *browser.Browser) (CanaryCloser, IsCanaryStillAlive, error) {
+func openTabCanaries(ctx context.Context, allocMiB int, ratio float32, cr *chrome.Chrome) (CanaryCloser, IsCanaryStillAlive, error) {
 	var bgTab *MemoryStressUnit
 	var protTab *MemoryStressUnit
 	closer := func(ctx context.Context) {
 		if bgTab != nil {
-			if err := bgTab.Close(ctx, br); err != nil {
+			if err := bgTab.Close(ctx, cr); err != nil {
 				testing.ContextLog(ctx, "Failure when closing background tab canary: ", err)
 			}
 		}
 		if protTab != nil {
-			if err := protTab.Close(ctx, br); err != nil {
+			if err := protTab.Close(ctx, cr); err != nil {
 				testing.ContextLog(ctx, "Failure when closing protected background tab canary: ", err)
 			}
 		}
@@ -44,21 +43,21 @@ func openTabCanaries(ctx context.Context, allocMiB int, ratio float32, br *brows
 		}
 	}()
 	bgTab = NewMemoryStressUnit(allocMiB, ratio, 2*time.Second)
-	if err := bgTab.Run(ctx, br, nil); err != nil {
+	if err := bgTab.Run(ctx, cr, nil); err != nil {
 		return nil, nil, errors.Wrap(err, "failed to run background tab canary")
 	}
 	protTab = NewMemoryStressUnit(allocMiB, ratio, 2*time.Second)
-	if err := protTab.Run(ctx, br, nil); err != nil {
+	if err := protTab.Run(ctx, cr, nil); err != nil {
 		return nil, nil, errors.Wrap(err, "failed to run protected background tab canary")
 	}
 	protTabAlive := true
 	bgTabAlive := true
 	stillAlive := func(ctx context.Context) bool {
-		if protTabAlive && !protTab.StillAlive(ctx, br) {
+		if protTabAlive && !protTab.StillAlive(ctx, cr) {
 			testing.ContextLog(ctx, "Protected background tab canary discard detected")
 			protTabAlive = false
 		}
-		if bgTabAlive && !bgTab.StillAlive(ctx, br) {
+		if bgTabAlive && !bgTab.StillAlive(ctx, cr) {
 			testing.ContextLog(ctx, "Background tab canary discard detected")
 			bgTabAlive = false
 		}
@@ -147,11 +146,11 @@ func openAppCanaries(ctx context.Context, allocMiB int, ratio float32, tconn *ch
 // ctx       - The context the test is running on.
 // allocMib  - The amount of memory allocated to a canary.
 // ratio     - How compressible the allocated memory will be.
-// br        - Browser to open the tab on.
+// cr        - Browser to open the tab on.
 // fs        - FileSystem to initialize the memory stress server.
 // tconn     - Test connection to Chrome.
 // a         - ARC test object.
-func OpenAppTabCanaries(ctx context.Context, allocMiB int, ratio float32, br *browser.Browser, tconn *chrome.TestConn, a *arc.ARC) (CanaryCloser, IsCanaryStillAlive, error) {
+func OpenAppTabCanaries(ctx context.Context, allocMiB int, ratio float32, cr *chrome.Chrome, tconn *chrome.TestConn, a *arc.ARC) (CanaryCloser, IsCanaryStillAlive, error) {
 	var tabCloser CanaryCloser
 	var appCloser CanaryCloser
 	closer := func(ctx context.Context) {
@@ -171,7 +170,7 @@ func OpenAppTabCanaries(ctx context.Context, allocMiB int, ratio float32, br *br
 
 	var err error
 	var tabStillAlive, appStillAlive IsCanaryStillAlive
-	tabCloser, tabStillAlive, err = openTabCanaries(ctx, allocMiB, ratio, br)
+	tabCloser, tabStillAlive, err = openTabCanaries(ctx, allocMiB, ratio, cr)
 	if err != nil {
 		return nil, nil, err
 	}
