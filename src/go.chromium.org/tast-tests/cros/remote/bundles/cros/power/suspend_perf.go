@@ -69,6 +69,7 @@ type testArgsForSuspendPerf struct {
 	numSuspend        int
 	enableArc         bool
 	enableMempressure bool
+	enableDisplay     bool
 }
 
 func init() {
@@ -81,7 +82,6 @@ func init() {
 		},
 		BugComponent: "b:167279", // ChromeOS > Platform > baseOS > Performance
 		SoftwareDeps: []string{"chrome"},
-		HardwareDeps: hwdep.D(hwdep.Display()),
 		ServiceDeps: []string{
 			"tast.cros.browser.ChromeService",
 			"tast.cros.power.SuspendPerfService",
@@ -94,35 +94,50 @@ func init() {
 		Params: []testing.Param{{
 			Name: "",
 			Val: testArgsForSuspendPerf{
-				numSuspend: 5,
+				numSuspend:    5,
+				enableDisplay: true,
 			},
-			ExtraAttr: []string{"group:crosbolt", "crosbolt_perbuild"},
+			ExtraAttr:         []string{"group:crosbolt", "crosbolt_perbuild"},
+			ExtraHardwareDeps: hwdep.D(hwdep.Display()),
 			// 10 min for setting up (login and opening tabs) +(3 min for each suspend/resume) * 5 times
 			Timeout: 30 * time.Minute,
 		}, {
 			Name: "arc",
 			Val: testArgsForSuspendPerf{
-				numSuspend: 5,
-				enableArc:  true,
+				numSuspend:    5,
+				enableDisplay: true,
+				enableArc:     true,
 			},
-			Timeout: 30 * time.Minute,
+			ExtraHardwareDeps: hwdep.D(hwdep.Display()),
+			Timeout:           30 * time.Minute,
 		}, {
 			Name: "mem",
 			Val: testArgsForSuspendPerf{
 				numSuspend:        5,
+				enableDisplay:     true,
 				enableMempressure: true,
 			},
+			ExtraHardwareDeps: hwdep.D(hwdep.Display()),
 			// mempressure will take another 20minutes
 			Timeout: 45 * time.Minute,
 		}, {
 			Name: "arc_mem",
 			Val: testArgsForSuspendPerf{
 				numSuspend:        5,
+				enableDisplay:     true,
 				enableArc:         true,
 				enableMempressure: true,
 			},
+			ExtraHardwareDeps: hwdep.D(hwdep.Display()),
 			// mempressure will take another 20minutes
 			Timeout: 45 * time.Minute,
+		}, {
+			Name: "no_display",
+			Val: testArgsForSuspendPerf{
+				numSuspend: 5,
+			},
+			// 10 min for setting up (login and opening tabs) +(3 min for each suspend/resume) * 5 times
+			Timeout: 30 * time.Minute,
 		}},
 	})
 }
@@ -149,6 +164,11 @@ var defaultMetrics = []*histogramRequest{
 	{Name: "Browser.Tabs.TotalSwitchDuration3"},
 }
 
+var kernelSuspendMetrics = []*histogramRequest{
+	{Name: "Power.KernelSuspendTimeOnAC"},
+	{Name: "Power.KernelResumeTimeOnAC"},
+}
+
 // Delay and timeout for waitHistogramsUpdate().
 var defaultWaitInterval = time.Duration(2) * time.Second
 var defaultWaitTimeout = time.Duration(80) * time.Second
@@ -157,6 +177,11 @@ var remoteCommandTimeout = time.Duration(3) * time.Second
 
 func SuspendPerf(ctx context.Context, s *testing.State) {
 	args := s.Param().(testArgsForSuspendPerf)
+	metrics := defaultMetrics
+	if !args.enableDisplay {
+		// If there is no display, only kernel metrics are available.
+		metrics = kernelSuspendMetrics
+	}
 	forceTabs, err := strconv.Atoi(forceTabsVar.Value())
 	if err != nil {
 		s.Fatal("Failed to convert ", forceTabsVarName, err)
@@ -198,9 +223,11 @@ func SuspendPerf(ctx context.Context, s *testing.State) {
 	service := powerpb.NewSuspendPerfServiceClient(cl.Conn)
 	tconn := ui.NewTconnServiceClient(cl.Conn)
 
-	// First, turn the display on.
-	if _, err := service.TurnOnDisplay(ctx, &emptypb.Empty{}); err != nil {
-		s.Fatal("Failed to turn on display: ", err)
+	// First, turn the display on if exists.
+	if args.enableDisplay {
+		if _, err := service.TurnOnDisplay(ctx, &emptypb.Empty{}); err != nil {
+			s.Fatal("Failed to turn on display: ", err)
+		}
 	}
 
 	// Prefetch tabs for the same condition.
@@ -208,16 +235,18 @@ func SuspendPerf(ctx context.Context, s *testing.State) {
 		s.Fatal("Failed to open tabs for measure performance: ", err)
 	}
 
-	// Trace the base metrics.
-	tracer.start(ctx, s, cl, false)
-	s.Log("Take a metric before suspend as a base metric")
-	if err := measureBaseTabSwitching(ctx, tconn, mp, pv); err != nil {
-		s.Fatal("Failed to measure base tab switching performance: ", err)
+	// Trace the base metrics if display exists.
+	if args.enableDisplay {
+		tracer.start(ctx, s, cl, false)
+		s.Log("Take a metric before suspend as a base metric")
+		if err := measureBaseTabSwitching(ctx, tconn, mp, pv); err != nil {
+			s.Fatal("Failed to measure base tab switching performance: ", err)
+		}
+		tracer.save(ctx, s, cl, "_base")
 	}
-	tracer.save(ctx, s, cl, "_base")
 
 	// Get old (before the suspend) histograms if exist. Usually this is empty.
-	older, err := getHistograms(ctx, tconn, defaultMetrics)
+	older, err := getHistograms(ctx, tconn, metrics)
 	if err != nil {
 		s.Fatal("Failed to get Histograms from DUT: ", err)
 	}
@@ -258,15 +287,16 @@ func SuspendPerf(ctx context.Context, s *testing.State) {
 			s.Fatal("Could not recover memory pressure session: ", err)
 		}
 		// This tab switching metrics are corrected by waitForHistogramsUpdate()
-		s.Log("Tab switching after resume")
-		tracer.start(ctx, s, cl, false)
-		mp.CycleTabs(ctx, defaultCycleTabs)
-		tracer.save(ctx, s, cl, fmt.Sprintf("_tabs-%d", i))
-
+		if args.enableDisplay {
+			s.Log("Tab switching after resume")
+			tracer.start(ctx, s, cl, false)
+			mp.CycleTabs(ctx, defaultCycleTabs)
+			tracer.save(ctx, s, cl, fmt.Sprintf("_tabs-%d", i))
+		}
 		s.Log("Wait for suspend metrics update")
 		service = powerpb.NewSuspendPerfServiceClient(cl.Conn)
 		tconn = ui.NewTconnServiceClient(cl.Conn)
-		prev, err = waitForHistogramsUpdate(ctx, tconn, defaultMetrics, prev)
+		prev, err = waitForHistogramsUpdate(ctx, tconn, metrics, prev)
 		if err != nil {
 			s.Fatal("Could not observe histogram update: ", err)
 		}
