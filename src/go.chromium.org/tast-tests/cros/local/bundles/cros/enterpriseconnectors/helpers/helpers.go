@@ -16,7 +16,6 @@ import (
 
 	"go.chromium.org/tast-tests/cros/local/chrome"
 	"go.chromium.org/tast-tests/cros/local/chrome/ash"
-	"go.chromium.org/tast-tests/cros/local/chrome/browser"
 	"go.chromium.org/tast-tests/cros/local/chrome/uiauto"
 	"go.chromium.org/tast-tests/cros/local/chrome/uiauto/nodewith"
 	"go.chromium.org/tast-tests/cros/local/chrome/uiauto/role"
@@ -28,10 +27,9 @@ import (
 
 // TestParams entail parameters describing the set policy for a user and more.
 type TestParams struct {
-	AllowsImmediateDelivery bool         // Specifies whether immediate delivery of files is allowed.
-	AllowsUnscannableFiles  bool         // Specifies whether unscannable files (large or encrypted) are allowed.
-	ScansEnabled            bool         // Specifies whether malware and dlp scans are enabled.
-	BrowserType             browser.Type // Specifies the type of browser.
+	AllowsImmediateDelivery bool // Specifies whether immediate delivery of files is allowed.
+	AllowsUnscannableFiles  bool // Specifies whether unscannable files (large or encrypted) are allowed.
+	ScansEnabled            bool // Specifies whether malware and dlp scans are enabled.
 }
 
 // TestFileParams describe the parameters for a test file.
@@ -156,10 +154,10 @@ func WithoutMalwareFiles(inputArray []TestFileParams) []TestFileParams {
 // WaitForFCMTokenRegistered waits until a valid fcm token exists.
 // This is done by downloading unknown_malware.zip from `download.html`.
 // This function fails if scanning is disabled.
-func WaitForFCMTokenRegistered(ctx context.Context, br *browser.Browser, tconnAsh *chrome.TestConn, server *httptest.Server, downloadsPath string) error {
+func WaitForFCMTokenRegistered(ctx context.Context, cr *chrome.Chrome, tconn *chrome.TestConn, server *httptest.Server, downloadsPath string) error {
 	retryNumber := 0
 	if err := testing.Poll(ctx, func(ctx context.Context) error {
-		canRetry, err := checkFCMTokenRegistered(ctx, br, tconnAsh, server, downloadsPath, retryNumber)
+		canRetry, err := checkFCMTokenRegistered(ctx, cr, tconn, server, downloadsPath, retryNumber)
 		retryNumber++
 		if canRetry {
 			return err
@@ -173,19 +171,19 @@ func WaitForFCMTokenRegistered(ctx context.Context, br *browser.Browser, tconnAs
 
 // checkFCMTokenRegistered checks that a fcm token is registered.
 // Returns a bool and an error. The bool indicates whether the check can be retried.
-func checkFCMTokenRegistered(ctx context.Context, br *browser.Browser, tconnAsh *chrome.TestConn, server *httptest.Server, downloadsPath string, retryNumber int) (bool, error) {
+func checkFCMTokenRegistered(ctx context.Context, cr *chrome.Chrome, tconn *chrome.TestConn, server *httptest.Server, downloadsPath string, retryNumber int) (bool, error) {
 	cleanupCtx := ctx
 	ctx, cancel := ctxutil.Shorten(ctx, 10*time.Second)
 	defer cancel()
 
-	dconnSafebrowsing, err := br.NewConn(ctx, "chrome://safe-browsing/#tab-deep-scan")
+	dconnSafebrowsing, err := cr.NewConn(ctx, "chrome://safe-browsing/#tab-deep-scan")
 	if err != nil {
 		return false, errors.Wrap(err, "failed to connect to chrome")
 	}
 	defer dconnSafebrowsing.Close()
 	defer dconnSafebrowsing.CloseTarget(cleanupCtx)
 
-	dconn, err := br.NewConn(ctx, server.URL+"/download.html")
+	dconn, err := cr.NewConn(ctx, server.URL+"/download.html")
 	if err != nil {
 		return false, errors.Wrap(err, "failed to connect to download page")
 	}
@@ -193,7 +191,7 @@ func checkFCMTokenRegistered(ctx context.Context, br *browser.Browser, tconnAsh 
 	defer dconn.CloseTarget(cleanupCtx)
 
 	// Close all prior notifications.
-	if err := ash.CloseNotifications(ctx, tconnAsh); err != nil {
+	if err := ash.CloseNotifications(ctx, tconn); err != nil {
 		return false, errors.Wrap(err, "failed to close notifications")
 	}
 
@@ -202,7 +200,7 @@ func checkFCMTokenRegistered(ctx context.Context, br *browser.Browser, tconnAsh 
 	}
 
 	// Check for notification (this might take some time in case of throttling).
-	downloadBubbleState, err := WaitForDownloadViaDownloadBubble(ctx, tconnAsh, "unknown_malware.zip")
+	downloadBubbleState, err := WaitForDownloadViaDownloadBubble(ctx, tconn, "unknown_malware.zip")
 	if err != nil {
 		return false, errors.Wrap(err, "failed to wait for download via download bubble UI")
 	}
@@ -210,7 +208,7 @@ func checkFCMTokenRegistered(ctx context.Context, br *browser.Browser, tconnAsh 
 	if downloadBubbleState == DownloadBubbleStateUnavailable {
 		if _, err := ash.WaitForNotification(
 			ctx,
-			tconnAsh,
+			tconn,
 			ScanningTimeOut,
 			ash.WaitIDContains("notification-ui-manager"),
 			ash.WaitTitleOrMessageContains("unknown_malware.zip"),
@@ -336,7 +334,7 @@ func WaitForDownloadViaDownloadBubble(ctx context.Context, tconnAsh *chrome.Test
 }
 
 // WaitForDeepScanningVerdict waits until a valid deep scanning verdict is found.
-func WaitForDeepScanningVerdict(ctx context.Context, dconnSafebrowsing *browser.Conn, timeout time.Duration) error {
+func WaitForDeepScanningVerdict(ctx context.Context, dconnSafebrowsing *chrome.Conn, timeout time.Duration) error {
 	return testing.Poll(ctx, func(ctx context.Context) error {
 		var failureReason string
 		if err := dconnSafebrowsing.Eval(ctx, `(async () => {
@@ -386,7 +384,7 @@ func WaitForDeepScanningVerdict(ctx context.Context, dconnSafebrowsing *browser.
 }
 
 // VerifyDeepScanningVerdict verifies that the deep scanning verdict corresponds to shouldBlock and shouldWarn.
-func VerifyDeepScanningVerdict(ctx context.Context, dconnSafebrowsing *browser.Conn, shouldBlock, shouldWarn bool) error {
+func VerifyDeepScanningVerdict(ctx context.Context, dconnSafebrowsing *chrome.Conn, shouldBlock, shouldWarn bool) error {
 	data := make(map[string]bool)
 	if err := dconnSafebrowsing.Eval(ctx, `(async () => {
 		const table = document.getElementById("deep-scan-list");
@@ -427,15 +425,15 @@ func VerifyDeepScanningVerdict(ctx context.Context, dconnSafebrowsing *browser.C
 }
 
 // GetCleanDconnSafebrowsing returns a Dconn to chrome://safe-browsing/#tab-deep-scan for which it is ensured that there is no prior deep scanning verdict.
-func GetCleanDconnSafebrowsing(ctx context.Context, cr *chrome.Chrome, br *browser.Browser) (*browser.Conn, error) {
-	var dconnSafebrowsing *browser.Conn
+func GetCleanDconnSafebrowsing(ctx context.Context, cr *chrome.Chrome) (*chrome.Conn, error) {
+	var dconnSafebrowsing *chrome.Conn
 	if err := testing.Poll(ctx, func(ctx context.Context) error {
 		cleanupCtx := ctx
 		ctx, cancel := ctxutil.Shorten(ctx, 2*time.Second)
 		defer cancel()
 
 		var err error
-		dconnSafebrowsing, err = br.NewConn(ctx, "chrome://safe-browsing/#tab-deep-scan")
+		dconnSafebrowsing, err = cr.NewConn(ctx, "chrome://safe-browsing/#tab-deep-scan")
 		if err != nil {
 			return testing.PollBreak(errors.Wrap(err, "failed to connect to chrome"))
 		}

@@ -17,8 +17,6 @@ import (
 	"go.chromium.org/tast-tests/cros/local/bundles/cros/enterpriseconnectors/helpers"
 	"go.chromium.org/tast-tests/cros/local/chrome"
 	"go.chromium.org/tast-tests/cros/local/chrome/ash"
-	"go.chromium.org/tast-tests/cros/local/chrome/browser"
-	"go.chromium.org/tast-tests/cros/local/chrome/browser/browserfixt"
 	"go.chromium.org/tast-tests/cros/local/chrome/uiauto"
 	"go.chromium.org/tast-tests/cros/local/chrome/uiauto/faillog"
 	"go.chromium.org/tast-tests/cros/local/chrome/uiauto/filepicker"
@@ -58,18 +56,18 @@ func TestFileAttached(ctx context.Context, s *testing.State, cr *chrome.Chrome, 
 		s.Fatal("Policy is set, but shouldn't be")
 	}
 
-	testFileAttachedForBrowser(ctx, s, cr, testParams.BrowserType, cryptohomeUsername)
+	testFileAttachedForBrowser(ctx, s, cr, cryptohomeUsername)
 }
 
-func testFileAttachedForBrowser(ctx context.Context, s *testing.State, cr *chrome.Chrome, browserType browser.Type, cryptohomeUsername string) {
+func testFileAttachedForBrowser(ctx context.Context, s *testing.State, cr *chrome.Chrome, cryptohomeUsername string) {
 	testParams := s.Param().(helpers.TestParams)
 
-	tconnAsh, err := cr.TestAPIConn(ctx)
+	tconn, err := cr.TestAPIConn(ctx)
 	if err != nil {
 		s.Fatal("Failed to connect to test API: ", err)
 	}
 
-	ui := uiauto.New(tconnAsh)
+	ui := uiauto.New(tconn)
 
 	// Setup test HTTP server.
 	server := httptest.NewServer(http.FileServer(s.DataFileSystem()))
@@ -80,31 +78,13 @@ func testFileAttachedForBrowser(ctx context.Context, s *testing.State, cr *chrom
 	defer cancel()
 
 	// Ensure that there are no windows open.
-	if err := ash.CloseAllWindows(ctx, tconnAsh); err != nil {
+	if err := ash.CloseAllWindows(ctx, tconn); err != nil {
 		s.Fatal("Failed to close all windows: ", err)
 	}
 	// Ensure that all windows are closed after test.
-	defer ash.CloseAllWindows(cleanupCtx, tconnAsh)
+	defer ash.CloseAllWindows(cleanupCtx, tconn)
 
-	// Create Browser.
-	br, closeBrowser, err := browserfixt.SetUp(ctx, cr, browserType)
-	if err != nil {
-		s.Fatal("Failed to open the browser: ", err)
-	}
-	defer closeBrowser(cleanupCtx)
-
-	tconnBrowser, err := br.TestAPIConn(ctx)
-	if err != nil {
-		s.Fatal("Failed to connect to browser's test API: ", err)
-	}
-
-	// The browsers sometimes restore some tabs, so we manually close all unneeded tabs.
-	if err := browser.CloseAllTabs(ctx, tconnBrowser); err != nil {
-		s.Fatal("Failed to close all unneeded tabs: ", err)
-	}
-	defer browser.CloseAllTabs(cleanupCtx, tconnBrowser)
-
-	dconn, err := br.NewConn(ctx, "chrome://policy")
+	dconn, err := cr.NewConn(ctx, "chrome://policy")
 	if err != nil {
 		s.Fatal("Failed to connect to chrome: ", err)
 	}
@@ -129,7 +109,7 @@ func testFileAttachedForBrowser(ctx context.Context, s *testing.State, cr *chrom
 	// Need to wait for a valid fcm token, i.e., the proper initialization of the enterprise connectors.
 	if testParams.ScansEnabled {
 		s.Log("Checking for fcm token")
-		if err := helpers.WaitForFCMTokenRegistered(ctx, br, tconnAsh, server, downloadsPath); err != nil {
+		if err := helpers.WaitForFCMTokenRegistered(ctx, cr, tconn, server, downloadsPath); err != nil {
 			s.Fatal("Failed to wait for FCM token: ", err)
 		}
 	}
@@ -150,7 +130,7 @@ func testFileAttachedForBrowser(ctx context.Context, s *testing.State, cr *chrom
 
 	for _, params := range helpers.GetTestFileParams() {
 		if succeeded := s.Run(ctx, params.TestName, func(ctx context.Context, s *testing.State) {
-			testFileAttachedForBrowserAndFile(ctx, params, testParams, cr, br, s, server, testDirPath, ui, tconnAsh)
+			testFileAttachedForBrowserAndFile(ctx, params, testParams, cr, s, server, testDirPath, ui, tconn)
 		}); !succeeded {
 			// Stop, if the subtest fails as it might have left the state unusable.
 			// It also prevents showing wrong errors on tastboard.
@@ -164,12 +144,11 @@ func testFileAttachedForBrowserAndFile(
 	params helpers.TestFileParams,
 	testParams helpers.TestParams,
 	cr *chrome.Chrome,
-	br *browser.Browser,
 	s *testing.State,
 	server *httptest.Server,
 	testDirPath string,
 	ui *uiauto.Context,
-	tconnAsh *chrome.TestConn,
+	tconn *chrome.TestConn,
 ) {
 	cleanupCtx := ctx
 	ctx, cancel := ctxutil.Shorten(ctx, 10*time.Second)
@@ -188,7 +167,7 @@ func testFileAttachedForBrowserAndFile(
 
 	defer faillog.DumpUITreeWithScreenshotOnError(cleanupCtx, s.OutDir(), s.HasError, cr, "dump_on_error")
 
-	dconnSafebrowsing, err := helpers.GetCleanDconnSafebrowsing(ctx, cr, br)
+	dconnSafebrowsing, err := helpers.GetCleanDconnSafebrowsing(ctx, cr)
 	if err != nil {
 		s.Fatal("Failed to get clean safe browsing page: ", err)
 	}
@@ -197,7 +176,7 @@ func testFileAttachedForBrowserAndFile(
 
 	defer faillog.DumpUITreeWithScreenshotOnError(cleanupCtx, s.OutDir(), s.HasError, cr, "dump_on_error_safe_browsing_page")
 
-	dconn, err := br.NewConn(ctx, server.URL+"/file_input.html")
+	dconn, err := cr.NewConn(ctx, server.URL+"/file_input.html")
 	if err != nil {
 		s.Fatal("Failed to connect to chrome: ", err)
 	}
@@ -221,7 +200,7 @@ func testFileAttachedForBrowserAndFile(
 		s.Fatal("Failed to press file input button: ", err)
 	}
 
-	files, err := filepicker.Find(ctx, tconnAsh)
+	files, err := filepicker.Find(ctx, tconn)
 	if err != nil {
 		s.Fatal("Failed to get window of picker: ", err)
 	}
@@ -263,7 +242,7 @@ func testFileAttachedForBrowserAndFile(
 		}
 	}
 
-	verifyUIForFileAttached(ctx, shouldBlockUpload, params, testParams, br, s, server, testDirPath, ui)
+	verifyUIForFileAttached(ctx, shouldBlockUpload, params, testParams, cr, s, server, testDirPath, ui)
 
 	if err := testing.Poll(ctx, func(ctx context.Context) error {
 		// Ensure file was or was not attached, by checking javascript output.
@@ -297,7 +276,7 @@ func verifyUIForFileAttached(
 	shouldBlockUpload bool,
 	params helpers.TestFileParams,
 	testParams helpers.TestParams,
-	br *browser.Browser,
+	cr *chrome.Chrome,
 	s *testing.State,
 	server *httptest.Server,
 	testDirPath string,

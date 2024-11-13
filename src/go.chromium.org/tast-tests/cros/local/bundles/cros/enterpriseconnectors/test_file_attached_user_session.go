@@ -11,7 +11,6 @@ import (
 	"go.chromium.org/tast-tests/cros/local/bundles/cros/enterpriseconnectors/helpers"
 	"go.chromium.org/tast-tests/cros/local/bundles/cros/enterpriseconnectors/testrunners"
 	"go.chromium.org/tast-tests/cros/local/chrome"
-	"go.chromium.org/tast-tests/cros/local/chrome/browser"
 	"go.chromium.org/tast/core/testing"
 )
 
@@ -45,7 +44,6 @@ func init() {
 					AllowsImmediateDelivery: true,
 					AllowsUnscannableFiles:  true,
 					ScansEnabled:            true,
-					BrowserType:             browser.TypeAsh,
 				},
 			},
 			{
@@ -55,7 +53,6 @@ func init() {
 					AllowsImmediateDelivery: false,
 					AllowsUnscannableFiles:  false,
 					ScansEnabled:            true,
-					BrowserType:             browser.TypeAsh,
 				},
 			},
 			{
@@ -65,7 +62,6 @@ func init() {
 					AllowsImmediateDelivery: true,
 					AllowsUnscannableFiles:  true,
 					ScansEnabled:            false,
-					BrowserType:             browser.TypeAsh,
 				},
 			},
 		},

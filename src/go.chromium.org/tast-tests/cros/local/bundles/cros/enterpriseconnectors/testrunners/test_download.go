@@ -17,8 +17,6 @@ import (
 	"go.chromium.org/tast-tests/cros/local/bundles/cros/enterpriseconnectors/helpers"
 	"go.chromium.org/tast-tests/cros/local/chrome"
 	"go.chromium.org/tast-tests/cros/local/chrome/ash"
-	"go.chromium.org/tast-tests/cros/local/chrome/browser"
-	"go.chromium.org/tast-tests/cros/local/chrome/browser/browserfixt"
 	"go.chromium.org/tast-tests/cros/local/chrome/uiauto/faillog"
 	"go.chromium.org/tast-tests/cros/local/cryptohome"
 	"go.chromium.org/tast-tests/cros/local/policyutil"
@@ -65,25 +63,7 @@ func TestDownload(ctx context.Context, s *testing.State, cr *chrome.Chrome, cryp
 	// Ensure that all windows are closed after test.
 	defer ash.CloseAllWindows(cleanupCtx, tconnAsh)
 
-	// Create Browser.
-	br, closeBrowser, err := browserfixt.SetUp(ctx, cr, testParams.BrowserType)
-	if err != nil {
-		s.Fatal("Failed to open the browser: ", err)
-	}
-	defer closeBrowser(cleanupCtx)
-
-	tconnBrowser, err := br.TestAPIConn(ctx)
-	if err != nil {
-		s.Fatal("Failed to connect to browser's test API: ", err)
-	}
-
-	// The browsers sometimes restore some tabs, so we manually close all unneeded tabs.
-	if err := browser.CloseAllTabs(ctx, tconnBrowser); err != nil {
-		s.Fatal("Failed to close all unneeded tabs: ", err)
-	}
-	defer browser.CloseAllTabs(cleanupCtx, tconnBrowser)
-
-	dconn, err := br.NewConn(ctx, "chrome://policy")
+	dconn, err := cr.NewConn(ctx, "chrome://policy")
 	if err != nil {
 		s.Fatal("Failed to connect to chrome: ", err)
 	}
@@ -110,7 +90,7 @@ func TestDownload(ctx context.Context, s *testing.State, cr *chrome.Chrome, cryp
 	// Need to wait for a valid fcm token, i.e., the proper initialization of the enterprise connectors.
 	if testParams.ScansEnabled {
 		s.Log("Checking for fcm token")
-		if err := helpers.WaitForFCMTokenRegistered(ctx, br, tconnAsh, server, downloadsPath); err != nil {
+		if err := helpers.WaitForFCMTokenRegistered(ctx, cr, tconnAsh, server, downloadsPath); err != nil {
 			s.Fatal("Failed to wait for FCM token: ", err)
 		}
 	}
@@ -121,7 +101,7 @@ func TestDownload(ctx context.Context, s *testing.State, cr *chrome.Chrome, cryp
 			ctx, cancel := ctxutil.Shorten(ctx, 10*time.Second)
 			defer cancel()
 
-			dconnSafebrowsing, err := helpers.GetCleanDconnSafebrowsing(ctx, cr, br)
+			dconnSafebrowsing, err := helpers.GetCleanDconnSafebrowsing(ctx, cr)
 			if err != nil {
 				s.Fatal("Failed to get clean safe browsing page: ", err)
 			}
@@ -142,7 +122,7 @@ func TestDownload(ctx context.Context, s *testing.State, cr *chrome.Chrome, cryp
 				}
 			}
 
-			dconn, err := br.NewConn(ctx, server.URL+"/download.html")
+			dconn, err := cr.NewConn(ctx, server.URL+"/download.html")
 			if err != nil {
 				s.Fatal("Failed to connect to chrome: ", err)
 			}

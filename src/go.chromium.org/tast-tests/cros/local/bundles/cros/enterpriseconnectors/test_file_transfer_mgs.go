@@ -12,7 +12,6 @@ import (
 	"go.chromium.org/tast-tests/cros/local/bundles/cros/enterpriseconnectors/helpers"
 	"go.chromium.org/tast-tests/cros/local/bundles/cros/enterpriseconnectors/testrunners"
 	"go.chromium.org/tast-tests/cros/local/chrome"
-	"go.chromium.org/tast-tests/cros/local/chrome/browser"
 	"go.chromium.org/tast/core/testing"
 )
 
@@ -47,7 +46,6 @@ func init() {
 						AllowsImmediateDelivery: true,
 						AllowsUnscannableFiles:  true,
 						ScansEnabled:            true,
-						BrowserType:             browser.TypeAsh,
 					},
 					// On Managed Guest Sessions, we don't get a mounted Drive directory, so we only test USB file transfers
 					FileSystem: helpers.FileSystemTypeUSB,
@@ -61,7 +59,6 @@ func init() {
 						AllowsImmediateDelivery: false,
 						AllowsUnscannableFiles:  false,
 						ScansEnabled:            true,
-						BrowserType:             browser.TypeAsh,
 					},
 					FileSystem: helpers.FileSystemTypeUSB,
 				},
@@ -74,7 +71,6 @@ func init() {
 						AllowsImmediateDelivery: true,
 						AllowsUnscannableFiles:  true,
 						ScansEnabled:            false,
-						BrowserType:             browser.TypeAsh,
 					},
 					FileSystem: helpers.FileSystemTypeUSB,
 				},

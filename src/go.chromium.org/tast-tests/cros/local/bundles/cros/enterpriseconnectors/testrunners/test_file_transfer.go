@@ -18,8 +18,6 @@ import (
 	"go.chromium.org/tast-tests/cros/local/bundles/cros/enterpriseconnectors/helpers"
 	"go.chromium.org/tast-tests/cros/local/chrome"
 	"go.chromium.org/tast-tests/cros/local/chrome/ash"
-	"go.chromium.org/tast-tests/cros/local/chrome/browser"
-	"go.chromium.org/tast-tests/cros/local/chrome/browser/browserfixt"
 	"go.chromium.org/tast-tests/cros/local/chrome/uiauto"
 	"go.chromium.org/tast-tests/cros/local/chrome/uiauto/faillog"
 	"go.chromium.org/tast-tests/cros/local/chrome/uiauto/filesapp"
@@ -42,11 +40,11 @@ import (
 // 3. Whether the deep scan result is correct (especially relevant for AllowsImmediateDelivery==true)
 func TestFileTransfer(ctx context.Context, s *testing.State, cr *chrome.Chrome, cryptohomeUsername string) {
 	// Verify policy.
-	tconnAsh, err := cr.TestAPIConn(ctx)
+	tconn, err := cr.TestAPIConn(ctx)
 	if err != nil {
 		s.Fatal("Failed to connect to test API: ", err)
 	}
-	devicePolicies, err := policyutil.PoliciesFromDUT(ctx, tconnAsh)
+	devicePolicies, err := policyutil.PoliciesFromDUT(ctx, tconn)
 	if err != nil {
 		s.Fatal("Failed to get device policies: ", err)
 	}
@@ -68,32 +66,13 @@ func TestFileTransfer(ctx context.Context, s *testing.State, cr *chrome.Chrome, 
 	defer cancel()
 
 	// Ensure that there are no windows open.
-	if err := ash.CloseAllWindows(ctx, tconnAsh); err != nil {
+	if err := ash.CloseAllWindows(ctx, tconn); err != nil {
 		s.Fatal("Failed to close all windows: ", err)
 	}
 	// Ensure that all windows are closed after test.
-	defer ash.CloseAllWindows(cleanupCtx, tconnAsh)
+	defer ash.CloseAllWindows(cleanupCtx, tconn)
 
-	// Create Browser.
-	browserType := testParams.BrowserType
-	br, closeBrowser, err := browserfixt.SetUp(ctx, cr, browserType)
-	if err != nil {
-		s.Fatal("Failed to open the browser: ", err)
-	}
-	defer closeBrowser(cleanupCtx)
-
-	tconnBrowser, err := br.TestAPIConn(ctx)
-	if err != nil {
-		s.Fatal("Failed to connect to browser's test API: ", err)
-	}
-
-	// The browsers sometimes restore some tabs, so we manually close all unneeded tabs.
-	if err := browser.CloseAllTabs(ctx, tconnBrowser); err != nil {
-		s.Fatal("Failed to close all unneeded tabs: ", err)
-	}
-	defer browser.CloseAllTabs(cleanupCtx, tconnBrowser)
-
-	dconn, err := br.NewConn(ctx, "chrome://policy")
+	dconn, err := cr.NewConn(ctx, "chrome://policy")
 	if err != nil {
 		s.Fatal("Failed to connect to chrome: ", err)
 	}
@@ -122,7 +101,7 @@ func TestFileTransfer(ctx context.Context, s *testing.State, cr *chrome.Chrome, 
 		if err != nil {
 			s.Fatal("Failed to get user's Download path: ", err)
 		}
-		if err := helpers.WaitForFCMTokenRegistered(ctx, br, tconnAsh, server, downloadsPath); err != nil {
+		if err := helpers.WaitForFCMTokenRegistered(ctx, cr, tconn, server, downloadsPath); err != nil {
 			s.Fatal("Failed to wait for FCM token: ", err)
 		}
 	}
@@ -149,7 +128,7 @@ func TestFileTransfer(ctx context.Context, s *testing.State, cr *chrome.Chrome, 
 
 	fileSystem := s.Param().(helpers.FileTransferTestParams).FileSystem
 
-	filesApp, openTestedFileSystem, closeFilesApp, err := launchFilesAppWithFileSystem(ctx, tconnAsh, fileSystem)
+	filesApp, openTestedFileSystem, closeFilesApp, err := launchFilesAppWithFileSystem(ctx, tconn, fileSystem)
 	if err != nil {
 		s.Fatal("Failed to launch files app: ", err)
 	}
@@ -169,7 +148,7 @@ func TestFileTransfer(ctx context.Context, s *testing.State, cr *chrome.Chrome, 
 		if succeeded := s.Run(ctx, testFileParams.TestName, func(ctx context.Context, s *testing.State) {
 			subTestCtx, cancel := context.WithTimeout(ctx, 10*time.Minute)
 			defer cancel()
-			testFileTransferForFile(subTestCtx, testFileParams, testParams, cr, br, s, testDirPath, tconnAsh, filesApp, openTestedFileSystem, myFilesIsSource)
+			testFileTransferForFile(subTestCtx, testFileParams, testParams, cr, s, testDirPath, tconn, filesApp, openTestedFileSystem, myFilesIsSource)
 		}); !succeeded {
 			// Stop, if the subtest fails as it might have left the state unusable.
 			// It also prevents showing wrong errors on tastboard.
@@ -183,10 +162,9 @@ func testFileTransferForFile(
 	testFileParams helpers.TestFileParams,
 	testParams helpers.TestParams,
 	cr *chrome.Chrome,
-	br *browser.Browser,
 	s *testing.State,
 	testDirPath string,
-	tconnAsh *chrome.TestConn,
+	tconn *chrome.TestConn,
 	filesApp *filesapp.FilesApp,
 	openTestedFileSystem func(ctx context.Context) error,
 	myFilesIsSource bool,
@@ -216,7 +194,7 @@ func testFileTransferForFile(
 
 	defer faillog.DumpUITreeWithScreenshotOnError(cleanupCtx, s.OutDir(), s.HasError, cr, "dump_on_error")
 
-	dconnSafebrowsing, err := helpers.GetCleanDconnSafebrowsing(ctx, cr, br)
+	dconnSafebrowsing, err := helpers.GetCleanDconnSafebrowsing(ctx, cr)
 	if err != nil {
 		s.Fatal("Failed to get clean safe browsing page: ", err)
 	}
@@ -238,7 +216,7 @@ func testFileTransferForFile(
 		}
 	}
 
-	ui := uiauto.New(tconnAsh)
+	ui := uiauto.New(tconn)
 
 	if err := ui.FocusAndWait(filesapp.WindowFinder(apps.FilesSWA.ID))(ctx); err != nil {
 		s.Fatal("Failed to focus files app: ", err)
@@ -398,18 +376,18 @@ func waitForFileTransferWarnedAndProceed(
 	return nil
 }
 
-func launchFilesAppWithFileSystem(ctx context.Context, tconnAsh *chrome.TestConn, fileSystem helpers.FileSystemType) (filesApp *filesapp.FilesApp, openTestedFileSystem, cancel func(ctx context.Context) error, err error) {
+func launchFilesAppWithFileSystem(ctx context.Context, tconn *chrome.TestConn, fileSystem helpers.FileSystemType) (filesApp *filesapp.FilesApp, openTestedFileSystem, cancel func(ctx context.Context) error, err error) {
 	if fileSystem == helpers.FileSystemTypeUSB {
-		return launchFilesAppWithFormattedUsb(ctx, tconnAsh)
+		return launchFilesAppWithFormattedUsb(ctx, tconn)
 	}
 	if fileSystem == helpers.FileSystemTypeGDrive {
-		return launchFilesAppWithDrive(ctx, tconnAsh)
+		return launchFilesAppWithDrive(ctx, tconn)
 	}
 	return nil, nil, nil, errors.Errorf("invalid fileSystemType: %s", fileSystem)
 }
 
-func launchFilesAppWithDrive(ctx context.Context, tconnAsh *chrome.TestConn) (filesApp *filesapp.FilesApp, openTestedFileSystem, cancel func(ctx context.Context) error, err error) {
-	filesApp, err = filesapp.Launch(ctx, tconnAsh)
+func launchFilesAppWithDrive(ctx context.Context, tconn *chrome.TestConn) (filesApp *filesapp.FilesApp, openTestedFileSystem, cancel func(ctx context.Context) error, err error) {
+	filesApp, err = filesapp.Launch(ctx, tconn)
 	if err != nil {
 		return nil, nil, nil, errors.Wrap(err, "failed to launch the Files App")
 	}
@@ -432,13 +410,13 @@ func launchFilesAppWithDrive(ctx context.Context, tconnAsh *chrome.TestConn) (fi
 	return filesApp, openDriveFS, cleanupFunc, nil
 }
 
-func launchFilesAppWithFormattedUsb(ctx context.Context, tconnAsh *chrome.TestConn) (filesApp *filesapp.FilesApp, openTestedFileSystem, cancel func(ctx context.Context) error, err error) {
+func launchFilesAppWithFormattedUsb(ctx context.Context, tconn *chrome.TestConn) (filesApp *filesapp.FilesApp, openTestedFileSystem, cancel func(ctx context.Context) error, err error) {
 	cleanupCtx := ctx
 	ctx, ctxCancel := ctxutil.Shorten(ctx, 5*time.Second)
 	defer ctxCancel()
 
 	// Open the Files app to cleanup USB devices. Closed at relaunch or Chrome reset.
-	filesApp, err = filesapp.Launch(ctx, tconnAsh)
+	filesApp, err = filesapp.Launch(ctx, tconn)
 	if err != nil {
 		return nil, nil, nil, errors.Wrap(err, "failed to launch the Files App")
 	}
