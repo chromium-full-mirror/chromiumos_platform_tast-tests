@@ -452,11 +452,11 @@ func bootPerfMetricBounds(ctx context.Context, features *protocol.DUTFeatures, b
 	maxSecondsPowerOnToKernel := 1.0
 	maxSecondsPowerOnToLogin := 8.0
 
-	// Intel MeteorLake and newer always have FW splash screen, and get +0.35s
 	if ok, _, _ := hwdep.IsIntelUarchEqualOrNewerThan(hwdep.IntelUarchs{IntelBigCoreOrderList: []hwdep.IntelBigCoreOrder{hwdep.MeteorLake}}).Satisfied(features.GetHardware()); ok {
+		// Intel MeteorLake and newer always have FW splash screen, and get +0.35s
 		maxSecondsPowerOnToKernel += 0.35
-		// Intel AlderLake & RaptorLake get +0.3s, unless they have the FW splash screen enabled, then they get that +0.25s
 	} else if ok, _, _ := hwdep.IsIntelUarchEqualOrNewerThan(hwdep.IntelUarchs{IntelBigCoreOrderList: []hwdep.IntelBigCoreOrder{hwdep.AlderLake}}).Satisfied(features.GetHardware()); ok {
+		// Intel AlderLake & RaptorLake get +0.3s, unless they have the FW splash screen enabled, then they get that +0.25s
 		maxSecondsPowerOnToKernel += 0.3
 		if ok, _, _ := hwdep.FirmwareSplashScreen().Satisfied(features.GetHardware()); ok {
 			maxSecondsPowerOnToKernel += 0.25
@@ -498,6 +498,10 @@ func bootPerfMetricBounds(ctx context.Context, features *protocol.DUTFeatures, b
 		// ROW 151 in go/cros-waivers
 		testing.ContextLogf(ctx, "%s waiver: Adjusting maxSecondsPowerOnToKernel from %f to 1.7", features.GetHardware().GetDeprecatedDeviceConfig().GetId().GetModel(), maxSecondsPowerOnToKernel)
 		maxSecondsPowerOnToKernel = 1.7
+	} else if features.GetHardware().GetDeprecatedDeviceConfig().GetId().GetModel() == "boxy" {
+		// ROW 143 in go/cros-waivers
+		testing.ContextLogf(ctx, "boxy waiver: Adjusting maxSecondsPowerOnToKernel from %f to 2", maxSecondsPowerOnToKernel)
+		maxSecondsPowerOnToKernel = 2
 	}
 
 	return []bounds.MetricBounds{
