@@ -14,8 +14,6 @@ import (
 	"go.chromium.org/tast-tests/cros/common/tbdep"
 	"go.chromium.org/tast-tests/cros/local/bundles/cros/filemanager/bulkpinning"
 	"go.chromium.org/tast-tests/cros/local/bundles/cros/filemanager/helpers"
-	"go.chromium.org/tast-tests/cros/local/chrome/browser"
-	"go.chromium.org/tast-tests/cros/local/chrome/browser/browserfixt"
 	"go.chromium.org/tast-tests/cros/local/chrome/uiauto"
 	"go.chromium.org/tast-tests/cros/local/chrome/uiauto/faillog"
 	"go.chromium.org/tast-tests/cros/local/chrome/uiauto/filesapp"
@@ -52,10 +50,7 @@ func init() {
 			Key:   "feature_id",
 			Value: "screenplay-3d076472-1afc-4bd8-a1a5-94017965d55e",
 		}},
-		Params: []testing.Param{{
-			Val:     browser.TypeAsh,
-			Fixture: "driveFsStartedBulkPinningEnabled",
-		}},
+		Fixture: "driveFsStartedBulkPinningEnabled",
 		// TODO(crbug/1112246): Reduce timeout period once push notifications fixed.
 		Timeout: 10 * time.Minute,
 	})
@@ -66,6 +61,7 @@ func BulkPinningHostedFilePinning(ctx context.Context, s *testing.State) {
 	APIClient := fixt.APIClient
 	driveFsClient := fixt.DriveFs
 	tconn := fixt.TestAPIConn
+	cr := s.FixtValue().(*drivefs.FixtureData).Chrome
 
 	// Current refresh period is 2 minutes, leaving buffer for UI propagation.
 	// TODO(crbug/1112246): Reduce refresh period once push notifications fixed.
@@ -86,18 +82,8 @@ func BulkPinningHostedFilePinning(ctx context.Context, s *testing.State) {
 	testDocName2 := fmt.Sprintf("after-%d-%d", time.Now().UnixNano(), rand.Intn(10000))
 	testDocName2WithExt := fmt.Sprintf("%s.gdoc", testDocName2)
 
-	br, closeBrowser, err := browserfixt.SetUp(
-		ctx,
-		s.FixtValue().(*drivefs.FixtureData).Chrome,
-		s.Param().(browser.Type),
-	)
-	if err != nil {
-		s.Fatal("Failed to set up browser: ", err)
-	}
-	defer closeBrowser(cleanupCtx)
-
 	// Install Google Docs Offline and Application Launcher for Drive extensions.
-	if err := helpers.InstallRequiredExtensions(ctx, br, tconn); err != nil {
+	if err := helpers.InstallRequiredExtensions(ctx, cr, tconn); err != nil {
 		s.Fatal("Failed to install the required extensions: ", err)
 	}
 

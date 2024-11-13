@@ -9,7 +9,6 @@ import (
 	"context"
 
 	"go.chromium.org/tast-tests/cros/local/chrome"
-	"go.chromium.org/tast-tests/cros/local/chrome/browser"
 	"go.chromium.org/tast-tests/cros/local/chrome/uiauto/cws"
 	"go.chromium.org/tast/core/errors"
 	"go.chromium.org/tast/core/testing"
@@ -29,11 +28,11 @@ type InstalledExtension struct {
 }
 
 // InstallRequiredExtensions installs both Google Docs Offline and Application Launcher for Drive extensions.
-func InstallRequiredExtensions(ctx context.Context, br *browser.Browser, tconn *chrome.TestConn) error {
+func InstallRequiredExtensions(ctx context.Context, cr *chrome.Chrome, tconn *chrome.TestConn) error {
 	docsOfflineExtensionID := "ghbmnnjooekpmoecnnnilnnbdlolhkhi"
 	applicationLauncherForDriveExtensionID := "lmjegmlicamnimmfhcmpkclmigmmcbeh"
 
-	conn, err := br.NewTab(ctx, "chrome://extensions-internals")
+	conn, err := cr.Browser().NewTab(ctx, "chrome://extensions-internals")
 	if err != nil {
 		return errors.Wrap(err, "failed to open chrome://extensions-internals tab")
 	}
@@ -59,14 +58,14 @@ func InstallRequiredExtensions(ctx context.Context, br *browser.Browser, tconn *
 	docsOfflineName := "Google Docs Offline"
 	docsOfflineURL := "https://chrome.google.com/webstore/detail/google-docs-offline/" + docsOfflineExtensionID
 	docsOfflineExt := cws.App{Name: docsOfflineName, URL: docsOfflineURL}
-	if err := cws.InstallApp(ctx, br, tconn, docsOfflineExt); err != nil {
+	if err := cws.InstallApp(ctx, cr.Browser(), tconn, docsOfflineExt); err != nil {
 		return errors.Wrap(err, "failed to install Google Docs Offline extension")
 	}
 
 	proxyExtName := "Application Launcher For Drive (by Google)"
 	proxyExtURL := "https://chrome.google.com/webstore/detail/application-launcher-for/" + applicationLauncherForDriveExtensionID
 	proxyExt := cws.App{Name: proxyExtName, URL: proxyExtURL}
-	if err := cws.InstallApp(ctx, br, tconn, proxyExt); err != nil {
+	if err := cws.InstallApp(ctx, cr.Browser(), tconn, proxyExt); err != nil {
 		return errors.Wrap(err, "failed to install Application Launcher for Drive extension")
 	}
 	return nil

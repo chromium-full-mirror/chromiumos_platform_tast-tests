@@ -11,10 +11,7 @@ import (
 
 	"go.chromium.org/tast-tests/cros/common/tbdep"
 	"go.chromium.org/tast-tests/cros/local/bundles/cros/filemanager/bulkpinning"
-
 	"go.chromium.org/tast-tests/cros/local/chrome"
-	"go.chromium.org/tast-tests/cros/local/chrome/browser"
-	"go.chromium.org/tast-tests/cros/local/chrome/browser/browserfixt"
 	"go.chromium.org/tast-tests/cros/local/chrome/uiauto"
 	"go.chromium.org/tast-tests/cros/local/chrome/uiauto/faillog"
 	"go.chromium.org/tast-tests/cros/local/chrome/uiauto/filesapp"
@@ -70,6 +67,7 @@ func BulkPinningHostedAvailableOffline(ctx context.Context, s *testing.State) {
 	apiClient := fixt.APIClient
 	driveFsClient := fixt.DriveFs
 	tconn := fixt.TestAPIConn
+	cr := s.FixtValue().(*drivefs.FixtureData).Chrome.Chrome()
 
 	// Give the Drive API enough time to remove the file.
 	cleanupCtx := ctx
@@ -89,14 +87,8 @@ func BulkPinningHostedAvailableOffline(ctx context.Context, s *testing.State) {
 		}
 	}()
 
-	br, closeBrowser, err := browserfixt.SetUp(ctx, s.FixtValue().(*drivefs.FixtureData).Chrome, browser.TypeAsh)
-	if err != nil {
-		s.Fatal("Failed to set up browser: ", err)
-	}
-	defer closeBrowser(cleanupCtx)
-
 	// Verify the Docs service worker gets registered.
-	if err := verifyDocsServiceWorkerCached(ctx, br); err != nil {
+	if err := verifyDocsServiceWorkerCached(ctx, cr); err != nil {
 		s.Fatal("Failed verifying Docs service worker is cached: ", err)
 	}
 
@@ -149,9 +141,9 @@ func openFileAndEnsureTitleContainsDocName(files *filesapp.FilesApp, tconn *chro
 // verifyDocsServiceWorkerCached continuously checks
 // chrome://serviceworker-interals until the Docs service worker has been
 // registered.
-func verifyDocsServiceWorkerCached(ctx context.Context, br *browser.Browser) error {
+func verifyDocsServiceWorkerCached(ctx context.Context, cr *chrome.Chrome) error {
 	// Open up docs.google.com to kick off the service worker caching mechanism.
-	docsConn, err := br.NewTab(ctx, "https://docs.google.com")
+	docsConn, err := cr.Browser().NewTab(ctx, "https://docs.google.com")
 	if err != nil {
 		return errors.Wrap(err, "failed to navigate to google docs")
 	}
@@ -162,7 +154,7 @@ func verifyDocsServiceWorkerCached(ctx context.Context, br *browser.Browser) err
 	// Open up the service worker internals page to monitor exactly when the
 	// service worker gets properly registered. Once registered the offline
 	// functionality should be available.
-	conn, err := br.NewTab(ctx, "chrome://serviceworker-internals")
+	conn, err := cr.Browser().NewTab(ctx, "chrome://serviceworker-internals")
 	if err != nil {
 		return errors.Wrap(err, "failed to navigate to serviceworker-internals")
 	}

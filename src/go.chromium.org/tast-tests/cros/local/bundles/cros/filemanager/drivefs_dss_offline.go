@@ -12,8 +12,6 @@ import (
 	"time"
 
 	"go.chromium.org/tast-tests/cros/local/bundles/cros/filemanager/helpers"
-	"go.chromium.org/tast-tests/cros/local/chrome/browser"
-	"go.chromium.org/tast-tests/cros/local/chrome/browser/browserfixt"
 	"go.chromium.org/tast-tests/cros/local/chrome/uiauto"
 	"go.chromium.org/tast-tests/cros/local/chrome/uiauto/checked"
 	"go.chromium.org/tast-tests/cros/local/chrome/uiauto/faillog"
@@ -62,6 +60,7 @@ func DrivefsDssOffline(ctx context.Context, s *testing.State) {
 	APIClient := s.FixtValue().(*drivefs.FixtureData).APIClient
 	tconn := s.FixtValue().(*drivefs.FixtureData).TestAPIConn
 	driveFsClient := s.FixtValue().(*drivefs.FixtureData).DriveFs
+	cr := s.FixtValue().(*drivefs.FixtureData).Chrome
 
 	uniqueSuffix := fmt.Sprintf("-%d-%d", time.Now().UnixNano(), rand.Intn(10000))
 	testDocFileName := fmt.Sprintf("doc-drivefs%s", uniqueSuffix)
@@ -70,12 +69,6 @@ func DrivefsDssOffline(ctx context.Context, s *testing.State) {
 	cleanupCtx := ctx
 	ctx, cancel := ctxutil.Shorten(ctx, 30*time.Second)
 	defer cancel()
-
-	br, closeBrowser, err := browserfixt.SetUp(ctx, s.FixtValue().(*drivefs.FixtureData).Chrome, browser.TypeAsh)
-	if err != nil {
-		s.Fatal("Failed to set up browser: ", err)
-	}
-	defer closeBrowser(cleanupCtx)
 
 	// Create the unique folder that will be directly navigated to below.
 	testFilePath := driveFsClient.MyDrivePath(uniqueTestFolderName, testDocFileName)
@@ -94,7 +87,7 @@ func DrivefsDssOffline(ctx context.Context, s *testing.State) {
 	defer faillog.DumpUITreeOnError(cleanupCtx, s.OutDir(), s.HasError, tconn)
 	defer driveFsClient.SaveLogsOnError(cleanupCtx, s.HasError)
 
-	if err := helpers.InstallRequiredExtensions(ctx, br, tconn); err != nil {
+	if err := helpers.InstallRequiredExtensions(ctx, cr, tconn); err != nil {
 		s.Fatal("Failed to install the required extensions: ", err)
 	}
 
