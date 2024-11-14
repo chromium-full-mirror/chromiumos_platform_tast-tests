@@ -16,7 +16,6 @@ import (
 
 	"go.chromium.org/tast-tests/cros/common/testexec"
 	"go.chromium.org/tast-tests/cros/local/chrome/ash/ashproc"
-	"go.chromium.org/tast-tests/cros/local/chrome/browser"
 	"go.chromium.org/tast-tests/cros/local/chrome/chromeproc"
 	"go.chromium.org/tast-tests/cros/local/tracing"
 	"go.chromium.org/tast/core/errors"
@@ -35,10 +34,7 @@ func init() {
 		BugComponent: "b:1069482", // ChromeOS > Platform > System > Performance > CrOSetto (Tracing)
 		SoftwareDeps: []string{"chrome"},
 		Attr:         []string{"group:mainline"},
-		Params: []testing.Param{{
-			Val:     browser.TypeAsh,
-			Fixture: "chromeLoggedIn",
-		}},
+		Fixture:      "chromeLoggedIn",
 	})
 }
 

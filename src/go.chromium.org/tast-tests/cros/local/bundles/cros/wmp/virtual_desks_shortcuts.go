@@ -12,7 +12,6 @@ import (
 	"go.chromium.org/tast-tests/cros/local/apps"
 	"go.chromium.org/tast-tests/cros/local/chrome"
 	"go.chromium.org/tast-tests/cros/local/chrome/ash"
-	"go.chromium.org/tast-tests/cros/local/chrome/browser"
 	"go.chromium.org/tast-tests/cros/local/chrome/uiauto"
 	"go.chromium.org/tast-tests/cros/local/chrome/uiauto/faillog"
 	"go.chromium.org/tast-tests/cros/local/chrome/uiauto/nodewith"
@@ -67,7 +66,7 @@ func deskMiniViewFinder(deskName string) *nodewith.Finder {
 	return nodewith.ClassName("DeskMiniView").Name(fmt.Sprintf("Desk: %s", deskName))
 }
 
-func findBrowserWindow(ctx context.Context, s *testing.State, tconn *chrome.TestConn, bt browser.Type) *ash.Window {
+func findBrowserWindow(ctx context.Context, s *testing.State, tconn *chrome.TestConn) *ash.Window {
 	window, err := ash.FindWindow(ctx, tconn, ash.BrowserTypeMatch())
 	if err != nil {
 		s.Fatal("Failed to find browser window: ", err)
@@ -97,7 +96,6 @@ func VirtualDesksShortcuts(ctx context.Context, s *testing.State) {
 	ctx, cancel := ctxutil.Shorten(ctx, 5*time.Second)
 	defer cancel()
 
-	bt := browser.TypeAsh
 	cr := s.FixtValue().(chrome.HasChrome).Chrome()
 	tconn, err := cr.TestAPIConn(ctx)
 	if err != nil {
@@ -183,7 +181,7 @@ func VirtualDesksShortcuts(ctx context.Context, s *testing.State) {
 	if _, err := ash.WaitForAppWindow(ctx, tconn, browserApp.ID); err != nil {
 		s.Fatal("Browser did not become visible: ", err)
 	}
-	if !findBrowserWindow(ctx, s, tconn, bt).OnActiveDesk {
+	if !findBrowserWindow(ctx, s, tconn).OnActiveDesk {
 		s.Fatal("Browser window is not on the current active desk (desk 2)")
 	}
 
@@ -191,9 +189,9 @@ func VirtualDesksShortcuts(ctx context.Context, s *testing.State) {
 		s.Fatal("Failed to move the current active window to the desk on the left: ", err)
 	}
 	// Wait for the window to finish animating and verify that it is no longer on the active desk.
-	browserWindowID := findBrowserWindow(ctx, s, tconn, bt).ID
+	browserWindowID := findBrowserWindow(ctx, s, tconn).ID
 	ash.WaitWindowFinishAnimating(ctx, tconn, browserWindowID)
-	if findBrowserWindow(ctx, s, tconn, bt).OnActiveDesk {
+	if findBrowserWindow(ctx, s, tconn).OnActiveDesk {
 		s.Fatal("Browser window unexpectedly still on desk 2, expected it to be on desk 1")
 	}
 
@@ -201,7 +199,7 @@ func VirtualDesksShortcuts(ctx context.Context, s *testing.State) {
 	if err := ash.ActivateDeskAtIndex(ctx, tconn, 0); err != nil {
 		s.Fatal("Failed to activate desk 1: ", err)
 	}
-	if !findBrowserWindow(ctx, s, tconn, bt).OnActiveDesk {
+	if !findBrowserWindow(ctx, s, tconn).OnActiveDesk {
 		s.Fatal("Browser window is not on desk 1")
 	}
 
@@ -211,7 +209,7 @@ func VirtualDesksShortcuts(ctx context.Context, s *testing.State) {
 	}
 	// Wait for the window to finish animating and verify that it is no longer on the active desk.
 	ash.WaitWindowFinishAnimating(ctx, tconn, browserWindowID)
-	if findBrowserWindow(ctx, s, tconn, bt).OnActiveDesk {
+	if findBrowserWindow(ctx, s, tconn).OnActiveDesk {
 		s.Fatal("Browser window unexpectedly still on desk 1, expected it to be on desk 2")
 	}
 
@@ -219,7 +217,7 @@ func VirtualDesksShortcuts(ctx context.Context, s *testing.State) {
 	if err := ash.ActivateDeskAtIndex(ctx, tconn, 1); err != nil {
 		s.Fatal("Failed to activate desk 2: ", err)
 	}
-	if !findBrowserWindow(ctx, s, tconn, bt).OnActiveDesk {
+	if !findBrowserWindow(ctx, s, tconn).OnActiveDesk {
 		s.Fatal("Browser window is not on the currently active desk (desk 2)")
 	}
 
@@ -321,7 +319,7 @@ func VirtualDesksShortcuts(ctx context.Context, s *testing.State) {
 	)(ctx); err != nil {
 		s.Fatal("Failed to switch to desk 2: ", err)
 	}
-	if !findBrowserWindow(ctx, s, tconn, bt).OnActiveDesk {
+	if !findBrowserWindow(ctx, s, tconn).OnActiveDesk {
 		s.Fatal("Browser window is not on the currently active desk (desk 2)")
 	}
 
@@ -334,7 +332,7 @@ func VirtualDesksShortcuts(ctx context.Context, s *testing.State) {
 	if err := ash.ActivateDeskAtIndex(ctx, tconn, 0); err != nil {
 		s.Fatal("Failed to activate desk 1: ", err)
 	}
-	if !findBrowserWindow(ctx, s, tconn, bt).OnActiveDesk {
+	if !findBrowserWindow(ctx, s, tconn).OnActiveDesk {
 		s.Fatal("Browser window is not on the currently active desk (desk 1)")
 	}
 
@@ -342,7 +340,7 @@ func VirtualDesksShortcuts(ctx context.Context, s *testing.State) {
 	if err := ash.ActivateDeskAtIndex(ctx, tconn, 1); err != nil {
 		s.Fatal("Failed to activate desk 2: ", err)
 	}
-	if !findBrowserWindow(ctx, s, tconn, bt).OnActiveDesk {
+	if !findBrowserWindow(ctx, s, tconn).OnActiveDesk {
 		s.Fatal("Browser window is not on the currently active desk (desk 2)")
 	}
 

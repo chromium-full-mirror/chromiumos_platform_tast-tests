@@ -14,7 +14,6 @@ import (
 	"go.chromium.org/tast-tests/cros/local/chrome"
 	"go.chromium.org/tast-tests/cros/local/chrome/apps/cursive"
 	"go.chromium.org/tast-tests/cros/local/chrome/ash"
-	"go.chromium.org/tast-tests/cros/local/chrome/browser"
 	"go.chromium.org/tast-tests/cros/local/chrome/uiauto"
 	"go.chromium.org/tast-tests/cros/local/chrome/uiauto/faillog"
 	"go.chromium.org/tast-tests/cros/local/chrome/uiauto/nodewith"
@@ -79,7 +78,6 @@ func init() {
 func CursiveSmoke(ctx context.Context, s *testing.State) {
 	cr := s.FixtValue().(fixture.FixtData).Chrome
 	tconn := s.FixtValue().(fixture.FixtData).TestAPIConn
-	browserType := browser.TypeAsh
 
 	isAutoInstall := s.Param().(bool)
 
@@ -103,7 +101,7 @@ func CursiveSmoke(ctx context.Context, s *testing.State) {
 			s.Fatal("Failed to wait for Cursive auto installed: ", err)
 		}
 	} else {
-		cursiveAppID, err = manualInstallCursive(ctx, tconn, cr, browserType, appURL)
+		cursiveAppID, err = manualInstallCursive(ctx, tconn, cr, appURL)
 		if err != nil {
 			s.Fatal("Failed to manually install Cursive: ", err)
 		}
@@ -123,7 +121,7 @@ func CursiveSmoke(ctx context.Context, s *testing.State) {
 	}
 }
 
-func manualInstallCursive(ctx context.Context, tconn *chrome.TestConn, cr *chrome.Chrome, browserType browser.Type, appURL string) (string, error) {
+func manualInstallCursive(ctx context.Context, tconn *chrome.TestConn, cr *chrome.Chrome, appURL string) (string, error) {
 	cleanupCtx := ctx
 	ctx, cancel := ctxutil.Shorten(ctx, 5*time.Second)
 	defer cancel()

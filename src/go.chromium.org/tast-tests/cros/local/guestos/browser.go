@@ -12,14 +12,13 @@ import (
 	"go.chromium.org/tast-tests/cros/common/testexec"
 	"go.chromium.org/tast-tests/cros/local/chrome"
 	"go.chromium.org/tast-tests/cros/local/chrome/ash"
-	"go.chromium.org/tast-tests/cros/local/chrome/browser"
 	"go.chromium.org/tast-tests/cros/local/vm"
 	"go.chromium.org/tast/core/errors"
 	"go.chromium.org/tast/core/testing"
 )
 
 // LaunchBrowser runs a command that is expected to launch the host system browser.
-func LaunchBrowser(ctx context.Context, tconn *chrome.TestConn, bt browser.Type, guest vm.Guest, title string, command []string) error {
+func LaunchBrowser(ctx context.Context, tconn *chrome.TestConn, guest vm.Guest, title string, command []string) error {
 	var err error
 	ctx, cancel := context.WithTimeout(ctx, 10*time.Second)
 	defer cancel()
@@ -32,7 +31,7 @@ func LaunchBrowser(ctx context.Context, tconn *chrome.TestConn, bt browser.Type,
 
 	pollOptions := &testing.PollOptions{Timeout: time.Minute, Interval: time.Second}
 	if err = ash.WaitForCondition(ctx, tconn, ash.BrowserTitleMatch(title), pollOptions); err != nil {
-		return errors.Wrapf(err, "failed to wait for the window to be open, browser: %v", bt)
+		return errors.Wrap(err, "failed to wait for the window to be open")
 	}
 
 	return nil

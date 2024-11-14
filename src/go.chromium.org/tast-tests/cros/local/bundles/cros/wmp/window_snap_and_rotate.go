@@ -11,7 +11,6 @@ import (
 	"go.chromium.org/tast-tests/cros/local/apps"
 	"go.chromium.org/tast-tests/cros/local/chrome"
 	"go.chromium.org/tast-tests/cros/local/chrome/ash"
-	"go.chromium.org/tast-tests/cros/local/chrome/browser"
 	"go.chromium.org/tast-tests/cros/local/chrome/display"
 	"go.chromium.org/tast-tests/cros/local/chrome/uiauto/faillog"
 	"go.chromium.org/tast-tests/cros/local/chrome/uiauto/filesapp"
@@ -25,7 +24,6 @@ import (
 
 type windowSnapAndRotateTestParam struct {
 	portrait bool
-	bt       browser.Type
 }
 
 func init() {
@@ -45,11 +43,11 @@ func init() {
 		Params: []testing.Param{{
 			Name:    "portrait",
 			Fixture: "chromeLoggedIn",
-			Val:     windowSnapAndRotateTestParam{portrait: true, bt: browser.TypeAsh},
+			Val:     windowSnapAndRotateTestParam{portrait: true},
 		}, {
 			Name:    "landscape",
 			Fixture: "chromeLoggedIn",
-			Val:     windowSnapAndRotateTestParam{portrait: false, bt: browser.TypeAsh},
+			Val:     windowSnapAndRotateTestParam{portrait: false},
 		}},
 	})
 }

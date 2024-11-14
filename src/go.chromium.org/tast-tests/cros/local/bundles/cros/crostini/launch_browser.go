@@ -10,7 +10,6 @@ import (
 	"path/filepath"
 	"time"
 
-	"go.chromium.org/tast-tests/cros/local/chrome/browser"
 	"go.chromium.org/tast-tests/cros/local/chrome/uiauto"
 	"go.chromium.org/tast-tests/cros/local/chrome/uiauto/faillog"
 	"go.chromium.org/tast-tests/cros/local/crostini"
@@ -66,19 +65,19 @@ func LaunchBrowser(ctx context.Context, s *testing.State) {
 	}
 
 	runSubTest("testing_sh_c", func(ctx context.Context, s *testing.State) {
-		if err := guestos.LaunchBrowser(ctx, tconn, browser.TypeAsh, cont, "browser-env", []string{"sh", "-c", "${BROWSER} http://browser-env.test/"}); err != nil {
+		if err := guestos.LaunchBrowser(ctx, tconn, cont, "browser-env", []string{"sh", "-c", "${BROWSER} http://browser-env.test/"}); err != nil {
 			s.Fatal("Launching browser failed: ", err)
 		}
 	})
 
 	runSubTest("testing_x_www_browser", func(ctx context.Context, s *testing.State) {
-		if err := guestos.LaunchBrowser(ctx, tconn, browser.TypeAsh, cont, "x-www-browser", []string{"/etc/alternatives/x-www-browser", "http://x-www-browser.test/"}); err != nil {
+		if err := guestos.LaunchBrowser(ctx, tconn, cont, "x-www-browser", []string{"/etc/alternatives/x-www-browser", "http://x-www-browser.test/"}); err != nil {
 			s.Fatal("Launching browser failed: ", err)
 		}
 	})
 
 	runSubTest("testing_xdg_open", func(ctx context.Context, s *testing.State) {
-		if err := guestos.LaunchBrowser(ctx, tconn, browser.TypeAsh, cont, "xdg-open", []string{"xdg-open", "http://xdg-open.test/"}); err != nil {
+		if err := guestos.LaunchBrowser(ctx, tconn, cont, "xdg-open", []string{"xdg-open", "http://xdg-open.test/"}); err != nil {
 			s.Fatal("Launching browser failed: ", err)
 		}
 	})

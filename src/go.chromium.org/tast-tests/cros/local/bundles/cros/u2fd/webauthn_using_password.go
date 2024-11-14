@@ -9,7 +9,6 @@ import (
 	"time"
 
 	"go.chromium.org/tast-tests/cros/local/chrome"
-	"go.chromium.org/tast-tests/cros/local/chrome/browser"
 	"go.chromium.org/tast-tests/cros/local/chrome/uiauto"
 	"go.chromium.org/tast-tests/cros/local/chrome/uiauto/faillog"
 	"go.chromium.org/tast-tests/cros/local/chrome/uiauto/nodewith"
@@ -40,18 +39,15 @@ func init() {
 			Name:              "tpm",
 			ExtraSoftwareDeps: []string{"no_gsc", "no_tpm_dynamic"},
 			Fixture:           "chromeLoggedIn",
-			Val:               browser.TypeAsh,
 		}, {
 			Name:              "tpm_dynamic",
 			ExtraSoftwareDeps: []string{"tpm_dynamic"},
 			ExtraHardwareDeps: hwdep.D(hwdep.HasTpm()),
 			Fixture:           "chromeLoggedIn",
-			Val:               browser.TypeAsh,
 		}, {
 			Name:              "gsc",
 			ExtraSoftwareDeps: []string{"gsc"},
 			Fixture:           "chromeLoggedIn",
-			Val:               browser.TypeAsh,
 		}},
 		Timeout: 5 * time.Minute,
 	})
