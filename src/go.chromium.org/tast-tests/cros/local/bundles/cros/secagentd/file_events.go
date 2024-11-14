@@ -37,31 +37,27 @@ func init() {
 		Params: []testing.Param{{
 			Name:      "user_fs",
 			Val:       pb.TestCase_USER_FILES,
-			ExtraAttr: []string{"group:mainline", "informational"},
-		}, {
-			Name:      "root_fs",
-			Val:       pb.TestCase_ROOT_FS,
-			ExtraAttr: []string{"group:mainline", "informational"},
+			ExtraAttr: []string{"group:mainline", "group:criticalstaging", "informational"},
 		}, {
 			Name:      "user_credential",
 			Val:       pb.TestCase_USER_CREDENTIAL,
-			ExtraAttr: []string{"group:mainline", "informational"},
+			ExtraAttr: []string{"group:mainline", "group:criticalstaging", "informational"},
 		}, {
 			Name:      "cookies",
 			Val:       pb.TestCase_COOKIES,
-			ExtraAttr: []string{"group:mainline", "informational"},
+			ExtraAttr: []string{"group:mainline", "group:criticalstaging", "informational"},
 		}, {
 			Name:      "tpm_key",
 			Val:       pb.TestCase_TPM_KEY,
-			ExtraAttr: []string{"group:mainline", "informational"},
+			ExtraAttr: []string{"group:mainline", "group:criticalstaging", "informational"},
 		}, {
 			Name:      "auth_factors",
 			Val:       pb.TestCase_AUTH_FACTORS,
-			ExtraAttr: []string{"group:mainline", "informational"},
+			ExtraAttr: []string{"group:mainline", "group:criticalstaging", "informational"},
 		}, {
 			Name:      "system_passwords",
 			Val:       pb.TestCase_SYSTEM_PASSWORD,
-			ExtraAttr: []string{"group:mainline", "informational"},
+			ExtraAttr: []string{"group:mainline", "group:criticalstaging", "informational"},
 		},
 		},
 	})
