@@ -657,7 +657,7 @@ func NewRecorderWithTestConn(ctx context.Context, tconn *chrome.TestConn, cr *ch
 	// Perf and CUJ tests both include the TPS timeline, which requires the
 	// GPU data source.
 	if r.options.Mode == Perf || r.options.Mode == CUJ {
-		r.gpuDataSource = perfSrc.NewGPUDataSource(map[browser.Type]*chrome.TestConn{browser.TypeAsh: tconn})
+		r.gpuDataSource = perfSrc.NewGPUDataSource(tconn)
 	}
 
 	if err := r.Reset(ctx); err != nil {
