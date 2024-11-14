@@ -91,17 +91,6 @@ func SelectDropDownOption(tconn *chrome.TestConn, dropdown *nodewith.Finder, opt
 	)
 }
 
-// SelectCustomizePeripheralButtonsDropdown returns a function that selects
-// dropdown for peripheral customization.
-func SelectCustomizePeripheralButtonsDropdown(tconn *chrome.TestConn, dropdown *nodewith.Finder, optionName string) uiauto.Action {
-	ui := uiauto.New(tconn)
-	option := nodewith.Name(optionName).First()
-	return uiauto.Combine(fmt.Sprintf("select option %q", optionName),
-		ExpandDropDown(tconn, dropdown),
-		ui.LeftClick(option),
-	)
-}
-
 // IsSelected returns true if the label matches the selected option, otherwise
 // returns false.
 func IsSelected(ctx context.Context, tconn *chrome.TestConn, dropdown *nodewith.Finder, optionName string) (bool, error) {
