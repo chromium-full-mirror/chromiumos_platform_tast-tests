@@ -30,12 +30,16 @@ type paramData struct {
 }
 
 // genFilesFromBugs generates multiple test cases for each files in the filesFromBugs map. The key of filesFromBugs would be appended in the test name and value will be assigned to VideoFiles.
-func genFilesFromBugs(defaultParam paramData, filesFromBugs map[string]string) []paramData {
+func genFilesFromBugs(defaultParam paramData, filesFromBugs, hardwareDepsOverrides map[string]string) []paramData {
 	var result []paramData
 	for _, key := range test_vectors.SortedStringKeys(filesFromBugs) {
 		data := defaultParam
 		data.Name = data.Name + "_" + key
 		data.VideoFiles = "[]string{\"" + filesFromBugs[key] + "\"}"
+
+		if override, ok := hardwareDepsOverrides[key]; ok {
+			data.HardwareDeps = override
+		}
 		result = append(result, data)
 	}
 	return result
@@ -317,31 +321,36 @@ func TestChromeStackDecoderVerificationParams(t *testing.T) {
 		Attr:          perBuildAttrs,
 		SoftwareDeps:  "[]string{caps.HWDecodeH264, \"proprietary_codecs\"}",
 		ValidatorType: "decoding.MD5",
-	}, test_vectors.H264FilesFromBugs)...)
+	}, test_vectors.H264FilesFromBugs, nil)...)
 	params = append(params, genFilesFromBugs(paramData{
 		Name:          "h264_4k_files_from_bugs",
 		Attr:          perBuildAttrs,
 		SoftwareDeps:  "[]string{caps.HWDecodeH264_4K, \"proprietary_codecs\"}",
 		ValidatorType: "decoding.MD5",
-	}, test_vectors.H2644kFilesFromBugs)...)
+	}, test_vectors.H2644kFilesFromBugs, nil)...)
 	params = append(params, genFilesFromBugs(paramData{
 		Name:          "vp9_files_from_bugs",
 		Attr:          perBuildAttrs,
 		SoftwareDeps:  "[]string{caps.HWDecodeVP9}",
 		ValidatorType: "decoding.MD5",
-	}, test_vectors.VP9FilesFromBugs)...)
+	}, test_vectors.VP9FilesFromBugs, nil)...)
 	params = append(params, genFilesFromBugs(paramData{
 		Name:          "av1_files_from_bugs",
 		Attr:          perBuildAttrs,
 		SoftwareDeps:  "[]string{caps.HWDecodeAV1}",
 		ValidatorType: "decoding.MD5",
-	}, test_vectors.AV1FilesFromBugs)...)
+	}, test_vectors.AV1FilesFromBugs,
+		map[string]string{
+			// Disable on Cherry, Geralt, and Skyrim (b/346775704)
+			"346405213": "hwdep.D(hwdep.SkipGPUFamily(\"gc_10_3_7\"), hwdep.SkipOnModel(\"dojo\", \"tomato\", \"ciri\"))",
+		},
+	)...)
 	params = append(params, genFilesFromBugs(paramData{
 		Name:          "hevc_files_from_bugs",
 		Attr:          perBuildAttrs,
 		SoftwareDeps:  "[]string{caps.HWDecodeHEVC, \"proprietary_codecs\"}",
 		ValidatorType: "decoding.MD5",
-	}, test_vectors.H265FilesFromBugs)...)
+	}, test_vectors.H265FilesFromBugs, nil)...)
 
 	for _, bugID := range test_vectors.SortedStringKeys(test_vectors.HEVCFilesFromBugs) {
 		params = append(params, []paramData{{
