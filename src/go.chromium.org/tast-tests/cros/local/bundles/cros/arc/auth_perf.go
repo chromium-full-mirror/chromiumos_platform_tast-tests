@@ -23,7 +23,6 @@ import (
 	"go.chromium.org/tast-tests/cros/local/arc/diskstats"
 	"go.chromium.org/tast-tests/cros/local/arc/optin"
 	"go.chromium.org/tast-tests/cros/local/chrome"
-	"go.chromium.org/tast-tests/cros/local/chrome/browser"
 	"go.chromium.org/tast-tests/cros/local/cpu"
 	"go.chromium.org/tast-tests/cros/local/disk"
 	"go.chromium.org/tast-tests/cros/local/power/metrics"
@@ -36,9 +35,8 @@ import (
 )
 
 type testParam struct {
-	browserType browser.Type
-	username    string
-	password    string
+	username string
+	password string
 	// maxErrorBootCount is the number of maximum allowed boot errors.
 	maxErrorBootCount int
 	chromeArgs        []string
@@ -58,7 +56,6 @@ func init() {
 	testing.AddTest(&testing.Test{
 		Func:           AuthPerf,
 		LifeCycleStage: testing.LifeCycleOwnerMonitored,
-		LacrosStatus:   testing.LacrosVariantUnneeded,
 		Desc:           "Measure auth times in ARC",
 		Contacts: []string{
 			"arc-performance@google.com",
@@ -75,7 +72,6 @@ func init() {
 			Name:              "managed",
 			ExtraSoftwareDeps: []string{"android_container"},
 			Val: testParam{
-				browserType:       browser.TypeAsh,
 				username:          "arc.AuthPerf.managed_username",
 				password:          "arc.AuthPerf.managed_password",
 				maxErrorBootCount: 1,
@@ -84,7 +80,6 @@ func init() {
 			Name:              "managed_vm",
 			ExtraSoftwareDeps: []string{"android_vm"},
 			Val: testParam{
-				browserType:       browser.TypeAsh,
 				username:          "arc.AuthPerf.managed_username",
 				password:          "arc.AuthPerf.managed_password",
 				maxErrorBootCount: 3,
@@ -94,14 +89,12 @@ func init() {
 			ExtraAttr:         []string{"crosbolt_arc_perf_qual"},
 			ExtraSoftwareDeps: []string{"android_container"},
 			Val: testParam{
-				browserType:       browser.TypeAsh,
 				maxErrorBootCount: 1,
 			},
 		}, {
 			Name:              "unmanaged_no_guest_ureadahead_vm",
 			ExtraSoftwareDeps: []string{"android_vm"},
 			Val: testParam{
-				browserType:       browser.TypeAsh,
 				maxErrorBootCount: 3,
 				chromeArgs:        []string{"--arcvm-ureadahead-mode=disabled"},
 			},
@@ -109,7 +102,6 @@ func init() {
 			Name:              "unmanaged_virtio_blk_vm",
 			ExtraSoftwareDeps: []string{"android_vm"},
 			Val: testParam{
-				browserType:       browser.TypeAsh,
 				maxErrorBootCount: 3,
 				chromeArgs:        []string{"--enable-features=ArcEnableVirtioBlkForData"},
 			},
@@ -118,7 +110,6 @@ func init() {
 			ExtraAttr:         []string{"crosbolt_arc_perf_qual"},
 			ExtraSoftwareDeps: []string{"android_vm"},
 			Val: testParam{
-				browserType:       browser.TypeAsh,
 				maxErrorBootCount: 3,
 			},
 		}, {
@@ -126,7 +117,6 @@ func init() {
 			Name:              "keymint_vm",
 			ExtraSoftwareDeps: []string{"android_vm_t"},
 			Val: testParam{
-				browserType:       browser.TypeAsh,
 				maxErrorBootCount: 3,
 				chromeArgs:        []string{"--enable-features=ArcSwitchToKeyMintOnT,ArcSwitchToKeyMintOnTOverride"},
 			},
@@ -137,7 +127,6 @@ func init() {
 			ExtraHardwareDeps: hwdep.D(hwdep.Platform("dedede")),
 			ExtraData:         []string{"perfetto_config.pbtxt"},
 			Val: testParam{
-				browserType:       browser.TypeAsh,
 				maxErrorBootCount: 1,
 				tracingEnabled:    true,
 			},

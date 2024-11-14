@@ -24,7 +24,6 @@ import (
 	"go.chromium.org/tast-tests/cros/local/arc/arcent"
 	"go.chromium.org/tast-tests/cros/local/chrome"
 	"go.chromium.org/tast-tests/cros/local/chrome/ash"
-	"go.chromium.org/tast-tests/cros/local/chrome/browser"
 	"go.chromium.org/tast-tests/cros/local/chrome/uiauto"
 	"go.chromium.org/tast-tests/cros/local/imagehelpers"
 	"go.chromium.org/tast-tests/cros/local/policyutil"
@@ -79,10 +78,9 @@ var arcPolicyMap = map[string]func(ctx context.Context, s *testing.State) (polic
 
 func init() {
 	testing.AddTest(&testing.Test{
-		Func:         ManagedDevicePolicy,
-		LacrosStatus: testing.LacrosVariantUnneeded,
-		Desc:         "This test ensure that managed policies are applied to Android",
-		Contacts:     []string{"arc-commercial@google.com", "mhasank@chromium.org"},
+		Func:     ManagedDevicePolicy,
+		Desc:     "This test ensure that managed policies are applied to Android",
+		Contacts: []string{"arc-commercial@google.com", "mhasank@chromium.org"},
 		// ChromeOS > Software > ARC++ > Commercial > Tast Tests
 		BugComponent: "b:1487630",
 		Attr:         []string{},
@@ -111,7 +109,7 @@ func init() {
 			{
 				Name:              "ca_certs",
 				Val:               policyCaCerts,
-				ExtraSoftwareDeps: []string{"android_container"},// Disabled by TORA.  See:b/346157268.
+				ExtraSoftwareDeps: []string{"android_container"}, // Disabled by TORA.  See:b/346157268.
 				// "gaia"
 
 				ExtraAttr: []string{
@@ -122,7 +120,7 @@ func init() {
 			{
 				Name:              "ca_certs_vm",
 				Val:               policyCaCerts,
-				ExtraSoftwareDeps: []string{"android_vm"},// Disabled by TORA.  See:b/346157268.
+				ExtraSoftwareDeps: []string{"android_vm"}, // Disabled by TORA.  See:b/346157268.
 				// "gaia"
 
 				ExtraAttr: []string{
@@ -133,7 +131,7 @@ func init() {
 			{
 				Name:              "camera_disabled",
 				Val:               policyCameraDisabled,
-				ExtraSoftwareDeps: []string{"android_container"},// Disabled by TORA.  See:b/346157268.
+				ExtraSoftwareDeps: []string{"android_container"}, // Disabled by TORA.  See:b/346157268.
 				// "gaia"
 
 				ExtraAttr: []string{
@@ -144,7 +142,7 @@ func init() {
 			{
 				Name:              "camera_disabled_vm",
 				Val:               policyCameraDisabled,
-				ExtraSoftwareDeps: []string{"android_vm"},// Disabled by TORA.  See:b/346157268.
+				ExtraSoftwareDeps: []string{"android_vm"}, // Disabled by TORA.  See:b/346157268.
 				// "gaia"
 
 				ExtraAttr: []string{
@@ -155,7 +153,7 @@ func init() {
 			{
 				Name:              "choose_private_key_rules",
 				Val:               policyChoosePrivateKeyRules,
-				ExtraSoftwareDeps: []string{"android_container"},// Disabled by TORA.  See:b/346157268.
+				ExtraSoftwareDeps: []string{"android_container"}, // Disabled by TORA.  See:b/346157268.
 				// "gaia"
 
 				ExtraAttr: []string{
@@ -166,7 +164,7 @@ func init() {
 			{
 				Name:              "choose_private_key_rules_vm",
 				Val:               policyChoosePrivateKeyRules,
-				ExtraSoftwareDeps: []string{"android_vm"},// Disabled by TORA.  See:b/346157268.
+				ExtraSoftwareDeps: []string{"android_vm"}, // Disabled by TORA.  See:b/346157268.
 				// "gaia"
 
 				ExtraAttr: []string{
@@ -177,7 +175,7 @@ func init() {
 			{
 				Name:              "credentials_config_disabled",
 				Val:               policyCredentialsConfigDisabled,
-				ExtraSoftwareDeps: []string{"android_container"},// Disabled by TORA.  See:b/346157268.
+				ExtraSoftwareDeps: []string{"android_container"}, // Disabled by TORA.  See:b/346157268.
 				// "gaia"
 
 				ExtraAttr: []string{
@@ -188,7 +186,7 @@ func init() {
 			{
 				Name:              "credentials_config_disabled_vm",
 				Val:               policyCredentialsConfigDisabled,
-				ExtraSoftwareDeps: []string{"android_vm"},// Disabled by TORA.  See:b/346157268.
+				ExtraSoftwareDeps: []string{"android_vm"}, // Disabled by TORA.  See:b/346157268.
 				// "gaia"
 
 				ExtraAttr: []string{
@@ -199,7 +197,7 @@ func init() {
 			{
 				Name:              "enabled_system_app_package_names",
 				Val:               policyEnabledSystemAppPackageNames,
-				ExtraSoftwareDeps: []string{"android_container"},// Disabled by TORA.  See:b/346157268.
+				ExtraSoftwareDeps: []string{"android_container"}, // Disabled by TORA.  See:b/346157268.
 				// "gaia"
 
 				ExtraAttr: []string{
@@ -223,7 +221,7 @@ func init() {
 			{
 				Name:              "install_unknown_sources_disabled",
 				Val:               policyInstallUnknownSourcesDisabled,
-				ExtraSoftwareDeps: []string{"android_container"},// Disabled by TORA.  See:b/346157268.
+				ExtraSoftwareDeps: []string{"android_container"}, // Disabled by TORA.  See:b/346157268.
 				// "gaia"
 
 				ExtraAttr: []string{
@@ -234,7 +232,7 @@ func init() {
 			{
 				Name:              "install_unknown_sources_disabled_vm",
 				Val:               policyInstallUnknownSourcesDisabled,
-				ExtraSoftwareDeps: []string{"android_vm"},// Disabled by TORA.  See:b/346157268.
+				ExtraSoftwareDeps: []string{"android_vm"}, // Disabled by TORA.  See:b/346157268.
 				// "gaia"
 
 				ExtraAttr: []string{
@@ -245,7 +243,7 @@ func init() {
 			{
 				Name:              "modify_accounts_disabled",
 				Val:               policyModifyAccountsDisabled,
-				ExtraSoftwareDeps: []string{"android_container"},// Disabled by TORA.  See:b/346157268.
+				ExtraSoftwareDeps: []string{"android_container"}, // Disabled by TORA.  See:b/346157268.
 				// "gaia"
 
 				ExtraAttr: []string{
@@ -256,7 +254,7 @@ func init() {
 			{
 				Name:              "modify_accounts_disabled_vm",
 				Val:               policyModifyAccountsDisabled,
-				ExtraSoftwareDeps: []string{"android_vm"},// Disabled by TORA.  See:b/346157268.
+				ExtraSoftwareDeps: []string{"android_vm"}, // Disabled by TORA.  See:b/346157268.
 				// "gaia"
 
 				ExtraAttr: []string{
@@ -267,7 +265,7 @@ func init() {
 			{
 				Name:              "permitted_accessibility_services",
 				Val:               policyPermittedAccessibilityServices,
-				ExtraSoftwareDeps: []string{"android_container"},// Disabled by TORA.  See:b/346157268.
+				ExtraSoftwareDeps: []string{"android_container"}, // Disabled by TORA.  See:b/346157268.
 				// "gaia"
 
 				ExtraAttr: []string{
@@ -278,7 +276,7 @@ func init() {
 			{
 				Name:              "permitted_accessibility_services_vm",
 				Val:               policyPermittedAccessibilityServices,
-				ExtraSoftwareDeps: []string{"android_vm"},// Disabled by TORA.  See:b/346157268.
+				ExtraSoftwareDeps: []string{"android_vm"}, // Disabled by TORA.  See:b/346157268.
 				// "gaia"
 
 				ExtraAttr: []string{
@@ -289,7 +287,7 @@ func init() {
 			{
 				Name:              "printing_disabled",
 				Val:               policyPrintingDisabled,
-				ExtraSoftwareDeps: []string{"android_container"},// Disabled by TORA.  See:b/346157268.
+				ExtraSoftwareDeps: []string{"android_container"}, // Disabled by TORA.  See:b/346157268.
 				// "gaia"
 
 				ExtraAttr: []string{
@@ -300,7 +298,7 @@ func init() {
 			{
 				Name:              "printing_disabled_vm",
 				Val:               policyPrintingDisabled,
-				ExtraSoftwareDeps: []string{"android_vm"},// Disabled by TORA.  See:b/346157268.
+				ExtraSoftwareDeps: []string{"android_vm"}, // Disabled by TORA.  See:b/346157268.
 				// "gaia"
 
 				ExtraAttr: []string{
@@ -311,7 +309,7 @@ func init() {
 			{
 				Name:              "screen_capture_disabled",
 				Val:               policyScreenCaptureDisabled,
-				ExtraSoftwareDeps: []string{"android_container"},// Disabled by TORA.  See:b/346157268.
+				ExtraSoftwareDeps: []string{"android_container"}, // Disabled by TORA.  See:b/346157268.
 				// "gaia"
 
 				ExtraAttr: []string{
@@ -322,7 +320,7 @@ func init() {
 			{
 				Name:              "screen_capture_disabled_vm",
 				Val:               policyScreenCaptureDisabled,
-				ExtraSoftwareDeps: []string{"android_vm"},// Disabled by TORA.  See:b/346157268.
+				ExtraSoftwareDeps: []string{"android_vm"}, // Disabled by TORA.  See:b/346157268.
 				// "gaia"
 
 				ExtraAttr: []string{
@@ -333,7 +331,7 @@ func init() {
 			{
 				Name:              "set_wallpaper",
 				Val:               policySetWallpaper,
-				ExtraSoftwareDeps: []string{"android_container"},// Disabled by TORA.  See:b/346157268.
+				ExtraSoftwareDeps: []string{"android_container"}, // Disabled by TORA.  See:b/346157268.
 				// "gaia"
 
 				ExtraAttr: []string{
@@ -344,7 +342,7 @@ func init() {
 			{
 				Name:              "set_wallpaper_vm",
 				Val:               policySetWallpaper,
-				ExtraSoftwareDeps: []string{"android_vm"},// Disabled by TORA.  See:b/346157268.
+				ExtraSoftwareDeps: []string{"android_vm"}, // Disabled by TORA.  See:b/346157268.
 				// "gaia"
 
 				ExtraAttr: []string{
@@ -355,7 +353,7 @@ func init() {
 			{
 				Name:              "share_location_disabled",
 				Val:               policyShareLocationDisabled,
-				ExtraSoftwareDeps: []string{"android_container"},// Disabled by TORA.  See:b/346157268.
+				ExtraSoftwareDeps: []string{"android_container"}, // Disabled by TORA.  See:b/346157268.
 				// "gaia"
 
 				ExtraAttr: []string{
@@ -366,7 +364,7 @@ func init() {
 			{
 				Name:              "share_location_disabled_vm",
 				Val:               policyShareLocationDisabled,
-				ExtraSoftwareDeps: []string{"android_vm"},// Disabled by TORA.  See:b/346157268.
+				ExtraSoftwareDeps: []string{"android_vm"}, // Disabled by TORA.  See:b/346157268.
 				// "gaia"
 
 				ExtraAttr: []string{
@@ -377,7 +375,7 @@ func init() {
 			{
 				Name:              "unmute_microphone_disabled",
 				Val:               policyUnmuteMicrophoneDisabled,
-				ExtraSoftwareDeps: []string{"android_container"},// Disabled by TORA.  See:b/346157268.
+				ExtraSoftwareDeps: []string{"android_container"}, // Disabled by TORA.  See:b/346157268.
 				// "gaia"
 
 				ExtraAttr: []string{
@@ -388,7 +386,7 @@ func init() {
 			{
 				Name:              "unmute_microphone_disabled_vm",
 				Val:               policyUnmuteMicrophoneDisabled,
-				ExtraSoftwareDeps: []string{"android_vm"},// Disabled by TORA.  See:b/346157268.
+				ExtraSoftwareDeps: []string{"android_vm"}, // Disabled by TORA.  See:b/346157268.
 				// "gaia"
 
 				ExtraAttr: []string{
@@ -399,7 +397,7 @@ func init() {
 			{
 				Name:              "vpn_config_disabled",
 				Val:               policyVpnConfigDisabled,
-				ExtraSoftwareDeps: []string{"android_container"},// Disabled by TORA.  See:b/346157268.
+				ExtraSoftwareDeps: []string{"android_container"}, // Disabled by TORA.  See:b/346157268.
 				// "gaia"
 
 				ExtraAttr: []string{
@@ -531,7 +529,7 @@ func ManagedDevicePolicy(ctx context.Context, s *testing.State) {
 	}
 
 	if policyName == policyChoosePrivateKeyRules {
-		if err := generateCorpUsageCert(ctx, cr, browser.TypeAsh); err != nil {
+		if err := generateCorpUsageCert(ctx, cr); err != nil {
 			s.Fatal("Failed to generate corp usage cert: ", err)
 		}
 	}
@@ -606,7 +604,7 @@ func ManagedDevicePolicy(ctx context.Context, s *testing.State) {
 	}
 }
 
-func generateCorpUsageCert(ctx context.Context, cr *chrome.Chrome, bt browser.Type) error {
+func generateCorpUsageCert(ctx context.Context, cr *chrome.Chrome) error {
 	extensionURL := fmt.Sprintf("chrome-extension://%s/main.html", platformKeysTestExtensionID)
 	const (
 		statusResultTimeout  = 3 * time.Second

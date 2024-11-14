@@ -17,7 +17,6 @@ import (
 	"go.chromium.org/tast-tests/cros/local/arc"
 	"go.chromium.org/tast-tests/cros/local/arc/optin"
 	"go.chromium.org/tast-tests/cros/local/chrome"
-	"go.chromium.org/tast-tests/cros/local/chrome/browser"
 	"go.chromium.org/tast-tests/cros/local/cpu"
 	"go.chromium.org/tast/core/ctxutil"
 	"go.chromium.org/tast/core/errors"
@@ -26,30 +25,27 @@ import (
 
 func init() {
 	testing.AddTest(&testing.Test{
-		Func:         PlayStorePersistent,
-		LacrosStatus: testing.LacrosVariantUnneeded,
-		Desc:         "Makes sure that Play Store remains open after it is fully initialized",
-		Contacts:     []string{"arc-core@google.com"},
+		Func:     PlayStorePersistent,
+		Desc:     "Makes sure that Play Store remains open after it is fully initialized",
+		Contacts: []string{"arc-core@google.com"},
 		// ChromeOS > Software > ARC++ > Core > Play Store Setup
 		BugComponent: "b:1131344",
 		Attr:         []string{
 			// Disabled by TORA.  See:b/331360350.
 			// "group:mainline", "informational"
-			},
+		},
 		SoftwareDeps: []string{
 			"chrome",
 			// Disabled by TORA.  See:b/331360350.
 			// "gaia"
 		},
-		Timeout:      chrome.LoginTimeout + arc.BootTimeout + 3*time.Minute,
+		Timeout: chrome.LoginTimeout + arc.BootTimeout + 3*time.Minute,
 		Params: []testing.Param{{
 			ExtraSoftwareDeps: []string{"android_container"},
-			Val:               browser.TypeAsh,
 		}, {
 			Name:              "vm",
 			ExtraAttr:         []string{"group:hw_agnostic"},
 			ExtraSoftwareDeps: []string{"android_vm"},
-			Val:               browser.TypeAsh,
 		}},
 		VarDeps: []string{ui.GaiaPoolDefaultVarName},
 	})

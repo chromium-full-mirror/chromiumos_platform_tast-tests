@@ -17,7 +17,6 @@ import (
 	"go.chromium.org/tast-tests/cros/local/arc"
 	"go.chromium.org/tast-tests/cros/local/arc/optin"
 	"go.chromium.org/tast-tests/cros/local/chrome"
-	"go.chromium.org/tast-tests/cros/local/chrome/browser"
 	"go.chromium.org/tast/core/ctxutil"
 	"go.chromium.org/tast/core/errors"
 	"go.chromium.org/tast/core/testing"
@@ -25,21 +24,18 @@ import (
 
 func init() {
 	testing.AddTest(&testing.Test{
-		Func:         PlayAutoInstall,
-		LacrosStatus: testing.LacrosVariantUnneeded,
-		Desc:         "A functional test that verifies PlayAutoInstall(PAI) flow, It waits PAI is triggered and verifies the minimal set of apps is schedulled for installation",
-		Contacts:     []string{"arc-core@google.com"},
+		Func:     PlayAutoInstall,
+		Desc:     "A functional test that verifies PlayAutoInstall(PAI) flow, It waits PAI is triggered and verifies the minimal set of apps is schedulled for installation",
+		Contacts: []string{"arc-core@google.com"},
 		// ChromeOS > Software > ARC++ > Core > Play Store Setup
 		BugComponent: "b:1131344",
 		Attr:         []string{"group:mainline", "informational"},
 		SoftwareDeps: []string{"chrome", "gaia"},
 		Params: []testing.Param{{
 			ExtraSoftwareDeps: []string{"android_container", "chrome"},
-			Val:               browser.TypeAsh,
 		}, {
 			Name:              "vm",
 			ExtraSoftwareDeps: []string{"android_vm"},
-			Val:               browser.TypeAsh,
 		}},
 		Timeout: chrome.LoginTimeout + arc.BootTimeout + 30*time.Second,
 		VarDeps: []string{arcCommon.PlayAutoInstallAccountVarName},

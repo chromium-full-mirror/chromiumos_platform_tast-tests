@@ -11,7 +11,6 @@ import (
 	"go.chromium.org/tast-tests/cros/common/perf"
 	"go.chromium.org/tast-tests/cros/local/arc"
 	"go.chromium.org/tast-tests/cros/local/chrome"
-	"go.chromium.org/tast-tests/cros/local/chrome/browser"
 	"go.chromium.org/tast-tests/cros/local/chrome/metrics"
 	"go.chromium.org/tast-tests/cros/local/chrome/uiauto"
 	"go.chromium.org/tast-tests/cros/local/chrome/uiauto/faillog"
@@ -21,10 +20,9 @@ import (
 )
 
 type testParamOobeProvisioningPerf struct {
-	browserType browser.Type
-	username    string
-	password    string
-	metric      string
+	username string
+	password string
+	metric   string
 }
 
 type oobeMetrics struct {
@@ -34,9 +32,8 @@ type oobeMetrics struct {
 
 func init() {
 	testing.AddTest(&testing.Test{
-		Func:         OobeProvisioningPerf,
-		LacrosStatus: testing.LacrosVariantUnneeded,
-		Desc:         "Navigate through Play Store Out-Of-Box Experience (OOBE) and perform ARC provisioning. Report provisioning time similar to UMA case Arc.UiAvailable.OobeProvisioning.TimeDelta.Unmanaged",
+		Func: OobeProvisioningPerf,
+		Desc: "Navigate through Play Store Out-Of-Box Experience (OOBE) and perform ARC provisioning. Report provisioning time similar to UMA case Arc.UiAvailable.OobeProvisioning.TimeDelta.Unmanaged",
 		Contacts: []string{
 			"arc-performance@google.com",
 			"khmel@chromium.org", // Original author.
@@ -51,34 +48,30 @@ func init() {
 			Name:              "managed",
 			ExtraSoftwareDeps: []string{"android_container"},
 			Val: testParamOobeProvisioningPerf{
-				browserType: browser.TypeAsh,
-				username:    "arc.OobeProvisioningPerf.managed_username",
-				password:    "arc.OobeProvisioningPerf.managed_password",
-				metric:      "Managed",
+				username: "arc.OobeProvisioningPerf.managed_username",
+				password: "arc.OobeProvisioningPerf.managed_password",
+				metric:   "Managed",
 			},
 		}, {
 			Name:              "managed_vm",
 			ExtraSoftwareDeps: []string{"android_vm"},
 			Val: testParamOobeProvisioningPerf{
-				browserType: browser.TypeAsh,
-				username:    "arc.OobeProvisioningPerf.managed_username",
-				password:    "arc.OobeProvisioningPerf.managed_password",
-				metric:      "Managed",
+				username: "arc.OobeProvisioningPerf.managed_username",
+				password: "arc.OobeProvisioningPerf.managed_password",
+				metric:   "Managed",
 			},
 		}, {
 			Name:              "unmanaged",
 			ExtraAttr:         []string{"crosbolt_arc_perf_qual"},
 			ExtraSoftwareDeps: []string{"android_container"},
 			Val: testParamOobeProvisioningPerf{
-				browserType: browser.TypeAsh,
-				metric:      "Unmanaged",
+				metric: "Unmanaged",
 			},
 		}, {
 			Name:              "unmanaged_vm",
 			ExtraSoftwareDeps: []string{"android_vm"},
 			Val: testParamOobeProvisioningPerf{
-				browserType: browser.TypeAsh,
-				metric:      "Unmanaged",
+				metric: "Unmanaged",
 			},
 		}},
 		VarDeps: []string{

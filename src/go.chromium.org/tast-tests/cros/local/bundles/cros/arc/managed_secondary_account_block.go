@@ -14,7 +14,6 @@ import (
 	"go.chromium.org/tast-tests/cros/common/policy"
 	uiCommon "go.chromium.org/tast-tests/cros/common/ui"
 	"go.chromium.org/tast-tests/cros/local/accountmanager"
-	"go.chromium.org/tast-tests/cros/local/chrome/browser"
 	"go.chromium.org/tast-tests/cros/local/chrome/uiauto"
 	"go.chromium.org/tast-tests/cros/local/chrome/uiauto/nodewith"
 	"go.chromium.org/tast-tests/cros/local/chrome/uiauto/role"
@@ -29,18 +28,16 @@ import (
 )
 
 type managedSecondaryAccountBlockArgs struct {
-	managed     bool
-	browserType browser.Type
+	managed bool
 }
 
 const managedEntAccountPoolName = "arc.managedEntAccountPool"
 
 func init() {
 	testing.AddTest(&testing.Test{
-		Func:         ManagedSecondaryAccountBlock,
-		LacrosStatus: testing.LacrosVariantUnneeded,
-		Desc:         "Checks that enterprise secondary account is not available in ARC",
-		Contacts:     []string{"arc-commercial@google.com", "mhasank@chromium.org"},
+		Func:     ManagedSecondaryAccountBlock,
+		Desc:     "Checks that enterprise secondary account is not available in ARC",
+		Contacts: []string{"arc-commercial@google.com", "mhasank@chromium.org"},
 		// ChromeOS > Software > ARC++ > Commercial > Tast Tests
 		BugComponent: "b:1487630",
 		Attr:         []string{"group:mainline"},
@@ -57,16 +54,14 @@ func init() {
 			{
 				Name: "managed_ash",
 				Val: managedSecondaryAccountBlockArgs{
-					managed:     true,
-					browserType: browser.TypeAsh,
+					managed: true,
 				},
 				ExtraAttr: []string{"informational"},
 			},
 			{
 				Name: "unmanaged_ash",
 				Val: managedSecondaryAccountBlockArgs{
-					managed:     false,
-					browserType: browser.TypeAsh,
+					managed: false,
 				},
 				ExtraAttr: []string{"informational"},
 			}},
