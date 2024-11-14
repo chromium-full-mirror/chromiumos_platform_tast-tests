@@ -383,7 +383,7 @@ func init() {
 				ExtraHardwareDeps: hwdep.D(hwdep.MotionSensor()),
 			},
 			{
-				Name: "all",
+				Name: "flash_keyscan_pd_sensors_suspend",
 				Val: ecStressParams{
 					flash:   true,
 					keyscan: true,
@@ -392,6 +392,17 @@ func init() {
 					suspend: true,
 				},
 				ExtraAttr:         []string{"group:firmware", "firmware_stress"},
+				ExtraHardwareDeps: hwdep.D(hwdep.MotionSensor()),
+			},
+			{
+				Name: "all",
+				Val: ecStressParams{
+					flash:   true,
+					keyscan: true,
+					pd:      true,
+					sensors: true,
+					suspend: true,
+				},
 				ExtraHardwareDeps: hwdep.D(hwdep.MotionSensor()),
 			},
 		},
