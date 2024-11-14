@@ -28,12 +28,11 @@ func init() {
 		Vars:         []string{"servo"},
 		SoftwareDeps: []string{"chrome"},
 		Fixture:      fixture.NormalMode,
-		HardwareDeps: hwdep.D(hwdep.ChromeEC()),
+		HardwareDeps: hwdep.D(hwdep.ChromeEC(), hwdep.MKBPEvent()),
 		Timeout:      60 * time.Minute,
 		LacrosStatus: testing.LacrosVariantUnneeded,
 		Attr:         []string{"group:firmware", "firmware_pd_unstable"},
 		Params: []testing.Param{{
-			Name: "normal",
 			Val: firmware.PDTestParams{
 				DTS: firmware.DTSModeOff,
 			},
@@ -56,6 +55,12 @@ func PDWakeHPD(ctx context.Context, s *testing.State) {
 
 	if err := h.RequireConfig(ctx); err != nil {
 		s.Fatal("Failed to create config: ", err)
+	}
+
+	// TODO(b/298675713): change hwdep to depend on pdc, not just brox
+	board, err := h.Reporter.Board(ctx)
+	if err != nil {
+		s.Fatal("Failed to get board name: ", err)
 	}
 
 	testParams := s.Param().(firmware.PDTestParams)
@@ -131,7 +136,8 @@ func PDWakeHPD(ctx context.Context, s *testing.State) {
 			s.Fatal("Failed to retrieve the power state of the DUT ", getPowerStateErr)
 		}
 
-		if hpd.expectedWake {
+		// ec policy always wake on high regardless of previous state
+		if hpd.expectedWake || board != "brox" {
 			if powerState != "S0" {
 				s.Logf("Expected power state: S0, actual: %s", string(powerState))
 				TestFailures = append(TestFailures, idx)
