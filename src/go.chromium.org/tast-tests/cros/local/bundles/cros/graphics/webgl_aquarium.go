@@ -18,7 +18,6 @@ import (
 	"go.chromium.org/tast-tests/cros/common/perf"
 	"go.chromium.org/tast-tests/cros/common/testexec"
 	"go.chromium.org/tast-tests/cros/local/chrome"
-	"go.chromium.org/tast-tests/cros/local/chrome/browser"
 	"go.chromium.org/tast-tests/cros/local/chrome/cuj"
 	"go.chromium.org/tast-tests/cros/local/cpu"
 	"go.chromium.org/tast-tests/cros/local/graphics"
@@ -44,8 +43,7 @@ var (
 )
 
 type aquariumParamData struct {
-	fishCount   int
-	browserType browser.Type
+	fishCount int
 }
 
 func init() {
@@ -68,8 +66,7 @@ func init() {
 			Fixture:   "chromeGraphics",
 			ExtraData: []string{webGlAquarium},
 			Val: aquariumParamData{
-				fishCount:   50,
-				browserType: browser.TypeAsh,
+				fishCount: 50,
 			},
 		}, {
 			Name:      "1000_fishes",
@@ -77,8 +74,7 @@ func init() {
 			ExtraData: []string{webGlAquarium},
 			ExtraAttr: []string{"group:crosbolt", "crosbolt_fsi_check"},
 			Val: aquariumParamData{
-				fishCount:   1000,
-				browserType: browser.TypeAsh,
+				fishCount: 1000,
 			},
 		}},
 	})

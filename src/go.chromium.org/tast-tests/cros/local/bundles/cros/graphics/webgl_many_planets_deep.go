@@ -16,7 +16,6 @@ import (
 	"go.chromium.org/tast-tests/cros/common/perf"
 	"go.chromium.org/tast-tests/cros/common/testexec"
 	"go.chromium.org/tast-tests/cros/local/chrome"
-	"go.chromium.org/tast-tests/cros/local/chrome/browser"
 	"go.chromium.org/tast-tests/cros/local/graphics"
 	"go.chromium.org/tast/core/ctxutil"
 	"go.chromium.org/tast/core/testing"
@@ -50,7 +49,6 @@ func init() {
 		Params: []testing.Param{{
 			Name:    "",
 			Fixture: "chromeGraphics",
-			Val:     browser.TypeAsh,
 		}},
 	})
 }

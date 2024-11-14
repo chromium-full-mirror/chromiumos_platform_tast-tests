@@ -16,7 +16,6 @@ import (
 
 	"go.chromium.org/tast-tests/cros/local/chrome"
 	"go.chromium.org/tast-tests/cros/local/chrome/ash"
-	"go.chromium.org/tast-tests/cros/local/chrome/browser"
 	"go.chromium.org/tast-tests/cros/local/graphics/modetest"
 	"go.chromium.org/tast/core/errors"
 	"go.chromium.org/tast/core/testing"
@@ -44,10 +43,9 @@ var (
 )
 
 type pageTestParams struct {
-	browserType browser.Type
-	file        string
-	media       string
-	title       string
+	file  string
+	media string
+	title string
 }
 
 func init() {
@@ -69,18 +67,16 @@ func init() {
 			Fixture:   "chromeGraphicsHwOverlays",
 			ExtraData: []string{canvas2DFile},
 			Val: pageTestParams{
-				browserType: browser.TypeAsh,
-				file:        canvas2DFile,
-				title:       "Canvas 2D Low Latency",
+				file:  canvas2DFile,
+				title: "Canvas 2D Low Latency",
 			},
 		}, {
 			Name:      "canvas_3d",
 			Fixture:   "chromeGraphicsHwOverlays",
 			ExtraData: []string{canvas3DFile},
 			Val: pageTestParams{
-				browserType: browser.TypeAsh,
-				file:        canvas3DFile,
-				title:       "Canvas 3D",
+				file:  canvas3DFile,
+				title: "Canvas 3D",
 			},
 		}, {
 			Name:      "video",
@@ -89,10 +85,9 @@ func init() {
 			// Video test requires NV12 overlay support.
 			ExtraHardwareDeps: hwdep.D(hwdep.SupportsNV12Overlays()),
 			Val: pageTestParams{
-				browserType: browser.TypeAsh,
-				file:        videoFile,
-				media:       videoMedia,
-				title:       "Video playback",
+				file:  videoFile,
+				media: videoMedia,
+				title: "Video playback",
 			},
 		}, {
 			Name:              "canvas_2d_vulkan",
@@ -100,9 +95,8 @@ func init() {
 			ExtraSoftwareDeps: []string{"vulkan_composite"},
 			ExtraData:         []string{canvas2DFile},
 			Val: pageTestParams{
-				browserType: browser.TypeAsh,
-				file:        canvas2DFile,
-				title:       "Canvas 2D Low Latency",
+				file:  canvas2DFile,
+				title: "Canvas 2D Low Latency",
 			},
 		}, {
 			Name:              "canvas_3d_vulkan",
@@ -110,9 +104,8 @@ func init() {
 			ExtraSoftwareDeps: []string{"vulkan_composite"},
 			ExtraData:         []string{canvas3DFile},
 			Val: pageTestParams{
-				browserType: browser.TypeAsh,
-				file:        canvas3DFile,
-				title:       "Canvas 3D",
+				file:  canvas3DFile,
+				title: "Canvas 3D",
 			},
 		}, {
 			Name:              "video_vulkan",
@@ -120,10 +113,9 @@ func init() {
 			ExtraSoftwareDeps: []string{"vulkan_composite"},
 			ExtraData:         []string{videoFile, videoMedia},
 			Val: pageTestParams{
-				browserType: browser.TypeAsh,
-				file:        videoFile,
-				media:       videoMedia,
-				title:       "Video playback",
+				file:  videoFile,
+				media: videoMedia,
+				title: "Video playback",
 			},
 		}},
 	})

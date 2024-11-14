@@ -12,7 +12,6 @@ import (
 	"time"
 
 	"go.chromium.org/tast-tests/cros/local/chrome"
-	"go.chromium.org/tast-tests/cros/local/chrome/browser"
 	"go.chromium.org/tast-tests/cros/local/chrome/display"
 	"go.chromium.org/tast-tests/cros/local/graphics"
 	"go.chromium.org/tast-tests/cros/local/graphics/modetest"
@@ -36,10 +35,7 @@ func init() {
 		HardwareDeps: hwdep.D(hwdep.InternalDisplay()),
 		Data:         []string{"fps.html"},
 		Timeout:      5 * time.Minute,
-		Params: []testing.Param{{
-			Val:     browser.TypeAsh,
-			Fixture: "chromeGraphics",
-		}},
+		Fixture:      "chromeGraphics",
 	})
 }
 
@@ -68,9 +64,10 @@ func FPS(ctx context.Context, s *testing.State) {
 		s.Fatal("Failed to set up browser: ", err)
 	}
 	defer conn.Close()
-	br := s.FixtValue().(chrome.HasChrome).Chrome().Browser()
 
-	tconn, err := br.TestAPIConn(ctx)
+	cr := s.FixtValue().(chrome.HasChrome).Chrome()
+
+	tconn, err := cr.TestAPIConn(ctx)
 	if err != nil {
 		s.Fatal("Failed to connect to test API: ", err)
 	}
