@@ -144,7 +144,7 @@ func init() {
 			},
 			{
 				Name:              "npu_no_effects",
-				ExtraSoftwareDeps: []string{"tflite_intel_openvino"},
+				ExtraSoftwareDeps: []string{"npu"},
 				Val: effectsParams{
 					blurLevel:        effects.KBlurDisabled,
 					relightEnabled:   false,
@@ -154,7 +154,7 @@ func init() {
 			},
 			{
 				Name:              "npu_blur_only",
-				ExtraSoftwareDeps: []string{"tflite_intel_openvino"},
+				ExtraSoftwareDeps: []string{"npu"},
 				Val: effectsParams{
 					blurLevel:        effects.KBlurMaximum,
 					relightEnabled:   false,
@@ -165,7 +165,7 @@ func init() {
 			},
 			{
 				Name:              "npu_relight_only",
-				ExtraSoftwareDeps: []string{"tflite_intel_openvino"},
+				ExtraSoftwareDeps: []string{"npu"},
 				Val: effectsParams{
 					blurLevel:        effects.KBlurDisabled,
 					relightEnabled:   true,
@@ -176,7 +176,7 @@ func init() {
 			},
 			{
 				Name:              "npu_replace_only",
-				ExtraSoftwareDeps: []string{"tflite_intel_openvino"},
+				ExtraSoftwareDeps: []string{"npu"},
 				Val: effectsParams{
 					blurLevel:        effects.KBlurImage,
 					relightEnabled:   false,
@@ -187,7 +187,7 @@ func init() {
 			},
 			{
 				Name:              "npu_retouch_only",
-				ExtraSoftwareDeps: []string{"tflite_intel_openvino"},
+				ExtraSoftwareDeps: []string{"npu"},
 				Val: effectsParams{
 					blurLevel:        effects.KBlurDisabled,
 					relightEnabled:   false,
@@ -198,7 +198,7 @@ func init() {
 			},
 			{
 				Name:              "npu_blur_and_relight",
-				ExtraSoftwareDeps: []string{"tflite_intel_openvino"},
+				ExtraSoftwareDeps: []string{"npu"},
 				Val: effectsParams{
 					blurLevel:        effects.KBlurMaximum,
 					relightEnabled:   true,
@@ -209,7 +209,7 @@ func init() {
 			},
 			{
 				Name:              "npu_relight_and_retouch",
-				ExtraSoftwareDeps: []string{"tflite_intel_openvino"},
+				ExtraSoftwareDeps: []string{"npu"},
 				Val: effectsParams{
 					blurLevel:        effects.KBlurDisabled,
 					relightEnabled:   true,
@@ -220,7 +220,7 @@ func init() {
 			},
 			{
 				Name:              "npu_blur_relight_retouch",
-				ExtraSoftwareDeps: []string{"tflite_intel_openvino"},
+				ExtraSoftwareDeps: []string{"npu"},
 				Val: effectsParams{
 					blurLevel:        effects.KBlurMaximum,
 					relightEnabled:   true,

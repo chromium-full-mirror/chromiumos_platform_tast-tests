@@ -201,7 +201,7 @@ func init() {
 				// Platform VC effects become available at feature level 1. Refer to
 				// the feature database in platform/feature-management{,-private}.
 				ExtraHardwareDeps: hwdep.D(hwdep.FeatureLevel(1)),
-				ExtraSoftwareDeps: []string{"tflite_intel_openvino"},
+				ExtraSoftwareDeps: []string{"npu"},
 				Val: meetcuj.MeetTest{
 					Bots:          []int{1, 3, 15},
 					Layout:        googlemeet.TiledLayout,
@@ -346,7 +346,7 @@ func init() {
 				Timeout:           meetcuj.DefaultTestTimeout,
 				ExtraAttr:         []string{"group:cuj"},
 				ExtraHardwareDeps: hwdep.D(hwdep.FeatureLevel(1)),
-				ExtraSoftwareDeps: []string{"tflite_intel_openvino"},
+				ExtraSoftwareDeps: []string{"npu"},
 				Val: meetcuj.MeetTest{
 					Bots:           []int{1, 3, 15},
 					Layout:         googlemeet.TiledLayout,
@@ -383,7 +383,7 @@ func init() {
 				Timeout:           meetcuj.DefaultTestTimeout,
 				ExtraAttr:         []string{"group:cuj"},
 				ExtraHardwareDeps: hwdep.D(hwdep.FeatureLevel(1)),
-				ExtraSoftwareDeps: []string{"tflite_intel_openvino"},
+				ExtraSoftwareDeps: []string{"npu"},
 				Val: meetcuj.MeetTest{
 					Bots:           []int{1, 3, 15},
 					Layout:         googlemeet.TiledLayout,
@@ -456,7 +456,7 @@ func init() {
 				Timeout:           meetcuj.DefaultTestTimeout,
 				ExtraAttr:         []string{"group:cuj"},
 				ExtraHardwareDeps: hwdep.D(hwdep.FeatureLevel(1)),
-				ExtraSoftwareDeps: []string{"tflite_intel_openvino"},
+				ExtraSoftwareDeps: []string{"npu"},
 				Val: meetcuj.MeetTest{
 					Bots:           []int{1, 3, 15},
 					Layout:         googlemeet.TiledLayout,
@@ -499,7 +499,7 @@ func init() {
 				Timeout:           meetcuj.DefaultTestTimeout,
 				ExtraAttr:         []string{"group:cuj"},
 				ExtraHardwareDeps: hwdep.D(hwdep.FeatureLevel(1)),
-				ExtraSoftwareDeps: []string{"tflite_intel_openvino"},
+				ExtraSoftwareDeps: []string{"npu"},
 				Val: meetcuj.MeetTest{
 					Bots:              []int{1, 3, 15},
 					Layout:            googlemeet.TiledLayout,
