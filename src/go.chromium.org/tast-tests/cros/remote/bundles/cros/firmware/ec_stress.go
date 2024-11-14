@@ -411,7 +411,6 @@ type cancelfunc func() error
 const defaultStressPeriod = 30 * time.Second
 const timeoutPadding = 20 * time.Second
 const iioBasePath = "/sys/bus/iio/devices"
-const crashDir = "/var/spool/crash"
 const keyboardWakeupPath = "/sys/devices/platform/i8042/serio0/power/wakeup"
 
 // errNoDeviceFound is returned by parser function when no device matches.
@@ -614,74 +613,6 @@ func processIsRunning(ctx context.Context, h *firmware.Helper, pid int) (bool, e
 		return false, nil
 	}
 	return false, err
-}
-
-// ****** Crash Utility Functions ******
-
-func clearCrashes(ctx context.Context, h *firmware.Helper) error {
-	fs := dutfs.NewClient(h.RPCClient.Conn)
-	// Remove all files under crashesDir
-	files, err := fs.ReadDir(ctx, crashDir)
-	if err != nil {
-		return errors.Wrapf(err, "failed to read crash dir %s", crashDir)
-	}
-	for _, file := range files {
-		testing.ContextLogf(ctx, "removing crash file: %s", file.Name())
-		if err := fs.Remove(ctx, filepath.Join(crashDir, file.Name())); err != nil {
-			return errors.Wrapf(err, "failed to remove crash file %s", file.Name())
-		}
-	}
-	crashes, err := getCrashes(ctx, h)
-	if err != nil {
-		return errors.Wrapf(err, "crash files still exist after removing: %v", crashes)
-	}
-	return nil
-}
-
-func getCrashes(ctx context.Context, h *firmware.Helper) ([]string, error) {
-	fs := dutfs.NewClient(h.RPCClient.Conn)
-	files, err := fs.ReadDir(ctx, crashDir)
-	if err != nil {
-		return nil, errors.Wrapf(err, "failed to read crash dir %q", crashDir)
-	}
-	var crashes []string
-	for _, file := range files {
-		testing.ContextLogf(ctx, "Found crash file: %s", file.Name())
-		crashes = append(crashes, file.Name())
-	}
-	return crashes, nil
-}
-
-func parseEcCrashes(ctx context.Context, h *firmware.Helper, crashFiles []string) ([]string, error) {
-	fs := dutfs.NewClient(h.RPCClient.Conn)
-	var ecCrashMagicIDs = map[string]string{
-		"dead6660": "div-by-0",
-		"dead6661": "stack-overflow",
-		"dead6662": "pd-crash",
-		"dead6663": "assert",
-		"dead6664": "watchdog",
-		"dead6665": "bad-rng",
-		"dead6666": "pmic-fault",
-		"dead6667": "exit",
-		"dead6668": "watchdog-warning",
-	}
-	var ecCrashes []string
-	for _, crashFile := range crashFiles {
-		if strings.HasSuffix(crashFile, ".eccrash") {
-			data, err := fs.ReadFile(ctx, filepath.Join(crashDir, crashFile))
-			if err != nil {
-				return nil, err
-			}
-			dataStr := string(data)
-			for ecCrashMagicID, crashType := range ecCrashMagicIDs {
-				if strings.Contains(dataStr, ecCrashMagicID) {
-					ecCrashes = append(ecCrashes, crashType)
-					break
-				}
-			}
-		}
-	}
-	return ecCrashes, nil
 }
 
 // ****** Sensor Utility Functions ******
@@ -1144,9 +1075,9 @@ func EcStress(ctx context.Context, s *testing.State) {
 		s.Fatal("Failed to remove ccd watchdog: ", err)
 	}
 
-	// Clear crashes so we know if a new crash occurred
-	if err := clearCrashes(ctx, h); err != nil {
-		s.Fatal("Failed to clear crashes: ", err)
+	// Cache crashes so we know if a new crash occurred
+	if err := h.UpdateECCrashCache(ctx); err != nil {
+		s.Fatal("Failed to cache ec crashes before starting")
 	}
 
 	// Collect the current boot ID to detect reboots
@@ -1272,30 +1203,34 @@ func EcStress(ctx context.Context, s *testing.State) {
 		}
 	}
 
-	crashes, err := getCrashes(ctx, h)
-	if err != nil {
-		s.Fatal("Failed to check for crashes after stress period: ", err)
-	}
-
-	for _, crashFile := range crashes {
-		s.Log("crash file detected: ", crashFile)
-	}
-
-	ecCrashes, err := parseEcCrashes(ctx, h, crashes)
-	if err != nil {
-		s.Fatal("Failed to parse ec crashes: ", err)
-	}
-
-	if len(ecCrashes) > 0 {
-		for _, ecCrash := range ecCrashes {
-			s.Error("EC crash detected: ", ecCrash)
-		}
-	}
-
 	if rebooted, err := dutRebooted(ctx, h); err != nil {
 		s.Fatal("Failed to check if dut rebooted: ", err)
 	} else if rebooted {
 		s.Error("DUT rebooted unexpectedly")
 	}
 
+	ecCrashes, err := h.GetNewECCrashes(ctx)
+	if err != nil {
+		s.Fatal("Failed to check for new ec crashes")
+	}
+	// Cache crashes so we don't fail EC crash check in fixture
+	if err := h.UpdateECCrashCache(ctx); err != nil {
+		s.Fatal("Failed to cache ec crashes after test")
+	}
+	if len(ecCrashes) == 0 {
+		return
+	}
+	for crashName := range ecCrashes {
+		logPath := firmware.ECCrashBaseDir + crashName + ".eccrash"
+		out, err := h.Reporter.CatFile(ctx, logPath)
+		if err != nil {
+			s.Fatalf("Failed to read .eccrash file %s", logPath)
+		}
+		// Ignore watchdog warnings
+		if strings.Contains(strings.ToLower(out), "dead6668") {
+			s.Log("Found watchdog warning (dead6668), ignoring")
+			continue
+		}
+		s.Fatalf("EC crash detected: %s", string(out))
+	}
 }
