@@ -29,7 +29,13 @@ func init() {
 			Name:              "real",
 			ExtraSoftwareDeps: []string{caps.BuiltinCamera},
 			Fixture:           "ccaLaunched",
-			ExtraAttr:         []string{"informational", "group:criticalstaging", "group:camera-libcamera"},
+			ExtraAttr:         []string{
+				"informational",
+				"group:criticalstaging",
+				"group:camera-libcamera",
+				"group:release-health",
+				"release-health_camera",
+			},
 		}, {
 			Name:              "vivid",
 			ExtraSoftwareDeps: []string{caps.VividCamera},

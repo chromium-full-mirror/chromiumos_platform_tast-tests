@@ -21,7 +21,12 @@ func init() {
 		Desc:         "Measure the average OCR scanning latency on preview in photo mode",
 		Contacts:     []string{"chromeos-camera-app-eng@google.com", "chuhsuan@chromium.org"},
 		BugComponent: "b:978428", // ChromeOS > Platform > Technologies > Camera > App & Framework
-		Attr:         []string{"group:crosbolt", "crosbolt_perbuild"},
+		Attr:         []string{
+			"group:crosbolt",
+			"crosbolt_perbuild",
+			"group:release-health",
+			"release-health_camera",
+		},
 		SoftwareDeps: []string{"camera_app", "chrome"},
 		Data:         []string{"ocr_no_text_3264x2448.jpg", "ocr_one_line_3264x2448.jpg", "ocr_full_of_text_3264x2448.jpg"},
 		Fixture:      "ccaTestBridgeReadyWithFakeHALCameraWithPreviewOCR",

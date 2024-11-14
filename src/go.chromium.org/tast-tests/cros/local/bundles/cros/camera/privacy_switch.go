@@ -29,7 +29,16 @@ func init() {
 			"ribalda@chromium.org",
 		},
 		BugComponent: "b:1481072", // ChromeOS > Platform > Technologies > Camera > Kernel
-		Attr:         []string{"group:mainline", "group:camera-stability", "group:camera-usb-qual", "group:camera", "camera_kernel", "camera_functional"},
+		Attr:         []string{
+			"group:mainline",
+			"group:camera-stability",
+			"group:camera-usb-qual",
+			"group:camera",
+			"camera_kernel",
+			"camera_functional",
+			"group:release-health",
+			"release-health_camera",
+		},
 		HardwareDeps: hwdep.D(hwdep.CameraEnumerated()),
 		SoftwareDeps: []string{caps.BuiltinUSBCamera},
 	})

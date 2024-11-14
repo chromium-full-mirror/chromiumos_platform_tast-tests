@@ -29,7 +29,11 @@ func init() {
 		Desc:         "Opens CCA and measures the UI performance including CPU and power usage",
 		Contacts:     []string{"chromeos-camera-app-eng@google.com", "wtlee@chromium.org"},
 		BugComponent: "b:978428", // ChromeOS > Platform > Technologies > Camera > App & Framework
-		Attr:         []string{"group:crosbolt"},
+		Attr:         []string{
+			"group:crosbolt",
+			"group:release-health",
+			"release-health_camera",
+		},
 		SoftwareDeps: []string{"camera_app", "chrome", caps.BuiltinOrVividCamera},
 		Params: []testing.Param{{
 			ExtraAttr: []string{"crosbolt_perbuild"},

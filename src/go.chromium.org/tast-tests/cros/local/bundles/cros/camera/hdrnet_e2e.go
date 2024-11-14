@@ -26,7 +26,12 @@ func init() {
 		Desc:         "Runs the HDRnet end-to-end integration test",
 		Contacts:     []string{"chromeos-camera-eng@google.com", "jcliang@chromium.org"},
 		BugComponent: "b:167281", // ChromeOS > Platform > Technologies > Camera
-		Attr:         []string{"group:mainline", "informational", "group:release-health"},
+		Attr:         []string{
+			"group:mainline",
+			"informational",
+			"group:release-health",
+			"release-health_camera",
+		},
 		HardwareDeps: hwdep.D(hwdep.CameraFeature(features.HDRnet)),
 		SoftwareDeps: []string{"camera_app", "chrome", caps.BuiltinMIPICamera},
 		Fixture:      "ccaTestBridgeReady",

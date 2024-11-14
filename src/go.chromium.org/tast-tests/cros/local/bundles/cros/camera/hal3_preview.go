@@ -20,7 +20,16 @@ func init() {
 		Desc:         "Verifies camera preview function with HAL3 interface",
 		Contacts:     []string{"chromeos-camera-eng@google.com", "beckerh@chromium.org", "xinggu@chromium.org"},
 		BugComponent: "b:167281", // ChromeOS > Platform > Technologies > Camera
-		Attr:         []string{"group:mainline", "informational", "group:camera-libcamera", "group:camera", "camera_hal", "camera_functional", "group:release-health"},
+		Attr:         []string{
+			"group:mainline",
+			"informational",
+			"group:camera-libcamera",
+			"group:camera",
+			"camera_hal",
+			"camera_functional",
+			"group:release-health",
+			"release-health_camera",
+		},
 		SoftwareDeps: []string{"arc", "arc_camera3", "chrome", caps.BuiltinCamera},
 		Fixture:      "chromeLoggedIn",
 		Timeout:      4*time.Minute + hal3.AdditionalTimeout,
