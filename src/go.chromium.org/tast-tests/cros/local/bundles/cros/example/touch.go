@@ -10,8 +10,6 @@ import (
 	"time"
 
 	"go.chromium.org/tast-tests/cros/local/chrome"
-	"go.chromium.org/tast-tests/cros/local/chrome/browser"
-	"go.chromium.org/tast-tests/cros/local/chrome/browser/browserfixt"
 	"go.chromium.org/tast-tests/cros/local/chrome/display"
 	"go.chromium.org/tast-tests/cros/local/input"
 	"go.chromium.org/tast/core/testing"
@@ -50,18 +48,11 @@ func Touch(ctx context.Context, s *testing.State) {
 		s.Fatal("No display: ", err)
 	}
 
-	// Setup a browser before opening a tab.
-	br, closeBrowser, err := browserfixt.SetUp(ctx, cr, browser.TypeAsh)
-	if err != nil {
-		s.Fatal("Failed to open the browser: ", err)
-	}
-	defer closeBrowser(ctx)
-
 	// TODO(ricardoq): This page might change/break in the future. If so, a built-in
 	// HTML page that accepts drawing should be used. Additionally, Kleki seems to ignore
 	// the 2nd & last events when drawing splines. But for the purpose of showing how
 	// to use the API is good enough.
-	conn, err := br.NewConn(ctx, "http://kleki.com")
+	conn, err := cr.NewConn(ctx, "http://kleki.com")
 	if err != nil {
 		s.Fatal("Failed to open connection: ", err)
 	}

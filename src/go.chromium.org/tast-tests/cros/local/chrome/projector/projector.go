@@ -14,8 +14,6 @@ import (
 	"go.chromium.org/tast-tests/cros/local/apps"
 	"go.chromium.org/tast-tests/cros/local/audio"
 	"go.chromium.org/tast-tests/cros/local/chrome"
-	"go.chromium.org/tast-tests/cros/local/chrome/browser"
-	"go.chromium.org/tast-tests/cros/local/chrome/browser/browserfixt"
 	"go.chromium.org/tast-tests/cros/local/chrome/uiauto"
 	"go.chromium.org/tast-tests/cros/local/chrome/uiauto/launcher"
 	"go.chromium.org/tast-tests/cros/local/chrome/uiauto/nodewith"
@@ -234,21 +232,13 @@ func DeleteScreencastItems(ctx context.Context, tconn *chrome.TestConn) error {
 
 // OpenSharedScreencast opens a new browser window and launches the Projector app from a share link.
 func OpenSharedScreencast(ctx context.Context, tconn *chrome.TestConn, cr *chrome.Chrome, sharedScreencastLink string) error {
-	ctxForCleanUp := ctx
 	ctx, cancel := ctxutil.Shorten(ctx, 10*time.Second)
 	defer cancel()
-
-	// Set up browser.
-	br, closeBrowser, err := browserfixt.SetUp(ctx, cr, browser.TypeAsh)
-	if err != nil {
-		return errors.Wrap(err, "failed to set up browser")
-	}
-	defer closeBrowser(ctxForCleanUp)
 
 	// Open a new window. Don't set the share link URL here
 	// because it navigates the browser to the PWA instead of
 	// launching the SWA.
-	conn, err := br.NewConn(ctx, "" /*url=*/)
+	conn, err := cr.NewConn(ctx, "" /*url=*/)
 	if err != nil {
 		return errors.Wrap(err, "failed to open a new browser window")
 	}

@@ -17,8 +17,6 @@ import (
 	"github.com/shirou/gopsutil/v3/process"
 
 	"go.chromium.org/tast-tests/cros/local/chrome"
-	"go.chromium.org/tast-tests/cros/local/chrome/browser"
-	"go.chromium.org/tast-tests/cros/local/chrome/browser/browserfixt"
 	"go.chromium.org/tast-tests/cros/local/chrome/chromeproc"
 	"go.chromium.org/tast-tests/cros/local/chrome/uiauto/faillog"
 	"go.chromium.org/tast-tests/cros/local/chrome/webutil"
@@ -153,14 +151,9 @@ func CoreSchedTag(ctx context.Context, s *testing.State) {
 		s.Fatal("Failed to connect to the test API connection: ", err)
 	}
 
-	br, closeBrowser, err := browserfixt.SetUp(ctx, cr, browser.TypeAsh)
-	if err != nil {
-		s.Fatal("Failed to set up browser: ", err)
-	}
-	defer closeBrowser(ctx)
 	defer faillog.DumpUITreeOnError(ctx, s.OutDir(), s.HasError, tconn)
 
-	settingsConn, err := br.NewConn(ctx, "chrome://settings")
+	settingsConn, err := cr.NewConn(ctx, "chrome://settings")
 	if err != nil {
 		s.Fatal("Failed to open page: ", err)
 	}
@@ -170,7 +163,7 @@ func CoreSchedTag(ctx context.Context, s *testing.State) {
 		s.Fatal("Failed to wait for chrome://settings to achieve quiescence: ", err)
 	}
 
-	versionConn, err := br.NewConn(ctx, "chrome://version")
+	versionConn, err := cr.NewConn(ctx, "chrome://version")
 	if err != nil {
 		s.Fatal("Failed to open page: ", err)
 	}

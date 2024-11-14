@@ -12,8 +12,6 @@ import (
 	"go.chromium.org/tast-tests/cros/common/policy"
 	"go.chromium.org/tast-tests/cros/local/bundles/cros/deskapi/apis"
 	"go.chromium.org/tast-tests/cros/local/chrome"
-	"go.chromium.org/tast-tests/cros/local/chrome/browser"
-	"go.chromium.org/tast-tests/cros/local/chrome/browser/browserfixt"
 	"go.chromium.org/tast-tests/cros/local/chrome/uiauto"
 	"go.chromium.org/tast-tests/cros/local/chrome/uiauto/event"
 	"go.chromium.org/tast-tests/cros/local/chrome/uiauto/faillog"
@@ -66,14 +64,7 @@ func LaunchAndClose(ctx context.Context, s *testing.State) {
 	}
 	defer cr.Close(cleanupCtx)
 
-	// Use the generic browser interface for both lacros and ash.
-	br, closeBrowser, err := browserfixt.SetUp(ctx, cr, browser.TypeAsh)
-	if err != nil {
-		s.Fatal("Failed to set up browser: ", err)
-	}
-	defer closeBrowser(cleanupCtx)
-
-	tconn, err := br.TestAPIConn(ctx)
+	tconn, err := cr.TestAPIConn(ctx)
 	if err != nil {
 		s.Fatal("Failed to create Test API connection: ", err)
 	}
@@ -84,7 +75,7 @@ func LaunchAndClose(ctx context.Context, s *testing.State) {
 	const url string = "https://continuous-sincere-relation.glitch.me"
 
 	// Create a new browser connection with target page opened.
-	conn, err := br.NewConn(ctx, url)
+	conn, err := cr.NewConn(ctx, url)
 	if err != nil {
 		s.Fatal("Failed to create a new browser connection: ", err)
 	}

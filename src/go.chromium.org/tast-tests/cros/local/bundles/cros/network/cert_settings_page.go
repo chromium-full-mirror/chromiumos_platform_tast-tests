@@ -18,8 +18,6 @@ import (
 	"go.chromium.org/tast-tests/cros/common/fixture"
 	utils "go.chromium.org/tast-tests/cros/local/certpageutils"
 	"go.chromium.org/tast-tests/cros/local/chrome"
-	"go.chromium.org/tast-tests/cros/local/chrome/browser"
-	"go.chromium.org/tast-tests/cros/local/chrome/browser/browserfixt"
 	"go.chromium.org/tast-tests/cros/local/chrome/uiauto"
 	"go.chromium.org/tast-tests/cros/local/chrome/uiauto/checked"
 	"go.chromium.org/tast-tests/cros/local/chrome/uiauto/faillog"
@@ -261,11 +259,11 @@ func createWebsite(s *testing.State) *httptest.Server {
 // the function will wait for and handle the cert selection window. `expectedText`
 // specifies what text should be seen on the page (for both successful and
 // failed page loads).
-func useWebsite(ctx context.Context, s *testing.State, browser *browser.Browser,
+func useWebsite(ctx context.Context, s *testing.State, cr *chrome.Chrome,
 	ui *uiauto.Context, kb *input.KeyboardEventWriter, website *httptest.Server, expectCertPopup bool,
 	expectedText string) error {
 
-	websiteConn, err := browser.NewConn(ctx, "")
+	websiteConn, err := cr.NewConn(ctx, "")
 	if err != nil {
 		return err
 	}
@@ -301,7 +299,7 @@ func useWebsite(ctx context.Context, s *testing.State, browser *browser.Browser,
 // certificates, then opens this new website in the browser and checks if any error
 // messages is shown.
 func createAndUseWebsite(ctx context.Context, s *testing.State,
-	browser *browser.Browser, ui *uiauto.Context, kb *input.KeyboardEventWriter, expectCertPopup bool, expectedText string) {
+	cr *chrome.Chrome, ui *uiauto.Context, kb *input.KeyboardEventWriter, expectCertPopup bool, expectedText string) {
 
 	var loopErr error
 
@@ -311,7 +309,7 @@ func createAndUseWebsite(ctx context.Context, s *testing.State,
 		website := createWebsite(s)
 		defer website.Close()
 
-		loopErr = useWebsite(ctx, s, browser, ui, kb, website, expectCertPopup, expectedText)
+		loopErr = useWebsite(ctx, s, cr, ui, kb, website, expectCertPopup, expectedText)
 		if err := utils.CloseCurrentPage(ctx); err != nil {
 			s.Fatal("Failed to close page: ", err)
 		}
@@ -366,18 +364,11 @@ func setCACertTrust(ctx context.Context, s *testing.State, ui *uiauto.Context, c
 // the CA certificate and it can be added back to it.
 func CertSettingsPage(ctx context.Context, s *testing.State) {
 	cr := s.FixtValue().(chrome.HasChrome).Chrome()
-	browserType := browser.TypeAsh
 
 	// Reserve ten seconds for cleanup.
 	cleanupCtx := ctx
 	ctx, cancel := ctxutil.Shorten(ctx, 10*time.Second)
 	defer cancel()
-
-	browser, closeBrowser, err := browserfixt.SetUp(ctx, cr, browserType)
-	if err != nil {
-		s.Fatal("Failed to set up browser: ", err)
-	}
-	defer closeBrowser(cleanupCtx)
 
 	tconn, err := cr.TestAPIConn(ctx)
 	if err != nil {
@@ -392,10 +383,10 @@ func CertSettingsPage(ctx context.Context, s *testing.State) {
 	}
 	defer kb.Close(ctx)
 
-	s.Logf("Opening a new tab in %v browser", browserType)
-	conn, err := browser.NewConn(ctx, "chrome://settings/certificates")
+	s.Log("Opening a new tab")
+	conn, err := cr.NewConn(ctx, "chrome://settings/certificates")
 	if err != nil {
-		s.Fatalf("Failed to open a new tab in %v browser: %v", browserType, err)
+		s.Fatal("Failed to open a new tab: ", err)
 	}
 	defer conn.Close()
 
@@ -416,7 +407,7 @@ func CertSettingsPage(ctx context.Context, s *testing.State) {
 	defer deleteCACert(ctx, s, ui, conn, true /*ignoreErrors*/)
 
 	// Try opening a website without any certs, that should fail with a CA error.
-	createAndUseWebsite(ctx, s, browser, ui, kb, false /*expectCertPopup*/, caInvalidErrorRegex)
+	createAndUseWebsite(ctx, s, cr, ui, kb, false /*expectCertPopup*/, caInvalidErrorRegex)
 
 	// Normal case - all certs are present and the website can be connected.
 	{
@@ -426,7 +417,7 @@ func CertSettingsPage(ctx context.Context, s *testing.State) {
 		waitForClientCert(ctx, s)
 
 		// Try to open the website again, this time it should succeed.
-		createAndUseWebsite(ctx, s, browser, ui, kb, true /*expectCertPopup*/, pageLoadedRegex)
+		createAndUseWebsite(ctx, s, cr, ui, kb, true /*expectCertPopup*/, pageLoadedRegex)
 		// Also check that client cert is usable in system settings.
 		checkCertInSystemSettings(ctx, s, cr, tconn)
 	}
@@ -436,29 +427,29 @@ func CertSettingsPage(ctx context.Context, s *testing.State) {
 		// Mark CA as not trusted for ssl and try connection to the website, it should fail.
 		setCACertTrust(ctx, s, ui, conn, checked.False)
 		waitForClientCert(ctx, s)
-		createAndUseWebsite(ctx, s, browser, ui, kb, false /*expectCertPopup*/, caInvalidErrorRegex)
+		createAndUseWebsite(ctx, s, cr, ui, kb, false /*expectCertPopup*/, caInvalidErrorRegex)
 
 		// Mark CA as trusted for ssl and try connection to the website, it should succeed.
 		setCACertTrust(ctx, s, ui, conn, checked.True)
 		waitForClientCert(ctx, s)
-		createAndUseWebsite(ctx, s, browser, ui, kb, true /*expectCertPopup*/, pageLoadedRegex)
+		createAndUseWebsite(ctx, s, cr, ui, kb, true /*expectCertPopup*/, pageLoadedRegex)
 	}
 
 	// Delete and add certificates back, there should be no errors.
 	{
 		// Delete the client cert and check that now the website rejects the connection.
 		deleteClientCert(ctx, s, ui, false /*ignoreErrors*/)
-		createAndUseWebsite(ctx, s, browser, ui, kb, false /*expectCertPopup*/, connectionErrorRegex)
+		createAndUseWebsite(ctx, s, cr, ui, kb, false /*expectCertPopup*/, connectionErrorRegex)
 
 		// Import a client certs again and open the website, it should succeed.
 		importClientCert(ctx, s, ui)
 		waitForClientCert(ctx, s)
-		createAndUseWebsite(ctx, s, browser, ui, kb, true /*expectCertPopup*/, pageLoadedRegex)
+		createAndUseWebsite(ctx, s, cr, ui, kb, true /*expectCertPopup*/, pageLoadedRegex)
 
 		// Delete the CA cert and check that Chrome gets the CA error again.
 		deleteCACert(ctx, s, ui, conn, false /*ignoreErrors*/)
 		waitForClientCert(ctx, s)
-		createAndUseWebsite(ctx, s, browser, ui, kb, false /*expectCertPopup*/, caInvalidErrorRegex)
+		createAndUseWebsite(ctx, s, cr, ui, kb, false /*expectCertPopup*/, caInvalidErrorRegex)
 
 		// Import the CA cert and try connection to the website, it should succeed.
 		importCACert(ctx, s, ui)
@@ -466,21 +457,21 @@ func CertSettingsPage(ctx context.Context, s *testing.State) {
 		// was shown. After the CA certificate is imported again, the list will be opened
 		// again automatically and it will break the next test. Page reload here will put
 		// all elements to the default state.
-		if reloadErr := browser.ReloadActiveTab(ctx); reloadErr != nil {
+		if reloadErr := cr.Browser().ReloadActiveTab(ctx); reloadErr != nil {
 			s.Fatal("Failed to reload page after CA import: ", reloadErr)
 		}
 		waitForClientCert(ctx, s)
-		createAndUseWebsite(ctx, s, browser, ui, kb, true /*expectCertPopup*/, pageLoadedRegex)
+		createAndUseWebsite(ctx, s, cr, ui, kb, true /*expectCertPopup*/, pageLoadedRegex)
 	}
 
 	// Clean certificates should have no errors.
 	{
 		// Delete the client cert and check that now the website rejects the connection.
 		deleteClientCert(ctx, s, ui, false /*ignoreErrors*/)
-		createAndUseWebsite(ctx, s, browser, ui, kb, false /*expectCertPopup*/, connectionErrorRegex)
+		createAndUseWebsite(ctx, s, cr, ui, kb, false /*expectCertPopup*/, connectionErrorRegex)
 
 		// Delete the CA cert and check that Chrome gets the CA error again.
 		deleteCACert(ctx, s, ui, conn, false /*ignoreErrors*/)
-		createAndUseWebsite(ctx, s, browser, ui, kb, false /*expectCertPopup*/, caInvalidErrorRegex)
+		createAndUseWebsite(ctx, s, cr, ui, kb, false /*expectCertPopup*/, caInvalidErrorRegex)
 	}
 }

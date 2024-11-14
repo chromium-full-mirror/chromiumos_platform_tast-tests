@@ -12,16 +12,13 @@ import (
 	"go.chromium.org/tast-tests/cros/common/perf"
 	"go.chromium.org/tast-tests/cros/common/tape"
 	"go.chromium.org/tast-tests/cros/local/accountmanager"
-	"go.chromium.org/tast-tests/cros/local/chrome/browser"
-	"go.chromium.org/tast-tests/cros/local/chrome/browser/browserfixt"
 	"go.chromium.org/tast-tests/cros/local/chrome/uiauto"
 	"go.chromium.org/tast-tests/cros/local/chrome/uiauto/faillog"
 	"go.chromium.org/tast-tests/cros/local/chrome/uiauto/mapui"
 	"go.chromium.org/tast-tests/cros/local/chrome/uiauto/nodewith"
 	"go.chromium.org/tast-tests/cros/local/chrome/uiauto/role"
-	"go.chromium.org/tast/core/testing"
-
 	"go.chromium.org/tast/core/ctxutil"
+	"go.chromium.org/tast/core/testing"
 )
 
 const addAccountOSSettingsTimeout = 7 * time.Minute
@@ -64,13 +61,6 @@ func AddAccountOSSettings(ctx context.Context, s *testing.State) {
 	defer cancel()
 
 	cr := s.FixtValue().(accountmanager.FixtureData).Chrome()
-
-	// Setup the browser.
-	br, closeBrowser, err := browserfixt.SetUp(ctx, cr, browser.TypeAsh)
-	if err != nil {
-		s.Fatal("Failed to setup chrome: ", err)
-	}
-	defer closeBrowser(cleanupCtx)
 
 	// Connect to Test API to use it with the UI library.
 	tconn, err := cr.TestAPIConn(ctx)
@@ -146,7 +136,7 @@ func AddAccountOSSettings(ctx context.Context, s *testing.State) {
 	// Check that account is present in OGB.
 	s.Log("Verifying that account is present in OGB")
 	secondaryAccountListItem := nodewith.NameContaining(acc.Username).Role(role.Link)
-	if err := accountmanager.CheckOneGoogleBar(ctx, tconn, br, ui.WaitUntilExists(secondaryAccountListItem)); err != nil {
+	if err := accountmanager.CheckOneGoogleBar(ctx, tconn, cr, ui.WaitUntilExists(secondaryAccountListItem)); err != nil {
 		s.Fatal("Failed to check that account is present in OGB: ", err)
 	}
 
@@ -160,7 +150,7 @@ func AddAccountOSSettings(ctx context.Context, s *testing.State) {
 
 	// Check that account is not present in OGB anymore.
 	s.Log("Verifying that account is not present in OGB")
-	if err := accountmanager.CheckOneGoogleBar(ctx, tconn, br, ui.WaitUntilGone(secondaryAccountListItem)); err != nil {
+	if err := accountmanager.CheckOneGoogleBar(ctx, tconn, cr, ui.WaitUntilGone(secondaryAccountListItem)); err != nil {
 		s.Fatal("Failed to remove account from OGB: ", err)
 	}
 

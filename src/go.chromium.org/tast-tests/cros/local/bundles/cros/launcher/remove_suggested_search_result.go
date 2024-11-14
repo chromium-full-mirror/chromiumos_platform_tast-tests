@@ -10,8 +10,6 @@ import (
 	"time"
 
 	"go.chromium.org/tast-tests/cros/local/chrome"
-	"go.chromium.org/tast-tests/cros/local/chrome/browser"
-	"go.chromium.org/tast-tests/cros/local/chrome/browser/browserfixt"
 	"go.chromium.org/tast-tests/cros/local/chrome/uiauto"
 	"go.chromium.org/tast-tests/cros/local/chrome/uiauto/faillog"
 	"go.chromium.org/tast-tests/cros/local/chrome/uiauto/launcher"
@@ -86,13 +84,7 @@ func RemoveSuggestedSearchResult(ctx context.Context, s *testing.State) {
 	testQuery := fmt.Sprintf("testquery_to_remove_%t", tabletMode)
 
 	// Open chrome window, and enter search query into omnibox.
-	br, closeBrowser, err := browserfixt.SetUp(ctx, cr, browser.TypeAsh)
-	if err != nil {
-		s.Fatal("Failed to open the browser: ", err)
-	}
-	defer closeBrowser(cleanupCtx)
-
-	conn, err := br.NewConn(ctx, fmt.Sprintf("https://www.google.com/search?q=%s", testQuery))
+	conn, err := cr.NewConn(ctx, fmt.Sprintf("https://www.google.com/search?q=%s", testQuery))
 	if err != nil {
 		s.Fatal("Failed to open new connection: ", err)
 	}

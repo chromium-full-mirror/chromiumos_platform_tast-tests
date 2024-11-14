@@ -11,8 +11,6 @@ import (
 	"time"
 
 	"go.chromium.org/tast-tests/cros/local/chrome"
-	"go.chromium.org/tast-tests/cros/local/chrome/browser"
-	"go.chromium.org/tast-tests/cros/local/chrome/browser/browserfixt"
 
 	"go.chromium.org/tast/core/ctxutil"
 	"go.chromium.org/tast/core/testing"
@@ -40,7 +38,6 @@ func init() {
 }
 
 func WebHandwritingRecognition(ctx context.Context, s *testing.State) {
-	cleanupCtx := ctx
 	ctx, cancel := ctxutil.Shorten(ctx, 5*time.Second)
 	defer cancel()
 
@@ -48,16 +45,10 @@ func WebHandwritingRecognition(ctx context.Context, s *testing.State) {
 	server := httptest.NewServer(http.FileServer(s.DataFileSystem()))
 	defer server.Close()
 
-	// Open browser.
 	cr := s.FixtValue().(chrome.HasChrome).Chrome()
-	br, closeBrowser, err := browserfixt.SetUp(ctx, cr, browser.TypeAsh)
-	if err != nil {
-		s.Fatal("Failed to set up browser: ", err)
-	}
-	defer closeBrowser(cleanupCtx)
 
 	// Open the test page.
-	conn, err := br.NewConn(ctx, server.URL+"/"+testSupportedRecognizerFileName)
+	conn, err := cr.NewConn(ctx, server.URL+"/"+testSupportedRecognizerFileName)
 	if err != nil {
 		s.Fatal("Failed to open test web page: ", err)
 	}

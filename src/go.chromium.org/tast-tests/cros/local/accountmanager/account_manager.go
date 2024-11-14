@@ -15,7 +15,6 @@ import (
 	"go.chromium.org/tast-tests/cros/local/apps"
 	"go.chromium.org/tast-tests/cros/local/chrome"
 	"go.chromium.org/tast-tests/cros/local/chrome/ash"
-	"go.chromium.org/tast-tests/cros/local/chrome/browser"
 	"go.chromium.org/tast-tests/cros/local/chrome/uiauto"
 	"go.chromium.org/tast-tests/cros/local/chrome/uiauto/nodewith"
 	"go.chromium.org/tast-tests/cros/local/chrome/uiauto/ossettings"
@@ -291,8 +290,8 @@ func AddAccountSAML(ctx context.Context, tconn *chrome.TestConn, email, password
 }
 
 // CheckOneGoogleBar opens OGB and checks that provided condition is true.
-func CheckOneGoogleBar(ctx context.Context, tconn *chrome.TestConn, br *browser.Browser, condition uiauto.Action) error {
-	if err := OpenOneGoogleBar(ctx, tconn, br); err != nil {
+func CheckOneGoogleBar(ctx context.Context, tconn *chrome.TestConn, cr *chrome.Chrome, condition uiauto.Action) error {
+	if err := OpenOneGoogleBar(ctx, tconn, cr); err != nil {
 		return errors.Wrap(err, "failed to open OGB")
 	}
 
@@ -304,8 +303,8 @@ func CheckOneGoogleBar(ctx context.Context, tconn *chrome.TestConn, br *browser.
 }
 
 // OpenOneGoogleBar opens chrome://new-tab-page in the browser and clicks on the One Google Bar.
-func OpenOneGoogleBar(ctx context.Context, tconn *chrome.TestConn, br *browser.Browser) error {
-	conn, err := br.NewConn(ctx, "chrome://new-tab-page")
+func OpenOneGoogleBar(ctx context.Context, tconn *chrome.TestConn, cr *chrome.Chrome) error {
+	conn, err := cr.NewConn(ctx, "chrome://new-tab-page")
 	if err != nil {
 		return errors.Wrap(err, "failed to create connection to chrome://new-tab-page")
 	}
@@ -314,7 +313,7 @@ func OpenOneGoogleBar(ctx context.Context, tconn *chrome.TestConn, br *browser.B
 	if err := openOGB(ctx, tconn, 30*time.Second); err != nil {
 		// The page may have loaded in logged out state: reload and try again.
 		testing.ContextLogf(ctx, "Reloading the active tab, the error was %q", err)
-		br.ReloadActiveTab(ctx)
+		cr.Browser().ReloadActiveTab(ctx)
 
 		if err := openOGB(ctx, tconn, LongUITimeout); err != nil {
 			if somethingWentWrongInOGB(ctx, tconn) {

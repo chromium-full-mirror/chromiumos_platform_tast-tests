@@ -17,8 +17,6 @@ import (
 	"go.chromium.org/tast-tests/cros/local/arc"
 	"go.chromium.org/tast-tests/cros/local/bundles/cros/appsplatform/webapks"
 	"go.chromium.org/tast-tests/cros/local/chrome"
-	"go.chromium.org/tast-tests/cros/local/chrome/browser"
-	"go.chromium.org/tast-tests/cros/local/chrome/browser/browserfixt"
 	"go.chromium.org/tast-tests/cros/local/chrome/uiauto"
 	"go.chromium.org/tast-tests/cros/local/webapk"
 	"go.chromium.org/tast/core/ctxutil"
@@ -88,12 +86,6 @@ func WebAPK(ctx context.Context, s *testing.State) {
 	}
 	defer cr.Close(cleanupCtx)
 
-	br, closeBrowser, err := browserfixt.SetUp(ctx, cr, browser.TypeAsh)
-	if err != nil {
-		s.Fatal("Failed to open the browser: ", err)
-	}
-	defer closeBrowser(cleanupCtx)
-
 	a, err := arc.New(ctx, s.OutDir(), cr.NormalizedUser())
 	if err != nil {
 		s.Fatal("Could not start ARC: ", err)
@@ -105,7 +97,7 @@ func WebAPK(ctx context.Context, s *testing.State) {
 		s.Fatal("Failed to connect to test API: ", err)
 	}
 
-	wm, err := webapk.NewManager(ctx, cr, br, a, s, webapks.WebShareTargetWebApk)
+	wm, err := webapk.NewManager(ctx, cr, cr.Browser(), a, s, webapks.WebShareTargetWebApk)
 	if err != nil {
 		s.Fatal("Failed to create WebAPK Manager: ", err)
 	}

@@ -10,7 +10,6 @@ import (
 	"time"
 
 	"go.chromium.org/tast-tests/cros/local/chrome"
-	"go.chromium.org/tast-tests/cros/local/chrome/browser"
 	"go.chromium.org/tast-tests/cros/local/chrome/uiauto"
 	"go.chromium.org/tast-tests/cros/local/chrome/uiauto/nodewith"
 	"go.chromium.org/tast-tests/cros/local/chrome/webutil"
@@ -45,7 +44,7 @@ func (v *Video) GetURL() string { return v.url }
 func (v *Video) GetConn() *chrome.Conn { return v.conn }
 
 // Open opens a video page with provided URL.
-func (v *Video) Open(ctx context.Context, br *browser.Browser) (retErr error) {
+func (v *Video) Open(ctx context.Context, cr *chrome.Chrome) (retErr error) {
 	if v.conn != nil {
 		return errors.New("video has been opened already")
 	}
@@ -55,7 +54,7 @@ func (v *Video) Open(ctx context.Context, br *browser.Browser) (retErr error) {
 	defer cancel()
 
 	var err error
-	if v.conn, err = br.NewConn(ctx, v.url); err != nil {
+	if v.conn, err = cr.NewConn(ctx, v.url); err != nil {
 		return errors.Wrapf(err, "failed to open video page with URL %q ", v.url)
 	}
 	defer func(ctx context.Context) {

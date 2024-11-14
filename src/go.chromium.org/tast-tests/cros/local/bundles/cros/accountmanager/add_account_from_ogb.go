@@ -9,8 +9,6 @@ import (
 	"time"
 
 	"go.chromium.org/tast-tests/cros/local/accountmanager"
-	"go.chromium.org/tast-tests/cros/local/chrome/browser"
-	"go.chromium.org/tast-tests/cros/local/chrome/browser/browserfixt"
 	"go.chromium.org/tast-tests/cros/local/chrome/uiauto"
 	"go.chromium.org/tast-tests/cros/local/chrome/uiauto/faillog"
 	"go.chromium.org/tast-tests/cros/local/chrome/uiauto/nodewith"
@@ -62,13 +60,6 @@ func AddAccountFromOGB(ctx context.Context, s *testing.State) {
 
 	cr := s.FixtValue().(accountmanager.FixtureData).Chrome()
 
-	// Setup the browser.
-	br, closeBrowser, err := browserfixt.SetUp(ctx, cr, browser.TypeAsh)
-	if err != nil {
-		s.Fatal("Failed to setup chrome: ", err)
-	}
-	defer closeBrowser(cleanupCtx)
-
 	// Connect to Test API to use it with the UI library.
 	tconn, err := cr.TestAPIConn(ctx)
 	if err != nil {
@@ -94,7 +85,7 @@ func AddAccountFromOGB(ctx context.Context, s *testing.State) {
 	}
 	defer arcDevice.Close(ctx)
 
-	if err := accountmanager.OpenOneGoogleBar(ctx, tconn, br); err != nil {
+	if err := accountmanager.OpenOneGoogleBar(ctx, tconn, cr); err != nil {
 		s.Fatal("Failed to open OGB: ", err)
 	}
 
@@ -120,7 +111,7 @@ func AddAccountFromOGB(ctx context.Context, s *testing.State) {
 	// Check that account is present in OGB.
 	s.Log("Verifying that account is present in OGB")
 	secondaryAccountListItem := nodewith.NameContaining(username).Role(role.Link)
-	if err := accountmanager.CheckOneGoogleBar(ctx, tconn, br, ui.WaitUntilExists(secondaryAccountListItem)); err != nil {
+	if err := accountmanager.CheckOneGoogleBar(ctx, tconn, cr, ui.WaitUntilExists(secondaryAccountListItem)); err != nil {
 		s.Fatal("Failed to check that account is present in OGB: ", err)
 	}
 }

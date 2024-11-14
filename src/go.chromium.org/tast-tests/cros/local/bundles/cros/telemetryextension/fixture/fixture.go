@@ -14,8 +14,6 @@ import (
 	"time"
 
 	"go.chromium.org/tast-tests/cros/local/chrome"
-	"go.chromium.org/tast-tests/cros/local/chrome/browser"
-	"go.chromium.org/tast-tests/cros/local/chrome/browser/browserfixt"
 	"go.chromium.org/tast-tests/cros/local/chrome/uiauto"
 	"go.chromium.org/tast-tests/cros/local/chrome/uiauto/nodewith"
 	"go.chromium.org/tast-tests/cros/local/chrome/uiauto/role"
@@ -99,10 +97,8 @@ func newTelemetryExtensionFixture(opts ...option) *telemetryExtensionFixture {
 type telemetryExtensionFixture struct {
 	skipOEMNameCheck bool
 
-	dir     string
-	cr      *chrome.Chrome
-	br      *browser.Browser
-	closeBr uiauto.Action
+	dir string
+	cr  *chrome.Chrome
 
 	healthdPID int
 
@@ -141,13 +137,6 @@ func (f *telemetryExtensionFixture) SetUp(ctx context.Context, s *testing.FixtSt
 		s.Fatal("Unable to pause after Ash launch")
 	}
 
-	br, closeBr, err := browserfixt.SetUp(ctx, f.cr, browser.TypeAsh)
-	if err != nil {
-		s.Fatal("Failed to open the browser: ", err)
-	}
-	f.br = br
-	f.closeBr = closeBr
-
 	tconn, err := f.cr.TestAPIConn(ctx)
 	if err != nil {
 		s.Fatal("Failed to get test API connections: ", err)
@@ -182,13 +171,6 @@ func (f *telemetryExtensionFixture) TearDown(ctx context.Context, s *testing.Fix
 			s.Error("Failed to close connection to google.com: ", err)
 		}
 		f.v.PwaConn = nil
-	}
-
-	if f.br != nil {
-		f.closeBr(ctx)
-
-		f.br = nil
-		f.closeBr = nil
 	}
 
 	if f.cr != nil {
@@ -270,7 +252,7 @@ func (f *telemetryExtensionFixture) setupChromeForConsumers(ctx context.Context,
 }
 
 func (f *telemetryExtensionFixture) setupConnectionToPWA(ctx context.Context) error {
-	pwaConn, err := f.br.NewConn(ctx, "https://googlechromelabs.github.io/cros-sample-telemetry-extension")
+	pwaConn, err := f.cr.NewConn(ctx, "https://googlechromelabs.github.io/cros-sample-telemetry-extension")
 	if err != nil {
 		return errors.Wrap(err, "failed to create connection to googlechromelabs.github.io")
 	}
@@ -283,7 +265,7 @@ func (f *telemetryExtensionFixture) setupConnectionToPWA(ctx context.Context) er
 }
 
 func (f *telemetryExtensionFixture) setupConnectionToExtension(ctx context.Context) error {
-	conn, err := f.br.NewConn(ctx, fmt.Sprintf("chrome-extension://%s/sw.js", f.v.ExtID))
+	conn, err := f.cr.NewConn(ctx, fmt.Sprintf("chrome-extension://%s/sw.js", f.v.ExtID))
 	if err != nil {
 		return errors.Wrap(err, "failed to create connection to Telemetry Extension")
 	}

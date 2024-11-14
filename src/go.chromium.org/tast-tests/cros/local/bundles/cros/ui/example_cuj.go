@@ -11,7 +11,6 @@ import (
 	"go.chromium.org/tast-tests/cros/common/perf"
 	"go.chromium.org/tast-tests/cros/local/chrome"
 	"go.chromium.org/tast-tests/cros/local/chrome/ash"
-	"go.chromium.org/tast-tests/cros/local/chrome/browser"
 	"go.chromium.org/tast-tests/cros/local/chrome/cuj/inputsimulations"
 	"go.chromium.org/tast-tests/cros/local/chrome/display"
 	"go.chromium.org/tast-tests/cros/local/chrome/uiauto"
@@ -28,9 +27,8 @@ import (
 
 func init() {
 	testing.AddTest(&testing.Test{
-		Func:         ExampleCUJ,
-		LacrosStatus: testing.LacrosVariantUnneeded,
-		Desc:         "Example of using the CUJ Recorder",
+		Func: ExampleCUJ,
+		Desc: "Example of using the CUJ Recorder",
 		Contacts: []string{
 			"cros-sw-perf@google.com",
 			"ramsaroop@google.com",
@@ -39,12 +37,7 @@ func init() {
 		SoftwareDeps: []string{"chrome"},
 		Data:         []string{cujrecorder.SystemTraceConfigFile},
 		Timeout:      15 * time.Minute,
-		Params: []testing.Param{
-			{
-				Fixture: "loggedInToCUJUser",
-				Val:     browser.TypeAsh,
-			},
-		},
+		Fixture:      "loggedInToCUJUser",
 	})
 }
 
@@ -64,28 +57,19 @@ func ExampleCUJ(ctx context.Context, s *testing.State) {
 	// implements the chrome.HasChrome interface.
 	cr := s.FixtValue().(chrome.HasChrome).Chrome()
 
-	// Use browserfixt.Setup to setup ash.
 	conn, err := cr.NewConn(ctx, "about:blank")
 	if err != nil {
 		s.Fatal("Failed to setup Chrome: ", err)
 	}
 	defer conn.Close()
 
-	// tconn is the Ash-chrome test connection.
 	tconn, err := cr.TestAPIConn(ctx)
 	if err != nil {
 		s.Fatal("Failed to connect to test API connection: ", err)
 	}
 
-	// bTconn is the browser test connection. This could either be a
-	// connection to Ash or Lacros, depending on the test variant.
-	bTconn, err := cr.Browser().TestAPIConn(ctx)
-	if err != nil {
-		s.Fatal("Falied to connect to browser test API connection: ", err)
-	}
-
 	// Create a new recorder with cujrecorder.NewRecorder.
-	recorder, err := cujrecorder.NewRecorder(ctx, cr, bTconn, nil, cujrecorder.RecorderOptions{})
+	recorder, err := cujrecorder.NewRecorder(ctx, cr, tconn, nil, cujrecorder.RecorderOptions{})
 	if err != nil {
 		s.Fatal("Failed to create a recorder: ", err)
 	}
@@ -93,7 +77,7 @@ func ExampleCUJ(ctx context.Context, s *testing.State) {
 
 	// [Optional] Add the pre-existing list of metrics to the
 	// recorder with recorder.AddCommonMetrics.
-	if err := recorder.AddCommonMetrics(tconn, bTconn); err != nil {
+	if err := recorder.AddCommonMetrics(tconn, tconn); err != nil {
 		s.Fatal("Failed to add common metrics to the recorder: ", err)
 	}
 

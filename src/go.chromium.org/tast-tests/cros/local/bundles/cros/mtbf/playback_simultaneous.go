@@ -10,8 +10,6 @@ import (
 	"time"
 
 	"go.chromium.org/tast-tests/cros/local/chrome"
-	"go.chromium.org/tast-tests/cros/local/chrome/browser"
-	"go.chromium.org/tast-tests/cros/local/chrome/browser/browserfixt"
 	"go.chromium.org/tast-tests/cros/local/chrome/uiauto/faillog"
 	"go.chromium.org/tast-tests/cros/local/input"
 	"go.chromium.org/tast-tests/cros/local/media/webmedia/vimeo"
@@ -73,14 +71,8 @@ func PlaybackSimultaneous(ctx context.Context, s *testing.State) {
 	}
 	defer kb.Close(ctx)
 
-	br, closeBrowser, err := browserfixt.SetUp(ctx, cr, browser.TypeAsh)
-	if err != nil {
-		s.Fatal("Failed to open the browser: ", err)
-	}
-	defer closeBrowser(cleanupCtx)
-
 	type videoPlayer interface {
-		Open(context.Context, *browser.Browser) error
+		Open(context.Context, *chrome.Chrome) error
 		Close(context.Context)
 		Play(ctx context.Context) error
 		IsPlaying(context.Context) (bool, error)
@@ -98,7 +90,7 @@ func PlaybackSimultaneous(ctx context.Context, s *testing.State) {
 	for order := 1; order <= len(videoSources); order++ {
 		video := videoSources[order]
 
-		if err := video.Open(ctx, br); err != nil {
+		if err := video.Open(ctx, cr); err != nil {
 			s.Fatalf("Failed to open video source [%s]: %v", video.GetURL(), err)
 		}
 		defer func(ctx context.Context) {
@@ -118,7 +110,7 @@ func PlaybackSimultaneous(ctx context.Context, s *testing.State) {
 	}
 
 	// Close the empty tab after all videos are opened.
-	if err := br.CloseWithURL(ctx, chrome.NewTabURL); err != nil {
+	if err := cr.Browser().CloseWithURL(ctx, chrome.NewTabURL); err != nil {
 		s.Fatal("Failed to close empty tab: ", err)
 	}
 
