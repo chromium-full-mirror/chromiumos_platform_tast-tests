@@ -21,7 +21,7 @@ func init() {
 		Desc:         "Verify traffic from different sources is routed to the correct interface",
 		Contacts:     []string{"cros-networking@google.com", "jiejiang@google.com"},
 		BugComponent: "b:1493959",
-		Attr:         []string{"group:mainline", "informational", "group:criticalstaging"},
+		Attr:         []string{"group:mainline"},
 		SoftwareDeps: []string{"ikev2"},
 		LacrosStatus: testing.LacrosVariantUnneeded,
 	})
