@@ -36,6 +36,16 @@ var consecutiveAuthErrorRegex = regexp.MustCompile(`Your.* password still couldn
 // ConsecutiveAuthErrorFinder is the finder for the authentication error shown on the consecutive failures.
 var ConsecutiveAuthErrorFinder = nodewith.Role(role.AlertDialog).NameRegex(consecutiveAuthErrorRegex)
 
+var pinAuthErrorRegex = regexp.MustCompile(`Your.* PIN couldn't be verified. Try again.*`)
+
+// PINAuthErrorFinder is the finder for the Pin authentication error shown on the first failure.
+var PINAuthErrorFinder = nodewith.Role(role.AlertDialog).NameRegex(pinAuthErrorRegex)
+
+var consecutivePINAuthErrorRegex = regexp.MustCompile(`Your.* PIN still couldn't be verified.*`)
+
+// ConsecutivePINAuthErrorFinder is the finder for the authentication error shown on the consecutive failures.
+var ConsecutivePINAuthErrorFinder = nodewith.Role(role.AlertDialog).NameRegex(consecutivePINAuthErrorRegex)
+
 // SmartLockArrowButtonFinder is the finder for the button that needs to be clicked to complete authentication with Smart Lock.
 var SmartLockArrowButtonFinder = nodewith.NameContaining("Unlocked by your phone. Tap or click to enter.").HasClass("ArrowButtonView")
 

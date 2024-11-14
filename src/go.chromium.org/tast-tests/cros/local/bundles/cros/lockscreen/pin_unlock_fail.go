@@ -108,11 +108,11 @@ func PinUnlockFail(ctx context.Context, s *testing.State) {
 
 		// Wait to see the Auth error.
 		if count > 0 {
-			if err := ui.WithTimeout(10 * time.Second).WaitUntilExists(lockscreen.ConsecutiveAuthErrorFinder)(ctx); err != nil {
+			if err := ui.WithTimeout(10 * time.Second).WaitUntilExists(lockscreen.ConsecutivePINAuthErrorFinder)(ctx); err != nil {
 				s.Fatal("Failed to see the Auth error: ", err)
 			}
 		} else {
-			if err := ui.WithTimeout(10 * time.Second).WaitUntilExists(lockscreen.AuthErrorFinder)(ctx); err != nil {
+			if err := ui.WithTimeout(10 * time.Second).WaitUntilExists(lockscreen.PINAuthErrorFinder)(ctx); err != nil {
 				s.Fatal("Failed to see the Auth error: ", err)
 			}
 		}
