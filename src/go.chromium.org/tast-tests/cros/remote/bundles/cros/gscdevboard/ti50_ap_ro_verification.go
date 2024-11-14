@@ -6,9 +6,6 @@ package gscdevboard
 
 import (
 	"context"
-	"os"
-	"regexp"
-	"strconv"
 	"strings"
 	"time"
 
@@ -19,17 +16,6 @@ import (
 	"go.chromium.org/tast-tests/cros/remote/firmware/ti50/fixture"
 	"go.chromium.org/tast/core/errors"
 	"go.chromium.org/tast/core/testing"
-)
-
-type spiImage string
-
-const (
-	validSPIImage  spiImage = "valid-8MB_20241018.bin"
-	badGBBSPIImage spiImage = "bad-gbb-8MB_20241018.bin"
-
-	verificationResultSuccess                   = 0xfffff000
-	verificationResultBadGBB                    = 0x11000000
-	verificationResultBadSettingsNotProvisioned = 0x10000000
 )
 
 type expectedResetState int
@@ -50,48 +36,6 @@ const (
 // See b/254309086
 const todoWpSenseCausesReset = false
 
-var (
-	verificationResult = regexp.MustCompile(`AP RO verification result: [^(]+ \(0x(\w+)\)`)
-)
-
-type apFlashInfo struct {
-	name        string
-	flashSize   int
-	wpSize      uint32
-	wpsrCmd     string
-	addrModeCmd string
-}
-
-var apFlashInfos = []apFlashInfo{
-	{
-		name:      "W25Q256JV_M",
-		flashSize: 32 * 1024 * 1024,
-		wpSize:    0x00100000,
-		// Found with the `src/third_party/ap_wpsr` tool with
-		// `./ap_wpsr --name W25Q256JV_M --start 0 --length 0x00100000`
-		wpsrCmd:     "ap_ro_verify wpsr d4 fc 0 41",
-		addrModeCmd: "ap_ro_verify addrmode 4byte",
-	},
-	{
-		name:      "GD25Q256D/GD25Q256E",
-		flashSize: 32 * 1024 * 1024,
-		wpSize:    0x00100000,
-		// Found with the `src/third_party/ap_wpsr` tool with
-		// `./ap_wpsr --name GD25Q256D/GD25Q256E --start 0 --length 0x00100000`
-		wpsrCmd:     "ap_ro_verify wpsr d4 fc 0 40",
-		addrModeCmd: "ap_ro_verify addrmode 4byte",
-	},
-	{
-		name:      "W25Q128.V..M",
-		flashSize: 16 * 1024 * 1024,
-		wpSize:    0x00080000,
-		// Found with the `src/third_party/ap_wpsr` tool with
-		// `./ap_wpsr --name W25Q128.V..M --start 0 --length 0x00080000`
-		wpsrCmd:     "ap_ro_verify wpsr a8 fc 0 41",
-		addrModeCmd: "ap_ro_verify addrmode 3byte",
-	},
-}
-
 func init() {
 	testing.AddTest(&testing.Test{
 		Func:    Ti50APROVerification,
@@ -107,23 +51,8 @@ func init() {
 			"gsc_image_ti50",
 			"gsc_nightly"},
 		Fixture: fixture.GSCInitialFactory,
-		Data:    []string{string(validSPIImage), string(badGBBSPIImage)},
+		Data:    []string{string(utils.ValidSPIImage), string(utils.BadGBBSPIImage)},
 	})
-}
-
-// getSPIImageContents loads a particular sample AP image, possibly zero-padded to given flash
-// chip size.
-func getSPIImageContents(s *testing.State, image spiImage, flashSize int) []byte {
-	result := make([]byte, flashSize)
-	contents, err := os.ReadFile(s.DataPath(string(image)))
-	if err != nil {
-		s.Fatalf("Could not read image %q: %s", string(image), err)
-	}
-	if len(contents) >= flashSize {
-		s.Fatalf("Flash chip to small to contain test AP image %s", image)
-	}
-	copy(result, contents)
-	return result
 }
 
 // Ti50APROVerification tests AP RO verification succeeds against a production
@@ -136,7 +65,7 @@ func Ti50APROVerification(ctx context.Context, s *testing.State) {
 
 	b.Reset(ctx)
 	th.MustSucceed(i.WaitUntilBooted(ctx), "GSC revives after reboot")
-	flashInfo := probeSPIFlashChip(ctx, s, b, i)
+	flashInfo := b.ProbeSPIFlashChip(ctx, i)
 
 	s.Log("(Re)starting GSC with clamshell straps and no CCD")
 	b.ResetWithStraps(ctx, ti50.FfClamshell, ti50.CCDModeOff)
@@ -149,7 +78,7 @@ func Ti50APROVerification(ctx context.Context, s *testing.State) {
 		s.Fatal("Could not set BID: ", bidSet)
 	}
 
-	wpsrSet, err := i.Command(ctx, flashInfo.wpsrCmd)
+	wpsrSet, err := i.Command(ctx, flashInfo.WpsrCmd)
 	th.MustSucceed(err, "Set wpsr")
 	if strings.Contains(wpsrSet, "failed") {
 		s.Fatal("Could not set wpsr: ", wpsrSet)
@@ -169,8 +98,8 @@ func Ti50APROVerification(ctx context.Context, s *testing.State) {
 	// will force GCS to perform another AP RO verification and that the result
 	// will be success.
 	s.Log("Verifying that initial failure before latch allows system out of reset")
-	flashSPIImage(ctx, s, b, i, validSPIImage, flashInfo.flashSize)
-	verifyVerificationResultOnReboot(ctx, s, b, i, verificationResultBadSettingsNotProvisioned)
+	b.FlashSPIImage(ctx, i, utils.ValidSPIImage, s.DataPath(string(utils.ValidSPIImage)), flashInfo.FlashSize)
+	b.VerifyVerificationResultOnReboot(ctx, i, utils.VerificationResultBadSettingsNotProvisioned)
 	verifyResetState(ctx, s, b, i, verificationFailedAllowReset, "AP RO failed but not latched")
 
 	s.Log("Toggle AP on then update addr mode")
@@ -179,7 +108,7 @@ func Ti50APROVerification(ctx context.Context, s *testing.State) {
 
 	// Use 4 byte addressing since this is a 32 MiB chip.
 	th.MustSucceed(i.WaitUntilBooted(ctx), "GSC revives after reboot")
-	modeSet, err := i.Command(ctx, flashInfo.addrModeCmd)
+	modeSet, err := i.Command(ctx, flashInfo.AddrModeCmd)
 	th.MustSucceed(err, "Set addrmode")
 	if strings.Contains(modeSet, "failed") {
 		s.Fatal("Could not set address mode: ", modeSet)
@@ -193,7 +122,7 @@ func Ti50APROVerification(ctx context.Context, s *testing.State) {
 	th.MustSucceed(i.WaitUntilBooted(ctx), "GSC revives after reboot")
 
 	s.Log("GSC should now have a passing AP RO verification which flips the latch")
-	verifyVerificationResultOnReboot(ctx, s, b, i, verificationResultSuccess)
+	b.VerifyVerificationResultOnReboot(ctx, i, utils.VerificationResultSuccess)
 	verifyResetState(ctx, s, b, i, verificationSuccessAllowReset, "AP RO verification passes")
 
 	// Before trying the bad image, verify that WP monitoring is working
@@ -203,10 +132,10 @@ func Ti50APROVerification(ctx context.Context, s *testing.State) {
 
 	// Now all failed verification should hold system in reset when
 	// AllowUnverifiedRO is false
-	verifyBadImage(ctx, s, b, i, badGBBSPIImage, flashInfo.flashSize, verificationResultBadGBB)
+	verifyBadImage(ctx, s, b, i, utils.BadGBBSPIImage, flashInfo.FlashSize, utils.VerificationResultBadGBB)
 }
 
-func verifyBadImage(ctx context.Context, s *testing.State, b utils.DevboardHelper, i *ti50.CrOSImage, spi spiImage, flashSize int, wantVerificationResult uint32) {
+func verifyBadImage(ctx context.Context, s *testing.State, b utils.DevboardHelper, i *ti50.CrOSImage, spi utils.SpiImage, flashSize int, wantVerificationResult uint32) {
 	th := utils.FirmwareTestingHelper{FirmwareTestingHelperDelegate: s}
 
 	s.Log("Set AllowUnverifiedRo to always (via ccd factory reset)")
@@ -221,10 +150,10 @@ func verifyBadImage(ctx context.Context, s *testing.State, b utils.DevboardHelpe
 	th.MustSucceed(tpm.TpmvCommitNvmem(), "NVCommit")
 
 	// Flash bad image on AP SPI chip. GSC held in reset after done
-	flashSPIImage(ctx, s, b, i, spi, flashSize)
+	b.FlashSPIImage(ctx, i, spi, s.DataPath(string(spi)), flashSize)
 
 	// Verify system not held in reset
-	verifyVerificationResultOnReboot(ctx, s, b, i, wantVerificationResult)
+	b.VerifyVerificationResultOnReboot(ctx, i, wantVerificationResult)
 	verifyResetState(ctx, s, b, i, verificationFailedAllowReset, "AP RO verification failed with AllowUnverifiedRO as always")
 
 	// Ensure that AllowUnverifiedRo is set to never so EC is held in reset
@@ -234,11 +163,11 @@ func verifyBadImage(ctx context.Context, s *testing.State, b utils.DevboardHelpe
 	th.MustSucceed(i.SetCCDCapability(ctx, ti50.AllowUnverifiedRO, ti50.CapDefault), "Set AllowUnverifiedRo to never")
 
 	// Verify system held in reset
-	verifyVerificationResultOnReboot(ctx, s, b, i, wantVerificationResult)
+	b.VerifyVerificationResultOnReboot(ctx, i, wantVerificationResult)
 	verifyResetState(ctx, s, b, i, verificationFailedForcedReset, "AP RO verification failed and AllowUnverifiedRo as never")
 
 	// Verify that the reboot is still in the failed verification state before continuing
-	verifyVerificationResultOnReboot(ctx, s, b, i, wantVerificationResult)
+	b.VerifyVerificationResultOnReboot(ctx, i, wantVerificationResult)
 
 	s.Log("Perform AP RO bypass key sequence (for clamshell)")
 	performAPROBypassKeySequence(ctx, b)
@@ -252,7 +181,7 @@ func verifyBadImage(ctx context.Context, s *testing.State, b utils.DevboardHelpe
 	defer tpm.NvUndefineSpace(attr)
 
 	// Restart GSC and ensure system held in reset
-	verifyVerificationResultOnReboot(ctx, s, b, i, wantVerificationResult)
+	b.VerifyVerificationResultOnReboot(ctx, i, wantVerificationResult)
 	verifyResetState(ctx, s, b, i, verificationFailedForcedReset, "Verification failed with FWMP before bypass")
 
 	s.Log("Perform AP RO bypass key sequence (for clamshell) -- Should be blocked by FWMP")
@@ -524,62 +453,4 @@ func tapActiveLowKey(ctx context.Context, b utils.DevboardHelper, gpio ti50.Gpio
 	b.GpioSet(ctx, gpio, false)
 	testing.Sleep(ctx, 100*time.Millisecond) // GoBigSleepLint: Simulating 100ms button press
 	b.GpioSet(ctx, gpio, true)
-}
-
-func probeSPIFlashChip(ctx context.Context, s *testing.State, b utils.DevboardHelper, i *ti50.CrOSImage) (flashInfo *apFlashInfo) {
-	b.WithApFlashAccess(ctx, i, ti50.HoldInReset, func(flash ti50.ApFlash) {
-		chipInfo, err := flash.FetchApFlashInfo(ctx)
-		if err != nil {
-			s.Fatalf("Could not get ap flash info: %s", err)
-		}
-		flashInfo = nil
-		for i := range apFlashInfos {
-			if apFlashInfos[i].name == chipInfo.Name {
-				// Enable SW WP on the AP SPI chip so the status registers are as expected.
-				// This range represents the RO section of the AP flash.
-				if err := flash.EnableApWriteProtect(ctx, 0, apFlashInfos[i].wpSize); err != nil {
-					s.Fatal("setting AP flash write protect: ", err)
-				}
-				flashInfo = &apFlashInfos[i]
-				s.Log("Recognized AP SPI flash chip: ", flashInfo)
-			}
-		}
-		if flashInfo == nil {
-			s.Fatalf("Unrecognized AP SPI flash chip: %s", chipInfo.Name)
-		}
-	})
-	return flashInfo
-}
-
-func flashSPIImage(ctx context.Context, s *testing.State, b utils.DevboardHelper, i *ti50.CrOSImage, spi spiImage, flashSize int) {
-	b.WithApFlashAccess(ctx, i, ti50.HoldInReset, func(flash ti50.ApFlash) {
-		// Write the fresh AP flash image. We only care about the RO section for
-		// verification but this will write the whole 32M image. The SW WP is
-		// ignored because HW WP is disabled.
-		s.Log("Flashing new AP image: ", string(spi))
-		if err := flash.WriteApFlash(ctx, getSPIImageContents(s, spi, flashSize)); err != nil {
-			s.Fatal("writing AP flash: ", err)
-		}
-	})
-}
-
-func verifyVerificationResultOnReboot(ctx context.Context, s *testing.State, b utils.DevboardHelper, i *ti50.CrOSImage, wantVerificationResult uint32) {
-	b.Reset(ctx)
-	m, err := i.WaitUntilMatch(ctx, verificationResult, 5*time.Second)
-	if err != nil {
-		s.Fatal("Expected to see Ti50 verification result: ", err)
-	}
-
-	verificationResult := mustParseVerificationResult(s, m)
-	if verificationResult != wantVerificationResult {
-		s.Errorf("Unexpected verification result: got 0x%x, wanted 0x%x", verificationResult, wantVerificationResult)
-	}
-}
-
-func mustParseVerificationResult(s *testing.State, m [][]byte) uint32 {
-	result, err := strconv.ParseUint(string(m[1]), 16, 32)
-	if err != nil {
-		s.Fatalf("Could not parse verification result of %v: %s", m[1], err)
-	}
-	return uint32(result)
 }

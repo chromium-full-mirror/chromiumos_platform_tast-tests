@@ -988,3 +988,158 @@ func (h DevboardHelper) WaitUntilAnySleep(ctx context.Context, i *ti50.CrOSImage
 	}
 	return i.WaitUntilAnySleep(ctx, timeout)
 }
+
+// AP RO verification result values.
+const (
+	VerificationResultSuccess                   = 0xfffff000
+	VerificationResultBadGBB                    = 0x11000000
+	VerificationResultBadSettingsNotProvisioned = 0x10000000
+)
+
+var (
+	verificationResultRe = regexp.MustCompile(`AP RO verification result: [^(]+ \(0x(\w+)\)`)
+)
+
+// SpiImage is an AP SPI flash image name.
+type SpiImage string
+
+// SPI images.
+const (
+	ValidSPIImage  SpiImage = "valid-8MB_20241018.bin"
+	BadGBBSPIImage SpiImage = "bad-gbb-8MB_20241018.bin"
+)
+
+// EnsureAPROVerificationSuccess configures Ti50 and SPI flash for AP RO verification.
+func (h DevboardHelper) EnsureAPROVerificationSuccess(ctx context.Context, i *ti50.CrOSImage, imageName SpiImage, imagePath string) error {
+	flashInfo := h.ProbeSPIFlashChip(ctx, i)
+	h.Reset(ctx)
+	if err := i.WaitUntilBooted(ctx); err != nil {
+		return errors.Errorf("failed to revive after reboot: %s", err)
+	}
+	if _, err := i.Command(ctx, "bid ZZCR 0x7fffffff"); err != nil {
+		return errors.Errorf("failed to set BID: %s", err)
+	}
+	if _, err := i.Command(ctx, flashInfo.WpsrCmd); err != nil {
+		return errors.Errorf("failed to set wpsr: %s", err)
+	}
+	if _, err := i.Command(ctx, flashInfo.AddrModeCmd); err != nil {
+		return errors.Errorf("failed to set addrmode: %s", err)
+	}
+	h.FlashSPIImage(ctx, i, imageName, imagePath, flashInfo.FlashSize)
+	return h.VerifyVerificationResultOnReboot(ctx, i, VerificationResultSuccess)
+}
+
+type apRoVerifyInfo struct {
+	Name        string
+	FlashSize   int
+	WpSize      uint32
+	WpsrCmd     string
+	AddrModeCmd string
+}
+
+var apRoVerifyInfos = []apRoVerifyInfo{
+	{
+		Name:      "W25Q256JV_M",
+		FlashSize: 32 * 1024 * 1024,
+		WpSize:    0x00100000,
+		// Found with the `src/third_party/ap_wpsr` tool with
+		// `./ap_wpsr --name W25Q256JV_M --start 0 --length 0x00100000`
+		WpsrCmd:     "ap_ro_verify wpsr d4 fc 0 41",
+		AddrModeCmd: "ap_ro_verify addrmode 4byte",
+	},
+	{
+		Name:      "GD25Q256D/GD25Q256E",
+		FlashSize: 32 * 1024 * 1024,
+		WpSize:    0x00100000,
+		// Found with the `src/third_party/ap_wpsr` tool with
+		// `./ap_wpsr --name GD25Q256D/GD25Q256E --start 0 --length 0x00100000`
+		WpsrCmd:     "ap_ro_verify wpsr d4 fc 0 40",
+		AddrModeCmd: "ap_ro_verify addrmode 4byte",
+	},
+	{
+		Name:      "W25Q128.V..M",
+		FlashSize: 16 * 1024 * 1024,
+		WpSize:    0x00080000,
+		// Found with the `src/third_party/ap_wpsr` tool with
+		// `./ap_wpsr --name W25Q128.V..M --start 0 --length 0x00080000`
+		WpsrCmd:     "ap_ro_verify wpsr a8 fc 0 41",
+		AddrModeCmd: "ap_ro_verify addrmode 3byte",
+	},
+}
+
+// ProbeSPIFlashChip detects AP RO verify settings for the SPI flash.
+func (h DevboardHelper) ProbeSPIFlashChip(ctx context.Context, i *ti50.CrOSImage) (flashInfo *apRoVerifyInfo) {
+	h.WithApFlashAccess(ctx, i, ti50.HoldInReset, func(flash ti50.ApFlash) {
+		chipInfo, err := flash.FetchApFlashInfo(ctx)
+		if err != nil {
+			h.Fatalf("Could not get ap flash info: %s", err)
+		}
+		flashInfo = nil
+		for i := range apRoVerifyInfos {
+			if apRoVerifyInfos[i].Name == chipInfo.Name {
+				// Enable SW WP on the AP SPI chip so the status registers are as expected.
+				// This range represents the RO section of the AP flash.
+				if err := flash.EnableApWriteProtect(ctx, 0, apRoVerifyInfos[i].WpSize); err != nil {
+					h.Fatalf("setting AP flash write protect: %s", err)
+				}
+				flashInfo = &apRoVerifyInfos[i]
+				testing.ContextLog(ctx, "Recognized AP SPI flash chip: ", flashInfo)
+			}
+		}
+		if flashInfo == nil {
+			h.Fatalf("Unrecognized AP SPI flash chip: %s", chipInfo.Name)
+		}
+	})
+	return flashInfo
+}
+
+// FlashSPIImage writes an image to the SPI flash.
+func (h DevboardHelper) FlashSPIImage(ctx context.Context, i *ti50.CrOSImage, imageName SpiImage, imagePath string, flashSize int) {
+	h.WithApFlashAccess(ctx, i, ti50.HoldInReset, func(flash ti50.ApFlash) {
+		// Write the fresh AP flash image. We only care about the RO section for
+		// verification but this will write the whole 32M image. The SW WP is
+		// ignored because HW WP is disabled.
+		testing.ContextLog(ctx, "Flashing new AP image: ", string(imageName))
+		if err := flash.WriteApFlash(ctx, h.getSPIImageContents(imageName, imagePath, flashSize)); err != nil {
+			h.Fatalf("writing AP flash: %s", err)
+		}
+	})
+}
+
+// getSPIImageContents loads a particular sample AP image, possibly zero-padded to given flash
+// chip size.
+func (h DevboardHelper) getSPIImageContents(imageName SpiImage, imagePath string, flashSize int) []byte {
+	result := make([]byte, flashSize)
+	contents, err := os.ReadFile(imagePath)
+	if err != nil {
+		h.Fatalf("Could not read image %q: %s", string(imageName), err)
+	}
+	if len(contents) >= flashSize {
+		h.Fatalf("Flash chip too small to contain test AP image %s", imageName)
+	}
+	copy(result, contents)
+	return result
+}
+
+// VerifyVerificationResultOnReboot reboots Ti50 then checks the AP RO verification result.
+func (h DevboardHelper) VerifyVerificationResultOnReboot(ctx context.Context, i *ti50.CrOSImage, wantVerificationResult uint32) error {
+	h.Reset(ctx)
+	m, err := i.WaitUntilMatch(ctx, verificationResultRe, 5*time.Second)
+	if err != nil {
+		h.Fatalf("Expected to see Ti50 verification result: %s", err)
+	}
+
+	verificationResult := h.mustParseVerificationResult(m)
+	if verificationResult != wantVerificationResult {
+		return errors.Errorf("unexpected verification result: got 0x%x, wanted 0x%x", verificationResult, wantVerificationResult)
+	}
+	return nil
+}
+
+func (h DevboardHelper) mustParseVerificationResult(m [][]byte) uint32 {
+	result, err := strconv.ParseUint(string(m[1]), 16, 32)
+	if err != nil {
+		h.Fatalf("Could not parse verification result of %v: %s", m[1], err)
+	}
+	return uint32(result)
+}

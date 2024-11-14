@@ -22,14 +22,18 @@ func init() {
 	testing.AddTest(&testing.Test{
 		Func:    Ti50BootTime,
 		Desc:    "Measure boot time",
-		Timeout: 2 * time.Minute,
+		Timeout: 10 * time.Minute,
 		Contacts: []string{
 			"cros-hwsec@google.com", // CrOS GSC Developers
 			"ecgh@google.com",
 		},
 		BugComponent: "b:715469", // ChromeOS > Platform > System > Hardware Security > HwSec GSC > Ti50
-		Attr:         []string{"group:gsc", "gsc_dt_shield", "gsc_ot_shield"},
-		Fixture:      fixture.GSCOpenCCD,
+		Attr: []string{"group:gsc",
+			"gsc_dt_shield", "gsc_ot_shield",
+			"gsc_image_ti50",
+			"gsc_nightly"},
+		Fixture: fixture.GSCInitialFactory,
+		Data:    []string{string(utils.ValidSPIImage)},
 	})
 }
 
@@ -47,6 +51,12 @@ func Ti50BootTime(ctx context.Context, s *testing.State) {
 	i := ti50.MustOpenCrOSImage(ctx, b, s, b.TestbedType)
 	defer i.Close(ctx)
 	pv := perf.NewValues()
+
+	b.Reset(ctx)
+	th.MustSucceed(i.WaitUntilBooted(ctx), "GSC revives after reboot")
+	if err := b.EnsureAPROVerificationSuccess(ctx, i, utils.ValidSPIImage, s.DataPath(string(utils.ValidSPIImage))); err != nil {
+		s.Error("Failed AP RO verification: ", err)
+	}
 
 	// Cold reboot with AP on.
 	prefix := "ColdReset_"
