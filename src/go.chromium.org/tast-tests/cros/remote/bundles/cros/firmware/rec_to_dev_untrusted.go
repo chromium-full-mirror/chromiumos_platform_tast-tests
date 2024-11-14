@@ -80,14 +80,6 @@ func RecToDevUntrusted(ctx context.Context, s *testing.State) {
 
 	s.Log("Rebooting the DUT with a warm reset")
 	if err := h.Servo.SetPowerState(ctx, servo.PowerStateWarmReset); err != nil {
-		// Log the current power state when warm_reset fails.
-		if h.Config.ChromeEC {
-			currPowerState, powerStateErr := h.Servo.GetECSystemPowerState(ctx)
-			if powerStateErr != nil {
-				s.Error("Failed to check powerstate: ", powerStateErr)
-			}
-			s.Fatalf("Failed to warm reset the DUT: %d, the current power state is %q", err, currPowerState)
-		}
 		s.Fatal("Failed to warm reset the DUT: ", err)
 	}
 
@@ -96,6 +88,14 @@ func RecToDevUntrusted(ctx context.Context, s *testing.State) {
 	waitConnectCtx, cancelWaitConnect := context.WithTimeout(ctx, h.Config.DelayRebootToPing)
 	defer cancelWaitConnect()
 	if err := h.WaitConnect(waitConnectCtx, waitConnectOps...); err != nil {
+		// Log the current power state when warm_reset fails.
+		if h.Config.ChromeEC {
+			currPowerState, powerStateErr := h.Servo.GetECSystemPowerState(ctx)
+			if powerStateErr != nil {
+				s.Error("Failed to check powerstate: ", powerStateErr)
+			}
+			s.Fatalf("Failed to reconnect to DUT: %d, the current power state is %q", err, currPowerState)
+		}
 		s.Fatal("Failed to reconnect to DUT: ", err)
 	}
 
