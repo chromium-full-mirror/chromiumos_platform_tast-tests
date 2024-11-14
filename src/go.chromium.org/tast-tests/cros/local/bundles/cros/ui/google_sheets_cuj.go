@@ -9,7 +9,6 @@ import (
 	"time"
 
 	"go.chromium.org/tast-tests/cros/local/chrome"
-	"go.chromium.org/tast-tests/cros/local/chrome/browser"
 	"go.chromium.org/tast-tests/cros/local/chrome/cuj"
 	"go.chromium.org/tast-tests/cros/local/ui/cujrecorder"
 	"go.chromium.org/tast-tests/cros/local/ui/googlesheetscuj"
@@ -37,32 +36,25 @@ func init() {
 		Timeout:      15*time.Minute + cujrecorder.CooldownTimeout,
 		Params: []testing.Param{
 			{
-				Val: googlesheetscuj.TestParam{
-					BrowserType: browser.TypeAsh,
-				},
+				Val:       googlesheetscuj.TestParam{},
 				ExtraAttr: []string{"group:cuj"},
 				Fixture:   "loggedInToCUJUserWithoutCooldown",
 			},
 			// Experimental variants.
 			{
-				Name: "field_trials",
-				Val: googlesheetscuj.TestParam{
-					BrowserType: browser.TypeAsh,
-				},
+				Name:      "field_trials",
+				Val:       googlesheetscuj.TestParam{},
 				ExtraAttr: []string{"group:cuj", "cuj_experimental"},
 				Fixture:   "loggedInToCUJUserWithFieldTrialsWithoutCooldown",
 			},
 			{
-				Name: "battery_saver",
-				Val: googlesheetscuj.TestParam{
-					BrowserType: browser.TypeAsh,
-				},
+				Name:    "battery_saver",
+				Val:     googlesheetscuj.TestParam{},
 				Fixture: "loggedInToCUJUserWithBatterySaverWithoutCooldown",
 			},
 			{
 				Name: "focusmode",
 				Val: googlesheetscuj.TestParam{
-					BrowserType:      browser.TypeAsh,
 					FocusModeEnabled: true,
 				},
 				Fixture: "loggedInToCUJUserWithFocusMode",

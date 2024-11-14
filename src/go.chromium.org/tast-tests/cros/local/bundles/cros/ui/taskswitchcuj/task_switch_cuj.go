@@ -12,8 +12,6 @@ import (
 
 	"go.chromium.org/tast-tests/cros/local/chrome"
 	"go.chromium.org/tast-tests/cros/local/chrome/ash"
-	"go.chromium.org/tast-tests/cros/local/chrome/browser"
-	"go.chromium.org/tast-tests/cros/local/chrome/browser/browserfixt"
 	"go.chromium.org/tast-tests/cros/local/chrome/cuj"
 	"go.chromium.org/tast-tests/cros/local/chrome/cuj/inputsimulations"
 	"go.chromium.org/tast-tests/cros/local/chrome/display"
@@ -57,20 +55,9 @@ func Run(ctx context.Context, s *testing.State) {
 	cr := s.FixtValue().(chrome.HasChrome).Chrome()
 	a := s.FixtValue().(cuj.FixtureData).ARC
 
-	br, closeBrowser, err := browserfixt.SetUp(ctx, cr, browser.TypeAsh)
-	if err != nil {
-		s.Fatal("Failed to setup Chrome: ", err)
-	}
-	defer closeBrowser(closeCtx)
-
 	tconn, err := cr.TestAPIConn(ctx)
 	if err != nil {
 		s.Fatal("Failed to connect to test API connection: ", err)
-	}
-
-	bTconn, err := br.TestAPIConn(ctx)
-	if err != nil {
-		s.Fatal("Falied to connect to browser test API connection: ", err)
 	}
 
 	cleanup, err := ash.EnsureTabletModeEnabled(ctx, tconn, testParam.Tablet)
@@ -102,11 +89,11 @@ func Run(ctx context.Context, s *testing.State) {
 
 	ac := uiauto.New(tconn)
 
-	recorder, err := cujrecorder.NewRecorder(ctx, cr, bTconn, a, cujrecorder.RecorderOptions{})
+	recorder, err := cujrecorder.NewRecorder(ctx, cr, tconn, a, cujrecorder.RecorderOptions{})
 	if err != nil {
 		s.Fatal("Failed to create a recorder: ", err)
 	}
-	if err := recorder.AddCommonMetrics(tconn, bTconn); err != nil {
+	if err := recorder.AddCommonMetrics(tconn, tconn); err != nil {
 		s.Fatal("Failed to add common metrics to the recorder: ", err)
 	}
 	defer recorder.Close(closeCtx)
@@ -230,13 +217,13 @@ func Run(ctx context.Context, s *testing.State) {
 	}
 
 	s.Log("Opening Chrome Tabs")
-	numBrowserWindows, err := openChromeTabs(ctx, tconn, bTconn, br, testParam.Tablet)
+	numBrowserWindows, err := openChromeTabs(ctx, tconn, cr, testParam.Tablet)
 	if err != nil {
 		s.Fatal("Failed to open Chrome tabs: ", err)
 	}
 
 	s.Log("Opening PWA")
-	cleanupPWA, err := openPWA(ctx, cr, tconn, br)
+	cleanupPWA, err := openPWA(ctx, cr, tconn)
 	if err != nil {
 		s.Fatal("Failed to open PWA: ", err)
 	}
@@ -261,7 +248,7 @@ func Run(ctx context.Context, s *testing.State) {
 		// page to ensure collection of
 		// PageLoad.PaintTiming.NavigationToLargestContentfulPaint2.
 		extraURL := "https://webglsamples.org/aquarium/aquarium.html?numFish=1000"
-		extraTab, err := cuj.NewTabByURL(ctx, br, true, extraURL)
+		extraTab, err := cuj.NewTabByURL(ctx, cr.Browser(), true, extraURL)
 		if err != nil {
 			return err
 		}
@@ -427,7 +414,7 @@ func Run(ctx context.Context, s *testing.State) {
 				return errors.Wrap(err, "failed to check if extraTab is still alive")
 			}
 			if !isAlive {
-				if err := extraTab.Reconnect(ctx, br); err != nil {
+				if err := extraTab.Reconnect(ctx, cr.Browser()); err != nil {
 					return errors.Wrap(err, "cdp connection is invalid and failed to reconnect")
 				}
 			}

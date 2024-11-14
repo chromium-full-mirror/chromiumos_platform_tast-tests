@@ -9,7 +9,6 @@ import (
 	"time"
 
 	"go.chromium.org/tast-tests/cros/local/chrome"
-	"go.chromium.org/tast-tests/cros/local/chrome/browser"
 	"go.chromium.org/tast-tests/cros/local/chrome/cuj"
 	"go.chromium.org/tast-tests/cros/local/ui/cujrecorder"
 	"go.chromium.org/tast-tests/cros/local/ui/deskscuj"
@@ -20,7 +19,6 @@ import (
 func init() {
 	testing.AddTest(&testing.Test{
 		Func:         DesksCUJ,
-		LacrosStatus: testing.LacrosVariantUnneeded,
 		Desc:         "Measures the performance of critical user journey for virtual desks",
 		Contacts:     []string{"cros-sw-perf@google.com", "ramsaroop@google.com"},
 		BugComponent: "b:1045832",
@@ -42,24 +40,18 @@ func init() {
 		Timeout: 50 * time.Minute,
 		Params: []testing.Param{
 			{
-				Val: deskscuj.TestParam{
-					BrowserType: browser.TypeAsh,
-				},
+				Val:       deskscuj.TestParam{},
 				ExtraAttr: []string{"group:cuj", "group:crosbolt", "crosbolt_release_gates"},
 				Fixture:   "loggedInToCUJUser",
 			}, {
-				Name: "arc_disabled",
-				Val: deskscuj.TestParam{
-					BrowserType: browser.TypeAsh,
-				},
+				Name:      "arc_disabled",
+				Val:       deskscuj.TestParam{},
 				ExtraAttr: []string{"group:cuj"},
 				Fixture:   "loggedInToCUJUserDisableARC",
 			}, {
-				Name:         "pvsched",
-				BugComponent: "b:167279",
-				Val: deskscuj.TestParam{
-					BrowserType: browser.TypeAsh,
-				},
+				Name:              "pvsched",
+				BugComponent:      "b:167279",
+				Val:               deskscuj.TestParam{},
 				ExtraAttr:         []string{"group:cuj", "cuj_experimental"},
 				ExtraHardwareDeps: hwdep.D(hwdep.HasParavirtSchedControl()),
 				Fixture:           "loggedInToCUJUserWithPvSchedEnabled",
@@ -69,35 +61,27 @@ func init() {
 			{
 				Name:      "field_trials",
 				ExtraAttr: []string{"group:cuj", "cuj_experimental"},
-				Val: deskscuj.TestParam{
-					BrowserType: browser.TypeAsh,
-				},
-				Fixture: "loggedInToCUJUserWithFieldTrials",
+				Val:       deskscuj.TestParam{},
+				Fixture:   "loggedInToCUJUserWithFieldTrials",
 			},
 			{
 				Name:      "battery_saver",
 				ExtraAttr: []string{"group:cuj"},
-				Val: deskscuj.TestParam{
-					BrowserType: browser.TypeAsh,
-				},
-				Fixture: "loggedInToCUJUserWithBatterySaver",
+				Val:       deskscuj.TestParam{},
+				Fixture:   "loggedInToCUJUserWithBatterySaver",
 			},
 			// TODO(b/302748186): Remove rounded window tests once A/B testing
 			// for rounded windows is done.
 			{
-				Name: "rounded_windows",
-				Val: deskscuj.TestParam{
-					BrowserType: browser.TypeAsh,
-				},
+				Name:      "rounded_windows",
+				Val:       deskscuj.TestParam{},
 				ExtraAttr: []string{"group:cuj", "cuj_experimental"},
 				Fixture:   "loggedInToCUJUserWithRoundedWindows",
 			},
 			// TODO(b/292249282): Remove when Vulkan is launched on brya, volteer, and skyrim
 			{
-				Name: "vulkan",
-				Val: deskscuj.TestParam{
-					BrowserType: browser.TypeAsh,
-				},
+				Name:              "vulkan",
+				Val:               deskscuj.TestParam{},
 				Fixture:           "loggedInToCUJUserVulkan",
 				ExtraAttr:         []string{"group:cuj"},
 				ExtraHardwareDeps: hwdep.D(hwdep.Model("redrix", "drobit", "frostflow")),

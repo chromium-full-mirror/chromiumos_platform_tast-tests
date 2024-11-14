@@ -8,7 +8,6 @@ import (
 	"context"
 	"time"
 
-	"go.chromium.org/tast-tests/cros/local/chrome/browser"
 	"go.chromium.org/tast-tests/cros/local/chrome/cuj"
 	"go.chromium.org/tast-tests/cros/local/ui/cujrecorder"
 	"go.chromium.org/tast-tests/cros/local/ui/videocuj"
@@ -18,9 +17,8 @@ import (
 
 func init() {
 	testing.AddTest(&testing.Test{
-		Func:         VideoCUJ,
-		LacrosStatus: testing.LacrosVariantUnneeded,
-		Desc:         "Measures the performance of a critical user journey of watching a video",
+		Func: VideoCUJ,
+		Desc: "Measures the performance of a critical user journey of watching a video",
 		Contacts: []string{
 			"cros-sw-perf@google.com",
 			"ramsaroop@google.com",
@@ -32,33 +30,28 @@ func init() {
 		Timeout:      15 * time.Minute,
 		Params: []testing.Param{
 			{
-				Val:       browser.TypeAsh,
 				ExtraAttr: []string{"group:cuj"},
 				Fixture:   "loggedInToCUJUser",
 			},
 			// Experimental variants.
 			{
 				Name:      "field_trials",
-				Val:       browser.TypeAsh,
 				ExtraAttr: []string{"group:cuj", "cuj_experimental"},
 				Fixture:   "loggedInToCUJUserWithFieldTrials",
 			},
 			{
 				Name:    "battery_saver",
-				Val:     browser.TypeAsh,
 				Fixture: "loggedInToCUJUserWithBatterySaver",
 			},
 			// TODO(b/292249282): Remove when Vulkan is launched on brya, volteer, and skyrim
 			{
 				Name:              "vulkan",
-				Val:               browser.TypeAsh,
 				Fixture:           "loggedInToCUJUserVulkan",
 				ExtraAttr:         []string{"group:cuj"},
 				ExtraHardwareDeps: hwdep.D(hwdep.Model("redrix", "drobit", "frostflow")),
 			},
 			{
 				Name:              "pvsched",
-				Val:               browser.TypeAsh,
 				BugComponent:      "b:167279",
 				Fixture:           "loggedInToCUJUserWithPvSchedEnabled",
 				ExtraAttr:         []string{"group:cuj", "cuj_experimental"},

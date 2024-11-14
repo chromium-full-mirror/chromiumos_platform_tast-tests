@@ -16,7 +16,6 @@ import (
 	"go.chromium.org/tast-tests/cros/local/chrome"
 	"go.chromium.org/tast-tests/cros/local/chrome/apps/thirdparty/googledocs"
 	"go.chromium.org/tast-tests/cros/local/chrome/ash"
-	"go.chromium.org/tast-tests/cros/local/chrome/browser"
 	"go.chromium.org/tast-tests/cros/local/chrome/cuj"
 	"go.chromium.org/tast-tests/cros/local/chrome/cuj/inputsimulations"
 	"go.chromium.org/tast-tests/cros/local/chrome/display"
@@ -39,7 +38,7 @@ import (
 
 // Run opens up a new Google Doc, and types paragraphs in multiple
 // languages, speeds, and styles, to test the Google Docs performance.
-func Run(ctx context.Context, cr *chrome.Chrome, bt browser.Type, outDir, systemTraceConfigPath, testName string) (pv *perf.Values, retErr error) {
+func Run(ctx context.Context, cr *chrome.Chrome, outDir, systemTraceConfigPath, testName string) (pv *perf.Values, retErr error) {
 	// Shorten context a bit to allow for cleanup.
 	closeCtx := ctx
 	ctx, cancel := ctxutil.Shorten(ctx, 5*time.Second)
@@ -63,19 +62,13 @@ func Run(ctx context.Context, cr *chrome.Chrome, bt browser.Type, outDir, system
 		return nil, errors.Wrap(err, "failed to connect to test API connection")
 	}
 
-	br := cr.Browser()
-	bTconn, err := br.TestAPIConn(ctx)
-	if err != nil {
-		return nil, errors.Wrap(err, "failed to connect to browser test API connection")
-	}
-
-	recorder, err := cujrecorder.NewRecorder(ctx, cr, bTconn, nil, cujrecorder.RecorderOptions{})
+	recorder, err := cujrecorder.NewRecorder(ctx, cr, tconn, nil, cujrecorder.RecorderOptions{})
 	if err != nil {
 		return nil, errors.Wrap(err, "failed to create a recorder")
 	}
 	defer recorder.Close(closeCtx)
 
-	if err := recorder.AddCommonMetrics(tconn, bTconn); err != nil {
+	if err := recorder.AddCommonMetrics(tconn, tconn); err != nil {
 		return nil, errors.Wrap(err, "failed to add common metrics to the recorder")
 	}
 
@@ -120,14 +113,14 @@ func Run(ctx context.Context, cr *chrome.Chrome, bt browser.Type, outDir, system
 
 	ac := uiauto.New(tconn)
 
-	tabChecker, err := cuj.NewTabCrashChecker(ctx, bTconn)
+	tabChecker, err := cuj.NewTabCrashChecker(ctx, tconn)
 	if err != nil {
 		return nil, errors.Wrap(err, "failed to create TabCrashChecker")
 	}
 
 	// Install the Google Docs offline extension to ensure that the
 	// test continues to run despite any network difficulties.
-	if err := cuj.EnsureDocsOfflineEnabled(ctx, br, tconn); err != nil {
+	if err := cuj.EnsureDocsOfflineEnabled(ctx, cr.Browser(), tconn); err != nil {
 		return nil, errors.Wrap(err, "failed to enable Docs offline support")
 	}
 

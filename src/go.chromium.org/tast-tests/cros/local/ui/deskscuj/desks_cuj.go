@@ -30,7 +30,6 @@ import (
 
 // TestParam is the test parameters for DesksCUJ.
 type TestParam struct {
-	BrowserType browser.Type
 }
 
 // Run runs the desks CUJ by opening up 4 different desks and switching
@@ -71,12 +70,6 @@ func Run(ctx context.Context, cr *chrome.Chrome, testParam TestParam, args func(
 		return nil, errors.Wrap(err, "failed to connect to test API connection")
 	}
 
-	br := cr.Browser()
-	bTconn, err := br.TestAPIConn(ctx)
-	if err != nil {
-		return nil, errors.Wrap(err, "failed to connect to browser test API connection")
-	}
-
 	cleanup, err := ash.EnsureTabletModeEnabled(ctx, tconn, false)
 	if err != nil {
 		return nil, errors.Wrap(err, "failed to ensure clamshell mode")
@@ -115,13 +108,13 @@ func Run(ctx context.Context, cr *chrome.Chrome, testParam TestParam, args func(
 		return nil, errors.Wrap(err, "failed to wake display")
 	}
 
-	recorder, err := cujrecorder.NewRecorder(ctx, cr, bTconn, nil, cujrecorder.RecorderOptions{})
+	recorder, err := cujrecorder.NewRecorder(ctx, cr, tconn, nil, cujrecorder.RecorderOptions{})
 	if err != nil {
 		return nil, errors.Wrap(err, "failed to create the recorder")
 	}
 	defer recorder.Close(cleanupCtx)
 
-	if err := recorder.AddCommonMetrics(tconn, bTconn); err != nil {
+	if err := recorder.AddCommonMetrics(tconn, tconn); err != nil {
 		return nil, errors.Wrap(err, "failed to add common metrics to recorder")
 	}
 
@@ -144,7 +137,7 @@ func Run(ctx context.Context, cr *chrome.Chrome, testParam TestParam, args func(
 
 	// Open all desks and windows for each desk. Additionally, initialize
 	// unique user input actions that will be performed on each desk.
-	onVisitActions, expectedNumWindows, cleanUpDesks, err := setUpDesks(ctx, tconn, bTconn, br, kw, mw, tpw, tw)
+	onVisitActions, expectedNumWindows, cleanUpDesks, err := setUpDesks(ctx, tconn, cr, kw, mw, tpw, tw)
 	if err != nil {
 		return nil, errors.Wrap(err, "failed to set up desks")
 	}
@@ -170,7 +163,7 @@ func Run(ctx context.Context, cr *chrome.Chrome, testParam TestParam, args func(
 		GetOverviewWorkflow(tconn, ac, setOverviewModeAndWait),
 	}
 
-	if err := browser.CloseTabByTitle(ctx, bTconn, "about:blank"); err != nil {
+	if err := browser.CloseTabByTitle(ctx, tconn, "about:blank"); err != nil {
 		return nil, errors.Wrap(err, "failed to close blank tab")
 	}
 
@@ -188,7 +181,7 @@ func Run(ctx context.Context, cr *chrome.Chrome, testParam TestParam, args func(
 			return errors.Wrap(err, "failed to get Google Slides URL")
 		}
 
-		slidesConn, err := recorder.NewConn(ctx, br, "Slides", slidesURL, browser.WithNewWindow())
+		slidesConn, err := recorder.NewConn(ctx, cr.Browser(), "Slides", slidesURL, browser.WithNewWindow())
 		if err != nil {
 			return errors.Wrap(err, "failed to open a Google Slides presentation")
 		}
@@ -217,7 +210,7 @@ func Run(ctx context.Context, cr *chrome.Chrome, testParam TestParam, args func(
 			matcher := func(t *target.Info) bool {
 				return strings.Contains(t.URL, slidesURL)
 			}
-			slidesConn, err = br.NewConnForTarget(ctx, matcher)
+			slidesConn, err = cr.NewConnForTarget(ctx, matcher)
 			if err != nil {
 				return errors.Wrap(err, "failed to reconnect to Google Slides tab")
 			}

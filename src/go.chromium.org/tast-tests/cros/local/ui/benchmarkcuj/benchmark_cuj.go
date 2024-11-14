@@ -12,7 +12,6 @@ import (
 	"go.chromium.org/tast-tests/cros/common/perf"
 	"go.chromium.org/tast-tests/cros/local/chrome"
 	"go.chromium.org/tast-tests/cros/local/chrome/ash"
-	"go.chromium.org/tast-tests/cros/local/chrome/browser"
 	"go.chromium.org/tast-tests/cros/local/chrome/uiauto"
 	"go.chromium.org/tast-tests/cros/local/chrome/uiauto/faillog"
 	localPerf "go.chromium.org/tast-tests/cros/local/perf"
@@ -30,7 +29,6 @@ const (
 
 // BenchmarkTest holds parameters for the BenchmarkCUJ test variants.
 type BenchmarkTest struct {
-	BrowserType   browser.Type
 	BenchmarkInfo benchmarkInfo
 	RecorderMode  cujrecorder.RecorderMode
 	RunOnBattery  bool
@@ -75,11 +73,6 @@ func Run(ctx context.Context, cr *chrome.Chrome, testParam BenchmarkTest, cmdLin
 		return nil, errors.Wrap(err, "failed to connect to the test API connection")
 	}
 
-	bTconn, err := cr.Browser().TestAPIConn(ctx)
-	if err != nil {
-		return nil, errors.Wrap(err, "falied to connect to browser test API connection")
-	}
-
 	dir, ok := testing.ContextOutDir(ctx)
 	if !ok || dir == "" {
 		return nil, errors.New("failed to get the out directory")
@@ -101,7 +94,7 @@ func Run(ctx context.Context, cr *chrome.Chrome, testParam BenchmarkTest, cmdLin
 		return nil, errors.Wrapf(err, "failed to set window state to %v", benchmarkParam.windowState)
 	}
 
-	recorder, err := cujrecorder.NewRecorder(ctx, cr, bTconn, nil, cujrecorder.RecorderOptions{
+	recorder, err := cujrecorder.NewRecorder(ctx, cr, tconn, nil, cujrecorder.RecorderOptions{
 		Mode:              testParam.RecorderMode,
 		CooldownBeforeRun: !testParam.SkipCooldown,
 		RunOnBattery:      testParam.RunOnBattery,

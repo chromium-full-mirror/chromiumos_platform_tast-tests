@@ -9,7 +9,6 @@ import (
 	"time"
 
 	"go.chromium.org/tast-tests/cros/local/chrome"
-	"go.chromium.org/tast-tests/cros/local/chrome/browser"
 	"go.chromium.org/tast-tests/cros/local/chrome/cuj"
 	"go.chromium.org/tast-tests/cros/local/ui/benchmarkcuj"
 	"go.chromium.org/tast-tests/cros/local/ui/cujrecorder"
@@ -41,7 +40,6 @@ func init() {
 				Timeout:   defaultTimeout,
 				Fixture:   "loggedInToCUJUserWithoutCooldownBenchmark",
 				Val: benchmarkcuj.BenchmarkTest{
-					BrowserType:   browser.TypeAsh,
 					BenchmarkInfo: benchmarkcuj.SpeedometerInfo,
 					RecorderMode:  cujrecorder.Benchmark,
 				},
@@ -52,7 +50,6 @@ func init() {
 				Timeout:   defaultTimeout,
 				Fixture:   "loggedInToCUJUserWithoutCooldownBenchmark",
 				Val: benchmarkcuj.BenchmarkTest{
-					BrowserType:   browser.TypeAsh,
 					BenchmarkInfo: benchmarkcuj.Speedometer3Info,
 					RecorderMode:  cujrecorder.Benchmark,
 				},
@@ -63,7 +60,6 @@ func init() {
 				Timeout:   defaultTimeout,
 				Fixture:   "loggedInToCUJUserWithoutCooldownBenchmark",
 				Val: benchmarkcuj.BenchmarkTest{
-					BrowserType:   browser.TypeAsh,
 					BenchmarkInfo: benchmarkcuj.MotionMarkInfo,
 					RecorderMode:  cujrecorder.Benchmark,
 				},
@@ -75,7 +71,6 @@ func init() {
 				Fixture:           "loggedInToCUJUserWithVulkanWithoutCooldown",
 				ExtraSoftwareDeps: []string{"vulkan_composite"},
 				Val: benchmarkcuj.BenchmarkTest{
-					BrowserType:   browser.TypeAsh,
 					BenchmarkInfo: benchmarkcuj.MotionMarkInfo,
 					RecorderMode:  cujrecorder.Benchmark,
 				},
@@ -86,7 +81,6 @@ func init() {
 				Timeout:   defaultTimeout,
 				Fixture:   "loggedInToCUJUserWithoutCooldownBenchmark",
 				Val: benchmarkcuj.BenchmarkTest{
-					BrowserType:   browser.TypeAsh,
 					BenchmarkInfo: benchmarkcuj.MotionMark1_3Info,
 					RecorderMode:  cujrecorder.Benchmark,
 				},
@@ -98,7 +92,6 @@ func init() {
 				Fixture:           "loggedInToCUJUserWithVulkanWithoutCooldown",
 				ExtraSoftwareDeps: []string{"vulkan_composite"},
 				Val: benchmarkcuj.BenchmarkTest{
-					BrowserType:   browser.TypeAsh,
 					BenchmarkInfo: benchmarkcuj.MotionMark1_3Info,
 					RecorderMode:  cujrecorder.Benchmark,
 				},
@@ -109,7 +102,6 @@ func init() {
 				Timeout:   defaultTimeout,
 				Fixture:   "loggedInToCUJUserWithoutCooldownBenchmark",
 				Val: benchmarkcuj.BenchmarkTest{
-					BrowserType:   browser.TypeAsh,
 					BenchmarkInfo: benchmarkcuj.JetStreamInfo,
 					RecorderMode:  cujrecorder.Benchmark,
 				},
@@ -120,7 +112,6 @@ func init() {
 				Timeout:   defaultTimeout,
 				Fixture:   "loggedInToCUJUserWithoutCooldownBenchmark",
 				Val: benchmarkcuj.BenchmarkTest{
-					BrowserType:   browser.TypeAsh,
 					BenchmarkInfo: benchmarkcuj.KrakenInfo,
 					RecorderMode:  cujrecorder.Benchmark,
 				},
@@ -131,7 +122,6 @@ func init() {
 				Timeout:   defaultTimeout,
 				Fixture:   "loggedInToCUJUserWithoutCooldownBenchmark",
 				Val: benchmarkcuj.BenchmarkTest{
-					BrowserType:   browser.TypeAsh,
 					BenchmarkInfo: benchmarkcuj.OctaneInfo,
 					RecorderMode:  cujrecorder.Benchmark,
 				},
@@ -142,7 +132,6 @@ func init() {
 				Timeout:   30*time.Minute + cujrecorder.CooldownTimeout,
 				Fixture:   "loggedInToCUJUserWithoutCooldownBenchmark",
 				Val: benchmarkcuj.BenchmarkTest{
-					BrowserType:   browser.TypeAsh,
 					BenchmarkInfo: benchmarkcuj.WebXPRT4Info,
 					RecorderMode:  cujrecorder.Benchmark,
 				},
@@ -154,7 +143,6 @@ func init() {
 				Fixture:           "loggedInToCUJUserWithVulkanWithoutCooldown",
 				ExtraSoftwareDeps: []string{"vulkan_composite"},
 				Val: benchmarkcuj.BenchmarkTest{
-					BrowserType:   browser.TypeAsh,
 					BenchmarkInfo: benchmarkcuj.WebXPRT4Info,
 					RecorderMode:  cujrecorder.Benchmark,
 				},
@@ -165,7 +153,6 @@ func init() {
 				Timeout: defaultTimeout,
 				Fixture: "loggedInToCUJUserWithBatterySaverWithoutCooldown",
 				Val: benchmarkcuj.BenchmarkTest{
-					BrowserType:   browser.TypeAsh,
 					BenchmarkInfo: benchmarkcuj.SpeedometerInfo,
 					RecorderMode:  cujrecorder.Benchmark,
 				},
@@ -175,7 +162,6 @@ func init() {
 				Timeout: defaultTimeout,
 				Fixture: "loggedInToCUJUserWithBatterySaverWithoutCooldown",
 				Val: benchmarkcuj.BenchmarkTest{
-					BrowserType:   browser.TypeAsh,
 					BenchmarkInfo: benchmarkcuj.MotionMarkInfo,
 					RecorderMode:  cujrecorder.Benchmark,
 				},
@@ -185,7 +171,6 @@ func init() {
 				Timeout: defaultTimeout,
 				Fixture: "loggedInToCUJUserWithBatterySaverWithoutCooldown",
 				Val: benchmarkcuj.BenchmarkTest{
-					BrowserType:   browser.TypeAsh,
 					BenchmarkInfo: benchmarkcuj.JetStreamInfo,
 					RecorderMode:  cujrecorder.Benchmark,
 				},
@@ -195,7 +180,6 @@ func init() {
 				Timeout: defaultTimeout,
 				Fixture: "loggedInToCUJUserWithBatterySaverWithoutCooldown",
 				Val: benchmarkcuj.BenchmarkTest{
-					BrowserType:   browser.TypeAsh,
 					BenchmarkInfo: benchmarkcuj.KrakenInfo,
 					RecorderMode:  cujrecorder.Benchmark,
 				},
@@ -205,7 +189,6 @@ func init() {
 				Timeout: defaultTimeout,
 				Fixture: "loggedInToCUJUserWithBatterySaverWithoutCooldown",
 				Val: benchmarkcuj.BenchmarkTest{
-					BrowserType:   browser.TypeAsh,
 					BenchmarkInfo: benchmarkcuj.OctaneInfo,
 					RecorderMode:  cujrecorder.Benchmark,
 				},
@@ -215,7 +198,6 @@ func init() {
 				Timeout: 30*time.Minute + cujrecorder.CooldownTimeout,
 				Fixture: "loggedInToCUJUserWithBatterySaverWithoutCooldown",
 				Val: benchmarkcuj.BenchmarkTest{
-					BrowserType:   browser.TypeAsh,
 					BenchmarkInfo: benchmarkcuj.WebXPRT4Info,
 					RecorderMode:  cujrecorder.Benchmark,
 				},
@@ -226,7 +208,6 @@ func init() {
 				Timeout: defaultTimeout,
 				Fixture: "loggedInToCUJUserWithoutCooldownBenchmark",
 				Val: benchmarkcuj.BenchmarkTest{
-					BrowserType:   browser.TypeAsh,
 					BenchmarkInfo: benchmarkcuj.BmarkInfo,
 					RecorderMode:  cujrecorder.Benchmark,
 				},
@@ -238,7 +219,6 @@ func init() {
 				Fixture:   benchmarkcuj.SpeedometerWPRReplayFixture,
 				ExtraAttr: []string{"group:cuj", "cuj_experimental"},
 				Val: benchmarkcuj.BenchmarkTest{
-					BrowserType:   browser.TypeAsh,
 					BenchmarkInfo: benchmarkcuj.SpeedometerInfo,
 					RecorderMode:  cujrecorder.Benchmark,
 				},
@@ -250,7 +230,6 @@ func init() {
 				Timeout: defaultTimeout,
 				Fixture: benchmarkcuj.SpeedometerWPRRecordFixture,
 				Val: benchmarkcuj.BenchmarkTest{
-					BrowserType:   browser.TypeAsh,
 					BenchmarkInfo: benchmarkcuj.SpeedometerInfo,
 					RecorderMode:  cujrecorder.Benchmark,
 				},
@@ -261,7 +240,6 @@ func init() {
 				Fixture:   benchmarkcuj.MotionmarkWPRReplayFixture,
 				ExtraAttr: []string{"group:cuj", "cuj_experimental"},
 				Val: benchmarkcuj.BenchmarkTest{
-					BrowserType:   browser.TypeAsh,
 					BenchmarkInfo: benchmarkcuj.MotionMarkInfo,
 					RecorderMode:  cujrecorder.Benchmark,
 				},
@@ -273,7 +251,6 @@ func init() {
 				Timeout: defaultTimeout,
 				Fixture: benchmarkcuj.MotionmarkWPRRecordFixture,
 				Val: benchmarkcuj.BenchmarkTest{
-					BrowserType:   browser.TypeAsh,
 					BenchmarkInfo: benchmarkcuj.MotionMarkInfo,
 					RecorderMode:  cujrecorder.Benchmark,
 				},
@@ -284,7 +261,6 @@ func init() {
 				Fixture:   benchmarkcuj.KrakenWPRReplayFixture,
 				ExtraAttr: []string{"group:cuj", "cuj_experimental"},
 				Val: benchmarkcuj.BenchmarkTest{
-					BrowserType:   browser.TypeAsh,
 					BenchmarkInfo: benchmarkcuj.KrakenInfo,
 					RecorderMode:  cujrecorder.Benchmark,
 				},
@@ -296,7 +272,6 @@ func init() {
 				Timeout: defaultTimeout,
 				Fixture: benchmarkcuj.KrakenWPRRecordFixture,
 				Val: benchmarkcuj.BenchmarkTest{
-					BrowserType:   browser.TypeAsh,
 					BenchmarkInfo: benchmarkcuj.KrakenInfo,
 					RecorderMode:  cujrecorder.Benchmark,
 				},
@@ -307,7 +282,6 @@ func init() {
 				Fixture:   benchmarkcuj.OctaneWPRReplayFixture,
 				ExtraAttr: []string{"group:cuj", "cuj_experimental"},
 				Val: benchmarkcuj.BenchmarkTest{
-					BrowserType:   browser.TypeAsh,
 					BenchmarkInfo: benchmarkcuj.OctaneInfo,
 					RecorderMode:  cujrecorder.Benchmark,
 				},
@@ -319,7 +293,6 @@ func init() {
 				Timeout: defaultTimeout,
 				Fixture: benchmarkcuj.OctaneWPRRecordFixture,
 				Val: benchmarkcuj.BenchmarkTest{
-					BrowserType:   browser.TypeAsh,
 					BenchmarkInfo: benchmarkcuj.OctaneInfo,
 					RecorderMode:  cujrecorder.Benchmark,
 				},

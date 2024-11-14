@@ -11,7 +11,6 @@ import (
 	"go.chromium.org/tast-tests/cros/local/apps"
 	"go.chromium.org/tast-tests/cros/local/chrome"
 	"go.chromium.org/tast-tests/cros/local/chrome/ash"
-	"go.chromium.org/tast-tests/cros/local/chrome/browser"
 	"go.chromium.org/tast-tests/cros/local/chrome/cuj"
 	"go.chromium.org/tast-tests/cros/local/chrome/uiauto/ossettings"
 
@@ -33,7 +32,7 @@ var simpleWebsites = []string{
 // This function opens an individual window for each URL in
 // simpleWebsites. It also opens a window with multiple tabs, to
 // increase RAM pressure during the test.
-func openChromeTabs(ctx context.Context, tconn, bTconn *chrome.TestConn, br *browser.Browser, tabletMode bool) (int, error) {
+func openChromeTabs(ctx context.Context, tconn *chrome.TestConn, cr *chrome.Chrome, tabletMode bool) (int, error) {
 	const numExtraWebsites = 2
 
 	// Keep track of the initial number of windows, to ensure
@@ -45,13 +44,13 @@ func openChromeTabs(ctx context.Context, tconn, bTconn *chrome.TestConn, br *bro
 	initialNumWindows := len(initialWindows)
 
 	// Open up a single window with a couple of tabs, to increase RAM pressure.
-	tabs, err := cuj.NewTabs(ctx, br, false, numExtraWebsites)
+	tabs, err := cuj.NewTabs(ctx, cr.Browser(), false, numExtraWebsites)
 	if err != nil {
 		return 0, errors.Wrap(err, "failed to bulk open tabs")
 	}
 
 	// Open up individual window for each website in simpleWebsites.
-	taskSwitchTabs, err := cuj.NewTabsByURLs(ctx, br, true, simpleWebsites)
+	taskSwitchTabs, err := cuj.NewTabsByURLs(ctx, cr.Browser(), true, simpleWebsites)
 	if err != nil {
 		return 0, err
 	}
@@ -86,7 +85,7 @@ func openChromeTabs(ctx context.Context, tconn, bTconn *chrome.TestConn, br *bro
 	return expectedNumBrowserWindows, nil
 }
 
-func openPWA(ctx context.Context, cr *chrome.Chrome, tconn *chrome.TestConn, br *browser.Browser) (func(ctx context.Context) error, error) {
+func openPWA(ctx context.Context, cr *chrome.Chrome, tconn *chrome.TestConn) (func(ctx context.Context) error, error) {
 	const (
 		// This value is used to properly uninstall the app during test
 		// cleanup. This name is different than apps.Meet.Name, which
@@ -109,7 +108,7 @@ func openPWA(ctx context.Context, cr *chrome.Chrome, tconn *chrome.TestConn, br 
 			return nil, errors.Wrapf(err, "failed to launch %s PWA", nameInSettingsApp)
 		}
 	} else {
-		if err := apps.InstallPWAForURL(ctx, tconn, br, pwaURL, 30*time.Second); err != nil {
+		if err := apps.InstallPWAForURL(ctx, tconn, cr.Browser(), pwaURL, 30*time.Second); err != nil {
 			return nil, errors.Wrapf(err, "failed to install and launch %s PWA", nameInSettingsApp)
 		}
 	}

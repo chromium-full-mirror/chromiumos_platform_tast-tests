@@ -8,7 +8,6 @@ import (
 	"context"
 	"time"
 
-	"go.chromium.org/tast-tests/cros/local/chrome/browser"
 	"go.chromium.org/tast-tests/cros/local/ui/cujrecorder"
 	"go.chromium.org/tast-tests/cros/local/ui/windowarrangementcuj"
 	"go.chromium.org/tast/core/testing"
@@ -21,9 +20,8 @@ func init() {
 		// in an attempt to fail on less niche bugs. Once this test has been
 		// improved, re-add it to the CUJ suite. Currently, the test is not
 		// run in the lab due to hard to resolve failures.
-		Func:         WindowArrangementCUJ,
-		LacrosStatus: testing.LacrosVariantUnneeded,
-		Desc:         "Measures the performance of critical user journey for window arrangements",
+		Func: WindowArrangementCUJ,
+		Desc: "Measures the performance of critical user journey for window arrangements",
 		Contacts: []string{
 			"cros-sw-perf@google.com",
 			"yichenz@chromium.org",
@@ -35,27 +33,22 @@ func init() {
 		Data:         []string{"shaka_720.webm", "pip.html", cujrecorder.SystemTraceConfigFile},
 		Params: []testing.Param{
 			{
-				Name: "clamshell_mode",
-				Val: windowarrangementcuj.TestParam{
-					BrowserType: browser.TypeAsh,
-				},
+				Name:    "clamshell_mode",
+				Val:     windowarrangementcuj.TestParam{},
 				Fixture: "loggedInToCUJUser",
 			},
 			{
 				Name:              "tablet_mode",
 				ExtraHardwareDeps: hwdep.D(hwdep.TouchScreen()),
 				Val: windowarrangementcuj.TestParam{
-					BrowserType: browser.TypeAsh,
-					Tablet:      true,
+					Tablet: true,
 				},
 				Fixture: "loggedInToCUJUser",
 			},
 			// TODO(b/292249282): Remove when Vulkan is launched on brya, volteer, and skyrim
 			{
-				Name: "vulkan",
-				Val: windowarrangementcuj.TestParam{
-					BrowserType: browser.TypeAsh,
-				},
+				Name:              "vulkan",
+				Val:               windowarrangementcuj.TestParam{},
 				Fixture:           "loggedInToCUJUserVulkan",
 				ExtraHardwareDeps: hwdep.D(hwdep.Model("redrix", "drobit", "frostflow")),
 			},
@@ -63,10 +56,8 @@ func init() {
 			// TODO(b/302748186): Remove rounded window tests once A/B testing
 			// for rounded windows is done.
 			{
-				Name: "rounded_windows",
-				Val: windowarrangementcuj.TestParam{
-					BrowserType: browser.TypeAsh,
-				},
+				Name:    "rounded_windows",
+				Val:     windowarrangementcuj.TestParam{},
 				Fixture: "loggedInToCUJUserWithRoundedWindows",
 			},
 		},

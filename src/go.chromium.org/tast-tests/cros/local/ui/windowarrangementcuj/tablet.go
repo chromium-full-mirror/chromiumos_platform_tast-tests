@@ -11,7 +11,6 @@ import (
 	"go.chromium.org/tast-tests/cros/common/action"
 	"go.chromium.org/tast-tests/cros/local/chrome"
 	"go.chromium.org/tast-tests/cros/local/chrome/ash"
-	"go.chromium.org/tast-tests/cros/local/chrome/browser"
 	"go.chromium.org/tast-tests/cros/local/chrome/display"
 	"go.chromium.org/tast-tests/cros/local/chrome/uiauto"
 	"go.chromium.org/tast-tests/cros/local/chrome/uiauto/event"
@@ -95,7 +94,7 @@ func exerciseSplitViewResize(ctx context.Context, tconn *chrome.TestConn, ui *ui
 // RunTablet runs window arrangement cuj for tablet. Since windows are always
 // maximized in tablet mode, we only test performance for tab dragging and split
 // view resizing.
-func RunTablet(ctx, closeCtx context.Context, br *browser.Browser, tconn *chrome.TestConn, ui *uiauto.Context, pc pointer.Context) (retErr error) {
+func RunTablet(ctx, closeCtx context.Context, cr *chrome.Chrome, tconn *chrome.TestConn, ui *uiauto.Context, pc pointer.Context) (retErr error) {
 	const (
 		timeout           = 10 * time.Second
 		duration          = 2 * time.Second
@@ -118,7 +117,7 @@ func RunTablet(ctx, closeCtx context.Context, br *browser.Browser, tconn *chrome
 		return errors.Wrap(err, "failed to wait for the tab strip to stabilize")
 	}
 
-	tabStripConn, err := br.NewConnForTarget(ctx, chrome.MatchTargetURL("chrome://tab-strip.top-chrome/"))
+	tabStripConn, err := cr.NewConnForTarget(ctx, chrome.MatchTargetURL("chrome://tab-strip.top-chrome/"))
 	if err != nil {
 		return errors.Wrap(err, "failed to get connection to web UI tab strip")
 	}

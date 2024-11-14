@@ -15,6 +15,7 @@ import (
 	"go.chromium.org/tast-tests/cros/local/audio/crastestclient"
 	"go.chromium.org/tast-tests/cros/local/chrome"
 	"go.chromium.org/tast-tests/cros/local/chrome/ash"
+	"go.chromium.org/tast-tests/cros/local/chrome/browser"
 	"go.chromium.org/tast-tests/cros/local/chrome/cuj"
 	"go.chromium.org/tast-tests/cros/local/chrome/display"
 	"go.chromium.org/tast-tests/cros/local/chrome/uiauto"
@@ -127,12 +128,6 @@ func Run(ctx context.Context, s *testing.State) *perf.Values {
 	}
 	defer connNoPiP.Close()
 
-	br := cr.Browser()
-	bTconn, err := br.TestAPIConn(ctx)
-	if err != nil {
-		s.Fatal("Failed to connect to browser test API connection: ", err)
-	}
-
 	tabChecker, err := cuj.NewTabCrashChecker(ctx, tconn)
 	if err != nil {
 		s.Fatal("Failed to create TabCrashChecker: ", err)
@@ -154,16 +149,16 @@ func Run(ctx context.Context, s *testing.State) *perf.Values {
 			cujrecorder.NewLatencyMetricConfig("Ash.SplitViewResize.PresentationTime.TabletMode.MultiWindow"))
 	}
 
-	recorder, err := cujrecorder.NewRecorder(ctx, cr, bTconn, nil, cujrecorder.RecorderOptions{})
+	recorder, err := cujrecorder.NewRecorder(ctx, cr, tconn, nil, cujrecorder.RecorderOptions{})
 	if err != nil {
 		s.Fatal("Failed to create a recorder: ", err)
 	}
 
-	if err := recorder.AddCollectedMetrics(bTconn, testParam.BrowserType, configs...); err != nil {
+	if err := recorder.AddCollectedMetrics(tconn, browser.TypeAsh, configs...); err != nil {
 		s.Fatal("Failed to add metrics to recorder: ", err)
 	}
 
-	if err := recorder.AddCommonMetrics(tconn, bTconn); err != nil {
+	if err := recorder.AddCommonMetrics(tconn, tconn); err != nil {
 		s.Fatal("Failed to add common metrics to recorder: ", err)
 	}
 
@@ -194,7 +189,7 @@ func Run(ctx context.Context, s *testing.State) *perf.Values {
 		s.Fatal("Failed to wait for pip.html to achieve quiescence: ", err)
 	}
 
-	connPiP, err := br.NewConn(ctx, pipVideoTestURL)
+	connPiP, err := cr.NewConn(ctx, pipVideoTestURL)
 	if err != nil {
 		s.Fatal("Failed to load pip.html: ", err)
 	}
@@ -232,7 +227,7 @@ func Run(ctx context.Context, s *testing.State) *perf.Values {
 	// For clamshell variants, activate the tab on the left.
 	if !tabletMode {
 		var tabs []map[string]interface{}
-		if err := bTconn.Call(ctx, &tabs,
+		if err := tconn.Call(ctx, &tabs,
 			"tast.promisify(chrome.tabs.query)",
 			map[string]interface{}{},
 		); err != nil {
@@ -241,7 +236,7 @@ func Run(ctx context.Context, s *testing.State) *perf.Values {
 		if len(tabs) != 2 {
 			s.Errorf("Unexpected number of browser tabs; got %d, want 2", len(tabs))
 		}
-		if err := bTconn.Call(ctx, nil,
+		if err := tconn.Call(ctx, nil,
 			"tast.promisify(chrome.tabs.update)",
 			int(tabs[0]["id"].(float64)),
 			map[string]interface{}{"active": true},
@@ -278,7 +273,7 @@ func Run(ctx context.Context, s *testing.State) *perf.Values {
 		}
 	} else {
 		f = func(ctx context.Context) error {
-			return RunTablet(ctx, closeCtx, br, tconn, ui, pc)
+			return RunTablet(ctx, closeCtx, cr, tconn, ui, pc)
 		}
 	}
 

@@ -11,7 +11,6 @@ import (
 	"go.chromium.org/tast-tests/cros/common/perf"
 	"go.chromium.org/tast-tests/cros/local/chrome"
 	"go.chromium.org/tast-tests/cros/local/chrome/ash"
-	"go.chromium.org/tast-tests/cros/local/chrome/browser"
 	"go.chromium.org/tast-tests/cros/local/chrome/cuj"
 	"go.chromium.org/tast-tests/cros/local/chrome/cuj/inputsimulations"
 	"go.chromium.org/tast-tests/cros/local/chrome/display"
@@ -33,9 +32,8 @@ import (
 
 func init() {
 	testing.AddTest(&testing.Test{
-		Func:         QuickCheckCUJ,
-		LacrosStatus: testing.LacrosVariantUnneeded,
-		Desc:         "Measures the smoothess of screen unlock and open an gmail thread",
+		Func: QuickCheckCUJ,
+		Desc: "Measures the smoothess of screen unlock and open an gmail thread",
 		Contacts: []string{
 			"cros-sw-perf@google.com",
 			"xiyuan@chromium.org",
@@ -45,10 +43,7 @@ func init() {
 		Data:         []string{cujrecorder.SystemTraceConfigFile},
 		HardwareDeps: hwdep.D(hwdep.InternalDisplay()),
 		Timeout:      4 * time.Minute,
-		Params: []testing.Param{{
-			Val:     browser.TypeAsh,
-			Fixture: "loggedInToCUJUser",
-		}},
+		Fixture:      "loggedInToCUJUser",
 	})
 }
 
@@ -77,22 +72,17 @@ func QuickCheckCUJ(ctx context.Context, s *testing.State) {
 		s.Fatal("Failed to connect to test API connection: ", err)
 	}
 
-	bTconn, err := cr.Browser().TestAPIConn(ctx)
-	if err != nil {
-		s.Fatal("Failed to connect to browser test API connection: ", err)
-	}
-
 	defer faillog.DumpUITreeOnError(closeCtx, s.OutDir(), s.HasError, tconn)
 
 	password := cr.Creds().Pass
 
-	recorder, err := cujrecorder.NewRecorder(ctx, cr, bTconn, nil, cujrecorder.RecorderOptions{})
+	recorder, err := cujrecorder.NewRecorder(ctx, cr, tconn, nil, cujrecorder.RecorderOptions{})
 	if err != nil {
 		s.Fatal("Failed to create a CUJ recorder: ", err)
 	}
 	defer recorder.Close(closeCtx)
 
-	if err := recorder.AddCommonMetrics(tconn, bTconn); err != nil {
+	if err := recorder.AddCommonMetrics(tconn, tconn); err != nil {
 		s.Fatal("Failed to add common metrics to recorder: ", err)
 	}
 

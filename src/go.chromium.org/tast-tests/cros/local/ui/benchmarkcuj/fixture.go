@@ -5,7 +5,6 @@
 package benchmarkcuj
 
 import (
-	"go.chromium.org/tast-tests/cros/local/chrome/browser"
 	"go.chromium.org/tast-tests/cros/local/chrome/cuj"
 	"go.chromium.org/tast-tests/cros/local/wpr"
 	"go.chromium.org/tast/core/testing"
@@ -52,7 +51,6 @@ func init() {
 			"cros-sw-perf@google.com",
 			"skardach@google.com",
 		},
-		browser.TypeAsh,
 		wpr.Record,
 		speedometerArchive))
 	testing.AddFixture(cuj.NewWPRLoggedInToCUJUserWithoutCooldownFixture(
@@ -62,7 +60,6 @@ func init() {
 			"cros-sw-perf@google.com",
 			"skardach@google.com",
 		},
-		browser.TypeAsh,
 		wpr.Replay,
 		speedometerArchive))
 	testing.AddFixture(cuj.NewWPRLoggedInToCUJUserWithoutCooldownFixture(
@@ -72,7 +69,6 @@ func init() {
 			"cros-sw-perf@google.com",
 			"skardach@google.com",
 		},
-		browser.TypeAsh,
 		wpr.Record,
 		motionmarkArchive))
 	testing.AddFixture(cuj.NewWPRLoggedInToCUJUserWithoutCooldownFixture(
@@ -82,7 +78,6 @@ func init() {
 			"cros-sw-perf@google.com",
 			"skardach@google.com",
 		},
-		browser.TypeAsh,
 		wpr.Replay,
 		motionmarkArchive))
 	testing.AddFixture(cuj.NewWPRLoggedInToCUJUserWithoutCooldownFixture(
@@ -92,7 +87,6 @@ func init() {
 			"cros-sw-perf@google.com",
 			"skardach@google.com",
 		},
-		browser.TypeAsh,
 		wpr.Record,
 		krakenArchive))
 	testing.AddFixture(cuj.NewWPRLoggedInToCUJUserWithoutCooldownFixture(
@@ -102,7 +96,6 @@ func init() {
 			"cros-sw-perf@google.com",
 			"skardach@google.com",
 		},
-		browser.TypeAsh,
 		wpr.Replay,
 		krakenArchive))
 	testing.AddFixture(cuj.NewWPRLoggedInToCUJUserWithoutCooldownFixture(
@@ -112,7 +105,6 @@ func init() {
 			"cros-sw-perf@google.com",
 			"skardach@google.com",
 		},
-		browser.TypeAsh,
 		wpr.Record,
 		octaneArchive))
 	testing.AddFixture(cuj.NewWPRLoggedInToCUJUserWithoutCooldownFixture(
@@ -122,7 +114,6 @@ func init() {
 			"cros-sw-perf@google.com",
 			"skardach@google.com",
 		},
-		browser.TypeAsh,
 		wpr.Replay,
 		octaneArchive))
 }

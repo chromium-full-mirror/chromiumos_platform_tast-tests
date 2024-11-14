@@ -1555,7 +1555,7 @@ type loggedInToCUJUserFixture struct {
 // set. This is a workaround for customizing the WPR behavior prior to b/285970864 implementation.
 // Note that if mode is not wpr.Record, fixture will assume that the WPR archive is an external Data,
 // in the s.DataPath(), otherwise the recorded archive will be put in the /tmp directory.
-func NewWPRLoggedInToCUJUserWithoutCooldownFixture(name, desc string, contacts []string, bt browser.Type, mode wpr.Mode, archive string) *testing.Fixture {
+func NewWPRLoggedInToCUJUserWithoutCooldownFixture(name, desc string, contacts []string, mode wpr.Mode, archive string) *testing.Fixture {
 	var data []string
 	if mode != wpr.Record {
 		data = append(data, archive)
@@ -1565,7 +1565,7 @@ func NewWPRLoggedInToCUJUserWithoutCooldownFixture(name, desc string, contacts [
 		Desc:     desc,
 		Contacts: contacts,
 		Impl: &loggedInToCUJUserFixture{
-			bt:         bt,
+			bt:         browser.TypeAsh,
 			wprMode:    mode,
 			wprArchive: archive,
 		},

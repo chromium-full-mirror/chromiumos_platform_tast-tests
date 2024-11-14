@@ -18,7 +18,6 @@ import (
 	"go.chromium.org/tast-tests/cros/common/testexec"
 	"go.chromium.org/tast-tests/cros/local/apps"
 	"go.chromium.org/tast-tests/cros/local/chrome"
-	"go.chromium.org/tast-tests/cros/local/chrome/browser"
 	"go.chromium.org/tast-tests/cros/local/chrome/cuj"
 	"go.chromium.org/tast-tests/cros/local/chrome/display"
 	"go.chromium.org/tast-tests/cros/local/chrome/uiauto"
@@ -59,7 +58,7 @@ const retryTimes = 3
 // Run runs the QuickCheckCUJ2 test. The lock is the function that suspends or locks
 // the DUT. The lockInRecorder flag indicates if the lock function should be executed
 // inside metrics recorder.
-func Run(ctx context.Context, s *testing.State, cr *chrome.Chrome, pauseMode PauseMode, tabletMode bool, bt browser.Type) *perf.Values {
+func Run(ctx context.Context, s *testing.State, cr *chrome.Chrome, pauseMode PauseMode, tabletMode bool) *perf.Values {
 	password := cr.Creds().Pass // Required to unlock screen.
 
 	// Ensure display on to record ui performance correctly.
@@ -163,11 +162,6 @@ func Run(ctx context.Context, s *testing.State, cr *chrome.Chrome, pauseMode Pau
 	if err != nil {
 		s.Fatal("Failed to launch Chrome: ", err)
 	}
-	br := cr.Browser()
-	bTconn, err := br.TestAPIConn(ctx)
-	if err != nil {
-		s.Fatalf("Failed to create Test API connection for %v browser: %v", bt, err)
-	}
 
 	if pauseMode == Lock {
 		// Lock the screen before recording the test.
@@ -201,7 +195,7 @@ func Run(ctx context.Context, s *testing.State, cr *chrome.Chrome, pauseMode Pau
 	defer cancel()
 
 	options := cujrecorder.NewPerformanceCUJOptions()
-	recorder, err := cujrecorder.NewRecorder(ctx, cr, bTconn, nil, options)
+	recorder, err := cujrecorder.NewRecorder(ctx, cr, tconn, nil, options)
 	if err != nil {
 		s.Fatal("Failed to create a CUJ recorder: ", err)
 	}
@@ -267,7 +261,7 @@ func Run(ctx context.Context, s *testing.State, cr *chrome.Chrome, pauseMode Pau
 					}
 				}()
 
-				if tab.conn, err = uiActionHandler.NewChromeTab(ctx, br, tab.url, tabIdx == 0); err != nil {
+				if tab.conn, err = uiActionHandler.NewChromeTab(ctx, cr.Browser(), tab.url, tabIdx == 0); err != nil {
 					return errors.Wrapf(err, "failed to open URL: %s", tab.url)
 				}
 			}

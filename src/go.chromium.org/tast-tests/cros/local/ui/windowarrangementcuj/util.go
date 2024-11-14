@@ -14,7 +14,6 @@ import (
 	"go.chromium.org/tast-tests/cros/common/action"
 	"go.chromium.org/tast-tests/cros/local/chrome"
 	"go.chromium.org/tast-tests/cros/local/chrome/ash"
-	"go.chromium.org/tast-tests/cros/local/chrome/browser"
 	"go.chromium.org/tast-tests/cros/local/chrome/display"
 	"go.chromium.org/tast-tests/cros/local/chrome/uiauto"
 	"go.chromium.org/tast-tests/cros/local/chrome/uiauto/event"
@@ -49,8 +48,7 @@ const (
 
 // TestParam holds parameters of window arrangement cuj test variations.
 type TestParam struct {
-	BrowserType browser.Type
-	Tablet      bool
+	Tablet bool
 }
 
 // cleanUp is used to execute a given cleanup action and report

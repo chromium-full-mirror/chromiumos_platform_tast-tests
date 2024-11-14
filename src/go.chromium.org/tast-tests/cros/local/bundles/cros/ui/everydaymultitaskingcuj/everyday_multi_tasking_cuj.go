@@ -21,7 +21,6 @@ import (
 	"go.chromium.org/tast-tests/cros/local/camera/testutil"
 	"go.chromium.org/tast-tests/cros/local/chrome"
 	"go.chromium.org/tast-tests/cros/local/chrome/ash"
-	"go.chromium.org/tast-tests/cros/local/chrome/browser"
 	"go.chromium.org/tast-tests/cros/local/chrome/cuj"
 	"go.chromium.org/tast-tests/cros/local/chrome/uiauto"
 	"go.chromium.org/tast-tests/cros/local/chrome/uiauto/faillog"
@@ -85,7 +84,7 @@ type runResources struct {
 }
 
 // Run runs the EverydayMultitaskingCUJ test.
-func Run(ctx context.Context, cr *chrome.Chrome, bt browser.Type, a *arc.ARC, params *RunParams) (retErr error) {
+func Run(ctx context.Context, cr *chrome.Chrome, a *arc.ARC, params *RunParams) (retErr error) {
 	cleanupCtx := ctx
 	ctx, cancel := ctxutil.Shorten(ctx, 10*time.Second)
 	defer cancel()
@@ -176,12 +175,7 @@ func Run(ctx context.Context, cr *chrome.Chrome, bt browser.Type, a *arc.ARC, pa
 	if err != nil {
 		return errors.Wrap(err, "failed to get browser start time")
 	}
-	br := cr.Browser()
 
-	bTconn, err := br.TestAPIConn(ctx)
-	if err != nil {
-		return errors.Wrapf(err, "failed to create Test API connection for %v browser", bt)
-	}
 	browserApp, err := apps.ChromeOrChromium(ctx, tconn)
 	if err != nil {
 		return errors.Wrap(err, "could not find the Chrome app")
@@ -221,7 +215,7 @@ func Run(ctx context.Context, cr *chrome.Chrome, bt browser.Type, a *arc.ARC, pa
 
 	options := cujrecorder.NewPerformanceCUJOptions()
 	options.DoNotChangeBluetooth = params.enableBT
-	recorder, err := cujrecorder.NewRecorder(ctx, cr, bTconn, a, options)
+	recorder, err := cujrecorder.NewRecorder(ctx, cr, tconn, a, options)
 	if err != nil {
 		return errors.Wrap(err, "failed to create a recorder")
 	}
@@ -276,7 +270,7 @@ func Run(ctx context.Context, cr *chrome.Chrome, bt browser.Type, a *arc.ARC, pa
 			uiHandler:  uiHandler,
 			browserApp: browserApp,
 		}
-		if err := openAndSwitchTabs(ctx, br, tconn, params, resources); err != nil {
+		if err := openAndSwitchTabs(ctx, cr, tconn, params, resources); err != nil {
 			return errors.Wrap(err, "failed to open and switch chrome tabs")
 		}
 
@@ -326,7 +320,7 @@ func Run(ctx context.Context, cr *chrome.Chrome, bt browser.Type, a *arc.ARC, pa
 	return nil
 }
 
-func openAndSwitchTabs(ctx context.Context, br *browser.Browser, tconn *chrome.TestConn, params *RunParams, resources *runResources) error {
+func openAndSwitchTabs(ctx context.Context, cr *chrome.Chrome, tconn *chrome.TestConn, params *RunParams, resources *runResources) error {
 	// Basic tier test scenario: Have 2 browser windows open with 5 tabs each.
 	// 1. The first window URL list including Gmail, Calendar, YouTube Music, Hulu and Google News.
 	// 2. The second window URL list including Google News, CCN news, Wiki.
@@ -348,7 +342,7 @@ func openAndSwitchTabs(ctx context.Context, br *browser.Browser, tconn *chrome.T
 
 	openBrowserWithTabs := func(urlList []string) error {
 		for idx, url := range urlList {
-			conn, err := resources.uiHandler.NewChromeTab(ctx, br, url, idx == 0)
+			conn, err := resources.uiHandler.NewChromeTab(ctx, cr.Browser(), url, idx == 0)
 			if err != nil {
 				return errors.Wrapf(err, "failed to open %s", url)
 			}

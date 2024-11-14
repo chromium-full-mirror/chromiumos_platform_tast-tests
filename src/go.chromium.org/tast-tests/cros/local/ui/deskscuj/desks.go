@@ -27,7 +27,7 @@ import (
 // successive call to openDesk must have an |i| value exactly 1 more than
 // in the previous call, with the first call to this function expected to
 // be 0.
-func openDesk(ctx context.Context, tconn *chrome.TestConn, cs ash.ConnSource, urls []string, expectedNumWindows, i int) ([]cuj.TabConn, error) {
+func openDesk(ctx context.Context, tconn *chrome.TestConn, cr *chrome.Chrome, urls []string, expectedNumWindows, i int) ([]cuj.TabConn, error) {
 	if i != 0 {
 		prepareDeskCtx, cancel := context.WithTimeout(ctx, time.Minute)
 		defer cancel()
@@ -40,7 +40,7 @@ func openDesk(ctx context.Context, tconn *chrome.TestConn, cs ash.ConnSource, ur
 		}
 	}
 
-	deskTabs, err := cuj.NewTabsByURLs(ctx, cs, true, urls)
+	deskTabs, err := cuj.NewTabsByURLs(ctx, cr, true, urls)
 	if err != nil {
 		return nil, errors.Wrapf(err, "failed to open urls for desk %d", i)
 	}
@@ -89,7 +89,7 @@ func openDesk(ctx context.Context, tconn *chrome.TestConn, cs ash.ConnSource, ur
 // Desk 4:
 //   - Windows: 1
 //   - User Input: Keyboard typing
-func setUpDesks(ctx context.Context, tconn, bTconn *chrome.TestConn, cs ash.ConnSource, kw *input.KeyboardEventWriter, mw *input.MouseEventWriter, tpw *input.TrackpadEventWriter, tw *input.TouchEventWriter) ([]action.Action, int, func(ctx context.Context) error, error) {
+func setUpDesks(ctx context.Context, tconn *chrome.TestConn, cr *chrome.Chrome, kw *input.KeyboardEventWriter, mw *input.MouseEventWriter, tpw *input.TrackpadEventWriter, tw *input.TouchEventWriter) ([]action.Action, int, func(ctx context.Context) error, error) {
 	// Create a separate desks-setup deadline. 15 minutes should be
 	// enough time to open all of the windows and desks. This limits
 	// the time that desk setup can take, to ensure we have time
@@ -106,7 +106,7 @@ func setUpDesks(ctx context.Context, tconn, bTconn *chrome.TestConn, cs ash.Conn
 	}
 
 	// Open additional tabs for RAM pressure.
-	tabs, err := cuj.NewTabs(setupCtx, cs, false, 3)
+	tabs, err := cuj.NewTabs(setupCtx, cr, false, 3)
 	if err != nil {
 		return nil, 0, cleanup, errors.Wrap(err, "failed to open multiple tabs in a window")
 	}
@@ -177,7 +177,7 @@ func setUpDesks(ctx context.Context, tconn, bTconn *chrome.TestConn, cs ash.Conn
 		},
 	} {
 		totalOpenWindows += desk.expectedNumWindows
-		deskTabs, err := openDesk(ctx, tconn, cs, desk.urls, totalOpenWindows, i)
+		deskTabs, err := openDesk(ctx, tconn, cr, desk.urls, totalOpenWindows, i)
 		if err != nil {
 			return nil, totalOpenWindows, cleanup, errors.Wrapf(err, "failed to complete setup for desk %d", i)
 		}

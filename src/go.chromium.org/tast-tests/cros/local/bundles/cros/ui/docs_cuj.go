@@ -10,7 +10,6 @@ import (
 	"time"
 
 	"go.chromium.org/tast-tests/cros/local/chrome"
-	"go.chromium.org/tast-tests/cros/local/chrome/browser"
 	"go.chromium.org/tast-tests/cros/local/chrome/cuj"
 	"go.chromium.org/tast-tests/cros/local/chrome/uiauto/launcher"
 	"go.chromium.org/tast-tests/cros/local/ui/cujrecorder"
@@ -21,9 +20,8 @@ import (
 
 func init() {
 	testing.AddTest(&testing.Test{
-		Func:         DocsCUJ,
-		LacrosStatus: testing.LacrosVariantUnneeded,
-		Desc:         "Measures the total performance of the critical user journey for Google Docs",
+		Func: DocsCUJ,
+		Desc: "Measures the total performance of the critical user journey for Google Docs",
 		Contacts: []string{
 			"cros-sw-perf@google.com",
 			"ramsaroop@google.com",
@@ -36,7 +34,6 @@ func init() {
 		Timeout:      20 * time.Minute,
 		Params: []testing.Param{
 			{
-				Val:     browser.TypeAsh,
 				Fixture: "loggedInToCUJUser",
 			},
 
@@ -44,26 +41,22 @@ func init() {
 			{
 				Name:      "field_trials",
 				ExtraAttr: []string{"cuj_experimental"},
-				Val:       browser.TypeAsh,
 				Fixture:   "loggedInToCUJUserWithFieldTrials",
 			},
 			{
 				Name:      "chromevox",
 				ExtraAttr: []string{"cuj_experimental"},
-				Val:       browser.TypeAsh,
 				Fixture:   "loggedInToCUJUserWithChromeVox",
 			},
 			// TODO(b/292249282): Remove when Vulkan is launched on brya, volteer, and skyrim.
 			{
 				Name:              "vulkan",
-				Val:               browser.TypeAsh,
 				Fixture:           "loggedInToCUJUserVulkan",
 				ExtraHardwareDeps: hwdep.D(hwdep.Model("redrix", "drobit", "frostflow")),
 			},
 			// TODO(b/343320265): Remove after cbx device launches the feature.
 			{
 				Name:              "image_indexing",
-				Val:               browser.TypeAsh,
 				Fixture:           "loggedInToCUJUserWithImageICA",
 				ExtraData:         []string{launcher.ImageSearchPowerTestPictureName},
 				ExtraHardwareDeps: hwdep.D(hwdep.FeatureLevel(1)),
@@ -76,7 +69,6 @@ func DocsCUJ(ctx context.Context, s *testing.State) {
 	cuj.WriteMetadataFile(ctx, s.TestName())
 
 	cr := s.FixtValue().(chrome.HasChrome).Chrome()
-	bt := s.Param().(browser.Type)
 	traceConfigPath := s.DataPath(cujrecorder.SystemTraceConfigFile)
 
 	if strings.HasSuffix(s.TestName(), "image_indexing") {
@@ -89,7 +81,7 @@ func DocsCUJ(ctx context.Context, s *testing.State) {
 		defer cleanup()
 	}
 
-	if _, err := docscuj.Run(ctx, cr, bt, s.OutDir(), traceConfigPath, s.TestName()); err != nil {
+	if _, err := docscuj.Run(ctx, cr, s.OutDir(), traceConfigPath, s.TestName()); err != nil {
 		s.Fatal("Failed to run DocsCUJ: ", err)
 	}
 }

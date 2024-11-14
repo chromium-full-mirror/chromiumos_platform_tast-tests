@@ -85,18 +85,13 @@ func Run(ctx context.Context, s *testing.State) *perf.Values {
 		s.Fatal("Failed to connect to test API connection: ", err)
 	}
 
-	bTconn, err := cr.Browser().TestAPIConn(ctx)
-	if err != nil {
-		s.Fatal("Failed to connect to browser test API connection: ", err)
-	}
-
-	recorder, err := cujrecorder.NewRecorder(ctx, cr, bTconn, nil, cujrecorder.RecorderOptions{})
+	recorder, err := cujrecorder.NewRecorder(ctx, cr, tconn, nil, cujrecorder.RecorderOptions{})
 	if err != nil {
 		s.Fatal("Failed to create a recorder: ", err)
 	}
 	defer recorder.Close(closeCtx)
 
-	if err := recorder.AddCommonMetrics(tconn, bTconn); err != nil {
+	if err := recorder.AddCommonMetrics(tconn, tconn); err != nil {
 		s.Fatal("Failed to add common metrics to the recorder: ", err)
 	}
 
@@ -143,7 +138,7 @@ func Run(ctx context.Context, s *testing.State) *perf.Values {
 	}
 	defer crastestclient.Unmute(closeCtx)
 
-	tabChecker, err := cuj.NewTabCrashChecker(ctx, bTconn)
+	tabChecker, err := cuj.NewTabCrashChecker(ctx, tconn)
 	if err != nil {
 		s.Fatal("Failed to create TabCrashChecker: ", err)
 	}

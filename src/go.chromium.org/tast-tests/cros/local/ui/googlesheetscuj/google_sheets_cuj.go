@@ -39,7 +39,6 @@ import (
 
 // TestParam is the test parameters for GoogleSheetsCUJ.
 type TestParam struct {
-	BrowserType      browser.Type
 	FocusModeEnabled bool
 }
 
@@ -76,12 +75,6 @@ func Run(ctx context.Context, cr *chrome.Chrome, testParam TestParam, outDir, sy
 	tconn, err := cr.TestAPIConn(ctx)
 	if err != nil {
 		return nil, errors.Wrap(err, "failed to connect to test API connection")
-	}
-
-	br := cr.Browser()
-	bTconn, err := br.TestAPIConn(ctx)
-	if err != nil {
-		return nil, errors.Wrap(err, "failed to connect to browser test API connection")
 	}
 
 	if testParam.FocusModeEnabled {
@@ -131,13 +124,13 @@ func Run(ctx context.Context, cr *chrome.Chrome, testParam TestParam, outDir, sy
 
 	ui := uiauto.New(tconn)
 
-	recorder, err := cujrecorder.NewRecorder(ctx, cr, bTconn, nil, cujrecorder.RecorderOptions{CooldownBeforeRun: true})
+	recorder, err := cujrecorder.NewRecorder(ctx, cr, tconn, nil, cujrecorder.RecorderOptions{CooldownBeforeRun: true})
 	if err != nil {
 		return nil, errors.Wrap(err, "failed to create a CUJ recorder")
 	}
 	defer recorder.Close(closeCtx)
 
-	if err := recorder.AddCommonMetrics(tconn, bTconn); err != nil {
+	if err := recorder.AddCommonMetrics(tconn, tconn); err != nil {
 		return nil, errors.Wrap(err, "failed to add common metrics to recorder")
 	}
 
@@ -180,12 +173,12 @@ func Run(ctx context.Context, cr *chrome.Chrome, testParam TestParam, outDir, sy
 		return nil, errors.Wrap(err, "failed to get the primary display info")
 	}
 
-	if err := cuj.WaitForValidAccountInCookieJar(ctx, br, tconn); err != nil {
+	if err := cuj.WaitForValidAccountInCookieJar(ctx, cr.Browser(), tconn); err != nil {
 		return nil, errors.Wrap(err, "failed to wait for valid account in cookie jar")
 	}
 
 	copySheetsStartTime := time.Now()
-	sheetURL, err := copySheets(ctx, br, tconn, sampleSheetURL, outDir)
+	sheetURL, err := copySheets(ctx, cr, tconn, sampleSheetURL, outDir)
 	if err != nil {
 		return nil, errors.Wrapf(err, "failed to copy sheets from %s", sampleSheetURL)
 	}
@@ -364,7 +357,7 @@ func Run(ctx context.Context, cr *chrome.Chrome, testParam TestParam, outDir, sy
 }
 
 // copySheets creates a new copy of the sample sheets and returns the URL of the copy.
-func copySheets(ctx context.Context, br *browser.Browser, tconn *chrome.TestConn, sampleSheetURL, outDir string) (copiedURL string, retErr error) {
+func copySheets(ctx context.Context, cr *chrome.Chrome, tconn *chrome.TestConn, sampleSheetURL, outDir string) (copiedURL string, retErr error) {
 	cleanupCtx := ctx
 	ctx, cancel := ctxutil.Shorten(ctx, 5*time.Second)
 	defer cancel()
@@ -372,7 +365,7 @@ func copySheets(ctx context.Context, br *browser.Browser, tconn *chrome.TestConn
 	// Replace the "/edit" suffix with "/copy" to enter the sheets copy page.
 	sheetURLReg := regexp.MustCompile(`\/edit(.*)`)
 	sampleSheetURL = sheetURLReg.ReplaceAllString(sampleSheetURL, `/copy`)
-	conn, err := br.NewConn(ctx, sampleSheetURL, browser.WithNewWindow())
+	conn, err := cr.NewConn(ctx, sampleSheetURL, browser.WithNewWindow())
 	if err != nil {
 		return "", errors.Wrapf(err, "failed to open the sample sheets: %s", sampleSheetURL)
 	}

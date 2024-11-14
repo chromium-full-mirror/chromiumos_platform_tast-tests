@@ -11,7 +11,6 @@ import (
 	"go.chromium.org/tast-tests/cros/common/action"
 	"go.chromium.org/tast-tests/cros/local/chrome"
 	"go.chromium.org/tast-tests/cros/local/chrome/ash"
-	"go.chromium.org/tast-tests/cros/local/chrome/browser"
 	"go.chromium.org/tast-tests/cros/local/chrome/cuj"
 	"go.chromium.org/tast-tests/cros/local/chrome/cuj/inputsimulations"
 	"go.chromium.org/tast-tests/cros/local/chrome/display"
@@ -32,9 +31,8 @@ import (
 
 func init() {
 	testing.AddTest(&testing.Test{
-		Func:         GoogleSlidesCUJ,
-		LacrosStatus: testing.LacrosVariantUnneeded,
-		Desc:         "Measures the total performance of critical user journey for Google Slides",
+		Func: GoogleSlidesCUJ,
+		Desc: "Measures the total performance of critical user journey for Google Slides",
 		Contacts: []string{
 			"cros-sw-perf@google.com",
 			"yichenz@chromium.org",
@@ -45,10 +43,7 @@ func init() {
 		HardwareDeps: hwdep.D(hwdep.InternalDisplay()),
 		Data:         []string{cujrecorder.SystemTraceConfigFile},
 		Timeout:      20 * time.Minute,
-		Params: []testing.Param{{
-			Val:     browser.TypeAsh,
-			Fixture: "loggedInToCUJUser",
-		}},
+		Fixture:      "loggedInToCUJUser",
 	})
 }
 
@@ -85,19 +80,13 @@ func GoogleSlidesCUJ(ctx context.Context, s *testing.State) {
 		s.Fatal("Failed to connect to test API connection: ", err)
 	}
 
-	br := cr.Browser()
-	bTconn, err := br.TestAPIConn(ctx)
-	if err != nil {
-		s.Fatal("Failed to connect to browser test API connection: ", err)
-	}
-
-	recorder, err := cujrecorder.NewRecorder(ctx, cr, bTconn, nil, cujrecorder.RecorderOptions{})
+	recorder, err := cujrecorder.NewRecorder(ctx, cr, tconn, nil, cujrecorder.RecorderOptions{})
 	if err != nil {
 		s.Fatal("Failed to create a CUJ recorder: ", err)
 	}
 	defer recorder.Close(closeCtx)
 
-	if err := recorder.AddCommonMetrics(tconn, bTconn); err != nil {
+	if err := recorder.AddCommonMetrics(tconn, tconn); err != nil {
 		s.Fatal("Failed to add common metrics to recorder: ", err)
 	}
 
@@ -136,7 +125,7 @@ func GoogleSlidesCUJ(ctx context.Context, s *testing.State) {
 
 	defer faillog.DumpUITreeWithScreenshotOnError(closeCtx, s.OutDir(), s.HasError, cr, "ui_dump")
 
-	if err := cuj.WaitForValidAccountInCookieJar(ctx, br, tconn); err != nil {
+	if err := cuj.WaitForValidAccountInCookieJar(ctx, cr.Browser(), tconn); err != nil {
 		s.Fatal("Failed to wait for valid account in cookie jar: ", err)
 	}
 
