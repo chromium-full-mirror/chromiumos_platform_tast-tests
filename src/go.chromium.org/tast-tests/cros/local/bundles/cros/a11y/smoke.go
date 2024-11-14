@@ -11,8 +11,6 @@ import (
 	"go.chromium.org/tast-tests/cros/local/apps"
 	"go.chromium.org/tast-tests/cros/local/chrome"
 	"go.chromium.org/tast-tests/cros/local/chrome/ash"
-	"go.chromium.org/tast-tests/cros/local/chrome/browser"
-	"go.chromium.org/tast-tests/cros/local/chrome/browser/browserfixt"
 	"go.chromium.org/tast-tests/cros/local/chrome/uiauto"
 	"go.chromium.org/tast-tests/cros/local/chrome/uiauto/faillog"
 	"go.chromium.org/tast-tests/cros/local/chrome/uiauto/nodewith"
@@ -41,12 +39,6 @@ func Smoke(ctx context.Context, s *testing.State) {
 	ctx, cancel := ctxutil.Shorten(ctx, 10*time.Second)
 	defer cancel()
 
-	br, closeBrowser, err := browserfixt.SetUp(ctx, cr, browser.TypeAsh)
-	if err != nil {
-		s.Fatal("Failed to set up browser: ", err)
-	}
-	defer closeBrowser(cleanupCtx)
-
 	tconn, err := cr.TestAPIConn(ctx)
 	if err != nil {
 		s.Fatal("Failed to create Test API connection: ", err)
@@ -61,7 +53,7 @@ func Smoke(ctx context.Context, s *testing.State) {
 	topLevelWindow := nodewith.Role(role.Window).HasClass(topWindowName)
 
 	s.Log("Opening a new tab in the browser")
-	conn, err := br.NewConn(ctx, "chrome://newtab")
+	conn, err := cr.NewConn(ctx, "chrome://newtab")
 	if err != nil {
 		s.Fatal("Failed to open a new tab in the browser: ", err)
 	}

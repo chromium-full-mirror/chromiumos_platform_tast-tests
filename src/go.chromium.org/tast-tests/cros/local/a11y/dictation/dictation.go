@@ -184,7 +184,7 @@ func SetUp(ctx context.Context, html, className string) (d driver, e error) {
 		return newNoOpDriver(tdh), errors.Wrap(err, "failed to create Test API connection")
 	}
 
-	brConn, err := a11y.NewTabWithURL(ctx, cr.Browser(), a11y.URLFromHTML(html))
+	brConn, err := a11y.NewTabWithURL(ctx, cr, a11y.URLFromHTML(html))
 	if err != nil {
 		return newNoOpDriver(tdh), errors.Wrapf(err, "failed to open a new tab with HTML: %q", html)
 	}

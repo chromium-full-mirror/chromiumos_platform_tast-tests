@@ -51,11 +51,11 @@ func SelectToSpeakGoogleDocs(ctx context.Context, s *testing.State) {
 	// manifest content script injection won't work.
 	text := "Long-string-to-test-select-to-speak"
 	url := a11y.ReadOnlyGoogleDocURL
-	stsData.BRConn.Navigate(ctx, url)
+	stsData.Conn.Navigate(ctx, url)
 	if err != nil {
 		s.Fatal("Failed to open Google Docs page: ", err)
 	}
-	if err := stsData.BRConn.WaitForExpr(ctx, `document.readyState === "complete"`); err != nil {
+	if err := stsData.Conn.WaitForExpr(ctx, `document.readyState === "complete"`); err != nil {
 		s.Fatal("Timed out waiting for page to load: ", err)
 	}
 

@@ -17,7 +17,6 @@ import (
 	"go.chromium.org/tast-tests/cros/local/audio/crastestclient"
 	"go.chromium.org/tast-tests/cros/local/chrome"
 	"go.chromium.org/tast-tests/cros/local/chrome/browser"
-	"go.chromium.org/tast-tests/cros/local/chrome/browser/browserfixt"
 	"go.chromium.org/tast/core/ctxutil"
 	"go.chromium.org/tast/core/errors"
 )
@@ -99,9 +98,8 @@ func URLFromHTML(html string) string {
 
 // NewTabWithURL creates a new tab with the specified URL, waits for it to
 // load, and returns a connection to the page.
-// This works with either ash-chrome or lacros-chrome browser.
-func NewTabWithURL(ctx context.Context, br *browser.Browser, url string) (*browser.Conn, error) {
-	c, err := br.NewConn(ctx, url, browser.WithNewWindow())
+func NewTabWithURL(ctx context.Context, cr *chrome.Chrome, url string) (*chrome.Conn, error) {
+	c, err := cr.NewConn(ctx, url, browser.WithNewWindow())
 	if err != nil {
 		return nil, errors.Wrapf(err, "failed to open new tab with url: %s", url)
 	}
@@ -164,11 +162,11 @@ type TTSFeatureInputs struct {
 // TTSFeatureData contains data and useful objects for an accessibility feature
 // that uses TTS. Tconn and SM live until TDown.TearDown() is called.
 type TTSFeatureData struct {
-	CTX    context.Context
-	TConn  *chrome.TestConn
-	SM     *tts.SpeechMonitor
-	TDown  *TearDownHelper
-	BRConn *browser.Conn
+	CTX   context.Context
+	TConn *chrome.TestConn
+	SM    *tts.SpeechMonitor
+	TDown *TearDownHelper
+	Conn  *chrome.Conn
 }
 
 func newNoOpTTSFeatureData(tdh *TearDownHelper) TTSFeatureData {
@@ -274,27 +272,18 @@ func SetUpTTSFeature(tfi TTSFeatureInputs) (tfd TTSFeatureData, e error) {
 		return newNoOpTTSFeatureData(tdown), errors.Wrap(err, "failed to change TTS rate")
 	}
 
-	// Setup a browser.
-	br, closeBrowser, err := browserfixt.SetUp(ctx, cr, browser.TypeAsh)
-	if err != nil {
-		return newNoOpTTSFeatureData(tdown), errors.Wrap(err, "failed to setup browser")
-	}
-	tdown.Append(func() error {
-		return closeBrowser(cleanupCtx)
-	})
-
-	brConn, err := NewTabWithURL(ctx, br, url)
+	crConn, err := NewTabWithURL(ctx, cr, url)
 	if err != nil {
 		return newNoOpTTSFeatureData(tdown), errors.Wrap(err, "failed to open a new tab with URL")
 	}
 	tdown.Append(func() error {
-		return brConn.Close()
+		return crConn.Close()
 	})
 
 	// Close the extra new tab page.
-	if err := br.CloseWithURL(ctx, chrome.NewTabURL); err != nil {
+	if err := cr.Browser().CloseWithURL(ctx, chrome.NewTabURL); err != nil {
 		return newNoOpTTSFeatureData(tdown), errors.Wrap(err, "failed to close new tab page")
 	}
 
-	return TTSFeatureData{ctx, tconn, sm, tdown, brConn}, nil
+	return TTSFeatureData{ctx, tconn, sm, tdown, crConn}, nil
 }

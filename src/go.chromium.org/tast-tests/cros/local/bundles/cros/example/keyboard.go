@@ -11,8 +11,6 @@ import (
 	"go.chromium.org/tast-tests/cros/local/a11y"
 	"go.chromium.org/tast-tests/cros/local/chrome"
 	"go.chromium.org/tast-tests/cros/local/chrome/ash"
-	"go.chromium.org/tast-tests/cros/local/chrome/browser"
-	"go.chromium.org/tast-tests/cros/local/chrome/browser/browserfixt"
 	"go.chromium.org/tast-tests/cros/local/chrome/uiauto"
 	"go.chromium.org/tast-tests/cros/local/chrome/uiauto/faillog"
 	"go.chromium.org/tast-tests/cros/local/chrome/uiauto/nodewith"
@@ -61,15 +59,9 @@ func Keyboard(ctx context.Context, s *testing.State) {
 	}
 	defer cleanup(cleanupCtx)
 
-	br, closeBrowser, err := browserfixt.SetUp(ctx, cr, browser.TypeAsh)
-	if err != nil {
-		s.Fatal("Failed to set up the browser: ", err)
-	}
-	defer closeBrowser(cleanupCtx)
-
 	defer faillog.DumpUITreeOnError(cleanupCtx, s.OutDir(), s.HasError, tconn)
 
-	c, err := a11y.NewTabWithURL(ctx, br, a11y.URLFromHTML(html))
+	c, err := a11y.NewTabWithURL(ctx, cr, a11y.URLFromHTML(html))
 	if err != nil {
 		s.Fatal("Failed to open a new tab with HTML: ", err)
 	}
