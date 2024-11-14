@@ -13,6 +13,7 @@ import (
 	"strings"
 	"time"
 
+	fwCommon "go.chromium.org/tast-tests/cros/common/firmware"
 	"go.chromium.org/tast-tests/cros/common/servo"
 	"go.chromium.org/tast-tests/cros/remote/firmware"
 	"go.chromium.org/tast-tests/cros/remote/firmware/fixture"
@@ -46,6 +47,21 @@ func DevBootTimeout(ctx context.Context, s *testing.State) {
 		s.Fatal("Failed to create config: ", err)
 	}
 
+	supportAPFwState, err := h.SupportAPFwState(ctx)
+	if err != nil {
+		s.Error("Failed to check whether DUT supports APFwState: ", err)
+	}
+
+	closeUART, err := h.Servo.EnableUARTCapture(ctx, servo.ECUARTCapture)
+	if err != nil {
+		s.Error("Failed to capture EC UART: ", err)
+	}
+	defer func() {
+		if err := closeUART(ctx); err != nil {
+			s.Error("Failed to cancel capture EC UART: ", err)
+		}
+	}()
+
 	s.Log("Running timeout boot in developer mode")
 	if err := h.Servo.SetPowerState(ctx, servo.PowerStateWarmReset); err != nil {
 		s.Fatal("Failed to warm reset the DUT: ", err)
@@ -55,6 +71,22 @@ func DevBootTimeout(ctx context.Context, s *testing.State) {
 	if err := h.DUT.WaitUnreachable(waitDisconnectCtx); err != nil {
 		s.Fatal("Failed to wait for DUT to become unreachable after sending a warm reset: ", err)
 	}
+
+	if supportAPFwState {
+		if err := h.DetectFirmwareScreen(ctx, h.Config.FirmwareScreen, fwCommon.DeveloperMode); err != nil {
+			s.Fatal("Failed to detect firmware screen: ", err)
+		}
+	} else {
+		s.Logf("Sleeping for %s (FirmwareScreen) ", h.Config.FirmwareScreen)
+		// GoBigSleepLint: Delay to wait for the firmware screen during boot-up.
+		if err := testing.Sleep(ctx, h.Config.FirmwareScreen); err != nil {
+			s.Fatalf("Failed to sleep for %s: %v", h.Config.FirmwareScreen, err)
+		}
+	}
+	if err := closeUART(ctx); err != nil {
+		s.Fatal("Failed to cancel capture EC UART: ", err)
+	}
+
 	testing.ContextLog(ctx, "Waiting for the DUT to reconnect")
 	waitConnectCtx, cancelWaitConnect := context.WithTimeout(ctx, h.Config.DelayRebootToPing+firmware.DevScreenTimeout)
 	defer cancelWaitConnect()
