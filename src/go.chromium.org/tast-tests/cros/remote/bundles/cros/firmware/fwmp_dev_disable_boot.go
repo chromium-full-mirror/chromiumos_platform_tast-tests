@@ -51,6 +51,11 @@ func FwmpDevDisableBoot(ctx context.Context, s *testing.State) {
 		s.Fatal("Failed to init servo: ", err)
 	}
 
+	supportAPFwState, err := h.SupportAPFwState(ctx)
+	if err != nil {
+		s.Fatal("Failed to check if DUT support APFwState: ", err)
+	}
+
 	setFWMP := func(ctx context.Context, flags string) error {
 		// TODO(b/273767236): Some models failed in holding the FWMP flags
 		// without a 30 secs delay after boot-up.
@@ -114,6 +119,16 @@ func FwmpDevDisableBoot(ctx context.Context, s *testing.State) {
 	ctx, cancel := ctxutil.Shorten(ctx, 10*time.Minute)
 	defer cancel()
 
+	closeUART, err := h.Servo.EnableUARTCapture(ctx, servo.ECUARTCapture)
+	if err != nil {
+		s.Fatal("Failed to enable capture EC UART: ", err)
+	}
+	defer func() {
+		if err := closeUART(ctx); err != nil {
+			s.Error("Failed to cancel capture EC UART: ", err)
+		}
+	}()
+
 	// Set DUT in "dev mode enable" state by setting TPM flags to "0x0" at the end of the test.
 	defer func(cleanupCtx context.Context) {
 		s.Log("Verifying DUT is reachable")
@@ -121,10 +136,18 @@ func FwmpDevDisableBoot(ctx context.Context, s *testing.State) {
 			if err := h.Servo.SetPowerState(ctx, servo.PowerStateReset); err != nil {
 				s.Fatal("Failed to set power_state to reset: ", err)
 			}
-			// GoBigSleepLint: wait for firmware screen to appear.
-			if err := testing.Sleep(ctx, h.Config.FirmwareScreen); err != nil {
-				s.Fatal("Failed to sleep: ", err)
+
+			if supportAPFwState {
+				if err := h.DetectFirmwareScreen(ctx, h.Config.FirmwareScreen, fwCommon.DeveloperToNorm); err != nil {
+					s.Error("Failed to detect DeveloperToNorm screen: ", err)
+				}
+			} else {
+				s.Log("Waiting for DUT to reach the firmware screen")
+				if err := h.WaitFirmwareScreen(ctx, h.Config.FirmwareScreen); err != nil {
+					s.Fatal("Failed to get to firmware screen: ", err)
+				}
 			}
+
 			if err := confirmContinueToNorm(ctx, h, ms); err != nil {
 				s.Fatal("Failed to confirm continue to norm: ", err)
 			}
@@ -168,10 +191,17 @@ func FwmpDevDisableBoot(ctx context.Context, s *testing.State) {
 		s.Fatal("Failed to wait for DUT to become unreachable: ", err)
 	}
 
-	// GoBigSleepLint: wait for firmware screen to appear.
-	if err := testing.Sleep(ctx, h.Config.FirmwareScreen); err != nil {
-		s.Fatal("Failed to sleep: ", err)
+	if supportAPFwState {
+		if err := h.DetectFirmwareScreen(ctx, h.Config.FirmwareScreen, fwCommon.DeveloperToNorm); err != nil {
+			s.Error("Failed to detect DeveloperToNorm screen: ", err)
+		}
+	} else {
+		s.Log("Waiting for DUT to reach the firmware screen")
+		if err := h.WaitFirmwareScreen(ctx, h.Config.FirmwareScreen); err != nil {
+			s.Fatal("Failed to get to firmware screen: ", err)
+		}
 	}
+
 	if err := ms.BypassDevMode(ctx); err != nil {
 		s.Fatal("Failed to Bypass DevMode: ", err)
 	}
