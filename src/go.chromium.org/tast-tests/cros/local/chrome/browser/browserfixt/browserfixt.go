@@ -11,7 +11,6 @@ import (
 
 	"go.chromium.org/tast-tests/cros/local/chrome"
 	"go.chromium.org/tast-tests/cros/local/chrome/browser"
-	"go.chromium.org/tast-tests/cros/local/chrome/lacros/lacrosfixt"
 	"go.chromium.org/tast/core/errors"
 )
 
@@ -24,52 +23,5 @@ func SetUp(ctx context.Context, cr *chrome.Chrome, bt browser.Type) (*browser.Br
 		return cr.Browser(), func(context.Context) error { return nil }, nil
 	default:
 		return nil, nil, errors.Errorf("unrecognized browser type %s", string(bt))
-	}
-}
-
-// SetUpWithNewChrome returns a new ash-chrome instance and a Browser instance as well.
-// This is useful when no fixture is used but the new chrome needs to be instantiated in test for a fresh UI restart between tests.
-// It also returns a closure to be called in order to close the browser instance.
-// The caller is responsible for calling the closure first, then Close() on the chrome instance for cleanup.
-// Note that it opens an extra default tab page for Lacros, but not for ash-chrome.
-// TODO(crbug.com/1357886): Fix the behavior inconsistency of SetUp and SetUpWithNewChrome for both browsers.
-func SetUpWithNewChrome(ctx context.Context, bt browser.Type, cfg *lacrosfixt.Config, opts ...chrome.Option) (_ *chrome.Chrome, _ *browser.Browser, _ func(ctx context.Context) error, errRet error) {
-	switch bt {
-	case browser.TypeAsh:
-		cr, err := chrome.New(ctx, opts...)
-		if err != nil {
-			return nil, nil, nil, errors.Wrap(err, "failed to connect to ash-chrome")
-		}
-		return cr, cr.Browser(), func(context.Context) error { return nil }, nil
-	default:
-		return nil, nil, nil, errors.Errorf("unrecognized browser type %s", string(bt))
-	}
-}
-
-// NewChrome is basically SetUpWithNewChrome without the SetUp part.
-// It restarts Chrome with, depending on the browser type, either just the
-// given opts or the given opts plus those provided by the Lacros
-// configuration. This is useful for situations where the browser will be
-// launched via some UI interaction, for example.
-func NewChrome(ctx context.Context, bt browser.Type, cfg *lacrosfixt.Config, opts ...chrome.Option) (*chrome.Chrome, error) {
-	if bt == browser.TypeLacros {
-		return nil, errors.Errorf("unrecognized browser type %s", string(bt))
-	}
-	cr, err := chrome.New(ctx, opts...)
-	if err != nil {
-		return nil, errors.Wrap(err, "failed to restart Chrome")
-	}
-	return cr, nil
-}
-
-// Connect connects to a running browser instance. It returns a closure for
-// freeing resources when the connection is no longer needed (note that the
-// closure does not close the browser).
-func Connect(ctx context.Context, cr *chrome.Chrome, bt browser.Type) (*browser.Browser, func(ctx context.Context), error) {
-	switch bt {
-	case browser.TypeAsh:
-		return cr.Browser(), func(context.Context) {}, nil
-	default:
-		return nil, nil, errors.Errorf("unrecognized Chrome type %s", string(bt))
 	}
 }
