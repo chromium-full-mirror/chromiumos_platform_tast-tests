@@ -101,6 +101,7 @@ func init() {
 					sensors: true,
 					suspend: false,
 				},
+				ExtraHardwareDeps: hwdep.D(hwdep.MotionSensor()),
 			},
 			{
 				Name: "suspend",
@@ -141,6 +142,7 @@ func init() {
 					sensors: true,
 					suspend: false,
 				},
+				ExtraHardwareDeps: hwdep.D(hwdep.MotionSensor()),
 			},
 			{
 				Name: "flash_suspend",
@@ -171,6 +173,7 @@ func init() {
 					sensors: true,
 					suspend: false,
 				},
+				ExtraHardwareDeps: hwdep.D(hwdep.MotionSensor()),
 			},
 			{
 				Name: "keyscan_suspend",
@@ -191,6 +194,7 @@ func init() {
 					sensors: true,
 					suspend: false,
 				},
+				ExtraHardwareDeps: hwdep.D(hwdep.MotionSensor()),
 			},
 			{
 				Name: "pd_suspend",
@@ -211,6 +215,7 @@ func init() {
 					sensors: true,
 					suspend: true,
 				},
+				ExtraHardwareDeps: hwdep.D(hwdep.MotionSensor()),
 			},
 			{
 				Name: "flash_keyscan_pd",
@@ -231,6 +236,7 @@ func init() {
 					sensors: true,
 					suspend: false,
 				},
+				ExtraHardwareDeps: hwdep.D(hwdep.MotionSensor()),
 			},
 			{
 				Name: "flash_keyscan_suspend",
@@ -251,6 +257,7 @@ func init() {
 					sensors: true,
 					suspend: false,
 				},
+				ExtraHardwareDeps: hwdep.D(hwdep.MotionSensor()),
 			},
 			{
 				Name: "flash_pd_suspend",
@@ -271,6 +278,7 @@ func init() {
 					sensors: true,
 					suspend: true,
 				},
+				ExtraHardwareDeps: hwdep.D(hwdep.MotionSensor()),
 			},
 			{
 				Name: "keyscan_pd_sensors",
@@ -281,6 +289,7 @@ func init() {
 					sensors: true,
 					suspend: false,
 				},
+				ExtraHardwareDeps: hwdep.D(hwdep.MotionSensor()),
 			},
 			{
 				Name: "keyscan_pd_suspend",
@@ -301,6 +310,7 @@ func init() {
 					sensors: true,
 					suspend: true,
 				},
+				ExtraHardwareDeps: hwdep.D(hwdep.MotionSensor()),
 			},
 			{
 				Name: "pd_sensors_suspend",
@@ -311,6 +321,7 @@ func init() {
 					sensors: true,
 					suspend: true,
 				},
+				ExtraHardwareDeps: hwdep.D(hwdep.MotionSensor()),
 			},
 			{
 				Name: "flash_keyscan_pd_sensors",
@@ -321,7 +332,8 @@ func init() {
 					sensors: true,
 					suspend: false,
 				},
-				ExtraAttr: []string{"group:firmware", "firmware_stress"},
+				ExtraAttr:         []string{"group:firmware", "firmware_stress"},
+				ExtraHardwareDeps: hwdep.D(hwdep.MotionSensor()),
 			},
 			{
 				Name: "flash_keyscan_pd_suspend",
@@ -343,7 +355,8 @@ func init() {
 					sensors: true,
 					suspend: true,
 				},
-				ExtraAttr: []string{"group:firmware", "firmware_stress"},
+				ExtraAttr:         []string{"group:firmware", "firmware_stress"},
+				ExtraHardwareDeps: hwdep.D(hwdep.MotionSensor()),
 			},
 			{
 				Name: "flash_pd_sensors_suspend",
@@ -354,7 +367,8 @@ func init() {
 					sensors: true,
 					suspend: true,
 				},
-				ExtraAttr: []string{"group:firmware", "firmware_stress"},
+				ExtraAttr:         []string{"group:firmware", "firmware_stress"},
+				ExtraHardwareDeps: hwdep.D(hwdep.MotionSensor()),
 			},
 			{
 				Name: "keyscan_pd_sensors_suspend",
@@ -365,7 +379,8 @@ func init() {
 					sensors: true,
 					suspend: true,
 				},
-				ExtraAttr: []string{"group:firmware", "firmware_stress"},
+				ExtraAttr:         []string{"group:firmware", "firmware_stress"},
+				ExtraHardwareDeps: hwdep.D(hwdep.MotionSensor()),
 			},
 			{
 				Name: "all",
@@ -376,7 +391,8 @@ func init() {
 					sensors: true,
 					suspend: true,
 				},
-				ExtraAttr: []string{"group:firmware", "firmware_stress"},
+				ExtraAttr:         []string{"group:firmware", "firmware_stress"},
+				ExtraHardwareDeps: hwdep.D(hwdep.MotionSensor()),
 			},
 		},
 	})
