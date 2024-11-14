@@ -147,8 +147,10 @@ func DeletePrintJobHistoryAllowed(ctx context.Context, s *testing.State) {
 			}
 
 			// Cancel the print job.
+			printJobRow := nodewith.NameContaining("Press enter to cancel the print job").First()
 			if err := uiauto.Combine("Cancel the print job",
-				uia.FocusAndWait((nodewith.NameContaining("Press enter to cancel the print job").First())),
+				uia.WaitUntilExists(printJobRow),
+				uia.LeftClick(printJobRow),
 				kb.AccelAction("Enter"),
 			)(ctx); err != nil {
 				s.Fatal("Failed to cancel the print job: ", err)
