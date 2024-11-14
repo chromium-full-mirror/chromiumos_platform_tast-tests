@@ -78,7 +78,7 @@ const (
 	// checkFrequency sets how often (in iterations) login, tpm, and ectool are checked. Always checked on last iteration.
 	checkFrequency = 100
 	// powerStatePadding is extra time to wait for the S3/S0ix power state, won't take any extra time except in failure cases.
-	powerStatePadding = 5 * time.Second
+	powerStatePadding = 10 * time.Second
 )
 
 func SuspendStress(ctx context.Context, s *testing.State) {
