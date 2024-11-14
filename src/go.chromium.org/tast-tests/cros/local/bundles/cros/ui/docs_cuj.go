@@ -60,12 +60,13 @@ func init() {
 				Fixture:           "loggedInToCUJUserVulkan",
 				ExtraHardwareDeps: hwdep.D(hwdep.Model("redrix", "drobit", "frostflow")),
 			},
-			// TODO(b/353385656): Remove after core device launches the feature.
+			// TODO(b/343320265): Remove after cbx device launches the feature.
 			{
-				Name:      "image_indexing",
-				Val:       browser.TypeAsh,
-				Fixture:   "loggedInToCUJUserWithImageOCR",
-				ExtraData: []string{launcher.ImageSearchPowerTestPictureName},
+				Name:              "image_indexing",
+				Val:               browser.TypeAsh,
+				Fixture:           "loggedInToCUJUserWithImageICA",
+				ExtraData:         []string{launcher.ImageSearchPowerTestPictureName},
+				ExtraHardwareDeps: hwdep.D(hwdep.FeatureLevel(1)),
 			},
 		},
 	})

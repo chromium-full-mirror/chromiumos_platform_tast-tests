@@ -1139,16 +1139,16 @@ func init() {
 		PostTestTimeout: postTestTimeout,
 	})
 	testing.AddFixture(&testing.Fixture{
-		Name: "loggedInToCUJUserWithImageOCR",
-		Desc: "CUJ fixture that adds 50MB background memory load",
+		Name: "loggedInToCUJUserWithImageICA",
+		Desc: "CUJ fixture with image search ICA indexing enabled in the background",
 		Contacts: []string{
 			"xiuwen@google.com",
 			"chromeos-launcher-search@google",
 		},
-		BugComponent: "b:1257106", // ChromeOS > Software > Consumer > Machine Intelligence > Search
+		BugComponent: "b:1281467", // ChromeOS > Software > Consumer > Machine Intelligence > ICA
 		Impl: &loggedInToCUJUserFixture{
 			chromeExtraOpts: []chrome.Option{
-				chrome.EnableFeatures("LocalImageSearchOnCore"),
+				chrome.EnableFeatures("LauncherImageSearchIca"),
 				chrome.ExtraArgs(webRTCEventLogCommandFlag),
 			},
 			bt: browser.TypeAsh,
