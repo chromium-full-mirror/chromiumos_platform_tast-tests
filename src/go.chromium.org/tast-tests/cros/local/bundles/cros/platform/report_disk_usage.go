@@ -8,7 +8,6 @@ import (
 	"bytes"
 	"context"
 	"io/ioutil"
-	"os"
 	"path/filepath"
 	"runtime"
 	"sort"
@@ -19,7 +18,6 @@ import (
 	"go.chromium.org/tast-tests/cros/common/testexec"
 	"go.chromium.org/tast-tests/cros/local/arc"
 	"go.chromium.org/tast-tests/cros/local/bundles/cros/platform/fsinfo"
-	"go.chromium.org/tast-tests/cros/local/chrome/lacros"
 	"go.chromium.org/tast-tests/cros/local/firmware"
 	"go.chromium.org/tast/core/errors"
 	"go.chromium.org/tast/core/testing"
@@ -28,7 +26,6 @@ import (
 func init() {
 	testing.AddTest(&testing.Test{
 		Func:         ReportDiskUsage,
-		LacrosStatus: testing.LacrosVariantUnneeded,
 		Desc:         "Reports available disk space in the root filesystem",
 		Contacts:     []string{"chromeos-data-eng@google.com", "ejcaruso@google.com"},
 		BugComponent: "b:1175318", // ChromeOS > Data > Engineering > Image Size
@@ -139,11 +136,6 @@ func ReportDiskUsage(ctx context.Context, s *testing.State) {
 		} else {
 			s.Error("Failed to detect ARC type")
 		}
-	}
-
-	// Report the lacros squashfs size, if it exists.
-	if _, err := os.Stat(lacros.LacrosSquashFSPath); err == nil {
-		metrics[lacros.LacrosSquashFSPath] = "bytes_rootfs_lacros"
 	}
 
 	// Log the size of the individual files/directories inside |path|.
