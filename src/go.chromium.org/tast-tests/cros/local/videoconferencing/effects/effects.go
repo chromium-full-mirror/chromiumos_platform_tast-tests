@@ -8,7 +8,6 @@ package effects
 import (
 	"context"
 	"encoding/json"
-	"io/ioutil"
 	"os"
 	"strconv"
 	"strings"
@@ -60,14 +59,14 @@ const (
 	KNone ModelType = ""
 	// KAuto is the string used for the system default model.
 	KAuto ModelType = "auto"
-	// KHd is the standard "HD" model.
-	KHd ModelType = "hd"
+	// KHd16 is the standard "HD" fp16 model.
+	KHd16 ModelType = "hd16"
 	// KFull is the standard "low res" model.
 	KFull ModelType = "full"
-	// KEffnet256 is a 256x160 resolution model.
-	KEffnet256 ModelType = "effnet256"
 	// KEffnet384 is a 384x224 resolution model.
 	KEffnet384 ModelType = "effnet384"
+	// KHd32 is the standard "HD" fp32 model.
+	KHd32 ModelType = "hd32"
 )
 
 // InferenceBackend is an enum to select GPU or NPU for ML inference backend.
@@ -122,15 +121,15 @@ func ApplyPlatformEffects(ctx context.Context, relight, retouch bool, blurLevel 
 	platformEffects.GpuAPI = "vulkan"
 	if modelType == KAuto {
 		platformEffects.SegmentationModelType = string(KAuto)
-	} else if modelType == KHd {
-		platformEffects.SegmentationModelType = string(KHd)
-	} else if modelType == KEffnet256 {
-		platformEffects.SegmentationModelType = string(KEffnet256)
+	} else if modelType == KHd16 {
+		platformEffects.SegmentationModelType = string(KHd16)
 	} else if modelType == KEffnet384 {
 		platformEffects.SegmentationModelType = string(KEffnet384)
 	} else if modelType == KFull {
 		platformEffects.SegmentationModelType = string(KFull)
 		platformEffects.GpuAPI = "opencl"
+	} else if modelType == KHd32 {
+		platformEffects.SegmentationModelType = string(KHd32)
 	} else if modelType == KNone {
 		// Do nothing.
 	} else {
@@ -152,7 +151,7 @@ func ApplyPlatformEffects(ctx context.Context, relight, retouch bool, blurLevel 
 	if err != nil {
 		return nil, errors.Wrap(err, "failed to serialize platform config")
 	}
-	if err := ioutil.WriteFile(platformEffectsOverridePath, platformEffectsJSON, 0644); err != nil {
+	if err := os.WriteFile(platformEffectsOverridePath, platformEffectsJSON, 0644); err != nil {
 		return nil, errors.Wrap(err, "failed to write platform config")
 	}
 	cleanup := func(ctx context.Context) error {
@@ -167,7 +166,7 @@ func ApplyPlatformEffects(ctx context.Context, relight, retouch bool, blurLevel 
 func CaptureFPSData(ctx context.Context, conn *browser.Conn, file string, seconds int) (DataResult, error) {
 	testing.ContextLog(ctx, "Start capturing FPS over ", seconds, " seconds")
 	var result DataResult
-	script, err := ioutil.ReadFile(file)
+	script, err := os.ReadFile(file)
 	if err != nil {
 		return result, errors.Wrap(err, "failed to read FPS script")
 	}
