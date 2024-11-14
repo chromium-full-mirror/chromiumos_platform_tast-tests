@@ -74,7 +74,7 @@ func trimEmptyString(list []interface{}) []string {
 	return r
 }
 
-func genPlaybackStressParam(param playbackStressParam) playback.ParamData {
+func genPlaybackStressParam(param playbackStressParam, hardwareDepsOverrides map[string]string) playback.ParamData {
 	nameSuffices := trimEmptyString([]interface{}{
 		param.codec,
 		fmt.Sprintf("%vp", param.resolution),
@@ -102,6 +102,10 @@ func genPlaybackStressParam(param playbackStressParam) playback.ParamData {
 	}
 	if param.codec == "hevc" {
 		hwdeps = append(hwdeps, "hwdep.SupportsHEVCVideoDecodingInChrome()")
+	}
+
+	if override, ok := hardwareDepsOverrides[testName]; ok {
+		hwdeps = append(hwdeps, override)
 	}
 
 	susMode := ""
@@ -191,10 +195,21 @@ func TestPlaybackStressConfig(t *testing.T) {
 	if testDuration < 10*time.Second {
 		t.Fatalf("Unexpect test duration, expect>: %v, got: %v. Adjust sumOfTestTimeout to have longer duration.", 10*time.Second, testDuration)
 	}
+	const platformSkip = "hwdep.SkipOnPlatform(\"zork\", \"fizz\"), hwdep.SkipOnModel(\"karma\")"
 	for _, param := range testParams {
 		param.duration = testDuration
 		param.timeout = testTimeout
-		p := genPlaybackStressParam(param)
+		p := genPlaybackStressParam(param,
+			map[string]string{
+				// Disable on Fizz, Kalista, and Zork devices (b/343540299).
+				"h264_720p_30fps_s3_core":  platformSkip,
+				"h264_1080p_30fps_s3_core": platformSkip,
+				"vp8_720p_30fps_s3_core":   platformSkip,
+				"vp8_1080p_30fps_s3_core":  platformSkip,
+				"vp9_720p_30fps_s3_core":   platformSkip,
+				"vp9_1080p_30fps_s3_core":  platformSkip,
+			},
+		)
 		params = append(params, p)
 	}
 
