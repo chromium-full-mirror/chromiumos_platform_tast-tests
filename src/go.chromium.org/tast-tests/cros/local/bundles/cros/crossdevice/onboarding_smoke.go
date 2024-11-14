@@ -31,11 +31,6 @@ func init() {
 				Fixture:   "crossdeviceOnboardedAllFeatures",
 				ExtraAttr: []string{"cross-device_cq"},
 			},
-			{
-				Name:      "floss",
-				Fixture:   "crossdeviceOnboardedAllFeaturesFloss",
-				ExtraAttr: []string{"cross-device_floss"},
-			},
 		},
 	})
 }

@@ -62,37 +62,6 @@ func init() {
 				ExtraSoftwareDeps: []string{"gaia"},
 				Timeout:           nearbycommon.DetectionTimeout + nearbycommon.LargeFileOnlineTransferTimeout,
 			},
-
-			// Disabled by TORA. See: b/347919202
-			// // Floss duplicates
-			// {
-			// 	Name:    "dataoffline_allcontacts_png5kb_floss",
-			// 	Fixture: "nearbyShareDataUsageOfflineSelfShareFloss",
-			// 	ExtraAttr: []string{"cross-device_floss"},
-			// 	Val: nearbycommon.TestData{
-			// 		Filename:        "small_png.zip",
-			// 		TransferTimeout: nearbycommon.SmallFileTransferTimeout,
-			// 		TestTimeout:     nearbycommon.DetectionTimeout + nearbycommon.SmallFileTransferTimeout,
-			// 	},
-			// 	ExtraData:         []string{"small_png.zip"},
-			// 	ExtraHardwareDeps: hwdep.D(hwdep.SkipOnModel(crossdevice.UnstableModels...)),
-			// 	Timeout:           nearbycommon.DetectionTimeout + nearbycommon.SmallFileTransferTimeout,
-			// },
-
-			// Disabled by TORA. See: b/347919202
-			// {
-			// 	Name:    "dataonline_allcontacts_txt30mb_floss",
-			// 	Fixture: "nearbyShareDataUsageOnlineSelfShareFloss",
-			// 	ExtraAttr: []string{"cross-device_floss"},
-			// 	Val: nearbycommon.TestData{
-			// 		Filename:        "big_txt.zip",
-			// 		TransferTimeout: nearbycommon.LargeFileOnlineTransferTimeout,
-			// 		TestTimeout:     nearbycommon.DetectionTimeout + nearbycommon.LargeFileOnlineTransferTimeout,
-			// 	},
-			// 	ExtraData:         []string{"big_txt.zip"},
-			// 	ExtraHardwareDeps: hwdep.D(hwdep.SkipOnModel(crossdevice.UnstableModels...)),
-			// 	Timeout:           nearbycommon.DetectionTimeout + nearbycommon.LargeFileOnlineTransferTimeout,
-			// },
 		},
 	})
 }

@@ -68,22 +68,6 @@ func init() {
 				Timeout:           nearbycommon.DetectionTimeout + nearbycommon.SmallFileTransferTimeout,
 				ExtraHardwareDeps: hwdep.D(hwdep.BackgroundScanning(), hwdep.Model(crossdevice.UnstableModels...)),
 			},
-
-			// Floss-enabled duplicate
-			{
-				Name:    "dataoffline_hidden_jpg11kb_floss",
-				Fixture: "nearbyShareDataUsageOfflineNoOneBackgroundScanningEnabledFloss",
-				Val: nearbycommon.TestData{
-					Filename:        "small_jpg.zip",
-					TransferTimeout: nearbycommon.SmallFileTransferTimeout,
-					TestTimeout:     nearbycommon.DetectionTimeout + nearbycommon.SmallFileTransferTimeout,
-					MimeType:        nearbycommon.MimeTypePng,
-				},
-				ExtraData:         []string{"small_jpg.zip"},
-				Timeout:           nearbycommon.DetectionTimeout + nearbycommon.SmallFileTransferTimeout,
-				ExtraHardwareDeps: hwdep.D(hwdep.BackgroundScanning(), hwdep.SkipOnModel(crossdevice.UnstableModels...)),
-				ExtraAttr:         []string{"cross-device_floss"},
-			},
 		},
 	})
 }

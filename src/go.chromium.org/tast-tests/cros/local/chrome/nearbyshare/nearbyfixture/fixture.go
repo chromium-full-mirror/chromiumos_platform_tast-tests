@@ -67,11 +67,6 @@ func init() {
 	addBackgroundScanningFixtures()
 	addARCFixtures()
 	addWebRTCAndWLANFixtures()
-
-	// Floss-enabled duplicates
-	addFlossModulefoodAndroidFixtures()
-	addFlossBackgroundScanningFixtures()
-	addFlossWebRTCAndWLANFixtures()
 }
 
 type nearbyShareFixture struct {

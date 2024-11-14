@@ -87,19 +87,6 @@ func init() {
 					"cd1": hwdep.D(hwdep.BackgroundScanning(), hwdep.Model(crossdevice.UnstableModels...)),
 				},
 			},
-
-			// Floss duplicate
-			{
-				Name:    "onboarding_flow_initiated_floss",
-				Fixture: "nearbyShareRemoteDataUsageOfflineNoOneBackgroundScanningPreSetupFloss",
-				Val:     nearbycommon.TestData{Filename: "small_png.zip", TransferTimeout: nearbycommon.SmallFileTransferTimeout},
-				Timeout: nearbycommon.DetectionTimeout + nearbycommon.SmallFileTransferTimeout,
-				ExtraHardwareDepsForAll: map[string]hwdep.Deps{
-					// Companion DUT 1 dependency.
-					"cd1": hwdep.D(hwdep.BackgroundScanning(), hwdep.SkipOnModel(crossdevice.UnstableModels...)),
-				},
-				ExtraAttr: []string{"cross-device-remote_floss"},
-			},
 		},
 	})
 }

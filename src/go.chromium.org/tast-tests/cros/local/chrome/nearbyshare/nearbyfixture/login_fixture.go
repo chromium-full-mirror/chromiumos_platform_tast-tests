@@ -76,7 +76,6 @@ func init() {
 		keepState = nearbycommon.KeepStateVar
 	)
 
-	flossOpt := []chrome.Option{chrome.EnableFeatures("Floss")}
 	selfShareOpt := []chrome.Option{chrome.EnableFeatures("NearbySharingSelfShare")}
 
 	// Basic login fixtures for general CrOS<->Android sharing. The Android account for these fixtures uses the modulefood version of Nearby Share.
@@ -104,29 +103,6 @@ func init() {
 	})
 
 	testing.AddFixture(&testing.Fixture{
-		Name: "nearbyShareGAIALoginFloss",
-		Desc: "CrOS login with GAIA and Nearby Share flags enabled (floss)",
-		Contacts: []string{
-			"chromeos-cross-device-eng@google.com",
-			"hansenmichael@google.com",
-			"joaquinmarquez@google.com",
-		},
-		BugComponent: "b:1131838", // ChromeOS > Software > System Services > Cross Device > Nearby Share
-		Parent:       "nearbyShareAndroidSetup",
-		Impl:         NewNearbyShareLogin(false, false, false, defaultMediums, flossOpt),
-		Vars: []string{
-			customCrOSUsername,
-			customCrOSPassword,
-			keepState,
-		},
-		SetUpTimeout:    3 * time.Minute,
-		ResetTimeout:    resetTimeout,
-		TearDownTimeout: resetTimeout,
-		PreTestTimeout:  resetTimeout,
-		PostTestTimeout: resetTimeout,
-	})
-
-	testing.AddFixture(&testing.Fixture{
 		Name: "nearbyShareGAIALoginAndroidAccount",
 		Desc: "CrOS login with Android nearby share account and Nearby Share enabled",
 		Contacts: []string{
@@ -137,29 +113,6 @@ func init() {
 		BugComponent: "b:1131838", // ChromeOS > Software > System Services > Cross Device > Nearby Share
 		Parent:       "nearbyShareAndroidSetup",
 		Impl:         NewNearbyShareLogin(false, false, true, defaultMediums, selfShareOpt),
-		Vars: []string{
-			customCrOSUsername,
-			customCrOSPassword,
-			keepState,
-		},
-		SetUpTimeout:    3 * time.Minute,
-		ResetTimeout:    resetTimeout,
-		TearDownTimeout: resetTimeout,
-		PreTestTimeout:  resetTimeout,
-		PostTestTimeout: resetTimeout,
-	})
-
-	testing.AddFixture(&testing.Fixture{
-		Name: "nearbyShareGAIALoginAndroidAccountFloss",
-		Desc: "CrOS login with Android nearby share account and Nearby Share enabled (floss)",
-		Contacts: []string{
-			"chromeos-cross-device-eng@google.com",
-			"hansenmichael@google.com",
-			"joaquinmarquez@google.com",
-		},
-		BugComponent: "b:1131838", // ChromeOS > Software > System Services > Cross Device > Nearby Share
-		Parent:       "nearbyShareAndroidSetup",
-		Impl:         NewNearbyShareLogin(false, false, true, defaultMediums, append(flossOpt, selfShareOpt...)),
 		Vars: []string{
 			customCrOSUsername,
 			customCrOSPassword,
@@ -290,29 +243,6 @@ func init() {
 		PostTestTimeout: resetTimeout,
 	})
 
-	testing.AddFixture(&testing.Fixture{
-		Name: "nearbyShareGAIALoginBackgroundScanningEnabledFloss",
-		Desc: "CrOS login with GAIA; Nearby Share and Background scanning flags enabled (floss)",
-		Contacts: []string{
-			"chromeos-cross-device-eng@google.com",
-			"hansenmichael@google.com",
-			"joaquinmarquez@google.com",
-		},
-		BugComponent: "b:1131838", // ChromeOS > Software > System Services > Cross Device > Nearby Share
-		Parent:       "nearbyShareAndroidSetup",
-		Impl:         NewNearbyShareLogin(false, true, false, defaultMediums, flossOpt),
-		Vars: []string{
-			customCrOSUsername,
-			customCrOSPassword,
-			keepState,
-		},
-		SetUpTimeout:    3 * time.Minute,
-		ResetTimeout:    resetTimeout,
-		TearDownTimeout: resetTimeout,
-		PreTestTimeout:  resetTimeout,
-		PostTestTimeout: resetTimeout,
-	})
-
 	// Fixture for testing shares initiated from the ARC sharesheet.
 	testing.AddFixture(&testing.Fixture{
 		Name: "nearbyShareGAIALoginARCEnabled",
@@ -361,29 +291,6 @@ func init() {
 	})
 
 	testing.AddFixture(&testing.Fixture{
-		Name: "nearbyShareGAIALoginWebRTCAndWLANFloss",
-		Desc: "CrOS login with GAIA; use WebRTC and WLAN upgrade mediums (floss)",
-		Contacts: []string{
-			"chromeos-cross-device-eng@google.com",
-			"hansenmichael@google.com",
-			"joaquinmarquez@google.com",
-		},
-		BugComponent: "b:1131838", // ChromeOS > Software > System Services > Cross Device > Nearby Share
-		Parent:       "nearbyShareAndroidSetup",
-		Impl:         NewNearbyShareLogin(false, false, false, webRTCAndWLAN, flossOpt),
-		Vars: []string{
-			customCrOSUsername,
-			customCrOSPassword,
-			keepState,
-		},
-		SetUpTimeout:    3 * time.Minute,
-		ResetTimeout:    resetTimeout,
-		TearDownTimeout: resetTimeout,
-		PreTestTimeout:  resetTimeout,
-		PostTestTimeout: resetTimeout,
-	})
-
-	testing.AddFixture(&testing.Fixture{
 		Name: "nearbyShareGAIALoginWebRTCOnly",
 		Desc: "CrOS login with GAIA; only use WebRTC upgrade medium",
 		Contacts: []string{
@@ -407,29 +314,6 @@ func init() {
 	})
 
 	testing.AddFixture(&testing.Fixture{
-		Name: "nearbyShareGAIALoginWebRTCOnlyFloss",
-		Desc: "CrOS login with GAIA; only use WebRTC upgrade medium (floss)",
-		Contacts: []string{
-			"chromeos-cross-device-eng@google.com",
-			"hansenmichael@google.com",
-			"joaquinmarquez@google.com",
-		},
-		BugComponent: "b:1131838", // ChromeOS > Software > System Services > Cross Device > Nearby Share
-		Parent:       "nearbyShareAndroidSetup",
-		Impl:         NewNearbyShareLogin(false, false, false, webRTCOnly, flossOpt),
-		Vars: []string{
-			customCrOSUsername,
-			customCrOSPassword,
-			keepState,
-		},
-		SetUpTimeout:    3 * time.Minute,
-		ResetTimeout:    resetTimeout,
-		TearDownTimeout: resetTimeout,
-		PreTestTimeout:  resetTimeout,
-		PostTestTimeout: resetTimeout,
-	})
-
-	testing.AddFixture(&testing.Fixture{
 		Name: "nearbyShareGAIALoginWLANOnly",
 		Desc: "CrOS login with GAIA; only use WLAN upgrade medium",
 		Contacts: []string{
@@ -440,29 +324,6 @@ func init() {
 		BugComponent: "b:1131838", // ChromeOS > Software > System Services > Cross Device > Nearby Share
 		Parent:       "nearbyShareAndroidSetup",
 		Impl:         NewNearbyShareLogin(false, false, false, wlanOnly, nil),
-		Vars: []string{
-			customCrOSUsername,
-			customCrOSPassword,
-			keepState,
-		},
-		SetUpTimeout:    3 * time.Minute,
-		ResetTimeout:    resetTimeout,
-		TearDownTimeout: resetTimeout,
-		PreTestTimeout:  resetTimeout,
-		PostTestTimeout: resetTimeout,
-	})
-
-	testing.AddFixture(&testing.Fixture{
-		Name: "nearbyShareGAIALoginWLANOnlyFloss",
-		Desc: "CrOS login with GAIA; only use WLAN upgrade medium (floss)",
-		Contacts: []string{
-			"chromeos-cross-device-eng@google.com",
-			"hansenmichael@google.com",
-			"joaquinmarquez@google.com",
-		},
-		BugComponent: "b:1131838", // ChromeOS > Software > System Services > Cross Device > Nearby Share
-		Parent:       "nearbyShareAndroidSetup",
-		Impl:         NewNearbyShareLogin(false, false, false, wlanOnly, flossOpt),
 		Vars: []string{
 			customCrOSUsername,
 			customCrOSPassword,

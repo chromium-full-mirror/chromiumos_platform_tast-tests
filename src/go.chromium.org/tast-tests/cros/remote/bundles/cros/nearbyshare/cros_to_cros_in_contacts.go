@@ -227,38 +227,6 @@ func init() {
 				},
 				Timeout: nearbycommon.DetectionTimeout + nearbycommon.LargeFileOnlineTransferTimeout,
 			},
-
-			// Floss duplicates
-			{
-				Name:      "dataoffline_allcontacts_jpg11kb_floss",
-				Fixture:   "nearbyShareRemoteDataUsageOfflineAllContactsFloss",
-				Val:       nearbycommon.TestData{Filename: "small_jpg.zip", TransferTimeout: nearbycommon.SmallFileTransferTimeout},
-				Timeout:   nearbycommon.DetectionTimeout + nearbycommon.SmallFileTransferTimeout,
-				ExtraAttr: []string{"cross-device-remote_floss"},
-			},
-			{
-				Name:      "dataoffline_somecontacts_jpg11kb_floss",
-				Fixture:   "nearbyShareRemoteDataUsageOfflineSomeContactsFloss",
-				Val:       nearbycommon.TestData{Filename: "small_jpg.zip", TransferTimeout: nearbycommon.SmallFileTransferTimeout},
-				Timeout:   nearbycommon.DetectionTimeout + nearbycommon.SmallFileTransferTimeout,
-				ExtraAttr: []string{"cross-device-remote_floss"},
-			},
-			{
-				Name:    "dataonline_allcontacts_txt30mb_floss",
-				Fixture: "nearbyShareRemoteDataUsageOnlineAllContactsFloss",
-				Val: nearbycommon.TestData{
-					Filename: "big_txt.zip", TransferTimeout: nearbycommon.LargeFileOnlineTransferTimeout},
-				Timeout:   nearbycommon.DetectionTimeout + nearbycommon.LargeFileOnlineTransferTimeout,
-				ExtraAttr: []string{"cross-device-remote_floss"},
-			},
-			{
-				Name:    "dataonline_somecontacts_txt30mb_floss",
-				Fixture: "nearbyShareRemoteDataUsageOnlineSomeContactsFloss",
-				Val: nearbycommon.TestData{
-					Filename: "big_txt.zip", TransferTimeout: nearbycommon.LargeFileOnlineTransferTimeout},
-				Timeout:   nearbycommon.DetectionTimeout + nearbycommon.LargeFileOnlineTransferTimeout,
-				ExtraAttr: []string{"cross-device-remote_floss"},
-			},
 		},
 	})
 }

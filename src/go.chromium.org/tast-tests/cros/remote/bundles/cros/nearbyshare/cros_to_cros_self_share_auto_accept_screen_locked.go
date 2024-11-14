@@ -59,33 +59,6 @@ func init() {
 				ExtraSoftwareDeps: []string{"gaia"},
 				Timeout:           nearbycommon.DetectionTimeout + nearbycommon.LargeFileOnlineTransferTimeout,
 			},
-
-			// Floss duplicates
-			{
-				Name:              "dataoffline_allcontacts_png5kb_floss",
-				Fixture:           "nearbyShareRemoteDataUsageOfflineSelfShareFloss",
-				ExtraAttr:         []string{"cross-device-remote_floss"},
-				Val:               nearbycommon.TestData{Filename: "small_png.zip", TransferTimeout: nearbycommon.SmallFileTransferTimeout},
-				ExtraHardwareDeps: hwdep.D(hwdep.SkipOnModel(crossdevice.UnstableModels...)),
-				ExtraHardwareDepsForAll: map[string]hwdep.Deps{
-					// Companion DUT 1 dependency.
-					"cd1": hwdep.D(hwdep.SkipOnModel(crossdevice.UnstableModels...)),
-				},
-				Timeout: nearbycommon.DetectionTimeout + nearbycommon.SmallFileTransferTimeout,
-			},
-			{
-				Name:      "dataonline_allcontacts_txt30mb_floss",
-				Fixture:   "nearbyShareRemoteDataUsageOnlineSelfShareFloss",
-				ExtraAttr: []string{"cross-device-remote_floss"},
-				Val: nearbycommon.TestData{
-					Filename: "big_txt.zip", TransferTimeout: nearbycommon.LargeFileOnlineTransferTimeout},
-				ExtraHardwareDeps: hwdep.D(hwdep.SkipOnModel(crossdevice.UnstableModels...)),
-				ExtraHardwareDepsForAll: map[string]hwdep.Deps{
-					// Companion DUT 1 dependency.
-					"cd1": hwdep.D(hwdep.SkipOnModel(crossdevice.UnstableModels...)),
-				},
-				Timeout: nearbycommon.DetectionTimeout + nearbycommon.LargeFileOnlineTransferTimeout,
-			},
 		},
 	})
 }

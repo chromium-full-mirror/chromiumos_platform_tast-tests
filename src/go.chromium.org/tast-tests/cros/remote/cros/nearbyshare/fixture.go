@@ -34,7 +34,6 @@ const (
 	backgroundScanning      = "NearbySharingBackgroundScanning"
 	webRTC                  = "NearbySharingWebRtc"
 	wlan                    = "NearbySharingWifiLan"
-	floss                   = "Floss"
 	selfShare               = "NearbySharingSelfShare"
 )
 
@@ -73,12 +72,6 @@ func init() {
 	addBasicOnlineFixtures()
 	addBackgroundScanningFixtures()
 	addWebRTCAndWLANFixtures()
-
-	// Floss-enabled duplicates
-	addFlossBasicOfflineFixtures()
-	addFlossBasicOnlineFixtures()
-	addFlossBackgroundScanningFixtures()
-	addFlossWebRTCAndWLANFixtures()
 }
 
 type nearbyShareFixture struct {

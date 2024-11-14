@@ -43,11 +43,6 @@ func init() {
 				Fixture:           "crossdeviceOnboarded",
 				ExtraHardwareDeps: hwdep.D(hwdep.Model(cdcommon.UnstableModels...)),
 			},
-			{
-				Name:      "floss",
-				Fixture:   "crossdeviceOnboardedFloss",
-				ExtraAttr: []string{"cross-device_floss"},
-			},
 		},
 	})
 }

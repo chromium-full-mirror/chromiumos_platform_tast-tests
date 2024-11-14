@@ -37,10 +37,6 @@ func init() {
 			{
 				ExtraAttr: []string{"cross-device-remote_cq"},
 			},
-			{
-				Name:      "floss",
-				ExtraAttr: []string{"cross-device-remote_floss"},
-			},
 		},
 	})
 }
