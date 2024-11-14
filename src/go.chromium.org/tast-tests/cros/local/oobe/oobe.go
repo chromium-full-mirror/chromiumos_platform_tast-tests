@@ -293,15 +293,16 @@ func ProceedThroughGaiaInfoScreen(ctx context.Context, oobeConn *chrome.Conn) er
 		return errors.Wrap(err, "failed to wait for the gaia info screen to be visible")
 	}
 
-	// The Gaia Info Screen has two main UI states. When QuickStart is enabled, the user must choose between
-	// the manual vs. QuickStart setup. When QuickStart is disabled, the only option is to click "Next".
-	isQuickStartEnabled := false
-	if err := oobeConn.Eval(ctx, "OobeAPI.screens.GaiaInfoScreen.isOobeQuickStartEnabled()", &isQuickStartEnabled); err != nil {
-		return errors.Wrap(err, "failed to evaluate whether QuickStart is enabled")
+	// The Gaia Info Screen has two main UI states. When the Cross Device feature suite is allowed and Quick Start
+	// is therefore available, the user must choose between the manual vs. Quick Start setup. When the Cross Device
+	// feature suite is not allowed, the only option is to click "Next".
+	isCrossDeviceFeatureSuiteAllowed := false
+	if err := oobeConn.Eval(ctx, "OobeAPI.screens.GaiaInfoScreen.isCrossDeviceFeatureSuiteAllowed()", &isCrossDeviceFeatureSuiteAllowed); err != nil {
+		return errors.Wrap(err, "failed to evaluate whether the Cross Device feature suite is allowed")
 	}
 
-	if isQuickStartEnabled {
-		testing.ContextLog(ctx, "QuickStart is enabled, selecting manual setup on Gaia Info Screen")
+	if isCrossDeviceFeatureSuiteAllowed {
+		testing.ContextLog(ctx, "Cross Device feature suite is allowed, selecting manual setup on Gaia Info Screen")
 		if err := oobeConn.Eval(ctx, "OobeAPI.screens.GaiaInfoScreen.selectManualCredentials()", nil); err != nil {
 			testing.ContextLog(ctx, "Unable to click gaia info screen manual credentials buttons: ", err)
 		}
