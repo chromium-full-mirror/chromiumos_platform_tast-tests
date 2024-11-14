@@ -64,15 +64,15 @@ func init() {
 
 // TrayTriggersExtension checks VC tray can be triggered by Chrome extension.
 func TrayTriggersExtension(cleanupCtx context.Context, s *testing.State) {
-	ctx, tconn, cr, br, _, cleanupFunc := common.Setup(cleanupCtx, s)
+	ctx, tconn, cr, _, cleanupFunc := common.Setup(cleanupCtx, s)
 	defer cleanupFunc()
 
 	vcTray := vctray.New(ctx, tconn)
 
-	if err := fakeextension.GrantAVPermissions(ctx, br); err != nil {
+	if err := fakeextension.GrantAVPermissions(ctx, cr); err != nil {
 		s.Fatal("Failed to grant AV permissions: ", err)
 	}
-	extUI, err := fakeextension.Launch(ctx, tconn, br)
+	extUI, err := fakeextension.Launch(ctx, tconn, cr)
 	if err != nil {
 		s.Fatal("Failed to launch extension: ", err)
 	}

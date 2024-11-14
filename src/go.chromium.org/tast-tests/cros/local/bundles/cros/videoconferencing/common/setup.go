@@ -20,32 +20,23 @@ import (
 )
 
 // Setup create tconn, browser, server etc.
-func Setup(cleanupCtx context.Context, s *testing.State) (context.Context, *chrome.TestConn, *chrome.Chrome, *browser.Browser, string, func()) {
+func Setup(cleanupCtx context.Context, s *testing.State) (context.Context, *chrome.TestConn, *chrome.Chrome, string, func()) {
 	ctx, cancel := ctxutil.Shorten(cleanupCtx, 10*time.Second)
 
-	// For chrome
 	cr := s.FixtValue().(chrome.HasChrome).Chrome()
 
-	// For ash chrome.TestConn
 	tconn, err := cr.TestAPIConn(ctx)
 	if err != nil {
 		s.Fatal("Failed to connect Test API: ", err)
 	}
 
-	// For browser.
 	conn, err := cr.NewConn(ctx, chrome.NewTabURL)
 	if err != nil {
 		s.Fatal("Failed to launch browser: ", err)
 	}
-	br := cr.Browser()
 
-	// Lacros browser won't work with ash TestConn tconn, instead we need the TestConn from the browser.
-	brTconn, err := br.TestAPIConn(ctx)
-	if err != nil {
-		s.Fatal("Failed to get TestAPIConn from the browser: ", err)
-	}
 	// Close all existings tabs just in case some tabs are left from previous tests.
-	if err := browser.CloseAllTabs(ctx, brTconn); err != nil {
+	if err := browser.CloseAllTabs(ctx, tconn); err != nil {
 		s.Fatal("Failed to close all tabs: ", err)
 	}
 
@@ -53,14 +44,14 @@ func Setup(cleanupCtx context.Context, s *testing.State) (context.Context, *chro
 	srv := httptest.NewServer(http.FileServer(s.DataFileSystem()))
 
 	// Add permission.
-	br.GrantPermissions(ctx, []string{fmt.Sprintf("%s/*", srv.URL)},
+	cr.Browser().GrantPermissions(ctx, []string{fmt.Sprintf("%s/*", srv.URL)},
 		browser.CameraContentSetting,
 		browser.MicrophoneContentSetting,
 	)
 
 	// Return a cleanUp for the main test to call.
 	cleanUpFunc := func() {
-		browser.CloseAllTabs(ctx, brTconn)
+		browser.CloseAllTabs(ctx, tconn)
 
 		cancel()
 		conn.Close()
@@ -69,5 +60,5 @@ func Setup(cleanupCtx context.Context, s *testing.State) (context.Context, *chro
 		faillog.DumpUITreeWithScreenshotOnError(cleanupCtx, s.OutDir(), s.HasError, cr, "ui_tree")
 	}
 
-	return ctx, tconn, cr, br, srv.URL + "/", cleanUpFunc
+	return ctx, tconn, cr, srv.URL + "/", cleanUpFunc
 }

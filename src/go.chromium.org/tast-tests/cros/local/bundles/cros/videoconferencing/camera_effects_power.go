@@ -234,7 +234,7 @@ func init() {
 }
 
 func CameraEffectsPower(cleanupCtx context.Context, s *testing.State) {
-	ctx, tconn, _, br, srvURL, cleanupFunc := common.Setup(cleanupCtx, s)
+	ctx, tconn, cr, srvURL, cleanupFunc := common.Setup(cleanupCtx, s)
 	defer cleanupFunc()
 
 	r := power.NewRecorder(ctx, 5*time.Second, s.OutDir(), s.TestName())
@@ -246,7 +246,7 @@ func CameraEffectsPower(cleanupCtx context.Context, s *testing.State) {
 	vcTray := vctray.New(ctx, tconn)
 
 	url := srvURL + effectshtml.PageURL
-	if err := effectshtml.OpenURLAndWaitForStreamToReady(ctx, tconn, br, url, vcTray); err != nil {
+	if err := effectshtml.OpenURLAndWaitForStreamToReady(ctx, tconn, cr, url, vcTray); err != nil {
 		s.Fatal("Fail to wait for camera stream: ", err)
 	}
 

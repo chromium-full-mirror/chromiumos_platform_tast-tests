@@ -24,14 +24,13 @@ import (
 )
 
 var (
-	liveCaptionBubble  = nodewith.ClassName("CaptionBubbleFrameView")
+	liveCaptionBubble = nodewith.ClassName("CaptionBubbleFrameView")
 )
 
 func init() {
 	testing.AddTest(&testing.Test{
-		Func:         LiveCaptionTabPwa,
-		LacrosStatus: testing.LacrosVariantUnneeded,
-		Desc:         "Checks on-device live caption works in tabs and pwas",
+		Func: LiveCaptionTabPwa,
+		Desc: "Checks on-device live caption works in tabs and pwas",
 		Contacts: []string{
 			"cros-video-conference-tast-tests@google.com",
 			"xiuwen@google.com",
@@ -83,7 +82,7 @@ func init() {
 }
 
 func LiveCaptionTabPwa(cleanupCtx context.Context, s *testing.State) {
-	ctx, tconn, cr, br, srvURL, cleanupFunc := common.Setup(cleanupCtx, s)
+	ctx, tconn, cr, srvURL, cleanupFunc := common.Setup(cleanupCtx, s)
 	defer cleanupFunc()
 
 	vcTray := vctray.New(ctx, tconn)
@@ -98,11 +97,11 @@ func LiveCaptionTabPwa(cleanupCtx context.Context, s *testing.State) {
 	vcTesterFullURL := srvURL + data.VcAppHTML
 	// Launch either the tab or the pwa.
 	if s.Param().(common.LaunchAppType) == common.LaunchAppInPWA {
-		appID, err := fakepwa.InstallPwa(ctx, br, tconn, vcTesterFullURL)
+		appID, err := fakepwa.InstallPwa(ctx, cr, tconn, vcTesterFullURL)
 		if err != nil {
 			s.Fatal("fail to install pwa: ", err)
 		}
-		pwaUI, err := fakepwa.LaunchApp(ctx, tconn, br, appID)
+		pwaUI, err := fakepwa.LaunchApp(ctx, tconn, appID)
 		if err != nil {
 			s.Fatal("Failed to open pwa: ", err)
 		}
@@ -118,7 +117,7 @@ func LiveCaptionTabPwa(cleanupCtx context.Context, s *testing.State) {
 		playAudioAction = pwaUI.PlayAudio
 
 	} else {
-		tabUI, err := fakevctab.LaunchTab(ctx, tconn, br, vcTesterFullURL)
+		tabUI, err := fakevctab.LaunchTab(ctx, tconn, cr, vcTesterFullURL)
 		if err != nil {
 			s.Fatal("Failed to open tab: ", err)
 		}

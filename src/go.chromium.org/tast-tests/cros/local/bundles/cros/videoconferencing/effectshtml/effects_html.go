@@ -15,7 +15,6 @@ import (
 
 	"go.chromium.org/tast-tests/cros/local/chrome"
 	"go.chromium.org/tast-tests/cros/local/chrome/ash"
-	"go.chromium.org/tast-tests/cros/local/chrome/browser"
 	"go.chromium.org/tast-tests/cros/local/chrome/display"
 	"go.chromium.org/tast-tests/cros/local/chrome/uiauto"
 	"go.chromium.org/tast-tests/cros/local/chrome/uiauto/nodewith"
@@ -126,8 +125,8 @@ func SaveImageToFaillog(ctx context.Context, s *testing.State, img image.Image, 
 }
 
 // OpenURLAndWaitForStreamToReady waits until camera stream is loaded and vcTray is triggered.
-func OpenURLAndWaitForStreamToReady(ctx context.Context, tconn *browser.TestConn, br *browser.Browser, url string, vcTray *vctray.VCTray) error {
-	if _, err := br.NewTab(ctx, url); err != nil {
+func OpenURLAndWaitForStreamToReady(ctx context.Context, tconn *chrome.TestConn, cr *chrome.Chrome, url string, vcTray *vctray.VCTray) error {
+	if _, err := cr.Browser().NewTab(ctx, url); err != nil {
 		return err
 	}
 
@@ -153,8 +152,8 @@ func OpenURLAndWaitForStreamToReady(ctx context.Context, tconn *browser.TestConn
 }
 
 // CloseURLAndWaitForWindowGone close the tab with the url and wait until vcTray disappears.
-func CloseURLAndWaitForWindowGone(ctx context.Context, tconn *browser.TestConn, br *browser.Browser, url string, vcTray *vctray.VCTray) error {
-	if err := br.CloseWithURL(ctx, url); err != nil {
+func CloseURLAndWaitForWindowGone(ctx context.Context, tconn *chrome.TestConn, cr *chrome.Chrome, url string, vcTray *vctray.VCTray) error {
+	if err := cr.Browser().CloseWithURL(ctx, url); err != nil {
 		return errors.Wrap(err, "Fail to close url")
 	}
 

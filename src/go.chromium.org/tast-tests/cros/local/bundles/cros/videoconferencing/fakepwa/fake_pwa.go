@@ -28,8 +28,8 @@ type VcPwaUI struct {
 }
 
 // InstallPwa installs the pwa and returns its appID.
-func InstallPwa(ctx context.Context, br *browser.Browser, tconn *chrome.TestConn, url string) (string, error) {
-	if err := apps.InstallPWAForURL(ctx, tconn, br, url, 15*time.Second); err != nil {
+func InstallPwa(ctx context.Context, cr *chrome.Chrome, tconn *chrome.TestConn, url string) (string, error) {
+	if err := apps.InstallPWAForURL(ctx, tconn, cr.Browser(), url, 15*time.Second); err != nil {
 		return "", errors.Wrap(err, "failed to InstallPWAForURL")
 	}
 
@@ -40,11 +40,7 @@ func InstallPwa(ctx context.Context, br *browser.Browser, tconn *chrome.TestConn
 		return "", errors.Wrap(err, "failed to InstalledAppID")
 	}
 
-	brTconn, err := br.TestAPIConn(ctx)
-	if err != nil {
-		return "", errors.Wrap(err, "failed to get browser TestAPIConn")
-	}
-	if err := browser.CloseAllTabs(ctx, brTconn); err != nil {
+	if err := browser.CloseAllTabs(ctx, tconn); err != nil {
 		return "", errors.Wrap(err, "failed to close all tabs")
 	}
 
@@ -52,7 +48,7 @@ func InstallPwa(ctx context.Context, br *browser.Browser, tconn *chrome.TestConn
 }
 
 // LaunchApp opens an app with appID.
-func LaunchApp(ctx context.Context, tconn *browser.TestConn, br *browser.Browser, appID string) (*VcPwaUI, error) {
+func LaunchApp(ctx context.Context, tconn *chrome.TestConn, appID string) (*VcPwaUI, error) {
 	if err := apps.Launch(ctx, tconn, appID); err != nil {
 		return nil, err
 	}

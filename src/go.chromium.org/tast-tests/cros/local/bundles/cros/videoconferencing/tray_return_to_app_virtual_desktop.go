@@ -55,7 +55,7 @@ func init() {
 }
 
 func TrayReturnToAppVirtualDesktop(cleanupCtx context.Context, s *testing.State) {
-	ctx, tconn, _, br, srvURL, cleanupFunc := common.Setup(cleanupCtx, s)
+	ctx, tconn, cr, srvURL, cleanupFunc := common.Setup(cleanupCtx, s)
 	defer cleanupFunc()
 
 	vcTray := vctray.New(ctx, tconn)
@@ -71,7 +71,7 @@ func TrayReturnToAppVirtualDesktop(cleanupCtx context.Context, s *testing.State)
 
 	// Open VcTester tab.
 	vcTabFullURL := srvURL + data.VcAppHTML
-	tabUI, err := fakevctab.LaunchTab(ctx, tconn, br, vcTabFullURL)
+	tabUI, err := fakevctab.LaunchTab(ctx, tconn, cr, vcTabFullURL)
 	if err != nil {
 		s.Fatal("Failed to open tab: ", err)
 	}

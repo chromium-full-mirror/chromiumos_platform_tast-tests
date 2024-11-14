@@ -71,20 +71,20 @@ func init() {
 
 // TrayTriggersPwa checks VC tray can be triggered by Chrome tabs.
 func TrayTriggersPwa(cleanupCtx context.Context, s *testing.State) {
-	ctx, tconn, cr, br, srvURL, cleanupFunc := common.Setup(cleanupCtx, s)
+	ctx, tconn, cr, srvURL, cleanupFunc := common.Setup(cleanupCtx, s)
 	defer cleanupFunc()
 
 	vcTray := vctray.New(ctx, tconn)
 
 	// Install PWA.
-	appID, err := fakepwa.InstallPwa(ctx, br, tconn, srvURL+data.VcAppHTML)
+	appID, err := fakepwa.InstallPwa(ctx, cr, tconn, srvURL+data.VcAppHTML)
 	if err != nil {
 		s.Fatal("fail to install pwa: ", err)
 	}
 
 	// Verify pwa triggers vcTray on camera.
 	s.Run(ctx, "cam_only", func(ctx context.Context, s *testing.State) {
-		pwaUI, err := fakepwa.LaunchApp(ctx, tconn, br, appID)
+		pwaUI, err := fakepwa.LaunchApp(ctx, tconn, appID)
 		if err != nil {
 			s.Fatal("Failed to open pwa: ", err)
 		}
@@ -120,7 +120,7 @@ func TrayTriggersPwa(cleanupCtx context.Context, s *testing.State) {
 
 	// Verify pwa triggers vcTray on mic.
 	s.Run(ctx, "mic_only", func(ctx context.Context, s *testing.State) {
-		pwaUI, err := fakepwa.LaunchApp(ctx, tconn, br, appID)
+		pwaUI, err := fakepwa.LaunchApp(ctx, tconn, appID)
 		if err != nil {
 			s.Fatal("Failed to open tab: ", err)
 		}
@@ -156,7 +156,7 @@ func TrayTriggersPwa(cleanupCtx context.Context, s *testing.State) {
 
 	// Verify pwa triggers vcTray on screen-share.
 	s.Run(ctx, "screen_only", func(ctx context.Context, s *testing.State) {
-		pwaUI, err := fakepwa.LaunchApp(ctx, tconn, br, appID)
+		pwaUI, err := fakepwa.LaunchApp(ctx, tconn, appID)
 		if err != nil {
 			s.Fatal("Failed to open tab: ", err)
 		}
@@ -192,7 +192,7 @@ func TrayTriggersPwa(cleanupCtx context.Context, s *testing.State) {
 
 	// Verify pwa works on return to app.
 	s.Run(ctx, "return_to_app", func(ctx context.Context, s *testing.State) {
-		pwaUI, err := fakepwa.LaunchApp(ctx, tconn, br, appID)
+		pwaUI, err := fakepwa.LaunchApp(ctx, tconn, appID)
 		if err != nil {
 			s.Fatal("Failed to open tab: ", err)
 		}

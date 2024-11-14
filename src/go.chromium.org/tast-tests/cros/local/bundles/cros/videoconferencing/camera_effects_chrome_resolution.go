@@ -59,7 +59,7 @@ func init() {
 }
 
 func CameraEffectsChromeResolution(cleanupCtx context.Context, s *testing.State) {
-	ctx, tconn, cr, br, srvURL, cleanupFunc := common.Setup(cleanupCtx, s)
+	ctx, tconn, cr, srvURL, cleanupFunc := common.Setup(cleanupCtx, s)
 	defer cleanupFunc()
 	defer faillog.DumpUITreeWithScreenshotOnError(cleanupCtx, s.OutDir(), s.HasError, cr, "ui_tree")
 
@@ -94,7 +94,7 @@ func CameraEffectsChromeResolution(cleanupCtx context.Context, s *testing.State)
 		s.Run(ctx, subTest.name, func(ctx context.Context, s *testing.State) {
 			urlWithResolution := url + strconv.Itoa(subTest.resolution)
 
-			if err := effectshtml.OpenURLAndWaitForStreamToReady(ctx, tconn, br, urlWithResolution, vcTray); err != nil {
+			if err := effectshtml.OpenURLAndWaitForStreamToReady(ctx, tconn, cr, urlWithResolution, vcTray); err != nil {
 				s.Fatal("Fail to wait for camera stream: ", err)
 			}
 
@@ -138,7 +138,7 @@ func CameraEffectsChromeResolution(cleanupCtx context.Context, s *testing.State)
 				s.Fatal("Screenshot diff unexpected: ", err)
 			}
 
-			if err := effectshtml.CloseURLAndWaitForWindowGone(ctx, tconn, br, urlWithResolution, vcTray); err != nil {
+			if err := effectshtml.CloseURLAndWaitForWindowGone(ctx, tconn, cr, urlWithResolution, vcTray); err != nil {
 				s.Fatal("Fail to wait for close tab: ", err)
 			}
 		})

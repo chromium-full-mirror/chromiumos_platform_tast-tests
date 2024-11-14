@@ -66,7 +66,7 @@ func init() {
 }
 
 func CameraEffectsChromeRetain(cleanupCtx context.Context, s *testing.State) {
-	ctx, tconn, cr, br, srvURL, cleanupFunc := common.Setup(cleanupCtx, s)
+	ctx, tconn, cr, srvURL, cleanupFunc := common.Setup(cleanupCtx, s)
 	defer cleanupFunc()
 
 	vcTray := vctray.New(ctx, tconn)
@@ -74,7 +74,7 @@ func CameraEffectsChromeRetain(cleanupCtx context.Context, s *testing.State) {
 	ui := uiauto.New(tconn)
 
 	url := srvURL + effectshtml.PageURL
-	if err := effectshtml.OpenURLAndWaitForStreamToReady(ctx, tconn, br, url, vcTray); err != nil {
+	if err := effectshtml.OpenURLAndWaitForStreamToReady(ctx, tconn, cr, url, vcTray); err != nil {
 		s.Fatal("Fail to wait for camera stream: ", err)
 	}
 
@@ -90,11 +90,11 @@ func CameraEffectsChromeRetain(cleanupCtx context.Context, s *testing.State) {
 		s.Fatal("Fail to grab camera screen shot before: ", err)
 	}
 
-	if err := effectshtml.CloseURLAndWaitForWindowGone(ctx, tconn, br, url, vcTray); err != nil {
+	if err := effectshtml.CloseURLAndWaitForWindowGone(ctx, tconn, cr, url, vcTray); err != nil {
 		s.Fatal("Fail to wait for close tab: ", err)
 	}
 
-	if err := effectshtml.OpenURLAndWaitForStreamToReady(ctx, tconn, br, url, vcTray); err != nil {
+	if err := effectshtml.OpenURLAndWaitForStreamToReady(ctx, tconn, cr, url, vcTray); err != nil {
 		s.Fatal("Fail to wait for camera stream: ", err)
 	}
 	s.Log("OpenURLAndWaitForStreamToReady successfully after closing the tab")

@@ -80,7 +80,7 @@ func init() {
 }
 
 func SpeakOnMuteTabPwa(cleanupCtx context.Context, s *testing.State) {
-	ctx, tconn, cr, br, srvURL, cleanupFunc := common.Setup(cleanupCtx, s)
+	ctx, tconn, cr, srvURL, cleanupFunc := common.Setup(cleanupCtx, s)
 	defer cleanupFunc()
 
 	vcTray := vctray.New(ctx, tconn)
@@ -106,11 +106,11 @@ func SpeakOnMuteTabPwa(cleanupCtx context.Context, s *testing.State) {
 	vcTesterFullURL := srvURL + data.VcAppHTML
 	if s.Param().(common.LaunchAppType) == common.LaunchAppInPWA {
 		// Install PWA.
-		appID, err := fakepwa.InstallPwa(ctx, br, tconn, vcTesterFullURL)
+		appID, err := fakepwa.InstallPwa(ctx, cr, tconn, vcTesterFullURL)
 		if err != nil {
 			s.Fatal("fail to install pwa: ", err)
 		}
-		pwaUI, err := fakepwa.LaunchApp(ctx, tconn, br, appID)
+		pwaUI, err := fakepwa.LaunchApp(ctx, tconn, appID)
 		if err != nil {
 			s.Fatal("Failed to open pwa: ", err)
 		}
@@ -124,7 +124,7 @@ func SpeakOnMuteTabPwa(cleanupCtx context.Context, s *testing.State) {
 			s.Fatal("Failed to verify that pwa triggers vcTray by mic: ", err)
 		}
 	} else {
-		tabUI, err := fakevctab.LaunchTab(ctx, tconn, br, vcTesterFullURL)
+		tabUI, err := fakevctab.LaunchTab(ctx, tconn, cr, vcTesterFullURL)
 		if err != nil {
 			s.Fatal("Failed to open tab: ", err)
 		}

@@ -47,7 +47,7 @@ func init() {
 }
 
 func VctrayLabelCheck(cleanupCtx context.Context, s *testing.State) {
-	ctx, tconn, cr, br, srvURL, cleanupFunc := common.Setup(cleanupCtx, s)
+	ctx, tconn, cr, srvURL, cleanupFunc := common.Setup(cleanupCtx, s)
 	defer cleanupFunc()
 	defer faillog.DumpUITreeWithScreenshotOnError(cleanupCtx, s.OutDir(), s.HasError, cr, "ui_tree")
 
@@ -55,7 +55,7 @@ func VctrayLabelCheck(cleanupCtx context.Context, s *testing.State) {
 	ui := uiauto.New(tconn)
 
 	url := srvURL + effectshtml.PageURL
-	if err := effectshtml.OpenURLAndWaitForStreamToReady(ctx, tconn, br, url, vcTray); err != nil {
+	if err := effectshtml.OpenURLAndWaitForStreamToReady(ctx, tconn, cr, url, vcTray); err != nil {
 		s.Fatal("Fail to wait for camera stream: ", err)
 	}
 

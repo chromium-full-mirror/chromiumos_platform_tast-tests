@@ -61,7 +61,7 @@ func init() {
 }
 
 func CameraEffectsReplace(cleanupCtx context.Context, s *testing.State) {
-	ctx, tconn, cr, br, srvURL, cleanupFunc := common.Setup(cleanupCtx, s)
+	ctx, tconn, cr, srvURL, cleanupFunc := common.Setup(cleanupCtx, s)
 	defer cleanupFunc()
 
 	// Copy background image and metadata to the BackgroundImageDirname to apply.
@@ -89,7 +89,7 @@ func CameraEffectsReplace(cleanupCtx context.Context, s *testing.State) {
 	ui := uiauto.New(tconn)
 
 	url := srvURL + effectshtml.PageURL
-	if err := effectshtml.OpenURLAndWaitForStreamToReady(ctx, tconn, br, url, vcTray); err != nil {
+	if err := effectshtml.OpenURLAndWaitForStreamToReady(ctx, tconn, cr, url, vcTray); err != nil {
 		s.Fatal("Fail to wait for camera stream: ", err)
 	}
 
