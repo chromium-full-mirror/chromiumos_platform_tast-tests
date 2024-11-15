@@ -6,15 +6,13 @@ package tflite
 
 import (
 	"context"
-	"encoding/json"
-	"os"
 	"path/filepath"
-	"runtime"
 	"strconv"
 	"strings"
 	"time"
 
 	"go.chromium.org/tast-tests/cros/local/gtest"
+	"go.chromium.org/tast-tests/cros/local/tflite"
 	"go.chromium.org/tast/core/fsutil"
 	"go.chromium.org/tast/core/shutil"
 	"go.chromium.org/tast/core/testing"
@@ -49,50 +47,15 @@ func init() {
 	})
 }
 
-// This should be sync with StableDelegateLoaderSettings in
-// https://github.com/tensorflow/tensorflow/blob/-/tensorflow/lite/acceleration/configuration/configuration.proto
-type stableDelegateLoaderSettings struct {
-	DelegatePath string `json:"delegate_path"`
-	DelegateName string `json:"delegate_name"`
-}
-
-type operationCheckMode int
-
-const (
-	noOperationCheck      operationCheckMode = 0
-	perNodeOperationCheck operationCheckMode = 1
-	preOperationCheck     operationCheckMode = 2
-)
-
-type mtkNeuronSettings struct {
-	OperationCheckMode        operationCheckMode `json:"operation_check_mode"`
-	AllowFp16PrecisionForFp32 bool               `json:"allow_fp16_precision_for_fp32"`
-}
-
-type stableDelegateSettings struct {
-	StableDelegateLoaderSettings stableDelegateLoaderSettings `json:"stable_delegate_loader_settings"`
-	MtkNeuronSettings            *mtkNeuronSettings           `json:"mtk_neuron_settings,omitempty"`
-}
-
 type testingParam struct {
-	Settings                  stableDelegateSettings
+	Settings                  tflite.StableDelegateSettings
 	AccelConfig               string
 	SkipTestPatterns          []string
 	AllowFp16PrecisionForFp32 bool
 }
 
-func localLibraryDirectory() string {
-	if runtime.GOARCH == "amd64" || runtime.GOARCH == "arm64" {
-		return "/usr/local/lib64/"
-	}
-	return "/usr/local/lib/"
-}
-
-var sampleSettings = stableDelegateSettings{
-	StableDelegateLoaderSettings: stableDelegateLoaderSettings{
-		DelegatePath: localLibraryDirectory() + "libtensorflowlite_cros_sample_delegate.so",
-		DelegateName: "cros_sample_delegate",
-	},
+var sampleSettings = tflite.StableDelegateSettings{
+	StableDelegateLoaderSettings: tflite.SampleDelegateLoaderSettings,
 }
 
 const sampleAccelConfig = "sample_accel_test.conf"
@@ -105,13 +68,10 @@ var sampleParam = testingParam{
 	SkipTestPatterns: []string{"*MultiDimBroadcastSubshard*"},
 }
 
-var neuronSettings = stableDelegateSettings{
-	StableDelegateLoaderSettings: stableDelegateLoaderSettings{
-		DelegatePath: "/usr/lib64/libtensorflowlite_mtk_neuron_delegate.so",
-		DelegateName: "mtk_neuron_delegate",
-	},
-	MtkNeuronSettings: &mtkNeuronSettings{
-		OperationCheckMode:        preOperationCheck,
+var neuronSettings = tflite.StableDelegateSettings{
+	StableDelegateLoaderSettings: tflite.MtkNeuronDelegateLoaderSettings,
+	MtkNeuronSettings: &tflite.MtkNeuronSettings{
+		OperationCheckMode:        tflite.PreOperationCheck,
 		AllowFp16PrecisionForFp32: true,
 	},
 }
@@ -160,11 +120,8 @@ var neuronParam = testingParam{
 	AllowFp16PrecisionForFp32: true,
 }
 
-var openvinoSettings = stableDelegateSettings{
-	StableDelegateLoaderSettings: stableDelegateLoaderSettings{
-		DelegatePath: "/usr/lib64/libtensorflowlite_intel_openvino_delegate.so",
-		DelegateName: "intel_openvino_delegate",
-	},
+var openvinoSettings = tflite.StableDelegateSettings{
+	StableDelegateLoaderSettings: tflite.IntelOpenVINODelegateLoaderSettings,
 }
 
 // TODO(b/332423167): Intel to provide the proper config.
@@ -212,11 +169,7 @@ func DTS(ctx context.Context, s *testing.State) {
 			s.Fatal("Failed to copy settings file: ", err)
 		}
 	} else {
-		jsonSettings, err := json.Marshal(param.Settings)
-		if err != nil {
-			s.Fatal("Failed to marshal stable delegate settings")
-		}
-		if err := os.WriteFile(settingsPath, jsonSettings, 0644); err != nil {
+		if err := param.Settings.WriteTo(settingsPath); err != nil {
 			s.Fatal("Failed to write settings.json: ", err)
 		}
 	}
