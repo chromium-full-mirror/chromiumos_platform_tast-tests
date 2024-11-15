@@ -46,6 +46,7 @@ type TFLiteBenchmarkParams struct {
 	Backend       TFLiteBackendType
 }
 
+// benchmarkResults contains the output result of `benchmark_model`.
 type benchmarkResults struct {
 	InitLatency           float64
 	FirstInferenceLatency float64
@@ -147,7 +148,8 @@ func parseOutput(output string) (*benchmarkResults, error) {
 	return &results, nil
 }
 
-func populateMetrics(results *benchmarkResults, p *perf.Values) {
+func createPerfValues(results *benchmarkResults) *perf.Values {
+	p := perf.NewValues()
 	p.Set(perf.Metric{
 		Name:      "init_latency",
 		Unit:      "ms",
@@ -178,6 +180,7 @@ func populateMetrics(results *benchmarkResults, p *perf.Values) {
 		Direction: perf.SmallerIsBetter,
 		Multiple:  false},
 		results.PeakMemoryUsage*1024*1024)
+	return p
 }
 
 func buildBenchmarkArgs(graphFileName string, backend TFLiteBackendType) map[string]string {
@@ -185,7 +188,6 @@ func buildBenchmarkArgs(graphFileName string, backend TFLiteBackendType) map[str
 
 	m["--graph"] = DataPath(graphFileName)
 	m["--min_secs"] = strconv.FormatInt(minDurationSeconds, 10)
-	m["--report_peak_memory_footprint"] = "true"
 
 	if backend == KGpuOpenGl {
 		m["--use_gpu"] = "true"
@@ -199,10 +201,13 @@ func buildBenchmarkArgs(graphFileName string, backend TFLiteBackendType) map[str
 	return m
 }
 
-func executeBenchmark(ctx context.Context, graphFileName string, backend TFLiteBackendType, p *perf.Values) error {
-	var cmd = BuildCommand(ctx, benchmarkModelCLI, buildBenchmarkArgs(graphFileName, backend))
+// executeBenchmark run `benchmark_model` with the given arg, benchmarkArgs.
+func executeBenchmark(ctx context.Context, benchmarkArgs map[string]string) (*benchmarkResults, error) {
+	// Ensure the peak memory footprint is captured
+	benchmarkArgs["--report_peak_memory_footprint"] = "true"
+	cmd := BuildCommand(ctx, benchmarkModelCLI, benchmarkArgs)
 
-	if backend == KGpuOpenCl {
+	if backend, hasGpuBackend := benchmarkArgs["--gpu_backend"]; hasGpuBackend && backend == "cl" {
 		os.Setenv("CLVK_POLL_MAIN_THREAD", "1")
 		os.Setenv("CLVK_POLL_EXECUTOR", "1")
 	}
@@ -211,18 +216,15 @@ func executeBenchmark(ctx context.Context, graphFileName string, backend TFLiteB
 	output, err := cmd.CombinedOutput()
 	outputStr := string(output[:])
 	if err != nil {
-		return errors.Wrapf(err, " benchmark failed, log output: %s", outputStr)
+		return nil, errors.Wrapf(err, "benchmark failed, log output: %s", outputStr)
 	}
 
 	results, err := parseOutput(outputStr)
 	if err != nil {
-		return errors.Wrapf(err, " failed to parse benchmark output: %s", outputStr)
+		return nil, errors.Wrapf(err, "failed to parse benchmark output: %s", outputStr)
 	}
 	testing.ContextLogf(ctx, "Results: %+v", results)
-
-	populateMetrics(results, p)
-
-	return nil
+	return results, nil
 }
 
 // RunTFLiteBenchmark will run the `benchmark_model` tool for a given `graphFileName` model file, using
@@ -252,10 +254,11 @@ func RunTFLiteBenchmark(ctx context.Context, testName, dataFilePath, graphFileNa
 		return errors.Wrap(err, "failed to start power metrics recording)")
 	}
 
-	p := perf.NewValues()
-	if err := executeBenchmark(ctx, graphFileName, backend, p); err != nil {
+	results, err := executeBenchmark(ctx, buildBenchmarkArgs(graphFileName, backend))
+	if err != nil {
 		return errors.Wrap(err, "benchmark failed")
 	}
+	p := createPerfValues(results)
 
 	if err := r.Finish(ctx, p); err != nil {
 		return errors.Wrap(err, "failed to finish collecting power metrics")
