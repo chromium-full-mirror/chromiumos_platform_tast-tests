@@ -46,8 +46,8 @@ type TFLiteBenchmarkParams struct {
 	Backend       TFLiteBackendType
 }
 
-// benchmarkResults contains the output result of `benchmark_model`.
-type benchmarkResults struct {
+// BenchmarkResults contains the output result of `benchmark_model`.
+type BenchmarkResults struct {
 	InitLatency           float64
 	FirstInferenceLatency float64
 	AvgLatency            float64
@@ -56,7 +56,7 @@ type benchmarkResults struct {
 	RunCount              int64
 }
 
-func parseOutput(output string) (*benchmarkResults, error) {
+func parseOutput(output string) (*BenchmarkResults, error) {
 	// The benchmark_model output will contain several key lines.
 	// There will be two that look like detailRe, and one that looks
 	// like summaryRe.
@@ -71,7 +71,7 @@ func parseOutput(output string) (*benchmarkResults, error) {
 	// There wil only be a single instance of memoryRe, and we will take the
 	// Init and Overall memory usage from there.
 
-	var results benchmarkResults
+	var results BenchmarkResults
 	var warmupRe = regexp.MustCompile(`\bcount=([\d\.]+) `)
 	var detailRe = regexp.MustCompile(`\bcount=([\d\.]+) first=[\d\.]+ curr=[\d\.]+ min=[\d\.]+ max=[\d\.]+ avg=([\d\.\+e]+) std=([\d\.]+)`)
 	var summaryRe = regexp.MustCompile(`\bInference timings in us: Init: ([\d\.]+), First inference: ([\d\.]+), Warmup \(avg\): [\d\.\+e]+, Inference \(avg\): [\d\.\+e]+`)
@@ -148,7 +148,7 @@ func parseOutput(output string) (*benchmarkResults, error) {
 	return &results, nil
 }
 
-func createPerfValues(results *benchmarkResults) *perf.Values {
+func createPerfValues(results *BenchmarkResults) *perf.Values {
 	p := perf.NewValues()
 	p.Set(perf.Metric{
 		Name:      "init_latency",
@@ -201,8 +201,8 @@ func buildBenchmarkArgs(graphFileName string, backend TFLiteBackendType) map[str
 	return m
 }
 
-// executeBenchmark run `benchmark_model` with the given arg, benchmarkArgs.
-func executeBenchmark(ctx context.Context, benchmarkArgs map[string]string) (*benchmarkResults, error) {
+// ExecuteBenchmark run `benchmark_model` with the given arg, benchmarkArgs.
+func ExecuteBenchmark(ctx context.Context, benchmarkArgs map[string]string) (*BenchmarkResults, error) {
 	// Ensure the peak memory footprint is captured
 	benchmarkArgs["--report_peak_memory_footprint"] = "true"
 	cmd := BuildCommand(ctx, benchmarkModelCLI, benchmarkArgs)
@@ -254,7 +254,7 @@ func RunTFLiteBenchmark(ctx context.Context, testName, dataFilePath, graphFileNa
 		return errors.Wrap(err, "failed to start power metrics recording)")
 	}
 
-	results, err := executeBenchmark(ctx, buildBenchmarkArgs(graphFileName, backend))
+	results, err := ExecuteBenchmark(ctx, buildBenchmarkArgs(graphFileName, backend))
 	if err != nil {
 		return errors.Wrap(err, "benchmark failed")
 	}
