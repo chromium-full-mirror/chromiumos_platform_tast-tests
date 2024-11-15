@@ -24,7 +24,6 @@ import (
 	"go.chromium.org/tast-tests/cros/local/input"
 	"go.chromium.org/tast/core/ctxutil"
 	"go.chromium.org/tast/core/testing"
-	"go.chromium.org/tast/core/testing/hwdep"
 )
 
 func init() {
@@ -42,8 +41,6 @@ func init() {
 			"chrome",
 			"chrome_internal",
 		},
-		// TODO(b:371861192) Screenshot combination doesn't work on split modifier keyboard.
-		HardwareDeps: hwdep.D(hwdep.NoSplitModifierKeyboard()),
 		Attr: []string{
 			"group:mainline",
 			"group:hw_agnostic",
