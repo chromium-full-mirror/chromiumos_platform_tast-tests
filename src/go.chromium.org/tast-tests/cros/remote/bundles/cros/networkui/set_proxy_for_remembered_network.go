@@ -307,17 +307,20 @@ func (helper *networksHelper) configureNetwork(ctx context.Context, tf *wificell
 	const testPass string = "chromeos"
 
 	securityConfig := wpa.NewConfigFactory(testPass, wpa.Mode(wpa.ModePureWPA2), wpa.Ciphers2(wpa.CipherCCMP, wpa.CipherTKIP))
-
-	netConfigSvc := networkui.NewCrosNetworkConfigServiceClient(rpcClient.Conn)
-
 	apOpts = append(apOpts, hostapd.SSID(hostapd.RandomSSID(string(prefix))))
-
 	ap, err := tf.ConfigureAPOnRouterID(ctx, routerID, apOpts, securityConfig, false /* enableDNS */, false /* enableHTTP */)
 	if err != nil {
 		return errors.Wrap(err, "failed to configure AP")
 	}
-
 	helper.aps[prefix] = ap
+
+	wifiSvc := wifi.NewWifiServiceClient(rpcClient.Conn)
+	if _, err := wifiSvc.WifiPageControl(ctx, &wifi.WifiPageControlRequest{
+		Ssid:    ap.Config().SSID,
+		Control: wifi.WifiPageControlRequest_WaitUntilExist,
+	}); err != nil {
+		return errors.Wrapf(err, "failed to discover the configured AP: %q", ap.Config().SSID)
+	}
 
 	wifiConfigProperties := &networkui.WiFiConfigProperties{
 		Ssid:           ap.Config().SSID,
@@ -331,6 +334,8 @@ func (helper *networksHelper) configureNetwork(ctx context.Context, tf *wificell
 			WifiConfigProperties: wifiConfigProperties,
 		},
 	}
+
+	netConfigSvc := networkui.NewCrosNetworkConfigServiceClient(rpcClient.Conn)
 	if _, err := netConfigSvc.ConfigureNetwork(ctx, &networkui.ConfigureNetworkRequest{
 		Shared:           shared,
 		ConfigProperties: networkTypeConfigProperties,
