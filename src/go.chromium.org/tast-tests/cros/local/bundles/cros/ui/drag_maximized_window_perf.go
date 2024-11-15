@@ -11,7 +11,6 @@ import (
 	uiperf "go.chromium.org/tast-tests/cros/local/bundles/cros/ui/perf"
 	"go.chromium.org/tast-tests/cros/local/chrome"
 	"go.chromium.org/tast-tests/cros/local/chrome/ash"
-	"go.chromium.org/tast-tests/cros/local/chrome/browser"
 	"go.chromium.org/tast-tests/cros/local/chrome/cuj"
 	"go.chromium.org/tast-tests/cros/local/chrome/display"
 	"go.chromium.org/tast-tests/cros/local/chrome/uiauto/mouse"
@@ -26,10 +25,9 @@ import (
 
 func init() {
 	testing.AddTest(&testing.Test{
-		Func:         DragMaximizedWindowPerf,
-		LacrosStatus: testing.LacrosVariantUnneeded,
-		Desc:         "Measures the animation smoothness of dragging a maximized window in clamshell mode",
-		Contacts:     []string{"cros-sw-perf@google.com", "chromeos-wm@google.com", "sammiequon@chromium.org"},
+		Func:     DragMaximizedWindowPerf,
+		Desc:     "Measures the animation smoothness of dragging a maximized window in clamshell mode",
+		Contacts: []string{"cros-sw-perf@google.com", "chromeos-wm@google.com", "sammiequon@chromium.org"},
 		// ChromeOS > Software > Window Management
 		BugComponent: "b:1238037",
 		Attr:         []string{"group:crosbolt", "crosbolt_perbuild"},
@@ -38,12 +36,7 @@ func init() {
 			hwdep.InternalDisplay(),
 			hwdep.SkipOnModel("burnet"),
 		),
-		Params: []testing.Param{
-			{
-				Fixture: "chromeLoggedIn",
-				Val:     browser.TypeAsh,
-			},
-		},
+		Fixture: "chromeLoggedIn",
 	})
 }
 
@@ -77,8 +70,7 @@ func DragMaximizedWindowPerf(ctx context.Context, s *testing.State) {
 		s.Fatal("Failed to open the browser: ", err)
 	}
 	defer conn.Close()
-	br := cr.Browser()
-	if err := ash.CreateWindows(ctx, tconn, br, url, numWindows-1); err != nil {
+	if err := ash.CreateWindows(ctx, tconn, cr, url, numWindows-1); err != nil {
 		s.Fatal("Failed to open browser windows: ", err)
 	}
 
@@ -126,7 +118,7 @@ func DragMaximizedWindowPerf(ctx context.Context, s *testing.State) {
 	// Return to the caption center, this will trigger a remaximize animation.
 	points = append(points, points[0])
 
-	if err := perfutil.RunMultipleAndSave(ctx, s.OutDir(), br, uiperf.Run(s, perfutil.RunAndWaitAll(tconn, func(ctx context.Context) error {
+	if err := perfutil.RunMultipleAndSave(ctx, s.OutDir(), cr, uiperf.Run(s, perfutil.RunAndWaitAll(tconn, func(ctx context.Context) error {
 		// Move the mouse to caption and press down.
 		if err := mouse.Move(tconn, points[0], 10*time.Millisecond)(ctx); err != nil {
 			return errors.Wrap(err, "failed to move to caption")

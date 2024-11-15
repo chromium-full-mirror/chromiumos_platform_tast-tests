@@ -11,7 +11,6 @@ import (
 	"go.chromium.org/tast-tests/cros/common/perf"
 	uiperf "go.chromium.org/tast-tests/cros/local/bundles/cros/ui/perf"
 	"go.chromium.org/tast-tests/cros/local/chrome"
-	"go.chromium.org/tast-tests/cros/local/chrome/browser"
 	"go.chromium.org/tast-tests/cros/local/chrome/cuj"
 	"go.chromium.org/tast-tests/cros/local/chrome/webutil"
 	localPerf "go.chromium.org/tast-tests/cros/local/perf"
@@ -24,25 +23,18 @@ import (
 
 func init() {
 	testing.AddTest(&testing.Test{
-		Func:         PageLoadPerf,
-		LacrosStatus: testing.LacrosVariantUnneeded,
-		Desc:         "Measures FCP and LCP performance",
+		Func: PageLoadPerf,
+		Desc: "Measures FCP and LCP performance",
 		Contacts: []string{
 			"cros-sw-perf@google.com",
 			"ramsaroop@google.com",
 		},
 		BugComponent: "b:1045832", // ChromeOS > Software > Performance > TPS
-		Attr:         []string{"group:cuj"},
+		Attr:         []string{"group:cuj", "group:crosbolt", "crosbolt_perbuild", "crosbolt_fsi_check"},
 		SoftwareDeps: []string{"chrome"},
 		Timeout:      10*time.Minute + cujrecorder.CooldownTimeout,
 		Data:         []string{cujrecorder.SystemTraceConfigFile},
-		Params: []testing.Param{
-			{
-				ExtraAttr: []string{"group:crosbolt", "crosbolt_perbuild", "crosbolt_fsi_check"},
-				Val:       browser.TypeAsh,
-				Fixture:   "tabSwitchPerfWPRAsh",
-			},
-		},
+		Fixture:      "tabSwitchPerfWPRAsh",
 	})
 }
 
@@ -61,19 +53,18 @@ func PageLoadPerf(ctx context.Context, s *testing.State) {
 		s.Fatal("Failed to set up Chrome: ", err)
 	}
 	defer conn.Close()
-	br := cr.Browser()
 
-	bTconn, err := br.TestAPIConn(ctx)
+	tconn, err := cr.TestAPIConn(ctx)
 	if err != nil {
 		s.Fatal("Failed to connect to browser test API connection: ", err)
 	}
 
-	runner := perfutil.NewRunner(br, perfutil.RunnerOptions{
+	runner := perfutil.NewRunner(cr, perfutil.RunnerOptions{
 		IgnoreFirstRun:   true,
 		DropMinMaxValues: true,
 	})
 
-	recorder, err := cujrecorder.NewRecorder(ctx, cr, bTconn, nil, cujrecorder.RecorderOptions{
+	recorder, err := cujrecorder.NewRecorder(ctx, cr, tconn, nil, cujrecorder.RecorderOptions{
 		// FCP and LCP are already noisy metrics, so use the recorder mode
 		// with the least amount of overhead.
 		Mode:              cujrecorder.Benchmark,
@@ -111,7 +102,7 @@ func PageLoadPerf(ctx context.Context, s *testing.State) {
 
 		for _, page := range pages {
 			runner.RunMultiple(ctx, page.prefix, uiperf.Run(s,
-				perfutil.RunAndWaitAll(bTconn,
+				perfutil.RunAndWaitAll(tconn,
 					navigateToPage(ctx, conn, page.url, recorder),
 					[]string{
 						"PageLoad.PaintTiming.NavigationToFirstContentfulPaint",

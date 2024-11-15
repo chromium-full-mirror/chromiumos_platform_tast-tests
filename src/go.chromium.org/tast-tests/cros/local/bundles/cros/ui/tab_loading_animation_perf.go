@@ -23,9 +23,8 @@ import (
 
 func init() {
 	testing.AddTest(&testing.Test{
-		Func:         TabLoadingAnimationPerf,
-		LacrosStatus: testing.LacrosVariantUnknown,
-		Desc:         "Measures the animation smoothness of tab loading animation",
+		Func: TabLoadingAnimationPerf,
+		Desc: "Measures the animation smoothness of tab loading animation",
 		Contacts: []string{
 			"cros-sw-perf@google.com",
 			"yichenz@chromium.org",
@@ -65,7 +64,7 @@ func TabLoadingAnimationPerf(ctx context.Context, s *testing.State) {
 	server := httptest.NewServer(http.FileServer(s.DataFileSystem()))
 	defer server.Close()
 
-	if err := perfutil.RunMultipleAndSave(ctx, s.OutDir(), cr.Browser(), uiperf.Run(s, perfutil.RunAndWaitAll(tconn, func(ctx context.Context) error {
+	if err := perfutil.RunMultipleAndSave(ctx, s.OutDir(), cr, uiperf.Run(s, perfutil.RunAndWaitAll(tconn, func(ctx context.Context) error {
 		conn, err := cr.NewConn(ctx, server.URL+"/tab_loading_test.html")
 		if err != nil {
 			return errors.Wrap(err, "failed to open a testing page")

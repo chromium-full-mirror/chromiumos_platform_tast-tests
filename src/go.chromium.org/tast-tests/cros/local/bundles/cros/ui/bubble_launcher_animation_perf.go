@@ -14,7 +14,6 @@ import (
 	uiperf "go.chromium.org/tast-tests/cros/local/bundles/cros/ui/perf"
 	"go.chromium.org/tast-tests/cros/local/chrome"
 	"go.chromium.org/tast-tests/cros/local/chrome/ash"
-	"go.chromium.org/tast-tests/cros/local/chrome/browser"
 	"go.chromium.org/tast-tests/cros/local/chrome/cuj"
 	"go.chromium.org/tast-tests/cros/local/chrome/metrics"
 	"go.chromium.org/tast-tests/cros/local/chrome/uiauto"
@@ -32,9 +31,8 @@ import (
 
 func init() {
 	testing.AddTest(&testing.Test{
-		Func:         BubbleLauncherAnimationPerf,
-		LacrosStatus: testing.LacrosVariantUnneeded,
-		Desc:         "Measures animation smoothness of bubble launcher animations",
+		Func: BubbleLauncherAnimationPerf,
+		Desc: "Measures animation smoothness of bubble launcher animations",
 		Contacts: []string{
 			"cros-system-ui-eng@google.com",
 			"chromeos-sw-engprod@google.com",
@@ -47,10 +45,7 @@ func init() {
 		SoftwareDeps: []string{"chrome"},
 		Timeout:      3 * time.Minute,
 		Data:         []string{"animation.html", "animation.js"},
-		Params: []testing.Param{{
-			Fixture: "install100Apps",
-			Val:     browser.TypeAsh,
-		}},
+		Fixture:      "install100Apps",
 	})
 }
 
@@ -153,9 +148,7 @@ func BubbleLauncherAnimationPerf(ctx context.Context, s *testing.State) {
 	// Run the launcher open/close flow with no browser windows open.
 	// This aligns with ui.LauncherAnimationPerf for the legacy launcher.
 	name := "0windows"
-	// Note that the test needs to take traces in ash-chrome, and grab the metrics from ash-chrome.
-	// So, ash-chrome (cr) should be used for perfutil.NewRunner and ash test APIs (tconn) for RunAndWaitAll here in this test.
-	runner := perfutil.NewRunner(cr.Browser(), perfutil.RunnerOptions{IgnoreFirstRun: true, DropMinMaxValues: true})
+	runner := perfutil.NewRunner(cr, perfutil.RunnerOptions{IgnoreFirstRun: true, DropMinMaxValues: true})
 	runner.RunMultiple(ctx, name, uiperf.Run(s,
 		perfutil.RunAndWaitAll(tconn, func(ctx context.Context) error {
 			return openAndCloseLauncher(ctx, tconn, ui)
@@ -164,16 +157,17 @@ func BubbleLauncherAnimationPerf(ctx context.Context, s *testing.State) {
 
 	// Open 2 browser windows with web contents playing an animation.
 	const numWindows = 2
-	// Open a first window using browserfixt to get a Browser instance.
+	// Open the first window.
 	conn, err := cr.NewConn(ctx, url)
 	if err != nil {
 		s.Fatal("Failed to open chrome: ", err)
 	}
 	defer conn.Close()
 	// Then open the rest of the windows alongside the one already opened.
-	if err := ash.CreateWindows(ctx, tconn, cr.Browser(), url, numWindows-1); err != nil {
+	if err := ash.CreateWindows(ctx, tconn, cr, url, numWindows-1); err != nil {
 		s.Fatal("Failed to create browser windows: ", err)
 	}
+
 	// Maximize all windows to ensure a consistent state.
 	if err := ash.ForEachWindow(ctx, tconn, func(w *ash.Window) error {
 		return ash.SetWindowStateAndWait(ctx, tconn, w.ID, ash.WindowStateMaximized)

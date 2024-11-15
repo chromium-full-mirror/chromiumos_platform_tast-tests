@@ -21,9 +21,8 @@ import (
 
 func init() {
 	testing.AddTest(&testing.Test{
-		Func:         DesksAnimationPerf,
-		LacrosStatus: testing.LacrosVariantUnneeded,
-		Desc:         "Measures the smoothness of the desk-activation and removal animations",
+		Func: DesksAnimationPerf,
+		Desc: "Measures the smoothness of the desk-activation and removal animations",
 		Contacts: []string{
 			"chromeos-wm@google.com",
 			"dandersson@google.com",
@@ -57,7 +56,7 @@ func DesksAnimationPerf(ctx context.Context, s *testing.State) {
 
 	defer ash.CleanUpDesks(cleanupCtx, tconn)
 
-	if perfutil.RunMultipleAndSave(ctx, s.OutDir(), cr.Browser(), uiperf.Run(s, perfutil.RunAndWaitAll(tconn, func(ctx context.Context) error {
+	if perfutil.RunMultipleAndSave(ctx, s.OutDir(), cr, uiperf.Run(s, perfutil.RunAndWaitAll(tconn, func(ctx context.Context) error {
 		// Create a new desk other than the default desk, activate it, then remove it.
 		if err = ash.CreateNewDesk(ctx, tconn); err != nil {
 			return errors.Wrap(err, "failed to create a new desk")

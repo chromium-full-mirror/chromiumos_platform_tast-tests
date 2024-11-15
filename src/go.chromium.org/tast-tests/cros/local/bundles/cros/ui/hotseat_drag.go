@@ -11,7 +11,6 @@ import (
 	uiperf "go.chromium.org/tast-tests/cros/local/bundles/cros/ui/perf"
 	"go.chromium.org/tast-tests/cros/local/chrome"
 	"go.chromium.org/tast-tests/cros/local/chrome/ash"
-	"go.chromium.org/tast-tests/cros/local/chrome/browser"
 	"go.chromium.org/tast-tests/cros/local/chrome/cuj"
 	"go.chromium.org/tast-tests/cros/local/chrome/display"
 	"go.chromium.org/tast-tests/cros/local/input"
@@ -25,9 +24,8 @@ import (
 
 func init() {
 	testing.AddTest(&testing.Test{
-		Func:         HotseatDrag,
-		LacrosStatus: testing.LacrosVariantUnneeded,
-		Desc:         "Measures the presentation time of dragging the hotseat in tablet mode",
+		Func: HotseatDrag,
+		Desc: "Measures the presentation time of dragging the hotseat in tablet mode",
 		Contacts: []string{
 			"cros-system-ui-eng@google.com",
 			"tbarzic@chromium.org",
@@ -38,10 +36,7 @@ func init() {
 		Attr:         []string{"group:crosbolt", "crosbolt_perbuild"},
 		SoftwareDeps: []string{"chrome"},
 		HardwareDeps: hwdep.D(hwdep.InternalDisplay()),
-		Params: []testing.Param{{
-			Fixture: "chromeLoggedIn",
-			Val:     browser.TypeAsh,
-		}},
+		Fixture:      "chromeLoggedIn",
 	})
 }
 
@@ -88,15 +83,14 @@ func HotseatDrag(ctx context.Context, s *testing.State) {
 	}
 	defer stw.Close()
 
-	// Open a browser window depending on the given browser type.
+	// Open a browser window.
 	conn, err := cr.NewConn(ctx, ui.PerftestURL)
 	if err != nil {
 		s.Fatal("Failed to open browser window: ", err)
 	}
 	defer conn.Close()
 
-	// Note that ash-chrome `cr` and `tconn` is passed in to take traces and metrics from ash-chrome.
-	if perfutil.RunMultipleAndSave(ctx, s.OutDir(), cr.Browser(), uiperf.Run(s, perfutil.RunAndWaitAll(tconn, func(ctx context.Context) error {
+	if perfutil.RunMultipleAndSave(ctx, s.OutDir(), cr, uiperf.Run(s, perfutil.RunAndWaitAll(tconn, func(ctx context.Context) error {
 		ws, err := ash.GetAllWindows(ctx, tconn)
 		if err != nil {
 			s.Fatal("Failed to obtain the window list: ", err)

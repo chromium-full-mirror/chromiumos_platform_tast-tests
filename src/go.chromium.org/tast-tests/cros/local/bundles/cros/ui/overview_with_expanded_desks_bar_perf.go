@@ -71,11 +71,11 @@ func OverviewWithExpandedDesksBarPerf(ctx context.Context, s *testing.State) {
 	defer ash.CleanUpDesks(cleanupCtx, tconn)
 
 	const numWindows = 16
-	if err := ash.CreateWindows(ctx, tconn, cr.Browser(), ui.PerftestURL, numWindows-1); err != nil {
+	if err := ash.CreateWindows(ctx, tconn, cr, ui.PerftestURL, numWindows-1); err != nil {
 		s.Fatal("Failed to open browser windows: ", err)
 	}
 
-	runner := perfutil.NewRunner(cr.Browser(), perfutil.RunnerOptions{IgnoreFirstRun: true, DropMinMaxValues: true})
+	runner := perfutil.NewRunner(cr, perfutil.RunnerOptions{IgnoreFirstRun: true, DropMinMaxValues: true})
 
 	// Maximize the active window so that the desks bar is created before the
 	// overview window animation is started. If the screen isn't covered by

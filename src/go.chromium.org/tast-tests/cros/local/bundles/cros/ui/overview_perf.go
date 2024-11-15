@@ -19,7 +19,6 @@ import (
 	uiperf "go.chromium.org/tast-tests/cros/local/bundles/cros/ui/perf"
 	"go.chromium.org/tast-tests/cros/local/chrome"
 	"go.chromium.org/tast-tests/cros/local/chrome/ash"
-	"go.chromium.org/tast-tests/cros/local/chrome/browser"
 	"go.chromium.org/tast-tests/cros/local/chrome/cuj"
 	"go.chromium.org/tast-tests/cros/local/chrome/uiauto"
 	"go.chromium.org/tast-tests/cros/local/chrome/uiauto/event"
@@ -39,9 +38,8 @@ import (
 
 func init() {
 	testing.AddTest(&testing.Test{
-		Func:         OverviewPerf,
-		LacrosStatus: testing.LacrosVariantUnneeded,
-		Desc:         "Measures animation smoothness of entering/exiting the overview mode",
+		Func: OverviewPerf,
+		Desc: "Measures animation smoothness of entering/exiting the overview mode",
 		Contacts: []string{
 			"cros-sw-perf@google.com",
 			"oshima@chromium.org",
@@ -52,17 +50,14 @@ func init() {
 		SoftwareDeps: []string{"chrome"},
 		HardwareDeps: hwdep.D(hwdep.InternalDisplay()),
 		Params: []testing.Param{{
-			Val:     browser.TypeAsh,
 			Fixture: "chromeLoggedIn",
 			Timeout: cujrecorder.CooldownTimeout + 20*time.Minute,
 		}, {
 			Name:    "passthrough",
-			Val:     browser.TypeAsh,
 			Fixture: "chromeLoggedInWith100FakeAppsPassthroughCmdDecoder",
 			Timeout: cujrecorder.CooldownTimeout + 20*time.Minute,
 		}, {
 			Name:    "oak",
-			Val:     browser.TypeAsh,
 			Fixture: "chromeLoggedInWithOak",
 			Timeout: cujrecorder.CooldownTimeout + 20*time.Minute,
 		}},
@@ -89,12 +84,6 @@ func OverviewPerf(ctx context.Context, s *testing.State) {
 	tconn, err := cr.TestAPIConn(ctx)
 	if err != nil {
 		s.Fatal("Failed to connect to test API: ", err)
-	}
-	br := cr.Browser()
-
-	bTconn, err := br.TestAPIConn(ctx)
-	if err != nil {
-		s.Fatal("Failed to get browser test API connection: ", err)
 	}
 
 	originalTabletMode, err := ash.TabletModeEnabled(ctx, tconn)
@@ -194,9 +183,9 @@ func OverviewPerf(ctx context.Context, s *testing.State) {
 
 	defer ash.SetOverviewModeAndWait(cleanupCtx, tconn, false)
 
-	runner := perfutil.NewRunner(cr.Browser(), perfutil.RunnerOptions{IgnoreFirstRun: true, DropMinMaxValues: true})
+	runner := perfutil.NewRunner(cr, perfutil.RunnerOptions{IgnoreFirstRun: true, DropMinMaxValues: true})
 
-	recorder, err := cujrecorder.NewRecorder(ctx, cr, bTconn, nil, cujrecorder.RecorderOptions{
+	recorder, err := cujrecorder.NewRecorder(ctx, cr, tconn, nil, cujrecorder.RecorderOptions{
 		Mode:              cujrecorder.Benchmark,
 		CooldownBeforeRun: true,
 	})
@@ -205,7 +194,7 @@ func OverviewPerf(ctx context.Context, s *testing.State) {
 	}
 	defer recorder.Close(cleanupCtx)
 
-	if err := recorder.AddCommonMetrics(tconn, bTconn); err != nil {
+	if err := recorder.AddCommonMetrics(tconn, tconn); err != nil {
 		s.Fatal("Failed to add common metrics to recorder: ", err)
 	}
 
@@ -228,13 +217,12 @@ func OverviewPerf(ctx context.Context, s *testing.State) {
 			// This assumes that the test scenarios are sorted by
 			// number of windows. If not, then this will generate
 			// Panic: runtime error: makeslice: cap out of range
-			if err := ash.CreateWindows(ctx, tconn, br, url, windows-currentWindows); err != nil {
+			if err := ash.CreateWindows(ctx, tconn, cr, url, windows-currentWindows); err != nil {
 				return errors.Wrap(err, "failed to create browser windows")
 			}
 
-			// This must be done after ash.CreateWindows to avoid terminating lacros-chrome.
 			if i == 0 {
-				if err := br.CloseWithURL(ctx, chrome.BlankURL); err != nil {
+				if err := cr.Browser().CloseWithURL(ctx, chrome.BlankURL); err != nil {
 					return errors.Wrap(err, "failed to close initial blank tab")
 				}
 			}

@@ -177,8 +177,7 @@ func HotseatAnimation(ctx context.Context, s *testing.State) {
 		s.Fatal("Could not find browser app info: ", err)
 	}
 
-	// Use `cr` from ash-chrome for the metrics that are recorded in ash-chrome.
-	runner := perfutil.NewRunner(cr.Browser(), perfutil.RunnerOptions{IgnoreFirstRun: true, DropMinMaxValues: true})
+	runner := perfutil.NewRunner(cr, perfutil.RunnerOptions{IgnoreFirstRun: true, DropMinMaxValues: true})
 
 	// Collect metrics data from hiding hotseat by window creation.
 	histogramsName := []string{

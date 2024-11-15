@@ -24,9 +24,8 @@ import (
 
 func init() {
 	testing.AddTest(&testing.Test{
-		Func:         OverviewScrollPerf,
-		LacrosStatus: testing.LacrosVariantUnneeded,
-		Desc:         "Measures the presentation time of scrolling the overview grid in tablet mode",
+		Func: OverviewScrollPerf,
+		Desc: "Measures the presentation time of scrolling the overview grid in tablet mode",
 		Contacts: []string{
 			"cros-sw-perf@google.com",
 			"chromeos-wm@google.com",
@@ -98,7 +97,7 @@ func OverviewScrollPerf(ctx context.Context, s *testing.State) {
 		}
 	}()
 
-	if err := perfutil.RunMultipleAndSave(ctx, s.OutDir(), cr.Browser(), uiperf.Run(s, perfutil.RunAndWaitAll(tconn, func(ctx context.Context) error {
+	if err := perfutil.RunMultipleAndSave(ctx, s.OutDir(), cr, uiperf.Run(s, perfutil.RunAndWaitAll(tconn, func(ctx context.Context) error {
 		// Scroll from the top right of the screen to the top middle (1/4 of the
 		// screen width). The destination position should match with the next swipe
 		// to make the same amount of scrolling.

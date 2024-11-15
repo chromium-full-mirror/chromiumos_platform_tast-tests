@@ -13,7 +13,6 @@ import (
 	uiperf "go.chromium.org/tast-tests/cros/local/bundles/cros/ui/perf"
 	"go.chromium.org/tast-tests/cros/local/chrome"
 	"go.chromium.org/tast-tests/cros/local/chrome/ash"
-	"go.chromium.org/tast-tests/cros/local/chrome/browser"
 	"go.chromium.org/tast-tests/cros/local/chrome/cuj"
 	"go.chromium.org/tast-tests/cros/local/chrome/display"
 	"go.chromium.org/tast-tests/cros/local/input"
@@ -41,7 +40,6 @@ type dragTest struct {
 	dt dragType // Type of the drag to run.
 	l  string   // Label for the metric name.
 	df dragFunc // Function to run the drag test.
-	bt browser.Type
 }
 
 func init() {
@@ -57,33 +55,28 @@ func init() {
 		SoftwareDeps: []string{"chrome"},
 		HardwareDeps: hwdep.D(hwdep.InternalDisplay()),
 		Timeout:      4 * time.Minute,
+		Fixture:      "chromeLoggedIn",
 		Params: []testing.Param{{
-			Name:    "normal_drag",
-			Fixture: "chromeLoggedIn",
+			Name: "normal_drag",
 			Val: dragTest{
 				dt: dragTypeNormal,
 				l:  "NormalDrag",
 				df: normalDrag,
-				bt: browser.TypeAsh,
 			},
 			ExtraAttr: []string{"group:crosbolt", "crosbolt_perbuild"},
 		}, {
-			Name:    "drag_to_snap",
-			Fixture: "chromeLoggedIn",
+			Name: "drag_to_snap",
 			Val: dragTest{
 				dt: dragTypeSnap,
 				l:  "DragToSnap",
 				df: dragToSnap,
-				bt: browser.TypeAsh,
 			},
 		}, {
-			Name:    "drag_to_close",
-			Fixture: "chromeLoggedIn",
+			Name: "drag_to_close",
 			Val: dragTest{
 				dt: dragTypeClose,
 				l:  "DragToClose",
 				df: dragToClose,
-				bt: browser.TypeAsh,
 			},
 			ExtraAttr: []string{"group:crosbolt", "crosbolt_perbuild"},
 		}},
@@ -348,29 +341,23 @@ func OverviewDragWindowPerf(ctx context.Context, s *testing.State) {
 
 	const histName = "Ash.Overview.WindowDrag.PresentationTime.TabletMode"
 
-	// Note that the test needs to take traces in ash-chrome, and grab the metrics from ash-chrome.
-	// So, ash-chrome `cr` should be used for perfutil.NewRunner and ash test APIs `tconn` for RunAndWaitAll here in this test.
-	runner := perfutil.NewRunner(cr.Browser(), perfutil.RunnerOptions{IgnoreFirstRun: true, DropMinMaxValues: true})
+	runner := perfutil.NewRunner(cr, perfutil.RunnerOptions{IgnoreFirstRun: true, DropMinMaxValues: true})
 	drag := s.Param().(dragTest)
 
 	defer ash.SetOverviewModeAndWait(ctx, tconn, false)
-	var br *browser.Browser
 	const url = ui.PerftestURL
 	currentWindows := 0
 	// Run the test cases with different number of browser windows.
 	for _, windows := range []int{2, 8} {
-		// Open a first window using browserfixt to get a Browser instance, then use the browser instance for other windows.
 		if currentWindows == 0 {
-			var conn *browser.Conn
-			conn, err = cr.NewConn(ctx, url)
+			conn, err := cr.NewConn(ctx, url)
 			if err != nil {
 				s.Fatal("Failed to open chrome: ", err)
 			}
 			defer conn.Close()
-			br = cr.Browser()
 			currentWindows++
 		}
-		if err := ash.CreateWindows(ctx, tconn, br, url, windows-currentWindows); err != nil {
+		if err := ash.CreateWindows(ctx, tconn, cr, url, windows-currentWindows); err != nil {
 			s.Fatal("Failed to open windows: ", err)
 		}
 		currentWindows = windows
@@ -393,7 +380,7 @@ func OverviewDragWindowPerf(ctx context.Context, s *testing.State) {
 					s.Fatal("Failed to clearSnap: ", err)
 				}
 			case dragTypeClose:
-				if err := ash.CreateWindows(ctx, tconn, br, url, 1); err != nil {
+				if err := ash.CreateWindows(ctx, tconn, cr, url, 1); err != nil {
 					return errors.Wrap(err, "failed to create windows")
 				}
 				if err := ash.SetOverviewModeAndWait(ctx, tconn, true); err != nil {

@@ -44,9 +44,8 @@ type idlePerfTest struct {
 
 func init() {
 	testing.AddTest(&testing.Test{
-		Func:         IdlePerf,
-		LacrosStatus: testing.LacrosVariantUnneeded,
-		Desc:         "Measures the CPU usage while the desktop is idle",
+		Func: IdlePerf,
+		Desc: "Measures the CPU usage while the desktop is idle",
 		Contacts: []string{
 			"cros-sw-perf@google.com",
 			"xiyuan@chromium.org",

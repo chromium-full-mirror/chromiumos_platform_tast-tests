@@ -23,7 +23,6 @@ import (
 func init() {
 	testing.AddTest(&testing.Test{
 		Func:         SystemTrayItemsPerf,
-		LacrosStatus: testing.LacrosVariantUnneeded,
 		Desc:         "Measures animation smoothness of items in the system tray",
 		Contacts:     []string{"cros-status-area-eng@google.com", "leandre@chromium.org", "chromeos-sw-engprod@google.com"},
 		BugComponent: "b:1246070", // ChromeOS > Software > System UI Surfaces > Status Area
@@ -77,7 +76,7 @@ func SystemTrayItemsPerf(ctx context.Context, s *testing.State) {
 		s.Fatal("Failed to enable caps lock via the 'Search+Alt' keyboard accelerator: ", err)
 	}
 
-	if err := perfutil.RunMultipleAndSave(ctx, s.OutDir(), cr.Browser(), uiperf.Run(s, perfutil.RunAndWaitAll(tconn, func(ctx context.Context) error {
+	if err := perfutil.RunMultipleAndSave(ctx, s.OutDir(), cr, uiperf.Run(s, perfutil.RunAndWaitAll(tconn, func(ctx context.Context) error {
 		// Take video recording so that the shelf pod bounces up, then click on the shelf pod for it to fade out,
 		// (at the same time notification counter tray item will do show animation), then we close the notification
 		// for tray item to perform hide animation.

@@ -134,7 +134,7 @@ type RunnerOptions struct {
 // test runs reached. If this number was not reached until `maxRuns` runner
 // will be raised.
 type Runner struct {
-	br                *browser.Browser
+	cr                *chrome.Chrome
 	pv                *Values
 	maxRuns           int
 	minSuccessfulRuns int
@@ -144,13 +144,13 @@ type Runner struct {
 }
 
 // NewRunner creates a new instance of Runner.
-func NewRunner(br *browser.Browser, options RunnerOptions) *Runner {
+func NewRunner(cr *chrome.Chrome, options RunnerOptions) *Runner {
 	return &Runner{
-		br:                br,
+		cr:                cr,
 		pv:                NewValues(options.DropMinMaxValues),
 		maxRuns:           DefaultRuns,
 		minSuccessfulRuns: DefaultRuns,
-		RunTracing:        (br != nil),
+		RunTracing:        (cr != nil),
 		options:           options,
 	}
 }
@@ -248,14 +248,14 @@ func (r *Runner) RunMultiple(ctx context.Context, name string, scenario Scenario
 		return runErrors, nil
 	}
 
-	defer r.br.StopTracing(ctx)
+	defer r.cr.StopTracing(ctx)
 	sctx, cancel := ctxutil.Shorten(ctx, traceCleanupDuration)
 	defer cancel()
 	// At this time, systrace causes kernel crash on dedede devices. Because of
 	// that and data points from systrace isn't actually helpful to most of
 	// UI tests, disable systraces for the time being.
 	// TODO(https://crbug.com/1162385, b/177636800): enable it.
-	if err := r.br.StartTracing(sctx, []string{"benchmark", "cc", "gpu", "input", "toplevel", "ui", "views", "viz"}, browser.DisableSystrace()); err != nil {
+	if err := r.cr.StartTracing(sctx, []string{"benchmark", "cc", "gpu", "input", "toplevel", "ui", "views", "viz"}, browser.DisableSystrace()); err != nil {
 		return runErrors, errors.Wrap(err, "failed to start tracing")
 	}
 
@@ -264,7 +264,7 @@ func (r *Runner) RunMultiple(ctx context.Context, name string, scenario Scenario
 		return runErrors, errors.Wrap(err, "failed to run the test scenario")
 	}
 
-	tr, err := r.br.StopTracing(ctx)
+	tr, err := r.cr.StopTracing(ctx)
 	if err != nil {
 		return runErrors, errors.Wrap(err, "failed to stop tracing")
 	}
@@ -290,8 +290,8 @@ func (r *Runner) RunMultiple(ctx context.Context, name string, scenario Scenario
 
 // RunMultipleAndSave is a utility to create a new runner, conduct runs multiple times,
 // and save the recorded values.
-func RunMultipleAndSave(ctx context.Context, outDir string, br *browser.Browser, scenario ScenarioFunc, store StoreFunc, options RunnerOptions) error {
-	r := NewRunner(br, options)
+func RunMultipleAndSave(ctx context.Context, outDir string, cr *chrome.Chrome, scenario ScenarioFunc, store StoreFunc, options RunnerOptions) error {
+	r := NewRunner(cr, options)
 	if _, err := r.RunMultiple(ctx, "", scenario, store); err != nil {
 		return err
 	}

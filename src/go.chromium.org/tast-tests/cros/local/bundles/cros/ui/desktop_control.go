@@ -37,12 +37,12 @@ func init() {
 		Attr:         []string{"group:mainline"},
 		SoftwareDeps: []string{"chrome", "no_chrome_dcheck"},
 		HardwareDeps: hwdep.D(hwdep.InternalDisplay()),
+		Fixture:      "chromeLoggedIn",
 		Params: []testing.Param{
 			{
 				// TODO(crbug.com/1337389): remove "informational" once the issue is fixed.
 				ExtraAttr:         []string{"group:mainline", "informational"},
 				ExtraHardwareDeps: hwdep.D(hwdep.SkipOnModel(perfutil.UnstableModels...)),
-				Fixture:           "chromeLoggedIn",
 			},
 			// TODO(crbug.com/1163981): remove "unstable" once we see stability on all platforms.
 			{
@@ -50,7 +50,6 @@ func init() {
 				// b:238260020 - disable aged (>1y) unpromoted informational tests
 				// ExtraAttr:         []string{"group:mainline", "informational"},
 				ExtraHardwareDeps: hwdep.D(hwdep.Model(perfutil.UnstableModels...)),
-				Fixture:           "chromeLoggedIn",
 			},
 		},
 	})
@@ -86,11 +85,10 @@ func DesktopControl(ctx context.Context, s *testing.State) {
 		s.Fatal("Failed to ensure into the clamshell mode: ", err)
 	}
 	defer cleanup(ctx)
-	br := cr.Browser()
 	defer faillog.DumpUITreeOnError(ctx, s.OutDir(), s.HasError, tconn)
 
 	// Open one extra new window.
-	conn2, err := br.NewConn(ctx, url, browser.WithNewWindow())
+	conn2, err := cr.NewConn(ctx, url, browser.WithNewWindow())
 	if err != nil {
 		s.Fatal("Failed to create new windows: ", err)
 	}
@@ -118,7 +116,7 @@ func DesktopControl(ctx context.Context, s *testing.State) {
 		s.Fatal("Failed to set all windows as normal state: ", err)
 	}
 
-	r := perfutil.NewRunner(cr.Browser(), perfutil.RunnerOptions{IgnoreFirstRun: true, DropMinMaxValues: true})
+	r := perfutil.NewRunner(cr, perfutil.RunnerOptions{IgnoreFirstRun: true, DropMinMaxValues: true})
 	r.SetRunsNumber(perfutil.RunnerCyclesOptions{MaxRuns: 3, MinSuccessfulRuns: 3})
 	r.RunTracing = false
 

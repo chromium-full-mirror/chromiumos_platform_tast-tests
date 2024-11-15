@@ -164,8 +164,7 @@ func NotificationScrollingPerf(ctx context.Context, s *testing.State) {
 	notificationCenterTray := nodewith.ClassName("NotificationCenterTray")
 	messageCenter := nodewith.ClassName("NotificationCenterView")
 
-	// Note that ash-chrome (cr and tconn) is passed in to take traces and metrics from ash-chrome.
-	if err := perfutil.RunMultipleAndSave(ctx, s.OutDir(), cr.Browser(), uiperf.Run(s, perfutil.RunAndWaitAll(tconn, func(ctx context.Context) error {
+	if err := perfutil.RunMultipleAndSave(ctx, s.OutDir(), cr, uiperf.Run(s, perfutil.RunAndWaitAll(tconn, func(ctx context.Context) error {
 		if err := uiauto.Combine(
 			"open the notification bubble, scroll up and down the notification list, then close it",
 			ac.LeftClick(notificationCenterTray),

@@ -25,9 +25,8 @@ import (
 
 func init() {
 	testing.AddTest(&testing.Test{
-		Func:         TabHoverCardAnimationPerf,
-		LacrosStatus: testing.LacrosVariantUnknown,
-		Desc:         "Measures the animation smoothness of tab hover card animation",
+		Func: TabHoverCardAnimationPerf,
+		Desc: "Measures the animation smoothness of tab hover card animation",
 		Contacts: []string{
 			"cros-sw-perf@google.com",
 			"yichenz@chromium.org",
@@ -84,7 +83,7 @@ func TabHoverCardAnimationPerf(ctx context.Context, s *testing.State) {
 		s.Fatal("Failed to find tabs: ", err)
 	}
 
-	runner := perfutil.NewRunner(cr.Browser(), perfutil.RunnerOptions{IgnoreFirstRun: true, DropMinMaxValues: true})
+	runner := perfutil.NewRunner(cr, perfutil.RunnerOptions{IgnoreFirstRun: true, DropMinMaxValues: true})
 	for _, data := range []struct {
 		tab    uiauto.NodeInfo
 		suffix string

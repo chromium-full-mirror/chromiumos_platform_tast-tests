@@ -11,7 +11,6 @@ import (
 	uiperf "go.chromium.org/tast-tests/cros/local/bundles/cros/ui/perf"
 	"go.chromium.org/tast-tests/cros/local/chrome"
 	"go.chromium.org/tast-tests/cros/local/chrome/ash"
-	"go.chromium.org/tast-tests/cros/local/chrome/browser"
 	"go.chromium.org/tast-tests/cros/local/chrome/cuj"
 	"go.chromium.org/tast-tests/cros/local/perfutil"
 	"go.chromium.org/tast-tests/cros/local/power"
@@ -23,19 +22,15 @@ import (
 
 func init() {
 	testing.AddTest(&testing.Test{
-		Func:         SnapPerf,
-		LacrosStatus: testing.LacrosVariantUnneeded,
-		Desc:         "Measures the animation smoothess of snapping windows in clamshell mode",
-		Contacts:     []string{"cros-sw-perf@google.com", "chromeos-wm@google.com", "sammiequon@chromium.org"},
+		Func:     SnapPerf,
+		Desc:     "Measures the animation smoothess of snapping windows in clamshell mode",
+		Contacts: []string{"cros-sw-perf@google.com", "chromeos-wm@google.com", "sammiequon@chromium.org"},
 		// ChromeOS > Software > Window Management
 		BugComponent: "b:1238037",
 		Attr:         []string{"group:crosbolt", "crosbolt_perbuild"},
 		SoftwareDeps: []string{"chrome"},
 		HardwareDeps: hwdep.D(hwdep.InternalDisplay()),
-		Params: []testing.Param{{
-			Fixture: "chromeLoggedIn",
-			Val:     browser.TypeAsh,
-		}},
+		Fixture:      "chromeLoggedIn",
 	})
 }
 
@@ -52,7 +47,7 @@ func SnapPerf(ctx context.Context, s *testing.State) {
 		s.Fatal("Failed to turn on display: ", err)
 	}
 
-	// Set up the browser.
+	// Open the browser.
 	cr := s.FixtValue().(chrome.HasChrome).Chrome()
 	conn, err := cr.NewConn(ctx, ui.PerftestURL)
 	if err != nil {
@@ -76,7 +71,7 @@ func SnapPerf(ctx context.Context, s *testing.State) {
 		s.Fatal("Failed to obtain the window list: ", err)
 	}
 
-	if err := perfutil.RunMultipleAndSave(ctx, s.OutDir(), cr.Browser(), uiperf.Run(s, perfutil.RunAndWaitAll(tconn, func(ctx context.Context) error {
+	if err := perfutil.RunMultipleAndSave(ctx, s.OutDir(), cr, uiperf.Run(s, perfutil.RunAndWaitAll(tconn, func(ctx context.Context) error {
 		// Snap the window to the left.
 		if err := ash.SetWindowStateAndWait(ctx, tconn, window.ID, ash.WindowStatePrimarySnapped); err != nil {
 			return err

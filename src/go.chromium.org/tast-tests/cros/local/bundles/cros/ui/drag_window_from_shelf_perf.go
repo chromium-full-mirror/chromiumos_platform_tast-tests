@@ -11,7 +11,6 @@ import (
 	uiperf "go.chromium.org/tast-tests/cros/local/bundles/cros/ui/perf"
 	"go.chromium.org/tast-tests/cros/local/chrome"
 	"go.chromium.org/tast-tests/cros/local/chrome/ash"
-	"go.chromium.org/tast-tests/cros/local/chrome/browser"
 	"go.chromium.org/tast-tests/cros/local/chrome/cuj"
 	"go.chromium.org/tast-tests/cros/local/chrome/display"
 	"go.chromium.org/tast-tests/cros/local/input"
@@ -26,9 +25,8 @@ import (
 
 func init() {
 	testing.AddTest(&testing.Test{
-		Func:         DragWindowFromShelfPerf,
-		LacrosStatus: testing.LacrosVariantUnneeded,
-		Desc:         "Measures the presentation time of dragging a window from the shelf in tablet mode",
+		Func: DragWindowFromShelfPerf,
+		Desc: "Measures the presentation time of dragging a window from the shelf in tablet mode",
 		Contacts: []string{
 			"chromeos-wm@google.com",
 			"cros-sw-perf@google.com",
@@ -40,10 +38,7 @@ func init() {
 		Attr:         []string{"group:crosbolt", "crosbolt_perbuild"},
 		SoftwareDeps: []string{"chrome"},
 		HardwareDeps: hwdep.D(hwdep.InternalDisplay()),
-		Params: []testing.Param{{
-			Fixture: "chromeLoggedIn",
-			Val:     browser.TypeAsh,
-		}},
+		Fixture:      "chromeLoggedIn",
 	})
 }
 
@@ -95,9 +90,10 @@ func DragWindowFromShelfPerf(ctx context.Context, s *testing.State) {
 	}
 	defer stw.Close()
 
-	// Set up the browser, open a first window.
 	const numWindows = 8
 	const url = ui.PerftestURL
+
+	// Open a first browser window.
 	conn, err := cr.NewConn(ctx, url)
 	if err != nil {
 		s.Fatal("Failed to open the browser: ", err)
@@ -105,12 +101,13 @@ func DragWindowFromShelfPerf(ctx context.Context, s *testing.State) {
 	if err := conn.Close(); err != nil {
 		s.Fatalf("Failed to close connection to url %v: %v", url, err)
 	}
+
 	// Open the rest of the windows.
-	if err := ash.CreateWindows(ctx, tconn, cr.Browser(), url, numWindows-1); err != nil {
+	if err := ash.CreateWindows(ctx, tconn, cr, url, numWindows-1); err != nil {
 		s.Fatal("Failed to open browser windows: ", err)
 	}
 
-	if err := perfutil.RunMultipleAndSave(ctx, s.OutDir(), cr.Browser(), uiperf.Run(s, perfutil.RunAndWaitAll(tconn, func(ctx context.Context) error {
+	if err := perfutil.RunMultipleAndSave(ctx, s.OutDir(), cr, uiperf.Run(s, perfutil.RunAndWaitAll(tconn, func(ctx context.Context) error {
 		if err := ash.DragToShowOverview(ctx, tsw, stw, tconn); err != nil {
 			return errors.Wrap(err, "failed to drag from bottom of the screen to show overview")
 		}

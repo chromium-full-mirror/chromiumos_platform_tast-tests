@@ -41,9 +41,8 @@ const (
 
 func init() {
 	testing.AddTest(&testing.Test{
-		Func:         SplitViewResizePerf,
-		LacrosStatus: testing.LacrosVariantNeeded,
-		Desc:         "Measures smoothness of resizing split view windows",
+		Func: SplitViewResizePerf,
+		Desc: "Measures smoothness of resizing split view windows",
 		Contacts: []string{
 			"cros-sw-perf@google.com",
 			"sammiequon@chromium.org",
@@ -52,16 +51,15 @@ func init() {
 		Attr:         []string{"group:crosbolt", "crosbolt_perbuild"},
 		SoftwareDeps: []string{"chrome"},
 		HardwareDeps: hwdep.D(hwdep.InternalDisplay()),
+		Fixture:      "chromeLoggedIn",
 		Params: []testing.Param{
 			{
 				Name:    "clamshell_mode",
 				Val:     splitViewResizeClamshell,
-				Fixture: "chromeLoggedIn",
 				Timeout: 4 * time.Minute,
 			},
 			{
 				Val:     splitViewResizeTablet,
-				Fixture: "chromeLoggedIn",
 				Timeout: 5 * time.Minute,
 			},
 		},
@@ -310,7 +308,7 @@ func SplitViewResizePerf(ctx context.Context, s *testing.State) {
 	defer ash.SetOverviewModeAndWait(cleanupCtx, tconn, false)
 	defer ash.CleanUpDesks(cleanupCtx, tconn)
 	currentWindows := 0
-	runner := perfutil.NewRunner(cr.Browser(), perfutil.RunnerOptions{IgnoreFirstRun: true, DropMinMaxValues: true})
+	runner := perfutil.NewRunner(cr, perfutil.RunnerOptions{IgnoreFirstRun: true, DropMinMaxValues: true})
 	var id0 int
 	for i, testCase := range testCases {
 		s.Run(ctx, testCase.name, func(ctx context.Context, s *testing.State) {

@@ -31,9 +31,8 @@ import (
 
 func init() {
 	testing.AddTest(&testing.Test{
-		Func:         LauncherPageSwitchPerf,
-		LacrosStatus: testing.LacrosVariantUnneeded,
-		Desc:         "Measures smoothness of switching pages within the launcher",
+		Func: LauncherPageSwitchPerf,
+		Desc: "Measures smoothness of switching pages within the launcher",
 		Contacts: []string{
 			"cros-system-ui-eng@google.com",
 			"cros-launcher-prod-notifications@google.com",
@@ -121,7 +120,7 @@ func LauncherPageSwitchPerf(ctx context.Context, s *testing.State) {
 		s.Fatalf("There are too few pages (%d), want more than 2 pages", len(buttonsInfo))
 	}
 
-	runner := perfutil.NewRunner(cr.Browser(), perfutil.RunnerOptions{IgnoreFirstRun: true, DropMinMaxValues: true})
+	runner := perfutil.NewRunner(cr, perfutil.RunnerOptions{IgnoreFirstRun: true, DropMinMaxValues: true})
 
 	clickPageButtonAndWait := func(idx int) action.Action {
 		return ac.WaitForEvent(pageSwitcher, event.Alert, pc.Click(pageButtons.Nth(idx)))

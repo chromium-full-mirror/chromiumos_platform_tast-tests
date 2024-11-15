@@ -93,7 +93,7 @@ func DesksTrackpadSwipePerf(ctx context.Context, s *testing.State) {
 		"Ash.Desks.PresentationTime.UpdateGesture.MaxLatency",
 	}
 
-	runner := perfutil.NewRunner(cr.Browser(), perfutil.RunnerOptions{IgnoreFirstRun: true, DropMinMaxValues: true})
+	runner := perfutil.NewRunner(cr, perfutil.RunnerOptions{IgnoreFirstRun: true, DropMinMaxValues: true})
 
 	// Subtest 1: Desks switch with zero windows, not in overview mode.
 	if err := runDesksTrackpadSwipeSubtest(ctx, s, tconn, runner, tpw, tw, false /* inOverview */, "NotInOverview" /* testName */, histogramNames); err != nil {
@@ -110,7 +110,7 @@ func DesksTrackpadSwipePerf(ctx context.Context, s *testing.State) {
 	}
 	defer blankConn.Close()
 
-	if err := ash.CreateWindows(ctx, tconn, cr.Browser(), ui.PerftestURL, numWindows-1); err != nil {
+	if err := ash.CreateWindows(ctx, tconn, cr, ui.PerftestURL, numWindows-1); err != nil {
 		s.Fatal("Failed to create browser windows: ", err)
 	}
 

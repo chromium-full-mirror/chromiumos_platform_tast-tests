@@ -14,7 +14,6 @@ import (
 	uiperf "go.chromium.org/tast-tests/cros/local/bundles/cros/ui/perf"
 	"go.chromium.org/tast-tests/cros/local/chrome"
 	"go.chromium.org/tast-tests/cros/local/chrome/ash"
-	"go.chromium.org/tast-tests/cros/local/chrome/browser"
 	"go.chromium.org/tast-tests/cros/local/chrome/cuj"
 	"go.chromium.org/tast-tests/cros/local/input"
 	localPerf "go.chromium.org/tast-tests/cros/local/perf"
@@ -29,9 +28,8 @@ import (
 
 func init() {
 	testing.AddTest(&testing.Test{
-		Func:         WindowCyclePerf,
-		LacrosStatus: testing.LacrosVariantUnneeded,
-		Desc:         "Measures the animation smoothness of window cycle animations when Alt + tabbing",
+		Func: WindowCyclePerf,
+		Desc: "Measures the animation smoothness of window cycle animations when Alt + tabbing",
 		Contacts: []string{
 			"cros-sw-perf@google.com",
 			"chromeos-wm@google.com",
@@ -42,15 +40,12 @@ func init() {
 		Attr:         []string{"group:cuj"},
 		SoftwareDeps: []string{"chrome"},
 		Timeout:      cujrecorder.CooldownTimeout + 3*time.Minute,
+		Fixture:      "chromeLoggedIn",
 		Params: []testing.Param{{
-			Val:               browser.TypeAsh,
-			Fixture:           "chromeLoggedIn",
 			ExtraHardwareDeps: hwdep.D(hwdep.InternalDisplay()),
 		}, {
 			// Pilot test on "noibat" that has HDMI dongle installed.
 			Name:              "noibat",
-			Val:               browser.TypeAsh,
-			Fixture:           "chromeLoggedIn",
 			ExtraHardwareDeps: hwdep.D(hwdep.Model("noibat")),
 		}},
 	})
@@ -77,12 +72,6 @@ func WindowCyclePerf(ctx context.Context, s *testing.State) {
 		s.Fatal("Failed to connect to test API: ", err)
 	}
 
-	br := cr.Browser()
-	bTconn, err := br.TestAPIConn(ctx)
-	if err != nil {
-		s.Fatal("Failed to get browser test API connection: ", err)
-	}
-
 	cleanup, err := ash.EnsureTabletModeEnabled(ctx, tconn, false)
 	if err != nil {
 		s.Fatal("Failed to ensure in clamshell mode: ", err)
@@ -97,9 +86,9 @@ func WindowCyclePerf(ctx context.Context, s *testing.State) {
 
 	numExistingWindows := 0
 
-	runner := perfutil.NewRunner(cr.Browser(), perfutil.RunnerOptions{IgnoreFirstRun: true, DropMinMaxValues: true})
+	runner := perfutil.NewRunner(cr, perfutil.RunnerOptions{IgnoreFirstRun: true, DropMinMaxValues: true})
 
-	recorder, err := cujrecorder.NewRecorder(ctx, cr, bTconn, nil, cujrecorder.RecorderOptions{
+	recorder, err := cujrecorder.NewRecorder(ctx, cr, tconn, nil, cujrecorder.RecorderOptions{
 		Mode:              cujrecorder.Benchmark,
 		CooldownBeforeRun: true,
 	})
@@ -116,13 +105,12 @@ func WindowCyclePerf(ctx context.Context, s *testing.State) {
 		}
 
 		for i, numWindows := range []int{2, 8, 16} {
-			if err := ash.CreateWindows(ctx, tconn, br, ui.PerftestURL, numWindows-numExistingWindows); err != nil {
+			if err := ash.CreateWindows(ctx, tconn, cr, ui.PerftestURL, numWindows-numExistingWindows); err != nil {
 				s.Fatal("Failed to open browser windows: ", err)
 			}
 
-			// This must be done after ash.CreateWindows to avoid terminating lacros-chrome.
 			if i == 0 {
-				if err := br.CloseWithURL(ctx, chrome.BlankURL); err != nil {
+				if err := cr.Browser().CloseWithURL(ctx, chrome.BlankURL); err != nil {
 					return errors.Wrap(err, "failed to close initial blank tab")
 				}
 			}

@@ -35,9 +35,8 @@ type splitViewTabletModeTestParam struct {
 
 func init() {
 	testing.AddTest(&testing.Test{
-		Func:         SplitViewTabletMode,
-		LacrosStatus: testing.LacrosVariantUnneeded,
-		Desc:         "In tablet mode, checks split view works properly",
+		Func: SplitViewTabletMode,
+		Desc: "In tablet mode, checks split view works properly",
 		Contacts: []string{
 			"chromeos-wm@google.com",
 			"chromeos-consumer-engprod@google.com",
@@ -154,7 +153,7 @@ func SplitViewTabletMode(ctx context.Context, s *testing.State) {
 	const numWindows = 4
 	appsList := []apps.App{apps.FilesSWA, apps.PlayStore}
 	numBrowserWindowsToOpen := numWindows - len(appsList)
-	if err := ash.CreateWindows(ctx, tconn, cr.Browser(), "", numBrowserWindowsToOpen); err != nil {
+	if err := ash.CreateWindows(ctx, tconn, cr, "", numBrowserWindowsToOpen); err != nil {
 		s.Fatal("Failed to create new windows: ", err)
 	}
 

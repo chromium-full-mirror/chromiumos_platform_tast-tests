@@ -69,7 +69,8 @@ func WindowControl(ctx context.Context, s *testing.State) {
 	if err != nil {
 		s.Fatal("Failed to get the connection to the test API: ", err)
 	}
-	// Set up the browser, open a first window.
+
+	// Open a first browser window.
 	const numWindows = 8
 	const url = chrome.BlankURL
 	conn, err := cr.NewConn(ctx, url)
@@ -83,9 +84,9 @@ func WindowControl(ctx context.Context, s *testing.State) {
 		s.Fatal("Failed to ensure into clamshell mode: ", err)
 	}
 	defer cleanup(cleanupCtx)
-	br := cr.Browser()
+
 	// Open the rest of the new windows alongside the one that was already opened above.
-	if err := ash.CreateWindows(ctx, tconn, br, url, numWindows-1); err != nil {
+	if err := ash.CreateWindows(ctx, tconn, cr, url, numWindows-1); err != nil {
 		s.Fatal("Failed to create new windows: ", err)
 	}
 	ws, err := ash.GetAllWindows(ctx, tconn)
@@ -93,7 +94,7 @@ func WindowControl(ctx context.Context, s *testing.State) {
 		s.Fatal("Failed to get the windows: ", err)
 	}
 
-	r := perfutil.NewRunner(br, perfutil.RunnerOptions{IgnoreFirstRun: true, DropMinMaxValues: true})
+	r := perfutil.NewRunner(cr, perfutil.RunnerOptions{IgnoreFirstRun: true, DropMinMaxValues: true})
 	r.SetRunsNumber(perfutil.RunnerCyclesOptions{MaxRuns: 5, MinSuccessfulRuns: 5})
 	r.RunTracing = false
 

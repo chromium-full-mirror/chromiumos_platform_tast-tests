@@ -27,9 +27,8 @@ import (
 
 func init() {
 	testing.AddTest(&testing.Test{
-		Func:         HotseatScrollPerf,
-		LacrosStatus: testing.LacrosVariantUnneeded,
-		Desc:         "Records the animation smoothness for shelf scroll animation",
+		Func: HotseatScrollPerf,
+		Desc: "Records the animation smoothness for shelf scroll animation",
 		Contacts: []string{
 			"cros-system-ui-eng@google.com",
 			"tbarzic@chromium.org",
@@ -292,7 +291,7 @@ func HotseatScrollPerf(ctx context.Context, s *testing.State) {
 	}
 	defer faillog.DumpUITreeOnError(ctx, s.OutDir(), s.HasError, tconn)
 
-	runner := perfutil.NewRunner(cr.Browser(), perfutil.RunnerOptions{IgnoreFirstRun: true, DropMinMaxValues: true})
+	runner := perfutil.NewRunner(cr, perfutil.RunnerOptions{IgnoreFirstRun: true, DropMinMaxValues: true})
 
 	var mode uiMode
 

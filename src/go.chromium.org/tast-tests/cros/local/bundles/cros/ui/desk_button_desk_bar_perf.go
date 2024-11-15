@@ -80,7 +80,7 @@ func DeskButtonDeskBarPerf(ctx context.Context, s *testing.State) {
 		s.Fatal("Failed to open browser windows: ", err)
 	}
 
-	runner := perfutil.NewRunner(cr.Browser(), perfutil.RunnerOptions{IgnoreFirstRun: true, DropMinMaxValues: true})
+	runner := perfutil.NewRunner(cr, perfutil.RunnerOptions{IgnoreFirstRun: true, DropMinMaxValues: true})
 
 	if err := runDeskButtonSubtest(ctx, s, tconn, runner, 2 /* desks */); err != nil {
 		s.Fatal("Test case with 2 desks failed: ", err)

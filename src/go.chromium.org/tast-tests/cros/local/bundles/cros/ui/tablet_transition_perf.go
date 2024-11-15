@@ -23,10 +23,9 @@ import (
 
 func init() {
 	testing.AddTest(&testing.Test{
-		Func:         TabletTransitionPerf,
-		LacrosStatus: testing.LacrosVariantUnneeded,
-		Desc:         "Measures the animation smoothess of animating to and from tablet mode",
-		Contacts:     []string{"cros-sw-perf@google.com", "chromeos-wm@google.com", "sammiequon@chromium.org"},
+		Func:     TabletTransitionPerf,
+		Desc:     "Measures the animation smoothess of animating to and from tablet mode",
+		Contacts: []string{"cros-sw-perf@google.com", "chromeos-wm@google.com", "sammiequon@chromium.org"},
 		// ChromeOS > Software > Window Management > TabletMode
 		BugComponent: "b:1253116",
 		SoftwareDeps: []string{"chrome"},
@@ -80,7 +79,7 @@ func TabletTransitionPerf(ctx context.Context, s *testing.State) {
 		s.Fatalf("Failed to set the window (%d): %v", windows[0].ID, err)
 	}
 
-	if err := perfutil.RunMultipleAndSave(ctx, s.OutDir(), cr.Browser(), uiperf.Run(s, perfutil.RunAndWaitAll(tconn, func(ctx context.Context) error {
+	if err := perfutil.RunMultipleAndSave(ctx, s.OutDir(), cr, uiperf.Run(s, perfutil.RunAndWaitAll(tconn, func(ctx context.Context) error {
 		if err := ash.SetTabletModeEnabled(ctx, tconn, true); err != nil {
 			return errors.Wrap(err, "failed to enable tablet mode")
 		}
