@@ -41,7 +41,7 @@ func init() {
 			"chromeos-sw-engprod@google.com",
 		},
 		BugComponent: "b:1207311", // ChromeOS > Software > Commercial (Enterprise) > Identity > LURS
-		SoftwareDeps: []string{"chrome", "chrome_internal", "gaia"},
+		SoftwareDeps: []string{"chrome", "chrome_internal", "gaia", "non_meet_device"},
 		Attr:         []string{"group:mainline", "group:hw_agnostic"},
 		VarDeps: []string{
 			"ui.signinProfileTestExtensionManifestKey",
