@@ -91,6 +91,12 @@ func DevDefaultBoot(ctx context.Context, s *testing.State) {
 	if err := h.RequireConfig(ctx); err != nil {
 		s.Fatal("Failed to create config: ", err)
 	}
+
+	supportAPFwState, err := h.SupportAPFwState(ctx)
+	if err != nil {
+		s.Fatal("Failed to check if DUT support APFwState: ", err)
+	}
+
 	testOpt := s.Param().(*devDefaultBootParam)
 	expEndBootMode := fwCommon.BootModeDev
 	reconnectTimeout := h.Config.DelayRebootToPing
@@ -146,6 +152,16 @@ func DevDefaultBoot(ctx context.Context, s *testing.State) {
 		}
 	}(cleanupCtx)
 
+	closeUART, err := h.Servo.EnableUARTCapture(ctx, servo.ECUARTCapture)
+	if err != nil {
+		s.Fatal("Failed to enable capture EC UART: ", err)
+	}
+	defer func() {
+		if err := closeUART(ctx); err != nil {
+			s.Error("Failed to cancel capture EC UART: ", err)
+		}
+	}()
+
 	s.Log("Rebooting DUT to developer screen")
 	if err := h.Servo.SetPowerState(ctx, servo.PowerStateWarmReset); err != nil {
 		s.Fatal("Failed to warm reset dut: ", err)
@@ -160,11 +176,17 @@ func DevDefaultBoot(ctx context.Context, s *testing.State) {
 	case triggerByTimeout:
 		reconnectTimeout += firmware.DevScreenTimeout
 	case triggerByMenu:
-		s.Logf("Sleeping for %s (FirmwareScreen)", h.Config.FirmwareScreen)
-		// GoBigSleepLint: Delay to wait for the firmware screen during boot-up.
-		if err := testing.Sleep(ctx, h.Config.FirmwareScreen); err != nil {
-			s.Fatalf("Failed to sleep for %s: %v", h.Config.FirmwareScreen, err)
+		if supportAPFwState {
+			if err := h.DetectFirmwareScreen(ctx, h.Config.FirmwareScreen, fwCommon.DeveloperMode); err != nil {
+				s.Fatal("Failed to detect firmware screen: ", err)
+			}
+		} else {
+			s.Log("Waiting for DUT to reach the firmware screen")
+			if err := h.WaitFirmwareScreen(ctx, h.Config.FirmwareScreen); err != nil {
+				s.Fatal("Failed to get to firmware screen: ", err)
+			}
 		}
+
 		menuBypasser, err := firmware.NewMenuBypasser(ctx, h)
 		if err != nil {
 			s.Fatal("Failed to create menu bypasser: ", err)
