@@ -201,6 +201,8 @@ const (
 	GpioTi50CC1 GpioName = "CC1"
 	// GpioTi50CC2 is the other analog USB-C signal used for detection/negotiation.
 	GpioTi50CC2 GpioName = "CC2"
+	// GpioTi50ECFlashSelect is the gpio used during EC programming over CCD.
+	GpioTi50ECFlashSelect GpioName = "GSC_EC_SPI_SEL"
 )
 
 const (
