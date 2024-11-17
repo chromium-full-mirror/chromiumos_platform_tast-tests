@@ -338,6 +338,10 @@ service ShillService {
   // ScanAndFetchRegion scans and checks if the region is initialized.
   rpc ScanAndFetchRegion(ScanAndFetchRegionRequest)
       returns (google.protobuf.Empty) {}
+
+  // TriggerIntelFirmwareDump triggers firmware dump.
+  rpc TriggerIntelFirmwareDump(google.protobuf.Empty)
+      returns (google.protobuf.Empty) {}
 }
 
 message ConnectRequest {

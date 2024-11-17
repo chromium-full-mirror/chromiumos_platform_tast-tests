@@ -600,6 +600,15 @@ func (cli *WifiClient) RequestScan(ctx context.Context) error {
 	return nil
 }
 
+// TriggerIntelFirmwareDump triggers firmware dump
+func (cli *WifiClient) TriggerIntelFirmwareDump(ctx context.Context) error {
+	_, err := cli.ShillServiceClient.TriggerIntelFirmwareDump(ctx, &empty.Empty{})
+	if err != nil {
+		return errors.Wrap(err, "failed to trigger firmware dump")
+	}
+	return nil
+}
+
 // SetBSSIDRequested sets the BSSIDRequested service property in shill
 func (cli *WifiClient) SetBSSIDRequested(ctx context.Context, bssid string) error {
 	service, err := cli.ShillServiceClient.SelectedService(ctx, &empty.Empty{})

@@ -41,6 +41,7 @@ import (
 	"go.chromium.org/tast-tests/cros/local/power"
 	"go.chromium.org/tast-tests/cros/local/shill"
 	"go.chromium.org/tast-tests/cros/local/upstart"
+	debug "go.chromium.org/tast-tests/cros/local/wifi"
 	local_iw "go.chromium.org/tast-tests/cros/local/wifi/iw"
 	localwpacli "go.chromium.org/tast-tests/cros/local/wifi/wpacli"
 	"go.chromium.org/tast-tests/cros/local/wpasupplicant"
@@ -2932,6 +2933,15 @@ func (s *ShillService) GetLoggingConfig(ctx context.Context, e *empty.Empty) (*w
 		DebugLevel: int32(level),
 		DebugTags:  tags,
 	}, nil
+}
+
+// TriggerIntelFirmwareDump triggers firmware dump logs from the DUT.
+func (s *ShillService) TriggerIntelFirmwareDump(ctx context.Context, e *empty.Empty) (*empty.Empty, error) {
+	if err := debug.TriggerIntelFirmwareDump(ctx); err != nil {
+		return &empty.Empty{}, errors.Wrap(err, "failed to trigger firmware dump")
+	}
+
+	return &empty.Empty{}, nil
 }
 
 // SetLoggingConfig sets the device logging configuration.

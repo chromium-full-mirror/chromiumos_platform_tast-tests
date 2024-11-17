@@ -9,6 +9,8 @@ import (
 	"fmt"
 	"math/rand"
 	"net"
+	"path"
+	"path/filepath"
 	"strconv"
 	"strings"
 	"time"
@@ -39,6 +41,8 @@ import (
 	"go.chromium.org/tast-tests/cros/remote/wificell/attenuator"
 	"go.chromium.org/tast-tests/cros/remote/wificell/dutcfg"
 	"go.chromium.org/tast-tests/cros/remote/wificell/framesender"
+	crashservice "go.chromium.org/tast-tests/cros/services/cros/crash"
+
 	//lint:ignore ST1019 multiple imports with different identifiers help code readability
 	"go.chromium.org/tast-tests/cros/remote/wificell/hostapd"
 	ap "go.chromium.org/tast-tests/cros/remote/wificell/hostapd"
@@ -113,6 +117,9 @@ const (
 
 	// ScreenshotService  is the name of the screenshot service.
 	ScreenshotServiceName = "tast.cros.graphics.ScreenshotService"
+
+	// CrashServiceName is the name of the crash service.
+	CrashServiceName = "tast.cros.crash.FixtureService"
 )
 
 // P2PDevice is used as p2p device type.
@@ -977,6 +984,44 @@ func (tf *TestFixture) CollectLogs(ctx context.Context) error {
 		}
 	}
 	return firstErr
+}
+
+// CollectCrashLogs downloads related crash log files to OutDir.
+func (tf *TestFixture) CollectCrashLogs(ctx context.Context, outDir string, crashTime time.Time) error {
+	crashDirs := []string{"/var/spool/crash"}
+	formatedCrashTime := crashTime.Format("20060102.150405")
+	firmwareDumpPattern := "devcoredump_iwlwifi." + formatedCrashTime + ".*"
+	requiredCrashMeta := []string{
+		firmwareDumpPattern + ".devcore.gz",
+		firmwareDumpPattern + ".meta",
+		firmwareDumpPattern + ".log",
+	}
+
+	fs := crashservice.NewFixtureServiceClient(tf.RPC().Conn)
+	waitReq := &crashservice.WaitForCrashFilesRequest{
+		Dirs:    crashDirs,
+		Regexes: requiredCrashMeta,
+	}
+	testing.ContextLog(ctx, "Waiting for files to become present")
+	res, err := fs.WaitForCrashFiles(ctx, waitReq)
+	if err != nil {
+		return errors.Wrap(err, "failed to find crash files")
+	}
+
+	for _, match := range res.Matches {
+		if err := tf.DUT(DefaultDUT).GetFile(ctx, match.Files[0],
+			filepath.Join(outDir, path.Base(match.Files[0]))); err != nil {
+			return errors.Wrap(err, "failed to save crash files")
+		}
+	}
+
+	removeReq := &crashservice.RemoveAllFilesRequest{
+		Matches: res.Matches,
+	}
+	if _, err := fs.RemoveAllFiles(ctx, removeReq); err != nil {
+		return errors.Wrap(err, "failed to remove crash files")
+	}
+	return nil
 }
 
 // ReserveForCollectLogs returns a shorter ctx and cancel function for tf.CollectRouterFileLogs.

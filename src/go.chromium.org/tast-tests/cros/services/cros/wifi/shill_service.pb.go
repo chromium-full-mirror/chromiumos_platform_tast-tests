@@ -6358,7 +6358,7 @@ var file_shill_service_proto_rawDesc = []byte{
 	0x48, 0x49, 0x4c, 0x4c, 0x5f, 0x41, 0x50, 0x49, 0x10, 0x01, 0x2a, 0x27, 0x0a, 0x11, 0x50, 0x32,
 	0x50, 0x44, 0x65, 0x76, 0x69, 0x63, 0x65, 0x52, 0x6f, 0x6c, 0x65, 0x45, 0x6e, 0x75, 0x6d, 0x12,
 	0x06, 0x0a, 0x02, 0x47, 0x4f, 0x10, 0x00, 0x12, 0x0a, 0x0a, 0x06, 0x43, 0x4c, 0x49, 0x45, 0x4e,
-	0x54, 0x10, 0x01, 0x32, 0x85, 0x33, 0x0a, 0x0c, 0x53, 0x68, 0x69, 0x6c, 0x6c, 0x53, 0x65, 0x72,
+	0x54, 0x10, 0x01, 0x32, 0xd3, 0x33, 0x0a, 0x0c, 0x53, 0x68, 0x69, 0x6c, 0x6c, 0x53, 0x65, 0x72,
 	0x76, 0x69, 0x63, 0x65, 0x12, 0x43, 0x0a, 0x07, 0x49, 0x6e, 0x69, 0x74, 0x44, 0x55, 0x54, 0x12,
 	0x1e, 0x2e, 0x74, 0x61, 0x73, 0x74, 0x2e, 0x63, 0x72, 0x6f, 0x73, 0x2e, 0x77, 0x69, 0x66, 0x69,
 	0x2e, 0x49, 0x6e, 0x69, 0x74, 0x44, 0x55, 0x54, 0x52, 0x65, 0x71, 0x75, 0x65, 0x73, 0x74, 0x1a,
@@ -6766,11 +6766,16 @@ var file_shill_service_proto_rawDesc = []byte{
 	0x6f, 0x73, 0x2e, 0x77, 0x69, 0x66, 0x69, 0x2e, 0x53, 0x63, 0x61, 0x6e, 0x41, 0x6e, 0x64, 0x46,
 	0x65, 0x74, 0x63, 0x68, 0x52, 0x65, 0x67, 0x69, 0x6f, 0x6e, 0x52, 0x65, 0x71, 0x75, 0x65, 0x73,
 	0x74, 0x1a, 0x16, 0x2e, 0x67, 0x6f, 0x6f, 0x67, 0x6c, 0x65, 0x2e, 0x70, 0x72, 0x6f, 0x74, 0x6f,
-	0x62, 0x75, 0x66, 0x2e, 0x45, 0x6d, 0x70, 0x74, 0x79, 0x22, 0x00, 0x42, 0x34, 0x5a, 0x32, 0x67,
-	0x6f, 0x2e, 0x63, 0x68, 0x72, 0x6f, 0x6d, 0x69, 0x75, 0x6d, 0x2e, 0x6f, 0x72, 0x67, 0x2f, 0x74,
-	0x61, 0x73, 0x74, 0x2d, 0x74, 0x65, 0x73, 0x74, 0x73, 0x2f, 0x63, 0x72, 0x6f, 0x73, 0x2f, 0x73,
-	0x65, 0x72, 0x76, 0x69, 0x63, 0x65, 0x73, 0x2f, 0x63, 0x72, 0x6f, 0x73, 0x2f, 0x77, 0x69, 0x66,
-	0x69, 0x62, 0x06, 0x70, 0x72, 0x6f, 0x74, 0x6f, 0x33,
+	0x62, 0x75, 0x66, 0x2e, 0x45, 0x6d, 0x70, 0x74, 0x79, 0x22, 0x00, 0x12, 0x4c, 0x0a, 0x18, 0x54,
+	0x72, 0x69, 0x67, 0x67, 0x65, 0x72, 0x49, 0x6e, 0x74, 0x65, 0x6c, 0x46, 0x69, 0x72, 0x6d, 0x77,
+	0x61, 0x72, 0x65, 0x44, 0x75, 0x6d, 0x70, 0x12, 0x16, 0x2e, 0x67, 0x6f, 0x6f, 0x67, 0x6c, 0x65,
+	0x2e, 0x70, 0x72, 0x6f, 0x74, 0x6f, 0x62, 0x75, 0x66, 0x2e, 0x45, 0x6d, 0x70, 0x74, 0x79, 0x1a,
+	0x16, 0x2e, 0x67, 0x6f, 0x6f, 0x67, 0x6c, 0x65, 0x2e, 0x70, 0x72, 0x6f, 0x74, 0x6f, 0x62, 0x75,
+	0x66, 0x2e, 0x45, 0x6d, 0x70, 0x74, 0x79, 0x22, 0x00, 0x42, 0x34, 0x5a, 0x32, 0x67, 0x6f, 0x2e,
+	0x63, 0x68, 0x72, 0x6f, 0x6d, 0x69, 0x75, 0x6d, 0x2e, 0x6f, 0x72, 0x67, 0x2f, 0x74, 0x61, 0x73,
+	0x74, 0x2d, 0x74, 0x65, 0x73, 0x74, 0x73, 0x2f, 0x63, 0x72, 0x6f, 0x73, 0x2f, 0x73, 0x65, 0x72,
+	0x76, 0x69, 0x63, 0x65, 0x73, 0x2f, 0x63, 0x72, 0x6f, 0x73, 0x2f, 0x77, 0x69, 0x66, 0x69, 0x62,
+	0x06, 0x70, 0x72, 0x6f, 0x74, 0x6f, 0x33,
 }
 
 var (
@@ -7021,80 +7026,82 @@ var file_shill_service_proto_depIdxs = []int32{
 	94,  // 117: tast.cros.wifi.ShillService.SetBSSIDRequested:input_type -> tast.cros.wifi.SetBSSIDRequestedRequest
 	95,  // 118: tast.cros.wifi.ShillService.GetProperties:input_type -> tast.cros.wifi.GetPropertiesRequest
 	97,  // 119: tast.cros.wifi.ShillService.ScanAndFetchRegion:input_type -> tast.cros.wifi.ScanAndFetchRegionRequest
-	110, // 120: tast.cros.wifi.ShillService.InitDUT:output_type -> google.protobuf.Empty
-	110, // 121: tast.cros.wifi.ShillService.ReinitTestState:output_type -> google.protobuf.Empty
-	110, // 122: tast.cros.wifi.ShillService.TearDown:output_type -> google.protobuf.Empty
-	7,   // 123: tast.cros.wifi.ShillService.Connect:output_type -> tast.cros.wifi.ConnectResponse
-	110, // 124: tast.cros.wifi.ShillService.Disconnect:output_type -> google.protobuf.Empty
-	110, // 125: tast.cros.wifi.ShillService.DeleteEntriesForSSID:output_type -> google.protobuf.Empty
-	13,  // 126: tast.cros.wifi.ShillService.QueryService:output_type -> tast.cros.wifi.QueryServiceResponse
-	14,  // 127: tast.cros.wifi.ShillService.GetInterface:output_type -> tast.cros.wifi.GetInterfaceResponse
-	15,  // 128: tast.cros.wifi.ShillService.GetDeviceInfo:output_type -> tast.cros.wifi.GetDeviceInfoResponse
-	17,  // 129: tast.cros.wifi.ShillService.GetIPv4Addrs:output_type -> tast.cros.wifi.GetIPv4AddrsResponse
-	19,  // 130: tast.cros.wifi.ShillService.GetHardwareAddr:output_type -> tast.cros.wifi.GetHardwareAddrResponse
-	110, // 131: tast.cros.wifi.ShillService.ExpectWifiFrequencies:output_type -> google.protobuf.Empty
-	22,  // 132: tast.cros.wifi.ShillService.GetBgscanConfig:output_type -> tast.cros.wifi.GetBgscanConfigResponse
-	110, // 133: tast.cros.wifi.ShillService.SetBgscanConfig:output_type -> google.protobuf.Empty
-	110, // 134: tast.cros.wifi.ShillService.AssureDisconnect:output_type -> google.protobuf.Empty
-	110, // 135: tast.cros.wifi.ShillService.DisableEnableTest:output_type -> google.protobuf.Empty
-	110, // 136: tast.cros.wifi.ShillService.EthernetFailoverToWifiTest:output_type -> google.protobuf.Empty
-	110, // 137: tast.cros.wifi.ShillService.RequestScan:output_type -> google.protobuf.Empty
-	110, // 138: tast.cros.wifi.ShillService.RequestScans:output_type -> google.protobuf.Empty
-	29,  // 139: tast.cros.wifi.ShillService.SetMACRandomize:output_type -> tast.cros.wifi.SetMACRandomizeResponse
-	110, // 140: tast.cros.wifi.ShillService.WaitScanIdle:output_type -> google.protobuf.Empty
-	31,  // 141: tast.cros.wifi.ShillService.ConfigureAndAssertAutoConnect:output_type -> tast.cros.wifi.ConfigureAndAssertAutoConnectResponse
-	32,  // 142: tast.cros.wifi.ShillService.GetCurrentTime:output_type -> tast.cros.wifi.GetCurrentTimeResponse
-	33,  // 143: tast.cros.wifi.ShillService.SelectedService:output_type -> tast.cros.wifi.SelectedServiceResponse
-	88,  // 144: tast.cros.wifi.ShillService.GetServicePath:output_type -> tast.cros.wifi.ServicePathResponse
-	36,  // 145: tast.cros.wifi.ShillService.ExpectShillProperty:output_type -> tast.cros.wifi.ExpectShillPropertyResponse
-	110, // 146: tast.cros.wifi.ShillService.ProfileBasicTest:output_type -> google.protobuf.Empty
-	9,   // 147: tast.cros.wifi.ShillService.DiscoverBSSID:output_type -> tast.cros.wifi.DiscoverBSSIDResponse
-	110, // 148: tast.cros.wifi.ShillService.RequestRoam:output_type -> google.protobuf.Empty
-	41,  // 149: tast.cros.wifi.ShillService.SetDHCPProperties:output_type -> tast.cros.wifi.SetDHCPPropertiesResponse
-	110, // 150: tast.cros.wifi.ShillService.Reassociate:output_type -> google.protobuf.Empty
-	43,  // 151: tast.cros.wifi.ShillService.GetWifiEnabled:output_type -> tast.cros.wifi.GetWifiEnabledResponse
-	110, // 152: tast.cros.wifi.ShillService.SetWifiEnabled:output_type -> google.protobuf.Empty
-	110, // 153: tast.cros.wifi.ShillService.WaitForBSSID:output_type -> google.protobuf.Empty
-	49,  // 154: tast.cros.wifi.ShillService.MACRandomizeSupport:output_type -> tast.cros.wifi.MACRandomizeSupportResponse
-	50,  // 155: tast.cros.wifi.ShillService.GetMACRandomize:output_type -> tast.cros.wifi.GetMACRandomizeResponse
-	51,  // 156: tast.cros.wifi.ShillService.EAPAuthSkipped:output_type -> tast.cros.wifi.EAPAuthSkippedResponse
-	54,  // 157: tast.cros.wifi.ShillService.SuspendAssertConnect:output_type -> tast.cros.wifi.SuspendAssertConnectResponse
-	56,  // 158: tast.cros.wifi.ShillService.Suspend:output_type -> tast.cros.wifi.SuspendResponse
-	57,  // 159: tast.cros.wifi.ShillService.GetGlobalFTProperty:output_type -> tast.cros.wifi.GetGlobalFTPropertyResponse
-	110, // 160: tast.cros.wifi.ShillService.SetGlobalFTProperty:output_type -> google.protobuf.Empty
-	59,  // 161: tast.cros.wifi.ShillService.GetRequestScanTypeProperty:output_type -> tast.cros.wifi.GetRequestScanTypePropertyResponse
-	110, // 162: tast.cros.wifi.ShillService.SetRequestScanTypeProperty:output_type -> google.protobuf.Empty
-	61,  // 163: tast.cros.wifi.ShillService.GetScanAllowRoamProperty:output_type -> tast.cros.wifi.GetScanAllowRoamPropertyResponse
-	110, // 164: tast.cros.wifi.ShillService.SetScanAllowRoamProperty:output_type -> google.protobuf.Empty
-	52,  // 165: tast.cros.wifi.ShillService.DisconnectReason:output_type -> tast.cros.wifi.DisconnectReasonResponse
-	110, // 166: tast.cros.wifi.ShillService.FlushBSS:output_type -> google.protobuf.Empty
-	110, // 167: tast.cros.wifi.ShillService.ResetTest:output_type -> google.protobuf.Empty
-	110, // 168: tast.cros.wifi.ShillService.HealthCheck:output_type -> google.protobuf.Empty
-	67,  // 169: tast.cros.wifi.ShillService.GetLoggingConfig:output_type -> tast.cros.wifi.GetLoggingConfigResponse
-	110, // 170: tast.cros.wifi.ShillService.SetLoggingConfig:output_type -> google.protobuf.Empty
-	70,  // 171: tast.cros.wifi.ShillService.GetWakeOnWifi:output_type -> tast.cros.wifi.GetWakeOnWifiResponse
-	110, // 172: tast.cros.wifi.ShillService.SetWakeOnWifi:output_type -> google.protobuf.Empty
-	110, // 173: tast.cros.wifi.ShillService.CheckLastWakeReason:output_type -> google.protobuf.Empty
-	72,  // 174: tast.cros.wifi.ShillService.WatchDarkResume:output_type -> tast.cros.wifi.WatchDarkResumeResponse
-	75,  // 175: tast.cros.wifi.ShillService.P2PGroupCreate:output_type -> tast.cros.wifi.P2PGroupCreateResponse
-	77,  // 176: tast.cros.wifi.ShillService.P2PGroupDelete:output_type -> tast.cros.wifi.P2PGroupDeleteResponse
-	79,  // 177: tast.cros.wifi.ShillService.P2PGroupConnect:output_type -> tast.cros.wifi.P2PGroupConnectResponse
-	81,  // 178: tast.cros.wifi.ShillService.P2PGroupDisconnect:output_type -> tast.cros.wifi.P2PGroupDisconnectResponse
-	83,  // 179: tast.cros.wifi.ShillService.P2PDeviceInfo:output_type -> tast.cros.wifi.P2PDeviceInfoResponse
-	86,  // 180: tast.cros.wifi.ShillService.StartTethering:output_type -> tast.cros.wifi.TetheringResponse
-	86,  // 181: tast.cros.wifi.ShillService.StopTethering:output_type -> tast.cros.wifi.TetheringResponse
-	93,  // 182: tast.cros.wifi.ShillService.GetTetheringConfig:output_type -> tast.cros.wifi.GetTetheringConfigResponse
-	110, // 183: tast.cros.wifi.ShillService.SetPortalDetectionEnabled:output_type -> google.protobuf.Empty
-	110, // 184: tast.cros.wifi.ShillService.SetCaptivePortalList:output_type -> google.protobuf.Empty
-	47,  // 185: tast.cros.wifi.ShillService.GetCaptivePortalList:output_type -> tast.cros.wifi.GetCaptivePortalListResponse
-	110, // 186: tast.cros.wifi.ShillService.EnsureTestProfileAvailable:output_type -> google.protobuf.Empty
-	91,  // 187: tast.cros.wifi.ShillService.GetNetworksForGeolocation:output_type -> tast.cros.wifi.GetNetworksForGeolocationResponse
-	92,  // 188: tast.cros.wifi.ShillService.GetWiFiNetworksForGeolocation:output_type -> tast.cros.wifi.GetWiFiNetworksForGeolocationResponse
-	110, // 189: tast.cros.wifi.ShillService.SetBSSIDRequested:output_type -> google.protobuf.Empty
-	96,  // 190: tast.cros.wifi.ShillService.GetProperties:output_type -> tast.cros.wifi.GetPropertiesResponse
-	110, // 191: tast.cros.wifi.ShillService.ScanAndFetchRegion:output_type -> google.protobuf.Empty
-	120, // [120:192] is the sub-list for method output_type
-	48,  // [48:120] is the sub-list for method input_type
+	110, // 120: tast.cros.wifi.ShillService.TriggerIntelFirmwareDump:input_type -> google.protobuf.Empty
+	110, // 121: tast.cros.wifi.ShillService.InitDUT:output_type -> google.protobuf.Empty
+	110, // 122: tast.cros.wifi.ShillService.ReinitTestState:output_type -> google.protobuf.Empty
+	110, // 123: tast.cros.wifi.ShillService.TearDown:output_type -> google.protobuf.Empty
+	7,   // 124: tast.cros.wifi.ShillService.Connect:output_type -> tast.cros.wifi.ConnectResponse
+	110, // 125: tast.cros.wifi.ShillService.Disconnect:output_type -> google.protobuf.Empty
+	110, // 126: tast.cros.wifi.ShillService.DeleteEntriesForSSID:output_type -> google.protobuf.Empty
+	13,  // 127: tast.cros.wifi.ShillService.QueryService:output_type -> tast.cros.wifi.QueryServiceResponse
+	14,  // 128: tast.cros.wifi.ShillService.GetInterface:output_type -> tast.cros.wifi.GetInterfaceResponse
+	15,  // 129: tast.cros.wifi.ShillService.GetDeviceInfo:output_type -> tast.cros.wifi.GetDeviceInfoResponse
+	17,  // 130: tast.cros.wifi.ShillService.GetIPv4Addrs:output_type -> tast.cros.wifi.GetIPv4AddrsResponse
+	19,  // 131: tast.cros.wifi.ShillService.GetHardwareAddr:output_type -> tast.cros.wifi.GetHardwareAddrResponse
+	110, // 132: tast.cros.wifi.ShillService.ExpectWifiFrequencies:output_type -> google.protobuf.Empty
+	22,  // 133: tast.cros.wifi.ShillService.GetBgscanConfig:output_type -> tast.cros.wifi.GetBgscanConfigResponse
+	110, // 134: tast.cros.wifi.ShillService.SetBgscanConfig:output_type -> google.protobuf.Empty
+	110, // 135: tast.cros.wifi.ShillService.AssureDisconnect:output_type -> google.protobuf.Empty
+	110, // 136: tast.cros.wifi.ShillService.DisableEnableTest:output_type -> google.protobuf.Empty
+	110, // 137: tast.cros.wifi.ShillService.EthernetFailoverToWifiTest:output_type -> google.protobuf.Empty
+	110, // 138: tast.cros.wifi.ShillService.RequestScan:output_type -> google.protobuf.Empty
+	110, // 139: tast.cros.wifi.ShillService.RequestScans:output_type -> google.protobuf.Empty
+	29,  // 140: tast.cros.wifi.ShillService.SetMACRandomize:output_type -> tast.cros.wifi.SetMACRandomizeResponse
+	110, // 141: tast.cros.wifi.ShillService.WaitScanIdle:output_type -> google.protobuf.Empty
+	31,  // 142: tast.cros.wifi.ShillService.ConfigureAndAssertAutoConnect:output_type -> tast.cros.wifi.ConfigureAndAssertAutoConnectResponse
+	32,  // 143: tast.cros.wifi.ShillService.GetCurrentTime:output_type -> tast.cros.wifi.GetCurrentTimeResponse
+	33,  // 144: tast.cros.wifi.ShillService.SelectedService:output_type -> tast.cros.wifi.SelectedServiceResponse
+	88,  // 145: tast.cros.wifi.ShillService.GetServicePath:output_type -> tast.cros.wifi.ServicePathResponse
+	36,  // 146: tast.cros.wifi.ShillService.ExpectShillProperty:output_type -> tast.cros.wifi.ExpectShillPropertyResponse
+	110, // 147: tast.cros.wifi.ShillService.ProfileBasicTest:output_type -> google.protobuf.Empty
+	9,   // 148: tast.cros.wifi.ShillService.DiscoverBSSID:output_type -> tast.cros.wifi.DiscoverBSSIDResponse
+	110, // 149: tast.cros.wifi.ShillService.RequestRoam:output_type -> google.protobuf.Empty
+	41,  // 150: tast.cros.wifi.ShillService.SetDHCPProperties:output_type -> tast.cros.wifi.SetDHCPPropertiesResponse
+	110, // 151: tast.cros.wifi.ShillService.Reassociate:output_type -> google.protobuf.Empty
+	43,  // 152: tast.cros.wifi.ShillService.GetWifiEnabled:output_type -> tast.cros.wifi.GetWifiEnabledResponse
+	110, // 153: tast.cros.wifi.ShillService.SetWifiEnabled:output_type -> google.protobuf.Empty
+	110, // 154: tast.cros.wifi.ShillService.WaitForBSSID:output_type -> google.protobuf.Empty
+	49,  // 155: tast.cros.wifi.ShillService.MACRandomizeSupport:output_type -> tast.cros.wifi.MACRandomizeSupportResponse
+	50,  // 156: tast.cros.wifi.ShillService.GetMACRandomize:output_type -> tast.cros.wifi.GetMACRandomizeResponse
+	51,  // 157: tast.cros.wifi.ShillService.EAPAuthSkipped:output_type -> tast.cros.wifi.EAPAuthSkippedResponse
+	54,  // 158: tast.cros.wifi.ShillService.SuspendAssertConnect:output_type -> tast.cros.wifi.SuspendAssertConnectResponse
+	56,  // 159: tast.cros.wifi.ShillService.Suspend:output_type -> tast.cros.wifi.SuspendResponse
+	57,  // 160: tast.cros.wifi.ShillService.GetGlobalFTProperty:output_type -> tast.cros.wifi.GetGlobalFTPropertyResponse
+	110, // 161: tast.cros.wifi.ShillService.SetGlobalFTProperty:output_type -> google.protobuf.Empty
+	59,  // 162: tast.cros.wifi.ShillService.GetRequestScanTypeProperty:output_type -> tast.cros.wifi.GetRequestScanTypePropertyResponse
+	110, // 163: tast.cros.wifi.ShillService.SetRequestScanTypeProperty:output_type -> google.protobuf.Empty
+	61,  // 164: tast.cros.wifi.ShillService.GetScanAllowRoamProperty:output_type -> tast.cros.wifi.GetScanAllowRoamPropertyResponse
+	110, // 165: tast.cros.wifi.ShillService.SetScanAllowRoamProperty:output_type -> google.protobuf.Empty
+	52,  // 166: tast.cros.wifi.ShillService.DisconnectReason:output_type -> tast.cros.wifi.DisconnectReasonResponse
+	110, // 167: tast.cros.wifi.ShillService.FlushBSS:output_type -> google.protobuf.Empty
+	110, // 168: tast.cros.wifi.ShillService.ResetTest:output_type -> google.protobuf.Empty
+	110, // 169: tast.cros.wifi.ShillService.HealthCheck:output_type -> google.protobuf.Empty
+	67,  // 170: tast.cros.wifi.ShillService.GetLoggingConfig:output_type -> tast.cros.wifi.GetLoggingConfigResponse
+	110, // 171: tast.cros.wifi.ShillService.SetLoggingConfig:output_type -> google.protobuf.Empty
+	70,  // 172: tast.cros.wifi.ShillService.GetWakeOnWifi:output_type -> tast.cros.wifi.GetWakeOnWifiResponse
+	110, // 173: tast.cros.wifi.ShillService.SetWakeOnWifi:output_type -> google.protobuf.Empty
+	110, // 174: tast.cros.wifi.ShillService.CheckLastWakeReason:output_type -> google.protobuf.Empty
+	72,  // 175: tast.cros.wifi.ShillService.WatchDarkResume:output_type -> tast.cros.wifi.WatchDarkResumeResponse
+	75,  // 176: tast.cros.wifi.ShillService.P2PGroupCreate:output_type -> tast.cros.wifi.P2PGroupCreateResponse
+	77,  // 177: tast.cros.wifi.ShillService.P2PGroupDelete:output_type -> tast.cros.wifi.P2PGroupDeleteResponse
+	79,  // 178: tast.cros.wifi.ShillService.P2PGroupConnect:output_type -> tast.cros.wifi.P2PGroupConnectResponse
+	81,  // 179: tast.cros.wifi.ShillService.P2PGroupDisconnect:output_type -> tast.cros.wifi.P2PGroupDisconnectResponse
+	83,  // 180: tast.cros.wifi.ShillService.P2PDeviceInfo:output_type -> tast.cros.wifi.P2PDeviceInfoResponse
+	86,  // 181: tast.cros.wifi.ShillService.StartTethering:output_type -> tast.cros.wifi.TetheringResponse
+	86,  // 182: tast.cros.wifi.ShillService.StopTethering:output_type -> tast.cros.wifi.TetheringResponse
+	93,  // 183: tast.cros.wifi.ShillService.GetTetheringConfig:output_type -> tast.cros.wifi.GetTetheringConfigResponse
+	110, // 184: tast.cros.wifi.ShillService.SetPortalDetectionEnabled:output_type -> google.protobuf.Empty
+	110, // 185: tast.cros.wifi.ShillService.SetCaptivePortalList:output_type -> google.protobuf.Empty
+	47,  // 186: tast.cros.wifi.ShillService.GetCaptivePortalList:output_type -> tast.cros.wifi.GetCaptivePortalListResponse
+	110, // 187: tast.cros.wifi.ShillService.EnsureTestProfileAvailable:output_type -> google.protobuf.Empty
+	91,  // 188: tast.cros.wifi.ShillService.GetNetworksForGeolocation:output_type -> tast.cros.wifi.GetNetworksForGeolocationResponse
+	92,  // 189: tast.cros.wifi.ShillService.GetWiFiNetworksForGeolocation:output_type -> tast.cros.wifi.GetWiFiNetworksForGeolocationResponse
+	110, // 190: tast.cros.wifi.ShillService.SetBSSIDRequested:output_type -> google.protobuf.Empty
+	96,  // 191: tast.cros.wifi.ShillService.GetProperties:output_type -> tast.cros.wifi.GetPropertiesResponse
+	110, // 192: tast.cros.wifi.ShillService.ScanAndFetchRegion:output_type -> google.protobuf.Empty
+	110, // 193: tast.cros.wifi.ShillService.TriggerIntelFirmwareDump:output_type -> google.protobuf.Empty
+	121, // [121:194] is the sub-list for method output_type
+	48,  // [48:121] is the sub-list for method input_type
 	48,  // [48:48] is the sub-list for extension type_name
 	48,  // [48:48] is the sub-list for extension extendee
 	0,   // [0:48] is the sub-list for field type_name
@@ -8538,6 +8545,8 @@ type ShillServiceClient interface {
 	GetProperties(ctx context.Context, in *GetPropertiesRequest, opts ...grpc.CallOption) (*GetPropertiesResponse, error)
 	// ScanAndFetchRegion scans and checks if the region is initialized.
 	ScanAndFetchRegion(ctx context.Context, in *ScanAndFetchRegionRequest, opts ...grpc.CallOption) (*emptypb.Empty, error)
+	// TriggerIntelFirmwareDump triggers firmware dump.
+	TriggerIntelFirmwareDump(ctx context.Context, in *emptypb.Empty, opts ...grpc.CallOption) (*emptypb.Empty, error)
 }
 
 type shillServiceClient struct {
@@ -9289,6 +9298,15 @@ func (c *shillServiceClient) ScanAndFetchRegion(ctx context.Context, in *ScanAnd
 	return out, nil
 }
 
+func (c *shillServiceClient) TriggerIntelFirmwareDump(ctx context.Context, in *emptypb.Empty, opts ...grpc.CallOption) (*emptypb.Empty, error) {
+	out := new(emptypb.Empty)
+	err := c.cc.Invoke(ctx, "/tast.cros.wifi.ShillService/TriggerIntelFirmwareDump", in, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
 // ShillServiceServer is the server API for ShillService service.
 type ShillServiceServer interface {
 	// InitDUT initialize the DUT for WiFi testing.
@@ -9505,6 +9523,8 @@ type ShillServiceServer interface {
 	GetProperties(context.Context, *GetPropertiesRequest) (*GetPropertiesResponse, error)
 	// ScanAndFetchRegion scans and checks if the region is initialized.
 	ScanAndFetchRegion(context.Context, *ScanAndFetchRegionRequest) (*emptypb.Empty, error)
+	// TriggerIntelFirmwareDump triggers firmware dump.
+	TriggerIntelFirmwareDump(context.Context, *emptypb.Empty) (*emptypb.Empty, error)
 }
 
 // UnimplementedShillServiceServer can be embedded to have forward compatible implementations.
@@ -9726,6 +9746,9 @@ func (*UnimplementedShillServiceServer) GetProperties(context.Context, *GetPrope
 }
 func (*UnimplementedShillServiceServer) ScanAndFetchRegion(context.Context, *ScanAndFetchRegionRequest) (*emptypb.Empty, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method ScanAndFetchRegion not implemented")
+}
+func (*UnimplementedShillServiceServer) TriggerIntelFirmwareDump(context.Context, *emptypb.Empty) (*emptypb.Empty, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method TriggerIntelFirmwareDump not implemented")
 }
 
 func RegisterShillServiceServer(s *grpc.Server, srv ShillServiceServer) {
@@ -11040,6 +11063,24 @@ func _ShillService_ScanAndFetchRegion_Handler(srv interface{}, ctx context.Conte
 	return interceptor(ctx, in, info, handler)
 }
 
+func _ShillService_TriggerIntelFirmwareDump_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(emptypb.Empty)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(ShillServiceServer).TriggerIntelFirmwareDump(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: "/tast.cros.wifi.ShillService/TriggerIntelFirmwareDump",
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(ShillServiceServer).TriggerIntelFirmwareDump(ctx, req.(*emptypb.Empty))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
 var _ShillService_serviceDesc = grpc.ServiceDesc{
 	ServiceName: "tast.cros.wifi.ShillService",
 	HandlerType: (*ShillServiceServer)(nil),
@@ -11315,6 +11356,10 @@ var _ShillService_serviceDesc = grpc.ServiceDesc{
 		{
 			MethodName: "ScanAndFetchRegion",
 			Handler:    _ShillService_ScanAndFetchRegion_Handler,
+		},
+		{
+			MethodName: "TriggerIntelFirmwareDump",
+			Handler:    _ShillService_TriggerIntelFirmwareDump_Handler,
 		},
 	},
 	Streams: []grpc.StreamDesc{

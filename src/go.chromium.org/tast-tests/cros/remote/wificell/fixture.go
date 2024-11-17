@@ -80,6 +80,8 @@ const (
 	// fixtureVarInvokeMethod is the fixture var for setting
 	// defaultRPCInvokeMethod for all fixtures.
 	fixtureVarInvokeMethod = "wificell.InvokeMethod"
+
+	intelVendorNum = "0x8086"
 )
 
 var alwaysInitAndroid = testing.RegisterVarString(
@@ -96,6 +98,7 @@ func init() {
 	params := make(map[TFFeatures]string)
 	params[TFFeaturesNone] = "Default wificell setup with router and pcap object. Note that pcap and router can point to the same Access Point. Also, unlike wificellFixtWithCapture, the fixture won't spawn Capturer. Users may spawn Capturer with customized configuration when needed"
 	params[TFFeaturesCapture] = "Wificell setup with Capturer on pcap for each configured AP"
+	params[TFFeaturesCollectWiFiFirmwareDump] = "Wificell setup with firmware dump collection on test failures"
 	params[TFFeaturesCapture|TFFeaturesRouterAsCapture] = "Wificell setup with default capturer on router instead of pcap"
 	params[TFFeaturesBridgeAndVeth] = "Wificell setup with bridge and veth support on router"
 	params[TFFeaturesBridgeAndVeth|TFFeaturesCapture] = "Wificell setup with bridge and veth support on router and Capturer on pcap"
@@ -130,7 +133,7 @@ func init() {
 			PreTestTimeout:  preTestTimeout,
 			PostTestTimeout: postTestTimeout,
 			TearDownTimeout: tearDownTimeout,
-			ServiceDeps:     []string{ShillServiceName, BluetoothServiceName},
+			ServiceDeps:     []string{ShillServiceName, BluetoothServiceName, CrashServiceName},
 			Vars: []string{
 				fixtureVarRouter,
 				fixtureVarPcap,
@@ -206,6 +209,8 @@ const (
 	TFFeaturesCellular
 	// TFFeaturesWithUI ensures the UI is started as part of the fixture setup.
 	TFFeaturesWithUI
+	// TFFeaturesCollectWiFiFirmwareDump collects WiFi firmware dump at the end of the test in the case of failure.
+	TFFeaturesCollectWiFiFirmwareDump
 )
 
 // String returns name component corresponding to enum value(s).
@@ -218,6 +223,11 @@ func (enum TFFeatures) String() string {
 		ret = append(ret, "Capture")
 		// Punch out the bit to check for weird values later.
 		enum ^= TFFeaturesCapture
+	}
+	if enum&TFFeaturesCollectWiFiFirmwareDump != 0 {
+		ret = append(ret, "CollectFirmwareDump")
+		// Punch out the bit to check for weird values later.
+		enum ^= TFFeaturesCollectWiFiFirmwareDump
 	}
 	if enum&TFFeaturesBridgeAndVeth != 0 {
 		ret = append(ret, "BridgeAndVeth")
@@ -785,6 +795,23 @@ func (f *tastFixtureImpl) PostTest(ctx context.Context, s *testing.FixtTestState
 			fileName := "android-device-" + dev.serialNumber + "-logcat.txt"
 			if err := dev.P2PDeviceLogcat(ctx, filepath.Join(s.OutDir(), fileName)); err != nil {
 				s.Error("Failed to save the Android Device Logs: ", err)
+			}
+		}
+	}
+
+	if s.HasError() && (f.features&TFFeaturesCollectWiFiFirmwareDump != 0) {
+		if devInfo, err := f.tf.WifiClient().GetDeviceInfo(ctx, &empty.Empty{}); err != nil {
+			s.Error("Failed to obtain WiFi device info: ", err)
+		} else if devInfo.Vendor == intelVendorNum {
+			// Record the current time so only crashes after this time is collected.
+			currentTime := time.Now()
+			// Firmware dump operations and existing crash data types are only
+			// supported on Intel WiFi chips for now.
+			if err := f.tf.WifiClient().TriggerIntelFirmwareDump(ctx); err != nil {
+				s.Error("Failed to trigger firmware dump: ", err)
+			}
+			if err := f.tf.CollectCrashLogs(ctx, s.OutDir(), currentTime); err != nil {
+				s.Error("Error collecting crash logs, err: ", err)
 			}
 		}
 	}
