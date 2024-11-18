@@ -10,7 +10,6 @@ import (
 
 	"go.chromium.org/tast-tests/cros/local/chrome"
 	"go.chromium.org/tast-tests/cros/local/chrome/ash"
-	"go.chromium.org/tast-tests/cros/local/chrome/browser"
 	"go.chromium.org/tast-tests/cros/local/chrome/uiauto"
 	"go.chromium.org/tast-tests/cros/local/chrome/uiauto/cws"
 	"go.chromium.org/tast-tests/cros/local/chrome/uiauto/faillog"
@@ -23,16 +22,19 @@ import (
 	"go.chromium.org/tast/core/testing"
 )
 
-// EnsureDocsOfflineInstalled ensures that docs offline extension is installed
-// for the browser. `br` is where the extension is installed to. `tconn` is a
-// TestConn to ash-chrome.
-func EnsureDocsOfflineInstalled(ctx context.Context, br *browser.Browser, tconn *chrome.TestConn) error {
+// EnsureDocsOfflineInstalled ensures that docs offline extension is installed.
+func EnsureDocsOfflineInstalled(ctx context.Context, cr *chrome.Chrome) error {
 	const (
 		docsOfflineID   = "ghbmnnjooekpmoecnnnilnnbdlolhkhi"
 		docsOfflineName = "Google Docs Offline"
 		docsOfflineURL  = "https://chrome.google.com/webstore/detail/google-docs-offline/ghbmnnjooekpmoecnnnilnnbdlolhkhi"
 	)
 	docsOfflineExt := cws.App{Name: docsOfflineName, URL: docsOfflineURL}
+
+	tconn, err := cr.TestAPIConn(ctx)
+	if err != nil {
+		return errors.Wrap(err, "failed to create Test API connection")
+	}
 
 	isInstalled, err := ash.ExtensionAppInstalled(ctx, tconn, docsOfflineID)
 	if err != nil {
@@ -48,7 +50,7 @@ func EnsureDocsOfflineInstalled(ctx context.Context, br *browser.Browser, tconn 
 	// Allow at maximum 2 minutes to install the extension. This normally only takes several seconds.
 	cwsCtx, cancel := context.WithTimeout(ctx, 2*time.Minute)
 	defer cancel()
-	cwsErr := cws.InstallApp(cwsCtx, br, tconn, docsOfflineExt)
+	cwsErr := cws.InstallApp(cwsCtx, cr, docsOfflineExt)
 	if cwsErr != nil {
 		// If Docs Offline extention is included in /usr/share/google-chrome/extensions/,
 		// it will be installed by the Chrome automatically.
@@ -66,8 +68,8 @@ func EnsureDocsOfflineInstalled(ctx context.Context, br *browser.Browser, tconn 
 // the browser and the current active user has it enabled in Drive's settings.
 // This function should be called before opening any docs if offline capability
 // is desired.
-func EnsureDocsOfflineEnabled(ctx context.Context, br *browser.Browser, tconn *chrome.TestConn) error {
-	if err := EnsureDocsOfflineInstalled(ctx, br, tconn); err != nil {
+func EnsureDocsOfflineEnabled(ctx context.Context, cr *chrome.Chrome) error {
+	if err := EnsureDocsOfflineInstalled(ctx, cr); err != nil {
 		return errors.Wrap(err, "failed to install Docs offline extension")
 	}
 
@@ -88,12 +90,17 @@ func EnsureDocsOfflineEnabled(ctx context.Context, br *browser.Browser, tconn *c
 		defer cancel()
 
 		// Open Drive settings page.
-		conn, err := br.NewConn(ctx, "https://drive.google.com/settings")
+		conn, err := cr.NewConn(ctx, "https://drive.google.com/settings")
 		if err != nil {
 			return errors.Wrap(err, "failed to open Drive settings")
 		}
 		defer conn.Close()
 		defer conn.CloseTarget(closeCtx)
+
+		tconn, err := cr.TestAPIConn(ctx)
+		if err != nil {
+			return errors.Wrap(err, "failed to create Test API connection")
+		}
 
 		defer func(ctx context.Context) {
 			if retryNumber == totalRetry {

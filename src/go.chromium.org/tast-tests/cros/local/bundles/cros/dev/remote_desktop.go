@@ -241,17 +241,16 @@ func RemoteDesktop(ctx context.Context, s *testing.State) {
 	}
 	defer cr.Close(ctx)
 
-	tconn, err := cr.TestAPIConn(ctx)
-	if err != nil {
-		s.Fatal("Failed to connect Test API: ", err)
-	}
-
-	if err := crd.Launch(ctx, cr.Browser(), tconn); err != nil {
+	if err := crd.Launch(ctx, cr); err != nil {
 		s.Fatal("Failed to Launch: ", err)
 	}
 
 	if vars.wait {
 		s.Log("Waiting connection")
+		tconn, err := cr.TestAPIConn(ctx)
+		if err != nil {
+			s.Fatal("Failed to connect Test API: ", err)
+		}
 		if err := crd.WaitConnection(ctx, tconn); err != nil {
 			s.Fatal("No client connected: ", err)
 		}

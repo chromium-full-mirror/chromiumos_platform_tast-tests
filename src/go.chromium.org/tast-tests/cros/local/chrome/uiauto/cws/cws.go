@@ -14,7 +14,6 @@ import (
 
 	"go.chromium.org/tast-tests/cros/local/chrome"
 	"go.chromium.org/tast-tests/cros/local/chrome/ash"
-	"go.chromium.org/tast-tests/cros/local/chrome/browser"
 	"go.chromium.org/tast-tests/cros/local/chrome/uiauto"
 	"go.chromium.org/tast-tests/cros/local/chrome/uiauto/faillog"
 	"go.chromium.org/tast-tests/cros/local/chrome/uiauto/nodewith"
@@ -38,16 +37,15 @@ type App struct {
 var pollOpts = &testing.PollOptions{Interval: time.Second, Timeout: InstallationTimeout}
 
 // InstallAppWithTimeout installs the specified Chrome app from Chrome Web Store with timeout.
-func InstallAppWithTimeout(ctx context.Context, br *browser.Browser, tconn *chrome.TestConn, app App, timeout time.Duration) error {
+func InstallAppWithTimeout(ctx context.Context, cr *chrome.Chrome, app App, timeout time.Duration) error {
 	installCtx, cancel := context.WithDeadline(ctx, time.Now().Add(timeout))
 	defer cancel()
-	return InstallApp(installCtx, br, tconn, app)
+	return InstallApp(installCtx, cr, app)
 }
 
-// InstallApp installs the specified Chrome app from the Chrome Web Store. This works for both ash-chrome and lacros-chrome browsers.
-// tconn is a connection to ash-chrome.
-func InstallApp(ctx context.Context, br *browser.Browser, tconn *chrome.TestConn, app App) (retErr error) {
-	cws, err := br.NewConn(ctx, app.URL)
+// InstallApp installs the specified Chrome app from the Chrome Web Store.
+func InstallApp(ctx context.Context, cr *chrome.Chrome, app App) (retErr error) {
+	cws, err := cr.NewConn(ctx, app.URL)
 	if err != nil {
 		return err
 	}
@@ -63,6 +61,11 @@ func InstallApp(ctx context.Context, br *browser.Browser, tconn *chrome.TestConn
 	closeCtx := ctx
 	ctx, cancel := ctxutil.Shorten(ctx, 2*time.Second)
 	defer cancel()
+
+	tconn, err := cr.TestAPIConn(ctx)
+	if err != nil {
+		return errors.Wrap(err, "failed to create Test API connection")
+	}
 
 	defer faillog.DumpUITreeWithScreenshotWithTestAPIOnError(closeCtx, outDir, func() bool { return retErr != nil }, tconn, "install_app_dump")
 
@@ -93,7 +96,7 @@ func InstallApp(ctx context.Context, br *browser.Browser, tconn *chrome.TestConn
 	// To get around it for recovery it gives a retry by reloading the page to the app page URL.
 	// TODO(crbug.com/1375314): Figure out how to avoid this timing issue in product, rather than in tests.
 	if err := waitForAccount(ctx); err != nil {
-		if err := br.ReloadActiveTab(ctx); err != nil {
+		if err := cr.Browser().ReloadActiveTab(ctx); err != nil {
 			return errors.Wrap(err, "failed to reload page")
 		}
 		if err := cws.Navigate(ctx, app.URL); err != nil {
@@ -111,18 +114,12 @@ func InstallApp(ctx context.Context, br *browser.Browser, tconn *chrome.TestConn
 	// The ID should be the last element of path.
 	appID := path.Base(u.Path)
 
-	// Get a test API connection for the browser.
-	bTconn, err := br.TestAPIConn(ctx)
-	if err != nil {
-		return err
-	}
-
 	// Click the add button at most once to prevent triggering
 	// weird UI behaviors in Chrome Web Store.
 	addClicked := false
 	if err := testing.Poll(ctx, func(ctx context.Context) error {
 		// Check if the app is installed.
-		if installed, err := ash.ExtensionAppInstalled(ctx, bTconn, appID); err != nil {
+		if installed, err := ash.ExtensionAppInstalled(ctx, tconn, appID); err != nil {
 			return testing.PollBreak(errors.Wrap(err, "failed to check if app is installed"))
 		} else if installed {
 			return nil
@@ -158,13 +155,18 @@ func InstallApp(ctx context.Context, br *browser.Browser, tconn *chrome.TestConn
 }
 
 // UninstallApp uninstalls the specified Chrome app from the Chrome Web Store.
-func UninstallApp(ctx context.Context, br *browser.Browser, tconn *chrome.TestConn, app App) error {
-	cws, err := br.NewConn(ctx, app.URL)
+func UninstallApp(ctx context.Context, cr *chrome.Chrome, app App) error {
+	cws, err := cr.NewConn(ctx, app.URL)
 	if err != nil {
 		return err
 	}
 	defer cws.Close()
 	defer cws.CloseTarget(ctx)
+
+	tconn, err := cr.TestAPIConn(ctx)
+	if err != nil {
+		return errors.Wrap(err, "failed to create Test API connection")
+	}
 
 	ui := uiauto.New(tconn)
 	return uiauto.Combine("uninstall the extension from CWS",

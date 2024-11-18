@@ -152,7 +152,7 @@ func RemoteDesktopManual(ctx context.Context, s *testing.State) {
 		s.Log("Failed to add shortcut Ctrl+Shift+s: ", err)
 	}
 
-	if err := crd.Launch(ctx, cr.Browser(), tconn); err != nil {
+	if err := crd.Launch(ctx, cr); err != nil {
 		s.Fatal("Failed to Launch: ", err)
 	}
 

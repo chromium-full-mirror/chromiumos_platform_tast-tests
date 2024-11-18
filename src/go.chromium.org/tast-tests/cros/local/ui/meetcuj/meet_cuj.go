@@ -433,7 +433,7 @@ func Run(ctx context.Context, meet MeetTest, cr *chrome.Chrome, testCaseVar func
 	if meet.Docs {
 		// Ensure docs offline support is enabled to avoid docs page hitting
 		// fatal network error. See http://b/254914987
-		if err := cuj.EnsureDocsOfflineEnabled(ctx, br, tconn); err != nil {
+		if err := cuj.EnsureDocsOfflineEnabled(ctx, cr); err != nil {
 			return pv, errors.Wrap(err, "failed to enable docs offline support")
 		}
 	}

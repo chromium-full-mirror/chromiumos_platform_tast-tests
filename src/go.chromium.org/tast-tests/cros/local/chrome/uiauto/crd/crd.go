@@ -11,7 +11,6 @@ import (
 	"time"
 
 	"go.chromium.org/tast-tests/cros/local/chrome"
-	"go.chromium.org/tast-tests/cros/local/chrome/browser"
 	"go.chromium.org/tast-tests/cros/local/chrome/uiauto"
 	"go.chromium.org/tast-tests/cros/local/chrome/uiauto/cws"
 	"go.chromium.org/tast-tests/cros/local/chrome/uiauto/nodewith"
@@ -30,9 +29,9 @@ const (
 // according to timeout for CRD one time access code.
 var rdpPollOpts = &testing.PollOptions{Interval: time.Second, Timeout: 5 * time.Minute}
 
-func launch(ctx context.Context, br *browser.Browser, tconn *chrome.TestConn) (*chrome.Conn, error) {
+func launch(ctx context.Context, cr *chrome.Chrome) (*chrome.Conn, error) {
 	// Use english version to avoid i18n differences of HTML element attributes.
-	conn, err := br.NewConn(ctx, crdURL+"?hl=en")
+	conn, err := cr.NewConn(ctx, crdURL+"?hl=en")
 	if err != nil {
 		return nil, err
 	}
@@ -76,16 +75,15 @@ func getAccessCode(ctx context.Context, crd *chrome.Conn) (string, error) {
 }
 
 // Launch prepares Chrome Remote Desktop and generates access code to be connected by.
-// tconn is a connection to ash-chrome
-func Launch(ctx context.Context, br *browser.Browser, tconn *chrome.TestConn) error {
+func Launch(ctx context.Context, cr *chrome.Chrome) error {
 	// Ensures the companion extension for the Chrome Remote Desktop website
 	// https://remotedesktop.google.com is installed.
 	app := cws.App{Name: "Remote Desktop", URL: appCWSURL}
-	if err := cws.InstallApp(ctx, br, tconn, app); err != nil {
+	if err := cws.InstallApp(ctx, cr, app); err != nil {
 		return errors.Wrap(err, "failed to install CRD app")
 	}
 
-	crd, err := launch(ctx, br, tconn)
+	crd, err := launch(ctx, cr)
 	if err != nil {
 		return errors.Wrap(err, "failed to launch CRD")
 	}

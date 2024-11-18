@@ -65,15 +65,11 @@ func TestCases() map[networkrequestmonitor.PolicySetting]testCase {
 // desktop works as expected.
 func TriggerRemoteSupportRegistration(ctx context.Context, params networkrequestmonitor.OptionalServiceParams) (err error) {
 	cr := params.Chrome
-	tconn, err := cr.TestAPIConn(ctx)
-	if err != nil {
-		errors.Wrap(err, "failed to create Test API connection")
-	}
 	policyParam := TestCases()[params.PolicySetting]
 
 	didCRDLaunchSucceed := true
 	errContainsRemoteSupportBlockedMessage := false
-	if err := crd.Launch(ctx, cr.Browser(), tconn); err != nil {
+	if err := crd.Launch(ctx, cr); err != nil {
 		didCRDLaunchSucceed = false
 		errContainsRemoteSupportBlockedMessage = strings.Contains(err.Error(), "Remote support connections blocked")
 	}

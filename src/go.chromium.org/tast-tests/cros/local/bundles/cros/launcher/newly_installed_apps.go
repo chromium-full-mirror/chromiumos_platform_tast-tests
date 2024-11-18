@@ -77,7 +77,7 @@ func NewlyInstalledApps(ctx context.Context, s *testing.State) {
 		s.Fatal("Failed to connect Test API: ", err)
 	}
 
-	if err := cws.InstallApp(ctx, cr.Browser(), tconn, cws.App{
+	if err := cws.InstallApp(ctx, cr, cws.App{
 		Name: cwsAppName,
 		URL:  "https://chrome.google.com/webstore/detail/wicked-good-unarchiver/" + cwsAppID,
 	}); err != nil {
