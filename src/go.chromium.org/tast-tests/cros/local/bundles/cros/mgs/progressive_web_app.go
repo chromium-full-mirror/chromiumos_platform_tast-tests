@@ -83,7 +83,7 @@ func ProgressiveWebApp(ctx context.Context, s *testing.State) {
 		s.Fatal("Failed to connect to test API: ", err)
 	}
 
-	if err := apps.InstallPWAForURL(ctx, tconn, cr.Browser(), fmt.Sprintf(url, port), 15*time.Second); err != nil {
+	if err := apps.InstallPWAForURL(ctx, cr, fmt.Sprintf(url, port), 15*time.Second); err != nil {
 		s.Fatal("Failed to install PWA for URL: ", err)
 	}
 

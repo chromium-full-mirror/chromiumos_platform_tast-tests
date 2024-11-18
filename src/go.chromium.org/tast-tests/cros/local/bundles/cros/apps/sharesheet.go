@@ -111,7 +111,7 @@ func Sharesheet(ctx context.Context, s *testing.State) {
 		s.Fatal("Failed to connect to test API: ", err)
 	}
 
-	if err := apps.InstallPWAForURL(ctx, tconn, cr.Browser(), fmt.Sprintf("http://localhost:%v/sharesheet_index.html", localServerPort), installTimeout); err != nil {
+	if err := apps.InstallPWAForURL(ctx, cr, fmt.Sprintf("http://localhost:%v/sharesheet_index.html", localServerPort), installTimeout); err != nil {
 		s.Fatal("Failed to install PWA for URL: ", err)
 	}
 

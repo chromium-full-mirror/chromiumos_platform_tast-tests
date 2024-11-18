@@ -13,7 +13,6 @@ import (
 	"go.chromium.org/tast-tests/cros/common/action"
 	"go.chromium.org/tast-tests/cros/local/chrome"
 	"go.chromium.org/tast-tests/cros/local/chrome/ash"
-	"go.chromium.org/tast-tests/cros/local/chrome/browser"
 	"go.chromium.org/tast-tests/cros/local/chrome/uiauto"
 	"go.chromium.org/tast-tests/cros/local/chrome/uiauto/nodewith"
 	"go.chromium.org/tast-tests/cros/local/chrome/uiauto/role"
@@ -558,15 +557,20 @@ func ChromeOrChromium(ctx context.Context, tconn *chrome.TestConn) (App, error) 
 }
 
 // InstallPWAForURL navigates to a PWA and attempts to install it.
-// The given TestConn must be a connection to Ash.
-func InstallPWAForURL(ctx context.Context, tconn *chrome.TestConn, br *browser.Browser, pwaURL string, timeout time.Duration) error {
+func InstallPWAForURL(ctx context.Context, cr *chrome.Chrome, pwaURL string, timeout time.Duration) error {
 	sctx, cancel := ctxutil.Shorten(ctx, time.Minute)
 	defer cancel()
-	conn, err := br.NewConn(sctx, pwaURL)
+
+	conn, err := cr.NewConn(sctx, pwaURL)
 	if err != nil {
 		return errors.Wrapf(err, "failed to open URL %q", pwaURL)
 	}
 	defer conn.Close()
+
+	tconn, err := cr.TestAPIConn(ctx)
+	if err != nil {
+		return errors.Wrap(err, "failed to connect Test API")
+	}
 
 	if err := webutil.WaitForQuiescence(ctx, conn, time.Minute); err != nil {
 		return errors.Wrapf(err, "failed to wait for %q to be loaded and achieve quiescence", pwaURL)
@@ -596,7 +600,7 @@ func InstallPWAForURL(ctx context.Context, tconn *chrome.TestConn, br *browser.B
 	var lastErr error
 	return uiauto.Retry(retryTimes, func(ctx context.Context) error {
 		if lastErr != nil {
-			if err := br.ReloadActiveTab(ctx); err != nil {
+			if err := cr.Browser().ReloadActiveTab(ctx); err != nil {
 				return errors.Wrap(err, "failed to reload the tab")
 			}
 			// The page might be usable even if it failed to quiesce.

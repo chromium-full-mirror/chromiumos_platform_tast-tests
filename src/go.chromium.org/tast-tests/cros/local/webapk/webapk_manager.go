@@ -14,7 +14,6 @@ import (
 	"go.chromium.org/tast-tests/cros/local/arc"
 	"go.chromium.org/tast-tests/cros/local/chrome"
 	"go.chromium.org/tast-tests/cros/local/chrome/ash"
-	"go.chromium.org/tast-tests/cros/local/chrome/browser"
 	"go.chromium.org/tast-tests/cros/local/chrome/uiauto/ossettings"
 	"go.chromium.org/tast/core/errors"
 )
@@ -38,7 +37,6 @@ type WebAPK struct {
 type Manager struct {
 	arc    *arc.ARC
 	cr     *chrome.Chrome
-	br     *browser.Browser
 	dpr    DataPathResolver
 	server *http.Server
 	tconn  *chrome.TestConn
@@ -52,7 +50,7 @@ type DataPathResolver interface {
 }
 
 // NewManager returns a reference to a new Manager.
-func NewManager(ctx context.Context, cr *chrome.Chrome, br *browser.Browser, arc *arc.ARC, dpr DataPathResolver, webapk WebAPK) (*Manager, error) {
+func NewManager(ctx context.Context, cr *chrome.Chrome, arc *arc.ARC, dpr DataPathResolver, webapk WebAPK) (*Manager, error) {
 	tconn, err := cr.TestAPIConn(ctx)
 	if err != nil {
 		return nil, errors.Wrap(err, "failed to create a Test API connection")
@@ -61,7 +59,6 @@ func NewManager(ctx context.Context, cr *chrome.Chrome, br *browser.Browser, arc
 	return &Manager{
 		arc:    arc,
 		cr:     cr,
-		br:     br,
 		dpr:    dpr,
 		server: nil,
 		tconn:  tconn,
@@ -109,11 +106,11 @@ func (wm *Manager) InstallPwa(ctx context.Context) error {
 	installTimeout := 15 * time.Second
 	localServerIndex := fmt.Sprintf(`http://localhost:%d/%s`, wm.webapk.Port, wm.webapk.IndexPageDataPath)
 
-	if err := apps.InstallPWAForURL(ctx, wm.tconn, wm.br, localServerIndex, installTimeout); err != nil {
+	if err := apps.InstallPWAForURL(ctx, wm.cr, localServerIndex, installTimeout); err != nil {
 		if errUninstall := wm.UninstallPwa(ctx); errUninstall != nil {
 			return errors.Wrapf(errUninstall, "failed to uninstall the pre-exist PWA %q", wm.webapk.Name)
 		}
-		if err := apps.InstallPWAForURL(ctx, wm.tconn, wm.br, localServerIndex, installTimeout); err != nil {
+		if err := apps.InstallPWAForURL(ctx, wm.cr, localServerIndex, installTimeout); err != nil {
 			return errors.Wrapf(err, "failed to install PWA %q", wm.webapk.Name)
 		}
 	}
@@ -166,7 +163,7 @@ func (wm *Manager) CloseApp(ctx context.Context) error {
 func (wm *Manager) GetChromeConnection(ctx context.Context) (*chrome.Conn, error) {
 	localServerAddress := fmt.Sprintf("http://127.0.0.1:%d/", wm.webapk.Port)
 
-	newConn, err := wm.br.NewConnForTarget(ctx, chrome.MatchTargetURL(localServerAddress))
+	newConn, err := wm.cr.NewConnForTarget(ctx, chrome.MatchTargetURL(localServerAddress))
 	if err != nil {
 		return nil, errors.Wrapf(err, "failed getting connection for target: %q", localServerAddress)
 	}

@@ -14,7 +14,6 @@ import (
 	"go.chromium.org/tast-tests/cros/local/apps"
 	"go.chromium.org/tast-tests/cros/local/chrome"
 	"go.chromium.org/tast-tests/cros/local/chrome/ash"
-	"go.chromium.org/tast-tests/cros/local/chrome/browser"
 	"go.chromium.org/tast-tests/cros/local/chrome/uiauto"
 	"go.chromium.org/tast-tests/cros/local/chrome/uiauto/nodewith"
 	"go.chromium.org/tast-tests/cros/local/chrome/uiauto/prompts"
@@ -51,8 +50,8 @@ var (
 	myAccountLink = nodewith.NameRegex(regexp.MustCompile("(?i)My Account")).Role(role.Link).Ancestor(zoomMainWebArea)
 	myProfileImg  = nodewith.Name("Profile picture").Role(role.Image).Ancestor(zoomMainWebArea)
 	// There may be multiple "sign in" links, so add First() here.
-	signInLink          = nodewith.NameRegex(regexp.MustCompile("(?i)sign in")).Role(role.Link).Ancestor(zoomMainWebArea).First()
-	agreeToTermsArea    = nodewith.NameContaining("Agree to the Terms of Service").Role(role.RootWebArea)
+	signInLink       = nodewith.NameRegex(regexp.MustCompile("(?i)sign in")).Role(role.Link).Ancestor(zoomMainWebArea).First()
+	agreeToTermsArea = nodewith.NameContaining("Agree to the Terms of Service").Role(role.RootWebArea)
 
 	// The main canvas of the meeting, it can be used to identify whether if it is in a meeting.
 	mainLayoutCanvas = nodewith.HasClass("main-layout__canvas").Role(role.Canvas).First()
@@ -73,7 +72,7 @@ var (
 
 // Zoom represents a type of Zoom meeting instance.
 type Zoom struct {
-	br    *browser.Browser
+	cr    *chrome.Chrome
 	conn  *chrome.Conn
 	tconn *chrome.TestConn
 	ui    *uiauto.Context
@@ -91,13 +90,13 @@ const (
 )
 
 // New creates a new Zoom meeting instance.
-func New(br *browser.Browser, conn *chrome.Conn, tconn *chrome.TestConn) *Zoom {
-	return &Zoom{br, conn, tconn, uiauto.New(tconn)}
+func New(cr *chrome.Chrome, conn *chrome.Conn, tconn *chrome.TestConn) *Zoom {
+	return &Zoom{cr, conn, tconn, uiauto.New(tconn)}
 }
 
 // NewFromTarget creates a new Zoom meeting instance from an existing web target.
-func NewFromTarget(ctx context.Context, cr *chrome.Chrome, br *browser.Browser, tm chrome.TargetMatcher) (*Zoom, error) {
-	conn, err := br.NewConnForTarget(ctx, tm)
+func NewFromTarget(ctx context.Context, cr *chrome.Chrome, tm chrome.TargetMatcher) (*Zoom, error) {
+	conn, err := cr.NewConnForTarget(ctx, tm)
 	if err != nil {
 		return nil, err
 	}
@@ -107,27 +106,27 @@ func NewFromTarget(ctx context.Context, cr *chrome.Chrome, br *browser.Browser, 
 		return nil, err
 	}
 
-	return New(br, conn, tconn), nil
+	return New(cr, conn, tconn), nil
 }
 
-// StartNewMeeting starts a new Zoom meeting using given browser.
+// StartNewMeeting starts a new Zoom meeting in the browser.
 // It does not join audio by default.
 // The caller should explicitly call Close function to release resources and close Chrome browser.
 // Example:
 //
-//	zm, err := zoom.StartNewMeeting(ctx, cr, br, true)
+//	zm, err := zoom.StartNewMeeting(ctx, cr, true)
 //	if err != nil {
 //	     s.Fatal("Failed to start meeting: ", err)
 //	}
 //	defer zm.Close(cleanupCtx)
-func StartNewMeeting(ctx context.Context, cr *chrome.Chrome, br *browser.Browser, conn *chrome.Conn, permissionsOption PermissionOption) (*Zoom, error) {
+func StartNewMeeting(ctx context.Context, cr *chrome.Chrome, conn *chrome.Conn, permissionsOption PermissionOption) (*Zoom, error) {
 	if permissionsOption == WithAllPermissions {
-		if err := GrantPermissions(ctx, br); err != nil {
+		if err := GrantPermissions(ctx, cr); err != nil {
 			return nil, errors.Wrap(err, "failed to grant permissions")
 		}
 	}
 
-	if err := navigateToZoomAndSignIn(ctx, cr, br, conn); err != nil {
+	if err := navigateToZoomAndSignIn(ctx, cr, conn); err != nil {
 		return nil, errors.Wrap(err, "failed to navigate to Zoom or sign-in")
 	}
 
@@ -140,7 +139,7 @@ func StartNewMeeting(ctx context.Context, cr *chrome.Chrome, br *browser.Browser
 		return nil, errors.Wrap(err, "failed to launch meeting")
 	}
 
-	zm := New(br, conn, tconn)
+	zm := New(cr, conn, tconn)
 
 	if err := prompts.ClearPotentialPrompts(tconn, shortUITimeout, prompts.ShowNotificationsPrompt)(ctx); err != nil {
 		return nil, errors.Wrap(err, "failed to clear notification prompt")
@@ -161,14 +160,14 @@ func StartNewMeeting(ctx context.Context, cr *chrome.Chrome, br *browser.Browser
 
 // JoinMeeting joins a Zoom meeting via invite link.
 // And make sure the camera and microphone are turned on before entering the meeting.
-func JoinMeeting(ctx context.Context, cr *chrome.Chrome, br *browser.Browser, conn *chrome.Conn, inviteLink string, permissionsOption PermissionOption) (*Zoom, error) {
+func JoinMeeting(ctx context.Context, cr *chrome.Chrome, conn *chrome.Conn, inviteLink string, permissionsOption PermissionOption) (*Zoom, error) {
 	if permissionsOption == WithAllPermissions {
-		if err := GrantPermissions(ctx, br); err != nil {
+		if err := GrantPermissions(ctx, cr); err != nil {
 			return nil, errors.Wrap(err, "failed to grant permissions")
 		}
 	}
 
-	if err := navigateToZoomAndSignIn(ctx, cr, br, conn); err != nil {
+	if err := navigateToZoomAndSignIn(ctx, cr, conn); err != nil {
 		return nil, errors.Wrap(err, "failed to navigate to Zoom or sign-in")
 	}
 	tconn, err := cr.TestAPIConn(ctx)
@@ -179,7 +178,7 @@ func JoinMeeting(ctx context.Context, cr *chrome.Chrome, br *browser.Browser, co
 		return nil, errors.Wrap(err, "failed to launch meeting")
 	}
 
-	return New(br, conn, tconn), nil
+	return New(cr, conn, tconn), nil
 }
 
 // StartNewMeetingUsingPWA starts a new Zoom Meeting in PWA mode.
@@ -187,19 +186,19 @@ func JoinMeeting(ctx context.Context, cr *chrome.Chrome, br *browser.Browser, co
 // The caller should explicitly call Close function to release resources and close the app.
 // Example:
 //
-//	zm, err := zoom.StartNewMeetingUsingPWA(ctx, cr, br, true)
+//	zm, err := zoom.StartNewMeetingUsingPWA(ctx, cr, true)
 //	if err != nil {
 //	     s.Fatal("Failed to start meeting: ", err)
 //	}
 //	defer zm.Close(cleanupCtx)
-func StartNewMeetingUsingPWA(ctx context.Context, cr *chrome.Chrome, br *browser.Browser, permissionsOption PermissionOption) (*Zoom, error) {
+func StartNewMeetingUsingPWA(ctx context.Context, cr *chrome.Chrome, permissionsOption PermissionOption) (*Zoom, error) {
 	if permissionsOption == WithAllPermissions {
-		if err := GrantPermissions(ctx, br); err != nil {
+		if err := GrantPermissions(ctx, cr); err != nil {
 			return nil, errors.Wrap(err, "failed to grant permissions")
 		}
 	}
 
-	if err := InstallPWA(ctx, cr, br); err != nil {
+	if err := InstallPWA(ctx, cr); err != nil {
 		return nil, err
 	}
 
@@ -232,7 +231,7 @@ func StartNewMeetingUsingPWA(ctx context.Context, cr *chrome.Chrome, br *browser
 		}
 	}
 
-	zm, err := NewFromTarget(ctx, cr, br, pwaTargetMatcher)
+	zm, err := NewFromTarget(ctx, cr, pwaTargetMatcher)
 	if err != nil {
 		return nil, errors.Wrap(err, "failed to connect to Zoom PWA")
 	}
@@ -329,7 +328,7 @@ func (zm *Zoom) EndMeetingForAll(ctx context.Context) error {
 }
 
 // InstallPWA installs Zoom PWA.
-func InstallPWA(ctx context.Context, cr *chrome.Chrome, br *browser.Browser) error {
+func InstallPWA(ctx context.Context, cr *chrome.Chrome) error {
 	tconn, err := cr.TestAPIConn(ctx)
 	if err != nil {
 		return err
@@ -342,7 +341,7 @@ func InstallPWA(ctx context.Context, cr *chrome.Chrome, br *browser.Browser) err
 	}
 
 	// Install Zoom PWA.
-	if err := apps.InstallPWAForURL(ctx, tconn, br, pwaInstallURL, 30*time.Second); err != nil {
+	if err := apps.InstallPWAForURL(ctx, cr, pwaInstallURL, 30*time.Second); err != nil {
 		return errors.Wrap(err, "failed to install Zoom PWA")
 	}
 	return ash.WaitForChromeAppInstalled(ctx, tconn, apps.Zoom.ID, time.Minute)

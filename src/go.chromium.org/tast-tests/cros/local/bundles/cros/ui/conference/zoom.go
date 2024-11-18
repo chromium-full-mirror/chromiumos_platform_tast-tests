@@ -49,7 +49,7 @@ func (conf *ZoomConference) Join(ctx context.Context, room string, toBlur bool) 
 		return errors.Wrap(err, "failed to create new tab")
 	}
 
-	conf.zm, err = zoom.JoinMeeting(ctx, conf.cr, br, conn, room, zoom.WithAllPermissions)
+	conf.zm, err = zoom.JoinMeeting(ctx, conf.cr, conn, room, zoom.WithAllPermissions)
 	if err != nil {
 		return errors.Wrap(err, "failed to join zoom meeting")
 	}

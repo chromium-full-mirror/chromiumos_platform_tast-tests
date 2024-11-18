@@ -106,7 +106,7 @@ func SpeakOnMuteTabPwa(cleanupCtx context.Context, s *testing.State) {
 	vcTesterFullURL := srvURL + data.VcAppHTML
 	if s.Param().(common.LaunchAppType) == common.LaunchAppInPWA {
 		// Install PWA.
-		appID, err := fakepwa.InstallPwa(ctx, cr, tconn, vcTesterFullURL)
+		appID, err := fakepwa.InstallPwa(ctx, cr, vcTesterFullURL)
 		if err != nil {
 			s.Fatal("fail to install pwa: ", err)
 		}

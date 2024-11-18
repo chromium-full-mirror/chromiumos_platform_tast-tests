@@ -23,7 +23,7 @@ import (
 )
 
 // navigateToZoomAndSignIn starts a new Chrome browser, navigates to the Zoom website and signs in if not yet.
-func navigateToZoomAndSignIn(ctx context.Context, cr *chrome.Chrome, br *browser.Browser, conn *chrome.Conn) error {
+func navigateToZoomAndSignIn(ctx context.Context, cr *chrome.Chrome, conn *chrome.Conn) error {
 	if err := conn.Navigate(ctx, zoomWebsite); err != nil {
 		return err
 	}
@@ -284,10 +284,10 @@ func allowPerm(tconn *chrome.TestConn) action.Action {
 }
 
 // GrantPermissions grants Microphone, Camera and Notifications permissions to Zoom.
-func GrantPermissions(ctx context.Context, br *browser.Browser) error {
+func GrantPermissions(ctx context.Context, cr *chrome.Chrome) error {
 	zoomURLPatterns := []string{"*://zoom.us/*", "*://*.zoom.us/*"}
 
-	return br.GrantPermissions(ctx, zoomURLPatterns,
+	return cr.Browser().GrantPermissions(ctx, zoomURLPatterns,
 		browser.CameraContentSetting,
 		browser.MicrophoneContentSetting,
 		browser.NotificationsContentSetting,

@@ -97,7 +97,7 @@ func WebAPK(ctx context.Context, s *testing.State) {
 		s.Fatal("Failed to connect to test API: ", err)
 	}
 
-	wm, err := webapk.NewManager(ctx, cr, cr.Browser(), a, s, webapks.WebShareTargetWebApk)
+	wm, err := webapk.NewManager(ctx, cr, a, s, webapks.WebShareTargetWebApk)
 	if err != nil {
 		s.Fatal("Failed to create WebAPK Manager: ", err)
 	}

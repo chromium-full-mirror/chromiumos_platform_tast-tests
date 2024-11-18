@@ -97,7 +97,7 @@ func LiveCaptionTabPwa(cleanupCtx context.Context, s *testing.State) {
 	vcTesterFullURL := srvURL + data.VcAppHTML
 	// Launch either the tab or the pwa.
 	if s.Param().(common.LaunchAppType) == common.LaunchAppInPWA {
-		appID, err := fakepwa.InstallPwa(ctx, cr, tconn, vcTesterFullURL)
+		appID, err := fakepwa.InstallPwa(ctx, cr, vcTesterFullURL)
 		if err != nil {
 			s.Fatal("fail to install pwa: ", err)
 		}

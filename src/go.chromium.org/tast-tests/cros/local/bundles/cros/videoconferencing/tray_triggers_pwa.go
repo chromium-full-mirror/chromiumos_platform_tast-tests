@@ -77,7 +77,7 @@ func TrayTriggersPwa(cleanupCtx context.Context, s *testing.State) {
 	vcTray := vctray.New(ctx, tconn)
 
 	// Install PWA.
-	appID, err := fakepwa.InstallPwa(ctx, cr, tconn, srvURL+data.VcAppHTML)
+	appID, err := fakepwa.InstallPwa(ctx, cr, srvURL+data.VcAppHTML)
 	if err != nil {
 		s.Fatal("fail to install pwa: ", err)
 	}

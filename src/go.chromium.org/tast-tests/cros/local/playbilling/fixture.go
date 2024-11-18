@@ -112,7 +112,7 @@ func (f *playBillingFixture) SetUp(ctx context.Context, s *testing.FixtState) in
 	cr := s.ParentValue().(*arc.PreData).Chrome
 	uiDevice := s.ParentValue().(*arc.PreData).UIDevice
 
-	wm, err := webapk.NewManager(ctx, cr, cr.Browser(), f.arcDevice, s, playBillingWebApk)
+	wm, err := webapk.NewManager(ctx, cr, f.arcDevice, s, playBillingWebApk)
 	if err != nil {
 		s.Fatal("Failed to create WebAPK Manager: ", err)
 	}

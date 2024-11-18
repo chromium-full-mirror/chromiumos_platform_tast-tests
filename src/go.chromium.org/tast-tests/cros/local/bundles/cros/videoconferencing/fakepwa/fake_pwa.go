@@ -28,9 +28,14 @@ type VcPwaUI struct {
 }
 
 // InstallPwa installs the pwa and returns its appID.
-func InstallPwa(ctx context.Context, cr *chrome.Chrome, tconn *chrome.TestConn, url string) (string, error) {
-	if err := apps.InstallPWAForURL(ctx, tconn, cr.Browser(), url, 15*time.Second); err != nil {
+func InstallPwa(ctx context.Context, cr *chrome.Chrome, url string) (string, error) {
+	if err := apps.InstallPWAForURL(ctx, cr, url, 15*time.Second); err != nil {
 		return "", errors.Wrap(err, "failed to InstallPWAForURL")
+	}
+
+	tconn, err := cr.TestAPIConn(ctx)
+	if err != nil {
+		return "", errors.Wrap(err, "failed to connect Test API")
 	}
 
 	appID, err := apps.InstalledAppID(ctx, tconn, func(app *ash.ChromeApp) bool {

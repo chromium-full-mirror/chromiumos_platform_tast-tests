@@ -108,7 +108,7 @@ func openPWA(ctx context.Context, cr *chrome.Chrome, tconn *chrome.TestConn) (fu
 			return nil, errors.Wrapf(err, "failed to launch %s PWA", nameInSettingsApp)
 		}
 	} else {
-		if err := apps.InstallPWAForURL(ctx, tconn, cr.Browser(), pwaURL, 30*time.Second); err != nil {
+		if err := apps.InstallPWAForURL(ctx, cr, pwaURL, 30*time.Second); err != nil {
 			return nil, errors.Wrapf(err, "failed to install and launch %s PWA", nameInSettingsApp)
 		}
 	}
