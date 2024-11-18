@@ -168,7 +168,6 @@ func New(ctx context.Context, mode Mode, archive string, scripts []string) (*WPR
 	args := chromeRuntimeArgs(httpAddr, httpsAddr)
 	opts := []chrome.Option{
 		chrome.ExtraArgs(args...),
-		chrome.LacrosExtraArgs(args...),
 		chrome.DisableFeatures("FirmwareUpdaterApp"),
 	}
 

@@ -388,10 +388,11 @@ func CreateAndStartScreenRecorder(ctx context.Context, tconn *chrome.TestConn) *
 }
 
 // CreateAndStartScreenRecorderWithAutoSelect should be used the same way as
-// CreateAndStartScreenRecorder except these two flags should be set.
-// chrome.ExtraArgs(`--auto-select-desktop-capture-source=display`),
-// chrome.LacrosExtraArgs("--auto-select-desktop-capture-source=Entire screen"),
-// When these two flags are set, screen recorder automatically skips all the confirmations.
+// CreateAndStartScreenRecorder except that the following flag should be set:
+//
+//	chrome.ExtraArgs(`--auto-select-desktop-capture-source=display`)
+//
+// Screen recorder will then automatically skip all the confirmations.
 func CreateAndStartScreenRecorderWithAutoSelect(ctx context.Context, tconn *chrome.TestConn) *ScreenRecorder {
 	recorder, err := requestScreenShare(ctx, tconn)
 

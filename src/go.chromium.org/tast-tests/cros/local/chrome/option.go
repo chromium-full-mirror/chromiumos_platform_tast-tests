@@ -442,26 +442,10 @@ func ExtraArgs(args ...string) Option {
 	}
 }
 
-// LacrosExtraArgs returns an Option that can be passed to New to append additional arguments to Lacros Chrome's command line.
-func LacrosExtraArgs(args ...string) Option {
-	return func(cfg *config.MutableConfig) error {
-		cfg.LacrosExtraArgs = append(cfg.LacrosExtraArgs, args...)
-		return nil
-	}
-}
-
 // EnableFeatures returns an Option that can be passed to New to enable specific features in Chrome.
 func EnableFeatures(features ...string) Option {
 	return func(cfg *config.MutableConfig) error {
 		cfg.EnableFeatures = append(cfg.EnableFeatures, features...)
-		return nil
-	}
-}
-
-// LacrosEnableFeatures returns an Option that can be passed to New to enable specific features in Lacros Chrome.
-func LacrosEnableFeatures(features ...string) Option {
-	return func(cfg *config.MutableConfig) error {
-		cfg.LacrosEnableFeatures = append(cfg.LacrosEnableFeatures, features...)
 		return nil
 	}
 }
@@ -474,14 +458,6 @@ func DisableFeatures(features ...string) Option {
 	}
 }
 
-// LacrosDisableFeatures returns an Option that can be passed to New to disable specific features in Lacros Chrome.
-func LacrosDisableFeatures(features ...string) Option {
-	return func(cfg *config.MutableConfig) error {
-		cfg.LacrosDisableFeatures = append(cfg.LacrosDisableFeatures, features...)
-		return nil
-	}
-}
-
 // UnpackedExtension returns an Option that can be passed to New to make Chrome load an unpacked
 // extension in the supplied directory.
 // The specified directory is copied to a different location before loading, so modifications to
@@ -489,14 +465,6 @@ func LacrosDisableFeatures(features ...string) Option {
 func UnpackedExtension(dir string) Option {
 	return func(cfg *config.MutableConfig) error {
 		cfg.ExtraExtDirs = append(cfg.ExtraExtDirs, dir)
-		return nil
-	}
-}
-
-// LacrosUnpackedExtension is similar to UnpackedExtension, but for lacros-chrome.
-func LacrosUnpackedExtension(dir string) Option {
-	return func(cfg *config.MutableConfig) error {
-		cfg.LacrosExtraExtDirs = append(cfg.LacrosExtraExtDirs, dir)
 		return nil
 	}
 }
@@ -587,19 +555,6 @@ func EnableHIDScreenOnOOBE() Option {
 func EnableStackSampledMetrics() Option {
 	return func(cfg *config.MutableConfig) error {
 		cfg.EnableStackSampledMetrics = true
-		return nil
-	}
-}
-
-// EnableLacrosStackSampledMetrics returns an Option that can be passed to New
-// to turn on the stack-sampling profiler in Lacros.
-// By default, in tast tests, we always force the stack-sampled profiler off in
-// Lacros to avoid strange flakes if the profiler has an issue, and to avoid
-// noise in performance tests. (It will run 20% of the time if we don't force
-// it one way or the other.)
-func EnableLacrosStackSampledMetrics() Option {
-	return func(cfg *config.MutableConfig) error {
-		cfg.EnableLacrosStackSampledMetrics = true
 		return nil
 	}
 }

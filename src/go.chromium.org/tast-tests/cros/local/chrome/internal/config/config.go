@@ -176,32 +176,14 @@ func (c *Config) BreakpadTestMode() bool { return c.m.BreakpadTestMode }
 // ExtraArgs returns extra arguments to pass to Chrome.
 func (c *Config) ExtraArgs() []string { return append([]string(nil), c.m.ExtraArgs...) }
 
-// LacrosExtraArgs returns extra arguments to pass to Lacros Chrome.
-func (c *Config) LacrosExtraArgs() []string { return append([]string(nil), c.m.LacrosExtraArgs...) }
-
 // EnableFeatures returns extra Chrome features to enable.
 func (c *Config) EnableFeatures() []string { return append([]string(nil), c.m.EnableFeatures...) }
-
-// LacrosEnableFeatures returns extra Lacros Chrome features to enable.
-func (c *Config) LacrosEnableFeatures() []string {
-	return append([]string(nil), c.m.LacrosEnableFeatures...)
-}
 
 // DisableFeatures returns extra Chrome features to disable.
 func (c *Config) DisableFeatures() []string { return append([]string(nil), c.m.DisableFeatures...) }
 
-// LacrosDisableFeatures returns extra Lacros Chrome features to disable.
-func (c *Config) LacrosDisableFeatures() []string {
-	return append([]string(nil), c.m.LacrosDisableFeatures...)
-}
-
 // ExtraExtDirs returns directories containing extra unpacked extensions to load.
 func (c *Config) ExtraExtDirs() []string { return append([]string(nil), c.m.ExtraExtDirs...) }
-
-// LacrosExtraExtDirs returns directories containing extra Lacros unpacked extensions to load.
-func (c *Config) LacrosExtraExtDirs() []string {
-	return append([]string(nil), c.m.LacrosExtraExtDirs...)
-}
 
 // SigninExtKey returns a private key for the sign-in profile test extension.
 func (c *Config) SigninExtKey() string { return c.m.SigninExtKey }
@@ -238,10 +220,6 @@ func (c *Config) EnableHIDScreenOnOOBE() bool { return c.m.EnableHIDScreenOnOOBE
 // EnableStackSampledMetrics returns true if ash should have stack-sampled
 // metrics enabled.
 func (c *Config) EnableStackSampledMetrics() bool { return c.m.EnableStackSampledMetrics }
-
-// EnableLacrosStackSampledMetrics returns true if Lacros should have stack-sampled
-// metrics enabled.
-func (c *Config) EnableLacrosStackSampledMetrics() bool { return c.m.EnableLacrosStackSampledMetrics }
 
 // FieldTrialConfig returns [enable|disable] to control whether field trial testing config should be used.
 func (c *Config) FieldTrialConfig() string { return c.m.FieldTrialConfig }
@@ -306,13 +284,9 @@ type MutableConfig struct {
 	UnRestrictARCCPU                   bool             `reuse_match:"true"`
 	BreakpadTestMode                   bool             `reuse_match:"true"`
 	ExtraArgs                          []string         `reuse_match:"true"`
-	LacrosExtraArgs                    []string         `reuse_match:"true"`
 	EnableFeatures                     []string         `reuse_match:"true"`
-	LacrosEnableFeatures               []string         `reuse_match:"true"`
 	DisableFeatures                    []string         `reuse_match:"true"`
-	LacrosDisableFeatures              []string         `reuse_match:"true"`
 	ExtraExtDirs                       []string         `reuse_match:"customized"`
-	LacrosExtraExtDirs                 []string         `reuse_match:"customized"`
 	SigninExtKey                       string           `reuse_match:"customized"`
 	SkipForceOnlineSignInForTesting    bool             `reuse_match:"true"`
 	RemoveNotification                 bool             `reuse_match:"true"`
@@ -323,7 +297,6 @@ type MutableConfig struct {
 	TestExtOAuthClientID               string           `reuse_match:"true"`
 	EnableHIDScreenOnOOBE              bool             `reuse_match:"true"`
 	EnableStackSampledMetrics          bool             `reuse_match:"true"`
-	EnableLacrosStackSampledMetrics    bool             `reuse_match:"true"`
 	FieldTrialConfig                   string           `reuse_match:"true"`
 	EnableHDR                          bool             `reuse_match:"false"`
 	ForceManualEnrollment              bool             `reuse_match:"true"`
@@ -366,7 +339,6 @@ func NewConfig(opts []Option) (*Config, error) {
 			UseGaiaConfig:                      "",
 			EnableHIDScreenOnOOBE:              false,
 			EnableStackSampledMetrics:          false,
-			EnableLacrosStackSampledMetrics:    false,
 			EnableOOBETestAPI:                  true,
 			DisableExtensionManifestV2Disabled: true,
 		},
@@ -378,7 +350,7 @@ func NewConfig(opts []Option) (*Config, error) {
 		}
 	}
 	for _, feature := range cfg.m.EnableFeatures {
-		if feature == "LacrosColorManagement" || feature == "EnableExternalDisplayHDR10Mode" {
+		if feature == "EnableExternalDisplayHDR10Mode" {
 			cfg.m.EnableHDR = true
 		}
 	}
