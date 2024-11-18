@@ -11,7 +11,6 @@ import (
 
 	"go.chromium.org/tast-tests/cros/local/chrome"
 	"go.chromium.org/tast-tests/cros/local/chrome/ash"
-	"go.chromium.org/tast-tests/cros/local/chrome/browser"
 	"go.chromium.org/tast-tests/cros/local/chrome/cuj"
 	"go.chromium.org/tast-tests/cros/local/chrome/uiauto"
 	"go.chromium.org/tast-tests/cros/local/chrome/uiauto/nodewith"
@@ -36,7 +35,6 @@ var (
 
 // YtWeb defines the struct related to youtube web.
 type YtWeb struct {
-	br      *browser.Browser
 	tconn   *chrome.TestConn
 	kb      *input.KeyboardEventWriter
 	ui      *uiauto.Context
@@ -49,9 +47,8 @@ type YtWeb struct {
 }
 
 // NewYtWeb creates an instance of YtWeb.
-func NewYtWeb(br *browser.Browser, tconn *chrome.TestConn, kb *input.KeyboardEventWriter, extendedDisplay bool, ui *uiauto.Context, uiHdl cuj.UIActionHandler) *YtWeb {
+func NewYtWeb(tconn *chrome.TestConn, kb *input.KeyboardEventWriter, extendedDisplay bool, ui *uiauto.Context, uiHdl cuj.UIActionHandler) *YtWeb {
 	return &YtWeb{
-		br:    br,
 		tconn: tconn,
 		kb:    kb,
 		ui:    ui,
@@ -76,7 +73,7 @@ func (y *YtWeb) Install(ctx context.Context) error {
 func (y *YtWeb) OpenAndPlayVideo(video VideoSrc) uiauto.Action {
 	return func(ctx context.Context) (err error) {
 		testing.ContextLog(ctx, "Open Youtube web")
-		y.ytConn, err = y.uiHdl.NewChromeTab(ctx, y.br, video.URL, y.openNewWindow)
+		y.ytConn, err = y.uiHdl.NewChromeTab(ctx, video.URL, y.openNewWindow)
 		if err != nil {
 			return errors.Wrap(err, "failed to open youtube tab")
 		}

@@ -146,11 +146,11 @@ func Run(ctx context.Context, s *testing.State, cr *chrome.Chrome, pauseMode Pau
 	// Create uiActionHandler at this point to make sure new tconn after suspend/resume is used.
 	var uiActionHandler cuj.UIActionHandler
 	if tabletMode {
-		if uiActionHandler, err = cuj.NewTabletActionHandler(ctx, tconn); err != nil {
+		if uiActionHandler, err = cuj.NewTabletActionHandler(ctx, cr); err != nil {
 			s.Fatal("Failed to create tablet action handler: ", err)
 		}
 	} else {
-		if uiActionHandler, err = cuj.NewClamshellActionHandler(ctx, tconn); err != nil {
+		if uiActionHandler, err = cuj.NewClamshellActionHandler(ctx, cr); err != nil {
 			s.Fatal("Failed to create clamshell action handler: ", err)
 		}
 	}
@@ -261,7 +261,7 @@ func Run(ctx context.Context, s *testing.State, cr *chrome.Chrome, pauseMode Pau
 					}
 				}()
 
-				if tab.conn, err = uiActionHandler.NewChromeTab(ctx, cr.Browser(), tab.url, tabIdx == 0); err != nil {
+				if tab.conn, err = uiActionHandler.NewChromeTab(ctx, tab.url, tabIdx == 0); err != nil {
 					return errors.Wrapf(err, "failed to open URL: %s", tab.url)
 				}
 			}

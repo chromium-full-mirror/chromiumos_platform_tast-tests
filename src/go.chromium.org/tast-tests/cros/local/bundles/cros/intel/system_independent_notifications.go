@@ -103,7 +103,7 @@ func SystemIndependentNotifications(ctx context.Context, s *testing.State) {
 		Quality: "1440p60",
 	}
 
-	uiHandler, err := cuj.NewClamshellActionHandler(ctx, tconn)
+	uiHandler, err := cuj.NewClamshellActionHandler(ctx, cr)
 	if err != nil {
 		s.Fatal("Failed to create clamshell action handler: ", err)
 	}
@@ -115,7 +115,7 @@ func SystemIndependentNotifications(ctx context.Context, s *testing.State) {
 	}
 
 	cui := uiauto.New(tconn)
-	videoApp := youtube.NewYtWeb(cr.Browser(), tconn, kb, false, cui, uiHandler)
+	videoApp := youtube.NewYtWeb(tconn, kb, false, cui, uiHandler)
 	if err := videoApp.OpenAndPlayVideo(videoSource)(ctx); err != nil {
 		s.Fatalf("Failed to open %s: %v", videoSource.URL, err)
 	}

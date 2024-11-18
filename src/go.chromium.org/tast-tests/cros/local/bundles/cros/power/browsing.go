@@ -231,7 +231,7 @@ func Browsing(ctx context.Context, s *testing.State) {
 	tab1 := tabData{Conn: conn, TabIndex: 0, WinIndex: 0}
 	tabDataList := []tabData{tab1}
 
-	uiHandler, err := cuj.NewClamshellActionHandler(ctx, tconn)
+	uiHandler, err := cuj.NewClamshellActionHandler(ctx, cr)
 	if err != nil {
 		s.Fatal("Failed to create action handler: ", err)
 	}
@@ -240,27 +240,26 @@ func Browsing(ctx context.Context, s *testing.State) {
 	// Create Window A with tab 1 & 2 in foreground
 	// Window B with tab 3 & 4 & 5 in background
 	if multiTab {
-		br := cr.Browser()
 		// tab1 was already created above
-		conn2, err := uiHandler.NewChromeTab(ctx, br, "about:blank", false)
+		conn2, err := uiHandler.NewChromeTab(ctx, "about:blank", false)
 		if err != nil {
 			s.Fatal("Failed to open new Chrome tab: ", err)
 		}
 		tab2 := tabData{Conn: conn2, TabIndex: 1, WinIndex: 0}
 
-		conn3, err := uiHandler.NewChromeTab(ctx, br, "about:blank", true)
+		conn3, err := uiHandler.NewChromeTab(ctx, "about:blank", true)
 		if err != nil {
 			s.Fatal("Failed to open new Chrome tab: ", err)
 		}
 		tab3 := tabData{Conn: conn3, TabIndex: 0, WinIndex: 1}
 
-		conn4, err := uiHandler.NewChromeTab(ctx, br, "about:blank", false)
+		conn4, err := uiHandler.NewChromeTab(ctx, "about:blank", false)
 		if err != nil {
 			s.Fatal("Failed to open new Chrome tab: ", err)
 		}
 		tab4 := tabData{Conn: conn4, TabIndex: 1, WinIndex: 1}
 
-		conn5, err := uiHandler.NewChromeTab(ctx, br, "about:blank", false)
+		conn5, err := uiHandler.NewChromeTab(ctx, "about:blank", false)
 		if err != nil {
 			s.Fatal("Failed to open new Chrome tab: ", err)
 		}

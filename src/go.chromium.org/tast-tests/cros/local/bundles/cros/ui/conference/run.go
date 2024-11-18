@@ -13,11 +13,9 @@ import (
 	"go.chromium.org/tast-tests/cros/local/chrome"
 	"go.chromium.org/tast-tests/cros/local/chrome/browser"
 	"go.chromium.org/tast-tests/cros/local/chrome/cuj"
-	"go.chromium.org/tast-tests/cros/local/chrome/display"
 	"go.chromium.org/tast-tests/cros/local/chrome/uiauto"
 	"go.chromium.org/tast-tests/cros/local/chrome/uiauto/faillog"
 	"go.chromium.org/tast-tests/cros/local/graphics"
-	"go.chromium.org/tast-tests/cros/local/input"
 	"go.chromium.org/tast-tests/cros/local/ui/cujrecorder"
 	"go.chromium.org/tast/core/ctxutil"
 	"go.chromium.org/tast/core/errors"
@@ -212,113 +210,6 @@ func Run(ctx context.Context, params *TestParams) (retErr error) {
 
 	if err := recorder.SaveHistograms(outDir); err != nil {
 		return errors.Wrap(err, "failed to save histogram raw data")
-	}
-
-	return nil
-}
-
-// RunWithGoogleConfig runs google meet testing with google meet config.
-func RunWithGoogleConfig(ctx context.Context, tconn *chrome.TestConn, meetConfig GoogleMeetConfig, p *TestParams) error {
-	var uiHandler cuj.UIActionHandler
-	var err error
-
-	if p.TabletMode {
-		cleanupCtx := ctx
-		ctx, cancel := ctxutil.Shorten(ctx, 5*time.Second)
-		defer cancel()
-
-		cleanup, err := display.RotateToLandscape(ctx, tconn)
-		if err != nil {
-			return errors.Wrap(err, "failed to rotate display to landscape")
-		}
-		defer cleanup(cleanupCtx)
-		if uiHandler, err = cuj.NewTabletActionHandler(ctx, tconn); err != nil {
-			return errors.Wrap(err, "failed to create tablet action handler")
-		}
-	} else {
-		if uiHandler, err = cuj.NewClamshellActionHandler(ctx, tconn); err != nil {
-			return errors.Wrap(err, "failed to create clamshell action handler")
-		}
-	}
-
-	kb, err := input.Keyboard(ctx)
-	if err != nil {
-		return errors.Wrap(err, "failed to initialize keyboard input")
-	}
-	defer kb.Close(ctx)
-
-	run := func(ctx context.Context, meetLink string) error {
-		cleanupGoogleMeetCtx := ctx
-		ctx, cancel := ctxutil.Shorten(ctx, 10*time.Second)
-		defer cancel()
-
-		// Creates a Google Meet conference instance which implements conference.Conference methods
-		// which provides conference operations.
-		gmcli := NewGoogleMeetConference(p.Cr, tconn, kb, uiHandler, p.RoomType, p.OutDir, p.TabletMode, p.ExtendedDisplay)
-		defer gmcli.End(cleanupGoogleMeetCtx)
-
-		p.Conf = gmcli
-		p.MeetLink = meetLink
-
-		if err := Run(ctx, p); err != nil {
-			return errors.Wrap(err, "failed to run Google Meet conference")
-		}
-
-		return nil
-	}
-
-	runWithMeetLinkViaBond := func(ctx context.Context) error {
-		cleanupCtx := ctx
-		ctx, cancel := ctxutil.Shorten(ctx, 5*time.Second)
-		defer cancel()
-
-		meetLink, cleanupBond, err := generateMeetLinkViaBond(ctx, meetConfig, p.RoomType)
-		if err != nil {
-			return &BondError{Err: errors.Wrap(err, "failed to create meet link via BOND API")}
-		}
-		defer cleanupBond(cleanupCtx)
-
-		return run(ctx, meetLink)
-	}
-
-	if p.RoomType == NoRoom {
-		// Without Google Meet, there is no need to assign a meet url.
-		if err := run(ctx, ""); err != nil {
-			return errors.Wrap(err, "failed to run no room")
-		}
-		return nil
-	}
-	// If meet.RetryTimeout equal to 0, don't do any retry.
-	if meetConfig.RetryTimeout == 0 {
-		testing.ContextLog(ctx, "Start running meet scenario")
-		if err := runWithMeetLinkViaBond(ctx); err != nil {
-			return errors.Wrap(err, "failed to run google meet")
-		}
-	}
-
-	var lastError error
-	startTime := time.Now()
-	if err := testing.Poll(ctx, func(ctx context.Context) error {
-		if err := runWithMeetLinkViaBond(ctx); err != nil {
-			elapsedTime := time.Since(startTime)
-			if elapsedTime < meetConfig.RetryTimeout {
-				// Record the complete run result if the failure is not because of timeout.
-				lastError = err
-			}
-			if IsParticipantError(err) || IsBondError(err) {
-				testing.ContextLogf(ctx, "Wait %v and try to run meet scenario again; caused by error: %v", meetConfig.RetryInterval, err)
-				return err
-			}
-			return testing.PollBreak(err) // Break if error is not participant number related.
-		}
-
-		return nil
-	}, &testing.PollOptions{Timeout: meetConfig.RetryTimeout, Interval: meetConfig.RetryInterval}); err != nil {
-		// Return test failure reason of last complete run.
-		if lastError != nil {
-			err = lastError
-		}
-		return errors.Wrap(err, "failed to run google meet")
 	}
 
 	return nil

@@ -61,7 +61,7 @@ func DMICRecord(ctx context.Context, s *testing.State) {
 		expectedAudioNode = "INTERNAL_SPEAKER"
 	)
 
-	uiHandler, err := cuj.NewClamshellActionHandler(ctx, tconn)
+	uiHandler, err := cuj.NewClamshellActionHandler(ctx, cr)
 	if err != nil {
 		s.Fatal("Failed to create clamshell action handler: ", err)
 	}
@@ -80,7 +80,7 @@ func DMICRecord(ctx context.Context, s *testing.State) {
 
 	ui := uiauto.New(tconn)
 	// Create an instance of YtWeb to perform actions on youtube web.
-	ytbWeb := youtube.NewYtWeb(cr.Browser(), tconn, kb, extendedDisplay, ui, uiHandler)
+	ytbWeb := youtube.NewYtWeb(tconn, kb, extendedDisplay, ui, uiHandler)
 	defer ytbWeb.Close(cleanupCtx)
 
 	if err := ytbWeb.OpenAndPlayVideo(videoSource)(ctx); err != nil {

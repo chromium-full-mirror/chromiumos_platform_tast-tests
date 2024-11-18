@@ -166,7 +166,7 @@ func createNewGoogleDocs(ctx context.Context, s *testing.State, cr *chrome.Chrom
 		s.Fatal("Failed to write to a Google doc: ", err)
 	}
 
-	uiHdl, err := cuj.NewClamshellActionHandler(ctx, tconn)
+	uiHdl, err := cuj.NewClamshellActionHandler(ctx, cr)
 	if err != nil {
 		s.Fatal("Failed to create clamshell action handler: ", err)
 	}

@@ -126,7 +126,7 @@ func presentApps(ctx context.Context, tconn *chrome.TestConn, uiHandler cuj.UIAc
 	ctx, cancel := ctxutil.Shorten(ctx, 10*time.Second)
 	defer cancel()
 
-	if err := googledocs.NewGoogleSlides(ctx, tconn, cr.Browser(), uiHandler, extendedDisplay); err != nil {
+	if err := googledocs.NewGoogleSlides(ctx, tconn, uiHandler, extendedDisplay); err != nil {
 		return CheckSignedOutError(ctx, tconn, err)
 	}
 	// Delete slide after presenting.
@@ -165,7 +165,7 @@ func presentApps(ctx context.Context, tconn *chrome.TestConn, uiHandler cuj.UIAc
 		}
 	}
 
-	if err := googledocs.NewGoogleDocs(ctx, tconn, cr.Browser(), uiHandler, extendedDisplay); err != nil {
+	if err := googledocs.NewGoogleDocs(ctx, uiHandler, extendedDisplay); err != nil {
 		return CheckSignedOutError(ctx, tconn, err)
 	}
 	// Delete document after presenting.

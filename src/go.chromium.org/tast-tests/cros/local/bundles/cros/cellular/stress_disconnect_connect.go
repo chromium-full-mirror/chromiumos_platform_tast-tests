@@ -109,7 +109,7 @@ func StressDisconnectConnect(ctx context.Context, s *testing.State) {
 	}
 
 	openWebPage := func(ctx context.Context, url string) (*chrome.Conn, error) {
-		conn, err := uiHelper.UIHandler.NewChromeTab(ctx, uiHelper.Cr.Browser(), url, false)
+		conn, err := uiHelper.UIHandler.NewChromeTab(ctx, url, false)
 		if err != nil {
 			return nil, errors.Wrap(err, "failed to open web page")
 		}

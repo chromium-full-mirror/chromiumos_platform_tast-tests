@@ -99,7 +99,7 @@ func (conf *ZoomConference) VideoAudioControl(ctx context.Context) error {
 func (conf *ZoomConference) SwitchTabs(ctx context.Context) error {
 	testing.ContextLog(ctx, "Open wiki page")
 	// Set newWindow to false to make the tab in the same Chrome window.
-	wikiConn, err := conf.uiHandler.NewChromeTab(ctx, conf.cr.Browser(), cuj.WikipediaURL, false)
+	wikiConn, err := conf.uiHandler.NewChromeTab(ctx, cuj.WikipediaURL, false)
 	if err != nil {
 		return errors.Wrap(err, "failed to open the wiki url")
 	}

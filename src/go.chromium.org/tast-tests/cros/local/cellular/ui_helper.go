@@ -44,7 +44,6 @@ const (
 
 // NewUIHelperWithOpts creates a Helper object with a new Chrome instance, and ensures that a UI is loaded.
 func NewUIHelperWithOpts(ctx context.Context, opts ...chrome.Option) (*UIHelper, error) {
-
 	cr, err := chrome.New(ctx, opts...)
 	if err != nil {
 		return nil, errors.Wrap(err, "chrome login failed")
@@ -63,7 +62,7 @@ func NewUIHelperWithOpts(ctx context.Context, opts ...chrome.Option) (*UIHelper,
 	helper.UI = ui
 
 	// uiHandler will be assigned with different instances for clamshell and tablet mode.
-	uiHandler, err := cuj.NewClamshellActionHandler(ctx, tconn)
+	uiHandler, err := cuj.NewClamshellActionHandler(ctx, cr)
 	if err != nil {
 		return nil, errors.Wrap(err, "failed to create clamshell action handler")
 	}
@@ -101,7 +100,7 @@ func (h *UIHelper) GoogleVoiceLogin(ctx context.Context) (*chrome.Conn, error) {
 
 	testing.ContextLog(ctx, "open googlevoice web url: ", gvoiceMessagesURL)
 	// Open google voice tab, set new window to true to be first tab
-	driverconn, err := h.UIHandler.NewChromeTab(ctx, h.Cr.Browser(), gvoiceMessagesURL, true)
+	driverconn, err := h.UIHandler.NewChromeTab(ctx, gvoiceMessagesURL, true)
 	if err != nil {
 		return driverconn, errors.Wrap(err, "failed to open voice web page")
 	}
@@ -302,7 +301,7 @@ func (h *UIHelper) ValidateSuppressedMessage(ctx context.Context) error {
 func (h *UIHelper) UploadCsvSimLockPortal(ctx context.Context, simlockConfigCsvFilePath string) error {
 	testing.ContextLog(ctx, "open SimLockPortal web url: ", simLockPortalURL)
 	// Open sim lock portal, set new window to true to be first tab
-	driverconn, err := h.UIHandler.NewChromeTab(ctx, h.Cr.Browser(), simLockPortalURL, true)
+	driverconn, err := h.UIHandler.NewChromeTab(ctx, simLockPortalURL, true)
 	if err != nil {
 		return errors.Wrap(err, "failed to open simLockPortal web page")
 	}

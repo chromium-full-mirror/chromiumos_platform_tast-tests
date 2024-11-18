@@ -188,7 +188,7 @@ func setUpDesks(ctx context.Context, tconn *chrome.TestConn, cr *chrome.Chrome, 
 				return nil, totalOpenWindows, cleanup, errors.Wrap(err, "failed to get URL")
 			}
 			cleanup = func(ctx context.Context) error {
-				uiHandler, err := cuj.NewClamshellActionHandler(ctx, tconn)
+				uiHandler, err := cuj.NewClamshellActionHandler(ctx, cr)
 				if err != nil {
 					return errors.Wrap(err, "failed to create clamshell action handler")
 				}

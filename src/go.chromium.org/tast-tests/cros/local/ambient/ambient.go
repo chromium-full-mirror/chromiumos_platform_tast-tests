@@ -518,7 +518,7 @@ func SetScreenSaverHelper(ctx context.Context, cr *chrome.Chrome, tconn *chrome.
 		defer kb.Close(cleanupCtx)
 
 		var uiHandler cuj.UIActionHandler
-		if uiHandler, err = cuj.NewClamshellActionHandler(ctx, tconn); err != nil {
+		if uiHandler, err = cuj.NewClamshellActionHandler(ctx, cr); err != nil {
 			return errors.Wrap(err, "failed to create clamshell action handler")
 		}
 		defer uiHandler.Close(cleanupCtx)
@@ -531,7 +531,7 @@ func SetScreenSaverHelper(ctx context.Context, cr *chrome.Chrome, tconn *chrome.
 		// Open up an arbitrary Youtube video to test "media string". The name of
 		// the media playing should be displayed in the screen saver.
 		const extendedDisplay = false
-		videoApp := youtube.NewYtWeb(cr.Browser(), tconn, kb, extendedDisplay, ui, uiHandler)
+		videoApp := youtube.NewYtWeb(tconn, kb, extendedDisplay, ui, uiHandler)
 		if err := videoApp.OpenAndPlayVideo(TestVideoSrc)(ctx); err != nil {
 			return errors.Wrapf(err, "failed to open %s", TestVideoSrc.URL)
 		}

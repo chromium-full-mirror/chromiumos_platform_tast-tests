@@ -160,11 +160,11 @@ func Run(ctx context.Context, cr *chrome.Chrome, a *arc.ARC, params *RunParams) 
 	// uiHandler will be assigned with different instances for clamshell and tablet mode.
 	var uiHandler cuj.UIActionHandler
 	if params.tabletMode {
-		if uiHandler, err = cuj.NewTabletActionHandler(ctx, tconn); err != nil {
+		if uiHandler, err = cuj.NewTabletActionHandler(ctx, cr); err != nil {
 			return errors.Wrap(err, "failed to create tablet action handler")
 		}
 	} else {
-		if uiHandler, err = cuj.NewClamshellActionHandler(ctx, tconn); err != nil {
+		if uiHandler, err = cuj.NewClamshellActionHandler(ctx, cr); err != nil {
 			return errors.Wrap(err, "failed to create clamshell action handler")
 		}
 	}
@@ -342,7 +342,7 @@ func openAndSwitchTabs(ctx context.Context, cr *chrome.Chrome, tconn *chrome.Tes
 
 	openBrowserWithTabs := func(urlList []string) error {
 		for idx, url := range urlList {
-			conn, err := resources.uiHandler.NewChromeTab(ctx, cr.Browser(), url, idx == 0)
+			conn, err := resources.uiHandler.NewChromeTab(ctx, url, idx == 0)
 			if err != nil {
 				return errors.Wrapf(err, "failed to open %s", url)
 			}

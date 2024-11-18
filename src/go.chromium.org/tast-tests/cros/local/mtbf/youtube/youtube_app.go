@@ -66,7 +66,11 @@ type YtApp struct {
 }
 
 // NewYtApp creates an instance of YtApp.
-func NewYtApp(cr *chrome.Chrome, tconn *chrome.TestConn, kb *input.KeyboardEventWriter, a *arc.ARC, d *androidui.Device, outDir, youtubeApkURL string) *YtApp {
+func NewYtApp(ctx context.Context, cr *chrome.Chrome, kb *input.KeyboardEventWriter, a *arc.ARC, d *androidui.Device, outDir, youtubeApkURL string) (*YtApp, error) {
+	tconn, err := cr.TestAPIConn(ctx)
+	if err != nil {
+		return nil, errors.Wrap(err, "creating test API connection failed")
+	}
 	return &YtApp{
 		cr:            cr,
 		tconn:         tconn,
@@ -76,7 +80,7 @@ func NewYtApp(cr *chrome.Chrome, tconn *chrome.TestConn, kb *input.KeyboardEvent
 		outDir:        outDir,
 		youtubeApkURL: youtubeApkURL,
 		premium:       true,
-	}
+	}, nil
 }
 
 // Install installs the Youtube app using the apk.

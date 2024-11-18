@@ -107,11 +107,6 @@ func MultiTaskingApp(ctx context.Context, s *testing.State) {
 	}
 	defer kb.Close(cleanupCtx)
 
-	bTconn, err := cr.TestAPIConn(ctx)
-	if err != nil {
-		s.Fatal("Failed to connect to the TestAPIConn: ", err)
-	}
-
 	tabletMode, err := ash.TabletModeEnabled(ctx, tconn)
 	if err != nil {
 		s.Fatal("Failed to get tablet mode: ", err)
@@ -119,11 +114,11 @@ func MultiTaskingApp(ctx context.Context, s *testing.State) {
 
 	var uiHandler cuj.UIActionHandler
 	if tabletMode {
-		if uiHandler, err = cuj.NewTabletActionHandler(ctx, tconn); err != nil {
+		if uiHandler, err = cuj.NewTabletActionHandler(ctx, cr); err != nil {
 			s.Fatal("Failed to create tablet action handler: ", err)
 		}
 	} else {
-		if uiHandler, err = cuj.NewClamshellActionHandler(ctx, tconn); err != nil {
+		if uiHandler, err = cuj.NewClamshellActionHandler(ctx, cr); err != nil {
 			s.Fatal("Failed to create clamshell action handler: ", err)
 		}
 	}
@@ -141,7 +136,6 @@ func MultiTaskingApp(ctx context.Context, s *testing.State) {
 		Kb:        kb,
 		UIHandler: uiHandler,
 		Tconn:     tconn,
-		Btconn:    bTconn,
 		A:         a,
 	}
 

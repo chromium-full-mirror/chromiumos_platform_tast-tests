@@ -125,13 +125,13 @@ func YoutubeStreamHDMIDisplay(ctx context.Context, s *testing.State) {
 		s.Fatal("Failed to change resolution: ", err)
 	}
 
-	uiHandler, err := cuj.NewClamshellActionHandler(ctx, tconn)
+	uiHandler, err := cuj.NewClamshellActionHandler(ctx, cr)
 	if err != nil {
 		s.Fatal("Failed to create clamshell action handler: ", err)
 	}
 	defer uiHandler.Close(ctx)
 
-	videoApp := youtube.NewYtWeb(cr.Browser(), tconn, kb, true, cui, uiHandler)
+	videoApp := youtube.NewYtWeb(tconn, kb, true, cui, uiHandler)
 	if err := videoApp.OpenAndPlayVideo(videoSource)(ctx); err != nil {
 		s.Fatalf("Failed to open %s: %v", videoSource.URL, err)
 	}

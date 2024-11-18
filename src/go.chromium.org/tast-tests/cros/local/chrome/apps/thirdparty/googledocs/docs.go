@@ -12,7 +12,6 @@ import (
 
 	"go.chromium.org/tast-tests/cros/common/action"
 	"go.chromium.org/tast-tests/cros/local/chrome"
-	"go.chromium.org/tast-tests/cros/local/chrome/browser"
 	"go.chromium.org/tast-tests/cros/local/chrome/cuj"
 	"go.chromium.org/tast-tests/cros/local/chrome/uiauto"
 	"go.chromium.org/tast-tests/cros/local/chrome/uiauto/nodewith"
@@ -35,15 +34,14 @@ var (
 )
 
 // NewGoogleDocs returns an action to create a new Google document.
-func NewGoogleDocs(ctx context.Context, tconn *chrome.TestConn, br *browser.Browser, uiHandler cuj.UIActionHandler, newWindow bool) error {
+func NewGoogleDocs(ctx context.Context, uiHandler cuj.UIActionHandler, newWindow bool) error {
 	testing.ContextLog(ctx, "Start to create Google document")
 	// If there is an account sign-out issue when navigating to a Google Docs page,
-	// it will continue to evaluate the JS expression in br.NewConn until
-	// the test case timeout is exceeded.
+	// it will continue to evaluate the JS expression until the test case timeout is exceeded.
 	// Set a short timeout value to return errors earlier.
 	newChromeTabCtx, cancel := context.WithTimeout(ctx, time.Minute)
 	defer cancel()
-	conn, err := uiHandler.NewChromeTab(newChromeTabCtx, br, cuj.NewGoogleDocsURL, newWindow)
+	conn, err := uiHandler.NewChromeTab(newChromeTabCtx, cuj.NewGoogleDocsURL, newWindow)
 	if err != nil {
 		return errors.Wrap(err, "failed to open the Google document")
 	}

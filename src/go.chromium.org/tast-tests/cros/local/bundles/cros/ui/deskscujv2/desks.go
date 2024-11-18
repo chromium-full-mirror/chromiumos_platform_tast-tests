@@ -133,7 +133,7 @@ func setUpDesks(ctx context.Context, cr *chrome.Chrome, tconn *chrome.TestConn, 
 	ui := uiauto.New(tconn)
 
 	desk1VisitAction := func(ctx context.Context) error {
-		if err := switchToWindow(ctx, tconn, crosVideoTitle); err != nil {
+		if err := switchToWindow(ctx, cr, crosVideoTitle); err != nil {
 			return errors.Wrap(err, "failed to switch to CrosVideo")
 		}
 		// GoBigSleepLint: sleep for 5 seconds to let the video play.
@@ -250,7 +250,7 @@ func setUpDesks(ctx context.Context, cr *chrome.Chrome, tconn *chrome.TestConn, 
 			cleanups = append(cleanups, cleanupPDF)
 			totalOpenWindows++
 
-			cleanupDocs, err := copyDocsFile(ctx, tconn, kw, pictureGoogleDocsTitle)
+			cleanupDocs, err := copyDocsFile(ctx, cr, kw, pictureGoogleDocsTitle)
 			if err != nil {
 				return nil, totalOpenWindows, nil, errors.Wrap(err, "failed to copy docs file")
 			}
@@ -290,13 +290,18 @@ func setUpDesks(ctx context.Context, cr *chrome.Chrome, tconn *chrome.TestConn, 
 
 // copyDocsFile switches to the Google docs window by window title |docWindowTitle| and copies the docs file.
 // This function also returns the cleanup function to delete the copied doc file.
-func copyDocsFile(ctx context.Context, tconn *chrome.TestConn, kw *input.KeyboardEventWriter, docWindowTitle string) (_ func(context.Context) error, retErr error) {
+func copyDocsFile(ctx context.Context, cr *chrome.Chrome, kw *input.KeyboardEventWriter, docWindowTitle string) (_ func(context.Context) error, retErr error) {
 	cleanupCtx := ctx
 	ctx, cancel := ctxutil.Shorten(ctx, 10*time.Second)
 	defer cancel()
 
-	if err := switchToWindow(ctx, tconn, docWindowTitle); err != nil {
+	if err := switchToWindow(ctx, cr, docWindowTitle); err != nil {
 		return nil, errors.Wrap(err, "failed to switch to docs window")
+	}
+
+	tconn, err := cr.TestAPIConn(ctx)
+	if err != nil {
+		return nil, errors.Wrap(err, "creating test API connection failed")
 	}
 
 	ui := uiauto.New(tconn)
@@ -314,7 +319,7 @@ func copyDocsFile(ctx context.Context, tconn *chrome.TestConn, kw *input.Keyboar
 
 	return func(ctx context.Context) error {
 		copyFileTitle := "Copy of " + docWindowTitle
-		if err := switchToWindow(ctx, tconn, copyFileTitle); err != nil {
+		if err := switchToWindow(ctx, cr, copyFileTitle); err != nil {
 			return errors.Wrap(err, "failed to switch to docs window")
 		}
 		if err := googledocs.DeleteDoc(tconn)(ctx); err != nil {
@@ -375,16 +380,21 @@ func openPDFFile(ctx context.Context, cr *chrome.Chrome, tconn *chrome.TestConn,
 }
 
 // switchToWindow switches to the specific window identified by its title |windowTitle|.
-func switchToWindow(ctx context.Context, tconn *chrome.TestConn, windowTitle string) error {
+func switchToWindow(ctx context.Context, cr *chrome.Chrome, windowTitle string) error {
 	cleanupCtx := ctx
 	ctx, cancel := ctxutil.Shorten(ctx, 10*time.Second)
 	defer cancel()
 
-	uiHandler, err := cuj.NewClamshellActionHandler(ctx, tconn)
+	uiHandler, err := cuj.NewClamshellActionHandler(ctx, cr)
 	if err != nil {
 		return errors.Wrap(err, "failed to create clamshell action handler")
 	}
 	defer uiHandler.Close(cleanupCtx)
+
+	tconn, err := cr.TestAPIConn(ctx)
+	if err != nil {
+		return errors.Wrap(err, "creating test API connection failed")
+	}
 
 	chromeApp, err := apps.ChromeOrChromium(ctx, tconn)
 	if err != nil {

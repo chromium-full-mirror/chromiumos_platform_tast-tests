@@ -54,7 +54,6 @@ type TestResources struct {
 	Kb        *input.KeyboardEventWriter
 	UIHandler cuj.UIActionHandler
 	Tconn     *chrome.TestConn
-	Btconn    *chrome.TestConn
 	A         *arc.ARC
 }
 
@@ -96,7 +95,6 @@ func Run(ctx context.Context, resources *TestResources, params *TestParams) (ret
 		tconn         = resources.Tconn
 		a             = resources.A
 		kb            = resources.Kb
-		bTconn        = resources.Btconn
 		uiHandler     = resources.UIHandler
 	)
 
@@ -227,7 +225,7 @@ func Run(ctx context.Context, resources *TestResources, params *TestParams) (ret
 		shortCtx, cancel := context.WithTimeout(ctx, 15*time.Second)
 		defer cancel()
 		// Use a short timeout context to prevent getting stuck at "CloseAllTabs".
-		if err := browser.CloseAllTabs(shortCtx, bTconn); err != nil {
+		if err := browser.CloseAllTabs(shortCtx, tconn); err != nil {
 			testing.ContextLog(ctx, "Failed to close all tabs: ", err)
 			// Click the leave button if it exists.
 			if err := prompts.ClearPotentialPrompts(tconn, time.Second, prompts.LeaveSitePrompt)(ctx); err != nil {
@@ -250,8 +248,7 @@ func Run(ctx context.Context, resources *TestResources, params *TestParams) (ret
 		return errors.Wrap(err, "failed to start collecting power metrics")
 	}
 
-	br := cr.Browser()
-	conn, err := uiHandler.NewChromeTab(ctx, br, chrome.BlankURL, true)
+	conn, err := uiHandler.NewChromeTab(ctx, chrome.BlankURL, true)
 	if err != nil {
 		return errors.Wrap(err, "failed to create new chrome tab")
 	}
@@ -268,7 +265,7 @@ func Run(ctx context.Context, resources *TestResources, params *TestParams) (ret
 			return errors.Wrap(err, "failed to run video app procedure")
 		}
 
-		if err := browserActivity(ctx, br, tconn, conn, uiHandler, browserApp, browserTime); err != nil {
+		if err := browserActivity(ctx, conn, uiHandler, browserApp, browserTime); err != nil {
 			return errors.Wrap(err, "failed to run browser procedure")
 		}
 	}
@@ -300,7 +297,7 @@ func arrangeWindow(ctx context.Context, tconn *chrome.TestConn, appID string, wi
 // browserActivity defines test scenario of browser.
 // Open a website, browse the page and wait 12 seconds.
 // The total execution time is 6 minutes.
-func browserActivity(ctx context.Context, br *browser.Browser, tconn *chrome.TestConn, conn *chrome.Conn, uiHandler cuj.UIActionHandler, browserApp apps.App, browserTime time.Duration) error {
+func browserActivity(ctx context.Context, conn *chrome.Conn, uiHandler cuj.UIActionHandler, browserApp apps.App, browserTime time.Duration) error {
 	const (
 		// chromeTabQuiescenceTimeout defines the maximum time duration to wait for a Chrome tab to achieve quiescence.
 		chromeTabQuiescenceTimeout = time.Minute

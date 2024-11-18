@@ -73,7 +73,7 @@ type UIActionHandler interface {
 	LaunchChrome(ctx context.Context) (time.Time, error)
 
 	// NewChromeTab creates a new tab of Google Chrome.
-	NewChromeTab(ctx context.Context, br *browser.Browser, url string, newWindow bool) (*chrome.Conn, error)
+	NewChromeTab(ctx context.Context, url string, newWindow bool) (*chrome.Conn, error)
 
 	// SwitchWindow returns a function which switches to the next window by key event.
 	SwitchWindow() action.Action
@@ -124,6 +124,7 @@ type UIActionHandler interface {
 
 // TabletActionHandler defines the action on tablet devices.
 type TabletActionHandler struct {
+	cr    *chrome.Chrome
 	tconn *chrome.TestConn
 	ui    *uiauto.Context
 	kb    *input.KeyboardEventWriter // Even in tablet mode, some tests might want to use keyboard shortcuts for certain operations.
@@ -134,16 +135,20 @@ type TabletActionHandler struct {
 }
 
 // NewTabletActionHandler returns the action handler which is responsible for handling UI actions on tablet.
-func NewTabletActionHandler(ctx context.Context, tconn *chrome.TestConn) (*TabletActionHandler, error) {
+func NewTabletActionHandler(ctx context.Context, cr *chrome.Chrome) (*TabletActionHandler, error) {
 	var (
 		succ = false
-		err  error
 		tc   *touch.Context
 		tcc  *input.TouchCoordConverter
 		kb   *input.KeyboardEventWriter
 		tew  *input.TouchscreenEventWriter
 		stew *input.SingleTouchEventWriter
 	)
+
+	tconn, err := cr.TestAPIConn(ctx)
+	if err != nil {
+		return nil, errors.Wrap(err, "failed to get test API connection")
+	}
 
 	defer func() {
 		if succ {
@@ -185,6 +190,7 @@ func NewTabletActionHandler(ctx context.Context, tconn *chrome.TestConn) (*Table
 
 	succ = true
 	return &TabletActionHandler{
+		cr:    cr,
 		tconn: tconn,
 		kb:    kb,
 		ui:    uiauto.New(tconn).WithPollOpts(defaultPollOpts),
@@ -258,7 +264,7 @@ func (t *TabletActionHandler) showTabList() action.Action {
 
 // NewChromeTab creates a new tab of Google Chrome.
 // newWindow indicates whether this new tab should open in current Chrome window or in new Chrome window.
-func (t *TabletActionHandler) NewChromeTab(ctx context.Context, br *browser.Browser, url string, newWindow bool) (*chrome.Conn, error) {
+func (t *TabletActionHandler) NewChromeTab(ctx context.Context, url string, newWindow bool) (*chrome.Conn, error) {
 	ctx, cancel := context.WithTimeout(ctx, 2*time.Minute)
 	defer cancel()
 
@@ -276,7 +282,7 @@ func (t *TabletActionHandler) NewChromeTab(ctx context.Context, br *browser.Brow
 	// The function is called with the assumption that all existing tabs are navigated to a certain URL.
 	// New tab (chrome://newtab/) should exist only for lacros-Chrome when it is initially launched.
 	// Find this initial lacros-Chrome new tab.
-	targets, err := br.FindTargets(ctx, chrome.MatchTargetURL("chrome://newtab/"))
+	targets, err := t.cr.FindTargets(ctx, chrome.MatchTargetURL("chrome://newtab/"))
 	if err != nil {
 		return nil, errors.Wrap(err, "failed to find new tab targets")
 	}
@@ -286,7 +292,7 @@ func (t *TabletActionHandler) NewChromeTab(ctx context.Context, br *browser.Brow
 	if len(targets) == 0 {
 		if newWindow || !shown {
 			// No new tab. Create a new window and return.
-			return br.NewConn(ctx, url, browser.WithNewWindow())
+			return t.cr.NewConn(ctx, url, browser.WithNewWindow())
 		}
 		// There may be multiple browser windows under tablet mode, with one active and others invisible.
 		// The UI layout of different windows are the same and with the same coordinates. So tap the first
@@ -297,7 +303,7 @@ func (t *TabletActionHandler) NewChromeTab(ctx context.Context, br *browser.Brow
 		}
 	}
 
-	c, err := br.NewConnForTarget(ctx, chrome.MatchTargetURL("chrome://newtab/"))
+	c, err := t.cr.NewConnForTarget(ctx, chrome.MatchTargetURL("chrome://newtab/"))
 	if err != nil {
 		return nil, errors.Wrap(err, "failed to find new tab")
 	}
@@ -657,6 +663,7 @@ func (t *TabletActionHandler) MinimizeAllWindow() action.Action {
 
 // ClamshellActionHandler define the action on clamshell devices.
 type ClamshellActionHandler struct {
+	cr       *chrome.Chrome
 	tconn    *chrome.TestConn
 	ui       *uiauto.Context
 	kb       *input.KeyboardEventWriter
@@ -665,14 +672,18 @@ type ClamshellActionHandler struct {
 }
 
 // NewClamshellActionHandler returns the action handler which is responsible for handling UI actions on clamshell.
-func NewClamshellActionHandler(ctx context.Context, tconn *chrome.TestConn) (*ClamshellActionHandler, error) {
+func NewClamshellActionHandler(ctx context.Context, cr *chrome.Chrome) (*ClamshellActionHandler, error) {
 	var (
 		succ     = false
-		err      error
 		pad      *input.TrackpadEventWriter
 		touchPad *input.TouchEventWriter
 		kb       *input.KeyboardEventWriter
 	)
+
+	tconn, err := cr.TestAPIConn(ctx)
+	if err != nil {
+		return nil, errors.Wrap(err, "failed to get test API connection")
+	}
 
 	defer func() {
 		if succ {
@@ -705,6 +716,7 @@ func NewClamshellActionHandler(ctx context.Context, tconn *chrome.TestConn) (*Cl
 
 	succ = true
 	return &ClamshellActionHandler{
+		cr:       cr,
 		tconn:    tconn,
 		ui:       uiauto.New(tconn).WithPollOpts(defaultPollOpts),
 		kb:       kb,
@@ -761,11 +773,11 @@ func (cl *ClamshellActionHandler) clickOpenedAppOnShelf(ctx context.Context, app
 
 // NewChromeTab creates a new tab of Google Chrome.
 // newWindow indicates this new tab should open in current Chrome window or open in new Chrome window.
-func (cl *ClamshellActionHandler) NewChromeTab(ctx context.Context, br *browser.Browser, url string, newWindow bool) (*chrome.Conn, error) {
+func (cl *ClamshellActionHandler) NewChromeTab(ctx context.Context, url string, newWindow bool) (*chrome.Conn, error) {
 	// The function is called with the assumption that all existing tabs are navigated to a certain URL.
 	// New tab (chrome://newtab/) should exist only for lacros-Chrome when it is initially launched.
 	// Find this initial lacros-Chrome new tab.
-	targets, err := br.FindTargets(ctx, chrome.MatchTargetURL("chrome://newtab/"))
+	targets, err := cl.cr.FindTargets(ctx, chrome.MatchTargetURL("chrome://newtab/"))
 	if err != nil {
 		return nil, errors.Wrap(err, "failed to find new tab targets")
 	}
@@ -775,7 +787,7 @@ func (cl *ClamshellActionHandler) NewChromeTab(ctx context.Context, br *browser.
 	if len(targets) == 0 {
 		if newWindow {
 			// No new tab. Create a new window and return.
-			return br.NewConn(ctx, url, browser.WithNewWindow())
+			return cl.cr.NewConn(ctx, url, browser.WithNewWindow())
 		}
 		// Create a new tab in the existing window.
 		if err := cl.kb.Accel(ctx, "Ctrl+T"); err != nil {
@@ -784,7 +796,7 @@ func (cl *ClamshellActionHandler) NewChromeTab(ctx context.Context, br *browser.
 	}
 
 	// Find the new tab and navigate to the the given URL.
-	c, err := br.NewConnForTarget(ctx, chrome.MatchTargetURL("chrome://newtab/"))
+	c, err := cl.cr.NewConnForTarget(ctx, chrome.MatchTargetURL("chrome://newtab/"))
 	if err != nil {
 		return nil, errors.Wrap(err, "failed to find new tab")
 	}

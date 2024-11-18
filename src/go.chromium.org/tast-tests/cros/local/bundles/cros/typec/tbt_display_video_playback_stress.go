@@ -171,7 +171,7 @@ func TBTDisplayVideoPlaybackStress(ctx context.Context, s *testing.State) {
 	defer kb.Close(ctx)
 
 	ui := uiauto.New(tconn)
-	uiHandler, err := cuj.NewClamshellActionHandler(ctx, tconn)
+	uiHandler, err := cuj.NewClamshellActionHandler(ctx, cr)
 	if err != nil {
 		s.Fatal("Failed to create clamshell action handler: ", err)
 	}
@@ -184,7 +184,7 @@ func TBTDisplayVideoPlaybackStress(ctx context.Context, s *testing.State) {
 	}
 
 	// Create an instance of YtWeb to perform actions on youtube web.
-	ytbWeb := youtube.NewYtWeb(cr.Browser(), tconn, kb, extendedDisplay, ui, uiHandler)
+	ytbWeb := youtube.NewYtWeb(tconn, kb, extendedDisplay, ui, uiHandler)
 	defer ytbWeb.Close(cleanupCtx)
 	defer cuj.SwitchWindowToDisplay(cleanupCtx, tconn, kb, !extendedDisplay)(ctx)
 

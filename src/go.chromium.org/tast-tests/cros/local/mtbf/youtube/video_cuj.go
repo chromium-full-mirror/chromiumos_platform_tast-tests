@@ -157,11 +157,6 @@ func Run(ctx context.Context, resources TestResources, param TestParams) error {
 		return errors.Wrap(err, "failed to get browser start time")
 	}
 
-	br := cr.Browser()
-	bTconn, err := br.TestAPIConn(ctx)
-	if err != nil {
-		return errors.Wrap(err, "failed to create Test API connection for the browser")
-	}
 	videoSources := basicVideoSrc
 	if tier == cuj.Premium || tier == cuj.Advanced {
 		videoSources = premiumVideoSrc
@@ -189,7 +184,7 @@ func Run(ctx context.Context, resources TestResources, param TestParams) error {
 	defer cancel()
 
 	options := cujrecorder.NewPerformanceCUJOptions()
-	recorder, err := cujrecorder.NewRecorder(ctx, cr, bTconn, a, options)
+	recorder, err := cujrecorder.NewRecorder(ctx, cr, tconn, a, options)
 	if err != nil {
 		return errors.Wrap(err, "failed to create a recorder")
 	}
@@ -201,9 +196,12 @@ func Run(ctx context.Context, resources TestResources, param TestParams) error {
 	var videoApp VideoApp
 	switch appName {
 	case YoutubeWeb:
-		videoApp = NewYtWeb(br, tconn, kb, extendedDisplay, ui, uiHandler)
+		videoApp = NewYtWeb(tconn, kb, extendedDisplay, ui, uiHandler)
 	case YoutubeApp:
-		videoApp = NewYtApp(cr, tconn, kb, a, d, outDir, youtubeApkURL)
+		videoApp, err = NewYtApp(ctx, cr, kb, a, d, outDir, youtubeApkURL)
+		if err != nil {
+			return err
+		}
 		if err := videoApp.Install(ctx); err != nil {
 			return errors.Wrap(err, "failed to install Youtube app")
 		}
@@ -224,19 +222,19 @@ func Run(ctx context.Context, resources TestResources, param TestParams) error {
 				videoApp.Close(ctx)
 			}
 			closeFunc := func(ctx context.Context) error {
-				if err := browser.CloseAllTabs(ctx, bTconn); err != nil {
+				if err := browser.CloseAllTabs(ctx, tconn); err != nil {
 					testing.ContextLog(ctx, "Failed to close all tabs: ", err)
 				}
 				return nil
 			}
-			if err := cuj.RunAndWaitLCPHistograms(ctx, bTconn, closeFunc); err != nil {
+			if err := cuj.RunAndWaitLCPHistograms(ctx, tconn, closeFunc); err != nil {
 				testing.ContextLog(ctx, "Failed to run and wait for LCP histograms to update: ", err)
 			}
 			// Close the currently playing video and restart the new one.
 			if appName == YoutubeWeb {
 				// Before closing the youtube site outside the recorder, dump the UI tree to capture a screenshot.
 				faillog.DumpUITreeWithScreenshotOnError(ctx, outDir, func() bool { return retErr != nil }, cr, "ui_dump")
-				if err := browser.CloseAllTabs(ctx, bTconn); err != nil {
+				if err := browser.CloseAllTabs(ctx, tconn); err != nil {
 					testing.ContextLog(ctx, "Failed to close all tabs: ", err)
 				}
 			}
@@ -253,7 +251,7 @@ func Run(ctx context.Context, resources TestResources, param TestParams) error {
 			defer recorder.StopTracing(ctx)
 		}
 
-		if err := videoScenario(ctx, resources, param, br, bTconn, videoApp, videoSource, tabChecker); err != nil {
+		if err := videoScenario(ctx, resources, param, videoApp, videoSource, tabChecker); err != nil {
 			return errors.Wrap(err, "failed to run video test")
 		}
 		if err := cuj.GenerateADF(ctx, tconn, tabletMode); err != nil {
@@ -309,7 +307,7 @@ func Run(ctx context.Context, resources TestResources, param TestParams) error {
 	return nil
 }
 
-func videoScenario(ctx context.Context, resources TestResources, param TestParams, br *browser.Browser, bTconn *chrome.TestConn,
+func videoScenario(ctx context.Context, resources TestResources, param TestParams,
 	videoApp VideoApp, videoSrc VideoSrc, tabChecker *cuj.TabCrashChecker) error {
 
 	var (
@@ -323,7 +321,7 @@ func videoScenario(ctx context.Context, resources TestResources, param TestParam
 
 	ui := uiauto.New(tconn)
 	openGoogleHelp := func(ctx context.Context) error {
-		conn, err := uiHandler.NewChromeTab(ctx, br, cuj.GoogleHelpChromeURL, true)
+		conn, err := uiHandler.NewChromeTab(ctx, cuj.GoogleHelpChromeURL, true)
 		if err != nil {
 			return errors.Wrap(err, "failed to open Google Help")
 		}
@@ -338,7 +336,7 @@ func videoScenario(ctx context.Context, resources TestResources, param TestParam
 		if err := ui.LeftClick(googleHelpHeading)(ctx); err != nil {
 			return err
 		}
-		if err := cuj.GeneratePDF(ctx, bTconn, kb); err != nil {
+		if err := cuj.GeneratePDF(ctx, tconn, kb); err != nil {
 			testing.ContextLog(ctx, "Failed to generate PDF histogram: ", err)
 		}
 		return nil

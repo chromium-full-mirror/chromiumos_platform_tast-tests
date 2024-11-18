@@ -223,7 +223,7 @@ func ThunderboltDockStationFunctionality(ctx context.Context, s *testing.State) 
 		Quality: "1440p60",
 	}
 
-	uiHandler, err := cuj.NewClamshellActionHandler(ctx, tconn)
+	uiHandler, err := cuj.NewClamshellActionHandler(ctx, cr)
 	if err != nil {
 		s.Fatal("Failed to create clamshell action handler: ", err)
 	}
@@ -231,7 +231,7 @@ func ThunderboltDockStationFunctionality(ctx context.Context, s *testing.State) 
 
 	cui := uiauto.New(tconn)
 	isExternalDisplay := false
-	videoApp := youtube.NewYtWeb(cr.Browser(), tconn, vkb, isExternalDisplay, cui, uiHandler)
+	videoApp := youtube.NewYtWeb(tconn, vkb, isExternalDisplay, cui, uiHandler)
 	if err := videoApp.OpenAndPlayVideo(videoSource)(ctx); err != nil {
 		s.Fatalf("Failed to open %s: %v", videoSource.URL, err)
 	}

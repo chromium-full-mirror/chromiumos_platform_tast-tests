@@ -12,7 +12,6 @@ import (
 
 	"go.chromium.org/tast-tests/cros/common/action"
 	"go.chromium.org/tast-tests/cros/local/chrome"
-	"go.chromium.org/tast-tests/cros/local/chrome/browser"
 	"go.chromium.org/tast-tests/cros/local/chrome/cuj"
 	"go.chromium.org/tast-tests/cros/local/chrome/uiauto"
 	"go.chromium.org/tast-tests/cros/local/chrome/uiauto/mouse"
@@ -35,10 +34,9 @@ var (
 )
 
 // NewGoogleSlides returns an action that creates a new google slides from web.
-func NewGoogleSlides(ctx context.Context, tconn *chrome.TestConn, br *browser.Browser, uiHandler cuj.UIActionHandler, newWindow bool) error {
-	ui := uiauto.New(tconn)
+func NewGoogleSlides(ctx context.Context, tconn *chrome.TestConn, uiHandler cuj.UIActionHandler, newWindow bool) error {
 	testing.ContextLog(ctx, "Start to create google slide")
-	conn, err := uiHandler.NewChromeTab(ctx, br, cuj.NewGoogleSlidesURL, newWindow)
+	conn, err := uiHandler.NewChromeTab(ctx, cuj.NewGoogleSlidesURL, newWindow)
 	if err != nil {
 		return errors.Wrap(err, "failed to open the google document")
 	}
@@ -48,6 +46,7 @@ func NewGoogleSlides(ctx context.Context, tconn *chrome.TestConn, br *browser.Br
 	}
 	gotIt := nodewith.Name("Got it").First()
 
+	ui := uiauto.New(tconn)
 	return uiauto.Combine("confirm to enter Google Slides",
 		ui.WithTimeout(longUITimeout).WaitUntilExists(navigation),
 		uiauto.IfSuccessThen(ui.Exists(gotIt), ui.DoDefault(gotIt)),
