@@ -34,7 +34,7 @@ func init() {
 		Name:            fixture.GpuRemoteWatcher,
 		Desc:            "Handles reboot and misc operation for cleanup the dut state",
 		BugComponent:    "b:885255", // ChromeOS > Platform > Graphics
-		Contacts:        []string{"chromeos-gfx@google.com", "ddmail@google.com"},
+		Contacts:        []string{"chromeos-gfx@google.com"},
 		Impl:            &gpuRemoteWatcherImpl{},
 		SetUpTimeout:    5 * time.Minute,
 		TearDownTimeout: 5 * time.Minute,

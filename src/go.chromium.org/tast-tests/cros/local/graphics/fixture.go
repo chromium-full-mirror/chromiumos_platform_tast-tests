@@ -43,7 +43,7 @@ func init() {
 		Name:            "gpuWatchHangsEnrolled",
 		BugComponent:    "b:885255", // ChromeOS > Platform > Graphics
 		Desc:            "Check if there any GPU related hangs during a test in an enrolled device",
-		Contacts:        []string{"chromeos-gfx@google.com", "ddmail@google.com"},
+		Contacts:        []string{"chromeos-gfx@google.com"},
 		Impl:            &gpuWatchHangsFixture{},
 		SetUpTimeout:    1 * time.Minute,
 		TearDownTimeout: 1 * time.Minute,
@@ -56,7 +56,7 @@ func init() {
 		Name:            "gpuWatchHangs",
 		Desc:            "Check if there any GPU related hangs during a test",
 		BugComponent:    "b:885255", // ChromeOS > Platform > Graphics
-		Contacts:        []string{"chromeos-gfx@google.com", "ddmail@google.com"},
+		Contacts:        []string{"chromeos-gfx@google.com"},
 		Impl:            &gpuWatchHangsFixture{},
 		SetUpTimeout:    1 * time.Minute,
 		TearDownTimeout: 1 * time.Minute,
@@ -69,7 +69,7 @@ func init() {
 		Name:            "gpuWatchDog",
 		Desc:            "Check if there any GPU related problems(hangs+crashes) observed during a test",
 		BugComponent:    "b:885255", // ChromeOS > Platform > Graphics
-		Contacts:        []string{"chromeos-gfx@google.com", "ddmail@google.com"},
+		Contacts:        []string{"chromeos-gfx@google.com"},
 		Parent:          "gpuWatchHangs",
 		Impl:            &gpuWatchDogFixture{},
 		PreTestTimeout:  5 * time.Second,
@@ -80,7 +80,7 @@ func init() {
 		Name:         "chromeGraphics",
 		Desc:         "Logged into a user session for graphics testing",
 		BugComponent: "b:885255", // ChromeOS > Platform > Graphics
-		Contacts:     []string{"chromeos-gfx@google.com", "ddmail@google.com"},
+		Contacts:     []string{"chromeos-gfx@google.com"},
 		Parent:       "gpuWatchDog",
 		Impl: chrome.NewLoggedInFixture(func(ctx context.Context, s *testing.FixtState) ([]chrome.Option, error) {
 			return []chrome.Option{disableFirmwareUpdater}, nil
@@ -181,7 +181,7 @@ func init() {
 		Name:            "chromeGraphicsIdle",
 		Desc:            "Logged into a user session for graphics Idle testing. This fixture starts a chrome dedicated for graphics.Idle tests",
 		BugComponent:    "b:885255", // ChromeOS > Platform > Graphics
-		Contacts:        []string{"chromeos-gfx@google.com", "ddmail@google.com"},
+		Contacts:        []string{"chromeos-gfx@google.com"},
 		Parent:          "gpuWatchDog",
 		Impl:            &graphicsIdleFixture{fOpt: []chrome.Option{disableFirmwareUpdater}},
 		SetUpTimeout:    chrome.LoginTimeout,
@@ -193,7 +193,7 @@ func init() {
 		Name:            "chromeGraphicsIdleArc",
 		Desc:            "Logged into a user session for graphics Idle testing. This fixture starts an arc enabled chrome dedicated for graphics.Idle.*arc tests",
 		BugComponent:    "b:885255", // ChromeOS > Platform > Graphics
-		Contacts:        []string{"chromeos-gfx@google.com", "ddmail@google.com"},
+		Contacts:        []string{"chromeos-gfx@google.com"},
 		Parent:          "gpuWatchDog",
 		Impl:            &graphicsIdleFixture{fOpt: []chrome.Option{chrome.ARCEnabled(), disableFirmwareUpdater}},
 		SetUpTimeout:    chrome.LoginTimeout,
@@ -205,7 +205,7 @@ func init() {
 		Name:            "chromeGraphicsWebContent",
 		Desc:            "Logs into Chrome and launches a browser window with specific content, like playing WebGL Aquarium for instance",
 		BugComponent:    "b:885255", // ChromeOS > Platform > Graphics
-		Contacts:        []string{"chromeos-gfx@google.com", "ddmail@google.com"},
+		Contacts:        []string{"chromeos-gfx@google.com"},
 		Parent:          "gpuWatchDog",
 		Impl:            &graphicsWebContentFixture{fOpt: []chrome.Option{chrome.ARCEnabled(), disableFirmwareUpdater}},
 		SetUpTimeout:    chrome.LoginTimeout,

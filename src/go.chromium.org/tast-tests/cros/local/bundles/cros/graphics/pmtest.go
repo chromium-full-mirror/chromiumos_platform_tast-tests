@@ -29,7 +29,6 @@ func init() {
 		BugComponent: "b:995569", // ChromeOS > Platform > Graphics > GPU
 		Contacts: []string{
 			"chromeos-gfx@google.com",
-			"ddmail@google.com",
 		},
 		// TODO(b/328563082): Remove it once cellular in the lab is replaced.
 		HardwareDeps: hwdep.D(hwdep.NoCellular()),
