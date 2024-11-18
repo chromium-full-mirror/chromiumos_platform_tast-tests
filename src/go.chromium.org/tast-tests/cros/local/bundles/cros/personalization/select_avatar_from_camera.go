@@ -42,7 +42,12 @@ func init() {
 		},
 		// ChromeOS > Software > Personalization
 		BugComponent: "b:1006527",
-		Attr:         []string{"group:mainline", "informational"},
+		Attr: []string{
+			"group:golden_tier",
+			"group:medium_low_tier",
+			"group:hardware",
+			"group:complementary",
+		},
 		SoftwareDeps: []string{"chrome", caps.BuiltinCamera, "gaia"},
 		Fixture:      personalization.GaiaFixture,
 		Timeout:      3 * time.Minute,

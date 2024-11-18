@@ -40,7 +40,14 @@ func init() {
 		},
 		// ChromeOS > Software > Personalization
 		BugComponent: "b:1006527",
-		Attr:         []string{"group:mainline", "informational", "group:hw_agnostic", "group:release-health"},
+		Attr: []string{
+			"group:golden_tier",
+			"group:medium_low_tier",
+			"group:hardware",
+			"group:complementary",
+			"group:hw_agnostic",
+			"group:release-health",
+		},
 		VarDeps:      []string{ambient.AccountVarName},
 		SoftwareDeps: []string{"chrome", "gaia"},
 		Timeout:      3 * time.Minute,
