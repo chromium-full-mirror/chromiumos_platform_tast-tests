@@ -811,7 +811,7 @@ func Run(ctx context.Context, meet MeetTest, cr *chrome.Chrome, testCaseVar func
 
 			// Enable docs blocker extension to force Docs in offline mode after docs
 			// is loaded.
-			docsBlockerConn, err := cuj.GetDocsBlockerConn(ctx, br)
+			docsBlockerConn, err := cuj.GetDocsBlockerConn(ctx, cr)
 			if err != nil {
 				return errors.Wrap(err, "failed to get docs blocker conn")
 			}
@@ -1212,7 +1212,7 @@ func Run(ctx context.Context, meet MeetTest, cr *chrome.Chrome, testCaseVar func
 			}
 
 			// Enable docsBlocker extension again to restore Google Docs.
-			docsBlockerConn, err := cuj.GetDocsBlockerConn(ctx, br)
+			docsBlockerConn, err := cuj.GetDocsBlockerConn(ctx, cr)
 			if err != nil {
 				return errors.Wrap(err, "failed to get docs blocker conn")
 			}

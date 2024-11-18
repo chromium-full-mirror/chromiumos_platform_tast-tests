@@ -25,7 +25,6 @@ import (
 	"go.chromium.org/tast-tests/cros/local/audio/crastestclient"
 	"go.chromium.org/tast-tests/cros/local/chrome"
 	"go.chromium.org/tast-tests/cros/local/chrome/ash"
-	"go.chromium.org/tast-tests/cros/local/chrome/browser"
 	"go.chromium.org/tast-tests/cros/local/chrome/display"
 	"go.chromium.org/tast-tests/cros/local/chrome/metrics"
 	"go.chromium.org/tast-tests/cros/local/chrome/uiauto"
@@ -221,7 +220,7 @@ func init() {
 			"cros-sw-perf@google.com",
 		},
 		BugComponent:    "b:1045832", // ChromeOS > Software > Performance > TPS
-		Impl:            &loggedInToCUJUserFixture{bt: browser.TypeAsh},
+		Impl:            &loggedInToCUJUserFixture{},
 		Parent:          "prepareForCUJ",
 		SetUpTimeout:    setUpTimeout,
 		ResetTimeout:    resetTimeout,
@@ -238,7 +237,6 @@ func init() {
 			"cros-sw-perf@google.com",
 		},
 		Impl: &loggedInToCUJUserFixture{
-			bt:            browser.TypeAsh,
 			enablePvSched: true,
 		},
 		Parent:          "prepareForCUJ",
@@ -257,7 +255,6 @@ func init() {
 		},
 		BugComponent: "b:1045832", // ChromeOS > Software > Performance > TPS
 		Impl: &loggedInToCUJUserFixture{
-			bt:         browser.TypeAsh,
 			disableARC: true,
 		},
 		Parent:          "prepareForCUJ",
@@ -282,7 +279,6 @@ func init() {
 		},
 		BugComponent: "b:1045832", // ChromeOS > Software > Performance > TPS
 		Impl: &loggedInToCUJUserFixture{
-			bt:           browser.TypeAsh,
 			arcSupported: true,
 		},
 		Parent:          "prepareForCUJ",
@@ -306,7 +302,6 @@ func init() {
 				chrome.EnableFeatures("PreferConstantFrameRate"),
 				chrome.ExtraArgs(webRTCEventLogCommandFlag),
 			},
-			bt:                browser.TypeAsh,
 			useEnterprisePool: true,
 			docsBlocker:       true,
 		},
@@ -328,7 +323,6 @@ func init() {
 		BugComponent: "b:1045832", // ChromeOS > Software > Performance > TPS
 		Impl: &loggedInToCUJUserFixture{
 			keepState: true,
-			bt:        browser.TypeAsh,
 			// Some tests will connect to websites hosted locally with HTTPs and this flag allows invalid certificates for resources loaded from localhost.
 			chromeExtraOpts: []chrome.Option{chrome.ExtraArgs("--allow-insecure-localhost")},
 		},
@@ -349,7 +343,6 @@ func init() {
 		BugComponent: "b:1045832", // ChromeOS > Software > Performance > TPS
 		Impl: &loggedInToCUJUserFixture{
 			keepState:    true,
-			bt:           browser.TypeAsh,
 			arcSupported: true,
 			// Some tests will connect to websites hosted locally with HTTPs and this flag allows invalid certificates for resources loaded from localhost.
 			chromeExtraOpts: []chrome.Option{chrome.ExtraArgs("--allow-insecure-localhost")},
@@ -372,7 +365,6 @@ func init() {
 		BugComponent: "b:1045832", // ChromeOS > Software > Performance > TPS
 		Impl: &loggedInToCUJUserFixture{
 			keepState: true,
-			bt:        browser.TypeAsh,
 			// Some tests will connect to websites hosted locally with HTTPs and this flag allows invalid certificates for resources loaded from localhost.
 			chromeExtraOpts: []chrome.Option{
 				chrome.ExtraArgs("--allow-insecure-localhost"),
@@ -411,7 +403,6 @@ func init() {
 		BugComponent: "b:1045832", // ChromeOS > Software > Performance > TPS
 		Data:         []string{highResFakeCameraFileName},
 		Impl: &loggedInToCUJUserFixture{
-			bt:                 browser.TypeAsh,
 			keepState:          true,
 			fakeCamera:         true,
 			fakeCameraFileName: highResFakeCameraFileName,
@@ -432,7 +423,6 @@ func init() {
 		BugComponent: "b:1045832", // ChromeOS > Software > Performance > TPS
 		Data:         append(docsBlockerFiles, lowResFakeCameraFileName),
 		Impl: &loggedInToCUJUserFixture{
-			bt:                 browser.TypeAsh,
 			keepState:          true,
 			fakeCamera:         true,
 			fakeCameraFileName: lowResFakeCameraFileName},
@@ -451,7 +441,6 @@ func init() {
 		},
 		BugComponent: "b:1045832", // ChromeOS > Software > Performance > TPS
 		Impl: &loggedInToCUJUserFixture{
-			bt: browser.TypeAsh,
 			chromeExtraOpts: []chrome.Option{
 				chrome.EnableFeatures("RoundedWindows"),
 			},
@@ -493,7 +482,6 @@ func init() {
 				chrome.EnableFeatures("PreferConstantFrameRate"),
 				chrome.ExtraArgs(webRTCEventLogCommandFlag),
 			},
-			bt:          browser.TypeAsh,
 			docsBlocker: true,
 		},
 		Parent:          "prepareForCUJ",
@@ -519,7 +507,6 @@ func init() {
 				chrome.ExtraArgs(webRTCEventLogCommandFlag),
 				chrome.EnableFeatures("VsyncDecoding"),
 			},
-			bt:          browser.TypeAsh,
 			docsBlocker: true,
 		},
 		Parent:          "prepareForCUJ",
@@ -544,7 +531,6 @@ func init() {
 				chrome.ExtraArgs(webRTCEventLogCommandFlag),
 				chrome.EnableFeatures("PreferConstantFrameRate"),
 			},
-			bt:            browser.TypeAsh,
 			docsBlocker:   true,
 			enablePvSched: true,
 		},
@@ -569,7 +555,6 @@ func init() {
 				chrome.EnableFeatures("PreferConstantFrameRate"),
 				chrome.ExtraArgs(webRTCEventLogCommandFlag),
 			},
-			bt:          browser.TypeAsh,
 			disableARC:  true,
 			docsBlocker: true,
 		},
@@ -604,7 +589,6 @@ func init() {
 				),
 				chrome.DisableFeatures("CrOSLateBootAudioStyleTransfer"),
 			},
-			bt:          browser.TypeAsh,
 			docsBlocker: true,
 		},
 		Parent:          "prepareForCUJ",
@@ -637,7 +621,6 @@ func init() {
 					"FeatureManagementVideoConference",
 				),
 			},
-			bt:          browser.TypeAsh,
 			docsBlocker: true,
 		},
 		Parent:          "prepareForCUJ",
@@ -664,7 +647,6 @@ func init() {
 					"CrosBatterySaverAlwaysOn"),
 				chrome.ExtraArgs(webRTCEventLogCommandFlag),
 			},
-			bt:          browser.TypeAsh,
 			docsBlocker: true,
 		},
 		Parent:          "prepareForCUJ",
@@ -706,7 +688,6 @@ func init() {
 				chrome.EnableFeatures("PreferConstantFrameRate"),
 				chrome.ExtraArgs(webRTCEventLogCommandFlag),
 			},
-			bt:          browser.TypeAsh,
 			docsBlocker: true,
 			scxType:     scx.TypeScxCentral,
 		},
@@ -749,7 +730,6 @@ func init() {
 				chrome.EnableFeatures("SetRtForDisplayThreads"),
 				chrome.ExtraArgs(webRTCEventLogCommandFlag),
 			},
-			bt:          browser.TypeAsh,
 			docsBlocker: true,
 			disableARC:  true,
 		},
@@ -773,7 +753,6 @@ func init() {
 				chrome.ExtraArgs("--enable-field-trial-config"),
 				chrome.EnableFeatures("DisablePrivacySandboxPrompts"),
 			},
-			bt: browser.TypeAsh,
 		},
 		Parent:          "prepareForCUJ",
 		SetUpTimeout:    setUpTimeout,
@@ -794,7 +773,6 @@ func init() {
 			chromeExtraOpts: []chrome.Option{
 				chrome.ExtraArgs("--enable-field-trial-config"),
 			},
-			bt:           browser.TypeAsh,
 			arcSupported: true,
 		},
 		Parent:          "prepareForCUJ",
@@ -819,7 +797,6 @@ func init() {
 				chrome.ExtraArgs("--enable-field-trial-config"),
 				chrome.ExtraArgs(webRTCEventLogCommandFlag),
 			},
-			bt:          browser.TypeAsh,
 			docsBlocker: true,
 		},
 		Parent:          "prepareForCUJ",
@@ -842,7 +819,6 @@ func init() {
 				chrome.ExtraArgs("--enable-field-trial-config"),
 				chrome.EnableFeatures("DisablePrivacySandboxPrompts"),
 			},
-			bt: browser.TypeAsh,
 		},
 		Parent:          "prepareForCUJWithoutCooldown",
 		SetUpTimeout:    setUpTimeout,
@@ -861,7 +837,6 @@ func init() {
 		},
 		BugComponent: "b:1045832", // ChromeOS > Software > Performance > TPS
 		Impl: &loggedInToCUJUserFixture{
-			bt: browser.TypeAsh,
 			chromeExtraOpts: []chrome.Option{
 				chrome.EnableFeatures("CrosBatterySaver", "CrosBatterySaverAlwaysOn"),
 			},
@@ -883,7 +858,6 @@ func init() {
 			"cros-sw-perf@google.com",
 		},
 		Impl: &loggedInToCUJUserFixture{
-			bt:            browser.TypeAsh,
 			arcSupported:  true,
 			enablePvSched: true,
 		},
@@ -918,7 +892,6 @@ func init() {
 		},
 		BugComponent: "b:1045832", // ChromeOS > Software > Performance > TPS
 		Impl: &loggedInToCUJUserFixture{
-			bt:              browser.TypeAsh,
 			enableChromeVox: true,
 		},
 		Parent:          "prepareForCUJ",
@@ -936,7 +909,7 @@ func init() {
 			"cros-sw-perf@google.com",
 		},
 		BugComponent:    "b:1045832", // ChromeOS > Software > Performance > TPS
-		Impl:            &loggedInToCUJUserFixture{bt: browser.TypeAsh},
+		Impl:            &loggedInToCUJUserFixture{},
 		Parent:          "prepareForCUJWithoutCooldown",
 		SetUpTimeout:    setUpTimeout,
 		ResetTimeout:    resetTimeout,
@@ -952,7 +925,6 @@ func init() {
 		},
 		BugComponent: "b:1045832", // ChromeOS > Software > Performance > TPS
 		Impl: &loggedInToCUJUserFixture{
-			bt:              browser.TypeAsh,
 			chromeExtraOpts: []chrome.Option{chrome.ExtraArgs(benchmarkFlags...)},
 		},
 		Parent:          "prepareForCUJWithoutCooldown",
@@ -974,7 +946,6 @@ func init() {
 				chrome.EnableFeatures("Vulkan", "DefaultANGLEVulkan", "VulkanFromANGLE"),
 				chrome.ExtraArgs(benchmarkFlags...),
 			},
-			bt: browser.TypeAsh,
 		},
 		Parent:          "prepareForCUJWithoutCooldown",
 		SetUpTimeout:    setUpTimeout,
@@ -992,7 +963,6 @@ func init() {
 		},
 		BugComponent: "b:1045832", // ChromeOS > Software > Performance > TPS
 		Impl: &loggedInToCUJUserFixture{
-			bt: browser.TypeAsh,
 			chromeExtraOpts: []chrome.Option{
 				chrome.EnableFeatures("CrosBatterySaver", "CrosBatterySaverAlwaysOn"),
 			},
@@ -1031,7 +1001,6 @@ func init() {
 			chromeExtraOpts: []chrome.Option{
 				chrome.EnableFeatures("Vulkan"),
 			},
-			bt: browser.TypeAsh,
 		},
 		Parent:          "prepareForCUJ",
 		SetUpTimeout:    setUpTimeout,
@@ -1049,7 +1018,6 @@ func init() {
 		},
 		BugComponent: "b:1045832", // ChromeOS > Software > Performance > TPS
 		Impl: &loggedInToCUJUserFixture{
-			bt:                       browser.TypeAsh,
 			mlbenchmarkDataDirectory: true,
 		},
 		Parent:          "prepareForCUJ",
@@ -1073,7 +1041,6 @@ func init() {
 				chrome.EnableFeatures("PreferConstantFrameRate"),
 				chrome.ExtraArgs(webRTCEventLogCommandFlag),
 			},
-			bt:                       browser.TypeAsh,
 			disableARC:               true,
 			docsBlocker:              true,
 			mlbenchmarkDataDirectory: true,
@@ -1094,7 +1061,6 @@ func init() {
 		},
 		BugComponent: "b:1045832", // ChromeOS > Software > Performance > TPS
 		Impl: &loggedInToCUJUserFixture{
-			bt:                       browser.TypeAsh,
 			mlbenchmarkDataDirectory: true,
 		},
 		Parent:          "prepareForCUJWithoutCooldown",
@@ -1127,7 +1093,6 @@ func init() {
 				),
 				chrome.DisableFeatures("CrOSLateBootAudioStyleTransfer"),
 			},
-			bt:                       browser.TypeAsh,
 			disableARC:               true,
 			mlbenchmarkDataDirectory: true,
 		},
@@ -1151,7 +1116,6 @@ func init() {
 				chrome.EnableFeatures("LauncherImageSearchIca"),
 				chrome.ExtraArgs(webRTCEventLogCommandFlag),
 			},
-			bt: browser.TypeAsh,
 		},
 		Parent:          "prepareForCUJ",
 		SetUpTimeout:    setUpTimeout,
@@ -1172,7 +1136,6 @@ func init() {
 			chromeExtraOpts: []chrome.Option{
 				chrome.ExtraArgs("--enable-hardware-overlays=\"\""),
 			},
-			bt: browser.TypeAsh,
 		},
 		Parent:          "prepareForCUJ",
 		SetUpTimeout:    setUpTimeout,
@@ -1193,7 +1156,6 @@ func init() {
 				chrome.ExtraArgs("--enable-hardware-overlays=\"\""),
 				chrome.DisableFeatures("DelegatedCompositing"),
 			},
-			bt: browser.TypeAsh,
 		},
 		Parent:          "prepareForCUJ",
 		SetUpTimeout:    setUpTimeout,
@@ -1213,7 +1175,6 @@ func init() {
 			chromeExtraOpts: []chrome.Option{
 				chrome.EnableFeatures("FocusMode"),
 			},
-			bt: browser.TypeAsh,
 		},
 		Parent:          "prepareForCUJ",
 		SetUpTimeout:    setUpTimeout,
@@ -1230,7 +1191,6 @@ func init() {
 		},
 		BugComponent: "b:1551116", // ChromeOS > Software > Consumer > Machine Intelligence > GenAI > Mahi
 		Impl: &loggedInToCUJUserFixture{
-			bt: browser.TypeAsh,
 			chromeExtraOpts: []chrome.Option{
 				chrome.ExtraArgs("--mahi-restrictions-override"),
 				chrome.EnableFeatures("Mahi"),
@@ -1273,10 +1233,10 @@ func prepareDocsBlockerExtension(s *testing.FixtState) (string, error) {
 
 // GetDocsBlockerConn returns a connection to the DocsBlocker background page
 // and waits for the background page to finish loading before it returns.
-func GetDocsBlockerConn(ctx context.Context, br *browser.Browser) (*browser.Conn, error) {
+func GetDocsBlockerConn(ctx context.Context, cr *chrome.Chrome) (*chrome.Conn, error) {
 	bgURL := "chrome-extension://" + docsBlockerExtensionID + "/background.js"
 
-	conn, err := br.NewConnForTarget(ctx, chrome.MatchTargetURL(bgURL))
+	conn, err := cr.NewConnForTarget(ctx, chrome.MatchTargetURL(bgURL))
 	if err != nil {
 		return nil, errors.Wrap(err, "DocsBlocker extension not found")
 	}
@@ -1519,15 +1479,13 @@ type FixtureData struct {
 func (f FixtureData) Chrome() *chrome.Chrome { return f.chrome }
 
 type loggedInToCUJUserFixture struct {
-	cr              *chrome.Chrome
-	arc             *arc.ARC
-	wr              *wpr.WPR
-	origRunningPkgs map[string]struct{}
-	logMarker       *logsaver.Marker
-	keepState       bool
-	chromeExtraOpts []chrome.Option
-	// bt describes what type of browser this fixture should use
-	bt                 browser.Type
+	cr                 *chrome.Chrome
+	arc                *arc.ARC
+	wr                 *wpr.WPR
+	origRunningPkgs    map[string]struct{}
+	logMarker          *logsaver.Marker
+	keepState          bool
+	chromeExtraOpts    []chrome.Option
 	useEnterprisePool  bool
 	fdms               *fakedms.FakeDMS
 	fakeCamera         bool
@@ -1565,7 +1523,6 @@ func NewWPRLoggedInToCUJUserWithoutCooldownFixture(name, desc string, contacts [
 		Desc:     desc,
 		Contacts: contacts,
 		Impl: &loggedInToCUJUserFixture{
-			bt:         browser.TypeAsh,
 			wprMode:    mode,
 			wprArchive: archive,
 		},
