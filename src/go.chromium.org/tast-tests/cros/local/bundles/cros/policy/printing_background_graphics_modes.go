@@ -12,7 +12,6 @@ import (
 	"go.chromium.org/tast-tests/cros/common/policy"
 	"go.chromium.org/tast-tests/cros/local/bundles/cros/policy/printingtest"
 	"go.chromium.org/tast-tests/cros/local/chrome"
-	"go.chromium.org/tast-tests/cros/local/chrome/browser"
 	"go.chromium.org/tast-tests/cros/local/chrome/uiauto"
 	"go.chromium.org/tast-tests/cros/local/chrome/uiauto/nodewith"
 	"go.chromium.org/tast-tests/cros/local/chrome/uiauto/printpreview"
@@ -24,9 +23,8 @@ import (
 
 func init() {
 	testing.AddTest(&testing.Test{
-		Func:         PrintingBackgroundGraphicsModes,
-		LacrosStatus: testing.LacrosVariantUnneeded,
-		Desc:         "Verify behaviour of PrintingAllowedBackgroundGraphicsModes and PrintingBackgroundGraphicsDefault Policies",
+		Func: PrintingBackgroundGraphicsModes,
+		Desc: "Verify behaviour of PrintingAllowedBackgroundGraphicsModes and PrintingBackgroundGraphicsDefault Policies",
 		Contacts: []string{
 			"chromeos-commercial-printing@google.com",
 			"nedol@google.com", // Test author
@@ -41,12 +39,7 @@ func init() {
 			"group:complementary",
 			"group:hw_agnostic",
 		},
-		Params: []testing.Param{
-			{
-				Fixture: "virtualUsbPrinterModulesLoadedWithChromePolicyLoggedIn",
-				Val:     browser.TypeAsh,
-			},
-		},
+		Fixture: "virtualUsbPrinterModulesLoadedWithChromePolicyLoggedIn",
 		SearchFlags: []*testing.StringPair{
 			pci.SearchFlag(&policy.PrintingBackgroundGraphicsDefault{}, pci.VerifiedFunctionalityUI),
 			pci.SearchFlag(&policy.PrintingAllowedBackgroundGraphicsModes{}, pci.VerifiedFunctionalityUI),

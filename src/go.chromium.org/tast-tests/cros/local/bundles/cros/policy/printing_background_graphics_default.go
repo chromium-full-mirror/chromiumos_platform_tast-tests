@@ -13,7 +13,6 @@ import (
 	"go.chromium.org/tast-tests/cros/common/policy"
 	"go.chromium.org/tast-tests/cros/common/policy/fakedms"
 	"go.chromium.org/tast-tests/cros/local/chrome"
-	"go.chromium.org/tast-tests/cros/local/chrome/browser"
 	"go.chromium.org/tast-tests/cros/local/chrome/uiauto"
 	"go.chromium.org/tast-tests/cros/local/chrome/uiauto/checked"
 	"go.chromium.org/tast-tests/cros/local/chrome/uiauto/faillog"
@@ -28,9 +27,8 @@ import (
 
 func init() {
 	testing.AddTest(&testing.Test{
-		Func:         PrintingBackgroundGraphicsDefault,
-		LacrosStatus: testing.LacrosVariantUnneeded,
-		Desc:         "Checking if the 'Background graphics' option is set by default depending on the value of this policy",
+		Func: PrintingBackgroundGraphicsDefault,
+		Desc: "Checking if the 'Background graphics' option is set by default depending on the value of this policy",
 		Contacts: []string{
 			"chromeos-commercial-printing@google.com",
 		},
@@ -44,12 +42,7 @@ func init() {
 			"group:complementary",
 			"group:hw_agnostic",
 		},
-		Params: []testing.Param{
-			{
-				Fixture: fixture.ChromePolicyLoggedIn,
-				Val:     browser.TypeAsh,
-			},
-		},
+		Fixture: fixture.ChromePolicyLoggedIn,
 		SearchFlags: []*testing.StringPair{
 			pci.SearchFlag(&policy.PrintingBackgroundGraphicsDefault{}, pci.VerifiedFunctionalityUI),
 		},

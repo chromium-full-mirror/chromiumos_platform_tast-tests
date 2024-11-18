@@ -12,7 +12,6 @@ import (
 	"go.chromium.org/tast-tests/cros/common/policy"
 	"go.chromium.org/tast-tests/cros/local/bundles/cros/policy/printingtest"
 	"go.chromium.org/tast-tests/cros/local/chrome"
-	"go.chromium.org/tast-tests/cros/local/chrome/browser"
 	"go.chromium.org/tast-tests/cros/local/chrome/uiauto"
 	"go.chromium.org/tast-tests/cros/local/chrome/uiauto/checked"
 	"go.chromium.org/tast-tests/cros/local/chrome/uiauto/dropdown"
@@ -27,9 +26,8 @@ import (
 
 func init() {
 	testing.AddTest(&testing.Test{
-		Func:         PrintingDuplexModes,
-		LacrosStatus: testing.LacrosVariantUnneeded,
-		Desc:         "Verify behaviour of PrintingAllowedDuplexModes and PrintingDuplexDefault Policies",
+		Func: PrintingDuplexModes,
+		Desc: "Verify behaviour of PrintingAllowedDuplexModes and PrintingDuplexDefault Policies",
 		Contacts: []string{
 			"chromeos-commercial-printing@google.com",
 			"nedol@google.com", // Test author
@@ -44,12 +42,7 @@ func init() {
 			"group:complementary",
 			"group:hw_agnostic",
 		},
-		Params: []testing.Param{
-			{
-				Fixture: "virtualUsbPrinterModulesLoadedWithChromePolicyLoggedIn",
-				Val:     browser.TypeAsh,
-			},
-		},
+		Fixture: "virtualUsbPrinterModulesLoadedWithChromePolicyLoggedIn",
 		SearchFlags: []*testing.StringPair{
 			pci.SearchFlag(&policy.PrintingAllowedDuplexModes{}, pci.VerifiedFunctionalityUI),
 			pci.SearchFlag(&policy.PrintingDuplexDefault{}, pci.VerifiedFunctionalityUI),

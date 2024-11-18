@@ -9,7 +9,6 @@ import (
 	"net/http/httptest"
 
 	"go.chromium.org/tast-tests/cros/local/chrome"
-	"go.chromium.org/tast-tests/cros/local/chrome/browser"
 )
 
 // PolicySetting is the key for a test case of a service, indicating the policy
@@ -64,8 +63,6 @@ const (
 type TestVariant struct {
 	// Variant specifies which alternative of this test is being run (umbrella vs annotationsdiff).
 	Variant VariantName
-	// BrowserType specifies which browser to use for this test.
-	BrowserType browser.Type
 	// PolicyStatus specified how the policies should be set before the test is run.
 	PolicyStatus PolicySetting
 	// ExcludeServices specifies service keys to skip for this test.

@@ -12,7 +12,6 @@ import (
 	"go.chromium.org/tast-tests/cros/common/policy"
 	"go.chromium.org/tast-tests/cros/local/bundles/cros/policy/printingtest"
 	"go.chromium.org/tast-tests/cros/local/chrome"
-	"go.chromium.org/tast-tests/cros/local/chrome/browser"
 	"go.chromium.org/tast-tests/cros/local/chrome/uiauto"
 	"go.chromium.org/tast-tests/cros/local/chrome/uiauto/nodewith"
 	"go.chromium.org/tast-tests/cros/local/chrome/uiauto/printpreview"
@@ -24,10 +23,9 @@ import (
 
 func init() {
 	testing.AddTest(&testing.Test{
-		Func:         PrintingPINModes,
-		LacrosStatus: testing.LacrosVariantUnneeded,
-		Desc:         "Verify behaviour of PrintingAllowedPinModes and PrintingPinDefault Policies",
-		Data:         []string{"printing_pin_modes_printer_attributes.json"},
+		Func: PrintingPINModes,
+		Desc: "Verify behaviour of PrintingAllowedPinModes and PrintingPinDefault Policies",
+		Data: []string{"printing_pin_modes_printer_attributes.json"},
 		Contacts: []string{
 			"chromeos-commercial-printing@google.com",
 			"nedol@google.com", // Test author
@@ -44,12 +42,7 @@ func init() {
 		},
 		Timeout: 4 * time.Minute,
 		// PIN printing is enabled only on enrolled devices, thus we use fixtures with enrollment.
-		Params: []testing.Param{
-			{
-				Fixture: "virtualUSBPrinterModulesLoadedWithChromeEnrolledLoggedIn",
-				Val:     browser.TypeAsh,
-			},
-		},
+		Fixture: "virtualUSBPrinterModulesLoadedWithChromeEnrolledLoggedIn",
 		SearchFlags: []*testing.StringPair{
 			pci.SearchFlag(&policy.PrintingPinDefault{}, pci.VerifiedFunctionalityUI),
 			pci.SearchFlag(&policy.PrintingAllowedPinModes{}, pci.VerifiedFunctionalityUI),

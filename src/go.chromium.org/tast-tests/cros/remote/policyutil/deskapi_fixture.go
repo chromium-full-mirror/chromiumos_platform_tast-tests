@@ -28,8 +28,7 @@ type DeskFixtData struct {
 
 // DeskFixt defines shared logic for desk API fixture.
 type deskFixt struct {
-	isLacros bool
-	acc      *tape.OwnedTestAccount
+	acc *tape.OwnedTestAccount
 }
 
 func init() {
@@ -57,7 +56,7 @@ func init() {
 
 // NewDeskAPIAshFixt returns a fixture to run desk API test in ash.
 func NewDeskAPIAshFixt() testing.FixtureImpl {
-	return &deskFixt{isLacros: false}
+	return &deskFixt{}
 }
 
 func (e *deskFixt) SetUp(ctx context.Context, s *testing.FixtState) interface{} {
