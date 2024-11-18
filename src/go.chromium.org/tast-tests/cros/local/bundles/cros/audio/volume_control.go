@@ -233,11 +233,6 @@ func VolumeControl(ctx context.Context, s *testing.State) {
 	originalVolume, err := vh.ActiveNodeVolume(ctx)
 	defer vh.SetVolume(ctx, originalVolume)
 
-	topRow, err := input.KeyboardTopRowLayout(ctx, kb)
-	if err != nil {
-		s.Fatal("Failed to obtain the top-row layout: ", err)
-	}
-
 	isMuted := func() bool {
 		dump, err := testexec.CommandContext(ctx, "sh", "-c", "cras_test_client --dump_server_info | grep muted").Output()
 		if err != nil {
@@ -248,14 +243,14 @@ func VolumeControl(ctx context.Context, s *testing.State) {
 	}
 
 	s.Log("Press mute key and unmute by pressing Volume up key")
-	if err = kb.Accel(ctx, topRow.VolumeMute); err != nil {
+	if err = kb.Accel(ctx, "mute"); err != nil {
 		s.Fatal(`Failed to press "Mute": `, err)
 	}
 	if !isMuted() {
 		s.Fatal("Failed to mute the audio")
 	}
 
-	if err = kb.Accel(ctx, topRow.VolumeUp); err != nil {
+	if err = kb.Accel(ctx, "volumeUp"); err != nil {
 		s.Fatal(`Failed to press "VolumeUp": `, err)
 	}
 
@@ -273,7 +268,7 @@ func VolumeControl(ctx context.Context, s *testing.State) {
 			break
 		}
 		if err := vh.VerifyVolumeChanged(ctx, func() error {
-			return kb.Accel(ctx, topRow.VolumeDown)
+			return kb.Accel(ctx, "volumeDown")
 		}); err != nil {
 			s.Fatal(`Failed to change volume after pressing "VolumeDown": `, err)
 		}
@@ -289,7 +284,7 @@ func VolumeControl(ctx context.Context, s *testing.State) {
 			break
 		}
 		if err := vh.VerifyVolumeChanged(ctx, func() error {
-			return kb.Accel(ctx, topRow.VolumeUp)
+			return kb.Accel(ctx, "volumeUp")
 		}); err != nil {
 			s.Fatal(`Failed to change volume after pressing "VolumeUp": `, err)
 		}
