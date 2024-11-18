@@ -19,6 +19,7 @@ import (
 	"go.chromium.org/tast/core/ctxutil"
 	"go.chromium.org/tast/core/errors"
 	"go.chromium.org/tast/core/testing"
+	"go.chromium.org/tast/core/testing/hwdep"
 	"google.golang.org/protobuf/proto"
 )
 
@@ -43,6 +44,8 @@ func init() {
 		Fixture:      fixture.CleanOwnership,
 		Attr:         []string{"group:mainline"},
 		SoftwareDeps: []string{"reven_oobe_config"},
+		// b/365541979: Skip on the reven\nuc11.
+		HardwareDeps: hwdep.D(hwdep.SkipDMIProductName("NUC11TNKv5")),
 	})
 }
 
