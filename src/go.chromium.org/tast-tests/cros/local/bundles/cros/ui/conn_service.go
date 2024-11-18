@@ -31,7 +31,6 @@ func init() {
 }
 
 // ConnService implements tast.cros.ui.ConnService.
-// A client of the service can create Conn instances for both browser context for Ash and Lacros.
 // TODO(crbug.com/1378851): Implement a way to automatically release stale conns.
 type ConnService struct {
 	sharedObject *common.SharedObjectsForService
@@ -53,11 +52,10 @@ func incrementer() func() uint32 {
 func (svc *ConnService) NewConn(ctx context.Context, req *pb.NewConnRequest) (*pb.NewConnResponse, error) {
 	svc.sharedObject.ChromeMutex.Lock()
 	defer svc.sharedObject.ChromeMutex.Unlock()
-	br, err := svc.sharedObject.Browser(req.CallOnLacros)
-	if err != nil {
-		return nil, err
-	}
-	conn, err := br.NewConn(ctx, req.Url)
+
+	cr := svc.sharedObject.Chrome
+
+	conn, err := cr.NewConn(ctx, req.Url)
 	if err != nil {
 		return nil, err
 	}
@@ -75,19 +73,19 @@ func (svc *ConnService) NewConn(ctx context.Context, req *pb.NewConnRequest) (*p
 func (svc *ConnService) NewConnForTarget(ctx context.Context, req *pb.NewConnForTargetRequest) (*pb.NewConnResponse, error) {
 	svc.sharedObject.ChromeMutex.Lock()
 	defer svc.sharedObject.ChromeMutex.Unlock()
-	br, err := svc.sharedObject.Browser(req.CallOnLacros)
-	if err != nil {
-		return nil, err
-	}
 
-	var conn *chrome.Conn
+	cr := svc.sharedObject.Chrome
+
+	var tm chrome.TargetMatcher
 	if req.TargetId != "" {
-		conn, err = br.NewConnForTarget(ctx, chrome.MatchTargetID(chrome.TargetID(req.TargetId)))
+		tm = chrome.MatchTargetID(chrome.TargetID(req.TargetId))
 	} else if req.Url != "" {
-		conn, err = br.NewConnForTarget(ctx, chrome.MatchTargetURL(req.Url))
+		tm = chrome.MatchTargetURL(req.Url)
 	} else {
 		return nil, errors.New("Please specify either Url or TargetId")
 	}
+
+	conn, err := cr.NewConnForTarget(ctx, tm)
 	if err != nil {
 		return nil, err
 	}

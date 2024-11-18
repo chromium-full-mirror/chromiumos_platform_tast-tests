@@ -12,7 +12,6 @@
 //go:generate protoc -I . --go_out=plugins=grpc:../../../../../.. screenlock_service.proto
 //go:generate protoc -I . --go_out=plugins=grpc:../../../../../.. tconn_service.proto
 //go:generate protoc -I . --go_out=plugins=grpc:../../../../../.. conn_service.proto
-//go:generate protoc -I . --go_out=plugins=grpc:../../../../../.. lacros_service.proto
 //go:generate protoc -I . --go_out=plugins=grpc:../../../../../.. notification_service.proto
 
 // Package ui provides all ui related types compiled from protobuf.

@@ -10,7 +10,6 @@ import (
 	"sync"
 
 	"go.chromium.org/tast-tests/cros/local/chrome"
-	"go.chromium.org/tast-tests/cros/local/chrome/browser"
 	"go.chromium.org/tast/core/errors"
 )
 
@@ -31,24 +30,6 @@ type SharedObjectsForService struct {
 	Chrome *chrome.Chrome
 	// Mutex to protect against concurrent access to Chrome and Browser.
 	ChromeMutex sync.Mutex
-	// Pointer to Browser connected to Lacros Chrome. The value is set once one of methods to connect to Lacros on LacrosService is called.
-	// Note that this Browser abstraction is used instead of Lacros object because using Lacros will introduce a circular dependency.
-	LacrosBrowser *browser.Browser
-}
-
-// Browser returns a pointer to a Browser instance on either Ash or Lacros.
-func (so *SharedObjectsForService) Browser(usingLacros bool) (*browser.Browser, error) {
-	if usingLacros {
-		if so.LacrosBrowser == nil {
-			return nil, errors.New("Lacros not instantiated")
-		}
-		return so.LacrosBrowser, nil
-	}
-
-	if so.Chrome == nil {
-		return nil, errors.New("Chrome not instantiated")
-	}
-	return so.Chrome.Browser(), nil
 }
 
 // UseTconn performs an action that requires access to tconn.
@@ -61,22 +42,11 @@ func (so *SharedObjectsForService) Browser(usingLacros bool) (*browser.Browser, 
 //	  })
 //	}
 func UseTconn[T any](ctx context.Context, so *SharedObjectsForService, fn func(tconn *chrome.TestConn) (*T, error)) (*T, error) {
-	return UseTconnMaybeLacros(ctx, so, fn, false)
-}
-
-// UseTconnMaybeLacros performs an action on tconn either on (Lacros) browser or (Ash) Chrome depending on the value of usingLacros.
-// Read comment on UseTconn on how to use it.
-func UseTconnMaybeLacros[T any](ctx context.Context, so *SharedObjectsForService, fn func(tconn *chrome.TestConn) (*T, error), usingLacros bool) (*T, error) {
 	so.ChromeMutex.Lock()
 	defer so.ChromeMutex.Unlock()
 
-	br, err := so.Browser(usingLacros)
-	if err != nil {
-		return nil, err
-	}
-
 	// When in OOBE, use SigninProfileTestAPIConn to create the test connection.
-	testAPIConn := br.TestAPIConn
+	testAPIConn := so.Chrome.TestAPIConn
 	if so.Chrome.LoginMode() == "NoLogin" {
 		testAPIConn = so.Chrome.SigninProfileTestAPIConn
 	}

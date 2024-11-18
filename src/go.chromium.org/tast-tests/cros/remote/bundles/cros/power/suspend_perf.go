@@ -339,7 +339,7 @@ func redialRPC(ctx context.Context, dut *dut.DUT, hint *testing.RPCHint, timeout
 
 func measureBaseTabSwitching(ctx context.Context, tconn ui.TconnServiceClient, mp *mempressure.RemoteMemoryPressure, pv *perf.Values) error {
 
-	prev, err := metrics.GetHistogram(ctx, tconn, "Browser.Tabs.TotalSwitchDuration3", false)
+	prev, err := metrics.GetHistogram(ctx, tconn, "Browser.Tabs.TotalSwitchDuration3")
 	if err != nil {
 		return errors.Wrap(err, "failed to get histogram for cyclic tabs(prev)")
 	}
@@ -349,7 +349,7 @@ func measureBaseTabSwitching(ctx context.Context, tconn ui.TconnServiceClient, m
 	testing.ContextLog(ctx, "Cycke tab switching done")
 
 	if err := testing.Poll(ctx, func(ctx context.Context) error {
-		post, err := metrics.GetHistogram(ctx, tconn, "Browser.Tabs.TotalSwitchDuration3", false)
+		post, err := metrics.GetHistogram(ctx, tconn, "Browser.Tabs.TotalSwitchDuration3")
 		if err != nil {
 			return errors.Wrap(err, "failed to get histogram for cyclic tabs(post)")
 		}
@@ -370,7 +370,7 @@ func measureBaseTabSwitching(ctx context.Context, tconn ui.TconnServiceClient, m
 		return err
 	}
 
-	post, err := metrics.GetHistogram(ctx, tconn, "Browser.Tabs.TotalSwitchDuration3", false)
+	post, err := metrics.GetHistogram(ctx, tconn, "Browser.Tabs.TotalSwitchDuration3")
 	if err != nil {
 		return errors.Wrap(err, "failed to get histogram for cyclic tabs(post)")
 	}
@@ -609,7 +609,7 @@ func waitForHistogramsUpdate(ctx context.Context, tconn ui.TconnServiceClient, r
 func getHistograms(ctx context.Context, tconn ui.TconnServiceClient, req []*histogramRequest) ([]*histogram.Histogram, error) {
 	var hists []*histogram.Histogram
 	for _, r := range req {
-		hist, err := metrics.GetHistogram(ctx, tconn, r.Name, false)
+		hist, err := metrics.GetHistogram(ctx, tconn, r.Name)
 		if err != nil {
 			return nil, err
 		}

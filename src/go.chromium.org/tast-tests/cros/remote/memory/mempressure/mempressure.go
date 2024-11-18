@@ -167,7 +167,7 @@ func (t *remoteTab) waitForRender(ctx context.Context, timeout time.Duration) er
 }
 
 func (m *RemoteMemoryPressure) newTab(ctx context.Context, url string) (*remoteTab, error) {
-	res, err := m.conn.NewConn(ctx, &ui.NewConnRequest{Url: url, CallOnLacros: false})
+	res, err := m.conn.NewConn(ctx, &ui.NewConnRequest{Url: url})
 	if err != nil {
 		return nil, errors.Wrap(err, "failed to open new Tab")
 	}
@@ -188,9 +188,9 @@ func (m *RemoteMemoryPressure) newTab(ctx context.Context, url string) (*remoteT
 
 func (m *RemoteMemoryPressure) pinTab(ctx context.Context, tab *remoteTab) error {
 	if _, err := m.tconn.Call(ctx, &ui.CallRequest{
-		Fn:           `(id) => tast.promisify(chrome.tabs.update)(id, {pinned: true})`,
-		Args:         []*structpb.Value{value(tab.tabID)},
-		CallOnLacros: false}); err != nil {
+		Fn:   `(id) => tast.promisify(chrome.tabs.update)(id, {pinned: true})`,
+		Args: []*structpb.Value{value(tab.tabID)},
+	}); err != nil {
 		return errors.Wrap(err, "failed to pin a tab")
 	}
 	tab.pinned = true
@@ -250,8 +250,7 @@ func (m *RemoteMemoryPressure) queryTestConnTabIDs(ctx context.Context, conditio
 			let tabs = await tast.promisify(chrome.tabs.query)({` + condition + `});
 			return tabs.map((tab) => tab.id);
 		  }`,
-		Args:         []*structpb.Value{},
-		CallOnLacros: false,
+		Args: []*structpb.Value{},
 	})
 	if err != nil {
 		return nil, errors.Wrap(err, "cannot query tab list")

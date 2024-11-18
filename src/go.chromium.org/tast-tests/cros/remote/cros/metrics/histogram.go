@@ -22,12 +22,11 @@ import (
 )
 
 // GetHistogram gets a histogram from DUT.
-func GetHistogram(ctx context.Context, tconn ui.TconnServiceClient, name string, fromLacros bool) (*histogram.Histogram, error) {
+func GetHistogram(ctx context.Context, tconn ui.TconnServiceClient, name string) (*histogram.Histogram, error) {
 	var h = histogram.Histogram{Name: name}
 	res, err := tconn.Call(ctx, &ui.CallRequest{
-		Fn:           `tast.promisify(chrome.metricsPrivate.getHistogram)`,
-		Args:         []*structpb.Value{structpb.NewStringValue(name)},
-		CallOnLacros: fromLacros,
+		Fn:   `tast.promisify(chrome.metricsPrivate.getHistogram)`,
+		Args: []*structpb.Value{structpb.NewStringValue(name)},
 	})
 	if err != nil {
 		if strings.Contains(err.Error(), fmt.Sprintf("Histogram %s not found", name)) {
@@ -49,11 +48,11 @@ func GetHistogram(ctx context.Context, tconn ui.TconnServiceClient, name string,
 // requested histogram contains at least one sample not present in old, an earlier
 // snapshot of the same histogram.
 // A histogram containing the new samples is returned; see Histogram.Diff for details.
-func WaitForHistogramUpdate(ctx context.Context, tconn ui.TconnServiceClient, name string, fromLacros bool, old *histogram.Histogram, timeout time.Duration) (*histogram.Histogram, error) {
+func WaitForHistogramUpdate(ctx context.Context, tconn ui.TconnServiceClient, name string, old *histogram.Histogram, timeout time.Duration) (*histogram.Histogram, error) {
 	var h *histogram.Histogram
 	err := testing.Poll(ctx, func(ctx context.Context) error {
 		var err error
-		if h, err = GetHistogram(ctx, tconn, name, fromLacros); err != nil {
+		if h, err = GetHistogram(ctx, tconn, name); err != nil {
 			return err
 		}
 		if reflect.DeepEqual(h, old) {

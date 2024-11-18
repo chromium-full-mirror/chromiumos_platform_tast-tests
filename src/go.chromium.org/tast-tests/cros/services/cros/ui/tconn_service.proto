@@ -19,31 +19,33 @@ service TconnService {
   // Call calls the javascript fn with given args. See Conn.Call for details
   rpc Call(CallRequest) returns (google.protobuf.Value) {}
 
-  // WaitForExpr repeatedly evaluates the JavaScript expression expr until it evaluates to true.
-  // Errors returned by Eval are treated the same as expr == false unless fail_on_err is true.
+  // WaitForExpr repeatedly evaluates the JavaScript expression expr until it
+  // evaluates to true. Errors returned by Eval are treated the same as expr ==
+  // false unless fail_on_err is true.
   rpc WaitForExpr(WaitForExprRequest) returns (google.protobuf.Empty) {}
 
-  // ResetAutomation resets the automation API feature. The automation API feature
-  // is widely used to control the UI, but keeping it activated sometimes causes
-  // performance drawback on low-end devices. This method deactivates the
-  // automation API and resets internal states. See: https://crbug.com/1096719.
+  // ResetAutomation resets the automation API feature. The automation API
+  // feature is widely used to control the UI, but keeping it activated
+  // sometimes causes performance drawback on low-end devices. This method
+  // deactivates the automation API and resets internal states. See:
+  // https://crbug.com/1096719.
   rpc ResetAutomation(google.protobuf.Empty) returns (google.protobuf.Empty) {}
 }
 
 message EvalRequest {
   string expr = 1;
-  bool call_on_lacros = 2;
+  reserved 2;
 }
 
 message CallRequest {
   string fn = 1;
   repeated google.protobuf.Value args = 2;
-  bool call_on_lacros = 3;
+  reserved 3;
 }
 
 message WaitForExprRequest {
   string expr = 1;
   uint32 timeout_secs = 2;
   bool fail_on_err = 3;
-  bool call_on_lacros = 4;
+  reserved 4;
 }
