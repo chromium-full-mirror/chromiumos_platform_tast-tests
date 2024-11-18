@@ -51,11 +51,12 @@ func init() {
 		Contacts: []string{
 			"chromeos-wifi-champs@google.com", // WiFi oncall rotation
 		},
-		BugComponent:    "b:893827", // ChromeOS > Platform > Connectivity > WiFi
-		Attr:            []string{"group:wificell", "wificell_func", "group:release-health", "release-health_wifi"},
-		TestBedDeps:     []string{tbdep.Wificell, tbdep.WifiStateNormal, tbdep.BluetoothStateNormal, tbdep.PeripheralWifiStateWorking},
-		ServiceDeps:     []string{wificell.ShillServiceName},
-		Fixture:         wificell.FixtureID(wificell.TFFeaturesCapture),
+		BugComponent: "b:893827", // ChromeOS > Platform > Connectivity > WiFi
+		Attr:         []string{"group:wificell", "wificell_func", "group:release-health", "release-health_wifi"},
+		TestBedDeps:  []string{tbdep.Wificell, tbdep.WifiStateNormal, tbdep.BluetoothStateNormal, tbdep.PeripheralWifiStateWorking},
+		ServiceDeps:  []string{wificell.ShillServiceName},
+		// TODO(b/377913176): Remove the wificell.TFFeaturesCollectWiFiFirmwareDump feature.
+		Fixture:         wificell.FixtureID(wificell.TFFeaturesCapture | wificell.TFFeaturesCollectWiFiFirmwareDump),
 		Requirements:    []string{tdreq.WiFiGenSupportMBO, tdreq.WiFiProcPassFW, tdreq.WiFiProcPassAVL, tdreq.WiFiProcPassAVLBeforeUpdates, tdreq.WiFiProcPassMatfunc, tdreq.WiFiProcPassMatfuncBeforeUpdates},
 		VariantCategory: `{"name": "WifiBtChipset_Soc_Kernel"}`,
 		Params: []testing.Param{

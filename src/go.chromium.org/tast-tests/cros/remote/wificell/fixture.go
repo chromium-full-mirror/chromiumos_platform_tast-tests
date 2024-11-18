@@ -99,6 +99,7 @@ func init() {
 	params[TFFeaturesNone] = "Default wificell setup with router and pcap object. Note that pcap and router can point to the same Access Point. Also, unlike wificellFixtWithCapture, the fixture won't spawn Capturer. Users may spawn Capturer with customized configuration when needed"
 	params[TFFeaturesCapture] = "Wificell setup with Capturer on pcap for each configured AP"
 	params[TFFeaturesCollectWiFiFirmwareDump] = "Wificell setup with firmware dump collection on test failures"
+	params[TFFeaturesCapture|TFFeaturesCollectWiFiFirmwareDump] = "Wificell setup with Capturer on pcap for each configured AP and collect frimware dump in test failures"
 	params[TFFeaturesCapture|TFFeaturesRouterAsCapture] = "Wificell setup with default capturer on router instead of pcap"
 	params[TFFeaturesBridgeAndVeth] = "Wificell setup with bridge and veth support on router"
 	params[TFFeaturesBridgeAndVeth|TFFeaturesCapture] = "Wificell setup with bridge and veth support on router and Capturer on pcap"
