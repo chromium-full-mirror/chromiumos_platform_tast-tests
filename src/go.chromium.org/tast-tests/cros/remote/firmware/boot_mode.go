@@ -1059,8 +1059,26 @@ func (ms *ModeSwitcher) RunBypasserUntilDUTConnected(ctx context.Context, params
 
 // RebootToFirmwareScreen requires that the DUT be connected initially, and runs
 // the respective logic to reboot the DUT to the given firmware screen.
-func (ms *ModeSwitcher) RebootToFirmwareScreen(ctx context.Context, fwScreen fwCommon.FwScreenType) error {
+func (ms *ModeSwitcher) RebootToFirmwareScreen(ctx context.Context, fwScreen fwCommon.FwScreenType) (retErr error) {
 	h := ms.Helper
+	if err := h.RequireServo(ctx); err != nil {
+		return errors.Wrap(err, "requiring servo")
+	}
+	if err := h.RequireConfig(ctx); err != nil {
+		return errors.Wrap(err, "requiring firmware config")
+	}
+
+	var fwScreenID fwCommon.FwScreenID
+	supportAPFwState, err := h.SupportAPFwState(ctx)
+	if err != nil {
+		return errors.Wrap(err, "failed to check if DUT support APFwState")
+	}
+	closeUART, err := h.Servo.EnableUARTCapture(ctx, servo.ECUARTCapture)
+	if err != nil {
+		return errors.Wrap(err, "failed to enable capture EC UART")
+	}
+	defer func() { retErr = errors.Join(retErr, closeUART(ctx)) }()
+
 	durToFwScreen := h.Config.FirmwareScreen
 	switch fwScreen {
 	case fwCommon.FwBrokenScreen:
@@ -1080,6 +1098,7 @@ func (ms *ModeSwitcher) RebootToFirmwareScreen(ctx context.Context, fwScreen fwC
 			return errors.Wrap(err, "failed to wait for DUT to become unreachable after sending a warm reset")
 		}
 		durToFwScreen = h.Config.FirmwareScreenRecMode
+		fwScreenID = fwCommon.RecoveryBroken
 	case fwCommon.FwDeveloperScreen:
 		if !h.DUT.Connected(ctx) {
 			return errors.New("requiring DUT to be connected initially")
@@ -1101,11 +1120,38 @@ func (ms *ModeSwitcher) RebootToFirmwareScreen(ctx context.Context, fwScreen fwC
 		if err := h.DUT.WaitUnreachable(waitDisconnectCtx); err != nil {
 			return errors.Wrap(err, "failed to wait for DUT to become unreachable after sending a warm reset")
 		}
+		fwScreenID = fwCommon.DeveloperMode
 	case fwCommon.FwRecoveryScreen:
-		if err := ms.EnableRecMode(ctx, servo.PowerStateRec, servo.USBMuxOff); err != nil {
-			return errors.Wrap(err, "failed to reboot to recovery screen")
+		// Disable USB to avoid booting in recovery mode.
+		testing.ContextLog(ctx, "Removing USB")
+		if err := h.Servo.SetUSBMuxState(ctx, servo.USBMuxOff); err != nil {
+			return errors.Wrap(err, "failed to set USBMux")
 		}
+		// There are two usb type-a ports on servo_v4p1. By default, the bottom
+		// one is set to 'dut_sees_usbkey'. If there's a usb device connected to it
+		// with a valid ChromeOS image, the DUT can attempt booting into recovery
+		// mode. As a safety measure, always disable the second port.
+		if ok, err := h.Servo.HasControl(ctx, string(servo.SecondUSBKeyDirection)); err != nil {
+			return errors.Wrapf(err, "failed to check control %s", servo.SecondUSBKeyDirection)
+		} else if ok {
+			// Set second_usbkey_direction to servo_sees_usbkey to disable
+			// the port because it doesn't accept USBMuxOff.
+			if err := h.Servo.SetString(ctx, servo.SecondUSBKeyDirection, string(servo.USBMuxHost)); err != nil {
+				return errors.Wrapf(err, "failed to set servo control %s to %s", servo.SecondUSBKeyDirection, servo.USBMuxHost)
+			}
+		}
+		// GoBigSleepLint: It may take some time for usb mux state to
+		// take effect.
+		if err := testing.Sleep(ctx, UsbVisibleTime); err != nil {
+			return errors.Wrapf(err, "failed to sleep for %v s", UsbDisableTime)
+		}
+		testing.ContextLog(ctx, "Rebooting the DUT to recovery screen")
+		if err := h.Servo.SetPowerState(ctx, servo.PowerStateRec); err != nil {
+			return errors.Wrap(err, "failed to set power state to rec")
+		}
+
 		durToFwScreen = h.Config.FirmwareScreenRecMode
+		fwScreenID = fwCommon.RecoverySelect
 	case fwCommon.FwToNormScreen:
 		if err := ms.RebootToFirmwareScreen(ctx, fwCommon.FwDeveloperScreen); err != nil {
 			return err
@@ -1113,6 +1159,7 @@ func (ms *ModeSwitcher) RebootToFirmwareScreen(ctx context.Context, fwScreen fwC
 		if err := ms.TriggerToNormScreen(ctx); err != nil {
 			return errors.Wrap(err, "failed to trigger the to-norm screen")
 		}
+		fwScreenID = fwCommon.DeveloperToNorm
 	case fwCommon.FwInvalidScreen:
 		usbdev, err := h.Servo.GetStringTimeout(ctx, servo.ImageUSBKeyDev, time.Second*90)
 		if err != nil {
@@ -1126,15 +1173,36 @@ func (ms *ModeSwitcher) RebootToFirmwareScreen(ctx context.Context, fwScreen fwC
 		if usbRelease != "" {
 			return errors.Errorf("found usb release %s, expected an invalid usb before triggering the invalid usb screen", usbRelease)
 		}
-		if err := ms.EnableRecMode(ctx, servo.PowerStateRec, servo.USBMuxDUT); err != nil {
-			return errors.Wrap(err, "failed to reboot to recovery screen")
+		if err := ms.RebootToFirmwareScreen(ctx, fwCommon.FwRecoveryScreen); err != nil {
+			return err
+		}
+		testing.ContextLog(ctx, "Setting DFP mode")
+		if err := h.Servo.SetDUTPDDataRole(ctx, servo.DFP); err != nil {
+			testing.ContextLogf(ctx, "Failed to set pd data role to DFP: %.400s", err)
+		}
+		testing.ContextLog(ctx, "Inserting the USB to DUT")
+		if err := h.Servo.SetUSBMuxState(ctx, servo.USBMuxDUT); err != nil {
+			return errors.Wrap(err, "failed to insert a valid USB to DUT")
+		}
+		// GoBigSleepLint: It may take some time for usb mux state to
+		// take effect.
+		if err := testing.Sleep(ctx, UsbVisibleTime); err != nil {
+			return errors.Wrapf(err, "failed to sleep for %v s", UsbDisableTime)
 		}
 		durToFwScreen = h.Config.FirmwareScreenRecMode
+		fwScreenID = fwCommon.RecoveryInvalid
 	}
-	testing.ContextLogf(ctx, "Sleeping for %s (FirmwareScreen) ", durToFwScreen)
-	// GoBigSleepLint: Delay to wait for the firmware screen during boot-up.
-	if err := testing.Sleep(ctx, durToFwScreen); err != nil {
-		return errors.Wrapf(err, "failed to sleep for %s", durToFwScreen)
+
+	if supportAPFwState {
+		if err := h.DetectFirmwareScreen(ctx, durToFwScreen, fwScreenID); err != nil {
+			return errors.Wrap(err, "failed to detect firmware screen")
+		}
+	} else {
+		testing.ContextLogf(ctx, "Sleeping for %s (FirmwareScreen) ", durToFwScreen)
+		// GoBigSleepLint: Delay to wait for the firmware screen during boot-up.
+		if err := testing.Sleep(ctx, durToFwScreen); err != nil {
+			return errors.Wrapf(err, "failed to sleep for %s", durToFwScreen)
+		}
 	}
 	return nil
 }
