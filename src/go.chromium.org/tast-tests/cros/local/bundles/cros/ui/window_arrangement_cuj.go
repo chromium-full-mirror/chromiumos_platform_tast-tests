@@ -52,14 +52,6 @@ func init() {
 				Fixture:           "loggedInToCUJUserVulkan",
 				ExtraHardwareDeps: hwdep.D(hwdep.Model("redrix", "drobit", "frostflow")),
 			},
-			// Experimental variants.
-			// TODO(b/302748186): Remove rounded window tests once A/B testing
-			// for rounded windows is done.
-			{
-				Name:    "rounded_windows",
-				Val:     windowarrangementcuj.TestParam{},
-				Fixture: "loggedInToCUJUserWithRoundedWindows",
-			},
 		},
 	})
 }

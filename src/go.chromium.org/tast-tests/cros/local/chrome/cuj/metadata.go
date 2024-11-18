@@ -23,7 +23,6 @@ const (
 	arcEnabled        feature = "ARC Enabled"
 	pvSched           feature = "Pvsched"
 	fieldTrials       feature = "Field Trials"
-	roundedWindows    feature = "Rounded Windows"
 	vulkan            feature = "Vulkan"
 	wprFeature        feature = "WPR"
 	chromevox         feature = "ChromeVox"
@@ -219,10 +218,6 @@ var Registry = map[string]Metadata{
 	"ui.DesksCUJ.battery_saver": Metadata{
 		BaseTestNames: []string{"ui.DesksCUJ"},
 		Features:      []feature{batterySaver},
-	},
-	"ui.DesksCUJ.rounded_windows": Metadata{
-		BaseTestNames: []string{"ui.DesksCUJ"},
-		Features:      []feature{roundedWindows},
 	},
 	"ui.DesksCUJ.vulkan": Metadata{
 		BaseTestNames: []string{"ui.DesksCUJ"},

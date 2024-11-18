@@ -70,14 +70,6 @@ func init() {
 				Val:       deskscuj.TestParam{},
 				Fixture:   "loggedInToCUJUserWithBatterySaver",
 			},
-			// TODO(b/302748186): Remove rounded window tests once A/B testing
-			// for rounded windows is done.
-			{
-				Name:      "rounded_windows",
-				Val:       deskscuj.TestParam{},
-				ExtraAttr: []string{"group:cuj", "cuj_experimental"},
-				Fixture:   "loggedInToCUJUserWithRoundedWindows",
-			},
 			// TODO(b/292249282): Remove when Vulkan is launched on brya, volteer, and skyrim
 			{
 				Name:              "vulkan",

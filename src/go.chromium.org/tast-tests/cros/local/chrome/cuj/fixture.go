@@ -431,27 +431,6 @@ func init() {
 		ResetTimeout:    resetTimeout,
 		TearDownTimeout: resetTimeout,
 	})
-	// TODO(b/302748186): Remove rounded window fixtures.
-	testing.AddFixture(&testing.Fixture{
-		Name: "loggedInToCUJUserWithRoundedWindows",
-		Desc: "UI CUJ tests with Rounded Windows feature enabled",
-		Contacts: []string{
-			"zoraiznaeem@chromium.org",
-			"cros-sw-perf@google.com",
-		},
-		BugComponent: "b:1045832", // ChromeOS > Software > Performance > TPS
-		Impl: &loggedInToCUJUserFixture{
-			chromeExtraOpts: []chrome.Option{
-				chrome.EnableFeatures("RoundedWindows"),
-			},
-		},
-		Parent:          "prepareForCUJ",
-		SetUpTimeout:    setUpTimeout,
-		ResetTimeout:    resetTimeout,
-		TearDownTimeout: resetTimeout,
-		PreTestTimeout:  CPUStablizationTimeout,
-		PostTestTimeout: postTestTimeout,
-	})
 	testing.AddFixture(&testing.Fixture{
 		Name: "enrolledLoggedInToCUJUser",
 		Desc: "Logged in with gaia user on an enrolled device",
