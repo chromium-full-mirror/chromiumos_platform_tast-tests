@@ -13,7 +13,6 @@
 // testing.AddTest(&testing.Test{
 //
 //	Func:         ExampleTest,
-//	LacrosStatus: testing.LacrosVariantNeeded,
 //	Desc:         "Fake example test",
 //	...
 //	Requirements: []string{tdreq.BootPerfKernel, tdreq.BootPerfLogin},

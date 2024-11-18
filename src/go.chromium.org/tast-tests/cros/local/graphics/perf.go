@@ -912,7 +912,7 @@ func MeasureSteadyStateSystemPowerConsumption(ctx context.Context, c *chrome.Tes
 type ProcessType int
 
 const (
-	// GPUProcess is GPU process (lacros- or ash-)
+	// GPUProcess is GPU process
 	GPUProcess ProcessType = iota
 	// VideoProcess is Utility Video process.
 	VideoProcess

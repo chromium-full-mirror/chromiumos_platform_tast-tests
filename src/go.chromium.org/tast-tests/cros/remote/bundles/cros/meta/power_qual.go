@@ -22,7 +22,6 @@ func init() {
 	testing.AddTest(&testing.Test{
 		Func:         PowerQual,
 		Desc:         "Run power test cases based on the given configuration",
-		LacrosStatus: testing.LacrosVariantUnneeded,
 		BugComponent: "b:1361410", // ChromeOS > Platform > Enablement > Power
 		Contacts:     []string{"chromeos-platform-power@google.com"},
 		Vars: []string{
@@ -42,10 +41,6 @@ func init() {
 			}, {
 				Name: "videoplayback_ash_test",
 				Val:  "https://storage.googleapis.com/chromiumos-test-assets-public/tast/cros/power/powerqual-config/videoplayback_ash_test.json",
-			},
-			{
-				Name: "videoplayback_lacros_test",
-				Val:  "https://storage.googleapis.com/chromiumos-test-assets-public/tast/cros/power/powerqual-config/videoplayback_lacros_test.json",
 			},
 			{
 				Name:              "qual",

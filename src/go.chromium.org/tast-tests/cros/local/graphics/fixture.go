@@ -115,7 +115,6 @@ func init() {
 		Impl: chrome.NewLoggedInFixture(func(ctx context.Context, s *testing.FixtState) ([]chrome.Option, error) {
 			return []chrome.Option{
 				chrome.EnableFeatures("UseHDRTransferFunction"),
-				chrome.EnableFeatures("LacrosColorManagement"),
 			}, nil
 		}),
 		SetUpTimeout:    chrome.LoginTimeout,

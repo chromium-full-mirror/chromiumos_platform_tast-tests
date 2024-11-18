@@ -39,8 +39,7 @@ func DefaultIdleConfig() IdleConfig {
 
 // DefaultPkgIdleConfig returns the default config to wait until the CPU package
 // state is idle. It usually takes long (>1 min) for pkg c-state to stabilize
-// when launching Chrome or having performed heavy duty. Lacros could take
-// longer time than ash to cooldown.
+// when launching Chrome or having performed heavy duty.
 func DefaultPkgIdleConfig() IdleConfig {
 	return IdleConfig{
 		Timeout:             3 * time.Minute,

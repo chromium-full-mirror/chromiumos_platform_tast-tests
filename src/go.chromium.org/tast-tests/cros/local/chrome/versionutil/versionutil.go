@@ -14,12 +14,6 @@ import (
 	"go.chromium.org/tast/core/errors"
 )
 
-type lacrosMetadata struct {
-	Content struct {
-		Version string `json:"version"`
-	} `json:"content"`
-}
-
 // AshVersion returns the version of Ash Chrome.
 func AshVersion(ctx context.Context) (version.Version, error) {
 	out, err := testexec.CommandContext(ctx, ashproc.ExecPath, "--version").Output(testexec.DumpLogOnError)

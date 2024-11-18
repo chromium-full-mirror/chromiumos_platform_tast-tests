@@ -61,9 +61,8 @@ const (
 func init() {
 	testing.AddTest(&testing.Test{
 		Func: BootPerf,
-		// The test reboots to the login screen and doesn't require a lacros variant.
-		LacrosStatus: testing.LacrosVariantUnneeded,
-		Desc:         "Boot performance test",
+		// The test reboots to the login screen.
+		Desc: "Boot performance test",
 		Contacts: []string{
 			"baseos-perf@google.com",
 			"chinglinyu@chromium.org",

@@ -33,11 +33,8 @@ const (
 func init() {
 	testing.AddTest(&testing.Test{
 		Func: SetProxyForRememberedNetwork,
-		// This test requires fetch proxy configs from a web page (CrosNetworkConfig),
-		// however, that page isn't available in lacros, only ash-Chrome is able to browse the page,
-		// therefore the lacros variant is not needed.
-		LacrosStatus: testing.LacrosVariantUnneeded,
-		Desc:         "Verify that proxy settings can be set for shared or non-shared network",
+		// This test requires fetch proxy configs from a web page (CrosNetworkConfig).
+		Desc: "Verify that proxy settings can be set for shared or non-shared network",
 		Contacts: []string{
 			"alfredyu@cienet.com",
 			"chromeos-connectivity-cienet-external@google.com",

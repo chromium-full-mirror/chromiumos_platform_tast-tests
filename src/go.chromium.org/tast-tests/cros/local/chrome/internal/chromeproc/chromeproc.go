@@ -67,10 +67,7 @@ func RootWithContext(ctx context.Context, execPath string) (*process.Process, er
 			return false
 		}
 
-		// A browser process should be spawned from some other executable process.
-		// If it is ash-chrome, we expect it is forked from /sbin/session_manager.
-		// If it is lacros-chrome, we expect it is forked from ash-chrome on production
-		// or tast test executable for testing.
+		// A browser process should be spawned from /sbin/session_manager.
 		// This check alone is not enough to determine that proc is a browser process;
 		// due to the use of prctl(PR_SET_CHILD_SUBREAPER) in session_manager,
 		// when the browser process exits, non-browser processes can temporarily
