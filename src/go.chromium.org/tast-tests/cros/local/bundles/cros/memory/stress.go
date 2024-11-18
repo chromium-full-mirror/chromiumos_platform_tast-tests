@@ -153,5 +153,5 @@ func stressTestCase(ctx context.Context, localRand *rand.Rand, mbPerTab, switchC
 		}
 	}
 
-	return memorystress.TestCase(ctx, cr.Browser(), localRand, mbPerTab, switchCount, compressRatio)
+	return memorystress.TestCase(ctx, cr, localRand, mbPerTab, switchCount, compressRatio)
 }

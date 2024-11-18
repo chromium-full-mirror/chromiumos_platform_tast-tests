@@ -9,31 +9,35 @@ import (
 	"time"
 
 	"go.chromium.org/tast-tests/cros/local/chrome"
-	"go.chromium.org/tast-tests/cros/local/chrome/browser"
 	"go.chromium.org/tast-tests/cros/local/input"
 	"go.chromium.org/tast/core/errors"
 	"go.chromium.org/tast/core/testing"
 )
 
 // reloadCrashedTab reloads the active tab if it's crashed. Returns whether the tab is reloaded.
-func reloadCrashedTab(ctx context.Context, br *browser.Browser) (bool, error) {
-	tabURL, err := activeTabURL(ctx, br)
+func reloadCrashedTab(ctx context.Context, cr *chrome.Chrome) (bool, error) {
+	tconn, err := cr.TestAPIConn(ctx)
+	if err != nil {
+		return false, errors.Wrap(err, "cannot create test connection")
+	}
+
+	tabURL, err := activeTabURL(ctx, tconn)
 	if err != nil {
 		return false, errors.Wrap(err, "cannot get active tab URL")
 	}
 
 	// If the active tab's URL is not in the devtools targets, the active tab is crashed.
-	targetAvailable, err := isTargetAvailable(ctx, br, chrome.MatchTargetURL(tabURL))
+	targetAvailable, err := isTargetAvailable(ctx, cr, chrome.MatchTargetURL(tabURL))
 	if err != nil {
 		return false, errors.Wrap(err, "isTargetAvailable failed")
 	}
 
 	if !targetAvailable {
 		testing.ContextLog(ctx, "Reload tab:", tabURL)
-		if err := br.ReloadActiveTab(ctx); err != nil {
+		if err := cr.Browser().ReloadActiveTab(ctx); err != nil {
 			return false, errors.Wrap(err, "failed to reload active tab")
 		}
-		if err := waitAllocationForURL(ctx, br, tabURL); err != nil {
+		if err := waitAllocationForURL(ctx, cr, tabURL); err != nil {
 			return false, errors.Wrap(err, "waitAllocationForURL failed")
 		}
 		return true, nil
@@ -70,7 +74,7 @@ func waitMoveCursor(ctx context.Context, mw *input.MouseEventWriter, d time.Dura
 // SwitchTabsList sends keyboard messages to switch tabs. It reloads crashed tabs. Returns the reload count.
 //
 // Switch tabs for len(waitTimeList) times. After switching, sleep for the time in waitTimeList.
-func SwitchTabsList(ctx context.Context, br *browser.Browser, waitTimeList []time.Duration) (uint64, error) {
+func SwitchTabsList(ctx context.Context, cr *chrome.Chrome, waitTimeList []time.Duration) (uint64, error) {
 	mouse, err := input.Mouse(ctx)
 	if err != nil {
 		return 0, errors.Wrap(err, "cannot initialize mouse")
@@ -95,7 +99,7 @@ func SwitchTabsList(ctx context.Context, br *browser.Browser, waitTimeList []tim
 		}
 		testing.ContextLogf(ctx, "%3d, wait time: %v", i, waitTime)
 
-		reloaded, err := reloadCrashedTab(ctx, br)
+		reloaded, err := reloadCrashedTab(ctx, cr)
 		if err != nil {
 			return 0, errors.Wrap(err, "reloadCrashedTab failed")
 		}
