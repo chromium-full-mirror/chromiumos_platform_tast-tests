@@ -87,9 +87,9 @@ func RoamDbus(ctx context.Context, s *testing.State) {
 	}
 
 	// Send roam command to shill, and shill will send D-Bus roam command to wpa_supplicant.
-	s.Logf("Requesting roam from %s to %s", rt.AP2BSSID(), rt.AP2BSSID())
+	s.Logf("Requesting roam from %s to %s", rt.AP1BSSID(), rt.AP2BSSID())
 	if err := tf.DUTWifiClient(wificell.DefaultDUT).RequestRoam(ctx, iface, rt.AP2BSSID(), 30*time.Second); err != nil {
-		s.Errorf("DUT: failed to roam from %s to %s: %v", rt.AP2BSSID(), rt.AP2BSSID(), err)
+		s.Errorf("DUT: failed to roam from %s to %s: %v", rt.AP1BSSID(), rt.AP2BSSID(), err)
 	}
 
 	// Verify that the DUT has roamed successfully.
