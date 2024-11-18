@@ -36,6 +36,8 @@ func init() {
 		Timeout:      1 * time.Minute,
 		Data:         []string{"rollback_smoke_metrics_file"},
 		Fixture:      fixture.CleanOwnership,
+		// b/365541979: Skip on the reven\nuc11.
+		HardwareDeps: hwdep.D(hwdep.SkipDMIProductName("NUC11TNKv5")),
 		Params: []testing.Param{{
 			Name: "cleanup_metrics_when_oobe_is_not_completed",
 			Val:  onlyCleanupMetricsWhenOobeIsNotCompletedTest,
