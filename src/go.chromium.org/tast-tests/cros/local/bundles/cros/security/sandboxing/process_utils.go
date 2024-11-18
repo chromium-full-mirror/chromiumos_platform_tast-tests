@@ -52,6 +52,7 @@ var Exclusions = []string{
 	"recover_duts",
 	"sleep",
 	"sshd",
+	"sshd-session", // OpenSSH 9.8 introduced a split process model.
 	"sudo",
 	"tail",
 	"timeout",
