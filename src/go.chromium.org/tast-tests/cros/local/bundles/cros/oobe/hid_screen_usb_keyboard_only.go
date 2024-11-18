@@ -25,7 +25,6 @@ func init() {
 		Desc:           "Checks that a single usb keyboard device can be connected in OOBE HID Detection screen",
 		Contacts: []string{
 			"cros-device-enablement@google.com",
-			"tjohnsonkanu@google.com",
 		},
 		VarDeps: []string{
 			"ui.signinProfileTestExtensionManifestKey",
