@@ -217,9 +217,10 @@ func KeyboardBinding(ctx context.Context, s *testing.State) {
 // obtainSearchKeyAndFunction obtains the corresponding key name and function name of "search"/"launcher".
 // The key name and function name of "search"/"launcher" will display differently across different models.
 func obtainSearchKeyAndFunction(ctx context.Context, ui *uiauto.Context) (*key, func(*keyboardBindingTestResources, string) *searchFunctionVerifier, error) {
-	nameRegex := regexp.MustCompile(fmt.Sprintf(`^(%s|%s)$`, searchKey, launcherKey))
-	keyRow := nodewith.NameRegex(nameRegex).Role(role.GenericContainer)
-	option := nodewith.NameRegex(nameRegex).Role(role.MenuListOption).Ancestor(keyRow)
+	keyRowRegex := regexp.MustCompile(fmt.Sprintf(`^Select an action for (%s|%s) key$`, searchKey, launcherKey))
+	optionRegex := regexp.MustCompile(fmt.Sprintf(`^(%s|%s)$`, searchKey, launcherKey))
+	keyRow := nodewith.NameRegex(keyRowRegex).Role(role.GenericContainer)
+	option := nodewith.NameRegex(optionRegex).Role(role.MenuListOption).Ancestor(keyRow)
 
 	if err := ui.WaitUntilExists(option)(ctx); err != nil {
 		return nil, nil, errors.Wrap(err, "failed to find key with name 'Search' or 'Launcher'")
@@ -242,7 +243,7 @@ func obtainSearchKeyAndFunction(ctx context.Context, ui *uiauto.Context) (*key, 
 
 // setKeybinding sets the key binding of the key to the specified option.
 func setKeybinding(res *keyboardBindingTestResources, k *key, functionName string) uiauto.Action {
-	keyRow := nodewith.Name(string(k.name)).Role(role.GenericContainer)
+	keyRow := nodewith.NameContaining(string(k.name)).Role(role.GenericContainer)
 	menu := nodewith.Role(role.ComboBoxSelect).Name(string(k.name)).Ancestor(keyRow)
 	targetOption := nodewith.Role(role.MenuListOption).Name(functionName).Ancestor(keyRow)
 
