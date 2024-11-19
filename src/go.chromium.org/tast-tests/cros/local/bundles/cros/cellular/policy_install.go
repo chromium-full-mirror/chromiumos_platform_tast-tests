@@ -32,13 +32,13 @@ func init() {
 		Func: PolicyInstall,
 		Desc: "Test that managed eSIM profile can correctly be installed from device policy and the profile can not be removed or renamed",
 		Contacts: []string{
-			"alfredyu@cienet.com",
-			"chromeos-connectivity-cienet-external@google.com",
+			"cros-device-enablement@google.com",
+			"jiajunz@google.com",
 		},
-		BugComponent:   "b:1578688", // ChromeOS > External > Cienet > Manual Test Automation > Test stabilization
+		BugComponent:   "b:1131774", // ChromeOS > Software > Fundamentals > Device Enablement > Connectivity > Cellular
 		LifeCycleStage: testing.LifeCycleOwnerMonitored,
-		SoftwareDeps:   []string{"chrome"},
 		Attr:           []string{"group:cellular", "cellular_sim_test_esim", "cellular_e2e"},
+		SoftwareDeps:   []string{"chrome"},
 		Fixture:        "cellularWithFakeDMSEnrolledAndTestSIM",
 		Timeout:        9 * time.Minute,
 		SearchFlags: []*testing.StringPair{

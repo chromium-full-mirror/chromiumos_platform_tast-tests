@@ -26,18 +26,18 @@ import (
 
 func init() {
 	testing.AddTest(&testing.Test{
-		Func:           RenameESimProfileNickname,
-		LifeCycleStage: testing.LifeCycleInDevelopment,
-		Desc:           "Renames connected and disconnected eSIM profiles name via the UI",
+		Func: RenameESimProfileNickname,
+		Desc: "Renames connected and disconnected eSIM profiles name via the UI",
 		Contacts: []string{
-			"alfredyu@cienet.com",
-			"chromeos-connectivity-cienet-external@google.com",
+			"cros-connectivity@google.com",
+			"hsuregan@google.com",
 		},
-		BugComponent: "b:1578688", // ChromeOS > External > Cienet > Manual Test Automation > Test stabilization
-		Attr:         []string{"group:cellular", "cellular_unstable", "cellular_sim_dual_active"},
-		SoftwareDeps: []string{"chrome"},
-		Fixture:      "cellular",
-		Timeout:      6 * time.Minute,
+		BugComponent:   "b:1131774", // ChromeOS > Software > Fundamentals > Device Enablement > Connectivity > Cellular
+		LifeCycleStage: testing.LifeCycleOwnerMonitored,
+		Attr:           []string{"group:cellular", "cellular_unstable", "cellular_sim_dual_active"},
+		SoftwareDeps:   []string{"chrome"},
+		Fixture:        "cellular",
+		Timeout:        6 * time.Minute,
 	})
 }
 

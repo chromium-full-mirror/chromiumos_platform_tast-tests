@@ -18,17 +18,17 @@ import (
 
 func init() {
 	testing.AddTest(&testing.Test{
-		Func:           ConnectedStatus,
-		LifeCycleStage: testing.LifeCycleOwnerMonitored,
-		Desc:           "Checks that active primary SIM is displayed correctly",
+		Func: ConnectedStatus,
+		Desc: "Checks that active primary SIM is displayed correctly",
 		Contacts: []string{
-			"alfredyu@cienet.com",
-			"chromeos-connectivity-cienet-external@google.com",
+			"cros-device-enablement@google.com",
+			"hsuregan@google.com",
 		},
-		BugComponent: "b:1578688", // ChromeOS > External > Cienet > Manual Test Automation > Test stabilization
-		SoftwareDeps: []string{"chrome"},
-		Attr:         []string{"group:cellular", "cellular_sim_dual_active"},
-		Fixture:      "cellularEnforceConnectionRemote",
+		BugComponent:   "b:1131774", // ChromeOS > Software > Fundamentals > Device Enablement > Connectivity > Cellular
+		LifeCycleStage: testing.LifeCycleOwnerMonitored,
+		Attr:           []string{"group:cellular", "cellular_sim_dual_active"},
+		SoftwareDeps:   []string{"chrome"},
+		Fixture:        "cellularEnforceConnectionRemote",
 	})
 }
 

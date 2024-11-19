@@ -26,18 +26,18 @@ import (
 
 func init() {
 	testing.AddTest(&testing.Test{
-		Func:           ESimInstallWithConfirmationCode,
-		LifeCycleStage: testing.LifeCycleInDevelopment,
-		Desc:           "Tests the add eSIM profile via activation code flow in the success and failure cases",
+		Func: ESimInstallWithConfirmationCode,
+		Desc: "Tests the add eSIM profile via activation code flow in the success and failure cases",
 		Contacts: []string{
-			"alfredyu@cienet.com",
-			"chromeos-connectivity-cienet-external@google.com",
+			"cros-device-enablement@google.com",
+			"hsuregan@google.com",
 		},
-		BugComponent: "b:1578688", // ChromeOS > External > Cienet > Manual Test Automation > Test stabilization
-		SoftwareDeps: []string{"chrome"},
-		Attr:         []string{"group:cellular", "cellular_sim_test_esim"},
-		Fixture:      "cellularTestESIM",
-		Timeout:      9 * time.Minute,
+		BugComponent:   "b:1131774", // ChromeOS > Software > Fundamentals > Device Enablement > Connectivity > Cellular
+		LifeCycleStage: testing.LifeCycleOwnerMonitored,
+		Attr:           []string{"group:cellular", "cellular_sim_test_esim"},
+		SoftwareDeps:   []string{"chrome"},
+		Fixture:        "cellularTestESIM",
+		Timeout:        9 * time.Minute,
 	})
 }
 
