@@ -8,7 +8,6 @@ import (
 	"context"
 	"os"
 
-	"go.chromium.org/tast-tests/cros/common/tbdep"
 	"go.chromium.org/tast-tests/cros/common/testexec"
 	"go.chromium.org/tast/core/errors"
 	"go.chromium.org/tast/core/testing"
@@ -28,7 +27,6 @@ func init() {
 		Attr:         []string{"group:fingerprint-cq"},
 		SoftwareDeps: []string{"biometrics_daemon"},
 		HardwareDeps: hwdep.D(hwdep.Fingerprint()),
-		TestBedDeps:  []string{tbdep.Fingerprint},
 	})
 }
 

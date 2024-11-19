@@ -9,7 +9,6 @@ import (
 	"path/filepath"
 
 	fp "go.chromium.org/tast-tests/cros/common/fingerprint"
-	"go.chromium.org/tast-tests/cros/common/tbdep"
 	"go.chromium.org/tast-tests/cros/local/crosconfig"
 	"go.chromium.org/tast/core/testing"
 	"go.chromium.org/tast/core/testing/hwdep"
@@ -28,7 +27,6 @@ func init() {
 		Attr:         []string{"group:fingerprint-cq"},
 		SoftwareDeps: []string{"biometrics_daemon"},
 		HardwareDeps: hwdep.D(hwdep.Fingerprint()),
-		TestBedDeps:  []string{tbdep.Fingerprint},
 	})
 }
 
