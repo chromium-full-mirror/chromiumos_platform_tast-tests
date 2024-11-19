@@ -344,6 +344,7 @@ func (f FileEvent) DoTest(ctx context.Context, tc *testDetails) {
 		var process, parentProcess *xdr.Process
 		var beforeAttributes, afterImage *xdr.FileImage
 		var actualEventType fileEventType
+		var sensitiveFileType *xdr.SensitiveFileType
 
 		if modify != nil {
 			process = modify.GetProcess()
@@ -351,11 +352,13 @@ func (f FileEvent) DoTest(ctx context.Context, tc *testDetails) {
 			beforeAttributes = modify.FileModify.GetAttributesBefore()
 			afterImage = modify.FileModify.GetImageAfter()
 			actualEventType = modifyEvent
+			sensitiveFileType = modify.FileModify.SensitiveFileType
 		} else if read != nil {
 			process = read.GetProcess()
 			parentProcess = read.GetParentProcess()
 			afterImage = read.FileRead.GetImage()
 			actualEventType = readEvent
+			sensitiveFileType = read.FileRead.SensitiveFileType
 		} else {
 			f.Error("encountered an empty file event, no read, no modify found")
 		}
@@ -368,32 +371,38 @@ func (f FileEvent) DoTest(ctx context.Context, tc *testDetails) {
 		}
 		eInfo := fmt.Sprintf("[%d] cmd %q ", pid, expectedResult.command)
 		if expectedResult.eventType != actualEventType {
-			f.Logf("%v expected event type %q actual %q", eInfo,
+			f.Logf("MISMATCH[event type] - %v expected %q actual %q", eInfo,
 				expectedResult.eventType,
 				actualEventType)
 			continue
 		}
-
 		if !proto.Equal(process, expectedResult.process) {
-			f.Logf("%v process mismatch - expected:%q actual: %q", eInfo,
+			f.Logf("MISMATCH - %v process - expected:%q actual: %q", eInfo,
 				expectedResult.process, process)
 			continue
 		}
 		if !proto.Equal(parentProcess, expectedResult.parentProcess) {
-			f.Logf("%v parent process mismatch - expected: %q actual: %q",
+			f.Logf("MISMATCH - %v parent process - expected: %q actual: %q",
 				eInfo, expectedResult.process, process)
 			continue
 		}
 
+		if expectedResult.fileType != *sensitiveFileType {
+			f.Logf("MISMATCH - %v sensitiveFileType - expected: %q actual: %q",
+				eInfo, expectedResult.fileType, *sensitiveFileType)
+			continue
+		}
+
 		if err = matchAttributes(afterImage, expectedResult.afterStat); err != nil {
-			f.Logf("%v after_image attribute matching failed: %v", eInfo, err)
+			f.Logf("MISMATCH - [%v] %v after_image attribute matching failed: %v", pid, eInfo, err)
 			continue
 		}
 
 		if modify != nil { //validation specific to modify
+			f.Logf("expectation for pid=%v and event is a modify", pid)
 			if modify.GetFileModify().GetModifyType() != *expectedResult.eventSubType {
-				f.Logf("%v modify type mismatch - expected:%q actual:%q",
-					eInfo, expectedResult.eventSubType,
+				f.Logf("MISMATCH - [%v] %v  expected:%q actual:%q",
+					pid, eInfo, expectedResult.eventSubType,
 					modify.GetFileModify().GetModifyType())
 				continue
 			}
@@ -624,7 +633,7 @@ func appendModifyAttributeCommand(ctx context.Context, cmdDetails []*commandDeta
 		cmd: testexec.CommandContext(ctx, (*sysCmds)["chmod"], "777", fileName),
 		expected: &expectedResult{
 			eventType:    modifyEvent,
-			fileType:     xdr.SensitiveFileType_SYSTEM_TPM_PUBLIC_KEY,
+			fileType:     fileType,
 			filePath:     fileName,
 			eventSubType: xdr.FileModify_MODIFY_ATTRIBUTE.Enum()},
 		filePath: fileName,
