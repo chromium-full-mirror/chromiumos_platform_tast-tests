@@ -9,6 +9,7 @@ import (
 	"context"
 	"time"
 
+	"go.chromium.org/tast-tests/cros/common/chrome/credconfig"
 	"go.chromium.org/tast-tests/cros/common/dma"
 	"go.chromium.org/tast-tests/cros/common/fixture"
 	"go.chromium.org/tast-tests/cros/common/hwsec"
@@ -16,11 +17,8 @@ import (
 	"go.chromium.org/tast-tests/cros/local/bundles/cros/login/signinutil"
 	"go.chromium.org/tast-tests/cros/local/chrome"
 	"go.chromium.org/tast-tests/cros/local/chrome/ash"
-	"go.chromium.org/tast-tests/cros/local/chrome/uiauto"
 	"go.chromium.org/tast-tests/cros/local/chrome/uiauto/faillog"
 	"go.chromium.org/tast-tests/cros/local/chrome/uiauto/lockscreen"
-	"go.chromium.org/tast-tests/cros/local/chrome/uiauto/nodewith"
-	"go.chromium.org/tast-tests/cros/local/chrome/uiauto/role"
 	"go.chromium.org/tast-tests/cros/local/chrome/userutil"
 	hwseclocal "go.chromium.org/tast-tests/cros/local/hwsec"
 	"go.chromium.org/tast-tests/cros/local/upstart"
@@ -61,6 +59,7 @@ func CryptohomeRecovery(ctx context.Context, s *testing.State) {
 		testData = "test that data persisted after the recovery"
 	)
 
+	var cr *chrome.Chrome
 	var creds chrome.Creds
 
 	cleanupCtx := ctx
@@ -70,95 +69,35 @@ func CryptohomeRecovery(ctx context.Context, s *testing.State) {
 	cmdRunner := hwseclocal.NewCmdRunner()
 	cryptohome := hwsec.NewCryptohomeClient(cmdRunner)
 
-	// Log in and log out to create a user pod on the login screen.
-	func() {
-		cr, err := chrome.New(ctx,
-			chrome.GAIALoginPool(dma.CredsFromPool(ui.GaiaPoolDefaultVarName)),
-			chrome.DontSkipOOBEAfterLogin(),
-			chrome.EnableFeatures("CryptohomeRecovery"),
-			// TODO(b/315829727): Remove this as a part of post-launch cleanup.
-			chrome.EnableFeatures("LocalPasswordsForConsumers"),
-		)
-		if err != nil {
-			s.Fatal("Chrome login failed: ", err)
-		}
-		defer cr.Close(cleanupCtx)
-		creds = cr.Creds()
+	gaiaCreds, err := credconfig.PickRandomCreds(dma.CredsFromPool(ui.GaiaPoolDefaultVarName))
+	if err != nil {
+		s.Fatal("Failed to parse creds: ", err)
+	}
 
-		tconn, err := cr.TestAPIConn(ctx)
-		if err != nil {
-			s.Fatal("Failed to connect Test API: ", err)
-		}
-		defer faillog.DumpUITreeWithScreenshotOnError(cleanupCtx, s.OutDir(), s.HasError, cr, "ui_dump")
+	cr, err = chrome.New(ctx,
+		chrome.GAIALogin(gaiaCreds),
+	)
 
-		oobeConn, err := cr.WaitForOOBEConnection(ctx)
-		if err != nil {
-			s.Fatal("Failed to create OOBE connection: ", err)
-		}
-		defer oobeConn.Close()
+	defer userutil.ResetUsers(cleanupCtx)
+	if err != nil {
+		s.Fatal("Failed to setup user: ", err)
+	}
+	defer cr.Close(cleanupCtx)
+	creds = cr.Creds()
 
-		if err := oobeConn.Eval(ctx, "OobeAPI.advanceToScreen('recovery-check')", nil); err != nil {
-			s.Fatal("Failed to advance to the 'recovery-check' screen: ", err)
-		}
-		if err := oobeConn.WaitForExprFailOnErr(ctx, "OobeAPI.screens.ConsolidatedConsentScreen.isReadyForTesting()"); err != nil {
-			s.Fatal("Failed to wait for the consolidated consent screen to be visible: ", err)
-		}
-		if err := oobeConn.Eval(ctx, "OobeAPI.screens.ConsolidatedConsentScreen.enableRecoveryToggle()", nil); err != nil {
-			s.Fatal("Failed to enable recovery toggle on the consolidated consent screen: ", err)
-		}
-		if err := oobeConn.Eval(ctx, "OobeAPI.screens.ConsolidatedConsentScreen.clickAcceptButton()", nil); err != nil {
-			s.Fatal("Failed to click consolidated consent screen accept button: ", err)
-		}
+	// Write test file to check that data persisted on password change.
+	if err := hwsec.WriteUserTestContent(ctx, cryptohome, cmdRunner, cr.NormalizedUser(), testFile, testData); err != nil {
+		s.Fatal("Failed to write a user test file: ", err)
+	}
 
-		if err := signinutil.WaitForRecoverySetup(ctx, oobeConn); err != nil {
-			s.Fatal("Failed to wait for recovery setup to be finished: ", err)
-		}
-
-		s.Log("Waiting for the password selection screen")
-		if err := oobeConn.WaitForExprFailOnErr(ctx, "OobeAPI.screens.PasswordSelectionScreen.isVisible()"); err != nil {
-			s.Fatal("Failed to wait for the password selection screen to be visible: ", err)
-		}
-
-		if err := oobeConn.Eval(ctx, "OobeAPI.screens.PasswordSelectionScreen.selectGaiaPassword()", nil); err != nil {
-			s.Fatal("Failed to select GAIA password: ", err)
-		}
-
-		ui := uiauto.New(tconn).WithTimeout(10 * time.Second)
-		nextButton := nodewith.Name("Next").Role(role.Button)
-		if err := uiauto.Combine("click next on the password selection screen",
-			ui.WaitUntilEnabled(nextButton),
-			ui.LeftClick(nextButton),
-		)(ctx); err != nil {
-			s.Fatal("Failed to click password selection screen next button: ", err)
-		}
-
-		if err := oobeConn.Eval(ctx, "OobeAPI.skipPostLoginScreens()", nil); err != nil {
-			// This is not fatal because sometimes it fails because Oobe shutdowns too fast after the call - which produces error.
-			s.Log("Failed to call skip post login screens: ", err)
-		}
-		if err := cr.WaitForOOBEConnectionToBeDismissed(ctx); err != nil {
-			s.Fatal("Failed to wait for OOBE to be dismissed: ", err)
-		}
-
-		// This is needed for reven tests, as login flow there relies on the existence of a device setting.
-		if err := userutil.WaitForOwnership(ctx, cr); err != nil {
-			s.Fatal("User did not become device owner: ", err)
-		}
-
-		// Write test file to check that data persisted on password change.
-		if err := hwsec.WriteUserTestContent(ctx, cryptohome, cmdRunner, cr.NormalizedUser(), testFile, testData); err != nil {
-			s.Fatal("Failed to write a user test file: ", err)
-		}
-
-		s.Log("The user was created - logging out")
-		if err := upstart.RestartJob(ctx, "ui"); err != nil {
-			s.Fatal("Failed to restart ui: ", err)
-		}
-	}()
+	s.Log("The user was created - logging out")
+	if err := upstart.RestartJob(ctx, "ui"); err != nil {
+		s.Fatal("Failed to restart ui: ", err)
+	}
 
 	// chrome.KeepState() is needed to show the login screen with a user pod
 	// (instead of the OOBE login screen).
-	cr, err := chrome.New(
+	cr, err = chrome.New(
 		ctx,
 		chrome.GAIALogin(creds),
 		chrome.DeferLogin(),
@@ -172,12 +111,12 @@ func CryptohomeRecovery(ctx context.Context, s *testing.State) {
 		s.Fatal("Failed to start Chrome on the login screen: ", err)
 	}
 	defer cr.Close(cleanupCtx)
+	defer faillog.DumpUITreeWithScreenshotOnError(cleanupCtx, s.OutDir(), s.HasError, cr, "ui_dump")
 
 	tLoginConn, err := cr.SigninProfileTestAPIConn(ctx)
 	if err != nil {
 		s.Fatal("Creating login test API connection failed: ", err)
 	}
-	defer faillog.DumpUITreeWithScreenshotOnError(cleanupCtx, s.OutDir(), s.HasError, cr, "ui_dump")
 
 	if err := signinutil.EnterInvalidPassword(ctx, cr, creds); err != nil {
 		s.Fatal("Failed to enter invalid password: ", err)
