@@ -207,15 +207,8 @@ func CorruptBothFWSigABAndEC(ctx context.Context, s *testing.State) {
 		}
 		// The power_state:reset command might cause an error (ec/cr50/servo: no data was sent from pty or unresponsive).
 		// To prevent this issue, send the 'reboot' command in VT2.
-		if err := h.RebootWithSSHCommand(ctx, pv.BootMode); err != nil {
-			s.Error("Failed to reboot with VT2 command: ", err)
-		}
-		// The DUT takes longer to reboot than expected.
-		s.Log("Waiting longer to see if the DUT can reconnect")
-		waitConnectCtx, cancelWaitConnect := context.WithTimeout(ctx, 5*time.Minute)
-		defer cancelWaitConnect()
-		if err := h.WaitConnect(waitConnectCtx, firmware.ResetEthernetDongle); err != nil {
-			s.Error("Failed to reconnect to the DUT during the extended waiting period: ", err)
+		if err := rebootAfterFlash(ctx, h, pv.BootMode); err != nil {
+			s.Error("Failed to reboot after flashing DUT: ", err)
 		}
 	}(ctx)
 
@@ -429,6 +422,23 @@ func pollForECHashChange(ctx context.Context, h *firmware.Helper, hashBefore []b
 		return nil
 	}, &testing.PollOptions{Timeout: time.Minute}); retErr != nil {
 		return retErr
+	}
+	return nil
+}
+
+// rebootAfterFlash sends a reboot command via SSH to reboot the DUT.
+func rebootAfterFlash(ctx context.Context, h *firmware.Helper, bootMode fwCommon.BootMode) error {
+	if err := h.RebootWithSSHCommand(ctx, bootMode); err != nil {
+		if errors.As(err, &context.DeadlineExceeded) {
+			// It may take a longer time for DUT to reboot after restoring firmware.
+			waitConnectCtx, cancelWaitConnect := context.WithTimeout(ctx, 10*time.Minute)
+			defer cancelWaitConnect()
+			if err := h.WaitConnect(waitConnectCtx, firmware.ResetEthernetDongle); err != nil {
+				return errors.Wrap(err, "failed to reconnect to the DUT")
+			}
+		} else {
+			return errors.Wrap(err, "failed to reboot with VT2 command")
+		}
 	}
 	return nil
 }
