@@ -34,6 +34,13 @@ type firmwareMetadata struct {
 	keyID     string
 }
 
+// If fwInfoType enums/names change, do the following:
+// - Run "go generate" from within this directory.
+// - Manually add ChromiumOS copyright header.
+//go:generate stringer -type=fwInfoType
+
+// fwInfoType specifies a property of a firmware binary, like RO version
+// or the key used to sign RW.
 type fwInfoType int
 
 const (
@@ -257,7 +264,7 @@ func getExpectedFwInfo(fpBoard fp.BoardName, buildFwFile string, infoType fwInfo
 	case fwInfoTypeKeyID:
 		return expectedFwInfo.keyID, nil
 	default:
-		return "", errors.Errorf("requested firmware info type %d does not exist", infoType)
+		return "", errors.Errorf("requested firmware info type %v does not exist", infoType)
 	}
 }
 
