@@ -1,4 +1,4 @@
-// Copyright 2022 The ChromiumOS Authors
+// Copyright 2024 The ChromiumOS Authors
 // Use of this source code is governed by a BSD-style license that can be
 // found in the LICENSE file.
 
@@ -15,52 +15,45 @@ import (
 
 func init() {
 	testing.AddTest(&testing.Test{
-		Func:           HasCorrectOrEmptyOEMName,
+		Func:           HasCorrectOEMName,
 		LifeCycleStage: testing.LifeCycleOwnerMonitored,
-		Desc:           "Verifies that DUT has correct or empty OEM name",
+		Desc:           "Verifies that DUT has correct OEM name",
 		Contacts:       []string{"chromeos-oem-services@google.com"},
 		// ChromeOS > Platform > Enablement > Serviceability > Diagnostic & Health > OEM Services
 		BugComponent: "b:1256717",
-		Attr:         []string{"group:telemetry_extension_hw"},
+		Attr:         []string{"group:telemetry_extension_hw", "group:mainline", "informational", "group:healthd", "healthd_perbuild"},
 		Params: []testing.Param{
 			{
 				Name:              "asus",
 				Val:               "ASUS",
 				ExtraHardwareDeps: dep.AsusModels(),
-				ExtraAttr:         []string{"group:mainline"},
 			},
 			{
 				Name:              "hp",
 				Val:               "HP",
 				ExtraHardwareDeps: dep.HPModels(),
-				ExtraAttr:         []string{"group:mainline"},
 			},
 			{
 				Name:              "lenovo",
 				Val:               "Lenovo",
 				ExtraHardwareDeps: dep.LenovoModels(),
-				ExtraAttr:         []string{"group:mainline", "informational", "group:criticalstaging"},
 			},
 			{
 				Name:              "acer",
 				Val:               "Acer",
 				ExtraHardwareDeps: dep.AcerModels(),
-				ExtraAttr:         []string{"group:mainline", "informational", "group:criticalstaging"},
 			},
 		},
 	})
 }
 
-// HasCorrectOrEmptyOEMName tests that DUT has correct or empty OEM name which
-// comes from
+// HasCorrectOEMName tests that DUT has correct OEM name which comes from
 //   - CrOSConfig or
 //   - /sys/firmware/vpd/ro/oem_name (for unreleased models).
 //
-// Empty OEM names are allowed because what we want to catach is the wrong OEM
-// names. For example,
-//   - "TBD" or
-//   - "OEM_B" when the actual OEM is A.
-func HasCorrectOrEmptyOEMName(ctx context.Context, s *testing.State) {
+// This test should not be promoted to critical as we don't plan to updata all
+// configs. It is used to know which models do not have the correct OEM name.
+func HasCorrectOEMName(ctx context.Context, s *testing.State) {
 	oemName, ok := s.Param().(string)
 	if !ok {
 		s.Fatal("Failed to convert params value into string: ", s.Param())
@@ -68,7 +61,7 @@ func HasCorrectOrEmptyOEMName(ctx context.Context, s *testing.State) {
 
 	if vendor, err := vendorutils.FetchVendor(ctx); err != nil {
 		s.Error("Failed to read vendor name: ", err)
-	} else if got, want := vendor, oemName; got != "" && got != want {
+	} else if got, want := vendor, oemName; got != want {
 		s.Errorf("Unexpected vendor name: got %q, want %q", got, want)
 	}
 }
