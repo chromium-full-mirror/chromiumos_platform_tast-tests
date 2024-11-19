@@ -241,11 +241,11 @@ func DUTModelIsInList(ctx context.Context, d *rpcdut.RPCDUT, modelList []string)
 func getExpectedFwInfo(fpBoard fp.BoardName, buildFwFile string, infoType fwInfoType) (string, error) {
 	boardExpectedFwInfo, ok := firmwareVersionMap[fpBoard]
 	if !ok {
-		return "", errors.Errorf("failed to get firmware info for board %s", fpBoard)
+		return "", errors.Errorf("failed to lookup expected firmware info for board %s", fpBoard)
 	}
 	expectedFwInfo, ok := boardExpectedFwInfo[filepath.Base(buildFwFile)]
 	if !ok {
-		return "", errors.Errorf("failed to get firmware info for file %s", buildFwFile)
+		return "", errors.Errorf("failed to lookup expected firmware info for file %s", buildFwFile)
 	}
 	switch infoType {
 	case fwInfoTypeSha256sum:
@@ -257,7 +257,7 @@ func getExpectedFwInfo(fpBoard fp.BoardName, buildFwFile string, infoType fwInfo
 	case fwInfoTypeKeyID:
 		return expectedFwInfo.keyID, nil
 	default:
-		return "", errors.Errorf("failed to get firmware info type %d", infoType)
+		return "", errors.Errorf("requested firmware info type %d does not exist", infoType)
 	}
 }
 
