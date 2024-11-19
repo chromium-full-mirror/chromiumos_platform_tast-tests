@@ -14,17 +14,12 @@ import (
 	cryptohomecommon "go.chromium.org/tast-tests/cros/common/cryptohome"
 	"go.chromium.org/tast-tests/cros/common/hwsec"
 	"go.chromium.org/tast-tests/cros/local/cryptohome"
-	cryptochrome "go.chromium.org/tast-tests/cros/local/cryptohome/chrome"
 	hwseclocal "go.chromium.org/tast-tests/cros/local/hwsec"
 
 	"go.chromium.org/tast/core/ctxutil"
 	"go.chromium.org/tast/core/errors"
 	"go.chromium.org/tast/core/testing"
 )
-
-type recoveryWithUssMigrationParam struct {
-	modernPin bool
-}
 
 func init() {
 	testing.AddTest(&testing.Test{
@@ -39,17 +34,6 @@ func init() {
 		Attr:         []string{"group:mainline", "group:cryptohome"},
 		// For "no_tpm_dynamic" - see http://b/251789202.
 		SoftwareDeps: []string{"pinweaver", "tpm", "no_tpm_dynamic", "chrome"},
-		Params: []testing.Param{{
-			Name: "legacy_pin",
-			Val: recoveryWithUssMigrationParam{
-				modernPin: false,
-			},
-		}, {
-			Name: "modern_pin",
-			Val: recoveryWithUssMigrationParam{
-				modernPin: true,
-			},
-		}},
 	})
 }
 
@@ -73,8 +57,6 @@ func RecoveryWithUssMigration(ctx context.Context, s *testing.State) {
 	ctxForCleanUp := ctx
 	ctx, cancel := ctxutil.Shorten(ctx, 10*time.Second)
 	defer cancel()
-
-	userParam := s.Param().(recoveryWithUssMigrationParam)
 
 	cmdRunner := hwseclocal.NewCmdRunner()
 	client := hwsec.NewCryptohomeClient(cmdRunner)
@@ -104,7 +86,7 @@ func RecoveryWithUssMigration(ctx context.Context, s *testing.State) {
 	}
 
 	// Set up an auth factor with USS migration disabled.
-	if err := cryptochrome.WithModernPinDisabled(ctx, func() error {
+	if err := func() error {
 		// Set up a VaultKeyset, auth factor is created.
 		setupUser := func(authSessionID string) error {
 			// Set up the user with a password and PIN VaultKeyset.
@@ -150,19 +132,13 @@ func RecoveryWithUssMigration(ctx context.Context, s *testing.State) {
 		}
 
 		return nil
-	}); err != nil {
+	}(); err != nil {
 		s.Fatal("Setup while USS migration was disabled failed: ", err)
 	}
 	defer cryptohome.RemoveVault(ctxForCleanUp, userName)
 
-	// Select the appropriate PIN wrapper function based on test parameters.
-	withPinFlags := cryptochrome.WithModernPinDisabled
-	if userParam.modernPin {
-		withPinFlags = cryptochrome.WithModernPin
-	}
-
 	// Enable migration to verify the migration process.
-	if err := withPinFlags(ctx, func() error {
+	if err := func() error {
 		authenticateAndMount := func(authSessionID string) error {
 			if _, err := client.AuthenticateAuthFactor(ctx, authSessionID, passwordLabel, userPassword); err != nil {
 				return errors.Wrap(err, "failed to authenticate password auth factor")
@@ -212,12 +188,12 @@ func RecoveryWithUssMigration(ctx context.Context, s *testing.State) {
 			return errors.Wrap(err, "failed to unmount vault after migration mount")
 		}
 		return nil
-	}); err != nil {
+	}(); err != nil {
 		s.Fatal("Validation during USS migration failed: ", err)
 	}
 
 	// Use Recovery and update password.
-	if err := withPinFlags(ctx, func() error {
+	if err := func() error {
 		performRecoveryAndUpdatePassword := func(authSessionID string) error {
 			epoch, err := testTool.FetchFakeEpochResponseHex(ctx)
 			if err != nil {
@@ -266,17 +242,17 @@ func RecoveryWithUssMigration(ctx context.Context, s *testing.State) {
 			return errors.Wrap(err, "failed to recover the user and update password")
 		}
 		return nil
-	}); err != nil {
+	}(); err != nil {
 		s.Fatal("Validation during USS migration failed: ", err)
 	}
 
-	if err := withPinFlags(ctx, func() error {
+	if err := func() error {
 		// Check that pin factor has not been migrated.
 		if err := cryptohome.CheckKeyBackingStoreExists(ctx, pinFactorFile, userName); err == nil {
 			return errors.New("Pin auth factor file was created before migration should have happened")
 		}
 		// Test that PIN reset with correct password works.
-		if err := cryptohome.TestPinCounterMechanism(ctx, userName, passwordLabel, userNewPassword, pinLabel, userPin, notUserPin, client, userParam.modernPin); err != nil {
+		if err := cryptohome.TestPinCounterMechanism(ctx, userName, passwordLabel, userNewPassword, pinLabel, userPin, notUserPin, client, true /*isModernPin*/); err != nil {
 			return errors.Wrap(err, "failed in testing PIN lockout and reset mechanism after recovery")
 		}
 
@@ -290,12 +266,12 @@ func RecoveryWithUssMigration(ctx context.Context, s *testing.State) {
 		}
 
 		return nil
-	}); err != nil {
+	}(); err != nil {
 		s.Fatal("Validation of inmigrated pin lockout failed post recovery: ", err)
 	}
 
 	// Test that PIN reset with correct password works after the migration.
-	if err := cryptohome.TestPinCounterMechanism(ctx, userName, passwordLabel, userNewPassword, pinLabel, userPin, notUserPin, client, userParam.modernPin); err != nil {
+	if err := cryptohome.TestPinCounterMechanism(ctx, userName, passwordLabel, userNewPassword, pinLabel, userPin, notUserPin, client, true /*isModernPin*/); err != nil {
 		s.Fatal("Failed in testing PIN lockout and reset mechanism after migration: ", err)
 	}
 }

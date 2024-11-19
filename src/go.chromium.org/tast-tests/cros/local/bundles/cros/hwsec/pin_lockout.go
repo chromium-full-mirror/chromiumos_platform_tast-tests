@@ -123,23 +123,6 @@ func PinLockout(ctx context.Context, s *testing.State) {
 		s.Fatal("Failed to remove old vault for preparation: ", err)
 	}
 
-	// Setup a new user with PIN while the modern pin is disabled.
-	// Test the legacy PIN lockout.
-	if err := cryptochrome.WithModernPinDisabled(ctx, func() error {
-		if err := setupUserWithPin(ctx, ctxForCleanup, util.FirstUsername, cmdRunner, helper, true); err != nil {
-			return errors.Wrap(err, "failed to set up a user with a pin auth factor while modern pin is disabled")
-		}
-		// The delay schedule is defined in
-		// https://crsrc.org/o/src/platform2/cryptohome/auth_blocks/pin_weaver_auth_block.cc.
-		legacyPinLockoutSchedule := pinLockoutSchedule{{attempts: 5, lockout: math.MaxInt64}}
-		if err := checkPinLockout(ctx, client, timerHelper, util.FirstUsername, legacyPinLockoutSchedule); err != nil {
-			return err
-		}
-		return nil
-	}); err != nil {
-		s.Fatal("Failed to check legacy PIN lockout: ", err)
-	}
-
 	if err := cryptochrome.WithMigrationPin(ctx, func() error {
 		_, authSessionID, err := client.StartAuthSession(ctx, util.FirstUsername, false /* ephemeral */, uda.AuthIntent_AUTH_INTENT_DECRYPT)
 		if err != nil {
