@@ -13,7 +13,6 @@ import (
 	"go.chromium.org/tast-tests/cros/local/a11y/facegaze"
 	"go.chromium.org/tast-tests/cros/local/arc"
 	"go.chromium.org/tast-tests/cros/local/chrome"
-	"go.chromium.org/tast-tests/cros/local/chrome/browser"
 	"go.chromium.org/tast-tests/cros/local/chrome/cuj"
 	"go.chromium.org/tast-tests/cros/local/chrome/uiauto/quicksettings"
 	"go.chromium.org/tast-tests/cros/local/cpu"
@@ -130,7 +129,7 @@ func IdlePerf(ctx context.Context, s *testing.State) {
 
 	// Recorder with no additional config; it records and reports memory usage and
 	// CPU percents of browser/GPU processes.
-	recorder, err := cujrecorder.NewRecorder(ctx, cr, tconn, a, cujrecorder.RecorderOptions{})
+	recorder, err := cujrecorder.NewRecorder(ctx, tconn, a, cujrecorder.RecorderOptions{})
 	if err != nil {
 		s.Fatal("Failed to create a recorder: ", err)
 	}
@@ -152,7 +151,7 @@ func IdlePerf(ctx context.Context, s *testing.State) {
 			cujrecorder.NewCustomMetricConfig("Accessibility.FaceGaze.AverageFaceLandmarkerLatency", "ms", perf.SmallerIsBetter),
 		}
 
-		if err := recorder.AddCollectedMetrics(tconn, browser.TypeAsh, metric...); err != nil {
+		if err := recorder.AddCollectedMetrics(metric...); err != nil {
 			s.Fatal("Failed to add FaceGaze metric to the recorder: ", err)
 		}
 

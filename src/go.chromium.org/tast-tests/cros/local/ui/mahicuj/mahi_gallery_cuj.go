@@ -106,13 +106,13 @@ func GalleryCUJRun(ctx context.Context, cr *chrome.Chrome, proxyScriptPath, pdfF
 	}
 	defer kb.Close(closeCtx)
 
-	recorder, err := cujrecorder.NewRecorder(ctx, cr, tconn, nil, cujrecorder.NewPerformanceCUJOptions())
+	recorder, err := cujrecorder.NewRecorder(ctx, tconn, nil, cujrecorder.NewPerformanceCUJOptions())
 	if err != nil {
 		return nil, errors.Wrap(err, "failed to create a CUJ recorder")
 	}
 	defer recorder.Close(closeCtx)
 
-	if err := recorder.AddCommonMetrics(tconn, tconn); err != nil {
+	if err := recorder.AddCommonMetrics(); err != nil {
 		return nil, errors.Wrap(err, "failed to add common metrics to CUJ recorder")
 	}
 

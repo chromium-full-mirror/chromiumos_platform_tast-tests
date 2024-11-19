@@ -83,13 +83,13 @@ func Run(ctx context.Context, cr *chrome.Chrome, outDir, systemTraceConfigPath s
 		return errors.Wrap(err, "failed to connect to test API connection")
 	}
 
-	recorder, err := cujrecorder.NewRecorder(ctx, cr, tconn, nil, cujrecorder.RecorderOptions{})
+	recorder, err := cujrecorder.NewRecorder(ctx, tconn, nil, cujrecorder.RecorderOptions{})
 	if err != nil {
 		return errors.Wrap(err, "failed to create a recorder")
 	}
 	defer recorder.Close(closeCtx)
 
-	if err := recorder.AddCommonMetrics(tconn, tconn); err != nil {
+	if err := recorder.AddCommonMetrics(); err != nil {
 		return errors.Wrap(err, "failed to add common metrics to the recorder")
 	}
 

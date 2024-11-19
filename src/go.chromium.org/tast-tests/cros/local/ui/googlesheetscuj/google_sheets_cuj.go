@@ -124,13 +124,13 @@ func Run(ctx context.Context, cr *chrome.Chrome, testParam TestParam, outDir, sy
 
 	ui := uiauto.New(tconn)
 
-	recorder, err := cujrecorder.NewRecorder(ctx, cr, tconn, nil, cujrecorder.RecorderOptions{CooldownBeforeRun: true})
+	recorder, err := cujrecorder.NewRecorder(ctx, tconn, nil, cujrecorder.RecorderOptions{CooldownBeforeRun: true})
 	if err != nil {
 		return nil, errors.Wrap(err, "failed to create a CUJ recorder")
 	}
 	defer recorder.Close(closeCtx)
 
-	if err := recorder.AddCommonMetrics(tconn, tconn); err != nil {
+	if err := recorder.AddCommonMetrics(); err != nil {
 		return nil, errors.Wrap(err, "failed to add common metrics to recorder")
 	}
 
@@ -173,7 +173,7 @@ func Run(ctx context.Context, cr *chrome.Chrome, testParam TestParam, outDir, sy
 		return nil, errors.Wrap(err, "failed to get the primary display info")
 	}
 
-	if err := cuj.WaitForValidAccountInCookieJar(ctx, cr.Browser(), tconn); err != nil {
+	if err := cuj.WaitForValidAccountInCookieJar(ctx, cr); err != nil {
 		return nil, errors.Wrap(err, "failed to wait for valid account in cookie jar")
 	}
 

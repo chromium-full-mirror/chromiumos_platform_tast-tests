@@ -377,18 +377,18 @@ func Run(ctx context.Context, meet MeetTest, cr *chrome.Chrome, testCaseVar func
 	}
 
 	meetHelper := googlemeet.NewHRTelemetryHelper(cr, tconn)
-	recorder, err := cujrecorder.NewRecorder(ctx, cr, tconn, nil, cujrecorder.RecorderOptions{})
+	recorder, err := cujrecorder.NewRecorder(ctx, tconn, nil, cujrecorder.RecorderOptions{})
 	if err != nil {
 		return pv, errors.Wrap(err, "failed to create the recorder")
 	}
 
-	if err := recorder.AddCollectedMetrics(tconn, browser.TypeAsh,
+	if err := recorder.AddCollectedMetrics(
 		cujrecorder.NewCustomMetricConfig("Cras.MissedCallbackFrequencyInput", "millisecond", perf.SmallerIsBetter),
 		cujrecorder.NewCustomMetricConfig("Cras.MissedCallbackFrequencyOutput", "millisecond", perf.SmallerIsBetter)); err != nil {
 		return pv, errors.Wrap(err, "failed to add metrics to recorder")
 	}
 
-	if err := recorder.AddCommonMetrics(tconn, tconn); err != nil {
+	if err := recorder.AddCommonMetrics(); err != nil {
 		return pv, errors.Wrap(err, "failed to add common metrics to recorder")
 	}
 
@@ -405,13 +405,12 @@ func Run(ctx context.Context, meet MeetTest, cr *chrome.Chrome, testCaseVar func
 		}
 	}()
 
-	br := cr.Browser()
-	if err := cuj.WaitForValidAccountInCookieJar(ctx, br, tconn); err != nil {
+	if err := cuj.WaitForValidAccountInCookieJar(ctx, cr); err != nil {
 		return pv, errors.Wrap(err, "failed to wait for valid account in cookie jar")
 	}
 
 	// Open chrome://webrtc-internals now so it will collect data on the meeting's streams.
-	webrtcInternals, err := recorder.NewConn(ctx, br, "WebRTC_Internals", "chrome://webrtc-internals", browser.WithNewWindow())
+	webrtcInternals, err := recorder.NewConn(ctx, cr, "WebRTC_Internals", "chrome://webrtc-internals", browser.WithNewWindow())
 	if err != nil {
 		return pv, errors.Wrap(err, "failed to open chrome://webrtc-internals")
 	}
@@ -788,7 +787,7 @@ func Run(ctx context.Context, meet MeetTest, cr *chrome.Chrome, testCaseVar func
 			}
 
 			// Create another browser window and open a Google Docs file.
-			collaborationConn, err = recorder.NewConn(ctx, br, "Docs", docsURL, browser.WithNewWindow())
+			collaborationConn, err = recorder.NewConn(ctx, cr, "Docs", docsURL, browser.WithNewWindow())
 			if err != nil {
 				return errors.Wrap(err, "failed to open the Google Docs website")
 			}

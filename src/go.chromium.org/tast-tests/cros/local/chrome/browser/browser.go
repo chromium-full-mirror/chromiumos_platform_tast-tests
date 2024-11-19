@@ -19,22 +19,6 @@ import (
 	"go.chromium.org/tast/core/testing"
 )
 
-// Type indicates the type of Chrome browser to be used.
-type Type string
-
-// HasBrowserType is an interface for fixture values that contain Type. It
-// allows retrieval of the browser type.
-type HasBrowserType interface {
-	BrowserType() Type
-}
-
-const (
-	// TypeAsh refers to Ash Chrome (the system browser).
-	TypeAsh Type = "ash"
-	// TypeLacros refers to Lacros Chrome (the user browser).
-	TypeLacros Type = "lacros"
-)
-
 // Browser consists primarily of a Chrome session.
 type Browser struct {
 	sess                     *driver.Session
@@ -60,11 +44,11 @@ func (b *Browser) NewTab(ctx context.Context, url string, opts ...CreateTargetOp
 		return b.NewConn(ctx, url, opts...)
 	}
 
-	return b.NavigateToURLUsingNewTab(ctx, url)
+	return b.navigateToURLUsingNewTab(ctx, url)
 }
 
-// NavigateToURLUsingNewTab finds the new tab and navigate to the given URL.
-func (b *Browser) NavigateToURLUsingNewTab(ctx context.Context, url string) (*Conn, error) {
+// navigateToURLUsingNewTab finds the new tab and navigate to the given URL.
+func (b *Browser) navigateToURLUsingNewTab(ctx context.Context, url string) (*Conn, error) {
 	conn, err := b.NewConnForTarget(ctx, driver.MatchTargetURL("chrome://newtab/"))
 	if err != nil {
 		return nil, errors.Wrap(err, "failed to find new tab")
@@ -82,11 +66,6 @@ type CreateTargetOption = cdputil.CreateTargetOption
 // WithNewWindow behaves like cpdutil.WithNewWindow.
 func WithNewWindow() CreateTargetOption {
 	return cdputil.WithNewWindow()
-}
-
-// WithBackground behaves like cpdutil.WithBackground.
-func WithBackground() CreateTargetOption {
-	return cdputil.WithBackground()
 }
 
 // Conn is chrome.Conn

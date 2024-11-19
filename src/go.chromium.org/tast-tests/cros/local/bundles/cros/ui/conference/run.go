@@ -11,7 +11,6 @@ import (
 	"go.chromium.org/tast-tests/cros/common/bond"
 	"go.chromium.org/tast-tests/cros/common/perf"
 	"go.chromium.org/tast-tests/cros/local/chrome"
-	"go.chromium.org/tast-tests/cros/local/chrome/browser"
 	"go.chromium.org/tast-tests/cros/local/chrome/cuj"
 	"go.chromium.org/tast-tests/cros/local/chrome/uiauto"
 	"go.chromium.org/tast-tests/cros/local/chrome/uiauto/faillog"
@@ -87,15 +86,15 @@ func Run(ctx context.Context, params *TestParams) (retErr error) {
 
 	testing.ContextLog(ctx, "Start recording actions")
 	options := cujrecorder.NewPerformanceCUJOptions()
-	recorder, err := cujrecorder.NewRecorder(ctx, cr, tconn, nil, options)
+	recorder, err := cujrecorder.NewRecorder(ctx, tconn, nil, options)
 	if err != nil {
 		return errors.Wrap(err, "failed to create the recorder")
 	}
 	defer recorder.Close(cleanUpRecorderCtx)
-	if err := cuj.AddPerformanceCUJMetrics(tconn, recorder); err != nil {
+	if err := cuj.AddPerformanceCUJMetrics(recorder); err != nil {
 		return errors.Wrap(err, "failed to add metrics to recorder")
 	}
-	if err := recorder.AddCollectedMetrics(tconn, browser.TypeAsh, cujrecorder.WebRTCMetrics()...); err != nil {
+	if err := recorder.AddCollectedMetrics(cujrecorder.WebRTCMetrics()...); err != nil {
 		return errors.Wrap(err, "failed to add metrics to recorder")
 	}
 	isNoRoom := roomType == NoRoom

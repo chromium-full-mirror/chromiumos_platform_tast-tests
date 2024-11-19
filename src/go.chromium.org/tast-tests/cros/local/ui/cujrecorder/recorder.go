@@ -322,7 +322,6 @@ func (rec *record) saveMetric(ctx context.Context, pv *perf.Values, name string)
 
 // Recorder is a utility to measure various metrics for CUJ-style tests.
 type Recorder struct {
-	cr    *chrome.Chrome
 	tconn *chrome.TestConn
 	arc   *arc.ARC
 
@@ -483,12 +482,8 @@ func (r *Recorder) AddPerfTimelines(timelines ...*perf.Timeline) {
 	r.perfTimelines = append(r.perfTimelines, timelines...)
 }
 
-// AddCollectedMetrics adds |configs| to the collected metrics for browser |bt| using the |tconn|
-// as test connection.
-func (r *Recorder) AddCollectedMetrics(tconn *chrome.TestConn, bt browser.Type, configs ...MetricConfig) error {
-	if tconn == nil {
-		return errors.New("tconn must never be nil")
-	}
+// AddCollectedMetrics adds |configs| to the collected metrics.
+func (r *Recorder) AddCollectedMetrics(configs ...MetricConfig) error {
 	if !r.startedAtTm.IsZero() {
 		return errors.New("canont modify list of collected metrics after recording was started")
 	}
@@ -504,12 +499,11 @@ func (r *Recorder) AddCollectedMetrics(tconn *chrome.TestConn, bt browser.Type, 
 }
 
 // AddCommonMetrics adds MetricConfigs defined by CommonMetrics to the collected metrics.
-// TODO(b/356187424): Remove bTconn from anywhere that calls this function.
-func (r *Recorder) AddCommonMetrics(tconn, bTconn *chrome.TestConn) error {
+func (r *Recorder) AddCommonMetrics() error {
 	allMetrics := CUJBrowserCommonMetricConfigs()
 	allMetrics = append(allMetrics, CUJAshCommonMetricConfigs()...)
 	allMetrics = append(allMetrics, CUJAnyChromeCommonMetricConfigs()...)
-	if err := r.AddCollectedMetrics(tconn, browser.TypeAsh, allMetrics...); err != nil {
+	if err := r.AddCollectedMetrics(allMetrics...); err != nil {
 		return errors.Wrap(err, "failed to add common metrics")
 	}
 	return nil
@@ -517,19 +511,19 @@ func (r *Recorder) AddCommonMetrics(tconn, bTconn *chrome.TestConn) error {
 
 // addScreenRecorder creates a screen recorder that will record the
 // device during the execution of recorder.Run.
-func (r *Recorder) addScreenRecorder(ctx context.Context, tconn *chrome.TestConn) error {
+func (r *Recorder) addScreenRecorder(ctx context.Context) error {
 	dir, ok := testing.ContextOutDir(ctx)
 	if !ok || dir == "" {
 		return errors.New("failed to get the out directory to save the screen recording")
 	}
 
-	screenRecorder, err := uiauto.NewScreenRecorder(ctx, tconn)
+	screenRecorder, err := uiauto.NewScreenRecorder(ctx, r.tconn)
 	if err != nil {
 		return errors.Wrap(err, "failed to create ScreenRecorder")
 	}
 
 	r.screenRecorderStart = func(ctx context.Context) error {
-		return screenRecorder.Start(ctx, tconn)
+		return screenRecorder.Start(ctx, r.tconn)
 	}
 	r.screenRecorderCleanup = func(ctx context.Context) {
 		// GoBigSleepLint Sleep before stopping the screen recorder, to ensure
@@ -638,17 +632,15 @@ func (r *Recorder) AnnotateSection(ctx context.Context, annotation string) func(
 	}
 }
 
-// NewRecorderWithTestConn creates a Recorder. It also aggregates the metrics of each
-// category (animation smoothness and input latency) and creates the aggregated
-// reports.
-// TODO(b/356187424): Remove bTconn from all calls to this function.
-func NewRecorderWithTestConn(ctx context.Context, tconn *chrome.TestConn, cr *chrome.Chrome, bTconn *chrome.TestConn, a *arc.ARC, options RecorderOptions) (*Recorder, error) {
+// NewRecorder creates a Recorder based on the configs. It also aggregates the
+// metrics of each category (animation smoothness and input latency) and creates
+// the aggregated reports.
+func NewRecorder(ctx context.Context, tconn *chrome.TestConn, a *arc.ARC, options RecorderOptions) (*Recorder, error) {
 	if tconn == nil {
 		return nil, errors.New("tconn must never be nil")
 	}
 
 	r := &Recorder{
-		cr:                  cr,
 		tconn:               tconn,
 		arc:                 a,
 		options:             options,
@@ -667,17 +659,6 @@ func NewRecorderWithTestConn(ctx context.Context, tconn *chrome.TestConn, cr *ch
 	}
 
 	return r, nil
-}
-
-// NewRecorder creates a Recorder based on the configs. It also aggregates the
-// metrics of each category (animation smoothness and input latency) and creates
-// the aggregated reports.
-func NewRecorder(ctx context.Context, cr *chrome.Chrome, bTconn *chrome.TestConn, a *arc.ARC, options RecorderOptions) (*Recorder, error) {
-	tconn, err := cr.TestAPIConn(ctx)
-	if err != nil {
-		return nil, errors.Wrap(err, "creating test API connection failed")
-	}
-	return NewRecorderWithTestConn(ctx, tconn, cr, bTconn, a, options)
 }
 
 // Reset creates new trackers and sets recorder values that are supposed to be
@@ -742,7 +723,7 @@ func (r *Recorder) Reset(ctx context.Context) error {
 	}
 
 	if strings.ToLower(screenRecord.Value()) == "true" {
-		if err := r.addScreenRecorder(ctx, r.tconn); err != nil {
+		if err := r.addScreenRecorder(ctx); err != nil {
 			return errors.Wrap(err, "failed to add the screen recorder")
 		}
 	}
@@ -1677,7 +1658,7 @@ func (r *Recorder) SaveHistograms(outDir string) error {
 	return nil
 }
 
-// NewConn is a wrapper around browser.NewConn that opens a tab for |url|,
+// NewConn is a wrapper around chrome.NewConn that opens a tab for |url|,
 // using the browser options |opts|. This wrapper records how long it took to
 // open up this specific url. The metric name is constructed as follows:
 //
@@ -1685,9 +1666,9 @@ func (r *Recorder) SaveHistograms(outDir string) error {
 //
 // |shortTitle| must follow all of the rules for perf.Metric names, including
 // only alphanumeric characters, periods, dashes, and underscores.
-func (r *Recorder) NewConn(ctx context.Context, br *browser.Browser, shortTitle, url string, opts ...browser.CreateTargetOption) (*browser.Conn, error) {
+func (r *Recorder) NewConn(ctx context.Context, cr *chrome.Chrome, shortTitle, url string, opts ...browser.CreateTargetOption) (*chrome.Conn, error) {
 	start := time.Now()
-	conn, err := br.NewConn(ctx, url, opts...)
+	conn, err := cr.NewConn(ctx, url, opts...)
 	if err != nil {
 		return nil, err
 	}

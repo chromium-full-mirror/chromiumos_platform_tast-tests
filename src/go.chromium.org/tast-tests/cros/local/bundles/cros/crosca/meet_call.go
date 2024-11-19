@@ -173,7 +173,7 @@ func MeetCall(ctx context.Context, s *testing.State) {
 	if err != nil {
 		s.Fatal("Failed to connect to test API: ", err)
 	}
-	bTconn := tconn
+
 	ui := uiauto.New(tconn)
 	meetingCode := ""
 	if strings.ToLower(meetingCodeVarString.Value()) != "" {
@@ -308,18 +308,18 @@ func MeetCall(ctx context.Context, s *testing.State) {
 		}
 	}
 
-	recorder, err := cujrecorder.NewRecorder(ctx, cr, bTconn, nil, cujrecorder.RecorderOptions{
+	recorder, err := cujrecorder.NewRecorder(ctx, tconn, nil, cujrecorder.RecorderOptions{
 		Mode: cujrecorder.Benchmark,
 	})
 	if err != nil {
 		s.Fatal("Failed to create the recorder: ", err)
 	}
 	defer recorder.Close(closeCtx)
-	if err := recorder.AddCommonMetrics(tconn, bTconn); err != nil {
+	if err := recorder.AddCommonMetrics(); err != nil {
 		s.Fatal("Failed to add common metrics to recorder: ", err)
 	}
 	// Open chrome://webrtc-internals now so it will collect data on the meeting's streams.
-	webrtcInternals, err := recorder.NewConn(ctx, cr.Browser(), "WebRTC_Internals", "chrome://webrtc-internals", browser.WithNewWindow())
+	webrtcInternals, err := recorder.NewConn(ctx, cr, "WebRTC_Internals", "chrome://webrtc-internals", browser.WithNewWindow())
 	if err != nil {
 		s.Fatal("Failed to open chrome://webrtc-internals: ", err)
 	}

@@ -64,7 +64,7 @@ func PageLoadPerf(ctx context.Context, s *testing.State) {
 		DropMinMaxValues: true,
 	})
 
-	recorder, err := cujrecorder.NewRecorder(ctx, cr, tconn, nil, cujrecorder.RecorderOptions{
+	recorder, err := cujrecorder.NewRecorder(ctx, tconn, nil, cujrecorder.RecorderOptions{
 		// FCP and LCP are already noisy metrics, so use the recorder mode
 		// with the least amount of overhead.
 		Mode:              cujrecorder.Benchmark,

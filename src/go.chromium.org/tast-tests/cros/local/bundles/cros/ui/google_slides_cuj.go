@@ -80,13 +80,13 @@ func GoogleSlidesCUJ(ctx context.Context, s *testing.State) {
 		s.Fatal("Failed to connect to test API connection: ", err)
 	}
 
-	recorder, err := cujrecorder.NewRecorder(ctx, cr, tconn, nil, cujrecorder.RecorderOptions{})
+	recorder, err := cujrecorder.NewRecorder(ctx, tconn, nil, cujrecorder.RecorderOptions{})
 	if err != nil {
 		s.Fatal("Failed to create a CUJ recorder: ", err)
 	}
 	defer recorder.Close(closeCtx)
 
-	if err := recorder.AddCommonMetrics(tconn, tconn); err != nil {
+	if err := recorder.AddCommonMetrics(); err != nil {
 		s.Fatal("Failed to add common metrics to recorder: ", err)
 	}
 
@@ -125,7 +125,7 @@ func GoogleSlidesCUJ(ctx context.Context, s *testing.State) {
 
 	defer faillog.DumpUITreeWithScreenshotOnError(closeCtx, s.OutDir(), s.HasError, cr, "ui_dump")
 
-	if err := cuj.WaitForValidAccountInCookieJar(ctx, cr.Browser(), tconn); err != nil {
+	if err := cuj.WaitForValidAccountInCookieJar(ctx, cr); err != nil {
 		s.Fatal("Failed to wait for valid account in cookie jar: ", err)
 	}
 

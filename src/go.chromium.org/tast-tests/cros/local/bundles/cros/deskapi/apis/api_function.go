@@ -8,11 +8,11 @@ package apis
 import (
 	"context"
 
-	"go.chromium.org/tast-tests/cros/local/chrome/browser"
+	"go.chromium.org/tast-tests/cros/local/chrome"
 )
 
 // SetAllDesk sets window to all desks.
-func SetAllDesk(ctx context.Context, conn *browser.Conn) error {
+func SetAllDesk(ctx context.Context, conn *chrome.Conn) error {
 	const setAllDeskJS = `new Promise((resolve, reject) => {
 		chrome.runtime.sendMessage(
 			"kflgdebkpepnpjobkdfeeipcjdahoomc", {
@@ -33,7 +33,7 @@ func SetAllDesk(ctx context.Context, conn *browser.Conn) error {
 }
 
 // LaunchDesk launches a new desk.
-func LaunchDesk(ctx context.Context, conn *browser.Conn) (string, error) {
+func LaunchDesk(ctx context.Context, conn *chrome.Conn) (string, error) {
 	const launchDeskJS = `new Promise((resolve, reject) => {
 		chrome.runtime.sendMessage(
 			"kflgdebkpepnpjobkdfeeipcjdahoomc", {
@@ -56,7 +56,7 @@ func LaunchDesk(ctx context.Context, conn *browser.Conn) (string, error) {
 }
 
 // RemoveDesk removes a desk.
-func RemoveDesk(ctx context.Context, conn *browser.Conn, deskID string) error {
+func RemoveDesk(ctx context.Context, conn *chrome.Conn, deskID string) error {
 	const removeDeskJS = `async (deskId) => {
 		await new Promise((resolve, reject) => {
 			chrome.runtime.sendMessage(
@@ -80,7 +80,7 @@ func RemoveDesk(ctx context.Context, conn *browser.Conn, deskID string) error {
 }
 
 // RemoveDeskWithUndo removes a desk with the option to undo the removal.
-func RemoveDeskWithUndo(ctx context.Context, conn *browser.Conn, deskID string) error {
+func RemoveDeskWithUndo(ctx context.Context, conn *chrome.Conn, deskID string) error {
 	const removeDeskJS = `async (deskId) => {
 		await new Promise((resolve, reject) => {
 			chrome.runtime.sendMessage(
@@ -108,7 +108,7 @@ func RemoveDeskWithUndo(ctx context.Context, conn *browser.Conn, deskID string) 
 }
 
 // GetActiveDesk retrieves the current active desk.
-func GetActiveDesk(ctx context.Context, conn *browser.Conn) (string, error) {
+func GetActiveDesk(ctx context.Context, conn *chrome.Conn) (string, error) {
 	const getActiveDeskJS = `new Promise((resolve, reject) => {
 		chrome.runtime.sendMessage(
 			"kflgdebkpepnpjobkdfeeipcjdahoomc", {
@@ -128,7 +128,7 @@ func GetActiveDesk(ctx context.Context, conn *browser.Conn) (string, error) {
 }
 
 // SwitchDesk switches to a designated desk.
-func SwitchDesk(ctx context.Context, conn *browser.Conn, deskID string) error {
+func SwitchDesk(ctx context.Context, conn *chrome.Conn, deskID string) error {
 	const switchDeskJS = `async (deskId) => {
 		await new Promise((resolve, reject) => {
 			chrome.runtime.sendMessage(

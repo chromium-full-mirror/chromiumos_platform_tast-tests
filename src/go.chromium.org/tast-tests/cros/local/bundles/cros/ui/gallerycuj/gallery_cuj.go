@@ -17,7 +17,6 @@ import (
 	"go.chromium.org/tast-tests/cros/local/chrome"
 	"go.chromium.org/tast-tests/cros/local/chrome/apps/galleryapp"
 	"go.chromium.org/tast-tests/cros/local/chrome/ash"
-	"go.chromium.org/tast-tests/cros/local/chrome/browser"
 	"go.chromium.org/tast-tests/cros/local/chrome/display"
 	"go.chromium.org/tast-tests/cros/local/chrome/uiauto"
 	"go.chromium.org/tast-tests/cros/local/chrome/uiauto/faillog"
@@ -194,7 +193,7 @@ func Run(ctx context.Context, cr *chrome.Chrome, outDir string, dataPath func(st
 	ctx, cancel = ctxutil.Shorten(ctx, time.Minute)
 	defer cancel()
 
-	recorder, err := cujrecorder.NewRecorder(ctx, cr, tconn, nil, cujrecorder.RecorderOptions{})
+	recorder, err := cujrecorder.NewRecorder(ctx, tconn, nil, cujrecorder.RecorderOptions{})
 	if err != nil {
 		return errors.Wrap(err, "failed to create a recorder")
 	}
@@ -205,7 +204,7 @@ func Run(ctx context.Context, cr *chrome.Chrome, outDir string, dataPath func(st
 	}
 	res.recorder = recorder
 
-	if err := recorder.AddCommonMetrics(tconn, tconn); err != nil {
+	if err := recorder.AddCommonMetrics(); err != nil {
 		return errors.Wrap(err, "failed to add common metrics to the recorder")
 	}
 
@@ -221,7 +220,7 @@ func Run(ctx context.Context, cr *chrome.Chrome, outDir string, dataPath func(st
 		cujrecorder.NewCustomMetricConfig("MediaApp.Vitals.FCP", "ms", perf.SmallerIsBetter),
 		cujrecorder.NewCustomMetricConfig("MediaApp.Vitals.LCP", "ms", perf.SmallerIsBetter),
 	}
-	if err := recorder.AddCollectedMetrics(tconn, browser.TypeAsh, mediaMetrics...); err != nil {
+	if err := recorder.AddCollectedMetrics(mediaMetrics...); err != nil {
 		return errors.Wrap(err, "failed to add media metrics to the recorder")
 	}
 

@@ -58,10 +58,15 @@ func ExpandCreateDumpSection(ctx context.Context, tconn *chrome.TestConn) error 
 }
 
 // OpenWebRTCInternals opens chrome://webrtc-internals now so it will collect data on the meeting's streams.
-func OpenWebRTCInternals(ctx context.Context, tconn *chrome.TestConn, br *browser.Browser) (*browser.Conn, error) {
-	conn, err := br.NewTab(ctx, WebRTCInternalsURL, browser.WithNewWindow())
+func OpenWebRTCInternals(ctx context.Context, cr *chrome.Chrome) (*chrome.Conn, error) {
+	conn, err := cr.Browser().NewTab(ctx, WebRTCInternalsURL, browser.WithNewWindow())
 	if err != nil {
 		return nil, errors.Wrapf(err, "failed to open %s", WebRTCInternalsURL)
+	}
+
+	tconn, err := cr.TestAPIConn(ctx)
+	if err != nil {
+		return nil, errors.Wrap(err, "failed to create Test API connection")
 	}
 
 	if err := ExpandCreateDumpSection(ctx, tconn); err != nil {

@@ -62,11 +62,6 @@ func BrowserCUJRun(ctx context.Context, cr *chrome.Chrome, proxyScriptPath, loca
 		return nil, errors.Wrap(err, "failed to connect to test API connection")
 	}
 
-	bTconn, err := cr.Browser().TestAPIConn(ctx)
-	if err != nil {
-		return nil, errors.Wrap(err, "failed to connect to browser test API connection")
-	}
-
 	// Force install screen-ai dlc.
 	if err := dlc.Install(ctx, "screen-ai", ""); err != nil {
 		return nil, errors.Wrap(err, "failed to install screen-ai dlc")
@@ -97,13 +92,13 @@ func BrowserCUJRun(ctx context.Context, cr *chrome.Chrome, proxyScriptPath, loca
 	defer os.RemoveAll(localFilePath)
 	defer localServer.Close()
 
-	recorder, err := cujrecorder.NewRecorder(ctx, cr, bTconn, nil, cujrecorder.NewPerformanceCUJOptions())
+	recorder, err := cujrecorder.NewRecorder(ctx, tconn, nil, cujrecorder.NewPerformanceCUJOptions())
 	if err != nil {
 		return nil, errors.Wrap(err, "failed to create a CUJ recorder")
 	}
 	defer recorder.Close(closeCtx)
 
-	if err := recorder.AddCommonMetrics(tconn, bTconn); err != nil {
+	if err := recorder.AddCommonMetrics(); err != nil {
 		return nil, errors.Wrap(err, "failed to add common metrics to CUJ recorder")
 	}
 

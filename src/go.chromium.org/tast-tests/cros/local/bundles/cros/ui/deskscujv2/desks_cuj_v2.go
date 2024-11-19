@@ -106,13 +106,13 @@ func Run(ctx context.Context, cr *chrome.Chrome, testParam TestParam, outDir, sy
 		return nil, errors.Wrap(err, "failed to turn on display")
 	}
 
-	recorder, err := cujrecorder.NewRecorder(ctx, cr, tconn, nil, cujrecorder.RecorderOptions{})
+	recorder, err := cujrecorder.NewRecorder(ctx, tconn, nil, cujrecorder.RecorderOptions{})
 	if err != nil {
 		return nil, errors.Wrap(err, "failed to create the recorder")
 	}
 	defer recorder.Close(cleanupCtx)
 
-	if err := recorder.AddCommonMetrics(tconn, tconn); err != nil {
+	if err := recorder.AddCommonMetrics(); err != nil {
 		return nil, errors.Wrap(err, "failed to add common metrics to recorder")
 	}
 
@@ -176,7 +176,7 @@ func Run(ctx context.Context, cr *chrome.Chrome, testParam TestParam, outDir, sy
 		activeDesk := 0
 
 		recorder.Annotate(ctx, "Open_CrosVideo")
-		videoConn, err := recorder.NewConn(ctx, br, "CrosVideo", crosVideoURL)
+		videoConn, err := recorder.NewConn(ctx, cr, "CrosVideo", crosVideoURL)
 		if err != nil {
 			return errors.Wrap(err, "failed to open CrosVideo website")
 		}
@@ -204,7 +204,7 @@ func Run(ctx context.Context, cr *chrome.Chrome, testParam TestParam, outDir, sy
 			matcher := func(t *target.Info) bool {
 				return strings.Contains(t.URL, crosVideoURL)
 			}
-			videoConn, err = br.NewConnForTarget(ctx, matcher)
+			videoConn, err = cr.NewConnForTarget(ctx, matcher)
 			if err != nil {
 				return errors.Wrap(err, "failed to reconnect to CrosVideo tab")
 			}

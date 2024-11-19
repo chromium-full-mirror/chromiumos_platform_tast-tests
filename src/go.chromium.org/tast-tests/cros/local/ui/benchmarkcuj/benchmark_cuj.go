@@ -94,7 +94,7 @@ func Run(ctx context.Context, cr *chrome.Chrome, testParam BenchmarkTest, cmdLin
 		return nil, errors.Wrapf(err, "failed to set window state to %v", benchmarkParam.windowState)
 	}
 
-	recorder, err := cujrecorder.NewRecorder(ctx, cr, tconn, nil, cujrecorder.RecorderOptions{
+	recorder, err := cujrecorder.NewRecorder(ctx, tconn, nil, cujrecorder.RecorderOptions{
 		Mode:              testParam.RecorderMode,
 		CooldownBeforeRun: !testParam.SkipCooldown,
 		RunOnBattery:      testParam.RunOnBattery,

@@ -30,7 +30,6 @@ import (
 	uiperf "go.chromium.org/tast-tests/cros/local/bundles/cros/ui/perf"
 	"go.chromium.org/tast-tests/cros/local/chrome"
 	"go.chromium.org/tast-tests/cros/local/chrome/ash"
-	"go.chromium.org/tast-tests/cros/local/chrome/browser"
 	"go.chromium.org/tast-tests/cros/local/chrome/cuj"
 	"go.chromium.org/tast-tests/cros/local/chrome/metrics"
 	"go.chromium.org/tast-tests/cros/local/chrome/uiauto"
@@ -853,10 +852,8 @@ func testFunction(
 	defer cancel()
 
 	// Initialize CUJ recording.
-	cujRecorder, err := cujrecorder.NewRecorderWithTestConn(
+	cujRecorder, err := cujrecorder.NewRecorder(
 		ctx,
-		tLoginConn,
-		cr,
 		tLoginConn,
 		nil,
 		cujrecorder.RecorderOptions{RecordLoginEvents: true},
@@ -871,7 +868,7 @@ func testFunction(
 		cujrecorder.BrowserCommonMetricConfigs(),
 		cujrecorder.AnyChromeCommonMetricConfigs(),
 	} {
-		if err := cujRecorder.AddCollectedMetrics(tLoginConn, browser.TypeAsh, metricConfig...); err != nil {
+		if err := cujRecorder.AddCollectedMetrics(metricConfig...); err != nil {
 			s.Fatal("Failed to add recorded metrics: ", err)
 		}
 	}

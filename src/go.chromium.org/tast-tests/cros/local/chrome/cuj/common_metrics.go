@@ -5,14 +5,12 @@
 package cuj
 
 import (
-	"go.chromium.org/tast-tests/cros/local/chrome"
-	"go.chromium.org/tast-tests/cros/local/chrome/browser"
 	"go.chromium.org/tast-tests/cros/local/ui/cujrecorder"
 	"go.chromium.org/tast/core/errors"
 )
 
 // AddPerformanceCUJMetrics adds the metrics to the recorder for performance CUJ test.
-func AddPerformanceCUJMetrics(tconn *chrome.TestConn, recorder *cujrecorder.Recorder) error {
+func AddPerformanceCUJMetrics(recorder *cujrecorder.Recorder) error {
 	ashMetrics := cujrecorder.AshCommonMetricConfigs()
 	browserMetrics := cujrecorder.BrowserCommonMetricConfigs()
 	commonMetrics := cujrecorder.AnyChromeCommonMetricConfigs()
@@ -20,8 +18,8 @@ func AddPerformanceCUJMetrics(tconn *chrome.TestConn, recorder *cujrecorder.Reco
 	// Collect all metrics to make it compatible with the CUJ scores generated from
 	// previouse releases, which collects all metrics for all system activities.
 	allMetrics := append(commonMetrics, append(ashMetrics, browserMetrics...)...)
-	if err := recorder.AddCollectedMetrics(tconn, browser.TypeAsh, allMetrics...); err != nil {
-		errors.Wrap(err, "failed to add metrics for tconn")
+	if err := recorder.AddCollectedMetrics(allMetrics...); err != nil {
+		errors.Wrap(err, "failed to add metrics")
 	}
 	return nil
 }

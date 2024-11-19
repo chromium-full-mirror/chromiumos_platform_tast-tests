@@ -510,12 +510,17 @@ func LogWindowMismatch(ctx context.Context, initialWindows, finalWindows []*ash.
 
 // WaitForValidAccountInCookieJar opens the "signin-internals/" page
 // and verifies if there is a valid account in the cookie jar.
-func WaitForValidAccountInCookieJar(ctx context.Context, br *browser.Browser, tconn *chrome.TestConn) (retErr error) {
+func WaitForValidAccountInCookieJar(ctx context.Context, cr *chrome.Chrome) (retErr error) {
 	cleanupCtx := ctx
 	ctx, cancel := ctxutil.Shorten(ctx, 10*time.Second)
 	defer cancel()
 
-	conn, err := br.NewConn(ctx, chrome.SigninInternalsURL)
+	tconn, err := cr.TestAPIConn(ctx)
+	if err != nil {
+		return errors.Wrap(err, "failed to connect to the test API connection")
+	}
+
+	conn, err := cr.NewConn(ctx, chrome.SigninInternalsURL)
 	if err != nil {
 		return errors.Wrapf(err, "failed to open %q page", chrome.SigninInternalsURL)
 	}

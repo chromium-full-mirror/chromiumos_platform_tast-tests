@@ -108,13 +108,13 @@ func Run(ctx context.Context, cr *chrome.Chrome, testParam TestParam, args func(
 		return nil, errors.Wrap(err, "failed to wake display")
 	}
 
-	recorder, err := cujrecorder.NewRecorder(ctx, cr, tconn, nil, cujrecorder.RecorderOptions{})
+	recorder, err := cujrecorder.NewRecorder(ctx, tconn, nil, cujrecorder.RecorderOptions{})
 	if err != nil {
 		return nil, errors.Wrap(err, "failed to create the recorder")
 	}
 	defer recorder.Close(cleanupCtx)
 
-	if err := recorder.AddCommonMetrics(tconn, tconn); err != nil {
+	if err := recorder.AddCommonMetrics(); err != nil {
 		return nil, errors.Wrap(err, "failed to add common metrics to recorder")
 	}
 
@@ -181,7 +181,7 @@ func Run(ctx context.Context, cr *chrome.Chrome, testParam TestParam, args func(
 			return errors.Wrap(err, "failed to get Google Slides URL")
 		}
 
-		slidesConn, err := recorder.NewConn(ctx, cr.Browser(), "Slides", slidesURL, browser.WithNewWindow())
+		slidesConn, err := recorder.NewConn(ctx, cr, "Slides", slidesURL, browser.WithNewWindow())
 		if err != nil {
 			return errors.Wrap(err, "failed to open a Google Slides presentation")
 		}

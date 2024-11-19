@@ -69,7 +69,7 @@ func ExampleCUJ(ctx context.Context, s *testing.State) {
 	}
 
 	// Create a new recorder with cujrecorder.NewRecorder.
-	recorder, err := cujrecorder.NewRecorder(ctx, cr, tconn, nil, cujrecorder.RecorderOptions{})
+	recorder, err := cujrecorder.NewRecorder(ctx, tconn, nil, cujrecorder.RecorderOptions{})
 	if err != nil {
 		s.Fatal("Failed to create a recorder: ", err)
 	}
@@ -77,7 +77,7 @@ func ExampleCUJ(ctx context.Context, s *testing.State) {
 
 	// [Optional] Add the pre-existing list of metrics to the
 	// recorder with recorder.AddCommonMetrics.
-	if err := recorder.AddCommonMetrics(tconn, tconn); err != nil {
+	if err := recorder.AddCommonMetrics(); err != nil {
 		s.Fatal("Failed to add common metrics to the recorder: ", err)
 	}
 

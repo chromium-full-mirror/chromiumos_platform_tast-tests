@@ -14,7 +14,7 @@ import (
 	"time"
 
 	"go.chromium.org/tast-tests/cros/common/perf"
-	"go.chromium.org/tast-tests/cros/local/chrome/browser"
+	"go.chromium.org/tast-tests/cros/local/chrome"
 	"go.chromium.org/tast-tests/cros/local/power/metrics"
 
 	"go.chromium.org/tast/core/errors"
@@ -163,7 +163,7 @@ func ApplyPlatformEffects(ctx context.Context, relight, retouch bool, blurLevel 
 }
 
 // CaptureFPSData records the current FPS and returns the data.
-func CaptureFPSData(ctx context.Context, conn *browser.Conn, file string, seconds int) (DataResult, error) {
+func CaptureFPSData(ctx context.Context, conn *chrome.Conn, file string, seconds int) (DataResult, error) {
 	testing.ContextLog(ctx, "Start capturing FPS over ", seconds, " seconds")
 	var result DataResult
 	script, err := os.ReadFile(file)
@@ -178,7 +178,7 @@ func CaptureFPSData(ctx context.Context, conn *browser.Conn, file string, second
 }
 
 // ReportFramePerfMetrics reports FPS and Frame duration metrics.
-func ReportFramePerfMetrics(ctx context.Context, p *perf.Values, conn *browser.Conn, file string, testDuration int) error {
+func ReportFramePerfMetrics(ctx context.Context, p *perf.Values, conn *chrome.Conn, file string, testDuration int) error {
 	results, err := CaptureFPSData(ctx, conn, file, testDuration)
 	if err != nil {
 		return errors.Wrap(err, "failed to run FPS script")

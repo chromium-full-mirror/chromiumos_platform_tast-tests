@@ -131,7 +131,7 @@ func Run(ctx context.Context, gbInfo GBInfo, fixtValue interface{}, stateVars ma
 		}
 	}()
 
-	recorder, err := cujrecorder.NewRecorder(ctx, cr, tconn, nil, cujrecorder.RecorderOptions{
+	recorder, err := cujrecorder.NewRecorder(ctx, tconn, nil, cujrecorder.RecorderOptions{
 		CooldownBeforeRun: true,
 		TurnOffDisplay:    true,
 		Mode:              cujrecorder.Benchmark,

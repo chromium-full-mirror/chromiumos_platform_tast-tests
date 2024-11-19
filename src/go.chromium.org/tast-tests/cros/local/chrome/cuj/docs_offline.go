@@ -64,8 +64,8 @@ func EnsureDocsOfflineInstalled(ctx context.Context, cr *chrome.Chrome) error {
 	return cwsErr
 }
 
-// EnsureDocsOfflineEnabled ensures that docs offline extension is installed for
-// the browser and the current active user has it enabled in Drive's settings.
+// EnsureDocsOfflineEnabled ensures that docs offline extension is installed
+// and the current active user has it enabled in Drive's settings.
 // This function should be called before opening any docs if offline capability
 // is desired.
 func EnsureDocsOfflineEnabled(ctx context.Context, cr *chrome.Chrome) error {

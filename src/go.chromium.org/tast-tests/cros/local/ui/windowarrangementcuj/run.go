@@ -15,7 +15,6 @@ import (
 	"go.chromium.org/tast-tests/cros/local/audio/crastestclient"
 	"go.chromium.org/tast-tests/cros/local/chrome"
 	"go.chromium.org/tast-tests/cros/local/chrome/ash"
-	"go.chromium.org/tast-tests/cros/local/chrome/browser"
 	"go.chromium.org/tast-tests/cros/local/chrome/cuj"
 	"go.chromium.org/tast-tests/cros/local/chrome/display"
 	"go.chromium.org/tast-tests/cros/local/chrome/uiauto"
@@ -149,16 +148,16 @@ func Run(ctx context.Context, s *testing.State) *perf.Values {
 			cujrecorder.NewLatencyMetricConfig("Ash.SplitViewResize.PresentationTime.TabletMode.MultiWindow"))
 	}
 
-	recorder, err := cujrecorder.NewRecorder(ctx, cr, tconn, nil, cujrecorder.RecorderOptions{})
+	recorder, err := cujrecorder.NewRecorder(ctx, tconn, nil, cujrecorder.RecorderOptions{})
 	if err != nil {
 		s.Fatal("Failed to create a recorder: ", err)
 	}
 
-	if err := recorder.AddCollectedMetrics(tconn, browser.TypeAsh, configs...); err != nil {
+	if err := recorder.AddCollectedMetrics(configs...); err != nil {
 		s.Fatal("Failed to add metrics to recorder: ", err)
 	}
 
-	if err := recorder.AddCommonMetrics(tconn, tconn); err != nil {
+	if err := recorder.AddCommonMetrics(); err != nil {
 		s.Fatal("Failed to add common metrics to recorder: ", err)
 	}
 

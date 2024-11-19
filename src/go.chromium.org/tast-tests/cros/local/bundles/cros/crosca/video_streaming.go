@@ -102,7 +102,7 @@ func VideoStreaming(ctx context.Context, s *testing.State) {
 	if err != nil {
 		s.Fatal("Failed to connect to test API: ", err)
 	}
-	bTconn := tconn
+
 	ui := uiauto.New(tconn)
 	cleanupCtx := ctx
 	ctx, cancel := ctxutil.Shorten(ctx, 10*time.Second)
@@ -149,18 +149,18 @@ func VideoStreaming(ctx context.Context, s *testing.State) {
 	if err != nil {
 		s.Fatal("Failed to find the histogram window: ", err)
 	}
-	recorder, err := cujrecorder.NewRecorder(ctx, cr, bTconn, nil, cujrecorder.RecorderOptions{
+	recorder, err := cujrecorder.NewRecorder(ctx, tconn, nil, cujrecorder.RecorderOptions{
 		Mode: cujrecorder.Benchmark,
 	})
 	if err != nil {
 		s.Fatal("Failed to create the recorder: ", err)
 	}
 	defer recorder.Close(cleanupCtx)
-	if err := recorder.AddCommonMetrics(tconn, bTconn); err != nil {
+	if err := recorder.AddCommonMetrics(); err != nil {
 		s.Fatal("Failed to add common metrics to recorder: ", err)
 	}
 
-	crosVideoConn, err := recorder.NewConn(ctx, cr.Browser(), "CrosVideo_Test", "https://crosvideo.appspot.com/?resolution=1080&loop=true", browser.WithNewWindow())
+	crosVideoConn, err := recorder.NewConn(ctx, cr, "CrosVideo_Test", "https://crosvideo.appspot.com/?resolution=1080&loop=true", browser.WithNewWindow())
 	if err != nil {
 		s.Fatal("Failed to open cros video: ", err)
 	}

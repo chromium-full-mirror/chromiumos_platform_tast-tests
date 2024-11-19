@@ -78,7 +78,12 @@ func runSetup(ctx context.Context, s *testing.State) (*tabSwitchVariables, error
 	}
 
 	var err error
-	vars.recorder, err = cujrecorder.NewRecorder(ctx, vars.cr, vars.tconn, nil, cujrecorder.RecorderOptions{
+	vars.tconn, err = vars.cr.TestAPIConn(ctx)
+	if err != nil {
+		return nil, errors.Wrap(err, "failed to get ash-chrome test connection")
+	}
+
+	vars.recorder, err = cujrecorder.NewRecorder(ctx, vars.tconn, nil, cujrecorder.RecorderOptions{
 		Mode:              cujrecorder.Benchmark,
 		CooldownBeforeRun: true,
 	})
@@ -93,12 +98,7 @@ func runSetup(ctx context.Context, s *testing.State) (*tabSwitchVariables, error
 		vars.recorder.Close(ctx)
 	}(ctx)
 
-	vars.tconn, err = vars.cr.TestAPIConn(ctx)
-	if err != nil {
-		return nil, errors.Wrap(err, "failed to get ash-chrome test connection")
-	}
-
-	if err := vars.recorder.AddCommonMetrics(vars.tconn, vars.tconn); err != nil {
+	if err := vars.recorder.AddCommonMetrics(); err != nil {
 		s.Fatal("Failed to add common metrics to the recorder: ", err)
 	}
 

@@ -170,13 +170,13 @@ func Coral(ctx context.Context, s *testing.State) {
 			s.Fatal("Failed to restart odmld: ", err)
 		}
 
-		recorder, err := cujrecorder.NewRecorder(ctx, cr, tconn, nil, cujrecorder.RecorderOptions{CooldownBeforeRun: true})
+		recorder, err := cujrecorder.NewRecorder(ctx, tconn, nil, cujrecorder.RecorderOptions{CooldownBeforeRun: true})
 		if err != nil {
 			s.Fatal("Failed to create the CUJ recorder: ", err)
 		}
 		defer recorder.Close(cleanupCtx)
 
-		if err := recorder.AddCommonMetrics(tconn, tconn); err != nil {
+		if err := recorder.AddCommonMetrics(); err != nil {
 			s.Fatal("Failed to add common metrics to recorder: ", err)
 		}
 

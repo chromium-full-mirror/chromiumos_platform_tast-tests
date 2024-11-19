@@ -215,12 +215,12 @@ func Run(ctx context.Context, cr *chrome.Chrome, a *arc.ARC, params *RunParams) 
 
 	options := cujrecorder.NewPerformanceCUJOptions()
 	options.DoNotChangeBluetooth = params.enableBT
-	recorder, err := cujrecorder.NewRecorder(ctx, cr, tconn, a, options)
+	recorder, err := cujrecorder.NewRecorder(ctx, tconn, a, options)
 	if err != nil {
 		return errors.Wrap(err, "failed to create a recorder")
 	}
 	defer recorder.Close(cleanUpRecorderCtx)
-	if err := cuj.AddPerformanceCUJMetrics(tconn, recorder); err != nil {
+	if err := cuj.AddPerformanceCUJMetrics(recorder); err != nil {
 		return errors.Wrap(err, "failed to add metrics to recorder")
 	}
 

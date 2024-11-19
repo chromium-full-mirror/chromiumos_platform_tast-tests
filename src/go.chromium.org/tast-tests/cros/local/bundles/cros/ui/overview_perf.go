@@ -185,7 +185,7 @@ func OverviewPerf(ctx context.Context, s *testing.State) {
 
 	runner := perfutil.NewRunner(cr, perfutil.RunnerOptions{IgnoreFirstRun: true, DropMinMaxValues: true})
 
-	recorder, err := cujrecorder.NewRecorder(ctx, cr, tconn, nil, cujrecorder.RecorderOptions{
+	recorder, err := cujrecorder.NewRecorder(ctx, tconn, nil, cujrecorder.RecorderOptions{
 		Mode:              cujrecorder.Benchmark,
 		CooldownBeforeRun: true,
 	})
@@ -194,7 +194,7 @@ func OverviewPerf(ctx context.Context, s *testing.State) {
 	}
 	defer recorder.Close(cleanupCtx)
 
-	if err := recorder.AddCommonMetrics(tconn, tconn); err != nil {
+	if err := recorder.AddCommonMetrics(); err != nil {
 		s.Fatal("Failed to add common metrics to recorder: ", err)
 	}
 
