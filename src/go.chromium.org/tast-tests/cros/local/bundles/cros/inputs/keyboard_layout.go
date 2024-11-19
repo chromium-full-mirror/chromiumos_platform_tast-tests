@@ -10,7 +10,6 @@ import (
 	"fmt"
 	"os"
 	"path/filepath"
-	"strconv"
 	"strings"
 	"time"
 
@@ -25,6 +24,18 @@ import (
 	"go.chromium.org/tast/core/ctxutil"
 	"go.chromium.org/tast/core/testing"
 	"go.chromium.org/tast/core/testing/hwdep"
+)
+
+var imeID = testing.RegisterVarString(
+	"inputs.imeID",
+	"",
+	"The target imeID string",
+)
+
+var altGr = testing.RegisterVarString(
+	"inputs.altGr",
+	"true",
+	"The flag for adding altGr case, it will be set true by default.",
 )
 
 // keystroke struct represent the potential dead key with it's mofider keys status.
@@ -45,9 +56,6 @@ func init() {
 		HardwareDeps: hwdep.D(pre.InputsStableModels),
 		Timeout:      150 * time.Minute,
 		Fixture:      fixture.ClamshellNonVK,
-		Vars: []string{
-			"imeID",
-		},
 	})
 }
 
@@ -77,10 +85,13 @@ func KeyboardLayout(ctx context.Context, s *testing.State) {
 	defer its.CloseAll(cleanupCtx)
 
 	ui := uiauto.New(tconn)
+	id := imeID.Value()
 
-	id, hasID := s.Var("imeID")
-	if !hasID {
-		s.Fatal("Missing input method ID arg when running tast command")
+	var needAltGrCase bool = true
+	altGr := altGr.Value()
+
+	if altGr == "false" {
+		needAltGrCase = false
 	}
 
 	// Check if the target ime info exists or not.
@@ -107,15 +118,17 @@ func KeyboardLayout(ctx context.Context, s *testing.State) {
 	noOpKey1ModifierList := make([]keystroke, 0)
 
 	for _, key1ModifiersStatus := range util.ModifiersStatusCombo {
-		testing.ContextLogf(ctx, "Start single key case with modifer shift: %t + altgr: %t + caps: %t ", key1ModifiersStatus.Shift, key1ModifiersStatus.Altgr, key1ModifiersStatus.Caps)
-
+		if !needAltGrCase && key1ModifiersStatus.Altgr {
+			continue
+		}
+		testing.ContextLog(ctx, getSingleKeyLogContent(key1ModifiersStatus))
 		for _, key := range util.LinuxKeyCodes {
-			if err := uiauto.Combine("typing key",
+			if err := uiauto.NamedCombine(fmt.Sprintf("typing key %s", key.KeyName),
 				its.Clear(inputField),
 				its.ClickFieldAndWaitForActive(inputField),
 				util.SingleKeyAction(key1ModifiersStatus, key.LinuxKeyCode, kb),
 			)(ctx); err != nil {
-				s.Fatal("Failed to typeing key: ", err)
+				s.Fatal("Failed to typing key: ", err)
 			}
 
 			nodeInfo, err := ui.Info(ctx, inputField.Finder())
@@ -130,14 +143,14 @@ func KeyboardLayout(ctx context.Context, s *testing.State) {
 			}
 
 			w.Write([]string{
-				strconv.FormatBool(key1ModifiersStatus.Shift),
-				strconv.FormatBool(key1ModifiersStatus.Altgr),
-				strconv.FormatBool(key1ModifiersStatus.Caps),
+				getModifierInCsv("shift", key1ModifiersStatus.Shift),
+				getModifierInCsv("alt", key1ModifiersStatus.Altgr),
+				getModifierInCsv("caps", key1ModifiersStatus.Caps),
 				key.KeyName,
-				"false",
-				"false",
-				"false",
-				"n/a",
+				"",
+				"",
+				"",
+				"",
 				nodeInfo.Value,
 				unicode})
 		}
@@ -145,15 +158,17 @@ func KeyboardLayout(ctx context.Context, s *testing.State) {
 
 	for _, key1keystroke := range noOpKey1ModifierList {
 		for _, key2Modifiers := range util.ModifiersStatusCombo {
-			testing.ContextLogf(ctx, "Start two keys case: key1: %s with modifer shift: %t + altgr: %t + caps: %t, and key2 modifer shift: %t + altgr: %t + caps: %t ", key1keystroke.keycode.KeyName, key1keystroke.modifierstatus.Shift, key1keystroke.modifierstatus.Altgr, key1keystroke.modifierstatus.Caps, key2Modifiers.Shift, key2Modifiers.Altgr, key2Modifiers.Caps)
-
+			if !needAltGrCase && key2Modifiers.Altgr {
+				continue
+			}
+			testing.ContextLog(ctx, getTwoKeysLogConent(key1keystroke, key2Modifiers))
 			for _, key := range util.LinuxKeyCodes {
-				if err := uiauto.Combine("typing key",
+				if err := uiauto.NamedCombine(fmt.Sprintf("typing key %s", key.KeyName),
 					its.Clear(inputField),
 					its.ClickFieldAndWaitForActive(inputField),
 					util.TwoKeysAction(key1keystroke.modifierstatus, key2Modifiers, key1keystroke.keycode.LinuxKeyCode, key.LinuxKeyCode, kb),
 				)(ctx); err != nil {
-					s.Fatal("Failed to typeing key: ", err)
+					s.Fatal("Failed to typing key: ", err)
 				}
 
 				nodeInfo, err := ui.Info(ctx, inputField.Finder())
@@ -162,13 +177,13 @@ func KeyboardLayout(ctx context.Context, s *testing.State) {
 				}
 
 				w.Write([]string{
-					strconv.FormatBool(key1keystroke.modifierstatus.Shift),
-					strconv.FormatBool(key1keystroke.modifierstatus.Altgr),
-					strconv.FormatBool(key1keystroke.modifierstatus.Caps),
+					getModifierInCsv("shift", key1keystroke.modifierstatus.Shift),
+					getModifierInCsv("alt", key1keystroke.modifierstatus.Altgr),
+					getModifierInCsv("caps", key1keystroke.modifierstatus.Caps),
 					key1keystroke.keycode.KeyName,
-					strconv.FormatBool(key2Modifiers.Shift),
-					strconv.FormatBool(key2Modifiers.Altgr),
-					strconv.FormatBool(key2Modifiers.Caps),
+					getModifierInCsv("shift", key2Modifiers.Shift),
+					getModifierInCsv("alt", key2Modifiers.Altgr),
+					getModifierInCsv("caps", key2Modifiers.Caps),
 					key.KeyName,
 					nodeInfo.Value,
 					getUniCode(nodeInfo.Value)})
@@ -190,4 +205,57 @@ func getUniCode(str string) string {
 		unicodeArr = append(unicodeArr, fmt.Sprintf("%U", runeValue))
 	}
 	return strings.Join(unicodeArr, ",")
+}
+
+func getModifierInCsv(modifier string, modifierStatus bool) string {
+	if modifierStatus {
+		return modifier
+	}
+	return ""
+}
+
+func getSingleKeyLogContent(status util.ModifiersStatus) string {
+	var activeKeys []string = getModiferInfo(status)
+
+	if len(activeKeys) == 0 {
+		return "Start single key case with no modifier key pressed."
+	}
+
+	return fmt.Sprintf("Start single key case with modifier key %s pressed.", strings.Join(activeKeys, " + "))
+}
+
+func getTwoKeysLogConent(keystroke keystroke, key2Status util.ModifiersStatus) string {
+	key1ActiveModifiers := getModiferInfo(keystroke.modifierstatus)
+	twoKeysLog := fmt.Sprintf("Start two key cases with key1 %s ", keystroke.keycode.KeyName)
+
+	if len(key1ActiveModifiers) > 0 {
+		twoKeysLog += fmt.Sprintf("with modifier key %s pressed ", strings.Join(key1ActiveModifiers, " + "))
+	} else {
+		twoKeysLog += "with no modifier key pressed "
+	}
+
+	key2ActiveModifiers := getModiferInfo(key2Status)
+	twoKeysLog += "and key2 "
+
+	if len(key2ActiveModifiers) > 0 {
+		twoKeysLog += fmt.Sprintf("with modifier key %s pressed.", strings.Join(key2ActiveModifiers, " + "))
+	} else {
+		twoKeysLog += "with no modifier key pressed."
+	}
+
+	return twoKeysLog
+}
+
+func getModiferInfo(status util.ModifiersStatus) []string {
+	var activeKeys []string
+	if status.Shift {
+		activeKeys = append(activeKeys, "SHIFT")
+	}
+	if status.Altgr {
+		activeKeys = append(activeKeys, "ALTGR")
+	}
+	if status.Caps {
+		activeKeys = append(activeKeys, "CAPS")
+	}
+	return activeKeys
 }
