@@ -235,12 +235,9 @@ func (t *FirmwareTest) Close(ctx context.Context) error {
 	var firstErr error
 
 	// Always flash MP firmware during clean up.
-	firmwareFile, err := NewMPFirmwareFile(ctx, t.dut)
-	if err != nil {
-		firstErr = err
-	}
-	if err := ReimageFPMCU(ctx, t.dut, t.servo, firmwareFile.FilePath, t.needsRebootAfterFlashing); err != nil {
-		firstErr = err
+	firmwareFile, firstErr := NewMPFirmwareFile(ctx, t.dut)
+	if firstErr == nil {
+		firstErr = ReimageFPMCU(ctx, t.dut, t.servo, firmwareFile.FilePath, t.needsRebootAfterFlashing)
 	}
 
 	// ReimageFPMCU reboots the DUT at least once. Sometimes after a reboot,
