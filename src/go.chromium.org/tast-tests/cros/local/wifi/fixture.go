@@ -102,7 +102,7 @@ func (f *wiphyEnabledFixture) PreTest(ctx context.Context, s *testing.FixtTestSt
 		} else if devInfo.Vendor == intelVendorNum {
 			// Firmware dump operations and existing crash data types are only
 			// supported on Intel WiFi chips for now.
-			if e := TriggerFirmwareDump(ctx); e != nil {
+			if e := TriggerIntelFirmwareDump(ctx); e != nil {
 				s.Error("Failed to trigger firmware dump: ", e)
 			} else {
 				t := 3 * time.Second

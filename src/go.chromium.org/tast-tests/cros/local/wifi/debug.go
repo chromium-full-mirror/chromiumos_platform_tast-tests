@@ -86,10 +86,10 @@ func SaveCrashData(ctx context.Context, outDir string) error {
 	return nil
 }
 
-// TriggerFirmwareDump triggers firmware dump at best effort by finding and
+// TriggerIntelFirmwareDump triggers firmware dump at best effort by finding and
 // calling the debugfs API for firmware dump collection. If not found, this func
 // assumes the operation is not supported by the driver and doesn't log error.
-func TriggerFirmwareDump(ctx context.Context) error {
+func TriggerIntelFirmwareDump(ctx context.Context) error {
 	entries, err := os.ReadDir(IwlwifiDir)
 	if err != nil {
 		return errors.Wrapf(err, "debugfs operations may not be supported -- failed to find/open directory %s", IwlwifiDir)
