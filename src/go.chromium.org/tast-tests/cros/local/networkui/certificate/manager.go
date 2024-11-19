@@ -190,7 +190,9 @@ func (m *Manager) ImportCACert(fileName string, org Organization, trustSettings 
 		m.ui.LeftClick(importButton),
 		uploadFile(m.tconn, fileName),
 		trustSettings.clickCheckBoxesAction(m.ui),
-		m.ui.LeftClick(okButton),
+		// The OK button might be covered by the download cert notification.
+		// Interact with the button through DoDefault to ensure the button is clicked.
+		m.ui.DoDefault(okButton),
 		m.ui.WaitUntilExists(organizationText),
 	)
 }
