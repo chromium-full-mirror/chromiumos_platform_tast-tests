@@ -23,10 +23,11 @@ func init() {
 		Func: ConnectToRoamingSim,
 		Desc: "Disable roaming on a roaming sim and verify connecting to network fails",
 		Contacts: []string{
-			"cros-device-enablement@google.com",
-			"chromeos-connectivity-engprod@google.com",
+			"alfredyu@cienet.com",
+			"chromeos-connectivity-cienet-external@google.com",
 		},
-		BugComponent:   "b:1131774", // ChromeOS > Software > Fundamentals > Device Enablement > Connectivity > Cellular
+		// ChromeOS > External > Cienet > Manual Test Automation > Test stabilization
+		BugComponent: "b:1578688",
 		LifeCycleStage: testing.LifeCycleOwnerMonitored,
 		SoftwareDeps:   []string{"chrome"},
 		Attr:           []string{"group:cellular", "cellular_sim_roaming"},
