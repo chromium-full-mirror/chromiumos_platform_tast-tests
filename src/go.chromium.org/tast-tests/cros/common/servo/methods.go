@@ -45,6 +45,8 @@ const (
 	SecondUSBKeyDirection StringControl = "second_usbkey_direction"
 	ServoDUTSBU1MV        StringControl = "servo_dut_sbu1_mv"
 	ServoDUTSBU2MV        StringControl = "servo_dut_sbu2_mv"
+	ServoDUTCC1MV         StringControl = "servo_dut_cc1_mv"
+	ServoDUTCC2MV         StringControl = "servo_dut_cc2_mv"
 	SupportCrosECComm     StringControl = "supports_cros_ec_communication"
 	TopUSBKeyMux          StringControl = "top_usbkey_mux"
 	Type                  StringControl = "servo_type"
@@ -313,6 +315,22 @@ func (s *Servo) SetActChgPort(ctx context.Context, port string) error {
 // DUTVoltageMV reads the voltage present on the DUT port on fluffy.
 func (s *Servo) DUTVoltageMV(ctx context.Context) (string, error) {
 	return s.GetString(ctx, DUTVoltageMV)
+}
+
+// DUTCCVoltageMV reads the voltage present on the cc lines.
+func (s *Servo) DUTCCVoltageMV(ctx context.Context) (string, string, error) {
+	var err error = nil
+	var cc1V, cc2V string
+
+	if cc1V, err = s.GetString(ctx, ServoDUTCC1MV); err != nil {
+		return cc1V, cc2V, err
+	}
+
+	if cc2V, err = s.GetString(ctx, ServoDUTCC2MV); err != nil {
+		return cc1V, cc2V, err
+	}
+
+	return cc1V, cc2V, nil
 }
 
 // GetServoVersion gets the version of Servo being used.

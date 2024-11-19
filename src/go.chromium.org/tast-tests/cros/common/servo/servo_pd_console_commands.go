@@ -593,6 +593,17 @@ func (s *Servo) ServoCcOn(ctx context.Context) error {
 	return err
 }
 
+// ServoCcSnk runs the `cc snk` console command on the Servo.
+func (s *Servo) ServoCcSnk(ctx context.Context) error {
+	output, err := s.RunServoCommandGetOutput(ctx, "cc snk", []string{`cc: (\w+)[\r\n]`})
+
+	if err == nil && output[0][1] != "on" {
+		return errors.New("CC state did not change to 'on': " + output[0][1])
+	}
+
+	return err
+}
+
 // ServoGetConnectedStateAfterCCReconnect get the connected state after disconnect/reconnect using PDTester
 //
 // PDTester supports a feature which simulates a USB Type C disconnect
