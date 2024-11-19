@@ -43,7 +43,7 @@ func init() {
 		SoftwareDeps: []string{"play_store", "chrome", "gaia"},
 		Params: []testing.Param{
 			{
-				ExtraAttr:         []string{"group:arc-functional", "group:mainline", "group:release-health"},
+				ExtraAttr:         []string{"group:arc-functional", "group:mainline", "group:release-health", "release-health_arc"},
 				ExtraSoftwareDeps: []string{"android_container"},
 				Val:               playStoreTestArgs{preprod: false, fieldTrialConfig: chrome.FieldTrialConfigDefault},
 			},

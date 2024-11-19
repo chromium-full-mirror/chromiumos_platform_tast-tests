@@ -36,7 +36,7 @@ func init() {
 		BugComponent: "b:537221",
 		SoftwareDeps: []string{"chrome"},
 		Data:         []string{"clipboard.html", "clipboard_image.html"},
-		Attr:         []string{"group:mainline", "group:release-health"},
+		Attr:         []string{"group:mainline", "group:release-health", "release-health_arc"},
 		Timeout:      chrome.LoginTimeout + arc.BootTimeout + 1*time.Minute,
 		Params: []testing.Param{{
 			Fixture:           "arcBooted",

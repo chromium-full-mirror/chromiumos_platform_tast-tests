@@ -113,7 +113,7 @@ func init() {
 		Contacts:     []string{"arc-framework+tast@google.com", "toshikikikuchi@chromium.org"},
 		// ChromeOS > Software > ARC++ > Framework > Window Management
 		BugComponent: "b:537272",
-		Attr:         []string{"group:mainline", "informational", "group:release-health"},
+		Attr:         []string{"group:mainline", "informational", "group:release-health", "release-health_arc"},
 		SoftwareDeps: []string{"chrome", "android_vm"},
 		Data:         []string{wm.WhiteWallpaperFileName},
 		Timeout:      5 * time.Minute,
@@ -256,6 +256,7 @@ func testChangeWindowState(ctx context.Context, tconn *chrome.TestConn, keyboard
 	defer ash.SetARCAppWindowStateAndWait(ctx, tconn, packageName, ash.WindowStateNormal)
 
 	if expectedState == ash.WindowStateNormal {
+		// GoBigSleepLint: valid testing.sleep.
 		if err := testing.Sleep(ctx, 3*time.Second); err != nil {
 			return errors.Wrap(err, "failed to sleep waiting for window state change event to be completed")
 		}
@@ -498,7 +499,7 @@ func testFullyLockedApp(ctx context.Context, tconn *chrome.TestConn, keyboard *i
 		return errors.Wrap(err, "failed to click on the compat-mode button")
 	}
 
-	// Need some sleep here as we verify that nothing changes.
+	// GoBigSleepLint: Need some sleep here as we verify that nothing changes.
 	if err := testing.Sleep(ctx, time.Second); err != nil {
 		return errors.Wrap(err, "failed to sleep after clicking on the compat-mode button")
 	}
