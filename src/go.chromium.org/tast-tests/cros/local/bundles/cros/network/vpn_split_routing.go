@@ -14,6 +14,7 @@ import (
 	"go.chromium.org/tast-tests/cros/local/network/vpn"
 	"go.chromium.org/tast/core/ctxutil"
 	"go.chromium.org/tast/core/testing"
+	"go.chromium.org/tast/core/testing/hwdep"
 )
 
 func init() {
@@ -28,6 +29,7 @@ func init() {
 		// ChromeOS > Platform > System > Networking > Continuous Maintenance
 		BugComponent: "b:1493959",
 		SoftwareDeps: []string{"chrome"},
+		HardwareDeps: hwdep.D(hwdep.HasTpm()),
 		Attr:         []string{"group:mainline", "group:release-health", "release-health_network"},
 		Fixture:      "vpnEnvWithCerts",
 		Params: []testing.Param{{
