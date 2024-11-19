@@ -59,21 +59,53 @@ func RecToDevUntrusted(ctx context.Context, s *testing.State) {
 		s.Fatal("Failed to create config: ", err)
 	}
 
+	supportAPFwState, err := h.SupportAPFwState(ctx)
+	if err != nil {
+		s.Fatal("Failed to check if DUT support APFwState: ", err)
+	}
+
 	if err := h.Reporter.ClearEventlog(ctx); err != nil {
 		s.Fatal("Failed to clear event log: ", err)
 	}
 
+	closeUART, err := h.Servo.EnableUARTCapture(ctx, servo.ECUARTCapture)
+	if err != nil {
+		s.Fatal("Failed to enable capture EC UART: ", err)
+	}
+	defer func() {
+		if err := closeUART(ctx); err != nil {
+			s.Error("Failed to cancel capture EC UART: ", err)
+		}
+	}()
+
 	if err := ms.EnableRecMode(ctx, servo.PowerStateRec, servo.USBMuxOff); err != nil {
 		s.Fatal("Failed to enable recovery mode: ", err)
 	}
-	s.Log("Waiting for DUT to reach the firmware screen")
-	if err := h.WaitFirmwareScreen(ctx, h.Config.FirmwareScreenRecMode); err != nil {
-		s.Fatal("Failed to get to firmware screen: ", err)
+
+	if supportAPFwState {
+		// Since corsola and dedede have already captured the EC log (including the FW screen ID) in ms.EnableRecMode(),
+		// we cannot retrieve the screen ID again here.
+		// Instead, perform an action to generate a new EC log with the FW screen ID.
+		if h.Board == "dedede" || h.Board == "corsola" {
+			if err = h.Servo.KeypressWithDuration(ctx, servo.ArrowUp, servo.DurTab); err != nil {
+				s.Fatal("Failed to press the up arrow: ", err)
+			}
+		}
+
+		if err := h.DetectFirmwareScreen(ctx, h.Config.FirmwareScreen, fwCommon.RecoverySelect); err != nil {
+			s.Fatal("Failed to detect RecoveryToDev screen: ", err)
+		}
+	} else {
+		s.Log("Waiting for DUT to reach the firmware screen")
+		if err := h.WaitFirmwareScreen(ctx, h.Config.FirmwareScreenRecMode); err != nil {
+			s.Fatal("Failed to get to firmware screen: ", err)
+		}
 	}
 
-	if err := reachToDevScreen(ctx, h); err != nil {
+	if err := reachToDevScreen(ctx, h, supportAPFwState); err != nil {
 		s.Fatal("Failed to reach the TO_DEV screen: ", err)
 	}
+
 	if err := enterDevModeUntrusted(ctx, h); err != nil {
 		s.Fatal("Failed to test untrusted entry to dev mode: ", err)
 	}
@@ -119,17 +151,24 @@ func RecToDevUntrusted(ctx context.Context, s *testing.State) {
 	}
 }
 
-func reachToDevScreen(ctx context.Context, h *firmware.Helper) error {
-	var err error
+func reachToDevScreen(ctx context.Context, h *firmware.Helper, supportAPFwState bool) (retErr error) {
 	switch h.Config.ModeSwitcherType {
 	case firmware.TabletDetachableSwitcher:
-		err = h.Servo.SetInt(ctx, servo.VolumeUpDownHold, 100)
+		retErr = h.Servo.SetInt(ctx, servo.VolumeUpDownHold, 100)
 	case firmware.MenuSwitcher, firmware.KeyboardDevSwitcher:
-		err = h.Servo.KeypressWithDuration(ctx, servo.CtrlD, servo.DurTab)
+		retErr = h.Servo.KeypressWithDuration(ctx, servo.CtrlD, servo.DurTab)
 	default:
-		err = errors.Errorf("unable to determine presses to get to the TO_DEV screen, got mode switcher type: %s", h.Config.ModeSwitcherType)
+		retErr = errors.Errorf("unable to determine presses to get to the TO_DEV screen, got mode switcher type: %s", h.Config.ModeSwitcherType)
 	}
-	return err
+
+	if supportAPFwState {
+		testing.ContextLog(ctx, "Waiting for DUT to reach the TO_DEV screen")
+		if err := h.DetectFirmwareScreen(ctx, h.Config.FirmwareScreen, fwCommon.RecoveryToDev); err != nil {
+			retErr = errors.Join(retErr, err)
+		}
+	}
+
+	return retErr
 }
 
 func enterDevModeUntrusted(ctx context.Context, h *firmware.Helper) error {
