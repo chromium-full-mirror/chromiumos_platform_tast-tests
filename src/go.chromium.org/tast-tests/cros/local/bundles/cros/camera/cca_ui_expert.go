@@ -19,7 +19,7 @@ func init() {
 	testing.AddTest(&testing.Test{
 		Func:         CCAUIExpert,
 		Desc:         "Opens CCA and verifies the expert options",
-		Contacts:     []string{"chromeos-camera-app-eng@google.com", "dorahkim@chromium.org", "shik@chromium.org"},
+		Contacts:     []string{"chromeos-camera-app-eng@google.com", "shik@chromium.org"},
 		BugComponent: "b:978428", // ChromeOS > Platform > Technologies > Camera > App & Framework
 		Attr: []string{
 			"group:mainline",

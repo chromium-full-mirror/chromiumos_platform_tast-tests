@@ -18,7 +18,7 @@ func init() {
 	testing.AddTest(&testing.Test{
 		Func:         ImageCapture,
 		Desc:         "Verifies availability of ImageCapture API outside CCA",
-		Contacts:     []string{"chromeos-camera-app-eng@google.com", "dorahkim@chromium.org"},
+		Contacts:     []string{"chromeos-camera-app-eng@google.com", "seannli@google.com"},
 		BugComponent: "b:978428", // ChromeOS > Platform > Technologies > Camera > App & Framework
 		Attr:         []string{"group:mainline", "group:camera-libcamera", "informational"},
 		SoftwareDeps: []string{"chrome", caps.BuiltinCamera},

@@ -240,7 +240,7 @@ func init() {
 	testing.AddFixture(&testing.Fixture{
 		Name:            "ccaPowerTestWithFakeHALCamera",
 		Desc:            "Set up test bridge for CCA with fake camera HAL for a power Test",
-		Contacts:        []string{"chromeos-camera-eng@google.com", "dorahkim@chromium.org"},
+		Contacts:        []string{"chromeos-camera-eng@google.com", "kamchonlathorn@chromium.org"},
 		BugComponent:    "b:978428", // ChromeOS > Platform > Technologies > Camera > App & Framework
 		Impl:            &fixture{powerTest: true, useCameraType: testutil.UseFakeHALCamera},
 		SetUpTimeout:    powerSetUpTimeout,
