@@ -7,6 +7,7 @@ package firmware
 import (
 	"context"
 
+	"go.chromium.org/tast-tests/cros/common/tbdep"
 	"go.chromium.org/tast-tests/cros/remote/firmware"
 	"go.chromium.org/tast/core/testing"
 	"go.chromium.org/tast/core/testing/hwdep"
@@ -23,6 +24,7 @@ func init() {
 		BugComponent: "b:792402", // ChromeOS > Platform > Enablement > Firmware > FAFT
 		Attr:         []string{"group:firmware", "firmware_ec", "firmware_bringup"},
 		Vars:         []string{"servo"},
+		TestBedDeps:  []string{tbdep.ServoStateWorking},
 		HardwareDeps: hwdep.D(hwdep.ChromeEC()),
 		LacrosStatus: testing.LacrosVariantUnneeded,
 	})

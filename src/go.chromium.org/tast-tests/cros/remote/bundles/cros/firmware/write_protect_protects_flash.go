@@ -14,6 +14,7 @@ import (
 
 	"go.chromium.org/tast-tests/cros/common/flashrom"
 	"go.chromium.org/tast-tests/cros/common/servo"
+	"go.chromium.org/tast-tests/cros/common/tbdep"
 	"go.chromium.org/tast-tests/cros/remote/bundles/cros/firmware/utils"
 	"go.chromium.org/tast-tests/cros/remote/firmware"
 
@@ -45,6 +46,7 @@ func init() {
 		// 10 minutes for the test, 21 minutes for cleanup.
 		Timeout:      31 * time.Minute,
 		Vars:         []string{"servo"},
+		TestBedDeps:  []string{tbdep.ServoStateWorking},
 		LacrosStatus: testing.LacrosVariantUnneeded,
 	})
 }

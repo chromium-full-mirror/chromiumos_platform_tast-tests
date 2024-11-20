@@ -8,6 +8,7 @@ import (
 	"context"
 
 	fwCommon "go.chromium.org/tast-tests/cros/common/firmware"
+	"go.chromium.org/tast-tests/cros/common/tbdep"
 	"go.chromium.org/tast-tests/cros/remote/firmware"
 	"go.chromium.org/tast-tests/cros/remote/firmware/fixture"
 	"go.chromium.org/tast/core/testing"
@@ -26,6 +27,7 @@ func init() {
 		ServiceDeps:  []string{"tast.cros.firmware.BiosService", "tast.cros.firmware.UtilsService"},
 		Attr:         []string{"group:firmware", "firmware_bios", "firmware_level1"},
 		Vars:         []string{"servo"},
+		TestBedDeps:  []string{tbdep.ServoStateWorking},
 		LacrosStatus: testing.LacrosVariantUnneeded,
 		Params: []testing.Param{
 			testing.Param{

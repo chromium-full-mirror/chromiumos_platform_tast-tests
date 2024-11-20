@@ -9,6 +9,7 @@ import (
 	"time"
 
 	"go.chromium.org/tast-tests/cros/common/servo"
+	"go.chromium.org/tast-tests/cros/common/tbdep"
 	"go.chromium.org/tast-tests/cros/remote/firmware"
 	"go.chromium.org/tast-tests/cros/remote/firmware/fixture"
 	"go.chromium.org/tast/core/errors"
@@ -28,6 +29,7 @@ func init() {
 		Data:         []string{firmware.ConfigFile},
 		Attr:         []string{"group:firmware", "firmware_pd"},
 		Vars:         []string{"servo"},
+		TestBedDeps:  []string{tbdep.ServoStateWorking},
 		Fixture:      fixture.NormalMode,
 		HardwareDeps: hwdep.D(hwdep.ChromeEC()),
 		Timeout:      15 * time.Minute,

@@ -11,6 +11,7 @@ import (
 	"regexp"
 	"strings"
 
+	"go.chromium.org/tast-tests/cros/common/tbdep"
 	"go.chromium.org/tast-tests/cros/remote/firmware"
 	"go.chromium.org/tast/core/errors"
 	"go.chromium.org/tast/core/testing"
@@ -27,6 +28,7 @@ func init() {
 		BugComponent: "b:792402", // ChromeOS > Platform > Enablement > Firmware > FAFT
 		Attr:         []string{"group:firmware", "firmware_bringup"},
 		Vars:         []string{"servo"},
+		TestBedDeps:  []string{tbdep.ServoStateWorking},
 		LacrosStatus: testing.LacrosVariantUnneeded,
 	})
 }

@@ -11,6 +11,7 @@ import (
 
 	"github.com/golang/protobuf/ptypes/empty"
 
+	"go.chromium.org/tast-tests/cros/common/tbdep"
 	"go.chromium.org/tast-tests/cros/remote/firmware/fixture"
 	"go.chromium.org/tast-tests/cros/remote/powercontrol"
 	"go.chromium.org/tast-tests/cros/remote/tabletmode"
@@ -35,6 +36,7 @@ func init() {
 		SoftwareDeps: []string{"chrome", "reboot"},
 		LacrosStatus: testing.LacrosVariantUnneeded,
 		Vars:         []string{"servo"},
+		TestBedDeps:  []string{tbdep.ServoStateWorking},
 		// TODO: When stable, change firmware_unstable to a different attr.
 		Attr:    []string{"group:firmware"},
 		Fixture: fixture.NormalMode,
