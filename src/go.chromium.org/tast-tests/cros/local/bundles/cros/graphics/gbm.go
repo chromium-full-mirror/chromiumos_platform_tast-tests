@@ -19,7 +19,7 @@ func init() {
 		BugComponent: "b:885255", // ChromeOS > Platform > Graphics
 		Contacts: []string{
 			"chromeos-gfx@google.com",
-			"marcheu@chromium.org",
+			"ihf@chromium.org",
 			"hidehiko@chromium.org", // Tast port author.
 		},
 		SoftwareDeps: []string{"no_qemu"},

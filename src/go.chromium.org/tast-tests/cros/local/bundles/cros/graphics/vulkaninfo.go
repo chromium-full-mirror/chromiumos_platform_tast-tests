@@ -25,7 +25,7 @@ func init() {
 		BugComponent: "b:995569", // ChromeOS > Platform > Graphics > GPU
 		Contacts: []string{
 			"chromeos-gfx@chromium.org",
-			"pwang@chromium.org",
+			"ihf@chromium.org",
 		},
 		Fixture: "gpuWatchHangs",
 		Attr:    []string{"group:mainline", "group:graphics", "graphics_perbuild", "group:cq-medium"},

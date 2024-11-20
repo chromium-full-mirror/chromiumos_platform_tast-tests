@@ -31,7 +31,7 @@ func init() {
 		BugComponent: "b:995569", // ChromeOS > Platform > Graphics > GPU
 		Contacts: []string{
 			"chromeos-gfx@google.com",
-			"pwang@chromium.org",
+			"ihf@chromium.org",
 		},
 		Timeout:      chrome.LoginTimeout + 3*time.Minute,
 		SoftwareDeps: []string{"chrome", "no_qemu"},

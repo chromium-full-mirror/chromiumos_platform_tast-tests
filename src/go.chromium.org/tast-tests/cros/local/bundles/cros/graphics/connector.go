@@ -64,7 +64,7 @@ func init() {
 		BugComponent: "b:188154", // ChromeOS > Platform > Graphics > Display
 		Contacts: []string{
 			"chromeos-gfx@google.com",
-			"pwang@chromium.org",
+			"ihf@chromium.org",
 		},
 		SoftwareDeps: []string{"no_qemu"},
 		Fixture:      "gpuWatchHangs",

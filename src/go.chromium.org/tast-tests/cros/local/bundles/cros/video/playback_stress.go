@@ -23,7 +23,7 @@ func init() {
 			"chromeos-gfx-video@google.com",
 			"hiroh@chromium.org",
 			"nhebert@chromium.org",
-			"pwang@chromium.org",
+			"ihf@chromium.org",
 		},
 		BugComponent: "b:168352", // ChromeOS > Platform > Graphics > Video
 		Attr:         []string{"group:graphics", "graphics_video", "graphics_stress", "graphics_cft"},

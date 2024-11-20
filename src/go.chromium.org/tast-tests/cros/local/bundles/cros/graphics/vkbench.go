@@ -25,7 +25,6 @@ func init() {
 		BugComponent: "b:995569", // ChromeOS > Platform > Graphics > GPU
 		Contacts: []string{
 			"chromeos-gfx@google.com",
-			"pwang@chromium.org",
 		},
 		SoftwareDeps: []string{"no_qemu", "vulkan"},
 		Attr:         []string{"group:graphics", "graphics_nightly"},

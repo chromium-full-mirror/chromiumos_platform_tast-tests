@@ -21,7 +21,7 @@ func init() {
 		Desc: "Reports various component versions from the system image",
 		Contacts: []string{
 			"chromeos-performance-eng+bugs@google.com",
-			"pwang@chromium.org", // test author
+			"ihf@chromium.org",
 		},
 		BugComponent: "b:497108", // ChromeOS > Platform > System > Health Monitoring > Bisector
 		Attr:         []string{"group:mainline", "group:graphics", "graphics_perbuild"},

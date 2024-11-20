@@ -26,7 +26,7 @@ func init() {
 		Desc: "Verify hardware_probe binary can detect various information",
 		Contacts: []string{
 			"chromeos-gfx@google.com",
-			"pwang@chromium.org",
+			"ihf@chromium.org",
 		},
 		BugComponent: "b:995569", // ChromeOS > Platform > Graphics > GPU
 		Attr:         []string{"group:graphics", "graphics_perbuild", "group:mainline"},

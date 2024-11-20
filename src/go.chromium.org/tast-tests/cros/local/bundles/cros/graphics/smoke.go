@@ -35,7 +35,6 @@ func init() {
 		Contacts: []string{
 			"chromeos-gfx@google.com",
 			"ihf@chromium.org",
-			"pwang@chromium.org",
 		},
 		Attr:         []string{"group:cq-minimal", "group:mainline", "informational"},
 		HardwareDeps: hwdep.D(hwdep.InternalDisplay()),

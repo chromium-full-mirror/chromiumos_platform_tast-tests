@@ -27,7 +27,7 @@ func init() {
 		Contacts: []string{
 			"chromeos-gfx@google.com",
 			"andrescj@chromium.org",
-			"pwang@chromium.org",
+			"ihf@chromium.org",
 		},
 		SoftwareDeps: []string{"no_qemu"},
 		Vars:         []string{"keepState"},
