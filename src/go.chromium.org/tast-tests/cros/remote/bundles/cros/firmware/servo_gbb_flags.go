@@ -19,6 +19,7 @@ import (
 	"go.chromium.org/tast-tests/cros/remote/firmware/bios"
 	"go.chromium.org/tast-tests/cros/remote/firmware/fixture"
 	pb "go.chromium.org/tast-tests/cros/services/cros/firmware"
+	"go.chromium.org/tast/core/errors"
 	"go.chromium.org/tast/core/testing"
 	"go.chromium.org/tast/core/testing/hwdep"
 )
@@ -146,18 +147,24 @@ func ServoGBBFlags(ctx context.Context, s *testing.State) {
 	if !cmp.Equal(old.Set, ret.Set, sortSlice) {
 		s.Fatal("GBB flags from CDD do not match SSH'd GBB flags ", cmp.Diff(old.Set, ret.Set, sortSlice))
 	}
-	// GoBigSleepLint: Flashrom usually restarts the dut, but on a few platforms it might require a power press to come back on.
-	// But you can't press the power button too soon, or it will be ignored.
-	if err := testing.Sleep(ctx, 2*time.Second); err != nil {
-		s.Fatal("Pre-power button sleep failed: ", err)
+	powerOnAndWait := func(ctx context.Context) {
+		if err := testing.Poll(ctx, func(ctx context.Context) error {
+			if err := h.Servo.KeypressWithDuration(ctx, servo.PowerKey, servo.Dur(h.Config.HoldPwrButtonPowerOn)); err != nil {
+				return errors.Wrap(err, "power button press failed")
+			}
+			s.Log("Waiting for reboot")
+			context.WithTimeout(ctx, 10*time.Second)
+			if err := h.WaitConnect(ctx); err != nil {
+				return errors.Wrap(err, "connect failed")
+			}
+			return nil
+		}, &testing.PollOptions{
+			Timeout: time.Minute,
+		}); err != nil {
+			s.Fatalf("Failed to connect to DUT: %s", err)
+		}
 	}
-	if err := h.Servo.KeypressWithDuration(ctx, servo.PowerKey, servo.Dur(h.Config.HoldPwrButtonPowerOn)); err != nil {
-		s.Fatal("Power button failed: ", err)
-	}
-	s.Log("Waiting for reboot")
-	if err := h.WaitConnect(ctx); err != nil {
-		s.Fatalf("Failed to connect to DUT: %s", err)
-	}
+	powerOnAndWait(ctx)
 
 	// We need to change some GBB flag, but it doesn't really matter which.
 	// Toggle DEV_SCREEN_SHORT_DELAY
@@ -179,18 +186,7 @@ func ServoGBBFlags(ctx context.Context, s *testing.State) {
 		s.Fatalf("Failed to enable %v: %+v", servoSPIControl, err)
 	}
 
-	// GoBigSleepLint: Flashrom usually restarts the dut, but on a few platforms it might require a power press to come back on.
-	// But you can't press the power button too soon, or it will be ignored.
-	if err := testing.Sleep(ctx, 2*time.Second); err != nil {
-		s.Fatal("Pre-power button sleep failed: ", err)
-	}
-	if err := h.Servo.KeypressWithDuration(ctx, servo.PowerKey, servo.Dur(h.Config.HoldPwrButtonPowerOn)); err != nil {
-		s.Fatal("Power button failed: ", err)
-	}
-	s.Log("Waiting for reboot")
-	if err := h.WaitConnect(ctx); err != nil {
-		s.Fatalf("Failed to connect to DUT: %s", err)
-	}
+	powerOnAndWait(ctx)
 
 	s.Log("Getting GBB flags")
 	newFlags, err := common.GetGBBFlags(ctx, s.DUT())
