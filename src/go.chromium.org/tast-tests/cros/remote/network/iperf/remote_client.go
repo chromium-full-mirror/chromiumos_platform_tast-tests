@@ -88,8 +88,16 @@ func (c *RemoteClient) Stop(ctx context.Context) error {
 
 	var allErrors error
 	if c.config == nil || c.config.AutoClean {
+		if err := c.conn.CommandContext(ctx, "killall", "-q", "-15", c.iperfPath).Run(); err != nil && err.Error() != "Process exited with status 1" {
+			curError := errors.Wrap(err, "failed to stop iperf nicely on client host")
+			allErrors = errors.Join(allErrors, curError)
+			testing.ContextLog(ctx, "Killing iperf client forcefully due to: ", curError)
+		}
+		// iperf client exits immediately upon recipient of TERM signal, polling the exit status isn't needed.
+		// Kill forcefully if TERM signal failed to terminate iperf processes.
+		// Kill -q -9 below is a no-op in case processes have already been killed by kill -15.
 		if err := c.conn.CommandContext(ctx, "killall", "-q", "-9", c.iperfPath).Run(); err != nil && err.Error() != "Process exited with status 1" {
-			allErrors = errors.Join(allErrors, errors.Wrap(err, "failed to stop iperf on client host"))
+			allErrors = errors.Join(allErrors, errors.Wrap(err, "failed to forcefully stop iperf on client host"))
 		}
 	}
 

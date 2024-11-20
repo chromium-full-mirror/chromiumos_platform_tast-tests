@@ -114,6 +114,7 @@ func (c *RemoteServer) Start(ctx context.Context, config *Config) error {
 		return errors.Wrap(err, "failed to verify that iperf server is started")
 	}
 
+	c.pid = ""
 	// An iperf command comprised of mode, IP address and port is pretty unique, if we grep for it, we should get PID rather reliably.
 	// Get the PID of the child process sandboxed by minijail. Minijail cleans up the child process on its exit.
 	// Since Openwrt supports simplified ps command only, use a fallback command if ps -e doesn't work.
@@ -147,15 +148,43 @@ func (c *RemoteServer) Stop(ctx context.Context) error {
 
 	var allErrors error
 	if c.config == nil || c.config.Version == Version2 {
-		if c.config == nil || c.config.AutoClean {
-			if err := c.conn.CommandContext(ctx, "killall", "-q", "-9", c.iperfPath).Run(); err != nil && err.Error() != "Process exited with status 1" {
-				allErrors = errors.Wrapf(allErrors, "failed to stop iperf on server host: %v", err) // NOLINT
-			}
-		} else if c.pid != "" {
+		if c.pid != "" {
 			// Best effort stop.
 			c.conn.CommandContext(ctx, "kill", c.pid).Run()
 		}
+
+		if c.config == nil || c.config.AutoClean {
+			if err := c.conn.CommandContext(ctx, "killall", "-q", "-15", c.iperfPath).Run(); err != nil && err.Error() != "Process exited with status 1" {
+				allErrors = errors.Wrapf(allErrors, "failed to nicely stop iperf on server host: %v", err) // NOLINT
+			}
+			// Wait for iperf server to complete its threads.
+			if err := testing.Poll(ctx, func(ctx context.Context) error {
+				psCmd := fmt.Sprintf("ps -e -o pid,cmd 2> /dev/null |grep \"%s\" |grep -v grep |grep -v %s", c.iperfPath, Minijail)
+				psFallbackCmd := fmt.Sprintf("ps w |grep \"%s\" |grep -v grep |grep -v %s", c.iperfPath, Minijail)
+				psCmd = fmt.Sprintf("%s || %s", psCmd, psFallbackCmd)
+				if out, err := c.conn.CommandContext(ctx, "sh", "-c", psCmd).Output(); err == nil && out != nil {
+					pid := strings.Fields(string(out))[0]
+					return errors.Errorf("iperf PID=%s is still exiting", pid)
+				}
+				allErrors = nil
+				return nil
+			}, &testing.PollOptions{
+				Timeout: 3 * time.Second,
+			}); err != nil {
+				testing.ContextLog(ctx, "Failed to kill iperf server nicely, killing it forcefully")
+				// Kill forcefully if TERM signal failed to terminate iperf processes.
+				// Kill -q -9 below is a no-op in case processes have already been killed by kill -15.
+				err := c.conn.CommandContext(ctx, "killall", "-q", "-9", c.iperfPath).Run()
+				if err != nil && err.Error() != "Process exited with status 1" {
+					allErrors = errors.Wrapf(allErrors, "failed to forcefully stop iperf on server host: %v", err) // NOLINT
+				} else {
+					allErrors = nil
+				}
+			}
+
+		}
 	} // Version3 cleans server by itself.
+	c.pid = ""
 
 	if err := c.fw.close(ctx); err != nil {
 		allErrors = errors.Wrapf(allErrors, "failed to close firewall on server host: %v", err) //NOLINT
