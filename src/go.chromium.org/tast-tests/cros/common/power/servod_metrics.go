@@ -26,8 +26,7 @@ type ServodMetrics struct {
 
 const (
 	// CpdPrefix is a special prefix on CPD rails.
-	CpdPrefix        = "ft4232h_generic"
-	servoAccumSuffix = "_mw"
+	CpdPrefix = "ft4232h_generic"
 )
 
 // Assert that ServodMetrics can be used in perf.Timeline.
@@ -58,7 +57,7 @@ func NewServodMetrics(ctx context.Context, svo *servo.Servo, cpd, useAccumulator
 // Setup initialises a metric for each rail.
 func (m *ServodMetrics) Setup(ctx context.Context, prefix, intervalName string) error {
 	for _, rail := range m.rails {
-		name := m.trimRailName(string(rail))
+		name := trimRailName(string(rail))
 		m.metrics[string(rail)] = perf.Metric{
 			Name:      prefix + name,
 			Unit:      ServodMetricTypeUnit,
@@ -101,9 +100,12 @@ func (m *ServodMetrics) Stop(_ context.Context, _ *perf.Values) error {
 	return nil
 }
 
-func (m *ServodMetrics) trimRailName(name string) string {
-	if m.cpd {
-		name = name[len(CpdPrefix)+1 : ]
+func trimRailName(name string) string {
+	// Remove 'ft4232h_generic.' prefix and '_mw' suffix
+	re := regexp.MustCompile("^(?:ft4232h_generic\\.)?([[:alnum:]-_]+)_mw$")
+	m := re.FindStringSubmatch(name)
+	if m == nil {
+		return name
 	}
-	return name[:len(name)-len(servoAccumSuffix)]
+	return m[1]
 }
