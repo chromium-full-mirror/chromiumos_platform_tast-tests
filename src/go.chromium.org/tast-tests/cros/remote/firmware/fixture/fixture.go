@@ -558,13 +558,15 @@ func (i *impl) PreTest(ctx context.Context, s *testing.FixtTestState) {
 		defer cancel()
 		if err := i.value.Helper.WaitConnect(connectTimeout); err != nil {
 			s.Log(logECCrash("failed to connect to dut before test to clear ec crashes", s, err))
-		}
-
-		s.Logf("Updating EC crash cache before test %s", s.TestName())
-		if err := i.value.Helper.UpdateECCrashCache(ctx); err != nil {
-			s.Log(logECCrash("failed to update EC crash cache", s, err))
-			// Couldn't update EC cache, don't check for crash files in post test.
 			i.checkECCrash = false
+		} else {
+			s.Logf("Updating EC crash cache before test %s", s.TestName())
+			if err := i.value.Helper.UpdateECCrashCache(ctx); err != nil {
+				s.Log(logECCrash("failed to update EC crash cache", s, err))
+				// Couldn't update EC cache, don't check for crash files in post test.
+				i.checkECCrash = false
+			}
+
 		}
 	}
 }
