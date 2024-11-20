@@ -6,7 +6,9 @@ package cellular
 
 import (
 	"context"
+	"time"
 
+	"go.chromium.org/tast-tests/cros/common/shillconst"
 	"go.chromium.org/tast-tests/cros/local/cellular"
 	"go.chromium.org/tast-tests/cros/local/chrome"
 	"go.chromium.org/tast-tests/cros/local/chrome/uiauto"
@@ -14,6 +16,7 @@ import (
 	"go.chromium.org/tast-tests/cros/local/chrome/uiauto/nodewith"
 	"go.chromium.org/tast-tests/cros/local/chrome/uiauto/quicksettings"
 	"go.chromium.org/tast-tests/cros/local/chrome/uiauto/role"
+	"go.chromium.org/tast/core/ctxutil"
 	"go.chromium.org/tast/core/testing"
 )
 
@@ -36,24 +39,33 @@ func init() {
 // ToggleCellularFromQuickSettings tests that a user can successfully toggle
 // the Cellular state using the Quick Settings.
 func ToggleCellularFromQuickSettings(ctx context.Context, s *testing.State) {
+	cleanupCtx := ctx
+	ctx, cancel := ctxutil.Shorten(ctx, 10*time.Second)
+	defer cancel()
+
 	cr, err := chrome.New(ctx)
 	if err != nil {
 		s.Fatal("Failed to create new chrome instance: ", err)
 	}
+	defer cr.Close(cleanupCtx)
 
 	tconn, err := cr.TestAPIConn(ctx)
 	if err != nil {
 		s.Fatal("Failed to create Test API connection: ", err)
 	}
 
-	helper, err := cellular.NewHelper(ctx)
+	helper := s.FixtValue().(*cellular.FixtData).Helper
+
+	// Disable auto-connect so that enabling cellular data will not automatically trigger a connection, reducing instability caused by connection attempts.
+	cleanup, err := helper.InitServiceProperty(ctx, shillconst.ServicePropertyAutoConnect, false)
 	if err != nil {
-		s.Fatal("Failed to create cellular.Helper: ", err)
+		s.Fatal("Failed to initialize autoconnect to false: ", err)
 	}
+	defer cleanup(cleanupCtx)
 
 	ui := uiauto.New(tconn)
 
-	defer faillog.DumpUITreeWithScreenshotOnError(ctx, s.OutDir(), s.HasError, cr, "ui_tree")
+	defer faillog.DumpUITreeWithScreenshotOnError(cleanupCtx, s.OutDir(), s.HasError, cr, "ui_tree")
 
 	if err := quicksettings.NavigateToNetworkDetailedView(ctx, tconn); err != nil {
 		s.Fatal("Failed to navigate to the detailed Network view: ", err)

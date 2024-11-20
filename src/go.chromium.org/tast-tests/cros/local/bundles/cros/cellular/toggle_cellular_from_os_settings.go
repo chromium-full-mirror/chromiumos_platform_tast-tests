@@ -8,6 +8,7 @@ import (
 	"context"
 	"time"
 
+	"go.chromium.org/tast-tests/cros/common/shillconst"
 	"go.chromium.org/tast-tests/cros/local/cellular"
 	"go.chromium.org/tast-tests/cros/local/chrome"
 	"go.chromium.org/tast-tests/cros/local/chrome/uiauto/faillog"
@@ -50,10 +51,14 @@ func ToggleCellularFromOSSettings(ctx context.Context, s *testing.State) {
 		s.Fatal("Failed to create Test API connection: ", err)
 	}
 
-	helper, err := cellular.NewHelper(ctx)
+	helper := s.FixtValue().(*cellular.FixtData).Helper
+
+	// Disable auto-connect so that enabling cellular data will not automatically trigger a connection, reducing instability caused by connection attempts.
+	cleanup, err := helper.InitServiceProperty(ctx, shillconst.ServicePropertyAutoConnect, false)
 	if err != nil {
-		s.Fatal("Failed to create cellular.Helper: ", err)
+		s.Fatal("Failed to initialize autoconnect to false: ", err)
 	}
+	defer cleanup(cleanupCtx)
 
 	app, err := ossettings.Launch(ctx, tconn)
 	if err != nil {
