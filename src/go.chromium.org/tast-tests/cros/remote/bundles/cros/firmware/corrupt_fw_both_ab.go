@@ -6,27 +6,17 @@ package firmware
 
 import (
 	"context"
-	"fmt"
-	"strings"
 	"time"
 
 	"go.chromium.org/tast-tests/cros/common/firmware/bios"
-	"go.chromium.org/tast-tests/cros/common/firmware/futility"
-	"go.chromium.org/tast-tests/cros/common/servo"
-	"go.chromium.org/tast-tests/cros/remote/firmware"
+	rbios "go.chromium.org/tast-tests/cros/remote/firmware/bios"
 	"go.chromium.org/tast-tests/cros/remote/firmware/fixture"
-	"go.chromium.org/tast-tests/cros/remote/firmware/reporters"
-	"go.chromium.org/tast/core/ctxutil"
+	"go.chromium.org/tast/core/dut"
 	"go.chromium.org/tast/core/errors"
 	"go.chromium.org/tast/core/ssh"
 	"go.chromium.org/tast/core/testing"
 	"go.chromium.org/tast/core/testing/hwdep"
 )
-
-type corruptTestVal struct {
-	sectionA bios.ImageSection
-	sectionB bios.ImageSection
-}
 
 func init() {
 	testing.AddTest(&testing.Test{
@@ -44,232 +34,61 @@ func init() {
 			{
 				Name:    "body_normal",
 				Fixture: fixture.BootModeFixtureWithAPBackup(fixture.NormalMode),
-				Val: &corruptTestVal{
-					bios.FWBodyAImageSection, bios.FWBodyBImageSection,
+				Val: &rbios.CorruptTestVal{
+					SectionA: bios.FWBodyAImageSection, SectionB: bios.FWBodyBImageSection,
 				},
 			},
 			{
 				Name:    "body_dev",
 				Fixture: fixture.BootModeFixtureWithAPBackup(fixture.DevModeGBB),
-				Val: &corruptTestVal{
-					bios.FWBodyAImageSection, bios.FWBodyBImageSection,
+				Val: &rbios.CorruptTestVal{
+					SectionA: bios.FWBodyAImageSection, SectionB: bios.FWBodyBImageSection,
 				},
 			},
 			{
 				Name:    "sig_normal",
 				Fixture: fixture.BootModeFixtureWithAPBackup(fixture.NormalMode),
-				Val: &corruptTestVal{
-					bios.FWSignAImageSection, bios.FWSignBImageSection,
+				Val: &rbios.CorruptTestVal{
+					SectionA: bios.FWSignAImageSection, SectionB: bios.FWSignBImageSection,
 				},
 			},
 			{
 				Name:    "sig_dev",
 				Fixture: fixture.BootModeFixtureWithAPBackup(fixture.DevModeGBB),
-				Val: &corruptTestVal{
-					bios.FWSignAImageSection, bios.FWSignBImageSection,
+				Val: &rbios.CorruptTestVal{
+					SectionA: bios.FWSignAImageSection, SectionB: bios.FWSignBImageSection,
 				},
 			},
 		},
 	})
 }
 
-func CorruptFWBodySection(ctx context.Context, s *testing.State, h *firmware.Helper, corruptBiosRemoteImage, backupBiosRemoteImage, remoteTempDir string) error {
-	s.Log("Corrupting FW bodies")
+func corruptFWBodySection(ctx context.Context, dut *dut.DUT, corruptBiosRemoteImage, backupBiosRemoteImage, remoteTempDir string) error {
+	testing.ContextLog(ctx, "Corrupting FW bodies")
 	// Copy BIOS image to corrupt it
-	out, err := h.DUT.Conn().CommandContext(ctx, "cp", backupBiosRemoteImage, corruptBiosRemoteImage).Output(ssh.DumpLogOnError)
+	out, err := dut.Conn().CommandContext(ctx, "cp", backupBiosRemoteImage, corruptBiosRemoteImage).Output(ssh.DumpLogOnError)
 	if err != nil {
-		s.Error("Failed to copy image for corruption: ", out)
-		return err
+		return errors.Wrapf(err, "failed to copy image for corruption: %s", out)
 	}
 
 	for _, section := range []string{string(bios.FWBodyAImageSection), string(bios.FWBodyBImageSection)} {
-		if _, err := h.DUT.Conn().CommandContext(ctx, "cbfstool", corruptBiosRemoteImage, "remove", "-r", section, "-n", "fallback/payload").Output(ssh.DumpLogOnError); err != nil {
-			s.Error("Failed to corrupt ", section, " section: ", err)
-			return err
+		if _, err := dut.Conn().CommandContext(ctx, "cbfstool", corruptBiosRemoteImage, "remove", "-r", section, "-n", "fallback/payload").Output(ssh.DumpLogOnError); err != nil {
+			return errors.Wrapf(err, "failed to remove %s section", section)
 		}
 		// Add new file to make sure checksum will differ
-		if _, err := h.DUT.Conn().CommandContext(ctx, "cbfstool", corruptBiosRemoteImage, "add-int", "-r", section, "-n", "fallback/new_int", "-i", "6677").Output(ssh.DumpLogOnError); err != nil {
-			s.Error("Failed to corrupt ", section, " section: ", err)
-			return err
+		if _, err := dut.Conn().CommandContext(ctx, "cbfstool", corruptBiosRemoteImage, "add-int", "-r", section, "-n", "fallback/new_int", "-i", "6677").Output(ssh.DumpLogOnError); err != nil {
+			return errors.Wrapf(err, "failed to add-int %s section", section)
 		}
 	}
 	return nil
 }
 
 func CorruptFWBothAB(ctx context.Context, s *testing.State) {
-	corruptFWSectionTest(ctx, s, CorruptFWBodySection, "RW firmware unable to verify firmware body")
-}
-
-func corruptFWSectionTest(ctx context.Context, s *testing.State, corruptFMAPSection func(context.Context, *testing.State, *firmware.Helper, string, string, string) error, failureReason string) {
 	backupManager := s.FixtValue().(*fixture.Value).BackupManager
 	h := s.FixtValue().(*fixture.Value).Helper
-	if err := h.RequireServo(ctx); err != nil {
-		s.Fatal("Failed to init servo: ", err)
-	}
 
-	futilityInstance, err := futility.NewLocalBuilder(h.DUT).Build()
-	if err != nil {
-		s.Fatal("Failed to setup futility instance: ", err)
-	}
-
-	sectionA := string(s.Param().(*corruptTestVal).sectionA)
-	sectionB := string(s.Param().(*corruptTestVal).sectionB)
-	shouldRestoreFirmware := false
-	cleanupContext := ctx
-	ctx, cancel := ctxutil.Shorten(ctx, 10*time.Minute)
-	defer cancel()
-
-	out, err := h.DUT.Conn().CommandContext(ctx, "mktemp", "-d", "-p", "/var/tmp", "-t", "fwimgXXXXXX").Output(ssh.DumpLogOnError)
-	if err != nil {
-		s.Fatal("Failed creating remote temp dir: ", err)
-	}
-	remoteTempDir := strings.TrimSuffix(string(out), "\n")
-	defer func() {
-		err := h.DUT.Conn().CommandContext(cleanupContext, "rm", "-rf", remoteTempDir).Run(ssh.DumpLogOnError)
-		if err != nil {
-			s.Fatal("Failed deleting remote temp dir: ", err)
-		}
-	}()
-
-	backupBiosRemoteImage := fmt.Sprintf("%s/bios_backup.bin", remoteTempDir)
-	if err := backupManager.CopyBackupToDut(ctx, h.DUT, fixture.FirmwareAP, backupBiosRemoteImage); err != nil {
-		s.Fatal("Failed to copy firmware backup image to DUT: ", err)
-	}
-
-	out, err = h.ServoProxy.OutputCommand(ctx, false, "mktemp", "-d", "-p", "/var/tmp", "-t", "fwservoXXXXXX")
-	if err != nil {
-		s.Fatal("Failed to create servo temp dir")
-	}
-	servoTempDir := strings.TrimSuffix(string(out), "\n")
-	defer func() {
-		if err := h.ServoProxy.RunCommand(cleanupContext, false, "rm", "-rf", servoTempDir); err != nil {
-			s.Fatal("Failed deleting servo temp dir: ", err)
-		}
-	}()
-
-	if err := h.Reporter.ClearEventlog(ctx); err != nil {
-		s.Fatal("Failed to clear event log: ", err)
-	}
-
-	restoreFirmware := func(ctx context.Context) {
-		s.Log("Restoring AP firmware via servo")
-
-		backupOnServoProxy := fmt.Sprintf("%s/bios_backup.bin", servoTempDir)
-		if err := backupManager.CopyBackupToServoProxy(ctx, h.ServoProxy, fixture.FirmwareAP, backupOnServoProxy); err != nil {
-			s.Fatal("Failed to copy backup to ServoProxy: ", err)
-		}
-
-		// futility doesn't know that you can't flash AP over C2D2, so switch the active controller to CCD.
-		if hasC2D2, err := h.Servo.HasC2D2(ctx); err != nil {
-			s.Fatal("Could not check c2d2: ", err)
-		} else if hasC2D2 {
-			if err := h.Servo.RequireCCD(ctx); err != nil {
-				s.Fatal("Could not enable CCD: ", err)
-			}
-		}
-		if out, err := h.ServoProxy.OutputCommand(ctx, true, "futility", "update", "--servo", fmt.Sprintf("--servo_port=%d", h.ServoProxy.GetPort()),
-			"--mode=recovery", "--wp=1", "--host_only", "-i", backupOnServoProxy); err != nil {
-			s.Errorf("Failed restoring firmware via servo: %s - %s", err, string(out))
-		}
-		// In b/314059450 it was discovered that some devices don't come back on after futility update. Explicitly reset to prevent this problem.
-		if err := h.Servo.SetPowerState(ctx, servo.PowerStateReset); err != nil {
-			s.Error("Failed to reset after restoring firmware: ", err)
-		}
-		if err := h.WaitConnect(ctx); err != nil {
-			s.Error("Failed to connect to DUT: ", err)
-		}
-		shouldRestoreFirmware = false
-	}
-	defer func() {
-		if shouldRestoreFirmware {
-			restoreFirmware(cleanupContext)
-		}
-	}()
-
-	// futility won't flash an image that has an invalid signature blocks, so to corrupt the data we need to:
-	// - Create copy of image and modify body by removing (or modifying) CBFS file "fallback/payload" to make firmware fail verification.
-	// - Sign resulting image
-	// - Extract the sections we want to test
-	// - Create yet another image that contains those sections
-	// - Flash it.
-
-	corruptBiosRemoteImage := fmt.Sprintf("%s/corrupt_bodies.bin", remoteTempDir)
-	if err := corruptFMAPSection(ctx, s, h, corruptBiosRemoteImage, backupBiosRemoteImage, remoteTempDir); err != nil {
-		s.Fatal("Failed to corrupt FMAP sections: ", err)
-	}
-
-	// - Sign it.
-	if out, err := futilityInstance.SignBIOS(ctx, futility.NewSignBIOSOptions(corruptBiosRemoteImage)); err != nil {
-		s.Fatal("Failed to sign corrupted firmware image: ", err, "\nOutput:\n", string(out))
-	}
-
-	// - Extract the sections we want to test
-	if out, err := futilityInstance.DumpFmapExtract(ctx, corruptBiosRemoteImage, map[string]string{
-		sectionA: fmt.Sprintf("%s/%s.bin", remoteTempDir, sectionA),
-		sectionB: fmt.Sprintf("%s/%s.bin", remoteTempDir, sectionB),
-	}); err != nil {
-		s.Fatal("Failed to extract sections from corrupted firmware image: ", err, "\nOutput:\n", string(out))
-	}
-
-	// - Create yet another image that contains those sections
-	allCorruptBiosImageOnDut := fmt.Sprintf("%s/corrupt.bin", remoteTempDir)
-	if out, err := futilityInstance.LoadFmap(ctx, backupBiosRemoteImage, allCorruptBiosImageOnDut, map[string]string{
-		sectionA: fmt.Sprintf("%s/%s.bin", remoteTempDir, sectionA),
-		sectionB: fmt.Sprintf("%s/%s.bin", remoteTempDir, sectionB),
-	}); err != nil {
-		s.Fatal("Failed to load corrupted sections into fimrware image: ", err, "\nOutput:\n", string(out))
-	}
-
-	s.Logf("Flashing corrupt sections: %q %q", sectionA, sectionB)
-	// - Flash it.
-	shouldRestoreFirmware = true
-	err = h.DUT.Conn().CommandContext(ctx, "futility", "update", "--wp=1", "--host_only", "-i", allCorruptBiosImageOnDut).Run(ssh.DumpLogOnError)
-	if err != nil {
-		s.Fatal("Failed flashing corrupt fw: ", err)
-	}
-
-	ms, err := firmware.NewModeSwitcher(ctx, h)
-	if err != nil {
-		s.Fatal("Creating mode switcher: ", err)
-	}
-	if err := ms.ModeAwareReboot(ctx, firmware.WarmReset, firmware.SkipWaitConnect); err != nil {
-		s.Fatal("Failed to reboot after corrupting: ", err)
-	}
-	waitContext, cancel := context.WithTimeout(ctx, h.Config.DelayRebootToPing)
-	defer cancel()
-	s.Logf("Waiting %s(DelayRebootToPing) for DUT not to boot", h.Config.DelayRebootToPing)
-	if err := h.WaitConnect(waitContext); err == nil {
-		s.Error("DUT is unexpectedly up, corruption failed")
-	}
-	restoreFirmware(ctx)
-
-	s.Log("Checking eventlog for evidence of broken screen")
-
-	// Sometimes events are missing if you check too quickly after boot.
-	var events []reporters.Event
-	if err := testing.Poll(ctx, func(context.Context) error {
-		var err error
-		events, err = h.Reporter.EventlogList(ctx)
-		if err != nil {
-			return testing.PollBreak(err)
-		}
-		if len(events) == 0 {
-			return errors.New("no new events found")
-		}
-		found := false
-		for _, event := range events {
-			if strings.Contains(event.Message, failureReason) {
-				found = true
-				break
-			}
-		}
-		if !found {
-			return errors.Errorf("missing expected recovery reason %q in event log: %v", failureReason, events)
-		}
-		return nil
-	}, &testing.PollOptions{
-		Timeout: 1 * time.Minute, Interval: 5 * time.Second,
-	}); err != nil {
-		s.Fatal("Gathering events: ", err)
+	param := s.Param().(*rbios.CorruptTestVal)
+	if err := rbios.CorruptFWSectionTest(ctx, backupManager, h, param, corruptFWBodySection, "RW firmware unable to verify firmware body"); err != nil {
+		s.Fatal("Test failed: ", err)
 	}
 }

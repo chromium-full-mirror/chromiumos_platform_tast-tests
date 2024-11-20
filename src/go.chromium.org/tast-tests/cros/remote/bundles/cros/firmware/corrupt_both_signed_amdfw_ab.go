@@ -11,8 +11,9 @@ import (
 
 	"go.chromium.org/tast-tests/cros/common/firmware/bios"
 	"go.chromium.org/tast-tests/cros/common/firmware/futility"
-	"go.chromium.org/tast-tests/cros/remote/firmware"
+	rbios "go.chromium.org/tast-tests/cros/remote/firmware/bios"
 	"go.chromium.org/tast-tests/cros/remote/firmware/fixture"
+	"go.chromium.org/tast/core/dut"
 	"go.chromium.org/tast/core/errors"
 	"go.chromium.org/tast/core/ssh"
 	"go.chromium.org/tast/core/testing"
@@ -43,47 +44,45 @@ func init() {
 			{
 				Name:    "normal_mode",
 				Fixture: fixture.BootModeFixtureWithAPBackup(fixture.NormalMode),
-				Val: &corruptTestVal{
-					bios.SignedAMDFWAImageSection, bios.SignedAMDFWBImageSection,
+				Val: &rbios.CorruptTestVal{
+					SectionA: bios.SignedAMDFWAImageSection, SectionB: bios.SignedAMDFWBImageSection,
 				},
 			},
 			{
 				Name:    "dev_mode",
 				Fixture: fixture.BootModeFixtureWithAPBackup(fixture.DevMode),
-				Val: &corruptTestVal{
-					bios.SignedAMDFWAImageSection, bios.SignedAMDFWBImageSection,
+				Val: &rbios.CorruptTestVal{
+					SectionA: bios.SignedAMDFWAImageSection, SectionB: bios.SignedAMDFWBImageSection,
 				},
 			},
 		},
 	})
 }
 
-func CorruptSignedAMDFWSection(ctx context.Context, s *testing.State, h *firmware.Helper, corruptBiosRemoteImage, backupBiosRemoteImage, remoteTempDir string) error {
-	s.Log("Corrupting SIGNED_AMDFW sections")
+func corruptSignedAMDFWSection(ctx context.Context, dut *dut.DUT, corruptBiosRemoteImage, backupBiosRemoteImage, remoteTempDir string) error {
+	testing.ContextLog(ctx, "Corrupting SIGNED_AMDFW sections")
 
-	futilityInstance, err := futility.NewLocalBuilder(h.DUT).Build()
+	futilityInstance, err := futility.NewLocalBuilder(dut).Build()
 	if err != nil {
-		s.Fatal("Failed to setup futility instance: ", err)
+		return errors.Wrap(err, "failed to setup futility instance")
 	}
 
 	// - Get the body sizes
 	sections, out, err := futilityInstance.DumpFmap(ctx, backupBiosRemoteImage, []string{string(bios.SignedAMDFWAImageSection), string(bios.SignedAMDFWBImageSection)})
 	if err != nil {
-		s.Error("Failed getting section sizes: ", err, "\nOutput:\n", string(out))
-		return err
+		return errors.Wrapf(err, "failed getting section sizes: %s", string(out))
 	}
 
 	if len(sections) == 0 {
-		s.Error("Output doesn't match regex: ", string(out))
+		testing.ContextLog(ctx, "Output doesn't match regex: ", string(out))
 		return errors.New("no sections matching SignedAMDFW")
 	}
 
 	// - Create corrupt bodies for A & B
 	for _, m := range sections {
-		_, err = h.DUT.Conn().CommandContext(ctx, "dd", fmt.Sprintf("of=%s/%s_corrupt.bin", remoteTempDir, m.Name), "if=/dev/random", fmt.Sprintf("bs=%d", m.Size), "count=1").Output(ssh.DumpLogOnError)
+		_, err = dut.Conn().CommandContext(ctx, "dd", fmt.Sprintf("of=%s/%s_corrupt.bin", remoteTempDir, m.Name), "if=/dev/random", fmt.Sprintf("bs=%d", m.Size), "count=1").Output(ssh.DumpLogOnError)
 		if err != nil {
-			s.Error("Failed creating corrupt file: ", err)
-			return err
+			return errors.Wrap(err, "failed to create corrupt file")
 		}
 	}
 	// - Generate a new image that contains those bodies
@@ -92,12 +91,17 @@ func CorruptSignedAMDFWSection(ctx context.Context, s *testing.State, h *firmwar
 		string(bios.SignedAMDFWBImageSection): fmt.Sprintf("%s/%s_corrupt.bin", remoteTempDir, bios.SignedAMDFWBImageSection),
 	})
 	if err != nil {
-		s.Error("Failed to load flashmap sections: ", err, "\nOutput:\n", string(out))
-		return err
+		return errors.Wrapf(err, "failed load flashmap sections: %s", string(out))
 	}
 	return nil
 }
 
 func CorruptBothSignedAMDFWAB(ctx context.Context, s *testing.State) {
-	corruptFWSectionTest(ctx, s, CorruptSignedAMDFWSection, "RW firmware vendor blob verification failure")
+	backupManager := s.FixtValue().(*fixture.Value).BackupManager
+	h := s.FixtValue().(*fixture.Value).Helper
+
+	param := s.Param().(*rbios.CorruptTestVal)
+	if err := rbios.CorruptFWSectionTest(ctx, backupManager, h, param, corruptSignedAMDFWSection, "RW firmware vendor blob verification failure"); err != nil {
+		s.Fatal("Test failed: ", err)
+	}
 }
