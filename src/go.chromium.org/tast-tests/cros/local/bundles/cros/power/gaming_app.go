@@ -17,6 +17,7 @@ import (
 	"go.chromium.org/tast-tests/cros/local/power/setup"
 	"go.chromium.org/tast/core/ctxutil"
 	"go.chromium.org/tast/core/testing"
+	"go.chromium.org/tast/core/testing/hwdep"
 )
 
 type gamingAppParams struct {
@@ -101,6 +102,9 @@ func init() {
 				Timeout:   shortTimeout + setup.BatteryPreparationTimeout,
 				ExtraData: []string{gameapp.SuperTuxKartIconGameScene},
 				ExtraAttr: []string{"group:power", "power_daily"},
+				// TODO(b/378405353): remove after the python 3.8->3.11 migration.
+				// 16 GB was a bit too small.
+				ExtraHardwareDeps: hwdep.D(hwdep.MinStorage(20)),
 			},
 		},
 	})
