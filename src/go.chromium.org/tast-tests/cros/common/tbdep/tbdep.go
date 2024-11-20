@@ -168,6 +168,12 @@ func keyValueDep(depKey, depValue string) string {
 	return dep
 }
 
+// AudioBeamforming returns an "audio_beamforming" dependency
+// with the given audio beamforming value.
+func AudioBeamforming(audioBeamforming string) string {
+	return keyValueDep("audio_beamforming", audioBeamforming)
+}
+
 // AudioBoxJackPluggerState returns an "audiobox_jackplugger_state" dependency
 // with the given state value.
 func AudioBoxJackPluggerState(state string) string {

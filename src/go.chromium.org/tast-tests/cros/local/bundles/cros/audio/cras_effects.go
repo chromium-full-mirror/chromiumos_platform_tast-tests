@@ -13,6 +13,7 @@ import (
 
 	"golang.org/x/exp/slices"
 
+	"go.chromium.org/tast-tests/cros/common/tbdep"
 	"go.chromium.org/tast-tests/cros/common/testexec"
 	"go.chromium.org/tast-tests/cros/local/audio"
 	"go.chromium.org/tast-tests/cros/local/audio/debug"
@@ -731,9 +732,9 @@ func init() {
 						NC:  sof.DSPEffectUnavailable,
 					},
 				},
-				Fixture: crasEffectsHasAPNC,
-				// TODO: Schedule this on omniknight.3mic.
-				ExtraAttr: []string{},
+				Fixture:          crasEffectsHasAPNC,
+				ExtraTestBedDeps: []string{tbdep.AudioBeamforming("intelligo")},
+				ExtraAttr:        []string{},
 			},
 			{
 				Name: "beamforming_enabled_by_ui",
@@ -750,9 +751,9 @@ func init() {
 						NC:  sof.DSPEffectUnavailable,
 					},
 				},
-				Fixture: crasEffectsHasAPNC,
-				// TODO: Schedule this on omniknight.3mic.
-				ExtraAttr: []string{},
+				Fixture:          crasEffectsHasAPNC,
+				ExtraTestBedDeps: []string{tbdep.AudioBeamforming("intelligo")},
+				ExtraAttr:        []string{},
 			},
 			{
 				Name: "style_transfer",
