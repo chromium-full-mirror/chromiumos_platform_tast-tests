@@ -39,10 +39,14 @@ func init() {
 		},
 		// ChromeOS > Software > Personalization
 		BugComponent: "b:1006527",
-		Attr:         []string{
-			// Disabled by TORA.  See:b/343060560.
-			//"group:mainline", "informational", "group:hw_agnostic"
-			},
+		Attr: []string{
+			"group:golden_tier",
+			"group:medium_low_tier",
+			"group:hardware",
+			"group:complementary",
+			"group:hw_agnostic",
+			"group:release-health",
+		},
 		SearchFlags: []*testing.StringPair{{
 			Key:   "feature_id",
 			Value: "screenplay-47bb4826-69df-4c03-aaf2-e9a8a0f0f636",
@@ -52,8 +56,8 @@ func init() {
 			// Disabled by TORA.  See:b/343060560.
 			// "gaia"
 		},
-		Timeout:      5 * time.Minute,
-		Fixture:      personalization.GooglePhotosFixture,
+		Timeout: 5 * time.Minute,
+		Fixture: personalization.GooglePhotosFixture,
 		Params: []testing.Param{{
 			Name: "from_album",
 			Val: dailyRefreshGooglePhotosWallpaperParams{

@@ -33,9 +33,14 @@ func init() {
 		},
 		// ChromeOS > Software > Personalization
 		BugComponent: "b:1006527",
-		Attr:         []string{
+		Attr: []string{
 			// Disabled by TORA.  See:b/343493817.
-			// "group:mainline", "informational", "group:hw_agnostic"
+			"group:golden_tier",
+			"group:medium_low_tier",
+			"group:hardware",
+			"group:complementary",
+			"group:hw_agnostic",
+			"group:release-health",
 		},
 		SearchFlags: []*testing.StringPair{{
 			Key:   "feature_id",
