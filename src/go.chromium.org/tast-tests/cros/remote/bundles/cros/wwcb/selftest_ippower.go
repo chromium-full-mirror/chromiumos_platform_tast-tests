@@ -11,6 +11,7 @@ import (
 	"time"
 
 	"go.chromium.org/tast-tests/cros/common/servo"
+	"go.chromium.org/tast-tests/cros/common/tbdep"
 	"go.chromium.org/tast-tests/cros/remote/bundles/cros/wwcb/utils"
 	"go.chromium.org/tast/core/ctxutil"
 	"go.chromium.org/tast/core/testing"
@@ -26,6 +27,7 @@ func init() {
 		Attr:         []string{"group:wwcb"},
 		SoftwareDeps: []string{"chrome"},
 		Vars:         []string{"servo", "wwcbIPPowerIp"},
+		TestBedDeps:  []string{tbdep.ServoState("WORKING")},
 		ServiceDeps:  []string{"tast.cros.browser.ChromeService"},
 		Data:         []string{"Capabilities.json"},
 	})

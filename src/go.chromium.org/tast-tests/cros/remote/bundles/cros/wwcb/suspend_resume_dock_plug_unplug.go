@@ -10,6 +10,7 @@ import (
 
 	"github.com/golang/protobuf/ptypes/empty"
 	"go.chromium.org/tast-tests/cros/common/servo"
+	"go.chromium.org/tast-tests/cros/common/tbdep"
 	"go.chromium.org/tast-tests/cros/remote/bundles/cros/wwcb/log"
 	"go.chromium.org/tast-tests/cros/remote/bundles/cros/wwcb/utils"
 	"go.chromium.org/tast-tests/cros/remote/bundles/cros/wwcb/utils/topology"
@@ -35,6 +36,7 @@ func init() {
 		HardwareDeps: hwdep.D(hwdep.ChromeEC()),
 		ServiceDeps:  []string{"tast.cros.browser.ChromeService", "tast.cros.ui.ChromeUIService"},
 		Vars:         []string{"servo", "newTestItem"},
+		TestBedDeps:  []string{tbdep.ServoState("WORKING")},
 		Data:         []string{"Capabilities.json"},
 		Timeout:      utils.TestingTimeout,
 		Fixture:      "wwcb.dock",

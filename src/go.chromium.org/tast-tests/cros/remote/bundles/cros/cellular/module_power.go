@@ -14,6 +14,7 @@ import (
 
 	"go.chromium.org/tast-tests/cros/common/perf"
 	cp "go.chromium.org/tast-tests/cros/common/power"
+	"go.chromium.org/tast-tests/cros/common/tbdep"
 	"go.chromium.org/tast-tests/cros/remote/cellular/callbox/manager"
 	"go.chromium.org/tast-tests/cros/remote/cellular/modulepower"
 	"go.chromium.org/tast-tests/cros/remote/firmware/reporters"
@@ -52,6 +53,7 @@ func init() {
 		Fixture:      "callboxManagedFixture",
 		Timeout:      15 * time.Minute,
 		Vars:         []string{"servo"},
+		TestBedDeps:  []string{tbdep.ServoState("WORKING")},
 		Params: []testing.Param{
 			{
 				Name:      "low_power",

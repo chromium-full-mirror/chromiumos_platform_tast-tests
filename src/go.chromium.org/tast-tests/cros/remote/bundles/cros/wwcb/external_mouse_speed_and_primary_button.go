@@ -13,6 +13,7 @@ import (
 	"time"
 
 	"github.com/golang/protobuf/ptypes/empty"
+	"go.chromium.org/tast-tests/cros/common/tbdep"
 	"go.chromium.org/tast-tests/cros/remote/bundles/cros/wwcb/utils"
 	"go.chromium.org/tast-tests/cros/remote/dutfs"
 	pb "go.chromium.org/tast-tests/cros/services/cros/apps"
@@ -35,6 +36,7 @@ func init() {
 		SoftwareDeps: []string{"chrome"},
 		ServiceDeps:  []string{"tast.cros.browser.ChromeService", "tast.cros.apps.AppsService", "tast.cros.ui.AutomationService", "tast.cros.ui.ChromeUIService"},
 		Vars:         []string{"servo", "USBID"},
+		TestBedDeps:  []string{tbdep.ServoState("WORKING")},
 		Data:         []string{"detect_mouse_speed.html", "detect_mouse_wheel.html"},
 		Timeout:      5 * time.Minute,
 		Params: []testing.Param{{

@@ -13,6 +13,7 @@ import (
 	"google.golang.org/grpc"
 
 	"go.chromium.org/tast-tests/cros/common/servo"
+	"go.chromium.org/tast-tests/cros/common/tbdep"
 	"go.chromium.org/tast-tests/cros/remote/bundles/cros/wwcb/log"
 	"go.chromium.org/tast-tests/cros/remote/bundles/cros/wwcb/utils"
 	"go.chromium.org/tast-tests/cros/remote/bundles/cros/wwcb/utils/topology"
@@ -33,6 +34,7 @@ func init() {
 		Attr:         []string{"group:wwcb", "group:pasit"},
 		SoftwareDeps: []string{"chrome"},
 		Vars:         []string{"servo", "newTestItem"},
+		TestBedDeps:  []string{tbdep.ServoState("WORKING")},
 		ServiceDeps:  []string{"tast.cros.wwcb.DisplayService", "tast.cros.browser.ChromeService", "tast.cros.ui.ChromeUIService", "tast.cros.ui.ScreenRecorderService"},
 		Fixture:      "wwcb.dock",
 		Data:         []string{"Capabilities.json"},

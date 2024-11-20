@@ -9,6 +9,7 @@ import (
 	"time"
 
 	"go.chromium.org/tast-tests/cros/common/servo"
+	"go.chromium.org/tast-tests/cros/common/tbdep"
 	"go.chromium.org/tast-tests/cros/remote/bundles/cros/wwcb/log"
 	"go.chromium.org/tast-tests/cros/remote/bundles/cros/wwcb/utils"
 	"go.chromium.org/tast-tests/cros/remote/bundles/cros/wwcb/utils/topology"
@@ -27,6 +28,7 @@ func init() {
 		Attr:         []string{"group:wwcb", "group:pasit"},
 		SoftwareDeps: []string{"chrome"},
 		Vars:         []string{"servo", "newTestItem"},
+		TestBedDeps:  []string{tbdep.ServoState("WORKING")},
 		Data:         []string{"Capabilities.json"},
 		Fixture:      "wwcb.dock",
 		Params: []testing.Param{

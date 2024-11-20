@@ -9,6 +9,7 @@ import (
 	"time"
 
 	fwCommon "go.chromium.org/tast-tests/cros/common/firmware"
+	"go.chromium.org/tast-tests/cros/common/tbdep"
 	"go.chromium.org/tast-tests/cros/remote/firmware"
 	"go.chromium.org/tast-tests/cros/remote/firmware/fixture"
 	"go.chromium.org/tast/core/ctxutil"
@@ -32,6 +33,7 @@ func init() {
 			},
 		},
 		VarDeps:      []string{"servo"},
+		TestBedDeps:  []string{tbdep.ServoState("WORKING")},
 		LacrosStatus: testing.LacrosVariantUnneeded,
 	})
 }

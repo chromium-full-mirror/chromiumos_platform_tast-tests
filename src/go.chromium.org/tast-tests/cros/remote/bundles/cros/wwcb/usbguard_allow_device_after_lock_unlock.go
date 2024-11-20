@@ -11,6 +11,7 @@ import (
 	"github.com/golang/protobuf/ptypes/empty"
 
 	"go.chromium.org/tast-tests/cros/common/servo"
+	"go.chromium.org/tast-tests/cros/common/tbdep"
 	"go.chromium.org/tast-tests/cros/remote/bundles/cros/wwcb/log"
 	"go.chromium.org/tast-tests/cros/remote/bundles/cros/wwcb/utils"
 	"go.chromium.org/tast-tests/cros/remote/bundles/cros/wwcb/utils/topology"
@@ -30,6 +31,7 @@ func init() {
 		Attr:         []string{"group:wwcb", "group:pasit", "pasit_storage"},
 		SoftwareDeps: []string{"chrome"},
 		Vars:         []string{"servo"},
+		TestBedDeps:  []string{tbdep.ServoState("WORKING")},
 		Fixture:      "wwcb.storage",
 		ServiceDeps:  []string{"tast.cros.nearbyservice.NearbyShareService"},
 	})

@@ -12,8 +12,10 @@ import (
 	"time"
 
 	"github.com/golang/protobuf/ptypes/empty"
+	"go.chromium.org/tast-tests/cros/common/tbdep"
 	"go.chromium.org/tast-tests/cros/remote/bundles/cros/wwcb/utils"
 	pb "go.chromium.org/tast-tests/cros/services/cros/apps"
+
 	//lint:ignore ST1019 multiple imports with different identifiers help code readability
 	"go.chromium.org/tast-tests/cros/services/cros/inputs"
 	inputspb "go.chromium.org/tast-tests/cros/services/cros/inputs"
@@ -50,6 +52,7 @@ func init() {
 		Attr:         []string{"group:wwcb", "group:pasit", "pasit_hid"},
 		SoftwareDeps: []string{"chrome"},
 		Vars:         []string{"servo", "USBID"},
+		TestBedDeps:  []string{tbdep.ServoState("WORKING")},
 		ServiceDeps: []string{
 			"tast.cros.nearbyservice.NearbyShareService",
 			"tast.cros.browser.ChromeService",

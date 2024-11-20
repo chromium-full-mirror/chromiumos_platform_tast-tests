@@ -14,6 +14,7 @@ import (
 	"github.com/golang/protobuf/ptypes/empty"
 
 	"go.chromium.org/tast-tests/cros/common/servo"
+	"go.chromium.org/tast-tests/cros/common/tbdep"
 	"go.chromium.org/tast-tests/cros/remote/powercontrol"
 	"go.chromium.org/tast-tests/cros/remote/tabletmode"
 	"go.chromium.org/tast-tests/cros/services/cros/inputs"
@@ -57,6 +58,7 @@ func init() {
 			"platform.BootupTimes.cbmemTimeout",
 			"platform.iterations",
 		},
+		TestBedDeps: []string{tbdep.ServoState("WORKING")},
 		Params: []testing.Param{{
 			Name:      "reboot",
 			Val:       bootupTimes{bootType: reboot},

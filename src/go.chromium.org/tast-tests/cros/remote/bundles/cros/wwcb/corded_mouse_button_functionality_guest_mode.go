@@ -12,6 +12,7 @@ import (
 	"github.com/golang/protobuf/ptypes/empty"
 	"google.golang.org/grpc"
 
+	"go.chromium.org/tast-tests/cros/common/tbdep"
 	"go.chromium.org/tast-tests/cros/remote/bundles/cros/wwcb/utils"
 	"go.chromium.org/tast-tests/cros/services/cros/ui"
 	"go.chromium.org/tast/core/ctxutil"
@@ -29,6 +30,7 @@ func init() {
 		Attr:         []string{"group:wwcb", "group:pasit", "pasit_hid"},
 		SoftwareDeps: []string{"chrome"},
 		Vars:         []string{"servo", "USBID"},
+		TestBedDeps:  []string{tbdep.ServoState("WORKING")},
 		ServiceDeps:  []string{"tast.cros.browser.ChromeService", "tast.cros.ui.AutomationService", "tast.cros.nearbyservice.NearbyShareService", "tast.cros.ui.ChromeUIService"},
 		Params: []testing.Param{{
 			Name:    "clamshell_mode",
