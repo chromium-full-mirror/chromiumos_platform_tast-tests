@@ -12,6 +12,7 @@ import (
 	"time"
 
 	"go.chromium.org/tast-tests/cros/common/servo"
+	"go.chromium.org/tast-tests/cros/common/tbdep"
 	"go.chromium.org/tast-tests/cros/remote/firmware"
 	"go.chromium.org/tast-tests/cros/remote/firmware/fixture"
 	"go.chromium.org/tast-tests/cros/remote/firmware/reporters"
@@ -36,6 +37,7 @@ func init() {
 		ServiceDeps:  []string{"tast.cros.security.BootLockboxService"},
 		Attr:         []string{"group:intel-sleep"},
 		Vars:         []string{"servo"},
+		TestBedDeps:  []string{tbdep.ServoStateWorking},
 		HardwareDeps: hwdep.D(hwdep.X86(), hwdep.ChromeEC()),
 		Fixture:      fixture.NormalMode,
 		Timeout:      15 * time.Minute,

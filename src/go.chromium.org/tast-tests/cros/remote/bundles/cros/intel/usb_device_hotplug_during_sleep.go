@@ -11,6 +11,7 @@ import (
 
 	"go.chromium.org/tast-tests/cros/common/cswitch"
 	"go.chromium.org/tast-tests/cros/common/servo"
+	"go.chromium.org/tast-tests/cros/common/tbdep"
 	"go.chromium.org/tast-tests/cros/common/usbutils"
 	"go.chromium.org/tast-tests/cros/remote/powercontrol"
 	"go.chromium.org/tast/core/ctxutil"
@@ -30,6 +31,7 @@ func init() {
 		SoftwareDeps: []string{"chrome", "reboot"},
 		ServiceDeps:  []string{"tast.cros.security.BootLockboxService"},
 		VarDeps:      []string{"servo", "intel.USBDeviceHotplugDuringSleep.cSwitchPort", "intel.USBDeviceHotplugDuringSleep.domainIP"},
+		TestBedDeps:  []string{tbdep.ServoStateWorking},
 		HardwareDeps: hwdep.D(hwdep.X86()),
 		Timeout:      5 * time.Minute,
 	})

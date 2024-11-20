@@ -14,6 +14,7 @@ import (
 
 	"go.chromium.org/tast-tests/cros/common/cswitch"
 	"go.chromium.org/tast-tests/cros/common/servo"
+	"go.chromium.org/tast-tests/cros/common/tbdep"
 	"go.chromium.org/tast-tests/cros/common/usbutils"
 	"go.chromium.org/tast-tests/cros/remote/powercontrol"
 	"go.chromium.org/tast-tests/cros/services/cros/power"
@@ -49,6 +50,7 @@ func init() {
 		ServiceDeps:  []string{"tast.cros.power.USBService"},
 		Attr:         []string{"group:intel-cswitch-set1"},
 		Vars:         []string{"servo", "intel.cSwitchPort", "intel.domainIP"},
+		TestBedDeps:  []string{tbdep.ServoStateWorking},
 		Params: []testing.Param{{
 			Name:    "usb2_warmboot",
 			Val:     usbTypeATestParam{warmboot, "480M", 0, "4"},

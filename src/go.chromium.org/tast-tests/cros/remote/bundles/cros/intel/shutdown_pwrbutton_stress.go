@@ -9,6 +9,7 @@ import (
 	"time"
 
 	"go.chromium.org/tast-tests/cros/common/servo"
+	"go.chromium.org/tast-tests/cros/common/tbdep"
 	"go.chromium.org/tast-tests/cros/remote/powercontrol"
 	"go.chromium.org/tast-tests/cros/remote/tabletmode"
 	"go.chromium.org/tast/core/ctxutil"
@@ -34,6 +35,7 @@ func init() {
 		Vars: []string{"servo",
 			"power.mode", // Optional. Expecting "tablet". By default power.mode will be "clamshell".
 		},
+		TestBedDeps: []string{tbdep.ServoStateWorking},
 		Params: []testing.Param{
 			{
 				Name:      "quick",

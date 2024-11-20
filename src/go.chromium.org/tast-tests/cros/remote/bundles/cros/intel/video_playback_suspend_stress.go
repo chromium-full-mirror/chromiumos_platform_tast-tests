@@ -13,6 +13,7 @@ import (
 	"github.com/golang/protobuf/ptypes/empty"
 
 	"go.chromium.org/tast-tests/cros/common/servo"
+	"go.chromium.org/tast-tests/cros/common/tbdep"
 	"go.chromium.org/tast-tests/cros/remote/powercontrol"
 	"go.chromium.org/tast-tests/cros/services/cros/typec"
 	"go.chromium.org/tast/core/ctxutil"
@@ -34,6 +35,7 @@ func init() {
 		Attr:         []string{"group:intel-sleep"},
 		Data:         []string{"1080p_60fps_600frames.hevc.mp4", "video.html", "playback.js"},
 		VarDeps:      []string{"servo"},
+		TestBedDeps:  []string{tbdep.ServoStateWorking},
 		Timeout:      8 * time.Minute,
 	})
 }
