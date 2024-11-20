@@ -37,7 +37,7 @@ func init() {
 			"informational",
 			"group:hw_agnostic",
 		},
-		SoftwareDeps: []string{"chrome"},
+		SoftwareDeps: []string{"chrome", "amd64"},
 		Data:         []string{"autofill_address_enabled.html"},
 		Timeout:      3 * time.Minute,
 		Fixture:      fixture.FakeDMS,
