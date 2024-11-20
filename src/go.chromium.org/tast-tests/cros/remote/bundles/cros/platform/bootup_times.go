@@ -58,7 +58,7 @@ func init() {
 			"platform.BootupTimes.cbmemTimeout",
 			"platform.iterations",
 		},
-		TestBedDeps: []string{tbdep.ServoState("WORKING")},
+		TestBedDeps: []string{tbdep.ServoStateWorking},
 		Params: []testing.Param{{
 			Name:      "reboot",
 			Val:       bootupTimes{bootType: reboot},

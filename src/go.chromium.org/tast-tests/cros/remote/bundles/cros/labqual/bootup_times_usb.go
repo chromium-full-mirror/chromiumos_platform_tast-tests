@@ -53,7 +53,7 @@ func init() {
 			Val:     fwCommon.BootModeRecovery,
 			Timeout: 60 * time.Minute,
 		}},
-		TestBedDeps: []string{tbdep.ServoUSBState("NORMAL"), tbdep.ServoState("WORKING")},
+		TestBedDeps: []string{tbdep.ServoUSBState("NORMAL"), tbdep.ServoStateWorking},
 	})
 }
 

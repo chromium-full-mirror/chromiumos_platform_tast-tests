@@ -17,6 +17,7 @@ import (
 	"go.chromium.org/tast-tests/cros/common/hwsec"
 	"go.chromium.org/tast-tests/cros/common/pkcs11"
 	"go.chromium.org/tast-tests/cros/common/servo"
+	"go.chromium.org/tast-tests/cros/common/tbdep"
 	"go.chromium.org/tast-tests/cros/remote/bundles/cros/hwsec/util"
 	hwsecremote "go.chromium.org/tast-tests/cros/remote/hwsec"
 	"go.chromium.org/tast-tests/cros/services/cros/example"
@@ -46,7 +47,8 @@ func init() {
 			"tast.cros.example.ChromeService",
 			"tast.cros.hwsec.AttestationDBusService",
 		},
-		Vars: []string{"servo"},
+		Vars:        []string{"servo"},
+		TestBedDeps: []string{tbdep.ServoStateWorking},
 		Params: []testing.Param{{
 			ExtraAttr:         []string{"group:firmware", "firmware_cr50"},
 			ExtraSoftwareDeps: []string{"no_tpm2_simulator"},

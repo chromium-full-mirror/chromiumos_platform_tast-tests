@@ -30,7 +30,7 @@ func init() {
 		Attr:         []string{"group:wwcb", "group:pasit", "pasit_hid"},
 		SoftwareDeps: []string{"chrome"},
 		Vars:         []string{"servo", "USBID"},
-		TestBedDeps:  []string{tbdep.ServoState("WORKING")},
+		TestBedDeps:  []string{tbdep.ServoStateWorking},
 		ServiceDeps:  []string{"tast.cros.browser.ChromeService", "tast.cros.ui.AutomationService", "tast.cros.ui.ChromeUIService"},
 		Params: []testing.Param{{
 			Name:    "clamshell_mode",

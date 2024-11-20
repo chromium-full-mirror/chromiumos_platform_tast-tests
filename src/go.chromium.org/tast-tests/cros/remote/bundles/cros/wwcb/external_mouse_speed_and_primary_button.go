@@ -36,7 +36,7 @@ func init() {
 		SoftwareDeps: []string{"chrome"},
 		ServiceDeps:  []string{"tast.cros.browser.ChromeService", "tast.cros.apps.AppsService", "tast.cros.ui.AutomationService", "tast.cros.ui.ChromeUIService"},
 		Vars:         []string{"servo", "USBID"},
-		TestBedDeps:  []string{tbdep.ServoState("WORKING")},
+		TestBedDeps:  []string{tbdep.ServoStateWorking},
 		Data:         []string{"detect_mouse_speed.html", "detect_mouse_wheel.html"},
 		Timeout:      5 * time.Minute,
 		Params: []testing.Param{{

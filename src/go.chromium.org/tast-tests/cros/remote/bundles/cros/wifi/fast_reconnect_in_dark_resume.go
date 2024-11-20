@@ -32,7 +32,7 @@ func init() {
 		BugComponent: "b:893827", // ChromeOS > Platform > Connectivity > WiFi
 		Attr:         []string{"group:wificell", "wificell_func", "wificell_suspend", "wificell_unstable"},
 		TestBedDeps: []string{tbdep.Wificell, tbdep.WifiStateNormal, tbdep.BluetoothStateNormal,
-			tbdep.ServoState("WORKING"), tbdep.PeripheralWifiStateWorking},
+			tbdep.ServoStateWorking, tbdep.PeripheralWifiStateWorking},
 		VarDeps:     []string{"servo"},
 		ServiceDeps: []string{wificell.ShillServiceName},
 		// TODO(b/187362093): Extend the platforms when WoWLAN is known to be good on them.

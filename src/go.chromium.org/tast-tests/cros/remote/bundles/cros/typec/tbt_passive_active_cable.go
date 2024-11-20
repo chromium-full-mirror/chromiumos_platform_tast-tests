@@ -16,6 +16,7 @@ import (
 
 	"go.chromium.org/tast-tests/cros/common/cswitch"
 	"go.chromium.org/tast-tests/cros/common/servo"
+	"go.chromium.org/tast-tests/cros/common/tbdep"
 	"go.chromium.org/tast-tests/cros/services/cros/typec"
 	"go.chromium.org/tast/core/ctxutil"
 	"go.chromium.org/tast/core/dut"
@@ -43,6 +44,7 @@ func init() {
 		Attr:         []string{"group:typec"},
 		Data:         []string{"test_config.json", "testcert.p12"},
 		Vars:         []string{"servo", "typec.cSwitchPort", "typec.dutTbtPort", "typec.domainIP"},
+		TestBedDeps:  []string{tbdep.ServoStateWorking},
 		// TODO(b/207569436): Define hardware dependency and get rid of hard-coding the models.
 		HardwareDeps: hwdep.D(hwdep.Model("volteer", "voxel", "redrix", "brya")),
 		Params: []testing.Param{{

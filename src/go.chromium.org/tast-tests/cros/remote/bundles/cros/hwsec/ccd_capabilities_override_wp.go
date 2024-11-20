@@ -10,6 +10,7 @@ import (
 	"time"
 
 	"go.chromium.org/tast-tests/cros/common/servo"
+	"go.chromium.org/tast-tests/cros/common/tbdep"
 	"go.chromium.org/tast-tests/cros/remote/firmware/fixture"
 	"go.chromium.org/tast/core/errors"
 	"go.chromium.org/tast/core/testing"
@@ -38,6 +39,7 @@ func init() {
 		SoftwareDeps: []string{"gsc", "reboot"},
 		Timeout:      2 * time.Minute,
 		Vars:         []string{"servo"},
+		TestBedDeps:  []string{tbdep.ServoStateWorking},
 		Params: []testing.Param{{
 			Name: "cap_default",
 			Val: cCDCapabilitiesOverrideWP{

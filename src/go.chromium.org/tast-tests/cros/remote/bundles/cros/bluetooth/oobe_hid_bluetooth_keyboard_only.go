@@ -38,7 +38,8 @@ func init() {
 		VarDeps:      []string{"servo"},
 		BugComponent: "b:1578688", // ChromeOS > External > Cienet > Manual Test Automation > Test stabilization
 		Attr:         []string{"group:bluetooth"},
-		TestBedDeps:  []string{tbdep.Wificell, tbdep.BluetoothStateNormal, tbdep.WorkingBluetoothPeers(1)},
+		TestBedDeps: []string{tbdep.Wificell, tbdep.BluetoothStateNormal,
+			tbdep.ServoStateWorking, tbdep.WorkingBluetoothPeers(1)},
 		SoftwareDeps: []string{"chrome"},
 		ServiceDeps: []string{
 			"tast.cros.ui.AutomationService",

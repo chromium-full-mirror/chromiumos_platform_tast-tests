@@ -33,7 +33,7 @@ func init() {
 			},
 		},
 		VarDeps:      []string{"servo"},
-		TestBedDeps:  []string{tbdep.ServoState("WORKING")},
+		TestBedDeps:  []string{tbdep.ServoStateWorking},
 		LacrosStatus: testing.LacrosVariantUnneeded,
 	})
 }

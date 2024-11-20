@@ -15,6 +15,7 @@ import (
 
 	"go.chromium.org/tast-tests/cros/common/cswitch"
 	"go.chromium.org/tast-tests/cros/common/servo"
+	"go.chromium.org/tast-tests/cros/common/tbdep"
 	"go.chromium.org/tast-tests/cros/common/usbutils"
 	"go.chromium.org/tast-tests/cros/remote/bundles/cros/typec/typecutils"
 	"go.chromium.org/tast-tests/cros/remote/powercontrol"
@@ -44,6 +45,7 @@ func init() {
 		ServiceDeps:  []string{"tast.cros.typec.Service"},
 		Data:         []string{"test_config.json", "testcert.p12"},
 		VarDeps:      []string{"servo", "typec.dutTbtPort", "typec.cSwitchPort", "typec.domainIP"},
+		TestBedDeps:  []string{tbdep.ServoStateWorking},
 
 		Params: []testing.Param{{
 			Name: "tbt_dock",

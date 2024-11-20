@@ -52,7 +52,7 @@ func init() {
 		Attr:         []string{"group:wwcb", "group:pasit", "pasit_hid"},
 		SoftwareDeps: []string{"chrome"},
 		Vars:         []string{"servo", "USBID"},
-		TestBedDeps:  []string{tbdep.ServoState("WORKING")},
+		TestBedDeps:  []string{tbdep.ServoStateWorking},
 		ServiceDeps: []string{
 			"tast.cros.nearbyservice.NearbyShareService",
 			"tast.cros.browser.ChromeService",

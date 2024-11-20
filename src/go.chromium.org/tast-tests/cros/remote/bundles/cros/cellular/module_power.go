@@ -53,7 +53,7 @@ func init() {
 		Fixture:      "callboxManagedFixture",
 		Timeout:      15 * time.Minute,
 		Vars:         []string{"servo"},
-		TestBedDeps:  []string{tbdep.ServoState("WORKING")},
+		TestBedDeps:  []string{tbdep.ServoStateWorking},
 		Params: []testing.Param{
 			{
 				Name:      "low_power",

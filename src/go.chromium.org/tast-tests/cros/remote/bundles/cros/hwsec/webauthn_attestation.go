@@ -12,6 +12,7 @@ import (
 	"go.chromium.org/tast-tests/cros/common/hwsec"
 	"go.chromium.org/tast-tests/cros/common/pkcs11"
 	"go.chromium.org/tast-tests/cros/common/servo"
+	"go.chromium.org/tast-tests/cros/common/tbdep"
 	"go.chromium.org/tast-tests/cros/remote/bundles/cros/hwsec/util"
 	"go.chromium.org/tast-tests/cros/remote/dutfs"
 	hwsecremote "go.chromium.org/tast-tests/cros/remote/hwsec"
@@ -60,7 +61,8 @@ func init() {
 				isSimulator: true,
 			},
 		}},
-		Vars: []string{"servo"},
+		Vars:        []string{"servo"},
+		TestBedDeps: []string{tbdep.ServoStateWorking},
 	})
 }
 

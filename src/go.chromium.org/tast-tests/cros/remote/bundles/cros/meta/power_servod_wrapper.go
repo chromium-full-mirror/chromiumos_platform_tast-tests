@@ -15,6 +15,7 @@ import (
 	cp "go.chromium.org/tast-tests/cros/common/power"
 	ps "go.chromium.org/tast-tests/cros/common/power/powerpb"
 	"go.chromium.org/tast-tests/cros/common/servo"
+	"go.chromium.org/tast-tests/cros/common/tbdep"
 	rp "go.chromium.org/tast-tests/cros/remote/power"
 
 	"go.chromium.org/tast-tests/cros/remote/bundles/cros/meta/tastrun"
@@ -230,7 +231,8 @@ func init() {
 				ExtraAttr: []string{"group:power", "power_regression_htl"},
 			},
 		},
-		Vars: []string{"servo", "subtest", "meta.PowerServodWrapper.interval"},
+		Vars:        []string{"servo", "subtest", "meta.PowerServodWrapper.interval"},
+		TestBedDeps: []string{tbdep.ServoStateWorking},
 		ServiceDeps: []string{"tast.common.power.powerpb.LocalInfoService",
 			"tast.cros.power.BatteryService"},
 	})
