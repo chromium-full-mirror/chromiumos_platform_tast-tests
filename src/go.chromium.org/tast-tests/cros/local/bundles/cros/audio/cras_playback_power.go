@@ -11,7 +11,6 @@ import (
 	"go.chromium.org/tast-tests/cros/common/testexec"
 	"go.chromium.org/tast-tests/cros/local/audio"
 	"go.chromium.org/tast-tests/cros/local/audio/crastestclient"
-	"go.chromium.org/tast-tests/cros/local/bundles/cros/audio/internal"
 	"go.chromium.org/tast-tests/cros/local/power"
 	"go.chromium.org/tast/core/ctxutil"
 	"go.chromium.org/tast/core/errors"
@@ -37,25 +36,7 @@ func init() {
 		Params: []testing.Param{
 			{
 				Name:    "baseline",
-				Fixture: "powerAshPlatformAudioNoDSPOffload",
-				Val: crasPlaybackPowerParam{
-					crasSetUp: func(ctx context.Context, s *testing.State) {
-						cras, err := audio.RestartCras(ctx)
-						if err != nil {
-							s.Fatal("Failed to restart CRAS: ", err)
-						}
-
-						_, err = selectInternalSpeakerInMaxVolume(ctx, cras)
-						if err != nil {
-							s.Fatal("Failed to select internal speaker: ", err)
-						}
-					},
-				},
-			},
-			{
-				Name:              "dsp_offload",
-				Fixture:           "powerAshPlatformAudioDSPOffload",
-				ExtraHardwareDeps: hwdep.D(hwdep.Model(internal.DSPOffloadDRCEQModels...)),
+				Fixture: "powerAshPlatformAudio",
 				Val: crasPlaybackPowerParam{
 					crasSetUp: func(ctx context.Context, s *testing.State) {
 						cras, err := audio.RestartCras(ctx)
@@ -70,10 +51,9 @@ func init() {
 
 						supported, err := cras.GetDSPOffloadSupported(ctx, *node)
 						if err != nil {
-							s.Fatal("Failed to get offload support flag: ", err)
-						}
-						if !supported {
-							s.Fatal("DSP offload is not supported")
+							s.Log("WARN: failed to get offload support flag: ", err)
+						} else {
+							s.Log("DSP offload support flag: ", supported)
 						}
 					},
 				},

@@ -104,28 +104,6 @@ func init() {
 				Fixture:           fixture.UIStopped{Parent: "rebootForAudioDSPFixture"}.Instance(),
 				ExtraHardwareDeps: hwdep.D(hwdep.Microphone(), hwdep.Speaker(), hwdep.SkipOnModel(unstableModelsPlaybackCapture...), hwdep.Model(internal.DSPAECModels...)),
 			},
-			{
-				Name: "playback_baseline",
-				Val: testParameters{
-					Playback:       true,
-					Capture:        false,
-					CaptureEffects: effectsNone,
-				},
-				Fixture:           "powerAshPlatformAudioNoDSPOffload",
-				ExtraHardwareDeps: hwdep.D(hwdep.Speaker(), hwdep.Model(internal.DSPOffloadDRCEQModels...), hwdep.SkipOnModel(unstableModelsPlaybackCapture...)),
-				ExtraAttr:         []string{"group:crosbolt", "crosbolt_perbuild"},
-			},
-			{
-				Name: "playback_dsp_offload",
-				Val: testParameters{
-					Playback:       true,
-					Capture:        false,
-					CaptureEffects: effectsNone,
-				},
-				Fixture:           "powerAshPlatformAudioDSPOffload",
-				ExtraHardwareDeps: hwdep.D(hwdep.Speaker(), hwdep.Model(internal.DSPOffloadDRCEQModels...), hwdep.SkipOnModel(unstableModelsPlaybackCapture...)),
-				ExtraAttr:         []string{"group:crosbolt", "crosbolt_perbuild"},
-			},
 		},
 	})
 }

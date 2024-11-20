@@ -61,10 +61,9 @@ const (
 	PowerAshNightlight = "powerAshNightlight"
 
 	// For platform audio test scheme
+	PowerAshPlatformAudio                  = "powerAshPlatformAudio"
 	PowerAshPlatformAudioNoiseCancellation = "powerAshPlatformAudioNoiseCancellation"
 	PowerAshPlatformAudioStyleTransfer     = "powerAshPlatformAudioStyleTransfer"
-	PowerAshPlatformAudioNoDSPOffload      = "powerAshPlatformAudioNoDSPOffload"
-	PowerAshPlatformAudioDSPOffload        = "powerAshPlatformAudioDSPOffload"
 
 	// Without Charge Limit
 	PowerAshAdaptiveCharging = "powerAshAdaptiveCharging"
@@ -565,8 +564,8 @@ func init() {
 	})
 
 	testing.AddFixture(&testing.Fixture{
-		Name:         PowerAshPlatformAudioNoDSPOffload,
-		Desc:         "PowerAsh customized for testing platform audio without DSP offload",
+		Name:         PowerAshPlatformAudio,
+		Desc:         "PowerAsh customized for testing platform audio",
 		BugComponent: "b:1361410",
 		Contacts: []string{
 			"chromeos-platform-power@google.com",
@@ -593,50 +592,6 @@ func init() {
 					// Prevent interference of audio preferences.
 					// See go/tast-fakecrasaudioclient.
 					chrome.ExtraArgs("--use-fake-cras-audio-client-for-dbus"),
-					// Feature flags.
-					chrome.DisableFeatures("CrOSLateBootAudioOffloadCrasDSPToSOF"),
-				},
-			},
-		),
-		Parent:          "rebootForAudioDSPFixture",
-		SetUpTimeout:    SetUpTimeout,
-		ResetTimeout:    ResetTimeout,
-		TearDownTimeout: TearDownTimeout,
-		PreTestTimeout:  PreTestTimeout,
-		PostTestTimeout: PostTestTimeout,
-	})
-
-	testing.AddFixture(&testing.Fixture{
-		Name:         PowerAshPlatformAudioDSPOffload,
-		Desc:         "PowerAsh customized for testing platform audio after DSP offload",
-		BugComponent: "b:1361410",
-		Contacts: []string{
-			"chromeos-platform-power@google.com",
-			"mqg@chromium.org",
-			"johnylin@google.com",
-		},
-		Impl: NewPowerUIFixture(
-			PowerTestOptions{
-				// CRAS depends on Chrome for DLC and features service.
-				UI: DoNotChangeUI,
-				// Audio should be handled within the test itself.
-				Audio: DoNotChangeAudio,
-				// Minimize interference.
-				KeyboardBrightness: SetKbBrightnessToZero,
-				Wifi:               DisableWifiInterfaces,
-				Backlight:          SetBacklightToZero,
-				// Disable these features even though we already set brightness to 0,
-				// just in case that nightlight/dark theme brings stress to the CPU.
-				NightLight: DisableNightLight,
-				DarkTheme:  EnableLightTheme,
-			},
-			PowerFixtureOptions{
-				BrowserExtraOpts: []chrome.Option{
-					// Prevent interference of audio preferences.
-					// See go/tast-fakecrasaudioclient.
-					chrome.ExtraArgs("--use-fake-cras-audio-client-for-dbus"),
-					// Feature flags.
-					chrome.EnableFeatures("CrOSLateBootAudioOffloadCrasDSPToSOF"),
 				},
 			},
 		),
