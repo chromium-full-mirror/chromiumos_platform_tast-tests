@@ -19,9 +19,8 @@ import (
 
 func init() {
 	testing.AddTest(&testing.Test{
-		Func:         AdapterDiscovery,
-		LacrosStatus: testing.LacrosVariantUnneeded,
-		Desc:         "Tests that the bluetooth adapter can discover a bluetooth device",
+		Func: AdapterDiscovery,
+		Desc: "Tests that the bluetooth adapter can discover a bluetooth device",
 		Contacts: []string{
 			"chromeos-connectivity-engprod@google.com",
 			"shijinabraham@google.com",

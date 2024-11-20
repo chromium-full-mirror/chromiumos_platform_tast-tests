@@ -36,9 +36,8 @@ import (
 
 func init() {
 	testing.AddTest(&testing.Test{
-		Func:         BaseECUpdate,
-		LacrosStatus: testing.LacrosVariantUnneeded,
-		Desc:         "Check that detachable base notification appears upon firmware update",
+		Func: BaseECUpdate,
+		Desc: "Check that detachable base notification appears upon firmware update",
 		Contacts: []string{
 			"chromeos-faft@google.com",
 			"cienet-firmware@cienet.corp-partner.google.com",

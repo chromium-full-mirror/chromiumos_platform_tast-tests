@@ -37,9 +37,8 @@ func (r *removeProxyTestParam) networkIsShared() bool {
 
 func init() {
 	testing.AddTest(&testing.Test{
-		Func:         RemoveProxySettingsByForgetNetwork,
-		LacrosStatus: testing.LacrosVariantUnneeded,
-		Desc:         "Verify that if a user forgets a network, the proxy settings are removed for that network as well",
+		Func: RemoveProxySettingsByForgetNetwork,
+		Desc: "Verify that if a user forgets a network, the proxy settings are removed for that network as well",
 		Contacts: []string{
 			"cros-device-enablement@google.com",
 			"chromeos-connectivity-engprod@google.com",

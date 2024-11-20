@@ -33,9 +33,8 @@ type integratedU2fParam struct {
 
 func init() {
 	testing.AddTest(&testing.Test{
-		Func:         IntegratedU2F,
-		LacrosStatus: testing.LacrosVariantUnneeded,
-		Desc:         "Verify U2F using the on-board cr50 firmware works",
+		Func: IntegratedU2F,
+		Desc: "Verify U2F using the on-board cr50 firmware works",
 		Contacts: []string{
 			"cros-hwsec@google.com",
 			"yich@google.com",

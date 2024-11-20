@@ -21,7 +21,6 @@ import (
 func init() {
 	testing.AddTest(&testing.Test{
 		Func:         WFCOrientation,
-		LacrosStatus: testing.LacrosVariantUnneeded,
 		Desc:         "Verifying the WFC orientation is correct or not",
 		Data:         []string{"camerabox_align.js", "opencv.js", "pattern_checker.js", "wfc_orientation.html", "wfc_orientation.css", "wfc_orientation.png", "wfc_pattern.png"},
 		Contacts:     []string{"chromeos-camera-eng@google.com", "beckerh@chromium.org", "xinggu@chromium.org"},

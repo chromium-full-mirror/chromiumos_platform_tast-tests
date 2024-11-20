@@ -29,7 +29,6 @@ func init() {
 		Attr:         []string{"group:firmware", "firmware_bringup"},
 		Vars:         []string{"servo"},
 		TestBedDeps:  []string{tbdep.ServoStateWorking},
-		LacrosStatus: testing.LacrosVariantUnneeded,
 	})
 }
 

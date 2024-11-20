@@ -29,9 +29,8 @@ const (
 
 func init() {
 	testing.AddTest(&testing.Test{
-		Func:         DeviceReboot,
-		LacrosStatus: testing.LacrosVariantUnneeded,
-		Desc:         "Checks the behavior of sending device reboot remote command",
+		Func: DeviceReboot,
+		Desc: "Checks the behavior of sending device reboot remote command",
 		Contacts: []string{
 			"chromeos-commercial-remote-management@google.com",
 			"mohamedaomar@google.com", // Test author

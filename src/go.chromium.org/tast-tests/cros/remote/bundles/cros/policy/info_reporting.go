@@ -31,9 +31,8 @@ type infoReportingParameters struct {
 
 func init() {
 	testing.AddTest(&testing.Test{
-		Func:         InfoReporting,
-		LacrosStatus: testing.LacrosVariantUnneeded,
-		Desc:         "GAIA Enroll a device and verify info data on reporting servers",
+		Func: InfoReporting,
+		Desc: "GAIA Enroll a device and verify info data on reporting servers",
 		Contacts: []string{
 			"cros-reporting-alerts+tast@google.com",
 			"albertojuarez@google.com", // Test owner

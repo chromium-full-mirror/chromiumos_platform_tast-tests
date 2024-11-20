@@ -19,10 +19,9 @@ import (
 
 func init() {
 	testing.AddTest(&testing.Test{
-		Func:         TbtSuspend,
-		LacrosStatus: testing.LacrosVariantNeeded,
-		Desc:         "Check that a Thunderbolt (3 or 4) device enumerates before and after suspend",
-		Contacts:     []string{"chromeos-usb-champs@google.com", "bszpila@google.com", "jthies@google.com"},
+		Func:     TbtSuspend,
+		Desc:     "Check that a Thunderbolt (3 or 4) device enumerates before and after suspend",
+		Contacts: []string{"chromeos-usb-champs@google.com", "bszpila@google.com", "jthies@google.com"},
 		// ChromeOS > Platform > Technologies > USB
 		BugComponent: "b:958036",
 		Attr:         []string{"group:typec", "typec_tbt4_bringup", "typec_tbt3_bringup"},

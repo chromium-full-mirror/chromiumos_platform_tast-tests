@@ -27,7 +27,6 @@ import (
 func init() {
 	testing.AddTest(&testing.Test{
 		Func:         UnplugExternalStorageWhileSuspend,
-		LacrosStatus: testing.LacrosVariantUnneeded,
 		Desc:         "Verify that when suspending with an external storage device disconnected, upon device wake-up, it can correctly copy files",
 		Contacts:     []string{"cros-wwcb-automation@google.com", "allion-wwcb@allion.corp-partner.google.com"},
 		BugComponent: "b:1289112", // ChromeOS > External > WWCB > Allion > Automation

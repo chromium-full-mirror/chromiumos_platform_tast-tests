@@ -42,7 +42,6 @@ func init() {
 		Fixture:      fixture.DevMode,
 		Timeout:      3 * time.Hour,
 		HardwareDeps: hwdep.D(hwdep.ChromeEC(), hwdep.X86()),
-		LacrosStatus: testing.LacrosVariantUnneeded,
 		Vars:         []string{"iterations"},
 	})
 }

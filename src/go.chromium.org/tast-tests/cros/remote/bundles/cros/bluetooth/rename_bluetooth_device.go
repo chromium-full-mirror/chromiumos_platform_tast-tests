@@ -21,9 +21,8 @@ import (
 
 func init() {
 	testing.AddTest(&testing.Test{
-		Func:         RenameBluetoothDevice,
-		LacrosStatus: testing.LacrosVariantUnneeded,
-		Desc:         "Verify that the connected/disconnected Bluetooth device can be renamed and the edited name is persisted after re-login",
+		Func: RenameBluetoothDevice,
+		Desc: "Verify that the connected/disconnected Bluetooth device can be renamed and the edited name is persisted after re-login",
 		Contacts: []string{
 			"cros-device-enablement@google.com",
 			"chromeos-connectivity-engprod@google.com",

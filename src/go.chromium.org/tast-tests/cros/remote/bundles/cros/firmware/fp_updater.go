@@ -57,7 +57,6 @@ func init() {
 			"buccaneer_v2.0.26327-becca858dd_20240922.bin",
 			"dartmonkey_v2.0.2887-311310808_20201214.bin",
 			"helipilot_v2.0.24290-9ec5208ff7_20240321.bin"},
-		LacrosStatus: testing.LacrosVariantUnneeded,
 	})
 }
 

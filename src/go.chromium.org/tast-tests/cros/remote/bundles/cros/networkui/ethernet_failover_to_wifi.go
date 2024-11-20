@@ -22,7 +22,6 @@ import (
 func init() {
 	testing.AddTest(&testing.Test{
 		Func:           EthernetFailoverToWifi,
-		LacrosStatus:   testing.LacrosVariantUnneeded,
 		LifeCycleStage: testing.LifeCycleOwnerMonitored,
 		Desc:           "Verify ChromeOS is able to transition from LAN connection to a Wifi connection on OOBE, user and guest session",
 		Contacts: []string{

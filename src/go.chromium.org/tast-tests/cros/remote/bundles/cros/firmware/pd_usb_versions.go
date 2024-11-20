@@ -20,9 +20,8 @@ import (
 
 func init() {
 	testing.AddTest(&testing.Test{
-		Func:         PDUsbVersions,
-		Desc:         "Verify USB-C/PD USB 2.0 and 3.0 support",
-		LacrosStatus: testing.LacrosVariantUnneeded,
+		Func: PDUsbVersions,
+		Desc: "Verify USB-C/PD USB 2.0 and 3.0 support",
 		Contacts: []string{
 			"chromeos-faft@google.com",
 			"jasonyuan@google.com",

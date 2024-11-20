@@ -17,9 +17,8 @@ import (
 
 func init() {
 	testing.AddTest(&testing.Test{
-		Func:         IdleUIPower,
-		LacrosStatus: testing.LacrosVariantUnneeded,
-		Desc:         "Measure Bluetooth idle power consumption with UI open",
+		Func: IdleUIPower,
+		Desc: "Measure Bluetooth idle power consumption with UI open",
 		Contacts: []string{
 			"jiangzp@google.com",
 			"chromeos-bt-team@google.com",

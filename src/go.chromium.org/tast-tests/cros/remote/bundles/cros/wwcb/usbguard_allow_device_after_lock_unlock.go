@@ -24,7 +24,6 @@ import (
 func init() {
 	testing.AddTest(&testing.Test{
 		Func:         USBGuardAllowDeviceAfterLockUnlock,
-		LacrosStatus: testing.LacrosVariantUnneeded,
 		Desc:         "Verify USB device storage partitions are mounted while the DUT is at the lock screen and after unlocking",
 		Contacts:     []string{"cros-wwcb-automation@google.com", "allion-wwcb@allion.corp-partner.google.com"},
 		BugComponent: "b:1289112", // ChromeOS > External > WWCB > Allion > Automation

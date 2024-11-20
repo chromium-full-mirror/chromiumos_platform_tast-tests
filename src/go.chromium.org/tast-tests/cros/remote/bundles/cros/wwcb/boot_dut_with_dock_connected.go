@@ -23,7 +23,6 @@ import (
 func init() {
 	testing.AddTest(&testing.Test{
 		Func:         BootDUTWithDockConnected,
-		LacrosStatus: testing.LacrosVariantUnneeded,
 		Desc:         "In clamshell and tablet modes, verify connection of peripherals after cold-boot DUT with the dock station connected",
 		Contacts:     []string{"cros-wwcb-automation@google.com", "allion-wwcb@allion.corp-partner.google.com"},
 		BugComponent: "b:1289112", // ChromeOS > External > WWCB > Allion > Automation

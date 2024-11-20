@@ -27,9 +27,8 @@ const (
 
 func init() {
 	testing.AddTest(&testing.Test{
-		Func:         HumanMotionRobotStylusLatencyRegression,
-		LacrosStatus: testing.LacrosVariantUnneeded,
-		Desc:         "Run a Stylus Drag Latency HMR Test",
+		Func: HumanMotionRobotStylusLatencyRegression,
+		Desc: "Run a Stylus Drag Latency HMR Test",
 		Contacts: []string{
 			"chromeos-tango@google.com",
 		},

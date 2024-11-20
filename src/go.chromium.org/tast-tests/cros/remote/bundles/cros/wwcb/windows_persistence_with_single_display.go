@@ -31,7 +31,6 @@ const (
 func init() {
 	testing.AddTest(&testing.Test{
 		Func:         WindowsPersistenceWithSingleDisplay,
-		LacrosStatus: testing.LacrosVariantUnneeded,
 		Desc:         "Test windows persistent settings with the single external display",
 		Contacts:     []string{"cros-wwcb-automation@google.com", "allion-wwcb@allion.corp-partner.google.com"},
 		BugComponent: "b:1289112", // ChromeOS > External > WWCB > Allion > Automation

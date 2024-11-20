@@ -40,7 +40,6 @@ func init() {
 		SoftwareDeps: []string{"crossystem", "flashrom"},
 		HardwareDeps: hwdep.D(hwdep.ChromeEC()),
 		Timeout:      60 * time.Minute,
-		LacrosStatus: testing.LacrosVariantUnneeded,
 		Params: []testing.Param{
 			{
 				Val:     "--flashrom_binary=/usr/sbin/flashrom",

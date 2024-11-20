@@ -28,8 +28,7 @@ func init() {
 			// b/183899510: icarus boards reserve half of the flash for saving EC logs, and therefore report the wrong size via ectool
 			"cozmo", "pico", "pico6",
 		)),
-		Fixture:      fixture.NormalMode,
-		LacrosStatus: testing.LacrosVariantUnneeded,
+		Fixture: fixture.NormalMode,
 	})
 }
 

@@ -43,7 +43,6 @@ func init() {
 			// b/350805894: Fizz devices don't have functional CCD.
 			"jax", "kench", "sion", "talon", "teemo", "twitch", "wukong",
 		)),
-		LacrosStatus: testing.LacrosVariantUnneeded,
 	})
 }
 

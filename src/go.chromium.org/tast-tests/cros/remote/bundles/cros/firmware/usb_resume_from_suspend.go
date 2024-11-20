@@ -23,9 +23,8 @@ import (
 
 func init() {
 	testing.AddTest(&testing.Test{
-		Func:         USBResumeFromSuspend,
-		LacrosStatus: testing.LacrosVariantUnneeded,
-		Desc:         "Verify if all usb ports come back from suspend",
+		Func: USBResumeFromSuspend,
+		Desc: "Verify if all usb ports come back from suspend",
 		Contacts: []string{
 			"chromeos-faft@google.com",
 			"cienet-firmware@cienet.corp-partner.google.com",

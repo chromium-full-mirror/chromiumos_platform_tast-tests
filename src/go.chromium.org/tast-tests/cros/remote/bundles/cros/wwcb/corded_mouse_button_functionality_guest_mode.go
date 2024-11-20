@@ -23,7 +23,6 @@ import (
 func init() {
 	testing.AddTest(&testing.Test{
 		Func:         CordedMouseButtonFunctionalityGuestMode,
-		LacrosStatus: testing.LacrosVariantUnneeded,
 		Desc:         "Check the functionality of the mouse buttons after the dut into guest mode",
 		Contacts:     []string{"cros-wwcb-automation@google.com", "allion-wwcb@allion.corp-partner.google.com"},
 		BugComponent: "b:1289112", // ChromeOS > External > WWCB > Allion > Automation

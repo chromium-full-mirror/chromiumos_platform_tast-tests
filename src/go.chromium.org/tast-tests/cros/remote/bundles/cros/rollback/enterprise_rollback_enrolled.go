@@ -33,9 +33,8 @@ const networkID = "rollback-PSK-Wifi"
 
 func init() {
 	testing.AddTest(&testing.Test{
-		Func:         EnterpriseRollbackEnrolled,
-		LacrosStatus: testing.LacrosVariantUnneeded,
-		Desc:         "Check that Enterprise Rollback recovers policy networks after re-enrollment",
+		Func: EnterpriseRollbackEnrolled,
+		Desc: "Check that Enterprise Rollback recovers policy networks after re-enrollment",
 		Contacts: []string{
 			"mpolzer@google.com",
 			"chromeos-commercial-remote-management@google.com",

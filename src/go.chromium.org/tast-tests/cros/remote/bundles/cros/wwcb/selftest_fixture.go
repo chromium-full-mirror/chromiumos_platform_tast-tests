@@ -23,7 +23,6 @@ import (
 func init() {
 	testing.AddTest(&testing.Test{
 		Func:         SelftestFixture,
-		LacrosStatus: testing.LacrosVariantUnneeded,
 		Desc:         "Check all Allion fixture functions and whether external devices are properly connected",
 		Contacts:     []string{"cros-wwcb-automation@google.com", "allion-wwcb@allion.corp-partner.google.com"},
 		BugComponent: "b:1289112", // ChromeOS > External > WWCB > Allion > Automation

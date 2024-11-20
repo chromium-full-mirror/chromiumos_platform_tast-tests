@@ -24,9 +24,8 @@ type fwScreenPressPwrParams struct {
 
 func init() {
 	testing.AddTest(&testing.Test{
-		Func:         FwScreenPressPower,
-		LacrosStatus: testing.LacrosVariantUnneeded,
-		Desc:         "Verify pressing the power button on a firmware screen shuts down the DUT",
+		Func: FwScreenPressPower,
+		Desc: "Verify pressing the power button on a firmware screen shuts down the DUT",
 		Contacts: []string{
 			"chromeos-faft@google.com",
 			"cienet-firmware@cienet.corp-partner.google.com",

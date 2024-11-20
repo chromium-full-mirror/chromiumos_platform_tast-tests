@@ -21,7 +21,6 @@ import (
 
 func init() {
 	testing.AddTest(&testing.Test{
-		LacrosStatus: testing.LacrosVariantUnneeded,
 		Func:         FaceAutoExposure,
 		Desc:         "Verifies face auto exposure",
 		Contacts:     []string{"chromeos-camera-eng@google.com", "beckerh@chromium.org"},

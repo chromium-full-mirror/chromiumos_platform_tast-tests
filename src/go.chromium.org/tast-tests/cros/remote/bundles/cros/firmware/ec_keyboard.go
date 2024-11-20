@@ -44,7 +44,6 @@ func init() {
 		Fixture:      fixture.NormalMode,
 		Timeout:      5 * time.Minute,
 		ServiceDeps:  []string{"tast.cros.firmware.UtilsService"},
-		LacrosStatus: testing.LacrosVariantUnneeded,
 		Params: []testing.Param{{
 			Val:               servoECKeyboard,
 			ExtraHardwareDeps: hwdep.D(hwdep.SkipOnFormFactor(hwdep.Detachable, hwdep.Convertible)),

@@ -36,7 +36,6 @@ func init() {
 		Attr:         []string{"group:firmware", "firmware_ec", "firmware_smoke", "firmware_bringup"},
 		Fixture:      fixture.NormalMode,
 		HardwareDeps: hwdep.D(hwdep.ChromeEC()),
-		LacrosStatus: testing.LacrosVariantUnneeded,
 		Params: []testing.Param{
 			{
 				Name: "x86",

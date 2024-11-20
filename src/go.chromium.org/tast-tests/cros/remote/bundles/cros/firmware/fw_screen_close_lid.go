@@ -24,9 +24,8 @@ type fwScreenCloseLidParam struct {
 
 func init() {
 	testing.AddTest(&testing.Test{
-		Func:         FWScreenCloseLid,
-		LacrosStatus: testing.LacrosVariantUnneeded,
-		Desc:         "Verify that lid close triggers shutdown during firmware screens",
+		Func: FWScreenCloseLid,
+		Desc: "Verify that lid close triggers shutdown during firmware screens",
 		Contacts: []string{
 			"chromeos-faft@google.com",
 			"cienet-firmware@cienet.corp-partner.google.com",

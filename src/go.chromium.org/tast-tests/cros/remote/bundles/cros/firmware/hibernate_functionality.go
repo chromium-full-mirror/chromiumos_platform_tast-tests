@@ -40,7 +40,6 @@ func init() {
 		Attr:         []string{"group:intel-sleep"},
 		HardwareDeps: hwdep.D(hwdep.ChromeEC()),
 		Fixture:      fixture.NormalMode,
-		LacrosStatus: testing.LacrosVariantUnneeded,
 	})
 }
 

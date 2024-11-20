@@ -25,7 +25,6 @@ func init() {
 		BugComponent: "b:1034649",
 		Attr:         []string{"group:mainline", "group:hw_agnostic", "informational"},
 		SoftwareDeps: []string{"chrome"},
-		LacrosStatus: testing.LacrosVariantUnneeded,
 	})
 }
 

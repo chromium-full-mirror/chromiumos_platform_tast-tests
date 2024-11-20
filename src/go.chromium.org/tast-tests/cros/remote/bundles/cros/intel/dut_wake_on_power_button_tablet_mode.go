@@ -27,7 +27,6 @@ import (
 func init() {
 	testing.AddTest(&testing.Test{
 		Func:         DUTWakeOnPowerButtonTabletMode,
-		LacrosStatus: testing.LacrosVariantUnneeded,
 		Desc:         "Verifies waking DUT from S0ix using power button press in tabletmode",
 		BugComponent: "b:157291", // ChromeOS > External > Intel
 		Contacts:     []string{"intel.chrome.automation.team@intel.com", "pathan.jilani@intel.com"},

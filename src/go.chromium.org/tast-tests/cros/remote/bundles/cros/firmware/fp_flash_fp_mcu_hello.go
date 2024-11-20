@@ -36,7 +36,6 @@ func init() {
 		HardwareDeps: hwdep.D(hwdep.Fingerprint()),
 		TestBedDeps:  []string{tbdep.Fingerprint, tbdep.ServoStateWorking},
 		Vars:         []string{"servo"},
-		LacrosStatus: testing.LacrosVariantUnneeded,
 	})
 }
 

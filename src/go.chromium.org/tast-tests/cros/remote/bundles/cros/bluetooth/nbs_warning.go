@@ -23,7 +23,6 @@ import (
 func init() {
 	testing.AddTest(&testing.Test{
 		Func:         NbsWarning,
-		LacrosStatus: testing.LacrosVariantUnneeded,
 		Desc:         "Verifies when an NBS device is connected, a warning is shown in the QS",
 		Contacts:     []string{"chromeos-audio-bugs@google.com", "jrwu@google.com"},
 		BugComponent: "b:776546",

@@ -29,9 +29,8 @@ type userParamInsession struct {
 
 func init() {
 	testing.AddTest(&testing.Test{
-		Func:         DeviceTrustInsession,
-		LacrosStatus: testing.LacrosVariantUnneeded,
-		Desc:         "Checks that Device Trust is working insession with a fake IdP",
+		Func: DeviceTrustInsession,
+		Desc: "Checks that Device Trust is working insession with a fake IdP",
 		Contacts: []string{
 			"cbe-device-trust-eng@google.com",
 			"cros-3pidp@google.com",

@@ -24,7 +24,6 @@ func init() {
 			"dlunev@google.com", // Test author
 		},
 		BugComponent: "b:974567", // ChromeOS > Platform > System > Storage
-		LacrosStatus: testing.LacrosVariantUnneeded,
 		Data:         util.Configs,
 		SoftwareDeps: []string{"crossystem"},
 		Attr:         []string{"group:storage-qual", "storage-qual_pdp_kpi", "storage-qual_pdp_stress"},

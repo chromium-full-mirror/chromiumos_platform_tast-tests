@@ -25,9 +25,8 @@ import (
 
 func init() {
 	testing.AddTest(&testing.Test{
-		Func:         OobeForcedAutoUpdate,
-		LacrosStatus: testing.LacrosVariantUnneeded,
-		Desc:         "Checks that forced auto update is applied during OOBE",
+		Func: OobeForcedAutoUpdate,
+		Desc: "Checks that forced auto update is applied during OOBE",
 		Contacts: []string{
 			"cros-oobe@google.com",
 			"dkuzmin@google.com", // Test owner

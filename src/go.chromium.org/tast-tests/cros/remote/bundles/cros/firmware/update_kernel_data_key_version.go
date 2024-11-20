@@ -44,7 +44,6 @@ func init() {
 		Data:         []string{kernelDataKeyVerMakekeyFile, kernelDataKeyVerCommonFile},
 		Fixture:      fixture.DevModeGBB,
 		Timeout:      30 * time.Minute,
-		LacrosStatus: testing.LacrosVariantUnneeded,
 	})
 }
 

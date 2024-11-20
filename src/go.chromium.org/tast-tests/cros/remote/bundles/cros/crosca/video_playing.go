@@ -17,7 +17,6 @@ import (
 func init() {
 	testing.AddTest(&testing.Test{
 		Func:         VideoPlaying,
-		LacrosStatus: testing.LacrosVariantUnneeded,
 		Desc:         "Run cuj.VideoPlaying python test",
 		Contacts:     []string{"cienet-development@googlegroups.com", "alston.huang@cienet.com"},
 		BugComponent: "b:1485133", // ChromeOS > Platform > baseOS > Performance > Competitive Analysis

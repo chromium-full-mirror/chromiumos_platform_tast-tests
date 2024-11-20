@@ -46,7 +46,6 @@ func init() {
 		Fixture:      fixture.NormalMode,
 		HardwareDeps: hwdep.D(hwdep.ChromeEC()),
 		SoftwareDeps: []string{"chrome"},
-		LacrosStatus: testing.LacrosVariantUnneeded,
 		ServiceDeps:  []string{"tast.cros.firmware.UtilsService"},
 		Timeout:      5 * time.Minute,
 		Params: []testing.Param{

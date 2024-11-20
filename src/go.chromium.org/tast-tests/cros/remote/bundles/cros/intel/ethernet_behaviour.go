@@ -23,7 +23,6 @@ import (
 func init() {
 	testing.AddTest(&testing.Test{
 		Func:         EthernetBehaviour,
-		LacrosStatus: testing.LacrosVariantUnneeded,
 		Desc:         "Reboot DUT and verify Ethernet behaviour",
 		Contacts:     []string{"intel.chrome.automation.team@intel.com", "ambalavanan.m.m@intel.com"},
 		ServiceDeps:  []string{"tast.cros.network.EthernetService"},

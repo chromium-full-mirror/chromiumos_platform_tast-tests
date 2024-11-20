@@ -22,7 +22,6 @@ import (
 func init() {
 	testing.AddTest(&testing.Test{
 		Func:         ConciergeCrashInReboot,
-		LacrosStatus: testing.LacrosVariantUnneeded,
 		Desc:         "Test to check that vm_concierge doesn't crash during reboot",
 		Contacts:     []string{"cros-virt-devices-guests@google.com", "chibar@google.com"},
 		BugComponent: "b:1248538",

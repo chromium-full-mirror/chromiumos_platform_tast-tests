@@ -25,9 +25,8 @@ type btActiveDiscoveryPowerTestCase struct {
 
 func init() {
 	testing.AddTest(&testing.Test{
-		Func:         BTActiveDiscoveryPower,
-		LacrosStatus: testing.LacrosVariantUnneeded,
-		Desc:         "Measure active discovery power consumption",
+		Func: BTActiveDiscoveryPower,
+		Desc: "Measure active discovery power consumption",
 		Contacts: []string{
 			"chromeos-bt-team@google.com",
 			"jiangzp@google.com",

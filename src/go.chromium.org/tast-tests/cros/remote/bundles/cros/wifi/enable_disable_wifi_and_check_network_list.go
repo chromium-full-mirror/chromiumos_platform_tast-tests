@@ -27,7 +27,6 @@ import (
 func init() {
 	testing.AddTest(&testing.Test{
 		Func:           EnableDisableWifiAndCheckNetworkList,
-		LacrosStatus:   testing.LacrosVariantUnneeded,
 		LifeCycleStage: testing.LifeCycleOwnerMonitored,
 		Desc:           "Verify that Disable/Enable option works correctly through the Network drop down menu and also WiFi setting page",
 		Contacts: []string{

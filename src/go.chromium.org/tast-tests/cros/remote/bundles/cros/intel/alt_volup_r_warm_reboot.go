@@ -17,7 +17,6 @@ import (
 func init() {
 	testing.AddTest(&testing.Test{
 		Func:         AltVolupRWarmReboot,
-		LacrosStatus: testing.LacrosVariantUnneeded,
 		Desc:         "Test if 'Alt + Vol Up + R' warm reboots the DUT successfully",
 		Contacts:     []string{"intel.chrome.automation.team@intel.com", "ambalavanan.m.m@intel.com"},
 		BugComponent: "b:157291", // ChromeOS > External > Intel

@@ -31,7 +31,6 @@ func init() {
 		Attr:         []string{"group:mainline", "informational"},
 		Timeout:      5 * time.Minute,
 		SoftwareDeps: []string{"bpf", "reboot", "chrome", "shipping_kernel"},
-		LacrosStatus: testing.LacrosVariantUnneeded,
 		ServiceDeps:  []string{"tast.cros.secagentd.FileEventService"},
 	})
 }

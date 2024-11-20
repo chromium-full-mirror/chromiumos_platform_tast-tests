@@ -24,10 +24,9 @@ import (
 
 func init() {
 	testing.AddTest(&testing.Test{
-		Func:         CameraboxLoLOff,
-		LacrosStatus: testing.LacrosVariantUnneeded,
-		Desc:         "Verify that HPS does not dim the screen quickly when LoL is off",
-		Data:         []string{hpsutil.PersonPresentPageArchiveFilename},
+		Func: CameraboxLoLOff,
+		Desc: "Verify that HPS does not dim the screen quickly when LoL is off",
+		Data: []string{hpsutil.PersonPresentPageArchiveFilename},
 		Contacts: []string{
 			"jmpollock@google.com",
 			"pmarheine@google.com",

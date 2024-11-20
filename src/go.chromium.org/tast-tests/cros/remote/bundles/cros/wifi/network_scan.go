@@ -31,9 +31,8 @@ type networkScanParam struct {
 
 func init() {
 	testing.AddTest(&testing.Test{
-		Func:         NetworkScan,
-		LacrosStatus: testing.LacrosVariantUnneeded,
-		Desc:         "Verify that the WiFi UIs will scan for networks periodically",
+		Func: NetworkScan,
+		Desc: "Verify that the WiFi UIs will scan for networks periodically",
 		Contacts: []string{
 			"cros-device-enablement@google.com",
 			"chromeos-connectivity-engprod@google.com",

@@ -41,9 +41,8 @@ type debugInformation struct {
 
 func init() {
 	testing.AddTest(&testing.Test{
-		Func:         ECWakeOnCharge,
-		Desc:         "Checks that device will charge when EC is in a low-power mode, as a replacement for manual test 1.4.11",
-		LacrosStatus: testing.LacrosVariantUnneeded,
+		Func: ECWakeOnCharge,
+		Desc: "Checks that device will charge when EC is in a low-power mode, as a replacement for manual test 1.4.11",
 		Contacts: []string{
 			"chromeos-faft@google.com",
 			"arthur.chuang@cienet.com",

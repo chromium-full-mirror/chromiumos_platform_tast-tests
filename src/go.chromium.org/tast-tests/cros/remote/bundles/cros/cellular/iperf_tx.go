@@ -19,7 +19,7 @@ import (
 )
 
 type iperfTestCaseConfiguration struct {
-	testType          cbiperf.TestType
+	testType cbiperf.TestType
 }
 
 type iperfTestCase struct {
@@ -29,9 +29,8 @@ type iperfTestCase struct {
 
 func init() {
 	testing.AddTest(&testing.Test{
-		Func:         IperfTx,
-		LacrosStatus: testing.LacrosVariantUnneeded,
-		Desc:         "Conducts cellular performance tests between DUT and callbox using Iperf to compare actual throughput results with expected for a given network configuration",
+		Func: IperfTx,
+		Desc: "Conducts cellular performance tests between DUT and callbox using Iperf to compare actual throughput results with expected for a given network configuration",
 		Contacts: []string{
 			"chromeos-cellular-team@google.com",
 			"srikanthkumar@google.com",

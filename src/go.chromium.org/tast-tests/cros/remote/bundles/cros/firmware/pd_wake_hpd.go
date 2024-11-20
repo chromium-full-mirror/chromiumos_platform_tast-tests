@@ -32,7 +32,6 @@ func init() {
 		Fixture:      fixture.NormalMode,
 		HardwareDeps: hwdep.D(hwdep.ChromeEC(), hwdep.MKBPEvent()),
 		Timeout:      60 * time.Minute,
-		LacrosStatus: testing.LacrosVariantUnneeded,
 		Attr:         []string{"group:firmware", "firmware_pd_unstable"},
 		Params: []testing.Param{{
 			Val: firmware.PDTestParams{

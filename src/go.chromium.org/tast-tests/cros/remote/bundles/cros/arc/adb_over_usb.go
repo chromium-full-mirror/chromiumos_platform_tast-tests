@@ -21,10 +21,9 @@ import (
 
 func init() {
 	testing.AddTest(&testing.Test{
-		Func:         ADBOverUSB,
-		LacrosStatus: testing.LacrosVariantUnneeded,
-		Desc:         "Checks that arc(vm)-adbd job is up and running when adb-over-usb feature available",
-		Contacts:     []string{"arc-core@google.com", "vraheja@google.com"},
+		Func:     ADBOverUSB,
+		Desc:     "Checks that arc(vm)-adbd job is up and running when adb-over-usb feature available",
+		Contacts: []string{"arc-core@google.com", "vraheja@google.com"},
 		// ChromeOS > Software > ARC++ > Core > Integration
 		BugComponent: "b:1131321",
 		HardwareDeps: hwdep.D(

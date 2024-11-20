@@ -43,8 +43,7 @@ func init() {
 			"tast.cros.browser.ChromeService",
 			"tast.cros.power.BatteryService",
 		},
-		Fixture:      fixture.NormalMode,
-		LacrosStatus: testing.LacrosVariantUnneeded,
+		Fixture: fixture.NormalMode,
 		Params: []testing.Param{{
 			Name:    "discharge",
 			Timeout: 70 * time.Minute,

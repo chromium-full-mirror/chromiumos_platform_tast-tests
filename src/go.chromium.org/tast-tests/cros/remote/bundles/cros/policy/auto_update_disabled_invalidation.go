@@ -36,9 +36,8 @@ type autoUpdateDisabledInvalidationTestParam struct {
 
 func init() {
 	testing.AddTest(&testing.Test{
-		Func:         AutoUpdateDisabledInvalidation,
-		LacrosStatus: testing.LacrosVariantUnneeded,
-		Desc:         "Verifies that the update engine invalidates completed pending updates if updates are disabled by policy",
+		Func: AutoUpdateDisabledInvalidation,
+		Desc: "Verifies that the update engine invalidates completed pending updates if updates are disabled by policy",
 		Contacts: []string{
 			"artyomchen@google.com", // Test author
 			"chromeos-commercial-remote-management@google.com",

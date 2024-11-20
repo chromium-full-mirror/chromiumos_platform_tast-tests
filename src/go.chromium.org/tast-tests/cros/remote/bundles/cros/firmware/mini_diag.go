@@ -22,9 +22,8 @@ import (
 
 func init() {
 	testing.AddTest(&testing.Test{
-		Func:         MiniDiag,
-		LacrosStatus: testing.LacrosVariantUnneeded,
-		Desc:         "Verify if DUT can boot to recovery screen and launch MiniDiag",
+		Func: MiniDiag,
+		Desc: "Verify if DUT can boot to recovery screen and launch MiniDiag",
 		Contacts: []string{
 			"chromeos-faft@google.com",
 			"cienet-firmware@cienet.corp-partner.google.com",

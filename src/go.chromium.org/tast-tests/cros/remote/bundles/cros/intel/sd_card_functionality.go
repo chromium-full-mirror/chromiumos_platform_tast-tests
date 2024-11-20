@@ -26,7 +26,6 @@ type sdCardTestParams struct {
 func init() {
 	testing.AddTest(&testing.Test{
 		Func:         SDCardFunctionality,
-		LacrosStatus: testing.LacrosVariantUnneeded,
 		Desc:         "Verifies micro SD card functionality before and after performing, shutdown or reboot",
 		Contacts:     []string{"intel.chrome.automation.team@intel.com", "pathan.jilani@intel.com"},
 		BugComponent: "b:157291", // ChromeOS > External > Intel

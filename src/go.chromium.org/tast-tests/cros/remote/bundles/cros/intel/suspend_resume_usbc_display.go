@@ -27,7 +27,6 @@ import (
 func init() {
 	testing.AddTest(&testing.Test{
 		Func:         SuspendResumeUSBCDisplay,
-		LacrosStatus: testing.LacrosVariantUnneeded,
 		Desc:         "Verifies suspend-resume with USB type-C display functionality check",
 		Contacts:     []string{"intel.chrome.automation.team@intel.com", "pathan.jilani@intel.com"},
 		BugComponent: "b:157291", // ChromeOS > External > Intel

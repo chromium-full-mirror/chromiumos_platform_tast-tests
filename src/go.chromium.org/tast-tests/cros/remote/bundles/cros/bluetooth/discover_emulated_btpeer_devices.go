@@ -19,7 +19,6 @@ import (
 func init() {
 	testing.AddTest(&testing.Test{
 		Func:           DiscoverEmulatedBTPeerDevices,
-		LacrosStatus:   testing.LacrosVariantUnneeded,
 		LifeCycleStage: testing.LifeCycleOwnerMonitored,
 		Desc:           "Tests that btpeers can be set to emulate a type device and that the DUT can discover them as those devices",
 		Contacts: []string{

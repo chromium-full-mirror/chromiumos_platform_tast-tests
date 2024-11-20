@@ -28,9 +28,8 @@ type param struct {
 
 func init() {
 	testing.AddTest(&testing.Test{
-		Func:         DisableHWWP,
-		LacrosStatus: testing.LacrosVariantUnneeded,
-		Desc:         "Can complete Shimless RMA successfully. Disable HWWP with Battery Disconnection",
+		Func: DisableHWWP,
+		Desc: "Can complete Shimless RMA successfully. Disable HWWP with Battery Disconnection",
 		Contacts: []string{
 			"chromeos-shimless-eng@google.com",
 			"chenghan@google.com",

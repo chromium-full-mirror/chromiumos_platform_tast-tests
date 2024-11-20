@@ -20,7 +20,6 @@ func init() {
 	testing.AddTest(&testing.Test{
 		// TODO(b/177494589): Add additional test cases for different FUSE instances.
 		Func:         FreezeFUSE,
-		LacrosStatus: testing.LacrosVariantUnneeded,
 		Desc:         "Verify that freeze on suspend works with FUSE",
 		BugComponent: "b:1361410",
 		Contacts: []string{

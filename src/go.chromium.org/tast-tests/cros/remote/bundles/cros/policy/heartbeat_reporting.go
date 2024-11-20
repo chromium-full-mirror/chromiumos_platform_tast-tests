@@ -32,9 +32,8 @@ type heartbeatTestParams struct {
 
 func init() {
 	testing.AddTest(&testing.Test{
-		Func:         HeartbeatReporting,
-		LacrosStatus: testing.LacrosVariantUnneeded,
-		Desc:         "Verify heartbeat reporting functionality",
+		Func: HeartbeatReporting,
+		Desc: "Verify heartbeat reporting functionality",
 		Contacts: []string{
 			"cros-reporting-alerts+tast@google.com",
 			"albertojuarez@google.com", // Test maintainer
@@ -233,7 +232,7 @@ func HeartbeatReporting(ctx context.Context, s *testing.State) {
 			if params.Autopush {
 				//lint:ignore SA4006 False positive, err is actually checked a few lines below
 				events, err = reportingutil.LookupEvents(ctx, customerID, clientID, APIKey, "HEARTBEAT_EVENTS", testStartTime)
-				} else {
+			} else {
 				//lint:ignore SA4006 False positive, err is actually checked a few lines below
 				events, err = reportingutil.LookupProdEvents(ctx, customerID, clientID, ProdAPIKey, "HEARTBEAT_EVENTS", testStartTime)
 			}

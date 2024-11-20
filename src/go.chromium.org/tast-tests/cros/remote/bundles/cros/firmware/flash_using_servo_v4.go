@@ -29,7 +29,6 @@ type servoV4Flash struct {
 func init() {
 	testing.AddTest(&testing.Test{
 		Func:         FlashUsingServoV4,
-		LacrosStatus: testing.LacrosVariantUnneeded,
 		Desc:         "System should support flashing ec/coreboot using Servo v4",
 		Contacts:     []string{"intel.chrome.automation.team@intel.com", "ambalavanan.m.m@intel.com"},
 		BugComponent: "b:157291", // ChromeOS > External > Intel

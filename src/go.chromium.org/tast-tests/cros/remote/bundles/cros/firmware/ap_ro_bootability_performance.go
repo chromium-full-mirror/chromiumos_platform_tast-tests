@@ -102,7 +102,6 @@ func init() {
 		BugComponent: "b:792402", // ChromeOS > Platform > Enablement > Firmware > FAFT
 		Attr:         []string{"group:firmware", "firmware_trial"},
 		Vars:         []string{"firmware_branch", "ro_versions"},
-		LacrosStatus: testing.LacrosVariantUnneeded,
 		Timeout:      120 * time.Minute, // 2 hrs.
 		SoftwareDeps: []string{"chrome"},
 		Fixture:      fixture.BootModeFixtureWithAPBackup(fixture.NormalMode),

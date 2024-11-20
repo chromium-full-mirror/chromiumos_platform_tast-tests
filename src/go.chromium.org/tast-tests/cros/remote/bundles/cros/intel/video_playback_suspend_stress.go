@@ -26,7 +26,6 @@ import (
 func init() {
 	testing.AddTest(&testing.Test{
 		Func:         VideoPlaybackSuspendStress,
-		LacrosStatus: testing.LacrosVariantUnneeded,
 		Desc:         "Video playback on onboard speaker: suspend-resume with operation for 10 cycles",
 		Contacts:     []string{"intel.chrome.automation.team@intel.com", "ambalavanan.m.m@intel.com"},
 		BugComponent: "b:157291",

@@ -25,7 +25,6 @@ import (
 func init() {
 	testing.AddTest(&testing.Test{
 		Func:         RebootDUTSwitchDockPower,
-		LacrosStatus: testing.LacrosVariantUnneeded,
 		Desc:         "In clamshell and tablet modes, verifies the connection of the peripherals after power off and on the docking station during DUT reboot",
 		Contacts:     []string{"cros-wwcb-automation@google.com", "allion-wwcb@allion.corp-partner.google.com"},
 		BugComponent: "b:1289112", // ChromeOS > External > WWCB > Allion > Automation

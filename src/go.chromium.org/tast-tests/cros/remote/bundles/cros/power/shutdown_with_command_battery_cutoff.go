@@ -25,9 +25,8 @@ import (
 
 func init() {
 	testing.AddTest(&testing.Test{
-		Func:         ShutdownWithCommandBatteryCutoff,
-		Desc:         "Verifies that system comes back after executing shutdown command with battery cutoff",
-		LacrosStatus: testing.LacrosVariantUnneeded,
+		Func: ShutdownWithCommandBatteryCutoff,
+		Desc: "Verifies that system comes back after executing shutdown command with battery cutoff",
 		Contacts: []string{
 			"chromeos-faft@google.com",
 			"timvp@google.com",

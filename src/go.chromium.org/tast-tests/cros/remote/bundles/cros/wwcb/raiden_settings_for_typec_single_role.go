@@ -27,7 +27,6 @@ import (
 func init() {
 	testing.AddTest(&testing.Test{
 		Func:         RaidenSettingsForTypecSingleRole,
-		LacrosStatus: testing.LacrosVariantUnneeded,
 		Desc:         "Verify the correctness of switching power sources behavior",
 		Contacts:     []string{"cros-wwcb-automation@google.com", "allion-wwcb@allion.corp-partner.google.com"},
 		BugComponent: "b:1289112", // ChromeOS > External > WWCB > Allion > Automation

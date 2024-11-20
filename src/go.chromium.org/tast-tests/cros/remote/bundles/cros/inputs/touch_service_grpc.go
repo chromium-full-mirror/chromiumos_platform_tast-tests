@@ -21,7 +21,6 @@ import (
 func init() {
 	testing.AddTest(&testing.Test{
 		Func:         TouchServiceGRPC,
-		LacrosStatus: testing.LacrosVariantUnneeded,
 		Desc:         "Check basic functionality of TouchService",
 		Contacts:     []string{"chromeos-sw-engprod@google.com", "jonfan@google.com"},
 		BugComponent: "b:1034649",

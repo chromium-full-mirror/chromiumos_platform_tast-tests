@@ -24,7 +24,6 @@ import (
 func init() {
 	testing.AddTest(&testing.Test{
 		Func:         EhideCommandSupport,
-		LacrosStatus: testing.LacrosVariantUnneeded,
 		Desc:         "Test rsync, scp, and sftp commands when ehide is enabled",
 		Timeout:      1 * time.Minute,
 		Contacts:     []string{"cros-networking@google.com", "chenzikai@google.com"},

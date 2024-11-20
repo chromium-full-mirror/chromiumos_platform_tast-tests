@@ -26,9 +26,8 @@ import (
 
 func init() {
 	testing.AddTest(&testing.Test{
-		Func:         BatteryCharging,
-		LacrosStatus: testing.LacrosVariantUnneeded,
-		Desc:         "Verify battery information when charger state is changed during suspend",
+		Func: BatteryCharging,
+		Desc: "Verify battery information when charger state is changed during suspend",
 		Contacts: []string{
 			"chromeos-faft@google.com",
 			"arthur.chuang@cienet.com",

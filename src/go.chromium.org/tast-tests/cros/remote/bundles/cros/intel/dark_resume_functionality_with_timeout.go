@@ -29,7 +29,6 @@ import (
 func init() {
 	testing.AddTest(&testing.Test{
 		Func:         DarkResumeFunctionalityWithTimeout,
-		LacrosStatus: testing.LacrosVariantUnneeded,
 		Desc:         "Verifies dark resume feature functionality with wakeup-timeout parameter",
 		Contacts:     []string{"intel.chrome.automation.team@intel.com", "ambalavanan.m.m@intel.com"},
 		BugComponent: "b:157291",

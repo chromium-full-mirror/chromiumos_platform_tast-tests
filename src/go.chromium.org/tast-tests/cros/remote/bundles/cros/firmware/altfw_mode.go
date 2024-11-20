@@ -33,7 +33,7 @@ const (
 
 func init() {
 	testing.AddTest(&testing.Test{
-		Func: AltfwMode, LacrosStatus: testing.LacrosVariantUnneeded,
+		Func: AltfwMode,
 		Desc: "Test DUT can get into U-Boot using altfw mode",
 		Contacts: []string{
 			"chromeos-faft@google.com", // Owning team list

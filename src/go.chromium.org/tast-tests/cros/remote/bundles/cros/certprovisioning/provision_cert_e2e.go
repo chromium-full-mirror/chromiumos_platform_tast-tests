@@ -45,9 +45,8 @@ const (
 
 func init() {
 	testing.AddTest(&testing.Test{
-		Func:         ProvisionCertE2E,
-		LacrosStatus: testing.LacrosVariantUnneeded,
-		Desc:         "Provision a client certificate with real DMServer",
+		Func: ProvisionCertE2E,
+		Desc: "Provision a client certificate with real DMServer",
 		Contacts: []string{
 			"chromeos-commercial-networking@google.com", // Team
 			"gschwarz@google.com",

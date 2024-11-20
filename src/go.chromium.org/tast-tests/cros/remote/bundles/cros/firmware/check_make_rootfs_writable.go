@@ -35,7 +35,6 @@ func init() {
 		ServiceDeps:  []string{"tast.cros.platform.UpstartService", dutfs.ServiceName},
 		Vars:         []string{"servo"},
 		TestBedDeps:  []string{tbdep.ServoStateWorking},
-		LacrosStatus: testing.LacrosVariantUnneeded,
 	})
 }
 

@@ -27,7 +27,6 @@ import (
 func init() {
 	testing.AddTest(&testing.Test{
 		Func:         UsbEthernetBehaviourColdReboot,
-		LacrosStatus: testing.LacrosVariantUnneeded,
 		Desc:         "USB type-C/type-A to Ethernet adapter behaves properly when device cold reboots",
 		Contacts:     []string{"intel.chrome.automation.team@intel.com", "ambalavanan.m.m@intel.com"},
 		BugComponent: "b:157291", // ChromeOS > External > Intel

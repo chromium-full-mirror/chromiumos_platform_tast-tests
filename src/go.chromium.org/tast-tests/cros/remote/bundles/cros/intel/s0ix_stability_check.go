@@ -34,7 +34,6 @@ type s0ixCheckTestParams struct {
 func init() {
 	testing.AddTest(&testing.Test{
 		Func:         S0ixStabilityCheck,
-		LacrosStatus: testing.LacrosVariantUnneeded,
 		Desc:         "Verifies S0ix stability with suspend-resume",
 		BugComponent: "b:157291", // ChromeOS > External > Intel
 		Contacts:     []string{"intel.chrome.automation.team@intel.com", "pathan.jilani@intel.com"},

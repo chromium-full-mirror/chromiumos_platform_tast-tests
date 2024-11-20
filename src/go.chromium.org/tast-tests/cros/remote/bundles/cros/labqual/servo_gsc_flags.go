@@ -25,7 +25,6 @@ func init() {
 		Attr:         []string{"group:labqual_informational", "group:labqual_stable"},
 		SoftwareDeps: []string{"gsc"},
 		Fixture:      fixture.NormalMode,
-		LacrosStatus: testing.LacrosVariantUnneeded,
 	})
 }
 

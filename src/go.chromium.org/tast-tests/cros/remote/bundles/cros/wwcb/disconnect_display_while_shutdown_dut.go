@@ -31,7 +31,6 @@ import (
 func init() {
 	testing.AddTest(&testing.Test{
 		Func:         DisconnectDisplayWhileShutdownDUT,
-		LacrosStatus: testing.LacrosVariantUnneeded,
 		Desc:         "Disconnect external display while shutdown DUT",
 		Contacts:     []string{"cros-wwcb-automation@google.com", "allion-wwcb@allion.corp-partner.google.com"},
 		BugComponent: "b:1289112", // ChromeOS > External > WWCB > Allion > Automation

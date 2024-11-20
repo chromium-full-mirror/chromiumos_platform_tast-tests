@@ -26,7 +26,6 @@ func init() {
 		Contacts:     []string{"intel.chrome.automation.team@intel.com", "ambalavanan.m.m@intel.com"},
 		BugComponent: "b:157291", // ChromeOS > External > Intel
 		SoftwareDeps: []string{"chrome"},
-		LacrosStatus: testing.LacrosVariantUnneeded,
 		ServiceDeps:  []string{"tast.cros.security.BootLockboxService"},
 		Fixture:      fixture.NormalMode,
 		Params: []testing.Param{

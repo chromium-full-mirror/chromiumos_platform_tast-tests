@@ -58,7 +58,6 @@ func init() {
 		SoftwareDeps: []string{"crossystem", "flashrom", "chrome"},
 		ServiceDeps:  []string{"tast.cros.firmware.UtilsService"},
 		Vars:         []string{"firmware.skipFlashUSB"},
-		LacrosStatus: testing.LacrosVariantUnneeded,
 		Params: []testing.Param{
 			// Test eventlog upon normal->normal reboot.
 			{

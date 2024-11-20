@@ -27,9 +27,8 @@ type testResources struct {
 
 func init() {
 	testing.AddTest(&testing.Test{
-		Func:         GAIANoLicenseEnrollment,
-		LacrosStatus: testing.LacrosVariantUnneeded,
-		Desc:         "Try to GAIA Enroll a device to a domain with no licenses; confirm error happens",
+		Func: GAIANoLicenseEnrollment,
+		Desc: "Try to GAIA Enroll a device to a domain with no licenses; confirm error happens",
 		Contacts: []string{
 			"chromeos-commercial-remote-management@google.com",
 			"vsavu@google.com",

@@ -27,9 +27,8 @@ type testDetails struct {
 
 func init() {
 	testing.AddTest(&testing.Test{
-		Func:         GAIAFlexorgsEnrollment,
-		LacrosStatus: testing.LacrosVariantUnneeded,
-		Desc:         "GAIA Enroll a device to FlexOrgs domain without checking policies",
+		Func: GAIAFlexorgsEnrollment,
+		Desc: "GAIA Enroll a device to FlexOrgs domain without checking policies",
 		Contacts: []string{
 			"chromeos-commercial-remote-management@google.com",
 			"vsavu@google.com",

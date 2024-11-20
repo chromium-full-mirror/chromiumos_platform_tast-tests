@@ -44,10 +44,9 @@ func init() {
 		SoftwareDeps: []string{"crossystem", "flashrom"},
 		HardwareDeps: hwdep.D(hwdep.ChromeEC()),
 		// 10 minutes for the test, 21 minutes for cleanup.
-		Timeout:      31 * time.Minute,
-		Vars:         []string{"servo"},
-		TestBedDeps:  []string{tbdep.ServoStateWorking},
-		LacrosStatus: testing.LacrosVariantUnneeded,
+		Timeout:     31 * time.Minute,
+		Vars:        []string{"servo"},
+		TestBedDeps: []string{tbdep.ServoStateWorking},
 	})
 }
 

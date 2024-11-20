@@ -34,9 +34,8 @@ const (
 
 func init() {
 	testing.AddTest(&testing.Test{
-		Func:         GAIAKioskEnrollment,
-		LacrosStatus: testing.LacrosVariantUnneeded,
-		Desc:         "GAIA Enroll a kiosk device and make sure kiosk app started",
+		Func: GAIAKioskEnrollment,
+		Desc: "GAIA Enroll a kiosk device and make sure kiosk app started",
 		Contacts: []string{
 			"chromeos-kiosk-eng+TAST@google.com",
 			"edmanp@google.com",

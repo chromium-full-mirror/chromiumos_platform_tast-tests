@@ -126,9 +126,8 @@ var tabletModeNotSupported = []string{
 
 func init() {
 	testing.AddTest(&testing.Test{
-		Func:         ScreenWakeTabletMode,
-		LacrosStatus: testing.LacrosVariantUnneeded,
-		Desc:         "Check that tablet mode allows waking screen from additional triggers",
+		Func: ScreenWakeTabletMode,
+		Desc: "Check that tablet mode allows waking screen from additional triggers",
 		Contacts: []string{
 			"chromeos-faft@google.com",
 			"arthur.chuang@cienet.com",

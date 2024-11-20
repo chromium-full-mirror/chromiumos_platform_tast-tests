@@ -19,9 +19,8 @@ type intraRatTestCase struct {
 
 func init() {
 	testing.AddTest(&testing.Test{
-		Func:         HandoverIntraRat,
-		LacrosStatus: testing.LacrosVariantUnneeded,
-		Desc:         "Verifies that the DUT is able to perform handovers within a RAT",
+		Func: HandoverIntraRat,
+		Desc: "Verifies that the DUT is able to perform handovers within a RAT",
 		Contacts: []string{
 			"chromeos-cellular-team@google.com",
 			"jstanko@google.com",

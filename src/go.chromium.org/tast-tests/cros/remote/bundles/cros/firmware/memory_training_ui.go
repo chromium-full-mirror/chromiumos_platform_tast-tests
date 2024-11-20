@@ -19,9 +19,8 @@ import (
 
 func init() {
 	testing.AddTest(&testing.Test{
-		Func:         MemoryTrainingUI,
-		Desc:         "Verify user is notified during memory training",
-		LacrosStatus: testing.LacrosVariantUnneeded,
+		Func: MemoryTrainingUI,
+		Desc: "Verify user is notified during memory training",
 		Contacts: []string{
 			"chromeos-faft@google.com",
 			"jbettis@chromium.org",

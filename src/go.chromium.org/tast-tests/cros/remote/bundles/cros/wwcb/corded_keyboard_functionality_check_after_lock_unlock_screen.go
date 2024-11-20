@@ -45,7 +45,6 @@ var launcherButton = ui.Node().Name("Launcher").Role(ui.Role_ROLE_BUTTON).HasCla
 func init() {
 	testing.AddTest(&testing.Test{
 		Func:         CordedKeyboardFunctionalityCheckAfterLockUnlockScreen,
-		LacrosStatus: testing.LacrosVariantUnneeded,
 		Desc:         "Check the external keyboard functionality after lock/unlock the DUT",
 		Contacts:     []string{"cros-wwcb-automation@google.com", "allion-wwcb@allion.corp-partner.google.com"},
 		BugComponent: "b:1289112", // ChromeOS > External > WWCB > Allion > Automation

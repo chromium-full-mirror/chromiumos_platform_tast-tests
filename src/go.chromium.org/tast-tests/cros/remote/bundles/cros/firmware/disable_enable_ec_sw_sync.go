@@ -45,7 +45,6 @@ func init() {
 		Attr:         []string{"group:intel-flashing"},
 		Fixture:      fixture.NormalMode,
 		Timeout:      10 * time.Minute,
-		LacrosStatus: testing.LacrosVariantUnneeded,
 	})
 }
 

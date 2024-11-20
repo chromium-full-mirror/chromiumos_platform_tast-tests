@@ -21,7 +21,6 @@ import (
 func init() {
 	testing.AddTest(&testing.Test{
 		Func:           CrosToCrosBackgroundScanningPreSetup,
-		LacrosStatus:   testing.LacrosVariantUnneeded,
 		LifeCycleStage: testing.LifeCycleOwnerMonitored,
 		Desc:           "Checks that Nearby Device is trying to share notification shows up, clicking the notification initiates onboarding flow",
 		Contacts: []string{

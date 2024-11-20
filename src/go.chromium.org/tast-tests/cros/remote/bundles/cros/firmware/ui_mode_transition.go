@@ -18,9 +18,8 @@ import (
 
 func init() {
 	testing.AddTest(&testing.Test{
-		Func:         UIModeTransition,
-		LacrosStatus: testing.LacrosVariantUnneeded,
-		Desc:         "Test mode transition via menu navigation instead of keyboard shortcuts",
+		Func: UIModeTransition,
+		Desc: "Test mode transition via menu navigation instead of keyboard shortcuts",
 		Contacts: []string{
 			"chromeos-faft@google.com",
 			"cienet-firmware@cienet.corp-partner.google.com",

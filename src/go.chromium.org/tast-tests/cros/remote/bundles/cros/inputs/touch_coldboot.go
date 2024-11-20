@@ -23,7 +23,6 @@ import (
 func init() {
 	testing.AddTest(&testing.Test{
 		Func:         TouchColdboot,
-		LacrosStatus: testing.LacrosVariantUnneeded,
 		Desc:         "Touchscreen: Cold boot (S0-S5) with operation for 10 cycles",
 		Contacts:     []string{"intel.chrome.automation.team@intel.com", "ambalavanan.m.m@intel.com"},
 		SoftwareDeps: []string{"chrome"},

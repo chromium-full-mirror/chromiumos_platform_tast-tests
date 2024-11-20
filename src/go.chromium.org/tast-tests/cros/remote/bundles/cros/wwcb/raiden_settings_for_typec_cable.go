@@ -25,7 +25,6 @@ import (
 func init() {
 	testing.AddTest(&testing.Test{
 		Func:         RaidenSettingsForTypecCable,
-		LacrosStatus: testing.LacrosVariantUnneeded,
 		Desc:         "Verify that the power source does not display a list when using a sink device",
 		Contacts:     []string{"cros-wwcb-automation@google.com", "allion-wwcb@allion.corp-partner.google.com"},
 		BugComponent: "b:1289112", // ChromeOS > External > WWCB > Allion > Automation

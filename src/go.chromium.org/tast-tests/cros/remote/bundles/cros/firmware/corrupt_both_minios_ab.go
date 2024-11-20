@@ -22,9 +22,8 @@ import (
 
 func init() {
 	testing.AddTest(&testing.Test{
-		Func:         CorruptBothMiniOSAB,
-		LacrosStatus: testing.LacrosVariantUnneeded,
-		Desc:         "Verify that DUT does not boot from corrupted MINIOS-A and MINIOS-B",
+		Func: CorruptBothMiniOSAB,
+		Desc: "Verify that DUT does not boot from corrupted MINIOS-A and MINIOS-B",
 		Contacts: []string{
 			"chromeos-faft@google.com",
 			"cienet-firmware@cienet.corp-partner.google.com",

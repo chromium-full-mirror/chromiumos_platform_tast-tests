@@ -26,9 +26,8 @@ const gaiaBytebotEnrollmentTimeout = 10 * time.Minute
 
 func init() {
 	testing.AddTest(&testing.Test{
-		Func:         GAIABytebotEnrollment,
-		LacrosStatus: testing.LacrosVariantUnneeded,
-		Desc:         "GAIA Enroll a device to a Bytebot domain and check PluginVmUserId policy",
+		Func: GAIABytebotEnrollment,
+		Desc: "GAIA Enroll a device to a Bytebot domain and check PluginVmUserId policy",
 		Contacts: []string{
 			"chromeos-commercial-remote-management@google.com",
 			"vsavu@google.com",

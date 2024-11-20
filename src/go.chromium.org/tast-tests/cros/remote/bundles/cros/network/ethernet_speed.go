@@ -31,7 +31,6 @@ type ethernet struct {
 func init() {
 	testing.AddTest(&testing.Test{
 		Func:         EthernetSpeed,
-		LacrosStatus: testing.LacrosVariantUnneeded,
 		Desc:         "Ethernet LAN Speed Test",
 		SoftwareDeps: []string{"chrome"},
 		Timeout:      3 * time.Minute,

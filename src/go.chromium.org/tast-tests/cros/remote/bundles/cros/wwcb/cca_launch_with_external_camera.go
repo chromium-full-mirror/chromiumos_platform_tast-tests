@@ -25,7 +25,6 @@ import (
 func init() {
 	testing.AddTest(&testing.Test{
 		Func:         CCALaunchWithExternalCamera,
-		LacrosStatus: testing.LacrosVariantUnneeded,
 		Desc:         "Launch cca app with the external camera connected and check the preview of app is from the front camera",
 		Contacts:     []string{"cros-wwcb-automation@google.com", "allion-wwcb@allion.corp-partner.google.com"},
 		BugComponent: "b:1289112", // ChromeOS > External > WWCB > Allion > Automation

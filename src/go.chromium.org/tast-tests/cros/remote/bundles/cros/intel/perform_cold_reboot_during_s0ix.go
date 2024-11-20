@@ -22,7 +22,6 @@ import (
 func init() {
 	testing.AddTest(&testing.Test{
 		Func:         PerformColdRebootDuringS0ix,
-		LacrosStatus: testing.LacrosVariantUnneeded,
 		Desc:         "Verifies cold reboot functionality during sleep",
 		Contacts:     []string{"intel.chrome.automation.team@intel.com", "ambalavanan.m.m@intel.com"},
 		BugComponent: "b:157291",

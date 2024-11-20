@@ -36,9 +36,8 @@ type tabletModeTestParams struct {
 
 func init() {
 	testing.AddTest(&testing.Test{
-		Func:         ECTabletMode,
-		LacrosStatus: testing.LacrosVariantUnneeded,
-		Desc:         "Checks that power button actions behave as expected in tablet mode, replacing case 1.4.9",
+		Func: ECTabletMode,
+		Desc: "Checks that power button actions behave as expected in tablet mode, replacing case 1.4.9",
 		Contacts: []string{
 			"chromeos-faft@google.com",
 			"arthur.chuang@cienet.com",

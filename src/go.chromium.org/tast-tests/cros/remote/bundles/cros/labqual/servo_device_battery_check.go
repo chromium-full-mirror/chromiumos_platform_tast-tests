@@ -20,9 +20,8 @@ import (
 
 func init() {
 	testing.AddTest(&testing.Test{
-		Func:         ServoDeviceBatteryCheck,
-		LacrosStatus: testing.LacrosVariantUnneeded,
-		Desc:         "Check battery's last full charge and that battery is charging or atleast 70%",
+		Func: ServoDeviceBatteryCheck,
+		Desc: "Check battery's last full charge and that battery is charging or atleast 70%",
 		Contacts: []string{
 			"peep-fleet-infra-sw@google.com",
 		},

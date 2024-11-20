@@ -32,7 +32,6 @@ func init() {
 		Attr:         []string{"group:firmware", "firmware_bios", "firmware_level4"},
 		Timeout:      8 * time.Minute,
 		HardwareDeps: hwdep.D(hwdep.ChromeEC(), hwdep.FirmwareUIType(hwdep.MenuUI, hwdep.LegacyMenuUI)),
-		LacrosStatus: testing.LacrosVariantUnneeded,
 		Params: []testing.Param{{
 			Name:    "dev",
 			Fixture: fixture.DevMode,

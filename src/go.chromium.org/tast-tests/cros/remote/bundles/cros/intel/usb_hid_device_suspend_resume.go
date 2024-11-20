@@ -38,7 +38,6 @@ type usbHIDTestParam struct {
 func init() {
 	testing.AddTest(&testing.Test{
 		Func:         USBHIDDeviceSuspendResume,
-		LacrosStatus: testing.LacrosVariantUnneeded,
 		Desc:         "Verifies USB HID devices functionality with suspend-resume",
 		BugComponent: "b:157291", // ChromeOS > External > Intel
 		Contacts:     []string{"intel.chrome.automation.team@intel.com", "ambalavanan.m.m@intel.com"},

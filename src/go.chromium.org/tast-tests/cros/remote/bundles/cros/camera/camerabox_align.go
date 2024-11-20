@@ -21,7 +21,6 @@ import (
 func init() {
 	testing.AddTest(&testing.Test{
 		Func:         CameraboxAlign,
-		LacrosStatus: testing.LacrosVariantUnneeded,
 		Desc:         "Verifying alignment of chart tablet screen and target facing camera FOV in camerabox setup",
 		Data:         []string{"camerabox_align.svg", "camerabox_align.html", "camerabox_align.css", "camerabox_align.js", "camerabox_align.png", "pattern_checker.js", "opencv.js"},
 		Contacts:     []string{"chromeos-camera-eng@google.com", "beckerh@chromium.org", "xinggu@chromium.org"},

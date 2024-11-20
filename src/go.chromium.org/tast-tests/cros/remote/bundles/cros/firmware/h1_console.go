@@ -26,7 +26,6 @@ func init() {
 		Vars:         []string{"servo"},
 		TestBedDeps:  []string{tbdep.ServoStateWorking},
 		HardwareDeps: hwdep.D(hwdep.GSCUART()),
-		LacrosStatus: testing.LacrosVariantUnneeded,
 	})
 }
 

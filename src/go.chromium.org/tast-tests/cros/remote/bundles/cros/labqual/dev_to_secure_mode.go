@@ -32,9 +32,8 @@ func init() {
 				Fixture: fixture.DevMode,
 			},
 		},
-		VarDeps:      []string{"servo"},
-		TestBedDeps:  []string{tbdep.ServoStateWorking},
-		LacrosStatus: testing.LacrosVariantUnneeded,
+		VarDeps:     []string{"servo"},
+		TestBedDeps: []string{tbdep.ServoStateWorking},
 	})
 }
 

@@ -25,7 +25,6 @@ import (
 func init() {
 	testing.AddTest(&testing.Test{
 		Func:         PowerOffInternalDisplay,
-		LacrosStatus: testing.LacrosVariantUnneeded,
 		Desc:         "Set display power to simulate that close DUT lid, then verify display resolution and windows work properly on the external display",
 		Contacts:     []string{"cros-wwcb-automation@google.com", "allion-wwcb@allion.corp-partner.google.com"},
 		BugComponent: "b:1289112", // ChromeOS > External > WWCB > Allion > Automation

@@ -22,9 +22,8 @@ import (
 
 func init() {
 	testing.AddTest(&testing.Test{
-		Func:         DeviceMinimumVersion,
-		LacrosStatus: testing.LacrosVariantUnneeded,
-		Desc:         "Behavior of DeviceMinimumVersion policy",
+		Func: DeviceMinimumVersion,
+		Desc: "Behavior of DeviceMinimumVersion policy",
 		Contacts: []string{
 			"chromeos-commercial-remote-management@google.com",
 		},

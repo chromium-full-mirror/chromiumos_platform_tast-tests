@@ -26,7 +26,6 @@ import (
 func init() {
 	testing.AddTest(&testing.Test{
 		Func:           WarningDialogFromQuickSettings,
-		LacrosStatus:   testing.LacrosVariantUnneeded,
 		LifeCycleStage: testing.LifeCycleInDevelopment,
 		Desc:           "Checks that a bluetooth mouse can be used to complete OOBE",
 		Contacts: []string{

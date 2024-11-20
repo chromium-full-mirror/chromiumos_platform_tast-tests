@@ -22,7 +22,6 @@ const maxTypeCPorts = 8
 func init() {
 	testing.AddTest(&testing.Test{
 		Func:         ModeReboot,
-		LacrosStatus: testing.LacrosVariantNeeded,
 		Desc:         "Demonstrates USB Type C mode selection after reboot",
 		Contacts:     []string{"chromeos-usb-champs@google.com", "bszpila@google.com", "jthies@google.com"},
 		BugComponent: "b:958036",

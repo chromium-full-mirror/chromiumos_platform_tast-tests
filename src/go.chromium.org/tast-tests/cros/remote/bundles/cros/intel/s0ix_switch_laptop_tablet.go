@@ -22,7 +22,6 @@ import (
 func init() {
 	testing.AddTest(&testing.Test{
 		Func:         S0ixSwitchLaptopTablet,
-		LacrosStatus: testing.LacrosVariantUnneeded,
 		Desc:         "During S0ix switch between laptop and tablet mode to resume DUT",
 		Contacts:     []string{"intel.chrome.automation.team@intel.com", "ambalavanan.m.m@intel.com"},
 		BugComponent: "b:157291",

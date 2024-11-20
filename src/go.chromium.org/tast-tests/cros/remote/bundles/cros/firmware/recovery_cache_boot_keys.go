@@ -40,7 +40,6 @@ func init() {
 		// seems to prioritize the use of APOB CACHE. Skip the models of board
 		// skyrim in this test.
 		HardwareDeps: hwdep.D(hwdep.ChromeEC(), hwdep.HasRecoveryMRCCacheSection(), hwdep.SkipOnModel("markarth", "frostflow", "crystaldrift", "skyrim15w", "whiterun")),
-		LacrosStatus: testing.LacrosVariantUnneeded,
 		Params: []testing.Param{
 			{
 				Name:      "normal",

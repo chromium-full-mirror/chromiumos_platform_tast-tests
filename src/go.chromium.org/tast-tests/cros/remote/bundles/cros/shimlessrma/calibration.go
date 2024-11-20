@@ -35,9 +35,8 @@ var sensorGyro = sensor{
 
 func init() {
 	testing.AddTest(&testing.Test{
-		Func:         Calibration,
-		LacrosStatus: testing.LacrosVariantUnneeded,
-		Desc:         "Test accelerometer/gyro calibration in Shimless RMA",
+		Func: Calibration,
+		Desc: "Test accelerometer/gyro calibration in Shimless RMA",
 		Contacts: []string{
 			"chromeos-shimless-eng@google.com",
 			"chenghan@google.com",

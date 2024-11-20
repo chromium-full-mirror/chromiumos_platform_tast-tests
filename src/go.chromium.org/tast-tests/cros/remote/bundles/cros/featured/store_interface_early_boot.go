@@ -24,9 +24,8 @@ const (
 
 func init() {
 	testing.AddTest(&testing.Test{
-		Func:         StoreInterfaceEarlyBoot,
-		LacrosStatus: testing.LacrosVariantUnneeded,
-		Desc:         "Verify data store exists after featured restarts and boot attempts field incremented",
+		Func: StoreInterfaceEarlyBoot,
+		Desc: "Verify data store exists after featured restarts and boot attempts field incremented",
 		Contacts: []string{
 			"chromeos-data-eng@google.com",
 			"joelaf@google.com",

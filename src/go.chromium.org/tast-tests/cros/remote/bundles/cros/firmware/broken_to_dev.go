@@ -22,9 +22,8 @@ import (
 
 func init() {
 	testing.AddTest(&testing.Test{
-		Func:         BrokenToDev,
-		LacrosStatus: testing.LacrosVariantUnneeded,
-		Desc:         "Verify triggering to_dev from broken screen does not boot DUT to dev mode",
+		Func: BrokenToDev,
+		Desc: "Verify triggering to_dev from broken screen does not boot DUT to dev mode",
 		Contacts: []string{
 			"chromeos-faft@google.com",
 			"cienet-firmware@cienet.corp-partner.google.com",

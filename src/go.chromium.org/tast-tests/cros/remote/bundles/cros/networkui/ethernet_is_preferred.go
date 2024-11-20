@@ -29,7 +29,6 @@ func init() {
 	testing.AddTest(&testing.Test{
 		Func:           EthernetIsPreferred,
 		LifeCycleStage: testing.LifeCycleOwnerMonitored,
-		LacrosStatus:   testing.LacrosVariantUnneeded,
 		Desc:           "Verify connection preference is for Ethernet when both wired and wireless networks are available",
 		Contacts: []string{
 			"cros-device-enablement@google.com",

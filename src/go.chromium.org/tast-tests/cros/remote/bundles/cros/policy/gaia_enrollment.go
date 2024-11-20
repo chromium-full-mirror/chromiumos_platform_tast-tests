@@ -25,9 +25,8 @@ const gaiaEnrollmentTimeout = 7 * time.Minute
 
 func init() {
 	testing.AddTest(&testing.Test{
-		Func:         GAIAEnrollment,
-		LacrosStatus: testing.LacrosVariantUnneeded,
-		Desc:         "GAIA Enroll a device without checking policies",
+		Func: GAIAEnrollment,
+		Desc: "GAIA Enroll a device without checking policies",
 		Contacts: []string{
 			"chromeos-commercial-remote-management@google.com",
 			"vsavu@google.com",

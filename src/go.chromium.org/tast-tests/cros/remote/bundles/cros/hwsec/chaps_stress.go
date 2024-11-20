@@ -22,9 +22,8 @@ import (
 
 func init() {
 	testing.AddTest(&testing.Test{
-		Func:         ChapsStress,
-		LacrosStatus: testing.LacrosVariantUnneeded,
-		Desc:         "Repeatedly load/unload slots, create/remove keys, sign to check that chaps works as intended. This is designed to uncover flaws in chaps key/session reloading mechanism",
+		Func: ChapsStress,
+		Desc: "Repeatedly load/unload slots, create/remove keys, sign to check that chaps works as intended. This is designed to uncover flaws in chaps key/session reloading mechanism",
 		Contacts: []string{
 			"cros-hwsec@google.com",
 			"zuan@chromium.org",

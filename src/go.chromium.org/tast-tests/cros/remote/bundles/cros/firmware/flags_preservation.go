@@ -40,7 +40,6 @@ func init() {
 		SoftwareDeps: []string{"crossystem"},
 		HardwareDeps: hwdep.D(hwdep.ChromeEC(), hwdep.Battery()),
 		Timeout:      50 * time.Minute,
-		LacrosStatus: testing.LacrosVariantUnneeded,
 	})
 }
 

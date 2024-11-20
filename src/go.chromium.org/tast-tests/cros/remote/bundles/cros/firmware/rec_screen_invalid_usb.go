@@ -21,9 +21,8 @@ import (
 
 func init() {
 	testing.AddTest(&testing.Test{
-		Func:         RecScreenInvalidUSB,
-		LacrosStatus: testing.LacrosVariantUnneeded,
-		Desc:         "Verify if DUT reaches RecoveryNoGood, or RecoveryInvalid screen invoked by invalid USB",
+		Func: RecScreenInvalidUSB,
+		Desc: "Verify if DUT reaches RecoveryNoGood, or RecoveryInvalid screen invoked by invalid USB",
 		Contacts: []string{
 			"chromeos-faft@google.com",
 			"cienet-firmware@cienet.corp-partner.google.com",

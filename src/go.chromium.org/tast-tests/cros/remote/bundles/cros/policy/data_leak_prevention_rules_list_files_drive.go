@@ -23,9 +23,8 @@ import (
 
 func init() {
 	testing.AddTest(&testing.Test{
-		Func:         DataLeakPreventionRulesListFilesDrive,
-		LacrosStatus: testing.LacrosVariantUnneeded,
-		Desc:         "Test behavior of DataLeakPreventionRulesList policy with file Google Drive restriction",
+		Func: DataLeakPreventionRulesListFilesDrive,
+		Desc: "Test behavior of DataLeakPreventionRulesList policy with file Google Drive restriction",
 		Contacts: []string{
 			"chromeos-dlp@google.com",
 			"aidazolic@google.com",

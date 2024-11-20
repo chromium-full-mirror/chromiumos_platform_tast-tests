@@ -27,9 +27,8 @@ type wilcoPowerBehaviorTestParams struct {
 
 func init() {
 	testing.AddTest(&testing.Test{
-		Func:         WilcoPowerBehavior,
-		LacrosStatus: testing.LacrosVariantUnneeded,
-		Desc:         "Verify Wilco power behavior based on AC and lid states",
+		Func: WilcoPowerBehavior,
+		Desc: "Verify Wilco power behavior based on AC and lid states",
 		Contacts: []string{
 			"chromeos-faft@google.com",
 			"cienet-firmware@cienet.corp-partner.google.com",

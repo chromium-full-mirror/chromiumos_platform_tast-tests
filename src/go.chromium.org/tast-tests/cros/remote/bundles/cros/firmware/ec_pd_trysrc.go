@@ -19,9 +19,8 @@ import (
 
 func init() {
 	testing.AddTest(&testing.Test{
-		Func:         ECPDTrysrc,
-		Desc:         "Verify USB-C/PD TrySrc",
-		LacrosStatus: testing.LacrosVariantUnneeded,
+		Func: ECPDTrysrc,
+		Desc: "Verify USB-C/PD TrySrc",
 		Contacts: []string{
 			"chromeos-faft@google.com",
 			"asemjonovs@google.com",

@@ -30,7 +30,6 @@ import (
 func init() {
 	testing.AddTest(&testing.Test{
 		Func:         BatteryChargeDuringShutdown,
-		LacrosStatus: testing.LacrosVariantUnneeded,
 		Desc:         "Verifies battery is charging during DUT shutdown",
 		BugComponent: "b:157291", // ChromeOS > External > Intel
 		Contacts:     []string{"intel.chrome.automation.team@intel.com", "ambalavanan.m.m@intel.com"},

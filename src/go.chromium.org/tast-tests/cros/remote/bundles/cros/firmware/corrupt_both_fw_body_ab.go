@@ -26,7 +26,6 @@ func init() {
 		BugComponent: "b:792402", // ChromeOS > Platform > Enablement > Firmware > FAFT
 		Timeout:      25 * time.Minute,
 		SoftwareDeps: []string{"crossystem", "flashrom"},
-		LacrosStatus: testing.LacrosVariantUnneeded,
 		Params: []testing.Param{
 			{
 				Name:    "normal_mode",

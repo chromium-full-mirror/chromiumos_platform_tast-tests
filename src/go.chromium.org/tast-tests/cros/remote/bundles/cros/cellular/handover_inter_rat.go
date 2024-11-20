@@ -23,9 +23,8 @@ type interRatTestCase struct {
 
 func init() {
 	testing.AddTest(&testing.Test{
-		Func:         HandoverInterRat,
-		LacrosStatus: testing.LacrosVariantUnneeded,
-		Desc:         "Verifies that the DUT is able to handover between two RATs",
+		Func: HandoverInterRat,
+		Desc: "Verifies that the DUT is able to handover between two RATs",
 		Contacts: []string{
 			"chromeos-cellular-team@google.com",
 			"jstanko@google.com",

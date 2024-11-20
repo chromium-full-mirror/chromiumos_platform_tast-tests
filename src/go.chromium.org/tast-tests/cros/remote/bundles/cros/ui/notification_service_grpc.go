@@ -22,7 +22,6 @@ import (
 func init() {
 	testing.AddTest(&testing.Test{
 		Func:         NotificationServiceGRPC,
-		LacrosStatus: testing.LacrosVariantUnneeded,
 		Desc:         "Check basic functionalities of NotificationService",
 		Contacts:     []string{"chromeos-sw-engprod@google.com", "jonfan@google.com"},
 		BugComponent: "b:1034649",

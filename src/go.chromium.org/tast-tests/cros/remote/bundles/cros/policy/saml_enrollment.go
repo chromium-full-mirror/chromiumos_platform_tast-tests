@@ -25,9 +25,8 @@ const samlEnrollmentTimeout = 7 * time.Minute
 
 func init() {
 	testing.AddTest(&testing.Test{
-		Func:         SAMLEnrollment,
-		LacrosStatus: testing.LacrosVariantUnneeded,
-		Desc:         "SAML Enroll a device without checking policies",
+		Func: SAMLEnrollment,
+		Desc: "SAML Enroll a device without checking policies",
 		Contacts: []string{
 			"cros-3pidp@google.com",
 			"lmasopust@google.com",

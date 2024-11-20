@@ -19,9 +19,8 @@ import (
 
 func init() {
 	testing.AddTest(&testing.Test{
-		Func:         AdapterDiscoverable,
-		LacrosStatus: testing.LacrosVariantUnneeded,
-		Desc:         "Verifies that the DUT can be discovered from a bluetooth device",
+		Func: AdapterDiscoverable,
+		Desc: "Verifies that the DUT can be discovered from a bluetooth device",
 		Contacts: []string{
 			"chromeos-connectivity-engprod@google.com",
 			"shijinabraham@google.com",

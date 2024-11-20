@@ -38,10 +38,9 @@ var customProbePlatforms = []string{"trogdor", "strongbad"}
 
 func init() {
 	testing.AddTest(&testing.Test{
-		Func:         HWIDDatabase,
-		LacrosStatus: testing.LacrosVariantUnneeded,
-		Desc:         "Test the flow from collecting materials, generating HWID database, to verifying the database is valid",
-		Contacts:     []string{"chromeos-factory-eng@google.com", "lschyi@google.com"},
+		Func:     HWIDDatabase,
+		Desc:     "Test the flow from collecting materials, generating HWID database, to verifying the database is valid",
+		Contacts: []string{"chromeos-factory-eng@google.com", "lschyi@google.com"},
 		// ChromeOS > Platform > Enablement > Factory
 		BugComponent: "b:167224",
 		Attr:         []string{"group:mainline", "informational"},

@@ -93,7 +93,6 @@ var (
 func init() {
 	testing.AddTest(&testing.Test{
 		Func:         NightLightViaDock,
-		LacrosStatus: testing.LacrosVariantUnneeded,
 		Desc:         "Test night light mode with dock and change color temperature from cooler to warmer",
 		Contacts:     []string{"cros-wwcb-automation@google.com", "allion-wwcb@allion.corp-partner.google.com"},
 		BugComponent: "b:1289112", // ChromeOS > External > WWCB > Allion > Automation

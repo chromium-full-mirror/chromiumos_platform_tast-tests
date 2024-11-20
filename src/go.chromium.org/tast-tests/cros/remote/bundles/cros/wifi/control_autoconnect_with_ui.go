@@ -37,9 +37,8 @@ type controlAutoconnectWithUIParam struct {
 
 func init() {
 	testing.AddTest(&testing.Test{
-		Func:         ControlAutoconnectWithUI,
-		LacrosStatus: testing.LacrosVariantUnneeded,
-		Desc:         "Verify user should be able to specify whether or not a particular network can auto-connect after turning WiFi off/on, rebooting and waking up from sleep",
+		Func: ControlAutoconnectWithUI,
+		Desc: "Verify user should be able to specify whether or not a particular network can auto-connect after turning WiFi off/on, rebooting and waking up from sleep",
 		Contacts: []string{
 			"alfredyu@cienet.com",
 			"vivian.chen@cienet.com",

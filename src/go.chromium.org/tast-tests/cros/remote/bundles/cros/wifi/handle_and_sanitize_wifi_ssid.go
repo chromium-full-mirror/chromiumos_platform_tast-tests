@@ -36,7 +36,6 @@ const handleAndSanitizeWifiSSIDTimeout = 3 * time.Minute
 func init() {
 	testing.AddTest(&testing.Test{
 		Func:           HandleAndSanitizeWifiSSID,
-		LacrosStatus:   testing.LacrosVariantUnneeded,
 		LifeCycleStage: testing.LifeCycleOwnerMonitored,
 		Desc:           "Verify that ChromeOS properly handles and sanitizes the SSIDs of WiFi networks",
 		Contacts: []string{

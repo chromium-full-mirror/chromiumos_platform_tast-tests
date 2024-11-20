@@ -23,7 +23,6 @@ import (
 func init() {
 	testing.AddTest(&testing.Test{
 		Func:         EarlyCrash,
-		LacrosStatus: testing.LacrosVariantUnneeded,
 		Desc:         "Verify artificial early crash creates crash files",
 		Contacts:     []string{"chromeos-data-eng@google.com", "troywang@google.com"},
 		BugComponent: "b:1032705",

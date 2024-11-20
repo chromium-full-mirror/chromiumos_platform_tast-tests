@@ -22,7 +22,6 @@ func init() {
 	// ambalavanan.m.m@intel.com needs to add this test as part of a new suite.
 	testing.AddTest(&testing.Test{
 		Func:         SDCardPlugUnplugDuringSleep,
-		LacrosStatus: testing.LacrosVariantUnneeded,
 		Desc:         "Verifies microSD card functionality with plug and unplug during sleep",
 		Contacts:     []string{"intel.chrome.automation.team@intel.com", "ambalavanan.m.m@intel.com"},
 		BugComponent: "b:157291",

@@ -46,7 +46,6 @@ func init() {
 		HardwareDeps: hwdep.D(hwdep.ChromeEC()),
 		Timeout:      2 * time.Hour,
 		Fixture:      fixture.NormalMode,
-		LacrosStatus: testing.LacrosVariantUnneeded,
 	})
 }
 

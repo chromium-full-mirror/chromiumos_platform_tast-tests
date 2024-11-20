@@ -32,10 +32,9 @@ type testParamForLoLOnMixPresence struct {
 
 func init() {
 	testing.AddTest(&testing.Test{
-		Func:         CameraboxLoLOnMixPresence,
-		LacrosStatus: testing.LacrosVariantUnneeded,
-		Desc:         "Verify that the HPS can dim/lock as expected when LOL enabled",
-		Data:         []string{hpsutil.PersonPresentPageArchiveFilename},
+		Func: CameraboxLoLOnMixPresence,
+		Desc: "Verify that the HPS can dim/lock as expected when LOL enabled",
+		Data: []string{hpsutil.PersonPresentPageArchiveFilename},
 		Contacts: []string{
 			"jmpollock@google.com",
 			"pmarheine@google.com",

@@ -29,7 +29,6 @@ func init() {
 		TestBedDeps:  []string{tbdep.ServoStateWorking},
 		Fixture:      fixture.NormalMode,
 		HardwareDeps: hwdep.D(hwdep.ChromeEC(), hwdep.SkipOnFormFactor(hwdep.Chromebox)),
-		LacrosStatus: testing.LacrosVariantUnneeded,
 		Attr:         []string{"group:firmware", "firmware_pd"},
 		Params: []testing.Param{{
 			Val: firmware.PDTestParams{},

@@ -28,7 +28,6 @@ import (
 func init() {
 	testing.AddTest(&testing.Test{
 		Func:         ExternalStorageSuspendAndResume,
-		LacrosStatus: testing.LacrosVariantUnneeded,
 		Desc:         "Check that the Device, when powered on while connected to the DUT and after undergoing Suspend/Resume, has its filesystems, FileManager, and ARC++ Application working as expected",
 		Contacts:     []string{"cros-wwcb-automation@google.com", "allion-wwcb@allion.corp-partner.google.com"},
 		BugComponent: "b:1289112", // ChromeOS > External > WWCB > Allion > Automation

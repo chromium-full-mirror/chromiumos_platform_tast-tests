@@ -42,7 +42,6 @@ type signalBarTest struct {
 func init() {
 	testing.AddTest(&testing.Test{
 		Func:         AssertUISignalQuality,
-		LacrosStatus: testing.LacrosVariantUnneeded,
 		Desc:         "Decrease downlink power on the callbox and verifies that the signal strength reflected on ui proportionally",
 		Contacts:     []string{"chromeos-cellular-team@google.com", "srikanthkumar@google.com"},
 		BugComponent: "b:167157", // ChromeOS > Platform > Connectivity > Cellular

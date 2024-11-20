@@ -22,9 +22,8 @@ const (
 
 func init() {
 	testing.AddTest(&testing.Test{
-		Func:         BasicNToN,
-		LacrosStatus: testing.LacrosVariantUnneeded,
-		Desc:         "Example test for the N2N update using Nebraska and test images",
+		Func: BasicNToN,
+		Desc: "Example test for the N2N update using Nebraska and test images",
 		Contacts: []string{
 			"chromeos-commercial-remote-management@google.com",
 			"mpolzer@google.com", // Test owner

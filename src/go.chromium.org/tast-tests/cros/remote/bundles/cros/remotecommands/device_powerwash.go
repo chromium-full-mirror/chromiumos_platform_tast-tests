@@ -27,9 +27,8 @@ import (
 
 func init() {
 	testing.AddTest(&testing.Test{
-		Func:         DevicePowerwash,
-		LacrosStatus: testing.LacrosVariantUnneeded,
-		Desc:         "Checks the behavior of sending device powerwash remote command",
+		Func: DevicePowerwash,
+		Desc: "Checks the behavior of sending device powerwash remote command",
 		Contacts: []string{
 			"chromeos-commercial-remote-management@google.com",
 			"mohamedaomar@google.com", // Test author

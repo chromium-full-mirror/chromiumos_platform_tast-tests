@@ -20,9 +20,8 @@ import (
 
 func init() {
 	testing.AddTest(&testing.Test{
-		Func:         WilcoNormalToDev,
-		LacrosStatus: testing.LacrosVariantUnneeded,
-		Desc:         "Verify wilco transitions from normal to dev using ctrld and power button",
+		Func: WilcoNormalToDev,
+		Desc: "Verify wilco transitions from normal to dev using ctrld and power button",
 		Contacts: []string{
 			"chromeos-faft@google.com",
 			"cienet-firmware@cienet.corp-partner.google.com",

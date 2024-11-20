@@ -30,7 +30,6 @@ import (
 func init() {
 	testing.AddTest(&testing.Test{
 		Func:         CCARecordFromExternalCamera,
-		LacrosStatus: testing.LacrosVariantUnneeded,
 		Desc:         "Connect an external camera and use the CCA app to test the photo-taking and video-recording functionalities to ensure they are working properly",
 		Contacts:     []string{"cros-wwcb-automation@google.com", "allion-wwcb@allion.corp-partner.google.com"},
 		BugComponent: "b:1289112", // ChromeOS > External > WWCB > Allion > Automation

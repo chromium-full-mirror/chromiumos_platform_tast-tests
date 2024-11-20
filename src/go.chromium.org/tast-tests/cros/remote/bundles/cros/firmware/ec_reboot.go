@@ -31,7 +31,6 @@ func init() {
 		Fixture:      fixture.NormalMode,
 		Timeout:      20 * time.Minute,
 		HardwareDeps: hwdep.D(hwdep.ChromeEC()),
-		LacrosStatus: testing.LacrosVariantUnneeded,
 	})
 }
 func ECReboot(ctx context.Context, s *testing.State) {

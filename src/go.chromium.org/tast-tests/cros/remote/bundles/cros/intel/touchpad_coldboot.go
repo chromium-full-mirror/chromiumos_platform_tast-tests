@@ -27,7 +27,6 @@ import (
 func init() {
 	testing.AddTest(&testing.Test{
 		Func:         TouchpadColdboot,
-		LacrosStatus: testing.LacrosVariantUnneeded,
 		Desc:         "Touchpad: Cold boot (S0-S5) with operation for 10 cycles",
 		Contacts:     []string{"intel.chrome.automation.team@intel.com", "ambalavanan.m.m@intel.com"},
 		BugComponent: "b:157291",

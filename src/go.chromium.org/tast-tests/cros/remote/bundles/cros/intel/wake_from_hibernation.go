@@ -21,7 +21,6 @@ import (
 func init() {
 	testing.AddTest(&testing.Test{
 		Func:         WakeFromHibernation,
-		LacrosStatus: testing.LacrosVariantUnneeded,
 		Desc:         "Wake from hibernation by AC plug",
 		Contacts:     []string{"intel.chrome.automation.team@intel.com", "ambalavanan.m.m@intel.com"},
 		BugComponent: "b:157291", // ChromeOS > External > Intel

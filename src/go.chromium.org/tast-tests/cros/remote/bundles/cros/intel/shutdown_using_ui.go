@@ -25,7 +25,6 @@ func init() {
 	// ambalavanan.m.m@intel.com needs to add this test as part of a new suite.
 	testing.AddTest(&testing.Test{
 		Func:         ShutdownUsingUI,
-		LacrosStatus: testing.LacrosVariantUnneeded,
 		Desc:         "Verifies shutdown through UI and boot using power button",
 		BugComponent: "b:157291", // ChromeOS > External > Intel
 		Contacts:     []string{"intel.chrome.automation.team@intel.com", "ambalavanan.m.m@intel.com"},

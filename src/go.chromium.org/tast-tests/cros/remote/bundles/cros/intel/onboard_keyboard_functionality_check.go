@@ -34,7 +34,6 @@ const (
 func init() {
 	testing.AddTest(&testing.Test{
 		Func:         OnboardKeyboardFunctionalityCheck,
-		LacrosStatus: testing.LacrosVariantUnneeded,
 		Desc:         "Verifies on-board keyboard functionality check with suspend-resume and coldboot operation",
 		Contacts:     []string{"intel.chrome.automation.team@intel.com", "ambalavanan.m.m@intel.com"},
 		BugComponent: "b:157291", // ChromeOS > External > Intel

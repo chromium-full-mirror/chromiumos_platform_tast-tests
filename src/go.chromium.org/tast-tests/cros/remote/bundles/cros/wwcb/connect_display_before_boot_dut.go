@@ -21,7 +21,6 @@ import (
 func init() {
 	testing.AddTest(&testing.Test{
 		Func:         ConnectDisplayBeforeBootDUT,
-		LacrosStatus: testing.LacrosVariantUnneeded,
 		Desc:         "Boot DUT with external display already connected, then verify that the DUT can detect the external display",
 		Contacts:     []string{"cros-wwcb-automation@google.com", "allion-wwcb@allion.corp-partner.google.com"},
 		BugComponent: "b:1289112", // ChromeOS > External > WWCB > Allion > Automation

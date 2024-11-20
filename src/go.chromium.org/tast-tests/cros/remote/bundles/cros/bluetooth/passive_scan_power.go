@@ -24,9 +24,8 @@ type btPassiveScanPowerTestCase struct {
 
 func init() {
 	testing.AddTest(&testing.Test{
-		Func:         PassiveScanPower,
-		LacrosStatus: testing.LacrosVariantUnneeded,
-		Desc:         "Measure passive scan power consumption with one peer paired and one peer advertising",
+		Func: PassiveScanPower,
+		Desc: "Measure passive scan power consumption with one peer paired and one peer advertising",
 		Contacts: []string{
 			"chromeos-bt-team@google.com",
 			"jiangzp@google.com",

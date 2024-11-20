@@ -27,9 +27,8 @@ type featuresTestParam struct {
 
 func init() {
 	testing.AddTest(&testing.Test{
-		Func:         ConsumerAutoupdateFeature,
-		LacrosStatus: testing.LacrosVariantUnneeded,
-		Desc:         "Verifies that consumer auto update feature work as intended",
+		Func: ConsumerAutoupdateFeature,
+		Desc: "Verifies that consumer auto update feature work as intended",
 		Contacts: []string{
 			"chromeos-core-services@google.com",
 			"yuanpengni@chromium.org",

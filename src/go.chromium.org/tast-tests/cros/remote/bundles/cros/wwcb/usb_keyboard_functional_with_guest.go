@@ -25,7 +25,6 @@ import (
 func init() {
 	testing.AddTest(&testing.Test{
 		Func:         UsbKeyboardFunctionalWithGuest,
-		LacrosStatus: testing.LacrosVariantUnneeded,
 		Desc:         "Check keyboard input and verify that the function is working properly in guest mode",
 		Contacts:     []string{"cros-wwcb-automation@google.com", "allion-wwcb@allion.corp-partner.google.com"},
 		BugComponent: "b:1289112", // ChromeOS > External > WWCB > Allion > Automation

@@ -47,8 +47,7 @@ func init() {
 		HardwareDeps: hwdep.D(hwdep.ChromeEC()),
 		// Default 10 iterations typically takes anywhere from 5 - 70 minutes
 		// depending on the model and amount of errors encountered.
-		Timeout:      30 * time.Hour,
-		LacrosStatus: testing.LacrosVariantUnneeded,
+		Timeout: 30 * time.Hour,
 		Params: []testing.Param{
 			{
 				Name:    "power_button_normal_mode",

@@ -46,7 +46,6 @@ func init() {
 		BugComponent: "b:792402", // ChromeOS > Platform > Enablement > Firmware > FAFT
 		Attr:         []string{"group:firmware"},
 		HardwareDeps: hwdep.D(hwdep.ChromeEC()),
-		LacrosStatus: testing.LacrosVariantUnneeded,
 		Fixture:      fixture.NormalMode,
 		Params: []testing.Param{
 			{

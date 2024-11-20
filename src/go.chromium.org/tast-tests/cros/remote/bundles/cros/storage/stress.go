@@ -32,7 +32,6 @@ func init() {
 			"asavery@google.com", // Test author
 		},
 		BugComponent: "b:974567", // ChromeOS > Platform > System > Storage
-		LacrosStatus: testing.LacrosVariantUnneeded,
 		Data:         util.Configs,
 		SoftwareDeps: []string{"crossystem"},
 		Params: []testing.Param{

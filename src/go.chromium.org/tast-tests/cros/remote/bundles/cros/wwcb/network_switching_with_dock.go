@@ -20,7 +20,6 @@ import (
 func init() {
 	testing.AddTest(&testing.Test{
 		Func:         NetworkSwitchingWithDock,
-		LacrosStatus: testing.LacrosVariantUnneeded,
 		Desc:         "Test wired network when connecting/disconnecting over a Dock",
 		Contacts:     []string{"cros-wwcb-automation@google.com", "allion-wwcb@allion.corp-partner.google.com"},
 		BugComponent: "b:1289112", // ChromeOS > External > WWCB > Allion > Automation

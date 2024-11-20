@@ -31,7 +31,6 @@ type usbDeviceTestParam struct {
 func init() {
 	testing.AddTest(&testing.Test{
 		Func:         USBDeviceFunctionality,
-		LacrosStatus: testing.LacrosVariantUnneeded,
 		Desc:         "Verifies USB device functionality before and after cold boot",
 		BugComponent: "b:157291", // ChromeOS > External > Intel
 		Contacts:     []string{"intel.chrome.automation.team@intel.com", "ambalavanan.m.m@intel.com"},

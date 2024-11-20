@@ -25,9 +25,8 @@ import (
 
 func init() {
 	testing.AddTest(&testing.Test{
-		Func:         ReporterStartup,
-		LacrosStatus: testing.LacrosVariantUnneeded,
-		Desc:         "Verifies crash reporter after reboot",
+		Func: ReporterStartup,
+		Desc: "Verifies crash reporter after reboot",
 		Contacts: []string{
 			"chromeos-data-eng@google.com",
 			"arc-performance@google.com",

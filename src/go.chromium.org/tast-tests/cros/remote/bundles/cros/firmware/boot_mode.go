@@ -49,7 +49,6 @@ func init() {
 		Attr:         []string{"group:firmware"},
 		SoftwareDeps: []string{"crossystem", "flashrom"},
 		Vars:         []string{"firmware.skipFlashUSB"},
-		LacrosStatus: testing.LacrosVariantUnneeded,
 		Params: []testing.Param{{
 			Name:    "normal_warm",
 			Fixture: fixture.NormalMode,

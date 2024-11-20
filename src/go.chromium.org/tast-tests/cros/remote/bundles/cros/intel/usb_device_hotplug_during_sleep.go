@@ -24,7 +24,6 @@ import (
 func init() {
 	testing.AddTest(&testing.Test{
 		Func:         USBDeviceHotplugDuringSleep,
-		LacrosStatus: testing.LacrosVariantUnneeded,
 		Desc:         "Verifies USB device functionality with hotplug during sleep",
 		Contacts:     []string{"intel.chrome.automation.team@intel.com", "ambalavanan.m.m@intel.com"},
 		BugComponent: "b:157291",

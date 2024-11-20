@@ -25,7 +25,6 @@ func init() {
 		Fixture:      fixture.NormalMode,
 		VarDeps:      []string{"servo"},
 		TestBedDeps:  []string{tbdep.ServoStateWorking},
-		LacrosStatus: testing.LacrosVariantUnneeded,
 	})
 }
 

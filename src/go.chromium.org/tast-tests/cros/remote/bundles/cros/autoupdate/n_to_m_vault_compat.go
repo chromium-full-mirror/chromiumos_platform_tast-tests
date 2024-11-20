@@ -41,9 +41,8 @@ const (
 
 func init() {
 	testing.AddTest(&testing.Test{
-		Func:         NToMVaultCompat,
-		LacrosStatus: testing.LacrosVariantUnneeded,
-		Desc:         "Verify cross version vault's compatibility",
+		Func: NToMVaultCompat,
+		Desc: "Verify cross version vault's compatibility",
 		Contacts: []string{
 			"chromeos-storage@google.com",
 			"dlunev@google.com", // Test author

@@ -37,7 +37,6 @@ type modulePowerTestCase struct {
 func init() {
 	testing.AddTest(&testing.Test{
 		Func:         ModulePower,
-		LacrosStatus: testing.LacrosVariantUnneeded,
 		Desc:         "Verifies that the power consumption of the DUT is in the expected range",
 		Contacts:     []string{"cros-cellular-core@google.com", "jstanko@google.com"},
 		BugComponent: "b:167157", // ChromeOS > Platform > Connectivity > Cellular

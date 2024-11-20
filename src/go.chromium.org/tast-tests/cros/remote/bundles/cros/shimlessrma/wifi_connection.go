@@ -22,9 +22,8 @@ const (
 
 func init() {
 	testing.AddTest(&testing.Test{
-		Func:         WifiConnection,
-		LacrosStatus: testing.LacrosVariantUnneeded,
-		Desc:         "Test wifi connection will be forgotten after Shimless RMA",
+		Func: WifiConnection,
+		Desc: "Test wifi connection will be forgotten after Shimless RMA",
 		Contacts: []string{
 			"chromeos-shimless-eng@google.com",
 			"chenghan@google.com",

@@ -26,7 +26,6 @@ type extendedDisplayTestParams struct {
 func init() {
 	testing.AddTest(&testing.Test{
 		Func:         ExtendedDisplayColdboot,
-		LacrosStatus: testing.LacrosVariantUnneeded,
 		Desc:         "Verifies extended display functionality before and after performing cold boot",
 		BugComponent: "b:157291", // ChromeOS > External > Intel
 		Contacts:     []string{"intel.chrome.automation.team@intel.com", "pathan.jilani@intel.com"},

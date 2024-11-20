@@ -17,9 +17,8 @@ import (
 
 func init() {
 	testing.AddTest(&testing.Test{
-		Func:         PairBluetoothDeviceWithUI,
-		LacrosStatus: testing.LacrosVariantUnneeded,
-		Desc:         "Tests that we can pair a Bluetooth device with the UI",
+		Func: PairBluetoothDeviceWithUI,
+		Desc: "Tests that we can pair a Bluetooth device with the UI",
 		Contacts: []string{
 			"cros-device-enablement@google.com",
 			"chromeos-connectivity-engprod@google.com",

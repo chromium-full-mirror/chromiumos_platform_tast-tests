@@ -19,9 +19,8 @@ import (
 
 func init() {
 	testing.AddTest(&testing.Test{
-		Func:         FastPairInitialPair,
-		LacrosStatus: testing.LacrosVariantUnneeded,
-		Desc:         "Tests the Fast Pair initial pairing scenario",
+		Func: FastPairInitialPair,
+		Desc: "Tests the Fast Pair initial pairing scenario",
 		Contacts: []string{
 			"chromeos-sw-engprod@google.com",
 			"chromeos-cross-device-eng@google.com",

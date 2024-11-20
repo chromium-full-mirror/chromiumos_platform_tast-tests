@@ -51,7 +51,6 @@ func init() {
 		BugComponent: "b:1280385",
 		SoftwareDeps: []string{"chrome"},
 		ServiceDeps:  []string{"tast.cros.camera.CCAService"},
-		LacrosStatus: testing.LacrosVariantUnneeded,
 		Timeout:      5 * time.Minute,
 		Params: []testing.Param{{
 			Name: "photo_front",

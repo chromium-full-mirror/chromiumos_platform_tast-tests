@@ -28,9 +28,8 @@ const erofsUtilsZip = "erofs-utils.zip"
 
 func init() {
 	testing.AddTest(&testing.Test{
-		Func:         CacheIntegrity,
-		LacrosStatus: testing.LacrosVariantUnneeded,
-		Desc:         "Validates that image has all caches ",
+		Func: CacheIntegrity,
+		Desc: "Validates that image has all caches ",
 		Contacts: []string{
 			"arc-performance@google.com",
 			"khmel@chromium.org",

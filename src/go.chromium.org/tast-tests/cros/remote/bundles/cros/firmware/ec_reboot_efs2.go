@@ -41,7 +41,6 @@ func init() {
 		Fixture:      fixture.NormalMode,
 		Timeout:      30 * time.Minute,
 		HardwareDeps: hwdep.D(hwdep.ChromeEC()),
-		LacrosStatus: testing.LacrosVariantUnneeded,
 		Params: []testing.Param{{
 			Name: "gsc_reboot",
 			Val:  true,

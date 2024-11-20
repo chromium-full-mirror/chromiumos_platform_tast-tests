@@ -40,7 +40,6 @@ func init() {
 		Attr:         []string{"group:firmware", "firmware_bios", "firmware_level3"},
 		HardwareDeps: hwdep.D(hwdep.ChromeEC()),
 		Timeout:      25 * time.Minute,
-		LacrosStatus: testing.LacrosVariantUnneeded,
 		Params: []testing.Param{
 			{
 				Name:    "body_normal",

@@ -171,9 +171,8 @@ const testScenarioTimeout = 2 * time.Minute
 
 func init() {
 	testing.AddTest(&testing.Test{
-		Func:         ShareNetwork,
-		LacrosStatus: testing.LacrosVariantUnneeded,
-		Desc:         "Verify the share property of a network across different users",
+		Func: ShareNetwork,
+		Desc: "Verify the share property of a network across different users",
 		Contacts: []string{
 			"alfredyu@cienet.com",
 			"cj.tsai@cienet.com",

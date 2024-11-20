@@ -20,7 +20,6 @@ import (
 func init() {
 	testing.AddTest(&testing.Test{
 		Func:         SelftestIppower,
-		LacrosStatus: testing.LacrosVariantUnneeded,
 		Desc:         "Check if IP Power is online and write the IP to the config file",
 		Contacts:     []string{"cros-wwcb-automation@google.com", "allion-wwcb@allion.corp-partner.google.com"},
 		BugComponent: "b:1289112", // ChromeOS > External > WWCB > Allion > Automation

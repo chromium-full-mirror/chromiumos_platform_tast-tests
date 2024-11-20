@@ -30,9 +30,8 @@ type userParam struct {
 
 func init() {
 	testing.AddTest(&testing.Test{
-		Func:         DeviceTrustLoginScreen,
-		LacrosStatus: testing.LacrosVariantUnneeded,
-		Desc:         "Checks that Device Trust is working on login screen with a fake IdP",
+		Func: DeviceTrustLoginScreen,
+		Desc: "Checks that Device Trust is working on login screen with a fake IdP",
 		Contacts: []string{
 			"cbe-device-trust-eng@google.com",
 			"cros-3pidp@google.com",

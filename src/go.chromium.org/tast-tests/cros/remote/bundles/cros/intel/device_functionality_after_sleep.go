@@ -40,7 +40,6 @@ const (
 func init() {
 	testing.AddTest(&testing.Test{
 		Func:         DeviceFunctionalityAfterSleep,
-		LacrosStatus: testing.LacrosVariantUnneeded,
 		Desc:         "Device functionality after sleep (Keep system idle)/(Close lid)",
 		HardwareDeps: hwdep.D(hwdep.X86()),
 		SoftwareDeps: []string{"chrome"},

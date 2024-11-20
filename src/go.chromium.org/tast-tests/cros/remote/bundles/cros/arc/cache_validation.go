@@ -37,9 +37,8 @@ var regExpLayoutEntry = regexp.MustCompile(`^(.+):([0-7]{3}):(\d+)$`)
 
 func init() {
 	testing.AddTest(&testing.Test{
-		Func:         CacheValidation,
-		LacrosStatus: testing.LacrosVariantUnneeded,
-		Desc:         "Validates that caches match for both modes when pre-generated packages cache is enabled and disabled",
+		Func: CacheValidation,
+		Desc: "Validates that caches match for both modes when pre-generated packages cache is enabled and disabled",
 		// Warning!
 		// Contact owners of this test first prior to altering its configuration.
 		// This provides viable information about release branch health.

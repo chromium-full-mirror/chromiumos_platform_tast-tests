@@ -26,9 +26,8 @@ import (
 
 func init() {
 	testing.AddTest(&testing.Test{
-		Func:         StatusUI,
-		LacrosStatus: testing.LacrosVariantUnneeded,
-		Desc:         "Verify Wi-Fi status is correctly represented in the Settings and Quick Settings UI",
+		Func: StatusUI,
+		Desc: "Verify Wi-Fi status is correctly represented in the Settings and Quick Settings UI",
 		Contacts: []string{
 			"cros-device-enablement@google.com",
 			"chromeos-connectivity-engprod@google.com",

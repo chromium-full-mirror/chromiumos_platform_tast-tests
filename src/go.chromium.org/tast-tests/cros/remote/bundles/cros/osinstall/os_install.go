@@ -17,9 +17,8 @@ import (
 
 func init() {
 	testing.AddTest(&testing.Test{
-		Func:         OsInstall,
-		LacrosStatus: testing.LacrosVariantUnneeded,
-		Desc:         "Test OS install (the DUT must be started back up again after install succeeds)",
+		Func: OsInstall,
+		Desc: "Test OS install (the DUT must be started back up again after install succeeds)",
 		Contacts: []string{
 			"chromeos-flex-eng@google.com",
 			"nicholasbishop@google.com",

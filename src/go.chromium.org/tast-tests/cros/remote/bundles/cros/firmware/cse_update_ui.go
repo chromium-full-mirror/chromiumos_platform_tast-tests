@@ -22,9 +22,8 @@ import (
 
 func init() {
 	testing.AddTest(&testing.Test{
-		Func:         CSEUpdateUI,
-		Desc:         "Verify user is notified during CSE update",
-		LacrosStatus: testing.LacrosVariantUnneeded,
+		Func: CSEUpdateUI,
+		Desc: "Verify user is notified during CSE update",
 		Contacts: []string{
 			"chromeos-faft@google.com",
 			"jbettis@chromium.org",

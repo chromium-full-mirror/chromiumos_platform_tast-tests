@@ -51,7 +51,6 @@ func init() {
 		Vars:         []string{"firmware_branch", "ro_versions"},
 		Data:         []string{"shipped-firmwares.json"},
 		Timeout:      40 * time.Minute,
-		LacrosStatus: testing.LacrosVariantUnneeded,
 		Params: []testing.Param{
 			{
 				Name:    "normal",

@@ -53,7 +53,6 @@ type passphraseTestCase struct {
 func init() {
 	testing.AddTest(&testing.Test{
 		Func:           HandlePassphrases,
-		LacrosStatus:   testing.LacrosVariantUnneeded,
 		LifeCycleStage: testing.LifeCycleOwnerMonitored,
 		Desc:           "Verify ChromeOS handles passphrases gracefully and displays error messages or UI prompts correctly",
 		Contacts: []string{

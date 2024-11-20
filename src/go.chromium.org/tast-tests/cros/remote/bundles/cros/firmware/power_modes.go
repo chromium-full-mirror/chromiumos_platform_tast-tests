@@ -36,9 +36,8 @@ const (
 
 func init() {
 	testing.AddTest(&testing.Test{
-		Func:         PowerModes,
-		LacrosStatus: testing.LacrosVariantUnneeded,
-		Desc:         "Verifies that system comes back after shutdown and coldreset",
+		Func: PowerModes,
+		Desc: "Verifies that system comes back after shutdown and coldreset",
 		Contacts: []string{
 			"chromeos-faft@google.com",
 			"intel.chrome.automation.team@intel.com", "pathan.jilani@intel.com",

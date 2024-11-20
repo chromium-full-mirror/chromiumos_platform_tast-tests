@@ -29,7 +29,6 @@ import (
 func init() {
 	testing.AddTest(&testing.Test{
 		Func:         PlayAudioWithDisplayOff,
-		LacrosStatus: testing.LacrosVariantUnneeded,
 		Desc:         "Verifies audio playback during display off with charger connected and disconnected",
 		Contacts:     []string{"chromeos-audio-bugs@google.com", "intel.chrome.automation.team@intel.com", "ambalavanan.m.m@intel.com"},
 		BugComponent: "b:776546",

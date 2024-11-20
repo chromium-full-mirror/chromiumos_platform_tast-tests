@@ -40,9 +40,8 @@ type majorVersionPinningE2ETestParam struct {
 
 func init() {
 	testing.AddTest(&testing.Test{
-		Func:         MajorVersionPinningE2E,
-		LacrosStatus: testing.LacrosVariantUnneeded,
-		Desc:         "Configures a milestone to pin to and verifies a pinned major version value on a device",
+		Func: MajorVersionPinningE2E,
+		Desc: "Configures a milestone to pin to and verifies a pinned major version value on a device",
 		Contacts: []string{
 			"artyomchen@google.com", // Test author
 			"chromeos-commercial-remote-management@google.com",

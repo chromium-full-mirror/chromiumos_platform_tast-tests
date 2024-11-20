@@ -20,7 +20,6 @@ import (
 func init() {
 	testing.AddTest(&testing.Test{
 		Func:         FlashOSViaUSB,
-		LacrosStatus: testing.LacrosVariantUnneeded,
 		Desc:         "Flash OS through USB 3.0 and boot with Local storage",
 		Contacts:     []string{"intel.chrome.automation.team@intel.com", "ambalavanan.m.m@intel.com"},
 		BugComponent: "b:157291", // ChromeOS > External > Intel

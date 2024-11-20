@@ -32,7 +32,6 @@ import (
 func init() {
 	testing.AddTest(&testing.Test{
 		Func:         SuspendResumeWithExternalDisplay,
-		LacrosStatus: testing.LacrosVariantUnneeded,
 		Desc:         "Suspend/resume DUT then check screen brightness on DUT & external display by camera connecting to the host",
 		Contacts:     []string{"cros-wwcb-automation@google.com", "allion-wwcb@allion.corp-partner.google.com"},
 		BugComponent: "b:1289112", // ChromeOS > External > WWCB > Allion > Automation

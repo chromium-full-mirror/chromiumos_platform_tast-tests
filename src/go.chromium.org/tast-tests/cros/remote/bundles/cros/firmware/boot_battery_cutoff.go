@@ -55,8 +55,7 @@ func init() {
 			ExtraHardwareDeps: hwdep.D(hwdep.SkipOnFormFactor(hwdep.Chromeslate)),
 			Val:               false,
 		}},
-		Timeout:      20 * time.Minute,
-		LacrosStatus: testing.LacrosVariantUnneeded,
+		Timeout: 20 * time.Minute,
 	})
 }
 

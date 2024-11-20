@@ -29,7 +29,6 @@ func init() {
 		ServiceDeps:  []string{"tast.cros.firmware.BiosService"},
 		Attr:         []string{"group:firmware", "group:labqual_informational", "firmware_smoke"},
 		SoftwareDeps: []string{"flashrom"},
-		LacrosStatus: testing.LacrosVariantUnneeded,
 	})
 }
 

@@ -26,9 +26,8 @@ const gaiaEnrollmentSlowTimeout = 10 * time.Minute
 
 func init() {
 	testing.AddTest(&testing.Test{
-		Func:         GAIAEnrollmentSlowConnection,
-		LacrosStatus: testing.LacrosVariantUnneeded,
-		Desc:         "GAIA Enroll a device on a slow connection 1000kbps without checking policies",
+		Func: GAIAEnrollmentSlowConnection,
+		Desc: "GAIA Enroll a device on a slow connection 1000kbps without checking policies",
 		Contacts: []string{
 			"chromeos-commercial-remote-management@google.com",
 			"mohamedaomar@google.com",

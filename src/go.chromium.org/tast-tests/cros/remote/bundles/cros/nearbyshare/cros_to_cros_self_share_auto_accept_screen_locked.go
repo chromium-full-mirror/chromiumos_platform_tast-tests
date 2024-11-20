@@ -21,7 +21,6 @@ import (
 func init() {
 	testing.AddTest(&testing.Test{
 		Func:           CrosToCrosSelfShareAutoAcceptScreenLocked,
-		LacrosStatus:   testing.LacrosVariantUnneeded,
 		LifeCycleStage: testing.LifeCycleOwnerMonitored,
 		Desc:           "Checks we can successfully send files from one Cros device to another on the same Gaia without accepting when the receiver is locked",
 		Contacts: []string{

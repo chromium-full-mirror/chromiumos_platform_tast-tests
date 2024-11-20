@@ -42,9 +42,8 @@ type omahaInvalidationTestParam struct {
 
 func init() {
 	testing.AddTest(&testing.Test{
-		Func:         OmahaInvalidation,
-		LacrosStatus: testing.LacrosVariantUnneeded,
-		Desc:         "Verifies that the update engine invalidates installed updates if Omaha issues an invalidation",
+		Func: OmahaInvalidation,
+		Desc: "Verifies that the update engine invalidates installed updates if Omaha issues an invalidation",
 		Contacts: []string{
 			"artyomchen@google.com", // Test author
 			"chromeos-commercial-remote-management@google.com",

@@ -45,7 +45,6 @@ const (
 func init() {
 	testing.AddTest(&testing.Test{
 		Func:         BootupTimes,
-		LacrosStatus: testing.LacrosVariantUnneeded,
 		Desc:         "Boot performance test after reboot, powerbutton and lid close open",
 		Contacts:     []string{"intel.chrome.automation.team@intel.com", "pathan.jilani@intel.com"},
 		BugComponent: "b:157291", // ChromeOS > External > Intel

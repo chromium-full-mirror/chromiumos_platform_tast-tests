@@ -28,7 +28,6 @@ func init() {
 		Attr:         []string{"group:firmware", "firmware_bios", "firmware_level2", "firmware_usb", "firmware_ro"},
 		Vars:         []string{"firmware.skipFlashUSB"},
 		Timeout:      2 * time.Hour,
-		LacrosStatus: testing.LacrosVariantUnneeded,
 		Params: []testing.Param{{
 			Name:    "dev",
 			Fixture: fixture.DevMode,

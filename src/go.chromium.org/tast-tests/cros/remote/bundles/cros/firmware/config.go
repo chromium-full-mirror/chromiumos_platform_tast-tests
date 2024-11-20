@@ -23,7 +23,6 @@ func init() {
 		Data:         []string{firmware.ConfigFile},
 		Attr:         []string{"group:mainline", "group:firmware", "firmware_smoke"},
 		SoftwareDeps: []string{"crossystem", "chromeos_firmware"},
-		LacrosStatus: testing.LacrosVariantUnneeded,
 	})
 }
 

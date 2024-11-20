@@ -25,7 +25,6 @@ func init() {
 		},
 		BugComponent: "b:792402", // ChromeOS > Platform > Enablement > Firmware > FAFT
 		ServiceDeps:  []string{"tast.cros.firmware.UtilsService"},
-		LacrosStatus: testing.LacrosVariantUnneeded,
 		Fixture:      fixture.NormalMode,
 		Timeout:      2 * time.Hour,
 	})

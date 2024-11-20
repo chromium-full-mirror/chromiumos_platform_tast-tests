@@ -28,7 +28,6 @@ import (
 func init() {
 	testing.AddTest(&testing.Test{
 		Func:         ExternalMouseSpeedAndPrimaryButton,
-		LacrosStatus: testing.LacrosVariantUnneeded,
 		Desc:         "Verify external mouse movement speed, scroll, and primary button functionality switching",
 		Contacts:     []string{"cros-wwcb-automation@google.com", "allion-wwcb@allion.corp-partner.google.com"},
 		BugComponent: "b:1289112", // ChromeOS > External > WWCB > Allion > Automation

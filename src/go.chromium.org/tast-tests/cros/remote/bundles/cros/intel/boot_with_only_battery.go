@@ -24,7 +24,6 @@ import (
 func init() {
 	testing.AddTest(&testing.Test{
 		Func:         BootWithOnlyBattery,
-		LacrosStatus: testing.LacrosVariantUnneeded,
 		Desc:         "Verifies DUT boots with battery after unplugging AC power supply",
 		BugComponent: "b:157291", // ChromeOS > External > Intel
 		Contacts:     []string{"intel.chrome.automation.team@intel.com", "ambalavanan.m.m@intel.com"},

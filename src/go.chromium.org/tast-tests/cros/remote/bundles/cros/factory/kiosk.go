@@ -26,10 +26,9 @@ const (
 
 func init() {
 	testing.AddTest(&testing.Test{
-		Func:         Kiosk,
-		LacrosStatus: testing.LacrosVariantUnneeded,
-		Desc:         "Test if factory UI is running",
-		Contacts:     []string{"chromeos-factory-eng@google.com", "lschyi@google.com"},
+		Func:     Kiosk,
+		Desc:     "Test if factory UI is running",
+		Contacts: []string{"chromeos-factory-eng@google.com", "lschyi@google.com"},
 		// ChromeOS > Platform > Enablement > Factory
 		BugComponent: "b:167224",
 		Attr:         []string{"group:mainline"},

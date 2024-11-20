@@ -28,7 +28,6 @@ func init() {
 		Attr:         []string{"group:firmware", "firmware_bios", "firmware_level1"},
 		Vars:         []string{"servo"},
 		TestBedDeps:  []string{tbdep.ServoStateWorking},
-		LacrosStatus: testing.LacrosVariantUnneeded,
 		Params: []testing.Param{
 			testing.Param{
 				Name:    "normal",

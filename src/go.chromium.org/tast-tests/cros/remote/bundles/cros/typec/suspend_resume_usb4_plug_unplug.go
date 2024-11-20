@@ -36,7 +36,6 @@ type suspendResumeParams struct {
 func init() {
 	testing.AddTest(&testing.Test{
 		Func:         SuspendResumeUSB4PlugUnplug,
-		LacrosStatus: testing.LacrosVariantUnneeded,
 		Desc:         "Verifies USB4 docking station using 40G passive cable: Insert before suspend, unplug during suspend, insert back in suspend, then resume",
 		Contacts:     []string{"intel.chrome.automation.team@intel.com", "ambalavanan.m.m@intel.com"},
 		BugComponent: "b:157291", // ChromeOS > External > Intel

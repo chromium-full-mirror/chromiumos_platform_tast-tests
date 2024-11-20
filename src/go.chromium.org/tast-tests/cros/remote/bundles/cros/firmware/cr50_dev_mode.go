@@ -30,7 +30,6 @@ func init() {
 		Timeout:      10 * time.Minute,
 		HardwareDeps: hwdep.D(hwdep.GSCUART()),
 		SoftwareDeps: []string{"gsc"},
-		LacrosStatus: testing.LacrosVariantUnneeded,
 	})
 }
 

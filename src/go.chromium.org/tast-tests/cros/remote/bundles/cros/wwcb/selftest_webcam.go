@@ -27,7 +27,6 @@ import (
 func init() {
 	testing.AddTest(&testing.Test{
 		Func:         SelftestWebcam,
-		LacrosStatus: testing.LacrosVariantUnneeded,
 		Desc:         "Check whether the host's webcam can be mapped correctly",
 		Contacts:     []string{"cros-wwcb-automation@google.com", "allion-wwcb@allion.corp-partner.google.com"},
 		BugComponent: "b:1289112", // ChromeOS > External > WWCB > Allion > Automation

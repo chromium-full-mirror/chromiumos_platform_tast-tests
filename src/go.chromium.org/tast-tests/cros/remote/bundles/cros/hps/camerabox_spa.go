@@ -29,10 +29,9 @@ type testParamForSpa struct {
 
 func init() {
 	testing.AddTest(&testing.Test{
-		Func:         CameraboxSPA,
-		LacrosStatus: testing.LacrosVariantUnneeded,
-		Desc:         "Verify that HPS does not respond when SPA is off",
-		Data:         []string{hpsutil.PersonPresentPageArchiveFilename},
+		Func: CameraboxSPA,
+		Desc: "Verify that HPS does not respond when SPA is off",
+		Data: []string{hpsutil.PersonPresentPageArchiveFilename},
 		Contacts: []string{
 			"jmpollock@google.com",
 			"pmarheine@google.com",

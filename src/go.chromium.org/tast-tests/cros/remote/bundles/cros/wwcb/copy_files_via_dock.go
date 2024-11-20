@@ -37,7 +37,6 @@ const (
 func init() {
 	testing.AddTest(&testing.Test{
 		Func:         CopyFilesViaDock,
-		LacrosStatus: testing.LacrosVariantUnneeded,
 		Desc:         "Copy file to flash drive connecting via a Dock",
 		Contacts:     []string{"cros-wwcb-automation@google.com", "allion-wwcb@allion.corp-partner.google.com"},
 		BugComponent: "b:1289112", // ChromeOS > External > WWCB > Allion > Automation

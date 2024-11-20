@@ -28,7 +28,6 @@ import (
 func init() {
 	testing.AddTest(&testing.Test{
 		Func:           OobeHidBluetoothKeyboardOnly,
-		LacrosStatus:   testing.LacrosVariantUnneeded,
 		LifeCycleStage: testing.LifeCycleOwnerMonitored,
 		Desc:           "Checks that a bluetooth keyboard can be used to complete OOBE",
 		Contacts: []string{

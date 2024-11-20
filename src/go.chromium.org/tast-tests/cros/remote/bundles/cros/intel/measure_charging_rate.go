@@ -42,7 +42,6 @@ const (
 func init() {
 	testing.AddTest(&testing.Test{
 		Func:         MeasureChargingRate,
-		LacrosStatus: testing.LacrosVariantUnneeded,
 		Desc:         "Measuring charging rate in suspend mode (S0ix)",
 		Contacts:     []string{"intel.chrome.automation.team@intel.com", "ambalavanan.m.m@intel.com"},
 		BugComponent: "b:157291",

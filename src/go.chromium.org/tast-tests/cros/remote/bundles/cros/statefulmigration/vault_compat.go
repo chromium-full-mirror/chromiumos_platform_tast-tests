@@ -39,9 +39,8 @@ const (
 
 func init() {
 	testing.AddTest(&testing.Test{
-		Func:         VaultCompat,
-		LacrosStatus: testing.LacrosVariantUnneeded,
-		Desc:         "Verify vaults are compatible across LVM migration",
+		Func: VaultCompat,
+		Desc: "Verify vaults are compatible across LVM migration",
 		Contacts: []string{
 			"chromeos-storage@google.com",
 			"sarthakkukreti@google.com", // Test author

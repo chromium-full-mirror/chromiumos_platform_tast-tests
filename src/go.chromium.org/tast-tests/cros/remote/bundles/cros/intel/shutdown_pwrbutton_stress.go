@@ -21,9 +21,8 @@ import (
 
 func init() {
 	testing.AddTest(&testing.Test{
-		Func:         ShutdownPwrbuttonStress,
-		LacrosStatus: testing.LacrosVariantUnneeded,
-		Desc:         "Verifies stress test shutdown using power button",
+		Func: ShutdownPwrbuttonStress,
+		Desc: "Verifies stress test shutdown using power button",
 		Contacts: []string{
 			"intel.chrome.automation.team@intel.com",
 			"pathan.jilani@intel.com",

@@ -18,9 +18,8 @@ import (
 
 func init() {
 	testing.AddTest(&testing.Test{
-		Func:         FastPairInitialPairPower,
-		LacrosStatus: testing.LacrosVariantUnneeded,
-		Desc:         "Tests the power consumption for Fast Pair initial pairing scenario and while Fast Pair is enabled and device is advertising",
+		Func: FastPairInitialPairPower,
+		Desc: "Tests the power consumption for Fast Pair initial pairing scenario and while Fast Pair is enabled and device is advertising",
 		Contacts: []string{
 			"chromeos-bt-team@google.com",
 			"jiangzp@google.com",

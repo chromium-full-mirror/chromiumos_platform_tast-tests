@@ -24,7 +24,6 @@ type stressConnectTestCase struct {
 func init() {
 	testing.AddTest(&testing.Test{
 		Func:         StressConnectDisconnect,
-		LacrosStatus: testing.LacrosVariantUnneeded,
 		Desc:         "Verifies that the DUT is able to connect and disconnect on 5GNSA",
 		Contacts:     []string{"chromeos-cellular-team@google.com", "srikanthkumar@google.com"},
 		BugComponent: "b:167157",

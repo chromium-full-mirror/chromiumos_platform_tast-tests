@@ -41,7 +41,6 @@ func init() {
 		HardwareDeps: hwdep.D(hwdep.CPUSocFamily("intel")),
 		Fixture:      fixture.NormalMode,
 		Timeout:      30 * time.Minute,
-		LacrosStatus: testing.LacrosVariantUnneeded,
 	})
 }
 

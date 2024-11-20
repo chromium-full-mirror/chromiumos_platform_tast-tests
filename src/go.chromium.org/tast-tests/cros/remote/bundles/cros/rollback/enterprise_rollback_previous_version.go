@@ -25,9 +25,8 @@ type testParam struct {
 
 func init() {
 	testing.AddTest(&testing.Test{
-		Func:         EnterpriseRollbackPreviousVersion,
-		LacrosStatus: testing.LacrosVariantUnneeded,
-		Desc:         "Tests the enterprise rollback feature by rolling back to a previous release",
+		Func: EnterpriseRollbackPreviousVersion,
+		Desc: "Tests the enterprise rollback feature by rolling back to a previous release",
 		Contacts: []string{
 			"chromeos-commercial-remote-management@google.com",
 			"mpolzer@google.com",

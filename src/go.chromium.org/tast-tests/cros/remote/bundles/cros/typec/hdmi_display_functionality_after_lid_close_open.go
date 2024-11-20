@@ -38,7 +38,6 @@ type displayParams struct {
 func init() {
 	testing.AddTest(&testing.Test{
 		Func:         HDMIDisplayFunctionalityAfterLidCloseOpen,
-		LacrosStatus: testing.LacrosVariantUnneeded,
 		Desc:         "Verifies connect HDMI Display to TBT to HDMI Dongle and check functionality after Lid close/open",
 		Contacts:     []string{"intel.chrome.automation.team@intel.com", "ambalavanan.m.m@intel.com"},
 		BugComponent: "b:157291", // ChromeOS > External > Intel

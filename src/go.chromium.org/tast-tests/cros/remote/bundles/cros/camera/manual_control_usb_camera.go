@@ -34,7 +34,6 @@ type manualControlUSBCameraParams struct {
 func init() {
 	testing.AddTest(&testing.Test{
 		Func:         ManualControlUSBCamera,
-		LacrosStatus: testing.LacrosVariantUnneeded,
 		Desc:         "Check the functionality of manual controlling usb cameras",
 		Contacts:     []string{"chromeos-camera-eng@google.com", "esker@chromium.org"},
 		BugComponent: "b:167281", // ChromeOS > Platform > Technologies > Camera

@@ -23,9 +23,8 @@ import (
 
 func init() {
 	testing.AddTest(&testing.Test{
-		Func:         AudioPlayPower,
-		LacrosStatus: testing.LacrosVariantUnneeded,
-		Desc:         "Measure Bluetooth audio play power consumption",
+		Func: AudioPlayPower,
+		Desc: "Measure Bluetooth audio play power consumption",
 		Contacts: []string{
 			"chromeos-bt-team@google.com",
 			"jiangzp@google.com",

@@ -41,7 +41,6 @@ type peripheralsTestParams struct {
 func init() {
 	testing.AddTest(&testing.Test{
 		Func:         SystemPeripheralsFunctionalityCheck,
-		LacrosStatus: testing.LacrosVariantUnneeded,
 		Desc:         "Verifies connected peripherals detection before and after power operations",
 		Contacts:     []string{"intel.chrome.automation.team@intel.com", "ambalavanan.m.m@intel.com"},
 		BugComponent: "b:157291", // ChromeOS > External > Intel

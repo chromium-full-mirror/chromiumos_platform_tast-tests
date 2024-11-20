@@ -21,9 +21,8 @@ import (
 
 func init() {
 	testing.AddTest(&testing.Test{
-		Func:         WilcoTPMKeyLadderVerification,
-		LacrosStatus: testing.LacrosVariantUnneeded,
-		Desc:         "Verify TPM key ladder when device boots into customer diagnostic mode",
+		Func: WilcoTPMKeyLadderVerification,
+		Desc: "Verify TPM key ladder when device boots into customer diagnostic mode",
 		Contacts: []string{
 			"chromeos-faft@google.com",
 			"cienet-firmware@cienet.corp-partner.google.com",

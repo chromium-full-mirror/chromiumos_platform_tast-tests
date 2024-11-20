@@ -25,7 +25,7 @@ import (
 )
 
 const (
-	problemSecurityTypeNone     uint32 = iota
+	problemSecurityTypeNone uint32 = iota
 	problemSecurityTypeWep8021x
 	problemSecurityTypeWepPsk
 	problemUnknownSecurityType
@@ -56,9 +56,8 @@ func genEAPSecConf() security.ConfigFactory {
 
 func init() {
 	testing.AddTest(&testing.Test{
-		Func:         DiagSecureWifi,
-		LacrosStatus: testing.LacrosVariantUnneeded,
-		Desc:         "Tests that the network diagnostic routine for secure WiFi connection gives correct results with different WiFi security protocols",
+		Func: DiagSecureWifi,
+		Desc: "Tests that the network diagnostic routine for secure WiFi connection gives correct results with different WiFi security protocols",
 		Contacts: []string{
 			"cros-network-health-team@google.com", // network-health team
 			"khegde@chromium.org",                 // test maintainer

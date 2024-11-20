@@ -43,7 +43,6 @@ func init() {
 	testing.AddTest(&testing.Test{
 		Func:           PacketCaptureWifi,
 		LifeCycleStage: testing.LifeCycleInDevelopment,
-		LacrosStatus:   testing.LacrosVariantUnneeded,
 		Desc:           "Verifies that network packet capture works, and various options function properly",
 		Contacts: []string{
 			"edgar.change@cienet.com",

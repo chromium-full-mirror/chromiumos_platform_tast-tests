@@ -19,9 +19,8 @@ import (
 
 func init() {
 	testing.AddTest(&testing.Test{
-		Func:         OobeConfigSaveShutdown,
-		LacrosStatus: testing.LacrosVariantUnneeded,
-		Desc:         "Check that oobe_config_save runs successfully on reboot",
+		Func: OobeConfigSaveShutdown,
+		Desc: "Check that oobe_config_save runs successfully on reboot",
 		Contacts: []string{
 			// DO NOT modify these tests without approval from a test contact.
 			"chromeos-commercial-remote-management@google.com",

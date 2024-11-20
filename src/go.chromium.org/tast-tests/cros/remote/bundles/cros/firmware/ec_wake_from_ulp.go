@@ -25,9 +25,8 @@ const (
 
 func init() {
 	testing.AddTest(&testing.Test{
-		Func:         ECWakeFromULP,
-		LacrosStatus: testing.LacrosVariantUnneeded,
-		Desc:         "Verify waking the EC from suspend by lid switch and pressing the power button",
+		Func: ECWakeFromULP,
+		Desc: "Verify waking the EC from suspend by lid switch and pressing the power button",
 		Contacts: []string{
 			"chromeos-faft@google.com",
 			"cienet-firmware@cienet.corp-partner.google.com",

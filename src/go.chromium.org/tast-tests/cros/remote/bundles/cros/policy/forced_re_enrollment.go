@@ -26,9 +26,8 @@ const freTestTimeout = 30 * time.Minute
 
 func init() {
 	testing.AddTest(&testing.Test{
-		Func:         ForcedReEnrollment,
-		LacrosStatus: testing.LacrosVariantUnneeded,
-		Desc:         "Test forced re-enrollment after powerwash",
+		Func: ForcedReEnrollment,
+		Desc: "Test forced re-enrollment after powerwash",
 		Contacts: []string{
 			"chromeos-commercial-remote-management@google.com",
 			"sergiyb@google.com",

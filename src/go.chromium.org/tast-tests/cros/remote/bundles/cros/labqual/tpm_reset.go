@@ -28,9 +28,8 @@ func init() {
 				Fixture: fixture.RecModeNoServices,
 			},
 		},
-		VarDeps:      []string{"servo"},
-		LacrosStatus: testing.LacrosVariantUnneeded,
-		TestBedDeps:  []string{tbdep.ServoUSBState("NORMAL"), tbdep.ServoStateWorking},
+		VarDeps:     []string{"servo"},
+		TestBedDeps: []string{tbdep.ServoUSBState("NORMAL"), tbdep.ServoStateWorking},
 	})
 }
 

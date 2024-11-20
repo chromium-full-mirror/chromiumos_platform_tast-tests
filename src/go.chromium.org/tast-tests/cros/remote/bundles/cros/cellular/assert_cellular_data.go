@@ -16,9 +16,8 @@ import (
 
 func init() {
 	testing.AddTest(&testing.Test{
-		Func:         AssertCellularData,
-		LacrosStatus: testing.LacrosVariantUnneeded,
-		Desc:         "Verifies that the DUT is able to establish a data connection under various RAT scenarios",
+		Func: AssertCellularData,
+		Desc: "Verifies that the DUT is able to establish a data connection under various RAT scenarios",
 		Contacts: []string{
 			"chromeos-cellular-team@google.com",
 		},

@@ -32,7 +32,6 @@ func init() {
 		Attr:         []string{"group:hw_agnostic", "group:mainline", "informational"},
 		SoftwareDeps: []string{"chrome"},
 		HardwareDeps: hwdep.D(hwdep.Model("amd64-generic")),
-		LacrosStatus: testing.LacrosVariantUnneeded,
 		Timeout:      time.Minute * 5,
 	})
 }

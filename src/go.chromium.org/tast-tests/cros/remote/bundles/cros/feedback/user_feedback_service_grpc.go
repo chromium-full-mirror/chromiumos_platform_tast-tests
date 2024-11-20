@@ -26,7 +26,6 @@ const systemLogsTxt = "system_logs.txt"
 func init() {
 	testing.AddTest(&testing.Test{
 		Func:         UserFeedbackServiceGRPC,
-		LacrosStatus: testing.LacrosVariantUnneeded,
 		Desc:         "Check basic functionalities of UserFeedbackService",
 		Contacts:     []string{"chromeos-sw-engprod@google.com", "jonfan@google.com"},
 		BugComponent: "b:1034649",

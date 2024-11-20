@@ -31,7 +31,6 @@ import (
 func init() {
 	testing.AddTest(&testing.Test{
 		Func:         DisconnectDisplayWhileSuspendDUT,
-		LacrosStatus: testing.LacrosVariantUnneeded,
 		Desc:         "Disconnect the external display while DUT is in suspend mode",
 		Contacts:     []string{"cros-wwcb-automation@google.com", "allion-wwcb@allion.corp-partner.google.com"},
 		BugComponent: "b:1289112", // ChromeOS > External > WWCB > Allion > Automation

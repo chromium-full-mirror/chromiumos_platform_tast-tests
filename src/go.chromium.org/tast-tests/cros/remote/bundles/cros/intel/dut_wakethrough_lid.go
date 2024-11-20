@@ -24,7 +24,6 @@ import (
 func init() {
 	testing.AddTest(&testing.Test{
 		Func:         DUTWakethroughLid,
-		LacrosStatus: testing.LacrosVariantUnneeded,
 		Desc:         "Verifies that system comes back after lid open in iterations",
 		Contacts:     []string{"intel.chrome.automation.team@intel.com", "pathan.jilani@intel.com"},
 		BugComponent: "b:157291", // ChromeOS > External > Intel

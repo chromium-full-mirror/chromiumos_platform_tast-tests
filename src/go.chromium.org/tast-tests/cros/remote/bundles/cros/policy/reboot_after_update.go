@@ -32,9 +32,8 @@ const (
 
 func init() {
 	testing.AddTest(&testing.Test{
-		Func:         RebootAfterUpdate,
-		LacrosStatus: testing.LacrosVariantUnneeded,
-		Desc:         "Verifies RebootAfterUpdate policy by setting the policy, updating in-place and checking if the device reboots",
+		Func: RebootAfterUpdate,
+		Desc: "Verifies RebootAfterUpdate policy by setting the policy, updating in-place and checking if the device reboots",
 		Contacts: []string{
 			"chromeos-commercial-remote-management@google.com",
 			"artyomchen@google.com", // Test author

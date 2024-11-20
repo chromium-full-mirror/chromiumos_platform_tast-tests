@@ -20,9 +20,8 @@ import (
 
 func init() {
 	testing.AddTest(&testing.Test{
-		Func:         FWScreenPressTab,
-		Desc:         "Verify that pressing the tab key on a firmware screen shows debug info",
-		LacrosStatus: testing.LacrosVariantUnneeded,
+		Func: FWScreenPressTab,
+		Desc: "Verify that pressing the tab key on a firmware screen shows debug info",
 		Contacts: []string{
 			"chromeos-faft@google.com",
 			"cienet-firmware@cienet.corp-partner.google.com",

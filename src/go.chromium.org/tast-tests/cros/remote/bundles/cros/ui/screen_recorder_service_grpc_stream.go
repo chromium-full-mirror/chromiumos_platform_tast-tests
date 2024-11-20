@@ -26,7 +26,6 @@ import (
 func init() {
 	testing.AddTest(&testing.Test{
 		Func:         ScreenRecorderServiceGRPCStream,
-		LacrosStatus: testing.LacrosVariantUnneeded,
 		Desc:         "Check video streaming functionalities of ScreenRecorderService",
 		Contacts:     []string{"chromeos-sw-engprod@google.com", "jonfan@google.com"},
 		BugComponent: "b:1034649",

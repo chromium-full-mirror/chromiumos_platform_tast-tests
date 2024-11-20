@@ -20,7 +20,6 @@ import (
 func init() {
 	testing.AddTest(&testing.Test{
 		Func:         PsrFunctionality,
-		LacrosStatus: testing.LacrosVariantUnneeded,
 		Desc:         "Functional PSR testing",
 		BugComponent: "b:1038263", // 152642 > 154116 > Intel > vPRO
 		Contacts:     []string{"intel.chrome.automation.team@intel.com", "moises.veleta@intel.com"},

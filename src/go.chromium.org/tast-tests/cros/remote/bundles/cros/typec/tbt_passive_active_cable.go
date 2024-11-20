@@ -35,7 +35,6 @@ type tbtCableTestParams struct {
 func init() {
 	testing.AddTest(&testing.Test{
 		Func:         TBTPassiveActiveCable,
-		LacrosStatus: testing.LacrosVariantUnneeded,
 		Desc:         "Verifies connected thunderbolt cable type is passive cable or active cable",
 		Contacts:     []string{"intel.chrome.automation.team@intel.com", "pathan.jilani@intel.com"},
 		BugComponent: "b:157291", // ChromeOS > External > Intel

@@ -20,9 +20,8 @@ import (
 
 func init() {
 	testing.AddTest(&testing.Test{
-		Func:         WilcoChargingFromUSBC,
-		LacrosStatus: testing.LacrosVariantUnneeded,
-		Desc:         "Verify typec charging behavior on wilco devices",
+		Func: WilcoChargingFromUSBC,
+		Desc: "Verify typec charging behavior on wilco devices",
 		Contacts: []string{
 			"chromeos-faft@google.com",
 			"cienet-firmware@cienet.corp-partner.google.com",

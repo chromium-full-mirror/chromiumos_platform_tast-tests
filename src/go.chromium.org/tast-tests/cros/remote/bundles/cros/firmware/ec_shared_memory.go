@@ -29,7 +29,6 @@ func init() {
 		Attr:         []string{"group:firmware", "firmware_ec", "firmware_bringup"},
 		HardwareDeps: hwdep.D(hwdep.ChromeEC()),
 		Fixture:      fixture.NormalMode,
-		LacrosStatus: testing.LacrosVariantUnneeded,
 	})
 }
 

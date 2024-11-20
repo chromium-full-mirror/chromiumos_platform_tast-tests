@@ -29,7 +29,6 @@ import (
 func init() {
 	testing.AddTest(&testing.Test{
 		Func:         CCASwitchToExternalCamera,
-		LacrosStatus: testing.LacrosVariantUnneeded,
 		Desc:         "Launch camera app and check external webcam could be detected",
 		Contacts:     []string{"cros-wwcb-automation@google.com", "allion-wwcb@allion.corp-partner.google.com"},
 		BugComponent: "b:1289112", // ChromeOS > External > WWCB > Allion > Automation

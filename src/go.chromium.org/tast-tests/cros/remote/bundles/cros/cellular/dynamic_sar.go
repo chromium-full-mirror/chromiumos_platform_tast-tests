@@ -38,7 +38,6 @@ type dSARTestCase struct {
 func init() {
 	testing.AddTest(&testing.Test{
 		Func:         DynamicSAR,
-		LacrosStatus: testing.LacrosVariantUnneeded,
 		Desc:         "Verifies that Tx power received at the callbox is within acceptable limits for a given SAR level/band combination",
 		Contacts:     []string{"chromeos-cellular-team@google.com", "jstanko@google.com"},
 		BugComponent: "b:167157", // ChromeOS > Platform > Connectivity > Cellular

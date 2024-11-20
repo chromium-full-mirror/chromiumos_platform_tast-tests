@@ -25,9 +25,8 @@ import (
 
 func init() {
 	testing.AddTest(&testing.Test{
-		Func:         DisconnectFromNetwork,
-		LacrosStatus: testing.LacrosVariantUnneeded,
-		Desc:         "Verify that the user has a way of disconnecting from the current network on a Chromebook",
+		Func: DisconnectFromNetwork,
+		Desc: "Verify that the user has a way of disconnecting from the current network on a Chromebook",
 		Contacts: []string{
 			"cros-device-enablement@google.com",
 			"chromeos-connectivity-engprod@google.com",

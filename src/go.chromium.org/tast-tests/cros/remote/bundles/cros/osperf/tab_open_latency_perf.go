@@ -28,7 +28,6 @@ import (
 func init() {
 	testing.AddTest(&testing.Test{
 		Func:         TabOpenLatencyPerf,
-		LacrosStatus: testing.LacrosVariantUnneeded,
 		Desc:         "Measures tab open latency remotely to get stable results quickly",
 		BugComponent: "b:167279", // ChromeOS > Platform > baseOS > Performance
 		Contacts:     []string{"baseos-perf@google.com", "hikalium@google.com"},

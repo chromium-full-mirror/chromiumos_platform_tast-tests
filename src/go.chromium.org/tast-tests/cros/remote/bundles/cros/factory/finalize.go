@@ -25,10 +25,9 @@ const (
 
 func init() {
 	testing.AddTest(&testing.Test{
-		Func:         Finalize,
-		LacrosStatus: testing.LacrosVariantUnneeded,
-		Desc:         "Test finalize process in factory toolkit",
-		Contacts:     []string{"chromeos-factory-eng@google.com", "lschyi@google.com"},
+		Func:     Finalize,
+		Desc:     "Test finalize process in factory toolkit",
+		Contacts: []string{"chromeos-factory-eng@google.com", "lschyi@google.com"},
 		// ChromeOS > Platform > Enablement > Factory
 		BugComponent: "b:167224",
 		SoftwareDeps: append([]string{"reboot", "factory_flow"}, fixture.EnsureToolkitSoftwareDeps...),

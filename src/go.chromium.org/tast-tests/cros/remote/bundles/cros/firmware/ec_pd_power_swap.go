@@ -18,9 +18,8 @@ import (
 
 func init() {
 	testing.AddTest(&testing.Test{
-		Func:         ECPDPowerSwap,
-		Desc:         "Verify USB-C/PD Power Role Swap",
-		LacrosStatus: testing.LacrosVariantUnneeded,
+		Func: ECPDPowerSwap,
+		Desc: "Verify USB-C/PD Power Role Swap",
 		Contacts: []string{
 			"chromeos-faft@google.com",
 			"asemjonovs@google.com",

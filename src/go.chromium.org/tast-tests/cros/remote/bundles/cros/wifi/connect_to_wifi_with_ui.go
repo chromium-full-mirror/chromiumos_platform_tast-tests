@@ -88,9 +88,8 @@ type connectToWifiWithUITestData struct {
 
 func init() {
 	testing.AddTest(&testing.Test{
-		Func:         ConnectToWifiWithUI,
-		LacrosStatus: testing.LacrosVariantUnneeded,
-		Desc:         "Tests that WiFi can be connected to with different UI surfaces, and can transit from one network to another",
+		Func: ConnectToWifiWithUI,
+		Desc: "Tests that WiFi can be connected to with different UI surfaces, and can transit from one network to another",
 		Contacts: []string{
 			"cros-device-enablement@google.com",
 			"chromeos-connectivity-engprod@google.com",

@@ -27,10 +27,9 @@ var (
 
 func init() {
 	testing.AddTest(&testing.Test{
-		Func:         PerfBoot,
-		LacrosStatus: testing.LacrosVariantUnneeded,
-		Desc:         "Signs in to DUT and measures Android boot performance metrics",
-		Contacts:     []string{"arc-performance@google.com", "khmel@chromium.org"},
+		Func:     PerfBoot,
+		Desc:     "Signs in to DUT and measures Android boot performance metrics",
+		Contacts: []string{"arc-performance@google.com", "khmel@chromium.org"},
 		// ChromeOS > Software > ARC++ > Performance
 		BugComponent: "b:168382",
 		Attr:         []string{"group:crosbolt", "crosbolt_perbuild"},

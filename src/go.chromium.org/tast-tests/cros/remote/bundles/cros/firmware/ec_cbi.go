@@ -37,7 +37,6 @@ func init() {
 			"ekko",
 			"syndra",
 		)),
-		LacrosStatus: testing.LacrosVariantUnneeded,
 	})
 }
 

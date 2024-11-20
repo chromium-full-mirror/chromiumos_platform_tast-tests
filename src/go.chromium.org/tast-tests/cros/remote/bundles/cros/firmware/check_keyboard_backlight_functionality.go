@@ -35,9 +35,8 @@ const powerdLogPath = "/var/log/power_manager/powerd.LATEST"
 
 func init() {
 	testing.AddTest(&testing.Test{
-		Func:         CheckKeyboardBacklightFunctionality,
-		LacrosStatus: testing.LacrosVariantUnneeded,
-		Desc:         "Confirm keyboard backlight support and check keyboard backlight functionality",
+		Func: CheckKeyboardBacklightFunctionality,
+		Desc: "Confirm keyboard backlight support and check keyboard backlight functionality",
 		Contacts: []string{
 			"chromeos-faft@google.com",
 			"cienet-firmware@cienet.corp-partner.google.com",

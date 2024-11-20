@@ -51,9 +51,8 @@ type tokenEnrollmentParams struct {
 
 func init() {
 	testing.AddTest(&testing.Test{
-		Func:         TokenBasedEnrollment,
-		LacrosStatus: testing.LacrosVariantUnneeded,
-		Desc:         "Verify success of token-based enrollment on ChromeOS Flex",
+		Func: TokenBasedEnrollment,
+		Desc: "Verify success of token-based enrollment on ChromeOS Flex",
 		Contacts: []string{
 			"cros-onboarding-team@google.com",
 			"jacksontadie@google.com",

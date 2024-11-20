@@ -122,9 +122,8 @@ type localContext struct {
 
 func init() {
 	testing.AddTest(&testing.Test{
-		Func:         PolicyBlockedWifi,
-		LacrosStatus: testing.LacrosVariantUnneeded,
-		Desc:         "Verifies that DUT respects rules for SSIDs blocked by device policy",
+		Func: PolicyBlockedWifi,
+		Desc: "Verifies that DUT respects rules for SSIDs blocked by device policy",
 		Contacts: []string{
 			"chromeos-commercial-networking@google.com",
 			"olsa@google.com",
@@ -778,7 +777,7 @@ func openJoinWiFiDialogFromOneClick(ctx context.Context, rpcClient *grpc.ClientC
 	if settings == quickSettings {
 		settingsSvc := quicksettings.NewQuickSettingsServiceClient(rpcClient)
 		if _, err := settingsSvc.NavigateToNetworkDetailedView(ctx, &emptypb.Empty{}); err != nil {
-			return func(ctx context.Context) { }, errors.Wrap(err, "failed to navigate to network detailed view within the Quick Settings")
+			return func(ctx context.Context) {}, errors.Wrap(err, "failed to navigate to network detailed view within the Quick Settings")
 		}
 		cleanup = func(ctx context.Context) { settingsSvc.Hide(ctx, &emptypb.Empty{}) }
 
@@ -786,7 +785,7 @@ func openJoinWiFiDialogFromOneClick(ctx context.Context, rpcClient *grpc.ClientC
 	} else if settings == osSettings {
 		settingsSvc := ossettings.NewOsSettingsServiceClient(rpcClient)
 		if _, err := settingsSvc.LaunchAtWifiPage(ctx, &emptypb.Empty{}); err != nil {
-			return func(ctx context.Context) { }, errors.Wrap(err, "error during opening OS WiFi setting page")
+			return func(ctx context.Context) {}, errors.Wrap(err, "error during opening OS WiFi setting page")
 		}
 		cleanup = func(ctx context.Context) { settingsSvc.Close(ctx, &emptypb.Empty{}) }
 		connectToSsidButton = &ui.Finder{

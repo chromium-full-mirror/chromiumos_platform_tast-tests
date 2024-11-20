@@ -28,10 +28,9 @@ func init() {
 			"chromeos-faft@google.com",
 			"jwerner@chromium.org", // Test author
 		},
-		Attr:         []string{"group:firmware", "firmware_bios", "firmware_level4", "firmware_ro"},
-		Fixture:      fixture.BootModeFixtureWithAPBackup(fixture.NormalMode),
-		ServiceDeps:  []string{"tast.cros.firmware.BiosService"},
-		LacrosStatus: testing.LacrosVariantUnneeded,
+		Attr:        []string{"group:firmware", "firmware_bios", "firmware_level4", "firmware_ro"},
+		Fixture:     fixture.BootModeFixtureWithAPBackup(fixture.NormalMode),
+		ServiceDeps: []string{"tast.cros.firmware.BiosService"},
 	})
 }
 

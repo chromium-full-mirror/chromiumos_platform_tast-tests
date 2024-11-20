@@ -33,9 +33,8 @@ type serviceResponse struct {
 
 func init() {
 	testing.AddTest(&testing.Test{
-		Func:         HumanMotionRobotLinearity,
-		LacrosStatus: testing.LacrosVariantUnneeded,
-		Desc:         "Run a linearity HMR Test",
+		Func: HumanMotionRobotLinearity,
+		Desc: "Run a linearity HMR Test",
 		Contacts: []string{
 			"chromeos-tango@google.com",
 			"wmahon@google.com", // Test author

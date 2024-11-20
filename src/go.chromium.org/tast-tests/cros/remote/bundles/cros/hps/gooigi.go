@@ -43,9 +43,8 @@ const duration = 20
 
 func init() {
 	testing.AddTest(&testing.Test{
-		Func:         Gooigi,
-		LacrosStatus: testing.LacrosVariantUnneeded,
-		Desc:         "Verifies that the hps detects single person in backlit environments",
+		Func: Gooigi,
+		Desc: "Verifies that the hps detects single person in backlit environments",
 		Contacts: []string{
 			"jmpollock@google.com",
 			"pmarheine@google.com",

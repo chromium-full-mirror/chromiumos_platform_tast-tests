@@ -31,7 +31,6 @@ type batteryStatusTestParam struct {
 func init() {
 	testing.AddTest(&testing.Test{
 		Func:         BatteryStatusOnACRemoval,
-		LacrosStatus: testing.LacrosVariantUnneeded,
 		Desc:         "Battery status and stop charging upon removal of AC",
 		Contacts:     []string{"intel.chrome.automation.team@intel.com", "ambalavanan.m.m@intel.com"},
 		BugComponent: "b:157291", // ChromeOS > External > Intel

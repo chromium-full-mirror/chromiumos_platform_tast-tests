@@ -23,9 +23,8 @@ import (
 
 func init() {
 	testing.AddTest(&testing.Test{
-		Func:         FastPairSavedDevicesAddAndRemoveInitialPair,
-		LacrosStatus: testing.LacrosVariantUnneeded,
-		Desc:         "Tests that Saved Devices subpage shows a newly added Saved Device after the Fast Pair initial pairing scenario, and removes the device after clicking Remove",
+		Func: FastPairSavedDevicesAddAndRemoveInitialPair,
+		Desc: "Tests that Saved Devices subpage shows a newly added Saved Device after the Fast Pair initial pairing scenario, and removes the device after clicking Remove",
 		Contacts: []string{
 			"chromeos-sw-engprod@google.com",
 			"chromeos-cross-device-eng@google.com",

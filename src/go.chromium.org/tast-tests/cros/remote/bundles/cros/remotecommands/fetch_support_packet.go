@@ -56,7 +56,6 @@ func init() {
 		},
 		SoftwareDeps: []string{"chrome", "vpd"},
 		ServiceDeps:  []string{"tast.cros.policy.PolicyService", "tast.cros.hwsec.OwnershipService", "tast.cros.tape.Service"},
-		LacrosStatus: testing.LacrosVariantUnneeded,
 		VarDeps: []string{
 			reportingutil.EventsAPIKeyPath,
 			tape.ServiceAccountVar,

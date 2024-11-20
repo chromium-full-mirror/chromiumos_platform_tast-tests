@@ -39,9 +39,8 @@ type compareDispBusInfo struct {
 
 func init() {
 	testing.AddTest(&testing.Test{
-		Func:         ECLaptopMode,
-		LacrosStatus: testing.LacrosVariantUnneeded,
-		Desc:         "Checks that power button actions at varied durations behave as expected in laptop mode",
+		Func: ECLaptopMode,
+		Desc: "Checks that power button actions at varied durations behave as expected in laptop mode",
 		Contacts: []string{
 			"chromeos-faft@google.com",
 			"cienet-firmware@cienet.corp-partner.google.com",

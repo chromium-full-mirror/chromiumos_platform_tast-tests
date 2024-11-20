@@ -19,9 +19,8 @@ import (
 
 func init() {
 	testing.AddTest(&testing.Test{
-		Func:         CrossVersionInstallAttributesMigrationAbort,
-		LacrosStatus: testing.LacrosVariantUnneeded,
-		Desc:         "Verifies aborting the migration of install attributes across versions would not cause data loss",
+		Func: CrossVersionInstallAttributesMigrationAbort,
+		Desc: "Verifies aborting the migration of install attributes across versions would not cause data loss",
 		Contacts: []string{
 			"cros-hwsec@google.com",
 			"yich@google.com",

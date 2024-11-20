@@ -20,9 +20,8 @@ const systemProxyForArcTestTimeout = 10 * time.Minute
 
 func init() {
 	testing.AddTest(&testing.Test{
-		Func:         SystemProxyForArc,
-		LacrosStatus: testing.LacrosVariantUnneeded,
-		Desc:         "Test that ARC++ apps can successfully connect to the remote host through the system-proxy daemon",
+		Func: SystemProxyForArc,
+		Desc: "Test that ARC++ apps can successfully connect to the remote host through the system-proxy daemon",
 		Contacts: []string{
 			"chromeos-commercial-networking@google.com", // Team
 			"acostinas@google.com",                      // Test author

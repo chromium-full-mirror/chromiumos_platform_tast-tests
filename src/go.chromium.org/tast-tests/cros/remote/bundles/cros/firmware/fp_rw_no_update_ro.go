@@ -36,7 +36,6 @@ func init() {
 		TestBedDeps:  []string{tbdep.Fingerprint, tbdep.ServoStateWorking},
 		Vars:         []string{"servo"},
 		Fixture:      fixture.FingerprintImages,
-		LacrosStatus: testing.LacrosVariantUnneeded,
 	})
 }
 

@@ -19,9 +19,8 @@ import (
 
 func init() {
 	testing.AddTest(&testing.Test{
-		Func:         FastPairRetroactivePairHID,
-		LacrosStatus: testing.LacrosVariantUnneeded,
-		Desc:         "Tests the Fast Pair retroactive pairing scenario with a HID. Floss only test",
+		Func: FastPairRetroactivePairHID,
+		Desc: "Tests the Fast Pair retroactive pairing scenario with a HID. Floss only test",
 		Contacts: []string{
 			"chromeos-sw-engprod@google.com",
 			"chromeos-cross-device-eng@google.com",

@@ -25,7 +25,6 @@ import (
 func init() {
 	testing.AddTest(&testing.Test{
 		Func:         DUTBehaviorOnECCommands,
-		LacrosStatus: testing.LacrosVariantUnneeded,
 		Desc:         "Verifies DUT behavior on executing various EC commands",
 		Contacts:     []string{"intel.chrome.automation.team@intel.com", "ambalavanan.m.m@intel.com"},
 		BugComponent: "b:157291",

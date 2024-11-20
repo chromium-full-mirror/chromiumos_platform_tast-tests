@@ -39,9 +39,8 @@ type testParam struct {
 
 func init() {
 	testing.AddTest(&testing.Test{
-		Func:         ReleaseChannelE2E,
-		LacrosStatus: testing.LacrosVariantUnneeded,
-		Desc:         "Enroll a device in an OU and select a channel",
+		Func: ReleaseChannelE2E,
+		Desc: "Enroll a device in an OU and select a channel",
 		Contacts: []string{
 			"vsavu@google.com", // Test author
 			"chromeos-commercial-remote-management@google.com",

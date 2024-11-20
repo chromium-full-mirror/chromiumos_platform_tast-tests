@@ -25,7 +25,6 @@ import (
 func init() {
 	testing.AddTest(&testing.Test{
 		Func:         CordedKeyboardKeyFunctionsSuspendAndResume,
-		LacrosStatus: testing.LacrosVariantUnneeded,
 		Desc:         "After suspend and resume, check the functionality of the top row function keys, special keys, and character keys on the corded keyboard",
 		Contacts:     []string{"cros-wwcb-automation@google.com", "allion-wwcb@allion.corp-partner.google.com"},
 		BugComponent: "b:1289112", // ChromeOS > External > WWCB > Allion > Automation

@@ -16,9 +16,8 @@ import (
 
 func init() {
 	testing.AddTest(&testing.Test{
-		Func:         BasicNToM,
-		LacrosStatus: testing.LacrosVariantUnneeded,
-		Desc:         "Example test for updating to an older version using Nebraska and test images",
+		Func: BasicNToM,
+		Desc: "Example test for updating to an older version using Nebraska and test images",
 		Contacts: []string{
 			"chromeos-commercial-remote-management@google.com",
 			"mpolzer@google.com", // Test owner

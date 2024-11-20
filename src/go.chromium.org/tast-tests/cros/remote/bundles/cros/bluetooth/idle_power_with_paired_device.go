@@ -22,9 +22,8 @@ type idlePowerWithPairedDeviceTestCase struct {
 
 func init() {
 	testing.AddTest(&testing.Test{
-		Func:         IdlePowerWithPairedDevice,
-		LacrosStatus: testing.LacrosVariantUnneeded,
-		Desc:         "Measure Bluetooth with one paired device without user activities power consumption",
+		Func: IdlePowerWithPairedDevice,
+		Desc: "Measure Bluetooth with one paired device without user activities power consumption",
 		Contacts: []string{
 			"chromeos-bt-team@google.com",
 			"jiangzp@google.com",

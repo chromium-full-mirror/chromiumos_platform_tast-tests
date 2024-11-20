@@ -25,9 +25,8 @@ import (
 
 func init() {
 	testing.AddTest(&testing.Test{
-		Func:         ECPDRole,
-		Desc:         "Verify USB-C/PD source role policy",
-		LacrosStatus: testing.LacrosVariantUnneeded,
+		Func: ECPDRole,
+		Desc: "Verify USB-C/PD source role policy",
 		Contacts: []string{
 			"chromeos-faft@google.com",
 			"cienet-firmware@cienet.corp-partner.google.com",

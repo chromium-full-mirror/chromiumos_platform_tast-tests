@@ -20,9 +20,8 @@ import (
 
 func init() {
 	testing.AddTest(&testing.Test{
-		Func:         SystemServicesConnectivity,
-		LacrosStatus: testing.LacrosVariantUnneeded,
-		Desc:         "Test that system services work behind a firewall configured according to our support page",
+		Func: SystemServicesConnectivity,
+		Desc: "Test that system services work behind a firewall configured according to our support page",
 		Contacts: []string{
 			"chromeos-commercial-networking@google.com", // Team
 			"acostinas@google.com",                      // Test author

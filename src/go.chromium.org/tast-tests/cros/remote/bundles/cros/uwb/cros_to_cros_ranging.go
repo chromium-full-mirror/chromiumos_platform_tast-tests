@@ -20,9 +20,8 @@ import (
 
 func init() {
 	testing.AddTest(&testing.Test{
-		Func:         CrosToCrosRanging,
-		Desc:         "Basic UWB Ranging Test between 2 CrOS devices",
-		LacrosStatus: testing.LacrosVariantUnneeded,
+		Func: CrosToCrosRanging,
+		Desc: "Basic UWB Ranging Test between 2 CrOS devices",
 		Contacts: []string{
 			"chromeos-uwb-team@google.com",
 		},

@@ -37,7 +37,6 @@ type connectPEAPGuestWithoutCertTestParam struct {
 func init() {
 	testing.AddTest(&testing.Test{
 		Func:           GuestConnectToWifiWithoutCert,
-		LacrosStatus:   testing.LacrosVariantUnneeded,
 		LifeCycleStage: testing.LifeCycleOwnerMonitored,
 		Desc:           "Verify that guest user can connect to a 802.1x PEAP secure WiFi network without certificate",
 		Contacts: []string{

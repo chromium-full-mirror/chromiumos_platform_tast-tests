@@ -36,9 +36,8 @@ type referenceFileData struct {
 
 func init() {
 	testing.AddTest(&testing.Test{
-		Func:         HumanMotionRobotStylusDrawing,
-		LacrosStatus: testing.LacrosVariantUnneeded,
-		Desc:         "Run a full image HMR Test",
+		Func: HumanMotionRobotStylusDrawing,
+		Desc: "Run a full image HMR Test",
 		Contacts: []string{
 			"chromeos-tango@google.com",
 			"wmahon@google.com", // Test author

@@ -20,7 +20,6 @@ import (
 func init() {
 	testing.AddTest(&testing.Test{
 		Func:         AssertSMS,
-		LacrosStatus: testing.LacrosVariantUnneeded,
 		Desc:         "Verifies that an SMS message sent from the callbox is received",
 		Contacts:     []string{"chromeos-cellular-team@google.com", "jstanko@google.com"},
 		BugComponent: "b:167157", // ChromeOS > Platform > Connectivity > Cellular

@@ -45,7 +45,6 @@ func init() {
 		Attr:         []string{"group:mainline", "informational", "group:dmserver-enrollment-daily", "group:enterprise-reporting", "group:hw_agnostic"},
 		Timeout:      xdrReportingTimeout,
 		SoftwareDeps: []string{"bpf", "reboot", "chrome"},
-		LacrosStatus: testing.LacrosVariantUnneeded,
 		ServiceDeps:  []string{"tast.cros.policy.PolicyService", "tast.cros.hwsec.OwnershipService", "tast.cros.tape.Service", "tast.cros.graphics.ScreenshotService"},
 		Params: []testing.Param{
 			{

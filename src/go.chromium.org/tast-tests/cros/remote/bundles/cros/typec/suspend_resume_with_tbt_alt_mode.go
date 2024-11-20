@@ -31,7 +31,6 @@ import (
 func init() {
 	testing.AddTest(&testing.Test{
 		Func:         SuspendResumeWithTBTAltMode,
-		LacrosStatus: testing.LacrosVariantUnneeded,
 		Desc:         "Verifies Switch between TBT mode alt mode and DP alt mode after suspend-resume power state using 40G passive cable",
 		Contacts:     []string{"intel.chrome.automation.team@intel.com", "ambalavanan.m.m@intel.com"},
 		BugComponent: "b:157291", // ChromeOS > External > Intel.

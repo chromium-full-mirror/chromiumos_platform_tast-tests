@@ -27,9 +27,8 @@ const arcConnectivityTestTimeout = 12 * time.Minute
 
 func init() {
 	testing.AddTest(&testing.Test{
-		Func:         ArcConnectivity,
-		LacrosStatus: testing.LacrosVariantUnneeded,
-		Desc:         "Test that the PlayStore works behind a firewall configured according to our support page",
+		Func: ArcConnectivity,
+		Desc: "Test that the PlayStore works behind a firewall configured according to our support page",
 		Contacts: []string{
 			"chromeos-commercial-networking@google.com", // Team
 			"acostinas@google.com",                      // Test author

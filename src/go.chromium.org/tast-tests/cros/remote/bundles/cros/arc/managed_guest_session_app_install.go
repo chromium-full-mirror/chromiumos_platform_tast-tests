@@ -24,10 +24,9 @@ const mgsTestTimeout = 15 * time.Minute
 
 func init() {
 	testing.AddTest(&testing.Test{
-		Func:         ManagedGuestSessionAppInstall,
-		LacrosStatus: testing.LacrosVariantUnneeded,
-		Desc:         "Verifies app is force-installed in MGS",
-		Contacts:     []string{"arc-commercial@google.com", "mhasank@chromium.org"},
+		Func:     ManagedGuestSessionAppInstall,
+		Desc:     "Verifies app is force-installed in MGS",
+		Contacts: []string{"arc-commercial@google.com", "mhasank@chromium.org"},
 		// ChromeOS > Software > ARC++ > Commercial > Tast Tests
 		BugComponent: "b:1487630",
 		Attr:         []string{"group:dpanel-end2end", "group:dmserver-enrollment-daily"},

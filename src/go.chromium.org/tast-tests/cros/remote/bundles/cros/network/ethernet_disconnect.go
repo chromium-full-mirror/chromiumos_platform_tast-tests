@@ -33,9 +33,8 @@ type ethernetDisconnectTestParam struct {
 
 func init() {
 	testing.AddTest(&testing.Test{
-		Func:         EthernetDisconnect,
-		LacrosStatus: testing.LacrosVariantUnneeded,
-		Desc:         "Verify DUT behavior for onboard Ethernet connect/disconnect/reboot/suspend and resume",
+		Func: EthernetDisconnect,
+		Desc: "Verify DUT behavior for onboard Ethernet connect/disconnect/reboot/suspend and resume",
 		Contacts: []string{
 			// "cros-device-enablement@google.com",
 			// "chromeos-connectivity-engprod@google.com",

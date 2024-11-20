@@ -33,7 +33,6 @@ type shutdownWithCmdTabletModeParams struct {
 func init() {
 	testing.AddTest(&testing.Test{
 		Func:         ShutdownWithCommandTabletMode,
-		LacrosStatus: testing.LacrosVariantUnneeded,
 		Desc:         "Verifies that system comes back after executing shutdown command in tabletmode",
 		BugComponent: "b:157291", // ChromeOS > External > Intel
 		Contacts:     []string{"intel.chrome.automation.team@intel.com", "pathan.jilani@intel.com"},

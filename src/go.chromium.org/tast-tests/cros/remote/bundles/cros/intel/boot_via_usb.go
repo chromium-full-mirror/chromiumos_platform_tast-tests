@@ -21,7 +21,6 @@ import (
 func init() {
 	testing.AddTest(&testing.Test{
 		Func:         BootViaUSB,
-		LacrosStatus: testing.LacrosVariantUnneeded,
 		Desc:         "Verifies if DUT can boot from USB Type-C pen drive",
 		Contacts:     []string{"intel.chrome.automation.team@intel.com", "ambalavanan.m.m@intel.com"},
 		BugComponent: "b:157291",

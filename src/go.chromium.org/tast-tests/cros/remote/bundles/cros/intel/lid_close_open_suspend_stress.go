@@ -21,7 +21,6 @@ import (
 func init() {
 	testing.AddTest(&testing.Test{
 		Func:         LidCloseOpenSuspendStress,
-		LacrosStatus: testing.LacrosVariantUnneeded,
 		Desc:         "Verifies lid close-open suspend stress test",
 		Contacts:     []string{"intel.chrome.automation.team@intel.com", "ambalavanan.m.m@intel.com"},
 		BugComponent: "b:157291", // ChromeOS > External > Intel

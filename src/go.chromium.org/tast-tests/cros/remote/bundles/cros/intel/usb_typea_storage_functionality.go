@@ -42,7 +42,6 @@ type usbTypeATestParam struct {
 func init() {
 	testing.AddTest(&testing.Test{
 		Func:         USBTypeAStorageFunctionality,
-		LacrosStatus: testing.LacrosVariantUnneeded,
 		Desc:         "Verifies USB type-A storage device functionality on warmboot/coldboot operation",
 		Contacts:     []string{"intel.chrome.automation.team@intel.com", "ambalavanan.m.m@intel.com"},
 		BugComponent: "b:157291",

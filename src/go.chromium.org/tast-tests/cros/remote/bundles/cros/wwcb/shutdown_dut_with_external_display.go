@@ -30,7 +30,6 @@ import (
 func init() {
 	testing.AddTest(&testing.Test{
 		Func:         ShutdownDUTWithExternalDisplay,
-		LacrosStatus: testing.LacrosVariantUnneeded,
 		Desc:         "Shutdown DUT then check both screens on DUT & external display to become dark by camera connecting to the host",
 		Contacts:     []string{"cros-wwcb-automation@google.com", "allion-wwcb@allion.corp-partner.google.com"},
 		BugComponent: "b:1289112", // ChromeOS > External > WWCB > Allion > Automation

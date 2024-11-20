@@ -25,9 +25,8 @@ import (
 
 func init() {
 	testing.AddTest(&testing.Test{
-		Func:         ForgetDevice,
-		LacrosStatus: testing.LacrosVariantUnneeded,
-		Desc:         "Verify that user can forget paired/connected and paired/disconnected devices by clicking the 'forget' button",
+		Func: ForgetDevice,
+		Desc: "Verify that user can forget paired/connected and paired/disconnected devices by clicking the 'forget' button",
 		Contacts: []string{
 			"cros-device-enablement@google.com",
 			"chromeos-connectivity-engprod@google.com",

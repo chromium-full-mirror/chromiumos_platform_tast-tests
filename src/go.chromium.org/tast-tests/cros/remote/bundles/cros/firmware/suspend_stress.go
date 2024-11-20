@@ -40,7 +40,6 @@ func init() {
 		Vars:         []string{"firmware.suspendStressFailFast"},
 		Attr:         []string{"group:firmware"},
 		ServiceDeps:  []string{"tast.cros.firmware.UtilsService", "tast.cros.firmware.TPMService"},
-		LacrosStatus: testing.LacrosVariantUnneeded,
 		HardwareDeps: hwdep.D(hwdep.ChromeEC()),
 		SoftwareDeps: []string{"chrome"},
 		Fixture:      fixture.NormalMode,
