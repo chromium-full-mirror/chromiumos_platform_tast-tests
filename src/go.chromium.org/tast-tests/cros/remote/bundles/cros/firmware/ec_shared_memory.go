@@ -63,6 +63,14 @@ func ECSharedMemory(ctx context.Context, s *testing.State) {
 	if err := h.Servo.RunECCommand(ctx, "crash divzero"); err != nil {
 		s.Fatal("Failed to send 'crash divzero' to EC: ", err)
 	}
+	defer func() {
+		if err := h.EnsureDUTBooted(ctx); err != nil {
+			s.Fatal("Failed to boot DUT after test: ", err)
+		}
+		if err := h.UpdateECCrashCache(ctx); err != nil {
+			s.Fatal("Failed to update EC crash file cache after test: ", err)
+		}
+	}()
 
 	/**
 	 * GoBigSleepLint: Wait for the EC to successfully crash before making the first attempt
@@ -77,10 +85,6 @@ func ECSharedMemory(ctx context.Context, s *testing.State) {
 	if err := h.DUT.WaitConnect(ctx); err != nil {
 		s.Fatal("Failed connect to DUT: ", err)
 	}
-	if err := h.UpdateECCrashCache(ctx); err != nil {
-		s.Fatal("Failed to update EC crash file cache after test: ", err)
-	}
-
 	s.Log("Check shared memory after crash")
 	if err := checkSharedMemory(ctx, h); err != nil {
 		s.Fatal("Failed to check shared memory after crash: ", err)
