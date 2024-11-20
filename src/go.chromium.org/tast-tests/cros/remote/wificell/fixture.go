@@ -81,7 +81,8 @@ const (
 	// defaultRPCInvokeMethod for all fixtures.
 	fixtureVarInvokeMethod = "wificell.InvokeMethod"
 
-	intelVendorNum = "0x8086"
+	// IntelVendorNum Intel WiFi vendor number.
+	IntelVendorNum = "0x8086"
 )
 
 var alwaysInitAndroid = testing.RegisterVarString(
@@ -803,7 +804,7 @@ func (f *tastFixtureImpl) PostTest(ctx context.Context, s *testing.FixtTestState
 	if s.HasError() && (f.features&TFFeaturesCollectWiFiFirmwareDump != 0) {
 		if devInfo, err := f.tf.WifiClient().GetDeviceInfo(ctx, &empty.Empty{}); err != nil {
 			s.Error("Failed to obtain WiFi device info: ", err)
-		} else if devInfo.Vendor == intelVendorNum {
+		} else if devInfo.Vendor == IntelVendorNum {
 			// Record the current time so only crashes after this time is collected.
 			currentTime := time.Now()
 			// Firmware dump operations and existing crash data types are only

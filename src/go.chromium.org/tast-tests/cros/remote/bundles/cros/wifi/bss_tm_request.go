@@ -5,14 +5,19 @@
 package wifi
 
 import (
+	"bytes"
 	"context"
+	"fmt"
+	"strings"
 	"time"
 
+	"github.com/golang/protobuf/ptypes/empty"
 	"go.chromium.org/tast-tests/cros/common/tbdep"
 	tdreq "go.chromium.org/tast-tests/cros/common/testdevicerequirements"
 	"go.chromium.org/tast-tests/cros/common/wifi/security"
 	"go.chromium.org/tast-tests/cros/common/wifi/security/wpa"
 	"go.chromium.org/tast-tests/cros/remote/bundles/cros/wifi/wifiutil"
+	"go.chromium.org/tast-tests/cros/remote/tracing"
 	"go.chromium.org/tast-tests/cros/remote/wificell"
 	"go.chromium.org/tast-tests/cros/remote/wificell/hostapd"
 	"go.chromium.org/tast/core/ctxutil"
@@ -54,7 +59,7 @@ func init() {
 		BugComponent: "b:893827", // ChromeOS > Platform > Connectivity > WiFi
 		Attr:         []string{"group:wificell", "wificell_func", "group:release-health", "release-health_wifi"},
 		TestBedDeps:  []string{tbdep.Wificell, tbdep.WifiStateNormal, tbdep.BluetoothStateNormal, tbdep.PeripheralWifiStateWorking},
-		ServiceDeps:  []string{wificell.ShillServiceName},
+		ServiceDeps:  []string{wificell.ShillServiceName, wificell.TraceCmdService},
 		// TODO(b/377913176): Remove the wificell.TFFeaturesCollectWiFiFirmwareDump feature.
 		Fixture:         wificell.FixtureID(wificell.TFFeaturesCapture | wificell.TFFeaturesCollectWiFiFirmwareDump),
 		Requirements:    []string{tdreq.WiFiGenSupportMBO, tdreq.WiFiProcPassFW, tdreq.WiFiProcPassAVL, tdreq.WiFiProcPassAVLBeforeUpdates, tdreq.WiFiProcPassMatfunc, tdreq.WiFiProcPassMatfuncBeforeUpdates},
@@ -250,6 +255,65 @@ func BSSTMRequest(ctx context.Context, s *testing.State) {
 		if err != nil {
 			s.Fatal("Failed to add wpa BSSID_IGNORE: ", err)
 		}
+
+		// TODO(b/377913176): Remove the intel_wifi tracing.
+		devInfo, err := tf.WifiClient().GetDeviceInfo(ctx, &empty.Empty{})
+		if err != nil {
+			s.Log("Failed to get the WiFi device information: ", err)
+		}
+		modelName, err := tf.DUTConn(wificell.DefaultDUT).CommandContext(ctx, "cros_config", "/", "name").Output()
+		if err != nil {
+			s.Log("Failed to get the model name: ", err)
+		}
+		if devInfo.Vendor == wificell.IntelVendorNum && string(bytes.TrimSuffix(modelName, []byte{'\n'})) == "riven" {
+			isTracingInstanceCreated := true
+			isTracingInstanceStarted := true
+			traceCmdEvents := "iwlwifi_data,iwlwifi_dev_tx,iwlwifi_dev_rx,iwlwifi,iwlwifi_msg,iwlwifi_ucode"
+			instanceName := "intel_wifi"
+			cl := tf.RPC()
+			_, err = tracing.NewRemoteInstance(ctx, cl, instanceName,
+				tracing.CPUBufferKiB(10240),
+				tracing.InitialStop(),
+				tracing.EnableEvents(strings.Split(traceCmdEvents, ",")...))
+			if err != nil {
+				s.Log("Failed to initialize TraceCmd: ", err)
+				isTracingInstanceCreated = false
+			}
+			defer func(ctx context.Context) {
+				if isTracingInstanceCreated {
+					if err = tracing.CleanupRemoteInstance(ctx, cl, instanceName); err != nil {
+						s.Log("Failed to clean the tracing remote instance: ", err)
+					}
+				}
+			}(ctx)
+			ctx, cancel = ctxutil.Shorten(ctx, 3*time.Second)
+			defer cancel()
+
+			if err := tracing.StartRemoteInstanceTrace(ctx, cl, instanceName); err != nil {
+				s.Log("Failed to start tracing: ", err)
+				isTracingInstanceStarted = false
+			}
+			defer func(ctx context.Context) {
+				if isTracingInstanceStarted {
+					testScantype := "waifForScanFalse"
+					if waitForScan {
+						testScantype = "waifForScanTrue"
+					}
+					dest := fmt.Sprintf("%s/trace_%s_%s.dat", s.OutDir(), instanceName, testScantype)
+					if err := tracing.SaveRemoteInstanceTraceData(ctx, cl, instanceName,
+						func(src string) error {
+							return s.DUT().GetFile(ctx, src, dest)
+						}); err != nil {
+						s.Log("Failed to copy the data file from DUT: ", err)
+					} else {
+						s.Logf("Save trace data into %q", dest)
+					}
+				}
+			}(ctx)
+			ctx, cancel = ctxutil.Shorten(ctx, 3*time.Second)
+			defer cancel()
+		}
+
 		if err := rt.SendBSSTMReqAndWaitConnected(ctx, wificell.DefaultDUT, roamBSSID, fromBSSID, rt.AP2(), rt.AP1(), req, rt.ServicePathOfDUT(wificell.DefaultDUT), false); err != nil {
 			s.Fatal("DUT: failed to roam and wait for connection: ", err)
 		}

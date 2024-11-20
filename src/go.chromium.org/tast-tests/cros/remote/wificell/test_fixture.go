@@ -120,6 +120,9 @@ const (
 
 	// CrashServiceName is the name of the crash service.
 	CrashServiceName = "tast.cros.crash.FixtureService"
+
+	// TraceCmdService is the name of the tracing service.
+	TraceCmdService = "tast.cros.tracing.TraceCmdService"
 )
 
 // P2PDevice is used as p2p device type.
