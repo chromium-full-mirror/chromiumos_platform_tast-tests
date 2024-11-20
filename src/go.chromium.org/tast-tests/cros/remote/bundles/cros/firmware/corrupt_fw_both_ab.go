@@ -160,9 +160,17 @@ func corruptFWSectionTest(ctx context.Context, s *testing.State, corruptFMAPSect
 			s.Fatal("Failed to copy backup to ServoProxy: ", err)
 		}
 
-		if err := h.ServoProxy.RunCommand(ctx, true, "futility", "update", "--servo", fmt.Sprintf("--servo_port=%d", h.ServoProxy.GetPort()),
+		// futility doesn't know that you can't flash AP over C2D2, so switch the active controller to CCD.
+		if hasC2D2, err := h.Servo.HasC2D2(ctx); err != nil {
+			s.Fatal("Could not check c2d2: ", err)
+		} else if hasC2D2 {
+			if err := h.Servo.RequireCCD(ctx); err != nil {
+				s.Fatal("Could not enable CCD: ", err)
+			}
+		}
+		if out, err := h.ServoProxy.OutputCommand(ctx, true, "futility", "update", "--servo", fmt.Sprintf("--servo_port=%d", h.ServoProxy.GetPort()),
 			"--mode=recovery", "--wp=1", "--host_only", "-i", backupOnServoProxy); err != nil {
-			s.Error("Failed restoring firmware via servo: ", err)
+			s.Errorf("Failed restoring firmware via servo: %s - %s", err, string(out))
 		}
 		// In b/314059450 it was discovered that some devices don't come back on after futility update. Explicitly reset to prevent this problem.
 		if err := h.Servo.SetPowerState(ctx, servo.PowerStateReset); err != nil {
