@@ -49,7 +49,7 @@ type hpdConfigs struct {
 }
 
 func PDWakeHPD(ctx context.Context, s *testing.State) {
-	var TestFailures []int
+	TestFailures := 0
 
 	h := s.FixtValue().(*fixture.Value).Helper
 
@@ -139,13 +139,13 @@ func PDWakeHPD(ctx context.Context, s *testing.State) {
 		// ec policy always wake on high regardless of previous state
 		if hpd.expectedWake || board != "brox" {
 			if powerState != "S0" {
-				s.Logf("Expected power state: S0, actual: %s", string(powerState))
-				TestFailures = append(TestFailures, idx)
+				s.Errorf("Test case %d: Expected power state: S0, actual: %s", idx, string(powerState))
+				TestFailures++
 			}
 		} else {
 			if powerState != "S3" && powerState != "S0ix" {
-				s.Logf("Expected power state: S3 or S0ix, actual: %s", string(powerState))
-				TestFailures = append(TestFailures, idx)
+				s.Errorf("Test case %d: Expected power state: S3 or S0ix, actual: %s", idx, string(powerState))
+				TestFailures++
 			}
 		}
 
@@ -159,14 +159,7 @@ func PDWakeHPD(ctx context.Context, s *testing.State) {
 		}
 	}
 
-	if len(TestFailures) > 0 {
-		for _, c := range TestFailures {
-			if configs[c].expectedWake {
-				s.Errorf("Test case %d: expected DUT wake but was in suspend", c)
-			} else {
-				s.Errorf("Test case %d: expected DUT suspend but was wake", c)
-			}
-		}
-		s.Fatalf("Failed %d cases", len(TestFailures))
+	if TestFailures > 0 {
+		s.Fatalf("Failed %d cases", TestFailures)
 	}
 }
