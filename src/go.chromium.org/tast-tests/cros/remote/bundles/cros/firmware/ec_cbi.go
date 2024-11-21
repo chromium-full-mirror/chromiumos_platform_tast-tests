@@ -30,10 +30,14 @@ func init() {
 		Timeout:      15 * time.Minute,
 		// Only run on platforms that include CL crrev/c/1234747 so that CBI can be reversibly written to.
 		HardwareDeps: hwdep.D(hwdep.ChromeEC(), hwdep.ECFeatureCBI(), hwdep.SkipOnModel(
-			"jax", // Fizz models
+			// Fizz models
+			"jax",
 			"kench",
 			"sion",
-			"bard", // Nami models
+			// Nami models
+			"akali",
+			"akali360",
+			"bard",
 			"ekko",
 			"syndra",
 		)),
@@ -60,12 +64,12 @@ func ECCbi(ctx context.Context, s *testing.State) {
 
 		s.Logf("Removing tag %q", testTag1)
 		if err := removeTagFromCbi(ctx, h, testTag1); err != nil {
-			s.Fatal("Expected remove to succeed: ", err)
+			s.Error("Expected remove to succeed: ", err)
 		}
 
 		s.Logf("Removing tag %q", testTag2)
 		if err := removeTagFromCbi(ctx, h, testTag2); err != nil {
-			s.Fatal("Expected remove to succeed: ", err)
+			s.Error("Expected remove to succeed: ", err)
 		}
 
 	}()
@@ -111,10 +115,10 @@ func ECCbi(ctx context.Context, s *testing.State) {
 		s.Fatal("Expected write to fail")
 	}
 
-	if out, err := readTagFromCbi(ctx, h, testTag2); err == nil {
-		s.Fatal("Expected read to fail since tag shouldn't exist: ", err)
-	} else if out == testData1 {
-		s.Fatalf("Read data matched written data, read/write should have failed, got %q: %v", out, err)
+	if out, err := readTagFromCbi(ctx, h, testTag2); out == testData1 {
+		s.Fatalf("Read data matched written data, read/write should have failed, got %q", out)
+	} else if err == nil {
+		s.Fatalf("Expected read to fail since tag shouldn't exist, got %q", out)
 	}
 
 	// Test writing data to existing tag with WP enabled.
