@@ -299,11 +299,13 @@ func (t *FrameDataTracker) Record(pv *perf.Values) {
 		return
 	}
 
-	pv.Set(perf.Metric{
-		Name:      t.prefix + "DisplayJankMetric",
-		Unit:      "percent",
-		Direction: perf.SmallerIsBetter,
-	}, float64(t.dsData.JankCount)/float64(t.dsData.FramesExpected)*100)
+	if t.dsData.FramesExpected > 0 {
+		pv.Set(perf.Metric{
+			Name:      t.prefix + "DisplayJankMetric",
+			Unit:      "percent",
+			Direction: perf.SmallerIsBetter,
+		}, float64(t.dsData.JankCount)/float64(t.dsData.FramesExpected)*100)
+	}
 
 	pv.Set(perf.Metric{
 		Name:      t.prefix + "Display.FramesExpected",
