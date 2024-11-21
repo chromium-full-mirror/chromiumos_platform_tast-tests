@@ -27,7 +27,12 @@ func init() {
 		Desc:         "Tests basic audio playback on ash chrome browser",
 		Contacts:     []string{"chromeos-audio-bugs@google.com", "bailideng@google.com"},
 		BugComponent: "b:776546",
-		Attr:         []string{"group:mainline", "group:audio"},
+		Attr:         []string{
+			"group:mainline",
+			"group:audio",
+			"group:release-health",
+			"release-health_audio",
+		},
 		SoftwareDeps: []string{"chrome"},
 		Fixture: audiofixture.AloopLoaded{Channels: 2, Parent: audiofixture.Chrome(
 			chrome.ExtraArgs(

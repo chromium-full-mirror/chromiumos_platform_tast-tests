@@ -27,7 +27,12 @@ func init() {
 		Contacts:     []string{"chromeos-audio-bugs@google.com", "johnylin@google.com"},
 		SoftwareDeps: []string{"chrome"},
 		HardwareDeps: hwdep.D(hwdep.Speaker()),
-		Attr:         []string{"group:crosbolt", "crosbolt_perbuild"},
+		Attr:         []string{
+			"group:crosbolt",
+			"crosbolt_perbuild",
+			"group:release-health",
+			"release-health_audio",
+		},
 		Timeout:      25*time.Minute + power.RecorderTimeout,
 		Params: []testing.Param{
 			{

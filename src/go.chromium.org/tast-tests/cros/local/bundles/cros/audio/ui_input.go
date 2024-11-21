@@ -43,7 +43,11 @@ func init() {
 		BugComponent: "b:776546",
 		SoftwareDeps: []string{"chrome"},
 		HardwareDeps: hwdep.D(hwdep.Speaker(), hwdep.Microphone()),
-		Attr:         []string{"group:mainline"},
+		Attr:         []string{
+			"group:mainline",
+			"group:release-health",
+			"release-health_audio",
+		},
 		Timeout:      4 * time.Minute,
 		Params: []testing.Param{
 			{

@@ -37,7 +37,12 @@ func init() {
 		Contacts:     []string{"chromeos-audio-bugs@google.com", "bailideng@google.com"},
 		BugComponent: "b:776546",
 		SoftwareDeps: []string{"chrome", "chrome_internal"},
-		Attr:         []string{"group:mainline", "group:intel-nda"},
+		Attr:         []string{
+			"group:mainline",
+			"group:intel-nda",
+			"group:release-health",
+			"release-health_audio",
+		},
 		Params: []testing.Param{
 			{
 				Name:    "fieldtrial_config_disable",

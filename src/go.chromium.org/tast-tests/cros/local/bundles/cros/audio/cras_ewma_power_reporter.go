@@ -27,6 +27,7 @@ func init() {
 			"group:mainline",
 			"informational",
 			"group:release-health",
+			"release-health_audio",
 		},
 		Fixture: fixture.AloopLoaded{
 			Channels: 2,

@@ -38,7 +38,12 @@ func init() {
 		Vars:         []string{"audio.usbDetectionName"},
 		Fixture:      "chromeLoggedIn",
 		Params: []testing.Param{{
-			ExtraAttr: []string{"group:mainline", "group:intel-nda"},
+			ExtraAttr: []string{
+				"group:mainline",
+				"group:intel-nda",
+				"group:release-health",
+				"release-health_audio",
+			},
 			Val:       false,
 		}, {
 			Name: "usb_pendrive",

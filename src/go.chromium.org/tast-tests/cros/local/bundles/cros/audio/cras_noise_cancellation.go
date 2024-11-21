@@ -29,7 +29,11 @@ func init() {
 		BugComponent: "b:776546",
 		Attr: []string{
 			"group:mainline",
-			"group:cbx", "cbx_feature_enabled", "cbx_stable",
+			"group:cbx",
+			"cbx_feature_enabled",
+			"cbx_stable",
+			"group:release-health",
+			"release-health_audio",
 		},
 		Fixture:      fixture.AloopLoaded{Channels: 2}.Instance(),
 		Timeout:      3 * time.Minute,
