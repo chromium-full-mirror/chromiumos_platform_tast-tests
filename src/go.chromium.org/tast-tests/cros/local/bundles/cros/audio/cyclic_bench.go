@@ -11,12 +11,14 @@ import (
 	"io/ioutil"
 	"path/filepath"
 	"strconv"
+	"strings"
 	"time"
 
 	"go.chromium.org/tast-tests/cros/common/perf"
 	"go.chromium.org/tast-tests/cros/common/testexec"
 	"go.chromium.org/tast-tests/cros/local/chrome"
 	"go.chromium.org/tast-tests/cros/local/crosconfig"
+
 	"go.chromium.org/tast/core/ctxutil"
 	"go.chromium.org/tast/core/testing"
 	"golang.org/x/exp/slices"
@@ -51,17 +53,18 @@ type schedConfig struct {
 
 // cyclicTestParameters contains all the data needed to run a single test iteration.
 type cyclicTestParameters struct {
-	Config              schedConfig   // The schedule config of the cyclictest.
-	Threads             int           // Number of threads.
-	Interval            time.Duration // Interval time.
-	Loops               int           // Number of times.
-	Affinity            affinity      // Run cyclictest threads on which sets of processors.
-	MaxLatencyThreshold time.Duration // Max latency threshold.
-	StressConfig        *schedConfig  // The schedule config of the stress process. if `StressConfig` is nil, no stress process will be run.
-	ShouldFail          bool          // Whether the test should fail based on the threshold. This should only be true for tests that simulate actual CRAS specs to prevent noise.
-	UI                  bool          // Test with UI running or not.
-	Tracer              bool          // Test with ftrace running or not.
-	ThreadedNAPI        bool          // Test with Threaded NAPI or not.
+	Config                 schedConfig   // The schedule config of the cyclictest.
+	Threads                int           // Number of threads.
+	Interval               time.Duration // Interval time.
+	Loops                  int           // Number of times.
+	Affinity               affinity      // Run cyclictest threads on which sets of processors.
+	MaxLatencyThreshold    time.Duration // Max latency threshold.
+	MaxLatencyThresholdCBX time.Duration // Max latency threshold for Chromebook Plus devices. If this is not given, the threshold will default to MaxLatencyThreshold
+	StressConfig           *schedConfig  // The schedule config of the stress process. if `StressConfig` is nil, no stress process will be run.
+	ShouldFail             bool          // Whether the test should fail based on the threshold. This should only be true for tests that simulate actual CRAS specs to prevent noise.
+	UI                     bool          // Test with UI running or not.
+	Tracer                 bool          // Test with ftrace running or not.
+	ThreadedNAPI           bool          // Test with Threaded NAPI or not.
 }
 
 const (
@@ -76,7 +79,9 @@ const (
 	// defaultLoops is the default number of loops tested in cyclictest.
 	defaultLoops = 60000
 	// defaultMaxLatencyThreshold is the default max latency threshold allowed in cyclictest.
-	defaultMaxLatencyThreshold = 3000 * time.Microsecond
+	defaultMaxLatencyThreshold = 5000 * time.Microsecond
+	// defaultMaxLatencyThresholdCBX is the default max latency threshold allowed in cyclictest for Chromebook Plus devices
+	defaultMaxLatencyThresholdCBX = 3000 * time.Microsecond
 	// defaultStressWorker is the number of workers spawned in the stress test.
 	defaultStressWorker = 4
 )
@@ -113,14 +118,15 @@ func init() {
 						Policy:   rrSched,
 						Priority: crasPriority,
 					},
-					Threads:             1,
-					Interval:            defaultInterval,
-					Loops:               defaultLoops,
-					Affinity:            defaultAff,
-					MaxLatencyThreshold: defaultMaxLatencyThreshold,
-					StressConfig:        nil,
-					ShouldFail:          true,
-					UI:                  true,
+					Threads:                1,
+					Interval:               defaultInterval,
+					Loops:                  defaultLoops,
+					Affinity:               defaultAff,
+					MaxLatencyThreshold:    defaultMaxLatencyThreshold,
+					MaxLatencyThresholdCBX: defaultMaxLatencyThresholdCBX,
+					StressConfig:           nil,
+					ShouldFail:             true,
+					UI:                     true,
 				},
 			},
 			{
@@ -132,15 +138,16 @@ func init() {
 						Policy:   rrSched,
 						Priority: crasPriority,
 					},
-					Threads:             1,
-					Interval:            defaultInterval,
-					Loops:               defaultLoops,
-					Affinity:            defaultAff,
-					MaxLatencyThreshold: defaultMaxLatencyThreshold,
-					StressConfig:        nil,
-					ShouldFail:          false,
-					UI:                  true,
-					Tracer:              true,
+					Threads:                1,
+					Interval:               defaultInterval,
+					Loops:                  defaultLoops,
+					Affinity:               defaultAff,
+					MaxLatencyThreshold:    defaultMaxLatencyThreshold,
+					MaxLatencyThresholdCBX: defaultMaxLatencyThresholdCBX,
+					StressConfig:           nil,
+					ShouldFail:             false,
+					UI:                     true,
+					Tracer:                 true,
 				},
 			},
 			{
@@ -153,14 +160,15 @@ func init() {
 						Policy:   rrSched,
 						Priority: crasPriority,
 					},
-					Threads:             1,
-					Interval:            defaultInterval,
-					Loops:               defaultLoops,
-					Affinity:            defaultAff,
-					MaxLatencyThreshold: defaultMaxLatencyThreshold,
-					StressConfig:        nil,
-					ShouldFail:          true,
-					UI:                  false,
+					Threads:                1,
+					Interval:               defaultInterval,
+					Loops:                  defaultLoops,
+					Affinity:               defaultAff,
+					MaxLatencyThreshold:    defaultMaxLatencyThreshold,
+					MaxLatencyThresholdCBX: defaultMaxLatencyThresholdCBX,
+					StressConfig:           nil,
+					ShouldFail:             true,
+					UI:                     false,
 				},
 			},
 			{
@@ -173,15 +181,16 @@ func init() {
 						Policy:   rrSched,
 						Priority: crasPriority,
 					},
-					Threads:             1,
-					Interval:            defaultInterval,
-					Loops:               defaultLoops,
-					Affinity:            defaultAff,
-					MaxLatencyThreshold: defaultMaxLatencyThreshold,
-					StressConfig:        nil,
-					ShouldFail:          false,
-					UI:                  false,
-					Tracer:              true,
+					Threads:                1,
+					Interval:               defaultInterval,
+					Loops:                  defaultLoops,
+					Affinity:               defaultAff,
+					MaxLatencyThreshold:    defaultMaxLatencyThreshold,
+					MaxLatencyThresholdCBX: defaultMaxLatencyThresholdCBX,
+					StressConfig:           nil,
+					ShouldFail:             false,
+					UI:                     false,
+					Tracer:                 true,
 				},
 			},
 			{
@@ -540,6 +549,27 @@ func CyclicBench(ctx context.Context, s *testing.State) {
 		defer chrome.Close(cleanupCtx)
 	}
 
+	// Check feature level to determine if device is Chromebook Plus devices
+	// The latency threshold is tighter for Chromebook Plus devices
+	cmd := testexec.CommandContext(ctx,
+		"feature_explorer",
+		"--feature_level",
+	)
+	out, err := cmd.CombinedOutput()
+	if err != nil {
+		s.Fatal("Failed to get feature explorer output: ", err)
+	}
+	level, err := strconv.ParseInt(strings.TrimSpace(string(out)), 0, 64)
+	if err != nil {
+		s.Fatal("Failed to get feature level: ", err)
+	}
+	threshold := param.MaxLatencyThreshold
+	if level != 0 && param.MaxLatencyThresholdCBX != 0 {
+
+		threshold = param.MaxLatencyThresholdCBX
+	}
+	testing.ContextLog(ctx, "Max latency threshold: ", threshold)
+
 	cmdStr := []string{"cyclic_bench.py",
 		"--policy=" + param.Config.Policy.String(),
 		"--priority=" + strconv.Itoa(param.Config.Priority),
@@ -551,7 +581,7 @@ func CyclicBench(ctx context.Context, s *testing.State) {
 	}
 	if param.Tracer {
 		cmdStr = append(cmdStr,
-			fmt.Sprintf("--breaktrace=%d", int((param.MaxLatencyThreshold+tracingOverhead)/time.Microsecond)),
+			fmt.Sprintf("--breaktrace=%d", int((threshold+tracingOverhead)/time.Microsecond)),
 			"--tracemark")
 	}
 	if param.StressConfig != nil {
@@ -589,7 +619,7 @@ func CyclicBench(ctx context.Context, s *testing.State) {
 	}
 
 	testing.ContextLog(ctx, "Start to execute cyclic_bench.py")
-	out, err := testexec.CommandContext(ctx, cmdStr[0], cmdStr[1:]...).Output(testexec.DumpLogOnError)
+	out, err = testexec.CommandContext(ctx, cmdStr[0], cmdStr[1:]...).Output(testexec.DumpLogOnError)
 	if err != nil {
 		s.Fatal("Failed to execute cyclic_bench.py: ", err)
 	}
@@ -656,13 +686,13 @@ func CyclicBench(ctx context.Context, s *testing.State) {
 			s.Error("Failed to read model from cros_config: ", err)
 		}
 
-		if stat.Max > float64(param.MaxLatencyThreshold/time.Microsecond) {
+		if stat.Max > float64(threshold/time.Microsecond) {
 			if param.ShouldFail && !slices.Contains(cyclicBenchUnstableModels, model) {
 				s.Error("Max latency exceeds threshold: ", stat.Max,
-					"us > ", param.MaxLatencyThreshold)
+					"us > ", threshold)
 			} else {
 				s.Log("Max latency exceeds threshold: ", stat.Max,
-					"us > ", param.MaxLatencyThreshold)
+					"us > ", threshold)
 			}
 		}
 	}
