@@ -26,8 +26,8 @@ type ServodRecorder struct {
 
 // NewServodRecorder creates and returns a new ServodRecorder.
 // Note: If also using the power recorder, it is recommended to use the same/similar interval.
-func NewServodRecorder(ctx context.Context, interval time.Duration, svo *servo.Servo, cpd, useAccumulators bool, filters ...*regexp.Regexp) (*ServodRecorder, error) {
-	sm, err := cp.NewServodMetrics(ctx, svo, cpd, useAccumulators, filters...)
+func NewServodRecorder(ctx context.Context, interval time.Duration, svo *servo.Servo, useAccumulators bool, filters ...*regexp.Regexp) (*ServodRecorder, error) {
+	sm, err := cp.NewServodMetrics(ctx, svo, useAccumulators, filters...)
 	if err != nil {
 		return nil, errors.Wrap(err, "setting up servod metrics")
 	}

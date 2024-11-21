@@ -36,8 +36,6 @@ For more options see go/tast-running#Running-tests-with-Servo
 */
 
 type testParams struct {
-	// cpd indicates if the servo used is CPD (special formatting)
-	cpd bool
 	// filter is applied when first finding servod rails.
 	filter string
 	// subtest specifies the test to be run within.
@@ -70,16 +68,8 @@ func init() {
 				},
 			},
 			{
-				Name: "cpd_manual",
-				Val: testParams{
-					cpd:      true,
-					useAccum: true,
-				},
-			},
-			{
 				Name: "cpd_vp_h264_1080_30fps",
 				Val: testParams{
-					cpd:      true,
 					subtest:  "power.VideoPlayback.h264_1080_30fps_ash",
 					useAccum: true,
 				},
@@ -88,7 +78,6 @@ func init() {
 			{
 				Name: "cpd_vp_vp9_1080_30fps",
 				Val: testParams{
-					cpd:      true,
 					subtest:  "power.VideoPlayback.vp9_1080_30fps_ash",
 					useAccum: true,
 				},
@@ -97,7 +86,6 @@ func init() {
 			{
 				Name: "cpd_vc_25m",
 				Val: testParams{
-					cpd:      true,
 					subtest:  "power.VideoCall.25m_ash",
 					useAccum: true,
 				},
@@ -106,7 +94,6 @@ func init() {
 			{
 				Name: "cpd_browsing",
 				Val: testParams{
-					cpd:      true,
 					subtest:  "power.Browsing.ash",
 					useAccum: true,
 				},
@@ -115,7 +102,6 @@ func init() {
 			{
 				Name: "cpd_browsing_heavy",
 				Val: testParams{
-					cpd:      true,
 					subtest:  "power.Browsing.heavy_ash",
 					useAccum: true,
 				},
@@ -124,7 +110,6 @@ func init() {
 			{
 				Name: "htl_idle_display_on_bt_off_ash",
 				Val: testParams{
-					cpd:      false,
 					subtest:  "power.Idle.display_on_bt_off_ash",
 					useAccum: true,
 				},
@@ -133,7 +118,6 @@ func init() {
 			{
 				Name: "htl_idle_display_on_bt_on_ash",
 				Val: testParams{
-					cpd:      false,
 					subtest:  "power.Idle.display_on_bt_on_ash",
 					useAccum: true,
 				},
@@ -142,7 +126,6 @@ func init() {
 			{
 				Name: "htl_browsing_heavy_20min_ash",
 				Val: testParams{
-					cpd:      false,
 					subtest:  "power.Browsing.heavy_20min_ash",
 					useAccum: true,
 				},
@@ -151,7 +134,6 @@ func init() {
 			{
 				Name: "htl_gaming_app_asphalt8",
 				Val: testParams{
-					cpd:      false,
 					subtest:  "power.GamingApp.asphalt8",
 					useAccum: true,
 				},
@@ -160,7 +142,6 @@ func init() {
 			{
 				Name: "htl_gaming_app_super_tux_kart",
 				Val: testParams{
-					cpd:      false,
 					subtest:  "power.GamingApp.super_tux_kart",
 					useAccum: true,
 				},
@@ -169,7 +150,6 @@ func init() {
 			{
 				Name: "htl_video_playback_h264_1080_30fps_1hr_ash",
 				Val: testParams{
-					cpd:      false,
 					subtest:  "power.VideoPlayback.h264_1080_30fps_1hr_ash",
 					useAccum: true,
 				},
@@ -178,7 +158,6 @@ func init() {
 			{
 				Name: "htl_video_playback_vp9_1080_30fps_1hr_ash",
 				Val: testParams{
-					cpd:      false,
 					subtest:  "power.VideoPlayback.vp9_1080_30fps_1hr_ash",
 					useAccum: true,
 				},
@@ -187,7 +166,6 @@ func init() {
 			{
 				Name: "htl_arc_video_playback_exoplayer_h264_1080_30fps_ash",
 				Val: testParams{
-					cpd:      false,
 					subtest:  "power.ARCVideoPlayback.exoplayer_h264_1080_30fps_ash",
 					useAccum: true,
 				},
@@ -196,7 +174,6 @@ func init() {
 			{
 				Name: "htl_arc_video_playback_exoplayer_vp9_1080_30fps_ash",
 				Val: testParams{
-					cpd:      false,
 					subtest:  "power.ARCVideoPlayback.exoplayer_vp9_1080_30fps_ash",
 					useAccum: true,
 				},
@@ -205,7 +182,6 @@ func init() {
 			{
 				Name: "htl_social_app_element_ash",
 				Val: testParams{
-					cpd:      false,
 					subtest:  "power.SocialApp.element_ash",
 					useAccum: true,
 				},
@@ -214,7 +190,6 @@ func init() {
 			{
 				Name: "htl_video_call_25m_ash",
 				Val: testParams{
-					cpd:      false,
 					subtest:  "power.VideoCall.25m_ash",
 					useAccum: true,
 				},
@@ -223,7 +198,6 @@ func init() {
 			{
 				Name: "htl_multi_tasking_app_ash",
 				Val: testParams{
-					cpd:      false,
 					subtest:  "power.MultiTaskingApp.ash",
 					useAccum: true,
 				},
@@ -324,7 +298,7 @@ func PowerServodWrapper(ctx context.Context, s *testing.State) {
 	}
 
 	servodRecorder, err := rp.NewServodRecorder(servoCtx, interval, pxy.Servo(),
-		param.cpd, param.useAccum, filters...)
+		param.useAccum, filters...)
 	if err != nil {
 		s.Fatal("Failed to create servod recorder: ", err)
 	}

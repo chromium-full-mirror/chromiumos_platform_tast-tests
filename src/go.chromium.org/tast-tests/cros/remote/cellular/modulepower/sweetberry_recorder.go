@@ -89,7 +89,7 @@ func NewSweetberryRecorder(ctx context.Context, proxyHost *ssh.Conn, xmlFile str
 		return nil, errors.Wrap(err, "failed to connect to servod instance")
 	}
 
-	servodRecorder, err := rp.NewServodRecorder(ctx, config.MeasurementInterval, s.svo, false /*isCPD*/, false /*useAccumulators*/)
+	servodRecorder, err := rp.NewServodRecorder(ctx, config.MeasurementInterval, s.svo, false /*useAccumulators*/)
 	if err != nil {
 		return nil, errors.Wrap(err, "failed to create servod recorder")
 	}

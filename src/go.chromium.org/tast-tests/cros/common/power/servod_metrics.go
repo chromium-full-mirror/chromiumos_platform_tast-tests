@@ -7,6 +7,7 @@ package power
 import (
 	"context"
 	"regexp"
+	"strings"
 
 	"go.chromium.org/tast-tests/cros/common/perf"
 	"go.chromium.org/tast-tests/cros/common/servo"
@@ -19,36 +20,34 @@ type ServodMetrics struct {
 	svo        *servo.Servo
 	rails      []servo.FloatControl
 	clearRails []servo.IntControl
-	cpd        bool
 	pv         *perf.Values
 	metrics    map[string]perf.Metric
 }
-
-const (
-	// CpdPrefix is a special prefix on CPD rails.
-	CpdPrefix = "ft4232h_generic"
-)
 
 // Assert that ServodMetrics can be used in perf.Timeline.
 var _ perf.TimelineDatasource = &ServodMetrics{}
 
 // NewServodMetrics creates a timeline metric to store servod readings.
-func NewServodMetrics(ctx context.Context, svo *servo.Servo, cpd, useAccumulators bool, filters ...*regexp.Regexp) (*ServodMetrics, error) {
-	if cpd {
-		filters = append(filters, regexp.MustCompile(CpdPrefix))
-	}
+func NewServodMetrics(ctx context.Context, svo *servo.Servo, useAccumulators bool, filters ...*regexp.Regexp) (*ServodMetrics, error) {
 	// Query for available rails.
 	rails, clearRails, err := servo.FindPowerRailsWithFilter(ctx, svo, useAccumulators, filters)
 	if err != nil {
-		return nil, errors.Wrap(err, "failed to get accum rails")
+		return nil, errors.Wrap(err, "failed to find servo power rails")
 	}
-	testing.ContextLog(ctx, "Avg power rail commands found:", rails)
+
+	if useAccumulators {
+		rails, clearRails, err = filterInvalidAccumulatorRails(ctx, svo, rails, clearRails)
+		if err != nil {
+			return nil, errors.Wrap(err, "failed to filter invalid rails")
+		}
+	}
+
+	testing.ContextLog(ctx, "Power rail commands found: ", rails)
 
 	return &ServodMetrics{
 		svo:        svo,
 		rails:      rails,
 		clearRails: clearRails,
-		cpd:        cpd,
 		pv:         perf.NewValues(),
 		metrics:    make(map[string]perf.Metric),
 	}, nil
@@ -108,4 +107,53 @@ func trimRailName(name string) string {
 		return name
 	}
 	return m[1]
+}
+
+func filterInvalidAccumulatorRails(ctx context.Context, svo *servo.Servo, rails []servo.FloatControl, clearRails []servo.IntControl) ([]servo.FloatControl, []servo.IntControl, error) {
+
+	// Split rails into CPD and non-CPD.
+	var cpdRails []servo.FloatControl
+	var nonCpdRails []servo.FloatControl
+
+	for _, r := range rails {
+		if strings.HasPrefix(string(r), "ft4232h_generic") {
+			cpdRails = append(cpdRails, r)
+		} else {
+			nonCpdRails = append(nonCpdRails, r)
+		}
+	}
+
+	var filteredRails []servo.FloatControl
+	var filteredClearRails []servo.IntControl
+	accumRegexp := regexp.MustCompile("_avg_mw$")
+
+	// Check if each CPD rail is working.
+	for _, r := range cpdRails {
+		if _, err := svo.GetFloat(ctx, r); err == nil {
+			filteredRails = append(filteredRails, r)
+			clearRail := accumRegexp.ReplaceAllString(string(r), "_acc_clear")
+			filteredClearRails = append(filteredClearRails, servo.IntControl(clearRail))
+		}
+	}
+
+	// CPD always have 2 working rails (vbat and vbat_alt).
+	// If there is any more rails from CPD works, use it.
+	// Otherwise, check non-CPD rails.
+	var invalidRails []string
+	if len(filteredRails) <= 2 {
+		for _, r := range nonCpdRails {
+			if _, err := svo.GetFloat(ctx, r); err == nil {
+				filteredRails = append(filteredRails, r)
+				clearRail := accumRegexp.ReplaceAllString(string(r), "_acc_clear")
+				filteredClearRails = append(filteredClearRails, servo.IntControl(clearRail))
+			} else {
+				invalidRails = append(invalidRails, string(r))
+			}
+		}
+	}
+
+	// If the rail is still filtered without CPD, it may mean that the conf overlay is incorrect. Print them to help debugging.
+	testing.ContextLog(ctx, "Filtered out invalid accum rails: ", invalidRails)
+
+	return filteredRails, filteredClearRails, nil
 }
