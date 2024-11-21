@@ -25,7 +25,7 @@ type crasTimestampInOrderParameters struct {
 
 var unstableModelsTimestampInOrder = []string{
 	// TODO(b/333498840): Undo skip after fix.
-	"careena", "treeya", "liara", "kasumi360", "kasumi",
+	"aleena", "barla", "careena", "treeya", "liara", "kasumi360", "kasumi",
 	// TODO(b/333498998): Undo skip after fix.
 	"craaskbowl", "craask", "craaskvin", "craasneto", "hideo", "quandiso", "xivu360", "yahiko",
 }
