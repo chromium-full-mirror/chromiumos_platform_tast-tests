@@ -29,9 +29,8 @@ import (
 
 func init() {
 	testing.AddTest(&testing.Test{
-		Func:         SpeakOnMutePower,
-		LacrosStatus: testing.LacrosVariantUnneeded, // Browser only used to trigger VC UI.
-		Desc:         "Checks Speak-On-Mute power usage",
+		Func: SpeakOnMutePower,
+		Desc: "Checks Speak-On-Mute power usage",
 		Contacts: []string{
 			"cros-video-conference-tast-tests@google.com",
 			"xiuwen@google.com",

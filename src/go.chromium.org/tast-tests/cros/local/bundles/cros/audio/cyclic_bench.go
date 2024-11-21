@@ -98,7 +98,6 @@ var cyclicBenchUnstableModels = []string{
 func init() {
 	testing.AddTest(&testing.Test{
 		Func:         CyclicBench,
-		LacrosStatus: testing.LacrosVariantUnknown,
 		Desc:         "Benchmarks for scheduling latency with cyclictest binary",
 		Contacts:     []string{"chromeos-audio-bugs@google.com", "eddyhsu@chromium.org", "cychiang@chromium.org"},
 		BugComponent: "b:776546",

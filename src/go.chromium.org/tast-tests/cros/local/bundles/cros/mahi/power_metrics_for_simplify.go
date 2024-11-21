@@ -39,9 +39,8 @@ type simplifyTestParameters struct {
 
 func init() {
 	testing.AddTest(&testing.Test{
-		Func:         PowerMetricsForSimplify,
-		LacrosStatus: testing.LacrosVariantUnneeded,
-		Desc:         "Collect power metrics of using Simplify",
+		Func: PowerMetricsForSimplify,
+		Desc: "Collect power metrics of using Simplify",
 		Contacts: []string{
 			"ml-service-team@google.com",
 			"alanlxl@google.com",

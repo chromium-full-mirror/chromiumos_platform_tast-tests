@@ -30,7 +30,8 @@ const (
 
 func init() {
 	testing.AddTest(&testing.Test{
-		Func: PinMigration, LacrosStatus: testing.LacrosVariantUnneeded, Desc: "Checks that the modern pin migration works properly",
+		Func: PinMigration,
+		Desc: "Checks that the modern pin migration works properly",
 		Contacts: []string{
 			"cryptohome-core@google.com",
 			"behnoodm@chromium.org", // Test author

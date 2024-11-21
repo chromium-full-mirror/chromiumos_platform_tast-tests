@@ -24,7 +24,6 @@ var hwdepDSPModels = hwdep.Model("redrix", "gimble", "anahera")
 func init() {
 	testing.AddTest(&testing.Test{
 		Func:         CrasNoiseCancellationPower,
-		LacrosStatus: testing.LacrosVariantUnneeded, // Ash is only a platform dependency.
 		Desc:         "Collect power metrics of using noise cancellation in CRAS",
 		BugComponent: "b:776546",
 		Contacts:     []string{"chromeos-audio-bugs@google.com", "aaronyu@google.com"},

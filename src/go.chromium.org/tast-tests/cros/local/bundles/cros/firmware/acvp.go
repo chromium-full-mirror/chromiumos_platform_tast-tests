@@ -44,8 +44,8 @@ var acvpIsFirmwareTest = false
 
 func init() {
 	testing.AddTest(&testing.Test{
-		Func:         ACVP,
-		LacrosStatus: testing.LacrosVariantUnneeded, // This test is launched manually during FIPS certification.
+		Func: ACVP,
+		// This test is launched manually during FIPS certification.
 		Contacts: []string{
 			"chromeos-faft@google.com",
 			"sukhomlinov@chromium.org", // CR50 certification lead, Test owner

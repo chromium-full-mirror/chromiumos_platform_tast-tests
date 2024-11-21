@@ -14,10 +14,9 @@ import (
 
 func init() {
 	testing.AddTest(&testing.Test{
-		Func:         Typecd,
-		LacrosStatus: testing.LacrosVariantUnknown,
-		Desc:         "Checks that typecd is running on a system",
-		Contacts:     []string{"chromeos-usb-champs@google.com", "bszpila@google.com"},
+		Func:     Typecd,
+		Desc:     "Checks that typecd is running on a system",
+		Contacts: []string{"chromeos-usb-champs@google.com", "bszpila@google.com"},
 		// ChromeOS > Platform > Technologies > USB
 		BugComponent: "b:958036",
 		Attr:         []string{"group:mainline"},

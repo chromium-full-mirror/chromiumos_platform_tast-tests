@@ -32,7 +32,6 @@ type roundedDisplayPowerParam struct {
 func init() {
 	testing.AddTest(&testing.Test{
 		Func:         RoundedDisplayPower,
-		LacrosStatus: testing.LacrosVariantUnneeded, // Ash is only a platform dependency.
 		Desc:         "Collect power metrics of using overlays for software masks for rounded displays",
 		BugComponent: "b:1045832", // ChromeOS > Software > Performance > TPS
 		Contacts: []string{

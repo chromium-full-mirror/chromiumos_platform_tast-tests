@@ -36,7 +36,8 @@ const (
 
 func init() {
 	testing.AddTest(&testing.Test{
-		Func: AuthFactorStatusUpdateSignal, LacrosStatus: testing.LacrosVariantUnneeded, Desc: "Checks that AuthFactorStatusUpdate signal is sent for the locked out users",
+		Func: AuthFactorStatusUpdateSignal,
+		Desc: "Checks that AuthFactorStatusUpdate signal is sent for the locked out users",
 		Contacts: []string{
 			"cryptohome-core@google.com",
 			"behnoodm@chromium.org", // Test author

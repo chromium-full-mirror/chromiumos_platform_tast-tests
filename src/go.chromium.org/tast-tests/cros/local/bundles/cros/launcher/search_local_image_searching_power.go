@@ -26,9 +26,8 @@ import (
 
 func init() {
 	testing.AddTest(&testing.Test{
-		Func:         SearchLocalImageSearchingPower,
-		LacrosStatus: testing.LacrosVariantUnneeded, // Image search won't interact with Chrome browser.
-		Desc:         "Checks launcher image search power usage",
+		Func: SearchLocalImageSearchingPower,
+		Desc: "Checks launcher image search power usage",
 		Contacts: []string{
 			"launcher-search-notify@google.com",
 			"xiuwen@google.com",

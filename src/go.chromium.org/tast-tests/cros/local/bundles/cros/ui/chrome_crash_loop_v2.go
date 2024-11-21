@@ -29,7 +29,6 @@ type chromeCrashLoopV2Params struct {
 func init() {
 	testing.AddTest(&testing.Test{
 		Func:         ChromeCrashLoopV2,
-		LacrosStatus: testing.LacrosVariantUnneeded, // Lacros crash loops do not log the user out. Only ash-chrome does that.
 		Desc:         "Checks that if Chrome crashes repeatedly when logged in, it does an immediate crash upload",
 		Contacts:     []string{"chromeos-data-eng@google.com", "troywang@google.com"},
 		BugComponent: "b:1032705",

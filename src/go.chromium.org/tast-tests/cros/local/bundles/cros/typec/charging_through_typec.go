@@ -27,7 +27,6 @@ type chargeTypecTestParams struct {
 func init() {
 	testing.AddTest(&testing.Test{
 		Func:         ChargingThroughTypec,
-		LacrosStatus: testing.LacrosVariantUnknown,
 		Desc:         "Checking device charging status after USB4/TBT dock hot plug-unplug",
 		Contacts:     []string{"intel.chrome.automation.team@intel.com", "pathan.jilani@intel.com"},
 		BugComponent: "b:157291", // ChromeOS > External > Intel

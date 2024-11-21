@@ -16,9 +16,9 @@ import (
 
 func init() {
 	testing.AddTest(&testing.Test{
-		Func:         TabSwitchPerfRecorder,
-		LacrosStatus: testing.LacrosVariantUnneeded, // used to record all web traffic via wpr so that later TabSwitchCUJ could run without really talking to real sites
-		Desc:         "Run tab-switching CUJ test in chromewpr recording mode",
+		Func: TabSwitchPerfRecorder,
+		// used to record all web traffic via wpr so that later TabSwitchCUJ could run without really talking to real sites
+		Desc: "Run tab-switching CUJ test in chromewpr recording mode",
 		Contacts: []string{
 			"cros-sw-perf@google.com",
 			"xiyuan@chromium.org",

@@ -41,9 +41,8 @@ type effectsParams struct {
 
 func init() {
 	testing.AddTest(&testing.Test{
-		Func:         CameraEffectsPower,
-		LacrosStatus: testing.LacrosVariantUnneeded, // Browser only used to trigger VC UI.
-		Desc:         "Checks camera effects power usage",
+		Func: CameraEffectsPower,
+		Desc: "Checks camera effects power usage",
 		Contacts: []string{
 			"cros-video-conference-tast-tests@google.com",
 			"xiuwen@google.com",
