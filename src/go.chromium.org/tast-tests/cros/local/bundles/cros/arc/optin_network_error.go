@@ -21,9 +21,8 @@ import (
 
 func init() {
 	testing.AddTest(&testing.Test{
-		Func:         OptinNetworkError,
-		LacrosStatus: testing.LacrosVariantUnneeded,
-		Desc:         "A functional test that validates the 'Check Network' button in optin dialog",
+		Func: OptinNetworkError,
+		Desc: "A functional test that validates the 'Check Network' button in optin dialog",
 		Contacts: []string{
 			"arc-core@google.com",
 			"mhasank@chromium.org", // author.

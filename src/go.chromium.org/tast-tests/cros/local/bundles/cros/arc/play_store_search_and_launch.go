@@ -31,9 +31,8 @@ type playStoreSearchAndLaunchTestParams struct {
 
 func init() {
 	testing.AddTest(&testing.Test{
-		Func:         PlayStoreSearchAndLaunch,
-		LacrosStatus: testing.LacrosVariantUnneeded,
-		Desc:         "A functional test of the Play Store that installs, search for, and launches Google Calculator",
+		Func: PlayStoreSearchAndLaunch,
+		Desc: "A functional test of the Play Store that installs, search for, and launches Google Calculator",
 		Contacts: []string{
 			"arc-core@google.com",
 			"cros-system-ui-eng@google.com",

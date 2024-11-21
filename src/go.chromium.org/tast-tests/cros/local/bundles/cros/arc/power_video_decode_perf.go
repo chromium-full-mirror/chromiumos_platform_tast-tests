@@ -41,7 +41,6 @@ const (
 func init() {
 	testing.AddTest(&testing.Test{
 		Func:         PowerVideoDecodePerf,
-		LacrosStatus: testing.LacrosVariantUnneeded,
 		Desc:         "Measures the battery drain during hardware accelerated video playback",
 		Contacts:     []string{"arc-performance@google.com", "arcvm-platform-power@google.com"},
 		BugComponent: "b:1477363",

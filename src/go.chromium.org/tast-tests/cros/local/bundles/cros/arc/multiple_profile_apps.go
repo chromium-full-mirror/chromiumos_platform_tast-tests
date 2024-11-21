@@ -20,10 +20,9 @@ import (
 
 func init() {
 	testing.AddTest(&testing.Test{
-		Func:         MultipleProfileApps,
-		LacrosStatus: testing.LacrosVariantUnneeded,
-		Desc:         "Checks that ARC app from one user doesn't appear in another user",
-		Contacts:     []string{"cros-arc-te@google.com", "jinrongwu@google.com"},
+		Func:     MultipleProfileApps,
+		Desc:     "Checks that ARC app from one user doesn't appear in another user",
+		Contacts: []string{"cros-arc-te@google.com", "jinrongwu@google.com"},
 		// ChromeOS > Software > ARC++ > EngProd
 		BugComponent: "b:1052117",
 		Attr:         []string{"group:arc", "arc_core", "group:arc-functional"},

@@ -104,10 +104,9 @@ var unstableTests = []companionLibTestEntry{
 
 func init() {
 	testing.AddTest(&testing.Test{
-		Func:         CompanionLibrary,
-		LacrosStatus: testing.LacrosVariantUnneeded,
-		Desc:         "Test all ARC++ companion library",
-		Contacts:     []string{"arc-framework+tast@google.com", "sstan@google.com", "yhanada@chromium.org"},
+		Func:     CompanionLibrary,
+		Desc:     "Test all ARC++ companion library",
+		Contacts: []string{"arc-framework+tast@google.com", "sstan@google.com", "yhanada@chromium.org"},
 		// ChromeOS > Software > ARC++ > Framework > Chrome Integration
 		BugComponent: "b:537221",
 		// ARC team decide move this test out of mainline, since:

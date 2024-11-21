@@ -19,9 +19,8 @@ import (
 
 func init() {
 	testing.AddTest(&testing.Test{
-		Func:         AppInfoWebStore,
-		LacrosStatus: testing.LacrosVariantUnneeded,
-		Desc:         "Test Web Store app info from the context menu on app list",
+		Func: AppInfoWebStore,
+		Desc: "Test Web Store app info from the context menu on app list",
 		Contacts: []string{
 			"chromeos-apps-foundation-team@google.com",
 		},

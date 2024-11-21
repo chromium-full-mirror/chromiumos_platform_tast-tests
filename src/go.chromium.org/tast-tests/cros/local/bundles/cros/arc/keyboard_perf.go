@@ -19,9 +19,8 @@ import (
 
 func init() {
 	testing.AddTest(&testing.Test{
-		Func:         KeyboardPerf,
-		LacrosStatus: testing.LacrosVariantUnneeded,
-		Desc:         "Test ARC keyboard system performance",
+		Func: KeyboardPerf,
+		Desc: "Test ARC keyboard system performance",
 		Contacts: []string{
 			"arc-performance@google.com",
 			"hungmn@chromium.org",

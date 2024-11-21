@@ -20,10 +20,9 @@ import (
 
 func init() {
 	testing.AddTest(&testing.Test{
-		Func:         ConciergeCrash,
-		LacrosStatus: testing.LacrosVariantUnneeded,
-		Desc:         "Test concierge crash handling",
-		Contacts:     []string{"arcvm-eng@google.com", "hashimoto@chromium.org"},
+		Func:     ConciergeCrash,
+		Desc:     "Test concierge crash handling",
+		Contacts: []string{"arcvm-eng@google.com", "hashimoto@chromium.org"},
 		// ChromeOS > Software > ARC++ > ARCVM
 		BugComponent: "b:883059",
 		Attr:         []string{"group:mainline", "informational", "group:hw_agnostic"}, // b/203428993

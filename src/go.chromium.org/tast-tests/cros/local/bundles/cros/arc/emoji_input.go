@@ -22,10 +22,9 @@ import (
 
 func init() {
 	testing.AddTest(&testing.Test{
-		Func:         EmojiInput,
-		LacrosStatus: testing.LacrosVariantUnneeded,
-		Desc:         "Checks whether ARC apps accept the input from ChromeOS emoji picker",
-		Contacts:     []string{"arc-framework+tast@google.com", "hirokisato@chromium.org"},
+		Func:     EmojiInput,
+		Desc:     "Checks whether ARC apps accept the input from ChromeOS emoji picker",
+		Contacts: []string{"arc-framework+tast@google.com", "hirokisato@chromium.org"},
 		// ChromeOS > Software > ARC++ > Framework > Input
 		BugComponent: "b:536706",
 		Attr:         []string{"group:mainline", "informational", "group:hw_agnostic", "group:input-tools"},

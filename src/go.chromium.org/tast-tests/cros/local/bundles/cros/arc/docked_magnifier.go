@@ -25,10 +25,9 @@ import (
 
 func init() {
 	testing.AddTest(&testing.Test{
-		Func:         DockedMagnifier,
-		LacrosStatus: testing.LacrosVariantUnneeded,
-		Desc:         "Checks DockedMagnifier works for arc windows as expected",
-		Contacts:     []string{"arc-framework+tast@google.com", "hirokisato@chromium.org", "yaoqq@chromium.org"},
+		Func:     DockedMagnifier,
+		Desc:     "Checks DockedMagnifier works for arc windows as expected",
+		Contacts: []string{"arc-framework+tast@google.com", "hirokisato@chromium.org", "yaoqq@chromium.org"},
 		// ChromeOS > Software > ARC++ > Framework > Window Management
 		BugComponent: "b:537272",
 		Attr:         []string{"group:mainline", "informational"},

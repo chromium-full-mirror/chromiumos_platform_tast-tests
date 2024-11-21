@@ -18,10 +18,9 @@ import (
 
 func init() {
 	testing.AddTest(&testing.Test{
-		Func:         MiniContainer,
-		LacrosStatus: testing.LacrosVariantUnneeded,
-		Desc:         "Ensures Android mini container is upgraded after login",
-		Contacts:     []string{"arc-core@google.com"},
+		Func:     MiniContainer,
+		Desc:     "Ensures Android mini container is upgraded after login",
+		Contacts: []string{"arc-core@google.com"},
 		// ChromeOS > Software > ARC++ > Core
 		BugComponent: "b:488493",
 		Attr:         []string{"group:mainline", "informational"},

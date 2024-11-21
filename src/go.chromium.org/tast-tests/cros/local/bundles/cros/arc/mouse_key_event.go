@@ -18,10 +18,9 @@ import (
 
 func init() {
 	testing.AddTest(&testing.Test{
-		Func:         MouseKeyEvent,
-		LacrosStatus: testing.LacrosVariantUnneeded,
-		Desc:         "Checks mouse buttons emit the correct key events on ARC",
-		Contacts:     []string{"arc-framework+tast@google.com", "yhanada@chromium.org", "nergi@chromium.org"},
+		Func:     MouseKeyEvent,
+		Desc:     "Checks mouse buttons emit the correct key events on ARC",
+		Contacts: []string{"arc-framework+tast@google.com", "yhanada@chromium.org", "nergi@chromium.org"},
 		// ChromeOS > Software > ARC++ > Framework > Input
 		BugComponent: "b:536706",
 		Attr:         []string{"group:mainline", "informational", "group:hw_agnostic", "hw_agnostic_vm_stable"},

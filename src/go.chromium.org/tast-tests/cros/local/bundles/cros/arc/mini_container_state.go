@@ -16,10 +16,9 @@ import (
 
 func init() {
 	testing.AddTest(&testing.Test{
-		Func:         MiniContainerState,
-		LacrosStatus: testing.LacrosVariantUnneeded,
-		Desc:         "Verifies ARC mini container starts right after ChromeOS shows the login screen",
-		Contacts:     []string{"arc-core@google.com"},
+		Func:     MiniContainerState,
+		Desc:     "Verifies ARC mini container starts right after ChromeOS shows the login screen",
+		Contacts: []string{"arc-core@google.com"},
 		// ChromeOS > Software > ARC++ > Core
 		BugComponent: "b:488493",
 		Attr:         []string{"group:mainline", "informational"},

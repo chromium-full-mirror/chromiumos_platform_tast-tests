@@ -21,8 +21,7 @@ func init() {
 	testing.AddTest(&testing.Test{
 		Func: KerberosDaemon,
 		// This tast doesn't interact with the browser.
-		LacrosStatus: testing.LacrosVariantUnneeded,
-		Desc:         "Verifies that the Kerberos system daemon works as expected",
+		Desc: "Verifies that the Kerberos system daemon works as expected",
 		Contacts: []string{
 			"cros-3pidp@google.com",
 			"slutskii@google.com",

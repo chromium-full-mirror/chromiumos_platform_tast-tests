@@ -120,10 +120,9 @@ func fioJobFileNames() []string {
 
 func init() {
 	testing.AddTest(&testing.Test{
-		Func:         Fio,
-		LacrosStatus: testing.LacrosVariantUnneeded,
-		Desc:         "Tests running fio inside ARCVM",
-		Contacts:     []string{"arc-storage@google.com", "momohatt@google.com"},
+		Func:     Fio,
+		Desc:     "Tests running fio inside ARCVM",
+		Contacts: []string{"arc-storage@google.com", "momohatt@google.com"},
 		// ChromeOS > Software > ARC++ > Storage
 		BugComponent: "b:516669",
 		SoftwareDeps: []string{"chrome", "android_vm"},

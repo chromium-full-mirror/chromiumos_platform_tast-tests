@@ -30,10 +30,9 @@ const (
 
 func init() {
 	testing.AddTest(&testing.Test{
-		Func:         ResizeLockA2C2,
-		LacrosStatus: testing.LacrosVariantUnneeded,
-		Desc:         "Checks that ARC++ Resize Lock via A2C2 works as expected",
-		Contacts:     []string{"arc-framework+tast@google.com", "toshikikikuchi@chromium.org"},
+		Func:     ResizeLockA2C2,
+		Desc:     "Checks that ARC++ Resize Lock via A2C2 works as expected",
+		Contacts: []string{"arc-framework+tast@google.com", "toshikikikuchi@chromium.org"},
 		// ChromeOS > Software > ARC++ > Framework > Window Management
 		BugComponent: "b:537272",
 		Attr:         []string{"group:mainline", "informational", "group:hw_agnostic"},

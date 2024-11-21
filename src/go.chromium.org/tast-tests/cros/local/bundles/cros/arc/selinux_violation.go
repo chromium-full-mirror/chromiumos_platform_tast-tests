@@ -22,9 +22,8 @@ import (
 
 func init() {
 	testing.AddTest(&testing.Test{
-		Func:         SELinuxViolation,
-		LacrosStatus: testing.LacrosVariantUnneeded,
-		Desc:         "Test handling of an ARC++ SELinux violation",
+		Func: SELinuxViolation,
+		Desc: "Test handling of an ARC++ SELinux violation",
 		Contacts: []string{
 			// ARC
 			"arc-core@google.com",

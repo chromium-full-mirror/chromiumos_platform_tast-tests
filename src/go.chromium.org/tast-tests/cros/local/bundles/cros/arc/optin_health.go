@@ -22,9 +22,8 @@ import (
 
 func init() {
 	testing.AddTest(&testing.Test{
-		Func:         OptinHealth,
-		LacrosStatus: testing.LacrosVariantUnneeded,
-		Desc:         "A functional test that verifies that ARC is healthy during optin",
+		Func: OptinHealth,
+		Desc: "A functional test that verifies that ARC is healthy during optin",
 		Contacts: []string{
 			"arc-core@google.com",
 			"mhasank@chromium.org",

@@ -67,10 +67,9 @@ type filesAppCtsTestParams struct {
 
 func init() {
 	testing.AddTest(&testing.Test{
-		Func:         FilesAppCts,
-		LacrosStatus: testing.LacrosVariantUnneeded,
-		Desc:         "Run CTS test cases relevant to CrOS Files app",
-		Contacts:     []string{"arc-storage@google.com", "youkichihosoi@google.com", "momohatt@google.com"},
+		Func:     FilesAppCts,
+		Desc:     "Run CTS test cases relevant to CrOS Files app",
+		Contacts: []string{"arc-storage@google.com", "youkichihosoi@google.com", "momohatt@google.com"},
 		// ChromeOS > Software > ARC++ > Storage
 		BugComponent: "b:516669",
 		Fixture:      "arcBootedWithoutUIAutomator",

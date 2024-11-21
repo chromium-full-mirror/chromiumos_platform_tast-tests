@@ -26,9 +26,8 @@ import (
 
 func init() {
 	testing.AddTest(&testing.Test{
-		Func:         Backup,
-		LacrosStatus: testing.LacrosVariantUnneeded,
-		Desc:         "This test ensure that we can backup and restore Android Apps",
+		Func: Backup,
+		Desc: "This test ensure that we can backup and restore Android Apps",
 		Contacts: []string{
 			"arcvm-software@google.com", // Owner team.
 			"niwa@google.com",           // ARCVM data migration.

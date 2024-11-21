@@ -14,10 +14,9 @@ import (
 
 func init() {
 	testing.AddTest(&testing.Test{
-		Func:         GamePerformanceBuffers,
-		LacrosStatus: testing.LacrosVariantUnneeded,
-		Desc:         "Captures set of performance metrics for buffers and upload it to the server",
-		Contacts:     []string{"arc-performance@google.com", "khmel@chromium.org", "skuhne@chromium.org"},
+		Func:     GamePerformanceBuffers,
+		Desc:     "Captures set of performance metrics for buffers and upload it to the server",
+		Contacts: []string{"arc-performance@google.com", "khmel@chromium.org", "skuhne@chromium.org"},
 		// ChromeOS > Software > ARC++ > Performance
 		BugComponent: "b:168382",
 		// TODO(http://b/140444033): Test is disabled until it can be fixed

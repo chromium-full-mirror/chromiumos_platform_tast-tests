@@ -20,10 +20,9 @@ import (
 
 func init() {
 	testing.AddTest(&testing.Test{
-		Func:         GameControls,
-		LacrosStatus: testing.LacrosVariantUnneeded,
-		Desc:         "Installs the game controls test application, adds a new button, and verifies correctness",
-		Contacts:     []string{"arc-gaming@google.com", "pjlee@google.com", "cuicuiruan@google.com"},
+		Func:     GameControls,
+		Desc:     "Installs the game controls test application, adds a new button, and verifies correctness",
+		Contacts: []string{"arc-gaming@google.com", "pjlee@google.com", "cuicuiruan@google.com"},
 		// ChromeOS > Software > ARC++ > Gaming
 		BugComponent: "b:1373988",
 		Attr:         []string{"group:arc", "group:arc-functional", "group:mainline", "informational"},

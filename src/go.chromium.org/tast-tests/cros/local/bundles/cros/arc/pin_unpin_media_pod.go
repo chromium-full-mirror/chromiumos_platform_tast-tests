@@ -35,7 +35,6 @@ func init() {
 	testing.AddTest(&testing.Test{
 		Func:           PinUnpinMediaPod,
 		LifeCycleStage: testing.LifeCycleOwnerMonitored,
-		LacrosStatus:   testing.LacrosVariantUnneeded,
 		Desc:           "Check the pin/unpin/re-pin for media control pod",
 		Contacts: []string{
 			// "cros-arc-te@google.com",

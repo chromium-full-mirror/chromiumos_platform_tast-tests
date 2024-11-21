@@ -17,9 +17,8 @@ import (
 
 func init() {
 	testing.AddTest(&testing.Test{
-		Func:         GuestMemorySize,
-		LacrosStatus: testing.LacrosVariantUnneeded,
-		Desc:         "Verify ARCVM boots with >3GiB of memory",
+		Func: GuestMemorySize,
+		Desc: "Verify ARCVM boots with >3GiB of memory",
 		Contacts: []string{
 			"cros-vm-technology@google.com",
 		},

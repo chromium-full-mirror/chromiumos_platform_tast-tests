@@ -90,10 +90,9 @@ func getAnyChildDataAppPath(ctx context.Context, appPath string) (string, error)
 
 func init() {
 	testing.AddTest(&testing.Test{
-		Func:         RestoreData,
-		Desc:         "This verifies SELinux data restore flow in case Android /data folder has corrupted SELinux contexts",
-		LacrosStatus: testing.LacrosVariantUnneeded,
-		Contacts:     []string{"arc-core@google.com"},
+		Func:     RestoreData,
+		Desc:     "This verifies SELinux data restore flow in case Android /data folder has corrupted SELinux contexts",
+		Contacts: []string{"arc-core@google.com"},
 		// ChromeOS > Software > ARC++ > Core
 		BugComponent: "b:488493",
 		Attr:         []string{"group:crosbolt", "crosbolt_perbuild"},

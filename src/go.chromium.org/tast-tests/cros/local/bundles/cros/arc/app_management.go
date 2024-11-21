@@ -38,9 +38,8 @@ type permissionState struct {
 
 func init() {
 	testing.AddTest(&testing.Test{
-		Func:         AppManagement,
-		LacrosStatus: testing.LacrosVariantUnneeded,
-		Desc:         "Verifies integration of ARC apps into the OS Settings App Management UI",
+		Func: AppManagement,
+		Desc: "Verifies integration of ARC apps into the OS Settings App Management UI",
 		Contacts: []string{
 			"chromeos-apps-foundation-team@google.com",
 			"tsergeant@chromium.org",

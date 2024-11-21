@@ -19,10 +19,9 @@ import (
 
 func init() {
 	testing.AddTest(&testing.Test{
-		Func:         ConfigChanges,
-		LacrosStatus: testing.LacrosVariantUnneeded,
-		Desc:         "Verifies that configChanges property in AndroidManifest.xml prevents an activity to restart on the configuration update",
-		Contacts:     []string{"arc-framework+tast@google.com", "yhanada@chromium.org"},
+		Func:     ConfigChanges,
+		Desc:     "Verifies that configChanges property in AndroidManifest.xml prevents an activity to restart on the configuration update",
+		Contacts: []string{"arc-framework+tast@google.com", "yhanada@chromium.org"},
 		// ChromeOS > Software > ARC++ > Framework > Chrome Integration
 		BugComponent: "b:537221",
 		Attr:         []string{"informational", "group:mainline", "group:hw_agnostic"},

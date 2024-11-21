@@ -28,10 +28,9 @@ import (
 
 func init() {
 	testing.AddTest(&testing.Test{
-		Func:         ManagedPlayStoreIconTablet,
-		LacrosStatus: testing.LacrosVariantUnneeded,
-		Desc:         "Tests the visibility of Play Store icon on tablet form factor w.r.t. ArcPolicy",
-		Contacts:     []string{"arc-commercial@google.com", "yaohuali@google.com"},
+		Func:     ManagedPlayStoreIconTablet,
+		Desc:     "Tests the visibility of Play Store icon on tablet form factor w.r.t. ArcPolicy",
+		Contacts: []string{"arc-commercial@google.com", "yaohuali@google.com"},
 		// ChromeOS > Software > ARC++ > Commercial > Tast Tests
 		BugComponent: "b:1487630",
 		SoftwareDeps: []string{"chrome"},

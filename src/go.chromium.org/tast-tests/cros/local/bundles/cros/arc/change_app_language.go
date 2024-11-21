@@ -41,10 +41,9 @@ const (
 
 func init() {
 	testing.AddTest(&testing.Test{
-		Func:         ChangeAppLanguage,
-		LacrosStatus: testing.LacrosVariantUnneeded,
-		Desc:         "Verifies integration of ARC apps with ChromeOS app language settings",
-		Contacts:     []string{"arc-framework+tast@google.com", "nergi@chromium.org"},
+		Func:     ChangeAppLanguage,
+		Desc:     "Verifies integration of ARC apps with ChromeOS app language settings",
+		Contacts: []string{"arc-framework+tast@google.com", "nergi@chromium.org"},
 		// ChromeOS > Software > ARC++ > Framework > Chrome Integration
 		BugComponent: "b:537221",
 		Attr:         []string{"group:mainline", "informational", "group:hw_agnostic"},

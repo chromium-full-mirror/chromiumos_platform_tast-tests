@@ -28,10 +28,9 @@ type buildPropertiesTestParameters struct {
 
 func init() {
 	testing.AddTest(&testing.Test{
-		Func:         BuildProperties,
-		LacrosStatus: testing.LacrosVariantUnneeded,
-		Desc:         "Checks important Android properties such as first_api_level",
-		Contacts:     []string{"arcvm-eng@google.com", "niwa@google.com"},
+		Func:     BuildProperties,
+		Desc:     "Checks important Android properties such as first_api_level",
+		Contacts: []string{"arcvm-eng@google.com", "niwa@google.com"},
 		// ChromeOS > Software > ARC++ > ARCVM
 		BugComponent: "b:883059",
 		SoftwareDeps: []string{"chrome"},

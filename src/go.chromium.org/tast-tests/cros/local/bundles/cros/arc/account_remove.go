@@ -36,22 +36,21 @@ type accountRemoveTestArgs struct {
 
 func init() {
 	testing.AddTest(&testing.Test{
-		Func:         AccountRemove,
-		LacrosStatus: testing.LacrosVariantUnneeded,
-		Desc:         "Verifies that primary managed account cannot be removed from ARC",
-		Contacts:     []string{"arc-commercial@google.com", "mhasank@chromium.org"},
+		Func:     AccountRemove,
+		Desc:     "Verifies that primary managed account cannot be removed from ARC",
+		Contacts: []string{"arc-commercial@google.com", "mhasank@chromium.org"},
 		// ChromeOS > Software > ARC++ > Commercial > Tast Tests
 		BugComponent: "b:1487630",
 		Attr:         []string{
 			// Disabled by TORA.  See:b/342208261.
 			// "group:mainline", "group:hw_agnostic"
-			},
+		},
 		SoftwareDeps: []string{
 			"chrome", "play_store",
 			// Disabled by TORA.  See:b/342208261.
 			// "gaia"
-			},
-		Timeout:      15 * time.Minute,
+		},
+		Timeout: 15 * time.Minute,
 		VarDeps: []string{
 			arcCommon.ManagedAccountPoolVarName,
 			uiCommon.GaiaPoolDefaultVarName,
@@ -72,10 +71,10 @@ func init() {
 					// Disabled by TORA.  See:b/342208261.
 					//"gaia"
 				},
-				ExtraAttr:         []string{
+				ExtraAttr: []string{
 					// Disabled by TORA.  See:b/342208261.
 					// "informational", "group:mainline"
-					},
+				},
 			},
 			{
 				Name: "managed_vm",
@@ -88,7 +87,7 @@ func init() {
 				ExtraAttr:         []string{
 					// Disabled by TORA.  See:b/342208261.
 					//"informational"
-					},
+				},
 			},
 			{
 				Name: "unmanaged",
@@ -102,10 +101,10 @@ func init() {
 					// Disabled by TORA.  See:b/342208261.
 					//"gaia"
 				},
-				ExtraAttr:         []string{
+				ExtraAttr: []string{
 					// Disabled by TORA.  See:b/342208261.
 					// "informational", "group:mainline"
-					},
+				},
 			},
 			{
 				Name: "unmanaged_vm",
@@ -119,10 +118,10 @@ func init() {
 					// Disabled by TORA.  See:b/342208261.
 					//"gaia"
 				},
-				ExtraAttr:         []string{
+				ExtraAttr: []string{
 					// Disabled by TORA.  See:b/342208261.
 					// "informational", "group:mainline"
-					},
+				},
 			}},
 	})
 }

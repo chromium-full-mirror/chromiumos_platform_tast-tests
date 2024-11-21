@@ -24,9 +24,8 @@ import (
 
 func init() {
 	testing.AddTest(&testing.Test{
-		Func:         OnDemand,
-		LacrosStatus: testing.LacrosVariantUnneeded,
-		Desc:         "Tests that ARC is started in an on-demand manner",
+		Func: OnDemand,
+		Desc: "Tests that ARC is started in an on-demand manner",
 		Contacts: []string{
 			"arcvm-eng@google.com",
 			"hashimoto@google.com",

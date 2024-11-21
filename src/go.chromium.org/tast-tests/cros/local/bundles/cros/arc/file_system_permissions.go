@@ -16,10 +16,9 @@ import (
 
 func init() {
 	testing.AddTest(&testing.Test{
-		Func:         FileSystemPermissions,
-		LacrosStatus: testing.LacrosVariantUnneeded,
-		Desc:         "Verifies filesystem permissions for ARC container",
-		Contacts:     []string{"arc-storage@google.com", "youkichihosoi@chromium.org"},
+		Func:     FileSystemPermissions,
+		Desc:     "Verifies filesystem permissions for ARC container",
+		Contacts: []string{"arc-storage@google.com", "youkichihosoi@chromium.org"},
 		// ChromeOS > Software > ARC++ > Storage
 		BugComponent: "b:516669",
 		// TODO(yusukes,ricardoq): ARCVM does not need the test. Remove this once we retire ARC container.

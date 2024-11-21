@@ -21,10 +21,9 @@ import (
 
 func init() {
 	testing.AddTest(&testing.Test{
-		Func:         ScreenPinning,
-		LacrosStatus: testing.LacrosVariantUnneeded,
-		Desc:         "Checks that screen pinning is entered and exits correctly",
-		Contacts:     []string{"arc-framework+tast@google.com", "yhanada@chromium.org"},
+		Func:     ScreenPinning,
+		Desc:     "Checks that screen pinning is entered and exits correctly",
+		Contacts: []string{"arc-framework+tast@google.com", "yhanada@chromium.org"},
 		// ChromeOS > Software > ARC++ > Framework > Window Management
 		BugComponent: "b:537272",
 		SoftwareDeps: []string{"chrome"},

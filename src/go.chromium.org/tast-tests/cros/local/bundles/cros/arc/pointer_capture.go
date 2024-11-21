@@ -26,10 +26,9 @@ import (
 
 func init() {
 	testing.AddTest(&testing.Test{
-		Func:         PointerCapture,
-		LacrosStatus: testing.LacrosVariantUnneeded,
-		Desc:         "Checks that Pointer Capture works in Android",
-		Contacts:     []string{"arc-framework+tast@google.com", "yhanada@chromium.org", "hirokisato@chromium.org"},
+		Func:     PointerCapture,
+		Desc:     "Checks that Pointer Capture works in Android",
+		Contacts: []string{"arc-framework+tast@google.com", "yhanada@chromium.org", "hirokisato@chromium.org"},
 		// ChromeOS > Software > ARC++ > Framework > Input
 		BugComponent: "b:536706",
 		Attr:         []string{"group:mainline", "informational", "group:hw_agnostic"},

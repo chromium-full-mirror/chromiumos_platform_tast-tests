@@ -71,10 +71,9 @@ var traceCmdEventsVar = testing.RegisterVarString(
 
 func init() {
 	testing.AddTest(&testing.Test{
-		Func:         RegularBoot,
-		LacrosStatus: testing.LacrosVariantUnneeded,
-		Desc:         "This exercises a scenario when user logs in Chrome where ARC is already provisioned and tries to use ARC app immediately. App launch delay is reported for this case. This does not do acutual reboot however drops caches before each iteration to match the cold start scenario",
-		Contacts:     []string{"arc-performance@google.com", "khmel@chromium.org"},
+		Func:     RegularBoot,
+		Desc:     "This exercises a scenario when user logs in Chrome where ARC is already provisioned and tries to use ARC app immediately. App launch delay is reported for this case. This does not do acutual reboot however drops caches before each iteration to match the cold start scenario",
+		Contacts: []string{"arc-performance@google.com", "khmel@chromium.org"},
 		// ChromeOS > Software > ARC++ > Performance
 		BugComponent: "b:168382",
 		Attr:         []string{"group:crosbolt", "crosbolt_perbuild"},

@@ -21,10 +21,9 @@ import (
 
 func init() {
 	testing.AddTest(&testing.Test{
-		Func:         IMEBlockingVK,
-		LacrosStatus: testing.LacrosVariantUnneeded,
-		Desc:         "Checks if IME is properly hidden by an ARC dialog in tablet mode",
-		Contacts:     []string{"arc-framework+tast@google.com", "yhanada@chromium.org"},
+		Func:     IMEBlockingVK,
+		Desc:     "Checks if IME is properly hidden by an ARC dialog in tablet mode",
+		Contacts: []string{"arc-framework+tast@google.com", "yhanada@chromium.org"},
 		// ChromeOS > Software > ARC++ > Framework > IME VK
 		BugComponent: "b:537350",
 		Attr:         []string{"group:mainline", "group:hw_agnostic"},

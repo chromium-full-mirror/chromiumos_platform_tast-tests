@@ -22,10 +22,9 @@ import (
 
 func init() {
 	testing.AddTest(&testing.Test{
-		Func:         InputOverlayEditor,
-		LacrosStatus: testing.LacrosVariantUnneeded,
-		Desc:         "Test for gaming input overlay key mapping editor correctness",
-		Contacts:     []string{"arc-app-dev@google.com", "pjlee@google.com", "cuicuiruan@google.com"},
+		Func:     InputOverlayEditor,
+		Desc:     "Test for gaming input overlay key mapping editor correctness",
+		Contacts: []string{"arc-app-dev@google.com", "pjlee@google.com", "cuicuiruan@google.com"},
 		// ChromeOS > Software > ARC++ > Gaming
 		BugComponent: "b:1373988",
 		Attr:         []string{"group:mainline", "informational"},

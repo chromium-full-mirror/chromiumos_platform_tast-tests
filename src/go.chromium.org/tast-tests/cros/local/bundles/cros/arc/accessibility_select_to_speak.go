@@ -21,10 +21,9 @@ import (
 
 func init() {
 	testing.AddTest(&testing.Test{
-		Func:         AccessibilitySelectToSpeak,
-		LacrosStatus: testing.LacrosVariantUnneeded,
-		Desc:         "Checks Select-to-Speak works on ARC windows",
-		Contacts:     []string{"arc-framework+tast@google.com", "hirokisato@chromium.org"},
+		Func:     AccessibilitySelectToSpeak,
+		Desc:     "Checks Select-to-Speak works on ARC windows",
+		Contacts: []string{"arc-framework+tast@google.com", "hirokisato@chromium.org"},
 		// ChromeOS > Software > ARC++ > Framework > Accessibility
 		BugComponent: "b:165222",
 		Attr:         []string{"group:mainline", "informational"},

@@ -52,10 +52,9 @@ var fullrestoreGwTests = []gwTestParams{
 
 func init() {
 	testing.AddTest(&testing.Test{
-		Func:         GhostWindow,
-		LacrosStatus: testing.LacrosVariantUnneeded,
-		Desc:         "Test ghost window for ARC Apps",
-		Contacts:     []string{"arc-framework+tast@google.com", "sstan@google.com"},
+		Func:     GhostWindow,
+		Desc:     "Test ghost window for ARC Apps",
+		Contacts: []string{"arc-framework+tast@google.com", "sstan@google.com"},
 		// ChromeOS > Software > ARC++ > Framework > Chrome Integration
 		BugComponent: "b:537221",
 		SoftwareDeps: []string{"chrome"},

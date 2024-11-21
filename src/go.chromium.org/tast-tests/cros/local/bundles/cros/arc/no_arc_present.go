@@ -15,10 +15,9 @@ import (
 
 func init() {
 	testing.AddTest(&testing.Test{
-		Func:         NoArcPresent,
-		LacrosStatus: testing.LacrosVariantUnneeded,
-		Desc:         "Verify that ARC is not present on devices with extended autoupdates",
-		Contacts:     []string{"arcvm-eng@google.com", "morg@google.com", "niwa@google.com"},
+		Func:     NoArcPresent,
+		Desc:     "Verify that ARC is not present on devices with extended autoupdates",
+		Contacts: []string{"arcvm-eng@google.com", "morg@google.com", "niwa@google.com"},
 		// ChromeOS > Software > ARC++
 		BugComponent: "b:153255",
 		Attr:         []string{"group:mainline", "informational"},

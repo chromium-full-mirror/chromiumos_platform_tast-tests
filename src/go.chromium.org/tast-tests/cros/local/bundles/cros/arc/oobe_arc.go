@@ -28,10 +28,9 @@ type oobeArcArgs struct {
 
 func init() {
 	testing.AddTest(&testing.Test{
-		Func:         OobeArc,
-		LacrosStatus: testing.LacrosVariantUnneeded,
-		Desc:         "Navigate through OOBE and Verify that PlayStore Settings Screen is launched at the end",
-		Contacts:     []string{"cros-arc-te@google.com", "cros-oac@google.com", "jinrongwu@google.com"},
+		Func:     OobeArc,
+		Desc:     "Navigate through OOBE and Verify that PlayStore Settings Screen is launched at the end",
+		Contacts: []string{"cros-arc-te@google.com", "cros-oac@google.com", "jinrongwu@google.com"},
 		// ChromeOS > Software > ARC++ > EngProd
 		BugComponent: "b:1052117",
 		SoftwareDeps: []string{"chrome", "gaia"},

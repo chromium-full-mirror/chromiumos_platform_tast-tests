@@ -19,10 +19,9 @@ import (
 
 func init() {
 	testing.AddTest(&testing.Test{
-		Func:         InputOverlayLaunch,
-		LacrosStatus: testing.LacrosVariantUnneeded,
-		Desc:         "Installs the GIO test application and checks for launch correctness",
-		Contacts:     []string{"arc-app-dev@google.com", "pjlee@google.com", "cuicuiruan@google.com"},
+		Func:     InputOverlayLaunch,
+		Desc:     "Installs the GIO test application and checks for launch correctness",
+		Contacts: []string{"arc-app-dev@google.com", "pjlee@google.com", "cuicuiruan@google.com"},
 		// ChromeOS > Software > ARC++ > Gaming
 		BugComponent: "b:1373988",
 		Attr:         []string{"group:mainline", "informational"},

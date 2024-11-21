@@ -21,10 +21,9 @@ import (
 
 func init() {
 	testing.AddTest(&testing.Test{
-		Func:         ChromeCrash,
-		LacrosStatus: testing.LacrosVariantUnneeded,
-		Desc:         "Test ash chrome crash handling of ARC",
-		Contacts:     []string{"arc-core@google.com"},
+		Func:     ChromeCrash,
+		Desc:     "Test ash chrome crash handling of ARC",
+		Contacts: []string{"arc-core@google.com"},
 		// ChromeOS > Software > ARC++ > Core
 		BugComponent: "b:488493",
 		SoftwareDeps: []string{"chrome"},

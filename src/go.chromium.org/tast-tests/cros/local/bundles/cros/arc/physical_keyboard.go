@@ -46,10 +46,9 @@ var unstablePkTests = []pkTestParams{
 
 func init() {
 	testing.AddTest(&testing.Test{
-		Func:         PhysicalKeyboard,
-		LacrosStatus: testing.LacrosVariantUnneeded,
-		Desc:         "Checks physical keyboard works on Android",
-		Contacts:     []string{"arc-framework+tast@google.com", "yhanada@chromium.org"},
+		Func:     PhysicalKeyboard,
+		Desc:     "Checks physical keyboard works on Android",
+		Contacts: []string{"arc-framework+tast@google.com", "yhanada@chromium.org"},
 		// ChromeOS > Software > ARC++ > Framework > Input
 		BugComponent: "b:536706",
 		SoftwareDeps: []string{"chrome"},

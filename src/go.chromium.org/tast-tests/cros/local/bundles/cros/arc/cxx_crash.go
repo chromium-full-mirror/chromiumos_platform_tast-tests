@@ -21,11 +21,10 @@ import (
 
 func init() {
 	testing.AddTest(&testing.Test{
-		Func:         CxxCrash,
-		LacrosStatus: testing.LacrosVariantUnneeded,
-		Desc:         "Test handling of a C++ binary crash",
-		Contacts:     []string{"arc-core@google.com", "matvore@chromium.org"},
-		Attr:         []string{"group:mainline", "informational"},
+		Func:     CxxCrash,
+		Desc:     "Test handling of a C++ binary crash",
+		Contacts: []string{"arc-core@google.com", "matvore@chromium.org"},
+		Attr:     []string{"group:mainline", "informational"},
 		// ChromeOS > Software > ARC++ > Core
 		BugComponent: "b:488493",
 		SoftwareDeps: []string{"chrome"},

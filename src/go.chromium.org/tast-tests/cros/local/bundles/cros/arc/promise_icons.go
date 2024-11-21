@@ -23,9 +23,8 @@ import (
 
 func init() {
 	testing.AddTest(&testing.Test{
-		Func:         PromiseIcons,
-		LacrosStatus: testing.LacrosVariantUnneeded,
-		Desc:         "Verifies that a Play Store installation creates a promise icon in Launcher",
+		Func: PromiseIcons,
+		Desc: "Verifies that a Play Store installation creates a promise icon in Launcher",
 		Contacts: []string{
 			"chromeos-apps-foundation-team@google.com",
 			"mattlui@google.com",

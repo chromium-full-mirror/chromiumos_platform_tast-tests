@@ -23,10 +23,9 @@ import (
 
 func init() {
 	testing.AddTest(&testing.Test{
-		Func:         PhysicalKeyboardWithoutUiautomator,
-		LacrosStatus: testing.LacrosVariantUnneeded,
-		Desc:         "Checks physical keyboard works on Android without uiautomator",
-		Contacts:     []string{"arc-framework+tast@google.com", "yhanada@chromium.org"},
+		Func:     PhysicalKeyboardWithoutUiautomator,
+		Desc:     "Checks physical keyboard works on Android without uiautomator",
+		Contacts: []string{"arc-framework+tast@google.com", "yhanada@chromium.org"},
 		// ChromeOS > Software > ARC++ > Framework > Input
 		BugComponent: "b:536706",
 		SoftwareDeps: []string{"chrome", "android_vm"},

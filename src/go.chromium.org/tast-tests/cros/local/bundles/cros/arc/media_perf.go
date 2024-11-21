@@ -32,7 +32,6 @@ func init() {
 	testing.AddTest(&testing.Test{
 		Func:           MediaPerf,
 		LifeCycleStage: testing.LifeCycleOwnerMonitored,
-		LacrosStatus:   testing.LacrosVariantUnneeded,
 		Desc:           "Captures set of media performance metrics and uploads them as perf metrics",
 		Contacts: []string{
 			"arc-performance@google.com",

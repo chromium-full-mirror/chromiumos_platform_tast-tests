@@ -18,10 +18,9 @@ import (
 
 func init() {
 	testing.AddTest(&testing.Test{
-		Func:         FontSharing,
-		LacrosStatus: testing.LacrosVariantUnneeded,
-		Desc:         "Test that font-sharing from ChromeOS to ARC works",
-		Contacts:     []string{"arcvm-eng@google.com", "hashimoto@chromium.org"},
+		Func:     FontSharing,
+		Desc:     "Test that font-sharing from ChromeOS to ARC works",
+		Contacts: []string{"arcvm-eng@google.com", "hashimoto@chromium.org"},
 		// ChromeOS > Software > ARC++ > ARCVM
 		BugComponent: "b:883059",
 		// Font sharing feature is currently disabled on all devices.

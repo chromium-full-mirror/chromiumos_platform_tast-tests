@@ -21,9 +21,8 @@ import (
 
 func init() {
 	testing.AddTest(&testing.Test{
-		Func:         DozeSuspend,
-		LacrosStatus: testing.LacrosVariantUnneeded,
-		Desc:         "Test that automatic suspending while dozing works",
+		Func: DozeSuspend,
+		Desc: "Test that automatic suspending while dozing works",
 		Contacts: []string{
 			"cros-vm-technology@google.com",
 			"stevensd@google.com",

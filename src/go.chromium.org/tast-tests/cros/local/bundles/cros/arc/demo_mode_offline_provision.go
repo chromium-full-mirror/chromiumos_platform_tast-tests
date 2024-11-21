@@ -20,10 +20,9 @@ import (
 
 func init() {
 	testing.AddTest(&testing.Test{
-		Func:         DemoModeOfflineProvision,
-		LacrosStatus: testing.LacrosVariantUnneeded,
-		Desc:         "Enter Demo Mode from OOBE via offline mode, verify Play Store can be opened",
-		Contacts:     []string{"arc-commercial@google.com", "yaohuali@google.com"},
+		Func:     DemoModeOfflineProvision,
+		Desc:     "Enter Demo Mode from OOBE via offline mode, verify Play Store can be opened",
+		Contacts: []string{"arc-commercial@google.com", "yaohuali@google.com"},
 		// ChromeOS > Software > ARC++ > Commercial > Tast Tests
 		BugComponent: "b:1487630",
 		Fixture:      fixture.PostDemoModeOOBESkipBothComponentsProd,

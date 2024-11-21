@@ -15,10 +15,9 @@ import (
 
 func init() {
 	testing.AddTest(&testing.Test{
-		Func:         GamePerformanceRender,
-		LacrosStatus: testing.LacrosVariantUnneeded,
-		Desc:         "Captures set of performance metrics for the render and upload it to the server",
-		Contacts:     []string{"arc-performance@google.com", "khmel@chromium.org", "skuhne@chromium.org"},
+		Func:     GamePerformanceRender,
+		Desc:     "Captures set of performance metrics for the render and upload it to the server",
+		Contacts: []string{"arc-performance@google.com", "khmel@chromium.org", "skuhne@chromium.org"},
 		// ChromeOS > Software > ARC++ > Performance
 		BugComponent: "b:168382",
 		Attr:         []string{"group:crosbolt", "crosbolt_perbuild"},

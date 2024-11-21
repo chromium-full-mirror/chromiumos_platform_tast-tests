@@ -28,10 +28,9 @@ type arcManyFilesTestParams struct {
 
 func init() {
 	testing.AddTest(&testing.Test{
-		Func:         ManyFiles,
-		LacrosStatus: testing.LacrosVariantUnneeded,
-		Desc:         "Verifies ARCVM storage integration works with a large number of files",
-		Contacts:     []string{"arc-storage@google.com", "youkichihosoi@chromium.org", "momohatt@google.com"},
+		Func:     ManyFiles,
+		Desc:     "Verifies ARCVM storage integration works with a large number of files",
+		Contacts: []string{"arc-storage@google.com", "youkichihosoi@chromium.org", "momohatt@google.com"},
 		// ChromeOS > Software > ARC++ > Storage
 		BugComponent: "b:516669",
 		SoftwareDeps: []string{"chrome", "android_vm"},

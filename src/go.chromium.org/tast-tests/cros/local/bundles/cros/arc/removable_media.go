@@ -14,10 +14,9 @@ import (
 
 func init() {
 	testing.AddTest(&testing.Test{
-		Func:         RemovableMedia,
-		LacrosStatus: testing.LacrosVariantUnneeded,
-		Desc:         "Verifies ARC removable media integration is working",
-		Contacts:     []string{"arc-storage@google.com", "youkichihosoi@chromium.org", "momohatt@google.com"},
+		Func:     RemovableMedia,
+		Desc:     "Verifies ARC removable media integration is working",
+		Contacts: []string{"arc-storage@google.com", "youkichihosoi@chromium.org", "momohatt@google.com"},
 		// ChromeOS > Software > ARC++ > Storage
 		BugComponent: "b:516669",
 		SoftwareDeps: []string{"chrome"},

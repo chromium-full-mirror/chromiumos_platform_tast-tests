@@ -26,10 +26,9 @@ import (
 
 func init() {
 	testing.AddTest(&testing.Test{
-		Func:         IMECursorLocation,
-		LacrosStatus: testing.LacrosVariantUnneeded,
-		Desc:         "Cursor location is correctly sent to Chrome IME",
-		Contacts:     []string{"arc-framework+tast@google.com", "yhanada@chromium.org"},
+		Func:     IMECursorLocation,
+		Desc:     "Cursor location is correctly sent to Chrome IME",
+		Contacts: []string{"arc-framework+tast@google.com", "yhanada@chromium.org"},
 		// ChromeOS > Software > ARC++ > Framework > IME VK
 		BugComponent: "b:537350",
 		Attr:         []string{"group:mainline", "informational", "group:hw_agnostic", "group:input-tools"},

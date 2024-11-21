@@ -15,10 +15,9 @@ import (
 
 func init() {
 	testing.AddTest(&testing.Test{
-		Func:         LaunchIntent,
-		LacrosStatus: testing.LacrosVariantUnneeded,
-		Desc:         "Checks launching an activity with extra values works",
-		Contacts:     []string{"arc-framework+tast@google.com", "yhanada@chromium.org"},
+		Func:     LaunchIntent,
+		Desc:     "Checks launching an activity with extra values works",
+		Contacts: []string{"arc-framework+tast@google.com", "yhanada@chromium.org"},
 		// ChromeOS > Software > ARC++ > Framework > Chrome Integration
 		BugComponent: "b:537221",
 		SoftwareDeps: []string{"chrome"},

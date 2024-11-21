@@ -28,9 +28,8 @@ type testParams struct {
 
 func init() {
 	testing.AddTest(&testing.Test{
-		Func:         LaunchHelpAppOnManagedDevice,
-		LacrosStatus: testing.LacrosVariantUnneeded,
-		Desc:         "Launch Help App on a managed device",
+		Func: LaunchHelpAppOnManagedDevice,
+		Desc: "Launch Help App on a managed device",
 		Contacts: []string{
 			"showoff-eng@google.com",
 		},

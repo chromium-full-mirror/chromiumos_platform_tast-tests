@@ -33,10 +33,9 @@ type managedPlayStoreIconTestArgs struct {
 
 func init() {
 	testing.AddTest(&testing.Test{
-		Func:         ManagedPlayStoreIcon,
-		LacrosStatus: testing.LacrosVariantUnneeded,
-		Desc:         "Ensures ARC policy controls the visibility of Play Store icon",
-		Contacts:     []string{"arc-commercial@google.com", "yaohuali@google.com"},
+		Func:     ManagedPlayStoreIcon,
+		Desc:     "Ensures ARC policy controls the visibility of Play Store icon",
+		Contacts: []string{"arc-commercial@google.com", "yaohuali@google.com"},
 		// ChromeOS > Software > ARC++ > Commercial > Tast Tests
 		BugComponent: "b:1487630",
 		SoftwareDeps: []string{"chrome", "no_tablet_form_factor", "gaia"},

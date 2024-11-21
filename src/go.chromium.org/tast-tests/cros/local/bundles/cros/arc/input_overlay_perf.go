@@ -29,10 +29,9 @@ const (
 
 func init() {
 	testing.AddTest(&testing.Test{
-		Func:         InputOverlayPerf,
-		LacrosStatus: testing.LacrosVariantUnneeded,
-		Desc:         "Tests the performance of inputs for input overlay",
-		Contacts:     []string{"arc-app-dev@google.com", "arc-performance@google.com", "pjlee@google.com", "cuicuiruan@google.com"},
+		Func:     InputOverlayPerf,
+		Desc:     "Tests the performance of inputs for input overlay",
+		Contacts: []string{"arc-app-dev@google.com", "arc-performance@google.com", "pjlee@google.com", "cuicuiruan@google.com"},
 		// ChromeOS > Software > ARC++ > Gaming
 		BugComponent: "b:1373988",
 		Attr:         []string{"group:crosbolt", "crosbolt_perbuild"},

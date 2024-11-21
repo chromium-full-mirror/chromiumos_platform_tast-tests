@@ -91,10 +91,9 @@ func (n *axTreeNode) findParams() a11y.FindParams {
 
 func init() {
 	testing.AddTest(&testing.Test{
-		Func:         AccessibilityTree,
-		LacrosStatus: testing.LacrosVariantUnneeded,
-		Desc:         "Checks that Chrome accessibility tree for ARC application is correct",
-		Contacts:     []string{"arc-framework+tast@google.com", "hirokisato@chromium.org", "dtseng@chromium.org"},
+		Func:     AccessibilityTree,
+		Desc:     "Checks that Chrome accessibility tree for ARC application is correct",
+		Contacts: []string{"arc-framework+tast@google.com", "hirokisato@chromium.org", "dtseng@chromium.org"},
 		// ChromeOS > Software > ARC++ > Framework > Accessibility
 		BugComponent: "b:165222",
 		Attr:         []string{"group:mainline", "informational"},

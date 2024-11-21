@@ -28,10 +28,9 @@ import (
 
 func init() {
 	testing.AddTest(&testing.Test{
-		Func:         SELinuxHostSideRestorecon,
-		LacrosStatus: testing.LacrosVariantUnneeded,
-		Desc:         "Checks that host-side SELinux restorecon does not take effect on ARC's /data directory",
-		Contacts:     []string{"arc-storage@google.com", "youkichihosoi@chromium.org"},
+		Func:     SELinuxHostSideRestorecon,
+		Desc:     "Checks that host-side SELinux restorecon does not take effect on ARC's /data directory",
+		Contacts: []string{"arc-storage@google.com", "youkichihosoi@chromium.org"},
 		// ChromeOS > Software > ARC++ > Storage
 		BugComponent: "b:516669",
 		Attr:         []string{"group:mainline", "informational"},

@@ -27,10 +27,9 @@ import (
 
 func init() {
 	testing.AddTest(&testing.Test{
-		Func:         MountOBB,
-		LacrosStatus: testing.LacrosVariantUnneeded,
-		Desc:         "Verifies mount-obb's fuse works",
-		Contacts:     []string{"arc-storage@google.com", "youkichihosoi@chromium.org"},
+		Func:     MountOBB,
+		Desc:     "Verifies mount-obb's fuse works",
+		Contacts: []string{"arc-storage@google.com", "youkichihosoi@chromium.org"},
 		// ChromeOS > Software > ARC++ > Storage
 		BugComponent: "b:516669",
 		// TODO(hidehiko,nya): registration_test.go is too strict.

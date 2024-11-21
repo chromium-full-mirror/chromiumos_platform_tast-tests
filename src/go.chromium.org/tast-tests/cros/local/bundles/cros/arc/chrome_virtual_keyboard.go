@@ -54,10 +54,9 @@ const virtualKeyboardTestAppPkg = "org.chromium.arc.testapp.keyboard"
 
 func init() {
 	testing.AddTest(&testing.Test{
-		Func:         ChromeVirtualKeyboard,
-		LacrosStatus: testing.LacrosVariantUnneeded,
-		Desc:         "Checks Chrome virtual keyboard working on Android apps",
-		Contacts:     []string{"arc-framework+tast@google.com", "yhanada@chromium.org"},
+		Func:     ChromeVirtualKeyboard,
+		Desc:     "Checks Chrome virtual keyboard working on Android apps",
+		Contacts: []string{"arc-framework+tast@google.com", "yhanada@chromium.org"},
 		// ChromeOS > Software > ARC++ > Framework > IME VK
 		BugComponent: "b:537350",
 		Attr:         []string{"group:mainline", "informational", "group:hw_agnostic", "group:input-tools"},

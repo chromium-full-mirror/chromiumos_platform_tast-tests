@@ -16,10 +16,9 @@ import (
 
 func init() {
 	testing.AddTest(&testing.Test{
-		Func:         LibvdaGpuTests,
-		LacrosStatus: testing.LacrosVariantUnneeded,
-		Desc:         "Runs the non-decoding tests targetting libvda's GPU implementation",
-		Contacts:     []string{"arcvm-platform-video@google.com"},
+		Func:     LibvdaGpuTests,
+		Desc:     "Runs the non-decoding tests targetting libvda's GPU implementation",
+		Contacts: []string{"arcvm-platform-video@google.com"},
 		// ChromeOS > Platform > Virtualization > ARC++ & ARCVM > ARC Video
 		BugComponent: "b:632502",
 		Attr:         []string{"group:mainline", "informational"},

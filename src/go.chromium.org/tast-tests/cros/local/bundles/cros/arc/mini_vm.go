@@ -24,10 +24,9 @@ import (
 
 func init() {
 	testing.AddTest(&testing.Test{
-		Func:         MiniVM,
-		LacrosStatus: testing.LacrosVariantUnneeded,
-		Desc:         "Ensures mini-ARCVM is functional and can be upgraded successfully",
-		Contacts:     []string{"arc-performance@google.com", "khmel@chromium.org"},
+		Func:     MiniVM,
+		Desc:     "Ensures mini-ARCVM is functional and can be upgraded successfully",
+		Contacts: []string{"arc-performance@google.com", "khmel@chromium.org"},
 		// ChromeOS > Software > ARC++ > Performance
 		BugComponent: "b:168382",
 		SoftwareDeps: []string{"android_vm", "chrome"},

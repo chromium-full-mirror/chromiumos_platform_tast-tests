@@ -21,9 +21,8 @@ import (
 
 func init() {
 	testing.AddTest(&testing.Test{
-		Func:         DownloadManager,
-		LacrosStatus: testing.LacrosVariantUnneeded,
-		Desc:         "Checks whether ARC can download files through DownloadManager",
+		Func: DownloadManager,
+		Desc: "Checks whether ARC can download files through DownloadManager",
 		Contacts: []string{"arc-storage@google.com",
 			"youkichihosoi@chromium.org",
 			"momohatt@google.com"},

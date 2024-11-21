@@ -32,9 +32,8 @@ import (
 
 func init() {
 	testing.AddTest(&testing.Test{
-		Func:         Sharesheet,
-		LacrosStatus: testing.LacrosVariantUnneeded,
-		Desc:         "Install ARC app and share to app via Sharesheet",
+		Func: Sharesheet,
+		Desc: "Install ARC app and share to app via Sharesheet",
 		Contacts: []string{
 			"chromeos-apps-foundation-team@google.com",
 		},

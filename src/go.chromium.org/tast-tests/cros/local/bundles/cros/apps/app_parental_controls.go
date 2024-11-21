@@ -20,9 +20,8 @@ import (
 
 func init() {
 	testing.AddTest(&testing.Test{
-		Func:         AppParentalControls,
-		LacrosStatus: testing.LacrosVariantUnneeded,
-		Desc:         "Test on-device parental controls for apps",
+		Func: AppParentalControls,
+		Desc: "Test on-device parental controls for apps",
 		Contacts: []string{"cros-families-eng+test@google.com",
 			"chromeos-consumer-engprod@google.com"},
 		// ChromeOS > Software > Family > Parental guidance

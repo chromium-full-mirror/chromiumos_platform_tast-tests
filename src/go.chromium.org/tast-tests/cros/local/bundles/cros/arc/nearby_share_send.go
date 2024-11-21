@@ -65,9 +65,8 @@ type arcNearbyShareParams struct {
 
 func init() {
 	testing.AddTest(&testing.Test{
-		Func:         NearbyShareSend,
-		LacrosStatus: testing.LacrosVariantUnneeded,
-		Desc:         "Installs ARC share test app and share text/file to Quick Share (previously known as Nearby Share) via Sharesheet",
+		Func: NearbyShareSend,
+		Desc: "Installs ARC share test app and share text/file to Quick Share (previously known as Nearby Share) via Sharesheet",
 		Contacts: []string{
 			"arc-app-dev@google.com",
 			"phshah@chromium.org",

@@ -24,10 +24,9 @@ import (
 
 func init() {
 	testing.AddTest(&testing.Test{
-		Func:         Availability,
-		LacrosStatus: testing.LacrosVariantUnneeded,
-		Desc:         "Verifies that ARC is available after update of GMS Core",
-		Contacts:     []string{"arc-core@google.com", "cros-arc-te@google.com"},
+		Func:     Availability,
+		Desc:     "Verifies that ARC is available after update of GMS Core",
+		Contacts: []string{"arc-core@google.com", "cros-arc-te@google.com"},
 		// ChromeOS > Software > ARC++ > Core
 		BugComponent: "b:488493",
 		SoftwareDeps: []string{"chrome", "gaia"},

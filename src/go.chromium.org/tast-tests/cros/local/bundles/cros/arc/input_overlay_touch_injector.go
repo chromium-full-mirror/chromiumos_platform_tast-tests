@@ -17,10 +17,9 @@ import (
 
 func init() {
 	testing.AddTest(&testing.Test{
-		Func:         InputOverlayTouchInjector,
-		LacrosStatus: testing.LacrosVariantUnneeded,
-		Desc:         "Test for gaming input overlay touch injector correctness",
-		Contacts:     []string{"arc-app-dev@google.com", "pjlee@google.com", "cuicuiruan@google.com"},
+		Func:     InputOverlayTouchInjector,
+		Desc:     "Test for gaming input overlay touch injector correctness",
+		Contacts: []string{"arc-app-dev@google.com", "pjlee@google.com", "cuicuiruan@google.com"},
 		// ChromeOS > Software > ARC++ > Gaming
 		BugComponent: "b:1373988",
 		Attr:         []string{"group:mainline", "informational"},

@@ -44,9 +44,8 @@ const (
 
 func init() {
 	testing.AddTest(&testing.Test{
-		Func:         NativeBridge,
-		LacrosStatus: testing.LacrosVariantUnneeded,
-		Desc:         "Checks whether native bridge is properly set up for ARCVM",
+		Func: NativeBridge,
+		Desc: "Checks whether native bridge is properly set up for ARCVM",
 		Contacts: []string{
 			"ndk_translation-eng@google.com",
 			"levarum@google.com",

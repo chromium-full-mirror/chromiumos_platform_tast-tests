@@ -27,10 +27,9 @@ import (
 
 func init() {
 	testing.AddTest(&testing.Test{
-		Func:         ManagedPlayForcedAppInstall,
-		LacrosStatus: testing.LacrosVariantUnneeded,
-		Desc:         "Checks that ARC is launched when policy is set",
-		Contacts:     []string{"arc-commercial@google.com", "mhasank@chromium.org"},
+		Func:     ManagedPlayForcedAppInstall,
+		Desc:     "Checks that ARC is launched when policy is set",
+		Contacts: []string{"arc-commercial@google.com", "mhasank@chromium.org"},
 		// ChromeOS > Software > ARC++ > Commercial > Tast Tests
 		BugComponent: "b:1487630",
 		Attr:         []string{"group:mainline"},

@@ -26,9 +26,8 @@ import (
 
 func init() {
 	testing.AddTest(&testing.Test{
-		Func:         AppDetails,
-		LacrosStatus: testing.LacrosVariantUnneeded,
-		Desc:         "Verifies App Details in the OS Settings App Management UI",
+		Func: AppDetails,
+		Desc: "Verifies App Details in the OS Settings App Management UI",
 		Contacts: []string{
 			"chromeos-apps-foundation-team@google.com",
 			"tsergeant@google.com",

@@ -24,10 +24,9 @@ type gamepadTestParams struct {
 
 func init() {
 	testing.AddTest(&testing.Test{
-		Func:         Gamepad,
-		LacrosStatus: testing.LacrosVariantUnneeded,
-		Desc:         "Checks gamepad support works on Android",
-		Contacts:     []string{"arc-framework+tast@google.com", "yhanada@chromium.org"},
+		Func:     Gamepad,
+		Desc:     "Checks gamepad support works on Android",
+		Contacts: []string{"arc-framework+tast@google.com", "yhanada@chromium.org"},
 		// ChromeOS > Software > ARC++ > Framework > Input
 		BugComponent: "b:536706",
 		Attr:         []string{"group:mainline", "group:hw_agnostic"},

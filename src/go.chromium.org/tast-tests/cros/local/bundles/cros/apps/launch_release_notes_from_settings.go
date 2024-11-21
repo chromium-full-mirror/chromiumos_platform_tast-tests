@@ -24,9 +24,8 @@ import (
 
 func init() {
 	testing.AddTest(&testing.Test{
-		Func:         LaunchReleaseNotesFromSettings,
-		LacrosStatus: testing.LacrosVariantUnneeded,
-		Desc:         "Help app release notes can be launched from Settings",
+		Func: LaunchReleaseNotesFromSettings,
+		Desc: "Help app release notes can be launched from Settings",
 		Contacts: []string{
 			"showoff-eng@google.com",
 		},

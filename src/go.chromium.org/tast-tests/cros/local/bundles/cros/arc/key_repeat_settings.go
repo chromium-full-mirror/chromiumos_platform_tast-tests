@@ -25,10 +25,9 @@ const (
 
 func init() {
 	testing.AddTest(&testing.Test{
-		Func:         KeyRepeatSettings,
-		LacrosStatus: testing.LacrosVariantUnneeded,
-		Desc:         "Checks ChromeOS key repeat settings are applied to ARC++ settings",
-		Contacts:     []string{"arc-framework+tast@google.com", "nergi@chromium.org"},
+		Func:     KeyRepeatSettings,
+		Desc:     "Checks ChromeOS key repeat settings are applied to ARC++ settings",
+		Contacts: []string{"arc-framework+tast@google.com", "nergi@chromium.org"},
 		// ChromeOS > Software > ARC++ > Framework > Input
 		BugComponent: "b:536706",
 		Attr:         []string{"group:mainline", "informational", "group:hw_agnostic"},

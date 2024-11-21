@@ -58,9 +58,8 @@ type audioOboetesterGlitchParam struct {
 
 func init() {
 	testing.AddTest(&testing.Test{
-		Func:         AudioOboetesterGlitch,
-		LacrosStatus: testing.LacrosVariantUnneeded,
-		Desc:         "Runs Oboetester glitch test for 60 seconds and stores the result",
+		Func: AudioOboetesterGlitch,
+		Desc: "Runs Oboetester glitch test for 60 seconds and stores the result",
 		Contacts: []string{
 			"chromeos-audio-bugs@google.com", // Media team
 			"pteerapong@chromium.org",        // Author

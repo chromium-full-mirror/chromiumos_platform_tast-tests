@@ -20,9 +20,8 @@ import (
 
 func init() {
 	testing.AddTest(&testing.Test{
-		Func:         DarkMode,
-		LacrosStatus: testing.LacrosVariantUnneeded,
-		Desc:         "Checks that ArcSystemUIService changes Settings.Secure",
+		Func: DarkMode,
+		Desc: "Checks that ArcSystemUIService changes Settings.Secure",
 		Contacts: []string{
 			"arc-app-dev@google.com",
 		},

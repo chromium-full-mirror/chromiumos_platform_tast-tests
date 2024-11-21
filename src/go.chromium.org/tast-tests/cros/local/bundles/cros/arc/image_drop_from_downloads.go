@@ -25,10 +25,9 @@ import (
 
 func init() {
 	testing.AddTest(&testing.Test{
-		Func:         ImageDropFromDownloads,
-		LacrosStatus: testing.LacrosVariantUnneeded,
-		Desc:         "Checks image drag drop app compat from Files App",
-		Contacts:     []string{"arc-framework+tast@google.com", "yhanada@chromium.org"},
+		Func:     ImageDropFromDownloads,
+		Desc:     "Checks image drag drop app compat from Files App",
+		Contacts: []string{"arc-framework+tast@google.com", "yhanada@chromium.org"},
 		// ChromeOS > Software > ARC++ > Framework > Chrome Integration
 		BugComponent: "b:537221",
 		SoftwareDeps: []string{"chrome", "android_vm"},

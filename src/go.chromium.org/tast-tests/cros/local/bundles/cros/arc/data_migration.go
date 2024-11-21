@@ -57,10 +57,9 @@ type dataMigrationTestParams struct {
 
 func init() {
 	testing.AddTest(&testing.Test{
-		Func:         DataMigration,
-		LacrosStatus: testing.LacrosVariantUnneeded,
-		Desc:         "Boots ARC with /data created on the previous version of ARC and verifies Play Store can install an app",
-		Contacts:     []string{"arc-storage@google.com", "momohatt@google.com", "niwa@google.com"},
+		Func:     DataMigration,
+		Desc:     "Boots ARC with /data created on the previous version of ARC and verifies Play Store can install an app",
+		Contacts: []string{"arc-storage@google.com", "momohatt@google.com", "niwa@google.com"},
 		// ChromeOS > Software > ARC++ > Storage
 		BugComponent: "b:516669",
 		// "no_qemu" is added for excluding betty from the target board list.

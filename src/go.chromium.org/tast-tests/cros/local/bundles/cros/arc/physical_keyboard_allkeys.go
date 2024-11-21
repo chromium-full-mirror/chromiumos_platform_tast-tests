@@ -21,10 +21,9 @@ import (
 
 func init() {
 	testing.AddTest(&testing.Test{
-		Func:         PhysicalKeyboardAllkeys,
-		LacrosStatus: testing.LacrosVariantUnneeded,
-		Desc:         "Check any key doesn't crash Android",
-		Contacts:     []string{"arc-framework+tast@google.com", "yhanada@chromium.org"},
+		Func:     PhysicalKeyboardAllkeys,
+		Desc:     "Check any key doesn't crash Android",
+		Contacts: []string{"arc-framework+tast@google.com", "yhanada@chromium.org"},
 		// ChromeOS > Software > ARC++ > Framework > Input
 		BugComponent: "b:536706",
 		SoftwareDeps: []string{"chrome"},

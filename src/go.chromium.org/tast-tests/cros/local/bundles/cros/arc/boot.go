@@ -30,9 +30,8 @@ type bootTestArgs struct {
 
 func init() {
 	testing.AddTest(&testing.Test{
-		Func:         Boot,
-		LacrosStatus: testing.LacrosVariantUnneeded,
-		Desc:         "Checks that Android boots",
+		Func: Boot,
+		Desc: "Checks that Android boots",
 		Contacts: []string{
 			// Please assign test failures to current constable on-call
 			"arc-constables@google.com",

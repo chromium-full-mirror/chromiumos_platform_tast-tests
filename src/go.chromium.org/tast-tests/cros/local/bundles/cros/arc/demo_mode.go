@@ -25,17 +25,16 @@ import (
 
 func init() {
 	testing.AddTest(&testing.Test{
-		Func:         DemoMode,
-		LacrosStatus: testing.LacrosVariantUnneeded,
-		Desc:         "Enter Demo Mode from OOBE, open Play Store and verify the Install button is disabled",
-		Contacts:     []string{"arc-commercial@google.com", "yaohuali@google.com"},
+		Func:     DemoMode,
+		Desc:     "Enter Demo Mode from OOBE, open Play Store and verify the Install button is disabled",
+		Contacts: []string{"arc-commercial@google.com", "yaohuali@google.com"},
 		// ChromeOS > Software > ARC++ > Commercial > Tast Tests
 		BugComponent: "b:1487630",
 		Fixture:      fixture.PostDemoModeOOBESkipBothComponentsProd,
 		Attr:         []string{
 			// Disabled by TORA.  See:b/330879131.
 			// "group:mainline"
-			},
+		},
 		// Demo Mode uses Zero Touch Enrollment for enterprise enrollment, which
 		// requires a real TPM.
 		// We require "arc" and "chrome_internal" because the ARC TOS screen

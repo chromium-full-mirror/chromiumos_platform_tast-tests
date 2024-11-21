@@ -31,10 +31,9 @@ type idleTestEntry struct {
 
 func init() {
 	testing.AddTest(&testing.Test{
-		Func:         Doze,
-		LacrosStatus: testing.LacrosVariantUnneeded,
-		Desc:         "Checks memory stat during Doze state on / off",
-		Contacts:     []string{"arcvm-eng@google.com", "sstan@chromium.org"},
+		Func:     Doze,
+		Desc:     "Checks memory stat during Doze state on / off",
+		Contacts: []string{"arcvm-eng@google.com", "sstan@chromium.org"},
 		// ChromeOS > Software > ARC++ > ARCVM
 		BugComponent: "b:537221",
 		SoftwareDeps: []string{"chrome", "android_vm", "gaia"},

@@ -25,9 +25,8 @@ import (
 
 func init() {
 	testing.AddTest(&testing.Test{
-		Func:         ManagedProvisioning,
-		LacrosStatus: testing.LacrosVariantUnneeded,
-		Desc:         "A functional test that verifies provisioning flow for managed user",
+		Func: ManagedProvisioning,
+		Desc: "A functional test that verifies provisioning flow for managed user",
 		Contacts: []string{
 			"arc-commercial@google.com",
 			"mhasank@chromium.org",

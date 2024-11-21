@@ -24,10 +24,9 @@ import (
 
 func init() {
 	testing.AddTest(&testing.Test{
-		Func:         RobloxUncompressOBBPerf,
-		LacrosStatus: testing.LacrosVariantUnneeded,
-		Desc:         "Measures time it takes to uncompress Roblox OBB file",
-		Contacts:     []string{"arc-performance@google.com", "khmel@chromium.org"},
+		Func:     RobloxUncompressOBBPerf,
+		Desc:     "Measures time it takes to uncompress Roblox OBB file",
+		Contacts: []string{"arc-performance@google.com", "khmel@chromium.org"},
 		// ChromeOS > Software > ARC++ > Performance
 		BugComponent: "b:168382",
 		Attr:         []string{"group:crosbolt", "crosbolt_perbuild"},

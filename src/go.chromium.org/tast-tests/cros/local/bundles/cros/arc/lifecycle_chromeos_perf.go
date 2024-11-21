@@ -18,9 +18,8 @@ import (
 
 func init() {
 	testing.AddTest(&testing.Test{
-		Func:         LifecycleChromeOSPerf,
-		LacrosStatus: testing.LacrosVariantUnneeded,
-		Desc:         "Launch many memory hogging tabs, and count how many are killed",
+		Func: LifecycleChromeOSPerf,
+		Desc: "Launch many memory hogging tabs, and count how many are killed",
 		Contacts: []string{
 			"arcvm-eng@google.com",
 			"cwd@chromium.org",

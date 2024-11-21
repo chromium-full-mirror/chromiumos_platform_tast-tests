@@ -30,7 +30,6 @@ func init() {
 		Func: InputOverlayReposition,
 		// Disabled by TORA. See: b/349631636
 		LifeCycleStage: testing.LifeCycleOwnerMonitored,
-		LacrosStatus:   testing.LacrosVariantUnneeded,
 		Desc:           "Drag test for GIO menu entry, button group, and actions",
 		Contacts:       []string{"arc-app-dev@google.com", "pjlee@google.com", "cuicuiruan@google.com"},
 		// ChromeOS > Software > ARC++ > Gaming

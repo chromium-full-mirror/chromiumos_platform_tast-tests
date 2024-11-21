@@ -41,24 +41,23 @@ const (
 
 func init() {
 	testing.AddTest(&testing.Test{
-		Func:         ManagedAppApkCache,
-		LacrosStatus: testing.LacrosVariantUnneeded,
-		Desc:         "Checks that apk is cached after forced app installation in ARC",
-		Contacts:     []string{"arc-commercial@google.com", "batoon@google.com"},
+		Func:     ManagedAppApkCache,
+		Desc:     "Checks that apk is cached after forced app installation in ARC",
+		Contacts: []string{"arc-commercial@google.com", "batoon@google.com"},
 		// ChromeOS > Software > ARC++ > Commercial > Tast Tests
 		BugComponent: "b:1487630",
 		Attr:         []string{
 			// Disabled by TORA.  See:b/332563290.
 			// "group:mainline"
-			},
+		},
 		SoftwareDeps: []string{
 			"chrome",
 			"play_store",
 			// Disabled by TORA.  See:b/332563290.
 			// "gaia"
 		},
-		Timeout:      arcApkCacheTestTimeout,
-		VarDeps:      []string{tape.ServiceAccountVar, arcCommon.ManagedAccountPoolVarName},
+		Timeout: arcApkCacheTestTimeout,
+		VarDeps: []string{tape.ServiceAccountVar, arcCommon.ManagedAccountPoolVarName},
 		SearchFlags: []*testing.StringPair{
 			pci.SearchFlag(&policy.ArcEnabled{}, pci.VerifiedFunctionalityOS),
 		},

@@ -22,10 +22,9 @@ import (
 
 func init() {
 	testing.AddTest(&testing.Test{
-		Func:         AccessibilityTextLocation,
-		LacrosStatus: testing.LacrosVariantUnneeded,
-		Desc:         "Checks AutomationNode.boundsForRange API works for Android apps",
-		Contacts:     []string{"arc-framework+tast@google.com", "hirokisato@chromium.org"},
+		Func:     AccessibilityTextLocation,
+		Desc:     "Checks AutomationNode.boundsForRange API works for Android apps",
+		Contacts: []string{"arc-framework+tast@google.com", "hirokisato@chromium.org"},
 		// ChromeOS > Software > ARC++ > Framework > Accessibility
 		BugComponent: "b:165222",
 		Attr:         []string{"group:mainline", "informational", "group:hw_agnostic"},

@@ -21,10 +21,9 @@ import (
 
 func init() {
 	testing.AddTest(&testing.Test{
-		Func:         SecondBoot,
-		LacrosStatus: testing.LacrosVariantUnneeded,
-		Desc:         "A functional test to verify that ARC can successfully boot after provisioning",
-		Contacts:     []string{"arc-core@google.com", "mhasank@chromium.org"},
+		Func:     SecondBoot,
+		Desc:     "A functional test to verify that ARC can successfully boot after provisioning",
+		Contacts: []string{"arc-core@google.com", "mhasank@chromium.org"},
 		// ChromeOS > Software > ARC++ > Core > Play Store Setup
 		BugComponent: "b:1131344",
 		Attr:         []string{"group:arc-functional", "group:mainline"},

@@ -32,22 +32,21 @@ type managedPlayStoreAccountSwitchArgs struct {
 
 func init() {
 	testing.AddTest(&testing.Test{
-		Func:         ManagedPlayStoreAccountSwitch,
-		LacrosStatus: testing.LacrosVariantUnneeded,
-		Desc:         "Checks that we can switch to secondary account in Play Store only when mode is block list",
-		Contacts:     []string{"arc-commercial@google.com", "mhasank@chromium.org"},
+		Func:     ManagedPlayStoreAccountSwitch,
+		Desc:     "Checks that we can switch to secondary account in Play Store only when mode is block list",
+		Contacts: []string{"arc-commercial@google.com", "mhasank@chromium.org"},
 		// ChromeOS > Software > ARC++ > Commercial > Tast Tests
 		BugComponent: "b:1487630",
 		Attr:         []string{
 			// Disabled by TORA.  See:b/345997350.
 			// "group:mainline"
-			},
+		},
 		SoftwareDeps: []string{
 			"chrome", "play_store",
 			// Disabled by TORA.  See:b/345997350.
 			// "gaia"
-			},
-		Timeout:      15 * time.Minute,
+		},
+		Timeout: 15 * time.Minute,
 		VarDeps: []string{
 			arcCommon.ManagedAccountPoolVarName,
 			uiCommon.GaiaPoolDefaultVarName,
@@ -66,7 +65,7 @@ func init() {
 				ExtraAttr:         []string{
 					// Disabled by TORA.  See:b/345997350.
 					//"informational"
-					},
+				},
 			},
 			{
 				Name: "blocklist_vm",
@@ -78,7 +77,7 @@ func init() {
 				ExtraAttr:         []string{
 					// Disabled by TORA.  See:b/345997350.
 					//"informational"
-					},
+				},
 			},
 			{
 				Name: "blocklist_betty_vm",
@@ -87,10 +86,10 @@ func init() {
 					accountSwitchEnabled: true,
 				},
 				ExtraSoftwareDeps: []string{"android_vm", "qemu"},
-					ExtraAttr:         []string{
+				ExtraAttr:         []string{
 					// Disabled by TORA.  See:b/345997350.
 					//"informational", "group:hw_agnostic"
-					},
+				},
 			},
 			{
 				Name: "allowlist",
@@ -102,7 +101,7 @@ func init() {
 				ExtraAttr:         []string{
 					// Disabled by TORA.  See:b/345997350.
 					//"informational"
-					},
+				},
 			},
 			{
 				Name: "allowlist_vm",
@@ -114,7 +113,7 @@ func init() {
 				ExtraAttr:         []string{
 					// Disabled by TORA.  See:b/345997350.
 					//"informational"
-					},
+				},
 			},
 			{
 				Name: "allowlist_betty_vm",
@@ -126,7 +125,7 @@ func init() {
 				ExtraAttr:         []string{
 					// Disabled by TORA.  See:b/345997350.
 					//"informational", "group:hw_agnostic"
-					},
+				},
 			}},
 	})
 }

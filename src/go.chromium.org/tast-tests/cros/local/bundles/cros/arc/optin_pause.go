@@ -24,9 +24,8 @@ const (
 
 func init() {
 	testing.AddTest(&testing.Test{
-		Func:         OptinPause,
-		LacrosStatus: testing.LacrosVariantUnneeded,
-		Desc:         "A functional test that verifies OptIn flow can be paused/resumed",
+		Func: OptinPause,
+		Desc: "A functional test that verifies OptIn flow can be paused/resumed",
 		Contacts: []string{
 			"arc-core@google.com",
 			"mhasank@chromium.org",

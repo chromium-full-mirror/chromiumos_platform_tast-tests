@@ -18,10 +18,9 @@ import (
 
 func init() {
 	testing.AddTest(&testing.Test{
-		Func:         Reboot,
-		LacrosStatus: testing.LacrosVariantUnneeded,
-		Desc:         "Checks whether Android can be successfully rebooted",
-		Contacts:     []string{"arc-core@google.com"},
+		Func:     Reboot,
+		Desc:     "Checks whether Android can be successfully rebooted",
+		Contacts: []string{"arc-core@google.com"},
 		// ChromeOS > Software > ARC++ > Core
 		BugComponent: "b:488493",
 		Attr:         []string{"group:mainline", "informational"},

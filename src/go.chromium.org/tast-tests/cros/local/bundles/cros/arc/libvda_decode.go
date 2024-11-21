@@ -17,10 +17,9 @@ import (
 
 func init() {
 	testing.AddTest(&testing.Test{
-		Func:         LibvdaDecode,
-		LacrosStatus: testing.LacrosVariantUnneeded,
-		Desc:         "Checks that video decoding using libvda's Mojo connection to GAVDA is working",
-		Contacts:     []string{"arcvm-platform-video@google.com"},
+		Func:     LibvdaDecode,
+		Desc:     "Checks that video decoding using libvda's Mojo connection to GAVDA is working",
+		Contacts: []string{"arcvm-platform-video@google.com"},
 		// ChromeOS > Platform > Virtualization > ARC++ & ARCVM > ARC Video
 		BugComponent: "b:632502",
 		Attr:         []string{"group:mainline", "informational"},

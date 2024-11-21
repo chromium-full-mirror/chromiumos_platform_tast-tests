@@ -24,9 +24,8 @@ import (
 
 func init() {
 	testing.AddTest(&testing.Test{
-		Func:         CalculatorSmoke,
-		LacrosStatus: testing.LacrosVariantUnneeded,
-		Desc:         "Calculator smoke test app launching and basic calculation",
+		Func: CalculatorSmoke,
+		Desc: "Calculator smoke test app launching and basic calculation",
 		Contacts: []string{
 			"apps-suite@google.com",
 			"jopalmer@google.com",

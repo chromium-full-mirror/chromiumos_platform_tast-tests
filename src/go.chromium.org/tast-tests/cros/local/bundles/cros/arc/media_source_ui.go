@@ -38,7 +38,6 @@ func init() {
 	testing.AddTest(&testing.Test{
 		Func:           MediaSourceUI,
 		LifeCycleStage: testing.LifeCycleOwnerMonitored,
-		LacrosStatus:   testing.LacrosVariantUnneeded,
 		Desc:           "Check if the media control widget is displaying correct media source",
 		Contacts: []string{
 			// "cros-arc-te@google.com",

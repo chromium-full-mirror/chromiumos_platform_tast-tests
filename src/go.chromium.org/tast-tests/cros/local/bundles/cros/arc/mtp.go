@@ -30,10 +30,9 @@ import (
 
 func init() {
 	testing.AddTest(&testing.Test{
-		Func:         MTP,
-		LacrosStatus: testing.LacrosVariantUnneeded,
-		Desc:         "ARC++/ARCVM Android app can read files on external Android device (with MTP) via FilesApp",
-		Contacts:     []string{"arc-storage@google.com", "youkichihosoi@chromium.org", "momohatt@google.com"},
+		Func:     MTP,
+		Desc:     "ARC++/ARCVM Android app can read files on external Android device (with MTP) via FilesApp",
+		Contacts: []string{"arc-storage@google.com", "youkichihosoi@chromium.org", "momohatt@google.com"},
 		// ChromeOS > Software > ARC++ > Storage
 		BugComponent: "b:516669",
 		Attr:         []string{"group:mtp"},

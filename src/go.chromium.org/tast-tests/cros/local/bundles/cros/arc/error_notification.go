@@ -20,10 +20,9 @@ import (
 
 func init() {
 	testing.AddTest(&testing.Test{
-		Func:         ErrorNotification,
-		LacrosStatus: testing.LacrosVariantUnneeded,
-		Desc:         "Checks error notification works for arc as expected",
-		Contacts:     []string{"arc-framework+tast@google.com", "yaoqq@chromium.org"},
+		Func:     ErrorNotification,
+		Desc:     "Checks error notification works for arc as expected",
+		Contacts: []string{"arc-framework+tast@google.com", "yaoqq@chromium.org"},
 		// ChromeOS > Software > ARC++ > Framework > Window Management
 		BugComponent: "b:537272",
 		Attr:         []string{"group:mainline", "informational"},

@@ -31,10 +31,9 @@ type managedPlayStoreModeArgs struct {
 
 func init() {
 	testing.AddTest(&testing.Test{
-		Func:         ManagedPlayStoreMode,
-		LacrosStatus: testing.LacrosVariantUnneeded,
-		Desc:         "Checks that apps are shown/hidden according to playStoreMode",
-		Contacts:     []string{"arc-commercial@google.com", "mhasank@chromium.org"},
+		Func:     ManagedPlayStoreMode,
+		Desc:     "Checks that apps are shown/hidden according to playStoreMode",
+		Contacts: []string{"arc-commercial@google.com", "mhasank@chromium.org"},
 		// ChromeOS > Software > ARC++ > Commercial > Tast Tests
 		BugComponent: "b:1487630",
 		Attr:         []string{"group:mainline"},

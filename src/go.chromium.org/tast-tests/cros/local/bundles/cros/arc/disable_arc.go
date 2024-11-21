@@ -24,16 +24,15 @@ import (
 
 func init() {
 	testing.AddTest(&testing.Test{
-		Func:         DisableArc,
-		LacrosStatus: testing.LacrosVariantUnneeded,
-		Desc:         "Verify PlayStore can be turned off in Settings ",
-		Contacts:     []string{"cros-arc-te@google.com", "arc-core@google.com", "jinrongwu@google.com"},
+		Func:     DisableArc,
+		Desc:     "Verify PlayStore can be turned off in Settings ",
+		Contacts: []string{"cros-arc-te@google.com", "arc-core@google.com", "jinrongwu@google.com"},
 		// ChromeOS > Software > ARC++ > EngProd
 		BugComponent: "b:1052117",
 		Attr:         []string{
 			// Disabled by TORA.  See:b/326829852.
 			// "group:arc", "arc_core", "group:arc-functional", "arc_chromeos_vm"
-			},
+		},
 		SoftwareDeps: []string{
 			"chrome",
 			// Disabled by TORA.  See:b/326829852.

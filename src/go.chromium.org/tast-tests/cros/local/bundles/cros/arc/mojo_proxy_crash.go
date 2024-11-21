@@ -20,10 +20,9 @@ import (
 
 func init() {
 	testing.AddTest(&testing.Test{
-		Func:         MojoProxyCrash,
-		LacrosStatus: testing.LacrosVariantUnneeded,
-		Desc:         "Test mojo proxy crash handling",
-		Contacts:     []string{"arcvm-eng@google.com", "hashimoto@chromium.org"},
+		Func:     MojoProxyCrash,
+		Desc:     "Test mojo proxy crash handling",
+		Contacts: []string{"arcvm-eng@google.com", "hashimoto@chromium.org"},
 		// ChromeOS > Software > ARC++ > ARCVM
 		BugComponent: "b:883059",
 		Attr:         []string{"group:mainline", "informational", "group:hw_agnostic"},

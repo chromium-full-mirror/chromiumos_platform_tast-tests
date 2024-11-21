@@ -22,9 +22,8 @@ import (
 
 func init() {
 	testing.AddTest(&testing.Test{
-		Func:         LaunchHelpAppFromLauncher,
-		LacrosStatus: testing.LacrosVariantUnneeded,
-		Desc:         "Help app can be found and launched from the launcher",
+		Func: LaunchHelpAppFromLauncher,
+		Desc: "Help app can be found and launched from the launcher",
 		Contacts: []string{
 			"showoff-eng@google.com",
 		},

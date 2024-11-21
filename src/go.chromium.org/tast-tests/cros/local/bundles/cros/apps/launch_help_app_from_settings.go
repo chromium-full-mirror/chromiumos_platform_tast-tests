@@ -21,9 +21,8 @@ import (
 
 func init() {
 	testing.AddTest(&testing.Test{
-		Func:         LaunchHelpAppFromSettings,
-		LacrosStatus: testing.LacrosVariantUnneeded,
-		Desc:         "Help app can be launched from Settings",
+		Func: LaunchHelpAppFromSettings,
+		Desc: "Help app can be launched from Settings",
 		Contacts: []string{
 			"showoff-eng@google.com",
 		},

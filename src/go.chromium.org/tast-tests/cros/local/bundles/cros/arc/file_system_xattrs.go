@@ -14,10 +14,9 @@ import (
 
 func init() {
 	testing.AddTest(&testing.Test{
-		Func:         FileSystemXattrs,
-		LacrosStatus: testing.LacrosVariantUnneeded,
-		Desc:         "Verifies filesystem extended attributes for ARC container",
-		Contacts:     []string{"arc-core@google.com"},
+		Func:     FileSystemXattrs,
+		Desc:     "Verifies filesystem extended attributes for ARC container",
+		Contacts: []string{"arc-core@google.com"},
 		// ChromeOS > Software > ARC++ > Core
 		BugComponent: "b:488493",
 		SoftwareDeps: []string{"chrome", "android_container"},

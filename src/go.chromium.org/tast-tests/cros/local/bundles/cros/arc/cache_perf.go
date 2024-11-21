@@ -32,9 +32,8 @@ const (
 
 func init() {
 	testing.AddTest(&testing.Test{
-		Func:         CachePerf,
-		LacrosStatus: testing.LacrosVariantUnneeded,
-		Desc:         "Measure benefits of using pre-generated caches for package manager and GMS Core",
+		Func: CachePerf,
+		Desc: "Measure benefits of using pre-generated caches for package manager and GMS Core",
 		Contacts: []string{
 			"arc-performance@google.com",
 			"khmel@chromium.org", // Original author.

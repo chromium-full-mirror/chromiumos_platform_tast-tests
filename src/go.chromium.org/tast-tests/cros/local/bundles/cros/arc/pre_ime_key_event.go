@@ -27,10 +27,9 @@ type testKeyStroke struct {
 
 func init() {
 	testing.AddTest(&testing.Test{
-		Func:         PreIMEKeyEvent,
-		LacrosStatus: testing.LacrosVariantUnneeded,
-		Desc:         "Checks View.onKeyPreIme() works on Android apps",
-		Contacts:     []string{"arc-framework+tast@google.com", "yhanada@chromium.org"},
+		Func:     PreIMEKeyEvent,
+		Desc:     "Checks View.onKeyPreIme() works on Android apps",
+		Contacts: []string{"arc-framework+tast@google.com", "yhanada@chromium.org"},
 		// ChromeOS > Software > ARC++ > Framework > IME VK
 		BugComponent: "b:537350",
 		SoftwareDeps: []string{"chrome"},

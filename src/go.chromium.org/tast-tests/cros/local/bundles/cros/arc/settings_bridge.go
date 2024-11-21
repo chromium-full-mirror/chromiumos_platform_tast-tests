@@ -22,10 +22,9 @@ import (
 
 func init() {
 	testing.AddTest(&testing.Test{
-		Func:         SettingsBridge,
-		LacrosStatus: testing.LacrosVariantUnneeded,
-		Desc:         "Checks that Chrome settings are persisted in ARC",
-		Contacts:     []string{"arc-framework+tast@google.com", "yhanada@chromium.org"},
+		Func:     SettingsBridge,
+		Desc:     "Checks that Chrome settings are persisted in ARC",
+		Contacts: []string{"arc-framework+tast@google.com", "yhanada@chromium.org"},
 		// ChromeOS > Software > ARC++ > Framework > Chrome Integration
 		BugComponent: "b:537221",
 		Attr:         []string{"group:mainline", "group:hw_agnostic"},

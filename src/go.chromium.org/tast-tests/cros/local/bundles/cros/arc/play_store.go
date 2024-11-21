@@ -29,9 +29,8 @@ type playStoreTestArgs struct {
 
 func init() {
 	testing.AddTest(&testing.Test{
-		Func:         PlayStore,
-		LacrosStatus: testing.LacrosVariantUnneeded,
-		Desc:         "A functional test of the Play Store that installs Google Calculator",
+		Func: PlayStore,
+		Desc: "A functional test of the Play Store that installs Google Calculator",
 		Contacts: []string{
 			// Please assign test failures to current constable on-call
 			"arc-constables@google.com",

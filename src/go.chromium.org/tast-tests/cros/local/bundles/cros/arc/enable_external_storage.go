@@ -23,10 +23,9 @@ import (
 
 func init() {
 	testing.AddTest(&testing.Test{
-		Func:         EnableExternalStorage,
-		LacrosStatus: testing.LacrosVariantUnneeded,
-		Desc:         "Verifies ARC removable media can be enabled from ChromeOS Settings",
-		Contacts:     []string{"arc-storage@google.com", "youkichihosoi@chromium.org", "momohatt@google.com"},
+		Func:     EnableExternalStorage,
+		Desc:     "Verifies ARC removable media can be enabled from ChromeOS Settings",
+		Contacts: []string{"arc-storage@google.com", "youkichihosoi@chromium.org", "momohatt@google.com"},
 		// ChromeOS > Software > ARC++ > Storage
 		BugComponent: "b:516669",
 		Attr:         []string{"group:mainline", "informational", "group:arc-functional"},

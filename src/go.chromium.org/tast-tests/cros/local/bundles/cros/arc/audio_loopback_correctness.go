@@ -42,9 +42,8 @@ type audioLoopbackCorrectnessVal struct {
 
 func init() {
 	testing.AddTest(&testing.Test{
-		Func:         AudioLoopbackCorrectness,
-		LacrosStatus: testing.LacrosVariantUnneeded,
-		Desc:         "Plays sine wave with different config in ARC. Captures output audio via loopback and verifies the frequency of each channel",
+		Func: AudioLoopbackCorrectness,
+		Desc: "Plays sine wave with different config in ARC. Captures output audio via loopback and verifies the frequency of each channel",
 		Contacts: []string{
 			"chromeos-audio-bugs@google.com", // Media team
 			"pteerapong@chromium.org",        // Author

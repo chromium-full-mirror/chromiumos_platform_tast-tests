@@ -18,9 +18,8 @@ import (
 
 func init() {
 	testing.AddTest(&testing.Test{
-		Func:         ADBValidity,
-		LacrosStatus: testing.LacrosVariantUnneeded,
-		Desc:         "Verifies adb communication works as intended",
+		Func: ADBValidity,
+		Desc: "Verifies adb communication works as intended",
 		Contacts: []string{
 			"arc-core@google.com",
 			"vraheja@chromium.org",

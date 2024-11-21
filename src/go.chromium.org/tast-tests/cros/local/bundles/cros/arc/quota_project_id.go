@@ -21,10 +21,9 @@ import (
 
 func init() {
 	testing.AddTest(&testing.Test{
-		Func:         QuotaProjectID,
-		LacrosStatus: testing.LacrosVariantUnneeded,
-		Desc:         "Verifies that Android's quota project ID setting logic works",
-		Contacts:     []string{"arc-storage@google.com", "youkichihosoi@chromium.org"},
+		Func:     QuotaProjectID,
+		Desc:     "Verifies that Android's quota project ID setting logic works",
+		Contacts: []string{"arc-storage@google.com", "youkichihosoi@chromium.org"},
 		// ChromeOS > Software > ARC++ > Storage
 		BugComponent: "b:516669",
 		Attr:         []string{"group:mainline", "informational", "group:hw_agnostic"},

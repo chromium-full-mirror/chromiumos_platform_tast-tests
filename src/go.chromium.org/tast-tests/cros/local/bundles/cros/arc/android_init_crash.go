@@ -19,10 +19,9 @@ import (
 
 func init() {
 	testing.AddTest(&testing.Test{
-		Func:         AndroidInitCrash,
-		LacrosStatus: testing.LacrosVariantUnneeded,
-		Desc:         "Test Android init crash handling",
-		Contacts:     []string{"arc-core@google.com"},
+		Func:     AndroidInitCrash,
+		Desc:     "Test Android init crash handling",
+		Contacts: []string{"arc-core@google.com"},
 		// ChromeOS > Software > ARC++ > Core
 		BugComponent: "b:488493",
 		Attr:         []string{"group:mainline", "informational"},

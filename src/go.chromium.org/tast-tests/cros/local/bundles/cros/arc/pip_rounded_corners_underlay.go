@@ -22,7 +22,6 @@ import (
 func init() {
 	testing.AddTest(&testing.Test{
 		Func:         PIPRoundedCornersUnderlay,
-		LacrosStatus: testing.LacrosVariantUnneeded,
 		Desc:         "Verifies that ARC++ PIP rounded corners are implemented with a hardware underlay",
 		Contacts:     []string{"chromeos-perf@google.com", "petermcneeley@chromium.org", "oshima@chromium.org"},
 		BugComponent: "b:1021073",

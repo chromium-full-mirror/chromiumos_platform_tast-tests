@@ -22,10 +22,9 @@ import (
 
 func init() {
 	testing.AddTest(&testing.Test{
-		Func:         InputCompat,
-		LacrosStatus: testing.LacrosVariantUnneeded,
-		Desc:         "Checks input compatibility for M and games working",
-		Contacts:     []string{"arc-framework+tast@google.com", "yhanada@chromium.org"},
+		Func:     InputCompat,
+		Desc:     "Checks input compatibility for M and games working",
+		Contacts: []string{"arc-framework+tast@google.com", "yhanada@chromium.org"},
 		// ChromeOS > Software > ARC++ > Framework > Input
 		BugComponent: "b:536706",
 		Attr:         []string{"informational", "group:mainline", "group:hw_agnostic"},

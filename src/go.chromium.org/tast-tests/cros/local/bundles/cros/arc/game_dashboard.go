@@ -27,10 +27,9 @@ import (
 
 func init() {
 	testing.AddTest(&testing.Test{
-		Func:         GameDashboard,
-		LacrosStatus: testing.LacrosVariantUnneeded,
-		Desc:         "Installs the game controls application and verifies game dashboard screen capture",
-		Contacts:     []string{"arc-gaming@google.com", "pjlee@google.com", "phshah@google.com", "cuicuiruan@google.com"},
+		Func:     GameDashboard,
+		Desc:     "Installs the game controls application and verifies game dashboard screen capture",
+		Contacts: []string{"arc-gaming@google.com", "pjlee@google.com", "phshah@google.com", "cuicuiruan@google.com"},
 		// ChromeOS > Software > ARC++ > Gaming
 		BugComponent: "b:1373988",
 		// TODO(b/339504728): Replace with the "stable" once test has stabilized.

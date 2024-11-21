@@ -16,10 +16,9 @@ import (
 
 func init() {
 	testing.AddTest(&testing.Test{
-		Func:         GlobalActionsMenu,
-		LacrosStatus: testing.LacrosVariantUnneeded,
-		Desc:         "Checks if showing and hiding global actions work on ARC",
-		Contacts:     []string{"arc-framework+tast@google.com", "nergi@chromium.org"},
+		Func:     GlobalActionsMenu,
+		Desc:     "Checks if showing and hiding global actions work on ARC",
+		Contacts: []string{"arc-framework+tast@google.com", "nergi@chromium.org"},
 		// ChromeOS > Software > ARC++ > Framework > Input
 		BugComponent: "b:536706",
 		Attr:         []string{"group:mainline", "group:hw_agnostic"},

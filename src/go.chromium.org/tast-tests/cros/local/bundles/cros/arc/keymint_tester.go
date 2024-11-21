@@ -27,10 +27,9 @@ const (
 
 func init() {
 	testing.AddTest(&testing.Test{
-		Func:         KeymintTester,
-		LacrosStatus: testing.LacrosVariantUnneeded,
-		Desc:         "A functional test using a KeyMintTester app",
-		Contacts:     []string{"arc-commercial@google.com", "yaohuali@google.com"},
+		Func:     KeymintTester,
+		Desc:     "A functional test using a KeyMintTester app",
+		Contacts: []string{"arc-commercial@google.com", "yaohuali@google.com"},
 		// ChromeOS > Software > ARC++ > Commercial > Tast Tests
 		BugComponent: "b:1487630",
 		Attr:         []string{"group:mainline", "informational"},

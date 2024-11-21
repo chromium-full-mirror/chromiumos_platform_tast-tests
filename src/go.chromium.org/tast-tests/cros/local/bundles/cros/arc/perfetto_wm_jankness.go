@@ -20,7 +20,6 @@ import (
 func init() {
 	testing.AddTest(&testing.Test{
 		Func:         PerfettoWMJankness,
-		LacrosStatus: testing.LacrosVariantUnneeded,
 		Desc:         "Detects jank while an ARC window changes its size",
 		Contacts:     []string{"arc-framework+tast@google.com", "sstan@google.com", "brpol@google.com"},
 		BugComponent: "b:537272",

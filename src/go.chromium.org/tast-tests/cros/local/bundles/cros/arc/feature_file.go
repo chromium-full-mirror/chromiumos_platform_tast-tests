@@ -17,10 +17,9 @@ import (
 
 func init() {
 	testing.AddTest(&testing.Test{
-		Func:         FeatureFile,
-		LacrosStatus: testing.LacrosVariantUnneeded,
-		Desc:         "Chekcs if Arc feature json file exists",
-		Contacts:     []string{"arc-core@google.com", "lgcheng@google.com"},
+		Func:     FeatureFile,
+		Desc:     "Chekcs if Arc feature json file exists",
+		Contacts: []string{"arc-core@google.com", "lgcheng@google.com"},
 		// ChromeOS > Software > ARC++ > Core
 		BugComponent: "b:488493",
 		Attr:         []string{"group:mainline", "informational"},

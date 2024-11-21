@@ -56,9 +56,8 @@ type testedStyles []string
 
 func init() {
 	testing.AddTest(&testing.Test{
-		Func:         NotificationExperimental,
-		LacrosStatus: testing.LacrosVariantUnneeded,
-		Desc:         "Launches a testing APK to generate various kinds of notifications and verifies its state",
+		Func: NotificationExperimental,
+		Desc: "Launches a testing APK to generate various kinds of notifications and verifies its state",
 		Contacts: []string{
 			"arc-framework+tast@google.com",
 			"yhanada@chromium.org",

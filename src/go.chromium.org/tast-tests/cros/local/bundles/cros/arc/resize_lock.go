@@ -107,10 +107,9 @@ var brokenKeyboardModelsListMap = []string{
 
 func init() {
 	testing.AddTest(&testing.Test{
-		Func:         ResizeLock,
-		LacrosStatus: testing.LacrosVariantUnneeded,
-		Desc:         "Checks that ARC++ Resize Lock works as expected",
-		Contacts:     []string{"arc-framework+tast@google.com", "toshikikikuchi@chromium.org"},
+		Func:     ResizeLock,
+		Desc:     "Checks that ARC++ Resize Lock works as expected",
+		Contacts: []string{"arc-framework+tast@google.com", "toshikikikuchi@chromium.org"},
 		// ChromeOS > Software > ARC++ > Framework > Window Management
 		BugComponent: "b:537272",
 		Attr:         []string{"group:mainline", "informational", "group:release-health", "release-health_arc"},

@@ -19,7 +19,6 @@ func init() {
 		Func: AppCrash,
 		// Disabled by TORA. See: b/349914087
 		LifeCycleStage: testing.LifeCycleOwnerMonitored,
-		LacrosStatus:   testing.LacrosVariantUnneeded,
 		Desc:           "Test handling of a local app crash",
 		Contacts: []string{
 			// ARC

@@ -26,9 +26,8 @@ import (
 
 func init() {
 	testing.AddTest(&testing.Test{
-		Func:         AudioOboetesterLatency,
-		LacrosStatus: testing.LacrosVariantUnneeded,
-		Desc:         "Runs oboetester Round Trip Latency test and stores the result",
+		Func: AudioOboetesterLatency,
+		Desc: "Runs oboetester Round Trip Latency test and stores the result",
 		Contacts: []string{
 			"chromeos-audio-bugs@google.com", // Media team
 			"pteerapong@chromium.org",        // Author

@@ -22,9 +22,8 @@ import (
 
 func init() {
 	testing.AddTest(&testing.Test{
-		Func:         PlayStoreDefaultHandler,
-		LacrosStatus: testing.LacrosVariantUnneeded,
-		Desc:         "Verifies Play Store is marked as preferred upon opt-in",
+		Func: PlayStoreDefaultHandler,
+		Desc: "Verifies Play Store is marked as preferred upon opt-in",
 		Contacts: []string{
 			"cros-arc-te@google.com",
 			"arc-core@google.com",

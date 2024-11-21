@@ -17,10 +17,9 @@ import (
 
 func init() {
 	testing.AddTest(&testing.Test{
-		Func:         Appfuse,
-		LacrosStatus: testing.LacrosVariantUnneeded,
-		Desc:         "Make sure arc-appfuse-provider works",
-		Contacts:     []string{"arc-storage@google.com", "youkichihosoi@chromium.org"},
+		Func:     Appfuse,
+		Desc:     "Make sure arc-appfuse-provider works",
+		Contacts: []string{"arc-storage@google.com", "youkichihosoi@chromium.org"},
 		// ChromeOS > Software > ARC++ > Storage
 		BugComponent: "b:516669",
 		Attr:         []string{"group:mainline"},

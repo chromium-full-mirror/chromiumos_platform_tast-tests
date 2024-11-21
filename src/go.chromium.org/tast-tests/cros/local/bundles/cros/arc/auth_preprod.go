@@ -25,10 +25,9 @@ import (
 
 func init() {
 	testing.AddTest(&testing.Test{
-		Func:         AuthPreprod,
-		LacrosStatus: testing.LacrosVariantUnneeded,
-		Desc:         "Test ARC authentication through OOBE, provision and app install against preprod envs of gaia and android auth server",
-		Contacts:     []string{"arc-core@google.com", "jinrongwu@google.com"},
+		Func:     AuthPreprod,
+		Desc:     "Test ARC authentication through OOBE, provision and app install against preprod envs of gaia and android auth server",
+		Contacts: []string{"arc-core@google.com", "jinrongwu@google.com"},
 		// ChromeOS > Software > ARC++ > Core
 		BugComponent: "b:488493",
 		SoftwareDeps: []string{"chrome", "play_store", "gaia", "android_vm", "no_qemu"},

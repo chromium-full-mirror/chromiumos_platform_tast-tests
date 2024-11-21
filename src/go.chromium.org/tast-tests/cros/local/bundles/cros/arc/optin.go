@@ -33,9 +33,8 @@ var playTermsURLRedirects = map[string]string{
 
 func init() {
 	testing.AddTest(&testing.Test{
-		Func:         Optin,
-		LacrosStatus: testing.LacrosVariantUnneeded,
-		Desc:         "A functional test that verifies OptIn flow",
+		Func: Optin,
+		Desc: "A functional test that verifies OptIn flow",
 		Contacts: []string{
 			// Please assign test failures to current constable on-call
 			"arc-constables@google.com",

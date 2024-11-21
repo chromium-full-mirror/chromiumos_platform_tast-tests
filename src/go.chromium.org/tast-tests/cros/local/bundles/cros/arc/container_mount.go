@@ -14,10 +14,9 @@ import (
 
 func init() {
 	testing.AddTest(&testing.Test{
-		Func:         ContainerMount,
-		LacrosStatus: testing.LacrosVariantUnneeded,
-		Desc:         "Verifies mount points' shared flags for ARC",
-		Contacts:     []string{"arc-storage@google.com", "youkichihosoi@chromium.org"},
+		Func:     ContainerMount,
+		Desc:     "Verifies mount points' shared flags for ARC",
+		Contacts: []string{"arc-storage@google.com", "youkichihosoi@chromium.org"},
 		// ChromeOS > Software > ARC++ > Storage
 		BugComponent: "b:516669",
 		// TODO(yusukes,ricardoq): ARCVM does not need the test. Remove this once we retire ARC container.

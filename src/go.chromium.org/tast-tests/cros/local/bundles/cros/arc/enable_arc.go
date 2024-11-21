@@ -22,21 +22,20 @@ import (
 
 func init() {
 	testing.AddTest(&testing.Test{
-		Func:         EnableArc,
-		LacrosStatus: testing.LacrosVariantUnneeded,
-		Desc:         "Verify PlayStore can be turned On from Settings ",
-		Contacts:     []string{"cros-arc-te@google.com", "arc-core@google.com", "jinrongwu@google.com"},
+		Func:     EnableArc,
+		Desc:     "Verify PlayStore can be turned On from Settings ",
+		Contacts: []string{"cros-arc-te@google.com", "arc-core@google.com", "jinrongwu@google.com"},
 		// ChromeOS > Software > ARC++ > EngProd
 		BugComponent: "b:1052117",
 		Attr:         []string{
 			// Disabled by TORA.  See:b/326900847.
 			// "group:arc", "arc_core", "group:arc-functional", "arc_chromeos_vm"
-			},
+		},
 		SoftwareDeps: []string{
 			"chrome",
 			// Disabled by TORA.  See:b/326900847.
 			// "gaia"
-			},
+		},
 		Params: []testing.Param{{
 			ExtraSoftwareDeps: []string{"android_container"},
 			Fixture:           "familyLinkParentArcLogin",
