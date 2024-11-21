@@ -134,7 +134,7 @@ type Helper struct {
 	powerunitHostname, powerunitOutlet, hydraHostname string
 
 	// eccrashFileCache holds a cache of the current ec crash files in /var/spool/crash/ (without file ext).
-	ecCrashFileCache []string
+	ecCrashFileCache map[string]bool
 }
 
 // WaitConnectOption includes situations to wait to connect from.
@@ -2438,10 +2438,12 @@ func (h *Helper) UpdateECCrashCache(ctx context.Context) error {
 	if err != nil {
 		return err
 	}
-	// Clear existing cache because some existing files may be deleted.
-	h.ecCrashFileCache = make([]string, 0)
+
+	if h.ecCrashFileCache == nil {
+		h.ecCrashFileCache = make(map[string]bool)
+	}
 	for file := range crashFiles {
-		h.ecCrashFileCache = append(h.ecCrashFileCache, file)
+		h.ecCrashFileCache[file] = true
 	}
 	return nil
 }
@@ -2455,7 +2457,7 @@ func (h *Helper) GetNewECCrashes(ctx context.Context) (map[string][]string, erro
 	}
 
 	// Remove cached files only keep new ones.
-	for _, file := range h.ecCrashFileCache {
+	for file := range h.ecCrashFileCache {
 		delete(crashFiles, file)
 	}
 
