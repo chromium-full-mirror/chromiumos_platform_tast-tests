@@ -34,8 +34,15 @@ func init() {
 		Timeout:      60 * time.Minute,
 		Attr:         []string{"group:firmware", "firmware_pd_unstable"},
 		Params: []testing.Param{{
+			Name: "normal",
 			Val: firmware.PDTestParams{
 				DTS: firmware.DTSModeOff,
+			},
+		}, {
+			Name: "normal_snk",
+			Val: firmware.PDTestParams{
+				PowerRole: firmware.RoleSink,
+				DTS:       firmware.DTSModeOff,
 			},
 		}},
 	})
