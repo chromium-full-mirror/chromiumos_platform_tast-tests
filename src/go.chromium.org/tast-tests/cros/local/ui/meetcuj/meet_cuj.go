@@ -796,7 +796,7 @@ func Run(ctx context.Context, meet MeetTest, cr *chrome.Chrome, testCaseVar func
 			// complete before forcing Google Docs offline. Only log the error,
 			// because sometimes reaching quiescence can take a really long
 			// time, even when the doc is interactable.
-			if err := webutil.WaitForQuiescence(ctx, collaborationConn, 15*time.Second); err != nil {
+			if err := webutil.WaitForQuiescence(ctx, collaborationConn, time.Minute); err != nil {
 				testing.ContextLog(ctx, "Failed to wait for Google Docs to quiesce: ", err)
 			}
 
