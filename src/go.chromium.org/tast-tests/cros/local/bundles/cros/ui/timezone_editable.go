@@ -28,9 +28,8 @@ import (
 
 func init() {
 	testing.AddTest(&testing.Test{
-		Func:         TimezoneEditable,
-		LacrosStatus: testing.LacrosVariantUnneeded,
-		Desc:         "Test that settings about time zone can only be changed by users and not guest",
+		Func: TimezoneEditable,
+		Desc: "Test that settings about time zone can only be changed by users and not guest",
 		Contacts: []string{
 			"cros-settings@google.com",
 			"chromeos-sw-engprod@google.com",

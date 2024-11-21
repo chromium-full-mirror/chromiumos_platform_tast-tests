@@ -22,9 +22,8 @@ import (
 
 func init() {
 	testing.AddTest(&testing.Test{
-		Func:         TermsLinkClickable,
-		LacrosStatus: testing.LacrosVariantNeeded,
-		Desc:         "Checks the terms of service link is clickable within help page",
+		Func: TermsLinkClickable,
+		Desc: "Checks the terms of service link is clickable within help page",
 		Contacts: []string{
 			"cros-settings@google.com",
 			"chromeos-consumer-engprod@google.com",

@@ -22,9 +22,8 @@ import (
 
 func init() {
 	testing.AddTest(&testing.Test{
-		Func:         VerifyProxyArc,
-		LacrosStatus: testing.LacrosVariantUnneeded,
-		Desc:         "A functional test that verifies proxy is supported in ARC",
+		Func: VerifyProxyArc,
+		Desc: "A functional test that verifies proxy is supported in ARC",
 		Contacts: []string{
 			"cros-ufo-testing@google.com",
 			"mhasank@chromium.org",

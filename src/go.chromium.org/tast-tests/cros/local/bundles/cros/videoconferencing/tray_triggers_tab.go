@@ -22,9 +22,8 @@ import (
 
 func init() {
 	testing.AddTest(&testing.Test{
-		Func:         TrayTriggersTab,
-		LacrosStatus: testing.LacrosVariantUnneeded,
-		Desc:         "Checks VC tray can be triggered by Chrome tab",
+		Func: TrayTriggersTab,
+		Desc: "Checks VC tray can be triggered by Chrome tab",
 		Contacts: []string{
 			"cros-video-conference-tast-tests@google.com",
 			"xiuwen@google.com",

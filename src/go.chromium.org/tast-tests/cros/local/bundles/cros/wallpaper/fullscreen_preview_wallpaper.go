@@ -25,9 +25,8 @@ import (
 
 func init() {
 	testing.AddTest(&testing.Test{
-		Func:         FullscreenPreviewWallpaper,
-		LacrosStatus: testing.LacrosVariantUnneeded,
-		Desc:         "Test full screen preview of local wallpapers in the new wallpaper app",
+		Func: FullscreenPreviewWallpaper,
+		Desc: "Test full screen preview of local wallpapers in the new wallpaper app",
 		Contacts: []string{
 			"cros-p13n-eng@google.com",
 			"chromeos-consumer-engprod@google.com",

@@ -26,9 +26,8 @@ import (
 
 func init() {
 	testing.AddTest(&testing.Test{
-		Func:         CameraEffectsChromeResolution,
-		LacrosStatus: testing.LacrosVariantUnneeded,
-		Desc:         "Checks Camera Effects in different resolution",
+		Func: CameraEffectsChromeResolution,
+		Desc: "Checks Camera Effects in different resolution",
 		Contacts: []string{
 			"cros-video-conference-tast-tests@google.com",
 			"xiuwen@google.com",

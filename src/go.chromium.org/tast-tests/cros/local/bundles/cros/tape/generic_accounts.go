@@ -15,10 +15,9 @@ import (
 
 func init() {
 	testing.AddTest(&testing.Test{
-		Func:         GenericAccounts,
-		Desc:         "Confirm that the generic account leasing for TAPE works as intended",
-		LacrosStatus: testing.LacrosVariantUnneeded,
-		Contacts:     []string{"arc-engprod@google.com", "alexanderhartl@google.com"},
+		Func:     GenericAccounts,
+		Desc:     "Confirm that the generic account leasing for TAPE works as intended",
+		Contacts: []string{"arc-engprod@google.com", "alexanderhartl@google.com"},
 		// ChromeOS > Software > Commercial (Enterprise) > EngProd > ChromeOS Testing
 		BugComponent: "b:1359454",
 		Attr:         []string{"group:mainline", "informational"},

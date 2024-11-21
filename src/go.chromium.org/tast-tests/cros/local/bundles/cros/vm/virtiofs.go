@@ -24,7 +24,6 @@ const runPjdfstest string = "run-pjdfstest.sh"
 func init() {
 	testing.AddTest(&testing.Test{
 		Func:         Virtiofs,
-		LacrosStatus: testing.LacrosVariantUnneeded,
 		Desc:         "Tests that the crosvm virtio-fs device works correctly",
 		Contacts:     []string{"cros-virt-devices-guests@google.com", "keiichiw@google.com"},
 		BugComponent: "b:1248538",

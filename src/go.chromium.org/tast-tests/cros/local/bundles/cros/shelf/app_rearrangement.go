@@ -49,9 +49,8 @@ type rearrangmentTestType struct {
 
 func init() {
 	testing.AddTest(&testing.Test{
-		Func:         AppRearrangement,
-		LacrosStatus: testing.LacrosVariantUnneeded,
-		Desc:         "Tests the rearrangement of shelf app icons",
+		Func: AppRearrangement,
+		Desc: "Tests the rearrangement of shelf app icons",
 		Contacts: []string{
 			"cros-system-ui-eng@google.com",
 			"chromeos-consumer-engprod@google.com",

@@ -32,7 +32,6 @@ func init() {
 	testing.AddTest(&testing.Test{
 		Func:           MigrationOnedrive,
 		LifeCycleStage: testing.LifeCycleInDevelopment,
-		LacrosStatus:   testing.LacrosVariantUnneeded,
 		Desc:           "Verifies that local files are moved to OneDrive, when LocalUserFilesAllowed and LocalUserFilesMigrationDestination policies are set",
 		BugComponent:   "b:1533988",
 		Contacts: []string{

@@ -21,9 +21,8 @@ import (
 
 func init() {
 	testing.AddTest(&testing.Test{
-		Func:         HotseatScalable,
-		LacrosStatus: testing.LacrosVariantUnneeded,
-		Desc:         "Tests the basic features of hotseat",
+		Func: HotseatScalable,
+		Desc: "Tests the basic features of hotseat",
 		Contacts: []string{
 			"chromeos-launcher@google.com",
 			"chromeos-consumer-engprod@google.com",

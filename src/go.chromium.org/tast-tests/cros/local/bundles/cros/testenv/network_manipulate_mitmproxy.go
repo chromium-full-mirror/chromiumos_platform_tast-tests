@@ -24,9 +24,8 @@ const (
 
 func init() {
 	testing.AddTest(&testing.Test{
-		Func:         NetworkManipulateMitmproxy,
-		LacrosStatus: testing.LacrosVariantUnneeded,
-		Desc:         "Verifies that manipulating network traffic with mitmproxy",
+		Func: NetworkManipulateMitmproxy,
+		Desc: "Verifies that manipulating network traffic with mitmproxy",
 		Contacts: []string{
 			"cros-ufo-testing@google.com",
 			"yanghenry@google.com",

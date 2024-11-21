@@ -24,15 +24,14 @@ import (
 const runAudioResumeAfterCrasRestarted string = "run-audio-resume-after-cras-restarted.sh"
 
 type audioResumeAfterCrasRestartedParams struct {
-	crosvmArgs    []string
+	crosvmArgs []string
 }
 
 func init() {
 	testing.AddTest(&testing.Test{
-		Func:         AudioResumeAfterCrasRestarted,
-		LacrosStatus: testing.LacrosVariantUnneeded,
-		Desc:         "Check that aplay resumes playing after cras is restarted during the playback",
-		Contacts:     []string{"chromeos-audio-bugs@google.com", "pteerapong@chromium.org"},
+		Func:     AudioResumeAfterCrasRestarted,
+		Desc:     "Check that aplay resumes playing after cras is restarted during the playback",
+		Contacts: []string{"chromeos-audio-bugs@google.com", "pteerapong@chromium.org"},
 		// ChromeOS > Platform > Technologies > Audio > VM
 		BugComponent: "b:1332660",
 		Attr:         []string{"group:mainline", "group:sw_gates_virt", "sw_gates_virt_enabled"},

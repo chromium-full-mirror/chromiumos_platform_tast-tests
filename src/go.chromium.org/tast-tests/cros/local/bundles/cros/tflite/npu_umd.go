@@ -15,7 +15,6 @@ import (
 func init() {
 	testing.AddTest(&testing.Test{
 		Func:         NPUUMD,
-		LacrosStatus: testing.LacrosVariantUnneeded,
 		Desc:         "Runs the test of Intel NPU UMD (User Mode Driver)",
 		Contacts:     []string{"cros-odml-foundations-eng@google.com", "shik@chromium.org"},
 		BugComponent: "b:1140119", // ChromeOS > Platform > Technologies > Machine Learning > ML Accelerators > Intel

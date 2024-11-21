@@ -32,9 +32,8 @@ import (
 
 func init() {
 	testing.AddTest(&testing.Test{
-		Func:         LockscreenWallpaper,
-		LacrosStatus: testing.LacrosVariantUnneeded,
-		Desc:         "Test verifying wallpaper on lock screen",
+		Func: LockscreenWallpaper,
+		Desc: "Test verifying wallpaper on lock screen",
 		Contacts: []string{
 			"cros-p13n-eng@google.com",
 			"chromeos-consumer-engprod@google.com",

@@ -18,9 +18,8 @@ import (
 
 func init() {
 	testing.AddTest(&testing.Test{
-		Func:         IWARunRoutines,
-		LacrosStatus: testing.LacrosVariantUnneeded,
-		Desc:         "Run healthd routines from IWA(Isolated Web App)",
+		Func: IWARunRoutines,
+		Desc: "Run healthd routines from IWA(Isolated Web App)",
 		Contacts: []string{
 			"chromeos-shimless-eng@google.com",
 		},

@@ -22,9 +22,8 @@ import (
 
 func init() {
 	testing.AddTest(&testing.Test{
-		Func:         VerifyShelfAlignment,
-		LacrosStatus: testing.LacrosVariantUnneeded,
-		Desc:         "Tests the shelf alignment",
+		Func: VerifyShelfAlignment,
+		Desc: "Tests the shelf alignment",
 		Contacts: []string{
 			"cros-system-ui-eng@google.com",
 			"chromeos-consumer-engprod@google.com",

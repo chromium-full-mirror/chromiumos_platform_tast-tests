@@ -25,7 +25,6 @@ type chromeCrashNotLoggedInParams struct {
 func init() {
 	testing.AddTest(&testing.Test{
 		Func:         ChromeCrashNotLoggedIn,
-		LacrosStatus: testing.LacrosVariantUnneeded,
 		Desc:         "Checks that Chrome writes crash dumps while not logged in",
 		Contacts:     []string{"chromeos-data-eng@google.com", "troywang@google.com"},
 		BugComponent: "b:1032705",

@@ -14,7 +14,6 @@ import (
 func init() {
 	testing.AddTest(&testing.Test{
 		Func:         Basic,
-		LacrosStatus: testing.LacrosVariantUnneeded,
 		Desc:         "Verifies basic Starfish functionality",
 		Contacts:     []string{"chromeos-cellular-team@google.com", "andrewlassalle@google.com"},
 		BugComponent: "b:167157", // ChromeOS > Platform > Connectivity > Cellular

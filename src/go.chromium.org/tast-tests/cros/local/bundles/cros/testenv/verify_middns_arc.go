@@ -31,7 +31,6 @@ func init() {
 		// TODO(b/342085937): Disable continuous testing for troubleshooting
 		// Attr:         []string{"group:mainline", "group:hw_agnostic", "informational"},
 		SoftwareDeps: []string{"chrome", "arc"},
-		LacrosStatus: testing.LacrosVariantUnneeded,
 		VarDeps:      []string{ui.GaiaPoolDefaultVarName},
 		Timeout:      chrome.LoginTimeout + arc.BootTimeout + 2*time.Minute,
 	})

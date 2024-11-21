@@ -23,9 +23,8 @@ import (
 
 func init() {
 	testing.AddTest(&testing.Test{
-		Func:         SavedDeskDelete,
-		LacrosStatus: testing.LacrosVariantUnneeded,
-		Desc:         "Checks saved desk can be deleted",
+		Func: SavedDeskDelete,
+		Desc: "Checks saved desk can be deleted",
 		Contacts: []string{
 			"chromeos-wm@google.com",
 			"cros-commercial-productivity-eng@google.com",

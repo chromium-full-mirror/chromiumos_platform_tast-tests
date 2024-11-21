@@ -21,9 +21,8 @@ import (
 
 func init() {
 	testing.AddTest(&testing.Test{
-		Func:         TrayTriggersExtension,
-		LacrosStatus: testing.LacrosVariantUnneeded,
-		Desc:         "Checks VC tray can be triggered by Chrome extension",
+		Func: TrayTriggersExtension,
+		Desc: "Checks VC tray can be triggered by Chrome extension",
 		Contacts: []string{
 			"cros-video-conference-tast-tests@google.com",
 			"xiuwen@google.com",

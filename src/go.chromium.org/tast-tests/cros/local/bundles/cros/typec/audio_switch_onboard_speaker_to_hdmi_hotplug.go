@@ -38,7 +38,6 @@ import (
 func init() {
 	testing.AddTest(&testing.Test{
 		Func:         AudioSwitchOnboardSpeakerToHDMIHotplug,
-		LacrosStatus: testing.LacrosVariantUnneeded,
 		Desc:         "Verifies local audio playback through default app, switch audio playback between internal-speaker and HDMI display",
 		Contacts:     []string{"intel.chrome.automation.team@intel.com", "ambalavanan.m.m@intel.com"},
 		BugComponent: "b:157291", // ChromeOS > External > Intel

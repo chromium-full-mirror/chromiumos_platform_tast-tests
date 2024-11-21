@@ -32,7 +32,6 @@ func init() {
 		Func: NightLightSchedule,
 		// Disabled by TORA. See: b/351561732
 		LifeCycleStage: testing.LifeCycleOwnerMonitored,
-		LacrosStatus:   testing.LacrosVariantUnneeded,
 		Desc:           "Tests the adjustment of night light schedule",
 		Contacts: []string{
 			"chromeos-wm@google.com",

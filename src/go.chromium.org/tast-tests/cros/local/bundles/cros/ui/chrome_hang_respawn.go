@@ -22,7 +22,6 @@ import (
 func init() {
 	testing.AddTest(&testing.Test{
 		Func:         ChromeHangRespawn,
-		LacrosStatus: testing.LacrosVariantUnneeded,
 		Desc:         "Hangs the browser and verifies that session_manager detects the hang and restarts it",
 		BugComponent: "b:1331478", // ChromeOS > Software > Core > SessionManager
 		Contacts: []string{

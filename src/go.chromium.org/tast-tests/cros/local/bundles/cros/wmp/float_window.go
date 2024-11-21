@@ -23,9 +23,8 @@ import (
 
 func init() {
 	testing.AddTest(&testing.Test{
-		Func:         FloatWindow,
-		LacrosStatus: testing.LacrosVariantUnneeded,
-		Desc:         "Test that the float shortcut works on a floatable window",
+		Func: FloatWindow,
+		Desc: "Test that the float shortcut works on a floatable window",
 		Contacts: []string{
 			"chromeos-wm@google.com",
 			"chromeos-consumer-engprod@google.com",

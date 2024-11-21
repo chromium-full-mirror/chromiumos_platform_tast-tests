@@ -22,7 +22,6 @@ import (
 func init() {
 	testing.AddTest(&testing.Test{
 		Func:         ScreenRecorder,
-		LacrosStatus: testing.LacrosVariantUnneeded,
 		Desc:         "Verifies that the screen recorder Tast API works",
 		Contacts:     []string{"chromeos-engprod-syd@google.com", "alvinjia@google.com", "mattlui@google.com"},
 		BugComponent: "b:1103568", // ChromeOS -> EngProd -> Developer

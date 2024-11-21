@@ -28,9 +28,8 @@ type windowSnapAndRotateTestParam struct {
 
 func init() {
 	testing.AddTest(&testing.Test{
-		Func:         WindowSnapAndRotate,
-		LacrosStatus: testing.LacrosVariantUnneeded,
-		Desc:         "In clamshell mode, checks that snap in landscape and portrait works properly",
+		Func: WindowSnapAndRotate,
+		Desc: "In clamshell mode, checks that snap in landscape and portrait works properly",
 		Contacts: []string{
 			"chromeos-wm@google.com",
 			"chromeos-consumer-engprod@google.com",

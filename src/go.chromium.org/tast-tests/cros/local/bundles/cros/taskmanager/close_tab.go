@@ -24,9 +24,8 @@ import (
 
 func init() {
 	testing.AddTest(&testing.Test{
-		Func:         CloseTab,
-		LacrosStatus: testing.LacrosVariantUnneeded,
-		Desc:         "Test the entry should be removed in task manager automatically after closing tab",
+		Func: CloseTab,
+		Desc: "Test the entry should be removed in task manager automatically after closing tab",
 		Contacts: []string{
 			"chromeos-wm@google.com",
 			"chromeos-consumer-engprod@google.com",

@@ -16,7 +16,6 @@ import (
 func init() {
 	testing.AddTest(&testing.Test{
 		Func:         FlexCheck,
-		LacrosStatus: testing.LacrosVariantUnneeded,
 		Desc:         "Verify Flex touchpad requirements",
 		Contacts:     []string{"jdenose@google.com"},
 		BugComponent: "b:998633", // ChromeOS > Platform > Enablement > ChromeOS Flex

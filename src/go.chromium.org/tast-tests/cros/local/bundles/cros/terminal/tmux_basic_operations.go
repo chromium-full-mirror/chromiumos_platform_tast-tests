@@ -20,9 +20,8 @@ import (
 
 func init() {
 	testing.AddTest(&testing.Test{
-		Func:         TmuxBasicOperations,
-		LacrosStatus: testing.LacrosVariantUnneeded,
-		Desc:         "Verify controlling tab, echo strings in the first Tmux tab, and detach and reattach tabs",
+		Func: TmuxBasicOperations,
+		Desc: "Verify controlling tab, echo strings in the first Tmux tab, and detach and reattach tabs",
 		Contacts: []string{
 			"guestos-ui@google.com",
 			"lxj@google.com",

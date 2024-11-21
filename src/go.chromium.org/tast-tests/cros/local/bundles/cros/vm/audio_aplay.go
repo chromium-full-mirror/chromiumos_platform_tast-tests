@@ -30,7 +30,6 @@ type audioAplayParams struct {
 func init() {
 	testing.AddTest(&testing.Test{
 		Func:         AudioAplay,
-		LacrosStatus: testing.LacrosVariantUnneeded,
 		Desc:         "Check that playback devices are listed correctly",
 		Contacts:     []string{"chromeos-audio-bugs@google.com", "pteerapong@google.com"},
 		BugComponent: "b:1332660",

@@ -23,9 +23,8 @@ import (
 
 func init() {
 	testing.AddTest(&testing.Test{
-		Func:         ShortcutOnInputLanguageChange,
-		LacrosStatus: testing.LacrosVariantUnneeded,
-		Desc:         "Shortcuts change when the keyboard language changes",
+		Func: ShortcutOnInputLanguageChange,
+		Desc: "Shortcuts change when the keyboard language changes",
 		Contacts: []string{
 			"cros-device-enablement@google.com",
 			"longbowei@google.com",

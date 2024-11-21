@@ -26,9 +26,8 @@ type overflowShelfSmokeTestType struct {
 
 func init() {
 	testing.AddTest(&testing.Test{
-		Func:         OverflowShelfAlignment,
-		LacrosStatus: testing.LacrosVariantUnneeded,
-		Desc:         "Verifies the overflow shelf by changing the shelf alignment",
+		Func: OverflowShelfAlignment,
+		Desc: "Verifies the overflow shelf by changing the shelf alignment",
 		Contacts: []string{
 			"cros-system-ui-eng@google.com",
 			"chromeos-consumer-engprod@google.com",

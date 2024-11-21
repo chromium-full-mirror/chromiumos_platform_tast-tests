@@ -27,7 +27,6 @@ func init() {
 	testing.AddTest(&testing.Test{
 		Func:           DownloadGoogleDrive,
 		LifeCycleStage: testing.LifeCycleInDevelopment,
-		LacrosStatus:   testing.LacrosVariantUnneeded,
 		Desc:           "Verifies saving downloads to Google Drive when DownloadDirectory policy is set",
 		BugComponent:   "b:1533988",
 		Contacts: []string{

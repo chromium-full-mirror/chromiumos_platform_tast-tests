@@ -73,7 +73,6 @@ type iperfParam struct {
 func init() {
 	testing.AddTest(&testing.Test{
 		Func:         Iperf,
-		LacrosStatus: testing.LacrosVariantUnneeded,
 		Desc:         "Tests crosvm's virtio-net performance with iperf3 command",
 		Contacts:     []string{"cros-virt-devices-guests@google.com", "yuanyaogoog@google.com"},
 		BugComponent: "b:1248538",

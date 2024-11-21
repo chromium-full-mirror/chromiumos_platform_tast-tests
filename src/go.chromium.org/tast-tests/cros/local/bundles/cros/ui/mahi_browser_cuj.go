@@ -27,9 +27,8 @@ type mahiParameters struct {
 
 func init() {
 	testing.AddTest(&testing.Test{
-		Func:         MahiBrowserCUJ,
-		LacrosStatus: testing.LacrosVariantUnneeded,
-		Desc:         "CUJ of Help Me Read feature",
+		Func: MahiBrowserCUJ,
+		Desc: "CUJ of Help Me Read feature",
 		Contacts: []string{
 			"alanlxl@google.com",
 			"thanhdng@google.com",

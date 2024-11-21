@@ -15,7 +15,6 @@ import (
 func init() {
 	testing.AddTest(&testing.Test{
 		Func:         AndroidHardwareBuffer,
-		LacrosStatus: testing.LacrosVariantUnneeded,
 		Desc:         "Runs the test of AHardwareBuffer shim used in TFLite",
 		Contacts:     []string{"cros-odml-foundations-eng@google.com", "shik@chromium.org"},
 		BugComponent: "b:1445284", // ChromeOS > Platform > Technologies > Machine Learning > On-Device ML

@@ -22,9 +22,8 @@ import (
 
 func init() {
 	testing.AddTest(&testing.Test{
-		Func:         TrayReturnToAppVirtualDesktop,
-		LacrosStatus: testing.LacrosVariantUnneeded,
-		Desc:         "Checks VC tray returns to app in a virtual desktop",
+		Func: TrayReturnToAppVirtualDesktop,
+		Desc: "Checks VC tray returns to app in a virtual desktop",
 		Contacts: []string{
 			"cros-video-conference-tast-tests@google.com",
 			"xiuwen@google.com",

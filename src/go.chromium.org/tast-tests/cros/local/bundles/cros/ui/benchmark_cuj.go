@@ -19,9 +19,8 @@ const defaultTimeout = 15*time.Minute + cujrecorder.CooldownTimeout
 
 func init() {
 	testing.AddTest(&testing.Test{
-		Func:         BenchmarkCUJ,
-		LacrosStatus: testing.LacrosVariantUnneeded,
-		Desc:         "CUJ running browser benchmarks",
+		Func: BenchmarkCUJ,
+		Desc: "CUJ running browser benchmarks",
 		Contacts: []string{
 			"cros-sw-perf@google.com",
 			"vincentchiang@chromium.org",

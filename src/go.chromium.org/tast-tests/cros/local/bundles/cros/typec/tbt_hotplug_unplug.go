@@ -28,7 +28,6 @@ const (
 func init() {
 	testing.AddTest(&testing.Test{
 		Func:         TbtHotplugUnplug,
-		LacrosStatus: testing.LacrosVariantUnneeded,
 		Desc:         "TBT device enumeration check after hot plug-unplug",
 		Contacts:     []string{"intel.chrome.automation.team@intel.com", "pathan.jilani@intel.com"},
 		Attr:         []string{"group:intel-tbt3-dock"},

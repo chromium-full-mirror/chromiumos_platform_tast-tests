@@ -25,9 +25,8 @@ import (
 
 func init() {
 	testing.AddTest(&testing.Test{
-		Func:         FloatWindowMultitaskMenu,
-		LacrosStatus: testing.LacrosVariantUnneeded,
-		Desc:         "Test that the float multitask menu works",
+		Func: FloatWindowMultitaskMenu,
+		Desc: "Test that the float multitask menu works",
 		Contacts: []string{
 			"chromeos-wm@google.com",
 			"chromeos-consumer-engprod@google.com",

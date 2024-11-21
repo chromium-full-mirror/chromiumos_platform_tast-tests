@@ -25,9 +25,8 @@ import (
 
 func init() {
 	testing.AddTest(&testing.Test{
-		Func:         SSH,
-		LacrosStatus: testing.LacrosVariantUnneeded,
-		Desc:         "Verify Terminal app can create an SSH outgoing client connection",
+		Func: SSH,
+		Desc: "Verify Terminal app can create an SSH outgoing client connection",
 		Contacts: []string{
 			"guestos-ui@google.com",
 			"joelhockey@chromium.org",
@@ -63,7 +62,7 @@ func SSH(ctx context.Context, s *testing.State) {
 	}
 	defer cleanup()
 
-	cr, err := chrome.New(ctx, chrome.EnableFeatures("TerminalAlternativeEmulator","NaclAllow"))
+	cr, err := chrome.New(ctx, chrome.EnableFeatures("TerminalAlternativeEmulator", "NaclAllow"))
 	if err != nil {
 		s.Fatal("Cannot start Chrome: ", err)
 	}

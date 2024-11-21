@@ -29,7 +29,6 @@ func init() {
 	testing.AddTest(&testing.Test{
 		Func:           DownloadOnedrive,
 		LifeCycleStage: testing.LifeCycleInDevelopment,
-		LacrosStatus:   testing.LacrosVariantUnneeded,
 		Desc:           "Verifies saving downloads to OneDrive when DownloadDirectory policy is set",
 		BugComponent:   "b:1533988",
 		Contacts: []string{

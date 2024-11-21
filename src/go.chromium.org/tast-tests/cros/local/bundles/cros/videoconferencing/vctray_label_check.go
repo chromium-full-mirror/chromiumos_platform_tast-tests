@@ -23,9 +23,8 @@ import (
 
 func init() {
 	testing.AddTest(&testing.Test{
-		Func:         VctrayLabelCheck,
-		LacrosStatus: testing.LacrosVariantUnneeded,
-		Desc:         "Checks all label texts shows on VCtray",
+		Func: VctrayLabelCheck,
+		Desc: "Checks all label texts shows on VCtray",
 		Contacts: []string{
 			"cros-video-conference-tast-tests@google.com",
 			"xiuwen@google.com",

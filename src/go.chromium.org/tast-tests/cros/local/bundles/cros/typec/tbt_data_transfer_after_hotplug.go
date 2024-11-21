@@ -27,7 +27,6 @@ import (
 func init() {
 	testing.AddTest(&testing.Test{
 		Func:         TbtDataTransferAfterHotplug,
-		LacrosStatus: testing.LacrosVariantUnneeded,
 		Desc:         "TBT data tarnsfer after hot plug",
 		Contacts:     []string{"intel.chrome.automation.team@intel.com", "pathan.jilani@intel.com"},
 		BugComponent: "b:157291", // ChromeOS > External > Intel

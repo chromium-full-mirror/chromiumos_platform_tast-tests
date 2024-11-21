@@ -21,7 +21,6 @@ import (
 func init() {
 	testing.AddTest(&testing.Test{
 		Func:           SettingsEnableDisable,
-		LacrosStatus:   testing.LacrosVariantUnneeded,
 		LifeCycleStage: testing.LifeCycleOwnerMonitored,
 		Desc:           "Tests ability to enable/disable Smart Lock with Settings",
 		Contacts: []string{

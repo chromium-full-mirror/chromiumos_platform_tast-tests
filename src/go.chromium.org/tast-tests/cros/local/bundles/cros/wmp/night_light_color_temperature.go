@@ -25,9 +25,8 @@ import (
 
 func init() {
 	testing.AddTest(&testing.Test{
-		Func:         NightLightColorTemperature,
-		LacrosStatus: testing.LacrosVariantUnneeded,
-		Desc:         "Tests the adjustment of night light color temperature",
+		Func: NightLightColorTemperature,
+		Desc: "Tests the adjustment of night light color temperature",
 		Contacts: []string{
 			"chromeos-wm@google.com",
 			"chromeos-consumer-engprod@google.com",

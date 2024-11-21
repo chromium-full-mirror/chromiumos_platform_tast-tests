@@ -16,7 +16,6 @@ import (
 func init() {
 	testing.AddTest(&testing.Test{
 		Func:         SyncTimeSlimRootfsVM,
-		LacrosStatus: testing.LacrosVariantUnneeded,
 		Desc:         "Syncs time of a Linux VM with a slim rootfs",
 		Contacts:     []string{"cros-virt-devices-guests@google.com", "uekawa@google.com"},
 		BugComponent: "b:1248538", // ChromeOS > Platform > Virtualization > Device and Guests

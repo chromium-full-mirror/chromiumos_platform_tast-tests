@@ -21,9 +21,8 @@ import (
 
 func init() {
 	testing.AddTest(&testing.Test{
-		Func:         CaptureModeEntryPoints,
-		LacrosStatus: testing.LacrosVariantUnneeded,
-		Desc:         "Tests entering capture mode with a variety of entry points",
+		Func: CaptureModeEntryPoints,
+		Desc: "Tests entering capture mode with a variety of entry points",
 		Contacts: []string{
 			"chromeos-wm@google.com",
 			"chromeos-consumer-engprod@google.com",

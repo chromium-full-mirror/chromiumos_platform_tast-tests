@@ -30,7 +30,6 @@ import (
 func init() {
 	testing.AddTest(&testing.Test{
 		Func:         TBTDockGatkexUSB4,
-		LacrosStatus: testing.LacrosVariantUnneeded,
 		Desc:         "Verifies test TBT Docking station on USB4 gatkex card TBT port via USB4 port using 40G passive cable",
 		Contacts:     []string{"intel.chrome.automation.team@intel.com", "ambalavanan.m.m@intel.com"},
 		BugComponent: "b:157291", // ChromeOS > External > Intel

@@ -21,7 +21,6 @@ import (
 func init() {
 	testing.AddTest(&testing.Test{
 		Func:         DTS,
-		LacrosStatus: testing.LacrosVariantUnneeded,
 		Desc:         "Runs the TFLite stable delegate test suite",
 		Contacts:     []string{"cros-odml-foundations-eng@google.com", "shik@chromium.org"},
 		BugComponent: "b:1445284", // ChromeOS > Platform > Technologies > Machine Learning > On-Device ML

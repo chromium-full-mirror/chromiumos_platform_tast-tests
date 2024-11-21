@@ -19,9 +19,8 @@ import (
 
 func init() {
 	testing.AddTest(&testing.Test{
-		Func:         MenuOverflow,
-		LacrosStatus: testing.LacrosVariantUnneeded,
-		Desc:         "Checks the behavior of shelf menu when it is overflowed",
+		Func: MenuOverflow,
+		Desc: "Checks the behavior of shelf menu when it is overflowed",
 		Contacts: []string{
 			"cros-system-ui-eng@google.com",
 			"chromeos-consumer-engprod@google.com",

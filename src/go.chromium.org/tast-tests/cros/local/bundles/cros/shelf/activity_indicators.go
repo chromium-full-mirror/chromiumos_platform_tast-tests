@@ -25,9 +25,8 @@ import (
 
 func init() {
 	testing.AddTest(&testing.Test{
-		Func:         ActivityIndicators,
-		LacrosStatus: testing.LacrosVariantUnneeded,
-		Desc:         "Test that opens shelf apps and checks each app's activity indicators",
+		Func: ActivityIndicators,
+		Desc: "Test that opens shelf apps and checks each app's activity indicators",
 		Contacts: []string{
 			"cros-system-ui-eng@google.com",
 			"chromeos-consumer-engprod@google.com",

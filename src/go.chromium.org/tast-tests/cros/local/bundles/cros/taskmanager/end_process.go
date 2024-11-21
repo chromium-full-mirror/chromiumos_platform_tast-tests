@@ -30,9 +30,8 @@ import (
 
 func init() {
 	testing.AddTest(&testing.Test{
-		Func:         EndProcess,
-		LacrosStatus: testing.LacrosVariantUnneeded,
-		Desc:         "Verify the 'End process' button works on plugin, non-plugin and grouped tabs",
+		Func: EndProcess,
+		Desc: "Verify the 'End process' button works on plugin, non-plugin and grouped tabs",
 		Contacts: []string{
 			"chromeos-wm@google.com",
 			"chromeos-consumer-engprod@google.com",

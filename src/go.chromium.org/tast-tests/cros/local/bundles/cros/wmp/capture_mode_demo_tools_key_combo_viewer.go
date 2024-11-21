@@ -23,9 +23,8 @@ import (
 
 func init() {
 	testing.AddTest(&testing.Test{
-		Func:         CaptureModeDemoToolsKeyComboViewer,
-		LacrosStatus: testing.LacrosVariantUnneeded,
-		Desc:         "Verifies that the key combo viewer will display conditionally on key event if demo tools feature is enabled",
+		Func: CaptureModeDemoToolsKeyComboViewer,
+		Desc: "Verifies that the key combo viewer will display conditionally on key event if demo tools feature is enabled",
 		Contacts: []string{
 			"chromeos-wm@google.com",
 			"chromeos-consumer-engprod@google.com",

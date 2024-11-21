@@ -30,9 +30,8 @@ import (
 
 func init() {
 	testing.AddTest(&testing.Test{
-		Func:         AdminTemplatesLaunch,
-		LacrosStatus: testing.LacrosVariantUnneeded,
-		Desc:         "Checks admin templates can be launched",
+		Func: AdminTemplatesLaunch,
+		Desc: "Checks admin templates can be launched",
 		Contacts: []string{
 			"chromeos-wm@google.com",
 			"cros-commercial-productivity-eng@google.com",

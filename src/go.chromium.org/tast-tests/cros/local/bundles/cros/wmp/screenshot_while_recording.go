@@ -19,9 +19,8 @@ import (
 
 func init() {
 	testing.AddTest(&testing.Test{
-		Func:         ScreenshotWhileRecording,
-		LacrosStatus: testing.LacrosVariantUnneeded,
-		Desc:         "Verify that the screenshot can be performed while doing screen recording",
+		Func: ScreenshotWhileRecording,
+		Desc: "Verify that the screenshot can be performed while doing screen recording",
 		Contacts: []string{
 			"chromeos-wm@google.com",
 			"chromeos-consumer-engprod@google.com",

@@ -19,9 +19,8 @@ import (
 
 func init() {
 	testing.AddTest(&testing.Test{
-		Func:         Geekbench6CUJ,
-		LacrosStatus: testing.LacrosVariantUnneeded,
-		Desc:         "Run Geekbench 6 CPU benchmark to test device performance",
+		Func: Geekbench6CUJ,
+		Desc: "Run Geekbench 6 CPU benchmark to test device performance",
 		Contacts: []string{
 			"cros-sw-perf@google.com",
 			"vincentchiang@chromium.org",

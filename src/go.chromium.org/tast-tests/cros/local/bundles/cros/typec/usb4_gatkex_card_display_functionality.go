@@ -24,7 +24,6 @@ import (
 func init() {
 	testing.AddTest(&testing.Test{
 		Func:         USB4GatkexCardDisplayFunctionality,
-		LacrosStatus: testing.LacrosVariantUnneeded,
 		Desc:         "Verifies Display functionalities on USB4 Gatkex card connected to USB4 port using 40G passive cable after hot plug/unplug",
 		Contacts:     []string{"intel.chrome.automation.team@intel.com", "ambalavanan.m.m@intel.com"},
 		BugComponent: "b:157291", // ChromeOS > External > Intel

@@ -23,9 +23,8 @@ import (
 
 func init() {
 	testing.AddTest(&testing.Test{
-		Func:         WindowCyclePerDesk,
-		LacrosStatus: testing.LacrosVariantUnneeded,
-		Desc:         "Checks Alt+Tab and Alt+Shift+Tab functionality for cycling windows for each desk",
+		Func: WindowCyclePerDesk,
+		Desc: "Checks Alt+Tab and Alt+Shift+Tab functionality for cycling windows for each desk",
 		Contacts: []string{
 			"chromeos-wm@google.com",
 			"chromeos-consumer-engprod@google.com",

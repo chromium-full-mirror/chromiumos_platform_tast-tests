@@ -24,9 +24,8 @@ import (
 
 func init() {
 	testing.AddTest(&testing.Test{
-		Func:         TmuxManageTabs,
-		LacrosStatus: testing.LacrosVariantUnneeded,
-		Desc:         "Test management of tabs of Terminal app tmux integration",
+		Func: TmuxManageTabs,
+		Desc: "Test management of tabs of Terminal app tmux integration",
 		Contacts: []string{
 			"guestos-ui@google.com",
 			"lxj@google.com",

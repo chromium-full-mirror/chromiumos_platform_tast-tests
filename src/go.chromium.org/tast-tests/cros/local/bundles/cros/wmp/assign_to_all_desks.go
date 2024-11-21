@@ -27,9 +27,8 @@ import (
 
 func init() {
 	testing.AddTest(&testing.Test{
-		Func:         AssignToAllDesks,
-		LacrosStatus: testing.LacrosVariantUnneeded,
-		Desc:         "Assign apps to all desks",
+		Func: AssignToAllDesks,
+		Desc: "Assign apps to all desks",
 		Contacts: []string{
 			"chromeos-wm@google.com",
 			"chromeos-consumer-engprod@google.com",

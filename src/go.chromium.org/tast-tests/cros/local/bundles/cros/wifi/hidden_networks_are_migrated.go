@@ -33,7 +33,6 @@ type testConfig struct {
 func init() {
 	testing.AddTest(&testing.Test{
 		Func:           HiddenNetworksAreMigrated,
-		LacrosStatus:   testing.LacrosVariantUnneeded,
 		LifeCycleStage: testing.LifeCycleOwnerMonitored,
 		Desc:           "Tests that hidden networks are migrated, for more details see go/cros-hidden-ssid-dd-software",
 		Contacts:       []string{"cros-device-enablement@google.com", "chadduffin@google.com"},

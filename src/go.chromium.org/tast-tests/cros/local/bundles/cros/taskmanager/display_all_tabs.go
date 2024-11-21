@@ -26,9 +26,8 @@ import (
 
 func init() {
 	testing.AddTest(&testing.Test{
-		Func:         DisplayAllTabs,
-		LacrosStatus: testing.LacrosVariantUnneeded,
-		Desc:         "Test that all tabs should be displayed in the task manager",
+		Func: DisplayAllTabs,
+		Desc: "Test that all tabs should be displayed in the task manager",
 		Contacts: []string{
 			"chromeos-wm@google.com",
 			"chromeos-consumer-engprod@google.com",

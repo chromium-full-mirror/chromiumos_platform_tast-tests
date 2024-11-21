@@ -30,7 +30,6 @@ type audioArecordParams struct {
 func init() {
 	testing.AddTest(&testing.Test{
 		Func:         AudioArecord,
-		LacrosStatus: testing.LacrosVariantUnneeded,
 		Desc:         "Check that capture devices are listed correctly",
 		Contacts:     []string{"chromeos-audio-bugs@google.com", "normanbt@google.com"},
 		BugComponent: "b:1332660",

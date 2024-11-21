@@ -22,9 +22,8 @@ import (
 
 func init() {
 	testing.AddTest(&testing.Test{
-		Func:         ToggleWifiFromOsSettings,
-		LacrosStatus: testing.LacrosVariantUnneeded,
-		Desc:         "Enable and disable WiFi from ChromeOS Settings UI",
+		Func: ToggleWifiFromOsSettings,
+		Desc: "Enable and disable WiFi from ChromeOS Settings UI",
 		Contacts: []string{
 			"chromeos-connectivity-cienet-external@google.com",
 			"edgar.chang@cienet.com",

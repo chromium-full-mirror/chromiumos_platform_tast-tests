@@ -30,9 +30,8 @@ import (
 
 func init() {
 	testing.AddTest(&testing.Test{
-		Func:         OverviewCloseAllUndo,
-		LacrosStatus: testing.LacrosVariantUnneeded,
-		Desc:         "Checks the action to close all windows and desks can be canceled",
+		Func: OverviewCloseAllUndo,
+		Desc: "Checks the action to close all windows and desks can be canceled",
 		Contacts: []string{
 			"chromeos-wm@google.com",
 			"chromeos-consumer-engprod@google.com",

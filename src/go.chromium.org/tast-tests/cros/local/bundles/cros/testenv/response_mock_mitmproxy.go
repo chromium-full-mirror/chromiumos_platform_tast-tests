@@ -23,9 +23,8 @@ const (
 
 func init() {
 	testing.AddTest(&testing.Test{
-		Func:         ResponseMockMitmproxy,
-		LacrosStatus: testing.LacrosVariantUnneeded,
-		Desc:         "Verifies that mocking traffic response with mitmproxy",
+		Func: ResponseMockMitmproxy,
+		Desc: "Verifies that mocking traffic response with mitmproxy",
 		Contacts: []string{
 			"cros-ufo-testing@google.com",
 			"yanghenry@google.com",

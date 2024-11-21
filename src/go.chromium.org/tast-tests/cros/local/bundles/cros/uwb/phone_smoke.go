@@ -18,9 +18,8 @@ type phoneSmokeParam struct {
 
 func init() {
 	testing.AddTest(&testing.Test{
-		Func:         PhoneSmoke,
-		LacrosStatus: testing.LacrosVariantUnneeded,
-		Desc:         "Verifies that experimental testbeds with multiple Android peers can be accessed in lab infrastructure",
+		Func: PhoneSmoke,
+		Desc: "Verifies that experimental testbeds with multiple Android peers can be accessed in lab infrastructure",
 		Contacts: []string{
 			"chromeos-uwb-team@google.com",
 			"jstanko@google.com",

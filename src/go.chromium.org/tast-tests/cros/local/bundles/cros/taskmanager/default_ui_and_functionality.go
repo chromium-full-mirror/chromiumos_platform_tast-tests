@@ -24,9 +24,8 @@ import (
 
 func init() {
 	testing.AddTest(&testing.Test{
-		Func:         DefaultUIAndFunctionality,
-		LacrosStatus: testing.LacrosVariantUnneeded,
-		Desc:         "Verify Task Manager default UI and functionality",
+		Func: DefaultUIAndFunctionality,
+		Desc: "Verify Task Manager default UI and functionality",
 		Contacts: []string{
 			"chromeos-wm@google.com",
 			"chromeos-consumer-engprod@google.com",

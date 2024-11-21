@@ -20,9 +20,8 @@ import (
 
 func init() {
 	testing.AddTest(&testing.Test{
-		Func:         WindowRecorder,
-		LacrosStatus: testing.LacrosVariantUnneeded,
-		Desc:         "Verifies that the window recorder Tast API works",
+		Func: WindowRecorder,
+		Desc: "Verifies that the window recorder Tast API works",
 		Contacts: []string{
 			"chromeos-wm@google.com",
 			"chromeos-consumer-engprod@google.com",

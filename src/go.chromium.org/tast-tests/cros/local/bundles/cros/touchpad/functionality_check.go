@@ -25,7 +25,6 @@ type touchpadTestParams struct {
 func init() {
 	testing.AddTest(&testing.Test{
 		Func:         FunctionalityCheck,
-		LacrosStatus: testing.LacrosVariantUnneeded,
 		Desc:         "Verify Touchpad primary button clicks",
 		Contacts:     []string{"intel.chrome.automation.team@intel.com", "pathan.jilani@intel.com"},
 		BugComponent: "b:157291", // ChromeOS > External > Intel

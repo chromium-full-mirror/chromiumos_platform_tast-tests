@@ -18,9 +18,8 @@ import (
 
 func init() {
 	testing.AddTest(&testing.Test{
-		Func:         GoogleSheetsCUJ,
-		LacrosStatus: testing.LacrosVariantUnneeded,
-		Desc:         "Measures the total performance of critical user journey for Google Sheets",
+		Func: GoogleSheetsCUJ,
+		Desc: "Measures the total performance of critical user journey for Google Sheets",
 		Contacts: []string{
 			"cros-sw-perf@google.com",
 			"yichenz@chromium.org",

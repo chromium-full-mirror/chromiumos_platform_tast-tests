@@ -29,9 +29,8 @@ type dailyRefreshGooglePhotosWallpaperParams struct {
 
 func init() {
 	testing.AddTest(&testing.Test{
-		Func:         DailyRefreshGooglePhotosWallpaper,
-		LacrosStatus: testing.LacrosVariantUnneeded,
-		Desc:         "Test setting Google Photos wallpapers as daily refresh source",
+		Func: DailyRefreshGooglePhotosWallpaper,
+		Desc: "Test setting Google Photos wallpapers as daily refresh source",
 		Contacts: []string{
 			"assistive-eng@google.com",
 			"xiaohuic@google.com",

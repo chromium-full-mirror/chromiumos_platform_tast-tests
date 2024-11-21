@@ -21,7 +21,6 @@ import (
 func init() {
 	testing.AddTest(&testing.Test{
 		Func:         GpuCUJ,
-		LacrosStatus: testing.LacrosVariantUnneeded,
 		Desc:         "GPU performance CUJ tests",
 		Contacts:     []string{"cros-sw-perf@google.com", "ramsaroop@google.com"},
 		BugComponent: "b:1045832", // ChromeOS > Software > Performance > TPS

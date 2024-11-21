@@ -22,7 +22,6 @@ import (
 func init() {
 	testing.AddTest(&testing.Test{
 		Func:         Usb4HotplugUnplug,
-		LacrosStatus: testing.LacrosVariantUnneeded,
 		Desc:         "USB4 device enumeration check after hot plug-unplug",
 		Contacts:     []string{"intel.chrome.automation.team@intel.com", "pathan.jilani@intel.com"},
 		BugComponent: "b:157291", // ChromeOS > External > Intel

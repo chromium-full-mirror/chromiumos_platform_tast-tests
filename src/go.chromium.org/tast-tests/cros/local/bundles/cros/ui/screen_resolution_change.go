@@ -19,9 +19,8 @@ import (
 
 func init() {
 	testing.AddTest(&testing.Test{
-		Func:         ScreenResolutionChange,
-		LacrosStatus: testing.LacrosVariantUnneeded,
-		Desc:         "Verifies all supported screen resolution on an external display can be set",
+		Func: ScreenResolutionChange,
+		Desc: "Verifies all supported screen resolution on an external display can be set",
 		Contacts: []string{
 			"chromeos-velocity@google.com",
 			"yixie@google.com", // Test author

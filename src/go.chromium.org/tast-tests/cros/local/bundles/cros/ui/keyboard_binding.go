@@ -31,9 +31,8 @@ import (
 
 func init() {
 	testing.AddTest(&testing.Test{
-		Func:         KeyboardBinding,
-		LacrosStatus: testing.LacrosVariantUnneeded,
-		Desc:         "Change and disable keyboard key bindings from OS settings",
+		Func: KeyboardBinding,
+		Desc: "Change and disable keyboard key bindings from OS settings",
 		Contacts: []string{
 			"cros-device-enablement@google.com",
 			"michaelcheco@google.com",

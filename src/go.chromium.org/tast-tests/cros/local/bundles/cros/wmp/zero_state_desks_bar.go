@@ -21,9 +21,8 @@ import (
 
 func init() {
 	testing.AddTest(&testing.Test{
-		Func:         ZeroStateDesksBar,
-		LacrosStatus: testing.LacrosVariantUnneeded,
-		Desc:         "Checks that zero state desks bar in overview works correctly",
+		Func: ZeroStateDesksBar,
+		Desc: "Checks that zero state desks bar in overview works correctly",
 		Contacts: []string{
 			"chromeos-wm@google.com",
 			"chromeos-consumer-engprod@google.com",

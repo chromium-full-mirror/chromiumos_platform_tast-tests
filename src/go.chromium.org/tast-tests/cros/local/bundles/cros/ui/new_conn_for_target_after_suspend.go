@@ -16,7 +16,6 @@ import (
 func init() {
 	testing.AddTest(&testing.Test{
 		Func:         NewConnForTargetAfterSuspend,
-		LacrosStatus: testing.LacrosVariantUnneeded,
 		Desc:         "Tests re-establishing chrome connection after power suspension",
 		Contacts:     []string{"chromeos-sw-engprod@google.com", "jonfan@google.com"},
 		BugComponent: "b:1034649",

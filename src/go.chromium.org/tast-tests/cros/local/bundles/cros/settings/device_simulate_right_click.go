@@ -27,9 +27,8 @@ import (
 
 func init() {
 	testing.AddTest(&testing.Test{
-		Func:         DeviceSimulateRightClick,
-		LacrosStatus: testing.LacrosVariantUnneeded,
-		Desc:         "Verify the simulate right-click touchpad setting",
+		Func: DeviceSimulateRightClick,
+		Desc: "Verify the simulate right-click touchpad setting",
 		Contacts: []string{
 			"cros-device-enablement@google.com",
 			"chromeos-consumer-engprod@google.com",

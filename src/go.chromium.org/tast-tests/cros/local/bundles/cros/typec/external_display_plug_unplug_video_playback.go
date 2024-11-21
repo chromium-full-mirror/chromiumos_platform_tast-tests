@@ -30,7 +30,6 @@ type displayFunctionalities struct {
 func init() {
 	testing.AddTest(&testing.Test{
 		Func:         ExternalDisplayPlugUnplugVideoPlayback,
-		LacrosStatus: testing.LacrosVariantUnneeded,
 		Desc:         "Verifies HDMI plug/unplug using USB type-C adapter during audio/video playback",
 		Contacts:     []string{"intel.chrome.automation.team@intel.com", "ambalavanan.m.m@intel.com"},
 		BugComponent: "b:157291", // ChromeOS > External > Intel

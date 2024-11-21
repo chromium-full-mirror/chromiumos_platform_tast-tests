@@ -43,9 +43,8 @@ const (
 
 func init() {
 	testing.AddTest(&testing.Test{
-		Func:         SearchSections,
-		LacrosStatus: testing.LacrosVariantUnneeded,
-		Desc:         "Search with keywords and verify the related results from OS Settings",
+		Func: SearchSections,
+		Desc: "Search with keywords and verify the related results from OS Settings",
 		Contacts: []string{
 			"cros-settings@google.com",
 			"chromeos-consumer-engprod@google.com",

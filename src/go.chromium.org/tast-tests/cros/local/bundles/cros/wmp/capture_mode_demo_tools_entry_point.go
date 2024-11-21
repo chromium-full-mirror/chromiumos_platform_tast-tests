@@ -19,9 +19,8 @@ import (
 
 func init() {
 	testing.AddTest(&testing.Test{
-		Func:         CaptureModeDemoToolsEntryPoint,
-		LacrosStatus: testing.LacrosVariantUnneeded,
-		Desc:         "Verifies that we can enable the demo tools feature from the capture mode settings menu",
+		Func: CaptureModeDemoToolsEntryPoint,
+		Desc: "Verifies that we can enable the demo tools feature from the capture mode settings menu",
 		Contacts: []string{
 			"chromeos-wm@google.com",
 			"chromeos-consumer-engprod@google.com",

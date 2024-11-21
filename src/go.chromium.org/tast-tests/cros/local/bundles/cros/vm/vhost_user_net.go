@@ -28,7 +28,6 @@ const runVhostUserNetTest string = "run-vhost-user-net-test.sh"
 func init() {
 	testing.AddTest(&testing.Test{
 		Func:         VhostUserNet,
-		LacrosStatus: testing.LacrosVariantUnneeded,
 		Desc:         "Tests crosvm's vhost-user net device",
 		Contacts:     []string{"cros-virt-devices-guests@google.com", "keiichiw@google.com"},
 		BugComponent: "b:1248538",

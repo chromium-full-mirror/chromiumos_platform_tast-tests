@@ -31,7 +31,6 @@ func init() {
 	testing.AddTest(&testing.Test{
 		Func:           ScreenshotGoogleDrive,
 		LifeCycleStage: testing.LifeCycleInDevelopment,
-		LacrosStatus:   testing.LacrosVariantUnneeded,
 		Desc:           "Verifies saving screenshots to Google Drive when ScreenCaptureLocation policy is set",
 		BugComponent:   "b:1533988",
 		Contacts: []string{

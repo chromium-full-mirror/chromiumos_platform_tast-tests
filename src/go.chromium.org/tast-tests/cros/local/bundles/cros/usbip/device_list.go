@@ -18,9 +18,8 @@ import (
 
 func init() {
 	testing.AddTest(&testing.Test{
-		Func:         DeviceList,
-		LacrosStatus: testing.LacrosVariantUnneeded,
-		Desc:         "Verify device listing works",
+		Func: DeviceList,
+		Desc: "Verify device listing works",
 		Contacts: []string{
 			"chromeos-dev-engprod@google.com",
 			"mattlui@google.com",

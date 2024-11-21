@@ -20,7 +20,6 @@ import (
 func init() {
 	testing.AddTest(&testing.Test{
 		Func:         APBrowseInternet,
-		LacrosStatus: testing.LacrosVariantUnneeded,
 		Desc:         "WiFi AP connect and browse internet",
 		Contacts:     []string{"intel.chrome.automation.team@intel.com", "pathan.jilani@intel.com"},
 		BugComponent: "b:157291", // ChromeOS > External > Intel

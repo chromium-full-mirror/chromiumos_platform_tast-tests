@@ -42,7 +42,6 @@ type usbFileInfo struct {
 func init() {
 	testing.AddTest(&testing.Test{
 		Func:         USBStorageFunctionality,
-		LacrosStatus: testing.LacrosVariantUnneeded,
 		Desc:         "Verifies USB pendrive functionality on TBT Dock station and USB4 Gatkex card",
 		Contacts:     []string{"intel.chrome.automation.team@intel.com", "pathan.jilani@intel.com"},
 		BugComponent: "b:157291", // ChromeOS > External > Intel

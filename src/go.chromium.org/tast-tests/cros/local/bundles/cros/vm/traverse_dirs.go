@@ -56,7 +56,6 @@ func (tp testParam) String() string {
 func init() {
 	testing.AddTest(&testing.Test{
 		Func:         TraverseDirs,
-		LacrosStatus: testing.LacrosVariantUnneeded,
 		Desc:         "Shares a directory with the guest as read-only to check directory traversal",
 		Contacts:     []string{"cros-virt-devices-guests@google.com", "keiichiw@google.com"},
 		BugComponent: "b:1248538",

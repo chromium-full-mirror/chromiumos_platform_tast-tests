@@ -25,9 +25,8 @@ import (
 
 func init() {
 	testing.AddTest(&testing.Test{
-		Func:         VirtualDesksShortcuts,
-		LacrosStatus: testing.LacrosVariantUnneeded,
-		Desc:         "Checks that virtual desks shortcuts works correctly",
+		Func: VirtualDesksShortcuts,
+		Desc: "Checks that virtual desks shortcuts works correctly",
 		Contacts: []string{
 			"chromeos-wm@google.com",
 			"chromeos-consumer-engprod@google.com",

@@ -27,9 +27,8 @@ import (
 
 func init() {
 	testing.AddTest(&testing.Test{
-		Func:         AssignToNewDesk,
-		LacrosStatus: testing.LacrosVariantUnneeded,
-		Desc:         "Assign apps to a new desk",
+		Func: AssignToNewDesk,
+		Desc: "Assign apps to a new desk",
 		Contacts: []string{
 			"chromeos-wm@google.com",
 			"chromeos-consumer-engprod@google.com",

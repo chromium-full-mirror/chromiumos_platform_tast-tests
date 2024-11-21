@@ -25,9 +25,8 @@ import (
 
 func init() {
 	testing.AddTest(&testing.Test{
-		Func:         VerifyProxyOobe,
-		LacrosStatus: testing.LacrosVariantUnneeded,
-		Desc:         "Smoke test that verifies mitmproxy working even not in a user session before login",
+		Func: VerifyProxyOobe,
+		Desc: "Smoke test that verifies mitmproxy working even not in a user session before login",
 		Contacts: []string{
 			"cros-ufo-testing@google.com",
 			"yanghenry@google.com",

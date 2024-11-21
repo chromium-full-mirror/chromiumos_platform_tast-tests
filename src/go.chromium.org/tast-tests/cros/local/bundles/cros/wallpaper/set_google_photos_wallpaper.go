@@ -31,9 +31,8 @@ type setGooglePhotosWallpaperParams struct {
 
 func init() {
 	testing.AddTest(&testing.Test{
-		Func:         SetGooglePhotosWallpaper,
-		LacrosStatus: testing.LacrosVariantUnneeded,
-		Desc:         "Test setting Google Photos wallpapers in the wallpaper app",
+		Func: SetGooglePhotosWallpaper,
+		Desc: "Test setting Google Photos wallpapers in the wallpaper app",
 		Contacts: []string{
 			"cros-p13n-eng@google.com",
 			"chromeos-consumer-engprod@google.com",

@@ -29,9 +29,8 @@ const (
 
 func init() {
 	testing.AddTest(&testing.Test{
-		Func:         MahiGalleryCUJ,
-		LacrosStatus: testing.LacrosVariantUnneeded,
-		Desc:         "CUJ of Help Me Read feature on Gallery surface",
+		Func: MahiGalleryCUJ,
+		Desc: "CUJ of Help Me Read feature on Gallery surface",
 		Contacts: []string{
 			"chrome-knowledge-eng@google.com",
 			"alanlxl@google.com",

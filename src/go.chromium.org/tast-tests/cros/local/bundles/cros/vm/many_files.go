@@ -107,7 +107,6 @@ type manyFilesParams struct {
 func init() {
 	testing.AddTest(&testing.Test{
 		Func:         ManyFiles,
-		LacrosStatus: testing.LacrosVariantUnneeded,
 		Desc:         "Measure performances of touching many files",
 		Contacts:     []string{"cros-virt-devices-guests@google.com", "keiichiw@google.com"},
 		BugComponent: "b:1248538",

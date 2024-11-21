@@ -18,9 +18,8 @@ import (
 
 func init() {
 	testing.AddTest(&testing.Test{
-		Func:         WelcomeNextCancel,
-		LacrosStatus: testing.LacrosVariantUnneeded,
-		Desc:         "Can successfully start, go to next screen and cancel the Shimless RMA app",
+		Func: WelcomeNextCancel,
+		Desc: "Can successfully start, go to next screen and cancel the Shimless RMA app",
 		Contacts: []string{
 			"chromeos-shimless-eng@google.com",
 			"chenghan@google.com",

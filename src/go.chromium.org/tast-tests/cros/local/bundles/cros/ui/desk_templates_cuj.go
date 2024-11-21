@@ -29,9 +29,8 @@ import (
 
 func init() {
 	testing.AddTest(&testing.Test{
-		Func:         DeskTemplatesCUJ,
-		LacrosStatus: testing.LacrosVariantUnneeded,
-		Desc:         "Measures the performance of desks templates",
+		Func: DeskTemplatesCUJ,
+		Desc: "Measures the performance of desks templates",
 		Contacts: []string{
 			"chromeos-wm@google.com",
 			"cros-commercial-productivity-eng@google.com",

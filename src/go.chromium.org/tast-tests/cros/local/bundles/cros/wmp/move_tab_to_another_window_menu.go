@@ -25,9 +25,8 @@ import (
 
 func init() {
 	testing.AddTest(&testing.Test{
-		Func:         MoveTabToAnotherWindowMenu,
-		LacrosStatus: testing.LacrosVariantUnneeded,
-		Desc:         "Check if the move tab to another window menu is grouped by desks",
+		Func: MoveTabToAnotherWindowMenu,
+		Desc: "Check if the move tab to another window menu is grouped by desks",
 		Contacts: []string{
 			"chromeos-wm@google.com",
 			"chromeos-consumer-engprod@google.com",

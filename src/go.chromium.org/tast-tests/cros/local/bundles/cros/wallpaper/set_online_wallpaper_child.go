@@ -21,9 +21,8 @@ const notificationID = "time-limit-screen-time"
 
 func init() {
 	testing.AddTest(&testing.Test{
-		Func:         SetOnlineWallpaperChild,
-		LacrosStatus: testing.LacrosVariantUnneeded,
-		Desc:         "Test setting online wallpapers in the new wallpaper app for a child user",
+		Func: SetOnlineWallpaperChild,
+		Desc: "Test setting online wallpapers in the new wallpaper app for a child user",
 		Contacts: []string{
 			"cros-p13n-eng@google.com",
 			"chromeos-consumer-engprod@google.com",

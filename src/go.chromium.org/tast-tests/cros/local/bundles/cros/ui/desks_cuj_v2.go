@@ -25,9 +25,8 @@ import (
 
 func init() {
 	testing.AddTest(&testing.Test{
-		Func:         DesksCUJV2,
-		LacrosStatus: testing.LacrosVariantUnneeded,
-		Desc:         "Measures the performance of critical user journey for virtual desks",
+		Func: DesksCUJV2,
+		Desc: "Measures the performance of critical user journey for virtual desks",
 		Contacts: []string{
 			"cros-sw-perf@google.com",
 			"cienet-development@googlegroups.com",

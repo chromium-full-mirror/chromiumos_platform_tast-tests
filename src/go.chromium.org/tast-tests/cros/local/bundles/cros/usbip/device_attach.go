@@ -20,9 +20,8 @@ import (
 
 func init() {
 	testing.AddTest(&testing.Test{
-		Func:         DeviceAttach,
-		LacrosStatus: testing.LacrosVariantUnneeded,
-		Desc:         "Verify devices can be attached",
+		Func: DeviceAttach,
+		Desc: "Verify devices can be attached",
 		Contacts: []string{
 			"chromeos-dev-engprod@google.com",
 			"mattlui@google.com",

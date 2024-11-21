@@ -36,7 +36,6 @@ var outputNodeHDMIRe = regexp.MustCompile(`yes.*HDMI.*\d\*`)
 func init() {
 	testing.AddTest(&testing.Test{
 		Func:         YoutubeStreamHDMIDisplay,
-		LacrosStatus: testing.LacrosVariantNeeded,
 		Desc:         "Verifies Youtube stream with 4K display and checks display functionalities on HDMI monitor connected on USB type-C port",
 		Contacts:     []string{"intel.chrome.automation.team@intel.com", "ambalavanan.m.m@intel.com"},
 		BugComponent: "b:157291", // ChromeOS > External > Intel
@@ -334,7 +333,7 @@ func youtubePlayerFunctionalities(ctx context.Context, kb *input.KeyboardEventWr
 	}
 
 	// To mitigate test case failures caused by varying Chrome window modes across boards,
-        // standardize by maximizing the window. If already maximized, proceed without intervention.
+	// standardize by maximizing the window. If already maximized, proceed without intervention.
 	maximizeButton := nodewith.Name("Maximize").Role(role.Button)
 	if err := cui.WaitUntilExists(maximizeButton)(ctx); err == nil {
 		if err := kb.Accel(ctx, "alt+="); err != nil {

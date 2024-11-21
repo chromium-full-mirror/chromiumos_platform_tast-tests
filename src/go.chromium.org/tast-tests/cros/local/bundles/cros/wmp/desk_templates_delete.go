@@ -23,9 +23,8 @@ import (
 
 func init() {
 	testing.AddTest(&testing.Test{
-		Func:         DeskTemplatesDelete,
-		LacrosStatus: testing.LacrosVariantUnneeded,
-		Desc:         "Checks desk templates can be delete",
+		Func: DeskTemplatesDelete,
+		Desc: "Checks desk templates can be delete",
 		Contacts: []string{
 			"chromeos-wm@google.com",
 			"cros-commercial-productivity-eng@google.com",

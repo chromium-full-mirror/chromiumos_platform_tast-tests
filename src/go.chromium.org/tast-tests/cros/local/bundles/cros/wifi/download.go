@@ -40,7 +40,6 @@ func init() {
 		TestBedDeps:  []string{tbdep.WifiStateNormal},
 		Fixture:      "chromeLoggedIn",
 		Attr:         []string{"group:intel-wlan"},
-		LacrosStatus: testing.LacrosVariantUnneeded,
 		Vars:         []string{"wifissid", "wifipassword", "iterations", "wifi.usbDetectionName"},
 		Params: []testing.Param{{
 			Name: "quick",

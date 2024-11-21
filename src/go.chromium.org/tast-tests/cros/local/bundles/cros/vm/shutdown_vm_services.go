@@ -21,7 +21,6 @@ import (
 func init() {
 	testing.AddTest(&testing.Test{
 		Func:         ShutdownVMServices,
-		LacrosStatus: testing.LacrosVariantUnneeded,
 		Desc:         "Checks that vm service processes don't crash during process shutdown",
 		Contacts:     []string{"cros-virt-devices-guests@google.com", "chibar@google.com"},
 		BugComponent: "b:1248538",

@@ -31,9 +31,8 @@ import (
 
 func init() {
 	testing.AddTest(&testing.Test{
-		Func:         SpeakOnMuteTabPwa,
-		LacrosStatus: testing.LacrosVariantUnneeded,
-		Desc:         "Checks Speak-On-Mute is functional in Google Meet",
+		Func: SpeakOnMuteTabPwa,
+		Desc: "Checks Speak-On-Mute is functional in Google Meet",
 		Contacts: []string{
 			"cros-video-conference-tast-tests@google.com",
 			"xiuwen@google.com",

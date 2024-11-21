@@ -18,7 +18,6 @@ import (
 func init() {
 	testing.AddTest(&testing.Test{
 		Func:         StartAndStopSlimRootfs,
-		LacrosStatus: testing.LacrosVariantUnneeded,
 		Desc:         "Starts and stops a small Linux VM",
 		Contacts:     []string{"cros-virt-devices-guests@google.com", "uekawa@google.com"},
 		BugComponent: "b:1248538", // ChromeOS > Platform > Virtualization > Device and Guests

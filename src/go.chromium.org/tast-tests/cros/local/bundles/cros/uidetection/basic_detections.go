@@ -40,7 +40,6 @@ func init() {
 	testing.AddTest(&testing.Test{
 		Func:         BasicDetections,
 		Desc:         "Confirm that the image-based uidetection library works as intended",
-		LacrosStatus: testing.LacrosVariantUnneeded,
 		Contacts:     []string{"chromeos-dev-engprod@google.com", "alvinjia@google.com", "mattlui@google.com"},
 		BugComponent: "b:1453900", // ChromeOS -> EngProd -> Developer -> uidetection
 		Attr:         []string{"group:mainline", "informational"},

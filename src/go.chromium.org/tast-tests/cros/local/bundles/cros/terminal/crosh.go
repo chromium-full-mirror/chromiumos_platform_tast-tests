@@ -25,9 +25,8 @@ import (
 
 func init() {
 	testing.AddTest(&testing.Test{
-		Func:         Crosh,
-		LacrosStatus: testing.LacrosVariantUnneeded,
-		Desc:         "Verify crosh System Web App",
+		Func: Crosh,
+		Desc: "Verify crosh System Web App",
 		Contacts: []string{
 			"chrome-hterm@google.com",
 			"joelhockey@chromium.org",

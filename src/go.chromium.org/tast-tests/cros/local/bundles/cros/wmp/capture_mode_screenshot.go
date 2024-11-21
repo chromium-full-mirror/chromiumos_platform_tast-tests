@@ -19,9 +19,8 @@ import (
 
 func init() {
 	testing.AddTest(&testing.Test{
-		Func:         CaptureModeScreenshot,
-		LacrosStatus: testing.LacrosVariantUnneeded,
-		Desc:         "Take a fullscreen, partial or window screen shot by pressing the 'Screen capture' button in the quick settings and verify the existence of the screenshot",
+		Func: CaptureModeScreenshot,
+		Desc: "Take a fullscreen, partial or window screen shot by pressing the 'Screen capture' button in the quick settings and verify the existence of the screenshot",
 		Contacts: []string{
 			"chromeos-wm@google.com",
 			"chromeos-consumer-engprod@google.com",

@@ -20,9 +20,8 @@ import (
 
 func init() {
 	testing.AddTest(&testing.Test{
-		Func:         LaunchedApps,
-		LacrosStatus: testing.LacrosVariantUnneeded,
-		Desc:         "Checks that launched apps appear in the shelf",
+		Func: LaunchedApps,
+		Desc: "Checks that launched apps appear in the shelf",
 		Contacts: []string{
 			"cros-system-ui-eng@google.com",
 			"chromeos-consumer-engprod@google.com",

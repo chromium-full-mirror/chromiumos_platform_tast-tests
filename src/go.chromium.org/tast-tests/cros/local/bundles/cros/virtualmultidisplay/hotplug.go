@@ -15,10 +15,9 @@ import (
 
 func init() {
 	testing.AddTest(&testing.Test{
-		Func:         Hotplug,
-		LacrosStatus: testing.LacrosVariantUnneeded,
-		Desc:         "Ensures that the multi display test fixture is capable of display hotplugging",
-		Contacts:     []string{"arc-framework+tast@google.com", "brpol@google.com"},
+		Func:     Hotplug,
+		Desc:     "Ensures that the multi display test fixture is capable of display hotplugging",
+		Contacts: []string{"arc-framework+tast@google.com", "brpol@google.com"},
 		// ChromeOS > Software > ARC++ > Framework > Window Management
 		BugComponent: "b:537272",
 		Attr:         []string{"group:mainline", "group:criticalstaging", "informational", "group:hw_agnostic"},

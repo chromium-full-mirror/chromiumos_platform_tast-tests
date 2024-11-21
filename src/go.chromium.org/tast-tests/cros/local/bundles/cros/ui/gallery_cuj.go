@@ -17,9 +17,8 @@ import (
 
 func init() {
 	testing.AddTest(&testing.Test{
-		Func:         GalleryCUJ,
-		LacrosStatus: testing.LacrosVariantUnneeded,
-		Desc:         "Measure the performance of a critical user journey for the Gallery and files app",
+		Func: GalleryCUJ,
+		Desc: "Measure the performance of a critical user journey for the Gallery and files app",
 		Contacts: []string{
 			"cros-sw-perf@google.com",
 			"cienet-development@googlegroups.com",

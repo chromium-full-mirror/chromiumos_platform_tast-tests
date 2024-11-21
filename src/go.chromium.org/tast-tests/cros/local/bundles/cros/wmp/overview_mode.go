@@ -24,9 +24,8 @@ import (
 
 func init() {
 	testing.AddTest(&testing.Test{
-		Func:         OverviewMode,
-		LacrosStatus: testing.LacrosVariantUnneeded,
-		Desc:         "Checks that overview mode works correctly",
+		Func: OverviewMode,
+		Desc: "Checks that overview mode works correctly",
 		Contacts: []string{
 			"chromeos-wm@google.com",
 			"chromeos-consumer-engprod@google.com",

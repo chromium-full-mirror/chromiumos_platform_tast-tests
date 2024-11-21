@@ -35,7 +35,6 @@ type videoStressTestParams struct {
 func init() {
 	testing.AddTest(&testing.Test{
 		Func:         TBTDisplayVideoPlaybackStress,
-		LacrosStatus: testing.LacrosVariantUnneeded,
 		Desc:         "Verifies Youtube video playback on TBT display for long duration ",
 		Contacts:     []string{"intel.chrome.automation.team@intel.com", "ambalavanan.m.m@intel.com"},
 		BugComponent: "b:157291", // ChromeOS > External > Intel

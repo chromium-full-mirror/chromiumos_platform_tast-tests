@@ -18,9 +18,8 @@ import (
 
 func init() {
 	testing.AddTest(&testing.Test{
-		Func:         IWAExtensionConnection,
-		LacrosStatus: testing.LacrosVariantUnneeded,
-		Desc:         "Check if IWA(Isolated Web App) can send message to extension and get response",
+		Func: IWAExtensionConnection,
+		Desc: "Check if IWA(Isolated Web App) can send message to extension and get response",
 		Contacts: []string{
 			"chromeos-shimless-eng@google.com",
 		},

@@ -24,9 +24,8 @@ import (
 
 func init() {
 	testing.AddTest(&testing.Test{
-		Func:         Keyboard,
-		LacrosStatus: testing.LacrosVariantUnneeded,
-		Desc:         "Verify keyboard can emulate input and still works after reattaching",
+		Func: Keyboard,
+		Desc: "Verify keyboard can emulate input and still works after reattaching",
 		Contacts: []string{
 			"chromeos-engprod-syd@google.com",
 			"mattlui@google.com",

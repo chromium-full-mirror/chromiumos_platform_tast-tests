@@ -23,9 +23,8 @@ import (
 
 func init() {
 	testing.AddTest(&testing.Test{
-		Func:         DesksTemplatesLaunch,
-		LacrosStatus: testing.LacrosVariantUnneeded,
-		Desc:         "Checks desks templates can be launched",
+		Func: DesksTemplatesLaunch,
+		Desc: "Checks desks templates can be launched",
 		Contacts: []string{
 			"chromeos-wm@google.com",
 			"cros-commercial-productivity-eng@google.com",

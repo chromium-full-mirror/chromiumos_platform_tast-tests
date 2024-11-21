@@ -24,9 +24,8 @@ import (
 
 func init() {
 	testing.AddTest(&testing.Test{
-		Func:         CameraEffectsChromeRetain,
-		LacrosStatus: testing.LacrosVariantUnneeded,
-		Desc:         "Checks Video Effects retains after re-launching vc apps",
+		Func: CameraEffectsChromeRetain,
+		Desc: "Checks Video Effects retains after re-launching vc apps",
 		Contacts: []string{
 			"cros-video-conference-tast-tests@google.com",
 			"xiuwen@google.com",

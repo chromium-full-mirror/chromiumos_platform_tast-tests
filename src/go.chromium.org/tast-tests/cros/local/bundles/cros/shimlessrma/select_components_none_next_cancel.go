@@ -18,9 +18,8 @@ import (
 
 func init() {
 	testing.AddTest(&testing.Test{
-		Func:         SelectComponentsNoneNextCancel,
-		LacrosStatus: testing.LacrosVariantUnneeded,
-		Desc:         "Can successfully start in select components state, go to next screen and cancel the Shimless RMA app",
+		Func: SelectComponentsNoneNextCancel,
+		Desc: "Can successfully start in select components state, go to next screen and cancel the Shimless RMA app",
 		Contacts: []string{
 			"chromeos-shimless-eng@google.com",
 			"chenghan@google.com",

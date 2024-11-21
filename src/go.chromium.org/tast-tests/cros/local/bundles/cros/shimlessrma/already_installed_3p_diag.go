@@ -15,9 +15,8 @@ import (
 
 func init() {
 	testing.AddTest(&testing.Test{
-		Func:         AlreadyInstalled3pDiag,
-		LacrosStatus: testing.LacrosVariantUnneeded,
-		Desc:         "Check if we can open IWA(Isolated Web App) directly if it's already installed",
+		Func: AlreadyInstalled3pDiag,
+		Desc: "Check if we can open IWA(Isolated Web App) directly if it's already installed",
 		Contacts: []string{
 			"chromeos-shimless-eng@google.com",
 		},

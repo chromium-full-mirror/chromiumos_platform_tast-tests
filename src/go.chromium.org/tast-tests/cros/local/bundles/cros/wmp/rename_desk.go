@@ -23,9 +23,8 @@ import (
 
 func init() {
 	testing.AddTest(&testing.Test{
-		Func:         RenameDesk,
-		LacrosStatus: testing.LacrosVariantUnneeded,
-		Desc:         "Tests the behavior of renaming desks",
+		Func: RenameDesk,
+		Desc: "Tests the behavior of renaming desks",
 		Contacts: []string{
 			"chromeos-wm@google.com",
 			"chromeos-consumer-engprod@google.com",

@@ -26,7 +26,6 @@ const (
 func init() {
 	testing.AddTest(&testing.Test{
 		Func:         AudioLoopbackLatency,
-		LacrosStatus: testing.LacrosVariantUnneeded,
 		Desc:         "Measures loopback latency of different audio devices in crosvm",
 		Contacts:     []string{"chromeos-audio-bugs@google.com", "normanbt@chromium.org"},
 		BugComponent: "b:1332660",

@@ -22,9 +22,8 @@ import (
 
 func init() {
 	testing.AddTest(&testing.Test{
-		Func:         RecordFullScreen,
-		LacrosStatus: testing.LacrosVariantUnneeded,
-		Desc:         "Checks that full screen video record works correctly",
+		Func: RecordFullScreen,
+		Desc: "Checks that full screen video record works correctly",
 		Contacts: []string{
 			"chromeos-wm@google.com",
 			"chromeos-consumer-engprod@google.com",

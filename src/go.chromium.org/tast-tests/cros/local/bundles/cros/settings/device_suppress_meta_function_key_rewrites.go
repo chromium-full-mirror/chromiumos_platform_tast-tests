@@ -23,9 +23,8 @@ import (
 
 func init() {
 	testing.AddTest(&testing.Test{
-		Func:         DeviceSuppressMetaFunctionKeyRewrites,
-		LacrosStatus: testing.LacrosVariantUnneeded,
-		Desc:         "Test if user can suppress meta + function key rewrites",
+		Func: DeviceSuppressMetaFunctionKeyRewrites,
+		Desc: "Test if user can suppress meta + function key rewrites",
 		Contacts: []string{
 			"cros-device-enablement@google.com",
 			"chromeos-consumer-engprod@google.com",

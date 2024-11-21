@@ -24,9 +24,8 @@ import (
 
 func init() {
 	testing.AddTest(&testing.Test{
-		Func:         CameraEffectsChrome,
-		LacrosStatus: testing.LacrosVariantUnneeded,
-		Desc:         "Verify camera effects using screen test",
+		Func: CameraEffectsChrome,
+		Desc: "Verify camera effects using screen test",
 		Contacts: []string{
 			"cros-video-conference-tast-tests@google.com",
 			"xiuwen@google.com",

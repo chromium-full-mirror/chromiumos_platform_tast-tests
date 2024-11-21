@@ -22,7 +22,6 @@ func init() {
 	// Pre-requisite: Connect Type-A USB 3.0 pendrive to the DUT.
 	testing.AddTest(&testing.Test{
 		Func:         CopyFiles,
-		LacrosStatus: testing.LacrosVariantUnneeded,
 		Desc:         "Copy files between Downloads and USB (and vice versa)",
 		Contacts:     []string{"intel.chrome.automation.team@intel.com", "ambalavanan.m.m@intel.com"},
 		SoftwareDeps: []string{"chrome"},

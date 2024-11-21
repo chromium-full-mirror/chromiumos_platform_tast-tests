@@ -27,7 +27,6 @@ const clearTimeout = 6 * time.Hour
 func init() {
 	testing.AddTest(&testing.Test{
 		Func:         ClearGoogleDriveFiles,
-		LacrosStatus: testing.LacrosVariantUnneeded,
 		Desc:         "Clear all files in Google Drive before yesterday",
 		Contacts:     []string{"chicheny@google.com"},
 		BugComponent: "b:1045832",

@@ -28,9 +28,8 @@ const (
 
 func init() {
 	testing.AddTest(&testing.Test{
-		Func:         OverviewDragWindowToNewDesk,
-		LacrosStatus: testing.LacrosVariantUnneeded,
-		Desc:         "Checks that drag window to new desk in overview mode works correctly",
+		Func: OverviewDragWindowToNewDesk,
+		Desc: "Checks that drag window to new desk in overview mode works correctly",
 		Contacts: []string{
 			"chromeos-wm@google.com",
 			"chromeos-consumer-engprod@google.com",

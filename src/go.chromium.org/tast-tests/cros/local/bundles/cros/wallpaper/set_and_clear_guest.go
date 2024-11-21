@@ -25,9 +25,8 @@ import (
 
 func init() {
 	testing.AddTest(&testing.Test{
-		Func:         SetAndClearGuest,
-		LacrosStatus: testing.LacrosVariantUnneeded,
-		Desc:         "Test setting guest wallpaper is cleared on next login",
+		Func: SetAndClearGuest,
+		Desc: "Test setting guest wallpaper is cleared on next login",
 		Contacts: []string{
 			"cros-p13n-eng@google.com",
 			"chromeos-consumer-engprod@google.com",

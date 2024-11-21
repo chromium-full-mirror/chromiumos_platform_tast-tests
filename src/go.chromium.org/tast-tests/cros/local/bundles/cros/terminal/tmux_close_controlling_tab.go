@@ -20,9 +20,8 @@ import (
 
 func init() {
 	testing.AddTest(&testing.Test{
-		Func:         TmuxCloseControllingTab,
-		LacrosStatus: testing.LacrosVariantUnneeded,
-		Desc:         "Verify closing the controlling tab in Terminal app tmux integration",
+		Func: TmuxCloseControllingTab,
+		Desc: "Verify closing the controlling tab in Terminal app tmux integration",
 		Contacts: []string{
 			"guestos-ui@google.com",
 			"lxj@google.com",
