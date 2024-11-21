@@ -25,7 +25,6 @@ import (
 	"go.chromium.org/tast-tests/cros/local/policyutil"
 	"go.chromium.org/tast-tests/cros/local/screenshot"
 	"go.chromium.org/tast-tests/cros/local/syslog"
-
 	"go.chromium.org/tast/core/ctxutil"
 	"go.chromium.org/tast/core/errors"
 	"go.chromium.org/tast/core/testing"
@@ -245,7 +244,7 @@ func init() {
 	testing.AddFixture(&testing.Fixture{
 		Name:         fixture.ChromeAdminDeskTemplatesLoggedIn,
 		Desc:         "Logged into a user session with admin desk templates",
-		Contacts:     []string{"zhumatthew@google.com", "chromeos-commercial-remote-management@google.com"},
+		Contacts:     []string{"aprilzhou@google.com", "chromeos-commercial-remote-management@google.com"},
 		BugComponent: "b:1111617", // ChromeOS > Software > Commercial (Enterprise) > Remote Management > Policy Stack
 		Impl: &policyChromeFixture{
 			extraOptsFunc: func(ctx context.Context, s *testing.FixtState) ([]chrome.Option, error) {

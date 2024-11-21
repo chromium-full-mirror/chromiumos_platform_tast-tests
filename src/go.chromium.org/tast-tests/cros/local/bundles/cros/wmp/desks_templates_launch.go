@@ -29,7 +29,6 @@ func init() {
 			"chromeos-wm@google.com",
 			"cros-commercial-productivity-eng@google.com",
 			"chromeos-sw-engprod@google.com",
-			"zhumatthew@google.com",
 			"yzd@google.com",
 		},
 		// Chrome OS Server Projects > Enterprise Management > Commercial Productivity

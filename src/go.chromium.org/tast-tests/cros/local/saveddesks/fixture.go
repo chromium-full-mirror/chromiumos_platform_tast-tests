@@ -40,7 +40,7 @@ func init() {
 		Desc: "Saved desks features enabled without ARC",
 		Contacts: []string{
 			"cros-commercial-productivity-eng@google.com",
-			"zhumatthew@google.com",
+			"aprilzhou@google.com",
 		},
 		BugComponent: "b:1020793", // ChromeOS Server Projects > Enterprise Management > Commercial Productivity
 		Impl: bootedWithFixture(func(ctx context.Context, s *testing.FixtState) ([]chrome.Option, error) {

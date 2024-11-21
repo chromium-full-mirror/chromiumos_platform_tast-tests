@@ -23,7 +23,7 @@ func init() {
 		Desc: "Check if we can create a template on one device and receive it on another one when desk template sync is enabled",
 		Contacts: []string{
 			"cros-commercial-productivity-eng@google.com",
-			"zhumatthew@google.com",
+			"aprilzhou@google.com",
 		},
 		// Chrome OS Server Projects > Enterprise Management > Commercial Productivity
 		BugComponent: "b:1020793",

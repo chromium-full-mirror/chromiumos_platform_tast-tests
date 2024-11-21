@@ -31,7 +31,6 @@ func init() {
 			"chromeos-sw-engprod@google.com",
 			"yongshun@chromium.org",
 			"yzd@google.com",
-			"zhumatthew@google.com",
 		},
 		// Chrome OS Server Projects > Enterprise Management > Commercial Productivity
 		BugComponent: "b:1020793",
