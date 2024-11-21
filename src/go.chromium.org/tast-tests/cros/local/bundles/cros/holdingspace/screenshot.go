@@ -31,7 +31,6 @@ type screenshotParams struct {
 func init() {
 	testing.AddTest(&testing.Test{
 		Func:         Screenshot,
-		LacrosStatus: testing.LacrosVariantUnneeded,
 		Desc:         "Verifies screenshot behavior in holding space",
 		BugComponent: "b:1268276", // ChromeOS > Software > System UI Surfaces > HoldingSpace
 		Contacts: []string{

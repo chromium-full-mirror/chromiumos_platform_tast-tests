@@ -18,7 +18,6 @@ func init() {
 	testing.AddTest(&testing.Test{
 		BugComponent: "b:1029735",
 		Func:         BootidLogger,
-		LacrosStatus: testing.LacrosVariantUnneeded,
 		Desc:         "Tests related to bootid-logger",
 		Contacts:     []string{"chromeos-velocity@google.com", "yoshiki@chromium.org"},
 		// b/267781987: Disable unclaimed Tast tests

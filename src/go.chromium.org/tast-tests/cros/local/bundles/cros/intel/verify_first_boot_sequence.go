@@ -26,7 +26,6 @@ import (
 func init() {
 	testing.AddTest(&testing.Test{
 		Func:         VerifyFirstBootSequence,
-		LacrosStatus: testing.LacrosVariantUnneeded,
 		Desc:         "Verify first boot sequence",
 		Contacts:     []string{"intel.chrome.automation.team@intel.com", "ambalavanan.m.m@intel.com"},
 		BugComponent: "b:157291",

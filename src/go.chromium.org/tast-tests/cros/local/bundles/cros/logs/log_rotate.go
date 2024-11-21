@@ -23,7 +23,6 @@ func init() {
 	testing.AddTest(&testing.Test{
 		BugComponent: "b:1029735",
 		Func:         LogRotate,
-		LacrosStatus: testing.LacrosVariantUnneeded,
 		Desc:         "Tests to run log_rotator",
 		Contacts:     []string{"chromeos-velocity@google.com", "yoshiki@chromium.org"},
 		// b/267781987: Disable unclaimed Tast tests

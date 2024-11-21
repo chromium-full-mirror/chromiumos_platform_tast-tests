@@ -25,9 +25,8 @@ import (
 
 func init() {
 	testing.AddTest(&testing.Test{
-		Func:         SwipeToggleLauncher,
-		LacrosStatus: testing.LacrosVariantUnneeded,
-		Desc:         "Verify the swipe gesture to show and hide bubble launcher",
+		Func: SwipeToggleLauncher,
+		Desc: "Verify the swipe gesture to show and hide bubble launcher",
 		Contacts: []string{
 			"chromeos-launcher@google.com",
 			"chromeos-sw-engprod@google.com",

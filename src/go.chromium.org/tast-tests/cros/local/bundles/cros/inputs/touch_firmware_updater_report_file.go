@@ -37,9 +37,8 @@ var unstableModels = []string{
 
 func init() {
 	testing.AddTest(&testing.Test{
-		Func:         TouchFirmwareUpdaterReportFile,
-		LacrosStatus: testing.LacrosVariantUnneeded,
-		Desc:         "Validates touch firmware information is always available after boot and not empty",
+		Func: TouchFirmwareUpdaterReportFile,
+		Desc: "Validates touch firmware information is always available after boot and not empty",
 		Contacts: []string{
 			"chromeos-tango@google.com",
 		},

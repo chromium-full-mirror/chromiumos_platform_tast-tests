@@ -20,9 +20,8 @@ import (
 
 func init() {
 	testing.AddTest(&testing.Test{
-		Func:         CrossVersionAuthFactor,
-		LacrosStatus: testing.LacrosVariantUnneeded,
-		Desc:         "Verifies functionality of auth factors across the version",
+		Func: CrossVersionAuthFactor,
+		Desc: "Verifies functionality of auth factors across the version",
 		Contacts: []string{
 			"cros-hwsec@google.com",
 			"chingkang@google.com",

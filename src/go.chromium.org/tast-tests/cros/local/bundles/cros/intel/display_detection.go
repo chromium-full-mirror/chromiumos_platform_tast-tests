@@ -27,7 +27,6 @@ type displayTestParams struct {
 func init() {
 	testing.AddTest(&testing.Test{
 		Func:         DisplayDetection,
-		LacrosStatus: testing.LacrosVariantUnneeded,
 		Desc:         "Verifies external display detection",
 		Contacts:     []string{"intel.chrome.automation.team@intel.com", "pathan.jilani@intel.com"},
 		BugComponent: "b:157291", // ChromeOS > External > Intel

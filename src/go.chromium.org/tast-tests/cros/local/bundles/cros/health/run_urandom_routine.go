@@ -15,9 +15,8 @@ import (
 
 func init() {
 	testing.AddTest(&testing.Test{
-		Func:         RunUrandomRoutine,
-		LacrosStatus: testing.LacrosVariantUnneeded,
-		Desc:         "Checks that cros_healthd can run urandom routine",
+		Func: RunUrandomRoutine,
+		Desc: "Checks that cros_healthd can run urandom routine",
 		Contacts: []string{
 			"cros-tdm-tpe-eng@google.com",
 			"yycheng@google.com",

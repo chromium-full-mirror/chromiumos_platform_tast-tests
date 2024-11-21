@@ -37,9 +37,8 @@ const (
 
 func init() {
 	testing.AddTest(&testing.Test{
-		Func:         SSO,
-		LacrosStatus: testing.LacrosVariantUnneeded,
-		Desc:         "Verifies in-session sso with Google services for managed accounts on unmanaged device",
+		Func: SSO,
+		Desc: "Verifies in-session sso with Google services for managed accounts on unmanaged device",
 		Contacts: []string{
 			"cros-3pidp@google.com",
 			"mslus@chromium.org",

@@ -18,7 +18,6 @@ import (
 func init() {
 	testing.AddTest(&testing.Test{
 		Func:         LPDDR5MemoryCheck,
-		LacrosStatus: testing.LacrosVariantUnneeded,
 		Desc:         "Verifies maximum data rate of LPDDR5 memory",
 		Contacts:     []string{"intel.chrome.automation.team@intel.com", "ambalavanan.m.m@intel.com"},
 		BugComponent: "b:157291", // ChromeOS > External > Intel

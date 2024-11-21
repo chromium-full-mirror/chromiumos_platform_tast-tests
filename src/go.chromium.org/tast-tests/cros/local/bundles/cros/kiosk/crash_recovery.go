@@ -37,9 +37,8 @@ const chromeAppWindowHeading = "Simple Print Sample"
 
 func init() {
 	testing.AddTest(&testing.Test{
-		Func:         CrashRecovery,
-		Desc:         "Verifies crash recovery flow for kiosk sessions",
-		LacrosStatus: testing.LacrosVariantUnneeded,
+		Func: CrashRecovery,
+		Desc: "Verifies crash recovery flow for kiosk sessions",
 		Contacts: []string{
 			"chromeos-kiosk-eng+TAST@google.com",
 			"macinashutosh@google.com", // Test author

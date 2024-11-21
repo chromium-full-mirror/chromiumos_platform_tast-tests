@@ -28,9 +28,8 @@ import (
 
 func init() {
 	testing.AddTest(&testing.Test{
-		Func:         ChangePin,
-		LacrosStatus: testing.LacrosVariantUnneeded,
-		Desc:         "Checks pin change flow in OS Settings for Pin only user",
+		Func: ChangePin,
+		Desc: "Checks pin change flow in OS Settings for Pin only user",
 		Contacts: []string{
 			"cros-lurs@google.com",
 			"iscsi@google.com",

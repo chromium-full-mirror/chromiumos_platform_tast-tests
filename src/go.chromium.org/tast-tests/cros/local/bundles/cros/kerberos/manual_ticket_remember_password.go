@@ -32,8 +32,7 @@ func init() {
 		Func: ManualTicketRememberPassword,
 		// Kerberos integration with Lacros will be covered by the
 		// kerberos.ManualTicketAccessWebsite tast.
-		LacrosStatus: testing.LacrosVariantUnneeded,
-		Desc:         "Checks if the remember password feature is working properly",
+		Desc: "Checks if the remember password feature is working properly",
 		Contacts: []string{
 			"cros-3pidp@google.com",
 			"slutskii@google.com",

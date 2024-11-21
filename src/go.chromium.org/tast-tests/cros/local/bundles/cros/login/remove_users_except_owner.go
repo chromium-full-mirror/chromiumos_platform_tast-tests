@@ -24,9 +24,8 @@ import (
 
 func init() {
 	testing.AddTest(&testing.Test{
-		Func:         RemoveUsersExceptOwner,
-		Desc:         "Checks if device owner can remove other users, but not self (on the Settings page)",
-		LacrosStatus: testing.LacrosVariantUnneeded,
+		Func: RemoveUsersExceptOwner,
+		Desc: "Checks if device owner can remove other users, but not self (on the Settings page)",
 		Contacts: []string{
 			"cros-lurs@google.com",
 			"jaflis@google.com",

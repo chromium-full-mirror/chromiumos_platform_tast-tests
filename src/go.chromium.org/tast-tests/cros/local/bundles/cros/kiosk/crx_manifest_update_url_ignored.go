@@ -23,9 +23,8 @@ import (
 
 func init() {
 	testing.AddTest(&testing.Test{
-		Func:         CRXManifestUpdateURLIgnored,
-		LacrosStatus: testing.LacrosVariantUnneeded,
-		Desc:         "Checks if CRXManifestUpdateURLIgnored policy is correctly reflected in update mechanism of extensions",
+		Func: CRXManifestUpdateURLIgnored,
+		Desc: "Checks if CRXManifestUpdateURLIgnored policy is correctly reflected in update mechanism of extensions",
 		Contacts: []string{
 			"chromeos-commercial-chrome-apps-and-extensions@google.com", // Test owner
 			"chromeos-kiosk-eng+TAST@google.com",

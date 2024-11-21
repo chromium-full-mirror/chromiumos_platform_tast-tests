@@ -18,7 +18,6 @@ func init() {
 	testing.AddTest(&testing.Test{
 		BugComponent: "b:1166446",
 		Func:         NetworkEventLog,
-		LacrosStatus: testing.LacrosVariantUnneeded,
 		Desc:         "Tests that the network_event_log section of the system logs has no ERROR entries",
 		Contacts: []string{
 			"cros-network-health-team@google.com", // Team alias

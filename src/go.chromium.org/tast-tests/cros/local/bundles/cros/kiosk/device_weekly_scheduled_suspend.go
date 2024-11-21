@@ -54,9 +54,8 @@ var (
 
 func init() {
 	testing.AddTest(&testing.Test{
-		Func:         DeviceWeeklyScheduledSuspend,
-		LacrosStatus: testing.LacrosVariantUnneeded,
-		Desc:         "Checks that kiosk device sleeps on schedule with policy DeviceWeeklyScheduledSuspend",
+		Func: DeviceWeeklyScheduledSuspend,
+		Desc: "Checks that kiosk device sleeps on schedule with policy DeviceWeeklyScheduledSuspend",
 		Contacts: []string{
 			"ghostbusters-reviews+TAST@google.com",
 			"chromeos-kiosk-eng+TAST@google.com",

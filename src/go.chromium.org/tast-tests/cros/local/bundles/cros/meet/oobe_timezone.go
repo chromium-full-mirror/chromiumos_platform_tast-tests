@@ -16,9 +16,8 @@ import (
 
 func init() {
 	testing.AddTest(&testing.Test{
-		Func:         OobeTimezone,
-		LacrosStatus: testing.LacrosVariantUnneeded,
-		Desc:         "Test that verifies OOBE timezones accuracy, accounting for accurate offsets and unique timezone entries",
+		Func: OobeTimezone,
+		Desc: "Test that verifies OOBE timezones accuracy, accounting for accurate offsets and unique timezone entries",
 		Contacts: []string{
 			"core-devices@google.com",
 			"joshuapius@google.com", // Test author

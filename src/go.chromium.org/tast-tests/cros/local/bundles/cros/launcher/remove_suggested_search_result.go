@@ -29,9 +29,8 @@ var removalDialogFinder = nodewith.Role(role.Dialog).NameContaining("Remove this
 
 func init() {
 	testing.AddTest(&testing.Test{
-		Func:         RemoveSuggestedSearchResult,
-		LacrosStatus: testing.LacrosVariantUnneeded,
-		Desc:         "Verifies the user us able to remove omnibox search suggestions from launcher search UI",
+		Func: RemoveSuggestedSearchResult,
+		Desc: "Verifies the user us able to remove omnibox search suggestions from launcher search UI",
 		Contacts: []string{
 			"chromeos-launcher@google.com",
 			"chromeos-sw-engprod@google.com",

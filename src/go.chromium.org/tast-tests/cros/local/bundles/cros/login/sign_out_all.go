@@ -24,9 +24,8 @@ import (
 
 func init() {
 	testing.AddTest(&testing.Test{
-		Func:         SignOutAll,
-		LacrosStatus: testing.LacrosVariantUnneeded,
-		Desc:         "Verify that the sign in page shows after signing out multi-users by clicking button from uber tray",
+		Func: SignOutAll,
+		Desc: "Verify that the sign in page shows after signing out multi-users by clicking button from uber tray",
 		Contacts: []string{
 			"cros-lurs@google.com",
 			"awendy@google.com",

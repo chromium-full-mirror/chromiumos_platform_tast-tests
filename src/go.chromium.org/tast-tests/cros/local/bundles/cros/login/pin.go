@@ -28,9 +28,8 @@ type testParam struct {
 
 func init() {
 	testing.AddTest(&testing.Test{
-		Func:         Pin,
-		LacrosStatus: testing.LacrosVariantUnneeded,
-		Desc:         "Test pin enrollment, pin unlock and pin login",
+		Func: Pin,
+		Desc: "Test pin enrollment, pin unlock and pin login",
 		Contacts: []string{
 			"cros-oobe@google.com",
 			"emaamari@google.com",

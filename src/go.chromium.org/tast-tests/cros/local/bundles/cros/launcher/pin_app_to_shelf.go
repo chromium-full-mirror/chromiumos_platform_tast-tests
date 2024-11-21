@@ -23,9 +23,8 @@ import (
 
 func init() {
 	testing.AddTest(&testing.Test{
-		Func:         PinAppToShelf,
-		LacrosStatus: testing.LacrosVariantUnneeded,
-		Desc:         "Using Launcher To Pin Application to Shelf",
+		Func: PinAppToShelf,
+		Desc: "Using Launcher To Pin Application to Shelf",
 		Contacts: []string{
 			"chromeos-launcher@google.com",
 			"chromeos-sw-engprod@google.com",

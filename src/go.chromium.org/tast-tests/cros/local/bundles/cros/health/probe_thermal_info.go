@@ -40,9 +40,8 @@ const maxTemperatureDelta = 10
 
 func init() {
 	testing.AddTest(&testing.Test{
-		Func:         ProbeThermalInfo,
-		LacrosStatus: testing.LacrosVariantUnneeded,
-		Desc:         "Check that we can probe cros_healthd for thermal info",
+		Func: ProbeThermalInfo,
+		Desc: "Check that we can probe cros_healthd for thermal info",
 		Contacts: []string{
 			"cros-tdm-tpe-eng@google.com",
 			"yycheng@google.com",

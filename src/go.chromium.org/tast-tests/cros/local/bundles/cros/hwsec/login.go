@@ -18,9 +18,8 @@ import (
 
 func init() {
 	testing.AddTest(&testing.Test{
-		Func:         Login,
-		LacrosStatus: testing.LacrosVariantUnneeded,
-		Desc:         "Verifies the cryptohome is mounted only after login",
+		Func: Login,
+		Desc: "Verifies the cryptohome is mounted only after login",
 		Contacts: []string{
 			"cros-hwsec@google.com",
 			"achuith@chromium.org",  // Original autotest author

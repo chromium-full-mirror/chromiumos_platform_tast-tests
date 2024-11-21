@@ -18,10 +18,9 @@ import (
 
 func init() {
 	testing.AddTest(&testing.Test{
-		Func:         ChapsPKCS1V15,
-		LacrosStatus: testing.LacrosVariantUnneeded,
-		Desc:         "Verifies PKCS#1 v1.5 works with RSA keys (sign, verify) in chaps",
-		Attr:         []string{"group:mainline", "group:chaps"},
+		Func: ChapsPKCS1V15,
+		Desc: "Verifies PKCS#1 v1.5 works with RSA keys (sign, verify) in chaps",
+		Attr: []string{"group:mainline", "group:chaps"},
 		Contacts: []string{
 			"cros-hwsec@google.com",
 			"zuan@chromium.org",

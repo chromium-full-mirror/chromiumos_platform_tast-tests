@@ -24,9 +24,8 @@ import (
 
 func init() {
 	testing.AddTest(&testing.Test{
-		Func:         SignInWithLotsOfUsers,
-		LacrosStatus: testing.LacrosVariantUnneeded,
-		Desc:         "Test user pods are all visible in the login screen and each user can log in accordingly",
+		Func: SignInWithLotsOfUsers,
+		Desc: "Test user pods are all visible in the login screen and each user can log in accordingly",
 		Contacts: []string{
 			"cros-lurs@google.com",
 			"emaamari@google.com",

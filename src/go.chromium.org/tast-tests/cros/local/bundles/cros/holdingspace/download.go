@@ -48,7 +48,6 @@ type downloadArguments struct {
 func init() {
 	testing.AddTest(&testing.Test{
 		Func:         Download,
-		LacrosStatus: testing.LacrosVariantUnneeded,
 		Desc:         "Verifies download behavior in holding space",
 		BugComponent: "b:1268276", // ChromeOS > Software > System UI Surfaces > HoldingSpace
 		Contacts: []string{

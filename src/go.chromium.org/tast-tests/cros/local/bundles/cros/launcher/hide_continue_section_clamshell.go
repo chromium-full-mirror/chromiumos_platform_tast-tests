@@ -21,9 +21,8 @@ import (
 
 func init() {
 	testing.AddTest(&testing.Test{
-		Func:         HideContinueSectionClamshell,
-		LacrosStatus: testing.LacrosVariantUnneeded,
-		Desc:         "Tests that the clamshell launcher continue section can be hidden",
+		Func: HideContinueSectionClamshell,
+		Desc: "Tests that the clamshell launcher continue section can be hidden",
 		Contacts: []string{
 			"chromeos-launcher@google.com",
 			"chromeos-sw-engprod@google.com",

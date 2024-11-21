@@ -32,9 +32,8 @@ type initParams struct {
 
 func init() {
 	testing.AddTest(&testing.Test{
-		Func:         RecentApps,
-		LacrosStatus: testing.LacrosVariantUnneeded,
-		Desc:         "Verify that different types of apps show in the recent apps section",
+		Func: RecentApps,
+		Desc: "Verify that different types of apps show in the recent apps section",
 		Contacts: []string{
 			"chromeos-launcher@google.com",
 			"chromeos-sw-engprod@google.com",

@@ -29,7 +29,6 @@ import (
 func init() {
 	testing.AddTest(&testing.Test{
 		Func:         InputMethodShelf,
-		LacrosStatus: testing.LacrosVariantUnneeded,
 		Desc:         "Verifies that user can toggle shelf option and switch inut method",
 		Contacts:     []string{"essential-inputs-gardener-oncall@google.com", "essential-inputs-team@google.com"},
 		BugComponent: "b:95887",

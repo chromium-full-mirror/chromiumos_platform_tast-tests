@@ -62,9 +62,8 @@ var (
 
 func init() {
 	testing.AddTest(&testing.Test{
-		Func:         Smoke,
-		Desc:         "Verifies core flows of Kiosk sessions",
-		LacrosStatus: testing.LacrosVariantUnneeded,
+		Func: Smoke,
+		Desc: "Verifies core flows of Kiosk sessions",
 		Contacts: []string{
 			"chromeos-kiosk-eng+TAST@google.com",
 			"edmanp@google.com", // Test author

@@ -26,9 +26,8 @@ type statefulPartitionInfo struct {
 
 func init() {
 	testing.AddTest(&testing.Test{
-		Func:         ProbeStatefulPartitionInfo,
-		LacrosStatus: testing.LacrosVariantUnneeded,
-		Desc:         "Checks that cros_healthd can fetch stateful partition info",
+		Func: ProbeStatefulPartitionInfo,
+		Desc: "Checks that cros_healthd can fetch stateful partition info",
 		Contacts: []string{
 			"cros-tdm-tpe-eng@google.com",
 			"dennyh@google.com",

@@ -32,9 +32,8 @@ const (
 
 func init() {
 	testing.AddTest(&testing.Test{
-		Func:         ExistingUser,
-		LacrosStatus: testing.LacrosVariantUnneeded,
-		Desc:         "Checks that an existing device user can login from the login screen",
+		Func: ExistingUser,
+		Desc: "Checks that an existing device user can login from the login screen",
 		Contacts: []string{
 			"cros-lurs@google.com",
 			"rrsilva@google.com",

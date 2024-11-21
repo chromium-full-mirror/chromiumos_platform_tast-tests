@@ -16,7 +16,6 @@ func init() {
 	testing.AddTest(&testing.Test{
 		BugComponent: "b:1166446",
 		Func:         Smoke,
-		LacrosStatus: testing.LacrosVariantUnneeded,
 		Desc:         "Tests that writing system logs succeeds",
 		Contacts: []string{
 			"cros-network-health-team@google.com", // Team alias

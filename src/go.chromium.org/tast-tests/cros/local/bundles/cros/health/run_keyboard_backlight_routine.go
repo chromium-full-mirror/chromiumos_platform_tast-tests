@@ -20,9 +20,8 @@ import (
 
 func init() {
 	testing.AddTest(&testing.Test{
-		Func:         RunKeyboardBacklightRoutine,
-		LacrosStatus: testing.LacrosVariantUnneeded,
-		Desc:         "Checks that cros_healthd can run keyboard backlight routine",
+		Func: RunKeyboardBacklightRoutine,
+		Desc: "Checks that cros_healthd can run keyboard backlight routine",
 		Contacts: []string{
 			"cros-tdm-tpe-eng@google.com",
 			"weiluanwang@google.com",

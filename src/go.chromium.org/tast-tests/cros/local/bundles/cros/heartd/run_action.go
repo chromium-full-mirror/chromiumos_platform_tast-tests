@@ -17,9 +17,8 @@ import (
 
 func init() {
 	testing.AddTest(&testing.Test{
-		Func:         RunAction,
-		LacrosStatus: testing.LacrosVariantUnneeded,
-		Desc:         "Checks that we can run the action without crash",
+		Func: RunAction,
+		Desc: "Checks that we can run the action without crash",
 		Contacts: []string{
 			"cros-tdm-tpe-eng@google.com",
 			"byronlee@chromium.org",

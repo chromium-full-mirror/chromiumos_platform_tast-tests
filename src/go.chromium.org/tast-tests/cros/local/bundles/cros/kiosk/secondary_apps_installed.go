@@ -32,7 +32,6 @@ type secondaryAppsInstalledParam struct {
 func init() {
 	testing.AddTest(&testing.Test{
 		Func:         SecondaryAppsInstalled,
-		LacrosStatus: testing.LacrosVariantUnneeded,
 		Desc:         "Checks if secondary apps and extensions in a Kiosk app can be installed and launched",
 		Contacts:     []string{"chromeos-kiosk-eng+TAST@google.com"},
 		BugComponent: "b:892153", // ChromeOS > Software > Commercial (Enterprise) > Kiosk

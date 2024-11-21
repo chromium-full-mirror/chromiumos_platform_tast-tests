@@ -70,9 +70,8 @@ type keyboardInfo struct {
 
 func init() {
 	testing.AddTest(&testing.Test{
-		Func:         FunctionRowPhysmapFile,
-		LacrosStatus: testing.LacrosVariantUnneeded,
-		Desc:         "Validate the contents of the function_row_physmap file",
+		Func: FunctionRowPhysmapFile,
+		Desc: "Validate the contents of the function_row_physmap file",
 		Contacts: []string{
 			"chromeos-tango@google.com",
 		},

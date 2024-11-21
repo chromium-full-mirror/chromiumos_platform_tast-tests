@@ -26,7 +26,6 @@ func init() {
 		Func: SearchInstalledApps,
 		// Disabled by TORA. See: b/343060877
 		LifeCycleStage: testing.LifeCycleOwnerMonitored,
-		LacrosStatus:   testing.LacrosVariantUnneeded,
 		Desc:           "Install apps from CWS and verify that it appears in the launcher",
 		Contacts: []string{
 			"chromeos-launcher@google.com",

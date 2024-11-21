@@ -15,9 +15,8 @@ import (
 
 func init() {
 	testing.AddTest(&testing.Test{
-		Func:         MonitorUsbEvent,
-		LacrosStatus: testing.LacrosVariantUnneeded,
-		Desc:         "Monitors the USB event detected properly or not",
+		Func: MonitorUsbEvent,
+		Desc: "Monitors the USB event detected properly or not",
 		Contacts: []string{
 			"cros-tdm-tpe-eng@google.com",
 			"chungsheng@google.com",

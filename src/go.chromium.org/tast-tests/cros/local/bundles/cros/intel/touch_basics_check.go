@@ -30,7 +30,6 @@ import (
 func init() {
 	testing.AddTest(&testing.Test{
 		Func:         TouchBasicsCheck,
-		LacrosStatus: testing.LacrosVariantNeeded,
 		Desc:         "Touch screen check basic functionality of the browser",
 		Contacts:     []string{"intel.chrome.automation.team@intel.com", "ambalavanan.m.m@intel.com"},
 		BugComponent: "b:157291",

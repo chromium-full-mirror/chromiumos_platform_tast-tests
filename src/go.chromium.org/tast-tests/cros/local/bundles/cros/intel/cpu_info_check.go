@@ -18,7 +18,6 @@ import (
 func init() {
 	testing.AddTest(&testing.Test{
 		Func:         CPUInfoCheck,
-		LacrosStatus: testing.LacrosVariantUnneeded,
 		Desc:         "Verifies CPU info test",
 		Contacts:     []string{"intel.chrome.automation.team@intel.com", "ambalavanan.m.m@intel.com"},
 		BugComponent: "b:157291",

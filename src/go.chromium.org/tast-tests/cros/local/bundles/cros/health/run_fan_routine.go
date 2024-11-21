@@ -15,9 +15,8 @@ import (
 
 func init() {
 	testing.AddTest(&testing.Test{
-		Func:         RunFanRoutine,
-		LacrosStatus: testing.LacrosVariantUnneeded,
-		Desc:         "Checks that cros_healthd can run fan routine",
+		Func: RunFanRoutine,
+		Desc: "Checks that cros_healthd can run fan routine",
 		Contacts: []string{
 			"cros-tdm-tpe-eng@google.com",
 			"yycheng@google.com",

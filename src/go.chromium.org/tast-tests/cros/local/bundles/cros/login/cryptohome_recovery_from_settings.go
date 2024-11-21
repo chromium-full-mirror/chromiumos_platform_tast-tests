@@ -28,9 +28,8 @@ import (
 
 func init() {
 	testing.AddTest(&testing.Test{
-		Func:         CryptohomeRecoveryFromSettings,
-		LacrosStatus: testing.LacrosVariantUnneeded,
-		Desc:         "Checks cryptohome password change flow, with setting up the flow from OS Settings",
+		Func: CryptohomeRecoveryFromSettings,
+		Desc: "Checks cryptohome password change flow, with setting up the flow from OS Settings",
 		Contacts: []string{
 			"cros-lurs@google.com",
 			"antrim@chromium.org",

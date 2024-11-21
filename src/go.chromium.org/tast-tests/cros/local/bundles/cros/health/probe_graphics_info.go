@@ -14,9 +14,8 @@ import (
 
 func init() {
 	testing.AddTest(&testing.Test{
-		Func:         ProbeGraphicsInfo,
-		LacrosStatus: testing.LacrosVariantUnneeded,
-		Desc:         "Check that we can probe cros_healthd for graphics info",
+		Func: ProbeGraphicsInfo,
+		Desc: "Check that we can probe cros_healthd for graphics info",
 		Contacts: []string{
 			"cros-tdm-tpe-eng@google.com",
 			"yycheng@google.com",

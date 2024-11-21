@@ -15,9 +15,8 @@ import (
 
 func init() {
 	testing.AddTest(&testing.Test{
-		Func:         OOBEExpectedUI,
-		LacrosStatus: testing.LacrosVariantUnneeded,
-		Desc:         "Checks that text, icons, and buttons are displayed with the correct color, font-family, font-size, and background color",
+		Func: OOBEExpectedUI,
+		Desc: "Checks that text, icons, and buttons are displayed with the correct color, font-family, font-size, and background color",
 		Contacts: []string{
 			"core-devices@google.com",
 			"joshuapius@google.com", // Test author

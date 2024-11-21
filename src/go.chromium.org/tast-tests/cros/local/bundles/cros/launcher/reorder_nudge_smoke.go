@@ -19,9 +19,8 @@ import (
 
 func init() {
 	testing.AddTest(&testing.Test{
-		Func:         ReorderNudgeSmoke,
-		LacrosStatus: testing.LacrosVariantUnneeded,
-		Desc:         "Verify the reorder nudge's behaviors",
+		Func: ReorderNudgeSmoke,
+		Desc: "Verify the reorder nudge's behaviors",
 		Contacts: []string{
 			"chromeos-launcher@google.com",
 			"chromeos-sw-engprod@google.com",

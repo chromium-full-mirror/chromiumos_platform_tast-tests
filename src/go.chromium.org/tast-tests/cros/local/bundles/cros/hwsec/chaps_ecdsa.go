@@ -19,9 +19,8 @@ import (
 
 func init() {
 	testing.AddTest(&testing.Test{
-		Func:         ChapsECDSA,
-		LacrosStatus: testing.LacrosVariantUnneeded,
-		Desc:         "Verifies PKCS#1 v1.5 works with ECDSA keys (sign, verify) in chaps",
+		Func: ChapsECDSA,
+		Desc: "Verifies PKCS#1 v1.5 works with ECDSA keys (sign, verify) in chaps",
 		Contacts: []string{
 			"cros-hwsec@google.com",
 			"zuan@chromium.org",

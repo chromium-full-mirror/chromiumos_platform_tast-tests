@@ -29,9 +29,8 @@ type testParameters struct {
 
 func init() {
 	testing.AddTest(&testing.Test{
-		Func:         InputMethodSystemLanguage,
-		LacrosStatus: testing.LacrosVariantUnneeded,
-		Desc:         "Launching ChromeOS in different languages defaults input method",
+		Func: InputMethodSystemLanguage,
+		Desc: "Launching ChromeOS in different languages defaults input method",
 		Contacts: []string{
 			"essential-inputs-gardener-oncall@google.com",
 			"essential-inputs-team@google.com",

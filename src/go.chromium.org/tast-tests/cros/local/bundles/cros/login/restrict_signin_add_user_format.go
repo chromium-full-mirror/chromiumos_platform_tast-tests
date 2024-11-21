@@ -25,9 +25,8 @@ import (
 
 func init() {
 	testing.AddTest(&testing.Test{
-		Func:         RestrictSigninAddUserFormat,
-		Desc:         "Check that 'Manage other people' validates user email format",
-		LacrosStatus: testing.LacrosVariantUnneeded,
+		Func: RestrictSigninAddUserFormat,
+		Desc: "Check that 'Manage other people' validates user email format",
 		Contacts: []string{
 			"cros-lurs@google.com",
 			"rrsilva@google.com",

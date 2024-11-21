@@ -48,9 +48,8 @@ type uploadedCrashInfo struct {
 
 func init() {
 	testing.AddTest(&testing.Test{
-		Func:         MonitorUploadedCrashEvent,
-		LacrosStatus: testing.LacrosVariantUnneeded,
-		Desc:         "Monitors uploaded crash events detected properly or not",
+		Func: MonitorUploadedCrashEvent,
+		Desc: "Monitors uploaded crash events detected properly or not",
 		Contacts: []string{
 			"cros-tdm-tpe-eng@google.com",
 			"weiluanwang@google.com",

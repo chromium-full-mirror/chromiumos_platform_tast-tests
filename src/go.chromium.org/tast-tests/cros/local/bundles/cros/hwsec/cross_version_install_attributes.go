@@ -17,9 +17,8 @@ import (
 
 func init() {
 	testing.AddTest(&testing.Test{
-		Func:         CrossVersionInstallAttributes,
-		LacrosStatus: testing.LacrosVariantUnneeded,
-		Desc:         "Verifies consistency of install attributes across versions",
+		Func: CrossVersionInstallAttributes,
+		Desc: "Verifies consistency of install attributes across versions",
 		Contacts: []string{
 			"cros-hwsec@google.com",
 			"sadmansakib@google.com",

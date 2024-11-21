@@ -22,9 +22,8 @@ import (
 
 func init() {
 	testing.AddTest(&testing.Test{
-		Func:         DisplayProperTimeFormat,
-		Desc:         "Test display proper time format on the lock screen",
-		LacrosStatus: testing.LacrosVariantUnneeded,
+		Func: DisplayProperTimeFormat,
+		Desc: "Test display proper time format on the lock screen",
 		Contacts: []string{
 			"cros-lurs@google.com",
 			"emaamari@google.com",

@@ -17,7 +17,6 @@ import (
 func init() {
 	testing.AddTest(&testing.Test{
 		Func:         PhysicalKeyboardKernelMode,
-		LacrosStatus: testing.LacrosVariantUnneeded,
 		Desc:         "Internal keyboard should not be in AT Raw mode",
 		Contacts:     []string{"chromeos-tango@google.com", "kenalba@google.com", "dtor@google.com", "dnojiri@google.com"},
 		BugComponent: "b:167212", // ChromeOS > Platform > Services > Input

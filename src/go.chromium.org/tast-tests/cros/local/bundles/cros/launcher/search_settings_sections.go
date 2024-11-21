@@ -99,9 +99,8 @@ var fingerprintTestCases = []searchSettingsTestCase{
 
 func init() {
 	testing.AddTest(&testing.Test{
-		Func:         SearchSettingsSections,
-		LacrosStatus: testing.LacrosVariantUnneeded,
-		Desc:         "Searches for sections in OS Settings using Launcher search, and checks that the correct pages are opened",
+		Func: SearchSettingsSections,
+		Desc: "Searches for sections in OS Settings using Launcher search, and checks that the correct pages are opened",
 		Contacts: []string{
 			"chromeos-launcher@google.com",
 			"chromeos-sw-engprod@google.com",

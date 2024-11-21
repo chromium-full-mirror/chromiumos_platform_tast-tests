@@ -33,7 +33,6 @@ type dragDropParams struct {
 func init() {
 	testing.AddTest(&testing.Test{
 		Func:         ChromeBrowserDragAndDrop,
-		LacrosStatus: testing.LacrosVariantUnneeded,
 		Desc:         "Tests dragging and dropping files from Holding Space to Chrome Browser",
 		BugComponent: "b:1268276", // ChromeOS > Software > System UI Surfaces > HoldingSpace
 		Contacts: []string{

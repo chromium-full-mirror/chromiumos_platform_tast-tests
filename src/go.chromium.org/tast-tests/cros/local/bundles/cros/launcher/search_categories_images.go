@@ -32,9 +32,8 @@ var queryCategoryInfo = launcher.SearchCategoryInfo{
 
 func init() {
 	testing.AddTest(&testing.Test{
-		Func:         SearchCategoriesImages,
-		LacrosStatus: testing.LacrosVariantUnneeded,
-		Desc:         "Checks that removing images item from search catetories will not show image search result",
+		Func: SearchCategoriesImages,
+		Desc: "Checks that removing images item from search catetories will not show image search result",
 		Contacts: []string{
 			"launcher-search-notify@google.com",
 			"chenjih@google.com",

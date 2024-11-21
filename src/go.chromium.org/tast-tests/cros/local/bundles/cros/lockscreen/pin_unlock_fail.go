@@ -21,9 +21,8 @@ import (
 
 func init() {
 	testing.AddTest(&testing.Test{
-		Func:         PinUnlockFail,
-		LacrosStatus: testing.LacrosVariantUnneeded,
-		Desc:         "Checks that password field is shown after incorrect PIN was entered multiple times",
+		Func: PinUnlockFail,
+		Desc: "Checks that password field is shown after incorrect PIN was entered multiple times",
 		Contacts: []string{
 			"cros-lurs@google.com",
 			"emaamari@google.com",

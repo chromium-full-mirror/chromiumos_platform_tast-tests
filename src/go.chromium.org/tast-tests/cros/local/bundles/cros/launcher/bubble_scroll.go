@@ -31,7 +31,6 @@ func init() {
 		Func: BubbleScroll,
 		// Disabled by TORA. See: b/350058015
 		LifeCycleStage: testing.LifeCycleOwnerMonitored,
-		LacrosStatus:   testing.LacrosVariantUnneeded,
 		Desc:           "Tests scrolling in the bubble launcher",
 		Contacts: []string{
 			"chromeos-launcher@google.com",

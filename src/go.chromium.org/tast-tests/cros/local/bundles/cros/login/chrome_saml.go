@@ -18,9 +18,8 @@ import (
 
 func init() {
 	testing.AddTest(&testing.Test{
-		Func:         ChromeSAML,
-		LacrosStatus: testing.LacrosVariantUnneeded,
-		Desc:         "Checks that Chrome can make real SAML logins",
+		Func: ChromeSAML,
+		Desc: "Checks that Chrome can make real SAML logins",
 		Contacts: []string{
 			"cros-3pidp@google.com",
 			"lmasopust@google.com",

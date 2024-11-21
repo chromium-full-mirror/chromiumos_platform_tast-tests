@@ -22,9 +22,8 @@ import (
 
 func init() {
 	testing.AddTest(&testing.Test{
-		Func:         EphemeralPolicies,
-		LacrosStatus: testing.LacrosVariantUnneeded,
-		Desc:         "Checks kiosk state persistance with combinations of policy DeviceEphemeralUsersEnabled and DeviceLocalAccountInfo.EphemeralMode",
+		Func: EphemeralPolicies,
+		Desc: "Checks kiosk state persistance with combinations of policy DeviceEphemeralUsersEnabled and DeviceLocalAccountInfo.EphemeralMode",
 		Contacts: []string{
 			"chromeos-kiosk-eng+TAST@google.com",
 		},

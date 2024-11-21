@@ -27,7 +27,6 @@ import (
 func init() {
 	testing.AddTest(&testing.Test{
 		Func:         VerifyPsrSleepStateWithEdp,
-		LacrosStatus: testing.LacrosVariantUnneeded,
 		Desc:         "Verify PSR sleep states with eDP panel",
 		Contacts:     []string{"intel.chrome.automation.team@intel.com", "ambalavanan.m.m@intel.com"},
 		BugComponent: "b:157291",

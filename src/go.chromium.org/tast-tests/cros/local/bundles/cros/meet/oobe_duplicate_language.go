@@ -16,9 +16,8 @@ import (
 
 func init() {
 	testing.AddTest(&testing.Test{
-		Func:         OOBEDuplicateLanguage,
-		LacrosStatus: testing.LacrosVariantUnneeded,
-		Desc:         "Test that verifies there are no duplicate languages in the language selection menu",
+		Func: OOBEDuplicateLanguage,
+		Desc: "Test that verifies there are no duplicate languages in the language selection menu",
 		Contacts: []string{
 			"core-devices@google.com",
 			"joshuapius@google.com", // Test author

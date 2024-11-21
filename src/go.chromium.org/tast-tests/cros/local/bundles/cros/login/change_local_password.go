@@ -28,9 +28,8 @@ import (
 
 func init() {
 	testing.AddTest(&testing.Test{
-		Func:         ChangeLocalPassword,
-		LacrosStatus: testing.LacrosVariantUnneeded,
-		Desc:         "Checks local password change flow in OS Settings",
+		Func: ChangeLocalPassword,
+		Desc: "Checks local password change flow in OS Settings",
 		Contacts: []string{
 			"cros-lurs@google.com",
 			"emaamari@google.com",

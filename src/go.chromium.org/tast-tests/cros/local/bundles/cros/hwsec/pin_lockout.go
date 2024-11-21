@@ -26,9 +26,8 @@ type pinLockoutTestParam struct {
 
 func init() {
 	testing.AddTest(&testing.Test{
-		Func:         PinLockout,
-		LacrosStatus: testing.LacrosVariantUnneeded,
-		Desc:         "Checks that the pin lockout schedule works properly",
+		Func: PinLockout,
+		Desc: "Checks that the pin lockout schedule works properly",
 		Contacts: []string{
 			"cryptohome-core@google.com",
 			"behnoodm@chromium.org", // Test author

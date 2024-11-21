@@ -17,7 +17,6 @@ import (
 func init() {
 	testing.AddTest(&testing.Test{
 		Func:         DisplayZoomChange,
-		LacrosStatus: testing.LacrosVariantUnneeded,
 		Desc:         "Verfifies display zoom to small and large",
 		Contacts:     []string{"intel.chrome.automation.team@intel.com", "pathan.jilani@intel.com"},
 		BugComponent: "b:157291",

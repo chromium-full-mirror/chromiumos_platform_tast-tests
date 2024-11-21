@@ -28,9 +28,8 @@ const localImageName = "dog_with_words.jpg"
 
 func init() {
 	testing.AddTest(&testing.Test{
-		Func:         SearchLocalImage,
-		LacrosStatus: testing.LacrosVariantUnneeded,
-		Desc:         "Checks that use local image search with different feature flags and search for a local image",
+		Func: SearchLocalImage,
+		Desc: "Checks that use local image search with different feature flags and search for a local image",
 		Contacts: []string{
 			"launcher-search-notify@google.com",
 			"chenjih@google.com",

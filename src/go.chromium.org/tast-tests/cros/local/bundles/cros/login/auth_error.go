@@ -22,9 +22,8 @@ import (
 
 func init() {
 	testing.AddTest(&testing.Test{
-		Func:         AuthError,
-		LacrosStatus: testing.LacrosVariantUnneeded,
-		Desc:         "Tests that auth error disappears when user perform some action",
+		Func: AuthError,
+		Desc: "Tests that auth error disappears when user perform some action",
 		Contacts: []string{
 			"cros-lurs@google.com",
 			"rrsilva@google.com",

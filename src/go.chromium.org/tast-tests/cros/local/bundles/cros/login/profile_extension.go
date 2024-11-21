@@ -15,9 +15,8 @@ import (
 
 func init() {
 	testing.AddTest(&testing.Test{
-		Func:         ProfileExtension,
-		LacrosStatus: testing.LacrosVariantUnneeded,
-		Desc:         "Check private signin profile extension loads",
+		Func: ProfileExtension,
+		Desc: "Check private signin profile extension loads",
 		Contacts: []string{
 			"cros-lurs@google.com",
 			"antrim@google.com",

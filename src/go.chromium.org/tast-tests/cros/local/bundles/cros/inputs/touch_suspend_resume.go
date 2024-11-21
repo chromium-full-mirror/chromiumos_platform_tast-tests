@@ -40,7 +40,6 @@ var (
 func init() {
 	testing.AddTest(&testing.Test{
 		Func:         TouchSuspendResume,
-		LacrosStatus: testing.LacrosVariantUnneeded,
 		Desc:         "Touchscreen: suspend-resume with operation for 10 cycles",
 		Contacts:     []string{"intel.chrome.automation.team@intel.com", "ambalavanan.m.m@intel.com"},
 		BugComponent: "b:157291", // ChromeOS > External > Intel

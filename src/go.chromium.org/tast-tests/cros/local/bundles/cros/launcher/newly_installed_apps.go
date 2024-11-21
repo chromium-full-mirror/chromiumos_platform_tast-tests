@@ -29,9 +29,8 @@ const newInstallDescription = "New install"
 
 func init() {
 	testing.AddTest(&testing.Test{
-		Func:         NewlyInstalledApps,
-		LacrosStatus: testing.LacrosVariantUnneeded,
-		Desc:         "Checks that newly installed apps are marked as such in launcher",
+		Func: NewlyInstalledApps,
+		Desc: "Checks that newly installed apps are marked as such in launcher",
 		Contacts: []string{
 			"chromeos-launcher@google.com",
 			"chromeos-sw-engprod@google.com",

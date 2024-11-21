@@ -20,9 +20,8 @@ import (
 
 func init() {
 	testing.AddTest(&testing.Test{
-		Func:         LocalPasswordUnlock,
-		LacrosStatus: testing.LacrosVariantUnneeded,
-		Desc:         "Checks that local password unlock works for ChromeOS",
+		Func: LocalPasswordUnlock,
+		Desc: "Checks that local password unlock works for ChromeOS",
 		Contacts: []string{
 			"cros-lurs@google.com",
 			"emaamari@google.com",

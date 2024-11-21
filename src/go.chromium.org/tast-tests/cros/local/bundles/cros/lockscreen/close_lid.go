@@ -21,9 +21,8 @@ import (
 
 func init() {
 	testing.AddTest(&testing.Test{
-		Func:         CloseLid,
-		LacrosStatus: testing.LacrosVariantUnneeded,
-		Desc:         "Checks that screen-locking works by closing lid",
+		Func: CloseLid,
+		Desc: "Checks that screen-locking works by closing lid",
 		Contacts: []string{
 			"cros-lurs@google.com",
 			"emaamari@google.com",

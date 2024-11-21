@@ -22,9 +22,8 @@ import (
 
 func init() {
 	testing.AddTest(&testing.Test{
-		Func:         HideContinueSectionTablet,
-		LacrosStatus: testing.LacrosVariantUnneeded,
-		Desc:         "Tests that the tablet launcher continue section can be hidden",
+		Func: HideContinueSectionTablet,
+		Desc: "Tests that the tablet launcher continue section can be hidden",
 		Contacts: []string{
 			"chromeos-launcher@google.com",
 			"chromeos-sw-engprod@google.com",

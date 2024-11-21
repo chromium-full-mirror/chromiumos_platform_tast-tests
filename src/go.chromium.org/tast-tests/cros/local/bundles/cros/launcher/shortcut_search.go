@@ -26,9 +26,8 @@ import (
 
 func init() {
 	testing.AddTest(&testing.Test{
-		Func:         ShortcutSearch,
-		LacrosStatus: testing.LacrosVariantUnneeded,
-		Desc:         "Tests that searching for queries associated with a keyhboard shortcut returns a keyboard shortcut result",
+		Func: ShortcutSearch,
+		Desc: "Tests that searching for queries associated with a keyhboard shortcut returns a keyboard shortcut result",
 		Contacts: []string{
 			"chromeos-launcher@google.com",
 			"chromeos-sw-engprod@google.com",

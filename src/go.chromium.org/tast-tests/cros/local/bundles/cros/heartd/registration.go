@@ -18,9 +18,8 @@ import (
 
 func init() {
 	testing.AddTest(&testing.Test{
-		Func:         Registration,
-		LacrosStatus: testing.LacrosVariantUnneeded,
-		Desc:         "Checks that we can register heartd service",
+		Func: Registration,
+		Desc: "Checks that we can register heartd service",
 		Contacts: []string{
 			"cros-tdm-tpe-eng@google.com",
 			"byronlee@chromium.org",

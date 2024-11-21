@@ -22,9 +22,8 @@ type sensitiveSensorRoutineTestParams struct {
 
 func init() {
 	testing.AddTest(&testing.Test{
-		Func:         RunSensitiveSensorRoutine,
-		LacrosStatus: testing.LacrosVariantUnneeded,
-		Desc:         "Checks that cros_healthd can run sensitive sensor routine",
+		Func: RunSensitiveSensorRoutine,
+		Desc: "Checks that cros_healthd can run sensitive sensor routine",
 		Contacts: []string{
 			"cros-tdm-tpe-eng@google.com",
 			"byronlee@chromium.org",

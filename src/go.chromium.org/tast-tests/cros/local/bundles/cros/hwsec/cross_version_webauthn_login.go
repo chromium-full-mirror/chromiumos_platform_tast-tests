@@ -26,9 +26,8 @@ import (
 
 func init() {
 	testing.AddTest(&testing.Test{
-		Func:         CrossVersionWebauthnLogin,
-		LacrosStatus: testing.LacrosVariantUnneeded,
-		Desc:         "Verifies WebAuthn login functionality across the version",
+		Func: CrossVersionWebauthnLogin,
+		Desc: "Verifies WebAuthn login functionality across the version",
 		Contacts: []string{
 			"cros-hwsec@google.com",
 			"chingkang@google.com",

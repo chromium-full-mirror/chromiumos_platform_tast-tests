@@ -33,9 +33,8 @@ var fakeAppInfoForAppInstallWithAppListSortedTest = launcher.FakeAppInfoForSort{
 
 func init() {
 	testing.AddTest(&testing.Test{
-		Func:         InstallArcAppWithAppListSorted,
-		LacrosStatus: testing.LacrosVariantUnneeded,
-		Desc:         "Tests to verify app installation with app list sorted",
+		Func: InstallArcAppWithAppListSorted,
+		Desc: "Tests to verify app installation with app list sorted",
 		Contacts: []string{
 			"chromeos-launcher@google.com",
 			"chromeos-sw-engprod@google.com",

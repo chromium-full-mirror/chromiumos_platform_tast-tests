@@ -18,9 +18,8 @@ import (
 
 func init() {
 	testing.AddTest(&testing.Test{
-		Func:         OobeElementsFit,
-		LacrosStatus: testing.LacrosVariantUnneeded,
-		Desc:         "Test that checks whether unexpected scrollbars have been added to any OOBE elements",
+		Func: OobeElementsFit,
+		Desc: "Test that checks whether unexpected scrollbars have been added to any OOBE elements",
 		Contacts: []string{
 			"core-devices@google.com",
 			"joshuapius@google.com", // Test author

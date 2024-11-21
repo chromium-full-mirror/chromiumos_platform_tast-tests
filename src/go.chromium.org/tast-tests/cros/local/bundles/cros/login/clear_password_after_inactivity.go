@@ -36,7 +36,6 @@ func init() {
 		Attr:         []string{"group:golden_tier", "group:medium_low_tier", "group:hardware", "group:complementary", "group:hw_agnostic"},
 		VarDeps:      []string{"ui.signinProfileTestExtensionManifestKey"},
 		Timeout:      2*chrome.LoginTimeout + clearTimeout + time.Minute,
-		LacrosStatus: testing.LacrosVariantUnneeded,
 	})
 }
 

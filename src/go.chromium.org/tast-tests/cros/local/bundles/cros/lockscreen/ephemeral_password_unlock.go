@@ -26,9 +26,8 @@ const testTimeout = 2*chrome.LoginTimeout + userutil.TakingOwnershipTimeout + 2*
 
 func init() {
 	testing.AddTest(&testing.Test{
-		Func:         EphemeralPasswordUnlock,
-		LacrosStatus: testing.LacrosVariantUnneeded,
-		Desc:         "Test checks if a user can unlock screen when DeviceEphemeralUsersEnabled policy is used",
+		Func: EphemeralPasswordUnlock,
+		Desc: "Test checks if a user can unlock screen when DeviceEphemeralUsersEnabled policy is used",
 		Contacts: []string{
 			"cros-lurs@google.com",
 			"kamilszarek@google.com",

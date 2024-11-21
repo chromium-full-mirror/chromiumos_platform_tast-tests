@@ -26,7 +26,6 @@ import (
 func init() {
 	testing.AddTest(&testing.Test{
 		Func:         ExternalDisplayMirrorModeVideoOrientation,
-		LacrosStatus: testing.LacrosVariantUnneeded,
 		Desc:         "Verifies video playback in mirror mode on external typec HDMI display with video orientations",
 		Contacts:     []string{"intel.chrome.automation.team@intel.com", "ambalavanan.m.m@intel.com"},
 		BugComponent: "b:157291",

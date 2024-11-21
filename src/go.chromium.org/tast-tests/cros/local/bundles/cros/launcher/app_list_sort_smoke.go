@@ -29,9 +29,8 @@ var fakeAppInfoForSortSmokeTest = launcher.FakeAppInfoForSort{
 
 func init() {
 	testing.AddTest(&testing.Test{
-		Func:         AppListSortSmoke,
-		LacrosStatus: testing.LacrosVariantUnneeded,
-		Desc:         "Basic smoke tests for the app list sorting",
+		Func: AppListSortSmoke,
+		Desc: "Basic smoke tests for the app list sorting",
 		Contacts: []string{
 			"chromeos-launcher@google.com",
 			"chromeos-sw-engprod@google.com",

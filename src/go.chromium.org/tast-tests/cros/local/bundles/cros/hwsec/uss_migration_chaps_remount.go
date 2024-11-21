@@ -23,9 +23,8 @@ import (
 
 func init() {
 	testing.AddTest(&testing.Test{
-		Func:         UssMigrationChapsRemount,
-		LacrosStatus: testing.LacrosVariantUnneeded,
-		Desc:         "Verifies chaps works correctly after USS migration",
+		Func: UssMigrationChapsRemount,
+		Desc: "Verifies chaps works correctly after USS migration",
 		Contacts: []string{
 			"cryptohome-core@google.com",
 		},

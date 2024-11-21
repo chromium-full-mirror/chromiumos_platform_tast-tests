@@ -24,7 +24,6 @@ import (
 func init() {
 	testing.AddTest(&testing.Test{
 		Func:         InputMethodManagement,
-		LacrosStatus: testing.LacrosVariantUnneeded,
 		Desc:         "Verifies that user can manage input methods in OS settings",
 		Contacts:     []string{"essential-inputs-gardener-oncall@google.com", "essential-inputs-team@google.com"},
 		BugComponent: "b:95887",

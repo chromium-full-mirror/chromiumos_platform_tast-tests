@@ -25,9 +25,8 @@ import (
 
 func init() {
 	testing.AddTest(&testing.Test{
-		Func:         InBrowserDialog,
-		LacrosStatus: testing.LacrosVariantNeeded,
-		Desc:         "Checks the behavior of Kerberos in-browser dialog",
+		Func: InBrowserDialog,
+		Desc: "Checks the behavior of Kerberos in-browser dialog",
 		Contacts: []string{
 			"cros-3pidp@google.com",
 			"slutskii@google.com",

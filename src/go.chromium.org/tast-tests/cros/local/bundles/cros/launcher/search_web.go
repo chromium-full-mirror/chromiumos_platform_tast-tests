@@ -24,9 +24,8 @@ import (
 
 func init() {
 	testing.AddTest(&testing.Test{
-		Func:         SearchWeb,
-		LacrosStatus: testing.LacrosVariantUnneeded,
-		Desc:         "App Launcher Search: Web",
+		Func: SearchWeb,
+		Desc: "App Launcher Search: Web",
 		Contacts: []string{
 			"chromeos-launcher@google.com",
 			"chromeos-sw-engprod@google.com",

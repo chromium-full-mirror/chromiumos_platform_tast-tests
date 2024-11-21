@@ -30,8 +30,7 @@ func init() {
 	testing.AddTest(&testing.Test{
 		Func: AutomaticTicketAccessFileSystem,
 		// This tast doesn't interact with the browser.
-		LacrosStatus: testing.LacrosVariantUnneeded,
-		Desc:         "Checks the behavior of accessing a file system secured with Kerberos using the KerberosAccount policy",
+		Desc: "Checks the behavior of accessing a file system secured with Kerberos using the KerberosAccount policy",
 		Contacts: []string{
 			"cros-3pidp@google.com",
 			"slutskii@google.com",

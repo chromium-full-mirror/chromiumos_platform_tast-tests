@@ -26,9 +26,8 @@ import (
 
 func init() {
 	testing.AddTest(&testing.Test{
-		Func:         MgsManualTicketAccessWebsite,
-		LacrosStatus: testing.LacrosVariantNeeded,
-		Desc:         "Checks if Kerberos is working properly in MGS",
+		Func: MgsManualTicketAccessWebsite,
+		Desc: "Checks if Kerberos is working properly in MGS",
 		Contacts: []string{
 			"cros-3pidp@google.com",
 			"slutskii@google.com",

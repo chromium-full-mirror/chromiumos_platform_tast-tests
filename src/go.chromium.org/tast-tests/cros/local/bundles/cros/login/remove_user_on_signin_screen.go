@@ -45,8 +45,7 @@ func init() {
 		// * launches chrome twice,
 		// * does some fast ui operations.
 		// We also need some time for cleanup.
-		Timeout:      5*chrome.LoginTimeout + time.Minute + 30*time.Second,
-		LacrosStatus: testing.LacrosVariantUnneeded,
+		Timeout: 5*chrome.LoginTimeout + time.Minute + 30*time.Second,
 	})
 }
 

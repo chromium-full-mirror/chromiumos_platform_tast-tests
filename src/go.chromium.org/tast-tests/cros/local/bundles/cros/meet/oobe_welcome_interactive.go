@@ -16,9 +16,8 @@ import (
 
 func init() {
 	testing.AddTest(&testing.Test{
-		Func:         OOBEWelcomeInteractive,
-		LacrosStatus: testing.LacrosVariantUnneeded,
-		Desc:         "Test that clicks through dialogs on the OOBE welcome screen and checks that they are present and interactive",
+		Func: OOBEWelcomeInteractive,
+		Desc: "Test that clicks through dialogs on the OOBE welcome screen and checks that they are present and interactive",
 		Contacts: []string{
 			"core-devices@google.com",
 			"joshuapius@google.com", // Test author

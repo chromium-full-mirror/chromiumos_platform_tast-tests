@@ -32,9 +32,8 @@ const driveSyncTimeout = 3 * time.Minute
 
 func init() {
 	testing.AddTest(&testing.Test{
-		Func:         SearchGoogleDocument,
-		LacrosStatus: testing.LacrosVariantUnneeded,
-		Desc:         "App Launcher Search: Google Document in Drive",
+		Func: SearchGoogleDocument,
+		Desc: "App Launcher Search: Google Document in Drive",
 		Contacts: []string{
 			"chromeos-launcher@google.com",
 			"chromeos-sw-engprod@google.com",

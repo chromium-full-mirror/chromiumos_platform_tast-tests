@@ -38,7 +38,6 @@ type searchQualityTestCase struct {
 func init() {
 	testing.AddTest(&testing.Test{
 		Func:         SearchQuality,
-		LacrosStatus: testing.LacrosVariantUnneeded,
 		Desc:         "Test different search queries should show content in the right category",
 		Contacts:     []string{"launcher-search-notify@google.com", "xiuwen@google.com"},
 		BugComponent: "b:1257106",

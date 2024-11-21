@@ -20,10 +20,9 @@ import (
 
 func init() {
 	testing.AddTest(&testing.Test{
-		Func:         ChapsAttributePolicy,
-		LacrosStatus: testing.LacrosVariantUnneeded,
-		Desc:         "Verifies Chaps Attribute policy works as intended",
-		Attr:         []string{"group:mainline", "group:chaps"},
+		Func: ChapsAttributePolicy,
+		Desc: "Verifies Chaps Attribute policy works as intended",
+		Attr: []string{"group:mainline", "group:chaps"},
 		Contacts: []string{
 			"cros-hwsec@google.com",
 			"zuan@chromium.org",

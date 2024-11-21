@@ -17,9 +17,8 @@ import (
 
 func init() {
 	testing.AddTest(&testing.Test{
-		Func:         CrossVersionPinWeaver,
-		LacrosStatus: testing.LacrosVariantUnneeded,
-		Desc:         "Verifies functionality of pinweaver operations across versions",
+		Func: CrossVersionPinWeaver,
+		Desc: "Verifies functionality of pinweaver operations across versions",
 		Contacts: []string{
 			"cros-hwsec@google.com",
 			"chingkang@google.com",

@@ -32,9 +32,8 @@ import (
 
 func init() {
 	testing.AddTest(&testing.Test{
-		Func:         RemoveContinueSectionTask,
-		LacrosStatus: testing.LacrosVariantUnneeded,
-		Desc:         "Verify that tasks gets removed from the Continue Section",
+		Func: RemoveContinueSectionTask,
+		Desc: "Verify that tasks gets removed from the Continue Section",
 		Contacts: []string{
 			"chromeos-launcher@google.com",
 			"chromeos-sw-engprod@google.com",

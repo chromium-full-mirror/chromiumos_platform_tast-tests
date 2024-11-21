@@ -29,7 +29,6 @@ var (
 func init() {
 	testing.AddTest(&testing.Test{
 		Func:         WebGLMultiWindow,
-		LacrosStatus: testing.LacrosVariantUnneeded,
 		Desc:         "WebGL Aquarium on multi windows with 5000 fishes",
 		Contacts:     []string{"intel.chrome.automation.team@intel.com", "ambalavanan.m.m@intel.com"},
 		BugComponent: "b:157291",

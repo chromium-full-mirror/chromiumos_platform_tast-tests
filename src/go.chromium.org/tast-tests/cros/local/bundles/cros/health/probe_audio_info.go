@@ -37,9 +37,8 @@ type audioNodeInfo struct {
 
 func init() {
 	testing.AddTest(&testing.Test{
-		Func:         ProbeAudioInfo,
-		LacrosStatus: testing.LacrosVariantUnneeded,
-		Desc:         "Check that we can probe cros_healthd for audio info",
+		Func: ProbeAudioInfo,
+		Desc: "Check that we can probe cros_healthd for audio info",
 		Contacts: []string{
 			"cros-tdm-tpe-eng@google.com",
 			"yycheng@google.com",

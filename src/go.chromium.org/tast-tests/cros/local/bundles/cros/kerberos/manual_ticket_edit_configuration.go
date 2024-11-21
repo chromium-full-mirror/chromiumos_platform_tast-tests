@@ -33,8 +33,7 @@ func init() {
 		Func: ManualTicketEditConfiguration,
 		// Kerberos integration with Lacros will be covered by the
 		// kerberos.ManualTicketAccessWebsite tast.
-		LacrosStatus: testing.LacrosVariantUnneeded,
-		Desc:         "Checks that changing Kerberos config works properly",
+		Desc: "Checks that changing Kerberos config works properly",
 		Contacts: []string{
 			"cros-3pidp@google.com",
 			"slutskii@google.com",

@@ -18,9 +18,8 @@ type timezoneInfo struct {
 
 func init() {
 	testing.AddTest(&testing.Test{
-		Func:         ProbeTimezoneInfo,
-		LacrosStatus: testing.LacrosVariantUnneeded,
-		Desc:         "Check that we can probe cros_healthd for timezone info",
+		Func: ProbeTimezoneInfo,
+		Desc: "Check that we can probe cros_healthd for timezone info",
 		Contacts: []string{
 			"cros-tdm-tpe-eng@google.com",
 			"yycheng@google.com",

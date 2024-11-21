@@ -47,7 +47,6 @@ type keystroke struct {
 func init() {
 	testing.AddTest(&testing.Test{
 		Func:         KeyboardLayout,
-		LacrosStatus: testing.LacrosVariantUnneeded,
 		Desc:         "Captures e2e physical keyboard layout behaviours",
 		Contacts:     []string{"xiuwen@google.com", "tranbaoduy@google.com", "essential-inputs-team@google.com"},
 		BugComponent: "b:95887",

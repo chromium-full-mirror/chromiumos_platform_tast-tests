@@ -31,9 +31,8 @@ type searchAutocompleteTestCase struct {
 
 func init() {
 	testing.AddTest(&testing.Test{
-		Func:         SearchAutocomplete,
-		LacrosStatus: testing.LacrosVariantUnneeded,
-		Desc:         "Checks Autocomplete behavior in Launcher Search",
+		Func: SearchAutocomplete,
+		Desc: "Checks Autocomplete behavior in Launcher Search",
 		Contacts: []string{
 			"chromeos-launcher@google.com",
 			"chromeos-sw-engprod@google.com",

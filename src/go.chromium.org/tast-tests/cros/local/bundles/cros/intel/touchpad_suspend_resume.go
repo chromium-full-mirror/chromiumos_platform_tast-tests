@@ -39,7 +39,6 @@ var (
 func init() {
 	testing.AddTest(&testing.Test{
 		Func:         TouchpadSuspendResume,
-		LacrosStatus: testing.LacrosVariantUnneeded,
 		Desc:         "Touchpad: suspend-resume with operation for 10 cycles",
 		Contacts:     []string{"intel.chrome.automation.team@intel.com", "ambalavanan.m.m@intel.com"},
 		BugComponent: "b:157291",

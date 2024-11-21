@@ -24,9 +24,8 @@ import (
 
 func init() {
 	testing.AddTest(&testing.Test{
-		Func:         BubbleLaunchApp,
-		LacrosStatus: testing.LacrosVariantUnneeded,
-		Desc:         "Tests that the bubble launcher closes when opening an app",
+		Func: BubbleLaunchApp,
+		Desc: "Tests that the bubble launcher closes when opening an app",
 		Contacts: []string{
 			"chromeos-launcher@google.com",
 			"chromeos-sw-engprod@google.com",

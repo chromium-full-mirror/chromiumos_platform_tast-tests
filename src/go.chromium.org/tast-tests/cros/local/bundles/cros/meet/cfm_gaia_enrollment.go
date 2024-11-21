@@ -15,9 +15,8 @@ import (
 
 func init() {
 	testing.AddTest(&testing.Test{
-		Func:         CfmGAIAEnrollment,
-		LacrosStatus: testing.LacrosVariantUnneeded,
-		Desc:         "Test that clicks through CFM OOBE to enrollment screen and verifies device enterprise enrollment",
+		Func: CfmGAIAEnrollment,
+		Desc: "Test that clicks through CFM OOBE to enrollment screen and verifies device enterprise enrollment",
 		Contacts: []string{
 			"core-devices@google.com",
 			"joshuapius@google.com", // Test author

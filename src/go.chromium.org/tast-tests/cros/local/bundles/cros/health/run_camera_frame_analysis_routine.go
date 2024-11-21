@@ -26,9 +26,8 @@ import (
 
 func init() {
 	testing.AddTest(&testing.Test{
-		Func:         RunCameraFrameAnalysisRoutine,
-		LacrosStatus: testing.LacrosVariantUnneeded,
-		Desc:         "Checks that cros_healthd can run camera frame analysis routine",
+		Func: RunCameraFrameAnalysisRoutine,
+		Desc: "Checks that cros_healthd can run camera frame analysis routine",
 		Contacts: []string{
 			"cros-tdm-tpe-eng@google.com",
 			"weiluanwang@google.com",

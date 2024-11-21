@@ -29,7 +29,6 @@ import (
 func init() {
 	testing.AddTest(&testing.Test{
 		Func:         PrintToPDF,
-		LacrosStatus: testing.LacrosVariantUnneeded,
 		Desc:         "Verifies print to pdf file appears in holding space",
 		BugComponent: "b:1268276", // ChromeOS > Software > System UI Surfaces > HoldingSpace
 		Contacts: []string{

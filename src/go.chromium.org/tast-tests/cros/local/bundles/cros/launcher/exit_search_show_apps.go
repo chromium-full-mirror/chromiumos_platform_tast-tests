@@ -21,9 +21,8 @@ import (
 
 func init() {
 	testing.AddTest(&testing.Test{
-		Func:         ExitSearchShowApps,
-		LacrosStatus: testing.LacrosVariantUnneeded,
-		Desc:         "Checks for best match search results in the launcher",
+		Func: ExitSearchShowApps,
+		Desc: "Checks for best match search results in the launcher",
 		Contacts: []string{
 			"chromeos-launcher@google.com",
 			"chromeos-sw-engprod@google.com",

@@ -21,9 +21,8 @@ import (
 
 func init() {
 	testing.AddTest(&testing.Test{
-		Func:         ServiceActivity,
-		LacrosStatus: testing.LacrosVariantUnneeded,
-		Desc:         "Checks that the Meet services needed for CFM functionality is running and can be started and stopped",
+		Func: ServiceActivity,
+		Desc: "Checks that the Meet services needed for CFM functionality is running and can be started and stopped",
 		Contacts: []string{
 			"core-devices@google.com",
 			"joshuapius@google.com", // Test author

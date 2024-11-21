@@ -49,9 +49,8 @@ type touchpadInfoTestParams struct {
 
 func init() {
 	testing.AddTest(&testing.Test{
-		Func:         ProbeInputInfo,
-		LacrosStatus: testing.LacrosVariantUnneeded,
-		Desc:         "Check that we can probe cros_healthd for input info",
+		Func: ProbeInputInfo,
+		Desc: "Check that we can probe cros_healthd for input info",
 		Contacts: []string{
 			"cros-tdm-tpe-eng@google.com",
 			"chungsheng@google.com",

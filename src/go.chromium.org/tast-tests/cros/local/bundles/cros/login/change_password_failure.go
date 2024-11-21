@@ -22,9 +22,8 @@ import (
 
 func init() {
 	testing.AddTest(&testing.Test{
-		Func:         ChangePasswordFailure,
-		LacrosStatus: testing.LacrosVariantUnneeded,
-		Desc:         "Checks cryptohome password change flow when user does not remember the old password",
+		Func: ChangePasswordFailure,
+		Desc: "Checks cryptohome password change flow when user does not remember the old password",
 		Contacts: []string{
 			"cros-lurs@google.com",
 			"emaamari@google.com",

@@ -24,9 +24,8 @@ import (
 
 func init() {
 	testing.AddTest(&testing.Test{
-		Func:         DeviceSetVolume,
-		LacrosStatus: testing.LacrosVariantUnneeded,
-		Desc:         "Checks the behavior of sending device set volume remote command",
+		Func: DeviceSetVolume,
+		Desc: "Checks the behavior of sending device set volume remote command",
 		Contacts: []string{
 			"chromeos-kiosk-eng+TAST@google.com",
 			"mohamedaomar@google.com", // Test author

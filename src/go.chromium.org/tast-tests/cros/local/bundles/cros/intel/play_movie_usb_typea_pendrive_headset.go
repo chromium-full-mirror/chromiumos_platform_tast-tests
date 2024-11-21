@@ -32,7 +32,6 @@ func init() {
 	// Pre-requisite: Connect Type-A USB 3.0 pendrive and Type-A Headset to the DUT.
 	testing.AddTest(&testing.Test{
 		Func:         PlayMovieUsbTypeaPendriveHeadset,
-		LacrosStatus: testing.LacrosVariantUnneeded,
 		Desc:         "Verifies Play movie in USB type-A pen drive with USB type-A HS",
 		Contacts:     []string{"intel.chrome.automation.team@intel.com", "ambalavanan.m.m@intel.com"},
 		BugComponent: "b:157291",

@@ -41,9 +41,8 @@ type touchscreenTouchPointEvent struct {
 
 func init() {
 	testing.AddTest(&testing.Test{
-		Func:         MonitorTouchscreenEvent,
-		LacrosStatus: testing.LacrosVariantUnneeded,
-		Desc:         "Monitors the touchscreen event detected properly or not",
+		Func: MonitorTouchscreenEvent,
+		Desc: "Monitors the touchscreen event detected properly or not",
 		Contacts: []string{
 			"cros-tdm-tpe-eng@google.com",
 			"weiluanwang@google.com",

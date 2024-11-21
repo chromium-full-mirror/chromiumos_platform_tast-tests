@@ -31,9 +31,8 @@ type searchTestCase struct {
 
 func init() {
 	testing.AddTest(&testing.Test{
-		Func:         AnswerCards,
-		LacrosStatus: testing.LacrosVariantUnneeded,
-		Desc:         "Checks for omnibox answer cards in the launcher",
+		Func: AnswerCards,
+		Desc: "Checks for omnibox answer cards in the launcher",
 		Contacts: []string{
 			"chromeos-launcher@google.com",
 			"chromeos-sw-engprod@google.com",

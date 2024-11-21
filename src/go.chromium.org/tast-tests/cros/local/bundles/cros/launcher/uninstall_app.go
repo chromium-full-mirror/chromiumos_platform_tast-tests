@@ -49,9 +49,8 @@ const installationTimeout = apputil.InstallationTimeout
 
 func init() {
 	testing.AddTest(&testing.Test{
-		Func:         UninstallApp,
-		LacrosStatus: testing.LacrosVariantUnneeded,
-		Desc:         "Verifies app can be deleted from the list of app in launcher",
+		Func: UninstallApp,
+		Desc: "Verifies app can be deleted from the list of app in launcher",
 		Contacts: []string{
 			"chromeos-launcher@google.com",
 			"chromeos-sw-engprod@google.com",

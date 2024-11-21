@@ -18,7 +18,6 @@ import (
 func init() {
 	testing.AddTest(&testing.Test{
 		Func:         TabletModeCheck,
-		LacrosStatus: testing.LacrosVariantUnneeded,
 		Desc:         "Verifies tablet mode functionality with checking input devices behavior",
 		Contacts:     []string{"intel.chrome.automation.team@intel.com", "ambalavanan.m.m@intel.com"},
 		BugComponent: "b:157291", // ChromeOS > External > Intel

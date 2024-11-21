@@ -24,9 +24,8 @@ import (
 
 func init() {
 	testing.AddTest(&testing.Test{
-		Func:         RestrictSignin,
-		Desc:         "Checks if device owner can restrict signin",
-		LacrosStatus: testing.LacrosVariantUnneeded,
+		Func: RestrictSignin,
+		Desc: "Checks if device owner can restrict signin",
 		Contacts: []string{
 			"cros-lurs@google.com",
 			"rrsilva@google.com",

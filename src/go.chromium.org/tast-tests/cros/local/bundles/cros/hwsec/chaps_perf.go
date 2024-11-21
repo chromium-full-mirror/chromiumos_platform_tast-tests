@@ -21,10 +21,9 @@ import (
 
 func init() {
 	testing.AddTest(&testing.Test{
-		Func:         ChapsPerf,
-		LacrosStatus: testing.LacrosVariantUnneeded,
-		Desc:         "Chaps performance test that includes key import, key sign operation performance measure",
-		Attr:         []string{"group:crosbolt", "crosbolt_perbuild"},
+		Func: ChapsPerf,
+		Desc: "Chaps performance test that includes key import, key sign operation performance measure",
+		Attr: []string{"group:crosbolt", "crosbolt_perbuild"},
 		Contacts: []string{
 			"cros-hwsec@google.com",
 			"zuan@chromium.org",

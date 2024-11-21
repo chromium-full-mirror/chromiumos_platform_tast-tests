@@ -23,9 +23,8 @@ import (
 
 func init() {
 	testing.AddTest(&testing.Test{
-		Func:         ChromeGaiaAPI,
-		LacrosStatus: testing.LacrosVariantUnneeded,
-		Desc:         "Checks Gaia calls credentials passing API properly",
+		Func: ChromeGaiaAPI,
+		Desc: "Checks Gaia calls credentials passing API properly",
 		Contacts: []string{
 			"cros-3pidp@google.com",
 			"lmasopust@google.com",

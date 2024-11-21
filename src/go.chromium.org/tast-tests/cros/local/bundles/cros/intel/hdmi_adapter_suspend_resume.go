@@ -33,7 +33,6 @@ const (
 func init() {
 	testing.AddTest(&testing.Test{
 		Func:         HdmiAdapterSuspendResume,
-		LacrosStatus: testing.LacrosVariantUnneeded,
 		Desc:         "Verifies USB type-C single port adapter functionality with suspend-resume cycles",
 		Contacts:     []string{"intel.chrome.automation.team@intel.com", "pathan.jilani@intel.com"},
 		BugComponent: "b:157291", // ChromeOS > External > Intel

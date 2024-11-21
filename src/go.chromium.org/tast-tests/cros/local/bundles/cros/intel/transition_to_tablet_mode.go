@@ -33,7 +33,6 @@ import (
 func init() {
 	testing.AddTest(&testing.Test{
 		Func:         TransitionToTabletMode,
-		LacrosStatus: testing.LacrosVariantUnneeded,
 		Desc:         "Tablet mode: Transition to tablet mode",
 		Contacts:     []string{"intel-chrome-system-automation-team@intel.com", "ambalavanan.m.m@intel.com"},
 		BugComponent: "b:157291",

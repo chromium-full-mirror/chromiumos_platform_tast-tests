@@ -27,9 +27,8 @@ type bluetoothRoutineTestParams struct {
 
 func init() {
 	testing.AddTest(&testing.Test{
-		Func:         RunBluetoothRoutine,
-		LacrosStatus: testing.LacrosVariantUnneeded,
-		Desc:         "Checks that cros_healthd can run Bluetooth routines",
+		Func: RunBluetoothRoutine,
+		Desc: "Checks that cros_healthd can run Bluetooth routines",
 		Contacts: []string{
 			"cros-tdm-tpe-eng@google.com",
 			"byronlee@chromium.org",

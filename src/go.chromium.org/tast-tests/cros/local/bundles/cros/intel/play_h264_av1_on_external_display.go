@@ -39,7 +39,6 @@ func init() {
 	// The test requires that the DUT connects to an external Type-C DP 4K display.
 	testing.AddTest(&testing.Test{
 		Func:         PlayH264AV1OnExternalDisplay,
-		LacrosStatus: testing.LacrosVariantUnneeded,
 		Desc:         "Verifies HDCP session with playing video and changing codec in extended mode",
 		Contacts:     []string{"intel-chrome-system-automation-team@intel.com", "ambalavanan.m.m@intel.com"},
 		BugComponent: "b:157291",

@@ -24,9 +24,8 @@ import (
 
 func init() {
 	testing.AddTest(&testing.Test{
-		Func:         ShowContinueSection,
-		LacrosStatus: testing.LacrosVariantUnneeded,
-		Desc:         "Verify that a local file shows to Continue Section",
+		Func: ShowContinueSection,
+		Desc: "Verify that a local file shows to Continue Section",
 		Contacts: []string{
 			"chromeos-launcher@google.com",
 			"chromeos-sw-engprod@google.com",

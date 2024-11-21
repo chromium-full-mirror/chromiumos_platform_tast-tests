@@ -17,9 +17,8 @@ import (
 
 func init() {
 	testing.AddTest(&testing.Test{
-		Func:         CrossVersionChromeLogin,
-		LacrosStatus: testing.LacrosVariantUnneeded,
-		Desc:         "Verifies chrome login functionality across the version",
+		Func: CrossVersionChromeLogin,
+		Desc: "Verifies chrome login functionality across the version",
 		Contacts: []string{
 			"cros-hwsec@google.com",
 			"chingkang@google.com",

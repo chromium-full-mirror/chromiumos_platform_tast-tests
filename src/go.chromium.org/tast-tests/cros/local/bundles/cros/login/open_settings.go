@@ -19,9 +19,8 @@ import (
 
 func init() {
 	testing.AddTest(&testing.Test{
-		Func:         OpenSettings,
-		LacrosStatus: testing.LacrosVariantUnneeded,
-		Desc:         "Open OS Settings and access them with an auth factor",
+		Func: OpenSettings,
+		Desc: "Open OS Settings and access them with an auth factor",
 		Contacts: []string{
 			"cros-lurs@google.com",
 			"emaamari@google.com",

@@ -37,9 +37,8 @@ type testParameters struct {
 
 func init() {
 	testing.AddTest(&testing.Test{
-		Func:         PowerMetrics,
-		LacrosStatus: testing.LacrosVariantUnneeded,
-		Desc:         "Collect power metrics of using mahi",
+		Func: PowerMetrics,
+		Desc: "Collect power metrics of using mahi",
 		Contacts: []string{
 			"ml-service-team@google.com",
 			"alanlxl@google.com",

@@ -19,10 +19,9 @@ import (
 
 func init() {
 	testing.AddTest(&testing.Test{
-		Func:         ChapsRSAPSS,
-		LacrosStatus: testing.LacrosVariantUnneeded,
-		Desc:         "Verifies RSA PSS works with RSA keys (sign, verify, encrypt, decrypt) in chaps",
-		Attr:         []string{"group:mainline", "group:chaps"},
+		Func: ChapsRSAPSS,
+		Desc: "Verifies RSA PSS works with RSA keys (sign, verify, encrypt, decrypt) in chaps",
+		Attr: []string{"group:mainline", "group:chaps"},
 		Contacts: []string{
 			"cros-hwsec@google.com",
 			"zuan@chromium.org",

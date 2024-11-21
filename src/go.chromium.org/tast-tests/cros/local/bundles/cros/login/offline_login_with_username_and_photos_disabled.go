@@ -26,9 +26,8 @@ import (
 
 func init() {
 	testing.AddTest(&testing.Test{
-		Func:         OfflineLoginWithUsernameAndPhotosDisabled,
-		Desc:         "Checks that a user can login again if they have already signed in even though the network is offline and the device owner disabled the username and photos",
-		LacrosStatus: testing.LacrosVariantUnneeded,
+		Func: OfflineLoginWithUsernameAndPhotosDisabled,
+		Desc: "Checks that a user can login again if they have already signed in even though the network is offline and the device owner disabled the username and photos",
 		Contacts: []string{
 			"cros-lurs@google.com",
 			"bchikhaoui@google.com",

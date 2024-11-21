@@ -29,7 +29,6 @@ import (
 func init() {
 	testing.AddTest(&testing.Test{
 		Func:         FilesAppDragAndDrop,
-		LacrosStatus: testing.LacrosVariantUnneeded,
 		Desc:         "Checks dragging and dropping to/from Holding Space from/to Files App",
 		BugComponent: "b:1268276", // ChromeOS > Software > System UI Surfaces > HoldingSpace
 		Contacts: []string{

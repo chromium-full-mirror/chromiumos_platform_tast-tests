@@ -26,9 +26,8 @@ import (
 
 func init() {
 	testing.AddTest(&testing.Test{
-		Func:         TTSExtensionSettings,
-		LacrosStatus: testing.LacrosVariantUnneeded,
-		Desc:         "Checks that the accessbility extensions settings can be opened in PWA Kiosk",
+		Func: TTSExtensionSettings,
+		Desc: "Checks that the accessbility extensions settings can be opened in PWA Kiosk",
 		Contacts: []string{
 			"chromeos-kiosk-eng+TAST@google.com",
 			"neis@google.com",

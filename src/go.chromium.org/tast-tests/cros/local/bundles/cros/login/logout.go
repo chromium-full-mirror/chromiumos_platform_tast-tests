@@ -29,9 +29,8 @@ const (
 
 func init() {
 	testing.AddTest(&testing.Test{
-		Func:         Logout,
-		LacrosStatus: testing.LacrosVariantUnneeded,
-		Desc:         "Verify that the sign in page shows after signing out",
+		Func: Logout,
+		Desc: "Verify that the sign in page shows after signing out",
 		Contacts: []string{
 			"cros-oac@google.com",
 			"cros-lurs@google.com",

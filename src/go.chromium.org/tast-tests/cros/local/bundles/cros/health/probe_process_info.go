@@ -55,9 +55,8 @@ type multipleProcessInfo struct {
 
 func init() {
 	testing.AddTest(&testing.Test{
-		Func:         ProbeProcessInfo,
-		LacrosStatus: testing.LacrosVariantUnneeded,
-		Desc:         "Check that we can probe cros_healthd for single process info",
+		Func: ProbeProcessInfo,
+		Desc: "Check that we can probe cros_healthd for single process info",
 		Contacts: []string{
 			"cros-tdm-tpe-eng@google.com",
 			"dennyh@google.com",

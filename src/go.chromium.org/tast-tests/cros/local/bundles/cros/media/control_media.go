@@ -21,9 +21,8 @@ import (
 
 func init() {
 	testing.AddTest(&testing.Test{
-		Func:         ControlMedia,
-		LacrosStatus: testing.LacrosVariantUnneeded,
-		Desc:         "Controls the media bubble",
+		Func: ControlMedia,
+		Desc: "Controls the media bubble",
 		Contacts: []string{
 			"cros-status-area@google.com",
 			"jiamingc@chromium.org",

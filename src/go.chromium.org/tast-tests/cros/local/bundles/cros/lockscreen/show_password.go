@@ -30,9 +30,8 @@ const hiddenPwdChar = "•"
 
 func init() {
 	testing.AddTest(&testing.Test{
-		Func:         ShowPassword,
-		LacrosStatus: testing.LacrosVariantUnneeded,
-		Desc:         "Test Show/Hide password functionality on lockscreen Password field and \"PIN or password\" field",
+		Func: ShowPassword,
+		Desc: "Test Show/Hide password functionality on lockscreen Password field and \"PIN or password\" field",
 		Contacts: []string{
 			"cros-lurs@google.com",
 			"rrsilva@google.com",

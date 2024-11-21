@@ -20,9 +20,8 @@ import (
 
 func init() {
 	testing.AddTest(&testing.Test{
-		Func:         Offline,
-		LacrosStatus: testing.LacrosVariantUnneeded,
-		Desc:         "Test that user can sign in when device offline ",
+		Func: Offline,
+		Desc: "Test that user can sign in when device offline ",
 		Contacts: []string{
 			"cros-lurs@google.com",
 			"bohdanty@google.com",

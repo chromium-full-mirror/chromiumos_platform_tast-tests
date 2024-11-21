@@ -15,9 +15,8 @@ import (
 
 func init() {
 	testing.AddTest(&testing.Test{
-		Func:         RunNetworkBandwidthRoutine,
-		LacrosStatus: testing.LacrosVariantUnneeded,
-		Desc:         "Checks that cros_healthd can run network bandwidth routine",
+		Func: RunNetworkBandwidthRoutine,
+		Desc: "Checks that cros_healthd can run network bandwidth routine",
 		Contacts: []string{
 			"cros-tdm-tpe-eng@google.com",
 			"byronlee@chromium.org",

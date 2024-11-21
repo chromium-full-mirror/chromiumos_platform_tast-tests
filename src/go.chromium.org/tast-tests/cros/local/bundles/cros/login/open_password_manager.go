@@ -21,9 +21,8 @@ import (
 
 func init() {
 	testing.AddTest(&testing.Test{
-		Func:         OpenPasswordManager,
-		LacrosStatus: testing.LacrosVariantUnneeded,
-		Desc:         "Open Password manager and access them with a password or pin",
+		Func: OpenPasswordManager,
+		Desc: "Open Password manager and access them with a password or pin",
 		Contacts: []string{
 			"cros-lurs@google.com",
 			"iscsi@google.com",
