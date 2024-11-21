@@ -30,9 +30,8 @@ type swapManagementTestParams struct {
 
 func init() {
 	testing.AddTest(&testing.Test{
-		Func:         SwapManagement,
-		LacrosStatus: testing.LacrosVariantUnneeded,
-		Desc:         "Checks that Android has swap management set up correctly",
+		Func: SwapManagement,
+		Desc: "Checks that Android has swap management set up correctly",
 		Contacts: []string{
 			"hungmn@google.com",
 			"raging@google.com",

@@ -16,9 +16,8 @@ import (
 
 func init() {
 	testing.AddTest(&testing.Test{
-		Func:         TextQueries,
-		LacrosStatus: testing.LacrosVariantUnneeded,
-		Desc:         "Tests Assistant basic functionality with text queries",
+		Func: TextQueries,
+		Desc: "Tests Assistant basic functionality with text queries",
 		Contacts: []string{
 			"cros-assistive@google.com",
 			"chromeos-consumer-engprod@google.com",

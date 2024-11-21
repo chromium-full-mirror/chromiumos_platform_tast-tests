@@ -16,9 +16,8 @@ import (
 
 func init() {
 	testing.AddTest(&testing.Test{
-		Func:         QueryOffline,
-		LacrosStatus: testing.LacrosVariantUnneeded,
-		Desc:         "Tests Assistant query without network",
+		Func: QueryOffline,
+		Desc: "Tests Assistant query without network",
 		Contacts: []string{
 			"cros-assistive@google.com",
 			"chromeos-consumer-engprod@google.com",

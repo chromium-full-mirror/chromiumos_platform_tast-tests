@@ -32,7 +32,6 @@ const (
 func init() {
 	testing.AddTest(&testing.Test{
 		Func:         USBStorage,
-		LacrosStatus: testing.LacrosVariantUnneeded,
 		Desc:         "USB storage functional tests for the bruschetta VM",
 		Contacts:     []string{"cros-virt-devices-guests@google.com", "chibar@google.com"},
 		SoftwareDeps: []string{"chrome", "vm_host", "untrusted_vm", "dlc", "amd64"},

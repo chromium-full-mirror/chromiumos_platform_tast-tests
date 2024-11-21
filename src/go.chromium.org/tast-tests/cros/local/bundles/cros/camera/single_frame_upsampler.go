@@ -20,11 +20,10 @@ const upsamplerTestGoldenImage = "super_res_golden_2560x1920.nv12"
 func init() {
 	testing.AddTest(&testing.Test{
 		Func:         SingleFrameUpsampler,
-		LacrosStatus: testing.LacrosVariantUnneeded,
 		Desc:         "Run single_frame_upsampler_test to verify libupsampler.so library works",
 		Contacts:     []string{"chromeos-camera-eng@google.com", "julianachang@chromium.org"},
 		BugComponent: "b:167281", // ChromeOS > Platform > Technologies > Camera
-		Attr:         []string{
+		Attr: []string{
 			"group:mainline",
 			"informational",
 			"group:release-health",

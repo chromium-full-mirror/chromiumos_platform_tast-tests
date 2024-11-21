@@ -26,7 +26,6 @@ func init() {
 		BugComponent: "b:776546",
 		Attr:         []string{"group:mainline", "informational"},
 		Timeout:      1 * time.Minute,
-		LacrosStatus: testing.LacrosVariantUnneeded,
 		Fixture:      fixture.AloopLoaded{Channels: 2}.Instance(),
 		Params: []testing.Param{
 			{

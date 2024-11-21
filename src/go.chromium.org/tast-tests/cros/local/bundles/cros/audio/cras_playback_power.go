@@ -22,7 +22,6 @@ import (
 func init() {
 	testing.AddTest(&testing.Test{
 		Func:         CrasPlaybackPower,
-		LacrosStatus: testing.LacrosVariantUnneeded,
 		Desc:         "Collect power metrics of audio playback with various configs in CRAS",
 		BugComponent: "b:776546",
 		Contacts:     []string{"chromeos-audio-bugs@google.com", "johnylin@google.com"},

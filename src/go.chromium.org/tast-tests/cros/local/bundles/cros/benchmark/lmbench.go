@@ -45,7 +45,6 @@ type runInfo struct {
 func init() {
 	testing.AddTest(&testing.Test{
 		Func:         LMbench,
-		LacrosStatus: testing.LacrosVariantUnneeded,
 		Desc:         "Measure system memory bandwidth and latency with LMBench",
 		Contacts:     []string{"cros-pe-pnp@google.com", "pmarheine@google.com"},
 		BugComponent: "b:1363623", // ChromeOS > Platform > Enablement > PnP

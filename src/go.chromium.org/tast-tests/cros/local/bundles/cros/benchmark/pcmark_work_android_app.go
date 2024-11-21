@@ -35,7 +35,6 @@ const (
 func init() {
 	testing.AddTest(&testing.Test{
 		Func:         PCMarkWorkAndroidApp,
-		LacrosStatus: testing.LacrosVariantUnneeded,
 		Desc:         "Execute PCMark Android App v3.0.4061 to do benchmark for PCMark Work and acquire test score",
 		Contacts:     []string{"chromeos-perf-reliability-eng@google.com", "cienet-development@googlegroups.com", "xibin@google.com"},
 		BugComponent: "b:1025042", // ChromeOS > EngProd > Platform > SPERA > Automation

@@ -66,10 +66,9 @@ type vmDataMigrationFileAttributes struct {
 
 func init() {
 	testing.AddTest(&testing.Test{
-		Func:         VMDataMigration,
-		LacrosStatus: testing.LacrosVariantUnneeded,
-		Desc:         "Performs ARCVM /data migration with virtio-fs /data and verifies Play Store can be launched and user data is migrated",
-		Contacts:     []string{"arc-storage@google.com", "youkichihosoi@google.com", "momohatt@google.com"},
+		Func:     VMDataMigration,
+		Desc:     "Performs ARCVM /data migration with virtio-fs /data and verifies Play Store can be launched and user data is migrated",
+		Contacts: []string{"arc-storage@google.com", "youkichihosoi@google.com", "momohatt@google.com"},
 		// ChromeOS > Software > ARC++ > Storage
 		BugComponent: "b:516669",
 		Attr:         []string{"group:mainline", "informational"},

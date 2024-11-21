@@ -32,7 +32,6 @@ import (
 func init() {
 	testing.AddTest(&testing.Test{
 		Func:         HDRnetPerf,
-		LacrosStatus: testing.LacrosVariantUnneeded,
 		Desc:         "Runs the HDRnet performance tests",
 		Contacts:     []string{"chromeos-camera-eng@google.com", "jcliang@chromium.org"},
 		BugComponent: "b:167281", // ChromeOS > Platform > Technologies > Camera

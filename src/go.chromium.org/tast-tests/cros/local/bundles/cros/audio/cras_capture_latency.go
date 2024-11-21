@@ -37,7 +37,6 @@ func init() {
 		SoftwareDeps: []string{"chrome"},
 		// TODO(b/312097873): remove "brya" when b/309904720 is fixed.
 		HardwareDeps: hwdep.D(hwdep.SkipOnModel("brya")),
-		LacrosStatus: testing.LacrosVariantUnneeded,
 		Params: []testing.Param{
 			{
 				Name: "no_effects",

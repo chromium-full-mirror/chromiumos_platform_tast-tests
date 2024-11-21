@@ -25,7 +25,6 @@ import (
 func init() {
 	testing.AddTest(&testing.Test{
 		Func:           AllowRoamingPolicy,
-		LacrosStatus:   testing.LacrosVariantUnneeded,
 		LifeCycleStage: testing.LifeCycleOwnerMonitored,
 		Desc:           "Tests the carrier name on connected esim",
 		Contacts: []string{

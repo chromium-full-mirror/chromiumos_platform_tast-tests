@@ -23,10 +23,9 @@ import (
 
 func init() {
 	testing.AddTest(&testing.Test{
-		Func:         WMResizableTablet,
-		LacrosStatus: testing.LacrosVariantUnneeded,
-		Desc:         "Verifies that Window Manager resizable tablet use-cases behave as described in go/arc-wm-r",
-		Contacts:     []string{"arc-framework+tast@google.com", "takise@chromium.org"},
+		Func:     WMResizableTablet,
+		Desc:     "Verifies that Window Manager resizable tablet use-cases behave as described in go/arc-wm-r",
+		Contacts: []string{"arc-framework+tast@google.com", "takise@chromium.org"},
 		// ChromeOS > Software > ARC++ > Framework > Window Management
 		BugComponent: "b:537272",
 		Attr:         []string{"group:mainline", "informational"},

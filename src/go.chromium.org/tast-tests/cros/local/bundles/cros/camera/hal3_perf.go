@@ -16,7 +16,6 @@ import (
 func init() {
 	testing.AddTest(&testing.Test{
 		Func:         HAL3Perf,
-		LacrosStatus: testing.LacrosVariantUnneeded,
 		Desc:         "Measures camera HAL3 performance",
 		Contacts:     []string{"chromeos-camera-eng@google.com", "beckerh@chromium.org", "xinggu@chromium.org"},
 		BugComponent: "b:167281", // ChromeOS > Platform > Technologies > Camera

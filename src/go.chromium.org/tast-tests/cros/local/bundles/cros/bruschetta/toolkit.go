@@ -16,7 +16,6 @@ import (
 func init() {
 	testing.AddTest(&testing.Test{
 		Func:         Toolkit,
-		LacrosStatus: testing.LacrosVariantUnneeded,
 		Desc:         "Verifies the behaviour of GUI apps based on various toolkits",
 		Contacts:     []string{"clumptini+oncall@google.com"},
 		SoftwareDeps: []string{"chrome", "vm_host", "untrusted_vm", "dlc", "amd64"},

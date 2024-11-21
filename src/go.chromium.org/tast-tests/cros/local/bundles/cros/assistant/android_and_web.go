@@ -15,15 +15,14 @@ import (
 
 func init() {
 	testing.AddTest(&testing.Test{
-		Func:         AndroidAndWeb,
-		LacrosStatus: testing.LacrosVariantUnneeded,
-		Desc:         "Test assistant to open Android app over web app",
+		Func: AndroidAndWeb,
+		Desc: "Test assistant to open Android app over web app",
 		Contacts: []string{
 			"cros-assistive@google.com",
 			"chromeos-consumer-engprod@google.com",
 		},
 		BugComponent: "b:905229", // ChromeOS > Software > Assistive
-		Attr: []string{
+		Attr:         []string{
 			// Disabled by TORA.  See:b/332052853.
 			// "group:mainline",
 			// "informational",
@@ -35,8 +34,8 @@ func init() {
 			// Disabled by TORA.  See:b/332052853.
 			// "gaia"
 		},
-		Fixture:      "assistantWithArc",
-		Timeout:      3 * time.Minute,
+		Fixture: "assistantWithArc",
+		Timeout: 3 * time.Minute,
 		Params: []testing.Param{{
 			ExtraSoftwareDeps: []string{"android_container"},
 		}, {

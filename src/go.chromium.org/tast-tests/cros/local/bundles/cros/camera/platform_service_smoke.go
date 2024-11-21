@@ -24,7 +24,6 @@ type testParam struct {
 func init() {
 	testing.AddTest(&testing.Test{
 		Func:         PlatformServiceSmoke,
-		LacrosStatus: testing.LacrosVariantUnneeded,
 		Desc:         "Smoke test for the Platform Camera Service",
 		Contacts:     []string{"chromeos-camera-eng@google.com", "hidenorik@chromium.org"},
 		BugComponent: "b:167281", // ChromeOS > Platform > Technologies > Camera

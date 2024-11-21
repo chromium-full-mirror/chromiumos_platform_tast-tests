@@ -18,7 +18,6 @@ import (
 func init() {
 	testing.AddTest(&testing.Test{
 		Func:         SetTimer,
-		LacrosStatus: testing.LacrosVariantUnneeded,
 		Desc:         "Tests Assistant to set timer",
 		BugComponent: "b:905229", // ChromeOS > Software > Assistive
 		Contacts: []string{
@@ -36,8 +35,8 @@ func init() {
 			// Disabled by TORA.  See:b/345577611.
 			// "gaia"
 		},
-		Timeout:      chrome.GAIALoginTimeout + time.Minute,
-		Fixture:      "assistantWithGaia",
+		Timeout: chrome.GAIALoginTimeout + time.Minute,
+		Fixture: "assistantWithGaia",
 	})
 }
 

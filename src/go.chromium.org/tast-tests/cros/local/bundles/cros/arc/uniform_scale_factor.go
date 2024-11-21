@@ -22,10 +22,9 @@ import (
 
 func init() {
 	testing.AddTest(&testing.Test{
-		Func:         UniformScaleFactor,
-		LacrosStatus: testing.LacrosVariantUnneeded,
-		Desc:         "Checks that the uniform scale factor is applied to Android applications",
-		Contacts:     []string{"arc-framework+tast@google.com", "yhanada@chromium.org"},
+		Func:     UniformScaleFactor,
+		Desc:     "Checks that the uniform scale factor is applied to Android applications",
+		Contacts: []string{"arc-framework+tast@google.com", "yhanada@chromium.org"},
 		// ChromeOS > Software > ARC++ > Framework > Window Management
 		BugComponent: "b:537272",
 		Attr:         []string{"group:mainline", "informational"},

@@ -24,9 +24,8 @@ type standardizedMouseScrollArgs struct {
 
 func init() {
 	testing.AddTest(&testing.Test{
-		Func:         StandardizedMouseScroll,
-		LacrosStatus: testing.LacrosVariantUnneeded,
-		Desc:         "Functional test that installs an app and tests that a standard mouse scroll up, an down works",
+		Func: StandardizedMouseScroll,
+		Desc: "Functional test that installs an app and tests that a standard mouse scroll up, an down works",
 		Contacts: []string{
 			"arc-framework+tast@google.com",
 			"arc-engprod@google.com",

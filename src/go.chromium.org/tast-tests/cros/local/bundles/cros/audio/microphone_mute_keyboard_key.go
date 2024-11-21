@@ -20,9 +20,8 @@ import (
 
 func init() {
 	testing.AddTest(&testing.Test{
-		Func:         MicrophoneMuteKeyboardKey,
-		LacrosStatus: testing.LacrosVariantUnneeded,
-		Desc:         "Tests to ensure that the dedicated keyboard key for microphone mute toggle properly mutes/unmutes the microphone",
+		Func: MicrophoneMuteKeyboardKey,
+		Desc: "Tests to ensure that the dedicated keyboard key for microphone mute toggle properly mutes/unmutes the microphone",
 		Contacts: []string{
 			"chromeos-audio-bugs@google.com",
 			"chromeos-sw-engprod@google.com",

@@ -20,9 +20,8 @@ import (
 
 func init() {
 	testing.AddTest(&testing.Test{
-		Func:         ScrollUpAndDown,
-		LacrosStatus: testing.LacrosVariantUnneeded,
-		Desc:         "Checks the scroll to next/previous months on the calendar view",
+		Func: ScrollUpAndDown,
+		Desc: "Checks the scroll to next/previous months on the calendar view",
 		Contacts: []string{
 			"cros-calendar@google.com",
 			"cros-status-area-eng@google.com",

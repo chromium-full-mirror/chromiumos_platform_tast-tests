@@ -19,10 +19,9 @@ import (
 
 func init() {
 	testing.AddTest(&testing.Test{
-		Func:         VerifyDefaultApps,
-		LacrosStatus: testing.LacrosVariantUnneeded,
-		Desc:         "Verifies Default arc apps are installed",
-		Contacts:     []string{"cros-arc-te@google.com", "jinrongwu@google.com"},
+		Func:     VerifyDefaultApps,
+		Desc:     "Verifies Default arc apps are installed",
+		Contacts: []string{"cros-arc-te@google.com", "jinrongwu@google.com"},
 		// ChromeOS > Software > ARC++ > EngProd
 		BugComponent: "b:1052117",
 		Attr:         []string{"group:arc", "arc_core", "group:arc-functional", "group:hw_agnostic", "group:release-health", "release-health_arc"},

@@ -32,9 +32,8 @@ type enableDisableBluetoothWithDifferentUsersParams struct {
 
 func init() {
 	testing.AddTest(&testing.Test{
-		Func:         EnableDisableBluetoothWithDifferentUsers,
-		LacrosStatus: testing.LacrosVariantUnneeded,
-		Desc:         "Checks that the Bluetooth adapter state preference is preserved for the device and users",
+		Func: EnableDisableBluetoothWithDifferentUsers,
+		Desc: "Checks that the Bluetooth adapter state preference is preserved for the device and users",
 		Contacts: []string{
 			"cros-device-enablement@google.com",
 			"chadduffin@google.com",

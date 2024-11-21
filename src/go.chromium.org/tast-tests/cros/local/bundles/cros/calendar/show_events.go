@@ -19,9 +19,8 @@ import (
 
 func init() {
 	testing.AddTest(&testing.Test{
-		Func:         ShowEvents,
-		LacrosStatus: testing.LacrosVariantUnneeded,
-		Desc:         "Checks the event list on the calendar view",
+		Func: ShowEvents,
+		Desc: "Checks the event list on the calendar view",
 		Contacts: []string{
 			"cros-calendar@google.com",
 			"cros-status-area-eng@google.com",

@@ -17,7 +17,6 @@ import (
 func init() {
 	testing.AddTest(&testing.Test{
 		Func:         VerifyAppWayland,
-		LacrosStatus: testing.LacrosVariantUnneeded,
 		Desc:         "Runs a Wayland bruschetta application from the terminal and verifies that it renders",
 		Contacts:     []string{"clumptini+oncall@google.com"},
 		SoftwareDeps: []string{"chrome", "vm_host", "untrusted_vm", "dlc", "amd64"},

@@ -34,7 +34,6 @@ func init() {
 		Fixture:      fixture.AloopLoaded{Channels: 2, Parent: "chromeLoggedIn"}.Instance(),
 		Timeout:      5 * time.Minute,
 		SoftwareDeps: []string{"chrome"},
-		LacrosStatus: testing.LacrosVariantUnneeded,
 	})
 }
 

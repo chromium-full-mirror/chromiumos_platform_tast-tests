@@ -25,10 +25,9 @@ import (
 
 func init() {
 	testing.AddTest(&testing.Test{
-		Func:         ShelfIcons,
-		LacrosStatus: testing.LacrosVariantUnneeded,
-		Desc:         "Tests that ARC++ windows are represented in the shelf correctly, including grouping of windows and custom icons",
-		Contacts:     []string{"arc-framework+tast@google.com", "yhanada@chromium.org"},
+		Func:     ShelfIcons,
+		Desc:     "Tests that ARC++ windows are represented in the shelf correctly, including grouping of windows and custom icons",
+		Contacts: []string{"arc-framework+tast@google.com", "yhanada@chromium.org"},
 		// ChromeOS > Software > ARC++ > Framework > Chrome Integration
 		BugComponent: "b:537221",
 		Attr:         []string{"group:hw_agnostic", "group:mainline", "informational"},

@@ -17,9 +17,8 @@ import (
 
 func init() {
 	testing.AddTest(&testing.Test{
-		Func:         ExampleChameleonUSB,
-		LacrosStatus: testing.LacrosVariantUnneeded,
-		Desc:         "An example of Chameleon acting as an USB mic",
+		Func: ExampleChameleonUSB,
+		Desc: "An example of Chameleon acting as an USB mic",
 		Contacts: []string{
 			"chromeos-sw-engprod@google.com",
 			"crosep-intertech@google.com",

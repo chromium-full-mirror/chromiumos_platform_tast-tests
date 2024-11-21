@@ -18,9 +18,8 @@ import (
 
 func init() {
 	testing.AddTest(&testing.Test{
-		Func:         StandardizedKeyboardCopyPaste,
-		LacrosStatus: testing.LacrosVariantUnneeded,
-		Desc:         "Functional test that installs an app and tests standard keyboard copy/paste functionality. Test are performed in clamshell and touchview mode. This does not test the virtual, on-screen keyboard",
+		Func: StandardizedKeyboardCopyPaste,
+		Desc: "Functional test that installs an app and tests standard keyboard copy/paste functionality. Test are performed in clamshell and touchview mode. This does not test the virtual, on-screen keyboard",
 		Contacts: []string{
 			"arc-framework+tast@google.com",
 			"arc-engprod@google.com",

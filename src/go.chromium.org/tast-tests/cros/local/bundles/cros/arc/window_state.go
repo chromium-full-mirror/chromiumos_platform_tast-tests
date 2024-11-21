@@ -58,10 +58,9 @@ var tabletWindowStateTests = []windowStateTest{
 
 func init() {
 	testing.AddTest(&testing.Test{
-		Func:         WindowState,
-		LacrosStatus: testing.LacrosVariantUnneeded,
-		Desc:         "Checks that ARC applications correctly change the window state",
-		Contacts:     []string{"arc-framework+tast@google.com", "takise@chromium.org"},
+		Func:     WindowState,
+		Desc:     "Checks that ARC applications correctly change the window state",
+		Contacts: []string{"arc-framework+tast@google.com", "takise@chromium.org"},
 		// ChromeOS > Software > ARC++ > Framework > Window Management
 		BugComponent: "b:537272",
 		Attr:         []string{"group:mainline"},

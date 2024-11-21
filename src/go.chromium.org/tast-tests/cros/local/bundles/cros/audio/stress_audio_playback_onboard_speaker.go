@@ -30,7 +30,6 @@ type audioStressTestParams struct {
 func init() {
 	testing.AddTest(&testing.Test{
 		Func:         StressAudioPlaybackOnboardSpeaker,
-		LacrosStatus: testing.LacrosVariantUnneeded,
 		Desc:         "Verifies audio playback over onboard speaker for long duration",
 		Contacts:     []string{"chromeos-audio-bugs@google.com", "intel.chrome.automation.team@intel.com", "ambalavanan.m.m@intel.com"},
 		BugComponent: "b:776546",

@@ -84,9 +84,8 @@ var unsupportedModel = []string{
 
 func init() {
 	testing.AddTest(&testing.Test{
-		Func:         KernelSmokeMIPI,
-		LacrosStatus: testing.LacrosVariantUnneeded,
-		Desc:         "Smoke test for MIPI Camera Kernel Drivers",
+		Func: KernelSmokeMIPI,
+		Desc: "Smoke test for MIPI Camera Kernel Drivers",
 		Contacts: []string{
 			"chromeos-camera-kernel@google.com",
 			"chromeos-camera-eng@google.com",

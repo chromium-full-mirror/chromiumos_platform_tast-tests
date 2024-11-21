@@ -30,7 +30,6 @@ func init() {
 		SoftwareDeps: []string{
 			"chrome", // For DLC.
 		},
-		LacrosStatus: testing.LacrosVariantUnneeded,
 		Params: []testing.Param{
 			{
 				Name: "nc",

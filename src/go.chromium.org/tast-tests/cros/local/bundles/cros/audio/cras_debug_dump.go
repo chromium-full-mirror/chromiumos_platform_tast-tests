@@ -25,8 +25,7 @@ func init() {
 		Attr: []string{
 			"group:mainline",
 		},
-		Timeout:      3 * time.Minute,
-		LacrosStatus: testing.LacrosVariantUnneeded,
+		Timeout: 3 * time.Minute,
 	})
 }
 

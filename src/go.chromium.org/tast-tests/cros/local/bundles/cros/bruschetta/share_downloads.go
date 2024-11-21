@@ -20,7 +20,6 @@ import (
 func init() {
 	testing.AddTest(&testing.Test{
 		Func:         ShareDownloads,
-		LacrosStatus: testing.LacrosVariantUnneeded,
 		Desc:         "Test sharing Downloads with Bruschetta",
 		Contacts:     []string{"clumptini+oncall@google.com"},
 		SoftwareDeps: []string{"chrome", "vm_host", "untrusted_vm", "dlc", "amd64"},

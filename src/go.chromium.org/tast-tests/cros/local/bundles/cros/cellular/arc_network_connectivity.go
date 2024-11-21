@@ -16,7 +16,6 @@ func init() {
 	testing.AddTest(&testing.Test{
 		Func:           ArcNetworkConnectivity,
 		LifeCycleStage: testing.LifeCycleOwnerMonitored,
-		LacrosStatus:   testing.LacrosVariantUnneeded,
 		Desc:           "Verifies that Arc has network connectivity via cellular interface",
 		Contacts:       []string{"chromeos-cellular-team@google.com", "madhavadas@google.com"},
 		BugComponent:   "b:167157", // ChromeOS > Platform > Connectivity > Cellular

@@ -29,7 +29,6 @@ func init() {
 		BugComponent: "b:632502",
 		Attr:         []string{"group:arc-video", "group:crosbolt", "crosbolt_perbuild"},
 		SoftwareDeps: []string{"arc", "chrome", "video_decoder_direct"},
-		LacrosStatus: testing.LacrosVariantUnneeded,
 		Fixture:      "graphicsNoChrome",
 		Timeout:      chrome.LoginTimeout + arc.BootTimeout + 30*time.Second,
 		Params: []testing.Param{{

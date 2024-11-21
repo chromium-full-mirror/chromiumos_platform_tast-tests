@@ -19,9 +19,8 @@ const soundFile2 = "open_settings.wav"
 
 func init() {
 	testing.AddTest(&testing.Test{
-		Func:         OpenSettingsAudioLocal,
-		LacrosStatus: testing.LacrosVariantUnneeded,
-		Desc:         "Tests opening the Settings app using an Assistant query with the hotword played from the DUT",
+		Func: OpenSettingsAudioLocal,
+		Desc: "Tests opening the Settings app using an Assistant query with the hotword played from the DUT",
 		Contacts: []string{
 			"cros-assistive@google.com",
 			"chromeos-consumer-engprod@google.com",

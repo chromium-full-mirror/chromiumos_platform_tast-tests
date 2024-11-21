@@ -30,7 +30,6 @@ type enumTestConfig struct {
 func init() {
 	testing.AddTest(&testing.Test{
 		Func:         KernelSmokeEnum,
-		LacrosStatus: testing.LacrosVariantUnneeded,
 		Desc:         "Smoke test for Camera Enumeration",
 		Contacts:     []string{"chromeos-camera-eng@google.com", "hidenorik@chromium.org"},
 		BugComponent: "b:167281", // ChromeOS > Platform > Technologies > Camera

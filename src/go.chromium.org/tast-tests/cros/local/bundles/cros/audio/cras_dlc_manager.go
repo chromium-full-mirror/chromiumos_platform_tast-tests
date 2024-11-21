@@ -30,7 +30,6 @@ func init() {
 		Timeout:      5 * time.Minute,
 		SoftwareDeps: []string{"chrome", "dlc", "cros_internal"},
 		HardwareDeps: hwdep.D(hwdep.SkipOnModel("amd64-generic")),
-		LacrosStatus: testing.LacrosVariantUnneeded,
 	})
 }
 

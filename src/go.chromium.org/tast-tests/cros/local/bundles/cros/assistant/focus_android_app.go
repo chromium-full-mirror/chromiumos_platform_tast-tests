@@ -16,9 +16,8 @@ import (
 
 func init() {
 	testing.AddTest(&testing.Test{
-		Func:         FocusAndroidApp,
-		LacrosStatus: testing.LacrosVariantUnneeded,
-		Desc:         "Test that assistant focuses Android app if both web and Android versions are open",
+		Func: FocusAndroidApp,
+		Desc: "Test that assistant focuses Android app if both web and Android versions are open",
 		Contacts: []string{
 			"cros-assistive@google.com",
 			"chromeos-consumer-engprod@google.com",

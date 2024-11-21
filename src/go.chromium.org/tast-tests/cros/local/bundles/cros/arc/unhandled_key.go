@@ -17,10 +17,9 @@ import (
 
 func init() {
 	testing.AddTest(&testing.Test{
-		Func:         UnhandledKey,
-		LacrosStatus: testing.LacrosVariantUnneeded,
-		Desc:         "Unhandled key in Android is sent back to Chrome",
-		Contacts:     []string{"arc-framework+tast@google.com", "hirokisato@chromium.org"},
+		Func:     UnhandledKey,
+		Desc:     "Unhandled key in Android is sent back to Chrome",
+		Contacts: []string{"arc-framework+tast@google.com", "hirokisato@chromium.org"},
 		// ChromeOS > Software > ARC++ > Framework > Input
 		BugComponent: "b:536706",
 		Attr:         []string{"group:mainline", "group:hw_agnostic"},

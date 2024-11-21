@@ -21,9 +21,8 @@ import (
 
 func init() {
 	testing.AddTest(&testing.Test{
-		Func:         Swap,
-		LacrosStatus: testing.LacrosVariantUnneeded,
-		Desc:         "Test that vmm-swap is correctly enabled/disabled based on app state",
+		Func: Swap,
+		Desc: "Test that vmm-swap is correctly enabled/disabled based on app state",
 		Contacts: []string{
 			"cros-vm-technology@google.com",
 			"kawasin@google.com",

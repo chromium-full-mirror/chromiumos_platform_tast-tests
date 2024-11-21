@@ -18,25 +18,23 @@ import (
 
 func init() {
 	testing.AddTest(&testing.Test{
-		Func:         OpenSettings,
-		LacrosStatus: testing.LacrosVariantUnneeded,
-		Desc:         "Tests opening the Settings app using an Assistant query",
+		Func: OpenSettings,
+		Desc: "Tests opening the Settings app using an Assistant query",
 		Contacts: []string{
 			"cros-assistive@google.com",
 			"chromeos-consumer-engprod@google.com",
 		},
 		BugComponent: "b:905229", // ChromeOS > Software > Assistive
-		Attr: []string{
+		Attr:         []string{
 			// Disabled by TORA.  See:b/345898733.
 			// "group:mainline",
 			// "informational",
 			// "group:hw_agnostic",
 		},
-		SoftwareDeps: []string{"chrome", "chrome_internal",
-			// Disabled by TORA.  See:b/345898733.
-			// "gaia"
-		},
-		Fixture:      "assistantWithGaia",
+		SoftwareDeps: []string{"chrome", "chrome_internal"}, // Disabled by TORA.  See:b/345898733.
+		// "gaia"
+
+		Fixture: "assistantWithGaia",
 	})
 }
 

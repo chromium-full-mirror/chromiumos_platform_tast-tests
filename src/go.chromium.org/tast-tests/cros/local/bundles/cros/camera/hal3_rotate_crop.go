@@ -16,7 +16,6 @@ import (
 func init() {
 	testing.AddTest(&testing.Test{
 		Func:         HAL3RotateCrop,
-		LacrosStatus: testing.LacrosVariantUnneeded,
 		Desc:         "Verifies Rotate and Crop stream manipulator with HAL3 interface",
 		Contacts:     []string{"chromeos-camera-eng@google.com", "yerlandinata@chromium.org", "kamesan@chromium.org"},
 		BugComponent: "b:167281", // ChromeOS > Platform > Technologies > Camera

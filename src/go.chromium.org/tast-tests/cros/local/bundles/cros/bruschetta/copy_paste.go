@@ -19,7 +19,6 @@ func init() {
 
 	testing.AddTest(&testing.Test{
 		Func:         CopyPaste,
-		LacrosStatus: testing.LacrosVariantUnneeded,
 		Desc:         "Test copy paste functionality",
 		Contacts:     []string{"clumptini+oncall@google.com"},
 		SoftwareDeps: []string{"chrome", "vm_host", "untrusted_vm", "dlc", "amd64"},

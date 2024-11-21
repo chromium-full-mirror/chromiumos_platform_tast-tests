@@ -21,7 +21,6 @@ import (
 func init() {
 	testing.AddTest(&testing.Test{
 		Func:         CrosConfig,
-		LacrosStatus: testing.LacrosVariantUnneeded,
 		Desc:         "Check and verify camera configuration",
 		Contacts:     []string{"chromeos-camera-eng@google.com", "yerlandinata@chromium.org"},
 		BugComponent: "b:167281", // ChromeOS > Platform > Technologies > Camera

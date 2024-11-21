@@ -20,7 +20,6 @@ import (
 func init() {
 	testing.AddTest(&testing.Test{
 		Func:         AppVscodeWindowOperations,
-		LacrosStatus: testing.LacrosVariantUnneeded,
 		Desc:         "Performs maximize/restore/minimize/close actions on VS Code",
 		Contacts:     []string{"clumptini+oncall@google.com"},
 		Attr:         []string{"group:mainline", "group:bruschetta_cq"},

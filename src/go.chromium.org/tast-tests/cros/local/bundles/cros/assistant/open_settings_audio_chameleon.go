@@ -26,9 +26,8 @@ const busNumber = chameleon.AudioBus1
 
 func init() {
 	testing.AddTest(&testing.Test{
-		Func:         OpenSettingsAudioChameleon,
-		LacrosStatus: testing.LacrosVariantUnneeded,
-		Desc:         "Tests opening the Settings app using an Assistant query with the hotword played from the Chameleon audio board",
+		Func: OpenSettingsAudioChameleon,
+		Desc: "Tests opening the Settings app using an Assistant query with the hotword played from the Chameleon audio board",
 		Contacts: []string{
 			"cros-assistive@google.com",
 			"chromeos-consumer-engprod@google.com",

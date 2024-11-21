@@ -17,9 +17,8 @@ import (
 
 func init() {
 	testing.AddTest(&testing.Test{
-		Func:         ExampleAudioLatencyToolkit,
-		LacrosStatus: testing.LacrosVariantUnneeded,
-		Desc:         "An example of audio latency toolkit and latency measurements",
+		Func: ExampleAudioLatencyToolkit,
+		Desc: "An example of audio latency toolkit and latency measurements",
 		Contacts: []string{
 			"chromeos-sw-engprod@google.com",
 			"crosep-intertech@google.com",

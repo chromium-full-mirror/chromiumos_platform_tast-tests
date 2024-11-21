@@ -25,10 +25,9 @@ import (
 
 func init() {
 	testing.AddTest(&testing.Test{
-		Func:         UsbAttachToArcvm,
-		LacrosStatus: testing.LacrosVariantUnneeded,
-		Desc:         "Validity attaching virtual usb device to arcvm",
-		Contacts:     []string{"arc-core@google.com", "lgcheng@google.com"},
+		Func:     UsbAttachToArcvm,
+		Desc:     "Validity attaching virtual usb device to arcvm",
+		Contacts: []string{"arc-core@google.com", "lgcheng@google.com"},
 		// ChromeOS > Software > ARC++ > Core > Integration
 		BugComponent: "b:1131321",
 		Attr:         []string{"group:mainline", "informational"},

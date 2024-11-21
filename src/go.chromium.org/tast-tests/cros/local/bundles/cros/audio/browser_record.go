@@ -33,7 +33,6 @@ func init() {
 		BugComponent: "b:776546",
 		Attr:         []string{"group:mainline", "group:audio"},
 		SoftwareDeps: []string{"chrome"},
-		LacrosStatus: testing.LacrosVariantUnneeded,
 		Fixture: audiofixture.AloopLoaded{Channels: 2, Parent: audiofixture.Chrome(
 			chrome.ExtraArgs(
 				// Avoid the need to grant camera/microphone permissions.

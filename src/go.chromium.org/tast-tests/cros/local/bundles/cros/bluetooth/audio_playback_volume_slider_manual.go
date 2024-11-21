@@ -26,7 +26,6 @@ import (
 func init() {
 	testing.AddTest(&testing.Test{
 		Func:         AudioPlaybackVolumeSliderManual,
-		LacrosStatus: testing.LacrosVariantUnneeded,
 		Desc:         "System volume slider works fine for audio playback on Bluetooth headset",
 		Contacts:     []string{"intel.chrome.automation.team@intel.com", "ambalavanan.m.m@intel.com"},
 		BugComponent: "b:157291", // ChromeOS > External > Intel

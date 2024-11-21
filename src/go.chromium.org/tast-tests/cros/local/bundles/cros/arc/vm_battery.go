@@ -19,7 +19,6 @@ import (
 func init() {
 	testing.AddTest(&testing.Test{
 		Func:         VMBattery,
-		LacrosStatus: testing.LacrosVariantUnneeded,
 		Desc:         "Test that VM Battery exists",
 		Contacts:     []string{"arcvm-platform-power@google.com"},
 		BugComponent: "b:1477363",

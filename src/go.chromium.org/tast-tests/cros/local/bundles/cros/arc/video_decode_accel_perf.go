@@ -18,10 +18,9 @@ import (
 
 func init() {
 	testing.AddTest(&testing.Test{
-		Func:         VideoDecodeAccelPerf,
-		LacrosStatus: testing.LacrosVariantUnneeded,
-		Desc:         "Measures ARC++ hardware video decode performance by running the c2_e2e_test APK",
-		Contacts:     []string{"arc-performance@google.com", "arcvm-platform-video@google.com"},
+		Func:     VideoDecodeAccelPerf,
+		Desc:     "Measures ARC++ hardware video decode performance by running the c2_e2e_test APK",
+		Contacts: []string{"arc-performance@google.com", "arcvm-platform-video@google.com"},
 		// ChromeOS > Platform > Virtualization > ARC++ & ARCVM > ARC Video
 		BugComponent: "b:632502",
 		Attr:         []string{"group:arc-video", "group:crosbolt", "crosbolt_perbuild"},

@@ -18,9 +18,8 @@ import (
 
 func init() {
 	testing.AddTest(&testing.Test{
-		Func:         StandardizedTrackpadZoom,
-		LacrosStatus: testing.LacrosVariantUnneeded,
-		Desc:         "Functional test that installs an app and tests standard trackpad zoom in and zoom out functionality. Tests are only performed in clamshell mode as tablets don't support the trackpad",
+		Func: StandardizedTrackpadZoom,
+		Desc: "Functional test that installs an app and tests standard trackpad zoom in and zoom out functionality. Tests are only performed in clamshell mode as tablets don't support the trackpad",
 		Contacts: []string{
 			"arc-framework+tast@google.com",
 			"arc-engprod@google.com",

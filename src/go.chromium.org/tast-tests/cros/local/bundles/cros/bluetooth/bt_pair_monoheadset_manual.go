@@ -22,7 +22,6 @@ func init() {
 		Attr:         []string{"group:intel-bt"},
 		Vars:         []string{"bluetooth.monoHeadset"},
 		Fixture:      "chromeLoggedIn",
-		LacrosStatus: testing.LacrosVariantUnneeded,
 	})
 }
 

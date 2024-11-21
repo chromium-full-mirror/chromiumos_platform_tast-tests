@@ -21,7 +21,6 @@ import (
 func init() {
 	testing.AddTest(&testing.Test{
 		Func:           AutomaticallyDetectedApn,
-		LacrosStatus:   testing.LacrosVariantUnneeded,
 		LifeCycleStage: testing.LifeCycleInDevelopment,
 		Desc:           "Tests the correctness of the UI for automatically detected APNs",
 		Contacts: []string{

@@ -41,7 +41,6 @@ func init() {
 	testing.AddTest(&testing.Test{
 		Func:           AllowTextMessagesPolicy,
 		LifeCycleStage: testing.LifeCycleOwnerMonitored,
-		LacrosStatus:   testing.LacrosVariantUnneeded,
 		Desc:           "Verifies that admins and users can suppress text message notifications",
 		Contacts:       []string{"chromeos-cellular-team@google.com", "fahadmansoor@google.com"},
 		BugComponent:   "b:167157", // ChromeOS > Platform > Connectivity > Cellular

@@ -31,7 +31,6 @@ func init() {
 		Func: UnicornParentPermission,
 		// Disabled by TORA. See: b/352944886
 		LifeCycleStage: testing.LifeCycleOwnerMonitored,
-		LacrosStatus:   testing.LacrosVariantUnneeded,
 		Desc:           "Checks if App Install Triggers Parent Permission For Unicorn Account",
 		Contacts:       []string{"arc-commercial@google.com", "cros-arc-te@google.com", "jinrongwu@google.com"},
 		// ChromeOS > Software > ARC++ > Commercial > Tast Tests

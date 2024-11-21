@@ -22,11 +22,10 @@ import (
 func init() {
 	testing.AddTest(&testing.Test{
 		Func:         HDRnetE2E,
-		LacrosStatus: testing.LacrosVariantUnneeded,
 		Desc:         "Runs the HDRnet end-to-end integration test",
 		Contacts:     []string{"chromeos-camera-eng@google.com", "jcliang@chromium.org"},
 		BugComponent: "b:167281", // ChromeOS > Platform > Technologies > Camera
-		Attr:         []string{
+		Attr: []string{
 			"group:mainline",
 			"informational",
 			"group:release-health",

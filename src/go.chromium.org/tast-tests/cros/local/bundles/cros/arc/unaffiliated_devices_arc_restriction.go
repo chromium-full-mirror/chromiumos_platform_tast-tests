@@ -32,10 +32,9 @@ type unaffiliatedDevicesArcRestrictionTestArgs struct {
 
 func init() {
 	testing.AddTest(&testing.Test{
-		Func:         UnaffiliatedDevicesArcRestriction,
-		LacrosStatus: testing.LacrosVariantUnneeded,
-		Desc:         "Checks if ARC is booted when policy is true and not when policy is false",
-		Contacts:     []string{"arc-commercial@google.com", "preranap@google.com"},
+		Func:     UnaffiliatedDevicesArcRestriction,
+		Desc:     "Checks if ARC is booted when policy is true and not when policy is false",
+		Contacts: []string{"arc-commercial@google.com", "preranap@google.com"},
 		// ChromeOS > Software > ARC++ > Commercial > Tast Tests
 		BugComponent: "b:1487630",
 		Attr:         []string{"group:mainline"},

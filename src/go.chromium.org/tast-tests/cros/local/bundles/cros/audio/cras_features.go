@@ -30,7 +30,6 @@ func init() {
 		Attr:         []string{"group:mainline"},
 		Timeout:      crasFeaturesIterations * (crasFeaturesTimeoutPerIteration + chrome.ResetTimeout),
 		SoftwareDeps: []string{"chrome"},
-		LacrosStatus: testing.LacrosVariantUnneeded,
 	})
 }
 

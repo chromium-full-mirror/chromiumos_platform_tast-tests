@@ -18,9 +18,8 @@ import (
 
 func init() {
 	testing.AddTest(&testing.Test{
-		Func:         StandardizedTrackpadLeftClick,
-		LacrosStatus: testing.LacrosVariantUnneeded,
-		Desc:         "Functional test that installs an app and tests standard trackpad left click functionality. Tests are only performed in clamshell mode as tablets don't support the trackpad",
+		Func: StandardizedTrackpadLeftClick,
+		Desc: "Functional test that installs an app and tests standard trackpad left click functionality. Tests are only performed in clamshell mode as tablets don't support the trackpad",
 		Contacts: []string{
 			"arc-framework+tast@google.com",
 			"arc-engprod@google.com",

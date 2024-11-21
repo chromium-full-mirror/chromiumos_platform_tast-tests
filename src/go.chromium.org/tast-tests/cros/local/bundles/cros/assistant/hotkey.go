@@ -17,9 +17,8 @@ import (
 
 func init() {
 	testing.AddTest(&testing.Test{
-		Func:         Hotkey,
-		LacrosStatus: testing.LacrosVariantUnneeded,
-		Desc:         "Test Assistant hotkey to toggle launcher",
+		Func: Hotkey,
+		Desc: "Test Assistant hotkey to toggle launcher",
 		Contacts: []string{
 			"cros-assistive@google.com",
 			"chromeos-consumer-engprod@google.com",

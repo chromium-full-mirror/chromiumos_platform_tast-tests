@@ -32,8 +32,7 @@ func init() {
 			DevicePairs: 2,
 			Parent:      fixture.UIStopped{}.Instance(),
 		}.Instance(),
-		Timeout:      3 * time.Minute,
-		LacrosStatus: testing.LacrosVariantUnneeded,
+		Timeout: 3 * time.Minute,
 		Params: []testing.Param{
 			{
 				Val: crasSidetoneParam{

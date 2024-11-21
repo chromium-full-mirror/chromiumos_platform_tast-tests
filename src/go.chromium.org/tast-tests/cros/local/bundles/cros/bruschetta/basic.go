@@ -16,7 +16,6 @@ import (
 func init() {
 	testing.AddTest(&testing.Test{
 		Func:         Basic,
-		LacrosStatus: testing.LacrosVariantUnneeded,
 		Desc:         "Tests startup for the bruschetta VM",
 		Contacts:     []string{"clumptini+oncall@google.com"},
 		SoftwareDeps: []string{"chrome", "vm_host", "untrusted_vm", "dlc", "amd64"},

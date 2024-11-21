@@ -23,10 +23,9 @@ const veapCacheExtractedVideo = false
 
 func init() {
 	testing.AddTest(&testing.Test{
-		Func:         VideoEncodeAccelPerf,
-		LacrosStatus: testing.LacrosVariantUnneeded,
-		Desc:         "Measures ARC++ and ARCVM hardware video encode performance by running the arcvideoencoder_test binary",
-		Contacts:     []string{"arc-performance@google.com", "arcvm-platform-video@google.com"},
+		Func:     VideoEncodeAccelPerf,
+		Desc:     "Measures ARC++ and ARCVM hardware video encode performance by running the arcvideoencoder_test binary",
+		Contacts: []string{"arc-performance@google.com", "arcvm-platform-video@google.com"},
 		// ChromeOS > Platform > Virtualization > ARC++ & ARCVM > ARC Video
 		BugComponent: "b:632502",
 		Data:         []string{c2e2etest.X86ApkName, c2e2etest.ArmApkName},

@@ -14,9 +14,8 @@ import (
 
 func init() {
 	testing.AddTest(&testing.Test{
-		Func:         StartupInSignedOutMode,
-		LacrosStatus: testing.LacrosVariantUnneeded,
-		Desc:         "Starts Google Assistant service in signed-out mode and checks the running status",
+		Func: StartupInSignedOutMode,
+		Desc: "Starts Google Assistant service in signed-out mode and checks the running status",
 		Contacts: []string{
 			"cros-assistive@google.com",
 			"chromeos-consumer-engprod@google.com",

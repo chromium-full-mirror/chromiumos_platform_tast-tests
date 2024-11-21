@@ -23,7 +23,6 @@ import (
 func init() {
 	testing.AddTest(&testing.Test{
 		Func:         CrasRecordingCorrectness,
-		LacrosStatus: testing.LacrosVariantUnneeded,
 		Attr:         []string{"group:mainline", "group:audio", "informational"},
 		Desc:         "Play audio to loopback by aplay and verifies that CRAS records audio correctly",
 		Contacts:     []string{"chromeos-audio-bugs@google.com", "judyhsiao@chromium.org", "yuhsuan@chromium.org"},

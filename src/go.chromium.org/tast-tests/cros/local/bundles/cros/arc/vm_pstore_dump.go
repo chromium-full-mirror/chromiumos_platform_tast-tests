@@ -17,7 +17,6 @@ import (
 func init() {
 	testing.AddTest(&testing.Test{
 		Func:         VMPstoreDump,
-		LacrosStatus: testing.LacrosVariantUnneeded,
 		Desc:         "Test of vm_pstore_dump command: check the kernel's console output after running vm_pstore_dump",
 		Contacts:     []string{"arcvm-eng@google.com", "hikalium@chromium.org", "matvore@chromium.org"},
 		BugComponent: "b:882467",

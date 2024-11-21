@@ -20,7 +20,6 @@ import (
 func init() {
 	testing.AddTest(&testing.Test{
 		Func:         USBVolumeGranularity,
-		LacrosStatus: testing.LacrosVariantUnneeded,
 		Desc:         "Check for USB device volume changes depending on the volume range reported by the USB device",
 		Contacts:     []string{"chromeos-audio-bugs@google.com", "whalechang@chromium.org"},
 		BugComponent: "b:776546",

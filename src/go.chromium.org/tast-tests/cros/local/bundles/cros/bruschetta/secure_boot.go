@@ -16,7 +16,6 @@ import (
 func init() {
 	testing.AddTest(&testing.Test{
 		Func:         SecureBoot,
-		LacrosStatus: testing.LacrosVariantUnneeded,
 		Desc:         "Checks UEFI Secure Boot is enabled for bruschetta VM",
 		Contacts:     []string{"clumptini+oncall@google.com"},
 		SoftwareDeps: []string{"chrome", "vm_host", "untrusted_vm", "dlc", "amd64"},

@@ -20,7 +20,6 @@ import (
 func init() {
 	testing.AddTest(&testing.Test{
 		Func:         SocProperties,
-		LacrosStatus: testing.LacrosVariantUnneeded,
 		Desc:         "Checks SOC model-related properties (ro.soc.*)",
 		Contacts:     []string{"arcvm-eng@google.com", "matvore@chromium.org", "niwa@chromium.org"},
 		BugComponent: "b:883059",

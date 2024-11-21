@@ -16,10 +16,9 @@ import (
 
 func init() {
 	testing.AddTest(&testing.Test{
-		Func:         VMConfig,
-		LacrosStatus: testing.LacrosVariantUnneeded,
-		Desc:         "Test that VM is configured correctly",
-		Contacts:     []string{"arcvm-eng@google.com", "hashimoto@chromium.org"},
+		Func:     VMConfig,
+		Desc:     "Test that VM is configured correctly",
+		Contacts: []string{"arcvm-eng@google.com", "hashimoto@chromium.org"},
 		// ChromeOS > Software > ARC++ > ARCVM
 		BugComponent: "b:883059",
 		Attr:         []string{"group:mainline", "informational"},

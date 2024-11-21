@@ -19,10 +19,9 @@ import (
 
 func init() {
 	testing.AddTest(&testing.Test{
-		Func:         VTSKeymint,
-		LacrosStatus: testing.LacrosVariantUnneeded,
-		Desc:         "Runs the Android VTS module VtsAidlKeyMintTargetTest",
-		Contacts:     []string{"arc-commercial@google.com", "yaohuali@google.com"},
+		Func:     VTSKeymint,
+		Desc:     "Runs the Android VTS module VtsAidlKeyMintTargetTest",
+		Contacts: []string{"arc-commercial@google.com", "yaohuali@google.com"},
 		// ChromeOS > Software > ARC++ > Commercial > Tast Tests
 		BugComponent: "b:1487630",
 		Attr:         []string{"group:mainline", "informational"},

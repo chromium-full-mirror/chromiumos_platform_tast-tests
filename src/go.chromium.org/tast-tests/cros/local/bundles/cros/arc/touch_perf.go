@@ -20,9 +20,8 @@ import (
 
 func init() {
 	testing.AddTest(&testing.Test{
-		Func:         TouchPerf,
-		LacrosStatus: testing.LacrosVariantUnneeded,
-		Desc:         "Test ARC touchscreen system performance",
+		Func: TouchPerf,
+		Desc: "Test ARC touchscreen system performance",
 		Contacts: []string{
 			"arc-performance@google.com",
 			"hungmn@chromium.org",

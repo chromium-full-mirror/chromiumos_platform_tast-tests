@@ -23,9 +23,8 @@ import (
 
 func init() {
 	testing.AddTest(&testing.Test{
-		Func:         CheckShutdownCrash,
-		LacrosStatus: testing.LacrosVariantUnneeded,
-		Desc:         "Check if there was a shutdown crash when Assistant is enabled",
+		Func: CheckShutdownCrash,
+		Desc: "Check if there was a shutdown crash when Assistant is enabled",
 		Contacts: []string{
 			"cros-assistive@google.com",
 			"chromeos-consumer-engprod@google.com",

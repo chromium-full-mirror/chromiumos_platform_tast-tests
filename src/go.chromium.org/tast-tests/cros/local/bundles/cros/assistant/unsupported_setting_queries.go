@@ -16,9 +16,8 @@ import (
 
 func init() {
 	testing.AddTest(&testing.Test{
-		Func:         UnsupportedSettingQueries,
-		LacrosStatus: testing.LacrosVariantUnneeded,
-		Desc:         "Tests Assistant with unsupported setting query",
+		Func: UnsupportedSettingQueries,
+		Desc: "Tests Assistant with unsupported setting query",
 		Contacts: []string{
 			"cros-assistive@google.com",
 			"chromeos-consumer-engprod@google.com",

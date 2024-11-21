@@ -17,9 +17,8 @@ import (
 
 func init() {
 	testing.AddTest(&testing.Test{
-		Func:         ButtonClicks,
-		LacrosStatus: testing.LacrosVariantUnneeded,
-		Desc:         "Checks the basic interacting with calendar view",
+		Func: ButtonClicks,
+		Desc: "Checks the basic interacting with calendar view",
 		Contacts: []string{
 			"cros-calendar@google.com",
 			"cros-status-area-eng@google.com",

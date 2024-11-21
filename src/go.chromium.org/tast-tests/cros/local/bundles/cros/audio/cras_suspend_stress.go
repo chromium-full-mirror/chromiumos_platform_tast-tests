@@ -43,7 +43,6 @@ func init() {
 		SoftwareDeps: []string{"chrome"},
 		Attr:         []string{"group:mainline"},
 		Fixture:      "rebootForAudioDSPFixture",
-		LacrosStatus: testing.LacrosVariantUnneeded,
 		Params: []testing.Param{{
 			Name: "playback",
 			Val: crasSuspendStressParam{

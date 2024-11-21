@@ -27,7 +27,6 @@ func init() {
 		Func: UnicornBlockedApps,
 		// Disabled by TORA. See: b/336400628
 		LifeCycleStage: testing.LifeCycleOwnerMonitored,
-		LacrosStatus:   testing.LacrosVariantUnneeded,
 		Desc:           "Checks if blocked apps cannot be installed from Child Account",
 		Contacts:       []string{"arc-commercial@google.com", "mhasank@chromium.org"},
 		// ChromeOS > Software > ARC++ > Commercial > Tast Tests

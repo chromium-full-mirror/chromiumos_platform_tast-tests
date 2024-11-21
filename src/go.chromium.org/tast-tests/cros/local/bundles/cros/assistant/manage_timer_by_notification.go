@@ -20,7 +20,6 @@ import (
 func init() {
 	testing.AddTest(&testing.Test{
 		Func:         ManageTimerByNotification,
-		LacrosStatus: testing.LacrosVariantUnneeded,
 		Desc:         "Tests Assistant to manage timer by notification",
 		BugComponent: "b:905229", // ChromeOS > Software > Assistive
 		Contacts: []string{
@@ -33,12 +32,11 @@ func init() {
 			//"informational",
 			//"group:hw_agnostic",
 		},
-		SoftwareDeps: []string{"chrome", "chrome_internal",
-			// Disabled by TORA.  See:b/330878696.
-			// "gaia"
-		},
-		Timeout:      chrome.GAIALoginTimeout + time.Minute,
-		Fixture:      "assistantWithGaia",
+		SoftwareDeps: []string{"chrome", "chrome_internal"}, // Disabled by TORA.  See:b/330878696.
+		// "gaia"
+
+		Timeout: chrome.GAIALoginTimeout + time.Minute,
+		Fixture: "assistantWithGaia",
 	})
 }
 

@@ -31,10 +31,9 @@ const (
 
 func init() {
 	testing.AddTest(&testing.Test{
-		Func:         SurfaceOrientation,
-		LacrosStatus: testing.LacrosVariantUnneeded,
-		Desc:         "Test the various orientations of an ARC activity window surface",
-		Contacts:     []string{"arc-framework+tast@google.com", "lpique@google.com", "yhanada@chromium.org"},
+		Func:     SurfaceOrientation,
+		Desc:     "Test the various orientations of an ARC activity window surface",
+		Contacts: []string{"arc-framework+tast@google.com", "lpique@google.com", "yhanada@chromium.org"},
 		// ChromeOS > Software > ARC++ > Graphics
 		BugComponent: "b:516668",
 		Attr:         []string{"group:mainline", "group:hw_agnostic", "informational"},

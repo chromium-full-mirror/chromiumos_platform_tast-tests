@@ -19,9 +19,8 @@ import (
 
 func init() {
 	testing.AddTest(&testing.Test{
-		Func:         OpenAndroidApp,
-		LacrosStatus: testing.LacrosVariantUnneeded,
-		Desc:         "Tests Assistant open Android app feature",
+		Func: OpenAndroidApp,
+		Desc: "Tests Assistant open Android app feature",
 		Contacts: []string{
 			"cros-assistive@google.com",
 			"chromeos-consumer-engprod@google.com",

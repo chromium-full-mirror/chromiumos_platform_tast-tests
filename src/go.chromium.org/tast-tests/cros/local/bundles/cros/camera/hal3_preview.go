@@ -16,11 +16,10 @@ import (
 func init() {
 	testing.AddTest(&testing.Test{
 		Func:         HAL3Preview,
-		LacrosStatus: testing.LacrosVariantUnneeded,
 		Desc:         "Verifies camera preview function with HAL3 interface",
 		Contacts:     []string{"chromeos-camera-eng@google.com", "beckerh@chromium.org", "xinggu@chromium.org"},
 		BugComponent: "b:167281", // ChromeOS > Platform > Technologies > Camera
-		Attr:         []string{
+		Attr: []string{
 			"group:mainline",
 			"informational",
 			"group:camera-libcamera",

@@ -20,9 +20,8 @@ import (
 
 func init() {
 	testing.AddTest(&testing.Test{
-		Func:         AudioDecoder,
-		LacrosStatus: testing.LacrosVariantUnneeded,
-		Desc:         "Test that Assistant Audio Decoder service starts on demand",
+		Func: AudioDecoder,
+		Desc: "Test that Assistant Audio Decoder service starts on demand",
 		Contacts: []string{
 			"cros-assistive@google.com",
 			"chromeos-consumer-engprod@google.com",

@@ -20,7 +20,6 @@ import (
 func init() {
 	testing.AddTest(&testing.Test{
 		Func:         DecodeAccelJPEG,
-		LacrosStatus: testing.LacrosVariantUnneeded,
 		Desc:         "Run Chrome jpeg_decode_accelerator_unittest",
 		Contacts:     []string{"chromeos-camera-eng@google.com", "kamesan@chromium.org"},
 		BugComponent: "b:167281", // ChromeOS > Platform > Technologies > Camera

@@ -22,10 +22,9 @@ type videoDecodeAccelVDVDATestParam struct {
 
 func init() {
 	testing.AddTest(&testing.Test{
-		Func:         VideoDecodeAccelVDVDA,
-		LacrosStatus: testing.LacrosVariantUnneeded,
-		Desc:         "Verifies hardware decode acceleration using a media::VideoDecoder through the VDA interface, by running the video_decode_accelerator_tests binary (see go/vd-migration)",
-		Contacts:     []string{"arcvm-platform-video@google.com"},
+		Func:     VideoDecodeAccelVDVDA,
+		Desc:     "Verifies hardware decode acceleration using a media::VideoDecoder through the VDA interface, by running the video_decode_accelerator_tests binary (see go/vd-migration)",
+		Contacts: []string{"arcvm-platform-video@google.com"},
 		// ChromeOS > Platform > Virtualization > ARC++ & ARCVM > ARC Video
 		BugComponent: "b:632502",
 		SoftwareDeps: []string{"arc", "chrome", "video_decoder_direct"},

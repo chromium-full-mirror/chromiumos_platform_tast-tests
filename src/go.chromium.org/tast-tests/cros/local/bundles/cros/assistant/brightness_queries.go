@@ -20,9 +20,8 @@ import (
 
 func init() {
 	testing.AddTest(&testing.Test{
-		Func:         BrightnessQueries,
-		LacrosStatus: testing.LacrosVariantUnneeded,
-		Desc:         "Tests changing the screen brightness using Assistant queries",
+		Func: BrightnessQueries,
+		Desc: "Tests changing the screen brightness using Assistant queries",
 		Contacts: []string{
 			"cros-assistive@google.com",
 			"chromeos-consumer-engprod@google.com",

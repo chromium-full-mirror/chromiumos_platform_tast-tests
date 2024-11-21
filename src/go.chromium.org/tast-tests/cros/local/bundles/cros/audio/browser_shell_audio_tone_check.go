@@ -25,7 +25,6 @@ import (
 func init() {
 	testing.AddTest(&testing.Test{
 		Func:         BrowserShellAudioToneCheck,
-		LacrosStatus: testing.LacrosVariantUnneeded,
 		Desc:         "Verifies system tones in browser shell",
 		Contacts:     []string{"chromeos-audio-bugs@google.com", "intel.chrome.automation.team@intel.com", "ambalavanan.m.m@intel.com"},
 		BugComponent: "b:776546",

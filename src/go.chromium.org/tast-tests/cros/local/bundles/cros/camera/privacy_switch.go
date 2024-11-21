@@ -20,16 +20,15 @@ import (
 
 func init() {
 	testing.AddTest(&testing.Test{
-		Func:         PrivacySwitch,
-		LacrosStatus: testing.LacrosVariantUnneeded,
-		Desc:         "Verifies the privacy switch",
+		Func: PrivacySwitch,
+		Desc: "Verifies the privacy switch",
 		Contacts: []string{
 			"chromeos-camera-kernel@google.com",
 			"chromeos-camera-eng@google.com",
 			"ribalda@chromium.org",
 		},
 		BugComponent: "b:1481072", // ChromeOS > Platform > Technologies > Camera > Kernel
-		Attr:         []string{
+		Attr: []string{
 			"group:mainline",
 			"group:camera-stability",
 			"group:camera-usb-qual",

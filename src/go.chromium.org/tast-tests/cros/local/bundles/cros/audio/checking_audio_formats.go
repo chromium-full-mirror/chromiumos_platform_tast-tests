@@ -29,7 +29,6 @@ import (
 func init() {
 	testing.AddTest(&testing.Test{
 		Func:         CheckingAudioFormats,
-		LacrosStatus: testing.LacrosVariantUnneeded,
 		Desc:         "Verifies supported audio file formats",
 		Contacts:     []string{"chromeos-audio-bugs@google.com", "intel.chrome.automation.team@intel.com", "pathan.jilani@intel.com"},
 		BugComponent: "b:776546",

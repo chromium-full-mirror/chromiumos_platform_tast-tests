@@ -32,7 +32,6 @@ const (
 func init() {
 	testing.AddTest(&testing.Test{
 		Func:         V4L2,
-		LacrosStatus: testing.LacrosVariantUnneeded,
 		Desc:         "Verifies required V4L2 operations on USB camera devices",
 		Contacts:     []string{"chromeos-camera-eng@google.com", "kamesan@chromium.org", "shik@chromium.org"},
 		BugComponent: "b:167281", // ChromeOS > Platform > Technologies > Camera

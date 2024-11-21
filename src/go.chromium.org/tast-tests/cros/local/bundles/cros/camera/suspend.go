@@ -25,9 +25,8 @@ var flakyModel = append(unstableSuspendModel, testutil.FlakyModel...)
 
 func init() {
 	testing.AddTest(&testing.Test{
-		Func:         Suspend,
-		LacrosStatus: testing.LacrosVariantUnneeded,
-		Desc:         "Verifies the camera stack works after a suspend",
+		Func: Suspend,
+		Desc: "Verifies the camera stack works after a suspend",
 		Contacts: []string{
 			"chromeos-camera-eng@google.com",
 			"ribalda@chromium.org",

@@ -16,7 +16,6 @@ import (
 func init() {
 	testing.AddTest(&testing.Test{
 		Func:         HAL3StillCaptureZSL,
-		LacrosStatus: testing.LacrosVariantUnneeded,
 		Desc:         "Verifies camera still capture with ZSL function with HAL3 interface",
 		Contacts:     []string{"chromeos-camera-eng@google.com", "beckerh@chromium.org", "xinggu@chromium.org"},
 		BugComponent: "b:167281", // ChromeOS > Platform > Technologies > Camera

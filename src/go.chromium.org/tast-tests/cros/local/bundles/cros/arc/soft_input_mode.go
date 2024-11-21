@@ -20,10 +20,9 @@ import (
 
 func init() {
 	testing.AddTest(&testing.Test{
-		Func:         SoftInputMode,
-		LacrosStatus: testing.LacrosVariantUnneeded,
-		Desc:         "Verifies that Ash split view works properly with softInputMode=adjustPan|adjustResize activity flags",
-		Contacts:     []string{"arc-framework+tast@google.com", "yhanada@chromium.org"},
+		Func:     SoftInputMode,
+		Desc:     "Verifies that Ash split view works properly with softInputMode=adjustPan|adjustResize activity flags",
+		Contacts: []string{"arc-framework+tast@google.com", "yhanada@chromium.org"},
 		// ChromeOS > Software > ARC++ > Framework > IME VK
 		BugComponent: "b:537350",
 		SoftwareDeps: []string{"chrome"},

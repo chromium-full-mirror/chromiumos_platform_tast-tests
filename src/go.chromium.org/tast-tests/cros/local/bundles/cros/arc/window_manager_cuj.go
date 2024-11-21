@@ -56,10 +56,9 @@ var cujTests = []wmCUJTestParams{
 
 func init() {
 	testing.AddTest(&testing.Test{
-		Func:         WindowManagerCUJ,
-		LacrosStatus: testing.LacrosVariantUnneeded,
-		Desc:         "Verifies that Window Manager Critical User Journey behaves as described in go/arc-wm-p",
-		Contacts:     []string{"arc-framework+tast@google.com", "takise@chromium.org"},
+		Func:     WindowManagerCUJ,
+		Desc:     "Verifies that Window Manager Critical User Journey behaves as described in go/arc-wm-p",
+		Contacts: []string{"arc-framework+tast@google.com", "takise@chromium.org"},
 		// ChromeOS > Software > ARC++ > Framework > Window Management
 		BugComponent: "b:537272",
 		Attr:         []string{"group:mainline", "informational", "group:hw_agnostic"},

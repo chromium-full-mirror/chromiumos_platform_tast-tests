@@ -16,7 +16,6 @@ import (
 func init() {
 	testing.AddTest(&testing.Test{
 		Func:         HAL3AUE,
-		LacrosStatus: testing.LacrosVariantUnneeded,
 		Desc:         "Verifies that camera HAL3 will still function after its device auto-update-expiration date",
 		Contacts:     []string{"chromeos-camera-eng@google.com", "beckerh@chromium.org", "xinggu@chromium.org", "yerlandinata@chromium.org"},
 		BugComponent: "b:167281", // ChromeOS > Platform > Technologies > Camera

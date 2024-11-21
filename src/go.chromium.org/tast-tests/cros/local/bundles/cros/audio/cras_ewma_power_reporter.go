@@ -32,8 +32,7 @@ func init() {
 			Channels: 2,
 			Parent:   fixture.UIStopped{}.Instance(),
 		}.Instance(),
-		Timeout:      3 * time.Minute,
-		LacrosStatus: testing.LacrosVariantUnneeded,
+		Timeout: 3 * time.Minute,
 	})
 }
 

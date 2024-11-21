@@ -23,9 +23,8 @@ type startStopTestArgs struct {
 
 func init() {
 	testing.AddTest(&testing.Test{
-		Func:         StartStop,
-		LacrosStatus: testing.LacrosVariantUnneeded,
-		Desc:         "Verifies clean start and stop of CrOS Chrome and Android container",
+		Func: StartStop,
+		Desc: "Verifies clean start and stop of CrOS Chrome and Android container",
 		Contacts: []string{
 			"arcvm-software@google.com", // Owner team.
 			"raging@google.com",         // Owner for VM tests.

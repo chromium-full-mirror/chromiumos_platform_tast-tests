@@ -18,25 +18,23 @@ import (
 
 func init() {
 	testing.AddTest(&testing.Test{
-		Func:         BluetoothQueries,
-		LacrosStatus: testing.LacrosVariantUnneeded,
-		Desc:         "Tests toggling Bluetooth using Assistant queries",
+		Func: BluetoothQueries,
+		Desc: "Tests toggling Bluetooth using Assistant queries",
 		Contacts: []string{
 			"cros-assistive@google.com",
 			"chromeos-consumer-engprod@google.com",
 		},
 		BugComponent: "b:905229", // ChromeOS > Software > Assistive
-		Attr: []string{
+		Attr:         []string{
 			// Disabled by TORA.  See:b/345997220.
 			// "group:mainline",
 			// "informational",
 			// "group:hw_agnostic",
 		},
-		SoftwareDeps: []string{"chrome",
-			// Disabled by TORA.  See:b/345997220.
-			// "gaia"
-		},
-		Fixture:      "assistantWithGaia",
+		SoftwareDeps: []string{"chrome"}, // Disabled by TORA.  See:b/345997220.
+		// "gaia"
+
+		Fixture: "assistantWithGaia",
 	})
 }
 

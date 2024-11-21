@@ -17,9 +17,8 @@ import (
 
 func init() {
 	testing.AddTest(&testing.Test{
-		Func:         StandardizedTouchscreenLongTap,
-		LacrosStatus: testing.LacrosVariantUnneeded,
-		Desc:         "Functional test that installs an app and tests that a standard touchscreen long tap works",
+		Func: StandardizedTouchscreenLongTap,
+		Desc: "Functional test that installs an app and tests that a standard touchscreen long tap works",
 		Contacts: []string{
 			"arc-framework+tast@google.com",
 			"arc-engprod@google.com",

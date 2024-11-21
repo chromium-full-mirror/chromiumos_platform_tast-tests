@@ -20,9 +20,8 @@ import (
 
 func init() {
 	testing.AddTest(&testing.Test{
-		Func:         TimeQuery,
-		LacrosStatus: testing.LacrosVariantUnneeded,
-		Desc:         "Tests Assistant time query response",
+		Func: TimeQuery,
+		Desc: "Tests Assistant time query response",
 		Contacts: []string{
 			"cros-assistive@google.com",
 			"chromeos-consumer-engprod@google.com",

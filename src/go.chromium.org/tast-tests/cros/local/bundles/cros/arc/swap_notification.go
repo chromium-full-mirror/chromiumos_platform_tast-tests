@@ -24,9 +24,8 @@ import (
 
 func init() {
 	testing.AddTest(&testing.Test{
-		Func:         SwapNotification,
-		LacrosStatus: testing.LacrosVariantUnneeded,
-		Desc:         "Test vmm-swap and notification interactions",
+		Func: SwapNotification,
+		Desc: "Test vmm-swap and notification interactions",
 		Contacts: []string{
 			"cros-vm-technology@google.com",
 			"kawasin@google.com",

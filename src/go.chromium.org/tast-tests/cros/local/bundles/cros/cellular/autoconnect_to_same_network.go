@@ -25,7 +25,6 @@ type autoconnectToSameNetworkTestParams struct {
 func init() {
 	testing.AddTest(&testing.Test{
 		Func:           AutoconnectToSameNetwork,
-		LacrosStatus:   testing.LacrosVariantUnneeded,
 		LifeCycleStage: testing.LifeCycleInDevelopment,
 		Desc:           "Checks that disabling and re-enabling mobile data will only reconnect if auto-connect was enabled",
 		Contacts: []string{

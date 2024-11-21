@@ -19,9 +19,8 @@ import (
 
 func init() {
 	testing.AddTest(&testing.Test{
-		Func:         VolumeQueries,
-		LacrosStatus: testing.LacrosVariantUnneeded,
-		Desc:         "Tests setting, increasing, and decreasing volume actions via Assistant",
+		Func: VolumeQueries,
+		Desc: "Tests setting, increasing, and decreasing volume actions via Assistant",
 		Contacts: []string{
 			"cros-assistive@google.com",
 			"chromeos-consumer-engprod@google.com",

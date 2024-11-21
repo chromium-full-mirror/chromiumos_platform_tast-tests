@@ -22,7 +22,6 @@ import (
 func init() {
 	testing.AddTest(&testing.Test{
 		Func:         AppVscode,
-		LacrosStatus: testing.LacrosVariantUnneeded,
 		Desc:         "Opens Visual Studio Code from terminal and performs UI interactions",
 		Contacts:     []string{"clumptini+oncall@google.com"},
 		Attr:         []string{"group:mainline", "group:bruschetta_cq", "informational"},

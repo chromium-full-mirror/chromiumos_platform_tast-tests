@@ -28,9 +28,8 @@ func init() {
 		Attr: []string{
 			"group:mainline",
 		},
-		Data:         []string{data.AudioLong16Wav},
-		Timeout:      3 * time.Minute,
-		LacrosStatus: testing.LacrosVariantUnneeded,
+		Data:    []string{data.AudioLong16Wav},
+		Timeout: 3 * time.Minute,
 		Params: []testing.Param{
 			{
 				Name: "48000_mono",

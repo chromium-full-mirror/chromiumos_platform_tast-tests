@@ -24,7 +24,6 @@ import (
 func init() {
 	testing.AddTest(&testing.Test{
 		Func:         AutoFramingUIToggle,
-		LacrosStatus: testing.LacrosVariantUnneeded,
 		Desc:         "Checks toggling Auto-framing from UI works",
 		Contacts:     []string{"chromeos-camera-eng@google.com", "kamesan@chromium.org"},
 		BugComponent: "b:167281", // ChromeOS > Platform > Technologies > Camera

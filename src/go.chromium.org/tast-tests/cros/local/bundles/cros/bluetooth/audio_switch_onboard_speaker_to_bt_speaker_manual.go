@@ -26,7 +26,6 @@ import (
 func init() {
 	testing.AddTest(&testing.Test{
 		Func:         AudioSwitchOnboardSpeakerToBTSpeakerManual,
-		LacrosStatus: testing.LacrosVariantUnneeded,
 		Desc:         "Verifies audio playback switching from onboard speaker to BT speaker",
 		Contacts:     []string{"intel.chrome.automation.team@intel.com", "ambalavanan.m.m@intel.com"},
 		BugComponent: "b:157291", // ChromeOS > External > Intel

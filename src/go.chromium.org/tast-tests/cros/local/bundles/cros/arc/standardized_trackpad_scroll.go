@@ -18,9 +18,8 @@ import (
 
 func init() {
 	testing.AddTest(&testing.Test{
-		Func:         StandardizedTrackpadScroll,
-		LacrosStatus: testing.LacrosVariantUnneeded,
-		Desc:         "Functional test that installs an app and tests standard trackpad scroll up and scroll down functionality. Tests are only performed in clamshell mode as tablets don't support the trackpad",
+		Func: StandardizedTrackpadScroll,
+		Desc: "Functional test that installs an app and tests standard trackpad scroll up and scroll down functionality. Tests are only performed in clamshell mode as tablets don't support the trackpad",
 		Contacts: []string{
 			"arc-framework+tast@google.com",
 			"arc-engprod@google.com",

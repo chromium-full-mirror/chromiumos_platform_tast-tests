@@ -16,7 +16,6 @@ import (
 func init() {
 	testing.AddTest(&testing.Test{
 		Func:         Diagnostics,
-		LacrosStatus: testing.LacrosVariantUnneeded,
 		Desc:         "Camera Diagnostics tests",
 		Contacts:     []string{"chromeos-camera-eng@google.com", "imranziad@chromium.org"},
 		BugComponent: "b:167281", // ChromeOS > Platform > Technologies > Camera

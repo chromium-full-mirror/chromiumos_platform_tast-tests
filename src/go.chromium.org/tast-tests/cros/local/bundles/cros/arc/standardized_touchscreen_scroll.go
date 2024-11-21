@@ -17,9 +17,8 @@ import (
 
 func init() {
 	testing.AddTest(&testing.Test{
-		Func:         StandardizedTouchscreenScroll,
-		LacrosStatus: testing.LacrosVariantUnneeded,
-		Desc:         "Functional test that installs an app and tests that a standard touchscreen scroll up, an ddown works",
+		Func: StandardizedTouchscreenScroll,
+		Desc: "Functional test that installs an app and tests that a standard touchscreen scroll up, an ddown works",
 		Contacts: []string{
 			"arc-framework+tast@google.com",
 			"arc-engprod@google.com",

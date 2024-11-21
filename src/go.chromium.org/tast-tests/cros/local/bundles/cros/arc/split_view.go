@@ -37,10 +37,9 @@ type splitViewTestParams struct {
 
 func init() {
 	testing.AddTest(&testing.Test{
-		Func:         SplitView,
-		LacrosStatus: testing.LacrosVariantUnneeded,
-		Desc:         "Tests split view works properly with ARC apps",
-		Contacts:     []string{"arc-framework+tast@google.com", "toshikikikuchi@chromium.org"},
+		Func:     SplitView,
+		Desc:     "Tests split view works properly with ARC apps",
+		Contacts: []string{"arc-framework+tast@google.com", "toshikikikuchi@chromium.org"},
 		// ChromeOS > Software > ARC++ > Framework > Window Management
 		BugComponent: "b:537272",
 		Attr:         []string{"group:mainline", "informational"},

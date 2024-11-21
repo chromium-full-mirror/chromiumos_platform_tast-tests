@@ -17,9 +17,8 @@ import (
 
 func init() {
 	testing.AddTest(&testing.Test{
-		Func:         StandardizedTouchscreenZoom,
-		LacrosStatus: testing.LacrosVariantUnneeded,
-		Desc:         "Functional test that installs an app and tests that a standard touchscreen zoom in, and zoom out gestures work",
+		Func: StandardizedTouchscreenZoom,
+		Desc: "Functional test that installs an app and tests that a standard touchscreen zoom in, and zoom out gestures work",
 		Contacts: []string{
 			"arc-framework+tast@google.com",
 			"arc-engprod@google.com",

@@ -51,7 +51,6 @@ func init() {
 		},
 		Timeout:      1 * time.Minute,
 		HardwareDeps: hwdep.D(hwdep.SOFAudioDSP()),
-		LacrosStatus: testing.LacrosVariantUnneeded,
 	})
 }
 

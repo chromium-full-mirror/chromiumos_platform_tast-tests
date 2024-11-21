@@ -21,9 +21,8 @@ import (
 
 func init() {
 	testing.AddTest(&testing.Test{
-		Func:         KernelSmokeUSB,
-		LacrosStatus: testing.LacrosVariantUnneeded,
-		Desc:         "Smoke test for USB Camera Kernel Drivers",
+		Func: KernelSmokeUSB,
+		Desc: "Smoke test for USB Camera Kernel Drivers",
 		Contacts: []string{
 			"chromeos-camera-kernel@google.com",
 			"chromeos-camera-eng@google.com",

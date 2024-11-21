@@ -31,10 +31,9 @@ const systemPropsVar = "arc.SystemProps.Props"
 
 func init() {
 	testing.AddTest(&testing.Test{
-		Func:         SystemProps,
-		LacrosStatus: testing.LacrosVariantUnneeded,
-		Desc:         "Verifies that all ARC system props are set",
-		Contacts:     []string{"arc-commercial@google.com", "mhasank@chromium.org"},
+		Func:     SystemProps,
+		Desc:     "Verifies that all ARC system props are set",
+		Contacts: []string{"arc-commercial@google.com", "mhasank@chromium.org"},
 		// ChromeOS > Software > ARC++ > Commercial > Tast Tests
 		BugComponent: "b:1487630",
 		Attr:         []string{"group:mainline", "group:hw_agnostic"},

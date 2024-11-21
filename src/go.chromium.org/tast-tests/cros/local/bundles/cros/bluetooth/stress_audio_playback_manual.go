@@ -29,7 +29,6 @@ type audioStress struct {
 func init() {
 	testing.AddTest(&testing.Test{
 		Func:         StressAudioPlaybackManual,
-		LacrosStatus: testing.LacrosVariantUnneeded,
 		Desc:         "Verifies audio playback over BT headset for long duration",
 		Contacts:     []string{"intel.chrome.automation.team@intel.com", "ambalavanan.m.m@intel.com"},
 		BugComponent: "b:157291", // ChromeOS > External > Intel

@@ -21,9 +21,8 @@ import (
 
 func init() {
 	testing.AddTest(&testing.Test{
-		Func:         UreadaheadGuestCompat,
-		LacrosStatus: testing.LacrosVariantUnneeded,
-		Desc:         "Validates that ureadahead binary from CrOS host can work in the guest ARCVM OS",
+		Func: UreadaheadGuestCompat,
+		Desc: "Validates that ureadahead binary from CrOS host can work in the guest ARCVM OS",
 		Contacts: []string{
 			"arc-performance@google.com",
 			"alanding@google.com",

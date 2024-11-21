@@ -70,7 +70,6 @@ func init() {
 		BugComponent: "b:776546",
 		Attr:         []string{},
 		Timeout:      30 * time.Second,
-		LacrosStatus: testing.LacrosVariantUnneeded,
 		Params: []testing.Param{
 			// AEC provider tests.
 			{

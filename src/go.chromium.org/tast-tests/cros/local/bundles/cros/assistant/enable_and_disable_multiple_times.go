@@ -15,15 +15,14 @@ import (
 
 func init() {
 	testing.AddTest(&testing.Test{
-		Func:         EnableAndDisableMultipleTimes,
-		LacrosStatus: testing.LacrosVariantUnneeded,
-		Desc:         "Enable/disable Google Assistant service multiple times and checks the running status",
+		Func: EnableAndDisableMultipleTimes,
+		Desc: "Enable/disable Google Assistant service multiple times and checks the running status",
 		Contacts: []string{
 			"cros-assistive@google.com",
 			"chromeos-consumer-engprod@google.com",
 		},
 		BugComponent: "b:905229", // ChromeOS > Software > Assistive
-		Attr: []string{
+		Attr:         []string{
 			// Disabled by TORA.  See:b/342434700.
 			// "group:mainline",
 			// "informational",

@@ -19,7 +19,6 @@ import (
 func init() {
 	testing.AddTest(&testing.Test{
 		Func:         CopyFilesToGuest,
-		LacrosStatus: testing.LacrosVariantUnneeded,
 		Desc:         "Tests copying files to the bruschetta VM through the Files app",
 		Contacts:     []string{"clumptini+oncall@google.com"},
 		SoftwareDeps: []string{"chrome", "vm_host", "untrusted_vm", "dlc", "amd64"},

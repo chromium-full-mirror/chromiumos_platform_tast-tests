@@ -20,7 +20,6 @@ import (
 func init() {
 	testing.AddTest(&testing.Test{
 		Func:         USBCameraInfo,
-		LacrosStatus: testing.LacrosVariantUnneeded,
 		Desc:         "Collect camera modules info",
 		Contacts:     []string{"chromeos-camera-eng@google.com", "esker@chromium.org"},
 		BugComponent: "b:167281", // ChromeOS > Platform > Technologies > Camera

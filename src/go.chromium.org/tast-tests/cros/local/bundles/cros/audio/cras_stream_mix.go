@@ -32,7 +32,6 @@ var crasStreamMixUnstableModels = []string{}
 func init() {
 	testing.AddTest(&testing.Test{
 		Func:         CrasStreamMix,
-		LacrosStatus: testing.LacrosVariantUnneeded,
 		Attr:         []string{"group:mainline", "group:audio"},
 		Desc:         "Captures output audio via loopback and verifies that CRAS plays multiple streams correctly",
 		Contacts:     []string{"chromeos-audio-bugs@google.com", "judyhsiao@chromium.org", "yuhsuan@chromium.org"},
