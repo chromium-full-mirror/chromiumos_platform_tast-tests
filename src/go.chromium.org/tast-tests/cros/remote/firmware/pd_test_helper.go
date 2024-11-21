@@ -54,6 +54,7 @@ type PDTestParams struct {
 	RequiredPort  *int
 	PowerRole     ServoPowerRole
 	NumIterations int
+	DPAltPlug     bool
 }
 
 // SetupPDTester handles some boilerplate tasks to prepare the Servo for PD testing:

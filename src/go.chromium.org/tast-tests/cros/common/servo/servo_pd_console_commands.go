@@ -245,6 +245,28 @@ func (s *Servo) SetHPD(ctx context.Context, HPDLevel HPDLevelValue) error {
 	return nil
 }
 
+// SetPlug sets the PLug status for an active dp-alt connection
+func (s *Servo) SetPlug(ctx context.Context, Plug bool) error {
+	cmd := fmt.Sprintf("usbc_action dp plug 0")
+	if Plug {
+		cmd = fmt.Sprintf("usbc_action dp plug 1")
+	}
+	if err := s.RunServoCommand(ctx, cmd); err != nil {
+		return errors.Wrap(err, "failed to set plug status")
+	}
+
+	// we only use commands off and on to preserve the usbc state between resets
+	if err := s.ServoCcOff(ctx); err != nil {
+		return errors.Wrap(err, "failed to turn off cc")
+	}
+
+	if err := s.ServoCcOn(ctx); err != nil {
+		return errors.Wrap(err, "failed to turn on cc")
+	}
+
+	return nil
+}
+
 // ServoSetUSBVersion3 sets the DUT USB connection as version 2.0 or 3.0
 func (s *Servo) ServoSetUSBVersion3(ctx context.Context, USBVersion3 bool) error {
 	enableVersion3 := "disable"
