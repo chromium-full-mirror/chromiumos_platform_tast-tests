@@ -22,7 +22,6 @@ import (
 func init() {
 	testing.AddTest(&testing.Test{
 		Func:         DrivefsSearch,
-		LacrosStatus: testing.LacrosVariantUnneeded,
 		Desc:         "Verify that exact file search for Google Drive returns correct value",
 		BugComponent: "b:167289",
 		Contacts: []string{

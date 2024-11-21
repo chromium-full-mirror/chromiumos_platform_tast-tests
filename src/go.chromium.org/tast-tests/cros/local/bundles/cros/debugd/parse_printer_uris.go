@@ -26,9 +26,8 @@ type printerSpec struct {
 
 func init() {
 	testing.AddTest(&testing.Test{
-		Func:         ParsePrinterUris,
-		LacrosStatus: testing.LacrosVariantUnneeded,
-		Desc:         "Tests debugd's behavior when parsing printer URIs",
+		Func: ParsePrinterUris,
+		Desc: "Tests debugd's behavior when parsing printer URIs",
 		Contacts: []string{
 			"project-bolton@google.com",
 			"nmuggli@google.com",

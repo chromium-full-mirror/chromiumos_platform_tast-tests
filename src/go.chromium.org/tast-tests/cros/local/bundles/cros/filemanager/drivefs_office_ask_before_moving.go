@@ -25,7 +25,6 @@ func init() {
 	testing.AddTest(&testing.Test{
 		Func:           DrivefsOfficeAskBeforeMoving,
 		LifeCycleStage: testing.LifeCycleOwnerMonitored,
-		LacrosStatus:   testing.LacrosVariantUnneeded,
 		Desc:           "Verifies that toggling the 'Ask Before Moving to Google Drive' option makes the move interstitial disappear for Setup flow",
 		BugComponent:   "b:1199143",
 		Timeout:        5 * time.Minute,

@@ -33,9 +33,8 @@ type ussMigrationKioskParam struct {
 
 func init() {
 	testing.AddTest(&testing.Test{
-		Func:         UssMigrationKiosk,
-		LacrosStatus: testing.LacrosVariantUnneeded,
-		Desc:         "Test migration to USS of Kiosk keysets",
+		Func: UssMigrationKiosk,
+		Desc: "Test migration to USS of Kiosk keysets",
 		Contacts: []string{
 			"cryptohome-core@google.com",
 			"jadmanski@chromium.org",

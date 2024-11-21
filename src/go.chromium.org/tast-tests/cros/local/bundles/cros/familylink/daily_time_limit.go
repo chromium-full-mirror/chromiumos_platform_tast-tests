@@ -26,9 +26,8 @@ import (
 
 func init() {
 	testing.AddTest(&testing.Test{
-		Func:         DailyTimeLimit,
-		LacrosStatus: testing.LacrosVariantUnneeded,
-		Desc:         "Verify the daily time limit works correctly for Family Link account",
+		Func: DailyTimeLimit,
+		Desc: "Verify the daily time limit works correctly for Family Link account",
 		Contacts: []string{
 			"cros-families-eng+test@google.com",
 			"chromeos-consumer-engprod@google.com",

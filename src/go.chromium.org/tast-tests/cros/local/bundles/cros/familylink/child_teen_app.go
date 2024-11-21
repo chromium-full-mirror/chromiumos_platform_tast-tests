@@ -29,9 +29,8 @@ import (
 
 func init() {
 	testing.AddTest(&testing.Test{
-		Func:         ChildTeenApp,
-		LacrosStatus: testing.LacrosVariantUnneeded,
-		Desc:         "Verify that clicking the 'Parental controls' link in the Accounts page in Settings launches the Child & Teen version of the Family Link app",
+		Func: ChildTeenApp,
+		Desc: "Verify that clicking the 'Parental controls' link in the Accounts page in Settings launches the Child & Teen version of the Family Link app",
 		Contacts: []string{
 			"cros-families-eng+test@google.com",
 			"chromeos-consumer-engprod@google.com",

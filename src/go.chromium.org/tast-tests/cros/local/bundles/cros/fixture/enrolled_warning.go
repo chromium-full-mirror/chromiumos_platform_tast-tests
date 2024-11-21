@@ -14,9 +14,8 @@ import (
 
 func init() {
 	testing.AddTest(&testing.Test{
-		Func:         EnrolledWarning,
-		LacrosStatus: testing.LacrosVariantUnneeded,
-		Desc:         "Showing errors of failed attempts in enrolled fixture",
+		Func: EnrolledWarning,
+		Desc: "Showing errors of failed attempts in enrolled fixture",
 		Contacts: []string{
 			"cros-engprod-muc@google.com",
 			"vsavu@google.com", // Test owner

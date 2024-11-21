@@ -26,7 +26,6 @@ import (
 func init() {
 	testing.AddTest(&testing.Test{
 		Func:         SMBFileOperations,
-		LacrosStatus: testing.LacrosVariantUnneeded,
 		Desc:         "Verify Files app can mount an SMB share and verify the contents",
 		BugComponent: "b:167289",
 		Contacts: []string{

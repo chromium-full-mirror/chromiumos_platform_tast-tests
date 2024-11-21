@@ -22,7 +22,6 @@ type config struct {
 func init() {
 	testing.AddTest(&testing.Test{
 		Func:         GLBench,
-		LacrosStatus: testing.LacrosVariantUnneeded,
 		Desc:         "Run glbench (a benchmark that times graphics intensive activities), check results and report its performance",
 		BugComponent: "b:995569", // ChromeOS > Platform > Graphics > GPU
 		Contacts: []string{

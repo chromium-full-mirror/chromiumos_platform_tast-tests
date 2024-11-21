@@ -27,7 +27,6 @@ import (
 func init() {
 	testing.AddTest(&testing.Test{
 		Func:         SMBPassword,
-		LacrosStatus: testing.LacrosVariantUnneeded,
 		Desc:         "Verify an SMB share can be mounted and password remembered after Chrome restart",
 		BugComponent: "b:167289",
 		Contacts: []string{

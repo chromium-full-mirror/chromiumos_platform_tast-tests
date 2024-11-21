@@ -24,9 +24,8 @@ import (
 
 func init() {
 	testing.AddTest(&testing.Test{
-		Func:         Idle,
-		LacrosStatus: testing.LacrosVariantUnneeded,
-		Desc:         "Log into Chrome, request nothing to be on the desktop, wait, verify there are moments where the GPU has nothing to do. If the GPU stays continuously busy system power usage will be unacceptably high",
+		Func: Idle,
+		Desc: "Log into Chrome, request nothing to be on the desktop, wait, verify there are moments where the GPU has nothing to do. If the GPU stays continuously busy system power usage will be unacceptably high",
 		// TODO(pwang): Add to CQ once it is green and stable.
 		Attr:         []string{"group:graphics", "graphics_nightly", "group:mainline"},
 		BugComponent: "b:995569", // ChromeOS > Platform > Graphics > GPU

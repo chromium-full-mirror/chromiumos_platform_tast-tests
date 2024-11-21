@@ -21,9 +21,8 @@ import (
 
 func init() {
 	testing.AddTest(&testing.Test{
-		Func:         CheckEOPState,
-		LacrosStatus: testing.LacrosVariantUnneeded,
-		Desc:         "Validates that the ME has been told by firmware that POST is done",
+		Func: CheckEOPState,
+		Desc: "Validates that the ME has been told by firmware that POST is done",
 		Contacts: []string{
 			"chromeos-faft@google.com",
 			"cienet-firmware@cienet.corp-partner.google.com",

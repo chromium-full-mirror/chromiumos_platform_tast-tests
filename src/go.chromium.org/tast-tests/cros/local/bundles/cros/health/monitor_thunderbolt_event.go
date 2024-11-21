@@ -18,9 +18,8 @@ import (
 
 func init() {
 	testing.AddTest(&testing.Test{
-		Func:         MonitorThunderboltEvent,
-		LacrosStatus: testing.LacrosVariantUnneeded,
-		Desc:         "Monitors the Thunderbolt event detected properly or not",
+		Func: MonitorThunderboltEvent,
+		Desc: "Monitors the Thunderbolt event detected properly or not",
 		Contacts: []string{
 			"cros-tdm-tpe-eng@google.com",
 			"chungsheng@google.com",

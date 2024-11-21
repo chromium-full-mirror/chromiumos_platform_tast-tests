@@ -25,9 +25,8 @@ import (
 
 func init() {
 	testing.AddTest(&testing.Test{
-		Func:         DataLeakPreventionRulesListFilesCrostini,
-		LacrosStatus: testing.LacrosVariantUnneeded,
-		Desc:         "Test behavior of DataLeakPreventionRulesList policy with file Crostini restriction",
+		Func: DataLeakPreventionRulesListFilesCrostini,
+		Desc: "Test behavior of DataLeakPreventionRulesList policy with file Crostini restriction",
 		Contacts: []string{
 			"chromeos-dlp@google.com",
 			"aidazolic@google.com",

@@ -16,9 +16,8 @@ import (
 
 func init() {
 	testing.AddTest(&testing.Test{
-		Func:         Webfonts,
-		LacrosStatus: testing.LacrosVariantUnneeded,
-		Desc:         "Checks that common webfonts are available on the system",
+		Func: Webfonts,
+		Desc: "Checks that common webfonts are available on the system",
 		Contacts: []string{
 			"chromeos-fonts@google.com",
 			"skau@chromium.org",

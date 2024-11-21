@@ -37,9 +37,8 @@ type testCase struct {
 
 func init() {
 	testing.AddTest(&testing.Test{
-		Func:         Smoke,
-		LacrosStatus: testing.LacrosVariantUnneeded,
-		Desc:         "Tests the basic ui elements for glanceables",
+		Func: Smoke,
+		Desc: "Tests the basic ui elements for glanceables",
 		Contacts: []string{
 			"cros-system-ui-eng@google.com",
 			"amitrokhin@google.com",

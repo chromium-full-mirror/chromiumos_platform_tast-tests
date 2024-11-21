@@ -23,9 +23,8 @@ import (
 
 func init() {
 	testing.AddTest(&testing.Test{
-		Func:         ParentalControlsLink,
-		LacrosStatus: testing.LacrosVariantUnneeded,
-		Desc:         "Verify 'Parental controls' setting opens family website when Play Store is disabled",
+		Func: ParentalControlsLink,
+		Desc: "Verify 'Parental controls' setting opens family website when Play Store is disabled",
 		Contacts: []string{
 			"cros-families-eng+test@google.com",
 			"chromeos-consumer-engprod@google.com",

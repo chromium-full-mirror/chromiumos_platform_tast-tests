@@ -25,7 +25,6 @@ type fileStabilityParams struct {
 func init() {
 	testing.AddTest(&testing.Test{
 		Func:         FileStability,
-		LacrosStatus: testing.LacrosVariantUnneeded,
 		Desc:         "Checks that the cryptohome is stable after login",
 		Contacts:     []string{"cryptohome-core@google.com"},
 		BugComponent: "b:1088399", // ChromeOS > Security > Cryptohome

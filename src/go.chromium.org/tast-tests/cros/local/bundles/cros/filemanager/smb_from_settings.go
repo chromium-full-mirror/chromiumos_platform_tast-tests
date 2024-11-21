@@ -28,7 +28,6 @@ import (
 func init() {
 	testing.AddTest(&testing.Test{
 		Func:         SMBFromSettings,
-		LacrosStatus: testing.LacrosVariantUnneeded,
 		Desc:         "Verify SMB mount can be added from OS Settings",
 		BugComponent: "b:167289",
 		Contacts: []string{

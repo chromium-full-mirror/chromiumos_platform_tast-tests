@@ -16,10 +16,9 @@ import (
 
 func init() {
 	testing.AddTest(&testing.Test{
-		Func:         DiagnosticsPass,
-		LacrosStatus: testing.LacrosVariantUnneeded,
-		Desc:         "Tests that the cros_healthd diagnostic routines can pass",
-		Contacts:     []string{"cros-tdm-tpe-eng@google.com"},
+		Func:     DiagnosticsPass,
+		Desc:     "Tests that the cros_healthd diagnostic routines can pass",
+		Contacts: []string{"cros-tdm-tpe-eng@google.com"},
 		// ChromeOS > Platform > Enablement > Serviceability > Diagnostic & Health
 		BugComponent: "b:982097",
 		SoftwareDeps: []string{"diagnostics"},

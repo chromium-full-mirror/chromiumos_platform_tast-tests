@@ -19,7 +19,6 @@ type manyParamsParams struct {
 func init() {
 	testing.AddTest(&testing.Test{
 		Func:         ManyParams,
-		LacrosStatus: testing.LacrosVariantUnneeded,
 		Desc:         "Example to generate many test parameters automatically",
 		Contacts:     []string{"tast-core@google.com"},
 		BugComponent: "b:1034522", // ChromeOS > Test > Harness > Tast > Examples

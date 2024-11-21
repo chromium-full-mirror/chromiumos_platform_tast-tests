@@ -20,9 +20,8 @@ import (
 
 func init() {
 	testing.AddTest(&testing.Test{
-		Func:         ChameleonCheckDisplayAfterSuspend,
-		LacrosStatus: testing.LacrosVariantUnneeded,
-		Desc:         "To check the UI display mode is preserved before and after suspend",
+		Func: ChameleonCheckDisplayAfterSuspend,
+		Desc: "To check the UI display mode is preserved before and after suspend",
 		Contacts: []string{
 			"chromeos-gfx-display@google.com",
 			"markyacoub@google.com",

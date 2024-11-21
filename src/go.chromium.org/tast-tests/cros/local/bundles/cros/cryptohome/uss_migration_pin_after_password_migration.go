@@ -21,9 +21,8 @@ import (
 
 func init() {
 	testing.AddTest(&testing.Test{
-		Func:         UssMigrationPinAfterPasswordMigration,
-		LacrosStatus: testing.LacrosVariantUnneeded,
-		Desc:         "Checks that adding a pin works correctly when password is migrate",
+		Func: UssMigrationPinAfterPasswordMigration,
+		Desc: "Checks that adding a pin works correctly when password is migrate",
 		Contacts: []string{
 			"cryptohome-core@google.com",
 			"hardikgoyal@chromium.org",

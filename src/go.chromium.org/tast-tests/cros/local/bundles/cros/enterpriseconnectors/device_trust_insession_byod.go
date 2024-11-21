@@ -28,9 +28,8 @@ type deviceTrustParams struct {
 
 func init() {
 	testing.AddTest(&testing.Test{
-		Func:         DeviceTrustInsessionByod,
-		LacrosStatus: testing.LacrosVariantUnneeded,
-		Desc:         "Checks that Device Trust is working in-session with a fake IdP on an unmanaged device",
+		Func: DeviceTrustInsessionByod,
+		Desc: "Checks that Device Trust is working in-session with a fake IdP on an unmanaged device",
 		Contacts: []string{
 			"cbe-device-trust-eng@google.com",
 			"cros-3pidp@google.com",

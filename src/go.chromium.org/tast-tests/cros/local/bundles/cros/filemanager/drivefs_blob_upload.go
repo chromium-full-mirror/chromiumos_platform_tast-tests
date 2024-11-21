@@ -21,7 +21,6 @@ import (
 func init() {
 	testing.AddTest(&testing.Test{
 		Func:         DrivefsBlobUpload,
-		LacrosStatus: testing.LacrosVariantUnneeded,
 		Desc:         "Verify that a file created in DriveFS is uploaded",
 		BugComponent: "b:167289",
 		Contacts: []string{

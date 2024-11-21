@@ -27,7 +27,6 @@ func init() {
 	testing.AddTest(&testing.Test{
 		Func:           BulkPinningDrivePinningChoobeScreenLowSpace,
 		LifeCycleStage: testing.LifeCycleOwnerMonitored,
-		LacrosStatus:   testing.LacrosVariantUnneeded,
 		Desc:           "Verify that the the CHOOBE screen does not show if not enough space",
 		BugComponent:   "b:167289",
 		Contacts: []string{

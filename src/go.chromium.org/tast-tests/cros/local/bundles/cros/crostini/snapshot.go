@@ -16,7 +16,6 @@ import (
 func init() {
 	testing.AddTest(&testing.Test{
 		Func:         Snapshot,
-		LacrosStatus: testing.LacrosVariantUnneeded,
 		Desc:         "Verifies that snapshot for container works as intended",
 		Contacts:     []string{"clumptini+oncall@google.com"},
 		Attr:         []string{"group:mainline"},

@@ -16,9 +16,8 @@ import (
 
 func init() {
 	testing.AddTest(&testing.Test{
-		Func:         RenderApp,
-		LacrosStatus: testing.LacrosVariantUnneeded,
-		Desc:         "Diagnostics app launches and renders components",
+		Func: RenderApp,
+		Desc: "Diagnostics app launches and renders components",
 		// ChromeOS > Platform > Enablement > Serviceability > Diagnostic & Health
 		BugComponent: "b:982097",
 		Contacts: []string{

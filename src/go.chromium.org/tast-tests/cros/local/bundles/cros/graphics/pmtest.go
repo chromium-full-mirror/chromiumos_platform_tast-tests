@@ -25,7 +25,6 @@ func init() {
 	// Developer can specify those perbuild tests via `tast run $DUT '("name:graphics.Pmtest.*" && "graphics_perbuild")'`
 	testing.AddTest(&testing.Test{
 		Func:         Pmtest,
-		LacrosStatus: testing.LacrosVariantUnneeded,
 		Desc:         "Verify that suspend through kernel pm_test works and GPU is alive afterwards",
 		BugComponent: "b:995569", // ChromeOS > Platform > Graphics > GPU
 		Contacts: []string{

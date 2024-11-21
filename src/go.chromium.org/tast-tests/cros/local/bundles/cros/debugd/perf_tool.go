@@ -31,9 +31,8 @@ type testCase struct {
 
 func init() {
 	testing.AddTest(&testing.Test{
-		Func:         PerfTool,
-		LacrosStatus: testing.LacrosVariantUnneeded,
-		Desc:         "Tests D-Bus methods related to PerfTool",
+		Func: PerfTool,
+		Desc: "Tests D-Bus methods related to PerfTool",
 		Contacts: []string{
 			"cwp-team@google.com",
 			"shantuo@google.com",

@@ -33,9 +33,8 @@ const (
 
 func init() {
 	testing.AddTest(&testing.Test{
-		Func:         FlexConfigDbusSmoke,
-		LacrosStatus: testing.LacrosVariantUnneeded,
-		Desc:         "Verify basic functionality of OobeConfigRestore Flex Config DBus methods",
+		Func: FlexConfigDbusSmoke,
+		Desc: "Verify basic functionality of OobeConfigRestore Flex Config DBus methods",
 		Contacts: []string{
 			"cros-onboarding-team@google.com",
 			"jacksontadie@google.com",

@@ -29,7 +29,6 @@ type testCase struct {
 func init() {
 	testing.AddTest(&testing.Test{
 		Func:         DrivefsPooledStorage,
-		LacrosStatus: testing.LacrosVariantUnneeded,
 		Desc:         "Verifies that the Files App UI correctly reflects the DriveFs states related to Pooled Storage",
 		BugComponent: "b:167289",
 		Contacts: []string{

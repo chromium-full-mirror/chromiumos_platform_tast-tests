@@ -21,7 +21,6 @@ import (
 func init() {
 	testing.AddTest(&testing.Test{
 		Func:         TwoUsersInstall,
-		LacrosStatus: testing.LacrosVariantUnneeded,
 		Desc:         "Test two users can install crostini separately",
 		Contacts:     []string{"clumptini@google.com"},
 		VarDeps:      []string{ui.GaiaPoolDefaultVarName},

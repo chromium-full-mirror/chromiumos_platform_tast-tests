@@ -28,7 +28,6 @@ const (
 func init() {
 	testing.AddTest(&testing.Test{
 		Func:         Clpeak,
-		LacrosStatus: testing.LacrosVariantUnneeded,
 		Desc:         "A series of microbenchmarks for the gpu using clvk",
 		SoftwareDeps: []string{"vulkan"},
 		Attr:         []string{"group:graphics", "graphics_opencl", "graphics_perbuild"},

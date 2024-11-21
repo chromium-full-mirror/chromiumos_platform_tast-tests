@@ -20,7 +20,6 @@ import (
 func init() {
 	testing.AddTest(&testing.Test{
 		Func:         DrivefsBlobDownloadOffline,
-		LacrosStatus: testing.LacrosVariantUnneeded,
 		Desc:         "Verify that a download while offline fails gracefully",
 		BugComponent: "b:167289",
 		Contacts: []string{

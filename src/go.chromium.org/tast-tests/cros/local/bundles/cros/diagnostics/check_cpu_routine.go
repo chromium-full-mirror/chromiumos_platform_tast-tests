@@ -20,9 +20,8 @@ import (
 
 func init() {
 	testing.AddTest(&testing.Test{
-		Func:         CheckCPURoutine,
-		LacrosStatus: testing.LacrosVariantUnneeded,
-		Desc:         "Diagnostics app CPU routines run and stop successfully",
+		Func: CheckCPURoutine,
+		Desc: "Diagnostics app CPU routines run and stop successfully",
 		// ChromeOS > Platform > Enablement > Serviceability > Diagnostic & Health
 		BugComponent: "b:982097",
 		Contacts: []string{

@@ -29,7 +29,6 @@ func init() {
 	testing.AddTest(&testing.Test{
 		Func:           BulkPinningEnableFromFilesBanner,
 		LifeCycleStage: testing.LifeCycleOwnerMonitored,
-		LacrosStatus:   testing.LacrosVariantUnneeded,
 		Desc:           "Verify that the bulk pinning feature can be enabled via the banner in Files app",
 		BugComponent:   "b:167289",
 		Contacts: []string{

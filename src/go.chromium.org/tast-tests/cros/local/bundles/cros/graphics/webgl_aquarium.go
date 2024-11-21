@@ -48,9 +48,8 @@ type aquariumParamData struct {
 
 func init() {
 	testing.AddTest(&testing.Test{
-		Func:         WebGLAquarium,
-		LacrosStatus: testing.LacrosVariantUnneeded,
-		Desc:         "Runs WebGL aquarium demo from a local build and reports metrics",
+		Func: WebGLAquarium,
+		Desc: "Runs WebGL aquarium demo from a local build and reports metrics",
 		Contacts: []string{
 			"chromeos-gfx@google.com",
 			"syedfaaiz@google.com",

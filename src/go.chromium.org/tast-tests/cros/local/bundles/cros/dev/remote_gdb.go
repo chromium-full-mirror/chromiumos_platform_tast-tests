@@ -15,7 +15,6 @@ import (
 func init() {
 	testing.AddTest(&testing.Test{
 		Func:         RemoteGDB,
-		LacrosStatus: testing.LacrosVariantUnneeded,
 		Desc:         "Check remote GDB works properly",
 		Contacts:     []string{"crostc-staff@google.com"},
 		BugComponent: "b:1038090", // ChromeOS Public Tracker > Services > EngProd > Toolchain

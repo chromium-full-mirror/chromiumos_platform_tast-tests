@@ -31,7 +31,6 @@ func init() {
 	testing.AddTest(&testing.Test{
 		Func:           OdfsCommercialLicenses,
 		LifeCycleStage: testing.LifeCycleOwnerMonitored,
-		LacrosStatus:   testing.LacrosVariantUnneeded,
 		Desc:           "Verifies that opening a file with OneDrive works on managed users with various Microsoft licenses",
 		BugComponent:   "b:1401215", // ChromeOS > Software > Commercial (Enterprise) > Identity > 3P IdP > Enterprise Clippy
 		Timeout:        5 * time.Minute,

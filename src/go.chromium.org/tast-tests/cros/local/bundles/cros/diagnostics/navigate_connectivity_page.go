@@ -16,9 +16,8 @@ import (
 
 func init() {
 	testing.AddTest(&testing.Test{
-		Func:         NavigateConnectivityPage,
-		LacrosStatus: testing.LacrosVariantUnneeded,
-		Desc:         "Can successfully navigate to the Connectivity page",
+		Func: NavigateConnectivityPage,
+		Desc: "Can successfully navigate to the Connectivity page",
 		// ChromeOS > Platform > Enablement > Serviceability > Diagnostic & Health
 		BugComponent: "b:982097",
 		Contacts: []string{

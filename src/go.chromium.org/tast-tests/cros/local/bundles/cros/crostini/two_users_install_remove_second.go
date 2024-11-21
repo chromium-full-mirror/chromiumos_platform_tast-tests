@@ -23,7 +23,6 @@ import (
 func init() {
 	testing.AddTest(&testing.Test{
 		Func:         TwoUsersInstallRemoveSecond,
-		LacrosStatus: testing.LacrosVariantUnneeded,
 		Desc:         "Test two users can install crostini parallely and then remove the second",
 		Contacts:     []string{"hardikgoyal@google.com", "cryptohome-core@google.com"},
 		VarDeps:      []string{ui.GaiaPoolDefaultVarName, "ui.signinProfileTestExtensionManifestKey"},

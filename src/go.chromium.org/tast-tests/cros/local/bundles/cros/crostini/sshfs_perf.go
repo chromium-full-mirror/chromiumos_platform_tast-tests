@@ -26,7 +26,6 @@ import (
 func init() {
 	testing.AddTest(&testing.Test{
 		Func:         SSHFSPerf,
-		LacrosStatus: testing.LacrosVariantUnneeded,
 		Desc:         "Performance test for guest file sharing over sshfs",
 		Contacts:     []string{"cros-virt-devices-guests@google.com", "chibar@google.com"},
 		BugComponent: "b:1248538",

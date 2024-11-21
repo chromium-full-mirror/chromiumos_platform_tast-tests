@@ -18,9 +18,8 @@ import (
 
 func init() {
 	testing.AddTest(&testing.Test{
-		Func:         ChameleonCheckModesForLoginLogout,
-		LacrosStatus: testing.LacrosVariantUnneeded,
-		Desc:         "To check the display mode is preserved after sign out and signin",
+		Func: ChameleonCheckModesForLoginLogout,
+		Desc: "To check the display mode is preserved after sign out and signin",
 		Contacts: []string{
 			"chromeos-gfx-display@google.com",
 			"markyacoub@google.com",

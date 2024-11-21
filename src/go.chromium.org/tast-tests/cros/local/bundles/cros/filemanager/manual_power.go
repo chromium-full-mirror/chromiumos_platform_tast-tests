@@ -18,7 +18,6 @@ import (
 func init() {
 	testing.AddTest(&testing.Test{
 		Func:         ManualPower,
-		LacrosStatus: testing.LacrosVariantUnneeded,
 		Desc:         "Measures power usage for an hour",
 		BugComponent: "b:167289",
 		Contacts: []string{

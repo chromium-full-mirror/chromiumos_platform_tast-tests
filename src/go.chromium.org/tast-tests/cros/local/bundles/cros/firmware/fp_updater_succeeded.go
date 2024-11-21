@@ -28,7 +28,6 @@ func init() {
 		SoftwareDeps: []string{"biometrics_daemon"},
 		HardwareDeps: hwdep.D(hwdep.Fingerprint()),
 		TestBedDeps:  []string{tbdep.Fingerprint},
-		LacrosStatus: testing.LacrosVariantUnneeded,
 	})
 }
 

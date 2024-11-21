@@ -25,7 +25,6 @@ func init() {
 	testing.AddTest(&testing.Test{
 		Func:           BulkPinningClearOfflineFiles,
 		LifeCycleStage: testing.LifeCycleOwnerMonitored,
-		LacrosStatus:   testing.LacrosVariantUnneeded,
 		Desc:           "Verify that when Clean offline storage is pressed, files are unpinned and made unavailable offline",
 		BugComponent:   "b:167289",
 		Contacts: []string{

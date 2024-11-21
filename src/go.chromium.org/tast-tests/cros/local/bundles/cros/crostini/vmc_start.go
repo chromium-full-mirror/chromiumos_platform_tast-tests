@@ -17,7 +17,6 @@ import (
 func init() {
 	testing.AddTest(&testing.Test{
 		Func:         VmcStart,
-		LacrosStatus: testing.LacrosVariantUnneeded,
 		Desc:         "Starts Crostini via vmc commands",
 		Contacts:     []string{"clumptini+oncall@google.com"},
 		SoftwareDeps: []string{"chrome", "vm_host"},

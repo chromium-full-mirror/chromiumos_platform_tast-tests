@@ -28,7 +28,6 @@ import (
 func init() {
 	testing.AddTest(&testing.Test{
 		Func:         AutomaticCleanupCritical,
-		LacrosStatus: testing.LacrosVariantUnneeded,
 		Desc:         "Test critical automatic disk cleanup",
 		BugComponent: "b:1264602",
 		Contacts: []string{

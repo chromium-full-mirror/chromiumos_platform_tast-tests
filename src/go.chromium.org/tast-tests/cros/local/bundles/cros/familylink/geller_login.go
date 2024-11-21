@@ -18,9 +18,8 @@ import (
 
 func init() {
 	testing.AddTest(&testing.Test{
-		Func:         GellerLogin,
-		LacrosStatus: testing.LacrosVariantUnneeded,
-		Desc:         "Checks if Geller login is working",
+		Func: GellerLogin,
+		Desc: "Checks if Geller login is working",
 		Contacts: []string{
 			"cros-families-eng+test@google.com",
 			"chromeos-consumer-engprod@google.com",

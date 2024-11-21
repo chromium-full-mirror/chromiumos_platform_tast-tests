@@ -28,7 +28,6 @@ import (
 func init() {
 	testing.AddTest(&testing.Test{
 		Func:         MTPCopyToPhone,
-		LacrosStatus: testing.LacrosVariantUnneeded,
 		Desc:         "Verify it is possible to copy files to the phone via MTP",
 		BugComponent: "b:167289",
 		Contacts: []string{

@@ -57,9 +57,8 @@ type iterationData struct {
 
 func init() {
 	testing.AddTest(&testing.Test{
-		Func:         VMCPUQuantifiedWork,
-		LacrosStatus: testing.LacrosVariantUnneeded,
-		Desc:         "Runs QuantifiedWork UEFI stress test app on a DUT and logs the result",
+		Func: VMCPUQuantifiedWork,
+		Desc: "Runs QuantifiedWork UEFI stress test app on a DUT and logs the result",
 		// ChromeOS > Platform > Graphics > Gaming > Steam > Core Gfx
 		BugComponent: "b:961455",
 		// CROSVM.fd contains the OVMF fork for use with crosvm

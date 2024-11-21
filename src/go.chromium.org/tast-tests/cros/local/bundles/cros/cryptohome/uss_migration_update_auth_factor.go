@@ -21,9 +21,8 @@ import (
 
 func init() {
 	testing.AddTest(&testing.Test{
-		Func:         UssMigrationUpdateAuthFactor,
-		LacrosStatus: testing.LacrosVariantUnneeded,
-		Desc:         "Test that USS migration succeeds during an UpdateAuthFactor operation",
+		Func: UssMigrationUpdateAuthFactor,
+		Desc: "Test that USS migration succeeds during an UpdateAuthFactor operation",
 		Contacts: []string{
 			"cryptohome-core@google.com",
 		},

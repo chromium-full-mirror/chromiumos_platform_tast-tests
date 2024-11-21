@@ -22,9 +22,8 @@ import (
 
 func init() {
 	testing.AddTest(&testing.Test{
-		Func:         NonEducoexistenceInsession,
-		LacrosStatus: testing.LacrosVariantUnneeded,
-		Desc:         "Checks that Unicorn account trying to add a non-EDU secondary account fails",
+		Func: NonEducoexistenceInsession,
+		Desc: "Checks that Unicorn account trying to add a non-EDU secondary account fails",
 		Contacts: []string{
 			"cros-families-eng+test@google.com",
 			"chromeos-consumer-engprod@google.com",

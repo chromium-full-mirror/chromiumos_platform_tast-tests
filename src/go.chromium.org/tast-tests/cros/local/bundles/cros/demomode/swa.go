@@ -30,14 +30,13 @@ type demoModeSWATestCase struct {
 func init() {
 	testing.AddTest(&testing.Test{
 		Func:         SWA,
-		LacrosStatus: testing.LacrosVariantUnneeded,
 		Desc:         "Verify that the Demo Mode System Web App launches in fullscreen and goes to windowed mode after user interaction",
 		Contacts:     []string{"cros-demo-mode-eng@google.com", "jacksontadie@google.com"},
 		BugComponent: "b:812312",
 		Attr:         []string{
 			// Disabled by TORA.  See:b/330711972.
 			//"group:mainline", "informational"
-			},
+		},
 		// Demo Mode uses Zero Touch Enrollment for enterprise enrollment, which
 		// requires a real TPM.
 		// We require "arc" and "chrome_internal" because the ARC TOS screen

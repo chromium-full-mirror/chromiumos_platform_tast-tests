@@ -24,9 +24,8 @@ import (
 
 func init() {
 	testing.AddTest(&testing.Test{
-		Func:         DataLeakPreventionRulesListArcClipboard,
-		LacrosStatus: testing.LacrosVariantUnneeded,
-		Desc:         "Test behavior of DataLeakPreventionRulesList policy with clipboard blocked restriction on ARC",
+		Func: DataLeakPreventionRulesListArcClipboard,
+		Desc: "Test behavior of DataLeakPreventionRulesList policy with clipboard blocked restriction on ARC",
 		Contacts: []string{
 			"arc-framework+tast@google.com",
 			"chromeos-dlp@google.com",

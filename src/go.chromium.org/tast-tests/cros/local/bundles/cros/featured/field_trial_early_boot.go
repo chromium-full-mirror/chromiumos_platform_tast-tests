@@ -24,9 +24,8 @@ const (
 
 func init() {
 	testing.AddTest(&testing.Test{
-		Func:         FieldTrialEarlyBoot,
-		LacrosStatus: testing.LacrosVariantUnneeded,
-		Desc:         "Verify that active field trials in early boot are recorded as active in UMA",
+		Func: FieldTrialEarlyBoot,
+		Desc: "Verify that active field trials in early boot are recorded as active in UMA",
 		Contacts: []string{
 			"chromeos-data-eng@google.com",
 			"bgeffon@chromium.org",

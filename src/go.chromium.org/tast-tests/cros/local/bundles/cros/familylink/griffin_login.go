@@ -18,9 +18,8 @@ import (
 
 func init() {
 	testing.AddTest(&testing.Test{
-		Func:         GriffinLogin,
-		LacrosStatus: testing.LacrosVariantUnneeded,
-		Desc:         "Checks if login is working for Family Link Griffin account",
+		Func: GriffinLogin,
+		Desc: "Checks if login is working for Family Link Griffin account",
 		Contacts: []string{
 			"cros-families-eng+test@google.com",
 			"chromeos-consumer-engprod@google.com",

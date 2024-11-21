@@ -32,7 +32,6 @@ type displayCompositionTestParams struct {
 func init() {
 	testing.AddTest(&testing.Test{
 		Func:         ExtendedDisplayCompositionCheck,
-		LacrosStatus: testing.LacrosVariantUnneeded,
 		Desc:         "Verifies graphics composition on extended display",
 		BugComponent: "b:157291", // ChromeOS > External > Intel
 		Contacts: []string{

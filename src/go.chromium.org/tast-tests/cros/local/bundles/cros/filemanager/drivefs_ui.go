@@ -20,7 +20,6 @@ import (
 func init() {
 	testing.AddTest(&testing.Test{
 		Func:         DrivefsUI,
-		LacrosStatus: testing.LacrosVariantUnneeded,
 		Desc:         "Verifies that drivefs can be accessed through the UI",
 		BugComponent: "b:167289",
 		Contacts: []string{

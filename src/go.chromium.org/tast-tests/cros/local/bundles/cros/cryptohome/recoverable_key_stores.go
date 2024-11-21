@@ -29,8 +29,7 @@ func init() {
 		// server side certificate list update during the test might make the test run fail. It is
 		// possible to add support to stop the certificate fetch routines during the test to prevent
 		// this, but in practice it doesn't seem necessary.
-		Desc:         "Test generation and update of recoverable key stores caused by adding, updating, or removing auth factors",
-		LacrosStatus: testing.LacrosVariantUnneeded,
+		Desc: "Test generation and update of recoverable key stores caused by adding, updating, or removing auth factors",
 		Contacts: []string{
 			"cros-hwsec@google.com",
 			"hcyang@google.com",

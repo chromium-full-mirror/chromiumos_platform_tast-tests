@@ -17,9 +17,8 @@ import (
 
 func init() {
 	testing.AddTest(&testing.Test{
-		Func:         DS3,
-		LacrosStatus: testing.LacrosVariantUnneeded,
-		Desc:         "Checks that the DS3 mappings are what we expect",
+		Func: DS3,
+		Desc: "Checks that the DS3 mappings are what we expect",
 		Contacts: []string{
 			"chromeos-tango@google.com",
 		},

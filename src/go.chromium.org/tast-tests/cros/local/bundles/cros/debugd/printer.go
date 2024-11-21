@@ -17,9 +17,8 @@ import (
 
 func init() {
 	testing.AddTest(&testing.Test{
-		Func:         Printer,
-		LacrosStatus: testing.LacrosVariantUnneeded,
-		Desc:         "Performs validity testing of printer-related D-Bus methods",
+		Func: Printer,
+		Desc: "Performs validity testing of printer-related D-Bus methods",
 		Contacts: []string{
 			"project-bolton@google.com",
 			"bmgordon@chromium.org",

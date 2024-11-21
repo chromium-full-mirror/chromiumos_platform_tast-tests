@@ -23,9 +23,8 @@ import (
 
 func init() {
 	testing.AddTest(&testing.Test{
-		Func:         Graduation,
-		LacrosStatus: testing.LacrosVariantUnneeded,
-		Desc:         "Checks that Graduation app can be opened when policy is enabled",
+		Func: Graduation,
+		Desc: "Checks that Graduation app can be opened when policy is enabled",
 		Contacts: []string{
 			"cros-families-eng+test@google.com",
 			"chromeos-consumer-engprod@google.com",

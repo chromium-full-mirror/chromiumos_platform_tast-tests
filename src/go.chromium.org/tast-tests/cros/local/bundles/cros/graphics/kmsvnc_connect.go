@@ -20,7 +20,6 @@ import (
 func init() {
 	testing.AddTest(&testing.Test{
 		Func:         KmsvncConnect,
-		LacrosStatus: testing.LacrosVariantUnneeded,
 		Desc:         "Connects to kmsvnc server and verifies server parameters",
 		Contacts:     []string{"chromeos-velocity@google.com", "shaochuan@chromium.org", "uekawa@chromium.org"},
 		BugComponent: "b:633439", // ChromeOS > Software > Eng Velocity

@@ -21,9 +21,8 @@ import (
 
 func init() {
 	testing.AddTest(&testing.Test{
-		Func:         WebFilteringAllowlist,
-		LacrosStatus: testing.LacrosVariantUnneeded,
-		Desc:         "Checks that web filtering allowlist mode work correctly: websites on the list are allowed and websites outside of the list are blocked",
+		Func: WebFilteringAllowlist,
+		Desc: "Checks that web filtering allowlist mode work correctly: websites on the list are allowed and websites outside of the list are blocked",
 		Contacts: []string{
 			"cros-families-eng+test@google.com",
 			"chromeos-consumer-engprod@google.com",

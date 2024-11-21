@@ -23,9 +23,8 @@ import (
 
 func init() {
 	testing.AddTest(&testing.Test{
-		Func:         RecoveryWithUssMigration,
-		LacrosStatus: testing.LacrosVariantUnneeded,
-		Desc:         "Test addition and authentication of recovery auth factor with only password migration to USS",
+		Func: RecoveryWithUssMigration,
+		Desc: "Test addition and authentication of recovery auth factor with only password migration to USS",
 		Contacts: []string{
 			"cryptohome-core@google.com",
 			"hardikgoyal@chromium.org",

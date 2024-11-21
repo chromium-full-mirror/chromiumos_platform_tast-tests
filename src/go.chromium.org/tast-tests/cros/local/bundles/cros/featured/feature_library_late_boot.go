@@ -37,9 +37,8 @@ type featureLibraryTestParams struct {
 
 func init() {
 	testing.AddTest(&testing.Test{
-		Func:         FeatureLibraryLateBoot,
-		LacrosStatus: testing.LacrosVariantUnneeded,
-		Desc:         "Verify features are enabled/disabled as expected and parameters are unchanged",
+		Func: FeatureLibraryLateBoot,
+		Desc: "Verify features are enabled/disabled as expected and parameters are unchanged",
 		Contacts: []string{
 			"chromeos-data-eng@google.com",
 			"bgeffon@chromium.org",

@@ -23,9 +23,8 @@ import (
 
 func init() {
 	testing.AddTest(&testing.Test{
-		Func:         InputCheckRegionalKey,
-		LacrosStatus: testing.LacrosVariantUnneeded,
-		Desc:         "Input page shows expected regional keyboard layout with different region code",
+		Func: InputCheckRegionalKey,
+		Desc: "Input page shows expected regional keyboard layout with different region code",
 		// ChromeOS > Platform > Enablement > Serviceability > Diagnostic & Health
 		BugComponent: "b:982097",
 		Contacts: []string{

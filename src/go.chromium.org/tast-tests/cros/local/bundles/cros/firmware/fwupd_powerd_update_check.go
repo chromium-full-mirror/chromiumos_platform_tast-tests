@@ -35,8 +35,7 @@ func init() {
 			hwdep.ChromeEC(),              // Test requires Chrome EC to set battery to discharge via ectool.
 			hwdep.SkipOnPlatform("celes"), // Platform does not register a discharge within timeout.
 		),
-		Timeout:      fwupd.ChargingStateTimeout + 1*time.Minute,
-		LacrosStatus: testing.LacrosVariantUnneeded,
+		Timeout: fwupd.ChargingStateTimeout + 1*time.Minute,
 		Params: []testing.Param{
 			{
 				Name: "ac_powerpresent",

@@ -24,9 +24,8 @@ type latePlatformParams struct {
 
 func init() {
 	testing.AddTest(&testing.Test{
-		Func:         LatePlatformFeatures,
-		LacrosStatus: testing.LacrosVariantUnneeded,
-		Desc:         "Verify platform-features.json enables features at login",
+		Func: LatePlatformFeatures,
+		Desc: "Verify platform-features.json enables features at login",
 		Contacts: []string{
 			"chromeos-data-eng@google.com",
 			"bgeffon@chromium.org",

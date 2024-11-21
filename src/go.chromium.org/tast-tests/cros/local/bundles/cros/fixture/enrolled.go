@@ -13,9 +13,8 @@ import (
 
 func init() {
 	testing.AddTest(&testing.Test{
-		Func:         Enrolled,
-		LacrosStatus: testing.LacrosVariantUnneeded,
-		Desc:         "Indicator test for the enrolled fixture",
+		Func: Enrolled,
+		Desc: "Indicator test for the enrolled fixture",
 		Contacts: []string{
 			"chromeos-commercial-remote-management@google.com",
 			"vsavu@google.com",

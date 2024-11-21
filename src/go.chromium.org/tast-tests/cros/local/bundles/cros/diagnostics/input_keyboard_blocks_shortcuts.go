@@ -19,9 +19,8 @@ import (
 
 func init() {
 	testing.AddTest(&testing.Test{
-		Func:         InputKeyboardBlocksShortcuts,
-		LacrosStatus: testing.LacrosVariantUnneeded,
-		Desc:         "Keyboard input tester blocks all shortcuts only when open",
+		Func: InputKeyboardBlocksShortcuts,
+		Desc: "Keyboard input tester blocks all shortcuts only when open",
 		// ChromeOS > Platform > Enablement > Serviceability > Diagnostic & Health
 		BugComponent: "b:982097",
 		Contacts: []string{

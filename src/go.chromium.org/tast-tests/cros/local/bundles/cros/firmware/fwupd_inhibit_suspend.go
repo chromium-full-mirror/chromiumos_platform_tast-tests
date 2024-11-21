@@ -34,8 +34,7 @@ func init() {
 			hwdep.Battery(),  // Test doesn't run on ChromeOS devices without a battery.
 			hwdep.ChromeEC(), // Test requires Chrome EC to set battery to charge via ectool.
 		),
-		Timeout:      fwupd.ChargingStateTimeout + 1*time.Minute,
-		LacrosStatus: testing.LacrosVariantUnneeded,
+		Timeout: fwupd.ChargingStateTimeout + 1*time.Minute,
 	})
 }
 

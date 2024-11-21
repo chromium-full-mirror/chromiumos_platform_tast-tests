@@ -30,7 +30,6 @@ const (
 func init() {
 	testing.AddTest(&testing.Test{
 		Func:         Smoke,
-		LacrosStatus: testing.LacrosVariantUnneeded,
 		Desc:         "Quick smoke check for GL/GLES2",
 		BugComponent: "b:995569", // ChromeOS > Platform > Graphics > GPU
 		Contacts: []string{

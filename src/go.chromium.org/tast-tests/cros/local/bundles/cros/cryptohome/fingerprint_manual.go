@@ -25,9 +25,8 @@ import (
 
 func init() {
 	testing.AddTest(&testing.Test{
-		Func:         FingerprintManual,
-		Desc:         "Checks that cryptohome fingerprint auth factor functions correctly through manual interaction with FP sensor",
-		LacrosStatus: testing.LacrosVariantUnneeded,
+		Func: FingerprintManual,
+		Desc: "Checks that cryptohome fingerprint auth factor functions correctly through manual interaction with FP sensor",
 		Contacts: []string{
 			"cryptohome-core@google.com",
 			"chromeos-fingerprint@google.com",

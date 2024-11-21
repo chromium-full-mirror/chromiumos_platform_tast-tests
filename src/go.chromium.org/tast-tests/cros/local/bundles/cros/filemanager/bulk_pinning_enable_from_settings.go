@@ -26,7 +26,6 @@ func init() {
 	testing.AddTest(&testing.Test{
 		Func:           BulkPinningEnableFromSettings,
 		LifeCycleStage: testing.LifeCycleOwnerMonitored,
-		LacrosStatus:   testing.LacrosVariantUnneeded,
 		Desc:           "Verify that the bulk pinning feature can be enabled via settings",
 		BugComponent:   "b:167289",
 		Contacts: []string{

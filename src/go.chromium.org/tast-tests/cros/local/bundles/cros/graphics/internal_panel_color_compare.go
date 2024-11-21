@@ -50,7 +50,6 @@ func init() {
 		SoftwareDeps: []string{"chrome"},
 		HardwareDeps: hwdep.D(hwdep.InternalDisplay()),
 		Fixture:      "gpuWatchHangs",
-		LacrosStatus: testing.LacrosVariantUnneeded,
 	})
 }
 

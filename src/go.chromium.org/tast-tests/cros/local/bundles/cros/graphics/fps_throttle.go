@@ -27,7 +27,6 @@ import (
 func init() {
 	testing.AddTest(&testing.Test{
 		Func:         FPSThrottle,
-		LacrosStatus: testing.LacrosVariantUnneeded,
 		Desc:         "Check that device FPS throttles and recovers",
 		Contacts:     []string{"chromeos-gfx-display@google.com", "ddavenport@google.com"},
 		BugComponent: "b:188154", // ChromeOS > Platform > Graphics > Display

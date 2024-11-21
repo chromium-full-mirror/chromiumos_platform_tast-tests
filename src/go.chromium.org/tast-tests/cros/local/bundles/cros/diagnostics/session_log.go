@@ -24,9 +24,8 @@ import (
 
 func init() {
 	testing.AddTest(&testing.Test{
-		Func:         SessionLog,
-		LacrosStatus: testing.LacrosVariantUnneeded,
-		Desc:         "Diagnostics app session log saves to files successfully",
+		Func: SessionLog,
+		Desc: "Diagnostics app session log saves to files successfully",
 		// ChromeOS > Platform > Enablement > Serviceability > Diagnostic & Health
 		BugComponent: "b:982097",
 		Contacts: []string{

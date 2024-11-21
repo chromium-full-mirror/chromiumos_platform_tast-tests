@@ -27,9 +27,8 @@ import (
 
 func init() {
 	testing.AddTest(&testing.Test{
-		Func:         UssMigrationChallengeCredential,
-		LacrosStatus: testing.LacrosVariantUnneeded,
-		Desc:         "Test that migration of challenge credential factor succeed during user login",
+		Func: UssMigrationChallengeCredential,
+		Desc: "Test that migration of challenge credential factor succeed during user login",
 		Contacts: []string{
 			"cryptohome-core@google.com",
 		},

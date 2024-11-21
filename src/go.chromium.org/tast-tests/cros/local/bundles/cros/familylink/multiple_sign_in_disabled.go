@@ -22,9 +22,8 @@ import (
 
 func init() {
 	testing.AddTest(&testing.Test{
-		Func:         MultipleSignInDisabled,
-		LacrosStatus: testing.LacrosVariantUnneeded,
-		Desc:         "Verifies that multiple sign-in is disabled for Unicorn users. Geller users should behave similarly",
+		Func: MultipleSignInDisabled,
+		Desc: "Verifies that multiple sign-in is disabled for Unicorn users. Geller users should behave similarly",
 		Contacts: []string{
 			"cros-families-eng+test@google.com",
 			"chromeos-consumer-engprod@google.com",

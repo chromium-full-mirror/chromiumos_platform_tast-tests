@@ -16,9 +16,8 @@ import (
 
 func init() {
 	testing.AddTest(&testing.Test{
-		Func:         IgtChamelium,
-		LacrosStatus: testing.LacrosVariantUnneeded,
-		Desc:         "Verifies IGT Chamelium test binaries run successfully",
+		Func: IgtChamelium,
+		Desc: "Verifies IGT Chamelium test binaries run successfully",
 		Contacts: []string{
 			"chromeos-gfx-display@google.com",
 			"markyacoub@google.com",

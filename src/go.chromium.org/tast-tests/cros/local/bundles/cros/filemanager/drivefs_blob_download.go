@@ -19,7 +19,6 @@ import (
 func init() {
 	testing.AddTest(&testing.Test{
 		Func:         DrivefsBlobDownload,
-		LacrosStatus: testing.LacrosVariantUnneeded,
 		Desc:         "Verify that a file created in Drive Web can be downloaded",
 		BugComponent: "b:167289",
 		Contacts: []string{

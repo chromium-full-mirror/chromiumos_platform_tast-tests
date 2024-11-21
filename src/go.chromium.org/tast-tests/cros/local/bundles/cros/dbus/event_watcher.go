@@ -25,8 +25,7 @@ func init() {
 			"group:mainline",
 			"group:hw_agnostic",
 		},
-		Timeout:      time.Minute,
-		LacrosStatus: testing.LacrosVariantUnneeded,
+		Timeout: time.Minute,
 	})
 }
 

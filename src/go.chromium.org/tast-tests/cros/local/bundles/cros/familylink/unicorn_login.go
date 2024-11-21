@@ -18,9 +18,8 @@ import (
 
 func init() {
 	testing.AddTest(&testing.Test{
-		Func:         UnicornLogin,
-		LacrosStatus: testing.LacrosVariantUnneeded,
-		Desc:         "Checks if Unicorn login is working",
+		Func: UnicornLogin,
+		Desc: "Checks if Unicorn login is working",
 		Contacts: []string{
 			"cros-families-eng+test@google.com",
 			"cros-oac@google.com",

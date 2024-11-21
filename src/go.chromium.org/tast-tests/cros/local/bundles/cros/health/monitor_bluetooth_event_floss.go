@@ -19,9 +19,8 @@ import (
 
 func init() {
 	testing.AddTest(&testing.Test{
-		Func:         MonitorBluetoothEventFloss,
-		LacrosStatus: testing.LacrosVariantUnneeded,
-		Desc:         "Monitors whether Bluetooth events are detected properly when the system is using Floss",
+		Func: MonitorBluetoothEventFloss,
+		Desc: "Monitors whether Bluetooth events are detected properly when the system is using Floss",
 		Contacts: []string{
 			"cros-tdm-tpe-eng@google.com",
 			"byronlee@chromium.org",

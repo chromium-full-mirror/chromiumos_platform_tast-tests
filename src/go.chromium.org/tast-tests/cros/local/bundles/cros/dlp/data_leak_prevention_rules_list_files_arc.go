@@ -28,9 +28,8 @@ import (
 
 func init() {
 	testing.AddTest(&testing.Test{
-		Func:         DataLeakPreventionRulesListFilesArc,
-		LacrosStatus: testing.LacrosVariantUnneeded,
-		Desc:         "Test behavior of DataLeakPreventionRulesList policy with file ARC restriction",
+		Func: DataLeakPreventionRulesListFilesArc,
+		Desc: "Test behavior of DataLeakPreventionRulesList policy with file ARC restriction",
 		Contacts: []string{
 			"chromeos-dlp@google.com",
 			"aidazolic@google.com",

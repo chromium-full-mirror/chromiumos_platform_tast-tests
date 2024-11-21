@@ -20,7 +20,6 @@ const (
 func init() {
 	testing.AddTest(&testing.Test{
 		Func:         Xattrs,
-		LacrosStatus: testing.LacrosVariantUnneeded,
 		Desc:         "Test that the container image has extended attributes set",
 		Contacts:     []string{"clumptini+oncall@google.com"},
 		Attr:         []string{"group:mainline", "group:sw_gates_virt", "sw_gates_virt_enabled"},

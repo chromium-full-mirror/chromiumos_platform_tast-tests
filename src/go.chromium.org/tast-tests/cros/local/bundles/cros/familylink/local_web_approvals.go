@@ -25,9 +25,8 @@ import (
 
 func init() {
 	testing.AddTest(&testing.Test{
-		Func:         LocalWebApprovals,
-		LacrosStatus: testing.LacrosVariantUnneeded,
-		Desc:         "Checks that parent can approve blocked sites locally",
+		Func: LocalWebApprovals,
+		Desc: "Checks that parent can approve blocked sites locally",
 		Contacts: []string{
 			"cros-families-eng+test@google.com",
 			"chromeos-consumer-engprod@google.com",

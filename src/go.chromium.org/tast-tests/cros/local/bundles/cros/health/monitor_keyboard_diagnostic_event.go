@@ -33,9 +33,8 @@ type keyboardEventTestParams struct {
 
 func init() {
 	testing.AddTest(&testing.Test{
-		Func:         MonitorKeyboardDiagnosticEvent,
-		LacrosStatus: testing.LacrosVariantUnneeded,
-		Desc:         "Monitors the keyboard diagnostic event detected properly or not",
+		Func: MonitorKeyboardDiagnosticEvent,
+		Desc: "Monitors the keyboard diagnostic event detected properly or not",
 		Contacts: []string{
 			"cros-tdm-tpe-eng@google.com",
 			"weiluanwang@google.com",

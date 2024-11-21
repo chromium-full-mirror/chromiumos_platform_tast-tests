@@ -23,7 +23,6 @@ var intelGen9AndEarlierGPUSoCs = []string{"pinetrail", "broadwell", "apollolake"
 func init() {
 	testing.AddTest(&testing.Test{
 		Func:         NullPlatformFormat,
-		LacrosStatus: testing.LacrosVariantUnneeded,
 		Desc:         "Checks that the null_platform_test passes for at least one format with a given color depth",
 		BugComponent: "b:168352", // ChromeOS > Platform > Graphics > Video
 		Contacts: []string{

@@ -18,9 +18,8 @@ import (
 
 func init() {
 	testing.AddTest(&testing.Test{
-		Func:         MonitorBluetoothEventBluez,
-		LacrosStatus: testing.LacrosVariantUnneeded,
-		Desc:         "Monitors whether Bluetooth events are detected properly when the system is using Bluez",
+		Func: MonitorBluetoothEventBluez,
+		Desc: "Monitors whether Bluetooth events are detected properly when the system is using Bluez",
 		Contacts: []string{
 			"cros-tdm-tpe-eng@google.com",
 			"byronlee@chromium.org",

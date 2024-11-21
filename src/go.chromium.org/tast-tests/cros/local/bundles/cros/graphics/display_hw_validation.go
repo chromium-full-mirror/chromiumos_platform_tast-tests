@@ -18,9 +18,8 @@ import (
 
 func init() {
 	testing.AddTest(&testing.Test{
-		Func:         DisplayHwValidation,
-		LacrosStatus: testing.LacrosVariantUnneeded,
-		Desc:         "Performs HW Validation (i.e. PVS) for CrOS Display. The tests are handpicked for subtests that make use of the hardware rather than relying entirely on the driver implementation",
+		Func: DisplayHwValidation,
+		Desc: "Performs HW Validation (i.e. PVS) for CrOS Display. The tests are handpicked for subtests that make use of the hardware rather than relying entirely on the driver implementation",
 		Contacts: []string{
 			"chromeos-gfx-display@google.com",
 			"markyacoub@google.com",

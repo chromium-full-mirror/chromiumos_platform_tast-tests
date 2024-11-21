@@ -22,9 +22,8 @@ type eventStartupParams struct {
 
 func init() {
 	testing.AddTest(&testing.Test{
-		Func:         MonitorEventStartup,
-		LacrosStatus: testing.LacrosVariantUnneeded,
-		Desc:         "Checks if cros_healthd can start up an event monitor for a period of time",
+		Func: MonitorEventStartup,
+		Desc: "Checks if cros_healthd can start up an event monitor for a period of time",
 		Contacts: []string{
 			"cros-tdm-tpe-eng@google.com",
 			"weiluanwang@google.com",

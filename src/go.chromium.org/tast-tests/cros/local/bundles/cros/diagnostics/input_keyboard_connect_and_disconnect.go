@@ -18,9 +18,8 @@ import (
 
 func init() {
 	testing.AddTest(&testing.Test{
-		Func:         InputKeyboardConnectAndDisconnect,
-		LacrosStatus: testing.LacrosVariantUnneeded,
-		Desc:         "Connect a virtual keyboard on the diagnostics input page and then disconnect it",
+		Func: InputKeyboardConnectAndDisconnect,
+		Desc: "Connect a virtual keyboard on the diagnostics input page and then disconnect it",
 		// ChromeOS > Platform > Enablement > Serviceability > Diagnostic & Health
 		BugComponent: "b:982097",
 		Contacts: []string{

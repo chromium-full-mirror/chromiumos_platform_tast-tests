@@ -17,9 +17,8 @@ import (
 
 func init() {
 	testing.AddTest(&testing.Test{
-		Func:         DisplayQualityValidation,
-		LacrosStatus: testing.LacrosVariantUnneeded,
-		Desc:         "Performs quality validation of the driver in its earlier stages. The list is based on intel-ci fast feedback testlist and AMD's basic validation testlist",
+		Func: DisplayQualityValidation,
+		Desc: "Performs quality validation of the driver in its earlier stages. The list is based on intel-ci fast feedback testlist and AMD's basic validation testlist",
 		Contacts: []string{
 			"chromeos-gfx-display@google.com",
 			"markyacoub@google.com",

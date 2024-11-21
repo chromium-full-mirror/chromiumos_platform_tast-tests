@@ -40,7 +40,6 @@ func init() {
 		Contacts:     []string{"cryptohome-core@google.com"},
 		SoftwareDeps: []string{"chrome"},
 		Attr:         []string{"group:mainline", "group:hw_agnostic"},
-		LacrosStatus: testing.LacrosVariantUnneeded,
 		BugComponent: "b:1088399", // ChromeOS > Security > Cryptohome
 		Fixture:      "chromeLoggedIn",
 		Params: []testing.Param{{

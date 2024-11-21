@@ -20,9 +20,8 @@ import (
 
 func init() {
 	testing.AddTest(&testing.Test{
-		Func:         LegacyFingerprintManual,
-		Desc:         "Checks that legacy fingerprint functions correctly through manual interaction with FP sensor",
-		LacrosStatus: testing.LacrosVariantUnneeded,
+		Func: LegacyFingerprintManual,
+		Desc: "Checks that legacy fingerprint functions correctly through manual interaction with FP sensor",
 		Contacts: []string{
 			"cryptohome-core@google.com",
 			"chromeos-fingerprint@google.com",

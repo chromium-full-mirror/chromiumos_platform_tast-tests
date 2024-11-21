@@ -18,7 +18,6 @@ import (
 func init() {
 	testing.AddTest(&testing.Test{
 		Func:         KernelMemory,
-		LacrosStatus: testing.LacrosVariantUnneeded,
 		Desc:         "Verify that no errors occur while examining graphics memory usage",
 		Attr:         []string{"group:mainline", "group:graphics", "graphics_nightly"},
 		HardwareDeps: hwdep.D(hwdep.CPUSocFamily("intel")),

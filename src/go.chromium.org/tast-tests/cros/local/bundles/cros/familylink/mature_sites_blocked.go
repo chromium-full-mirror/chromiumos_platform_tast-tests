@@ -21,9 +21,8 @@ import (
 
 func init() {
 	testing.AddTest(&testing.Test{
-		Func:         MatureSitesBlocked,
-		LacrosStatus: testing.LacrosVariantUnneeded,
-		Desc:         "Checks that matures sites are blocked for Unicorn users",
+		Func: MatureSitesBlocked,
+		Desc: "Checks that matures sites are blocked for Unicorn users",
 		Contacts: []string{
 			"cros-families-eng+test@google.com",
 			"chromeos-consumer-engprod@google.com",

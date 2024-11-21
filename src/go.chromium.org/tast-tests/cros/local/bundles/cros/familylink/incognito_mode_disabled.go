@@ -21,9 +21,8 @@ import (
 
 func init() {
 	testing.AddTest(&testing.Test{
-		Func:         IncognitoModeDisabled,
-		LacrosStatus: testing.LacrosVariantUnneeded,
-		Desc:         "Tests that incognito mode is disabled for Unicorn users",
+		Func: IncognitoModeDisabled,
+		Desc: "Tests that incognito mode is disabled for Unicorn users",
 		Contacts: []string{
 			"cros-families-eng+test@google.com",
 			"chromeos-consumer-engprod@google.com",

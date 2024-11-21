@@ -29,7 +29,6 @@ import (
 func init() {
 	testing.AddTest(&testing.Test{
 		Func:         SendToTrash,
-		LacrosStatus: testing.LacrosVariantUnneeded,
 		Desc:         "Verify that local and DriveFS files can be trashed",
 		BugComponent: "b:167289",
 		Contacts: []string{

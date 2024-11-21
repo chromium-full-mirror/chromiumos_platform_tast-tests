@@ -20,9 +20,8 @@ import (
 
 func init() {
 	testing.AddTest(&testing.Test{
-		Func:         InputCheckDefocusing,
-		LacrosStatus: testing.LacrosVariantUnneeded,
-		Desc:         "Pressing and releasing keys won't affect key states when the input page isn't focused",
+		Func: InputCheckDefocusing,
+		Desc: "Pressing and releasing keys won't affect key states when the input page isn't focused",
 		// ChromeOS > Platform > Enablement > Serviceability > Diagnostic & Health
 		BugComponent: "b:982097",
 		Contacts: []string{

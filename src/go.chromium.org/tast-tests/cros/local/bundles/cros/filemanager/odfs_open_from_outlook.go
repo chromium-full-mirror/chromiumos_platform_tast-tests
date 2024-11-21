@@ -41,7 +41,6 @@ func init() {
 	testing.AddTest(&testing.Test{
 		Func:           OdfsOpenFromOutlook,
 		LifeCycleStage: testing.LifeCycleOwnerMonitored,
-		LacrosStatus:   testing.LacrosVariantUnneeded,
 		Desc:           "Verifies that a file is opened within the M365 PWA if it's opened from a mail in Outlook",
 		BugComponent:   "b:1401215", // ChromeOS > Software > Commercial (Enterprise) > Identity > 3P IdP > Enterprise Clippy
 		Timeout:        10 * time.Minute,

@@ -28,9 +28,8 @@ import (
 
 func init() {
 	testing.AddTest(&testing.Test{
-		Func:         BedTimeLimit,
-		LacrosStatus: testing.LacrosVariantUnneeded,
-		Desc:         "Verify the bed time limit works correctly for Family Link account",
+		Func: BedTimeLimit,
+		Desc: "Verify the bed time limit works correctly for Family Link account",
 		Contacts: []string{
 			"cros-families-eng+test@google.com",
 			"chromeos-consumer-engprod@google.com",

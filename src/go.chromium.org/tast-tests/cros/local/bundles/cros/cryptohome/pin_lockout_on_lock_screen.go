@@ -40,9 +40,8 @@ type pinLockoutOnLockScreenParam struct {
 
 func init() {
 	testing.AddTest(&testing.Test{
-		Func:         PinLockoutOnLockScreen,
-		LacrosStatus: testing.LacrosVariantUnneeded,
-		Desc:         "Test that checks pin counter mechanism on lock screen",
+		Func: PinLockoutOnLockScreen,
+		Desc: "Test that checks pin counter mechanism on lock screen",
 		Contacts: []string{
 			"cryptohome-core@google.com",
 			"hardikgoyal@google.com",

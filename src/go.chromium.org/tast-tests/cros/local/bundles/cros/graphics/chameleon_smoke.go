@@ -18,9 +18,8 @@ import (
 
 func init() {
 	testing.AddTest(&testing.Test{
-		Func:         ChameleonSmoke,
-		LacrosStatus: testing.LacrosVariantUnneeded,
-		Desc:         "Verifies that a working Chameleon device is connected to at least one valid port",
+		Func: ChameleonSmoke,
+		Desc: "Verifies that a working Chameleon device is connected to at least one valid port",
 		Contacts: []string{
 			"chromeos-gfx-display@google.com",
 			"markyacoub@google.com",

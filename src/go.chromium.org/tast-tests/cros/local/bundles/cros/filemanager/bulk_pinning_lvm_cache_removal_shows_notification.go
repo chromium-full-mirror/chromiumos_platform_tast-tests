@@ -31,7 +31,6 @@ func init() {
 	testing.AddTest(&testing.Test{
 		Func:           BulkPinningLvmCacheRemovalShowsNotification,
 		LifeCycleStage: testing.LifeCycleOwnerMonitored,
-		LacrosStatus:   testing.LacrosVariantUnneeded,
 		Desc:           "Verify that a notification is shown when the LVM cache partition is removed",
 		BugComponent:   "b:167289",
 		Contacts: []string{

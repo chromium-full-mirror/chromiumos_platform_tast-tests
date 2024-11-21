@@ -23,9 +23,8 @@ import (
 
 func init() {
 	testing.AddTest(&testing.Test{
-		Func:         ExtensionApprovals,
-		LacrosStatus: testing.LacrosVariantUnneeded,
-		Desc:         "Checks if Unicorn user can add extension with parent permission",
+		Func: ExtensionApprovals,
+		Desc: "Checks if Unicorn user can add extension with parent permission",
 		Contacts: []string{
 			"cros-families-eng+test@google.com",
 			"chromeos-consumer-engprod@google.com",

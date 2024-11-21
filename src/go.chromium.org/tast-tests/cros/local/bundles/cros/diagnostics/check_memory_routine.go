@@ -22,9 +22,8 @@ import (
 
 func init() {
 	testing.AddTest(&testing.Test{
-		Func:         CheckMemoryRoutine,
-		LacrosStatus: testing.LacrosVariantUnneeded,
-		Desc:         "Diagnostics app memory routine runs and stops successfully",
+		Func: CheckMemoryRoutine,
+		Desc: "Diagnostics app memory routine runs and stops successfully",
 		// ChromeOS > Platform > Enablement > Serviceability > Diagnostic & Health
 		BugComponent: "b:982097",
 		Contacts: []string{

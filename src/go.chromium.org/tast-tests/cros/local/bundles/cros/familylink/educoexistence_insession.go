@@ -19,9 +19,8 @@ import (
 
 func init() {
 	testing.AddTest(&testing.Test{
-		Func:         EducoexistenceInsession,
-		LacrosStatus: testing.LacrosVariantUnneeded,
-		Desc:         "Checks if in-session EDU Coexistence flow is working",
+		Func: EducoexistenceInsession,
+		Desc: "Checks if in-session EDU Coexistence flow is working",
 		Contacts: []string{
 			"cros-families-eng+test@google.com",
 			"chromeos-consumer-engprod@google.com",

@@ -17,7 +17,6 @@ import (
 func init() {
 	testing.AddTest(&testing.Test{
 		Func:         ScreenshotCLI,
-		LacrosStatus: testing.LacrosVariantUnneeded,
 		Desc:         "Takes a screenshot using the CLI",
 		BugComponent: "b:995569", // ChromeOS > Platform > Graphics > GPU
 		Contacts: []string{

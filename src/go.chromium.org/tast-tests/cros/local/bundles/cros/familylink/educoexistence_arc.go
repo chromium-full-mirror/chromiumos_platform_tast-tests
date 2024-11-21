@@ -25,9 +25,8 @@ import (
 
 func init() {
 	testing.AddTest(&testing.Test{
-		Func:         EducoexistenceArc,
-		LacrosStatus: testing.LacrosVariantUnneeded,
-		Desc:         "Checks ARC behavior for account added via in-session EDU Coexistence flow",
+		Func: EducoexistenceArc,
+		Desc: "Checks ARC behavior for account added via in-session EDU Coexistence flow",
 		Contacts: []string{
 			"cros-families-eng+test@google.com",
 			"chromeos-consumer-engprod@google.com",

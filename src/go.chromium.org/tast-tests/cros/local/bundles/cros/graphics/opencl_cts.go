@@ -25,7 +25,6 @@ type oclctsTest struct {
 func init() {
 	testing.AddTest(&testing.Test{
 		Func:         OpenclCts,
-		LacrosStatus: testing.LacrosVariantUnneeded,
 		Desc:         "Run OpenCL CTS",
 		BugComponent: "b:1171198", // ChromeOS > Platform > Graphics > GPU > OpenCL
 		Contacts: []string{

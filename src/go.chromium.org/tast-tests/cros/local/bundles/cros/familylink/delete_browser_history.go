@@ -22,9 +22,8 @@ import (
 
 func init() {
 	testing.AddTest(&testing.Test{
-		Func:         DeleteBrowserHistory,
-		LacrosStatus: testing.LacrosVariantUnneeded,
-		Desc:         "Verifies that a Unicorn Account can delete browsing history",
+		Func: DeleteBrowserHistory,
+		Desc: "Verifies that a Unicorn Account can delete browsing history",
 		Contacts: []string{
 			"cros-families-eng+test@google.com",
 			"chromeos-consumer-engprod@google.com",

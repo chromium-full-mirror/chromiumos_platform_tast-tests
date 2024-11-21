@@ -31,9 +31,8 @@ import (
 
 func init() {
 	testing.AddTest(&testing.Test{
-		Func:         PacketCapture,
-		LacrosStatus: testing.LacrosVariantUnneeded,
-		Desc:         "Verifies network packet capture works and can be controlled by policy",
+		Func: PacketCapture,
+		Desc: "Verifies network packet capture works and can be controlled by policy",
 		Contacts: []string{
 			"chromeos-commercial-supportability@google.com", // Team
 			"iremuguz@google.com",                           // Test author

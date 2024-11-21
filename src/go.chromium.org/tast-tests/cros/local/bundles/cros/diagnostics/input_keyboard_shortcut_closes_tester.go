@@ -17,9 +17,8 @@ import (
 
 func init() {
 	testing.AddTest(&testing.Test{
-		Func:         InputKeyboardShortcutClosesTester,
-		LacrosStatus: testing.LacrosVariantUnneeded,
-		Desc:         "Keyboard input tester window closes with keyboard shortcut",
+		Func: InputKeyboardShortcutClosesTester,
+		Desc: "Keyboard input tester window closes with keyboard shortcut",
 		// ChromeOS > Platform > Enablement > Serviceability > Diagnostic & Health
 		BugComponent: "b:982097",
 		Contacts: []string{

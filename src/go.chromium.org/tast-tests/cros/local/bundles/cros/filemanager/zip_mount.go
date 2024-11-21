@@ -26,7 +26,6 @@ import (
 func init() {
 	testing.AddTest(&testing.Test{
 		Func:         ZipMount,
-		LacrosStatus: testing.LacrosVariantUnneeded,
 		Desc:         "Checks that Files App can mount archives (ZIP, RAR, 7Z...)",
 		BugComponent: "b:167289",
 		Contacts: []string{

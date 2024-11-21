@@ -21,7 +21,6 @@ import (
 func init() {
 	testing.AddTest(&testing.Test{
 		Func:         TaskManager,
-		LacrosStatus: testing.LacrosVariantUnneeded,
 		Desc:         "Tests Crostini integration with the task manager",
 		Contacts:     []string{"clumptini+oncall@google.com"},
 		SoftwareDeps: []string{"chrome", "vm_host"},

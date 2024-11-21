@@ -31,7 +31,6 @@ func init() {
 	testing.AddTest(&testing.Test{
 		Func:           BulkPinningEnterpriseChoobeScreen,
 		LifeCycleStage: testing.LifeCycleOwnerMonitored,
-		LacrosStatus:   testing.LacrosVariantUnneeded,
 		Desc:           "Verify that the the CHOOBE screen shows for enterprise users with the right policy",
 		BugComponent:   "b:167289",
 		Contacts: []string{

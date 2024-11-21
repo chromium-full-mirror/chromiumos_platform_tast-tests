@@ -14,9 +14,8 @@ import (
 
 func init() {
 	testing.AddTest(&testing.Test{
-		Func:         Dawn,
-		LacrosStatus: testing.LacrosVariantUnneeded,
-		Desc:         "Verifies that Dawn unit and end-to-end tests run successfully",
+		Func: Dawn,
+		Desc: "Verifies that Dawn unit and end-to-end tests run successfully",
 		Contacts: []string{
 			"chromeos-gfx@google.com",
 			"hob@chromium.org",

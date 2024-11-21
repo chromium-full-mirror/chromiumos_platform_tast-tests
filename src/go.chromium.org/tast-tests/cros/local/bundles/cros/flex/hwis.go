@@ -21,9 +21,8 @@ import (
 
 func init() {
 	testing.AddTest(&testing.Test{
-		Func:         HWIS,
-		LacrosStatus: testing.LacrosVariantUnneeded,
-		Desc:         "Tests that the ChromeOS Flex HWIS can run and exit successfully",
+		Func: HWIS,
+		Desc: "Tests that the ChromeOS Flex HWIS can run and exit successfully",
 		Contacts: []string{
 			"chromeos-flex-eng@google.com",
 			"tinghaolin@google.com", // Test author

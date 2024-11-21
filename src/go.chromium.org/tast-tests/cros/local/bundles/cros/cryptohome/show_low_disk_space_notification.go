@@ -20,7 +20,6 @@ import (
 func init() {
 	testing.AddTest(&testing.Test{
 		Func:         ShowLowDiskSpaceNotification,
-		LacrosStatus: testing.LacrosVariantUnneeded,
 		Desc:         "Test showing the low disk space notification",
 		BugComponent: "b:1264602", // ChromeOS > Software > Commercial (Enterprise) > DiskCleanup
 		Contacts: []string{

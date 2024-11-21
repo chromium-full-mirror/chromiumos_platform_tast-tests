@@ -20,9 +20,8 @@ import (
 
 func init() {
 	testing.AddTest(&testing.Test{
-		Func:         UssMigrationPasswordPin,
-		LacrosStatus: testing.LacrosVariantUnneeded,
-		Desc:         "Test that migration of two factors succeed when password is migrated first and PIN is migrated second",
+		Func: UssMigrationPasswordPin,
+		Desc: "Test that migration of two factors succeed when password is migrated first and PIN is migrated second",
 		Contacts: []string{
 			"cryptohome-core@google.com",
 		},

@@ -24,9 +24,8 @@ import (
 
 func init() {
 	testing.AddTest(&testing.Test{
-		Func:         MountPerfWithArc,
-		LacrosStatus: testing.LacrosVariantUnneeded,
-		Desc:         "Performance for cryptohome mount operation with an android app installed",
+		Func: MountPerfWithArc,
+		Desc: "Performance for cryptohome mount operation with an android app installed",
 		Contacts: []string{
 			"cryptohome-core@google.com",
 			"hardikgoyal@google.com", // Test author

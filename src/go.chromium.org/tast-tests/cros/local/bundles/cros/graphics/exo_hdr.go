@@ -23,7 +23,6 @@ var pixelFormatPattern = regexp.MustCompile(`(?:format=)\w+`)
 func init() {
 	testing.AddTest(&testing.Test{
 		Func:         ExoHDR,
-		LacrosStatus: testing.LacrosVariantUnneeded,
 		Desc:         "Tests that a client can send a 30-bit buffer to exo",
 		BugComponent: "b:1021073", // ChromeOS > Platform > Graphics > Compositor
 		Contacts: []string{

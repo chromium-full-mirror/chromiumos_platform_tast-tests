@@ -19,7 +19,6 @@ import (
 func init() {
 	testing.AddTest(&testing.Test{
 		Func:         GLAPICheck,
-		LacrosStatus: testing.LacrosVariantUnneeded,
 		Desc:         "Verifies the OpenGL API requirements",
 		Attr:         []string{"group:mainline", "group:graphics", "graphics_nightly", "group:cq-medium"},
 		BugComponent: "b:995569", // ChromeOS > Platform > Graphics > GPU

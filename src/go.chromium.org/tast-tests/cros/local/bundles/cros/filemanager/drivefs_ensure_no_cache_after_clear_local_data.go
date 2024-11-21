@@ -20,7 +20,6 @@ import (
 func init() {
 	testing.AddTest(&testing.Test{
 		Func:         DrivefsEnsureNoCacheAfterClearLocalData,
-		LacrosStatus: testing.LacrosVariantUnneeded,
 		Desc:         "Verify that a file created on the cloud can still be read after clearing the local data",
 		BugComponent: "b:167289",
 		Contacts: []string{

@@ -15,7 +15,6 @@ import (
 func init() {
 	testing.AddTest(&testing.Test{
 		Func:         LibDRM,
-		LacrosStatus: testing.LacrosVariantUnneeded,
 		Desc:         "A quick smoke check using the binaries shipping with libdrm",
 		Attr:         []string{"group:graphics", "group:mainline", "graphics_nightly"},
 		BugComponent: "b:995569", // ChromeOS > Platform > Graphics > GPU

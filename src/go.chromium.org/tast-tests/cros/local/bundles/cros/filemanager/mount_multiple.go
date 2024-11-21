@@ -62,7 +62,6 @@ type testEntry struct {
 func init() {
 	testing.AddTest(&testing.Test{
 		Func:         MountMultiple,
-		LacrosStatus: testing.LacrosVariantUnneeded,
 		Desc:         "Checks that Files App can mount multiple archives in one go",
 		BugComponent: "b:167289",
 		Contacts: []string{

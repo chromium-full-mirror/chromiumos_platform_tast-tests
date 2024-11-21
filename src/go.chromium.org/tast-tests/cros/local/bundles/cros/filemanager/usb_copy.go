@@ -26,7 +26,6 @@ import (
 func init() {
 	testing.AddTest(&testing.Test{
 		Func:         USBCopy,
-		LacrosStatus: testing.LacrosVariantUnneeded,
 		Desc:         "Verify it is possible to copy files to and from a mass storage USB device",
 		BugComponent: "b:167289",
 		Contacts: []string{

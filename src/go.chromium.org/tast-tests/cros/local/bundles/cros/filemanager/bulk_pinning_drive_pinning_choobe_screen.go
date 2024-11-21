@@ -29,7 +29,6 @@ func init() {
 	testing.AddTest(&testing.Test{
 		Func:           BulkPinningDrivePinningChoobeScreen,
 		LifeCycleStage: testing.LifeCycleOwnerMonitored,
-		LacrosStatus:   testing.LacrosVariantUnneeded,
 		Desc:           "Verify that the the CHOOBE screen shows for consumer users",
 		BugComponent:   "b:167289",
 		Contacts: []string{

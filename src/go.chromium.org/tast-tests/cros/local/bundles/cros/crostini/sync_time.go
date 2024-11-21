@@ -21,7 +21,6 @@ import (
 func init() {
 	testing.AddTest(&testing.Test{
 		Func:         SyncTime,
-		LacrosStatus: testing.LacrosVariantUnneeded,
 		Desc:         "Manually sets the time in the guest to an incorrect value, uses 'SyncTimes' to correct it, and verifies that it is correct",
 		Contacts:     []string{"clumptini+oncall@google.com"},
 		Attr:         []string{"group:mainline"},

@@ -19,17 +19,16 @@ import (
 
 func init() {
 	testing.AddTest(&testing.Test{
-		Func:         FeatureAwareDevice,
-		LacrosStatus: testing.LacrosVariantUnneeded,
-		Desc:         "Verify that feature aware devices download the right app component for demomode",
-		Contacts:     []string{"cros-demo-mode-eng@google.com", "xiqiruan@google.com"},
+		Func:     FeatureAwareDevice,
+		Desc:     "Verify that feature aware devices download the right app component for demomode",
+		Contacts: []string{"cros-demo-mode-eng@google.com", "xiqiruan@google.com"},
 		// Chrome OS Server Projects > Enterprise Management > Demo Mode
 		BugComponent: "b:812312",
 		Fixture:      fixture.PostDemoModeOOBESkipResourcesComponentProd,
 		Attr:         []string{
 			// Disabled by TORA.  See:b/329013560.
 			// "group:cbx", "cbx_feature_enabled", "cbx_unstable"
-			},
+		},
 		// Demo Mode uses Zero Touch Enrollment for enterprise enrollment, which
 		// requires a real TPM.
 		// We require "arc" and "chrome_internal" because the ARC TOS screen

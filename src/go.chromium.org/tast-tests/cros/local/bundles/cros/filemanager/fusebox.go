@@ -26,7 +26,6 @@ import (
 func init() {
 	testing.AddTest(&testing.Test{
 		Func:         Fusebox,
-		LacrosStatus: testing.LacrosVariantUnneeded,
 		Desc:         "Mount fusebox daemon and verify it responds to requests",
 		BugComponent: "b:167289",
 		Contacts: []string{

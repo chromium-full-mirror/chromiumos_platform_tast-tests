@@ -28,7 +28,6 @@ func init() {
 		},
 		Attr:         []string{"group:mainline"},
 		SoftwareDeps: []string{"fwupd"},
-		LacrosStatus: testing.LacrosVariantUnneeded,
 		Params: []testing.Param{{
 			// Baseline plugins that should always be present.
 			Val: []string{

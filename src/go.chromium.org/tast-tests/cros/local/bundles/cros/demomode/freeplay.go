@@ -30,10 +30,9 @@ type freeplayTestParams struct {
 
 func init() {
 	testing.AddTest(&testing.Test{
-		Func:         Freeplay,
-		LacrosStatus: testing.LacrosVariantNeeded,
-		Desc:         "Verify that all preinstalled sample apps are present in Demo Mode freeplay",
-		Contacts:     []string{"cros-demo-mode-eng@google.com", "wanghaifan@google.com"},
+		Func:     Freeplay,
+		Desc:     "Verify that all preinstalled sample apps are present in Demo Mode freeplay",
+		Contacts: []string{"cros-demo-mode-eng@google.com", "wanghaifan@google.com"},
 		// Chrome OS Server Projects > Enterprise Management > Demo Mode
 		BugComponent: "b:812312",
 		Attr:         []string{"group:mainline", "informational"},

@@ -41,7 +41,6 @@ func init() {
 	testing.AddTest(&testing.Test{
 		Func:           OdfsStayInM365Pwa,
 		LifeCycleStage: testing.LifeCycleOwnerMonitored,
-		LacrosStatus:   testing.LacrosVariantUnneeded,
 		Desc:           "Verifies that we stay within the M365 PWA when creating a new file or opening an existing file from M365",
 		BugComponent:   "b:1401215", // ChromeOS > Software > Commercial (Enterprise) > Identity > 3P IdP > Enterprise Clippy
 		Timeout:        5 * time.Minute,

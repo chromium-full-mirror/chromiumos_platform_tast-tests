@@ -16,9 +16,8 @@ import (
 
 func init() {
 	testing.AddTest(&testing.Test{
-		Func:         NavigateInputPage,
-		LacrosStatus: testing.LacrosVariantUnneeded,
-		Desc:         "Can successfully navigate to the Input page",
+		Func: NavigateInputPage,
+		Desc: "Can successfully navigate to the Input page",
 		// ChromeOS > Platform > Enablement > Serviceability > Diagnostic & Health
 		BugComponent: "b:982097",
 		Contacts: []string{

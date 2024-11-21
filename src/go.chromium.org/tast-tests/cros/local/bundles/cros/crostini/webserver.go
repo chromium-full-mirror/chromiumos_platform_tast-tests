@@ -20,7 +20,6 @@ import (
 func init() {
 	testing.AddTest(&testing.Test{
 		Func:         Webserver,
-		LacrosStatus: testing.LacrosVariantUnneeded,
 		Desc:         "Runs a webserver in the container, and confirms that the host can connect to it",
 		Contacts:     []string{"clumptini+oncall@google.com"},
 		Attr:         []string{"group:mainline"},

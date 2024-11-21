@@ -33,7 +33,6 @@ const (
 func init() {
 	testing.AddTest(&testing.Test{
 		Func:         RoundedDisplay,
-		LacrosStatus: testing.LacrosVariantUnneeded,
 		Desc:         "Verifies that rounded display mask textures are using hardware overlay as intended",
 		BugComponent: "b:1045832", // ChromeOS > Software > Performance > TPS
 		Contacts: []string{

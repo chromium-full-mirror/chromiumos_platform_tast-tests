@@ -27,9 +27,8 @@ var (
 
 func init() {
 	testing.AddTest(&testing.Test{
-		Func:         ChameleonSwitchMode,
-		LacrosStatus: testing.LacrosVariantUnneeded,
-		Desc:         "Switch between extended and mirror mode and compare display screenshots",
+		Func: ChameleonSwitchMode,
+		Desc: "Switch between extended and mirror mode and compare display screenshots",
 		Contacts: []string{
 			"chromeos-gfx-display@google.com",
 			"markyacoub@google.com",

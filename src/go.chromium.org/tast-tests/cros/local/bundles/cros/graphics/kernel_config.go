@@ -47,7 +47,6 @@ var (
 func init() {
 	testing.AddTest(&testing.Test{
 		Func:         KernelConfig,
-		LacrosStatus: testing.LacrosVariantUnneeded,
 		Desc:         "Verify that a kernel is correctly configured for graphics usage",
 		Attr:         []string{"group:mainline", "group:graphics", "graphics_nightly"},
 		BugComponent: "b:995569", // ChromeOS > Platform > Graphics > GPU

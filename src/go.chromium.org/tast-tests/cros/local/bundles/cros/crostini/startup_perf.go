@@ -15,7 +15,6 @@ import (
 func init() {
 	testing.AddTest(&testing.Test{
 		Func:         StartupPerf,
-		LacrosStatus: testing.LacrosVariantUnneeded,
 		Desc:         "Performance tests of Termina VM startup and container startup",
 		Contacts:     []string{"clumptini@google.com", "nverne@chromium.org"},
 		SoftwareDeps: []string{"chrome", "vm_host"},
