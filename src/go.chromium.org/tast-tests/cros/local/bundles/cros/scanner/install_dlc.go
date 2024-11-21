@@ -21,10 +21,9 @@ import (
 
 func init() {
 	testing.AddTest(&testing.Test{
-		Func:         InstallDLC,
-		LacrosStatus: testing.LacrosVariantUnneeded,
-		Desc:         "E2E verification that SANE backend DLCs are installed for specific detected scanners",
-		Contacts:     []string{"project-bolton@google.com", "aaronmassey@google.com"},
+		Func:     InstallDLC,
+		Desc:     "E2E verification that SANE backend DLCs are installed for specific detected scanners",
+		Contacts: []string{"project-bolton@google.com", "aaronmassey@google.com"},
 		// ChromeOS > Platform > Services > Scanning
 		BugComponent: "b:860616",
 		Attr: []string{

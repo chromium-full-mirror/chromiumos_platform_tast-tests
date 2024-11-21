@@ -29,9 +29,8 @@ import (
 
 func init() {
 	testing.AddTest(&testing.Test{
-		Func:         PrintPdfAsImageDefault,
-		LacrosStatus: testing.LacrosVariantUnneeded,
-		Desc:         "Checking if the 'Print as image' option is set by default depending on the value of this policy",
+		Func: PrintPdfAsImageDefault,
+		Desc: "Checking if the 'Print as image' option is set by default depending on the value of this policy",
 		Contacts: []string{
 			"chromeos-commercial-printing@google.com",
 		},

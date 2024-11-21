@@ -24,9 +24,8 @@ import (
 
 func init() {
 	testing.AddTest(&testing.Test{
-		Func:         WebRTCVideoConference,
-		LacrosStatus: testing.LacrosVariantUnneeded,
-		Desc:         "Measure audio, camera, graphics and video stack performance in a video conference using WebRTC",
+		Func: WebRTCVideoConference,
+		Desc: "Measure audio, camera, graphics and video stack performance in a video conference using WebRTC",
 		Vars: []string{
 			"rtc.WebRTCVideoConference.Mouse",
 			"rtc.WebRTCVideoConference.NumPeople",

@@ -39,7 +39,6 @@ func init() {
 		Func:         Power,
 		Desc:         "Navigate to different web pages and print them to pdf",
 		BugComponent: "b:1208373",
-		LacrosStatus: testing.LacrosVariantUnneeded,
 		Contacts: []string{
 			"cros-enterprise-security@google.com",
 			"aashay@google.com",

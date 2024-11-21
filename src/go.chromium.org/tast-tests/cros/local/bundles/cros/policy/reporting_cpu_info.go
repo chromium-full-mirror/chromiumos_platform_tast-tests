@@ -28,9 +28,8 @@ import (
 
 func init() {
 	testing.AddTest(&testing.Test{
-		Func:         ReportingCPUInfo,
-		LacrosStatus: testing.LacrosVariantUnneeded,
-		Desc:         "Verify CPU info is reported when ReportDeviceCpuInfo is enabled",
+		Func: ReportingCPUInfo,
+		Desc: "Verify CPU info is reported when ReportDeviceCpuInfo is enabled",
 		Contacts: []string{
 			"cros-reporting-alerts+tast@google.com",
 			"albertojuarez@google.com", // Test author

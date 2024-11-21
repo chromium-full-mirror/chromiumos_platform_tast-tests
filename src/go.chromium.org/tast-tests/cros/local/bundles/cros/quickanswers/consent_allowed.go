@@ -16,9 +16,8 @@ import (
 
 func init() {
 	testing.AddTest(&testing.Test{
-		Func:         ConsentAllowed,
-		LacrosStatus: testing.LacrosVariantUnneeded,
-		Desc:         "Test Quick Answers consent flow",
+		Func: ConsentAllowed,
+		Desc: "Test Quick Answers consent flow",
 		Contacts: []string{
 			"assistive-eng@google.com",
 			"chromeos-consumer-engprod@google.com",

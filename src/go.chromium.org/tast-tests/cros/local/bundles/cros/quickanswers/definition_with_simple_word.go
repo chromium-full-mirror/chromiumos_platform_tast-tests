@@ -16,15 +16,14 @@ import (
 
 func init() {
 	testing.AddTest(&testing.Test{
-		Func:         DefinitionWithSimpleWord,
-		LacrosStatus: testing.LacrosVariantUnneeded,
-		Desc:         "Test Quick Answers always trigger for single word feature",
+		Func: DefinitionWithSimpleWord,
+		Desc: "Test Quick Answers always trigger for single word feature",
 		Contacts: []string{
 			"cros-assistive@google.com",
 			"chromeos-consumer-engprod@google.com",
 		},
 		BugComponent: "b:905229", // ChromeOS > Software > Assistive
-		Attr: []string{
+		Attr:         []string{
 			// Disabled by TORA.  See:b/331078791.
 			// "group:hw_agnostic",
 			// "group:mainline",
@@ -44,7 +43,7 @@ func init() {
 		SoftwareDeps: []string{
 			// Disabled by TORA.  See:b/331078791.
 			// "gaia"
-			},
+		},
 	})
 }
 

@@ -13,9 +13,8 @@ import (
 
 func init() {
 	testing.AddTest(&testing.Test{
-		Func:         SELinuxNonRootFSPaths,
-		LacrosStatus: testing.LacrosVariantUnneeded,
-		Desc:         "Checks that SELinux file labels are set correctly for stateful partition files",
+		Func: SELinuxNonRootFSPaths,
+		Desc: "Checks that SELinux file labels are set correctly for stateful partition files",
 		Contacts: []string{
 			"chromeos-hardening@google.com",
 		},

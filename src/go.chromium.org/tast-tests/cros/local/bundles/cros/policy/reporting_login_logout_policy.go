@@ -26,9 +26,8 @@ import (
 
 func init() {
 	testing.AddTest(&testing.Test{
-		Func:         ReportingLoginLogoutPolicy,
-		LacrosStatus: testing.LacrosVariantUnneeded,
-		Desc:         "Verify user added/removed, device lock/unlock, and user login/logout events are reported correctly",
+		Func: ReportingLoginLogoutPolicy,
+		Desc: "Verify user added/removed, device lock/unlock, and user login/logout events are reported correctly",
 		Contacts: []string{
 			"cros-reporting-alerts+tast@google.com",
 			"albertojuarez@google.com", // Test author

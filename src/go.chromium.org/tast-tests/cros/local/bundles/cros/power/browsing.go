@@ -41,7 +41,6 @@ const setupTimeoutBuffer = 5 * time.Minute
 func init() {
 	testing.AddTest(&testing.Test{
 		Func:         Browsing,
-		LacrosStatus: testing.LacrosVariantUnneeded,
 		Desc:         "Collect power metrics when browsing",
 		BugComponent: "b:1361410", // ChromeOS > Platform > System > Core Power
 		Contacts:     []string{"chromeos-power-team@google.com"},

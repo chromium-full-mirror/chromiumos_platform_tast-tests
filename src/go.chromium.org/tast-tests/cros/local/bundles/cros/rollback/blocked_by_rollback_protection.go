@@ -29,9 +29,8 @@ type rollbackBlockerTestParam struct {
 
 func init() {
 	testing.AddTest(&testing.Test{
-		Func:         BlockedByRollbackProtection,
-		LacrosStatus: testing.LacrosVariantUnneeded,
-		Desc:         "Tests that no rollback happens if firmware or kernel version of the rollback image are too low",
+		Func: BlockedByRollbackProtection,
+		Desc: "Tests that no rollback happens if firmware or kernel version of the rollback image are too low",
 		Contacts: []string{
 			"chromeos-commercial-remote-management@google.com",
 			"mpolzer@google.com",

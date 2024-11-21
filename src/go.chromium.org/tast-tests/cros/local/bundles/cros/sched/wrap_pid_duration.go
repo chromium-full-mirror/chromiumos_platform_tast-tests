@@ -75,7 +75,6 @@ print(int(duration_millis))
 func init() {
 	testing.AddTest(&testing.Test{
 		Func:         WrapPidDuration,
-		LacrosStatus: testing.LacrosVariantUnneeded,
 		Desc:         "Measure how long it takes to wrap the PID space by spawning threads",
 		Contacts:     []string{"cros-core-systems-perf@google.com", "kawasin@google.com"},
 		BugComponent: "b:167279", // ChromeOS > Platform > baseOS > Performance

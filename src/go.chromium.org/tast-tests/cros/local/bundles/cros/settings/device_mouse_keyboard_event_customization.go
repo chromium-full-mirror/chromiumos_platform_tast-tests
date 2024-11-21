@@ -23,9 +23,8 @@ import (
 
 func init() {
 	testing.AddTest(&testing.Test{
-		Func:         DeviceMouseKeyboardEventCustomization,
-		LacrosStatus: testing.LacrosVariantUnneeded,
-		Desc:         "Test mouse key customization to a keyboard action in device settings",
+		Func: DeviceMouseKeyboardEventCustomization,
+		Desc: "Test mouse key customization to a keyboard action in device settings",
 		Contacts: []string{
 			"cros-device-enablement@google.com",
 			"chromeos-consumer-engprod@google.com",

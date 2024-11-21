@@ -24,9 +24,8 @@ import (
 
 func init() {
 	testing.AddTest(&testing.Test{
-		Func:         ReportingHeartbeatDbus,
-		LacrosStatus: testing.LacrosVariantUnneeded,
-		Desc:         "Verify that heartbeat events are being sent to missive when the flag is enabled",
+		Func: ReportingHeartbeatDbus,
+		Desc: "Verify that heartbeat events are being sent to missive when the flag is enabled",
 		Contacts: []string{
 			"cros-reporting-alerts+tast@google.com",
 			"albertojuarez@google.com", // Test author

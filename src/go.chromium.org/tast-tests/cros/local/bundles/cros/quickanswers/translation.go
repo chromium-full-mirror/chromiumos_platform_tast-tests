@@ -16,9 +16,8 @@ import (
 
 func init() {
 	testing.AddTest(&testing.Test{
-		Func:         Translation,
-		LacrosStatus: testing.LacrosVariantUnneeded,
-		Desc:         "Test Quick Answers translation feature",
+		Func: Translation,
+		Desc: "Test Quick Answers translation feature",
 		Contacts: []string{
 			"cros-assistive@google.com",
 			"chromeos-consumer-engprod@google.com",

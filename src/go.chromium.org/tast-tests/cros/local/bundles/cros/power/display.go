@@ -138,7 +138,6 @@ const tmpPath = "/tmp"
 func init() {
 	testing.AddTest(&testing.Test{
 		Func:         Display,
-		LacrosStatus: testing.LacrosVariantUnneeded,
 		Desc:         "Collect power metrics displaying different static pages with different screen brightness level",
 		BugComponent: "b:1361410",
 		Contacts:     []string{"chromeos-power-team@google.com", "jingmuli@google.com"},

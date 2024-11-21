@@ -19,10 +19,9 @@ import (
 
 func init() {
 	testing.AddTest(&testing.Test{
-		Func:         KnownProblemFiles,
-		LacrosStatus: testing.LacrosVariantUnneeded,
-		Desc:         "Tests files that have been problematic in the past",
-		Contacts:     []string{"project-bolton@google.com", "nmuggli@google.com"},
+		Func:     KnownProblemFiles,
+		Desc:     "Tests files that have been problematic in the past",
+		Contacts: []string{"project-bolton@google.com", "nmuggli@google.com"},
 		// ChromeOS > Platform > Services > Printing
 		BugComponent: "b:167231",
 		Attr: []string{

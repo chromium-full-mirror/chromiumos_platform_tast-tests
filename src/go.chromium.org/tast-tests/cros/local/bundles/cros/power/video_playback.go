@@ -30,7 +30,6 @@ var videoPlaybackDefaultTimeParams = power.TimeParams{Interval: 5 * time.Second,
 func init() {
 	testing.AddTest(&testing.Test{
 		Func:         VideoPlayback,
-		LacrosStatus: testing.LacrosVariantUnneeded,
 		Desc:         "Collect power metrics playing offline video",
 		BugComponent: "b:1361410",
 		Contacts:     []string{"chromeos-power-team@google.com"},

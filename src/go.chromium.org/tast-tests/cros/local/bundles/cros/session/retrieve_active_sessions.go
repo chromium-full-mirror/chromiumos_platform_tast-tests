@@ -16,7 +16,6 @@ import (
 func init() {
 	testing.AddTest(&testing.Test{
 		Func:         RetrieveActiveSessions,
-		LacrosStatus: testing.LacrosVariantUnneeded,
 		Desc:         "Ensures that the session_manager correctly tracks active sessions",
 		BugComponent: "b:1331478", // ChromeOS > Software > Core > SessionManager
 		Contacts: []string{

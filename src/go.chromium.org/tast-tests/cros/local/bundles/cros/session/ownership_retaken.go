@@ -32,9 +32,8 @@ import (
 
 func init() {
 	testing.AddTest(&testing.Test{
-		Func:         OwnershipRetaken,
-		LacrosStatus: testing.LacrosVariantUnneeded,
-		Desc:         "Ensures that ownership is re-taken upon loss of owner's cryptohome and device policies are preserved",
+		Func: OwnershipRetaken,
+		Desc: "Ensures that ownership is re-taken upon loss of owner's cryptohome and device policies are preserved",
 		Contacts: []string{
 			"hidehiko@chromium.org",
 			"miersh@google.com",

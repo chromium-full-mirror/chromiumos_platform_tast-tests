@@ -38,9 +38,8 @@ type audioProbeResults struct {
 
 func init() {
 	testing.AddTest(&testing.Test{
-		Func:         AudioCodecCoverage,
-		LacrosStatus: testing.LacrosVariantUnneeded,
-		Desc:         "Checks audio codec kernel names coverage",
+		Func: AudioCodecCoverage,
+		Desc: "Checks audio codec kernel names coverage",
 		Contacts: []string{
 			"chromeos-runtime-probe@google.com",
 			"clarkchung@google.com",

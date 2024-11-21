@@ -25,9 +25,8 @@ type verifySandboxTestParams struct {
 
 func init() {
 	testing.AddTest(&testing.Test{
-		Func:         VerifySandbox,
-		LacrosStatus: testing.LacrosVariantUnneeded,
-		Desc:         "Checks runtime_probe sandbox",
+		Func: VerifySandbox,
+		Desc: "Checks runtime_probe sandbox",
 		Contacts: []string{
 			"chromeos-runtime-probe@google.com",
 			"chungsheng@google.com",

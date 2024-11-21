@@ -32,7 +32,6 @@ const timeoutBuffer = 5 * time.Minute
 func init() {
 	testing.AddTest(&testing.Test{
 		Func:         VideoCall,
-		LacrosStatus: testing.LacrosVariantUnneeded,
 		Desc:         "Collect power metrics when mutitasking typing and video call",
 		BugComponent: "b:1361410", // ChromeOS > Platform > System > Core Power
 		Contacts:     []string{"chromeos-power-team@google.com"},

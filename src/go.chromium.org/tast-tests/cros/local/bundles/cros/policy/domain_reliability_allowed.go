@@ -28,9 +28,8 @@ import (
 
 func init() {
 	testing.AddTest(&testing.Test{
-		Func:         DomainReliabilityAllowed,
-		LacrosStatus: testing.LacrosVariantUnneeded,
-		Desc:         "This test checks for the network annotation for Domain Reliability to make sure we are not sending network traffic when the policy is disabled",
+		Func: DomainReliabilityAllowed,
+		Desc: "This test checks for the network annotation for Domain Reliability to make sure we are not sending network traffic when the policy is disabled",
 		Contacts: []string{
 			"dp-chromeos-eng@google.com",
 			"alexwchen@google.com",

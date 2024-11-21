@@ -20,9 +20,8 @@ import (
 
 func init() {
 	testing.AddTest(&testing.Test{
-		Func:         UserPolicyPropagationE2E,
-		LacrosStatus: testing.LacrosVariantUnneeded,
-		Desc:         "E2E test for user policy propagation",
+		Func: UserPolicyPropagationE2E,
+		Desc: "E2E test for user policy propagation",
 		Contacts: []string{
 			"chromeos-commercial-remote-management@google.com",
 			"artyomchen@google.com", // Test author

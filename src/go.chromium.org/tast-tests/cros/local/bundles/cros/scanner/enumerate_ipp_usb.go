@@ -34,10 +34,9 @@ type enumParams struct {
 
 func init() {
 	testing.AddTest(&testing.Test{
-		Func:         EnumerateIPPUSB,
-		LacrosStatus: testing.LacrosVariantUnneeded,
-		Desc:         "Tests that IPP-USB devices are correctly found",
-		Contacts:     []string{"project-bolton@google.com", "bmgordon@chromium.org"},
+		Func:     EnumerateIPPUSB,
+		Desc:     "Tests that IPP-USB devices are correctly found",
+		Contacts: []string{"project-bolton@google.com", "bmgordon@chromium.org"},
 		// ChromeOS > Platform > Services > Scanning
 		BugComponent: "b:860616",
 		Attr: []string{

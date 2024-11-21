@@ -24,9 +24,8 @@ import (
 
 func init() {
 	testing.AddTest(&testing.Test{
-		Func:         AddAndRemoveLanguage,
-		LacrosStatus: testing.LacrosVariantUnneeded,
-		Desc:         "Check if it is able to add and remove language",
+		Func: AddAndRemoveLanguage,
+		Desc: "Check if it is able to add and remove language",
 		Contacts: []string{
 			"cros-settings@google.com",
 			"chromeos-consumer-engprod@google.com",

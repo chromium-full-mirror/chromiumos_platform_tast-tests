@@ -27,9 +27,8 @@ import (
 
 func init() {
 	testing.AddTest(&testing.Test{
-		Func:         UserPluginVMAllowed,
-		LacrosStatus: testing.LacrosVariantUnneeded,
-		Desc:         "Test UserPluginVmAllowed policy",
+		Func: UserPluginVMAllowed,
+		Desc: "Test UserPluginVmAllowed policy",
 		Contacts: []string{
 			"dp-chromeos-eng@google.com",
 			"chiav@google.com",

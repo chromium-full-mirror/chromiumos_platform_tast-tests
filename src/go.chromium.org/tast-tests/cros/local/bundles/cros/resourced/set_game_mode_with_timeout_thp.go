@@ -16,7 +16,6 @@ import (
 func init() {
 	testing.AddTest(&testing.Test{
 		Func:         SetGameModeWithTimeoutThp,
-		LacrosStatus: testing.LacrosVariantUnneeded,
 		Desc:         "Checks swappiness and thp tuning when resourced game mode changes with timeout",
 		Contacts:     []string{"chromeos-memory@google.com", "vovoy@chromium.org"},
 		BugComponent: "b:167286", // ChromeOS > Platform > System > Memory Management

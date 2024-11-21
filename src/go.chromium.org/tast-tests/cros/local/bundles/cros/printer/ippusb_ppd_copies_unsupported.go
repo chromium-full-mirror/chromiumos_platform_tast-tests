@@ -15,10 +15,9 @@ import (
 
 func init() {
 	testing.AddTest(&testing.Test{
-		Func:         IPPUSBPPDCopiesUnsupported,
-		LacrosStatus: testing.LacrosVariantUnneeded,
-		Desc:         "Verifies that the 'copies-supported' attribute of the printer is used to populate the cupsManualCopies and cupsMaxCopies values in the corresponding generated PPD",
-		Contacts:     []string{"project-bolton@google.com", "bmgordon@chromium.org"},
+		Func:     IPPUSBPPDCopiesUnsupported,
+		Desc:     "Verifies that the 'copies-supported' attribute of the printer is used to populate the cupsManualCopies and cupsMaxCopies values in the corresponding generated PPD",
+		Contacts: []string{"project-bolton@google.com", "bmgordon@chromium.org"},
 		// ChromeOS > Platform > Services > Printing
 		BugComponent: "b:167231",
 		Attr: []string{

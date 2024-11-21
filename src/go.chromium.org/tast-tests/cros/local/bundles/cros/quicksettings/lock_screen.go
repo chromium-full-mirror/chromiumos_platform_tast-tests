@@ -22,9 +22,8 @@ import (
 
 func init() {
 	testing.AddTest(&testing.Test{
-		Func:         LockScreen,
-		LacrosStatus: testing.LacrosVariantUnneeded,
-		Desc:         "Checks that the screen can be locked from Quick Settings",
+		Func: LockScreen,
+		Desc: "Checks that the screen can be locked from Quick Settings",
 		Contacts: []string{
 			"cros-status-area-eng@google.com",
 			"chromeos-consumer-engprod@google.com",

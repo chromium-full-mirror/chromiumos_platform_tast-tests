@@ -282,9 +282,8 @@ type probeFunctionTestParam struct {
 
 func init() {
 	testing.AddTest(&testing.Test{
-		Func:         ProbeFunction,
-		LacrosStatus: testing.LacrosVariantUnneeded,
-		Desc:         "Checks that probe results are expected",
+		Func: ProbeFunction,
+		Desc: "Checks that probe results are expected",
 		Contacts: []string{
 			"chromeos-runtime-probe@google.com",
 			"clarkchung@google.com",

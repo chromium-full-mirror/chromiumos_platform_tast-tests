@@ -26,9 +26,8 @@ import (
 
 func init() {
 	testing.AddTest(&testing.Test{
-		Func:         ChromeOSPageInfo,
-		LacrosStatus: testing.LacrosVariantNeeded,
-		Desc:         "Check the ChromeOS page shows enough information to user",
+		Func: ChromeOSPageInfo,
+		Desc: "Check the ChromeOS page shows enough information to user",
 		Contacts: []string{
 			"cros-settings@google.com",
 			"chromeos-consumer-engprod@google.com",

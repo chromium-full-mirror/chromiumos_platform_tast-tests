@@ -15,7 +15,6 @@ import (
 func init() {
 	testing.AddTest(&testing.Test{
 		Func:         SetMemoryMargins,
-		LacrosStatus: testing.LacrosVariantUnneeded,
 		Desc:         "Checks resourced setting memory margins",
 		Contacts:     []string{"chromeos-memory@google.com", "vovoy@chromium.org"},
 		BugComponent: "b:167286", // ChromeOS > Platform > System > Memory Management

@@ -31,9 +31,8 @@ import (
 
 func init() {
 	testing.AddTest(&testing.Test{
-		Func:         ExternalPrintServers,
-		LacrosStatus: testing.LacrosVariantUnneeded,
-		Desc:         "Verify behavior of external print server configuration user policies",
+		Func: ExternalPrintServers,
+		Desc: "Verify behavior of external print server configuration user policies",
 		Contacts: []string{
 			"chromeos-commercial-printing@google.com",
 			"ust@google.com",

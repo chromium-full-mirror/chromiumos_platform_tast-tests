@@ -27,9 +27,8 @@ import (
 
 func init() {
 	testing.AddTest(&testing.Test{
-		Func:         UserAvatarImage,
-		LacrosStatus: testing.LacrosVariantUnneeded,
-		Desc:         "Test that users cannot change avatar if managed by enterprise policy",
+		Func: UserAvatarImage,
+		Desc: "Test that users cannot change avatar if managed by enterprise policy",
 		Contacts: []string{
 			"cros-p13n-eng@google.com",
 			"chromeos-consumer-engprod@google.com",

@@ -24,9 +24,8 @@ import (
 
 func init() {
 	testing.AddTest(&testing.Test{
-		Func:         DictationEnabled,
-		LacrosStatus: testing.LacrosVariantUnneeded,
-		Desc:         "Behavior of DictationEnabled policy: checking if dictation is enabled or not",
+		Func: DictationEnabled,
+		Desc: "Behavior of DictationEnabled policy: checking if dictation is enabled or not",
 		Contacts: []string{
 			"chromeos-a11y-eng@google.com",
 			"akihiroota@google.com",

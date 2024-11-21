@@ -32,7 +32,6 @@ func init() {
 		Attr:         []string{},
 		Timeout:      3 * time.Minute,
 		SoftwareDeps: []string{"bpf", "chrome", "shipping_kernel"},
-		LacrosStatus: testing.LacrosVariantUnneeded,
 		Fixture:      fixture.LoggedInWithFileEventsEnabled,
 		Params: []testing.Param{{
 			Name:      "user_fs",

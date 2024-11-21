@@ -24,9 +24,8 @@ import (
 
 func init() {
 	testing.AddTest(&testing.Test{
-		Func:         ReportingMissiveFeatureFlagsDbus,
-		LacrosStatus: testing.LacrosVariantUnneeded,
-		Desc:         "Verify that missive executes a dBus call to the Chrome feature API without error",
+		Func: ReportingMissiveFeatureFlagsDbus,
+		Desc: "Verify that missive executes a dBus call to the Chrome feature API without error",
 		Contacts: []string{
 			"cros-reporting-alerts+tast@google.com",
 			"jrhilke@google.com", // Test author

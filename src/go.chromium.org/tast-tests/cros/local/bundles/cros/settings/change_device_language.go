@@ -19,9 +19,8 @@ import (
 
 func init() {
 	testing.AddTest(&testing.Test{
-		Func:         ChangeDeviceLanguage,
-		LacrosStatus: testing.LacrosVariantUnneeded,
-		Desc:         "Change device language and validate new langauge after restart",
+		Func: ChangeDeviceLanguage,
+		Desc: "Change device language and validate new langauge after restart",
 		Contacts: []string{
 			"cros-borders-eng@google.com",
 			"chromeos-consumer-engprod@google.com",

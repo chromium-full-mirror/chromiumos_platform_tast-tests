@@ -76,7 +76,6 @@ func init() {
 		Attr:         []string{},
 		Timeout:      3 * time.Minute,
 		SoftwareDeps: []string{"bpf", "chrome", "shipping_kernel"},
-		LacrosStatus: testing.LacrosVariantUnneeded,
 		Params: []testing.Param{{
 			// TODO: According to jiejiang@, icmp can be tested by simply sending pings,
 			// hence it might not not necessary to separate as an individual test.

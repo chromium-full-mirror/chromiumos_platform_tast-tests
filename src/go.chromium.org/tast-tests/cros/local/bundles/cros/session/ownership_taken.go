@@ -18,9 +18,8 @@ import (
 
 func init() {
 	testing.AddTest(&testing.Test{
-		Func:         OwnershipTaken,
-		LacrosStatus: testing.LacrosVariantUnneeded,
-		Desc:         "Sign in and ensure that ownership of the device is taken",
+		Func: OwnershipTaken,
+		Desc: "Sign in and ensure that ownership of the device is taken",
 		Contacts: []string{
 			"hidehiko@chromium.org",
 		},

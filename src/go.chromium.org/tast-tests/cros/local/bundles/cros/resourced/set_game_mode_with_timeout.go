@@ -16,7 +16,6 @@ import (
 func init() {
 	testing.AddTest(&testing.Test{
 		Func:         SetGameModeWithTimeout,
-		LacrosStatus: testing.LacrosVariantUnneeded,
 		Desc:         "Checks resourced setting game mode with timeout",
 		Contacts:     []string{"chromeos-memory@google.com", "vovoy@chromium.org"},
 		BugComponent: "b:167286", // ChromeOS > Platform > System > Memory Management

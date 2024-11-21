@@ -26,9 +26,8 @@ import (
 
 func init() {
 	testing.AddTest(&testing.Test{
-		Func:         ReportingUsbEvents,
-		LacrosStatus: testing.LacrosVariantUnneeded,
-		Desc:         "Verify that USB added events get sent to the reporting server",
+		Func: ReportingUsbEvents,
+		Desc: "Verify that USB added events get sent to the reporting server",
 		Contacts: []string{
 			"cros-reporting-alerts+tast@google.com",
 			"albertojuarez@google.com", // Test author

@@ -23,7 +23,6 @@ import (
 func init() {
 	testing.AddTest(&testing.Test{
 		Func:         LogoutCleanup,
-		LacrosStatus: testing.LacrosVariantUnneeded,
 		Desc:         "Verifies all processes owned by chronos are destroyed on logout",
 		BugComponent: "b:1331478", // ChromeOS > Software > Core > SessionManager
 		Contacts: []string{

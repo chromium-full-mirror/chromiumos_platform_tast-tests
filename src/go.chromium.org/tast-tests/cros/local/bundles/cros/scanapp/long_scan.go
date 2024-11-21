@@ -22,9 +22,8 @@ import (
 
 func init() {
 	testing.AddTest(&testing.Test{
-		Func:         LongScan,
-		LacrosStatus: testing.LacrosVariantUnneeded,
-		Desc:         "Tests that the Scan app will not suspend during long scans",
+		Func: LongScan,
+		Desc: "Tests that the Scan app will not suspend during long scans",
 		Contacts: []string{
 			"cros-device-enablement@google.com",
 			"project-bolton@google.com",

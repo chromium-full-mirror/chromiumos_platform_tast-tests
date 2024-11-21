@@ -18,9 +18,8 @@ import (
 
 func init() {
 	testing.AddTest(&testing.Test{
-		Func:         PhoneticsAudioButton,
-		LacrosStatus: testing.LacrosVariantUnneeded,
-		Desc:         "Test Quick Answers phonetics audio button",
+		Func: PhoneticsAudioButton,
+		Desc: "Test Quick Answers phonetics audio button",
 		Contacts: []string{
 			"cros-assistive@google.com",
 			"chromeos-consumer-engprod@google.com",

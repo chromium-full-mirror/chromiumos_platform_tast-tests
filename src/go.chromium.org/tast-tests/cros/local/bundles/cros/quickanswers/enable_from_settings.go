@@ -19,9 +19,8 @@ import (
 
 func init() {
 	testing.AddTest(&testing.Test{
-		Func:         EnableFromSettings,
-		LacrosStatus: testing.LacrosVariantUnneeded,
-		Desc:         "Test enabling Quick Answers from settings",
+		Func: EnableFromSettings,
+		Desc: "Test enabling Quick Answers from settings",
 		Contacts: []string{
 			"assistive-eng@google.com",
 			"chromeos-consumer-engprod@google.com",

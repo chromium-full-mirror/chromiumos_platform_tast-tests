@@ -23,9 +23,8 @@ import (
 
 func init() {
 	testing.AddTest(&testing.Test{
-		Func:         PluginVMDataCollectionAllowed,
-		LacrosStatus: testing.LacrosVariantUnneeded,
-		Desc:         "Behavior of PluginVmDataCollectionAllowed policy",
+		Func: PluginVMDataCollectionAllowed,
+		Desc: "Behavior of PluginVmDataCollectionAllowed policy",
 		Contacts: []string{
 			"parallels-cros@google.com",
 			"timloh@google.com",

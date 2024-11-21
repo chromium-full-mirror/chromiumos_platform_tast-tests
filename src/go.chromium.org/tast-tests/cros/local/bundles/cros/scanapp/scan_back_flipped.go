@@ -15,9 +15,8 @@ import (
 
 func init() {
 	testing.AddTest(&testing.Test{
-		Func:         ScanBackFlipped,
-		LacrosStatus: testing.LacrosVariantUnneeded,
-		Desc:         "Tests that the Scan app properly flips reverse sides of duplex pages",
+		Func: ScanBackFlipped,
+		Desc: "Tests that the Scan app properly flips reverse sides of duplex pages",
 		Contacts: []string{
 			"cros-device-enablement@google.com",
 			"project-bolton@google.com",

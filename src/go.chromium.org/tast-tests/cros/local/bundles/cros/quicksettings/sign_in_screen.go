@@ -24,9 +24,8 @@ type testParameters struct {
 
 func init() {
 	testing.AddTest(&testing.Test{
-		Func:         SignInScreen,
-		LacrosStatus: testing.LacrosVariantUnneeded,
-		Desc:         "Checks the Quick Settings from SignIn screen",
+		Func: SignInScreen,
+		Desc: "Checks the Quick Settings from SignIn screen",
 		Contacts: []string{
 			"cros-status-area-eng@google.com",
 			"chromeos-consumer-engprod@google.com",
@@ -35,7 +34,7 @@ func init() {
 		Attr:         []string{
 			// Disabled by TORA.  See:b/345799861.
 			// "group:mainline", "informational"
-			},
+		},
 		SoftwareDeps: []string{"chrome", "chrome_internal"},
 		SearchFlags: []*testing.StringPair{{
 			Key:   "feature_id",

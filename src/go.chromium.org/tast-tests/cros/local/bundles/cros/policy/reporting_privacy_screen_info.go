@@ -33,9 +33,8 @@ type reportingPrivacyScreenInfoParameters struct {
 
 func init() {
 	testing.AddTest(&testing.Test{
-		Func:         ReportingPrivacyScreenInfo,
-		LacrosStatus: testing.LacrosVariantUnneeded,
-		Desc:         "Verify network telemetry is reported when ReportDeviceNetworkStatus is enabled",
+		Func: ReportingPrivacyScreenInfo,
+		Desc: "Verify network telemetry is reported when ReportDeviceNetworkStatus is enabled",
 		Contacts: []string{
 			"cros-reporting-alerts+tast@google.com",
 			"albertojuarez@google.com", // Test author

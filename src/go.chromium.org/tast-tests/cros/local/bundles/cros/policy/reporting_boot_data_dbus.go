@@ -30,9 +30,8 @@ type bootReportingParameters struct {
 
 func init() {
 	testing.AddTest(&testing.Test{
-		Func:         ReportingBootDataDbus,
-		LacrosStatus: testing.LacrosVariantUnneeded,
-		Desc:         "Verify that the boot reporting telemetry is being populated and sent correctly",
+		Func: ReportingBootDataDbus,
+		Desc: "Verify that the boot reporting telemetry is being populated and sent correctly",
 		Contacts: []string{
 			"cros-reporting-alerts+tast@google.com",
 			"albertojuarez@google.com", // Test author

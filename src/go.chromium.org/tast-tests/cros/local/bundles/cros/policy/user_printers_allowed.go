@@ -22,9 +22,8 @@ import (
 
 func init() {
 	testing.AddTest(&testing.Test{
-		Func:         UserPrintersAllowed,
-		LacrosStatus: testing.LacrosVariantUnneeded,
-		Desc:         "Test behavior of UserPrintersAllowed policy: check if Add printer button is restricted based on the value of the policy",
+		Func: UserPrintersAllowed,
+		Desc: "Test behavior of UserPrintersAllowed policy: check if Add printer button is restricted based on the value of the policy",
 		Contacts: []string{
 			"chromeos-commercial-printing@google.com",
 			"alexanderhartl@google.com", // Test author

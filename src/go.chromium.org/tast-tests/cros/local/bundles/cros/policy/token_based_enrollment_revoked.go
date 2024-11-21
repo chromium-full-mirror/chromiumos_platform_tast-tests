@@ -25,9 +25,8 @@ const (
 
 func init() {
 	testing.AddTest(&testing.Test{
-		Func:         TokenBasedEnrollmentRevoked,
-		LacrosStatus: testing.LacrosVariantUnneeded,
-		Desc:         "Verify that token-based enrollment with a revoked token does not enroll",
+		Func: TokenBasedEnrollmentRevoked,
+		Desc: "Verify that token-based enrollment with a revoked token does not enroll",
 		Contacts: []string{
 			"cros-onboarding-team@google.com",
 			"jacksontadie@google.com",

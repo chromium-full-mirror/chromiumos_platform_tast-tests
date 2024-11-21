@@ -18,10 +18,9 @@ import (
 
 func init() {
 	testing.AddTest(&testing.Test{
-		Func:         RejectDocumentFormat,
-		LacrosStatus: testing.LacrosVariantUnneeded,
-		Desc:         "Tests that lpadmin handles a printer rejecting get-printer-attributes requests containing the document-format attribute",
-		Contacts:     []string{"project-bolton@google.com", "pmoy@chromium.org"},
+		Func:     RejectDocumentFormat,
+		Desc:     "Tests that lpadmin handles a printer rejecting get-printer-attributes requests containing the document-format attribute",
+		Contacts: []string{"project-bolton@google.com", "pmoy@chromium.org"},
 		// ChromeOS > Platform > Services > Printing
 		BugComponent: "b:167231",
 		Attr: []string{

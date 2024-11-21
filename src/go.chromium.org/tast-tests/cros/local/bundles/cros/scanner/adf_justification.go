@@ -22,10 +22,9 @@ import (
 
 func init() {
 	testing.AddTest(&testing.Test{
-		Func:         ADFJustification,
-		LacrosStatus: testing.LacrosVariantUnneeded,
-		Desc:         "Tests that scanners with specified ADF justification values have correct scan regions",
-		Contacts:     []string{"project-bolton@google.com", "bmgordon@chromium.org"},
+		Func:     ADFJustification,
+		Desc:     "Tests that scanners with specified ADF justification values have correct scan regions",
+		Contacts: []string{"project-bolton@google.com", "bmgordon@chromium.org"},
 		// ChromeOS > Platform > Services > Scanning
 		BugComponent: "b:860616",
 		Attr: []string{

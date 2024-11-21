@@ -32,9 +32,8 @@ const (
 
 func init() {
 	testing.AddTest(&testing.Test{
-		Func:         SocialApp,
-		LacrosStatus: testing.LacrosVariantUnneeded,
-		Desc:         "Collect the power-related data for social app operations",
+		Func: SocialApp,
+		Desc: "Collect the power-related data for social app operations",
 		Contacts: []string{
 			"chromeos-power-team@google.com",
 			"cienet-development@googlegroups.com",

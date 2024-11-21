@@ -16,7 +16,6 @@ import (
 func init() {
 	testing.AddTest(&testing.Test{
 		Func:         SchedQos,
-		LacrosStatus: testing.LacrosVariantUnneeded,
 		Desc:         "Checks resourced setting thread/process QoS state",
 		Contacts:     []string{"chromeos-memory@google.com", "vovoy@chromium.org"},
 		BugComponent: "b:167286", // ChromeOS > Platform > System > Memory Management

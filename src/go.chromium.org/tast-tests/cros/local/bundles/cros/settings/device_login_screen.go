@@ -26,9 +26,8 @@ import (
 
 func init() {
 	testing.AddTest(&testing.Test{
-		Func:         DeviceLoginScreen,
-		LacrosStatus: testing.LacrosVariantUnneeded,
-		Desc:         "Device keyboard remapping settings work on the login screen",
+		Func: DeviceLoginScreen,
+		Desc: "Device keyboard remapping settings work on the login screen",
 		Contacts: []string{
 			"cros-device-enablement@google.com",
 			"chromeos-consumer-engprod@google.com",

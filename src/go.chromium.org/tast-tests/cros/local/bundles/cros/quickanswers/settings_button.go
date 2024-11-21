@@ -20,7 +20,6 @@ func init() {
 		Func: SettingsButton,
 		// Disabled by TORA. See: b/340910339
 		LifeCycleStage: testing.LifeCycleOwnerMonitored,
-		LacrosStatus:   testing.LacrosVariantUnneeded,
 		Desc:           "Test Quick Answers settings button",
 		Contacts: []string{
 			"cros-assistive@google.com",

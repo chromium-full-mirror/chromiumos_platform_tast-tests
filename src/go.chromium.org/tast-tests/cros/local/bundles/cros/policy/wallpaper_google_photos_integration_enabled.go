@@ -29,9 +29,8 @@ import (
 
 func init() {
 	testing.AddTest(&testing.Test{
-		Func:         WallpaperGooglePhotosIntegrationEnabled,
-		LacrosStatus: testing.LacrosVariantUnneeded,
-		Desc:         "Verifies the behavior of the WallpaperGooglePhotosIntegrationEnabled policy",
+		Func: WallpaperGooglePhotosIntegrationEnabled,
+		Desc: "Verifies the behavior of the WallpaperGooglePhotosIntegrationEnabled policy",
 		Contacts: []string{
 			"dp-chromeos-eng@google.com",
 			"crmullins@google.com",

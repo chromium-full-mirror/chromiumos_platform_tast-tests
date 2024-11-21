@@ -19,10 +19,9 @@ import (
 
 func init() {
 	testing.AddTest(&testing.Test{
-		Func:         PrintIPPUSB,
-		LacrosStatus: testing.LacrosVariantUnneeded,
-		Desc:         "Tests ipp-over-usb printing",
-		Contacts:     []string{"project-bolton@google.com", "bmgordon@chromium.org"},
+		Func:     PrintIPPUSB,
+		Desc:     "Tests ipp-over-usb printing",
+		Contacts: []string{"project-bolton@google.com", "bmgordon@chromium.org"},
 		// ChromeOS > Platform > Services > Printing
 		BugComponent: "b:167231",
 		Attr: []string{

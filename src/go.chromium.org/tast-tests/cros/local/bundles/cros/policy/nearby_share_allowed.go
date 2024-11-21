@@ -24,7 +24,6 @@ import (
 func init() {
 	testing.AddTest(&testing.Test{
 		Func:           NearbyShareAllowed,
-		LacrosStatus:   testing.LacrosVariantUnneeded,
 		LifeCycleStage: testing.LifeCycleOwnerMonitored,
 		Desc:           "Test NearbyShareAllowed policy",
 		Contacts: []string{

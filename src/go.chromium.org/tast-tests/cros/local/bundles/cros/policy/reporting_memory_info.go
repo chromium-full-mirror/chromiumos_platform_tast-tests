@@ -36,9 +36,8 @@ type reportingMemoryInfoParams struct {
 
 func init() {
 	testing.AddTest(&testing.Test{
-		Func:         ReportingMemoryInfo,
-		LacrosStatus: testing.LacrosVariantUnneeded,
-		Desc:         "Verify memory info is reported when ReportDeviceMemoryInfo is enabled",
+		Func: ReportingMemoryInfo,
+		Desc: "Verify memory info is reported when ReportDeviceMemoryInfo is enabled",
 		Contacts: []string{
 			"cros-reporting-alerts+tast@google.com",
 			"albertojuarez@google.com", // Test author

@@ -22,7 +22,6 @@ var exampleUI5minTimeParams = power.TimeParams{Interval: 5 * time.Second, Total:
 func init() {
 	testing.AddTest(&testing.Test{
 		Func:         ExampleUI,
-		LacrosStatus: testing.LacrosVariantUnneeded,
 		Desc:         "Collect power metrics when device is in idle with UI",
 		BugComponent: "b:1361410",
 		Contacts:     []string{"chromeos-power-team@google.com"},

@@ -15,7 +15,6 @@ import (
 func init() {
 	testing.AddTest(&testing.Test{
 		Func:         PowerSupplyChange,
-		LacrosStatus: testing.LacrosVariantUnneeded,
 		Desc:         "Checks resourced power supply change",
 		Contacts:     []string{"chromeos-memory@google.com", "vovoy@chromium.org"},
 		BugComponent: "b:167286", // ChromeOS > Platform > System > Memory Management

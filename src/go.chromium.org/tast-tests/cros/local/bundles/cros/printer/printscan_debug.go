@@ -21,9 +21,8 @@ const (
 
 func init() {
 	testing.AddTest(&testing.Test{
-		Func:         PrintscanDebug,
-		LacrosStatus: testing.LacrosVariantUnneeded,
-		Desc:         "Tests the printscan_debug D-bus methods",
+		Func: PrintscanDebug,
+		Desc: "Tests the printscan_debug D-bus methods",
 		Contacts: []string{
 			"project-bolton@google.com",
 			"pmoy@google.com",

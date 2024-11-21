@@ -18,9 +18,8 @@ import (
 
 func init() {
 	testing.AddTest(&testing.Test{
-		Func:         VerifyConfig,
-		LacrosStatus: testing.LacrosVariantUnneeded,
-		Desc:         "Checks runtime_probe probe config",
+		Func: VerifyConfig,
+		Desc: "Checks runtime_probe probe config",
 		Contacts: []string{
 			"chromeos-runtime-probe@google.com",
 			"chungsheng@google.com",

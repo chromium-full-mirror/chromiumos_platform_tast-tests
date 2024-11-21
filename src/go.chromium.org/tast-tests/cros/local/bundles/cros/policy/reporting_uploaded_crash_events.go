@@ -30,9 +30,8 @@ import (
 
 func init() {
 	testing.AddTest(&testing.Test{
-		Func:         ReportingUploadedCrashEvents,
-		LacrosStatus: testing.LacrosVariantUnneeded,
-		Desc:         "Verify uploaded fatal crash events are reported when policy ReportDeviceCrashReportInfo is on",
+		Func: ReportingUploadedCrashEvents,
+		Desc: "Verify uploaded fatal crash events are reported when policy ReportDeviceCrashReportInfo is on",
 		Contacts: []string{
 			"cros-reporting-alerts+tast@google.com",
 			"albertojuarez@google.com", // Test maintainer

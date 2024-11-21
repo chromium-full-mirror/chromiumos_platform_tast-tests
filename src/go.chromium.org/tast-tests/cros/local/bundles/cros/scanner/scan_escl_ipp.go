@@ -28,10 +28,9 @@ type params struct {
 
 func init() {
 	testing.AddTest(&testing.Test{
-		Func:         ScanESCLIPP,
-		LacrosStatus: testing.LacrosVariantUnneeded,
-		Desc:         "Tests eSCL scanning via an ipp-over-usb tunnel",
-		Contacts:     []string{"project-bolton@google.com", "bmgordon@chromium.org"},
+		Func:     ScanESCLIPP,
+		Desc:     "Tests eSCL scanning via an ipp-over-usb tunnel",
+		Contacts: []string{"project-bolton@google.com", "bmgordon@chromium.org"},
 		// ChromeOS > Platform > Services > Scanning
 		BugComponent: "b:860616",
 		Attr: []string{

@@ -22,9 +22,8 @@ import (
 
 func init() {
 	testing.AddTest(&testing.Test{
-		Func:         UserPolicyPropagationPerformanceE2E,
-		LacrosStatus: testing.LacrosVariantUnneeded,
-		Desc:         "E2E test for user policy propagation performance",
+		Func: UserPolicyPropagationPerformanceE2E,
+		Desc: "E2E test for user policy propagation performance",
 		Contacts: []string{
 			"chromeos-commercial-remote-management@google.com",
 			"vsavu@google.com",      // Test author

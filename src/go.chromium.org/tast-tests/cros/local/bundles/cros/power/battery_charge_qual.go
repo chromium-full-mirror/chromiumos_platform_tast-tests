@@ -43,7 +43,6 @@ const (
 func init() {
 	testing.AddTest(&testing.Test{
 		Func:         BatteryChargeQual,
-		LacrosStatus: testing.LacrosVariantUnneeded,
 		Desc:         "Measure battery charging speed in Active S0 idle state with default screen brightness",
 		BugComponent: "b:1361410", // ChromeOS > Platform > System > Core Power
 		Contacts:     []string{"chromeos-power-team@google.com"},

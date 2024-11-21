@@ -21,9 +21,8 @@ import (
 
 func init() {
 	testing.AddTest(&testing.Test{
-		Func:         ReportUploadFrequency,
-		LacrosStatus: testing.LacrosVariantUnneeded,
-		Desc:         "Check ReportUploadFrequency by observing /var/log/messages",
+		Func: ReportUploadFrequency,
+		Desc: "Check ReportUploadFrequency by observing /var/log/messages",
 		Contacts: []string{
 			"cros-reporting-alerts+tast@google.com",
 			"albertojuarez@google.com", // Test maintainer

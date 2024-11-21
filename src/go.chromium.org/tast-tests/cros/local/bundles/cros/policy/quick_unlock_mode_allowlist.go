@@ -34,9 +34,8 @@ type testParam struct {
 
 func init() {
 	testing.AddTest(&testing.Test{
-		Func:         QuickUnlockModeAllowlist,
-		LacrosStatus: testing.LacrosVariantUnneeded,
-		Desc:         "Checks that quick unlock options are enabled or disabled based on the policy value",
+		Func: QuickUnlockModeAllowlist,
+		Desc: "Checks that quick unlock options are enabled or disabled based on the policy value",
 		Contacts: []string{
 			"cros-lurs@google.com",
 			"iscsi@google.com",

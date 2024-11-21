@@ -26,9 +26,8 @@ import (
 
 func init() {
 	testing.AddTest(&testing.Test{
-		Func:         ReportingConfigFileDbus,
-		LacrosStatus: testing.LacrosVariantUnneeded,
-		Desc:         "Verify that the configuration file is delivered correctly to missive",
+		Func: ReportingConfigFileDbus,
+		Desc: "Verify that the configuration file is delivered correctly to missive",
 		Contacts: []string{
 			"cros-reporting-alerts+tast@google.com",
 			"albertojuarez@google.com", // Test author

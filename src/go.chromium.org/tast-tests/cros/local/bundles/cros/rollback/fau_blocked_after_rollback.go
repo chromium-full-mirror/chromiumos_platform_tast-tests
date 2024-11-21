@@ -28,9 +28,8 @@ const (
 
 func init() {
 	testing.AddTest(&testing.Test{
-		Func:         FauBlockedAfterRollback,
-		LacrosStatus: testing.LacrosVariantUnneeded,
-		Desc:         "Tests that no FAU happens if rollback-happened flag is set",
+		Func: FauBlockedAfterRollback,
+		Desc: "Tests that no FAU happens if rollback-happened flag is set",
 		Contacts: []string{
 			"chromeos-commercial-remote-management@google.com",
 			"igorcov@google.com",

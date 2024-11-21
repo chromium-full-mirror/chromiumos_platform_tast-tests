@@ -24,9 +24,8 @@ import (
 
 func init() {
 	testing.AddTest(&testing.Test{
-		Func:         DeviceShowUserNamesOnSignin,
-		LacrosStatus: testing.LacrosVariantUnneeded,
-		Desc:         "Test the DeviceShowUserNamesOnSignin policy",
+		Func: DeviceShowUserNamesOnSignin,
+		Desc: "Test the DeviceShowUserNamesOnSignin policy",
 		Contacts: []string{
 			"cros-oobe@google.com",
 			"cros-lurs@google.com",

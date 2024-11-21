@@ -23,9 +23,8 @@ import (
 
 func init() {
 	testing.AddTest(&testing.Test{
-		Func:         SmokeEncryption,
-		LacrosStatus: testing.LacrosVariantUnneeded,
-		Desc:         "Runs rollback encryptions making sure nothing crashes and the output looks ok",
+		Func: SmokeEncryption,
+		Desc: "Runs rollback encryptions making sure nothing crashes and the output looks ok",
 		Contacts: []string{
 			"chromeos-commercial-remote-management@google.com",
 			"mpolzer@google.com",

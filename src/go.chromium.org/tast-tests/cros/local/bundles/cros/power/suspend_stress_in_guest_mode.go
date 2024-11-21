@@ -18,7 +18,6 @@ import (
 func init() {
 	testing.AddTest(&testing.Test{
 		Func:         SuspendStressInGuestMode,
-		LacrosStatus: testing.LacrosVariantUnneeded,
 		Desc:         "Suspend Stress test memory check in GuestMode",
 		BugComponent: "b:157291", // ChromeOS > External > Intel
 		Contacts:     []string{"intel.chrome.automation.team@intel.com", "pathan.jilani@intel.com"},

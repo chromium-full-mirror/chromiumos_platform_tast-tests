@@ -30,9 +30,8 @@ import (
 
 func init() {
 	testing.AddTest(&testing.Test{
-		Func:         ReportingRuntimeCountersTelemetry,
-		LacrosStatus: testing.LacrosVariantUnneeded,
-		Desc:         "Verify runtime counters telemetry is reported when DeviceReportRuntimeCounters is on",
+		Func: ReportingRuntimeCountersTelemetry,
+		Desc: "Verify runtime counters telemetry is reported when DeviceReportRuntimeCounters is on",
 		Contacts: []string{
 			"cros-reporting-alerts+tast@google.com",
 			"albertojuarez@google.com", // Test maintainer

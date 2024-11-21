@@ -24,9 +24,8 @@ import (
 
 func init() {
 	testing.AddTest(&testing.Test{
-		Func:         SmokeCleanup,
-		LacrosStatus: testing.LacrosVariantUnneeded,
-		Desc:         "Runs rollback cleanups making sure nothing crashes and the output looks ok",
+		Func: SmokeCleanup,
+		Desc: "Runs rollback cleanups making sure nothing crashes and the output looks ok",
 		Contacts: []string{
 			"chromeos-commercial-remote-management@google.com",
 			"mpolzer@google.com",

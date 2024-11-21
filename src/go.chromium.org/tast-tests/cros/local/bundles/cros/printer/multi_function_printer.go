@@ -27,10 +27,9 @@ import (
 
 func init() {
 	testing.AddTest(&testing.Test{
-		Func:         MultiFunctionPrinter,
-		LacrosStatus: testing.LacrosVariantUnneeded,
-		Desc:         "Tests printer/scanner/storage combo device",
-		Contacts:     []string{"project-bolton@google.com", "bmgordon@chromium.org"},
+		Func:     MultiFunctionPrinter,
+		Desc:     "Tests printer/scanner/storage combo device",
+		Contacts: []string{"project-bolton@google.com", "bmgordon@chromium.org"},
 		// ChromeOS > Platform > Services > Printing
 		BugComponent: "b:167231",
 		Attr: []string{

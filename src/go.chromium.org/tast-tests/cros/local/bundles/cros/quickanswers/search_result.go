@@ -17,9 +17,8 @@ import (
 
 func init() {
 	testing.AddTest(&testing.Test{
-		Func:         SearchResult,
-		LacrosStatus: testing.LacrosVariantUnneeded,
-		Desc:         "Test Quick Answers card click should bring up search result",
+		Func: SearchResult,
+		Desc: "Test Quick Answers card click should bring up search result",
 		Contacts: []string{
 			"cros-assistive@google.com",
 			"chromeos-consumer-engprod@google.com",

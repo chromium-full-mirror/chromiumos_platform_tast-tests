@@ -38,9 +38,8 @@ const (
 
 func init() {
 	testing.AddTest(&testing.Test{
-		Func:         MemoryFileExecTelemetry,
-		LacrosStatus: testing.LacrosVariantUnneeded,
-		Desc:         "Verifies the blockage of memfd execution attempts and ensures their detection and reporting through secanomalyd",
+		Func: MemoryFileExecTelemetry,
+		Desc: "Verifies the blockage of memfd execution attempts and ensures their detection and reporting through secanomalyd",
 		Contacts: []string{
 			"chromeos-hardening@google.com",
 		},

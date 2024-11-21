@@ -16,9 +16,8 @@ import (
 
 func init() {
 	testing.AddTest(&testing.Test{
-		Func:         DefinitionWithNonEnglishWord,
-		LacrosStatus: testing.LacrosVariantUnneeded,
-		Desc:         "Test Quick Answers definition feature on non-English words",
+		Func: DefinitionWithNonEnglishWord,
+		Desc: "Test Quick Answers definition feature on non-English words",
 		Contacts: []string{
 			"cros-assistive@google.com",
 			"chromeos-consumer-engprod@google.com",

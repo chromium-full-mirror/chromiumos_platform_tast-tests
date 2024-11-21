@@ -30,9 +30,8 @@ import (
 
 func init() {
 	testing.AddTest(&testing.Test{
-		Func:         WebAppInstallForceList,
-		LacrosStatus: testing.LacrosVariantUnneeded,
-		Desc:         "Behavior of WebAppInstallForceList policy",
+		Func: WebAppInstallForceList,
+		Desc: "Behavior of WebAppInstallForceList policy",
 		Contacts: []string{
 			"cros-engprod-muc@google.com",
 			"alexanderhartl@google.com", // Test author

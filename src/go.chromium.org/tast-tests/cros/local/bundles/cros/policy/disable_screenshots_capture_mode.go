@@ -25,9 +25,8 @@ import (
 
 func init() {
 	testing.AddTest(&testing.Test{
-		Func:         DisableScreenshotsCaptureMode,
-		LacrosStatus: testing.LacrosVariantUnneeded,
-		Desc:         "Behavior of the DisableScreenshots policy, check whether screenshot can be taken from capture mode in quick settings",
+		Func: DisableScreenshotsCaptureMode,
+		Desc: "Behavior of the DisableScreenshots policy, check whether screenshot can be taken from capture mode in quick settings",
 		Contacts: []string{
 			"chromeos-wm@google.com",
 			"afakhry@google.com",

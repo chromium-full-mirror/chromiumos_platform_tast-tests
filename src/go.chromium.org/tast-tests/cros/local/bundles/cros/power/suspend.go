@@ -62,9 +62,8 @@ type suspendConfig struct {
 
 func init() {
 	testing.AddTest(&testing.Test{
-		Func:         Suspend,
-		LacrosStatus: testing.LacrosVariantUnneeded,
-		Desc:         "Simple, single-cycle Suspend and Resume",
+		Func: Suspend,
+		Desc: "Simple, single-cycle Suspend and Resume",
 		Contacts: []string{
 			"chromeos-power-team@google.com",
 		},

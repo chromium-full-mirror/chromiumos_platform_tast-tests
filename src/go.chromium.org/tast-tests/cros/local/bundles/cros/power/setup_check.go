@@ -20,7 +20,6 @@ import (
 func init() {
 	testing.AddTest(&testing.Test{
 		Func:         SetupCheck,
-		LacrosStatus: testing.LacrosVariantUnneeded,
 		Desc:         "Check the health of power test library setup",
 		BugComponent: "b:1361410",
 		Contacts: []string{

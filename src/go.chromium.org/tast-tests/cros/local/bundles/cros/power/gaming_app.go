@@ -40,9 +40,8 @@ const (
 
 func init() {
 	testing.AddTest(&testing.Test{
-		Func:         GamingApp,
-		LacrosStatus: testing.LacrosVariantUnneeded,
-		Desc:         "Collect power metrics of gaming app",
+		Func: GamingApp,
+		Desc: "Collect power metrics of gaming app",
 		Contacts: []string{
 			"chromeos-power-team@google.com",
 			"cienet-development@googlegroups.com",

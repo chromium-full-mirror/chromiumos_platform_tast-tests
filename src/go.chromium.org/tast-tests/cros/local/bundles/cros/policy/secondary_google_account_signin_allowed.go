@@ -25,9 +25,8 @@ import (
 
 func init() {
 	testing.AddTest(&testing.Test{
-		Func:         SecondaryGoogleAccountSigninAllowed,
-		LacrosStatus: testing.LacrosVariantUnneeded,
-		Desc:         "Test behavior of SecondaryGoogleAccountSigninAllowed policy: check if Add account button is restricted based on the value of the policy", // TODO(chromium:1128915): Add test cases for signin screen.
+		Func: SecondaryGoogleAccountSigninAllowed,
+		Desc: "Test behavior of SecondaryGoogleAccountSigninAllowed policy: check if Add account button is restricted based on the value of the policy", // TODO(chromium:1128915): Add test cases for signin screen.
 		Contacts: []string{
 			"team-dent@google.com",
 			"sinhak@google.com",

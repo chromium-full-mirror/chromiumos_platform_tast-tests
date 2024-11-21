@@ -15,7 +15,6 @@ import (
 func init() {
 	testing.AddTest(&testing.Test{
 		Func:         MemoryPressureSignal,
-		LacrosStatus: testing.LacrosVariantUnneeded,
 		Desc:         "Checks resourced memory pressure signal",
 		Contacts:     []string{"chromeos-memory@google.com", "vovoy@chromium.org"},
 		BugComponent: "b:167286", // ChromeOS > Platform > System > Memory Management

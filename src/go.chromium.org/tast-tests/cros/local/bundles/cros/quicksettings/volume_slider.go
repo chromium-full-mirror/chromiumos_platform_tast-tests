@@ -23,9 +23,8 @@ import (
 
 func init() {
 	testing.AddTest(&testing.Test{
-		Func:         VolumeSlider,
-		LacrosStatus: testing.LacrosVariantUnneeded,
-		Desc:         "Checks that the Quick Settings volume slider can be adjusted by keyboard",
+		Func: VolumeSlider,
+		Desc: "Checks that the Quick Settings volume slider can be adjusted by keyboard",
 		Contacts: []string{
 			"cros-status-area-eng@google.com",
 			"chromeos-consumer-engprod@google.com",

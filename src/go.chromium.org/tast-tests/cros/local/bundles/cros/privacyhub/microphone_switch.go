@@ -21,10 +21,9 @@ import (
 
 func init() {
 	testing.AddTest(&testing.Test{
-		Func:         MicrophoneSwitch,
-		LacrosStatus: testing.LacrosVariantUnneeded,
-		Desc:         "Checks that PrivacyHub microphone toggle switches off the audio input",
-		Contacts:     []string{"chromeos-privacyhub@google.com", "kisliaks@google.com"},
+		Func:     MicrophoneSwitch,
+		Desc:     "Checks that PrivacyHub microphone toggle switches off the audio input",
+		Contacts: []string{"chromeos-privacyhub@google.com", "kisliaks@google.com"},
 		// ChromeOS > Privacy > ChromeOS Privacy Feature Development.
 		BugComponent: "b:1178745",
 		SoftwareDeps: []string{"chrome"},

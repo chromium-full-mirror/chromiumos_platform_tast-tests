@@ -20,9 +20,8 @@ import (
 
 func init() {
 	testing.AddTest(&testing.Test{
-		Func:         SELinuxFilesARC,
-		LacrosStatus: testing.LacrosVariantUnneeded,
-		Desc:         "Checks SELinux labels on ARC-specific files on devices that support ARC",
+		Func: SELinuxFilesARC,
+		Desc: "Checks SELinux labels on ARC-specific files on devices that support ARC",
 		Contacts: []string{
 			"chromeos-hardening@google.com",
 			"niwa@chromium.org",
@@ -33,16 +32,16 @@ func init() {
 		Attr:         []string{"group:mainline"},
 		Timeout:      5 * time.Minute,
 		Params: []testing.Param{{
-				Name:              "arcpp_user",
-				Fixture:           "arcBooted",
-				ExtraSoftwareDeps: []string{"android_container"},
-				Val:               "arcpp-user",
-			}, {
-				Name:              "arcvm_user",
-				Fixture:           "arcBooted",
-				ExtraSoftwareDeps: []string{"android_vm"},
-				Val:               "arcvm-user",
-			}},
+			Name:              "arcpp_user",
+			Fixture:           "arcBooted",
+			ExtraSoftwareDeps: []string{"android_container"},
+			Val:               "arcpp-user",
+		}, {
+			Name:              "arcvm_user",
+			Fixture:           "arcBooted",
+			ExtraSoftwareDeps: []string{"android_vm"},
+			Val:               "arcvm-user",
+		}},
 	})
 }
 

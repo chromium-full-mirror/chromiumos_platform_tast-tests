@@ -28,9 +28,8 @@ import (
 
 func init() {
 	testing.AddTest(&testing.Test{
-		Func:         UserAvatarCustomization,
-		LacrosStatus: testing.LacrosVariantUnneeded,
-		Desc:         "Verifies behavior of UserAvatarCustomizationSelectorsEnabled policy",
+		Func: UserAvatarCustomization,
+		Desc: "Verifies behavior of UserAvatarCustomizationSelectorsEnabled policy",
 		Contacts: []string{
 			"dp-chromeos-eng@google.com",
 			"chiav@google.com",

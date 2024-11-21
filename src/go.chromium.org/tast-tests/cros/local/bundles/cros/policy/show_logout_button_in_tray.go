@@ -22,9 +22,8 @@ import (
 
 func init() {
 	testing.AddTest(&testing.Test{
-		Func:         ShowLogoutButtonInTray,
-		LacrosStatus: testing.LacrosVariantUnneeded,
-		Desc:         "Behavior of ShowLogoutButtonInTray policy, check if a logout button is shown based on the value of the policy",
+		Func: ShowLogoutButtonInTray,
+		Desc: "Behavior of ShowLogoutButtonInTray policy, check if a logout button is shown based on the value of the policy",
 		Contacts: []string{
 			"chromeos-kiosk-eng+TAST@google.com",
 			"alexanderhartl@google.com", // Test author

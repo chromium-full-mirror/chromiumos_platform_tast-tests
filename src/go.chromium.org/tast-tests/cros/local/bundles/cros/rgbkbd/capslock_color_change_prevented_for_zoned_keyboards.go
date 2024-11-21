@@ -20,9 +20,8 @@ import (
 
 func init() {
 	testing.AddTest(&testing.Test{
-		Func:         CapslockColorChangePreventedForZonedKeyboards,
-		LacrosStatus: testing.LacrosVariantUnneeded,
-		Desc:         "Verifies that the caps lock keys do not change colors when SetCapsLockState is called from a zoned keyboard",
+		Func: CapslockColorChangePreventedForZonedKeyboards,
+		Desc: "Verifies that the caps lock keys do not change colors when SetCapsLockState is called from a zoned keyboard",
 		Contacts: []string{
 			"cros-device-enablement@google.com",
 			"michaelcheco@google.com",

@@ -25,9 +25,8 @@ import (
 
 func init() {
 	testing.AddTest(&testing.Test{
-		Func:         HideWebStoreIcon,
-		LacrosStatus: testing.LacrosVariantUnneeded,
-		Desc:         "Behavior of HideWebStoreIcon policy, check if a Web Store Icon is displayed in app launcher based on the value of the policy",
+		Func: HideWebStoreIcon,
+		Desc: "Behavior of HideWebStoreIcon policy, check if a Web Store Icon is displayed in app launcher based on the value of the policy",
 		Contacts: []string{
 			"cros-engprod-muc@google.com",
 			"kamilszarek@google.com", // Test owner

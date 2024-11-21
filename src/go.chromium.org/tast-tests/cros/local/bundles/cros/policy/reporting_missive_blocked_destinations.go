@@ -24,9 +24,8 @@ import (
 
 func init() {
 	testing.AddTest(&testing.Test{
-		Func:         ReportingMissiveBlockedDestinations,
-		LacrosStatus: testing.LacrosVariantUnneeded,
-		Desc:         "Verify that the configuration file is reaching missive and being updated correctly",
+		Func: ReportingMissiveBlockedDestinations,
+		Desc: "Verify that the configuration file is reaching missive and being updated correctly",
 		Contacts: []string{
 			"cros-reporting-alerts+tast@google.com",
 			"albertojuarez@google.com", // Test author

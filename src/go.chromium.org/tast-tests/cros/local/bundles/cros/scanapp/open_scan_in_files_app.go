@@ -23,9 +23,8 @@ import (
 
 func init() {
 	testing.AddTest(&testing.Test{
-		Func:         OpenScanInFilesApp,
-		LacrosStatus: testing.LacrosVariantUnneeded,
-		Desc:         "Tests that a scan can be opened in the Files app",
+		Func: OpenScanInFilesApp,
+		Desc: "Tests that a scan can be opened in the Files app",
 		Contacts: []string{
 			"cros-device-enablement@google.com",
 			"project-bolton@google.com",

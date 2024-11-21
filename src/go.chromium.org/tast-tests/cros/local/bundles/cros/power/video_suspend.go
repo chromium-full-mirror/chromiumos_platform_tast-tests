@@ -29,7 +29,6 @@ var (
 func init() {
 	testing.AddTest(&testing.Test{
 		Func:         VideoSuspend,
-		LacrosStatus: testing.LacrosVariantUnneeded,
 		Desc:         "Suspend while video is playing",
 		BugComponent: "b:1361410",
 		Contacts: []string{

@@ -21,10 +21,9 @@ import (
 
 func init() {
 	testing.AddTest(&testing.Test{
-		Func:         PrintingColorModes,
-		LacrosStatus: testing.LacrosVariantUnneeded,
-		Desc:         "Verify behaviour of PrintingAllowedColorModes and PrintingColorDefault Policies",
-		Data:         []string{"printing_color_modes_printer_attributes.json"},
+		Func: PrintingColorModes,
+		Desc: "Verify behaviour of PrintingAllowedColorModes and PrintingColorDefault Policies",
+		Data: []string{"printing_color_modes_printer_attributes.json"},
 		Contacts: []string{
 			"chromeos-commercial-printing@google.com",
 			"nedol@google.com", // Test author

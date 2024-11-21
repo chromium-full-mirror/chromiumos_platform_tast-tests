@@ -30,10 +30,9 @@ type advParams struct {
 
 func init() {
 	testing.AddTest(&testing.Test{
-		Func:         AdvancedScan,
-		LacrosStatus: testing.LacrosVariantUnneeded,
-		Desc:         "Tests eSCL scanning via an ipp-over-usb tunnel using the lorgnette advanced APIs",
-		Contacts:     []string{"project-bolton@google.com", "bmgordon@chromium.org"},
+		Func:     AdvancedScan,
+		Desc:     "Tests eSCL scanning via an ipp-over-usb tunnel using the lorgnette advanced APIs",
+		Contacts: []string{"project-bolton@google.com", "bmgordon@chromium.org"},
 		// ChromeOS > Platform > Services > Scanning
 		BugComponent: "b:860616",
 		Attr: []string{

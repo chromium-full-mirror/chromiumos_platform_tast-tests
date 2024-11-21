@@ -23,9 +23,8 @@ import (
 
 func init() {
 	testing.AddTest(&testing.Test{
-		Func:         AllSections,
-		LacrosStatus: testing.LacrosVariantUnneeded,
-		Desc:         "Open OS Settings and check main sections are displayed properly",
+		Func: AllSections,
+		Desc: "Open OS Settings and check main sections are displayed properly",
 		Contacts: []string{
 			"cros-settings@google.com",
 			"chromeos-consumer-engprod@google.com",

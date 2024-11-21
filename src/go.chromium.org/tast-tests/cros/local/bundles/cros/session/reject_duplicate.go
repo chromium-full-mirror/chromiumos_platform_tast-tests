@@ -18,7 +18,6 @@ import (
 func init() {
 	testing.AddTest(&testing.Test{
 		Func:         RejectDuplicate,
-		LacrosStatus: testing.LacrosVariantUnneeded,
 		Desc:         "Ensures that the session_manager won't start the same session twice",
 		BugComponent: "b:1331478", // ChromeOS > Software > Core > SessionManager
 		Contacts: []string{

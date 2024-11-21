@@ -30,9 +30,8 @@ type displayTestParam struct {
 
 func init() {
 	testing.AddTest(&testing.Test{
-		Func:         ReportingDisplayDbus,
-		LacrosStatus: testing.LacrosVariantUnneeded,
-		Desc:         "Verify that the display information is being reported as expected",
+		Func: ReportingDisplayDbus,
+		Desc: "Verify that the display information is being reported as expected",
 		Contacts: []string{
 			"cros-reporting-alerts+tast@google.com",
 			"albertojuarez@google.com", // Test author

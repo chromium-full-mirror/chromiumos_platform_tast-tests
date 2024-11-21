@@ -22,7 +22,6 @@ import (
 func init() {
 	testing.AddTest(&testing.Test{
 		Func:           GaiaInfoScreenPIN,
-		LacrosStatus:   testing.LacrosVariantUnneeded,
 		LifeCycleStage: testing.LifeCycleOwnerMonitored,
 		Desc:           "Test Quick Start starting on the Gaia Info Screen with PIN verification",
 		Contacts: []string{

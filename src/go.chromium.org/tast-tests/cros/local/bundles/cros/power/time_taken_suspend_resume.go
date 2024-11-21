@@ -25,7 +25,6 @@ import (
 func init() {
 	testing.AddTest(&testing.Test{
 		Func:         TimeTakenSuspendResume,
-		LacrosStatus: testing.LacrosVariantUnneeded,
 		Desc:         "Time Taken to suspend and resume for S0ix",
 		BugComponent: "b:157291", // ChromeOS > External > Intel
 		Contacts: []string{

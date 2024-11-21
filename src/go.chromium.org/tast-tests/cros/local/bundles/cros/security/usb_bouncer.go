@@ -21,7 +21,6 @@ import (
 func init() {
 	testing.AddTest(&testing.Test{
 		Func:         USBBouncer,
-		LacrosStatus: testing.LacrosVariantUnneeded,
 		Desc:         "Check that usb_bouncer works as intended",
 		SoftwareDeps: []string{"chrome", "usbguard"},
 		BugComponent: "b:1048474", // ChromeOS > Security > Usb_bouncer/Usbguard

@@ -36,9 +36,8 @@ type basicLayoutTestParam struct {
 
 func init() {
 	testing.AddTest(&testing.Test{
-		Func:         BasicLayout,
-		LacrosStatus: testing.LacrosVariantUnneeded,
-		Desc:         "Checks that settings can be found on Quick Settings",
+		Func: BasicLayout,
+		Desc: "Checks that settings can be found on Quick Settings",
 		Contacts: []string{
 			"cros-status-area-eng@google.com",
 			"chromeos-consumer-engprod@google.com",

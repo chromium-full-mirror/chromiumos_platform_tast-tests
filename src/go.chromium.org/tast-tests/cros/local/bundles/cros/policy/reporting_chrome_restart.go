@@ -22,9 +22,8 @@ import (
 
 func init() {
 	testing.AddTest(&testing.Test{
-		Func:         ReportingChromeRestart,
-		LacrosStatus: testing.LacrosVariantUnneeded,
-		Desc:         "Verifies that missive and enqueue work after chrome shuts down and restarts, kill chrome, check missive, start chrome, check missive, enqueue",
+		Func: ReportingChromeRestart,
+		Desc: "Verifies that missive and enqueue work after chrome shuts down and restarts, kill chrome, check missive, start chrome, check missive, enqueue",
 		Contacts: []string{
 			"cros-reporting-alerts+tast@google.com",
 			"albertojuarez@google.com", // Test author

@@ -21,9 +21,8 @@ import (
 
 func init() {
 	testing.AddTest(&testing.Test{
-		Func:         CapslockRgbStateUpdates,
-		LacrosStatus: testing.LacrosVariantUnneeded,
-		Desc:         "Checks that toggling Capslock updates the RGB backlight",
+		Func: CapslockRgbStateUpdates,
+		Desc: "Checks that toggling Capslock updates the RGB backlight",
 		Contacts: []string{
 			"cros-device-enablement@google.com",
 			"jimmyxgong@chromium.org",

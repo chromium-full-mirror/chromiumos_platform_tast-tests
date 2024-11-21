@@ -20,9 +20,8 @@ import (
 
 func init() {
 	testing.AddTest(&testing.Test{
-		Func:         TAPEEnrolledLogin,
-		LacrosStatus: testing.LacrosVariantUnneeded,
-		Desc:         "Login using TAPE on an enrolled device",
+		Func: TAPEEnrolledLogin,
+		Desc: "Login using TAPE on an enrolled device",
 		Contacts: []string{
 			"chromeos-commercial-remote-management@google.com",
 			"vsavu@google.com", // Test author

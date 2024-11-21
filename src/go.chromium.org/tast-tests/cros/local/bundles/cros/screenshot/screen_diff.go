@@ -25,9 +25,8 @@ import (
 
 func init() {
 	testing.AddTest(&testing.Test{
-		Func:         ScreenDiff,
-		LacrosStatus: testing.LacrosVariantUnneeded,
-		Desc:         "Test to confirm that the screen diffing library works as intended",
+		Func: ScreenDiff,
+		Desc: "Test to confirm that the screen diffing library works as intended",
 		Contacts: []string{
 			"chromeos-engprod-syd@google.com",
 			"mattlui@google.com",

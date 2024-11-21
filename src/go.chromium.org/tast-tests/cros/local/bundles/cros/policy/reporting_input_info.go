@@ -30,9 +30,8 @@ import (
 
 func init() {
 	testing.AddTest(&testing.Test{
-		Func:         ReportingInputInfo,
-		LacrosStatus: testing.LacrosVariantUnneeded,
-		Desc:         "Verify network telemetry is reported when ReportDeviceNetworkStatus is enabled",
+		Func: ReportingInputInfo,
+		Desc: "Verify network telemetry is reported when ReportDeviceNetworkStatus is enabled",
 		Contacts: []string{
 			"cros-reporting-alerts+tast@google.com",
 			"albertojuarez@google.com", // Test author

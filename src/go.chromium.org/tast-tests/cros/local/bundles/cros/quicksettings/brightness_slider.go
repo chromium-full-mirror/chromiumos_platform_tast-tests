@@ -16,9 +16,8 @@ import (
 
 func init() {
 	testing.AddTest(&testing.Test{
-		Func:         BrightnessSlider,
-		LacrosStatus: testing.LacrosVariantUnneeded,
-		Desc:         "Checks that the Quick Settings brightness slider can be adjusted by keyboard",
+		Func: BrightnessSlider,
+		Desc: "Checks that the Quick Settings brightness slider can be adjusted by keyboard",
 		Contacts: []string{
 			"cros-status-area-eng@google.com",
 			"chromeos-consumer-engprod@google.com",

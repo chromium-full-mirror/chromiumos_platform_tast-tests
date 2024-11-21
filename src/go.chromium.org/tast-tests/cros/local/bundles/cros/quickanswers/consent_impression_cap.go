@@ -17,9 +17,8 @@ import (
 
 func init() {
 	testing.AddTest(&testing.Test{
-		Func:         ConsentImpressionCap,
-		LacrosStatus: testing.LacrosVariantUnneeded,
-		Desc:         "Test Quick Answers consent impression cap logic",
+		Func: ConsentImpressionCap,
+		Desc: "Test Quick Answers consent impression cap logic",
 		Contacts: []string{
 			"cros-assistive@google.com",
 			"chromeos-consumer-engprod@google.com",

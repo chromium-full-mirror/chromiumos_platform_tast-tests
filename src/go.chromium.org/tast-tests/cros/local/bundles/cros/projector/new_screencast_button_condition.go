@@ -22,10 +22,9 @@ import (
 
 func init() {
 	testing.AddTest(&testing.Test{
-		Func:         NewScreencastButtonCondition,
-		LacrosStatus: testing.LacrosVariantUnneeded,
-		Desc:         "Checks conditions where the new screencast button is disabled or enabled",
-		Contacts:     []string{"cros-projector+tast@google.com", "bzielinski@google.com"},
+		Func:     NewScreencastButtonCondition,
+		Desc:     "Checks conditions where the new screencast button is disabled or enabled",
+		Contacts: []string{"cros-projector+tast@google.com", "bzielinski@google.com"},
 		// ChromeOS > Software > Family > Projector
 		BugComponent: "b:1080013",
 		Attr:         []string{"group:mainline", "informational"},

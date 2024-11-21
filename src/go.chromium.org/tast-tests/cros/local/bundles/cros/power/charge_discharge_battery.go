@@ -19,7 +19,6 @@ import (
 func init() {
 	testing.AddTest(&testing.Test{
 		Func:         ChargeDischargeBattery,
-		LacrosStatus: testing.LacrosVariantUnneeded,
 		Desc:         "This test is used to charge battery to a certain range before running other (power) tests",
 		BugComponent: "b:1361410", // ChromeOS > Platform > System > Core Power
 		Contacts:     []string{"chromeos-power-team@google.com", "jingmuli@google.com"},

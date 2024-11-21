@@ -15,10 +15,9 @@ import (
 
 func init() {
 	testing.AddTest(&testing.Test{
-		Func:         ProxyAdd,
-		LacrosStatus: testing.LacrosVariantUnneeded,
-		Desc:         "Verifies the lp command enqueues print jobs",
-		Contacts:     []string{"project-bolton@google.com"},
+		Func:     ProxyAdd,
+		Desc:     "Verifies the lp command enqueues print jobs",
+		Contacts: []string{"project-bolton@google.com"},
 		// ChromeOS > Platform > Services > Printing
 		BugComponent: "b:167231",
 		Attr: []string{

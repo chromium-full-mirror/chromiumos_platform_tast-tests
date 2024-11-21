@@ -37,7 +37,6 @@ var hwdrmDataFiles = []string{
 func init() {
 	testing.AddTest(&testing.Test{
 		Func:         VideoPlaybackDrm,
-		LacrosStatus: testing.LacrosVariantUnneeded,
 		Desc:         "Collect power metrics playing protected offline video",
 		BugComponent: "b:1361410",
 		Contacts: []string{

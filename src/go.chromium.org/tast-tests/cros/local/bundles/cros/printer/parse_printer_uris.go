@@ -20,17 +20,16 @@ import (
 // struct helps simplify some function definitions, shortening the
 // parameter list.
 type printerSpec struct {
-	name           string            // a descriptive printer name pertinent to test subject
-	uri            string            // the printer URI
-	ppdContents    []byte            // PPD contents if applicable - empty otherwise
+	name           string               // a descriptive printer name pertinent to test subject
+	uri            string               // the printer URI
+	ppdContents    []byte               // PPD contents if applicable - empty otherwise
 	expectedStatus ppb.AddPrinterResult // result we expect from printscanmgr
 }
 
 func init() {
 	testing.AddTest(&testing.Test{
-		Func:         ParsePrinterUris,
-		LacrosStatus: testing.LacrosVariantUnneeded,
-		Desc:         "Tests printscanmgr's behavior when parsing printer URIs",
+		Func: ParsePrinterUris,
+		Desc: "Tests printscanmgr's behavior when parsing printer URIs",
 		Contacts: []string{
 			"project-bolton@google.com",
 			"pmoy@google.com",
@@ -84,7 +83,7 @@ func ParsePrinterUris(ctx context.Context, s *testing.State) {
 		s.Fatal("Failed to connect to printscanmgr: ", err)
 	}
 
-	if err := printer.ResetCups(ctx, /*usePrintscanmgr=*/true); err != nil {
+	if err := printer.ResetCups(ctx /*usePrintscanmgr=*/, true); err != nil {
 		s.Fatal("Failed to reset cupsd: ", err)
 	}
 

@@ -19,9 +19,8 @@ import (
 
 func init() {
 	testing.AddTest(&testing.Test{
-		Func:         Printscanmgr,
-		LacrosStatus: testing.LacrosVariantUnneeded,
-		Desc:         "Performs validity testing of printer-related D-Bus methods",
+		Func: Printscanmgr,
+		Desc: "Performs validity testing of printer-related D-Bus methods",
 		Contacts: []string{
 			"project-bolton@google.com",
 			"pmoy@chromium.org",
@@ -63,7 +62,7 @@ func Printscanmgr(ctx context.Context, s *testing.State) {
 		s.Fatal("Failed to connect to printscanmgr: ", err)
 	}
 
-	if err := printer.ResetCups(ctx, /*usePrintscanmgr=*/true); err != nil {
+	if err := printer.ResetCups(ctx /*usePrintscanmgr=*/, true); err != nil {
 		s.Fatal("Failed to reset cupsd: ", err)
 	}
 

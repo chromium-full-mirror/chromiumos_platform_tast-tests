@@ -40,7 +40,6 @@ const simpleHTML = `
 func init() {
 	testing.AddTest(&testing.Test{
 		Func:         ChromeQoS,
-		LacrosStatus: testing.LacrosVariantUnneeded,
 		Desc:         "Checks that Chrome processes works with resourced schedqos",
 		Contacts:     []string{"cros-core-systems-perf@google.com", "kawasin@google.com"},
 		BugComponent: "b:167279", // ChromeOS > Platform > baseOS > Performance

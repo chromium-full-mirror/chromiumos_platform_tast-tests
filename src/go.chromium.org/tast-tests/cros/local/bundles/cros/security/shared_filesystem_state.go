@@ -27,9 +27,8 @@ import (
 
 func init() {
 	testing.AddTest(&testing.Test{
-		Func:         SharedFilesystemState,
-		LacrosStatus: testing.LacrosVariantUnneeded,
-		Desc:         "Reports on the state of the ChromeOS shared filesystem and fails if an unexpected mount is found",
+		Func: SharedFilesystemState,
+		Desc: "Reports on the state of the ChromeOS shared filesystem and fails if an unexpected mount is found",
 		Contacts: []string{
 			"chromeos-hardening@google.com",
 		},

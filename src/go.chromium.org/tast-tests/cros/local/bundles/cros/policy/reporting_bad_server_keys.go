@@ -33,9 +33,8 @@ type keysTestParam struct {
 
 func init() {
 	testing.AddTest(&testing.Test{
-		Func:         ReportingBadServerKeys,
-		LacrosStatus: testing.LacrosVariantUnneeded,
-		Desc:         "Verify that our pipeline doesn't work with incorrect keys",
+		Func: ReportingBadServerKeys,
+		Desc: "Verify that our pipeline doesn't work with incorrect keys",
 		Contacts: []string{
 			"cros-reporting-alerts+tast@google.com",
 			"albertojuarez@google.com", // Test author

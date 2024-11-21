@@ -28,9 +28,8 @@ import (
 
 func init() {
 	testing.AddTest(&testing.Test{
-		Func:         SystemTimezone,
-		LacrosStatus: testing.LacrosVariantUnneeded,
-		Desc:         "Behavior of SystemTimezone policy",
+		Func: SystemTimezone,
+		Desc: "Behavior of SystemTimezone policy",
 		Contacts: []string{
 			"cros-engprod-muc@google.com",
 			"vsavu@google.com",          // Test author

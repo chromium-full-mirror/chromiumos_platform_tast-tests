@@ -31,7 +31,6 @@ var allowPaths = map[string]struct{}{
 func init() {
 	testing.AddTest(&testing.Test{
 		Func:         NoNestedCPUCgroups,
-		LacrosStatus: testing.LacrosVariantUnneeded,
 		Desc:         "Ensures that no nested cpu cgroups are created. Nested cpu cgroup has overhead on each scheduling",
 		Contacts:     []string{"baseos-perf@google.com", "kawasin@google.com"},
 		BugComponent: "b:167279", // ChromeOS > Platform > baseOS > Performance

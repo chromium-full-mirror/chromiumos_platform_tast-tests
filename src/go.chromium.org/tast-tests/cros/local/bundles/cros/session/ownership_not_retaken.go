@@ -19,9 +19,8 @@ import (
 
 func init() {
 	testing.AddTest(&testing.Test{
-		Func:         OwnershipNotRetaken,
-		LacrosStatus: testing.LacrosVariantUnneeded,
-		Desc:         "Subsequent logins after the owner must not clobber the owner's key",
+		Func: OwnershipNotRetaken,
+		Desc: "Subsequent logins after the owner must not clobber the owner's key",
 		Contacts: []string{
 			"hidehiko@chromium.org",
 		},

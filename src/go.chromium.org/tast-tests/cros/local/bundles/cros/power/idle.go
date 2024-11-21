@@ -74,7 +74,6 @@ var displayOnPSROff = power.IdleParams{
 func init() {
 	testing.AddTest(&testing.Test{
 		Func:         Idle,
-		LacrosStatus: testing.LacrosVariantUnneeded,
 		Desc:         "Collects data on idle with Chrome logged in",
 		BugComponent: "b:1361410",
 		Contacts:     []string{"chromeos-power-team@google.com", "jingmuli@google.com"},

@@ -21,9 +21,8 @@ import (
 
 func init() {
 	testing.AddTest(&testing.Test{
-		Func:         ReportingHeartbeatLocal,
-		LacrosStatus: testing.LacrosVariantUnneeded,
-		Desc:         "Verify heartbeat events with flag enabled using the fake reporting service",
+		Func: ReportingHeartbeatLocal,
+		Desc: "Verify heartbeat events with flag enabled using the fake reporting service",
 		Contacts: []string{
 			"cros-reporting-alerts+tast@google.com",
 			"albertojuarez@google.com", // Test author

@@ -13,9 +13,8 @@ import (
 
 func init() {
 	testing.AddTest(&testing.Test{
-		Func:         SELinuxRootFS,
-		LacrosStatus: testing.LacrosVariantUnneeded,
-		Desc:         "Checks that SELinux file labels are set correctly for rootfs files",
+		Func: SELinuxRootFS,
+		Desc: "Checks that SELinux file labels are set correctly for rootfs files",
 		Contacts: []string{
 			"chromeos-hardening@google.com",
 		},

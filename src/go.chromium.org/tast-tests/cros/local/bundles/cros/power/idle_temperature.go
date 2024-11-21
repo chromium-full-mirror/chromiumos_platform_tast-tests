@@ -17,7 +17,6 @@ import (
 func init() {
 	testing.AddTest(&testing.Test{
 		Func:         IdleTemperature,
-		LacrosStatus: testing.LacrosVariantUnneeded,
 		Desc:         "Collects data on the idle temperature of devices",
 		BugComponent: "b:1361410",
 		Contacts:     []string{"chromeos-power-team@google.com", "edcourtney@chromium.org"},

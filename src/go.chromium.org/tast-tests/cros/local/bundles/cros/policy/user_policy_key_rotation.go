@@ -27,7 +27,6 @@ func init() {
 	testing.AddTest(&testing.Test{
 		Func:         UserPolicyKeyRotation,
 		BugComponent: "b:1111617",
-		LacrosStatus: testing.LacrosVariantUnneeded,
 		Fixture:      fixture.FakeDMSEnrolled,
 		Desc:         "Verifies that when the user private policy key is rotated on the server, the public half is correctly stored on the device",
 		Contacts: []string{

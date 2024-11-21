@@ -28,9 +28,8 @@ import (
 
 func init() {
 	testing.AddTest(&testing.Test{
-		Func:         UserPolicyKeys,
-		LacrosStatus: testing.LacrosVariantUnneeded,
-		Desc:         "Verifies that, after policy is pushed, the user policy key winds up stored in the right place",
+		Func: UserPolicyKeys,
+		Desc: "Verifies that, after policy is pushed, the user policy key winds up stored in the right place",
 		Contacts: []string{
 			"hidehiko@chromium.org",
 		},

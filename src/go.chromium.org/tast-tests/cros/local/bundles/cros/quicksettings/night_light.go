@@ -20,9 +20,8 @@ import (
 
 func init() {
 	testing.AddTest(&testing.Test{
-		Func:         NightLight,
-		LacrosStatus: testing.LacrosVariantUnneeded,
-		Desc:         "Checks that the Quick Settings Night Light feature pod button is working correctly",
+		Func: NightLight,
+		Desc: "Checks that the Quick Settings Night Light feature pod button is working correctly",
 		Contacts: []string{
 			"cros-status-area-eng@google.com",
 			"chromeos-consumer-engprod@google.com",

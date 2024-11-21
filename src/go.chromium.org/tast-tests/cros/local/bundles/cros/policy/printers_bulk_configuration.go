@@ -24,9 +24,8 @@ import (
 
 func init() {
 	testing.AddTest(&testing.Test{
-		Func:         PrintersBulkConfiguration,
-		LacrosStatus: testing.LacrosVariantUnneeded,
-		Desc:         "Verify behavior of printer bulk configuration user policies",
+		Func: PrintersBulkConfiguration,
+		Desc: "Verify behavior of printer bulk configuration user policies",
 		Contacts: []string{
 			"chromeos-commercial-printing@google.com",
 		},

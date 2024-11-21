@@ -40,7 +40,6 @@ func init() {
 		Attr:         []string{"group:mainline", "group:enterprise-reporting", "group:secagentd_bpf"},
 		Timeout:      4 * time.Minute,
 		SoftwareDeps: []string{"bpf", "shipping_kernel"},
-		LacrosStatus: testing.LacrosVariantUnneeded,
 	})
 }
 

@@ -22,10 +22,9 @@ import (
 
 func init() {
 	testing.AddTest(&testing.Test{
-		Func:         LocalPlayback,
-		LacrosStatus: testing.LacrosVariantUnneeded,
-		Desc:         "Tests local playback feature from DriveFS while screencast is transcoding",
-		Contacts:     []string{"cros-projector+tast@google.com", "anasr@google.com"},
+		Func:     LocalPlayback,
+		Desc:     "Tests local playback feature from DriveFS while screencast is transcoding",
+		Contacts: []string{"cros-projector+tast@google.com", "anasr@google.com"},
 		// ChromeOS > Software > Family > Projector
 		BugComponent: "b:1080013",
 		Attr:         []string{"group:mainline", "informational"},

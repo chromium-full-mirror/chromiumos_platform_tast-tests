@@ -35,7 +35,6 @@ var defaultTimeParams = power.TimeParams{Interval: 5 * time.Second, Total: 6 * t
 func init() {
 	testing.AddTest(&testing.Test{
 		Func:         VideoEncode,
-		LacrosStatus: testing.LacrosVariantUnneeded,
 		Desc:         "Collects power metrics while encoding video files",
 		BugComponent: "b:1361410",
 		Contacts:     []string{"chromeos-power-team@google.com", "jingmuli@google.com"},

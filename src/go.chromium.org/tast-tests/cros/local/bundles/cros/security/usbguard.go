@@ -23,7 +23,6 @@ import (
 func init() {
 	testing.AddTest(&testing.Test{
 		Func:         USBGuard,
-		LacrosStatus: testing.LacrosVariantUnneeded,
 		Desc:         "Check that USBGuard-related feature flags work as intended",
 		Fixture:      fixture.ChromeLoggedIn,
 		Attr:         []string{"group:mainline"},

@@ -18,9 +18,8 @@ import (
 
 func init() {
 	testing.AddTest(&testing.Test{
-		Func:         HardwareAllCombinations,
-		LacrosStatus: testing.LacrosVariantUnneeded,
-		Desc:         "Tests that the Scan app can be used on real hardware with all settings combinations",
+		Func: HardwareAllCombinations,
+		Desc: "Tests that the Scan app can be used on real hardware with all settings combinations",
 		Contacts: []string{
 			"cros-device-enablement@google.com",
 			"project-bolton@google.com",
