@@ -48,9 +48,8 @@ type mediaPlaybackSmokeParam struct {
 
 func init() {
 	testing.AddTest(&testing.Test{
-		Func:         MediaPlaybackSmoke,
-		LacrosStatus: testing.LacrosVariantUnneeded,
-		Desc:         "Verify media is supported by checking the series of media fundamental playback functionalities",
+		Func: MediaPlaybackSmoke,
+		Desc: "Verify media is supported by checking the series of media fundamental playback functionalities",
 		Contacts: []string{
 			"chromeos-perf-reliability-eng@google.com",
 			"abergman@google.com",

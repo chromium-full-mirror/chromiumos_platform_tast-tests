@@ -30,7 +30,6 @@ func init() {
 		BugComponent: "b:1493959",
 		Attr:         []string{"group:mainline", "group:release-health", "release-health_network"},
 		Fixture:      "vpnEnv",
-		LacrosStatus: testing.LacrosVariantUnneeded,
 		Params: []testing.Param{
 			{
 				Name: "strict_mode_ikev2",

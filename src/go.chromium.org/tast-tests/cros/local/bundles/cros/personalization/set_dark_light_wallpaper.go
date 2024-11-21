@@ -21,9 +21,8 @@ import (
 
 func init() {
 	testing.AddTest(&testing.Test{
-		Func:         SetDarkLightWallpaper,
-		LacrosStatus: testing.LacrosVariantUnneeded,
-		Desc:         "Test setting D/L wallpapers in the personalization hub app",
+		Func: SetDarkLightWallpaper,
+		Desc: "Test setting D/L wallpapers in the personalization hub app",
 		Contacts: []string{
 			"cros-p13n-eng@google.com",
 			"chromeos-consumer-engprod@google.com",

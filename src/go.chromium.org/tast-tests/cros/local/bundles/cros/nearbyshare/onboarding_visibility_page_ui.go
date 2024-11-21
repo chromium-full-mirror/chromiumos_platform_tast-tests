@@ -17,7 +17,6 @@ import (
 func init() {
 	testing.AddTest(&testing.Test{
 		Func:           OnboardingVisibilityPageUI,
-		LacrosStatus:   testing.LacrosVariantUnneeded,
 		LifeCycleStage: testing.LifeCycleOwnerMonitored,
 		Desc:           "Checks that Nearby Share can be enabled from the visibility selection page of onboarding workflow",
 		Contacts: []string{

@@ -18,7 +18,6 @@ import (
 func init() {
 	testing.AddTest(&testing.Test{
 		Func:           SmokeHighVisibilityUI,
-		LacrosStatus:   testing.LacrosVariantUnneeded,
 		LifeCycleStage: testing.LifeCycleOwnerMonitored,
 		Desc:           "Checks that Nearby Share high-visibility receiving can be initiated from Quick Settings",
 		Contacts: []string{

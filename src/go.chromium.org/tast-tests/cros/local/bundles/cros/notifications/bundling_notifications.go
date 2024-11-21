@@ -32,9 +32,8 @@ const bundlingNotificationApkFileName = "ArcNotificationTest2.apk"
 
 func init() {
 	testing.AddTest(&testing.Test{
-		Func:         BundlingNotifications,
-		LacrosStatus: testing.LacrosVariantUnneeded,
-		Desc:         "Tests that bundling notifications appear in notification centre can be interacted with",
+		Func: BundlingNotifications,
+		Desc: "Tests that bundling notifications appear in notification centre can be interacted with",
 		Contacts: []string{
 			"cros-status-area-eng@google.com",
 			"chromeos-consumer-engprod@google.com",

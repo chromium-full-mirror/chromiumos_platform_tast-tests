@@ -58,9 +58,8 @@ var deleteMenuItem = nodewith.Name("Delete").Role(role.MenuItem)
 
 func init() {
 	testing.AddTest(&testing.Test{
-		Func:         AllowCACertificateManagement,
-		LacrosStatus: testing.LacrosVariantUnneeded,
-		Desc:         "Test that policy can block user from managing CA certificates",
+		Func: AllowCACertificateManagement,
+		Desc: "Test that policy can block user from managing CA certificates",
 		Contacts: []string{
 			"chromeos-commercial-networking@google.com", // Team
 			"olsa@google.com", // Test author

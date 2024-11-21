@@ -24,7 +24,6 @@ import (
 func init() {
 	testing.AddTest(&testing.Test{
 		Func:           CrosToPhoneInContacts,
-		LacrosStatus:   testing.LacrosVariantUnneeded,
 		LifeCycleStage: testing.LifeCycleOwnerMonitored,
 		Desc:           "Checks that we can successfully send files between contacts from CrOS to Android",
 		Contacts: []string{

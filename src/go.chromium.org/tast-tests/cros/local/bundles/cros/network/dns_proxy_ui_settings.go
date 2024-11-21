@@ -21,10 +21,9 @@ import (
 
 func init() {
 	testing.AddTest(&testing.Test{
-		Func:         DNSProxyUISettings,
-		LacrosStatus: testing.LacrosVariantUnneeded,
-		Desc:         "Ensure that DoH settings in UI can be propagated to shill correctly",
-		Contacts:     []string{"cros-networking@google.com", "jasongustaman@google.com"},
+		Func:     DNSProxyUISettings,
+		Desc:     "Ensure that DoH settings in UI can be propagated to shill correctly",
+		Contacts: []string{"cros-networking@google.com", "jasongustaman@google.com"},
 		// ChromeOS > Platform > System > Networking > Continuous Maintenance
 		BugComponent: "b:1493959",
 		Attr:         []string{"group:mainline"},

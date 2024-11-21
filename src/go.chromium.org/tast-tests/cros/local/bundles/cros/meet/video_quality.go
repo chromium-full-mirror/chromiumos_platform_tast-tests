@@ -26,9 +26,8 @@ const maxAvgColorDist = 25
 
 func init() {
 	testing.AddTest(&testing.Test{
-		Func:         VideoQuality,
-		LacrosStatus: testing.LacrosVariantUnneeded,
-		Desc:         "Test that checks DUT video quality",
+		Func: VideoQuality,
+		Desc: "Test that checks DUT video quality",
 		Contacts: []string{
 			"core-devices@google.com",
 			"joshuapius@google.com", // Test author

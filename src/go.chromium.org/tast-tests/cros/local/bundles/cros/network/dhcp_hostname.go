@@ -28,8 +28,7 @@ func init() {
 		// DHCP hostname property is written into the default profile but not user
 		// profile. Use shillReset to guarantee it is clean before and after the
 		// test.
-		Fixture:      "shillReset.ehide",
-		LacrosStatus: testing.LacrosVariantUnneeded,
+		Fixture: "shillReset.ehide",
 	})
 }
 

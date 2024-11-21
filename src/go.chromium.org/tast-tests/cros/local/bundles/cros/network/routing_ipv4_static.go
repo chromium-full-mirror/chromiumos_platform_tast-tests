@@ -33,7 +33,6 @@ func init() {
 		// ChromeOS > Platform > System > Networking > Continuous Maintenance
 		BugComponent: "b:1493959",
 		Attr:         []string{"group:mainline"},
-		LacrosStatus: testing.LacrosVariantUnneeded,
 		// Using ehide in this test since there might be some problems with
 		// StaticIPConfig due to the ethernet_any profile implementation
 		// (b/159725895).

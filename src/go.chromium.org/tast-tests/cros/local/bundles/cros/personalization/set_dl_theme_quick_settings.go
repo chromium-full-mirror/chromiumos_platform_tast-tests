@@ -26,8 +26,7 @@ import (
 func init() {
 	testing.AddTest(&testing.Test{
 		Func: SetDLThemeQuickSettings,
-		LacrosStatus:   testing.LacrosVariantUnneeded,
-		Desc:           "Test setting dark light theme from quick settings",
+		Desc: "Test setting dark light theme from quick settings",
 		Contacts: []string{
 			"cros-p13n-eng@google.com",
 			"chromeos-consumer-engprod@google.com",

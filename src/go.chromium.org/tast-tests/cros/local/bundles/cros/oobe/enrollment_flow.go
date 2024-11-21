@@ -15,9 +15,8 @@ import (
 
 func init() {
 	testing.AddTest(&testing.Test{
-		Func:         EnrollmentFlow,
-		LacrosStatus: testing.LacrosVariantUnneeded,
-		Desc:         "Test that clicks through OOBE to enrollment screen",
+		Func: EnrollmentFlow,
+		Desc: "Test that clicks through OOBE to enrollment screen",
 		Contacts: []string{
 			"cros-oobe@google.com",
 			"chromeos-consumer-engprod@google.com",

@@ -45,7 +45,6 @@ func init() {
 		Fixture:      "shillSimulatedWiFi",
 		Attr:         []string{"group:network", "network_platform"},
 		SoftwareDeps: []string{"wifi"},
-		LacrosStatus: testing.LacrosVariantUnneeded,
 		Timeout:      3 * time.Minute,
 		Requirements: []string{tdreq.WiFiGenSupportPasspoint},
 		Params: []testing.Param{

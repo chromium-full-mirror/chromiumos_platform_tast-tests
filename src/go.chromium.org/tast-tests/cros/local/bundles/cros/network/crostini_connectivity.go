@@ -19,7 +19,6 @@ import (
 func init() {
 	testing.AddTest(&testing.Test{
 		Func:         CrostiniConnectivity,
-		LacrosStatus: testing.LacrosVariantUnneeded,
 		Desc:         "Checks IPv4 and IPv6 connectivity inside penguin container",
 		Contacts:     []string{"cros-networking@google.com", "taoyl@google.com"},
 		BugComponent: "b:1493959",

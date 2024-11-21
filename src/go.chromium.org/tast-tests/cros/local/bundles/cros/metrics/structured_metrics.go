@@ -16,9 +16,8 @@ import (
 
 func init() {
 	testing.AddTest(&testing.Test{
-		Func:         StructuredMetrics,
-		LacrosStatus: testing.LacrosVariantUnneeded,
-		Desc:         "Checks that processes can log Structured Metrics events",
+		Func: StructuredMetrics,
+		Desc: "Checks that processes can log Structured Metrics events",
 		Contacts: []string{
 			"chromeos-data-eng@google.com",
 		},

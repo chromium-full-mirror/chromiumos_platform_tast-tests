@@ -53,7 +53,6 @@ var allWeekInTwoIntervals = []*policy.DeviceAutoUpdateTimeRestrictionsValue{
 func init() {
 	testing.AddTest(&testing.Test{
 		Func:         DeviceAutoUpdateTimeRestrictions,
-		LacrosStatus: testing.LacrosVariantUnneeded,
 		Desc:         "Check that update engine requests updates according to DeviceAutoUpdateTimeRestrictions policy",
 		BugComponent: "b:1031231", // ChromeOS > Software > Commercial (Enterprise) > Remote Management > Version Control
 		Contacts: []string{

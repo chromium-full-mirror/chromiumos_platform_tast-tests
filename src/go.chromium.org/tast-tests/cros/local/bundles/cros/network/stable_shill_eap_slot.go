@@ -39,7 +39,6 @@ func init() {
 		Attr:         []string{"group:mainline", "group:release-health", "release-health_network"},
 		SoftwareDeps: []string{"chrome"},
 		HardwareDeps: hwdep.D(hwdep.HasTpm()),
-		LacrosStatus: testing.LacrosVariantUnneeded,
 		Timeout:      7 * time.Minute,
 	})
 }

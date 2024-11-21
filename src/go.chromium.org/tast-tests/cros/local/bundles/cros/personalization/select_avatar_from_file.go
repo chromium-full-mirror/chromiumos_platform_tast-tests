@@ -31,9 +31,8 @@ const (
 
 func init() {
 	testing.AddTest(&testing.Test{
-		Func:         SelectAvatarFromFile,
-		LacrosStatus: testing.LacrosVariantUnneeded,
-		Desc:         "Test setting avatar from local files or Google Drive",
+		Func: SelectAvatarFromFile,
+		Desc: "Test setting avatar from local files or Google Drive",
 		Contacts: []string{
 			"cros-p13n-eng@google.com",
 			"chromeos-consumer-engprod@google.com",

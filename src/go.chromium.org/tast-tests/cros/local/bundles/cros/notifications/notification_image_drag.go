@@ -22,9 +22,8 @@ import (
 
 func init() {
 	testing.AddTest(&testing.Test{
-		Func:         NotificationImageDrag,
-		LacrosStatus: testing.LacrosVariantUnneeded,
-		Desc:         "Verifies that the notification image drag feature works as expected",
+		Func: NotificationImageDrag,
+		Desc: "Verifies that the notification image drag feature works as expected",
 		Contacts: []string{
 			"cros-status-area-eng@google.com",
 			"chromeos-consumer-engprod@google.com",

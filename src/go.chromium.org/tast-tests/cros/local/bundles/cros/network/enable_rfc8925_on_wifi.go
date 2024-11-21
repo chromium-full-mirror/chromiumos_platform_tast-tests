@@ -30,7 +30,6 @@ func init() {
 		Attr:         []string{"group:mainline", "informational"},
 		SoftwareDeps: []string{"wifi"},
 		Fixture:      "shillSimulatedWiFi",
-		LacrosStatus: testing.LacrosVariantUnneeded,
 		Params: []testing.Param{{
 			Name: "non_link_local_dns",
 			Val:  false,

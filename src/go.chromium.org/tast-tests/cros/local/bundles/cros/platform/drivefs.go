@@ -20,7 +20,6 @@ import (
 func init() {
 	testing.AddTest(&testing.Test{
 		Func:         Drivefs,
-		LacrosStatus: testing.LacrosVariantUnneeded,
 		Desc:         "Verifies that drivefs mounts on sign in",
 		Contacts:     []string{"chromeos-files-syd@google.com", "austinct@chromium.org"},
 		BugComponent: "b:167289",

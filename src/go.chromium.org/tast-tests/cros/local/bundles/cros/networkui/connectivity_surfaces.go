@@ -38,7 +38,6 @@ type connectivitySurfacesTestCase struct {
 func init() {
 	testing.AddTest(&testing.Test{
 		Func:           ConnectivitySurfaces,
-		LacrosStatus:   testing.LacrosVariantUnneeded,
 		LifeCycleStage: testing.LifeCycleOwnerMonitored,
 		Desc:           "ConnectivitySurfaces is a test that is intended to be run during CQ to prevent regressions resulting from changes to ChromeOS Connectivity surfaces",
 		Contacts: []string{

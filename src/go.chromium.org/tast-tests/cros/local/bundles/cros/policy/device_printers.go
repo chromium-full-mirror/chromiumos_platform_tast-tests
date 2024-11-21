@@ -24,9 +24,8 @@ import (
 
 func init() {
 	testing.AddTest(&testing.Test{
-		Func:         DevicePrinters,
-		LacrosStatus: testing.LacrosVariantUnneeded,
-		Desc:         "Verify behavior of printer configuration device policies",
+		Func: DevicePrinters,
+		Desc: "Verify behavior of printer configuration device policies",
 		Contacts: []string{
 			"chromeos-commercial-printing@google.com",
 		},

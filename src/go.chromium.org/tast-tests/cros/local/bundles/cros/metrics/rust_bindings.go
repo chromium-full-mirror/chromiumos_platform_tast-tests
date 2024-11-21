@@ -20,9 +20,8 @@ const waitHistogramTimeout = 10 * time.Second
 
 func init() {
 	testing.AddTest(&testing.Test{
-		Func:         RustBindings,
-		LacrosStatus: testing.LacrosVariantUnneeded,
-		Desc:         "Checks that the rust bindings reports histograms to Chrome",
+		Func: RustBindings,
+		Desc: "Checks that the rust bindings reports histograms to Chrome",
 		Contacts: []string{
 			"chromeos-data-eng@google.com",
 			"vovoy@chromium.org",

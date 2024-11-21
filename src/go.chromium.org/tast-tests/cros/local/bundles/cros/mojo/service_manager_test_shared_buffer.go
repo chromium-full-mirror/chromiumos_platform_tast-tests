@@ -17,9 +17,8 @@ import (
 
 func init() {
 	testing.AddTest(&testing.Test{
-		Func:         ServiceManagerTestSharedBuffer,
-		LacrosStatus: testing.LacrosVariantUnneeded,
-		Desc:         "Check we can create shared buffer from mojo service manager",
+		Func: ServiceManagerTestSharedBuffer,
+		Desc: "Check we can create shared buffer from mojo service manager",
 		Contacts: []string{
 			"chromeos-mojo-service-manager@google.com",
 			"chungsheng@google.com",

@@ -23,9 +23,8 @@ import (
 
 func init() {
 	testing.AddTest(&testing.Test{
-		Func:         SetDailyRefreshDLWallpaper,
-		LacrosStatus: testing.LacrosVariantUnneeded,
-		Desc:         "Test setting D/L wallpapers daily refresh in the personalization hub app",
+		Func: SetDailyRefreshDLWallpaper,
+		Desc: "Test setting D/L wallpapers daily refresh in the personalization hub app",
 		Contacts: []string{
 			"cros-p13n-eng@google.com",
 			"chromeos-consumer-engprod@google.com",

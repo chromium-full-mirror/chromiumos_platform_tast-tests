@@ -18,9 +18,8 @@ import (
 
 func init() {
 	testing.AddTest(&testing.Test{
-		Func:         ShillDisableEnableTechnology,
-		LacrosStatus: testing.LacrosVariantUnneeded,
-		Desc:         "Ensures that the Ethernet technology can be disabled and enabled by Shill",
+		Func: ShillDisableEnableTechnology,
+		Desc: "Ensures that the Ethernet technology can be disabled and enabled by Shill",
 		Contacts: []string{
 			"cros-networking@google.com", // Platform networking team: owner/maintainer
 			"stevenjb@chromium.org",      // author

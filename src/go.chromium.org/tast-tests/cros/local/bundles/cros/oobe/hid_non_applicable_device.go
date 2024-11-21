@@ -17,7 +17,6 @@ import (
 func init() {
 	testing.AddTest(&testing.Test{
 		Func:           HidNonApplicableDevice,
-		LacrosStatus:   testing.LacrosVariantUnneeded,
 		LifeCycleStage: testing.LifeCycleOwnerMonitored,
 		Desc:           "Checks that OOBE HID Detection screen is skipped on non-applicable devices",
 		Contacts: []string{

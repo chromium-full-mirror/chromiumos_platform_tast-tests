@@ -28,10 +28,9 @@ type ipv6TestParams struct {
 
 func init() {
 	testing.AddTest(&testing.Test{
-		Func:         ARCIPv6Connectivity,
-		LacrosStatus: testing.LacrosVariantUnneeded,
-		Desc:         "Checks IPv6 connectivity inside ARC",
-		Contacts:     []string{"cros-networking@google.com", "taoyl@google.com"},
+		Func:     ARCIPv6Connectivity,
+		Desc:     "Checks IPv6 connectivity inside ARC",
+		Contacts: []string{"cros-networking@google.com", "taoyl@google.com"},
 		// ChromeOS > Platform > System > Networking > Continuous Maintenance
 		BugComponent: "b:1493959",
 		Attr:         []string{"group:mainline", "group:cq-medium", "group:hw_agnostic"},

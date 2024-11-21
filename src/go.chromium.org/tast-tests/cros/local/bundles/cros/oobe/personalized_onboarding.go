@@ -24,9 +24,8 @@ type testParam struct {
 
 func init() {
 	testing.AddTest(&testing.Test{
-		Func:         PersonalizedOnboarding,
-		LacrosStatus: testing.LacrosVariantUnneeded,
-		Desc:         "Test Use-Case selection and Personalized Recommend Apps screens",
+		Func: PersonalizedOnboarding,
+		Desc: "Test Use-Case selection and Personalized Recommend Apps screens",
 		Contacts: []string{
 			"cros-oobe@google.com",
 			"chromeos-consumer-engprod@google.com",

@@ -19,9 +19,8 @@ import (
 
 func init() {
 	testing.AddTest(&testing.Test{
-		Func:         SetScreenSaver,
-		LacrosStatus: testing.LacrosVariantUnneeded,
-		Desc:         "Test setting screen saver options and starting screen saver",
+		Func: SetScreenSaver,
+		Desc: "Test setting screen saver options and starting screen saver",
 		Contacts: []string{
 			"cros-p13n-eng@google.com",
 			"chromeos-consumer-engprod@google.com",

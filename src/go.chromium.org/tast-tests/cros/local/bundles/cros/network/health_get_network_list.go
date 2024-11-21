@@ -17,9 +17,8 @@ import (
 
 func init() {
 	testing.AddTest(&testing.Test{
-		Func:         HealthGetNetworkList,
-		LacrosStatus: testing.LacrosVariantUnneeded,
-		Desc:         "Validates that NetworkHealth API accurately gets networks",
+		Func: HealthGetNetworkList,
+		Desc: "Validates that NetworkHealth API accurately gets networks",
 		Contacts: []string{
 			"cros-network-health-team@google.com", // network-health team
 			"khegde@chromium.org",                 // test maintainer

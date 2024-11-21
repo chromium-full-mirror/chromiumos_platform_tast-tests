@@ -32,7 +32,6 @@ func init() {
 		// ChromeOS > Platform > System > Networking > Continuous Maintenance
 		BugComponent: "b:1493959",
 		Attr:         []string{"group:mainline", "group:hw_agnostic"},
-		LacrosStatus: testing.LacrosVariantUnneeded,
 		Params: []testing.Param{{
 			Name: "shill_crash_proxy_disabled",
 			Val: resolvConfCrashTestParams{

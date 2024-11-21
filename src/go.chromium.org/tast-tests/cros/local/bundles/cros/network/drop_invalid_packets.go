@@ -36,7 +36,6 @@ func init() {
 		Fixture:      "shillSimulatedWiFiWithArcBooted",
 		Attr:         []string{"group:mainline"},
 		SoftwareDeps: []string{"wifi", "chrome", "arc"},
-		LacrosStatus: testing.LacrosVariantUnneeded,
 	})
 }
 

@@ -20,9 +20,8 @@ import (
 
 func init() {
 	testing.AddTest(&testing.Test{
-		Func:         MarketingOptIn,
-		LacrosStatus: testing.LacrosVariantUnneeded,
-		Desc:         "Test marketing opt-in screen in tablet and laptop modes",
+		Func: MarketingOptIn,
+		Desc: "Test marketing opt-in screen in tablet and laptop modes",
 		Contacts: []string{
 			"cros-oobe@google.com",
 			"chromeos-consumer-engprod@google.com",

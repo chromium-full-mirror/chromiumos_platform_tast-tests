@@ -26,7 +26,6 @@ func init() {
 		BugComponent: "b:1493959",
 		Attr:         []string{"group:mainline"},
 		SoftwareDeps: []string{"wifi"},
-		LacrosStatus: testing.LacrosVariantUnneeded,
 		Fixture:      "shillSimulatedWiFi",
 		Params: []testing.Param{{
 			Name: "ipv4",

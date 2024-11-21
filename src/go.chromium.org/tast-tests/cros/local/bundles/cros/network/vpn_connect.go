@@ -47,7 +47,6 @@ func init() {
 		Contacts: []string{"cros-networking@google.com", "jiejiang@google.com"},
 		// ChromeOS > Platform > System > Networking > Continuous Maintenance
 		BugComponent: "b:1493959",
-		LacrosStatus: testing.LacrosVariantUnneeded,
 		// We use different fixtures in different tests, based on whether they need
 		// certificates or not. The following configurations are covered by
 		// VPNRouting tests so we don't need them here.

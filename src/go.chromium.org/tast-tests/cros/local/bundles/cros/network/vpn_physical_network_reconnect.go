@@ -43,7 +43,6 @@ func init() {
 		Contacts: []string{"cros-networking@google.com", "ningyuan@google.com"},
 		// ChromeOS > Platform > System > Networking > Continuous Maintenance
 		BugComponent: "b:1493959",
-		LacrosStatus: testing.LacrosVariantUnneeded,
 		// TODO(258091734): Move to CQ after test is stable.
 		Attr: []string{"group:mainline", "informational"},
 		Params: []testing.Param{{

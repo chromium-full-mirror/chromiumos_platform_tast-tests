@@ -27,9 +27,8 @@ const (
 
 func init() {
 	testing.AddTest(&testing.Test{
-		Func:         AudioAppsPlaying,
-		LacrosStatus: testing.LacrosVariantUnneeded,
-		Desc:         "Test and verify top ARC++ audio apps are working",
+		Func: AudioAppsPlaying,
+		Desc: "Test and verify top ARC++ audio apps are working",
 		Contacts: []string{
 			"chromeos-perf-reliability-eng@google.com",
 			"abergman@google.com",

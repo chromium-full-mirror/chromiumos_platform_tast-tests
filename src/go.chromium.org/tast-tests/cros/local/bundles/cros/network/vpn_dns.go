@@ -29,9 +29,8 @@ type vpnDNSTestCase struct {
 
 func init() {
 	testing.AddTest(&testing.Test{
-		Func:         VPNDNS,
-		LacrosStatus: testing.LacrosVariantUnneeded,
-		Desc:         "Test that DNS config pushed by VPN servers are correctly applied",
+		Func: VPNDNS,
+		Desc: "Test that DNS config pushed by VPN servers are correctly applied",
 		Contacts: []string{
 			"cros-networking@google.com",
 			"taoyl@google.com",

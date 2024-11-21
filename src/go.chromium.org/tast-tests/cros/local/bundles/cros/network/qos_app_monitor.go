@@ -47,10 +47,9 @@ const (
 
 func init() {
 	testing.AddTest(&testing.Test{
-		Func:         QosAppMonitor,
-		LacrosStatus: testing.LacrosVariantUnneeded,
-		Desc:         "Checks if ARC QoS App monitor works correctly",
-		Contacts:     []string{"cros-networking@google.com", "chuweih@google.com"},
+		Func:     QosAppMonitor,
+		Desc:     "Checks if ARC QoS App monitor works correctly",
+		Contacts: []string{"cros-networking@google.com", "chuweih@google.com"},
 		// ChromeOS > Platform > System > Networking > Continuous Maintenance
 		BugComponent: "b:1493959",
 		Attr:         []string{"group:mainline", "informational"},

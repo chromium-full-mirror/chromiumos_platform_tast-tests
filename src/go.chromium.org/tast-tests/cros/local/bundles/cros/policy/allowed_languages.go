@@ -23,9 +23,8 @@ import (
 
 func init() {
 	testing.AddTest(&testing.Test{
-		Func:         AllowedLanguages,
-		LacrosStatus: testing.LacrosVariantUnneeded,
-		Desc:         "Behavior of AllowedLanguages policy, checking the correspoding checkbox states (count) after setting the policy",
+		Func: AllowedLanguages,
+		Desc: "Behavior of AllowedLanguages policy, checking the correspoding checkbox states (count) after setting the policy",
 		Contacts: []string{
 			"cros-borders-eng@google.com",
 			"dvallet@google.com",

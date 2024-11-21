@@ -34,7 +34,6 @@ func init() {
 		// This test mainly verifies the crosh interface so it's hw_agnostic.
 		Attr:         []string{"group:mainline", "group:hw_agnostic"},
 		SoftwareDeps: []string{"wireguard"},
-		LacrosStatus: testing.LacrosVariantUnneeded,
 	})
 }
 

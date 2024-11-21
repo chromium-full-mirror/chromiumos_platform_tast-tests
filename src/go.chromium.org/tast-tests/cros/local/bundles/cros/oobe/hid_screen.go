@@ -21,9 +21,8 @@ import (
 
 func init() {
 	testing.AddTest(&testing.Test{
-		Func:         HidScreen,
-		LacrosStatus: testing.LacrosVariantUnneeded,
-		Desc:         "Checks that HID screen is shown on Chromebase, Chromebox and Chromebit form factors and skipped on other form factors",
+		Func: HidScreen,
+		Desc: "Checks that HID screen is shown on Chromebase, Chromebox and Chromebit form factors and skipped on other form factors",
 		Contacts: []string{
 			"cros-oobe@google.com",
 			"chromeos-consumer-engprod@google.com",

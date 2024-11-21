@@ -26,7 +26,6 @@ import (
 func init() {
 	testing.AddTest(&testing.Test{
 		Func:         PalmTouch,
-		LacrosStatus: testing.LacrosVariantUnneeded,
 		Desc:         "Test palm rejection functionality",
 		Contacts:     []string{"chromeos-touch-ml@google.com", "jiwan@chromium.org"},
 		BugComponent: "b:651985",

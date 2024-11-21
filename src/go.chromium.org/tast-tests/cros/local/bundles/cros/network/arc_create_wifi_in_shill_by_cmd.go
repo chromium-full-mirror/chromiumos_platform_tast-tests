@@ -45,7 +45,6 @@ func init() {
 		Fixture:      "shillSimulatedWiFiWithArcBooted",
 		Attr:         []string{"group:mainline"},
 		SoftwareDeps: []string{"wifi", "chrome", "arc"},
-		LacrosStatus: testing.LacrosVariantUnneeded,
 		Timeout:      chrome.LoginTimeout + arc.BootTimeout + 30*time.Second,
 		Params: []testing.Param{
 			{

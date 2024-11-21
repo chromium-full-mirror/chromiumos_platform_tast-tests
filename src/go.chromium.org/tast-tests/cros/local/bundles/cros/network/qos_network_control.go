@@ -88,7 +88,6 @@ func init() {
 		Fixture:      "shillSimulatedWiFi",
 		Attr:         []string{"group:mainline"},
 		SoftwareDeps: []string{"wifi"},
-		LacrosStatus: testing.LacrosVariantUnneeded,
 		Timeout:      2 * time.Minute,
 	})
 }

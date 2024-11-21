@@ -37,7 +37,6 @@ func init() {
 		// ChromeOS > Platform > System > Networking > Continuous Maintenance
 		BugComponent: "b:1493959",
 		Attr:         []string{"group:mainline", "group:network", "network_cq"},
-		LacrosStatus: testing.LacrosVariantUnneeded,
 		Params: []testing.Param{{
 			Name: "ikev2_ipv4",
 			Val: vpnRoutingTestCase{

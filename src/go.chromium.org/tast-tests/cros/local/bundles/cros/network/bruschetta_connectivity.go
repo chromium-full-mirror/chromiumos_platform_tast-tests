@@ -18,7 +18,6 @@ import (
 func init() {
 	testing.AddTest(&testing.Test{
 		Func:         BruschettaConnectivity,
-		LacrosStatus: testing.LacrosVariantUnneeded,
 		Desc:         "Checks IPv4 and IPv6 connectivity inside Bruschetta VM",
 		Contacts:     []string{"cros-networking@google.com", "taoyl@google.com", "clumptini@google.com"},
 		BugComponent: "b:1493959",

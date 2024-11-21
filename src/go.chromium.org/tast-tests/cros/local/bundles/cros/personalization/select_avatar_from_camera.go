@@ -33,9 +33,8 @@ const (
 
 func init() {
 	testing.AddTest(&testing.Test{
-		Func:         SelectAvatarFromCamera,
-		LacrosStatus: testing.LacrosVariantUnneeded,
-		Desc:         "Test setting avatar from camera",
+		Func: SelectAvatarFromCamera,
+		Desc: "Test setting avatar from camera",
 		Contacts: []string{
 			"cros-p13n-eng@google.com",
 			"chromeos-consumer-engprod@google.com",

@@ -19,7 +19,6 @@ import (
 func init() {
 	testing.AddTest(&testing.Test{
 		Func:         ShillInitScriptsLoginMultiProfile,
-		LacrosStatus: testing.LacrosVariantUnneeded,
 		Desc:         "Test that shill init login script perform as expected",
 		Contacts:     []string{"cros-networking@google.com", "hugobenichi@google.com"},
 		BugComponent: "b:1493959",

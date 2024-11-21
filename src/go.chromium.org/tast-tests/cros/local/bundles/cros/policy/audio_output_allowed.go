@@ -25,9 +25,8 @@ import (
 
 func init() {
 	testing.AddTest(&testing.Test{
-		Func:         AudioOutputAllowed,
-		LacrosStatus: testing.LacrosVariantUnneeded,
-		Desc:         "Check if AudioOutputAllowed forces the device to be muted",
+		Func: AudioOutputAllowed,
+		Desc: "Check if AudioOutputAllowed forces the device to be muted",
 		Contacts: []string{
 			"cros-engprod-muc@google.com",
 			"vsavu@google.com", // Test author

@@ -37,7 +37,6 @@ func init() {
 		// ChromeOS > Platform > System > Networking > Continuous Maintenance
 		BugComponent: "b:1493959",
 		Fixture:      "vpnEnvWithCerts",
-		LacrosStatus: testing.LacrosVariantUnneeded,
 		Params: []testing.Param{
 			{
 				Name: "strict_mode_l2tp_ipsec",

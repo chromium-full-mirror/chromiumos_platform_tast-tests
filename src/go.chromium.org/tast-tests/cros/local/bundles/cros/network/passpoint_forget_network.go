@@ -31,7 +31,6 @@ func init() {
 		Fixture:      "shillSimulatedWiFiWithChromeLoggedIn",
 		Attr:         []string{"group:network", "network_platform"},
 		SoftwareDeps: []string{"wifi", "chrome"},
-		LacrosStatus: testing.LacrosVariantUnneeded,
 		Timeout:      7 * time.Minute,
 		Requirements: []string{tdreq.WiFiGenSupportPasspoint},
 	})

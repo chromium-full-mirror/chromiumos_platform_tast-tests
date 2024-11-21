@@ -32,9 +32,8 @@ import (
 
 func init() {
 	testing.AddTest(&testing.Test{
-		Func:         ChromeOSReleaseChannelDelegated,
-		LacrosStatus: testing.LacrosVariantUnneeded,
-		Desc:         "Check of ChromeOsReleaseChannelDelegated policy by checking the settings page and update_engine",
+		Func: ChromeOSReleaseChannelDelegated,
+		Desc: "Check of ChromeOsReleaseChannelDelegated policy by checking the settings page and update_engine",
 		Contacts: []string{
 			"chromeos-commercial-remote-management@google.com",
 			"vsavu@google.com", // Test author

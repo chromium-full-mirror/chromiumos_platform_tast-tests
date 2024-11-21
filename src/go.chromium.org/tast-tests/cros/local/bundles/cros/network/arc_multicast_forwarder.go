@@ -36,10 +36,9 @@ type multicastForwarderTestCase struct {
 
 func init() {
 	testing.AddTest(&testing.Test{
-		Func:         ARCMulticastForwarder,
-		LacrosStatus: testing.LacrosVariantUnneeded,
-		Desc:         "Checks if multicast forwarder works correctly with Android multicast lock held status on ARC",
-		Contacts:     []string{"cros-networking@google.com", "chuweih@google.com"},
+		Func:     ARCMulticastForwarder,
+		Desc:     "Checks if multicast forwarder works correctly with Android multicast lock held status on ARC",
+		Contacts: []string{"cros-networking@google.com", "chuweih@google.com"},
 		// ChromeOS > Platform > System > Networking > Continuous Maintenance
 		BugComponent: "b:1493959",
 		Attr:         []string{"group:network", "network_platform"},

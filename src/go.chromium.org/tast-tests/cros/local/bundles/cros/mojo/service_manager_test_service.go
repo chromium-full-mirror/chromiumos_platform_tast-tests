@@ -17,9 +17,8 @@ import (
 
 func init() {
 	testing.AddTest(&testing.Test{
-		Func:         ServiceManagerTestService,
-		LacrosStatus: testing.LacrosVariantUnneeded,
-		Desc:         "Check we can register and request service from mojo service manager",
+		Func: ServiceManagerTestService,
+		Desc: "Check we can register and request service from mojo service manager",
 		Contacts: []string{
 			"chromeos-mojo-service-manager@google.com",
 			"chungsheng@google.com",

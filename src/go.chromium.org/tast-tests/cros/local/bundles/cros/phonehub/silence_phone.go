@@ -19,7 +19,6 @@ import (
 func init() {
 	testing.AddTest(&testing.Test{
 		Func:           SilencePhone,
-		LacrosStatus:   testing.LacrosVariantUnneeded,
 		LifeCycleStage: testing.LifeCycleOwnerMonitored,
 		Desc:           "Checks that toggling Phone Hub's \"Silence phone\" pod will toggle do-not-disturb on the Android phone",
 		Contacts: []string{

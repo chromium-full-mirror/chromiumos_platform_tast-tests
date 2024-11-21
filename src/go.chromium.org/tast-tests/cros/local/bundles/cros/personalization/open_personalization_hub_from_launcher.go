@@ -19,9 +19,8 @@ import (
 
 func init() {
 	testing.AddTest(&testing.Test{
-		Func:         OpenPersonalizationHubFromLauncher,
-		LacrosStatus: testing.LacrosVariantUnneeded,
-		Desc:         "Test opening personalization hub app by searching in launcher",
+		Func: OpenPersonalizationHubFromLauncher,
+		Desc: "Test opening personalization hub app by searching in launcher",
 		Contacts: []string{
 			"cros-p13n-eng@google.com",
 			"chromeos-consumer-engprod@google.com",

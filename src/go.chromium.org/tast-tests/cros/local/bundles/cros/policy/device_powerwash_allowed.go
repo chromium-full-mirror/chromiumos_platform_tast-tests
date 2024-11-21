@@ -25,9 +25,8 @@ import (
 
 func init() {
 	testing.AddTest(&testing.Test{
-		Func:         DevicePowerwashAllowed,
-		LacrosStatus: testing.LacrosVariantUnneeded,
-		Desc:         "Test the DevicePowerwashAllowed policy",
+		Func: DevicePowerwashAllowed,
+		Desc: "Test the DevicePowerwashAllowed policy",
 		Contacts: []string{
 			"chromeos-commercial-remote-management@google.com",
 			"artyomchen@google.com", // Test author

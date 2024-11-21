@@ -24,9 +24,8 @@ import (
 
 func init() {
 	testing.AddTest(&testing.Test{
-		Func:         SelectRainbowMode,
-		LacrosStatus: testing.LacrosVariantUnneeded,
-		Desc:         "Checks that rainbow mode updates the correct number of keys for each device",
+		Func: SelectRainbowMode,
+		Desc: "Checks that rainbow mode updates the correct number of keys for each device",
 		Contacts: []string{
 			"cros-device-enablement@google.com",
 			"chromeos-consumer-engprod@google.com",

@@ -19,7 +19,6 @@ import (
 func init() {
 	testing.AddTest(&testing.Test{
 		Func:           PhoneToCrosWifiCredsUnsecureNetwork,
-		LacrosStatus:   testing.LacrosVariantUnneeded,
 		LifeCycleStage: testing.LifeCycleOwnerMonitored,
 		Desc:           "Checks that ChromeOS rejects unsecure Wi-Fi credentials received from Android",
 		Contacts: []string{

@@ -31,7 +31,6 @@ const statusAreaOverflowButtonTrayClassName = "StatusAreaOverflowButtonTray"
 func init() {
 	testing.AddTest(&testing.Test{
 		Func:           DownloadRecentPhoto,
-		LacrosStatus:   testing.LacrosVariantUnneeded,
 		LifeCycleStage: testing.LifeCycleOwnerMonitored,
 
 		Desc: "Exercises toggling the Recent Photos feature and downloading a photo from a connected phone",

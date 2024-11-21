@@ -16,7 +16,6 @@ import (
 func init() {
 	testing.AddTest(&testing.Test{
 		Func:         EhideNoEthernet,
-		LacrosStatus: testing.LacrosVariantUnneeded,
 		Desc:         "Verify that there is no Ethernet connection when ehide has started",
 		Timeout:      30 * time.Second,
 		Contacts:     []string{"cros-networking@google.com", "chenzikai@google.com"},

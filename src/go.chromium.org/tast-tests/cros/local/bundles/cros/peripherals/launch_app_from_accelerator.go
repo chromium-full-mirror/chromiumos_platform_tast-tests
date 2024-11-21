@@ -19,15 +19,14 @@ import (
 
 // accelTestParams contains all the data needed to run a single test iteration.
 type accelTestParams struct {
-	app         apps.App
-	keystroke   string
+	app       apps.App
+	keystroke string
 }
 
 func init() {
 	testing.AddTest(&testing.Test{
-		Func:         LaunchAppFromAccelerator,
-		LacrosStatus: testing.LacrosVariantUnneeded,
-		Desc:         "Peripherals app can be found and launched with an accelerator",
+		Func: LaunchAppFromAccelerator,
+		Desc: "Peripherals app can be found and launched with an accelerator",
 		Contacts: []string{
 			"cros-device-enablement@google.com",
 			"michaelcheco@google.com",

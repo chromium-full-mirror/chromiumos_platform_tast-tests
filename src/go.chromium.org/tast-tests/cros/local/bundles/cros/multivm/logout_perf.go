@@ -17,7 +17,6 @@ import (
 func init() {
 	testing.AddTest(&testing.Test{
 		Func:         LogoutPerf,
-		LacrosStatus: testing.LacrosVariantUnneeded,
 		Desc:         "Measures time to logout while multiple VMs running",
 		Contacts:     []string{"cros-virt-devices-guests@google.com", "keiichiw@google.com"},
 		BugComponent: "b:1248538",

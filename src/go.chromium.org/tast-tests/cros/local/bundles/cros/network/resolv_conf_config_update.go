@@ -32,7 +32,6 @@ func init() {
 		// ChromeOS > Platform > System > Networking > Continuous Maintenance
 		BugComponent: "b:1493959",
 		Attr:         []string{"group:mainline", "group:hw_agnostic"},
-		LacrosStatus: testing.LacrosVariantUnneeded,
 		Params: []testing.Param{{
 			Name: "ipv4_only_proxy_disabled",
 			Val: resolvConfConfigUpdateTestParams{

@@ -24,7 +24,6 @@ import (
 func init() {
 	testing.AddTest(&testing.Test{
 		Func:           PhoneToCrosSelfShareAutoAccept,
-		LacrosStatus:   testing.LacrosVariantUnneeded,
 		LifeCycleStage: testing.LifeCycleOwnerMonitored,
 		Desc:           "Checks that we can successfully send files from Android to CrOS on the same Gaia without accepting",
 		Contacts: []string{

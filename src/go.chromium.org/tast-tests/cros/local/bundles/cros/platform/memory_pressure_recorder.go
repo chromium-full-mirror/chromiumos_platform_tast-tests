@@ -17,7 +17,6 @@ import (
 func init() {
 	testing.AddTest(&testing.Test{
 		Func:         MemoryPressureRecorder,
-		LacrosStatus: testing.LacrosVariantUnneeded,
 		Desc:         "Record a WPR archive for platform.MemoryPressure",
 		Contacts:     []string{"chromeos-memory@google.com"},
 		BugComponent: "b:167286",

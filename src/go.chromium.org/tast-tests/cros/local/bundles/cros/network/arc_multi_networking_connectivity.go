@@ -23,10 +23,9 @@ import (
 
 func init() {
 	testing.AddTest(&testing.Test{
-		Func:         ARCMultiNetworkingConnectivity,
-		LacrosStatus: testing.LacrosVariantUnneeded,
-		Desc:         "Checks connectivity while multi-networking is enabled",
-		Contacts:     []string{"cros-networking@google.com", "jasongustaman@google.com"},
+		Func:     ARCMultiNetworkingConnectivity,
+		Desc:     "Checks connectivity while multi-networking is enabled",
+		Contacts: []string{"cros-networking@google.com", "jasongustaman@google.com"},
 		// ChromeOS > Platform > System > Networking > Continuous Maintenance
 		BugComponent: "b:1493959",
 		Attr:         []string{"group:mainline", "group:cq-medium"},

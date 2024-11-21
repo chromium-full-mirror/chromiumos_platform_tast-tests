@@ -36,9 +36,8 @@ const (
 
 func init() {
 	testing.AddTest(&testing.Test{
-		Func:         AudioFilesPlaying,
-		LacrosStatus: testing.LacrosVariantUnneeded,
-		Desc:         "Play audio files via ARC++ app VLC player and verifies audio volume level is changed based on volume controls",
+		Func: AudioFilesPlaying,
+		Desc: "Play audio files via ARC++ app VLC player and verifies audio volume level is changed based on volume controls",
 		Contacts: []string{
 			"chromeos-perf-reliability-eng@google.com",
 			"abergman@google.com",

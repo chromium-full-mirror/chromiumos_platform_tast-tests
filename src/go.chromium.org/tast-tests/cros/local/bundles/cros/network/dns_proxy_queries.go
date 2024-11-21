@@ -17,10 +17,9 @@ import (
 
 func init() {
 	testing.AddTest(&testing.Test{
-		Func:         DNSProxyQueries,
-		LacrosStatus: testing.LacrosVariantUnneeded,
-		Desc:         "Ensure that DNS queries are successful",
-		Contacts:     []string{"cros-networking@google.com", "jasongustaman@google.com"},
+		Func:     DNSProxyQueries,
+		Desc:     "Ensure that DNS queries are successful",
+		Contacts: []string{"cros-networking@google.com", "jasongustaman@google.com"},
 		// ChromeOS > Platform > System > Networking > Continuous Maintenance
 		BugComponent: "b:1493959",
 		Attr:         []string{"group:mainline", "group:cq-medium", "group:network", "network_cq"},

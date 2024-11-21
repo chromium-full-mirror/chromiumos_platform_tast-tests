@@ -40,7 +40,6 @@ func init() {
 		// ChromeOS > Platform > System > Networking > Continuous Maintenance
 		BugComponent: "b:1493959",
 		Attr:         []string{"group:network", "network_platform"},
-		LacrosStatus: testing.LacrosVariantUnneeded,
 		Timeout:      3 * time.Minute,
 		Params: []testing.Param{{
 			Name:              "chrome",

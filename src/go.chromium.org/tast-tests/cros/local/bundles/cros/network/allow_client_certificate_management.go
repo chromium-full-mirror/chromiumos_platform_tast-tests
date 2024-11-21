@@ -40,9 +40,8 @@ const clientCertFile = "cert_settings_page_client_cert.p12"
 
 func init() {
 	testing.AddTest(&testing.Test{
-		Func:         AllowClientCertificateManagement,
-		LacrosStatus: testing.LacrosVariantUnneeded,
-		Desc:         "Test that chrome://settings/certificates page can import and manage client certificates based on ClientCertificateManagementAllowed policy",
+		Func: AllowClientCertificateManagement,
+		Desc: "Test that chrome://settings/certificates page can import and manage client certificates based on ClientCertificateManagementAllowed policy",
 		Contacts: []string{
 			"chromeos-commercial-networking@google.com", // Team
 			"olsa@google.com", // Test author

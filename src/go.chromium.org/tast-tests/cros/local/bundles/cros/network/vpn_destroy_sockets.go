@@ -27,7 +27,6 @@ func init() {
 		// ChromeOS > Platform > System > Networking > Continuous Maintenance
 		BugComponent: "b:1493959",
 		Attr:         []string{"group:mainline", "informational"},
-		LacrosStatus: testing.LacrosVariantUnneeded,
 		Params: []testing.Param{
 			{
 				Val: false,

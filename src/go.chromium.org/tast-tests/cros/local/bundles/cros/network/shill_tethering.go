@@ -38,7 +38,6 @@ func init() {
 		BugComponent: "b:1493959",
 		Fixture:      "shillSimulatedWiFi",
 		Attr:         []string{"group:mainline"},
-		LacrosStatus: testing.LacrosVariantUnneeded,
 		Timeout:      10 * time.Minute,
 	})
 }

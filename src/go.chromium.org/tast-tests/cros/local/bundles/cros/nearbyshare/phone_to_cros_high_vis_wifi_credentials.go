@@ -19,7 +19,6 @@ import (
 func init() {
 	testing.AddTest(&testing.Test{
 		Func:           PhoneToCrosHighVisWifiCredentials,
-		LacrosStatus:   testing.LacrosVariantUnneeded,
 		LifeCycleStage: testing.LifeCycleOwnerMonitored,
 		Desc:           "Checks that CrOS can receive Wi-Fi credentials from Android to CrOS",
 		Contacts: []string{

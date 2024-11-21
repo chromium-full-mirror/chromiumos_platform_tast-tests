@@ -32,9 +32,8 @@ type vpnIncorrectCredsTestParam struct {
 
 func init() {
 	testing.AddTest(&testing.Test{
-		Func:         VPNIncorrectCreds,
-		LacrosStatus: testing.LacrosVariantUnneeded,
-		Desc:         "Verify that device fails to connect to VPN with incorrect credentials",
+		Func: VPNIncorrectCreds,
+		Desc: "Verify that device fails to connect to VPN with incorrect credentials",
 		Contacts: []string{
 			"cros-device-enablement@google.com",
 			"chromeos-connectivity-engprod@google.com",

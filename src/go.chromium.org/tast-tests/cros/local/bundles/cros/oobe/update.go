@@ -23,9 +23,8 @@ import (
 
 func init() {
 	testing.AddTest(&testing.Test{
-		Func:         Update,
-		LacrosStatus: testing.LacrosVariantUnneeded,
-		Desc:         "Tests that non critical update applied during oobe for consumer users and ignored for commercial users",
+		Func: Update,
+		Desc: "Tests that non critical update applied during oobe for consumer users and ignored for commercial users",
 		Contacts: []string{
 			"cros-oobe@google.com",
 			"chromeos-consumer-engprod@google.com",

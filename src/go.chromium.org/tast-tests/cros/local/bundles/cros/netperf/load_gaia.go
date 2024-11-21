@@ -19,9 +19,8 @@ import (
 
 func init() {
 	testing.AddTest(&testing.Test{
-		Func:         LoadGAIA,
-		LacrosStatus: testing.LacrosVariantUnneeded,
-		Desc:         "Try to load GAIA during OOBE to monitor the internet connection health",
+		Func: LoadGAIA,
+		Desc: "Try to load GAIA during OOBE to monitor the internet connection health",
 		Contacts: []string{
 			"cros-engprod-muc@google.com",
 			"vsavu@google.com", // Test author

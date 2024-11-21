@@ -27,7 +27,6 @@ func init() {
 		BugComponent: "b:1493959",
 		Attr:         []string{"group:mainline", "group:release-health", "release-health_network"},
 		SoftwareDeps: []string{"wifi"},
-		LacrosStatus: testing.LacrosVariantUnneeded,
 		Fixture:      "shillSimulatedWiFi",
 		Params: []testing.Param{{
 			Val: dhcp.ServerPort,

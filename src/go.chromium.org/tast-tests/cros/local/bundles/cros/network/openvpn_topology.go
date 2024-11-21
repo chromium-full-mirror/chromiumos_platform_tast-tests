@@ -22,7 +22,6 @@ func init() {
 		// ChromeOS > Platform > System > Networking > Continuous Maintenance
 		BugComponent: "b:1493959",
 		Attr:         []string{"group:network", "network_platform", "group:hw_agnostic"},
-		LacrosStatus: testing.LacrosVariantUnneeded,
 		Fixture:      "vpnEnvWithCerts",
 		Params: []testing.Param{{
 			Name: "net30",

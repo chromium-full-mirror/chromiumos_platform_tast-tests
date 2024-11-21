@@ -23,9 +23,8 @@ import (
 
 func init() {
 	testing.AddTest(&testing.Test{
-		Func:         DeviceOffHours,
-		LacrosStatus: testing.LacrosVariantUnneeded,
-		Desc:         "Behavior of DeviceOffHours policy",
+		Func: DeviceOffHours,
+		Desc: "Behavior of DeviceOffHours policy",
 		// ChromeOS > Software > Commercial (Enterprise) > Remote Management > Policy Stack
 		BugComponent: "b:1111617",
 		Contacts: []string{

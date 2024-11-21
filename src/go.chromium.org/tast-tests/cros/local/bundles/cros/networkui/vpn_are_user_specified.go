@@ -30,9 +30,8 @@ import (
 
 func init() {
 	testing.AddTest(&testing.Test{
-		Func:         VPNAreUserSpecified,
-		LacrosStatus: testing.LacrosVariantUnneeded,
-		Desc:         "Verify VPN networks added are user specific",
+		Func: VPNAreUserSpecified,
+		Desc: "Verify VPN networks added are user specific",
 		Contacts: []string{
 			"cros-device-enablement@google.com",
 			"chromeos-connectivity-engprod@google.com",

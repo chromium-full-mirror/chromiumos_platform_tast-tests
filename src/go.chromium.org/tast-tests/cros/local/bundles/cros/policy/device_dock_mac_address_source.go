@@ -34,10 +34,9 @@ var noEthernetModels = []string{"arcada", "drallion", "drallion360"}
 
 func init() {
 	testing.AddTest(&testing.Test{
-		Func:         DeviceDockMacAddressSource,
-		LacrosStatus: testing.LacrosVariantUnneeded,
-		Desc:         "Test setting the DeviceDockMacAddressSource policy by checking if the DUT changing MAC address",
-		Contacts:     []string{"chromeos-oem-services@google.com"},
+		Func:     DeviceDockMacAddressSource,
+		Desc:     "Test setting the DeviceDockMacAddressSource policy by checking if the DUT changing MAC address",
+		Contacts: []string{"chromeos-oem-services@google.com"},
 		// ChromeOS > Software > Commercial (Enterprise) > OEM Services.
 		BugComponent: "b:1256717",
 		SoftwareDeps: []string{"chrome", "wilco"},

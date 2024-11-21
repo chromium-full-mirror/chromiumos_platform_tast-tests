@@ -29,7 +29,6 @@ const ehideInternetConnectivityIndefiniteTimeout = 10 * time.Hour
 func init() {
 	testing.AddTest(&testing.Test{
 		Func:         EhideInternetConnectivity,
-		LacrosStatus: testing.LacrosVariantUnneeded,
 		Desc:         "Verify that there is no Ethernet connection when ehide has started",
 		Contacts:     []string{"cros-networking@google.com", "jiejiang@google.com"},
 		BugComponent: "b:1493959", // ChromeOS > Platform > baseOS > Networking > Continuous Maintenance

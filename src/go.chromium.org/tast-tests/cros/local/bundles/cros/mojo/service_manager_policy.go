@@ -16,9 +16,8 @@ import (
 
 func init() {
 	testing.AddTest(&testing.Test{
-		Func:         ServiceManagerPolicy,
-		LacrosStatus: testing.LacrosVariantUnneeded,
-		Desc:         "Check the policy files of mojo service manager",
+		Func: ServiceManagerPolicy,
+		Desc: "Check the policy files of mojo service manager",
 		Contacts: []string{
 			"chromeos-mojo-service-manager@google.com",
 			"chungsheng@google.com",

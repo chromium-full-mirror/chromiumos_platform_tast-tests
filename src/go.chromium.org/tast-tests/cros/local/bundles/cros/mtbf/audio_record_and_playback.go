@@ -22,9 +22,8 @@ const recordingDuration = 5 * time.Second
 
 func init() {
 	testing.AddTest(&testing.Test{
-		Func:         AudioRecordAndPlayback,
-		LacrosStatus: testing.LacrosVariantUnneeded,
-		Desc:         "Records audio via ARC++ app Voice Recorder and verifies that it can playback the recorded audio file",
+		Func: AudioRecordAndPlayback,
+		Desc: "Records audio via ARC++ app Voice Recorder and verifies that it can playback the recorded audio file",
 		Contacts: []string{
 			"chromeos-perf-reliability-eng@google.com",
 			"abergman@google.com",

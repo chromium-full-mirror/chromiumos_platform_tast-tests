@@ -22,9 +22,8 @@ import (
 
 func init() {
 	testing.AddTest(&testing.Test{
-		Func:         SelectMultizoneKeyboardBacklight,
-		LacrosStatus: testing.LacrosVariantUnneeded,
-		Desc:         "Test selecting keyboard backlight zone colors in personalization hub app",
+		Func: SelectMultizoneKeyboardBacklight,
+		Desc: "Test selecting keyboard backlight zone colors in personalization hub app",
 		Contacts: []string{
 			"cros-p13n-eng@google.com",
 			"chromeos-consumer-engprod@google.com",

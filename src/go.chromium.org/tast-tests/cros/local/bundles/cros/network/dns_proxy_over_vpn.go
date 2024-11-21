@@ -36,10 +36,9 @@ type dnsProxyOverVPNTestParams struct {
 
 func init() {
 	testing.AddTest(&testing.Test{
-		Func:         DNSProxyOverVPN,
-		LacrosStatus: testing.LacrosVariantUnneeded,
-		Desc:         "Ensure that DNS proxies are working correctly over VPN",
-		Contacts:     []string{"cros-networking@google.com", "jasongustaman@google.com", "garrick@google.com"},
+		Func:     DNSProxyOverVPN,
+		Desc:     "Ensure that DNS proxies are working correctly over VPN",
+		Contacts: []string{"cros-networking@google.com", "jasongustaman@google.com", "garrick@google.com"},
 		// ChromeOS > Platform > System > Networking > Continuous Maintenance
 		BugComponent: "b:1493959",
 		Attr:         []string{"group:mainline", "group:release-health", "release-health_network"},

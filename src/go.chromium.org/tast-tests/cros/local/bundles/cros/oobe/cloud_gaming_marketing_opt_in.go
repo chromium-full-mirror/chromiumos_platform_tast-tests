@@ -17,9 +17,8 @@ import (
 
 func init() {
 	testing.AddTest(&testing.Test{
-		Func:         CloudGamingMarketingOptIn,
-		LacrosStatus: testing.LacrosVariantUnneeded,
-		Desc:         "Test that we show gaming-specific marketing opt in screen on a cloud gaming board",
+		Func: CloudGamingMarketingOptIn,
+		Desc: "Test that we show gaming-specific marketing opt in screen on a cloud gaming board",
 		Contacts: []string{
 			"cros-oobe@google.com",
 			"chromeos-consumer-engprod@google.com",

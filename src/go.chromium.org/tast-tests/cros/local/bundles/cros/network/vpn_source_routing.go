@@ -23,7 +23,6 @@ func init() {
 		BugComponent: "b:1493959",
 		Attr:         []string{"group:mainline"},
 		SoftwareDeps: []string{"ikev2"},
-		LacrosStatus: testing.LacrosVariantUnneeded,
 	})
 }
 

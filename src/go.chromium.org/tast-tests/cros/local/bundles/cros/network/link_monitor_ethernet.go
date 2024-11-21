@@ -28,10 +28,9 @@ import (
 
 func init() {
 	testing.AddTest(&testing.Test{
-		Func:         LinkMonitorEthernet,
-		LacrosStatus: testing.LacrosVariantUnneeded,
-		Desc:         "Verifies gateway reachability fail changes network to no connectivity",
-		Contacts:     []string{"cros-networking@google.com", "ningyuan@google.com"},
+		Func:     LinkMonitorEthernet,
+		Desc:     "Verifies gateway reachability fail changes network to no connectivity",
+		Contacts: []string{"cros-networking@google.com", "ningyuan@google.com"},
 		// ChromeOS > Platform > System > Networking > Continuous Maintenance
 		BugComponent: "b:1493959",
 		Attr:         []string{"group:network", "network_platform"},

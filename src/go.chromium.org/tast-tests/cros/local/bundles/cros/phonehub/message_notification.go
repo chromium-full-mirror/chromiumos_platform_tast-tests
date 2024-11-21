@@ -26,7 +26,6 @@ import (
 func init() {
 	testing.AddTest(&testing.Test{
 		Func:           MessageNotification,
-		LacrosStatus:   testing.LacrosVariantUnneeded,
 		LifeCycleStage: testing.LifeCycleOwnerMonitored,
 		Desc:           "Checks that Android message notifications appear in Phone Hub and that inline reply works",
 		Contacts: []string{

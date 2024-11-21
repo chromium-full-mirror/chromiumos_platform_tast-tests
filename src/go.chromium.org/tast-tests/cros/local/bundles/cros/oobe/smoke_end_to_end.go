@@ -38,9 +38,8 @@ type oobeTestArgs struct {
 
 func init() {
 	testing.AddTest(&testing.Test{
-		Func:         SmokeEndToEnd,
-		LacrosStatus: testing.LacrosVariantUnneeded,
-		Desc:         "Smoke test that goes through OOBE, Login and Onboarding using the automation tools",
+		Func: SmokeEndToEnd,
+		Desc: "Smoke test that goes through OOBE, Login and Onboarding using the automation tools",
 		Contacts: []string{
 			"cros-oobe@google.com",
 			"chromeos-consumer-engprod@google.com",

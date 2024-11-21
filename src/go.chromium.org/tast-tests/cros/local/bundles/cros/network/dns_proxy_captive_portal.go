@@ -31,10 +31,9 @@ type dnsProxyCaptivePortalTestParams struct {
 
 func init() {
 	testing.AddTest(&testing.Test{
-		Func:         DNSProxyCaptivePortal,
-		LacrosStatus: testing.LacrosVariantUnneeded,
-		Desc:         "Verify dns-proxy behaves correctly when shill detects a captive portal",
-		Contacts:     []string{"cros-networking@google.com", "jasongustaman@google.com", "garrick@google.com"},
+		Func:     DNSProxyCaptivePortal,
+		Desc:     "Verify dns-proxy behaves correctly when shill detects a captive portal",
+		Contacts: []string{"cros-networking@google.com", "jasongustaman@google.com", "garrick@google.com"},
 		// ChromeOS > Platform > System > Networking > Continuous Maintenance
 		BugComponent: "b:1493959",
 		SoftwareDeps: []string{"chrome", "no_kernel_upstream"},

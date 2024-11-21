@@ -87,9 +87,8 @@ type filesConfig struct {
 
 func init() {
 	testing.AddTest(&testing.Test{
-		Func:         CertSettingsPage,
-		LacrosStatus: testing.LacrosVariantUnneeded,
-		Desc:         "Test that chrome://settings/certificates page can import and use client and CA certificates",
+		Func: CertSettingsPage,
+		Desc: "Test that chrome://settings/certificates page can import and use client and CA certificates",
 		Contacts: []string{
 			"chromeos-commercial-networking@google.com", // Team
 			"miersh@google.com",                         // Test author

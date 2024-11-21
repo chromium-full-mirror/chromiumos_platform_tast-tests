@@ -21,9 +21,8 @@ import (
 
 func init() {
 	testing.AddTest(&testing.Test{
-		Func:         ScreenSaverPreview,
-		LacrosStatus: testing.LacrosVariantUnneeded,
-		Desc:         "Test previewing screen saver in the personalization hub app",
+		Func: ScreenSaverPreview,
+		Desc: "Test previewing screen saver in the personalization hub app",
 		Contacts: []string{
 			"cros-p13n-eng@google.com",
 			"chromeos-consumer-engprod@google.com",

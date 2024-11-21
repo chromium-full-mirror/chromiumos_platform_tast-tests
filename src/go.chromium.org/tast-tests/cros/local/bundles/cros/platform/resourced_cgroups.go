@@ -15,7 +15,6 @@ import (
 func init() {
 	testing.AddTest(&testing.Test{
 		Func:         ResourcedCgroups,
-		LacrosStatus: testing.LacrosVariantUnneeded,
 		Desc:         "Checks that cgroups managed by resourced have the same value as before migration",
 		Contacts:     []string{"chromeos-memory@google.com", "kawasin@chromium.org"},
 		BugComponent: "b:167279", // ChromeOS > Platform > baseOS > Performance

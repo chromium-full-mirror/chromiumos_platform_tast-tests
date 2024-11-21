@@ -26,9 +26,8 @@ const uiTimeout = 30 * time.Second
 
 func init() {
 	testing.AddTest(&testing.Test{
-		Func:         Smoke,
-		LacrosStatus: testing.LacrosVariantUnneeded,
-		Desc:         "Checks that notifications appear in notification centre and can be interacted with",
+		Func: Smoke,
+		Desc: "Checks that notifications appear in notification centre and can be interacted with",
 		Contacts: []string{
 			"cros-status-area-eng@google.com",
 			"chromeos-consumer-engprod@google.com",

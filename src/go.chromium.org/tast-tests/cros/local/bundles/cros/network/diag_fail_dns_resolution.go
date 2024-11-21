@@ -17,9 +17,8 @@ import (
 
 func init() {
 	testing.AddTest(&testing.Test{
-		Func:         DiagFailDNSResolution,
-		LacrosStatus: testing.LacrosVariantUnneeded,
-		Desc:         "Tests that the DNS resolution network diagnostic test fails when the DNS cannot resolve requests",
+		Func: DiagFailDNSResolution,
+		Desc: "Tests that the DNS resolution network diagnostic test fails when the DNS cannot resolve requests",
 		Contacts: []string{
 			"cros-network-health-team@google.com", // network-health team
 			"khegde@chromium.org",                 // test maintainer

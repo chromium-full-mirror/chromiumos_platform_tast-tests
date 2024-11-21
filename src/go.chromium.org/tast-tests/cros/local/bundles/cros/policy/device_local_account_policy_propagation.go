@@ -23,9 +23,8 @@ import (
 
 func init() {
 	testing.AddTest(&testing.Test{
-		Func:         DeviceLocalAccountPolicyPropagation,
-		LacrosStatus: testing.LacrosVariantUnneeded,
-		Desc:         "Test for device local account policy propagation",
+		Func: DeviceLocalAccountPolicyPropagation,
+		Desc: "Test for device local account policy propagation",
 		Contacts: []string{
 			"chromeos-commercial-remote-management@google.com",
 			"artyomchen@google.com", // Test author

@@ -20,7 +20,6 @@ import (
 func init() {
 	testing.AddTest(&testing.Test{
 		Func:           HidScreenUsbMouseOnly,
-		LacrosStatus:   testing.LacrosVariantUnneeded,
 		LifeCycleStage: testing.LifeCycleOwnerMonitored,
 		Desc:           "Checks that a single usb mouse device can be connected in OOBE HID Detection screen",
 		Contacts: []string{

@@ -21,10 +21,9 @@ import (
 
 func init() {
 	testing.AddTest(&testing.Test{
-		Func:         DNSProxyCustomNameserver,
-		LacrosStatus: testing.LacrosVariantUnneeded,
-		Desc:         "Verify dns-proxy is elided when a custom nameserver is used",
-		Contacts:     []string{"cros-networking@google.com", "jasongustaman@google.com", "garrick@google.com"},
+		Func:     DNSProxyCustomNameserver,
+		Desc:     "Verify dns-proxy is elided when a custom nameserver is used",
+		Contacts: []string{"cros-networking@google.com", "jasongustaman@google.com", "garrick@google.com"},
 		// ChromeOS > Platform > System > Networking > Continuous Maintenance
 		BugComponent: "b:1493959",
 		Attr:         []string{"group:network", "network_platform"},

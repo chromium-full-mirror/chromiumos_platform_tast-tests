@@ -29,7 +29,6 @@ func init() {
 		// TODO(b/356752035): Reenable the test.
 		// Attr:         []string{"group:mainline", "informational"},
 		SoftwareDeps: []string{"wifi"},
-		LacrosStatus: testing.LacrosVariantUnneeded,
 		Fixture:      "shillSimulatedWiFi",
 	})
 }

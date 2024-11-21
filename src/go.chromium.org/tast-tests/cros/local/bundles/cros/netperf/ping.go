@@ -17,9 +17,8 @@ import (
 
 func init() {
 	testing.AddTest(&testing.Test{
-		Func:         Ping,
-		LacrosStatus: testing.LacrosVariantUnneeded,
-		Desc:         "Ping different domains to determine the internet connection health",
+		Func: Ping,
+		Desc: "Ping different domains to determine the internet connection health",
 		Contacts: []string{
 			"cros-engprod-muc@google.com",
 			"vsavu@google.com", // Test author

@@ -19,9 +19,8 @@ import (
 
 func init() {
 	testing.AddTest(&testing.Test{
-		Func:         VPNSplitRouting,
-		LacrosStatus: testing.LacrosVariantUnneeded,
-		Desc:         "Test that split routing works correctly for VPN",
+		Func: VPNSplitRouting,
+		Desc: "Test that split routing works correctly for VPN",
 		Contacts: []string{
 			"cros-networking@google.com",
 			"taoyl@google.com",

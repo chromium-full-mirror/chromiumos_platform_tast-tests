@@ -78,7 +78,6 @@ func init() {
 		BugComponent: "b:1493959",
 		Attr:         []string{"group:mainline"},
 		Timeout:      5 * time.Minute,
-		LacrosStatus: testing.LacrosVariantUnneeded,
 		Params: []testing.Param{{
 			Name: "users_ipv4",
 			Val: tcParams{

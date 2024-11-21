@@ -27,9 +27,8 @@ const (
 
 func init() {
 	testing.AddTest(&testing.Test{
-		Func:         DoNotDisturbOSSettings,
-		LacrosStatus: testing.LacrosVariantUnneeded,
-		Desc:         "Checks the Do Not Disturb toggle in the OS Settings Notifications subpage",
+		Func: DoNotDisturbOSSettings,
+		Desc: "Checks the Do Not Disturb toggle in the OS Settings Notifications subpage",
 		Contacts: []string{
 			"cros-status-area-eng@google.com",
 			"chromeos-consumer-engprod@google.com",

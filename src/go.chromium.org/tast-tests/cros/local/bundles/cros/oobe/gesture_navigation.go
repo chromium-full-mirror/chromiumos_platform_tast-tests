@@ -18,9 +18,8 @@ import (
 
 func init() {
 	testing.AddTest(&testing.Test{
-		Func:         GestureNavigation,
-		LacrosStatus: testing.LacrosVariantUnneeded,
-		Desc:         "Test whether we show gesture navigation screens for a new users",
+		Func: GestureNavigation,
+		Desc: "Test whether we show gesture navigation screens for a new users",
 		Contacts: []string{
 			"cros-oobe@google.com",
 			"chromeos-consumer-engprod@google.com",

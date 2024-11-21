@@ -21,9 +21,8 @@ import (
 
 func init() {
 	testing.AddTest(&testing.Test{
-		Func:         SelectKeyboardBacklight,
-		LacrosStatus: testing.LacrosVariantUnneeded,
-		Desc:         "Test selecting keyboard backlight color in personalization hub app",
+		Func: SelectKeyboardBacklight,
+		Desc: "Test selecting keyboard backlight color in personalization hub app",
 		Contacts: []string{
 			"cros-p13n-eng@google.com",
 			"chromeos-consumer-engprod@google.com",

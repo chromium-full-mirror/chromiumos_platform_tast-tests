@@ -23,9 +23,8 @@ import (
 
 func init() {
 	testing.AddTest(&testing.Test{
-		Func:         PerfETM,
-		LacrosStatus: testing.LacrosVariantUnneeded,
-		Desc:         "Verify ETM functionality with the perf tool",
+		Func: PerfETM,
+		Desc: "Verify ETM functionality with the perf tool",
 		Contacts: []string{
 			"c-compiler-chrome@google.com",
 			"denik@chromium.org",

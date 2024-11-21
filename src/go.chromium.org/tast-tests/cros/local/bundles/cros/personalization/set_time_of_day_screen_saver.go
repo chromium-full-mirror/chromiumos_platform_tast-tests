@@ -20,9 +20,8 @@ import (
 
 func init() {
 	testing.AddTest(&testing.Test{
-		Func:         SetTimeOfDayScreenSaver,
-		LacrosStatus: testing.LacrosVariantUnneeded,
-		Desc:         "Test setting screen saver video and starting playback",
+		Func: SetTimeOfDayScreenSaver,
+		Desc: "Test setting screen saver video and starting playback",
 		Contacts: []string{
 			"cros-p13n-eng@google.com",
 			"chromeos-consumer-engprod@google.com",

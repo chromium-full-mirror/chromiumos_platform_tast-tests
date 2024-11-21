@@ -20,9 +20,8 @@ import (
 
 func init() {
 	testing.AddTest(&testing.Test{
-		Func:         ThemeSelection,
-		LacrosStatus: testing.LacrosVariantUnneeded,
-		Desc:         "Test Theme Selection screen during OOBE to support light/dark/auto themes",
+		Func: ThemeSelection,
+		Desc: "Test Theme Selection screen during OOBE to support light/dark/auto themes",
 		Contacts: []string{
 			"cros-oobe@google.com",
 			"chromeos-consumer-engprod@google.com",

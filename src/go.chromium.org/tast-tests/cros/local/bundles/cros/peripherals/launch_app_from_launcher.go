@@ -20,15 +20,14 @@ import (
 
 // testParams contains all the data needed to run a single test iteration.
 type testParams struct {
-	app         apps.App
-	query       string
+	app   apps.App
+	query string
 }
 
 func init() {
 	testing.AddTest(&testing.Test{
-		Func:         LaunchAppFromLauncher,
-		LacrosStatus: testing.LacrosVariantUnneeded,
-		Desc:         "Peripherals app can be found and launched from the launcher",
+		Func: LaunchAppFromLauncher,
+		Desc: "Peripherals app can be found and launched from the launcher",
 		Contacts: []string{
 			"cros-device-enablement@google.com",
 			"michaelcheco@google.com",

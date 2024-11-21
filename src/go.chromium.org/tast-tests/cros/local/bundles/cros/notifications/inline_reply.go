@@ -27,7 +27,6 @@ func init() {
 	testing.AddTest(&testing.Test{
 		Func:           InlineReply,
 		LifeCycleStage: testing.LifeCycleOwnerMonitored,
-		LacrosStatus:   testing.LacrosVariantUnneeded,
 		Desc:           "Verify inline reply for Chrome notification works",
 		Contacts: []string{
 			"cros-status-area-eng@google.com",

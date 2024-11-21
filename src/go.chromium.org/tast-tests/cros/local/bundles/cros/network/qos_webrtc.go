@@ -34,7 +34,6 @@ func init() {
 		// crrev.com/c/5119091 is in the kernel upstream branch.
 		SoftwareDeps: []string{"bpf", "wifi", "chrome", "no_chrome_dcheck", "no_kernel_upstream"},
 		Data:         webrtc.TestFiles(),
-		LacrosStatus: testing.LacrosVariantUnneeded,
 		Timeout:      5 * time.Minute, // need to start Chrome in the test
 	})
 }

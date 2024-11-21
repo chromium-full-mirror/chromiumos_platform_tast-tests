@@ -35,9 +35,8 @@ type healthCaptivePortalHTTPParams struct {
 
 func init() {
 	testing.AddTest(&testing.Test{
-		Func:         HealthCaptivePortalHTTP,
-		LacrosStatus: testing.LacrosVariantNeeded,
-		Desc:         "Ensures that captive portal-related Service state changes are propogated to the Networks obtained by the NetworkHealth API",
+		Func: HealthCaptivePortalHTTP,
+		Desc: "Ensures that captive portal-related Service state changes are propogated to the Networks obtained by the NetworkHealth API",
 		Contacts: []string{
 			"cros-network-health-team@google.com", // network-health team
 			"khegde@chromium.org",                 // test maintainer

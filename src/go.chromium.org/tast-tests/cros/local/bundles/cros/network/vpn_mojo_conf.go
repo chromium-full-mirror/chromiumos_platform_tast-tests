@@ -19,7 +19,6 @@ import (
 func init() {
 	testing.AddTest(&testing.Test{
 		Func:         VPNMojoConf,
-		LacrosStatus: testing.LacrosVariantUnneeded,
 		Desc:         "Test that VPN can correctly be configured through Chrome mojo API",
 		Contacts:     []string{"cros-networking@google.com", "taoyl@google.com"},
 		BugComponent: "b:1493959",

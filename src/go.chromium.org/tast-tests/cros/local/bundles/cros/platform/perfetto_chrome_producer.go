@@ -24,9 +24,8 @@ import (
 
 func init() {
 	testing.AddTest(&testing.Test{
-		Func:         PerfettoChromeProducer,
-		LacrosStatus: testing.LacrosVariantUnneeded,
-		Desc:         "Tests Chrome connecting to the Perfetto system tracing service",
+		Func: PerfettoChromeProducer,
+		Desc: "Tests Chrome connecting to the Perfetto system tracing service",
 		Contacts: []string{
 			"baseos-perf@google.com",
 			"chinglinyu@chromium.org",

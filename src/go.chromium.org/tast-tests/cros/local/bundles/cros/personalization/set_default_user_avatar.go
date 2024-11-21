@@ -22,9 +22,8 @@ import (
 
 func init() {
 	testing.AddTest(&testing.Test{
-		Func:         SetDefaultUserAvatar,
-		LacrosStatus: testing.LacrosVariantUnneeded,
-		Desc:         "Test setting default user avatar in the personalization hub app",
+		Func: SetDefaultUserAvatar,
+		Desc: "Test setting default user avatar in the personalization hub app",
 		Contacts: []string{
 			"cros-p13n-eng@google.com",
 			"chromeos-consumer-engprod@google.com",

@@ -19,9 +19,8 @@ import (
 
 func init() {
 	testing.AddTest(&testing.Test{
-		Func:         ArcVpnVmmSwap,
-		LacrosStatus: testing.LacrosVariantUnneeded,
-		Desc:         "Test that vmm-swap doesn't interfere with Android VPNs",
+		Func: ArcVpnVmmSwap,
+		Desc: "Test that vmm-swap doesn't interfere with Android VPNs",
 		Contacts: []string{
 			"cros-vm-technology@google.com",
 			"kawasin@google.com",

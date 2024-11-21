@@ -19,7 +19,6 @@ import (
 func init() {
 	testing.AddTest(&testing.Test{
 		Func:         ConfigureServiceForUserProfile,
-		LacrosStatus: testing.LacrosVariantUnneeded,
 		Desc:         "Checks that we can configure a WiFi network for a user profile (guest or normal)",
 		BugComponent: "b:1493959",
 		Contacts: []string{

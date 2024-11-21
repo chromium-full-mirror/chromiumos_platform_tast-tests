@@ -42,10 +42,9 @@ type routerServerWrapper struct {
 
 func init() {
 	testing.AddTest(&testing.Test{
-		Func:         ARCMultiNetworking,
-		LacrosStatus: testing.LacrosVariantUnneeded,
-		Desc:         "Verifies guest network connectivity upon physical interface change",
-		Contacts:     []string{"cros-networking@google.com", "ningyuan@google.com"},
+		Func:     ARCMultiNetworking,
+		Desc:     "Verifies guest network connectivity upon physical interface change",
+		Contacts: []string{"cros-networking@google.com", "ningyuan@google.com"},
 		// ChromeOS > Platform > System > Networking > Continuous Maintenance
 		BugComponent: "b:1493959",
 		// TODO(b/331845752): Promote to criticalstaging and CQ after $BUG is fixed.

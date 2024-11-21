@@ -28,9 +28,8 @@ import (
 
 func init() {
 	testing.AddTest(&testing.Test{
-		Func:         DeletePrintJobHistoryAllowed,
-		LacrosStatus: testing.LacrosVariantUnneeded,
-		Desc:         "Behavior of DeletePrintJobHistoryAllowed policy, checking the corresponding button state after setting the policy",
+		Func: DeletePrintJobHistoryAllowed,
+		Desc: "Behavior of DeletePrintJobHistoryAllowed policy, checking the corresponding button state after setting the policy",
 		Contacts: []string{
 			"cros-device-enablement@google.com",
 			"gavinwill@google.com",

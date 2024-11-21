@@ -20,7 +20,6 @@ import (
 func init() {
 	testing.AddTest(&testing.Test{
 		Func:           LocatePhone,
-		LacrosStatus:   testing.LacrosVariantUnneeded,
 		LifeCycleStage: testing.LifeCycleOwnerMonitored,
 		Desc:           "Checks that toggling Phone Hub's \"Locate phone\" pod will toggle the ringer on the Android phone",
 		Contacts: []string{
