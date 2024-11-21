@@ -125,6 +125,24 @@ func UpdateKernelDataKeyVersion(ctx context.Context, s *testing.State) {
 		}
 	}(cleanupContext)
 
+	// Make sure we start with a deterministic state so we don't have a situation where
+	// KERN-B is not bootable, additionally boot to both copies to make sure they are bootable.
+	if _, err := h.KernelServiceClient.EnsureBothKernelCopiesBootable(ctx, &empty.Empty{}); err != nil {
+		s.Fatal("Failed to ensure both kernel copies are bootable: ", err)
+	}
+	if err := coldResetToKernelPartition(ctx, h, ms, &pb.Partition{
+		Name: pb.PartitionName_KERNEL,
+		Copy: pb.PartitionCopy_B,
+	}); err != nil {
+		s.Fatal("Failed to prioritize KERN-B: ", err)
+	}
+	if err := coldResetToKernelPartition(ctx, h, ms, &pb.Partition{
+		Name: pb.PartitionName_KERNEL,
+		Copy: pb.PartitionCopy_A,
+	}); err != nil {
+		s.Fatal("Failed to prioritize KERN-A: ", err)
+	}
+
 	s.Log("Getting original data key version of KERN-B")
 	initVersion, err := h.KernelServiceClient.GetKernelVersion(ctx, &pb.Partition{
 		Copy: pb.PartitionCopy_B,
@@ -143,15 +161,8 @@ func UpdateKernelDataKeyVersion(ctx context.Context, s *testing.State) {
 		Copy:           pb.PartitionCopy_B,
 	}
 	s.Log("Setting data key version of KERN-B to ", newVersion.DataKeyVersion)
-
 	if _, err := h.KernelServiceClient.EnsureBothKernelCopiesBootable(ctx, &empty.Empty{}); err != nil {
 		s.Fatal("Failed to ensure both kernel copies are bootable: ", err)
-	}
-	if err := coldResetToKernelPartition(ctx, h, ms, &pb.Partition{
-		Name: pb.PartitionName_KERNEL,
-		Copy: pb.PartitionCopy_A,
-	}); err != nil {
-		s.Fatal("Failed to prioritize KERN-A: ", err)
 	}
 
 	s.Log("Preparing the key files that are going to be resigned")
@@ -170,7 +181,6 @@ func UpdateKernelDataKeyVersion(ctx context.Context, s *testing.State) {
 	if err := resignKernelBWithKeys(ctx, h, keysDir); err != nil {
 		s.Fatal("Fail to resign KERN-B to new version: ", err)
 	}
-
 	s.Log("Prioritizing KERN-B to verify the update was successful")
 	if _, err := h.KernelServiceClient.SetBothKernelBootable(ctx, &empty.Empty{}); err != nil {
 		s.Fatal("Failed to set both kernel copies to bootable: ", err)
