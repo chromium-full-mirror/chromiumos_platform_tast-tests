@@ -22,9 +22,8 @@ import (
 
 func init() {
 	testing.AddTest(&testing.Test{
-		Func:         AppFirefoxEmoji,
-		LacrosStatus: testing.LacrosVariantUnneeded,
-		Desc:         "Open a test webpage with an input box in Firefox and test input with emoji keyboard",
+		Func: AppFirefoxEmoji,
+		Desc: "Open a test webpage with an input box in Firefox and test input with emoji keyboard",
 		Contacts: []string{
 			"essential-inputs-gardener-oncall@google.com",
 			"essential-inputs-team@google.com",

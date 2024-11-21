@@ -58,7 +58,6 @@ var (
 func init() {
 	testing.AddTest(&testing.Test{
 		Func:         CheckUsers,
-		LacrosStatus: testing.LacrosVariantUnneeded,
 		Desc:         "Test the installation could not proceed with invalid user",
 		Contacts:     []string{"clumptini+oncall@google.com"},
 		Attr:         []string{"group:mainline", "group:crostini_slow", "group:sw_gates_virt", "sw_gates_virt_enabled"},

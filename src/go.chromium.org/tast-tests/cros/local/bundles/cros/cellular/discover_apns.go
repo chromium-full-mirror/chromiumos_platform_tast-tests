@@ -24,9 +24,8 @@ import (
 
 func init() {
 	testing.AddTest(&testing.Test{
-		Func:         DiscoverApns,
-		LacrosStatus: testing.LacrosVariantUnneeded,
-		Desc:         "Tests the correct connect behavior for adding known APNs",
+		Func: DiscoverApns,
+		Desc: "Tests the correct connect behavior for adding known APNs",
 		Contacts: []string{
 			"alfredyu@cienet.com",
 			"chromeos-connectivity-cienet-external@google.com",

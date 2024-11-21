@@ -17,7 +17,6 @@ import (
 func init() {
 	testing.AddTest(&testing.Test{
 		Func:         SharedFontFiles,
-		LacrosStatus: testing.LacrosVariantUnneeded,
 		Desc:         "Checks that the hostOS font files are shared with the guestOS and they are accessible",
 		Contacts:     []string{"clumptini+oncall@google.com"},
 		Attr:         []string{"group:mainline"},

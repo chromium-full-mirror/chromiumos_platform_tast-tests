@@ -33,9 +33,8 @@ type installESIMProfilesOnManagedDeviceTestConfig struct {
 
 func init() {
 	testing.AddTest(&testing.Test{
-		Func:         InstallESIMProfilesOnManagedDevice,
-		LacrosStatus: testing.LacrosVariantUnneeded,
-		Desc:         "Test that managed eSIM profile can be installed from device policy via the esim_manager Mojo API",
+		Func: InstallESIMProfilesOnManagedDevice,
+		Desc: "Test that managed eSIM profile can be installed from device policy via the esim_manager Mojo API",
 		Contacts: []string{
 			"cros-device-enablement@google.com",
 			"chadduffin@google.com",

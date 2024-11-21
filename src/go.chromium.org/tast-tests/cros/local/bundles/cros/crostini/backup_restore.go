@@ -24,7 +24,6 @@ import (
 func init() {
 	testing.AddTest(&testing.Test{
 		Func:         BackupRestore,
-		LacrosStatus: testing.LacrosVariantUnneeded,
 		Desc:         "Checks crostini backup and restore",
 		Contacts:     []string{"clumptini+oncall@google.com"},
 		Attr:         []string{"group:mainline", "group:crostini_slow"},

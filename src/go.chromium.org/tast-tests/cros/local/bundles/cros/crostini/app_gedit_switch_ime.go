@@ -28,9 +28,8 @@ import (
 
 func init() {
 	testing.AddTest(&testing.Test{
-		Func:         AppGeditSwitchIME,
-		LacrosStatus: testing.LacrosVariantUnneeded,
-		Desc:         "Verify that users can type and view characters on switching input methods in one app",
+		Func: AppGeditSwitchIME,
+		Desc: "Verify that users can type and view characters on switching input methods in one app",
 		Contacts: []string{
 			"essential-inputs-gardener-oncall@google.com",
 			"essential-inputs-team@google.com",

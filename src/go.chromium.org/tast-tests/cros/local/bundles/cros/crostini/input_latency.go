@@ -32,7 +32,6 @@ import (
 func init() {
 	testing.AddTest(&testing.Test{
 		Func:         InputLatency,
-		LacrosStatus: testing.LacrosVariantUnneeded,
 		Desc:         "Tests Crostini input latency",
 		Contacts:     []string{"clumptini@google.com", "cylee@chromium.org"},
 		Data:         []string{"input_latency_server.py"},

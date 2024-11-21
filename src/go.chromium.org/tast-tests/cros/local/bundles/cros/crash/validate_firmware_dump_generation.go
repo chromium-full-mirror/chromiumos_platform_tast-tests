@@ -70,9 +70,8 @@ type validateFirmwareDumpGenerationTestCase struct {
 
 func init() {
 	testing.AddTest(&testing.Test{
-		Func:         ValidateFirmwareDumpGeneration,
-		LacrosStatus: testing.LacrosVariantUnneeded,
-		Desc:         "Trigger firmware dump and ensure it exists if allowed by policy",
+		Func: ValidateFirmwareDumpGeneration,
+		Desc: "Trigger firmware dump and ensure it exists if allowed by policy",
 		Contacts: []string{
 			"chromeos-wifi-champs@google.com", // WiFi oncall rotation
 		},

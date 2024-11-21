@@ -19,7 +19,6 @@ import (
 func init() {
 	testing.AddTest(&testing.Test{
 		Func:         Notify,
-		LacrosStatus: testing.LacrosVariantUnneeded,
 		Desc:         "Tests crostini notification integration",
 		Contacts:     []string{"clumptini+oncall@google.com"},
 		SoftwareDeps: []string{"chrome", "vm_host"},

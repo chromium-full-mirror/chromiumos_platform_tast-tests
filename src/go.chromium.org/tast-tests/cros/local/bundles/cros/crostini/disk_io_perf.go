@@ -33,7 +33,6 @@ func fioFiles() []string {
 func init() {
 	testing.AddTest(&testing.Test{
 		Func:         DiskIOPerf,
-		LacrosStatus: testing.LacrosVariantUnneeded,
 		Desc:         "Tests Crostini Disk IO Performance",
 		Contacts:     []string{"clumptini+oncall@google.com"},
 		Data:         fioFiles(),

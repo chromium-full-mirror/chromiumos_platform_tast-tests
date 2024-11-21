@@ -24,7 +24,6 @@ import (
 func init() {
 	testing.AddTest(&testing.Test{
 		Func:         CloseTerminalTabsAndWindow,
-		LacrosStatus: testing.LacrosVariantUnneeded,
 		Desc:         "Test to open and close tabs in Terminal window",
 		Contacts:     []string{"clumptini+oncall@google.com"},
 		Attr:         []string{"group:mainline", "informational"},

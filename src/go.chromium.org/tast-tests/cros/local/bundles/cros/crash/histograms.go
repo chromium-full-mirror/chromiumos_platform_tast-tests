@@ -22,7 +22,6 @@ import (
 func init() {
 	testing.AddTest(&testing.Test{
 		Func:         Histograms,
-		LacrosStatus: testing.LacrosVariantUnneeded,
 		Desc:         "Checks that the client computed crash severity and product group data are being reported to the appropriate UMA histogram",
 		Contacts:     []string{"chromeos-data-eng@google.com"},
 		BugComponent: "b:1032705",

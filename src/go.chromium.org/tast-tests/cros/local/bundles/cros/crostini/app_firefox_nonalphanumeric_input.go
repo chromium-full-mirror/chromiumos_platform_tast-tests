@@ -22,7 +22,6 @@ import (
 func init() {
 	testing.AddTest(&testing.Test{
 		Func:         AppFirefoxNonalphanumericInput,
-		LacrosStatus: testing.LacrosVariantUnneeded,
 		Desc:         "Verify non-alphanumeric keys (tab, ctrl+c, ctrl+v, arrows, backspace and enter) work in firefox test webpage",
 		Contacts:     []string{"clumptini@google.com"},
 		Attr:         []string{"group:mainline", "group:crostini_app_cq"},

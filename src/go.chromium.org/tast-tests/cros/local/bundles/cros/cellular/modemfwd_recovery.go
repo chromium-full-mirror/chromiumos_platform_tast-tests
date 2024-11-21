@@ -28,7 +28,6 @@ type recoveryTestParams struct {
 func init() {
 	testing.AddTest(&testing.Test{
 		Func:         ModemfwdRecovery,
-		LacrosStatus: testing.LacrosVariantUnneeded,
 		Desc:         "Verifies that modemfwd's recovery mechanism works properly",
 		Contacts:     []string{"chromeos-cellular-team@google.com", "danielwinkler@google.com"},
 		BugComponent: "b:167157", // ChromeOS > Platform > Connectivity > Cellular

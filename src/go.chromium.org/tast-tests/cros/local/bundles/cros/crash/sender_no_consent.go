@@ -15,9 +15,8 @@ import (
 
 func init() {
 	testing.AddTest(&testing.Test{
-		Func:         SenderNoConsent,
-		LacrosStatus: testing.LacrosVariantUnneeded,
-		Desc:         "Check that crashes are not uploaded without consent",
+		Func: SenderNoConsent,
+		Desc: "Check that crashes are not uploaded without consent",
 		Contacts: []string{
 			"chromeos-data-eng@google.com",
 			"troywang@google.com",

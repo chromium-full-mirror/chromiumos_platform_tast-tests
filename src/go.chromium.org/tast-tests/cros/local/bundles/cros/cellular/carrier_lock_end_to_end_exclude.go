@@ -21,7 +21,6 @@ func init() {
 	testing.AddTest(&testing.Test{
 		Func:           CarrierLockEndToEndExclude,
 		LifeCycleStage: testing.LifeCycleOwnerMonitored,
-		LacrosStatus:   testing.LacrosVariantUnneeded,
 		Desc:           "Verifies that carriers excluded by carrier lock config does not connect",
 		Contacts:       []string{"ujjwalpande@google.com", "chromeos-cellular-team@google.com"},
 		BugComponent:   "b:167157", // ChromeOS > Platform > Connectivity > Cellular

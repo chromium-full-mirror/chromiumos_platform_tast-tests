@@ -25,7 +25,6 @@ import (
 func init() {
 	testing.AddTest(&testing.Test{
 		Func:         ShareFilesToast,
-		LacrosStatus: testing.LacrosVariantUnneeded,
 		Desc:         "Test sharing My files with Crostini and clicking Manage on toast nofication",
 		Contacts:     []string{"clumptini+oncall@google.com"},
 		Attr:         []string{"group:mainline"},

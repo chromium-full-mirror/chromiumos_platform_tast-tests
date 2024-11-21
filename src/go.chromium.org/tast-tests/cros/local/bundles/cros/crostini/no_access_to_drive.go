@@ -21,7 +21,6 @@ import (
 func init() {
 	testing.AddTest(&testing.Test{
 		Func:         NoAccessToDrive,
-		LacrosStatus: testing.LacrosVariantUnneeded,
 		Desc:         "Run a test to make sure crostini does not have access to GoogleDrive",
 		Contacts:     []string{"clumptini+oncall@google.com"},
 		Attr:         []string{"group:mainline"},

@@ -24,7 +24,6 @@ import (
 func init() {
 	testing.AddTest(&testing.Test{
 		Func:         SelinuxViolation,
-		LacrosStatus: testing.LacrosVariantUnneeded,
 		Desc:         "Verify selinux violations are logged as expected",
 		Contacts:     []string{"chromeos-data-eng@google.com", "enlightened@chromium.org"},
 		BugComponent: "b:1032705",

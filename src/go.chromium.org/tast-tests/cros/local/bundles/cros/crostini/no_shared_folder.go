@@ -18,7 +18,6 @@ import (
 func init() {
 	testing.AddTest(&testing.Test{
 		Func:         NoSharedFolder,
-		LacrosStatus: testing.LacrosVariantUnneeded,
 		Desc:         "Test shared folder list in Settings app when there is no folder shared",
 		Contacts:     []string{"clumptini+oncall@google.com"},
 		Attr:         []string{"group:mainline"},

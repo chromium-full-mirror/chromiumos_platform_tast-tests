@@ -27,7 +27,6 @@ func init() {
 	testing.AddTest(&testing.Test{
 		Func:           ShillSuspendResumeAutoconnect,
 		LifeCycleStage: testing.LifeCycleOwnerMonitored,
-		LacrosStatus:   testing.LacrosVariantUnneeded,
 		Desc:           "Verifies that cellular maintains autoconnect state around Suspend/Resume",
 		Contacts:       []string{"chromeos-cellular-team@google.com", "danielwinkler@google.com"},
 		BugComponent:   "b:167157", // ChromeOS > Platform > Connectivity > Cellular

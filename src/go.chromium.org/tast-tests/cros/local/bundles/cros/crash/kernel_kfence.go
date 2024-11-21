@@ -19,7 +19,6 @@ import (
 func init() {
 	testing.AddTest(&testing.Test{
 		Func:         KernelKfence,
-		LacrosStatus: testing.LacrosVariantUnneeded,
 		Desc:         "Verify kernel kfence errors are logged as expected",
 		Contacts:     []string{"chromeos-data-eng@google.com", "dianders@chromium.org", "swboyd@chromium.org"},
 		BugComponent: "b:1032705",

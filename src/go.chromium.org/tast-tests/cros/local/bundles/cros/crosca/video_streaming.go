@@ -73,7 +73,6 @@ var manualPowerMeasurementVarString = testing.RegisterVarString(
 func init() {
 	testing.AddTest(&testing.Test{
 		Func:         VideoStreaming,
-		LacrosStatus: testing.LacrosVariantUnneeded,
 		Desc:         "A test case that plays the crosvideo use H264 decoding 60fps",
 		Contacts:     []string{"chromeos-competitive-analysis@google.com", "williskung@google.com"},
 		BugComponent: "b:1025042", // ChromeOS > EngProd > Platform > crosca > Automation

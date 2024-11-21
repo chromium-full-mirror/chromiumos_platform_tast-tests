@@ -40,9 +40,8 @@ const (
 
 func init() {
 	testing.AddTest(&testing.Test{
-		Func:         OOMEvent,
-		LacrosStatus: testing.LacrosVariantUnneeded,
-		Desc:         "Check that OOM kill by kernel is detected correctly",
+		Func: OOMEvent,
+		Desc: "Check that OOM kill by kernel is detected correctly",
 		Contacts: []string{
 			"clumptini+oncall@google.com",
 			// Crosvm

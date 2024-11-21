@@ -30,9 +30,8 @@ import (
 
 func init() {
 	testing.AddTest(&testing.Test{
-		Func:         SimLockPolicyLockSettingOff,
-		LacrosStatus: testing.LacrosVariantUnneeded,
-		Desc:         "Test that SIM PIN locking is disabled when the SIM lock policy is applied",
+		Func: SimLockPolicyLockSettingOff,
+		Desc: "Test that SIM PIN locking is disabled when the SIM lock policy is applied",
 		Contacts: []string{
 			"cros-device-enablement@google.com",
 			"chromeos-connectivity-engprod@google.com",

@@ -21,7 +21,6 @@ import (
 func init() {
 	testing.AddTest(&testing.Test{
 		Func:         KernelWarning,
-		LacrosStatus: testing.LacrosVariantUnneeded,
 		Desc:         "Verify kernel warnings are logged as expected",
 		Contacts:     []string{"chromeos-data-eng@google.com", "swboyd@chromium.org", "dianders@chromium.org"},
 		BugComponent: "b:1032705",

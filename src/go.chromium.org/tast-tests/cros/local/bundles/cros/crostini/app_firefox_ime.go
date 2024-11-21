@@ -26,9 +26,8 @@ import (
 
 func init() {
 	testing.AddTest(&testing.Test{
-		Func:         AppFirefoxIME,
-		LacrosStatus: testing.LacrosVariantUnneeded,
-		Desc:         "Open a test webpage with an input box in Firefox and test IME inputs",
+		Func: AppFirefoxIME,
+		Desc: "Open a test webpage with an input box in Firefox and test IME inputs",
 		Contacts: []string{
 			"essential-inputs-gardener-oncall@google.com",
 			"essential-inputs-team@google.com",

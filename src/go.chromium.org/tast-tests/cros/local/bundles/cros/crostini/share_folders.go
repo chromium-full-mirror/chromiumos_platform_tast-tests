@@ -28,7 +28,6 @@ import (
 func init() {
 	testing.AddTest(&testing.Test{
 		Func:         ShareFolders,
-		LacrosStatus: testing.LacrosVariantUnneeded,
 		Desc:         "Test sharing folders with Crostini",
 		Contacts:     []string{"clumptini+oncall@google.com"},
 		Attr:         []string{"group:mainline"},

@@ -20,7 +20,6 @@ import (
 func init() {
 	testing.AddTest(&testing.Test{
 		Func:         IconAndUsername,
-		LacrosStatus: testing.LacrosVariantUnneeded,
 		Desc:         "Test Terminal icon on shelf and username in Terminal window",
 		Contacts:     []string{"clumptini@google.com"},
 		Attr:         []string{"group:mainline", "informational"},

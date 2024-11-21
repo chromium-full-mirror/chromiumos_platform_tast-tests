@@ -22,7 +22,6 @@ import (
 func init() {
 	testing.AddTest(&testing.Test{
 		Func:         ModemPowerOffVerification,
-		LacrosStatus: testing.LacrosVariantUnneeded,
 		Desc:         "Verifies that modem can be powered off and then on properly",
 		Contacts:     []string{"cros-cellular-core@google.com", "rmao@google.com"},
 		BugComponent: "b:167157", // ChromeOS > Platform > Connectivity > Cellular

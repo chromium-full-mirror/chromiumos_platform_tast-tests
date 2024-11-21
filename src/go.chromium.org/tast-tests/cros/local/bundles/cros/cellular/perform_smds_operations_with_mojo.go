@@ -23,9 +23,8 @@ type testConfig struct {
 
 func init() {
 	testing.AddTest(&testing.Test{
-		Func:         PerformSmdsOperationsWithMojo,
-		LacrosStatus: testing.LacrosVariantUnneeded,
-		Desc:         "Ensures that eSIM operations work with a Stork server when accessed via Mojo",
+		Func: PerformSmdsOperationsWithMojo,
+		Desc: "Ensures that eSIM operations work with a Stork server when accessed via Mojo",
 		Contacts: []string{
 			"cros-device-enablement@google.com",
 			"chromeos-connectivity-engprod@google.com",

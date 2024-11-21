@@ -23,7 +23,6 @@ import (
 func init() {
 	testing.AddTest(&testing.Test{
 		Func:         AppAudacity,
-		LacrosStatus: testing.LacrosVariantUnneeded,
 		Desc:         "Opens Audacity from launcher",
 		Contacts:     []string{"clumptini+oncall@google.com"},
 		Attr:         []string{"group:mainline", "group:crostini_app_cq"},

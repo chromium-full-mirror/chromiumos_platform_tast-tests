@@ -24,7 +24,6 @@ import (
 func init() {
 	testing.AddTest(&testing.Test{
 		Func:         AppEclipse,
-		LacrosStatus: testing.LacrosVariantUnneeded,
 		Desc:         "Verifies Eclipse can be launched from terminal",
 		Contacts:     []string{"clumptini+oncall@google.com"},
 		Attr:         []string{"group:mainline", "group:crostini_app_cq"},

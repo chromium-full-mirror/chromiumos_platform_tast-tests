@@ -27,9 +27,8 @@ type generateMeetCodeTest struct {
 
 func init() {
 	testing.AddTest(&testing.Test{
-		Func:         GenerateMeetCode,
-		LacrosStatus: testing.LacrosVariantUnneeded,
-		Desc:         "Host a Google Meet video conference and type in the chat window",
+		Func: GenerateMeetCode,
+		Desc: "Host a Google Meet video conference and type in the chat window",
 		Contacts: []string{
 			"chromeos-competitive-analysis@google.com",
 			"williskung@google.com",

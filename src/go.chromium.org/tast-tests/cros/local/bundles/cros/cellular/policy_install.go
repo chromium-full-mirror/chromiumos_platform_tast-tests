@@ -29,9 +29,8 @@ import (
 
 func init() {
 	testing.AddTest(&testing.Test{
-		Func:         PolicyInstall,
-		LacrosStatus: testing.LacrosVariantUnneeded,
-		Desc:         "Test that managed eSIM profile can correctly be installed from device policy and the profile can not be removed or renamed",
+		Func: PolicyInstall,
+		Desc: "Test that managed eSIM profile can correctly be installed from device policy and the profile can not be removed or renamed",
 		Contacts: []string{
 			"alfredyu@cienet.com",
 			"chromeos-connectivity-cienet-external@google.com",

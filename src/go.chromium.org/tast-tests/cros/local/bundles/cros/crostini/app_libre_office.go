@@ -28,7 +28,6 @@ import (
 func init() {
 	testing.AddTest(&testing.Test{
 		Func:         AppLibreOffice,
-		LacrosStatus: testing.LacrosVariantUnneeded,
 		Desc:         "Opens LibreOffice Writer from launcher",
 		Contacts:     []string{"clumptini+oncall@google.com"},
 		Attr:         []string{"group:mainline", "group:crostini_app_cq"},

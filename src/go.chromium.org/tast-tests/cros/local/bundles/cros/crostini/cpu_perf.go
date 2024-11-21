@@ -28,7 +28,6 @@ import (
 func init() {
 	testing.AddTest(&testing.Test{
 		Func:         CPUPerf,
-		LacrosStatus: testing.LacrosVariantUnneeded,
 		Desc:         "Tests Crostini CPU performance",
 		Contacts:     []string{"clumptini@google.com", "cylee@chromium.org"},
 		Attr:         []string{"group:crosbolt", "crosbolt_perbuild", "group:sw_gates_virt", "sw_gates_virt_enabled"},

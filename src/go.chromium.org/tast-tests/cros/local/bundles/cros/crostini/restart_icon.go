@@ -18,7 +18,6 @@ import (
 func init() {
 	testing.AddTest(&testing.Test{
 		Func:         RestartIcon,
-		LacrosStatus: testing.LacrosVariantUnneeded,
 		Desc:         "Tests that we can shut down and restart crostini through clicking the Terminal icon on launcher",
 		Contacts:     []string{"clumptini+oncall@google.com"},
 		Attr:         []string{"group:mainline"},

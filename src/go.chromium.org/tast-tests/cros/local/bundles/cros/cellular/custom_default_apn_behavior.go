@@ -23,9 +23,8 @@ import (
 
 func init() {
 	testing.AddTest(&testing.Test{
-		Func:         CustomDefaultApnBehavior,
-		LacrosStatus: testing.LacrosVariantUnneeded,
-		Desc:         "Tests the correct connect behavior for a custom default APN",
+		Func: CustomDefaultApnBehavior,
+		Desc: "Tests the correct connect behavior for a custom default APN",
 		Contacts: []string{
 			"alfredyu@cienet.com",
 			"chromeos-connectivity-cienet-external@google.com",

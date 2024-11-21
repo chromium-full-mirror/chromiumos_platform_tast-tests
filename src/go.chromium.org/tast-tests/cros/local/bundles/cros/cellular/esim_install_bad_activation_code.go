@@ -22,9 +22,8 @@ import (
 
 func init() {
 	testing.AddTest(&testing.Test{
-		Func:         ESimInstallBadActivationCode,
-		LacrosStatus: testing.LacrosVariantUnneeded,
-		Desc:         "Tests the add eSIM profile via activation code flow in the success and failure cases",
+		Func: ESimInstallBadActivationCode,
+		Desc: "Tests the add eSIM profile via activation code flow in the success and failure cases",
 		Contacts: []string{
 			"cros-device-enablement@google.com",
 			"hsuregan@google.com",

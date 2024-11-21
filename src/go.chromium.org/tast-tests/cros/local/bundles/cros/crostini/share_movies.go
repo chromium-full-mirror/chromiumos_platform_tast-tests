@@ -27,7 +27,6 @@ import (
 func init() {
 	testing.AddTest(&testing.Test{
 		Func:         ShareMovies,
-		LacrosStatus: testing.LacrosVariantUnneeded,
 		Desc:         "Test sharing Play files > Movies with Crostini",
 		Contacts:     []string{"clumptini+oncall@google.com"},
 		Attr:         []string{"group:mainline"},

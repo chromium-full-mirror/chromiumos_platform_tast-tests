@@ -21,7 +21,6 @@ import (
 func init() {
 	testing.AddTest(&testing.Test{
 		Func:         ResizeSpaceConstrained,
-		LacrosStatus: testing.LacrosVariantUnneeded,
 		Desc:         "Test resizing disk of Crostini from the Settings with constrained host disk space",
 		Contacts:     []string{"clumptini+oncall@google.com", "nverne@google.com"},
 		Attr:         []string{"group:mainline"},

@@ -19,7 +19,6 @@ import (
 func init() {
 	testing.AddTest(&testing.Test{
 		Func:         HomeDirectoryShare,
-		LacrosStatus: testing.LacrosVariantUnneeded,
 		Desc:         "Test sharing the VM home directory with the Files app",
 		Contacts:     []string{"clumptini+oncall@google.com"},
 		Attr:         []string{"group:mainline"},

@@ -24,7 +24,6 @@ const (
 func init() {
 	testing.AddTest(&testing.Test{
 		Func:         Consent,
-		LacrosStatus: testing.LacrosVariantUnneeded,
 		Desc:         "Verify consent can be set and unset",
 		Contacts:     []string{"chromeos-data-eng@google.com", "troywang@google.com"},
 		BugComponent: "b:1032705", // ChromeOS > Data > Engineering > Crash Reporting

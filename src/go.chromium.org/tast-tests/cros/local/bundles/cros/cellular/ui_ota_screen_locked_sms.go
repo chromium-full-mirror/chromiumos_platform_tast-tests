@@ -28,7 +28,6 @@ func init() {
 	testing.AddTest(&testing.Test{
 		Func:           UIOtaScreenLockedSms,
 		LifeCycleStage: testing.LifeCycleOwnerMonitored,
-		LacrosStatus:   testing.LacrosVariantUnneeded,
 		Desc:           "Verifies that the UI shows a notification for a received MT SMS after unlocking the screen",
 		Contacts:       []string{"chromeos-cellular-team@google.com", "srikanthkumar@google.com"},
 		BugComponent:   "b:167157", // ChromeOS > Platform > Connectivity > Cellular

@@ -18,9 +18,8 @@ import (
 
 func init() {
 	testing.AddTest(&testing.Test{
-		Func:         SenderDryRun,
-		LacrosStatus: testing.LacrosVariantUnneeded,
-		Desc:         "Basic test to check that dry run mode prints uploads.log entries",
+		Func: SenderDryRun,
+		Desc: "Basic test to check that dry run mode prints uploads.log entries",
 		Contacts: []string{
 			"chromeos-data-eng@google.com",
 			"troywang@google.com",

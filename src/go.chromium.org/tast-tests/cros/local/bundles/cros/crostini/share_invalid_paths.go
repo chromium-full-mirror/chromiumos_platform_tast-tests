@@ -20,7 +20,6 @@ import (
 func init() {
 	testing.AddTest(&testing.Test{
 		Func:         ShareInvalidPaths,
-		LacrosStatus: testing.LacrosVariantUnneeded,
 		Desc:         "Tests that seneschal rejects paths that contain symlinks or point to non-regular files/directories",
 		Contacts:     []string{"clumptini+oncall@google.com"},
 		Attr:         []string{"group:mainline"},

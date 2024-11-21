@@ -18,7 +18,6 @@ import (
 func init() {
 	testing.AddTest(&testing.Test{
 		Func:         GPUEnabled,
-		LacrosStatus: testing.LacrosVariantUnneeded,
 		Desc:         "Tests that Crostini starts with the correct GPU device depending on whether the GPU flag is set or not",
 		Contacts:     []string{"clumptini+oncall@google.com"},
 		Attr:         []string{"group:mainline"},

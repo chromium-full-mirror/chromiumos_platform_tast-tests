@@ -20,7 +20,6 @@ import (
 func init() {
 	testing.AddTest(&testing.Test{
 		Func:         RemoveOk,
-		LacrosStatus: testing.LacrosVariantUnneeded,
 		Desc:         "Test uninstalling Crostini via the Settings app",
 		Contacts:     []string{"clumptini+oncall@google.com"},
 		Attr:         []string{"group:mainline"},

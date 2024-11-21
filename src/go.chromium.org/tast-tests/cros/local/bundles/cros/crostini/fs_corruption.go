@@ -48,9 +48,8 @@ const (
 
 func init() {
 	testing.AddTest(&testing.Test{
-		Func:         FsCorruption,
-		LacrosStatus: testing.LacrosVariantUnneeded,
-		Desc:         "Check that fs corruption is detected correctly",
+		Func: FsCorruption,
+		Desc: "Check that fs corruption is detected correctly",
 		Contacts: []string{
 			// Crostini
 			"clumptini+oncall@google.com",

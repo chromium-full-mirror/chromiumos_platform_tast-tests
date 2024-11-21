@@ -40,9 +40,8 @@ const (
 
 func init() {
 	testing.AddTest(&testing.Test{
-		Func:         NativePassmarkCUJ,
-		LacrosStatus: testing.LacrosVariantUnneeded,
-		Desc:         "Run Passmark natively to test device performance",
+		Func: NativePassmarkCUJ,
+		Desc: "Run Passmark natively to test device performance",
 		Contacts: []string{
 			"chromeos-competitive-analysis@google.com",
 			"cienet-development@googlegroups.com",

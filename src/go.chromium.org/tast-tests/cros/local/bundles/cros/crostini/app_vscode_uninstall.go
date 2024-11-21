@@ -23,7 +23,6 @@ import (
 func init() {
 	testing.AddTest(&testing.Test{
 		Func:         AppVscodeUninstall,
-		LacrosStatus: testing.LacrosVariantUnneeded,
 		Desc:         "Uninstall in Terminal app",
 		Contacts:     []string{"clumptini+oncall@google.com"},
 		Attr:         []string{"group:mainline", "group:crostini_app_cq"},

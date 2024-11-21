@@ -19,7 +19,6 @@ import (
 func init() {
 	testing.AddTest(&testing.Test{
 		Func:         HostSpeedtest,
-		LacrosStatus: testing.LacrosVariantUnneeded,
 		Desc:         "Runs Speedtest on cellular interface and capture power consumption data",
 		Contacts:     []string{"chromeos-cellular-team@google.com", "madhavadas@google.com", "rmao@google.com"},
 		BugComponent: "b:167157", // ChromeOS > Platform > Connectivity > Cellular

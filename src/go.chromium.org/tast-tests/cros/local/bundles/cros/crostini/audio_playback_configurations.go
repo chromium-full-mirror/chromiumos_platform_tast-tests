@@ -19,7 +19,6 @@ import (
 func init() {
 	testing.AddTest(&testing.Test{
 		Func:         AudioPlaybackConfigurations,
-		LacrosStatus: testing.LacrosVariantUnneeded,
 		Desc:         "Tests different channel number on the container's audio (through alsa) using a pre-built crostini image",
 		Contacts:     []string{"chromeos-audio-bugs@google.com", "clumptini+oncall@google.com", "judyhsiao@chromium.org"},
 		Attr:         []string{"group:mainline", "group:audio"},

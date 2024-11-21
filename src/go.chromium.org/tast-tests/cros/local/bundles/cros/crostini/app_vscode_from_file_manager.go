@@ -22,7 +22,6 @@ import (
 func init() {
 	testing.AddTest(&testing.Test{
 		Func:         AppVscodeFromFileManager,
-		LacrosStatus: testing.LacrosVariantUnneeded,
 		Desc:         "Launches Visual Studio Code from File Manager",
 		Contacts:     []string{"clumptini+oncall@google.com"},
 		Attr:         []string{"group:mainline", "group:crostini_app_cq"},

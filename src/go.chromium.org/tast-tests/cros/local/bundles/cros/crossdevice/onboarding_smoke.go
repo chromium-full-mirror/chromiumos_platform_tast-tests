@@ -14,7 +14,6 @@ import (
 func init() {
 	testing.AddTest(&testing.Test{
 		Func:           OnboardingSmoke,
-		LacrosStatus:   testing.LacrosVariantUnneeded,
 		LifeCycleStage: testing.LifeCycleOwnerMonitored,
 		Desc:           "Runs the cross device onboarding fixture to prevent its failures from failing other tests in the cross device suite",
 		Contacts: []string{

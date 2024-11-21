@@ -43,7 +43,6 @@ type clipboardHistoryTestParam struct {
 func init() {
 	testing.AddTest(&testing.Test{
 		Func:         ContextMenuClipboard,
-		LacrosStatus: testing.LacrosVariantUnneeded,
 		Desc:         "Verifies the clipboard option in the context menu is working properly within several apps by left-clicking an option",
 		BugComponent: "b:1268414", // ChromeOS > Software > System UI Surfaces > EnhancedClipboard
 		Contacts: []string{

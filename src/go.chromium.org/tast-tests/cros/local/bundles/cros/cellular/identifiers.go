@@ -17,7 +17,6 @@ import (
 func init() {
 	testing.AddTest(&testing.Test{
 		Func:         Identifiers,
-		LacrosStatus: testing.LacrosVariantUnneeded,
 		Desc:         "Verifies that a modem returns valid identifiers",
 		Contacts:     []string{"chromeos-cellular-team@google.com", "madhavadas@google.com"},
 		BugComponent: "b:167157", // ChromeOS > Platform > Connectivity > Cellular

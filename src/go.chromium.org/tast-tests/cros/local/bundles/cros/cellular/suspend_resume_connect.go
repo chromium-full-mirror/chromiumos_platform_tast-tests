@@ -26,7 +26,6 @@ import (
 func init() {
 	testing.AddTest(&testing.Test{
 		Func:           SuspendResumeConnect,
-		LacrosStatus:   testing.LacrosVariantUnneeded,
 		LifeCycleStage: testing.LifeCycleInDevelopment,
 		Desc:           "Tests that cellular reconnects after a suspend and resume only when autoconnect is enabled",
 		Contacts: []string{

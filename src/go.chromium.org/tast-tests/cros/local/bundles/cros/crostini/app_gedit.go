@@ -28,7 +28,6 @@ import (
 func init() {
 	testing.AddTest(&testing.Test{
 		Func:         AppGedit,
-		LacrosStatus: testing.LacrosVariantUnneeded,
 		Desc:         "Open Gedit in Terminal and do basic edits",
 		Contacts:     []string{"clumptini+oncall@google.com"},
 		Attr:         []string{"group:mainline", "group:crostini_app_cq"},

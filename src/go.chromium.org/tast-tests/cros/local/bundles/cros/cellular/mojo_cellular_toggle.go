@@ -16,9 +16,8 @@ import (
 
 func init() {
 	testing.AddTest(&testing.Test{
-		Func:         MojoCellularToggle,
-		LacrosStatus: testing.LacrosVariantUnneeded,
-		Desc:         "Enable/disable Cellular service using Mojo and confirms using shill",
+		Func: MojoCellularToggle,
+		Desc: "Enable/disable Cellular service using Mojo and confirms using shill",
 		Contacts: []string{
 			"cros-device-enablement@google.com",
 			"chromeos-connectivity-engprod@google.com",

@@ -23,9 +23,8 @@ import (
 
 func init() {
 	testing.AddTest(&testing.Test{
-		Func:         AppGeditEmoji,
-		LacrosStatus: testing.LacrosVariantUnneeded,
-		Desc:         "Test emoji keyboard input in gedit windows",
+		Func: AppGeditEmoji,
+		Desc: "Test emoji keyboard input in gedit windows",
 		Contacts: []string{
 			"essential-inputs-gardener-oncall@google.com",
 			"essential-inputs-team@google.com",

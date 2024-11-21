@@ -55,7 +55,6 @@ var validUsersMap = map[string][]string{
 func init() {
 	testing.AddTest(&testing.Test{
 		Func:         CheckValidUsers,
-		LacrosStatus: testing.LacrosVariantUnneeded,
 		Desc:         "Test the installation could proceed with valid users",
 		Contacts:     []string{"clumptini+oncall@google.com"},
 		Attr:         []string{"group:mainline", "group:crostini_slow", "group:sw_gates_virt", "sw_gates_virt_enabled"},

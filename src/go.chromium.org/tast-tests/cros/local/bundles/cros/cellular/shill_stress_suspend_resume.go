@@ -19,7 +19,6 @@ func init() {
 	testing.AddTest(&testing.Test{
 		Func:           ShillStressSuspendResume,
 		LifeCycleStage: testing.LifeCycleOwnerMonitored,
-		LacrosStatus:   testing.LacrosVariantUnneeded,
 		Desc:           "Stress test suspend resume, verify modem is in right state after each resume",
 		Contacts:       []string{"chromeos-cellular-team@google.com", "rmao@google.com"},
 		BugComponent:   "b:167157", // ChromeOS > Platform > Connectivity > Cellular

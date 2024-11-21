@@ -17,7 +17,6 @@ import (
 func init() {
 	testing.AddTest(&testing.Test{
 		Func:         PackageInfo,
-		LacrosStatus: testing.LacrosVariantUnneeded,
 		Desc:         "Queries the information for a Debian package that we have copied into the container",
 		Contacts:     []string{"clumptini+oncall@google.com"},
 		Attr:         []string{"group:mainline"},

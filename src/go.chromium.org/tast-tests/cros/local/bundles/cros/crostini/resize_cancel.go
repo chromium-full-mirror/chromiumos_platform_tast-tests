@@ -20,7 +20,6 @@ import (
 func init() {
 	testing.AddTest(&testing.Test{
 		Func:         ResizeCancel,
-		LacrosStatus: testing.LacrosVariantUnneeded,
 		Desc:         "Test cancelling resizing of Crostini from the Settings app",
 		Contacts:     []string{"clumptini+oncall@google.com"},
 		Attr:         []string{"group:mainline"},

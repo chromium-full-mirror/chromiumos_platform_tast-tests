@@ -23,9 +23,8 @@ import (
 
 func init() {
 	testing.AddTest(&testing.Test{
-		Func:         AppVSCodeEmoji,
-		LacrosStatus: testing.LacrosVariantUnneeded,
-		Desc:         "Opens Visual Studio Code from terminal and type using an IME",
+		Func: AppVSCodeEmoji,
+		Desc: "Opens Visual Studio Code from terminal and type using an IME",
 		Contacts: []string{
 			"essential-inputs-gardener-oncall@google.com",
 			"essential-inputs-team@google.com",

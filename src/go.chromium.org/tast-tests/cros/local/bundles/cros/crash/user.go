@@ -39,9 +39,8 @@ type userCrashParams struct {
 
 func init() {
 	testing.AddTest(&testing.Test{
-		Func:         User,
-		LacrosStatus: testing.LacrosVariantUnneeded,
-		Desc:         "Verifies crash reporting for user processes",
+		Func: User,
+		Desc: "Verifies crash reporting for user processes",
 		Contacts: []string{
 			"chromeos-data-eng@google.com",
 			"arc-performance@google.com",

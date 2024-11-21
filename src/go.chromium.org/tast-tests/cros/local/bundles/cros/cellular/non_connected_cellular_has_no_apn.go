@@ -27,7 +27,6 @@ type nonConnectedCellularHasNoApnTestParam struct {
 func init() {
 	testing.AddTest(&testing.Test{
 		Func:           NonConnectedCellularHasNoApn,
-		LacrosStatus:   testing.LacrosVariantUnneeded,
 		LifeCycleStage: testing.LifeCycleInDevelopment,
 		Desc:           "Tests that no APNs are shown for cellular networks that are not connected",
 		Contacts: []string{

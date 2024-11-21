@@ -18,7 +18,6 @@ import (
 func init() {
 	testing.AddTest(&testing.Test{
 		Func:         PackageInstallUninstall,
-		LacrosStatus: testing.LacrosVariantUnneeded,
 		Desc:         "Installs and then uninstalls a package that we have copied into the container",
 		Contacts:     []string{"clumptini+oncall@google.com"},
 		Attr:         []string{"group:mainline"},

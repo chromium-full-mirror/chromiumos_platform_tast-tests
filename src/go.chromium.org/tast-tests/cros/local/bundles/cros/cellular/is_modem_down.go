@@ -15,7 +15,6 @@ import (
 func init() {
 	testing.AddTest(&testing.Test{
 		Func:         IsModemDown,
-		LacrosStatus: testing.LacrosVariantUnneeded,
 		Desc:         "Verifies that a modem label is correct and that the modem is not available",
 		Contacts:     []string{"chromeos-cellular-team@google.com"},
 		BugComponent: "b:167157", // ChromeOS > Platform > Connectivity > Cellular

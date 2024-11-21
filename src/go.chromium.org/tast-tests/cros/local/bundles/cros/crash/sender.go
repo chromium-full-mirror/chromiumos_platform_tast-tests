@@ -19,9 +19,8 @@ import (
 
 func init() {
 	testing.AddTest(&testing.Test{
-		Func:         Sender,
-		LacrosStatus: testing.LacrosVariantUnneeded,
-		Desc:         "Basic test to check that minidump crashes are uploaded",
+		Func: Sender,
+		Desc: "Basic test to check that minidump crashes are uploaded",
 		Contacts: []string{
 			"chromeos-data-eng@google.com",
 			"troywang@google.com",

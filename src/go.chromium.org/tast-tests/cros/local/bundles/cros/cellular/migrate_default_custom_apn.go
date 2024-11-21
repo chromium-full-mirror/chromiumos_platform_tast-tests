@@ -22,7 +22,6 @@ import (
 func init() {
 	testing.AddTest(&testing.Test{
 		Func:           MigrateDefaultCustomApn,
-		LacrosStatus:   testing.LacrosVariantUnneeded,
 		LifeCycleStage: testing.LifeCycleInDevelopment,
 		Desc:           "Tests the correctness of the UI for a valid custom APN that is migrated to the new UI",
 		Contacts: []string{

@@ -17,7 +17,6 @@ import (
 func init() {
 	testing.AddTest(&testing.Test{
 		Func:         NestedVM,
-		LacrosStatus: testing.LacrosVariantUnneeded,
 		Desc:         "Test that /dev/kvm is present and basic functionality works",
 		Contacts:     []string{"clumptini+oncall@google.com"},
 		SoftwareDeps: []string{"chrome", "vm_host", "untrusted_vm", "amd64"},

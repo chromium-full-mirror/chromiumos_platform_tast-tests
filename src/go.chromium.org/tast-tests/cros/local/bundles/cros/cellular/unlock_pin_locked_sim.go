@@ -25,9 +25,8 @@ import (
 
 func init() {
 	testing.AddTest(&testing.Test{
-		Func:         UnlockPinLockedSim,
-		LacrosStatus: testing.LacrosVariantUnneeded,
-		Desc:         "Verifies that a PIN locked SIM can only be unlocked by the correct PIN, and then subsequently connected to",
+		Func: UnlockPinLockedSim,
+		Desc: "Verifies that a PIN locked SIM can only be unlocked by the correct PIN, and then subsequently connected to",
 		Contacts: []string{
 			"cros-device-enablement@google.com",
 			"chromeos-connectivity-engprod@google.com",

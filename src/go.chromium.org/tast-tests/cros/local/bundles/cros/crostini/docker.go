@@ -17,7 +17,6 @@ import (
 func init() {
 	testing.AddTest(&testing.Test{
 		Func:         Docker,
-		LacrosStatus: testing.LacrosVariantUnneeded,
 		Desc:         "Tests running a Docker container in Crostini",
 		Contacts:     []string{"clumptini+oncall@google.com"},
 		SoftwareDeps: []string{"chrome", "vm_host"},

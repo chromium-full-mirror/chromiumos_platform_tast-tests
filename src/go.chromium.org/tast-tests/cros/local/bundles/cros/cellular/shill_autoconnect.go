@@ -18,7 +18,6 @@ func init() {
 	testing.AddTest(&testing.Test{
 		Func:           ShillAutoconnect,
 		LifeCycleStage: testing.LifeCycleOwnerMonitored,
-		LacrosStatus:   testing.LacrosVariantUnneeded,
 		Desc:           "Verifies that Shill auto-connects to a Cellular Service correctly",
 		Contacts:       []string{"chromeos-cellular-team@google.com", "ejcaruso@google.com"},
 		BugComponent:   "b:167157", // ChromeOS > Platform > Connectivity > Cellular

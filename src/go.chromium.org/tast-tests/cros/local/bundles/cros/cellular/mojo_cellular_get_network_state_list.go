@@ -20,7 +20,6 @@ func init() {
 	testing.AddTest(&testing.Test{
 		Func:           MojoCellularGetNetworkStateList,
 		LifeCycleStage: testing.LifeCycleOwnerMonitored,
-		LacrosStatus:   testing.LacrosVariantUnneeded,
 		Desc:           "Ensure that CrosNetworkConfig.GetNetworkStateList matches properties in Shill ",
 		Contacts:       []string{"chromeos-cellular-team@google.com", "cros-device-enablement@google.com"},
 		BugComponent:   "b:1166446",

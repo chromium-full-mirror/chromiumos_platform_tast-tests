@@ -24,7 +24,6 @@ import (
 func init() {
 	testing.AddTest(&testing.Test{
 		Func:           HotspotDisabledWhenNoUpstreamNetwork,
-		LacrosStatus:   testing.LacrosVariantUnneeded,
 		LifeCycleStage: testing.LifeCycleInDevelopment,
 		Desc:           "Test hotspot toggle is disabled and learn more link shown when no upstream network",
 		Contacts: []string{

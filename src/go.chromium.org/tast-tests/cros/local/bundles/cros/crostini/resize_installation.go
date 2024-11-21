@@ -29,7 +29,6 @@ import (
 func init() {
 	testing.AddTest(&testing.Test{
 		Func:         ResizeInstallation,
-		LacrosStatus: testing.LacrosVariantUnneeded,
 		Desc:         "Test resizing during installation",
 		Contacts:     []string{"clumptini+oncall@google.com"},
 		Attr:         []string{"group:mainline", "group:crostini_slow"},

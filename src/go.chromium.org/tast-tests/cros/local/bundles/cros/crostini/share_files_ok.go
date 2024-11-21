@@ -22,7 +22,6 @@ import (
 func init() {
 	testing.AddTest(&testing.Test{
 		Func:         ShareFilesOK,
-		LacrosStatus: testing.LacrosVariantUnneeded,
 		Desc:         "Test sharing My files with Crostini and clicking OK on the confirm dialog",
 		Contacts:     []string{"clumptini+oncall@google.com"},
 		Attr:         []string{"group:mainline"},

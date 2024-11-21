@@ -28,7 +28,6 @@ import (
 func init() {
 	testing.AddTest(&testing.Test{
 		Func:         AppGeditInstallUninstall,
-		LacrosStatus: testing.LacrosVariantUnneeded,
 		Desc:         "Install Gedit, check rendering, icons, saving and uninstall behavior",
 		Contacts:     []string{"clumptini@google.com"},
 		Attr:         []string{"group:mainline", "group:crostini_app_cq", "informational"},

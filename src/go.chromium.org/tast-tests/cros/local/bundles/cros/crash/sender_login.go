@@ -24,9 +24,8 @@ const (
 
 func init() {
 	testing.AddTest(&testing.Test{
-		Func:         SenderLogin,
-		LacrosStatus: testing.LacrosVariantUnneeded,
-		Desc:         "Basic test to check that crash_sender runs on login",
+		Func: SenderLogin,
+		Desc: "Basic test to check that crash_sender runs on login",
 		Contacts: []string{
 			"chromeos-data-eng@google.com",
 			"troywang@google.com",

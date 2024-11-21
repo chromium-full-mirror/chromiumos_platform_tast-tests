@@ -50,7 +50,7 @@ const (
 )
 
 var (
-	meetRootWebArea   = nodewith.NameContaining("Meet").Role(role.RootWebArea)
+	meetRootWebArea = nodewith.NameContaining("Meet").Role(role.RootWebArea)
 
 	// meetCallHistograms records histograms of MeetCall performance comparisons.
 	meetCallHistograms = []string{
@@ -112,9 +112,8 @@ var typingDelayVarString = testing.RegisterVarString(
 
 func init() {
 	testing.AddTest(&testing.Test{
-		Func:         MeetCall,
-		LacrosStatus: testing.LacrosVariantUnneeded,
-		Desc:         "Host a Google Meet video conference and type in the chat window",
+		Func: MeetCall,
+		Desc: "Host a Google Meet video conference and type in the chat window",
 		Contacts: []string{
 			"chromeos-competitive-analysis@google.com",
 			"williskung@google.com",

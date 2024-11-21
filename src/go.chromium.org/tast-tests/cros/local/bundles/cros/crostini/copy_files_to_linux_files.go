@@ -19,7 +19,6 @@ import (
 func init() {
 	testing.AddTest(&testing.Test{
 		Func:         CopyFilesToLinuxFiles,
-		LacrosStatus: testing.LacrosVariantUnneeded,
 		Desc:         "Tests copying files to Linux files using a pre-built crostini image",
 		Contacts:     []string{"clumptini+oncall@google.com"},
 		Attr:         []string{"group:mainline"},

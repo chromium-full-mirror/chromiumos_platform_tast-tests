@@ -34,7 +34,6 @@ import (
 func init() {
 	testing.AddTest(&testing.Test{
 		Func:         AppGeditUnshareFolder,
-		LacrosStatus: testing.LacrosVariantUnneeded,
 		Desc:         "Test gedit in Terminal window",
 		Contacts:     []string{"clumptini+oncall@google.com"},
 		Attr:         []string{"group:mainline", "group:crostini_app_cq"},

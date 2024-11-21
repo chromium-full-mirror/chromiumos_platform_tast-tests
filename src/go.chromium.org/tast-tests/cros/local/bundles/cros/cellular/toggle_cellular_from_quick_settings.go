@@ -20,7 +20,6 @@ import (
 func init() {
 	testing.AddTest(&testing.Test{
 		Func:           ToggleCellularFromQuickSettings,
-		LacrosStatus:   testing.LacrosVariantUnneeded,
 		LifeCycleStage: testing.LifeCycleInDevelopment,
 		Desc:           "Checks that Cellular can be enabled and disabled from within the Quick Settings",
 		Contacts: []string{

@@ -23,7 +23,6 @@ import (
 func init() {
 	testing.AddTest(&testing.Test{
 		Func:         MousePerf,
-		LacrosStatus: testing.LacrosVariantUnneeded,
 		Desc:         "Performance test for mouse responsiveness",
 		Contacts:     []string{"clumptini@google.com"},
 		Data:         []string{"mouse_perf.py"},

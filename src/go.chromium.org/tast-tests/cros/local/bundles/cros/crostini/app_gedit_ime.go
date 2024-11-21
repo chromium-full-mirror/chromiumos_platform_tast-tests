@@ -27,9 +27,8 @@ import (
 
 func init() {
 	testing.AddTest(&testing.Test{
-		Func:         AppGeditIME,
-		LacrosStatus: testing.LacrosVariantUnneeded,
-		Desc:         "Test IME inputs in Gedit App",
+		Func: AppGeditIME,
+		Desc: "Test IME inputs in Gedit App",
 		Contacts: []string{
 			"essential-inputs-gardener-oncall@google.com",
 			"essential-inputs-team@google.com",

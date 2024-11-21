@@ -21,7 +21,6 @@ func init() {
 	testing.AddTest(&testing.Test{
 		Func:           CarrierLockEndToEndWildcard,
 		LifeCycleStage: testing.LifeCycleOwnerMonitored,
-		LacrosStatus:   testing.LacrosVariantUnneeded,
 		Desc:           "Verifies that cellular can connect to any carrier with wildcard profile",
 		Contacts:       []string{"ujjwalpande@google.com", "chromeos-cellular-team@google.com"},
 		BugComponent:   "b:167157", // ChromeOS > Platform > Connectivity > Cellular

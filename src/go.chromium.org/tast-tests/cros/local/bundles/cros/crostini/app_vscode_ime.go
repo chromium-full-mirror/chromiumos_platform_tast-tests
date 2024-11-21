@@ -27,9 +27,8 @@ import (
 
 func init() {
 	testing.AddTest(&testing.Test{
-		Func:         AppVscodeIME,
-		LacrosStatus: testing.LacrosVariantUnneeded,
-		Desc:         "Opens Visual Studio Code from terminal and type using an IME",
+		Func: AppVscodeIME,
+		Desc: "Opens Visual Studio Code from terminal and type using an IME",
 		Contacts: []string{
 			"essential-inputs-gardener-oncall@google.com",
 			"essential-inputs-team@google.com",

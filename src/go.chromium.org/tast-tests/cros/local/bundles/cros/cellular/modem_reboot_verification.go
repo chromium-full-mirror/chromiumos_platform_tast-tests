@@ -19,7 +19,6 @@ func init() {
 	testing.AddTest(&testing.Test{
 		Func:           ModemRebootVerification,
 		LifeCycleStage: testing.LifeCycleOwnerMonitored,
-		LacrosStatus:   testing.LacrosVariantUnneeded,
 		Desc:           "Verifies that the modem can be rebooted using GPIO",
 		Contacts:       []string{"chromeos-cellular-team@google.com", "madhavadas@google.com"},
 		BugComponent:   "b:167157", // ChromeOS > Platform > Connectivity > Cellular

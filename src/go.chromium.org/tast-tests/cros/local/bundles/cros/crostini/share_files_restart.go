@@ -26,7 +26,6 @@ import (
 func init() {
 	testing.AddTest(&testing.Test{
 		Func:         ShareFilesRestart,
-		LacrosStatus: testing.LacrosVariantUnneeded,
 		Desc:         "Test shared folders are persistent after restarting Crostini",
 		Contacts:     []string{"clumptini+oncall@google.com"},
 		Attr:         []string{"group:mainline"},

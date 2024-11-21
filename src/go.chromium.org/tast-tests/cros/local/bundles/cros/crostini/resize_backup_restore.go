@@ -29,7 +29,6 @@ import (
 func init() {
 	testing.AddTest(&testing.Test{
 		Func:         ResizeBackupRestore,
-		LacrosStatus: testing.LacrosVariantUnneeded,
 		Desc:         "Test resizing disk of Crostini from the Settings app between backup and restore",
 		Contacts:     []string{"clumptini@google.com", "nverne@google.com"},
 		Attr:         []string{"group:mainline", "group:crostini_slow", "informational"},

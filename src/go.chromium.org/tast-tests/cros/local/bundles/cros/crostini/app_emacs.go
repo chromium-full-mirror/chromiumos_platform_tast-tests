@@ -21,7 +21,6 @@ import (
 func init() {
 	testing.AddTest(&testing.Test{
 		Func:         AppEmacs,
-		LacrosStatus: testing.LacrosVariantUnneeded,
 		Desc:         "Opens Emacs from terminal and does some edits via keyboard",
 		Contacts:     []string{"clumptini+oncall@google.com"},
 		Attr:         []string{"group:mainline", "group:crostini_app_cq"},

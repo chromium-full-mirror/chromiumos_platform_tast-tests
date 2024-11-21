@@ -21,7 +21,6 @@ func init() {
 	testing.AddTest(&testing.Test{
 		Func:           CarrierLockEndToEndTmo,
 		LifeCycleStage: testing.LifeCycleOwnerMonitored,
-		LacrosStatus:   testing.LacrosVariantUnneeded,
 		Desc:           "Verifies that carrier lock restrictions are enforced by modem",
 		Contacts:       []string{"chromeos-cellular-team@google.com", "ujjwalpande@google.com"},
 		BugComponent:   "b:167157", // ChromeOS > Platform > Connectivity > Cellular

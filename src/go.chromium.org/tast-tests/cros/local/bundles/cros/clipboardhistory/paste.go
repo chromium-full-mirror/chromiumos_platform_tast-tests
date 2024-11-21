@@ -22,7 +22,6 @@ import (
 func init() {
 	testing.AddTest(&testing.Test{
 		Func:         Paste,
-		LacrosStatus: testing.LacrosVariantUnneeded,
 		Desc:         "Verifies different methods for pasting from clipboard history",
 		BugComponent: "b:1268414", // ChromeOS > Software > System UI Surfaces > EnhancedClipboard
 		Contacts: []string{

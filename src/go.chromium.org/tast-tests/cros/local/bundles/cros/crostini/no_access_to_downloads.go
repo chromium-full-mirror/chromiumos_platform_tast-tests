@@ -26,7 +26,6 @@ import (
 func init() {
 	testing.AddTest(&testing.Test{
 		Func:         NoAccessToDownloads,
-		LacrosStatus: testing.LacrosVariantUnneeded,
 		Desc:         "Run a test to make sure Linux does not have access to downloads on Chrome using a pre-built crostini image",
 		Contacts:     []string{"clumptini+oncall@google.com"},
 		Attr:         []string{"group:mainline"},

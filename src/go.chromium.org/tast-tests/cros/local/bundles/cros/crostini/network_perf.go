@@ -30,7 +30,6 @@ import (
 func init() {
 	testing.AddTest(&testing.Test{
 		Func:         NetworkPerf,
-		LacrosStatus: testing.LacrosVariantUnneeded,
 		Desc:         "Tests Crostini network performance",
 		Contacts:     []string{"clumptini@google.com", "cylee@chromium.org"},
 		SoftwareDeps: []string{"chrome", "vm_host"},

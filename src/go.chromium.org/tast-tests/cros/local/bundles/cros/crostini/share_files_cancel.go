@@ -20,7 +20,6 @@ import (
 func init() {
 	testing.AddTest(&testing.Test{
 		Func:         ShareFilesCancel,
-		LacrosStatus: testing.LacrosVariantUnneeded,
 		Desc:         "Test clicking Cancel on share confirm dialog",
 		Contacts:     []string{"clumptini+oncall@google.com"},
 		Attr:         []string{"group:mainline"},

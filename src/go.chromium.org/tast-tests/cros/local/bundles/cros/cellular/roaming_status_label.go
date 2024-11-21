@@ -23,7 +23,6 @@ type testParameters struct {
 func init() {
 	testing.AddTest(&testing.Test{
 		Func:           RoamingStatusLabel,
-		LacrosStatus:   testing.LacrosVariantUnneeded,
 		LifeCycleStage: testing.LifeCycleOwnerMonitored,
 		Desc:           "Checks the roaming label status on a roaming and non roaming SIM",
 		Contacts: []string{

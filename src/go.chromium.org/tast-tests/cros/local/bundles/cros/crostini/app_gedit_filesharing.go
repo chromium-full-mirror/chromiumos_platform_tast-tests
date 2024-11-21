@@ -44,9 +44,8 @@ var (
 
 func init() {
 	testing.AddTest(&testing.Test{
-		Func:         AppGeditFilesharing,
-		LacrosStatus: testing.LacrosVariantUnneeded,
-		Desc:         "Test gedit file sharing in Terminal window",
+		Func: AppGeditFilesharing,
+		Desc: "Test gedit file sharing in Terminal window",
 		Contacts: []string{
 			"clumptini+oncall@google.com",
 		},

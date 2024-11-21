@@ -17,7 +17,6 @@ import (
 func init() {
 	testing.AddTest(&testing.Test{
 		Func:         SmokeIPConnectivity,
-		LacrosStatus: testing.LacrosVariantUnneeded,
 		Desc:         "Verifies that host has network connectivity via cellular interface",
 		Contacts:     []string{"chromeos-cellular-team@google.com", "madhavadas@google.com"},
 		BugComponent: "b:167157", // ChromeOS > Platform > Connectivity > Cellular

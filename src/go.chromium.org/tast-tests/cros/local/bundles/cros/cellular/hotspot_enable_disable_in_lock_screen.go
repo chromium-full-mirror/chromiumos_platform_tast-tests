@@ -23,7 +23,6 @@ import (
 func init() {
 	testing.AddTest(&testing.Test{
 		Func:           HotspotEnableDisableInLockScreen,
-		LacrosStatus:   testing.LacrosVariantUnneeded,
 		LifeCycleStage: testing.LifeCycleInDevelopment,
 		Desc:           "Test hotspot can be accessed and controled in lock screen through Quick Settings",
 		Contacts: []string{

@@ -20,9 +20,8 @@ import (
 
 func init() {
 	testing.AddTest(&testing.Test{
-		Func:         CustomDefaultAttachApnDisableEnableBehavior,
-		LacrosStatus: testing.LacrosVariantUnneeded,
-		Desc:         "Tests the correct connect behavior for a custom APN that needs to be enabled as default and attach is created separately",
+		Func: CustomDefaultAttachApnDisableEnableBehavior,
+		Desc: "Tests the correct connect behavior for a custom APN that needs to be enabled as default and attach is created separately",
 		Contacts: []string{
 			"cros-device-enablement@google.com",
 			"hsuregan@google.com",

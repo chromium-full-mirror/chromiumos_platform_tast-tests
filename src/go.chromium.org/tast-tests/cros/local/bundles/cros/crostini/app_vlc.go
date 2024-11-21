@@ -33,7 +33,6 @@ const testVideo = "vlc_test_video.mp4"
 func init() {
 	testing.AddTest(&testing.Test{
 		Func:         AppVLC,
-		LacrosStatus: testing.LacrosVariantUnneeded,
 		Desc:         "Opens VLC from launcher",
 		Contacts:     []string{"clumptini+oncall@google.com"},
 		Attr:         []string{"group:mainline", "group:crostini_app_cq", "informational"},

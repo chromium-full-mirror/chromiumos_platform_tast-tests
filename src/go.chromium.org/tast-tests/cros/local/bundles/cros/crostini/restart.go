@@ -22,7 +22,6 @@ import (
 func init() {
 	testing.AddTest(&testing.Test{
 		Func:         Restart,
-		LacrosStatus: testing.LacrosVariantUnneeded,
 		Desc:         "Tests that we can shut down and restart crostini (where the VM image is a build artifact)",
 		Contacts:     []string{"clumptini+oncall@google.com"},
 		Attr:         []string{"group:mainline"},
