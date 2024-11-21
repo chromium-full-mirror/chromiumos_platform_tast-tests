@@ -52,6 +52,8 @@ const (
 type Version string
 
 const (
+	// Minijail command.
+	Minijail = "minijail0"
 	// Version2 is iperf2.
 	Version2 = "iperf"
 	// Version3 is iperf3.

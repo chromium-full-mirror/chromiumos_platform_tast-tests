@@ -47,12 +47,12 @@ func NewRemoteServer(ctx context.Context, conn *ssh.Conn) (*RemoteServer, error)
 	// If minijail0 is on ${PATH} on any host, use it. If not,
 	// use the original invocation.
 	useMiniJail := true
-	minijailPath, err := cmd.FindCmdPath(ctx, conn, "minijail0")
+	minijailPath, err := cmd.FindCmdPath(ctx, conn, Minijail)
 	if err != nil {
 		useMiniJail = false
-		testing.ContextLog(ctx, "minijail0 not present on host, proceeding without minijail")
+		testing.ContextLogf(ctx, "%s not present on host, proceeding without minijail", Minijail)
 	} else {
-		testing.ContextLog(ctx, "minijail0 found on host, proceeding to use minijail")
+		testing.ContextLogf(ctx, "%s found on host, proceeding to use minijail", Minijail)
 	}
 
 	return &RemoteServer{
@@ -115,7 +115,11 @@ func (c *RemoteServer) Start(ctx context.Context, config *Config) error {
 	}
 
 	// An iperf command comprised of mode, IP address and port is pretty unique, if we grep for it, we should get PID rather reliably.
-	psCmd := fmt.Sprintf("ps -e -o pid,cmd |grep \"%s\" |grep -v grep", iperfCommand)
+	// Get the PID of the child process sandboxed by minijail. Minijail cleans up the child process on its exit.
+	// Since Openwrt supports simplified ps command only, use a fallback command if ps -e doesn't work.
+	psCmd := fmt.Sprintf("ps -e -o pid,cmd 2> /dev/null |grep \"%s\" |grep -v grep |grep -v %s", iperfCommand, Minijail)
+	psFallbackCmd := fmt.Sprintf("ps w |grep \"%s\" |grep -v grep |grep -v %s", iperfCommand, Minijail)
+	psCmd = fmt.Sprintf("%s || %s", psCmd, psFallbackCmd)
 	if out, err := c.conn.CommandContext(ctx, "sh", "-c", psCmd).Output(); err == nil && out != nil {
 		c.pid = strings.Fields(string(out))[0]
 	}
