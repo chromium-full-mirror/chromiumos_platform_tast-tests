@@ -50,7 +50,7 @@ func GSCCCDProgramming(ctx context.Context, s *testing.State) {
 	// Convert the EC_UART_TX_GSC_RX pin to an input on hyperdebug instead of the
 	// normal UART alternate function.
 	b.GpioMultiSet(ctx, ti50.GpioTi50UartEcTxDbgRx, true, utils.GpioModeInput, utils.GpioPullUp)
-	if b.GpioGet(ctx, ti50.GpioTi50UartEcTxDbgRx) != true {
+	if !b.GpioGet(ctx, ti50.GpioTi50UartEcTxDbgRx) {
 		s.Fatal("UART RX not high be default")
 	}
 
@@ -60,7 +60,7 @@ func GSCCCDProgramming(ctx context.Context, s *testing.State) {
 	} else {
 		_, err := i.Command(ctx, "gpioset EC_TX_CR50_RX_OUT 0")
 		th.MustSucceed(err, "Call gpioset EC_TX_CR50_RX_OUT 0")
-		if b.GpioGet(ctx, ti50.GpioTi50UartEcTxDbgRx) != true {
+		if !b.GpioGet(ctx, ti50.GpioTi50UartEcTxDbgRx) {
 			s.Error("UART RX should not change if ecrst isn't being held")
 		}
 	}
@@ -69,19 +69,19 @@ func GSCCCDProgramming(ctx context.Context, s *testing.State) {
 
 	_, err := i.Command(ctx, "gpioset EC_TX_CR50_RX_OUT 0")
 	th.MustSucceed(err, "Call gpioset EC_TX_CR50_RX_OUT 0")
-	if b.GpioGet(ctx, ti50.GpioTi50UartEcTxDbgRx) != false {
+	if b.GpioGet(ctx, ti50.GpioTi50UartEcTxDbgRx) {
 		s.Error("UART RX not set to low when EC held in reset")
 	}
 
 	th.MustSucceed(i.EcrstOff(ctx), "Release EC from reset")
 
-	if b.GpioGet(ctx, ti50.GpioTi50UartEcTxDbgRx) != false {
+	if b.GpioGet(ctx, ti50.GpioTi50UartEcTxDbgRx) {
 		s.Error("UART RX did not maintain low value after EC released")
 	}
 
 	_, err = i.Command(ctx, "gpioset EC_TX_CR50_RX_OUT 1")
 	th.MustSucceed(err, "Call gpioset EC_TX_CR50_RX_OUT 1")
-	if b.GpioGet(ctx, ti50.GpioTi50UartEcTxDbgRx) != true {
+	if !b.GpioGet(ctx, ti50.GpioTi50UartEcTxDbgRx) {
 		s.Error("UART RX not released back to high")
 	}
 
@@ -89,13 +89,13 @@ func GSCCCDProgramming(ctx context.Context, s *testing.State) {
 
 	_, err = i.Command(ctx, "gpioset EC_FLASH_SELECT 0")
 	th.MustSucceed(err, "Call gpioset EC_FLASH_SELECT 0")
-	if b.GpioGet(ctx, ti50.GpioTi50ECFlashSelect) != false {
+	if b.GpioGet(ctx, ti50.GpioTi50ECFlashSelect) {
 		s.Error("EC flash select gpio did not go low")
 	}
 
 	_, err = i.Command(ctx, "gpioset EC_FLASH_SELECT 1")
 	th.MustSucceed(err, "Call gpioset EC_FLASH_SELECT 1")
-	if b.GpioGet(ctx, ti50.GpioTi50ECFlashSelect) != true {
+	if !b.GpioGet(ctx, ti50.GpioTi50ECFlashSelect) {
 		s.Error("EC flash select gpio did not go high")
 	}
 }

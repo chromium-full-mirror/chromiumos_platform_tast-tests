@@ -31,7 +31,6 @@ type signaturePadTestParams struct {
 	appIcon          string
 	motionData       string
 	deviceName       string
-	expectedFileName string
 }
 
 var signaturePadData = append(citrix.CitrixData, citrix.SignaturePadData...)

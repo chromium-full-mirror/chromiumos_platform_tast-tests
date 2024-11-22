@@ -123,7 +123,7 @@ func GSCRollbackBits(ctx context.Context, s *testing.State) {
 	sysinfo, err := i.Sysinfo(ctx)
 	th.MustSucceed(err, "failed to get sysinfo")
 	s.Logf("Rollback info running old image %+v", sysinfo.RWRollbackBits)
-	oldRollbackBits, err := activeImageRollbackBits(sysinfo.RWRollbackBits, version.RwA.Active)
+	oldRollbackBits, _ := activeImageRollbackBits(sysinfo.RWRollbackBits, version.RwA.Active)
 
 	// Run power-on reset to clear update rate limit
 	b.GpioSet(ctx, ti50.GpioTi50ResetL, false)
@@ -147,7 +147,7 @@ func GSCRollbackBits(ctx context.Context, s *testing.State) {
 	th.MustSucceed(err, "failed to get sysinfo")
 	s.Logf("Rollback info running release image %+v", sysinfo.RWRollbackBits)
 
-	releaseRollbackBits, err := activeImageRollbackBits(sysinfo.RWRollbackBits, version.RwA.Active)
+	releaseRollbackBits, _ := activeImageRollbackBits(sysinfo.RWRollbackBits, version.RwA.Active)
 
 	if releaseRollbackBits == oldRollbackBits {
 		s.Fatal("The release and old image have the same number of bits blown")

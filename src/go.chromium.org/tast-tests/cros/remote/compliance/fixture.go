@@ -103,7 +103,7 @@ func complianceHostName(dut *dut.DUT) (string, error) {
 
 // Reset checks if the compliance host is pingable.
 func (tf *TestFixture) Reset(ctx context.Context) error {
-	if connected := tf.Host.Connected(ctx); connected != true {
+	if connected := tf.Host.Connected(ctx); !connected {
 		return errors.New("Windows Host is unpingable, reset required")
 	}
 	return nil
