@@ -40,11 +40,13 @@ func init() {
 		},
 		// ChromeOS > Software > System UI Surfaces > Notifications
 		BugComponent: "b:1246021",
-		Attr:         []string{
-			// Disabled by TORA. See: b/341684403
-			// "group:mainline",
-			// "informational",
-			// "group:release-health",
+		Attr: []string{
+			"group:golden_tier",
+			"group:medium_low_tier",
+			"group:hardware",
+			"group:complementary",
+			"group:release-health",
+			"release-health_ui",
 		},
 		Data:         []string{bundlingNotificationApkFileName},
 		SoftwareDeps: []string{"chrome", "arc"},

@@ -28,7 +28,15 @@ func init() {
 		Contacts:     []string{"cros-status-area-eng@google.com", "leandre@chromium.org", "chromeos-sw-engprod@google.com"},
 		BugComponent: "b:1246021", // ChromeOS > Software > System UI Surfaces > Notifications
 		SoftwareDeps: []string{"chrome"},
-		Attr:         []string{"group:mainline", "informational", "group:hw_agnostic", "group:release-health"},
+		Attr: []string{
+			"group:golden_tier",
+			"group:medium_low_tier",
+			"group:hardware",
+			"group:complementary",
+			"group:hw_agnostic",
+			"group:release-health",
+			"release-health_ui",
+		},
 		Timeout:      3 * time.Minute,
 		Fixture:      "chromeLoggedIn",
 	})
