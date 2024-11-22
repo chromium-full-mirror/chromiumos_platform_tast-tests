@@ -22,7 +22,11 @@ func init() {
 		Desc:         "Verifies face detection",
 		Contacts:     []string{"chromeos-camera-eng@google.com", "beckerh@chromium.org"},
 		BugComponent: "b:167281", // ChromeOS > Platform > Technologies > Camera
-		Attr:         []string{"group:camerabox"},
+		Attr:         []string{
+			"group:camerabox",
+			"group:release-health",
+			"release-health_camera",
+		},
 		SoftwareDeps: []string{"arc", "arc_camera3", caps.BuiltinUSBCamera},
 		ServiceDeps:  []string{"tast.cros.camerabox.HAL3Service"},
 		Data:         []string{"its_scene2_c_20210708.png"},

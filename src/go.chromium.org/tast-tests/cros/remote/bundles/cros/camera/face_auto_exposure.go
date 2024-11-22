@@ -25,7 +25,11 @@ func init() {
 		Desc:         "Verifies face auto exposure",
 		Contacts:     []string{"chromeos-camera-eng@google.com", "beckerh@chromium.org"},
 		BugComponent: "b:167281", // ChromeOS > Platform > Technologies > Camera
-		Attr:         []string{"group:camerabox"},
+		Attr:         []string{
+			"group:camerabox",
+			"group:release-health",
+			"release-health_camera",
+		},
 		SoftwareDeps: []string{"arc", "arc_camera3", caps.BuiltinUSBCamera},
 		Data:         []string{"te273_mia_20211228.jpg"},
 		Vars:         []string{"chart"},

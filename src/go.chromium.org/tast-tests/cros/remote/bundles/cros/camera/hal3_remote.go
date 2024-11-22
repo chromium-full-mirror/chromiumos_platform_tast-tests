@@ -20,7 +20,11 @@ func init() {
 		Desc:         "Verifies camera HAL3 interface function on remote DUT",
 		Contacts:     []string{"chromeos-camera-eng@google.com", "beckerh@chromium.org", "xinggu@chromium.org"},
 		BugComponent: "b:167281", // ChromeOS > Platform > Technologies > Camera
-		Attr:         []string{"group:camerabox"},
+		Attr:         []string{
+			"group:camerabox",
+			"group:release-health",
+			"release-health_camera",
+		},
 		SoftwareDeps: []string{"arc", "arc_camera3", caps.BuiltinCamera},
 		ServiceDeps:  []string{"tast.cros.camerabox.HAL3Service"},
 		Data:         []string{"third_party/cts_portrait_scene.jpg"},
