@@ -115,7 +115,7 @@ func (a *AllowlistService) CheckArcAppInstalled(ctx context.Context, req *networ
 		testing.ContextLog(ctx, "Error requesting gmail install status")
 		return nil, err
 	}
-	if isGmailInstalled == true {
+	if isGmailInstalled {
 		testing.ContextLog(ctx, "Gmail app is already installed, failing test")
 		return nil, errors.New("Gmail app is already installed")
 	}

@@ -60,9 +60,6 @@ func CloseAllTabs(ctx context.Context, tconn *TestConn) error {
 	})()`, nil)
 }
 
-// TODO(neis): Put this in a common place.
-const newTabURL = "chrome://new-tab/"
-
 // GetTabByTitle gets a single tab that has a tab title that
 // matches |title|. It returns an error if there is not exactly 1 tab
 // that meets the criterion. The browser is given via |tconn|.

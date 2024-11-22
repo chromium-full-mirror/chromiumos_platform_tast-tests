@@ -18,9 +18,7 @@ import (
 	"go.chromium.org/tast-tests/cros/local/chrome/uiauto"
 	"go.chromium.org/tast-tests/cros/local/chrome/uiauto/nodewith"
 	"go.chromium.org/tast-tests/cros/local/chrome/uiauto/role"
-	"go.chromium.org/tast-tests/cros/local/chrome/uiauto/state"
 	"go.chromium.org/tast-tests/cros/local/cryptohome"
-	"go.chromium.org/tast-tests/cros/local/input"
 	"go.chromium.org/tast/core/errors"
 	"go.chromium.org/tast/core/testing"
 )
@@ -303,36 +301,6 @@ func clickBtnOnPage(ctx context.Context, netConn *chrome.Conn, btnID string) err
 	}
 
 	return nil
-}
-
-// setFileName sets the file name in file app during the save file process.
-// This function uses polling with retries and verification because this process
-// is flaky and can result in incorrectly set file names.
-func setFileName(desiredFileName string, ui *uiauto.Context, kb *input.KeyboardEventWriter) uiauto.Action {
-	fileNameField := nodewith.Name("File name").Role(role.TextField).State(state.Focused, true)
-
-	return func(ctx context.Context) error {
-		return testing.Poll(ctx, func(ctx context.Context) error {
-			if err := uiauto.Combine("Change file name in file picker",
-				ui.WaitUntilExists(fileNameField),
-				kb.AccelAction("ctrl+a"),
-				kb.TypeAction(desiredFileName),
-			)(ctx); err != nil {
-				return errors.Wrap(err, "failed to change file name")
-			}
-
-			fileNameFieldInfo, err := ui.Info(ctx, fileNameField)
-			if err != nil {
-				return errors.Wrap(err, "failed to read file name")
-			}
-			if fileNameFieldInfo.Value != desiredFileName {
-				errMsg := fmt.Sprintf("file name was not renamed correctly = got %s, want %s", fileNameFieldInfo.Value, desiredFileName)
-				testing.ContextLog(ctx, errMsg)
-				return errors.Wrap(err, errMsg)
-			}
-			return nil
-		}, &testing.PollOptions{Interval: time.Second, Timeout: 15 * time.Second})
-	}
 }
 
 // PollMultipleAnnotation checks collection of hashcodes in net-log.

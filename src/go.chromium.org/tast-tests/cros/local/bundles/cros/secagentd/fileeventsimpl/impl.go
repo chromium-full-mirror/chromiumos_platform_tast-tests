@@ -71,22 +71,12 @@ type expectedResult struct {
 	process             *xdr.Process
 	processTimeUs       uint64
 	parentProcess       *xdr.Process
-	parentProcessTimeUs uint64
 	beforeStat          *syscall.Stat_t // stat taken before the command executes
 	afterStat           *syscall.Stat_t // stat taken after the command executes
 	filePath            string
 	eventType           fileEventType              // read or modify
 	eventSubType        *xdr.FileModify_ModifyType // modify, modify and write or write only
 	fileType            xdr.SensitiveFileType
-}
-
-// FileEventResult - contains a logging message produced by the test when
-// the FileEvent logging, error, and fatal functions use the DoLog, DoError, DoFatal
-// variants. These results are meant to be used by the RPC version of the test.
-type FileEventResult struct {
-	isError    bool
-	isFatal    bool
-	logMessage string
 }
 
 // CreateForLocalTest - creates a FileEvent object suitable for running
@@ -223,7 +213,6 @@ func (f FileEvent) DoTest(ctx context.Context, tc *testDetails) {
 				return r
 			}, filepath.Base(fileDetails.name))
 
-			filepath.Base(fileDetails.name)
 			tempFile, err := os.CreateTemp(tempDir, filepath.Base(tempFileName))
 			if err != nil {
 				f.Fatalf("Unable to create temp file to save off %q:%v",
@@ -329,7 +318,7 @@ func (f FileEvent) DoTest(ctx context.Context, tc *testDetails) {
 		f.Fatal("Failed to sleep: ", err)
 	}
 
-	bFileEvents, err := f.collectFileDbusMessages(ctx, expectedResults,
+	bFileEvents, _ := f.collectFileDbusMessages(ctx, expectedResults,
 		stopDbusMonitoring)
 
 	// Check to make sure we see file events with the proper process ID
@@ -366,7 +355,7 @@ func (f FileEvent) DoTest(ctx context.Context, tc *testDetails) {
 		ok := false
 		var expectedResult *expectedResult
 		pid := process.GetCanonicalPid()
-		if expectedResult, ok = expectedResults[pid]; ok == false {
+		if expectedResult, ok = expectedResults[pid]; !ok {
 			continue
 		}
 		eInfo := fmt.Sprintf("[%d] cmd %q ", pid, expectedResult.command)
@@ -611,9 +600,7 @@ func recursiveGetFiles(dirName string) ([]string, error) {
 			if err != nil {
 				return nil, err
 			}
-			for _, fileName := range subFileNames {
-				fileNames = append(fileNames, fileName)
-			}
+			fileNames = append(fileNames, subFileNames...)
 			continue
 		}
 		fileNames = append(fileNames, filepath.Join(dirName, dirEntry.Name()))

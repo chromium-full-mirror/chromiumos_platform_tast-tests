@@ -62,10 +62,6 @@ func RoutingConnectionPinning(ctx context.Context, s *testing.State) {
 		}
 	}(cleanupCtx)
 
-	// Message to be sent via TCP/UDP connections in this test.
-	const msg = "abcdefg"
-	const msgLen = len(msg)
-
 	var conns []net.Conn
 
 	ipAddrs, err := testEnv.BaseServer.WaitForVethInAddrs(ctx, true /*ipv4*/, true /*ipv6*/)

@@ -18,16 +18,12 @@ import (
 	"go.chromium.org/tast-tests/cros/local/arc"
 	"go.chromium.org/tast-tests/cros/local/arc/optin"
 	"go.chromium.org/tast-tests/cros/local/chrome"
-	"go.chromium.org/tast-tests/cros/local/chrome/ash"
-	"go.chromium.org/tast-tests/cros/local/cpu"
 	"go.chromium.org/tast-tests/cros/local/network/ping"
 	"go.chromium.org/tast/core/errors"
 	"go.chromium.org/tast/core/testing"
 )
 
 const (
-	setUpTimeout    = time.Minute
-	tearDownTimeout = time.Minute
 	// 2 minutes:
 	// - 30 seconds for waiting an internet connection
 	// - 30 seconds for running a test query
@@ -295,55 +291,6 @@ func init() {
 	})
 }
 
-type tabletFixture struct {
-	enabled bool
-	cleanup func(ctx context.Context) error
-}
-
-func newTabletFixture(e bool) testing.FixtureImpl {
-	return &tabletFixture{
-		enabled: e,
-	}
-}
-
-func (f *tabletFixture) SetUp(ctx context.Context, s *testing.FixtState) interface{} {
-	fixtData := s.ParentValue().(*FixtData)
-	cr := fixtData.Chrome
-
-	tconn, err := cr.TestAPIConn(ctx)
-	if err != nil {
-		s.Fatal("Failed to create test API connection: ", err)
-	}
-
-	cleanup, err := ash.EnsureTabletModeEnabled(ctx, tconn, f.enabled)
-	if err != nil {
-		s.Fatal("Failed to put into specified mode: ", err)
-	}
-	f.cleanup = cleanup
-
-	// If a DUT switches from Tablet mode to Clamshell mode, it can take a while
-	// until launcher gets settled down.
-	if err := ash.WaitForLauncherState(ctx, tconn, ash.Closed); err != nil {
-		s.Fatal("Failed to wait the launcher state Closed: ", err)
-	}
-
-	return fixtData
-}
-
-func (f *tabletFixture) TearDown(ctx context.Context, s *testing.FixtState) {
-	if f.cleanup != nil {
-		f.cleanup(ctx)
-	}
-}
-
-func (f *tabletFixture) Reset(ctx context.Context) error {
-	return nil
-}
-
-func (f *tabletFixture) PreTest(ctx context.Context, s *testing.FixtTestState) {}
-
-func (f *tabletFixture) PostTest(ctx context.Context, s *testing.FixtTestState) {}
-
 type parentFixtDataCallback func(s *testing.FixtState) FixtData
 
 type enabledFixture struct {
@@ -439,35 +386,6 @@ func (f *enabledFixture) PostTest(ctx context.Context, s *testing.FixtTestState)
 		s.Fatal("Failed to disable Assistant: ", err)
 	}
 }
-
-type perfFixture struct{}
-
-// 2 mins is coming from waitIdleCPUTimeout in cpu.WaitUntilIdle.
-const perfFixturePreTestTimeout = 2 * time.Minute
-
-func newPerfFixture() testing.FixtureImpl {
-	return &perfFixture{}
-}
-
-func (f *perfFixture) SetUp(ctx context.Context, s *testing.FixtState) interface{} {
-	return s.ParentValue()
-}
-
-func (f *perfFixture) TearDown(ctx context.Context, s *testing.FixtState) {}
-
-func (f *perfFixture) Reset(ctx context.Context) error {
-	return nil
-}
-
-func (f *perfFixture) PreTest(ctx context.Context, s *testing.FixtTestState) {
-	// We don't want to include noises from cpu busy state.
-	// As a best practice, wait cpu idle time before running a performance related test.
-	if err := cpu.WaitUntilIdle(ctx); err != nil {
-		s.Fatal("Failed to wait for cpu idle time: ", err)
-	}
-}
-
-func (f *perfFixture) PostTest(ctx context.Context, s *testing.FixtTestState) {}
 
 type parentAudioBoxFixtDataCallback func(s *testing.FixtState) AudioBoxFixtData
 

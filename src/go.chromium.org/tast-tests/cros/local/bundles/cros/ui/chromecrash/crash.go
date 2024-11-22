@@ -21,7 +21,6 @@ import (
 	"github.com/shirou/gopsutil/v3/process"
 	"golang.org/x/sys/unix"
 
-	"go.chromium.org/tast-tests/cros/local/chrome"
 	"go.chromium.org/tast-tests/cros/local/chrome/ash/ashproc"
 	"go.chromium.org/tast-tests/cros/local/chrome/chromeproc"
 	"go.chromium.org/tast-tests/cros/local/crash"
@@ -191,7 +190,6 @@ func crashReporterRunning(ctx context.Context) (bool, error) {
 type CrashTester struct {
 	ptype     ProcessType
 	waitFor   CrashFileType
-	tconn     *chrome.TestConn
 	killedPID int32
 }
 

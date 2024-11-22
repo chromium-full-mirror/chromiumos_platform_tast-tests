@@ -460,10 +460,6 @@ func (f *cellularFixture) setStopUI(value bool) *cellularFixture {
 	f.stopUI = value
 	return f
 }
-func (f *cellularFixture) setSIMFeatures(value ...labapi.SIMProfileInfo_Feature) *cellularFixture {
-	f.simFeatures = value
-	return f
-}
 func (f *cellularFixture) setResetShillProfileOnPostTest(value bool) *cellularFixture {
 	f.resetShillProfileOnPostTest = value
 	return f

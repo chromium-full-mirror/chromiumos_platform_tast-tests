@@ -67,23 +67,6 @@ var ashPipTests = pipTestParams{
 	pipClassName:  "PictureInPictureWindow",
 }
 
-var arcPipTests = pipTestParams{
-	pipType: arcPip,
-	tests: []pipTestFunc{
-		testPipPinchResize,
-		testPipDoubleTapToEnlarge,
-		testPipDoubleTapToOriginalSize,
-		testPipTuck,
-		testPipMove,
-		testPipExpandViaMenu,
-		testPipHotKeyToEnlarge,
-		testPipHotKeyToOriginalSize,
-		testPipExpandViaShelfIcon,
-	},
-	pipWindowName: arcPipAppName,
-	pipClassName:  "Widget",
-}
-
 func init() {
 	testing.AddTest(&testing.Test{
 		Func: Pip,
@@ -574,21 +557,6 @@ func testPipHotKeyToOriginalSize(ctx context.Context, tconn *chrome.TestConn, ac
 	return nil
 }
 
-// testPipExpandViaShelfIcon verifies that PiP can be expanded by pressing the shelf icon of the app.
-func testPipExpandViaShelfIcon(ctx context.Context, tconn *chrome.TestConn, ac *uiauto.Context, _ *display.Info, _ *input.TouchscreenEventWriter) error {
-	return expandPipViaShelfIcon(ctx, tconn, ac)
-}
-
-// expandPipViaShelfIcon expands the PiP window by pressing the shelf icon of the app.
-// Note that this behavior is currently supported only by ARC PiP.
-func expandPipViaShelfIcon(ctx context.Context, tconn *chrome.TestConn, ac *uiauto.Context) error {
-	pipShelfIcon := nodewith.Name(arcPipAppName).ClassName(ash.ShelfAppButtonClassName)
-	if err := ac.WithTimeout(10 * time.Second).LeftClick(pipShelfIcon)(ctx); err != nil {
-		return errors.Wrapf(err, "failed to click on the shelf icon of %s", arcPipAppName)
-	}
-	return waitUntilPipWindowIsGone(ctx, tconn)
-}
-
 func createArcPip(ctx context.Context, cr *chrome.Chrome, tconn *chrome.TestConn, a *arc.ARC, dispInfo *display.Info, test pipTestParams) (*arc.Activity, error) {
 	pipAct, err := arc.NewActivity(a, arcPipTestPkgName, ".PipActivity")
 	if err != nil {
@@ -690,22 +658,6 @@ func cleanUpArcTest(ctx context.Context, tconn *chrome.TestConn, pipAct *arc.Act
 		return errors.Wrap(err, "failed to close all windows")
 	}
 	return nil
-}
-
-// waitUntilPipWindowIsGone keeps looking for a PiP window until it gets gone.
-func waitUntilPipWindowIsGone(ctx context.Context, tconn *chrome.TestConn) error {
-	return testing.Poll(ctx, func(ctx context.Context) error {
-		ws, err := ash.GetAllWindows(ctx, tconn)
-		if err != nil {
-			return testing.PollBreak(errors.Wrap(err, "failed to get the window list"))
-		}
-		for _, window := range ws {
-			if window.State == ash.WindowStatePIP {
-				return errors.New("PiP still exists")
-			}
-		}
-		return nil
-	}, &testing.PollOptions{Timeout: 10 * time.Second})
 }
 
 // resizePipWindowByDoubleTapAndWait makes double-tapping and waits for the PiP become the max size.

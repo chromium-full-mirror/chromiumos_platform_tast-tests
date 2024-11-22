@@ -400,10 +400,9 @@ func (fwupd *Fwupd) InstallDeviceByVersion(ctx context.Context, device *Device, 
 
 // findLocalMirrorURI returns the first URI that matches the local mirror regex.
 func findLocalMirrorURI(uris []string) (string, error) {
+	re := regexp.MustCompile(LvfsMirrorURIRegex)
 	for _, uri := range uris {
-		if match, err := regexp.MatchString(LvfsMirrorURIRegex, uri); err != nil {
-			return "", errors.Wrap(err, "failed to match URI")
-		} else if match {
+		if re.MatchString(uri) {
 			return uri, nil
 		}
 	}

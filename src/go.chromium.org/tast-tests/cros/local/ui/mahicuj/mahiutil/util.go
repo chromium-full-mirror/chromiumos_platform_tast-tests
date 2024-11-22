@@ -45,7 +45,6 @@ var (
 	mahiQAView                 = nodewith.ClassName("MahiQuestionAnswerView").Ancestor(mahiPanelView)
 	compactSummaryButton       = nodewith.Name("Summarize with Help me read").ClassName("MahiCondensedMenuButton")
 	summaryElucidationSection  = nodewith.ClassName("SummaryOutlinesElucidationSection").Ancestor(mahiPanelView)
-	summaryIndicatorLabel      = nodewith.Name("Summary").ClassName("Label").Role("staticText").Ancestor(summaryElucidationSection)
 	simplifyIndicatorLabel     = nodewith.Name("Simplified text").ClassName("Label").Role("staticText").Ancestor(summaryElucidationSection)
 	anySummaryText             = nodewith.NameRegex(regexp.MustCompile(`^.{20,}$`)).ClassName("Label").Role("staticText").Ancestor(summaryElucidationSection)
 	mockSummaryText            = nodewith.Name(mockResponseString).ClassName("Label").Role("staticText").Ancestor(summaryElucidationSection)

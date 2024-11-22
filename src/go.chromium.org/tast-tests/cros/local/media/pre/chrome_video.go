@@ -12,10 +12,8 @@ import (
 )
 
 const (
-	chromeVideo featureType = featureType(uint32(1) << iota)
-
 	// VideoFeatureFakeMediaStreamUI avoids the need to grant camera/microphone permissions.
-	VideoFeatureFakeMediaStreamUI
+	VideoFeatureFakeMediaStreamUI featureType = featureType(uint32(1) << (iota + 1))
 
 	// VideoFeatureNaCl enables support for Native Client apps.
 	VideoFeatureNaCl

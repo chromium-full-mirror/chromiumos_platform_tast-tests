@@ -71,8 +71,8 @@ func init() {
 type appType int
 
 const (
-	chromeApp appType = 0
-	webApp            = 1
+	chromeApp appType = iota
+	webApp
 )
 
 func CrashRecovery(ctx context.Context, s *testing.State) {
