@@ -39,6 +39,8 @@ func init() {
 			"group:hardware",
 			"group:complementary",
 			"group:hw_agnostic",
+			"group:release-health",
+			"release-health_ui",
 		},
 		SoftwareDeps: []string{"chrome", "gaia"},
 		Timeout:      5 * time.Minute,
