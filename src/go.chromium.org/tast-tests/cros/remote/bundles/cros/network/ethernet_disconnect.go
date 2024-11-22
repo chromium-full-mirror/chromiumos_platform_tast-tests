@@ -110,8 +110,8 @@ func EthernetDisconnect(ctx context.Context, s *testing.State) {
 	ctx, cancel := ctxutil.Shorten(ctx, 5*time.Second)
 	defer cancel()
 
-	wifiChips := s.Features("").Hardware.HardwareFeatures.Wifi.WifiChips
-	helper := &disconnectEthernetRPCHelper{hint: s.RPCHint(), dut: s.DUT(), hasWifi: len(wifiChips) != 0}
+	wifiChips := s.Features("").GetHardware().GetHardwareFeatures().GetWifi().GetWifiChips()
+	helper := &disconnectEthernetRPCHelper{hint: s.RPCHint(), dut: s.DUT(), hasWifi: len(wifiChips) > 0}
 	if err := helper.establish(ctx); err != nil {
 		s.Fatal("Failed to establish RPC helper: ", err)
 	}
