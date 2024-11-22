@@ -208,9 +208,13 @@ func WaitForRecoverySetup(ctx context.Context, oobeConn *chrome.Conn) error {
 	if err := oobeConn.Eval(ctx, "OobeAPI.advanceToScreen('cryptohome-recovery-setup')", nil); err != nil {
 		return errors.Wrap(err, "failed to advance to the cryptohome-recovery-setup screen")
 	}
-	if err := oobeConn.WaitForExprFailOnErr(ctx, "OobeAPI.screens.CryptohomeRecoverySetupScreen.isVisible()"); err != nil {
-		return errors.Wrap(err, "failed to wait for the recovery setup screen to be visible")
+
+	// Some devices lack a recovery MRC cache, in which case the recovery screen is skipped.
+	if err := oobeConn.WaitForExprFailOnErr(ctx, "OobeAPI.screens.CryptohomeRecoverySetupScreen.isVisible() || "+
+		" OobeAPI.screens.PinSetupScreen.isVisible()"); err != nil {
+		return errors.Wrap(err, "failed to wait for the recovery setup screen or pin setup screen to be visible")
 	}
+
 	if err := oobeConn.WaitForExprFailOnErr(ctx, "!OobeAPI.screens.CryptohomeRecoverySetupScreen.isVisible()"); err != nil {
 		return errors.Wrap(err, "failed to wait for the recovery setup screen to not be visible")
 	}
