@@ -83,7 +83,7 @@ func isUnderSSHDTree(pid int32) bool {
 		if err != nil {
 			return false
 		}
-		if exe == "/usr/sbin/sshd" {
+		if exe == "/usr/sbin/sshd" || exe == "/usr/lib64/misc/sshd-session" || exe == "/usr/lib/misc/sshd-session" {
 			return ppid != 1
 		}
 		pid = ppid
