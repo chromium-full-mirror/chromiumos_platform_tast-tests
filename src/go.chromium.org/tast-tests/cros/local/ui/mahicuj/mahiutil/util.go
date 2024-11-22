@@ -46,6 +46,7 @@ var (
 	compactSummaryButton       = nodewith.Name("Summarize with Help me read").ClassName("MahiCondensedMenuButton")
 	summaryElucidationSection  = nodewith.ClassName("SummaryOutlinesElucidationSection").Ancestor(mahiPanelView)
 	summaryIndicatorLabel      = nodewith.Name("Summary").ClassName("Label").Role("staticText").Ancestor(summaryElucidationSection)
+	simplifyIndicatorLabel     = nodewith.Name("Simplified text").ClassName("Label").Role("staticText").Ancestor(summaryElucidationSection)
 	anySummaryText             = nodewith.NameRegex(regexp.MustCompile(`^.{20,}$`)).ClassName("Label").Role("staticText").Ancestor(summaryElucidationSection)
 	mockSummaryText            = nodewith.Name(mockResponseString).ClassName("Label").Role("staticText").Ancestor(summaryElucidationSection)
 	mahiErrorStatus            = nodewith.ClassName("MahiErrorStatusView").Ancestor(mahiPanelView)
@@ -313,7 +314,7 @@ func SelectContentAndRightClick(
 		event.DocumentSelectionChanged,
 		ui.Select(
 			contentNode, 0 /*startOffset*/, contentNode,
-			utf8.RuneCountInString(content) /*endOffset*/))(ctx); err != nil {
+			utf8.RuneCountInString(content)-1 /*endOffset*/))(ctx); err != nil {
 		return errors.Wrap(err, "failed to select query")
 	}
 
@@ -336,13 +337,22 @@ func SelectContentAndRightClick(
 // DoSimplify clicks the simplify button and checks the result panel exists.
 func DoSimplify(
 	ctx context.Context,
-	ui *uiauto.Context) error {
+	ui *uiauto.Context,
+	expectResponse bool,
+) error {
+
+	expectAction := func() uiauto.Action {
+		if expectResponse {
+			return ui.WaitUntilExists(simplifyIndicatorLabel)
+		}
+		return ui.WaitUntilAnyExists(simplifyIndicatorLabel, mahiErrorStatus)
+	}
 
 	return uiauto.Combine("Right click selected text and do simplify",
 		ui.WaitUntilExists(SimplifyButton),
 		ui.LeftClick(SimplifyButton),
 		ui.WaitUntilExists(mahiCloseButton),
-		ui.WaitUntilAnyExists(anySummaryText, mahiErrorStatus),
+		expectAction(),
 	)(ctx)
 
 }

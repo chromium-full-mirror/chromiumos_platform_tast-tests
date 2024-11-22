@@ -178,7 +178,7 @@ func PowerMetricsForSimplify(ctx context.Context, s *testing.State) {
 		}
 
 		if params.doSimplify {
-			if err := mahiutil.DoSimplify(ctx, ui); err != nil {
+			if err := mahiutil.DoSimplify(ctx, ui, false /*expectResponse*/); err != nil {
 				s.Log("Failed to click the simplify button and wait for the result panel: ", err)
 				return errors.Wrap(err, "failed to click the simplify button and wait for the result panel")
 			}

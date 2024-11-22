@@ -8,6 +8,7 @@ package mahicuj
 import (
 	"context"
 	"os"
+	"path"
 	"time"
 
 	"go.chromium.org/tast-tests/cros/common/perf"
@@ -27,7 +28,7 @@ import (
 )
 
 // BrowserCUJRun opens webpage or pdf served by a local HTTP server and uses Mahi features (summary, QA) on it.
-func BrowserCUJRun(ctx context.Context, cr *chrome.Chrome, proxyScriptPath, localZipFilePath, outDir string, urlCount int) (pv *perf.Values, retErr error) {
+func BrowserCUJRun(ctx context.Context, cr *chrome.Chrome, proxyScriptPath, localZipFilePath, outDir string, urlCount int, doSimplify bool) (pv *perf.Values, retErr error) {
 	closeCtx := ctx
 	ctx, cancel := ctxutil.Shorten(ctx, 5*time.Second)
 	defer cancel()
@@ -126,44 +127,75 @@ func BrowserCUJRun(ctx context.Context, cr *chrome.Chrome, proxyScriptPath, loca
 				return errors.Wrapf(err, "failed to open local file %s", fileName)
 			}
 
-			// Do a summary then send a question on the result panel.
-			if err := mahiutil.RightClickAndMaybeShowMahiWidget(
-				ctx, tconn, window, ui, true /*expectMahiWidget*/); err != nil {
-				return errors.Wrap(err, "failed to do a right click")
-			}
-
-			if err := mahiutil.DoSummary(ctx, ui, true /*expectMockResponse*/); err != nil {
-				return errors.Wrap(err, "failed to do a mahi summary")
-			}
-
-			if err := mahiutil.AskQuestionOnMahiPanel(ctx, ui, kb); err != nil {
-				return errors.Wrap(err, "failed to ask a question")
-			}
-
-			if err := mahiutil.CleanUIElement(ctx, ui, kb); err != nil {
-				return errors.Wrap(err, "failed to clean mahi UI elements after summary")
-			}
-
-			// Right click again and if normal mahi widget (instead of compact summary
-			// button) shows up, send a question on the widget.
-			if err := mahiutil.RightClickAndMaybeShowMahiWidget(
-				ctx, tconn, window, ui, true /*expectMahiWidget*/); err != nil {
-				return errors.Wrap(err, "failed to do a right click")
-			}
-
-			if err := ui.Exists(mahiutil.SummarizeButton)(ctx); err != nil {
-				if err := mahiutil.CleanUIElement(ctx, ui, kb); err != nil {
-					return errors.Wrap(err, "failed clean the compact widget")
+			summaryAndAskQuestionAction := func() error {
+				// Do a summary then send a question on the result panel.
+				if err := mahiutil.RightClickAndMaybeShowMahiWidget(
+					ctx, tconn, window, ui, true /*expectMahiWidget*/); err != nil {
+					return errors.Wrap(err, "failed to do a right click")
 				}
-				continue
+
+				if err := mahiutil.DoSummary(ctx, ui, true /*expectMockResponse*/); err != nil {
+					return errors.Wrap(err, "failed to do a mahi summary")
+				}
+
+				if err := mahiutil.AskQuestionOnMahiPanel(ctx, ui, kb); err != nil {
+					return errors.Wrap(err, "failed to ask a question")
+				}
+
+				if err := mahiutil.CleanUIElement(ctx, ui, kb); err != nil {
+					return errors.Wrap(err, "failed to clean mahi UI elements after summary")
+				}
+
+				// Right click again and if normal mahi widget (instead of compact summary
+				// button) shows up, send a question on the widget.
+				if err := mahiutil.RightClickAndMaybeShowMahiWidget(
+					ctx, tconn, window, ui, true /*expectMahiWidget*/); err != nil {
+					return errors.Wrap(err, "failed to do a right click")
+				}
+
+				if err := ui.Exists(mahiutil.SummarizeButton)(ctx); err != nil {
+					if err := mahiutil.CleanUIElement(ctx, ui, kb); err != nil {
+						return errors.Wrap(err, "failed clean the compact widget")
+					}
+					return nil
+				}
+
+				if err := mahiutil.AskQuestionOnMahiWidget(ctx, ui, kb); err != nil {
+					return errors.Wrap(err, "failed to send a question on the widget")
+				}
+
+				if err := mahiutil.CleanUIElement(ctx, ui, kb); err != nil {
+					return errors.Wrap(err, "failed to clean mahi UI elements after sending a question")
+				}
+				return nil
 			}
 
-			if err := mahiutil.AskQuestionOnMahiWidget(ctx, ui, kb); err != nil {
-				return errors.Wrap(err, "failed to send a question on the widget")
+			simplifyAction := func() error {
+				// Selects the content, right click then clicks the Simplify button.
+				content, err := mahiutil.ReadTextFile(path.Join(localFilePath, fileName))
+				if err != nil {
+					return errors.Wrapf(err, "failed to read content of file %s", fileName)
+				}
+				if err := mahiutil.SelectContentAndRightClick(ctx, ui, content, mahiutil.SimplifyButton); err != nil {
+					return errors.Wrap(err, "failed to do a right click and checks the simplify button")
+				}
+				if err := mahiutil.DoSimplify(ctx, ui, true /*expectResponse*/); err != nil {
+					return errors.Wrap(err, "failed to click the simplify button and wait for the result panel")
+				}
+				if err := mahiutil.CleanUIElement(ctx, ui, kb); err != nil {
+					return errors.Wrap(err, "failed to clean mahi UI elements after simplifying")
+				}
+				return nil
 			}
 
-			if err := mahiutil.CleanUIElement(ctx, ui, kb); err != nil {
-				return errors.Wrap(err, "failed to clean mahi UI elements after sending a question")
+			if !doSimplify {
+				if err := summaryAndAskQuestionAction(); err != nil {
+					return errors.Wrap(err, "failed to do summary and QA")
+				}
+			} else {
+				if err := simplifyAction(); err != nil {
+					return errors.Wrap(err, "failed to do simplify")
+				}
 			}
 		}
 

@@ -18,11 +18,13 @@ const (
 	responseMockPy = "mahi_response_mock.py"
 	localHTMLZip   = "mahi_html.zip"
 	localPDFZip    = "mahi_example_pdf.zip"
+	localTextZip   = "mahi_text.zip"
 )
 
 type mahiParameters struct {
 	urlCount     int
 	localZipFile string
+	doSimplify   bool
 }
 
 func init() {
@@ -40,6 +42,7 @@ func init() {
 		Data: []string{
 			localHTMLZip,
 			localPDFZip,
+			localTextZip,
 			responseMockPy,
 		},
 		Attr: []string{"group:cuj", "cuj_experimental"},
@@ -50,6 +53,16 @@ func init() {
 				Val: mahiParameters{
 					urlCount:     5,
 					localZipFile: localHTMLZip,
+					doSimplify:   false,
+				},
+			},
+			{
+				Name:    "webpage_simplify",
+				Fixture: "loggedInToCUJUserWithMahiEnabled",
+				Val: mahiParameters{
+					urlCount:     5,
+					localZipFile: localTextZip,
+					doSimplify:   true,
 				},
 			},
 			{
@@ -58,6 +71,7 @@ func init() {
 				Val: mahiParameters{
 					urlCount:     1,
 					localZipFile: localPDFZip,
+					doSimplify:   false,
 				},
 			},
 		},
@@ -68,7 +82,9 @@ func MahiBrowserCUJ(ctx context.Context, s *testing.State) {
 	cr := s.FixtValue().(chrome.HasChrome).Chrome()
 	params := s.Param().(mahiParameters)
 
-	if _, err := mahicuj.BrowserCUJRun(ctx, cr, s.DataPath(responseMockPy), s.DataPath(params.localZipFile), s.OutDir(), params.urlCount); err != nil {
+	if _, err := mahicuj.BrowserCUJRun(
+		ctx, cr, s.DataPath(responseMockPy), s.DataPath(params.localZipFile),
+		s.OutDir(), params.urlCount, params.doSimplify); err != nil {
 		s.Fatal("Failed to run MahiBrowserCUJ: ", err)
 	}
 
