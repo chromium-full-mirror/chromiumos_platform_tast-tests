@@ -8,6 +8,7 @@ import (
 	"context"
 	"os"
 	"reflect"
+	"regexp"
 	"strings"
 	"time"
 
@@ -39,6 +40,9 @@ const (
 	InstallMethod = "Install"
 	// QuitMethod - Method name to stop fwupd
 	QuitMethod = "Quit"
+
+	// LvfsMirrorURIRegex - Regex of LVFS Mirror
+	LvfsMirrorURIRegex = "https://storage.googleapis.com/chromeos-localmirror/lvfs/.*"
 )
 
 // Fwupd structure maintains the auxiliary data needed for package methods.
@@ -73,7 +77,7 @@ type Release struct {
 	RemoteId   string // NOLINT
 	TrustFlags uint64
 	Version    string
-	Uri        string // NOLINT
+	Locations  []string // NOLINT
 }
 
 // New opens connection to DBus and do any other initialization if needed.
@@ -345,8 +349,14 @@ func (fwupd *Fwupd) InstallDeviceByVersion(ctx context.Context, device *Device, 
 		return errors.Wrapf(err, "failed to find release %s", version)
 	}
 
+	// Choose the one that starts with our local mirror
+	uri, err := findLocalMirrorURI(release.Locations)
+	if err != nil {
+		return err
+	}
+
 	// Install the firmware file if needed and get the absolute file path.
-	releaseFile, err := DownloadFile(ctx, release.Uri, CacheDir)
+	releaseFile, err := DownloadFile(ctx, uri, CacheDir)
 	if err != nil {
 		return err
 	}
@@ -386,4 +396,16 @@ func (fwupd *Fwupd) InstallDeviceByVersion(ctx context.Context, device *Device, 
 		return errors.Errorf("unexpected device version after update: %s; want %s", device.Version, version)
 	}
 	return nil
+}
+
+// findLocalMirrorURI returns the first URI that matches the local mirror regex.
+func findLocalMirrorURI(uris []string) (string, error) {
+	for _, uri := range uris {
+		if match, err := regexp.MatchString(LvfsMirrorURIRegex, uri); err != nil {
+			return "", errors.Wrap(err, "failed to match URI")
+		} else if match {
+			return uri, nil
+		}
+	}
+	return "", errors.New("no local mirror URI found")
 }
