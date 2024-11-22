@@ -64,6 +64,7 @@ const (
 	pap         = shillconst.DevicePropertyCellularAPNInfoApnAuthenticationPap
 	username    = shillconst.DevicePropertyCellularAPNInfoApnUsername
 	password    = shillconst.DevicePropertyCellularAPNInfoApnPassword
+	source      = shillconst.DevicePropertyCellularAPNInfoApnSource
 )
 
 var (
@@ -94,66 +95,66 @@ var (
 func initializeCarrierAPNs() map[Carrier][]KnownAPN {
 	return map[Carrier][]KnownAPN{
 		CarrierAmarisoft: []KnownAPN{
-			KnownAPN{Optional: false, APNInfo: map[string]interface{}{apn: "callbox-ipv4", ipType: ipv4}, APNTypes: []string{typeDefault, typeIA}},
-			KnownAPN{Optional: false, APNInfo: map[string]interface{}{apn: "callbox-ipv4", ipType: ipv4}, APNTypes: []string{typeDefault}},
-			KnownAPN{Optional: false, APNInfo: map[string]interface{}{apn: "callbox-ipv4-chap", ipType: ipv4, username: "username", password: "password"}, APNTypes: []string{typeDefault, typeIA}},
-			KnownAPN{Optional: false, APNInfo: map[string]interface{}{apn: "callbox-ipv4-pap", ipType: ipv4, username: "username", password: "password", auth: pap}, APNTypes: []string{typeDefault, typeIA}},
-			KnownAPN{Optional: false, APNInfo: map[string]interface{}{apn: "callbox-ipv6", ipType: ipv6}, APNTypes: []string{typeDefault, typeIA}},
-			KnownAPN{Optional: false, APNInfo: map[string]interface{}{apn: "callbox-ipv4v6", ipType: ipv4v6}, APNTypes: []string{typeDefault, typeIA}},
+			KnownAPN{Optional: false, APNInfo: map[string]interface{}{apn: "callbox-ipv4", ipType: ipv4, source: "ui"}, APNTypes: []string{typeDefault, typeIA}},
+			KnownAPN{Optional: false, APNInfo: map[string]interface{}{apn: "callbox-ipv4", ipType: ipv4, source: "ui"}, APNTypes: []string{typeDefault}},
+			KnownAPN{Optional: false, APNInfo: map[string]interface{}{apn: "callbox-ipv4-chap", ipType: ipv4, source: "ui", username: "username", password: "password"}, APNTypes: []string{typeDefault, typeIA}},
+			KnownAPN{Optional: false, APNInfo: map[string]interface{}{apn: "callbox-ipv4-pap", ipType: ipv4, source: "ui", username: "username", password: "password", auth: pap}, APNTypes: []string{typeDefault, typeIA}},
+			KnownAPN{Optional: false, APNInfo: map[string]interface{}{apn: "callbox-ipv6", ipType: ipv6, source: "ui"}, APNTypes: []string{typeDefault, typeIA}},
+			KnownAPN{Optional: false, APNInfo: map[string]interface{}{apn: "callbox-ipv4v6", ipType: ipv4v6, source: "ui"}, APNTypes: []string{typeDefault, typeIA}},
 		},
 		CarrierSysmocom: []KnownAPN{
-			KnownAPN{Optional: false, APNInfo: map[string]interface{}{apn: "internet", ipType: ipv4v6}, APNTypes: []string{typeDefault, typeIA}},
+			KnownAPN{Optional: false, APNInfo: map[string]interface{}{apn: "internet", ipType: ipv4v6, source: "ui"}, APNTypes: []string{typeDefault, typeIA}},
 		},
 		// US
 		CarrierTmobile: []KnownAPN{
-			KnownAPN{Optional: false, APNInfo: map[string]interface{}{apn: "fast.t-mobile.com", ipType: ipv4v6}, APNTypes: []string{typeDefault, typeIA}},
-			KnownAPN{Optional: false, APNInfo: map[string]interface{}{apn: "fast.t-mobile.com", ipType: ipv4v6}, APNTypes: []string{typeDefault}},
+			KnownAPN{Optional: false, APNInfo: map[string]interface{}{apn: "fast.t-mobile.com", ipType: ipv4v6, source: "ui"}, APNTypes: []string{typeDefault, typeIA}},
+			KnownAPN{Optional: false, APNInfo: map[string]interface{}{apn: "fast.t-mobile.com", ipType: ipv4v6, source: "ui"}, APNTypes: []string{typeDefault}},
 		},
 		CarrierAtt: []KnownAPN{
-			KnownAPN{Optional: true, APNInfo: map[string]interface{}{apn: "broadband", ipType: ipv4v6}, APNTypes: []string{typeDefault, typeIA}},
-			KnownAPN{Optional: true, APNInfo: map[string]interface{}{apn: "broadband"}, APNTypes: []string{typeDefault}},
-			KnownAPN{Optional: true, APNInfo: map[string]interface{}{apn: "nrbroadband", ipType: ipv4v6}, APNTypes: []string{typeDefault, typeIA}},
-			KnownAPN{Optional: true, APNInfo: map[string]interface{}{apn: "nrbroadband"}, APNTypes: []string{typeDefault}},
+			KnownAPN{Optional: true, APNInfo: map[string]interface{}{apn: "broadband", ipType: ipv4v6, source: "ui"}, APNTypes: []string{typeDefault, typeIA}},
+			KnownAPN{Optional: true, APNInfo: map[string]interface{}{apn: "broadband", source: "ui"}, APNTypes: []string{typeDefault}},
+			KnownAPN{Optional: true, APNInfo: map[string]interface{}{apn: "nrbroadband", ipType: ipv4v6, source: "ui"}, APNTypes: []string{typeDefault, typeIA}},
+			KnownAPN{Optional: true, APNInfo: map[string]interface{}{apn: "nrbroadband", source: "ui"}, APNTypes: []string{typeDefault}},
 		},
 		CarrierVerizon: []KnownAPN{
-			KnownAPN{Optional: false, APNInfo: map[string]interface{}{apn: "vzwinternet", ipType: ipv4v6}, APNTypes: []string{typeDefault}},
-			KnownAPN{Optional: false, APNInfo: map[string]interface{}{apn: "vzwinternet"}, APNTypes: []string{typeDefault}},
+			KnownAPN{Optional: false, APNInfo: map[string]interface{}{apn: "vzwinternet", ipType: ipv4v6, source: "ui"}, APNTypes: []string{typeDefault}},
+			KnownAPN{Optional: false, APNInfo: map[string]interface{}{apn: "vzwinternet", source: "ui"}, APNTypes: []string{typeDefault}},
 		},
 		// Japan
 		CarrierKDDI: []KnownAPN{
-			KnownAPN{Optional: true, APNInfo: map[string]interface{}{apn: "au.au-net.ne.jp", ipType: ipv4v6, username: "user@au.au-net.ne.jp", password: "au", auth: chap}, APNTypes: []string{typeDefault, typeIA}},
-			KnownAPN{Optional: true, APNInfo: map[string]interface{}{apn: "uno.au-net.ne.jp", ipType: ipv4v6, username: "685840734641020@uno.au-net.ne.jp", password: "KpyrR6BP", auth: chap}, APNTypes: []string{typeDefault, typeIA}},
+			KnownAPN{Optional: true, APNInfo: map[string]interface{}{apn: "au.au-net.ne.jp", ipType: ipv4v6, username: "user@au.au-net.ne.jp", password: "au", auth: chap, source: "ui"}, APNTypes: []string{typeDefault, typeIA}},
+			KnownAPN{Optional: true, APNInfo: map[string]interface{}{apn: "uno.au-net.ne.jp", ipType: ipv4v6, username: "685840734641020@uno.au-net.ne.jp", password: "KpyrR6BP", auth: chap, source: "ui"}, APNTypes: []string{typeDefault, typeIA}},
 		},
 		CarrierDocomo: []KnownAPN{
-			KnownAPN{Optional: false, APNInfo: map[string]interface{}{apn: "spmode.ne.jp", ipType: ipv4v6, auth: chap}, APNTypes: []string{typeDefault, typeIA}},
+			KnownAPN{Optional: false, APNInfo: map[string]interface{}{apn: "spmode.ne.jp", ipType: ipv4v6, auth: chap, source: "ui"}, APNTypes: []string{typeDefault, typeIA}},
 		},
 		CarrierRakuten: []KnownAPN{
-			KnownAPN{Optional: false, APNInfo: map[string]interface{}{apn: "rakuten.jp", ipType: ipv4v6}, APNTypes: []string{typeDefault, typeIA}},
+			KnownAPN{Optional: false, APNInfo: map[string]interface{}{apn: "rakuten.jp", ipType: ipv4v6, source: "ui"}, APNTypes: []string{typeDefault, typeIA}},
 		},
 		CarrierSoftbank: []KnownAPN{
-			KnownAPN{Optional: true, APNInfo: map[string]interface{}{apn: "plus.acs.jp.v6", ipType: ipv4v6, username: "ym", password: "ym", auth: chap}, APNTypes: []string{typeDefault, typeIA}},
-			KnownAPN{Optional: true, APNInfo: map[string]interface{}{apn: "cmn.mgx", ipType: ipv4v6, username: "cmn@mgx", password: "mgx", auth: pap}, APNTypes: []string{typeDefault, typeIA}},
-			KnownAPN{Optional: true, APNInfo: map[string]interface{}{apn: "plus.4g", ipType: ipv4v6, username: "plus", password: "4g", auth: chap}, APNTypes: []string{typeDefault, typeIA}},
+			KnownAPN{Optional: true, APNInfo: map[string]interface{}{apn: "plus.acs.jp.v6", ipType: ipv4v6, source: "ui", username: "ym", password: "ym", auth: chap}, APNTypes: []string{typeDefault, typeIA}},
+			KnownAPN{Optional: true, APNInfo: map[string]interface{}{apn: "cmn.mgx", ipType: ipv4v6, username: "cmn@mgx", password: "mgx", auth: pap, source: "ui"}, APNTypes: []string{typeDefault, typeIA}},
+			KnownAPN{Optional: true, APNInfo: map[string]interface{}{apn: "plus.4g", ipType: ipv4v6, username: "plus", password: "4g", auth: chap, source: "ui"}, APNTypes: []string{typeDefault, typeIA}},
 		},
 		// UK
 		CarrierEEUK: []KnownAPN{
-			KnownAPN{Optional: false, APNInfo: map[string]interface{}{apn: "everywhere", ipType: ipv4v6, username: "eesecure", password: "secure", auth: pap}, APNTypes: []string{typeDefault}},
+			KnownAPN{Optional: false, APNInfo: map[string]interface{}{apn: "everywhere", ipType: ipv4v6, username: "eesecure", password: "secure", auth: pap, source: "ui"}, APNTypes: []string{typeDefault}},
 		},
 		CarrierVodafoneUK: []KnownAPN{
-			KnownAPN{Optional: false, APNInfo: map[string]interface{}{apn: "wap.vodafone.co.uk", ipType: ipv4v6, username: "wap", password: "wap"}, APNTypes: []string{typeDefault}},
+			KnownAPN{Optional: false, APNInfo: map[string]interface{}{apn: "wap.vodafone.co.uk", ipType: ipv4v6, username: "wap", password: "wap", source: "ui"}, APNTypes: []string{typeDefault}},
 		},
 		// Canada
 		CarrierRoger: []KnownAPN{
-			KnownAPN{Optional: true, APNInfo: map[string]interface{}{apn: "mobile.apn", ipType: ipv4v6}, APNTypes: []string{typeDefault}},
-			KnownAPN{Optional: true, APNInfo: map[string]interface{}{apn: "ltemobile.apn", ipType: ipv4v6}, APNTypes: []string{typeDefault, typeIA}},
-			KnownAPN{Optional: true, APNInfo: map[string]interface{}{apn: "ltemobile.apn", ipType: ipv4v6}, APNTypes: []string{typeDefault}},
+			KnownAPN{Optional: true, APNInfo: map[string]interface{}{apn: "mobile.apn", ipType: ipv4v6, source: "ui"}, APNTypes: []string{typeDefault}},
+			KnownAPN{Optional: true, APNInfo: map[string]interface{}{apn: "ltemobile.apn", ipType: ipv4v6, source: "ui"}, APNTypes: []string{typeDefault, typeIA}},
+			KnownAPN{Optional: true, APNInfo: map[string]interface{}{apn: "ltemobile.apn", ipType: ipv4v6, source: "ui"}, APNTypes: []string{typeDefault}},
 		},
 		CarrierTelus: []KnownAPN{
-			KnownAPN{Optional: true, APNInfo: map[string]interface{}{apn: "isp.telus.com", ipType: ipv4v6}, APNTypes: []string{typeDefault}},
-			KnownAPN{Optional: true, APNInfo: map[string]interface{}{apn: "sp.telus.com", ipType: ipv4v6}, APNTypes: []string{typeDefault}},
+			KnownAPN{Optional: true, APNInfo: map[string]interface{}{apn: "isp.telus.com", ipType: ipv4v6, source: "ui"}, APNTypes: []string{typeDefault}},
+			KnownAPN{Optional: true, APNInfo: map[string]interface{}{apn: "sp.telus.com", ipType: ipv4v6, source: "ui"}, APNTypes: []string{typeDefault}},
 		},
 		CarrierCBRS: []KnownAPN{
-			KnownAPN{Optional: true, APNInfo: map[string]interface{}{apn: "internet", ipType: ipv4v6}, APNTypes: []string{typeDefault}},
+			KnownAPN{Optional: true, APNInfo: map[string]interface{}{apn: "internet", ipType: ipv4v6, source: "ui"}, APNTypes: []string{typeDefault}},
 		},
 	}
 }
