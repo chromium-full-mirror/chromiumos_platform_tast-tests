@@ -23,9 +23,11 @@ func init() {
 		Contacts: []string{
 			"chromeos-faft@google.com",
 			"hc.tsai@cienet.com",
+			"jbettis@google.com",
 		},
 		BugComponent: "b:792402", // ChromeOS > Platform > Enablement > Firmware > FAFT
-		Attr:         []string{"group:firmware", "firmware_bringup"},
+		// firmware_slow is mapped into faft_ec, but in a separate group so it won't timeout.
+		Attr:         []string{"group:firmware", "firmware_bringup", "firmware_slow"},
 		Vars:         []string{"firmware.hibernate_time", "board", "model"},
 		HardwareDeps: hwdep.D(hwdep.Battery(), hwdep.ChromeEC()),
 		Timeout:      260 * time.Minute, // 4hrs 20mins
@@ -196,7 +198,7 @@ func DeepSleep(ctx context.Context, s *testing.State) {
 			s.Errorf("Estimate Battery Life(%f) less than 100 days", days)
 		}
 	} else {
-		// If less than 1 mAh is consumed during the test, we still won't know it passed unless we
+		// If less than 1 mAh is consumed during the test, we still won't know if passed unless we
 		// ran for long enough for it not to be a rounding error. This does assume that
 		// the battery is capable of reporting charge in increments of 1mAh, which might not
 		// be true.
