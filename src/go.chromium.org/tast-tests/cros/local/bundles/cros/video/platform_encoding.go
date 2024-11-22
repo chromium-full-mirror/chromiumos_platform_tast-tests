@@ -925,6 +925,174 @@ func init() {
 			},
 			ExtraData:         []string{"gipsrestat-1280x720.vp9.webm"},
 			ExtraSoftwareDeps: []string{"v4l2_codec", caps.HWEncodeVP8},
+		}, {
+			Name: "cros_codecs_v4l2_h264_180",
+			Val: testParam{
+				command:        "ccenc",
+				filename:       "tulip2-320x180.vp9.webm",
+				numFrames:      500,
+				fps:            30,
+				size:           coords.NewSize(320, 180),
+				commandBuilder: platform.ArgsCcenc,
+				regExpFPS:      regExpFPSV4L2,
+				decoder:        encoding.OpenH264Decoder,
+			},
+			ExtraData:         []string{"tulip2-320x180.vp9.webm"},
+			ExtraSoftwareDeps: []string{"v4l2_codec", caps.HWEncodeH264},
+		}, {
+			Name: "cros_codecs_v4l2_h264_360",
+			Val: testParam{
+				command:        "ccenc",
+				filename:       "tulip2-640x360.vp9.webm",
+				numFrames:      500,
+				fps:            30,
+				size:           coords.NewSize(640, 360),
+				commandBuilder: platform.ArgsCcenc,
+				regExpFPS:      regExpFPSV4L2,
+				decoder:        encoding.OpenH264Decoder,
+			},
+			ExtraData:         []string{"tulip2-640x360.vp9.webm"},
+			ExtraSoftwareDeps: []string{"v4l2_codec", caps.HWEncodeH264},
+		}, {
+			Name: "cros_codecs_v4l2_h264_720",
+			Val: testParam{
+				command:        "ccenc",
+				filename:       "tulip2-1280x720.vp9.webm",
+				numFrames:      500,
+				fps:            30,
+				size:           coords.NewSize(1280, 720),
+				commandBuilder: platform.ArgsCcenc,
+				regExpFPS:      regExpFPSV4L2,
+				decoder:        encoding.OpenH264Decoder,
+			},
+			ExtraData:         []string{"tulip2-1280x720.vp9.webm"},
+			ExtraSoftwareDeps: []string{"v4l2_codec", caps.HWEncodeH264},
+		}, {
+			Name: "cros_codecs_v4l2_h264_180_meet",
+			Val: testParam{
+				command:        "ccenc",
+				filename:       "gipsrestat-320x180.vp9.webm",
+				numFrames:      846,
+				fps:            50,
+				size:           coords.NewSize(320, 180),
+				commandBuilder: platform.ArgsCcenc,
+				regExpFPS:      regExpFPSV4L2,
+				decoder:        encoding.OpenH264Decoder,
+			},
+			ExtraData:         []string{"gipsrestat-320x180.vp9.webm"},
+			ExtraSoftwareDeps: []string{"v4l2_codec", caps.HWEncodeH264},
+		}, {
+			Name: "cros_codecs_v4l2_h264_360_meet",
+			Val: testParam{
+				command:        "ccenc",
+				filename:       "gipsrestat-640x360.vp9.webm",
+				numFrames:      846,
+				fps:            50,
+				size:           coords.NewSize(640, 360),
+				commandBuilder: platform.ArgsCcenc,
+				regExpFPS:      regExpFPSV4L2,
+				decoder:        encoding.OpenH264Decoder,
+			},
+			ExtraData:         []string{"gipsrestat-640x360.vp9.webm"},
+			ExtraSoftwareDeps: []string{"v4l2_codec", caps.HWEncodeH264},
+		}, {
+			Name: "cros_codecs_v4l2_h264_720_meet",
+			Val: testParam{
+				command:        "ccenc",
+				filename:       "gipsrestat-1280x720.vp9.webm",
+				numFrames:      846,
+				fps:            50,
+				size:           coords.NewSize(1280, 720),
+				commandBuilder: platform.ArgsCcenc,
+				regExpFPS:      regExpFPSV4L2,
+				decoder:        encoding.OpenH264Decoder,
+			},
+			ExtraData:         []string{"gipsrestat-1280x720.vp9.webm"},
+			ExtraSoftwareDeps: []string{"v4l2_codec", caps.HWEncodeH264},
+		}, {
+			Name: "cros_codecs_v4l2_vp8_180",
+			Val: testParam{
+				command:        "ccenc",
+				filename:       "tulip2-320x180.vp9.webm",
+				numFrames:      500,
+				fps:            30,
+				size:           coords.NewSize(320, 180),
+				commandBuilder: platform.ArgsCcenc,
+				regExpFPS:      regExpFPSV4L2,
+				decoder:        encoding.LibvpxDecoder,
+			},
+			ExtraData:         []string{"tulip2-320x180.vp9.webm"},
+			ExtraSoftwareDeps: []string{"v4l2_codec", caps.HWEncodeVP8},
+		}, {
+			Name: "cros_codecs_v4l2_vp8_360",
+			Val: testParam{
+				command:        "ccenc",
+				filename:       "tulip2-640x360.vp9.webm",
+				numFrames:      500,
+				fps:            30,
+				size:           coords.NewSize(640, 360),
+				commandBuilder: platform.ArgsCcenc,
+				regExpFPS:      regExpFPSV4L2,
+				decoder:        encoding.LibvpxDecoder,
+			},
+			ExtraData:         []string{"tulip2-640x360.vp9.webm"},
+			ExtraSoftwareDeps: []string{"v4l2_codec", caps.HWEncodeVP8},
+		}, {
+			Name: "cros_codecs_v4l2_vp8_720",
+			Val: testParam{
+				command:        "ccenc",
+				filename:       "tulip2-1280x720.vp9.webm",
+				numFrames:      500,
+				fps:            30,
+				size:           coords.NewSize(1280, 720),
+				commandBuilder: platform.ArgsCcenc,
+				regExpFPS:      regExpFPSV4L2,
+				decoder:        encoding.LibvpxDecoder,
+			},
+			ExtraData:         []string{"tulip2-1280x720.vp9.webm"},
+			ExtraSoftwareDeps: []string{"v4l2_codec", caps.HWEncodeVP8},
+		}, {
+			Name: "cros_codecs_v4l2_vp8_180_meet",
+			Val: testParam{
+				command:        "ccenc",
+				filename:       "gipsrestat-320x180.vp9.webm",
+				numFrames:      846,
+				fps:            50,
+				size:           coords.NewSize(320, 180),
+				commandBuilder: platform.ArgsCcenc,
+				regExpFPS:      regExpFPSV4L2,
+				decoder:        encoding.LibvpxDecoder,
+			},
+			ExtraData:         []string{"gipsrestat-320x180.vp9.webm"},
+			ExtraSoftwareDeps: []string{"v4l2_codec", caps.HWEncodeVP8},
+		}, {
+			Name: "cros_codecs_v4l2_vp8_360_meet",
+			Val: testParam{
+				command:        "ccenc",
+				filename:       "gipsrestat-640x360.vp9.webm",
+				numFrames:      846,
+				fps:            50,
+				size:           coords.NewSize(640, 360),
+				commandBuilder: platform.ArgsCcenc,
+				regExpFPS:      regExpFPSV4L2,
+				decoder:        encoding.LibvpxDecoder,
+			},
+			ExtraData:         []string{"gipsrestat-640x360.vp9.webm"},
+			ExtraSoftwareDeps: []string{"v4l2_codec", caps.HWEncodeVP8},
+		}, {
+			Name: "cros_codecs_v4l2_vp8_720_meet",
+			Val: testParam{
+				command:        "ccenc",
+				filename:       "gipsrestat-1280x720.vp9.webm",
+				numFrames:      846,
+				fps:            50,
+				size:           coords.NewSize(1280, 720),
+				commandBuilder: platform.ArgsCcenc,
+				regExpFPS:      regExpFPSV4L2,
+				decoder:        encoding.LibvpxDecoder,
+			},
+			ExtraData:         []string{"gipsrestat-1280x720.vp9.webm"},
+			ExtraSoftwareDeps: []string{"v4l2_codec", caps.HWEncodeVP8},
 		}},
 		Timeout: 30 * time.Minute,
 	})
@@ -974,22 +1142,25 @@ func PlatformEncoding(ctx context.Context, s *testing.State) {
 		}
 	}
 
-	fps, err := extractValue(logFile, testOpt.regExpFPS)
-	if err != nil {
-		s.Fatal("Failed to extract FPS: ", err)
+	p := perf.NewValues()
+
+	// ccenc does not currently support FPS metrics.
+	if !strings.Contains(s.TestName(), "cros_codecs") {
+		fps, err := extractValue(logFile, testOpt.regExpFPS)
+		if err != nil {
+			s.Fatal("Failed to extract FPS: ", err)
+		}
+		p.Set(perf.Metric{
+			Name:      "fps",
+			Unit:      "fps",
+			Direction: perf.BiggerIsBetter,
+		}, fps)
 	}
 
 	psnr, ssim, vmaf, err := encoding.CompareFiles(ctx, testOpt.decoder, yuvFile, encodedFile, s.OutDir(), testOpt.size)
 	if err != nil {
 		s.Fatal("Failed to decode and compare results: ", err)
 	}
-
-	p := perf.NewValues()
-	p.Set(perf.Metric{
-		Name:      "fps",
-		Unit:      "fps",
-		Direction: perf.BiggerIsBetter,
-	}, fps)
 	p.Set(perf.Metric{
 		Name:      "SSIM",
 		Unit:      "percent",
