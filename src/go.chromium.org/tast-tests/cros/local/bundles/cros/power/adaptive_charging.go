@@ -72,9 +72,13 @@ func AdaptiveCharging(ctx context.Context, s *testing.State) {
 		MaxBatteryPreparationTime: 80 * time.Minute,
 		MinChargePercentage:       80.0,
 		MaxChargePercentage:       93.0,
-		DischargeOnCompletion:     false,
-		IsCustomized:              false,
-		IsPowerQual:               false,
+		// Powerd uses display battery percentage for adaptive charging.
+		// Set UseDisplayPercentage to true when preparing battery for adaptive
+		// charging.
+		UseDisplayPercentage:  true,
+		DischargeOnCompletion: false,
+		IsCustomized:          false,
+		IsPowerQual:           false,
 	}
 	if err := setup.PrepareBattery(ctx, chargeParam); err != nil {
 		s.Fatalf("Failed to ensure battery percentage within %.2f%% to %.2f%%: %v", chargeParam.MinChargePercentage, chargeParam.MaxChargePercentage, err)

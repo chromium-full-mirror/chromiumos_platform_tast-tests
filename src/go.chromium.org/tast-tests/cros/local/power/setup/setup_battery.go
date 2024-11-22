@@ -169,8 +169,13 @@ func PrepareBattery(ctx context.Context, cp power.ChargeParams) error {
 	}
 
 	currentPercentage := status.BatteryPercent
-	testing.ContextLogf(ctx, "Current battery charge is %.2f%%", currentPercentage)
-	testing.ContextLogf(ctx, "Acceptable battery range is [%.2f%%, %.2f%%]", cp.MinChargePercentage, cp.MaxChargePercentage)
+	logStr := "battery"
+	if cp.UseDisplayPercentage {
+		currentPercentage = status.BatteryDisplayPercent
+		logStr = "display battery"
+	}
+	testing.ContextLogf(ctx, "Current %s charge is %.2f%%", logStr, currentPercentage)
+	testing.ContextLogf(ctx, "Acceptable %s range is [%.2f%%, %.2f%%]", logStr, cp.MinChargePercentage, cp.MaxChargePercentage)
 
 	batteryPreparationTimeout := BatteryPreparationTimeout
 	if cp.MaxBatteryPreparationTime != time.Duration(0) {
@@ -182,10 +187,10 @@ func PrepareBattery(ctx context.Context, cp power.ChargeParams) error {
 		err = nil
 	} else if currentPercentage < cp.MinChargePercentage {
 		testing.ContextLog(ctx, "Current battery charge is below the acceptable range")
-		err = chargeBattery(ctx, batteryPreparationTimeout, cp.MinChargePercentage, cp.IsPowerQual)
+		err = chargeBattery(ctx, batteryPreparationTimeout, cp.MinChargePercentage, cp.IsPowerQual, cp.UseDisplayPercentage)
 	} else {
 		testing.ContextLog(ctx, "Current battery charge is above the acceptable range")
-		err = drainBattery(ctx, batteryPreparationTimeout, cp.MaxChargePercentage)
+		err = drainBattery(ctx, batteryPreparationTimeout, cp.MaxChargePercentage, cp.UseDisplayPercentage)
 	}
 
 	if err != nil {
@@ -199,7 +204,7 @@ func PrepareBattery(ctx context.Context, cp power.ChargeParams) error {
 	return AllowBatteryCharging(ctx)
 }
 
-func chargeBattery(ctx context.Context, batteryPreparationTimeout time.Duration, targetPercentage float64, isPowerQual bool) error {
+func chargeBattery(ctx context.Context, batteryPreparationTimeout time.Duration, targetPercentage float64, isPowerQual, UseDisplayPercent bool) error {
 	testing.ContextLog(ctx, "Start charging battery")
 
 	cleanupCtx := ctx
@@ -238,9 +243,14 @@ func chargeBattery(ctx context.Context, batteryPreparationTimeout time.Duration,
 		if !power.IsLinePowerConnected(status) {
 			return testing.PollBreak(errors.Wrap(err, "power source is not connected while charging"))
 		}
-		testing.ContextLogf(ctx, "Current battery percentage is %v%%", status.BatteryPercent)
-		testing.ContextLogf(ctx, "Current display battery percentage is %v%%", status.BatteryDisplayPercent)
-		if status.BatteryPercent < targetPercentage {
+		currentPercent := status.BatteryPercent
+		logStr := "battery"
+		if UseDisplayPercent {
+			currentPercent = status.BatteryDisplayPercent
+			logStr = "display battery"
+		}
+		testing.ContextLogf(ctx, "Current %s percentage is %v%%", logStr, currentPercent)
+		if currentPercent < targetPercentage {
 			return errors.New("failed to reach target battery charge")
 		}
 		// Some battery status goes directly from "Charging" to "Discharging" when the battery is full
@@ -258,7 +268,7 @@ func chargeBattery(ctx context.Context, batteryPreparationTimeout time.Duration,
 	})
 }
 
-func drainBattery(ctx context.Context, batteryPreparationTimeout time.Duration, targetPercentage float64) error {
+func drainBattery(ctx context.Context, batteryPreparationTimeout time.Duration, targetPercentage float64, UseDisplayPercent bool) error {
 	testing.ContextLog(ctx, "Start draining battery")
 
 	cleanupCtx := ctx
@@ -303,7 +313,14 @@ func drainBattery(ctx context.Context, batteryPreparationTimeout time.Duration, 
 		if power.IsLinePowerConnected(status) {
 			return testing.PollBreak(errors.Wrap(err, "power source is connected while discharging"))
 		}
-		if status.BatteryPercent > targetPercentage {
+		currentPercent := status.BatteryPercent
+		logStr := "battery"
+		if UseDisplayPercent {
+			currentPercent = status.BatteryDisplayPercent
+			logStr = "display battery"
+		}
+		testing.ContextLogf(ctx, "Current %s percentage is %v%%", logStr, currentPercent)
+		if currentPercent > targetPercentage {
 			return errors.New("failed to reach target battery charge")
 		}
 		testing.ContextLog(ctx, "Successfully drained battery")

@@ -28,6 +28,10 @@ type ChargeParams struct {
 	// Max battery percent used in a charge test.
 	MaxChargePercentage float64
 
+	// UseDisplayPercentage indicates the requested charge percentage is battery
+	// display percentage. If not set, the percentage is battery percentage.
+	UseDisplayPercentage bool
+
 	// If set to true then AC power will be forced to be temporarily
 	// disconnected via "ectool" to prevent battery from being charged.
 	DischargeOnCompletion bool
