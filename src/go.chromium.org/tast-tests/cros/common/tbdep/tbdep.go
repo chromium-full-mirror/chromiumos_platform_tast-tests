@@ -333,6 +333,18 @@ func HmrState(peripheralState string) string {
 	return keyValueDep("hmr_state", peripheralState)
 }
 
+// HmrWalt returns a "hmr_walt" dependency with the provided hmrWaltState as the value.
+func HmrWalt(hmrWaltState bool) string {
+	// Infra parsing of this value is not flexible, so we must set it exactly.
+	var depValue string
+	if hmrWaltState {
+		depValue = "True"
+	} else {
+		depValue = "False"
+	}
+	return keyValueDep("hmr_walt", depValue)
+}
+
 // HWVideoAcc returns a video acceleration capability dependency in the format
 // "hw_video_acc_<capability>".
 func HWVideoAcc(videoAccelerationCapability string) string {

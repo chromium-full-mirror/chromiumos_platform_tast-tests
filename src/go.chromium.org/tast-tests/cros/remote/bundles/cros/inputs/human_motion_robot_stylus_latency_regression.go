@@ -37,6 +37,7 @@ func init() {
 		ServiceDeps:  []string{"tast.cros.inputs.StylusService", "tast.cros.inputs.WaltService"},
 		Timeout:      15 * time.Minute,
 		Vars:         []string{"servo"},
+		TestBedDeps:  []string{tbdep.ServoStateWorking, tbdep.HmrWalt(true)},
 	})
 }
 
