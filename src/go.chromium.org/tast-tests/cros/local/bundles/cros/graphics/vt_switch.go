@@ -28,7 +28,6 @@ import (
 func init() {
 	testing.AddTest(&testing.Test{
 		Func:         VTSwitch,
-		LacrosStatus: testing.LacrosVariantUnneeded,
 		Desc:         "Switch between VT-2 shell and GUI multiple times",
 		BugComponent: "b:995569", // ChromeOS > Platform > Graphics > GPU
 		Contacts: []string{
