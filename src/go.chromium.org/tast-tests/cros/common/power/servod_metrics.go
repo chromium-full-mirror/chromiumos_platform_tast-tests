@@ -102,7 +102,7 @@ func (m *ServodMetrics) Stop(_ context.Context, _ *perf.Values) error {
 
 func trimRailName(name string) string {
 	// Remove 'ft4232h_generic.' prefix and '_mw' suffix
-	re := regexp.MustCompile("^(?:ft4232h_generic\\.)?([[:alnum:]-_]+)_mw$")
+	re := regexp.MustCompile(`^(?:ft4232h_generic\.)?([[:alnum:]-_]+)_mw$`)
 	m := re.FindStringSubmatch(name)
 	if m == nil {
 		return name
