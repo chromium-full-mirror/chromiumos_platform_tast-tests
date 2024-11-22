@@ -26,7 +26,7 @@ func init() {
 			"shijinabraham@google.com",
 		},
 		BugComponent:    "b:976419", // ChromeOS > EngProd > Platform > Connectivity
-		Attr:            []string{"group:bluetooth"},
+		Attr:            []string{"group:bluetooth", "group:release-health", "release-health_bt"},
 		ServiceDeps:     []string{"tast.cros.bluetooth.BluetoothService"},
 		TestBedDeps:     []string{tbdep.Wificell, tbdep.BluetoothStateNormal, tbdep.WorkingBluetoothPeers(1)},
 		Timeout:         3 * time.Minute,

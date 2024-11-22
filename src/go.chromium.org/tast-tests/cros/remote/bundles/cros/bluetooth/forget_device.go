@@ -33,7 +33,7 @@ func init() {
 		},
 		BugComponent:   "b:1131776", // ChromeOS > Software > Fundamentals > Device Enablement > Connectivity > Bluetooth
 		LifeCycleStage: testing.LifeCycleOwnerMonitored,
-		Attr:           []string{"group:bluetooth", "bluetooth_floss"},
+		Attr:           []string{"group:bluetooth", "bluetooth_floss", "group:release-health", "release-health_bt"},
 		SoftwareDeps:   []string{"chrome"},
 		Fixture:        "chromeLoggedInWith1BTPeerFlossEnabled",
 		TestBedDeps:    []string{tbdep.Wificell, tbdep.BluetoothStateNormal, tbdep.WorkingBluetoothPeers(1)},

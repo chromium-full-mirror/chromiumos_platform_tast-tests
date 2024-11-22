@@ -27,7 +27,7 @@ func init() {
 		},
 		BugComponent:   "b:1131776", // ChromeOS > Software > System Services > Connectivity > Bluetooth
 		LifeCycleStage: testing.LifeCycleOwnerMonitored,
-		Attr:           []string{"group:bluetooth", "bluetooth_sa", "bluetooth_floss"},
+		Attr:           []string{"group:bluetooth", "bluetooth_sa", "bluetooth_floss", "group:release-health", "release-health_bt"},
 		SoftwareDeps:   []string{"chrome"},
 		TestBedDeps:    []string{tbdep.BluetoothStateNormal},
 		// Skip on form factors where a warning dialog may be shown when disabling Bluetooth due to all known HID devices being connected via Bluetooth.

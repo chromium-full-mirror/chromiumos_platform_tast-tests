@@ -24,7 +24,7 @@ func init() {
 			"chadduffin@chromium.org",
 		},
 		BugComponent:    "b:1131776", // ChromeOS > Software > System Services > Connectivity > Bluetooth
-		Attr:            []string{"group:bluetooth"},
+		Attr:            []string{"group:bluetooth", "group:release-health", "release-health_bt"},
 		SoftwareDeps:    []string{"chrome"},
 		TestBedDeps:     []string{tbdep.BluetoothStateNormal},
 		VariantCategory: `{"name": "BT_Chipset_Kernel"}`,

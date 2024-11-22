@@ -54,7 +54,7 @@ func init() {
 					btImpl:          &bluez.BlueZ{},
 					disableFeatures: []string{"Floss"},
 				},
-				ExtraAttr: []string{"bluetooth_sa"},
+				ExtraAttr: []string{"bluetooth_sa", "group:release-health", "release-health_bt"},
 			}, {
 				Name: "floss_enabled",
 				Val: enableDisableBluetoothWithDifferentUsersParams{
