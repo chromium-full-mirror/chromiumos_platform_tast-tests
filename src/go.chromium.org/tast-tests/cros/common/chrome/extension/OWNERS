@@ -4,7 +4,6 @@ set noparent
 kawasin@google.com
 mhiramat@google.com
 sxm@google.com
-mtomoya@google.com
 
 # Tast team for bulk/emergencies
 include /OWNERS.tast
