@@ -88,8 +88,20 @@ func CustomDefaultAttachApnDisableEnableBehavior(ctx context.Context, s *testing
 		s.Fatal("Error getting Service properties: ", err)
 	}
 
+	apnName := serviceLastGoodAPN[shillconst.DevicePropertyCellularAPNInfoApnName]
+	if apnName == "" {
+		// Retrieve the APN name from known APN list if the name in shill profile is blank.
+		knownAPNs, err := cellular.GetKnownApns(ctx)
+		if err != nil {
+			s.Fatal("Failed to get known APNs: ", err)
+		}
+		if len(knownAPNs) > 0 {
+			apnName = knownAPNs[0].APNInfo[shillconst.DevicePropertyCellularAPNInfoApnName].(string)
+		}
+	}
+
 	defaultApnConfig := &ossettings.ApnConfig{
-		Name:               serviceLastGoodAPN[shillconst.DevicePropertyCellularAPNInfoApnName],
+		Name:               apnName,
 		Username:           serviceLastGoodAPN[shillconst.DevicePropertyCellularAPNInfoApnUsername],
 		Password:           serviceLastGoodAPN[shillconst.DevicePropertyCellularAPNInfoApnPassword],
 		AuthenticationType: ossettings.GetUIStringForAuthenticationType(serviceLastGoodAPN[shillconst.DevicePropertyCellularAPNInfoApnAuthentication]),
