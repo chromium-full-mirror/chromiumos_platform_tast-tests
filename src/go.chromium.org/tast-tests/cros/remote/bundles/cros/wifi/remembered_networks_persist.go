@@ -41,7 +41,6 @@ func init() {
 		Desc: "Verify remembered networks persist across suspend/resume, reboot and logout/login",
 		Contacts: []string{
 			"cros-device-enablement@google.com",
-			"chromeos-connectivity-engprod@google.com",
 		},
 		BugComponent:   "b:1131912", // ChromeOS > Software > Fundamentals > Device Enablement > Connectivity > WiFi
 		LifeCycleStage: testing.LifeCycleOwnerMonitored,

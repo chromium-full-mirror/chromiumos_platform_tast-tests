@@ -34,7 +34,6 @@ func init() {
 		Desc: "Test that SIM PIN locking is disabled when the SIM lock policy is applied",
 		Contacts: []string{
 			"cros-device-enablement@google.com",
-			"chromeos-connectivity-engprod@google.com",
 		},
 		BugComponent:   "b:1131774", // ChromeOS > Software > Fundamentals > Device Enablement > Connectivity > Cellular
 		LifeCycleStage: testing.LifeCycleOwnerMonitored,

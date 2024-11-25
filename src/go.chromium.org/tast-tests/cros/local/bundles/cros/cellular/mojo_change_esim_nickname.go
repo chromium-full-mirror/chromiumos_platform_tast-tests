@@ -19,9 +19,8 @@ func init() {
 		Desc: "Installs a new eSIM profile on the device and then changes its nickname",
 		Contacts: []string{
 			"cros-device-enablement@google.com",
-			"jstanko@google.com",
 		},
-		BugComponent:   "b:1131774", // ChromeOS > Software > System Services > Connectivity > Cellular
+		BugComponent:   "b:1131774", // ChromeOS > Software > Fundamentals > Device Enablement > Connectivity > Cellular
 		LifeCycleStage: testing.LifeCycleOwnerMonitored,
 		Attr:           []string{"group:cellular", "cellular_sim_test_esim", "group:release-health", "release-health_cellular"},
 		SoftwareDeps:   []string{"chrome"},

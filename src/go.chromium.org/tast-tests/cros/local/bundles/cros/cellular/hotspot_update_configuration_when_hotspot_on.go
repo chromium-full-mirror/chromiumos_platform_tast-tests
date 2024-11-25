@@ -25,8 +25,7 @@ func init() {
 		Func: HotspotUpdateConfigurationWhenHotspotOn,
 		Desc: "Test hotspot configuration can be updated correctly when hotspot is active",
 		Contacts: []string{
-			"cros-connectivity@google.com",
-			"jiajunz@google.com",
+			"cros-device-enablement@google.com",
 		},
 		BugComponent:   "b:1281224", // ChromeOS > Software > Fundamentals > Device Enablement > Connectivity > Hotspot
 		LifeCycleStage: testing.LifeCycleOwnerMonitored,

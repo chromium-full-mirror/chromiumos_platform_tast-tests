@@ -27,7 +27,6 @@ func init() {
 		Desc: "Ensures that eSIM operations work with a Stork server when accessed via Mojo",
 		Contacts: []string{
 			"cros-device-enablement@google.com",
-			"chromeos-connectivity-engprod@google.com",
 		},
 		BugComponent:   "b:1131774", // ChromeOS > Software > Fundamentals > Device Enablement > Connectivity > Cellular
 		LifeCycleStage: testing.LifeCycleOwnerMonitored,

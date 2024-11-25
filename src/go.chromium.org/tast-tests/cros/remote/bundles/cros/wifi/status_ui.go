@@ -30,7 +30,6 @@ func init() {
 		Desc: "Verify Wi-Fi status is correctly represented in the Settings and Quick Settings UI",
 		Contacts: []string{
 			"cros-device-enablement@google.com",
-			"chromeos-connectivity-engprod@google.com",
 		},
 		BugComponent:   "b:1131912", // ChromeOS > Software > Fundamentals > Device Enablement > Connectivity > WiFi
 		LifeCycleStage: testing.LifeCycleOwnerMonitored,

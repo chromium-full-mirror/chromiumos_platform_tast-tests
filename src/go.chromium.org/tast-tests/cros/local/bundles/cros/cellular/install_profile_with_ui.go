@@ -29,7 +29,6 @@ func init() {
 		Desc:           "Installs an eSIM profile using the UI",
 		Contacts: []string{
 			"cros-device-enablement@google.com",
-			"chromeos-connectivity-engprod@google.com",
 		},
 		BugComponent: "b:1131774", // ChromeOS > Software > Fundamentals > Device Enablement > Connectivity > Cellular
 		Attr:         []string{"group:cellular", "cellular_sim_test_esim"},

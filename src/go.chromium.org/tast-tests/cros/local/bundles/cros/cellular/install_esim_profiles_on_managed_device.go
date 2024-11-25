@@ -37,10 +37,8 @@ func init() {
 		Desc: "Test that managed eSIM profile can be installed from device policy via the esim_manager Mojo API",
 		Contacts: []string{
 			"cros-device-enablement@google.com",
-			"chadduffin@google.com",
-			"khegde@google.com",
 		},
-		BugComponent:   "b:1131774", // ChromeOS > Software > System Services > Connectivity > Cellular
+		BugComponent:   "b:1131774", // ChromeOS > Software > Fundamentals > Device Enablement > Connectivity > Cellular
 		LifeCycleStage: testing.LifeCycleOwnerMonitored,
 		SoftwareDeps:   []string{"chrome"},
 		Attr:           []string{"group:cellular", "cellular_sim_test_esim", "cellular_e2e", "group:release-health", "release-health_cellular"},

@@ -24,9 +24,8 @@ func init() {
 		Desc: "Test hotspot enable operation can be aborted",
 		Contacts: []string{
 			"cros-device-enablement@google.com",
-			"chromeos-connectivity-engprod@google.com",
 		},
-		BugComponent:   "b:1131774", // ChromeOS > Software > Fundamentals > Device Enablement > Connectivity > Cellular
+		BugComponent:   "b:1281224", // ChromeOS > Software > Fundamentals > Device Enablement > Connectivity > Hotspot
 		LifeCycleStage: testing.LifeCycleOwnerMonitored,
 		Attr:           []string{"group:cellular", "cellular_sim_active", "cellular_carrier_dependent"},
 		HardwareDeps:   hwdep.D(hwdep.WifiSAP()),

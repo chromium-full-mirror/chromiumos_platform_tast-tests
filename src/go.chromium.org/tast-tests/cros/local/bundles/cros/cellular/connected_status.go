@@ -22,7 +22,6 @@ func init() {
 		Desc: "Checks that active primary SIM is displayed correctly",
 		Contacts: []string{
 			"cros-device-enablement@google.com",
-			"hsuregan@google.com",
 		},
 		BugComponent:   "b:1131774", // ChromeOS > Software > Fundamentals > Device Enablement > Connectivity > Cellular
 		LifeCycleStage: testing.LifeCycleOwnerMonitored,

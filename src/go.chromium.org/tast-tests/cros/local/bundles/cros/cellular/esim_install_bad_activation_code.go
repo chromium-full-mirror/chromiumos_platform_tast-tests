@@ -26,9 +26,8 @@ func init() {
 		Desc: "Tests the add eSIM profile via activation code flow in the success and failure cases",
 		Contacts: []string{
 			"cros-device-enablement@google.com",
-			"hsuregan@google.com",
 		},
-		BugComponent:   "b:1131774", // ChromeOS > Software > System Services > Connectivity > Cellular
+		BugComponent:   "b:1131774", // ChromeOS > Software > Fundamentals > Device Enablement > Connectivity > Cellular
 		LifeCycleStage: testing.LifeCycleOwnerMonitored,
 		SoftwareDeps:   []string{"chrome"},
 		Attr:           []string{"group:cellular", "cellular_sim_test_esim", "group:release-health", "release-health_cellular"},

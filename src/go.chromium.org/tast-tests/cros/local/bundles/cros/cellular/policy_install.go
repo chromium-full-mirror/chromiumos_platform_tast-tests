@@ -33,7 +33,6 @@ func init() {
 		Desc: "Test that managed eSIM profile can correctly be installed from device policy and the profile can not be removed or renamed",
 		Contacts: []string{
 			"cros-device-enablement@google.com",
-			"jiajunz@google.com",
 		},
 		BugComponent:   "b:1131774", // ChromeOS > Software > Fundamentals > Device Enablement > Connectivity > Cellular
 		LifeCycleStage: testing.LifeCycleOwnerMonitored,

@@ -27,7 +27,6 @@ func init() {
 		Desc:           "Test hotspot configuration can be updated correctly when hotspot is off",
 		Contacts: []string{
 			"cros-device-enablement@google.com",
-			"chromeos-connectivity-engprod@google.com",
 		},
 		BugComponent: "b:1281224", // ChromeOS > Software > Fundamentals > Device Enablement > Connectivity > Hotspot
 		Attr:         []string{"group:cellular", "cellular_sim_active", "cellular_carrier_dependent"},

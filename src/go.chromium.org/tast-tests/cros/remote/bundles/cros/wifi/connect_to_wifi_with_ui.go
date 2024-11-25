@@ -92,7 +92,6 @@ func init() {
 		Desc: "Tests that WiFi can be connected to with different UI surfaces, and can transit from one network to another",
 		Contacts: []string{
 			"cros-device-enablement@google.com",
-			"chromeos-connectivity-engprod@google.com",
 		},
 		BugComponent:   "b:1131912", // ChromeOS > Software > Fundamentals > Device Enablement > Connectivity > WiFi
 		LifeCycleStage: testing.LifeCycleOwnerMonitored,

@@ -20,7 +20,8 @@ func init() {
 		Desc: "Enable/disable Cellular service using Mojo and confirms using shill",
 		Contacts: []string{
 			"cros-device-enablement@google.com",
-			"chromeos-connectivity-engprod@google.com",
+			"chromeos-cellular-team@google.com",
+			"cros-network-health-team@google.com",
 		},
 		BugComponent:   "b:1131774", // ChromeOS > Software > Fundamentals > Device Enablement > Connectivity > Cellular
 		LifeCycleStage: testing.LifeCycleOwnerMonitored,

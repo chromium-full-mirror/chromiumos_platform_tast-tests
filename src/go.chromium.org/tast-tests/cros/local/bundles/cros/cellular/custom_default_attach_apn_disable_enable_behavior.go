@@ -26,9 +26,8 @@ func init() {
 		Desc: "Tests the correct connect behavior for a custom APN that needs to be enabled as default and attach is created separately",
 		Contacts: []string{
 			"cros-device-enablement@google.com",
-			"hsuregan@google.com",
 		},
-		BugComponent:   "b:1131774", // ChromeOS > Software > System Services > Connectivity > Cellular
+		BugComponent:   "b:1131774", // ChromeOS > Software > Fundamentals > Device Enablement > Connectivity > Cellular
 		LifeCycleStage: testing.LifeCycleOwnerMonitored,
 		Attr:           []string{"group:cellular", "cellular_sim_active", "cellular_e2e"},
 		SoftwareDeps:   []string{"chrome"},

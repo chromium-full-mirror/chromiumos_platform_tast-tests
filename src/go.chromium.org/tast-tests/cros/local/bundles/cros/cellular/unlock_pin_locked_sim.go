@@ -29,7 +29,6 @@ func init() {
 		Desc: "Verifies that a PIN locked SIM can only be unlocked by the correct PIN, and then subsequently connected to",
 		Contacts: []string{
 			"cros-device-enablement@google.com",
-			"chromeos-connectivity-engprod@google.com",
 		},
 		BugComponent:   "b:1131774", // ChromeOS > Software > Fundamentals > Device Enablement > Connectivity > Cellular
 		LifeCycleStage: testing.LifeCycleOwnerMonitored,

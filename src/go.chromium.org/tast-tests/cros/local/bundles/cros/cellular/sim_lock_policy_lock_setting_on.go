@@ -32,7 +32,6 @@ func init() {
 		Desc: "Test the notification flow that's triggered when the 'Lock SIM' setting is turned on before the policy is turned on",
 		Contacts: []string{
 			"cros-device-enablement@google.com",
-			"chromeos-connectivity-engprod@google.com",
 		},
 		BugComponent:   "b:1131774", // ChromeOS > Software > Fundamentals > Device Enablement > Connectivity > Cellular
 		LifeCycleStage: testing.LifeCycleOwnerMonitored,

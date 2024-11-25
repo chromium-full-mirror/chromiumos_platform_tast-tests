@@ -23,8 +23,7 @@ func init() {
 		Func: HotspotAutoDisable,
 		Desc: "Test hotspot will be turned off automatically if no device connectes to it in 5 min",
 		Contacts: []string{
-			"cros-connectivity@google.com",
-			"jiajunz@google.com",
+			"cros-device-enablement@google.com",
 		},
 		BugComponent:   "b:1281224", // ChromeOS > Software > Fundamentals > Device Enablement > Connectivity > Hotspot
 		LifeCycleStage: testing.LifeCycleOwnerMonitored,

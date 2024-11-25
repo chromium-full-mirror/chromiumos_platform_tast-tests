@@ -29,8 +29,7 @@ func init() {
 		Func: RenameESimProfileNickname,
 		Desc: "Renames connected and disconnected eSIM profiles name via the UI",
 		Contacts: []string{
-			"cros-connectivity@google.com",
-			"hsuregan@google.com",
+			"cros-device-enablement@google.com",
 		},
 		BugComponent:   "b:1131774", // ChromeOS > Software > Fundamentals > Device Enablement > Connectivity > Cellular
 		LifeCycleStage: testing.LifeCycleOwnerMonitored,

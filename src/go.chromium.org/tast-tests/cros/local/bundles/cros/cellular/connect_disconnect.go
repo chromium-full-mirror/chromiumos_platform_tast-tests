@@ -29,7 +29,6 @@ func init() {
 		Desc: "Tests that user can connect and disconnect from Cellular via OS Settings and Quick Settings",
 		Contacts: []string{
 			"cros-device-enablement@google.com",
-			"chromeos-connectivity-engprod@google.com",
 		},
 		BugComponent:   "b:1131774", // ChromeOS > Software > Fundamentals > Device Enablement > Connectivity > Cellular
 		LifeCycleStage: testing.LifeCycleOwnerMonitored,
