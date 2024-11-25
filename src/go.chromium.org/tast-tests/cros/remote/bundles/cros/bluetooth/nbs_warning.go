@@ -88,6 +88,16 @@ func selectInternalMic(ctx context.Context, qsSvc qs.QuickSettingsServiceClient)
 	return err
 }
 
+func selectBTMic(ctx context.Context, qsSvc qs.QuickSettingsServiceClient) error {
+	_, err := qsSvc.SelectNthAudioOption(
+		ctx, &qs.SelectNthAudioOptionRequest{
+			AudioNodeName: "RASPI_AUDIO",
+			Nth:           1,
+		})
+
+	return err
+}
+
 // NbsWarning verifies when a NBS device is connected, a warning is shown in the QS.
 func NbsWarning(ctx context.Context, s *testing.State) {
 	fv := s.FixtValue().(*bluetooth.FixtValue)
@@ -124,10 +134,17 @@ func NbsWarning(ctx context.Context, s *testing.State) {
 		s.Fatal("Failed to pair device: ", err)
 	}
 
-	audioDevice, err := adSvc.AudioCrasSelectedInputDevice(ctx, &emptypb.Empty{})
-	if err != nil {
-		s.Fatal("Failed to get input audio device info: ", err)
-	}
+	// wait until device is selectable
+	err = testing.Poll(ctx, func(ctx context.Context) error {
+		if e := selectBTMic(ctx, qsSvc); e != nil {
+			return errors.New("failed to set active node to BT mic")
+		}
+
+		return nil
+	}, &testing.PollOptions{
+		Timeout:  30 * time.Second,
+		Interval: 5 * time.Second,
+	})
 
 	expectWarning := !tc.enableWBS
 
