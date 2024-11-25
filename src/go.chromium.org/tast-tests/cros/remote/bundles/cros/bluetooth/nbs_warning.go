@@ -8,10 +8,10 @@ import (
 	"context"
 	"time"
 
-	"go.chromium.org/tast-tests/cros/common/tbdep"
 	"google.golang.org/protobuf/types/known/emptypb"
 
 	cbt "go.chromium.org/tast-tests/cros/common/chameleon/devices/common/bluetooth"
+	"go.chromium.org/tast-tests/cros/common/tbdep"
 	"go.chromium.org/tast-tests/cros/remote/bluetooth"
 	bts "go.chromium.org/tast-tests/cros/services/cros/bluetooth"
 	qs "go.chromium.org/tast-tests/cros/services/cros/chrome/uiauto/quicksettings"
@@ -19,6 +19,10 @@ import (
 	"go.chromium.org/tast/core/errors"
 	"go.chromium.org/tast/core/testing"
 )
+
+type btNBSWarningTestCase struct {
+	enableWBS bool
+}
 
 func init() {
 	testing.AddTest(&testing.Test{
@@ -39,14 +43,36 @@ func init() {
 		VariantCategory: `{"name": "BT_Chipset_Kernel"}`,
 		Params: []testing.Param{
 			{
-				Name:      "floss_disabled",
+				Name:      "floss_disabled_wbs_disabled",
 				Fixture:   "chromeLoggedInWith1BTPeerFlossDisabled",
 				ExtraAttr: []string{"bluetooth_flaky"},
+				Val: &btNBSWarningTestCase{
+					enableWBS: false,
+				},
 			},
 			{
-				Name:      "floss_enabled",
+				Name:      "floss_disabled_wbs_enabled",
+				Fixture:   "chromeLoggedInWith1BTPeerFlossDisabled",
+				ExtraAttr: []string{"bluetooth_flaky"},
+				Val: &btNBSWarningTestCase{
+					enableWBS: true,
+				},
+			},
+			{
+				Name:      "floss_enabled_wbs_disabled",
 				Fixture:   "chromeLoggedInWith1BTPeerFlossEnabled",
 				ExtraAttr: []string{"bluetooth_floss_flaky"},
+				Val: &btNBSWarningTestCase{
+					enableWBS: false,
+				},
+			},
+			{
+				Name:      "floss_enabled_wbs_enabled",
+				Fixture:   "chromeLoggedInWith1BTPeerFlossEnabled",
+				ExtraAttr: []string{"bluetooth_floss_flaky"},
+				Val: &btNBSWarningTestCase{
+					enableWBS: true,
+				},
 			},
 		},
 	})
@@ -65,10 +91,18 @@ func selectInternalMic(ctx context.Context, qsSvc qs.QuickSettingsServiceClient)
 // NbsWarning verifies when a NBS device is connected, a warning is shown in the QS.
 func NbsWarning(ctx context.Context, s *testing.State) {
 	fv := s.FixtValue().(*bluetooth.FixtValue)
+	tc := s.Param().(*btNBSWarningTestCase)
 
 	adSvc := fv.AudioService
 	btUISvc := fv.BluetoothUIService
 	qsSvc := fv.QuickSettingsService
+
+	if _, err := adSvc.SetWBSEnabled(
+		ctx, &ui.AudioServiceRequest{
+			WBSEnabled: tc.enableWBS,
+		}); err != nil {
+		s.Fatal("Failed to change WBS support: ", err)
+	}
 
 	emulatedDevice, err := bluetooth.NewEmulatedBTPeerDevice(ctx, fv.BTPeers[0],
 		&bluetooth.EmulatedBTPeerDeviceConfig{DeviceType: cbt.DeviceTypeBluetoothAudio})
@@ -84,62 +118,50 @@ func NbsWarning(ctx context.Context, s *testing.State) {
 		s.Fatal("Failed to start Ofono: ", err)
 	}
 
-	WBSTests := []bool{true, false}
-	for _, enableWBS := range WBSTests {
-		if _, err := adSvc.SetWBSEnabled(
-			ctx, &ui.AudioServiceRequest{
-				WBSEnabled: enableWBS,
-			}); err != nil {
-			s.Fatal("Failed to change WBS support: ", err)
+	if _, err := btUISvc.PairDeviceWithQuickSettings(ctx, &bts.PairDeviceWithQuickSettingsRequest{
+		AdvertisedName: emulatedDevice.AdvertisedName(),
+	}); err != nil {
+		s.Fatal("Failed to pair device: ", err)
+	}
+
+	audioDevice, err := adSvc.AudioCrasSelectedInputDevice(ctx, &emptypb.Empty{})
+	if err != nil {
+		s.Fatal("Failed to get input audio device info: ", err)
+	}
+
+	expectWarning := !tc.enableWBS
+
+	// verify if warning is shown as expected
+	err = testing.Poll(ctx, func(ctx context.Context) error {
+		res, checkErr := qsSvc.IsNBSWarningShown(ctx, &emptypb.Empty{})
+		if checkErr != nil {
+			return checkErr
 		}
-
-		if _, err := btUISvc.PairDeviceWithQuickSettings(ctx, &bts.PairDeviceWithQuickSettingsRequest{
-			AdvertisedName: emulatedDevice.AdvertisedName(),
-		}); err != nil {
-			s.Fatal("Failed to pair device: ", err)
+		if !expectWarning && res.GetIsNbsWarningShown() {
+			return errors.New("the NBS warning should not be shown in Quick Settings")
 		}
-
-		audioDevice, err := adSvc.AudioCrasSelectedInputDevice(ctx, &emptypb.Empty{})
-		if err != nil {
-			s.Fatal("Failed to get input audio device info: ", err)
+		if expectWarning && !res.GetIsNbsWarningShown() {
+			return errors.New("the NBS warning should be shown in Quick Settings")
 		}
+		return nil
+	}, &testing.PollOptions{
+		Timeout:  30 * time.Second,
+		Interval: 5 * time.Second,
+	})
 
-		expectWarning := audioDevice.DeviceType == "BLUETOOTH_NB_MIC"
+	if err != nil {
+		s.Fatal("Unexpected: ", err)
+	}
 
-		// verify if warning is shown as expected
-		err = testing.Poll(ctx, func(ctx context.Context) error {
-			res, checkErr := qsSvc.IsNBSWarningShown(ctx, &emptypb.Empty{})
-			if checkErr != nil {
-				return checkErr
-			}
-			if !expectWarning && res.GetIsNbsWarningShown() {
-				return errors.New("the NBS warning should not be shown in Quick Settings")
-			}
-			if expectWarning && !res.GetIsNbsWarningShown() {
-				return errors.New("the NBS warning should be shown in Quick Settings")
-			}
-			return nil
-		}, &testing.PollOptions{
-			Timeout:  30 * time.Second,
-			Interval: 1 * time.Second,
-		})
+	if err := selectInternalMic(ctx, qsSvc); err != nil {
+		s.Fatal("Failed to select internal mic: ", err)
+	}
 
-		if err != nil {
-			s.Fatal("Unexpected: ", err)
-		}
-
-		if err := selectInternalMic(ctx, qsSvc); err != nil {
-			s.Fatal("Failed to select internal mic: ", err)
-		}
-
-		res, err := qsSvc.IsNBSWarningShown(ctx, &emptypb.Empty{})
-		if err != nil {
-			s.Fatal("Failed to check whether the NBS warning is shown: ", err)
-		}
-		if res.GetIsNbsWarningShown() {
-			s.Fatal("The NBS warning should not be shown when internal mic is chosen")
-		}
-
-		btUISvc.ForgetBluetoothDevice(ctx, &bts.ForgetBluetoothDeviceRequest{DeviceName: emulatedDevice.AdvertisedName()})
+	res, err := qsSvc.IsNBSWarningShown(ctx, &emptypb.Empty{})
+	if err != nil {
+		s.Fatal("Failed to check whether the NBS warning is shown: ", err)
+	}
+	if res.GetIsNbsWarningShown() {
+		s.Fatal("The NBS warning should not be shown when internal mic is chosen")
 	}
 }
