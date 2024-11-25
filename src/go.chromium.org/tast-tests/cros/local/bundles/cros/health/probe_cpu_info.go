@@ -24,6 +24,10 @@ import (
 	"go.chromium.org/tast/core/testing"
 )
 
+type probeCPUInfoTestParams struct {
+	CPUTempVerification bool
+}
+
 func init() {
 	testing.AddTest(&testing.Test{
 		Func: ProbeCPUInfo,
@@ -40,6 +44,17 @@ func init() {
 		SoftwareDeps: []string{"diagnostics"},
 		Fixture:      "crosHealthdRunning",
 		Timeout:      3 * time.Minute,
+		Params: []testing.Param{{
+			Val: probeCPUInfoTestParams{
+				CPUTempVerification: false,
+			},
+		}, {
+			Name: "cpu_temp_verification",
+			Val: probeCPUInfoTestParams{
+				CPUTempVerification: true,
+			},
+			ExtraAttr: []string{"informational", "group:criticalstaging"},
+		}},
 	})
 }
 
@@ -348,7 +363,29 @@ func validateCPUEquality(physicalCPUs []types.PhysicalCPUInfo) error {
 	return nil
 }
 
+// verifyCPUTempRange verifies that all temperatures read from sensors are reasonable.
+func verifyCPUTempRange(tempChannels *[]types.TemperatureChannelInfo) error {
+	for _, tempChannel := range *tempChannels {
+		// Arbitrary value for checking temperature reading is reasonable. Values beyond
+		// these limits are most likely caused by sensor failure.
+		if tempChannel.TemperatureCelsius < 0 || tempChannel.TemperatureCelsius > 100 {
+			return errors.Errorf("CPU temperature reading outside threshold of 0-100 Celsius: %d", tempChannel.TemperatureCelsius)
+		}
+	}
+	return nil
+}
+
+func validateCPUTempData(info *types.CPUInfo) error {
+	// Check CpuInfo has at least one CPU temperature channel
+	if len(info.TemperatureChannels) == 0 {
+		return errors.New("invalid TemperatureChannels (empty)")
+	}
+
+	return verifyCPUTempRange(&info.TemperatureChannels)
+}
+
 func ProbeCPUInfo(ctx context.Context, s *testing.State) {
+	CPUTempVerification := s.Param().(probeCPUInfoTestParams).CPUTempVerification
 	params := croshealthd.TelemParams{Category: croshealthd.TelemCategoryCPU}
 
 	var info types.CPUInfo
@@ -380,6 +417,11 @@ func ProbeCPUInfo(ctx context.Context, s *testing.State) {
 	} else {
 		if info.KeylockerInfo != nil {
 			s.Fatal("Failed to validate empty memory keyLockerdata")
+		}
+	}
+	if CPUTempVerification {
+		if err := validateCPUTempData(&info); err != nil {
+			s.Fatal("Failed to validate cpu temp data: ", err)
 		}
 	}
 }
