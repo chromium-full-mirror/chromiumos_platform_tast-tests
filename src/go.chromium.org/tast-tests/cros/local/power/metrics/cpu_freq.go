@@ -19,6 +19,7 @@ import (
 
 	"go.chromium.org/tast-tests/cros/common/perf"
 	"go.chromium.org/tast-tests/cros/common/power"
+	localCPU "go.chromium.org/tast-tests/cros/local/cpu"
 	"go.chromium.org/tast/core/errors"
 )
 
@@ -229,6 +230,19 @@ func (s *CPUUsageSource) Snapshot(ctx context.Context, values *perf.Values) erro
 		busyPercentages[time.CPU] = cpuUtilization(s.prevStats[time.CPU], time) / 100
 	}
 	armCPUUsage := 0.0
+
+	temperature, _, err := localCPU.Temperature(ctx)
+	if err != nil {
+		return errors.Wrap(err, "failed to read CPU temperature")
+	}
+
+	values.Append(perf.Metric{
+		Name:      s.name + ".Temperature",
+		Multiple:  true,
+		Unit:      "celsius",
+		Direction: perf.SmallerIsBetter,
+		Interval:  s.intervalName,
+	}, float64(temperature))
 
 	var totalPercent float64
 	for _, time := range times {
