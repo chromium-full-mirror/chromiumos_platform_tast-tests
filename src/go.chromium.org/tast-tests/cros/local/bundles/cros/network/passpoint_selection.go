@@ -66,7 +66,7 @@ func init() {
 		// ChromeOS > Platform > System > Networking > Continuous Maintenance
 		BugComponent: "b:1493959",
 		Fixture:      "shillSimulatedWiFi",
-		Attr:         []string{"group:network", "network_platform"},
+		Attr:         []string{"group:mainline", "group:criticalstaging", "informational"},
 		SoftwareDeps: []string{"wifi"},
 		Timeout:      5 * time.Minute,
 		Requirements: []string{tdreq.WiFiGenSupportPasspoint},
