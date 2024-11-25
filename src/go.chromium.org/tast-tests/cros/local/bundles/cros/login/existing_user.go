@@ -9,7 +9,7 @@ import (
 	"time"
 
 	"go.chromium.org/tast-tests/cros/common/dma"
-	"go.chromium.org/tast-tests/cros/common/floatingworkspace"
+	"go.chromium.org/tast-tests/cros/common/ui"
 	"go.chromium.org/tast-tests/cros/local/chrome"
 	"go.chromium.org/tast-tests/cros/local/chrome/ash"
 	"go.chromium.org/tast-tests/cros/local/chrome/uiauto/faillog"
@@ -158,7 +158,7 @@ func ExistingUser(ctx context.Context, s *testing.State) {
 // can be user for the offline login afterwards.
 func logInWithGaiaPassword(ctx context.Context, s *testing.State) (c *chrome.Chrome, creds chrome.Creds) {
 	cr, err := chrome.New(ctx,
-		chrome.GAIALoginPool(dma.CredsFromPool(floatingworkspace.AccountVarName)))
+		chrome.GAIALoginPool(dma.CredsFromPool(ui.GaiaPoolDefaultVarName)))
 	if err != nil {
 		s.Fatal("Chrome login failed: ", err)
 	}
