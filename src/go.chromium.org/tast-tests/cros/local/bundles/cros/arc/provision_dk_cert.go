@@ -37,7 +37,7 @@ func init() {
 		Attr:         []string{"group:mainline", "informational"},
 		Timeout:      chrome.LoginTimeout + arc.BootTimeout + 60*time.Second,
 		Fixture:      "arcBooted",
-		SoftwareDeps: []string{"android_vm_t", "chrome"},
+		SoftwareDeps: []string{"android_vm_t", "chrome", "no_qemu"},
 		VarDeps:      []string{},
 		Params: []testing.Param{{
 			Name: "non_blocking",
