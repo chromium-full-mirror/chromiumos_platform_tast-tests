@@ -20433,37 +20433,6 @@ func (p *OriginAgentClusterDefaultEnabled) Equal(iface interface{}) bool {
 }
 
 // ****************************************************************************
-// 934. DeviceLoginScreenWebUILazyLoading
-// This is a future policy, it is not present in stable builds.
-// ****************************************************************************
-type DeviceLoginScreenWebUILazyLoading struct {
-	Stat Status
-	Val  bool
-}
-
-func (p *DeviceLoginScreenWebUILazyLoading) Name() string          { return "DeviceLoginScreenWebUILazyLoading" }
-func (p *DeviceLoginScreenWebUILazyLoading) Scope() Scope          { return ScopeDevice }
-func (p *DeviceLoginScreenWebUILazyLoading) Status() Status        { return p.Stat }
-func (p *DeviceLoginScreenWebUILazyLoading) UntypedV() interface{} { return p.Val }
-func (p *DeviceLoginScreenWebUILazyLoading) UnmarshalAs(m json.RawMessage) (interface{}, error) {
-	var v bool
-	if err := json.Unmarshal(m, &v); err != nil {
-		return nil, errors.Wrapf(err, "could not read %s as bool", m)
-	}
-	return v, nil
-}
-func (p *DeviceLoginScreenWebUILazyLoading) SetProto(m *protoreflect.Message) {
-	SetDeviceProto(m, "login_web_ui_lazy_loading", "enabled", p.Val)
-}
-func (p *DeviceLoginScreenWebUILazyLoading) Equal(iface interface{}) bool {
-	v, ok := iface.(bool)
-	if !ok {
-		return ok
-	}
-	return cmp.Equal(p.Val, v, cmpopts.EquateEmpty())
-}
-
-// ****************************************************************************
 // 935. ProjectorEnabled
 // This policy can be modified without rebooting.
 // ****************************************************************************
@@ -29614,6 +29583,37 @@ func (p *GenAiLensOverlaySettings) Equal(iface interface{}) bool {
 }
 
 // ****************************************************************************
+// 1316. PasswordManagerPasskeysEnabled
+// This policy can be modified without rebooting.
+// ****************************************************************************
+type PasswordManagerPasskeysEnabled struct {
+	Stat Status
+	Val  bool
+}
+
+func (p *PasswordManagerPasskeysEnabled) Name() string          { return "PasswordManagerPasskeysEnabled" }
+func (p *PasswordManagerPasskeysEnabled) Scope() Scope          { return ScopeUser }
+func (p *PasswordManagerPasskeysEnabled) Status() Status        { return p.Stat }
+func (p *PasswordManagerPasskeysEnabled) UntypedV() interface{} { return p.Val }
+func (p *PasswordManagerPasskeysEnabled) UnmarshalAs(m json.RawMessage) (interface{}, error) {
+	var v bool
+	if err := json.Unmarshal(m, &v); err != nil {
+		return nil, errors.Wrapf(err, "could not read %s as bool", m)
+	}
+	return v, nil
+}
+func (p *PasswordManagerPasskeysEnabled) SetProto(m *protoreflect.Message) {
+	SetUserProto(m, p.Name(), p.Val)
+}
+func (p *PasswordManagerPasskeysEnabled) Equal(iface interface{}) bool {
+	v, ok := iface.(bool)
+	if !ok {
+		return ok
+	}
+	return cmp.Equal(p.Val, v, cmpopts.EquateEmpty())
+}
+
+// ****************************************************************************
 // JSON deserialization logic (used by policy.Unmarshal).
 // ****************************************************************************
 
@@ -30874,8 +30874,6 @@ func newByName(name string) (Policy, error) {
 		return &UserAgentReduction{}, nil
 	case "OriginAgentClusterDefaultEnabled":
 		return &OriginAgentClusterDefaultEnabled{}, nil
-	case "DeviceLoginScreenWebUILazyLoading":
-		return &DeviceLoginScreenWebUILazyLoading{}, nil
 	case "ProjectorEnabled":
 		return &ProjectorEnabled{}, nil
 	case "PhoneHubCameraRollAllowed":
@@ -31436,6 +31434,8 @@ func newByName(name string) (Policy, error) {
 		return &DeviceNativeClientForceAllowed{}, nil
 	case "GenAiLensOverlaySettings":
 		return &GenAiLensOverlaySettings{}, nil
+	case "PasswordManagerPasskeysEnabled":
+		return &PasswordManagerPasskeysEnabled{}, nil
 	default:
 		return nil, errors.New("Unknown policy " + name)
 	}
