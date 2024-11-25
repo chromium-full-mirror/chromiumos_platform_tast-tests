@@ -459,6 +459,8 @@ type RecorderOptions struct {
 
 	// RecordLoginEvents, if set, will enable |loginEventRecorder| to collect login metrics.
 	RecordLoginEvents bool
+
+	SkipBootShutdownMetrics bool
 }
 
 var performanceCUJDischargeThreshold = 25.0
@@ -1068,20 +1070,23 @@ func (r *Recorder) startRecording(ctx context.Context) (runCtx context.Context, 
 	if err != nil {
 		return nil, errors.Wrap(err, "failed to start metrics recorder")
 	}
-	bootMetrics, err := r.getBootAndShutdownMetricNames()
-	if err != nil {
-		return nil, errors.Wrap(err, "failed to query boot metrics")
-	}
-	if len(bootMetrics) > 0 {
-		// Some of BootTime.* metrics are reported only once after reboot.
-		// Force reporting them here in case they are already gone.
-		if err := testexec.CommandContext(
-			ctx,
-			"sh",
-			"-c",
-			"start send-boot-metrics || true",
-		).Run(testexec.DumpLogOnError); err != nil {
-			return nil, errors.Wrap(err, "failed to force send-boot-metrics to be reported again")
+
+	if !r.options.SkipBootShutdownMetrics {
+		bootMetrics, err := r.getBootAndShutdownMetricNames()
+		if err != nil {
+			return nil, errors.Wrap(err, "failed to query boot metrics")
+		}
+		if len(bootMetrics) > 0 {
+			// Some of BootTime.* metrics are reported only once after reboot.
+			// Force reporting them here in case they are already gone.
+			if err := testexec.CommandContext(
+				ctx,
+				"sh",
+				"-c",
+				"start send-boot-metrics || true",
+			).Run(testexec.DumpLogOnError); err != nil {
+				return nil, errors.Wrap(err, "failed to force send-boot-metrics to be reported again")
+			}
 		}
 	}
 
@@ -1338,7 +1343,7 @@ func (r *Recorder) stopRecording(ctx, runCtx context.Context) (e error) {
 		return errors.Wrap(err, "failed to get boot and shutdown metric names")
 	}
 
-	if !r.chromeosFlexTesting && len(bootAndShutdownMetrics) > 0 {
+	if !r.chromeosFlexTesting && len(bootAndShutdownMetrics) > 0 && !r.options.SkipBootShutdownMetrics {
 		// Some BootTime.* metrics are only reported once after
 		// a reboot. We forced them to be reported again after
 		// the recorder started, but ChromeOS metrics are
@@ -1353,17 +1358,18 @@ func (r *Recorder) stopRecording(ctx, runCtx context.Context) (e error) {
 		); err != nil {
 			return errors.Wrap(err, "failed to wait until BootTime.Total2 metrics is reported")
 		}
-	}
 
-	bootAndShutdownHistograms, err := metrics.GetHistograms(runCtx, r.tconn, bootAndShutdownMetrics)
-	if err != nil {
-		return errors.Wrap(err, "failed to fetch boot and shutdown metrics")
+		bootAndShutdownHistograms, err := metrics.GetHistograms(runCtx, r.tconn, bootAndShutdownMetrics)
+		if err != nil {
+			return errors.Wrap(err, "failed to fetch boot and shutdown metrics")
+		}
+
+		testing.ContextLog(ctx, "The following boot and shutdown metrics are collected: ", histsWithSamples(bootAndShutdownHistograms))
+		hists = append(hists, bootAndShutdownHistograms...)
 	}
 
 	testing.ContextLog(ctx, "The following in-test metrics are collected: ", histsWithSamples(inTestHistograms))
-	testing.ContextLog(ctx, "The following boot and shutdown metrics are collected: ", histsWithSamples(bootAndShutdownHistograms))
 	hists = append(hists, inTestHistograms...)
-	hists = append(hists, bootAndShutdownHistograms...)
 
 	// Reset recorders and context.
 	r.mr = nil
