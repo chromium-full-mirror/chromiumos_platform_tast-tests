@@ -242,7 +242,9 @@ Device Descriptor:
         "a01d9cb7-dc1c-52dc-88ad-ba94f473681a"
       ],
       "Serial" : "0000074f7cb5",
-      "VendorId" : "USB:0x1FC9",
+      "VendorIds" : [
+        "USB:0x1FC9"
+      ],
       "Version" : "6.45",
       "VersionFormat" : "bcd"
     },
@@ -252,7 +254,9 @@ Device Descriptor:
 		"27b7e656-278a-5d76-8a78-5829322b74a1"
 	  ],
 	  "Serial" : "serial",
-	  "VendorId" : "USB:0x2A2B",
+	  "VendorIds" : [
+	    "USB:0x2A2B"
+	  ],
 	  "Version" : "trailing_spaces_version",
 	  "VersionFormat" : "plain"
 	}

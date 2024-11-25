@@ -64,7 +64,7 @@ type fwupdDevice struct {
 	GUID          []string `json:"Guid"`
 	InstanceIDs   []string `json:"InstanceIds"`
 	Serial        *string  `json:"Serial"`
-	VendorID      *string  `json:"VendorId"`
+	VendorIDs     []string `json:"VendorIds"`
 	Version       *string  `json:"Version"`
 	VersionFormat *string  `json:"VersionFormat"`
 }
@@ -167,13 +167,11 @@ func deviceNames(ctx context.Context, vendorID, prodID, busNumber, devNumber str
 // The matching of serial will be skipped if it is empty.
 func matchFwupdDevice(device fwupdDevice, vendorID, prodID, serial string) bool {
 	var matchVendor bool
-	// Example arget vendor id: USB:0x1FC9.
+	// Example target vendor id: USB:0x1FC9.
 	targetVendorID := fmt.Sprintf("USB:0x%s", strings.ToUpper(vendorID))
-	if device.VendorID != nil {
-		for _, vid := range strings.Split(*device.VendorID, "|") {
-			if vid == targetVendorID {
-				matchVendor = true
-			}
+	for _, vid := range device.VendorIDs {
+		if vid == targetVendorID {
+			matchVendor = true
 		}
 	}
 
