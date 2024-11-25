@@ -761,6 +761,12 @@ func (f *tastFixtureImpl) PreTest(ctx context.Context, s *testing.FixtTestState)
 			s.Fatal("Failed to start power metrics: ", err)
 		}
 	}
+
+	if f.features&TFFeaturesCollectWiFiFirmwareDump != 0 {
+		if err := f.tf.DUTConn(DefaultDUT).CommandContext(ctx, "sh", "-c", "rm /var/spool/crash/devcoredump_iwlwifi*").Run(); err != nil {
+			testing.ContextLog(ctx, "Failed to delete old frimware dumps: ", err)
+		}
+	}
 }
 
 func (f *tastFixtureImpl) PostTest(ctx context.Context, s *testing.FixtTestState) {
