@@ -11,6 +11,7 @@ import (
 	"go.chromium.org/tast-tests/cros/common/shillconst"
 	"go.chromium.org/tast-tests/cros/local/cellular"
 	"go.chromium.org/tast-tests/cros/local/chrome"
+	"go.chromium.org/tast-tests/cros/local/chrome/uiauto"
 	"go.chromium.org/tast-tests/cros/local/chrome/uiauto/faillog"
 	"go.chromium.org/tast-tests/cros/local/chrome/uiauto/ossettings"
 	"go.chromium.org/tast/core/ctxutil"
@@ -36,7 +37,7 @@ func init() {
 
 func MigrateInvalidApn(ctx context.Context, s *testing.State) {
 	cleanupCtx := ctx
-	ctx, cancel := ctxutil.Shorten(ctx, 30*time.Second)
+	ctx, cancel := ctxutil.Shorten(ctx, 10*time.Second)
 	defer cancel()
 
 	// In case roaming is required for the SIM on the device.
@@ -61,58 +62,68 @@ func MigrateInvalidApn(ctx context.Context, s *testing.State) {
 	}(cleanupCtx)
 
 	invalidAPNToMigrate := "INVALIDAPN"
-	cr, err := chrome.New(ctx, chrome.DisableFeatures("ApnRevamp"))
-	if err != nil {
-		s.Fatal("Failed to start Chrome: ", err)
-	}
+	func(ctx context.Context) {
+		cleanupCtx := ctx
+		ctx, cancel := ctxutil.Shorten(ctx, 10*time.Second)
+		defer cancel()
 
-	tconn, err := cr.TestAPIConn(ctx)
-	if err != nil {
-		s.Fatal("Failed to connect Test API: ", err)
-	}
+		cr, err := chrome.New(ctx, chrome.DisableFeatures("ApnRevamp"))
+		if err != nil {
+			s.Fatal("Failed to start Chrome: ", err)
+		}
+		defer cr.Close(cleanupCtx)
 
-	if _, err := ossettings.OpenMobileDataSubpage(ctx, tconn, cr); err != nil {
-		s.Fatal("Failed to open mobile data subpage: ", err)
-	}
+		tconn, err := cr.TestAPIConn(ctx)
+		if err != nil {
+			s.Fatal("Failed to connect Test API: ", err)
+		}
 
-	if err := ossettings.GoToActiveNetworkDetails(ctx, tconn); err != nil {
-		s.Fatal("Failed to go to active cellular network detail page view: ", err)
-	}
+		settings, err := ossettings.LaunchAtMobileData(ctx, tconn, cr)
+		if err != nil {
+			s.Fatal("Failed to open mobile data subpage: ", err)
+		}
+		defer settings.Close(cleanupCtx)
+		defer faillog.DumpUITreeWithScreenshotOnError(cleanupCtx, s.OutDir(), s.HasError, cr, "pre_revamp_ossettings")
 
-	if err := ossettings.SelectPreRevampOtherAPN(ctx, tconn, "Other"); err != nil {
-		s.Fatal("Failed to select custom APN: ", err)
-	}
+		if err := settings.NavigateToMobileNetworkDetailsPage(cr, ossettings.ActiveCellularBtn)(ctx); err != nil {
+			s.Fatal("Failed to move to the network details page: ", err)
+		}
 
-	if err := ossettings.EnterPreRevampOtherAPNDetails(ctx, tconn, invalidAPNToMigrate, "", "", false); err != nil {
-		s.Fatal("Failed to enter custom APN: ", err)
-	}
+		if err := ossettings.SelectPreRevampOtherAPN(ctx, tconn, "Other"); err != nil {
+			s.Fatal("Failed to select custom APN: ", err)
+		}
 
-	cr, err = chrome.New(ctx,
+		if err := ossettings.EnterPreRevampOtherAPNDetails(ctx, tconn, invalidAPNToMigrate, "", "", false); err != nil {
+			s.Fatal("Failed to enter custom APN: ", err)
+		}
+	}(ctx)
+
+	cr, err := chrome.New(ctx,
 		chrome.EnableFeatures("ApnRevamp"),
 		chrome.RemoveNotification(false),
 		chrome.KeepState())
 	if err != nil {
 		s.Fatal("Failed to start Chrome: ", err)
 	}
+	defer cr.Close(cleanupCtx)
 
-	tconn, err = cr.TestAPIConn(ctx)
+	tconn, err := cr.TestAPIConn(ctx)
 	if err != nil {
 		s.Fatal("Failed to connect Test API: ", err)
 	}
 
-	mdp, err := ossettings.OpenMobileDataSubpage(ctx, tconn, cr)
+	settings, err := ossettings.LaunchAtMobileData(ctx, tconn, cr)
 	if err != nil {
 		s.Fatal("Failed to open mobile data subpage: ", err)
 	}
-	defer mdp.Close(cleanupCtx)
+	defer settings.Close(cleanupCtx)
 	defer faillog.DumpUITreeWithScreenshotOnError(cleanupCtx, s.OutDir(), s.HasError, cr, "ossettings")
 
-	if err := ossettings.GoToActiveNetworkDetails(ctx, tconn); err != nil {
-		s.Fatal("Failed to go to active cellular network detail page view: ", err)
-	}
-
-	if err := ossettings.GoToActiveNetworkApnSubpage(ctx, tconn, false); err != nil {
-		s.Fatal("Failed to go to APN subpage: ", err)
+	if err := uiauto.Combine("go to APN page of the active cellular network",
+		settings.NavigateToMobileNetworkDetailsPage(cr, ossettings.ActiveCellularBtn),
+		settings.NavigateToApnPage(cr),
+	)(ctx); err != nil {
+		s.Fatal("Failed to move to the APN page: ", err)
 	}
 
 	serviceLastGoodAPN, err := helper.GetCellularLastGoodAPN(ctx)
@@ -126,13 +137,13 @@ func MigrateInvalidApn(ctx context.Context, s *testing.State) {
 	}
 	serviceLastGoodAPNInfoApnSource := serviceLastGoodAPN[shillconst.DevicePropertyCellularAPNInfoApnSource]
 
-	if err := mdp.VerifyAPNSubpageConnectedApnUI(ctx, tconn, cr, serviceLastGoodAPNInfoApnName, serviceLastGoodAPNInfoApnSource); err != nil {
+	if err := settings.VerifyApnConnected(cr, serviceLastGoodAPNInfoApnName, serviceLastGoodAPNInfoApnSource)(ctx); err != nil {
 		s.Fatal("Failed to verify connected APN UI: ", err)
 	}
 
 	// For example, T-Mobile in the US accepts any APN name.
 	if serviceLastGoodAPNInfoApnName != invalidAPNToMigrate {
-		if err := mdp.VerifyAPNSubpageNotConnectedApnUI(ctx, tconn, cr, invalidAPNToMigrate); err != nil {
+		if err := settings.VerifyApnNotConnected(cr, invalidAPNToMigrate)(ctx); err != nil {
 			s.Fatal("Failed to verify not connected APN UI: ", err)
 		}
 	}

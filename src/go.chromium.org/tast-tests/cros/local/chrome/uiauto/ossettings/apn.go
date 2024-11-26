@@ -619,24 +619,3 @@ func (s *OSSettings) VerifyAPNSubpageConnectedApnUI(ctx context.Context, tconn *
 
 	return nil
 }
-
-// VerifyAPNSubpageNotConnectedApnUI verifies the UI for APNs that are not in use in the revamped APN UI.
-// Deprecated: Use `(s *OSSettings) VerifyApnNotConnected` instead.
-func (s *OSSettings) VerifyAPNSubpageNotConnectedApnUI(ctx context.Context, tconn *chrome.TestConn, cr *chrome.Chrome, apn string) error {
-	expr := fmt.Sprintf(`(() => {
-		let nodes = shadowPiercingQueryAll(
-		'apn-list-item div#labelWrapper');
-		for (const node of nodes) {
-			if (!node.innerText.includes("Connected")) {
-				if (node.querySelector('#apnName').innerText == %q) {
-					return
-				}
-			}
-		}
-		throw new Error("Not connected APN is not found");
-		})()`, apn)
-	if err := s.EvalJSWithShadowPiercer(ctx, cr, expr, nil); err != nil {
-		return errors.Wrap(err, "failed to find not connected APN rows")
-	}
-	return nil
-}
