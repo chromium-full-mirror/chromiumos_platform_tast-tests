@@ -63,9 +63,10 @@ func init() {
 						Total: asphalt8PlayTime,
 					},
 				},
-				Timeout:   asphalt8Timeout + setup.BatteryPreparationTimeout,
-				ExtraData: []string{gameapp.Asphalt8IconGameScene},
-				ExtraAttr: []string{"group:power", "power_regression"},
+				Timeout:           asphalt8Timeout + setup.BatteryPreparationTimeout,
+				ExtraData:         []string{gameapp.Asphalt8IconGameScene},
+				ExtraAttr:         []string{"group:power", "power_regression"},
+				ExtraHardwareDeps: hwdep.D(hwdep.MinStorage(17)), // 16Gb devices may not have enough space to install Asphalt 8.
 			},
 			{
 				Name: "asphalt8_short",
@@ -75,9 +76,10 @@ func init() {
 						Total: shortPlayTime,
 					},
 				},
-				Timeout:   shortTimeout + setup.BatteryPreparationTimeout,
-				ExtraData: []string{gameapp.Asphalt8IconGameScene},
-				ExtraAttr: []string{"group:power", "power_daily"},
+				Timeout:           shortTimeout + setup.BatteryPreparationTimeout,
+				ExtraData:         []string{gameapp.Asphalt8IconGameScene},
+				ExtraAttr:         []string{"group:power", "power_daily"},
+				ExtraHardwareDeps: hwdep.D(hwdep.MinStorage(17)), // 16Gb devices may not have enough space to install Asphalt 8.
 			},
 			{
 				Name: "super_tux_kart",

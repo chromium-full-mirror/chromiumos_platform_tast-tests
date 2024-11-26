@@ -18,6 +18,7 @@ import (
 	"go.chromium.org/tast-tests/cros/local/power/setup"
 	"go.chromium.org/tast/core/ctxutil"
 	"go.chromium.org/tast/core/testing"
+	"go.chromium.org/tast/core/testing/hwdep"
 )
 
 const (
@@ -62,6 +63,7 @@ func init() {
 		BugComponent: "b:1361410", // ChromeOS > Platform > System > Core Power
 		// Attr:         []string{"group:crosbolt", "crosbolt_perbuild"},
 		SoftwareDeps: []string{"chrome", "arc"},
+		HardwareDeps: hwdep.D(hwdep.MinStorage(17)), // 16Gb devices may not have enough space to install all the testing apps.
 		Data:         []string{multitaskingapp.VideoSrc, arcvideoplayback.ExoPlayerAPKFileName},
 		Vars:         socialapp.ElementApkURLVars, // Optional. The URL of the APK file of Element app.
 		Params: []testing.Param{
