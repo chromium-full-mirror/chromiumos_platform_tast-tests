@@ -265,7 +265,8 @@ func BSSTMRequest(ctx context.Context, s *testing.State) {
 		if err != nil {
 			s.Log("Failed to get the model name: ", err)
 		}
-		if devInfo.Vendor == wificell.IntelVendorNum && string(bytes.TrimSuffix(modelName, []byte{'\n'})) == "riven" {
+		boardName := string(bytes.TrimSuffix(modelName, []byte{'\n'}))
+		if devInfo.Vendor == wificell.IntelVendorNum && (boardName == "riven" || boardName == "karis") {
 			isTracingInstanceCreated := true
 			isTracingInstanceStarted := true
 			traceCmdEvents := "iwlwifi_data,iwlwifi_dev_tx,iwlwifi_dev_rx,iwlwifi,iwlwifi_msg,iwlwifi_ucode"
