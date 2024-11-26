@@ -50,3 +50,9 @@ func chownContents(dir, username string) error {
 func BackgroundPageURL(id string) string {
 	return "chrome-extension://" + id + "/_generated_background_page.html"
 }
+
+// ServiceWorkerURL returns the URL to the service worker page for the extension
+// with the supplied ID.
+func ServiceWorkerURL(id, serviceWorker string) string {
+	return "chrome-extension://" + id + "/" + serviceWorker
+}

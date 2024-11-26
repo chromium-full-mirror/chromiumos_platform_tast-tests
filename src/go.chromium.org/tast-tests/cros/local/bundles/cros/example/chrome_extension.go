@@ -63,7 +63,7 @@ func ChromeExtension(ctx context.Context, s *testing.State) {
 	defer cr.Close(ctx)
 
 	s.Log("Connecting to background page")
-	bgURL := chrome.ExtensionBackgroundPageURL(extID)
+	bgURL := chrome.ExtensionServiceWorkerURL(extID, "background.js")
 	conn, err := cr.NewConnForTarget(ctx, chrome.MatchTargetURL(bgURL))
 	if err != nil {
 		s.Fatalf("Failed to connect to background page at %v: %v", bgURL, err)

@@ -27,3 +27,9 @@ func AddTastLibrary(ctx context.Context, conn *Conn) error {
 func ExtensionBackgroundPageURL(extID string) string {
 	return extension.BackgroundPageURL(extID)
 }
+
+// ExtensionServiceWorkerURL returns the URL to the background page for
+// the extension with the supplied ID.
+func ExtensionServiceWorkerURL(extID, serviceWorker string) string {
+	return extension.ServiceWorkerURL(extID, serviceWorker)
+}
