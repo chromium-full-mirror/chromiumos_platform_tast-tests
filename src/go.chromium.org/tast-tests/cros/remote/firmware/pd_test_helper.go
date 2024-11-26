@@ -20,8 +20,8 @@ type DTSMode int
 
 // USB-C DTS mode options
 const (
-	DTSModeOn DTSMode = iota
-	DTSModeOff
+	DTSModeOff DTSMode = iota
+	DTSModeOn
 )
 
 // CCPolarity is a type for CC Polarity control in SetupPDTester
