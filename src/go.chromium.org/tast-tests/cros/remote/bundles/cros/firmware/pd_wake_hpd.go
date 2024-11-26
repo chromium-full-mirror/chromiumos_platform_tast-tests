@@ -34,15 +34,30 @@ func init() {
 		Timeout:      60 * time.Minute,
 		Attr:         []string{"group:firmware", "firmware_pd_unstable"},
 		Params: []testing.Param{{
-			Name: "normal",
+			Name: "plug",
 			Val: firmware.PDTestParams{
-				DTS: firmware.DTSModeOff,
+				DTS:       firmware.DTSModeOff,
+				DPAltPlug: true,
 			},
 		}, {
-			Name: "normal_snk",
+			Name: "plug_snk",
 			Val: firmware.PDTestParams{
 				PowerRole: firmware.RoleSink,
 				DTS:       firmware.DTSModeOff,
+				DPAltPlug: true,
+			},
+		}, {
+			Name: "receptacle",
+			Val: firmware.PDTestParams{
+				DTS:       firmware.DTSModeOff,
+				DPAltPlug: false,
+			},
+		}, {
+			Name: "receptacle_snk",
+			Val: firmware.PDTestParams{
+				PowerRole: firmware.RoleSink,
+				DTS:       firmware.DTSModeOff,
+				DPAltPlug: false,
 			},
 		}},
 	})
@@ -80,6 +95,9 @@ func PDWakeHPD(ctx context.Context, s *testing.State) {
 	input := servo.TypeCInfo{DPMode: servo.DPEnable, PinsCDEF: "CD"}
 	if err := h.Servo.ServoSetDPConfigs(ctx, &input, servo.MFPrefEnable); err != nil {
 		s.Fatal("Failed to set DP alt-mode: ", err)
+	}
+	if err := h.Servo.SetPlug(ctx, testParams.DPAltPlug); err != nil {
+		s.Fatal("Failed to set plug: ", err)
 	}
 
 	testing.ContextLog(ctx, "verifying DP is enabled")
@@ -161,9 +179,19 @@ func PDWakeHPD(ctx context.Context, s *testing.State) {
 			if err := h.Servo.SetPowerState(ctx, servo.PowerStateOn); err != nil {
 				testing.ContextLog(ctx, "Failed to power on DUT: ", err)
 			}
-			if err := h.WaitConnect(ctx); err != nil {
+			if err := h.WaitConnect(ctx, firmware.SkipPDRoleSnk); err != nil {
 				s.Fatal("Failed to boot after test: ", err)
 			}
+		}
+
+		testing.ContextLog(ctx, "verifying DP is still enabled")
+		typecInfo, err := h.Servo.GetTypeCInfo(ctx, h.DUT)
+		if err != nil {
+			s.Fatal("Failed to retrieve type-c information: ", err)
+		}
+		if typecInfo.DPMode != servo.DPEnable {
+			s.Errorf("Test case %d: Type-c DP did not enable", idx)
+			TestFailures++
 		}
 	}
 
