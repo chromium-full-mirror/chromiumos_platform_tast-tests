@@ -33,7 +33,7 @@ func init() {
 		},
 		BugComponent:   "b:1131774", // ChromeOS > Software > Fundamentals > Device Enablement > Connectivity > Cellular
 		LifeCycleStage: testing.LifeCycleOwnerMonitored,
-		Attr:           []string{"group:cellular", "cellular_unstable", "cellular_sim_dual_active"},
+		Attr:           []string{"group:cellular", "cellular_sim_dual_active"},
 		SoftwareDeps:   []string{"chrome"},
 		Fixture:        "cellular",
 		Timeout:        6 * time.Minute,
