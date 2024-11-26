@@ -1,0 +1,75 @@
+// Copyright 2022 The ChromiumOS Authors
+// Use of this source code is governed by a BSD-style license that can be
+// found in the LICENSE file.
+
+package cellularui
+
+import (
+	"context"
+	"time"
+
+	"go.chromium.org/tast-tests/cros/local/cellular/esim/mojo"
+	"go.chromium.org/tast-tests/cros/local/stork"
+	"go.chromium.org/tast/core/testing"
+)
+
+func init() {
+	testing.AddTest(&testing.Test{
+		Func: MojoChangeESimNickname,
+		Desc: "Installs a new eSIM profile on the device and then changes its nickname",
+		Contacts: []string{
+			"cros-device-enablement@google.com",
+		},
+		BugComponent:   "b:1131774", // ChromeOS > Software > Fundamentals > Device Enablement > Connectivity > Cellular
+		LifeCycleStage: testing.LifeCycleOwnerMonitored,
+		Attr:           []string{"group:cellular", "cellular_sim_test_esim", "group:release-health", "release-health_cellular"},
+		SoftwareDeps:   []string{"chrome"},
+		Fixture:        "chromeLoggedInWithMojoTestEuicc",
+		Timeout:        5 * time.Minute,
+	})
+}
+
+const (
+	// Test nickname to assign to the new profile.
+	testName = "Test Nickname"
+)
+
+func MojoChangeESimNickname(ctx context.Context, s *testing.State) {
+	eSimMojo := s.FixtValue().(*mojo.FixtData)
+
+	activationCode, cleanupFunc, err := stork.FetchStorkProfile(ctx)
+	if err != nil {
+		s.Fatal("Failed to fetch Stork profile: ", err)
+	}
+	defer cleanupFunc(ctx)
+
+	var euicc = eSimMojo.Euicc
+
+	s.Log("Installing Stork profile with activation code: ", activationCode)
+	installResult, profile, err := euicc.InstallProfileFromActivationCode(ctx, string(activationCode), "" /*confirmationCode*/)
+	if err != nil {
+		s.Fatal("Failed to install eSIM profile via Mojo: ", err)
+	}
+	if installResult != mojo.ProfileInstallSuccess {
+		s.Fatal("eSIM install failed with error code: ", installResult)
+	}
+
+	s.Log("Installed Stork profile with ICCID: ", profile.Iccid)
+	defer profile.UninstallProfile(ctx)
+
+	s.Log("Changing profile nickname")
+	_, err = profile.SetProfileNickname(ctx, mojo.NewString16(testName))
+	if err != nil {
+		s.Fatal("Failed to set eSIM profile nickname via Mojo: ", err)
+	}
+
+	profileProperties, err := profile.Properties(ctx)
+	if err != nil {
+		s.Fatal("Failed to get eSIM profile properties via Mojo: ", err)
+	}
+
+	if profileProperties.Nickname.String() != testName {
+		s.Fatalf("Failed to confirm eSIM profile nickname, got: %v, want: %v",
+			profileProperties.Nickname, testName)
+	}
+}

@@ -1,44 +1,37 @@
-// Copyright 2023 The ChromiumOS Authors
+// Copyright 2024 The ChromiumOS Authors
 // Use of this source code is governed by a BSD-style license that can be
 // found in the LICENSE file.
 
-package cellular
+package cellularui
 
 // To update test parameters after modifying this file, run:
-// TAST_GENERATE_UPDATE=1 ~/chromiumos/src/platform/tast/tools/go.sh test -count=1 go.chromium.org/tast-tests/cros/local/bundles/cros/cellular/
+// TAST_GENERATE_UPDATE=1 ~/chromiumos/src/platform/tast/tools/go.sh test -count=1 go.chromium.org/tast-tests/cros/local/bundles/cros/cellularui/
 
 import (
 	"testing"
-	"time"
 
 	"go.chromium.org/tast-tests/cros/common/genparams"
-	"go.chromium.org/tast-tests/cros/local/crostini"
 )
 
-// Map tests to whether or not they belong in AVL and need to be run on Verizon.
-var standardTests = map[string]bool{
-	"is_connected.go":          false,
-	"smoke.go":                 true,
-	"smoke_ip_connectivity.go": true,
+// Tests that needs to run on all carriers except Verizon.
+var hotspotTests = []string{
+	"hotspot_abort_enable.go",
+	"hotspot_auto_disable.go",
+	"hotspot_disabled_when_no_upstream_network.go",
+	"hotspot_enable_disable_in_lock_screen.go",
+	"hotspot_policy.go",
+	"hotspot_update_configuration.go",
+	"hotspot_update_configuration_when_hotspot_on.go",
 }
 
 func TestFixTestParams(t *testing.T) {
-	getParams := func(isAVL bool) string {
-		localParams := `
+	getParams := func() string {
+		return `
 		{
 			Name:      "",
 			Val:       "",
 			ExtraAttr: []string{"cellular_carrier_local"},
-		},`
-		if isAVL {
-			localParams = `
-		{
-			Name:      "",
-			Val:       "",
-			ExtraAttr: []string{"cellular_carrier_local", "cellular_ota_avl"},
-		},`
-		}
-		return localParams + `
+		},
 		{
 			Name:      "att",
 			Val:       "att",
@@ -90,11 +83,6 @@ func TestFixTestParams(t *testing.T) {
 			ExtraAttr: []string{"cellular_carrier_fi"},
 		},
 		{
-			Name:      "verizon",
-			Val:       "verizon",
-			ExtraAttr: []string{"cellular_carrier_verizon"},
-		},
-		{
 			Name:      "bell",
 			Val:       "bell",
 			ExtraAttr: []string{"cellular_carrier_bell"},
@@ -131,22 +119,7 @@ func TestFixTestParams(t *testing.T) {
 		},`
 	}
 
-	for filename, param := range standardTests {
-		genparams.Ensure(t, filename, getParams(param))
-	}
-}
-
-var crostiniTests = map[string]time.Duration{
-	"crostini_network_connectivity.go": 10 * time.Minute,
-}
-
-func TestFixCrostiniTestParams(t *testing.T) {
-	for filename, duration := range crostiniTests {
-		params := crostini.MakeTestParamsFromList(t, []crostini.Param{{
-			Timeout:       duration,
-			IsNotMainline: true,
-			UseFixture:    true,
-		}})
-		genparams.Ensure(t, filename, params)
+	for _, filename := range hotspotTests {
+		genparams.Ensure(t, filename, getParams())
 	}
 }

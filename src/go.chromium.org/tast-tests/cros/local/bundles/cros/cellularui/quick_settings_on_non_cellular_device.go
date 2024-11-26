@@ -1,0 +1,64 @@
+// Copyright 2022 The ChromiumOS Authors
+// Use of this source code is governed by a BSD-style license that can be
+// found in the LICENSE file.
+
+package cellularui
+
+import (
+	"context"
+
+	"go.chromium.org/tast-tests/cros/local/chrome"
+	"go.chromium.org/tast-tests/cros/local/chrome/uiauto"
+	"go.chromium.org/tast-tests/cros/local/chrome/uiauto/quicksettings"
+	"go.chromium.org/tast/core/testing"
+	"go.chromium.org/tast/core/testing/hwdep"
+)
+
+func init() {
+	testing.AddTest(&testing.Test{
+		Func:           QuickSettingsOnNonCellularDevice,
+		LifeCycleStage: testing.LifeCycleOwnerMonitored,
+		Desc:           "Checks that Cellular quick settings are not shown in non cellular devices",
+		Contacts: []string{
+			"cros-device-enablement@google.com",
+			"nikhilcn@google.com",
+		},
+		BugComponent: "b:1131774", // ChromeOS > Software > System Services > Connectivity > Cellular
+		SoftwareDeps: []string{"chrome"},
+		HardwareDeps: hwdep.D(hwdep.NoCellular()),
+		Attr:         []string{"group:wificell", "wificell_e2e"},
+	})
+}
+
+// QuickSettingsOnNonCellularDevice tests that quick settings does not display
+// mobile data settings on a non cellular device
+func QuickSettingsOnNonCellularDevice(ctx context.Context, s *testing.State) {
+	cr, err := chrome.New(ctx)
+	if err != nil {
+		s.Fatal("Failed to create new chrome instance: ", err)
+	}
+
+	tconn, err := cr.TestAPIConn(ctx)
+	if err != nil {
+		s.Fatal("Failed to create Test API connection: ", err)
+	}
+
+	ui := uiauto.New(tconn)
+
+	if err := quicksettings.NavigateToNetworkDetailedView(ctx, tconn); err != nil {
+		s.Fatal("Failed to navigate to the detailed Network view: ", err)
+	}
+
+	mobileDataToggle, err := quicksettings.NetworkDetailedViewMobileDataToggle(ctx, tconn)
+	if err != nil {
+		s.Fatal("Failed to get mobile data toggle: ", err)
+	}
+
+	if err := ui.Exists(mobileDataToggle)(ctx); err == nil {
+		s.Fatal("Mobile data toggle is present on a non cellular device")
+	}
+
+	if err := ui.Exists(quicksettings.AddCellularButton)(ctx); err == nil {
+		s.Fatal("Add cellular button is present on a non cellular device")
+	}
+}
