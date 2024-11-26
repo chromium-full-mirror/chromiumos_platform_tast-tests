@@ -993,6 +993,7 @@ func (tf *TestFixture) CollectLogs(ctx context.Context) error {
 func (tf *TestFixture) CollectCrashLogs(ctx context.Context, outDir string, crashTime time.Time) error {
 	crashDirs := []string{"/var/spool/crash"}
 	formatedCrashTime := crashTime.Format("20060102.150405")
+	formatedCrashTime = formatedCrashTime[:len(formatedCrashTime)-1]
 	firmwareDumpPattern := "devcoredump_iwlwifi." + formatedCrashTime + ".*"
 	requiredCrashMeta := []string{
 		firmwareDumpPattern + ".devcore.gz",
