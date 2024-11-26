@@ -82,6 +82,10 @@ const (
 	kioskCrashRecoveryLog = "Crash recovery flow succeeded"
 	// kioskCrashRecoveryDuration is the time estimate to emit a kioskCrashRecoveryLog after a crash.
 	kioskCrashRecoveryDuration = 60 * time.Second
+	// extensionGarbageCollectionCompletedLog is reported when extensions garbage collection is completed.
+	extensionGarbageCollectionCompletedLog = "Garbage collection for extensions on file thread is complete"
+	// extensionGarbageCollectionWaitDuration is the time estimate required to finish extensions garbage collection.
+	extensionGarbageCollectionWaitDuration = 2 * time.Minute
 
 	// policyPersistDuration is the time estimate for Chrome to store policies after a refresh.
 	policyPersistDuration = 15 * time.Second
@@ -285,6 +289,16 @@ func (k *Kiosk) WaitLaunchLogs(ctx context.Context) error {
 func (k *Kiosk) WaitForSplashScreenClosed(ctx context.Context) error {
 	if err := waitLog(ctx, k.reader, kioskClosingSplashScreenLog, kioskClosingSplashScreenDuration); err != nil {
 		return errors.Wrap(err, "Kiosk splash screen was not closed")
+	}
+
+	return nil
+}
+
+// WaitForExtensionGarbageCollectionLog uses the reader stored in this Kiosk struct to check if
+// the extensions garbage collection log is present.
+func (k *Kiosk) WaitForExtensionGarbageCollectionLog(ctx context.Context) error {
+	if err := waitLog(ctx, k.reader, extensionGarbageCollectionCompletedLog, extensionGarbageCollectionWaitDuration); err != nil {
+		return errors.Wrap(err, "Extension garbage collection didn't complete")
 	}
 
 	return nil

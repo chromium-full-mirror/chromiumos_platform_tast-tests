@@ -27,7 +27,12 @@ import (
 var (
 	webKioskCrashRecoveryFeature = testing.StringPair{
 		Key: "feature_id",
-		// Relaunch kiosk app after os crash.
+		// Relaunch kiosk web app after os crash.
+		Value: "screenplay-86fc814e-2bdd-4680-bbb2-defed8bde33c",
+	}
+	chromeAppKioskCrashRecoveryFeature = testing.StringPair{
+		Key: "feature_id",
+		// Relaunch kiosk chrome app after os crash.
 		Value: "screenplay-6ac07cf6-6fe6-49d7-9398-769574c032ba",
 	}
 )
@@ -63,6 +68,11 @@ func init() {
 				Val:              appType(webApp),
 				ExtraSearchFlags: []*testing.StringPair{&webKioskCrashRecoveryFeature},
 			},
+			{
+				Name:             "auto_chromeapp",
+				Val:              appType(chromeApp),
+				ExtraSearchFlags: []*testing.StringPair{&chromeAppKioskCrashRecoveryFeature},
+			},
 		},
 	})
 }
@@ -85,7 +95,7 @@ func CrashRecovery(ctx context.Context, s *testing.State) {
 	defer cancel()
 
 	kiosk, cr, err := kioskmode.New(
-		ctx, fdms, signinTestExtensionManifestKey, getWebKioskModeOptions()...,
+		ctx, fdms, signinTestExtensionManifestKey, getWebKioskModeOptions(appType)...,
 	)
 	if err != nil {
 		s.Fatal("Failed to create Chrome in Kiosk mode: ", err)
@@ -113,6 +123,14 @@ func CrashRecovery(ctx context.Context, s *testing.State) {
 		s.Fatal("Kiosk app launch is not completed successfully: ", err)
 	}
 
+	// TODO(crbug.com/379867155) Remove this after chrome app kiosk crash recovery
+	// is independent of extensions garbage collection.
+	if appType == chromeApp {
+		if err := kiosk.WaitForExtensionGarbageCollectionLog(ctx); err != nil {
+			s.Fatal("Extensions garbage collection didn't finish: ", err)
+		}
+	}
+
 	// Cause crash using SIGSEGV signal to simulate a browser crash.
 	s.Log("Cause a browser crash")
 	proc, err := ashproc.RootWithContext(ctx)
@@ -129,10 +147,21 @@ func CrashRecovery(ctx context.Context, s *testing.State) {
 	}
 }
 
-func getWebKioskModeOptions() []kioskmode.Option {
+func getWebKioskModeOptions(appType appType) []kioskmode.Option {
 	var options []kioskmode.Option
-	options = append(options, kioskmode.AutoLaunch(kioskmode.WebKioskAccountID))
+	options = append(options, kioskmode.AutoLaunch(getKioskAccountId(appType)))
 	return options
+}
+
+func getKioskAccountId(appType appType) string {
+	switch appType {
+	case webApp:
+		return kioskmode.WebKioskAccountID
+	case chromeApp:
+		return kioskmode.KioskAppAccountID
+	default:
+		return ""
+	}
 }
 
 func waitForKioskAppStart(ctx context.Context, cr *chrome.Chrome, appType appType, outDir string) error {
