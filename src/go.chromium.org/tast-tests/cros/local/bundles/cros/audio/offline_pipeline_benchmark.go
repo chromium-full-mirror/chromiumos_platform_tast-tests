@@ -52,7 +52,7 @@ func init() {
 				},
 			},
 			{
-				Name: "nc_sleep_10ms",
+				Name: "nc_sleep_rt",
 				Val: offlinePipelineBenchmarkParam{
 					dlcID:             "nc-ap-dlc",
 					dlcSharedObject:   "libeffects.so",
@@ -60,10 +60,11 @@ func init() {
 					blockSizeFrames:   480,
 					inputWavFrameRate: 48000,
 					sleepTime:         10 * time.Millisecond,
+					setThreadPriority: true,
 				},
 			},
 			{
-				Name: "ast_sleep_20ms",
+				Name: "ast_sleep_rt",
 				Val: offlinePipelineBenchmarkParam{
 					dlcID:             "nc-ap-dlc",
 					dlcSharedObject:   "libeffects.so",
@@ -71,6 +72,7 @@ func init() {
 					blockSizeFrames:   480,
 					inputWavFrameRate: 24000,
 					sleepTime:         20 * time.Millisecond,
+					setThreadPriority: true,
 				},
 			},
 		},
@@ -84,6 +86,7 @@ type offlinePipelineBenchmarkParam struct {
 	blockSizeFrames   int
 	inputWavFrameRate int
 	sleepTime         time.Duration
+	setThreadPriority bool
 }
 
 // OfflinePipelineBenchmark benchmarks audio_processor modules using offline-pipeline.
@@ -119,14 +122,20 @@ func OfflinePipelineBenchmark(ctx context.Context, s *testing.State) {
 		s.Fatal("Failed to generate test data: ", err)
 	}
 
-	stdout, err := testexec.CommandContext(
+	cmd := testexec.CommandContext(
 		ctx,
 		"offline-pipeline", "--json",
 		fmt.Sprintf("--plugin-name=%s", param.pluginName),
 		fmt.Sprintf("--block-size-frames=%d", param.blockSizeFrames),
-		fmt.Sprintf("--sleep-sec=%v", param.sleepTime.Seconds()),
 		sharedObject, inputWav, outputWav,
-	).Output(testexec.DumpLogOnError)
+	)
+	if param.sleepTime != 0 {
+		cmd.Args = append(cmd.Args, fmt.Sprintf("--sleep-sec=%v", param.sleepTime.Seconds()))
+	}
+	if param.setThreadPriority {
+		cmd.Args = append(cmd.Args, "--set-thread-priority")
+	}
+	stdout, err := cmd.Output(testexec.DumpLogOnError)
 	if err != nil {
 		s.Fatal("Command offline-pipeline failed: ", err)
 	}
