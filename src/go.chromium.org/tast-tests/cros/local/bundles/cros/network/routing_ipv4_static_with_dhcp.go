@@ -32,19 +32,8 @@ func init() {
 		// ChromeOS > Platform > System > Networking > Continuous Maintenance
 		BugComponent: "b:1493959",
 		Attr:         []string{"group:mainline", "group:network", "network_cq", "group:release-health", "release-health_network"},
-		Params: []testing.Param{
-			{
-				Val:       false,
-				ExtraAttr: []string{"group:network", "network_cq"},
-			},
-			{
-				Name:              "chrome",
-				Val:               true,
-				Fixture:           fixture.ChromeLoggedIn,
-				ExtraSoftwareDeps: []string{"chrome"},
-				ExtraAttr:         []string{"informational", "group:criticalstaging"},
-			},
-		},
+		Fixture:      fixture.ChromeLoggedIn,
+		SoftwareDeps: []string{"chrome"},
 	})
 }
 
@@ -65,24 +54,14 @@ func RoutingIPv4StaticWithDHCP(ctx context.Context, s *testing.State) {
 	s.AttachErrorHandlers(hookEnv.OnErrorHandler, hookEnv.OnFatalHandler)
 	defer hookEnv.TearDownWithLogFailures(cleanupCtx, s.HasError)
 
-	var cr *chrome.Chrome
-	if s.Param().(bool) {
-		cr = s.FixtValue().(chrome.HasChrome).Chrome()
-	}
+	cr := s.FixtValue().(chrome.HasChrome).Chrome()
 
-	// This test changes static IP configure, push a test profile to avoid
-	// polluting default profile by any chance. Ideally we want to do this even
-	// with Chrome, but it's not practical now since 1) test profile cannot be
-	// pushed on top of a user profile and 2) we don't have a good way to push the
-	// test profile before login with the chromeLoggedIn feature. If this becomes
-	// a problem, we can consider doing StaticIPConfig cleanup in test hooks.
-	if cr == nil {
-		popFunc, err := shill.LogOutUserAndPushTestProfile(ctx)
-		if err != nil {
-			s.Fatal("Failed to push test profile: ", err)
-		}
-		defer popFunc(cleanupCtx)
-	}
+	// This test changes static IP configure. Ideally we want to call
+	// LogOutUserAndPushTestProfile() here to avoid polluting the profile, but
+	// it's not practical now since 1) test profile cannot be pushed on top of a
+	// user profile and 2) we don't have a good way to push the test profile
+	// before login with the chromeLoggedIn feature. If this becomes a problem,
+	// we can consider doing StaticIPConfig cleanup in test hooks.
 
 	testEnv := routing.NewTestEnv(cr)
 	if err := testEnv.SetUpWithoutBaseNetwork(ctx); err != nil {

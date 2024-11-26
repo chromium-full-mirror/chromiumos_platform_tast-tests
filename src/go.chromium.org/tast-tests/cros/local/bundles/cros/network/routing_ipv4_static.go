@@ -22,7 +22,6 @@ import (
 
 type routingIPv4StaticTestCase struct {
 	applyWhenConnecting bool
-	useChrome           bool
 }
 
 func init() {
@@ -33,6 +32,8 @@ func init() {
 		// ChromeOS > Platform > System > Networking > Continuous Maintenance
 		BugComponent: "b:1493959",
 		Attr:         []string{"group:mainline"},
+		SoftwareDeps: []string{"chrome"},
+		Fixture:      "chromeLoggedIn.ehide",
 		// Using ehide in this test since there might be some problems with
 		// StaticIPConfig due to the ethernet_any profile implementation
 		// (b/159725895).
@@ -41,31 +42,11 @@ func init() {
 			Val: routingIPv4StaticTestCase{
 				applyWhenConnecting: false,
 			},
-			Fixture: "ehide",
 		}, {
 			Name: "apply_when_connecting",
 			Val: routingIPv4StaticTestCase{
 				applyWhenConnecting: true,
 			},
-			Fixture: "ehide",
-		}, {
-			Name: "apply_when_idle_chrome",
-			Val: routingIPv4StaticTestCase{
-				applyWhenConnecting: false,
-				useChrome:           true,
-			},
-			ExtraAttr:         []string{"informational", "group:criticalstaging"},
-			ExtraSoftwareDeps: []string{"chrome"},
-			Fixture:           "chromeLoggedIn.ehide",
-		}, {
-			Name: "apply_when_connecting_chrome",
-			Val: routingIPv4StaticTestCase{
-				applyWhenConnecting: true,
-				useChrome:           true,
-			},
-			ExtraAttr:         []string{"informational", "group:criticalstaging"},
-			ExtraSoftwareDeps: []string{"chrome"},
-			Fixture:           "chromeLoggedIn.ehide",
 		}},
 	})
 }
@@ -90,24 +71,14 @@ func RoutingIPv4Static(ctx context.Context, s *testing.State) {
 	tc := s.Param().(routingIPv4StaticTestCase)
 	disconnectBeforeApply := !tc.applyWhenConnecting
 
-	var cr *chrome.Chrome
-	if tc.useChrome {
-		cr = s.FixtValue().(chrome.HasChrome).Chrome()
-	}
+	cr := s.FixtValue().(chrome.HasChrome).Chrome()
 
-	// This test changes static IP configure, push a test profile to avoid
-	// polluting default profile by any chance. Ideally we want to do this even
-	// with Chrome, but it's not practical now since 1) test profile cannot be
-	// pushed on top of a user profile and 2) we don't have a good way to push the
-	// test profile before login with the chromeLoggedIn feature. If this becomes
-	// a problem, we can consider doing StaticIPConfig cleanup in test hooks.
-	if cr == nil {
-		popFunc, err := shill.LogOutUserAndPushTestProfile(ctx)
-		if err != nil {
-			s.Fatal("Failed to push test profile: ", err)
-		}
-		defer popFunc(cleanupCtx)
-	}
+	// This test changes static IP configure. Ideally we want to call
+	// LogOutUserAndPushTestProfile() here to avoid polluting the profile, but
+	// it's not practical now since 1) test profile cannot be pushed on top of a
+	// user profile and 2) we don't have a good way to push the test profile
+	// before login with the chromeLoggedIn feature. If this becomes a problem,
+	// we can consider doing StaticIPConfig cleanup in test hooks.
 
 	testEnv := routing.NewTestEnv(cr)
 	if err := testEnv.SetUpWithoutBaseNetwork(ctx); err != nil {
