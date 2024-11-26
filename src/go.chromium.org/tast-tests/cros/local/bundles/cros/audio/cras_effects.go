@@ -734,7 +734,7 @@ func init() {
 				},
 				Fixture:          crasEffectsHasAPNC,
 				ExtraTestBedDeps: []string{tbdep.AudioBeamforming("intelligo")},
-				ExtraAttr:        []string{},
+				ExtraAttr:        []string{"group:mainline", "informational"},
 			},
 			{
 				Name: "beamforming_enabled_by_ui",
@@ -753,7 +753,7 @@ func init() {
 				},
 				Fixture:          crasEffectsHasAPNC,
 				ExtraTestBedDeps: []string{tbdep.AudioBeamforming("intelligo")},
-				ExtraAttr:        []string{},
+				ExtraAttr:        []string{"group:mainline", "informational"},
 			},
 			{
 				Name: "style_transfer",
