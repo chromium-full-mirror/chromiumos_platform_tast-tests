@@ -9,9 +9,9 @@ import (
 	"time"
 
 	"go.chromium.org/tast-tests/cros/local/chrome"
-	"go.chromium.org/tast-tests/cros/local/chrome/ash"
 	"go.chromium.org/tast-tests/cros/local/chrome/uiauto/diagnosticsapp"
 	"go.chromium.org/tast-tests/cros/local/chrome/uiauto/faillog"
+	"go.chromium.org/tast-tests/cros/local/diagnosticsutils"
 	"go.chromium.org/tast/core/testing"
 )
 
@@ -63,6 +63,7 @@ type diagnosticsPrepFixture struct {
 	cr                *chrome.Chrome
 	tconn             *chrome.TestConn
 	disableTabletMode bool
+	cleanUpSystemMode func(ctx context.Context) error
 }
 
 func newDiagnosticsPrepFixture(disableTabletMode bool) testing.FixtureImpl {
@@ -88,8 +89,10 @@ func (f *diagnosticsPrepFixture) SetUp(ctx context.Context, s *testing.FixtState
 	}
 
 	if f.disableTabletMode {
-		if err := ash.SetTabletModeEnabled(ctx, tconn, false); err != nil {
+		if cleanUp, err := diagnosticsutils.EnsureClamshellMode(ctx, tconn); err != nil {
 			s.Error("Failed to set the system mode: ", err)
+		} else {
+			f.cleanUpSystemMode = cleanUp
 		}
 	}
 
@@ -101,6 +104,12 @@ func (f *diagnosticsPrepFixture) SetUp(ctx context.Context, s *testing.FixtState
 }
 
 func (f *diagnosticsPrepFixture) TearDown(ctx context.Context, s *testing.FixtState) {
+	if f.disableTabletMode {
+		if err := f.cleanUpSystemMode(ctx); err != nil {
+			s.Log("Failed to reset the system mode: ", err)
+		}
+	}
+
 	if err := f.cr.Close(ctx); err != nil {
 		s.Log("Failed to close Chrome: ", err)
 	}

@@ -13,12 +13,12 @@ import (
 	"time"
 
 	"go.chromium.org/tast-tests/cros/common/testexec"
-	"go.chromium.org/tast-tests/cros/local/bundles/cros/health/utils"
 	"go.chromium.org/tast-tests/cros/local/chrome"
 	"go.chromium.org/tast-tests/cros/local/chrome/uiauto"
 	"go.chromium.org/tast-tests/cros/local/chrome/uiauto/diagnosticsapp"
 	"go.chromium.org/tast-tests/cros/local/chrome/uiauto/nodewith"
 	"go.chromium.org/tast-tests/cros/local/chrome/uiauto/role"
+	"go.chromium.org/tast-tests/cros/local/diagnosticsutils"
 	"go.chromium.org/tast-tests/cros/local/input"
 	"go.chromium.org/tast/core/ctxutil"
 	"go.chromium.org/tast/core/errors"
@@ -137,7 +137,7 @@ func MonitorKeyboardDiagnosticEvent(ctx context.Context, s *testing.State) {
 	}
 
 	if testParam.forceClamshellMode {
-		cleanup, err := utils.EnsureClamshellMode(ctx, tconn)
+		cleanup, err := diagnosticsutils.EnsureClamshellMode(ctx, tconn)
 		if err != nil {
 			s.Fatal("Failed to ensure in clamshell mode: ", err)
 		}

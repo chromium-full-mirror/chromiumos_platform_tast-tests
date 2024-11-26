@@ -18,6 +18,7 @@ import (
 	"go.chromium.org/tast-tests/cros/common/testexec"
 	"go.chromium.org/tast-tests/cros/local/bundles/cros/health/utils"
 	"go.chromium.org/tast-tests/cros/local/croshealthd"
+	"go.chromium.org/tast-tests/cros/local/diagnosticsutils"
 	"go.chromium.org/tast-tests/cros/local/jsontypes"
 	"go.chromium.org/tast/core/errors"
 	"go.chromium.org/tast/core/lsbrelease"
@@ -217,13 +218,13 @@ func expectedOSInfo(ctx context.Context) (osInfo, error) {
 	)
 	var r osInfo
 	var err error
-	if r.CodeName, err = utils.GetCrosConfig(ctx, cfgCodeName); err != nil {
+	if r.CodeName, err = diagnosticsutils.GetCrosConfig(ctx, cfgCodeName); err != nil {
 		return r, err
 	}
-	if r.MarketingName, err = utils.GetOptionalCrosConfig(ctx, cfgMarketingName); err != nil {
+	if r.MarketingName, err = diagnosticsutils.GetOptionalCrosConfig(ctx, cfgMarketingName); err != nil {
 		return r, err
 	}
-	if r.OEMName, err = utils.GetOptionalCrosConfig(ctx, cfgOEMName); err != nil {
+	if r.OEMName, err = diagnosticsutils.GetOptionalCrosConfig(ctx, cfgOEMName); err != nil {
 		return r, err
 	}
 	if r.OSVersion, err = expectedOSVersion(ctx); err != nil {
@@ -248,7 +249,7 @@ func expectedOSInfo(ctx context.Context) (osInfo, error) {
 func expectedSKUNumber(ctx context.Context, filePath string) (*string, error) {
 	const cfgSKUNumber = "/cros-healthd/cached-vpd/has-sku-number"
 
-	c, err := utils.IsCrosConfigTrue(ctx, cfgSKUNumber)
+	c, err := diagnosticsutils.IsCrosConfigTrue(ctx, cfgSKUNumber)
 	if err != nil {
 		return nil, err
 	}
