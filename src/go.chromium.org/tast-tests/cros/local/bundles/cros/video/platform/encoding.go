@@ -211,12 +211,23 @@ func ArgsCcenc(ctx context.Context, testName, exe, yuvFile string, size coords.S
 	numFrames := yuvSize / int64(size.Width*size.Height*3/2)
 	command = append(command, "--count", strconv.FormatInt(numFrames, 10))
 
+	bitrate = int(0.1 /* BPP */ * float64(fps) * float64(size.Width) * float64(size.Height))
 	if strings.Contains(testName, "h264") {
 		command = append(command, "--codec", "H264")
 		// The output file automatically gets a .h264 suffix added.
 		encodedFile = yuvFile + ".h264"
 	} else if strings.Contains(testName, "vp8") {
-		command = append(command, "--codec", "VP80")
+		command = append(command, "--codec", "VP8")
+		// The output file automatically gets a .ivf suffix added.
+		encodedFile = yuvFile + ".ivf"
+	} else if strings.Contains(testName, "vp9") {
+		command = append(command, "--codec", "VP9")
+
+		// VP9 is 30% more efficient than H264
+		bitrate = int(float64(bitrate) * 0.7)
+		// VP9 encoding is LP only on newer Intel devices.
+		command = append(command, "--low-power")
+
 		// The output file automatically gets a .ivf suffix added.
 		encodedFile = yuvFile + ".ivf"
 	} else {
@@ -224,7 +235,6 @@ func ArgsCcenc(ctx context.Context, testName, exe, yuvFile string, size coords.S
 	}
 	command = append(command, "--output", encodedFile)
 
-	bitrate = int(0.1 /* BPP */ * float64(fps) * float64(size.Width) * float64(size.Height))
 	command = append(command, "--bitrate", strconv.Itoa(bitrate) /* bps */)
 	return
 }
