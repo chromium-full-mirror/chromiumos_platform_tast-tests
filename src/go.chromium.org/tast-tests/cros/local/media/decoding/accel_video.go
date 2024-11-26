@@ -276,7 +276,7 @@ func RunAccelVideoPerfTest(ctx context.Context, outDir, filename string, paramet
 	}{
 		{CappedFlag, "MeasureCappedPerformance", "capped_single_decoder", parseCappedPerfMetrics},
 		{UncappedFlag, "MeasureUncappedPerformance", "uncapped_single_decoder", parseUncappedPerfMetrics},
-		{UncappedConcurrentFlag, "MeasureUncappedPerformance_TenConcurrentDecoders", "uncapped_ten_concurrent_decoders",
+		{UncappedConcurrentFlag, "MeasureUncappedPerformanceTenConcurrentDecoders", "uncapped_ten_concurrent_decoders",
 			// TODO(b/211783279) Replace this parser with one that can handle multiple captures.
 			parseUncappedPerfMetrics},
 	}
