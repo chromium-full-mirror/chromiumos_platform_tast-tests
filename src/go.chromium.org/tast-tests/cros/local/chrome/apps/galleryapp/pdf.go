@@ -16,6 +16,7 @@ import (
 )
 
 var (
+	pdfCanvas            = nodewith.Role(role.Canvas).Ancestor(RootFinder).First()
 	pdfRootWebArea       = nodewith.Role(role.RootWebArea).Ancestor(RootFinder).First()
 	drawSignatureCanvas  = nodewith.Name("Draw your signature in this area").Role(role.Canvas).Ancestor(RootFinder)
 	placeSignatureButton = nodewith.Name("Place signature").Role(role.Button).Ancestor(RootFinder)
@@ -28,7 +29,7 @@ func (g *Gallery) DismissPDFDialog() uiauto.Action {
 	okButton := nodewith.Name("OK").Role(role.Button).Ancestor(dialog)
 	return uiauto.Retry(3, uiauto.Combine("dismiss PDF dialog",
 		g.WaitUntilSpinnerGone(),
-		ui.WaitUntilAnyExists(okButton, pdfRootWebArea),
+		ui.WaitUntilAnyExists(okButton, pdfCanvas),
 		uiauto.IfSuccessThen(ui.Exists(okButton),
 			ui.DoDefaultUntil(okButton,
 				ui.WithTimeout(5*time.Second).WaitUntilGone(okButton)),
@@ -40,7 +41,7 @@ func (g *Gallery) DismissPDFDialog() uiauto.Action {
 func (g *Gallery) WaitPDFOpened() uiauto.Action {
 	return uiauto.Combine("wait PDF opened",
 		g.WaitUntilSpinnerGone(),
-		g.ui.WaitUntilExists(pdfRootWebArea),
+		g.ui.WaitUntilExists(pdfCanvas),
 	)
 }
 
