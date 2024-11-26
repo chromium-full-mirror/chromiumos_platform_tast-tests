@@ -123,6 +123,10 @@ func TestPlatformDecodingParams(t *testing.T) {
 						hardwareDeps = append(hardwareDeps, "hwdep.SkipGPUFamily(\"picasso\")")
 					}
 
+					if vaapiTestParam.testNamePrefix == "cros_codecs_" {
+						hardwareDeps = append(hardwareDeps, "hwdep.SupportsCrosCodecs()")
+					}
+
 					switch levelGroup {
 					case "level5_0":
 						param.SoftwareDeps = append(param.SoftwareDeps, caps.HWDecodeVP9_4K)
@@ -140,7 +144,7 @@ func TestPlatformDecodingParams(t *testing.T) {
 		}
 
 		// Generate VAAPI AV1 tests.
-		params = append(params, paramData{
+		param := paramData{
 			Name:               fmt.Sprintf("%svaapi_av1", vaapiTestParam.testNamePrefix),
 			Decoder:            vaapiTestParam.binaryName,
 			DecoderArgsBuilder: genDecoderArgsBuilder(vaapiTestParam.testNamePrefix, "av1"),
@@ -150,7 +154,11 @@ func TestPlatformDecodingParams(t *testing.T) {
 			SoftwareDeps: []string{"vaapi", caps.HWDecodeAV1},
 			Metadata:     "test_vectors.AV1Files[\"8bit\"]",
 			Attr:         []string{"graphics_video_av1", "graphics_perbuild"},
-		})
+		}
+		if vaapiTestParam.testNamePrefix == "cros_codecs_" {
+			param.HardwareDeps = "hwdep.SupportsCrosCodecs()"
+		}
+		params = append(params, param)
 		for _, cat := range []string{"quantizer", "size", "allintra", "cdfupdate", "motionvec"} {
 			files := fmt.Sprintf("test_vectors.AV1Aom8bitFiles[\"%s\"]", cat)
 			param := paramData{
@@ -164,7 +172,9 @@ func TestPlatformDecodingParams(t *testing.T) {
 				Metadata:     files,
 				Attr:         []string{"graphics_video_av1", "graphics_perbuild"},
 			}
-
+			if vaapiTestParam.testNamePrefix == "cros_codecs_" {
+				param.HardwareDeps = "hwdep.SupportsCrosCodecs()"
+			}
 			params = append(params, param)
 		}
 
@@ -172,7 +182,7 @@ func TestPlatformDecodingParams(t *testing.T) {
 		for _, testGroup := range []string{"main_part_1", "main_part_2", "main_part_3", "main_part_4"} {
 			files := fmt.Sprintf("test_vectors.HEVCFiles[\"%s\"]", testGroup)
 
-			params = append(params, paramData{
+			param := paramData{
 				Name:               fmt.Sprintf("%svaapi_hevc_%s", vaapiTestParam.testNamePrefix, testGroup),
 				Decoder:            vaapiTestParam.binaryName,
 				DecoderArgsBuilder: genDecoderArgsBuilder(vaapiTestParam.testNamePrefix, "h265"),
@@ -181,9 +191,13 @@ func TestPlatformDecodingParams(t *testing.T) {
 				SoftwareDeps:       []string{"vaapi", caps.HWDecodeHEVC},
 				Metadata:           files,
 				Attr:               []string{"graphics_video_hevc", vaapiTestParam.frequency},
-			})
+			}
+			if vaapiTestParam.testNamePrefix == "cros_codecs_" {
+				param.HardwareDeps = "hwdep.SupportsCrosCodecs()"
+			}
+			params = append(params, param)
 		}
-		params = append(params, paramData{
+		param = paramData{
 			Name:               fmt.Sprintf("%shevc_main_part_5_8k", vaapiTestParam.testNamePrefix),
 			Decoder:            vaapiTestParam.binaryName,
 			DecoderArgsBuilder: genDecoderArgsBuilder(vaapiTestParam.testNamePrefix, "hevc"),
@@ -192,13 +206,17 @@ func TestPlatformDecodingParams(t *testing.T) {
 			SoftwareDeps:       []string{"vaapi", caps.HWDecodeHEVC8K},
 			Metadata:           "test_vectors.HEVCFiles[\"main_part_5_8K\"]",
 			Attr:               []string{"graphics_video_hevc", vaapiTestParam.frequency},
-		})
+		}
+		if vaapiTestParam.testNamePrefix == "cros_codecs_" {
+			param.HardwareDeps = "hwdep.SupportsCrosCodecs()"
+		}
+		params = append(params, param)
 
 		// Generate VAAPI VP8 tests.
 		for _, testGroup := range []string{"inter", "inter_multi_coeff", "inter_segment", "intra", "intra_multi_coeff", "intra_segment", "comprehensive"} {
 			files := fmt.Sprintf("test_vectors.VP8Files[\"%s\"]", testGroup)
 
-			params = append(params, paramData{
+			param := paramData{
 				Name:               fmt.Sprintf("%svaapi_vp8_%s", vaapiTestParam.testNamePrefix, testGroup),
 				Decoder:            vaapiTestParam.binaryName,
 				DecoderArgsBuilder: genDecoderArgsBuilder(vaapiTestParam.testNamePrefix, "vp8"),
@@ -207,7 +225,11 @@ func TestPlatformDecodingParams(t *testing.T) {
 				SoftwareDeps:       []string{"vaapi", caps.HWDecodeVP8},
 				Metadata:           files,
 				Attr:               []string{"graphics_video_vp8", vaapiTestParam.frequency},
-			})
+			}
+			if vaapiTestParam.testNamePrefix == "cros_codecs_" {
+				param.HardwareDeps = "hwdep.SupportsCrosCodecs()"
+			}
+			params = append(params, param)
 		}
 
 		// Generates VAAPI H264 tests.
@@ -223,6 +245,9 @@ func TestPlatformDecodingParams(t *testing.T) {
 				SoftwareDeps:       []string{"vaapi", caps.HWDecodeH264},
 				Metadata:           files,
 				Attr:               []string{"graphics_video_h264", vaapiTestParam.frequency},
+			}
+			if vaapiTestParam.testNamePrefix == "cros_codecs_" {
+				param.HardwareDeps = "hwdep.SupportsCrosCodecs()"
 			}
 			params = append(params, param)
 		}
@@ -240,6 +265,9 @@ func TestPlatformDecodingParams(t *testing.T) {
 				Metadata:           files,
 				Attr:               []string{"graphics_video_h264", vaapiTestParam.frequency},
 			}
+			if vaapiTestParam.testNamePrefix == "cros_codecs_" {
+				param.HardwareDeps = "hwdep.SupportsCrosCodecs()"
+			}
 			params = append(params, param)
 		}
 		for _, bugID := range test_vectors.SortedStringKeys(test_vectors.H2644kFilesFromBugs) {
@@ -253,6 +281,9 @@ func TestPlatformDecodingParams(t *testing.T) {
 				SoftwareDeps:       []string{"vaapi", caps.HWDecodeH264_4K},
 				Metadata:           files,
 				Attr:               []string{"graphics_video_h264", vaapiTestParam.frequency},
+			}
+			if vaapiTestParam.testNamePrefix == "cros_codecs_" {
+				param.HardwareDeps = "hwdep.SupportsCrosCodecs()"
 			}
 			params = append(params, param)
 		}
@@ -268,6 +299,9 @@ func TestPlatformDecodingParams(t *testing.T) {
 				Metadata:           files,
 				Attr:               []string{"graphics_video_vp9", vaapiTestParam.frequency},
 			}
+			if vaapiTestParam.testNamePrefix == "cros_codecs_" {
+				param.HardwareDeps = "hwdep.SupportsCrosCodecs()"
+			}
 			params = append(params, param)
 		}
 		for _, bugID := range test_vectors.SortedStringKeys(test_vectors.AV1FilesFromBugs) {
@@ -281,6 +315,9 @@ func TestPlatformDecodingParams(t *testing.T) {
 				SoftwareDeps:       []string{"vaapi", caps.HWDecodeAV1},
 				Metadata:           files,
 				Attr:               []string{"graphics_video_av1", vaapiTestParam.frequency},
+			}
+			if vaapiTestParam.testNamePrefix == "cros_codecs_" {
+				param.HardwareDeps = "hwdep.SupportsCrosCodecs()"
 			}
 			params = append(params, param)
 		}
@@ -296,11 +333,14 @@ func TestPlatformDecodingParams(t *testing.T) {
 				Metadata:           files,
 				Attr:               []string{"graphics_video_hevc", vaapiTestParam.frequency},
 			}
+			if vaapiTestParam.testNamePrefix == "cros_codecs_" {
+				param.HardwareDeps = "hwdep.SupportsCrosCodecs()"
+			}
 			params = append(params, param)
 		}
 		for _, bugID := range test_vectors.SortedStringKeys(test_vectors.HEVCFilesFromBugs) {
 			files := fmt.Sprintf("test_vectors.HEVCFilesFromBugs[\"%s\"]", bugID)
-			params = append(params, paramData{
+			param := paramData{
 				Name:               fmt.Sprintf("%svaapi_hevc_files_from_bugs_%s", vaapiTestParam.testNamePrefix, bugID),
 				Decoder:            vaapiTestParam.binaryName,
 				DecoderArgsBuilder: genDecoderArgsBuilder(vaapiTestParam.testNamePrefix, "hevc"),
@@ -309,7 +349,11 @@ func TestPlatformDecodingParams(t *testing.T) {
 				SoftwareDeps:       []string{"vaapi", caps.HWDecodeHEVC},
 				Metadata:           files,
 				Attr:               []string{"graphics_video_hevc", vaapiTestParam.frequency},
-			})
+			}
+			if vaapiTestParam.testNamePrefix == "cros_codecs_" {
+				param.HardwareDeps = "hwdep.SupportsCrosCodecs()"
+			}
+			params = append(params, param)
 		}
 	}
 

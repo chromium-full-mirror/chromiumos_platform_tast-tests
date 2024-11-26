@@ -938,6 +938,7 @@ func init() {
 				decoder:        encoding.OpenH264Decoder,
 			},
 			ExtraData:         []string{"tulip2-320x180.vp9.webm"},
+			ExtraHardwareDeps: hwdep.D(hwdep.SupportsCrosCodecs()),
 			ExtraSoftwareDeps: []string{"v4l2_codec", caps.HWEncodeH264},
 		}, {
 			Name: "cros_codecs_v4l2_h264_360",
@@ -952,6 +953,7 @@ func init() {
 				decoder:        encoding.OpenH264Decoder,
 			},
 			ExtraData:         []string{"tulip2-640x360.vp9.webm"},
+			ExtraHardwareDeps: hwdep.D(hwdep.SupportsCrosCodecs()),
 			ExtraSoftwareDeps: []string{"v4l2_codec", caps.HWEncodeH264},
 		}, {
 			Name: "cros_codecs_v4l2_h264_720",
@@ -966,6 +968,7 @@ func init() {
 				decoder:        encoding.OpenH264Decoder,
 			},
 			ExtraData:         []string{"tulip2-1280x720.vp9.webm"},
+			ExtraHardwareDeps: hwdep.D(hwdep.SupportsCrosCodecs()),
 			ExtraSoftwareDeps: []string{"v4l2_codec", caps.HWEncodeH264},
 		}, {
 			Name: "cros_codecs_v4l2_h264_180_meet",
@@ -980,6 +983,7 @@ func init() {
 				decoder:        encoding.OpenH264Decoder,
 			},
 			ExtraData:         []string{"gipsrestat-320x180.vp9.webm"},
+			ExtraHardwareDeps: hwdep.D(hwdep.SupportsCrosCodecs()),
 			ExtraSoftwareDeps: []string{"v4l2_codec", caps.HWEncodeH264},
 		}, {
 			Name: "cros_codecs_v4l2_h264_360_meet",
@@ -994,6 +998,7 @@ func init() {
 				decoder:        encoding.OpenH264Decoder,
 			},
 			ExtraData:         []string{"gipsrestat-640x360.vp9.webm"},
+			ExtraHardwareDeps: hwdep.D(hwdep.SupportsCrosCodecs()),
 			ExtraSoftwareDeps: []string{"v4l2_codec", caps.HWEncodeH264},
 		}, {
 			Name: "cros_codecs_v4l2_h264_720_meet",
@@ -1008,6 +1013,7 @@ func init() {
 				decoder:        encoding.OpenH264Decoder,
 			},
 			ExtraData:         []string{"gipsrestat-1280x720.vp9.webm"},
+			ExtraHardwareDeps: hwdep.D(hwdep.SupportsCrosCodecs()),
 			ExtraSoftwareDeps: []string{"v4l2_codec", caps.HWEncodeH264},
 		}, {
 			Name: "cros_codecs_v4l2_vp8_180",
@@ -1022,6 +1028,7 @@ func init() {
 				decoder:        encoding.LibvpxDecoder,
 			},
 			ExtraData:         []string{"tulip2-320x180.vp9.webm"},
+			ExtraHardwareDeps: hwdep.D(hwdep.SupportsCrosCodecs()),
 			ExtraSoftwareDeps: []string{"v4l2_codec", caps.HWEncodeVP8},
 		}, {
 			Name: "cros_codecs_v4l2_vp8_360",
@@ -1036,6 +1043,7 @@ func init() {
 				decoder:        encoding.LibvpxDecoder,
 			},
 			ExtraData:         []string{"tulip2-640x360.vp9.webm"},
+			ExtraHardwareDeps: hwdep.D(hwdep.SupportsCrosCodecs()),
 			ExtraSoftwareDeps: []string{"v4l2_codec", caps.HWEncodeVP8},
 		}, {
 			Name: "cros_codecs_v4l2_vp8_720",
@@ -1050,6 +1058,7 @@ func init() {
 				decoder:        encoding.LibvpxDecoder,
 			},
 			ExtraData:         []string{"tulip2-1280x720.vp9.webm"},
+			ExtraHardwareDeps: hwdep.D(hwdep.SupportsCrosCodecs()),
 			ExtraSoftwareDeps: []string{"v4l2_codec", caps.HWEncodeVP8},
 		}, {
 			Name: "cros_codecs_v4l2_vp8_180_meet",
@@ -1064,6 +1073,7 @@ func init() {
 				decoder:        encoding.LibvpxDecoder,
 			},
 			ExtraData:         []string{"gipsrestat-320x180.vp9.webm"},
+			ExtraHardwareDeps: hwdep.D(hwdep.SupportsCrosCodecs()),
 			ExtraSoftwareDeps: []string{"v4l2_codec", caps.HWEncodeVP8},
 		}, {
 			Name: "cros_codecs_v4l2_vp8_360_meet",
@@ -1078,6 +1088,7 @@ func init() {
 				decoder:        encoding.LibvpxDecoder,
 			},
 			ExtraData:         []string{"gipsrestat-640x360.vp9.webm"},
+			ExtraHardwareDeps: hwdep.D(hwdep.SupportsCrosCodecs()),
 			ExtraSoftwareDeps: []string{"v4l2_codec", caps.HWEncodeVP8},
 		}, {
 			Name: "cros_codecs_v4l2_vp8_720_meet",
@@ -1092,6 +1103,7 @@ func init() {
 				decoder:        encoding.LibvpxDecoder,
 			},
 			ExtraData:         []string{"gipsrestat-1280x720.vp9.webm"},
+			ExtraHardwareDeps: hwdep.D(hwdep.SupportsCrosCodecs()),
 			ExtraSoftwareDeps: []string{"v4l2_codec", caps.HWEncodeVP8},
 		}, {
 			Name: "cros_codecs_vaapi_h264_180",
