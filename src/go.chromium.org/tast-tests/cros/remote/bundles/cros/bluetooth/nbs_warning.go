@@ -135,21 +135,23 @@ func NbsWarning(ctx context.Context, s *testing.State) {
 	}
 
 	// wait until device is selectable
-	err = testing.Poll(ctx, func(ctx context.Context) error {
+	if err = testing.Poll(ctx, func(ctx context.Context) error {
 		if e := selectBTMic(ctx, qsSvc); e != nil {
-			return errors.New("failed to set active node to BT mic")
+			return errors.New("unable to set active node to BT mic")
 		}
 
 		return nil
 	}, &testing.PollOptions{
 		Timeout:  30 * time.Second,
 		Interval: 5 * time.Second,
-	})
+	}); err != nil {
+		s.Fatal("Failed to select device: ", err)
+	}
 
 	expectWarning := !tc.enableWBS
 
 	// verify if warning is shown as expected
-	err = testing.Poll(ctx, func(ctx context.Context) error {
+	if err = testing.Poll(ctx, func(ctx context.Context) error {
 		res, checkErr := qsSvc.IsNBSWarningShown(ctx, &emptypb.Empty{})
 		if checkErr != nil {
 			return checkErr
@@ -164,9 +166,7 @@ func NbsWarning(ctx context.Context, s *testing.State) {
 	}, &testing.PollOptions{
 		Timeout:  30 * time.Second,
 		Interval: 5 * time.Second,
-	})
-
-	if err != nil {
+	}); err != nil {
 		s.Fatal("Unexpected: ", err)
 	}
 

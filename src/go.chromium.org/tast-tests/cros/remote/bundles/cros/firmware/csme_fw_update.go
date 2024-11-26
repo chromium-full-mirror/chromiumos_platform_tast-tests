@@ -19,12 +19,6 @@ import (
 	"go.chromium.org/tast/core/testing/hwdep"
 )
 
-const (
-	defaultUpdater       = "/usr/sbin/chromeos-firmwareupdate"
-	meRwVersionFilename  = "me_rw.version"
-	meRwMetadataFilename = "me_rw.metadata"
-)
-
 func init() {
 	testing.AddTest(&testing.Test{
 		Func:         CsmeFwUpdate,

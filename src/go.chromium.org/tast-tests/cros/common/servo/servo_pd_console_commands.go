@@ -247,9 +247,9 @@ func (s *Servo) SetHPD(ctx context.Context, HPDLevel HPDLevelValue) error {
 
 // SetPlug sets the PLug status for an active dp-alt connection
 func (s *Servo) SetPlug(ctx context.Context, Plug bool) error {
-	cmd := fmt.Sprintf("usbc_action dp plug 0")
+	cmd := "usbc_action dp plug 0"
 	if Plug {
-		cmd = fmt.Sprintf("usbc_action dp plug 1")
+		cmd = "usbc_action dp plug 1"
 	}
 	if err := s.RunServoCommand(ctx, cmd); err != nil {
 		return errors.Wrap(err, "failed to set plug status")

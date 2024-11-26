@@ -341,8 +341,7 @@ func SuspendPerf(ctx context.Context, s *testing.State) {
 		}
 
 		if args.benchMarkEval {
-			err := <-errCh
-			if err != nil {
+			if err := <-errCh; err != nil {
 				s.Fatalf("Failed to get one of %v power state: %s", expectedSuspendStates, err)
 			}
 			powerState := <-powerStateCh
