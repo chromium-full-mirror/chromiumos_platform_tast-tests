@@ -34,48 +34,52 @@ func init() {
 			Name: "normal",
 			Val: firmware.PDTestParams{
 				NumIterations: 1,
+				DTS:           firmware.DTSModeOff,
 			},
 		}, {
 			Name: "normal_stress",
 			Val: firmware.PDTestParams{
 				NumIterations: 20,
+				DTS:           firmware.DTSModeOff,
 			},
 		}, {
 			Name: "flipcc",
 			Val: firmware.PDTestParams{
 				CC:            firmware.CCPolarityFlipped,
 				NumIterations: 1,
+				DTS:           firmware.DTSModeOff,
 			},
 		}, {
 			Name: "flipcc_stress",
 			Val: firmware.PDTestParams{
 				CC:            firmware.CCPolarityFlipped,
 				NumIterations: 20,
+				DTS:           firmware.DTSModeOff,
 			},
 		}, {
-			Name: "dtsoff",
+			Name: "dts",
 			Val: firmware.PDTestParams{
-				DTS:           firmware.DTSModeOff,
+				DTS:           firmware.DTSModeOn,
 				NumIterations: 1,
 			},
 		}, {
-			Name: "dtsoff_stress",
+			Name: "dts_stress",
 			Val: firmware.PDTestParams{
-				DTS:           firmware.DTSModeOff,
+				DTS:           firmware.DTSModeOn,
 				NumIterations: 20,
 			},
 		}, {
-			Name: "flipcc_dtsoff",
+			Name: "flipcc_dts",
 			Val: firmware.PDTestParams{
 				CC:            firmware.CCPolarityFlipped,
-				DTS:           firmware.DTSModeOff,
+				DTS:           firmware.DTSModeOn,
 				NumIterations: 1,
 			},
 		}, {
-			Name: "flipcc_dtsoff_stress",
+			Name: "flipcc_dts_stress",
 			Val: firmware.PDTestParams{
 				CC:            firmware.CCPolarityFlipped,
-				DTS:           firmware.DTSModeOff,
+				DTS:           firmware.DTSModeOn,
 				NumIterations: 20,
 			},
 		}, {
@@ -83,12 +87,14 @@ func init() {
 			Val: firmware.PDTestParams{
 				Shutdown:      true,
 				NumIterations: 1,
+				DTS:           firmware.DTSModeOff,
 			},
 		}, {
 			Name: "suspend",
 			Val: firmware.PDTestParams{
 				Suspend:       true,
 				NumIterations: 1,
+				DTS:           firmware.DTSModeOff,
 			},
 		}},
 	})

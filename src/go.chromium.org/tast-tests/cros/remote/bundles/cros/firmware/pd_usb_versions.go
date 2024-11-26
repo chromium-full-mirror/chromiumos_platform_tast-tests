@@ -37,45 +37,50 @@ func init() {
 		// Attr:         []string{"group:firmware", "firmware_pd_unstable"},
 		Params: []testing.Param{{
 			Name: "normal",
-			Val:  firmware.PDTestParams{},
+			Val: firmware.PDTestParams{
+				DTS: firmware.DTSModeOff,
+			},
 		}, {
 			Name: "normal_snk",
 			Val: firmware.PDTestParams{
 				PowerRole: firmware.RoleSink,
+				DTS:       firmware.DTSModeOff,
 			},
 		}, {
 			Name: "flipcc",
 			Val: firmware.PDTestParams{
-				CC: firmware.CCPolarityFlipped,
+				CC:  firmware.CCPolarityFlipped,
+				DTS: firmware.DTSModeOff,
 			},
 		}, {
 			Name: "flipcc_snk",
 			Val: firmware.PDTestParams{
 				CC:        firmware.CCPolarityFlipped,
 				PowerRole: firmware.RoleSink,
-			},
-		}, {
-			Name: "dtsoff",
-			Val: firmware.PDTestParams{
-				DTS: firmware.DTSModeOff,
-			},
-		}, {
-			Name: "dtsoff_snk",
-			Val: firmware.PDTestParams{
 				DTS:       firmware.DTSModeOff,
+			},
+		}, {
+			Name: "dts",
+			Val: firmware.PDTestParams{
+				DTS: firmware.DTSModeOn,
+			},
+		}, {
+			Name: "dts_snk",
+			Val: firmware.PDTestParams{
+				DTS:       firmware.DTSModeOn,
 				PowerRole: firmware.RoleSink,
 			},
 		}, {
-			Name: "flipcc_dtsoff",
+			Name: "flipcc_dts",
 			Val: firmware.PDTestParams{
 				CC:  firmware.CCPolarityFlipped,
-				DTS: firmware.DTSModeOff,
+				DTS: firmware.DTSModeOn,
 			},
 		}, {
-			Name: "flipcc_dtsoff_snk",
+			Name: "flipcc_dts_snk",
 			Val: firmware.PDTestParams{
 				CC:        firmware.CCPolarityFlipped,
-				DTS:       firmware.DTSModeOff,
+				DTS:       firmware.DTSModeOn,
 				PowerRole: firmware.RoleSink,
 			},
 		}, {

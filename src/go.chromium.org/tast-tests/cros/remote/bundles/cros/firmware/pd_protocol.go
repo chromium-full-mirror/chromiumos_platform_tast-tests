@@ -31,7 +31,9 @@ func init() {
 		HardwareDeps: hwdep.D(hwdep.ChromeEC(), hwdep.SkipOnFormFactor(hwdep.Chromebox)),
 		Attr:         []string{"group:firmware", "firmware_pd"},
 		Params: []testing.Param{{
-			Val: firmware.PDTestParams{},
+			Val: firmware.PDTestParams{
+				DTS: firmware.DTSModeOff,
+			},
 		}},
 	})
 }

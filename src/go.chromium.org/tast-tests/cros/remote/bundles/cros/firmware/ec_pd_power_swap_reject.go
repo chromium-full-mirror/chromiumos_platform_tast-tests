@@ -32,32 +32,37 @@ func init() {
 		Attr:         []string{"group:firmware", "firmware_pd_unstable"},
 		Params: []testing.Param{{
 			Name: "normal",
-			Val:  firmware.PDTestParams{},
-		}, {
-			Name: "flipcc",
-			Val: firmware.PDTestParams{
-				CC: firmware.CCPolarityFlipped,
-			},
-		}, {
-			Name: "dtsoff",
 			Val: firmware.PDTestParams{
 				DTS: firmware.DTSModeOff,
 			},
 		}, {
-			Name: "flipcc_dtsoff",
+			Name: "flipcc",
 			Val: firmware.PDTestParams{
 				CC:  firmware.CCPolarityFlipped,
 				DTS: firmware.DTSModeOff,
 			},
 		}, {
+			Name: "dts",
+			Val: firmware.PDTestParams{
+				DTS: firmware.DTSModeOn,
+			},
+		}, {
+			Name: "flipcc_dts",
+			Val: firmware.PDTestParams{
+				CC:  firmware.CCPolarityFlipped,
+				DTS: firmware.DTSModeOn,
+			},
+		}, {
 			Name: "shutdown",
 			Val: firmware.PDTestParams{
 				Shutdown: true,
+				DTS:      firmware.DTSModeOff,
 			},
 		}, {
 			Name: "suspend",
 			Val: firmware.PDTestParams{
 				Suspend: true,
+				DTS:     firmware.DTSModeOff,
 			},
 		}},
 	})
