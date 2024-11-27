@@ -7,7 +7,6 @@
 
 # Disallow the use of src/chromiumos in tast-tests
 
-rohitbm@chromium.org
 seewaifu@google.com
 yichiyan@google.com
 abergman@google.com
