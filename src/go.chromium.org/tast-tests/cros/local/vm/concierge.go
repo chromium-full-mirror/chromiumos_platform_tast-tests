@@ -348,7 +348,7 @@ func (c *Concierge) startVM(ctx context.Context, vm *VM) (string, error) {
 }
 
 func (c *Concierge) stopVM(ctx context.Context, vm *VM) error {
-	resp := &vmpb.StopVmResponse{}
+	resp := &vmpb.SuccessFailureResponse{}
 	if err := dbusutil.CallProtoMethod(ctx, vm.Concierge.conciergeObj, conciergeInterface+".StopVm",
 		&vmpb.StopVmRequest{
 			Name:    vm.name,
