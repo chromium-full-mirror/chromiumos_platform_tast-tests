@@ -725,7 +725,8 @@ func (s *Servo) getTypeCByDUTCommand(ctx context.Context, dut *dut.DUT) (*TypeCI
 	return ret, nil
 }
 
-func (s *Servo) getTypeCByECCommand(ctx context.Context) (*TypeCInfo, error) {
+// GetTypeCByECCommand returns the type-c information as seen from the EC
+func (s *Servo) GetTypeCByECCommand(ctx context.Context) (*TypeCInfo, error) {
 	cmd := fmt.Sprintf("typec %d", s.dutPDInfo.activePort)
 
 	typeCOutput, err := s.RunECCommandGetOutput(ctx, cmd, []string{reEcTypeC})
@@ -747,7 +748,7 @@ func (s *Servo) GetTypeCInfo(ctx context.Context, dut *dut.DUT) (*TypeCInfo, err
 	ret, err := s.getTypeCByDUTCommand(ctx, dut)
 	if err != nil {
 		testing.ContextLog(ctx, "unable to retrieve type-c information by ectool, attempting EC console command")
-		ret, err = s.getTypeCByECCommand(ctx)
+		ret, err = s.GetTypeCByECCommand(ctx)
 		if err != nil {
 			return nil, errors.Wrap(err, "failed to retrieve type-c by EC console")
 		}
