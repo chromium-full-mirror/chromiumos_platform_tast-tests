@@ -24,4 +24,8 @@ type Controller interface {
 	// |duration| is the duration of each movement. The overall time consumption would be
 	// |duration| * len(multiPos).
 	MultiMove(ctx context.Context, multiPos [][]float32, duration time.Duration) error
+	// ReleaseGripper releases the gripper using a default intensity.
+	ReleaseGripper(ctx context.Context) error
+	// HoldGripper holds the gripper with the specified intensity.
+	HoldGripper(ctx context.Context, intensity uint16) error
 }

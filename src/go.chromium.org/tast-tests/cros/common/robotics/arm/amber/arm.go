@@ -24,8 +24,12 @@ var armIPVar = testing.RegisterVarString(
 
 const (
 	defaultMoveDuration = 5 * time.Second
+	// defaultGripperDuration is the default wait time for a gripper operation to complete.
+	defaultGripperDuration = 3 * time.Second
 	// DefaultReadWriteTimeout is the default timeout for connection read / write.
 	DefaultReadWriteTimeout = 10 * time.Second
+	// responseSuccess indicates a successful arm operation.
+	responseSuccess uint8 = 1
 )
 
 // Arm implements the Controller interface for Amber Robotics Arm.

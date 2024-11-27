@@ -79,16 +79,12 @@ func (a *Arm) SingleMove(ctx context.Context, positions []float32, duration time
 		return errors.Wrap(err, "failed to send request")
 	}
 
-	// GoBigSleepLint: Wait for the operation to execute.
-	if err := testing.Sleep(ctx, duration); err != nil {
-		return errors.Wrap(err, "failed to wait for operation executed")
-	}
-
 	res := newGeneralResponse()
+	// Read the response from the single move.
+	// Note that the response is returned immediately after the joint starts processing the request.
 	if err := a.readResponse(generalResLength, res); err != nil {
 		return errors.Wrap(err, "failed to read single move response")
 	}
-
 	status, err := newGeneralOperationStatus(res)
 	if err != nil {
 		return errors.Wrap(err, "failed to get operation status")
@@ -96,9 +92,17 @@ func (a *Arm) SingleMove(ctx context.Context, positions []float32, duration time
 	if status.Counter != counter {
 		return errors.Errorf("unmatched counter from response: got %d, want %d", status.Counter, counter)
 	}
-	// 1 indicates the operation succeeds.
-	if status.Respond != 1 {
-		return errors.New("received failure response from arm")
+	// Check if the response indicates success in receiving the request.
+	// Note that Success here only means the request was received and does not confirm the action itself is complete.
+	if status.Respond != responseSuccess {
+		return errors.Errorf("unexpected arm response: got %v, want %v", status.Respond, responseSuccess)
+	}
+
+	// GoBigSleepLint: Wait for the operation to complete.
+	// Note that the response success only indicates that the request was received and action has started,
+	// not that it has been executed. Therefore, a fixed sleep duration is needed to wait for the operation to finish.
+	if err := testing.Sleep(ctx, duration); err != nil {
+		return errors.Wrap(err, "failed to wait for operation executed")
 	}
 	return nil
 }

@@ -314,3 +314,21 @@ func newRespondData() []*armData {
 		},
 	}
 }
+
+// newGripperActionData returns the data of the gripper action shared by all commands and responses.
+func newGripperActionData() []*armData {
+	return []*armData{
+		{
+			name:     "Action",
+			dataType: typeUInt16,
+		},
+		{
+			name:     "Intensity",
+			dataType: typeUInt16,
+		},
+		{
+			name:     "GripperID",
+			dataType: typeUInt8,
+		},
+	}
+}
