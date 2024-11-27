@@ -1,5 +1,5 @@
 {
-  "url": "gs://chromeos-test-assets-private/tast/crosint/platform/memory_pressure_mixed_sites_20190201.wprgo",
-  "size": 183292001,
-  "sha256sum": "e927eff671269912ab62edc4d67ebc20d5952dd8c5f93d81f4063b643cae267e"
+  "url": "gs://chromiumos-test-assets-public/tast/cros/platform/memory_pressure_mixed_sites_20241126.wprgo",
+  "size": 879834472,
+  "sha256sum": "1b591a3d82affb6e1f55d6065a78822dd9d713c9693a7059ba2ce37888fdcec0"
 }
