@@ -27,7 +27,12 @@ func init() {
 		Desc:         "Verify consent can be set and unset",
 		Contacts:     []string{"chromeos-data-eng@google.com", "troywang@google.com"},
 		BugComponent: "b:1032705", // ChromeOS > Data > Engineering > Crash Reporting
-		Attr:         []string{"group:mainline", "informational", "group:release-health"},
+		Attr:         []string{
+			"group:mainline",
+			"informational",
+			"group:release-health",
+			"release-health_crashfeed",
+		},
 		// tpm1 is not common and requires a reboot for clearing ownership, which would make the test more complex
 		SoftwareDeps: []string{"chrome", "metrics_consent", "tpm2"},
 		Timeout:      iterations * chrome.LoginTimeout,

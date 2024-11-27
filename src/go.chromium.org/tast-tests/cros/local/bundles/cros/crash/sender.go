@@ -33,7 +33,11 @@ func init() {
 		Attr:         []string{"group:mainline"},
 		Params: []testing.Param{{
 			Name:              "real_consent",
-			ExtraAttr:         []string{"informational", "group:release-health"},
+			ExtraAttr:         []string{
+				"informational",
+				"group:release-health",
+				"release-health_crashfeed",
+			},
 			ExtraSoftwareDeps: []string{"metrics_consent"},
 			Fixture:           crash.LoggedInRealConsent,
 		}, {

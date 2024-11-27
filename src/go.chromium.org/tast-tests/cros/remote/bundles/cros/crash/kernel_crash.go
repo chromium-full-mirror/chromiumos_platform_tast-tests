@@ -30,7 +30,12 @@ func init() {
 		Desc:         "Verify artificial kernel crash creates crash files",
 		Contacts:     []string{"chromeos-data-eng@google.com", "swboyd@chromium.org", "dianders@chromium.org"},
 		BugComponent: "b:1032705",
-		Attr:         []string{"group:mainline", "informational", "group:release-health"},
+		Attr:         []string{
+			"group:mainline",
+			"informational",
+			"group:release-health",
+			"release-health_crashfeed",
+		},
 		SoftwareDeps: []string{"device_crash", "pstore", "reboot"},
 		ServiceDeps:  []string{"tast.cros.crash.FixtureService"},
 		Params: []testing.Param{{

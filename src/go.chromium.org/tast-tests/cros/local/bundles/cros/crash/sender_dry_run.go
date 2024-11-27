@@ -28,7 +28,13 @@ func init() {
 		BugComponent: "b:1032705",
 		// We only care about crash_sender on internal builds.
 		SoftwareDeps: []string{"cros_internal"},
-		Attr:         []string{"group:mainline", "informational", "group:hw_agnostic", "group:release-health"},
+		Attr:         []string{
+			"group:mainline",
+			"informational",
+			"group:hw_agnostic",
+			"group:release-health",
+			"release-health_crashfeed",
+		},
 		Params: []testing.Param{{
 			Name:              "real_consent",
 			ExtraSoftwareDeps: []string{"metrics_consent"},

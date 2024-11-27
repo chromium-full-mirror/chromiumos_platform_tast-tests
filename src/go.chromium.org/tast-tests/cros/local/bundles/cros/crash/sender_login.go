@@ -33,7 +33,12 @@ func init() {
 		BugComponent: "b:1032705",
 		// We only care about crash_sender on internal builds.
 		SoftwareDeps: []string{"chrome", "cros_internal"},
-		Attr:         []string{"group:mainline", "informational", "group:release-health"},
+		Attr:         []string{
+			"group:mainline",
+			"informational",
+			"group:release-health",
+			"release-health_crashfeed",
+		},
 		Timeout:      chrome.LoginTimeout + time.Minute,
 	})
 }
