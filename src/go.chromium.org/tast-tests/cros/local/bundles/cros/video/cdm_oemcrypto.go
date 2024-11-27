@@ -27,7 +27,13 @@ func init() {
 		BugComponent: "b:168352", // ChromeOS > Platform > Graphics > Video
 		SoftwareDeps: []string{"protected_content"},
 		Timeout:      25 * time.Minute,
-		Attr:         []string{"group:graphics", "graphics_video", "graphics_nightly"},
+		Attr:         []string{
+			"group:graphics",
+			"graphics_video",
+			"graphics_nightly",
+			"group:release-health",
+			"release-health_gfx",
+		},
 		Fixture:      "gpuWatchHangs",
 		Params: []testing.Param{{
 			Name: "ce_cdm",

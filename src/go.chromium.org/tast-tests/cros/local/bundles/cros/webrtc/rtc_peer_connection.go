@@ -32,7 +32,13 @@ func init() {
 		BugComponent: "b:168352", // ChromeOS > Platform > Graphics > Video
 		SoftwareDeps: []string{"chrome"},
 		Data:         append(peerconnection.DataFiles(), peerconnection.LoopbackFile),
-		Attr:         []string{"group:graphics", "graphics_video", "graphics_perbuild"},
+		Attr:         []string{
+			"group:graphics",
+			"graphics_video",
+			"graphics_perbuild",
+			"group:release-health",
+			"release-health_gfx",
+		},
 		Params: []testing.Param{{
 			Name: "h264_no_verify_hw",
 			Val: peerconnection.RTCTestParams{

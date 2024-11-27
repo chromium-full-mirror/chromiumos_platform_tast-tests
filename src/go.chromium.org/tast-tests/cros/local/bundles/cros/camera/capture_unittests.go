@@ -32,7 +32,13 @@ func init() {
 		Contacts:     []string{"chromeos-camera-app-eng@google.com", "shik@chromium.org"},
 		BugComponent: "b:978428", // ChromeOS > Platform > Technologies > Camera > App & Framework
 		// TODO(b/187020361): removed from group:camera-postsubmit.
-		Attr:         []string{"group:mainline", "informational", "group:camera-libcamera", "group:release-health"},
+		Attr:         []string{
+			"group:mainline",
+			"informational",
+			"group:camera-libcamera",
+			"group:release-health",
+			"release-health_gfx",
+		},
 		SoftwareDeps: []string{"chrome", caps.BuiltinOrVividCamera},
 		Data:         []string{"bear.mjpeg"},
 	})

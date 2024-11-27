@@ -30,7 +30,12 @@ func init() {
 		Desc:         "Check that device FPS throttles and recovers",
 		Contacts:     []string{"chromeos-gfx-display@google.com", "ddavenport@google.com"},
 		BugComponent: "b:188154", // ChromeOS > Platform > Graphics > Display
-		Attr:         []string{"group:graphics", "graphics_nightly"},
+		Attr:         []string{
+			"group:graphics",
+			"graphics_nightly",
+			"group:release-health",
+			"release-health_gfx",
+		},
 		SoftwareDeps: []string{"chrome", "no_chrome_dcheck", "no_qemu"},
 		HardwareDeps: hwdep.D(hwdep.InternalDisplay(), hwdep.SeamlessRefreshRate()),
 		Fixture:      "chromeGraphics",

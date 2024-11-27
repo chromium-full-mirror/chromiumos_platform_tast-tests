@@ -29,6 +29,7 @@ func init() {
 		},
 		BugComponent: "b:168352", // ChromeOS > Platform > Graphics > Video
 		SoftwareDeps: []string{"chrome", "protected_content"},
+		Attr:         []string{"group:release-health", "release-health_gfx"},
 		Params: []testing.Param{{
 			Name: "cencv1_h264_ctr",
 			Val: playDrmParams{

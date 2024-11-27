@@ -34,6 +34,7 @@ func init() {
 		BugComponent: "b:168352", // ChromeOS > Platform > Graphics > Video
 		SoftwareDeps: []string{"chrome"},
 		Data:         []string{"video.html", "playback.js"},
+		Attr:         []string{"group:release-health", "release-health_gfx"},
 		Params: []testing.Param{{
 			Name: "av1",
 			Val: seekTest{

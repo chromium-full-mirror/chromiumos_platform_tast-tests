@@ -56,7 +56,14 @@ func init() {
 		},
 		// ChromeOS > Platform > Graphics > GPU
 		BugComponent: "b:995569",
-		Attr:         []string{"graphics_perbuild", "group:graphics", "group:mainline", "informational", "group:release-health"},
+		Attr:         []string{
+			"graphics_perbuild",
+			"group:graphics",
+			"group:mainline",
+			"informational",
+			"group:release-health",
+			"release-health_gfx",
+		},
 		Timeout:      7 * time.Minute,
 		Data:         []string{webGlAquarium},
 		SoftwareDeps: []string{"chrome"},
