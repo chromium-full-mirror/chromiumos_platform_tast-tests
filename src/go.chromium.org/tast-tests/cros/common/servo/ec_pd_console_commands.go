@@ -762,6 +762,8 @@ func (s *Servo) GetTypeCInfo(ctx context.Context, dut *dut.DUT) (*TypeCInfo, err
 	matches := pinsRe.FindAllStringSubmatch(string(pinsByteArr), -1)
 	if len(matches) != 0 {
 		ret.PinsCDEF = matches[0][1]
+		// Some boards do not report dp as connected through console, report status as enabled anyways if we find a pin is connected.
+		ret.DPMode = DPEnable
 	}
 
 	return ret, err
