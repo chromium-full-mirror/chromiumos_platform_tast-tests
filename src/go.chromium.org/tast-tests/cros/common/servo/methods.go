@@ -1253,7 +1253,7 @@ func (s *Servo) SetCC(ctx context.Context, val OnOffValue) error {
 // SetActiveDUTController sets the active controller on a dual mode v4 servo
 func (s *Servo) SetActiveDUTController(ctx context.Context, adc DUTController) error {
 	return testing.Poll(ctx, func(ctx context.Context) error {
-		err := s.SetString(ctx, ActiveDUTController, string(adc))
+		err := s.SetStringTimeout(ctx, ActiveDUTController, string(adc), 30*time.Second)
 		if err != nil && !strings.Contains(err.Error(), "activeV4DeviceError") {
 			return testing.PollBreak(err)
 		}

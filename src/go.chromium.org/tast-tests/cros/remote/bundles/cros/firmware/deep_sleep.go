@@ -92,6 +92,12 @@ func DeepSleep(ctx context.Context, s *testing.State) {
 			if err := h.SetDUTPower(ctx, true); err != nil {
 				s.Fatal("Failed to attach charger: ", err)
 			}
+			// On strongbad and trogdor we may have to press the power button after connecting power
+			if h.Board == "strongbad" || h.Board == "trogdor" {
+				if err := h.Servo.KeypressWithDuration(ctx, servo.PowerKey, servo.DurTab); err != nil {
+					s.Error("Failed to press power: ", err)
+				}
+			}
 		}(ctx)
 		if err := testing.Poll(ctx, func(ctx context.Context) error {
 			if attached, err := h.Servo.GetChargerAttached(ctx); err != nil {
