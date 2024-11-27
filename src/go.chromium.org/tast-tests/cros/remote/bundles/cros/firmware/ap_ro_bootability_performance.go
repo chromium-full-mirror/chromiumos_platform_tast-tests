@@ -67,10 +67,10 @@ type apROBootabilityPerformanceArgs struct {
 
 const (
 	// flashingTime sets the timeout for the flashing process.
-	flashingTime = 20 * time.Minute
+	flashingTime = 40 * time.Minute
 
 	// reconnectTime sets the timeout to reconnect DUT after flashing.
-	reconnectTime = 10 * time.Minute
+	reconnectTime = 30 * time.Minute
 
 	// speedometerTime sets the timeout for Speedometer test.
 	speedometerTime = 10 * time.Minute
@@ -102,7 +102,7 @@ func init() {
 		BugComponent: "b:792402", // ChromeOS > Platform > Enablement > Firmware > FAFT
 		Attr:         []string{"group:firmware", "firmware_trial"},
 		Vars:         []string{"firmware_branch", "ro_versions"},
-		Timeout:      120 * time.Minute, // 2 hrs.
+		Timeout:      2 * time.Hour,
 		SoftwareDeps: []string{"chrome"},
 		Fixture:      fixture.BootModeFixtureWithAPBackup(fixture.NormalMode),
 		Data:         []string{"shipped-firmwares.json"},
