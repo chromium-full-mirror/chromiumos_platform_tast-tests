@@ -3429,17 +3429,17 @@ func (s *ShillService) p2pGroupConnectShillAPI(ctx context.Context, request *wif
 		shillconst.P2PDevicePriority:   int32(request.Data.Priority),
 	}
 
-	// Only now we can create the group.
+	// Only now we can connect to the group.
 	result, err := manager.ConnectToP2PGroup(ctx, props)
 	if err != nil {
-		return nil, errors.Wrap(err, "failed to request to create P2P group")
+		return nil, errors.Wrap(err, "failed to request to connect to P2P group")
 	}
 	status, err := result.Get(shillconst.P2PResultCode)
 	if err != nil {
 		return nil, errors.Wrap(err, "result code not found in response")
 	}
-	if status != shillconst.CreateP2PGroupResultSuccess {
-		return nil, errors.Errorf("failed to create P2PGroup (%v)", status)
+	if status != shillconst.ConnectToP2PGroupResultSuccess {
+		return nil, errors.Errorf("failed to connect to P2PGroup (%v)", status)
 	}
 	shillIDobj, err := result.Get(shillconst.P2PDeviceShillID)
 	if err != nil {
