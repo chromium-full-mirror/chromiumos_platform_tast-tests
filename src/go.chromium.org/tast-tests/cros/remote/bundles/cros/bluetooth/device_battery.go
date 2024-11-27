@@ -6,6 +6,7 @@ package bluetooth
 
 import (
 	"context"
+	"path/filepath"
 	"time"
 
 	"golang.org/x/exp/slices"
@@ -15,8 +16,10 @@ import (
 	"go.chromium.org/tast-tests/cros/common/tbdep"
 	"go.chromium.org/tast-tests/cros/remote/bluetooth"
 	bts "go.chromium.org/tast-tests/cros/services/cros/bluetooth"
+	"go.chromium.org/tast-tests/cros/services/cros/ui"
 	"go.chromium.org/tast/core/ctxutil"
 	"go.chromium.org/tast/core/errors"
+	"go.chromium.org/tast/core/ssh/linuxssh"
 	"go.chromium.org/tast/core/testing"
 )
 
@@ -37,6 +40,7 @@ func init() {
 		ServiceDeps: []string{
 			"tast.cros.bluetooth.BluetoothService",
 			"tast.cros.bluetooth.BluetoothUIService",
+			"tast.cros.ui.ScreenRecorderService",
 		},
 		VariantCategory: `{"name": "BT_Chipset_Kernel"}`,
 		Params: []testing.Param{{
@@ -66,6 +70,29 @@ func DeviceBattery(ctx context.Context, s *testing.State) {
 	cleanupCtx := ctx
 	ctx, cancel := ctxutil.Shorten(ctx, forgetBTDeviceTimeout)
 	defer cancel()
+
+	// TODO(b/343143720): Remove this function once we no longer need it for debugging.
+	screenRecordSvc := ui.NewScreenRecorderServiceClient(fv.DUTRPCClient.Conn)
+	if _, err := screenRecordSvc.Start(ctx, &ui.StartRequest{}); err != nil {
+		s.Fatal("Failed to start screen recording: ", err)
+	}
+	defer func(ctx context.Context) {
+		res, err := screenRecordSvc.Stop(ctx, &emptypb.Empty{})
+		if err != nil {
+			s.Log("Failed to stop the screen recording: ", err)
+			return
+		}
+
+		if !s.HasError() {
+			return
+		}
+
+		destPath := filepath.Join(s.OutDir(), "record.webm")
+		if err := linuxssh.GetFile(ctx, s.DUT().Conn(), res.FileName, destPath, linuxssh.DereferenceSymlinks); err != nil {
+			s.Log("Failed to fetch the screen recording from dut: ", err)
+
+		}
+	}(cleanupCtx)
 
 	if _, err := fv.BluetoothUIService.PairDeviceWithQuickSettings(ctx, &bts.PairDeviceWithQuickSettingsRequest{
 		AdvertisedName: device.AdvertisedName(),
