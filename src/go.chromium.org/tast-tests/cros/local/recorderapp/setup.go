@@ -7,20 +7,32 @@ package recorderapp
 import (
 	"context"
 	"encoding/json"
+	"fmt"
 	"os"
 	"time"
 
 	"go.chromium.org/tast/core/errors"
 )
 
+// TranscriptionLanguage is locale string of the transcription language.
+type TranscriptionLanguage string
+
+const (
+	// EnUs is locale string of en-US.
+	EnUs TranscriptionLanguage = `en-US`
+	// JaJp is locale string of ja-JP.
+	JaJp TranscriptionLanguage = `ja-JP`
+)
+
 // LaunchConfig is the configuration sent to the app to modify the local
 // settings before starting the test.
 type LaunchConfig struct {
-	IncludeSystemAudio        bool `json:"includeSystemAudio"`
-	ShowOnboardingDialog      bool `json:"showOnboardingDialog"`
-	SpeakerLabelForceEnabled  bool `json:"speakerLabelForceEnabled"`
-	SummaryForceEnabled       bool `json:"summaryForceEnabled"`
-	TranscriptionForceEnabled bool `json:"transcriptionForceEnabled"`
+	IncludeSystemAudio        bool                  `json:"includeSystemAudio"`
+	ShowOnboardingDialog      bool                  `json:"showOnboardingDialog"`
+	SpeakerLabelForceEnabled  bool                  `json:"speakerLabelForceEnabled"`
+	SummaryForceEnabled       bool                  `json:"summaryForceEnabled"`
+	TranscriptionForceEnabled bool                  `json:"transcriptionForceEnabled"`
+	TranscriptionLanguage     TranscriptionLanguage `json:"transcriptionLanguage"`
 }
 
 // Setup contains the setup to be configured for the Recorder App before
@@ -52,20 +64,25 @@ type RecordingTextToken struct {
 // RecordingData represents the recording data that can be imported to the
 // Recorder App for testing.
 type RecordingData struct {
-	Audio      string               `json:"audio"`
-	DurationMs int                  `json:"durationMs"`
-	Powers     []int64              `json:"powers"`
-	TextTokens []RecordingTextToken `json:"textTokens,omitempty"`
-	Title      string               `json:"title"`
+	Audio                 string                `json:"audio"`
+	DurationMs            int                   `json:"durationMs"`
+	Powers                []int64               `json:"powers"`
+	TextTokens            []RecordingTextToken  `json:"textTokens,omitempty"`
+	Title                 string                `json:"title"`
+	TranscriptionLanguage TranscriptionLanguage `json:"transcriptionLanguage,omitempty"`
 }
 
 func (a *App) ensureModelInstalled(ctx context.Context, setup Setup) error {
 	if setup.Config.TranscriptionForceEnabled || setup.Config.SpeakerLabelForceEnabled {
-		if err := a.conn.Eval(ctx, "TestHelper.installTranscriptionModel()", nil); err != nil {
-			return errors.Wrap(err, "failed to install transcription model")
+		transcriptionLanguage := EnUs
+		if setup.Config.TranscriptionLanguage != "" {
+			transcriptionLanguage = setup.Config.TranscriptionLanguage
 		}
-		if err := a.conn.WaitForExprWithTimeout(ctx, "TestHelper.isTranscriptionModelInstalled()", time.Minute); err != nil {
-			return errors.Wrap(err, "failed to wait for the transcription model to be installed")
+		if err := a.conn.Call(ctx, nil, "TestHelper.installTranscriptionModel", transcriptionLanguage); err != nil {
+			return errors.Wrapf(err, "failed to install %s transcription model", transcriptionLanguage)
+		}
+		if err := a.conn.WaitForExprWithTimeout(ctx, fmt.Sprintf("TestHelper.isTranscriptionModelInstalled('%s')", transcriptionLanguage), time.Minute); err != nil {
+			return errors.Wrapf(err, "failed to wait for %s transcription model to be installed", transcriptionLanguage)
 		}
 	}
 
