@@ -90,7 +90,7 @@ func GetKeyboardMappings(ctx context.Context, dut *dut.DUT, model string, hwFeat
 
 	// (2) Non-vivaldi devices that have key mappings
 	// 15194 corsola/steelix:    F5=KEY_BRIGHTNESSDOWN F6=KEY_BRIGHTNESSUP F7=KEY_MICMUTE
-	if model == "steelix" || model == "rusty" {
+	if model == "steelix" || model == "rusty" || model == "magneton" {
 		forwardMapping[LogicalKeyBrightnessDown] = "<f5>"
 		forwardMapping[LogicalKeyBrightnessUp] = "<f6>"
 		return forwardMapping, reverseMappingExceptions, nil
