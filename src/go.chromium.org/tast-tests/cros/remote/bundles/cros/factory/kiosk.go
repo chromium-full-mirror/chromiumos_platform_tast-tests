@@ -39,7 +39,10 @@ func init() {
 		// skip amd64-generic as it is not a real board go through
 		// factory process, and the browser blocks loading toolkit
 		// plugin. See b/365652714.
-		HardwareDeps: hwdep.D(hwdep.SkipOnModel("kitty", "nocturne", "amd64-generic")),
+		// Skip "dewatt" because we will no longer build this model with ToT
+		// factory toolkit so we decide to ignore its model specific browser
+		// issue that is hard to debug. See b/379207436.
+		HardwareDeps: hwdep.D(hwdep.SkipOnModel("kitty", "nocturne", "amd64-generic", "dewatt")),
 		SoftwareDeps: append([]string{"factory_flow"}, fixture.EnsureToolkitSoftwareDeps...),
 	})
 }
