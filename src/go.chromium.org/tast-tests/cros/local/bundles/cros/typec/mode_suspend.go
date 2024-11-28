@@ -19,7 +19,12 @@ func init() {
 		Desc:         "Checks USB Type C mode switch behaviour with a Thunderbolt dock during suspend/resume",
 		Contacts:     []string{"chromeos-usb-champs@google.com", "bszpila@google.com"},
 		BugComponent: "b:958036",
-		Attr:         []string{"group:typec", "typec_lab"},
+		Attr:         []string{
+			"group:typec",
+			"typec_lab",
+			"group:release-health",
+			"release-health_usb",
+		},
 		SoftwareDeps: []string{"chrome"},
 		Vars:         []string{"ui.signinProfileTestExtensionManifestKey"},
 		Data:         []string{"testcert.p12"},

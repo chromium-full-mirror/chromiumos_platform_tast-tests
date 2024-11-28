@@ -27,7 +27,13 @@ func init() {
 		Desc:         "Check the external keyboard functionality after reboot DUT",
 		Contacts:     []string{"cros-wwcb-automation@google.com", "allion-wwcb@allion.corp-partner.google.com"},
 		BugComponent: "b:1289112", // ChromeOS > External > WWCB > Allion > Automation
-		Attr:         []string{"group:wwcb", "group:pasit", "pasit_hid"},
+		Attr:         []string{
+			"group:wwcb",
+			"group:pasit",
+			"pasit_hid",
+			"group:release-health",
+			"release-health_usb",
+		},
 		SoftwareDeps: []string{"chrome"},
 		Vars:         []string{"servo", "USBID"},
 		TestBedDeps:  []string{tbdep.ServoStateWorking},

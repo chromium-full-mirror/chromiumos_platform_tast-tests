@@ -38,7 +38,13 @@ func init() {
 		Desc:         "Check whether the USB Device is working as expected in terms of filesystem and FileManager after formatting, and ensure the ARC++ application is working as expected",
 		Contacts:     []string{"cros-wwcb-automation@google.com", "allion-wwcb@allion.corp-partner.google.com"},
 		BugComponent: "b:1289112", // ChromeOS > External > WWCB > Allion > Automation
-		Attr:         []string{"group:wwcb", "group:pasit", "pasit_storage"},
+		Attr:         []string{
+			"group:wwcb",
+			"group:pasit",
+			"pasit_storage",
+			"group:release-health",
+			"release-health_usb",
+		},
 		SoftwareDeps: []string{"chrome"},
 		Vars:         []string{"servo"},
 		TestBedDeps:  []string{tbdep.ServoStateWorking},

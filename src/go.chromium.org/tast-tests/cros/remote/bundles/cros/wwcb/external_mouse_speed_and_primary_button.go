@@ -31,7 +31,13 @@ func init() {
 		Desc:         "Verify external mouse movement speed, scroll, and primary button functionality switching",
 		Contacts:     []string{"cros-wwcb-automation@google.com", "allion-wwcb@allion.corp-partner.google.com"},
 		BugComponent: "b:1289112", // ChromeOS > External > WWCB > Allion > Automation
-		Attr:         []string{"group:wwcb", "group:pasit", "pasit_hid"},
+		Attr:         []string{
+			"group:wwcb",
+			"group:pasit",
+			"pasit_hid",
+			"group:release-health",
+			"release-health_usb",
+		},
 		SoftwareDeps: []string{"chrome"},
 		ServiceDeps:  []string{"tast.cros.browser.ChromeService", "tast.cros.apps.AppsService", "tast.cros.ui.AutomationService", "tast.cros.ui.ChromeUIService"},
 		Vars:         []string{"servo", "USBID"},

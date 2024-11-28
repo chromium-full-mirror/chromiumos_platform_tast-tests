@@ -37,7 +37,12 @@ func init() {
 		Desc:         "Test Windows persistent settings with dual external display",
 		Contacts:     []string{"cros-wwcb-automation@google.com", "allion-wwcb@allion.corp-partner.google.com"},
 		BugComponent: "b:1289112", // ChromeOS > External > WWCB > Allion > Automation
-		Attr:         []string{"group:wwcb", "group:pasit"},
+		Attr:         []string{
+			"group:wwcb",
+			"group:pasit",
+			"group:release-health",
+			"release-health_usb",
+		},
 		SoftwareDeps: []string{"chrome"},
 		Vars:         []string{"DockingID", "newTestItem"},
 		ServiceDeps:  []string{"tast.cros.wwcb.DisplayService", "tast.cros.apps.AppsService", "tast.cros.browser.ChromeService", "tast.cros.ui.ChromeUIService"},

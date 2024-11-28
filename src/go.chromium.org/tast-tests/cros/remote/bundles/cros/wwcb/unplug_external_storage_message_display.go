@@ -31,7 +31,13 @@ func init() {
 		Desc:         "Verify if a warning message is displayed after unplugging the external storage, and ensure that Files app does not crash",
 		Contacts:     []string{"cros-wwcb-automation@google.com", "allion-wwcb@allion.corp-partner.google.com"},
 		BugComponent: "b:1289112", // ChromeOS > External > WWCB > Allion > Automation
-		Attr:         []string{"group:wwcb", "group:pasit", "pasit_storage"},
+		Attr:         []string{
+			"group:wwcb",
+			"group:pasit",
+			"pasit_storage",
+			"group:release-health",
+			"release-health_usb",
+		},
 		SoftwareDeps: []string{"chrome"},
 		Vars:         []string{"servo"},
 		TestBedDeps:  []string{tbdep.ServoStateWorking},

@@ -34,7 +34,13 @@ func init() {
 		Desc:         "Verify no USB devices sotrage partitions mounted on the lock screnn,but they should be mounted on the unlock screen",
 		Contacts:     []string{"cros-wwcb-automation@google.com", "allion-wwcb@allion.corp-partner.google.com"},
 		BugComponent: "b:1289112", // ChromeOS > External > WWCB > Allion > Automation
-		Attr:         []string{"group:wwcb", "group:pasit", "pasit_storage"},
+		Attr:         []string{
+			"group:wwcb",
+			"group:pasit",
+			"pasit_storage",
+			"group:release-health",
+			"release-health_usb",
+		},
 		SoftwareDeps: []string{"chrome"},
 		ServiceDeps:  []string{"tast.cros.nearbyservice.NearbyShareService"},
 		Vars:         []string{"servo"},
