@@ -5838,37 +5838,6 @@ func (p *SessionLocales) Equal(iface interface{}) bool {
 }
 
 // ****************************************************************************
-// 275. BrowserGuestModeEnabled
-// This policy can be modified without rebooting.
-// ****************************************************************************
-type BrowserGuestModeEnabled struct {
-	Stat Status
-	Val  bool
-}
-
-func (p *BrowserGuestModeEnabled) Name() string          { return "BrowserGuestModeEnabled" }
-func (p *BrowserGuestModeEnabled) Scope() Scope          { return ScopeUser }
-func (p *BrowserGuestModeEnabled) Status() Status        { return p.Stat }
-func (p *BrowserGuestModeEnabled) UntypedV() interface{} { return p.Val }
-func (p *BrowserGuestModeEnabled) UnmarshalAs(m json.RawMessage) (interface{}, error) {
-	var v bool
-	if err := json.Unmarshal(m, &v); err != nil {
-		return nil, errors.Wrapf(err, "could not read %s as bool", m)
-	}
-	return v, nil
-}
-func (p *BrowserGuestModeEnabled) SetProto(m *protoreflect.Message) {
-	SetUserProto(m, p.Name(), p.Val)
-}
-func (p *BrowserGuestModeEnabled) Equal(iface interface{}) bool {
-	v, ok := iface.(bool)
-	if !ok {
-		return ok
-	}
-	return cmp.Equal(p.Val, v, cmpopts.EquateEmpty())
-}
-
-// ****************************************************************************
 // 276. BrowserAddPersonEnabled
 // This policy can be modified without rebooting.
 // ****************************************************************************
@@ -29554,6 +29523,7 @@ func (p *DeviceNativeClientForceAllowed) Equal(iface interface{}) bool {
 // ****************************************************************************
 // 1315. GenAiLensOverlaySettings
 // This policy can be modified without rebooting.
+// This is a future policy, it is not present in stable builds.
 // ****************************************************************************
 type GenAiLensOverlaySettings struct {
 	Stat Status
@@ -29986,8 +29956,6 @@ func newByName(name string) (Policy, error) {
 		return &NetworkPredictionOptions{}, nil
 	case "SessionLocales":
 		return &SessionLocales{}, nil
-	case "BrowserGuestModeEnabled":
-		return &BrowserGuestModeEnabled{}, nil
 	case "BrowserAddPersonEnabled":
 		return &BrowserAddPersonEnabled{}, nil
 	case "ExtensionSettings":
