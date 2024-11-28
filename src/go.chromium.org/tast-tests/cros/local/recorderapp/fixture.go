@@ -6,7 +6,6 @@ package recorderapp
 
 import (
 	"context"
-	"fmt"
 	"time"
 
 	audiofixture "go.chromium.org/tast-tests/cros/local/audio/fixture"
@@ -21,12 +20,6 @@ var recorderAppPowerTestOptions = powersetup.PowerTestOptions{
 	NightLight:         powersetup.DisableNightLight,
 	DarkTheme:          powersetup.EnableLightTheme,
 	KeyboardBrightness: powersetup.SetKbBrightnessToZero,
-}
-
-func resolveConchKey(ctx context.Context, s *testing.FixtState) ([]chrome.Option, error) {
-	return []chrome.Option{
-		chrome.ExtraArgs(fmt.Sprintf("--conch-key=%s", s.RequiredVar("recorderapp.conchKey"))),
-	}, nil
 }
 
 // PowerTimeParams are time parameters used in power recording in Recorder App.
@@ -47,7 +40,6 @@ func init() {
 		SetUpTimeout:    chrome.FixtureSetUpTimeout,
 		ResetTimeout:    chrome.ResetTimeout,
 		TearDownTimeout: chrome.ResetTimeout,
-		Vars:            []string{"recorderapp.conchKey"},
 	})
 
 	testing.AddFixture(&testing.Fixture{
@@ -59,14 +51,13 @@ func init() {
 			BrowserExtraOpts: []chrome.Option{
 				chrome.EnableFeatures("Conch"),
 			},
-			ExtraOptsFunc: resolveConchKey,
+			EnableGAIALogin: true,
 		}),
-		SetUpTimeout:    powersetup.SetUpTimeout,
+		SetUpTimeout:    chrome.GAIALoginTimeout + powersetup.SetUpTimeout,
 		ResetTimeout:    powersetup.ResetTimeout,
 		TearDownTimeout: powersetup.TearDownTimeout,
 		PreTestTimeout:  powersetup.PreTestTimeout,
 		PostTestTimeout: powersetup.PostTestTimeout,
-		Vars:            []string{"recorderapp.conchKey"},
 	})
 
 	testing.AddFixture(&testing.Fixture{
@@ -77,7 +68,6 @@ func init() {
 		Impl: powersetup.NewPowerUIFixture(recorderAppPowerTestOptions, powersetup.PowerFixtureOptions{
 			BrowserExtraOpts: []chrome.Option{chrome.EnableFeatures("Conch")},
 			EnableGAIALogin:  true,
-			ExtraOptsFunc:    resolveConchKey,
 		}),
 		Parent:          audiofixture.AloopLoaded{Channels: 2}.Instance(),
 		SetUpTimeout:    chrome.GAIALoginTimeout + powersetup.SetUpTimeout + aloopTimeout,
@@ -85,7 +75,6 @@ func init() {
 		TearDownTimeout: powersetup.TearDownTimeout + aloopTimeout,
 		PreTestTimeout:  powersetup.PreTestTimeout + aloopTimeout,
 		PostTestTimeout: powersetup.PostTestTimeout,
-		Vars:            []string{"recorderapp.conchKey"},
 	})
 }
 
@@ -99,8 +88,9 @@ type FixtureData struct {
 }
 
 func (f *fixture) SetUp(ctx context.Context, s *testing.FixtState) interface{} {
-	conchKeyOption, _ := resolveConchKey(ctx, s)
-	chromeOpts := append(conchKeyOption, chrome.EnableFeatures("Conch"))
+	chromeOpts := []chrome.Option{
+		chrome.EnableFeatures("Conch"),
+	}
 	cr, err := chrome.New(ctx, chromeOpts...)
 	if err != nil {
 		s.Fatal("Failed to start Chrome: ", err)
