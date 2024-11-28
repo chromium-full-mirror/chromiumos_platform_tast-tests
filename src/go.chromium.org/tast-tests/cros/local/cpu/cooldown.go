@@ -19,6 +19,16 @@ import (
 	"go.chromium.org/tast/core/testing"
 )
 
+// SkipCooldownVar is a Tast variable passed as a flag. If true, skips waiting for the device to
+// cool down. Recommended for debugging only.
+//
+// Usage: -var=cpu.Cooldown.skipCooldown=true.
+var SkipCooldownVar = testing.RegisterVarString(
+	"cpu.Cooldown.skipCooldown",
+	"false",
+	"Boolean value. If true, skips waiting for the device to cool down. Recommended for debugging only.",
+)
+
 // CoolDownMode defines various modes how to do cool down.
 type CoolDownMode int
 
@@ -139,7 +149,14 @@ func Temperature(ctx context.Context) (int, string, error) {
 }
 
 // WaitUntilCoolDown waits until CPU is cooled down and returns the time it took to cool down.
+//
+// To skip cooldown for debugging, use
+// -var=cpu.Cooldown.skipCooldown=true.
 func WaitUntilCoolDown(ctx context.Context, config CoolDownConfig) (time.Duration, error) {
+	if IsSkipCooldownSet(ctx) {
+		return 0, nil
+	}
+
 	timeBefore := time.Now()
 
 	threshold, err := temperatureThreshold(ctx, config)
@@ -183,7 +200,14 @@ func WaitUntilCoolDown(ctx context.Context, config CoolDownConfig) (time.Duratio
 }
 
 // Cooldown thoroughly cools down for power measurement.
+//
+// To skip cooldown for debugging, use
+// -var=cpu.Cooldown.skipCooldown=true.
 func Cooldown(ctx context.Context) error {
+	if IsSkipCooldownSet(ctx) {
+		return nil
+	}
+
 	// Wait until CPU is cooled down and idle.
 	if _, err := WaitUntilCoolDown(ctx, DefaultCoolDownConfig(CoolDownPreserveUI)); err != nil {
 		return errors.Wrap(err, "CPU failed to cool down")
@@ -198,6 +222,19 @@ func Cooldown(ctx context.Context) error {
 		}
 	}
 	return nil
+}
+
+// IsSkipCooldownSet checks if the skip cooldown flag is set.
+func IsSkipCooldownSet(ctx context.Context) bool {
+	skipCooldown, err := strconv.ParseBool(SkipCooldownVar.Value())
+	if err != nil {
+		testing.ContextLog(ctx, errors.Wrapf(err, "failed to parse runtime variable %s as bool. Got %q", SkipCooldownVar.Name(), SkipCooldownVar.Value()))
+		return false
+	}
+	if skipCooldown {
+		testing.ContextLog(ctx, "Skipping cooldown")
+	}
+	return skipCooldown
 }
 
 // temperatureThreshold gets the temperatuer threshold given the CoolDownConfig.

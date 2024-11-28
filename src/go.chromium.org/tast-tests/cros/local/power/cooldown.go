@@ -177,7 +177,14 @@ func afterIdleTemperature(ctx context.Context, cfg CooldownConfig) <-chan error 
 }
 
 // ConfigurableCooldown cools down device as specified by the CooldownConfig.
+//
+// To skip cooldown for debugging, use
+// -var=cpu.Cooldown.skipCooldown=true.
 func ConfigurableCooldown(ctx context.Context, cfg CooldownConfig) (err error) {
+	if cpu.IsSkipCooldownSet(ctx) {
+		return nil
+	}
+
 	// Keep fans running at max RPM throughout cooldown.
 	fanStatus, resetFan := KeepFanMax(ctx, cfg.UseFan)
 
@@ -221,6 +228,9 @@ func ConfigurableCooldown(ctx context.Context, cfg CooldownConfig) (err error) {
 // ensures the device cannot be cooled down further. It should be used before
 // any test setup but not after it, otherwise cooldown may fail due to system is
 // not fully idling.
+//
+// To skip cooldown for debugging, use
+// -var=cpu.Cooldown.skipCooldown=true.
 func Cooldown(ctx context.Context) error {
 	cfg := CooldownConfig{
 		// Accelerate cooldown when possible.
