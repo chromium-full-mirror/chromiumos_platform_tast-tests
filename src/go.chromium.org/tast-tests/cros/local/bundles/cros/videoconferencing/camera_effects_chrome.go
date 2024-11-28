@@ -34,6 +34,8 @@ func init() {
 		Attr: []string{
 			"group:camera_dependent",
 			"group:cbx", "cbx_feature_enabled", "cbx_unstable",
+			"group:release-health",
+			"release-health_vc",
 		},
 		TestBedDeps:  []string{tbdep.Cbx(true)},
 		SoftwareDeps: []string{"chrome", "camera_feature_effects"},

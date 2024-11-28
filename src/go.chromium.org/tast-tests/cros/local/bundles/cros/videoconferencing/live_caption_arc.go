@@ -34,6 +34,7 @@ func init() {
 		Timeout:      10 * time.Minute,
 		Attr: []string{
 			"group:cbx", "cbx_feature_enabled", "cbx_unstable",
+			"group:release-health", "release-health_vc",
 		},
 		TestBedDeps:  []string{tbdep.Cbx(true)},
 		Data:         []string{fakearc.AppNameArc},

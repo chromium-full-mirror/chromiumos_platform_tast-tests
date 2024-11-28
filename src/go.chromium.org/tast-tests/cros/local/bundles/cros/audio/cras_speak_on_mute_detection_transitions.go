@@ -27,6 +27,8 @@ func init() {
 		Attr: []string{
 			"group:mainline",
 			"group:cbx", "cbx_feature_enabled", "cbx_stable",
+			"group:release-health",
+			"release-health_vc",
 		},
 		Fixture: fixture.AloopLoaded{
 			Channels: 2,
