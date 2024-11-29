@@ -9,7 +9,6 @@ import (
 	"fmt"
 	"path/filepath"
 	"regexp"
-	"strconv"
 	"strings"
 	"time"
 
@@ -52,10 +51,9 @@ func init() {
 
 // baseECInfo contains information about base ec.
 type baseECInfo struct {
-	name           string
-	version        string
-	protectionFlag string
-	roProtected    bool
+	name        string
+	version     string
+	roProtected bool
 }
 
 // modifiedFileDir contains paths defined as follows,
@@ -71,6 +69,7 @@ type hammerRequiredVariables struct {
 	pid     string
 	vid     string
 	usbPath string
+	i2cPath string
 }
 
 type baseStateSetter interface {
@@ -139,7 +138,7 @@ func BaseECUpdate(ctx context.Context, s *testing.State) {
 	}
 
 	s.Log("Saving the base ec firmware version before flashing an old image")
-	originalBaseEC, err := getBaseECInfo(ctx, dut, hammerConfigs.pid)
+	originalBaseEC, err := getBaseECInfo(ctx, dut)
 	if err != nil {
 		s.Fatal("Failed to check base ec's version: ", err)
 	}
@@ -159,7 +158,7 @@ func BaseECUpdate(ctx context.Context, s *testing.State) {
 		// Error message: libminijail[9206]: child process 9207 exited
 		// with status 14.
 		s.Log("Failed to flash base ec to an old version: ", err)
-		flashedBaseEC, err := getBaseECInfo(ctx, dut, hammerConfigs.pid)
+		flashedBaseEC, err := getBaseECInfo(ctx, dut)
 		if err != nil {
 			s.Fatal("Failed to get base ec info after flash: ", err)
 		}
@@ -185,7 +184,7 @@ func BaseECUpdate(ctx context.Context, s *testing.State) {
 	}
 
 	s.Log("Saving the current base ec firmware version")
-	newBaseEC, err := getBaseECInfo(ctx, dut, hammerConfigs.pid)
+	newBaseEC, err := getBaseECInfo(ctx, dut)
 	if err != nil {
 		s.Fatal("Failed to check base ec's version: ", err)
 	}
@@ -197,6 +196,13 @@ func BaseECUpdate(ctx context.Context, s *testing.State) {
 }
 
 func flashAnOldImgToDetachableBaseEC(ctx context.Context, dut *dut.DUT, hammerConfigs hammerRequiredVariables, dstImg string) error {
+	path := ""
+	if hammerConfigs.usbPath != "" {
+		path = "--usb_path=" + hammerConfigs.usbPath
+	} else if hammerConfigs.i2cPath != "" {
+		path = "--i2c_path=" + hammerConfigs.i2cPath
+	}
+
 	if err := dut.Conn().CommandContext(
 		ctx,
 		"/sbin/minijail0", "-e", "-N", "-p", "-l", "-u",
@@ -204,7 +210,7 @@ func flashAnOldImgToDetachableBaseEC(ctx context.Context, dut *dut.DUT, hammerCo
 		"--ec_image_path="+dstImg,
 		"--product_id="+hammerConfigs.pid,
 		"--vendor_id="+hammerConfigs.vid,
-		"--usb_path="+hammerConfigs.usbPath,
+		path,
 		"--update_if=always",
 	).Run(testexec.DumpLogOnError); err != nil {
 		return errors.Wrap(err, "unable to run the hammerd command")
@@ -223,57 +229,44 @@ func baseECVersionUnchanged(old, new string) bool {
 	return semver.Compare(old, new) == 0
 }
 
-func getBaseECInfo(ctx context.Context, dut *dut.DUT, productIDDecimal string) (baseECInfo, error) {
+func getBaseECInfo(ctx context.Context, dut *dut.DUT) (baseECInfo, error) {
 	var baseEC baseECInfo
-	productID, _ := strconv.Atoi(productIDDecimal)
-	hexProductID := strconv.FormatInt(int64(productID), 16)
-	deviceParams := fmt.Sprintf("18d1:%s", hexProductID)
 
-	outputUsbUpdater := ""
-	// Poll on the usb_updater2 command, as the first few iterations
+	outputHammerInfo := ""
+	// Poll `hammer_info` until the keyboard is ready, as the first few iterations
 	// might run into the 'can't find device' error.
 	if err := testing.Poll(ctx, func(ctx context.Context) error {
-		output, err := dut.Conn().CommandContext(ctx, "usb_updater2", "-d", deviceParams, "-f").Output(testexec.DumpLogOnError)
+		output, err := dut.Conn().CommandContext(ctx, "hammer_info.py").Output(testexec.DumpLogOnError)
 		if err != nil {
-			return errors.Wrap(err, "failed to run usb_updater2 command in the dut")
+			return errors.Wrap(err, "failed to run hammer_info.py command in the dut")
 		}
-		outputUsbUpdater = string(output)
+		outputHammerInfo = string(output)
 		return nil
 	}, &testing.PollOptions{Interval: 1 * time.Second, Timeout: 10 * time.Second}); err != nil {
-		return baseEC, errors.Wrap(err, "failed to get the info from usb_updater2")
+		return baseEC, errors.Wrap(err, "failed to get the info from hammer_info.py")
 	}
 
 	baseECInfoMap := map[string]*regexp.Regexp{
-		"name":             regexp.MustCompile(`version:\s+(\w+)(?:_v|-)`),
-		"version":          regexp.MustCompile(`version:\s+([\w-.]+)`),
-		"protection flags": regexp.MustCompile(`Flash protection status:\s+(\w+)`),
+		"name":             regexp.MustCompile(`rw_version="(\w+)(?:_v|-)`),
+		"version":          regexp.MustCompile(`rw_version="([\w-.]+)"`),
+		"protection flags": regexp.MustCompile(`wp_all="(\w+)`),
 	}
 
-	for k, v := range baseECInfoMap {
-		match := v.FindStringSubmatch(outputUsbUpdater)
+	for k, re := range baseECInfoMap {
+		match := re.FindStringSubmatch(outputHammerInfo)
 		if len(match) < 2 {
-			return baseEC, errors.Errorf("did not match regex %q in %q", v, outputUsbUpdater)
+			return baseEC, errors.Errorf("did not match regex %q in %q", re, outputHammerInfo)
 		}
-		usbUpdater2Info := strings.TrimSpace(match[1])
+		value := strings.TrimSpace(match[1])
 
 		switch k {
 		case "name":
-			baseEC.name = usbUpdater2Info
+			baseEC.name = value
 		case "version":
-			baseEC.version = usbUpdater2Info
+			baseEC.version = value
 		case "protection flags":
-			baseEC.protectionFlag = usbUpdater2Info
+			baseEC.roProtected = (value == "True")
 		}
-	}
-
-	flagInDecimal, err := strconv.ParseInt(baseEC.protectionFlag, 16, 64)
-	if err != nil {
-		return baseEC, errors.Wrap(err, "failed to convert protection flags into hexadecimal")
-	}
-	flagInBinary := strconv.FormatInt(flagInDecimal, 2)
-	// If the second bit is equal to 1, RO is protected now.
-	if len(flagInBinary) > 1 && string(flagInBinary[len(flagInBinary)-2]) == "1" {
-		baseEC.roProtected = true
 	}
 
 	return baseEC, nil
@@ -422,6 +415,7 @@ func getHammerConfig(ctx context.Context, h *firmware.Helper, utilServiceClient 
 		hammerConfigs.pid = crosCfgRes.ProductId
 		hammerConfigs.vid = crosCfgRes.VendorId
 		hammerConfigs.usbPath = crosCfgRes.UsbPath
+		hammerConfigs.i2cPath = crosCfgRes.I2CPath
 	}
 	return hammerConfigs, nil
 }

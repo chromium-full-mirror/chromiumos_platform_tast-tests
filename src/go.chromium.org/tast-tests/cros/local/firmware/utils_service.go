@@ -254,17 +254,14 @@ func saveLogsOnError(ctx context.Context, us *UtilsService, hasError func() bool
 // such as product-id, usb-path, and vendor-id. The values are saved and returned
 // in a list.
 func (us *UtilsService) GetDetachableBaseValue(ctx context.Context, req *empty.Empty) (*fwpb.CrosConfigResponse, error) {
-	paramsSlice := []string{"product-id", "vendor-id", "usb-path"}
+	paramsSlice := []string{"product-id", "vendor-id", "usb-path", "i2c-path"}
 
 	crosCfgRes := fwpb.CrosConfigResponse{}
 
 	for _, v := range paramsSlice {
 		value, err := crosconfig.Get(ctx, "/detachable-base", v)
 		if err != nil {
-			return nil, err
-		}
-		if value == "" {
-			return nil, errors.Errorf("%s is empty", v)
+			value = ""
 		}
 		switch v {
 		case "product-id":
@@ -273,6 +270,8 @@ func (us *UtilsService) GetDetachableBaseValue(ctx context.Context, req *empty.E
 			crosCfgRes.VendorId = value
 		case "usb-path":
 			crosCfgRes.UsbPath = value
+		case "i2c-path":
+			crosCfgRes.I2CPath = value
 		}
 	}
 	return &crosCfgRes, nil

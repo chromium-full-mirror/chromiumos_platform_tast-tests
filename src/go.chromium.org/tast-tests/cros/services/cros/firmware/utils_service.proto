@@ -72,6 +72,7 @@ message CrosConfigResponse {
   string product_id = 2;
   string vendor_id = 3;
   string usb_path = 4;
+  string i2c_path = 5;
 }
 
 // SpeedometerResponse provides the result from running a speedometer test.
