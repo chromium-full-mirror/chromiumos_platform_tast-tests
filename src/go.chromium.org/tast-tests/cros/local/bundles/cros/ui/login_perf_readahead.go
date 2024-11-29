@@ -139,15 +139,24 @@ func findDevicePath(id deviceID) (string, error) {
 
 	devices, err := os.ReadDir(devFs)
 	if err != nil {
-		return "", err
+		return "", errors.Wrap(err, "os.ReadDir failed")
 	}
 
 	for _, dev := range devices {
+		// Ignore /dev/core as it should not host any files.
+		//
+		// /dev/core is a symlink that points to /proc/kcore. However, the
+		// destination file may not exist on some systems with CONFIG_PROC_KCORE
+		// disabled, in which case unix.Stat fails with ENOENT.
+		if dev.Name() == "core" {
+			continue
+		}
+
 		path := filepath.Join(devFs, dev.Name())
 
 		var stbuf unix.Stat_t
 		if err := unix.Stat(path, &stbuf); err != nil {
-			return "", err
+			return "", errors.Wrap(err, "unix.Stat failed")
 		}
 		if unix.Major(stbuf.Rdev) == id.major && unix.Minor(stbuf.Rdev) == id.minor {
 			return path, nil
