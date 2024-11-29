@@ -766,8 +766,8 @@ func Run(ctx context.Context, meet MeetTest, cr *chrome.Chrome, testCaseVar func
 	defer cancel()
 	defer func(ctx context.Context) {
 		if cleanUpDoc && docsHref != "" {
+			faillog.DumpUITreeWithScreenshotOnError(ctx, outDir, func() bool { return retErr != nil }, cr, "cleanup_doc")
 			if err := googledocs.DeleteDocWithURL(tconn, cr, docsHref)(ctx); err != nil {
-				faillog.DumpUITreeWithScreenshotOnError(ctx, outDir, func() bool { return true }, cr, "cleanup_doc")
 				testing.ContextLog(ctx, "Failed to delete doc: ", err)
 			}
 		}
@@ -778,6 +778,8 @@ func Run(ctx context.Context, meet MeetTest, cr *chrome.Chrome, testCaseVar func
 		// PageLoad.PaintTiming.NavigationToFirstContentfulPaint.
 		var collaborationRE *regexp.Regexp
 		var collaborationConn *chrome.Conn
+		var collaborationWindow *ash.Window
+
 		if meet.Docs {
 			recorder.Annotate(ctx, "Open_Google_Doc")
 			docsURL := defaultDocsURL
@@ -832,10 +834,7 @@ func Run(ctx context.Context, meet MeetTest, cr *chrome.Chrome, testCaseVar func
 			if err := googledocs.ShowTheDocMenus(tconn, kw)(ctx); err != nil {
 				return errors.Wrap(err, "failed to show the doc menus")
 			}
-		}
 
-		var collaborationWindow *ash.Window
-		if meet.Docs {
 			collaborationWindow, err = ash.FindOnlyWindow(ctx, tconn, func(w *ash.Window) bool { return collaborationRE.MatchString(w.Title) })
 			if err != nil {
 				return errors.Wrap(err, "failed to find the collaboration window")

@@ -134,18 +134,22 @@ func DeleteDoc(tconn *chrome.TestConn) action.Action {
 	docHomeWebArea := nodewith.Name(docsName).Role(role.RootWebArea).First()
 	fileButton := nodewith.Name("File").Role(role.MenuItem).Ancestor(docsApplication)
 	menu := nodewith.Role(role.Menu).Ancestor(docsApplication)
-	moveToTrash := nodewith.NameContaining("Move to trash t").Role(role.MenuItem)
+	moveToTrashItem := nodewith.NameContaining("Move to trash t").Role(role.MenuItem)
 	goToDocsHome := nodewith.Name("Go to Docs home screen").Role(role.Button)
+	moveToTrash := uiauto.NamedCombine("move to trash",
+		ui.DoDefault(moveToTrashItem),
+		ui.DoDefault(goToDocsHome),
+		// When leaving the edit document, the popup "Leave site?" might appear.
+		// Click the leave button if it exists.
+		prompts.ClearPotentialPrompts(tconn, 5*time.Second, prompts.LeaveSitePrompt),
+		ui.WithTimeout(longUITimeout).WaitUntilExists(docHomeWebArea),
+	)
 	return uiauto.NamedCombine("delete document",
 		cuj.ExpandMenu(tconn, fileButton, menu, 392),
-		ui.WaitUntilExists(moveToTrash),
-		uiauto.NamedCombine("move to trash",
-			ui.DoDefault(moveToTrash),
-			ui.DoDefault(goToDocsHome),
-			// When leaving the edit document, the popup "Leave site?" might appear.
-			// Click the leave button if it exists.
-			prompts.ClearPotentialPrompts(tconn, 5*time.Second, prompts.LeaveSitePrompt),
-			ui.WithTimeout(longUITimeout).WaitUntilExists(docHomeWebArea),
+		ui.WaitUntilExists(moveToTrashItem),
+		uiauto.IfSuccessThenWithLog(
+			ui.WithTimeout(3*time.Second).WaitUntilCheckedState(moveToTrashItem, true),
+			moveToTrash,
 		),
 	)
 }
