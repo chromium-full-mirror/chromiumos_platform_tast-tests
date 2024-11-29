@@ -52,17 +52,16 @@ type passphraseTestCase struct {
 
 func init() {
 	testing.AddTest(&testing.Test{
-		Func:           HandlePassphrases,
-		LifeCycleStage: testing.LifeCycleOwnerMonitored,
-		Desc:           "Verify ChromeOS handles passphrases gracefully and displays error messages or UI prompts correctly",
+		Func: HandlePassphrases,
+		Desc: "Verify ChromeOS handles passphrases gracefully and displays error messages or UI prompts correctly",
 		Contacts: []string{
-			"alfredyu@cienet.com",
-			"vivian.chen@cienet.com",
-			"chromeos-connectivity-cienet-external@google.com",
+			"cros-device-enablement@google.com",
+			"chadduffin@chromium.org",
 		},
-		BugComponent: "b:1578688", // ChromeOS > External > Cienet > Manual Test Automation > Test stabilization
-		Attr:         []string{"group:wificell"},
-		TestBedDeps:  []string{tbdep.Wificell, tbdep.WifiStateNormal, tbdep.BluetoothStateNormal, tbdep.PeripheralWifiStateWorking},
+		BugComponent:   "b:1131912", // ChromeOS > Software > Fundamentals > Device Enablement > Connectivity > WiFi
+		LifeCycleStage: testing.LifeCycleOwnerMonitored,
+		Attr:           []string{"group:wificell"},
+		TestBedDeps:    []string{tbdep.Wificell, tbdep.WifiStateNormal, tbdep.BluetoothStateNormal, tbdep.PeripheralWifiStateWorking},
 		ServiceDeps: append(
 			wifiutil.JoinWifiServiceNames,
 			wificell.ShillServiceName,
