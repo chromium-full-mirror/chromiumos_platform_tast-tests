@@ -131,40 +131,22 @@ func CrasDLCManager(ctx context.Context, s *testing.State) {
 	}
 
 	s.Log("Starting CRAS (which should trigger DLC install)")
-	if err := upstart.EnsureJobRunning(ctx, "cras"); err != nil {
+	cras, err := audio.RestartCras(ctx)
+	if err != nil {
 		s.Fatal("Failed to start CRAS: ", err)
 	}
 
-	// Wait until all DLCs are installed
-	s.Log("Checking DLC state")
-	if err := waitUntilAllDLCAreInstalled(ctx, dlcIDs); err != nil {
-		for _, dlcID := range dlcIDs {
-			dlcState, _ := dlc.GetDlcState(ctx, dlcID)
-			dlcStateState := dlcservice_proto.DlcState_State(dlcState.State)
-			if dlcStateState != dlcservice_proto.DlcState_INSTALLED {
-				s.Logf("DLC %q is not installed", dlcID)
-			}
-		}
-		s.Fatal("Failed to install some DLCs: ", err)
+	s.Log("Waiting for audio_effects_ready in S2")
+	if err := cras.WaitForAudioEffectsReady(ctx); err != nil {
+		s.Fatal("cras.WaitForAudioEffectsReady: ", err)
 	}
-}
 
-// waitUntilAllDLCAreInstalled polls the state of each `dlcIDs` until all are installed.
-func waitUntilAllDLCAreInstalled(ctx context.Context, dlcIDs []string) error {
-	return testing.Poll(ctx, func(ctx context.Context) error {
-		for _, dlcID := range dlcIDs {
-			dlcState, err := dlc.GetDlcState(ctx, dlcID)
-			if err != nil {
-				return testing.PollBreak(errors.Wrapf(err, "failed to get state of DLC %q", dlcID))
-			}
-			dlcStateState := dlcservice_proto.DlcState_State(dlcState.State)
-			if dlcStateState != dlcservice_proto.DlcState_INSTALLED {
-				return errors.Errorf("DLC %q is not installed", dlcID)
-			}
+	s.Log("Check DLCs")
+	for _, dlcID := range dlcIDs {
+		dlcState, _ := dlc.GetDlcState(ctx, dlcID)
+		dlcStateState := dlcservice_proto.DlcState_State(dlcState.State)
+		if dlcStateState != dlcservice_proto.DlcState_INSTALLED {
+			s.Errorf("DLC %q is not installed", dlcID)
 		}
-		return nil
-	}, &testing.PollOptions{
-		Timeout:  3 * time.Minute,
-		Interval: 3 * time.Second,
-	})
+	}
 }

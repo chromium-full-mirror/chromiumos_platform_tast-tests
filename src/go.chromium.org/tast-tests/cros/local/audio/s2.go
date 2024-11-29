@@ -15,7 +15,9 @@ type S2 struct {
 	Input struct {
 		DLCManagerReady bool `json:"dlc_manager_ready"`
 	}
-	Output struct{}
+	Output struct {
+		AudioEffectsReady bool `json:"audio_effects_ready"`
+	}
 }
 
 func (c *Cras) dumpS2(ctx context.Context) (*S2, error) {

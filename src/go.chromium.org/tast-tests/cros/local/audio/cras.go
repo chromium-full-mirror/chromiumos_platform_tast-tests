@@ -541,6 +541,25 @@ func (c *Cras) WaitUntilFeatureFlagHasValue(ctx context.Context, flagName string
 	})
 }
 
+// WaitForAudioEffectsReady waits for s2.Output.AudioEffectsReady to be true.
+func (c *Cras) WaitForAudioEffectsReady(ctx context.Context) error {
+	return testing.Poll(ctx, func(ctx context.Context) error {
+		s2, err := c.dumpS2(ctx)
+		if err != nil {
+			return errors.Wrap(err, "dumpS2()")
+		}
+		if !s2.Output.AudioEffectsReady {
+			return errors.Wrap(err, "audio effects not ready")
+		}
+		return nil
+	},
+		&testing.PollOptions{
+			Timeout:  3 * time.Minute,
+			Interval: 3 * time.Second,
+		},
+	)
+}
+
 // GetForceHFPSwbEnabled returns the response of the dbus method of the same name.
 func (c *Cras) GetForceHFPSwbEnabled(ctx context.Context) (enabled bool, err error) {
 	err = c.call(ctx, "GetForceHFPSwbEnabled").Store(&enabled)
