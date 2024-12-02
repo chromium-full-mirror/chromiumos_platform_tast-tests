@@ -15,7 +15,6 @@ tast-owners@google.com
 
 # Tast reviewers
 aaronyu@google.com #{LAST_RESORT_SUGGESTION}
-abergman@google.com #{LAST_RESORT_SUGGESTION}
 albertojuarez@google.com #{LAST_RESORT_SUGGESTION}
 alexanderhartl@google.com #{LAST_RESORT_SUGGESTION}
 alvinjia@google.com #{LAST_RESORT_SUGGESTION}
@@ -47,16 +46,16 @@ nartemiev@google.com #{LAST_RESORT_SUGGESTION}
 neis@chromium.org #{LAST_RESORT_SUGGESTION}
 pjlee@google.com #{LAST_RESORT_SUGGESTION}
 ramsaroop@google.com #{LAST_RESORT_SUGGESTION}
-seewaifu@google.com #{LAST_RESORT_SUGGESTION}
 stevensd@chromium.org #{LAST_RESORT_SUGGESTION}
 tij@google.com #{LAST_RESORT_SUGGESTION}
 vsavu@google.com #{LAST_RESORT_SUGGESTION}
 xiuwen@google.com #{LAST_RESORT_SUGGESTION}
 yanyeli@google.com #{LAST_RESORT_SUGGESTION}
 yichenz@chromium.org #{LAST_RESORT_SUGGESTION}
-yichiyan@google.com #{LAST_RESORT_SUGGESTION}
 zactu@google.com #{LAST_RESORT_SUGGESTION}
 zhaon@google.com #{LAST_RESORT_SUGGESTION}
 
 # Tast team for bulk/emergencies
-rohitbm@chromium.org #{LAST_RESORT_SUGGESTION}
+abergman@google.com #{LAST_RESORT_SUGGESTION}
+seewaifu@google.com #{LAST_RESORT_SUGGESTION}
+yichiyan@google.com #{LAST_RESORT_SUGGESTION}
