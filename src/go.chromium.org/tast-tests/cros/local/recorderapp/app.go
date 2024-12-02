@@ -42,7 +42,7 @@ func StartApp(ctx context.Context, cr *chrome.Chrome) (app *App, retErr error) {
 }
 
 // StartAppWithSetup starts the Recorder App with the specified setup.
-func StartAppWithSetup(ctx context.Context, cr *chrome.Chrome, setup Setup) (app *App, retErr error) {
+func StartAppWithSetup(ctx context.Context, cr *chrome.Chrome, setup Setup) (retApp *App, retErr error) {
 	// Reserve time to close the app in case there is an error.
 	cleanupCtx := ctx
 	ctx, cancel := ctxutil.Shorten(ctx, 3*time.Second)
