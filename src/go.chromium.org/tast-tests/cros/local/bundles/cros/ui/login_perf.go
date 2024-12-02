@@ -81,6 +81,7 @@ const (
 	newMetricPostLoginAnimationDurationPrefix   = "Ash.LoginPerf.AutoRestore.PostLoginAnimation.Duration"
 	newMetricPostLoginAnimationSmoothnessPrefix = "Ash.LoginPerf.AutoRestore.PostLoginAnimation.Smoothness"
 	newMetricPostLoginAnimationJankPrefix       = "Ash.LoginPerf.AutoRestore.PostLoginAnimation.Jank"
+	newMetricDeferredTasksStarted               = "Ash.LoginPerf.AutoRestore.DeferredTasksStarted"
 
 	suffixClamshellMode = ".ClamshellMode"
 	suffixTabletMode    = ".TabletMode"
@@ -981,7 +982,8 @@ func storeHistograms(
 			newMetricShelfLoginAnimationEnd,
 			newMetricTotalDuration,
 			newMetricPostLoginAnimationDurationPrefix + suffixClamshellMode,
-			newMetricPostLoginAnimationDurationPrefix + suffixTabletMode:
+			newMetricPostLoginAnimationDurationPrefix + suffixTabletMode,
+			newMetricDeferredTasksStarted:
 			storeHistogramMeanValue(ctx, pv, hist, "ms", perf.SmallerIsBetter)
 
 		case
@@ -1115,6 +1117,7 @@ func LoginPerf(ctx context.Context, s *testing.State) {
 		newMetricAllBrowserWindowsCreated,
 		newMetricAllBrowserWindowsShown,
 		newMetricAllShelfIconsLoaded,
+		newMetricDeferredTasksStarted,
 	}
 	// Histogram is only collected when the DUT is connected to the display.
 	if displCount > 0 {
