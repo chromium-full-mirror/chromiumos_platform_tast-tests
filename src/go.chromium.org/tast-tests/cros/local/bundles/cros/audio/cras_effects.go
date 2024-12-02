@@ -914,7 +914,7 @@ func CrasEffects(ctx context.Context, s *testing.State) {
 		}
 	}
 
-	if err := audio.SelectIODevices(ctx, cras, param.inputDevice, param.outputDevice); err != nil {
+	if err := audio.SelectIODevices(ctx, cras, nodematch.Type(param.inputDevice), nodematch.Type(param.outputDevice)); err != nil {
 		s.Fatal("Failed to select IO devices: ", err)
 	}
 	if err := cras.SetVoiceIsolationUIEnabled(ctx, param.voiceIsolationUIEnabled); err != nil {

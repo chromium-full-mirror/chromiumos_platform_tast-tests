@@ -15,6 +15,7 @@ import (
 
 	"go.chromium.org/tast-tests/cros/local/audio"
 	"go.chromium.org/tast-tests/cros/local/audio/crastestclient"
+	"go.chromium.org/tast-tests/cros/local/audio/nodematch"
 	"go.chromium.org/tast/core/testing"
 )
 
@@ -79,7 +80,7 @@ func (t *tester) Run(ctx context.Context, s *testing.State) {
 		s.Fatal("Failed to restart CRAS: ", err)
 	}
 
-	if err := audio.SelectIODevices(ctx, cras, "ALSA_LOOPBACK", "ALSA_LOOPBACK"); err != nil {
+	if err := audio.SelectIODevices(ctx, cras, nodematch.Type("ALSA_LOOPBACK"), nodematch.Type("ALSA_LOOPBACK")); err != nil {
 		s.Fatal("Failed to set internal device as selected device: ", err)
 	}
 

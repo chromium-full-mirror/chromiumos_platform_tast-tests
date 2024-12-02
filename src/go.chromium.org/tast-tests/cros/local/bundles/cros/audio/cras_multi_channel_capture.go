@@ -14,6 +14,7 @@ import (
 	"go.chromium.org/tast-tests/cros/common/testexec"
 	"go.chromium.org/tast-tests/cros/local/audio"
 	"go.chromium.org/tast-tests/cros/local/audio/fixture"
+	"go.chromium.org/tast-tests/cros/local/audio/nodematch"
 	"go.chromium.org/tast-tests/cros/local/bundles/cros/audio/data"
 	"go.chromium.org/tast-tests/cros/local/bundles/cros/audio/device"
 	"go.chromium.org/tast-tests/cros/local/bundles/cros/audio/internal"
@@ -126,7 +127,7 @@ func CrasMultiChannelCapture(ctx context.Context, s *testing.State) {
 		s.Fatal("Cannot connect to CRAS: ", err)
 	}
 
-	if err := audio.SelectIODevices(ctx, cras, "ALSA_LOOPBACK", "ALSA_LOOPBACK"); err != nil {
+	if err := audio.SelectIODevices(ctx, cras, nodematch.Type("ALSA_LOOPBACK"), nodematch.Type("ALSA_LOOPBACK")); err != nil {
 		s.Fatal("Cannot select IO devices: ", err)
 	}
 

@@ -11,6 +11,7 @@ import (
 
 	"go.chromium.org/tast-tests/cros/local/audio"
 	"go.chromium.org/tast-tests/cros/local/audio/fixture"
+	"go.chromium.org/tast-tests/cros/local/audio/nodematch"
 	"go.chromium.org/tast-tests/cros/local/audio/wav"
 	"go.chromium.org/tast-tests/cros/local/dbusutil"
 	"go.chromium.org/tast/core/ctxutil"
@@ -47,7 +48,7 @@ func CrasEwmaPowerReporter(ctx context.Context, s *testing.State) {
 	if err != nil {
 		s.Fatal("Failed to connect to CRAS: ", err)
 	}
-	if err := audio.SelectIODevices(ctx, cras, "ALSA_LOOPBACK", "ALSA_LOOPBACK"); err != nil {
+	if err := audio.SelectIODevices(ctx, cras, nodematch.Type("ALSA_LOOPBACK"), nodematch.Type("ALSA_LOOPBACK")); err != nil {
 		s.Fatal("Cannot select IO devices: ", err)
 	}
 

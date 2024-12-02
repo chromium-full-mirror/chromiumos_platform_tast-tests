@@ -8,6 +8,7 @@ import (
 	"context"
 
 	"go.chromium.org/tast-tests/cros/local/audio"
+	"go.chromium.org/tast-tests/cros/local/audio/nodematch"
 	"go.chromium.org/tast-tests/cros/local/dlc"
 	"go.chromium.org/tast-tests/cros/local/videoconferencing/effects"
 	"go.chromium.org/tast/core/errors"
@@ -26,7 +27,7 @@ func setUpAudio(ctx context.Context, voiceIsolation bool) error {
 		return errors.Wrap(err, "cannot restart CRAS")
 	}
 
-	if err := audio.SelectIODevices(ctx, cras, "INTERNAL_MIC", "INTERNAL_SPEAKER"); err != nil {
+	if err := audio.SelectIODevices(ctx, cras, nodematch.Type("INTERNAL_MIC"), nodematch.Type("INTERNAL_SPEAKER")); err != nil {
 		return errors.Wrap(err, "audio.SelectIODevices")
 	}
 

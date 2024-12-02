@@ -15,6 +15,7 @@ import (
 	"go.chromium.org/tast-tests/cros/common/testexec"
 	"go.chromium.org/tast-tests/cros/local/audio"
 	"go.chromium.org/tast-tests/cros/local/audio/fixture"
+	"go.chromium.org/tast-tests/cros/local/audio/nodematch"
 	"go.chromium.org/tast-tests/cros/local/bundles/cros/audio/device"
 	"go.chromium.org/tast-tests/cros/local/chrome"
 	"go.chromium.org/tast/core/testing"
@@ -185,7 +186,7 @@ func CrasNoiseCancellation(ctx context.Context, s *testing.State) {
 		func(ctx context.Context, cras *audio.Cras) {
 			// Workaround for b/377736374.
 			// Select the audio device via D-Bus.
-			if err := audio.SelectIODevices(ctx, cras, "ALSA_LOOPBACK", "ALSA_LOOPBACK"); err != nil {
+			if err := audio.SelectIODevices(ctx, cras, nodematch.Type("ALSA_LOOPBACK"), nodematch.Type("ALSA_LOOPBACK")); err != nil {
 				s.Fatal("audio.SelectIODevices: ", err)
 			}
 
