@@ -51,6 +51,11 @@ func FWScreenPressTab(ctx context.Context, s *testing.State) {
 		s.Fatal("Failed to create config: ", err)
 	}
 
+	supportAPFwState, err := h.SupportAPFwState(ctx)
+	if err != nil {
+		s.Fatal("Failed to check if DUT support APFwState: ", err)
+	}
+
 	if err := h.Servo.SetOnOff(ctx, servo.USBKeyboard, servo.Off); err != nil {
 		s.Fatal("Failed to turn off usb keyboard: ", err)
 	}
@@ -69,24 +74,41 @@ func FWScreenPressTab(ctx context.Context, s *testing.State) {
 		}
 	}()
 
+	closeUART, err := h.Servo.EnableUARTCapture(ctx, servo.ECUARTCapture)
+	if err != nil {
+		s.Fatal("Failed to enable capture EC UART: ", err)
+	}
+	defer func() {
+		if err := closeUART(ctx); err != nil {
+			s.Error("Failed to cancel capture EC UART: ", err)
+		}
+	}()
+
 	s.Log("Rebooting to the developer screen")
 	if err := h.Servo.SetPowerState(ctx, servo.PowerStateWarmReset); err != nil {
 		s.Fatal("Failed to warm reset the DUT: ", err)
 	}
-	waitUnreachableCtx, cancelUnreachable := context.WithTimeout(ctx, 2*time.Minute)
-	defer cancelUnreachable()
-	if err := h.DUT.WaitUnreachable(waitUnreachableCtx); err != nil {
-		s.Fatal("Failed to wait DUT unreachable: ", err)
-	}
 
-	s.Logf("Sleeping for %s (FirmwareScreen) ", h.Config.FirmwareScreen)
-	// GoBigSleepLint: Delay to wait for the firmware screen during boot-up.
-	if err := testing.Sleep(ctx, h.Config.FirmwareScreen); err != nil {
-		s.Fatalf("Failed to sleep for %s: %v", h.Config.FirmwareScreen, err)
+	if supportAPFwState {
+		if err := h.DetectFirmwareScreen(ctx, h.Config.FirmwareScreen, fwCommon.DeveloperMode); err != nil {
+			s.Log("Failed to detect firmware screen: ", err)
+		}
+	} else {
+		waitUnreachableCtx, cancelUnreachable := context.WithTimeout(ctx, 2*time.Minute)
+		defer cancelUnreachable()
+		if err := h.DUT.WaitUnreachable(waitUnreachableCtx); err != nil {
+			s.Fatal("Failed to wait DUT unreachable: ", err)
+		}
+
+		s.Logf("Sleeping for %s (FirmwareScreen) ", h.Config.FirmwareScreen)
+		// GoBigSleepLint: Delay to wait for the firmware screen during boot-up.
+		if err := testing.Sleep(ctx, h.Config.FirmwareScreen); err != nil {
+			s.Fatalf("Failed to sleep for %s: %v", h.Config.FirmwareScreen, err)
+		}
 	}
 
 	s.Log("Triggering debug info separately on two firmware screens")
-	expFwScreens, err := triggerDebugInfoOnFwScreens(ctx, h)
+	expFwScreens, err := triggerDebugInfoOnFwScreens(ctx, h, supportAPFwState)
 	if err != nil {
 		s.Fatal("Failed to invoke debug info on firmware screen: ", err)
 	}
@@ -102,16 +124,19 @@ func FWScreenPressTab(ctx context.Context, s *testing.State) {
 	if err := ms.RunBypasserUntilDUTConnected(ctx, devModeBypasserParams); err != nil {
 		s.Fatal("Failed to boot through dev mode: ", err)
 	}
-	found, err := h.Reporter.GetDisplayedFWScreens(ctx)
-	if err != nil {
-		s.Fatal("Failed to get firmware screens: ", err)
-	}
-	if err := checkDisplayedScreensInSeq(ctx, h, found, expFwScreens); err != nil {
-		s.Fatal("Failed to verify firmware screens displayed: ", err)
+
+	if !supportAPFwState {
+		found, err := h.Reporter.GetDisplayedFWScreens(ctx)
+		if err != nil {
+			s.Fatal("Failed to get firmware screens: ", err)
+		}
+		if err := checkDisplayedScreensInSeq(ctx, h, found, expFwScreens); err != nil {
+			s.Fatal("Failed to verify firmware screens displayed: ", err)
+		}
 	}
 }
 
-func selectMenuTopmost(ctx context.Context, h *firmware.Helper) error {
+func selectMenuTopmost(ctx context.Context, h *firmware.Helper, supportAPFwState bool) error {
 	navigator, err := firmware.NewMenuNavigator(ctx, h)
 	if err != nil {
 		return errors.Wrap(err, "failed to create a new menu navigator")
@@ -123,18 +148,28 @@ func selectMenuTopmost(ctx context.Context, h *firmware.Helper) error {
 	if err := navigator.SelectOption(ctx); err != nil {
 		return err
 	}
-	return nil
-}
-
-func showDebugInfo(ctx context.Context, h *firmware.Helper) error {
-	testing.ContextLog(ctx, "Pressing <tab>")
-	if err := h.Servo.PressKey(ctx, "<tab>", servo.DurTab); err != nil {
-		return errors.Wrap(err, "failed to press tab")
+	if supportAPFwState {
+		if err := h.DetectFirmwareScreen(ctx, h.Config.FirmwareScreen, fwCommon.LanguageSelect); err != nil {
+			return errors.Wrap(err, "failed to detect firmware screen")
+		}
 	}
 	return nil
 }
 
-func hideDebugInfo(ctx context.Context, h *firmware.Helper) error {
+func showDebugInfo(ctx context.Context, h *firmware.Helper, supportAPFwState bool) error {
+	testing.ContextLog(ctx, "Pressing <tab>")
+	if err := h.Servo.PressKey(ctx, "<tab>", servo.DurTab); err != nil {
+		return errors.Wrap(err, "failed to press tab")
+	}
+	if supportAPFwState {
+		if err := h.DetectFirmwareScreen(ctx, h.Config.FirmwareScreen, fwCommon.DebugInfo); err != nil {
+			return errors.Wrap(err, "failed to detect firmware screen")
+		}
+	}
+	return nil
+}
+
+func hideDebugInfo(ctx context.Context, h *firmware.Helper, supportAPFwState bool) error {
 	testing.ContextLog(ctx, "Pressing <esc>")
 	if err := h.Servo.PressKey(ctx, "<esc>", servo.DurTab); err != nil {
 		return errors.Wrap(err, "failed to press esc")
@@ -142,7 +177,7 @@ func hideDebugInfo(ctx context.Context, h *firmware.Helper) error {
 	return nil
 }
 
-func hitSpaceForToNormScreen(ctx context.Context, h *firmware.Helper) error {
+func hitSpaceForToNormScreen(ctx context.Context, h *firmware.Helper, supportAPFwState bool) error {
 	if h.Config.ModeSwitcherType != firmware.KeyboardDevSwitcher {
 		return errors.New("hitting space to trigger TO_NORM only works for KeyboardDevSwitcher")
 	}
@@ -153,12 +188,12 @@ func hitSpaceForToNormScreen(ctx context.Context, h *firmware.Helper) error {
 	return nil
 }
 
-func triggerDebugInfoOnFwScreens(ctx context.Context, h *firmware.Helper) ([]fwCommon.FwScreenID, error) {
-	var fwScreensOperations []func(ctx context.Context, h *firmware.Helper) error
+func triggerDebugInfoOnFwScreens(ctx context.Context, h *firmware.Helper, supportAPFwState bool) ([]fwCommon.FwScreenID, error) {
+	var fwScreensOperations []func(ctx context.Context, h *firmware.Helper, supportAPFwState bool) error
 	var expFwScreens []fwCommon.FwScreenID
 	switch h.Config.ModeSwitcherType {
 	case firmware.TabletDetachableSwitcher:
-		fwScreensOperations = []func(ctx context.Context, h *firmware.Helper) error{
+		fwScreensOperations = []func(ctx context.Context, h *firmware.Helper, supportAPFwState bool) error{
 			showDebugInfo, hideDebugInfo, selectMenuTopmost, showDebugInfo, hideDebugInfo}
 		expFwScreens = []fwCommon.FwScreenID{
 			fwCommon.LegacyDeveloperWarningMenu,
@@ -167,7 +202,7 @@ func triggerDebugInfoOnFwScreens(ctx context.Context, h *firmware.Helper) ([]fwC
 			fwCommon.LegacyDebugInfo,
 		}
 	case firmware.KeyboardDevSwitcher:
-		fwScreensOperations = []func(ctx context.Context, h *firmware.Helper) error{
+		fwScreensOperations = []func(ctx context.Context, h *firmware.Helper, supportAPFwState bool) error{
 			showDebugInfo, hideDebugInfo, hitSpaceForToNormScreen, showDebugInfo, hideDebugInfo}
 		expFwScreens = []fwCommon.FwScreenID{
 			fwCommon.LegacyDeveloperWarning,
@@ -176,7 +211,7 @@ func triggerDebugInfoOnFwScreens(ctx context.Context, h *firmware.Helper) ([]fwC
 			fwCommon.LegacyDebugInfo,
 		}
 	case firmware.MenuSwitcher:
-		fwScreensOperations = []func(ctx context.Context, h *firmware.Helper) error{
+		fwScreensOperations = []func(ctx context.Context, h *firmware.Helper, supportAPFwState bool) error{
 			showDebugInfo, hideDebugInfo, selectMenuTopmost, showDebugInfo, hideDebugInfo}
 		expFwScreens = []fwCommon.FwScreenID{
 			fwCommon.DeveloperMode,
@@ -188,7 +223,7 @@ func triggerDebugInfoOnFwScreens(ctx context.Context, h *firmware.Helper) ([]fwC
 		return nil, errors.Errorf("found unsupported mode switcher type %s", h.Config.ModeSwitcherType)
 	}
 	for _, opt := range fwScreensOperations {
-		if err := opt(ctx, h); err != nil {
+		if err := opt(ctx, h, supportAPFwState); err != nil {
 			return nil, err
 		}
 		// GoBigSleepLint: Simulate a specific speed of key press.
