@@ -14,6 +14,7 @@ import (
 	"go.chromium.org/tast-tests/cros/common/testexec"
 	"go.chromium.org/tast-tests/cros/local/audio"
 	"go.chromium.org/tast-tests/cros/local/audio/fixture"
+	"go.chromium.org/tast-tests/cros/local/audio/nodematch"
 	"go.chromium.org/tast-tests/cros/local/bundles/cros/audio/data"
 	"go.chromium.org/tast/core/testing"
 	"go.chromium.org/tast/core/testing/hwdep"
@@ -73,7 +74,7 @@ func CrasSidetoneMultipleLoopbackLatency(ctx context.Context, s *testing.State) 
 		StyleTransferAllowed: param.styleTransferEnabled,
 		VoiceIsolation:       param.noiseCancellationEnabled || param.styleTransferEnabled,
 	}
-	if err := audio.WithNoiseCancellation(ctx, apConfig, s.OutDir(), s.HasError, "Loopback Capture", "Loopback Playback 1", func(ctx context.Context, cras *audio.Cras) {
+	if err := audio.WithNoiseCancellation(ctx, apConfig, s.OutDir(), s.HasError, nodematch.Name("Loopback Capture"), nodematch.Name("Loopback Playback 1"), func(ctx context.Context, cras *audio.Cras) {
 		if err := cras.SetSidetoneEnabled(ctx, true); err != nil {
 			s.Fatal("Failed to SetSidetoneEnabled: ", err)
 		}

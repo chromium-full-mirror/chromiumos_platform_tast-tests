@@ -171,25 +171,12 @@ func CrasNoiseCancellation(ctx context.Context, s *testing.State) {
 	apConfig := audio.NoiseCancellationConfig{
 		StyleTransferAllowed: param.styleTransferEnabled,
 		VoiceIsolation:       param.noiseCancellationEnabled || param.styleTransferEnabled,
-		ChromeOpts: append(
-			param.extraChromeOpts,
-			// Workaround for b/377736374.
-			// Here we make mock Chrome's cras client so the test has full control via D-Bus.
-			chrome.ExtraArgs("--use-fake-cras-audio-client-for-dbus"),
-		),
+		ChromeOpts:           param.extraChromeOpts,
 	}
 
 	if err := audio.WithNoiseCancellation(ctx, apConfig, s.OutDir(), s.HasError,
-		// Workaround for b/377736374.
-		// Fake devices to select.
-		"Microphone (internal)", "Speaker (internal)",
+		nodematch.Type("ALSA_LOOPBACK"), nodematch.Type("ALSA_LOOPBACK"),
 		func(ctx context.Context, cras *audio.Cras) {
-			// Workaround for b/377736374.
-			// Select the audio device via D-Bus.
-			if err := audio.SelectIODevices(ctx, cras, nodematch.Type("ALSA_LOOPBACK"), nodematch.Type("ALSA_LOOPBACK")); err != nil {
-				s.Fatal("audio.SelectIODevices: ", err)
-			}
-
 			// Generate test file.
 			const noiseDuration = 10 * time.Second
 

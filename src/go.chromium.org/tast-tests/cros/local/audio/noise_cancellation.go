@@ -7,6 +7,7 @@ package audio
 import (
 	"context"
 
+	"go.chromium.org/tast-tests/cros/local/audio/nodematch"
 	"go.chromium.org/tast-tests/cros/local/chrome"
 	"go.chromium.org/tast-tests/cros/local/dlc"
 	"go.chromium.org/tast/core/ctxutil"
@@ -34,7 +35,7 @@ func installDlcs(ctx context.Context, dlcIDs []string) error {
 func WithNoiseCancellation(
 	ctx context.Context, config NoiseCancellationConfig,
 	outDir string, hasError func() bool,
-	input, output string,
+	input, output nodematch.Matcher,
 	f func(ctx context.Context, cras *Cras),
 ) error {
 	cleanupCtx := ctx
@@ -42,7 +43,11 @@ func WithNoiseCancellation(
 	defer cancel()
 
 	// Start chrome.
-	chromeOpts := config.ChromeOpts
+	chromeOpts := append(
+		config.ChromeOpts,
+		// Avoid UI interference with D-Bus controls set by tast.
+		chrome.ExtraArgs("--use-fake-cras-audio-client-for-dbus"),
+	)
 	if config.StyleTransferAllowed {
 		chromeOpts = append(chromeOpts, chrome.EnableFeatures("CrOSLateBootAudioStyleTransfer"))
 	} else {
@@ -62,19 +67,17 @@ func WithNoiseCancellation(
 		}
 	}
 
-	if err := SelectDevicesViaQuickSettings(ctx, cr, outDir, hasError, input, output); err != nil {
-		return errors.Wrap(err, "failed to select loopback device from the UI")
-	}
-
 	// Start Cras.
 	cras, err := NewCras(ctx)
 	if err != nil {
 		return errors.Wrap(err, "failed to connect to CRAS")
 	}
+	if err := SelectIODevices(ctx, cras, input, output); err != nil {
+		return errors.Wrap(err, "audio.SelectIODevices()")
+	}
 	if err := cras.WaitUntilFeatureFlagHasValue(ctx, "CrOSLateBootAudioStyleTransfer", config.StyleTransferAllowed); err != nil {
 		return errors.Wrap(err, "feature flag not propagated to CRAS")
 	}
-	// b/377736374: This doesn't work reliably because Chrome may overwrite it.
 	if err := cras.SetVoiceIsolationUIEnabled(ctx, config.VoiceIsolation); err != nil {
 		return errors.Wrap(err, "failed to SetVoiceIsolationUIEnabled")
 	}

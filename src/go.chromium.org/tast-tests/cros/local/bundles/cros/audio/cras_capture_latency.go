@@ -14,6 +14,7 @@ import (
 	"go.chromium.org/tast-tests/cros/common/testexec"
 	"go.chromium.org/tast-tests/cros/local/audio"
 	"go.chromium.org/tast-tests/cros/local/audio/fixture"
+	"go.chromium.org/tast-tests/cros/local/audio/nodematch"
 	"go.chromium.org/tast-tests/cros/local/bundles/cros/audio/data"
 	"go.chromium.org/tast/core/testing"
 	"go.chromium.org/tast/core/testing/hwdep"
@@ -71,7 +72,7 @@ func CrasCaptureLatency(ctx context.Context, s *testing.State) {
 		StyleTransferAllowed: param.styleTransferEnabled,
 		VoiceIsolation:       param.noiseCancellationEnabled || param.styleTransferEnabled,
 	}
-	if err := audio.WithNoiseCancellation(ctx, apConfig, s.OutDir(), s.HasError, "Loopback Playback", "Loopback Capture", func(ctx context.Context, _ *audio.Cras) {
+	if err := audio.WithNoiseCancellation(ctx, apConfig, s.OutDir(), s.HasError, nodematch.Name("Loopback Playback"), nodematch.Name("Loopback Capture"), func(ctx context.Context, _ *audio.Cras) {
 		outputPath := filepath.Join(s.OutDir(), "result.txt")
 		output, err := os.Create(outputPath)
 		if err != nil {
