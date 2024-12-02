@@ -34,6 +34,7 @@ func init() {
 }
 
 func ModemPowerOffVerification(ctx context.Context, s *testing.State) {
+	const MaxCellularDisableRetryNum = 2
 	perfValues := perf.NewValues()
 	helper := s.FixtValue().(*cellular.FixtData).Helper
 
@@ -55,8 +56,11 @@ func ModemPowerOffVerification(ctx context.Context, s *testing.State) {
 		s.Fatal("Modem EnsureEnabled failed (precondition): ", err)
 	}
 
-	if _, err := helper.Disable(ctx); err != nil {
-		s.Fatal("Failed to disable modem: ", err)
+	// Disable cellular fails in case a modem start is in progress. Retry solves the issue.
+	for i := 1; i <= MaxCellularDisableRetryNum; i++ {
+		if _, err := helper.Disable(ctx); err != nil && i == MaxCellularDisableRetryNum {
+			s.Fatal("Failed to disable modem: ", err)
+		}
 	}
 
 	// Modem is expected to be turned off when the power off hysteresis
