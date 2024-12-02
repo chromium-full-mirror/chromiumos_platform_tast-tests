@@ -10,6 +10,7 @@ import (
 
 	"go.chromium.org/tast-tests/cros/local/chrome/uiauto"
 	"go.chromium.org/tast-tests/cros/local/chrome/uiauto/nodewith"
+	"go.chromium.org/tast-tests/cros/local/chrome/uiauto/restriction"
 
 	"go.chromium.org/tast/core/testing"
 )
@@ -137,4 +138,9 @@ func (s *OSSettings) DoDefault(finder *nodewith.Finder) uiauto.Action {
 // EnsureExistsFor calls ui.EnsureExistsFor scoping the finder to the Settings app.
 func (s *OSSettings) EnsureExistsFor(finder *nodewith.Finder, duration time.Duration) uiauto.Action {
 	return s.ui.EnsureExistsFor(finder.FinalAncestor(WindowFinder), duration)
+}
+
+// CheckRestriction calls ui.CheckRestriction scoping the finder to the Settings app.
+func (s *OSSettings) CheckRestriction(finder *nodewith.Finder, restriction restriction.Restriction) uiauto.Action {
+	return s.ui.CheckRestriction(finder.FinalAncestor(WindowFinder), restriction)
 }

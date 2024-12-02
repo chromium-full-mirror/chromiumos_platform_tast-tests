@@ -16,7 +16,6 @@ import (
 	"go.chromium.org/tast-tests/cros/local/chrome/uiauto/checked"
 	"go.chromium.org/tast-tests/cros/local/chrome/uiauto/expandable"
 	"go.chromium.org/tast-tests/cros/local/chrome/uiauto/nodewith"
-	"go.chromium.org/tast-tests/cros/local/chrome/uiauto/restriction"
 	"go.chromium.org/tast-tests/cros/local/chrome/uiauto/role"
 	"go.chromium.org/tast-tests/cros/local/input"
 	"go.chromium.org/tast/core/errors"
@@ -39,70 +38,6 @@ func GoToCellularNetworkDetailPageWithNickName(ctx context.Context, tconn *chrom
 
 	if err := ui.LeftClick(DetailButton)(ctx); err != nil {
 		return errors.Wrap(err, "failed to click into cellular networks detail view with name: "+name)
-	}
-
-	return nil
-}
-
-// ClickAPNMoreActionsButton will click the 'More Actions' button associated to the APN.
-func ClickAPNMoreActionsButton(ctx context.Context, tconn *chrome.TestConn, userFriendlyAPNName string) error {
-	ui := uiauto.New(tconn)
-
-	apnMoreActionBtn := nodewith.NameContaining(userFriendlyAPNName).Role(role.Button).HasClass("icon-more-vert").First()
-
-	// More actions button may be temporarily disabled if cellular is connecting or disconnecting.
-	if err := ui.WithTimeout(30 * time.Second).WaitUntilExists(apnMoreActionBtn.Focusable())(ctx); err != nil {
-		return errors.Wrap(err, "failed to show more actions button")
-	}
-
-	if err := ui.LeftClickUntil(apnMoreActionBtn, ui.Exists(DetailsBtn))(ctx); err != nil {
-		return errors.Wrap(err, "failed to click more actions button")
-	}
-
-	return nil
-}
-
-// CheckAutomaticallyDetectedAPNDetailesDialog willcheck that the APN details dialog is correct for automatically detected APN.
-func CheckAutomaticallyDetectedAPNDetailesDialog(ctx context.Context, tconn *chrome.TestConn) error {
-	ui := uiauto.New(tconn)
-	if err := ui.WaitUntilExists(NameOfAPNInput)(ctx); err != nil {
-		return errors.Wrap(err, "failed to wait for name of apn input")
-	}
-
-	if err := ui.CheckRestriction(NameOfAPNInput, restriction.Disabled)(ctx); err != nil {
-		return errors.Wrap(err, "failed to verify APN name input disabled")
-	}
-
-	if err := ui.CheckRestriction(UserNameOfAPNInput, restriction.Disabled)(ctx); err != nil {
-		return errors.Wrap(err, "failed to verify APN username input disabled")
-	}
-
-	if err := ui.CheckRestriction(PasswordOfAPNInput, restriction.Disabled)(ctx); err != nil {
-		return errors.Wrap(err, "failed to verify APN password input disabled")
-	}
-
-	if err := ui.LeftClick(APNAdvancedBtn)(ctx); err != nil {
-		return errors.Wrap(err, "failed to click on APN advanced settings button")
-	}
-
-	if err := ui.CheckRestriction(AuthenticationTypeDropdown, restriction.Disabled)(ctx); err != nil {
-		return errors.Wrap(err, "failed to verify Authentication type dropdown disabled")
-	}
-
-	if err := ui.WaitUntilExists(IPTypeDropdown)(ctx); err != nil {
-		return errors.Wrap(err, "failed to wait for name of apn input")
-	}
-
-	if err := ui.CheckRestriction(IPTypeDropdown, restriction.Disabled)(ctx); err != nil {
-		return errors.Wrap(err, "failed to verify IP type dropdown disabled")
-	}
-
-	if err := ui.CheckRestriction(DefaultAPNCheckbox, restriction.Disabled)(ctx); err != nil {
-		return errors.Wrap(err, "failed to verify default checkbox disabled")
-	}
-
-	if err := ui.CheckRestriction(AttachAPNCheckbox, restriction.Disabled)(ctx); err != nil {
-		return errors.Wrap(err, "failed to verify attach checkbox disabled")
 	}
 
 	return nil
@@ -249,52 +184,6 @@ func SelectPreRevampOtherAPN(ctx context.Context, tconn *chrome.TestConn, apn st
 		ui.LeftClick(apnMenuItem),
 	)(ctx); err != nil {
 		return errors.Wrap(err, "failed to select other menu item")
-	}
-
-	return nil
-}
-
-// VerifyAPNMoreActionsMenuItemsPresent verifies the presence of more actions APN menu items.
-func VerifyAPNMoreActionsMenuItemsPresent(ctx context.Context, tconn *chrome.TestConn, userFriendlyAPNName string, hasEnable, hasDisable, hasRemove bool) error {
-	ui := uiauto.New(tconn)
-
-	if err := ui.Exists(DetailsBtn)(ctx); err != nil {
-		if err := ClickAPNMoreActionsButton(ctx, tconn, userFriendlyAPNName); err != nil {
-			return errors.Wrap(err, "failed to click more actions button")
-		}
-		if err := ui.Exists(DetailsBtn)(ctx); err != nil {
-			return errors.Wrap(err, "failed to find Details button")
-		}
-	}
-
-	if hasDisable {
-		if err := ui.Exists(DisableBtn)(ctx); err != nil {
-			return errors.Wrap(err, "failed to find Disable menu item")
-		}
-	} else {
-		if err := ui.Gone(DisableBtn)(ctx); err != nil {
-			return errors.Wrap(err, "failed to verify lack of Disable menu item")
-		}
-	}
-
-	if hasEnable {
-		if err := ui.Exists(EnableBtn)(ctx); err != nil {
-			return errors.Wrap(err, "failed to find Enable menu item")
-		}
-	} else {
-		if err := ui.Gone(EnableBtn)(ctx); err != nil {
-			return errors.Wrap(err, "failed to verify lack of Enable menu item")
-		}
-	}
-
-	if hasRemove {
-		if err := ui.Exists(RemoveBtn)(ctx); err != nil {
-			return errors.Wrap(err, "failed to find Remove menu item")
-		}
-	} else {
-		if err := ui.Gone(RemoveBtn)(ctx); err != nil {
-			return errors.Wrap(err, "failed to verify lack of Remove menu item")
-		}
 	}
 
 	return nil

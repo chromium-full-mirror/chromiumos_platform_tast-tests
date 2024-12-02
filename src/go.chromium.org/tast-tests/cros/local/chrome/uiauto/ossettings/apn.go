@@ -15,6 +15,7 @@ import (
 	"go.chromium.org/tast-tests/cros/local/chrome/uiauto"
 	"go.chromium.org/tast-tests/cros/local/chrome/uiauto/checked"
 	"go.chromium.org/tast-tests/cros/local/chrome/uiauto/nodewith"
+	"go.chromium.org/tast-tests/cros/local/chrome/uiauto/restriction"
 	"go.chromium.org/tast-tests/cros/local/chrome/uiauto/role"
 	"go.chromium.org/tast-tests/cros/local/input"
 	"go.chromium.org/tast-tests/cros/local/networkui/netconfig"
@@ -418,6 +419,52 @@ func (s *OSSettings) SelectAPNFromDialog(apnName string) uiauto.Action {
 		s.WaitUntilGone(autoDetectedText),
 		s.EnsureGoneFor(autoDetectedText, 3*time.Second),
 	)
+}
+
+// ClickMoreActionsButtonWithAPNName clicks the 'More Actions' button associated to the APN.
+func (s *OSSettings) ClickMoreActionsButtonWithAPNName(userFriendlyAPNName string) uiauto.Action {
+	apnMoreActionBtn := nodewith.NameContaining(userFriendlyAPNName).Role(role.Button).HasClass("icon-more-vert").First()
+	return uiauto.Combine("click the more actions button",
+		// More actions button may be temporarily disabled if cellular is connecting or disconnecting.
+		s.WithTimeout(WaitForConnectionTimeout).WaitUntilExists(apnMoreActionBtn.Focusable()),
+		s.DoDefault(apnMoreActionBtn),
+	)
+}
+
+// VerifyAPNMoreActionsMenuItemsPresent verifies the presence of more actions APN menu items.
+// Note that the 'More Actions' button has to be clicked before calling this function.
+func (s *OSSettings) VerifyAPNMoreActionsMenuItemsPresent(hasEnable, hasDisable, hasRemove bool) uiauto.Action {
+	actions := []uiauto.Action{s.WaitUntilExists(DetailsBtn)}
+	for button, shouldExist := range map[*nodewith.Finder]bool{
+		EnableBtn:  hasEnable,
+		DisableBtn: hasDisable,
+		RemoveBtn:  hasRemove,
+	} {
+		if shouldExist {
+			actions = append(actions, s.WaitUntilExists(button))
+		} else {
+			actions = append(actions, s.WaitUntilGone(button))
+		}
+	}
+
+	return uiauto.Combine("verify APN more actions menu items", actions...)
+}
+
+// CheckAutomaticallyDetectedAPNDetailesDialog checks that the APN details dialog is correct for automatically detected APN.
+func (s *OSSettings) CheckAutomaticallyDetectedAPNDetailesDialog(ctx context.Context) error {
+	return uiauto.Combine("check APN details",
+		s.DoDefault(DetailsBtn),
+		s.WaitUntilExists(NameOfAPNInput),
+		s.CheckRestriction(NameOfAPNInput, restriction.Disabled),
+		s.CheckRestriction(UserNameOfAPNInput, restriction.Disabled),
+		s.CheckRestriction(PasswordOfAPNInput, restriction.Disabled),
+		s.DoDefault(APNAdvancedBtn),
+		s.CheckRestriction(AuthenticationTypeDropdown, restriction.Disabled),
+		s.WaitUntilExists(IPTypeDropdown),
+		s.CheckRestriction(IPTypeDropdown, restriction.Disabled),
+		s.CheckRestriction(DefaultAPNCheckbox, restriction.Disabled),
+		s.CheckRestriction(AttachAPNCheckbox, restriction.Disabled),
+	)(ctx)
 }
 
 func apnMoreActionButtonFinder(apn *ApnConfig, apnState ApnState) *nodewith.Finder {

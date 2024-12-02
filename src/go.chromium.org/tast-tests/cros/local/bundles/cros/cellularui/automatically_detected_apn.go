@@ -79,39 +79,31 @@ func AutomaticallyDetectedApn(ctx context.Context, s *testing.State) {
 		s.Fatal("Failed to create Test API connection: ", err)
 	}
 
-	mdp, err := ossettings.OpenMobileDataSubpage(ctx, tconn, cr)
+	settings, err := ossettings.LaunchAtMobileData(ctx, tconn, cr)
 	if err != nil {
 		s.Fatal("Failed to open mobile data subpage: ", err)
 	}
-	defer mdp.Close(cleanupCtx)
+	defer settings.Close(cleanupCtx)
 	defer faillog.DumpUITreeWithScreenshotOnError(cleanupCtx, s.OutDir(), s.HasError, cr, "ossettings")
 
-	if err := ossettings.GoToActiveNetworkDetails(ctx, tconn); err != nil {
+	if err := settings.NavigateToMobileNetworkDetailsPage(cr, ossettings.ActiveCellularBtn)(ctx); err != nil {
 		s.Fatal("Failed to go to active cellular network detail page view: ", err)
 	}
 
-	if err := mdp.VerifyApnIsVisibleInSubtext(ctx, tconn, cr, serviceLastGoodAPNInfoApnUserFriendlyName); err != nil {
+	if err := settings.VerifyApnIsVisibleInSubtext(ctx, tconn, cr, serviceLastGoodAPNInfoApnUserFriendlyName); err != nil {
 		s.Fatal("Failed to go to verify active apn subtext: ", err)
 	}
 
-	if err := ossettings.GoToActiveNetworkApnSubpage(ctx, tconn, false); err != nil {
-		s.Fatal("Failed to go to apn subpage: ", err)
+	if err := uiauto.Combine("verify the more actions items present correctly",
+		settings.NavigateToApnPage(cr),
+		settings.VerifyApnConnected(cr, serviceLastGoodAPNInfoApnUserFriendlyName, serviceLastGoodAPNInfoApnSource),
+		settings.ClickMoreActionsButtonWithAPNName(serviceLastGoodAPNInfoApnUserFriendlyName),
+		settings.VerifyAPNMoreActionsMenuItemsPresent(false /* hasEnable */, false /* hasDisable */, false /* hasRemove*/),
+	)(ctx); err != nil {
+		s.Fatal("Failed to verify more action items: ", err)
 	}
 
-	if err := mdp.VerifyAPNSubpageConnectedApnUI(ctx, tconn, cr, serviceLastGoodAPNInfoApnUserFriendlyName, serviceLastGoodAPNInfoApnSource); err != nil {
-		s.Fatal("Failed to verify connected APN UI: ", err)
-	}
-
-	if err := ossettings.VerifyAPNMoreActionsMenuItemsPresent(ctx, tconn, serviceLastGoodAPNInfoApnUserFriendlyName, false, false, false); err != nil {
-		s.Fatal("Failed verify items in APN more actions menu: ", err)
-	}
-
-	ui := uiauto.New(tconn)
-	if err := ui.LeftClick(ossettings.DetailsBtn)(ctx); err != nil {
-		s.Fatal("Failed to click details APN menu item: ", err)
-	}
-
-	if err := ossettings.CheckAutomaticallyDetectedAPNDetailesDialog(ctx, tconn); err != nil {
+	if err := settings.CheckAutomaticallyDetectedAPNDetailesDialog(ctx); err != nil {
 		s.Fatal("Failed to verify automatically detected APN details dialog: ", err)
 	}
 }
