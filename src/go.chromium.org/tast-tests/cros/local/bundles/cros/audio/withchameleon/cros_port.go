@@ -15,6 +15,7 @@ import (
 	"go.chromium.org/tast-tests/cros/common/testexec"
 	"go.chromium.org/tast-tests/cros/local/audio"
 	"go.chromium.org/tast-tests/cros/local/audio/crastestclient"
+	"go.chromium.org/tast-tests/cros/local/audio/nodematch"
 	"go.chromium.org/tast/core/errors"
 	"go.chromium.org/tast/core/testing"
 )
@@ -187,7 +188,7 @@ func ToCrasNode(ctx context.Context, crasNodeType string, isInput bool) (*audio.
 		return nil, errors.Wrap(err, "cannot get all cras nodes")
 	}
 
-	crasNode, err := cras.GetNodeByMatcher(ctx, &audio.MatchNodeTypeDirection{Type: crasNodeType, Direction: crasNodeStreamType})
+	crasNode, err := cras.GetNodeByMatcher(ctx, nodematch.All(nodematch.Type(crasNodeType), nodematch.Direction(crasNodeStreamType)))
 	if err != nil {
 		return nil, errors.Wrapf(err, "cannot find cras node with node_type: %s, node_stream_type: %s, all_nodes: %v", crasNodeType, crasNodeStreamType.String(), crasNodes)
 	}

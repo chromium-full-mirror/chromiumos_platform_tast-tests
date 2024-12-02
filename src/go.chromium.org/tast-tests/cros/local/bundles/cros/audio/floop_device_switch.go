@@ -12,6 +12,7 @@ import (
 	"go.chromium.org/tast-tests/cros/local/audio/crastestclient"
 	"go.chromium.org/tast-tests/cros/local/audio/debug"
 	"go.chromium.org/tast-tests/cros/local/audio/fixture"
+	"go.chromium.org/tast-tests/cros/local/audio/nodematch"
 	"go.chromium.org/tast/core/testing"
 )
 
@@ -44,9 +45,9 @@ func FloopDeviceSwitch(ctx context.Context, s *testing.State) {
 		s.Fatal("RequestFloopMask failed for mask=4: ", err)
 	}
 
-	if err := cras.SetActiveNodeByMatcher(ctx, audio.MatchNodeName{
-		Name: "Loopback Capture",
-	}); err != nil {
+	if err := cras.SetActiveNodeByMatcher(ctx,
+		nodematch.Name("Loopback Capture"),
+	); err != nil {
 		s.Fatal("Failed to SetActiveNodeByMatcher: ", err)
 	}
 
@@ -68,9 +69,9 @@ func FloopDeviceSwitch(ctx context.Context, s *testing.State) {
 	defer crastestclient.DumpAudioDiagnosticsOnError(ctx, s.OutDir(), s.HasError)
 
 	switchDeviceAndCheck := func(dev string) {
-		if err := cras.SetActiveNodeByMatcher(ctx, audio.MatchNodeName{
-			Name: dev,
-		}); err != nil {
+		if err := cras.SetActiveNodeByMatcher(ctx,
+			nodematch.Name(dev),
+		); err != nil {
 			s.Fatal("Failed to SetActiveNodeByMatcher: ", err)
 		}
 

@@ -7,11 +7,11 @@ package audio
 
 import (
 	"context"
-	"fmt"
 	"time"
 
 	"github.com/godbus/dbus/v5"
 
+	"go.chromium.org/tast-tests/cros/local/audio/nodematch"
 	"go.chromium.org/tast-tests/cros/local/audio/types"
 	"go.chromium.org/tast-tests/cros/local/dbusutil"
 	"go.chromium.org/tast-tests/cros/local/upstart"
@@ -157,72 +157,8 @@ func (c *Cras) GetNodes(ctx context.Context) ([]CrasNode, error) {
 	return nodes, nil
 }
 
-// NodeMatcher matches a CrasNode, used by *NodeByMatcher functions.
-type NodeMatcher interface {
-	Match(*CrasNode) bool
-	fmt.Stringer
-}
-
-// MatchNodeName is a NodeMatcher that matches CrasNode's device name.
-type MatchNodeName struct {
-	Name string
-}
-
-var _ NodeMatcher = MatchNodeName{}
-
-// Match implements NodeMatcher.Match.
-func (m MatchNodeName) Match(n *CrasNode) bool {
-	return m.Name == n.Name
-}
-
-func (m MatchNodeName) String() string {
-	return fmt.Sprintf("%#v", m)
-}
-
-// MatchNodeType is a NodeMatcher that matches CrasNode's type.
-type MatchNodeType struct {
-	Type string
-}
-
-var _ NodeMatcher = MatchNodeType{}
-
-// Match implements NodeMatcher.Match.
-func (m MatchNodeType) Match(n *CrasNode) bool {
-	if n.Type == m.Type {
-		return true
-	}
-	// Regard the front mic as the internal mic.
-	if m.Type == "INTERNAL_MIC" && n.Type == "FRONT_MIC" {
-		return true
-	}
-	return false
-}
-
-func (m MatchNodeType) String() string {
-	return fmt.Sprintf("%#v", m)
-}
-
-// MatchNodeTypeDirection is a NodeMatcher that matches CrasNode's type and direction.
-type MatchNodeTypeDirection struct {
-	Type      string
-	Direction StreamType
-}
-
-var _ NodeMatcher = MatchNodeTypeDirection{}
-
-// Match implements NodeMatcher.Match.
-func (m MatchNodeTypeDirection) Match(n *CrasNode) bool {
-	return (m.Direction == InputStream) == n.IsInput &&
-		MatchNodeType{Type: m.Type}.Match(n)
-
-}
-
-func (m MatchNodeTypeDirection) String() string {
-	return fmt.Sprintf("%#v", m)
-}
-
 // GetNodeByMatcher returns the first node matching the matcher.
-func (c *Cras) GetNodeByMatcher(ctx context.Context, matcher NodeMatcher) (*CrasNode, error) {
+func (c *Cras) GetNodeByMatcher(ctx context.Context, matcher nodematch.Matcher) (*CrasNode, error) {
 	nodes, err := c.GetNodes(ctx)
 	if err != nil {
 		return nil, err
@@ -239,7 +175,7 @@ func (c *Cras) GetNodeByMatcher(ctx context.Context, matcher NodeMatcher) (*Cras
 
 // GetNodeByType returns the first node with given type.
 func (c *Cras) GetNodeByType(ctx context.Context, t string) (*CrasNode, error) {
-	return c.GetNodeByMatcher(ctx, MatchNodeType{Type: t})
+	return c.GetNodeByMatcher(ctx, nodematch.Type(t))
 }
 
 // call is a wrapper around CallWithContext for convenience.
@@ -267,7 +203,7 @@ func (c *Cras) SetActiveInputNode(ctx context.Context, nodeID uint64) error {
 }
 
 // SetActiveNodeByMatcher sets node with specified matcher active.
-func (c *Cras) SetActiveNodeByMatcher(ctx context.Context, matcher NodeMatcher) error {
+func (c *Cras) SetActiveNodeByMatcher(ctx context.Context, matcher nodematch.Matcher) error {
 	var node *CrasNode
 
 	// Wait until the node with this type is existing.
@@ -302,7 +238,7 @@ func (c *Cras) SetActiveNodeByMatcher(ctx context.Context, matcher NodeMatcher) 
 
 // SetActiveNodeByType sets node with specified type active.
 func (c *Cras) SetActiveNodeByType(ctx context.Context, nodeType string) error {
-	return c.SetActiveNodeByMatcher(ctx, MatchNodeType{Type: nodeType})
+	return c.SetActiveNodeByMatcher(ctx, nodematch.Type(nodeType))
 }
 
 // SetOutputNodeVolume calls cras.Control.SetOutputNodeVolume over D-Bus.

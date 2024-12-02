@@ -11,6 +11,7 @@ import (
 
 	"go.chromium.org/tast-tests/cros/local/audio"
 	"go.chromium.org/tast-tests/cros/local/audio/fixture"
+	"go.chromium.org/tast-tests/cros/local/audio/nodematch"
 	"go.chromium.org/tast-tests/cros/local/audio/wav"
 	"go.chromium.org/tast-tests/cros/local/chrome"
 	"go.chromium.org/tast/core/ctxutil"
@@ -75,15 +76,15 @@ func CrasSidetone(ctx context.Context, s *testing.State) {
 		s.Fatal("Failed to connect to CRAS: ", err)
 	}
 
-	if err := cras.SetActiveNodeByMatcher(ctx, audio.MatchNodeName{
-		Name: "Loopback Playback 1",
-	}); err != nil {
+	if err := cras.SetActiveNodeByMatcher(ctx,
+		nodematch.Name("Loopback Playback 1"),
+	); err != nil {
 		s.Fatal("Failed to SetActiveNodeByMatcher: ", err)
 	}
 
-	if err := cras.SetActiveNodeByMatcher(ctx, audio.MatchNodeName{
-		Name: "Loopback Capture",
-	}); err != nil {
+	if err := cras.SetActiveNodeByMatcher(ctx,
+		nodematch.Name("Loopback Capture"),
+	); err != nil {
 		s.Fatal("Failed to SetActiveNodeByMatcher: ", err)
 	}
 

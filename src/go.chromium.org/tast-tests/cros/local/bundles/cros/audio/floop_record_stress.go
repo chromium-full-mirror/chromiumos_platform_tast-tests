@@ -12,6 +12,7 @@ import (
 	"go.chromium.org/tast-tests/cros/local/audio/crastestclient"
 	"go.chromium.org/tast-tests/cros/local/audio/debug"
 	"go.chromium.org/tast-tests/cros/local/audio/fixture"
+	"go.chromium.org/tast-tests/cros/local/audio/nodematch"
 	"go.chromium.org/tast/core/testing"
 )
 
@@ -44,9 +45,9 @@ func FloopRecordStress(ctx context.Context, s *testing.State) {
 		s.Fatal("RequestFloopMask failed for mask=4: ", err)
 	}
 
-	if err := cras.SetActiveNodeByMatcher(ctx, audio.MatchNodeName{
-		Name: "Loopback Playback",
-	}); err != nil {
+	if err := cras.SetActiveNodeByMatcher(ctx,
+		nodematch.Name("Loopback Playback"),
+	); err != nil {
 		s.Fatal("Failed to SetActiveNodeByMatcher: ", err)
 	}
 

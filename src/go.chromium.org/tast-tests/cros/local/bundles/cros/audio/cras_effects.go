@@ -18,6 +18,7 @@ import (
 	"go.chromium.org/tast-tests/cros/local/audio"
 	"go.chromium.org/tast-tests/cros/local/audio/debug"
 	"go.chromium.org/tast-tests/cros/local/audio/fixture"
+	"go.chromium.org/tast-tests/cros/local/audio/nodematch"
 	"go.chromium.org/tast-tests/cros/local/audio/sof"
 	"go.chromium.org/tast-tests/cros/local/bundles/cros/audio/internal"
 	"go.chromium.org/tast-tests/cros/local/chrome"
@@ -947,7 +948,7 @@ func CrasEffects(ctx context.Context, s *testing.State) {
 	}
 
 	if param.addPlaybackPinDevice != "" {
-		node, err := cras.GetNodeByMatcher(ctx, audio.MatchNodeTypeDirection{Type: param.addPlaybackPinDevice, Direction: audio.OutputStream})
+		node, err := cras.GetNodeByMatcher(ctx, nodematch.All(nodematch.Type(param.addPlaybackPinDevice), nodematch.Direction(audio.OutputStream)))
 		if err != nil {
 			s.Fatalf("Cannot find %q: %v", param.addPlaybackPinDevice, err)
 		}

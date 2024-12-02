@@ -8,6 +8,7 @@ import (
 	"context"
 	"time"
 
+	"go.chromium.org/tast-tests/cros/local/audio/nodematch"
 	"go.chromium.org/tast-tests/cros/local/chrome"
 	"go.chromium.org/tast-tests/cros/local/chrome/uiauto/faillog"
 	"go.chromium.org/tast-tests/cros/local/chrome/uiauto/quicksettings"
@@ -21,17 +22,21 @@ import (
 // UI must be stopped otherwise it may overwrite the settings.
 func SelectIODevices(ctx context.Context, cras *Cras, defaultInputDeviceType, defaultOutputDeviceType string) error {
 	testing.ContextLog(ctx, "Setting default input device to ", defaultInputDeviceType)
-	if err := cras.SetActiveNodeByMatcher(ctx, MatchNodeTypeDirection{
-		Type:      defaultInputDeviceType,
-		Direction: InputStream,
-	}); err != nil {
+	if err := cras.SetActiveNodeByMatcher(ctx,
+		nodematch.All(
+			nodematch.Type(defaultInputDeviceType),
+			nodematch.Direction(InputStream),
+		),
+	); err != nil {
 		return errors.Wrapf(err, "cannot set default input device to %s", defaultInputDeviceType)
 	}
 	testing.ContextLog(ctx, "Setting default output device to ", defaultOutputDeviceType)
-	if err := cras.SetActiveNodeByMatcher(ctx, MatchNodeTypeDirection{
-		Type:      defaultOutputDeviceType,
-		Direction: OutputStream,
-	}); err != nil {
+	if err := cras.SetActiveNodeByMatcher(ctx,
+		nodematch.All(
+			nodematch.Type(defaultOutputDeviceType),
+			nodematch.Direction(OutputStream),
+		),
+	); err != nil {
 		return errors.Wrapf(err, "cannot set default output device to %s", defaultOutputDeviceType)
 	}
 	return nil
