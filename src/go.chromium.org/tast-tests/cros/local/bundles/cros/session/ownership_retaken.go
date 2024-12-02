@@ -150,7 +150,7 @@ func OwnershipRetaken(ctx context.Context, s *testing.State) {
 		// This change is expected to be preserved when ChromeOS retakes ownership.
 		toggle24Hours := nodewith.Name("Use 24-hour clock").Role(role.ToggleButton)
 
-		settings, err := ossettings.LaunchAtPageURL(ctx, tconn, cr, "dateTime", ui.Exists(toggle24Hours))
+		settings, err := ossettings.LaunchAtPageURL(ctx, tconn, cr, "systemPreferences", ui.Exists(toggle24Hours))
 		if err != nil {
 			s.Fatal("Failed to open time and date OS settings: ", err)
 		}
