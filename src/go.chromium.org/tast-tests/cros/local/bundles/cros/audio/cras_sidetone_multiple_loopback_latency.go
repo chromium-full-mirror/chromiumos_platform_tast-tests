@@ -36,8 +36,6 @@ func init() {
 		Timeout:      3 * time.Minute,
 		Data:         []string{data.TheQuickBrownFoxS16LEStereo48000Wav},
 		SoftwareDeps: []string{"chrome"},
-		// TODO(b/312097873): remove "brya" when b/309904720 is fixed.
-		HardwareDeps: hwdep.D(hwdep.SkipOnModel("brya")),
 		Params: []testing.Param{
 			{
 				Name: "no_effects",

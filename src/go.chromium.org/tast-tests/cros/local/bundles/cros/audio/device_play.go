@@ -25,8 +25,7 @@ func init() {
 		Attr:         []string{"group:mainline"},
 		Params: []testing.Param{{
 			// TODO(b/244254621) : remove "sasukette" when b/244254621 is fixed.
-			// TODO(b/312097873): remove "brya" when b/309904720 is fixed.
-			ExtraHardwareDeps: hwdep.D(hwdep.SkipOnModel("sasukette", "brya")),
+			ExtraHardwareDeps: hwdep.D(hwdep.SkipOnModel("sasukette")),
 		}, {
 			Name:              "unstable_model",
 			ExtraHardwareDeps: hwdep.D(hwdep.Model("sasukette", "brya")),

@@ -28,8 +28,7 @@ func init() {
 		BugComponent: "b:776546",
 		Contacts:     []string{"chromeos-audio-bugs@google.com", "aaronyu@google.com"},
 		SoftwareDeps: []string{"chrome"},
-		// TODO(b/312097873): remove "brya" when b/309904720 is fixed.
-		HardwareDeps: hwdep.D(hwdep.Microphone(), hwdep.Speaker(), hwdep.SkipOnModel("brya")),
+		HardwareDeps: hwdep.D(hwdep.Microphone(), hwdep.Speaker()),
 		Timeout:      10*time.Minute + power.RecorderTimeout,
 		Params: []testing.Param{
 			{
