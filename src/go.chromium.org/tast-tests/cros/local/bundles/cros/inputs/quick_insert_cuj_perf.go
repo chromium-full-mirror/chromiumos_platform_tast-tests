@@ -44,8 +44,8 @@ func internalUIPerfRun(s *testing.State, scenario perfutil.ScenarioFunc) func(ct
 	}
 }
 
-// pickerPerfModels is list of models to run the test on.
-var pickerPerfModels = []string{
+// quickInsertPerfModels is list of models to run the test on.
+var quickInsertPerfModels = []string{
 	// Common ARM-64
 	"burnet",
 	// Launch device
@@ -57,20 +57,20 @@ var pickerPerfModels = []string{
 
 func init() {
 	testing.AddTest(&testing.Test{
-		Func:         PickerCujPerf,
-		Desc:         "Measures the performance of Picker CUJs",
+		Func:         QuickInsertCujPerf,
+		Desc:         "Measures the performance of Quick Insert CUJs",
 		Contacts:     []string{"essential-inputs-gardener-oncall@google.com", "essential-inputs-team@google.com"},
 		BugComponent: "b:95887",
 		Attr:         []string{"group:input-tools"},
 		SoftwareDeps: []string{"inputs_deps", "chrome", "chrome_internal"},
-		HardwareDeps: hwdep.D(hwdep.Model(pickerPerfModels...)),
+		HardwareDeps: hwdep.D(hwdep.Model(quickInsertPerfModels...)),
 		SearchFlags:  util.IMESearchFlags([]ime.InputMethod{ime.DefaultInputMethod}),
 		Timeout:      2 * time.Minute,
 		Fixture:      fixture.ClamshellNonVKWithPicker,
 	})
 }
 
-func PickerCujPerf(ctx context.Context, s *testing.State) {
+func QuickInsertCujPerf(ctx context.Context, s *testing.State) {
 	cleanupCtx := ctx
 	ctx, cancel := ctxutil.Shorten(ctx, 10*time.Second)
 	defer cancel()
@@ -95,16 +95,16 @@ func PickerCujPerf(ctx context.Context, s *testing.State) {
 	ui := uiauto.New(tconn)
 
 	inputField := testserver.TextAreaInputField
-	pickerWindow := nodewith.HasClass("Picker").Visible().Onscreen()
+	quickInsertWindow := nodewith.HasClass("Picker").Visible().Onscreen()
 
 	runner := perfutil.NewRunner(cr, perfutil.RunnerOptions{IgnoreFirstRun: true, DropMinMaxValues: true})
 	runner.RunMultiple(ctx, "", internalUIPerfRun(s, perfutil.RunAndWaitAll(tconn, action.Combine("search emoji and insert",
 		its.ClickField(inputField),
 		keyboard.AccelAction("Search+F"),
-		ui.WaitUntilExists(pickerWindow),
+		ui.WaitUntilExists(quickInsertWindow),
 		keyboard.TypeAction("thumbs up"),
-		ui.LeftClick(nodewith.Ancestor(pickerWindow).Name("👍").Role(role.Button).Visible().Onscreen().First()),
-		ui.WaitUntilGone(pickerWindow),
+		ui.LeftClick(nodewith.Ancestor(quickInsertWindow).Name("👍").Role(role.Button).Visible().Onscreen().First()),
+		ui.WaitUntilGone(quickInsertWindow),
 	),
 		"Ash.Picker.Session.InputReadyLatency",
 		"Ash.Picker.Session.SearchLatency",

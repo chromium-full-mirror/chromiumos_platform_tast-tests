@@ -39,8 +39,8 @@ import (
 
 func init() {
 	testing.AddTest(&testing.Test{
-		Func:         PickerCuj,
-		Desc:         "Checks the CUJs of Picker",
+		Func:         QuickInsertCuj,
+		Desc:         "Checks the CUJs of Quick Insert",
 		Contacts:     []string{"essential-inputs-gardener-oncall@google.com", "essential-inputs-team@google.com"},
 		BugComponent: "b:95887",
 		Attr: []string{
@@ -70,39 +70,39 @@ func init() {
 	})
 }
 
-var pickerFeatureTourContinueButtonFinder = nodewith.Name("Get started").Role(role.Button).Visible().Onscreen()
-var pickerWindowFinder = nodewith.HasClass("Picker").Visible().Onscreen()
-var pickerEmojiResultsFinder = nodewith.HasClass("PickerEmojiBarView").Visible().Onscreen()
-var pickerMainResultsFinder = nodewith.HasClass("PickerSearchResultsView").Visible().Onscreen()
-var pickerZeroStateResultsFinder = nodewith.HasClass("PickerZeroStateView").Visible().Onscreen()
-var pickerSubmenuResultsFinder = nodewith.HasClass("PickerSubmenu").Visible().Onscreen()
+var quickInsertFeatureTourContinueButtonFinder = nodewith.Name("Get started").Role(role.Button).Visible().Onscreen()
+var quickInsertWindowFinder = nodewith.HasClass("Picker").Visible().Onscreen()
+var quickInsertEmojiResultsFinder = nodewith.HasClass("PickerEmojiBarView").Visible().Onscreen()
+var quickInsertMainResultsFinder = nodewith.HasClass("PickerSearchResultsView").Visible().Onscreen()
+var quickInsertZeroStateResultsFinder = nodewith.HasClass("PickerZeroStateView").Visible().Onscreen()
+var quickInsertSubmenuResultsFinder = nodewith.HasClass("PickerSubmenu").Visible().Onscreen()
 var emojiPickerFinder = nodewith.HasClass("EmojiBubbleDialogView").Role(role.Window).Visible().Onscreen()
 
-func pickerEmojiResultFinder(emoji, description string) *nodewith.Finder {
+func quickInsertEmojiResultFinder(emoji, description string) *nodewith.Finder {
 	// Emoji results are displayed as a button with a label as the only child.
 	// The label name is the emoji itself.
 	// The button name is the textual description of the emoji.
-	return nodewith.Ancestor(nodewith.Name(description).Role(role.Button).Ancestor(pickerEmojiResultsFinder)).Name(emoji).Role(role.StaticText).Visible().First()
+	return nodewith.Ancestor(nodewith.Name(description).Role(role.Button).Ancestor(quickInsertEmojiResultsFinder)).Name(emoji).Role(role.StaticText).Visible().First()
 }
 
-func pickerMainResultFinder(text string) *nodewith.Finder {
-	return nodewith.Ancestor(pickerMainResultsFinder).NameContaining(text).Role(role.Button).Visible().First()
+func quickInsertMainResultFinder(text string) *nodewith.Finder {
+	return nodewith.Ancestor(quickInsertMainResultsFinder).NameContaining(text).Role(role.Button).Visible().First()
 }
 
-func pickerMainResultFinderRegexp(r *regexp.Regexp) *nodewith.Finder {
-	return nodewith.Ancestor(pickerMainResultsFinder).NameRegex(r).Role(role.Button).Visible().First()
+func quickInsertMainResultFinderRegexp(r *regexp.Regexp) *nodewith.Finder {
+	return nodewith.Ancestor(quickInsertMainResultsFinder).NameRegex(r).Role(role.Button).Visible().First()
 }
 
-func pickerZeroStateResultFinder(text string) *nodewith.Finder {
-	return nodewith.Ancestor(pickerZeroStateResultsFinder).NameContaining(text).Role(role.Button).Visible().First()
+func quickInsertZeroStateResultFinder(text string) *nodewith.Finder {
+	return nodewith.Ancestor(quickInsertZeroStateResultsFinder).NameContaining(text).Role(role.Button).Visible().First()
 }
 
-func pickerZeroStateResultWithSubmenuFinder(text string) *nodewith.Finder {
-	return nodewith.Ancestor(pickerZeroStateResultsFinder).NameContaining(text).Role(role.PopUpButton).Visible().First()
+func quickInsertZeroStateResultWithSubmenuFinder(text string) *nodewith.Finder {
+	return nodewith.Ancestor(quickInsertZeroStateResultsFinder).NameContaining(text).Role(role.PopUpButton).Visible().First()
 }
 
-func pickerSubmenuResultFinder(text string) *nodewith.Finder {
-	return nodewith.Ancestor(pickerSubmenuResultsFinder).NameContaining(text).Role(role.Button).Visible().First()
+func quickInsertSubmenuResultFinder(text string) *nodewith.Finder {
+	return nodewith.Ancestor(quickInsertSubmenuResultsFinder).NameContaining(text).Role(role.Button).Visible().First()
 }
 
 func orcaButtonFinder(text string) *nodewith.Finder {
@@ -296,7 +296,7 @@ func setUpDoc(ctx context.Context, cr *chrome.Chrome, tconn *chrome.TestConn, ke
 	return docsHref, nil
 }
 
-func PickerCuj(ctx context.Context, s *testing.State) {
+func QuickInsertCuj(ctx context.Context, s *testing.State) {
 	cleanupCtx := ctx
 	ctx, cancel := ctxutil.Shorten(ctx, 10*time.Second)
 	defer cancel()
@@ -330,7 +330,7 @@ func PickerCuj(ctx context.Context, s *testing.State) {
 			}
 		}
 	}(cleanupCtx)
-	var docTitle = fmt.Sprintf("PickerCUJ %s", time.Now().Format(time.RFC822Z))
+	var docTitle = fmt.Sprintf("QuickInsertCUJ %s", time.Now().Format(time.RFC822Z))
 	docURL, err = setUpDoc(ctx, cr, tconn, keyboard, docTitle)
 	if err != nil {
 		s.Fatal("Failed to create Google Doc: ", err)
@@ -347,7 +347,7 @@ func PickerCuj(ctx context.Context, s *testing.State) {
 	plainTextField := testserver.TextAreaInputField
 	richTextField := testserver.ContentEditableInputField
 
-	togglePicker := keyboard.AccelAction("Search+F")
+	toggleQuickInsert := keyboard.AccelAction("Search+F")
 
 	subtests := []struct {
 		name     string
@@ -357,12 +357,12 @@ func PickerCuj(ctx context.Context, s *testing.State) {
 		{
 			name:     "First-use feature tour dialog",
 			scenario: "verify a feature tour dialog appears on first-use",
-			action: uiauto.Combine("show picker by finishing feature tour",
-				togglePicker,
-				ui.LeftClick(pickerFeatureTourContinueButtonFinder),
-				ui.WaitUntilExists(pickerWindowFinder),
-				// Close the window by toggling Picker again
-				togglePicker,
+			action: uiauto.Combine("show Quick Insert by finishing feature tour",
+				toggleQuickInsert,
+				ui.LeftClick(quickInsertFeatureTourContinueButtonFinder),
+				ui.WaitUntilExists(quickInsertWindowFinder),
+				// Close the window by toggling Quick Insert again
+				toggleQuickInsert,
 			),
 		},
 		{
@@ -370,11 +370,11 @@ func PickerCuj(ctx context.Context, s *testing.State) {
 			scenario: "verify emoji search and insert CUJ",
 			action: uiauto.Combine("search emoji and insert",
 				its.ClearThenClickFieldAndWaitForActive(plainTextField),
-				togglePicker,
-				ui.WaitUntilExists(pickerWindowFinder),
+				toggleQuickInsert,
+				ui.WaitUntilExists(quickInsertWindowFinder),
 				keyboard.TypeAction("thumbs up"),
-				scrollToThenClick(ui, pickerEmojiResultFinder("👍", "thumbs up emoji")),
-				ui.WaitUntilGone(pickerWindowFinder),
+				scrollToThenClick(ui, quickInsertEmojiResultFinder("👍", "thumbs up emoji")),
+				ui.WaitUntilGone(quickInsertWindowFinder),
 				util.WaitForFieldTextToBe(tconn, plainTextField.Finder(), "👍"),
 			),
 		},
@@ -383,11 +383,11 @@ func PickerCuj(ctx context.Context, s *testing.State) {
 			scenario: "verify symbol search and insert CUJ",
 			action: uiauto.Combine("search symbol and insert",
 				its.ClearThenClickFieldAndWaitForActive(plainTextField),
-				togglePicker,
-				ui.WaitUntilExists(pickerWindowFinder),
+				toggleQuickInsert,
+				ui.WaitUntilExists(quickInsertWindowFinder),
 				keyboard.TypeAction("superset of"),
-				scrollToThenClick(ui, pickerEmojiResultFinder("⊃", "superset of")),
-				ui.WaitUntilGone(pickerWindowFinder),
+				scrollToThenClick(ui, quickInsertEmojiResultFinder("⊃", "superset of")),
+				ui.WaitUntilGone(quickInsertWindowFinder),
 				util.WaitForFieldTextToBe(tconn, plainTextField.Finder(), "⊃"),
 			),
 		},
@@ -396,11 +396,11 @@ func PickerCuj(ctx context.Context, s *testing.State) {
 			scenario: "verify emoticon search and insert CUJ",
 			action: uiauto.Combine("search emoticon and insert",
 				its.ClearThenClickFieldAndWaitForActive(plainTextField),
-				togglePicker,
-				ui.WaitUntilExists(pickerWindowFinder),
+				toggleQuickInsert,
+				ui.WaitUntilExists(quickInsertWindowFinder),
 				keyboard.TypeAction("denko of disapproval"),
-				scrollToThenClick(ui, pickerEmojiResultFinder("ಠωಠ", "denko of disapproval emoticon")),
-				ui.WaitUntilGone(pickerWindowFinder),
+				scrollToThenClick(ui, quickInsertEmojiResultFinder("ಠωಠ", "denko of disapproval emoticon")),
+				ui.WaitUntilGone(quickInsertWindowFinder),
 				util.WaitForFieldTextToBe(tconn, plainTextField.Finder(), "ಠωಠ"),
 			),
 		},
@@ -409,13 +409,13 @@ func PickerCuj(ctx context.Context, s *testing.State) {
 			scenario: "verify recently used emojis CUJ",
 			action: uiauto.Combine("check recently used emojis appears on zero-state and insert",
 				its.ClearThenClickFieldAndWaitForActive(plainTextField),
-				togglePicker,
-				ui.WaitUntilExists(pickerWindowFinder),
-				ui.WaitUntilExists(pickerEmojiResultFinder("👍", "thumbs up emoji")),
-				ui.WaitUntilExists(pickerEmojiResultFinder("⊃", "superset of")),
-				ui.WaitUntilExists(pickerEmojiResultFinder("ಠωಠ", "denko of disapproval emoticon")),
-				scrollToThenClick(ui, pickerEmojiResultFinder("👍", "thumbs up emoji")),
-				ui.WaitUntilGone(pickerWindowFinder),
+				toggleQuickInsert,
+				ui.WaitUntilExists(quickInsertWindowFinder),
+				ui.WaitUntilExists(quickInsertEmojiResultFinder("👍", "thumbs up emoji")),
+				ui.WaitUntilExists(quickInsertEmojiResultFinder("⊃", "superset of")),
+				ui.WaitUntilExists(quickInsertEmojiResultFinder("ಠωಠ", "denko of disapproval emoticon")),
+				scrollToThenClick(ui, quickInsertEmojiResultFinder("👍", "thumbs up emoji")),
+				ui.WaitUntilGone(quickInsertWindowFinder),
 				util.WaitForFieldTextToBe(tconn, plainTextField.Finder(), "👍"),
 			),
 		},
@@ -431,15 +431,15 @@ func PickerCuj(ctx context.Context, s *testing.State) {
 				emojiPickerClearRecentsForCategory(ui, "Emoticon category"),
 				keyboard.AccelAction("Esc"),
 				ui.WaitUntilGone(emojiPickerFinder),
-				togglePicker,
-				ui.WaitUntilExists(pickerEmojiResultsFinder),
+				toggleQuickInsert,
+				ui.WaitUntilExists(quickInsertEmojiResultsFinder),
 				// The smiley emoji will appear as a default emoji when there's no recently used emoji.
-				ui.WaitUntilExists(pickerEmojiResultFinder("🙂", "slightly smiling face emoji")),
-				ui.Gone(pickerEmojiResultFinder("👍", "thumbs up emoji")),
-				ui.Gone(pickerEmojiResultFinder("⊃", "superset of")),
-				ui.Gone(pickerEmojiResultFinder("ಠωಠ", "denko of disapproval emoticon")),
-				togglePicker,
-				ui.WaitUntilGone(pickerWindowFinder),
+				ui.WaitUntilExists(quickInsertEmojiResultFinder("🙂", "slightly smiling face emoji")),
+				ui.Gone(quickInsertEmojiResultFinder("👍", "thumbs up emoji")),
+				ui.Gone(quickInsertEmojiResultFinder("⊃", "superset of")),
+				ui.Gone(quickInsertEmojiResultFinder("ಠωಠ", "denko of disapproval emoticon")),
+				toggleQuickInsert,
+				ui.WaitUntilGone(quickInsertWindowFinder),
 			),
 		},
 		{
@@ -448,11 +448,11 @@ func PickerCuj(ctx context.Context, s *testing.State) {
 			action: uiauto.Combine("search browsing history and insert",
 				setUpHistoryData(browserUI, "https://news.google.com/"),
 				its.ClearThenClickFieldAndWaitForActive(plainTextField),
-				togglePicker,
-				ui.WaitUntilExists(pickerWindowFinder),
+				toggleQuickInsert,
+				ui.WaitUntilExists(quickInsertWindowFinder),
 				keyboard.TypeAction("Google News"),
-				scrollToThenClick(ui, pickerMainResultFinder("Insert Google News")),
-				ui.WaitUntilGone(pickerWindowFinder),
+				scrollToThenClick(ui, quickInsertMainResultFinder("Insert Google News")),
+				ui.WaitUntilGone(quickInsertWindowFinder),
 				util.WaitForFieldTextToBe(tconn, plainTextField.Finder(), "https://news.google.com/"),
 			),
 		},
@@ -462,11 +462,11 @@ func PickerCuj(ctx context.Context, s *testing.State) {
 			action: uiauto.Combine("search bookmarks and insert",
 				setUpBookmarksData(tconn, cr, "https://www.google.com/finance"),
 				its.ClearThenClickFieldAndWaitForActive(plainTextField),
-				togglePicker,
-				ui.WaitUntilExists(pickerWindowFinder),
+				toggleQuickInsert,
+				ui.WaitUntilExists(quickInsertWindowFinder),
 				keyboard.TypeAction("finance"),
-				scrollToThenClick(ui, pickerMainResultFinder("Insert Google Finance")),
-				ui.WaitUntilGone(pickerWindowFinder),
+				scrollToThenClick(ui, quickInsertMainResultFinder("Insert Google Finance")),
+				ui.WaitUntilGone(quickInsertWindowFinder),
 				util.WaitForFieldTextToBe(tconn, plainTextField.Finder(), "https://www.google.com/finance/"),
 			),
 		},
@@ -476,11 +476,11 @@ func PickerCuj(ctx context.Context, s *testing.State) {
 			action: uiauto.Combine("search open tabs and insert",
 				setUpOpenTabs(browserUI, tconn, "https://books.google.com/"),
 				its.ClearThenClickFieldAndWaitForActive(plainTextField),
-				togglePicker,
-				ui.WaitUntilExists(pickerWindowFinder),
+				toggleQuickInsert,
+				ui.WaitUntilExists(quickInsertWindowFinder),
 				keyboard.TypeAction("Google Books"),
-				scrollToThenClick(ui, pickerMainResultFinder("Insert Google Books")),
-				ui.WaitUntilGone(pickerWindowFinder),
+				scrollToThenClick(ui, quickInsertMainResultFinder("Insert Google Books")),
+				ui.WaitUntilGone(quickInsertWindowFinder),
 				util.WaitForFieldTextToBe(tconn, plainTextField.Finder(), "https://books.google.com/"),
 			),
 		},
@@ -490,13 +490,13 @@ func PickerCuj(ctx context.Context, s *testing.State) {
 			action: uiauto.Combine("select browsing history category and insert",
 				setUpHistoryData(browserUI, "https://news.google.com/"),
 				its.ClearThenClickFieldAndWaitForActive(plainTextField),
-				togglePicker,
-				ui.WaitUntilExists(pickerWindowFinder),
-				scrollToThenClick(ui, pickerZeroStateResultFinder("Browsing history")),
-				ui.WaitUntilExists(pickerMainResultFinder("Insert Google News")),
+				toggleQuickInsert,
+				ui.WaitUntilExists(quickInsertWindowFinder),
+				scrollToThenClick(ui, quickInsertZeroStateResultFinder("Browsing history")),
+				ui.WaitUntilExists(quickInsertMainResultFinder("Insert Google News")),
 				keyboard.TypeAction("n"),
-				scrollToThenClick(ui, pickerMainResultFinder("Insert Google News")),
-				ui.WaitUntilGone(pickerWindowFinder),
+				scrollToThenClick(ui, quickInsertMainResultFinder("Insert Google News")),
+				ui.WaitUntilGone(quickInsertWindowFinder),
 				util.WaitForFieldTextToBe(tconn, plainTextField.Finder(), "https://news.google.com/"),
 			),
 		},
@@ -506,11 +506,11 @@ func PickerCuj(ctx context.Context, s *testing.State) {
 			action: uiauto.Combine("create local image in downloads, search and insert",
 				setUpDownloads(cr, s.DataPath("capybara.jpg")),
 				its.ClearThenClickFieldAndWaitForActive(richTextField),
-				togglePicker,
-				ui.WaitUntilExists(pickerWindowFinder),
+				toggleQuickInsert,
+				ui.WaitUntilExists(quickInsertWindowFinder),
 				keyboard.TypeAction("capybara"),
-				scrollToThenClick(ui, pickerMainResultFinder("capybara.jpg")),
-				ui.WaitUntilGone(pickerWindowFinder),
+				scrollToThenClick(ui, quickInsertMainResultFinder("capybara.jpg")),
+				ui.WaitUntilGone(quickInsertWindowFinder),
 				ui.WaitUntilExists(nodewith.Ancestor(richTextField.Finder()).Role(role.Image)),
 			),
 		},
@@ -520,13 +520,13 @@ func PickerCuj(ctx context.Context, s *testing.State) {
 			action: uiauto.Combine("create local image in downloads, select category and insert",
 				setUpDownloads(cr, s.DataPath("capybara.jpg")),
 				its.ClearThenClickFieldAndWaitForActive(richTextField),
-				togglePicker,
-				ui.WaitUntilExists(pickerWindowFinder),
-				scrollToThenClick(ui, pickerZeroStateResultFinder("Files")),
-				ui.WaitUntilExists(pickerMainResultFinder("capybara.jpg")),
+				toggleQuickInsert,
+				ui.WaitUntilExists(quickInsertWindowFinder),
+				scrollToThenClick(ui, quickInsertZeroStateResultFinder("Files")),
+				ui.WaitUntilExists(quickInsertMainResultFinder("capybara.jpg")),
 				keyboard.TypeAction("c"),
-				scrollToThenClick(ui, pickerMainResultFinder("capybara.jpg")),
-				ui.WaitUntilGone(pickerWindowFinder),
+				scrollToThenClick(ui, quickInsertMainResultFinder("capybara.jpg")),
+				ui.WaitUntilGone(quickInsertWindowFinder),
 				ui.WaitUntilExists(nodewith.Ancestor(richTextField.Finder()).Role(role.Image)),
 			),
 		},
@@ -535,11 +535,11 @@ func PickerCuj(ctx context.Context, s *testing.State) {
 			scenario: "verify drive search and insert CUJ",
 			action: uiauto.Combine("create new Drive file, search and insert",
 				its.ClearThenClickFieldAndWaitForActive(plainTextField),
-				togglePicker,
-				ui.WaitUntilExists(pickerWindowFinder),
-				keyboard.TypeAction("pickercuj"),
-				scrollToThenClick(ui, pickerMainResultFinder("PickerCUJ")),
-				ui.WaitUntilGone(pickerWindowFinder),
+				toggleQuickInsert,
+				ui.WaitUntilExists(quickInsertWindowFinder),
+				keyboard.TypeAction("quickinsertcuj"),
+				scrollToThenClick(ui, quickInsertMainResultFinder("QuickInsertCUJ")),
+				ui.WaitUntilGone(quickInsertWindowFinder),
 				util.WaitForFieldTextToSatisfy(tconn, plainTextField.Finder(), "contains correct doc ID", func(text string) bool {
 					docURLParts := strings.Split(docURL, "/")
 					docID := docURLParts[5]
@@ -552,12 +552,12 @@ func PickerCuj(ctx context.Context, s *testing.State) {
 			scenario: "verify drive category suggestions, search and insert CUJ",
 			action: uiauto.Combine("create new Drive file, select category and insert",
 				its.ClearThenClickFieldAndWaitForActive(plainTextField),
-				togglePicker,
-				ui.WaitUntilExists(pickerWindowFinder),
-				scrollToThenClick(ui, pickerZeroStateResultFinder("Google Drive")),
-				ui.WaitUntilExists(pickerMainResultFinder("PickerCUJ")),
-				keyboard.TypeAction("picker"),
-				scrollToThenClick(ui, pickerMainResultFinder("PickerCUJ")),
+				toggleQuickInsert,
+				ui.WaitUntilExists(quickInsertWindowFinder),
+				scrollToThenClick(ui, quickInsertZeroStateResultFinder("Google Drive")),
+				ui.WaitUntilExists(quickInsertMainResultFinder("QuickInsertCUJ")),
+				keyboard.TypeAction("quickinsert"),
+				scrollToThenClick(ui, quickInsertMainResultFinder("QuickInsertCUJ")),
 				util.WaitForFieldTextToSatisfy(tconn, plainTextField.Finder(), "contains correct doc ID", func(text string) bool {
 					docURLParts := strings.Split(docURL, "/")
 					docID := docURLParts[5]
@@ -571,11 +571,11 @@ func PickerCuj(ctx context.Context, s *testing.State) {
 			action: uiauto.Combine("type a calculation and insert",
 				setUpClipboard(tconn, "hello world"),
 				its.ClearThenClickFieldAndWaitForActive(plainTextField),
-				togglePicker,
-				ui.WaitUntilExists(pickerWindowFinder),
+				toggleQuickInsert,
+				ui.WaitUntilExists(quickInsertWindowFinder),
 				keyboard.TypeAction("h"),
-				scrollToThenClick(ui, pickerMainResultFinder("Insert hello world")),
-				ui.WaitUntilGone(pickerWindowFinder),
+				scrollToThenClick(ui, quickInsertMainResultFinder("Insert hello world")),
+				ui.WaitUntilGone(quickInsertWindowFinder),
 				util.WaitForFieldTextToBe(tconn, plainTextField.Finder(), "hello world"),
 			),
 		},
@@ -585,13 +585,13 @@ func PickerCuj(ctx context.Context, s *testing.State) {
 			action: uiauto.Combine("copy text, select category and insert",
 				setUpClipboard(tconn, "hello world"),
 				its.ClearThenClickFieldAndWaitForActive(plainTextField),
-				togglePicker,
-				ui.WaitUntilExists(pickerWindowFinder),
-				scrollToThenClick(ui, pickerZeroStateResultFinder("Clipboard")),
-				ui.WaitUntilExists(pickerMainResultFinder("hello world")),
+				toggleQuickInsert,
+				ui.WaitUntilExists(quickInsertWindowFinder),
+				scrollToThenClick(ui, quickInsertZeroStateResultFinder("Clipboard")),
+				ui.WaitUntilExists(quickInsertMainResultFinder("hello world")),
 				keyboard.TypeAction("h"),
-				scrollToThenClick(ui, pickerMainResultFinder("hello world")),
-				ui.WaitUntilGone(pickerWindowFinder),
+				scrollToThenClick(ui, quickInsertMainResultFinder("hello world")),
+				ui.WaitUntilGone(quickInsertWindowFinder),
 				util.WaitForFieldTextToBe(tconn, plainTextField.Finder(), "hello world"),
 			),
 		},
@@ -600,11 +600,11 @@ func PickerCuj(ctx context.Context, s *testing.State) {
 			scenario: "verify maths calculator and insert CUJ",
 			action: uiauto.Combine("type a calculation and insert",
 				its.ClearThenClickFieldAndWaitForActive(plainTextField),
-				togglePicker,
-				ui.WaitUntilExists(pickerWindowFinder),
+				toggleQuickInsert,
+				ui.WaitUntilExists(quickInsertWindowFinder),
 				keyboard.TypeAction("8/2*(2+2)"),
-				scrollToThenClick(ui, pickerMainResultFinder("Insert 16")),
-				ui.WaitUntilGone(pickerWindowFinder),
+				scrollToThenClick(ui, quickInsertMainResultFinder("Insert 16")),
+				ui.WaitUntilGone(quickInsertWindowFinder),
 				util.WaitForFieldTextToBe(tconn, plainTextField.Finder(), "16"),
 			),
 		},
@@ -613,11 +613,11 @@ func PickerCuj(ctx context.Context, s *testing.State) {
 			scenario: "verify unit conversion and insert CUJ",
 			action: uiauto.Combine("type a calculation and insert",
 				its.ClearThenClickFieldAndWaitForActive(plainTextField),
-				togglePicker,
-				ui.WaitUntilExists(pickerWindowFinder),
+				toggleQuickInsert,
+				ui.WaitUntilExists(quickInsertWindowFinder),
 				keyboard.TypeAction("1 l to ml"),
-				scrollToThenClick(ui, pickerMainResultFinder("Insert 1000 ml")),
-				ui.WaitUntilGone(pickerWindowFinder),
+				scrollToThenClick(ui, quickInsertMainResultFinder("Insert 1000 ml")),
+				ui.WaitUntilGone(quickInsertWindowFinder),
 				util.WaitForFieldTextToBe(tconn, plainTextField.Finder(), "1000 ml"),
 			),
 		},
@@ -626,8 +626,8 @@ func PickerCuj(ctx context.Context, s *testing.State) {
 			scenario: "verify date and insert CUJ",
 			action: uiauto.Combine("type a date expression and insert",
 				its.ClearThenClickFieldAndWaitForActive(plainTextField),
-				togglePicker,
-				ui.WaitUntilExists(pickerWindowFinder),
+				toggleQuickInsert,
+				ui.WaitUntilExists(quickInsertWindowFinder),
 				keyboard.TypeAction("today"),
 				getCurrentDateFromTrayAndThen(ui, func(time time.Time) uiauto.Action {
 					// The date might've change if the test ran past midnight, so check both the current date and also the date of the next day.
@@ -635,8 +635,8 @@ func PickerCuj(ctx context.Context, s *testing.State) {
 					tomorrowDate := time.AddDate(0, 0, 1).Format("Jan 2")
 					dateRegex := regexp.MustCompile(todayDate + "|" + tomorrowDate)
 					return uiauto.Combine("select date result and verify",
-						scrollToThenClick(ui, pickerMainResultFinderRegexp(dateRegex)),
-						ui.WaitUntilGone(pickerWindowFinder),
+						scrollToThenClick(ui, quickInsertMainResultFinderRegexp(dateRegex)),
+						ui.WaitUntilGone(quickInsertWindowFinder),
 						util.WaitForFieldTextToSatisfy(tconn, plainTextField.Finder(), "matches date", func(text string) bool {
 							return dateRegex.MatchString(text)
 						}),
@@ -651,26 +651,26 @@ func PickerCuj(ctx context.Context, s *testing.State) {
 				setUpHistoryData(browserUI, "https://scholar.google.com/"),
 				setUpDownloads(cr, s.DataPath("capybara.jpg")),
 				its.ClearThenClickFieldAndWaitForActive(plainTextField),
-				togglePicker,
-				ui.WaitUntilExists(pickerWindowFinder),
-				ui.WaitUntilExists(pickerZeroStateResultFinder("Insert Google Scholar")),
-				ui.WaitUntilExists(pickerZeroStateResultFinder("Insert capybara.jpg")),
-				scrollToThenClick(ui, pickerZeroStateResultFinder("Insert Google Scholar")),
-				ui.WaitUntilGone(pickerWindowFinder),
+				toggleQuickInsert,
+				ui.WaitUntilExists(quickInsertWindowFinder),
+				ui.WaitUntilExists(quickInsertZeroStateResultFinder("Insert Google Scholar")),
+				ui.WaitUntilExists(quickInsertZeroStateResultFinder("Insert capybara.jpg")),
+				scrollToThenClick(ui, quickInsertZeroStateResultFinder("Insert Google Scholar")),
+				ui.WaitUntilGone(quickInsertWindowFinder),
 				util.WaitForFieldTextToBe(tconn, plainTextField.Finder(), "https://scholar.google.com/"),
 			),
 		},
 		{
 			name:     "Use Orca for freeform write",
 			scenario: "verify Orca freeform write and insert CUJ",
-			action: uiauto.Combine("show Picker, type a sentence, trigger Orca, and insert",
+			action: uiauto.Combine("show Quick Insert, type a sentence, trigger Orca, and insert",
 				setUpOrca(tconn, "test poem"),
 				its.ClearThenClickFieldAndWaitForActive(plainTextField),
-				togglePicker,
-				ui.WaitUntilExists(pickerWindowFinder),
+				toggleQuickInsert,
+				ui.WaitUntilExists(quickInsertWindowFinder),
 				keyboard.TypeAction("a poem about tests"),
-				scrollToThenClick(ui, pickerMainResultFinder("Help me write")),
-				ui.WaitUntilGone(pickerWindowFinder),
+				scrollToThenClick(ui, quickInsertMainResultFinder("Help me write")),
+				ui.WaitUntilGone(quickInsertWindowFinder),
 				ui.LeftClick(orcaButtonFinder("Got it")),
 				ui.LeftClick(orcaButtonFinder("Insert")),
 				util.WaitForFieldTextToBe(tconn, plainTextField.Finder(), "test poem"),
@@ -679,16 +679,16 @@ func PickerCuj(ctx context.Context, s *testing.State) {
 		{
 			name:     "Use Orca for freeform rewrite",
 			scenario: "verify Orca freeform rewrite and insert CUJ",
-			action: uiauto.Combine("select some text, show Picker, type a sentence, trigger Orca, and insert",
+			action: uiauto.Combine("select some text, show Quick Insert, type a sentence, trigger Orca, and insert",
 				setUpOrca(tconn, "hello world poem"),
 				its.ClearThenClickFieldAndWaitForActive(plainTextField),
 				keyboard.TypeAction("hello world"),
 				ui.SelectText(nodewith.Role(role.InlineTextBox).Ancestor(plainTextField.Finder()), 0, 11),
-				togglePicker,
-				ui.WaitUntilExists(pickerWindowFinder),
+				toggleQuickInsert,
+				ui.WaitUntilExists(quickInsertWindowFinder),
 				keyboard.TypeAction("make it a poem"),
-				scrollToThenClick(ui, pickerMainResultFinder("Rewrite")),
-				ui.WaitUntilGone(pickerWindowFinder),
+				scrollToThenClick(ui, quickInsertMainResultFinder("Rewrite")),
+				ui.WaitUntilGone(quickInsertWindowFinder),
 				ui.LeftClick(orcaButtonFinder("Replace")),
 				util.WaitForFieldTextToBe(tconn, plainTextField.Finder(), "hello world poem"),
 			),
@@ -696,17 +696,17 @@ func PickerCuj(ctx context.Context, s *testing.State) {
 		{
 			name:     "Use Orca for preset rewrite",
 			scenario: "verify Orca preset rewrite and insert CUJ",
-			action: uiauto.Combine("select some text, show Picker, select a Orca preset, and insert",
+			action: uiauto.Combine("select some text, show Quick Insert, select a Orca preset, and insert",
 				setUpOrca(tconn, "hello world emoji"),
 				its.ClearThenClickFieldAndWaitForActive(plainTextField),
 				keyboard.TypeAction("hello world"),
 				ui.SelectText(nodewith.Role(role.InlineTextBox).Ancestor(plainTextField.Finder()), 0, 11),
-				togglePicker,
-				ui.WaitUntilExists(pickerWindowFinder),
-				scrollToThenClick(ui, pickerZeroStateResultWithSubmenuFinder("Change tone")),
-				ui.WaitUntilExists(pickerSubmenuResultsFinder),
-				scrollToThenClick(ui, pickerSubmenuResultFinder("Emojify")),
-				ui.WaitUntilGone(pickerWindowFinder),
+				toggleQuickInsert,
+				ui.WaitUntilExists(quickInsertWindowFinder),
+				scrollToThenClick(ui, quickInsertZeroStateResultWithSubmenuFinder("Change tone")),
+				ui.WaitUntilExists(quickInsertSubmenuResultsFinder),
+				scrollToThenClick(ui, quickInsertSubmenuResultFinder("Emojify")),
+				ui.WaitUntilGone(quickInsertWindowFinder),
 				ui.LeftClick(orcaButtonFinder("Replace")),
 				util.WaitForFieldTextToBe(tconn, plainTextField.Finder(), "hello world emoji"),
 			),
@@ -718,12 +718,12 @@ func PickerCuj(ctx context.Context, s *testing.State) {
 				its.ClearThenClickFieldAndWaitForActive(plainTextField),
 				keyboard.TypeAction("hElLo WoRlD"),
 				ui.SelectText(nodewith.Role(role.InlineTextBox).Ancestor(plainTextField.Finder()), 0, 11),
-				togglePicker,
-				scrollToThenClick(ui, pickerZeroStateResultWithSubmenuFinder("Change capitalization")),
-				ui.WaitUntilExists(pickerSubmenuResultsFinder),
-				ui.WaitUntilExists(pickerSubmenuResultFinder("lowercase")),
-				ui.DoDefault(pickerSubmenuResultFinder("lowercase")),
-				ui.WaitUntilGone(pickerWindowFinder),
+				toggleQuickInsert,
+				scrollToThenClick(ui, quickInsertZeroStateResultWithSubmenuFinder("Change capitalization")),
+				ui.WaitUntilExists(quickInsertSubmenuResultsFinder),
+				ui.WaitUntilExists(quickInsertSubmenuResultFinder("lowercase")),
+				ui.DoDefault(quickInsertSubmenuResultFinder("lowercase")),
+				ui.WaitUntilGone(quickInsertWindowFinder),
 				util.WaitForFieldTextToBe(tconn, plainTextField.Finder(), "hello world"),
 			),
 		},
@@ -734,12 +734,12 @@ func PickerCuj(ctx context.Context, s *testing.State) {
 				its.ClearThenClickFieldAndWaitForActive(plainTextField),
 				keyboard.TypeAction("hElLo WoRlD"),
 				ui.SelectText(nodewith.Role(role.InlineTextBox).Ancestor(plainTextField.Finder()), 0, 11),
-				togglePicker,
-				scrollToThenClick(ui, pickerZeroStateResultWithSubmenuFinder("Change capitalization")),
-				ui.WaitUntilExists(pickerSubmenuResultsFinder),
-				ui.WaitUntilExists(pickerSubmenuResultFinder("UPPERCASE")),
-				ui.DoDefault(pickerSubmenuResultFinder("UPPERCASE")),
-				ui.WaitUntilGone(pickerWindowFinder),
+				toggleQuickInsert,
+				scrollToThenClick(ui, quickInsertZeroStateResultWithSubmenuFinder("Change capitalization")),
+				ui.WaitUntilExists(quickInsertSubmenuResultsFinder),
+				ui.WaitUntilExists(quickInsertSubmenuResultFinder("UPPERCASE")),
+				ui.DoDefault(quickInsertSubmenuResultFinder("UPPERCASE")),
+				ui.WaitUntilGone(quickInsertWindowFinder),
 				util.WaitForFieldTextToBe(tconn, plainTextField.Finder(), "HELLO WORLD"),
 			),
 		},
@@ -750,12 +750,12 @@ func PickerCuj(ctx context.Context, s *testing.State) {
 				its.ClearThenClickFieldAndWaitForActive(plainTextField),
 				keyboard.TypeAction("hElLo WoRlD"),
 				ui.SelectText(nodewith.Role(role.InlineTextBox).Ancestor(plainTextField.Finder()), 0, 11),
-				togglePicker,
-				scrollToThenClick(ui, pickerZeroStateResultWithSubmenuFinder("Change capitalization")),
-				ui.WaitUntilExists(pickerSubmenuResultsFinder),
-				ui.WaitUntilExists(pickerSubmenuResultFinder("Title Case")),
-				ui.DoDefault(pickerSubmenuResultFinder("Title Case")),
-				ui.WaitUntilGone(pickerWindowFinder),
+				toggleQuickInsert,
+				scrollToThenClick(ui, quickInsertZeroStateResultWithSubmenuFinder("Change capitalization")),
+				ui.WaitUntilExists(quickInsertSubmenuResultsFinder),
+				ui.WaitUntilExists(quickInsertSubmenuResultFinder("Title Case")),
+				ui.DoDefault(quickInsertSubmenuResultFinder("Title Case")),
+				ui.WaitUntilGone(quickInsertWindowFinder),
 				util.WaitForFieldTextToBe(tconn, plainTextField.Finder(), "Hello World"),
 			),
 		},
@@ -764,16 +764,16 @@ func PickerCuj(ctx context.Context, s *testing.State) {
 			scenario: "verify toggling caps lock",
 			action: uiauto.Combine("select the caps lock option",
 				its.ClearThenClickFieldAndWaitForActive(plainTextField),
-				togglePicker,
-				scrollToThenClick(ui, pickerZeroStateResultFinder("Turn on Caps Lock")),
+				toggleQuickInsert,
+				scrollToThenClick(ui, quickInsertZeroStateResultFinder("Turn on Caps Lock")),
 				// Typing 'a' should be in uppercase.
 				keyboard.TypeAction("a"),
 				util.WaitForFieldTextToBe(tconn, plainTextField.Finder(), "A"),
 				its.ClearThenClickFieldAndWaitForActive(plainTextField),
-				togglePicker,
+				toggleQuickInsert,
 				// The caps lock result should also be searchable.
 				keyboard.TypeAction("caps"),
-				scrollToThenClick(ui, pickerMainResultFinder("Turn off Caps Lock")),
+				scrollToThenClick(ui, quickInsertMainResultFinder("Turn off Caps Lock")),
 				// Typing 'a' should be in lowercase.
 				keyboard.TypeAction("a"),
 				util.WaitForFieldTextToBe(tconn, plainTextField.Finder(), "a"),
@@ -786,10 +786,10 @@ func PickerCuj(ctx context.Context, s *testing.State) {
 				setUpHistoryData(browserUI, "https://maps.google.com/"),
 				// Click a button on the test page to lose focus.
 				its.ClickButton(testserver.MakeTextButton),
-				togglePicker,
+				toggleQuickInsert,
 				keyboard.TypeAction("Google Maps"),
-				scrollToThenClick(ui, pickerMainResultFinder("Open Google Maps")),
-				ui.WaitUntilGone(pickerWindowFinder),
+				scrollToThenClick(ui, quickInsertMainResultFinder("Open Google Maps")),
+				ui.WaitUntilGone(quickInsertWindowFinder),
 				ui.WaitUntilExists(nodewith.Name("Chrome - Google Maps").HasClass("BrowserFrame")),
 				// Close the newly created tab.
 				keyboard.AccelAction("Ctrl+w"),
@@ -801,10 +801,10 @@ func PickerCuj(ctx context.Context, s *testing.State) {
 			action: uiauto.Combine("open new Google sheet",
 				// Click a button on the test page to lose focus.
 				its.ClickButton(testserver.MakeTextButton),
-				togglePicker,
-				scrollToThenClick(ui, pickerZeroStateResultWithSubmenuFinder("New")),
-				ui.WaitUntilExists(pickerSubmenuResultFinder("Google Sheet")),
-				ui.DoDefault(pickerSubmenuResultFinder("Google Sheet")),
+				toggleQuickInsert,
+				scrollToThenClick(ui, quickInsertZeroStateResultWithSubmenuFinder("New")),
+				ui.WaitUntilExists(quickInsertSubmenuResultFinder("Google Sheet")),
+				ui.DoDefault(quickInsertSubmenuResultFinder("Google Sheet")),
 				ui.WaitUntilExists(nodewith.NameContaining("Chrome - Untitled spreadsheet").HasClass("BrowserFrame")),
 				// Close the newly created tab.
 				keyboard.AccelAction("Ctrl+w"),
@@ -816,7 +816,7 @@ func PickerCuj(ctx context.Context, s *testing.State) {
 		s.Run(ctx, subtest.name, func(ctx context.Context, s *testing.State) {
 			defer faillog.DumpUITreeWithScreenshotOnError(ctx, s.OutDir(), s.HasError, cr, "ui_tree_"+string(subtest.name))
 
-			if err := uiauto.UserAction("Picker CUJ",
+			if err := uiauto.UserAction("Quick Insert CUJ",
 				subtest.action,
 				uc, &useractions.UserActionCfg{
 					Attributes: map[string]string{
