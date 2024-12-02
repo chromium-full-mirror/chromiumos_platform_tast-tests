@@ -53,7 +53,7 @@ const (
 	retryTimes = 3
 	// If the network is unstable, account synchronization may take a long time.
 	syncTimeout      = 5 * time.Minute
-	pageLoadTimeout  = time.Minute
+	loadTimeout      = time.Minute
 	longUITimeout    = 30 * time.Second
 	defaultUITimeout = 15 * time.Second
 	shortUITimeout   = 5 * time.Second
@@ -149,7 +149,7 @@ func (e *Element) loginWithGoogle(ctx context.Context, username string) error {
 	userLink := nodewith.NameContaining(username).Role(role.Link)
 	if err := uiauto.NamedCombine("select user "+username,
 		e.waitForLoginWindowMaximized,
-		e.ui.WithTimeout(pageLoadTimeout).DoDefaultUntil(userLink,
+		e.ui.WithTimeout(loadTimeout).DoDefaultUntil(userLink,
 			e.ui.WithTimeout(longUITimeout).WaitUntilGone(userLink),
 		),
 	)(ctx); err != nil {
@@ -339,7 +339,7 @@ func (e *Element) CreateRoom(roomName string) uiauto.Action {
 		e.swipeToShowObject(roomAccessText, roomNameFieldWithText, createButton, swipeDuration),
 		apputil.FindAndClick(createButton, defaultUITimeout),
 		uiauto.NamedAction("wait for room title "+roomName,
-			apputil.WaitForExists(roomTitle, pageLoadTimeout)),
+			apputil.WaitForExists(roomTitle, loadTimeout)),
 	)
 }
 
@@ -420,8 +420,8 @@ func (e *Element) sendMessageAndWait(expectedMessage string) uiauto.Action {
 	return uiauto.NamedCombine("send message and wait for expected message",
 		apputil.FindAndClick(sendButton, defaultUITimeout),
 		apputil.WaitForExists(expectedMessageText, defaultUITimeout),
-		// On low-end machine, the message might take more time to sent.
-		apputil.WaitForExists(messageSentImage, longUITimeout),
+		// On low-end machine, the message might take more time to be sent.
+		apputil.WaitForExists(messageSentImage, loadTimeout),
 	)
 }
 
