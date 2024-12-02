@@ -924,7 +924,7 @@ func Run(ctx context.Context, meet MeetTest, cr *chrome.Chrome, testCaseVar func
 			endPresentSection := recorder.AnnotateSection(ctx, "Screenshare")
 
 			presentTabTitle := "Untitled document"
-			if err := startPresenting(ctx, collaborationConn, ui, meetHelper, kw, presentTabTitle); err != nil {
+			if err := meetHelper.PresentTab(ctx, collaborationConn, ui, kw, presentTabTitle); err != nil {
 				return errors.Wrap(err, "failed to start screen sharing")
 			}
 			expectedParticipantCount++
@@ -1239,7 +1239,7 @@ func Run(ctx context.Context, meet MeetTest, cr *chrome.Chrome, testCaseVar func
 		// "Stop presenting" if the test wants to interact with
 		// Google Slides or Google Sheets later.
 		if meet.Slides || meet.Sheets {
-			if err := stopPresenting(ctx, ui); err != nil {
+			if err := meetHelper.StopPresenting(ctx, ui); err != nil {
 				return errors.Wrap(err, "failed to stop presenting")
 			}
 			// When a participant share the screen, one more participant
@@ -1300,7 +1300,7 @@ func Run(ctx context.Context, meet MeetTest, cr *chrome.Chrome, testCaseVar func
 			}
 			// We stopped presenting before navigating to the Google Slides page.
 			// Start screen sharing again for the page.
-			if err := startPresenting(ctx, collaborationConn, ui, meetHelper, kw, "Google Slides"); err != nil {
+			if err := meetHelper.PresentTab(ctx, collaborationConn, ui, kw, "Google Slides"); err != nil {
 				return errors.Wrap(err, "failed to start screen sharing")
 			}
 
@@ -1319,7 +1319,7 @@ func Run(ctx context.Context, meet MeetTest, cr *chrome.Chrome, testCaseVar func
 
 			// "Stop presenting" if the test wants to interact with
 			// Google Sheets later.
-			if err := stopPresenting(ctx, ui); err != nil {
+			if err := meetHelper.StopPresenting(ctx, ui); err != nil {
 				return errors.Wrap(err, "failed to stop presenting")
 			}
 			endSlidesInteractions(ctx)
@@ -1354,7 +1354,7 @@ func Run(ctx context.Context, meet MeetTest, cr *chrome.Chrome, testCaseVar func
 			}
 			// We stopped presenting before navigating to the Google Sheets page.
 			// Start screen sharing again for the page.
-			if err := startPresenting(ctx, collaborationConn, ui, meetHelper, kw, "Google Sheets"); err != nil {
+			if err := meetHelper.PresentTab(ctx, collaborationConn, ui, kw, "Google Sheets"); err != nil {
 				return errors.Wrap(err, "failed to start screen sharing")
 			}
 			expectedParticipantCount++
@@ -1616,63 +1616,6 @@ func scrollDownPage(ctx context.Context, conn *chrome.Conn, kw *input.KeyboardEv
 	}
 	// Ensure the element gets scrolled.
 	return ensureElementGetsScrolled(ctx, conn, element)
-}
-
-var (
-	stopPresentingRe     = regexp.MustCompile("(Stop presenting|Stop sharing)")
-	stopPresentingButton = nodewith.NameRegex(stopPresentingRe).Role(role.Button).First()
-)
-
-// startPresenting starts to present |presentTabTitle| tab in Google Meet.
-// It will only start present if there's nothing being shared now.
-func startPresenting(ctx context.Context, conn *chrome.Conn, ui *uiauto.Context, meetHelper *googlemeet.HRTelemetryHelper, kw *input.KeyboardEventWriter, presentTabTitle string) error {
-	// Only start sharing if it's not presenting anything now.
-	if err := ui.Exists(stopPresentingButton)(ctx); err == nil {
-		return nil
-	}
-
-	if err := meetHelper.OpenPresentDialog(ctx); err != nil {
-		return errors.Wrap(err, "failed to start to present a tab")
-	}
-
-	// Select the tab to present.
-	waitForPresentTabFocus := ui.WithTimeout(5 * time.Second).WaitUntilExists(nodewith.NameContaining(presentTabTitle).HasClass("AXVirtualView").Focused())
-	if err := uiauto.NamedCombine(fmt.Sprintf("select tab %q to screenshare", presentTabTitle),
-		ui.EnsureFocused(nodewith.HasClass("TableView").Role(role.ListGrid)),
-		// If the presenting tab is not focused, press the down
-		// arrow until it is.
-		uiauto.IfFailThen(
-			waitForPresentTabFocus,
-			ui.RetryUntil(
-				kw.AccelAction("Down"),
-				waitForPresentTabFocus,
-			),
-		),
-		kw.AccelAction("Enter"),
-		// Some low-end DUTs may take a long time to actually get to
-		// the presenting page. Wait for the "Stop presenting" to appear
-		// to ensure the page is being shared.
-		ui.WithTimeout(time.Minute).WaitUntilExists(stopPresentingButton),
-	)(ctx); err != nil {
-		return errors.Wrap(err, "failed to select the tab to share")
-	}
-
-	startTime := time.Now()
-	if err := webutil.WaitForQuiescence(ctx, conn, time.Minute); err != nil {
-		testing.ContextLog(ctx, "Ignoring waiting for page to quiesce: ", err)
-	} else {
-		testing.ContextLog(ctx, "Loading page took: ", time.Since(startTime))
-	}
-
-	return nil
-}
-
-// stopPresenting stops presenting in Google Meet.
-func stopPresenting(ctx context.Context, ui *uiauto.Context) error {
-	return uiauto.NamedAction("stop presenting",
-		ui.WithTimeout(time.Minute).DoDefaultUntil(stopPresentingButton,
-			ui.WaitUntilGone(stopPresentingButton)),
-	)(ctx)
 }
 
 // generateMetrics generates metrics by interacting with the page and the Ash UI.

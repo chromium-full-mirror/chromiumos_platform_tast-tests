@@ -21,6 +21,7 @@ import (
 	"go.chromium.org/tast-tests/cros/local/chrome/uiauto/nodewith"
 	"go.chromium.org/tast-tests/cros/local/chrome/uiauto/role"
 	"go.chromium.org/tast-tests/cros/local/chrome/webutil"
+	"go.chromium.org/tast-tests/cros/local/input"
 )
 
 // MeetHelper is an interface defines the operations performed in MeetCUJ.
@@ -35,14 +36,21 @@ type MeetHelper interface {
 	SetSendResolution720p(ctx context.Context) error
 	SetReceiveResolution720p(ctx context.Context) error
 	OpenPresentDialog(ctx context.Context) error
+	PresentTab(ctx context.Context, conn *chrome.Conn, ui *uiauto.Context, kw *input.KeyboardEventWriter, presentTabTitle string) error
 }
 
 // HRTelemetryHelper helps to perform Meet operations with hrTelemetryApi.
 type HRTelemetryHelper struct {
-	cs       ash.ConnSource
-	tconn    *chrome.TestConn
-	meetConn *chrome.Conn
+	cs           ash.ConnSource
+	tconn        *chrome.TestConn
+	meetConn     *chrome.Conn
+	isPresenting bool
 }
+
+var (
+	stopPresentingRe     = regexp.MustCompile("(Stop presenting|Stop sharing)")
+	stopPresentingButton = nodewith.NameRegex(stopPresentingRe).Role(role.Button).First()
+)
 
 // NewHRTelemetryHelper returns a new HRTelemetryHelper object.
 func NewHRTelemetryHelper(cs ash.ConnSource, tconn *chrome.TestConn) *HRTelemetryHelper {
@@ -187,6 +195,62 @@ func (h *HRTelemetryHelper) OpenPresentDialog(ctx context.Context) error {
 		return errors.Wrap(err, "failed to find the screen-sharing popup")
 	}
 	return nil
+}
+
+// PresentTab presents the tab with |presentTabTitle|.
+func (h *HRTelemetryHelper) PresentTab(ctx context.Context, conn *chrome.Conn, ui *uiauto.Context, kw *input.KeyboardEventWriter, presentTabTitle string) error {
+	if err := ui.Exists(stopPresentingButton)(ctx); err == nil {
+		return nil
+	}
+
+	if err := h.OpenPresentDialog(ctx); err != nil {
+		return errors.Wrap(err, "failed to start to present a tab")
+	}
+
+	// Select the tab to present.
+	waitForPresentTabFocus := ui.WithTimeout(5 * time.Second).WaitUntilExists(nodewith.NameContaining(presentTabTitle).HasClass("AXVirtualView").Focused())
+	if err := uiauto.NamedCombine(fmt.Sprintf("select tab %q to screenshare", presentTabTitle),
+		ui.EnsureFocused(nodewith.HasClass("TableView").Role(role.ListGrid)),
+		// If the presenting tab is not focused, press the down
+		// arrow until it is.
+		uiauto.IfFailThen(
+			waitForPresentTabFocus,
+			ui.RetryUntil(
+				kw.AccelAction("Down"),
+				waitForPresentTabFocus,
+			),
+		),
+		kw.AccelAction("Enter"),
+		// Some low-end DUTs may take a long time to actually get to
+		// the presenting page. Wait for the "Stop presenting" to appear
+		// to ensure the page is being shared.
+		ui.WithTimeout(time.Minute).WaitUntilExists(stopPresentingButton),
+	)(ctx); err != nil {
+		return errors.Wrap(err, "failed to select the tab to share")
+	}
+
+	startTime := time.Now()
+	if err := webutil.WaitForQuiescence(ctx, conn, time.Minute); err != nil {
+		testing.ContextLog(ctx, "Ignoring waiting for page to quiesce: ", err)
+	} else {
+		testing.ContextLog(ctx, "Loading page took: ", time.Since(startTime))
+	}
+
+	h.isPresenting = true
+
+	return nil
+}
+
+// StopPresenting stops presenting in Google Meet.
+func (h *HRTelemetryHelper) StopPresenting(ctx context.Context, ui *uiauto.Context) error {
+	if !h.isPresenting {
+		return errors.New("failed to stop presenting, because no screenshare is active")
+	}
+
+	return uiauto.NamedAction("stop presenting",
+		ui.WithTimeout(time.Minute).DoDefaultUntil(stopPresentingButton,
+			ui.WaitUntilGone(stopPresentingButton)),
+	)(ctx)
 }
 
 var _ MeetHelper = (*HRTelemetryHelper)(nil)
