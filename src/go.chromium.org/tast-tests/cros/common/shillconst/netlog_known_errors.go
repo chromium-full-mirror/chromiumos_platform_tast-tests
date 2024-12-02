@@ -77,6 +77,7 @@ func InitializeAllowedEntries() []AllowedEntry {
 		// modemfwd and shill could start and register D-Bus service in any
 		// order. There is no functional impact because in this case when
 		// modemfwd is ready it will notify shill on any flashing operations.
+		{"shill", "cellular.cc", ".*The name org.chromium.Modemfwd was not provided by any .service files.*", 0},
 		{"shill", "utils.cc", ".*The name org.chromium.Modemfwd was not provided by any .service files.*", 0},
 		{"shill", "wifi.cc", ".*does not support MAC address randomization.*", 0}, // b/241418700
 		{"wpa_supplicant", "", ".*Could not set interface wlan0 flags \\(UP\\): Input\\/output error.*", 0},
