@@ -72,7 +72,13 @@ func LaunchHelpAppInBrowserMenu(ctx context.Context, s *testing.State) {
 
 	if err := uiauto.Combine("launch Help app from Chrome browser",
 		ui.LeftClick(browserAppMenuButtonFinder),
-		ui.LeftClick(helpMenuItemFinder),
+		// The help menu item may not be on the screen when the DUT has a small
+		// display area (e.g., krane) and thus the user needs to scroll to find
+		// it. It seems that in the UI tree this item is still visible, and we
+		// don't have a good way to simulate the scroll action. Use DoDefault
+		// instead of LeftClick here so that it can be "clicked" even if it's
+		// not on the screen.
+		ui.DoDefault(helpMenuItemFinder),
 		ui.LeftClick(getHelpMenuItemFinder),
 		helpapp.NewContext(cr, tconn).WaitForApp(),
 	)(ctx); err != nil {
