@@ -60,6 +60,20 @@ func GestureNavigation(ctx context.Context, s *testing.State) {
 		}
 		defer oobeConn.Close()
 
+		// To prevent potential race conditions wait for the Consolidated Consent
+		// screen to show up first. After that it should be safe to call
+		// `advanceToScreen` and move to the Gesture Navigation flow.
+		var shouldSkipConsolidatedConsentScreen bool
+		if err := oobeConn.Eval(ctx, "OobeAPI.screens.ConsolidatedConsentScreen.shouldSkip()", &shouldSkipConsolidatedConsentScreen); err != nil {
+			s.Fatal("Failed to evaluate whether to skip consolidated consent screen: ", err)
+		}
+
+		if !shouldSkipConsolidatedConsentScreen {
+			if err := oobeConn.WaitForExprFailOnErr(ctx, "OobeAPI.screens.ConsolidatedConsentScreen.isReadyForTesting()"); err != nil {
+				s.Fatal("Failed to wait for consolidated consent screen to be visible: ", err)
+			}
+		}
+
 		if err := oobeConn.Eval(ctx, "OobeAPI.advanceToScreen('gesture-navigation')", nil); err != nil {
 			s.Fatal("Failed to advance to the gesture navigation screen: ", err)
 		}
