@@ -29,9 +29,12 @@ func init() {
 		},
 		// ChromeOS > Software > System UI Surfaces > Shelf
 		BugComponent: "b:1288352",
-		Attr:         []string{"group:mainline"},
+		Attr: []string{
+			"group:mainline",
+			"group:release-health",
+			"release-health_ui",
+		},
 		SoftwareDeps: []string{"chrome"},
-
 		Params: []testing.Param{
 			{
 				// Primary form factor is not tablet.
@@ -39,7 +42,7 @@ func init() {
 				Fixture:           "chromeLoggedInDisableSync",
 				Val:               false,
 				ExtraSoftwareDeps: []string{"no_tablet_form_factor"},
-				ExtraAttr:         []string{"informational", "group:release-health"},
+				ExtraAttr:         []string{"informational"},
 			},
 			{
 				// Primary form factor is tablet.
