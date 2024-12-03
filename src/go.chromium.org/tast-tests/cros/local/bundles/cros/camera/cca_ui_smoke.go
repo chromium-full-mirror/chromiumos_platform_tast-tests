@@ -31,7 +31,6 @@ func init() {
 			Fixture:           "ccaLaunched",
 			ExtraAttr:         []string{
 				"informational",
-				"group:criticalstaging",
 				"group:camera-libcamera",
 				"group:release-health",
 				"release-health_camera",
@@ -44,7 +43,7 @@ func init() {
 		}, {
 			Name:      "fake_vcd",
 			Fixture:   "ccaLaunchedWithFakeVCDCamera",
-			ExtraAttr: []string{"informational", "group:criticalstaging"},
+			ExtraAttr: []string{"informational"},
 		}, {
 			Name:      "fake_hal",
 			Fixture:   "ccaLaunchedWithFakeHALCamera",
