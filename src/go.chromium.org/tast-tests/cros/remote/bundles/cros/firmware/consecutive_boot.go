@@ -232,13 +232,33 @@ func ConsecutiveBoot(ctx context.Context, s *testing.State) {
 			checkCrash = false
 		}
 
-		if err := shutdownFunc(); err != nil {
-			logFailure(errors.Wrap(err, "error in shutdown func"), i, &shutdownFuncFailed)
-		}
+		if err := testing.Poll(ctx, func(ctx context.Context) error {
+			if err := shutdownFunc(); err != nil {
+				s.Log("Error in shutdown func: ", err)
+				return errors.Wrap(err, "error in shutdown func")
+			}
 
-		s.Log("Check for G3/S5 powerstate")
-		if err := h.WaitForPowerStates(ctx, 500*time.Millisecond, 180*time.Second, expectedStates...); err != nil {
-			logFailure(errors.Wrap(err, "failed to get G3/S5 powerstate"), i, &failToGetG3S5)
+			s.Log("Check for G3/S5 powerstate")
+			if err := h.WaitForPowerStates(ctx, 500*time.Millisecond, 20*time.Second, expectedStates...); err != nil {
+				s.Log("Failed to get G3/S5 powerstate: ", err)
+				return errors.Wrap(err, "failed to get G3/S5 powerstate")
+			}
+
+			return nil
+		}, &testing.PollOptions{
+			// In case the DUT enters the automatic critical update procedure,
+			// retrying the shutdown() and WaitForPowerStates() for ten minutes might help.
+			Timeout:  10 * time.Minute,
+			Interval: 5 * time.Second, // Wait for 5 seconds to prevent too many logs are recorded in the EC console.
+		}); err != nil {
+			s.Log("Failed to shutdown and wait for G3/S5 powerstate")
+			if strings.Contains(err.Error(), "error in shutdown func") {
+				logFailure(err, i, &shutdownFuncFailed)
+			} else if strings.Contains(err.Error(), "failed to get G3/S5 powerstate") {
+				logFailure(err, i, &failToGetG3S5)
+			} else {
+				s.Error("Unexpected error: ", err)
+			}
 		}
 
 		s.Log("Pressing power key until device boots")
