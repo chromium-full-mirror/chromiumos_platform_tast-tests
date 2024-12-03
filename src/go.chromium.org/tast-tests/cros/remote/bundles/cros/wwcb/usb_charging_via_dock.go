@@ -102,10 +102,6 @@ func USBChargingViaDock(ctx context.Context, s *testing.State) {
 	}(ctx)
 
 	tf := s.FixtValue().(*topology.TestFixture)
-	if _, _, err := tf.Helper.ActivateDeviceByTypeVia(ctx, topology.DeviceTypeMonitor, topology.DeviceTypeDockingStation); err != nil {
-		s.Fatal("Failed to connect to the external display via dock: ", err)
-	}
-
 	if _, ok := s.Var("newTestItem"); ok {
 		dockPowerPath, err := utils.FindDockingPowerPath(ctx, dut)
 		if err != nil {
@@ -116,6 +112,10 @@ func USBChargingViaDock(ctx context.Context, s *testing.State) {
 		if err := tf.VerifyDockingInterface(ctx, s.DUT(), s.DataPath("Capabilities.json")); err != nil {
 			s.Fatal("Failed to verify the docking station interface: ", err)
 		}
+	}
+
+	if _, _, err := tf.Helper.ActivateDeviceByTypeVia(ctx, topology.DeviceTypeMonitor, topology.DeviceTypeDockingStation); err != nil {
+		s.Fatal("Failed to connect to the external display via dock: ", err)
 	}
 
 	if _, err := displaySvc.VerifyDisplayCount(ctx, &wwcb.QueryRequest{DisplayCount: 2}); err != nil {

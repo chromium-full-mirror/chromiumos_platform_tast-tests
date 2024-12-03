@@ -58,6 +58,12 @@ func NetworkSwitchingWithDock(ctx context.Context, s *testing.State) {
 	}
 
 	tf := s.FixtValue().(*topology.TestFixture)
+	if _, ok := s.Var("newTestItem"); ok {
+		if err := tf.VerifyDockingInterface(ctx, s.DUT(), s.DataPath("Capabilities.json")); err != nil {
+			s.Fatal("Failed to verify the docking station interface: ", err)
+		}
+	}
+
 	// Connect Monitor and network via dock.
 	_, dockID, err := tf.Helper.ActivateDeviceByTypeVia(ctx, topology.DeviceTypeMonitor, topology.DeviceTypeDockingStation)
 	if err != nil {
@@ -67,12 +73,6 @@ func NetworkSwitchingWithDock(ctx context.Context, s *testing.State) {
 	ethID, err := tf.Helper.ActivateDeviceByTypeViaId(ctx, topology.DeviceTypeNetwork, dockID)
 	if err != nil {
 		s.Fatal("Failed to connect to the Ethernet: ", err)
-	}
-
-	if _, ok := s.Var("newTestItem"); ok {
-		if err := tf.VerifyDockingInterface(ctx, s.DUT(), s.DataPath("Capabilities.json")); err != nil {
-			s.Fatal("Failed to verify the docking station interface: ", err)
-		}
 	}
 
 	// Find Dock Ethernet on DUT.

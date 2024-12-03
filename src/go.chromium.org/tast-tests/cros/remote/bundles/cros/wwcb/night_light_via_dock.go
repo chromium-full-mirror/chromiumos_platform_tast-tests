@@ -158,16 +158,16 @@ func NightLightViaDock(ctx context.Context, s *testing.State) {
 		}
 	}(ctx)
 
-	// Connect the external display & Dock.
 	tf := s.FixtValue().(*topology.TestFixture)
-	if _, _, err := tf.Helper.ActivateDeviceByTypeVia(ctx, topology.DeviceTypeMonitor, topology.DeviceTypeDockingStation); err != nil {
-		s.Fatal("Failed to connect to the external display: ", err)
-	}
-
 	if _, ok := s.Var("newTestItem"); ok {
 		if err := tf.VerifyDockingInterface(ctx, s.DUT(), s.DataPath("Capabilities.json")); err != nil {
 			s.Fatal("Failed to verify the docking station interface: ", err)
 		}
+	}
+
+	// Connect the external display & Dock.
+	if _, _, err := tf.Helper.ActivateDeviceByTypeVia(ctx, topology.DeviceTypeMonitor, topology.DeviceTypeDockingStation); err != nil {
+		s.Fatal("Failed to connect to the external display: ", err)
 	}
 
 	if _, err := displaySvc.VerifyDisplayCount(ctx, &wwcb.QueryRequest{DisplayCount: 2}); err != nil {
