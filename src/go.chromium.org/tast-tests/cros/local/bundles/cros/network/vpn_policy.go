@@ -230,14 +230,18 @@ func VPNPolicy(ctx context.Context, s *testing.State) {
 		s.Fatal("Failed to create Test API connection: ", err)
 	}
 	if err := certManager.CreateCertAndImport(ctx, cr, tconn, certificate.TestCert1(), certManager.TypeImportAndBind, "" /* password */, 0 /* trustSettings */); err != nil {
-		s.Fatal("Failed to create and import certificates: ", err)
+		testing.ContextLogf(ctx, "Failed to create and import certificates. Continue the test in case that's causes by left-over of previous test: %s", err)
 	}
-	defer certManager.DeleteCert(
-		tconn,
-		cr,
-		certManager.NewCertData(certificate.TestCert1(), certManager.TypeClient),
-		certManager.NewCertData(certificate.TestCert1(), certManager.TypeCA),
-	)(cleanupCtx)
+	defer func() {
+		if err := certManager.DeleteCert(
+			tconn,
+			cr,
+			certManager.NewCertData(certificate.TestCert1(), certManager.TypeClient),
+			certManager.NewCertData(certificate.TestCert1(), certManager.TypeCA),
+		)(cleanupCtx); err != nil {
+			testing.ContextLog(cleanupCtx, "Failed to delete certificate after test: ", err)
+		}
+	}()
 
 	if err := policyutil.ServeAndRefresh(ctx, fdms, cr, []policy.Policy{netPolicy}); err != nil {
 		s.Fatal("Failed to update policy: ", err)
