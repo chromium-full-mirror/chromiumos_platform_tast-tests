@@ -14,6 +14,7 @@ import (
 	"go.chromium.org/tast-tests/cros/common/hwsec"
 	"go.chromium.org/tast-tests/cros/local/bundles/cros/hwsec/fixture"
 	"go.chromium.org/tast/core/testing"
+	"go.chromium.org/tast/core/testing/hwdep"
 )
 
 type attestParam struct {
@@ -171,6 +172,7 @@ func init() {
 		}, {
 			// This test requires the device ADID.
 			Name:              "enterprise_vtpm_ek_certificate_ecc_system",
+			ExtraHardwareDeps: hwdep.D(hwdep.HasValidADID()),
 			ExtraSoftwareDeps: []string{"tpm2"},
 			Val: attestParam{
 				profile:    apb.CertificateProfile_ENTERPRISE_VTPM_EK_CERTIFICATE,
@@ -181,6 +183,7 @@ func init() {
 		}, {
 			// This test requires the device ADID.
 			Name:              "enterprise_vtpm_ek_certificate_ecc_user",
+			ExtraHardwareDeps: hwdep.D(hwdep.HasValidADID()),
 			ExtraSoftwareDeps: []string{"tpm2"},
 			Val: attestParam{
 				profile:    apb.CertificateProfile_ENTERPRISE_VTPM_EK_CERTIFICATE,
