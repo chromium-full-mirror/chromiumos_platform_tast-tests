@@ -21,7 +21,6 @@ import (
 	"go.chromium.org/tast-tests/cros/local/audio/nodematch"
 	"go.chromium.org/tast-tests/cros/local/audio/sof"
 	"go.chromium.org/tast-tests/cros/local/bundles/cros/audio/internal"
-	"go.chromium.org/tast-tests/cros/local/chrome"
 	"go.chromium.org/tast-tests/cros/local/crosconfig"
 	"go.chromium.org/tast-tests/cros/local/dlc"
 	"go.chromium.org/tast/core/errors"
@@ -32,27 +31,27 @@ import (
 var (
 	crasEffectsHasAPNC = fixture.AloopLoaded{
 		Channels: 2,
-		Parent: fixture.Chrome(
-			chrome.GuestLogin(),
-			chrome.EnableFeatures("CrOSLateBootAudioAPNoiseCancellation"),
-			chrome.DisableFeatures("CrOSLateBootAudioStyleTransfer"),
-			chrome.ExtraArgs("--use-fake-cras-audio-client-for-dbus"),
-		),
+		Parent: fixture.ChromeForCras{
+			CrasFeatures: fixture.CrasFeatureOverrides{
+				fixture.APNoiseCancellation: true,
+				fixture.StyleTransfer:       false,
+			},
+		}.Instance(),
 	}.Instance()
 	crasEffectsHasNoAPNC = fixture.AloopLoaded{
 		Channels: 2,
-		Parent: fixture.Chrome(
-			chrome.GuestLogin(),
-			chrome.ExtraArgs("--use-fake-cras-audio-client-for-dbus"),
-		),
+		Parent: fixture.ChromeForCras{
+			CrasFeatures: fixture.CrasFeatureOverrides{},
+		}.Instance(),
 	}.Instance()
 	crasEffectsHasAST = fixture.AloopLoaded{
 		Channels: 2,
-		Parent: fixture.Chrome(
-			chrome.GuestLogin(),
-			chrome.EnableFeatures("CrOSLateBootAudioAPNoiseCancellation", "CrOSLateBootAudioStyleTransfer"),
-			chrome.ExtraArgs("--use-fake-cras-audio-client-for-dbus"),
-		),
+		Parent: fixture.ChromeForCras{
+			CrasFeatures: fixture.CrasFeatureOverrides{
+				fixture.APNoiseCancellation: true,
+				fixture.StyleTransfer:       true,
+			},
+		}.Instance(),
 	}.Instance()
 )
 

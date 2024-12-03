@@ -7,6 +7,10 @@ package fixture
 import (
 	"context"
 	"fmt"
+
+	"golang.org/x/exp/slices"
+
+	"strings"
 	"time"
 
 	"go.chromium.org/tast-tests/cros/local/chrome"
@@ -87,4 +91,79 @@ func (pf parameterizedChrome) Instance() string {
 // Chrome returns the name of the chrome.LoggedInFixture to start Chrome with the given options.
 func Chrome(opts ...chrome.Option) string {
 	return parameterizedChrome{opts: opts}.Instance()
+}
+
+// CrasFeature references a feature defined in cras's features.inc.
+type CrasFeature string
+
+// CrasFeature definitions.
+const (
+	APNoiseCancellation CrasFeature = "CrOSLateBootAudioAPNoiseCancellation"
+	StyleTransfer       CrasFeature = "CrOSLateBootAudioStyleTransfer"
+)
+
+func (f CrasFeature) shortNameForFixture() string {
+	return strings.TrimPrefix(strings.TrimPrefix(string(f), "CrOSLateBoot"), "Audio")
+}
+
+// CrasFeatureOverrides is a set of features to override.
+type CrasFeatureOverrides map[CrasFeature]bool
+
+// groups return features to enable and disable.
+func (cfos CrasFeatureOverrides) groups() (enable, disable []CrasFeature) {
+	for feature, enabled := range cfos {
+		if enabled {
+			enable = append(enable, feature)
+		} else {
+			disable = append(disable, feature)
+		}
+	}
+	slices.Sort(enable)
+	slices.Sort(disable)
+	return
+}
+
+// ChromeForCras is a ParameterizedFixture for setting up Chrome with well-known configs that
+// are related to testing CRAS.
+//
+// ChromeForCras is preferred to using Chrome() inline because
+// ChromeForCras avoids generating multiple fixtures, while Chrome() generates
+// a new fixture for each call.
+type ChromeForCras struct {
+	CrasFeatures CrasFeatureOverrides
+}
+
+var _ ParameterizedFixture = ChromeForCras{}
+
+// Instance implements ParameterizedFixture.
+func (pf ChromeForCras) Instance() string {
+	opts := []chrome.Option{
+		chrome.GuestLogin(),
+		chrome.ExtraArgs("--use-fake-cras-audio-client-for-dbus"),
+	}
+	var name strings.Builder
+	name.WriteString("chromeForCras")
+
+	enableFeatures, disableFeatures := pf.CrasFeatures.groups()
+	for _, f := range enableFeatures {
+		opts = append(opts, chrome.EnableFeatures(string(f)))
+		name.WriteString("Enable" + f.shortNameForFixture())
+	}
+	for _, f := range disableFeatures {
+		opts = append(opts, chrome.DisableFeatures(string(f)))
+		name.WriteString("Disable" + f.shortNameForFixture())
+	}
+
+	return maybeRegisterFixture(&testing.Fixture{
+		Name:         name.String(),
+		Desc:         "Starts Chrome with the given config",
+		Contacts:     []string{"chromeos-audio-bugs@google.com", "aaronyu@google.com"},
+		BugComponent: "b:776546",
+		Impl: chrome.NewLoggedInFixture(func(ctx context.Context, s *testing.FixtState) ([]chrome.Option, error) {
+			return opts, nil
+		}),
+		SetUpTimeout:    chrome.LoginTimeout,
+		ResetTimeout:    chrome.ResetTimeout,
+		TearDownTimeout: chrome.ResetTimeout,
+	})
 }
