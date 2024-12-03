@@ -71,11 +71,11 @@ func init() {
 }
 
 var quickInsertFeatureTourContinueButtonFinder = nodewith.Name("Get started").Role(role.Button).Visible().Onscreen()
-var quickInsertWindowFinder = nodewith.HasClass("Picker").Visible().Onscreen()
-var quickInsertEmojiResultsFinder = nodewith.HasClass("PickerEmojiBarView").Visible().Onscreen()
-var quickInsertMainResultsFinder = nodewith.HasClass("PickerSearchResultsView").Visible().Onscreen()
-var quickInsertZeroStateResultsFinder = nodewith.HasClass("PickerZeroStateView").Visible().Onscreen()
-var quickInsertSubmenuResultsFinder = nodewith.HasClass("PickerSubmenu").Visible().Onscreen()
+var quickInsertWindowFinder = nodewith.HasClass("Quick Insert").Visible().Onscreen()
+var quickInsertEmojiResultsFinder = nodewith.HasClass("QuickInsertEmojiBarView").Visible().Onscreen()
+var quickInsertMainResultsFinder = nodewith.HasClass("QuickInsertSearchResultsView").Visible().Onscreen()
+var quickInsertZeroStateResultsFinder = nodewith.HasClass("QuickInsertZeroStateView").Visible().Onscreen()
+var quickInsertSubmenuResultsFinder = nodewith.HasClass("QuickInsertSubmenu").Visible().Onscreen()
 var emojiPickerFinder = nodewith.HasClass("EmojiBubbleDialogView").Role(role.Window).Visible().Onscreen()
 
 func quickInsertEmojiResultFinder(emoji, description string) *nodewith.Finder {

@@ -95,7 +95,7 @@ func QuickInsertCujPerf(ctx context.Context, s *testing.State) {
 	ui := uiauto.New(tconn)
 
 	inputField := testserver.TextAreaInputField
-	quickInsertWindow := nodewith.HasClass("Picker").Visible().Onscreen()
+	quickInsertWindow := nodewith.HasClass("Quick Insert").Visible().Onscreen()
 
 	runner := perfutil.NewRunner(cr, perfutil.RunnerOptions{IgnoreFirstRun: true, DropMinMaxValues: true})
 	runner.RunMultiple(ctx, "", internalUIPerfRun(s, perfutil.RunAndWaitAll(tconn, action.Combine("search emoji and insert",
