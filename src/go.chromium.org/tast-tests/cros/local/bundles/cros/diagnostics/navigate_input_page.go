@@ -24,7 +24,7 @@ func init() {
 			"cros-tdm-tpe-eng@google.com",
 		},
 		Fixture: "diagnosticsPrepForInputDiagnostics",
-		Attr: []string{"group:mainline", "informational", "group:criticalstaging",
+		Attr: []string{"group:mainline", "informational",
 			"group:hw_agnostic"},
 		SoftwareDeps: []string{"chrome"},
 		HardwareDeps: hwdep.D(hwdep.InternalKeyboard(), hwdep.NoSplitModifierKeyboard()),
