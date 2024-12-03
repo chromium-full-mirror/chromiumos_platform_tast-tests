@@ -41,8 +41,6 @@ func init() {
 		},
 		SoftwareDeps: []string{"chrome", "gaia"},
 		Params: []testing.Param{{
-			ExtraSoftwareDeps: []string{"android_p"},
-		}, {
 			Name:              "vm",
 			ExtraSoftwareDeps: []string{"android_vm"},
 		}},
