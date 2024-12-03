@@ -119,6 +119,8 @@ var ShimlessRmaEnabledModelsCritical = []string{
 	"joxer",
 	"anraggar",
 	"anraggar360",
+	"craasneto",
+	"craaskino",
 	// staryu
 	"starmie",
 	// brya
@@ -145,7 +147,14 @@ var ShimlessRmaEnabledModelsCritical = []string{
 
 // ShimlessRmaEnabledModelsStaging are models with Shimless RMA support and pending to be enlisted to critical model list.
 var ShimlessRmaEnabledModelsStaging = []string{
+	// corsola
+	"skitty",
+	"veluza",
+	"keldeo",
 	// nissa
-	"craasneto",
-	"craaskino",
+	"yavilly",
+	"yavilla",
+	"pujjoga",
+	// brox
+	"lotso",
 }
