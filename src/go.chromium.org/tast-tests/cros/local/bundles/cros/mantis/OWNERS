@@ -1,0 +1,8 @@
+set noparent
+
+# ChromeOS ODML team
+nurlitadf@google.com
+yich@google.com
+
+# Tast team for bulk/emergencies
+include /OWNERS.tast
