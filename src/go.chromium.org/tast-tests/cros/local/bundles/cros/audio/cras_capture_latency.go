@@ -30,97 +30,102 @@ func init() {
 			"group:mainline", "informational",
 			"group:cbx", "cbx_feature_enabled", "cbx_stable",
 		},
-		Fixture: fixture.AloopLoaded{
-			Channels: 2,
-		}.Instance(),
 		Timeout:      3 * time.Minute,
 		Data:         []string{data.TheQuickBrownFoxS16LEStereo48000Wav},
 		SoftwareDeps: []string{"chrome"},
 		Params: []testing.Param{
 			{
-				Name: "no_effects",
-				Val:  crasCaptureLatencyParams{},
+				Name:    "no_effects",
+				Fixture: crasCaptureLatencyFixture{}.Instance(),
 			},
 			{
 				Name: "nc",
-				Val: crasCaptureLatencyParams{
+				Fixture: crasCaptureLatencyFixture{
 					noiseCancellationEnabled: true,
-				},
+				}.Instance(),
 				ExtraHardwareDeps: hwdep.D(hwdep.FeatureLevel(1)),
 			},
 			{
 				Name: "nc_ast",
-				Val: crasCaptureLatencyParams{
+				Fixture: crasCaptureLatencyFixture{
 					noiseCancellationEnabled: true,
 					styleTransferEnabled:     true,
-				},
+				}.Instance(),
 				ExtraHardwareDeps: hwdep.D(hwdep.FeatureLevel(1)),
 			},
 		},
 	})
 }
 
-type crasCaptureLatencyParams struct {
+type crasCaptureLatencyFixture struct {
 	noiseCancellationEnabled bool
 	styleTransferEnabled     bool
 }
 
+var _ fixture.ParameterizedFixture = crasCaptureLatencyFixture{}
+
+// Instance implements fixture.ParameterizedFixture.
+func (f crasCaptureLatencyFixture) Instance() string {
+	return fixture.CrasSetUp{
+		CrasFeatures: fixture.CrasFeatureOverrides{
+			fixture.StyleTransfer: f.styleTransferEnabled,
+		},
+		Aloop: &fixture.AloopLoaded{
+			Channels: 2,
+		},
+		VoiceIsolationUIEnabled: f.noiseCancellationEnabled || f.styleTransferEnabled,
+		InputDevice:             nodematch.Name("Loopback Capture"),
+		OutputDevice:            nodematch.Name("Loopback Playback"),
+	}.Instance()
+}
+
 // CrasCaptureLatency measures the capture latency with CRAS and some audio processing.
 func CrasCaptureLatency(ctx context.Context, s *testing.State) {
-	param := s.Param().(crasCaptureLatencyParams)
-	apConfig := audio.NoiseCancellationConfig{
-		StyleTransferAllowed: param.styleTransferEnabled,
-		VoiceIsolation:       param.noiseCancellationEnabled || param.styleTransferEnabled,
+	outputPath := filepath.Join(s.OutDir(), "result.txt")
+	output, err := os.Create(outputPath)
+	if err != nil {
+		s.Fatal("Failed to create output file: ", err)
 	}
-	if err := audio.WithNoiseCancellation(ctx, apConfig, s.OutDir(), s.HasError, nodematch.Name("Loopback Playback"), nodematch.Name("Loopback Capture"), func(ctx context.Context, _ *audio.Cras) {
-		outputPath := filepath.Join(s.OutDir(), "result.txt")
-		output, err := os.Create(outputPath)
-		if err != nil {
-			s.Fatal("Failed to create output file: ", err)
-		}
-		defer output.Close()
+	defer output.Close()
 
-		const (
-			bufferSize     = "480"
-			periodSize     = "240"
-			noiseThreshold = "1000"
-		)
+	const (
+		bufferSize     = "480"
+		periodSize     = "240"
+		noiseThreshold = "1000"
+	)
 
-		cmd := testexec.CommandContext(
-			ctx,
-			"loopback_latency",
-			"-i",
-			"default", // Use default so it captures from cras and do the audio processing.
-			"-o",
-			"hw:Loopback,0", // Use hw:Loopback,0 so it playbacks to the alsa device directly.
-			"-b",
-			bufferSize,
-			"-p",
-			periodSize,
-			"-n",
-			noiseThreshold,
-			"-f",
-			s.DataPath(data.TheQuickBrownFoxS16LEStereo48000Wav),
-		)
-		cmd.Stdout = output
-		if err := cmd.Run(testexec.DumpLogOnError); err != nil {
-			s.Fatal("Failed to run loopback_latency: ", err)
-		}
-
-		perfValues := perf.NewValues()
-		defer func() {
-			if err := perfValues.Save(s.OutDir()); err != nil {
-				s.Error("Cannot save perf data: ", err)
-			}
-		}()
-
-		result, err := audio.ParseLoopbackLatencyResult(outputPath, 1)
-		if err != nil {
-			s.Fatal("Failed to parse the latency result: ", err)
-		}
-
-		audio.UpdatePerfValuesFromResult(perfValues, result, bufferSize)
-	}); err != nil {
-		s.Fatal("Failed to setup noise cancellation: ", err)
+	cmd := testexec.CommandContext(
+		ctx,
+		"loopback_latency",
+		"-i",
+		"default", // Use default so it captures from cras and do the audio processing.
+		"-o",
+		"hw:Loopback,0", // Use hw:Loopback,0 so it playbacks to the alsa device directly.
+		"-b",
+		bufferSize,
+		"-p",
+		periodSize,
+		"-n",
+		noiseThreshold,
+		"-f",
+		s.DataPath(data.TheQuickBrownFoxS16LEStereo48000Wav),
+	)
+	cmd.Stdout = output
+	if err := cmd.Run(testexec.DumpLogOnError); err != nil {
+		s.Fatal("Failed to run loopback_latency: ", err)
 	}
+
+	perfValues := perf.NewValues()
+	defer func() {
+		if err := perfValues.Save(s.OutDir()); err != nil {
+			s.Error("Cannot save perf data: ", err)
+		}
+	}()
+
+	result, err := audio.ParseLoopbackLatencyResult(outputPath, 1)
+	if err != nil {
+		s.Fatal("Failed to parse the latency result: ", err)
+	}
+
+	audio.UpdatePerfValuesFromResult(perfValues, result, bufferSize)
 }
