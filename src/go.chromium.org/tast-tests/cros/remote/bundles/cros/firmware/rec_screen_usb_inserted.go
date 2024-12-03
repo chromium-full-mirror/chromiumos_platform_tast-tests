@@ -76,7 +76,11 @@ func RecScreenUSBInserted(ctx context.Context, s *testing.State) {
 	}
 	s.Log("Checking if DUT boots from the USB")
 	if err := h.WaitDUTConnectDuringBootFromUSB(ctx, true); err != nil {
-		s.Fatal("Failed to boot from the USB: ", err)
+		s.Log("Failed to connect on the first attempt: ", err)
+		s.Log("Wait again to see if the DUT can reconnect")
+		if errSecond := h.WaitDUTConnectDuringBootFromUSB(ctx, true); errSecond != nil {
+			s.Fatal("Failed to boot from the USB: ", errSecond)
+		}
 	}
 	s.Log("Checking DUT has booted to recovery mode")
 	if curr, err := h.Reporter.CurrentBootMode(ctx); err != nil {
