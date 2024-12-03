@@ -29,7 +29,11 @@ func init() {
 			"mpolzer@google.com", // Test owner
 		},
 		BugComponent: "b:1170223", // ChromeOS > Software > Commercial (Enterprise) > EngProd
-		Attr:         []string{"group:autoupdate", "group:release-health"},
+		Attr:         []string{
+			"group:autoupdate",
+			"group:release-health",
+			"release-health_autoupdate",
+		},
 		SoftwareDeps: []string{"reboot", "chrome", "auto_update_stable"},
 		ServiceDeps: []string{
 			"tast.cros.nebraska.Service",

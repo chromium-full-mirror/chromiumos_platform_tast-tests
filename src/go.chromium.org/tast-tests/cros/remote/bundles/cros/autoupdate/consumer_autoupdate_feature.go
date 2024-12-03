@@ -35,7 +35,11 @@ func init() {
 			"kimjae@chromium.org",
 		},
 		BugComponent: "b:908319",
-		Attr:         []string{"group:mainline", "group:release-health"},
+		Attr:         []string{
+			"group:autoupdate",
+			"group:release-health",
+			"release-health_autoupdate",
+		},
 		SoftwareDeps: []string{"reboot", "chrome", "auto_update_stable"},
 		ServiceDeps: []string{
 			"tast.cros.nebraska.Service",
@@ -49,14 +53,12 @@ func init() {
 				Val: featuresTestParam{
 					enabled: true,
 				},
-				ExtraAttr: []string{"informational"},
 			},
 			{
 				Name: "disabled",
 				Val: featuresTestParam{
 					enabled: false,
 				},
-				ExtraAttr: []string{"informational"},
 			},
 		},
 	})
