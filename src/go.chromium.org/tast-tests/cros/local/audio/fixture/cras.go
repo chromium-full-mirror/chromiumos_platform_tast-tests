@@ -57,7 +57,7 @@ func (pf CrasSetUp) Instance() string {
 		}
 		aloopCopy := *pf.Aloop
 		aloopCopy.Parent = parent
-		parent = aloopCopy.Instance()
+		parent = aloopCopy.internalInstance() // Use the internal aloop fixture. Our fixture restarts CRAS already.
 	}
 	crasSetUpID++
 	return maybeRegisterFixture(&testing.Fixture{

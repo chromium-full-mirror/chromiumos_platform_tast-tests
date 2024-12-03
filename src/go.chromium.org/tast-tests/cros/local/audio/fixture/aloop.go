@@ -33,28 +33,46 @@ var _ ParameterizedFixture = AloopLoaded{}
 
 // Instance returns the instance name of the parameterized AloopLoaded fixture.
 func (pf AloopLoaded) Instance() string {
-	name := "aloopLoaded"
-	if pf.Channels != 0 {
-		name += fmt.Sprintf("%dch", pf.Channels)
-	}
-	if pf.DevicePairs != 0 {
-		name += fmt.Sprintf("%dpair", pf.DevicePairs)
-	}
-
 	return maybeRegisterFixture(&testing.Fixture{
-		Name:         maybeWithParentName(name, pf.Parent),
-		Desc:         fmt.Sprintf("Configure the ALSA loopback device with %v", pf),
+		Name:           pf.name(false),
+		Desc:           fmt.Sprintf("Configure the ALSA loopback device with %v", pf),
+		Contacts:       []string{"chromeos-audio-bugs@google.com", "aaronyu@google.com"},
+		BugComponent:   "b:776546",
+		Impl:           &restartCrasForAloopFixture{},
+		Parent:         pf.internalInstance(),
+		PreTestTimeout: 20 * time.Second,
+	})
+}
+
+// internalInstance creates an aloopLoaded instance that does not restart CRAS.
+func (pf AloopLoaded) internalInstance() string {
+	return maybeRegisterFixture(&testing.Fixture{
+		Name:         pf.name(true),
+		Desc:         fmt.Sprintf("Configure the ALSA loopback device with %v (internal)", pf),
 		Contacts:     []string{"chromeos-audio-bugs@google.com", "aaronyu@google.com"},
 		BugComponent: "b:776546",
-		Impl: &AloopLoadedFixture{
+		Impl: &aloopLoadedFixture{
 			Channels:    pf.Channels,
 			DevicePairs: pf.DevicePairs,
 		},
 		Parent:          pf.Parent,
 		SetUpTimeout:    20 * time.Second,
 		TearDownTimeout: 20 * time.Second,
-		PreTestTimeout:  20 * time.Second,
 	})
+}
+
+func (pf AloopLoaded) name(isInternal bool) string {
+	name := "aloopLoaded"
+	if isInternal {
+		name += "Internal"
+	}
+	if pf.Channels != 0 {
+		name += fmt.Sprintf("%dch", pf.Channels)
+	}
+	if pf.DevicePairs != 0 {
+		name += fmt.Sprintf("%dpair", pf.DevicePairs)
+	}
+	return maybeWithParentName(name, pf.Parent)
 }
 
 const defaultChannels = 2
@@ -91,11 +109,11 @@ SectionDevice."Loopback Capture{{if gt $i 0}} {{$i}}{{end}}".0 {
 {{end}}
 `
 
-// AloopLoadedFixture is a fixture to load snd-aloop kernel module.
+// aloopLoadedFixture is a fixture to load snd-aloop kernel module.
 // Take note that this fixture doesn't select the output/input node.
 // We need to call audio.SelectIODevices to select the output/input node
 // via D-Bus, or SetupLoopback to select the output/input node via Quick Settings UI.
-type AloopLoadedFixture struct {
+type aloopLoadedFixture struct {
 	// Channels of the aloop device. 0 to not change the existing configuration.
 	Channels int
 
@@ -107,7 +125,7 @@ type AloopLoadedFixture struct {
 }
 
 // SetUp the AloopLoadedFixture
-func (f *AloopLoadedFixture) SetUp(ctx context.Context, s *testing.FixtState) interface{} {
+func (f *aloopLoadedFixture) SetUp(ctx context.Context, s *testing.FixtState) interface{} {
 	if f.Channels != 0 || f.DevicePairs != 0 {
 		if f.Channels == 0 {
 			f.Channels = defaultChannels
@@ -151,8 +169,8 @@ func (f *AloopLoadedFixture) SetUp(ctx context.Context, s *testing.FixtState) in
 	return s.ParentValue()
 }
 
-// TearDown the AloopLoadedFixture
-func (f *AloopLoadedFixture) TearDown(ctx context.Context, s *testing.FixtState) {
+// TearDown the aloopLoadedFixture
+func (f *aloopLoadedFixture) TearDown(ctx context.Context, s *testing.FixtState) {
 	if f.Channels != 0 {
 		s.Log("Restoring ", aloopUCMPath)
 		if err := testexec.CommandContext(ctx, "umount", aloopUCMPath).Run(testexec.DumpLogOnError); err != nil {
@@ -166,23 +184,41 @@ func (f *AloopLoadedFixture) TearDown(ctx context.Context, s *testing.FixtState)
 	}
 }
 
-// Reset the AloopLoadedFixture
-func (AloopLoadedFixture) Reset(ctx context.Context) error {
+// Reset the aloopLoadedFixture
+func (aloopLoadedFixture) Reset(ctx context.Context) error {
 	return nil
 }
 
-// PreTest the AloopLoadedFixture by restarting CRAS and wait until loopback node is available
-func (AloopLoadedFixture) PreTest(ctx context.Context, s *testing.FixtTestState) {
+// PreTest the AloopLoadedFixture
+func (aloopLoadedFixture) PreTest(ctx context.Context, s *testing.FixtTestState) {
+}
+
+// PostTest the AloopLoadedFixture
+func (aloopLoadedFixture) PostTest(ctx context.Context, s *testing.FixtTestState) {}
+
+type restartCrasForAloopFixture struct{}
+
+var _ testing.FixtureImpl = restartCrasForAloopFixture{}
+
+// SetUp implements testing.FixtureImpl.
+func (restartCrasForAloopFixture) SetUp(ctx context.Context, s *testing.FixtState) interface{} {
+	// Provides pass-through for the value yielded by the parent fixture.
+	return s.ParentValue()
+}
+
+// TearDown implements testing.FixtureImpl.
+func (restartCrasForAloopFixture) TearDown(ctx context.Context, s *testing.FixtState) {
+}
+
+// PreTest restarts CRAS and wait until loopback node is available.
+func (restartCrasForAloopFixture) PreTest(ctx context.Context, s *testing.FixtTestState) {
 	// Restart CRAS to prevent CRAS state leakage between tests.
-	if _, err := audio.RestartCras(ctx); err != nil {
+	cras, err := audio.RestartCras(ctx)
+	if err != nil {
 		s.Fatal("Cannot restart CRAS: ", err)
 	}
 
 	// Wait for the aloop device to be actually available in CRAS.
-	cras, err := audio.NewCras(ctx)
-	if err != nil {
-		s.Fatal("Cannot connect to CRAS: ", err)
-	}
 	if err := testing.Poll(ctx,
 		func(ctx context.Context) error {
 			_, err := cras.GetNodeByType(ctx, "ALSA_LOOPBACK")
@@ -197,5 +233,11 @@ func (AloopLoadedFixture) PreTest(ctx context.Context, s *testing.FixtTestState)
 	}
 }
 
-// PostTest the AloopLoadedFixture
-func (AloopLoadedFixture) PostTest(ctx context.Context, s *testing.FixtTestState) {}
+// PostTest implements testing.FixtureImpl.
+func (restartCrasForAloopFixture) PostTest(ctx context.Context, s *testing.FixtTestState) {
+}
+
+// Reset implements testing.FixtureImpl.
+func (restartCrasForAloopFixture) Reset(ctx context.Context) error {
+	return nil
+}
