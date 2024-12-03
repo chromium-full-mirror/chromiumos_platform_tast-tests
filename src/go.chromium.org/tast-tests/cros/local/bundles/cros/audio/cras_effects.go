@@ -22,37 +22,21 @@ import (
 	"go.chromium.org/tast-tests/cros/local/audio/sof"
 	"go.chromium.org/tast-tests/cros/local/bundles/cros/audio/internal"
 	"go.chromium.org/tast-tests/cros/local/crosconfig"
-	"go.chromium.org/tast-tests/cros/local/dlc"
 	"go.chromium.org/tast/core/errors"
 	"go.chromium.org/tast/core/testing"
 	"go.chromium.org/tast/core/testing/hwdep"
 )
 
 var (
-	crasEffectsHasAPNC = fixture.AloopLoaded{
-		Channels: 2,
-		Parent: fixture.ChromeForCras{
-			CrasFeatures: fixture.CrasFeatureOverrides{
-				fixture.APNoiseCancellation: true,
-				fixture.StyleTransfer:       false,
-			},
-		}.Instance(),
-	}.Instance()
-	crasEffectsHasNoAPNC = fixture.AloopLoaded{
-		Channels: 2,
-		Parent: fixture.ChromeForCras{
-			CrasFeatures: fixture.CrasFeatureOverrides{},
-		}.Instance(),
-	}.Instance()
-	crasEffectsHasAST = fixture.AloopLoaded{
-		Channels: 2,
-		Parent: fixture.ChromeForCras{
-			CrasFeatures: fixture.CrasFeatureOverrides{
-				fixture.APNoiseCancellation: true,
-				fixture.StyleTransfer:       true,
-			},
-		}.Instance(),
-	}.Instance()
+	crasEffectsFeaturesAPNC = fixture.CrasFeatureOverrides{
+		fixture.APNoiseCancellation: true,
+		fixture.StyleTransfer:       false,
+	}
+	crasEffectsFeaturesNoAPNC = fixture.CrasFeatureOverrides{}
+	crasEffectsFeaturesAST    = fixture.CrasFeatureOverrides{
+		fixture.APNoiseCancellation: true,
+		fixture.StyleTransfer:       true,
+	}
 )
 
 // AP effect names.
@@ -76,9 +60,6 @@ func init() {
 			{
 				Name: "dsp_aec",
 				Val: crasEffectsParam{
-					voiceIsolationUIEnabled: true,
-					inputDevice:             "INTERNAL_MIC",
-					outputDevice:            "INTERNAL_SPEAKER",
 					captureClients: []captureConfig{
 						{effects: 0x11, expectAPEffects: nil},
 					},
@@ -87,16 +68,18 @@ func init() {
 						NC:  sof.DSPEffectOn,
 					},
 				},
-				Fixture:           crasEffectsHasAPNC,
+				Fixture: crasEffectsSetUp{
+					features:                crasEffectsFeaturesAPNC,
+					voiceIsolationUIEnabled: true,
+					inputDevice:             "INTERNAL_MIC",
+					outputDevice:            "INTERNAL_SPEAKER",
+				}.Instance(),
 				ExtraHardwareDeps: hwdep.D(hwdep.Model(internal.DSPAECModels...)),
 				ExtraAttr:         []string{"group:mainline"},
 			},
 			{
 				Name: "dsp_0x0_conflict",
 				Val: crasEffectsParam{
-					voiceIsolationUIEnabled: true,
-					inputDevice:             "INTERNAL_MIC",
-					outputDevice:            "INTERNAL_SPEAKER",
 					captureClients: []captureConfig{
 						{effects: 0x0, expectAPEffects: []string{apNC}},
 					},
@@ -105,16 +88,18 @@ func init() {
 						NC:  sof.DSPEffectOff, // DSP AEC blocked.
 					},
 				},
-				Fixture:           crasEffectsHasAPNC,
+				Fixture: crasEffectsSetUp{
+					features:                crasEffectsFeaturesAPNC,
+					voiceIsolationUIEnabled: true,
+					inputDevice:             "INTERNAL_MIC",
+					outputDevice:            "INTERNAL_SPEAKER",
+				}.Instance(),
 				ExtraHardwareDeps: hwdep.D(hwdep.Model(internal.DSPAECModels...)),
 				ExtraAttr:         []string{"group:mainline"},
 			},
 			{
 				Name: "dsp_0x10_conflict", // 0x10 is exactly the same as 0x0.
 				Val: crasEffectsParam{
-					voiceIsolationUIEnabled: true,
-					inputDevice:             "INTERNAL_MIC",
-					outputDevice:            "INTERNAL_SPEAKER",
 					captureClients: []captureConfig{
 						{effects: 0x10, expectAPEffects: []string{apNC}},
 					},
@@ -123,16 +108,18 @@ func init() {
 						NC:  sof.DSPEffectOff, // DSP AEC blocked.
 					},
 				},
-				Fixture:           crasEffectsHasAPNC,
+				Fixture: crasEffectsSetUp{
+					features:                crasEffectsFeaturesAPNC,
+					voiceIsolationUIEnabled: true,
+					inputDevice:             "INTERNAL_MIC",
+					outputDevice:            "INTERNAL_SPEAKER",
+				}.Instance(),
 				ExtraHardwareDeps: hwdep.D(hwdep.Model(internal.DSPAECModels...)),
 				ExtraAttr:         []string{"group:mainline"},
 			},
 			{
 				Name: "dsp_0x10_0x11_conflict",
 				Val: crasEffectsParam{
-					voiceIsolationUIEnabled: true,
-					inputDevice:             "INTERNAL_MIC",
-					outputDevice:            "INTERNAL_SPEAKER",
 					captureClients: []captureConfig{
 						{effects: 0x10, expectAPEffects: []string{apNC}},
 						{effects: 0x11, expectAPEffects: []string{apAEC, apNC}},
@@ -142,16 +129,18 @@ func init() {
 						NC:  sof.DSPEffectOff, // DSP AEC blocked.
 					},
 				},
-				Fixture:           crasEffectsHasAPNC,
+				Fixture: crasEffectsSetUp{
+					features:                crasEffectsFeaturesAPNC,
+					voiceIsolationUIEnabled: true,
+					inputDevice:             "INTERNAL_MIC",
+					outputDevice:            "INTERNAL_SPEAKER",
+				}.Instance(),
 				ExtraHardwareDeps: hwdep.D(hwdep.Model(internal.DSPAECModels...)),
 				ExtraAttr:         []string{"group:mainline"},
 			},
 			{
 				Name: "dsp_0x0_dont_care",
 				Val: crasEffectsParam{
-					voiceIsolationUIEnabled: true,
-					inputDevice:             "INTERNAL_MIC",
-					outputDevice:            "INTERNAL_SPEAKER",
 					captureClients: []captureConfig{
 						{
 							effects:         0x0,
@@ -164,16 +153,18 @@ func init() {
 						NC:  sof.DSPEffectOn, // NC enabled.
 					},
 				},
-				Fixture:           crasEffectsHasAPNC,
+				Fixture: crasEffectsSetUp{
+					features:                crasEffectsFeaturesAPNC,
+					voiceIsolationUIEnabled: true,
+					inputDevice:             "INTERNAL_MIC",
+					outputDevice:            "INTERNAL_SPEAKER",
+				}.Instance(),
 				ExtraHardwareDeps: hwdep.D(hwdep.Model(internal.DSPAECModels...)),
 				ExtraAttr:         []string{"group:mainline"},
 			},
 			{
 				Name: "dsp_aec_0x0_conflict",
 				Val: crasEffectsParam{
-					voiceIsolationUIEnabled: true,
-					inputDevice:             "INTERNAL_MIC",
-					outputDevice:            "INTERNAL_SPEAKER",
 					captureClients: []captureConfig{
 						{effects: 0x11, expectAPEffects: []string{apNC, apAEC}},
 						{effects: 0x0, expectAPEffects: []string{apNC}},
@@ -183,16 +174,18 @@ func init() {
 						NC:  sof.DSPEffectOff, // DSP AEC blocked.
 					},
 				},
-				Fixture:           crasEffectsHasAPNC,
+				Fixture: crasEffectsSetUp{
+					features:                crasEffectsFeaturesAPNC,
+					voiceIsolationUIEnabled: true,
+					inputDevice:             "INTERNAL_MIC",
+					outputDevice:            "INTERNAL_SPEAKER",
+				}.Instance(),
 				ExtraHardwareDeps: hwdep.D(hwdep.Model(internal.DSPAECModels...)),
 				ExtraAttr:         []string{"group:mainline"},
 			},
 			{
 				Name: "dsp_aec_0x0_dont_care",
 				Val: crasEffectsParam{
-					voiceIsolationUIEnabled: true,
-					inputDevice:             "INTERNAL_MIC",
-					outputDevice:            "INTERNAL_SPEAKER",
 					captureClients: []captureConfig{
 						{effects: 0x11, expectAPEffects: nil},
 						{
@@ -206,16 +199,19 @@ func init() {
 						NC:  sof.DSPEffectOn, // NC enabled.
 					},
 				},
-				Fixture:           crasEffectsHasAPNC,
+
+				Fixture: crasEffectsSetUp{
+					features:                crasEffectsFeaturesAPNC,
+					voiceIsolationUIEnabled: true,
+					inputDevice:             "INTERNAL_MIC",
+					outputDevice:            "INTERNAL_SPEAKER",
+				}.Instance(),
 				ExtraHardwareDeps: hwdep.D(hwdep.Model(internal.DSPAECModels...)),
 				ExtraAttr:         []string{"group:mainline"},
 			},
 			{
 				Name: "dsp_echo_ref_blocked_by_selection",
 				Val: crasEffectsParam{
-					voiceIsolationUIEnabled: true,
-					inputDevice:             "INTERNAL_MIC",
-					outputDevice:            "ALSA_LOOPBACK",
 					captureClients: []captureConfig{
 						{effects: 0x11, expectAPEffects: []string{apAEC, apNC}},
 					},
@@ -224,17 +220,19 @@ func init() {
 						NC:  sof.DSPEffectOff, // Blocked by echo reference: user selection.
 					},
 				},
-				Fixture:           crasEffectsHasAPNC,
+				Fixture: crasEffectsSetUp{
+					features:                crasEffectsFeaturesAPNC,
+					voiceIsolationUIEnabled: true,
+					inputDevice:             "INTERNAL_MIC",
+					outputDevice:            "ALSA_LOOPBACK",
+				}.Instance(),
 				ExtraHardwareDeps: hwdep.D(hwdep.Model(internal.DSPAECModels...)),
 				ExtraAttr:         []string{"group:mainline"},
 			},
 			{
 				Name: "dsp_echo_ref_blocked_by_playback",
 				Val: crasEffectsParam{
-					voiceIsolationUIEnabled: true,
-					inputDevice:             "INTERNAL_MIC",
-					outputDevice:            "INTERNAL_SPEAKER",
-					addPlaybackPinDevice:    "ALSA_LOOPBACK",
+					addPlaybackPinDevice: "ALSA_LOOPBACK",
 					captureClients: []captureConfig{
 						{effects: 0x11, expectAPEffects: []string{apAEC, apNC}},
 					},
@@ -243,17 +241,19 @@ func init() {
 						NC:  sof.DSPEffectOff, // Blocked by echo reference: playback.
 					},
 				},
-				Fixture:           crasEffectsHasAPNC,
+				Fixture: crasEffectsSetUp{
+					features:                crasEffectsFeaturesAPNC,
+					voiceIsolationUIEnabled: true,
+					inputDevice:             "INTERNAL_MIC",
+					outputDevice:            "INTERNAL_SPEAKER",
+				}.Instance(),
 				ExtraHardwareDeps: hwdep.D(hwdep.Model(internal.DSPAECModels...)),
 				ExtraAttr:         []string{"group:mainline"},
 			},
 			{
 				Name: "dsp_echo_ref_not_blocked_by_playback",
 				Val: crasEffectsParam{
-					voiceIsolationUIEnabled: true,
-					inputDevice:             "INTERNAL_MIC",
-					outputDevice:            "INTERNAL_SPEAKER",
-					addPlaybackPinDevice:    "INTERNAL_SPEAKER",
+					addPlaybackPinDevice: "INTERNAL_SPEAKER",
 					captureClients: []captureConfig{
 						{effects: 0x11, expectAPEffects: nil},
 					},
@@ -262,7 +262,12 @@ func init() {
 						NC:  sof.DSPEffectOn,
 					},
 				},
-				Fixture:           crasEffectsHasAPNC,
+				Fixture: crasEffectsSetUp{
+					features:                crasEffectsFeaturesAPNC,
+					voiceIsolationUIEnabled: true,
+					inputDevice:             "INTERNAL_MIC",
+					outputDevice:            "INTERNAL_SPEAKER",
+				}.Instance(),
 				ExtraHardwareDeps: hwdep.D(hwdep.Model(internal.DSPAECModels...)),
 				ExtraAttr:         []string{"group:mainline"},
 			},
@@ -270,9 +275,6 @@ func init() {
 			{
 				Name: "nc_both_prefer_dsp",
 				Val: crasEffectsParam{
-					voiceIsolationUIEnabled: true,
-					inputDevice:             "INTERNAL_MIC",
-					outputDevice:            "INTERNAL_SPEAKER",
 					captureClients: []captureConfig{
 						{
 							effects:         0x11, // Set AEC on to avoid blocking DSP NC.
@@ -284,16 +286,18 @@ func init() {
 						NC:  sof.DSPEffectOn,
 					},
 				},
-				Fixture:           crasEffectsHasAPNC,
+				Fixture: crasEffectsSetUp{
+					features:                crasEffectsFeaturesAPNC,
+					voiceIsolationUIEnabled: true,
+					inputDevice:             "INTERNAL_MIC",
+					outputDevice:            "INTERNAL_SPEAKER",
+				}.Instance(),
 				ExtraHardwareDeps: hwdep.D(hwdep.Model(internal.DSPAPNCModels...)),
 				ExtraAttr:         []string{"group:mainline"},
 			},
 			{
 				Name: "nc_both_disabled",
 				Val: crasEffectsParam{
-					voiceIsolationUIEnabled: false,
-					inputDevice:             "INTERNAL_MIC",
-					outputDevice:            "INTERNAL_SPEAKER",
 					captureClients: []captureConfig{
 						{
 							effects:         0x11, // Set AEC on to avoid blocking DSP NC.
@@ -305,16 +309,18 @@ func init() {
 						NC:  sof.DSPEffectOff,
 					},
 				},
-				Fixture:           crasEffectsHasAPNC,
+				Fixture: crasEffectsSetUp{
+					features:                crasEffectsFeaturesAPNC,
+					voiceIsolationUIEnabled: false,
+					inputDevice:             "INTERNAL_MIC",
+					outputDevice:            "INTERNAL_SPEAKER",
+				}.Instance(),
 				ExtraHardwareDeps: hwdep.D(hwdep.Model(internal.DSPAPNCModels...)),
 				ExtraAttr:         []string{"group:mainline"},
 			},
 			{
 				Name: "nc_both_fallback_ap",
 				Val: crasEffectsParam{
-					voiceIsolationUIEnabled: true,
-					inputDevice:             "INTERNAL_MIC",
-					outputDevice:            "ALSA_LOOPBACK", // Using non-internal speaker should block DSP AEC.
 					captureClients: []captureConfig{
 						{
 							effects:         0x11, // Set AEC on to avoid blocking DSP NC.
@@ -326,16 +332,18 @@ func init() {
 						NC:  sof.DSPEffectOff,
 					},
 				},
-				Fixture:           crasEffectsHasAPNC,
+				Fixture: crasEffectsSetUp{
+					features:                crasEffectsFeaturesAPNC,
+					voiceIsolationUIEnabled: true,
+					inputDevice:             "INTERNAL_MIC",
+					outputDevice:            "ALSA_LOOPBACK", // Using non-internal speaker should block DSP AEC.
+				}.Instance(),
 				ExtraHardwareDeps: hwdep.D(hwdep.Model(internal.DSPAPNCModels...)),
 				ExtraAttr:         []string{"group:mainline"},
 			},
 			{
 				Name: "nc_both_fallback_ap_disabled",
 				Val: crasEffectsParam{
-					voiceIsolationUIEnabled: false,
-					inputDevice:             "INTERNAL_MIC",
-					outputDevice:            "ALSA_LOOPBACK", // Using non-internal speaker should block DSP AEC.
 					captureClients: []captureConfig{
 						{
 							effects:         0x11, // Set AEC on to avoid blocking DSP NC.
@@ -347,7 +355,12 @@ func init() {
 						NC:  sof.DSPEffectOff,
 					},
 				},
-				Fixture:           crasEffectsHasAPNC,
+				Fixture: crasEffectsSetUp{
+					features:                crasEffectsFeaturesAPNC,
+					voiceIsolationUIEnabled: false,
+					inputDevice:             "INTERNAL_MIC",
+					outputDevice:            "ALSA_LOOPBACK", // Using non-internal speaker should block DSP AEC.
+				}.Instance(),
 				ExtraHardwareDeps: hwdep.D(hwdep.Model(internal.DSPAPNCModels...)),
 				ExtraAttr:         []string{"group:mainline"},
 			},
@@ -355,9 +368,6 @@ func init() {
 			{
 				Name: "nc_both_prefer_ast",
 				Val: crasEffectsParam{
-					voiceIsolationUIEnabled: true,
-					inputDevice:             "INTERNAL_MIC",
-					outputDevice:            "INTERNAL_SPEAKER",
 					captureClients: []captureConfig{
 						{
 							effects:         0x11,
@@ -369,7 +379,12 @@ func init() {
 						NC:  sof.DSPEffectOff,
 					},
 				},
-				Fixture:           crasEffectsHasAST,
+				Fixture: crasEffectsSetUp{
+					features:                crasEffectsFeaturesAST,
+					voiceIsolationUIEnabled: true,
+					inputDevice:             "INTERNAL_MIC",
+					outputDevice:            "INTERNAL_SPEAKER",
+				}.Instance(),
 				ExtraHardwareDeps: hwdep.D(hwdep.Model(internal.DSPAPNCModels...), hwdep.FeatureLevel(1)),
 				ExtraAttr: []string{
 					"group:mainline", "group:cbx", "cbx_feature_enabled", "cbx_stable",
@@ -378,9 +393,6 @@ func init() {
 			{
 				Name: "nc_both_ast_disabled",
 				Val: crasEffectsParam{
-					voiceIsolationUIEnabled: false,
-					inputDevice:             "INTERNAL_MIC",
-					outputDevice:            "INTERNAL_SPEAKER",
 					captureClients: []captureConfig{
 						{
 							effects:         0x11, // Set AEC on to avoid blocking DSP NC.
@@ -392,16 +404,18 @@ func init() {
 						NC:  sof.DSPEffectOff,
 					},
 				},
-				Fixture:           crasEffectsHasAST,
+				Fixture: crasEffectsSetUp{
+					features:                crasEffectsFeaturesAST,
+					voiceIsolationUIEnabled: false,
+					inputDevice:             "INTERNAL_MIC",
+					outputDevice:            "INTERNAL_SPEAKER",
+				}.Instance(),
 				ExtraHardwareDeps: hwdep.D(hwdep.Model(internal.DSPAPNCModels...)),
 				ExtraAttr:         []string{"group:mainline"},
 			},
 			{
 				Name: "nc_both_ast",
 				Val: crasEffectsParam{
-					voiceIsolationUIEnabled: true,
-					inputDevice:             "INTERNAL_MIC",
-					outputDevice:            "ALSA_LOOPBACK", // Using non-internal speaker should block DSP AEC.
 					captureClients: []captureConfig{
 						{
 							effects:         0x11, // Set AEC on to avoid blocking DSP NC.
@@ -413,7 +427,12 @@ func init() {
 						NC:  sof.DSPEffectOff,
 					},
 				},
-				Fixture:           crasEffectsHasAST,
+				Fixture: crasEffectsSetUp{
+					features:                crasEffectsFeaturesAST,
+					voiceIsolationUIEnabled: true,
+					inputDevice:             "INTERNAL_MIC",
+					outputDevice:            "ALSA_LOOPBACK", // Using non-internal speaker should block DSP AEC.
+				}.Instance(),
 				ExtraHardwareDeps: hwdep.D(hwdep.Model(internal.DSPAPNCModels...), hwdep.FeatureLevel(1)),
 				ExtraAttr: []string{
 					"group:mainline", "group:cbx", "cbx_feature_enabled", "cbx_stable",
@@ -423,9 +442,6 @@ func init() {
 			{
 				Name: "nc_only_dsp_enabled",
 				Val: crasEffectsParam{
-					voiceIsolationUIEnabled: true,
-					inputDevice:             "INTERNAL_MIC",
-					outputDevice:            "ALSA_LOOPBACK", // Using non-internal speaker should allow DSP NC.
 					captureClients: []captureConfig{
 						{effects: 0, expectAPEffects: nil}, // Effects=0 should not block.
 					},
@@ -434,16 +450,18 @@ func init() {
 						NC:  sof.DSPEffectOn,
 					},
 				},
-				Fixture:           crasEffectsHasNoAPNC,
+				Fixture: crasEffectsSetUp{
+					features:                crasEffectsFeaturesNoAPNC,
+					voiceIsolationUIEnabled: true,
+					inputDevice:             "INTERNAL_MIC",
+					outputDevice:            "ALSA_LOOPBACK", // Using non-internal speaker should allow DSP NC.
+				}.Instance(),
 				ExtraHardwareDeps: hwdep.D(hwdep.Model(internal.DSPNCOnlyModels...)),
 				ExtraAttr:         []string{"group:mainline"},
 			},
 			{
 				Name: "nc_only_dsp_block_select_internal_speaker",
 				Val: crasEffectsParam{
-					voiceIsolationUIEnabled: true,
-					inputDevice:             "INTERNAL_MIC",
-					outputDevice:            "INTERNAL_SPEAKER", // Using internal speaker should block DSP NC.
 					captureClients: []captureConfig{
 						{effects: 0, expectAPEffects: nil}, // Effects=0 should not block.
 					},
@@ -452,16 +470,18 @@ func init() {
 						NC:  sof.DSPEffectOff,
 					},
 				},
-				Fixture:           crasEffectsHasNoAPNC,
+				Fixture: crasEffectsSetUp{
+					features:                crasEffectsFeaturesNoAPNC,
+					voiceIsolationUIEnabled: true,
+					inputDevice:             "INTERNAL_MIC",
+					outputDevice:            "INTERNAL_SPEAKER", // Using internal speaker should block DSP NC.
+				}.Instance(),
 				ExtraHardwareDeps: hwdep.D(hwdep.Model(internal.DSPNCOnlyModels...)),
 				ExtraAttr:         []string{"group:mainline"},
 			},
 			{
 				Name: "nc_only_dsp_block_pin_internal_speaker",
 				Val: crasEffectsParam{
-					voiceIsolationUIEnabled: true,
-					inputDevice:             "INTERNAL_MIC",
-					outputDevice:            "ALSA_LOOPBACK",
 					captureClients: []captureConfig{
 						{effects: 0, expectAPEffects: nil}, // Effects=0 should not block.
 					},
@@ -471,16 +491,18 @@ func init() {
 						NC:  sof.DSPEffectOff,
 					},
 				},
-				Fixture:           crasEffectsHasNoAPNC,
+				Fixture: crasEffectsSetUp{
+					features:                crasEffectsFeaturesNoAPNC,
+					voiceIsolationUIEnabled: true,
+					inputDevice:             "INTERNAL_MIC",
+					outputDevice:            "ALSA_LOOPBACK",
+				}.Instance(),
 				ExtraHardwareDeps: hwdep.D(hwdep.Model(internal.DSPNCOnlyModels...)),
 				ExtraAttr:         []string{"group:mainline"},
 			},
 			{
 				Name: "nc_only_dsp_enabled_with_aec",
 				Val: crasEffectsParam{
-					voiceIsolationUIEnabled: true,
-					inputDevice:             "INTERNAL_MIC",
-					outputDevice:            "ALSA_LOOPBACK", // Using non-internal speaker should allow DSP NC.
 					captureClients: []captureConfig{
 						{effects: 0x1, expectAPEffects: []string{apAEC}}, // Effects=1 should not block.
 					},
@@ -489,16 +511,18 @@ func init() {
 						NC:  sof.DSPEffectOn,
 					},
 				},
-				Fixture:           crasEffectsHasNoAPNC,
+				Fixture: crasEffectsSetUp{
+					features:                crasEffectsFeaturesNoAPNC,
+					voiceIsolationUIEnabled: true,
+					inputDevice:             "INTERNAL_MIC",
+					outputDevice:            "ALSA_LOOPBACK", // Using non-internal speaker should allow DSP NC.
+				}.Instance(),
 				ExtraHardwareDeps: hwdep.D(hwdep.Model(internal.DSPNCOnlyModels...)),
 				ExtraAttr:         []string{"group:mainline"},
 			},
 			{
 				Name: "nc_only_dsp_block_select_internal_speaker_with_aec",
 				Val: crasEffectsParam{
-					voiceIsolationUIEnabled: true,
-					inputDevice:             "INTERNAL_MIC",
-					outputDevice:            "INTERNAL_SPEAKER", // Using internal speaker should block DSP NC.
 					captureClients: []captureConfig{
 						{effects: 0x1, expectAPEffects: []string{apAEC}}, // Effects=1 should not block.
 					},
@@ -507,16 +531,18 @@ func init() {
 						NC:  sof.DSPEffectOff,
 					},
 				},
-				Fixture:           crasEffectsHasNoAPNC,
+				Fixture: crasEffectsSetUp{
+					features:                crasEffectsFeaturesNoAPNC,
+					voiceIsolationUIEnabled: true,
+					inputDevice:             "INTERNAL_MIC",
+					outputDevice:            "INTERNAL_SPEAKER", // Using internal speaker should block DSP NC.
+				}.Instance(),
 				ExtraHardwareDeps: hwdep.D(hwdep.Model(internal.DSPNCOnlyModels...)),
 				ExtraAttr:         []string{"group:mainline"},
 			},
 			{
 				Name: "nc_only_dsp_block_pin_internal_speaker_with_aec",
 				Val: crasEffectsParam{
-					voiceIsolationUIEnabled: true,
-					inputDevice:             "INTERNAL_MIC",
-					outputDevice:            "ALSA_LOOPBACK",
 					captureClients: []captureConfig{
 						{effects: 0x1, expectAPEffects: []string{apAEC}}, // Effects=1 should not block.
 					},
@@ -526,7 +552,12 @@ func init() {
 						NC:  sof.DSPEffectOff,
 					},
 				},
-				Fixture:           crasEffectsHasNoAPNC,
+				Fixture: crasEffectsSetUp{
+					features:                crasEffectsFeaturesNoAPNC,
+					voiceIsolationUIEnabled: true,
+					inputDevice:             "INTERNAL_MIC",
+					outputDevice:            "ALSA_LOOPBACK",
+				}.Instance(),
 				ExtraHardwareDeps: hwdep.D(hwdep.Model(internal.DSPNCOnlyModels...)),
 				ExtraAttr:         []string{"group:mainline"},
 			},
@@ -534,9 +565,6 @@ func init() {
 			{
 				Name: "forced_voice_isolation_with_nc_button_disabled",
 				Val: crasEffectsParam{
-					voiceIsolationUIEnabled: false,
-					inputDevice:             "INTERNAL_MIC",
-					outputDevice:            "INTERNAL_SPEAKER",
 					captureClients: []captureConfig{
 						{effects: 0x310, expectAPEffects: []string{apNC}}, // Force enable NC.
 					},
@@ -545,16 +573,19 @@ func init() {
 						NC:  sof.DSPEffectOff,
 					},
 				},
-				Fixture:           crasEffectsHasAPNC,
+
+				Fixture: crasEffectsSetUp{
+					features:                crasEffectsFeaturesAPNC,
+					voiceIsolationUIEnabled: false,
+					inputDevice:             "INTERNAL_MIC",
+					outputDevice:            "INTERNAL_SPEAKER",
+				}.Instance(),
 				ExtraHardwareDeps: hwdep.D(hwdep.Model(internal.DSPAPNCModels...)),
 				ExtraAttr:         []string{"group:mainline"},
 			},
 			{
 				Name: "forced_voice_isolation_with_nc_button_enabled",
 				Val: crasEffectsParam{
-					voiceIsolationUIEnabled: true,
-					inputDevice:             "INTERNAL_MIC",
-					outputDevice:            "INTERNAL_SPEAKER",
 					captureClients: []captureConfig{
 						{effects: 0x310, expectAPEffects: []string{apNC}}, // Force enable NC.
 					},
@@ -563,16 +594,19 @@ func init() {
 						NC:  sof.DSPEffectOff,
 					},
 				},
-				Fixture:           crasEffectsHasAPNC,
+
+				Fixture: crasEffectsSetUp{
+					features:                crasEffectsFeaturesAPNC,
+					voiceIsolationUIEnabled: true,
+					inputDevice:             "INTERNAL_MIC",
+					outputDevice:            "INTERNAL_SPEAKER",
+				}.Instance(),
 				ExtraHardwareDeps: hwdep.D(hwdep.Model(internal.DSPAPNCModels...)),
 				ExtraAttr:         []string{"group:mainline"},
 			},
 			{
 				Name: "forced_disabled_voice_isolation_with_nc_button_disabled",
 				Val: crasEffectsParam{
-					voiceIsolationUIEnabled: false,
-					inputDevice:             "INTERNAL_MIC",
-					outputDevice:            "INTERNAL_SPEAKER",
 					captureClients: []captureConfig{
 						{effects: 0x100, expectAPEffects: nil}, // Force disable NC.
 					},
@@ -581,16 +615,19 @@ func init() {
 						NC:  sof.DSPEffectOff,
 					},
 				},
-				Fixture:           crasEffectsHasAPNC,
+
+				Fixture: crasEffectsSetUp{
+					features:                crasEffectsFeaturesAPNC,
+					voiceIsolationUIEnabled: false,
+					inputDevice:             "INTERNAL_MIC",
+					outputDevice:            "INTERNAL_SPEAKER",
+				}.Instance(),
 				ExtraHardwareDeps: hwdep.D(hwdep.Model(internal.DSPAPNCModels...)),
 				ExtraAttr:         []string{"group:mainline"},
 			},
 			{
 				Name: "forced_disabled_voice_isolation_with_nc_button_enabled",
 				Val: crasEffectsParam{
-					voiceIsolationUIEnabled: true,
-					inputDevice:             "INTERNAL_MIC",
-					outputDevice:            "INTERNAL_SPEAKER",
 					captureClients: []captureConfig{
 						{effects: 0x100, expectAPEffects: nil}, // Force disable NC.
 					},
@@ -599,7 +636,13 @@ func init() {
 						NC:  sof.DSPEffectOff,
 					},
 				},
-				Fixture:           crasEffectsHasAPNC,
+
+				Fixture: crasEffectsSetUp{
+					features:                crasEffectsFeaturesAPNC,
+					voiceIsolationUIEnabled: true,
+					inputDevice:             "INTERNAL_MIC",
+					outputDevice:            "INTERNAL_SPEAKER",
+				}.Instance(),
 				ExtraHardwareDeps: hwdep.D(hwdep.Model(internal.DSPAPNCModels...)),
 				ExtraAttr:         []string{"group:mainline"},
 			},
@@ -607,9 +650,6 @@ func init() {
 			{
 				Name: "forced_voice_isolation_with_ast_button_disabled",
 				Val: crasEffectsParam{
-					voiceIsolationUIEnabled: false,
-					inputDevice:             "INTERNAL_MIC",
-					outputDevice:            "INTERNAL_SPEAKER",
 					captureClients: []captureConfig{
 						{effects: 0x310, expectAPEffects: []string{apNC, apAST}},
 					},
@@ -618,16 +658,18 @@ func init() {
 						NC:  sof.DSPEffectOff,
 					},
 				},
-				Fixture:           crasEffectsHasAST,
+				Fixture: crasEffectsSetUp{
+					features:                crasEffectsFeaturesAST,
+					voiceIsolationUIEnabled: false,
+					inputDevice:             "INTERNAL_MIC",
+					outputDevice:            "INTERNAL_SPEAKER",
+				}.Instance(),
 				ExtraHardwareDeps: hwdep.D(hwdep.Model(internal.DSPAPNCModels...)),
 				ExtraAttr:         []string{"group:mainline"},
 			},
 			{
 				Name: "forced_voice_isolation_with_ast_button_enabled",
 				Val: crasEffectsParam{
-					voiceIsolationUIEnabled: true,
-					inputDevice:             "INTERNAL_MIC",
-					outputDevice:            "INTERNAL_SPEAKER",
 					captureClients: []captureConfig{
 						{effects: 0x310, expectAPEffects: []string{apNC, apAST}},
 					},
@@ -636,7 +678,12 @@ func init() {
 						NC:  sof.DSPEffectOff,
 					},
 				},
-				Fixture:           crasEffectsHasAST,
+				Fixture: crasEffectsSetUp{
+					features:                crasEffectsFeaturesAST,
+					voiceIsolationUIEnabled: true,
+					inputDevice:             "INTERNAL_MIC",
+					outputDevice:            "INTERNAL_SPEAKER",
+				}.Instance(),
 				ExtraHardwareDeps: hwdep.D(hwdep.Model(internal.DSPAPNCModels...), hwdep.FeatureLevel(1)),
 				ExtraAttr: []string{
 					"group:mainline", "group:cbx", "cbx_feature_enabled", "cbx_stable",
@@ -645,9 +692,6 @@ func init() {
 			{
 				Name: "forced_disabled_voice_isolation_with_ast_button_disabled",
 				Val: crasEffectsParam{
-					voiceIsolationUIEnabled: false,
-					inputDevice:             "INTERNAL_MIC",
-					outputDevice:            "INTERNAL_SPEAKER",
 					captureClients: []captureConfig{
 						{effects: 0x100, expectAPEffects: nil}, // Force disable NC.
 					},
@@ -656,16 +700,18 @@ func init() {
 						NC:  sof.DSPEffectOff,
 					},
 				},
-				Fixture:           crasEffectsHasAST,
+				Fixture: crasEffectsSetUp{
+					features:                crasEffectsFeaturesAST,
+					voiceIsolationUIEnabled: false,
+					inputDevice:             "INTERNAL_MIC",
+					outputDevice:            "INTERNAL_SPEAKER",
+				}.Instance(),
 				ExtraHardwareDeps: hwdep.D(hwdep.Model(internal.DSPAPNCModels...)),
 				ExtraAttr:         []string{"group:mainline"},
 			},
 			{
 				Name: "forced_disabled_voice_isolation_with_ast_button_enabled",
 				Val: crasEffectsParam{
-					voiceIsolationUIEnabled: true,
-					inputDevice:             "INTERNAL_MIC",
-					outputDevice:            "INTERNAL_SPEAKER",
 					captureClients: []captureConfig{
 						{effects: 0x100, expectAPEffects: nil}, // Force disable NC.
 					},
@@ -674,7 +720,12 @@ func init() {
 						NC:  sof.DSPEffectOff,
 					},
 				},
-				Fixture:           crasEffectsHasAST,
+				Fixture: crasEffectsSetUp{
+					features:                crasEffectsFeaturesAST,
+					voiceIsolationUIEnabled: true,
+					inputDevice:             "INTERNAL_MIC",
+					outputDevice:            "INTERNAL_SPEAKER",
+				}.Instance(),
 				ExtraHardwareDeps: hwdep.D(hwdep.Model(internal.DSPAPNCModels...)),
 				ExtraAttr:         []string{"group:mainline"},
 			},
@@ -682,9 +733,6 @@ func init() {
 			{
 				Name: "nc_then_unprocessed_stream",
 				Val: crasEffectsParam{
-					voiceIsolationUIEnabled: true,
-					inputDevice:             "INTERNAL_MIC",
-					outputDevice:            "INTERNAL_SPEAKER",
 					captureClients: []captureConfig{
 						{effects: 0x310, expectAPEffects: []string{apNC}}, // Force enable NC.
 						{effects: 0x100, expectAPEffects: nil},            // unprocessed.
@@ -694,16 +742,18 @@ func init() {
 						NC:  sof.DSPEffectOff,
 					},
 				},
-				Fixture:           crasEffectsHasAPNC,
+				Fixture: crasEffectsSetUp{
+					features:                crasEffectsFeaturesAPNC,
+					voiceIsolationUIEnabled: true,
+					inputDevice:             "INTERNAL_MIC",
+					outputDevice:            "INTERNAL_SPEAKER",
+				}.Instance(),
 				ExtraHardwareDeps: hwdep.D(hwdep.Model(internal.DSPAPNCModels...)),
 				ExtraAttr:         []string{"group:mainline"},
 			},
 			{
 				Name: "unprocessed_then_nc_stream",
 				Val: crasEffectsParam{
-					voiceIsolationUIEnabled: true,
-					inputDevice:             "INTERNAL_MIC",
-					outputDevice:            "INTERNAL_SPEAKER",
 					captureClients: []captureConfig{
 						{effects: 0x100, expectAPEffects: nil},            // Force enable NC.
 						{effects: 0x310, expectAPEffects: []string{apNC}}, // unprocessed.
@@ -713,16 +763,18 @@ func init() {
 						NC:  sof.DSPEffectOff,
 					},
 				},
-				Fixture:           crasEffectsHasAPNC,
+				Fixture: crasEffectsSetUp{
+					features:                crasEffectsFeaturesAPNC,
+					voiceIsolationUIEnabled: true,
+					inputDevice:             "INTERNAL_MIC",
+					outputDevice:            "INTERNAL_SPEAKER",
+				}.Instance(),
 				ExtraHardwareDeps: hwdep.D(hwdep.Model(internal.DSPAPNCModels...)),
 				ExtraAttr:         []string{"group:mainline"},
 			},
 			{
 				Name: "beamforming_enabled_by_client",
 				Val: crasEffectsParam{
-					voiceIsolationUIEnabled: false,
-					inputDevice:             "INTERNAL_MIC",
-					outputDevice:            "INTERNAL_SPEAKER",
 					captureClients: []captureConfig{
 						{effects: 0x300, expectAPEffects: []string{apNC, apBF}}, // Force enable NC.
 						{effects: 0x100, expectAPEffects: nil},                  // unprocessed.
@@ -732,16 +784,18 @@ func init() {
 						NC:  sof.DSPEffectUnavailable,
 					},
 				},
-				Fixture:          crasEffectsHasAPNC,
+				Fixture: crasEffectsSetUp{
+					features:                crasEffectsFeaturesAPNC,
+					voiceIsolationUIEnabled: false,
+					inputDevice:             "INTERNAL_MIC",
+					outputDevice:            "INTERNAL_SPEAKER",
+				}.Instance(),
 				ExtraTestBedDeps: []string{tbdep.AudioBeamforming("intelligo")},
 				ExtraAttr:        []string{"group:mainline", "informational"},
 			},
 			{
 				Name: "beamforming_enabled_by_ui",
 				Val: crasEffectsParam{
-					voiceIsolationUIEnabled: true,
-					inputDevice:             "INTERNAL_MIC",
-					outputDevice:            "INTERNAL_SPEAKER",
 					captureClients: []captureConfig{
 						{effects: 0x0, expectAPEffects: []string{apNC, apBF}}, // NC enabled with UI.
 						{effects: 0x100, expectAPEffects: nil},                // unprocessed.
@@ -751,16 +805,18 @@ func init() {
 						NC:  sof.DSPEffectUnavailable,
 					},
 				},
-				Fixture:          crasEffectsHasAPNC,
+				Fixture: crasEffectsSetUp{
+					features:                crasEffectsFeaturesAPNC,
+					voiceIsolationUIEnabled: true,
+					inputDevice:             "INTERNAL_MIC",
+					outputDevice:            "INTERNAL_SPEAKER",
+				}.Instance(),
 				ExtraTestBedDeps: []string{tbdep.AudioBeamforming("intelligo")},
 				ExtraAttr:        []string{"group:mainline", "informational"},
 			},
 			{
 				Name: "style_transfer",
 				Val: crasEffectsParam{
-					voiceIsolationUIEnabled: true,
-					inputDevice:             "INTERNAL_MIC",
-					outputDevice:            "INTERNAL_SPEAKER",
 					captureClients: []captureConfig{
 						{effects: 0x300, expectAPEffects: []string{apNC, apAST}},
 						{effects: 0x100, expectAPEffects: nil}, // unprocessed.
@@ -770,7 +826,12 @@ func init() {
 						NC:  sof.DSPEffectOff,
 					},
 				},
-				Fixture:           crasEffectsHasAST,
+				Fixture: crasEffectsSetUp{
+					features:                crasEffectsFeaturesAST,
+					voiceIsolationUIEnabled: true,
+					inputDevice:             "INTERNAL_MIC",
+					outputDevice:            "INTERNAL_SPEAKER",
+				}.Instance(),
 				ExtraHardwareDeps: hwdep.D(hwdep.Model(internal.DSPAPNCModels...), hwdep.FeatureLevel(1)),
 				ExtraAttr: []string{
 					"group:mainline", "group:cbx", "cbx_feature_enabled", "cbx_stable",
@@ -781,12 +842,30 @@ func init() {
 }
 
 type crasEffectsParam struct {
-	voiceIsolationUIEnabled bool
+	addPlaybackPinDevice string
+	captureClients       []captureConfig
+	expectDSPEffects     dspEffects
+}
+
+type crasEffectsSetUp struct {
+	features                fixture.CrasFeatureOverrides
 	inputDevice             string
 	outputDevice            string
-	addPlaybackPinDevice    string
-	captureClients          []captureConfig
-	expectDSPEffects        dspEffects
+	voiceIsolationUIEnabled bool
+}
+
+var _ fixture.ParameterizedFixture = crasEffectsSetUp{}
+
+func (pf crasEffectsSetUp) Instance() string {
+	return fixture.CrasSetUp{
+		CrasFeatures: pf.features,
+		Aloop: &fixture.AloopLoaded{
+			Channels: 2,
+		},
+		InputDevice:             nodematch.Type(pf.inputDevice),
+		OutputDevice:            nodematch.Type(pf.outputDevice),
+		VoiceIsolationUIEnabled: pf.voiceIsolationUIEnabled,
+	}.Instance()
 }
 
 // dspEffects observed and expected.
@@ -895,15 +974,9 @@ func resetNCState(ctx context.Context) error {
 
 func CrasEffects(ctx context.Context, s *testing.State) {
 	param := s.Param().(crasEffectsParam)
+	fixt := s.FixtValue().(fixture.CrasFixtValue)
+	cras := fixt.Cras()
 
-	if err := dlc.Install(ctx, "nc-ap-dlc", ""); err != nil {
-		s.Fatal("Cannot install nc-ap-dlc: ", err)
-	}
-
-	cras, err := audio.RestartCras(ctx)
-	if err != nil {
-		s.Fatal("Cannot restart CRAS: ", err)
-	}
 	// b/301912218: This is needed because CRAS & the use case manager
 	// assume that the modifiers are turned off initially,
 	// e.g. on CRAS restart.
@@ -911,13 +984,6 @@ func CrasEffects(ctx context.Context, s *testing.State) {
 		if err := resetNCState(ctx); err != nil {
 			s.Fatal("resetNCState failed: ", err)
 		}
-	}
-
-	if err := audio.SelectIODevices(ctx, cras, nodematch.Type(param.inputDevice), nodematch.Type(param.outputDevice)); err != nil {
-		s.Fatal("Failed to select IO devices: ", err)
-	}
-	if err := cras.SetVoiceIsolationUIEnabled(ctx, param.voiceIsolationUIEnabled); err != nil {
-		s.Fatal("Failed to set voice isolation enabled/disabled: ", err)
 	}
 
 	// Start capture clients.
