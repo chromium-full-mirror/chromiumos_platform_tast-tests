@@ -67,11 +67,27 @@ func (h *HRTelemetryHelper) JoinMeetingWithDisabledExperiments(ctx context.Conte
 		return errors.New("already joined a meeting")
 	}
 
+	// We need to navigate to the Meet window first when using the "e" URL
+	// parameter. This probably has to do with verifying that the account
+	// is an allowlisted account - the e parameter is only valid for
+	// specific accounts, and if we try to use it before Meet sees its an
+	// internal account, it would reject the URL as malformed.
+	h.meetConn, err = h.cs.NewConn(ctx, "https://meet.google.com", opts...)
+	if err != nil {
+		return errors.Wrap(err, "failed to navigate to the Meet homepage")
+	}
+
+	if err := webutil.WaitForQuiescence(ctx, h.meetConn, 10*time.Second); err != nil {
+		testing.ContextLog(ctx, "Failed to wait for Meet homepage to quiesce: ", err)
+	}
+
 	// Experiments in the url are disabled using the e= parameter, where
 	// each experiment is prefixed with - to mark it as disabled.
-	experiments := strings.Join(disabledExperiments, ",-")
-	h.meetConn, err = h.cs.NewConn(ctx, fmt.Sprintf("https://meet.google.com/%s/?e=-%s", meetingCode, experiments), opts...)
-	return err
+	return h.meetConn.Navigate(ctx, fmt.Sprintf(
+		"https://meet.google.com/%s/?e=-%s",
+		meetingCode,
+		strings.Join(disabledExperiments, ",-"),
+	))
 }
 
 // JoinMeeting joins the meeting room with the conn source.
