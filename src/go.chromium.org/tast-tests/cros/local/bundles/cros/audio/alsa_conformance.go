@@ -37,6 +37,7 @@ var relexedCriteriaModels = []string{"aleena", "barla", "careena", "kasumi", "ka
 var fixFormatS16CaptureModels = []string{"redrix", "gimble", "anahera", "yaviks", "yavikso"}
 
 var mergeThresholdSize480Boards = []string{"volteer", "brya", "nissa", "nirul"}
+var mergeThresholdSize480Models = []string{"jubilant", "jubileum"}
 
 func init() {
 	testing.AddTest(&testing.Test{
@@ -195,7 +196,7 @@ func ALSAConformance(ctx context.Context, s *testing.State) {
 			// Setting board to be empty string and it should not be run with merge-thld-size 480
 			board = ""
 		}
-		if slices.Contains(mergeThresholdSize480Boards, board) {
+		if slices.Contains(mergeThresholdSize480Boards, board) || slices.Contains(mergeThresholdSize480Models, model) {
 			args = append(args, "--merge-thld-size", "480")
 		}
 		if slices.Contains(fixFormatS16CaptureModels, model) && stream == audio.InputStream {
