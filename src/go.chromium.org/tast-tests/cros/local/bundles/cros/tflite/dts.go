@@ -145,11 +145,16 @@ var openvinoParam = testingParam{
 		// TODO(b/364772332): Openvino delegate output incorrect results.
 		"FloatPoolingOpTest.MaxPoolActivationRelu6",
 
-		// TODO(b/366096384): Openvino delegate crashed on those tests after
-		// intel-npu-umd is updated to v1.6.0.
-		"SoftmaxOpTest.SimpleTest",
-		"SoftmaxOpTest.CompareWithTFminiBetaEq1",
-		"SoftmaxOpTest.CompareWithTFminiBetaNotEq1",
+		// TODO(b/381967953): Openvino delegate crashed on these tests after updated to v1.10.0.
+		"DepthwiseConvolutionOpTest/DepthwiseConvolutionOpTest.BatchPaddingSameTest/0",
+		"DepthwiseConvolutionOpTest/DepthwiseConvolutionOpTest.BatchPaddingSameTest/1",
+		"DepthwiseConvolutionOpTest/DepthwiseConvolutionOpTest.BatchPaddingSameTest/2",
+		"DepthwiseConvolutionOpTest/DepthwiseConvolutionOpTest.MultithreadBatchPaddingSameTest/0",
+		"DepthwiseConvolutionOpTest/DepthwiseConvolutionOpTest.MultithreadBatchPaddingSameTest/1",
+		"DepthwiseConvolutionOpTest/DepthwiseConvolutionOpTest.MultithreadBatchPaddingSameTest/2",
+
+		// TODO(b/381968609): Openvino cannot broadcast eltwise inputs.
+		"ConstantInputs/MulOpTest.FloatMixedBroadcast/0",
 	},
 	AllowFp16PrecisionForFp32: true,
 }
