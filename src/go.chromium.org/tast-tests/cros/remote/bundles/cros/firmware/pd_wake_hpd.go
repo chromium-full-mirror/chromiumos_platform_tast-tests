@@ -114,9 +114,10 @@ func PDWakeHPD(ctx context.Context, s *testing.State) {
 		// hpdBeforeSuspend, hpdAfterSuspend, hpdIRQSuspend, hpdBeforeResume, expectedWake
 		hpdConfigs{servo.HPDHigh, servo.HPDHigh, false, servo.HPDHigh, false}, // always hpd high
 		hpdConfigs{servo.HPDHigh, servo.HPDHigh, false, servo.HPDLow, false},  // hpd low in suspend
-		hpdConfigs{servo.HPDHigh, servo.HPDLow, false, servo.HPDHigh, true},   // hpd low and then high in suspend
+		hpdConfigs{servo.HPDHigh, servo.HPDLow, false, servo.HPDHigh, false},  // hpd low and then high in suspend
 		hpdConfigs{servo.HPDHigh, servo.HPDHigh, true, servo.HPDHigh, false},  // hpd irq in suspend
 		hpdConfigs{servo.HPDLow, servo.HPDLow, false, servo.HPDHigh, true},    // suspend then hpd high
+		hpdConfigs{servo.HPDLow, servo.HPDHigh, false, servo.HPDLow, true},    // suspend and plug and unplug
 	}
 
 	for idx, hpd := range configs {
@@ -133,6 +134,8 @@ func PDWakeHPD(ctx context.Context, s *testing.State) {
 		if err := h.WaitForPowerStates(ctx, firmware.PowerStateInterval, firmware.PowerStateTimeout, "S3", "S0ix"); err != nil {
 			s.Fatal("Failed to suspend: ", err)
 		}
+		// GoBigSleepLint: give the hpd policy manager some time to respond to the suspend.
+		testing.Sleep(ctx, 2*time.Second)
 
 		irqString := "no interrupt"
 		if hpd.hpdIRQSuspend {
