@@ -26,7 +26,7 @@ func init() {
 			"chromeos-faft@google.com",
 			"jasonyuan@google.com",
 		},
-		BugComponent: "b:362991308", // ChromeOS > Platform > Enablement > Firmware > FAFT
+		BugComponent: "b:792402", // ChromeOS > Platform > Enablement > Firmware > FAFT
 		Fixture:      fixture.NormalMode,
 		SoftwareDeps: []string{"chrome"},
 		HardwareDeps: hwdep.D(hwdep.ChromeEC()),
