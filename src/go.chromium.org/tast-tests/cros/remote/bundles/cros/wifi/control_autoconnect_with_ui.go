@@ -177,7 +177,7 @@ func ControlAutoconnectWithUI(ctx context.Context, s *testing.State) {
 				hostapd.Mode(hostapd.Mode80211nPure),
 				hostapd.HTCaps(hostapd.HTCapHT20),
 				hostapd.PMF(hostapd.PMFOptional),
-				hostapd.Channel(1),
+				hostapd.Channel(6),
 			},
 			routerID: 1,
 		}, {
@@ -186,7 +186,7 @@ func ControlAutoconnectWithUI(ctx context.Context, s *testing.State) {
 				hostapd.Mode(hostapd.Mode80211nPure),
 				hostapd.HTCaps(hostapd.HTCapHT20),
 				hostapd.PMF(hostapd.PMFOptional),
-				hostapd.Channel(48),
+				hostapd.Channel(36),
 			},
 			routerID: 1,
 		},
