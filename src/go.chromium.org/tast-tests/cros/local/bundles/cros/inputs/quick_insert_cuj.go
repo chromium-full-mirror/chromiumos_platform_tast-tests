@@ -73,6 +73,7 @@ func init() {
 var quickInsertFeatureTourContinueButtonFinder = nodewith.Name("Get started").Role(role.Button).Visible().Onscreen()
 var quickInsertWindowFinder = nodewith.HasClass("Quick Insert").Visible().Onscreen()
 var quickInsertEmojiResultsFinder = nodewith.HasClass("QuickInsertEmojiBarView").Visible().Onscreen()
+var quickInsertGifsButtonFinder = nodewith.Ancestor(quickInsertWindowFinder).HasClass("GifsButton").Visible().Onscreen()
 var quickInsertMainResultsFinder = nodewith.HasClass("QuickInsertSearchResultsView").Visible().Onscreen()
 var quickInsertZeroStateResultsFinder = nodewith.HasClass("QuickInsertZeroStateView").Visible().Onscreen()
 var quickInsertSubmenuResultsFinder = nodewith.HasClass("QuickInsertSubmenu").Visible().Onscreen()
@@ -83,6 +84,10 @@ func quickInsertEmojiResultFinder(emoji, description string) *nodewith.Finder {
 	// The label name is the emoji itself.
 	// The button name is the textual description of the emoji.
 	return nodewith.Ancestor(nodewith.Name(description).Role(role.Button).Ancestor(quickInsertEmojiResultsFinder)).Name(emoji).Role(role.StaticText).Visible().First()
+}
+
+func quickInsertGifResultFinder(keyword string) *nodewith.Finder {
+	return nodewith.NameContaining(keyword).HasClass("QuickInsertImageItemView").Role(role.Button).Ancestor(quickInsertMainResultsFinder).Visible().First()
 }
 
 func quickInsertMainResultFinder(text string) *nodewith.Finder {
@@ -440,6 +445,20 @@ func QuickInsertCuj(ctx context.Context, s *testing.State) {
 				ui.Gone(quickInsertEmojiResultFinder("ಠωಠ", "denko of disapproval emoticon")),
 				toggleQuickInsert,
 				ui.WaitUntilGone(quickInsertWindowFinder),
+			),
+		},
+		{
+			name:     "Search GIFs and insert",
+			scenario: "verify GIF search and insert CUJ",
+			action: uiauto.Combine("search GIFs and insert",
+				its.ClearThenClickFieldAndWaitForActive(richTextField),
+				toggleQuickInsert,
+				ui.WaitUntilExists(quickInsertWindowFinder),
+				ui.LeftClick(quickInsertGifsButtonFinder),
+				keyboard.TypeAction("plink"),
+				scrollToThenClick(ui, quickInsertGifResultFinder("plink")),
+				ui.WaitUntilGone(quickInsertWindowFinder),
+				ui.WaitUntilExists(nodewith.Ancestor(richTextField.Finder()).Role(role.Image)),
 			),
 		},
 		{
