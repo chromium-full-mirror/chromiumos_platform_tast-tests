@@ -5,12 +5,8 @@
 package firmware
 
 import (
-	"bufio"
-	"bytes"
 	"context"
 	"fmt"
-	"io"
-	"os"
 	"path/filepath"
 	"regexp"
 	"strconv"
@@ -20,8 +16,10 @@ import (
 	"github.com/golang/protobuf/ptypes/empty"
 	"golang.org/x/mod/semver"
 
+	"go.chromium.org/tast-tests/cros/common/firmware/futility"
 	"go.chromium.org/tast-tests/cros/common/servo"
 	"go.chromium.org/tast-tests/cros/common/testexec"
+	"go.chromium.org/tast-tests/cros/remote/dutfs"
 	"go.chromium.org/tast-tests/cros/remote/firmware"
 	"go.chromium.org/tast-tests/cros/remote/firmware/fixture"
 	fwpb "go.chromium.org/tast-tests/cros/services/cros/firmware"
@@ -61,11 +59,11 @@ type baseECInfo struct {
 }
 
 // modifiedFileDir contains paths defined as follows,
-// onLocal: path on the local machine.
-// onHost: path on DUT, where the modified base ec bin file will be copied to.
+// modifiedBin: path on DUT, where the modified base ec bin file will be copied to.
+// versionFile: path on DUT that stores the modified firmware version string
 type modifiedFileDir struct {
-	onLocal string
-	onHost  string
+	modifiedBin string
+	versionFile string
 }
 
 // hammerRequiredVariables contains the required values for hammer command.
@@ -128,16 +126,16 @@ func BaseECUpdate(ctx context.Context, s *testing.State) {
 		s.Fatal("Failed to get hammer config: ", err)
 	}
 
-	tempDir, err := os.MkdirTemp("", "BaseECUpdate")
+	dutfsClient := dutfs.NewClient(h.RPCClient.Conn)
+	tempDir, err := dutfsClient.TempDir(ctx, "", "BaseECUpdate")
 	if err != nil {
-		s.Fatal("Failed to create a temp dir")
+		s.Fatal("Failed to create a temp dir on DUT")
 	}
-	defer os.RemoveAll(tempDir)
 
 	// fileDir creates paths to save the modified base ec bin file at respective locations.
 	fileDir := modifiedFileDir{
-		onLocal: filepath.Join(tempDir, "modifiedBaseECLocal.bin"),
-		onHost:  filepath.Join(tempDir, "modifiedBaseECHost.bin"),
+		modifiedBin: filepath.Join(tempDir, "modifiedBaseEC.bin"),
+		versionFile: filepath.Join(tempDir, "version.txt"),
 	}
 
 	s.Log("Saving the base ec firmware version before flashing an old image")
@@ -177,7 +175,7 @@ func BaseECUpdate(ctx context.Context, s *testing.State) {
 	}(cleanupCtx, &requiredReboot)
 
 	s.Log("Flashing an old image to detachable-base ec")
-	if err := flashAnOldImgToDetachableBaseEC(ctx, dut, hammerConfigs, fileDir.onHost); err != nil {
+	if err := flashAnOldImgToDetachableBaseEC(ctx, dut, hammerConfigs, fileDir.modifiedBin); err != nil {
 		// If flashing an edited image fails, check whether the version
 		// has changed. Sometimes, this failure might relate to the protection
 		// pipeline designed to guarantee a file's integrity, like so:
@@ -247,6 +245,13 @@ func flashAnOldImgToDetachableBaseEC(ctx context.Context, dut *dut.DUT, hammerCo
 }
 
 func baseECVersionUnchanged(old, new string) bool {
+	// semver.Compare requires a 'v' prefix
+	if !strings.HasPrefix(old, "v") {
+		old = "v" + old
+	}
+	if !strings.HasPrefix(new, "v") {
+		new = "v" + new
+	}
 	return semver.Compare(old, new) == 0
 }
 
@@ -271,8 +276,8 @@ func getBaseECInfo(ctx context.Context, dut *dut.DUT, productIDDecimal string) (
 	}
 
 	baseECInfoMap := map[string]*regexp.Regexp{
-		"name":             regexp.MustCompile(`version:\s+(\w+)_v`),
-		"version":          regexp.MustCompile(`version:\s+(\w+.\w.\w+-\w+)`),
+		"name":             regexp.MustCompile(`version:\s+(\w+)(?:_v|-)`),
+		"version":          regexp.MustCompile(`version:\s+([\w-.]+)`),
 		"protection flags": regexp.MustCompile(`Flash protection status:\s+(\w+)`),
 	}
 
@@ -355,76 +360,29 @@ func triggerAndFindNotification(ctx context.Context, ecTool *firmware.ECTool, ut
 }
 
 // modifyBaseEC copies the /lib/firmware/base-ec.fw to local,
-// modifies its version -1 and puts it back to /tmp/ folder in DUT.
+// modifies its version and puts it back to /tmp/ folder in DUT.
 func modifyBaseEC(ctx context.Context, dut *dut.DUT, boardInfo baseECInfo, fileDir *modifiedFileDir) error {
 	originalBaseECBinFile := fmt.Sprintf("/lib/firmware/%s.fw", boardInfo.name)
 
-	testing.ContextLog(ctx, "Copying base-ec.fw from DUT to local")
-	if err := linuxssh.GetFile(ctx, dut.Conn(), originalBaseECBinFile, fileDir.onLocal, linuxssh.DereferenceSymlinks); err != nil {
-		return errors.Wrap(err, "failed to copy base-ec.fw to local")
-	}
-
-	f, err := os.Open(fileDir.onLocal)
-	if err != nil {
-		return errors.Wrap(err, "failed to open base-ec.bin")
-	}
-	defer f.Close()
-
-	stat, err := f.Stat()
-	if err != nil {
-		return errors.Wrap(err, "failed to read base-ec.bin")
-	}
-
-	reader := bufio.NewReader(f)
-	buf := make([]byte, stat.Size())
-
-	for {
-		_, err := reader.Read(buf)
-		if err != nil {
-			if err != io.EOF {
-				testing.ContextLog(ctx, "Unexpected error: ", err)
-			}
-			break
-		}
-
-	}
 	testing.ContextLog(ctx, "Current base-ec version: ", boardInfo.version)
 	testing.ContextLog(ctx, "Starting to modify base-ec.bin")
 
-	baseECWithVersion := boardInfo.name + "_v"
-	indexRWBoard := len(buf)
-	count := bytes.Count(buf, []byte(baseECWithVersion))
-	if count == 0 {
-		return errors.Wrapf(err, "did not find %s in the base-ec.bin", baseECWithVersion)
+	if err := linuxssh.WriteFile(ctx, dut.Conn(), fileDir.versionFile, []byte(boardInfo.name+"_v999.0.0\x00"), 0644); err != nil {
+		return errors.Wrap(err, "failed to create version file on DUT")
 	}
 
-	for i := 0; i < count; i++ {
-		indexRWBoard = bytes.LastIndex(buf[:indexRWBoard], []byte(baseECWithVersion))
-		indexVersionToModify := indexRWBoard
-		indexVersionToModify += len(baseECWithVersion)
-		// version -1
-		buf[indexVersionToModify] = buf[indexVersionToModify] - 1
-	}
-	testing.ContextLog(ctx, "Modified base-ec version: ", string(buf[indexRWBoard:indexRWBoard+len(boardInfo.version)]))
-
-	// create a new bin file.
-	file, err := os.Create(fileDir.onLocal)
+	futilityInstance, err := futility.NewLocalBuilder(dut).Debug(true).Build()
 	if err != nil {
-		return errors.New("failed to create a new bin file")
-	}
-	defer func() {
-		os.Remove(fileDir.onLocal)
-		file.Close()
-	}()
-
-	if _, err := file.Write(buf); err != nil {
-		return errors.New("failed to write modified binary code into a new file")
+		return errors.Wrap(err, "failed to setup futility instance")
 	}
 
-	testing.ContextLog(ctx, "Copy the modified base-ec.bin back to DUT")
-	if _, err := linuxssh.PutFiles(ctx, dut.Conn(), map[string]string{fileDir.onLocal: fileDir.onHost}, linuxssh.DereferenceSymlinks); err != nil {
-		return errors.Wrap(err, "failed to copy files into DUT")
+	futilityOutput, err := futilityInstance.LoadFmap(ctx, originalBaseECBinFile, fileDir.modifiedBin, map[string]string{
+		"RW_FWID": fileDir.versionFile,
+	})
+	if err != nil {
+		return errors.Wrapf(err, "failed to modify version string: %s", futilityOutput)
 	}
+
 	return nil
 }
 
