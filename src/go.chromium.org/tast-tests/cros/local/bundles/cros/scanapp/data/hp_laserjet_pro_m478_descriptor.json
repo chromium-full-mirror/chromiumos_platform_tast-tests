@@ -1,0 +1,67 @@
+{
+  "Name": "HP Color LaserJet Pro M478f-9f [C4B80E]",
+  "Sources": [
+    {
+      "ColorModes": [
+        "Color",
+        "Grayscale"
+      ],
+      "PageSizes": [
+        "A4",
+        "Letter",
+        "Fit to scan area"
+      ],
+      "Resolutions": [
+        "600 dpi",
+        "300 dpi",
+        "200 dpi",
+        "150 dpi",
+        "100 dpi",
+        "75 dpi"
+      ],
+      "SourceDimensions": {
+        "Height": 297.011,
+        "Width": 215.9
+      },
+      "SourceType": "Flatbed"
+    },
+    {
+      "ColorModes": [
+        "Color",
+        "Grayscale"
+      ],
+      "PageSizes": [
+        "A4",
+        "Letter",
+        "Fit to scan area"
+      ],
+      "Resolutions": [
+        "300 dpi",
+        "200 dpi",
+        "150 dpi",
+        "100 dpi",
+        "75 dpi"
+      ],
+      "SourceType": "Document Feeder (One-sided)"
+    },
+    {
+      "ColorModes": [
+        "Color",
+        "Grayscale"
+      ],
+      "PageSizes": [
+        "A4",
+        "Letter",
+        "Fit to scan area"
+      ],
+      "Resolutions": [
+        "300 dpi",
+        "200 dpi",
+        "150 dpi",
+        "100 dpi",
+        "75 dpi"
+      ],
+      "SourceType": "Document Feeder (Two-sided)"
+    }
+  ]
+}
