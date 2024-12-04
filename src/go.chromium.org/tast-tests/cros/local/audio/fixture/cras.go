@@ -11,6 +11,7 @@ import (
 
 	"go.chromium.org/tast-tests/cros/local/audio"
 	"go.chromium.org/tast-tests/cros/local/audio/nodematch"
+	"go.chromium.org/tast/core/errors"
 	"go.chromium.org/tast/core/testing"
 )
 
@@ -73,6 +74,32 @@ func (pf CrasSetUp) Instance() string {
 	})
 }
 
+// DoCras performs set up for the CRAS part.
+//
+// Most code should use CrasSetUp as a fixture as it also helps configure Chrome and aloop.
+// Only use this when Chrome and aloop are already configured elsewhere.
+func (pf CrasSetUp) DoCras(ctx context.Context) (*audio.Cras, error) {
+	cras, err := audio.RestartCras(ctx)
+	if err != nil {
+		return nil, errors.Wrap(err, "cannot restart CRAS")
+	}
+	for feature, enabled := range pf.CrasFeatures {
+		if err := cras.WaitUntilFeatureFlagHasValue(ctx, string(feature), enabled); err != nil {
+			return nil, errors.Wrap(err, "feature flag not propagated to CRAS")
+		}
+	}
+	if err := cras.WaitForAudioEffectsReady(ctx); err != nil {
+		return nil, errors.Wrap(err, "failed to WaitForAudioEffectsReady()")
+	}
+	if err := audio.SelectIODevices(ctx, cras, pf.InputDevice, pf.OutputDevice); err != nil {
+		return nil, errors.Wrap(err, "failed to select IO devices")
+	}
+	if err := cras.SetVoiceIsolationUIEnabled(ctx, pf.VoiceIsolationUIEnabled); err != nil {
+		return nil, errors.Wrap(err, "failed to set voice isolation enabled/disabled")
+	}
+	return cras, nil
+}
+
 // CrasFixtValue is the type of s.FixtValue() for CrasSetUp instances.
 type CrasFixtValue interface {
 	Cras() *audio.Cras
@@ -113,23 +140,9 @@ func (f *crasSetUpFixtureImpl) PreTest(ctx context.Context, s *testing.FixtTestS
 
 	t0 := time.Now()
 
-	cras, err := audio.RestartCras(ctx)
+	cras, err := f.config.DoCras(ctx)
 	if err != nil {
-		s.Fatal("Cannot restart CRAS: ", err)
-	}
-	for feature, enabled := range f.config.CrasFeatures {
-		if err := cras.WaitUntilFeatureFlagHasValue(ctx, string(feature), enabled); err != nil {
-			s.Fatal("feature flag not propagated to CRAS: ", err)
-		}
-	}
-	if err := cras.WaitForAudioEffectsReady(ctx); err != nil {
-		s.Fatal("Faild to WaitForAudioEffectsReady(): ", err)
-	}
-	if err := audio.SelectIODevices(ctx, cras, f.config.InputDevice, f.config.OutputDevice); err != nil {
-		s.Fatal("Failed to select IO devices: ", err)
-	}
-	if err := cras.SetVoiceIsolationUIEnabled(ctx, f.config.VoiceIsolationUIEnabled); err != nil {
-		s.Fatal("Failed to set voice isolation enabled/disabled: ", err)
+		s.Fatal("DoCras(): ", err)
 	}
 
 	duration := time.Since(t0)

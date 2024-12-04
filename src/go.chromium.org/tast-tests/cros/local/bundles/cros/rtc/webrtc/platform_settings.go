@@ -7,9 +7,8 @@ package webrtc
 import (
 	"context"
 
-	"go.chromium.org/tast-tests/cros/local/audio"
+	"go.chromium.org/tast-tests/cros/local/audio/fixture"
 	"go.chromium.org/tast-tests/cros/local/audio/nodematch"
-	"go.chromium.org/tast-tests/cros/local/dlc"
 	"go.chromium.org/tast-tests/cros/local/videoconferencing/effects"
 	"go.chromium.org/tast/core/errors"
 	"go.chromium.org/tast/core/testing"
@@ -17,24 +16,12 @@ import (
 
 // setUpAudio configures the audio server according to noiseCancellation and styleTransfer.
 func setUpAudio(ctx context.Context, voiceIsolation bool) error {
-	if voiceIsolation {
-		if err := dlc.Install(ctx, "nc-ap-dlc", ""); err != nil {
-			return errors.Wrap(err, "cannot install nc-ap-dlc")
-		}
-	}
-	cras, err := audio.RestartCras(ctx)
-	if err != nil {
-		return errors.Wrap(err, "cannot restart CRAS")
-	}
-
-	if err := audio.SelectIODevices(ctx, cras, nodematch.Type("INTERNAL_MIC"), nodematch.Type("INTERNAL_SPEAKER")); err != nil {
-		return errors.Wrap(err, "audio.SelectIODevices")
-	}
-
-	if err := cras.SetVoiceIsolationUIEnabled(ctx, voiceIsolation); err != nil {
-		return errors.Wrap(err, "cras.SetVoiceIsolationUIEnabled")
-	}
-	return nil
+	_, err := fixture.CrasSetUp{
+		VoiceIsolationUIEnabled: voiceIsolation,
+		InputDevice:             nodematch.Type("INTERNAL_MIC"),
+		OutputDevice:            nodematch.Type("INTERNAL_SPEAKER"),
+	}.DoCras(ctx)
+	return err
 }
 
 // enableCameraEffects turns on the platform video conferencing effects (platform blurring, relighting, and face retouching).
