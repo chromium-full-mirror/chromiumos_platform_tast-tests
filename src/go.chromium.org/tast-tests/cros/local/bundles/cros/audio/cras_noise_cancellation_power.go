@@ -9,10 +9,11 @@ import (
 	"time"
 
 	"go.chromium.org/tast-tests/cros/common/testexec"
-	"go.chromium.org/tast-tests/cros/local/audio"
 	"go.chromium.org/tast-tests/cros/local/audio/crastestclient"
-	"go.chromium.org/tast-tests/cros/local/dlc"
+	"go.chromium.org/tast-tests/cros/local/audio/fixture"
+	"go.chromium.org/tast-tests/cros/local/audio/nodematch"
 	"go.chromium.org/tast-tests/cros/local/power"
+	"go.chromium.org/tast-tests/cros/local/power/setup"
 	"go.chromium.org/tast/core/ctxutil"
 	"go.chromium.org/tast/core/errors"
 	"go.chromium.org/tast/core/testing"
@@ -34,152 +35,88 @@ func init() {
 			{
 				Name: "no_effects",
 				Val: crasNoiseCancellationPowerParam{
-					crasSetUp: func(ctx context.Context, s *testing.State) {
-						cras, err := audio.RestartCras(ctx)
-						if err != nil {
-							s.Fatal("Failed to restart CRAS: ", err)
-						}
-						if err := cras.SetActiveNodeByType(ctx, "INTERNAL_MIC"); err != nil {
-							s.Fatal("Failed to set internal mic active: ", err)
-						}
-						if err := cras.SetActiveNodeByType(ctx, "INTERNAL_SPEAKER"); err != nil {
-							s.Fatal("Failed to set internal speaker active: ", err)
-						}
-					},
 					extraCrasClientArgs: nil,
 				},
-				Fixture:   "powerAshPlatformAudioNoiseCancellation",
+				Fixture: fixture.CrasSetUp{
+					ChromeFixture: setup.PowerAshPlatformAudioNoiseCancellation,
+					InputDevice:   nodematch.Type("INTERNAL_MIC"),
+					OutputDevice:  nodematch.Type("INTERNAL_SPEAKER"),
+				}.Instance(),
 				ExtraAttr: []string{"group:crosbolt", "crosbolt_perbuild"},
 			},
 			{
 				Name: "aec",
 				Val: crasNoiseCancellationPowerParam{
-					crasSetUp: func(ctx context.Context, s *testing.State) {
-						cras, err := audio.RestartCras(ctx)
-						if err != nil {
-							s.Fatal("Failed to restart CRAS: ", err)
-						}
-						if err := cras.SetActiveNodeByType(ctx, "INTERNAL_MIC"); err != nil {
-							s.Fatal("Failed to set internal mic active: ", err)
-						}
-						if err := cras.SetActiveNodeByType(ctx, "INTERNAL_SPEAKER"); err != nil {
-							s.Fatal("Failed to set internal speaker active: ", err)
-						}
-						if err := cras.SetVoiceIsolationUIEnabled(ctx, false); err != nil {
-							s.Fatal("Failed to SetVoiceIsolationUIEnabled: ", err)
-						}
-					},
 					extraCrasClientArgs: []string{"--effects=aec"},
 				},
-				Fixture:   "powerAshPlatformAudioNoiseCancellation",
+				Fixture: fixture.CrasSetUp{
+					ChromeFixture:           setup.PowerAshPlatformAudioNoiseCancellation,
+					InputDevice:             nodematch.Type("INTERNAL_MIC"),
+					OutputDevice:            nodematch.Type("INTERNAL_SPEAKER"),
+					VoiceIsolationUIEnabled: false,
+				}.Instance(),
 				ExtraAttr: []string{"group:crosbolt", "crosbolt_perbuild"},
 			},
 			{
 				Name: "aec_nc",
 				Val: crasNoiseCancellationPowerParam{
-					crasSetUp: func(ctx context.Context, s *testing.State) {
-						cras, err := audio.RestartCras(ctx)
-						if err != nil {
-							s.Fatal("Failed to restart CRAS: ", err)
-						}
-						if err := dlc.Install(ctx, "nc-ap-dlc", ""); err != nil {
-							s.Fatal("Cannot install nc-ap-dlc: ", err)
-						}
-						if err := cras.SetActiveNodeByType(ctx, "INTERNAL_MIC"); err != nil {
-							s.Fatal("Failed to set internal mic active: ", err)
-						}
-						if err := cras.SetActiveNodeByType(ctx, "INTERNAL_SPEAKER"); err != nil {
-							s.Fatal("Failed to set internal speaker active: ", err)
-						}
-						if err := cras.SetVoiceIsolationUIEnabled(ctx, true); err != nil {
-							s.Fatal("Failed to SetVoiceIsolationUIEnabled: ", err)
-						}
-						if err := cras.WaitUntilFeatureFlagHasValue(ctx, "CrOSLateBootAudioAPNoiseCancellation", true); err != nil {
-							s.Fatal("Faild to WaitUntilFeatureFlagHasValue: ", err)
-						}
-						if err := cras.WaitUntilFeatureFlagHasValue(ctx, "CrOSLateBootAudioStyleTransfer", false); err != nil {
-							s.Fatal("Faild to WaitUntilFeatureFlagHasValue: ", err)
-						}
-					},
 					extraCrasClientArgs: []string{"--effects=aec"},
 				},
-				Fixture:   "powerAshPlatformAudioNoiseCancellation",
+				Fixture: fixture.CrasSetUp{
+					ChromeFixture:           setup.PowerAshPlatformAudioNoiseCancellation,
+					InputDevice:             nodematch.Type("INTERNAL_MIC"),
+					OutputDevice:            nodematch.Type("INTERNAL_SPEAKER"),
+					VoiceIsolationUIEnabled: true,
+					CrasFeatures: fixture.CrasFeatureOverrides{
+						fixture.APNoiseCancellation: true,
+						fixture.StyleTransfer:       false,
+					},
+				}.Instance(),
 				ExtraAttr: []string{"group:crosbolt", "crosbolt_perbuild"},
 			},
 			{
 				Name: "aec_nc_ast",
 				Val: crasNoiseCancellationPowerParam{
-					crasSetUp: func(ctx context.Context, s *testing.State) {
-						cras, err := audio.RestartCras(ctx)
-						if err != nil {
-							s.Fatal("Failed to restart CRAS: ", err)
-						}
-						if err := dlc.Install(ctx, "nc-ap-dlc", ""); err != nil {
-							s.Fatal("Cannot install nc-ap-dlc: ", err)
-						}
-						if err := cras.SetActiveNodeByType(ctx, "INTERNAL_MIC"); err != nil {
-							s.Fatal("Failed to set internal mic active: ", err)
-						}
-						if err := cras.SetActiveNodeByType(ctx, "INTERNAL_SPEAKER"); err != nil {
-							s.Fatal("Failed to set internal speaker active: ", err)
-						}
-						if err := cras.SetVoiceIsolationUIEnabled(ctx, true); err != nil {
-							s.Fatal("Failed to set voice isolation enabled/disabled: ", err)
-						}
-						if err := cras.WaitUntilFeatureFlagHasValue(ctx, "CrOSLateBootAudioAPNoiseCancellation", true); err != nil {
-							s.Fatal("Faild to WaitUntilFeatureFlagHasValue: ", err)
-						}
-						if err := cras.WaitUntilFeatureFlagHasValue(ctx, "CrOSLateBootAudioStyleTransfer", true); err != nil {
-							s.Fatal("Faild to WaitUntilFeatureFlagHasValue: ", err)
-						}
-					},
 					extraCrasClientArgs: []string{"--effects=aec"},
 				},
-				Fixture:   "powerAshPlatformAudioStyleTransfer",
+				Fixture: fixture.CrasSetUp{
+					ChromeFixture:           setup.PowerAshPlatformAudioStyleTransfer,
+					InputDevice:             nodematch.Type("INTERNAL_MIC"),
+					OutputDevice:            nodematch.Type("INTERNAL_SPEAKER"),
+					VoiceIsolationUIEnabled: true,
+					CrasFeatures: fixture.CrasFeatureOverrides{
+						fixture.APNoiseCancellation: true,
+						fixture.StyleTransfer:       true,
+					},
+				}.Instance(),
 				ExtraAttr: []string{"group:crosbolt", "crosbolt_perbuild"},
 			},
 			{
 				Name: "dsp_aec",
 				Val: crasNoiseCancellationPowerParam{
-					crasSetUp: func(ctx context.Context, s *testing.State) {
-						cras, err := audio.RestartCras(ctx)
-						if err != nil {
-							s.Fatal("Failed to restart CRAS: ", err)
-						}
-						if err := cras.SetActiveNodeByType(ctx, "INTERNAL_MIC"); err != nil {
-							s.Fatal("Failed to set internal mic active: ", err)
-						}
-						if err := cras.SetActiveNodeByType(ctx, "INTERNAL_SPEAKER"); err != nil {
-							s.Fatal("Failed to set internal speaker active: ", err)
-						}
-					},
 					extraCrasClientArgs: []string{"--effects=0x11"},
 				},
+				Fixture: fixture.CrasSetUp{
+					ChromeFixture: setup.PowerAshPlatformAudioNoiseCancellation,
+					InputDevice:   nodematch.Type("INTERNAL_MIC"),
+					OutputDevice:  nodematch.Type("INTERNAL_SPEAKER"),
+					CrasFeatures:  fixture.CrasFeatureOverrides{},
+				}.Instance(),
 				ExtraHardwareDeps: hwdep.D(hwdepDSPModels),
-				Fixture:           "powerAshPlatformAudioNoiseCancellation",
 			},
 			{
 				Name: "dsp_aec_nc",
 				Val: crasNoiseCancellationPowerParam{
-					crasSetUp: func(ctx context.Context, s *testing.State) {
-						cras, err := audio.RestartCras(ctx)
-						if err != nil {
-							s.Fatal("Failed to restart CRAS: ", err)
-						}
-						if err := cras.SetActiveNodeByType(ctx, "INTERNAL_MIC"); err != nil {
-							s.Fatal("Failed to set internal mic active: ", err)
-						}
-						if err := cras.SetActiveNodeByType(ctx, "INTERNAL_SPEAKER"); err != nil {
-							s.Fatal("Failed to set internal speaker active: ", err)
-						}
-						if err := cras.SetVoiceIsolationUIEnabled(ctx, true); err != nil {
-							s.Fatal("Failed to SetVoiceIsolationUIEnabled: ", err)
-						}
-					},
 					extraCrasClientArgs: []string{"--effects=0x11"},
 				},
+				Fixture: fixture.CrasSetUp{
+					ChromeFixture:           setup.PowerAshPlatformAudioNoiseCancellation,
+					InputDevice:             nodematch.Type("INTERNAL_MIC"),
+					OutputDevice:            nodematch.Type("INTERNAL_SPEAKER"),
+					VoiceIsolationUIEnabled: true,
+					CrasFeatures:            fixture.CrasFeatureOverrides{},
+				}.Instance(),
 				ExtraHardwareDeps: hwdep.D(hwdepDSPModels),
-				Fixture:           "powerAshPlatformAudioNoiseCancellation",
 				ExtraAttr:         []string{"group:crosbolt", "crosbolt_perbuild"},
 			},
 		},
@@ -187,7 +124,6 @@ func init() {
 }
 
 type crasNoiseCancellationPowerParam struct {
-	crasSetUp           func(ctx context.Context, s *testing.State)
 	extraCrasClientArgs []string
 }
 
@@ -198,8 +134,6 @@ func CrasNoiseCancellationPower(ctx context.Context, s *testing.State) {
 	cleanupCtx := ctx
 	ctx, cancel := ctxutil.Shorten(ctx, 5*time.Second)
 	defer cancel()
-
-	param.crasSetUp(ctx, s)
 
 	const (
 		interval     = 5 * time.Second // Power metrics collect interval.

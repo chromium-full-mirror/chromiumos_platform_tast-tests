@@ -26,6 +26,10 @@ import (
 //     instead of having duplicated specifications for the test and the fixture.
 //  3. As a bonus, fixtures' timeouts are separated from test timeouts.
 type CrasSetUp struct {
+	// The name of the fixture that sets up Chrome.
+	// Setting ChromeFixture removes the automatic Chrome configuration done by ChromeForCras.
+	ChromeFixture string
+
 	// Feature overrides that are visible to CRAS.
 	CrasFeatures CrasFeatureOverrides
 
@@ -49,9 +53,14 @@ var crasSetUpID int
 
 // Instance implements ParameterizedFixture.
 func (pf CrasSetUp) Instance() string {
-	parent := ChromeForCras{
-		CrasFeatures: pf.CrasFeatures,
-	}.Instance()
+	var parent string
+	if pf.ChromeFixture != "" {
+		parent = pf.ChromeFixture
+	} else {
+		parent = ChromeForCras{
+			CrasFeatures: pf.CrasFeatures,
+		}.Instance()
+	}
 	if pf.Aloop != nil {
 		if pf.Aloop.Parent != "" {
 			panic("Aloop.Parent must not be set")
