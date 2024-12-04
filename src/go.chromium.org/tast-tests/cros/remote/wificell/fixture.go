@@ -99,8 +99,6 @@ func init() {
 	params := make(map[TFFeatures]string)
 	params[TFFeaturesNone] = "Default wificell setup with router and pcap object. Note that pcap and router can point to the same Access Point. Also, unlike wificellFixtWithCapture, the fixture won't spawn Capturer. Users may spawn Capturer with customized configuration when needed"
 	params[TFFeaturesCapture] = "Wificell setup with Capturer on pcap for each configured AP"
-	params[TFFeaturesCollectWiFiFirmwareDump] = "Wificell setup with firmware dump collection on test failures"
-	params[TFFeaturesCapture|TFFeaturesCollectWiFiFirmwareDump] = "Wificell setup with Capturer on pcap for each configured AP and collect frimware dump in test failures"
 	params[TFFeaturesCapture|TFFeaturesRouterAsCapture] = "Wificell setup with default capturer on router instead of pcap"
 	params[TFFeaturesBridgeAndVeth] = "Wificell setup with bridge and veth support on router"
 	params[TFFeaturesBridgeAndVeth|TFFeaturesCapture] = "Wificell setup with bridge and veth support on router and Capturer on pcap"
@@ -211,8 +209,6 @@ const (
 	TFFeaturesCellular
 	// TFFeaturesWithUI ensures the UI is started as part of the fixture setup.
 	TFFeaturesWithUI
-	// TFFeaturesCollectWiFiFirmwareDump collects WiFi firmware dump at the end of the test in the case of failure.
-	TFFeaturesCollectWiFiFirmwareDump
 )
 
 // String returns name component corresponding to enum value(s).
@@ -225,11 +221,6 @@ func (enum TFFeatures) String() string {
 		ret = append(ret, "Capture")
 		// Punch out the bit to check for weird values later.
 		enum ^= TFFeaturesCapture
-	}
-	if enum&TFFeaturesCollectWiFiFirmwareDump != 0 {
-		ret = append(ret, "CollectFirmwareDump")
-		// Punch out the bit to check for weird values later.
-		enum ^= TFFeaturesCollectWiFiFirmwareDump
 	}
 	if enum&TFFeaturesBridgeAndVeth != 0 {
 		ret = append(ret, "BridgeAndVeth")
@@ -762,11 +753,12 @@ func (f *tastFixtureImpl) PreTest(ctx context.Context, s *testing.FixtTestState)
 		}
 	}
 
-	if f.features&TFFeaturesCollectWiFiFirmwareDump != 0 {
-		if err := f.tf.DUTConn(DefaultDUT).CommandContext(ctx, "sh", "-c", "rm /var/spool/crash/devcoredump_iwlwifi*").Run(); err != nil {
-			testing.ContextLog(ctx, "Failed to delete old frimware dumps: ", err)
-		}
+	if err := f.tf.CleanCrashDir(ctx, DefaultDUT); err != nil {
+		testing.ContextLogf(ctx, "Failed to clean the crash directory on the DUT %d: %v", DefaultDUT, err)
 	}
+
+	// Disable collecting Intel firmware dump on failure.
+	f.tf.CollectIntelFirmwareDumpOnError = false
 }
 
 func (f *tastFixtureImpl) PostTest(ctx context.Context, s *testing.FixtTestState) {
@@ -807,7 +799,7 @@ func (f *tastFixtureImpl) PostTest(ctx context.Context, s *testing.FixtTestState
 		}
 	}
 
-	if s.HasError() && (f.features&TFFeaturesCollectWiFiFirmwareDump != 0) {
+	if s.HasError() && f.tf.CollectIntelFirmwareDumpOnError {
 		if devInfo, err := f.tf.WifiClient().GetDeviceInfo(ctx, &empty.Empty{}); err != nil {
 			s.Error("Failed to obtain WiFi device info: ", err)
 		} else if devInfo.Vendor == IntelVendorNum {

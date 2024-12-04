@@ -12,6 +12,7 @@ import (
 	"time"
 
 	"github.com/golang/protobuf/ptypes/empty"
+
 	"go.chromium.org/tast-tests/cros/common/tbdep"
 	tdreq "go.chromium.org/tast-tests/cros/common/testdevicerequirements"
 	"go.chromium.org/tast-tests/cros/common/wifi/security"
@@ -56,12 +57,11 @@ func init() {
 		Contacts: []string{
 			"chromeos-wifi-champs@google.com", // WiFi oncall rotation
 		},
-		BugComponent: "b:893827", // ChromeOS > Platform > Connectivity > WiFi
-		Attr:         []string{"group:wificell", "wificell_func", "group:release-health", "release-health_wifi"},
-		TestBedDeps:  []string{tbdep.Wificell, tbdep.WifiStateNormal, tbdep.BluetoothStateNormal, tbdep.PeripheralWifiStateWorking},
-		ServiceDeps:  []string{wificell.ShillServiceName, wificell.TraceCmdService},
-		// TODO(b/377913176): Remove the wificell.TFFeaturesCollectWiFiFirmwareDump feature.
-		Fixture:         wificell.FixtureID(wificell.TFFeaturesCapture | wificell.TFFeaturesCollectWiFiFirmwareDump),
+		BugComponent:    "b:893827", // ChromeOS > Platform > Connectivity > WiFi
+		Attr:            []string{"group:wificell", "wificell_func", "group:release-health", "release-health_wifi"},
+		TestBedDeps:     []string{tbdep.Wificell, tbdep.WifiStateNormal, tbdep.BluetoothStateNormal, tbdep.PeripheralWifiStateWorking},
+		ServiceDeps:     []string{wificell.ShillServiceName, wificell.TraceCmdService},
+		Fixture:         wificell.FixtureID(wificell.TFFeaturesCapture),
 		Requirements:    []string{tdreq.WiFiGenSupportMBO, tdreq.WiFiProcPassFW, tdreq.WiFiProcPassAVL, tdreq.WiFiProcPassAVLBeforeUpdates, tdreq.WiFiProcPassMatfunc, tdreq.WiFiProcPassMatfuncBeforeUpdates},
 		VariantCategory: `{"name": "WifiBtChipset_Soc_Kernel"}`,
 		Params: []testing.Param{
@@ -162,6 +162,9 @@ func init() {
 
 func BSSTMRequest(ctx context.Context, s *testing.State) {
 	tf := s.FixtValue().(*wificell.TestFixture)
+
+	// TODO(b/377913176): Remove CollectIntelFirmwareDumpOnErr.
+	tf.CollectIntelFirmwareDumpOnError = true
 
 	runTest := func(ctx context.Context, s *testing.State, waitForScan bool) {
 		apOpts1 := []hostapd.Option{hostapd.Mode(hostapd.Mode80211nMixed), hostapd.HTCaps(hostapd.HTCapHT20), hostapd.Channel(1), hostapd.SpectrumManagement()}
@@ -300,14 +303,16 @@ func BSSTMRequest(ctx context.Context, s *testing.State) {
 					if waitForScan {
 						testScantype = "waifForScanTrue"
 					}
-					dest := fmt.Sprintf("%s/trace_%s_%s.dat", s.OutDir(), instanceName, testScantype)
-					if err := tracing.SaveRemoteInstanceTraceData(ctx, cl, instanceName,
-						func(src string) error {
-							return s.DUT().GetFile(ctx, src, dest)
-						}); err != nil {
-						s.Log("Failed to copy the data file from DUT: ", err)
-					} else {
-						s.Logf("Save trace data into %q", dest)
+					if s.HasError() {
+						dest := fmt.Sprintf("%s/trace_%s_%s.dat", s.OutDir(), instanceName, testScantype)
+						if err := tracing.SaveRemoteInstanceTraceData(ctx, cl, instanceName,
+							func(src string) error {
+								return s.DUT().GetFile(ctx, src, dest)
+							}); err != nil {
+							s.Log("Failed to copy the data file from DUT: ", err)
+						} else {
+							s.Logf("Save trace data into %q", dest)
+						}
 					}
 				}
 			}(ctx)

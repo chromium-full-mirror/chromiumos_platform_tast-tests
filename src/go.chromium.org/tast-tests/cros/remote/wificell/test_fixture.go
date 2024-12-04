@@ -244,6 +244,10 @@ type TestFixture struct {
 	powerSetupClient    power.DeviceSetupServiceClient
 	powerRecorderClient power.RecorderServiceClient
 	powerCleanup        func(context.Context) error
+
+	// Enable CollectIntelFirmwareDumpOnError at the beginning of the test to collect
+	// Intel firmware dumps in the case of failure.
+	CollectIntelFirmwareDumpOnError bool
 }
 
 // NewTestFixture creates a TestFixture.
@@ -989,12 +993,20 @@ func (tf *TestFixture) CollectLogs(ctx context.Context) error {
 	return firstErr
 }
 
+// CleanCrashDir removes files in the directory /var/spool/crash/.
+func (tf *TestFixture) CleanCrashDir(ctx context.Context, dutIdx DutIdx) error {
+	if err := tf.DUTConn(dutIdx).CommandContext(ctx, "sh", "-c", "rm -f /var/spool/crash/*").Run(); err != nil {
+		return errors.Wrap(err, "failed to empty the crash directory /var/spool/crash/")
+	}
+	return nil
+}
+
 // CollectCrashLogs downloads related crash log files to OutDir.
 func (tf *TestFixture) CollectCrashLogs(ctx context.Context, outDir string, crashTime time.Time) error {
 	crashDirs := []string{"/var/spool/crash"}
-	formatedCrashTime := crashTime.Format("20060102.150405")
-	formatedCrashTime = formatedCrashTime[:len(formatedCrashTime)-1]
-	firmwareDumpPattern := "devcoredump_iwlwifi." + formatedCrashTime + ".*"
+	formattedCrashTime := crashTime.Format("20060102.150405")
+	formattedCrashTime = formattedCrashTime[:len(formattedCrashTime)-2]
+	firmwareDumpPattern := "devcoredump_iwlwifi." + formattedCrashTime + ".*"
 	requiredCrashMeta := []string{
 		firmwareDumpPattern + ".devcore.gz",
 		firmwareDumpPattern + ".meta",
