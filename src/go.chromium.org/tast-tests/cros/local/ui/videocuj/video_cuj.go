@@ -18,11 +18,9 @@ import (
 	"go.chromium.org/tast-tests/cros/local/chrome/ash"
 	"go.chromium.org/tast-tests/cros/local/chrome/cuj"
 	"go.chromium.org/tast-tests/cros/local/chrome/cuj/inputsimulations"
-	"go.chromium.org/tast-tests/cros/local/chrome/display"
 	"go.chromium.org/tast-tests/cros/local/chrome/uiauto"
 	"go.chromium.org/tast-tests/cros/local/chrome/uiauto/event"
 	"go.chromium.org/tast-tests/cros/local/chrome/uiauto/faillog"
-	"go.chromium.org/tast-tests/cros/local/chrome/uiauto/mouse"
 	"go.chromium.org/tast-tests/cros/local/chrome/uiauto/nodewith"
 	"go.chromium.org/tast-tests/cros/local/chrome/uiauto/pointer"
 	"go.chromium.org/tast-tests/cros/local/chrome/uiauto/role"
@@ -121,11 +119,6 @@ func Run(ctx context.Context, cr *chrome.Chrome, outDir, systemTraceConfigPath s
 		return errors.Wrap(err, "failed to create a keyboard")
 	}
 	defer kw.Close(ctx)
-
-	info, err := display.GetPrimaryInfo(ctx, tconn)
-	if err != nil {
-		return errors.Wrap(err, "failed to get the primary display info")
-	}
 
 	ui := uiauto.New(tconn)
 
@@ -313,24 +306,13 @@ func Run(ctx context.Context, cr *chrome.Chrome, outDir, systemTraceConfigPath s
 				// and unmute buttons.
 				volumeButton := nodewith.NameRegex(regexp.MustCompile("mute$")).Role(role.Button)
 				volumeSlider := nodewith.Name("volume").Role(role.Slider)
+
 				if err := action.Combine(
 					"open volume slider toggle",
-
-					// Move the mouse to the left of the screen, then back to
-					// the center of the video. By moving the mouse to the
-					// center of the video, the media controls become visible.
-					mouse.Move(tconn, info.Bounds.LeftCenter(), 200*time.Millisecond),
-					ui.MouseMoveTo(video, 200*time.Millisecond),
-					ui.WaitUntilExists(volumeButton),
-
 					// The volume button is frequently offscreen. ui.MakeVisible
 					// scrolls the page until the button is visible on screen.
 					ui.MakeVisible(volumeButton),
-
-					// Move the mouse to the button and wait until the volume
-					// slider exists, and the animations are complete.
-					ui.MouseMoveTo(volumeButton, 200*time.Millisecond),
-					ui.WaitUntilExists(volumeSlider),
+					ui.EnsureFocused(volumeButton),
 					ui.WaitForLocation(volumeSlider),
 				)(ctx); err != nil {
 					return err
