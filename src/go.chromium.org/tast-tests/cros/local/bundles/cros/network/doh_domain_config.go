@@ -164,6 +164,11 @@ func DoHDomainConfig(ctx context.Context, s *testing.State) {
 			if _, err := dns.SetDoHModeViaShill(ctx, dns.DoHAutomatic, provider); err != nil {
 				s.Fatal("Failed to set DNS-over-HTTPS mode: ", err)
 			}
+			// Wait for the DoH mode to be propagated to DNS proxy
+			// and for the DoH servers to be probed.
+			// GoBigSleepLint: The sleep is necessary as there is
+			// currently no way of querying DNS proxy's state.
+			testing.Sleep(ctx, 1*time.Second)
 		}
 
 		for _, tc := range []dns.ProxyTestCase{
