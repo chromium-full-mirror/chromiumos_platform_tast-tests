@@ -17,6 +17,7 @@ import (
 	"go.chromium.org/tast-tests/cros/local/upstart"
 	"go.chromium.org/tast/core/ctxutil"
 	"go.chromium.org/tast/core/testing"
+	"go.chromium.org/tast/core/testing/hwdep"
 )
 
 const (
@@ -35,6 +36,8 @@ func init() {
 		Fixture:      fixture.CleanOwnership,
 		Attr:         []string{"group:dmserver-enrollment-daily"},
 		SoftwareDeps: []string{"flex_device", "chrome"},
+		// b/365541979: Skip on the reven\nuc11.
+		HardwareDeps: hwdep.D(hwdep.SkipDMIProductName("NUC11TNKv5")),
 		VarDeps: []string{
 			enrollmentTokenVarRevoked,
 			"ui.signinProfileTestExtensionManifestKey",

@@ -19,6 +19,7 @@ import (
 	"go.chromium.org/tast/core/ctxutil"
 	"go.chromium.org/tast/core/rpc"
 	"go.chromium.org/tast/core/testing"
+	"go.chromium.org/tast/core/testing/hwdep"
 )
 
 const samlEnrollmentTimeout = 7 * time.Minute
@@ -33,6 +34,8 @@ func init() {
 		},
 		Attr:         []string{"group:dmserver-enrollment-daily"},
 		SoftwareDeps: []string{"reboot", "chrome"},
+		// b/365541979: Skip on the reven\nuc11.
+		HardwareDeps: hwdep.D(hwdep.SkipDMIProductName("NUC11TNKv5")),
 		ServiceDeps: []string{
 			"tast.cros.hwsec.OwnershipService",
 			"tast.cros.policy.PolicyService",

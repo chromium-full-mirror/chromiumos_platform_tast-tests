@@ -20,6 +20,7 @@ import (
 	"go.chromium.org/tast/core/ctxutil"
 	"go.chromium.org/tast/core/rpc"
 	"go.chromium.org/tast/core/testing"
+	"go.chromium.org/tast/core/testing/hwdep"
 )
 
 const (
@@ -44,6 +45,8 @@ func init() {
 		Attr:         []string{"group:dpanel-end2end", "group:dmserver-enrollment-daily", "group:hw_agnostic"},
 		SoftwareDeps: []string{"reboot", "chrome"},
 		ServiceDeps:  []string{"tast.cros.policy.PolicyService", "tast.cros.kiosk.KioskService", "tast.cros.hwsec.OwnershipService", "tast.cros.tape.Service", "tast.cros.graphics.ScreenshotService"},
+		// b/365541979: Skip on the reven\nuc11.
+		HardwareDeps: hwdep.D(hwdep.SkipDMIProductName("NUC11TNKv5")),
 		Timeout:      gaiaKioskEnrollmentTestTimeout,
 		Params: []testing.Param{
 			{
