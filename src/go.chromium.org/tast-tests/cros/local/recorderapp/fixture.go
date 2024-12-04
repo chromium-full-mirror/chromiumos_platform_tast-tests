@@ -22,6 +22,18 @@ var recorderAppPowerTestOptions = powersetup.PowerTestOptions{
 	KeyboardBrightness: powersetup.SetKbBrightnessToZero,
 }
 
+// addChromeOpts enables conch flag by default and adds chrome options specified in fixture parameter.
+func addChromeOpts(ctx context.Context, s *testing.FixtState) ([]chrome.Option, error) {
+	chromeOpts := []chrome.Option{
+		chrome.EnableFeatures("Conch"),
+	}
+	if s.Param() != nil {
+		extraOpts := s.Param().([]chrome.Option)
+		chromeOpts = append(chromeOpts, extraOpts...)
+	}
+	return chromeOpts, nil
+}
+
 // PowerTimeParams are time parameters used in power recording in Recorder App.
 var PowerTimeParams = power.TimeParams{Interval: 5 * time.Second, Total: 5 * time.Minute}
 
@@ -48,10 +60,8 @@ func init() {
 		Contacts:     []string{"chromeos-recorder-app@google.com", "kamchonlathorn@chromium.org"},
 		BugComponent: "b:1522466", // ChromeOS > Platform > Technologies > Audio > Recorder App
 		Impl: powersetup.NewPowerUIFixture(recorderAppPowerTestOptions, powersetup.PowerFixtureOptions{
-			BrowserExtraOpts: []chrome.Option{
-				chrome.EnableFeatures("Conch"),
-			},
 			EnableGAIALogin: true,
+			ExtraOptsFunc:   addChromeOpts,
 		}),
 		SetUpTimeout:    chrome.GAIALoginTimeout + powersetup.SetUpTimeout,
 		ResetTimeout:    powersetup.ResetTimeout,
@@ -66,8 +76,8 @@ func init() {
 		Contacts:     []string{"chromeos-recorder-app@google.com", "kamchonlathorn@chromium.org"},
 		BugComponent: "b:1522466", // ChromeOS > Platform > Technologies > Audio > Recorder App
 		Impl: powersetup.NewPowerUIFixture(recorderAppPowerTestOptions, powersetup.PowerFixtureOptions{
-			BrowserExtraOpts: []chrome.Option{chrome.EnableFeatures("Conch")},
-			EnableGAIALogin:  true,
+			EnableGAIALogin: true,
+			ExtraOptsFunc:   addChromeOpts,
 		}),
 		Parent:          audiofixture.AloopLoaded{Channels: 2}.Instance(),
 		SetUpTimeout:    chrome.GAIALoginTimeout + powersetup.SetUpTimeout + aloopTimeout,
@@ -75,6 +85,16 @@ func init() {
 		TearDownTimeout: powersetup.TearDownTimeout + aloopTimeout,
 		PreTestTimeout:  powersetup.PreTestTimeout + aloopTimeout,
 		PostTestTimeout: powersetup.PostTestTimeout,
+		Params: []testing.FixtureParam{
+			{
+				// No additional flags
+				Val: []chrome.Option{},
+			},
+			{
+				Name: "japanese_transcription",
+				Val:  []chrome.Option{chrome.EnableFeatures("ConchExpandTranscriptionLanguage")},
+			},
+		},
 	})
 }
 
@@ -88,9 +108,7 @@ type FixtureData struct {
 }
 
 func (f *fixture) SetUp(ctx context.Context, s *testing.FixtState) interface{} {
-	chromeOpts := []chrome.Option{
-		chrome.EnableFeatures("Conch"),
-	}
+	chromeOpts, _ := addChromeOpts(ctx, s)
 	cr, err := chrome.New(ctx, chromeOpts...)
 	if err != nil {
 		s.Fatal("Failed to start Chrome: ", err)

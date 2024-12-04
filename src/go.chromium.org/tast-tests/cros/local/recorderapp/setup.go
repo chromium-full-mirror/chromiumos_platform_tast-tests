@@ -81,7 +81,7 @@ func (a *App) ensureModelInstalled(ctx context.Context, setup Setup) error {
 		if err := a.conn.Call(ctx, nil, "TestHelper.installTranscriptionModel", transcriptionLanguage); err != nil {
 			return errors.Wrapf(err, "failed to install %s transcription model", transcriptionLanguage)
 		}
-		if err := a.conn.WaitForExprWithTimeout(ctx, fmt.Sprintf("TestHelper.isTranscriptionModelInstalled('%s')", transcriptionLanguage), time.Minute); err != nil {
+		if err := a.conn.WaitForExprWithTimeout(ctx, fmt.Sprintf("TestHelper.isTranscriptionModelInstalled('%s')", transcriptionLanguage), 2*time.Minute); err != nil {
 			return errors.Wrapf(err, "failed to wait for %s transcription model to be installed", transcriptionLanguage)
 		}
 	}

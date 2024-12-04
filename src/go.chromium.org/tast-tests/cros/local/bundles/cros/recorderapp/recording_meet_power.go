@@ -44,8 +44,9 @@ var (
 )
 
 type recordingMeetPowerParam struct {
-	launchConfig recorderapp.LaunchConfig
-	recordAudio  bool
+	launchConfig        recorderapp.LaunchConfig
+	recordAudio         bool
+	speechAudioDataPath string
 }
 
 func init() {
@@ -58,39 +59,59 @@ func init() {
 		Timeout:      testDuration,
 		Attr:         []string{"group:crosbolt", "crosbolt_perbuild"},
 		SoftwareDeps: []string{"chrome"},
-		Fixture:      "powerAshGAIAWithRecorderAppAndAloopLoaded",
-		Data:         []string{data.ShortNewsAudio},
+		Data:         []string{data.ShortNewsAudio, data.ShortJapaneseNewsAudio},
 		Params: []testing.Param{
 			{
-				Name: "idle",
+				Name:    "idle",
+				Fixture: "powerAshGAIAWithRecorderAppAndAloopLoaded",
 				Val: recordingMeetPowerParam{
-					launchConfig: recorderapp.LaunchConfig{},
-					recordAudio:  false,
+					launchConfig:        recorderapp.LaunchConfig{},
+					recordAudio:         false,
+					speechAudioDataPath: data.ShortNewsAudio,
 				},
 			},
 			{
-				Name: "record",
+				Name:    "record",
+				Fixture: "powerAshGAIAWithRecorderAppAndAloopLoaded",
 				Val: recordingMeetPowerParam{
-					launchConfig: recorderapp.LaunchConfig{},
-					recordAudio:  true,
+					launchConfig:        recorderapp.LaunchConfig{},
+					recordAudio:         true,
+					speechAudioDataPath: data.ShortNewsAudio,
 				},
 			},
 			{
-				Name: "record_transcription",
+				Name:    "record_transcription",
+				Fixture: "powerAshGAIAWithRecorderAppAndAloopLoaded",
 				Val: recordingMeetPowerParam{
-					launchConfig: recorderapp.LaunchConfig{TranscriptionForceEnabled: true},
-					recordAudio:  true,
+					launchConfig:        recorderapp.LaunchConfig{TranscriptionForceEnabled: true},
+					recordAudio:         true,
+					speechAudioDataPath: data.ShortNewsAudio,
 				},
 				ExtraSoftwareDeps: []string{"ondevice_speech"},
 			},
 			{
-				Name: "record_speaker_label",
+				Name:    "record_japanese_transcription",
+				Fixture: "powerAshGAIAWithRecorderAppAndAloopLoaded.japanese_transcription",
+				Val: recordingMeetPowerParam{
+					launchConfig: recorderapp.LaunchConfig{
+						TranscriptionForceEnabled: true,
+						TranscriptionLanguage:     recorderapp.JaJp,
+					},
+					recordAudio:         true,
+					speechAudioDataPath: data.ShortJapaneseNewsAudio,
+				},
+				ExtraSoftwareDeps: []string{"ondevice_speech"},
+			},
+			{
+				Name:    "record_speaker_label",
+				Fixture: "powerAshGAIAWithRecorderAppAndAloopLoaded",
 				Val: recordingMeetPowerParam{
 					launchConfig: recorderapp.LaunchConfig{
 						TranscriptionForceEnabled: true,
 						SpeakerLabelForceEnabled:  true,
 					},
-					recordAudio: true,
+					recordAudio:         true,
+					speechAudioDataPath: data.ShortNewsAudio,
 				},
 				ExtraSoftwareDeps: []string{"ondevice_speech"},
 			},
@@ -123,7 +144,8 @@ func RecordingMeetPower(ctx context.Context, s *testing.State) {
 	}
 	defer os.RemoveAll(tempDir)
 	extendedSpeechWav := filepath.Join(tempDir, "speech.wav")
-	if err := wav.RepeatForDuration(ctx, s.DataPath(data.ShortNewsAudio), extendedSpeechWav, testDuration); err != nil {
+	param := s.Param().(recordingMeetPowerParam)
+	if err := wav.RepeatForDuration(ctx, s.DataPath(param.speechAudioDataPath), extendedSpeechWav, testDuration); err != nil {
 		s.Fatal("Failed to prepare wav file: ", err)
 	}
 
@@ -145,7 +167,6 @@ func RecordingMeetPower(ctx context.Context, s *testing.State) {
 	// Launch Recorder App and start recording if specified.
 	s.Log("Launching Recorder App")
 
-	param := s.Param().(recordingMeetPowerParam)
 	setup := recorderapp.Setup{Config: param.launchConfig}
 	app, err := recorderapp.StartAppWithSetup(ctx, cr, setup)
 	if err != nil {
