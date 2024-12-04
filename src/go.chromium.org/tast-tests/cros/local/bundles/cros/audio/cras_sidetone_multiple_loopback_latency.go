@@ -30,108 +30,116 @@ func init() {
 			"group:mainline", "informational",
 			"group:cbx", "cbx_feature_enabled", "cbx_stable",
 		},
-		Fixture: fixture.AloopLoaded{
-			Channels:    2,
-			DevicePairs: 2,
-		}.Instance(),
 		Timeout:      3 * time.Minute,
 		Data:         []string{data.TheQuickBrownFoxS16LEStereo48000Wav},
 		SoftwareDeps: []string{"chrome"},
 		Params: []testing.Param{
 			{
-				Name: "no_effects",
-				Val:  crasSidetoneMultipleLoopbackLatencyParams{},
+				Name:    "no_effects",
+				Fixture: crasSidetoneMultipleLoopbackLatencyFixture{}.Instance(),
 			},
 			{
 				Name: "nc",
-				Val: crasSidetoneMultipleLoopbackLatencyParams{
+				Fixture: crasSidetoneMultipleLoopbackLatencyFixture{
 					noiseCancellationEnabled: true,
-				},
+				}.Instance(),
 				ExtraHardwareDeps: hwdep.D(hwdep.FeatureLevel(1)),
 			},
 			{
 				Name: "nc_ast",
-				Val: crasSidetoneMultipleLoopbackLatencyParams{
+				Fixture: crasSidetoneMultipleLoopbackLatencyFixture{
 					noiseCancellationEnabled: true,
 					styleTransferEnabled:     true,
-				},
+				}.Instance(),
 				ExtraHardwareDeps: hwdep.D(hwdep.FeatureLevel(1)),
 			},
 		},
 	})
 }
 
-type crasSidetoneMultipleLoopbackLatencyParams struct {
+type crasSidetoneMultipleLoopbackLatencyFixture struct {
 	noiseCancellationEnabled bool
 	styleTransferEnabled     bool
+}
+
+var _ fixture.ParameterizedFixture = crasSidetoneMultipleLoopbackLatencyFixture{}
+
+// Instance implements fixture.ParameterizedFixture.
+func (f crasSidetoneMultipleLoopbackLatencyFixture) Instance() string {
+	return fixture.CrasSetUp{
+		CrasFeatures: fixture.CrasFeatureOverrides{
+			fixture.StyleTransfer: f.styleTransferEnabled,
+		},
+		Aloop: &fixture.AloopLoaded{
+			Channels:    2,
+			DevicePairs: 2,
+		},
+		VoiceIsolationUIEnabled: f.noiseCancellationEnabled || f.styleTransferEnabled,
+		InputDevice:             nodematch.Name("Loopback Capture"),
+		OutputDevice:            nodematch.Name("Loopback Playback 1"),
+	}.Instance()
 }
 
 // CrasSidetoneMultipleLoopbackLatency measures the sidetone latency with multiple loopback setups
 // and some audio processing.
 func CrasSidetoneMultipleLoopbackLatency(ctx context.Context, s *testing.State) {
-	param := s.Param().(crasSidetoneMultipleLoopbackLatencyParams)
-	apConfig := audio.NoiseCancellationConfig{
-		StyleTransferAllowed: param.styleTransferEnabled,
-		VoiceIsolation:       param.noiseCancellationEnabled || param.styleTransferEnabled,
+	fixt := s.FixtValue().(fixture.CrasFixtValue)
+	cras := fixt.Cras()
+
+	if err := cras.SetSidetoneEnabled(ctx, true); err != nil {
+		s.Fatal("Failed to SetSidetoneEnabled: ", err)
 	}
-	if err := audio.WithNoiseCancellation(ctx, apConfig, s.OutDir(), s.HasError, nodematch.Name("Loopback Capture"), nodematch.Name("Loopback Playback 1"), func(ctx context.Context, cras *audio.Cras) {
-		if err := cras.SetSidetoneEnabled(ctx, true); err != nil {
-			s.Fatal("Failed to SetSidetoneEnabled: ", err)
-		}
-		defer func() {
-			cras.SetSidetoneEnabled(ctx, false)
-		}()
+	defer func() {
+		cras.SetSidetoneEnabled(ctx, false)
+	}()
 
-		outputPath := filepath.Join(s.OutDir(), "result.txt")
-		output, err := os.Create(outputPath)
-		if err != nil {
-			s.Fatal("Failed to create output file: ", err)
-		}
-		defer output.Close()
-
-		const (
-			bufferSize     = "480"
-			periodSize     = "240"
-			noiseThreshold = "1000"
-		)
-
-		// The audio path is the same as CrasSidetone test.
-		cmd := testexec.CommandContext(
-			ctx,
-			"loopback_latency",
-			"-i",
-			"hw:Loopback_1,1",
-			"-o",
-			"hw:Loopback,0",
-			"-b",
-			bufferSize,
-			"-p",
-			periodSize,
-			"-n",
-			noiseThreshold,
-			"-f",
-			s.DataPath(data.TheQuickBrownFoxS16LEStereo48000Wav),
-		)
-		cmd.Stdout = output
-		if err := cmd.Run(testexec.DumpLogOnError); err != nil {
-			s.Fatal("Failed to run loopback_latency: ", err)
-		}
-
-		perfValues := perf.NewValues()
-		defer func() {
-			if err := perfValues.Save(s.OutDir()); err != nil {
-				s.Error("Cannot save perf data: ", err)
-			}
-		}()
-
-		result, err := audio.ParseLoopbackLatencyResult(outputPath, 1)
-		if err != nil {
-			s.Fatal("Failed to parse the latency result: ", err)
-		}
-		s.Logf("Result: %+v", result)
-
-		audio.UpdatePerfValuesFromResult(perfValues, result, bufferSize)
-	}); err != nil {
-		s.Fatal("Failed to setup noise cancellation: ", err)
+	outputPath := filepath.Join(s.OutDir(), "result.txt")
+	output, err := os.Create(outputPath)
+	if err != nil {
+		s.Fatal("Failed to create output file: ", err)
 	}
+	defer output.Close()
+
+	const (
+		bufferSize     = "480"
+		periodSize     = "240"
+		noiseThreshold = "1000"
+	)
+
+	// The audio path is the same as CrasSidetone test.
+	cmd := testexec.CommandContext(
+		ctx,
+		"loopback_latency",
+		"-i",
+		"hw:Loopback_1,1",
+		"-o",
+		"hw:Loopback,0",
+		"-b",
+		bufferSize,
+		"-p",
+		periodSize,
+		"-n",
+		noiseThreshold,
+		"-f",
+		s.DataPath(data.TheQuickBrownFoxS16LEStereo48000Wav),
+	)
+	cmd.Stdout = output
+	if err := cmd.Run(testexec.DumpLogOnError); err != nil {
+		s.Fatal("Failed to run loopback_latency: ", err)
+	}
+
+	perfValues := perf.NewValues()
+	defer func() {
+		if err := perfValues.Save(s.OutDir()); err != nil {
+			s.Error("Cannot save perf data: ", err)
+		}
+	}()
+
+	result, err := audio.ParseLoopbackLatencyResult(outputPath, 1)
+	if err != nil {
+		s.Fatal("Failed to parse the latency result: ", err)
+	}
+	s.Logf("Result: %+v", result)
+
+	audio.UpdatePerfValuesFromResult(perfValues, result, bufferSize)
 }
