@@ -33,7 +33,7 @@ func init() {
 		Desc: "Device is setup for multiple display enable/disable testing",
 		Contacts: []string{
 			"arc-framework+tast@google.com",
-			"brpol@google.com",
+			"yhanada@chromium.org",
 		},
 		BugComponent: "b:536857", // ChromeOS > Software > ARC++ > Framework > Tests
 		Impl: NewMultiDisplayFixture(func(ctx context.Context, s *testing.FixtState) ([]chrome.Option, error) {
@@ -58,7 +58,7 @@ func init() {
 		Parent: VirtualMultiDisplay,
 		Contacts: []string{
 			"arc-framework+tast@google.com",
-			"brpol@chromium.org",
+			"yhanada@chromium.org",
 		},
 		BugComponent:    "b:536857", // ChromeOS > Software > ARC++ > Framework > Tests
 		Impl:            arc.NewArcBootedFixture(fixtureConfig),

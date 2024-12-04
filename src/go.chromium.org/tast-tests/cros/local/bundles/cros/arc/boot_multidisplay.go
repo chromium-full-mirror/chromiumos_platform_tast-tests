@@ -19,7 +19,7 @@ func init() {
 	testing.AddTest(&testing.Test{
 		Func:     BootMultidisplay,
 		Desc:     "Checks that Android boots when VKMS multidisplay is configured",
-		Contacts: []string{"arc-framework+tast@google.com", "brpol@chromium.org"},
+		Contacts: []string{"arc-framework+tast@google.com", "yhanada@chromium.org"},
 		// ChromeOS > Software > ARC++ > Core
 		BugComponent: "b:488493",
 		SoftwareDeps: []string{"chrome", "virtual_multidisplay", "android_vm"},

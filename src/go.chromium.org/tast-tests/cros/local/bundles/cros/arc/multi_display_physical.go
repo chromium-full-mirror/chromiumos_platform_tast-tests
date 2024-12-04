@@ -18,7 +18,7 @@ func init() {
 	testing.AddTest(&testing.Test{
 		Func:     MultiDisplayPhysical,
 		Desc:     "Mutli-display ARC window management tests",
-		Contacts: []string{"arc-framework+tast@google.com", "ruanc@chromium.org", "niwa@chromium.org", "brpol@google.com"},
+		Contacts: []string{"arc-framework+tast@google.com", "ruanc@chromium.org", "niwa@chromium.org"},
 		// ChromeOS > Software > ARC++ > Framework > Window Management
 		BugComponent: "b:537272",
 		Data:         []string{wm.WhiteWallpaperFileName},

@@ -17,7 +17,7 @@ func init() {
 	testing.AddTest(&testing.Test{
 		Func:     Hotplug,
 		Desc:     "Ensures that the multi display test fixture is capable of display hotplugging",
-		Contacts: []string{"arc-framework+tast@google.com", "brpol@google.com"},
+		Contacts: []string{"arc-framework+tast@google.com", "yhanada@chromium.org"},
 		// ChromeOS > Software > ARC++ > Framework > Window Management
 		BugComponent: "b:537272",
 		Attr:         []string{"group:mainline", "group:criticalstaging", "informational", "group:hw_agnostic"},
