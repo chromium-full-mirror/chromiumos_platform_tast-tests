@@ -37,7 +37,7 @@ import (
 
 // Run runs VideoCUJ by opening CrosVideo and playing the video at
 // different resolutions and frame rates.
-func Run(ctx context.Context, s *testing.State) *perf.Values {
+func Run(ctx context.Context, cr *chrome.Chrome, outDir, systemTraceConfigPath string) (retErr error) {
 	const (
 		videoURL          = "http://crosvideo.appspot.com/?codec=%s&resolution=1080&loop=true"
 		totalTestDuration = 10 * time.Minute
@@ -67,51 +67,49 @@ func Run(ctx context.Context, s *testing.State) *perf.Values {
 
 	pv, err := localPerf.CaptureDeviceSnapshot(ctx, "Initial")
 	if err != nil {
-		s.Fatal("Failed to capture device snapshot: ", err)
+		return errors.Wrap(err, "failed to capture device snapshot")
 	}
-
-	cr := s.FixtValue().(chrome.HasChrome).Chrome()
 
 	// Set up an about:blank page, so that we can use the given
 	// connection to navigate to CrosVideo within the recorder.
 	videoConn, err := cr.NewConn(ctx, chrome.BlankURL)
 	if err != nil {
-		s.Fatal("Failed to set up Chrome: ", err)
+		return errors.Wrap(err, "failed to set up Chrome")
 	}
 	defer videoConn.Close()
 
 	tconn, err := cr.TestAPIConn(ctx)
 	if err != nil {
-		s.Fatal("Failed to connect to test API connection: ", err)
+		return errors.Wrap(err, "failed to connect to test API connection")
 	}
 
 	recorder, err := cujrecorder.NewRecorder(ctx, cr, tconn, nil, cujrecorder.RecorderOptions{})
 	if err != nil {
-		s.Fatal("Failed to create a recorder: ", err)
+		return errors.Wrap(err, "failed to create a recorder")
 	}
 	defer recorder.Close(closeCtx)
 
 	if err := recorder.AddCommonMetrics(tconn, tconn); err != nil {
-		s.Fatal("Failed to add common metrics to the recorder: ", err)
+		return errors.Wrap(err, "failed to add common metrics to the recorder")
 	}
 
 	// Add an empty screenshot recorder. We will manually take screenshots
 	// after every section of the test.
 	if err := recorder.AddScreenshotRecorder(ctx, 0, 0); err != nil {
-		s.Log("Failed to add screenshot recorder: ", err)
+		testing.ContextLog(ctx, "Failed to add screenshot recorder: ", err)
 	}
 
 	inTabletMode, err := ash.TabletModeEnabled(ctx, tconn)
-	s.Logf("Is in tablet-mode: %t", inTabletMode)
+	testing.ContextLog(ctx, "Is in tablet-mode: ", inTabletMode)
 	if err != nil {
-		s.Fatal("Failed to detect if device is in tablet-mode or not: ", err)
+		return errors.Wrap(err, "failed to detect if device is in tablet-mode or not")
 	}
 
 	var pc pointer.Context
 	if inTabletMode {
 		pc, err = pointer.NewTouch(ctx, tconn)
 		if err != nil {
-			s.Fatal("Failed to create a touch controller: ", err)
+			return errors.Wrap(err, "failed to create a touch controller")
 		}
 	} else {
 		pc = pointer.NewMouse(tconn)
@@ -120,13 +118,13 @@ func Run(ctx context.Context, s *testing.State) *perf.Values {
 
 	kw, err := input.Keyboard(ctx)
 	if err != nil {
-		s.Fatal("Failed to create a keyboard: ", err)
+		return errors.Wrap(err, "failed to create a keyboard")
 	}
 	defer kw.Close(ctx)
 
 	info, err := display.GetPrimaryInfo(ctx, tconn)
 	if err != nil {
-		s.Fatal("Failed to get the primary display info: ", err)
+		return errors.Wrap(err, "failed to get the primary display info")
 	}
 
 	ui := uiauto.New(tconn)
@@ -134,20 +132,20 @@ func Run(ctx context.Context, s *testing.State) *perf.Values {
 	// Mute the whole device, to prevent disturbing the lab while
 	// fiddling with the volume slider during the test.
 	if err := crastestclient.Mute(ctx); err != nil {
-		s.Fatal("Failed to mute audio: ", err)
+		return errors.Wrap(err, "failed to mute audio")
 	}
 	defer crastestclient.Unmute(closeCtx)
 
 	tabChecker, err := cuj.NewTabCrashChecker(ctx, tconn)
 	if err != nil {
-		s.Fatal("Failed to create TabCrashChecker: ", err)
+		return errors.Wrap(err, "failed to create TabCrashChecker")
 	}
 
-	defer faillog.DumpUITreeWithScreenshotOnError(closeCtx, s.OutDir(), s.HasError, cr, "ui_dump")
+	defer faillog.DumpUITreeWithScreenshotOnError(closeCtx, outDir, func() bool { return retErr != nil }, cr, "ui_dump")
 
 	videoWindow, err := ash.GetActiveWindow(ctx, tconn)
 	if err != nil {
-		s.Fatal("Failed to get active window: ", err)
+		return errors.Wrap(err, "failed to get active window")
 	}
 
 	// videoEvalAction returns an action.Action that executes the given
@@ -209,13 +207,13 @@ func Run(ctx context.Context, s *testing.State) *perf.Values {
 			}
 
 			if err := webutil.WaitForQuiescence(ctx, videoConn, 10*time.Second); err != nil {
-				s.Logf("Failed to wait for the tab %s to quiesce", videoURL)
+				testing.ContextLogf(ctx, "Failed to wait for the tab %s to quiesce", videoURL)
 			}
 
 			// Switch between each video format (Normal, PIP, Fullscreen).
 			for _, format := range setVideoFormats {
 				if err := tabChecker.Check(ctx); err != nil {
-					s.Fatal("Tab renderer crashed: ", err)
+					return errors.Wrap(err, "tab renderer crashed")
 				}
 
 				// Properly focus on the window. Click on the window a few
@@ -234,7 +232,7 @@ func Run(ctx context.Context, s *testing.State) *perf.Values {
 				}
 
 				if err := ui.WithTimeout(3*time.Second).WaitUntilNoEvent(nodewith.Root(), event.LocationChanged)(ctx); err != nil {
-					s.Log("Failed to wait until no event after focusing window: ", err)
+					testing.ContextLog(ctx, "Failed to wait until no event after focusing window: ", err)
 				}
 
 				// Ensure the video is playing before we set up the video format.
@@ -253,7 +251,7 @@ func Run(ctx context.Context, s *testing.State) *perf.Values {
 				}
 
 				if err := ui.WithTimeout(5*time.Second).WaitUntilNoEvent(nodewith.Root(), event.LocationChanged)(ctx); err != nil {
-					s.Log("Failed to wait until no event: ", err)
+					testing.ContextLog(ctx, "Failed to wait until no event: ", err)
 				}
 
 				// Start watching, and record the initial decoded frames and
@@ -272,7 +270,7 @@ func Run(ctx context.Context, s *testing.State) *perf.Values {
 
 				// See go/trace-in-cuj-tests about rules for tracing.
 				if shouldRecordTrace {
-					if err := recorder.StartTracing(ctx, s.OutDir(), s.DataPath(cujrecorder.SystemTraceConfigFile)); err != nil {
+					if err := recorder.StartTracing(ctx, outDir, systemTraceConfigPath); err != nil {
 						return errors.Wrap(err, "failed to start tracing")
 					}
 				}
@@ -354,7 +352,7 @@ func Run(ctx context.Context, s *testing.State) *perf.Values {
 
 				// Wait for any leftover animations to complete .
 				if err := ui.WithTimeout(5*time.Second).WaitUntilNoEvent(volumeSlider, event.LocationChanged)(ctx); err != nil {
-					s.Log("Failed to wait for volume slider to stabilize: ", err)
+					testing.ContextLog(ctx, "Failed to wait for volume slider to stabilize: ", err)
 				}
 
 				// Press the down and up arrow key 15 times, with 100 milliseconds
@@ -459,7 +457,7 @@ func Run(ctx context.Context, s *testing.State) *perf.Values {
 		// minutes have passed, to standardize how long recorder.Run takes.
 		timeLeft := totalTestDuration - time.Since(runStart)
 		if timeLeft > 0 {
-			s.Logf("Sleeping for %s to close out the test", timeLeft)
+			testing.ContextLogf(ctx, "Sleeping for %s to close out the test", timeLeft)
 			// GoBigSleepLint: Run until total test time has passed.
 			if err := testing.Sleep(ctx, timeLeft); err != nil {
 				return errors.Wrap(err, "failed to sleep to close out the test")
@@ -485,22 +483,22 @@ func Run(ctx context.Context, s *testing.State) *perf.Values {
 
 		return nil
 	}); err != nil {
-		s.Fatal("Failed to conduct the recorder task: ", err)
+		return errors.Wrap(err, "failed to conduct the recorder task")
 	}
 
 	if err := recorder.Record(ctx, pv); err != nil {
-		s.Fatal("Failed to report: ", err)
+		return errors.Wrap(err, "failed to report")
 	}
 	if err := recorder.SaveTraceFiles(ctx); err != nil {
 		testing.ContextLog(ctx, "Failed to save trace files: ", err)
 	}
-	if err := recorder.SaveHistograms(s.OutDir()); err != nil {
-		s.Error("Failed to save histogram raw data: ", err)
+	if err := recorder.SaveHistograms(outDir); err != nil {
+		return errors.Wrap(err, "failed to save histogram raw data")
 	}
-	if err := pv.Save(s.OutDir()); err != nil {
-		s.Error("Failed to store values: ", err)
+	if err := pv.Save(outDir); err != nil {
+		return errors.Wrap(err, "failed to store values")
 	}
-	return pv
+	return nil
 }
 
 // getFrameData reads the dropped frames and decoded frames from a given

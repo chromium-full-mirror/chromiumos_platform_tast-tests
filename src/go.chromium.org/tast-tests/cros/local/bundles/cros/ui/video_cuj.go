@@ -8,6 +8,7 @@ import (
 	"context"
 	"time"
 
+	"go.chromium.org/tast-tests/cros/local/chrome"
 	"go.chromium.org/tast-tests/cros/local/chrome/cuj"
 	"go.chromium.org/tast-tests/cros/local/ui/cujrecorder"
 	"go.chromium.org/tast-tests/cros/local/ui/videocuj"
@@ -63,6 +64,9 @@ func init() {
 
 func VideoCUJ(ctx context.Context, s *testing.State) {
 	cuj.WriteMetadataFile(ctx, s.TestName())
+	cr := s.FixtValue().(chrome.HasChrome).Chrome()
 
-	videocuj.Run(ctx, s)
+	if err := videocuj.Run(ctx, cr, s.OutDir(), s.DataPath(cujrecorder.SystemTraceConfigFile)); err != nil {
+		s.Fatal("Failed to run VideoCUJ: ", err)
+	}
 }
