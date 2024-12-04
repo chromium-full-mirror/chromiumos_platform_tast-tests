@@ -125,8 +125,10 @@ func init() {
 			Desc: desc,
 			// Default fixture configuration.
 			Contacts: []string{
+				"chromeos-connectivity-engprod@google.com",
 				"chromeos-wifi-champs@google.com", // WiFi oncall rotation; or http://b/new?component=893827
 			},
+			BugComponent:    "b:978946", // ChromeOS > EngProd > Platform > Connectivity > WiFi,
 			Impl:            newTastFixture(f),
 			SetUpTimeout:    setUpTimeout,
 			ResetTimeout:    resetTimeout,
