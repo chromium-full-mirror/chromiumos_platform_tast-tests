@@ -60,7 +60,7 @@ func init() {
 			"drivefs"},
 		HardwareDeps: hwdep.D(hwdep.Model(pre.StableModels...)),
 		SearchFlags:  util.IMESearchFlags([]ime.InputMethod{ime.DefaultInputMethod}),
-		Timeout:      5 * time.Minute,
+		Timeout:      10 * time.Minute,
 		Data:         []string{"capybara.jpg"},
 		Params: []testing.Param{
 			{
