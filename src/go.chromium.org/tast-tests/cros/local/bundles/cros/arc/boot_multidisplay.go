@@ -24,7 +24,7 @@ func init() {
 		BugComponent: "b:488493",
 		SoftwareDeps: []string{"chrome", "virtual_multidisplay", "android_vm"},
 		Fixture:      virtualmultidisplay.VirtualMultiDisplay,
-		Attr:         []string{"group:mainline", "group:criticalstaging", "informational", "group:hw_agnostic"},
+		Attr:         []string{"group:mainline", "informational", "group:hw_agnostic"},
 		Timeout:      chrome.LoginTimeout + arc.BootTimeout + 2*time.Minute,
 	})
 }

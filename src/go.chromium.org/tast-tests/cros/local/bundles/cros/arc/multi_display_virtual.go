@@ -30,12 +30,12 @@ func init() {
 		Params: []testing.Param{
 			{
 				Val:       arcmultidisplay.StableTestSet,
-				ExtraAttr: []string{"group:mainline", "group:criticalstaging", "group:hw_agnostic", "informational"},
+				ExtraAttr: []string{"group:mainline", "group:hw_agnostic", "informational"},
 			},
 			{
 				Name:      "android_vm_only",
 				Val:       arcmultidisplay.AndroidVM,
-				ExtraAttr: []string{"group:mainline", "group:criticalstaging", "group:hw_agnostic", "informational"},
+				ExtraAttr: []string{"group:mainline", "group:hw_agnostic", "informational"},
 			},
 			{
 				Name:      "android_vm_unstable",
