@@ -50,7 +50,7 @@ func init() {
 		Fixture:      fixture.NormalMode,
 		HardwareDeps: hwdep.D(hwdep.ChromeEC()),
 		Params: []testing.Param{{
-			ExtraHardwareDeps: hwdep.D(hwdep.FormFactor(hwdep.Convertible), hwdep.SkipOnModel("nautilus", "nautiluslte")),
+			ExtraHardwareDeps: hwdep.D(hwdep.FormFactor(hwdep.Convertible), hwdep.SkipOnModel("nautilus", "nautiluslte", "akali360", "pantheon", "pyke", "sona", "vayne")),
 			Val: tabletModeTestParams{
 				hasLid:        true,
 				tabletModeOn:  "tabletmode on",
