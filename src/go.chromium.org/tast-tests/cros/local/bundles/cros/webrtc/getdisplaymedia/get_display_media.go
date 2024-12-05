@@ -84,7 +84,16 @@ func RunGetDisplayMediaPerf(ctx context.Context, fileSystem http.FileSystem, cs 
 		return errors.Wrap(err, "failed to maximize the window with the title GetDisplayMedia test")
 	}
 
-	if err := power.Cooldown(ctx); err != nil {
+	if err := power.ConfigurableCooldown(ctx, power.CooldownConfig{
+		UseFan: true,
+		SteadyStateConfig: &power.ThermalSteadyStateConfig{
+			SampleSize:           60,
+			Interval:             time.Second,
+			Timeout:              90 * time.Second,
+			MaxStandardDeviation: 1.0,
+			MaxTempAtTimeout:     50,
+		},
+	}); err != nil {
 		return errors.Wrap(err, "failed waiting for DUT to cool down")
 	}
 	testing.ContextLog(ctx, "Starting GetDisplayMedia()")
