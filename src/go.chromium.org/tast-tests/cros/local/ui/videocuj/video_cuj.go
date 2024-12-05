@@ -39,7 +39,7 @@ import (
 // different resolutions and frame rates.
 func Run(ctx context.Context, cr *chrome.Chrome, outDir, systemTraceConfigPath string) (retErr error) {
 	const (
-		videoURL          = "http://crosvideo.appspot.com/?codec=%s&resolution=1080&loop=true"
+		videoURL          = "https://crosvideo.appspot.com/?codec=%s&resolution=1080&loop=true"
 		totalTestDuration = 10 * time.Minute
 	)
 
