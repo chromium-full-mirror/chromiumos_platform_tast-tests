@@ -170,7 +170,7 @@ func testIfPhysicalPresenceIsRequired(ctx context.Context, s *testing.State, exp
 // required for `ccd open` with a hint about whether it is expected or not.
 func testIfPhysicalPresenceRequiredForCCDOpen(ctx context.Context, s *testing.State, shouldBeRequired bool) error {
 	h := s.FixtValue().(*fixture.Value).Helper
-	regex := "Console unlock allowed|(?i)CCD Opened"
+	regex := "(?i)Console unlock allowed|CCD Opened"
 	if shouldBeRequired {
 		// If `ccd open` is allowed, the GSC will prompt for the user to press.
 		// If `ccd open` is not allowed, an access denied string will be
