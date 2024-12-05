@@ -135,6 +135,9 @@ type Helper struct {
 
 	// eccrashFileCache holds a cache of the current ec crash files in /var/spool/crash/ (without file ext).
 	ecCrashFileCache map[string]bool
+
+	// HasAPFwState indicates that the DUT firmware version supports reading firmware screen IDs from the EC console.
+	HasAPFwState bool
 }
 
 // WaitConnectOption includes situations to wait to connect from.
@@ -2465,6 +2468,7 @@ func (h *Helper) GetNewECCrashes(ctx context.Context) (map[string][]string, erro
 }
 
 // SupportAPFwState checks whether DUT supports the host command EC_CMD_AP_FW_STATE.
+// TODO(b:300525571): If the h.HasAPFwState approach is adopted, remove bool from this function's outputs.
 func (h *Helper) SupportAPFwState(ctx context.Context) (bool, error) {
 	roVersion, err := h.Reporter.GetFWVersion(ctx, reporters.CrossystemParamRoFwid)
 	if err != nil {
@@ -2480,6 +2484,7 @@ func (h *Helper) SupportAPFwState(ctx context.Context) (bool, error) {
 	}
 	// CL:5020949 laned in 15683.0.0
 	if roMajorVersion >= 15683 {
+		h.HasAPFwState = true
 		return true, nil
 	}
 
