@@ -61,7 +61,7 @@ func init() {
 				CanSetSNBits:   true,
 				ExpectedSNBits: testSNBits,
 			},
-			ExtraAttr: []string{"gsc_h1_shield", "gsc_dt_shield", "gsc_ot_shield"},
+			ExtraAttr: []string{"gsc_h1_shield", "gsc_dt_shield", "gsc_ot_shield", "gsc_ot_fpga_cw310"},
 		}, {
 			Name: "long",
 			Val: testSNBitsConfig{
@@ -71,7 +71,7 @@ func init() {
 				CanSetSNBits:   false,
 				ExpectedSNBits: erasedSNBits,
 			},
-			ExtraAttr: []string{"gsc_h1_shield", "gsc_dt_shield", "gsc_ot_shield"},
+			ExtraAttr: []string{"gsc_h1_shield", "gsc_dt_shield", "gsc_ot_shield", "gsc_ot_fpga_cw310"},
 		}, {
 			Name: "short",
 			Val: testSNBitsConfig{
@@ -81,7 +81,7 @@ func init() {
 				CanSetSNBits:   false,
 				ExpectedSNBits: erasedSNBits,
 			},
-			ExtraAttr: []string{"gsc_h1_shield", "gsc_dt_shield", "gsc_ot_shield"},
+			ExtraAttr: []string{"gsc_h1_shield", "gsc_dt_shield", "gsc_ot_shield", "gsc_ot_fpga_cw310"},
 		}, {
 			// Ti50 devices don't block setting SN bits based on the
 			// board ID. SN bits should be settable when the board
@@ -94,7 +94,7 @@ func init() {
 				CanSetSNBits:   true,
 				ExpectedSNBits: testSNBits,
 			},
-			ExtraAttr: []string{"gsc_dt_shield", "gsc_ot_shield"},
+			ExtraAttr: []string{"gsc_dt_shield", "gsc_ot_shield", "gsc_ot_fpga_cw310"},
 		}, {
 			// Ti50 blocks setting SN bits after factory mode is
 			// disabled. Verify Ti50 can't set SN bits after factory
@@ -107,7 +107,7 @@ func init() {
 				CanSetSNBits:   false,
 				ExpectedSNBits: erasedSNBits,
 			},
-			ExtraAttr: []string{"gsc_dt_shield", "gsc_ot_shield"},
+			ExtraAttr: []string{"gsc_dt_shield", "gsc_ot_shield", "gsc_ot_fpga_cw310"},
 		}, {
 			// Cr50 blocks setting SN bits after the board ID type
 			// is set. Verify Cr50 can't set SN bits after setting
