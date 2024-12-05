@@ -487,18 +487,6 @@ Framebuffers  correspond to the amount of allocated video frame resources.
 MSE while verifying that the amount of Framebuffers of any of a given set of
 resolutions never exceeds a given value.
 
-## Pepper Tests (`video.PepperVideoDecode`)
-
-This group of tests verifies that a Pepper (NaCl) plugin plays a video
-(presumably decoded using hardware acceleration) correctly in the Chrome
-browser.
-
-These tests fail if video playback does not complete successfully.
-
-To run these tests use:
-
-    tast run $HOST video.PepperVideoDecode.*
-
 ## Addendum
 
 ### Generation of test videos (for `video.{DrawOnCanvas,Contents}`)

@@ -15,9 +15,6 @@ const (
 	// VideoFeatureFakeMediaStreamUI avoids the need to grant camera/microphone permissions.
 	VideoFeatureFakeMediaStreamUI featureType = featureType(uint32(1) << (iota + 1))
 
-	// VideoFeatureNaCl enables support for Native Client apps.
-	VideoFeatureNaCl
-
 	// VideoFeatureSWDecoding disables HW accelerated video decoding.
 	VideoFeatureSWDecoding
 
@@ -57,44 +54,6 @@ func initChromeVideoFixtures() {
 			return getChromeVideoOptions(
 				chrome.ExtraArgs(chromeBypassPermissionsArgs...),
 				chrome.DisableFeatures("UseOutOfProcessVideoDecoding"),
-			), nil
-		}),
-		Parent:          "gpuWatchDog",
-		SetUpTimeout:    chrome.FixtureSetUpTimeout,
-		ResetTimeout:    chrome.ResetTimeout,
-		TearDownTimeout: chrome.ResetTimeout,
-	})
-
-	testing.AddFixture(&testing.Fixture{
-		Name:         "chromeVideoNaCl",
-		Desc:         "Logged into a user session with logging, NaCl and the MojoVideoDecoder-for-Pepper enabled",
-		Contacts:     []string{"chromeos-gfx-video@google.com"},
-		BugComponent: "b:168352", // ChromeOS > Platform > Graphics > Video.
-		Impl: chrome.NewLoggedInFixture(func(ctx context.Context, s *testing.FixtState) ([]chrome.Option, error) {
-			return getChromeVideoOptions(
-				chrome.ExtraArgs(chromeBypassPermissionsArgs...),
-				chrome.ExtraArgs("--enable-nacl"),
-				chrome.EnableFeatures("NaclAllow"),
-			), nil
-		}),
-		Parent:          "gpuWatchDog",
-		SetUpTimeout:    chrome.FixtureSetUpTimeout,
-		ResetTimeout:    chrome.ResetTimeout,
-		TearDownTimeout: chrome.ResetTimeout,
-	})
-
-	testing.AddFixture(&testing.Fixture{
-		Name:         "chromeVideoNaClWithSWDecoding",
-		Desc:         "Similar to chromeVideoNaClWithMojoVideoDecoder but making sure Chrome does not use any potential hardware accelerated decoding",
-		Contacts:     []string{"chromeos-gfx-video@google.com"},
-		BugComponent: "b:168352", // ChromeOS > Platform > Graphics > Video.
-		Impl: chrome.NewLoggedInFixture(func(ctx context.Context, s *testing.FixtState) ([]chrome.Option, error) {
-			return getChromeVideoOptions(
-				chrome.ExtraArgs(chromeBypassPermissionsArgs...),
-				chrome.ExtraArgs("--enable-nacl"),
-				chrome.EnableFeatures("NaclAllow"),
-				chrome.EnableFeatures("UseMojoVideoDecoderForPepper"),
-				chrome.ExtraArgs("--disable-accelerated-video-decode"),
 			), nil
 		}),
 		Parent:          "gpuWatchDog",
