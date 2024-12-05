@@ -604,6 +604,18 @@ func (s *Servo) ServoCcSnk(ctx context.Context) error {
 	return err
 }
 
+// ServoCcDac runs the `cc_dac` console command on the Servo.
+func (s *Servo) ServoCcDac(ctx context.Context, cc int, param string) error {
+	cmd := fmt.Sprintf("cc_dac %d %s", cc, param)
+	err := s.RunServoCommand(ctx, cmd)
+
+	if err != nil {
+		return errors.Wrap(err, "failed to run cc_dac cmd")
+	}
+
+	return err
+}
+
 // ServoGetConnectedStateAfterCCReconnect get the connected state after disconnect/reconnect using PDTester
 //
 // PDTester supports a feature which simulates a USB Type C disconnect

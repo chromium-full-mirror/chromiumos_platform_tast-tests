@@ -306,6 +306,25 @@ func (s *Servo) GetAPState(ctx context.Context) (string, string, error) {
 	return apPower, screenState, nil
 }
 
+/*
+GetCCDMode runs the 'ccdstate' command in the gsc console, and returns information
+about CCD_MODE's status as either "asserted" or "deasserted".
+*/
+func (s *Servo) GetCCDMode(ctx context.Context) (string, error) {
+	cmd := "ccdstate"
+	regex := []string{`CCD_MODE:\s*([a-z]+)\s`}
+	matches, err := s.RunGSCCommandGetOutput(ctx, cmd, regex)
+	if err != nil {
+		return "", errors.Wrapf(err, "while running %s", cmd)
+	}
+
+	if len(matches[0]) != 2 {
+		return "", errors.Errorf("found unexpected number of matches: %v", matches)
+	}
+
+	return matches[0][1], nil
+}
+
 // GetGscUSBSerialNumberDescriptor uses the GSC `sysinfo` command to get the
 // `DEV_ID`s for the device and format them as a USB serial number descriptor
 // that can be used in the `flashrom` command. This is useful when many GSCs are
