@@ -21,8 +21,6 @@ import (
 	"go.chromium.org/tast/core/testing/hwdep"
 )
 
-const indexingLimit = 500
-
 func init() {
 	testing.AddTest(&testing.Test{
 		Func: SearchLocalImageFileIndexingPower,
@@ -92,8 +90,7 @@ func SearchLocalImageFileIndexingPower(ctx context.Context, s *testing.State) {
 		s.Fatal("Failed to start collecting power metrics: ", err)
 	}
 
-	// Index for 500 images, which is the current indexing limit per user session.
-	for i := 0; i < indexingLimit; i++ {
+	for i := 0; i < launcher.ImageSearchPowerTestRepeatTimes; i++ {
 		imageFile := localFileLocation + fmt.Sprintf("%d.png", i)
 		if err := fsutil.CopyFile(s.DataPath(launcher.ImageSearchPowerTestPictureName), imageFile); err != nil {
 			s.Fatalf("Failed to copy the test image to %s: %v", localFileLocation, err)
