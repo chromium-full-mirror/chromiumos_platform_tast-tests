@@ -38,7 +38,7 @@ func init() {
 }
 
 var (
-	bootTraceRe       = regexp.MustCompile(`(\S+):\s*(\d+) ms`)
+	bootTraceRe       = regexp.MustCompile(`\s*(\w+):?\s+(\d+) ms`)
 	coldResetStagesRe = regexp.MustCompile(`ProjectStart,EcRstAsserted,(EcRstAsserted,)?Tp?mRstDeasserted,EcRstDeasserted,TpmAppReady`)
 	deepSleepStagesRe = regexp.MustCompile(`ProjectStart,Tp?mRstDeasserted,EcRstDeasserted,TpmAppReady`)
 	metricsRe         = regexp.MustCompile(`(\S+)_time:\s*(\d+)`)
