@@ -20,7 +20,7 @@ func init() {
 		Contacts: []string{"arc-framework+tast@google.com", "yhanada@chromium.org"},
 		// ChromeOS > Software > ARC++ > Framework > Window Management
 		BugComponent: "b:537272",
-		Attr:         []string{"group:mainline", "group:criticalstaging", "informational", "group:hw_agnostic"},
+		Attr:         []string{"group:mainline", "informational", "group:hw_agnostic"},
 		SoftwareDeps: []string{"chrome", "virtual_multidisplay"},
 		Timeout:      2 * time.Minute,
 		Fixture:      virtualmultidisplay.VirtualMultiDisplay,
