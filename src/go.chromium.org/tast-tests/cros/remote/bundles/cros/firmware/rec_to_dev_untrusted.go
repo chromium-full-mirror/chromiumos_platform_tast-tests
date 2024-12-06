@@ -126,7 +126,7 @@ func RecToDevUntrusted(ctx context.Context, s *testing.State) {
 			if powerStateErr != nil {
 				s.Error("Failed to check powerstate: ", powerStateErr)
 			}
-			s.Fatalf("Failed to reconnect to DUT: %d, the current power state is %q", err, currPowerState)
+			s.Fatalf("Failed to reconnect to DUT: %v, the current power state is %q", err, currPowerState)
 		}
 		s.Fatal("Failed to reconnect to DUT: ", err)
 	}
