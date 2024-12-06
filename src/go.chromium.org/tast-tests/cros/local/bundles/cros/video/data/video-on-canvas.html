@@ -16,7 +16,75 @@ function initializeCanvas(width, height) {
   const canvas = document.getElementById('canvas');
   canvas.width = width;
   canvas.height = height;
-  ctx = canvas.getContext('2d', {alpha: false});
+
+  // Note: according to section 4.12.5.1 of the specification [1]:
+  //
+  // > A CanvasRenderingContext2D object has an output bitmap that is
+  // > initialized when the object is created.
+  // >
+  // > ...
+  // >
+  // > The CanvasRenderingContext2D object also has a color space setting of
+  // > type PredefinedColorSpace. The CanvasRenderingContext2D object's color
+  // > space indicates the color space for the output bitmap.
+  // >
+  // > ...
+  // >
+  // > The PredefinedColorSpace enumeration is used to specify the color space
+  // > of the canvas's backing store.
+  //
+  // This color space is set by supplying the "colorSpace" option to the "2D
+  // context creation algorithm":
+  //
+  // > 8. Set context's color space to settings["colorSpace"].
+  //
+  // This algorithm is invoked by the canvas.getContext('2d', ...) call (section
+  // 4.12.5).
+  //
+  // Furthermore, note that the way we'll get the canvas data is by using the
+  // <canvas>.toDataURL('image/png') method (see the getCanvasAsPNG() function
+  // below). According to sections 4.12.5 and 4.12.5.5, this should result in a
+  // PNG image with a color profile matching the specified color space:
+  //
+  // > 3. Let file be a serialization of this canvas element's bitmap as a file,
+  // >    passing type and quality if given.
+  // >
+  // > ...
+  // >
+  // > For image types that support color profiles, the serialized image must
+  // > include a color profile indicating the color space of the underlying
+  // > bitmap.
+  //
+  // ---
+  //
+  // Note about terminology: according to section 4.12.5.1.1 (non-normative):
+  //
+  // > The bitmap of a canvas element is the one bitmap that's pretty much
+  // > always going to be needed in practice. The output bitmap of a rendering
+  // > context, when it has one, is always just an alias to a canvas element's
+  // > bitmap.
+  //
+  // Therefore, for color space practical purposes, we're assuming that
+  // "output bitmap" == "element's bitmap" == "underlying bitmap" ==
+  // "backing store".
+  //
+  // ---
+  //
+  // The default value of the color space should be 'srgb' according to section
+  // 4.12.5.4):
+  //
+  // > The canvas APIs provide mechanisms for specifying the color space of the
+  // > canvas's backing store. The default backing store color space for all
+  // > canvas APIs is 'srgb'.
+  //
+  // That said, we specify it here explicitly for documentation purposes and to
+  // show that this was a deliberate choice: the reference renderings for the
+  // video.DrawOnCanvas variants are sRGB PNGs, so for comparison purposes it's
+  // convenient if the canvas data to be validated is also sRGB.
+  //
+  // [1] https://html.spec.whatwg.org/multipage/canvas.html (accessed on
+  //     2024-12-06).
+  ctx = canvas.getContext('2d', {alpha: false, colorSpace: 'srgb'});
 }
 
 // Returns a Promise that resolves when the first frame of videoSourcePath is
@@ -33,7 +101,7 @@ function drawFirstFrameOnCanvas(videoSourcePath) {
   });
 }
 
-// Returns the contents of the canvas as a PNG image in data URI format.
+// Returns the contents of the canvas as an sRGB PNG image in data URI format.
 function getCanvasAsPNG() {
   return document.getElementById('canvas').toDataURL('image/png');
 }
