@@ -10,6 +10,7 @@ import (
 	"strings"
 	"time"
 
+	"go.chromium.org/tast-tests/cros/local/arc"
 	"go.chromium.org/tast-tests/cros/local/chrome"
 	"go.chromium.org/tast-tests/cros/local/chrome/ash"
 	"go.chromium.org/tast-tests/cros/local/chrome/cuj"
@@ -30,14 +31,9 @@ import (
 	"go.chromium.org/tast/core/testing"
 )
 
-// TaskSwitchTest holds parameters for the TaskSwitchCUJ test variants.
-type TaskSwitchTest struct {
-	Tablet bool
-}
-
 // Run runs the task switch CUJ by opening up ARC and browser windows
 // and switching among them using various workflows.
-func Run(ctx context.Context, s *testing.State) {
+func Run(ctx context.Context, cr *chrome.Chrome, a *arc.ARC, isTablet bool, outDir, perfettoCfgPath string) (retErr error) {
 	const taskSwitchingDuration = 5 * time.Minute
 
 	// Shorten context a bit to allow for cleanup.
@@ -47,54 +43,49 @@ func Run(ctx context.Context, s *testing.State) {
 
 	pv, err := localPerf.CaptureDeviceSnapshot(ctx, "Initial")
 	if err != nil {
-		s.Fatal("Failed to capture device snapshot: ", err)
+		return errors.Wrap(err, "failed to capture device snapshot")
 	}
-
-	testParam := s.Param().(TaskSwitchTest)
-
-	cr := s.FixtValue().(chrome.HasChrome).Chrome()
-	a := s.FixtValue().(cuj.FixtureData).ARC
 
 	tconn, err := cr.TestAPIConn(ctx)
 	if err != nil {
-		s.Fatal("Failed to connect to test API connection: ", err)
+		return errors.Wrap(err, "failed to connect to test API connection")
 	}
 
-	cleanup, err := ash.EnsureTabletModeEnabled(ctx, tconn, testParam.Tablet)
+	cleanup, err := ash.EnsureTabletModeEnabled(ctx, tconn, isTablet)
 	if err != nil {
-		s.Fatalf("Failed to ensure the tablet mode state [%t]: %v", testParam.Tablet, err)
+		return errors.Wrapf(err, "failed to ensure the tablet mode state [%t]", isTablet)
 	}
 	defer cleanup(closeCtx)
 
 	kw, err := input.Keyboard(ctx)
 	if err != nil {
-		s.Fatal("Failed to open the keyboard: ", err)
+		return errors.Wrap(err, "failed to open the keyboard")
 	}
 	defer kw.Close(ctx)
 
 	// Create a virtual mouse for clamshell tests.
 	var mw *input.MouseEventWriter
-	if !testParam.Tablet {
+	if !isTablet {
 		mw, err = input.Mouse(ctx)
 		if err != nil {
-			s.Fatal("Failed to create a mouse: ", err)
+			return errors.Wrap(err, "failed to create a mouse")
 		}
 		defer mw.Close(ctx)
 	}
 
 	info, err := display.GetPrimaryInfo(ctx, tconn)
 	if err != nil {
-		s.Fatal("Failed to get the primary display info: ", err)
+		return errors.Wrap(err, "failed to get the primary display info")
 	}
 
 	ac := uiauto.New(tconn)
 
 	recorder, err := cujrecorder.NewRecorder(ctx, tconn, a, cujrecorder.RecorderOptions{})
 	if err != nil {
-		s.Fatal("Failed to create a recorder: ", err)
+		return errors.Wrap(err, "failed to create a recorder")
 	}
 	if err := recorder.AddCommonMetrics(); err != nil {
-		s.Fatal("Failed to add common metrics to the recorder: ", err)
+		return errors.Wrap(err, "failed to add common metrics to the recorder")
 	}
 	defer recorder.Close(closeCtx)
 
@@ -102,12 +93,12 @@ func Run(ctx context.Context, s *testing.State) {
 	// screenshots, to try to capture at least 2 screenshots in each
 	// of the task switching workflows.
 	if err := recorder.AddScreenshotRecorder(ctx, 2*time.Minute, 5); err != nil {
-		s.Log("Failed to add screenshot recorder: ", err)
+		testing.ContextLog(ctx, "Failed to add screenshot recorder: ", err)
 	}
 
 	topRow, err := input.KeyboardTopRowLayout(ctx, kw)
 	if err != nil {
-		s.Fatal("Failed to obtain the top-row layout: ", err)
+		return errors.Wrap(err, "failed to obtain the top-row layout")
 	}
 
 	setOverviewModeWithKeyboard := func(ctx context.Context) error {
@@ -123,7 +114,7 @@ func Run(ctx context.Context, s *testing.State) {
 		// ensures that the previews are properly loaded before we
 		// interact with the windows in overview mode.
 		if err := ac.WithTimeout(5*time.Second).WaitUntilNoEvent(nodewith.Root(), event.LocationChanged)(ctx); err != nil {
-			s.Log("Failed to wait for overview stabilization: ", err)
+			testing.ContextLog(ctx, "Failed to wait for overview stabilization: ", err)
 		}
 		return nil
 	}
@@ -132,21 +123,21 @@ func Run(ctx context.Context, s *testing.State) {
 	var tcc *input.TouchCoordConverter
 	var stw *input.SingleTouchEventWriter
 	var pc pointer.Context
-	if testParam.Tablet {
+	if isTablet {
 		pc, err = pointer.NewTouch(ctx, tconn)
 		if err != nil {
-			s.Fatal("Failed to create a touch controller: ", err)
+			return errors.Wrap(err, "failed to create a touch controller")
 		}
 		defer pc.Close(ctx)
 
 		var tsew *input.TouchscreenEventWriter
 		if tsew, tcc, err = touch.NewTouchscreenAndConverter(ctx, tconn); err != nil {
-			s.Fatal("Failed to access the touchscreen: ", err)
+			return errors.Wrap(err, "failed to access the touchscreen")
 		}
 		defer tsew.Close(ctx)
 
 		if stw, err = tsew.NewSingleTouchWriter(); err != nil {
-			s.Fatal("Failed to create a single touch writer: ", err)
+			return errors.Wrap(err, "failed to create a single touch writer")
 		}
 		defer stw.Close()
 
@@ -180,15 +171,16 @@ func Run(ctx context.Context, s *testing.State) {
 
 	defer ash.CloseAllWindows(closeCtx, tconn)
 
+	hasError := func() bool { return retErr != nil }
 	d, err := a.NewUIDevice(ctx)
 	if err != nil {
-		s.Fatal("Failed to set up ARC and Play Store: ", err)
+		return errors.Wrap(err, "failed to set up ARC and Play Store")
 	}
 	defer func(ctx context.Context) {
 		if err := d.Close(ctx); err != nil {
-			s.Log("Failed closing UI Automator: ", err)
+			testing.ContextLog(ctx, "Failed closing UI Automator: ", err)
 		}
-		a.DumpUIHierarchyOnError(ctx, s.OutDir(), s.HasError)
+		a.DumpUIHierarchyOnError(ctx, outDir, hasError)
 	}(closeCtx)
 
 	pwaOpened := false
@@ -196,36 +188,37 @@ func Run(ctx context.Context, s *testing.State) {
 		// The faillog captures the errors that occur before opening PWA.
 		// Errors occur after the opening PWA will be captured by the other faillog.
 		if !pwaOpened {
-			faillog.DumpUITreeWithScreenshotOnError(ctx, s.OutDir(), s.HasError, cr, "ui_dump_before_PWA_opened")
+			faillog.DumpUITreeWithScreenshotOnError(ctx, outDir, hasError, cr, "ui_dump_before_PWA_opened")
 		}
 	}(closeCtx)
 
-	s.Log("Installing packages")
+	testing.ContextLog(ctx, "Installing packages")
 	packages := getPackages(ctx, tconn, d)
 	if err := installPackages(ctx, tconn, a, d, packages); err != nil {
-		s.Fatal("Failed to install packages: ", err)
+		return errors.Wrap(err, "failed to install packages")
 	}
 
 	// Launch packages before launching Chrome tabs, to mitigate
 	// flakiness when opening applications. When a lot of tabs are
 	// open, sometimes the launcher does not stabilize within the
 	// required timeout.
-	s.Log("Launching packages")
+	testing.ContextLog(ctx, "Launching packages")
+
 	numAppWindows, err := launchPackages(ctx, tconn, kw, ac, packages)
 	if err != nil {
-		s.Fatal("Failed to launch apps: ", err)
+		return errors.Wrap(err, "failed to launch apps")
 	}
 
-	s.Log("Opening Chrome Tabs")
-	numBrowserWindows, err := openChromeTabs(ctx, tconn, cr, testParam.Tablet)
+	testing.ContextLog(ctx, "Opening Chrome Tabs")
+	numBrowserWindows, err := openChromeTabs(ctx, tconn, cr, isTablet)
 	if err != nil {
-		s.Fatal("Failed to open Chrome tabs: ", err)
+		return errors.Wrap(err, "failed to open Chrome tabs")
 	}
 
-	s.Log("Opening PWA")
+	testing.ContextLog(ctx, "Opening PWA")
 	cleanupPWA, err := openPWA(ctx, cr, tconn)
 	if err != nil {
-		s.Fatal("Failed to open PWA: ", err)
+		return errors.Wrap(err, "failed to open PWA")
 	}
 	defer cleanupPWA(closeCtx)
 	pwaOpened = true
@@ -236,7 +229,7 @@ func Run(ctx context.Context, s *testing.State) {
 
 	// cleanupPWA opens the os settings and blocks the UI tree and screenshot of the error.
 	// Dump UI tree and screenshot before the cleanupPWA function.
-	defer faillog.DumpUITreeWithScreenshotOnError(closeCtx, s.OutDir(), s.HasError, cr, "ui_dump")
+	defer faillog.DumpUITreeWithScreenshotOnError(closeCtx, outDir, hasError, cr, "ui_dump")
 
 	// Get a list of metrics to collect for each test phase.
 	ashMetrics, browserMetrics := cujrecorder.GetShortenedPerformanceMetrics()
@@ -262,7 +255,7 @@ func Run(ctx context.Context, s *testing.State) {
 		taskSwitchers := []taskSwitchWorkflow{
 			initializeSwitchTaskByOverviewMode(ctx, tconn, pc, setOverviewMode),
 		}
-		if testParam.Tablet {
+		if isTablet {
 			switchTaskByHotseat, err := initializeSwitchTaskByHotseat(ctx, tconn, stw, tcc, pc, ac, numWindows, numBrowserWindows)
 			if err != nil {
 				return errors.Wrap(err, "failed to initialize switching task by hotseat")
@@ -286,13 +279,13 @@ func Run(ctx context.Context, s *testing.State) {
 				return errors.Wrapf(err, "failed to start snapshot for %s", taskSwitcher.name)
 			}
 
-			s.Log(taskSwitcher.description)
+			testing.ContextLog(ctx, taskSwitcher.description)
 			cycles := 0
 			for endTime := time.Now().Add(taskSwitchingDuration); time.Now().Before(endTime); {
 				if taskSwitcher.recordTrace {
 					if cycles == 0 {
 						// See go/trace-in-cuj-tests about rules for tracing.
-						if err := recorder.StartTracing(ctx, s.OutDir(), s.DataPath(cujrecorder.SystemTraceConfigFile)); err != nil {
+						if err := recorder.StartTracing(ctx, outDir, perfettoCfgPath); err != nil {
 							return errors.Wrap(err, "failed to start tracing")
 						}
 					} else if cycles == numWindows {
@@ -320,7 +313,7 @@ func Run(ctx context.Context, s *testing.State) {
 					return errors.Wrap(err, "failed to sleep")
 				}
 
-				if !testParam.Tablet {
+				if !isTablet {
 					// Move mouse to center of window to ensure we are
 					// scrolling on the currently active window.
 					if err := mouse.Move(tconn, activeWindow.BoundsInRoot.CenterPoint(), 500*time.Millisecond)(ctx); err != nil {
@@ -338,7 +331,7 @@ func Run(ctx context.Context, s *testing.State) {
 						return errors.Wrapf(err, "failed to repeatedly press %q in between task switches", key)
 					}
 
-					if testParam.Tablet {
+					if isTablet {
 						// Since tablets are unable to scroll with the mouse,
 						// scroll again with the keyboard. Avoid swiping on
 						// the screen, to limit unintentionally tapping on
@@ -370,7 +363,8 @@ func Run(ctx context.Context, s *testing.State) {
 
 				cycles++
 			}
-			s.Logf("Switched task by %s %d times", taskSwitcher.name, cycles)
+
+			testing.ContextLogf(ctx, "Switched task by %s %d times", taskSwitcher.name, cycles)
 
 			if err := stopSnapshot(ctx); err != nil {
 				return errors.Wrapf(err, "failed to stop snapshot for %s", taskSwitcher.name)
@@ -388,7 +382,7 @@ func Run(ctx context.Context, s *testing.State) {
 			// stabilization fails, because sometimes the visible
 			// window does not stabilize in a timely manner.
 			if err := ac.WithInterval(2*time.Second).WaitUntilNoEvent(nodewith.Root(), event.LocationChanged)(ctx); err != nil {
-				s.Logf("Failed to wait for the window to stabilize after running workflow %s: %v", taskSwitcher.name, err)
+				testing.ContextLogf(ctx, "Failed to wait for the window to stabilize after running workflow %s: %v", taskSwitcher.name, err)
 			}
 		}
 
@@ -429,19 +423,20 @@ func Run(ctx context.Context, s *testing.State) {
 
 		return nil
 	}); err != nil {
-		s.Fatal("Failed to conduct the recorder task: ", err)
+		return errors.Wrap(err, "failed to conduct the recorder task")
 	}
 
 	if err := recorder.Record(ctx, pv); err != nil {
-		s.Fatal("Failed to report: ", err)
+		return errors.Wrap(err, "failed to report")
 	}
 	if err := recorder.SaveTraceFiles(ctx); err != nil {
 		testing.ContextLog(ctx, "Failed to save trace files: ", err)
 	}
-	if err := recorder.SaveHistograms(s.OutDir()); err != nil {
-		s.Error("Failed to save histogram raw data: ", err)
+	if err := recorder.SaveHistograms(outDir); err != nil {
+		return errors.Wrap(err, "failed to save histogram raw data")
 	}
-	if err := pv.Save(s.OutDir()); err != nil {
-		s.Error("Failed to store values: ", err)
+	if err := pv.Save(outDir); err != nil {
+		return errors.Wrap(err, "failed to store values")
 	}
+	return nil
 }

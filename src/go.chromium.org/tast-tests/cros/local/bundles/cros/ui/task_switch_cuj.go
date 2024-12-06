@@ -9,6 +9,7 @@ import (
 	"time"
 
 	"go.chromium.org/tast-tests/cros/local/bundles/cros/ui/taskswitchcuj"
+	"go.chromium.org/tast-tests/cros/local/chrome"
 	"go.chromium.org/tast-tests/cros/local/chrome/cuj"
 	"go.chromium.org/tast-tests/cros/local/ui/cujrecorder"
 
@@ -36,26 +37,20 @@ func init() {
 		Params: []testing.Param{
 			{
 				Fixture: "loggedInToCUJUserARCSupported",
-				Val: taskswitchcuj.TaskSwitchTest{
-					Tablet: false,
-				},
+				Val:     false, /*tablet*/
 			}, {
 				Name:              "tablet",
 				ExtraHardwareDeps: hwdep.D(hwdep.TouchScreen()),
 				Fixture:           "loggedInToCUJUserARCSupported",
-				Val: taskswitchcuj.TaskSwitchTest{
-					Tablet: true,
-				},
+				Val:               true, /*tablet*/
 			},
 
 			// Experimental variants.
 			{
 				Name:      "field_trials",
 				ExtraAttr: []string{"cuj_experimental"},
-				Val: taskswitchcuj.TaskSwitchTest{
-					Tablet: false,
-				},
-				Fixture: "loggedInToCUJUserARCSupportedWithFieldTrials",
+				Val:       false, /*tablet*/
+				Fixture:   "loggedInToCUJUserARCSupportedWithFieldTrials",
 			},
 			{
 				Name:              "pvsched",
@@ -63,9 +58,7 @@ func init() {
 				ExtraAttr:         []string{"cuj_experimental"},
 				ExtraHardwareDeps: hwdep.D(hwdep.HasParavirtSchedControl()),
 				Fixture:           "loggedInToCUJUserARCSupportedWithPvSchedEnabled",
-				Val: taskswitchcuj.TaskSwitchTest{
-					Tablet: false,
-				},
+				Val:               false, /*tablet*/
 			},
 		},
 	})
@@ -74,5 +67,12 @@ func init() {
 func TaskSwitchCUJ(ctx context.Context, s *testing.State) {
 	cuj.WriteMetadataFile(ctx, s.TestName())
 
-	taskswitchcuj.Run(ctx, s)
+	cr := s.FixtValue().(chrome.HasChrome).Chrome()
+	a := s.FixtValue().(cuj.FixtureData).ARC
+	isTablet := s.Param().(bool)
+	perfettoCfgPath := s.DataPath(cujrecorder.SystemTraceConfigFile)
+
+	if err := taskswitchcuj.Run(ctx, cr, a, isTablet, s.OutDir(), perfettoCfgPath); err != nil {
+		s.Fatal("Failed to run TaskSwitchCUJ: ", err)
+	}
 }
