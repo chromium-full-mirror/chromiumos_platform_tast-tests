@@ -26,8 +26,12 @@ func init() {
 		// machines (betty, tast-vm) and devices that don't have ChromeOS
 		// firmware (reven).
 		SoftwareDeps: []string{"crossystem", "chromeos_firmware"},
-		Attr:         []string{"group:mainline"},
-		Timeout:      1 * time.Minute,
+		Attr: []string{
+			"group:mainline",
+			"group:release-health",
+			"release-health_power",
+		},
+		Timeout: 1 * time.Minute,
 	})
 }
 

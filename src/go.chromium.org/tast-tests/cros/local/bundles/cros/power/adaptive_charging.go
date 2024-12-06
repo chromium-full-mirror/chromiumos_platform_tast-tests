@@ -36,7 +36,12 @@ func init() {
 		Desc:         "Test that Adaptive Charging functionality works correctly",
 		BugComponent: "b:1361410",
 		Contacts:     []string{"chromeos-power-team@google.com"}, // CrOS power team
-		Attr:         []string{"group:mainline", "informational"},
+		Attr: []string{
+			"group:mainline",
+			"informational",
+			"group:release-health",
+			"release-health_power",
+		},
 		SoftwareDeps: []string{"chrome"},
 		HardwareDeps: hwdep.D(
 			hwdep.Battery(),  // Test doesn't run on ChromeOS devices without a battery.

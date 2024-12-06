@@ -20,7 +20,12 @@ func init() {
 		Desc:         "Collects data on the idle temperature of devices",
 		BugComponent: "b:1361410",
 		Contacts:     []string{"chromeos-power-team@google.com", "edcourtney@chromium.org"},
-		Attr:         []string{"group:crosbolt", "crosbolt_perbuild"},
+		Attr: []string{
+			"group:crosbolt",
+			"crosbolt_perbuild",
+			"group:release-health",
+			"release-health_power",
+		},
 		SoftwareDeps: []string{"chrome"},
 		Fixture:      "chromeLoggedIn",
 		Timeout:      10 * time.Minute,

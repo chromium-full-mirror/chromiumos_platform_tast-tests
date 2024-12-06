@@ -44,9 +44,14 @@ func init() {
 		Vars:         socialapp.ElementApkURLVars, // Optional. The URL of the APK file of Element app.
 		Timeout:      socialAppTimeout + setup.BatteryPreparationTimeout,
 		Params: []testing.Param{{
-			Name:      "element_ash",
-			Fixture:   "powerAshARC",
-			ExtraAttr: []string{"group:power", "power_regression"},
+			Name:    "element_ash",
+			Fixture: "powerAshARC",
+			ExtraAttr: []string{
+				"group:power",
+				"power_regression",
+				"group:release-health",
+				"release-health_power",
+			},
 		}},
 	})
 }

@@ -63,9 +63,14 @@ func init() {
 						Total: asphalt8PlayTime,
 					},
 				},
-				Timeout:           asphalt8Timeout + setup.BatteryPreparationTimeout,
-				ExtraData:         []string{gameapp.Asphalt8IconGameScene},
-				ExtraAttr:         []string{"group:power", "power_regression"},
+				Timeout:   asphalt8Timeout + setup.BatteryPreparationTimeout,
+				ExtraData: []string{gameapp.Asphalt8IconGameScene},
+				ExtraAttr: []string{
+					"group:power",
+					"power_regression",
+					"group:release-health",
+					"release-health_power",
+				},
 				ExtraHardwareDeps: hwdep.D(hwdep.MinStorage(17)), // 16Gb devices may not have enough space to install Asphalt 8.
 			},
 			{
@@ -76,9 +81,14 @@ func init() {
 						Total: shortPlayTime,
 					},
 				},
-				Timeout:           shortTimeout + setup.BatteryPreparationTimeout,
-				ExtraData:         []string{gameapp.Asphalt8IconGameScene},
-				ExtraAttr:         []string{"group:power", "power_daily"},
+				Timeout:   shortTimeout + setup.BatteryPreparationTimeout,
+				ExtraData: []string{gameapp.Asphalt8IconGameScene},
+				ExtraAttr: []string{
+					"group:power",
+					"power_daily",
+					"group:release-health",
+					"release-health_power",
+				},
 				ExtraHardwareDeps: hwdep.D(hwdep.MinStorage(17)), // 16Gb devices may not have enough space to install Asphalt 8.
 			},
 			{
@@ -91,7 +101,12 @@ func init() {
 				},
 				Timeout:   superTuxKartTimeout + setup.BatteryPreparationTimeout,
 				ExtraData: []string{gameapp.SuperTuxKartIconGameScene},
-				ExtraAttr: []string{"group:power", "power_regression"},
+				ExtraAttr: []string{
+					"group:power",
+					"power_regression",
+					"group:release-health",
+					"release-health_power",
+				},
 			},
 			{
 				Name: "super_tux_kart_short",
@@ -103,7 +118,12 @@ func init() {
 				},
 				Timeout:   shortTimeout + setup.BatteryPreparationTimeout,
 				ExtraData: []string{gameapp.SuperTuxKartIconGameScene},
-				ExtraAttr: []string{"group:power", "power_daily"},
+				ExtraAttr: []string{
+					"group:power",
+					"power_daily",
+					"group:release-health",
+					"release-health_power",
+				},
 				// TODO(b/378405353): remove after the python 3.8->3.11 migration.
 				// 16 GB was a bit too small.
 				ExtraHardwareDeps: hwdep.D(hwdep.MinStorage(20)),

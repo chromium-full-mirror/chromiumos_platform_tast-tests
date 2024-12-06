@@ -68,18 +68,28 @@ func init() {
 		Vars:         socialapp.ElementApkURLVars, // Optional. The URL of the APK file of Element app.
 		Params: []testing.Param{
 			{
-				Name:      "ash",
-				Fixture:   "powerAshARC",
-				Timeout:   multiTaskingAppTimeout + setup.BatteryPreparationTimeout,
-				ExtraAttr: []string{"group:power", "power_regression"},
-				Val:       multiTaskingAppParam,
+				Name:    "ash",
+				Fixture: "powerAshARC",
+				Timeout: multiTaskingAppTimeout + setup.BatteryPreparationTimeout,
+				ExtraAttr: []string{
+					"group:power",
+					"power_regression",
+					"group:release-health",
+					"release-health_power",
+				},
+				Val: multiTaskingAppParam,
 			},
 			{
-				Name:      "ash_short",
-				Fixture:   "powerAshARC",
-				Timeout:   multiTaskingAppShortTimeout + setup.BatteryPreparationTimeout,
-				ExtraAttr: []string{"group:power", "power_daily"},
-				Val:       multiTaskingAppShortParam,
+				Name:    "ash_short",
+				Fixture: "powerAshARC",
+				Timeout: multiTaskingAppShortTimeout + setup.BatteryPreparationTimeout,
+				ExtraAttr: []string{
+					"group:power",
+					"power_daily",
+					"group:release-health",
+					"release-health_power",
+				},
+				Val: multiTaskingAppShortParam,
 			},
 		},
 	})

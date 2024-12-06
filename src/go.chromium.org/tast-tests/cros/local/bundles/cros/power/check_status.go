@@ -20,7 +20,12 @@ func init() {
 		Desc:         "Checks that dump_power_status can read power supply info from the kernel",
 		BugComponent: "b:1361410",
 		Contacts:     []string{"chromeos-power-team@google.com"},
-		Attr:         []string{"group:mainline", "group:labqual"},
+		Attr: []string{
+			"group:mainline",
+			"group:labqual",
+			"group:release-health",
+			"release-health_power",
+		},
 	})
 }
 

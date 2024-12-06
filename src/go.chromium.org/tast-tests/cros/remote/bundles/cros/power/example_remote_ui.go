@@ -40,7 +40,13 @@ func init() {
 		// We need 1 minute for setting up the DUT and 30 seconds for measuring
 		// idle power consumption.
 		Timeout: cp.RecorderTimeout + 1*time.Minute + 30*time.Second,
-		Attr:    []string{"group:power", "power_daily", "power_weekly"},
+		Attr: []string{
+			"group:power",
+			"power_daily",
+			"power_weekly",
+			"group:release-health",
+			"release-health_power",
+		},
 	})
 }
 

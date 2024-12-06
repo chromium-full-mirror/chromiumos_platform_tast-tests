@@ -47,10 +47,18 @@ func init() {
 			Name:              "convertible",
 			Val:               tabletModeConfig{control: &tabletmode.ConvertibleModeControl{}},
 			ExtraHardwareDeps: hwdep.D(hwdep.FormFactor(hwdep.Convertible)),
+			ExtraAttr: []string{
+				"group:release-health",
+				"release-health_power",
+			},
 		}, {
 			Name:              "detachable",
 			Val:               tabletModeConfig{control: &tabletmode.DetachableModeControl{}},
 			ExtraHardwareDeps: hwdep.D(hwdep.FormFactor(hwdep.Detachable)),
+			ExtraAttr: []string{
+				"group:release-health",
+				"release-health_power",
+			},
 		}},
 	})
 }

@@ -24,7 +24,12 @@ func init() {
 			"chromeos-power-team@google.com", // CrOS platform power developers
 			"puthik@chromium.org",            // test author
 		},
-		Attr: []string{"group:mainline", "informational"},
+		Attr: []string{
+			"group:mainline",
+			"informational",
+			"group:release-health",
+			"release-health_power",
+		},
 		// Only applied to newer Intel boards
 		HardwareDeps: hwdep.D(hwdep.Platform("poppy", "nami", "hatch", "volteer", "brya", "dedede")),
 	})

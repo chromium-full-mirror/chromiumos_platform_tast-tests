@@ -22,7 +22,12 @@ func init() {
 			"puthik@chromium.org",            // test author
 		},
 		// TODO(b/210921679): re-enable once failures are fixed.
-		Attr: []string{"group:mainline", "informational"},
+		Attr: []string{
+			"group:mainline",
+			"informational",
+			"group:release-health",
+			"release-health_power",
+		},
 		// Only Atlas use override script, board developed later uses unibuild.
 		HardwareDeps: hwdep.D(hwdep.Model("atlas")),
 	})

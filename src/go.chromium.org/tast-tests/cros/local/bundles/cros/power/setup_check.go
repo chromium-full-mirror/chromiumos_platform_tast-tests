@@ -28,8 +28,12 @@ func init() {
 		},
 		SoftwareDeps: []string{"chrome"},
 		HardwareDeps: hwdep.D(hwdep.ChromeEC()),
-		Attr:         []string{"group:mainline"},
-		Timeout:      3 * time.Minute,
+		Attr: []string{
+			"group:mainline",
+			"group:release-health",
+			"release-health_power",
+		},
+		Timeout: 3 * time.Minute,
 	})
 }
 

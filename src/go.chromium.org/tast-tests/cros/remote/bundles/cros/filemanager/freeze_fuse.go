@@ -35,6 +35,8 @@ func init() {
 		Attr: []string{
 			"group:mainline",
 			"informational",
+			"group:release-health",
+			"release-health_power",
 		},
 		Data:    []string{"100000_files_in_one_folder.zip"},
 		Timeout: 20 * time.Minute,

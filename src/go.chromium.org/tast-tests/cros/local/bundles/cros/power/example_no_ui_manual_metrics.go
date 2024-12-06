@@ -46,7 +46,13 @@ func init() {
 				Interval: 1 * time.Second,
 				Total:    10 * time.Second,
 			},
-			ExtraAttr: []string{"group:power", "power_daily", "power_weekly"},
+			ExtraAttr: []string{
+				"group:power",
+				"power_daily",
+				"power_weekly",
+				"group:release-health",
+				"release-health_power",
+			},
 		}},
 	})
 }

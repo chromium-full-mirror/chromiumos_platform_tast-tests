@@ -35,9 +35,14 @@ func init() {
 			"chromeos-power-team@google.com",
 		},
 		SoftwareDeps: []string{"chrome"},
-		Attr:         []string{"group:mainline", "informational"},
-		Vars:         []string{"power.VideoSuspend.videoURL"},
-		Timeout:      5 * time.Minute,
+		Attr: []string{
+			"group:mainline",
+			"informational",
+			"group:release-health",
+			"release-health_power",
+		},
+		Vars:    []string{"power.VideoSuspend.videoURL"},
+		Timeout: 5 * time.Minute,
 		Data: []string{
 			"video.html",
 		},

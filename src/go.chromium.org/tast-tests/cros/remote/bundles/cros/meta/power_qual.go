@@ -70,6 +70,10 @@ func init() {
 			{
 				Name: "segment",
 				Val:  "https://storage.googleapis.com/chromiumos-test-assets-public/tast/cros/power/powerqual-config/segment.json",
+				ExtraAttr: []string{
+					"group:release-health",
+					"release-health_power",
+				},
 			},
 			{
 				Name: "qual_arc",

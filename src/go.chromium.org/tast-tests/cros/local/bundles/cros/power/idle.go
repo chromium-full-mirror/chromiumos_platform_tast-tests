@@ -80,19 +80,29 @@ func init() {
 		SoftwareDeps: []string{"chrome"},
 		Timeout:      10*time.Minute + power.RecorderTimeout,
 		Params: []testing.Param{{
-			Name:      "display_off_bt_off_ash",
-			Fixture:   "powerAsh",
-			Val:       displayOffBTOff,
-			ExtraAttr: []string{"group:power", "power_regression"},
+			Name:    "display_off_bt_off_ash",
+			Fixture: "powerAsh",
+			Val:     displayOffBTOff,
+			ExtraAttr: []string{
+				"group:power",
+				"power_regression",
+				"group:release-health",
+				"release-health_power",
+			},
 		}, {
 			Name:    "display_on_bt_off_ash",
 			Fixture: "powerAsh",
 			Val:     displayOnBTOff,
 		}, {
-			Name:      "display_on_bt_on_ash",
-			Fixture:   "powerAsh",
-			Val:       displayOnBTOn,
-			ExtraAttr: []string{"group:power", "power_regression"},
+			Name:    "display_on_bt_on_ash",
+			Fixture: "powerAsh",
+			Val:     displayOnBTOn,
+			ExtraAttr: []string{
+				"group:power",
+				"power_regression",
+				"group:release-health",
+				"release-health_power",
+			},
 		}, {
 			Name:              "display_on_bt_on_ash_arc",
 			Fixture:           "powerAshARC",
@@ -103,10 +113,16 @@ func init() {
 			Fixture: "powerAsh",
 			Val:     displayOffBTOn,
 		}, {
-			Name:      "default_fast_ash",
-			Fixture:   "powerAsh",
-			Val:       defaultFast,
-			ExtraAttr: []string{"group:power", "power_daily", "power_weekly"},
+			Name:    "default_fast_ash",
+			Fixture: "powerAsh",
+			Val:     defaultFast,
+			ExtraAttr: []string{
+				"group:power",
+				"power_daily",
+				"power_weekly",
+				"group:release-health",
+				"release-health_power",
+			},
 		}, {
 			Name:      "tracing_display_on_bt_on_ash",
 			Fixture:   "powerAsh",

@@ -80,8 +80,13 @@ func init() {
 					TimeParams: videoPlaybackTimeParam,
 				},
 				ExtraData: []string{"arc_video_playback/h264_1080_30fps.mp4", arcvpb.ExoPlayerAPKFileName},
-				ExtraAttr: []string{"group:power", "power_regression"},
-				Timeout:   videoPlaybackTimeout,
+				ExtraAttr: []string{
+					"group:power",
+					"power_regression",
+					"group:release-health",
+					"release-health_power",
+				},
+				Timeout: videoPlaybackTimeout,
 			}, {
 				Name: "exoplayer_h264_1080_30fps_ash_short",
 				Val: arcVideoTestParam{
@@ -90,8 +95,13 @@ func init() {
 					TimeParams: videoPlaybackShortTimeParam,
 				},
 				ExtraData: []string{"arc_video_playback/h264_1080_30fps.mp4", arcvpb.ExoPlayerAPKFileName},
-				ExtraAttr: []string{"group:power", "power_daily"},
-				Timeout:   videoPlaybackShortTimeout,
+				ExtraAttr: []string{
+					"group:power",
+					"power_daily",
+					"group:release-health",
+					"release-health_power",
+				},
+				Timeout: videoPlaybackShortTimeout,
 			}, {
 				Name: "exoplayer_h264_1080_60fps_ash",
 				Val: arcVideoTestParam{
@@ -199,8 +209,13 @@ func init() {
 					TimeParams: videoPlaybackTimeParam,
 				},
 				ExtraData: []string{"arc_video_playback/vp9_1080_30fps.webm", arcvpb.ExoPlayerAPKFileName},
-				ExtraAttr: []string{"group:power", "power_regression"},
-				Timeout:   videoPlaybackTimeout,
+				ExtraAttr: []string{
+					"group:power",
+					"power_regression",
+					"group:release-health",
+					"release-health_power",
+				},
+				Timeout: videoPlaybackTimeout,
 			}, {
 				Name: "exoplayer_vp9_1080_30fps_ash_short",
 				Val: arcVideoTestParam{
@@ -209,8 +224,13 @@ func init() {
 					TimeParams: videoPlaybackShortTimeParam,
 				},
 				ExtraData: []string{"arc_video_playback/h264_1080_30fps.mp4", arcvpb.ExoPlayerAPKFileName},
-				ExtraAttr: []string{"group:power", "power_daily"},
-				Timeout:   videoPlaybackShortTimeout,
+				ExtraAttr: []string{
+					"group:power",
+					"power_daily",
+					"group:release-health",
+					"release-health_power",
+				},
+				Timeout: videoPlaybackShortTimeout,
 			}, {
 				Name: "exoplayer_vp9_1080_60fps_ash",
 				Val: arcVideoTestParam{

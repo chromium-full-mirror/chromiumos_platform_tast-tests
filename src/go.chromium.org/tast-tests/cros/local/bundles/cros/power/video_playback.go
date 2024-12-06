@@ -52,20 +52,37 @@ func init() {
 			Val:       videoPlaybackTestParam{VideoName: "h264_1080_30fps"},
 			Timeout:   6*time.Minute + power.RecorderTimeout,
 			ExtraData: []string{"video_playback/h264_1080_30fps.mp4"},
-			ExtraAttr: []string{"group:power", "power_daily_video_playback", "power_weekly_video_playback"},
+			ExtraAttr: []string{
+				"group:power",
+				"power_daily_video_playback",
+				"power_weekly_video_playback",
+				"group:release-health",
+				"release-health_power",
+			},
 		}, {
 			Name:      "h264_bt2020_1080_30fps_ash",
 			Fixture:   "powerAshRamfs",
 			Val:       videoPlaybackTestParam{VideoName: "h264_bt2020_1080_30fps"},
 			Timeout:   6*time.Minute + power.RecorderTimeout,
 			ExtraData: []string{"video_playback/h264_bt2020_1080_30fps.mp4"},
-			ExtraAttr: []string{"group:power", "power_daily_video_playback", "power_weekly_video_playback"},
+			ExtraAttr: []string{
+				"group:power",
+				"power_daily_video_playback",
+				"power_weekly_video_playback",
+				"group:release-health",
+				"release-health_power",
+			},
 		}, {
 			Name:      "h264_1080_30fps_1hr_ash",
 			Fixture:   "powerAshRamfs",
 			ExtraData: []string{"video_playback/h264_1080_30fps.mp4"},
-			ExtraAttr: []string{"group:power", "power_regression"},
-			Timeout:   time.Hour + power.RecorderTimeout + setup.BatteryPreparationTimeout, // 1 hour for video
+			ExtraAttr: []string{
+				"group:power",
+				"power_regression",
+				"group:release-health",
+				"release-health_power",
+			},
+			Timeout: time.Hour + power.RecorderTimeout + setup.BatteryPreparationTimeout, // 1 hour for video
 			Val: videoPlaybackTestParam{
 				VideoName:  "h264_1080_30fps",
 				TimeParams: power.TimeParams{Total: time.Hour, Interval: 5 * time.Second}},
@@ -150,20 +167,37 @@ func init() {
 			Val:       videoPlaybackTestParam{VideoName: "vp9_1080_30fps"},
 			Timeout:   6*time.Minute + power.RecorderTimeout,
 			ExtraData: []string{"video_playback/vp9_1080_30fps.webm"},
-			ExtraAttr: []string{"group:power", "power_daily_video_playback", "power_weekly_video_playback"},
+			ExtraAttr: []string{
+				"group:power",
+				"power_daily_video_playback",
+				"power_weekly_video_playback",
+				"group:release-health",
+				"release-health_power",
+			},
 		}, {
 			Name:      "vp9_bt2020_1080_30fps_ash",
 			Fixture:   "powerAshRamfs",
 			Val:       videoPlaybackTestParam{VideoName: "vp9_bt2020_1080_30fps"},
 			Timeout:   6*time.Minute + power.RecorderTimeout,
 			ExtraData: []string{"video_playback/vp9_bt2020_1080_30fps.webm"},
-			ExtraAttr: []string{"group:power", "power_daily_video_playback", "power_weekly_video_playback"},
+			ExtraAttr: []string{
+				"group:power",
+				"power_daily_video_playback",
+				"power_weekly_video_playback",
+				"group:release-health",
+				"release-health_power",
+			},
 		}, {
 			Name:      "vp9_1080_30fps_1hr_ash",
 			Fixture:   "powerAshRamfs",
 			ExtraData: []string{"video_playback/vp9_1080_30fps.webm"},
-			ExtraAttr: []string{"group:power", "power_regression"},
-			Timeout:   time.Hour + power.RecorderTimeout + setup.BatteryPreparationTimeout, // 1 hour for video
+			ExtraAttr: []string{
+				"group:power",
+				"power_regression",
+				"group:release-health",
+				"release-health_power",
+			},
+			Timeout: time.Hour + power.RecorderTimeout + setup.BatteryPreparationTimeout, // 1 hour for video
 			Val: videoPlaybackTestParam{
 				VideoName:  "vp9_1080_30fps",
 				TimeParams: power.TimeParams{Total: time.Hour, Interval: 5 * time.Second}},

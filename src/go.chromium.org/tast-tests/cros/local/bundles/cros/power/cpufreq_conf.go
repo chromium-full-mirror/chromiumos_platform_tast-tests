@@ -23,7 +23,11 @@ func init() {
 		Desc:         "Check that we respect the /etc/cpufreq.conf file",
 		Contacts:     []string{"chromeos-power-team@google.com"},
 		BugComponent: "b:1361410",
-		Attr:         []string{"group:mainline"},
+		Attr: []string{
+			"group:mainline",
+			"group:release-health",
+			"release-health_power",
+		},
 	})
 }
 

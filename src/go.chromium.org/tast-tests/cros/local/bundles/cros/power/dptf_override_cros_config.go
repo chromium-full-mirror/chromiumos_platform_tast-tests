@@ -21,7 +21,12 @@ func init() {
 			"chromeos-power-team@google.com", // CrOS power team
 			"puthik@chromium.org",            // test author
 		},
-		Attr:         []string{"group:mainline", "informational"},
+		Attr: []string{
+			"group:mainline",
+			"informational",
+			"group:release-health",
+			"release-health_power",
+		},
 		SoftwareDeps: []string{"dptf", "unibuild"},
 
 		// Atlas is a migrated pre-unibuild device, and uses a

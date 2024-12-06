@@ -27,11 +27,17 @@ func init() {
 		Contacts:     []string{"chromeos-power-team@google.com"},
 		SoftwareDeps: []string{"chrome"},
 		Params: []testing.Param{{
-			Name:      "ash_kbbl",
-			Fixture:   setup.PowerAshKbbl,
-			ExtraAttr: []string{"group:power", "power_daily", "power_weekly"},
-			Val:       exampleUITimeParams,
-			Timeout:   1*time.Minute + power.RecorderTimeout,
+			Name:    "ash_kbbl",
+			Fixture: setup.PowerAshKbbl,
+			ExtraAttr: []string{
+				"group:power",
+				"power_daily",
+				"power_weekly",
+				"group:release-health",
+				"release-health_power",
+			},
+			Val:     exampleUITimeParams,
+			Timeout: 1*time.Minute + power.RecorderTimeout,
 		}, {
 			Name:    "ash",
 			Fixture: setup.PowerAsh,
