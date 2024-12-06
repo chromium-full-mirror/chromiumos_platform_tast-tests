@@ -204,7 +204,7 @@ func verifyWebApps(ctx context.Context, tconn *chrome.TestConn) error {
 	// ID, as this is unchanging (derived from the URL for PWAs or the package name for
 	// Android Apps).
 	var webAppsToIDs = map[string]string{
-		"Zoom":       "jldpdkiafafcejhceeincjmlkmibemgj",
+		"Zoom":       "ddamjdmghnhnicfnliimfobemngigiom",
 		"Youtube":    "agimnkijcaahngcdmfeangaknmldooml",
 		"GoogleDocs": "cepkndkdlbllfhpfhledabdcdbidehkd",
 		"BeFunky":    "fjoomcalbeohjbnlcneddljemclcekeg",
