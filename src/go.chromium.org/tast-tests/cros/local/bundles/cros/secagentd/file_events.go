@@ -36,15 +36,15 @@ func init() {
 		Params: []testing.Param{{
 			Name:      "user_fs",
 			Val:       pb.TestCase_USER_FILES,
-			ExtraAttr: []string{"group:mainline", "group:criticalstaging", "informational"},
+			ExtraAttr: []string{"group:mainline"},
 		}, {
 			Name:      "user_credential",
 			Val:       pb.TestCase_USER_CREDENTIAL,
-			ExtraAttr: []string{"group:mainline", "group:criticalstaging", "informational"},
+			ExtraAttr: []string{"group:mainline", "group:secagentd_bpf"},
 		}, {
 			Name:      "cookies",
 			Val:       pb.TestCase_COOKIES,
-			ExtraAttr: []string{"group:mainline", "group:criticalstaging", "informational"},
+			ExtraAttr: []string{"group:mainline", "group:secagentd_bpf"},
 		}, {
 			Name:      "tpm_key",
 			Val:       pb.TestCase_TPM_KEY,
@@ -52,7 +52,7 @@ func init() {
 		}, {
 			Name:      "auth_factors",
 			Val:       pb.TestCase_AUTH_FACTORS,
-			ExtraAttr: []string{"group:mainline", "group:criticalstaging", "informational"},
+			ExtraAttr: []string{"group:mainline", "group:secagentd_bpf"},
 		}, {
 			Name:      "system_passwords",
 			Val:       pb.TestCase_SYSTEM_PASSWORD,
