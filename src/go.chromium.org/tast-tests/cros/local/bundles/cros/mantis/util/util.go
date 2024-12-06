@@ -16,9 +16,14 @@ import (
 	"go.chromium.org/tast-tests/cros/local/chrome/ash"
 	"go.chromium.org/tast-tests/cros/local/chrome/uiauto"
 	"go.chromium.org/tast-tests/cros/local/chrome/uiauto/filesapp"
+	"go.chromium.org/tast-tests/cros/local/chrome/uiauto/mouse"
 	"go.chromium.org/tast-tests/cros/local/chrome/uiauto/nodewith"
 	"go.chromium.org/tast-tests/cros/local/chrome/uiauto/role"
+	"go.chromium.org/tast-tests/cros/local/coords"
 	"go.chromium.org/tast-tests/cros/local/cryptohome"
+	"go.chromium.org/tast-tests/cros/local/dlc"
+	"go.chromium.org/tast-tests/cros/local/updateengine"
+	"go.chromium.org/tast-tests/cros/local/upstart"
 	"go.chromium.org/tast/core/errors"
 	"go.chromium.org/tast/core/fsutil"
 	"go.chromium.org/tast/core/testing"
@@ -75,6 +80,74 @@ func DownloadAndOpenFileInGallery(ctx context.Context, cr *chrome.Chrome, testFi
 	imageElement := nodewith.Role(role.Image).Name(testFile).Ancestor(galleryapp.RootFinder)
 	if err := ui.WithInterval(time.Second).WaitUntilExists(imageElement)(ctx); err != nil {
 		return errors.Wrap(err, "failed to render Gallery")
+	}
+
+	return nil
+}
+
+// EnsureDLCInstalled ensures a DLC package is installed.
+func EnsureDLCInstalled(ctx context.Context, dlcID string) error {
+	// Ensure that the update engine service is ready to receive DLC install request from DLC service.
+	if err := upstart.StartJobAndWaitForDbusService(ctx, updateengine.JobName, updateengine.ServiceName); err != nil {
+		return errors.Wrapf(err, "failed to ensure %s running", updateengine.JobName)
+	}
+
+	// Check dlcservice is up and running.
+	if err := upstart.EnsureJobRunning(ctx, dlc.JobName); err != nil {
+		return errors.Wrapf(err, "failed to ensure %s running", dlc.JobName)
+	}
+
+	// Install DLC.
+	if err := dlc.Install(ctx, dlcID, ""); err != nil {
+		return errors.Wrap(err, "failed to install DLC")
+	}
+
+	return nil
+}
+
+// DrawOnImage draws a line on image in Gallery app.
+func DrawOnImage(ctx context.Context, tconn *chrome.TestConn, ui *uiauto.Context) error {
+	backlightDropTarget := nodewith.HasClass("backlight-drop-target").Ancestor(galleryapp.RootFinder)
+	imageCanvas := nodewith.Role(role.Image).Ancestor(backlightDropTarget).First()
+	canvasBounds, err := ui.ImmediateLocation(ctx, imageCanvas)
+	if err != nil {
+		return errors.Wrap(err, "failed to get the canvas location")
+	}
+
+	startLocation := coords.NewPoint(
+		canvasBounds.CenterX(),
+		canvasBounds.CenterY(),
+	)
+	if err := mouse.Move(tconn, startLocation, 200*time.Millisecond)(ctx); err != nil {
+		return errors.Wrap(err, "failed to move mouse")
+	}
+
+	if err := mouse.Press(tconn, mouse.LeftButton)(ctx); err != nil {
+		return errors.Wrap(err, "failed to press mouse")
+	}
+
+	endLocation := coords.NewPoint(
+		canvasBounds.CenterX()+50,
+		canvasBounds.CenterY()+50,
+	)
+	if err := mouse.Move(tconn, endLocation, 200*time.Millisecond)(ctx); err != nil {
+		return errors.Wrap(err, "failed to move mouse")
+	}
+
+	if err := mouse.Release(tconn, mouse.LeftButton)(ctx); err != nil {
+		return errors.Wrap(err, "failed to release mouse")
+	}
+
+	return nil
+}
+
+// WaitForSpinner waits for spinner until it is gone.
+func WaitForSpinner(ctx context.Context, tconn *chrome.TestConn, ui *uiauto.Context) error {
+	spinner := nodewith.HasClass("mdc-circular-progress__spinner-layer").Ancestor(galleryapp.RootFinder)
+	if err := uiauto.Combine("Waiting for spinner",
+		ui.WithTimeout(3*time.Second).WaitUntilExists(spinner),
+		ui.WithTimeout(1*time.Minute).WaitUntilGone(spinner))(ctx); err != nil {
+		return errors.Wrap(err, "error while waiting for spinner")
 	}
 
 	return nil
