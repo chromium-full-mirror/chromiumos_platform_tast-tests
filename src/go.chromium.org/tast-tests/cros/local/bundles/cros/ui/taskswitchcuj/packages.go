@@ -34,8 +34,9 @@ type packageInfo struct {
 }
 
 const (
-	playStorePackageName = "com.android.vending"
-	gmailPackageName     = "com.google.android.gm"
+	playStorePackageName  = "com.android.vending"
+	gmailPackageName      = "com.google.android.gm"
+	packageInstallTimeout = 10 * time.Minute
 )
 
 // getPackages returns a list of all the packages that should be opened
@@ -65,7 +66,7 @@ func installPackages(ctx context.Context, tconn *chrome.TestConn, a *arc.ARC, d 
 
 		testing.ContextLog(ctx, "Installing: ", pkg.name)
 		openedPlayStore = true
-		installCtx, cancel := context.WithTimeout(ctx, 3*time.Minute)
+		installCtx, cancel := context.WithTimeout(ctx, packageInstallTimeout)
 		if err := playstore.InstallApp(installCtx, a, d, pkg.name, &playstore.Options{TryLimit: -1}); err != nil {
 			cancel()
 			return errors.Wrapf(err, "failed to install %s", pkg.name)

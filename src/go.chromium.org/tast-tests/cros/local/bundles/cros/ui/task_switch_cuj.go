@@ -6,7 +6,6 @@ package ui
 
 import (
 	"context"
-	"time"
 
 	"go.chromium.org/tast-tests/cros/local/bundles/cros/ui/taskswitchcuj"
 	"go.chromium.org/tast-tests/cros/local/chrome"
@@ -30,7 +29,7 @@ func init() {
 		HardwareDeps: hwdep.D(hwdep.InternalDisplay()),
 		SoftwareDeps: []string{"chrome", "arc"},
 		Data:         []string{cujrecorder.SystemTraceConfigFile},
-		Timeout:      25 * time.Minute,
+		Timeout:      taskswitchcuj.TestTimeout,
 		Vars: []string{
 			"mute",
 		},

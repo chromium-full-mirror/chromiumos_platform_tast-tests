@@ -31,10 +31,16 @@ import (
 	"go.chromium.org/tast/core/testing"
 )
 
+const (
+	taskSwitchingDuration = 5 * time.Minute
+	preparationTimeout    = 10*time.Minute + packageInstallTimeout
+	// TestTimeout is the total timeout of the test preparation and the 2 task switch operations.
+	TestTimeout = preparationTimeout + taskSwitchingDuration*2
+)
+
 // Run runs the task switch CUJ by opening up ARC and browser windows
 // and switching among them using various workflows.
 func Run(ctx context.Context, cr *chrome.Chrome, a *arc.ARC, isTablet bool, outDir, perfettoCfgPath string) (retErr error) {
-	const taskSwitchingDuration = 5 * time.Minute
 
 	// Shorten context a bit to allow for cleanup.
 	closeCtx := ctx
