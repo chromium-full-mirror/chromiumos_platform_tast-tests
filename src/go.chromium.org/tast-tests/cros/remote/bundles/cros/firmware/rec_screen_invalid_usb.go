@@ -68,6 +68,11 @@ func RecScreenInvalidUSB(ctx context.Context, s *testing.State) {
 		s.Fatal("Failed to clear event log: ", err)
 	}
 
+	supportAPFwState, err := h.SupportAPFwState(ctx)
+	if err != nil {
+		s.Fatal("Failed to check if DUT support APFwState: ", err)
+	}
+
 	var state firmware.CheckAndSetServoCharger = h.CheckServoChargerBeforeBootingFromUSB(ctx)
 
 	defer func() {
@@ -110,43 +115,54 @@ func RecScreenInvalidUSB(ctx context.Context, s *testing.State) {
 		}
 	}()
 
-	if err := bootToNoGoodScreen(ctx, h, &state); err != nil {
+	if err := bootToNoGoodScreen(ctx, h, &state, supportAPFwState); err != nil {
 		s.Fatal("Failed to traverse NoGood screen: ", err)
 	}
 	s.Log("Powering off the USB")
 	if err := h.Servo.SetUSBMuxState(ctx, servo.USBMuxOff); err != nil {
 		s.Fatal("Failed to power off the USB: ", err)
 	}
-	s.Log("Restoring the USB")
-	if err := h.RestoreUSBKey(ctx); err != nil {
-		s.Fatal("Failed to restore the USB: ", err)
-	}
-	s.Log("Enabling a valid USB to DUT")
-	if err := h.Servo.SetUSBMuxState(ctx, servo.USBMuxDUT); err != nil {
-		s.Fatal("Failed to enable the USB to DUT: ", err)
-	}
-	s.Log("Checking if DUT boots from the USB")
-	if err := h.WaitDUTConnectDuringBootFromUSB(ctx, true); err != nil {
-		if errors.As(err, &context.DeadlineExceeded) {
-			bootUSBTimeoutErr.err = err
+	if !supportAPFwState {
+		s.Log("Restoring the USB")
+		if err := h.RestoreUSBKey(ctx); err != nil {
+			s.Fatal("Failed to restore the USB: ", err)
 		}
-		s.Fatal("Failed to boot from USB: ", err)
-	}
+		s.Log("Enabling a valid USB to DUT")
+		if err := h.Servo.SetUSBMuxState(ctx, servo.USBMuxDUT); err != nil {
+			s.Fatal("Failed to enable the USB to DUT: ", err)
+		}
+		s.Log("Checking if DUT boots from the USB")
+		if err := h.WaitDUTConnectDuringBootFromUSB(ctx, true); err != nil {
+			if errors.As(err, &context.DeadlineExceeded) {
+				bootUSBTimeoutErr.err = err
+			}
+			s.Fatal("Failed to boot from USB: ", err)
+		}
 
-	match, err := h.Reporter.CheckDisplayedScreens(ctx, identifyFwScreens(h))
-	if err != nil {
-		s.Fatal("Failed to verify firmware screen data: ", err)
-	}
-	if !match {
-		saveLogPath := filepath.Join(s.OutDir(), "firmware.log")
-		if err := h.SaveCBMEMLogs(ctx, saveLogPath); err != nil {
-			s.Fatal("Failed to save firmware log while matching firmware screen data: ", err)
+		match, err := h.Reporter.CheckDisplayedScreens(ctx, identifyFwScreens(h))
+		if err != nil {
+			s.Fatal("Failed to verify firmware screen data: ", err)
 		}
-		s.Fatal("Failed to find matching firmware screen data")
+		if !match {
+			saveLogPath := filepath.Join(s.OutDir(), "firmware.log")
+			if err := h.SaveCBMEMLogs(ctx, saveLogPath); err != nil {
+				s.Fatal("Failed to save firmware log while matching firmware screen data: ", err)
+			}
+			s.Fatal("Failed to find matching firmware screen data")
+		}
 	}
 }
 
-func bootToNoGoodScreen(ctx context.Context, h *firmware.Helper, state *firmware.CheckAndSetServoCharger) error {
+func bootToNoGoodScreen(ctx context.Context, h *firmware.Helper, state *firmware.CheckAndSetServoCharger, supportAPFwState bool) (retErr error) {
+	closeUART, err := h.Servo.EnableUARTCapture(ctx, servo.ECUARTCapture)
+	if err != nil {
+		return errors.Wrap(err, "failed to enable capture EC UART")
+	}
+	defer func() {
+		if err := closeUART(ctx); err != nil {
+			retErr = errors.Join(retErr, errors.Wrap(err, "failed to cancel capture EC UART"))
+		}
+	}()
 	ms, err := firmware.NewModeSwitcher(ctx, h)
 	if err != nil {
 		return errors.Wrap(err, "failed to create mode switcher")
@@ -154,9 +170,15 @@ func bootToNoGoodScreen(ctx context.Context, h *firmware.Helper, state *firmware
 	if err := ms.EnableRecMode(ctx, servo.PowerStateRec, servo.USBMuxOff); err != nil {
 		return err
 	}
-	testing.ContextLog(ctx, "Waiting for DUT to reach the firmware screen")
-	if err := h.WaitFirmwareScreen(ctx, h.Config.FirmwareScreenRecMode); err != nil {
-		return errors.Wrap(err, "failed to get to firmware screen")
+	if supportAPFwState && (h.Board != "dedede" && h.Board != "corsola") {
+		if err := h.DetectFirmwareScreen(ctx, h.Config.FirmwareScreen, fwCommon.RecoverySelect); err != nil {
+			return errors.Wrap(err, "failed to detect firmware screen")
+		}
+	} else {
+		testing.ContextLog(ctx, "Waiting for DUT to reach the firmware screen")
+		if err := h.WaitFirmwareScreen(ctx, h.Config.FirmwareScreenRecMode); err != nil {
+			return errors.Wrap(err, "failed to get to firmware screen")
+		}
 	}
 	if state.IsServoChargerConnected && state.RemoveServoChargerRequired {
 		if err := h.SetDUTPower(ctx, false); err != nil {
@@ -173,6 +195,17 @@ func bootToNoGoodScreen(ctx context.Context, h *firmware.Helper, state *firmware
 	if err := h.Servo.SetDUTPDDataRole(ctx, servo.DFP); err != nil {
 		testing.ContextLogf(ctx, "Failed to set pd data role to DFP: %.400s", err)
 	}
+	if supportAPFwState && (h.Board == "dedede" || h.Board == "corsola") {
+		closeUART, err := h.Servo.EnableUARTCapture(ctx, servo.ECUARTCapture)
+		if err != nil {
+			return errors.Wrap(err, "failed to enable capture EC UART")
+		}
+		defer func() {
+			if err := closeUART(ctx); err != nil {
+				retErr = errors.Join(retErr, errors.Wrap(err, "failed to cancel capture EC UART"))
+			}
+		}()
+	}
 	if h.Config.ModeSwitcherType == firmware.MenuSwitcher {
 		menuNavigator, err := firmware.NewMenuNavigator(ctx, h)
 		if err != nil {
@@ -181,14 +214,24 @@ func bootToNoGoodScreen(ctx context.Context, h *firmware.Helper, state *firmware
 		// Select 'Recovery using external storage' on the recovery screen.
 		// Select 'Next' on the 'Get ready to recover your device' screen.
 		// Select 'Next' on the 'Set up your external storage' screen.
-		for press := 0; press < 3; press++ {
+		for _, id := range []fwCommon.FwScreenID{
+			fwCommon.RecoveryDiskStep1,
+			fwCommon.RecoveryDiskStep2,
+			fwCommon.RecoveryDiskStep3,
+		} {
 			if err := menuNavigator.SelectOption(ctx); err != nil {
 				return err
 			}
-			testing.ContextLogf(ctx, "Sleeping for %s (KeypressDelay)", h.Config.KeypressDelay)
-			// GoBigSleepLint: Simulate a specific speed of key press.
-			if err := testing.Sleep(ctx, h.Config.KeypressDelay); err != nil {
-				return errors.Wrap(err, "failed to sleep")
+			if supportAPFwState {
+				if err := h.DetectFirmwareScreen(ctx, h.Config.FirmwareScreen, id); err != nil {
+					return errors.Wrap(err, "failed to detect firmware screen")
+				}
+			} else {
+				testing.ContextLogf(ctx, "Sleeping for %s (KeypressDelay)", h.Config.KeypressDelay)
+				// GoBigSleepLint: Simulate a specific speed of key press.
+				if err := testing.Sleep(ctx, h.Config.KeypressDelay); err != nil {
+					return errors.Wrap(err, "failed to sleep")
+				}
 			}
 		}
 	}
@@ -212,17 +255,23 @@ func bootToNoGoodScreen(ctx context.Context, h *firmware.Helper, state *firmware
 	if err := h.Servo.SetUSBMuxState(ctx, servo.USBMuxDUT); err != nil {
 		return errors.Wrap(err, "failed to enable the USB to DUT")
 	}
-	testing.ContextLogf(ctx, "Sleeping for %s to ensure rec invalid screen appears", h.Config.RecInvalidScreen)
-	// GoBigSleepLint: This sleep is necessary to accommodate for the delay
-	// that the DUT takes in recognizing the USB as a valid/invalid device.
-	// If the delay was too short, the rec invalid screen might not appear.
-	// If the delay was too long, the firmware log might get over flooded.
-	// When leasing a few duts and running this test remotely, we found a
-	// duration of two seconds to be the most promising for most of the boards,
-	// and five seconds for boards, such as sarien, coral, octopus, eve, nami
-	// and grunt.
-	if err := testing.Sleep(ctx, h.Config.RecInvalidScreen); err != nil {
-		return errors.Wrap(err, "failed to sleep")
+	if supportAPFwState {
+		if err := h.DetectFirmwareScreen(ctx, h.Config.FirmwareScreen, fwCommon.RecoveryInvalid); err != nil {
+			return errors.Wrap(err, "failed to detect firmware screen")
+		}
+	} else {
+		testing.ContextLogf(ctx, "Sleeping for %s to ensure rec invalid screen appears", h.Config.RecInvalidScreen)
+		// GoBigSleepLint: This sleep is necessary to accommodate for the delay
+		// that the DUT takes in recognizing the USB as a valid/invalid device.
+		// If the delay was too short, the rec invalid screen might not appear.
+		// If the delay was too long, the firmware log might get over flooded.
+		// When leasing a few duts and running this test remotely, we found a
+		// duration of two seconds to be the most promising for most of the boards,
+		// and five seconds for boards, such as sarien, coral, octopus, eve, nami
+		// and grunt.
+		if err := testing.Sleep(ctx, h.Config.RecInvalidScreen); err != nil {
+			return errors.Wrap(err, "failed to sleep")
+		}
 	}
 	return nil
 }
