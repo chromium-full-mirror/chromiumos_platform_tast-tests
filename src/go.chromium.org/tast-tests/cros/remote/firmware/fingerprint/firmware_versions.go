@@ -11,10 +11,15 @@ import "go.chromium.org/tast-tests/cros/common/fingerprint"
 // fpmcu-firmware-binaries/generate_test_versions.py script.
 
 // Map of attributes for a given board's various firmware file releases.
+//
+// Keep the latest 2 or 3 versions to allow easier testing against other
+// release channels, like stable and beta.
+//
 // Two purposes:
 //  1. Documents the exact versions and keys used for a given firmware file.
-//  2. Used to verify that files that end up in the build (and therefore
-//     what we release) is exactly what we expect.
+//  2. Verifies files that end up in the build are valid firmware image files.
+//     TODO(b/382782212): Add explicit check for ToT builds to ensure the single
+//     latest firmware file was used.
 var firmwareVersionMap = map[fingerprint.BoardName]map[string]firmwareMetadata{
 	fingerprint.BoardNameBloonchipper: {
 		"bloonchipper_v2.0.4277-9f652bb3-RO_v2.0.25973-4e2e543-RW.bin": {
