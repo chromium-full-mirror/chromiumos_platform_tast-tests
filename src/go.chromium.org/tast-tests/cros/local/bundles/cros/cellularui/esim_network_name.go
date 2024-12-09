@@ -7,10 +7,14 @@ package cellularui
 import (
 	"context"
 	"strings"
+	"time"
 
 	"go.chromium.org/tast-tests/cros/local/cellular"
 	"go.chromium.org/tast-tests/cros/local/chrome"
+	"go.chromium.org/tast-tests/cros/local/chrome/uiauto/faillog"
 	"go.chromium.org/tast-tests/cros/local/chrome/uiauto/ossettings"
+	"go.chromium.org/tast/core/ctxutil"
+	"go.chromium.org/tast/core/errors"
 	"go.chromium.org/tast/core/testing"
 )
 
@@ -31,7 +35,15 @@ func init() {
 }
 
 func ESimNetworkName(ctx context.Context, s *testing.State) {
-	cr, _ := chrome.New(ctx)
+	cleanupCtx := ctx
+	ctx, cancel := ctxutil.Shorten(ctx, 10*time.Second)
+	defer cancel()
+
+	cr, err := chrome.New(ctx)
+	if err != nil {
+		s.Fatal("Failed to create a new instance of Chrome: ", err)
+	}
+	defer cr.Close(cleanupCtx)
 
 	helper := s.FixtValue().(*cellular.FixtData).Helper
 	if _, err := helper.Connect(ctx); err != nil {
@@ -43,25 +55,40 @@ func ESimNetworkName(ctx context.Context, s *testing.State) {
 		s.Fatal("Error fetching the current network name: ", err)
 	}
 
-	tconn, _ := cr.TestAPIConn(ctx)
+	tconn, err := cr.TestAPIConn(ctx)
+	if err != nil {
+		s.Fatal("Failed to create Test API connection: ", err)
+	}
 
-	app, err := ossettings.OpenMobileDataSubpage(ctx, tconn, cr)
+	app, err := ossettings.LaunchAtMobileData(ctx, tconn, cr)
 	if err != nil {
 		s.Fatal("Failed to open mobile data subpage: ", err)
 	}
+	defer app.Close(cleanupCtx)
+	defer faillog.DumpUITreeWithScreenshotWithTestAPIOnError(cleanupCtx, s.OutDir(), s.HasError, tconn, "os_settings")
 
-	expr := `var optionNode = shadowPiercingQuery('div[id="itemTitle"][aria-hidden="true"]');
+	if err := ossettings.WaitUntilRefreshCellularProfileCompletes(ctx, tconn); err != nil {
+		s.Fatal("Failed to wait until refresh profile complete: ", err)
+	}
+
+	const expr string = `var optionNode = shadowPiercingQuery('div[id="itemTitle"][aria-hidden="true"]');
 	         if (optionNode == undefined) {
 		       throw new Error("Title node not found.");
 	         }
 	         optionNode.innerText;`
 
-	var title string
-	if err := app.EvalJSWithShadowPiercer(ctx, cr, expr, &title); err != nil {
-		s.Fatal("Failed to fetch title: ", err)
-	}
+	if err := testing.Poll(ctx, func(ctx context.Context) error {
+		var title string
+		if err := app.EvalJSWithShadowPiercer(ctx, cr, expr, &title); err != nil {
+			return errors.Wrap(err, "failed to fetch title")
+		}
 
-	if !strings.Contains(title, networkName) {
-		s.Fatal("Network name is not present in the title: ", networkName)
+		if !strings.Contains(title, networkName) {
+			return errors.Wrapf(err, "network name %q is not present in the title: %q", networkName, title)
+		}
+
+		return nil
+	}, &testing.PollOptions{Timeout: 15 * time.Second, Interval: time.Second}); err != nil {
+		s.Fatal("Failed to wait until the carrier name shown with the connected esim: ", err)
 	}
 }
