@@ -33,6 +33,10 @@ func init() {
 			Name:              "chromeos_kernelci",
 			Val:               addExtraCheckForChromeOSKernelCI,
 			ExtraSoftwareDeps: []string{"chromeos_kernelci"},
+		}, {
+			Name:              "chromeos_flex",
+			Val:               addExtraCheckForChromeOSFlex,
+			ExtraSoftwareDeps: []string{"flex_device"},
 		}},
 	})
 }
@@ -431,6 +435,18 @@ func addExtraCheckForChromeOSKernelCI(kcc *kernelConfigCheck, ver *sysutil.Kerne
 
 	// "ESD_FS" is optional.
 	kcc.optional = append(kcc.optional, "ESD_FS")
+
+	return kcc
+}
+
+func addExtraCheckForChromeOSFlex(kcc *kernelConfigCheck, ver *sysutil.KernelVersion,
+	arch string) *kernelConfigCheck {
+
+	// Security: ensure the lockdown LSM is enabled and enforced in
+	// integrity mode.
+	kcc.builtin = append(kcc.builtin, "LOCK_DOWN_KERNEL_FORCE_INTEGRITY")
+	kcc.builtin = append(kcc.builtin, "SECURITY_LOCKDOWN_LSM")
+	kcc.builtin = append(kcc.builtin, "SECURITY_LOCKDOWN_LSM_EARLY")
 
 	return kcc
 }
