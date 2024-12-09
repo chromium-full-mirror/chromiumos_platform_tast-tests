@@ -139,8 +139,9 @@ func KeyboardBinding(ctx context.Context, s *testing.State) {
 
 	// Go to the "Customize keyboard keys" subpage.
 	rows := nodewith.Name(customizeKeyboardRowLabel).Role(role.Link).Ancestor(ossettings.WindowFinder)
-	if err := res.ui.WaitUntilExists(rows)(ctx); err != nil {
-		s.Fatal("Failed to find customize keyboard rows: ", err)
+	// Verify if the first row element exists if there are multiple rows.
+	if err := res.ui.WaitUntilExists(rows.First())(ctx); err != nil {
+		s.Fatal("Failed to find first customize keyboard row: ", err)
 	}
 	nodes, _ := res.ui.NodesInfo(ctx, rows)
 	rowCount := len(nodes)
