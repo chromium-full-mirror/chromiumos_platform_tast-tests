@@ -16,8 +16,10 @@ import (
 	"go.chromium.org/tast-tests/cros/common/ui"
 	"go.chromium.org/tast-tests/cros/local/bundles/cros/login/signinutil"
 	"go.chromium.org/tast-tests/cros/local/chrome"
+	"go.chromium.org/tast-tests/cros/local/chrome/uiauto/auth"
 	"go.chromium.org/tast-tests/cros/local/chrome/uiauto/faillog"
 	"go.chromium.org/tast-tests/cros/local/chrome/uiauto/lockscreen"
+	"go.chromium.org/tast-tests/cros/local/chrome/uiauto/ossettings"
 	"go.chromium.org/tast-tests/cros/local/chrome/userutil"
 	hwseclocal "go.chromium.org/tast-tests/cros/local/hwsec"
 	"go.chromium.org/tast-tests/cros/local/input"
@@ -30,6 +32,13 @@ const (
 	testFile = "test_file"
 	testData = "test that data persisted on the password change"
 )
+
+type changePasswordParams struct {
+	// Specify if the user has recovery enabled by default during setup.
+	userHasRecovery bool
+	// Specify if the user should setup recovery in settings.
+	setUpRecovery bool
+}
 
 func init() {
 	testing.AddTest(&testing.Test{
@@ -60,10 +69,22 @@ func init() {
 		}},
 		Params: []testing.Param{{
 			Name: "user_without_recovery",
-			Val:  false,
+			Val: changePasswordParams{
+				userHasRecovery: false,
+				setUpRecovery:   false,
+			},
 		}, {
 			Name: "user_with_recovery",
-			Val:  true,
+			Val: changePasswordParams{
+				userHasRecovery: true,
+				setUpRecovery:   false,
+			},
+		}, {
+			Name: "user_without_recovery_and_setup",
+			Val: changePasswordParams{
+				userHasRecovery: false,
+				setUpRecovery:   true,
+			},
 		}},
 	})
 }
@@ -86,7 +107,10 @@ func ChangePassword(ctx context.Context, s *testing.State) {
 		testing.ContextLog(ctx, "Failed to verify Internet connectivity before test: ", err)
 	}
 
-	userHasRecovery := s.Param().(bool)
+	// Make sure that we actually reset users to avoid flakiness due to previous tests.
+	userutil.ResetUsers(ctx)
+	userParam := s.Param().(changePasswordParams)
+	userHasRecovery := userParam.userHasRecovery
 
 	// Isolate the step to leverage `defer` pattern.
 	func() {
@@ -117,6 +141,13 @@ func ChangePassword(ctx context.Context, s *testing.State) {
 			s.Fatal("Failed to create a user: ", err)
 		}
 		defer cr.Close(cleanupCtx)
+
+		tconn, err := cr.TestAPIConn(ctx)
+		if err != nil {
+			s.Fatal("Failed to connect Test API: ", err)
+		}
+		defer faillog.DumpUITreeWithScreenshotOnError(cleanupCtx, s.OutDir(), s.HasError, cr, "first_login")
+
 		normalizedUser = cr.NormalizedUser()
 		if err := hwsec.WriteUserTestContent(ctx, cryptohome, cmdRunner, normalizedUser, testFile, testData); err != nil {
 			s.Fatal("Failed to write a user test file: ", err)
@@ -124,6 +155,23 @@ func ChangePassword(ctx context.Context, s *testing.State) {
 		// This is needed for reven tests, as login flow there relies on the existence of a device setting.
 		if err := userutil.WaitForOwnership(ctx, cr); err != nil {
 			s.Fatal("User did not become device owner: ", err)
+		}
+
+		if userParam.setUpRecovery {
+			// Set up Recovery through a connection to the Settings page.
+			settings, err := ossettings.LaunchAtPageURL(ctx, tconn, cr, "osPrivacy/lockScreen", func(context.Context) error { return nil })
+			if err != nil {
+				s.Fatal("Failed to open setting page: ", err)
+			}
+			defer settings.Close(ctx)
+
+			if err := auth.ConfirmPassword(ctx, cr, initialCreds.Pass); err != nil {
+				s.Fatal("Failed to confirm password: ", err)
+			}
+
+			if err := settings.SetToggleOption(cr, "Local data recovery", true)(ctx); err != nil {
+				s.Fatal("Failed to toggle recovery: ", err)
+			}
 		}
 	}()
 
@@ -170,7 +218,7 @@ func ChangePassword(ctx context.Context, s *testing.State) {
 		}
 		defer oobeConn.Close()
 
-		if !userHasRecovery {
+		if !userHasRecovery && !userParam.setUpRecovery {
 			// Without recovery user need to enter old password.
 			if err := oobeConn.WaitForExprFailOnErrWithTimeout(ctx, "!document.querySelector('#enter-old-password').hidden", 45*time.Second); err != nil {
 				s.Fatal("Failed to wait for enter old password screen: ", err)
