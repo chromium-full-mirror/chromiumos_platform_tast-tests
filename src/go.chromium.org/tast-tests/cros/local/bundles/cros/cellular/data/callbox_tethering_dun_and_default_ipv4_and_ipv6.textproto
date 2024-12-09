@@ -6,7 +6,6 @@ mno {
       name: "Cros Cellular Network"
     }
     mccmnc: "00101"
-    tethering_allowed: true
     mobile_apn {
       apn: "callbox-ipv4"
       ip_type: IPV4

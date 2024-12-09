@@ -6,7 +6,6 @@ mno {
       name: "Cros Cellular Network"
     }
     mccmnc: "00101"
-    tethering_allowed: true
     mhs_entitlement_url: "http://server-callbox.cros:9920/entitlement_check_ok"
     mobile_apn {
       apn: "callbox-ipv6"
