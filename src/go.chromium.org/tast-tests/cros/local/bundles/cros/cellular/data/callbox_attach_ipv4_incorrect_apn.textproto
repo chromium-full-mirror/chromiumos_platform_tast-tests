@@ -1,21 +1,21 @@
 # Test networks added to test the software stack.
 mno {
   data {
-    uuid : "test-network"
-    country : "us"
+    uuid: "test-network"
+    country: "us"
     localized_name {
-      name : "Test Network"
+      name: "Test Network"
     }
-    mccmnc : "00101"
+    mccmnc: "00101"
     mobile_apn {
-      apn : "callbox-incorrect-ipv4"
+      apn: "callbox-incorrect-ipv4"
       ip_type: IPV4
       type: DEFAULT
       type: IA
       username: "username1"
       password: "password1"
       localized_name {
-        name : "Test Network Incorrect APN"
+        name: "Test Network Incorrect APN"
       }
     }
   }

@@ -7,7 +7,7 @@ mno {
     }
     mccmnc: "00101"
     mobile_apn {
-       # Will result in MissingOrUnknownApn or ServiceOptionNotSubscribed
+      # Will result in MissingOrUnknownApn or ServiceOptionNotSubscribed
       apn: "callbox-wrong-connect-apn"
       ip_type: IPV4
       type: DEFAULT
