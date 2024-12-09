@@ -16,10 +16,8 @@ import (
 
 	"golang.org/x/exp/slices"
 
-	"go.chromium.org/tast-tests/cros/local/arc"
 	"go.chromium.org/tast-tests/cros/local/bundles/cros/security/filesetup"
 	"go.chromium.org/tast-tests/cros/local/moblab"
-	"go.chromium.org/tast-tests/cros/local/syslog"
 	"go.chromium.org/tast-tests/cros/local/upstart"
 
 	"go.chromium.org/tast/core/errors"
@@ -75,23 +73,6 @@ func Mtab(ctx context.Context, s *testing.State) {
 		if err := upstart.RestartJob(ctx, "ui"); err != nil {
 			s.Fatal("Failed to restart ui job: ", err)
 		}
-		// Android mounts don't appear immediately after the ui job starts, so wait
-		// a bit if the system supports Android.
-		if arc.Supported() {
-			// TODO(crbug.com/1033637): support ARCVM.
-			if t, ok := arc.Type(); ok && t == arc.Container {
-				reader, err := syslog.NewReader(ctx)
-				if err != nil {
-					s.Fatal("Failed to open syslog reader: ", err)
-				}
-				defer reader.Close()
-
-				s.Log("Waiting for Android mounts")
-				if err := arc.WaitAndroidInit(ctx, reader); err != nil {
-					s.Error("Failed waiting for Android mounts: ", err) // non-fatal so we can check other mounts
-				}
-			}
-		}
 	}
 
 	// mountSpec holds required criteria for a mounted filesystem.
@@ -116,27 +97,13 @@ func Mtab(ctx context.Context, s *testing.State) {
 
 		"/efi": {nil, "vfat", defaultRW + ",fmask=0007,dmask=0007"},
 
-		"/opt/google/containers/android/rootfs/root":                        {loopDev, "squashfs", "ro"},
-		"/opt/google/containers/android/rootfs/root/system/lib/arm":         {loopDev, "squashfs", "ro,nosuid,nodev"},
-		"/opt/google/containers/arc-obb-mounter/mountpoints/container-root": {loopDev, "squashfs", "ro,noexec"},
-		"/opt/google/containers/arc-sdcard/mountpoints/container-root":      {loopDev, "squashfs", "ro,noexec"},
-
-		"/run":                     {nil, "tmpfs", defaultRW + ",mode=755"},
-		"/run/arc/adb":             {nil, "tmpfs", defaultRW + ",mode=775"},
-		"/run/arc/adbd":            {nil, "tmpfs", defaultRW + ",mode=770"},
-		"/run/arc/media":           {nil, "tmpfs", defaultRO + ",mode=755"},
-		"/run/arc/obb":             {nil, "tmpfs", defaultRO + ",mode=755"},
-		"/run/arc/oem":             {nil, "tmpfs", defaultRW + ",mode=755"},
-		"/run/arc/sdcard":          {nil, "tmpfs", defaultRO + ",mode=755"},
-		"/run/arc/shared_mounts":   {nil, "tmpfs", defaultRW + ",mode=755"},
-		"/run/arc/debugfs/sync":    {nil, "debugfs", defaultRW + ",gid=605,mode=750"},
-		"/run/arc/debugfs/tracing": {nil, "tracefs", defaultRW + ",mode=755"},
-		"/run/chromeos-config/v1":  {nil, "tmpfs", defaultRO},
-		"/run/debugfs_gpu":         {nil, "debugfs", defaultRW + ",gid=605,mode=750"}, // debugfs-access
-		"/run/imageloader":         {nil, "tmpfs", defaultRW + ",mode=755"},
-		"/run/namespaces":          {nil, "tmpfs", defaultRW + ",mode=755"}, // This is a bind mount
-		"/run/netns":               {nil, "tmpfs", defaultRW + ",mode=755"},
-		"/run/lock":                {nil, "tmpfs", defaultRW + ",mode=755"},
+		"/run":                    {nil, "tmpfs", defaultRW + ",mode=755"},
+		"/run/chromeos-config/v1": {nil, "tmpfs", defaultRO},
+		"/run/debugfs_gpu":        {nil, "debugfs", defaultRW + ",gid=605,mode=750"}, // debugfs-access
+		"/run/imageloader":        {nil, "tmpfs", defaultRW + ",mode=755"},
+		"/run/namespaces":         {nil, "tmpfs", defaultRW + ",mode=755"}, // This is a bind mount
+		"/run/netns":              {nil, "tmpfs", defaultRW + ",mode=755"},
+		"/run/lock":               {nil, "tmpfs", defaultRW + ",mode=755"},
 
 		"/sys/fs/cgroup":            {nil, "tmpfs", defaultRW + ",mode=755"},
 		"/sys/fs/selinux":           {nil, "selinuxfs", "rw,nosuid,noexec"},
