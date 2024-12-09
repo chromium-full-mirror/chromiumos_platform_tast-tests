@@ -179,58 +179,6 @@ func GSCCCDStraps(ctx context.Context, s *testing.State) {
 	//testOutsideEdges(ctx, userParams, b, i, s)
 }
 
-func testInsideCorners(ctx context.Context, userParams gSCCCDStrapsParam, b utils.DevboardHelper, i *ti50.CrOSImage, s *testing.State) {
-	// Run test with voltages barely inside each of four corners of the allowed ranges.
-	// Ideally, we would want to test exactly at the corner, but HyperDebug has +/-.5%
-	// accuracy on its analog outputs, so in order to be sure that a failing test is not
-	// caused by HyperDebug providing a voltage just outside the nominal range, we have to
-	// stay safe.
-	testStrapCorner(ctx, userParams.expectedState,
-		userParams.cc1.lowerBoundVolts*1.005,
-		userParams.cc2.lowerBoundVolts*1.005,
-		s.TestName()+" lower left corner",
-		b, i, s)
-	testStrapCorner(ctx, userParams.expectedState,
-		userParams.cc1.upperBoundVolts*0.995,
-		userParams.cc2.lowerBoundVolts*1.005,
-		s.TestName()+" lower right corner",
-		b, i, s)
-	testStrapCorner(ctx, userParams.expectedState,
-		userParams.cc1.upperBoundVolts*0.995,
-		userParams.cc2.upperBoundVolts*0.995,
-		s.TestName()+" upper right corner",
-		b, i, s)
-	testStrapCorner(ctx, userParams.expectedState,
-		userParams.cc1.lowerBoundVolts*1.005,
-		userParams.cc2.upperBoundVolts*0.995,
-		s.TestName()+" upper left corner",
-		b, i, s)
-}
-
-func testOutsideEdges(ctx context.Context, userParams gSCCCDStrapsParam, b utils.DevboardHelper, i *ti50.CrOSImage, s *testing.State) {
-	// Test just outside each edge of the box.
-	testStrapCorner(ctx, ti50.UsbDisconnected,
-		(userParams.cc1.lowerBoundVolts+userParams.cc1.upperBoundVolts)/2,
-		(userParams.cc2.lowerBoundVolts-userParams.cc2.margin)*.995,
-		s.TestName()+" below",
-		b, i, s)
-	testStrapCorner(ctx, ti50.UsbDisconnected,
-		(userParams.cc1.lowerBoundVolts+userParams.cc1.upperBoundVolts)/2,
-		(userParams.cc2.upperBoundVolts+userParams.cc2.margin)*1.005,
-		s.TestName()+" above",
-		b, i, s)
-	testStrapCorner(ctx, ti50.UsbDisconnected,
-		(userParams.cc1.lowerBoundVolts-userParams.cc1.margin)*.995,
-		(userParams.cc2.lowerBoundVolts+userParams.cc2.upperBoundVolts)/2,
-		s.TestName()+" left",
-		b, i, s)
-	testStrapCorner(ctx, ti50.UsbDisconnected,
-		(userParams.cc1.upperBoundVolts+userParams.cc1.margin)*1.005,
-		(userParams.cc2.lowerBoundVolts+userParams.cc2.upperBoundVolts)/2,
-		s.TestName()+" right",
-		b, i, s)
-}
-
 func testStrapCorner(ctx context.Context, expectedState ti50.UsbDeviceLinkState, cc1Volts, cc2Volts float32, caseStr string, b utils.DevboardHelper, i *ti50.CrOSImage, s *testing.State) {
 	th := utils.FirmwareTestingHelper{FirmwareTestingHelperDelegate: s}
 

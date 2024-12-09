@@ -8,7 +8,6 @@ import (
 	"context"
 	"time"
 
-	"go.chromium.org/tast-tests/cros/common/bond"
 	"go.chromium.org/tast-tests/cros/common/perf"
 	"go.chromium.org/tast-tests/cros/local/chrome"
 	"go.chromium.org/tast-tests/cros/local/chrome/cuj"
@@ -212,54 +211,4 @@ func Run(ctx context.Context, params *TestParams) (retErr error) {
 	}
 
 	return nil
-}
-
-func generateMeetLinkViaBond(ctx context.Context, meet GoogleMeetConfig, roomType RoomType) (meetLink string, cleanup func(ctx context.Context), err error) {
-	var (
-		bondConn        *bond.Client
-		bondMeetingCode string
-		numFailures     int
-	)
-	cleanupfunc := func(ctx context.Context) {
-		if bondConn != nil {
-			if bondMeetingCode != "" {
-				bondConn.RemoveAllBotsFromConference(ctx, bondMeetingCode)
-			}
-			bondConn.Close()
-		}
-	}
-	// Connect.
-	bondConn, err = bond.NewClient(ctx, bond.WithCredsJSON(meet.BondCreds), bond.WithExternalEndpoint())
-	if err != nil {
-		return "", cleanupfunc, errors.Wrap(err, "BOND API2: Failed to connect")
-	}
-	defer func(ctx context.Context) {
-		if err != nil {
-			bondConn.Close()
-		}
-	}(ctx)
-
-	// Create room with bots.
-	botsDuration := 60 * time.Minute // one hour long by default.
-	deadline, ok := ctx.Deadline()
-	if ok {
-		botsDuration = time.Until(deadline.Add(90 * time.Second))
-	}
-	numBots := GoogleMeetRoomParticipants[roomType] - 1 // one of participants is the test itself
-	bondMeetingCode, numFailures, err = bondConn.CreateConferenceWithBots(ctx, numBots, botsDuration)
-	defer func(ctx context.Context) {
-		if err != nil {
-			bondConn.RemoveAllBotsFromConference(ctx, bondMeetingCode)
-		}
-	}(ctx)
-
-	if err != nil || numFailures > 0 {
-		return "", cleanupfunc, errors.Wrapf(err, "BOND API2: %d bots failed to connect", numFailures)
-	}
-	testing.ContextLogf(ctx, "BOND API2: Created conference: %+v and added %d bots for the duration of %v", bondMeetingCode, numBots, botsDuration)
-
-	// Make the room created by BOND the first one to try.
-	meetLink = "https://meet.google.com/" + bondMeetingCode
-
-	return meetLink, cleanupfunc, nil
 }
