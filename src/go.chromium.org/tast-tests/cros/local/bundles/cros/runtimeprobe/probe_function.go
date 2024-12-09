@@ -312,7 +312,7 @@ func init() {
 				ExtraAttr: []string{"racc_encrypted_config_installed"},
 			}, {
 				Name:              "camera",
-				ExtraHardwareDeps: common.ReleasedDeviceDeps(hwdep.SkipOnModel("blacktip360")),
+				ExtraHardwareDeps: common.ReleasedDeviceDeps(hwdep.SkipOnModel("blacktip360", "wugtrio")),
 				Val: probeFunctionTestParam{
 					categories:           []string{"camera"},
 					allowExtraComponents: false,
