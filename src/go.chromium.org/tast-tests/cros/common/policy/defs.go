@@ -22413,6 +22413,7 @@ type IsolatedWebAppInstallForceList struct {
 }
 
 type IsolatedWebAppInstallForceListValue struct {
+	AllowDowngrades   bool   `json:"allow_downgrades"`
 	PinnedVersion     string `json:"pinned_version"`
 	UpdateChannel     string `json:"update_channel"`
 	UpdateManifestUrl string `json:"update_manifest_url"`
@@ -28004,38 +28005,6 @@ func (p *KeyboardFocusableScrollersEnabled) Equal(iface interface{}) bool {
 }
 
 // ****************************************************************************
-// 1260. CSSCustomStateDeprecatedSyntaxEnabled
-// ****************************************************************************
-type CSSCustomStateDeprecatedSyntaxEnabled struct {
-	Stat Status
-	Val  bool
-}
-
-func (p *CSSCustomStateDeprecatedSyntaxEnabled) Name() string {
-	return "CSSCustomStateDeprecatedSyntaxEnabled"
-}
-func (p *CSSCustomStateDeprecatedSyntaxEnabled) Scope() Scope          { return ScopeUser }
-func (p *CSSCustomStateDeprecatedSyntaxEnabled) Status() Status        { return p.Stat }
-func (p *CSSCustomStateDeprecatedSyntaxEnabled) UntypedV() interface{} { return p.Val }
-func (p *CSSCustomStateDeprecatedSyntaxEnabled) UnmarshalAs(m json.RawMessage) (interface{}, error) {
-	var v bool
-	if err := json.Unmarshal(m, &v); err != nil {
-		return nil, errors.Wrapf(err, "could not read %s as bool", m)
-	}
-	return v, nil
-}
-func (p *CSSCustomStateDeprecatedSyntaxEnabled) SetProto(m *protoreflect.Message) {
-	SetUserProto(m, p.Name(), p.Val)
-}
-func (p *CSSCustomStateDeprecatedSyntaxEnabled) Equal(iface interface{}) bool {
-	v, ok := iface.(bool)
-	if !ok {
-		return ok
-	}
-	return cmp.Equal(p.Val, v, cmpopts.EquateEmpty())
-}
-
-// ****************************************************************************
 // 1261. MemorySaverModeSavings
 // This policy can be modified without rebooting.
 // ****************************************************************************
@@ -31306,8 +31275,6 @@ func newByName(name string) (Policy, error) {
 		return &LockScreenAutoStartOnlineReauth{}, nil
 	case "KeyboardFocusableScrollersEnabled":
 		return &KeyboardFocusableScrollersEnabled{}, nil
-	case "CSSCustomStateDeprecatedSyntaxEnabled":
-		return &CSSCustomStateDeprecatedSyntaxEnabled{}, nil
 	case "MemorySaverModeSavings":
 		return &MemorySaverModeSavings{}, nil
 	case "KioskVisionTelemetryEnabled":
