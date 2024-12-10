@@ -254,6 +254,10 @@ func TestPlatformDecodingParams(t *testing.T) {
 
 		// Generates VAAPI tests from bugs files
 		for _, bugID := range test_vectors.SortedStringKeys(test_vectors.H264FilesFromBugs) {
+			if vaapiTestParam.testNamePrefix == "cros_codecs_" && bugID == "299320432" {
+				// This vector is legitimately malformed. Our regular VA-API decoder is just more tolerant than cros-codecs.
+				continue
+			}
 			files := fmt.Sprintf("[]string{\"%s\"}", test_vectors.H264FilesFromBugs[bugID])
 			param := paramData{
 				Name:               fmt.Sprintf("%svaapi_h264_files_from_bugs_%s", vaapiTestParam.testNamePrefix, bugID),

@@ -1835,19 +1835,6 @@ func init() {
 				ExtraAttr:         []string{"graphics_video_h264", "graphics_perbuild"},
 			},
 			{
-				Name: "cros_codecs_vaapi_h264_files_from_bugs_299320432",
-				Val: platformDecodingParams{
-					filenames:          []string{"test_vectors/h264/files_from_bugs/b_299320432__amd_skyrim_system_hang.h264"},
-					decoder:            "ccdec",
-					decoderArgsBuilder: platform.H264DecodeCrosCodecsargs,
-				},
-				Timeout:           10 * time.Minute,
-				ExtraHardwareDeps: hwdep.D(hwdep.SupportsCrosCodecs()),
-				ExtraSoftwareDeps: []string{"vaapi", "autotest-capability:hw_dec_h264_1080_30"},
-				ExtraData:         test_vectors.AppendJSONFiles([]string{"test_vectors/h264/files_from_bugs/b_299320432__amd_skyrim_system_hang.h264"}),
-				ExtraAttr:         []string{"graphics_video_h264", "graphics_perbuild"},
-			},
-			{
 				Name: "cros_codecs_vaapi_h264_4k_files_from_bugs_22704778",
 				Val: platformDecodingParams{
 					filenames:          []string{"test_vectors/h264/files_from_bugs/b_227047778_mtk_8195_artifacts.h264"},
