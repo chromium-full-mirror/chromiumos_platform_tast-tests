@@ -2,7 +2,7 @@
 // Use of this source code is governed by a BSD-style license that can be
 // found in the LICENSE file.
 
-// Package util functions that help with common actions for Mantis tast tests.
+// Package util contains functions that help with common actions for Mantis tast tests.
 package util
 
 import (
@@ -143,7 +143,7 @@ func DrawOnImage(ctx context.Context, tconn *chrome.TestConn, ui *uiauto.Context
 
 // WaitForSpinner waits for spinner until it is gone.
 func WaitForSpinner(ctx context.Context, tconn *chrome.TestConn, ui *uiauto.Context) error {
-	spinner := nodewith.HasClass("mdc-circular-progress__spinner-layer").Ancestor(galleryapp.RootFinder)
+	spinner := nodewith.HasClass("mdc-circular-progress__spinner-layer").Ancestor(galleryapp.RootFinder).First()
 	if err := uiauto.Combine("Waiting for spinner",
 		ui.WithTimeout(3*time.Second).WaitUntilExists(spinner),
 		ui.WithTimeout(1*time.Minute).WaitUntilGone(spinner))(ctx); err != nil {
