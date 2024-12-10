@@ -148,8 +148,9 @@ func OfflinePipelineBenchmark(ctx context.Context, s *testing.State) {
 		RealTimeFactor *float64 `json:"real_time_factor"`
 	}
 	var output struct {
-		CPU  *perfStats `json:"cpu"`
-		Wall *perfStats `json:"wall"`
+		CPU      *perfStats `json:"cpu"`
+		Wall     *perfStats `json:"wall"`
+		MaxRSSKB *int       `json:"max_rss_kb"`
 	}
 	if err := json.NewDecoder(bytes.NewReader(stdout)).Decode(&output); err != nil {
 		s.Fatalf("Failed to decode output: %s", stdout)
@@ -177,6 +178,10 @@ func OfflinePipelineBenchmark(ctx context.Context, s *testing.State) {
 			*stats.RealTimeFactor,
 		)
 	}
+	p.Set(
+		perf.Metric{Name: "rss", Variant: "max", Unit: "bytes", Direction: perf.SmallerIsBetter},
+		float64(*output.MaxRSSKB)*1024,
+	)
 	if err := p.Save(s.OutDir()); err != nil {
 		s.Error("Failed saving perf data: ", err)
 	}
