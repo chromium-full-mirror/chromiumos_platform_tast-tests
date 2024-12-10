@@ -8,6 +8,7 @@ import (
 	"context"
 	"time"
 
+	"go.chromium.org/tast-tests/cros/common/fixture"
 	"go.chromium.org/tast-tests/cros/local/bundles/cros/network/dns"
 	"go.chromium.org/tast-tests/cros/local/network/virtualnet/subnet"
 	"go.chromium.org/tast-tests/cros/local/shill"
@@ -22,10 +23,17 @@ func init() {
 		Contacts: []string{"cros-networking@google.com", "jasongustaman@google.com"},
 		// ChromeOS > Platform > System > Networking > Continuous Maintenance
 		BugComponent: "b:1493959",
-		Attr:         []string{"group:mainline", "group:cq-medium", "group:network", "network_cq"},
+		Attr:         []string{"group:mainline"},
 		SoftwareDeps: []string{"chrome", "no_kernel_upstream"},
 		Timeout:      1 * time.Minute,
-		Fixture:      "chromeLoggedIn",
+		Params: []testing.Param{{
+			Fixture:   "chromeLoggedIn",
+			ExtraAttr: []string{"group:cq-medium", "group:network", "network_cq"},
+		}, {
+			Name:      "root_ns",
+			Fixture:   fixture.ChromeLoggedInWithRootNsDnsProxy,
+			ExtraAttr: []string{"informational", "group:criticalstaging"},
+		}},
 	})
 }
 

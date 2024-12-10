@@ -8,6 +8,7 @@ import (
 	"context"
 	"time"
 
+	"go.chromium.org/tast-tests/cros/common/fixture"
 	"go.chromium.org/tast-tests/cros/common/shillconst"
 	"go.chromium.org/tast-tests/cros/local/bundles/cros/network/dns"
 	"go.chromium.org/tast-tests/cros/local/network/dumputil"
@@ -46,6 +47,14 @@ func init() {
 			},
 			Fixture: "chromeLoggedIn",
 		}, {
+			Name: "root_ns_ipv4_only",
+			Val: resolvConfConfigUpdateTestParams{
+				ipv4:            true,
+				dnsProxyEnabled: true,
+			},
+			Fixture:   fixture.ChromeLoggedInWithRootNsDnsProxy,
+			ExtraAttr: []string{"informational", "group:criticalstaging"},
+		}, {
 			Name: "ipv6_only_proxy_disabled",
 			Val: resolvConfConfigUpdateTestParams{
 				ipv6: true,
@@ -58,6 +67,14 @@ func init() {
 				dnsProxyEnabled: true,
 			},
 			Fixture: "chromeLoggedIn",
+		}, {
+			Name: "root_ns_ipv6_only",
+			Val: resolvConfConfigUpdateTestParams{
+				ipv6:            true,
+				dnsProxyEnabled: true,
+			},
+			Fixture:   fixture.ChromeLoggedInWithRootNsDnsProxy,
+			ExtraAttr: []string{"informational", "group:criticalstaging"},
 		}, {
 			Name: "dual_stack_proxy_disabled",
 			Val: resolvConfConfigUpdateTestParams{
@@ -73,6 +90,15 @@ func init() {
 				dnsProxyEnabled: true,
 			},
 			Fixture: "chromeLoggedIn",
+		}, {
+			Name: "root_ns_dual_stack",
+			Val: resolvConfConfigUpdateTestParams{
+				ipv4:            true,
+				ipv6:            true,
+				dnsProxyEnabled: true,
+			},
+			Fixture:   fixture.ChromeLoggedInWithRootNsDnsProxy,
+			ExtraAttr: []string{"informational", "group:criticalstaging"},
 		}},
 	})
 }

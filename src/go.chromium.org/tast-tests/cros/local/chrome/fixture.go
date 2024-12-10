@@ -457,6 +457,23 @@ func init() {
 		ResetTimeout:    ResetTimeout,
 		TearDownTimeout: ResetTimeout,
 	})
+
+	testing.AddFixture(&testing.Fixture{
+		Name: fixture.ChromeLoggedInWithRootNsDnsProxy,
+		Desc: "Logged into a user session with DNS proxy running on the root network namespace",
+		Contacts: []string{
+			"jasongustaman@google.com",
+			"cros-networking@google.com",
+		},
+		// ChromeOS > Platform > System > Networking > Continuous Maintenance
+		BugComponent: "b:1493959",
+		Impl: NewLoggedInFixture(func(ctx context.Context, s *testing.FixtState) ([]Option, error) {
+			return []Option{EnableFeatures("EnableRootNsDnsProxy")}, nil
+		}),
+		SetUpTimeout:    FixtureSetUpTimeout,
+		ResetTimeout:    ResetTimeout,
+		TearDownTimeout: ResetTimeout,
+	})
 }
 
 // OptionsCallback is the function used to set up the fixture by returning Chrome options.

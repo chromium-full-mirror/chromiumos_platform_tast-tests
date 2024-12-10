@@ -302,6 +302,29 @@ func init() {
 		Data:            []string{GetContainerMetadataArtifact("bullseye", false), GetContainerRootfsArtifact("bullseye", false)},
 		BugComponent:    "b:658562", // ChromeOS > Software > GuestOS
 	})
+
+	testing.AddFixture(&testing.Fixture{
+		Name: "crostiniBullseyeWithRootNsDnsProxy",
+		Desc: "Install Crostini with Bullseye, with Chrome logged in with DNS proxy running on the root network namespace",
+		Contacts: []string{
+			"jasongustaman@google.com",
+			"cros-networking@google.com",
+		},
+		// ChromeOS > Platform > System > Networking > Continuous Maintenance
+		BugComponent: "b:1493959",
+		Impl: &crostiniFixture{preData: preTestDataBullseye,
+			extraOptsFunc: func(ctx context.Context, s *testing.FixtState) ([]chrome.Option, error) {
+				return []chrome.Option{chrome.EnableFeatures("EnableRootNsDnsProxy")}, nil
+			},
+		},
+		SetUpTimeout:    installationTimeout + uninstallationTimeout,
+		ResetTimeout:    checkContainerTimeout,
+		PostTestTimeout: postTestTimeout,
+		TearDownTimeout: uninstallationTimeout,
+		Parent:          fixture.ChromePolicyLoggedIn,
+		Vars:            []string{"keepState"},
+		Data:            []string{GetContainerMetadataArtifact("bullseye", false), GetContainerRootfsArtifact("bullseye", false)},
+	})
 }
 
 // preTestData contains the data to set up the fixture.

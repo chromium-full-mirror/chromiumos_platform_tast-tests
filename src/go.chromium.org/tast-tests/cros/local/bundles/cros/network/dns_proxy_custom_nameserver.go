@@ -29,8 +29,13 @@ func init() {
 		Attr:         []string{"group:network", "network_platform"},
 		SoftwareDeps: []string{"chrome", "arc", "no_kernel_upstream"},
 		Data:         []string{digExecutable()},
-		Fixture:      "arcBooted",
 		Timeout:      5 * time.Minute,
+		Params: []testing.Param{{
+			Fixture: "arcBooted",
+		}, {
+			Name:    "root_ns",
+			Fixture: "arcBootedWithRootNsDnsProxy",
+		}},
 	})
 }
 

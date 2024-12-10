@@ -9,6 +9,7 @@ import (
 	"path/filepath"
 	"time"
 
+	"go.chromium.org/tast-tests/cros/common/fixture"
 	"go.chromium.org/tast-tests/cros/local/bundles/cros/network/dns"
 	"go.chromium.org/tast-tests/cros/local/chrome"
 	"go.chromium.org/tast-tests/cros/local/chrome/uiauto"
@@ -29,7 +30,13 @@ func init() {
 		Attr:         []string{"group:mainline"},
 		SoftwareDeps: []string{"chrome", "no_kernel_upstream"},
 		Timeout:      2 * time.Minute,
-		Fixture:      "chromeLoggedIn",
+		Params: []testing.Param{{
+			Fixture: "chromeLoggedIn",
+		}, {
+			Name:      "root_ns",
+			Fixture:   fixture.ChromeLoggedInWithRootNsDnsProxy,
+			ExtraAttr: []string{"informational", "group:criticalstaging"},
+		}},
 	})
 }
 

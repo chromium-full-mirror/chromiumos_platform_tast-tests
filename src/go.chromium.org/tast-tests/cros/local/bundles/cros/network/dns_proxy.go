@@ -8,6 +8,7 @@ import (
 	"context"
 	"time"
 
+	"go.chromium.org/tast-tests/cros/common/fixture"
 	"go.chromium.org/tast-tests/cros/common/shillconst"
 	"go.chromium.org/tast-tests/cros/local/arc"
 	"go.chromium.org/tast-tests/cros/local/bundles/cros/network/dns"
@@ -116,6 +117,87 @@ func init() {
 			ExtraSoftwareDeps: []string{"vm_host", "dlc"},
 			ExtraHardwareDeps: crostini.CrostiniStable,
 			Fixture:           "crostiniBullseye",
+		}, {
+			Name: "root_ns_chrome_doh_off",
+			Val: dnsProxyTestParams{
+				mode:   dns.DoHOff,
+				chrome: true,
+			},
+			ExtraAttr: []string{"informational", "group:criticalstaging"},
+			Fixture:   fixture.ChromeLoggedInWithRootNsDnsProxy,
+		}, {
+			Name: "root_ns_chrome_doh_automatic",
+			Val: dnsProxyTestParams{
+				mode:   dns.DoHAutomatic,
+				chrome: true,
+			},
+			ExtraAttr: []string{"informational", "group:criticalstaging"},
+			Fixture:   fixture.ChromeLoggedInWithRootNsDnsProxy,
+		}, {
+			Name: "root_ns_chrome_doh_always_on",
+			Val: dnsProxyTestParams{
+				mode:   dns.DoHAlwaysOn,
+				chrome: true,
+			},
+			ExtraAttr: []string{"informational", "group:criticalstaging"},
+			Fixture:   fixture.ChromeLoggedInWithRootNsDnsProxy,
+		}, {
+			Name: "root_ns_arc_doh_off",
+			Val: dnsProxyTestParams{
+				mode: dns.DoHOff,
+				arc:  true,
+			},
+			ExtraSoftwareDeps: []string{"arc"},
+			ExtraAttr:         []string{"informational", "group:criticalstaging"},
+			Fixture:           "arcBootedWithRootNsDnsProxy",
+		}, {
+			Name: "root_ns_arc_doh_automatic",
+			Val: dnsProxyTestParams{
+				mode: dns.DoHAutomatic,
+				arc:  true,
+			},
+			ExtraSoftwareDeps: []string{"arc"},
+			ExtraAttr:         []string{"informational", "group:criticalstaging"},
+			Fixture:           "arcBootedWithRootNsDnsProxy",
+		}, {
+			Name: "root_ns_arc_doh_always_on",
+			Val: dnsProxyTestParams{
+				mode: dns.DoHAlwaysOn,
+				arc:  true,
+			},
+			ExtraSoftwareDeps: []string{"arc"},
+			ExtraAttr:         []string{"informational", "group:criticalstaging"},
+			Fixture:           "arcBootedWithRootNsDnsProxy",
+		}, {
+			Name: "root_ns_crostini_doh_off",
+			Val: dnsProxyTestParams{
+				mode:     dns.DoHOff,
+				crostini: true,
+			},
+			ExtraSoftwareDeps: []string{"vm_host", "dlc"},
+			ExtraHardwareDeps: crostini.CrostiniStable,
+			ExtraAttr:         []string{"informational", "group:criticalstaging"},
+			Fixture:           "crostiniBullseyeWithRootNsDnsProxy",
+		}, {
+			Name: "root_ns_crostini_doh_automatic",
+			Val: dnsProxyTestParams{
+				mode:     dns.DoHAutomatic,
+				crostini: true,
+			},
+			ExtraSoftwareDeps: []string{"vm_host", "dlc"},
+			ExtraHardwareDeps: crostini.CrostiniStable,
+			ExtraAttr:         []string{"informational", "group:criticalstaging"},
+			Fixture:           "crostiniBullseyeWithRootNsDnsProxy",
+		}, {
+			Name: "root_ns_crostini_doh_always_on",
+			Val: dnsProxyTestParams{
+				mode:     dns.DoHAlwaysOn,
+				crostini: true,
+			},
+			ExtraSoftwareDeps: []string{"vm_host", "dlc"},
+			ExtraHardwareDeps: crostini.CrostiniStable,
+			ExtraAttr:         []string{"informational", "group:criticalstaging"},
+			Fixture:           "crostiniBullseyeWithRootNsDnsProxy",
 		}},
 	})
 }
