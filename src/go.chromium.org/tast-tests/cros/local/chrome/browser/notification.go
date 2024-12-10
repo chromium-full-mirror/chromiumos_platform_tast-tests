@@ -8,6 +8,7 @@ import (
 	"context"
 
 	"go.chromium.org/tast-tests/cros/common/chrome/ash"
+	"go.chromium.org/tast-tests/cros/local/chrome/internal/driver"
 	"go.chromium.org/tast/core/errors"
 )
 
@@ -33,7 +34,7 @@ type NotificationItem = ash.NotificationItem
 // CreateTestNotification creates a notification with a custom title and message.
 // iconUrl is a required field to the chrome.notifiations.create() call so a 1px transparent data-url is hardcoded.
 // tconn is an arg to be passed in from active browser under test (either ash-chrome or lacros-chrome).
-func CreateTestNotification(ctx context.Context, tconn *TestConn, notificationType NotificationType, title, message string) (string, error) {
+func CreateTestNotification(ctx context.Context, tconn *driver.TestConn, notificationType NotificationType, title, message string) (string, error) {
 	var imageURL string
 	if notificationType == NotificationTypeImage {
 		// Used a transparent solid color image for testing.
@@ -69,7 +70,7 @@ func CreateTestNotification(ctx context.Context, tconn *TestConn, notificationTy
 }
 
 // ClearNotification clear a notification with the given id.
-func ClearNotification(ctx context.Context, tconn *TestConn, id string) error {
+func ClearNotification(ctx context.Context, tconn *driver.TestConn, id string) error {
 	if err := tconn.Call(ctx, nil, `tast.promisify(chrome.notifications.clear)`, id); err != nil {
 		return errors.Wrap(err, "failed to clear notification")
 	}

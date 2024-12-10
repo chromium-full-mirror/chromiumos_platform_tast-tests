@@ -293,9 +293,7 @@ func (ms *Ms365) InstallPWA(ctx context.Context, cr *chrome.Chrome) error {
 	ctx, cancel := ctxutil.Shorten(ctx, 5*time.Second)
 	defer cancel()
 
-	// Use NewConn instead of NewTab to prevent Lacros from reusing the existing
-	// chrome://newtab, the reuse will cause chrome://newtab to be closed below.
-	conn, err := cr.Browser().NewConn(ctx, officePWAInstallURL)
+	conn, err := cr.NewConn(ctx, officePWAInstallURL)
 	if err != nil {
 		return errors.Wrap(err, "failed to open office website")
 	}
@@ -365,9 +363,7 @@ func ClearBrowserCookiesForOffice(ctx context.Context, cr *chrome.Chrome) error 
 		quickCtx, cancel := context.WithTimeout(ctx, 30*time.Second)
 		defer cancel()
 
-		// Use NewConn instead of NewTab to prevent Lacros from reusing the existing
-		// chrome://newtab, the reuse will cause chrome://newtab to be closed below.
-		conn, err := cr.Browser().NewConn(quickCtx, officePWAInstallURL)
+		conn, err := cr.NewConn(quickCtx, officePWAInstallURL)
 		if err != nil {
 			return errors.Wrap(err, "failed to open office website")
 		}

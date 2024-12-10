@@ -62,10 +62,6 @@ func ExampleHistogram(ctx context.Context, s *testing.State) {
 	if err != nil {
 		s.Fatal("Failed to get ash tconn: ", err)
 	}
-	bTconn, err := cr.Browser().TestAPIConn(ctx)
-	if err != nil {
-		s.Fatal("Failed to get browser tconn: ", err)
-	}
 
 	w, err := ash.WaitForAnyWindow(ctx, tconn, ash.BrowserTypeMatch())
 	if err != nil {
@@ -114,8 +110,8 @@ func ExampleHistogram(ctx context.Context, s *testing.State) {
 	//   }
 	// }
 	r.RegisterMetrics(
-		pm.NewHistogramMetrics(bTconn, []string{"EventLatency.KeyPressed.TotalLatency"}),
-		pm.NewHistogramAverageMetrics(bTconn, []string{"EventLatency.MousePressed.TotalLatency"}),
+		pm.NewHistogramMetrics(tconn, []string{"EventLatency.KeyPressed.TotalLatency"}),
+		pm.NewHistogramAverageMetrics(tconn, []string{"EventLatency.MousePressed.TotalLatency"}),
 	)
 	if err := power.Cooldown(ctx); err != nil {
 		s.Error("Cooldown failed: ", err)

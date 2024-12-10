@@ -70,7 +70,7 @@ func ImagePaste(ctx context.Context, s *testing.State) {
 	)
 
 	pageURL := server.URL + "/image_paste.html"
-	conn, err := cr.Browser().NewConn(ctx, pageURL)
+	conn, err := cr.NewConn(ctx, pageURL)
 	if err != nil {
 		s.Fatalf("Could not connect to page at %v: %v", pageURL, err)
 	}

@@ -134,7 +134,7 @@ func runStep(ctx context.Context, conn *chrome.Conn, pr *power.Recorder) error {
 
 // runNonStep holds a conference video call in which |numPeople| persons attends
 // and thus |numPeople-1| decoders and 1 encoder run.
-func runNonStep(ctx context.Context, tconn, bTconn *chrome.TestConn, s *testing.State, conn, subWinConn *chrome.Conn, pr *power.Recorder, wm *windowManager, params VCTestParams) error {
+func runNonStep(ctx context.Context, tconn *chrome.TestConn, s *testing.State, conn, subWinConn *chrome.Conn, pr *power.Recorder, wm *windowManager, params VCTestParams) error {
 	const profileInterval = 100 * time.Second // Sleep interval to measure the performance metrics.
 	if params.NumPeople <= 1 {
 		return errors.Errorf("the number of people must be more than 1: NumPeople=%d", params.NumPeople)
@@ -168,15 +168,15 @@ func runNonStep(ctx context.Context, tconn, bTconn *chrome.TestConn, s *testing.
 
 	var histNames []string
 	if wm.hasSubWindow() {
-		if err := wm.activateSubWindow(ctx, bTconn); err != nil {
+		if err := wm.activateSubWindow(ctx, tconn); err != nil {
 			return err
 		}
 		var err error
 		var stopEventFunc func() = func() {}
 		if params.Mouse {
-			histNames, stopEventFunc, err = startMouseEvent(ctx, tconn, bTconn)
+			histNames, stopEventFunc, err = startMouseEvent(ctx, tconn)
 		} else if params.Text {
-			histNames, stopEventFunc, err = startKeyInputEvent(ctx, tconn, bTconn)
+			histNames, stopEventFunc, err = startKeyInputEvent(ctx, tconn)
 		} else if params.Present {
 			err = subWinConn.Eval(ctx, "drawCanvasAlternatingColours(1280, 720, 30)", nil)
 		}
@@ -203,7 +203,7 @@ func runNonStep(ctx context.Context, tconn, bTconn *chrome.TestConn, s *testing.
 	var err error
 	var histRecorder *metrics.Recorder
 	if len(histNames) > 0 {
-		histRecorder, err = metrics.StartRecorder(ctx, bTconn, histNames...)
+		histRecorder, err = metrics.StartRecorder(ctx, tconn, histNames...)
 		if err != nil {
 			return errors.Wrap(err, "failed to get histograms")
 		}
@@ -223,7 +223,7 @@ func runNonStep(ctx context.Context, tconn, bTconn *chrome.TestConn, s *testing.
 	}
 
 	if histRecorder != nil {
-		diffHists, err := histRecorder.Histogram(ctx, bTconn)
+		diffHists, err := histRecorder.Histogram(ctx, tconn)
 		if err != nil {
 			return errors.Wrap(err, "failed to get difference in histograms")
 		}
@@ -301,7 +301,7 @@ func setupDisplayEnv(ctx context.Context, tconn *chrome.TestConn) (func(context.
 	}, nil
 }
 
-func runVCPerf(ctx context.Context, tconn, bTconn *chrome.TestConn, s *testing.State, params VCTestParams, wm *windowManager) error {
+func runVCPerf(ctx context.Context, tconn *chrome.TestConn, s *testing.State, params VCTestParams, wm *windowManager) error {
 	closeCtx := ctx
 
 	// Reserve time for closing tab and cleaning up a power library.
@@ -354,12 +354,12 @@ func runVCPerf(ctx context.Context, tconn, bTconn *chrome.TestConn, s *testing.S
 	if params.Step {
 		return runStep(ctx, conn, r)
 	}
-	return runNonStep(ctx, tconn, bTconn, s, conn, subWinConn, r, wm, params)
+	return runNonStep(ctx, tconn, s, conn, subWinConn, r, wm, params)
 }
 
 // RunVideoConference runs a video conference using WebRTC API and measures the
 // performance metrics while enabling features in order.
-func RunVideoConference(ctx context.Context, cs ash.ConnSource, tconn, bTConn *chrome.TestConn, s *testing.State, params VCTestParams) error {
+func RunVideoConference(ctx context.Context, cs ash.ConnSource, tconn *chrome.TestConn, s *testing.State, params VCTestParams) error {
 	const cleanupTime = 5 * time.Second
 
 	server := httptest.NewServer(http.FileServer(s.DataFileSystem()))
@@ -367,7 +367,7 @@ func RunVideoConference(ctx context.Context, cs ash.ConnSource, tconn, bTConn *c
 	wm := newWindowManager(cs, server.URL, params.Present, params.Text, params.Mouse)
 	ctx, cancel := ctxutil.Shorten(ctx, cleanupTime)
 	defer cancel()
-	return runVCPerf(ctx, tconn, bTConn, s, params, wm)
+	return runVCPerf(ctx, tconn, s, params, wm)
 }
 
 func recordTracing(ctx context.Context, outDir, configFile string) error {

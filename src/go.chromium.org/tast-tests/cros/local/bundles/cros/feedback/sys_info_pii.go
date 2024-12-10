@@ -117,17 +117,16 @@ func SysInfoPII(ctx context.Context, s *testing.State) {
 		s.Fatal("Failed to create new browser window: ", err)
 	}
 	defer conn.Close()
-	br := cr.Browser()
 
 	// Get a test API connection to active browser.
-	bTconn, err := br.TestAPIConn(ctx)
+	tconn, err := cr.TestAPIConn(ctx)
 	if err != nil {
 		s.Fatal("Failed to create test API connection: ", err)
 	}
 
 	s.Log("Calling getSystemInformation")
 	var ret []*systemInformation
-	if err := bTconn.Eval(ctx, "tast.promisify(chrome.feedbackPrivate.getSystemInformation)()", &ret); err != nil {
+	if err := tconn.Eval(ctx, "tast.promisify(chrome.feedbackPrivate.getSystemInformation)()", &ret); err != nil {
 		s.Fatal("Could not call getSystemInformation: ", err)
 	}
 

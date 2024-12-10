@@ -332,10 +332,6 @@ func WebRTCVideoConference(ctx context.Context, s *testing.State) {
 	if err != nil {
 		s.Fatal("Failed to create Test API connection: ", err)
 	}
-	bTconn, err := cr.Browser().TestAPIConn(ctx)
-	if err != nil {
-		s.Fatal("Failed to connect to browser test API: ", err)
-	}
 
 	// Setup the device for power testing. This includes setting the battery to discharge mode in
 	// order to be able to collect system power usage numbers.
@@ -367,7 +363,7 @@ func WebRTCVideoConference(ctx context.Context, s *testing.State) {
 		graphics.SysLogKernelSplats,
 	)
 
-	if err := webrtc.RunVideoConference(ctx, cr, tconn, bTconn, s, params); err != nil {
+	if err := webrtc.RunVideoConference(ctx, cr, tconn, s, params); err != nil {
 		s.Fatal("RunVideoConference failed: ", err)
 	}
 }

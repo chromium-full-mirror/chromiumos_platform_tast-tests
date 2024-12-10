@@ -60,7 +60,6 @@ func PNPGoogleMeetFrameCapture(ctx context.Context, s *testing.State) {
 		s.Fatal("Failed to launch browser: ", err)
 	}
 	defer conn.Close()
-	br := cr.Browser()
 
 	tconn, err := cr.TestAPIConn(ctx)
 	if err != nil {
@@ -127,7 +126,7 @@ func PNPGoogleMeetFrameCapture(ctx context.Context, s *testing.State) {
 	}()
 
 	var gm *googlemeet.GoogleMeet
-	gm, err = googlemeet.JoinMeeting(ctx, cr, br, conn, meetingCode,
+	gm, err = googlemeet.JoinMeeting(ctx, cr, conn, meetingCode,
 		map[string]string{
 			// Meet can dynamically switch between different segmentation models.
 			// Force the same model with the experiment ?e=ForceSegmentationModelVariant::GpuMid.

@@ -16,9 +16,7 @@ import (
 	"go.chromium.org/tast-tests/cros/local/chrome/ash"
 	"go.chromium.org/tast-tests/cros/local/chrome/uiauto"
 	"go.chromium.org/tast-tests/cros/local/chrome/uiauto/nodewith"
-	"go.chromium.org/tast-tests/cros/local/chrome/uiauto/prompts"
 	"go.chromium.org/tast-tests/cros/local/chrome/uiauto/role"
-	"go.chromium.org/tast-tests/cros/local/chrome/webutil"
 
 	"go.chromium.org/tast/core/errors"
 	"go.chromium.org/tast/core/testing"
@@ -109,55 +107,6 @@ func NewFromTarget(ctx context.Context, cr *chrome.Chrome, tm chrome.TargetMatch
 	return New(cr, conn, tconn), nil
 }
 
-// StartNewMeeting starts a new Zoom meeting in the browser.
-// It does not join audio by default.
-// The caller should explicitly call Close function to release resources and close Chrome browser.
-// Example:
-//
-//	zm, err := zoom.StartNewMeeting(ctx, cr, true)
-//	if err != nil {
-//	     s.Fatal("Failed to start meeting: ", err)
-//	}
-//	defer zm.Close(cleanupCtx)
-func StartNewMeeting(ctx context.Context, cr *chrome.Chrome, conn *chrome.Conn, permissionsOption PermissionOption) (*Zoom, error) {
-	if permissionsOption == WithAllPermissions {
-		if err := GrantPermissions(ctx, cr); err != nil {
-			return nil, errors.Wrap(err, "failed to grant permissions")
-		}
-	}
-
-	if err := navigateToZoomAndSignIn(ctx, cr, conn); err != nil {
-		return nil, errors.Wrap(err, "failed to navigate to Zoom or sign-in")
-	}
-
-	tconn, err := cr.TestAPIConn(ctx)
-	if err != nil {
-		return nil, err
-	}
-
-	if err := launchNewMeeting(ctx, conn, tconn, newMeetingURL); err != nil {
-		return nil, errors.Wrap(err, "failed to launch meeting")
-	}
-
-	zm := New(cr, conn, tconn)
-
-	if err := prompts.ClearPotentialPrompts(tconn, shortUITimeout, prompts.ShowNotificationsPrompt)(ctx); err != nil {
-		return nil, errors.Wrap(err, "failed to clear notification prompt")
-	}
-
-	if err := webutil.WaitForQuiescence(ctx, conn, time.Minute); err != nil {
-		return nil, errors.Wrap(err, "failed to wait for page finish loading")
-	}
-
-	// Do not join audio by default by dismissing the dialog.
-	// Assume the dialog is not shown up if not found in a certain time.
-	if err := zm.SetJoinAudio(false)(ctx); err != nil {
-		return nil, errors.Wrap(err, "failed to choose not join audio")
-	}
-
-	return zm, nil
-}
-
 // JoinMeeting joins a Zoom meeting via invite link.
 // And make sure the camera and microphone are turned on before entering the meeting.
 func JoinMeeting(ctx context.Context, cr *chrome.Chrome, conn *chrome.Conn, inviteLink string, permissionsOption PermissionOption) (*Zoom, error) {
@@ -179,85 +128,6 @@ func JoinMeeting(ctx context.Context, cr *chrome.Chrome, conn *chrome.Conn, invi
 	}
 
 	return New(cr, conn, tconn), nil
-}
-
-// StartNewMeetingUsingPWA starts a new Zoom Meeting in PWA mode.
-// It automatically installs PWA if it is not installed yet.
-// The caller should explicitly call Close function to release resources and close the app.
-// Example:
-//
-//	zm, err := zoom.StartNewMeetingUsingPWA(ctx, cr, true)
-//	if err != nil {
-//	     s.Fatal("Failed to start meeting: ", err)
-//	}
-//	defer zm.Close(cleanupCtx)
-func StartNewMeetingUsingPWA(ctx context.Context, cr *chrome.Chrome, permissionsOption PermissionOption) (*Zoom, error) {
-	if permissionsOption == WithAllPermissions {
-		if err := GrantPermissions(ctx, cr); err != nil {
-			return nil, errors.Wrap(err, "failed to grant permissions")
-		}
-	}
-
-	if err := InstallPWA(ctx, cr); err != nil {
-		return nil, err
-	}
-
-	tconn, err := cr.TestAPIConn(ctx)
-	if err != nil {
-		return nil, err
-	}
-
-	pwaTitle := "Zoom"
-	pwaTargetMatcher := func(t *chrome.Target) bool {
-		return t.Title == pwaTitle
-	}
-
-	// PWA is automatically launched after installation.
-	// Check if app is already running to avoid double launch.
-	if isAppShownOnShelf, err := ash.AppShown(ctx, tconn, apps.Zoom.ID); err != nil {
-		return nil, errors.Wrap(err, "failed to check whether Zoom is shown on shelf")
-	} else if isAppShownOnShelf {
-		if isRunning, err := ash.AppRunning(ctx, tconn, apps.Zoom.ID); err != nil {
-			return nil, errors.Wrap(err, "failed to check whether Zoom is already running")
-		} else if isRunning {
-			// Bring existing Zoom PWA to front.
-			if _, err := ash.BringWindowToForeground(ctx, tconn, pwaTitle); err != nil {
-				return nil, errors.Wrap(err, "failed to bring Zoom PWA to front")
-			}
-		}
-	} else {
-		if err := apps.Launch(ctx, tconn, apps.Zoom.ID); err != nil {
-			return nil, err
-		}
-	}
-
-	zm, err := NewFromTarget(ctx, cr, pwaTargetMatcher)
-	if err != nil {
-		return nil, errors.Wrap(err, "failed to connect to Zoom PWA")
-	}
-
-	if err := signIn(zm.conn, tconn)(ctx); err != nil {
-		return nil, errors.Wrap(err, "failed to sign in on Zoom PWA")
-	}
-
-	if err := launchNewMeeting(ctx, zm.conn, tconn, newMeetingURL); err != nil {
-		return nil, errors.Wrap(err, "failed to launch meeting")
-	}
-	if err := prompts.ClearPotentialPrompts(tconn, shortUITimeout, prompts.ShowNotificationsPrompt)(ctx); err != nil {
-		return nil, errors.Wrap(err, "failed to clear notification prompt")
-	}
-
-	if err := webutil.WaitForQuiescence(ctx, zm.conn, time.Minute); err != nil {
-		return nil, errors.Wrap(err, "failed to wait for page finish loading")
-	}
-
-	// Do not join audio by default by dismissing the dialog.
-	// Assume the dialog is not shown up if not found in a certain time.
-	if err := zm.SetJoinAudio(false)(ctx); err != nil {
-		return nil, errors.Wrap(err, "failed to choose not join audio")
-	}
-
-	return zm, nil
 }
 
 // Close closes the Zoom meeting browser or PWA app and clean up resources.

@@ -44,7 +44,6 @@ func PrivacyIndicators(ctx context.Context, s *testing.State) {
 	defer cancel()
 
 	cr := s.FixtValue().(chrome.HasChrome).Chrome()
-	br := cr.Browser()
 
 	tconn, err := cr.TestAPIConn(ctx)
 	if err != nil {
@@ -56,7 +55,7 @@ func PrivacyIndicators(ctx context.Context, s *testing.State) {
 	defer faillog.DumpUITreeOnError(cleanupCtx, s.OutDir(), s.HasError, tconn)
 
 	// Grant mic, camera and notification to Meet to suppress prompts during testing.
-	if err = br.GrantPermissions(ctx, []string{"*://meet.google.com/*"},
+	if err = cr.Browser().GrantPermissions(ctx, []string{"*://meet.google.com/*"},
 		browser.CameraContentSetting,
 		browser.MicrophoneContentSetting,
 		browser.NotificationsContentSetting,
@@ -65,7 +64,7 @@ func PrivacyIndicators(ctx context.Context, s *testing.State) {
 	}
 
 	url := "https://meet.google.com/" + meetingCode
-	meetConn, err := br.NewConn(ctx, url, browser.WithNewWindow())
+	meetConn, err := cr.NewConn(ctx, url, browser.WithNewWindow())
 	if err != nil {
 		s.Fatal("Failed to open the hangout meet website: ", err)
 	}
@@ -103,7 +102,7 @@ func PrivacyIndicators(ctx context.Context, s *testing.State) {
 	account := nodewith.Role(role.StaticText).NameContaining(`@gmail.com`)
 	if err = ui.WithTimeout(time.Second).WaitUntilExists(account)(ctx); err != nil {
 		s.Log("Reload page to sign in")
-		if err := br.ReloadActiveTab(ctx); err != nil {
+		if err := cr.Browser().ReloadActiveTab(ctx); err != nil {
 			s.Fatal("Failed to reload page: ", err)
 		}
 		if err := meetConn.Navigate(ctx, url); err != nil {

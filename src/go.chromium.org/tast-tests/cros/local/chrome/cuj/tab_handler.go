@@ -118,9 +118,9 @@ func (t *TabConn) WaitForQuiescence(ctx context.Context, timeout time.Duration) 
 }
 
 // Reconnect reconnects to the tab.
-func (t *TabConn) Reconnect(ctx context.Context, br *browser.Browser) error {
+func (t *TabConn) Reconnect(ctx context.Context, cr *chrome.Chrome) error {
 	var err error
-	if t.Conn, err = br.NewConnForTarget(ctx, chrome.MatchTargetURL(t.URL)); err != nil {
+	if t.Conn, err = cr.NewConnForTarget(ctx, chrome.MatchTargetURL(t.URL)); err != nil {
 		return errors.Wrapf(err, "failed to reconnect to target %q", t.URL)
 	}
 

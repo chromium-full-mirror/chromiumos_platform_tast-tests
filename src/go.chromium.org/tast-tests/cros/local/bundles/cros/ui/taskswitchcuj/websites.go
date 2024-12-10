@@ -44,13 +44,13 @@ func openChromeTabs(ctx context.Context, tconn *chrome.TestConn, cr *chrome.Chro
 	initialNumWindows := len(initialWindows)
 
 	// Open up a single window with a couple of tabs, to increase RAM pressure.
-	tabs, err := cuj.NewTabs(ctx, cr.Browser(), false, numExtraWebsites)
+	tabs, err := cuj.NewTabs(ctx, cr, false, numExtraWebsites)
 	if err != nil {
 		return 0, errors.Wrap(err, "failed to bulk open tabs")
 	}
 
 	// Open up individual window for each website in simpleWebsites.
-	taskSwitchTabs, err := cuj.NewTabsByURLs(ctx, cr.Browser(), true, simpleWebsites)
+	taskSwitchTabs, err := cuj.NewTabsByURLs(ctx, cr, true, simpleWebsites)
 	if err != nil {
 		return 0, err
 	}

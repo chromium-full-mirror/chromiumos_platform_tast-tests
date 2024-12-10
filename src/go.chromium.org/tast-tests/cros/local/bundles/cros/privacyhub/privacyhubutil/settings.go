@@ -10,7 +10,7 @@ import (
 	"strconv"
 	"time"
 
-	"go.chromium.org/tast-tests/cros/local/chrome/browser"
+	"go.chromium.org/tast-tests/cros/local/chrome"
 	"go.chromium.org/tast-tests/cros/local/chrome/uiauto"
 	"go.chromium.org/tast-tests/cros/local/chrome/uiauto/nodewith"
 	"go.chromium.org/tast-tests/cros/local/chrome/uiauto/ossettings"
@@ -26,7 +26,7 @@ func privacyControlsLink() *nodewith.Finder {
 	return nodewith.NameStartingWith("Privacy controls")
 }
 
-func navigateToToggle(ctx context.Context, tconn *browser.TestConn, toggleLabel string) (*nodewith.Finder, *uiauto.NodeInfo, error) {
+func navigateToToggle(ctx context.Context, tconn *chrome.TestConn, toggleLabel string) (*nodewith.Finder, *uiauto.NodeInfo, error) {
 	ui := uiauto.New(tconn)
 	toggleLabelNode := nodewith.NameStartingWith(toggleLabel).Role(role.ToggleButton)
 	// Wait for the toggle to appear.
@@ -44,7 +44,7 @@ func navigateToToggle(ctx context.Context, tconn *browser.TestConn, toggleLabel 
 }
 
 // IsToggleOn checks if a toggle with the given label in Privacy Controls is on.
-func IsToggleOn(ctx context.Context, tconn *browser.TestConn, toggleLabel string) (bool, error) {
+func IsToggleOn(ctx context.Context, tconn *chrome.TestConn, toggleLabel string) (bool, error) {
 	settings, err := ossettings.Launch(ctx, tconn)
 	if err != nil {
 		return false, err
@@ -77,7 +77,7 @@ func IsToggleOn(ctx context.Context, tconn *browser.TestConn, toggleLabel string
 }
 
 // ClickToggle clicks the specified toggle (changing it's state).
-func ClickToggle(ctx context.Context, tconn *browser.TestConn, toggleLabel string) error {
+func ClickToggle(ctx context.Context, tconn *chrome.TestConn, toggleLabel string) error {
 	settings, err := ossettings.Launch(ctx, tconn)
 	if err != nil {
 		return err
@@ -103,7 +103,7 @@ func ClickToggle(ctx context.Context, tconn *browser.TestConn, toggleLabel strin
 }
 
 // SetToggleState changes the state of the given toggle to the given state.
-func SetToggleState(ctx context.Context, tconn *browser.TestConn, toggleLabel string, enabled bool) error {
+func SetToggleState(ctx context.Context, tconn *chrome.TestConn, toggleLabel string, enabled bool) error {
 	if currentState, err := IsToggleOn(ctx, tconn, toggleLabel); err != nil {
 		return err
 	} else if currentState == enabled {

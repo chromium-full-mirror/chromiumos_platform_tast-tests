@@ -779,7 +779,8 @@ var ErrTestConnUndefinedOut = cdputil.ErrUndefinedOut
 // ctx's deadline is reached. The caller should not close the returned
 // connection; it will be closed automatically by Close.
 func (c *Chrome) TestAPIConn(ctx context.Context) (*TestConn, error) {
-	return c.Browser().TestAPIConn(ctx)
+	const autotestPrivateSupported = true
+	return c.sess.TestAPIConn(ctx, autotestPrivateSupported)
 }
 
 // SigninProfileTestAPIConn is the same as TestAPIConn, but for the signin

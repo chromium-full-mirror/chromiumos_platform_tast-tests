@@ -117,7 +117,12 @@ func openDesk(ctx context.Context, tconn *chrome.TestConn, cs ash.ConnSource, ur
 // Desk 4:
 //   - Windows: 1
 //   - User Input: Keyboard typing, Mouse Movement
-func setUpDesks(ctx context.Context, cr *chrome.Chrome, tconn *chrome.TestConn, cs ash.ConnSource, kw *input.KeyboardEventWriter, pc pointer.Context, mw *input.MouseEventWriter, tpw *input.TrackpadEventWriter, tw *input.TouchEventWriter, testParam TestParam) (_ []action.Action, _ int, _ func(ctx context.Context) error, retErr error) {
+func setUpDesks(ctx context.Context, cr *chrome.Chrome, kw *input.KeyboardEventWriter, pc pointer.Context, mw *input.MouseEventWriter, tpw *input.TrackpadEventWriter, tw *input.TouchEventWriter, testParam TestParam) (_ []action.Action, _ int, _ func(ctx context.Context) error, retErr error) {
+	tconn, err := cr.TestAPIConn(ctx)
+	if err != nil {
+		return nil, 0, nil, errors.Wrap(err, "failed to create Test API connection")
+	}
+
 	// Create a separate desks-setup deadline. 15 minutes should be
 	// enough time to open all of the windows and desks. This limits
 	// the time that desk setup can take, to ensure we have time
@@ -228,7 +233,7 @@ func setUpDesks(ctx context.Context, cr *chrome.Chrome, tconn *chrome.TestConn, 
 		},
 	} {
 		totalOpenWindows += desk.expectedNumWindows
-		deskTabs, err := openDesk(ctx, tconn, cs, desk.urls, desk.individualWindows, totalOpenWindows, i)
+		deskTabs, err := openDesk(ctx, tconn, cr, desk.urls, desk.individualWindows, totalOpenWindows, i)
 		if err != nil {
 			return nil, totalOpenWindows, nil, errors.Wrapf(err, "failed to complete setup for desk %d", i)
 		}

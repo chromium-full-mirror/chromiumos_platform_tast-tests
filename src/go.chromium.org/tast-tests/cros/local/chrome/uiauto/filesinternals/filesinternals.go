@@ -34,8 +34,7 @@ func Start(ctx context.Context, tconn *chrome.TestConn, cr *chrome.Chrome) (*Fil
 		return nil, err
 	}
 
-	br := cr.Browser()
-	conn, err := br.NewTab(ctx, "chrome://files-internals")
+	conn, err := cr.Browser().NewTab(ctx, "chrome://files-internals")
 	if err != nil {
 		return nil, errors.Wrap(err, "failed to open chrome://files-internals tab")
 	}

@@ -56,7 +56,7 @@ func ChromeAECDump(ctx context.Context, s *testing.State) {
 	server := httptest.NewServer(http.FileServer(s.DataFileSystem()))
 	defer server.Close()
 
-	webrtcInternals, err := cr.Browser().NewConn(ctx, "chrome://webrtc-internals")
+	webrtcInternals, err := cr.NewConn(ctx, "chrome://webrtc-internals")
 	if err != nil {
 		s.Fatal("Cannot open webrtc-internals: ", err)
 	}

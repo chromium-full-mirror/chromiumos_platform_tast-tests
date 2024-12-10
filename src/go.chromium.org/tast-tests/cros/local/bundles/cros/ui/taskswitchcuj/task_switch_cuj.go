@@ -247,7 +247,7 @@ func Run(ctx context.Context, cr *chrome.Chrome, a *arc.ARC, isTablet bool, outD
 		// page to ensure collection of
 		// PageLoad.PaintTiming.NavigationToLargestContentfulPaint2.
 		extraURL := "https://webglsamples.org/aquarium/aquarium.html?numFish=1000"
-		extraTab, err := cuj.NewTabByURL(ctx, cr.Browser(), true, extraURL)
+		extraTab, err := cuj.NewTabByURL(ctx, cr, true, extraURL)
 		if err != nil {
 			return err
 		}
@@ -414,7 +414,7 @@ func Run(ctx context.Context, cr *chrome.Chrome, a *arc.ARC, isTablet bool, outD
 				return errors.Wrap(err, "failed to check if extraTab is still alive")
 			}
 			if !isAlive {
-				if err := extraTab.Reconnect(ctx, cr.Browser()); err != nil {
+				if err := extraTab.Reconnect(ctx, cr); err != nil {
 					return errors.Wrap(err, "cdp connection is invalid and failed to reconnect")
 				}
 			}

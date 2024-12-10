@@ -414,7 +414,7 @@ func (f *fixture) TearDown(ctx context.Context, s *testing.FixtState) {
 
 func (f *fixture) Reset(ctx context.Context) error {
 	if f.enableBulkPinning {
-		conn, err := f.cr.Browser().NewConn(ctx, "chrome://drive-internals")
+		conn, err := f.cr.NewConn(ctx, "chrome://drive-internals")
 		if err != nil {
 			return errors.Wrap(err, "failed to open drive-internals to ensure Bulk Pinning is disabled")
 		}

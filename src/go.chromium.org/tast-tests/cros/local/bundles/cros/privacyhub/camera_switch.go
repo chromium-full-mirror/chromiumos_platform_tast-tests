@@ -86,7 +86,7 @@ func CameraSwitch(ctx context.Context, s *testing.State) {
 		s.Fatal("Failed to enable the camera")
 	}
 	var sshot image.Image
-	sshot, err = privacyhubutil.LaunchCameraAndTakeScreenshot(ctx, cr, tconn, s)
+	sshot, err = privacyhubutil.LaunchCameraAndTakeScreenshot(ctx, cr, s)
 	if err != nil {
 		s.Fatal("Couldn't get camera screenshot: ", err)
 	}
@@ -106,7 +106,7 @@ func CameraSwitch(ctx context.Context, s *testing.State) {
 	} else if enabled {
 		s.Fatal("Failed to disable the camera")
 	}
-	sshot, err = privacyhubutil.LaunchCameraAndTakeScreenshot(ctx, cr, tconn, s)
+	sshot, err = privacyhubutil.LaunchCameraAndTakeScreenshot(ctx, cr, s)
 	if err != nil {
 		s.Fatal("Couldn't get camera screenshot: ", err)
 	}

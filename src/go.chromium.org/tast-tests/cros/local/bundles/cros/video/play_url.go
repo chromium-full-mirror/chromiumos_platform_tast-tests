@@ -139,10 +139,9 @@ func init() {
 func PlayURL(ctx context.Context, s *testing.State) {
 	testOpt := s.Param().(playURLParams)
 	cr := s.FixtValue().(chrome.HasChrome).Chrome()
-	br := cr.Browser()
 
 	// Navigate to the interesting URL and maximize the window.
-	conn, err := br.NewConn(ctx, testOpt.url)
+	conn, err := cr.NewConn(ctx, testOpt.url)
 	if err != nil {
 		s.Fatal("Failed to create browser connection: ", err)
 	}

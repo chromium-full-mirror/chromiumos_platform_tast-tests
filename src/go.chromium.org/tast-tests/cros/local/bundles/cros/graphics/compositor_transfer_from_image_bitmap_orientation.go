@@ -86,15 +86,16 @@ func CompositorTransferFromImageBitmapOrientation(ctx context.Context, s *testin
 	defer server.Close()
 	url := server.URL + "/transfer-from-image-bitmap.html"
 
+	cr := s.FixtValue().(chrome.HasChrome).Chrome()
 	params := s.Param().(params)
-	conn, err := s.FixtValue().(chrome.HasChrome).Chrome().NewConn(ctx, url)
+
+	conn, err := cr.NewConn(ctx, url)
 	if err != nil {
 		s.Fatal("Failed to set up browser: ", err)
 	}
 	defer conn.Close()
-	br := s.FixtValue().(chrome.HasChrome).Chrome().Browser()
 
-	tconn, err := br.TestAPIConn(ctx)
+	tconn, err := cr.TestAPIConn(ctx)
 	if err != nil {
 		s.Fatal("Failed to connect to test API: ", err)
 	}

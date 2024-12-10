@@ -13,12 +13,12 @@ import (
 	"go.chromium.org/tast-tests/cros/common/policy"
 	"go.chromium.org/tast-tests/cros/common/policy/fakedms"
 	"go.chromium.org/tast-tests/cros/local/chrome"
-	"go.chromium.org/tast-tests/cros/local/chrome/browser"
 	"go.chromium.org/tast-tests/cros/local/chrome/uiauto"
 	"go.chromium.org/tast-tests/cros/local/chrome/uiauto/nodewith"
 	"go.chromium.org/tast-tests/cros/local/chrome/uiauto/role"
 	"go.chromium.org/tast-tests/cros/local/policyutil"
 	"go.chromium.org/tast-tests/cros/local/policyutil/fixtures"
+	"go.chromium.org/tast/core/errors"
 	"go.chromium.org/tast/core/testing"
 )
 
@@ -127,14 +127,14 @@ func RequiredClientCertificate(ctx context.Context, s *testing.State) {
 				s.Fatal("Chrome login failed: ", err)
 			}
 
+			s.Log("Starting to check that certificate is visible in Ash")
+			if err := checkCertificateVisibleInBrowserSettings(ctx, cr); err != nil {
+				s.Fatal("Failed to find certificate: ", err)
+			}
+
 			tconn, err := cr.TestAPIConn(ctx)
 			if err != nil {
 				s.Fatal("Failed to create Test API connection: ", err)
-			}
-
-			s.Log("Starting to check that certificate is visible in Ash")
-			if err := checkCertificateVisibleInBrowserSettings(ctx, tconn, cr.Browser()); err != nil {
-				s.Fatal("Failed to find certificate: ", err)
 			}
 
 			s.Log("Starting to check that certificate is visible in system settings")
@@ -154,9 +154,13 @@ func newPolicyBlobWithAffiliation() *policy.Blob {
 }
 
 // checkCertificateVisibleInBrowserSettings does what its name suggests.
-// NOTE: tconn must be a TestConn for Ash.
-func checkCertificateVisibleInBrowserSettings(ctx context.Context, tconn *chrome.TestConn, br *browser.Browser) error {
-	conn, err := br.NewConn(ctx, "chrome://settings/certificates")
+func checkCertificateVisibleInBrowserSettings(ctx context.Context, cr *chrome.Chrome) error {
+	tconn, err := cr.TestAPIConn(ctx)
+	if err != nil {
+		errors.Wrap(err, "failed to create Test API connection")
+	}
+
+	conn, err := cr.NewConn(ctx, "chrome://settings/certificates")
 	if err != nil {
 		return err
 	}
@@ -167,7 +171,7 @@ func checkCertificateVisibleInBrowserSettings(ctx context.Context, tconn *chrome
 	return testing.Poll(ctx, func(ctx context.Context) error {
 		node := nodewith.Role(role.StaticText).Name("org-" + certificateName)
 		if err := ui.WithTimeout(3 * time.Second).WaitUntilExists(node)(ctx); err != nil {
-			if err := br.ReloadActiveTab(ctx); err != nil {
+			if err := cr.Browser().ReloadActiveTab(ctx); err != nil {
 				return testing.PollBreak(err)
 			}
 			return err // Try again after reloading.

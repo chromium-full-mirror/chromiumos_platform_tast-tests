@@ -38,7 +38,7 @@ var keyInputHistograms = []string{
 
 // startMouseEvent starts mouse operations (dragging, moving, clicking and scrolling) and
 // returns histograms about the mouse events and the callback of stopping the mouse operations.
-func startMouseEvent(ctx context.Context, tconn, bTconn *chrome.TestConn) ([]string, func(), error) {
+func startMouseEvent(ctx context.Context, tconn *chrome.TestConn) ([]string, func(), error) {
 	mouseCtx := ctx
 	mouseOpCtx, stopMouseOperating := ctxutil.Shorten(mouseCtx, 1*time.Second)
 
@@ -50,7 +50,7 @@ func startMouseEvent(ctx context.Context, tconn, bTconn *chrome.TestConn) ([]str
 }
 
 // startKeyInputEvent starts key typing and returns histograms about the key input events and the callback of stopping the key typing.
-func startKeyInputEvent(ctx context.Context, tconn, bTconn *chrome.TestConn) ([]string, func(), error) {
+func startKeyInputEvent(ctx context.Context, tconn *chrome.TestConn) ([]string, func(), error) {
 	// typeCtx is shorter than kbdCtx because a keyboard needs to be closed
 	// after typeCtx is expired.
 	kbdCtx := ctx

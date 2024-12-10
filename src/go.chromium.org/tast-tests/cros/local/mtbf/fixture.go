@@ -103,9 +103,7 @@ func (f *mtbfCleanTabsFixture) TearDown(ctx context.Context, s *testing.FixtStat
 func (f *mtbfCleanTabsFixture) Reset(ctx context.Context) error { return nil }
 
 func (f *mtbfCleanTabsFixture) PreTest(ctx context.Context, s *testing.FixtTestState) {
-	br := f.fixtValue.cr.Browser()
-
-	if err := closeExistingAndLeftOffTabs(ctx, br); err != nil {
+	if err := closeExistingAndLeftOffTabs(ctx, f.fixtValue.cr); err != nil {
 		s.Fatal("Failed to close existing and left-off tab(s): ", err)
 	}
 }
@@ -113,28 +111,28 @@ func (f *mtbfCleanTabsFixture) PreTest(ctx context.Context, s *testing.FixtTestS
 func (f *mtbfCleanTabsFixture) PostTest(ctx context.Context, s *testing.FixtTestState) {}
 
 // closeExistingAndLeftOffTabs closes the existing and left-off tabs.
-func closeExistingAndLeftOffTabs(ctx context.Context, br *browser.Browser) error {
-	btconn, err := br.TestAPIConn(ctx)
+func closeExistingAndLeftOffTabs(ctx context.Context, cr *chrome.Chrome) error {
+	tconn, err := cr.TestAPIConn(ctx)
 	if err != nil {
 		return errors.Wrap(err, "failed to get test API connection")
 	}
 
 	for {
-		tabsCnt, err := countExistingTabs(ctx, btconn)
+		tabsCnt, err := countExistingTabs(ctx, tconn)
 		if err != nil {
 			return err
 		}
 		if tabsCnt > 0 {
 			// The last session did not clanup properly, remove existing tabs can ensure tabs are cleaned.
 			testing.ContextLogf(ctx, "Removing %d existing page(s)", tabsCnt)
-			return removeExistingTabs(ctx, btconn)
+			return removeExistingTabs(ctx, tconn)
 		}
 
 		// Depending on the settings, Chrome might open all left-off pages automatically from last session,
 		// which the left-off pages might casues test case fail.
 		// Launch Chrome browser by open a blank page to bring up all left-off pages to further remove them.
 		testing.ContextLog(ctx, "Opening empty Chrome tab to bring up left-off page(s)")
-		conn, err := br.NewConn(ctx, "", browser.WithNewWindow())
+		conn, err := cr.NewConn(ctx, "", browser.WithNewWindow())
 		if err != nil {
 			return errors.Wrap(err, "failed to launch Chrome browser")
 		}

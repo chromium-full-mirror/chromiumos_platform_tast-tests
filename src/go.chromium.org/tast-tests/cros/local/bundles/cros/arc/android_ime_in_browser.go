@@ -141,7 +141,7 @@ func AndroidIMEInBrowser(ctx context.Context, s *testing.State) {
 	}))
 	defer server.Close()
 
-	conn, err := cr.Browser().NewConn(ctx, server.URL)
+	conn, err := cr.NewConn(ctx, server.URL)
 	if err != nil {
 		s.Fatal("Creating renderer for test page failed: ", err)
 	}

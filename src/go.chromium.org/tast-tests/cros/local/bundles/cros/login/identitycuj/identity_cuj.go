@@ -53,8 +53,7 @@ func CreateManagedDeviceAccount(ctx context.Context, credsJSON []byte) (*tape.Ow
 
 // OpenNewURL opens a new Chrome tab with the given url.
 func OpenNewURL(ctx context.Context, cr *chrome.Chrome, url string) (*chrome.Conn, error) {
-	br := cr.Browser()
-	newConn, err := br.NewConn(ctx, url)
+	newConn, err := cr.NewConn(ctx, url)
 	if err != nil {
 		return nil, errors.Wrapf(err, "failed to open URL %v", url)
 	}

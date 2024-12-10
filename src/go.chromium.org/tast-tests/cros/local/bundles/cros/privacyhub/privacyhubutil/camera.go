@@ -15,7 +15,6 @@ import (
 	"time"
 
 	"go.chromium.org/tast-tests/cros/local/chrome"
-	"go.chromium.org/tast-tests/cros/local/chrome/browser"
 	"go.chromium.org/tast-tests/cros/local/chrome/display"
 	"go.chromium.org/tast-tests/cros/local/chrome/uiauto"
 	"go.chromium.org/tast-tests/cros/local/chrome/uiauto/launcher"
@@ -56,7 +55,7 @@ func IsImageBlack(img image.Image) (bool, error) {
 	return true, nil
 }
 
-func launchCameraAppFromHomeMenu(ctx context.Context, tconn *browser.TestConn) {
+func launchCameraAppFromHomeMenu(ctx context.Context, tconn *chrome.TestConn) {
 	ui := uiauto.New(tconn)
 	cameraAppButton := nodewith.Role("button").Name("Camera").ClassName("AppListItemView").First()
 
@@ -68,7 +67,7 @@ func launchCameraAppFromHomeMenu(ctx context.Context, tconn *browser.TestConn) {
 	}
 }
 
-func getRectPXForUIElement(ctx context.Context, cr *chrome.Chrome, tconn *browser.TestConn,
+func getRectPXForUIElement(ctx context.Context, tconn *chrome.TestConn,
 	finderForUIElement *nodewith.Finder) (*coords.Rect, error) {
 	ui := uiauto.New(tconn)
 
@@ -93,8 +92,11 @@ func getRectPXForUIElement(ctx context.Context, cr *chrome.Chrome, tconn *browse
 
 // LaunchCameraAndTakeScreenshot starts the Camera app and
 // takes a screenshot of content (cropped, without UI elements).
-func LaunchCameraAndTakeScreenshot(ctx context.Context, cr *chrome.Chrome,
-	tconn *browser.TestConn, s *testing.State) (image.Image, error) {
+func LaunchCameraAndTakeScreenshot(ctx context.Context, cr *chrome.Chrome, s *testing.State) (image.Image, error) {
+	tconn, err := cr.TestAPIConn(ctx)
+	if err != nil {
+		errors.Wrap(err, "failed to create Test API connection")
+	}
 
 	launchCameraAppFromHomeMenu(ctx, tconn)
 
@@ -108,7 +110,7 @@ func LaunchCameraAndTakeScreenshot(ctx context.Context, cr *chrome.Chrome,
 	}
 
 	// Get rect in px of camera app.
-	rectPX, _ := getRectPXForUIElement(ctx, cr, tconn, cameraFrame)
+	rectPX, _ := getRectPXForUIElement(ctx, tconn, cameraFrame)
 
 	// We need to have a subRectPX, as the rectPX holds
 	// the entire viewing area of the camera app
@@ -150,7 +152,6 @@ func LaunchCameraAndTakeScreenshot(ctx context.Context, cr *chrome.Chrome,
 	}
 
 	// Grab and return the camera stream.
-	var sshot image.Image
 	sshot, err := screenshot.GrabAndCropScreenshot(ctx, cr, subRectPX)
 	if err != nil {
 		return nil, errors.Wrap(err, "failed to create camera feed image")

@@ -114,9 +114,8 @@ func VideoCall(ctx context.Context, s *testing.State) {
 	}
 	defer videoConn.Close()
 	defer videoConn.CloseTarget(cleanupCtx)
-	br := cr.Browser()
 
-	bTconn, err := br.TestAPIConn(ctx)
+	bTconn, err := cr.TestAPIConn(ctx)
 	if err != nil {
 		s.Fatal("Failed to get browser test API connection: ", err)
 	}
@@ -128,7 +127,7 @@ func VideoCall(ctx context.Context, s *testing.State) {
 	if err := ash.SetWindowStateAndWait(ctx, tconn, videoWin.ID, ash.WindowStatePrimarySnapped); err != nil {
 		s.Fatal("Failed to snap video window to the left: ", err)
 	}
-	docConn, err := br.NewConn(ctx, urlDoc, browser.WithNewWindow())
+	docConn, err := cr.NewConn(ctx, urlDoc, browser.WithNewWindow())
 	if err != nil {
 		s.Fatal("Failed to setup a new window for doc: ", err)
 	}

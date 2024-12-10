@@ -197,7 +197,7 @@ func OdfsOpenFromOutlook(ctx context.Context, s *testing.State) {
 		defer apps.Close(ctx, tconn, apps.Outlook.ID)
 
 	} else {
-		conn, err := cr.Browser().NewConn(ctx, outlookURL)
+		conn, err := cr.NewConn(ctx, outlookURL)
 		if err != nil {
 			s.Fatal("Failed to open office website: ", err)
 		}

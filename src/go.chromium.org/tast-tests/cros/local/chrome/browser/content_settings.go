@@ -44,7 +44,7 @@ const (
 // allows Google Meet to use camera device.
 func (b *Browser) SetContentSetting(settingType ContentSettingType, filterKey ContentSettingFilterKey, filterValue, settingValue string) action.Action {
 	return func(ctx context.Context) error {
-		tconn, err := b.TestAPIConn(ctx)
+		tconn, err := b.sess.TestAPIConn(ctx, b.autotestPrivateSupported)
 		if err != nil {
 			return errors.Wrap(err, "failed to create Test API connection")
 		}

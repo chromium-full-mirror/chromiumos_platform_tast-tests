@@ -127,7 +127,7 @@ func SpeakOnMutePower(ctx context.Context, s *testing.State) {
 	}
 
 	// Open an arbitrary web page that has access to navigator.mediaDevices.
-	recorderPage, err := cr.Browser().NewConn(ctx, "chrome://version")
+	recorderPage, err := cr.NewConn(ctx, "chrome://version")
 	if err != nil {
 		s.Fatal("Cannot open browser: ", err)
 	}

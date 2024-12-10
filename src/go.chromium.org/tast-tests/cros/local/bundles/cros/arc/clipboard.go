@@ -396,7 +396,7 @@ func Clipboard(ctx context.Context, s *testing.State) {
 		s.Fatal("Failed to click the center of the app: ", err)
 	}
 
-	conn, err := cr.Browser().NewConn(ctx, server.URL+"/clipboard.html")
+	conn, err := cr.NewConn(ctx, server.URL+"/clipboard.html")
 	if err != nil {
 		s.Fatal("Failed to open the clipboard.html: ", err)
 	}

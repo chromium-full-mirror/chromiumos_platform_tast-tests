@@ -239,7 +239,7 @@ func RecordingMeetPower(ctx context.Context, s *testing.State) {
 			s.Fatal("Failed to add bot: ", err)
 		}
 
-		gm, err := googlemeet.JoinMeeting(ctx, cr, cr.Browser(), conn, meetingCode, map[string]string{}, googlemeet.WithAllPermissions)
+		gm, err := googlemeet.JoinMeeting(ctx, cr, conn, meetingCode, map[string]string{}, googlemeet.WithAllPermissions)
 		if err != nil {
 			s.Fatal("Failed to join a meeting: ", err)
 		}

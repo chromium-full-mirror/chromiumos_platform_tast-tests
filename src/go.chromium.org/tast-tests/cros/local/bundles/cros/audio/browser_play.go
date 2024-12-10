@@ -27,7 +27,7 @@ func init() {
 		Desc:         "Tests basic audio playback on ash chrome browser",
 		Contacts:     []string{"chromeos-audio-bugs@google.com", "bailideng@google.com"},
 		BugComponent: "b:776546",
-		Attr:         []string{
+		Attr: []string{
 			"group:mainline",
 			"group:audio",
 			"group:release-health",
@@ -80,7 +80,7 @@ func BrowserPlay(ctx context.Context, s *testing.State) {
 	server := httptest.NewServer(http.FileServer(s.DataFileSystem()))
 	defer server.Close()
 
-	conn, err := cr.Browser().NewConn(ctx, server.URL+"/audio_playback_test.html")
+	conn, err := cr.NewConn(ctx, server.URL+"/audio_playback_test.html")
 	if err != nil {
 		s.Fatal("Failed to open new tab: ", err)
 	}

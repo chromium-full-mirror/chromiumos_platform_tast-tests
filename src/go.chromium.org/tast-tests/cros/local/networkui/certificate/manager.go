@@ -108,7 +108,7 @@ func Launch(ctx context.Context, tconn *chrome.TestConn, cr *chrome.Chrome) (*Ma
 // The Certificates Manager page should be opened before calling this function.
 // The current connection to the Certificates Manager page would be closed before creating a new connection.
 func (m *Manager) Connect(ctx context.Context, tconn *chrome.TestConn, cr *chrome.Chrome) error {
-	conn, err := cr.Browser().NewConnForTarget(ctx, chrome.MatchTargetURL(certManagerURL))
+	conn, err := cr.NewConnForTarget(ctx, chrome.MatchTargetURL(certManagerURL))
 	if err != nil {
 		return errors.Wrap(err, "failed to connect to the Certificates Manager")
 	}

@@ -65,8 +65,6 @@ func Run(ctx context.Context, cr *chrome.Chrome, testParam TestParam, outDir, sy
 		return nil, errors.Wrap(err, "failed to connect to test API connection")
 	}
 
-	br := cr.Browser()
-
 	cleanup, err := ash.EnsureTabletModeEnabled(ctx, tconn, false)
 	if err != nil {
 		return nil, errors.Wrap(err, "failed to ensure clamshell mode")
@@ -135,7 +133,7 @@ func Run(ctx context.Context, cr *chrome.Chrome, testParam TestParam, outDir, sy
 
 	// Open all desks and windows for each desk. Additionally, initialize
 	// unique user input actions that will be performed on each desk.
-	onVisitActions, expectedNumWindows, cleanUpDesks, err := setUpDesks(ctx, cr, tconn, br, kw, pc, mw, tpw, tw, testParam)
+	onVisitActions, expectedNumWindows, cleanUpDesks, err := setUpDesks(ctx, cr, kw, pc, mw, tpw, tw, testParam)
 	if err != nil {
 		return nil, errors.Wrap(err, "failed to set up desks")
 	}
