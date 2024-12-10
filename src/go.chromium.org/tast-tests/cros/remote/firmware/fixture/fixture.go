@@ -500,8 +500,8 @@ func (i *impl) PreTest(ctx context.Context, s *testing.FixtTestState) {
 		s.Fatal("Failed to check for servo_micro connection: ", err)
 	}
 	if !hasServoMicro {
-		s.Log("Ensuring CCD open, testlab enabled, and capabilities set to factory settings")
-		if err := i.value.Helper.OpenCCD(ctx, true, true); err != nil {
+		s.Log("Ensuring CCD open, testlab enabled")
+		if err := i.value.Helper.OpenCCD(ctx, true /* ensureTestlab */, false /* resetCCD */); err != nil {
 			s.Fatal("Failed to set CCD open: ", err)
 		}
 	}
