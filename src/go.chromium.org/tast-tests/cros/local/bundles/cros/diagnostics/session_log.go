@@ -32,7 +32,7 @@ func init() {
 			"cros-tdm-tpe-eng@google.com",
 			"menghuan@google.comcom",
 		},
-		Attr:         []string{"group:mainline", "informational", "group:hw_agnostic"},
+		Attr:         []string{"group:mainline", "group:hw_agnostic"},
 		SoftwareDeps: []string{"chrome"},
 		Fixture:      "diagnosticsPrep",
 	})
