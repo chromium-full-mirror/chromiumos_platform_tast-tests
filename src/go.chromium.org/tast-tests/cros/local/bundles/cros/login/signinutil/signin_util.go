@@ -52,9 +52,8 @@ func OpenManageOtherPeople(ctx context.Context, cr *chrome.Chrome, tconn *chrome
 	return settings, nil
 }
 
-// EnterInvalidPassword enters invalid password on the login screen and waits until
-// the auth error dialog is shown.
-func EnterInvalidPassword(ctx context.Context, cr *chrome.Chrome, creds chrome.Creds) error {
+// enterPassword enters a password on the login screen.
+func enterPassword(ctx context.Context, cr *chrome.Chrome, creds chrome.Creds) error {
 	tconn, err := cr.SigninProfileTestAPIConn(ctx)
 	if err != nil {
 		return errors.Wrap(err, "failed to create login test API connection")
@@ -80,13 +79,114 @@ func EnterInvalidPassword(ctx context.Context, cr *chrome.Chrome, creds chrome.C
 	defer keyboard.Close(ctx)
 
 	// Enter wrong password.
-	if err = lockscreen.EnterPassword(ctx, tconn, creds.User, creds.Pass+"invalid", keyboard); err != nil {
+	if err = lockscreen.EnterPassword(ctx, tconn, creds.User, creds.Pass, keyboard); err != nil {
 		return errors.Wrap(err, "failed to enter password")
 	}
+	return nil
+}
+
+// EnterInvalidPassword enters invalid password on the login screen and waits until
+// the auth error dialog is shown.
+func EnterInvalidPassword(ctx context.Context, cr *chrome.Chrome, creds chrome.Creds) error {
+	if err := enterPassword(ctx, cr, creds); err != nil {
+		return errors.Wrap(err, "failed to enter password")
+	}
+
+	tconn, err := cr.SigninProfileTestAPIConn(ctx)
+	if err != nil {
+		return errors.Wrap(err, "failed to create login test API connection")
+	}
+
 	if err := lockscreen.WaitForAuthError(ctx, tconn, 10*time.Second); err != nil {
 		return errors.Wrap(err, "failed to wait for auth error")
 	}
 
+	return nil
+}
+
+// EnterValidPassword enters valid password on the login screen and waits until
+// logged in
+func EnterValidPassword(ctx context.Context, cr *chrome.Chrome, creds chrome.Creds) error {
+	if err := enterPassword(ctx, cr, creds); err != nil {
+		return errors.Wrap(err, "failed to enter password")
+	}
+
+	tconn, err := cr.SigninProfileTestAPIConn(ctx)
+	if err != nil {
+		return errors.Wrap(err, "failed to create login test API connection")
+	}
+
+	if err = lockscreen.WaitForLoggedIn(ctx, tconn, chrome.LoginTimeout); err != nil {
+		return errors.Wrap(err, "failed to login")
+	}
+
+	return nil
+}
+
+// enterPin enters invalid pin on the login screen.
+func enterPin(ctx context.Context, cr *chrome.Chrome, pin string) error {
+	tconn, err := cr.SigninProfileTestAPIConn(ctx)
+	if err != nil {
+		return errors.Wrap(err, "failed to create login test API connection")
+	}
+
+	// Wait for the login screen to be ready for password entry.
+	if st, err := lockscreen.WaitState(ctx, tconn, func(st lockscreen.State) bool { return st.ReadyForPassword }, 30*time.Second); err != nil {
+		return errors.Wrapf(err, "failed waiting for the login screen to be ready for password entry last state %+v", st)
+	}
+
+	keyboard, err := input.VirtualKeyboard(ctx)
+	if err != nil {
+		return errors.Wrap(err, "failed to get virtual keyboard")
+	}
+	defer keyboard.Close(ctx)
+
+	// Enter wrong pin.
+	if err = lockscreen.EnterPIN(ctx, tconn, keyboard, pin); err != nil {
+		return errors.Wrap(err, "failed to enter password")
+	}
+
+	if err := lockscreen.WaitForPinAuthError(ctx, tconn, 10*time.Second); err != nil {
+		return errors.Wrap(err, "failed to wait for auth error")
+	}
+
+	return nil
+}
+
+// EnterInvalidPin enters invalid pin on the login screen and waits until
+// the auth error dialog is shown.
+func EnterInvalidPin(ctx context.Context, cr *chrome.Chrome, pin string) error {
+	if err := enterPin(ctx, cr, pin); err != nil {
+		return errors.Wrap(err, "failed to enter password")
+	}
+
+	tconn, err := cr.SigninProfileTestAPIConn(ctx)
+	if err != nil {
+		return errors.Wrap(err, "failed to create login test API connection")
+	}
+
+	if err := lockscreen.WaitForPinAuthError(ctx, tconn, 10*time.Second); err != nil {
+		return errors.Wrap(err, "failed to wait for auth error")
+	}
+
+	return nil
+}
+
+// EnterValidPin enters invalid pin on the login screen and waits until
+// the auth error dialog is shown.
+func EnterValidPin(ctx context.Context, cr *chrome.Chrome, pin string) error {
+	if err := enterPin(ctx, cr, pin); err != nil {
+		return errors.Wrap(err, "failed to enter password")
+	}
+
+	tconn, err := cr.SigninProfileTestAPIConn(ctx)
+	if err != nil {
+		return errors.Wrap(err, "failed to create login test API connection")
+	}
+
+	if err = lockscreen.WaitForLoggedIn(ctx, tconn, chrome.LoginTimeout); err != nil {
+		return errors.Wrap(err, "failed to login")
+	}
 	return nil
 }
 

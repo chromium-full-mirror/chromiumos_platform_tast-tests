@@ -151,6 +151,11 @@ func WaitForAuthError(ctx context.Context, tconn *chrome.TestConn, timeout time.
 	return uiauto.New(tconn).WithTimeout(timeout).WaitUntilExists(AuthErrorFinder)(ctx)
 }
 
+// WaitForPinAuthError waits for the login error bubble that pin was not correct.
+func WaitForPinAuthError(ctx context.Context, tconn *chrome.TestConn, timeout time.Duration) error {
+	return uiauto.New(tconn).WithTimeout(timeout).WaitUntilExists(PINAuthErrorFinder)(ctx)
+}
+
 func typePasswordAndVerify(ctx context.Context, tconn *chrome.TestConn, username, password string, submit bool, kb *input.KeyboardEventWriter) error {
 	if st, err := WaitState(ctx, tconn, func(st State) bool { return st.ReadyForPassword }, 3*uiTimeout); err != nil {
 		return errors.Wrapf(err, "failed to wait for screen to be ready for password (last status %+v)", st)

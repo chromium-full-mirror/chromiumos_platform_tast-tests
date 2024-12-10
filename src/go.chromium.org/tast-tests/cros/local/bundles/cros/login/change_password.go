@@ -22,16 +22,19 @@ import (
 	"go.chromium.org/tast-tests/cros/local/chrome/uiauto/ossettings"
 	"go.chromium.org/tast-tests/cros/local/chrome/userutil"
 	hwseclocal "go.chromium.org/tast-tests/cros/local/hwsec"
-	"go.chromium.org/tast-tests/cros/local/input"
+	"go.chromium.org/tast-tests/cros/local/login"
 	"go.chromium.org/tast-tests/cros/local/network/ping"
 	"go.chromium.org/tast/core/ctxutil"
 	"go.chromium.org/tast/core/errors"
 	"go.chromium.org/tast/core/testing"
 )
 
+type setupWithAuthFactorType int
+
 const (
-	testFile = "test_file"
-	testData = "test that data persisted on the password change"
+	setupWithGaiaPassword setupWithAuthFactorType = iota
+	setupWithLocalPassword
+	setupWithPin
 )
 
 type changePasswordParams struct {
@@ -39,6 +42,8 @@ type changePasswordParams struct {
 	userHasRecovery bool
 	// Specify if the user should setup recovery in settings.
 	setUpRecovery bool
+	// Setup user with local password
+	authFactorType setupWithAuthFactorType
 }
 
 func init() {
@@ -56,6 +61,8 @@ func init() {
 			"chrome",
 			"chrome_internal",
 			"gaia",
+			"pinweaver",
+			"tpm2",
 		},
 		Attr: []string{"group:mainline", "group:hw_agnostic"},
 		VarDeps: []string{
@@ -73,18 +80,35 @@ func init() {
 			Val: changePasswordParams{
 				userHasRecovery: false,
 				setUpRecovery:   false,
-			},
-		}, {
-			Name: "user_with_recovery",
-			Val: changePasswordParams{
-				userHasRecovery: true,
-				setUpRecovery:   false,
+				authFactorType:  setupWithGaiaPassword,
 			},
 		}, {
 			Name: "user_without_recovery_and_setup",
 			Val: changePasswordParams{
 				userHasRecovery: false,
 				setUpRecovery:   true,
+				authFactorType:  setupWithGaiaPassword,
+			},
+		}, {
+			Name: "user_with_recovery_gaia",
+			Val: changePasswordParams{
+				userHasRecovery: true,
+				setUpRecovery:   false,
+				authFactorType:  setupWithGaiaPassword,
+			},
+		}, {
+			Name: "user_with_recovery_local_password",
+			Val: changePasswordParams{
+				userHasRecovery: true,
+				setUpRecovery:   true,
+				authFactorType:  setupWithLocalPassword,
+			},
+		}, {
+			Name: "user_with_recovery_pin",
+			Val: changePasswordParams{
+				userHasRecovery: true,
+				setUpRecovery:   true,
+				authFactorType:  setupWithPin,
 			},
 		}},
 	})
@@ -94,6 +118,15 @@ func ChangePassword(ctx context.Context, s *testing.State) {
 	var initialCreds chrome.Creds
 	var gaiaCreds chrome.Creds
 	var normalizedUser string
+
+	const (
+		testFile         = "test_file"
+		testData         = "test that data persisted on the password change"
+		localPassword    = "local_password"
+		localPasswordNew = "local_password_new"
+		pin              = "123456"
+		pinNew           = "654321"
+	)
 
 	cmdRunner := hwseclocal.NewCmdRunner()
 	cryptohome := hwsec.NewCryptohomeClient(cmdRunner)
@@ -111,33 +144,48 @@ func ChangePassword(ctx context.Context, s *testing.State) {
 	// Make sure that we actually reset users to avoid flakiness due to previous tests.
 	userutil.ResetUsers(ctx)
 	userParam := s.Param().(changePasswordParams)
-	userHasRecovery := userParam.userHasRecovery
+
+	var options []chrome.Option
+	// We don't have a way to configure recovery via chrome.New params, so
+	// rely on Feature flag for now to control recovery factor.
+	if userParam.userHasRecovery {
+		options = append(options, chrome.EnableFeatures("CryptohomeRecoveryByDefaultForConsumers"))
+	} else {
+		options = append(options, chrome.DisableFeatures("CryptohomeRecoveryByDefaultForConsumers"))
+	}
+
+	gaiaCreds, err := credconfig.PickRandomCreds(dma.CredsFromPool(ui.GaiaPoolDefaultVarName))
+	if err != nil {
+		s.Fatal("Failed to parse creds: ", err)
+	}
 
 	// Isolate the step to leverage `defer` pattern.
 	func() {
 		var err error
-		gaiaCreds, err = credconfig.PickRandomCreds(dma.CredsFromPool(ui.GaiaPoolDefaultVarName))
-		if err != nil {
-			s.Fatal("Failed to parse creds: ", err)
-		}
+		var cr *chrome.Chrome
+		switch userParam.authFactorType {
+		case setupWithGaiaPassword:
+			{
+				initialCreds = gaiaCreds
+				// Add a whitespace to the password, so when user logs in again - password change would be detected.
+				// Note: the password with a whitespace will still be accepted by Gaia.
+				initialCreds.Pass = " " + initialCreds.Pass
+				options = append(options, chrome.GAIALogin(initialCreds))
+				cr, err = chrome.New(ctx, options...)
+			}
+		case setupWithLocalPassword:
+			{
+				options = append(options, chrome.GAIALogin(gaiaCreds))
+				cr, err = login.SetupUserWithLocalPassword(ctx, localPassword, options...)
+			}
+		case setupWithPin:
+			{
+				options = append(options, chrome.GAIALogin(gaiaCreds))
+				s.Logf("User: %s , Pass: %s", gaiaCreds.User, gaiaCreds.Pass)
+				cr, err = login.SetupUserWithPin(ctx, pin, options...)
+			}
 
-		initialCreds = gaiaCreds
-		// Add a whitespace to the password, so when user logs in again - password change would be detected.
-		// Note: the password with a whitespace will still be accepted by Gaia.
-		initialCreds.Pass = " " + initialCreds.Pass
-
-		options := []chrome.Option{
-			chrome.GAIALogin(initialCreds),
 		}
-		// We don't have a way to configure recovery via chrome.New params, so
-		// rely on Feature flag for now to control recovery factor.
-		if userHasRecovery {
-			options = append(options, chrome.EnableFeatures("CryptohomeRecoveryByDefaultForConsumers"))
-		} else {
-			options = append(options, chrome.DisableFeatures("CryptohomeRecoveryByDefaultForConsumers"))
-		}
-
-		cr, err := chrome.New(ctx, options...)
 		if err != nil {
 			s.Fatal("Failed to create a user: ", err)
 		}
@@ -159,15 +207,35 @@ func ChangePassword(ctx context.Context, s *testing.State) {
 		}
 
 		if userParam.setUpRecovery {
+			// GoBigSleepLint, there is a launcher showing up due to real gaia sign in.
+			testing.Sleep(ctx, time.Second*10)
+
 			// Set up Recovery through a connection to the Settings page.
 			settings, err := ossettings.LaunchAtPageURL(ctx, tconn, cr, "osPrivacy/lockScreen", func(context.Context) error { return nil })
 			if err != nil {
 				s.Fatal("Failed to open setting page: ", err)
 			}
 			defer settings.Close(ctx)
+			switch userParam.authFactorType {
+			case setupWithGaiaPassword:
+				{
+					if err := auth.ConfirmPassword(ctx, cr, initialCreds.Pass); err != nil {
+						s.Fatal("Failed to confirm password: ", err)
+					}
 
-			if err := auth.ConfirmPassword(ctx, cr, initialCreds.Pass); err != nil {
-				s.Fatal("Failed to confirm password: ", err)
+				}
+			case setupWithLocalPassword:
+				{
+					if err := auth.ConfirmPassword(ctx, cr, localPassword); err != nil {
+						s.Fatal("Failed to confirm password: ", err)
+					}
+				}
+			case setupWithPin:
+				{
+					if err := auth.ConfirmPin(ctx, cr, pin, true); err != nil {
+						s.Fatal("Failed to confirm password: ", err)
+					}
+				}
 			}
 
 			if err := settings.SetToggleOption(cr, "Local data recovery", true)(ctx); err != nil {
@@ -200,8 +268,14 @@ func ChangePassword(ctx context.Context, s *testing.State) {
 		}
 		defer faillog.DumpUITreeWithScreenshotOnError(cleanupCtx, s.OutDir(), s.HasError, cr, "ui_dump")
 
-		if err := signinutil.EnterInvalidPassword(ctx, cr, gaiaCreds); err != nil {
-			s.Fatal("Failed to enter invalid password: ", err)
+		if userParam.authFactorType != setupWithPin {
+			if err := signinutil.EnterInvalidPassword(ctx, cr, gaiaCreds); err != nil {
+				s.Fatal("Failed to enter invalid password: ", err)
+			}
+		} else {
+			if err := signinutil.EnterInvalidPin(ctx, cr, pinNew); err != nil {
+				s.Fatal("Failed to enter pin: ", err)
+			}
 		}
 
 		s.Log("Starting reauth flow")
@@ -219,7 +293,7 @@ func ChangePassword(ctx context.Context, s *testing.State) {
 		}
 		defer oobeConn.Close()
 
-		if !userHasRecovery && !userParam.setUpRecovery {
+		if !userParam.userHasRecovery && !userParam.setUpRecovery {
 			// Without recovery user need to enter old password.
 			if err := oobeConn.WaitForExprFailOnErrWithTimeout(ctx, "!document.querySelector('#enter-old-password').hidden", 45*time.Second); err != nil {
 				s.Fatal("Failed to wait for enter old password screen: ", err)
@@ -231,43 +305,80 @@ func ChangePassword(ctx context.Context, s *testing.State) {
 			if err := oobeConn.Eval(ctx, "document.querySelector('#enter-old-password').$.next.click()", nil); err != nil {
 				s.Fatal("Failed to click on the next button: ", err)
 			}
-		}
 
-		if err := oobeConn.WaitForExprFailOnErrWithTimeout(ctx, "OobeAPI.screens.PasswordFactorSuccessScreen.isVisible()", 45*time.Second); err != nil {
-			s.Fatal("Failed to wait for factor setup success screen: ", err)
-		}
+			if err := oobeConn.WaitForExprFailOnErr(ctx, "OobeAPI.screens.PasswordFactorSuccessScreen.isDone()"); err != nil {
+				s.Fatal("Failed to see password success screen")
+			}
 
-		if err := oobeConn.Eval(ctx, "OobeAPI.screens.PasswordFactorSuccessScreen.clickDone()", nil); err != nil {
-			s.Fatal("Failed to click on the done button: ", err)
-		}
+			if err := oobeConn.Eval(ctx, "OobeAPI.screens.PasswordFactorSuccessScreen.clickDone()", nil); err != nil {
+				s.Fatal("Failed to click done")
+			}
+		} else {
+			switch userParam.authFactorType {
+			case setupWithGaiaPassword:
+				{
+					if err := oobeConn.WaitForExprFailOnErrWithTimeout(ctx, "OobeAPI.screens.PasswordFactorSuccessScreen.isVisible()", 45*time.Second); err != nil {
+						s.Fatal("Failed to wait for factor setup success screen: ", err)
+					}
 
-		if err := cr.WaitForOOBEConnectionToBeDismissed(ctx); err != nil {
-			s.Fatal("Failed to wait for OOBE to be dismissed: ", err)
-		}
+					if err := oobeConn.Eval(ctx, "OobeAPI.screens.PasswordFactorSuccessScreen.clickDone()", nil); err != nil {
+						s.Fatal("Failed to click on the done button: ", err)
+					}
+				}
+			case setupWithLocalPassword:
+				{
+					if err := oobeConn.WaitForExprFailOnErr(ctx, "OobeAPI.screens.LocalPasswordSetupScreen.isReadyForTesting()"); err != nil {
+						s.Fatal("Failed to get local password setup screen")
+					}
+					if err := oobeConn.Call(ctx, nil, `(pw) => { OobeAPI.screens.LocalPasswordSetupScreen.enterPasswordToFirstInput(pw); }`, localPasswordNew); err != nil {
+						s.Fatal("Failed to enter first password")
+					}
+					if err := oobeConn.Call(ctx, nil, `(pw) => { OobeAPI.screens.LocalPasswordSetupScreen.enterPasswordToConfirmInput(pw); }`, localPasswordNew); err != nil {
+						s.Fatal("Failed to enter second password")
+					}
+					if err := oobeConn.WaitForExprWithTimeout(ctx, "OobeAPI.screens.LocalPasswordSetupScreen.nextButton.isEnabled()", 3*time.Second); err != nil {
+						s.Fatal("Failed to see next button enabled")
+					}
+					if err := oobeConn.Eval(ctx, "OobeAPI.screens.LocalPasswordSetupScreen.nextButton.click()", nil); err != nil {
+						s.Fatal("Failed to click next button")
+					}
+					if err := oobeConn.WaitForExprFailOnErr(ctx, "OobeAPI.screens.PasswordFactorSuccessScreen.isDone()"); err != nil {
+						s.Fatal("Failed to see password success screen")
+					}
+					if err := oobeConn.Eval(ctx, "OobeAPI.screens.PasswordFactorSuccessScreen.clickDone()", nil); err != nil {
+						s.Fatal("Failed to click done")
+					}
+				}
+			case setupWithPin:
+				{
+					if err := oobeConn.WaitForExprFailOnErr(ctx, "!document.querySelector('#pin-setup').hidden"); err != nil {
+						s.Fatal("Failed to see pin setup screen")
+					}
 
-		// Read test file to check that data persisted on password change.
-		if content, err := hwsec.ReadUserTestContent(ctx, cryptohome, cmdRunner, normalizedUser, testFile); err != nil {
-			s.Fatal("Failed to read a user test file: ", err)
-		} else if !bytes.Equal(content, []byte(testData)) {
-			s.Fatalf("Unexpected test file content: got %q, want %q", content, testData)
+					for _, step := range []string{"start", "confirm"} {
+						if err := oobeConn.WaitForExprFailOnErr(ctx, fmt.Sprintf("document.querySelector('#pin-setup').uiStep === '%s'", step)); err != nil {
+							s.Fatal("Failed to see pin setup screen")
+						}
+						if err := oobeConn.Eval(ctx, fmt.Sprintf("document.querySelector('#pin-setup').$.pinKeyboard.$.pinKeyboard.$.pinInput.value = '%s'", pinNew), nil); err != nil {
+							s.Fatal("Failed to enter pin")
+						}
+
+						if err := oobeConn.Eval(ctx, "document.querySelector('#pin-setup').$.nextButton.click()", nil); err != nil {
+							s.Fatal("Failed to click next button")
+						}
+					}
+
+					if err := oobeConn.WaitForExprFailOnErr(ctx, "document.querySelector('#pin-setup').uiStep === 'done'"); err != nil {
+						s.Fatal("Failed to setup new pin")
+					}
+
+					if err := oobeConn.Eval(ctx, "document.querySelector('#pin-setup').$.doneButton.click()", nil); err != nil {
+						s.Fatal("Failed to setup new pin")
+					}
+				}
+			}
 		}
 	}()
-
-	// Verify we can not login with the old password.
-	if err := loginWithCreds(ctx, cleanupCtx, s, normalizedUser, initialCreds, false); err != nil {
-		s.Fatal("Failed to verify old password does not work: ", err)
-	}
-
-	// Verify we can login with the new password.
-	if err := loginWithCreds(ctx, cleanupCtx, s, normalizedUser, gaiaCreds, true); err != nil {
-		s.Fatal("Failed to verify new password works: ", err)
-	}
-
-}
-
-func loginWithCreds(ctx, cleanupCtx context.Context, s *testing.State, normalizedUser string, creds chrome.Creds, successExpected bool) error {
-	cmdRunner := hwseclocal.NewCmdRunner()
-	cryptohome := hwsec.NewCryptohomeClient(cmdRunner)
 
 	cr, err := chrome.New(
 		ctx,
@@ -276,43 +387,75 @@ func loginWithCreds(ctx, cleanupCtx context.Context, s *testing.State, normalize
 		chrome.KeepState(),
 	)
 	if err != nil {
-		return errors.Wrap(err, "crome start failed")
+		s.Fatal("Chrome start failed: ", err)
 	}
 	defer cr.Close(cleanupCtx)
 
-	tconn, err := cr.SigninProfileTestAPIConn(ctx)
-	if err != nil {
-		return errors.Wrap(err, "failed to get signing test API connection")
-	}
+	switch userParam.authFactorType {
+	case setupWithGaiaPassword:
+		{
+			// Verify we can not login with the old password.
+			if err := signinutil.EnterInvalidPassword(ctx, cr, initialCreds); err != nil {
+				s.Fatal("Failed to verify old password does not work: ", err)
+			}
 
-	if err = lockscreen.WaitForPasswordField(ctx, tconn, creds.User, 10*time.Second); err != nil {
-		return errors.Wrap(err, "failed to wait for password")
-	}
+			// Verify we can login with the new password.
+			if err := signinutil.EnterValidPassword(ctx, cr, gaiaCreds); err != nil {
+				s.Fatal("Failed to verify new password does work: ", err)
+			}
 
-	keyboard, err := input.VirtualKeyboard(ctx)
-	if err != nil {
-		return errors.Wrap(err, "failed to wait for virtual keyboard")
-	}
-	defer keyboard.Close(cleanupCtx)
-	if err = lockscreen.EnterPassword(ctx, tconn, creds.User, creds.Pass, keyboard); err != nil {
-		return errors.Wrap(err, "failed to enter password")
-	}
+			// Verify we can verify file contents.
+			if err := checkFileContents(ctx, cleanupCtx, s, normalizedUser, testFile, testData); err != nil {
+				s.Fatal("Failed to verify test file data persisted: ", err)
+			}
+		}
+	case setupWithLocalPassword:
+		{
+			creds := chrome.Creds{User: initialCreds.User, Pass: localPassword}
+			// Verify we can not login with the old password.
+			if err := signinutil.EnterInvalidPassword(ctx, cr, creds); err != nil {
+				s.Fatal("Failed to verify old password does not work: ", err)
+			}
 
-	if successExpected {
-		if err = lockscreen.WaitForLoggedIn(ctx, tconn, chrome.LoginTimeout); err != nil {
-			return errors.Wrap(err, "failed to login")
+			// Verify we can login with the new password.
+			creds.Pass = localPasswordNew
+			if err := signinutil.EnterValidPassword(ctx, cr, creds); err != nil {
+				s.Fatal("Failed to verify new password does work: ", err)
+			}
+
+			// Verify we can verify file contents.
+			if err := checkFileContents(ctx, cleanupCtx, s, normalizedUser, testFile, testData); err != nil {
+				s.Fatal("Failed to verify test file data persisted: ", err)
+			}
+		}
+	case setupWithPin:
+		{
+			if err := signinutil.EnterInvalidPin(ctx, cr, pin); err != nil {
+				s.Fatal("Failed to verify olf pin does not work: ", err)
+			}
+
+			if err := signinutil.EnterValidPin(ctx, cr, pinNew); err != nil {
+				s.Fatal("Failed to verify old pin does not work: ", err)
+			}
+
+			// Verify we can login with the new pin.
+			if err := checkFileContents(ctx, cleanupCtx, s, normalizedUser, testFile, testData); err != nil {
+				s.Fatal("Failed to verify test file data persisted: ", err)
+			}
 		}
 
-		// Read test file to check that data persisted after login with updated password.
-		if content, err := hwsec.ReadUserTestContent(ctx, cryptohome, cmdRunner, normalizedUser, testFile); err != nil {
-			return errors.Wrap(err, "failed to read user test file")
-		} else if !bytes.Equal(content, []byte(testData)) {
-			return errors.Wrapf(err, "unexpected test file content: got %q, want %q", content, testData)
-		}
-	} else {
-		if err := lockscreen.WaitForAuthError(ctx, tconn, 10*time.Second); err != nil {
-			return errors.Wrap(err, "failed to wait for auth error")
-		}
+	}
+}
+
+func checkFileContents(ctx, cleanupCtx context.Context, s *testing.State, normalizedUser, testFile, testData string) error {
+	cmdRunner := hwseclocal.NewCmdRunner()
+	cryptohome := hwsec.NewCryptohomeClient(cmdRunner)
+
+	// Read test file to check that data persisted after login with updated password.
+	if content, err := hwsec.ReadUserTestContent(ctx, cryptohome, cmdRunner, normalizedUser, testFile); err != nil {
+		return errors.Wrap(err, "failed to read user test file")
+	} else if !bytes.Equal(content, []byte(testData)) {
+		return errors.Wrapf(err, "unexpected test file content: got %q, want %q", content, testData)
 	}
 	return nil
 }
