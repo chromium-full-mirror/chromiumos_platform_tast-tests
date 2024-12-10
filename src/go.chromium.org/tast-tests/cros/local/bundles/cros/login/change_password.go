@@ -25,6 +25,7 @@ import (
 	"go.chromium.org/tast-tests/cros/local/input"
 	"go.chromium.org/tast-tests/cros/local/network/ping"
 	"go.chromium.org/tast/core/ctxutil"
+	"go.chromium.org/tast/core/errors"
 	"go.chromium.org/tast/core/testing"
 )
 
@@ -252,7 +253,22 @@ func ChangePassword(ctx context.Context, s *testing.State) {
 		}
 	}()
 
-	// Login again with the updated password.
+	// Verify we can not login with the old password.
+	if err := loginWithCreds(ctx, cleanupCtx, s, normalizedUser, initialCreds, false); err != nil {
+		s.Fatal("Failed to verify old password does not work: ", err)
+	}
+
+	// Verify we can login with the new password.
+	if err := loginWithCreds(ctx, cleanupCtx, s, normalizedUser, gaiaCreds, true); err != nil {
+		s.Fatal("Failed to verify new password works: ", err)
+	}
+
+}
+
+func loginWithCreds(ctx, cleanupCtx context.Context, s *testing.State, normalizedUser string, creds chrome.Creds, successExpected bool) error {
+	cmdRunner := hwseclocal.NewCmdRunner()
+	cryptohome := hwsec.NewCryptohomeClient(cmdRunner)
+
 	cr, err := chrome.New(
 		ctx,
 		chrome.NoLogin(),
@@ -260,36 +276,43 @@ func ChangePassword(ctx context.Context, s *testing.State) {
 		chrome.KeepState(),
 	)
 	if err != nil {
-		s.Fatal("Chrome start failed: ", err)
+		return errors.Wrap(err, "crome start failed")
 	}
 	defer cr.Close(cleanupCtx)
 
 	tconn, err := cr.SigninProfileTestAPIConn(ctx)
 	if err != nil {
-		s.Fatal("Getting signing test API connection failed: ", err)
+		return errors.Wrap(err, "failed to get signing test API connection")
 	}
 
-	if err = lockscreen.WaitForPasswordField(ctx, tconn, gaiaCreds.User, 25*time.Second); err != nil {
-		s.Fatal("Fail to wait for password: ", err)
+	if err = lockscreen.WaitForPasswordField(ctx, tconn, creds.User, 10*time.Second); err != nil {
+		return errors.Wrap(err, "failed to wait for password")
 	}
 
 	keyboard, err := input.VirtualKeyboard(ctx)
 	if err != nil {
-		s.Fatal("Failed to get virtual keyboard: ", err)
+		return errors.Wrap(err, "failed to wait for virtual keyboard")
 	}
 	defer keyboard.Close(cleanupCtx)
-	if err = lockscreen.EnterPassword(ctx, tconn, gaiaCreds.User, gaiaCreds.Pass, keyboard); err != nil {
-		s.Fatal("Failed to enter password: ", err)
+	if err = lockscreen.EnterPassword(ctx, tconn, creds.User, creds.Pass, keyboard); err != nil {
+		return errors.Wrap(err, "failed to enter password")
 	}
 
-	if err := lockscreen.WaitForLoggedIn(ctx, tconn, chrome.LoginTimeout); err != nil {
-		s.Fatal("Failed to login: ", err)
-	}
+	if successExpected {
+		if err = lockscreen.WaitForLoggedIn(ctx, tconn, chrome.LoginTimeout); err != nil {
+			return errors.Wrap(err, "failed to login")
+		}
 
-	// Read test file to check that data persisted after login with updated password.
-	if content, err := hwsec.ReadUserTestContent(ctx, cryptohome, cmdRunner, normalizedUser, testFile); err != nil {
-		s.Fatal("Failed to read a user test file: ", err)
-	} else if !bytes.Equal(content, []byte(testData)) {
-		s.Fatalf("Unexpected test file content: got %q, want %q", content, testData)
+		// Read test file to check that data persisted after login with updated password.
+		if content, err := hwsec.ReadUserTestContent(ctx, cryptohome, cmdRunner, normalizedUser, testFile); err != nil {
+			return errors.Wrap(err, "failed to read user test file")
+		} else if !bytes.Equal(content, []byte(testData)) {
+			return errors.Wrapf(err, "unexpected test file content: got %q, want %q", content, testData)
+		}
+	} else {
+		if err := lockscreen.WaitForAuthError(ctx, tconn, 10*time.Second); err != nil {
+			return errors.Wrap(err, "failed to wait for auth error")
+		}
 	}
+	return nil
 }
