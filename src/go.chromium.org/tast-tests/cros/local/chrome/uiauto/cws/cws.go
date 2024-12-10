@@ -14,6 +14,7 @@ import (
 
 	"go.chromium.org/tast-tests/cros/local/chrome"
 	"go.chromium.org/tast-tests/cros/local/chrome/ash"
+	"go.chromium.org/tast-tests/cros/local/chrome/browser"
 	"go.chromium.org/tast-tests/cros/local/chrome/uiauto"
 	"go.chromium.org/tast-tests/cros/local/chrome/uiauto/faillog"
 	"go.chromium.org/tast-tests/cros/local/chrome/uiauto/nodewith"
@@ -96,7 +97,7 @@ func InstallApp(ctx context.Context, cr *chrome.Chrome, app App) (retErr error) 
 	// To get around it for recovery it gives a retry by reloading the page to the app page URL.
 	// TODO(crbug.com/1375314): Figure out how to avoid this timing issue in product, rather than in tests.
 	if err := waitForAccount(ctx); err != nil {
-		if err := cr.Browser().ReloadActiveTab(ctx); err != nil {
+		if err := browser.ReloadActiveTab(ctx, tconn); err != nil {
 			return errors.Wrap(err, "failed to reload page")
 		}
 		if err := cws.Navigate(ctx, app.URL); err != nil {

@@ -11,6 +11,7 @@ import (
 
 	"go.chromium.org/tast-tests/cros/common/fixture"
 	"go.chromium.org/tast-tests/cros/local/chrome"
+	"go.chromium.org/tast-tests/cros/local/chrome/browser"
 	"go.chromium.org/tast-tests/cros/local/testenv/proxy"
 	"go.chromium.org/tast/core/ctxutil"
 	"go.chromium.org/tast/core/errors"
@@ -88,7 +89,13 @@ func verify(ctx context.Context, s *testing.State, cr *chrome.Chrome, mp proxy.P
 		s.Fatal("Failed to open test page: ", err)
 	}
 	defer conn.Close()
-	cr.Browser().ReloadActiveTab(ctx)
+
+	tconn, err := cr.TestAPIConn(ctx)
+	if err != nil {
+		s.Fatal("Failed to get test API connection: ", err)
+	}
+
+	browser.ReloadActiveTab(ctx, tconn)
 
 	switch s.Param().(string) {
 	case "hostredirect":

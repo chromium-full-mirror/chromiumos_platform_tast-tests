@@ -18,6 +18,7 @@ import (
 	"go.chromium.org/tast-tests/cros/common/fixture"
 	utils "go.chromium.org/tast-tests/cros/local/certpageutils"
 	"go.chromium.org/tast-tests/cros/local/chrome"
+	"go.chromium.org/tast-tests/cros/local/chrome/browser"
 	"go.chromium.org/tast-tests/cros/local/chrome/uiauto"
 	"go.chromium.org/tast-tests/cros/local/chrome/uiauto/checked"
 	"go.chromium.org/tast-tests/cros/local/chrome/uiauto/faillog"
@@ -456,7 +457,7 @@ func CertSettingsPage(ctx context.Context, s *testing.State) {
 		// was shown. After the CA certificate is imported again, the list will be opened
 		// again automatically and it will break the next test. Page reload here will put
 		// all elements to the default state.
-		if reloadErr := cr.Browser().ReloadActiveTab(ctx); reloadErr != nil {
+		if reloadErr := browser.ReloadActiveTab(ctx, tconn); reloadErr != nil {
 			s.Fatal("Failed to reload page after CA import: ", reloadErr)
 		}
 		waitForClientCert(ctx, s)

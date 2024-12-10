@@ -103,3 +103,14 @@ func ActivateTabByTitle(ctx context.Context, tconn *driver.TestConn, title strin
 	}
 	return nil
 }
+
+// ReloadActiveTab reloads the active tab.
+func ReloadActiveTab(ctx context.Context, tconn *driver.TestConn) error {
+	if err := tconn.Eval(ctx, "chrome.tabs.reload()", nil); err != nil {
+		return errors.Wrap(err, "failed to reload tab")
+	}
+	if err := tconn.WaitForExpr(ctx, "document.readyState === 'complete'"); err != nil {
+		return errors.Wrap(err, "failed to wait for the ready state")
+	}
+	return nil
+}

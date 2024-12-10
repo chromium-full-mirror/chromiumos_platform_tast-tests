@@ -9,6 +9,7 @@ import (
 	"time"
 
 	"go.chromium.org/tast-tests/cros/local/chrome"
+	"go.chromium.org/tast-tests/cros/local/chrome/browser"
 	"go.chromium.org/tast-tests/cros/local/input"
 	"go.chromium.org/tast/core/errors"
 	"go.chromium.org/tast/core/testing"
@@ -34,7 +35,7 @@ func reloadCrashedTab(ctx context.Context, cr *chrome.Chrome) (bool, error) {
 
 	if !targetAvailable {
 		testing.ContextLog(ctx, "Reload tab:", tabURL)
-		if err := cr.Browser().ReloadActiveTab(ctx); err != nil {
+		if err := browser.ReloadActiveTab(ctx, tconn); err != nil {
 			return false, errors.Wrap(err, "failed to reload active tab")
 		}
 		if err := waitAllocationForURL(ctx, cr, tabURL); err != nil {

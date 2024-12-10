@@ -13,6 +13,7 @@ import (
 	"go.chromium.org/tast-tests/cros/common/action"
 	"go.chromium.org/tast-tests/cros/local/chrome"
 	"go.chromium.org/tast-tests/cros/local/chrome/ash"
+	"go.chromium.org/tast-tests/cros/local/chrome/browser"
 	"go.chromium.org/tast-tests/cros/local/chrome/uiauto"
 	"go.chromium.org/tast-tests/cros/local/chrome/uiauto/nodewith"
 	"go.chromium.org/tast-tests/cros/local/chrome/uiauto/role"
@@ -600,7 +601,7 @@ func InstallPWAForURL(ctx context.Context, cr *chrome.Chrome, pwaURL string, tim
 	var lastErr error
 	return uiauto.Retry(retryTimes, func(ctx context.Context) error {
 		if lastErr != nil {
-			if err := cr.Browser().ReloadActiveTab(ctx); err != nil {
+			if err := browser.ReloadActiveTab(ctx, tconn); err != nil {
 				return errors.Wrap(err, "failed to reload the tab")
 			}
 			// The page might be usable even if it failed to quiesce.

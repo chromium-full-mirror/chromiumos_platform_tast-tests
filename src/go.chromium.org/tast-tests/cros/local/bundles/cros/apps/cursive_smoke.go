@@ -14,6 +14,7 @@ import (
 	"go.chromium.org/tast-tests/cros/local/chrome"
 	"go.chromium.org/tast-tests/cros/local/chrome/apps/cursive"
 	"go.chromium.org/tast-tests/cros/local/chrome/ash"
+	"go.chromium.org/tast-tests/cros/local/chrome/browser"
 	"go.chromium.org/tast-tests/cros/local/chrome/uiauto"
 	"go.chromium.org/tast-tests/cros/local/chrome/uiauto/faillog"
 	"go.chromium.org/tast-tests/cros/local/chrome/uiauto/nodewith"
@@ -144,7 +145,7 @@ func manualInstallCursive(ctx context.Context, tconn *chrome.TestConn, cr *chrom
 		if err := ui.WithTimeout(30 * time.Second).WaitUntilExists(installIcon)(ctx); err != nil {
 			testing.ContextLog(ctx, "Install button is not shown initially. See b/230413572")
 			testing.ContextLog(ctx, "Refresh page to enable installation")
-			if reloadErr := cr.Browser().ReloadActiveTab(ctx); reloadErr != nil {
+			if reloadErr := browser.ReloadActiveTab(ctx, tconn); reloadErr != nil {
 				return testing.PollBreak(errors.Wrap(reloadErr, "failed to reload page"))
 			}
 			return err

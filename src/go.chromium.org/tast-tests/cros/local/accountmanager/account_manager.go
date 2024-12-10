@@ -15,6 +15,7 @@ import (
 	"go.chromium.org/tast-tests/cros/local/apps"
 	"go.chromium.org/tast-tests/cros/local/chrome"
 	"go.chromium.org/tast-tests/cros/local/chrome/ash"
+	"go.chromium.org/tast-tests/cros/local/chrome/browser"
 	"go.chromium.org/tast-tests/cros/local/chrome/uiauto"
 	"go.chromium.org/tast-tests/cros/local/chrome/uiauto/nodewith"
 	"go.chromium.org/tast-tests/cros/local/chrome/uiauto/ossettings"
@@ -313,7 +314,7 @@ func OpenOneGoogleBar(ctx context.Context, tconn *chrome.TestConn, cr *chrome.Ch
 	if err := openOGB(ctx, tconn, 30*time.Second); err != nil {
 		// The page may have loaded in logged out state: reload and try again.
 		testing.ContextLogf(ctx, "Reloading the active tab, the error was %q", err)
-		cr.Browser().ReloadActiveTab(ctx)
+		browser.ReloadActiveTab(ctx, tconn)
 
 		if err := openOGB(ctx, tconn, LongUITimeout); err != nil {
 			if somethingWentWrongInOGB(ctx, tconn) {

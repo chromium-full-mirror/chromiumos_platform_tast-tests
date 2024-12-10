@@ -419,7 +419,7 @@ func EnsurePWAInstalled(ctx context.Context, cr *chrome.Chrome, permissionOption
 	if err := testing.Poll(ctx, func(ctx context.Context) error {
 		// Wait for longer time after second launch, since it can be delayed on low-end devices.
 		if err := ui.WithTimeout(30 * time.Second).WaitUntilExists(installIcon)(ctx); err != nil {
-			if reloadErr := cr.Browser().ReloadActiveTab(ctx); reloadErr != nil {
+			if reloadErr := browser.ReloadActiveTab(ctx, tconn); reloadErr != nil {
 				return testing.PollBreak(errors.Wrap(reloadErr, "failed to reload page"))
 			}
 			return err

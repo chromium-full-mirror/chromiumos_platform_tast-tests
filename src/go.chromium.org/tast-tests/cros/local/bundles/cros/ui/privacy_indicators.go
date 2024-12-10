@@ -102,7 +102,7 @@ func PrivacyIndicators(ctx context.Context, s *testing.State) {
 	account := nodewith.Role(role.StaticText).NameContaining(`@gmail.com`)
 	if err = ui.WithTimeout(time.Second).WaitUntilExists(account)(ctx); err != nil {
 		s.Log("Reload page to sign in")
-		if err := cr.Browser().ReloadActiveTab(ctx); err != nil {
+		if err := browser.ReloadActiveTab(ctx, tconn); err != nil {
 			s.Fatal("Failed to reload page: ", err)
 		}
 		if err := meetConn.Navigate(ctx, url); err != nil {

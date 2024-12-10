@@ -13,6 +13,7 @@ import (
 	"go.chromium.org/tast-tests/cros/common/policy"
 	"go.chromium.org/tast-tests/cros/common/policy/fakedms"
 	"go.chromium.org/tast-tests/cros/local/chrome"
+	"go.chromium.org/tast-tests/cros/local/chrome/browser"
 	"go.chromium.org/tast-tests/cros/local/chrome/uiauto"
 	"go.chromium.org/tast-tests/cros/local/chrome/uiauto/nodewith"
 	"go.chromium.org/tast-tests/cros/local/chrome/uiauto/role"
@@ -171,7 +172,7 @@ func checkCertificateVisibleInBrowserSettings(ctx context.Context, cr *chrome.Ch
 	return testing.Poll(ctx, func(ctx context.Context) error {
 		node := nodewith.Role(role.StaticText).Name("org-" + certificateName)
 		if err := ui.WithTimeout(3 * time.Second).WaitUntilExists(node)(ctx); err != nil {
-			if err := cr.Browser().ReloadActiveTab(ctx); err != nil {
+			if err := browser.ReloadActiveTab(ctx, tconn); err != nil {
 				return testing.PollBreak(err)
 			}
 			return err // Try again after reloading.

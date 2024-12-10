@@ -75,21 +75,6 @@ func DisableSystrace() TraceOption {
 	return cdputil.DisableSystrace()
 }
 
-// ReloadActiveTab reloads the active tab.
-func (b *Browser) ReloadActiveTab(ctx context.Context) error {
-	tconn, err := b.sess.TestAPIConn(ctx, b.autotestPrivateSupported)
-	if err != nil {
-		return errors.Wrap(err, "failed to create Test API connection")
-	}
-	if err := tconn.Eval(ctx, "chrome.tabs.reload()", nil); err != nil {
-		return errors.Wrap(err, "failed to reload tab")
-	}
-	if err := tconn.WaitForExpr(ctx, "document.readyState === 'complete'"); err != nil {
-		return errors.Wrap(err, "failed to wait for the ready state")
-	}
-	return nil
-}
-
 // CloseWithURL finds all targets with the given url, closes them, and waits
 // until they are closed. Note that if this closes all lacros pages, lacros will
 // exit, and we won't be able to verify closing was done successfully.
