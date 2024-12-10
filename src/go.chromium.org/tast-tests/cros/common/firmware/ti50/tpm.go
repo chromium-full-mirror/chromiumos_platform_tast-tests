@@ -5,6 +5,7 @@
 package ti50
 
 import (
+	"bytes"
 	"context"
 	"encoding/binary"
 	"encoding/hex"
@@ -91,9 +92,9 @@ const (
 
 // TpmHandle allows interacting with GSC's TPM bus with higher level tpm commands until tpm2 lib
 type TpmHandle struct {
-	b        DevBoard
-	Ctx      context.Context
-	Bus      TpmBus
+	b   DevBoard
+	Ctx context.Context
+	Bus TpmBus
 }
 
 // NewTpmHandle create a new TpmHandle that can be used with tpm2 library
@@ -451,6 +452,89 @@ func (t *TpmHandle) TpmvFactoryModeDisable() error {
 	}
 	if errorCode != 0 {
 		return errors.Errorf("FactoryModeDisable command returned error: 0x%x", errorCode)
+	}
+	return nil
+}
+
+const (
+	// ExtendDevBoot is the value extended into PCR0 for dev mode (rec=0, dev=1) - SHA1(0x01|0x00|0x01) + 0s to SHA256 size
+	ExtendDevBoot = "c42ac1c46f1d4e211c735cc7dfad4ff8391110e9000000000000000000000000"
+	// DigestDevBoot is the PCR0 digest value in dev mode
+	DigestDevBoot = "23E14DD9BB51A50E16911F7E11DF1E1AAF0B17134DC739C5653607A1EC8DD37A"
+	// ExtendNormalBoot is the value extended into PCR0 for normal mode (rec=0, dev=0) - SHA1(0x00|0x00|0x01) + 0s to SHA256 size
+	ExtendNormalBoot = "2547cc736e951fa4919853c43ae890861a3b3264000000000000000000000000"
+	// DigestNormalBoot is the PCR0 digest value in normal mode
+	DigestNormalBoot = "89EAF35134B4B3C649F44C0C765B96AEAB8BB34EE83CC7A683C4E53D1581C8C7"
+	// ExtendRecBoot is the value extended into PCR0 for recovery mode (rec=1, dev=0) - SHA1(0x00|0x01|0x00) + 0s to SHA256 size
+	ExtendRecBoot = "62571891215b4efc1ceab744ce59dd0b66ea6f73000000000000000000000000"
+	// DigestRecBoot is the PCR0 digest value in rec mode
+	DigestRecBoot = "9F9EA866D3F34FE3A3112AE9CB1FBABC6FFE8CD261D42493BC6842A9E4F93B3D"
+	// ExtendRecDevBoot is the value extended into PCR0 for recovery + dev mode (rec=1, dev=1) -  SHA1(0x01|0x01|0x00) + 0s to SHA256 size
+	ExtendRecDevBoot = "47ec8d98366433dc002e7721c9e37d5067547937000000000000000000000000"
+	// DigestRecDevBoot is the PCR0 digest value in rec + dev mode
+	DigestRecDevBoot = "2A7580E5DA289546F4D2E0509CC6DE155EA131818954D36D49E027FD42B8C8F8"
+	// ZeroPCR is the uninitialized PCR0 value
+	ZeroPCR = "0000000000000000000000000000000000000000000000000000000000000000"
+)
+
+// TpmvPCR0Read reads the contents of PCR0
+func (t *TpmHandle) TpmvPCR0Read() (*tpm2.PCRReadResponse, error) {
+	pcrRead := tpm2.PCRRead{
+		PCRSelectionIn: tpm2.TPMLPCRSelection{
+			PCRSelections: []tpm2.TPMSPCRSelection{
+				{
+					Hash:      tpm2.TPMAlgSHA256,
+					PCRSelect: []byte{0x01, 0x00, 0x00},
+				},
+			},
+		},
+	}
+	return pcrRead.Execute(t)
+}
+
+// TpmvPCR0Extend extends the value into PCR0
+func (t *TpmHandle) TpmvPCR0Extend(extendDigest string) error {
+	extendBytes, err := hex.DecodeString(extendDigest)
+	if err != nil {
+		return errors.Wrap(err, "failed to decode extend value")
+	}
+	authHandle := tpm2.AuthHandle{
+		Handle: tpm2.TPMHandle(0),
+		Auth:   tpm2.PasswordAuth(nil),
+	}
+	pcrExtend := tpm2.PCRExtend{
+		PCRHandle: authHandle,
+		Digests: tpm2.TPMLDigestValues{
+			Digests: []tpm2.TPMTHA{
+				{
+					HashAlg: tpm2.TPMAlgSHA256,
+					Digest:  extendBytes,
+				},
+			},
+		},
+	}
+	if _, err := pcrExtend.Execute(t); err != nil {
+		return errors.Wrap(err, "PCR extend failed")
+	}
+	return nil
+}
+
+// TpmvPCR0ExtendCheckDigest extends PCR0 and checks that the new value it reads matches the expected digest
+func (t *TpmHandle) TpmvPCR0ExtendCheckDigest(extendDigest, expectedDigest string) error {
+	expectedBytes, err := hex.DecodeString(expectedDigest)
+	if err != nil {
+		return errors.Wrap(err, "failed to decode expected digest")
+	}
+	err = t.TpmvPCR0Extend(extendDigest)
+	if err != nil {
+		return errors.Wrap(err, "failed to extend PCR0")
+	}
+	read, err := t.TpmvPCR0Read()
+	if err != nil {
+		return errors.Wrap(err, "PCR read failed")
+	}
+	if !bytes.Equal(read.PCRValues.Digests[0].Buffer, expectedBytes) {
+		return errors.Wrap(err, "PCR0 did not match the expected value")
 	}
 	return nil
 }
