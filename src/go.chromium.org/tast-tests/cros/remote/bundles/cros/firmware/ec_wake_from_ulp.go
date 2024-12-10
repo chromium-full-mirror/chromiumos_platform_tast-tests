@@ -127,6 +127,8 @@ func init() {
 				"sundance",
 				"teliks",
 				"teliks360",
+				"telith",
+				"teltic",
 				"uldren",
 				"uldren360",
 				"xivu",
