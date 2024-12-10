@@ -23,9 +23,10 @@ func init() {
 		Func: SimLockSettingOnOff,
 		Desc: "Checks that SIM Lock in Settings PIN locks and unlocks the SIM",
 		Contacts: []string{
-			"cros-device-enablement@google.com",
+			"alfredyu@cienet.com",
+			"chromeos-connectivity-cienet-external@google.com",
 		},
-		BugComponent:   "b:1131774", // // ChromeOS > Software > Fundamentals > Device Enablement > Connectivity > Cellular
+		BugComponent:   "b:1578688", // ChromeOS > External > Cienet > Manual Test Automation > Test stabilization
 		LifeCycleStage: testing.LifeCycleOwnerMonitored,
 		SoftwareDeps:   []string{"chrome"},
 		Attr:           []string{"group:cellular", "cellular_sim_pinlock", "cellular_e2e"},

@@ -23,9 +23,10 @@ func init() {
 		Func: HotspotAbortEnable,
 		Desc: "Test hotspot enable operation can be aborted",
 		Contacts: []string{
-			"cros-device-enablement@google.com",
+			"alfredyu@cienet.com",
+			"chromeos-connectivity-cienet-external@google.com",
 		},
-		BugComponent:   "b:1281224", // ChromeOS > Software > Fundamentals > Device Enablement > Connectivity > Hotspot
+		BugComponent:   "b:1578688", // ChromeOS > External > Cienet > Manual Test Automation > Test stabilization
 		LifeCycleStage: testing.LifeCycleOwnerMonitored,
 		Attr:           []string{"group:cellular", "cellular_sim_active", "cellular_carrier_dependent"},
 		HardwareDeps:   hwdep.D(hwdep.WifiSAP()),
