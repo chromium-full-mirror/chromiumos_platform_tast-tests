@@ -442,6 +442,12 @@ func addExtraCheckForChromeOSKernelCI(kcc *kernelConfigCheck, ver *sysutil.Kerne
 func addExtraCheckForChromeOSFlex(kcc *kernelConfigCheck, ver *sysutil.KernelVersion,
 	arch string) *kernelConfigCheck {
 
+	// Required for UEFI.
+	kcc.builtin = append(kcc.builtin, "EFIVAR_FS")
+
+	// Required for Intel Compute Stick (b/267515944).
+	kcc.builtin = append(kcc.builtin, "I2C_DESIGNWARE_BAYTRAIL")
+
 	// Security: ensure the lockdown LSM is enabled and enforced in
 	// integrity mode.
 	kcc.builtin = append(kcc.builtin, "LOCK_DOWN_KERNEL_FORCE_INTEGRITY")
