@@ -22,12 +22,11 @@ import (
 
 // Remap changes the action performed by a modifier key.
 func Remap(ctx context.Context, ui *uiauto.Context, from, to string) error {
-	keyRow := nodewith.Name(from).Role(role.GenericContainer)
-	key := nodewith.Name(from).Role(
-		role.ComboBoxSelect).Ancestor(keyRow)
-	option := nodewith.Name(to).Role(role.MenuListOption).Ancestor(keyRow)
+	dropdown := nodewith.Name(from).Role(role.ComboBoxSelect)
+	option := nodewith.Name(to).Role(role.MenuListOption).Ancestor(dropdown)
 	if err := uiauto.Combine(fmt.Sprintf("choose %q option", to),
-		ui.LeftClickUntil(key, ui.WithTimeout(
+		ui.WaitUntilExists(option),
+		ui.LeftClickUntil(dropdown, ui.WithTimeout(
 			2*time.Second).WaitUntilExists(option)),
 		ui.LeftClick(option),
 		ui.WaitUntilExists(option),
