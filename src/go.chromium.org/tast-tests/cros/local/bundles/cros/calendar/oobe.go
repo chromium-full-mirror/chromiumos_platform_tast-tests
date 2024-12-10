@@ -39,6 +39,7 @@ func init() {
 			"group:complementary",
 			"group:hw_agnostic",
 			"group:release-health",
+			"release-health_ui",
 		},
 		SoftwareDeps: []string{"chrome"},
 		SearchFlags: []*testing.StringPair{{
