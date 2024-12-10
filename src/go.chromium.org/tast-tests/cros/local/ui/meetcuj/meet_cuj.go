@@ -405,10 +405,6 @@ func Run(ctx context.Context, meet MeetTest, cr *chrome.Chrome, testCaseVar func
 		}
 	}()
 
-	if err := cuj.WaitForValidAccountInCookieJar(ctx, cr); err != nil {
-		return pv, errors.Wrap(err, "failed to wait for valid account in cookie jar")
-	}
-
 	// Open chrome://webrtc-internals now so it will collect data on the meeting's streams.
 	webrtcInternals, err := recorder.NewConn(ctx, cr, "WebRTC_Internals", "chrome://webrtc-internals", browser.WithNewWindow())
 	if err != nil {

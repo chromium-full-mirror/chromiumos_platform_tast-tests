@@ -125,10 +125,6 @@ func GoogleSlidesCUJ(ctx context.Context, s *testing.State) {
 
 	defer faillog.DumpUITreeWithScreenshotOnError(closeCtx, s.OutDir(), s.HasError, cr, "ui_dump")
 
-	if err := cuj.WaitForValidAccountInCookieJar(ctx, cr); err != nil {
-		s.Fatal("Failed to wait for valid account in cookie jar: ", err)
-	}
-
 	windows, err := ash.GetAllWindows(ctx, tconn)
 	if err != nil {
 		s.Fatal("Failed to get all windows: ", err)

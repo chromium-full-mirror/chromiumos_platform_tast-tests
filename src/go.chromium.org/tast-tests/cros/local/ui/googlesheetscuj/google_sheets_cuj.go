@@ -173,10 +173,6 @@ func Run(ctx context.Context, cr *chrome.Chrome, testParam TestParam, outDir, sy
 		return nil, errors.Wrap(err, "failed to get the primary display info")
 	}
 
-	if err := cuj.WaitForValidAccountInCookieJar(ctx, cr); err != nil {
-		return nil, errors.Wrap(err, "failed to wait for valid account in cookie jar")
-	}
-
 	copySheetsStartTime := time.Now()
 	sheetURL, err := copySheets(ctx, cr, tconn, sampleSheetURL, outDir)
 	if err != nil {
