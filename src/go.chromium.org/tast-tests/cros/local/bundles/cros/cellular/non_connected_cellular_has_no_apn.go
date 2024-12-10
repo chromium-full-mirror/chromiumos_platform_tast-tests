@@ -26,18 +26,18 @@ type nonConnectedCellularHasNoApnTestParam struct {
 
 func init() {
 	testing.AddTest(&testing.Test{
-		Func:           NonConnectedCellularHasNoApn,
-		LifeCycleStage: testing.LifeCycleInDevelopment,
-		Desc:           "Tests that no APNs are shown for cellular networks that are not connected",
+		Func: NonConnectedCellularHasNoApn,
+		Desc: "Tests that no APNs are shown for cellular networks that are not connected",
 		Contacts: []string{
-			"alfredyu@cienet.com",
-			"chromeos-connectivity-cienet-external@google.com",
+			"cros-device-enablement@google.com",
+			"chadduffin@google.com",
 		},
-		BugComponent: "b:1578688", // ChromeOS > External > Cienet > Manual Test Automation > Test stabilization
-		Attr:         []string{"group:cellular", "cellular_unstable", "cellular_sim_active", "cellular_carrier_agnostic"},
-		SoftwareDeps: []string{"chrome"},
-		Fixture:      "cellularEnforceConnectionLocal",
-		Timeout:      3 * time.Minute,
+		BugComponent:   "b:1131774", // ChromeOS > Software > Fundamentals > Device Enablement > Connectivity > Cellular
+		LifeCycleStage: testing.LifeCycleOwnerMonitored,
+		Attr:           []string{"group:cellular", "cellular_sim_active", "cellular_carrier_agnostic"},
+		SoftwareDeps:   []string{"chrome"},
+		Fixture:        "cellularEnforceConnectionLocal",
+		Timeout:        3 * time.Minute,
 		Params: []testing.Param{{
 			Name: "logged_out",
 			Val: nonConnectedCellularHasNoApnTestParam{

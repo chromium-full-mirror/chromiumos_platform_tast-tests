@@ -33,16 +33,16 @@ type enableHotspotTestParam struct {
 
 func init() {
 	testing.AddTest(&testing.Test{
-		Func:           EnableHotspotWithOSSettings,
-		LifeCycleStage: testing.LifeCycleInDevelopment,
-		Desc:           "Tests that hotspot can be turned on and off with os settings",
+		Func: EnableHotspotWithOSSettings,
+		Desc: "Tests that hotspot can be turned on and off with os settings",
 		Contacts: []string{
-			"alfredyu@cienet.com",
-			"chromeos-connectivity-cienet-external@google.com",
+			"cros-device-enablement@google.com",
+			"jiajunz@google.com",
 		},
-		BugComponent: "b:1578688", // ChromeOS > External > Cienet > Manual Test Automation > Test stabilization
-		Attr:         []string{"group:wificell_cross_device", "wificell_cross_device_sap", "wificell_cross_device_unstable"},
-		TestBedDeps:  []string{tbdep.Wificell, tbdep.PeripheralWifiStateWorking},
+		BugComponent:   "b:1131774", // ChromeOS > Software > Fundamentals > Device Enablement > Connectivity > Cellular
+		LifeCycleStage: testing.LifeCycleOwnerMonitored,
+		Attr:           []string{"group:wificell_cross_device", "wificell_cross_device_sap"},
+		TestBedDeps:    []string{tbdep.Wificell, tbdep.PeripheralWifiStateWorking},
 		ServiceDeps: []string{
 			wificell.BrowserChromeServiceName,
 			wificell.OsSettingsServiceName,
