@@ -167,6 +167,67 @@ func BSSTMRequest(ctx context.Context, s *testing.State) {
 	tf.CollectIntelFirmwareDumpOnError = true
 
 	runTest := func(ctx context.Context, s *testing.State, waitForScan bool) {
+		// TODO(b/377913176): Remove the intel_wifi tracing.
+		devInfo, err := tf.WifiClient().GetDeviceInfo(ctx, &empty.Empty{})
+		if err != nil {
+			s.Log("Failed to get the WiFi device information: ", err)
+		}
+		modelName, err := tf.DUTConn(wificell.DefaultDUT).CommandContext(ctx, "cros_config", "/", "name").Output()
+		if err != nil {
+			s.Log("Failed to get the model name: ", err)
+		}
+		boardName := string(bytes.TrimSuffix(modelName, []byte{'\n'}))
+		if devInfo.Vendor == wificell.IntelVendorNum && (boardName == "riven" || boardName == "karis") {
+			isTracingInstanceCreated := true
+			isTracingInstanceStarted := true
+			traceCmdEvents := "iwlwifi_data,iwlwifi_dev_tx,iwlwifi_dev_rx,iwlwifi,iwlwifi_msg,iwlwifi_ucode"
+			instanceName := "intel_wifi"
+			cl := tf.RPC()
+			_, err = tracing.NewRemoteInstance(ctx, cl, instanceName,
+				tracing.CPUBufferKiB(10240),
+				tracing.InitialStop(),
+				tracing.EnableEvents(strings.Split(traceCmdEvents, ",")...))
+			if err != nil {
+				s.Log("Failed to initialize TraceCmd: ", err)
+				isTracingInstanceCreated = false
+			}
+			defer func(ctx context.Context) {
+				if isTracingInstanceCreated {
+					if err = tracing.CleanupRemoteInstance(ctx, cl, instanceName); err != nil {
+						s.Log("Failed to clean the tracing remote instance: ", err)
+					}
+				}
+			}(ctx)
+			ctx, cancel := ctxutil.Shorten(ctx, 3*time.Second)
+			defer cancel()
+
+			if err := tracing.StartRemoteInstanceTrace(ctx, cl, instanceName); err != nil {
+				s.Log("Failed to start tracing: ", err)
+				isTracingInstanceStarted = false
+			}
+			defer func(ctx context.Context) {
+				if isTracingInstanceStarted {
+					testScantype := "waifForScanFalse"
+					if waitForScan {
+						testScantype = "waifForScanTrue"
+					}
+					if s.HasError() {
+						dest := fmt.Sprintf("%s/trace_%s_%s.dat", s.OutDir(), instanceName, testScantype)
+						if err := tracing.SaveRemoteInstanceTraceData(ctx, cl, instanceName,
+							func(src string) error {
+								return s.DUT().GetFile(ctx, src, dest)
+							}); err != nil {
+							s.Log("Failed to copy the data file from DUT: ", err)
+						} else {
+							s.Logf("Save trace data into %q", dest)
+						}
+					}
+				}
+			}(ctx)
+			ctx, cancel = ctxutil.Shorten(ctx, 3*time.Second)
+			defer cancel()
+		}
+
 		apOpts1 := []hostapd.Option{hostapd.Mode(hostapd.Mode80211nMixed), hostapd.HTCaps(hostapd.HTCapHT20), hostapd.Channel(1), hostapd.SpectrumManagement()}
 		apOpts2 := []hostapd.Option{hostapd.Mode(hostapd.Mode80211nMixed), hostapd.HTCaps(hostapd.HTCapHT20), hostapd.Channel(48), hostapd.SpectrumManagement()}
 		params := s.Param().(bssTMReqTestCase)
@@ -257,67 +318,6 @@ func BSSTMRequest(ctx context.Context, s *testing.State) {
 		err = tf.AddToBSSIDIgnoreDUT(ctx, wificell.DefaultDUT, roamBSSID)
 		if err != nil {
 			s.Fatal("Failed to add wpa BSSID_IGNORE: ", err)
-		}
-
-		// TODO(b/377913176): Remove the intel_wifi tracing.
-		devInfo, err := tf.WifiClient().GetDeviceInfo(ctx, &empty.Empty{})
-		if err != nil {
-			s.Log("Failed to get the WiFi device information: ", err)
-		}
-		modelName, err := tf.DUTConn(wificell.DefaultDUT).CommandContext(ctx, "cros_config", "/", "name").Output()
-		if err != nil {
-			s.Log("Failed to get the model name: ", err)
-		}
-		boardName := string(bytes.TrimSuffix(modelName, []byte{'\n'}))
-		if devInfo.Vendor == wificell.IntelVendorNum && (boardName == "riven" || boardName == "karis") {
-			isTracingInstanceCreated := true
-			isTracingInstanceStarted := true
-			traceCmdEvents := "iwlwifi_data,iwlwifi_dev_tx,iwlwifi_dev_rx,iwlwifi,iwlwifi_msg,iwlwifi_ucode"
-			instanceName := "intel_wifi"
-			cl := tf.RPC()
-			_, err = tracing.NewRemoteInstance(ctx, cl, instanceName,
-				tracing.CPUBufferKiB(10240),
-				tracing.InitialStop(),
-				tracing.EnableEvents(strings.Split(traceCmdEvents, ",")...))
-			if err != nil {
-				s.Log("Failed to initialize TraceCmd: ", err)
-				isTracingInstanceCreated = false
-			}
-			defer func(ctx context.Context) {
-				if isTracingInstanceCreated {
-					if err = tracing.CleanupRemoteInstance(ctx, cl, instanceName); err != nil {
-						s.Log("Failed to clean the tracing remote instance: ", err)
-					}
-				}
-			}(ctx)
-			ctx, cancel = ctxutil.Shorten(ctx, 3*time.Second)
-			defer cancel()
-
-			if err := tracing.StartRemoteInstanceTrace(ctx, cl, instanceName); err != nil {
-				s.Log("Failed to start tracing: ", err)
-				isTracingInstanceStarted = false
-			}
-			defer func(ctx context.Context) {
-				if isTracingInstanceStarted {
-					testScantype := "waifForScanFalse"
-					if waitForScan {
-						testScantype = "waifForScanTrue"
-					}
-					if s.HasError() {
-						dest := fmt.Sprintf("%s/trace_%s_%s.dat", s.OutDir(), instanceName, testScantype)
-						if err := tracing.SaveRemoteInstanceTraceData(ctx, cl, instanceName,
-							func(src string) error {
-								return s.DUT().GetFile(ctx, src, dest)
-							}); err != nil {
-							s.Log("Failed to copy the data file from DUT: ", err)
-						} else {
-							s.Logf("Save trace data into %q", dest)
-						}
-					}
-				}
-			}(ctx)
-			ctx, cancel = ctxutil.Shorten(ctx, 3*time.Second)
-			defer cancel()
 		}
 
 		if err := rt.SendBSSTMReqAndWaitConnected(ctx, wificell.DefaultDUT, roamBSSID, fromBSSID, rt.AP2(), rt.AP1(), req, rt.ServicePathOfDUT(wificell.DefaultDUT), false); err != nil {
