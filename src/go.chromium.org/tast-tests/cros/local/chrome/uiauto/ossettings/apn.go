@@ -58,18 +58,25 @@ func LaunchAtMobileData(ctx context.Context, tconn *chrome.TestConn, cr *chrome.
 // WaitForRefreshCellularProfile waits until the cellular is no longer inhibited and refresh profile completes.
 func (s *OSSettings) WaitForRefreshCellularProfile(cr *chrome.Chrome) uiauto.Action {
 	return func(ctx context.Context) error {
-		cleanupCtx := ctx
-		ctx, cancel := ctxutil.Shorten(ctx, 5*time.Second)
-		defer cancel()
+		// Isolate the step to leverage `defer` pattern.
+		// The "Cros Network Config" page must be closed before calling "WaitUntilRefreshCellularProfileCompletes".
+		if err := func(ctx context.Context) error {
+			cleanupCtx := ctx
+			ctx, cancel := ctxutil.Shorten(ctx, 5*time.Second)
+			defer cancel()
 
-		netConn, err := netconfig.CreateLoggedInCrosNetworkConfig(ctx, cr)
-		if err != nil {
-			return errors.Wrap(err, "failed to get network Mojo Object")
-		}
-		defer netConn.Close(cleanupCtx)
+			netConn, err := netconfig.CreateLoggedInCrosNetworkConfig(ctx, cr)
+			if err != nil {
+				return errors.Wrap(err, "failed to get network Mojo Object")
+			}
+			defer netConn.Close(cleanupCtx)
 
-		if err := netConn.WaitForCellularDeviceUninhibited(ctx); err != nil {
-			return errors.Wrap(err, "failed to get uninhibited cellular device")
+			if err := netConn.WaitForCellularDeviceUninhibited(ctx); err != nil {
+				return errors.Wrap(err, "failed to get uninhibited cellular device")
+			}
+			return nil
+		}(ctx); err != nil {
+			return err
 		}
 
 		return WaitUntilRefreshCellularProfileCompletes(ctx, s.tconn)
@@ -412,8 +419,8 @@ func (s *OSSettings) SelectAPNFromDialog(apnName string) uiauto.Action {
 
 	return uiauto.Combine("add known APN",
 		s.WithTimeout(3*time.Second).WaitUntilExists(apnSelection),
-		s.LeftClick(apnSelection),
-		s.LeftClick(ConfirmButton.Ancestor(chooseApnDialog)),
+		s.DoDefault(apnSelection),
+		s.DoDefault(ConfirmButton.Ancestor(chooseApnDialog)),
 		s.WithTimeout(3*time.Second).WaitUntilGone(ConfirmButton.Ancestor(chooseApnDialog)),
 		s.EnsureGoneFor(ConfirmButton.Ancestor(chooseApnDialog), 5*time.Second),
 		s.WaitUntilGone(autoDetectedText),

@@ -99,9 +99,19 @@ func DiscoverApns(ctx context.Context, s *testing.State) {
 		s.Fatal("Failed to go to apn subpage: ", err)
 	}
 
+	ui := uiauto.New(tconn)
 	if err := uiauto.Combine("select and verify the first APN",
+		// Settings app should be at APN page at this point.
 		settings.OpenDiscoverAPNDialogFromAPNSubpage(),
 		settings.SelectAPNFromDialog(firstAPNName),
+		// Back to network details page to connect to the network.
+		settings.DoDefault(ossettings.BackArrowBtn),
+		ui.WithTimeout(ossettings.WaitForConnectionTimeout).RetryUntil(
+			settings.MaybeConnectToApn(cr),
+			settings.WaitUntilExists(ossettings.ConnectedStatus),
+		),
+		// Navigate to the APN page to verify that the APN page UI reports it's connected to the newly added APN correctly.
+		settings.NavigateToApnPage(cr),
 		settings.VerifyApnConnected(cr, firstAPNName, "ui"),
 		verifyOnlyThisAPNEnabled(settings, firstAPNName),
 	)(ctx); err != nil {
