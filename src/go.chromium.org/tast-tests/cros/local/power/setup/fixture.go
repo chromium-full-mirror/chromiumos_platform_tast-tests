@@ -11,6 +11,8 @@ import (
 	"time"
 	"unicode"
 
+	cf "go.chromium.org/tast-tests/cros/common/fixture"
+	"go.chromium.org/tast-tests/cros/common/policy/fakedms"
 	cp "go.chromium.org/tast-tests/cros/common/power"
 	"go.chromium.org/tast-tests/cros/common/utils"
 	"go.chromium.org/tast-tests/cros/local/arc"
@@ -18,6 +20,7 @@ import (
 	"go.chromium.org/tast-tests/cros/local/audio/fixture"
 	"go.chromium.org/tast-tests/cros/local/chrome"
 	"go.chromium.org/tast-tests/cros/local/chrome/ash"
+	"go.chromium.org/tast-tests/cros/local/policyutil/fixtures"
 	"go.chromium.org/tast-tests/cros/local/power"
 	"go.chromium.org/tast/core/ctxutil"
 	"go.chromium.org/tast/core/errors"
@@ -84,6 +87,10 @@ const (
 	// Mahi
 	PowerAshMahi            = "powerAshMahi"
 	PowerAshMahiAndSimplify = "powerAshMahiAndSimplify"
+
+	// Regmon
+	PowerAshRegmonEnabled  = "powerAshRegmonEnabled"
+	PowerAshRegmonDisabled = "powerAshRegmonDisabled"
 )
 
 // PowerFixtureOptions describes options used by the fixture only.
@@ -812,6 +819,82 @@ func init() {
 		PreTestTimeout:  PreTestTimeout,
 		PostTestTimeout: PostTestTimeout,
 	})
+
+	testing.AddFixture(&testing.Fixture{
+		Name:         PowerAshRegmonEnabled,
+		Desc:         "Fixture with Regmon feature enabled",
+		BugComponent: "b:1129862",
+		Contacts: []string{
+			"dp-chromeos-eng@google.com",
+			"chiav@google.com",
+		},
+		Impl: NewPowerUIFixture(PowerTestOptions{
+			NightLight:         DisableNightLight,
+			DarkTheme:          EnableLightTheme,
+			KeyboardBrightness: SetKbBrightnessToZero,
+		}, PowerFixtureOptions{
+			BrowserExtraOpts: []chrome.Option{
+				// Fake login, to also support setting policies.
+				chrome.FakeLogin(chrome.Creds{User: fixtures.Username, Pass: fixtures.Password}),
+				// Enable Regmon feature flags.
+				chrome.ExtraArgs("--enable-features=CrOSLateBootRegmonPolicyMonitoringEnabled,NetworkAnnotationMonitoring"),
+			},
+			ExtraOptsFunc: func(ctx context.Context, s *testing.FixtState) ([]chrome.Option, error) {
+				fdms, ok := s.ParentValue().(*fakedms.FakeDMS)
+				if !ok {
+					s.Fatal("Parent is not a FakeDMS fixture")
+				}
+				return []chrome.Option{
+					// FakeDMS for setting policies.
+					chrome.DMSPolicy(fdms.URL),
+				}, nil
+			},
+		}),
+		SetUpTimeout:    SetUpTimeout,
+		ResetTimeout:    ResetTimeout,
+		TearDownTimeout: TearDownTimeout,
+		PreTestTimeout:  PreTestTimeout,
+		PostTestTimeout: PostTestTimeout,
+		Parent:          cf.FakeDMS, // Allow setting policies
+	})
+
+	testing.AddFixture(&testing.Fixture{
+		Name:         PowerAshRegmonDisabled,
+		Desc:         "Fixture with Regmon feature disabled",
+		BugComponent: "b:1129862",
+		Contacts: []string{
+			"dp-chromeos-eng@google.com",
+			"chiav@google.com",
+		},
+		Impl: NewPowerUIFixture(PowerTestOptions{
+			NightLight:         DisableNightLight,
+			DarkTheme:          EnableLightTheme,
+			KeyboardBrightness: SetKbBrightnessToZero,
+		}, PowerFixtureOptions{
+			BrowserExtraOpts: []chrome.Option{
+				// Fake login, to also support setting policies.
+				chrome.FakeLogin(chrome.Creds{User: fixtures.Username, Pass: fixtures.Password}),
+				// Enable Regmon feature flags.
+				chrome.ExtraArgs("--disable-features=CrOSLateBootRegmonPolicyMonitoringEnabled,NetworkAnnotationMonitoring"),
+			},
+			ExtraOptsFunc: func(ctx context.Context, s *testing.FixtState) ([]chrome.Option, error) {
+				fdms, ok := s.ParentValue().(*fakedms.FakeDMS)
+				if !ok {
+					s.Fatal("Parent is not a FakeDMS fixture")
+				}
+				return []chrome.Option{
+					// FakeDMS for setting policies.
+					chrome.DMSPolicy(fdms.URL),
+				}, nil
+			},
+		}),
+		SetUpTimeout:    SetUpTimeout,
+		ResetTimeout:    ResetTimeout,
+		TearDownTimeout: TearDownTimeout,
+		PreTestTimeout:  PreTestTimeout,
+		PostTestTimeout: PostTestTimeout,
+		Parent:          cf.FakeDMS, // Allow setting policies
+	})
 }
 
 type powerNoUIFixture struct {
@@ -954,6 +1037,7 @@ type powerUIFixture struct {
 	cr          *chrome.Chrome
 	arc         *arc.ARC
 	arcSnapshot *arc.Snapshot
+	fdms        *fakedms.FakeDMS
 	logRecorder *power.LogRecorder
 	cleanup     func(context.Context) error
 }
@@ -963,6 +1047,7 @@ type PowerUIFixtureData struct {
 	Discharge bool
 	Cr        *chrome.Chrome
 	ARC       *arc.ARC
+	Fdms      *fakedms.FakeDMS
 }
 
 // Chrome returns Chrome. This adds support for chrome.HasChrome interface.
@@ -1105,7 +1190,10 @@ func (f *powerUIFixture) SetUp(ctx context.Context, s *testing.FixtState) interf
 	f.arc = a
 	f.cleanup = cleanup
 
-	return PowerUIFixtureData{Discharge: discharge, Cr: f.cr, ARC: f.arc}
+	fdms, _ := s.ParentValue().(*fakedms.FakeDMS)
+	f.fdms = fdms
+
+	return PowerUIFixtureData{Discharge: discharge, Cr: f.cr, ARC: f.arc, Fdms: f.fdms}
 }
 
 func (f *powerUIFixture) TearDown(ctx context.Context, s *testing.FixtState) {
