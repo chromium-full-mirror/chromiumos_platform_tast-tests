@@ -9,6 +9,7 @@ import (
 	"strconv"
 	"time"
 
+	"go.chromium.org/tast-tests/cros/common/servo"
 	"go.chromium.org/tast-tests/cros/common/tbdep"
 	"go.chromium.org/tast-tests/cros/remote/firmware"
 	"go.chromium.org/tast-tests/cros/remote/firmware/fixture"
@@ -59,6 +60,10 @@ func ECPDCCD(ctx context.Context, s *testing.State) {
 
 	if err := firmware.SetupPDTester(ctx, h, testParams); err != nil {
 		s.Fatal("Failed to configure Servo for PD testing: ", err)
+	}
+
+	if err := h.Servo.SetOnOff(ctx, servo.CCDKeepaliveEn, servo.Off); err != nil {
+		s.Fatal("Failed to disable ccd keep alive: ", err)
 	}
 
 	//TODO(b/343535169): different gsc chips seems to have different voltage thresholds,
