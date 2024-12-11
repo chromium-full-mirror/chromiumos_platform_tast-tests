@@ -47,6 +47,9 @@ func USBResumeFromSuspend(ctx context.Context, s *testing.State) {
 	if err := h.RequireConfig(ctx); err != nil {
 		s.Fatal("Failed to create config: ", err)
 	}
+	if err := h.Servo.ToggleOffOn(ctx, servo.InitKeyboard); err != nil {
+		s.Fatal("Failed to turn on internal keyboard: ", err)
+	}
 
 	if err := h.RequireRPCClient(ctx); err != nil {
 		s.Fatal("Failed to connect to the RPC service on the DUT: ", err)
