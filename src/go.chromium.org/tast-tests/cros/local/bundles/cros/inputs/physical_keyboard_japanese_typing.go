@@ -388,10 +388,12 @@ func PhysicalKeyboardJapaneseTyping(ctx context.Context, s *testing.State) {
 				kb.AccelAction("Ctrl+Down"),
 				util.WaitForFieldTextToBe(tconn, inputField.Finder(), "天気がいい"),
 				// Shrink the segment so there's two segments: い|い
-				// Then convert it to Half Width Latin
+				// Then convert the first segment to Half Width Latin.
 				kb.AccelAction("Shift+Left"),
 				kb.AccelAction("Ctrl+t"),
+				// Then convert the second segment to Hiragana.
 				kb.AccelAction("Ctrl+n"),
+				kb.AccelAction("Ctrl+u"),
 				util.WaitForFieldTextToBe(tconn, inputField.Finder(), "天気がiい"),
 				// Convert the final segment (い) to Katakana.
 				kb.AccelAction("Ctrl+i"),
