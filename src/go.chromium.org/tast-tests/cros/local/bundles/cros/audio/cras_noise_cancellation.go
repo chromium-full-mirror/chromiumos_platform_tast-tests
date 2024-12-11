@@ -36,7 +36,7 @@ func init() {
 			"release-health_audio",
 		},
 		Timeout:      3 * time.Minute,
-		SoftwareDeps: []string{"chrome"},
+		SoftwareDeps: []string{"chrome", "dlc", "cros_internal"},
 		Params: []testing.Param{
 			{
 				Name: "no_effects",
