@@ -124,8 +124,8 @@ func (c *CitrixService) LoginCitrix(ctx context.Context, req *empty.Empty) (*emp
 		return nil, errors.Wrap(err, "failed to login to the Citrix application")
 	}
 	c.login = true
-	if err := citrix.WaitForDesktop(c.ud, c.dataPath)(ctx); err != nil {
-		return nil, errors.Wrap(err, "failed to wait for desktop")
+	if err := citrix.EnterDesktop(c.tconn, c.ud, c.dataPath)(ctx); err != nil {
+		return nil, errors.Wrap(err, "failed to enter desktop")
 	}
 
 	return &empty.Empty{}, nil

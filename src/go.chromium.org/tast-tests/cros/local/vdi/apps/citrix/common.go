@@ -13,6 +13,8 @@ import (
 
 	"go.chromium.org/tast-tests/cros/local/chrome"
 	"go.chromium.org/tast-tests/cros/local/chrome/uiauto"
+	"go.chromium.org/tast-tests/cros/local/chrome/uiauto/nodewith"
+	"go.chromium.org/tast-tests/cros/local/chrome/uiauto/role"
 	"go.chromium.org/tast-tests/cros/local/input"
 	"go.chromium.org/tast-tests/cros/local/uidetection"
 	"go.chromium.org/tast/core/errors"
@@ -30,6 +32,20 @@ func ShowDesktop(ud *uidetection.Context, dataPath func(string) string) uiauto.A
 			ud.LeftClick(desktopText),
 			WaitForDesktop(ud, dataPath),
 		))
+}
+
+// EnterDesktop enters the Citrix desktop.
+func EnterDesktop(tconn *chrome.TestConn, ud *uidetection.Context, dataPath func(string) string) uiauto.Action {
+	ui := uiauto.New(tconn)
+	desktopText := nodewith.Name("Desktop").Role(role.StaticText).First()
+	launchingDesktopText := nodewith.Name("Launching desktop...").Role(role.StaticText).First()
+	return uiauto.NamedCombine("enter desktop",
+		ui.WaitUntilAnyExists(desktopText, launchingDesktopText),
+		uiauto.IfSuccessThen(ui.Exists(desktopText), ui.DoDefault(desktopText)),
+		ui.WaitUntilExists(launchingDesktopText),
+		ui.WaitUntilGone(launchingDesktopText),
+		WaitForDesktop(ud, dataPath),
+	)
 }
 
 // WaitForDesktop waits for desktop to be visible.
