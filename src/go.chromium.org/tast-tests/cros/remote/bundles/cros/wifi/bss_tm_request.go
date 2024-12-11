@@ -224,7 +224,7 @@ func BSSTMRequest(ctx context.Context, s *testing.State) {
 					}
 				}
 			}(ctx)
-			ctx, cancel = ctxutil.Shorten(ctx, 3*time.Second)
+			_, cancel = ctxutil.Shorten(ctx, 3*time.Second)
 			defer cancel()
 		}
 

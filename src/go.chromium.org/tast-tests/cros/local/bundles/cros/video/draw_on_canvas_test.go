@@ -77,7 +77,7 @@ func TestDrawOnCanvasConfig(t *testing.T) {
 
 	// Exotic cropping variant.
 	params = append(params, drawOnCanvasTestParamData{
-		Name:       fmt.Sprintf("h264_360p_exotic_crop_bt601_limited_srgb"),
+		Name:       "h264_360p_exotic_crop_bt601_limited_srgb",
 		FilePrefix: "still-colors-720x480-cropped-to-640x360-bt601-limited-srgb.h264",
 	})
 
