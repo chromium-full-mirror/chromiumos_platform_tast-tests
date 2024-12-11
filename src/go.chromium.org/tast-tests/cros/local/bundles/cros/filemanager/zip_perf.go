@@ -31,9 +31,6 @@ const zipPerfUITimeout = 15 * time.Second
 
 const zipOperationTimeout = time.Minute
 
-const zipPerfCompleteLabel = "Complete"
-const zipPerfDismissButtonLabel = "Dismiss"
-
 func init() {
 	testing.AddTest(&testing.Test{
 		Func:         ZipPerf,
@@ -260,14 +257,14 @@ func testExtractingZipFile(ctx context.Context, s *testing.State, files *filesap
 
 	// Find "Complete" within the copy notification panel, to wait for the copy operation to finish.
 	copyNotification := nodewith.Name(copyLabel).Role(role.GenericContainer)
-	completeNotification := nodewith.Name(zipPerfCompleteLabel).Role(role.StaticText).Ancestor(copyNotification)
+	completeNotification := nodewith.Name("Complete").Role(role.StaticText).Ancestor(copyNotification)
 	if err := files.WithTimeout(zipOperationTimeout).WaitUntilExists(completeNotification)(ctx); err != nil {
 		s.Fatal("Failed to wait for end of copy operation: ", err)
 	}
 
 	duration := float64(time.Since(startTime).Milliseconds())
 
-	dismissButton := nodewith.Name(zipPerfDismissButtonLabel).Role(role.Button).Ancestor(copyNotification)
+	dismissButton := nodewith.Name("Dismiss").Role(role.Button).Ancestor(copyNotification)
 	if err := uiauto.Combine("Dismiss copy notification",
 		files.LeftClick(dismissButton),
 		files.WaitUntilGone(dismissButton),
@@ -290,15 +287,15 @@ func testZippingFiles(ctx context.Context, tconn *chrome.TestConn, s *testing.St
 		s.Fatal("Failed to get zip time histogram: ", err)
 	}
 
-	if err := uiauto.Combine("select Zip selection on all files",
+	if err := uiauto.Combine("select and zip all files",
 		// Move the focus to the Files app listBox.
 		files.FocusAndWait(nodewith.Role(role.ListBox)),
 		// Select all extracted files.
 		ew.AccelAction("ctrl+A"),
 		// Right click on the Files app listBox.
 		files.RightClick(nodewith.Role(role.ListBox).Focused()),
-		// Select "Zip selection".
-		files.LeftClick(nodewith.Name("Zip selection").Role(role.MenuItem)),
+		// Click the "Zip" menu item.
+		files.LeftClick(nodewith.Name("Zip").Role(role.MenuItem)),
 	)(ctx); err != nil {
 		s.Fatal("Failed to start zipping files: ", err)
 	}
