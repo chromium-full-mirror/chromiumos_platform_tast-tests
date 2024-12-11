@@ -25,7 +25,7 @@ func init() {
 		},
 		BugComponent: "b:715469", // ChromeOS > Platform > System > Hardware Security > HwSec GSC > Ti50
 		Attr: []string{"group:gsc",
-			"gsc_h1_shield", "gsc_dt_shield", "gsc_ot_shield",
+			"gsc_h1_shield", "gsc_dt_shield", "gsc_ot_shield", "gsc_ot_fpga_cw310",
 			"gsc_image_ti50",
 			"gsc_nightly"},
 		Fixture: fixture.GSCOpenCCD,
@@ -85,17 +85,25 @@ func GSCCCDProgramming(ctx context.Context, s *testing.State) {
 		s.Error("UART RX not released back to high")
 	}
 
-	s.Log("Verify EC_FLASH_SELECT functionality")
+	// The swizzle board does not route through the following signals:
+	// B7: GSC_EC_SPI_SEL (tested below)
+	// B8: EN_I2C_DBG_PWR_L
+	// B11, B12: I2C_GSC_DBG_SDA/SCL
+	// C7: Unused by Ti50
+	// C9: Unused by Ti50
+	if b.TestbedType != ti50.GscOpentitanCw310Fpga {
+		s.Log("Verify EC_FLASH_SELECT functionality")
 
-	_, err = i.Command(ctx, "gpioset EC_FLASH_SELECT 0")
-	th.MustSucceed(err, "Call gpioset EC_FLASH_SELECT 0")
-	if b.GpioGet(ctx, ti50.GpioTi50ECFlashSelect) {
-		s.Error("EC flash select gpio did not go low")
-	}
+		_, err = i.Command(ctx, "gpioset EC_FLASH_SELECT 0")
+		th.MustSucceed(err, "Call gpioset EC_FLASH_SELECT 0")
+		if b.GpioGet(ctx, ti50.GpioTi50ECFlashSelect) {
+			s.Error("EC flash select gpio did not go low")
+		}
 
-	_, err = i.Command(ctx, "gpioset EC_FLASH_SELECT 1")
-	th.MustSucceed(err, "Call gpioset EC_FLASH_SELECT 1")
-	if !b.GpioGet(ctx, ti50.GpioTi50ECFlashSelect) {
-		s.Error("EC flash select gpio did not go high")
+		_, err = i.Command(ctx, "gpioset EC_FLASH_SELECT 1")
+		th.MustSucceed(err, "Call gpioset EC_FLASH_SELECT 1")
+		if !b.GpioGet(ctx, ti50.GpioTi50ECFlashSelect) {
+			s.Error("EC flash select gpio did not go high")
+		}
 	}
 }
