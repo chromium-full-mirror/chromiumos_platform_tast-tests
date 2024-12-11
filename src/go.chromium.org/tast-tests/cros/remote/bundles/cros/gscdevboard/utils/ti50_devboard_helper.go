@@ -1065,6 +1065,11 @@ var apRoVerifyInfos = []apRoVerifyInfo{
 		WpsrCmd:     "ap_ro_verify wpsr a8 fc 0 41",
 		AddrModeCmd: "ap_ro_verify addrmode 3byte",
 	},
+	{
+		Name:      "IS25WP128",
+		FlashSize: 16 * 1024 * 1024,
+		WpSize:    0, // Does not support write protection
+	},
 }
 
 // ProbeSPIFlashChip detects AP RO verify settings for the SPI flash.
@@ -1077,17 +1082,19 @@ func (h DevboardHelper) ProbeSPIFlashChip(ctx context.Context, i *ti50.CrOSImage
 		flashInfo = nil
 		for i := range apRoVerifyInfos {
 			if apRoVerifyInfos[i].Name == chipInfo.Name {
-				// Enable SW WP on the AP SPI chip so the status registers are as expected.
-				// This range represents the RO section of the AP flash.
-				if err := flash.EnableApWriteProtect(ctx, 0, apRoVerifyInfos[i].WpSize); err != nil {
-					h.Fatalf("setting AP flash write protect: %s", err)
-				}
 				flashInfo = &apRoVerifyInfos[i]
 				testing.ContextLog(ctx, "Recognized AP SPI flash chip: ", flashInfo)
 			}
 		}
 		if flashInfo == nil {
 			h.Fatalf("Unrecognized AP SPI flash chip: %s", chipInfo.Name)
+		}
+		// Enable SW WP on the AP SPI chip so the status registers are as expected.
+		// This range represents the RO section of the AP flash.
+		if flashInfo.WpSize > 0 {
+			if err := flash.EnableApWriteProtect(ctx, 0, flashInfo.WpSize); err != nil {
+				h.Fatalf("setting AP flash write protect: %s", err)
+			}
 		}
 	})
 	return flashInfo

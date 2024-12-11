@@ -20,7 +20,7 @@ func init() {
 	testing.AddTest(&testing.Test{
 		Func:    Ti50CCDFlashrom,
 		Desc:    "Measure flashrom speed over CCD",
-		Timeout: 20 * time.Minute,
+		Timeout: 30 * time.Minute,
 		Contacts: []string{
 			"cros-hwsec@google.com", // CrOS GSC Developers
 			"ecgh@google.com",
@@ -28,7 +28,7 @@ func init() {
 		BugComponent: "b:715469", // ChromeOS > Platform > System > Hardware Security > HwSec GSC > Ti50
 		Attr: []string{
 			"group:gsc",
-			"gsc_dt_shield", "gsc_ot_shield",
+			"gsc_dt_shield", "gsc_ot_shield", "gsc_ot_fpga_cw310",
 			"gsc_image_ti50",
 			"gsc_nightly"},
 		Fixture: fixture.GSCOpenCCD,
