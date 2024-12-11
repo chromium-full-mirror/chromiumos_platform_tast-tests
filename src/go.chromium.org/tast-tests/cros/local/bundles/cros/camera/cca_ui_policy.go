@@ -243,7 +243,7 @@ func testVideoCaptureShowPrompt(ctx context.Context, cr *chrome.Chrome, outDir, 
 
 	ui := uiauto.New(tconn)
 
-	allowButton := nodewith.Name("Allow").Role(role.Button)
+	allowButton := nodewith.Name("Allow while visiting the site").Role(role.Button)
 	if shouldShowPrompt {
 		if err := ui.WithTimeout(10 * time.Second).WaitUntilExists(allowButton)(ctx); err != nil {
 			return errors.Wrap(err, "failed to find the video capture prompt dialog")
