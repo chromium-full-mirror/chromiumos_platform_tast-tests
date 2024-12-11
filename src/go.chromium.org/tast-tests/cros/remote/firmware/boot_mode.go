@@ -1069,10 +1069,6 @@ func (ms *ModeSwitcher) RebootToFirmwareScreen(ctx context.Context, fwScreen fwC
 	}
 
 	var fwScreenID fwCommon.FwScreenID
-	supportAPFwState, err := h.SupportAPFwState(ctx)
-	if err != nil {
-		return errors.Wrap(err, "failed to check if DUT support APFwState")
-	}
 	closeUART, err := h.Servo.EnableUARTCapture(ctx, servo.ECUARTCapture)
 	if err != nil {
 		return errors.Wrap(err, "failed to enable capture EC UART")
@@ -1193,7 +1189,7 @@ func (ms *ModeSwitcher) RebootToFirmwareScreen(ctx context.Context, fwScreen fwC
 		fwScreenID = fwCommon.RecoveryInvalid
 	}
 
-	if supportAPFwState {
+	if h.HasAPFwState {
 		if err := h.DetectFirmwareScreen(ctx, durToFwScreen, fwScreenID); err != nil {
 			return errors.Wrap(err, "failed to detect firmware screen")
 		}

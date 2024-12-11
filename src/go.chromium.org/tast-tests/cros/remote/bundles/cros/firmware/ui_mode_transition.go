@@ -44,10 +44,7 @@ func UIModeTransition(ctx context.Context, s *testing.State) {
 	if err != nil {
 		s.Fatal("Creating mode switcher: ", err)
 	}
-	supportAPFwState, err := h.SupportAPFwState(ctx)
-	if err != nil {
-		s.Fatal("Failed to check if DUT support APFwState: ", err)
-	}
+
 	var bypassDevMode, triggerDevToNormal, triggerRecToDev func(ctx context.Context) error
 	switch h.Config.ModeSwitcherType {
 	case firmware.KeyboardDevSwitcher:
@@ -88,22 +85,25 @@ func UIModeTransition(ctx context.Context, s *testing.State) {
 			expBootMode:  fwCommon.BootModeNormal,
 		},
 	} {
-		closeUART, err := h.Servo.EnableUARTCapture(ctx, servo.ECUARTCapture)
-		if err != nil {
-			s.Fatal("Failed to enable capture EC UART: ", err)
-		}
-		defer func() {
-			if err := closeUART(ctx); err != nil {
-				s.Error("Failed to cancel capture EC UART: ", err)
+		var closeUART func(ctx context.Context) error
+		if h.HasAPFwState {
+			closeUART, err := h.Servo.EnableUARTCapture(ctx, servo.ECUARTCapture)
+			if err != nil {
+				s.Fatal("Failed to enable capture EC UART: ", err)
 			}
-		}()
+			defer func() {
+				if err := closeUART(ctx); err != nil {
+					s.Error("Failed to cancel capture EC UART: ", err)
+				}
+			}()
+		}
 		switch boot.transition {
 		case normalToDev:
 			if err := ms.EnableRecMode(ctx, servo.PowerStateRec, servo.USBMuxHost); err != nil {
 				s.Fatal("Failed to enable recovery mode: ", err)
 			}
 
-			if supportAPFwState {
+			if h.HasAPFwState {
 				if err := h.DetectFirmwareScreen(ctx, h.Config.FirmwareScreen, fwCommon.RecoverySelect); err != nil {
 					s.Log("Failed to detect firmware screen: ", err)
 				}
@@ -123,7 +123,7 @@ func UIModeTransition(ctx context.Context, s *testing.State) {
 				s.Fatal("Faild to reset DUT: ", err)
 			}
 		}
-		if supportAPFwState {
+		if h.HasAPFwState {
 			if err := h.DetectFirmwareScreen(ctx, h.Config.FirmwareScreen, fwCommon.DeveloperMode); err != nil {
 				s.Log("Failed to detect firmware screen: ", err)
 			}
@@ -154,8 +154,10 @@ func UIModeTransition(ctx context.Context, s *testing.State) {
 		} else if !isExpMode {
 			s.Fatal("Found unexpected boot mode")
 		}
-		if err := closeUART(ctx); err != nil {
-			s.Fatal("Failed to disable capture EC UART: ", err)
+		if h.HasAPFwState {
+			if err := closeUART(ctx); err != nil {
+				s.Fatal("Failed to disable capture EC UART: ", err)
+			}
 		}
 	}
 }

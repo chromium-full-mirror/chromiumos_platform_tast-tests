@@ -2467,26 +2467,27 @@ func (h *Helper) GetNewECCrashes(ctx context.Context) (map[string][]string, erro
 	return crashFiles, err
 }
 
-// SupportAPFwState checks whether DUT supports the host command EC_CMD_AP_FW_STATE.
-// TODO(b:300525571): If the h.HasAPFwState approach is adopted, remove bool from this function's outputs.
-func (h *Helper) SupportAPFwState(ctx context.Context) (bool, error) {
+// SupportAPFwState checks whether DUT supports the host command EC_CMD_AP_FW_STATE. Sets h.HasAPFwState to true if supported.
+func (h *Helper) SupportAPFwState(ctx context.Context) error {
+	if h.HasAPFwState {
+		return nil
+	}
+
 	roVersion, err := h.Reporter.GetFWVersion(ctx, reporters.CrossystemParamRoFwid)
 	if err != nil {
-		return false, errors.Wrap(err, "failed to get RO firmware version")
+		return errors.Wrap(err, "failed to get RO firmware version")
 	}
 	splitout := strings.Split(roVersion, ".")
 	if len(splitout) < 3 {
-		return false, errors.Wrapf(err, "got invalid firmware version: %v", roVersion)
+		return errors.Wrapf(err, "got invalid firmware version: %v", roVersion)
 	}
 	roMajorVersion, err := strconv.Atoi(splitout[0])
 	if err != nil {
-		return false, errors.Wrap(err, "failed to convert firmware major version value to integer value")
+		return errors.Wrap(err, "failed to convert firmware major version value to integer value")
 	}
 	// CL:5020949 laned in 15683.0.0
 	if roMajorVersion >= 15683 {
 		h.HasAPFwState = true
-		return true, nil
 	}
-
-	return false, nil
+	return nil
 }

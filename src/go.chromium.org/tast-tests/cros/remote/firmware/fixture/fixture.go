@@ -569,6 +569,14 @@ func (i *impl) PreTest(ctx context.Context, s *testing.FixtTestState) {
 
 		}
 	}
+
+	// Check if the DUT supports the EC_CMD_AP_FW_STATE host command and store the result in h.HasAPFwState.
+	// If supported, detects the firmware screen from the ec console.
+	// Otherwise, use the delay strategy to ensure the DUT is on the correct firmware screen.
+	if err := i.value.Helper.SupportAPFwState(ctx); err != nil {
+		// Unable to verify the firmware version. Set h.HasAPFwState to false and continue the test.
+		s.Error("Failed to check if DUT support APFwState, set : ", err)
+	}
 }
 
 // PreTest is called by the framework before each test to do a light-weight set up for the test.

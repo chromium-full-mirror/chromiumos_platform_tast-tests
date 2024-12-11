@@ -63,11 +63,6 @@ func BrokenToDev(ctx context.Context, s *testing.State) {
 		}
 	}(cleanupCtx)
 
-	supportAPFwState, err := h.SupportAPFwState(ctx)
-	if err != nil {
-		s.Fatal("Failed to check if DUT support APFwState: ", err)
-	}
-
 	s.Log("Setting GBB flags to enable dev screen short delay")
 	if _, err := fwCommon.ClearAndSetGBBFlags(ctx, s.DUT(), &pb.GBBFlagsState{Set: []pb.GBBFlag{pb.GBBFlag_DEV_SCREEN_SHORT_DELAY}}); err != nil {
 		s.Fatal("Failed to set the GBBFlag_DEV_SCREEN_SHORT_DELAY flag: ", err)
@@ -82,15 +77,17 @@ func BrokenToDev(ctx context.Context, s *testing.State) {
 		s.Fatal("Failed to set crossystem recovery_request to 193: ", err)
 	}
 
-	closeUART, err := h.Servo.EnableUARTCapture(ctx, servo.ECUARTCapture)
-	if err != nil {
-		s.Fatal("Failed to enable capture EC UART: ", err)
-	}
-	defer func() {
-		if err := closeUART(ctx); err != nil {
-			s.Error("Failed to cancel capture EC UART: ", err)
+	if h.HasAPFwState {
+		closeUART, err := h.Servo.EnableUARTCapture(ctx, servo.ECUARTCapture)
+		if err != nil {
+			s.Fatal("Failed to enable capture EC UART: ", err)
 		}
-	}()
+		defer func() {
+			if err := closeUART(ctx); err != nil {
+				s.Error("Failed to cancel capture EC UART: ", err)
+			}
+		}()
+	}
 
 	s.Log("Rebooting the DUT")
 	if err := h.DUT.Conn().CommandContext(ctx, "reboot").Run(); err != nil && !errors.As(err, &context.DeadlineExceeded) {
@@ -102,7 +99,7 @@ func BrokenToDev(ctx context.Context, s *testing.State) {
 		s.Fatal("Failed to wait for DUT to become unreachable, warm reset failed: ", err)
 	}
 
-	if supportAPFwState {
+	if h.HasAPFwState {
 		if err := h.DetectFirmwareScreen(ctx, h.Config.FirmwareScreen, fwCommon.RecoveryBroken); err != nil {
 			s.Fatal("Failed to detect firmware screen: ", err)
 		}

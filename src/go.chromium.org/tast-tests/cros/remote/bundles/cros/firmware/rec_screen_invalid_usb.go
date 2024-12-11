@@ -68,11 +68,6 @@ func RecScreenInvalidUSB(ctx context.Context, s *testing.State) {
 		s.Fatal("Failed to clear event log: ", err)
 	}
 
-	supportAPFwState, err := h.SupportAPFwState(ctx)
-	if err != nil {
-		s.Fatal("Failed to check if DUT support APFwState: ", err)
-	}
-
 	var state firmware.CheckAndSetServoCharger = h.CheckServoChargerBeforeBootingFromUSB(ctx)
 
 	defer func() {
@@ -115,14 +110,14 @@ func RecScreenInvalidUSB(ctx context.Context, s *testing.State) {
 		}
 	}()
 
-	if err := bootToNoGoodScreen(ctx, h, &state, supportAPFwState); err != nil {
+	if err := bootToNoGoodScreen(ctx, h, &state); err != nil {
 		s.Fatal("Failed to traverse NoGood screen: ", err)
 	}
 	s.Log("Powering off the USB")
 	if err := h.Servo.SetUSBMuxState(ctx, servo.USBMuxOff); err != nil {
 		s.Fatal("Failed to power off the USB: ", err)
 	}
-	if !supportAPFwState {
+	if !h.HasAPFwState {
 		s.Log("Restoring the USB")
 		if err := h.RestoreUSBKey(ctx); err != nil {
 			s.Fatal("Failed to restore the USB: ", err)
@@ -153,16 +148,18 @@ func RecScreenInvalidUSB(ctx context.Context, s *testing.State) {
 	}
 }
 
-func bootToNoGoodScreen(ctx context.Context, h *firmware.Helper, state *firmware.CheckAndSetServoCharger, supportAPFwState bool) (retErr error) {
-	closeUART, err := h.Servo.EnableUARTCapture(ctx, servo.ECUARTCapture)
-	if err != nil {
-		return errors.Wrap(err, "failed to enable capture EC UART")
-	}
-	defer func() {
-		if err := closeUART(ctx); err != nil {
-			retErr = errors.Join(retErr, errors.Wrap(err, "failed to cancel capture EC UART"))
+func bootToNoGoodScreen(ctx context.Context, h *firmware.Helper, state *firmware.CheckAndSetServoCharger) (retErr error) {
+	if h.HasAPFwState {
+		closeUART, err := h.Servo.EnableUARTCapture(ctx, servo.ECUARTCapture)
+		if err != nil {
+			return errors.Wrap(err, "failed to enable capture EC UART")
 		}
-	}()
+		defer func() {
+			if err := closeUART(ctx); err != nil {
+				retErr = errors.Join(retErr, errors.Wrap(err, "failed to cancel capture EC UART"))
+			}
+		}()
+	}
 	ms, err := firmware.NewModeSwitcher(ctx, h)
 	if err != nil {
 		return errors.Wrap(err, "failed to create mode switcher")
@@ -170,7 +167,7 @@ func bootToNoGoodScreen(ctx context.Context, h *firmware.Helper, state *firmware
 	if err := ms.EnableRecMode(ctx, servo.PowerStateRec, servo.USBMuxOff); err != nil {
 		return err
 	}
-	if supportAPFwState && (h.Board != "dedede" && h.Board != "corsola") {
+	if h.HasAPFwState && (h.Board != "dedede" && h.Board != "corsola") {
 		if err := h.DetectFirmwareScreen(ctx, h.Config.FirmwareScreen, fwCommon.RecoverySelect); err != nil {
 			return errors.Wrap(err, "failed to detect firmware screen")
 		}
@@ -195,7 +192,7 @@ func bootToNoGoodScreen(ctx context.Context, h *firmware.Helper, state *firmware
 	if err := h.Servo.SetDUTPDDataRole(ctx, servo.DFP); err != nil {
 		testing.ContextLogf(ctx, "Failed to set pd data role to DFP: %.400s", err)
 	}
-	if supportAPFwState && (h.Board == "dedede" || h.Board == "corsola") {
+	if h.HasAPFwState && (h.Board == "dedede" || h.Board == "corsola") {
 		closeUART, err := h.Servo.EnableUARTCapture(ctx, servo.ECUARTCapture)
 		if err != nil {
 			return errors.Wrap(err, "failed to enable capture EC UART")
@@ -222,7 +219,7 @@ func bootToNoGoodScreen(ctx context.Context, h *firmware.Helper, state *firmware
 			if err := menuNavigator.SelectOption(ctx); err != nil {
 				return err
 			}
-			if supportAPFwState {
+			if h.HasAPFwState {
 				if err := h.DetectFirmwareScreen(ctx, h.Config.FirmwareScreen, id); err != nil {
 					return errors.Wrap(err, "failed to detect firmware screen")
 				}
@@ -255,7 +252,7 @@ func bootToNoGoodScreen(ctx context.Context, h *firmware.Helper, state *firmware
 	if err := h.Servo.SetUSBMuxState(ctx, servo.USBMuxDUT); err != nil {
 		return errors.Wrap(err, "failed to enable the USB to DUT")
 	}
-	if supportAPFwState {
+	if h.HasAPFwState {
 		if err := h.DetectFirmwareScreen(ctx, h.Config.FirmwareScreen, fwCommon.RecoveryInvalid); err != nil {
 			return errors.Wrap(err, "failed to detect firmware screen")
 		}

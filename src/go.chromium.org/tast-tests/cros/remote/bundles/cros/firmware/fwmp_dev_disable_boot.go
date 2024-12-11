@@ -51,11 +51,6 @@ func FwmpDevDisableBoot(ctx context.Context, s *testing.State) {
 		s.Fatal("Failed to init servo: ", err)
 	}
 
-	supportAPFwState, err := h.SupportAPFwState(ctx)
-	if err != nil {
-		s.Fatal("Failed to check if DUT support APFwState: ", err)
-	}
-
 	setFWMP := func(ctx context.Context, flags string) error {
 		// TODO(b/273767236): Some models failed in holding the FWMP flags
 		// without a 30 secs delay after boot-up.
@@ -115,19 +110,21 @@ func FwmpDevDisableBoot(ctx context.Context, s *testing.State) {
 		s.Fatal("Failed to create mode switcher: ", err)
 	}
 
+	if h.HasAPFwState {
+		closeUART, err := h.Servo.EnableUARTCapture(ctx, servo.ECUARTCapture)
+		if err != nil {
+			s.Fatal("Failed to enable capture EC UART: ", err)
+		}
+		defer func() {
+			if err := closeUART(ctx); err != nil {
+				s.Error("Failed to cancel capture EC UART: ", err)
+			}
+		}()
+	}
+
 	cleanupCtx := ctx
 	ctx, cancel := ctxutil.Shorten(ctx, 10*time.Minute)
 	defer cancel()
-
-	closeUART, err := h.Servo.EnableUARTCapture(ctx, servo.ECUARTCapture)
-	if err != nil {
-		s.Fatal("Failed to enable capture EC UART: ", err)
-	}
-	defer func() {
-		if err := closeUART(ctx); err != nil {
-			s.Error("Failed to cancel capture EC UART: ", err)
-		}
-	}()
 
 	// Set DUT in "dev mode enable" state by setting TPM flags to "0x0" at the end of the test.
 	defer func(cleanupCtx context.Context) {
@@ -137,7 +134,7 @@ func FwmpDevDisableBoot(ctx context.Context, s *testing.State) {
 				s.Fatal("Failed to set power_state to reset: ", err)
 			}
 
-			if supportAPFwState {
+			if h.HasAPFwState {
 				if err := h.DetectFirmwareScreen(ctx, h.Config.FirmwareScreen, fwCommon.DeveloperToNorm); err != nil {
 					s.Error("Failed to detect DeveloperToNorm screen: ", err)
 				}
@@ -191,7 +188,7 @@ func FwmpDevDisableBoot(ctx context.Context, s *testing.State) {
 		s.Fatal("Failed to wait for DUT to become unreachable: ", err)
 	}
 
-	if supportAPFwState {
+	if h.HasAPFwState {
 		if err := h.DetectFirmwareScreen(ctx, h.Config.FirmwareScreen, fwCommon.DeveloperToNorm); err != nil {
 			s.Error("Failed to detect DeveloperToNorm screen: ", err)
 		}

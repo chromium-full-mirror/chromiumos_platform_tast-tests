@@ -88,11 +88,6 @@ func DevBootUSB(ctx context.Context, s *testing.State) {
 
 	var state firmware.CheckAndSetServoCharger = h.CheckServoChargerBeforeBootingFromUSB(ctx)
 
-	supportAPFwState, err := h.SupportAPFwState(ctx)
-	if err != nil {
-		s.Error("Failed to check whether DUT supports APFwState: ", err)
-	}
-
 	// Set up USB when there is one present, and
 	// for cases that depend on it.
 	s.Log("Setup USB key")
@@ -141,15 +136,18 @@ func DevBootUSB(ctx context.Context, s *testing.State) {
 		s.Fatal("Failed to remove the USB: ", err)
 	}
 
-	closeUART, err := h.Servo.EnableUARTCapture(ctx, servo.ECUARTCapture)
-	if err != nil {
-		s.Error("Failed to capture EC UART: ", err)
-	}
-	defer func() {
-		if err := closeUART(ctx); err != nil {
-			s.Error("Failed to cancel capture EC UART: ", err)
+	var closeUART func(ctx context.Context) error
+	if h.HasAPFwState {
+		closeUART, err := h.Servo.EnableUARTCapture(ctx, servo.ECUARTCapture)
+		if err != nil {
+			s.Error("Failed to capture EC UART: ", err)
 		}
-	}()
+		defer func() {
+			if err := closeUART(ctx); err != nil {
+				s.Error("Failed to cancel capture EC UART: ", err)
+			}
+		}()
+	}
 
 	s.Log("Rebooting DUT to developer screen")
 	if err := h.Servo.SetPowerState(ctx, servo.PowerStateWarmReset); err != nil {
@@ -161,7 +159,7 @@ func DevBootUSB(ctx context.Context, s *testing.State) {
 		s.Fatal("Failed to wait for DUT to become unreachable after sending a warm reset: ", err)
 	}
 
-	if supportAPFwState {
+	if h.HasAPFwState {
 		if err := h.DetectFirmwareScreen(ctx, h.Config.FirmwareScreen, fwCommon.DeveloperMode); err != nil {
 			s.Error("Failed to detect firmware screen: ", err)
 		}
@@ -171,9 +169,9 @@ func DevBootUSB(ctx context.Context, s *testing.State) {
 		if err := testing.Sleep(ctx, h.Config.FirmwareScreen); err != nil {
 			s.Fatalf("Failed to sleep for %s: %v", h.Config.FirmwareScreen, err)
 		}
-	}
-	if err := closeUART(ctx); err != nil {
-		s.Fatal("Failed to cancel capture EC UART: ", err)
+		if err := closeUART(ctx); err != nil {
+			s.Fatal("Failed to cancel capture EC UART: ", err)
+		}
 	}
 
 	// Pressing Ctrl-U should invoke a beep sound, indicating that

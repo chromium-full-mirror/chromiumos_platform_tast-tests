@@ -92,11 +92,6 @@ func DevDefaultBoot(ctx context.Context, s *testing.State) {
 		s.Fatal("Failed to create config: ", err)
 	}
 
-	supportAPFwState, err := h.SupportAPFwState(ctx)
-	if err != nil {
-		s.Fatal("Failed to check if DUT support APFwState: ", err)
-	}
-
 	testOpt := s.Param().(*devDefaultBootParam)
 	expEndBootMode := fwCommon.BootModeDev
 	reconnectTimeout := h.Config.DelayRebootToPing
@@ -152,15 +147,17 @@ func DevDefaultBoot(ctx context.Context, s *testing.State) {
 		}
 	}(cleanupCtx)
 
-	closeUART, err := h.Servo.EnableUARTCapture(ctx, servo.ECUARTCapture)
-	if err != nil {
-		s.Fatal("Failed to enable capture EC UART: ", err)
-	}
-	defer func() {
-		if err := closeUART(ctx); err != nil {
-			s.Error("Failed to cancel capture EC UART: ", err)
+	if h.HasAPFwState {
+		closeUART, err := h.Servo.EnableUARTCapture(ctx, servo.ECUARTCapture)
+		if err != nil {
+			s.Fatal("Failed to enable capture EC UART: ", err)
 		}
-	}()
+		defer func() {
+			if err := closeUART(ctx); err != nil {
+				s.Error("Failed to cancel capture EC UART: ", err)
+			}
+		}()
+	}
 
 	s.Log("Rebooting DUT to developer screen")
 	if err := h.Servo.SetPowerState(ctx, servo.PowerStateWarmReset); err != nil {
@@ -176,7 +173,7 @@ func DevDefaultBoot(ctx context.Context, s *testing.State) {
 	case triggerByTimeout:
 		reconnectTimeout += firmware.DevScreenTimeout
 	case triggerByMenu:
-		if supportAPFwState {
+		if h.HasAPFwState {
 			if err := h.DetectFirmwareScreen(ctx, h.Config.FirmwareScreen, fwCommon.DeveloperMode); err != nil {
 				s.Fatal("Failed to detect firmware screen: ", err)
 			}
