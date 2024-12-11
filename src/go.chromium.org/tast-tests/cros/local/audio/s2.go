@@ -13,8 +13,9 @@ import (
 // https://source.chromium.org/chromiumos/chromiumos/codesearch/+/main:src/third_party/adhd/cras/server/s2/src/lib.rs
 type S2 struct {
 	Input struct {
-		DLCManagerReady                 bool   `json:"dlc_manager_ready"`
-		VoiceIsolationUIPreferredEffect string `json:"voice_isolation_ui_preferred_effect"`
+		DLCManagerReady                 bool              `json:"dlc_manager_ready"`
+		VoiceIsolationUIPreferredEffect string            `json:"voice_isolation_ui_preferred_effect"`
+		CrasProcessorVars               map[string]string `json:"cras_processor_vars"`
 	}
 	Output struct {
 		AudioEffectsReady bool `json:"audio_effects_ready"`

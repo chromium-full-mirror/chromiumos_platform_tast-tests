@@ -14,8 +14,9 @@ import (
 	"time"
 
 	"go.chromium.org/tast-tests/cros/common/perf"
+	"go.chromium.org/tast-tests/cros/common/tbdep"
 	"go.chromium.org/tast-tests/cros/common/testexec"
-	"go.chromium.org/tast-tests/cros/local/dlc"
+	"go.chromium.org/tast-tests/cros/local/audio/audioprocessor"
 	"go.chromium.org/tast/core/testing"
 )
 
@@ -34,31 +35,54 @@ func init() {
 			{
 				Name: "nc",
 				Val: offlinePipelineBenchmarkParam{
-					dlcID:             "nc-ap-dlc",
-					dlcSharedObject:   "libeffects.so",
-					pluginName:        "plugin_processor_create_nc",
+					plugin: &audioprocessor.DLCPlugin{
+						DLCID:       audioprocessor.Const("nc-ap-dlc"),
+						Path:        audioprocessor.Const("libeffects.so"),
+						Constructor: "plugin_processor_create_nc",
+					},
 					blockSizeFrames:   480,
 					inputWavFrameRate: 48000,
+					inputWavChannels:  1,
 				},
 			},
 			{
 				Name: "ast",
 				Val: offlinePipelineBenchmarkParam{
-					dlcID:             "nc-ap-dlc",
-					dlcSharedObject:   "libeffects.so",
-					pluginName:        "plugin_processor_create_ast",
+					plugin: &audioprocessor.DLCPlugin{
+						DLCID:       audioprocessor.Const("nc-ap-dlc"),
+						Path:        audioprocessor.Const("libeffects.so"),
+						Constructor: "plugin_processor_create_ast",
+					},
 					blockSizeFrames:   480,
 					inputWavFrameRate: 24000,
+					inputWavChannels:  1,
 				},
+			},
+			{
+				Name: "bf",
+				Val: offlinePipelineBenchmarkParam{
+					plugin: &audioprocessor.DLCPlugin{
+						DLCID:       audioprocessor.Var("beamforming_dlc_id"),
+						Path:        audioprocessor.Var("beamforming_dlc_path"),
+						Constructor: "plugin_processor_create",
+					},
+					blockSizeFrames:   256,
+					inputWavFrameRate: 16000,
+					inputWavChannels:  3,
+				},
+				ExtraTestBedDeps: []string{tbdep.AudioBeamforming("intelligo")},
 			},
 			{
 				Name: "nc_sleep_rt",
 				Val: offlinePipelineBenchmarkParam{
-					dlcID:             "nc-ap-dlc",
-					dlcSharedObject:   "libeffects.so",
-					pluginName:        "plugin_processor_create_nc",
+					plugin: &audioprocessor.DLCPlugin{
+						DLCID:       audioprocessor.Const("nc-ap-dlc"),
+						Path:        audioprocessor.Const("libeffects.so"),
+						Constructor: "plugin_processor_create_nc",
+					},
 					blockSizeFrames:   480,
 					inputWavFrameRate: 48000,
+					inputWavChannels:  1,
 					sleepTime:         10 * time.Millisecond,
 					setThreadPriority: true,
 				},
@@ -66,25 +90,43 @@ func init() {
 			{
 				Name: "ast_sleep_rt",
 				Val: offlinePipelineBenchmarkParam{
-					dlcID:             "nc-ap-dlc",
-					dlcSharedObject:   "libeffects.so",
-					pluginName:        "plugin_processor_create_ast",
+					plugin: &audioprocessor.DLCPlugin{
+						DLCID:       audioprocessor.Const("nc-ap-dlc"),
+						Path:        audioprocessor.Const("libeffects.so"),
+						Constructor: "plugin_processor_create_ast",
+					},
 					blockSizeFrames:   480,
 					inputWavFrameRate: 24000,
+					inputWavChannels:  1,
 					sleepTime:         20 * time.Millisecond,
 					setThreadPriority: true,
 				},
+			},
+			{
+				Name: "bf_sleep_rt",
+				Val: offlinePipelineBenchmarkParam{
+					plugin: &audioprocessor.DLCPlugin{
+						DLCID:       audioprocessor.Var("beamforming_dlc_id"),
+						Path:        audioprocessor.Var("beamforming_dlc_path"),
+						Constructor: "plugin_processor_create",
+					},
+					blockSizeFrames:   256,
+					inputWavFrameRate: 16000,
+					inputWavChannels:  3,
+					sleepTime:         16 * time.Millisecond,
+					setThreadPriority: true,
+				},
+				ExtraTestBedDeps: []string{tbdep.AudioBeamforming("intelligo")},
 			},
 		},
 	})
 }
 
 type offlinePipelineBenchmarkParam struct {
-	dlcID             string
-	dlcSharedObject   string
-	pluginName        string
+	plugin            *audioprocessor.DLCPlugin
 	blockSizeFrames   int
 	inputWavFrameRate int
+	inputWavChannels  int
 	sleepTime         time.Duration
 	setThreadPriority bool
 }
@@ -93,16 +135,11 @@ type offlinePipelineBenchmarkParam struct {
 func OfflinePipelineBenchmark(ctx context.Context, s *testing.State) {
 	param := s.Param().(offlinePipelineBenchmarkParam)
 
-	if err := dlc.Install(ctx, param.dlcID, ""); err != nil {
-		s.Fatalf("Failed to install DLC %q: %v", param.dlcID, err)
-	}
-
-	dlcState, err := dlc.GetDlcState(ctx, param.dlcID)
+	plugin, err := param.plugin.Install(ctx)
 	if err != nil {
-		s.Fatalf("Failed to get DLC %q state: %v", param.dlcID, err)
+		s.Fatal("Failed to install plugin: ", err)
 	}
 
-	sharedObject := filepath.Join(dlcState.RootPath, param.dlcSharedObject)
 	inputWav := filepath.Join(s.OutDir(), "input.wav")
 	outputWav := filepath.Join(s.OutDir(), "output.wav")
 
@@ -113,7 +150,7 @@ func OfflinePipelineBenchmark(ctx context.Context, s *testing.State) {
 		"-n", "-L", "-e", "signed-integer",
 		"-b", "16",
 		"-r", strconv.Itoa(param.inputWavFrameRate),
-		"-c", "1",
+		"-c", strconv.Itoa(param.inputWavChannels),
 		inputWav,
 		"synth", "60",
 		"sine", "300",
@@ -125,9 +162,9 @@ func OfflinePipelineBenchmark(ctx context.Context, s *testing.State) {
 	cmd := testexec.CommandContext(
 		ctx,
 		"offline-pipeline", "--json",
-		fmt.Sprintf("--plugin-name=%s", param.pluginName),
+		fmt.Sprintf("--plugin-name=%s", plugin.Constructor),
 		fmt.Sprintf("--block-size-frames=%d", param.blockSizeFrames),
-		sharedObject, inputWav, outputWav,
+		plugin.Path, inputWav, outputWav,
 	)
 	if param.sleepTime != 0 {
 		cmd.Args = append(cmd.Args, fmt.Sprintf("--sleep-sec=%v", param.sleepTime.Seconds()))

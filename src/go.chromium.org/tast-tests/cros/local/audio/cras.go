@@ -497,3 +497,12 @@ func (c *Cras) GetVoiceIsolationUIPreferredEffect(ctx context.Context) (effect s
 func (c *Cras) SetVoiceIsolationUIPreferredEffect(ctx context.Context, effect VoiceIsolationPreferredEffect) (err error) {
 	return c.call(ctx, "SetVoiceIsolationUIPreferredEffect", effect).Err
 }
+
+// GetCrasProcessorVars returns [cras_processor_vars] defined in board.ini, as parsed by CRAS.
+func (c *Cras) GetCrasProcessorVars(ctx context.Context) (map[string]string, error) {
+	s2, err := c.dumpS2(ctx)
+	if err != nil {
+		return nil, err
+	}
+	return s2.Input.CrasProcessorVars, nil
+}
