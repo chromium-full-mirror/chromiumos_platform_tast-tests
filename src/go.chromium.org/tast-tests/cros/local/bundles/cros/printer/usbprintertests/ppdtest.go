@@ -25,6 +25,15 @@ func getPPDFilename(ctx context.Context, printerName string) string {
 // returns a map containing of each of its key-value pairs.
 func getPPDMap(ctx context.Context, printerName string) (map[string]string, error) {
 	ppdFilename := getPPDFilename(ctx, printerName)
+
+	// Wait for the file to be created
+	if err := testing.Poll(ctx, func(ctx context.Context) error {
+		_, err := os.Stat(ppdFilename)
+		return err
+	}, nil); err != nil {
+		return nil, err
+	}
+
 	f, err := os.Open(ppdFilename)
 	if err != nil {
 		return nil, err
