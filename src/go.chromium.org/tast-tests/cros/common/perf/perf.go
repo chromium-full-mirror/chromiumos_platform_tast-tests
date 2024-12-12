@@ -242,6 +242,28 @@ func (p *Values) MergeWithSuffix(suffix string, vs ...*Values) {
 	}
 }
 
+// MergeWithPrefix merges all data points of vs into this Values structure
+// optionally adding prefix to the value name.
+func (p *Values) MergeWithPrefix(prefix string, vs ...*Values) {
+	for _, val := range vs {
+		if val == nil {
+			continue
+		}
+		for k, v := range val.values {
+			prefixedK := k
+			prefixedK.Name = prefix + prefixedK.Name
+			if k.Multiple {
+				p.Append(prefixedK, v...)
+			} else {
+				if vv, c := p.values[prefixedK]; c {
+					panic(fmt.Sprint("MergeWithPrefix(prefix='", prefix, "'): Single-valued metric {", prefixedK, "} already present as {", vv, "}. Cannot merge with another value."))
+				}
+				p.Set(prefixedK, v...)
+			}
+		}
+	}
+}
+
 // Merge merges all data points of vs into this Values structure.
 func (p *Values) Merge(vs ...*Values) {
 	p.MergeWithSuffix("", vs...)

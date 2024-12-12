@@ -144,6 +144,25 @@ func SaveRuntimePerfResults(p *perf.Values, r *Results, outDir string) error {
 	return p.Save(outDir)
 }
 
+// SaveRuntimePerfResultsWithPrefix sets and saves the runtime performance metric results with the given prefix.
+func SaveRuntimePerfResultsWithPrefix(p *perf.Values, r *Results, prefix, outDir string) error {
+	setMetricWithPrefix := func(metric perf.Metric, value float64) {
+		metric.Name = prefix + metric.Name
+		p.Set(metric, value)
+	}
+	setMetricWithPrefix(FpsPerfMetric(), r.FPS)
+	setMetricWithPrefix(PerceivedFpsPerfMetric(), r.PerceivedFPS)
+	setMetricWithPrefix(CommitDeviationPerfMetric(), r.CommitDeviation)
+	setMetricWithPrefix(PresentDeviationPerfMetric(), r.PresentDeviation)
+	setMetricWithPrefix(RenderQualityPerfMetric(), r.RenderQuality*100.0)
+	setMetricWithPrefix(JanksPerMinutePerfMetric(), r.JanksPerMinute)
+	setMetricWithPrefix(JanksPercentagePerfMetric(), r.JanksPercentage)
+	setMetricWithPrefix(SurfaceFlingerFpsPerfMetric(), r.SurfaceFlingerFPS)
+	setMetricWithPrefix(SurfaceFlingerLatencyPerfMetric(), r.SurfaceFlingerLatency)
+	p.MergeWithPrefix(prefix, r.memoryPerfValues)
+	return p.Save(outDir)
+}
+
 // LaunchTimePerfMetric returns a standard metric that launch time can be saved in.
 func LaunchTimePerfMetric() perf.Metric {
 	return perf.Metric{
