@@ -34,29 +34,41 @@ func init() {
 		Timeout:      20 * time.Minute,
 		Params: []testing.Param{
 			{
+				Val:     docscuj.TestParam{},
 				Fixture: "loggedInToCUJUser",
 			},
-
 			// Experimental variants.
 			{
 				Name:      "field_trials",
+				Val:       docscuj.TestParam{},
 				ExtraAttr: []string{"cuj_experimental"},
 				Fixture:   "loggedInToCUJUserWithFieldTrials",
 			},
 			{
 				Name:      "chromevox",
+				Val:       docscuj.TestParam{},
 				ExtraAttr: []string{"cuj_experimental"},
 				Fixture:   "loggedInToCUJUserWithChromeVox",
+			},
+			{
+				Name: "bounce_keys",
+				Val: docscuj.TestParam{
+					BounceKeysEnabled: true,
+				},
+				ExtraAttr: []string{"cuj_experimental"},
+				Fixture:   "loggedInToCUJUserWithBounceKeys",
 			},
 			// TODO(b/292249282): Remove when Vulkan is launched on brya, volteer, and skyrim.
 			{
 				Name:              "vulkan",
+				Val:               docscuj.TestParam{},
 				Fixture:           "loggedInToCUJUserVulkan",
 				ExtraHardwareDeps: hwdep.D(hwdep.Model("redrix", "drobit", "frostflow")),
 			},
 			// TODO(b/343320265): Remove after cbx device launches the feature.
 			{
 				Name:              "image_indexing",
+				Val:               docscuj.TestParam{},
 				Fixture:           "loggedInToCUJUserWithImageICA",
 				ExtraData:         []string{launcher.ImageSearchPowerTestPictureName},
 				ExtraHardwareDeps: hwdep.D(hwdep.FeatureLevel(1)),
@@ -68,6 +80,7 @@ func init() {
 func DocsCUJ(ctx context.Context, s *testing.State) {
 	cuj.WriteMetadataFile(ctx, s.TestName())
 
+	testParam := s.Param().(docscuj.TestParam)
 	cr := s.FixtValue().(chrome.HasChrome).Chrome()
 	traceConfigPath := s.DataPath(cujrecorder.SystemTraceConfigFile)
 
@@ -81,7 +94,7 @@ func DocsCUJ(ctx context.Context, s *testing.State) {
 		defer cleanup()
 	}
 
-	if _, err := docscuj.Run(ctx, cr, s.OutDir(), traceConfigPath, s.TestName()); err != nil {
+	if _, err := docscuj.Run(ctx, cr, testParam, s.OutDir(), traceConfigPath, s.TestName()); err != nil {
 		s.Fatal("Failed to run DocsCUJ: ", err)
 	}
 }

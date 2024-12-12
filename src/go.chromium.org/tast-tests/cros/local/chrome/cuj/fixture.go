@@ -863,6 +863,26 @@ func init() {
 		PreTestTimeout:  batterySaverTimeout,
 	})
 	testing.AddFixture(&testing.Fixture{
+		Name: "loggedInToCUJUserWithBounceKeys",
+		Desc: "CUJ fixture with Bounce Keys feature enabled",
+		Contacts: []string{
+			"aluh@chromium.org",
+			"cros-sw-perf@google.com",
+		},
+		BugComponent: "b:1686419", // ChromeOS > Software > Experiences > Accessibility > Features > Slow And Bounce Keys
+		Impl: &loggedInToCUJUserFixture{
+			chromeExtraOpts: []chrome.Option{
+				chrome.EnableFeatures("AccessibilityBounceKeys"),
+			},
+		},
+		Parent:          "prepareForCUJ",
+		SetUpTimeout:    setUpTimeout,
+		ResetTimeout:    resetTimeout,
+		TearDownTimeout: resetTimeout,
+		PreTestTimeout:  CPUStablizationTimeout,
+		PostTestTimeout: postTestTimeout,
+	})
+	testing.AddFixture(&testing.Fixture{
 		Name: "loggedInToCUJUserWithChromeVox",
 		Desc: "CUJ fixture with ChromeVox enabled",
 		Contacts: []string{

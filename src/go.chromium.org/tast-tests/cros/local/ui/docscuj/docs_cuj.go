@@ -24,6 +24,7 @@ import (
 	"go.chromium.org/tast-tests/cros/local/chrome/uiauto/event"
 	"go.chromium.org/tast-tests/cros/local/chrome/uiauto/faillog"
 	"go.chromium.org/tast-tests/cros/local/chrome/uiauto/nodewith"
+	"go.chromium.org/tast-tests/cros/local/chrome/uiauto/ossettings"
 	"go.chromium.org/tast-tests/cros/local/chrome/uiauto/pointer"
 	"go.chromium.org/tast-tests/cros/local/chrome/uiauto/role"
 	"go.chromium.org/tast-tests/cros/local/chrome/webutil"
@@ -36,9 +37,14 @@ import (
 	"go.chromium.org/tast/core/testing"
 )
 
+// TestParam is the test parameters for DocsCUJ.
+type TestParam struct {
+	BounceKeysEnabled bool
+}
+
 // Run opens up a new Google Doc, and types paragraphs in multiple
 // languages, speeds, and styles, to test the Google Docs performance.
-func Run(ctx context.Context, cr *chrome.Chrome, outDir, systemTraceConfigPath, testName string) (pv *perf.Values, retErr error) {
+func Run(ctx context.Context, cr *chrome.Chrome, testParam TestParam, outDir, systemTraceConfigPath, testName string) (pv *perf.Values, retErr error) {
 	// Shorten context a bit to allow for cleanup.
 	closeCtx := ctx
 	ctx, cancel := ctxutil.Shorten(ctx, 5*time.Second)
@@ -60,6 +66,27 @@ func Run(ctx context.Context, cr *chrome.Chrome, outDir, systemTraceConfigPath, 
 	tconn, err := cr.TestAPIConn(ctx)
 	if err != nil {
 		return nil, errors.Wrap(err, "failed to connect to test API connection")
+	}
+
+	ac := uiauto.New(tconn)
+
+	if testParam.BounceKeysEnabled {
+		if err := func() error {
+			defer faillog.DumpUITreeWithScreenshotOnError(closeCtx, outDir, func() bool { return retErr != nil }, cr, "failure")
+
+			heading := nodewith.NameStartingWith("Keyboard and text input").Role(role.Heading).Ancestor(ossettings.WindowFinder)
+			kbSettings, err := ossettings.LaunchAtPageURL(ctx, tconn, cr, "keyboardAndTextInput?settingId=1554", ac.Exists(heading))
+			if err != nil {
+				return errors.Wrap(err, "failed to open keyboard accessibility settings page")
+			}
+			defer kbSettings.Close(ctx)
+			if err := kbSettings.SetToggleOption(cr, "Bounce keys", true)(ctx); err != nil {
+				return errors.Wrap(err, "failed to toggle Bounce keys setting to on")
+			}
+			return nil
+		}(); err != nil {
+			return nil, err
+		}
 	}
 
 	recorder, err := cujrecorder.NewRecorder(ctx, tconn, nil, cujrecorder.RecorderOptions{})
@@ -110,8 +137,6 @@ func Run(ctx context.Context, cr *chrome.Chrome, outDir, systemTraceConfigPath, 
 	if err != nil {
 		return nil, errors.Wrap(err, "failed to get the primary display info")
 	}
-
-	ac := uiauto.New(tconn)
 
 	tabChecker, err := cuj.NewTabCrashChecker(ctx, tconn)
 	if err != nil {
