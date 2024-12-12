@@ -598,13 +598,13 @@ func ti50ImageDirectory(t ti50.TestbedType, i ImageType) (string, error) {
 	case ti50.GscDTAndreiboard:
 		fallthrough
 	case ti50.GscDTShield:
-		return "andreiboard-" + n, nil
+		return "dt-" + n, nil
 	case ti50.GscOTShield:
-		return "opentitan-" + n, nil
+		return "nt-" + n, nil
 	case ti50.GscOpentitanCw310Fpga:
 		return "nuvotitan_cw310_a1-" + n, nil
 	case ti50.GscHostEmulation:
-		return "host_emulation-" + n, nil
+		return "he-" + n, nil
 	default:
 		return "", errors.New("unknown ti50 testbed type: " + string(t))
 	}
