@@ -33,7 +33,7 @@ const (
 	beginAppInstall operation = "beginAppInstall"
 	// Update an app from the Play Store and wait for it to complete.
 	updateApp        operation = "update"
-	playStorePackage    string = "com.android.vending"
+	playStorePackage string    = "com.android.vending"
 )
 
 // Options contains options used when installing or updating an app.
@@ -109,12 +109,15 @@ func FindAndDismissErrorDialog(ctx context.Context, d *ui.Device) error {
 		installAppsFromDeviceText = "Install apps from your devices"
 		internalProblemText       = "There.s an internal problem with your device.*"
 		itemNotFoundText          = ".*item.*could not be found.*"
+		discountOfPlayPassText    = "Get .* off Play Pass"
+		tryPlayPassText           = "Try Google Play Pass"
 
 		acceptButtonText       = "accept"
 		gotItButtonText        = "got it"
 		okButtonText           = "ok"
 		noThanksButtonText     = "No thanks"
 		tryAgainOrOkButtonText = "Try again|OK"
+		notNowButtonText       = "Not now"
 	)
 
 	for _, val := range []struct {
@@ -143,6 +146,10 @@ func FindAndDismissErrorDialog(ctx context.Context, d *ui.Device) error {
 		{termsOfServiceText, acceptButtonText},
 		// Press Ok to dismiss the dialog if "There\'s an internal problem with your device" dialog pops up.
 		{internalProblemText, okButtonText},
+		// Press "No thanks" to dismiss if the dialog of "Get X% off Play Pass" pops up.
+		{discountOfPlayPassText, noThanksButtonText},
+		// Press "Not now" to dismiss if the dialog of "Try Google Play Pass" pops up.
+		{tryPlayPassText, notNowButtonText},
 	} {
 		if err := FindAndDismissDialog(ctx, d, val.dialogText, val.buttonText); err != nil {
 			return err
