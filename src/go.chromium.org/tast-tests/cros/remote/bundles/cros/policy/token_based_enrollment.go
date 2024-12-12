@@ -21,6 +21,7 @@ import (
 	"go.chromium.org/tast/core/errors"
 	"go.chromium.org/tast/core/rpc"
 	"go.chromium.org/tast/core/testing"
+	"go.chromium.org/tast/core/testing/hwdep"
 )
 
 const (
@@ -61,6 +62,8 @@ func init() {
 		Fixture:      fixture.CleanOwnership,
 		Attr:         []string{"group:dmserver-enrollment-daily"},
 		SoftwareDeps: []string{"flex_device", "chrome"},
+		// b/365541979: Skip on the reven\nuc11.
+		HardwareDeps: hwdep.D(hwdep.SkipDMIProductName("NUC11TNKv5")),
 		ServiceDeps: []string{
 			"tast.cros.policy.PolicyService",
 			dutfs.ServiceName,
