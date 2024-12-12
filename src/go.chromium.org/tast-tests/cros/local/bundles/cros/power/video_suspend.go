@@ -22,7 +22,7 @@ import (
 var (
 	videoURL = testing.RegisterVarString(
 		"power.VideoSuspend.videoURL",
-		"http://commondatastorage.googleapis.com/chromeos-test-public/big_buck_bunny/big_buck_bunny_trailer_400p.mp4",
+		"https://storage.googleapis.com/chromiumos-test-assets-public/tast/cros/video/power/big_buck_bunny_trailer_400p.mp4",
 		"Video URL to play")
 )
 
