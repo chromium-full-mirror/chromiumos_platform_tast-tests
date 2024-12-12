@@ -375,7 +375,7 @@ func verifyEcResetWithKeysInOrder(ctx context.Context, s *testing.State, b utils
 		s.Error("EC_RST_L did stay asserted long enough: ", assertTime)
 		return
 	}
-	s.Logf("EC_RST_L asserted for %dus", assertTime)
+	s.Log("EC_RST_L asserted for ", assertTime)
 
 	if minHold != nil {
 		resetDelay := time.Duration(assertReset.TimestampUS) * time.Microsecond
