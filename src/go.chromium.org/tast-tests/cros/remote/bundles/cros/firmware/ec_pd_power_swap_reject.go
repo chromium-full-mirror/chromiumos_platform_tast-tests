@@ -140,7 +140,7 @@ func ECPDPowerSwapReject(ctx context.Context, s *testing.State) {
 		s.Fatal("Failed to re-enable Servo power swap: ", err)
 	}
 
-	if testParams.Shutdown {
+	if testParams.Shutdown || testParams.Suspend {
 		if err := h.Servo.SetPowerState(ctx, servo.PowerStateOn); err != nil {
 			testing.ContextLog(ctx, "Failed to power on DUT: ", err)
 		}
