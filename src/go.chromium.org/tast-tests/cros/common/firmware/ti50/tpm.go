@@ -86,6 +86,8 @@ const (
 	RootPlatformHandle tpm2.TPMHandle = 0x4000000c
 	// KernelNvIndex is the NVMem ID for the kernel file
 	KernelNvIndex tpm2.TPMHandle = 0x01001008
+	// EncstatefulNvIndex is the NVMem ID for the Encrypted Stateful space
+	EncstatefulNvIndex tpm2.TPMHandle = 0x1800005
 	// FwmpNvIndex is the NVMem ID for the Firmware Management Parameters file
 	FwmpNvIndex tpm2.TPMHandle = 0x100100a
 )
@@ -277,6 +279,23 @@ func getTPMVResponseStatus(buf []byte) (uint32, error) {
 func KernelAttr() tpm2.TPMSNVPublic {
 	return tpm2.TPMSNVPublic{
 		NVIndex: KernelNvIndex,
+		NameAlg: tpm2.TPMAlgSHA1,
+		Attributes: tpm2.TPMANV{
+			PlatformCreate: true,
+			AuthRead:       true,
+			PPRead:         true,
+			WriteSTClear:   true,
+			PPWrite:        true,
+			NT:             tpm2.TPMNTOrdinary,
+		},
+		DataSize: 40,
+	}
+}
+
+// EncstatefulAttr generates the public area for the FWMP NV index.
+func EncstatefulAttr() tpm2.TPMSNVPublic {
+	return tpm2.TPMSNVPublic{
+		NVIndex: EncstatefulNvIndex,
 		NameAlg: tpm2.TPMAlgSHA1,
 		Attributes: tpm2.TPMANV{
 			PlatformCreate: true,
