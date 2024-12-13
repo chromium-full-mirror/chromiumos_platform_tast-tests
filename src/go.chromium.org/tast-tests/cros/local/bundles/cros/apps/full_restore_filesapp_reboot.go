@@ -34,7 +34,7 @@ func init() {
 
 func FullRestoreFilesappReboot(ctx context.Context, s *testing.State) {
 	func() {
-		cr, err := chrome.New(ctx, chrome.EnableFeatures("FullRestore"))
+		cr, err := chrome.New(ctx)
 		if err != nil {
 			s.Fatal("Failed to start Chrome: ", err)
 		}
@@ -64,7 +64,6 @@ func FullRestoreFilesappReboot(ctx context.Context, s *testing.State) {
 			// By default, On startup is set to ask every time after reboot
 			// and there is an alertdialog asking the user to select whether to restore or not.
 			chrome.RemoveNotification(false),
-			chrome.EnableFeatures("FullRestore"),
 			chrome.KeepState())
 		if err != nil {
 			s.Fatal("Failed to start Chrome: ", err)

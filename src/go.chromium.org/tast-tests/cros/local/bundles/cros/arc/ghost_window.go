@@ -39,7 +39,6 @@ type gwTestParams struct {
 }
 
 var ghostWindowFeatureFlags = []string{
-	"FullRestore",
 	"ArcGhostWindow",
 	"ArcWindowPredictor",
 }

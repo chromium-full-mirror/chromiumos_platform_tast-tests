@@ -272,7 +272,6 @@ func loginPerfStartToLoginScreen(
 			testConfig.signinExtManifestKey),
 		// Disable OOBE testing API for measurement runs because it can affect the performance. See b/354825581.
 		chrome.DisableOOBETestAPI(),
-		chrome.EnableFeatures("FullRestore"),
 		chrome.EnableRestoreTabs(),
 		chrome.SkipForceOnlineSignInForTesting(),
 		chrome.EnableWebAppInstall(),
