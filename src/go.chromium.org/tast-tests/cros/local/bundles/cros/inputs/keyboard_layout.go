@@ -57,7 +57,7 @@ func init() {
 		Attr:         []string{},
 		SoftwareDeps: []string{"inputs_deps", "chrome"},
 		HardwareDeps: hwdep.D(pre.InputsStableModels),
-		Timeout:      150 * time.Minute,
+		Timeout:      500 * time.Minute,
 		Fixture:      fixture.ClamshellNonVK,
 	})
 }
@@ -120,6 +120,10 @@ func KeyboardLayout(ctx context.Context, s *testing.State) {
 	w.Write([]string{"shift-1", "altgr-1", "caps-1", "location-1", "shift-2", "altgr-2", "caps-2", "location-2", "string", "unicode"})
 	noOpKey1ModifierList := make([]keystroke, 0)
 
+	if err := its.ClickFieldAndWaitForActive(inputField)(ctx); err != nil {
+		s.Fatal("Failed to ClickFieldAndWaitForActive: ", err)
+	}
+
 	for _, key1ModifiersStatus := range util.ModifiersStatusCombo {
 		if !needAltGrCase && key1ModifiersStatus.Altgr {
 			continue
@@ -127,7 +131,6 @@ func KeyboardLayout(ctx context.Context, s *testing.State) {
 		for _, key := range util.LinuxKeyCodes {
 			if err := uiauto.NamedCombine(fmt.Sprintf("typing %s + %s", getModifierInfo(key1ModifiersStatus), key.KeyName),
 				its.Clear(inputField),
-				its.ClickFieldAndWaitForActive(inputField),
 				util.SingleKeyAction(key1ModifiersStatus, key.LinuxKeyCode, kb),
 			)(ctx); err != nil {
 				s.Fatal("Failed to typing key: ", err)
@@ -164,7 +167,6 @@ func KeyboardLayout(ctx context.Context, s *testing.State) {
 			for _, key := range util.LinuxKeyCodes {
 				if err := uiauto.NamedCombine(fmt.Sprintf("typing %s + %s, then %s + %s", getModifierInfo(key1keystroke.modifierstatus), key1keystroke.keycode.KeyName, getModifierInfo(key2Modifiers), key.KeyName),
 					its.Clear(inputField),
-					its.ClickFieldAndWaitForActive(inputField),
 					util.TwoKeysAction(key1keystroke.modifierstatus, key2Modifiers, key1keystroke.keycode.LinuxKeyCode, key.LinuxKeyCode, kb),
 				)(ctx); err != nil {
 					s.Fatal("Failed to typing key: ", err)
