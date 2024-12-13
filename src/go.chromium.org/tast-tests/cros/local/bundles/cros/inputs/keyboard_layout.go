@@ -119,6 +119,10 @@ func KeyboardLayout(ctx context.Context, s *testing.State) {
 	w.Write([]string{"shift-1", "altgr-1", "caps-1", "location-1", "shift-2", "altgr-2", "caps-2", "location-2", "string", "unicode"})
 	noOpKeystrokes := make([]keystroke, 0)
 
+	// Whether ESC is needed to abort possible dead-key composition or
+	// modifier latch from previous iteration.
+	needEsc := false
+
 	if err := its.ClickFieldAndWaitForActive(inputField)(ctx); err != nil {
 		s.Fatal("Failed to ClickFieldAndWaitForActive: ", err)
 	}
@@ -130,7 +134,7 @@ func KeyboardLayout(ctx context.Context, s *testing.State) {
 		for _, key := range util.LinuxKeyCodes {
 			if err := uiauto.NamedCombine(fmt.Sprintf("typing %s + %s", getModifierInfo(modifiers), key.KeyName),
 				its.Clear(inputField),
-				util.SingleKeyAction(modifiers, key.LinuxKeyCode, kb),
+				util.SingleKeyAction(needEsc, modifiers, key.LinuxKeyCode, kb),
 			)(ctx); err != nil {
 				s.Fatal("Failed to typing key: ", err)
 			}
@@ -155,6 +159,11 @@ func KeyboardLayout(ctx context.Context, s *testing.State) {
 				"",
 				nodeInfo.Value,
 				getUniCode(nodeInfo.Value)})
+
+			// No-op looking outcome indicates either true no-op,
+			// or ongoing dead-key composition or modifier latch
+			// (hence ESC to abort it in next iteration).
+			needEsc = (nodeInfo.Value == "")
 		}
 	}
 
@@ -166,7 +175,7 @@ func KeyboardLayout(ctx context.Context, s *testing.State) {
 			for _, key2 := range util.LinuxKeyCodes {
 				if err := uiauto.NamedCombine(fmt.Sprintf("typing %s + %s, then %s + %s", getModifierInfo(keystroke1.modifiers), keystroke1.key.KeyName, getModifierInfo(modifiers2), key2.KeyName),
 					its.Clear(inputField),
-					util.TwoKeysAction(keystroke1.modifiers, modifiers2, keystroke1.key.LinuxKeyCode, key2.LinuxKeyCode, kb),
+					util.TwoKeysAction(needEsc, keystroke1.modifiers, modifiers2, keystroke1.key.LinuxKeyCode, key2.LinuxKeyCode, kb),
 				)(ctx); err != nil {
 					s.Fatal("Failed to typing key: ", err)
 				}
@@ -187,6 +196,11 @@ func KeyboardLayout(ctx context.Context, s *testing.State) {
 					key2.KeyName,
 					nodeInfo.Value,
 					getUniCode(nodeInfo.Value)})
+
+				// No-op looking outcome indicates either true
+				// no-op, or dead-key composition or modifier
+				// latch (hence ESC to abort in next iteration).
+				needEsc = (nodeInfo.Value == "")
 			}
 		}
 	}
