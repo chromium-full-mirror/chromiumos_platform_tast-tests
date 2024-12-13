@@ -7,10 +7,11 @@ package printer
 import (
 	"bytes"
 	"context"
+	"fmt"
 	"io/fs"
-	"io/ioutil"
 	"os"
 	"path/filepath"
+	"regexp"
 	"time"
 
 	"go.chromium.org/tast-tests/cros/local/printing/lp"
@@ -47,7 +48,7 @@ func OAuthToken(ctx context.Context, s *testing.State) {
 
 	// Create the temp dir to store the HTTP headers.
 	httpHeaderFiles := "printer.OAuthToken.httpHeaders"
-	tmpDir, err := ioutil.TempDir("", httpHeaderFiles)
+	tmpDir, err := os.MkdirTemp("", httpHeaderFiles)
 	if err != nil {
 		s.Fatal("Failed to create temporary directory")
 	}
@@ -107,19 +108,51 @@ func OAuthToken(ctx context.Context, s *testing.State) {
 
 	// Look at all of our http header files and make sure they have the correct
 	// oauth access token.
-	if files, err := fs.Glob(os.DirFS(tmpDir), "*"); err != nil {
+	if files, err := fs.Glob(os.DirFS(tmpDir), "http-header-*"); err != nil {
 		s.Fatalf("Unable to read dir %s: %s", tmpDir, err)
 	} else {
 		for _, file := range files {
-			fileToRead := filepath.Join(tmpDir, file)
-			if data, err := ioutil.ReadFile(fileToRead); err != nil {
+			httpData, err := os.ReadFile(filepath.Join(tmpDir, file))
+			if err != nil {
 				s.Fatalf("Unable to read HTTP header file %s: %s", file, err)
-			} else {
-				if !(bytes.Contains(data,
-					[]byte("Authorization: Bearer "+oauthTokenString+"\n"))) {
+			}
+
+			httpOauth := "Authorization: Bearer " + oauthTokenString + "\n"
+			if !(bytes.Contains(httpData, []byte(httpOauth))) {
+				// Get-Printer-Attributes is an exception because it
+				// can be made without an OAuth header, so check for it
+				ippGetAttr := "Op ID: Get-Printer-Attributes"
+
+				ippData, err := getIppFileData(tmpDir, file)
+				if err != nil {
+					s.Fatalf("Unable to read IPP header file %s: %s", file, err)
+				}
+
+				if !(bytes.Contains(ippData, []byte(ippGetAttr))) {
 					s.Fatal("HTTP header does not contain correct oauth token")
 				}
 			}
 		}
 	}
+}
+
+// getIppFileData finds the corresponding IPP header file for a given HTTP header file
+// and returns its contents
+func getIppFileData(directory, httpFile string) ([]byte, error) {
+	re := regexp.MustCompile(`http-header-(\d+)\.txt`)
+	matches := re.FindStringSubmatch(httpFile)
+	if len(matches) != 2 {
+		return []byte{}, errors.Errorf("file %s does not match expected pattern", httpFile)
+	}
+
+	ippFile := fmt.Sprintf("ipp-header-%s.txt", matches[1])
+
+	// Read the corresponding IPP file
+	ippFilePath := filepath.Join(directory, ippFile)
+	ippData, err := os.ReadFile(ippFilePath)
+	if err != nil {
+		return nil, errors.Errorf("unable to read IPP header file %s: %s", ippFile, err)
+	}
+
+	return ippData, nil
 }
