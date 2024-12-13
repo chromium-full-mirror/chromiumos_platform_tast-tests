@@ -289,25 +289,25 @@ func SingleKeyAction(modifiers ModifiersStatus, key input.EventCode, kb *input.K
 }
 
 // TwoKeysAction return the action for pressing different modifier with key-1 and key-2.
-func TwoKeysAction(deadkeyModifier, modifiers ModifiersStatus, key1, key2 input.EventCode, kb *input.KeyboardEventWriter) action.Action {
+func TwoKeysAction(modifiers1, modifiers2 ModifiersStatus, key1, key2 input.EventCode, kb *input.KeyboardEventWriter) action.Action {
 	// Alt+Search should be equivalent to Capslock, but unlike real Capslock
 	// it unexpectedly disrupts dead-key composition (crbug/383673473).
 	return uiauto.Combine("click key based on modifers state",
-		ifModifierThen(deadkeyModifier.Caps, kb.TypeKeyAction(input.KEY_CAPSLOCK)),
-		ifModifierThen(deadkeyModifier.Shift, kb.AccelPressAction("shift")),
-		ifModifierThen(deadkeyModifier.Altgr, kb.AccelPressAction("Altgr")),
+		ifModifierThen(modifiers1.Caps, kb.TypeKeyAction(input.KEY_CAPSLOCK)),
+		ifModifierThen(modifiers1.Shift, kb.AccelPressAction("shift")),
+		ifModifierThen(modifiers1.Altgr, kb.AccelPressAction("Altgr")),
 		kb.TypeKeyAction(key1),
-		ifModifierThen(deadkeyModifier.Altgr, kb.AccelReleaseAction("Altgr")),
-		ifModifierThen(deadkeyModifier.Shift, kb.AccelReleaseAction("shift")),
-		ifModifierThen(deadkeyModifier.Caps, kb.TypeKeyAction(input.KEY_CAPSLOCK)),
+		ifModifierThen(modifiers1.Altgr, kb.AccelReleaseAction("Altgr")),
+		ifModifierThen(modifiers1.Shift, kb.AccelReleaseAction("shift")),
+		ifModifierThen(modifiers1.Caps, kb.TypeKeyAction(input.KEY_CAPSLOCK)),
 
-		ifModifierThen(modifiers.Caps, kb.TypeKeyAction(input.KEY_CAPSLOCK)),
-		ifModifierThen(modifiers.Shift, kb.AccelPressAction("shift")),
-		ifModifierThen(modifiers.Altgr, kb.AccelPressAction("Altgr")),
+		ifModifierThen(modifiers2.Caps, kb.TypeKeyAction(input.KEY_CAPSLOCK)),
+		ifModifierThen(modifiers2.Shift, kb.AccelPressAction("shift")),
+		ifModifierThen(modifiers2.Altgr, kb.AccelPressAction("Altgr")),
 		kb.TypeKeyAction(key2),
-		ifModifierThen(modifiers.Altgr, kb.AccelReleaseAction("Altgr")),
-		ifModifierThen(modifiers.Shift, kb.AccelReleaseAction("shift")),
-		ifModifierThen(modifiers.Caps, kb.TypeKeyAction(input.KEY_CAPSLOCK)),
+		ifModifierThen(modifiers2.Altgr, kb.AccelReleaseAction("Altgr")),
+		ifModifierThen(modifiers2.Shift, kb.AccelReleaseAction("shift")),
+		ifModifierThen(modifiers2.Caps, kb.TypeKeyAction(input.KEY_CAPSLOCK)),
 	)
 }
 

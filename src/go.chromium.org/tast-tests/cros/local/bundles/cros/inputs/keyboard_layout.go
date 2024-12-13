@@ -42,10 +42,9 @@ var altGr = testing.RegisterVarString(
 	"The flag for adding altGr case, it will be set true by default.",
 )
 
-// keystroke struct represent the potential dead key with it's mofider keys status.
 type keystroke struct {
-	keycode        util.LinuxKeyCode
-	modifierstatus util.ModifiersStatus
+	key       util.LinuxKeyCode
+	modifiers util.ModifiersStatus
 }
 
 func init() {
@@ -118,20 +117,20 @@ func KeyboardLayout(ctx context.Context, s *testing.State) {
 
 	w := csv.NewWriter(file)
 	w.Write([]string{"shift-1", "altgr-1", "caps-1", "location-1", "shift-2", "altgr-2", "caps-2", "location-2", "string", "unicode"})
-	noOpKey1ModifierList := make([]keystroke, 0)
+	noOpKeystrokes := make([]keystroke, 0)
 
 	if err := its.ClickFieldAndWaitForActive(inputField)(ctx); err != nil {
 		s.Fatal("Failed to ClickFieldAndWaitForActive: ", err)
 	}
 
-	for _, key1ModifiersStatus := range util.ModifiersStatusCombo {
-		if !needAltGrCase && key1ModifiersStatus.Altgr {
+	for _, modifiers := range util.ModifiersStatusCombo {
+		if !needAltGrCase && modifiers.Altgr {
 			continue
 		}
 		for _, key := range util.LinuxKeyCodes {
-			if err := uiauto.NamedCombine(fmt.Sprintf("typing %s + %s", getModifierInfo(key1ModifiersStatus), key.KeyName),
+			if err := uiauto.NamedCombine(fmt.Sprintf("typing %s + %s", getModifierInfo(modifiers), key.KeyName),
 				its.Clear(inputField),
-				util.SingleKeyAction(key1ModifiersStatus, key.LinuxKeyCode, kb),
+				util.SingleKeyAction(modifiers, key.LinuxKeyCode, kb),
 			)(ctx); err != nil {
 				s.Fatal("Failed to typing key: ", err)
 			}
@@ -142,13 +141,13 @@ func KeyboardLayout(ctx context.Context, s *testing.State) {
 			}
 
 			if nodeInfo.Value == "" {
-				noOpKey1ModifierList = append(noOpKey1ModifierList, keystroke{keycode: key, modifierstatus: key1ModifiersStatus})
+				noOpKeystrokes = append(noOpKeystrokes, keystroke{key: key, modifiers: modifiers})
 			}
 
 			w.Write([]string{
-				getModifierInCsv(csvShiftLabel, key1ModifiersStatus.Shift),
-				getModifierInCsv(csvAltgrLabel, key1ModifiersStatus.Altgr),
-				getModifierInCsv(csvCapsLabel, key1ModifiersStatus.Caps),
+				getModifierInCsv(csvShiftLabel, modifiers.Shift),
+				getModifierInCsv(csvAltgrLabel, modifiers.Altgr),
+				getModifierInCsv(csvCapsLabel, modifiers.Caps),
 				key.KeyName,
 				"",
 				"",
@@ -159,15 +158,15 @@ func KeyboardLayout(ctx context.Context, s *testing.State) {
 		}
 	}
 
-	for _, key1keystroke := range noOpKey1ModifierList {
-		for _, key2Modifiers := range util.ModifiersStatusCombo {
-			if !needAltGrCase && key2Modifiers.Altgr {
+	for _, keystroke1 := range noOpKeystrokes {
+		for _, modifiers2 := range util.ModifiersStatusCombo {
+			if !needAltGrCase && modifiers2.Altgr {
 				continue
 			}
-			for _, key := range util.LinuxKeyCodes {
-				if err := uiauto.NamedCombine(fmt.Sprintf("typing %s + %s, then %s + %s", getModifierInfo(key1keystroke.modifierstatus), key1keystroke.keycode.KeyName, getModifierInfo(key2Modifiers), key.KeyName),
+			for _, key2 := range util.LinuxKeyCodes {
+				if err := uiauto.NamedCombine(fmt.Sprintf("typing %s + %s, then %s + %s", getModifierInfo(keystroke1.modifiers), keystroke1.key.KeyName, getModifierInfo(modifiers2), key2.KeyName),
 					its.Clear(inputField),
-					util.TwoKeysAction(key1keystroke.modifierstatus, key2Modifiers, key1keystroke.keycode.LinuxKeyCode, key.LinuxKeyCode, kb),
+					util.TwoKeysAction(keystroke1.modifiers, modifiers2, keystroke1.key.LinuxKeyCode, key2.LinuxKeyCode, kb),
 				)(ctx); err != nil {
 					s.Fatal("Failed to typing key: ", err)
 				}
@@ -178,14 +177,14 @@ func KeyboardLayout(ctx context.Context, s *testing.State) {
 				}
 
 				w.Write([]string{
-					getModifierInCsv(csvShiftLabel, key1keystroke.modifierstatus.Shift),
-					getModifierInCsv(csvAltgrLabel, key1keystroke.modifierstatus.Altgr),
-					getModifierInCsv(csvCapsLabel, key1keystroke.modifierstatus.Caps),
-					key1keystroke.keycode.KeyName,
-					getModifierInCsv(csvShiftLabel, key2Modifiers.Shift),
-					getModifierInCsv(csvAltgrLabel, key2Modifiers.Altgr),
-					getModifierInCsv(csvCapsLabel, key2Modifiers.Caps),
-					key.KeyName,
+					getModifierInCsv(csvShiftLabel, keystroke1.modifiers.Shift),
+					getModifierInCsv(csvAltgrLabel, keystroke1.modifiers.Altgr),
+					getModifierInCsv(csvCapsLabel, keystroke1.modifiers.Caps),
+					keystroke1.key.KeyName,
+					getModifierInCsv(csvShiftLabel, modifiers2.Shift),
+					getModifierInCsv(csvAltgrLabel, modifiers2.Altgr),
+					getModifierInCsv(csvCapsLabel, modifiers2.Caps),
+					key2.KeyName,
 					nodeInfo.Value,
 					getUniCode(nodeInfo.Value)})
 			}
@@ -215,15 +214,15 @@ func getModifierInCsv(modifier string, modifierStatus bool) string {
 	return ""
 }
 
-func getModifierInfo(status util.ModifiersStatus) []string {
+func getModifierInfo(modifiers util.ModifiersStatus) []string {
 	var activeKeys []string
-	if status.Shift {
+	if modifiers.Shift {
 		activeKeys = append(activeKeys, "SHIFT")
 	}
-	if status.Altgr {
+	if modifiers.Altgr {
 		activeKeys = append(activeKeys, "ALTGR")
 	}
-	if status.Caps {
+	if modifiers.Caps {
 		activeKeys = append(activeKeys, "CAPS")
 	}
 	return activeKeys
