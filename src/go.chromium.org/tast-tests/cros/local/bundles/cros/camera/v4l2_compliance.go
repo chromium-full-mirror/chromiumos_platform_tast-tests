@@ -44,6 +44,7 @@ func V4L2Compliance(ctx context.Context, s *testing.State) {
 		"322e:2339": "b/327164074",
 		"5959:0131": "b/302211073", // Auto PLF missing
 		"2b7e:1085": "b/302211073", // Auto PLF missing
+		"3277:0003": "b/383995807", // Focus return EIO
 	}
 
 	captureDevices, err := testutil.CaptureDevicesFromV4L2Test(ctx)
