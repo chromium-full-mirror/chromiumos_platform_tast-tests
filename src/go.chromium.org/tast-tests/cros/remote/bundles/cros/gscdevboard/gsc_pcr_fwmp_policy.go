@@ -39,7 +39,7 @@ func init() {
 		Timeout: 10 * time.Minute,
 		Contacts: []string{
 			"cros-hwsec@google.com", // CrOS GSC Developers
-			"granaghan@google.com",  // Test Author
+			"mruthven@google.com",   // Test Author
 		},
 		BugComponent: "b:715469", // ChromeOS > Platform > System > Hardware Security > HwSec GSC > Ti50
 		Attr: []string{

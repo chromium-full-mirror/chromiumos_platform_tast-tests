@@ -35,11 +35,11 @@ const (
 func init() {
 	testing.AddTest(&testing.Test{
 		Func:    GSCPCREncstatefulPolicy,
-		Desc:    "Test FWMP can be updated in the right PCR0 states",
+		Desc:    "Test EncStateful can be updated in the right PCR0 states",
 		Timeout: 10 * time.Minute,
 		Contacts: []string{
 			"cros-hwsec@google.com", // CrOS GSC Developers
-			"granaghan@google.com",  // Test Author
+			"mruthven@google.com",   // Test Author
 		},
 		BugComponent: "b:715469", // ChromeOS > Platform > System > Hardware Security > HwSec GSC > Ti50
 		Attr: []string{
@@ -166,7 +166,7 @@ func GSCPCREncstatefulPolicy(ctx context.Context, s *testing.State) {
 		s.Log("Blocked defining EncStateful after PCR0 extend")
 		return
 	}
-	th.MustSucceed(err, "failed to define FWMP after PCR0 is extended")
+	th.MustSucceed(err, "failed to define EncStateful after PCR0 is extended")
 	defer tpm.NvUndefineSpace(attr)
 	s.Log("Defined EncStateful after PCR0 extend")
 
