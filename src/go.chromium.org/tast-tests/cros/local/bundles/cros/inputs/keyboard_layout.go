@@ -124,9 +124,8 @@ func KeyboardLayout(ctx context.Context, s *testing.State) {
 		if !needAltGrCase && key1ModifiersStatus.Altgr {
 			continue
 		}
-		testing.ContextLog(ctx, getSingleKeyLogContent(key1ModifiersStatus))
 		for _, key := range util.LinuxKeyCodes {
-			if err := uiauto.NamedCombine(fmt.Sprintf("typing key %s", key.KeyName),
+			if err := uiauto.NamedCombine(fmt.Sprintf("typing %s + %s", getModifierInfo(key1ModifiersStatus), key.KeyName),
 				its.Clear(inputField),
 				its.ClickFieldAndWaitForActive(inputField),
 				util.SingleKeyAction(key1ModifiersStatus, key.LinuxKeyCode, kb),
@@ -162,9 +161,8 @@ func KeyboardLayout(ctx context.Context, s *testing.State) {
 			if !needAltGrCase && key2Modifiers.Altgr {
 				continue
 			}
-			testing.ContextLog(ctx, getTwoKeysLogConent(key1keystroke, key2Modifiers))
 			for _, key := range util.LinuxKeyCodes {
-				if err := uiauto.NamedCombine(fmt.Sprintf("typing key %s", key.KeyName),
+				if err := uiauto.NamedCombine(fmt.Sprintf("typing %s + %s, then %s + %s", getModifierInfo(key1keystroke.modifierstatus), key1keystroke.keycode.KeyName, getModifierInfo(key2Modifiers), key.KeyName),
 					its.Clear(inputField),
 					its.ClickFieldAndWaitForActive(inputField),
 					util.TwoKeysAction(key1keystroke.modifierstatus, key2Modifiers, key1keystroke.keycode.LinuxKeyCode, key.LinuxKeyCode, kb),
@@ -213,38 +211,6 @@ func getModifierInCsv(modifier string, modifierStatus bool) string {
 		return modifier
 	}
 	return ""
-}
-
-func getSingleKeyLogContent(status util.ModifiersStatus) string {
-	var activeKeys []string = getModifierInfo(status)
-
-	if len(activeKeys) == 0 {
-		return "Start single key case with no modifier key pressed."
-	}
-
-	return fmt.Sprintf("Start single key case with modifier key %s pressed.", strings.Join(activeKeys, " + "))
-}
-
-func getTwoKeysLogConent(keystroke keystroke, key2Status util.ModifiersStatus) string {
-	key1ActiveModifiers := getModifierInfo(keystroke.modifierstatus)
-	twoKeysLog := fmt.Sprintf("Start two key cases with key1 %s ", keystroke.keycode.KeyName)
-
-	if len(key1ActiveModifiers) > 0 {
-		twoKeysLog += fmt.Sprintf("with modifier key %s pressed ", strings.Join(key1ActiveModifiers, " + "))
-	} else {
-		twoKeysLog += "with no modifier key pressed "
-	}
-
-	key2ActiveModifiers := getModifierInfo(key2Status)
-	twoKeysLog += "and key2 "
-
-	if len(key2ActiveModifiers) > 0 {
-		twoKeysLog += fmt.Sprintf("with modifier key %s pressed.", strings.Join(key2ActiveModifiers, " + "))
-	} else {
-		twoKeysLog += "with no modifier key pressed."
-	}
-
-	return twoKeysLog
 }
 
 func getModifierInfo(status util.ModifiersStatus) []string {
