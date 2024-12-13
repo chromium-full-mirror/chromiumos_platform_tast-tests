@@ -15,11 +15,12 @@ import (
 	"go.chromium.org/tast/core/testing"
 )
 
-// ShutdownDUT performs power long press to shutdown DUT.
+// ShutdownDUT is a helper function for commanding the DUT to shutdown and waiting
+// until it does so with a timeout.
 func ShutdownDUT(ctx context.Context, pxy *servo.Proxy, dut *dut.DUT) error {
 	testing.ContextLog(ctx, "Performing shutdown DUT")
-	if err := pxy.Servo().KeypressWithDuration(ctx, servo.PowerKey, servo.DurLongPress); err != nil {
-		return errors.Wrap(err, "failed to power long press")
+	if err := pxy.Servo().SetPowerState(ctx, servo.PowerStateOff); err != nil {
+		return errors.Wrap(err, "failed to set power_state:off")
 	}
 	sdCtx, cancel := context.WithTimeout(ctx, 30*time.Second)
 	defer cancel()
@@ -48,14 +49,15 @@ func SuspendDUT(ctx context.Context, dut *dut.DUT, pxy *servo.Proxy) error {
 	}, &testing.PollOptions{Timeout: 40 * time.Second, Interval: time.Second})
 }
 
-// PowerOnDUT performs power normal press to wake DUT.
+// PowerOnDUT is a helper function for commanding the DUT to power on and waiting
+// until it does so with a timeout.
 func PowerOnDUT(ctx context.Context, pxy *servo.Proxy, dut *dut.DUT) error {
 	testing.ContextLog(ctx, "Performing power on DUT")
 	return testing.Poll(ctx, func(ctx context.Context) error {
 		waitCtx, cancel := context.WithTimeout(ctx, time.Minute)
 		defer cancel()
-		if err := pxy.Servo().KeypressWithDuration(ctx, servo.PowerKey, servo.DurPress); err != nil {
-			return errors.Wrap(err, "failed to press the power button of the DUT")
+		if err := pxy.Servo().SetPowerState(ctx, servo.PowerStateOn); err != nil {
+			return errors.Wrap(err, "failed to set power_state:on")
 		}
 		if err := dut.WaitConnect(waitCtx); err != nil {
 			return errors.Wrap(err, "failed to wait connect to the DUT")
