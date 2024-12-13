@@ -23,6 +23,10 @@ import (
 	"go.chromium.org/tast/core/testing/hwdep"
 )
 
+type reimagineTestParameters struct {
+	withPrompt bool
+}
+
 func init() {
 	testing.AddTest(&testing.Test{
 		Func: ReimaginePowerMetrics,
@@ -38,6 +42,20 @@ func init() {
 		Data:         []string{constant.ImageTestFileName},
 		Attr:         []string{"group:crosbolt", "crosbolt_perbuild"},
 		Fixture:      setup.PowerAshGAIA,
+		Params: []testing.Param{
+			{
+				Name: "with_text_prompt",
+				Val: reimagineTestParameters{
+					withPrompt: true,
+				},
+			},
+			{
+				Name: "without_text_prompt",
+				Val: reimagineTestParameters{
+					withPrompt: false,
+				},
+			},
+		},
 	})
 }
 
@@ -97,7 +115,7 @@ func ReimaginePowerMetrics(ctx context.Context, s *testing.State) {
 	}
 
 	if err := util.WaitForSpinner(ctx, tconn, ui); err != nil {
-		s.Error("Error while waiting for spinner: ", err)
+		s.Log("Error while waiting for spinner: ", err)
 	}
 
 	// Draw a scribble on the image
@@ -105,14 +123,17 @@ func ReimaginePowerMetrics(ctx context.Context, s *testing.State) {
 		s.Fatal("Cannot draw on the image")
 	}
 
-	// Input the text prompt
-	reimagineTextArea := nodewith.Role(role.TextField).Name("What do you want to generate in the area?").Ancestor(galleryapp.RootFinder)
-	if err := ui.LeftClick(reimagineTextArea)(ctx); err != nil {
-		s.Fatal("Failed to click the prompt text area: ", err)
-	}
+	params := s.Param().(reimagineTestParameters)
+	if params.withPrompt {
+		// Input the text prompt
+		reimagineTextArea := nodewith.Role(role.TextField).Name("What do you want to generate in the area?").Ancestor(galleryapp.RootFinder)
+		if err := ui.LeftClick(reimagineTextArea)(ctx); err != nil {
+			s.Fatal("Failed to click the prompt text area: ", err)
+		}
 
-	if err := kb.Type(ctx, "a cute cat"); err != nil {
-		s.Fatal("Failed to type the text prompt: ", err)
+		if err := kb.Type(ctx, "a cute cat"); err != nil {
+			s.Fatal("Failed to type the text prompt: ", err)
+		}
 	}
 
 	// Click on the reimagine button

@@ -21,6 +21,7 @@ import (
 	"go.chromium.org/tast-tests/cros/local/chrome/uiauto/role"
 	"go.chromium.org/tast-tests/cros/local/coords"
 	"go.chromium.org/tast-tests/cros/local/cryptohome"
+	"go.chromium.org/tast-tests/cros/local/dbusutil"
 	"go.chromium.org/tast-tests/cros/local/dlc"
 	"go.chromium.org/tast-tests/cros/local/updateengine"
 	"go.chromium.org/tast-tests/cros/local/upstart"
@@ -88,8 +89,13 @@ func DownloadAndOpenFileInGallery(ctx context.Context, cr *chrome.Chrome, testFi
 // EnsureDLCInstalled ensures a DLC package is installed.
 func EnsureDLCInstalled(ctx context.Context, dlcID string) error {
 	// Ensure that the update engine service is ready to receive DLC install request from DLC service.
-	if err := upstart.StartJobAndWaitForDbusService(ctx, updateengine.JobName, updateengine.ServiceName); err != nil {
+	if err := upstart.EnsureJobRunning(ctx, updateengine.JobName); err != nil {
 		return errors.Wrapf(err, "failed to ensure %s running", updateengine.JobName)
+	}
+	if bus, err := dbusutil.SystemBus(); err != nil {
+		return errors.Wrap(err, "failed to connect to the message bus")
+	} else if err := dbusutil.WaitForService(ctx, bus, updateengine.ServiceName); err != nil {
+		return errors.Wrapf(err, "failed to wait for D-Bus service %s", updateengine.ServiceName)
 	}
 
 	// Check dlcservice is up and running.
