@@ -7,7 +7,7 @@ package apps
 import (
 	"bytes"
 	"context"
-	"math/rand"
+	"crypto/rand"
 	"os"
 	"path/filepath"
 	"time"

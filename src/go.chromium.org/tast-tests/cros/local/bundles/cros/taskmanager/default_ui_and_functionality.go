@@ -197,7 +197,6 @@ func (f *endProcessButtonEnabledVerifier) verify(ctx context.Context) error {
 		return errors.New("expecting at least two processes")
 	}
 
-	rand.Seed(time.Now().UnixNano())
 	numberOfRows := len(processesInfo)
 	// Skip the first process "Browser", which it cannot be terminated by default.
 	nth := rand.Intn(numberOfRows-1) + 1
@@ -232,7 +231,6 @@ func newTerminateProcessVerifier(res *taskManagerDefaultTestResources) *terminat
 func (f *terminateProcessVerifier) getDescription() string { return f.description }
 
 func (f *terminateProcessVerifier) verify(ctx context.Context) error {
-	rand.Seed(time.Now().UnixNano())
 	p := f.processes[rand.Intn(len(f.processes))]
 
 	if status, err := p.Status(ctx); err != nil {

@@ -695,10 +695,6 @@ func RunHardwareTests(ctx context.Context, s *testing.State, cr *chrome.Chrome, 
 		s.Fatal("Failed to sleep after selecting scanner: ", err)
 	}
 
-	if mode == HardwareTestRunRandomizedCombinations {
-		rand.Seed(time.Now().UnixNano())
-	}
-
 	myFilesPath, err := cryptohome.MyFilesPath(ctx, cr.NormalizedUser())
 	if err != nil {
 		s.Fatal("Failed to retrieve users MyFiles path: ", err)

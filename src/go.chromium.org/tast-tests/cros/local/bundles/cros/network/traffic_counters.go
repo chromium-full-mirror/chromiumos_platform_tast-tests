@@ -6,10 +6,10 @@ package network
 
 import (
 	"context"
+	"crypto/rand"
 	"encoding/hex"
 	"fmt"
 	"io"
-	"math/rand"
 	"net"
 	"net/http"
 	"os/user"
@@ -224,7 +224,6 @@ func TrafficCounters(ctx context.Context, s *testing.State) {
 	defer svr.cleanup(cleanupCtx)
 
 	b := make([]byte, 128)
-	rand.Seed(time.Now().UnixNano())
 	rand.Read(b) // OK to elide error since its documented to return nil
 	msg := hex.EncodeToString(b)
 	msgLen := len(msg)

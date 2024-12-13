@@ -7,7 +7,6 @@ package wificell
 import (
 	"context"
 	"fmt"
-	"math/rand"
 	"net"
 	"path"
 	"path/filepath"
@@ -309,9 +308,6 @@ func NewTestFixture(fullCtx, daemonCtx context.Context, options *TFOptions) (ret
 	if err := tf.initializeLabstation(ctx); err != nil {
 		return nil, err
 	}
-
-	// Seed the random as we have some randomization. e.g. default SSID.
-	rand.Seed(time.Now().UnixNano())
 
 	// Reinitialize state of routers (including the pcap).
 	if err := tf.ReinitRouters(ctx, true); err != nil {

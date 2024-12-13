@@ -5,6 +5,7 @@
 package hostapd
 
 import (
+	cryptorand "crypto/rand"
 	"encoding/hex"
 	"fmt"
 	"math/rand"
@@ -1579,7 +1580,7 @@ const macBitMulticast = 0x1
 // This can also be used as BSSID.
 func RandomMAC() (net.HardwareAddr, error) {
 	randMAC := make(net.HardwareAddr, 6)
-	if _, err := rand.Read(randMAC); err != nil {
+	if _, err := cryptorand.Read(randMAC); err != nil {
 		return nil, errors.Wrap(err, "failed to generate random MAC address")
 	}
 	randMAC[0] = (randMAC[0] &^ macBitMulticast) | macBitLocal

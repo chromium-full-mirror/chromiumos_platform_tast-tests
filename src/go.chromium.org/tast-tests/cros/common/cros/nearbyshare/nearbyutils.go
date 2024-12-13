@@ -8,7 +8,6 @@ import (
 	"math"
 	"math/rand"
 	"strconv"
-	"time"
 
 	"go.chromium.org/tast/core/testing"
 )
@@ -24,7 +23,6 @@ var EnableFeatures = testing.RegisterVarString(
 // when nearby devices in the lab may be running the same test at the same time.
 func RandomDeviceName(basename string) string {
 	const maxDigits = 6
-	rand.Seed(time.Now().UnixNano())
 	num := rand.Intn(int(math.Pow10(maxDigits) - 1))
 	return basename + strconv.Itoa(num)
 }

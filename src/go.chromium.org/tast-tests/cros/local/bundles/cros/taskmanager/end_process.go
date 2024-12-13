@@ -268,7 +268,6 @@ func newPluginTest() (*pluginTest, func(), error) {
 }
 
 func (pt *pluginTest) terminateAndVerify(ctx context.Context, res *endProcessTestResources) error {
-	rand.Seed(time.Now().UnixNano())
 	p := pt.processes[rand.Intn(len(pt.processes))]
 
 	name, err := p.NameInTaskManager(ctx)
@@ -334,7 +333,6 @@ func (gtt *groupedTabsTest) getProcesses() []taskmanager.Process {
 }
 
 func terminateAndVerify(ctx context.Context, test endProcessTest, res *endProcessTestResources) error {
-	rand.Seed(time.Now().UnixNano())
 	n := rand.Intn(len(test.getProcesses()))
 	p := test.getProcesses()[n]
 

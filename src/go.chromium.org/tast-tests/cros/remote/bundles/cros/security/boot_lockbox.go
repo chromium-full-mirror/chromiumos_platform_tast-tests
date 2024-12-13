@@ -7,8 +7,8 @@ package security
 import (
 	"bytes"
 	"context"
+	"crypto/rand"
 	"encoding/hex"
-	"math/rand"
 
 	"github.com/golang/protobuf/ptypes/empty"
 

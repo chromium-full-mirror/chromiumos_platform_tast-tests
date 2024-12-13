@@ -111,9 +111,9 @@ func getDriveURL(ctx context.Context, fileType string, ids []string) (string, er
 	// each model gets the same document on each run.
 	hash := fnv.New64a()
 	hash.Write([]byte(model))
-	rand.Seed(int64(hash.Sum64()))
+	r := rand.New(rand.NewSource(int64(hash.Sum64())))
 
-	return fmt.Sprintf("https://docs.google.com/%s/d/%s/edit", fileType, ids[rand.Intn(len(ids))]), nil
+	return fmt.Sprintf("https://docs.google.com/%s/d/%s/edit", fileType, ids[r.Intn(len(ids))]), nil
 }
 
 // GetTestDocCommentURL is like GetTestDocURL, but returns a link to a

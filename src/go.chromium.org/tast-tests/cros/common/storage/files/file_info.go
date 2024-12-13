@@ -9,6 +9,7 @@ package files
 import (
 	"bytes"
 	"context"
+	cryptorand "crypto/rand"
 	"crypto/sha256"
 	"encoding/binary"
 	"encoding/hex"
@@ -62,7 +63,7 @@ type FileInfo struct {
 // touch anything on disk. To reset the on disk state, call Clear().
 func NewFileInfo(ctx context.Context, path string, runner hwsec.CmdRunner) (*FileInfo, error) {
 	seed := make([]byte, seedSize)
-	if _, err := rand.Read(seed); err != nil {
+	if _, err := cryptorand.Read(seed); err != nil {
 		return nil, errors.Wrap(err, "failed to generate seed for NewFileInfo")
 	}
 

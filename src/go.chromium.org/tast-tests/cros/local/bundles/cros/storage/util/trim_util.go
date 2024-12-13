@@ -6,8 +6,8 @@ package util
 
 import (
 	"crypto/sha256"
+	"crypto/rand"
 	"encoding/hex"
-	"math/rand"
 	"os"
 	"unsafe"
 
