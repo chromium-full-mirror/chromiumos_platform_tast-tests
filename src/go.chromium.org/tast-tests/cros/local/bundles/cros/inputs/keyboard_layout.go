@@ -26,6 +26,10 @@ import (
 	"go.chromium.org/tast/core/testing/hwdep"
 )
 
+const csvShiftLabel = "shift"
+const csvAltgrLabel = "altgr"
+const csvCapsLabel = "caps"
+
 var imeID = testing.RegisterVarString(
 	"inputs.imeID",
 	"",
@@ -104,7 +108,7 @@ func KeyboardLayout(ctx context.Context, s *testing.State) {
 		s.Fatal("Failed to set input method: ", err)
 	}
 
-	filename := fmt.Sprintf("%s.csv", inputMethod.Name)
+	filename := fmt.Sprintf("%s.csv", inputMethod.ID)
 	path := filepath.Join(s.OutDir(), filename)
 	file, err := os.Create(path)
 	if err != nil {
@@ -113,7 +117,7 @@ func KeyboardLayout(ctx context.Context, s *testing.State) {
 	defer file.Close()
 
 	w := csv.NewWriter(file)
-	w.Write([]string{"key1-shift", "key1-altgr", "key1-caps", "key1-location", "key2-shift", "key2-altgr", "key2-caps", "key2-location", "char", "unicode"})
+	w.Write([]string{"shift-1", "altgr-1", "caps-1", "location-1", "shift-2", "altgr-2", "caps-2", "location-2", "string", "unicode"})
 	noOpKey1ModifierList := make([]keystroke, 0)
 
 	for _, key1ModifiersStatus := range util.ModifiersStatusCombo {
@@ -135,23 +139,21 @@ func KeyboardLayout(ctx context.Context, s *testing.State) {
 				s.Fatal("Failed to get node info: ", err)
 			}
 
-			unicode := getUniCode(nodeInfo.Value)
-
-			if unicode == "no-op" {
+			if nodeInfo.Value == "" {
 				noOpKey1ModifierList = append(noOpKey1ModifierList, keystroke{keycode: key, modifierstatus: key1ModifiersStatus})
 			}
 
 			w.Write([]string{
-				getModifierInCsv("shift", key1ModifiersStatus.Shift),
-				getModifierInCsv("alt", key1ModifiersStatus.Altgr),
-				getModifierInCsv("caps", key1ModifiersStatus.Caps),
+				getModifierInCsv(csvShiftLabel, key1ModifiersStatus.Shift),
+				getModifierInCsv(csvAltgrLabel, key1ModifiersStatus.Altgr),
+				getModifierInCsv(csvCapsLabel, key1ModifiersStatus.Caps),
 				key.KeyName,
 				"",
 				"",
 				"",
 				"",
 				nodeInfo.Value,
-				unicode})
+				getUniCode(nodeInfo.Value)})
 		}
 	}
 
@@ -176,13 +178,13 @@ func KeyboardLayout(ctx context.Context, s *testing.State) {
 				}
 
 				w.Write([]string{
-					getModifierInCsv("shift", key1keystroke.modifierstatus.Shift),
-					getModifierInCsv("alt", key1keystroke.modifierstatus.Altgr),
-					getModifierInCsv("caps", key1keystroke.modifierstatus.Caps),
+					getModifierInCsv(csvShiftLabel, key1keystroke.modifierstatus.Shift),
+					getModifierInCsv(csvAltgrLabel, key1keystroke.modifierstatus.Altgr),
+					getModifierInCsv(csvCapsLabel, key1keystroke.modifierstatus.Caps),
 					key1keystroke.keycode.KeyName,
-					getModifierInCsv("shift", key2Modifiers.Shift),
-					getModifierInCsv("alt", key2Modifiers.Altgr),
-					getModifierInCsv("caps", key2Modifiers.Caps),
+					getModifierInCsv(csvShiftLabel, key2Modifiers.Shift),
+					getModifierInCsv(csvAltgrLabel, key2Modifiers.Altgr),
+					getModifierInCsv(csvCapsLabel, key2Modifiers.Caps),
 					key.KeyName,
 					nodeInfo.Value,
 					getUniCode(nodeInfo.Value)})
@@ -195,7 +197,7 @@ func KeyboardLayout(ctx context.Context, s *testing.State) {
 
 func getUniCode(str string) string {
 	if str == "" {
-		return "no-op"
+		return "(n/a)"
 	}
 
 	var unicodeArr []string
