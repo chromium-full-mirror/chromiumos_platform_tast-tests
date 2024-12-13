@@ -19,6 +19,8 @@ import (
 	"go.chromium.org/tast/core/testing"
 )
 
+const defaultDelay = 50 * time.Millisecond
+
 const (
 	// Vendor ID / Product ID that is unlikely to match the internal keyboard.
 	vendorID  = 0x1234
@@ -30,7 +32,7 @@ const (
 type KeyboardEventWriter struct {
 	rw                *RawEventWriter
 	virt              *os.File            // if non-nil, used to hold a virtual device open
-	fast              bool                // if true, do not sleep after type; useful for unit tests
+	delay             time.Duration       // duration to sleep after key-typing action
 	dev               string              // path to underlying device in /dev/input
 	topRowLayoutType  TopRowLayoutType    // layout type of the top row of the keyboard
 	topRowScanCodeMap map[EventCode]int32 // map to map between EventCodes and the scan code for top row keys. only initializd when topRowLayoutType is LayoutCustom.
@@ -45,20 +47,26 @@ var nextVirtKbdNum = 1 // appended to virtual keyboard device name
 // This is the normal use case for KeyboardImpl that skips looking for existing physical
 // keyboard in tablet mode.
 func Keyboard(ctx context.Context) (*KeyboardEventWriter, error) {
-	return KeyboardImpl(ctx, false)
+	return KeyboardImpl(ctx, false, defaultDelay)
+}
+
+// KeyboardWithCustomDelay is similar to Keyboard, but with custom duration for
+// delay after key-typing action.
+func KeyboardWithCustomDelay(ctx context.Context, customDelay time.Duration) (*KeyboardEventWriter, error) {
+	return KeyboardImpl(ctx, false, customDelay)
 }
 
 // KeyboardTabletModeForceDisabled returns an EventWriter as the KeyboardImpl does but
 // manually use the physical keyboard even if querySwitch value matches SW_TABLET_MODE.
 func KeyboardTabletModeForceDisabled(ctx context.Context) (*KeyboardEventWriter, error) {
-	return KeyboardImpl(ctx, true)
+	return KeyboardImpl(ctx, true, defaultDelay)
 }
 
 // KeyboardImpl returns an EventWriter to inject events into an arbitrary keyboard device.
 //
 // If a physical keyboard is present, it is used.
 // Otherwise, a one-off virtual device is created.
-func KeyboardImpl(ctx context.Context, tabletModeForceDisabled bool) (*KeyboardEventWriter, error) {
+func KeyboardImpl(ctx context.Context, tabletModeForceDisabled bool, delay time.Duration) (*KeyboardEventWriter, error) {
 	// Look for an existing physical keyboard first, but only if we're not in tablet mode,
 	// as the EC may mask keyboard events in that case: https://crbug.com/930568
 	if sw, err := querySwitch(ctx, SW_TABLET_MODE); err != nil {
@@ -75,7 +83,7 @@ func KeyboardImpl(ctx context.Context, tabletModeForceDisabled bool) (*KeyboardE
 			if err != nil {
 				return nil, err
 			}
-			return &KeyboardEventWriter{rw: rw, dev: infoPath}, nil
+			return &KeyboardEventWriter{rw: rw, delay: delay, dev: infoPath}, nil
 		}
 	}
 
@@ -155,7 +163,7 @@ func FindPowerKeyDevice(ctx context.Context) (bool, string, error) {
 
 // virtualKeyboard creates a virtual keyboard device and returns an EventWriter that injects events into it.
 func virtualKeyboard(ctx context.Context, deviceID devID) (*KeyboardEventWriter, error) {
-	kw := &KeyboardEventWriter{}
+	kw := &KeyboardEventWriter{delay: defaultDelay}
 
 	// Include our PID in the device name to be extra careful in case an old bundle process hasn't exited.
 	name := fmt.Sprintf("Tast virtual keyboard %d.%d", os.Getpid(), nextVirtKbdNum)
@@ -373,7 +381,7 @@ func (kw *KeyboardEventWriter) AccelRelease(ctx context.Context, s string) error
 // Without sleeping between keystrokes, the omnibox seems to produce scrambled text.
 // Presumably there's a bug in Chrome's input stack or the omnibox code.
 func (kw *KeyboardEventWriter) sleepAfterType(ctx context.Context, firstErr *error) {
-	if kw.fast {
+	if kw.delay <= 0 {
 		return
 	}
 	if *firstErr != nil {
@@ -381,7 +389,7 @@ func (kw *KeyboardEventWriter) sleepAfterType(ctx context.Context, firstErr *err
 	}
 
 	// GoBigSleepLint: Sleeps to simulate key strokes by a keyboard.
-	if err := testing.Sleep(ctx, 50*time.Millisecond); err != nil {
+	if err := testing.Sleep(ctx, kw.delay); err != nil {
 		*firstErr = errors.Wrap(err, "timeout while typing")
 	}
 }
