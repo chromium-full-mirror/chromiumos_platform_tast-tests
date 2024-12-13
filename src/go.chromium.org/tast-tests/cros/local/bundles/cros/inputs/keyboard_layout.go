@@ -214,7 +214,7 @@ func getModifierInCsv(modifier string, modifierStatus bool) string {
 }
 
 func getSingleKeyLogContent(status util.ModifiersStatus) string {
-	var activeKeys []string = getModiferInfo(status)
+	var activeKeys []string = getModifierInfo(status)
 
 	if len(activeKeys) == 0 {
 		return "Start single key case with no modifier key pressed."
@@ -224,7 +224,7 @@ func getSingleKeyLogContent(status util.ModifiersStatus) string {
 }
 
 func getTwoKeysLogConent(keystroke keystroke, key2Status util.ModifiersStatus) string {
-	key1ActiveModifiers := getModiferInfo(keystroke.modifierstatus)
+	key1ActiveModifiers := getModifierInfo(keystroke.modifierstatus)
 	twoKeysLog := fmt.Sprintf("Start two key cases with key1 %s ", keystroke.keycode.KeyName)
 
 	if len(key1ActiveModifiers) > 0 {
@@ -233,7 +233,7 @@ func getTwoKeysLogConent(keystroke keystroke, key2Status util.ModifiersStatus) s
 		twoKeysLog += "with no modifier key pressed "
 	}
 
-	key2ActiveModifiers := getModiferInfo(key2Status)
+	key2ActiveModifiers := getModifierInfo(key2Status)
 	twoKeysLog += "and key2 "
 
 	if len(key2ActiveModifiers) > 0 {
@@ -245,7 +245,7 @@ func getTwoKeysLogConent(keystroke keystroke, key2Status util.ModifiersStatus) s
 	return twoKeysLog
 }
 
-func getModiferInfo(status util.ModifiersStatus) []string {
+func getModifierInfo(status util.ModifiersStatus) []string {
 	var activeKeys []string
 	if status.Shift {
 		activeKeys = append(activeKeys, "SHIFT")
