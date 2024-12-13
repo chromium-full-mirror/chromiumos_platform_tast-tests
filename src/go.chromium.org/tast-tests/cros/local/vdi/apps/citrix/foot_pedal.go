@@ -17,8 +17,8 @@ const (
 	// FootPedalAppName is the name of the Foot Pedal application.
 	FootPedalAppName AppName = "Philips"
 
-	footPedalMarkIcon     = "foot_pedal_mark.png"
-	footPedalMaximizeIcon = "foot_pedal_maximize.png"
+	footPedalMarkIcon     = "citrix/foot_pedal_mark.png"
+	footPedalMaximizeIcon = "citrix/foot_pedal_maximize.png"
 )
 
 // FootPedalButton is the name of the foot pedal button.

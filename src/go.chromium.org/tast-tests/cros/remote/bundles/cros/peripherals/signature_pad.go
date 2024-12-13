@@ -2,7 +2,7 @@
 // Use of this source code is governed by a BSD-style license that can be
 // found in the LICENSE file.
 
-package vdi
+package peripherals
 
 import (
 	"context"
@@ -14,7 +14,8 @@ import (
 	"go.chromium.org/tast-tests/cros/common/fixture"
 	"go.chromium.org/tast-tests/cros/common/policy"
 	"go.chromium.org/tast-tests/cros/common/robotics/arm/amber"
-	"go.chromium.org/tast-tests/cros/remote/bundles/cros/vdi/citrix"
+	"go.chromium.org/tast-tests/cros/remote/bundles/cros/peripherals/citrix"
+	"go.chromium.org/tast-tests/cros/remote/bundles/cros/peripherals/utils"
 	ps "go.chromium.org/tast-tests/cros/services/cros/policy"
 	pb "go.chromium.org/tast-tests/cros/services/cros/ui"
 	"go.chromium.org/tast-tests/cros/services/cros/vdi"
@@ -26,11 +27,11 @@ import (
 )
 
 type signaturePadTestParams struct {
-	appName          citrix.AppName
-	appTitle         string
-	appIcon          string
-	motionData       string
-	deviceName       string
+	appName    citrix.AppName
+	appTitle   string
+	appIcon    string
+	motionData string
+	deviceName string
 }
 
 var signaturePadData = append(citrix.CitrixData, citrix.SignaturePadData...)
@@ -52,14 +53,14 @@ func init() {
 			"tast.cros.policy.PolicyService",
 			"tast.cros.vdi.CitrixService",
 			"tast.cros.ui.ScreenRecorderService",
-			citrix.FaillogServiceName,
+			utils.FaillogServiceName,
 		},
 		SoftwareDeps: []string{"chrome"},
 		Vars: []string{
-			"vdi.ota_citrix_username",
-			"vdi.ota_citrix_password",
-			"vdi.record_screen",
-			"vdi.manual_test",
+			"peripherals.ota_username",
+			"peripherals.ota_password",
+			"peripherals.record_screen",
+			"peripherals.manual_test",
 		},
 		Data: signaturePadData,
 		Params: []testing.Param{
@@ -90,12 +91,12 @@ func init() {
 
 func SignaturePad(ctx context.Context, s *testing.State) {
 	testParams := s.Param().(signaturePadTestParams)
-	otaUsername := s.RequiredVar("vdi.ota_citrix_username")
-	otaPassword := s.RequiredVar("vdi.ota_citrix_password")
+	otaUsername := s.RequiredVar("peripherals.ota_username")
+	otaPassword := s.RequiredVar("peripherals.ota_password")
 
 	// Prepare data path on DUT.
 	d := s.DUT()
-	dataPath, err := citrix.CopyFilesToRemote(ctx, s, d, signaturePadData)
+	dataPath, err := utils.CopyFilesToRemote(ctx, s, d, signaturePadData)
 	if err != nil {
 		s.Fatal("Failed to put files to remote: ", err)
 	}
@@ -123,9 +124,9 @@ func SignaturePad(ctx context.Context, s *testing.State) {
 	defer policyClient.StopChrome(cleanupCtx, &empty.Empty{})
 
 	recordScreen := false
-	if val, ok := s.Var("vdi.record_screen"); ok {
+	if val, ok := s.Var("peripherals.record_screen"); ok {
 		if recordScreen, err = strconv.ParseBool(val); err != nil {
-			s.Fatal("Failed to parse argument 'vdi.record_screen' of type bool: ", err)
+			s.Fatal("Failed to parse argument 'peripherals.record_screen' of type bool: ", err)
 		}
 	}
 	if recordScreen {
@@ -163,7 +164,7 @@ func SignaturePad(ctx context.Context, s *testing.State) {
 	}
 
 	defer func(ctx context.Context) {
-		citrix.DumpUITreeWithScreenshotToFile(ctx, cl.Conn, s.HasError, "ui_dump")
+		utils.DumpUITreeWithScreenshotToFile(ctx, cl.Conn, s.HasError, "ui_dump")
 		if _, err := citrixSvc.CloseCitrix(ctx, &empty.Empty{}); err != nil {
 			s.Log("Failed to close Citrix app: ", err)
 		}
@@ -174,10 +175,10 @@ func SignaturePad(ctx context.Context, s *testing.State) {
 	}
 
 	manualTest := false
-	if val, ok := s.Var("vdi.manual_test"); ok {
+	if val, ok := s.Var("peripherals.manual_test"); ok {
 		manualTest, err = strconv.ParseBool(val)
 		if err != nil {
-			s.Fatal("Failed to parse argument 'vdi.manual_test' of type bool: ", err)
+			s.Fatal("Failed to parse argument 'peripherals.manual_test' of type bool: ", err)
 		}
 	}
 

@@ -46,8 +46,8 @@ var FootPedalData = []string{
 }
 
 const (
-	footPedalMarkIcon     = "foot_pedal_mark.png"
-	footPedalMaximizeIcon = "foot_pedal_maximize.png"
+	footPedalMarkIcon     = "citrix/foot_pedal_mark.png"
+	footPedalMaximizeIcon = "citrix/foot_pedal_maximize.png"
 )
 
 // SignaturePadData holds the UI fragments that are used by Topaz/Scriptel signature. Use
@@ -62,22 +62,22 @@ var SignaturePadData = []string{
 const (
 	// ScriptelMotionData is the motion data that controls the robotic arm to
 	// operate the Scriptel signature pad.
-	ScriptelMotionData = "scriptel_motion_data.csv"
+	ScriptelMotionData = "citrix/scriptel_motion_data.csv"
 	// ScriptelAppTitle is the app title of the Scriptel app.
 	ScriptelAppTitle = "ScripTouch Sign and Save"
 	// ScriptelAppIcon is the file name of the Scriptel app icon.
-	ScriptelAppIcon         = "scriptel_icon.png"
-	scriptelTransparentIcon = "scriptel_transparent.png"
-	scriptelClearIcon       = "scriptel_clear.png"
+	ScriptelAppIcon         = "citrix/scriptel_icon.png"
+	scriptelTransparentIcon = "citrix/scriptel_transparent.png"
+	scriptelClearIcon       = "citrix/scriptel_clear.png"
 )
 
 const (
 	// TopazMotionData is the motion data that controls the robotic arm to
 	// operate the Topaz signature pad.
-	TopazMotionData = "topaz_motion_data.csv"
+	TopazMotionData = "citrix/topaz_motion_data.csv"
 	// TopazAppTitle is the app title of the Topaz app.
 	TopazAppTitle = "Topaz SigPlus Demonstration"
 	// TopazDeviceName is the device name of the Topaz signature pad.
 	TopazDeviceName = "Topaz HID Tablet"
-	topazClearIcon  = "topaz_clear.png"
+	topazClearIcon  = "citrix/topaz_clear.png"
 )

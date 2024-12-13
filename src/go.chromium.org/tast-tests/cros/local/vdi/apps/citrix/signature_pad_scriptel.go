@@ -19,8 +19,8 @@ const (
 	// ScriptelAppName is the name of the Scriptel application.
 	ScriptelAppName AppName = "Scrip"
 
-	scriptelTransparentIcon = "scriptel_transparent.png"
-	scriptelClearIcon       = "scriptel_clear.png"
+	scriptelTransparentIcon = "citrix/scriptel_transparent.png"
+	scriptelClearIcon       = "citrix/scriptel_clear.png"
 )
 
 // ScriptelSignaturePad implements the SignaturePad interface for Scriptel.

@@ -18,7 +18,7 @@ const (
 	// TopazAppName is the name of the Topaz application.
 	TopazAppName AppName = "DemoOCX32"
 
-	topazClearIcon = "topaz_clear.png"
+	topazClearIcon = "citrix/topaz_clear.png"
 )
 
 // TopazSignaturePad implements the SignaturePad interface for Topaz.

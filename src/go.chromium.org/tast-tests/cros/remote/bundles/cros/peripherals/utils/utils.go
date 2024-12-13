@@ -2,7 +2,8 @@
 // Use of this source code is governed by a BSD-style license that can be
 // found in the LICENSE file.
 
-package citrix
+// Package utils contains some common utilities for the peripherals tests.
+package utils
 
 import (
 	"context"
@@ -38,7 +39,7 @@ func DumpUITreeWithScreenshotToFile(ctx context.Context, conn *grpc.ClientConn, 
 // on the remote, and returns the tempdir path.
 func CopyFilesToRemote(ctx context.Context, s *testing.State, d *dut.DUT, fileList []string) (string, error) {
 	files := map[string]string{}
-	tempdir, err := d.Conn().CommandContext(ctx, "mktemp", "-d", "/tmp/citrix_service_XXXXXX").Output()
+	tempdir, err := d.Conn().CommandContext(ctx, "mktemp", "-d", "/tmp/peripherals_XXXXXX").Output()
 	if err != nil {
 		return "", errors.Wrap(err, "failed to create remote data path directory")
 	}
