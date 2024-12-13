@@ -34,6 +34,7 @@ var (
 	captionDialogFinder           = nodewith.Name("Caption languages & translation").Role(role.Dialog).First()
 	avMeetPermPromptFinder        = nodewith.NameRegex(avMeetPermPromptReg).Role(role.Dialog).First()
 	leaveSitePromptFinder         = nodewith.Name("Leave site?").ClassName("RootView").Role(role.Dialog).First()
+	cameraPermPromptFinder        = nodewith.NameStartingWith("storage.googleapis.com wants to").First()
 )
 
 // General dismiss button finders for prompts.
@@ -85,6 +86,13 @@ var LeaveSitePrompt = Prompt{
 	Name:              "leave site",
 	PromptFinder:      leaveSitePromptFinder,
 	ClearButtonFinder: LeaveButtonFinder.Ancestor(leaveSitePromptFinder),
+}
+
+// AllowCameraPermPrompt represents the browser prompt to request permission for camera.
+var AllowCameraPermPrompt = Prompt{
+	Name:              "Allow camera permission",
+	PromptFinder:      AllowAVButtonFinder,
+	ClearButtonFinder: AllowAVButtonFinder.Ancestor(cameraPermPromptFinder),
 }
 
 // ClearPotentialPrompts clears one or more potential prompts disorderly.

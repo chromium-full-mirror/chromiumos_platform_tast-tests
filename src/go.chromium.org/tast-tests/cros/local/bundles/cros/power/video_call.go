@@ -19,6 +19,7 @@ import (
 	"go.chromium.org/tast-tests/cros/local/chrome/uiauto/faillog"
 	"go.chromium.org/tast-tests/cros/local/chrome/uiauto/nodewith"
 	"go.chromium.org/tast-tests/cros/local/chrome/uiauto/pointer"
+	"go.chromium.org/tast-tests/cros/local/chrome/uiauto/prompts"
 	"go.chromium.org/tast-tests/cros/local/chrome/uiauto/role"
 	"go.chromium.org/tast-tests/cros/local/input"
 	"go.chromium.org/tast-tests/cros/local/power"
@@ -89,7 +90,6 @@ func VideoCall(ctx context.Context, s *testing.State) {
 	if err != nil {
 		s.Fatal("Failed to get ash tconn: ", err)
 	}
-	defer faillog.DumpUITreeOnError(ctx, s.OutDir(), s.HasError, tconn)
 
 	ui := uiauto.New(tconn)
 
@@ -133,6 +133,7 @@ func VideoCall(ctx context.Context, s *testing.State) {
 	}
 	defer docConn.Close()
 	defer docConn.CloseTarget(cleanupCtx)
+	defer faillog.DumpUITreeWithScreenshotWithTestAPIOnError(ctx, s.OutDir(), s.HasError, tconn, "ui_dump")
 
 	docWin, err := ash.WaitForAnyWindowWithTitle(ctx, tconn, titleDoc)
 	if err != nil {
@@ -169,27 +170,14 @@ func VideoCall(ctx context.Context, s *testing.State) {
 		s.Fatal("Failed to navigate: ", err)
 	}
 
-	// Check whether we need camera permission by find one of these
-	// * Allow button for camera permission
-	// * cameraData node which indicate that the camera is already recorded
-	bubble := nodewith.NameStartingWith(permBubbleName).First()
-	allow := nodewith.Name("Allow").Role(role.Button).Ancestor(bubble)
-	cameraData := nodewith.NameRegex(regexp.MustCompile(cameraDataNameRegex)).First()
-
-	foundNode, err := ui.FindAnyExists(ctx, allow, cameraData)
-	if err != nil {
-		s.Fatal("Failed to find the permission bubble: ", err)
+	// Allow camera permission if the prompt exists.
+	if err := prompts.ClearPotentialPrompts(tconn, 30*time.Second, prompts.AllowCameraPermPrompt)(ctx); err != nil {
+		s.Fatal("Failed to clear camera permission prompt dialog: ", err)
 	}
 
-	// Click the allow button if found, and wait until cameraData node exists
-	pc := pointer.NewMouse(tconn)
-	if foundNode == allow {
-		if err := pc.Click(allow)(ctx); err != nil {
-			s.Fatal("Failed to click permission bubble: ", err)
-		}
-		if err := ui.WaitUntilExists(cameraData)(ctx); err != nil {
-			s.Fatal("Failed to find the fps data note: ", err)
-		}
+	cameraData := nodewith.NameRegex(regexp.MustCompile(cameraDataNameRegex)).First()
+	if err := ui.WaitUntilExists(cameraData)(ctx); err != nil {
+		s.Fatal("Failed to find the fps data note: ", err)
 	}
 
 	// Wait until all videos start playing
@@ -204,6 +192,7 @@ func VideoCall(ctx context.Context, s *testing.State) {
 		s.Fatal("Failed to sleep: ", err)
 	}
 	// Select text input field
+	pc := pointer.NewMouse(tconn)
 	if err := pc.Click(nodewith.Name("Edit here").Role(role.TextField))(ctx); err != nil {
 		s.Fatal("Failed to select input field on docs page: ", err)
 	}
