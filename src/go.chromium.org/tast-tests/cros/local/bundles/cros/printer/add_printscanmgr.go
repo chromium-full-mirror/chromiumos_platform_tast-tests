@@ -646,8 +646,9 @@ func init() {
 					PrintFile:    "receipt_70mmx80mm.pdf",
 					ExpectedFile: "printer_add_tsc_printer_rastertobarcodetspl.bin",
 				},
-				ExtraData: []string{"receipt_70mmx80mm.pdf", "printer_add_tsc_printer_rastertobarcodetspl.ppd.gz", "printer_add_tsc_printer_rastertobarcodetspl.bin"},
-				ExtraAttr: []string{"informational"},
+				ExtraData:         []string{"receipt_70mmx80mm.pdf", "printer_add_tsc_printer_rastertobarcodetspl.ppd.gz", "printer_add_tsc_printer_rastertobarcodetspl.bin"},
+				ExtraAttr:         []string{"informational"},
+				ExtraSoftwareDeps: []string{"no_arm"},
 			},
 		},
 	})

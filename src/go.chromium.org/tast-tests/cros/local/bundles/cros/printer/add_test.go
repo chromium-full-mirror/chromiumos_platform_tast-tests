@@ -57,6 +57,12 @@ func iTestCustomInput(name, ppdFile, testFile, expectedFile string, options ...s
 	return base{ExtraAttr: []string{"informational"}, PrintFile: testFile, Name: name, PPDFile: ppdFile, ExpectedFile: expectedFile, Options: options}
 }
 
+// iTestCustomInputNoArm32 adds informational parameterized tests (one proxy, one
+// regular) that use "testFile" for printing and skips arm32 boards.
+func iTestCustomInputNoArm32(name, ppdFile, testFile, expectedFile string, options ...string) base {
+	return base{ExtraAttr: []string{"informational"}, ExtraSoftwareDeps: []string{"no_arm"}, PrintFile: testFile, Name: name, PPDFile: ppdFile, ExpectedFile: expectedFile, Options: options}
+}
+
 func TestAddParams(t *testing.T) {
 	code := genparams.Template(t, `{{ range . }} {
         Name: {{ .Name | fmt }},
@@ -160,7 +166,7 @@ func TestAddParams(t *testing.T) {
 		iTestCustomInput("epson_thermal_receipt", "printer_add_epson_thermal_receipt.ppd", "receipt_70mmx80mm.pdf", "receipt_70mmx80mm.bin"),
 		iTestCustomInput("generic_escpos_receipt", "printer_add_generic_escpos_receipt.ppd", "receipt_70mmx80mm.pdf", "printer_add_generic_escpos_receipt.bin"),
 		iTestCustomInput("hwasung", "printer_add_hwasung_printer_rastertohwasung.ppd.gz", "receipt_70mmx80mm.pdf", "printer_add_hwasung_printer_rastertohwasung.bin"),
-		iTestCustomInput("tsc", "printer_add_tsc_printer_rastertobarcodetspl.ppd.gz", "receipt_70mmx80mm.pdf", "printer_add_tsc_printer_rastertobarcodetspl.bin"),
+		iTestCustomInputNoArm32("tsc", "printer_add_tsc_printer_rastertobarcodetspl.ppd.gz", "receipt_70mmx80mm.pdf", "printer_add_tsc_printer_rastertobarcodetspl.bin"),
 	})
 	genparams.Ensure(t, "add.go", code)
 	genparams.Ensure(t, "add_printscanmgr.go", code)
