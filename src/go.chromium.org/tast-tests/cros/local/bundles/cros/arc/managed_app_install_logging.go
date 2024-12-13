@@ -7,7 +7,7 @@ package arc
 import (
 	"context"
 	"fmt"
-	"io/ioutil"
+	"os"
 	"regexp"
 	"strings"
 	"time"
@@ -244,7 +244,7 @@ func statusCodeToEvent(code string) eventType {
 
 // readLoggedEvents reads logged events from /var/log/chrome/chrome file.
 func readLoggedEvents(packageName string, useEncryptedReportingPipeline bool) ([]eventType, error) {
-	logContent, err := ioutil.ReadFile(syslog.ChromeLogFile)
+	logContent, err := os.ReadFile(syslog.ChromeLogFile)
 	if err != nil {
 		return nil, errors.Wrap(err, "failed to read "+syslog.ChromeLogFile)
 	}

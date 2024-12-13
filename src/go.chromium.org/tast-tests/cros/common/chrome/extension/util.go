@@ -8,7 +8,7 @@ import (
 	"crypto/sha256"
 	"encoding/base64"
 	"encoding/json"
-	"io/ioutil"
+	"os"
 	"path/filepath"
 )
 
@@ -40,7 +40,7 @@ func ComputeExtensionID(dir string) (string, error) {
 // is missing or malformed. A nil key is returned if the manifest is
 // parsable but doesn't contain a key.
 func readKeyFromExtensionManifest(path string) ([]byte, error) {
-	b, err := ioutil.ReadFile(path)
+	b, err := os.ReadFile(path)
 	if err != nil {
 		return nil, err
 	}

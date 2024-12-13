@@ -6,7 +6,7 @@ package rgbkbd
 
 import (
 	"context"
-	"io/ioutil"
+	"os"
 	"time"
 
 	"go.chromium.org/tast-tests/cros/local/chrome"
@@ -82,7 +82,7 @@ func CapslockColorChangePreventedForZonedKeyboards(ctx context.Context, s *testi
 	}
 	defer kb.Close(ctx)
 
-	initialContent, err := ioutil.ReadFile("/run/rgbkbd/log")
+	initialContent, err := os.ReadFile("/run/rgbkbd/log")
 	if err != nil {
 		s.Fatal("Failed to read initial rgbkbd log contents: ", err)
 	}
@@ -96,7 +96,7 @@ func CapslockColorChangePreventedForZonedKeyboards(ctx context.Context, s *testi
 		s.Fatal("Failed to press alt+search to disable caps lock: ", err)
 	}
 
-	contentAfterCapsLockKeyPress, err := ioutil.ReadFile("/run/rgbkbd/log")
+	contentAfterCapsLockKeyPress, err := os.ReadFile("/run/rgbkbd/log")
 	if err != nil {
 		s.Fatal("Failed to read rgbkbd log contents: ", err)
 	}

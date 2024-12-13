@@ -7,7 +7,7 @@ package perfboot
 import (
 	"bufio"
 	"context"
-	"io/ioutil"
+	"os"
 	"regexp"
 	"strconv"
 	"strings"
@@ -146,7 +146,7 @@ func clockDelta(ctx context.Context) (time.Duration, error) {
 		return 0, errors.Wrap(err, "failed to prase guest's /proc/timer_list")
 	}
 
-	out, err = ioutil.ReadFile("/proc/timer_list")
+	out, err = os.ReadFile("/proc/timer_list")
 	if err != nil {
 		return 0, errors.Wrap(err, "failed to read host's /proc/timer_list")
 	}

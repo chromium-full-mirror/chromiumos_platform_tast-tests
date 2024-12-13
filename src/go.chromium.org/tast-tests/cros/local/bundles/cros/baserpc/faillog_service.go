@@ -6,7 +6,6 @@ package baserpc
 
 import (
 	"context"
-	"io/ioutil"
 	"os"
 	"path/filepath"
 
@@ -41,7 +40,7 @@ func (c *FaillogService) Create(ctx context.Context, req *empty.Empty) (*baserpc
 	}
 	// Create temporary directory.
 	var err error
-	if c.tmpDir, err = ioutil.TempDir("", ""); err != nil {
+	if c.tmpDir, err = os.MkdirTemp("", ""); err != nil {
 		return nil, errors.Wrap(err, "failed to create a temp dir")
 	}
 

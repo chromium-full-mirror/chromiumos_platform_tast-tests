@@ -6,7 +6,6 @@ package smb
 
 import (
 	"context"
-	"io/ioutil"
 	"os"
 	"path/filepath"
 	"time"
@@ -88,7 +87,7 @@ func (f *fixture) SetUp(ctx context.Context, s *testing.FixtState) interface{} {
 
 	// Create a temporary directory for smb.conf and a guestshare, this should be
 	// removed at the end of the fixture or in the event of an error.
-	dir, err := ioutil.TempDir("", "temporary_guestshare")
+	dir, err := os.MkdirTemp("", "temporary_guestshare")
 	if err != nil {
 		s.Fatal("Failed to create temporary directory for shares: ", err)
 	}
@@ -196,7 +195,7 @@ func createSambaConf(ctx context.Context, sharePath, confLocation string) (strin
 	config.AddFileShare(secureshare)
 
 	sambaFileLocation := filepath.Join(confLocation, "smb.conf")
-	return sambaFileLocation, ioutil.WriteFile(sambaFileLocation, []byte(config.String()), 0644)
+	return sambaFileLocation, os.WriteFile(sambaFileLocation, []byte(config.String()), 0644)
 }
 
 // UnmountAllSmbMounts uses the chrome.fileManagerPrivate.removeMount API to
@@ -254,7 +253,7 @@ func UnmountAllSmbMounts(ctx context.Context, cr *chrome.Chrome) error {
 // removeAllContents removes all files / folders of the supplied path, but leave
 // the path still available.
 func removeAllContents(ctx context.Context, path string) error {
-	dir, err := ioutil.ReadDir(path)
+	dir, err := os.ReadDir(path)
 	if err != nil {
 		return errors.Wrapf(err, "failed to read path %q", path)
 	}

@@ -6,7 +6,6 @@ package printer
 
 import (
 	"context"
-	"io/ioutil"
 	"os"
 	"path/filepath"
 
@@ -99,7 +98,7 @@ func init() {
 func KnownProblemFiles(ctx context.Context, s *testing.State) {
 	param := s.Param().(usbprintertests.PrintJobSetup)
 
-	tmpDir, err := ioutil.TempDir("", "tast.printer.KnownProblemFiles.")
+	tmpDir, err := os.MkdirTemp("", "tast.printer.KnownProblemFiles.")
 	if err != nil {
 		s.Fatal("Failed to create temporary directory")
 	}

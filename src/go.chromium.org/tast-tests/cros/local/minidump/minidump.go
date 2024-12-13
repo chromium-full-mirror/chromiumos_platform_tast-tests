@@ -9,7 +9,6 @@ package minidump
 import (
 	"context"
 	"fmt"
-	"io/ioutil"
 	"os"
 	"path/filepath"
 
@@ -108,7 +107,7 @@ func unfreeze(ctx context.Context, procs []*process.Process) {
 
 // saveWithoutCrash saves minidump of a process without making it crash.
 func saveWithoutCrash(ctx context.Context, pid int32, path string) {
-	tmp, err := ioutil.TempDir("", "gcore.")
+	tmp, err := os.MkdirTemp("", "gcore.")
 	if err != nil {
 		testing.ContextLog(ctx, "Failed creating a temporary directory: ", err)
 		return

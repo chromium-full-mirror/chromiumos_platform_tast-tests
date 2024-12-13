@@ -6,7 +6,6 @@ package gtest
 
 import (
 	"context"
-	"io/ioutil"
 	"os"
 	"path/filepath"
 	"reflect"
@@ -93,7 +92,7 @@ exit 0
 const fakeGTestTimeout = time.Minute
 
 func setUpTest() (td, gtest string, retErr error) {
-	td, err := ioutil.TempDir("", "gtest")
+	td, err := os.MkdirTemp("", "gtest")
 	if err != nil {
 		return "", "", errors.Wrap(err, "failed to create temp dir")
 	}
@@ -104,7 +103,7 @@ func setUpTest() (td, gtest string, retErr error) {
 	}()
 
 	gtest = filepath.Join(td, "gtest")
-	if err := ioutil.WriteFile(gtest, []byte(fakeGTest), 0755); err != nil {
+	if err := os.WriteFile(gtest, []byte(fakeGTest), 0755); err != nil {
 		return "", "", errors.Wrap(err, "failed to create an executable script")
 	}
 
@@ -164,7 +163,7 @@ func TestLogfile(t *testing.T) {
 		t.Fatal("Unexpected execution error: ", err)
 	}
 
-	out, err := ioutil.ReadFile(logpath)
+	out, err := os.ReadFile(logpath)
 	if err != nil {
 		t.Fatal("Failed to read log file: ", err)
 	}
@@ -198,7 +197,7 @@ func TestTempLogfile(t *testing.T) {
 		t.Fatal("Unexpected number of log files: got ", len(matches))
 	}
 
-	out, err := ioutil.ReadFile(matches[0])
+	out, err := os.ReadFile(matches[0])
 	if err != nil {
 		t.Fatal("Failed to read log file: ", err)
 	}

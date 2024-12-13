@@ -6,7 +6,7 @@ package health
 
 import (
 	"context"
-	"io/ioutil"
+	"os"
 	"strings"
 
 	"go.chromium.org/tast-tests/cros/local/croshealthd"
@@ -110,7 +110,7 @@ func ProbeMemoryInfo(ctx context.Context, s *testing.State) {
 		s.Fatalf("Failed to validate memory data, err [%v]", err)
 	}
 
-	out, err := ioutil.ReadFile("/proc/cpuinfo")
+	out, err := os.ReadFile("/proc/cpuinfo")
 	if err != nil {
 		s.Fatal("Failed to read /proc/cpuinfo file: ", err)
 	}

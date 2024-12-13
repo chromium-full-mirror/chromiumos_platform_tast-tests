@@ -11,7 +11,6 @@ import (
 	"image"
 	"image/color"
 	"image/png"
-	"io/ioutil"
 	"os"
 	"path/filepath"
 
@@ -28,7 +27,7 @@ func CopyRemoteFile(ctx context.Context, fs *dutfs.Client, remoteFilePath, local
 	}
 
 	savedFilePath := filepath.Join(localFilePath, filepath.Base(remoteFilePath))
-	err = ioutil.WriteFile(savedFilePath, readData, 0777)
+	err = os.WriteFile(savedFilePath, readData, 0777)
 	if err != nil {
 		return "", errors.Wrap(err, "failed to save record file")
 	}

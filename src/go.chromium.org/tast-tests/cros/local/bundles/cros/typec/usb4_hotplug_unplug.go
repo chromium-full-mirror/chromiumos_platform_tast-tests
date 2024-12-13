@@ -7,7 +7,7 @@ package typec
 import (
 	"context"
 	"encoding/json"
-	"io/ioutil"
+	"os"
 	"strings"
 	"time"
 
@@ -69,7 +69,7 @@ func Usb4HotplugUnplug(ctx context.Context, s *testing.State) {
 	defer cancel()
 
 	// Read json config file.
-	jsonData, err := ioutil.ReadFile(s.DataPath(testConfig))
+	jsonData, err := os.ReadFile(s.DataPath(testConfig))
 	if err != nil {
 		s.Fatalf("Failed to open %v file : %v", testConfig, err)
 	}

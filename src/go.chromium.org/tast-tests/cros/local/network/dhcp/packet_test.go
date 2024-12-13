@@ -5,7 +5,7 @@
 package dhcp
 
 import (
-	"io/ioutil"
+	"os"
 	"path/filepath"
 	"reflect"
 	"strings"
@@ -34,7 +34,7 @@ var (
 )
 
 func TestPacketSerialization(t *testing.T) {
-	data, err := ioutil.ReadFile(filepath.Join(dataPathPrefix, "dhcp_discovery.log"))
+	data, err := os.ReadFile(filepath.Join(dataPathPrefix, "dhcp_discovery.log"))
 	if err != nil {
 		t.Fatalf("unable to read log file: %v", err)
 	}

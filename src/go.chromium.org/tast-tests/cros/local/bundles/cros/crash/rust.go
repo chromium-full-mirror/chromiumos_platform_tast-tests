@@ -7,7 +7,7 @@ package crash
 import (
 	"context"
 	"fmt"
-	"io/ioutil"
+	"os"
 	"os/exec"
 	"strings"
 
@@ -67,7 +67,7 @@ func Rust(ctx context.Context, s *testing.State) {
 	found := false
 	for _, match := range files[pattern] {
 		if strings.HasSuffix(match, ".meta") {
-			contents, err := ioutil.ReadFile(match)
+			contents, err := os.ReadFile(match)
 			if err != nil {
 				s.Errorf("Couldn't read meta file %s contents: %v", match, err)
 				continue

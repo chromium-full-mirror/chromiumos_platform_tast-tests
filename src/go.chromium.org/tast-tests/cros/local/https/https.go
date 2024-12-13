@@ -7,9 +7,9 @@ package https
 import (
 	"context"
 	"fmt"
-	"io/ioutil"
 	"net"
 	"net/http"
+	"os"
 	"path/filepath"
 	"time"
 
@@ -39,8 +39,8 @@ type ServerConfiguration struct {
 }
 
 func copyFile(source, destination string) error {
-	bytesRead, err := ioutil.ReadFile(source)
-	ioutil.WriteFile(destination, bytesRead, 0644)
+	bytesRead, err := os.ReadFile(source)
+	os.WriteFile(destination, bytesRead, 0644)
 	if err != nil {
 		return errors.Wrap(err, "failed to copy file")
 	}
@@ -82,7 +82,7 @@ func (handler httpsHandler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 				return
 			}
 		}
-		b, err := ioutil.ReadFile(server.ServerConfiguration.HostedFilesBasePath + "/" + path[1:])
+		b, err := os.ReadFile(server.ServerConfiguration.HostedFilesBasePath + "/" + path[1:])
 		if err != nil {
 			w.WriteHeader(404)
 		} else {

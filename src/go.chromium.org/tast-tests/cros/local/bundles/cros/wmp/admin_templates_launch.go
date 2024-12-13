@@ -7,7 +7,7 @@ package wmp
 import (
 	"context"
 	"encoding/json"
-	"io/ioutil"
+	"os"
 	"time"
 
 	"go.chromium.org/tast-tests/cros/common/fixture"
@@ -201,7 +201,7 @@ func AdminTemplatesLaunch(ctx context.Context, s *testing.State) {
 
 // getJSONFileFromFilePath returns bytes of json file with the file path.
 func getJSONFileFromFilePath(filePath string) ([]byte, error) {
-	byteValue, _ := ioutil.ReadFile(filePath)
+	byteValue, _ := os.ReadFile(filePath)
 	var jsonResult interface{}
 	json.Unmarshal(byteValue, &jsonResult)
 	return json.Marshal(jsonResult)

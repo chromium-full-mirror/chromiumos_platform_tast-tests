@@ -6,7 +6,7 @@ package wifi
 
 import (
 	"context"
-	"io/ioutil"
+	"os"
 	"path/filepath"
 
 	"go.chromium.org/tast-tests/cros/common/tbdep"
@@ -41,7 +41,7 @@ func ConcurrencyCaps(ctx context.Context, s *testing.State) {
 		s.Fatal("Expect at least one wireless phy; found nothing")
 	}
 	// Save `iw list` text to log file.
-	ioutil.WriteFile(filepath.Join(s.OutDir(), "iw_list"), out, 0644)
+	os.WriteFile(filepath.Join(s.OutDir(), "iw_list"), out, 0644)
 
 	supportsAPSTA := false
 	supportsAPSTAMultiChannel := false

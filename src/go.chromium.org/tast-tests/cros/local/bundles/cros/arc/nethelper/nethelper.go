@@ -24,8 +24,8 @@ import (
 	"context"
 	"fmt"
 	"io"
-	"io/ioutil"
 	"net"
+	"os"
 	"regexp"
 	"strconv"
 	"strings"
@@ -323,7 +323,7 @@ func handleReceivePayload(w io.Writer, r *bufio.Reader) (int64, error) {
 	}
 
 	// Read payload and discard immediately since it's not used.
-	if bytesRead, err := io.CopyN(ioutil.Discard, r, payloadSize); err != nil {
+	if bytesRead, err := io.CopyN(io.Discard, r, payloadSize); err != nil {
 		return 0, errors.Wrap(err, "failed to read payload")
 	} else if bytesRead != payloadSize {
 		return 0, errors.Errorf("failed to read with %d bytes of payload processed", bytesRead)
@@ -335,7 +335,7 @@ func handleReceivePayload(w io.Writer, r *bufio.Reader) (int64, error) {
 }
 
 func handleGetTotalMemoryKB(ctx context.Context) (int, string) {
-	memInfo, err := ioutil.ReadFile("/proc/meminfo")
+	memInfo, err := os.ReadFile("/proc/meminfo")
 	if err != nil {
 		testing.ContextLog(ctx, "Failed to read /proc/meminfo with error: ", err)
 		return 0, failedResponse

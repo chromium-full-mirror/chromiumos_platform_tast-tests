@@ -7,7 +7,6 @@ package quickcheckcuj
 import (
 	"context"
 	"fmt"
-	"io/ioutil"
 	"os"
 	"regexp"
 	"strconv"
@@ -380,7 +379,7 @@ func suspendAndResume(ctx context.Context, cr *chrome.Chrome, sleepTime int) err
 	timeout := maxSleepTime + 20
 
 	// Read wakeup count here to prevent suspend retries, which happens without user input.
-	wakeupCount, err := ioutil.ReadFile("/sys/power/wakeup_count")
+	wakeupCount, err := os.ReadFile("/sys/power/wakeup_count")
 	if err != nil {
 		return errors.Wrap(err, "failed to read wakeup count before suspend")
 	}
@@ -435,7 +434,7 @@ func readWakeupDuration(ctx context.Context, earliestModTime time.Time) (float64
 		return 0.0, errors.Wrapf(err, "failed to check existence of a new last_resume_timings file within %v", pollOpts.Timeout)
 	}
 
-	b, err := ioutil.ReadFile(lastResumeTimingsFile)
+	b, err := os.ReadFile(lastResumeTimingsFile)
 	if err != nil {
 		return 0.0, errors.Wrap(err, "failed to read last_resume_timings file")
 	}

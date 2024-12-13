@@ -8,7 +8,6 @@ import (
 	"context"
 	"crypto/rsa"
 	"crypto/x509"
-	"io/ioutil"
 	"os"
 	"path/filepath"
 	"time"
@@ -127,7 +126,7 @@ func setupOwnerKey(der []byte) error {
 	}
 
 	ownerKeyPath := filepath.Join(devicesettingsDir, "owner.key")
-	if err := ioutil.WriteFile(ownerKeyPath, der, 0604); err != nil {
+	if err := os.WriteFile(ownerKeyPath, der, 0604); err != nil {
 		return errors.Wrapf(err, "failed to write to %s", ownerKeyPath)
 	}
 	return nil
@@ -174,7 +173,7 @@ func OwnershipAPI(ctx context.Context, s *testing.State) {
 	// Verify that there's no diff between sent data and fetched data.
 	if diff := cmp.Diff(settings, ret, protocmp.Transform()); diff != "" {
 		const diffName = "diff.txt"
-		if err = ioutil.WriteFile(filepath.Join(s.OutDir(), diffName), []byte(diff), 0644); err != nil {
+		if err = os.WriteFile(filepath.Join(s.OutDir(), diffName), []byte(diff), 0644); err != nil {
 			s.Error("Failed to write diff: ", err)
 		}
 		s.Error("Sent data and fetched data has diff, which is found in ", diffName)

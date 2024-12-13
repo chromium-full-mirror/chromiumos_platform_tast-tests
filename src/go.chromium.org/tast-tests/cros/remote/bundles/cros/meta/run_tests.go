@@ -6,7 +6,6 @@ package meta
 
 import (
 	"context"
-	"io/ioutil"
 	"os"
 	"path/filepath"
 	"reflect"
@@ -194,5 +193,5 @@ func readFileWithWildcard(p string) ([]byte, error) {
 	}
 
 	// Return the file byte of the first existing file found.
-	return ioutil.ReadFile(matches[0])
+	return os.ReadFile(matches[0])
 }

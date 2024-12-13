@@ -6,7 +6,7 @@ package kernel
 
 import (
 	"context"
-	"io/ioutil"
+	"os"
 	"strconv"
 	"strings"
 
@@ -60,7 +60,7 @@ func Limits(ctx context.Context, s *testing.State) {
 		{"/proc/sys/net/ipv4/tcp_syncookies", eq, 1},
 		{"/proc/sys/vm/mmap_min_addr", ge, 32768},
 	} {
-		b, err := ioutil.ReadFile(tc.path)
+		b, err := os.ReadFile(tc.path)
 		if err != nil {
 			s.Errorf("Failed to read %v: %v", tc.path, err)
 			continue

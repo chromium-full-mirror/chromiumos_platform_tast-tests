@@ -5,7 +5,6 @@
 package vkb
 
 import (
-	"io/ioutil"
 	"os"
 	"reflect"
 	"testing"
@@ -45,7 +44,7 @@ func TestNewStrokeGroup(t *testing.T) {
 		},
 	}
 
-	file, err := ioutil.TempFile("", "handwriting_test_")
+	file, err := os.CreateTemp("", "handwriting_test_")
 	if err != nil {
 		t.Fatal("TempFile() failed: ", err)
 	}

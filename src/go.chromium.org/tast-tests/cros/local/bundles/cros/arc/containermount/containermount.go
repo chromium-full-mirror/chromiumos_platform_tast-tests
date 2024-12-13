@@ -7,7 +7,7 @@ package containermount
 
 import (
 	"context"
-	"io/ioutil"
+	"os"
 	"path/filepath"
 	"reflect"
 	"regexp"
@@ -27,7 +27,7 @@ import (
 // mountsForMinijail returns a list of mount points of the minijail'ed process
 // whose PID file is at pidFile.
 func mountsForMinijail(pidFile string) ([]sysutil.MountInfo, error) {
-	b, err := ioutil.ReadFile(pidFile)
+	b, err := os.ReadFile(pidFile)
 	if err != nil {
 		return nil, errors.Wrapf(err, "failed to read %s", pidFile)
 	}

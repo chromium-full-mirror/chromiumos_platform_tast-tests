@@ -6,7 +6,7 @@ package ui
 
 import (
 	"context"
-	"io/ioutil"
+	"os"
 	"path/filepath"
 	"strings"
 	"time"
@@ -93,7 +93,7 @@ func checkJavaScriptError(ctx, cleanupCtx context.Context, crashDirs []string, o
 		return errors.New("multiple JS Errors found")
 	}
 
-	metaContents, err := ioutil.ReadFile(metas[0])
+	metaContents, err := os.ReadFile(metas[0])
 	if err != nil {
 		return errors.Wrap(err, "couldn't read meta file")
 	}
@@ -117,7 +117,7 @@ func checkJavaScriptError(ctx, cleanupCtx context.Context, crashDirs []string, o
 		return errors.Errorf("didn't find expected meta log upload: %q. Leaving for debugging: %s", expectedLogUpload, metas[0])
 	}
 
-	stackContents, err := ioutil.ReadFile(stacks[0])
+	stackContents, err := os.ReadFile(stacks[0])
 	if err != nil {
 		return errors.Wrap(err, "couldn't read stack file")
 	}

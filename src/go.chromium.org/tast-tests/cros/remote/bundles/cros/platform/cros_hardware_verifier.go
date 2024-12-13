@@ -10,7 +10,7 @@ import (
 	"encoding/hex"
 	"encoding/json"
 	"fmt"
-	"io/ioutil"
+	"os"
 	"path/filepath"
 	"sort"
 	"strconv"
@@ -404,7 +404,7 @@ func report(ctx context.Context, s *testing.State, fieldsMapping requiredFieldSe
 		return nil, err
 	}
 	s.Log("Got HwVerifier report at:", outPath)
-	bytes, err := ioutil.ReadFile(outPath)
+	bytes, err := os.ReadFile(outPath)
 	if err != nil {
 		return nil, err
 	}

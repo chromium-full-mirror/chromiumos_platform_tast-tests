@@ -7,7 +7,6 @@ package iio
 import (
 	"encoding/binary"
 	"io"
-	"io/ioutil"
 	"os"
 	"path/filepath"
 	"regexp"
@@ -95,7 +94,7 @@ func (s *Sensor) NewBuffer() (*Buffer, error) {
 
 	// Get all channels
 	chDir := filepath.Join(basePath, iioBasePath, s.Path, "scan_elements")
-	files, err := ioutil.ReadDir(chDir)
+	files, err := os.ReadDir(chDir)
 	if err != nil {
 		return nil, errors.Wrap(err, "error reading scan_elements")
 	}

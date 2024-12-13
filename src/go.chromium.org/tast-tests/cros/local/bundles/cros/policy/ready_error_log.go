@@ -6,7 +6,6 @@ package policy
 
 import (
 	"context"
-	"io/ioutil"
 	"os"
 	"strings"
 
@@ -29,7 +28,7 @@ func init() {
 }
 
 func ReadyErrorLog(ctx context.Context, s *testing.State) {
-	contents, err := ioutil.ReadFile(ready.ClearPoliciesLogLocation)
+	contents, err := os.ReadFile(ready.ClearPoliciesLogLocation)
 	if os.IsNotExist(err) {
 		return // Test passed as error log is missing.
 	}

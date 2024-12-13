@@ -9,7 +9,6 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
-	"io/ioutil"
 	"os"
 	"path/filepath"
 	"strconv"
@@ -103,7 +102,7 @@ func waitForPort(ctx context.Context, root string) (*int, error) {
 		return nil, errors.Wrap(err, "Nebraska did not start")
 	}
 
-	portStr, err := ioutil.ReadFile(portPath)
+	portStr, err := os.ReadFile(portPath)
 	if err != nil {
 		return nil, errors.Wrap(err, "failed to read the Nebraska's port file")
 	}

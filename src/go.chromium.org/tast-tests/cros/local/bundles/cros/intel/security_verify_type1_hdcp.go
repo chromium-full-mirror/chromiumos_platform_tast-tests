@@ -7,7 +7,6 @@ package intel
 import (
 	"context"
 	"fmt"
-	"io/ioutil"
 	"os"
 	"path"
 	"regexp"
@@ -77,7 +76,7 @@ func SecurityVerifyType1HDCP(ctx context.Context, s *testing.State) {
 
 	testData := s.Param().(securityVerifyTestParams)
 
-	tempDir, err := ioutil.TempDir("", "temp")
+	tempDir, err := os.MkdirTemp("", "temp")
 	if err != nil {
 		s.Fatal("Failed to create temp directory: ", err)
 	}
@@ -190,7 +189,7 @@ func SecurityVerifyType1HDCP(ctx context.Context, s *testing.State) {
 	// from drm logs when video is played.
 	// Execute: dmesg -w | grep hdcp.
 	err = testing.Poll(ctx, func(ctx context.Context) error {
-		output, err := ioutil.ReadFile(tmpFilePath)
+		output, err := os.ReadFile(tmpFilePath)
 		if err != nil {
 			return testing.PollBreak(errors.Wrapf(err, "failed to read %s drm log file", tmpFilePath))
 		}

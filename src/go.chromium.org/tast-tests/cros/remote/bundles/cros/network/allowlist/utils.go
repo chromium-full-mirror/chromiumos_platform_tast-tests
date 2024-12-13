@@ -7,7 +7,7 @@ package allowlist
 import (
 	"context"
 	"encoding/json"
-	"io/ioutil"
+	"os"
 
 	"go.chromium.org/tast/core/errors"
 )
@@ -25,7 +25,7 @@ type allowlist struct {
 // return hostnames required by the PlayStore. If `ext` is true, it will add to the list hostnames
 // required to install extensions.
 func ReadHostnames(ctx context.Context, path string, arc, ext bool) ([]string, error) {
-	j, err := ioutil.ReadFile(path)
+	j, err := os.ReadFile(path)
 	if err != nil {
 		return nil, errors.Wrap(err, "failed to read hostnames file")
 	}

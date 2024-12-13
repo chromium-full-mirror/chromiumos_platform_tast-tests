@@ -8,7 +8,6 @@ import (
 	"bufio"
 	"context"
 	"io"
-	"io/ioutil"
 	"os"
 	"path"
 	"path/filepath"
@@ -56,7 +55,7 @@ func SELinuxAuditBasic(ctx context.Context, s *testing.State) {
 	}
 
 	// Generate an audit event by creating a file inside markerDirectory
-	td, err := ioutil.TempDir("/tmp", "tast.security.SELinuxAuditBasic.")
+	td, err := os.MkdirTemp("/tmp", "tast.security.SELinuxAuditBasic.")
 	if err != nil {
 		s.Fatal("Failed to create temporary directory for testing: ", err)
 	}
@@ -65,7 +64,7 @@ func SELinuxAuditBasic(ctx context.Context, s *testing.State) {
 	if err := os.Mkdir(markerDirectory, 0700); err != nil {
 		s.Fatal("Failed to create marker directory for testing: ", err)
 	}
-	f, err := ioutil.TempFile(markerDirectory, "audit-marker-")
+	f, err := os.CreateTemp(markerDirectory, "audit-marker-")
 	if err != nil {
 		s.Fatal("Failed to create marker file: ", err)
 	}

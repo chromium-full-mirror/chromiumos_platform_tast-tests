@@ -7,7 +7,7 @@ package security
 import (
 	"context"
 	"fmt"
-	"io/ioutil"
+	"os"
 	"regexp"
 	"strings"
 
@@ -36,7 +36,7 @@ func ExecStack(ctx context.Context, s *testing.State) {
 
 	checkMaps := func(pid int32) error {
 		// Ignore errors, which likely indicate that the process went away.
-		b, err := ioutil.ReadFile(fmt.Sprintf("/proc/%d/maps", pid))
+		b, err := os.ReadFile(fmt.Sprintf("/proc/%d/maps", pid))
 		if err != nil {
 			return nil
 		}

@@ -12,7 +12,6 @@ import (
 	"encoding/json"
 	"encoding/pem"
 	"fmt"
-	"io/ioutil"
 	"os"
 	"path/filepath"
 	"regexp"
@@ -55,7 +54,7 @@ func RootCA(ctx context.Context, s *testing.State) {
 			return nil, errors.Errorf("found multiple copies of libnssckbi.so: %v", nssLibs)
 		}
 
-		dir, err := ioutil.TempDir("", "tast.security.RootCA.")
+		dir, err := os.MkdirTemp("", "tast.security.RootCA.")
 		if err != nil {
 			return nil, err
 		}
@@ -117,7 +116,7 @@ func RootCA(ctx context.Context, s *testing.State) {
 	openSSLCertGlob := "/etc/ssl/certs/" + strings.Repeat("[0-9a-f]", 8) + ".*"
 	getOpenSSLCerts := func() (certs map[string]string, err error) {
 		getCert := func(path string) (c *x509.Certificate, err error) {
-			certPem, err := ioutil.ReadFile(path)
+			certPem, err := os.ReadFile(path)
 			if err != nil {
 				return nil, err
 			}

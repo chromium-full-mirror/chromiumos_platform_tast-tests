@@ -7,7 +7,6 @@ package extension
 import (
 	"crypto/md5"
 	"fmt"
-	"io/ioutil"
 	"os"
 	"path/filepath"
 	"strings"
@@ -123,7 +122,7 @@ func PrepareExtensions(destDir string, cfg *config.Config, guestMode GuestModeLo
 
 // Checksums returns the MD5 checksums of the existing extensions' manifest file.
 func Checksums(destDir string) ([]string, error) {
-	dirs, err := ioutil.ReadDir(destDir)
+	dirs, err := os.ReadDir(destDir)
 	if err != nil {
 		return nil, err
 	}
@@ -131,7 +130,7 @@ func Checksums(destDir string) ([]string, error) {
 	var checksums []string
 	for _, subdir := range dirs {
 		manifest := filepath.Join(destDir, subdir.Name(), "manifest.json")
-		manifestContent, err := ioutil.ReadFile(manifest)
+		manifestContent, err := os.ReadFile(manifest)
 		if os.IsNotExist(err) {
 			// Skip this directory.
 			continue

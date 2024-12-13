@@ -7,7 +7,7 @@ package vm
 import (
 	"context"
 	"fmt"
-	"io/ioutil"
+	"os"
 	"path/filepath"
 	"time"
 
@@ -136,7 +136,7 @@ func AudioAplay(ctx context.Context, s *testing.State) {
 		s.Fatal("Failed to run crosvm: ", err)
 	}
 
-	output, err := ioutil.ReadFile(outputLogPath)
+	output, err := os.ReadFile(outputLogPath)
 	if err != nil {
 		s.Fatalf("Failed to read output file %q: %v", outputLogPath, err)
 	}

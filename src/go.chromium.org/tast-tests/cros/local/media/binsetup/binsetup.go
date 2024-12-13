@@ -6,7 +6,6 @@
 package binsetup
 
 import (
-	"io/ioutil"
 	"os"
 	"path/filepath"
 
@@ -18,7 +17,7 @@ import (
 // and copies basenames of the supplied data file into it.
 // The directory's path and error are returned.
 func CreateTempDataDir(prefix string, srcs []string) (string, error) {
-	td, err := ioutil.TempDir("", prefix)
+	td, err := os.MkdirTemp("", prefix)
 	if err != nil {
 		return "", errors.Wrap(err, "failed to create temp dir")
 	}

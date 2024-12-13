@@ -8,7 +8,6 @@ package graphics
 import (
 	"context"
 	"fmt"
-	"io/ioutil"
 	"os"
 	"path/filepath"
 	"regexp"
@@ -243,7 +242,7 @@ func (a APIType) String() string {
 // parsed. This is roughly a port of get_ui_use_flags() defined in
 // autotest/files/client/bin/utils.py.
 func parseUIUseFlags(path string) (map[string]struct{}, error) {
-	b, err := ioutil.ReadFile(path)
+	b, err := os.ReadFile(path)
 	if err != nil {
 		return nil, err
 	}
@@ -279,7 +278,7 @@ func extractOpenGLVersion(ctx context.Context, wflout string) (major,
 	matches := re.FindAllStringSubmatch(wflout, -1)
 	if len(matches) != 1 {
 		if dir, ok := testing.ContextOutDir(ctx); ok {
-			if err := ioutil.WriteFile(filepath.Join(dir, "wflinfo.txt"),
+			if err := os.WriteFile(filepath.Join(dir, "wflinfo.txt"),
 				[]byte(wflout), 0644); err != nil {
 				testing.ContextLog(ctx, "Failed to write wflinfo output: ", err)
 			}
@@ -450,7 +449,7 @@ func DEQPEnvironment(ctx context.Context, env []string) []string {
 func SetDirtyWritebackDuration(ctx context.Context, d time.Duration) error {
 	if d >= 0 {
 		centisecs := d / (time.Second / 100)
-		if err := ioutil.WriteFile(dirtyWritebackCentisecsPath, []byte(fmt.Sprintf("%d", centisecs)), 0600); err != nil {
+		if err := os.WriteFile(dirtyWritebackCentisecsPath, []byte(fmt.Sprintf("%d", centisecs)), 0600); err != nil {
 			return err
 		}
 
@@ -475,7 +474,7 @@ func SetDirtyWritebackDuration(ctx context.Context, d time.Duration) error {
 // get_dirty_writeback_centisecs() function in
 // autotest/files/client/bin/utils.py.
 func GetDirtyWritebackDuration() (time.Duration, error) {
-	b, err := ioutil.ReadFile(dirtyWritebackCentisecsPath)
+	b, err := os.ReadFile(dirtyWritebackCentisecsPath)
 	if err != nil {
 		return -1, err
 	}

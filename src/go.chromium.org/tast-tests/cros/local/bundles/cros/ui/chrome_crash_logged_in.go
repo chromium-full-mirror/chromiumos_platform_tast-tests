@@ -6,7 +6,7 @@ package ui
 
 import (
 	"context"
-	"io/ioutil"
+	"os"
 	"path/filepath"
 	"time"
 
@@ -288,7 +288,7 @@ func ChromeCrashLoggedIn(ctx context.Context, s *testing.State) {
 			s.Logf("ls of %v failed: %v", args, err)
 		}
 		outfile := filepath.Join(s.OutDir(), "ls_output.txt")
-		if err := ioutil.WriteFile(outfile, out, 0644); err != nil {
+		if err := os.WriteFile(outfile, out, 0644); err != nil {
 			s.Logf("Storing ls output %v to %v failed: %v", out, outfile, err)
 		}
 	}

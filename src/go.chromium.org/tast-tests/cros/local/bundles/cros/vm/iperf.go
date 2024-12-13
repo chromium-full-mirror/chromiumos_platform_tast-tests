@@ -8,7 +8,6 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
-	"io/ioutil"
 	"os"
 	"path/filepath"
 	"runtime"
@@ -275,7 +274,7 @@ func getCrosvmNetCmd(ctx context.Context, kernel, serialLog string, netOption vm
 }
 
 func Iperf(ctx context.Context, s *testing.State) {
-	td, err := ioutil.TempDir("", "tast.vm.Iperf.")
+	td, err := os.MkdirTemp("", "tast.vm.Iperf.")
 	if err != nil {
 		s.Fatal("Failed to create temporary directory: ", err)
 	}
@@ -416,7 +415,7 @@ func Iperf(ctx context.Context, s *testing.State) {
 	}
 
 	// Check iperf3 output
-	buf, err := ioutil.ReadFile(iperfLog)
+	buf, err := os.ReadFile(iperfLog)
 	if err != nil {
 		s.Fatalf("Failed to read %s: %v", iperfLog, err)
 	}

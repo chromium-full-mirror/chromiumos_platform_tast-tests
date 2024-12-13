@@ -6,7 +6,6 @@ package ui
 
 import (
 	"context"
-	"io/ioutil"
 	"os"
 	"path/filepath"
 	"regexp"
@@ -189,7 +188,7 @@ func ChromeCrashEarly(ctx context.Context, s *testing.State) {
 		// core. Set the limit higher by touching
 		// /run/crash_reporter/running-loose-chrome-crash-early-test so that we can
 		// at least test other aspects of system.
-		if err := ioutil.WriteFile(chromeCrashEarlyLooseModeFile, nil, 0644); err != nil {
+		if err := os.WriteFile(chromeCrashEarlyLooseModeFile, nil, 0644); err != nil {
 			s.Fatal("Failed writing ChromeCrashEarly loose-mode file ", chromeCrashEarlyLooseModeFile, ": ", err)
 		}
 		defer func() {

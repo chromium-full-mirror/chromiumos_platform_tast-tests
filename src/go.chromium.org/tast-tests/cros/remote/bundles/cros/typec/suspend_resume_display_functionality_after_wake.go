@@ -8,7 +8,7 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
-	"io/ioutil"
+	"os"
 	"path/filepath"
 	"time"
 
@@ -125,7 +125,7 @@ func SuspendResumeDisplayFunctionalityAfterWake(ctx context.Context, s *testing.
 	defer dut.Conn().CommandContext(cleanupCtx, "sh", "-c", fmt.Sprintf("rm -rf %s %s %s", htmlPath, videoPath, jsPath)).Run()
 
 	// Read json config file.
-	jsonData, err := ioutil.ReadFile(s.DataPath(testConfig))
+	jsonData, err := os.ReadFile(s.DataPath(testConfig))
 	if err != nil {
 		s.Fatalf("Failed to open %v file : %v", testConfig, err)
 	}

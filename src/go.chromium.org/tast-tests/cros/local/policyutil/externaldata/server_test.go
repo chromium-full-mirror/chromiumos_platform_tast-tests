@@ -7,7 +7,7 @@ package externaldata
 import (
 	"bytes"
 	"context"
-	"io/ioutil"
+	"io"
 	"net/http"
 	"testing"
 )
@@ -36,7 +36,7 @@ func TestServeURL(t *testing.T) {
 		t.Fatalf("Failed to get %q: %v", url, err)
 	}
 	defer resp.Body.Close()
-	body, err := ioutil.ReadAll(resp.Body)
+	body, err := io.ReadAll(resp.Body)
 	if err != nil {
 		t.Fatal("Failed to read response body: ", err)
 	}
@@ -63,7 +63,7 @@ func TestMissingURL(t *testing.T) {
 		t.Fatalf("Failed to get %q: %v", url, err)
 	}
 	defer resp.Body.Close()
-	if _, err := ioutil.ReadAll(resp.Body); err != nil {
+	if _, err := io.ReadAll(resp.Body); err != nil {
 		t.Fatal("Failed to read response body: ", err)
 	}
 

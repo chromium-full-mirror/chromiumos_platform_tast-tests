@@ -11,7 +11,6 @@ import (
 	"crypto/sha256"
 	"encoding/hex"
 	"fmt"
-	"io/ioutil"
 	"os"
 	"path/filepath"
 	"regexp"
@@ -64,7 +63,7 @@ func GetCmdLineParts(ctx context.Context, pid uint64) ([]string, error) {
 	if err := action.Retry(cmdLineRetryTimes, func(context.Context) error {
 		cmdLine := fmt.Sprintf("/proc/%d/cmdline", pid)
 		var err error
-		buff, err = ioutil.ReadFile(cmdLine)
+		buff, err = os.ReadFile(cmdLine)
 		if err != nil {
 			return err
 		}
@@ -104,7 +103,7 @@ func FillNamespaces(pid uint64, ns *xdr.Namespaces) error {
 		"cgroup": &ns.CgroupNs, "ipc": &ns.IpcNs, "mnt": &ns.MntNs,
 		"net": &ns.NetNs, "pid": &ns.PidNs,
 		"user": &ns.UserNs, "uts": &ns.UtsNs}
-	dirs, err := ioutil.ReadDir(fmt.Sprintf("/proc/%d/ns", pid))
+	dirs, err := os.ReadDir(fmt.Sprintf("/proc/%d/ns", pid))
 	if err != nil {
 		return err
 	}
@@ -142,7 +141,7 @@ func FillImage(pid, mntNs uint64, i *xdr.FileImage) error {
 		return err
 	}
 	i.Pathname = proto.String(imagePath)
-	image, err := ioutil.ReadFile(imagePath)
+	image, err := os.ReadFile(imagePath)
 	if err != nil {
 		return err
 	}
@@ -175,7 +174,7 @@ func FillImage(pid, mntNs uint64, i *xdr.FileImage) error {
 // and /proc/x/stat for the given pid.
 func FillProc(pid uint64, p *xdr.Process) (uint64, error) {
 	statusFilename := fmt.Sprintf("/proc/%d/status", pid)
-	buff, err := ioutil.ReadFile(statusFilename)
+	buff, err := os.ReadFile(statusFilename)
 	if err != nil {
 		return 0, err
 	}
@@ -201,7 +200,7 @@ func FillProc(pid uint64, p *xdr.Process) (uint64, error) {
 	}
 	// Start time relative to boot time is found in the stat file.
 	statFilename := fmt.Sprintf("/proc/%d/stat", pid)
-	buff, err = ioutil.ReadFile(statFilename)
+	buff, err = os.ReadFile(statFilename)
 	if err != nil {
 		return 0, err
 	}
@@ -226,7 +225,7 @@ func FillProc(pid uint64, p *xdr.Process) (uint64, error) {
 func WaitForBpfMaps(ctx context.Context, pid uint64) error {
 	mapsFilename := fmt.Sprintf("/proc/%d/maps", pid)
 	return testing.Poll(ctx, func(ctx context.Context) error {
-		buff, err := ioutil.ReadFile(mapsFilename)
+		buff, err := os.ReadFile(mapsFilename)
 		if err != nil {
 			return testing.PollBreak(errors.Wrap(err, "failed to read proc map"))
 		}
@@ -242,7 +241,7 @@ func WaitForBpfMaps(ctx context.Context, pid uint64) error {
 // application is to get secagentd pid given its minijail0 pid.
 func GetOnlyChildPid(pid uint64) (uint64, error) {
 	childrenFilename := fmt.Sprintf("/proc/%d/task/%d/children", pid, pid)
-	buff, err := ioutil.ReadFile(childrenFilename)
+	buff, err := os.ReadFile(childrenFilename)
 	if err != nil {
 		return 0, err
 	}

@@ -7,7 +7,6 @@ package launcher
 import (
 	"context"
 	"fmt"
-	"io/ioutil"
 	"math/rand"
 	"os"
 	"path/filepath"
@@ -104,7 +103,7 @@ func RemoveContinueSectionTask(ctx context.Context, s *testing.State) {
 		// Create a test file.
 		filePath := filepath.Join(downloadsPath, testFileName)
 		fileContent := fmt.Sprintf("Test file %d", i)
-		if err := ioutil.WriteFile(filePath, []byte(fileContent), 0644); err != nil {
+		if err := os.WriteFile(filePath, []byte(fileContent), 0644); err != nil {
 			s.Fatalf("Failed to create file %d in Downloads: %v", i, err)
 		}
 		defer os.Remove(filePath)

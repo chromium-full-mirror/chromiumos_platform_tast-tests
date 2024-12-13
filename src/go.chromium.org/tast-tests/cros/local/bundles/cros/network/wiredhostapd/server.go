@@ -7,7 +7,7 @@ package wiredhostapd
 import (
 	"context"
 	"fmt"
-	"io/ioutil"
+	"os"
 	"path/filepath"
 	"strings"
 	"time"
@@ -71,7 +71,7 @@ eapol_version=2
 		{eapUserFilePath, eapUser},
 		{caCertPath, c.Cert.CACred.Cert},
 	} {
-		if err := ioutil.WriteFile(p.path, []byte(p.contents), 0644); err != nil {
+		if err := os.WriteFile(p.path, []byte(p.contents), 0644); err != nil {
 			return "", errors.Wrapf(err, "failed to write file %q", p.path)
 		}
 	}
@@ -110,7 +110,7 @@ func (s *Server) ExpectSTAStatus(ctx context.Context, staAddr, key, val string) 
 
 	// Stash output for analysis.
 	path := filepath.Join(s.OutDir(), fmt.Sprintf("hostapd_auth_%d.txt", s.logIndex))
-	if err := ioutil.WriteFile(path, []byte(out), 0644); err != nil {
+	if err := os.WriteFile(path, []byte(out), 0644); err != nil {
 		return errors.Wrapf(err, "failed to write file %q", path)
 	}
 

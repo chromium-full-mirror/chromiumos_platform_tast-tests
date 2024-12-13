@@ -6,7 +6,7 @@ package filemanager
 
 import (
 	"context"
-	"io/ioutil"
+	"os"
 	"time"
 
 	"go.chromium.org/tast-tests/cros/local/chrome/uiauto/faillog"
@@ -53,7 +53,7 @@ func DrivefsSearch(ctx context.Context, s *testing.State) {
 	// This test case is exercising the full-text search of DriveFS, keeping the name
 	// fairly unique to avoid having it match as content search (not just file name).
 	const fileName = "verify-full-text-search-functionality-drivefs"
-	if err := ioutil.WriteFile(dfs.MyDrivePath(fileName), []byte("fake-content"), 0644); err != nil {
+	if err := os.WriteFile(dfs.MyDrivePath(fileName), []byte("fake-content"), 0644); err != nil {
 		s.Fatalf("Could not create the test file at %q: %v", dfs.MyDrivePath(fileName), err)
 	}
 	// Don't delete the test file after the test as there may not be enough time

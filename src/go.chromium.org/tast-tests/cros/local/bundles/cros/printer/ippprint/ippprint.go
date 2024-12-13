@@ -8,7 +8,7 @@ package ippprint
 import (
 	"context"
 	"fmt"
-	"io/ioutil"
+	"os"
 	"strings"
 
 	"go.chromium.org/tast-tests/cros/local/bundles/cros/printer/lpprint"
@@ -62,7 +62,7 @@ func ProxyRun(ctx context.Context, s *testing.State, p *Params) {
 
 // run runs the given print function and compares the output to the golden file.
 func run(ctx context.Context, s *testing.State, p *Params, printFun func(context.Context) ([]byte, error)) {
-	expect, err := ioutil.ReadFile(s.DataPath(p.ExpectedFile))
+	expect, err := os.ReadFile(s.DataPath(p.ExpectedFile))
 	if err != nil {
 		s.Fatal("Failed to read golden file: ", err)
 	}

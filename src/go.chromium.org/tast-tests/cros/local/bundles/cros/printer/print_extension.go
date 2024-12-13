@@ -6,7 +6,6 @@ package printer
 
 import (
 	"context"
-	"io/ioutil"
 	"os"
 	"time"
 
@@ -70,7 +69,7 @@ func PrintExtension(ctx context.Context, s *testing.State) {
 		s.Fatal("Failed to read PPD file: ", err)
 	}
 
-	expect, err := ioutil.ReadFile(s.DataPath(goldenFile))
+	expect, err := os.ReadFile(s.DataPath(goldenFile))
 	if err != nil {
 		s.Fatal("Failed to read golden file: ", err)
 	}

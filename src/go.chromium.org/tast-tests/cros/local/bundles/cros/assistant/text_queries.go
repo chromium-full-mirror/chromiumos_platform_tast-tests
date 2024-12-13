@@ -6,7 +6,7 @@ package assistant
 
 import (
 	"context"
-	"io/ioutil"
+	"os"
 	"path/filepath"
 	"strings"
 
@@ -79,7 +79,7 @@ func TextQueries(ctx context.Context, s *testing.State) {
 		// Writes the TEXT response to logName file for debugging if no matching results found.
 		const logName = "text_query_text_response.txt"
 		s.Log("No matching results found. Try to log the TEXT response to ", logName)
-		if err := ioutil.WriteFile(filepath.Join(s.OutDir(), logName), []byte(text), 0644); err != nil {
+		if err := os.WriteFile(filepath.Join(s.OutDir(), logName), []byte(text), 0644); err != nil {
 			s.Logf("Failed to log response to %s: %v", logName, err)
 		}
 		s.Fatal("TEXT response doesn't contain the response of the text query")

@@ -6,7 +6,6 @@ package cellular
 
 import (
 	"context"
-	"io/ioutil"
 	"os"
 	"path/filepath"
 	"time"
@@ -65,7 +64,7 @@ func ModemfwdFallbackToRootfsFailedToInstallDlc(ctx context.Context, s *testing.
 	}(cleanupCtx)
 
 	// Force a DLC Install failure by moving the PRELOAD directory to another place
-	extDirBase, err := ioutil.TempDir("", "")
+	extDirBase, err := os.MkdirTemp("", "")
 	if err != nil {
 		s.Fatal("Failed to create a tempdir: ", err)
 	}

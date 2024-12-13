@@ -6,7 +6,7 @@ package platform
 
 import (
 	"context"
-	"io/ioutil"
+	"os"
 	"path/filepath"
 	"time"
 
@@ -57,7 +57,7 @@ func PerfettoChromeConsumer(ctx context.Context, s *testing.State) {
 
 	// Create the binary protobuf TraceConfig: unmarshal from pbtxt and then marshal to binary protobuf.
 	traceConfigPath := s.DataPath(tracing.TraceConfigFile)
-	configTxt, err := ioutil.ReadFile(traceConfigPath)
+	configTxt, err := os.ReadFile(traceConfigPath)
 	if err != nil {
 		s.Fatal("Failed to read the trace config: ", err)
 	}

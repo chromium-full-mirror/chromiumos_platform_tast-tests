@@ -8,7 +8,6 @@ package removablemedia
 
 import (
 	"context"
-	"io/ioutil"
 	"os"
 	"path"
 	"path/filepath"
@@ -28,7 +27,7 @@ import (
 
 // createZeroFile creates a file filled with size bytes of 0.
 func createZeroFile(size int64, name string) (string, error) {
-	f, err := ioutil.TempFile("", name)
+	f, err := os.CreateTemp("", name)
 	if err != nil {
 		return "", errors.Wrap(err, "failed to create an image file")
 	}
@@ -188,7 +187,7 @@ func RunTest(ctx context.Context, s *testing.State, a *arc.ARC, cr *chrome.Chrom
 
 	// Create a text file in the removable media.
 	tpath := filepath.Join(mountDir, testFile)
-	if err := ioutil.WriteFile(tpath, []byte(fileContent), 0644); err != nil {
+	if err := os.WriteFile(tpath, []byte(fileContent), 0644); err != nil {
 		s.Fatal("Failed to write a data file: ", err)
 	}
 

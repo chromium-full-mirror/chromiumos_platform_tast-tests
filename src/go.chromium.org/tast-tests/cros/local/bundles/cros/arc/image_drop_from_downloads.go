@@ -6,7 +6,7 @@ package arc
 
 import (
 	"context"
-	"io/ioutil"
+	"os"
 	"path/filepath"
 	"time"
 
@@ -56,12 +56,12 @@ func ImageDropFromDownloads(ctx context.Context, s *testing.State) {
 	}
 	crosPath := filepath.Join(cryptohomeUserPath, "MyFiles", "Downloads", filename)
 
-	expected, err := ioutil.ReadFile(s.DataPath(filename))
+	expected, err := os.ReadFile(s.DataPath(filename))
 	if err != nil {
 		s.Fatal("Could not read the test file: ", err)
 	}
 
-	if err = ioutil.WriteFile(crosPath, expected, 0666); err != nil {
+	if err = os.WriteFile(crosPath, expected, 0666); err != nil {
 		s.Fatalf("Could not write to %s: %v", crosPath, err)
 	}
 

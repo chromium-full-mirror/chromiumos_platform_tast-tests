@@ -8,7 +8,6 @@ import (
 	"context"
 	"fmt"
 	"io"
-	"io/ioutil"
 	"os"
 	"regexp"
 	"strconv"
@@ -93,7 +92,7 @@ type wakeupCountParam struct{}
 
 func (p *wakeupCountParam) Name() string { return "wakeup_count" }
 func (p *wakeupCountParam) Value() (string, error) {
-	bytes, err := ioutil.ReadFile("/sys/power/wakeup_count")
+	bytes, err := os.ReadFile("/sys/power/wakeup_count")
 	if err != nil {
 		return "", err
 	}
@@ -149,7 +148,7 @@ func checkPowerdRet(ctx context.Context, reader *syslog.LineReader, lineCache *[
 func checkKernelRet() (int, error) {
 	// TODO just read /sys/power/suspend_stats/last_failed_errno after it exists
 	// for all platforms (when all kernels are 5.4 or newer).
-	out, err := ioutil.ReadFile("/sys/kernel/debug/suspend_stats")
+	out, err := os.ReadFile("/sys/kernel/debug/suspend_stats")
 	if err != nil {
 		return 0, err
 	}
@@ -174,7 +173,7 @@ func checkECRet() (uint32, error) {
 		}
 		return 0, errors.Wrapf(err, "failed to stat EC suspend result path %s", ecSuspendResultPath)
 	}
-	out, err := ioutil.ReadFile(ecSuspendResultPath)
+	out, err := os.ReadFile(ecSuspendResultPath)
 	if err != nil {
 		return 0, err
 	}
@@ -310,20 +309,20 @@ func ForDuration(ctx context.Context, t time.Duration) (ResumeInfo, error) {
 func setUserspaceFreezetimeout(ctx context.Context, t time.Duration) (func(), error) {
 	const pmFreezeTimeoutPath = "/sys/power/pm_freeze_timeout"
 
-	oldMsecsStr, err := ioutil.ReadFile(pmFreezeTimeoutPath)
+	oldMsecsStr, err := os.ReadFile(pmFreezeTimeoutPath)
 	if err != nil {
 		return nil, errors.Wrapf(err, "could not read timeout from %s", pmFreezeTimeoutPath)
 	}
 
 	msecs := t.Milliseconds()
 	testing.ContextLogf(ctx, "Setting pm_freeze_timeout to %v ms", msecs)
-	if err = ioutil.WriteFile(pmFreezeTimeoutPath, []byte(fmt.Sprintf("%d\n", msecs)), 0644); err != nil {
+	if err = os.WriteFile(pmFreezeTimeoutPath, []byte(fmt.Sprintf("%d\n", msecs)), 0644); err != nil {
 		return nil, errors.Wrapf(err, "could not write timeout to %v", pmFreezeTimeoutPath)
 	}
 
 	restoreUserspaceFreezeTimeout := func() {
 		testing.ContextLogf(ctx, "Resetting pm_freeze_timeout to %s ms", strings.TrimSpace(string(oldMsecsStr)))
-		err := ioutil.WriteFile(pmFreezeTimeoutPath, oldMsecsStr, 0644)
+		err := os.WriteFile(pmFreezeTimeoutPath, oldMsecsStr, 0644)
 		if err != nil {
 			testing.ContextLogf(ctx, "Couldn't write old timeout to %v err %v", pmFreezeTimeoutPath, err)
 		}

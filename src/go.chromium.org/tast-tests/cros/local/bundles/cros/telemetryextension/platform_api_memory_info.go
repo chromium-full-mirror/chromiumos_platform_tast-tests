@@ -6,7 +6,7 @@ package telemetryextension
 
 import (
 	"context"
-	"io/ioutil"
+	"os"
 	"regexp"
 	"strconv"
 
@@ -88,7 +88,7 @@ func PlatformAPIMemoryInfo(ctx context.Context, s *testing.State) {
 }
 
 func fetchIntFromFile(filePath string, re *regexp.Regexp) (int64, error) {
-	b, err := ioutil.ReadFile(filePath)
+	b, err := os.ReadFile(filePath)
 	if err != nil {
 		return 0, errors.Wrap(err, "failed to read file")
 	}

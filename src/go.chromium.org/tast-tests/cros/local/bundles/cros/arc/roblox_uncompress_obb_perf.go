@@ -7,7 +7,6 @@ package arc
 import (
 	"bufio"
 	"context"
-	"io/ioutil"
 	"os"
 	"path"
 	"regexp"
@@ -65,7 +64,7 @@ func RobloxUncompressOBBPerf(ctx context.Context, s *testing.State) {
 	// when the Roblox APK gets uninstalled.
 
 	// Unzip "split" APK and install all the "splits" at the same time.
-	tempDir, err := ioutil.TempDir("", "roblox-split-apk-")
+	tempDir, err := os.MkdirTemp("", "roblox-split-apk-")
 	if err != nil {
 		s.Fatal("Failed to create temp dir: ", err)
 	}

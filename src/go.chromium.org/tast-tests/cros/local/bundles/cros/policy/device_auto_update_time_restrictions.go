@@ -6,7 +6,6 @@ package policy
 
 import (
 	"context"
-	"io/ioutil"
 	"os"
 	"strings"
 	"time"
@@ -146,7 +145,7 @@ func DeviceAutoUpdateTimeRestrictions(ctx context.Context, s *testing.State) {
 				s.Error("Failed to find update_engine.log on device: ", err)
 			}
 
-			realLog, err := ioutil.ReadFile(linkToLog)
+			realLog, err := os.ReadFile(linkToLog)
 			if err != nil {
 				s.Error("Failed to find on device: ", linkToLog)
 			}

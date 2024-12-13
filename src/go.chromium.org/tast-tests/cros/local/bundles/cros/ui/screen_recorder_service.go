@@ -7,7 +7,6 @@ package ui
 import (
 	"context"
 	"fmt"
-	"io/ioutil"
 	"os"
 	"path"
 	"sync"
@@ -120,7 +119,7 @@ func (svc *ScreenRecorderService) Stop(ctx context.Context, req *empty.Empty) (*
 	var fileName string
 	if svc.fileName == "" {
 		// Create a temporary file if user does not give a specific path
-		tempFile, err := ioutil.TempFile("", "record*.webm")
+		tempFile, err := os.CreateTemp("", "record*.webm")
 		if err != nil {
 			return nil, err
 		}

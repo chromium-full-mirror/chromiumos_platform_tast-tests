@@ -7,7 +7,6 @@ package apps
 
 import (
 	"context"
-	"io/ioutil"
 	"os"
 	"path/filepath"
 	"regexp"
@@ -84,12 +83,12 @@ func DownloadAppServiceInternals(ctx context.Context, cr *chrome.Chrome, outDir 
 	}
 
 	// Copy the downloaded file to log dir.
-	input, err := ioutil.ReadFile(downloadFilePath)
+	input, err := os.ReadFile(downloadFilePath)
 	if err != nil {
 		return errors.Wrap(err, "failed to read downloaded app-service-internals.txt")
 	}
 
-	err = ioutil.WriteFile(filepath.Join(outDir, downloadFileName), input, 0644)
+	err = os.WriteFile(filepath.Join(outDir, downloadFileName), input, 0644)
 	if err != nil {
 		return errors.Wrap(err, "failed to write to the out dir")
 	}

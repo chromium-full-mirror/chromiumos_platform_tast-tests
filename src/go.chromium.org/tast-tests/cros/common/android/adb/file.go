@@ -6,7 +6,6 @@ package adb
 
 import (
 	"context"
-	"io/ioutil"
 	"os"
 	"path/filepath"
 	"strconv"
@@ -42,7 +41,7 @@ func (d *Device) PushFileToTmpDir(ctx context.Context, src string) (string, erro
 
 // ReadFile reads a file in Android file system with adb pull.
 func (d *Device) ReadFile(ctx context.Context, filename string) ([]byte, error) {
-	f, err := ioutil.TempFile("", "adb")
+	f, err := os.CreateTemp("", "adb")
 	if err != nil {
 		return nil, err
 	}
@@ -55,12 +54,12 @@ func (d *Device) ReadFile(ctx context.Context, filename string) ([]byte, error) 
 	if err = d.PullFile(ctx, filename, f.Name()); err != nil {
 		return nil, err
 	}
-	return ioutil.ReadFile(f.Name())
+	return os.ReadFile(f.Name())
 }
 
 // WriteFile writes to a file in Android file system with adb push.
 func (d *Device) WriteFile(ctx context.Context, filename string, data []byte) error {
-	f, err := ioutil.TempFile("", "adb")
+	f, err := os.CreateTemp("", "adb")
 	if err != nil {
 		return err
 	}

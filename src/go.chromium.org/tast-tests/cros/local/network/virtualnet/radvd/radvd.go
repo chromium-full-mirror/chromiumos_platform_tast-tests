@@ -10,7 +10,6 @@ package radvd
 import (
 	"bytes"
 	"context"
-	"io/ioutil"
 	"os"
 	"strings"
 	"text/template"
@@ -72,7 +71,7 @@ func (r *radvd) Start(ctx context.Context, env *env.Env) error {
 	}
 	b := &bytes.Buffer{}
 	template.Must(template.New("").Parse(confTemplate)).Execute(b, confVals)
-	if err := ioutil.WriteFile(r.env.ChrootPath(confPath), b.Bytes(), 0644); err != nil {
+	if err := os.WriteFile(r.env.ChrootPath(confPath), b.Bytes(), 0644); err != nil {
 		return errors.Wrap(err, "failed to write config file")
 	}
 

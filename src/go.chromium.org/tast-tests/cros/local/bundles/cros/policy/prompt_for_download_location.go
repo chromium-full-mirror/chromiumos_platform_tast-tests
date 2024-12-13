@@ -6,7 +6,6 @@ package policy
 
 import (
 	"context"
-	"io/ioutil"
 	"net/http"
 	"net/http/httptest"
 	"os"
@@ -76,7 +75,7 @@ func PromptForDownloadLocation(ctx context.Context, s *testing.State) {
 	}
 
 	defer func() { // Clean up Downloads directory.
-		files, err := ioutil.ReadDir(downloadsPath)
+		files, err := os.ReadDir(downloadsPath)
 		if err != nil {
 			s.Fatal("Failed to get files from Downloads directory: ", err)
 		}

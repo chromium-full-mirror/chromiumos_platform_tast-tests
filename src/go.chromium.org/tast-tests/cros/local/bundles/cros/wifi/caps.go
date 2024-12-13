@@ -6,7 +6,7 @@ package wifi
 
 import (
 	"context"
-	"io/ioutil"
+	"os"
 	"path/filepath"
 
 	"go.chromium.org/tast-tests/cros/common/tbdep"
@@ -51,7 +51,7 @@ func Caps(ctx context.Context, s *testing.State) {
 	}
 
 	// Save `iw list` text to log file.
-	ioutil.WriteFile(filepath.Join(s.OutDir(), "iw_list"), out, 0644)
+	os.WriteFile(filepath.Join(s.OutDir(), "iw_list"), out, 0644)
 
 	staSupported := false
 	for _, mode := range res[0].Modes {

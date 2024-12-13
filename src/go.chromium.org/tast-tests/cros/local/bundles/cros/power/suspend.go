@@ -8,7 +8,6 @@ import (
 	"bufio"
 	"context"
 	"fmt"
-	"io/ioutil"
 	"os"
 	"path/filepath"
 	"strconv"
@@ -181,7 +180,7 @@ func startEvTestLogging(ctx context.Context, s *testing.State) (func(), error) {
 			filename := "evtest" + strconv.Itoa(i) + ".txt"
 			i = i + 1
 			testing.ContextLogf(ctx, "Writing evtest output for %s to %s", name, filename)
-			if err := ioutil.WriteFile(filepath.Join(s.OutDir(), filename), []byte(output), 0644); err != nil {
+			if err := os.WriteFile(filepath.Join(s.OutDir(), filename), []byte(output), 0644); err != nil {
 				testing.ContextLogf(ctx, "Failed to write %s: %v", filename, err)
 			}
 		}
@@ -208,13 +207,13 @@ func setupSubstateRequirements(ctx context.Context, s *testing.State) (bool, str
 
 func saveSubstateRequirements(ctx context.Context, s *testing.State, outdir string, i int) error {
 	outFileName := filepath.Join(outdir, fmt.Sprintf("substate_requirements.%d", i))
-	reqs, err := ioutil.ReadFile(substateRequirementsPath)
+	reqs, err := os.ReadFile(substateRequirementsPath)
 	if err != nil {
 		testing.ContextLog(ctx, "Could not read "+substateRequirementsPath)
 		return err
 	}
 
-	if err = ioutil.WriteFile(outFileName, reqs, 0644); err != nil {
+	if err = os.WriteFile(outFileName, reqs, 0644); err != nil {
 		testing.ContextLogf(ctx, "Failed to write %s: %v", outFileName, err)
 		return err
 	}

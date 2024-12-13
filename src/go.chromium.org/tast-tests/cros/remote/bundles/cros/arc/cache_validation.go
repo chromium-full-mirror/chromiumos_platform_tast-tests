@@ -8,7 +8,6 @@ import (
 	"bufio"
 	"context"
 	"fmt"
-	"io/ioutil"
 	"os"
 	"path/filepath"
 	"regexp"
@@ -197,12 +196,12 @@ func CacheValidation(ctx context.Context, s *testing.State) {
 		s.Error("Error validating app_chimera layouts: ", err)
 	} else if diff != "" {
 		s.Error("app_chimera layouts are different, see layout.diff")
-		if err = ioutil.WriteFile(filepath.Join(s.OutDir(), "layout.diff"), []byte(diff), 0644); err != nil {
+		if err = os.WriteFile(filepath.Join(s.OutDir(), "layout.diff"), []byte(diff), 0644); err != nil {
 			s.Error("Failed to save layout diff: ", err)
 		}
 	}
 
-	tempDir, err := ioutil.TempDir("", "tmp_dir")
+	tempDir, err := os.MkdirTemp("", "tmp_dir")
 	if err != nil {
 		s.Fatal("Failed to create global temp dir: ", err)
 	}

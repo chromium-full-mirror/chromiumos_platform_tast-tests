@@ -8,7 +8,7 @@ package document
 
 import (
 	"context"
-	"io/ioutil"
+	"os"
 	"path/filepath"
 	"regexp"
 
@@ -176,7 +176,7 @@ func CompareFileContents(ctx context.Context, actual, expected, logDir, diffFn, 
 	writeData := func(description, data, filename string) {
 		path := filepath.Join(logDir, filename)
 		testing.ContextLog(ctx, "Dumping ", description, " data to ", path)
-		if err := ioutil.WriteFile(path, []byte(data), 0644); err != nil {
+		if err := os.WriteFile(path, []byte(data), 0644); err != nil {
 			testing.ContextLog(ctx, "Failed to dump ", description, " data: ", err)
 		}
 	}
@@ -206,11 +206,11 @@ func CompareFileContents(ctx context.Context, actual, expected, logDir, diffFn, 
 // CompareFiles loads the contents of the given actual and expected files and
 // compares them for differences by delegating to CompareFileContents.
 func CompareFiles(ctx context.Context, actual, expected, logDir, diffFn, saveFn string) error {
-	actualBytes, err := ioutil.ReadFile(actual)
+	actualBytes, err := os.ReadFile(actual)
 	if err != nil {
 		return errors.Wrapf(err, "failed to read file %s", actual)
 	}
-	expectedBytes, err := ioutil.ReadFile(expected)
+	expectedBytes, err := os.ReadFile(expected)
 	if err != nil {
 		return errors.Wrapf(err, "failed to read file %s", expected)
 	}

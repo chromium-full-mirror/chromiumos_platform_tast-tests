@@ -7,7 +7,6 @@ package toolkit
 import (
 	"context"
 	"encoding/json"
-	"io/ioutil"
 	"os"
 	"path/filepath"
 	"strings"
@@ -64,7 +63,7 @@ func (i *Installer) installFactoryToolKitFromToolkitInstaller(ctx context.Contex
 	}
 
 	// Get the factory toolkit version.
-	b, err := ioutil.ReadFile(factorycommon.ToolkitVersionFilePath)
+	b, err := os.ReadFile(factorycommon.ToolkitVersionFilePath)
 	if err != nil {
 		return "", errors.Wrap(err, "failed to read version file")
 	}
@@ -88,7 +87,7 @@ func (i *Installer) configureToolkitWithLabEnvironment(ctx context.Context) erro
 		ID string `json:"id"`
 	}
 	var data DataFile
-	b, err := ioutil.ReadFile(factorycommon.ActiveTestListFilePath)
+	b, err := os.ReadFile(factorycommon.ActiveTestListFilePath)
 	if err != nil {
 		return errors.Wrap(err, "failed to read TestList config file")
 	}

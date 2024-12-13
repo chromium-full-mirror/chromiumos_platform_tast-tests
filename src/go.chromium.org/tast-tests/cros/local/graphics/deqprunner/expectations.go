@@ -7,7 +7,6 @@ package deqprunner
 
 import (
 	"context"
-	"io/ioutil"
 	"os"
 	"path/filepath"
 	"strings"
@@ -74,7 +73,7 @@ func MakeFilterCmd(filters CaseListFilters, tmpDir string) ([]string, error) {
 func readExpectations(ctx context.Context, category runnerCategory, gpu string, environment runnerEnvironment, suffix string) ([]string, error) {
 	readLines := func(name string) ([]string, error) {
 		path := filepath.Join("/usr/local/graphics/expectations/", string(category), name)
-		out, err := ioutil.ReadFile(path)
+		out, err := os.ReadFile(path)
 		if err != nil {
 			if errors.Is(err, os.ErrNotExist) {
 				testing.ContextLogf(ctx, "No file found for %v, skip it", name)

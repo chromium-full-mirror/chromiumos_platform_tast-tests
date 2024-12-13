@@ -5,7 +5,6 @@
 package encoding
 
 import (
-	"io/ioutil"
 	"os"
 
 	"go.chromium.org/tast/core/errors"
@@ -14,7 +13,7 @@ import (
 // CreatePublicTempFile creates a world-readable temporary file. A caller should
 // close and remove the file in the end.
 func CreatePublicTempFile(prefix string) (*os.File, error) {
-	f, err := ioutil.TempFile("", prefix)
+	f, err := os.CreateTemp("", prefix)
 	if err != nil {
 		return nil, errors.Wrap(err, "failed to create a public temporary file")
 	}

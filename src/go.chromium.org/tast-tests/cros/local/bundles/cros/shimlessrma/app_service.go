@@ -8,7 +8,7 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
-	"io/ioutil"
+	"io"
 	"os"
 	"strings"
 	"time"
@@ -168,7 +168,7 @@ func (shimlessRMA *AppService) TestWelcomeAndNetworkConnection(ctx context.Conte
 // VerifyTestWelcomeAndNetworkConnectionSuccess verify that TestWelcomeAndNetworkConnection runs successfully.
 // It reads offlineLogFile and verify the content.
 func (shimlessRMA *AppService) VerifyTestWelcomeAndNetworkConnectionSuccess(ctx context.Context, req *empty.Empty) (*empty.Empty, error) {
-	content, err := ioutil.ReadFile(offlineLogFile)
+	content, err := os.ReadFile(offlineLogFile)
 	if err != nil {
 		return nil, errors.Wrap(err, "TestWelcomeAndNetworkConnection failed because we cannot read log file")
 	}
@@ -307,7 +307,7 @@ func (shimlessRMA *AppService) BypassFirmwareInstallation(ctx context.Context, r
 	}
 	defer jsonFile.Close()
 
-	byteValue, err := ioutil.ReadAll(jsonFile)
+	byteValue, err := io.ReadAll(jsonFile)
 	if err != nil {
 		return nil, err
 	}
@@ -323,7 +323,7 @@ func (shimlessRMA *AppService) BypassFirmwareInstallation(ctx context.Context, r
 		return nil, err
 	}
 
-	if err := ioutil.WriteFile(stateFilePath, updatedByteValue, 0666); err != nil {
+	if err := os.WriteFile(stateFilePath, updatedByteValue, 0666); err != nil {
 		return nil, err
 	}
 	return &empty.Empty{}, nil

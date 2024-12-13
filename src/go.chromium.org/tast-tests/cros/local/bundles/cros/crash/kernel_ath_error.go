@@ -6,7 +6,6 @@ package crash
 
 import (
 	"context"
-	"io/ioutil"
 	"os"
 	"path/filepath"
 	"regexp"
@@ -156,7 +155,7 @@ func KernelAthError(ctx context.Context, s *testing.State) {
 	}
 
 	s.Log("Inducing artificial ath crash")
-	if err := ioutil.WriteFile(athPath, []byte(tc.trigger), 0); err != nil {
+	if err := os.WriteFile(athPath, []byte(tc.trigger), 0); err != nil {
 		s.Fatal("Failed to induce ath crash: ", err)
 	}
 
@@ -183,7 +182,7 @@ func KernelAthError(ctx context.Context, s *testing.State) {
 
 	if len(files[tc.crashAthMetaFileName]) == 1 {
 		metaFile := files[tc.crashAthMetaFileName][0]
-		contents, err := ioutil.ReadFile(metaFile)
+		contents, err := os.ReadFile(metaFile)
 		if err != nil {
 			s.Errorf("Couldn't read meta file %s contents: %v", metaFile, err)
 		} else {

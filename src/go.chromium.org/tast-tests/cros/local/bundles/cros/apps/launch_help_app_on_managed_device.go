@@ -6,7 +6,6 @@ package apps
 
 import (
 	"context"
-	"io/ioutil"
 	"os"
 
 	"go.chromium.org/tast-tests/cros/common/policy"
@@ -100,7 +99,7 @@ func LaunchHelpAppOnManagedDevice(ctx context.Context, s *testing.State) {
 	if isOOBE {
 		// Using fakedms and login
 		// Start FakeDMS.
-		tmpdir, err := ioutil.TempDir("", "fdms-")
+		tmpdir, err := os.MkdirTemp("", "fdms-")
 		if err != nil {
 			s.Fatal("Failed to create fdms temp dir: ", err)
 		}

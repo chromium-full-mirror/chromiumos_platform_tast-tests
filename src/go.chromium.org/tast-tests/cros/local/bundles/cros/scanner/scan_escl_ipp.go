@@ -6,7 +6,6 @@ package scanner
 
 import (
 	"context"
-	"io/ioutil"
 	"os"
 	"time"
 
@@ -99,7 +98,7 @@ func ScanESCLIPP(ctx context.Context, s *testing.State) {
 	}
 	defer scanner.Cleanup(cleanupCtx)
 
-	tmpDir, err := ioutil.TempDir("", "tast.scanner.ScanEsclIPP.")
+	tmpDir, err := os.MkdirTemp("", "tast.scanner.ScanEsclIPP.")
 	if err != nil {
 		s.Fatal("Failed to create temporary directory: ", err)
 	}

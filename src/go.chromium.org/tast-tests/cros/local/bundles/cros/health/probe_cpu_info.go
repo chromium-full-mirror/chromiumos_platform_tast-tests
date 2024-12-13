@@ -9,7 +9,6 @@ import (
 	"bytes"
 	"context"
 	"fmt"
-	"io/ioutil"
 	"os"
 	"sort"
 	"strings"
@@ -70,7 +69,7 @@ func readMsr(msrReg int64, logicalID int) (uint64, error) {
 }
 
 func getFlags() (map[string]bool, error) {
-	cpuinfoContent, err := ioutil.ReadFile("/proc/cpuinfo")
+	cpuinfoContent, err := os.ReadFile("/proc/cpuinfo")
 	if err != nil {
 		return nil, errors.Wrap(err, "could not read /proc/cpuinfo")
 	}
@@ -260,7 +259,7 @@ func getExpectedVirtualization() (types.VirtualizationInfo, error) {
 		return virtualization, err
 	}
 
-	smtActiveContent, err := ioutil.ReadFile("/sys/devices/system/cpu/smt/active")
+	smtActiveContent, err := os.ReadFile("/sys/devices/system/cpu/smt/active")
 	if err != nil {
 		return virtualization, errors.Wrap(err, "could not read /sys/devices/system/cpu/smt/active")
 	}
@@ -274,7 +273,7 @@ func getExpectedVirtualization() (types.VirtualizationInfo, error) {
 	}
 	virtualization.IsSmtActive = smtActive
 
-	smtControl, err := ioutil.ReadFile("/sys/devices/system/cpu/smt/control")
+	smtControl, err := os.ReadFile("/sys/devices/system/cpu/smt/control")
 	if err != nil {
 		return virtualization, errors.Wrap(err, "could not read /sys/devices/system/cpu/smt/control")
 	}
@@ -296,14 +295,14 @@ func validateVirtualization(gotVirtualization types.VirtualizationInfo) error {
 
 func validateVulnerabilities(gotVulnerabilities map[string]types.VulnerabilityInfo) error {
 	expectedVulnerabilities := make(map[string]types.VulnerabilityInfo)
-	vulnerabilityFiles, err := ioutil.ReadDir("/sys/devices/system/cpu/vulnerabilities")
+	vulnerabilityFiles, err := os.ReadDir("/sys/devices/system/cpu/vulnerabilities")
 	if err != nil && !os.IsNotExist(err) {
 		return errors.Wrap(err, "failed to read vulnerabilities directory")
 	}
 	if err == nil {
 		for _, vulnerabilityFile := range vulnerabilityFiles {
 			name := vulnerabilityFile.Name()
-			out, err := ioutil.ReadFile("/sys/devices/system/cpu/vulnerabilities/" + name)
+			out, err := os.ReadFile("/sys/devices/system/cpu/vulnerabilities/" + name)
 			if err != nil {
 				return errors.Wrapf(err, "failed to read vulnerability: %s", name)
 			}
@@ -389,7 +388,7 @@ func ProbeCPUInfo(ctx context.Context, s *testing.State) {
 		s.Fatal("Failed to validate cpu vulnerabilities: ", err)
 	}
 
-	out, err := ioutil.ReadFile("/proc/crypto")
+	out, err := os.ReadFile("/proc/crypto")
 	if err != nil {
 		s.Fatal("Failed to read /proc/crypto file: ", err)
 	}

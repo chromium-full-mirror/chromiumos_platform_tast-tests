@@ -5,7 +5,6 @@
 package gtest
 
 import (
-	"io/ioutil"
 	"os"
 	"path/filepath"
 	"reflect"
@@ -38,7 +37,7 @@ func TestReport(t *testing.T) {
 	dir := testutil.TempDir(t)
 	defer os.RemoveAll(dir)
 	path := filepath.Join(dir, "output.xml")
-	if err := ioutil.WriteFile(path, []byte(data), 0644); err != nil {
+	if err := os.WriteFile(path, []byte(data), 0644); err != nil {
 		t.Fatal("Failed to create output.xml: ", err)
 	}
 

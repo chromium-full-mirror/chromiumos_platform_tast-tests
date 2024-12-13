@@ -6,8 +6,8 @@ package personalization
 
 import (
 	"context"
-	"io/ioutil"
 	"log"
+	"os"
 	"time"
 
 	"go.chromium.org/tast-tests/cros/local/chrome"
@@ -129,7 +129,7 @@ func SelectRainbowMode(ctx context.Context, s *testing.State) {
 				s.Fatal("Failed to select backlight color rainbow: ", err)
 			}
 
-			content, err := ioutil.ReadFile("/run/rgbkbd/log")
+			content, err := os.ReadFile("/run/rgbkbd/log")
 			if err != nil {
 				log.Fatal(err)
 			}

@@ -6,7 +6,6 @@ package security
 
 import (
 	"context"
-	"io/ioutil"
 	"os"
 	"syscall"
 
@@ -80,7 +79,7 @@ func SystemDirs(ctx context.Context, s *testing.State) {
 
 	// tryWrite attempts to create and remove a file in dir.
 	tryWrite := func(dir string) error {
-		f, err := ioutil.TempFile(dir, ".tast.security.MountPerms.")
+		f, err := os.CreateTemp(dir, ".tast.security.MountPerms.")
 		if err != nil {
 			return err
 		}

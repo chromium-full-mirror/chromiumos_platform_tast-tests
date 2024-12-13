@@ -9,9 +9,9 @@ import (
 	"crypto/tls"
 	"crypto/x509"
 	"fmt"
-	"io/ioutil"
 	"net/http"
 	"net/http/httptest"
+	"os"
 	"regexp"
 	"time"
 
@@ -233,7 +233,7 @@ func createWebsite(s *testing.State) *httptest.Server {
 		s.Fatal("Failed to load website cert: ", err)
 	}
 
-	rootCertPem, err := ioutil.ReadFile(s.DataPath(rootCertFileName))
+	rootCertPem, err := os.ReadFile(s.DataPath(rootCertFileName))
 	if err != nil {
 		s.Fatal("Failed to read root cert: ", err)
 	}

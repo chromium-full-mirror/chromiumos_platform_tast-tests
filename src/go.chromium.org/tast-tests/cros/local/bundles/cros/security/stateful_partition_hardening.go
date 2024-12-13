@@ -7,7 +7,6 @@ package security
 import (
 	"context"
 	"fmt"
-	"io/ioutil"
 	"os"
 	"path/filepath"
 
@@ -32,7 +31,7 @@ func init() {
 func StatefulPartitionHardening(ctx context.Context, s *testing.State) {
 	generateTempFilename := func(parent, fileType string) string {
 		template := fmt.Sprintf("tast.security.StatefulPartitionHardening.%v.", fileType)
-		tempFile, err := ioutil.TempFile(parent, template)
+		tempFile, err := os.CreateTemp(parent, template)
 		if err != nil {
 			s.Fatalf("Could not generate temp %v in %v", fileType, parent)
 		}
@@ -98,7 +97,7 @@ func StatefulPartitionHardening(ctx context.Context, s *testing.State) {
 	// treated specially (like the symlinkExceptions).
 	for _, locs := range []*[]string{&blockedLocations, &symlinkBlocked, &symlinkExceptions} {
 		for _, loc := range *locs {
-			path, err := ioutil.TempDir(loc, "tast.security.StatefulPartitionHardening.")
+			path, err := os.MkdirTemp(loc, "tast.security.StatefulPartitionHardening.")
 			if err != nil {
 				s.Fatal("Failed to create temp directory in ", loc)
 			}

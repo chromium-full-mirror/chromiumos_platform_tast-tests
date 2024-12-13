@@ -8,7 +8,6 @@ import (
 	"bufio"
 	"context"
 	"encoding/json"
-	"io/ioutil"
 	"math"
 	"os"
 	"regexp"
@@ -77,7 +76,7 @@ func (d DiskInfo) SaveDiskInfo(fileName string) error {
 	if err != nil {
 		return errors.Wrap(err, "failed marshalling disk info to JSON")
 	}
-	err = ioutil.WriteFile(fileName, file, 0644)
+	err = os.WriteFile(fileName, file, 0644)
 	if err != nil {
 		return errors.Wrap(err, "failed saving disk info to file")
 	}

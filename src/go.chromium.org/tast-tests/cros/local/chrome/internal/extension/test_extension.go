@@ -6,7 +6,6 @@ package extension
 
 import (
 	"fmt"
-	"io/ioutil"
 	"os"
 	"path/filepath"
 
@@ -162,7 +161,7 @@ func writeTestExtension(dir, key, extraBgJs, clientID string) (id string, err er
 		// Use tast library by default in Test extension. Append any extra JavaScript.
 		{"background.js", TastLibraryJS + extraBgJs},
 	} {
-		if err = ioutil.WriteFile(filepath.Join(dir, f.name), []byte(f.data), 0644); err != nil {
+		if err = os.WriteFile(filepath.Join(dir, f.name), []byte(f.data), 0644); err != nil {
 			return "", err
 		}
 	}

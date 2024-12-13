@@ -6,7 +6,7 @@ package crash
 
 import (
 	"context"
-	"io/ioutil"
+	"os"
 	"strings"
 	"time"
 
@@ -91,7 +91,7 @@ func CryptohomeRecoveryFailure(ctx context.Context, s *testing.State) {
 		s.Errorf("Unexpected number of crash files: expected %v, got %v", 1, len(metaFiles))
 	}
 	meta := metaFiles[0]
-	contents, err := ioutil.ReadFile(meta)
+	contents, err := os.ReadFile(meta)
 	if err != nil {
 		s.Errorf("Couldn't read log file %s: %v", meta, err)
 	}

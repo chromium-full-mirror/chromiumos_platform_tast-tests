@@ -6,7 +6,7 @@ package arc
 
 import (
 	"context"
-	"io/ioutil"
+	"os"
 	"strings"
 	"time"
 
@@ -130,7 +130,7 @@ func SELinuxViolation(ctx context.Context, s *testing.State) {
 	// anomaly_detector should ignore those violations that do not
 	// contain these strings.
 	for _, f := range files[logFileRegex] {
-		bytes, err := ioutil.ReadFile(f)
+		bytes, err := os.ReadFile(f)
 		if err != nil {
 			s.Errorf("Couldn't read log file %s: %v", f, err)
 			continue

@@ -6,7 +6,7 @@ package disk
 
 import (
 	"context"
-	"io/ioutil"
+	"os"
 
 	"go.chromium.org/tast-tests/cros/common/testexec"
 	"go.chromium.org/tast/core/errors"
@@ -22,7 +22,7 @@ func DropCaches(ctx context.Context) error {
 	if err := testexec.CommandContext(ctx, "sync").Run(testexec.DumpLogOnError); err != nil {
 		return errors.Wrap(err, "failed to flush buffers")
 	}
-	if err := ioutil.WriteFile("/proc/sys/vm/drop_caches", []byte("3"), 0200); err != nil {
+	if err := os.WriteFile("/proc/sys/vm/drop_caches", []byte("3"), 0200); err != nil {
 		return errors.Wrap(err, "failed to clear caches")
 	}
 	return nil

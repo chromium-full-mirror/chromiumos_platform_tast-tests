@@ -6,7 +6,6 @@ package kernel
 
 import (
 	"context"
-	"io/ioutil"
 	"os"
 	"path/filepath"
 	"regexp"
@@ -33,7 +32,7 @@ func init() {
 func PerfCallgraph(ctx context.Context, s *testing.State) {
 	const exe = "/usr/local/libexec/tast/helpers/local/cros/kernel.PerfCallgraph.graph"
 
-	td, err := ioutil.TempDir("", "tast.kernel.PerfCallgraph")
+	td, err := os.MkdirTemp("", "tast.kernel.PerfCallgraph")
 	if err != nil {
 		s.Fatal("Failed to create temp dir: ", err)
 	}
@@ -51,7 +50,7 @@ func PerfCallgraph(ctx context.Context, s *testing.State) {
 		s.Fatal("Failed to generate report: ", err)
 	}
 	const outFile = "report.txt"
-	if err := ioutil.WriteFile(filepath.Join(s.OutDir(), outFile), out, 0644); err != nil {
+	if err := os.WriteFile(filepath.Join(s.OutDir(), outFile), out, 0644); err != nil {
 		s.Error("Failed to write report: ", err)
 	}
 

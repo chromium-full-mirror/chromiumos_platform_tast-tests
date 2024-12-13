@@ -7,7 +7,7 @@ package vm
 import (
 	"context"
 	"fmt"
-	"io/ioutil"
+	"os"
 	"path/filepath"
 	"strings"
 	"sync"
@@ -97,7 +97,7 @@ func AudioResumeAfterCrasRestarted(ctx context.Context, s *testing.State) {
 	runScriptWG.Wait()
 
 	// Read output and check that the second aplay returned 0
-	output, err := ioutil.ReadFile(outputLogPath)
+	output, err := os.ReadFile(outputLogPath)
 	if err != nil {
 		s.Fatal("Failed to read output file: ", err)
 	}

@@ -7,7 +7,7 @@ package platform
 import (
 	"context"
 	"fmt"
-	"io/ioutil"
+	"os"
 	"path/filepath"
 	"strconv"
 	"strings"
@@ -42,7 +42,7 @@ func sysfsRootDeviceSize(ctx context.Context) (int64, error) {
 	}
 
 	fp := fmt.Sprintf("/sys/block/%s/size", filepath.Base(rootdev))
-	content, err := ioutil.ReadFile(fp)
+	content, err := os.ReadFile(fp)
 	if err != nil {
 		return 0, errors.Wrapf(err, "reading filepath %s", fp)
 	}

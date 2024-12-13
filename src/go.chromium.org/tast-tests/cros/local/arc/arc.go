@@ -10,7 +10,6 @@ import (
 	"context"
 	"fmt"
 	"io"
-	"io/ioutil"
 	"os"
 	"path/filepath"
 	"regexp"
@@ -202,7 +201,7 @@ func (a *ARC) IsProvisioned(ctx context.Context) (bool, error) {
 
 // ReadXMLFile reads XML file and converts from binary to plain-text if necessary.
 func (a *ARC) ReadXMLFile(ctx context.Context, filepath string) ([]byte, error) {
-	out, err := ioutil.ReadFile(filepath)
+	out, err := os.ReadFile(filepath)
 	if err != nil || len(out) == 0 || bytes.HasPrefix(out, []byte("<?xml ")) {
 		return out, err
 	}
@@ -1055,7 +1054,7 @@ func WriteArcvmDevConf(ctx context.Context, text string) error {
 			return err
 		}
 	}
-	return ioutil.WriteFile(arcvmDevConfFile, []byte(text), 0644)
+	return os.WriteFile(arcvmDevConfFile, []byte(text), 0644)
 }
 
 // AppendToArcvmDevConf appends the string to the arcvm_dev.conf on ARCVM devices. Useful for
@@ -1236,7 +1235,7 @@ func CheckNoDex2Oat(outDir string) error {
 	// check logcat for evidence of dex2oat running.
 	logcatPath := filepath.Join(outDir, "logcat.txt")
 
-	dump, err := ioutil.ReadFile(logcatPath)
+	dump, err := os.ReadFile(logcatPath)
 	if err != nil {
 		return errors.Wrap(err, "failed to read logcat")
 	}

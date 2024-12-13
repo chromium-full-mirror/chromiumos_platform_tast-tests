@@ -7,7 +7,6 @@ package crostini
 import (
 	"bytes"
 	"context"
-	"io/ioutil"
 	"os"
 	"path/filepath"
 	"time"
@@ -102,7 +101,7 @@ func trySaveContainerLogs(ctx context.Context, dir string, cont *vm.Container) {
 	}
 
 	path := filepath.Join(dir, "crostini_journalctl.txt")
-	err = ioutil.WriteFile(path, output, 0644)
+	err = os.WriteFile(path, output, 0644)
 	if err != nil {
 		testing.ContextLog(ctx, "Error writing journalctl to log: ", err)
 		return

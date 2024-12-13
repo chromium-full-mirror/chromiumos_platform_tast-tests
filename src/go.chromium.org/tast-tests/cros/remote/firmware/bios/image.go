@@ -7,7 +7,6 @@ package bios
 import (
 	"context"
 	"fmt"
-	"io/ioutil"
 	"os"
 	"strings"
 
@@ -31,7 +30,7 @@ type ServoHostCommandRunner interface {
 
 // NewRemoteImage creates an Image object representing the currently loaded BIOS image. If you pass in a section, only that section will be read.
 func NewRemoteImage(ctx context.Context, runner ServoHostCommandRunner, programmer string, section commonbios.ImageSection, extraFlashromArgs []string) (*commonbios.Image, error) {
-	localTempFile, err := ioutil.TempFile("", "")
+	localTempFile, err := os.CreateTemp("", "")
 	if err != nil {
 		return nil, errors.Wrap(err, "creating tmpfile for image contents")
 	}
@@ -76,7 +75,7 @@ func NewRemoteImage(ctx context.Context, runner ServoHostCommandRunner, programm
 		return nil, errors.Wrapf(err, "copy remote %s to local %s", remoteTempFileName, localTempFileName)
 	}
 
-	data, err := ioutil.ReadFile(localTempFileName)
+	data, err := os.ReadFile(localTempFileName)
 	if err != nil {
 		return nil, errors.Wrap(err, "could not read firmware host image contents")
 	}
@@ -108,7 +107,7 @@ func WriteRemoteFlashrom(ctx context.Context, runner ServoHostCommandRunner, pro
 		return errors.Errorf("section %q is not recognized", string(sec))
 	}
 
-	localTempFile, err := ioutil.TempFile("", "")
+	localTempFile, err := os.CreateTemp("", "")
 	if err != nil {
 		return errors.Wrap(err, "creating tmpfile for image contents")
 	}

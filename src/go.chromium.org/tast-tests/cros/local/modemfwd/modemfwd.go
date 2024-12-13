@@ -9,7 +9,6 @@ import (
 	"bytes"
 	"context"
 	"encoding/hex"
-	"io/ioutil"
 	"os"
 	"strconv"
 	"strings"
@@ -170,14 +169,14 @@ func WatchUpdateFirmwareCompleted(ctx context.Context) (*dbusutil.SignalWatcher,
 func DisableAutoUpdate(ctx context.Context) (func(), error) {
 	fileExists := disableAutoUpdatePrefFileExists()
 	currentValue := GetAutoUpdatePrefValue(ctx)
-	if err := ioutil.WriteFile(DisableAutoUpdatePref, []byte("1"), 0666); err != nil {
+	if err := os.WriteFile(DisableAutoUpdatePref, []byte("1"), 0666); err != nil {
 		return nil, errors.Wrapf(err, "could not write to %s", DisableAutoUpdatePref)
 	}
 	return func() {
 		if !fileExists {
 			os.Remove(DisableAutoUpdatePref)
 		} else if !currentValue {
-			ioutil.WriteFile(DisableAutoUpdatePref, []byte("0"), 0666)
+			os.WriteFile(DisableAutoUpdatePref, []byte("0"), 0666)
 		}
 	}, nil
 }
@@ -193,7 +192,7 @@ func GetAutoUpdatePrefValue(ctx context.Context) bool {
 	if !disableAutoUpdatePrefFileExists() {
 		return false
 	}
-	pref, err := ioutil.ReadFile(DisableAutoUpdatePref)
+	pref, err := os.ReadFile(DisableAutoUpdatePref)
 	if err != nil {
 		return false
 	}

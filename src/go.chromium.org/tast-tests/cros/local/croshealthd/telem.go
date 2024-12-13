@@ -10,7 +10,7 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
-	"io/ioutil"
+	"os"
 	"path/filepath"
 	"strconv"
 	"strings"
@@ -91,7 +91,7 @@ func RunTelem(ctx context.Context, params TelemParams, outDir string) ([]byte, e
 
 	// Log output to file for debugging.
 	path := filepath.Join(outDir, "command_output.txt")
-	if err := ioutil.WriteFile(path, stdout, 0644); err != nil {
+	if err := os.WriteFile(path, stdout, 0644); err != nil {
 		return nil, errors.Wrapf(err, "failed to write output to %s", path)
 	}
 

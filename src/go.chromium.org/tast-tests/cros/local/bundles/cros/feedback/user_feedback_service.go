@@ -6,7 +6,6 @@ package feedback
 
 import (
 	"context"
-	"io/ioutil"
 	"os"
 	"sync"
 	"time"
@@ -143,7 +142,7 @@ func (svc *UserFeedbackService) GetUserFeedback(ctx context.Context, req *pb.Get
 	// Read feedback report content.
 	var content []byte
 	if err := testing.Poll(ctx, func(ctx context.Context) error {
-		content, err = ioutil.ReadFile(feedbackapp.ReportPath)
+		content, err = os.ReadFile(feedbackapp.ReportPath)
 		if err != nil {
 			return errors.Wrap(err, "failed to read user report report content")
 		}

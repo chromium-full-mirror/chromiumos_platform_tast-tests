@@ -8,7 +8,7 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
-	"io/ioutil"
+	"os"
 	"path/filepath"
 	"regexp"
 	"strconv"
@@ -530,7 +530,7 @@ func parseResult(resultFilePath, ioType string) (jobResult, error) {
 	// 	  ...
 	// 	}
 
-	buf, err := ioutil.ReadFile(resultFilePath)
+	buf, err := os.ReadFile(resultFilePath)
 	if err != nil {
 		return jobResult{}, errors.Wrap(err, "failed to read fio result file")
 	}

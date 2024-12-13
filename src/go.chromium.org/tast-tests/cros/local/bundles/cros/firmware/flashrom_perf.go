@@ -6,7 +6,6 @@ package firmware
 
 import (
 	"context"
-	"io/ioutil"
 	"os"
 	"strings"
 	"time"
@@ -101,7 +100,7 @@ func FlashromPerf(ctx context.Context, s *testing.State) {
 func testFlashromReadTime(ctx context.Context, s *testing.State, regions []string) float64 {
 	flashromStart := time.Now()
 
-	opTempFile, err := ioutil.TempFile("", "dump_"+strings.Join(regions, "")+"_*.bin")
+	opTempFile, err := os.CreateTemp("", "dump_"+strings.Join(regions, "")+"_*.bin")
 	if err != nil {
 		s.Fatal("Failed creating temp file: ", err)
 	}

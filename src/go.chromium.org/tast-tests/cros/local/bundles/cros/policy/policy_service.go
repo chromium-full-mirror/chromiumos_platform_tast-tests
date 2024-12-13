@@ -9,7 +9,6 @@ import (
 	"encoding/json"
 	"fmt"
 	"io"
-	"io/ioutil"
 	"os"
 	"path/filepath"
 	"strings"
@@ -354,7 +353,7 @@ func (c *PolicyService) EnrollUsingChrome(ctx context.Context, req *ppb.EnrollUs
 	ok := false
 
 	for _, extension := range req.Extensions {
-		extDir, err := ioutil.TempDir("", "tast-extensions-")
+		extDir, err := os.MkdirTemp("", "tast-extensions-")
 		if err != nil {
 			return nil, errors.Wrap(err, "failed to create temp dir")
 		}
@@ -384,7 +383,7 @@ func (c *PolicyService) EnrollUsingChrome(ctx context.Context, req *ppb.EnrollUs
 	}
 
 	if req.FakedmsDir == "" {
-		tmpdir, err := ioutil.TempDir("", "fdms-")
+		tmpdir, err := os.MkdirTemp("", "fdms-")
 		if err != nil {
 			return nil, errors.Wrap(err, "failed to create temp dir")
 		}
@@ -886,7 +885,7 @@ func (c *PolicyService) StableDeviceSecret(ctx context.Context, req *empty.Empty
 	// Get the stable_device_secret as the key under which we store the deviceID and customerID
 	// as that won't change.
 	const stableDeviceSecretFileName = "/sys/firmware/vpd/ro/stable_device_secret_DO_NOT_SHARE"
-	data, err := ioutil.ReadFile(stableDeviceSecretFileName)
+	data, err := os.ReadFile(stableDeviceSecretFileName)
 	if err != nil {
 		return nil, errors.Wrapf(err, "failed to read %s", stableDeviceSecretFileName)
 	}

@@ -6,7 +6,7 @@ package fixtures
 
 import (
 	"context"
-	"io/ioutil"
+	"os"
 	"path/filepath"
 	"time"
 
@@ -98,7 +98,7 @@ func (f *fakeDMSFixture) SetUp(ctx context.Context, s *testing.FixtState) interf
 	defer st.End()
 
 	// Use a tmpdir to ensure multiple startups don't override logs.
-	tmpdir, err := ioutil.TempDir(s.OutDir(), "fdms-")
+	tmpdir, err := os.MkdirTemp(s.OutDir(), "fdms-")
 	if err != nil {
 		s.Fatal("Failed to create fdms temp dir: ", err)
 	}

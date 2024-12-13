@@ -6,8 +6,8 @@ package printer
 
 import (
 	"context"
-	"io/ioutil"
 	"net/http"
+	"os"
 
 	ppb "go.chromium.org/chromiumos/system_api/printscanmgr_proto"
 
@@ -52,7 +52,7 @@ func Printscanmgr(ctx context.Context, s *testing.State) {
 	go server.ListenAndServe()
 	defer server.Shutdown(ctx)
 
-	ppd, err := ioutil.ReadFile(s.DataPath("GenericPostScript.ppd.gz"))
+	ppd, err := os.ReadFile(s.DataPath("GenericPostScript.ppd.gz"))
 	if err != nil {
 		s.Fatal("Failed to read PPD file: ", err)
 	}

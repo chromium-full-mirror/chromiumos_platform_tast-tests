@@ -6,7 +6,7 @@ package crash
 
 import (
 	"context"
-	"io/ioutil"
+	"os"
 	"strings"
 
 	"go.chromium.org/tast-tests/cros/common/testexec"
@@ -27,7 +27,7 @@ func KernelLogCollector(ctx context.Context, s *testing.State) {
 	s.Log("Triggering kernel log")
 
 	// Trigger a kernel 'sysrq HELP' log.
-	ioutil.WriteFile("/proc/sysrq-trigger", []byte("?"), 0666)
+	os.WriteFile("/proc/sysrq-trigger", []byte("?"), 0666)
 
 	s.Log("Using kernel_log_collector.sh to find logs")
 

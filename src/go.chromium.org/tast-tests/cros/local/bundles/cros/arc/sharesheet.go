@@ -6,7 +6,6 @@ package arc
 
 import (
 	"context"
-	"io/ioutil"
 	"os"
 	"path/filepath"
 	"time"
@@ -83,7 +82,7 @@ func Sharesheet(ctx context.Context, s *testing.State) {
 
 	// Setup the test file.
 	testFileLocation := filepath.Join(downloadsPath, expectedFileName)
-	if err := ioutil.WriteFile(testFileLocation, []byte(expectedFileContents), 0644); err != nil {
+	if err := os.WriteFile(testFileLocation, []byte(expectedFileContents), 0644); err != nil {
 		s.Fatalf("Failed to create file %q: %s", testFileLocation, err)
 	}
 	defer os.Remove(testFileLocation)

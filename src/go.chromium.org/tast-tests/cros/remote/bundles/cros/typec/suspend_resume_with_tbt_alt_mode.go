@@ -8,7 +8,7 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
-	"io/ioutil"
+	"os"
 	"time"
 
 	"go.chromium.org/tast-tests/cros/common/cswitch"
@@ -97,7 +97,7 @@ func SuspendResumeWithTBTAltMode(ctx context.Context, s *testing.State) {
 	loginChrome()
 
 	// Read json config file.
-	jsonData, err := ioutil.ReadFile(s.DataPath(testConfig))
+	jsonData, err := os.ReadFile(s.DataPath(testConfig))
 	if err != nil {
 		s.Fatalf("Failed to open %v file : %v", testConfig, err)
 	}

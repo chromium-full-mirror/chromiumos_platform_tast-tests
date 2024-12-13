@@ -5,7 +5,6 @@
 package adb
 
 import (
-	"io/ioutil"
 	"os"
 	"path/filepath"
 	"strings"
@@ -73,7 +72,7 @@ func InstallVendorKeys() error {
 		return err
 	}
 	for _, key := range vendorKeys {
-		if err := ioutil.WriteFile(vendorKeyFile(key), []byte(key.privateKey), 0600); err != nil {
+		if err := os.WriteFile(vendorKeyFile(key), []byte(key.privateKey), 0600); err != nil {
 			return errors.Wrapf(err, "failed installing ADB private key for %q", key.name)
 		}
 	}

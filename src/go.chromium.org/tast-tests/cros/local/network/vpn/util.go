@@ -7,7 +7,6 @@ package vpn
 import (
 	"context"
 	"fmt"
-	"io/ioutil"
 	"os"
 	"os/exec"
 	"strconv"
@@ -58,7 +57,7 @@ func waitForCharonExitOrKill(ctx context.Context) error {
 
 	// Assume charon is not running and return nil directly if either 1) pid file
 	// does not exist, or 2) pid file does not contain a valid pid number.
-	pidStr, err := ioutil.ReadFile(pidFile)
+	pidStr, err := os.ReadFile(pidFile)
 	if err != nil {
 		if errors.Is(err, os.ErrNotExist) {
 			return nil

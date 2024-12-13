@@ -6,7 +6,6 @@ package hardware
 
 import (
 	"context"
-	"io/ioutil"
 	"os"
 	"path/filepath"
 	"regexp"
@@ -66,7 +65,7 @@ func DiskErrors(ctx context.Context, s *testing.State) {
 		s.Fatal("Failed to run dmesg: ", err)
 	}
 
-	b, err := ioutil.ReadFile(f.Name())
+	b, err := os.ReadFile(f.Name())
 	if err != nil {
 		s.Fatal("Failed to read dmesg.txt: ", err)
 	}

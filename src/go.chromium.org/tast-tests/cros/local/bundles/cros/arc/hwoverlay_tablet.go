@@ -6,7 +6,6 @@ package arc
 
 import (
 	"context"
-	"io/ioutil"
 	"os"
 	"regexp"
 	"strconv"
@@ -126,7 +125,7 @@ func verifyHWOverlay(ctx context.Context, a *arc.Activity, path string) error {
 		return errors.Errorf("invalid surface size: %dx%d", w, h)
 	}
 
-	dat, err := ioutil.ReadFile(path)
+	dat, err := os.ReadFile(path)
 	if err != nil {
 		return err
 	}

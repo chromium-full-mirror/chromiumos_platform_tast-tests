@@ -6,7 +6,6 @@ package hwsec
 
 import (
 	"context"
-	"io/ioutil"
 	"os"
 
 	"go.chromium.org/tast-tests/cros/common/hwsec"
@@ -25,14 +24,14 @@ func NewPCAAgentClient() *PCAAgentClient {
 // HandleEnrollRequest calls pca_agent_client to process the enroll request.
 func (rp *PCAAgentClient) HandleEnrollRequest(ctx context.Context, request string, pcaType hwsec.PCAType) (string, error) {
 	// Set up input/output temp files.
-	fdIn, err := ioutil.TempFile("", "tast-hwsec-test-pca-enroll-request")
+	fdIn, err := os.CreateTemp("", "tast-hwsec-test-pca-enroll-request")
 	if err != nil {
 		return "", errors.Wrap(err, "error creating temp file")
 	}
 	defer os.Remove(fdIn.Name())
 	defer fdIn.Close()
 
-	fdOut, err := ioutil.TempFile("", "tast-hwsec-test-pca-enroll-response")
+	fdOut, err := os.CreateTemp("", "tast-hwsec-test-pca-enroll-response")
 	if err != nil {
 		return "", errors.Wrap(err, "error creating temp file")
 	}
@@ -40,7 +39,7 @@ func (rp *PCAAgentClient) HandleEnrollRequest(ctx context.Context, request strin
 	defer fdOut.Close()
 
 	//Write the input file.
-	if err := ioutil.WriteFile(fdIn.Name(), []byte(request), 0644); err != nil {
+	if err := os.WriteFile(fdIn.Name(), []byte(request), 0644); err != nil {
 		return "", errors.Wrap(err, "failed to write input file")
 	}
 
@@ -50,7 +49,7 @@ func (rp *PCAAgentClient) HandleEnrollRequest(ctx context.Context, request strin
 	}
 
 	// Read the output file content.
-	output, err := ioutil.ReadFile(fdOut.Name())
+	output, err := os.ReadFile(fdOut.Name())
 	if err != nil {
 		return "", errors.Wrap(err, "failed to read output")
 	}
@@ -60,14 +59,14 @@ func (rp *PCAAgentClient) HandleEnrollRequest(ctx context.Context, request strin
 // HandleCertificateRequest calls pca_agent_client to process the certificate request.
 func (rp *PCAAgentClient) HandleCertificateRequest(ctx context.Context, request string, pcaType hwsec.PCAType) (string, error) {
 	// Set up input/output temp files.
-	fdIn, err := ioutil.TempFile("", "tast-hwsec-test-pca-cert-request")
+	fdIn, err := os.CreateTemp("", "tast-hwsec-test-pca-cert-request")
 	if err != nil {
 		return "", errors.Wrap(err, "error creating temp file")
 	}
 	defer os.Remove(fdIn.Name())
 	defer fdIn.Close()
 
-	fdOut, err := ioutil.TempFile("", "tast-hwsec-test-pca-cert-respone")
+	fdOut, err := os.CreateTemp("", "tast-hwsec-test-pca-cert-respone")
 	if err != nil {
 		return "", errors.Wrap(err, "error creating temp file")
 	}
@@ -75,7 +74,7 @@ func (rp *PCAAgentClient) HandleCertificateRequest(ctx context.Context, request 
 	defer fdOut.Close()
 
 	//Write the input file.
-	if err := ioutil.WriteFile(fdIn.Name(), []byte(request), 0644); err != nil {
+	if err := os.WriteFile(fdIn.Name(), []byte(request), 0644); err != nil {
 		return "", errors.Wrap(err, "failed to write input file")
 	}
 
@@ -85,7 +84,7 @@ func (rp *PCAAgentClient) HandleCertificateRequest(ctx context.Context, request 
 	}
 
 	// Read the output file content.
-	output, err := ioutil.ReadFile(fdOut.Name())
+	output, err := os.ReadFile(fdOut.Name())
 	if err != nil {
 		return "", errors.Wrap(err, "failed to read output")
 	}

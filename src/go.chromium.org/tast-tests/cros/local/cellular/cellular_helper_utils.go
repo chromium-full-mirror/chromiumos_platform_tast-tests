@@ -7,7 +7,7 @@ package cellular
 import (
 	"context"
 	"fmt"
-	"io/ioutil"
+	"os"
 	"regexp"
 	"strconv"
 	"strings"
@@ -34,7 +34,7 @@ var (
 
 // EnsureUptime ensures that the system has been up for at least the specified amount of time before returning.
 func EnsureUptime(ctx context.Context, duration time.Duration) error {
-	uptimeStr, err := ioutil.ReadFile("/proc/uptime")
+	uptimeStr, err := os.ReadFile("/proc/uptime")
 	if err != nil {
 		return errors.Wrap(err, "failed to read system uptime")
 	}
@@ -71,7 +71,7 @@ func EnsureDaemonUptime(ctx context.Context, job string, duration time.Duration)
 	}
 	// Start time relative to boot time is found in the stat file.
 	statFilename := fmt.Sprintf("/proc/%d/stat", pid)
-	buff, err := ioutil.ReadFile(statFilename)
+	buff, err := os.ReadFile(statFilename)
 	if err != nil {
 		return err
 	}
@@ -84,7 +84,7 @@ func EnsureDaemonUptime(ctx context.Context, job string, duration time.Duration)
 	}
 	startTimeSeconds := startTimeTicks / ticksPerSecond
 	endTime := time.Duration(startTimeSeconds)*time.Second + duration
-	uptimeStr, err := ioutil.ReadFile("/proc/uptime")
+	uptimeStr, err := os.ReadFile("/proc/uptime")
 	if err != nil {
 		return errors.Wrap(err, "failed to read system uptime")
 	}

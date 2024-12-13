@@ -8,7 +8,7 @@ package utils
 import (
 	"context"
 	"fmt"
-	"io/ioutil"
+	"io"
 	"net/http"
 	"strings"
 	"time"
@@ -97,7 +97,7 @@ func IppowerIP(dutIP string) (string, error) {
 		if err != nil {
 			continue
 		}
-		body, err := ioutil.ReadAll(resp.Body)
+		body, err := io.ReadAll(resp.Body)
 		if err != nil {
 			resp.Body.Close()
 			continue
@@ -122,7 +122,7 @@ func CheckIppowerStatus(ip string) error {
 		return errors.Errorf("unable to send a GET request to %s", ip)
 	}
 	defer resp.Body.Close()
-	body, err := ioutil.ReadAll(resp.Body)
+	body, err := io.ReadAll(resp.Body)
 	if err != nil {
 		return errors.Errorf("unable to read the body content from %s", ip)
 	}

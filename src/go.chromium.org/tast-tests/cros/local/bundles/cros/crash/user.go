@@ -8,7 +8,6 @@ import (
 	"context"
 	"fmt"
 	"io"
-	"io/ioutil"
 	"os"
 	"os/exec"
 	"path/filepath"
@@ -200,7 +199,7 @@ func testReporterStartup(ctx context.Context, s *testing.State) {
 		s.Error("Failed to turn off crash filtering: ", err)
 		return
 	}
-	out, err := ioutil.ReadFile(commoncrash.CorePattern)
+	out, err := os.ReadFile(commoncrash.CorePattern)
 	if err != nil {
 		s.Error("Failed to read core pattern file: ", commoncrash.CorePattern)
 		return
@@ -305,7 +304,7 @@ func testCoreFileRemovedInProduction(ctx context.Context, s *testing.State) {
 	if err != nil {
 		s.Fatal("Failed opening root crash dir: ", err)
 	}
-	files, err := ioutil.ReadDir(crashDir)
+	files, err := os.ReadDir(crashDir)
 	if err != nil {
 		s.Fatal("Failed to read crash dir: ", err)
 	}
@@ -351,7 +350,7 @@ func testReporterShutdown(ctx context.Context, s *testing.State) {
 	if err := cmd.Run(testexec.DumpLogOnError); err != nil {
 		s.Error("Failed to clean shutdown crash reporter: ", err)
 	}
-	b, err := ioutil.ReadFile(commoncrash.CorePattern)
+	b, err := os.ReadFile(commoncrash.CorePattern)
 	if err != nil {
 		s.Error("Failed to read core pattern file")
 	}
@@ -512,16 +511,16 @@ func testCrashBlocking(ctx context.Context, s *testing.State) {
 // checkCollectionFailure is a helper function for testing with crash log collection failures.
 func checkCollectionFailure(ctx context.Context, testOption, failureString string) error {
 	// Add parameter to core_pattern.
-	out, err := ioutil.ReadFile(commoncrash.CorePattern)
+	out, err := os.ReadFile(commoncrash.CorePattern)
 	if err != nil {
 		return errors.Wrapf(err, "failed to read core pattern file: %s", commoncrash.CorePattern)
 	}
 	oldCorePattern := strings.TrimSpace(string(out))
-	if err := ioutil.WriteFile(commoncrash.CorePattern, []byte(oldCorePattern+" "+testOption), 0644); err != nil {
+	if err := os.WriteFile(commoncrash.CorePattern, []byte(oldCorePattern+" "+testOption), 0644); err != nil {
 		return errors.Wrapf(err, "failed to add core pattern: %s", testOption)
 	}
 	defer func() {
-		if err := ioutil.WriteFile(commoncrash.CorePattern, []byte(oldCorePattern), 0644); err != nil {
+		if err := os.WriteFile(commoncrash.CorePattern, []byte(oldCorePattern), 0644); err != nil {
 			testing.ContextLog(ctx, "Failed to restore core pattern file: ", err)
 		}
 	}()
@@ -559,7 +558,7 @@ func checkCollectionFailure(ctx context.Context, testOption, failureString strin
 	if result.Log == "" {
 		return errors.New("failed collection had no log")
 	}
-	out, err = ioutil.ReadFile(result.Log)
+	out, err = os.ReadFile(result.Log)
 	if err != nil {
 		return err
 	}
@@ -569,7 +568,7 @@ func checkCollectionFailure(ctx context.Context, testOption, failureString strin
 	}
 
 	pslogName := result.Pslog
-	out, err = ioutil.ReadFile(pslogName)
+	out, err = os.ReadFile(pslogName)
 	if err != nil {
 		return err
 	}
@@ -620,14 +619,14 @@ func testCrashLogsCreation(ctx context.Context, s *testing.State) {
 	if !result.CrashReporterCaught {
 		s.Error("Logs do not contain crash_reporter message")
 	}
-	b, err := ioutil.ReadFile(result.Log)
+	b, err := os.ReadFile(result.Log)
 	if err != nil {
 		s.Error("Failed to read result log: ", err)
 	}
 	if contents := string(b); contents != "hello world\n" {
 		s.Error("Crash log contents unexpected: ", contents)
 	}
-	b, err = ioutil.ReadFile(result.Meta)
+	b, err = os.ReadFile(result.Meta)
 	if err != nil {
 		s.Error("Failed to read result meta: ", err)
 	}
@@ -722,7 +721,7 @@ func testMaxEnqueuedCrash(ctx context.Context, s *testing.State) {
 		}
 	}
 
-	files, err := ioutil.ReadDir(crashDir)
+	files, err := os.ReadDir(crashDir)
 	if err != nil {
 		s.Fatal("Failed to get crash dir size: ", crashDir)
 	}
@@ -744,7 +743,7 @@ func testMaxEnqueuedCrash(ctx context.Context, s *testing.State) {
 		if _, err := reader.Wait(ctx, 30*time.Second, func(e *syslog.Entry) bool { return strings.Contains(e.Content, fullMessage) }); err != nil {
 			s.Error("Expected full message: ", fullMessage)
 		}
-		files, err = ioutil.ReadDir(crashDir)
+		files, err = os.ReadDir(crashDir)
 		if err != nil {
 			s.Fatalf("Failed to get crash dir size of %s: %v", crashDir, err)
 		}

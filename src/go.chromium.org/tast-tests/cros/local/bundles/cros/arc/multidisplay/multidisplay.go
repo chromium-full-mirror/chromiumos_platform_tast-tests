@@ -12,7 +12,6 @@ import (
 	"image"
 	"image/color"
 	"image/png"
-	"io/ioutil"
 	"os"
 	"path/filepath"
 	"reflect"
@@ -1295,7 +1294,7 @@ func ensureActivityReady(ctx context.Context, tconn *chrome.TestConn, act *arc.A
 
 // grabScreenshotForDisplay takes a screenshot for a given displayID and returns an image.Image.
 func grabScreenshotForDisplay(ctx context.Context, cr *chrome.Chrome, displayID string) (image.Image, error) {
-	fd, err := ioutil.TempFile("", "screenshot")
+	fd, err := os.CreateTemp("", "screenshot")
 	if err != nil {
 		return nil, errors.Wrap(err, "error opening screenshot file")
 	}

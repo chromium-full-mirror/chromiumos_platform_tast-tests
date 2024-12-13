@@ -8,7 +8,6 @@ import (
 	"bufio"
 	"context"
 	"fmt"
-	"io/ioutil"
 	"os"
 	"path/filepath"
 	"regexp"
@@ -515,7 +514,7 @@ func (h *Helper) CopyTastFilesFromDUT(ctx context.Context) error {
 	}
 
 	// Create temp dir to hold copied Tast files.
-	tmpDir, err := ioutil.TempDir("", "tast-host-files-copy")
+	tmpDir, err := os.MkdirTemp("", "tast-host-files-copy")
 	if err != nil {
 		return err
 	}
@@ -1662,7 +1661,7 @@ func (h *Helper) SaveCBMEMLogs(ctx context.Context, saveLogPath string, logType 
 		return errors.Wrap(err, "failed to run cbmem command")
 	}
 
-	if err := ioutil.WriteFile(saveLogPath, []byte(out), 0666); err != nil {
+	if err := os.WriteFile(saveLogPath, []byte(out), 0666); err != nil {
 		return errors.Wrapf(err, "failed to write firmware log to %s", saveLogPath)
 	}
 	return nil

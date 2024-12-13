@@ -5,7 +5,6 @@
 package mediarecorder
 
 import (
-	"io/ioutil"
 	"os"
 	"testing"
 
@@ -16,7 +15,7 @@ import (
 // number of frames for a given MKV video.
 func TestComputeNumFrames(t *testing.T) {
 	const correctFrameNum = 313
-	videoBytes, err := ioutil.ReadFile("testdata/test_video.mkv")
+	videoBytes, err := os.ReadFile("testdata/test_video.mkv")
 	if err != nil {
 		t.Error(err, "failed to read video file")
 	}

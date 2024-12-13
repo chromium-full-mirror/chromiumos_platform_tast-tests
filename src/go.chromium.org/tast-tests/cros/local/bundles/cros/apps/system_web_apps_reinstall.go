@@ -7,7 +7,6 @@ package apps
 import (
 	"bytes"
 	"context"
-	"io/ioutil"
 	"math/rand"
 	"os"
 	"path/filepath"
@@ -69,7 +68,7 @@ func SystemWebAppsReinstall(ctx context.Context, s *testing.State) {
 		if err != nil {
 			return errors.Wrap(err, "failed to get test file path")
 		}
-		if err := ioutil.WriteFile(testFilePath, testFileContent, 0644); err != nil {
+		if err := os.WriteFile(testFilePath, testFileContent, 0644); err != nil {
 			return errors.Wrap(err, "failed to create test file for confidence check")
 		}
 
@@ -113,7 +112,7 @@ func SystemWebAppsReinstall(ctx context.Context, s *testing.State) {
 
 		defer os.Remove(testFilePath)
 
-		b, err := ioutil.ReadFile(testFilePath)
+		b, err := os.ReadFile(testFilePath)
 		if err != nil {
 			return errors.Wrap(err, "failed to pass confidence check")
 		}

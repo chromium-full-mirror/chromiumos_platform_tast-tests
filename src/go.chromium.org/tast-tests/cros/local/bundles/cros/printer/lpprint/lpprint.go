@@ -8,7 +8,7 @@ package lpprint
 
 import (
 	"context"
-	"io/ioutil"
+	"os"
 	"time"
 
 	ppb "go.chromium.org/chromiumos/system_api/printscanmgr_proto"
@@ -29,7 +29,7 @@ func Run(ctx context.Context, ppdFilePath, toPrintFilePath, options string, useP
 		socketAddr = "socket://localhost:9101"
 	)
 
-	ppd, err := ioutil.ReadFile(ppdFilePath)
+	ppd, err := os.ReadFile(ppdFilePath)
 	if err != nil {
 		return nil, errors.Wrap(err, "failed to read PPD file")
 	}

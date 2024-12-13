@@ -8,7 +8,7 @@ package typecutils
 import (
 	"bytes"
 	"context"
-	"io/ioutil"
+	"os"
 	"regexp"
 	"strconv"
 	"strings"
@@ -49,7 +49,7 @@ func BuiltInTBTDevice(name string) bool {
 // |expected| specifies whether we want to check for the presence of a TBT device (true) or the
 // absence of one (false).
 func CheckTBTDevice(expected bool) error {
-	files, err := ioutil.ReadDir("/sys/bus/thunderbolt/devices")
+	files, err := os.ReadDir("/sys/bus/thunderbolt/devices")
 	if err != nil {
 		return errors.Wrap(err, "couldn't read TBT devices directory")
 	}

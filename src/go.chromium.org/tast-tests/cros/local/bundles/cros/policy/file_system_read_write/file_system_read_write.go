@@ -6,7 +6,6 @@ package filesystemreadwrite
 
 import (
 	"context"
-	"io/ioutil"
 	"os"
 	"path"
 	"strings"
@@ -117,7 +116,7 @@ func triggerFilePicker(ctx context.Context, conn *chrome.Conn, ui *uiauto.Contex
 // checkFileContent waits for the file to be written to disk and checks its contents.
 func checkFileContent(ctx context.Context, filePath string) error {
 	return testing.Poll(ctx, func(ctx context.Context) error {
-		fileContent, err := ioutil.ReadFile(filePath)
+		fileContent, err := os.ReadFile(filePath)
 		if err != nil {
 			return err
 		}

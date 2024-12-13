@@ -8,7 +8,7 @@ package video
 import (
 	"context"
 	"fmt"
-	"io/ioutil"
+	"os"
 	"regexp"
 	"strconv"
 	"strings"
@@ -27,7 +27,7 @@ var regExpEncodeLatency95 = regexp.MustCompile(`(?m)^Encode latency for the 95th
 
 // reportFPS reports FPS info from log file and sets as the perf metric.
 func reportFPS(ctx context.Context, p *perf.Values, name, logPath string) error {
-	b, err := ioutil.ReadFile(logPath)
+	b, err := os.ReadFile(logPath)
 	if err != nil {
 		return errors.Wrapf(err, "failed to read file %s", logPath)
 	}
@@ -55,7 +55,7 @@ func reportFPS(ctx context.Context, p *perf.Values, name, logPath string) error 
 
 // reportEncodeLatency reports encode latency from log file and sets as the perf metrics.
 func reportEncodeLatency(ctx context.Context, p *perf.Values, name, logPath string) error {
-	b, err := ioutil.ReadFile(logPath)
+	b, err := os.ReadFile(logPath)
 	if err != nil {
 		return errors.Wrapf(err, "failed to read file %s", logPath)
 	}
@@ -91,7 +91,7 @@ func reportEncodeLatency(ctx context.Context, p *perf.Values, name, logPath stri
 
 // reportCPUUsage reports CPU usage from log file and sets as the perf metric.
 func reportCPUUsage(ctx context.Context, p *perf.Values, name, logPath string) error {
-	b, err := ioutil.ReadFile(logPath)
+	b, err := os.ReadFile(logPath)
 	if err != nil {
 		return errors.Wrapf(err, "failed to read file %s", logPath)
 	}
@@ -115,7 +115,7 @@ func reportCPUUsage(ctx context.Context, p *perf.Values, name, logPath string) e
 
 // reportPowerConsumption reports power consumption from log file and sets as the perf metric.
 func reportPowerConsumption(ctx context.Context, p *perf.Values, name, logPath string) error {
-	b, err := ioutil.ReadFile(logPath)
+	b, err := os.ReadFile(logPath)
 	if err != nil {
 		return errors.Wrapf(err, "failed to read file %s", logPath)
 	}

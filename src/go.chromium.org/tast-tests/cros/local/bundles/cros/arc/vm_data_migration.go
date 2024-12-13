@@ -8,7 +8,6 @@ import (
 	"bytes"
 	"context"
 	"io/fs"
-	"io/ioutil"
 	"os"
 	"path/filepath"
 	"syscall"
@@ -381,7 +380,7 @@ func reSignInAndVerifyMigration(ctx context.Context, s *testing.State, creds chr
 func createTestImageFileWithAttrs(ctx context.Context, a *arc.ARC, androidDataDir, dataPath string) error {
 	path := filepath.Join(androidDataDir, "data/media/0/Pictures", vmDataMigrationTestImageFilename)
 
-	image, err := ioutil.ReadFile(dataPath)
+	image, err := os.ReadFile(dataPath)
 	if err != nil {
 		return errors.Wrapf(err, "failed to read %s", dataPath)
 	}
@@ -642,7 +641,7 @@ func verifyMigratedFileAttributes(ctx context.Context, s *testing.State, usernam
 }
 
 func verifyAndroidImageFileContent(ctx context.Context, a *arc.ARC, expectedDataPath string) error {
-	expected, err := ioutil.ReadFile(expectedDataPath)
+	expected, err := os.ReadFile(expectedDataPath)
 	if err != nil {
 		return errors.Wrapf(err, "failed to read %s", expectedDataPath)
 	}

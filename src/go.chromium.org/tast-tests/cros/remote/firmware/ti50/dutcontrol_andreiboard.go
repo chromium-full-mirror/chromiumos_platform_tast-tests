@@ -8,7 +8,6 @@ import (
 	"context"
 	"encoding/json"
 	"io"
-	"io/ioutil"
 	"log"
 	"os"
 	"path/filepath"
@@ -102,7 +101,7 @@ func (a *DUTControlAndreiboard) Query(ctx context.Context) (props TestbedPropert
 func (a *DUTControlAndreiboard) Setup(ctx context.Context, image string, fwConfs []string) (err error) {
 	req := &dutcontrol.SetupRequest{}
 	if image != "" {
-		imageBytes, err := ioutil.ReadFile(image)
+		imageBytes, err := os.ReadFile(image)
 		if err != nil {
 			return errors.Wrapf(err, "reading image file %q", image)
 		}
@@ -111,7 +110,7 @@ func (a *DUTControlAndreiboard) Setup(ctx context.Context, image string, fwConfs
 
 	req.ConfFiles = []*dutcontrol.File{}
 	for _, conf := range fwConfs {
-		confBytes, err := ioutil.ReadFile(conf)
+		confBytes, err := os.ReadFile(conf)
 		if err != nil {
 			return errors.Wrapf(err, "reading conf file %q", conf)
 		}
@@ -281,7 +280,7 @@ func (a *DUTControlAndreiboard) gsctoolCommand(ctx context.Context, bus *ti50.Tp
 		cArgs = append(cArgs, &dutcontrol.CommandArg{Type: &dutcontrol.CommandArg_Plain{Plain: a}})
 	}
 	if image != "" {
-		imageBytes, err := ioutil.ReadFile(image)
+		imageBytes, err := os.ReadFile(image)
 		if err != nil {
 			return nil, errors.Wrapf(err, "reading image file %q", image)
 		}

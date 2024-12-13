@@ -9,7 +9,6 @@ package kernelmeter
 
 import (
 	"context"
-	"io/ioutil"
 	"os"
 	"path/filepath"
 	"strconv"
@@ -29,7 +28,7 @@ func PSIMemoryLines() ([]string, error) {
 		}
 		return nil, err
 	}
-	bytes, err := ioutil.ReadFile(psiFile)
+	bytes, err := os.ReadFile(psiFile)
 	if err != nil {
 		return nil, err
 	}
@@ -51,7 +50,7 @@ func ZramStats(ctx context.Context) (*ZramStatsData, error) {
 	const zramDir = "/sys/block/zram0"
 	mmStats := filepath.Join(zramDir, "mm_stat")
 	var fields []string
-	bytes, err := ioutil.ReadFile(mmStats)
+	bytes, err := os.ReadFile(mmStats)
 	if err == nil {
 		// mm_stat contains a list of unlabeled numbers representing
 		// various zram-related quantities.  We are interested in the
@@ -63,7 +62,7 @@ func ZramStats(ctx context.Context) (*ZramStatsData, error) {
 	} else {
 		testing.ContextLogf(ctx, "Cannot read %v, assuming legacy device", mmStats)
 		for _, fn := range []string{"orig_data_size", "compressed_data_size", "mem_used_total"} {
-			b, err := ioutil.ReadFile(filepath.Join(zramDir, fn))
+			b, err := os.ReadFile(filepath.Join(zramDir, fn))
 			if err != nil {
 				return nil, err
 			}
@@ -107,7 +106,7 @@ func ParseVMStats(vmstat string) (map[string]uint64, error) {
 
 // VMStats returns /proc/vmstat values in a map. /proc/vmstat numbers are in unsigned long long.
 func VMStats() (map[string]uint64, error) {
-	b, err := ioutil.ReadFile("/proc/vmstat")
+	b, err := os.ReadFile("/proc/vmstat")
 	if err != nil {
 		return nil, errors.Wrap(err, "cannot read /proc/vmstat")
 	}

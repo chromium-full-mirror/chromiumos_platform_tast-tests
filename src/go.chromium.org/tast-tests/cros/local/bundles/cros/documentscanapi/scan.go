@@ -7,7 +7,6 @@ package documentscanapi
 import (
 	"context"
 	"encoding/base64"
-	"io/ioutil"
 	"os"
 	"path/filepath"
 	"strings"
@@ -54,7 +53,7 @@ func Scan(ctx context.Context, s *testing.State) {
 	ctx, cancel := ctxutil.Shorten(ctx, 5*time.Second)
 	defer cancel()
 
-	extDir, err := ioutil.TempDir("", "tast.documentscanapi.Scan.")
+	extDir, err := os.MkdirTemp("", "tast.documentscanapi.Scan.")
 	if err != nil {
 		s.Fatal("Failed to create temp extension dir: ", err)
 	}

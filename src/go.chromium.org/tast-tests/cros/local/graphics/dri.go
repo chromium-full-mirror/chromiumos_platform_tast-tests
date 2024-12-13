@@ -8,7 +8,7 @@ package graphics
 import (
 	"context"
 	"fmt"
-	"io/ioutil"
+	"io"
 	"math"
 	"os"
 	"strings"
@@ -76,7 +76,7 @@ func (g I915Backend) ReadFramebufferCount(ctx context.Context, width, height int
 	if err != nil {
 		return framebuffers, errors.Wrap(err, "failed to open dri file")
 	}
-	text, err := ioutil.ReadAll(f)
+	text, err := io.ReadAll(f)
 	if err != nil {
 		return framebuffers, errors.Wrap(err, "failed to read dri file")
 	}
@@ -126,7 +126,7 @@ func (g GenericBackend) ReadFramebufferCount(ctx context.Context, width, height 
 		return framebuffers, errors.Wrap(err, "failed to open dri file")
 	}
 
-	text, err := ioutil.ReadAll(f)
+	text, err := io.ReadAll(f)
 	if err != nil {
 		return framebuffers, errors.Wrap(err, "failed to read dri file")
 	}

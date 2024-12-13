@@ -6,7 +6,6 @@ package arc
 
 import (
 	"context"
-	"io/ioutil"
 	"os"
 	"path/filepath"
 	"time"
@@ -85,7 +84,7 @@ func MTP(ctx context.Context, s *testing.State) {
 
 	// Set up the test file.
 	testFileLocation := filepath.Join(downloadsPath, filename)
-	if err := ioutil.WriteFile(testFileLocation, []byte(fileContent), 0777); err != nil {
+	if err := os.WriteFile(testFileLocation, []byte(fileContent), 0777); err != nil {
 		s.Fatalf("Creating file %s failed: %s", testFileLocation, err)
 	}
 	defer os.Remove(testFileLocation)

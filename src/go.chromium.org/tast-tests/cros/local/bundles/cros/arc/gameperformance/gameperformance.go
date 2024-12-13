@@ -6,7 +6,7 @@ package gameperformance
 
 import (
 	"context"
-	"io/ioutil"
+	"os"
 	"path/filepath"
 	"regexp"
 	"strconv"
@@ -74,7 +74,7 @@ func RunTest(ctx context.Context, s *testing.State, className string) {
 	}
 
 	outputFile := filepath.Join(s.OutDir(), "test_log.txt")
-	err = ioutil.WriteFile(outputFile, []byte(out), 0644)
+	err = os.WriteFile(outputFile, []byte(out), 0644)
 	if err != nil {
 		s.Fatal("Failed to save test output: ", err)
 	}

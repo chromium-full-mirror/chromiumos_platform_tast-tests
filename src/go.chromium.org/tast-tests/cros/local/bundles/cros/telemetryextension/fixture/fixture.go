@@ -8,7 +8,6 @@ package fixture
 import (
 	"context"
 	"fmt"
-	"io/ioutil"
 	"os"
 	"path/filepath"
 	"time"
@@ -213,7 +212,7 @@ func (f *telemetryExtensionFixture) Reset(ctx context.Context) error {
 }
 
 func (f *telemetryExtensionFixture) setupChromeForConsumers(ctx context.Context, dataPathFunc func(string) string) error {
-	dir, err := ioutil.TempDir("", "telemetry_extension")
+	dir, err := os.MkdirTemp("", "telemetry_extension")
 	if err != nil {
 		return errors.Wrap(err, "failed to create temporary directory for TelemetryExtension")
 	}

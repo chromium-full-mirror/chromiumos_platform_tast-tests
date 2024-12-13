@@ -8,7 +8,6 @@ package cellular
 import (
 	"context"
 	"encoding/hex"
-	"io/ioutil"
 	"math/rand"
 	"net"
 	"os"
@@ -1369,11 +1368,11 @@ func (h *Helper) GetProviderRequiresRoamingFromShill(ctx context.Context) (bool,
 // SetServiceProvidersExclusiveOverride adds an override MODB to shill.
 // The function returns a closure to delete the override file.
 func SetServiceProvidersExclusiveOverride(ctx context.Context, sourceFile string) (func(), error) {
-	input, err := ioutil.ReadFile(sourceFile)
+	input, err := os.ReadFile(sourceFile)
 	if err != nil {
 		return nil, errors.Wrapf(err, "failed to read %q", sourceFile)
 	}
-	err = ioutil.WriteFile(shillconst.ServiceProviderOverridePath, input, 0644)
+	err = os.WriteFile(shillconst.ServiceProviderOverridePath, input, 0644)
 	if err != nil {
 		return nil, errors.Wrapf(err, "failed to write %q", shillconst.ServiceProviderOverridePath)
 	}

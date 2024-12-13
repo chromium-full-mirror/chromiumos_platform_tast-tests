@@ -10,7 +10,6 @@ import (
 	"bufio"
 	"context"
 	"fmt"
-	"io/ioutil"
 	"os"
 	"path/filepath"
 	"regexp"
@@ -612,7 +611,7 @@ func (ct *CrashTester) killBrowser(ctx context.Context) error {
 // metaFileContains checks that each value in |expectedValues| appears in
 // |metaFile|. Return nil if each value is found.
 func metaFileContains(ctx context.Context, metaFile string, expectedValues map[string]string) error {
-	b, err := ioutil.ReadFile(metaFile)
+	b, err := os.ReadFile(metaFile)
 	if err != nil {
 		return errors.Wrapf(err, "couldn't read meta file %s contents", metaFile)
 	}

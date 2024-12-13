@@ -7,7 +7,7 @@ package wifi
 import (
 	"context"
 	"fmt"
-	"io/ioutil"
+	"os"
 	"path"
 	"time"
 
@@ -53,7 +53,7 @@ func WPAValidity(ctx context.Context, s *testing.State) {
 	dumpCmdOut := func(cmdOut []byte) string {
 		filename := "wpa_cli.stdout"
 		outPath := path.Join(s.OutDir(), filename)
-		err := ioutil.WriteFile(outPath, cmdOut, 0644)
+		err := os.WriteFile(outPath, cmdOut, 0644)
 		if err != nil {
 			return fmt.Sprintf("failed to write output to %s: %s", filename, err)
 		}

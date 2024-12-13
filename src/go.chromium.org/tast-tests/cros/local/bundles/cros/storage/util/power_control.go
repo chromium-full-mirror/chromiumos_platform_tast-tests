@@ -7,7 +7,6 @@ package util
 import (
 	"bufio"
 	"context"
-	"io/ioutil"
 	"os"
 	"os/exec"
 	"path/filepath"
@@ -155,7 +154,7 @@ func getS2IdleResidencyStats(filePattern string) (time.Duration, error) {
 	}
 
 	for _, file := range files {
-		if data, err := ioutil.ReadFile(file); err == nil {
+		if data, err := os.ReadFile(file); err == nil {
 			if duration, err := parseDuration(string(data)); err == nil {
 				totalDuration += duration
 			} else {
@@ -184,7 +183,7 @@ func getS0ixResidencyStatsFromFiles(amdResidencyFile string,
 	} else {
 		// Trying Intel status files.
 		for _, path := range intelResidencyFiles {
-			if data, err := ioutil.ReadFile(path); err == nil {
+			if data, err := os.ReadFile(path); err == nil {
 				return parseDuration(string(data))
 			}
 		}

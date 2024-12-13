@@ -6,7 +6,6 @@ package launcher
 
 import (
 	"context"
-	"io/ioutil"
 	"os"
 	"time"
 
@@ -47,7 +46,7 @@ func init() {
 
 // CreateAndFillFolder tests that a folder can be filled to the maximum allowed size.
 func CreateAndFillFolder(ctx context.Context, s *testing.State) {
-	extDirBase, err := ioutil.TempDir("", "")
+	extDirBase, err := os.MkdirTemp("", "")
 	if err != nil {
 		s.Fatal("Failed to create a temporary directory: ", err)
 	}

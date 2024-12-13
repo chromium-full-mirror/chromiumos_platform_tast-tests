@@ -8,7 +8,6 @@ package framesender
 import (
 	"context"
 	"fmt"
-	"io/ioutil"
 	"os"
 	"path"
 	"path/filepath"
@@ -145,7 +144,7 @@ func (s *Sender) Start(ctx context.Context, t Type, ch int, ops ...Option) error
 	if !ok {
 		return errors.New("failed to get OutDir")
 	}
-	f, err := ioutil.TempFile(outdir, "frame_sender_*.log")
+	f, err := os.CreateTemp(outdir, "frame_sender_*.log")
 	if err != nil {
 		return errors.Wrap(err, "failed to create log file for frame_sender")
 	}

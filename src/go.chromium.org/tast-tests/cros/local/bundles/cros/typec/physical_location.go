@@ -6,7 +6,7 @@ package typec
 
 import (
 	"context"
-	"io/ioutil"
+	"os"
 	"path/filepath"
 	"regexp"
 	"strings"
@@ -30,7 +30,7 @@ func init() {
 func PhysicalLocation(ctx context.Context, s *testing.State) {
 	const typecPath = "/sys/class/typec/"
 
-	ports, err := ioutil.ReadDir(typecPath)
+	ports, err := os.ReadDir(typecPath)
 	if err != nil {
 		s.Fatal("Could not read typec directory")
 	}
@@ -85,7 +85,7 @@ func checkForPhysicalLocationDir(portPath string) error {
 // readFileFromDir returns the content of the file within the directory.
 func readFileFromDir(directory, file string) (string, error) {
 	path := filepath.Join(directory, file)
-	data, err := ioutil.ReadFile(path)
+	data, err := os.ReadFile(path)
 	if err != nil {
 		return "", errors.Wrapf(err, "could not read file %s", path)
 	}

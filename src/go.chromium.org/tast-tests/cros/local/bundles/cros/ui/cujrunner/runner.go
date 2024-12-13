@@ -8,7 +8,7 @@ package cujrunner
 import (
 	"context"
 	"encoding/json"
-	"io/ioutil"
+	"os"
 	"sort"
 	"time"
 
@@ -77,7 +77,7 @@ func (r *CUJRunner) sortTask() {
 
 // Run runs the given json config.
 func (r *CUJRunner) Run(ctx context.Context, s *testing.State, conf string) error {
-	cb, err := ioutil.ReadFile(conf)
+	cb, err := os.ReadFile(conf)
 	if err != nil {
 		return errors.Wrap(err, "failed to read conf file")
 	}

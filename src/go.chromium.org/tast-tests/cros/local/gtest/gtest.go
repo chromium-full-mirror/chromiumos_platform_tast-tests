@@ -10,7 +10,6 @@ package gtest
 import (
 	"context"
 	"fmt"
-	"io/ioutil"
 	"os"
 	"path/filepath"
 	"strconv"
@@ -80,7 +79,7 @@ type GTest struct {
 	logfile string
 
 	// tempLogfile is true if the logfile should be created with
-	// ioutil.TestFile instead of os.Create().
+	// os.CreateTemp instead of os.Create().
 	tempLogfile bool
 
 	// filter specifies a subset of tests to run. If not empty, the value
@@ -124,7 +123,7 @@ func Logfile(path string) option {
 }
 
 // TempLogfile returns an option to set logfile path of GTest. The file is
-// created by using ioutil.TempFile to avoid conflict, so its special pattern
+// created by using os.CreateTemp to avoid conflict, so its special pattern
 // is usable here.
 func TempLogfile(path string) option {
 	return func(t *GTest) {
@@ -228,7 +227,7 @@ type runner interface {
 type crosRunner struct{}
 
 func (*crosRunner) mktemp(ctx context.Context, name string) (path string, retErr error) {
-	f, err := ioutil.TempFile("", name)
+	f, err := os.CreateTemp("", name)
 	if err != nil {
 		return "", err
 	}
@@ -257,7 +256,7 @@ func (*crosRunner) command(ctx context.Context, args []string) *testexec.Cmd {
 }
 
 func (*crosRunner) read(ctx context.Context, path string) ([]byte, error) {
-	return ioutil.ReadFile(path)
+	return os.ReadFile(path)
 }
 
 // arcRunner is the implementation of the runner for gtest execution in ARC.
@@ -409,9 +408,9 @@ func (t *GTest) startCommand(ctx context.Context, r runner, output string) (*tes
 }
 
 // openLogfile creates and opens the log file at path. If tempfile is set true,
-// ioutil.TempFile is used. Specifically, some random string will be appended
+// os.CreateTemp is used. Specifically, some random string will be appended
 // at the end of path, or last '*' is expanded to a random string. Please see
-// also ioutil.TempFile's comment for details.
+// also os.CreateTemp's comment for details.
 func openLogfile(path string, tempfile bool) (*os.File, error) {
 	dir := filepath.Dir(path)
 	if err := os.MkdirAll(dir, 0755); err != nil {
@@ -421,7 +420,7 @@ func openLogfile(path string, tempfile bool) (*os.File, error) {
 	var f *os.File
 	var err error
 	if tempfile {
-		f, err = ioutil.TempFile(dir, filepath.Base(path))
+		f, err = os.CreateTemp(dir, filepath.Base(path))
 	} else {
 		f, err = os.Create(path)
 	}

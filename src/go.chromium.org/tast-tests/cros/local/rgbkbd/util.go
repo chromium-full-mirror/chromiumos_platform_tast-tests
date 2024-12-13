@@ -7,7 +7,7 @@ package rgbkbd
 
 import (
 	"fmt"
-	"io/ioutil"
+	"os"
 	"path/filepath"
 	"reflect"
 	"strings"
@@ -18,7 +18,7 @@ import (
 const logFilename = "capslock_rgb_state_updates.log"
 
 func writeErrOutputToLog(outDir, log string) error {
-	if err := ioutil.WriteFile(filepath.Join(outDir, logFilename),
+	if err := os.WriteFile(filepath.Join(outDir, logFilename),
 		[]byte(log), 0644); err != nil {
 		return err
 	}

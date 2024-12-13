@@ -7,8 +7,8 @@ package wifi
 import (
 	"context"
 	"fmt"
-	"io/ioutil"
 	"net"
+	"os"
 	"path/filepath"
 	"sort"
 	"strings"
@@ -103,10 +103,10 @@ func restartWifiInterface(ctx context.Context) error {
 	for _, devPath := range devPaths {
 		testing.ContextLogf(ctx, "Rebind device %s to driver %s", devPath, driverRealPath)
 		devName := filepath.Base(devPath)
-		if err := ioutil.WriteFile(filepath.Join(driverRealPath, "unbind"), []byte(devName), 0200); err != nil {
+		if err := os.WriteFile(filepath.Join(driverRealPath, "unbind"), []byte(devName), 0200); err != nil {
 			return errors.Wrapf(err, "could not unbind %s driver", iface)
 		}
-		if err := ioutil.WriteFile(filepath.Join(driverRealPath, "bind"), []byte(devName), 0200); err != nil {
+		if err := os.WriteFile(filepath.Join(driverRealPath, "bind"), []byte(devName), 0200); err != nil {
 			return errors.Wrapf(err, "could not bind %s driver", iface)
 		}
 	}

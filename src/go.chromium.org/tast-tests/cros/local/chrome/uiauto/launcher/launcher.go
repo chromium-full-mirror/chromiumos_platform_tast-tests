@@ -11,7 +11,6 @@ import (
 	"fmt"
 	"image"
 	"image/png"
-	"io/ioutil"
 	"os"
 	"path/filepath"
 	"regexp"
@@ -328,7 +327,7 @@ func SetupContinueSectionFiles(ctx context.Context, tconn *chrome.TestConn,
 		// Create a test file.
 		filePath := filepath.Join(downloadsPath, testFileName)
 		fileContent := fmt.Sprintf("Test file %d", i)
-		if err := ioutil.WriteFile(filePath, []byte(fileContent), 0644); err != nil {
+		if err := os.WriteFile(filePath, []byte(fileContent), 0644); err != nil {
 			return nil, nil, errors.Wrapf(err, "failed to create file %d in Downloads", i)
 		}
 		testDocFilePaths = append(testDocFilePaths, filePath)

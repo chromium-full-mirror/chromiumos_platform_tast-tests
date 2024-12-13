@@ -6,7 +6,6 @@ package crash
 
 import (
 	"context"
-	"io/ioutil"
 	"os"
 	"strings"
 	"time"
@@ -44,7 +43,7 @@ func init() {
 }
 
 func setCorePatternCrashTest(ctx context.Context, crashTest bool) error {
-	b, err := ioutil.ReadFile(commoncrash.CorePattern)
+	b, err := os.ReadFile(commoncrash.CorePattern)
 	if err != nil {
 		return errors.Wrapf(err, "failed reading core pattern file %s",
 			commoncrash.CorePattern)
@@ -60,7 +59,7 @@ func setCorePatternCrashTest(ctx context.Context, crashTest bool) error {
 	}
 
 	testing.ContextLogf(ctx, "Setting core pattern to: %s", corePatternExpr)
-	if err := ioutil.WriteFile(commoncrash.CorePattern,
+	if err := os.WriteFile(commoncrash.CorePattern,
 		[]byte(corePatternExpr), 0644); err != nil {
 		return errors.Wrapf(err, "failed writing core pattern file %s",
 			commoncrash.CorePattern)

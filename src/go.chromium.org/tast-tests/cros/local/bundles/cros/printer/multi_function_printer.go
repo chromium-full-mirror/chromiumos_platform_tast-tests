@@ -7,7 +7,6 @@ package printer
 import (
 	"context"
 	"fmt"
-	"io/ioutil"
 	"os"
 	"path/filepath"
 	"time"
@@ -112,7 +111,7 @@ func MultiFunctionPrinter(ctx context.Context, s *testing.State) {
 	ctx, cancel := ctxutil.Shorten(ctx, 5*time.Second)
 	defer cancel()
 
-	tmpDir, err := ioutil.TempDir("", "tast.printer.MultiFunctionPrinter.")
+	tmpDir, err := os.MkdirTemp("", "tast.printer.MultiFunctionPrinter.")
 	if err != nil {
 		s.Fatal("Failed to create temporary directory: ", err)
 	}

@@ -6,7 +6,7 @@ package graphics
 
 import (
 	"encoding/xml"
-	"io/ioutil"
+	"os"
 	"strings"
 
 	"go.chromium.org/tast/core/errors"
@@ -174,7 +174,7 @@ func (d *deqpParser) prepareForNextTestCase() {
 // TODO(andrescj): another possible error check is to make sure a test doesn't
 // appear twice.
 func (d *deqpParser) parse(p string) error {
-	b, err := ioutil.ReadFile(p)
+	b, err := os.ReadFile(p)
 	if err != nil {
 		return err
 	}

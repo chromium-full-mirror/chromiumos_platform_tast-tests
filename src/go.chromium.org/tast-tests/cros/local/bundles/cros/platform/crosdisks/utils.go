@@ -9,7 +9,6 @@ package crosdisks
 import (
 	"bytes"
 	"context"
-	"io/ioutil"
 	"os"
 	"path/filepath"
 	"strings"
@@ -116,7 +115,7 @@ func listDirectoryRecursively(rootDir string) (items DirectoryContents, err erro
 	for len(dirs) > 0 {
 		dir := dirs[0]
 		dirs = dirs[1:]
-		entries, err := ioutil.ReadDir(filepath.Join(rootDir, dir))
+		entries, err := os.ReadDir(filepath.Join(rootDir, dir))
 		if err != nil {
 			return nil, err
 		}
@@ -206,7 +205,7 @@ func verifyDirectoryContents(ctx context.Context, dir string, expectedContent Di
 		}
 
 		if want := v.Data; want != nil {
-			got, err := ioutil.ReadFile(filepath.Join(dir, k))
+			got, err := os.ReadFile(filepath.Join(dir, k))
 			if err != nil {
 				return errors.Wrapf(err, "cannot read file %q", k)
 			}

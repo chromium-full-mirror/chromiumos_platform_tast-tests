@@ -6,8 +6,8 @@ package policy
 
 import (
 	"context"
-	"io/ioutil"
 	"net"
+	"os"
 	"path/filepath"
 	"strings"
 	"time"
@@ -216,7 +216,7 @@ func DeviceDockMacAddressSource(ctx context.Context, s *testing.State) {
 }
 
 func readMACFromVPD(vpd string) (string, error) {
-	bytes, err := ioutil.ReadFile(filepath.Join("/sys/firmware/vpd/ro", vpd))
+	bytes, err := os.ReadFile(filepath.Join("/sys/firmware/vpd/ro", vpd))
 	if err != nil {
 		return "", err
 	}

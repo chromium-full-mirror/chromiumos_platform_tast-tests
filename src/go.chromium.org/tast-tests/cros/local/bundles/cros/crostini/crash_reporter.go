@@ -6,7 +6,7 @@ package crostini
 
 import (
 	"context"
-	"io/ioutil"
+	"os"
 	"os/exec"
 	"regexp"
 	"syscall"
@@ -105,7 +105,7 @@ func CrashReporter(ctx context.Context, s *testing.State) {
 
 	s.Log("Checking for expected metadata values")
 
-	metaData, err := ioutil.ReadFile(files[`vm_crash.*\.meta`][0])
+	metaData, err := os.ReadFile(files[`vm_crash.*\.meta`][0])
 	if err != nil {
 		s.Fatal("Failed to read metadata file: ", err)
 	}

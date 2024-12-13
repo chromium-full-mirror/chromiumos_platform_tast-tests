@@ -6,7 +6,6 @@ package chrome
 
 import (
 	"context"
-	"io/ioutil"
 	"os"
 	"path/filepath"
 
@@ -103,7 +102,7 @@ func compareExtensions(cfg *config.Config) error {
 	}
 
 	// Prepare extensions for new session in a temporary dir.
-	tempDir, err := ioutil.TempDir("", "")
+	tempDir, err := os.MkdirTemp("", "")
 	if err != nil {
 		return err
 	}

@@ -7,7 +7,6 @@ package arc
 import (
 	"bytes"
 	"context"
-	"io/ioutil"
 	"os"
 	"path/filepath"
 	"time"
@@ -53,7 +52,7 @@ func Downloads(ctx context.Context, s *testing.State) {
 	}
 	crosPath := filepath.Join(cryptohomeUserPath, "MyFiles", "Downloads", filename)
 
-	expected, err := ioutil.ReadFile(s.DataPath(filename))
+	expected, err := os.ReadFile(s.DataPath(filename))
 	if err != nil {
 		s.Fatal("Could not read the test file: ", err)
 	}
@@ -64,7 +63,7 @@ func Downloads(ctx context.Context, s *testing.State) {
 	}
 
 	// CrOS -> Android
-	if err = ioutil.WriteFile(crosPath, expected, 0666); err != nil {
+	if err = os.WriteFile(crosPath, expected, 0666); err != nil {
 		s.Fatalf("Could not write to %s: %v", crosPath, err)
 	}
 	actual, err := a.ReadFile(ctx, androidPath)
@@ -94,7 +93,7 @@ func Downloads(ctx context.Context, s *testing.State) {
 	if err = a.WriteFile(ctx, androidPath, expected); err != nil {
 		s.Fatalf("Could not write to %s: %v", androidPath, err)
 	}
-	actual, err = ioutil.ReadFile(crosPath)
+	actual, err = os.ReadFile(crosPath)
 	if err != nil {
 		s.Error("Android -> CrOS failed: ", err)
 	} else if !bytes.Equal(actual, expected) {

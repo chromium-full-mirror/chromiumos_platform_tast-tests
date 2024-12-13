@@ -7,7 +7,7 @@ package usb
 import (
 	"context"
 	"fmt"
-	"io/ioutil"
+	"os"
 	"path/filepath"
 
 	"go.chromium.org/tast-tests/cros/common/testexec"
@@ -57,7 +57,7 @@ func gatherInfo(ctx context.Context, s *testing.State, command, filenName string
 }
 
 func writeOutput(s *testing.State, fileName string, fileContent []byte) {
-	if err := ioutil.WriteFile(filepath.Join(s.OutDir(), fileName), fileContent, 0640); err != nil {
+	if err := os.WriteFile(filepath.Join(s.OutDir(), fileName), fileContent, 0640); err != nil {
 		s.Log("Can't write output of: ", fileName)
 	}
 }

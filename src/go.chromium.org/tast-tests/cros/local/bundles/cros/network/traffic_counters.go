@@ -8,7 +8,7 @@ import (
 	"context"
 	"encoding/hex"
 	"fmt"
-	"io/ioutil"
+	"io"
 	"math/rand"
 	"net"
 	"net/http"
@@ -377,7 +377,7 @@ func TrafficCounters(ctx context.Context, s *testing.State) {
 		handler := func(resp http.ResponseWriter, req *http.Request) {
 			// Request payload is unused. Log any error on failure though to help
 			// debug if the test fails.
-			if _, err := ioutil.ReadAll(req.Body); err != nil {
+			if _, err := io.ReadAll(req.Body); err != nil {
 				testing.ContextLog(ctx, "Failed to read HTTP request: ", err)
 			}
 			resp.Header().Set("content-type", "application/octet-stream")

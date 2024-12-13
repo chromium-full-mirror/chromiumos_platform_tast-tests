@@ -8,7 +8,6 @@ import (
 	"bufio"
 	"context"
 	"fmt"
-	"io/ioutil"
 	"os"
 	"strconv"
 	"strings"
@@ -76,7 +75,7 @@ func Seccomp(ctx context.Context, s *testing.State) {
 		}
 	}()
 
-	pidFile, err := ioutil.TempFile("", "crash.Seccomp")
+	pidFile, err := os.CreateTemp("", "crash.Seccomp")
 	if err != nil {
 		s.Fatal("Failed to get pid file: ", err)
 	}
@@ -127,7 +126,7 @@ func Seccomp(ctx context.Context, s *testing.State) {
 				}
 			}
 		} else if strings.HasSuffix(match, ".meta") {
-			contents, err := ioutil.ReadFile(match)
+			contents, err := os.ReadFile(match)
 			if err != nil {
 				s.Errorf("Couldn't read meta file %s contents: %v", match, err)
 				continue

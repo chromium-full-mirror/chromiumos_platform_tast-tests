@@ -8,7 +8,6 @@ package video
 import (
 	"context"
 	"fmt"
-	"io/ioutil"
 	"os"
 	"path/filepath"
 	"strings"
@@ -224,7 +223,7 @@ func runARCBinaryWithArgs(ctx context.Context, s *testing.State, a *arc.ARC, com
 		cpuUsage := measurements["cpu"]
 		// TODO(b/143190876): Don't write value to disk, as this can increase test flakiness.
 		cpuLogPath := filepath.Join(s.OutDir(), cpuLog)
-		if err := ioutil.WriteFile(cpuLogPath, []byte(fmt.Sprintf("%f", cpuUsage)), 0644); err != nil {
+		if err := os.WriteFile(cpuLogPath, []byte(fmt.Sprintf("%f", cpuUsage)), 0644); err != nil {
 			return errors.Wrap(err, "failed to write CPU usage to file")
 		}
 
@@ -236,7 +235,7 @@ func runARCBinaryWithArgs(ctx context.Context, s *testing.State, a *arc.ARC, com
 		if ok {
 			// TODO(b/143190876): Don't write value to disk, as this can increase test flakiness.
 			powerLogPath := filepath.Join(s.OutDir(), powerLog)
-			if err := ioutil.WriteFile(powerLogPath, []byte(fmt.Sprintf("%f", powerConsumption)), 0644); err != nil {
+			if err := os.WriteFile(powerLogPath, []byte(fmt.Sprintf("%f", powerConsumption)), 0644); err != nil {
 				return errors.Wrap(err, "failed to write power consumption to file")
 			}
 

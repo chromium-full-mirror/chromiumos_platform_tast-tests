@@ -7,7 +7,7 @@ package gtest
 import (
 	"encoding/xml"
 	"fmt"
-	"io/ioutil"
+	"os"
 
 	"go.chromium.org/tast/core/errors"
 )
@@ -71,7 +71,7 @@ func (r *Report) FailedTestNames() []string {
 
 // ParseReport parses the XML gtest output report at path.
 func ParseReport(path string) (*Report, error) {
-	b, err := ioutil.ReadFile(path)
+	b, err := os.ReadFile(path)
 	if err != nil {
 		return nil, errors.Wrap(err, "failed to read")
 	}

@@ -6,7 +6,6 @@ package hwsec
 
 import (
 	"context"
-	"io/ioutil"
 	"os"
 	"path/filepath"
 	"time"
@@ -103,7 +102,7 @@ func Pkcs11InitUnderErrors(ctx context.Context, s *testing.State) {
 	}
 
 	// Deliberately corrupt the files in the chaps database directory. Chaps should detect the error, regenerate the database, and carry on the test.
-	files, err := ioutil.ReadDir(userDbPath)
+	files, err := os.ReadDir(userDbPath)
 	if err != nil {
 		s.Error("Read db directory error: ", err)
 	}

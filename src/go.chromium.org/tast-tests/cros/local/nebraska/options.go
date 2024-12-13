@@ -7,7 +7,6 @@ package nebraska
 import (
 	"context"
 	"fmt"
-	"io/ioutil"
 	"os"
 	"strconv"
 
@@ -32,7 +31,7 @@ const statefulLSBRelease = "/mnt/stateful_partition/etc/lsb-release"
 // This option is always added and not configurable from the outside.
 func runInTmpDir() Option {
 	return func(config *MutableConfig) error {
-		root, err := ioutil.TempDir("", tmpPathPattern)
+		root, err := os.MkdirTemp("", tmpPathPattern)
 		if err != nil {
 			return errors.Wrap(err, "failed to create temporary runtime root for Nebraska")
 		}
@@ -115,7 +114,7 @@ func ConfigureUpdateEngine() Option {
 	return func(config *MutableConfig) error {
 		// Delay setup until after nebraska is up and we know the port it runs on.
 		config.ConfigureUpdateEngine = func(port int) error {
-			if err := ioutil.WriteFile(statefulLSBRelease, []byte(fmt.Sprintf("CHROMEOS_AUSERVER=%s", UpdateURL(port))), 0666); err != nil {
+			if err := os.WriteFile(statefulLSBRelease, []byte(fmt.Sprintf("CHROMEOS_AUSERVER=%s", UpdateURL(port))), 0666); err != nil {
 				return errors.Wrap(err, "failed to configure LSB release")
 			}
 			// TODO restart update engine?

@@ -6,7 +6,7 @@ package wifi
 
 import (
 	"context"
-	"io/ioutil"
+	"os"
 	"path/filepath"
 	"reflect"
 
@@ -61,7 +61,7 @@ func SAPCaps(ctx context.Context, s *testing.State) {
 	}
 
 	// Save `iw list` text to log file.
-	ioutil.WriteFile(filepath.Join(s.OutDir(), "iw_list"), out, 0644)
+	os.WriteFile(filepath.Join(s.OutDir(), "iw_list"), out, 0644)
 
 	checkMode := func(phy *iw.Phy, mode iw.IfType) bool {
 		for _, m := range phy.Modes {

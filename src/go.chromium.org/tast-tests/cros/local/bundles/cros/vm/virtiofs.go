@@ -7,7 +7,6 @@ package vm
 import (
 	"context"
 	"fmt"
-	"io/ioutil"
 	"os"
 	"path/filepath"
 	"strings"
@@ -71,7 +70,7 @@ func setupCrosvmCmd(ctx context.Context, kernel, serialLog, script string, scrip
 // Please ask to crosvm-core@ if you want to modify or delete this test.
 func Virtiofs(ctx context.Context, s *testing.State) {
 	// Create a temporary directory on the stateful partition rather than in memory.
-	td, err := ioutil.TempDir("/usr/local/tmp", "tast.vm.Virtiofs.")
+	td, err := os.MkdirTemp("/usr/local/tmp", "tast.vm.Virtiofs.")
 	if err != nil {
 		s.Fatal("Failed to create temporary directory: ", err)
 	}
@@ -104,7 +103,7 @@ func Virtiofs(ctx context.Context, s *testing.State) {
 		s.Fatal("Failed to run crosvm: ", err)
 	}
 
-	log, err := ioutil.ReadFile(logFile)
+	log, err := os.ReadFile(logFile)
 	if err != nil {
 		s.Fatal("Failed to read serial log: ", err)
 	}

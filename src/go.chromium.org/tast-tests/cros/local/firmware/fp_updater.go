@@ -5,7 +5,6 @@
 package firmware
 
 import (
-	"io/ioutil"
 	"os"
 	"strings"
 
@@ -19,11 +18,11 @@ const (
 
 // ReadFpUpdaterLogs reads the latest and previous fingerprint firmware updater logs.
 func ReadFpUpdaterLogs() (string, string, error) {
-	latestData, err := ioutil.ReadFile(latestFpUpdaterLog)
+	latestData, err := os.ReadFile(latestFpUpdaterLog)
 	if err != nil {
 		return "", "", errors.Wrap(err, "failed to read latest updater log")
 	}
-	previousData, err := ioutil.ReadFile(previousFpUpdaterLog)
+	previousData, err := os.ReadFile(previousFpUpdaterLog)
 	if err != nil {
 		if os.IsNotExist(err) {
 			// Previous log doesn't exist, this is the first boot.

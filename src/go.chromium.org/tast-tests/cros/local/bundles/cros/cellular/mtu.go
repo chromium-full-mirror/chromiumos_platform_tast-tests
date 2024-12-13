@@ -6,7 +6,7 @@ package cellular
 
 import (
 	"context"
-	"io/ioutil"
+	"os"
 	"path/filepath"
 	"strconv"
 	"strings"
@@ -138,7 +138,7 @@ func getConfiguredMTU(ctx context.Context, service *shill.Service) (int32, error
 	}
 
 	ifaceMTUFile := filepath.Join("/sys/class/net", iface, "mtu")
-	bytes, err := ioutil.ReadFile(ifaceMTUFile)
+	bytes, err := os.ReadFile(ifaceMTUFile)
 	if err != nil {
 		return 0, errors.Wrap(err, "could not read sysfs file for MTU")
 	}

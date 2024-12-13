@@ -9,7 +9,6 @@ import (
 	"context"
 	"image/color"
 	"image/png"
-	"io/ioutil"
 	"os"
 	"path/filepath"
 	"time"
@@ -116,7 +115,7 @@ func AdvancedScan(ctx context.Context, s *testing.State) {
 	}
 	defer scanner.Cleanup(cleanupCtx)
 
-	tmpDir, err := ioutil.TempDir("", "tast.scanner.AdvancedScan.")
+	tmpDir, err := os.MkdirTemp("", "tast.scanner.AdvancedScan.")
 	if err != nil {
 		s.Fatal("Failed to create temporary directory: ", err)
 	}
@@ -333,7 +332,7 @@ func AdvancedScan(ctx context.Context, s *testing.State) {
 	if err := checkImage(scanData, 1240, 1753); err != nil {
 		s.Error("Incorrect scanned image: ", err)
 		saveScanPath := filepath.Join(s.OutDir(), "scan.png")
-		if err := ioutil.WriteFile(saveScanPath, scanData, 0644); err != nil {
+		if err := os.WriteFile(saveScanPath, scanData, 0644); err != nil {
 			s.Fatal("Failed to save scanned image: ", err)
 		}
 	}

@@ -6,7 +6,6 @@ package printer
 
 import (
 	"context"
-	"io/ioutil"
 	"os"
 	"path/filepath"
 	"time"
@@ -66,7 +65,7 @@ func ExpiredCert(ctx context.Context, s *testing.State) {
 		s.Fatal("Failed to create Test API connection: ", err)
 	}
 
-	tmpDir, err := ioutil.TempDir("", "expired-certs")
+	tmpDir, err := os.MkdirTemp("", "expired-certs")
 	if err != nil {
 		s.Fatal("Failed to create temporary directory: ", err)
 	}

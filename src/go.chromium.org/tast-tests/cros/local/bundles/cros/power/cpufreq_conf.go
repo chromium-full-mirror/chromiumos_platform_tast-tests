@@ -6,7 +6,6 @@ package power
 
 import (
 	"context"
-	"io/ioutil"
 	"os"
 	"path/filepath"
 	"strings"
@@ -52,7 +51,7 @@ func CpufreqConf(ctx context.Context, s *testing.State) {
 		}
 
 		for _, path := range paths {
-			out, err := ioutil.ReadFile(path)
+			out, err := os.ReadFile(path)
 			if err != nil {
 				return errors.Wrap(err, "failed to read governor")
 			}
@@ -73,7 +72,7 @@ func CpufreqConf(ctx context.Context, s *testing.State) {
 		}
 
 		for _, path := range paths {
-			out, err := ioutil.ReadFile(path)
+			out, err := os.ReadFile(path)
 			if err != nil {
 				return errors.Wrap(err, "failed to read energy performance preference")
 			}
@@ -116,7 +115,7 @@ func CpufreqConf(ctx context.Context, s *testing.State) {
 		}
 
 		for _, path := range paths {
-			out, err := ioutil.ReadFile(path)
+			out, err := os.ReadFile(path)
 			if err != nil {
 				return err
 			}
@@ -180,7 +179,7 @@ func CpufreqConf(ctx context.Context, s *testing.State) {
 		}
 	}
 
-	out, err := ioutil.ReadFile("/etc/cpufreq.conf")
+	out, err := os.ReadFile("/etc/cpufreq.conf")
 	if os.IsNotExist(err) {
 		s.Log("No cpufreq.conf file")
 		return

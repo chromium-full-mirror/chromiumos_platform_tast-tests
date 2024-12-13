@@ -6,7 +6,7 @@ package uhid
 
 import (
 	"context"
-	"io/ioutil"
+	"io/fs"
 	"os"
 	"path"
 	"path/filepath"
@@ -30,7 +30,7 @@ import (
 func devicePath(infoString string) (string, error) {
 	const devicesDirectory = "/sys/bus/hid/devices/"
 
-	files, err := ioutil.ReadDir(devicesDirectory)
+	files, err := os.ReadDir(devicesDirectory)
 	if err != nil {
 		return "", err
 	}
@@ -59,7 +59,7 @@ func hidrawNodes(ctx context.Context, devicePath string) ([]string, error) {
 	const hidrawDir = "hidraw"
 
 	err := testing.Poll(ctx, func(ctx context.Context) error {
-		directories, err := ioutil.ReadDir(devicePath)
+		directories, err := os.ReadDir(devicePath)
 		if err != nil {
 			return err
 		}
@@ -75,7 +75,7 @@ func hidrawNodes(ctx context.Context, devicePath string) ([]string, error) {
 	}
 
 	devicePath = path.Join(devicePath, hidrawDir)
-	files, err := ioutil.ReadDir(devicePath)
+	files, err := os.ReadDir(devicePath)
 	if err != nil {
 		return nil, err
 	}
@@ -89,7 +89,7 @@ func hidrawNodes(ctx context.Context, devicePath string) ([]string, error) {
 // its motion sensors.
 func eventNodes(devicePath string) ([]string, error) {
 	eventNodes := make([]string, 0)
-	directories, err := ioutil.ReadDir(path.Join(devicePath, "input"))
+	directories, err := os.ReadDir(path.Join(devicePath, "input"))
 	if err != nil {
 		return nil, err
 	}
@@ -121,7 +121,7 @@ func deviceID(path string) (int, error) {
 // hidrawPaths returns the file names of the files in files prepended
 // with "/dev/" which creates their absolute path. It filters out of
 // files the none hidraw files.
-func hidrawPaths(files []os.FileInfo) []string {
+func hidrawPaths(files []fs.DirEntry) []string {
 	paths := make([]string, 0)
 	for _, f := range files {
 		if strings.HasPrefix(f.Name(), "hidraw") {
@@ -134,7 +134,7 @@ func hidrawPaths(files []os.FileInfo) []string {
 // eventNode gets the event* node that exists inside path and prepends
 // to it "/dev/input/" to create its absolute path.
 func eventNode(devicePath string) (string, error) {
-	files, err := ioutil.ReadDir(devicePath)
+	files, err := os.ReadDir(devicePath)
 	if err != nil {
 		return "", err
 	}

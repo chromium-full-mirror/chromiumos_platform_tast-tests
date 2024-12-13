@@ -10,7 +10,7 @@ import (
 	"crypto/tls"
 	"encoding/xml"
 	"fmt"
-	"io/ioutil"
+	"io"
 	"math"
 	"math/rand"
 	"net"
@@ -415,7 +415,7 @@ func scannerStatus(uri string, backend ScannerBackend) (string, error) {
 		return "", errors.Errorf("unexpected HTTP response status: %s", response.Status)
 	}
 
-	bytes, err := ioutil.ReadAll(response.Body)
+	bytes, err := io.ReadAll(response.Body)
 	if err != nil {
 		return "", err
 	}

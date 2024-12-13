@@ -6,7 +6,6 @@ package playbilling
 
 import (
 	"context"
-	"io/ioutil"
 	"os"
 	"path/filepath"
 	"strings"
@@ -118,7 +117,7 @@ func (f *playBillingFixture) SetUp(ctx context.Context, s *testing.FixtState) in
 	}
 	f.wm = wm
 
-	pwaDir, err := ioutil.TempDir("", "tast-play-billing-pwa")
+	pwaDir, err := os.MkdirTemp("", "tast-play-billing-pwa")
 	if err != nil {
 		s.Fatal("Failed to create temporary directory for Play Billing PWA: ", err)
 	}
@@ -141,7 +140,7 @@ func (f *playBillingFixture) SetUp(ctx context.Context, s *testing.FixtState) in
 	}
 
 	testFileLocation := filepath.Join(wellKnownDirectory, "assetlinks.json")
-	if err := ioutil.WriteFile(testFileLocation, []byte(assetLinks), 0644); err != nil {
+	if err := os.WriteFile(testFileLocation, []byte(assetLinks), 0644); err != nil {
 		s.Fatalf("Failed creating %q: %s", testFileLocation, err)
 	}
 

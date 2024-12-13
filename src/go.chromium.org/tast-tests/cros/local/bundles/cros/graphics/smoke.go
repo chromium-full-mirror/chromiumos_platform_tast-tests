@@ -7,7 +7,6 @@ package graphics
 import (
 	"context"
 	"fmt"
-	"io/ioutil"
 	"os"
 	"path/filepath"
 	"time"
@@ -87,7 +86,7 @@ func testSomethingOnScreen(ctx context.Context, s *testing.State) {
 
 	// Wait until screenshot can be taken.
 	if err := testing.Poll(ctx, func(ctx context.Context) error {
-		f, err := ioutil.TempFile("", "screenshot_test-*.png")
+		f, err := os.CreateTemp("", "screenshot_test-*.png")
 		if err != nil {
 			return testing.PollBreak(err)
 		}
@@ -169,7 +168,7 @@ func testGeneratedScreenshot(ctx context.Context, s *testing.State) {
 	}
 	defer upstart.StartJob(ctx, "ui")
 
-	tempdir, err := ioutil.TempDir("", "generated_screenshot")
+	tempdir, err := os.MkdirTemp("", "generated_screenshot")
 	if err != nil {
 		s.Error("Failed to create a tempdir: ", err)
 		return

@@ -8,7 +8,7 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
-	"io/ioutil"
+	"os"
 	"path/filepath"
 	"time"
 
@@ -48,7 +48,7 @@ func init() {
 }
 
 func parseResults(ctx context.Context, path string) (int, int, error) {
-	buf, err := ioutil.ReadFile(path)
+	buf, err := os.ReadFile(path)
 	if err != nil {
 		return 0, 0, errors.Wrapf(err, "failed to read result file %s", path)
 	}

@@ -11,7 +11,6 @@ import (
 	"image/color"
 	"image/draw"
 	"image/png"
-	"io/ioutil"
 	"os"
 	"path/filepath"
 	"strconv"
@@ -318,7 +317,7 @@ func saveBytesImageToOutput(ctx context.Context, img []byte, filename string) er
 	if err != nil {
 		return errors.Wrapf(err, "failed to get the output directory to save file %s", filename)
 	}
-	if err := ioutil.WriteFile((filepath.Join(outputPath, filename)), img, 0644); err != nil {
+	if err := os.WriteFile((filepath.Join(outputPath, filename)), img, 0644); err != nil {
 		return errors.Wrapf(err, "failed to save file %s", filename)
 	}
 	return nil

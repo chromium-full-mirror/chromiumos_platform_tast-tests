@@ -8,7 +8,7 @@ package firmware
 
 import (
 	"encoding/json"
-	"io/ioutil"
+	"os"
 	"regexp"
 	"strings"
 	"time"
@@ -179,7 +179,7 @@ func parentFromBytes(b []byte) (string, error) {
 // cfgFilepath should take s.DataPath(firmware.ConfigFile).
 func NewConfig(cfgFilepath, board, model string) (*Config, error) {
 	// Load CONSOLIDATED.json as bytes
-	b, err := ioutil.ReadFile(cfgFilepath)
+	b, err := os.ReadFile(cfgFilepath)
 	if err != nil {
 		return nil, errors.Wrapf(err, "reading config file %s", cfgFilepath)
 	}

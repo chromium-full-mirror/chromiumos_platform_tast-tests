@@ -6,7 +6,7 @@ package kdump
 
 import (
 	"context"
-	"io/ioutil"
+	"os"
 	"strings"
 
 	"go.chromium.org/tast/core/testing"
@@ -24,7 +24,7 @@ func init() {
 }
 
 func ProbeKernelLimits(ctx context.Context, s *testing.State) {
-	valBytes, err := ioutil.ReadFile("/proc/sys/kernel/kexec_load_disabled")
+	valBytes, err := os.ReadFile("/proc/sys/kernel/kexec_load_disabled")
 	if err != nil {
 		s.Log("Kernel does not support kexec")
 		return
@@ -40,7 +40,7 @@ func ProbeKernelLimits(ctx context.Context, s *testing.State) {
 		"kexec_load_limit_panic",
 	}
 	for _, limit := range limits {
-		valBytes, err := ioutil.ReadFile("/proc/sys/kernel/" + limit)
+		valBytes, err := os.ReadFile("/proc/sys/kernel/" + limit)
 		if err != nil {
 			s.Fatal("Error opening "+limit, err)
 		}

@@ -6,7 +6,7 @@ package hwsec
 
 import (
 	"context"
-	"io/ioutil"
+	"os"
 	"path/filepath"
 	"strings"
 	"time"
@@ -119,7 +119,7 @@ func TPMContest(ctx context.Context, s *testing.State) {
 			s.Errorf("Error running %s: %v", result.cmd, result.err)
 			if result.output != nil {
 				path := filepath.Join(s.OutDir(), "failed_cmd_output.txt")
-				if err := ioutil.WriteFile(path, result.output, 0644); err != nil {
+				if err := os.WriteFile(path, result.output, 0644); err != nil {
 					s.Errorf("Failed to write command output to %v: %v", path, err)
 				} else {
 					s.Log("Path on DUT to command output: ", path)

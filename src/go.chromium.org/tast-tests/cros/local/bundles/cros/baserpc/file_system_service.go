@@ -6,7 +6,7 @@ package baserpc
 
 import (
 	"context"
-	"io/ioutil"
+	"io/fs"
 	"os"
 
 	"golang.org/x/sys/unix"
@@ -35,13 +35,17 @@ type FileSystemService struct {
 func (fs *FileSystemService) ReadDir(ctx context.Context, req *baserpc.ReadDirRequest) (*baserpc.ReadDirResponse, error) {
 	var res baserpc.ReadDirResponse
 	res.Error = encodeErr(func() error {
-		fis, err := ioutil.ReadDir(req.Dir)
+		fis, err := os.ReadDir(req.Dir)
 		if err != nil {
 			return err
 		}
 
 		for _, fi := range fis {
-			i, err := toFileInfoProto(fi)
+			info, err := fi.Info()
+			if err != nil {
+				return err
+			}
+			i, err := toFileInfoProto(info)
 			if err != nil {
 				return err
 			}
@@ -74,7 +78,7 @@ func (fs *FileSystemService) Stat(ctx context.Context, req *baserpc.StatRequest)
 func (fs *FileSystemService) ReadFile(ctx context.Context, req *baserpc.ReadFileRequest) (*baserpc.ReadFileResponse, error) {
 	var res baserpc.ReadFileResponse
 	res.Error = encodeErr(func() error {
-		f, err := ioutil.ReadFile(req.Name)
+		f, err := os.ReadFile(req.Name)
 		if err != nil {
 			return err
 		}
@@ -88,7 +92,7 @@ func (fs *FileSystemService) ReadFile(ctx context.Context, req *baserpc.ReadFile
 func (fs *FileSystemService) WriteFile(ctx context.Context, req *baserpc.WriteFileRequest) (*baserpc.WriteFileResponse, error) {
 	var res baserpc.WriteFileResponse
 	res.Error = encodeErr(func() error {
-		if err := ioutil.WriteFile(req.Name, req.Content, os.FileMode(req.Mode)); err != nil {
+		if err := os.WriteFile(req.Name, req.Content, os.FileMode(req.Mode)); err != nil {
 			return err
 		}
 		return nil
@@ -123,7 +127,7 @@ func (fs *FileSystemService) RemoveAll(ctx context.Context, req *baserpc.RemoveR
 func (fs *FileSystemService) TempDir(ctx context.Context, req *baserpc.TempDirRequest) (*baserpc.TempDirResponse, error) {
 	var res baserpc.TempDirResponse
 	res.Error = encodeErr(func() error {
-		dirName, err := ioutil.TempDir(req.Dir, req.Pattern)
+		dirName, err := os.MkdirTemp(req.Dir, req.Pattern)
 		if err != nil {
 			return err
 		}
@@ -210,7 +214,7 @@ func (fs *FileSystemService) WriteFileAtOffset(ctx context.Context, req *baserpc
 	return &res, nil
 }
 
-func toFileInfoProto(fi os.FileInfo) (*baserpc.FileInfo, error) {
+func toFileInfoProto(fi fs.FileInfo) (*baserpc.FileInfo, error) {
 	return &baserpc.FileInfo{
 		Name:     fi.Name(),
 		Size:     uint64(fi.Size()),

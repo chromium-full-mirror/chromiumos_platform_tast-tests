@@ -7,7 +7,6 @@ package hwsec
 import (
 	"context"
 	"encoding/base64"
-	"io/ioutil"
 	"os"
 
 	"go.chromium.org/tast-tests/cros/common/testexec"
@@ -37,7 +36,7 @@ func (rc *LocalVA) GetDecodedVAChallenge(ctx context.Context) ([]byte, error) {
 
 // VerifyEncodedVAChallenge asks hwsec-test-va to verify the challenge response.
 func (rc *LocalVA) VerifyEncodedVAChallenge(ctx context.Context, signedChallenge string) error {
-	fd, err := ioutil.TempFile("", "tast-hwsec-test-va-challenge-response")
+	fd, err := os.CreateTemp("", "tast-hwsec-test-va-challenge-response")
 	if err != nil {
 		return errors.Wrap(err, "error creating temp file")
 	}

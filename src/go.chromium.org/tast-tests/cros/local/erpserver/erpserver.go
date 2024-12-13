@@ -11,7 +11,6 @@ import (
 	"encoding/base64"
 	"encoding/json"
 	"io"
-	"io/ioutil"
 	"net/http"
 	"net/http/httptest"
 	"strconv"
@@ -189,7 +188,7 @@ func (erpserver *ErpServer) SetFakeConfigFile(configFile *ResponseConfigFile) {
 
 func (erpserver *ErpServer) handleUpload(ctx context.Context, w http.ResponseWriter, r *http.Request) {
 	testing.ContextLog(ctx, "Reporting: new request to the server")
-	body, err := ioutil.ReadAll(r.Body)
+	body, err := io.ReadAll(r.Body)
 	if err != nil {
 		testing.ContextLog(ctx, "Reporting: Could not read request body: ", err)
 		http.Error(w, http.StatusText(http.StatusBadRequest), http.StatusBadRequest)

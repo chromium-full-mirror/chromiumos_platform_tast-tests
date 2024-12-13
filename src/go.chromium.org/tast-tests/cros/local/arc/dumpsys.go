@@ -6,7 +6,7 @@ package arc
 
 import (
 	"context"
-	"io/ioutil"
+	"os"
 	"path"
 	"regexp"
 	"strconv"
@@ -283,7 +283,7 @@ func (a *ARC) dumpsysActivityActivitiesR(ctx context.Context) (tasks []TaskInfo,
 	if err := proto.Unmarshal(output, am); err != nil {
 		if dir, ok := testing.ContextOutDir(ctx); !ok {
 			testing.ContextLog(ctx, "Failed to save protobuf message. Could not get ContextOutDir()")
-		} else if f, err := ioutil.TempFile(dir, "activity-activities-protobuf-message-*.bin"); err != nil {
+		} else if f, err := os.CreateTemp(dir, "activity-activities-protobuf-message-*.bin"); err != nil {
 			testing.ContextLog(ctx, "Failed to save protobuf message. Could not create temp file: ", err)
 		} else {
 			defer f.Close()
@@ -511,7 +511,7 @@ func (a *ARC) dumpsysMeminfoPackageR(ctx context.Context, pkg string) (*MeminfoA
 	if err := proto.Unmarshal(output, mi); err != nil {
 		if dir, ok := testing.ContextOutDir(ctx); !ok {
 			testing.ContextLog(ctx, "Failed to save protobuf message. Could not get ContextOutDir()")
-		} else if f, err := ioutil.TempFile(dir, "meminfo-protobuf-message-*.bin"); err != nil {
+		} else if f, err := os.CreateTemp(dir, "meminfo-protobuf-message-*.bin"); err != nil {
 			testing.ContextLog(ctx, "Failed to save protobuf message. Could not create temp file: ", err)
 		} else {
 			defer f.Close()

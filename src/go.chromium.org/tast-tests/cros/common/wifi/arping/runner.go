@@ -8,7 +8,7 @@ package arping
 import (
 	"context"
 	"fmt"
-	"io/ioutil"
+	"os"
 	"path/filepath"
 	"regexp"
 	"strconv"
@@ -118,7 +118,7 @@ func logArpingResult(ctx context.Context, output []byte) error {
 		return errors.New("failed to get OutDir")
 	}
 
-	f, err := ioutil.TempFile(outdir, "arping_*.log")
+	f, err := os.CreateTemp(outdir, "arping_*.log")
 	if err != nil {
 		return errors.Wrap(err, "failed to create log file for arping")
 	}

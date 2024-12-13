@@ -9,7 +9,6 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
-	"io/ioutil"
 	"math/rand"
 	"os"
 	"path/filepath"
@@ -126,7 +125,7 @@ func (c *Config) InstallRouterCredentials(ctx context.Context, host *ssh.Conn, w
 		{c.serverCred.PrivateKey, c.ServerKeyFile},
 		{c.serverEAPUsers, c.ServerEAPUsersFile},
 	} {
-		tmpfile, err := ioutil.TempFile("", "upload_tmp_")
+		tmpfile, err := os.CreateTemp("", "upload_tmp_")
 		if err != nil {
 			return errors.Wrap(err, "unable to create temp file")
 		}

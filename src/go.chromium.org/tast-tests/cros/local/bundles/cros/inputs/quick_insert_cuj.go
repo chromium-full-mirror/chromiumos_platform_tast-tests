@@ -8,7 +8,7 @@ package inputs
 import (
 	"context"
 	"fmt"
-	"io/ioutil"
+	"os"
 	"path/filepath"
 	"regexp"
 	"strings"
@@ -208,13 +208,13 @@ func setUpDownloads(cr *chrome.Chrome, path string) uiauto.Action {
 			return errors.Wrapf(err, "failed to get the cryptohome user path for %s", cr.NormalizedUser())
 		}
 
-		expected, err := ioutil.ReadFile(path)
+		expected, err := os.ReadFile(path)
 		if err != nil {
 			return errors.Wrap(err, "could not read test file")
 		}
 
 		crosPath := filepath.Join(cryptohomeUserPath, "MyFiles", "Downloads", filepath.Base(path))
-		if err = ioutil.WriteFile(crosPath, expected, 0666); err != nil {
+		if err = os.WriteFile(crosPath, expected, 0666); err != nil {
 			return errors.Wrap(err, "could not write test file")
 		}
 		return nil

@@ -9,7 +9,6 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
-	"io/ioutil"
 	"os"
 	"path"
 	"strings"
@@ -248,7 +247,7 @@ func (u *UpdateService) InstalledLSBReleaseContent(ctx context.Context, req *emp
 		return nil, errors.Errorf("unknown root partition %q", currentPartition)
 	}
 
-	mountPath, err := ioutil.TempDir("", "mount")
+	mountPath, err := os.MkdirTemp("", "mount")
 	if err != nil {
 		return nil, err
 	}
@@ -288,7 +287,7 @@ func (u *UpdateService) OverwriteStatefulLSBRelease(ctx context.Context, req *au
 		fmt.Fprintf(output, "%s=%s\n", key, value)
 	}
 
-	err := ioutil.WriteFile(statefulPath, output.Bytes(), 0644)
+	err := os.WriteFile(statefulPath, output.Bytes(), 0644)
 	if err != nil {
 		return &empty.Empty{}, errors.Wrapf(err, "failed to write the new content to %s", statefulPath)
 	}

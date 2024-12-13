@@ -10,7 +10,6 @@ import (
 	"crypto/rsa"
 	"crypto/sha1"
 	"crypto/x509"
-	"io/ioutil"
 	"os"
 	"path/filepath"
 	"time"
@@ -114,7 +113,7 @@ func DevicePolicyDescriptor() *lm.PolicyDescriptor {
 // ExtractPrivKey reads a PKCS #12 format file at path, then extracts and
 // returns RSA private key.
 func ExtractPrivKey(path string) (*rsa.PrivateKey, error) {
-	p12, err := ioutil.ReadFile(path)
+	p12, err := os.ReadFile(path)
 	if err != nil {
 		return nil, errors.Wrapf(err, "failed to read %s", path)
 	}

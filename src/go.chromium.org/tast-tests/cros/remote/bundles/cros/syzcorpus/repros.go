@@ -7,7 +7,6 @@ package syzcorpus
 import (
 	"context"
 	"fmt"
-	"io/ioutil"
 	"os"
 	"path/filepath"
 	"time"
@@ -135,7 +134,7 @@ func Repros(ctx context.Context, s *testing.State) {
 	}
 	s.Log("Arch found to be: ", arch)
 
-	tastDir, err := ioutil.TempDir("", "tast-syzcorpus")
+	tastDir, err := os.MkdirTemp("", "tast-syzcorpus")
 	if err != nil {
 		s.Fatal("Unable to create tast temporary directory: ", err)
 	}
@@ -158,7 +157,7 @@ func Repros(ctx context.Context, s *testing.State) {
 		s.Fatal("Encountered error fetching fuzz artifacts: ", err)
 	}
 	binDir := filepath.Join(tastDir, fmt.Sprintf("bin_%v_%v", param.subsystem, arch))
-	files, err := ioutil.ReadDir(binDir)
+	files, err := os.ReadDir(binDir)
 	if err != nil {
 		s.Fatalf("Unable to read extracted corpus dir at: %v: %v", binDir, err)
 	}
@@ -207,7 +206,7 @@ func Repros(ctx context.Context, s *testing.State) {
 			s.Fatalf("warningInDmesg failed after running repros %v: %v", repros[start:end], err)
 		} else if len(warning) > 0 {
 			crashFile := filepath.Join(crashesDir, "stacktrace")
-			if err := ioutil.WriteFile(crashFile, warning, 0755); err != nil {
+			if err := os.WriteFile(crashFile, warning, 0755); err != nil {
 				s.Log("Failed to save warning: ", err)
 			}
 			if err := d.Reboot(ctx); err != nil {

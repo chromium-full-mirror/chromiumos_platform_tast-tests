@@ -7,7 +7,6 @@ package router
 import (
 	"context"
 	"io"
-	"io/ioutil"
 	"os"
 	"path/filepath"
 
@@ -78,7 +77,7 @@ func PutFiles(ctx context.Context, host *ssh.Conn, files map[string]string) (int
 		}
 		if srcFileInfo.IsDir() {
 			// Add files in dir to queue, skipping any already accounted for
-			dirFiles, err := ioutil.ReadDir(src)
+			dirFiles, err := os.ReadDir(src)
 			if err != nil {
 				return bytesTransferred, errors.Wrapf(err, "failed to read contents of source directory %q", src)
 			}
@@ -118,7 +117,7 @@ func PutFiles(ctx context.Context, host *ssh.Conn, files map[string]string) (int
 		var err error
 
 		// Read local file contents
-		if data, err = ioutil.ReadFile(src); err != nil {
+		if data, err = os.ReadFile(src); err != nil {
 			return bytesTransferred, errors.Wrapf(err, "failed to read source file %q", src)
 		}
 

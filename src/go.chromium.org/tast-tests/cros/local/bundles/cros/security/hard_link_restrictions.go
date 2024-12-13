@@ -6,7 +6,6 @@ package security
 
 import (
 	"context"
-	"io/ioutil"
 	"os"
 	"path/filepath"
 	"strings"
@@ -34,7 +33,7 @@ func HardLinkRestrictions(ctx context.Context, s *testing.State) {
 	// Check that hard link protection is enabled.
 	// See https://wiki.ubuntu.com/SecurityTeam/Roadmap/KernelHardening for details.
 	const procPath = "/proc/sys/fs/protected_hardlinks"
-	if b, err := ioutil.ReadFile(procPath); err != nil {
+	if b, err := os.ReadFile(procPath); err != nil {
 		s.Fatalf("Failed to read %s: %v", procPath, err)
 	} else if v := strings.TrimSpace(string(b)); v != "1" {
 		s.Fatalf("%v contains %q; want \"1\"", procPath, v)
@@ -42,7 +41,7 @@ func HardLinkRestrictions(ctx context.Context, s *testing.State) {
 
 	const user = "chronos" // arbitrary unprivileged user
 
-	td, err := ioutil.TempDir("", "tast.security.HardLinkRestrictions.")
+	td, err := os.MkdirTemp("", "tast.security.HardLinkRestrictions.")
 	if err != nil {
 		s.Fatal("Failed to create temp dir: ", err)
 	}
@@ -132,7 +131,7 @@ func HardLinkRestrictions(ctx context.Context, s *testing.State) {
 	s.Log("Checking hard links to non-regular files")
 
 	// Create a temp dir under /dev so we can test behavior around non-regular files.
-	devdir, err := ioutil.TempDir("/dev", "tast.security.HardLinkRestrictions.")
+	devdir, err := os.MkdirTemp("/dev", "tast.security.HardLinkRestrictions.")
 	if err != nil {
 		s.Fatal("Failed to create temp dir under /dev: ", err)
 	}

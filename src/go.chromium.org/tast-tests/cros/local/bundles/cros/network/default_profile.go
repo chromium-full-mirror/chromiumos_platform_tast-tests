@@ -6,7 +6,6 @@ package network
 
 import (
 	"context"
-	"io/ioutil"
 	"os"
 	"path/filepath"
 	"strings"
@@ -82,11 +81,11 @@ func DefaultProfile(ctx context.Context, s *testing.State) {
 	}, &testing.PollOptions{Timeout: 5 * time.Second})
 
 	// Read the default profile and check expected settings.
-	b, err := ioutil.ReadFile(shillconst.DefaultProfilePath)
+	b, err := os.ReadFile(shillconst.DefaultProfilePath)
 	if err != nil {
 		s.Fatal("Failed reading the default profile: ", err)
 	}
-	ioutil.WriteFile(filepath.Join(s.OutDir(), "default.profile"), b, 0644)
+	os.WriteFile(filepath.Join(s.OutDir(), "default.profile"), b, 0644)
 	profile := string(b)
 
 	for _, es := range expectedSettings {

@@ -9,7 +9,6 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
-	"io/ioutil"
 	"os"
 	"path"
 	"path/filepath"
@@ -128,7 +127,7 @@ func smapsRollups(ctx context.Context, processes []*process.Process, sharedInfoM
 			// We're racing with this process potentially exiting, so just
 			// ignore errors and don't generate a NamesSmapsRollup if we fail to
 			// read anything from proc.
-			smapsData, err := ioutil.ReadFile(fmt.Sprintf("/proc/%d/smaps_rollup", p.Pid))
+			smapsData, err := os.ReadFile(fmt.Sprintf("/proc/%d/smaps_rollup", p.Pid))
 			if err != nil {
 				// Not all processes have a smaps_rollup, this process may have
 				// exited.
@@ -234,7 +233,7 @@ func makeSharedInfoMap(ctx context.Context, processes []*process.Process) (Share
 		i := index
 		pid := process.Pid
 		g.Go(func() error {
-			smapsData, err := ioutil.ReadFile(fmt.Sprintf("/proc/%d/smaps", pid))
+			smapsData, err := os.ReadFile(fmt.Sprintf("/proc/%d/smaps", pid))
 			if err != nil {
 				// Not all processes have a smaps_rollup, this process may have
 				// exited.
@@ -344,7 +343,7 @@ func GetHostMetrics(ctx context.Context, outdir, suffix string) (*HostSummary, e
 			return nil, errors.Wrap(err, "failed to convert smaps_rollups to JSON")
 		}
 		filename := fmt.Sprintf("smaps_rollup%s.json", suffix)
-		if err := ioutil.WriteFile(path.Join(outdir, filename), rollupsJSON, 0644); err != nil {
+		if err := os.WriteFile(path.Join(outdir, filename), rollupsJSON, 0644); err != nil {
 			return nil, errors.Wrapf(err, "failed to write smaps_rollups to %s", filename)
 		}
 	}

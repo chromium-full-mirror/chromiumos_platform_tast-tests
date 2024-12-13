@@ -7,7 +7,6 @@ package bootperf
 
 import (
 	"context"
-	"io/ioutil"
 	"math"
 	"os"
 	"path/filepath"
@@ -214,7 +213,7 @@ func EnsureTlsdatedStopped(ctx context.Context) error {
 // value of the given field.
 func parseBootstat(fileName string, fieldNum int) ([]float64, error) {
 	var result []float64
-	b, err := ioutil.ReadFile(fileName)
+	b, err := os.ReadFile(fileName)
 	if err != nil {
 		return nil, err
 	}
@@ -391,7 +390,7 @@ func GatherFirmwareBootTime(ctx context.Context, results *platform.GetBootPerfMe
 
 // getFirmwareTimestampBootTime reads firmware startup time from /tmp/firmware-boot-time.
 func getFirmwareTimestampBootTime(ctx context.Context) (float64, error) {
-	b, err := ioutil.ReadFile("/tmp/firmware-boot-time")
+	b, err := os.ReadFile("/tmp/firmware-boot-time")
 	for err != nil {
 		return 0, err
 	}
@@ -568,7 +567,7 @@ func calculateTimeOffset(t0, t1, tx float64) (float64, float64) {
 // For example: `7.558581153 7.559699999 2021-02-09 11:42:10`
 // Returns `uptime0`, `uptime1` as floats, RTC time as a Unix timestamp.
 func parseSyncRtc(rtcPath string) (float64, float64, int64, error) {
-	c, err := ioutil.ReadFile(rtcPath)
+	c, err := os.ReadFile(rtcPath)
 	if err != nil {
 		return 0, 0, 0, errors.Wrap(err, "failed to read timestamp")
 	}
@@ -600,7 +599,7 @@ func canonicalizeBootID(s string) string {
 
 // getCurrentBootID returns canonicalized boot ID of the current boot.
 func getCurrentBootID() (string, error) {
-	b, err := ioutil.ReadFile(currentBootIDPath)
+	b, err := os.ReadFile(currentBootIDPath)
 	if err != nil {
 		return "", err
 	}
@@ -609,7 +608,7 @@ func getCurrentBootID() (string, error) {
 
 // getPreviousBootIDFromLog returns the boot ID of previous boot from /var/log/boot_id.log.
 func getPreviousBootIDFromLog() (string, error) {
-	b, err := ioutil.ReadFile("/var/log/boot_id.log")
+	b, err := os.ReadFile("/var/log/boot_id.log")
 	if err != nil {
 		return "", errors.New("failed to read boot_id.log")
 	}
@@ -657,7 +656,7 @@ func getBootstatArchivePath() (string, error) {
 	}
 
 	bootIDPath := filepath.Join(bootstatArchives[0], "boot_id")
-	b, err := ioutil.ReadFile(bootIDPath)
+	b, err := os.ReadFile(bootIDPath)
 	if err != nil || canonicalizeBootID(string(b)) != previousBootID {
 		return "", errors.New("unexpected boot_id")
 	}
@@ -708,7 +707,7 @@ func GatherRebootMetrics(results *platform.GetRebootMetricsResponse) error {
 	// Compute reboot time using system time (quite inaccurate).
 	// TODO(b:181084968): Remove this once we are convinced RTC code works better.
 	timestampPath := filepath.Join(bootstatDir, "timestamp")
-	b, err := ioutil.ReadFile(timestampPath)
+	b, err := os.ReadFile(timestampPath)
 	if err != nil {
 		return errors.Wrap(err, "failed to read timestamp")
 	}
@@ -730,7 +729,7 @@ func GatherRebootMetrics(results *platform.GetRebootMetricsResponse) error {
 	shutdownSystemTime := shutdownUptime + archiveSystemTimeOffset
 
 	nowSystemTime0 := time.Now().Unix()
-	nowUptimeStr, err := ioutil.ReadFile("/proc/uptime")
+	nowUptimeStr, err := os.ReadFile("/proc/uptime")
 	if err != nil {
 		return errors.Wrap(err, "failed to read system uptime")
 	}
@@ -811,7 +810,7 @@ func GatherRebootRawDataFiles(raw map[string][]byte) error {
 	files = append(files, filepath.Join(lastBootstatArchive, "sync-rtc-tlsdated-stop"))
 
 	for _, f := range files {
-		b, err := ioutil.ReadFile(f)
+		b, err := os.ReadFile(f)
 		if err != nil {
 			return errors.Wrapf(err, "failed to read from %s", f)
 		}
@@ -831,7 +830,7 @@ func GatherMetricRawDataFiles(raw map[string][]byte) error {
 	}
 
 	for _, f := range files {
-		b, err := ioutil.ReadFile(f)
+		b, err := os.ReadFile(f)
 		if err != nil {
 			return errors.Wrapf(err, "failed to read from %s", f)
 		}
@@ -845,7 +844,7 @@ func GatherMetricRawDataFiles(raw map[string][]byte) error {
 func GatherConsoleRamoops(raw map[string][]byte) error {
 	list, _ := filepath.Glob(ramOopsFileGlob) // filepath.Glob() only returns error on malformed glob patterns.
 	for _, f := range list {
-		b, err := ioutil.ReadFile(f)
+		b, err := os.ReadFile(f)
 		if err != nil {
 			return errors.Wrapf(err, "failed to read from %s", f)
 		}

@@ -10,7 +10,7 @@ import (
 	"context"
 	"encoding/json"
 	"io"
-	"io/ioutil"
+	"io/fs"
 	"os"
 	"regexp"
 	"strconv"
@@ -46,7 +46,7 @@ func enableMockSending(path string, success bool) error {
 	if !success {
 		b = []byte{'1'}
 	}
-	if err := ioutil.WriteFile(path, b, 0644); err != nil {
+	if err := os.WriteFile(path, b, 0644); err != nil {
 		return errors.Wrap(err, "failed to enable crash_sender mock")
 	}
 	return nil
@@ -73,17 +73,17 @@ func resetSendRecords(dir string) error {
 // A send record file represents an upload event of a crash report. Its content is
 // serialized crash.SendRecord protocol buffers message, and its timestamp indicates
 // when the upload was performed.
-func ListSendRecords() ([]os.FileInfo, error) {
-	fis, err := ioutil.ReadDir(SendRecordDir)
+func ListSendRecords() ([]fs.DirEntry, error) {
+	fis, err := os.ReadDir(SendRecordDir)
 	if os.IsNotExist(err) {
 		return nil, nil
 	}
 	if err != nil {
 		return nil, errors.Wrap(err, "failed to count send records")
 	}
-	var rs []os.FileInfo
+	var rs []fs.DirEntry
 	for _, fi := range fis {
-		if fi.Mode().IsRegular() {
+		if fi.Type().IsRegular() {
 			rs = append(rs, fi)
 		}
 	}

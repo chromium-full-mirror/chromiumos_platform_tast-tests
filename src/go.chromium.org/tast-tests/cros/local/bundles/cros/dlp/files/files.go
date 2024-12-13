@@ -8,7 +8,6 @@ package files
 
 import (
 	"context"
-	"io/ioutil"
 	"net/http"
 	"net/http/httptest"
 	"os"
@@ -43,7 +42,7 @@ func ClearDownloads(ctx context.Context, cr *chrome.Chrome) error {
 	if err != nil {
 		return errors.Wrap(err, "failed to get user's Download path")
 	}
-	files, err := ioutil.ReadDir(downloadsPath)
+	files, err := os.ReadDir(downloadsPath)
 	if err != nil {
 		return errors.Wrap(err, "failed to get files from Downloads directory")
 	}

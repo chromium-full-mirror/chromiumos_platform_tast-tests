@@ -8,7 +8,6 @@ import (
 	"context"
 	"fmt"
 	"io/fs"
-	"io/ioutil"
 	"os"
 	"path/filepath"
 	"regexp"
@@ -314,7 +313,7 @@ func CopyGmsCoreCaches(ctx context.Context, a *arc.ARC, outputDir string) error 
 	}
 	sort.Strings(layoutLines)
 	layout := strings.Join(layoutLines, "\n")
-	if err := ioutil.WriteFile(filepath.Join(outputDir, LayoutTxt), []byte(layout), 0644); err != nil {
+	if err := os.WriteFile(filepath.Join(outputDir, LayoutTxt), []byte(layout), 0644); err != nil {
 		return errors.Wrapf(err, "failed to generate %q for %q", LayoutTxt, chimeraPath)
 	}
 
@@ -327,7 +326,7 @@ func CopyGmsCoreCaches(ctx context.Context, a *arc.ARC, outputDir string) error 
 		return errors.Wrapf(err, "failed to read and parse packages cache XML %q", packagesPath)
 	}
 	packagesPathLocal := filepath.Join(outputDir, PackagesCacheXML)
-	if err := ioutil.WriteFile(packagesPathLocal, packagesXML, 0644); err != nil {
+	if err := os.WriteFile(packagesPathLocal, packagesXML, 0644); err != nil {
 		return errors.Wrapf(err, "failed to write the parsed packages cache XML content to %q", packagesPathLocal)
 	}
 
@@ -365,7 +364,7 @@ func CopyGmsCoreCaches(ctx context.Context, a *arc.ARC, outputDir string) error 
 		return errors.Wrapf(err, "failed to create GMS Core manifiest: %q", string(out))
 	}
 
-	if err := ioutil.WriteFile(manifestPath, out, 0644); err != nil {
+	if err := os.WriteFile(manifestPath, out, 0644); err != nil {
 		return errors.Wrapf(err, "failed to save GMS Core manifest to %q", manifestPath)
 	}
 

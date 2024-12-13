@@ -8,7 +8,6 @@ import (
 	"context"
 	"encoding/base64"
 	"fmt"
-	"io/ioutil"
 	"os"
 	"path/filepath"
 
@@ -81,7 +80,7 @@ func RunSSHFSTests(ctx context.Context, s *testing.State) {
 			s.Fatalf("Could not set correct owner of directory %q: %v", sshDir, err)
 		}
 	}
-	if err := ioutil.WriteFile(authorizedKeysPath, []byte(sshPublicKey), 0600); err != nil {
+	if err := os.WriteFile(authorizedKeysPath, []byte(sshPublicKey), 0600); err != nil {
 		s.Fatalf("Could not write file %q: %v", authorizedKeysPath, err)
 	}
 	defer os.Remove(authorizedKeysPath)
@@ -91,7 +90,7 @@ func RunSSHFSTests(ctx context.Context, s *testing.State) {
 
 	// We are using the ssh server running on the same DUT to verify mounting.
 	// Read host's identification.
-	data, err := ioutil.ReadFile(sshHostKeyPath)
+	data, err := os.ReadFile(sshHostKeyPath)
 	if err != nil {
 		s.Fatal("Could not read the host identification: ", err)
 	}

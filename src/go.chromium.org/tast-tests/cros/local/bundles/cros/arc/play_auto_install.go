@@ -6,7 +6,6 @@ package arc
 
 import (
 	"context"
-	"io/ioutil"
 	"os"
 	"path/filepath"
 	"strings"
@@ -103,7 +102,7 @@ func PlayAutoInstall(ctx context.Context, s *testing.State) {
 		// Although ReadFile isn't retried, it needs to be called inside the polling function
 		// because the source file is in Android /data, which needs to be mounted if virtio-blk
 		// /data is used.
-		out, err := ioutil.ReadFile(paiListUnderHome)
+		out, err := os.ReadFile(paiListUnderHome)
 		if err != nil {
 			return testing.PollBreak(err)
 		}

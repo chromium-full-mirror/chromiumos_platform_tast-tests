@@ -8,7 +8,7 @@ import (
 	"bytes"
 	"compress/gzip"
 	"context"
-	"io/ioutil"
+	"io"
 	"regexp"
 	"strings"
 	"time"
@@ -317,7 +317,7 @@ func ECSafeMode(ctx context.Context, s *testing.State) {
 		}
 		defer gz.Close()
 
-		coredumpGzDecompressed, err := ioutil.ReadAll(gz)
+		coredumpGzDecompressed, err := io.ReadAll(gz)
 		if err != nil {
 			s.Fatal("Failed to decompress coredump gz")
 		}

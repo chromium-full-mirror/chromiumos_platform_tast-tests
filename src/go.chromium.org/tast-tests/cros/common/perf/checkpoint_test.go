@@ -5,7 +5,6 @@
 package perf
 
 import (
-	"io/ioutil"
 	"os"
 	"path/filepath"
 	"testing"
@@ -28,7 +27,7 @@ func saveCheckpointsAndCompare(t *testing.T, c *Checkpoints, goldenPath string) 
 
 	path := filepath.Join(td, "checkpoint_log.json")
 	if err := jsonEquals(path, goldenPath); err != nil {
-		data, _ := ioutil.ReadFile(path)
+		data, _ := os.ReadFile(path)
 		t.Fatalf("%v; output:\n%s", err, string(data))
 	}
 }

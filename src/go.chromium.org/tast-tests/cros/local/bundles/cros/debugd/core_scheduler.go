@@ -6,7 +6,7 @@ package debugd
 
 import (
 	"context"
-	"io/ioutil"
+	"os"
 	"strings"
 	"time"
 
@@ -37,7 +37,7 @@ func init() {
 
 func CoreScheduler(ctx context.Context, s *testing.State) {
 	// Find out if this machine has Hyper-Threading.
-	siblingThreads, err := ioutil.ReadFile("/sys/devices/system/cpu/cpu0/topology/thread_siblings_list")
+	siblingThreads, err := os.ReadFile("/sys/devices/system/cpu/cpu0/topology/thread_siblings_list")
 	if err != nil {
 		s.Fatal("Failed to open sibling threads file: ", err)
 	}
@@ -60,7 +60,7 @@ func CoreScheduler(ctx context.Context, s *testing.State) {
 		}
 
 		// Now see if the CPUs are offline.
-		offlineDat, err := ioutil.ReadFile("/sys/devices/system/cpu/offline")
+		offlineDat, err := os.ReadFile("/sys/devices/system/cpu/offline")
 		if err != nil {
 			return errors.Wrap(err, "failed to open offline CPU file")
 		}

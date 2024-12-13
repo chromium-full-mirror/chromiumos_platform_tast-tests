@@ -6,7 +6,7 @@ package arc
 
 import (
 	"context"
-	"io/ioutil"
+	"os"
 	"path/filepath"
 	"regexp"
 	"strconv"
@@ -90,7 +90,7 @@ func waitForDailyHygieneDone(ctx context.Context, user string) (bool, []byte, er
 	var ok bool
 	var fileContent []byte
 	err = arc.PollWithReadOnlyAndroidData(ctx, user, func(ctx context.Context) error {
-		fileContent, err = ioutil.ReadFile(finskyPrefsPath)
+		fileContent, err = os.ReadFile(finskyPrefsPath)
 		if err != nil {
 			// It is OK if it does not exist yet
 			return err
@@ -147,7 +147,7 @@ func PlayStorePersistent(ctx context.Context, s *testing.State) {
 	s.Log("Waiting for daily hygiene done")
 	ok, out, err := waitForDailyHygieneDone(ctx, cr.NormalizedUser())
 	if err != nil {
-		if rerr := ioutil.WriteFile(filepath.Join(s.OutDir(), "finsky.xml"), out, 0644); rerr != nil {
+		if rerr := os.WriteFile(filepath.Join(s.OutDir(), "finsky.xml"), out, 0644); rerr != nil {
 			s.Error("Failed to write Finsky prefs: ", rerr)
 		} else {
 			s.Log("Finsky prefs is saved to finsky.xml")

@@ -7,7 +7,6 @@ package filemanager
 import (
 	"context"
 	"fmt"
-	"io/ioutil"
 	"math/rand"
 	"os"
 	"path/filepath"
@@ -132,7 +131,7 @@ func createTestData(folderPath, relativeTrashPath string) (sendToTrashTestData, 
 	trashedFilePath := filepath.Join(folderPath, relativeTrashPath, "files", fileName)
 	trashedMetadataPath := filepath.Join(folderPath, relativeTrashPath, "info", fileName+".trashinfo")
 	originalFilePath := filepath.Join(folderPath, fileName)
-	if err := ioutil.WriteFile(originalFilePath, []byte("fake-content"), 0644); err != nil {
+	if err := os.WriteFile(originalFilePath, []byte("fake-content"), 0644); err != nil {
 		return sendToTrashTestData{}, errors.Wrapf(err, "failed to create the test file inside %q", folderPath)
 	}
 	cleanupFunc := func(ctx context.Context, cr *chrome.Chrome, s *testing.State, name string) {

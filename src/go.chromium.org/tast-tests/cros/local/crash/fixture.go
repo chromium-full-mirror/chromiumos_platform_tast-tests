@@ -6,7 +6,6 @@ package crash
 
 import (
 	"context"
-	"io/ioutil"
 	"os"
 	"path/filepath"
 	"time"
@@ -350,12 +349,12 @@ func SetConsent(ctx context.Context, cr *chrome.Chrome, consent bool) error {
 
 func setMockConsent(rebootTest bool, inProgDir, rebootPersistDir string) error {
 	mockConsentPath := filepath.Join(inProgDir, mockConsentFile)
-	if err := ioutil.WriteFile(mockConsentPath, nil, 0644); err != nil {
+	if err := os.WriteFile(mockConsentPath, nil, 0644); err != nil {
 		return errors.Wrapf(err, "failed writing mock consent file %s", mockConsentPath)
 	}
 	if rebootTest {
 		mockConsentPersistent := filepath.Join(rebootPersistDir, mockConsentFile)
-		if err := ioutil.WriteFile(mockConsentPersistent, []byte(rebootPersistenceCount), 0644); err != nil {
+		if err := os.WriteFile(mockConsentPersistent, []byte(rebootPersistenceCount), 0644); err != nil {
 			return errors.Wrapf(err, "failed writing mock consent file %s", mockConsentPersistent)
 		}
 	}
@@ -405,7 +404,7 @@ func ensureSoftwareDeps(ctx context.Context) error {
 // start crash tests with an empty spool directory, reducing risk of flakes if
 // the dir is already full when the test starts.
 func moveAllCrashesTo(source, target string) error {
-	files, err := ioutil.ReadDir(source)
+	files, err := os.ReadDir(source)
 	if err != nil {
 		// Bubble this up so caller can check whether IsNotExist and behave accordingly.
 		return err
@@ -573,7 +572,7 @@ type setUpParams struct {
 // SetCrashTestInProgress creates a file to tell crash_reporter that a crash_reporter test is in progress.
 func SetCrashTestInProgress() error {
 	filePath := filepath.Join(crashTestInProgressDir, crashTestInProgressFile)
-	if err := ioutil.WriteFile(filePath, []byte("in-progress"), 0644); err != nil {
+	if err := os.WriteFile(filePath, []byte("in-progress"), 0644); err != nil {
 		return errors.Wrapf(err, "failed writing in-progress state file %s", filePath)
 	}
 	return nil
@@ -601,7 +600,7 @@ func CreatePerUserConsent(ctx context.Context, enable bool) error {
 		if enable {
 			contents = "1"
 		}
-		if err := ioutil.WriteFile(f, []byte(contents), 0644); err != nil {
+		if err := os.WriteFile(f, []byte(contents), 0644); err != nil {
 			return errors.Wrapf(err, "failed writing consent-enabled file %s", f)
 		}
 	}
@@ -709,7 +708,7 @@ func setUpCrashTest(ctx context.Context, p *setUpParams) (retErr error) {
 	}
 
 	// Pause the periodic crash_sender job.
-	if err := ioutil.WriteFile(p.senderPausePath, nil, 0644); err != nil {
+	if err := os.WriteFile(p.senderPausePath, nil, 0644); err != nil {
 		return errors.Wrapf(err, "couldn't write sender pause file %s", p.senderPausePath)
 	}
 	// If crash_sender happens to be running, touching senderPausePath does not
@@ -752,13 +751,13 @@ func setUpCrashTest(ctx context.Context, p *setUpParams) (retErr error) {
 	}
 
 	filePath := filepath.Join(p.inProgDir, crashTestInProgressFile)
-	if err := ioutil.WriteFile(filePath, nil, 0644); err != nil {
+	if err := os.WriteFile(filePath, nil, 0644); err != nil {
 		return errors.Wrapf(err, "could not create %v", filePath)
 	}
 
 	if p.rebootTest {
 		filePath = filepath.Join(p.rebootPersistDir, crashTestInProgressFile)
-		if err := ioutil.WriteFile(filePath, []byte(rebootPersistenceCount), 0644); err != nil {
+		if err := os.WriteFile(filePath, []byte(rebootPersistenceCount), 0644); err != nil {
 			return errors.Wrapf(err, "could not create %v", filePath)
 		}
 	}

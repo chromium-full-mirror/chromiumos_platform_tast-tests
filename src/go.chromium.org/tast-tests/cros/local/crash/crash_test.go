@@ -8,7 +8,6 @@ import (
 	"bytes"
 	"context"
 	"fmt"
-	"io/ioutil"
 	"math/rand"
 	"os"
 	"os/exec"
@@ -79,7 +78,7 @@ func TestProcessRunning(t *gotesting.T) {
 	// procName must be <=14 characters long so that gopsutil doesn't look at
 	// /proc/$$/cmdline.
 	procName := fmt.Sprintf("t_%d", rand.Int31())
-	if err := ioutil.WriteFile(filepath.Join(td, procName), []byte("#!/bin/sh\nsleep 10\n"), 0777); err != nil {
+	if err := os.WriteFile(filepath.Join(td, procName), []byte("#!/bin/sh\nsleep 10\n"), 0777); err != nil {
 		t.Fatal("Failed to write a script: ", err)
 	}
 
@@ -189,7 +188,7 @@ func writeFiles(dir string, files []string, fileContents []byte, overrideFileCon
 		if val, ok := overrideFileContents[file]; ok {
 			contents = val
 		}
-		if err := ioutil.WriteFile(filepath.Join(dir, file), contents, 0666); err != nil {
+		if err := os.WriteFile(filepath.Join(dir, file), contents, 0666); err != nil {
 			return errors.Wrap(err, "failed to touch file")
 		}
 	}
@@ -490,14 +489,14 @@ func TestDeleteCoreDumps(t *gotesting.T) {
 
 	initFiles := []string{"a.core", "a.txt", "b.core", "b.dmp", "b.jpg"}
 	for _, fn := range initFiles {
-		if err := ioutil.WriteFile(filepath.Join(dir2, fn), nil, 0666); err != nil {
+		if err := os.WriteFile(filepath.Join(dir2, fn), nil, 0666); err != nil {
 			t.Fatal("Failed to touch file: ", err)
 		}
 	}
 
 	// filesIn returns a list of files under dir.
 	filesIn := func(dir string) []string {
-		fis, err := ioutil.ReadDir(dir)
+		fis, err := os.ReadDir(dir)
 		if err != nil {
 			t.Fatal("ReadDir failed: ", err)
 		}
@@ -538,7 +537,7 @@ func TestDeleteCoreDumps(t *gotesting.T) {
 	reporterRunning := func() (bool, error) {
 		// Create a new core file. This should not be deleted.
 		for _, fn := range []string{"c.core", "c.dmp"} {
-			if err := ioutil.WriteFile(filepath.Join(dir2, fn), nil, 0666); err != nil {
+			if err := os.WriteFile(filepath.Join(dir2, fn), nil, 0666); err != nil {
 				t.Fatal("Failed to touch file: ", err)
 			}
 		}

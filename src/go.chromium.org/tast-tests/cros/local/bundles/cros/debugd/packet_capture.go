@@ -9,7 +9,6 @@ import (
 	"context"
 	"fmt"
 	"io"
-	"io/ioutil"
 	"net"
 	"os"
 	"sync"
@@ -207,7 +206,7 @@ func PacketCapture(ctx context.Context, s *testing.State) {
 			// Start packet captures for testing.
 			for i := 0; i < param.numberOfCaptures; i++ {
 				// Create output file for packet capture operation.
-				of, err := ioutil.TempFile("", fmt.Sprintf("test%d.*.pcap", i))
+				of, err := os.CreateTemp("", fmt.Sprintf("test%d.*.pcap", i))
 				if err != nil {
 					s.Fatal("Failed to create output file: ", err)
 				}
@@ -346,7 +345,7 @@ func listener(lstnr net.Listener, sizeMiBs int64, wg *sync.WaitGroup, s *testing
 	defer conn.Close()
 
 	// Read the data in the socket.
-	n, err := io.Copy(ioutil.Discard, conn)
+	n, err := io.Copy(io.Discard, conn)
 	if err != nil {
 		s.Error("Can't read data from localhost tcp port: ", err)
 		return

@@ -12,7 +12,6 @@ import (
 	"context"
 	"fmt"
 	"io"
-	"io/ioutil"
 	"net"
 	"os"
 	"path/filepath"
@@ -99,7 +98,7 @@ func NewSnippetClient(ctx context.Context, d *adb.Device, moblyPackage, apkZipPa
 // unzipAndInstallApk extracts and installs the specified APK from the given zip.
 func unzipAndInstallApk(ctx context.Context, d *adb.Device, apkZipPath, apkName string) error {
 	// Unzip the APK to a temp dir.
-	tempDir, err := ioutil.TempDir("", "snippet-apk")
+	tempDir, err := os.MkdirTemp("", "snippet-apk")
 	if err != nil {
 		return errors.Wrap(err, "failed to create temp dir")
 	}

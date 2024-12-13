@@ -6,7 +6,7 @@ package example
 
 import (
 	"context"
-	"io/ioutil"
+	"os"
 	"path/filepath"
 
 	"go.chromium.org/tast-tests/cros/local/chrome"
@@ -43,7 +43,7 @@ func UIFaillog(ctx context.Context, s *testing.State) {
 		s.Fatal("Failed to dump: ", err)
 	}
 
-	b, err := ioutil.ReadFile(filePath)
+	b, err := os.ReadFile(filePath)
 	if err != nil {
 		s.Fatal("Failed to read ui_dump file: ", err)
 	}

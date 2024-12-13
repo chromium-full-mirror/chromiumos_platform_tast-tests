@@ -7,7 +7,7 @@ package arc
 import (
 	"context"
 	"fmt"
-	"io/ioutil"
+	"os"
 	"path/filepath"
 	"regexp"
 	"strconv"
@@ -46,7 +46,7 @@ func DumpsysMeminfo(ctx context.Context, a *arc.ARC, outdir string) error {
 
 	const outfile = "arc.meminfo.log"
 	outpath := filepath.Join(outdir, outfile)
-	if err := ioutil.WriteFile(outpath, meminfo, 0644); err != nil {
+	if err := os.WriteFile(outpath, meminfo, 0644); err != nil {
 		return errors.Wrapf(err, "failed to write meminfo to %q", outpath)
 	}
 	return nil
@@ -157,7 +157,7 @@ func GetDumpsysMeminfoMetrics(ctx context.Context, a *arc.ARC, outdir, suffix st
 	if len(outdir) > 0 {
 		outfile := "arc.meminfo" + suffix + ".txt"
 		outpath := filepath.Join(outdir, outfile)
-		if err := ioutil.WriteFile(outpath, meminfo, 0644); err != nil {
+		if err := os.WriteFile(outpath, meminfo, 0644); err != nil {
 			return nil, errors.Wrapf(err, "failed to write meminfo to %q", outpath)
 		}
 		errorContext = func() string {

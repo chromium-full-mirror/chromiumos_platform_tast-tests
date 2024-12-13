@@ -6,7 +6,6 @@ package dlp
 
 import (
 	"context"
-	"io/ioutil"
 	"net/http"
 	"net/http/httptest"
 	"net/url"
@@ -68,7 +67,7 @@ func DataLeakPreventionRulesListClipboardExt(ctx context.Context, s *testing.Sta
 		s.Fatal("Failed to write policies to FakeDMS: ", err)
 	}
 
-	extDir, err := ioutil.TempDir("", "tast.dlp.Clipboard.")
+	extDir, err := os.MkdirTemp("", "tast.dlp.Clipboard.")
 	if err != nil {
 		s.Fatal("Failed to create temp extension dir: ", err)
 	}

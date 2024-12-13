@@ -6,7 +6,6 @@ package security
 
 import (
 	"context"
-	"io/ioutil"
 	"os"
 	"path/filepath"
 
@@ -29,7 +28,7 @@ func init() {
 }
 
 func MountSymlink(ctx context.Context, s *testing.State) {
-	base, err := ioutil.TempDir("/tmp", "mount_symlink_test.")
+	base, err := os.MkdirTemp("/tmp", "mount_symlink_test.")
 	if err != nil {
 		s.Fatal("Failed creating temp dir: ", err)
 	}

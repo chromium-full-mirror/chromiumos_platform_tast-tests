@@ -6,7 +6,6 @@ package printer
 
 import (
 	"context"
-	"io/ioutil"
 	"os"
 	"path/filepath"
 
@@ -41,7 +40,7 @@ func Rastertoescpos(ctx context.Context, s *testing.State) {
 		ppd          = "rastertoescpos.ppd"
 	)
 
-	inputContents, err := ioutil.ReadFile(s.DataPath(input))
+	inputContents, err := os.ReadFile(s.DataPath(input))
 	if err != nil {
 		s.Fatal("Failed to read input file: ", err)
 	}
@@ -73,7 +72,7 @@ func Rastertoescpos(ctx context.Context, s *testing.State) {
 	}()
 	rastertoescposOutput, _ := escposCmd.Output(testexec.DumpLogOnError)
 
-	goldenBytes, err := ioutil.ReadFile(s.DataPath(golden))
+	goldenBytes, err := os.ReadFile(s.DataPath(golden))
 	if err != nil {
 		s.Fatalf("Failed to read file %s: %v", golden, err)
 	}

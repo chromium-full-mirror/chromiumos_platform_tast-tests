@@ -8,7 +8,6 @@ import (
 	"compress/gzip"
 	"context"
 	"io"
-	"io/ioutil"
 	"os"
 	"strings"
 
@@ -48,7 +47,7 @@ func readLog(filename string) ([]byte, error) {
 			return nil, err
 		}
 	}
-	return ioutil.ReadAll(r)
+	return io.ReadAll(r)
 }
 
 func Udev(ctx context.Context, s *testing.State) {

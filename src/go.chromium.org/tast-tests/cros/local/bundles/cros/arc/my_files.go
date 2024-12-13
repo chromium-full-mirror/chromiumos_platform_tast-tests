@@ -7,7 +7,6 @@ package arc
 import (
 	"bytes"
 	"context"
-	"io/ioutil"
 	"os"
 	"path/filepath"
 	"time"
@@ -94,7 +93,7 @@ func testPushToARCAndReadFromCros(ctx context.Context, a *arc.ARC, sourcePath, a
 	ctx, cancel := ctxutil.Shorten(ctx, 10*time.Second)
 	defer cancel()
 
-	expected, err := ioutil.ReadFile(sourcePath)
+	expected, err := os.ReadFile(sourcePath)
 	if err != nil {
 		return errors.Wrapf(err, "failed to read from %s in ChromeOS", sourcePath)
 	}
@@ -112,7 +111,7 @@ func testPushToARCAndReadFromCros(ctx context.Context, a *arc.ARC, sourcePath, a
 		}
 	}(cleanupCtx)
 
-	actual, err := ioutil.ReadFile(crosPath)
+	actual, err := os.ReadFile(crosPath)
 	if err != nil {
 		return errors.Wrapf(err, "failed to read from %s in ChromeOS", crosPath)
 	}
@@ -137,7 +136,7 @@ func testFilesAppIntegrationForMyFiles(ctx context.Context, a *arc.ARC, cr *chro
 	testing.ContextLog(ctx, "Testing Files app integration")
 
 	testFilePath := filepath.Join(myFilesPath, filename)
-	if err := ioutil.WriteFile(testFilePath, []byte(fileContent), 0666); err != nil {
+	if err := os.WriteFile(testFilePath, []byte(fileContent), 0666); err != nil {
 		return errors.Wrapf(err, "failed to create test file %s", testFilePath)
 	}
 	defer os.Remove(testFilePath)

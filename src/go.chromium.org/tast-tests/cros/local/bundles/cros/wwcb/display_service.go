@@ -7,7 +7,6 @@ package wwcb
 import (
 	"context"
 	"image"
-	"io/ioutil"
 	"os"
 	"strings"
 	"time"
@@ -340,7 +339,7 @@ func (ds *DisplayService) ChangeResolution(ctx context.Context, req *wwcb.QueryR
 		}
 
 		// Compare display mode with screenshot of external display.
-		fd, err := ioutil.TempFile("", "screenshot")
+		fd, err := os.CreateTemp("", "screenshot")
 		if err != nil {
 			return nil, errors.Wrap(err, "error opening screenshot file")
 		}

@@ -10,7 +10,6 @@ import (
 	"encoding/json"
 	"fmt"
 	"io"
-	"io/ioutil"
 	"net"
 	"net/http"
 	"net/url"
@@ -170,7 +169,7 @@ type graphicsPowerInterface struct {
 // finishCheckpointWithStartTime writes to signalCheckpointFile monitored by the graphics_Power process, informing it to save a checkpoint.
 // The passed startTime as seconds since the epoch is used as the checkpoint's start time.
 func (gpi *graphicsPowerInterface) finishCheckpointWithStartTime(ctx context.Context, name string, startTime float64) error {
-	if err := ioutil.WriteFile(gpi.signalCheckpointFile, []byte(name+"\n"+strconv.FormatFloat(startTime, 'e', -1, 64)), 0644); err != nil {
+	if err := os.WriteFile(gpi.signalCheckpointFile, []byte(name+"\n"+strconv.FormatFloat(startTime, 'e', -1, 64)), 0644); err != nil {
 		testing.ContextLogf(ctx, "Failed to write graphics_Power checkpoint signal file %s", gpi.signalCheckpointFile)
 		return err
 	}
@@ -180,7 +179,7 @@ func (gpi *graphicsPowerInterface) finishCheckpointWithStartTime(ctx context.Con
 // finishCheckpoint writes to signalCheckpointFile monitored by the graphics_Power process, informing it to save a checkpoint.
 // The current checkpoint is started immediately after the previous checkpoint's end.
 func (gpi *graphicsPowerInterface) finishCheckpoint(ctx context.Context, name string) error {
-	if err := ioutil.WriteFile(gpi.signalCheckpointFile, []byte(name), 0644); err != nil {
+	if err := os.WriteFile(gpi.signalCheckpointFile, []byte(name), 0644); err != nil {
 		testing.ContextLogf(ctx, "Failed to write graphics_Power checkpoint signal file %s", gpi.signalCheckpointFile)
 		return err
 	}

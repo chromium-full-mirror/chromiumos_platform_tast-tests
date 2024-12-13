@@ -8,7 +8,6 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
-	"io/ioutil"
 	"os"
 	"path/filepath"
 	"time"
@@ -130,7 +129,7 @@ func (f *backupFixtImpl) SetUp(ctx context.Context, s *testing.FixtState) interf
 		s.Fatal("Failed to reset TPM or system states: ", err)
 	}
 
-	tmpDir, err := ioutil.TempDir("", "cross_version_login")
+	tmpDir, err := os.MkdirTemp("", "cross_version_login")
 	if err != nil {
 		s.Fatal("Failed to create temp directory: ", err)
 	}
@@ -200,7 +199,7 @@ func (f *crossVersionFixtImpl) SetUp(ctx context.Context, s *testing.FixtState) 
 		s.Fatal("Failed to create hwsec local helper: ", err)
 	}
 
-	tmpDir, err := ioutil.TempDir("", "cross_version_login")
+	tmpDir, err := os.MkdirTemp("", "cross_version_login")
 	if err != nil {
 		s.Fatal("Failed to create temp directory: ", err)
 	}
@@ -222,7 +221,7 @@ func (f *crossVersionFixtImpl) SetUp(ctx context.Context, s *testing.FixtState) 
 		configPath = s.DataPath(configName)
 	}
 
-	configJSON, err := ioutil.ReadFile(configPath)
+	configJSON, err := os.ReadFile(configPath)
 	if err != nil {
 		s.Fatalf("Failed to read %q: %v", configPath, err)
 	}

@@ -8,7 +8,7 @@ import (
 	"context"
 	"encoding/xml"
 	"fmt"
-	"io/ioutil"
+	"io"
 	"math"
 	"os"
 	"strings"
@@ -71,7 +71,7 @@ func readSvg(filePath string) (*svg, error) {
 	defer file.Close()
 
 	// Populate the svg struct with the data in the SVG file.
-	byteValue, err := ioutil.ReadAll(file)
+	byteValue, err := io.ReadAll(file)
 	if err != nil {
 		return nil, errors.Wrap(err, "failed to read SVG file")
 	}

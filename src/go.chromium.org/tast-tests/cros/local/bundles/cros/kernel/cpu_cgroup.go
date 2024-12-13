@@ -6,7 +6,6 @@ package kernel
 
 import (
 	"context"
-	"io/ioutil"
 	"os"
 	"path/filepath"
 
@@ -25,7 +24,7 @@ func init() {
 }
 
 func CPUCgroup(ctx context.Context, s *testing.State) {
-	td, err := ioutil.TempDir("", "tast.kernel.CPUCgroup.")
+	td, err := os.MkdirTemp("", "tast.kernel.CPUCgroup.")
 	if err != nil {
 		s.Fatal("Failed to create temp dir: ", err)
 	}

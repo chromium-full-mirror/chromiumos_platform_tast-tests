@@ -6,7 +6,7 @@ package network
 
 import (
 	"context"
-	"io/ioutil"
+	"os"
 
 	"go.chromium.org/tast-tests/cros/local/bundles/cros/network/shillscript"
 	"go.chromium.org/tast-tests/cros/local/chrome"
@@ -73,7 +73,7 @@ func testLoginMultiProfile(ctx context.Context, env *shillscript.TestEnv) error 
 			return err
 		}
 
-		files, err := ioutil.ReadDir(shillscript.ShillUserProfilesDir)
+		files, err := os.ReadDir(shillscript.ShillUserProfilesDir)
 		if err != nil {
 			return err
 		}

@@ -8,7 +8,6 @@ package ghostscript
 
 import (
 	"context"
-	"io/ioutil"
 	"os"
 	"path/filepath"
 
@@ -22,7 +21,7 @@ import (
 // the contents of the given golden file. Some filters may require an extra
 // environment variable to be set, which is given by envVar.
 func RunTest(ctx context.Context, s *testing.State, gsFilter, input, golden, envVar string) {
-	inputContents, err := ioutil.ReadFile(input)
+	inputContents, err := os.ReadFile(input)
 	if err != nil {
 		s.Fatal("Failed to load file contents: ", err)
 	}
@@ -56,7 +55,7 @@ func RunTest(ctx context.Context, s *testing.State, gsFilter, input, golden, env
 		s.Fatalf("Failed to run %s command: %v", gsFilter, err)
 	}
 
-	goldenBytes, err := ioutil.ReadFile(golden)
+	goldenBytes, err := os.ReadFile(golden)
 	if err != nil {
 		s.Fatalf("Failed to read file %s: %v", golden, err)
 	}

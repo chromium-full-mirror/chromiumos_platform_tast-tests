@@ -6,7 +6,6 @@ package arc
 
 import (
 	"context"
-	"io/ioutil"
 	"os"
 	"time"
 
@@ -36,7 +35,7 @@ type DexOptCacheService struct {
 func (c *DexOptCacheService) Generate(ctx context.Context, request *empty.Empty) (res *arcpb.DexOptCacheResponse, retErr error) {
 	testing.ContextLog(ctx, "Generating DexOpt cache")
 
-	targetDir, err := ioutil.TempDir("", "dex_opt_cache")
+	targetDir, err := os.MkdirTemp("", "dex_opt_cache")
 	if err != nil {
 		return nil, errors.Wrap(err, "failed to created target dir for DexOpt cache")
 	}

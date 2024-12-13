@@ -6,7 +6,7 @@ package meta
 
 import (
 	"context"
-	"io/ioutil"
+	"os"
 
 	"go.chromium.org/tast-tests/cros/common/testexec"
 	"go.chromium.org/tast/core/testing"
@@ -29,7 +29,7 @@ func LocalKernelPanic(ctx context.Context, s *testing.State) {
 	}
 
 	// Trigger a kernel panic. Don't try this at home.
-	ioutil.WriteFile("/proc/sysrq-trigger", []byte("c"), 0666)
+	os.WriteFile("/proc/sysrq-trigger", []byte("c"), 0666)
 
 	// Wait until the test timeout is reached.
 	<-ctx.Done()

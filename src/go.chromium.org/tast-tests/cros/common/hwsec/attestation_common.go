@@ -15,7 +15,7 @@ import (
 	"encoding/base64"
 	"encoding/hex"
 	"fmt"
-	"io/ioutil"
+	"io"
 	"math/big"
 	"net/http"
 	"net/url"
@@ -56,7 +56,7 @@ func sendHTTPRequest(req *http.Request) (string, error) {
 	if resp.StatusCode != 200 {
 		return "", errors.Errorf("%v %v", resp.StatusCode, http.StatusText(resp.StatusCode))
 	}
-	respBody, err := ioutil.ReadAll(resp.Body)
+	respBody, err := io.ReadAll(resp.Body)
 	if err != nil {
 		return "", err
 	}

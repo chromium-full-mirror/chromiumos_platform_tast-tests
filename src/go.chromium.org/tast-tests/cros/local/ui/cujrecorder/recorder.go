@@ -10,7 +10,6 @@ import (
 	"encoding/json"
 	"fmt"
 	"io"
-	"io/ioutil"
 	"os"
 	"path"
 	"path/filepath"
@@ -1659,7 +1658,7 @@ func (r *Recorder) SaveHistograms(outDir string) error {
 	if err != nil {
 		return errors.Wrapf(err, "failed to marshall data for %s json file: %v", fileName, r.records)
 	}
-	if err := ioutil.WriteFile(filePath, j, 0644); err != nil {
+	if err := os.WriteFile(filePath, j, 0644); err != nil {
 		return errors.Wrapf(err, "failed to write %s json file", fileName)
 	}
 	return nil

@@ -10,7 +10,7 @@ import (
 	"bytes"
 	"context"
 	"fmt"
-	"io/ioutil"
+	"os"
 	"path/filepath"
 	"text/template"
 
@@ -121,7 +121,7 @@ func (c APConf) Generate(ctx context.Context, dir, ctrlPath string) (string, err
 		{eapUserFilePath, eapUsers},
 		{caCertPath, c.cert.CACred.Cert},
 	} {
-		if err := ioutil.WriteFile(p.path, []byte(p.contents), 0644); err != nil {
+		if err := os.WriteFile(p.path, []byte(p.contents), 0644); err != nil {
 			return "", errors.Wrapf(err, "failed to write file %q", p.path)
 		}
 	}

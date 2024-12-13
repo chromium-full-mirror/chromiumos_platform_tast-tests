@@ -6,7 +6,6 @@ package crash
 
 import (
 	"context"
-	"io/ioutil"
 	"os"
 	"strings"
 
@@ -75,7 +74,7 @@ func saveMountFailureLogs() error {
 		if log.path == "" {
 			continue
 		}
-		if err := ioutil.WriteFile(log.path, []byte(log.contents), 0644); err != nil && !os.IsNotExist(err) {
+		if err := os.WriteFile(log.path, []byte(log.contents), 0644); err != nil && !os.IsNotExist(err) {
 			return errors.Wrapf(err, "failed to write %s", log.path)
 		}
 	}
@@ -122,7 +121,7 @@ func validateCrashLogs(ctx context.Context, outDir string, files map[string][]st
 		}
 
 		f := files[logFileRegex][0]
-		contents, err := ioutil.ReadFile(f)
+		contents, err := os.ReadFile(f)
 		if err != nil {
 			return errors.Wrap(err, "couldn't read log file")
 		}

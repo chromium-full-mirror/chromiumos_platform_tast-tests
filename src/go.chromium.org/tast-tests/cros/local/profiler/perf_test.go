@@ -5,7 +5,6 @@
 package profiler
 
 import (
-	"io/ioutil"
 	"math"
 	"os"
 	"path/filepath"
@@ -34,7 +33,7 @@ func TestParseStatFile(t *testing.T) {
 	defer os.RemoveAll(dir)
 
 	path := filepath.Join(dir, "perf_stat.data")
-	if err := ioutil.WriteFile(path, []byte(data), 0644); err != nil {
+	if err := os.WriteFile(path, []byte(data), 0644); err != nil {
 		t.Fatal("Failed to create perf_stat.data: ", err)
 	}
 
@@ -76,7 +75,7 @@ func TestParseStatFileECore(t *testing.T) {
 	defer os.RemoveAll(dir)
 
 	path := filepath.Join(dir, "perf_stat.data")
-	if err := ioutil.WriteFile(path, []byte(data), 0644); err != nil {
+	if err := os.WriteFile(path, []byte(data), 0644); err != nil {
 		t.Fatal("Failed to create perf_stat.data: ", err)
 	}
 
@@ -116,7 +115,7 @@ func TestParseStatFileNoCycle(t *testing.T) {
 	defer os.RemoveAll(dir)
 
 	path := filepath.Join(dir, "perf_stat_no_cycle.data")
-	if err := ioutil.WriteFile(path, []byte(data), 0644); err != nil {
+	if err := os.WriteFile(path, []byte(data), 0644); err != nil {
 		t.Fatal("Failed to create perf_stat_no_cycle.data: ", err)
 	}
 
@@ -138,7 +137,7 @@ func TestParseStatInstructionsAtIntervals(t *testing.T) {
 	defer os.RemoveAll(dir)
 
 	path := filepath.Join(dir, "perf_stat_instructions_at_intervals.data")
-	if err := ioutil.WriteFile(path, []byte(data), 0644); err != nil {
+	if err := os.WriteFile(path, []byte(data), 0644); err != nil {
 		t.Fatal("Failed to create perf_stat_instructions_at_intervals.data: ", err)
 	}
 

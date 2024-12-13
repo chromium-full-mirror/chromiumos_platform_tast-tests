@@ -7,7 +7,7 @@ package memoryuser
 import (
 	"context"
 	"fmt"
-	"io/ioutil"
+	"os"
 	"path/filepath"
 
 	"go.chromium.org/tast-tests/cros/local/cryptohome"
@@ -35,11 +35,11 @@ func (vt *VMTask) Run(ctx context.Context, testEnv *TestEnv) error {
 	vmMountDir := fmt.Sprintf("/media/fuse/crostini_%s_%s_%s", ownerID, vm.DefaultVMName, vm.DefaultContainerName)
 	for _, f := range vt.Files {
 		name := filepath.Base(f)
-		input, err := ioutil.ReadFile(f)
+		input, err := os.ReadFile(f)
 		if err != nil {
 			return errors.Wrap(err, "cannot read data file")
 		}
-		if err = ioutil.WriteFile(filepath.Join(vmMountDir, name), input, 0644); err != nil {
+		if err = os.WriteFile(filepath.Join(vmMountDir, name), input, 0644); err != nil {
 			return errors.Wrap(err, "cannot copy data file into VM directory")
 		}
 	}

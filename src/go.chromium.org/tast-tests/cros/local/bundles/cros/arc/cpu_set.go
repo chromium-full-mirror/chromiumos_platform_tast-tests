@@ -7,7 +7,7 @@ package arc
 import (
 	"context"
 	"fmt"
-	"io/ioutil"
+	"os"
 	"regexp"
 	"runtime"
 	"strings"
@@ -144,7 +144,7 @@ func isHeterogeneousCores(ctx context.Context) (bool, error) {
 		return false, nil
 	}
 
-	out, err := ioutil.ReadFile("/proc/cpuinfo")
+	out, err := os.ReadFile("/proc/cpuinfo")
 
 	if err != nil {
 		return false, errors.Wrap(err, "failed to read cpuinfo")
@@ -191,7 +191,7 @@ func readCPUSetInfo(ctx context.Context, t string) (string, []byte, error) {
 	path := fmt.Sprintf("/proc/%d/root/dev/cpuset/%s/effective_cpus", initPID, t)
 	// cgroup pseudo file cannot be "adb pull"ed. Additionally, it is not
 	// accessible via adb shell user in P. Access by procfs instead.
-	out, err := ioutil.ReadFile(path)
+	out, err := os.ReadFile(path)
 	return path, out, err
 }
 

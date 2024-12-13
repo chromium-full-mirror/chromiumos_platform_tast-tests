@@ -7,7 +7,6 @@ package security
 import (
 	"context"
 	"fmt"
-	"io/ioutil"
 	"os"
 	"path/filepath"
 	"strings"
@@ -35,13 +34,13 @@ func SymlinkRestrictions(ctx context.Context, s *testing.State) {
 	// Check that symlink protection is enabled.
 	// See https://wiki.ubuntu.com/SecurityTeam/Roadmap/KernelHardening for details.
 	const procPath = "/proc/sys/fs/protected_symlinks"
-	if b, err := ioutil.ReadFile(procPath); err != nil {
+	if b, err := os.ReadFile(procPath); err != nil {
 		s.Fatalf("Failed to read %s: %v", procPath, err)
 	} else if v := strings.TrimSpace(string(b)); v != "1" {
 		s.Fatalf("%v contains %q; want \"1\"", procPath, v)
 	}
 
-	td, err := ioutil.TempDir("", "tast.security.SymlinkRestrictions.")
+	td, err := os.MkdirTemp("", "tast.security.SymlinkRestrictions.")
 	if err != nil {
 		s.Fatal("Failed to create temp dir: ", err)
 	}
@@ -53,7 +52,7 @@ func SymlinkRestrictions(ctx context.Context, s *testing.State) {
 	// As an initial high-level check, verify that we won't follow a chronos-owned symlink to a restricted file.
 	linkPath := filepath.Join(td, "evil-symlink")
 	filesetup.CreateSymlink("/etc/shadow", linkPath, int(sysutil.ChronosUID))
-	if _, err := ioutil.ReadFile(linkPath); err == nil {
+	if _, err := os.ReadFile(linkPath); err == nil {
 		s.Errorf("Following malicious symlink %v was permitted", linkPath)
 	}
 

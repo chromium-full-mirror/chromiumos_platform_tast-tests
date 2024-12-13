@@ -10,7 +10,6 @@ import (
 	"crypto/sha256"
 	"encoding/hex"
 	"encoding/pem"
-	"io/ioutil"
 	"os"
 	"path/filepath"
 
@@ -33,7 +32,7 @@ func PrepareCertSHA256Fingerprint(certs certificate.CertStore) (string, error) {
 
 // PreparePKCS12Cert create a PKCS#12 format certificate from its client's certificate and private key.
 func PreparePKCS12Cert(ctx context.Context, certs certificate.CertStore) (cert string, retErr error) {
-	tmpDir, err := ioutil.TempDir("", "")
+	tmpDir, err := os.MkdirTemp("", "")
 	if err != nil {
 		return "", errors.Wrap(err, "failed to create a temporary directory")
 	}
@@ -55,7 +54,7 @@ func PreparePKCS12Cert(ctx context.Context, certs certificate.CertStore) (cert s
 		{clientCertPath, certs.ClientCred.Cert},
 		{privateKeyPath, certs.ClientCred.PrivateKey},
 	} {
-		if err := ioutil.WriteFile(p.path, []byte(p.contents), 0644); err != nil {
+		if err := os.WriteFile(p.path, []byte(p.contents), 0644); err != nil {
 			return "", errors.Wrapf(err, "failed to write file %q", p.path)
 		}
 	}

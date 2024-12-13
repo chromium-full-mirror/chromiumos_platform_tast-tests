@@ -8,7 +8,7 @@ package apps
 import (
 	"context"
 	"fmt"
-	"io/ioutil"
+	"os"
 	"path/filepath"
 	"regexp"
 	"strings"
@@ -273,7 +273,7 @@ func SaveWaylandDebugLogs(ctx context.Context, cont *vm.Container) {
 		return
 	}
 
-	err = ioutil.WriteFile(path, output, 0644)
+	err = os.WriteFile(path, output, 0644)
 	if err != nil {
 		testing.ContextLogf(ctx, "Error writing %s to tast output: %q", WaylandDebugFile, err)
 		return

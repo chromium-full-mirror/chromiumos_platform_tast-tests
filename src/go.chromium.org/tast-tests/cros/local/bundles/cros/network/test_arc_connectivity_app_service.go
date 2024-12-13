@@ -7,7 +7,6 @@ package network
 import (
 	"context"
 	"fmt"
-	"io/ioutil"
 	"os"
 	"regexp"
 
@@ -42,7 +41,7 @@ type TestArcConnectivityAppService struct {
 // RunTest verifies that Android apps can authenticate to remote proxy servers via the system-proxy daemon.
 // This is the implementation of network.TestArcConnectivityAppService/RunTest gRPC.
 func (s *TestArcConnectivityAppService) RunTest(ctx context.Context, req *empty.Empty) (_ *empty.Empty, retErr error) {
-	tmpdir, err := ioutil.TempDir("", "fdms-")
+	tmpdir, err := os.MkdirTemp("", "fdms-")
 	if err != nil {
 		return nil, errors.Wrap(err, "failed to create temp dir")
 	}

@@ -6,7 +6,6 @@ package arc
 
 import (
 	"context"
-	"io/ioutil"
 	"os"
 	"path/filepath"
 	"regexp"
@@ -43,7 +42,7 @@ type TTSCacheService struct {
 
 // Generate generates TTS cache.
 func (c *TTSCacheService) Generate(ctx context.Context, request *arcpb.TTSCacheRequest) (res *arcpb.TTSCacheResponse, retErr error) {
-	targetDir, err := ioutil.TempDir("", "tts_cache")
+	targetDir, err := os.MkdirTemp("", "tts_cache")
 	if err != nil {
 		return nil, errors.Wrap(err, "failed to created target dir for TTS cache")
 	}

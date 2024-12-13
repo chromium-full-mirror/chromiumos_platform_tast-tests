@@ -6,7 +6,6 @@ package sysutil
 
 import (
 	"fmt"
-	"io/ioutil"
 	"os"
 	"regexp"
 	"strconv"
@@ -210,7 +209,7 @@ func MountInfoForPID(pid int) ([]MountInfo, error) {
 	}
 	path := fmt.Sprintf("/proc/%d/mountinfo", pid)
 
-	b, err := ioutil.ReadFile(path)
+	b, err := os.ReadFile(path)
 	if err != nil {
 		return nil, errors.Wrap(err, "failed to read: "+path)
 	}

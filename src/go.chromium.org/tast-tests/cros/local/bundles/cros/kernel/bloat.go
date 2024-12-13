@@ -9,7 +9,7 @@ import (
 	"bytes"
 	"context"
 	"fmt"
-	"io/ioutil"
+	"io/fs"
 	"os"
 	"path/filepath"
 	"regexp"
@@ -79,7 +79,7 @@ func findUnusedDriversAndDevices(ctx context.Context, s *testing.State, pv *perf
 	}
 	defer unusedModuleDriversFile.Close()
 
-	busses, err := ioutil.ReadDir(sysBus)
+	busses, err := os.ReadDir(sysBus)
 	if err != nil {
 		s.Fatalf("Failed to read %s for busses: %s", sysBus, err)
 	}
@@ -87,7 +87,7 @@ func findUnusedDriversAndDevices(ctx context.Context, s *testing.State, pv *perf
 	for _, bus := range busses {
 		busName := bus.Name()
 		driversDir := filepath.Join(sysBus, busName, "drivers/")
-		drivers, err := ioutil.ReadDir(driversDir)
+		drivers, err := os.ReadDir(driversDir)
 		if err != nil {
 			s.Fatalf("Failed to find drivers for bus %s: %s", busName, err)
 		}
@@ -95,7 +95,7 @@ func findUnusedDriversAndDevices(ctx context.Context, s *testing.State, pv *perf
 		for _, driver := range drivers {
 			driverName := driver.Name()
 			driverDir := filepath.Join(driversDir, driverName)
-			files, err := ioutil.ReadDir(driverDir)
+			files, err := os.ReadDir(driverDir)
 			if err != nil {
 				s.Fatalf("Failed to read driver directory for %s: %s", driverName, err)
 			}
@@ -110,7 +110,7 @@ func findUnusedDriversAndDevices(ctx context.Context, s *testing.State, pv *perf
 				}
 
 				// Assume it's a device symlink
-				if file.Mode()&os.ModeSymlink == os.ModeSymlink {
+				if file.Type()&fs.ModeSymlink == fs.ModeSymlink {
 					hasDevice = true
 				}
 			}
@@ -144,7 +144,7 @@ func findUnusedDriversAndDevices(ctx context.Context, s *testing.State, pv *perf
 		}
 
 		devicesDir := filepath.Join(sysBus, busName, "devices/")
-		devices, err := ioutil.ReadDir(devicesDir)
+		devices, err := os.ReadDir(devicesDir)
 		if err != nil {
 			s.Fatalf("Failed to find devices for bus %s: %s", busName, err)
 		}
@@ -167,7 +167,7 @@ func findUnusedDriversAndDevices(ctx context.Context, s *testing.State, pv *perf
 
 			// Ignore PCI devices that aren't enabled as a driver can't attach
 			if busName == "pci" {
-				if b, err := ioutil.ReadFile(filepath.Join(deviceDir, "enable")); err == nil {
+				if b, err := os.ReadFile(filepath.Join(deviceDir, "enable")); err == nil {
 					if enabled, err := strconv.ParseInt(string(bytes.TrimSpace(b)), 10, 64); err == nil {
 						if enabled == 0 {
 							continue

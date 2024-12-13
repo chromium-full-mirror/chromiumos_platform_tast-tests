@@ -6,7 +6,6 @@ package launcher
 
 import (
 	"context"
-	"io/ioutil"
 	"os"
 	"time"
 
@@ -53,7 +52,7 @@ func RemoveAppsFromFolder(ctx context.Context, s *testing.State) {
 	ctx, cancel := ctxutil.Shorten(ctx, 10*time.Second)
 	defer cancel()
 
-	extDirBase, err := ioutil.TempDir("", "")
+	extDirBase, err := os.MkdirTemp("", "")
 	if err != nil {
 		s.Fatal("Failed to create a temporary directory: ", err)
 	}

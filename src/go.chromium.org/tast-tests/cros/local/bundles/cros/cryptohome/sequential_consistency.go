@@ -8,7 +8,6 @@ import (
 	"bytes"
 	"context"
 	"fmt"
-	"io/ioutil"
 	"os"
 	"path/filepath"
 	"time"
@@ -172,7 +171,7 @@ func SequentialConsistency(ctx context.Context, s *testing.State) {
 			if _, err := os.Stat(fileName); err == nil {
 				// File exists.
 				fileCreated[i] = true
-				contents, err := ioutil.ReadFile(fileName)
+				contents, err := os.ReadFile(fileName)
 				if err != nil {
 					return testing.PollBreak(errors.Wrapf(err, "could not read %s", fileName))
 				}

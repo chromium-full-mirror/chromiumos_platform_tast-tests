@@ -7,7 +7,7 @@ package typec
 import (
 	"context"
 	"encoding/json"
-	"io/ioutil"
+	"os"
 	"strings"
 	"time"
 
@@ -85,7 +85,7 @@ func TbtHotplugUnplug(ctx context.Context, s *testing.State) {
 	}
 
 	// Read json config file.
-	jsonData, err := ioutil.ReadFile(s.DataPath(testConfig))
+	jsonData, err := os.ReadFile(s.DataPath(testConfig))
 	if err != nil {
 		s.Fatal("Failed to read response data: ", err)
 	}

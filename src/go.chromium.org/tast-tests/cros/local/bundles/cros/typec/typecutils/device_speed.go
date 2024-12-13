@@ -9,7 +9,6 @@ import (
 	"context"
 	"crypto/sha256"
 	"io"
-	"io/ioutil"
 	"os"
 	"regexp"
 	"strings"
@@ -136,7 +135,7 @@ func FileChecksum(path string) ([]byte, error) {
 
 // RemovableDirs returns the connected removable devices.
 func RemovableDirs(mountPath string) ([]string, error) {
-	fis, err := ioutil.ReadDir(mountPath)
+	fis, err := os.ReadDir(mountPath)
 	if err != nil {
 		return nil, errors.Wrap(err, "failed to read directory")
 	}

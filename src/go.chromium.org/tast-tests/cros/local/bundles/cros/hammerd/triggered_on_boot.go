@@ -8,7 +8,6 @@ import (
 	"bufio"
 	"context"
 	"fmt"
-	"io/ioutil"
 	"os"
 	"path/filepath"
 	"strings"
@@ -109,7 +108,7 @@ func TriggeredOnBoot(ctx context.Context, s *testing.State) {
 
 	// Hammerd writes the USB device path to the base into this file.
 	devicePathFile := "/run/metrics/external/hammer/hammer_sysfs_path"
-	buf, err := ioutil.ReadFile(devicePathFile)
+	buf, err := os.ReadFile(devicePathFile)
 	if err != nil {
 		s.Fatal("Failed to read the device path: ", devicePathFile)
 	}
@@ -117,7 +116,7 @@ func TriggeredOnBoot(ctx context.Context, s *testing.State) {
 
 	// Check if autosuspend is enabled.
 	powerControlFile := filepath.Join(sysfsPath, "power/control")
-	buf, err = ioutil.ReadFile(powerControlFile)
+	buf, err = os.ReadFile(powerControlFile)
 	if err != nil {
 		s.Fatal("Failed to read the power control: ", powerControlFile)
 	} else if control := strings.TrimSuffix(string(buf), "\n"); control != "auto" {

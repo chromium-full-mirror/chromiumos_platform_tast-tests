@@ -6,7 +6,7 @@ package intel
 
 import (
 	"context"
-	"io/ioutil"
+	"os"
 	"regexp"
 	"time"
 
@@ -86,7 +86,7 @@ func HdmiAdapterSuspendResume(ctx context.Context, s *testing.State) {
 	}
 
 	cmdOutput := func(ctx context.Context, file string) string {
-		out, err := ioutil.ReadFile(file)
+		out, err := os.ReadFile(file)
 		if err != nil {
 			s.Fatalf("Failed to read %q file: %v", file, err)
 		}
@@ -133,7 +133,7 @@ func HdmiAdapterSuspendResume(ctx context.Context, s *testing.State) {
 }
 
 func assertSLPCounter(ctx context.Context, slpOpSetPre string) error {
-	slpOpSetPost, err := ioutil.ReadFile(slpS0Files)
+	slpOpSetPost, err := os.ReadFile(slpS0Files)
 	if err != nil {
 		return errors.Wrapf(err, "failed to read %q file", slpS0Files)
 	}
@@ -147,7 +147,7 @@ func assertSLPCounter(ctx context.Context, slpOpSetPre string) error {
 }
 
 func assertPackageCStates(ctx context.Context, pkgOpSetPre string) error {
-	pkgOpSetPostOutput, err := ioutil.ReadFile(packageCstateFiles)
+	pkgOpSetPostOutput, err := os.ReadFile(packageCstateFiles)
 	if err != nil {
 		return errors.Wrapf(err, "failed to read %q file", packageCstateFiles)
 	}

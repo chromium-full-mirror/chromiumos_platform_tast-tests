@@ -6,7 +6,6 @@ package video
 
 import (
 	"context"
-	"io/ioutil"
 	"os"
 	"path/filepath"
 	"regexp"
@@ -93,7 +92,7 @@ func PlatformV4L2(ctx context.Context, s *testing.State) {
 			s.Fatalf("Failed to run %s: %v", command[0], err)
 		}
 
-		contents, err := ioutil.ReadFile(logFile)
+		contents, err := os.ReadFile(logFile)
 		if err != nil {
 			s.Fatal("Failed to read the log file: ", err)
 		}

@@ -7,7 +7,6 @@ package crostini
 import (
 	"context"
 	"fmt"
-	"io/ioutil"
 	"os"
 	"path/filepath"
 	"strings"
@@ -92,7 +91,7 @@ func AppGeditFilesharing(ctx context.Context, s *testing.State) {
 	}
 
 	// Create a temp text file in the /Downloads folder to use in this test.
-	if err := ioutil.WriteFile(tmpFileCrosDownloadsPath, []byte(tmpFileContents), 0644); err != nil {
+	if err := os.WriteFile(tmpFileCrosDownloadsPath, []byte(tmpFileContents), 0644); err != nil {
 		s.Fatal("Failed to create text file in Downloads folder: ", err)
 	}
 	defer func() {

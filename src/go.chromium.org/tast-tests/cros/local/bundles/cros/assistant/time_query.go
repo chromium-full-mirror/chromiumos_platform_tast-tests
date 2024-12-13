@@ -6,7 +6,7 @@ package assistant
 
 import (
 	"context"
-	"io/ioutil"
+	"os"
 	"path/filepath"
 	"regexp"
 	"strconv"
@@ -104,7 +104,7 @@ func parseTimeNearNow(ctx context.Context, html string, now time.Time) ([]time.T
 		if !ok {
 			testing.ContextLog(ctx, "Failed to log response because out dir not available")
 		} else {
-			if err := ioutil.WriteFile(filepath.Join(outDir, logName), []byte(html), 0644); err != nil {
+			if err := os.WriteFile(filepath.Join(outDir, logName), []byte(html), 0644); err != nil {
 				testing.ContextLogf(ctx, "Failed to log response to %s: %v", logName, err)
 			}
 		}

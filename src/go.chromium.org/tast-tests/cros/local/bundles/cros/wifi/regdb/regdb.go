@@ -8,7 +8,7 @@ package regdb
 import (
 	"bytes"
 	"encoding/binary"
-	"io/ioutil"
+	"os"
 	"unicode"
 
 	"go.chromium.org/tast/core/errors"
@@ -120,7 +120,7 @@ func newRegulatoryDB(b []byte) (*RegulatoryDB, error) {
 
 // NewRegulatoryDB retrieves and parses the system's WiFi regulatory database.
 func NewRegulatoryDB() (*RegulatoryDB, error) {
-	b, err := ioutil.ReadFile(regdbPath)
+	b, err := os.ReadFile(regdbPath)
 	if err != nil {
 		return nil, err
 	}

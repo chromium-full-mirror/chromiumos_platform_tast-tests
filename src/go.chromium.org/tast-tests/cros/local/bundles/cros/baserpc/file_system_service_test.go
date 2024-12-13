@@ -7,7 +7,6 @@ package baserpc
 import (
 	"context"
 	"fmt"
-	"io/ioutil"
 	"net"
 	"os"
 	"path/filepath"
@@ -103,7 +102,7 @@ func TestStat(t *testing.T) {
 	defer os.RemoveAll(dir)
 
 	path := filepath.Join(dir, "foo")
-	if err := ioutil.WriteFile(path, []byte("12345"), 0666); err != nil {
+	if err := os.WriteFile(path, []byte("12345"), 0666); err != nil {
 		t.Fatal("Failed to create file: ", err)
 	}
 
@@ -162,7 +161,7 @@ func TestReadFile(t *testing.T) {
 
 	path := filepath.Join(dir, "foo")
 	const content = "12345"
-	if err := ioutil.WriteFile(path, []byte(content), 0666); err != nil {
+	if err := os.WriteFile(path, []byte(content), 0666); err != nil {
 		t.Fatal("Failed to create file: ", err)
 	}
 
@@ -190,7 +189,7 @@ func TestOSErrors(t *testing.T) {
 	defer os.RemoveAll(dir)
 
 	path := filepath.Join(dir, "unreadable")
-	if err := ioutil.WriteFile(path, nil, 0); err != nil {
+	if err := os.WriteFile(path, nil, 0); err != nil {
 		t.Fatal("Failed to create file: ", err)
 	}
 

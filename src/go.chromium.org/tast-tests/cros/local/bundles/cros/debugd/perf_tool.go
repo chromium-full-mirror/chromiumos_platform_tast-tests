@@ -9,7 +9,6 @@ import (
 	"context"
 	"fmt"
 	"io"
-	"io/ioutil"
 	"os"
 	"os/exec"
 	"strconv"
@@ -412,7 +411,7 @@ func testRestoreCPUIdle(ctx context.Context, s *testing.State, d *debugd.Debugd)
 func checkCPUIdleDisabled(disabled bool) error {
 	const cpuTopologyLocation = "/sys/devices/system/cpu/online"
 	const cpuidlePathPat = "/sys/devices/system/cpu/cpu%d/cpuidle/state%d/disable"
-	b, err := ioutil.ReadFile(cpuTopologyLocation)
+	b, err := os.ReadFile(cpuTopologyLocation)
 	if err != nil {
 		return errors.Wrapf(err, "failed to read %s", cpuTopologyLocation)
 	}

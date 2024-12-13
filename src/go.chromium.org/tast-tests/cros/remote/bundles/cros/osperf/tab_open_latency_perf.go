@@ -7,7 +7,6 @@ package osperf
 import (
 	"context"
 	"encoding/json"
-	"io/ioutil"
 	"os"
 	"path/filepath"
 	"strings"
@@ -145,7 +144,7 @@ func runBluebench(ctx context.Context, s *testing.State, cl *rpc.Client, extDir,
 	if err = json.Unmarshal(jsonString, &info); err != nil {
 		s.Fatal("Failed to parse tabOpenLatencyTestResult: ", err)
 	}
-	if err := ioutil.WriteFile(filepath.Join(s.OutDir(), "bluebench_log.txt"),
+	if err := os.WriteFile(filepath.Join(s.OutDir(), "bluebench_log.txt"),
 		[]byte(info.ResultLog), 0644); err != nil {
 		s.Error("Failed to write bluebench_log.txt: ", err)
 	}

@@ -8,7 +8,6 @@ import (
 	"bytes"
 	"context"
 	"encoding/base64"
-	"io/ioutil"
 	"os"
 	"path/filepath"
 	"regexp"
@@ -262,7 +261,7 @@ func (r *ScreenRecorder) SaveInBytes(ctx context.Context, filepath string) error
 	if _, err := buf.ReadFrom(reader); err != nil {
 		return errors.Wrap(err, "failed to read from decoder")
 	}
-	if err := ioutil.WriteFile(filepath, buf.Bytes(), 0644); err != nil {
+	if err := os.WriteFile(filepath, buf.Bytes(), 0644); err != nil {
 		return errors.Wrapf(err, "failed to dump bytes to %s", filepath)
 	}
 	return nil
@@ -271,7 +270,7 @@ func (r *ScreenRecorder) SaveInBytes(ctx context.Context, filepath string) error
 // SaveInString saves the latest encoded string into a string file.
 func (r *ScreenRecorder) SaveInString(ctx context.Context, filepath string) error {
 	result := strings.Split(r.result, ",")[1]
-	if err := ioutil.WriteFile(filepath, []byte(result), 0644); err != nil {
+	if err := os.WriteFile(filepath, []byte(result), 0644); err != nil {
 		return errors.Wrapf(err, "failed to dump string to %s", filepath)
 	}
 	return nil
@@ -461,7 +460,7 @@ func StartRecordFromKB(ctx context.Context, tconn *chrome.TestConn, kb *input.Ke
 	desktop := nodewith.Role(role.Window).First()
 	ui := New(tconn)
 
-	files, err := ioutil.ReadDir(downloadsPath)
+	files, err := os.ReadDir(downloadsPath)
 	if err != nil {
 		return errors.Wrap(err, "failed to read files from Downloads")
 	}
@@ -469,7 +468,7 @@ func StartRecordFromKB(ctx context.Context, tconn *chrome.TestConn, kb *input.Ke
 	const timeout = 10 * time.Second
 	checkRecordFile := func(ctx context.Context) error {
 		return testing.Poll(ctx, func(ctx context.Context) error {
-			files, err = ioutil.ReadDir(downloadsPath)
+			files, err = os.ReadDir(downloadsPath)
 			if err != nil {
 				return errors.Wrap(err, "failed to read files from Downloads")
 			}
@@ -510,7 +509,7 @@ var ScreenRecordStopButton = nodewith.Name("Stop screen recording").Role(role.Bu
 // SaveRecordFromKBOnError saves the recording from StartRecordFromKB.
 // This can be used without StopRecordFromKBAndSaveOnError if the screen recording was stopped automatically (i.e. if the screen was locked).
 func SaveRecordFromKBOnError(ctx context.Context, tconn *chrome.TestConn, hasError func() bool, dir, downloadsPath string) error {
-	files, err := ioutil.ReadDir(downloadsPath)
+	files, err := os.ReadDir(downloadsPath)
 	if err != nil {
 		return errors.Wrap(err, "failed to read files from Downloads")
 	}

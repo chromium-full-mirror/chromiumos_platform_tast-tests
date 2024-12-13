@@ -6,7 +6,7 @@ package arc
 
 import (
 	"context"
-	"io/ioutil"
+	"os"
 	"path/filepath"
 	"strings"
 	"time"
@@ -146,7 +146,7 @@ func CxxCrash(ctx context.Context, s *testing.State) {
 		// The time to wait for removal of temporary files. Typically they are removed in a few seconds.
 		const pollingTimeout = 10 * time.Second
 		if err := arc.PollWithReadOnlyAndroidData(ctx, cr.NormalizedUser(), func(c context.Context) error {
-			files, err := ioutil.ReadDir(temporaryCrashDir)
+			files, err := os.ReadDir(temporaryCrashDir)
 			if err != nil {
 				return arc.PollBreakIfNotEUCLEANOnVirtioBlkData(ctx, err)
 			}

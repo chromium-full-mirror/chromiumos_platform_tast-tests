@@ -7,7 +7,6 @@ package policy
 import (
 	"context"
 	"fmt"
-	"io/ioutil"
 	"net/http"
 	"net/http/httptest"
 	"os"
@@ -67,7 +66,7 @@ func DisableScreenshotsExtension(ctx context.Context, s *testing.State) {
 
 	fdms := s.FixtValue().(*fakedms.FakeDMS)
 
-	extDir, err := ioutil.TempDir("", "screen_shooter_extension")
+	extDir, err := os.MkdirTemp("", "screen_shooter_extension")
 	if err != nil {
 		s.Fatal("Failed to create temp dir: ", err)
 	}

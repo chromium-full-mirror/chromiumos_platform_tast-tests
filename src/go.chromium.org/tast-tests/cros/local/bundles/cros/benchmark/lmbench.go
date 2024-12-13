@@ -7,8 +7,8 @@ package benchmark
 import (
 	"context"
 	"encoding/json"
-	"io/ioutil"
 	"math"
+	"os"
 	"path"
 	"regexp"
 	"strconv"
@@ -251,7 +251,7 @@ func LMbench(ctx context.Context, s *testing.State) {
 	if err != nil {
 		s.Fatal("Failed to marshal lmbench data: ", err)
 	}
-	if err := ioutil.WriteFile(filePath, j, 0644); err != nil {
+	if err := os.WriteFile(filePath, j, 0644); err != nil {
 		s.Fatal("Failed to save lmbench data: ", err)
 	}
 }

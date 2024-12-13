@@ -9,7 +9,6 @@ import (
 	"context"
 	"fmt"
 	"image"
-	"io/ioutil"
 	"os"
 	"path/filepath"
 	"strconv"
@@ -78,7 +77,7 @@ func AdvancedScan(ctx context.Context, s *testing.State) {
 	ctx, cancel := ctxutil.Shorten(ctx, 5*time.Second)
 	defer cancel()
 
-	extDir, err := ioutil.TempDir("", "tast.documentscanapi.AdvancedScan.")
+	extDir, err := os.MkdirTemp("", "tast.documentscanapi.AdvancedScan.")
 	if err != nil {
 		s.Fatal("Failed to create temp extension dir: ", err)
 	}

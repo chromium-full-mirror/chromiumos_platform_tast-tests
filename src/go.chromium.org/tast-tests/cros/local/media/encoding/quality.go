@@ -6,7 +6,6 @@ package encoding
 
 import (
 	"context"
-	"io/ioutil"
 	"os"
 	"path/filepath"
 	"regexp"
@@ -42,7 +41,7 @@ var regExpVMAF = regexp.MustCompile(`.*<metric name="vmaf".* mean="(\d+\.\d+)"`)
 
 // extractValues parses logFile using regExps and returns matched float64 values.
 func extractValues(logFile string, regExps []*regexp.Regexp) (values []float64, err error) {
-	b, err := ioutil.ReadFile(logFile)
+	b, err := os.ReadFile(logFile)
 	if err != nil {
 		return values, errors.Wrapf(err, "failed to read file %s", logFile)
 	}

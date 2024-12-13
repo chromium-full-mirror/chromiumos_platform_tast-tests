@@ -7,7 +7,7 @@ package fixtures
 import (
 	"context"
 	"encoding/json"
-	"io/ioutil"
+	"os"
 	"path/filepath"
 
 	"go.chromium.org/tast-tests/cros/local/chrome"
@@ -34,7 +34,7 @@ func dumpPolicies(ctx context.Context, tconn *chrome.TestConn, fileName string) 
 	}
 
 	// Dump all policies as seen by Chrome to the tests OutDir.
-	if err := ioutil.WriteFile(filepath.Join(dir, fileName), b, 0644); err != nil {
+	if err := os.WriteFile(filepath.Join(dir, fileName), b, 0644); err != nil {
 		return errors.Wrap(err, "failed to dump policies to file")
 	}
 	return nil

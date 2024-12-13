@@ -6,7 +6,6 @@
 package utils
 
 import (
-	"io/ioutil"
 	"os"
 	"strings"
 
@@ -14,7 +13,7 @@ import (
 )
 
 // For mocking
-var readFile = ioutil.ReadFile
+var readFile = os.ReadFile
 
 // ReadStringFileWithLeadingSpaces reads a file and returns its content as
 // string while keeping the leading spaces.

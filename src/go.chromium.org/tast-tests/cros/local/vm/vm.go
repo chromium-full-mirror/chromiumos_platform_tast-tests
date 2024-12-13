@@ -8,7 +8,7 @@ import (
 	"bytes"
 	"context"
 	"encoding/json"
-	"io/ioutil"
+	"os"
 	"path/filepath"
 	"strconv"
 	"strings"
@@ -381,7 +381,7 @@ func (vm *VM) TrySaveContainerLogs(ctx context.Context, outDir string) {
 	}
 
 	path := filepath.Join(outDir, "crostini_journalctl.txt")
-	err = ioutil.WriteFile(path, []byte(output), 0644)
+	err = os.WriteFile(path, []byte(output), 0644)
 	if err != nil {
 		testing.ContextLog(ctx, "Error writing journalctl to log: ", err)
 	}

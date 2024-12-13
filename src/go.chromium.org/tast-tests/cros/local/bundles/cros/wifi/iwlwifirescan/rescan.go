@@ -8,7 +8,7 @@ package iwlwifirescan
 import (
 	"context"
 	"fmt"
-	"io/ioutil"
+	"os"
 	"time"
 
 	"github.com/godbus/dbus/v5"
@@ -99,7 +99,7 @@ func removeIfaceAndWait(ctx context.Context, m *shill.Manager, iface string) err
 	}()
 
 	driverPath := fmt.Sprintf("/sys/class/net/%s/device/remove", iface)
-	if err := ioutil.WriteFile(driverPath, []byte("1"), 0200); err != nil {
+	if err := os.WriteFile(driverPath, []byte("1"), 0200); err != nil {
 		return errors.Wrapf(err, "could not remove %s driver: %s", iface, err.Error())
 	}
 
@@ -119,7 +119,7 @@ func RemoveIfaceAndWaitForRecovery(ctx context.Context) error {
 		return errors.Wrap(err, "could not get a WiFi interface")
 	}
 	rescanFile := fmt.Sprintf("/sys/class/net/%s/device/driver/module/parameters/remove_when_gone", iface)
-	out, err := ioutil.ReadFile(rescanFile)
+	out, err := os.ReadFile(rescanFile)
 	if err != nil {
 		return errors.Wrap(err, "could not read rescan file")
 	} else if string(out) != "Y\n" {

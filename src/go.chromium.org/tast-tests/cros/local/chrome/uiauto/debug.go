@@ -6,7 +6,7 @@ package uiauto
 
 import (
 	"context"
-	"io/ioutil"
+	"os"
 
 	"go.chromium.org/tast-tests/cros/local/chrome"
 )
@@ -25,5 +25,5 @@ func LogRootDebugInfo(ctx context.Context, tconn *chrome.TestConn, filename stri
 	if err != nil {
 		return err
 	}
-	return ioutil.WriteFile(filename, []byte(debugInfo), 0644)
+	return os.WriteFile(filename, []byte(debugInfo), 0644)
 }

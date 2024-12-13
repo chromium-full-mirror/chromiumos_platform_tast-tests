@@ -6,7 +6,7 @@ package kernel
 
 import (
 	"context"
-	"io/ioutil"
+	"os"
 	"strconv"
 	"strings"
 
@@ -44,7 +44,7 @@ func StackEntropy(ctx context.Context, s *testing.State) {
 	const lkdtm = "/sys/kernel/debug/provoke-crash/DIRECT"
 
 	for i := 0; i < 1000; i++ {
-		if err := ioutil.WriteFile(lkdtm, []byte("REPORT_STACK"), 0); err != nil {
+		if err := os.WriteFile(lkdtm, []byte("REPORT_STACK"), 0); err != nil {
 			s.Fatal("Failed to report kernel stack offset with lkdtm: ", err)
 		}
 	}

@@ -7,7 +7,6 @@ package crostini
 import (
 	"context"
 	"fmt"
-	"io/ioutil"
 	"math/rand"
 	"os"
 	"path/filepath"
@@ -123,7 +122,7 @@ func ShareDrive(ctx context.Context, s *testing.State) {
 	if err := os.MkdirAll(folderPath, 0755); err != nil {
 		s.Fatal("Failed to create test folder in Drive: ", err)
 	}
-	if err := ioutil.WriteFile(filepath.Join(folderPath, testFile), []byte(testString), 0755); err != nil {
+	if err := os.WriteFile(filepath.Join(folderPath, testFile), []byte(testString), 0755); err != nil {
 		s.Fatal("Failed to create file in Drive: ", err)
 	}
 	// With the line above the file is not executable. Chmod is necessary here.
@@ -136,7 +135,7 @@ func ShareDrive(ctx context.Context, s *testing.State) {
 	if err != nil {
 		s.Fatal("Failed to get file list of /mnt/chromeos/MyFiles/MyDrive: ", err)
 	}
-	list, err := ioutil.ReadDir(drivefsRoot)
+	list, err := os.ReadDir(drivefsRoot)
 	if err != nil {
 		s.Fatal("Failed to read files in Drive: ", err)
 	}

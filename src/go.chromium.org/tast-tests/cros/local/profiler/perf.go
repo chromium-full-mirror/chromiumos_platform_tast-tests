@@ -7,7 +7,6 @@ package profiler
 import (
 	"bufio"
 	"context"
-	"io/ioutil"
 	"os"
 	"path/filepath"
 	"regexp"
@@ -362,7 +361,7 @@ func getMaxLatencyMs(ctx context.Context, perfSchedFile, procName string) (float
 	}
 
 	perfSchedLatencyFile := filepath.Join(filepath.Dir(perfSchedFile), "perf_sched_latency.out")
-	if err := ioutil.WriteFile(perfSchedLatencyFile, output, 0644); err != nil {
+	if err := os.WriteFile(perfSchedLatencyFile, output, 0644); err != nil {
 		return 0, errors.Wrap(err, "failed to write latency file")
 	}
 
@@ -395,7 +394,7 @@ func getMaxLatencyMs(ctx context.Context, perfSchedFile, procName string) (float
 // spent in a process. The file should contain cycles and seconds elapsed.
 // The return value is a float64 for cycles per second.
 func parseStatFileCycles(path string) ([]cyclesPerSecond, error) {
-	b, err := ioutil.ReadFile(path)
+	b, err := os.ReadFile(path)
 	if err != nil {
 		return nil, errors.Wrapf(err, "failed to read %q", path)
 	}
@@ -440,7 +439,7 @@ func parseStatFileCycles(path string) ([]cyclesPerSecond, error) {
 // parseStatFileInstructions parses the output file of perf stat of outputting
 // instructions at intervals.
 func parseStatFileInstructions(path string) ([]valueWithTimestamp, error) {
-	b, err := ioutil.ReadFile(path)
+	b, err := os.ReadFile(path)
 	if err != nil {
 		return nil, errors.Wrapf(err, "failed to read %q", path)
 	}

@@ -7,8 +7,8 @@ package vpn
 import (
 	"context"
 	"fmt"
-	"io/ioutil"
 	"net"
+	"os"
 	"path/filepath"
 	"strings"
 	"time"
@@ -846,7 +846,7 @@ func (s *Server) collectLogs(ctx context.Context) error {
 		return errors.New("failed to get OutDir")
 	}
 
-	if err := ioutil.WriteFile(filepath.Join(dir, logName),
+	if err := os.WriteFile(filepath.Join(dir, logName),
 		[]byte(content), 0644); err != nil {
 		return errors.Wrap(err, "failed to write vpnlogs output")
 	}

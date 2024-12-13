@@ -7,7 +7,7 @@ package arccrash
 
 import (
 	"context"
-	"io/ioutil"
+	"os"
 	"path/filepath"
 	"strings"
 
@@ -70,7 +70,7 @@ func UploadSystemBuildProp(ctx context.Context, a *arc.ARC, outdir string) error
 
 // FileContains checks that each value in |expectedValues| appears as a line in |filePath|.
 func FileContains(ctx context.Context, filePath string, expectedValues []string) (bool, error) {
-	b, err := ioutil.ReadFile(filePath)
+	b, err := os.ReadFile(filePath)
 	if err != nil {
 		return false, errors.Wrap(err, "failed to read meta file")
 	}

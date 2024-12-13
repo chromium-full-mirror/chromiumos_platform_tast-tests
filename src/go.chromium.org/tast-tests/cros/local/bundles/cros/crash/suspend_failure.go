@@ -6,7 +6,7 @@ package crash
 
 import (
 	"context"
-	"io/ioutil"
+	"os"
 	"strings"
 	"time"
 
@@ -116,7 +116,7 @@ func SuspendFailure(ctx context.Context, s *testing.State) {
 	}()
 
 	for _, meta := range files[metaFileRegex] {
-		contents, err := ioutil.ReadFile(meta)
+		contents, err := os.ReadFile(meta)
 		if err != nil {
 			s.Errorf("Couldn't read log file %s: %v", meta, err)
 		}

@@ -9,7 +9,6 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
-	"io/ioutil"
 	"os"
 	"os/exec"
 	"path/filepath"
@@ -247,7 +246,7 @@ func Wrapper(ctx context.Context, s *testing.State) {
 	}
 	s.Log("kernelCommit found to be: ", kernelCommit)
 
-	syzkallerTastDir, err := ioutil.TempDir("", "tast-syzkaller")
+	syzkallerTastDir, err := os.MkdirTemp("", "tast-syzkaller")
 	if err != nil {
 		s.Fatal("Unable to create tast temporary directory: ", err)
 	}
@@ -325,7 +324,7 @@ func Wrapper(ctx context.Context, s *testing.State) {
 
 	// Create startup script.
 	startupScript := filepath.Join(syzkallerTastDir, "startup_script")
-	if err := ioutil.WriteFile(startupScript, []byte(scriptContents), 0755); err != nil {
+	if err := os.WriteFile(startupScript, []byte(scriptContents), 0755); err != nil {
 		s.Fatal("Unable to create temp configfile: ", err)
 	}
 
@@ -665,7 +664,7 @@ func loadEnabledSyscalls(fpath, board string) (drivers, enabledSyscalls []string
 		return false
 	}
 
-	contents, err := ioutil.ReadFile(fpath)
+	contents, err := os.ReadFile(fpath)
 	if err != nil {
 		return nil, nil, "", err
 	}
@@ -712,7 +711,7 @@ func panicOnWarn(board string) int {
 }
 
 func loadPeriodic(fpath, board string) (*periodicConfig, error) {
-	contents, err := ioutil.ReadFile(fpath)
+	contents, err := os.ReadFile(fpath)
 	if err != nil {
 		return nil, err
 	}
@@ -751,7 +750,7 @@ func runPeriodic(ctx context.Context, d *dut.DUT, done chan bool, cfg *periodicC
 }
 
 func logValidity(fname string) error {
-	logs, err := ioutil.ReadFile(fname)
+	logs, err := os.ReadFile(fname)
 	if err != nil {
 		return errors.Wrapf(err, "unable to read logfile at [%v]", fname)
 	}

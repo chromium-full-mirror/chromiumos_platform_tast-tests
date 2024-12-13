@@ -6,8 +6,8 @@ package debugd
 
 import (
 	"context"
-	"io/ioutil"
 	"net/http"
+	"os"
 
 	"go.chromium.org/tast-tests/cros/local/debugd"
 	"go.chromium.org/tast-tests/cros/local/printing/printer"
@@ -50,7 +50,7 @@ func Printer(ctx context.Context, s *testing.State) {
 	go server.ListenAndServe()
 	defer server.Shutdown(ctx)
 
-	ppd, err := ioutil.ReadFile(s.DataPath("GenericPostScript.ppd.gz"))
+	ppd, err := os.ReadFile(s.DataPath("GenericPostScript.ppd.gz"))
 	if err != nil {
 		s.Fatal("Failed to read PPD file: ", err)
 	}

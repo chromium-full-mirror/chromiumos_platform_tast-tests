@@ -6,7 +6,6 @@ package policy
 
 import (
 	"context"
-	"io/ioutil"
 	"net/http"
 	"net/http/httptest"
 	"os"
@@ -60,7 +59,7 @@ func DownloadRestrictions(ctx context.Context, s *testing.State) {
 	if err != nil {
 		s.Fatal("Failed to get user's Download path: ", err)
 	}
-	files, err := ioutil.ReadDir(downloadsPath)
+	files, err := os.ReadDir(downloadsPath)
 	if err != nil {
 		s.Fatal("Failed to get files from Downloads directory")
 	}

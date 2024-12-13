@@ -8,7 +8,6 @@ import (
 	"context"
 	"fmt"
 	"io/fs"
-	"io/ioutil"
 	"os"
 	"path/filepath"
 	"regexp"
@@ -142,7 +141,7 @@ func StopLoggingCheckLogs(ctx context.Context, cr *chrome.Chrome, annotation str
 	downloadLocation := filepath.Join(downloadsPath, DownloadName)
 
 	// Read the net export log file.
-	logFile, err := ioutil.ReadFile(downloadLocation)
+	logFile, err := os.ReadFile(downloadLocation)
 	if err != nil {
 		return false, errors.Wrap(err, "failed to open logfile")
 	}
@@ -188,7 +187,7 @@ func StopLoggingVerifyAnnotationSet(ctx context.Context, cr *chrome.Chrome, anno
 
 func verifyAnnotationSet(downloadLocation string, annotationsShouldBePresent bool, annotationHashCodes []string) (foundAnnotation bool, err error) {
 	// Read the net export log file.
-	logFile, err := ioutil.ReadFile(downloadLocation)
+	logFile, err := os.ReadFile(downloadLocation)
 	if err != nil {
 		return false, errors.Wrap(err, "failed to open logfile")
 	}
@@ -248,7 +247,7 @@ func CheckLogs(ctx context.Context, cr *chrome.Chrome, annotation string) (found
 // CheckLogsFromFile checks logs for given annotation in given file.
 func CheckLogsFromFile(ctx context.Context, cr *chrome.Chrome, annotation, logFilePath string) (foundAnnotation bool, err error) {
 	// Read the net export log file.
-	logFile, err := ioutil.ReadFile(logFilePath)
+	logFile, err := os.ReadFile(logFilePath)
 	if err != nil {
 		return false, errors.Wrap(err, "failed to open logfile")
 	}

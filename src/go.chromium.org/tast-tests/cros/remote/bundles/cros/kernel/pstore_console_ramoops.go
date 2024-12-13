@@ -6,7 +6,7 @@ package kernel
 
 import (
 	"context"
-	"io/ioutil"
+	"os"
 	"path/filepath"
 	"strings"
 
@@ -38,13 +38,17 @@ func PstoreConsoleRamoops(ctx context.Context, s *testing.State) {
 			s.Fatal("Failed to copy ramoops dir after reboot on the DUT: ", err)
 		}
 
-		files, err := ioutil.ReadDir(ramoopsDir)
+		files, err := os.ReadDir(ramoopsDir)
 		if err != nil {
 			s.Fatal("Failed to list ramoops directory: ", err)
 		}
 
 		for _, file := range files {
-			if strings.HasPrefix(file.Name(), "console-ramoops") && file.Size() > 0 {
+			info, err := file.Info()
+			if err != nil {
+				s.Fatal("Failed to get ramoops file details: ", err)
+			}
+			if strings.HasPrefix(file.Name(), "console-ramoops") && info.Size() > 0 {
 				return true
 			}
 		}
@@ -82,7 +86,7 @@ func PstoreConsoleRamoops(ctx context.Context, s *testing.State) {
 	if err != nil {
 		s.Log("Failed to execute cbmem -1")
 	} else {
-		if err := ioutil.WriteFile(filepath.Join(s.OutDir(), "bios_log.txt"), out, 0666); err != nil {
+		if err := os.WriteFile(filepath.Join(s.OutDir(), "bios_log.txt"), out, 0666); err != nil {
 			s.Log("Failed to write bios log")
 		}
 	}

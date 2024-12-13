@@ -6,7 +6,6 @@
 package cleanupfolder
 
 import (
-	"io/ioutil"
 	"os"
 	"path/filepath"
 
@@ -15,7 +14,7 @@ import (
 
 // RemoveAllFilesInDirectory removes all files in a directory but leaves the directory itself intact.
 func RemoveAllFilesInDirectory(directory string) error {
-	files, err := ioutil.ReadDir(directory)
+	files, err := os.ReadDir(directory)
 	if err != nil {
 		return errors.Wrapf(err, "failed to read files in %s", directory)
 	}

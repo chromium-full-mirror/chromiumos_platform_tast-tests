@@ -7,7 +7,6 @@ package video
 import (
 	"context"
 	"fmt"
-	"io/ioutil"
 	"os"
 	"path/filepath"
 	"regexp"
@@ -163,7 +162,7 @@ func runLIBYUVUnittest(ctx context.Context, logFile, testName string, env []stri
 func extractTime(logFile string) (value int64, err error) {
 	regExpTime := regexp.MustCompile(`\n\[==========\] .+\. \((\d+) ms total\)\n`)
 
-	b, err := ioutil.ReadFile(logFile)
+	b, err := os.ReadFile(logFile)
 	if err != nil {
 		return 0, errors.Wrapf(err, "failed to read file %s", logFile)
 	}

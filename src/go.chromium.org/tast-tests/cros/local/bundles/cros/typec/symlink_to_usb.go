@@ -6,7 +6,7 @@ package typec
 
 import (
 	"context"
-	"io/ioutil"
+	"os"
 	"path/filepath"
 	"regexp"
 
@@ -30,7 +30,7 @@ func init() {
 func SymlinkToUsb(ctx context.Context, s *testing.State) {
 	const typecPath = "/sys/class/typec/"
 
-	ls, err := ioutil.ReadDir(typecPath)
+	ls, err := os.ReadDir(typecPath)
 	if err != nil {
 		s.Fatal("Could not read typec directory: ", err)
 	}
@@ -52,7 +52,7 @@ func checkTypecPortDir(typecPortPath string) error {
 		return errors.Wrapf(err, "could not evaluate symlink for %s", typecPortPath)
 	}
 
-	ls, err := ioutil.ReadDir(typecPortPath)
+	ls, err := os.ReadDir(typecPortPath)
 	if err != nil {
 		return errors.Wrapf(err, "could not read directory %s", typecPortPath)
 	}
@@ -96,7 +96,7 @@ func checkUsbPortDir(usbPortPath, typecPortAbsPath string) error {
 		return errors.Errorf("usb port directory, %s, not linked to usb port device", usbPortPath)
 	}
 
-	ls, err := ioutil.ReadDir(usbPortAbsPath)
+	ls, err := os.ReadDir(usbPortAbsPath)
 	if err != nil {
 		return errors.Wrapf(err, "could not read directory %s", usbPortPath)
 	}

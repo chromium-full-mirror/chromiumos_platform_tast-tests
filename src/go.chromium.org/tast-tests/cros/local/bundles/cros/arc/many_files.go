@@ -7,7 +7,6 @@ package arc
 import (
 	"context"
 	"fmt"
-	"io/ioutil"
 	"os"
 	"path/filepath"
 	"time"
@@ -91,7 +90,7 @@ func ManyFiles(ctx context.Context, s *testing.State) {
 	// Create a lot of text files in the target directory from the host side.
 	for i := 0; i < numberOfFiles; i++ {
 		tpath := filepath.Join(targetDir, fmt.Sprintf("storage_%d", i))
-		if err := ioutil.WriteFile(tpath, []byte(fileContent), 0644); err != nil {
+		if err := os.WriteFile(tpath, []byte(fileContent), 0644); err != nil {
 			s.Fatal("Failed to write a data file: ", err)
 		}
 		if (i+1)%(numberOfFiles/10) == 0 {

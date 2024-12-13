@@ -6,7 +6,6 @@ package power
 
 import (
 	"context"
-	"io/ioutil"
 	"os"
 	"path/filepath"
 	"regexp"
@@ -252,7 +251,7 @@ func createFakeChargeHistory(s *testing.State, dir string) {
 		// microseconds, as commented for libchrome/base/time/time.h:Time::kTimeTToMicrosecondsOffset.
 		// Windows Epoch is 1601-01-01 and Unix Epoch is 1970-01-01.
 		dateMicroseconds += 11644473600000000
-		if err := ioutil.WriteFile(filepath.Join(dir, strconv.FormatInt(dateMicroseconds, 10)), contents, 0600); err != nil {
+		if err := os.WriteFile(filepath.Join(dir, strconv.FormatInt(dateMicroseconds, 10)), contents, 0600); err != nil {
 			s.Fatal("Failed to write charge history file: ", err)
 		}
 	}

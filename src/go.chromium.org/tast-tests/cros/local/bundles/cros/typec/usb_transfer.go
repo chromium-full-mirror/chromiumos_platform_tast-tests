@@ -9,7 +9,6 @@ import (
 	"context"
 	"crypto/sha256"
 	"io"
-	"io/ioutil"
 	"os"
 	"path"
 	"strings"
@@ -62,7 +61,7 @@ func USBTransfer(ctx context.Context, s *testing.State) {
 	// Source file name.
 	transFilename := "file_ogg.ogg"
 
-	sourcePath, err := ioutil.TempDir("", "temp")
+	sourcePath, err := os.MkdirTemp("", "temp")
 	if err != nil {
 		s.Fatal("Failed to create temp directory: ", err)
 	}
@@ -70,7 +69,7 @@ func USBTransfer(ctx context.Context, s *testing.State) {
 
 	// Source file path.
 	sourceFilePath := path.Join(sourcePath, transFilename)
-	if err := ioutil.WriteFile(sourceFilePath, []byte("test"), 0644); err != nil {
+	if err := os.WriteFile(sourceFilePath, []byte("test"), 0644); err != nil {
 		s.Fatal("Failed to create file in tempdir: ", err)
 	}
 	defer os.Remove(sourceFilePath)

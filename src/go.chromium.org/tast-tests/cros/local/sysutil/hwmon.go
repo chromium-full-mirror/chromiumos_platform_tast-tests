@@ -5,8 +5,8 @@
 package sysutil
 
 import (
-	"io/ioutil"
 	"math"
+	"os"
 	"path/filepath"
 	"strconv"
 	"strings"
@@ -29,7 +29,7 @@ func TemperatureInputMax() (float64, error) {
 
 	res := math.Inf(-1)
 	for _, f := range fs {
-		b, err := ioutil.ReadFile(f)
+		b, err := os.ReadFile(f)
 		if err != nil {
 			return 0, errors.Wrap(err, "unable to read temperature file")
 		}

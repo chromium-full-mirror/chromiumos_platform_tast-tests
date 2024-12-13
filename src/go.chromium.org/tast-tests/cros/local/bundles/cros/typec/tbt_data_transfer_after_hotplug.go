@@ -7,7 +7,6 @@ package typec
 import (
 	"context"
 	"encoding/json"
-	"io/ioutil"
 	"os"
 	"path"
 	"strings"
@@ -100,7 +99,7 @@ func TbtDataTransferAfterHotplug(ctx context.Context, s *testing.State) {
 	}
 
 	// Read json config file.
-	jsonData, err := ioutil.ReadFile(s.DataPath(jsonTestConfig))
+	jsonData, err := os.ReadFile(s.DataPath(jsonTestConfig))
 	if err != nil {
 		s.Fatal("Failed to read response data: ", err)
 	}
@@ -152,7 +151,7 @@ func TbtDataTransferAfterHotplug(ctx context.Context, s *testing.State) {
 			s.Fatalf("Failed to verify the generation, got %s, want %s", tbtGeneration, tbtVal["generation"].(string))
 		}
 
-		sourcePath, err := ioutil.TempDir("", "temp")
+		sourcePath, err := os.MkdirTemp("", "temp")
 		if err != nil {
 			s.Fatal("Failed to create temp directory: ", err)
 		}

@@ -8,7 +8,7 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
-	"io/ioutil"
+	"os"
 	"path"
 	"strings"
 	"time"
@@ -96,7 +96,7 @@ func NewPSIStats(ctx context.Context, a *arc.ARC) (*PSIStats, error) {
 	stats := &PSIStats{Timestamp: time.Now()}
 
 	// Gather PSI from the host first.
-	statBlob, err := ioutil.ReadFile(psiFilename)
+	statBlob, err := os.ReadFile(psiFilename)
 	if err == nil {
 		stats.Host, err = newPSISystemStats(statBlob)
 		if err != nil {
@@ -236,7 +236,7 @@ func PSIMetrics(ctx context.Context, a *arc.ARC, base *PSIStats, p *perf.Values,
 			return errors.Wrap(err, "failed to serialize psi metrics to JSON")
 		}
 		filename := fmt.Sprintf("psi%s.json", suffix)
-		if err := ioutil.WriteFile(path.Join(outdir, filename), statJSON, 0644); err != nil {
+		if err := os.WriteFile(path.Join(outdir, filename), statJSON, 0644); err != nil {
 			return errors.Wrapf(err, "failed to write psi stats to %s", filename)
 		}
 	}

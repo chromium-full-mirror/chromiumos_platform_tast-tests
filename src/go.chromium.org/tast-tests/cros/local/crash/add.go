@@ -9,7 +9,6 @@ import (
 	"crypto/rand"
 	"fmt"
 	"io"
-	"io/ioutil"
 	"os"
 	"path/filepath"
 
@@ -46,7 +45,7 @@ func addFakeCrash(ctx context.Context, basename, payloadExt, payloadKind string)
 		return nil, err
 	}
 	meta := fmt.Sprintf("exec_name=%s\nver=%s\npayload=%s\ndone=1\n", executable, version, filepath.Base(payloadPath))
-	if err := ioutil.WriteFile(metaPath, []byte(meta), 0644); err != nil {
+	if err := os.WriteFile(metaPath, []byte(meta), 0644); err != nil {
 		return nil, err
 	}
 	return expectedSendData(ctx, metaPath, payloadPath, payloadKind, version, executable)

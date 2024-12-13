@@ -7,7 +7,6 @@ package security
 import (
 	"context"
 	"fmt"
-	"io/ioutil"
 	"os"
 	"path/filepath"
 	"regexp"
@@ -61,7 +60,7 @@ func Minijail(ctx context.Context, s *testing.State) {
 	)
 
 	// Create a directory that can be written to by test cases running in user namespaces.
-	usernsDir, err := ioutil.TempDir("", "tast.security.Minijail.userns.")
+	usernsDir, err := os.MkdirTemp("", "tast.security.Minijail.userns.")
 	if err != nil {
 		s.Fatal("Failed to create userns dir: ", err)
 	}
@@ -91,7 +90,7 @@ func Minijail(ctx context.Context, s *testing.State) {
 		}
 
 		// Create a temp dir that the test's setup function (if any) can write to.
-		td, err := ioutil.TempDir("", "tast.security.Minijail."+name+".")
+		td, err := os.MkdirTemp("", "tast.security.Minijail."+name+".")
 		if err != nil {
 			s.Fatal("Failed to create temp dir: ", err)
 		}

@@ -8,7 +8,6 @@ import (
 	"bytes"
 	"context"
 	"encoding/binary"
-	"io/ioutil"
 	"os"
 	"path/filepath"
 
@@ -165,7 +164,7 @@ func Serializer(ctx context.Context, s *testing.State) {
 		if basePayload != x.Blob.Filename {
 			s.Errorf("Unexpected filename. Want %s, got %s", basePayload, x.Blob.Filename)
 		}
-		contents, err := ioutil.ReadFile(exp.PayloadPath)
+		contents, err := os.ReadFile(exp.PayloadPath)
 		if err != nil {
 			s.Fatal("Failed to read payload file: ", err)
 		}
@@ -174,7 +173,7 @@ func Serializer(ctx context.Context, s *testing.State) {
 			if err := crash.MoveFilesToOut(ctx, s.OutDir(), exp.PayloadPath); err != nil {
 				s.Error("Failed to save expected payload: ", err)
 			}
-			if err := ioutil.WriteFile(filepath.Join(s.OutDir(), basePayload+".actual"), x.Blob.Blob, 0664); err != nil {
+			if err := os.WriteFile(filepath.Join(s.OutDir(), basePayload+".actual"), x.Blob.Blob, 0664); err != nil {
 				s.Error("Failed to save actual payload: ", err)
 			}
 
@@ -196,7 +195,7 @@ func Serializer(ctx context.Context, s *testing.State) {
 				s.Errorf("Unexpected oneof type for protos[%d]: %T", i, x)
 			}
 		}
-		contents, err := ioutil.ReadFile(coreName)
+		contents, err := os.ReadFile(coreName)
 		if err != nil {
 			s.Fatal("Failed to read core file: ", err)
 		}
@@ -205,7 +204,7 @@ func Serializer(ctx context.Context, s *testing.State) {
 			if err := crash.MoveFilesToOut(ctx, s.OutDir(), coreName); err != nil {
 				s.Error("Failed to save expected core: ", err)
 			}
-			if err := ioutil.WriteFile(filepath.Join(s.OutDir(), filepath.Base(coreName+".actual")), core, 0664); err != nil {
+			if err := os.WriteFile(filepath.Join(s.OutDir(), filepath.Base(coreName+".actual")), core, 0664); err != nil {
 				s.Error("Failed to save actual core: ", err)
 			}
 		}

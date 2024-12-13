@@ -7,7 +7,6 @@ package graphics
 import (
 	"bufio"
 	"context"
-	"io/ioutil"
 	"math"
 	"os"
 	"path/filepath"
@@ -83,7 +82,7 @@ func ParseVblankTrace(tracePath string) ([][]time.Duration, error) {
 
 // ClearTraceBuffer clears the tracefs buffer.
 func ClearTraceBuffer() error {
-	if err := ioutil.WriteFile(traceFile, nil, 0644); err != nil {
+	if err := os.WriteFile(traceFile, nil, 0644); err != nil {
 		return errors.Wrap(err, "cannot clear trace buffer")
 	}
 	return nil
@@ -92,12 +91,12 @@ func ClearTraceBuffer() error {
 // EnableVblankTrace enables vblank event tracing and turns on tracing.
 func EnableVblankTrace(ctx context.Context) error {
 	// Enable vblank event tracing.
-	if err := ioutil.WriteFile(vblankEventEnable, []byte("1"), 0644); err != nil {
+	if err := os.WriteFile(vblankEventEnable, []byte("1"), 0644); err != nil {
 		return errors.Wrap(err, "cannot enable drm vblank event tracing")
 	}
 
 	// Turn on tracing.
-	if err := ioutil.WriteFile(tracingOn, []byte("1"), 0644); err != nil {
+	if err := os.WriteFile(tracingOn, []byte("1"), 0644); err != nil {
 		return errors.Wrap(err, "cannot enable tracing")
 	}
 	return nil
@@ -105,8 +104,8 @@ func EnableVblankTrace(ctx context.Context) error {
 
 // DisableVblankTrace disables vblank event tracing and turns off tracing.
 func DisableVblankTrace() {
-	ioutil.WriteFile(vblankEventEnable, []byte("0"), 0644)
-	ioutil.WriteFile(tracingOn, []byte("0"), 0644)
+	os.WriteFile(vblankEventEnable, []byte("0"), 0644)
+	os.WriteFile(tracingOn, []byte("0"), 0644)
 }
 
 // CopyVblankTrace copies the tracefs buffer to the specified output location.

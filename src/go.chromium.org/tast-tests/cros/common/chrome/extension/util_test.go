@@ -5,7 +5,6 @@
 package extension
 
 import (
-	"io/ioutil"
 	"os"
 	"path/filepath"
 	"testing"
@@ -19,7 +18,7 @@ func TestComputeExtensionID(t *testing.T) {
 
 	// Taken from Chrome's components/crx_file/id_util_unittest.cc.
 	manifest := `{ "key": "MIGfMA0GCSqGSIb3DQEBAQUAA4GNADCBiQKBgQC4fysg3HybDNxRYZkNNg/UZogIVYTVOr8rpGSFewwEEz+N9Lw4DUn+a8RasEBTOtdmCQ+eNnQw2ooxTx8UUNfHIJQX3k65V15+CuWyZXqJTrZH/xy9tzgTr0eFhDIz8xdJv+mW0NYUbxONxfwscrqs6n4YU1amg6LOk5PnHw/mDwIDAQAB" }`
-	if err := ioutil.WriteFile(filepath.Join(dir, "manifest.json"), []byte(manifest), 0644); err != nil {
+	if err := os.WriteFile(filepath.Join(dir, "manifest.json"), []byte(manifest), 0644); err != nil {
 		t.Fatal(err)
 	}
 	id, err := ComputeExtensionID(dir)

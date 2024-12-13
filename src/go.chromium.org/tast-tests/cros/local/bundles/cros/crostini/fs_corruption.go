@@ -9,7 +9,6 @@ import (
 	"context"
 	"fmt"
 	"io"
-	"io/ioutil"
 	"os"
 	"os/exec"
 	"time"
@@ -74,7 +73,7 @@ func init() {
 }
 
 func createTestFile(ctx context.Context, container *vm.Container, hostPath, guestPath string, data []byte) error {
-	if err := ioutil.WriteFile(hostPath, data, 0755); err != nil {
+	if err := os.WriteFile(hostPath, data, 0755); err != nil {
 		return errors.Wrap(err, "failed to write to test file")
 	}
 	if err := container.PushFile(ctx, hostPath, guestPath); err != nil {

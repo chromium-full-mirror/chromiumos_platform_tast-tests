@@ -7,7 +7,6 @@ package crash
 import (
 	"context"
 	"encoding/binary"
-	"io/ioutil"
 	"os"
 	"time"
 
@@ -119,7 +118,7 @@ func UncleanShutdownCollector(ctx context.Context, s *testing.State) {
 			s.Fatal("unclean_shutdown_collector failed to create either unclean-shutdown-detected or kernel-crash-detected: ", err)
 		}
 		// As a last-ditch attempt to verify that metrics daemon works, create the file manually.
-		if err := ioutil.WriteFile(uncleanShutdownDetectedFile, []byte(""), 0644); err != nil {
+		if err := os.WriteFile(uncleanShutdownDetectedFile, []byte(""), 0644); err != nil {
 			s.Fatalf("Failed to manually create %q: %v", uncleanShutdownDetectedFile, err)
 		}
 	}

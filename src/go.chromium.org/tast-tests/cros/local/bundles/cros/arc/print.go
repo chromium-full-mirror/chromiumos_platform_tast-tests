@@ -6,7 +6,6 @@ package arc
 
 import (
 	"context"
-	"io/ioutil"
 	"os"
 	"path/filepath"
 	"time"
@@ -99,7 +98,7 @@ func Print(ctx context.Context, s *testing.State) {
 
 	// Install virtual USB printer.
 	s.Log("Installing printer")
-	tmpDir, err := ioutil.TempDir("", "tast.printer.PrintIPPUSB.")
+	tmpDir, err := os.MkdirTemp("", "tast.printer.PrintIPPUSB.")
 	if err != nil {
 		s.Fatal("Failed to create temporary directory: ", err)
 	}

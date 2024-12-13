@@ -6,7 +6,7 @@ package crash
 
 import (
 	"context"
-	"io/ioutil"
+	"os"
 	"path"
 	"path/filepath"
 	"regexp"
@@ -318,7 +318,7 @@ func KernelCrash(ctx context.Context, s *testing.State) {
 			s.Error("Failed to save meta file")
 			continue
 		}
-		f, err := ioutil.ReadFile(filepath.Join(s.OutDir(), path.Base(match.Files[0])))
+		f, err := os.ReadFile(filepath.Join(s.OutDir(), path.Base(match.Files[0])))
 		if err != nil {
 			s.Error("Failed to read meta file", match.Files[0])
 			continue
@@ -368,7 +368,7 @@ func KernelCrash(ctx context.Context, s *testing.State) {
 			s.Error("Failed to save kcrash file")
 			continue
 		}
-		f, err := ioutil.ReadFile(filepath.Join(s.OutDir(), path.Base(match.Files[0])))
+		f, err := os.ReadFile(filepath.Join(s.OutDir(), path.Base(match.Files[0])))
 		if err != nil {
 			s.Error("Failed to read kcrash file", match.Files[0])
 			continue

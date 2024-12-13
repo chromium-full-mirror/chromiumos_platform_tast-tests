@@ -7,7 +7,7 @@ package crossdevice
 import (
 	"context"
 	"encoding/json"
-	"io/ioutil"
+	"os"
 	"path/filepath"
 	"strconv"
 	"strings"
@@ -651,7 +651,7 @@ func saveDeviceAttributes(crosAttrs *crossdevicecommon.CrosAttributes, androidAt
 	if err != nil {
 		return errors.Wrap(err, "failed to format device metadata for logging")
 	}
-	if err := ioutil.WriteFile(filepath, crosLog, 0644); err != nil {
+	if err := os.WriteFile(filepath, crosLog, 0644); err != nil {
 		return errors.Wrap(err, "failed to write CrOS attributes to output file")
 	}
 	return nil

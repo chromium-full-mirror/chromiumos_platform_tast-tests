@@ -7,7 +7,6 @@ package cryptohome
 import (
 	"context"
 	"encoding/hex"
-	"io/ioutil"
 	"os"
 	"path/filepath"
 	"time"
@@ -144,7 +143,7 @@ func RecoveryOptOut(ctx context.Context, s *testing.State) {
 	}
 
 	// Create a temp directory for backup.
-	loginDataBackup, err := ioutil.TempDir("", "login_data_backup*")
+	loginDataBackup, err := os.MkdirTemp("", "login_data_backup*")
 	if err != nil {
 		s.Fatal("Could not create a temp directory: ", err)
 	}

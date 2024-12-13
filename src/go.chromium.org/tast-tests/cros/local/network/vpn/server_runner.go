@@ -8,7 +8,6 @@ import (
 	"bytes"
 	"context"
 	"fmt"
-	"io/ioutil"
 	"os"
 	"path/filepath"
 	"strconv"
@@ -106,7 +105,7 @@ func (n *serverRunner) writeConfigs() error {
 	for configFile, fileTemplate := range n.netConfigFileTemplates {
 		b := &bytes.Buffer{}
 		template.Must(template.New("").Parse(fileTemplate)).Execute(b, n.netConfigFileValues)
-		err := ioutil.WriteFile(n.virtualNetEnv.ChrootPath(configFile), b.Bytes(), 0644)
+		err := os.WriteFile(n.virtualNetEnv.ChrootPath(configFile), b.Bytes(), 0644)
 		if err != nil {
 			return err
 		}
@@ -128,7 +127,7 @@ func (n *serverRunner) RunChroot(ctx context.Context, args []string) error {
 // getPidFile returns the integer contents of |pid_file| in the chroot.
 func (n *serverRunner) getPidFile(pidFile string, missingOk bool) (int, error) {
 	chrootPidFile := n.virtualNetEnv.ChrootPath(pidFile)
-	content, err := ioutil.ReadFile(chrootPidFile)
+	content, err := os.ReadFile(chrootPidFile)
 	if err != nil {
 		if !missingOk || !errors.Is(err, os.ErrNotExist) {
 			return 0, err

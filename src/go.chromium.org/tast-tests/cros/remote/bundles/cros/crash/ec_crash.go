@@ -6,7 +6,7 @@ package crash
 
 import (
 	"context"
-	"io/ioutil"
+	"os"
 	"path"
 	"path/filepath"
 	"regexp"
@@ -203,7 +203,7 @@ func ECCrash(ctx context.Context, s *testing.State) {
 
 		if hasError {
 			localFile := filepath.Join(s.OutDir(), path.Base(match.Files[0]))
-			if err := ioutil.WriteFile(localFile, b, 0644); err != nil {
+			if err := os.WriteFile(localFile, b, 0644); err != nil {
 				s.Log("Error writing local copy of the crash: ", err)
 			}
 		}

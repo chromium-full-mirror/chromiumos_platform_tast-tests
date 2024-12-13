@@ -8,7 +8,6 @@ package openfds
 import (
 	"context"
 	"fmt"
-	"io/ioutil"
 	"os"
 	"path/filepath"
 	"regexp"
@@ -59,7 +58,7 @@ func DumpFDs(ctx context.Context, path string) error {
 	// Intentionally ignore errors. Some files under /proc/*/fd is not
 	// accessible by permission.
 	o, _ := cmd.CombinedOutput()
-	return ioutil.WriteFile(path, o, 0644)
+	return os.WriteFile(path, o, 0644)
 }
 
 // expectType returns whether the given mode is allowed or not for an open

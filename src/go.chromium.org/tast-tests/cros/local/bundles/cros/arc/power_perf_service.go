@@ -6,7 +6,6 @@ package arc
 
 import (
 	"context"
-	"io/ioutil"
 	"os"
 	"time"
 
@@ -99,7 +98,7 @@ func (c *PowerPerfService) Setup(ctx context.Context, _ *emptypb.Empty) (*emptyp
 	}
 
 	// Set up Android.
-	td, err := ioutil.TempDir("", "")
+	td, err := os.MkdirTemp("", "")
 	if err != nil {
 		return nil, errors.Wrap(err, "failed to create a temp dir")
 	}

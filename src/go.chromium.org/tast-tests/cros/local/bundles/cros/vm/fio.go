@@ -8,7 +8,6 @@ import (
 	"bufio"
 	"context"
 	"encoding/json"
-	"io/ioutil"
 	"os"
 	"path/filepath"
 	"time"
@@ -596,7 +595,7 @@ func Fio(ctx context.Context, s *testing.State) {
 	defer cancel()
 
 	// Create a temporary directory that shared with the guest so the guest can put test logs.
-	td, err := ioutil.TempDir("/usr/local/tmp", "tast.vm.Fio.")
+	td, err := os.MkdirTemp("/usr/local/tmp", "tast.vm.Fio.")
 	if err != nil {
 		s.Fatal("Failed to create temporary directory: ", err)
 	}
@@ -622,7 +621,7 @@ func Fio(ctx context.Context, s *testing.State) {
 	if err != nil {
 		s.Fatal("Failed to get the cryptohome directory: ", err)
 	}
-	ud, err := ioutil.TempDir(rootCryptDir, "tast.vm.Fio.")
+	ud, err := os.MkdirTemp(rootCryptDir, "tast.vm.Fio.")
 	if err != nil {
 		s.Fatal("Failed to create temporary directory: ", err)
 	}

@@ -8,7 +8,6 @@ import (
 	"bytes"
 	"context"
 	"fmt"
-	"io/ioutil"
 	"os"
 	"path/filepath"
 	"time"
@@ -105,13 +104,13 @@ func FileStability(ctx context.Context, s *testing.State) {
 	for i := 0; i < len(fileContents); i++ {
 		fileName := filepath.Join(path, fmt.Sprint("FileStabilityTest.", i, ".txt"))
 		fileNames = append(fileNames, fileName)
-		if err := ioutil.WriteFile(fileName, []byte(fileContents[i]), 0644); err != nil {
+		if err := os.WriteFile(fileName, []byte(fileContents[i]), 0644); err != nil {
 			s.Fatal("Could not write ", fileName, ": ", err)
 		}
 		defer os.Remove(fileName)
 
 		// Immediately attempt a read.
-		if contents, err := ioutil.ReadFile(fileName); err != nil {
+		if contents, err := os.ReadFile(fileName); err != nil {
 			s.Fatal("Could not immediately re-read ", fileName, ": ", err)
 		} else if !bytes.Equal(contents, []byte(fileContents[i])) {
 			s.Fatalf("Immediate re-read of %s did not get expected result: Expect %q, got %q", fileName, fileContents[i], contents)
@@ -125,7 +124,7 @@ func FileStability(ctx context.Context, s *testing.State) {
 	if err := testing.Poll(ctx, func(ctx context.Context) error {
 		for i := 0; i < len(fileNames); i++ {
 			fileName := fileNames[i]
-			if contents, err := ioutil.ReadFile(fileName); err != nil {
+			if contents, err := os.ReadFile(fileName); err != nil {
 				return testing.PollBreak(errors.Wrapf(err, "could not later re-read %s", fileName))
 			} else if !bytes.Equal(contents, []byte(fileContents[i])) {
 				return testing.PollBreak(errors.Errorf("later re-read of %s did not get expected result: Expect %q, got %q", fileName, fileContents[i], contents))

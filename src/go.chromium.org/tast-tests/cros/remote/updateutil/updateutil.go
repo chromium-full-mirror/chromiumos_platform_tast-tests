@@ -8,9 +8,9 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
-	"io/ioutil"
 	"math/rand"
 	"net"
+	"os"
 	"path/filepath"
 	"strconv"
 	"strings"
@@ -424,7 +424,7 @@ func bucketContentToFile(ctx context.Context, gsFolder, logPath string) error {
 		return errors.Wrap(err, "failed to list files in the GS bucket")
 	}
 
-	if err := ioutil.WriteFile(logPath, out, 0644); err != nil {
+	if err := os.WriteFile(logPath, out, 0644); err != nil {
 		return errors.Wrapf(err, "failed to write GS bucket content content to %s", logPath)
 	}
 

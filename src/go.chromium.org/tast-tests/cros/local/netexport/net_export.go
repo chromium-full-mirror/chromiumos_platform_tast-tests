@@ -22,7 +22,6 @@ import (
 	"context"
 	"fmt"
 	"io"
-	"io/ioutil"
 	"os"
 	"path/filepath"
 	"regexp"
@@ -89,7 +88,7 @@ type NetExport struct {
 func (ne *NetExport) Find(annotationID string) (foundAnnotation bool, err error) {
 	for _, logFile := range ne.logFiles {
 		// Read the net export log file.
-		logFile, err := ioutil.ReadFile(logFile)
+		logFile, err := os.ReadFile(logFile)
 		if err != nil {
 			return false, errors.Wrap(err, "failed to open logfile")
 		}
@@ -115,7 +114,7 @@ func (ne *NetExport) FindAll() (map[string]struct{}, error) {
 
 	foundAnnotations := make(map[string]struct{})
 	for _, logFile := range ne.logFiles {
-		logs, err := ioutil.ReadFile(logFile)
+		logs, err := os.ReadFile(logFile)
 		if err != nil {
 			return nil, errors.Wrap(err, "failed to open logfile")
 		}

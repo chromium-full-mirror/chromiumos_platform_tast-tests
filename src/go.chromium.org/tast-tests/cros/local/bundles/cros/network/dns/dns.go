@@ -9,7 +9,7 @@ import (
 	"context"
 	"fmt"
 	"html/template"
-	"io/ioutil"
+	"io"
 	"net"
 	"net/http"
 	"os"
@@ -612,7 +612,7 @@ func (q *dohQueryLogs) Clear() {
 // Optionally, pass dohQueryLogs to log the queries target domains.
 func DoHResponder(ctx context.Context, addr string, q *dohQueryLogs) func(http.ResponseWriter, *http.Request) {
 	return func(rw http.ResponseWriter, req *http.Request) {
-		msg, err := ioutil.ReadAll(req.Body)
+		msg, err := io.ReadAll(req.Body)
 		if err != nil {
 			testing.ContextLog(ctx, "Failed to read HTTPS request: ", err)
 			return

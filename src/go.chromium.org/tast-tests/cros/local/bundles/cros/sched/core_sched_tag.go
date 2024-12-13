@@ -8,7 +8,7 @@ package sched
 import (
 	"context"
 	"fmt"
-	"io/ioutil"
+	"os"
 	"path/filepath"
 	"regexp"
 	"strconv"
@@ -50,7 +50,7 @@ func getProcCookie(p *process.Process) (int64, error) {
 		return 0, errors.Wrap(err, "failed to compile cookie regex")
 	}
 
-	data, err := ioutil.ReadFile(path)
+	data, err := os.ReadFile(path)
 	if err != nil {
 		return 0, err
 	}
@@ -71,7 +71,7 @@ func getThreadsFromProcess(p *process.Process) ([]*process.Process, error) {
 	path := filepath.Join("/proc", fmt.Sprint(p.Pid), "task")
 	var ret []*process.Process
 
-	finfos, err := ioutil.ReadDir(path)
+	finfos, err := os.ReadDir(path)
 	if err != nil {
 		return nil, err
 	}

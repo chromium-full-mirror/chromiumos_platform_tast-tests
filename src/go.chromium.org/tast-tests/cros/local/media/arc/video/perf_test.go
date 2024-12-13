@@ -8,7 +8,6 @@ package video
 import (
 	"context"
 	"encoding/json"
-	"io/ioutil"
 	"os"
 	"path/filepath"
 	"reflect"
@@ -61,9 +60,9 @@ func saveAndCompare(t *testing.T, p *perf.Values, goldenPath string) {
 
 	path := filepath.Join(td, "results-chart.json")
 	if err := jsonEquals(path, goldenPath); err != nil {
-		if data, rerr := ioutil.ReadFile(path); rerr != nil {
+		if data, rerr := os.ReadFile(path); rerr != nil {
 			t.Fatal(rerr)
-		} else if golden, gerr := ioutil.ReadFile(goldenPath); gerr != nil {
+		} else if golden, gerr := os.ReadFile(goldenPath); gerr != nil {
 			t.Fatal(gerr)
 		} else {
 			diff := diff.Diff(string(data), string(golden))

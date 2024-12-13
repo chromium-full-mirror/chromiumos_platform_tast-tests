@@ -6,7 +6,6 @@ package network
 
 import (
 	"context"
-	"io/ioutil"
 	"os"
 	"path/filepath"
 	"time"
@@ -187,7 +186,7 @@ func PasspointARCDialog(ctx context.Context, s *testing.State) {
 		s.Fatal("Failed to get user downloads path: ", err)
 	}
 	filePath := filepath.Join(downloadsPath, fileName)
-	if err := ioutil.WriteFile(filePath, []byte(config), 0644); err != nil {
+	if err := os.WriteFile(filePath, []byte(config), 0644); err != nil {
 		s.Fatal("Failed to write Passpoint config: ", err)
 	}
 	defer os.Remove(filePath)

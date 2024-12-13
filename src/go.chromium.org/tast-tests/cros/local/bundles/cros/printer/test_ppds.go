@@ -8,7 +8,7 @@ import (
 	"bytes"
 	"compress/gzip"
 	"context"
-	"io/ioutil"
+	"io"
 	"os"
 	"path/filepath"
 	"regexp"
@@ -218,7 +218,7 @@ trailer<</Size 4/Root 1 0 R>>
 startxref
 147
 %EOF`
-	if err := ioutil.WriteFile(ppdFile, ppdContents, 0644); err != nil {
+	if err := os.WriteFile(ppdFile, ppdContents, 0644); err != nil {
 		return errors.Wrap(err, "failed to write file")
 	}
 	defer os.Remove(ppdFile)
@@ -275,7 +275,7 @@ func extractPPD(ctx context.Context, ppd []byte) ([]byte, error) {
 	if err != nil {
 		return nil, errors.Wrap(err, "failed to create reader")
 	}
-	ppd, readErr := ioutil.ReadAll(buf)
+	ppd, readErr := io.ReadAll(buf)
 	if err := buf.Close(); err != nil {
 		testing.ContextLog(ctx, "Failed to close gzip: ", err)
 	}
@@ -292,7 +292,7 @@ func testPPDs(ctx context.Context, dir string, files <-chan string, errors chan<
 	var errs []fileError
 	for file := range files {
 		if err := func() error {
-			ppd, err := ioutil.ReadFile(filepath.Join(dir, file))
+			ppd, err := os.ReadFile(filepath.Join(dir, file))
 			if err != nil {
 				return err
 			}
@@ -317,7 +317,7 @@ func extractArchive(ctx context.Context, src, dst string) error {
 }
 
 func TestPPDs(ctx context.Context, s *testing.State) {
-	dir, err := ioutil.TempDir("", "")
+	dir, err := os.MkdirTemp("", "")
 	if err != nil {
 		s.Fatal("Failed to create temp dir: ", err)
 	}
@@ -326,7 +326,7 @@ func TestPPDs(ctx context.Context, s *testing.State) {
 	if err := extractArchive(ctx, s.DataPath(ppdsAll), dir); err != nil {
 		s.Fatal("Failed to extract archive: ", err)
 	}
-	files, err := ioutil.ReadDir(dir)
+	files, err := os.ReadDir(dir)
 	if err != nil {
 		s.Fatal("Failed to read directory: ", err)
 	}

@@ -5,8 +5,8 @@
 package audio
 
 import (
-	"io/ioutil"
 	"math"
+	"os"
 	"regexp"
 	"strconv"
 
@@ -63,7 +63,7 @@ func ParseLoopbackLatencyResult(filepath string, loop int) (LoopbackLatencyResul
 		ExpectedLoops: loop,
 	}
 
-	loopbackLogBytes, err := ioutil.ReadFile(filepath)
+	loopbackLogBytes, err := os.ReadFile(filepath)
 	if err != nil {
 		return result, errors.Errorf("failed to read loopback log: %s", err)
 	}

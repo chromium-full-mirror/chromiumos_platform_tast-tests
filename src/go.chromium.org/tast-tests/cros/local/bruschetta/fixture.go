@@ -9,7 +9,6 @@ import (
 	"encoding/json"
 	"fmt"
 	"io"
-	"io/ioutil"
 	"net/http"
 	"os"
 	"path/filepath"
@@ -166,12 +165,12 @@ type FixtureData struct {
 }
 
 func refvmConfiguration(s *testing.FixtState) map[string]interface{} {
-	imageHash, err := ioutil.ReadFile(s.DataPath(referenceVMInstallerHash))
+	imageHash, err := os.ReadFile(s.DataPath(referenceVMInstallerHash))
 	if err != nil {
 		s.Fatal("Failed to read disk image hash: ", err)
 	}
 
-	pflashHash, err := ioutil.ReadFile(s.DataPath(referenceVMPflashHash))
+	pflashHash, err := os.ReadFile(s.DataPath(referenceVMPflashHash))
 	if err != nil {
 		s.Fatal("Failed to read pflash hash: ", err)
 	}

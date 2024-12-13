@@ -8,7 +8,6 @@ import (
 	"context"
 	"encoding/binary"
 	"fmt"
-	"io/ioutil"
 	"os"
 	"regexp"
 	"strconv"
@@ -84,7 +83,7 @@ func FetchIntelCPUUarch() (string, error) {
 		"06_2C": "Westmere",
 		"06_2F": "Westmere",
 	}
-	out, err := ioutil.ReadFile("/proc/cpuinfo")
+	out, err := os.ReadFile("/proc/cpuinfo")
 	if err != nil {
 		return "", errors.Wrap(err, "failed to read cpuinfo")
 	}
@@ -157,7 +156,7 @@ func FetchPackageStates() (map[string]int64, error) {
 // FindCPUPerPackage returns a slice that contains 1 CPU from each package.
 func FindCPUPerPackage(ctx context.Context) ([]int, error) {
 	packages := make(map[int]int)
-	cpuInfos, err := ioutil.ReadDir("/dev/cpu")
+	cpuInfos, err := os.ReadDir("/dev/cpu")
 	if err != nil {
 		return nil, errors.Wrap(err, "failed to read /dev/cpu")
 	}

@@ -6,7 +6,7 @@ package security
 
 import (
 	"context"
-	"io/ioutil"
+	"os"
 
 	"go.chromium.org/tast/core/testing"
 )
@@ -27,7 +27,7 @@ func init() {
 
 func SELinuxValidity(ctx context.Context, s *testing.State) {
 	assertFileContent := func(path, expected string) {
-		actual, err := ioutil.ReadFile(path)
+		actual, err := os.ReadFile(path)
 		if err != nil {
 			s.Errorf("Failed to read %q: %v", path, err)
 			return

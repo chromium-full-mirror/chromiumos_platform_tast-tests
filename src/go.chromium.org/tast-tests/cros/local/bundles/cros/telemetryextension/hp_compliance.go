@@ -6,7 +6,7 @@ package telemetryextension
 
 import (
 	"context"
-	"io/ioutil"
+	"os"
 
 	"go.chromium.org/tast-tests/cros/common/testexec"
 	"go.chromium.org/tast-tests/cros/local/bundles/cros/telemetryextension/dep"
@@ -43,25 +43,25 @@ func HPCompliance(ctx context.Context, s *testing.State) {
 		s.Error("OEM data is empty")
 	}
 
-	if activateDateBytes, err := ioutil.ReadFile("/sys/firmware/vpd/rw/ActivateDate"); err != nil {
+	if activateDateBytes, err := os.ReadFile("/sys/firmware/vpd/rw/ActivateDate"); err != nil {
 		s.Error("Failed to read ActivateDate VPD field: ", err)
 	} else if len(activateDateBytes) == 0 {
 		s.Error("ActivateDate VPD is empty")
 	}
 
-	if modelNameBytes, err := ioutil.ReadFile("/sys/firmware/vpd/ro/model_name"); err != nil {
+	if modelNameBytes, err := os.ReadFile("/sys/firmware/vpd/ro/model_name"); err != nil {
 		s.Error("Failed to read model_name VPD field: ", err)
 	} else if len(modelNameBytes) == 0 {
 		s.Error("model_name VPD is empty")
 	}
 
-	if serialNumberBytes, err := ioutil.ReadFile("/sys/firmware/vpd/ro/serial_number"); err != nil {
+	if serialNumberBytes, err := os.ReadFile("/sys/firmware/vpd/ro/serial_number"); err != nil {
 		s.Error("Failed to read serial_number VPD field: ", err)
 	} else if len(serialNumberBytes) == 0 {
 		s.Error("serial_number VPD is empty")
 	}
 
-	if skuNumberBytes, err := ioutil.ReadFile("/sys/firmware/vpd/ro/sku_number"); err != nil {
+	if skuNumberBytes, err := os.ReadFile("/sys/firmware/vpd/ro/sku_number"); err != nil {
 		s.Error("Failed to read sku_number VPD field: ", err)
 	} else if len(skuNumberBytes) == 0 {
 		s.Error("sku_number VPD is empty")

@@ -8,7 +8,6 @@ import (
 	"bytes"
 	"context"
 	"fmt"
-	"io/ioutil"
 	"os"
 	"path/filepath"
 	"strconv"
@@ -48,7 +47,7 @@ func MountOBB(ctx context.Context, s *testing.State) {
 
 	// createFile creates a file at path with given content.
 	createFile := func(path string, content []byte) error {
-		if err := ioutil.WriteFile(path, content, 0644); err != nil {
+		if err := os.WriteFile(path, content, 0644); err != nil {
 			return errors.Wrapf(err, "failed to create %s", path)
 		}
 		return nil
@@ -95,7 +94,7 @@ func MountOBB(ctx context.Context, s *testing.State) {
 		for i := 0; i < 100; i++ {
 			path := filepath.Join(dir, fmt.Sprintf("file%d.txt", i))
 			expect := []byte(strconv.Itoa(i))
-			if data, err := ioutil.ReadFile(path); err != nil {
+			if data, err := os.ReadFile(path); err != nil {
 				s.Errorf("Failed to read %s: %v", path, err)
 				success = false
 			} else if !bytes.Equal(data, expect) {
@@ -118,7 +117,7 @@ func MountOBB(ctx context.Context, s *testing.State) {
 
 		// Verify the large file has expected content.
 		path := filepath.Join(dir, "large_file.data")
-		if data, err := ioutil.ReadFile(path); err != nil {
+		if data, err := os.ReadFile(path); err != nil {
 			s.Errorf("Failed to read %s: %v", path, err)
 			success = false
 		} else if !bytes.Equal(data, largeData) {
@@ -207,7 +206,7 @@ func MountOBB(ctx context.Context, s *testing.State) {
 	runTest := func(variant fatType) {
 		s.Log("Testing FAT", variant)
 
-		tempdir, err := ioutil.TempDir("", "fat"+string(variant))
+		tempdir, err := os.MkdirTemp("", "fat"+string(variant))
 		if err != nil {
 			s.Error("Failed to create tempdir: ", err)
 			return

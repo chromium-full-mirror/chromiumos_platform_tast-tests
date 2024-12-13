@@ -10,7 +10,6 @@ package filesetup
 
 import (
 	"fmt"
-	"io/ioutil"
 	"os"
 
 	"golang.org/x/sys/unix"
@@ -34,7 +33,7 @@ func CreateDir(path string, uid int, mode os.FileMode) {
 // The file will be owned by uid and will have the supplied mode.
 // Panics on error.
 func CreateFile(path, data string, uid int, mode os.FileMode) {
-	if err := ioutil.WriteFile(path, []byte(data), mode); err != nil {
+	if err := os.WriteFile(path, []byte(data), mode); err != nil {
 		panic(fmt.Sprintf("Failed to create %v containing %q: %v", path, data, err))
 	}
 	if err := os.Chown(path, uid, 0); err != nil {

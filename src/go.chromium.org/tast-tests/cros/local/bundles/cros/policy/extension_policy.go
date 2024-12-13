@@ -7,7 +7,6 @@ package policy
 import (
 	"context"
 	"encoding/json"
-	"io/ioutil"
 	"os"
 	"path/filepath"
 	"time"
@@ -62,7 +61,7 @@ func ExtensionPolicy(ctx context.Context, s *testing.State) {
 	defer cancel()
 
 	// Load extension as unpacked.
-	extDir, err := ioutil.TempDir("", "policy_test_extension")
+	extDir, err := os.MkdirTemp("", "policy_test_extension")
 	if err != nil {
 		s.Fatal("Failed to create temporary directory for test extension: ", err)
 	}
@@ -89,7 +88,7 @@ func ExtensionPolicy(ctx context.Context, s *testing.State) {
 		s.Fatalf("Failed to compute extension ID for %v: %v", extDir, err)
 	}
 
-	b, err := ioutil.ReadFile(s.DataPath("extension_policy/policy.json"))
+	b, err := os.ReadFile(s.DataPath("extension_policy/policy.json"))
 	if err != nil {
 		s.Fatal("Failed to load extension_policy.json: ", err)
 	}

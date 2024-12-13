@@ -7,7 +7,7 @@ package platform
 import (
 	"context"
 	"fmt"
-	"io/ioutil"
+	"os"
 	"path/filepath"
 	"strconv"
 	"strings"
@@ -64,7 +64,7 @@ get_fixed_dst_drive`
 		// This file contains the partition size in 512-byte sectors.
 		// See https://patchwork.kernel.org/patch/7922301/ .
 		sizePath := fmt.Sprintf("/sys/block/%s/%s/size", baseDev, partDev)
-		out, err := ioutil.ReadFile(sizePath)
+		out, err := os.ReadFile(sizePath)
 		if err != nil {
 			s.Errorf("Failed to get %s size: %v", partDev, err)
 			continue

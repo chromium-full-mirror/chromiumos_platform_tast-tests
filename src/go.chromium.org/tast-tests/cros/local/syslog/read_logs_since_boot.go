@@ -7,7 +7,6 @@ package syslog
 import (
 	"context"
 	"io"
-	"io/ioutil"
 	"os"
 	"path/filepath"
 	"regexp"
@@ -27,7 +26,7 @@ const (
 
 // BootTime returns last boot time.
 func BootTime() (time.Time, error) {
-	statLogs, err := ioutil.ReadFile(statLogPath)
+	statLogs, err := os.ReadFile(statLogPath)
 	if err != nil {
 		return time.Time{}, errors.Wrap(err, "failed to read status logs")
 	}
@@ -50,7 +49,7 @@ func AuditLogsSinceBoot(ctx context.Context) ([]string, error) {
 	if err != nil {
 		return nil, errors.Wrap(err, "failed to get boot time")
 	}
-	auditLogs, err := ioutil.ReadFile(auditLogPath)
+	auditLogs, err := os.ReadFile(auditLogPath)
 	if err != nil {
 		return nil, errors.Wrap(err, "failed to read audit log")
 	}

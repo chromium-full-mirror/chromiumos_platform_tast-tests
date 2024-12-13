@@ -7,7 +7,6 @@ package debugd
 import (
 	"context"
 	"fmt"
-	"io/ioutil"
 	"os"
 	"path/filepath"
 	"regexp"
@@ -231,10 +230,10 @@ func testTraceSnapshot(ctx context.Context, d *debugd.Debugd) error {
 	}
 
 	if !strings.HasSuffix(trace, snapshot) {
-		if err := ioutil.WriteFile(filepath.Join(dir, "snapshot"), []byte(snapshot), 0644); err != nil {
+		if err := os.WriteFile(filepath.Join(dir, "snapshot"), []byte(snapshot), 0644); err != nil {
 			testing.ContextLog(ctx, "Failed to write snapshot file to output dir")
 		}
-		if err := ioutil.WriteFile(filepath.Join(dir, "trace"), []byte(trace), 0644); err != nil {
+		if err := os.WriteFile(filepath.Join(dir, "trace"), []byte(trace), 0644); err != nil {
 			testing.ContextLog(ctx, "Failed to write snapshot file to output dir")
 		}
 		return errors.New("trace and snapshot contents do not match")
@@ -290,7 +289,7 @@ func testModetestSnapshot(ctx context.Context, d *debugd.Debugd) error {
 	}
 
 	// Fall through to error handling.
-	if err := ioutil.WriteFile(filepath.Join(dir, "modetest_snapshot"), []byte(snapshot), 0644); err != nil {
+	if err := os.WriteFile(filepath.Join(dir, "modetest_snapshot"), []byte(snapshot), 0644); err != nil {
 		testing.ContextLog(ctx, "Failed to write snapshot file to output dir")
 	}
 	return errors.Errorf("snapshot contents does not look like modetest output: %s", reason)
@@ -425,7 +424,7 @@ func setTraceCategoriesAndSize(ctx context.Context, d *debugd.Debugd, categories
 // readFileToString opens the file at |path|, reads its contents, and returns the contents as a string.
 // The contents are trimmed of leading and trailing whitespace.
 func readFileToString(path string) (string, error) {
-	bytes, err := ioutil.ReadFile(path)
+	bytes, err := os.ReadFile(path)
 	if err != nil {
 		return "", err
 	}
@@ -458,7 +457,7 @@ func writeStringToFile(path, contents string) error {
 // The directory at |path| itself will not be removed. If the directory doesn't exist,
 // this function succeeds trivially.
 func removeDirContents(path string) error {
-	dir, err := ioutil.ReadDir(path)
+	dir, err := os.ReadDir(path)
 	if err != nil {
 		if os.IsNotExist(err) {
 			return nil

@@ -6,7 +6,7 @@ package power
 
 import (
 	"context"
-	"io/ioutil"
+	"os"
 	"path"
 	"strings"
 
@@ -34,7 +34,7 @@ func ListingSysfsCoolingDevices(ctx context.Context) ([]*CoolingDevice, error) {
 	var devices []*CoolingDevice
 	const sysfsThermalPath = "/sys/class/thermal"
 	testing.ContextLog(ctx, "Listing cooling devices in ", sysfsThermalPath)
-	files, err := ioutil.ReadDir(sysfsThermalPath)
+	files, err := os.ReadDir(sysfsThermalPath)
 	if err != nil {
 		return devices, errors.Wrap(err, "failed to read sysfs dir")
 	}

@@ -7,7 +7,6 @@ package updateutil
 import (
 	"context"
 	"encoding/json"
-	"io/ioutil"
 	"os"
 	"path/filepath"
 	"strconv"
@@ -72,7 +71,7 @@ func LoadPaygenFromGS(ctx context.Context) (*Paygen, error) {
 
 	src := "gs://chromeos-build-release-console/paygen.json"
 
-	dir, err := ioutil.TempDir("", "paygen")
+	dir, err := os.MkdirTemp("", "paygen")
 	if err != nil {
 		return nil, errors.Wrap(err, "failed to create temp dir")
 	}

@@ -6,8 +6,8 @@ package memory
 
 import (
 	"context"
-	"io/ioutil"
 	"math/rand"
+	"os"
 	"strconv"
 	"time"
 
@@ -148,7 +148,7 @@ func stressTestCase(ctx context.Context, localRand *rand.Rand, mbPerTab, switchC
 
 	// Setup min_filelist_kbytes after chrome start.
 	if minFilelistKB >= 0 {
-		if err := ioutil.WriteFile("/proc/sys/vm/min_filelist_kbytes", []byte(strconv.Itoa(minFilelistKB)), 0644); err != nil {
+		if err := os.WriteFile("/proc/sys/vm/min_filelist_kbytes", []byte(strconv.Itoa(minFilelistKB)), 0644); err != nil {
 			return memorystress.TestCaseResult{}, errors.Wrap(err, "could not write to /proc/sys/vm/min_filelist_kbytes")
 		}
 	}

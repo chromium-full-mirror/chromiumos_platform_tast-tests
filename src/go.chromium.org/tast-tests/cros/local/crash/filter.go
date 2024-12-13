@@ -6,7 +6,6 @@ package crash
 
 import (
 	"context"
-	"io/ioutil"
 	"os"
 	"time"
 
@@ -18,7 +17,7 @@ import (
 // (usually called "filter-in", see platform2/crash-reporter/README.md for more
 // info) and waiting for crash_reporter to finish.
 func enableCrashFiltering(ctx context.Context, filterFile, filter string) error {
-	if err := ioutil.WriteFile(filterFile, []byte(filter), 0644); err != nil {
+	if err := os.WriteFile(filterFile, []byte(filter), 0644); err != nil {
 		return errors.Wrapf(err, "failed writing %q to filter in file %s", filter, filterFile)
 	}
 

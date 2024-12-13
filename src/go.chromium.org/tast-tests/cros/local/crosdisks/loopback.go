@@ -8,7 +8,6 @@ package crosdisks
 
 import (
 	"context"
-	"io/ioutil"
 	"os"
 	"path"
 	"strings"
@@ -25,7 +24,7 @@ type LoopbackDevice struct {
 
 // CreateLoopbackDevice creates a loopback device backed by a file of the specified size.
 func CreateLoopbackDevice(ctx context.Context, sizeBytes int64) (*LoopbackDevice, error) {
-	file, err := ioutil.TempFile("", "cros-disks-loop-*")
+	file, err := os.CreateTemp("", "cros-disks-loop-*")
 	if err != nil {
 		return nil, errors.Wrap(err, "could not create temporary loopback file")
 	}

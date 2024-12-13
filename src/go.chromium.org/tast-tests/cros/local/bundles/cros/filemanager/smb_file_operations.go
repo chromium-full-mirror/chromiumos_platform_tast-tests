@@ -6,7 +6,6 @@ package filemanager
 
 import (
 	"context"
-	"io/ioutil"
 	"os"
 	"path/filepath"
 	"time"
@@ -174,5 +173,5 @@ func testUnmountOperation(ctx context.Context, kb *input.KeyboardEventWriter, s 
 }
 
 func createTestFile(path string) error {
-	return ioutil.WriteFile(path, []byte("blahblah"), 0644)
+	return os.WriteFile(path, []byte("blahblah"), 0644)
 }

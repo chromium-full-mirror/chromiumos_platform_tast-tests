@@ -6,7 +6,6 @@ package metrics
 
 import (
 	"context"
-	"io/ioutil"
 	"os"
 	"path"
 	"regexp"
@@ -37,7 +36,7 @@ func computeCpuidleStateFiles(ctx context.Context) (map[string][]cpuidleTimeFile
 	numCpus := 0
 
 	const cpusDir = "/sys/devices/system/cpu/"
-	cpuInfos, err := ioutil.ReadDir(cpusDir)
+	cpuInfos, err := os.ReadDir(cpusDir)
 	if err != nil {
 		return nil, 0, errors.Wrap(err, "failed to find cpus")
 	}
@@ -52,7 +51,7 @@ func computeCpuidleStateFiles(ctx context.Context) (map[string][]cpuidleTimeFile
 		numCpus++
 
 		cpuDir := path.Join(cpusDir, cpuInfo.Name(), "cpuidle")
-		cpuidles, err := ioutil.ReadDir(cpuDir)
+		cpuidles, err := os.ReadDir(cpuDir)
 		if err != nil {
 			testing.ContextLogf(ctx, "System does not expose %v, skipping CPU", cpuDir)
 			continue

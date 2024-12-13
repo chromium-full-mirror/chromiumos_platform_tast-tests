@@ -6,7 +6,7 @@
 package logging
 
 import (
-	"io/ioutil"
+	"os"
 	"path/filepath"
 	"strings"
 
@@ -75,7 +75,7 @@ func NewVideoLogger() (*VideoLogger, error) {
 
 	for _, l := range vl.specs {
 		for _, f := range l.files {
-			if err := ioutil.WriteFile(f, l.enableValue, 0644); err != nil {
+			if err := os.WriteFile(f, l.enableValue, 0644); err != nil {
 				vl.Close()
 				return nil, errors.Wrap(err, "failed to set log level")
 			}
@@ -89,7 +89,7 @@ func (vl *VideoLogger) Close() error {
 	var lastErr error
 	for _, l := range vl.specs {
 		for _, f := range l.files {
-			if err := ioutil.WriteFile(f, l.disableValue, 0644); err != nil {
+			if err := os.WriteFile(f, l.disableValue, 0644); err != nil {
 				lastErr = errors.Wrap(err, "failed to set log level")
 			}
 		}

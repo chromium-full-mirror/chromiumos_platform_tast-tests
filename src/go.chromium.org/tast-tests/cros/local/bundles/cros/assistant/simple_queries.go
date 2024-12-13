@@ -6,7 +6,7 @@ package assistant
 
 import (
 	"context"
-	"io/ioutil"
+	"os"
 	"path/filepath"
 	"strings"
 
@@ -76,7 +76,7 @@ func testAssistantSimpleMathQuery(ctx context.Context, s *testing.State, tconn *
 		// Writes the HTML response to logName file for debugging if no matching results found.
 		const logName = "math_query_html_response.txt"
 		s.Log("No matching results found. Try to log the HTML response to ", logName)
-		if err := ioutil.WriteFile(filepath.Join(s.OutDir(), logName), []byte(html), 0644); err != nil {
+		if err := os.WriteFile(filepath.Join(s.OutDir(), logName), []byte(html), 0644); err != nil {
 			s.Logf("Failed to log response to %s: %v", logName, err)
 		}
 		s.Fatal("HTML response doesn't contain the answer of the math query")

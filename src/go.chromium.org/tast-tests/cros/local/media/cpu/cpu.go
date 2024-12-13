@@ -7,7 +7,6 @@ package cpu
 
 import (
 	"context"
-	"io/ioutil"
 	"os"
 	"path/filepath"
 	"regexp"
@@ -305,7 +304,7 @@ func disableCPUFrequencyScaling(ctx context.Context) (func(ctx context.Context) 
 func applyConfig(ctx context.Context, cpuConfig []cpuConfigEntry) ([]cpuConfigEntry, error) {
 	var origConfig []cpuConfigEntry
 	for _, config := range cpuConfig {
-		origValue, err := ioutil.ReadFile(config.path)
+		origValue, err := os.ReadFile(config.path)
 		if err != nil {
 			if !config.ignoreErrors {
 				return origConfig, err
@@ -313,7 +312,7 @@ func applyConfig(ctx context.Context, cpuConfig []cpuConfigEntry) ([]cpuConfigEn
 			testing.ContextLogf(ctx, "Failed to read %v: %v", config.path, err)
 			continue
 		}
-		if err = ioutil.WriteFile(config.path, []byte(config.value), 0644); err != nil {
+		if err = os.WriteFile(config.path, []byte(config.value), 0644); err != nil {
 			if !config.ignoreErrors {
 				return origConfig, err
 			}

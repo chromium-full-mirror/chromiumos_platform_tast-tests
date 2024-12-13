@@ -10,7 +10,6 @@ import (
 	"image"
 	"image/png" // PNG decoder
 	"io"
-	"io/ioutil"
 	"os"
 	"path/filepath"
 	"strings"
@@ -190,7 +189,7 @@ func GrabAndCropScreenshot(ctx context.Context, cr *chrome.Chrome, bounds coords
 // GrabScreenshot creates a screenshot and returns an image.Image.
 // The path of the image is generated ramdomly in /tmp.
 func GrabScreenshot(ctx context.Context, cr *chrome.Chrome) (image.Image, error) {
-	fd, err := ioutil.TempFile("", "screenshot")
+	fd, err := os.CreateTemp("", "screenshot")
 	if err != nil {
 		return nil, errors.Wrap(err, "error opening screenshot file")
 	}

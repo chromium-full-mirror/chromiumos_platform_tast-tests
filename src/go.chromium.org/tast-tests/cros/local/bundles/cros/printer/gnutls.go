@@ -8,7 +8,6 @@ import (
 	"bufio"
 	"context"
 	"fmt"
-	"io/ioutil"
 	"os"
 	"strings"
 	"time"
@@ -111,7 +110,7 @@ func GnuTLS(ctx context.Context, s *testing.State) {
 	const lpadminCmdLine = "/usr/sbin/lpadmin"
 	const lpadminUser = "lpadmin"
 
-	tmpDir, err := ioutil.TempDir("", "")
+	tmpDir, err := os.MkdirTemp("", "")
 	if err != nil {
 		s.Fatal("Could not create temp directory: ", err)
 	}

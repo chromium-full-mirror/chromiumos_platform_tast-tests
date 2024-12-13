@@ -10,7 +10,6 @@ import (
 	"crypto/x509"
 	"encoding/json"
 	"fmt"
-	"io/ioutil"
 	"math/rand"
 	"os"
 
@@ -410,7 +409,7 @@ func PrepareCrossVersionLoginData(ctx context.Context, lf hwsec.LogFunc, helper 
 	if err != nil {
 		return errors.Wrap(err, "failed to encode the cross-version-login config to json")
 	}
-	if err := ioutil.WriteFile(configPath, configJSON, 0644); err != nil {
+	if err := os.WriteFile(configPath, configJSON, 0644); err != nil {
 		return errors.Wrapf(err, "failed to write file to %q", configPath)
 	}
 	return nil

@@ -7,7 +7,7 @@ package crash
 import (
 	"context"
 	"fmt"
-	"io/ioutil"
+	"os"
 	"strings"
 
 	"go.chromium.org/tast-tests/cros/local/crash"
@@ -132,7 +132,7 @@ func ServiceFailure(ctx context.Context, s *testing.State) {
 				ss.Error("Multiple service failures found. Leaving for debugging: ", strings.Join(logs, ", "))
 				crash.MoveFilesToOut(sctx, ss.OutDir(), logs...)
 			} else {
-				contents, err := ioutil.ReadFile(logs[0])
+				contents, err := os.ReadFile(logs[0])
 				if err != nil {
 					ss.Error("Couldn't read log file: ", err)
 				}

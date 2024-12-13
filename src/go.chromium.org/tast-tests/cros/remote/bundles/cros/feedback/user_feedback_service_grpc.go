@@ -122,7 +122,7 @@ func UserFeedbackServiceGRPC(ctx context.Context, s *testing.State) {
 		if f.Name == systemLogsTxt {
 			// Note: Here are the steps to extract the system_logs.txt content.
 			// rc, err := f.Open()
-			// systemlogsTxtBytes, err := ioutil.ReadAll(rc)
+			// systemlogsTxtBytes, err := io.ReadAll(rc)
 			systemLogsTxtExists = true
 		}
 	}

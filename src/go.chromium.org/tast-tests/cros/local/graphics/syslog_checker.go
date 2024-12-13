@@ -9,7 +9,7 @@ import (
 	"context"
 	"fmt"
 	"io"
-	"io/ioutil"
+	"os"
 	"regexp"
 	"strconv"
 	"strings"
@@ -227,7 +227,7 @@ func SetHangCheckTimer(ctx context.Context, d time.Duration) error {
 		return errors.Wrap(err, "failed to get hangcheck file")
 	}
 	periodMs := int64(d / time.Millisecond)
-	if err := ioutil.WriteFile(path, []byte(fmt.Sprintf("%d", periodMs)), 0600); err != nil {
+	if err := os.WriteFile(path, []byte(fmt.Sprintf("%d", periodMs)), 0600); err != nil {
 		return errors.Wrapf(err, "failed to write %d to %s", periodMs, path)
 	}
 	testing.ContextLogf(ctx, "Wrote %d to %s", periodMs, path)
@@ -242,7 +242,7 @@ func GetHangCheckTimer(ctx context.Context) (time.Duration, error) {
 		return -1, errors.Wrap(err, "failed to get hangcheck file")
 	}
 
-	b, err := ioutil.ReadFile(p)
+	b, err := os.ReadFile(p)
 	if err != nil {
 		return -1, errors.Wrapf(err, "failed to read %s", p)
 	}

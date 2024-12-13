@@ -7,7 +7,6 @@ package input
 import (
 	"bufio"
 	"fmt"
-	"io/ioutil"
 	"math/big"
 	"os"
 	"path/filepath"
@@ -250,12 +249,12 @@ func ReadInputDevices(root string) ([]DevInfo, error) {
 // corresponding device in /dev/input (e.g. "/dev/input/event3").
 // Unit tests may specify an alternate root directory via root.
 func getDevicePath(sysdir, root string) (string, error) {
-	fis, err := ioutil.ReadDir(filepath.Join(root, sysdir))
+	fis, err := os.ReadDir(filepath.Join(root, sysdir))
 	if err != nil {
 		return "", err
 	}
 	for _, fi := range fis {
-		if !strings.HasPrefix(fi.Name(), "event") || !fi.Mode().IsDir() {
+		if !strings.HasPrefix(fi.Name(), "event") || !fi.Type().IsDir() {
 			continue
 		}
 		dev := filepath.Join(deviceDir, fi.Name())

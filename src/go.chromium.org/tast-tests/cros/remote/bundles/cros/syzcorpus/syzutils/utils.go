@@ -10,7 +10,7 @@ import (
 	"bytes"
 	"context"
 	"fmt"
-	"io/ioutil"
+	"os"
 	"path/filepath"
 	"strings"
 	"time"
@@ -151,7 +151,7 @@ func ExtractCorpus(ctx context.Context, tastDir, dataPath string) error {
 // LoadEnabledRepros reads and returns a list of repros from the
 // provided input filepath.
 func LoadEnabledRepros(fpath string) (map[string]bool, error) {
-	contents, err := ioutil.ReadFile(fpath)
+	contents, err := os.ReadFile(fpath)
 	if err != nil {
 		return nil, err
 	}

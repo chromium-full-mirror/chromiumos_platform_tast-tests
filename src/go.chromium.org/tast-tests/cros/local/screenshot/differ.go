@@ -12,7 +12,6 @@ import (
 	"image/color"
 	"image/draw"
 	"image/png"
-	"io/ioutil"
 	"math"
 	"math/rand"
 	"net/url"
@@ -224,7 +223,7 @@ func (d *differ) initialize(ctx context.Context) error {
 	if err := os.MkdirAll(d.dir, 0755); err != nil {
 		return err
 	}
-	if err := ioutil.WriteFile(filepath.Join(d.dir, keysFile), jsonString, 0644); err != nil {
+	if err := os.WriteFile(filepath.Join(d.dir, keysFile), jsonString, 0644); err != nil {
 		return err
 	}
 
@@ -633,7 +632,7 @@ func (d *differ) authenticateGold(ctx context.Context) (bool, error) {
 	if !ok {
 		return false, nil
 	}
-	if err := ioutil.WriteFile(goldServiceAccountKeyFile, []byte(key), 0644); err != nil {
+	if err := os.WriteFile(goldServiceAccountKeyFile, []byte(key), 0644); err != nil {
 		return true, err
 	}
 

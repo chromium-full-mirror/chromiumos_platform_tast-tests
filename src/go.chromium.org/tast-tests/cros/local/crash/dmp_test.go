@@ -5,24 +5,23 @@
 package crash
 
 import (
-	"io/ioutil"
 	"math"
 	"os"
 	"testing"
 )
 
 func TestSimpleSuccess(t *testing.T) {
-	dir, err := ioutil.TempDir("", "TestSimpleSuccess")
+	dir, err := os.MkdirTemp("", "TestSimpleSuccess")
 	if err != nil {
-		t.Fatalf("ioutil.TempDir: %v", err)
+		t.Fatalf("os.MkdirTemp: %v", err)
 	}
 	defer os.RemoveAll(dir)
 
 	const contents = "pid:4:1234"
 	fileName := dir + "/test.dmp"
 
-	if err = ioutil.WriteFile(fileName, []byte(contents), 0755); err != nil {
-		t.Fatalf("ioutil.WriteFile: %v", err)
+	if err = os.WriteFile(fileName, []byte(contents), 0755); err != nil {
+		t.Fatalf("os.WriteFile: %v", err)
 	}
 
 	if found, err := IsBreakpadDmpFileForPID(fileName, 1234); err != nil {
@@ -33,17 +32,17 @@ func TestSimpleSuccess(t *testing.T) {
 }
 
 func TestWrongPID(t *testing.T) {
-	dir, err := ioutil.TempDir("", "TestWrongPID")
+	dir, err := os.MkdirTemp("", "TestWrongPID")
 	if err != nil {
-		t.Fatalf("ioutil.TempDir: %v", err)
+		t.Fatalf("os.MkdirTemp: %v", err)
 	}
 	defer os.RemoveAll(dir)
 
 	const contents = "pid:3:555"
 	fileName := dir + "/test.dmp"
 
-	if err = ioutil.WriteFile(fileName, []byte(contents), 0755); err != nil {
-		t.Fatalf("ioutil.WriteFile: %v", err)
+	if err = os.WriteFile(fileName, []byte(contents), 0755); err != nil {
+		t.Fatalf("os.WriteFile: %v", err)
 	}
 
 	if found, err := IsBreakpadDmpFileForPID(fileName, 1234); err != nil {
@@ -54,17 +53,17 @@ func TestWrongPID(t *testing.T) {
 }
 
 func TestMultipleKeySuccess(t *testing.T) {
-	dir, err := ioutil.TempDir("", "TestMultipleKeySuccess")
+	dir, err := os.MkdirTemp("", "TestMultipleKeySuccess")
 	if err != nil {
-		t.Fatalf("ioutil.TempDir: %v", err)
+		t.Fatalf("os.MkdirTemp: %v", err)
 	}
 	defer os.RemoveAll(dir)
 
 	const contents = "prod:15:Chrome_ChromeOSptype:7:browseruser:8:chromeospid:4:1234"
 	fileName := dir + "/test.dmp"
 
-	if err = ioutil.WriteFile(fileName, []byte(contents), 0755); err != nil {
-		t.Fatalf("ioutil.WriteFile: %v", err)
+	if err = os.WriteFile(fileName, []byte(contents), 0755); err != nil {
+		t.Fatalf("os.WriteFile: %v", err)
 	}
 
 	if found, err := IsBreakpadDmpFileForPID(fileName, 1234); err != nil {
@@ -75,17 +74,17 @@ func TestMultipleKeySuccess(t *testing.T) {
 }
 
 func TestMultipleKeySuccess2(t *testing.T) {
-	dir, err := ioutil.TempDir("", "TestMultipleKeySuccess2")
+	dir, err := os.MkdirTemp("", "TestMultipleKeySuccess2")
 	if err != nil {
-		t.Fatalf("ioutil.TempDir: %v", err)
+		t.Fatalf("os.MkdirTemp: %v", err)
 	}
 	defer os.RemoveAll(dir)
 
 	const contents = "prod:15:Chrome_ChromeOSptype:7:browserpid:4:1234user:8:chromeos"
 	fileName := dir + "/test.dmp"
 
-	if err = ioutil.WriteFile(fileName, []byte(contents), 0755); err != nil {
-		t.Fatalf("ioutil.WriteFile: %v", err)
+	if err = os.WriteFile(fileName, []byte(contents), 0755); err != nil {
+		t.Fatalf("os.WriteFile: %v", err)
 	}
 
 	if found, err := IsBreakpadDmpFileForPID(fileName, 1234); err != nil {
@@ -96,17 +95,17 @@ func TestMultipleKeySuccess2(t *testing.T) {
 }
 
 func TestNoPIDKey(t *testing.T) {
-	dir, err := ioutil.TempDir("", "TestNoPIDKey")
+	dir, err := os.MkdirTemp("", "TestNoPIDKey")
 	if err != nil {
-		t.Fatalf("ioutil.TempDir: %v", err)
+		t.Fatalf("os.MkdirTemp: %v", err)
 	}
 	defer os.RemoveAll(dir)
 
 	const contents = "prod:15:Chrome_ChromeOSptype:7:browseruser:8:chromeos"
 	fileName := dir + "/test.dmp"
 
-	if err = ioutil.WriteFile(fileName, []byte(contents), 0755); err != nil {
-		t.Fatalf("ioutil.WriteFile: %v", err)
+	if err = os.WriteFile(fileName, []byte(contents), 0755); err != nil {
+		t.Fatalf("os.WriteFile: %v", err)
 	}
 
 	if found, err := IsBreakpadDmpFileForPID(fileName, 1234); err != nil {
@@ -117,17 +116,17 @@ func TestNoPIDKey(t *testing.T) {
 }
 
 func TestMalformedIncompleteKey(t *testing.T) {
-	dir, err := ioutil.TempDir("", "TestMalformedIncompleteKey")
+	dir, err := os.MkdirTemp("", "TestMalformedIncompleteKey")
 	if err != nil {
-		t.Fatalf("ioutil.TempDir: %v", err)
+		t.Fatalf("os.MkdirTemp: %v", err)
 	}
 	defer os.RemoveAll(dir)
 
 	const contents = "prod:15:Chrome_ChromeOSptype:7:browseruser:8:chromeospid"
 	fileName := dir + "/test.dmp"
 
-	if err = ioutil.WriteFile(fileName, []byte(contents), 0755); err != nil {
-		t.Fatalf("ioutil.WriteFile: %v", err)
+	if err = os.WriteFile(fileName, []byte(contents), 0755); err != nil {
+		t.Fatalf("os.WriteFile: %v", err)
 	}
 
 	if _, err := IsBreakpadDmpFileForPID(fileName, 1234); err == nil {
@@ -136,17 +135,17 @@ func TestMalformedIncompleteKey(t *testing.T) {
 }
 
 func TestMalformedIncompleteLength(t *testing.T) {
-	dir, err := ioutil.TempDir("", "TestMalformedIncompleteLength")
+	dir, err := os.MkdirTemp("", "TestMalformedIncompleteLength")
 	if err != nil {
-		t.Fatalf("ioutil.TempDir: %v", err)
+		t.Fatalf("os.MkdirTemp: %v", err)
 	}
 	defer os.RemoveAll(dir)
 
 	const contents = "prod:15:Chrome_ChromeOSptype:7:browseruser:8:chromeospid:4"
 	fileName := dir + "/test.dmp"
 
-	if err = ioutil.WriteFile(fileName, []byte(contents), 0755); err != nil {
-		t.Fatalf("ioutil.WriteFile: %v", err)
+	if err = os.WriteFile(fileName, []byte(contents), 0755); err != nil {
+		t.Fatalf("os.WriteFile: %v", err)
 	}
 
 	if _, err = IsBreakpadDmpFileForPID(fileName, 1234); err == nil {
@@ -155,17 +154,17 @@ func TestMalformedIncompleteLength(t *testing.T) {
 }
 
 func TestMalformedIncompleteValue(t *testing.T) {
-	dir, err := ioutil.TempDir("", "TestMalformedIncompleteValue")
+	dir, err := os.MkdirTemp("", "TestMalformedIncompleteValue")
 	if err != nil {
-		t.Fatalf("ioutil.TempDir: %v", err)
+		t.Fatalf("os.MkdirTemp: %v", err)
 	}
 	defer os.RemoveAll(dir)
 
 	const contents = "prod:15:Chrome_ChromeOSptype:7:browseruser:8:ch"
 	fileName := dir + "/test.dmp"
 
-	if err = ioutil.WriteFile(fileName, []byte(contents), 0755); err != nil {
-		t.Fatalf("ioutil.WriteFile: %v", err)
+	if err = os.WriteFile(fileName, []byte(contents), 0755); err != nil {
+		t.Fatalf("os.WriteFile: %v", err)
 	}
 
 	if _, err := IsBreakpadDmpFileForPID(fileName, 1234); err == nil {
@@ -174,9 +173,9 @@ func TestMalformedIncompleteValue(t *testing.T) {
 }
 
 func TestNonUTF8(t *testing.T) {
-	dir, err := ioutil.TempDir("", "TestNonUTF8")
+	dir, err := os.MkdirTemp("", "TestNonUTF8")
 	if err != nil {
-		t.Fatalf("ioutil.TempDir: %v", err)
+		t.Fatalf("os.MkdirTemp: %v", err)
 	}
 	defer os.RemoveAll(dir)
 
@@ -199,8 +198,8 @@ func TestNonUTF8(t *testing.T) {
 
 	fileName := dir + "/test.dmp"
 
-	if err = ioutil.WriteFile(fileName, []byte(contents), 0755); err != nil {
-		t.Fatalf("ioutil.WriteFile: %v", err)
+	if err = os.WriteFile(fileName, []byte(contents), 0755); err != nil {
+		t.Fatalf("os.WriteFile: %v", err)
 	}
 
 	if found, err := IsBreakpadDmpFileForPID(fileName, 1234); err != nil {

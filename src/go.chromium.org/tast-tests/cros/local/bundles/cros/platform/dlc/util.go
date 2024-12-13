@@ -12,7 +12,6 @@ import (
 	"encoding/hex"
 	"encoding/json"
 	"fmt"
-	"io/ioutil"
 	"os"
 	"os/user"
 	"path/filepath"
@@ -70,7 +69,7 @@ func getRootMounts(path, id string) ([]string, error) {
 func checkSHA2Sum(hashPath string) error {
 	// Get the actual SHA256 sum.
 	path := removeExt(hashPath)
-	actualBytes, err := ioutil.ReadFile(path)
+	actualBytes, err := os.ReadFile(path)
 	if err != nil {
 		return err
 	}
@@ -78,7 +77,7 @@ func checkSHA2Sum(hashPath string) error {
 	actualSum := hex.EncodeToString(actualSumBytes[:])
 
 	// Get the expected SHA256 sum.
-	expectedBytes, err := ioutil.ReadFile(hashPath)
+	expectedBytes, err := os.ReadFile(hashPath)
 	if err != nil {
 		return err
 	}
@@ -104,7 +103,7 @@ func checkPerms(parmsPath string) error {
 	actualPerm := fmt.Sprintf("%#o", info.Mode().Perm())
 
 	// Get the expected permissions.
-	permsBytes, err := ioutil.ReadFile(parmsPath)
+	permsBytes, err := os.ReadFile(parmsPath)
 	if err != nil {
 		return err
 	}
@@ -148,7 +147,7 @@ func verifyDlcContent(path, id string) error {
 
 // dlcList reads in the given path and then converts it to a map of structs.
 func dlcList(path string) (map[string][]ListOutput, error) {
-	b, err := ioutil.ReadFile(path)
+	b, err := os.ReadFile(path)
 	if err != nil {
 		return nil, err
 	}
@@ -231,11 +230,11 @@ func DumpAndVerifyInstalledDLCs(ctx context.Context, dumpPath, tag string, ids .
 
 // CopyFileWithPermissions copies file |from| to |to| and sets permissions.
 func CopyFileWithPermissions(from, to string, perms os.FileMode) error {
-	b, err := ioutil.ReadFile(from)
+	b, err := os.ReadFile(from)
 	if err != nil {
 		return errors.Wrap(err, "failed to read file")
 	}
-	if err := ioutil.WriteFile(to, b, perms); err != nil {
+	if err := os.WriteFile(to, b, perms); err != nil {
 		return errors.Wrap(err, "failed to write file")
 	}
 	return nil

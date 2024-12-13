@@ -8,7 +8,6 @@ import (
 	"bytes"
 	"context"
 	"fmt"
-	"io/ioutil"
 	"os"
 	"path/filepath"
 	"time"
@@ -80,7 +79,7 @@ func waitUntilFileAvailable(ctx context.Context, path string) error {
 // VhostUserNet is used as one of the standard SW gates (go/pe-sw-gates).
 // Please ask to crosvm-core@ if you want to modify or delete this test.
 func VhostUserNet(ctx context.Context, s *testing.State) {
-	td, err := ioutil.TempDir("", "tast.vm.VhostUserNet.")
+	td, err := os.MkdirTemp("", "tast.vm.VhostUserNet.")
 	if err != nil {
 		s.Fatal("Failed to create temporary directory: ", err)
 	}
@@ -199,7 +198,7 @@ func VhostUserNet(ctx context.Context, s *testing.State) {
 	}
 
 	// Check client log
-	log, err := ioutil.ReadFile(clientLog)
+	log, err := os.ReadFile(clientLog)
 	if err != nil {
 		s.Fatalf("Failed to read %s: %v", clientLog, err)
 	}

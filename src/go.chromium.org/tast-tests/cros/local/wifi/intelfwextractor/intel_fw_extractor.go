@@ -11,7 +11,6 @@ import (
 	"context"
 	"encoding/binary"
 	"io"
-	"io/ioutil"
 	"os"
 	"strings"
 
@@ -115,7 +114,7 @@ func ValidateFWDump(ctx context.Context, file string) error {
 	}
 	defer r.Close()
 
-	fwDumpData, err := ioutil.ReadAll(r)
+	fwDumpData, err := io.ReadAll(r)
 	if err != nil {
 		return errors.Wrap(err, "failed to read the fw_dump")
 	}

@@ -8,7 +8,7 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
-	"io/ioutil"
+	"os"
 	"path"
 	"path/filepath"
 	"strconv"
@@ -66,7 +66,7 @@ func NewZramStats() (*ZramStats, error) {
 	} else if len(files) != 1 {
 		return nil, errors.Errorf("expected 1 zram device, got %d", len(files))
 	}
-	statBlob, err := ioutil.ReadFile(files[0])
+	statBlob, err := os.ReadFile(files[0])
 	if err != nil {
 		return nil, errors.Wrap(err, "failed to read zram stat")
 	}
@@ -183,7 +183,7 @@ func ZramStatMetrics(ctx context.Context, base *ZramStats, p *perf.Values, outdi
 			return errors.Wrap(err, "failed to serialize mm_stat metrics to JSON")
 		}
 		filename := fmt.Sprintf("zram_stat%s.json", suffix)
-		if err := ioutil.WriteFile(path.Join(outdir, filename), statJSON, 0644); err != nil {
+		if err := os.WriteFile(path.Join(outdir, filename), statJSON, 0644); err != nil {
 			return errors.Wrapf(err, "failed to write zram stats to %s", filename)
 		}
 	}

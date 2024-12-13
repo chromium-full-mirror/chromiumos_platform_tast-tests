@@ -7,7 +7,7 @@ package cryptohome
 import (
 	"bytes"
 	"context"
-	"io/ioutil"
+	"os"
 	"path/filepath"
 	"time"
 
@@ -74,7 +74,7 @@ func UpdatePassword(ctx context.Context, s *testing.State) {
 		s.Fatal("Failed to get user vault path: ", err)
 	}
 	filePath := filepath.Join(userPath, testFile)
-	if err := ioutil.WriteFile(filePath, []byte(testFileContent), 0644); err != nil {
+	if err := os.WriteFile(filePath, []byte(testFileContent), 0644); err != nil {
 		s.Fatal("Failed to write a file to the vault: ", err)
 	}
 
@@ -99,7 +99,7 @@ func UpdatePassword(ctx context.Context, s *testing.State) {
 		}
 
 		// Verify that the test file is still there.
-		if content, err := ioutil.ReadFile(filePath); err != nil {
+		if content, err := os.ReadFile(filePath); err != nil {
 			return authSessionID, errors.Wrap(err, "failed to read back test file")
 		} else if !bytes.Equal(content, []byte(testFileContent)) {
 			return authSessionID, errors.Errorf("incorrect tests file content. got: %q, want: %q", content, testFileContent)

@@ -6,7 +6,7 @@ package debugd
 
 import (
 	"context"
-	"io/ioutil"
+	"os"
 
 	"go.chromium.org/tast-tests/cros/local/debugd"
 	"go.chromium.org/tast-tests/cros/local/printing/printer"
@@ -68,7 +68,7 @@ func addPrinterWithExpectedStatus(
 // ATOW this involves a sandboxed helper executable; this test helps
 // guard against the possibility of seccomp filters going stale.
 func ParsePrinterUris(ctx context.Context, s *testing.State) {
-	ppd, err := ioutil.ReadFile(s.DataPath("GenericPostScript.ppd.gz"))
+	ppd, err := os.ReadFile(s.DataPath("GenericPostScript.ppd.gz"))
 	if err != nil {
 		s.Fatal("Failed to read PPD file: ", err)
 	}

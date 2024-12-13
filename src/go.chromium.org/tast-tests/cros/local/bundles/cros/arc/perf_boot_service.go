@@ -6,7 +6,6 @@ package arc
 
 import (
 	"context"
-	"io/ioutil"
 	"os"
 
 	"github.com/golang/protobuf/ptypes/empty"
@@ -60,7 +59,7 @@ func (c *PerfBootService) GetPerfValues(ctx context.Context, req *empty.Empty) (
 	}
 	defer cr.Close(ctx)
 
-	td, err := ioutil.TempDir("", "")
+	td, err := os.MkdirTemp("", "")
 	if err != nil {
 		return nil, errors.Wrap(err, "failed to create a temp dir")
 	}

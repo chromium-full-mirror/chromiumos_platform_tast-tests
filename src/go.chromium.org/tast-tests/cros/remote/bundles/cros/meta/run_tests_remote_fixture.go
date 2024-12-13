@@ -7,7 +7,7 @@ package meta
 import (
 	"context"
 	"fmt"
-	"io/ioutil"
+	"os"
 	"path/filepath"
 	"regexp"
 
@@ -75,7 +75,7 @@ func RunTestsRemoteFixture(ctx context.Context, s *testing.State) {
 			}
 
 			for k, re := range tc.wantLogs {
-				if b, err := ioutil.ReadFile(filepath.Join(resultsDir, k)); err != nil {
+				if b, err := os.ReadFile(filepath.Join(resultsDir, k)); err != nil {
 					s.Errorf("Log %s: %v", k, err)
 				} else if !re.Match(b) {
 					s.Errorf("Log %s didn't match with %s", k, re)

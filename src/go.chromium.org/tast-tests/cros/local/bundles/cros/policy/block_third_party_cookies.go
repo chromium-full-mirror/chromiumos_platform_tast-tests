@@ -7,8 +7,8 @@ package policy
 import (
 	"context"
 	"fmt"
-	"io/ioutil"
 	"net/http"
+	"os"
 	"path/filepath"
 	"strings"
 	"time"
@@ -100,7 +100,7 @@ func BlockThirdPartyCookies(ctx context.Context, s *testing.State) {
 
 	// For third_party_cookies.html, we need to insert the right port number to the other server into the HTML.
 	path := s.DataPath("third_party_cookies.html")
-	htmlBuffer, err := ioutil.ReadFile(path)
+	htmlBuffer, err := os.ReadFile(path)
 	if err != nil {
 		s.Fatal("Couldn't read .html template file")
 	}
@@ -108,7 +108,7 @@ func BlockThirdPartyCookies(ctx context.Context, s *testing.State) {
 
 	// Read third_party_cookies.js, because we need to write it in our custom handler that also sets the cookies.
 	jsPath := s.DataPath("third_party_cookies.js")
-	jsBuffer, err := ioutil.ReadFile(jsPath)
+	jsBuffer, err := os.ReadFile(jsPath)
 	if err != nil {
 		s.Fatal("Couldn't read .js file")
 	}

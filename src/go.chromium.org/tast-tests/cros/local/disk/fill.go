@@ -6,7 +6,6 @@ package disk
 
 import (
 	"context"
-	"io/ioutil"
 	"os"
 	"time"
 
@@ -20,7 +19,7 @@ import (
 // Fill creates a temporary file in a directory that fills the disk by
 // allocating it, but without performing any actual IO to write the content.
 func Fill(dir string, tofill uint64) (string, error) {
-	file, err := ioutil.TempFile(dir, "fill.*.dat")
+	file, err := os.CreateTemp(dir, "fill.*.dat")
 	if err != nil {
 		return "", errors.Wrapf(err, "failed to create temp file in %s", dir)
 	}

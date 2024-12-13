@@ -9,7 +9,7 @@ package video
 import (
 	"context"
 	"fmt"
-	"io/ioutil"
+	"os"
 	"path/filepath"
 	"regexp"
 	"strconv"
@@ -111,7 +111,7 @@ func (t *arcTestConfig) argsList() ([]string, error) {
 
 // writeLinesToFile writes lines to filepath line by line.
 func writeLinesToFile(lines []string, filepath string) error {
-	return ioutil.WriteFile(filepath, []byte(strings.Join(lines, "\n")+"\n"), 0644)
+	return os.WriteFile(filepath, []byte(strings.Join(lines, "\n")+"\n"), 0644)
 }
 
 func arcVideoTestCleanup(ctx context.Context, a *arc.ARC) {
@@ -364,7 +364,7 @@ func RunAllARCVideoTests(ctx context.Context, s *testing.State, opts DecodeTestO
 
 // reportFrameStats parses FPS and dropped frame info from log file
 func reportFrameStats(logPath string) (float64, float64, error) {
-	b, err := ioutil.ReadFile(logPath)
+	b, err := os.ReadFile(logPath)
 	if err != nil {
 		return 0, 0, errors.Wrap(err, "failed to read file")
 	}

@@ -8,7 +8,6 @@ package shillscript
 import (
 	"context"
 	"fmt"
-	"io/ioutil"
 	"os"
 	"os/user"
 	"path/filepath"
@@ -299,7 +298,7 @@ func AssureIsLinkTo(path, pointee string) error {
 
 // CreateFileWithContents creates a file named |filename| that contains contents.
 func CreateFileWithContents(fileName, contents string) error {
-	if err := ioutil.WriteFile(fileName, []byte(contents), 0644); err != nil {
+	if err := os.WriteFile(fileName, []byte(contents), 0644); err != nil {
 		return err
 	}
 	return nil

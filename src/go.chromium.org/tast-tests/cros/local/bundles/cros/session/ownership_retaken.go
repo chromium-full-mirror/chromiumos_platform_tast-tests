@@ -7,7 +7,7 @@ package session
 import (
 	"bytes"
 	"context"
-	"io/ioutil"
+	"os"
 	"path/filepath"
 	"time"
 
@@ -89,7 +89,7 @@ func readPolicyProto(ctx context.Context, sessionManager *session.SessionManager
 // readPublicKey returns the public half of the owner key.
 func readPublicKey(ctx context.Context) ([]byte, error) {
 	path := filepath.Join(session.PolicyPath, "owner.key")
-	pubKey, err := ioutil.ReadFile(path)
+	pubKey, err := os.ReadFile(path)
 	if err != nil {
 		return nil, errors.Wrap(err, "failed to read owner key")
 	}
@@ -261,7 +261,7 @@ func OwnershipRetaken(ctx context.Context, s *testing.State) {
 	// But policy values should stay the same.
 	if diff := cmp.Diff(policyValues1, policyValues2, protocmp.Transform()); diff != "" {
 		const diffName = "diff.txt"
-		if err := ioutil.WriteFile(filepath.Join(s.OutDir(), diffName), []byte(diff), 0644); err != nil {
+		if err := os.WriteFile(filepath.Join(s.OutDir(), diffName), []byte(diff), 0644); err != nil {
 			s.Error("Failed to write diff: ", err)
 		}
 		s.Error("Policy values changed after the ownership was retaken, diff can be found in ", diffName)

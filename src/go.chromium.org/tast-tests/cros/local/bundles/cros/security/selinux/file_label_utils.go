@@ -7,7 +7,6 @@ package selinux
 import (
 	"context"
 	"fmt"
-	"io/ioutil"
 	"os"
 	"path/filepath"
 	"regexp"
@@ -178,7 +177,7 @@ func CheckContext(ctx context.Context, s *testing.State, req *CheckContextReq) {
 		return
 	}
 
-	fis, err := ioutil.ReadDir(req.Path)
+	fis, err := os.ReadDir(req.Path)
 	if err != nil {
 		if !req.IgnoreErrors {
 			s.Errorf("Failed to list directory %s: %s", req.Path, err)
@@ -244,7 +243,7 @@ func IIOSensorDevices() ([]string, error) {
 	var firstErr error
 	var errCnt int
 	for _, entry := range trees {
-		name, err := ioutil.ReadFile(filepath.Join(entry, "name"))
+		name, err := os.ReadFile(filepath.Join(entry, "name"))
 		if err != nil {
 			if firstErr == nil {
 				firstErr = errors.Wrap(err, "unable to determine device name")

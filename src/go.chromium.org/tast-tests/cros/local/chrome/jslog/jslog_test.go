@@ -6,7 +6,6 @@ package jslog
 
 import (
 	"io"
-	"io/ioutil"
 	"os"
 	"path/filepath"
 	"testing"
@@ -66,7 +65,7 @@ func verifyLog(t *testing.T, agg *Aggregator, exp string) {
 		t.Fatal("Failed to save JS logs: ", err)
 	}
 
-	data, err := ioutil.ReadFile(fn)
+	data, err := os.ReadFile(fn)
 	if err != nil {
 		t.Fatal("Failed to read JS logs: ", err)
 	}

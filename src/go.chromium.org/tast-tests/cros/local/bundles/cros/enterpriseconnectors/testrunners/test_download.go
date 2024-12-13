@@ -6,7 +6,6 @@ package testrunners
 
 import (
 	"context"
-	"io/ioutil"
 	"net/http"
 	"net/http/httptest"
 	"os"
@@ -77,7 +76,7 @@ func TestDownload(ctx context.Context, s *testing.State, cr *chrome.Chrome, cryp
 	if err != nil {
 		s.Fatal("Failed to get user's Download path: ", err)
 	}
-	files, err := ioutil.ReadDir(downloadsPath)
+	files, err := os.ReadDir(downloadsPath)
 	if err != nil {
 		s.Fatal("Failed to get files from Downloads directory")
 	}

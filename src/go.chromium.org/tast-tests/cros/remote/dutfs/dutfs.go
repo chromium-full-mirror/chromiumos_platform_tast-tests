@@ -134,7 +134,7 @@ func (c *Client) RemoveAll(ctx context.Context, name string) error {
 // random string replaces the last "*". If dir is the empty string, TempDir uses
 // the default directory for temporary files. TempDir returns the name of the
 // new directory.
-// The remote implementation calls ioutil.TempDir; see that for more details.
+// The remote implementation calls os.MkdirTemp; see that for more details.
 func (c *Client) TempDir(ctx context.Context, dir, pattern string) (string, error) {
 	res, err := c.fs.TempDir(ctx, &baserpc.TempDirRequest{Dir: dir, Pattern: pattern})
 	if err != nil {

@@ -7,7 +7,6 @@ package hostapd
 import (
 	"context"
 	"fmt"
-	"io/ioutil"
 	"os"
 	"path/filepath"
 	"strings"
@@ -73,7 +72,7 @@ func (s *Server) OutDir() string {
 // finished.
 func (s *Server) Start(ctx context.Context) (retErr error) {
 	var err error
-	if s.tmpDir, err = ioutil.TempDir("", ""); err != nil {
+	if s.tmpDir, err = os.MkdirTemp("", ""); err != nil {
 		return errors.Wrap(err, "failed to create a temporary directory")
 	}
 	defer func() {

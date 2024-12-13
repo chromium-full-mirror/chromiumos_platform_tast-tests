@@ -7,7 +7,7 @@ package platform
 import (
 	"bytes"
 	"context"
-	"io/ioutil"
+	"os"
 	"path/filepath"
 	"runtime"
 	"sort"
@@ -51,7 +51,7 @@ func ReportDiskUsage(ctx context.Context, s *testing.State) {
 
 	// Report the production image size if it exists.
 	const prodFile = "/root/bytes-rootfs-prod"
-	if b, err := ioutil.ReadFile(prodFile); err == nil {
+	if b, err := os.ReadFile(prodFile); err == nil {
 		if size, err := strconv.ParseInt(string(bytes.TrimSpace(b)), 10, 64); err != nil {
 			s.Errorf("Failed to parse %q from %v: %v", string(b), prodFile, err)
 		} else {

@@ -6,7 +6,6 @@ package wifi
 
 import (
 	"context"
-	"io/ioutil"
 	"os"
 	"path/filepath"
 	"strings"
@@ -248,7 +247,7 @@ func Driver(ctx context.Context, s *testing.State) {
 	}
 
 	moduleDir := filepath.Join("/sys/class/net", netIf, "device/driver/")
-	dirs, err := ioutil.ReadDir(moduleDir)
+	dirs, err := os.ReadDir(moduleDir)
 	if err != nil {
 		s.Fatal("Failed to list module path: ", err)
 	}

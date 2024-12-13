@@ -9,7 +9,6 @@ import (
 	"context"
 	"encoding/binary"
 	"fmt"
-	"io/ioutil"
 	"os"
 	"sort"
 	"strconv"
@@ -245,7 +244,7 @@ func NewImageFromData(data []byte, sections map[ImageSection]SectionInfo) *Image
 
 // NewImage creates an Image object representing the currently loaded BIOS image. If you pass in a section, only that section will be read.
 func NewImage(ctx context.Context, section ImageSection, flashromInstance *flashrom.Instance) (*Image, error) {
-	tmpFile, err := ioutil.TempFile("", "")
+	tmpFile, err := os.CreateTemp("", "")
 	if err != nil {
 		return nil, errors.Wrap(err, "creating tmpfile for image contents")
 	}
@@ -263,7 +262,7 @@ func NewImage(ctx context.Context, section ImageSection, flashromInstance *flash
 		return nil, errors.Wrapf(err, "could not read firmware host image: %v", string(out))
 	}
 
-	data, err := ioutil.ReadFile(tmpFile.Name())
+	data, err := os.ReadFile(tmpFile.Name())
 	if err != nil {
 		return nil, errors.Wrap(err, "could not read firmware host image contents")
 	}
@@ -293,7 +292,7 @@ func NewImageToFile(ctx context.Context, section ImageSection, flashromInstance 
 	if dirpath == "" {
 		fileDir = "/var/tmp"
 	}
-	tmpFile, err := ioutil.TempFile(fileDir, "")
+	tmpFile, err := os.CreateTemp(fileDir, "")
 	if err != nil {
 		return "", errors.Wrap(err, "creating tmpfile for image contents")
 	}
@@ -324,14 +323,14 @@ func (i *Image) WriteImageToFile(ctx context.Context, sec ImageSection, dirpath 
 	if dirpath == "" {
 		fileDir = "/var/tmp"
 	}
-	imgFile, err := ioutil.TempFile(fileDir, "")
+	imgFile, err := os.CreateTemp(fileDir, "")
 	if err != nil {
 		return "", errors.Wrap(err, "creating tmpfile for image contents")
 	}
 
 	dataToWrite := i.Data[dataRange.Start : dataRange.Start+dataRange.Length]
 
-	if err := ioutil.WriteFile(imgFile.Name(), dataToWrite, 0644); err != nil {
+	if err := os.WriteFile(imgFile.Name(), dataToWrite, 0644); err != nil {
 		return "", errors.Wrap(err, "writing image contents to tmpfile")
 	}
 
@@ -537,7 +536,7 @@ func ChromeosFirmwareUpdate(ctx context.Context, mode FirmwareUpdateMode, option
 
 // ParseFMAP reads FMAP for given programmer then parses it into map.
 func ParseFMAP(ctx context.Context, flashromInstance *flashrom.Instance) ([]*pb.FMAP_FMAPEntry, error) {
-	tmpFile, err := ioutil.TempFile("", "")
+	tmpFile, err := os.CreateTemp("", "")
 	if err != nil {
 		return nil, errors.Wrap(err, "creating tmpfile to read FMAP")
 	}

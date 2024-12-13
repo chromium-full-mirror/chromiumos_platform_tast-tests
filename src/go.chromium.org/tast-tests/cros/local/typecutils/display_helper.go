@@ -8,7 +8,7 @@ package typecutils
 import (
 	"context"
 	"fmt"
-	"io/ioutil"
+	"os"
 	"regexp"
 	"strings"
 	"time"
@@ -100,7 +100,7 @@ func CheckDisplayInfo(ctx context.Context, typecHdmiConnector, typecDpConnector 
 		displayPattern = regexp.MustCompile(`.*DP branch device present.*yes\n.*Type.*HDMI`)
 	}
 	if err := testing.Poll(ctx, func(ctx context.Context) error {
-		out, err := ioutil.ReadFile(displayInfoFile)
+		out, err := os.ReadFile(displayInfoFile)
 		if err != nil {
 			return errors.Wrap(err, "failed to read display info file ")
 		}
@@ -162,7 +162,7 @@ func SetMirrorDisplay(ctx context.Context, tconn *chrome.TestConn, set bool) err
 
 // VerifyDisplay4KResolution verifies whether the connected display has 4k resolution or not.
 func VerifyDisplay4KResolution(ctx context.Context) error {
-	out, err := ioutil.ReadFile(displayInfoFile)
+	out, err := os.ReadFile(displayInfoFile)
 	if err != nil {
 		return errors.Wrap(err, "failed to run display info command ")
 	}

@@ -6,7 +6,6 @@ package holdingspace
 
 import (
 	"context"
-	"io/ioutil"
 	"os"
 	"path/filepath"
 	"strings"
@@ -169,7 +168,7 @@ func verifyTip(ctx context.Context, tconn *chrome.TestConn, tabletModeEnabled bo
 func createTarget(targetPath string, isFile bool) error {
 	if isFile {
 		// Create our file, with appropriate permissions so we can delete later.
-		return ioutil.WriteFile(targetPath, []byte("Per aspera, ad astra"), 0644)
+		return os.WriteFile(targetPath, []byte("Per aspera, ad astra"), 0644)
 	}
 
 	return os.Mkdir(targetPath, 0755)

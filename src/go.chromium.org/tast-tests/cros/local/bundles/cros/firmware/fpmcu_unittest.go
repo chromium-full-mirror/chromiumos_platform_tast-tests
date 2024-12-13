@@ -8,7 +8,6 @@ import (
 	"bufio"
 	"context"
 	"fmt"
-	"io/ioutil"
 	"os"
 	"path/filepath"
 	"regexp"
@@ -356,7 +355,7 @@ func extractBinaryToFlash(ctx context.Context, binaryToFlash, tempDir, tarballPa
 // flashUnittestBinary flashes the unittest binary to the FPMCU connected to the target.
 func flashUnittestBinary(ctx context.Context, testName, dataPath string) error {
 	// The default working directory is /root, which isn't writable.
-	dir, err := ioutil.TempDir("", "tast.firmware.FpmcuUnittest.")
+	dir, err := os.MkdirTemp("", "tast.firmware.FpmcuUnittest.")
 	if err != nil {
 		return errors.Wrap(err, "failed to create temp directory")
 	}

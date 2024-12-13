@@ -6,7 +6,6 @@ package crostini
 
 import (
 	"context"
-	"io/ioutil"
 	"os"
 	"path/filepath"
 	"time"
@@ -72,7 +71,7 @@ func NoAccessToDownloads(ctx context.Context, s *testing.State) {
 		s.Fatal("Failed to get user downloads path: ", err)
 	}
 	filePath := filepath.Join(userPath, "MyFiles", "Downloads", fileName)
-	if err := ioutil.WriteFile(filePath, []byte("teststring"), 0644); err != nil {
+	if err := os.WriteFile(filePath, []byte("teststring"), 0644); err != nil {
 		for _, dir := range []string{userPath, filepath.Join(userPath, "MyFiles"), filepath.Join(userPath, "MyFiles", "Downloads")} {
 			if stat, err := os.Stat(dir); err == nil && stat.IsDir() {
 				s.Logf("%s exists", dir)

@@ -5,8 +5,8 @@
 package memory
 
 import (
-	"io/ioutil"
 	"regexp"
+	"os"
 	"strconv"
 
 	"go.chromium.org/tast/core/errors"
@@ -64,7 +64,7 @@ func ParseZoneInfo(data string) ([]ZoneInfo, error) {
 
 // ReadZoneInfo parses /proc/zoneinfo into a slice of ZoneInfo structures.
 func ReadZoneInfo() ([]ZoneInfo, error) {
-	data, err := ioutil.ReadFile(zoneInfoFile)
+	data, err := os.ReadFile(zoneInfoFile)
 	if err != nil {
 		return nil, errors.Wrap(err, "failed to open zoneinfo")
 	}

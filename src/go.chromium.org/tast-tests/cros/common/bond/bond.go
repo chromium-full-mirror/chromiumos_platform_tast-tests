@@ -10,7 +10,7 @@ import (
 	"context"
 	"encoding/json"
 	"io"
-	"io/ioutil"
+	"os"
 	"net/http"
 	"time"
 
@@ -97,7 +97,7 @@ func NewClient(ctx context.Context, opts ...NewClientOption) (*Client, error) {
 
 	if len(option.credsJSON) == 0 {
 		var err error
-		if option.credsJSON, err = ioutil.ReadFile(defaultCredPath); err != nil {
+		if option.credsJSON, err = os.ReadFile(defaultCredPath); err != nil {
 			return nil, errors.Wrap(err, "failed to read the credential file")
 		}
 	}

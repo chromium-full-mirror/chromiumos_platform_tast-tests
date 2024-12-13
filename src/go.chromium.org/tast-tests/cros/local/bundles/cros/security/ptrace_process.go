@@ -8,7 +8,6 @@ import (
 	"context"
 	"fmt"
 	"io"
-	"io/ioutil"
 	"os"
 	"path/filepath"
 	"strconv"
@@ -48,7 +47,7 @@ func PtraceProcess(ctx context.Context, s *testing.State) {
 	)
 
 	const sysctl = "/proc/sys/kernel/yama/ptrace_scope"
-	b, err := ioutil.ReadFile(sysctl)
+	b, err := os.ReadFile(sysctl)
 	if err != nil {
 		s.Fatalf("Failed to read %v: %v", sysctl, err)
 	}
@@ -91,7 +90,7 @@ func PtraceProcess(ctx context.Context, s *testing.State) {
 		allowed := strings.Contains(string(out), "A debugging session is active.")
 		if !allowed && !strings.Contains(string(out), "ptrace: Operation not permitted") {
 			fn := fmt.Sprintf("gdb-%d.txt", pid)
-			ioutil.WriteFile(filepath.Join(s.OutDir(), fn), out, 0644)
+			os.WriteFile(filepath.Join(s.OutDir(), fn), out, 0644)
 			return errors.New("failed determining if ptrace was allowed; see " + fn)
 		}
 		if shouldAllow && !allowed {

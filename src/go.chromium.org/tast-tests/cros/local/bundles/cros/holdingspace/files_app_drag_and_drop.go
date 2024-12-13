@@ -7,7 +7,6 @@ package holdingspace
 import (
 	"context"
 	"fmt"
-	"io/ioutil"
 	"os"
 	"path/filepath"
 	"time"
@@ -107,7 +106,7 @@ func FilesAppDragAndDrop(ctx context.Context, s *testing.State) {
 	for i := 0; i < fileNum; i++ {
 		testFile := fmt.Sprintf("test%d.txt", i)
 		testFilePath := filepath.Join(myFilesPath, testFile)
-		if err := ioutil.WriteFile(testFilePath, []byte("Per aspera, ad astra"), 0644); err != nil {
+		if err := os.WriteFile(testFilePath, []byte("Per aspera, ad astra"), 0644); err != nil {
 			s.Fatalf("Failed to create file %q: %s", testFilePath, err)
 		}
 		defer os.Remove(testFilePath)

@@ -8,7 +8,7 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
-	"io/ioutil"
+	"io"
 	"net/http"
 	"os"
 	"path"
@@ -133,7 +133,7 @@ func LookupEventsByRequestPath(ctx context.Context, requestPath string, testStar
 	if resp.StatusCode != 200 {
 		return nil, errors.Errorf("reporting server encountered an error with the event query %q %v %q", requestPath, resp.StatusCode, http.StatusText(resp.StatusCode))
 	}
-	resBody, err := ioutil.ReadAll(resp.Body)
+	resBody, err := io.ReadAll(resp.Body)
 	if err != nil {
 		return nil, errors.Wrap(err, "failed to read the response body")
 	}

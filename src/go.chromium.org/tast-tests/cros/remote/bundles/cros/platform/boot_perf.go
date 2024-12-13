@@ -7,7 +7,6 @@ package platform
 import (
 	"context"
 	"fmt"
-	"io/ioutil"
 	"os"
 	"path"
 	"path/filepath"
@@ -374,7 +373,7 @@ func bootPerfOnce(ctx context.Context, s *testing.State, i, iterations int, pv *
 	}
 	saveRawData := func(path string, data map[string][]byte) {
 		for k, v := range data {
-			if err = ioutil.WriteFile(filepath.Join(savedRaw, k), v, 0644); err != nil {
+			if err = os.WriteFile(filepath.Join(savedRaw, k), v, 0644); err != nil {
 				s.Fatal("Failed to save raw data: ", err)
 			}
 		}

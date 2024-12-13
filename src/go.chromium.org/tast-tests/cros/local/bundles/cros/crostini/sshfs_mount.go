@@ -7,7 +7,6 @@ package crostini
 import (
 	"context"
 	"fmt"
-	"io/ioutil"
 	"os"
 	"path/filepath"
 	"time"
@@ -69,7 +68,7 @@ func SSHFSMount(ctx context.Context, s *testing.State) {
 		testFileContent = "SshfsMount"
 	)
 	crosFileName := filepath.Join(sshfsMountDir, testFileName)
-	if err := ioutil.WriteFile(crosFileName, []byte(testFileContent), 0644); err != nil {
+	if err := os.WriteFile(crosFileName, []byte(testFileContent), 0644); err != nil {
 		s.Fatalf("Failed writing file %v: %v", crosFileName, err)
 	}
 	defer os.Remove(crosFileName)

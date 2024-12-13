@@ -8,7 +8,6 @@ package perfetto
 import (
 	"bytes"
 	"context"
-	"io/ioutil"
 	"os"
 	"path/filepath"
 	"strings"
@@ -103,7 +102,7 @@ func Trace(ctx context.Context, a *arc.ARC, traceConfigPath, traceResultPath str
 		localTempResultPath   = localPerfettoTraceDir + "perfetto.trace"
 	)
 
-	config, err := ioutil.ReadFile(traceConfigPath)
+	config, err := os.ReadFile(traceConfigPath)
 	if err != nil {
 		return errors.Wrap(err, "failed to read config file")
 	}

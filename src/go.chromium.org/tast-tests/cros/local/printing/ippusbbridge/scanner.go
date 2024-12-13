@@ -7,7 +7,7 @@ package ippusbbridge
 import (
 	"context"
 	"fmt"
-	"io/ioutil"
+	"io"
 	"net"
 	"net/http"
 	"strings"
@@ -109,7 +109,7 @@ func PrepareScannerConnection(ctx context.Context, devInfo usbprinter.DevInfo, n
 	if err != nil {
 		return nil, errors.Wrap(err, "failed to send query to ippusb_bridge")
 	}
-	_, err = ioutil.ReadAll(resp.Body)
+	_, err = io.ReadAll(resp.Body)
 	resp.Body.Close()
 	if err != nil {
 		return nil, errors.Wrap(err, "failed to read response from ippusb_bridge")

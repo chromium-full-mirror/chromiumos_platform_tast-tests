@@ -7,7 +7,6 @@ package arc
 import (
 	"bytes"
 	"context"
-	"io/ioutil"
 	"os"
 	"path/filepath"
 	"time"
@@ -114,7 +113,7 @@ func testCopyToPlayfiles(ctx context.Context, cr *chrome.Chrome, tconn *chrome.T
 		return errors.Wrap(err, "failed to get user's Download path")
 	}
 	crosPath := filepath.Join(downloadsPath, filename)
-	if err := ioutil.WriteFile(crosPath, expected, 0644); err != nil {
+	if err := os.WriteFile(crosPath, expected, 0644); err != nil {
 		return errors.Wrapf(err, "failed to write to %s in ChromeOS", crosPath)
 	}
 	defer os.Remove(crosPath)
@@ -248,7 +247,7 @@ func testAndroidToCros(ctx context.Context, a *arc.ARC, dataPath, crosPlayfilesP
 	const androidPath = "/storage/emulated/0/Pictures/capybara.jpg"
 	crosPath := filepath.Join(crosPlayfilesPath, "Pictures", "capybara.jpg")
 
-	expected, err := ioutil.ReadFile(dataPath)
+	expected, err := os.ReadFile(dataPath)
 	if err != nil {
 		return errors.Wrapf(err, "failed to read %s", dataPath)
 	}
@@ -258,7 +257,7 @@ func testAndroidToCros(ctx context.Context, a *arc.ARC, dataPath, crosPlayfilesP
 	}
 	defer a.RemoveAll(cleanupCtx, androidPath)
 
-	actual, err := ioutil.ReadFile(crosPath)
+	actual, err := os.ReadFile(crosPath)
 	if err != nil {
 		return errors.Wrapf(err, "failed to read %s in ChromeOS", crosPath)
 	}

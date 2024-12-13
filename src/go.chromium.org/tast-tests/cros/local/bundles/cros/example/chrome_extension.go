@@ -6,7 +6,6 @@ package example
 
 import (
 	"context"
-	"io/ioutil"
 	"math"
 	"os"
 	"path/filepath"
@@ -31,7 +30,7 @@ func init() {
 }
 
 func ChromeExtension(ctx context.Context, s *testing.State) {
-	extDir, err := ioutil.TempDir("", "tast.example.ChromeExtension.")
+	extDir, err := os.MkdirTemp("", "tast.example.ChromeExtension.")
 	if err != nil {
 		s.Fatal("Failed to create temp dir: ", err)
 	}
@@ -46,7 +45,7 @@ func ChromeExtension(ctx context.Context, s *testing.State) {
 		filepath.Join(extDir, "manifest.json")); err != nil {
 		s.Fatal("Failed to copy manifest: ", err)
 	}
-	if err := ioutil.WriteFile(filepath.Join(extDir, "background.js"), []byte{}, 0644); err != nil {
+	if err := os.WriteFile(filepath.Join(extDir, "background.js"), []byte{}, 0644); err != nil {
 		s.Fatal("Failed to write background.js: ", err)
 	}
 

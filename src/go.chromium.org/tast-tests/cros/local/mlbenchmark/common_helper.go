@@ -10,7 +10,6 @@ import (
 	"bufio"
 	"context"
 	"fmt"
-	"io/ioutil"
 	"math"
 	"math/big"
 	"os"
@@ -123,7 +122,7 @@ func (r *PeakMemoryWatcher) Start(ctx context.Context) error {
 			}
 
 			fdinfoDir := "/proc/" + strconv.Itoa(r.pid) + "/fdinfo/"
-			files, _ := ioutil.ReadDir(fdinfoDir)
+			files, _ := os.ReadDir(fdinfoDir)
 			for _, file := range files {
 				fdinfoContents, err := os.ReadFile(fdinfoDir + file.Name())
 				if err != nil {

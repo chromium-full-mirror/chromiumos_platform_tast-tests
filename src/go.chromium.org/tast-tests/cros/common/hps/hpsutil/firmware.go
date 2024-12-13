@@ -7,7 +7,6 @@ package hpsutil
 
 import (
 	"context"
-	"io/ioutil"
 	"os"
 	"path"
 	"path/filepath"
@@ -99,7 +98,7 @@ func remoteUnbindUsbHid(hctx *HpsContext) error {
 func localUnbindUsbHid(ctx context.Context) error {
 	// Unbind the USB to stop getting USB `claim interface: Resource busy` errors.
 	// This needs to be done once after SantaP2 is re-plugged.
-	files, err := ioutil.ReadDir(usbhidPath)
+	files, err := os.ReadDir(usbhidPath)
 	if err != nil {
 		return errors.Wrap(err, "unable to list files in usbhid")
 	}
@@ -110,7 +109,7 @@ func localUnbindUsbHid(ctx context.Context) error {
 		matched := usbHidRegex.MatchString(file.Name())
 		if matched {
 			testing.ContextLog(ctx, "usbhid: Unbinding ", file.Name())
-			err := ioutil.WriteFile(path.Join(usbhidPath, "unbind"), []byte(file.Name()), 0300)
+			err := os.WriteFile(path.Join(usbhidPath, "unbind"), []byte(file.Name()), 0300)
 			if err != nil {
 				return errors.Wrapf(err, "unable to unbind %s", file.Name())
 			}
@@ -226,7 +225,7 @@ func EnsureLatestFirmware(hctx *HpsContext) error {
 }
 
 func decompressBin(ctx context.Context) (map[string]string, error) {
-	tmpDir, err := ioutil.TempDir("", "hps_firmware")
+	tmpDir, err := os.MkdirTemp("", "hps_firmware")
 	if err != nil {
 		return nil, errors.Wrap(err, "failed to create test directory under /tmp")
 	}
@@ -234,7 +233,7 @@ func decompressBin(ctx context.Context) (map[string]string, error) {
 
 	firmwareTmpPath := strings.TrimSpace(string(tmpDir))
 
-	files, err := ioutil.ReadDir(FirmwarePath)
+	files, err := os.ReadDir(FirmwarePath)
 	if err != nil {
 		return nil, errors.Wrap(err, "failed to list files under firmware dir")
 	}
@@ -291,7 +290,7 @@ func FetchFirmwareVersionFromImage(hctx *HpsContext, firmwarePath string) (uint3
 	if hctx.DutConn != nil {
 		versionBytes, err = linuxssh.ReadFile(hctx.Ctx, hctx.DutConn, firmwareVersionFilePath)
 	} else {
-		versionBytes, err = ioutil.ReadFile(firmwareVersionFilePath)
+		versionBytes, err = os.ReadFile(firmwareVersionFilePath)
 	}
 	if err != nil {
 		return 0, errors.Wrapf(err, "failed to read firmware version from %v", firmwareVersionFilePath)

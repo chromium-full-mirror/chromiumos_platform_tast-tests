@@ -8,7 +8,7 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
-	"io/ioutil"
+	"os"
 	"path/filepath"
 	"strconv"
 	"strings"
@@ -517,11 +517,11 @@ func enableThreadedNAPI(ctx context.Context) (func(ctx context.Context) error, e
 func applyConfig(ctx context.Context, cpuConfig []cpuConfigEntry) ([]cpuConfigEntry, error) {
 	var origConfig []cpuConfigEntry
 	for _, config := range cpuConfig {
-		origValue, err := ioutil.ReadFile(config.path)
+		origValue, err := os.ReadFile(config.path)
 		if err != nil {
 			return origConfig, err
 		}
-		if err = ioutil.WriteFile(config.path, []byte(config.value), 0644); err != nil {
+		if err = os.WriteFile(config.path, []byte(config.value), 0644); err != nil {
 			return origConfig, err
 		}
 		// Inserts a new entry at the front of origConfig.

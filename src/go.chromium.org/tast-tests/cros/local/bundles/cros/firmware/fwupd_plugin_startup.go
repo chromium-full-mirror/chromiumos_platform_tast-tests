@@ -7,7 +7,7 @@ package firmware
 import (
 	"context"
 	"encoding/json"
-	"io/ioutil"
+	"os"
 	"path/filepath"
 
 	"go.chromium.org/tast-tests/cros/common/testexec"
@@ -90,7 +90,7 @@ func parsePluginStates(output []byte) (map[string][]string, error) {
 func FwupdPluginStartup(ctx context.Context, s *testing.State) {
 	cmd := testexec.CommandContext(ctx, "fwupdmgr", "get-plugins", "--json")
 	output, err := cmd.Output(testexec.DumpLogOnError)
-	if errw := ioutil.WriteFile(filepath.Join(s.OutDir(), "fwupdmgr.txt"), output, 0644); errw != nil {
+	if errw := os.WriteFile(filepath.Join(s.OutDir(), "fwupdmgr.txt"), output, 0644); errw != nil {
 		s.Error("Failed dumping fwupdmgr output: ", errw)
 	}
 	if err != nil {

@@ -8,7 +8,6 @@ import (
 	"bytes"
 	"context"
 	"encoding/json"
-	"io/ioutil"
 	"os"
 	"path"
 	"time"
@@ -100,7 +99,7 @@ func ThunderboltDockStationFunctionality(ctx context.Context, s *testing.State) 
 	defer crastestclient.Unmute(cleanupCtx)
 
 	// Read json config file.
-	jsonData, err := ioutil.ReadFile(s.DataPath(testConfig))
+	jsonData, err := os.ReadFile(s.DataPath(testConfig))
 	if err != nil {
 		s.Fatal("Failed to read response data: ", err)
 	}
@@ -140,7 +139,7 @@ func ThunderboltDockStationFunctionality(ctx context.Context, s *testing.State) 
 		s.Fatal("Failed to enumerate the TBT device: ", err)
 	}
 
-	sourcePath, err := ioutil.TempDir("", "temp")
+	sourcePath, err := os.MkdirTemp("", "temp")
 	if err != nil {
 		s.Fatal("Failed to create temp directory: ", err)
 	}

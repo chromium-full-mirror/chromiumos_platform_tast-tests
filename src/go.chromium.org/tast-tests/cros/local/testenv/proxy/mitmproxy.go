@@ -12,7 +12,6 @@ import (
 	"encoding/json"
 	"fmt"
 	"io"
-	"io/ioutil"
 	"net"
 	"net/http"
 	"net/url"
@@ -315,7 +314,7 @@ func (mp *MitmProxy) getPidFromPath(ctx context.Context, pidPath string) (int, e
 	var pid int
 	// Wait for the proxy service to write the PID at `pidPath`.
 	if err := testing.Poll(ctx, func(ctx context.Context) error {
-		dat, err := ioutil.ReadFile(pidPath)
+		dat, err := os.ReadFile(pidPath)
 		if err != nil {
 			return errors.Wrap(err, "failed to read proxy process pid")
 		}

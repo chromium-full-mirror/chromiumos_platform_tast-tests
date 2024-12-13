@@ -10,7 +10,6 @@ import (
 	"context"
 	"fmt"
 	"io/fs"
-	"io/ioutil"
 	"os"
 	"path/filepath"
 	"regexp"
@@ -90,7 +89,7 @@ func createSELinuxPolicyFile(ctx context.Context) error {
 	}
 
 	// Create a temporary SELinux Policy File.
-	if err = ioutil.WriteFile(dataDirFileContexts, fout.Bytes(), 0644); err != nil {
+	if err = os.WriteFile(dataDirFileContexts, fout.Bytes(), 0644); err != nil {
 		return errors.Wrap(err, "failed to create temporary SELinux file")
 	}
 	return nil
@@ -143,7 +142,7 @@ func verifyDirSELinuxContext(ctx context.Context, directoryPath, outDir string) 
 
 	// Write the output of matchpathcon command.
 	matchPathConFileLocation := filepath.Join(outDir, matchPathConFileName)
-	if err := ioutil.WriteFile(matchPathConFileLocation,
+	if err := os.WriteFile(matchPathConFileLocation,
 		[]byte(matchPathConOutput), 0644); err != nil {
 		return errors.Wrap(err, "failed to write matchpathcon output")
 	}
@@ -190,9 +189,9 @@ func SELinuxFilesDataDir(ctx context.Context, s *testing.State) {
 		return
 	}
 
-	var dirList []fs.FileInfo
+	var dirList []fs.DirEntry
 	if err := testing.Poll(ctx, func(ctx context.Context) error {
-		dirList, err = ioutil.ReadDir(dataDirPath)
+		dirList, err = os.ReadDir(dataDirPath)
 		return err
 	}, &testing.PollOptions{Timeout: 10 * time.Second}); err != nil {
 		s.Fatalf("Failed to read from directory %v: %v", dataDirPath, err)

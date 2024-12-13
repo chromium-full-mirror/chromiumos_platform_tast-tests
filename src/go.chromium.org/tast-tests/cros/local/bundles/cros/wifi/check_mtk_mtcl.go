@@ -8,7 +8,6 @@ import (
 	"bytes"
 	"context"
 	"encoding/binary"
-	"io/ioutil"
 	"os"
 	"path/filepath"
 	"strconv"
@@ -225,12 +224,12 @@ func CheckMtkMTCL(ctx context.Context, s *testing.State) {
 	if pathToSSDT == "" {
 		s.Fatal("Failed to find SSDT path")
 	}
-	SSDTRaw, err := ioutil.ReadFile(pathToSSDT)
+	SSDTRaw, err := os.ReadFile(pathToSSDT)
 	if err != nil {
 		s.Fatal("Could not read SSDT data: ", err)
 	}
 	// Write encoded SSDT data to temp file.
-	tmpSSDT, err := ioutil.TempFile("", "tempSSDT")
+	tmpSSDT, err := os.CreateTemp("", "tempSSDT")
 	if err != nil {
 		s.Fatal("Could not create temp file for SSDT: ", err)
 	}
@@ -246,7 +245,7 @@ func CheckMtkMTCL(ctx context.Context, s *testing.State) {
 	}
 	// Read in the decoded table.
 	pathToDecodedSSDT := tmpSSDT.Name() + ".dsl"
-	decodedSSDT, err := ioutil.ReadFile(pathToDecodedSSDT)
+	decodedSSDT, err := os.ReadFile(pathToDecodedSSDT)
 	defer os.Remove(pathToDecodedSSDT)
 	if err != nil {
 		s.Fatal("SSDT decoding failed: ", err)

@@ -6,7 +6,6 @@ package crash
 
 import (
 	"context"
-	"io/ioutil"
 	"os"
 	"path/filepath"
 	"testing"
@@ -28,7 +27,7 @@ func statAll(files ...string) error {
 // createAll attempts to create all given files with "" as contents.
 func createAll(files ...string) error {
 	for _, f := range files {
-		if err := ioutil.WriteFile(f, nil, 0644); err != nil {
+		if err := os.WriteFile(f, nil, 0644); err != nil {
 			return err
 		}
 	}
@@ -438,7 +437,7 @@ func TestFilterIn(t *testing.T) {
 	}
 
 	// Verify filter in file was created with right contents.
-	contents, err := ioutil.ReadFile(filterInPath)
+	contents, err := os.ReadFile(filterInPath)
 	if err != nil {
 		t.Fatalf("Could not read filter in file %q: %v", filterInPath, err)
 	}
@@ -463,7 +462,7 @@ func TestFilterIn(t *testing.T) {
 
 	// Verify that the file is deleted if the test requests no filtering.
 	// (the default)
-	if err := ioutil.WriteFile(filterInPath, []byte("asdf"), 0664); err != nil {
+	if err := os.WriteFile(filterInPath, []byte("asdf"), 0664); err != nil {
 		t.Fatalf("Error creating fake filterIn file: %v", err)
 	}
 	sp.filterIn = ""

@@ -6,7 +6,6 @@ package filemanager
 
 import (
 	"context"
-	"io/ioutil"
 	"os"
 	"path"
 	"regexp"
@@ -195,7 +194,7 @@ func (f *FreezeFUSEService) TestMountZipAndSuspend(ctx context.Context, request 
 var successfulSuspendsRegex = regexp.MustCompile(`success: ([0-9]+)`)
 
 func readSuccessfulSuspends(ctx context.Context) (int, error) {
-	out, err := ioutil.ReadFile("/sys/kernel/debug/suspend_stats")
+	out, err := os.ReadFile("/sys/kernel/debug/suspend_stats")
 	if err != nil {
 		return 0, errors.Wrap(err, "failed to read suspend_stats for the number of successful suspends")
 	}

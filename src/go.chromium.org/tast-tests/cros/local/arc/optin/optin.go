@@ -8,7 +8,7 @@ package optin
 import (
 	"context"
 	"fmt"
-	"io/ioutil"
+	"os"
 	"path/filepath"
 	"strconv"
 	"time"
@@ -375,7 +375,7 @@ func writeLog(ctx context.Context, fileName string, data []byte) error {
 	}
 
 	logPath := filepath.Join(dir, fileName)
-	err := ioutil.WriteFile(logPath, data, 0644)
+	err := os.WriteFile(logPath, data, 0644)
 	if err != nil {
 		return errors.Wrapf(err, "failed to save %q", fileName)
 	}

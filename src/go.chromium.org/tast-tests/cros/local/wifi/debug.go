@@ -6,7 +6,6 @@ package wifi
 
 import (
 	"context"
-	"io/ioutil"
 	"os"
 	"path/filepath"
 	"strings"
@@ -33,7 +32,7 @@ func SaveDebugData(ctx context.Context, outDir, outputFile, command string) erro
 	if err != nil {
 		return errors.Wrapf(err, "failed to execute command %s", command)
 	}
-	err = ioutil.WriteFile(filepath.Join(outDir, outputFile), output, 0644)
+	err = os.WriteFile(filepath.Join(outDir, outputFile), output, 0644)
 	if err != nil {
 		return errors.Wrapf(err, "failed to save debug data to %s", outputFile)
 	}

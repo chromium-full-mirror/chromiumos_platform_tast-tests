@@ -6,7 +6,6 @@ package inputs
 
 import (
 	"context"
-	"io/ioutil"
 	"os"
 	"strconv"
 	"strings"
@@ -190,7 +189,7 @@ func Manual(ctx context.Context, s *testing.State) {
 	case "enterprise":
 		// Using fakedms and login.
 		// Start FakeDMS.
-		tmpdir, err := ioutil.TempDir("", "fdms-")
+		tmpdir, err := os.MkdirTemp("", "fdms-")
 		if err != nil {
 			s.Fatal("Failed to create fdms temp dir: ", err)
 		}

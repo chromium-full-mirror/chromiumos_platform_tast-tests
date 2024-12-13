@@ -6,7 +6,7 @@ package printer
 
 import (
 	"context"
-	"io/ioutil"
+	"os"
 
 	"go.chromium.org/tast-tests/cros/local/bundles/cros/printer/pre"
 	"go.chromium.org/tast-tests/cros/local/debugd"
@@ -40,7 +40,7 @@ func AddHTTPPrinter(ctx context.Context, s *testing.State) {
 	// Downloads the PPD and tries to install the printer using the dbus method.
 	const printerID = "HttpPrinterId"
 
-	ppd, err := ioutil.ReadFile(s.DataPath(httpTestPPDFile))
+	ppd, err := os.ReadFile(s.DataPath(httpTestPPDFile))
 	if err != nil {
 		s.Fatal("Failed to read PPD file: ", err)
 	}

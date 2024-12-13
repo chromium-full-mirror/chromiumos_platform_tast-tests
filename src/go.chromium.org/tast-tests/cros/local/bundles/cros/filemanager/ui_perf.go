@@ -7,7 +7,6 @@ package filemanager
 import (
 	"context"
 	"fmt"
-	"io/ioutil"
 	"os"
 	"path/filepath"
 	"time"
@@ -152,7 +151,7 @@ func UIPerf(ctx context.Context, s *testing.State) {
 func createDirectoryListing(ctx context.Context, folderPath string, files int) error {
 	for i := 0; i < files; i++ {
 		filePath := filepath.Join(folderPath, fmt.Sprintf("File-%d.txt", i))
-		if err := ioutil.WriteFile(filePath, []byte("blah"), 0666); err != nil {
+		if err := os.WriteFile(filePath, []byte("blah"), 0666); err != nil {
 			return errors.Wrapf(err, "failed to create file with path %q", filePath)
 		}
 	}

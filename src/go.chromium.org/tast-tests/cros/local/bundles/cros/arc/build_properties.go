@@ -7,7 +7,7 @@ package arc
 import (
 	"context"
 	"fmt"
-	"io/ioutil"
+	"os"
 	"path/filepath"
 	"regexp"
 	"strconv"
@@ -195,7 +195,7 @@ func BuildProperties(ctx context.Context, s *testing.State) {
 		if firstAPILevel != expectedFirstAPILevel {
 			if props, err := a.Command(ctx, "getprop").Output(testexec.DumpLogOnError); err != nil {
 				s.Log("Failed to read properties: ", err)
-			} else if err := ioutil.WriteFile(filepath.Join(s.OutDir(), "props.txt"), props, 0644); err != nil {
+			} else if err := os.WriteFile(filepath.Join(s.OutDir(), "props.txt"), props, 0644); err != nil {
 				s.Log("Failed to dump properties: ", err)
 			}
 			s.Errorf("Unexpected %v property (see props.txt for details): got %q; want %q", propertyFirstAPILevel,

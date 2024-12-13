@@ -6,7 +6,6 @@ package firmware
 
 import (
 	"context"
-	"io/ioutil"
 	"os"
 	"path/filepath"
 	"time"
@@ -71,7 +70,7 @@ func FwupdPowerdUpdateCheck(ctx context.Context, s *testing.State) {
 	} else if err == nil && !charge {
 		s.Errorf("%s succeeded erroneously: %v", shutil.EscapeSlice(upd.Args), err)
 	}
-	if err := ioutil.WriteFile(filepath.Join(s.OutDir(), "fwupdmgr.txt"), output, 0644); err != nil {
+	if err := os.WriteFile(filepath.Join(s.OutDir(), "fwupdmgr.txt"), output, 0644); err != nil {
 		s.Error("Failed to write output from update: ", err)
 	}
 }

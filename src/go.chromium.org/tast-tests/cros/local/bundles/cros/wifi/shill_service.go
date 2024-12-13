@@ -9,7 +9,6 @@ import (
 	"context"
 	"encoding/hex"
 	"fmt"
-	"io/ioutil"
 	"net"
 	"os"
 	"reflect"
@@ -2279,7 +2278,7 @@ func suspend(ctx context.Context, wakeUpTimeout time.Duration, checkEarlyWake bo
 	defer unlock()
 
 	rtcTimeSeconds := func() (int, error) {
-		b, err := ioutil.ReadFile(rtcPath)
+		b, err := os.ReadFile(rtcPath)
 		if err != nil {
 			return 0, errors.Wrapf(err, "failed to read the %s", rtcPath)
 		}
@@ -2573,7 +2572,7 @@ func (s *ShillService) ResetTest(ctx context.Context, req *wifi.ResetTestRequest
 		return !os.IsNotExist(err)
 	}
 	writeStringToFile := func(file, content string) error {
-		return ioutil.WriteFile(file, []byte(content), 0444)
+		return os.WriteFile(file, []byte(content), 0444)
 	}
 	// Asserts that after f() is called, shill sees the service changes state to Idle then to IsConnected.
 	// The reason to pass f() is because we need to set up a shill property watcher before the f() is called.
@@ -2692,7 +2691,7 @@ func (s *ShillService) ResetTest(ctx context.Context, req *wifi.ResetTestRequest
 		if err != nil {
 			return "", err
 		}
-		b, err := ioutil.ReadFile(fmt.Sprintf(ath10kDeviceFormat, iface))
+		b, err := os.ReadFile(fmt.Sprintf(ath10kDeviceFormat, iface))
 		if err != nil {
 			return "", err
 		}
@@ -2764,7 +2763,7 @@ func (s *ShillService) ResetTest(ctx context.Context, req *wifi.ResetTestRequest
 			return errors.Wrapf(err, "failed to write to the reset path %q", resetPath)
 		}
 		return testing.Poll(ctx, func(ctx context.Context) error {
-			raw, err := ioutil.ReadFile(resetPath)
+			raw, err := os.ReadFile(resetPath)
 			if err != nil {
 				return errors.Wrap(err, "failed to read reset status")
 			}

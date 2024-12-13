@@ -6,7 +6,7 @@ package security
 
 import (
 	"context"
-	"io/ioutil"
+	"os"
 	"path/filepath"
 	"strings"
 
@@ -39,7 +39,7 @@ func Firewall(ctx context.Context, s *testing.State) {
 			return
 		}
 		// Save the full output to aid in debugging.
-		if err := ioutil.WriteFile(filepath.Join(s.OutDir(), prog+".txt"), out, 0644); err != nil {
+		if err := os.WriteFile(filepath.Join(s.OutDir(), prog+".txt"), out, 0644); err != nil {
 			s.Errorf("Failed to save %v output: %v", prog, err)
 		}
 

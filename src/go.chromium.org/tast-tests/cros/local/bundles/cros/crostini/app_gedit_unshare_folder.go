@@ -6,7 +6,6 @@ package crostini
 
 import (
 	"context"
-	"io/ioutil"
 	"os"
 	"path/filepath"
 	"strings"
@@ -195,7 +194,7 @@ func setupAndShareFileWithLinux(
 	tmpFileContents string) error {
 
 	// Create a temp text file in the /Downloads folder to use in this test.
-	if err := ioutil.WriteFile(tmpFileCrosDownloadsPath, []byte(tmpFileContents), 0644); err != nil {
+	if err := os.WriteFile(tmpFileCrosDownloadsPath, []byte(tmpFileContents), 0644); err != nil {
 		return errors.Wrap(err, "failed to create text file in Downloads folder")
 	}
 

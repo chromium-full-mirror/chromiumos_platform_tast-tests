@@ -9,7 +9,6 @@ import (
 	"bytes"
 	"context"
 	"encoding/json"
-	"io/ioutil"
 	"os"
 	"os/exec"
 	"path/filepath"
@@ -68,10 +67,10 @@ func Exec(ctx context.Context, s *testing.State, subcmd string, flags, patterns 
 	s.Log("Running ", strings.Join(cmd.Args, " "))
 	runErr := cmd.Run()
 
-	if werr := ioutil.WriteFile(filepath.Join(s.OutDir(), "stdout.txt"), stdoutBuf.Bytes(), 0644); werr != nil {
+	if werr := os.WriteFile(filepath.Join(s.OutDir(), "stdout.txt"), stdoutBuf.Bytes(), 0644); werr != nil {
 		s.Error("Failed to save stdout: ", werr)
 	}
-	if werr := ioutil.WriteFile(filepath.Join(s.OutDir(), "stderr.txt"), stderrBuf.Bytes(), 0644); werr != nil {
+	if werr := os.WriteFile(filepath.Join(s.OutDir(), "stderr.txt"), stderrBuf.Bytes(), 0644); werr != nil {
 		s.Error("Failed to save stderr: ", werr)
 	}
 	return stdoutBuf.Bytes(), stderrBuf.Bytes(), runErr

@@ -8,7 +8,6 @@ import (
 	"bufio"
 	"context"
 	"fmt"
-	"io/ioutil"
 	"math"
 	"os"
 	"path/filepath"
@@ -76,7 +75,7 @@ func cpuUtilization(prev, time cpu.TimesStat) float64 {
 // cpuFreq reads frequency data from cpufreq/cpuinfo_`type`_freq where `type` can be
 // `max`, `min` or `cur`.
 func cpuFreq(cpuName, freqType string) (float64, error) {
-	data, err := ioutil.ReadFile(filepath.Join(
+	data, err := os.ReadFile(filepath.Join(
 		"/sys/devices/system/cpu", cpuName, "cpufreq", fmt.Sprintf("cpuinfo_%s_freq", freqType)))
 	if err != nil {
 		return 0, err
@@ -93,7 +92,7 @@ func cpuFreq(cpuName, freqType string) (float64, error) {
 // CPUScalingFreq reads frequency data from cpufreq/scaling_`type`_freq where `type` can be
 // `max`, `min` or `cur`.
 func CPUScalingFreq(cpuName, freqType string) (float64, error) {
-	data, err := ioutil.ReadFile(filepath.Join(
+	data, err := os.ReadFile(filepath.Join(
 		"/sys/devices/system/cpu", cpuName, "cpufreq", fmt.Sprintf("scaling_%s_freq", freqType)))
 	if err != nil {
 		return 0, err
@@ -108,7 +107,7 @@ func CPUScalingFreq(cpuName, freqType string) (float64, error) {
 }
 
 func cpuCapacity(cpuName string) (float64, error) {
-	data, err := ioutil.ReadFile(filepath.Join(
+	data, err := os.ReadFile(filepath.Join(
 		"/sys/devices/system/cpu", cpuName, "cpu_capacity"))
 	if err != nil {
 		return 0, err

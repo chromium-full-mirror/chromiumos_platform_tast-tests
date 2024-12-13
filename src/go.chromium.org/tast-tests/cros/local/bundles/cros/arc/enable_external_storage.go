@@ -6,7 +6,6 @@ package arc
 
 import (
 	"context"
-	"io/ioutil"
 	"os"
 	"time"
 
@@ -95,7 +94,7 @@ func EnableExternalStorage(ctx context.Context, s *testing.State) {
 	}
 
 	// Verify Android dir is not present.
-	_, err = ioutil.ReadDir(androidPath)
+	_, err = os.ReadDir(androidPath)
 	if os.IsNotExist(err) {
 		s.Log("Android folder doesn't exist: ", err)
 	}
@@ -133,7 +132,7 @@ func EnableExternalStorage(ctx context.Context, s *testing.State) {
 	}
 
 	// Verify Android dir is present.
-	_, err = ioutil.ReadDir(androidPath)
+	_, err = os.ReadDir(androidPath)
 	if os.IsNotExist(err) {
 		s.Fatal("Android folder doesn't exist: ", err)
 	}

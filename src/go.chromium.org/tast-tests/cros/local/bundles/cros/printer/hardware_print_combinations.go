@@ -7,7 +7,7 @@ package printer
 import (
 	"context"
 	"encoding/json"
-	"io/ioutil"
+	"os"
 	"time"
 
 	"go.chromium.org/tast-tests/cros/local/chrome"
@@ -219,7 +219,7 @@ func HardwarePrintCombinations(ctx context.Context, s *testing.State) {
 	}
 
 	// Read and parse the JSON file describing the printer's available settings.
-	fileContents, err := ioutil.ReadFile(s.DataPath(param.descriptorPath))
+	fileContents, err := os.ReadFile(s.DataPath(param.descriptorPath))
 	if err != nil {
 		s.Fatal("Unable to read printer descriptor file: ", err)
 	}

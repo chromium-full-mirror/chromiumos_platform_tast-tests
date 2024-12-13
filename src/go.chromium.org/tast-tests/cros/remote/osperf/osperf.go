@@ -6,7 +6,7 @@ package osperf
 
 import (
 	"context"
-	"io/ioutil"
+	"os"
 	"time"
 
 	"go.chromium.org/tast-tests/cros/common/testexec"
@@ -27,5 +27,5 @@ func DumpCommandOutput(ctx context.Context, dut *dut.DUT, path, cmd string) erro
 	if err != nil {
 		return err
 	}
-	return ioutil.WriteFile(path, []byte(output), 0644)
+	return os.WriteFile(path, []byte(output), 0644)
 }

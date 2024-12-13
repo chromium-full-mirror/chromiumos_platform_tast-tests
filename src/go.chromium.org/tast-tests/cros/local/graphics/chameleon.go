@@ -11,7 +11,6 @@ import (
 	"image"
 	"image/color"
 	"image/png"
-	"io/ioutil"
 	"net"
 	"os"
 	"path/filepath"
@@ -456,7 +455,7 @@ func ChameleonSaveLogsAndOutputOnError(ctx context.Context, cham chameleon.Chame
 	if isError() {
 		testing.ContextLog(ctx, "Chameleon logs: ", logs)
 	}
-	if err := ioutil.WriteFile(filepath.Join(outDir, "chameleon_logs.txt"),
+	if err := os.WriteFile(filepath.Join(outDir, "chameleon_logs.txt"),
 		[]byte(logs), 0644); err != nil {
 		testing.ContextLog(ctx, "Failed to write Chameleon logs: ", err)
 	}

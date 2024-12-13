@@ -6,7 +6,7 @@ package firmware
 
 import (
 	"context"
-	"io/ioutil"
+	"os"
 	"path/filepath"
 
 	"go.chromium.org/tast-tests/cros/common/flashrom"
@@ -47,7 +47,7 @@ func Flashrom(ctx context.Context, s *testing.State) {
 
 	if err != nil {
 		path := filepath.Join(s.OutDir(), "flashrom.txt")
-		if err := ioutil.WriteFile(path, out, 0644); err != nil {
+		if err := os.WriteFile(path, out, 0644); err != nil {
 			s.Error("Failed to save flashrom output: ", err)
 		}
 		s.Fatalf("Failed to confirm flashrom could find a flash chip:  "+

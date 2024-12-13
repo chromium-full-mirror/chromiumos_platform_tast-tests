@@ -8,14 +8,14 @@ package graphics
 import (
 	"context"
 	"go.chromium.org/tast-tests/cros/local/syslog"
-	"io/ioutil"
+	"os"
 	"strings"
 	"testing"
 )
 
 // newReader writes messages to a tempfile and return the reader.
 func newReader(t *testing.T, messages []string) *syslog.Reader {
-	tf, err := ioutil.TempFile("", "")
+	tf, err := os.CreateTemp("", "")
 	if err != nil {
 		t.Fatal("TempFile failed: ", err)
 	}

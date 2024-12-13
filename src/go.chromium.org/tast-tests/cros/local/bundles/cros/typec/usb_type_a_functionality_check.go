@@ -10,7 +10,6 @@ import (
 	"crypto/sha256"
 	"fmt"
 	"io"
-	"io/ioutil"
 	"os"
 	"os/exec"
 	"path"
@@ -336,7 +335,7 @@ func USBTypeAFunctionalityCheck(ctx context.Context, s *testing.State) {
 			s.Fatal("Timeout waiting for USB pendrive detection: ", err)
 		}
 
-		sourcePath, err := ioutil.TempDir("", "temp")
+		sourcePath, err := os.MkdirTemp("", "temp")
 		if err != nil {
 			s.Fatal("Failed to create temp directory: ", err)
 		}
@@ -409,7 +408,7 @@ func fileChecksumValue(path string) ([]byte, error) {
 
 // removableDirsList lists the connected removable devices.
 func removableDirsList() ([]string, error) {
-	fis, err := ioutil.ReadDir(mediaRemovable)
+	fis, err := os.ReadDir(mediaRemovable)
 	if err != nil {
 		return nil, errors.Wrap(err, "failed to read directory")
 	}

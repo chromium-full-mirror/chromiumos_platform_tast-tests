@@ -8,9 +8,9 @@ package mediarecorder
 import (
 	"context"
 	"encoding/base64"
-	"io/ioutil"
 	"net/http"
 	"net/http/httptest"
+	"os"
 	"path/filepath"
 	"sync"
 	"time"
@@ -228,7 +228,7 @@ func calculateTimePerFrame(ctx context.Context, conn *chrome.Conn, videoBuffer, 
 // computeNumFrames computes number of frames in the given MKV video byte array.
 func computeNumFrames(videoBytes []byte, tmpDir string) (frameNum int, err error) {
 	videoFilePath := filepath.Join(tmpDir, "recorded_video.mkv")
-	if err := ioutil.WriteFile(videoFilePath, videoBytes, 0644); err != nil {
+	if err := os.WriteFile(videoFilePath, videoBytes, 0644); err != nil {
 		return 0, errors.Wrap(err, "failed to open file")
 	}
 

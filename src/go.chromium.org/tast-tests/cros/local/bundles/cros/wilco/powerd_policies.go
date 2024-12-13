@@ -6,7 +6,7 @@ package wilco
 
 import (
 	"context"
-	"io/ioutil"
+	"os"
 	"time"
 
 	"google.golang.org/protobuf/proto"
@@ -377,7 +377,7 @@ func PowerdPolicies(ctx context.Context, s *testing.State) {
 
 			for _, wFile := range tc.wantFiles {
 				if err := testing.Poll(ctx, func(ctx context.Context) error {
-					bytes, err := ioutil.ReadFile(wFile.filePath)
+					bytes, err := os.ReadFile(wFile.filePath)
 					if err != nil {
 						return testing.PollBreak(errors.Wrapf(err, "failed to read %s file", wFile.filePath))
 					}

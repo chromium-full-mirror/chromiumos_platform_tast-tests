@@ -6,7 +6,6 @@ package arc
 
 import (
 	"context"
-	"io/ioutil"
 	"os"
 	"path/filepath"
 
@@ -37,7 +36,7 @@ func (c *GmsCoreCacheService) Generate(ctx context.Context, request *arcpb.GmsCo
 	// Boot ARC without existing GMS caches enabled to let GMS Core generate genuine caches.
 	testing.ContextLog(ctx, "Starting ARC, with existing GMS caches disabled")
 
-	targetDir, err := ioutil.TempDir("", "gms_core_caches")
+	targetDir, err := os.MkdirTemp("", "gms_core_caches")
 	if err != nil {
 		return nil, errors.Wrap(err, "failed to created target dir for GMS Core caches")
 	}

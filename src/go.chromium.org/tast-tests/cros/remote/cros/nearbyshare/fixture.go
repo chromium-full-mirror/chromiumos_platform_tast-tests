@@ -8,7 +8,7 @@ package nearbyshare
 import (
 	"context"
 	"encoding/json"
-	"io/ioutil"
+	"os"
 	"path/filepath"
 	"strconv"
 	"strings"
@@ -307,7 +307,7 @@ func (f *nearbyShareFixture) Reset(ctx context.Context) error { return nil }
 
 // PreTest is run before each test in the fixture..
 func (f *nearbyShareFixture) PreTest(ctx context.Context, s *testing.FixtTestState) {
-	if err := ioutil.WriteFile(filepath.Join(s.OutDir(), "device_attributes.json"), f.attributes, 0644); err != nil {
+	if err := os.WriteFile(filepath.Join(s.OutDir(), "device_attributes.json"), f.attributes, 0644); err != nil {
 		s.Fatal("Failed to write CrOS attributes to output file: ", err)
 	}
 

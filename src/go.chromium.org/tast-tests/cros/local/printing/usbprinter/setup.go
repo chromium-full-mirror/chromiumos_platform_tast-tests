@@ -11,7 +11,6 @@ import (
 	"encoding/json"
 	"fmt"
 	"io"
-	"io/ioutil"
 	"os"
 	"path"
 
@@ -276,7 +275,7 @@ func launchPrinter(ctx context.Context, op config) (cmd *testexec.Cmd, err error
 
 	// We pull everything out from the pipe so that
 	// virtual-usb-printer doesn't block on writing to stdout.
-	go io.Copy(ioutil.Discard, p)
+	go io.Copy(io.Discard, p)
 
 	return launch, nil
 }

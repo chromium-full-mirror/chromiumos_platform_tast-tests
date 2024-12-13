@@ -7,7 +7,6 @@ package crostini
 import (
 	"context"
 	"fmt"
-	"io/ioutil"
 	"os"
 	"path/filepath"
 	"time"
@@ -142,7 +141,7 @@ func createTestData(ctx context.Context, downloadsPath string) error {
 
 	// Create a file inside the folder.
 	filePath := filepath.Join(downloadsPath, testFolderZip, testFileZip1)
-	if err := ioutil.WriteFile(filePath, []byte("testString"), 0644); err != nil {
+	if err := os.WriteFile(filePath, []byte("testString"), 0644); err != nil {
 		return errors.Wrap(err, "failed to create file in Downloads")
 	}
 

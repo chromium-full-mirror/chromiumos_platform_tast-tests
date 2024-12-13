@@ -7,7 +7,7 @@ package arc
 import (
 	"context"
 	"fmt"
-	"io/ioutil"
+	"os"
 	"path/filepath"
 
 	"go.chromium.org/tast-tests/cros/common/perf"
@@ -30,7 +30,7 @@ func VMStatMetrics(ctx context.Context, a *arc.ARC, p *perf.Values, outdir, suff
 	if len(outdir) > 0 {
 		outfile := "arc.vmstat" + suffix + ".txt"
 		outpath := filepath.Join(outdir, outfile)
-		if err := ioutil.WriteFile(outpath, vmstat, 0644); err != nil {
+		if err := os.WriteFile(outpath, vmstat, 0644); err != nil {
 			return errors.Wrapf(err, "failed to write vmstat to %q", outpath)
 		}
 	}

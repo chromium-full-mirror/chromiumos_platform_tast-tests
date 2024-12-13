@@ -8,7 +8,7 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
-	"io/ioutil"
+	"os"
 	"path/filepath"
 	"strconv"
 	"strings"
@@ -218,7 +218,7 @@ func Browsing(ctx context.Context, s *testing.State) {
 	}
 
 	configFileName := s.OutDir() + configName + configURLSuffix
-	if err := ioutil.WriteFile(configFileName, []byte(configJSON), 0644); err != nil {
+	if err := os.WriteFile(configFileName, []byte(configJSON), 0644); err != nil {
 		s.Fatalf("Failed to write %s json file: %v", configFileName, err)
 	}
 

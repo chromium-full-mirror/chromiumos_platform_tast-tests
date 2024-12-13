@@ -8,7 +8,6 @@ import (
 	"bytes"
 	"context"
 	"encoding/csv"
-	"io/ioutil"
 	"os"
 	"regexp"
 	"strconv"
@@ -46,7 +45,7 @@ type Session struct {
 }
 
 func createTempFileForTrace() (*os.File, error) {
-	return ioutil.TempFile("", "perfetto-trace-*.pb")
+	return os.CreateTemp("", "perfetto-trace-*.pb")
 }
 
 type option struct {
@@ -175,7 +174,7 @@ func (sess *Session) RunQueryString(ctx context.Context, query string) ([][]stri
 	ctx, cancel := ctxutil.Shorten(ctx, 5*time.Second)
 	defer cancel()
 	// trace_processor_shell accepts the SQL query as a file. Create a temp query file.
-	queryFile, err := ioutil.TempFile("", "trace_processor_query_*.sql")
+	queryFile, err := os.CreateTemp("", "trace_processor_query_*.sql")
 	if err != nil {
 		return nil, errors.Wrap(err, "failed to create a temp file for SQL query")
 	}

@@ -6,7 +6,7 @@ package crash
 
 import (
 	"context"
-	"io/ioutil"
+	"os"
 	"regexp"
 	"time"
 
@@ -130,7 +130,7 @@ func AuthFailure(ctx context.Context, s *testing.State) {
 
 	if len(files[crashAuthFailureMetaName]) == 1 {
 		metaFile := files[crashAuthFailureMetaName][0]
-		contents, err := ioutil.ReadFile(metaFile)
+		contents, err := os.ReadFile(metaFile)
 		if err != nil {
 			s.Errorf("Failed to read meta file %s contents: %v", metaFile, err)
 		} else {

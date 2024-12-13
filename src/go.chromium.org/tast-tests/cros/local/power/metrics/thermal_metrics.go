@@ -6,7 +6,7 @@ package metrics
 
 import (
 	"context"
-	"io/ioutil"
+	"os"
 	"path"
 	"regexp"
 	"strconv"
@@ -25,7 +25,7 @@ func ListSysfsThermalSensors(ctx context.Context) (map[string]string, error) {
 	thermalSensors := make(map[string]string)
 	const sysfsThermalPath = "/sys/class/thermal"
 	testing.ContextLog(ctx, "Listing thermal sensors in ", sysfsThermalPath)
-	files, err := ioutil.ReadDir(sysfsThermalPath)
+	files, err := os.ReadDir(sysfsThermalPath)
 	if err != nil {
 		return thermalSensors, errors.Wrap(err, "failed to read sysfs dir")
 	}

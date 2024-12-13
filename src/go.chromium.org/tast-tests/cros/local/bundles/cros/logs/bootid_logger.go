@@ -6,7 +6,7 @@ package logs
 
 import (
 	"context"
-	"io/ioutil"
+	"os"
 	"strings"
 
 	"go.chromium.org/tast-tests/cros/common/testexec"
@@ -60,7 +60,7 @@ func BootidLogger(ctx context.Context, s *testing.State) {
 }
 
 func getCurrentBootID() (string, error) {
-	b, err := ioutil.ReadFile("/proc/sys/kernel/random/boot_id")
+	b, err := os.ReadFile("/proc/sys/kernel/random/boot_id")
 
 	if err != nil {
 		return "", errors.Wrap(err, "failed to read the current boot id")
@@ -69,7 +69,7 @@ func getCurrentBootID() (string, error) {
 }
 
 func getCurrentBootIDLog() (string, error) {
-	out, err := ioutil.ReadFile("/var/log/boot_id.log")
+	out, err := os.ReadFile("/var/log/boot_id.log")
 
 	if err != nil {
 		return "", errors.Wrap(err, "failed to read the content of the boot id log")

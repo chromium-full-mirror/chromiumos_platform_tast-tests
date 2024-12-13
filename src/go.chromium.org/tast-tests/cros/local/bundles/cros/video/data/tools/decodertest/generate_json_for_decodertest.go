@@ -21,7 +21,6 @@ import (
 	"encoding/json"
 	"fmt"
 	"io"
-	"io/ioutil"
 	"math"
 	"os"
 	"os/exec"
@@ -361,7 +360,7 @@ func writeJSON(file string, info JSONInfo) (string, error) {
 	}
 
 	jsonPath := file + ".json"
-	return jsonPath, ioutil.WriteFile(jsonPath, s, 0644)
+	return jsonPath, os.WriteFile(jsonPath, s, 0644)
 }
 
 func main() {

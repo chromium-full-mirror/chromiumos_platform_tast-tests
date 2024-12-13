@@ -7,7 +7,6 @@ package setup
 import (
 	"context"
 	"fmt"
-	"io/ioutil"
 	"os"
 	"path"
 	"strconv"
@@ -77,7 +76,7 @@ func setBacklightBrightnessLinearPercent(ctx context.Context, percent float64) e
 // listBacklightPaths lists paths of backlights in sysfs.
 func listBacklightPaths() ([]string, error) {
 	const sysfsBacklightPath = "/sys/class/backlight"
-	files, err := ioutil.ReadDir(sysfsBacklightPath)
+	files, err := os.ReadDir(sysfsBacklightPath)
 	if err != nil {
 		if os.IsNotExist(err) {
 			// Ignore NotExist error since /sys/class/backlight may not exist.

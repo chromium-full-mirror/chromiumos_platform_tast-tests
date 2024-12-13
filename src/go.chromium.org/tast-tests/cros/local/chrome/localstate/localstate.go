@@ -8,7 +8,6 @@ package localstate
 
 import (
 	"encoding/json"
-	"io/ioutil"
 	"os"
 	"strings"
 
@@ -22,7 +21,7 @@ const (
 // Unmarshal performs json.Unmarshal on the contents of the browser's Local
 // State file.
 func Unmarshal(out interface{}) error {
-	b, err := ioutil.ReadFile(localStatePath)
+	b, err := os.ReadFile(localStatePath)
 	if err != nil {
 		return errors.Wrap(err, "failed to read Local State file")
 	}
@@ -68,7 +67,7 @@ func Marshal(localState interface{}) error {
 	if err != nil {
 		return errors.Wrap(err, "failed to marshal Local State")
 	}
-	if err := ioutil.WriteFile(localStatePath, s, 0644); err != nil {
+	if err := os.WriteFile(localStatePath, s, 0644); err != nil {
 		return errors.Wrap(err, "failed to write Local State")
 	}
 	return nil

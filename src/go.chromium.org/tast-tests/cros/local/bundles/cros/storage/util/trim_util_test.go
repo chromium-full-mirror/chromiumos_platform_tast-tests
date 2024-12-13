@@ -5,7 +5,6 @@
 package util
 
 import (
-	"io/ioutil"
 	"os"
 	"testing"
 
@@ -29,7 +28,7 @@ func TestCalculateCurrentHashes(t *testing.T) {
 }
 
 func TestWriteRandomData(t *testing.T) {
-	file, err := ioutil.TempFile(os.TempDir(), "trim_test_")
+	file, err := os.CreateTemp(os.TempDir(), "trim_test_")
 	if err != nil {
 		t.Fatal(err)
 	}

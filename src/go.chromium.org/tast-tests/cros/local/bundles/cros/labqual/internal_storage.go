@@ -7,7 +7,6 @@ package labqual
 import (
 	"context"
 	"fmt"
-	"io/ioutil"
 	"math"
 	"strconv"
 	"strings"
@@ -59,7 +58,7 @@ func checkStatefulPartitionsWritable(ctx context.Context, s *testing.State) {
 	} {
 		checkPathExists(ctx, s, dir)
 		fp := filepath.Join(dir, ".tast.check-disk")
-		if err := ioutil.WriteFile(fp, nil, 0600); err != nil {
+		if err := os.WriteFile(fp, nil, 0600); err != nil {
 			s.Fatalf("%s is not writable: %s", dir, err)
 		}
 		if err := os.Remove(fp); err != nil {

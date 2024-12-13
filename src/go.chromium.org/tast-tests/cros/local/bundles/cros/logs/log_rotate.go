@@ -10,7 +10,6 @@ import (
 	"crypto/sha256"
 	"fmt"
 	"io"
-	"io/ioutil"
 	"os"
 	"time"
 
@@ -133,7 +132,7 @@ func createLogsIfNotExist(path string, s *testing.State) error {
 	s.Logf("Creating a log file %q", path)
 	contents := "THIS FILE IS FOR TESTING " + time.Now().Format("2006-01-02 15:04:05.000000000")
 
-	err := ioutil.WriteFile(path, []byte(contents), 0644)
+	err := os.WriteFile(path, []byte(contents), 0644)
 	if err != nil {
 		return errors.Wrapf(err, "failed to create log files %q", path)
 	}

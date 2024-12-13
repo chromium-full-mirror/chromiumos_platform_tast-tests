@@ -7,7 +7,6 @@ package pre
 import (
 	"context"
 	"fmt"
-	"io/ioutil"
 	"os"
 	"path"
 	"strings"
@@ -122,11 +121,11 @@ func (p *itsPreImpl) String() string         { return fmt.Sprintf("its_%s_precon
 func (p *itsPreImpl) Timeout() time.Duration { return 5 * time.Minute }
 
 func copyFile(src, dst string, perm os.FileMode) error {
-	content, err := ioutil.ReadFile(src)
+	content, err := os.ReadFile(src)
 	if err != nil {
 		return err
 	}
-	return ioutil.WriteFile(dst, content, perm)
+	return os.WriteFile(dst, content, perm)
 }
 
 func (p *itsPreImpl) Prepare(ctx context.Context, s *testing.PreState) interface{} {
@@ -151,7 +150,7 @@ func (p *itsPreImpl) Prepare(ctx context.Context, s *testing.PreState) interface
 	p.itsCl = itsClient
 
 	// Prepare temp bin dir.
-	tempDir, err := ioutil.TempDir("", "")
+	tempDir, err := os.MkdirTemp("", "")
 	if err != nil {
 		s.Fatal("Failed to create a temp dir for extra binaries: ", err)
 	}

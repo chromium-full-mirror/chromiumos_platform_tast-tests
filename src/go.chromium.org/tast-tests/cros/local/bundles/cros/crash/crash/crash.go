@@ -8,7 +8,6 @@ package crash
 import (
 	"context"
 	"fmt"
-	"io/ioutil"
 	"os"
 	"os/exec"
 	"os/user"
@@ -114,7 +113,7 @@ func checkCrashDirectoryPermissions(path string) error {
 	var expectedGroup string
 	if strings.HasPrefix(path, "/var/spool/crash") {
 		if fileInfo.IsDir() {
-			files, err := ioutil.ReadDir(path)
+			files, err := os.ReadDir(path)
 			if err != nil {
 				return errors.Wrapf(err, "failed to read directory %s", path)
 			}
@@ -315,7 +314,7 @@ func RunCrasherProcessAndAnalyze(ctx context.Context, opts CrasherOptions) (*Cra
 		return nil, errors.Wrapf(err, "failed to get crash directory for user [%s]", opts.Username)
 	}
 	if !opts.Consent {
-		filesAndDirs, err := ioutil.ReadDir(crashDir)
+		filesAndDirs, err := os.ReadDir(crashDir)
 		if err != nil && !os.IsNotExist(err) {
 			return nil, err
 		}
@@ -332,7 +331,7 @@ func RunCrasherProcessAndAnalyze(ctx context.Context, opts CrasherOptions) (*Cra
 	}
 
 	crashDir = canonicalizeCrashDir(crashDir)
-	crashContents, err := ioutil.ReadDir(crashDir)
+	crashContents, err := os.ReadDir(crashDir)
 	if err != nil {
 		return nil, errors.Wrapf(err, "failed to read crash directory %s", crashDir)
 	}
@@ -462,7 +461,7 @@ func RunCrasherProcessAndAnalyze(ctx context.Context, opts CrasherOptions) (*Cra
 	}
 
 	// Verify the .meta file includes the correct computed_severity and computed_product values.
-	contents, err := ioutil.ReadFile(result.Meta)
+	contents, err := os.ReadFile(result.Meta)
 	if err != nil {
 		return nil, errors.Wrapf(err, "couldn't read meta file %s contents", result.Meta)
 	}

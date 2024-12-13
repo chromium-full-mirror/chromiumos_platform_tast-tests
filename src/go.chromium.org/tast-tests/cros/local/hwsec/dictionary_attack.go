@@ -6,7 +6,6 @@ package hwsec
 
 import (
 	"context"
-	"io/ioutil"
 	"os"
 	"path/filepath"
 	"time"
@@ -23,7 +22,7 @@ func IncreaseDAForTpm1(ctx context.Context, tpmManager *hwsec.TPMManagerClient) 
 	const testIncorrectPassword = "4321"
 
 	// Prepare a test file.
-	testFile, err := ioutil.TempFile("", "dictionary_attack_test")
+	testFile, err := os.CreateTemp("", "dictionary_attack_test")
 	if err != nil {
 		return errors.Wrap(err, "failed to create temp file")
 	}

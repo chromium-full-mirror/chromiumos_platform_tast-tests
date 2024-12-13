@@ -8,7 +8,6 @@ package glbench
 import (
 	"context"
 	"fmt"
-	"io/ioutil"
 	"os"
 	"path/filepath"
 	"regexp"
@@ -173,7 +172,7 @@ func analyzeSummary(summary, resultPath string, isHasty bool, pv *perf.Values) (
 	}
 
 	readFile := func(f string) (string, error) {
-		b, err := ioutil.ReadFile(f)
+		b, err := os.ReadFile(f)
 		if err != nil {
 			return "", errors.Wrap(err, "failed to read files")
 		}

@@ -8,7 +8,6 @@ import (
 	"compress/gzip"
 	"context"
 	"io"
-	"io/ioutil"
 	"os"
 	"path/filepath"
 	"strings"
@@ -43,7 +42,7 @@ func ModuleLocking(ctx context.Context, s *testing.State) {
 	)
 
 	s.Log("Checking ", sysctl)
-	if b, err := ioutil.ReadFile(sysctl); err != nil && !os.IsNotExist(err) {
+	if b, err := os.ReadFile(sysctl); err != nil && !os.IsNotExist(err) {
 		s.Fatalf("Failed to read %s: %v", sysctl, err)
 	} else if err == nil && string(b) != "1\n" {
 		s.Fatalf("%v contains %q; want 1", sysctl, string(b))
@@ -88,7 +87,7 @@ func ModuleLocking(ctx context.Context, s *testing.State) {
 	run(true, "insmod", modulePath)
 	unloadModule(ctx, s, module)
 
-	td, err := ioutil.TempDir("", "security.ModuleLocking.")
+	td, err := os.MkdirTemp("", "security.ModuleLocking.")
 	if err != nil {
 		s.Fatal("Failed to create temp dir: ", err)
 	}
@@ -124,7 +123,7 @@ func ModuleLocking(ctx context.Context, s *testing.State) {
 // Errors cause a fatal test error to be reported via s.
 func moduleLoaded(s *testing.State, module string) bool {
 	const modulesPath = "/proc/modules"
-	b, err := ioutil.ReadFile(modulesPath)
+	b, err := os.ReadFile(modulesPath)
 	if err != nil {
 		s.Fatalf("Failed to read %s: %v", modulesPath, err)
 	}
@@ -196,7 +195,7 @@ func loadViaInitModule(modulePath string) (bool, error) {
 		defer r.Close()
 	}
 
-	buf, err := ioutil.ReadAll(r)
+	buf, err := io.ReadAll(r)
 	if err != nil {
 		return false, errors.Wrap(err, "failed to read module data")
 	}

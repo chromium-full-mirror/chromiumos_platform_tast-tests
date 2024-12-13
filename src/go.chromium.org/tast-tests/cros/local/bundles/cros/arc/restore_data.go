@@ -6,7 +6,7 @@ package arc
 
 import (
 	"context"
-	"io/ioutil"
+	"os"
 	"path"
 	"time"
 
@@ -73,7 +73,7 @@ func anyChildDataAppVMPathSelector(ctx context.Context, user string) (string, er
 func getAnyChildDataAppPath(ctx context.Context, appPath string) (string, error) {
 	resultPath := ""
 	if err := testing.Poll(ctx, func(ctx context.Context) error {
-		entries, err := ioutil.ReadDir(appPath)
+		entries, err := os.ReadDir(appPath)
 		if err != nil {
 			return testing.PollBreak(err)
 		}

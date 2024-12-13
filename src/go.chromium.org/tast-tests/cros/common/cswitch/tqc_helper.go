@@ -14,7 +14,7 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
-	"io/ioutil"
+	"io"
 	"net/http"
 	"strings"
 	"time"
@@ -67,7 +67,7 @@ func CreateSession(ctx context.Context, domain string) (string, error) {
 	}
 	defer resp.Body.Close()
 	// Reading response data for session id.
-	body, err := ioutil.ReadAll(resp.Body)
+	body, err := io.ReadAll(resp.Body)
 	if err != nil {
 		return "", errors.New("failed to read response data for session id")
 	}
@@ -141,7 +141,7 @@ func execCommand(ctx context.Context, sessionID, cmdLine, domain string) error {
 	defer resp.Body.Close()
 
 	// Read the response body.
-	body, err := ioutil.ReadAll(resp.Body)
+	body, err := io.ReadAll(resp.Body)
 	if err != nil {
 		return errors.Wrap(err, "failed to read response data")
 	}
@@ -187,7 +187,7 @@ func commandStatus(ctx context.Context, commandID, domain string) (string, error
 	}
 	defer resp.Body.Close()
 
-	body, err := ioutil.ReadAll(resp.Body)
+	body, err := io.ReadAll(resp.Body)
 	if err != nil {
 		return "", errors.Wrap(err, "failed to read response data")
 	}

@@ -7,7 +7,6 @@ package setup
 import (
 	"context"
 	"fmt"
-	"io/ioutil"
 	"os"
 	"os/user"
 	"path/filepath"
@@ -379,7 +378,7 @@ func moveUserCrashDumps() error {
 		return err
 	}
 
-	fis, err := ioutil.ReadDir(userCrashDir)
+	fis, err := os.ReadDir(userCrashDir)
 	if os.IsNotExist(err) {
 		return nil
 	}
@@ -388,7 +387,7 @@ func moveUserCrashDumps() error {
 	}
 
 	for _, fi := range fis {
-		if !fi.Mode().IsRegular() {
+		if !fi.Type().IsRegular() {
 			continue
 		}
 
@@ -428,7 +427,7 @@ func clearUserData(ctx context.Context, cfg *config.Config) error {
 		// This always fails because /home/chronos is a mount point, but all files
 		// under the directory should be removed.
 		os.RemoveAll(chronosDir)
-		fis, err := ioutil.ReadDir(chronosDir)
+		fis, err := os.ReadDir(chronosDir)
 		if err != nil {
 			return err
 		}
@@ -443,7 +442,7 @@ func clearUserData(ctx context.Context, cfg *config.Config) error {
 	}
 
 	// Delete files from shadow directory.
-	shadowFiles, err := ioutil.ReadDir(shadowDir)
+	shadowFiles, err := os.ReadDir(shadowDir)
 	if err != nil {
 		return errors.Wrapf(err, "failed to read directory %q", shadowDir)
 	}

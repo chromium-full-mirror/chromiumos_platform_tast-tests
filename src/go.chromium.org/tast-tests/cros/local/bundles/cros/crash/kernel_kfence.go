@@ -6,7 +6,7 @@ package crash
 
 import (
 	"context"
-	"io/ioutil"
+	"os"
 	"strings"
 	"time"
 
@@ -66,7 +66,7 @@ func KernelKfence(ctx context.Context, s *testing.State) {
 
 	s.Log("Inducing artificial kfence error")
 	const lkdtm = "/sys/kernel/debug/provoke-crash/DIRECT"
-	if err := ioutil.WriteFile(lkdtm, []byte("KFENCE_READ_AFTER_FREE"), 0); err != nil {
+	if err := os.WriteFile(lkdtm, []byte("KFENCE_READ_AFTER_FREE"), 0); err != nil {
 		s.Fatal("Failed to induce kfence error in lkdtm: ", err)
 	}
 
@@ -105,7 +105,7 @@ func KernelKfence(ctx context.Context, s *testing.State) {
 			"client_computed_severity":     "ERROR",
 			"client_computed_product":      "Platform",
 		}
-		if contents, err := ioutil.ReadFile(metaFile); err != nil {
+		if contents, err := os.ReadFile(metaFile); err != nil {
 			s.Errorf("Couldn't read meta file %s contents: %v", metaFile, err)
 		} else {
 			missing := false

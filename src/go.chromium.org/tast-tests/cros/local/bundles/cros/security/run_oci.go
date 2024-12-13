@@ -7,7 +7,6 @@ package security
 import (
 	"context"
 	"encoding/json"
-	"io/ioutil"
 	"os"
 	"path/filepath"
 	"strings"
@@ -69,7 +68,7 @@ func RunOCI(ctx context.Context, s *testing.State) {
 
 	runTest := func(tc testCase) {
 		// Create temp dir under /tmp to ensure that it's accessible by the chronos user.
-		td, err := ioutil.TempDir("/tmp", "tast.security.RunOCI.")
+		td, err := os.MkdirTemp("/tmp", "tast.security.RunOCI.")
 		if err != nil {
 			s.Fatal("Failed to create temp dir: ", err)
 		}
@@ -86,7 +85,7 @@ func RunOCI(ctx context.Context, s *testing.State) {
 			s.Fatal("Failed to marshal config to JSON: ", err)
 		}
 		cfgPath := filepath.Join(td, "config.json")
-		if err := ioutil.WriteFile(cfgPath, b, 0644); err != nil {
+		if err := os.WriteFile(cfgPath, b, 0644); err != nil {
 			s.Fatal("Failed to create write file: ", err)
 		}
 

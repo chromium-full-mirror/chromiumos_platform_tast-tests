@@ -7,7 +7,6 @@ package security
 import (
 	"bytes"
 	"context"
-	"io/ioutil"
 	"os"
 	"runtime/debug"
 
@@ -45,7 +44,7 @@ func Mprotect(ctx context.Context, s *testing.State) {
 	}
 
 	// Create a temp file and write a byte at an offset to zero-fill the earlier portion.
-	f, err := ioutil.TempFile(dir, "tast.security.Mprotect.")
+	f, err := os.CreateTemp(dir, "tast.security.Mprotect.")
 	if err != nil {
 		s.Fatal("Failed to create temp file: ", err)
 	}

@@ -7,7 +7,6 @@ package syslog
 import (
 	"context"
 	"io"
-	"io/ioutil"
 	"os"
 	"path/filepath"
 	"testing"
@@ -184,7 +183,7 @@ func TestReaderRead(t *testing.T) {
 		},
 	} {
 		t.Run(tc.name, func(t *testing.T) {
-			tf, err := ioutil.TempFile("", "")
+			tf, err := os.CreateTemp("", "")
 			if err != nil {
 				t.Fatal("TempFile failed: ", err)
 			}
@@ -228,7 +227,7 @@ func TestReaderRead(t *testing.T) {
 }
 
 func TestReaderParseFailure(t *testing.T) {
-	tf, err := ioutil.TempFile("", "")
+	tf, err := os.CreateTemp("", "")
 	if err != nil {
 		t.Fatal("TempFile failed: ", err)
 	}
@@ -277,7 +276,7 @@ func TestReaderReadLogRotation(t *testing.T) {
 
 	path := filepath.Join(td, "syslog")
 
-	if err := ioutil.WriteFile(path, nil, 0644); err != nil {
+	if err := os.WriteFile(path, nil, 0644); err != nil {
 		t.Fatal("Failed to create an empty syslog: ", err)
 	}
 
@@ -287,13 +286,13 @@ func TestReaderReadLogRotation(t *testing.T) {
 	}
 	defer r.Close()
 
-	if err := ioutil.WriteFile(path, []byte(fakeLine1), 0644); err != nil {
+	if err := os.WriteFile(path, []byte(fakeLine1), 0644); err != nil {
 		t.Fatal("Failed to write the first entry: ", err)
 	}
 	if err := os.Rename(path, path+".rotated"); err != nil {
 		t.Fatal("Rename failed: ", err)
 	}
-	if err := ioutil.WriteFile(path, []byte(fakeLine2), 0644); err != nil {
+	if err := os.WriteFile(path, []byte(fakeLine2), 0644); err != nil {
 		t.Fatal("Failed to write the second entry: ", err)
 	}
 
@@ -310,7 +309,7 @@ func TestReaderReadLogRotationRace(t *testing.T) {
 
 	path := filepath.Join(td, "syslog")
 
-	if err := ioutil.WriteFile(path, nil, 0644); err != nil {
+	if err := os.WriteFile(path, nil, 0644); err != nil {
 		t.Fatal("Failed to create an empty syslog: ", err)
 	}
 
@@ -320,7 +319,7 @@ func TestReaderReadLogRotationRace(t *testing.T) {
 	}
 	defer r.Close()
 
-	if err := ioutil.WriteFile(path, []byte(fakeLine1), 0644); err != nil {
+	if err := os.WriteFile(path, []byte(fakeLine1), 0644); err != nil {
 		t.Fatal("Failed to write the first entry: ", err)
 	}
 	if err := os.Rename(path, path+".rotated"); err != nil {
@@ -335,7 +334,7 @@ func TestReaderReadLogRotationRace(t *testing.T) {
 		t.Errorf("Result unmatched (-got +want):\n%s", diff)
 	}
 
-	if err := ioutil.WriteFile(path, []byte(fakeLine2), 0644); err != nil {
+	if err := os.WriteFile(path, []byte(fakeLine2), 0644); err != nil {
 		t.Fatal("Failed to write the second entry: ", err)
 	}
 
@@ -400,7 +399,7 @@ func TestReaderWait(t *testing.T) {
 		},
 	} {
 		t.Run(tc.name, func(t *testing.T) {
-			tf, err := ioutil.TempFile("", "")
+			tf, err := os.CreateTemp("", "")
 			if err != nil {
 				t.Fatal("TempFile failed: ", err)
 			}
@@ -495,7 +494,7 @@ func TestChromeReaderRead(t *testing.T) {
 		},
 	} {
 		t.Run(tc.name, func(t *testing.T) {
-			tf, err := ioutil.TempFile("", "")
+			tf, err := os.CreateTemp("", "")
 			if err != nil {
 				t.Fatal("TempFile failed: ", err)
 			}
@@ -558,7 +557,7 @@ func TestChromeReaderReadLogRotation(t *testing.T) {
 
 	realPath := filepath.Join(td, "chrome_20200101-010101")
 
-	if err := ioutil.WriteFile(realPath, nil, 0644); err != nil {
+	if err := os.WriteFile(realPath, nil, 0644); err != nil {
 		t.Fatal("Failed to create an empty chrome log: ", err)
 	}
 
@@ -574,12 +573,12 @@ func TestChromeReaderReadLogRotation(t *testing.T) {
 	}
 	defer r.Close()
 
-	if err := ioutil.WriteFile(realPath, []byte(chromeFakeLine1), 0644); err != nil {
+	if err := os.WriteFile(realPath, []byte(chromeFakeLine1), 0644); err != nil {
 		t.Fatal("Failed to write the first entry: ", err)
 	}
 
 	realPath2 := filepath.Join(td, "chrome_20200101-020202")
-	if err := ioutil.WriteFile(realPath2, []byte(chromeFakeLine2), 0644); err != nil {
+	if err := os.WriteFile(realPath2, []byte(chromeFakeLine2), 0644); err != nil {
 		t.Fatal("Failed to write the second entry: ", err)
 	}
 
@@ -603,7 +602,7 @@ func TestChromeReaderReadLogRotationRace(t *testing.T) {
 
 	realPath := filepath.Join(td, "chrome_20200101-010101")
 
-	if err := ioutil.WriteFile(realPath, nil, 0644); err != nil {
+	if err := os.WriteFile(realPath, nil, 0644); err != nil {
 		t.Fatal("Failed to create an empty chrome log: ", err)
 	}
 
@@ -618,7 +617,7 @@ func TestChromeReaderReadLogRotationRace(t *testing.T) {
 	}
 	defer r.Close()
 
-	if err := ioutil.WriteFile(realPath, []byte(chromeFakeLine1), 0644); err != nil {
+	if err := os.WriteFile(realPath, []byte(chromeFakeLine1), 0644); err != nil {
 		t.Fatal("Failed to write the first entry: ", err)
 	}
 	if err = os.Rename(symlinkPath, symlinkPath+".PREVIOUS"); err != nil {
@@ -634,7 +633,7 @@ func TestChromeReaderReadLogRotationRace(t *testing.T) {
 	}
 
 	realPath2 := filepath.Join(td, "chrome_20200101-020202")
-	if err := ioutil.WriteFile(realPath2, []byte(chromeFakeLine2), 0644); err != nil {
+	if err := os.WriteFile(realPath2, []byte(chromeFakeLine2), 0644); err != nil {
 		t.Fatal("Failed to write the second entry: ", err)
 	}
 	if err := os.Symlink(realPath2, symlinkPath); err != nil {

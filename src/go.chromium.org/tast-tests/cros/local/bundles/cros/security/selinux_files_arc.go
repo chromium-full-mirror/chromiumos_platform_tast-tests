@@ -7,7 +7,7 @@ package security
 import (
 	"context"
 	"fmt"
-	"io/ioutil"
+	"os"
 	"path/filepath"
 	"strings"
 	"time"
@@ -189,7 +189,7 @@ func androidContainerRootPath() (string, error) {
 	}
 	containerPIDFileName := containerPIDFiles[0]
 
-	b, err := ioutil.ReadFile(containerPIDFileName)
+	b, err := os.ReadFile(containerPIDFileName)
 	if err != nil {
 		return "", errors.Wrap(err, "failed to read container.pid")
 	}

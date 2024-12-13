@@ -6,7 +6,6 @@ package security
 
 import (
 	"context"
-	"io/ioutil"
 	"os"
 	"os/exec"
 	"os/user"
@@ -73,7 +72,7 @@ func LogPerms(ctx context.Context, s *testing.State) {
 	if err != nil {
 		s.Error("ls failed: ", err)
 	}
-	if err = ioutil.WriteFile(filepath.Join(s.OutDir(), "ls.txt"), b, 0644); err != nil {
+	if err = os.WriteFile(filepath.Join(s.OutDir(), "ls.txt"), b, 0644); err != nil {
 		s.Error("Failed writing log listing: ", err)
 	}
 }

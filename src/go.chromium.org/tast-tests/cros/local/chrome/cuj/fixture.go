@@ -6,7 +6,6 @@ package cuj
 
 import (
 	"context"
-	"io/ioutil"
 	"os"
 	"path"
 	"path/filepath"
@@ -1257,7 +1256,7 @@ func init() {
 }
 
 func prepareDocsBlockerExtension(s *testing.FixtState) (string, error) {
-	extDir, err := ioutil.TempDir("", "docs_blocker_extension")
+	extDir, err := os.MkdirTemp("", "docs_blocker_extension")
 	if err != nil {
 		return "", errors.Wrap(err, "failed to create temporary directory for DocsBlockerExtension")
 	}

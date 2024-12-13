@@ -6,7 +6,7 @@ package power
 
 import (
 	"context"
-	"io/ioutil"
+	"os"
 	"os/exec"
 	"path/filepath"
 
@@ -54,7 +54,7 @@ func CheckStatus(ctx context.Context, s *testing.State) {
 	if err != nil {
 		s.Error("power_supply_info failed: ", err)
 	}
-	if err = ioutil.WriteFile(filepath.Join(s.OutDir(), "power_supply_info.txt"), b, 0644); err != nil {
+	if err = os.WriteFile(filepath.Join(s.OutDir(), "power_supply_info.txt"), b, 0644); err != nil {
 		s.Error("Writing output file failed: ", err)
 	}
 }

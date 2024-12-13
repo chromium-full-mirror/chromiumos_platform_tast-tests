@@ -6,7 +6,6 @@ package ocr
 
 import (
 	"context"
-	"io/ioutil"
 	"os"
 	"path/filepath"
 
@@ -38,7 +37,7 @@ const (
 // the output PDF file with a golden file. It also dumps the output to a file
 // for debugging.
 func GenerateSearchablePDFFromImage(ctx context.Context, s *testing.State) {
-	tmpDir, err := ioutil.TempDir("", "tast.ocr.GenerateSearchablePDFFromImage.")
+	tmpDir, err := os.MkdirTemp("", "tast.ocr.GenerateSearchablePDFFromImage.")
 	if err != nil {
 		s.Fatal("Failed to create temporary directory: ", err)
 	}
@@ -55,7 +54,7 @@ func GenerateSearchablePDFFromImage(ctx context.Context, s *testing.State) {
 
 	// Log output to file for debugging.
 	path := filepath.Join(s.OutDir(), "command_output.txt")
-	if err := ioutil.WriteFile(path, out, 0644); err != nil {
+	if err := os.WriteFile(path, out, 0644); err != nil {
 		s.Fatal("Failed to write output to ", path)
 	}
 

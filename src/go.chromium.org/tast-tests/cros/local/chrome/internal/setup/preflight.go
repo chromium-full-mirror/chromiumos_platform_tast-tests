@@ -6,7 +6,6 @@ package setup
 
 import (
 	"context"
-	"io/ioutil"
 	"os"
 	"path/filepath"
 
@@ -73,7 +72,7 @@ func checkStateful() error {
 			return errors.Wrapf(err, "failed to stat %s", dir)
 		}
 		fp := filepath.Join(dir, ".tast.check-disk")
-		if err := ioutil.WriteFile(fp, nil, 0600); err != nil {
+		if err := os.WriteFile(fp, nil, 0600); err != nil {
 			return errors.Wrapf(err, "%s is not writable", dir)
 		}
 		if err := os.Remove(fp); err != nil {

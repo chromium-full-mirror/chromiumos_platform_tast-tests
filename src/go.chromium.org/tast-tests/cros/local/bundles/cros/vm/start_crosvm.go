@@ -7,7 +7,6 @@ package vm
 import (
 	"context"
 	"io"
-	"io/ioutil"
 	"os"
 	"path/filepath"
 	"regexp"
@@ -35,7 +34,7 @@ func init() {
 func StartCrosvm(ctx context.Context, s *testing.State) {
 	data := s.FixtValue().(dlc.FixtData)
 
-	td, err := ioutil.TempDir("", "tast.vm.StartCrosvm.")
+	td, err := os.MkdirTemp("", "tast.vm.StartCrosvm.")
 	if err != nil {
 		s.Fatal("Failed to create temporary directory: ", err)
 	}

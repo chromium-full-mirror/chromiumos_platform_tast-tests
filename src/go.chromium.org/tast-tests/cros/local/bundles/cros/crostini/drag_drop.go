@@ -7,7 +7,6 @@ package crostini
 import (
 	"bytes"
 	"context"
-	"io/ioutil"
 	"os"
 	"path/filepath"
 	"time"
@@ -141,7 +140,7 @@ func DragDrop(ctx context.Context, s *testing.State) {
 	}
 	defer os.Remove(path)
 	path = filepath.Join(myFilesPath, fileDragFromFilesapp)
-	if err := ioutil.WriteFile(path, []byte(fileDragFromFilesapp), 0644); err != nil {
+	if err := os.WriteFile(path, []byte(fileDragFromFilesapp), 0644); err != nil {
 		s.Fatalf("Create file %s failed: %s", path, err)
 	}
 	defer os.Remove(path)
@@ -290,7 +289,7 @@ func dragFromCrostini(ctx context.Context, pre crostini.FixtureData, files *file
 		return errors.Wrap(err, "stat")
 	}
 	if isFile {
-		b, err := ioutil.ReadFile(crosPath)
+		b, err := os.ReadFile(crosPath)
 		if err != nil {
 			return errors.Wrap(err, "read the file in ChromeOS")
 		}

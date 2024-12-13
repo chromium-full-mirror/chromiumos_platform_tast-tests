@@ -6,7 +6,6 @@ package network
 
 import (
 	"context"
-	"io/ioutil"
 	"os"
 	"path/filepath"
 	"regexp"
@@ -73,7 +72,7 @@ func EthernetSpeed(ctx context.Context, s *testing.State) {
 	defer cancel()
 
 	testfileName := "test.img"
-	tmpDir, err := ioutil.TempDir("", "tast-tmp")
+	tmpDir, err := os.MkdirTemp("", "tast-tmp")
 	if err != nil {
 		s.Fatal("Failed to create temp dir: ", err)
 	}

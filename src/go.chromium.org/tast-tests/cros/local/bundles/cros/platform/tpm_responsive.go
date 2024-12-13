@@ -6,7 +6,7 @@ package platform
 
 import (
 	"context"
-	"io/ioutil"
+	"os"
 	"path/filepath"
 	"strings"
 
@@ -43,7 +43,7 @@ func TPMResponsive(ctx context.Context, s *testing.State) {
 	if !strings.Contains(string(out), exp) {
 		s.Errorf("tpm_version output doesn't contain %q (see %v)", exp, fn)
 	}
-	if err := ioutil.WriteFile(filepath.Join(s.OutDir(), fn), out, 0644); err != nil {
+	if err := os.WriteFile(filepath.Join(s.OutDir(), fn), out, 0644); err != nil {
 		s.Error("Failed to write output: ", err)
 	}
 }

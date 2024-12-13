@@ -11,7 +11,7 @@ This file implements functions to check or switch the DUT's boot mode.
 import (
 	"context"
 	"fmt"
-	"io/ioutil"
+	"os"
 	"path/filepath"
 	"regexp"
 	"strings"
@@ -880,7 +880,7 @@ func (ms *ModeSwitcher) EnableRecMode(ctx context.Context, recType servo.PowerSt
 				outDir, ok := testing.ContextOutDir(ctx)
 				if ok {
 					destPath := filepath.Join(outDir, "ecUart.log")
-					if err := ioutil.WriteFile(destPath, []byte(ecStream), 0666); err != nil {
+					if err := os.WriteFile(destPath, []byte(ecStream), 0666); err != nil {
 						testing.ContextLog(ctx, "Failed to write ecUart.log: ", err)
 					}
 				} else {

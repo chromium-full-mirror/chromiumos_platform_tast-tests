@@ -6,7 +6,6 @@ package u2fd
 
 import (
 	"context"
-	"io/ioutil"
 	"net/http"
 	"os"
 	"time"
@@ -94,7 +93,7 @@ func (c *WebauthnService) New(ctx context.Context, req *hwsec.NewRequest) (*empt
 	}
 
 	if req.GetAllowEnterpriseAttestation() {
-		tmpdir, err := ioutil.TempDir("", "fdms-")
+		tmpdir, err := os.MkdirTemp("", "fdms-")
 		if err != nil {
 			return nil, errors.Wrap(err, "failed to create temp dir")
 		}

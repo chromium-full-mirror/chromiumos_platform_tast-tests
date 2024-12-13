@@ -9,7 +9,7 @@ import (
 	"encoding/csv"
 	"fmt"
 	"io"
-	"io/ioutil"
+	"os"
 	"strconv"
 	"strings"
 	"time"
@@ -141,7 +141,7 @@ type sarTable map[string][]sarConfig
 
 // readSARTable fetches the supported SAR levels and expected Tx power for the requested band.
 func readSARTable(ctx context.Context, filePath string) (sarTable, error) {
-	b, err := ioutil.ReadFile(filePath)
+	b, err := os.ReadFile(filePath)
 	if err != nil {
 		return nil, errors.Wrap(err, "failed to read SAR data file")
 	}

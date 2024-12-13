@@ -6,7 +6,7 @@ package printer
 
 import (
 	"context"
-	"io/ioutil"
+	"os"
 
 	ppb "go.chromium.org/chromiumos/system_api/printscanmgr_proto"
 
@@ -73,7 +73,7 @@ func addPrinterWithExpectedStatus(
 // involves a sandboxed helper executable; this test helps guard against the
 // possibility of seccomp filters going stale.
 func ParsePrinterUris(ctx context.Context, s *testing.State) {
-	ppd, err := ioutil.ReadFile(s.DataPath("GenericPostScript.ppd.gz"))
+	ppd, err := os.ReadFile(s.DataPath("GenericPostScript.ppd.gz"))
 	if err != nil {
 		s.Fatal("Failed to read PPD file: ", err)
 	}

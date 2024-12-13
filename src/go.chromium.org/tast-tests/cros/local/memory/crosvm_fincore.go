@@ -8,7 +8,6 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
-	"io/ioutil"
 	"os"
 	"path"
 	"regexp"
@@ -173,7 +172,7 @@ func CrosvmFincoreMetrics(ctx context.Context, p *perf.Values, outdir, suffix st
 	}
 	if len(outdir) > 0 {
 		filename := fmt.Sprintf("fincore%s.json", suffix)
-		if err := ioutil.WriteFile(path.Join(outdir, filename), fincoreBytes, 0644); err != nil {
+		if err := os.WriteFile(path.Join(outdir, filename), fincoreBytes, 0644); err != nil {
 			return errors.Wrapf(err, "failed to write fincore JSON to %s", filename)
 		}
 	}

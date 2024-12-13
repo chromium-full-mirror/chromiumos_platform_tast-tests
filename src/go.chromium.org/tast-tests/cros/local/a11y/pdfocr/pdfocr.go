@@ -10,7 +10,6 @@ import (
 	"context"
 	"fmt"
 	"io/fs"
-	"io/ioutil"
 	"net/http"
 	"net/http/httptest"
 	"os"
@@ -262,7 +261,7 @@ func moveDir(srcDir, dstDir string) (retErr error) {
 	}
 
 	// Move dir content.
-	entries, err := ioutil.ReadDir(srcDir)
+	entries, err := os.ReadDir(srcDir)
 	if err != nil {
 		retErr = errors.Wrapf(err, "failed to read dir %s", srcDir)
 		return

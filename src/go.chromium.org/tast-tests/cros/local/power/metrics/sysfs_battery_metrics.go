@@ -6,7 +6,6 @@ package metrics
 
 import (
 	"context"
-	"io/ioutil"
 	"os"
 	"path"
 	"strconv"
@@ -339,7 +338,7 @@ func ListSysfsBatteryPaths(ctx context.Context) ([]string, error) {
 	// TODO(hikarun): Remove ContextLogf()s after checking this function works on all platforms
 	const sysfsPowerSupplyPath = "/sys/class/power_supply"
 	testing.ContextLog(ctx, "Listing batteries in ", sysfsPowerSupplyPath)
-	files, err := ioutil.ReadDir(sysfsPowerSupplyPath)
+	files, err := os.ReadDir(sysfsPowerSupplyPath)
 	if err != nil {
 		return nil, errors.Wrap(err, "failed to read sysfs dir")
 	}

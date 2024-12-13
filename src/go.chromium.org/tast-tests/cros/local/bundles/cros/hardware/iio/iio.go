@@ -7,7 +7,6 @@ package iio
 import (
 	"context"
 	"fmt"
-	"io/ioutil"
 	"os"
 	"path/filepath"
 	"regexp"
@@ -190,7 +189,7 @@ func GetSensors(ctx context.Context) ([]*Sensor, error) {
 		return ret, nil
 	}
 
-	files, err := ioutil.ReadDir(fullpath)
+	files, err := os.ReadDir(fullpath)
 	if err != nil {
 		return nil, err
 	}
@@ -330,7 +329,7 @@ func GetTriggers() ([]*Trigger, error) {
 		return ret, nil
 	}
 
-	files, err := ioutil.ReadDir(fullpath)
+	files, err := os.ReadDir(fullpath)
 	if err != nil {
 		return nil, err
 	}
@@ -454,7 +453,7 @@ func (s *Sensor) Read() (*SensorReading, error) {
 
 // WriteAttr writes value to the device's attr file.
 func (d *Device) WriteAttr(attr, value string) error {
-	if err := ioutil.WriteFile(filepath.Join(basePath, iioBasePath, d.Path, attr),
+	if err := os.WriteFile(filepath.Join(basePath, iioBasePath, d.Path, attr),
 		[]byte(value), os.ModePerm); err != nil {
 		return errors.Wrapf(err, "error writing attribute %q of %v", attr, d.Path)
 	}
@@ -464,7 +463,7 @@ func (d *Device) WriteAttr(attr, value string) error {
 
 // ReadAttr reads the device's attr file and returns the value.
 func (d *Device) ReadAttr(attr string) (string, error) {
-	a, err := ioutil.ReadFile(filepath.Join(basePath, iioBasePath, d.Path, attr))
+	a, err := os.ReadFile(filepath.Join(basePath, iioBasePath, d.Path, attr))
 	if err != nil {
 		return "", errors.Wrapf(err, "error reading attribute %q of %v", attr, d.Path)
 	}

@@ -7,7 +7,6 @@ package arc
 import (
 	"context"
 	"encoding/json"
-	"io/ioutil"
 	"os"
 
 	"github.com/golang/protobuf/ptypes/duration"
@@ -57,7 +56,7 @@ func (c *SuspendService) Prepare(ctx context.Context, req *empty.Empty) (*arcpb.
 	}
 	defer cr.Close(ctx)
 
-	td, err := ioutil.TempDir("", "")
+	td, err := os.MkdirTemp("", "")
 	if err != nil {
 		return nil, errors.Wrap(err, "failed to create a temp dir")
 	}
@@ -115,7 +114,7 @@ func parseReadClocksOutput(output []byte) (*arcpb.ClockValues, error) {
 
 func readARCClocks(ctx context.Context, readClocksPath string) (*arcpb.ClockValues, error) {
 	// This will take some time since it creates a connection to ARC again
-	td, err := ioutil.TempDir("", "")
+	td, err := os.MkdirTemp("", "")
 	if err != nil {
 		return nil, errors.Wrap(err, "failed to create a temp dir")
 	}

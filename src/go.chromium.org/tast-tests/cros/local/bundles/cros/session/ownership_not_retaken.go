@@ -7,7 +7,7 @@ package session
 import (
 	"bytes"
 	"context"
-	"io/ioutil"
+	"os"
 	"time"
 
 	"go.chromium.org/tast-tests/cros/local/chrome"
@@ -99,7 +99,7 @@ func OwnershipNotRetaken(ctx context.Context, s *testing.State) {
 		}
 	}()
 
-	key, err := ioutil.ReadFile(ownerKeyFile)
+	key, err := os.ReadFile(ownerKeyFile)
 	if err != nil {
 		s.Fatalf("Failed to read %s: %v", ownerKeyFile, err)
 	}
@@ -119,7 +119,7 @@ func OwnershipNotRetaken(ctx context.Context, s *testing.State) {
 	}
 
 	// Compare the file content.
-	if key2, err := ioutil.ReadFile(ownerKeyFile); err != nil {
+	if key2, err := os.ReadFile(ownerKeyFile); err != nil {
 		s.Fatalf("Failed to read %s second time: %v", ownerKeyFile, err)
 	} else if !bytes.Equal(key, key2) {
 		s.Fatalf("%s is changed on second login", ownerKeyFile)

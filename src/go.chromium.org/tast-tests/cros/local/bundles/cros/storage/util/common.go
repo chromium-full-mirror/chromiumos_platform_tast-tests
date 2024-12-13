@@ -8,7 +8,6 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
-	"io/ioutil"
 	"os"
 	"path/filepath"
 	"sort"
@@ -65,7 +64,7 @@ func WriteTestStatusFile(ctx context.Context, outDir string, passed bool, startT
 		return errors.Wrap(err, "failed marshalling test status to JSON")
 	}
 	filename := filepath.Join(outDir, "status.json")
-	if err := ioutil.WriteFile(filename, content, 0644); err != nil {
+	if err := os.WriteFile(filename, content, 0644); err != nil {
 		return errors.Wrap(err, "failed saving test status to file")
 	}
 	return nil

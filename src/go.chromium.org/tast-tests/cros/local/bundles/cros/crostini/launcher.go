@@ -6,7 +6,6 @@ package crostini
 
 import (
 	"context"
-	"io/ioutil"
 	"os"
 	"path/filepath"
 	"time"
@@ -294,7 +293,7 @@ func waitForIcon(ctx context.Context, tconn *chrome.TestConn, ownerID, appID str
 		} else if !fileInfo.IsDir() {
 			return iconAbsent, errors.Errorf("icon path %v is not a directory", iconDir)
 		}
-		entries, err := ioutil.ReadDir(iconDir)
+		entries, err := os.ReadDir(iconDir)
 		if err != nil {
 			return iconAbsent, errors.Wrapf(err, "failed reading dir %v", iconDir)
 		}

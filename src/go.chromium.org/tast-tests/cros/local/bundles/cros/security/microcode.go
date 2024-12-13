@@ -12,7 +12,6 @@ import (
 	"encoding/binary"
 	"fmt"
 	"io"
-	"io/ioutil"
 	"os"
 	"reflect"
 	"regexp"
@@ -357,7 +356,7 @@ type cpuInfo struct {
 
 // readCPUInfo parses /proc/cpuinfo into a map of cpuInfo objects.
 func readCPUInfo() ([]cpuInfo, error) {
-	cpuinfo, err := ioutil.ReadFile("/proc/cpuinfo")
+	cpuinfo, err := os.ReadFile("/proc/cpuinfo")
 	if err != nil {
 		return nil, err
 	}
@@ -409,7 +408,7 @@ func readCPUInfo() ([]cpuInfo, error) {
 func readSysfsCPUVal(index uint, name string) (uint64, error) {
 	path := fmt.Sprintf("/sys/devices/system/cpu/cpu%d/%s", index, name)
 
-	b, err := ioutil.ReadFile(path)
+	b, err := os.ReadFile(path)
 	if err != nil {
 		return 0, err
 	}

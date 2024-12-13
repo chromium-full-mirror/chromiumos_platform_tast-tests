@@ -6,7 +6,7 @@ package platform
 
 import (
 	"context"
-	"io/ioutil"
+	"os"
 	"path/filepath"
 	"regexp"
 	"strconv"
@@ -50,7 +50,7 @@ func testETMEventAvailable(ctx context.Context, s *testing.State) {
 		s.Fatalf("%s failed: %v", shutil.EscapeSlice(cmd.Args), err)
 	}
 	perfListFile := filepath.Join(s.OutDir(), "perf-list.txt")
-	if err = ioutil.WriteFile(perfListFile, out, 0644); err != nil {
+	if err = os.WriteFile(perfListFile, out, 0644); err != nil {
 		s.Fatalf("Write to %q failed: %v", perfListFile, err)
 	}
 	// Make sure CoreSight is listed in the Kernel PMU events.
@@ -80,16 +80,16 @@ func testSettingETMStrobingConfiguration(ctx context.Context, s *testing.State) 
 	} {
 		s.Run(ctx, param.name, func(ctx context.Context, s *testing.State) {
 			// Read the default parameter.
-			defaultParam, err := ioutil.ReadFile(param.path)
+			defaultParam, err := os.ReadFile(param.path)
 			if err != nil {
 				s.Fatalf("Failed to read %v, error %v", param.path, err)
 			}
 			// Set new strobing parameters.
-			if err = ioutil.WriteFile(param.path, []byte(param.value), 0644); err != nil {
+			if err = os.WriteFile(param.path, []byte(param.value), 0644); err != nil {
 				s.Fatalf("Write to %q failed: %v", param.path, err)
 			}
 			// Verify the new strobing settings.
-			readBackParam, err := ioutil.ReadFile(param.path)
+			readBackParam, err := os.ReadFile(param.path)
 			if err != nil {
 				s.Fatalf("Failed to read %v, error %v", param.path, err)
 			}

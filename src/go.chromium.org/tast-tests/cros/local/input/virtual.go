@@ -7,7 +7,6 @@ package input
 import (
 	"encoding/binary"
 	"fmt"
-	"io/ioutil"
 	"math/big"
 	"os"
 	"path/filepath"
@@ -227,19 +226,19 @@ func getVirtDevSysfsPath(fd int, name string, id devID) (string, error) {
 
 	// UI_GET_SYSNAME is only available in v3.14 and newer kernels.
 	// If the ioctl failed, iterate over all virtual devices to find the one with the name and ID that we used.
-	fis, err := ioutil.ReadDir(sysfsVirtDir)
+	fis, err := os.ReadDir(sysfsVirtDir)
 	if err != nil {
 		return "", errors.Wrap(err, "UI_DEV_SETUP ioctl failed and no virtual devices found")
 	}
 	for _, fi := range fis {
 		dir := filepath.Join(sysfsVirtDir, fi.Name())
-		sysfsName, err := ioutil.ReadFile(filepath.Join(dir, "name"))
+		sysfsName, err := os.ReadFile(filepath.Join(dir, "name"))
 		if err != nil || strings.TrimSpace(string(sysfsName)) != name {
 			continue
 		}
 
 		checkID := func(name string, val uint16) bool {
-			b, err := ioutil.ReadFile(filepath.Join(dir, "id", name))
+			b, err := os.ReadFile(filepath.Join(dir, "id", name))
 			return err == nil && strings.TrimSpace(string(b)) == fmt.Sprintf("%04x", val)
 		}
 		if checkID("bustype", id.bustype) && checkID("vendor", id.vendor) &&

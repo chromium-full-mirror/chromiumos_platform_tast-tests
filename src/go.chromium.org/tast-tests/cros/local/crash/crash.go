@@ -9,7 +9,6 @@ package crash
 import (
 	"context"
 	"fmt"
-	"io/ioutil"
 	"os"
 	"path/filepath"
 	"regexp"
@@ -166,7 +165,7 @@ func isCrashFile(filename string) bool {
 func GetCrashes(dirs ...string) ([]string, error) {
 	var crashFiles []string
 	for _, dir := range dirs {
-		files, err := ioutil.ReadDir(dir)
+		files, err := os.ReadDir(dir)
 		if os.IsNotExist(err) {
 			continue
 		} else if err != nil {
@@ -456,7 +455,7 @@ func WaitForCrashFiles(ctx context.Context, dirs, regexes []string, opts ...Wait
 						// other strings.
 						if strings.HasSuffix(f, ".meta") {
 							var contents []byte
-							if contents, err = ioutil.ReadFile(f); err != nil {
+							if contents, err = os.ReadFile(f); err != nil {
 								// There's a known issue with cryptohome 'flickering'
 								// occasionally. (b/189707927) If one process writes a file, a
 								// different process trying to read it the instant the file
@@ -605,7 +604,7 @@ func findCoreDumps(dirs []string) (paths []string, size int64) {
 	const extension = ".core"
 
 	for _, dir := range dirs {
-		fis, err := ioutil.ReadDir(dir)
+		fis, err := os.ReadDir(dir)
 		if err != nil {
 			continue
 		}
@@ -624,7 +623,8 @@ func findCoreDumps(dirs []string) (paths []string, size int64) {
 				continue
 			}
 			paths = append(paths, filepath.Join(dir, fi.Name()))
-			size += fi.Size()
+			info, _ := fi.Info()
+			size += info.Size()
 		}
 	}
 
@@ -676,7 +676,7 @@ func MarkTestInProgress(ctx context.Context, name string) error {
 	if !shouldMarkTestInProgress(ctx) {
 		return nil
 	}
-	if err := ioutil.WriteFile(testInProgressPath, []byte(testInProgressPrefixVar.Value()+name), 0644); err != nil {
+	if err := os.WriteFile(testInProgressPath, []byte(testInProgressPrefixVar.Value()+name), 0644); err != nil {
 		return errors.Wrap(err, "failed to write in-progress test name")
 	}
 	return nil

@@ -17,7 +17,6 @@ package kernelmeter
 import (
 	"context"
 	"fmt"
-	"io/ioutil"
 	"os"
 	"regexp"
 	"strconv"
@@ -236,7 +235,7 @@ func (v *vmStatsMeter) stats() (*VMStatsData, error) {
 // /proc/vmstat are left unchanged.
 func (s *vmSample) read() {
 	s.time = time.Now()
-	b, err := ioutil.ReadFile("/proc/vmstat")
+	b, err := os.ReadFile("/proc/vmstat")
 	if err != nil {
 		panic(fmt.Sprint("Cannot read /proc/vmstat: ", err))
 	}
@@ -315,7 +314,7 @@ type watermarkData struct {
 // approximation (and an upper bound) of the minimum amount of RAM which the
 // kernel tries to keep free by reclaiming.
 func watermarks() (*watermarkData, error) {
-	b, err := ioutil.ReadFile("/proc/zoneinfo")
+	b, err := os.ReadFile("/proc/zoneinfo")
 	if err != nil {
 		return nil, err
 	}
@@ -430,7 +429,7 @@ func stringToWatermarks(s string) (*watermarkData, error) {
 // ReadMemInfo returns all name-value pairs from /proc/meminfo.  The values
 // returned are in bytes.
 func ReadMemInfo() (map[string]MemSize, error) {
-	b, err := ioutil.ReadFile("/proc/meminfo")
+	b, err := os.ReadFile("/proc/meminfo")
 	if err != nil {
 		return nil, err
 	}
@@ -486,7 +485,7 @@ func ProcessMemory() (allocated MemSize, err error) {
 // HasZram returns true when the system uses swap on a zram device,
 // and no other device.
 func HasZram() bool {
-	b, err := ioutil.ReadFile("/proc/swaps")
+	b, err := os.ReadFile("/proc/swaps")
 	if err != nil {
 		return false
 	}

@@ -9,7 +9,7 @@ package hermes
 import (
 	"context"
 	"encoding/json"
-	"io/ioutil"
+	"os"
 	"reflect"
 	"time"
 
@@ -58,7 +58,7 @@ func WaitForChromeESIMCache(ctx context.Context, timeout time.Duration) error {
 		return nil
 	}
 	if err := testing.Poll(ctx, func(ctx context.Context) error {
-		_, err := ioutil.ReadFile("/home/chronos/Local State")
+		_, err := os.ReadFile("/home/chronos/Local State")
 		return err
 	}, &testing.PollOptions{Timeout: timeout}); err != nil {
 		return errors.Wrap(err, "unable to read Chrome eSIM cache (b/269175859)")
@@ -80,7 +80,7 @@ func waitForHermesIdleHelper(ctx context.Context) error {
 }
 
 func ensureEUICCSRefreshed(euiccPaths []dbus.ObjectPath) error {
-	jsonBytes, err := ioutil.ReadFile("/home/chronos/Local State")
+	jsonBytes, err := os.ReadFile("/home/chronos/Local State")
 	if err != nil {
 		return errors.Wrap(err, "unable to read Chrome eSIM cache (b/269175859)")
 	}

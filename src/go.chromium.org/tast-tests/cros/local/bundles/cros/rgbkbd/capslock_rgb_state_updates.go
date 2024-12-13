@@ -6,8 +6,8 @@ package rgbkbd
 
 import (
 	"context"
-	"io/ioutil"
 	"log"
+	"os"
 	"time"
 
 	"go.chromium.org/tast-tests/cros/local/chrome"
@@ -94,7 +94,7 @@ func CapslockRgbStateUpdates(ctx context.Context, s *testing.State) {
 	// TODO(b/241255465): Add tast test that verifies calls made at startup
 	// (initial caps lock state, default keyboard backlight color) when RGB keyboard
 	// is supported.
-	content, err := ioutil.ReadFile("/run/rgbkbd/log")
+	content, err := os.ReadFile("/run/rgbkbd/log")
 	if err != nil {
 		log.Fatal(err)
 	}

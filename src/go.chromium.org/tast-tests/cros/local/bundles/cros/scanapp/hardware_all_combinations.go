@@ -7,7 +7,7 @@ package scanapp
 import (
 	"context"
 	"encoding/json"
-	"io/ioutil"
+	"os"
 	"time"
 
 	"go.chromium.org/tast-tests/cros/local/bundles/cros/scanapp/scanning"
@@ -78,7 +78,7 @@ func init() {
 func HardwareAllCombinations(ctx context.Context, s *testing.State) {
 	cr := s.FixtValue().(chrome.HasChrome).Chrome()
 
-	fileContents, err := ioutil.ReadFile(s.DataPath(s.Param().(string)))
+	fileContents, err := os.ReadFile(s.DataPath(s.Param().(string)))
 	if err != nil {
 		s.Fatal("Unable to read scanner descriptor file: ", err)
 	}

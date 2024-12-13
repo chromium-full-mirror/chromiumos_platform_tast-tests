@@ -10,7 +10,6 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
-	"io/ioutil"
 	"os"
 	"regexp"
 	"strconv"
@@ -75,7 +74,7 @@ var runCommand = func(ctx context.Context, cmd string, args ...string) ([]byte, 
 }
 
 // For mocking.
-var readFile = ioutil.ReadFile
+var readFile = os.ReadFile
 
 // usbDevices returns a list of USB devices. Each device is represented as a
 // list of string. Each string contains some attributes related to the device.

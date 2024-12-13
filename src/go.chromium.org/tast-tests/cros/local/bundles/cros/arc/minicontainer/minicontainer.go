@@ -11,7 +11,6 @@ import (
 	"context"
 	"fmt"
 	"io"
-	"io/ioutil"
 	"os"
 	"path/filepath"
 	"runtime"
@@ -130,7 +129,7 @@ func testAndroidLogs(ctx context.Context, s *testing.State, sr *syslog.Reader) {
 	const minLogSize = 2048
 	if size := logs.Len(); size < minLogSize {
 		// Dump arc-kmsg-logger log to output directory for debugging on failure.
-		if err := ioutil.WriteFile(filepath.Join(s.OutDir(), "arc-kmsg-logger.log"), logs.Bytes(), 0644); err != nil {
+		if err := os.WriteFile(filepath.Join(s.OutDir(), "arc-kmsg-logger.log"), logs.Bytes(), 0644); err != nil {
 			s.Error("Failed to write arc-kmsg-logger.log: ", err)
 		}
 		s.Errorf("log size is too small: got %d; want >= %d", size, minLogSize)

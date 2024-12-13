@@ -10,7 +10,7 @@ import (
 	"bytes"
 	"context"
 	"fmt"
-	"io/ioutil"
+	"os"
 	"path/filepath"
 	"strings"
 	"time"
@@ -458,7 +458,7 @@ func InitializeKnownState(ctx context.Context, d *rpcdut.RPCDUT, outdir string, 
 	}
 	versionOutputFile := "cros_fp_version.txt"
 	testing.ContextLogf(ctx, "Writing FP firmware version to %s", versionOutputFile)
-	if err := ioutil.WriteFile(filepath.Join(outdir, versionOutputFile), out, 0644); err != nil {
+	if err := os.WriteFile(filepath.Join(outdir, versionOutputFile), out, 0644); err != nil {
 		// This is a nonfatal error that shouldn't kill the test.
 		testing.ContextLog(ctx, "Failed to write FP firmware version to file: ", err)
 	}

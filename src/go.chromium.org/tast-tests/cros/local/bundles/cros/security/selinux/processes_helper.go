@@ -6,7 +6,6 @@ package selinux
 
 import (
 	"fmt"
-	"io/ioutil"
 	"os"
 	"regexp"
 	"strconv"
@@ -76,7 +75,7 @@ func GetProcesses(filter ProcessFilter) ([]Process, error) {
 			proc.Euid = uint32(uids[1])
 		}
 
-		if comm, err := ioutil.ReadFile(fmt.Sprintf("/proc/%d/comm", proc.Pid)); os.IsNotExist(err) {
+		if comm, err := os.ReadFile(fmt.Sprintf("/proc/%d/comm", proc.Pid)); os.IsNotExist(err) {
 			continue
 		} else if err != nil {
 			return nil, err
@@ -99,7 +98,7 @@ func GetProcesses(filter ProcessFilter) ([]Process, error) {
 			continue
 		}
 
-		if secontext, err := ioutil.ReadFile(fmt.Sprintf("/proc/%d/attr/current", proc.Pid)); err != nil {
+		if secontext, err := os.ReadFile(fmt.Sprintf("/proc/%d/attr/current", proc.Pid)); err != nil {
 			// ESRCH 3 No such process is returned for syscall read, if process dies after open succeeds.
 			// TODO: check ESRCH instead of string when golang updates to have such builtin functions.
 			if os.IsNotExist(err) || strings.Contains(err.Error(), "no such process") {

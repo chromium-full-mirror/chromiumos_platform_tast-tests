@@ -5,22 +5,21 @@
 package metrics
 
 import (
-	"io/ioutil"
 	"os"
 	"testing"
 )
 
 func TestClearHistogramTransferFile(t *testing.T) {
-	dir, err := ioutil.TempDir("", "TestClearHistogramTransferFile")
+	dir, err := os.MkdirTemp("", "TestClearHistogramTransferFile")
 	if err != nil {
-		t.Fatalf("ioutil.TempDir: %v", err)
+		t.Fatalf("os.MkdirTemp: %v", err)
 	}
 	defer os.RemoveAll(dir)
 
 	fileName := dir + "/metrics"
 	const contents = "ABC123"
-	if err = ioutil.WriteFile(fileName, []byte(contents), 0666); err != nil {
-		t.Fatalf("ioutil.WriteFile: %v", err)
+	if err = os.WriteFile(fileName, []byte(contents), 0666); err != nil {
+		t.Fatalf("os.WriteFile: %v", err)
 	}
 
 	if err = clearHistogramTransferFileByName(fileName); err != nil {
@@ -35,9 +34,9 @@ func TestClearHistogramTransferFile(t *testing.T) {
 }
 
 func TestClearHistogramTransferFileWhenFileDoesntExist(t *testing.T) {
-	dir, err := ioutil.TempDir("", "TestClearHistogramTransferFileWhenFileDoesntExist")
+	dir, err := os.MkdirTemp("", "TestClearHistogramTransferFileWhenFileDoesntExist")
 	if err != nil {
-		t.Fatalf("ioutil.TempDir: %v", err)
+		t.Fatalf("os.MkdirTemp: %v", err)
 	}
 	defer os.RemoveAll(dir)
 

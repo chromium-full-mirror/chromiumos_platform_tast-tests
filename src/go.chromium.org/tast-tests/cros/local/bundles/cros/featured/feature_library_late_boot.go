@@ -8,7 +8,7 @@ import (
 	"bytes"
 	"context"
 	"encoding/json"
-	"io/ioutil"
+	"os"
 	"path/filepath"
 	"time"
 
@@ -169,7 +169,7 @@ func FeatureLibraryLateBoot(ctx context.Context, s *testing.State) {
 
 	stdout, stderr, err := cmd.SeparatedOutput()
 	const fileName = "check_stderr"
-	if err2 := ioutil.WriteFile(filepath.Join(s.OutDir(), fileName), stderr, 0644); err2 != nil {
+	if err2 := os.WriteFile(filepath.Join(s.OutDir(), fileName), stderr, 0644); err2 != nil {
 		s.Error("Failed to write stderr: ", err2)
 	}
 

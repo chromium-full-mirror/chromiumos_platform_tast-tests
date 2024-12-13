@@ -6,7 +6,6 @@ package security
 
 import (
 	"context"
-	"io/ioutil"
 	"os"
 	"path/filepath"
 	"strings"
@@ -106,7 +105,7 @@ func testUsbBouncer(ctx context.Context, s *testing.State, m *seccomp.PolicyGene
 	}
 
 	for _, c := range cases {
-		f, err := ioutil.TempFile(s.OutDir(), "strace-usb_bouncer")
+		f, err := os.CreateTemp(s.OutDir(), "strace-usb_bouncer")
 		if err != nil {
 			s.Error("TempFile failed: ", err)
 			continue
@@ -178,7 +177,7 @@ func USBBouncer(ctx context.Context, s *testing.State) {
 	testUsbBouncer(ctx, s, m, d, withChrome(tt) /*withChrome*/, enforceSeccomp(tt) /*withSeccomp*/)
 
 	policyFile := filepath.Join(s.OutDir(), "usb_bouncer.policy")
-	if err := ioutil.WriteFile(policyFile, []byte(m.GeneratePolicy()), 0644); err != nil {
+	if err := os.WriteFile(policyFile, []byte(m.GeneratePolicy()), 0644); err != nil {
 		s.Fatal("Failed to record seccomp policy: ", err)
 	}
 	s.Logf("Wrote usb_bouncer seccomp policy to %q", policyFile)

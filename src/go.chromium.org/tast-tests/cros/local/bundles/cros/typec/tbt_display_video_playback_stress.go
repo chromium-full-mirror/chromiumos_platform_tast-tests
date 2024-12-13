@@ -7,7 +7,7 @@ package typec
 import (
 	"context"
 	"encoding/json"
-	"io/ioutil"
+	"os"
 	"time"
 
 	"go.chromium.org/tast-tests/cros/common/cswitch"
@@ -110,7 +110,7 @@ func TBTDisplayVideoPlaybackStress(ctx context.Context, s *testing.State) {
 	}
 
 	// Read json config file.
-	jsonData, err := ioutil.ReadFile(s.DataPath(testConfig))
+	jsonData, err := os.ReadFile(s.DataPath(testConfig))
 	if err != nil {
 		s.Fatal("Failed to read response data: ", err)
 	}

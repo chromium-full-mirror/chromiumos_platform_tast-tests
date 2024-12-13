@@ -10,7 +10,6 @@ import (
 	"encoding/json"
 	"fmt"
 	"image/jpeg"
-	"io/ioutil"
 	"os"
 	"path/filepath"
 	"regexp"
@@ -510,12 +509,16 @@ func (a *App) CheckNoTemporalFile(ctx context.Context, dir string, pat *regexp.R
 		return false
 	}
 	return testing.Poll(ctx, func(ctx context.Context) error {
-		files, err := ioutil.ReadDir(dir)
+		files, err := os.ReadDir(dir)
 		if err != nil {
 			return err
 		}
 		for _, file := range files {
-			if file.ModTime().Before(ts) {
+			info, err := file.Info()
+			if err != nil {
+				return err
+			}
+			if info.ModTime().Before(ts) {
 				continue
 			}
 			if !pat.MatchString(file.Name()) && !isFileInExceptions(file.Name(), exceptions) {
@@ -537,12 +540,16 @@ func (a *App) WaitForFileSavedFor(ctx context.Context, dir string, pat *regexp.R
 	var result os.FileInfo
 	seen := make(map[string]struct{})
 	if err := testing.Poll(ctx, func(ctx context.Context) error {
-		files, err := ioutil.ReadDir(dir)
+		files, err := os.ReadDir(dir)
 		if err != nil {
 			return errors.Wrap(err, "failed to read the camera directory")
 		}
 		for _, file := range files {
-			if file.Size() == 0 || file.ModTime().Before(ts) {
+			info, err := file.Info()
+			if err != nil {
+				return err
+			}
+			if info.Size() == 0 || info.ModTime().Before(ts) {
 				continue
 			}
 			if _, ok := seen[file.Name()]; ok {
@@ -552,7 +559,7 @@ func (a *App) WaitForFileSavedFor(ctx context.Context, dir string, pat *regexp.R
 			testing.ContextLog(ctx, "New file found: ", file.Name())
 			if pat.MatchString(file.Name()) {
 				testing.ContextLog(ctx, "Found a match: ", file.Name())
-				result = file
+				result = info
 				return nil
 			}
 		}

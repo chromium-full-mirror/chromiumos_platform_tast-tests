@@ -5,7 +5,6 @@
 package arc
 
 import (
-	"io/ioutil"
 	"os"
 	"path/filepath"
 	"testing"
@@ -21,7 +20,7 @@ func verifyDiagnose(t *testing.T, logcat, exp string) {
 	defer os.RemoveAll(td)
 
 	tf := filepath.Join(td, "logcat.txt")
-	if err := ioutil.WriteFile(tf, []byte(logcat), 0644); err != nil {
+	if err := os.WriteFile(tf, []byte(logcat), 0644); err != nil {
 		t.Fatal(err)
 	}
 

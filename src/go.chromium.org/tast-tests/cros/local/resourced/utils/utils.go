@@ -6,7 +6,6 @@ package utils
 
 import (
 	"context"
-	"io/ioutil"
 	"os"
 	"regexp"
 	"strconv"
@@ -20,7 +19,7 @@ import (
 )
 
 func readSwappiness(ctx context.Context) (int, error) {
-	fileBytes, err := ioutil.ReadFile("/proc/sys/vm/swappiness")
+	fileBytes, err := os.ReadFile("/proc/sys/vm/swappiness")
 
 	if err != nil {
 		return 0, errors.Wrap(err, "failed to read swappiness")
@@ -33,7 +32,7 @@ func readSwappiness(ctx context.Context) (int, error) {
 }
 
 func readTHP(ctx context.Context, thpFile string) (string, error) {
-	thp, err := ioutil.ReadFile(thpFile)
+	thp, err := os.ReadFile(thpFile)
 	if err != nil {
 		return "", err
 	}

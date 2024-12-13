@@ -9,7 +9,6 @@ import (
 	"bytes"
 	"context"
 	"fmt"
-	"io/ioutil"
 	"os"
 	"os/exec"
 	"path/filepath"
@@ -77,7 +76,7 @@ func releaseDevice(ctx context.Context, c []string, device string) error {
 // The path to the created image is returned. Callers have responsibility to
 // delete the file when it gets no longer needed.
 func createImage(ctx context.Context, dir, name string, nBlocks uint) (string, error) {
-	f, err := ioutil.TempFile(dir, name+".img.")
+	f, err := os.CreateTemp(dir, name+".img.")
 	if err != nil {
 		return "", err
 	}
@@ -116,7 +115,7 @@ func createFileSystem(ctx context.Context, path string) error {
 // createHash generates the hash for verity. On success, the path to the hash
 // file and the device mapper table are returned.
 func createHash(ctx context.Context, dir, name, image string, nBlocks uint) (hash, table string, err error) {
-	f, err := ioutil.TempFile(dir, name+".hash.")
+	f, err := os.CreateTemp(dir, name+".hash.")
 	if err != nil {
 		return "", "", err
 	}
@@ -144,7 +143,7 @@ func createHash(ctx context.Context, dir, name, image string, nBlocks uint) (has
 
 // appendHash appends the contents of the hash file to the image file.
 func appendHash(image, hash string) error {
-	content, err := ioutil.ReadFile(hash)
+	content, err := os.ReadFile(hash)
 	if err != nil {
 		return err
 	}
@@ -265,7 +264,7 @@ func checkTools() []error {
 // Returns error if some setup/teardown fails, or the dm-verify behavior is
 // different from expect (true on success, false on fail).
 func runCheck(ctx context.Context, name string, expect bool, modify func(string) error) error {
-	dir, err := ioutil.TempDir("", "")
+	dir, err := os.MkdirTemp("", "")
 	if err != nil {
 		return err
 	}

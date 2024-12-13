@@ -6,7 +6,6 @@ package arc
 
 import (
 	"context"
-	"io/ioutil"
 	"os"
 	"path"
 	"path/filepath"
@@ -86,7 +85,7 @@ func Drivefs(ctx context.Context, s *testing.State) {
 	// after the test (b/179876719).
 	testFilePath := filepath.Join(drivefsRoot, filename)
 	if _, err := os.Stat(testFilePath); errors.Is(err, os.ErrNotExist) {
-		if err := ioutil.WriteFile(testFilePath, []byte(fileContent), 0666); err != nil {
+		if err := os.WriteFile(testFilePath, []byte(fileContent), 0666); err != nil {
 			s.Fatalf("Failed to create test file %s: %v", testFilePath, err)
 		}
 	}

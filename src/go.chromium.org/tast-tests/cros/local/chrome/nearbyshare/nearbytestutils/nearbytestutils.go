@@ -10,7 +10,6 @@ import (
 	"crypto/sha256"
 	"encoding/hex"
 	"io"
-	"io/ioutil"
 	"os"
 	"path/filepath"
 
@@ -27,7 +26,7 @@ import (
 // The extracted files can then be pushed to the Android device or copied to a user-accessible directory on CrOS, depending on which device is the sender.
 // The data files supplied for file transfer tests should be contained in a .zip file regardless of how many files are being transferred.
 func UnzipTestFiles(ctx context.Context, zipPath string) (filenames []string, tempDir string, err error) {
-	tempDir, err = ioutil.TempDir("", "nearby-test-files")
+	tempDir, err = os.MkdirTemp("", "nearby-test-files")
 	if err != nil {
 		return filenames, tempDir, errors.Wrap(err, "failed to create temp dir")
 	}
@@ -35,7 +34,7 @@ func UnzipTestFiles(ctx context.Context, zipPath string) (filenames []string, te
 		return filenames, tempDir, errors.Wrapf(err, "failed to unzip test data from %v", zipPath)
 	}
 
-	files, err := ioutil.ReadDir(tempDir)
+	files, err := os.ReadDir(tempDir)
 	if err != nil {
 		return filenames, tempDir, errors.Wrap(err, "failed to read tempDir's contents")
 	}
@@ -158,7 +157,7 @@ func HashFiles(ctx context.Context, filenames []string, fileDir string) ([]strin
 
 // ClearCrOSDownloads clears the Downloads folder (where incoming shares are received).
 func ClearCrOSDownloads(ctx context.Context, downloadsPath string) error {
-	files, err := ioutil.ReadDir(downloadsPath)
+	files, err := os.ReadDir(downloadsPath)
 	if err != nil {
 		return errors.Wrap(err, "failed to retrieve Downloads folder contents")
 	}

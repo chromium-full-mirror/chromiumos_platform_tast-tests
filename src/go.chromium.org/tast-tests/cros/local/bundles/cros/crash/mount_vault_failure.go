@@ -6,7 +6,6 @@ package crash
 
 import (
 	"context"
-	"io/ioutil"
 	"os"
 	"path/filepath"
 	"time"
@@ -185,7 +184,7 @@ func MountVaultFailure(ctx context.Context, s *testing.State) {
 		if err := os.RemoveAll(userDir); err != nil {
 			s.Fatal("Failed to remove user diretory: ", err)
 		}
-		if err := ioutil.WriteFile(userDir, nil, 0644); err != nil {
+		if err := os.WriteFile(userDir, nil, 0644); err != nil {
 			s.Fatal("Failed to make user directory a file: ", err)
 		}
 

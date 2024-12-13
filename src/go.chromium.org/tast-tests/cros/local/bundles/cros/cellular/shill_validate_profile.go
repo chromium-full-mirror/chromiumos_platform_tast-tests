@@ -6,7 +6,6 @@ package cellular
 
 import (
 	"context"
-	"io/ioutil"
 	"os"
 	"strings"
 	"time"
@@ -107,7 +106,7 @@ func ShillValidateProfile(ctx context.Context, s *testing.State) {
 		s.Fatal("Failed to read SIM IMSI: ", err)
 	}
 	path := s.DataPath(testDefaultProfile)
-	testProfile, err := ioutil.ReadFile(path)
+	testProfile, err := os.ReadFile(path)
 	if err != nil {
 		s.Fatal("Could not read test profile from given profile file: ", err)
 	}

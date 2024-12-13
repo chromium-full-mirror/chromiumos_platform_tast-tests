@@ -7,7 +7,6 @@ package platform
 import (
 	"context"
 	"fmt"
-	"io/ioutil"
 	"os"
 	"path/filepath"
 	"regexp"
@@ -85,7 +84,7 @@ func ArgsVpxenc(ctx context.Context, testName, exe, yuvFile string, size coords.
 func ArgsOpenh264enc(ctx context.Context, testName, exe, yuvFile string, size coords.Size, fps int) (command []string, h264File string, bitrate int, _ error) {
 	// openh264enc needs a configuration file, even if empty.
 	emptyCfg := filepath.Join(filepath.Dir(yuvFile), "empty.cfg")
-	if err := ioutil.WriteFile(emptyCfg, []byte(""), 0644); err != nil {
+	if err := os.WriteFile(emptyCfg, []byte(""), 0644); err != nil {
 		return nil, "", 0, errors.Wrapf(err, "failed creating an empty file: %s", emptyCfg)
 	}
 	command = append(command, exe, emptyCfg)

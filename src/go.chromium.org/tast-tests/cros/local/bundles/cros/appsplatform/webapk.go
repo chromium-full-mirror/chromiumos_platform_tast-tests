@@ -6,7 +6,7 @@ package appsplatform
 
 import (
 	"context"
-	"io/ioutil"
+	"io"
 	"net/http"
 	"path/filepath"
 	"time"
@@ -198,7 +198,7 @@ func startTestPWAServer(ctx context.Context, wm *webapk.Manager, filesystem http
 				return
 			}
 			defer filecontents.Close()
-			bytes, err := ioutil.ReadAll(filecontents)
+			bytes, err := io.ReadAll(filecontents)
 			if err != nil {
 				shareChan <- shareResult{err: errors.Wrap(err, "failed to read file")}
 				return

@@ -6,7 +6,6 @@ package crash
 
 import (
 	"context"
-	"io/ioutil"
 	"os"
 	"path"
 	"path/filepath"
@@ -48,7 +47,7 @@ func saveSelinuxLog(ctx context.Context, destDir string) error {
 		return errors.Wrap(err, "failed to get selinux audit log entries")
 	}
 
-	if err := ioutil.WriteFile(filepath.Join(destDir, "audit.log"), out, 0644); err != nil {
+	if err := os.WriteFile(filepath.Join(destDir, "audit.log"), out, 0644); err != nil {
 		return errors.Wrap(err, "failed to write selinux audit log")
 	}
 	return nil
@@ -84,7 +83,7 @@ func SelinuxViolation(ctx context.Context, s *testing.State) {
 
 	// Generate an audit event by creating a file inside markerDirectory
 	s.Log("Generating audit event")
-	td, err := ioutil.TempDir("/tmp", "tast.platform.SelinuxViolation.")
+	td, err := os.MkdirTemp("/tmp", "tast.platform.SelinuxViolation.")
 	if err != nil {
 		s.Fatal("Failed to create temporary directory for testing: ", err)
 	}
@@ -93,7 +92,7 @@ func SelinuxViolation(ctx context.Context, s *testing.State) {
 	if err := os.Mkdir(markerDirectory, 0700); err != nil {
 		s.Fatal("Failed to create marker directory for testing: ", err)
 	}
-	f, err := ioutil.TempFile(markerDirectory, "audit-marker-")
+	f, err := os.CreateTemp(markerDirectory, "audit-marker-")
 	if err != nil {
 		s.Fatal("Failed to create marker file: ", err)
 	}
@@ -130,7 +129,7 @@ func SelinuxViolation(ctx context.Context, s *testing.State) {
 
 	var matchingFile string
 	for _, f := range files[logFileRegex] {
-		contents, err := ioutil.ReadFile(f)
+		contents, err := os.ReadFile(f)
 		if err != nil {
 			s.Errorf("Couldn't read log file %s: %v", f, err)
 		} else {

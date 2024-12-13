@@ -7,9 +7,9 @@ package typec
 import (
 	"context"
 	"encoding/json"
-	"io/ioutil"
 	"net/http"
 	"net/http/httptest"
+	"os"
 	"time"
 
 	"go.chromium.org/tast-tests/cros/common/cswitch"
@@ -67,7 +67,7 @@ func USB4GatkexCardDisplayFunctionality(ctx context.Context, s *testing.State) {
 	}
 
 	// Read json config file.
-	jsonData, err := ioutil.ReadFile(s.DataPath(jsonTestConfig))
+	jsonData, err := os.ReadFile(s.DataPath(jsonTestConfig))
 	if err != nil {
 		s.Fatal("Failed to read response data: ", err)
 	}

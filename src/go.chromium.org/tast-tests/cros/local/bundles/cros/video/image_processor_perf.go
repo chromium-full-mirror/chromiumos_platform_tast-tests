@@ -8,7 +8,7 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
-	"io/ioutil"
+	"io"
 	"os"
 	"path/filepath"
 	"strings"
@@ -115,7 +115,7 @@ func ImageProcessorPerf(ctx context.Context, s *testing.State) {
 	}
 
 	logPath := s.OutDir() + "/ImageProcessorPerfTest/"
-	files, err := ioutil.ReadDir(logPath)
+	files, err := os.ReadDir(logPath)
 	if err != nil {
 		s.Error("Failed to read ImageProcessorPerf test result directory: ", err)
 	}
@@ -126,7 +126,7 @@ func ImageProcessorPerf(ctx context.Context, s *testing.State) {
 			s.Error("Failed to open ImageProcessorPerf test json: ", err)
 		}
 
-		val, _ := ioutil.ReadAll(jsonFile)
+		val, _ := io.ReadAll(jsonFile)
 		var result interface{}
 		json.Unmarshal([]byte(val), &result)
 		data := result.(map[string]interface{})

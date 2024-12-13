@@ -6,7 +6,7 @@ package usbutils
 
 import (
 	"context"
-	"io/ioutil"
+	"os"
 	"regexp"
 	"time"
 
@@ -109,7 +109,7 @@ func externalDisplayDetection(ctx context.Context, dut *dut.DUT, remoteTest bool
 		if remoteTest {
 			out, err = linuxssh.ReadFile(ctx, dut.Conn(), displayInfoFile)
 		} else {
-			out, err = ioutil.ReadFile(displayInfoFile)
+			out, err = os.ReadFile(displayInfoFile)
 		}
 		if err != nil {
 			return errors.Wrap(err, "failed to run display info command")

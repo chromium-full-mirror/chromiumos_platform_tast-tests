@@ -8,7 +8,7 @@ import (
 	"context"
 	"crypto/rand"
 	"crypto/rsa"
-	"io/ioutil"
+	"os"
 	"path/filepath"
 
 	"github.com/google/go-cmp/cmp"
@@ -61,7 +61,7 @@ func RemoteOwnership(ctx context.Context, s *testing.State) {
 		s.Fatal("Failed to retrieve settings: ", err)
 	} else if diff := cmp.Diff(settings, retrieved, protocmp.Transform()); diff != "" {
 		const diffName = "diff.txt"
-		if err = ioutil.WriteFile(filepath.Join(s.OutDir(), diffName), []byte(diff), 0644); err != nil {
+		if err = os.WriteFile(filepath.Join(s.OutDir(), diffName), []byte(diff), 0644); err != nil {
 			s.Error("Failed to write diff: ", err)
 		}
 		s.Fatal("Unexpected settings were retrieved. Diff is found in ", diffName)
@@ -79,7 +79,7 @@ func RemoteOwnership(ctx context.Context, s *testing.State) {
 		s.Fatal("Failed to retrieve rekeyed settings: ", err)
 	} else if diff := cmp.Diff(settings, retrieved, protocmp.Transform()); diff != "" {
 		const diffName = "diff-rekeyed.txt"
-		if err = ioutil.WriteFile(filepath.Join(s.OutDir(), diffName), []byte(diff), 0644); err != nil {
+		if err = os.WriteFile(filepath.Join(s.OutDir(), diffName), []byte(diff), 0644); err != nil {
 			s.Error("Failed to write diff: ", err)
 		}
 		s.Fatal("Unexpected rekeyed settings were retrieved. Diff is found in ", diffName)
@@ -112,7 +112,7 @@ func RemoteOwnership(ctx context.Context, s *testing.State) {
 		s.Fatal("Failed to retrieve user settings: ", err)
 	} else if diff := cmp.Diff(settings, retrieved, protocmp.Transform()); diff != "" {
 		const diffName = "diff-user.txt"
-		if err = ioutil.WriteFile(filepath.Join(s.OutDir(), diffName), []byte(diff), 0644); err != nil {
+		if err = os.WriteFile(filepath.Join(s.OutDir(), diffName), []byte(diff), 0644); err != nil {
 			s.Error("Failed to write diff: ", err)
 		}
 		s.Fatal("Unexpected user settings were retrieved. Diff is found in ", diffName)

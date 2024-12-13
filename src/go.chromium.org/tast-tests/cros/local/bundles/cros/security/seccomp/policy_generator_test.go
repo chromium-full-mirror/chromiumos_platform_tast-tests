@@ -6,7 +6,6 @@ package seccomp
 
 import (
 	"context"
-	"io/ioutil"
 	"os"
 	"testing"
 
@@ -62,7 +61,7 @@ func TestPolicyGeneratorAddSyscall(t *testing.T) {
 }
 
 func setupTestLog(content string) (log string, rerr error) {
-	logFile, err := ioutil.TempFile("", "tast_strace_")
+	logFile, err := os.CreateTemp("", "tast_strace_")
 	if err != nil {
 		return "", errors.Wrap(err, "failed to get a temp file")
 	}

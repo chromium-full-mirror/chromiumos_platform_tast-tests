@@ -6,7 +6,7 @@ package meta
 
 import (
 	"context"
-	"io/ioutil"
+	"os"
 	"path/filepath"
 
 	"go.chromium.org/tast/core/testing"
@@ -26,7 +26,7 @@ func init() {
 
 func RemoteVars(ctx context.Context, s *testing.State) {
 	p := filepath.Join(s.OutDir(), "var.txt")
-	if err := ioutil.WriteFile(p, []byte(s.RequiredVar("meta.RemoteVars.var")), 0644); err != nil {
+	if err := os.WriteFile(p, []byte(s.RequiredVar("meta.RemoteVars.var")), 0644); err != nil {
 		s.Error("Failed to write variable: ", err)
 	}
 }

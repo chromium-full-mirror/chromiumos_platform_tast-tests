@@ -6,7 +6,6 @@ package nacl
 
 import (
 	"context"
-	"io/ioutil"
 	"os"
 	"path/filepath"
 
@@ -51,7 +50,7 @@ func init() {
 }
 
 func Pnacl(ctx context.Context, s *testing.State) {
-	extDir, err := ioutil.TempDir("", "tast.nacl.PnaclApp.")
+	extDir, err := os.MkdirTemp("", "tast.nacl.PnaclApp.")
 	if err != nil {
 		s.Fatal("Failed to create temp dir: ", err)
 	}

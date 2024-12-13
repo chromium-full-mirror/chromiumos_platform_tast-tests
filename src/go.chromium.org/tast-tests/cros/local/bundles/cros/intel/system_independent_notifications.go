@@ -7,7 +7,6 @@ package intel
 import (
 	"context"
 	"fmt"
-	"io/ioutil"
 	"os"
 	"path/filepath"
 	"regexp"
@@ -148,7 +147,7 @@ func SystemIndependentNotifications(ctx context.Context, s *testing.State) {
 	}
 
 	// Generate sine raw input file that lasts 30 seconds.
-	rawTempFile, err := ioutil.TempFile("", "30SEC_*.raw")
+	rawTempFile, err := os.CreateTemp("", "30SEC_*.raw")
 	if err != nil {
 		s.Error("Failed to create raw temp file: ", err)
 	}
@@ -168,7 +167,7 @@ func SystemIndependentNotifications(ctx context.Context, s *testing.State) {
 		s.Fatal("Failed to generate audio test data: ", err)
 	}
 
-	wavTempFile, err := ioutil.TempFile("", "30SEC_*.wav")
+	wavTempFile, err := os.CreateTemp("", "30SEC_*.wav")
 	if err != nil {
 		s.Error("Failed to create wav temp file: ", err)
 	}

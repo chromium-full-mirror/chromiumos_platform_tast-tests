@@ -6,7 +6,6 @@ package telemetryextension
 
 import (
 	"context"
-	"io/ioutil"
 	"os"
 	"reflect"
 	"strings"
@@ -131,7 +130,7 @@ func fetchOptionalVpdField(path string) (string, error) {
 		return "", errors.Wrapf(err, "failed to check whether %q exists", path)
 	}
 
-	bytes, err := ioutil.ReadFile(path)
+	bytes, err := os.ReadFile(path)
 	if err != nil {
 		return "", errors.Wrapf(err, "failed to read %q", path)
 	}

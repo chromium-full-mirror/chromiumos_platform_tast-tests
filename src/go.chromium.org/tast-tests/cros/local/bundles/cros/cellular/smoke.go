@@ -7,7 +7,7 @@ package cellular
 import (
 	"context"
 	"fmt"
-	"io/ioutil"
+	"io"
 	"net/http"
 	"time"
 
@@ -161,7 +161,7 @@ func Smoke(ctx context.Context, s *testing.State) {
 				return errors.Wrapf(err, "error fetching data from URL %q", fetchURL)
 			}
 			defer resp.Body.Close()
-			body, err := ioutil.ReadAll(resp.Body)
+			body, err := io.ReadAll(resp.Body)
 			if err != nil {
 				return errors.Wrapf(err, "error reading data, got HTTP status code %d", resp.StatusCode)
 			}

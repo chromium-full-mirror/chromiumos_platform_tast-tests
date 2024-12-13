@@ -6,7 +6,7 @@ package smb
 
 import (
 	"context"
-	"io/ioutil"
+	"os"
 	"path/filepath"
 	"strings"
 	"time"
@@ -105,7 +105,7 @@ func (s *Server) Start(ctx context.Context) error {
 		outDir, ok := testing.ContextOutDir(ctx)
 		if ok {
 			errorLogPath := filepath.Join(outDir, "smbd.log")
-			if err := ioutil.WriteFile(errorLogPath, output, 0644); err != nil {
+			if err := os.WriteFile(errorLogPath, output, 0644); err != nil {
 				testing.ContextLog(ctx, "Failed to write smbd logs to: ", errorLogPath)
 			}
 		} else {

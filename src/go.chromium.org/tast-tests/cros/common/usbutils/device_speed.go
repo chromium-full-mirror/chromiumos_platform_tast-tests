@@ -10,7 +10,6 @@ import (
 	"context"
 	"crypto/sha256"
 	"io"
-	"io/ioutil"
 	"os"
 	"path/filepath"
 	"regexp"
@@ -127,7 +126,7 @@ func StoragePath(ctx context.Context, deviceName string) (string, error) {
 	var storageFullPath string
 
 	if err := testing.Poll(ctx, func(ctx context.Context) error {
-		fileInfos, err := ioutil.ReadDir(mediaRemovable)
+		fileInfos, err := os.ReadDir(mediaRemovable)
 		if err != nil {
 			return errors.Wrap(err, "failed to read contents of media removable directory")
 		}

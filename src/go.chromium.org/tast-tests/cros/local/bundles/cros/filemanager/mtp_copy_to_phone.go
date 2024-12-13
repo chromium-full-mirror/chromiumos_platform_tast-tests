@@ -7,7 +7,6 @@ package filemanager
 import (
 	"bytes"
 	"context"
-	"io/ioutil"
 	"os"
 	"path/filepath"
 	"time"
@@ -70,7 +69,7 @@ func MTPCopyToPhone(ctx context.Context, s *testing.State) {
 	originalFileLocation := filepath.Join(downloadsPath, testFile)
 	copiedFileLocation := filepath.Join(android.DownloadDir, testFile)
 
-	if err := ioutil.WriteFile(originalFileLocation, []byte("blahblah"), 0644); err != nil {
+	if err := os.WriteFile(originalFileLocation, []byte("blahblah"), 0644); err != nil {
 		s.Fatalf("Failed to create file %q: %s", originalFileLocation, err)
 	}
 	defer os.Remove(originalFileLocation)
@@ -96,7 +95,7 @@ func MTPCopyToPhone(ctx context.Context, s *testing.State) {
 	}
 	defer adb.RemoveContents(cleanupCtx, android.DownloadDir)
 
-	original, err := ioutil.ReadFile(originalFileLocation)
+	original, err := os.ReadFile(originalFileLocation)
 	if err != nil {
 		s.Fatalf("Failed to read %s: %v", originalFileLocation, err)
 	}

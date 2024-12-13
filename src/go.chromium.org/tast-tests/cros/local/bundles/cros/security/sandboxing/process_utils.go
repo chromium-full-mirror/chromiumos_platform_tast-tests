@@ -7,7 +7,6 @@ package sandboxing
 
 import (
 	"fmt"
-	"io/ioutil"
 	"os"
 	"regexp"
 	"strconv"
@@ -229,8 +228,8 @@ func GetProcSandboxInfo(proc *process.Process) (*ProcSandboxInfo, error) {
 // ReadProcMountpoints returns all mountpoints listed in /proc/<pid>/mounts.
 // This may return os.ErrNotExist or syscall.EINVAL for zombie processes: https://crbug.com/936703
 func ReadProcMountpoints(pid int32) ([]string, error) {
-	b, err := ioutil.ReadFile(fmt.Sprintf("/proc/%d/mounts", pid))
-	// ioutil.ReadFile can return an *os.PathError. If it's os.ErrNotExist, we return it directly
+	b, err := os.ReadFile(fmt.Sprintf("/proc/%d/mounts", pid))
+	// os.ReadFile can return an *os.PathError. If it's os.ErrNotExist, we return it directly
 	// since it's easy to check, but for other errors, we return the inner error (which is a syscall.Errno)
 	// so that callers can inspect it.
 	if pathErr, ok := err.(*os.PathError); ok && !os.IsNotExist(err) {
@@ -279,7 +278,7 @@ var procStatusLineRegexp = regexp.MustCompile(`^([^:]+):\t(.*)$`)
 
 // ReadProcStatus parses /proc/<pid>/status and returns its key/value pairs.
 func ReadProcStatus(pid int32) (map[string]string, error) {
-	b, err := ioutil.ReadFile(fmt.Sprintf("/proc/%d/status", pid))
+	b, err := os.ReadFile(fmt.Sprintf("/proc/%d/status", pid))
 	if err != nil {
 		return nil, err
 	}
@@ -365,8 +364,8 @@ type ProcMountinfo struct {
 func ReadProcMountinfo(pid int32) ([]ProcMountinfo, error) {
 	const firstOptField = 6
 
-	b, err := ioutil.ReadFile(fmt.Sprintf("/proc/%d/mountinfo", pid))
-	// ioutil.ReadFile can return an *os.PathError. If it's os.ErrNotExist, we return it directly
+	b, err := os.ReadFile(fmt.Sprintf("/proc/%d/mountinfo", pid))
+	// os.ReadFile can return an *os.PathError. If it's os.ErrNotExist, we return it directly
 	// since it's easy to check, but for other errors, we return the inner error (which is a syscall.Errno)
 	// so that callers can inspect it.
 	if pathErr, ok := err.(*os.PathError); ok && !os.IsNotExist(err) {

@@ -11,7 +11,6 @@ import (
 	"fmt"
 	"image"
 	"image/png"
-	"io/ioutil"
 	"os"
 	"path/filepath"
 	"strings"
@@ -199,7 +198,7 @@ func prepareFakeApp(baseDir, appName, iconDir string, iconFileMap map[int]string
 		iconJSON = fmt.Sprintf(`"icons": %s,`, string(iconJSONData))
 	}
 
-	if err := ioutil.WriteFile(filepath.Join(extDir, "manifest.json"), []byte(fmt.Sprintf(manifestTmpl, appName, iconJSON)), 0644); err != nil {
+	if err := os.WriteFile(filepath.Join(extDir, "manifest.json"), []byte(fmt.Sprintf(manifestTmpl, appName, iconJSON)), 0644); err != nil {
 		return "", errors.Wrapf(err, "failed to prepare manifest.json for %s", appName)
 	}
 

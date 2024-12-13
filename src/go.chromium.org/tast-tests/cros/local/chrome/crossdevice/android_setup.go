@@ -8,7 +8,6 @@ import (
 	"archive/zip"
 	"context"
 	"io"
-	"io/ioutil"
 	"os"
 	"path/filepath"
 	"strconv"
@@ -117,7 +116,7 @@ func AdbOverWifi(ctx context.Context, phoneIP string) (*adb.Device, error) {
 // Note that only rooted Android devices can add/remove accounts in this way.
 func GAIALogin(ctx context.Context, d *adb.Device, accountUtilZipPath, username, password string) error {
 	// Unzip the APK to a temp dir.
-	tempDir, err := ioutil.TempDir("", "account-util-apk")
+	tempDir, err := os.MkdirTemp("", "account-util-apk")
 	if err != nil {
 		return errors.Wrap(err, "failed to create temp dir")
 	}

@@ -6,7 +6,6 @@ package bootperf
 
 import (
 	"context"
-	"io/ioutil"
 	"os"
 	"regexp"
 	"strconv"
@@ -66,14 +65,14 @@ func editKernelArgs(ctx context.Context, f func([]byte) []byte) error {
 	savedKArgsFile := prefix + "." + part
 	defer os.Remove(savedKArgsFile)
 
-	savedKArgs, err := ioutil.ReadFile(savedKArgsFile)
+	savedKArgs, err := os.ReadFile(savedKArgsFile)
 	if err != nil {
 		return errors.Wrap(err, "failed to read saved kernel config")
 	}
 
 	// Transform the content.
 	savedKArgs = f(savedKArgs)
-	err = ioutil.WriteFile(savedKArgsFile, savedKArgs, 0644)
+	err = os.WriteFile(savedKArgsFile, savedKArgs, 0644)
 	if err != nil {
 		return errors.Wrap(err, "failed to edit saved kernel config")
 	}

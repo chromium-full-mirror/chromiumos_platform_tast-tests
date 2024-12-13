@@ -6,7 +6,6 @@ package filemanager
 
 import (
 	"context"
-	"io/ioutil"
 	"os"
 	"path/filepath"
 	"strings"
@@ -55,7 +54,7 @@ func SMB(ctx context.Context, s *testing.State) {
 	// Write a file to the folder that is being shared via samba.
 	const textFile = "test.txt"
 	testFileLocation := filepath.Join(fixt.GuestSharePath, textFile)
-	if err := ioutil.WriteFile(testFileLocation, []byte("blahblah"), 0644); err != nil {
+	if err := os.WriteFile(testFileLocation, []byte("blahblah"), 0644); err != nil {
 		s.Fatalf("Failed to create file %q: %s", testFileLocation, err)
 	}
 	defer os.Remove(testFileLocation)

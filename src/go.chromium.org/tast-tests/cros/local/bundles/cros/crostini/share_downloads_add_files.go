@@ -6,7 +6,6 @@ package crostini
 
 import (
 	"context"
-	"io/ioutil"
 	"os"
 	"path/filepath"
 	"strings"
@@ -138,7 +137,7 @@ func ShareDownloadsAddFiles(ctx context.Context, s *testing.State) {
 
 		// Add a file and a folder in Downloads.
 		filePath := filepath.Join(downloadsPath, testFile)
-		if err := ioutil.WriteFile(filePath, []byte(testString), 0644); err != nil {
+		if err := os.WriteFile(filePath, []byte(testString), 0644); err != nil {
 			s.Fatal("Failed to create file in Downloads: ", err)
 		}
 		folderPath := filepath.Join(downloadsPath, testFolder)
@@ -174,14 +173,14 @@ func ShareDownloadsAddFiles(ctx context.Context, s *testing.State) {
 		}
 
 		// Create a file in a temp directory in ChromeOS and push it to the container.
-		dir, err := ioutil.TempDir("", "tempDir")
+		dir, err := os.MkdirTemp("", "tempDir")
 		if err != nil {
 			s.Fatal("Failed to create a temp directory: ", err)
 		}
 		defer os.RemoveAll(dir)
 
 		filePath := filepath.Join(dir, testFile)
-		if err := ioutil.WriteFile(filePath, []byte(testString), 0644); err != nil {
+		if err := os.WriteFile(filePath, []byte(testString), 0644); err != nil {
 			s.Fatal("Failed to create file in ChromeOS: ", err)
 		}
 		defer os.Remove(filePath)
@@ -197,7 +196,7 @@ func ShareDownloadsAddFiles(ctx context.Context, s *testing.State) {
 		}
 
 		// Check the content of the test file in ChromeOS.
-		b, err := ioutil.ReadFile(filepath.Join(downloadsPath, testFile))
+		b, err := os.ReadFile(filepath.Join(downloadsPath, testFile))
 		if err != nil {
 			s.Fatal("Failed to read the file in ChromeOS: ", err)
 		}
@@ -215,7 +214,7 @@ func ShareDownloadsAddFiles(ctx context.Context, s *testing.State) {
 
 		// Add a file in Downloads.
 		filePath := filepath.Join(downloadsPath, testFile)
-		if err := ioutil.WriteFile(filePath, []byte(testString), 0755); err != nil {
+		if err := os.WriteFile(filePath, []byte(testString), 0755); err != nil {
 			s.Fatal("Failed to create file in Downloads: ", err)
 		}
 

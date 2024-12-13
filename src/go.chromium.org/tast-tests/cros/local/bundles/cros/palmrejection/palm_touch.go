@@ -9,9 +9,9 @@ import (
 	"context"
 	"encoding/csv"
 	"io"
-	"io/ioutil"
 	"net/http"
 	"net/http/httptest"
+	"os"
 	"strconv"
 	"strings"
 	"time"
@@ -68,7 +68,7 @@ type evTestRecord struct {
 
 func readEvtestFile(dataFile string) ([]evTestRecord, error) {
 	var err error
-	b, err := ioutil.ReadFile(dataFile)
+	b, err := os.ReadFile(dataFile)
 	if err != nil {
 		return nil, errors.Wrap(err, "failed to read internal data file")
 	}

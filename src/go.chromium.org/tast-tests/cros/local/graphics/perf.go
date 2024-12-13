@@ -9,7 +9,6 @@ import (
 	"bytes"
 	"context"
 	"fmt"
-	"io/ioutil"
 	"os"
 	"os/exec"
 	"path/filepath"
@@ -188,7 +187,7 @@ func collectGPUPerformanceCounters(ctx context.Context, interval time.Duration) 
 		if !ok {
 			return nil, 0, errors.New("failed to retrieve output directory")
 		}
-		if err := ioutil.WriteFile(filepath.Join(dir, dumpFile), stderr, 0644); err != nil {
+		if err := os.WriteFile(filepath.Join(dir, dumpFile), stderr, 0644); err != nil {
 			return nil, 0, errors.Wrapf(err, "failed to dump perf output to %q", dumpFile)
 		}
 	}
@@ -249,7 +248,7 @@ func collectAMDBusyCounter(ctx context.Context, interval time.Duration) (counter
 			return nil, 0, errors.Wrap(err, "error sleeping")
 		}
 
-		v, err := ioutil.ReadFile(amdBusyGPUFile)
+		v, err := os.ReadFile(amdBusyGPUFile)
 		if err != nil {
 			return nil, 0, errors.Wrapf(err, "error reading from %s", amdBusyGPUFile)
 		}
@@ -342,7 +341,7 @@ func collectMaliPerformanceCounters(ctx context.Context, interval time.Duration)
 // times in every frequency, otherwise err will be filled in.
 // [1]https://www.kernel.org/doc/Documentation/ABI/testing/sysfs-class-devfreq
 func parseTransStatFile(transStatFileName string) (freqs map[float64]time.Duration, err error) {
-	out, err := ioutil.ReadFile(transStatFileName)
+	out, err := os.ReadFile(transStatFileName)
 	if err != nil {
 
 		// the output of `trans_stat` might be larger than `PAGE_SIZE` can handle
@@ -401,7 +400,7 @@ func parseTransStatFile(transStatFileName string) (freqs map[float64]time.Durati
 // collectGPUPerformanceCounters() does.
 // [1] https://www.kernel.org/doc/Documentation/ABI/testing/sysfs-class-devfreq
 func collectDevFreqCounters(ctx context.Context, interval time.Duration) (counters map[string]time.Duration, megaPeriods int64, err error) {
-	files, err := ioutil.ReadDir("/sys/class/devfreq/")
+	files, err := os.ReadDir("/sys/class/devfreq/")
 	if os.IsNotExist(err) {
 		// If the kernel doesn't provide devfreq it's not an error.
 		return nil, 0, nil

@@ -8,7 +8,6 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
-	"io/ioutil"
 	"os"
 	"time"
 
@@ -105,7 +104,7 @@ func runJustificationTest(ctx context.Context, s *testing.State, params scannerP
 
 	s.Log("Performing scan on ", params.name)
 
-	tmpDir, err := ioutil.TempDir("", "tast.scanner.ADFJustification.")
+	tmpDir, err := os.MkdirTemp("", "tast.scanner.ADFJustification.")
 	if err != nil {
 		s.Fatal("Failed to create temporary directory: ", err)
 	}

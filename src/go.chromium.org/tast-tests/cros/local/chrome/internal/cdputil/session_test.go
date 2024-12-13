@@ -8,7 +8,6 @@ import (
 	"context"
 	"encoding/json"
 	"io"
-	"io/ioutil"
 	"os"
 	"path/filepath"
 	"testing"
@@ -35,7 +34,7 @@ func TestReadDebuggingPort(t *testing.T) {
 		{"empty", "", -1},
 	} {
 		p := filepath.Join(td, tc.name)
-		if err := ioutil.WriteFile(p, []byte(tc.data), 0644); err != nil {
+		if err := os.WriteFile(p, []byte(tc.data), 0644); err != nil {
 			t.Fatal(err)
 		}
 		port, err := readDebuggingPort(p)

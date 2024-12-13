@@ -6,7 +6,6 @@ package ash
 
 import (
 	"context"
-	"io/ioutil"
 	"os"
 	"time"
 
@@ -42,7 +41,7 @@ type fakeAppsFixture struct {
 }
 
 func (f *fakeAppsFixture) SetUp(ctx context.Context, s *testing.FixtState) interface{} {
-	extDirBase, err := ioutil.TempDir("", "")
+	extDirBase, err := os.MkdirTemp("", "")
 	if err != nil {
 		s.Fatal("Failed to create a tempdir: ", err)
 	}

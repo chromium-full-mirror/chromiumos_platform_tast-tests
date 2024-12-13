@@ -6,7 +6,6 @@
 package filesnapshot
 
 import (
-	"io/ioutil"
 	"os"
 	"path/filepath"
 	"syscall"
@@ -36,7 +35,7 @@ func (s *Snapshot) Save(filename string) error {
 	if !filepath.IsAbs(filename) {
 		return errors.New("not an absolute path")
 	}
-	content, err := ioutil.ReadFile(filename)
+	content, err := os.ReadFile(filename)
 	if err != nil {
 		return errors.Wrap(err, "failed to read file")
 	}
@@ -59,7 +58,7 @@ func (s *Snapshot) Restore(filename string) error {
 	if !ok {
 		return errors.Errorf("snapshot of path %s not found", filename)
 	}
-	if err := ioutil.WriteFile(filename, val.content, val.mode); err != nil {
+	if err := os.WriteFile(filename, val.content, val.mode); err != nil {
 		return errors.Wrap(err, "failed to restore file content")
 	}
 	// Always set the permission again; necessary when the file exist already when calling WriteFile.
@@ -103,7 +102,7 @@ func (s *Snapshot) SaveFrom(filename, keypath string) error {
 	if !filepath.IsAbs(filename) {
 		return errors.New("not an absolute path")
 	}
-	content, err := ioutil.ReadFile(filename)
+	content, err := os.ReadFile(filename)
 	if err != nil {
 		return errors.Wrapf(err, "failed to read file %s", filename)
 	}
@@ -127,7 +126,7 @@ func (s *Snapshot) RestoreTo(keypath, filename string) error {
 	if !ok {
 		return errors.Errorf("snapshot of path %s not found", keypath)
 	}
-	if err := ioutil.WriteFile(filename, snapshot.content, snapshot.mode); err != nil {
+	if err := os.WriteFile(filename, snapshot.content, snapshot.mode); err != nil {
 		return errors.Wrapf(err, "failed to restore the file %s from snapshot", filename)
 	}
 	// Always set the permission again; necessary when the file exist already when calling WriteFile.

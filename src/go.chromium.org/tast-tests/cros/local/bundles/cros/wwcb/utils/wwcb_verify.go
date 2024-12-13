@@ -6,7 +6,7 @@ package utils
 
 import (
 	"context"
-	"io/ioutil"
+	"os"
 	"strings"
 
 	"go.chromium.org/tast-tests/cros/local/audio"
@@ -55,7 +55,7 @@ func VerifyEthernetStatus(ctx context.Context, isConnect bool) error {
 	}
 	// Find out eth0 operstate.
 	return testing.Poll(ctx, func(c context.Context) error {
-		output, err := ioutil.ReadFile("/sys/class/net/eth0/operstate")
+		output, err := os.ReadFile("/sys/class/net/eth0/operstate")
 		if err != nil {
 			if isConnect {
 				return errors.Wrap(err, "failed to get eth0 operstate")
@@ -82,7 +82,7 @@ func VerifyPowerStatus(ctx context.Context, isConnect bool) error {
 	}
 	// Find out BAT0 status.
 	return testing.Poll(ctx, func(c context.Context) error {
-		output, err := ioutil.ReadFile("/sys/class/power_supply/BAT0/status")
+		output, err := os.ReadFile("/sys/class/power_supply/BAT0/status")
 		if err != nil {
 			return errors.Wrap(err, "failed to get power status")
 		}

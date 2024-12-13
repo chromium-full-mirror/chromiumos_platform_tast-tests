@@ -6,7 +6,7 @@
 package vm
 
 import (
-	"io/ioutil"
+	"os"
 	"path/filepath"
 	"strings"
 )
@@ -19,7 +19,7 @@ func init() {
 	productPath := filepath.Join(dmiDir, "product_name")
 	vendorPath := filepath.Join(dmiDir, "sys_vendor")
 
-	content, err := ioutil.ReadFile(productPath)
+	content, err := os.ReadFile(productPath)
 	if err != nil {
 		isVM = false
 		return
@@ -30,7 +30,7 @@ func init() {
 		return
 	}
 
-	content, err = ioutil.ReadFile(vendorPath)
+	content, err = os.ReadFile(vendorPath)
 	if err != nil {
 		isVM = false
 		return

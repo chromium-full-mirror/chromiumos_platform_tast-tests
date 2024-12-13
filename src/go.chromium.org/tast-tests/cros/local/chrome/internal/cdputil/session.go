@@ -7,7 +7,8 @@ package cdputil
 import (
 	"context"
 	"fmt"
-	"io/ioutil"
+	"io"
+	"os"
 	"strconv"
 	"strings"
 	"time"
@@ -131,7 +132,7 @@ func waitForDebuggingPort(ctx context.Context, debuggingPortPath string) (int, e
 // readDebuggingPort returns the port number from the first line of p, a file
 // written by Chrome when --remote-debugging-port=0 is passed.
 func readDebuggingPort(p string) (int, error) {
-	b, err := ioutil.ReadFile(p)
+	b, err := os.ReadFile(p)
 	if err != nil {
 		return -1, err
 	}
@@ -359,7 +360,7 @@ func (s *Session) StopTracing(ctx context.Context) (*perfetto_proto.Trace, error
 
 	r := s.client.NewIOStreamReader(ctx, *cr.Stream)
 	defer r.Close()
-	buf, err := ioutil.ReadAll(r)
+	buf, err := io.ReadAll(r)
 	if err != nil {
 		return nil, errors.Wrap(err, "unable to read tracing data stream")
 	}

@@ -7,7 +7,6 @@ package firmware
 import (
 	"context"
 	"fmt"
-	"io/ioutil"
 	"os"
 	"path/filepath"
 	"regexp"
@@ -75,7 +74,7 @@ func BootDeviceRemovable(ctx context.Context) (bool, error) {
 // deviceRemovable checks whether a certain storage device is removable.
 func deviceRemovable(ctx context.Context, device string) (bool, error) {
 	fp := fmt.Sprintf("/sys/block/%s/removable", filepath.Base(device))
-	content, err := ioutil.ReadFile(fp)
+	content, err := os.ReadFile(fp)
 	if err != nil {
 		return false, errors.Wrapf(err, "reading filepath %s", fp)
 	}

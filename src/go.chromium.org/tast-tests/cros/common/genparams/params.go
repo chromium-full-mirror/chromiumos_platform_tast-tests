@@ -7,7 +7,6 @@ package genparams
 import (
 	"bytes"
 	"fmt"
-	"io/ioutil"
 	"os"
 	"path/filepath"
 	"runtime"
@@ -42,7 +41,7 @@ const envName = "TAST_GENERATE_UPDATE"
 func Ensure(t TestingT, file, params string) {
 	t.Helper()
 
-	oldCode, err := ioutil.ReadFile(file)
+	oldCode, err := os.ReadFile(file)
 	if err != nil {
 		t.Fatalf("%s: %v", file, err)
 	}
@@ -145,7 +144,7 @@ var _ = []testing.Param{
 
 	// If the environment variable is set, update the source code.
 	if os.Getenv(envName) != "" {
-		if err := ioutil.WriteFile(file, newCode, 0666); err != nil {
+		if err := os.WriteFile(file, newCode, 0666); err != nil {
 			t.Fatalf("%s: failed to save the generated code: %v", file, err)
 		}
 		return

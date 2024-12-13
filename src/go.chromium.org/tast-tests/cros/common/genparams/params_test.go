@@ -6,7 +6,6 @@ package genparams
 
 import (
 	"fmt"
-	"io/ioutil"
 	"os"
 	"testing"
 
@@ -81,7 +80,7 @@ func callEnsure(t *testing.T, code, params string) (errors []string, newCode str
 		t.Errorf("Ensure failed: %v", ft1.Errors)
 	}
 
-	newBytes, err := ioutil.ReadFile(filename)
+	newBytes, err := os.ReadFile(filename)
 	if err != nil {
 		t.Fatal(err)
 	}

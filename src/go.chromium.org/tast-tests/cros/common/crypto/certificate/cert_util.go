@@ -8,7 +8,6 @@ import (
 	"context"
 	"fmt"
 	"io/fs"
-	"io/ioutil"
 	"os"
 	"path/filepath"
 	"time"
@@ -132,7 +131,7 @@ func (w *remoteCertUtil) tempDir() string {
 type localCertUtil struct{}
 
 func (w *localCertUtil) write(ctx context.Context, data []byte, fullPath string) error {
-	return ioutil.WriteFile(fullPath, data, defaultFileMode)
+	return os.WriteFile(fullPath, data, defaultFileMode)
 }
 
 func (w *localCertUtil) remove(ctx context.Context, fullPath string) error {

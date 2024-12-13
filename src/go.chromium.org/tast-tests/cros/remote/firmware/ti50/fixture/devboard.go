@@ -9,7 +9,6 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
-	"io/ioutil"
 	"os"
 	"path/filepath"
 	"regexp"
@@ -346,7 +345,7 @@ func currentImageGood(ctx context.Context, s TestingState, board *remoteTi50.DUT
 	}
 	runningCorrectVersionStr := false
 	// Check if the image under test contains the running version string
-	imageContents, err := ioutil.ReadFile(imagePath)
+	imageContents, err := os.ReadFile(imagePath)
 	if err != nil {
 		testing.ContextLog(ctx, "Unable to read file", imagePath)
 	} else {

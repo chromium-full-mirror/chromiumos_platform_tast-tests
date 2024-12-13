@@ -8,7 +8,6 @@ import (
 	"context"
 	"crypto/md5"
 	"encoding/hex"
-	"io/ioutil"
 	"net/http"
 	"os"
 	"path/filepath"
@@ -142,7 +141,7 @@ func validateMD5s(ctx context.Context, gotMD5s []string, jsonFilePath, outDir st
 	if err != nil {
 		testing.ContextLog(ctx, "md5 validation fails, dumping validate log to validate.log")
 
-		if err := ioutil.WriteFile(filepath.Join(outDir, "validate.log"),
+		if err := os.WriteFile(filepath.Join(outDir, "validate.log"),
 			append(stdout, append([]byte("\n === stderr ===\n"), stderr...)...), 0644); err != nil {
 			return errors.Wrap(err, "failed to dump output of validate")
 		}

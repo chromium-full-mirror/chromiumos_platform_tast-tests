@@ -6,7 +6,6 @@ package video
 
 import (
 	"context"
-	"io/ioutil"
 	"os"
 	"regexp"
 	"strconv"
@@ -1491,7 +1490,7 @@ func PlatformEncoding(ctx context.Context, s *testing.State) {
 
 // extractValue parses logFile using r and returns a single float64 match.
 func extractValue(logFile string, r *regexp.Regexp) (value float64, err error) {
-	b, err := ioutil.ReadFile(logFile)
+	b, err := os.ReadFile(logFile)
 	if err != nil {
 		return 0.0, errors.Wrapf(err, "failed to read file %s", logFile)
 	}

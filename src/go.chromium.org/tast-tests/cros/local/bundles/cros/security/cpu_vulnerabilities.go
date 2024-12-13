@@ -7,7 +7,7 @@ package security
 import (
 	"bytes"
 	"context"
-	"io/ioutil"
+	"os"
 	"path/filepath"
 
 	"go.chromium.org/tast/core/testing"
@@ -29,7 +29,7 @@ func init() {
 
 func CPUVulnerabilities(ctx context.Context, s *testing.State) {
 	vulnDir := "/sys/devices/system/cpu/vulnerabilities/"
-	fileList, err := ioutil.ReadDir(vulnDir)
+	fileList, err := os.ReadDir(vulnDir)
 	if err != nil {
 		s.Fatal("Failed to list vulnerability files: ", err)
 	}
@@ -40,7 +40,7 @@ func CPUVulnerabilities(ctx context.Context, s *testing.State) {
 		if fName == "spec_rstack_overflow" {
 			continue
 		}
-		contents, err := ioutil.ReadFile(filepath.Join(vulnDir, fName))
+		contents, err := os.ReadFile(filepath.Join(vulnDir, fName))
 		if err != nil {
 			s.Fatal("Can't read vulnerability file: ", err)
 		}

@@ -13,7 +13,6 @@ import (
 	"encoding/json"
 	"fmt"
 	"io"
-	"io/ioutil"
 	"net/http"
 	"net/url"
 	"strings"
@@ -243,7 +242,7 @@ func (d *Device) call(ctx context.Context, method string, out interface{}, param
 	if err != nil {
 		return errors.Wrapf(err, "%s: failed marshaling request", method)
 	}
-	req.Body = ioutil.NopCloser(bytes.NewReader(reqBody))
+	req.Body = io.NopCloser(bytes.NewReader(reqBody))
 	req.ContentLength = int64(len(reqBody))
 	req.Header.Add("Content-Type", "application/json")
 	req.Close = true
@@ -265,7 +264,7 @@ func (d *Device) call(ctx context.Context, method string, out interface{}, param
 	}
 
 	// Read and parse the response.
-	resBody, err := ioutil.ReadAll(res.Body)
+	resBody, err := io.ReadAll(res.Body)
 	if err != nil {
 		return errors.Wrapf(err, "%s: failed reading response", method)
 	}

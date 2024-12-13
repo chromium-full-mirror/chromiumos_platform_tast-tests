@@ -5,7 +5,6 @@
 package util
 
 import (
-	"io/ioutil"
 	"os"
 	"testing"
 )
@@ -76,12 +75,12 @@ func TestParseS2IdleResidencyInvalidFile(t *testing.T) {
 }
 
 func writeResidencyFile(t *testing.T, content string) string {
-	file, err := ioutil.TempFile(os.TempDir(), "ResidencyFile-")
+	file, err := os.CreateTemp(os.TempDir(), "ResidencyFile-")
 	if err != nil {
 		t.Fatal(err)
 	}
 
-	err = ioutil.WriteFile(file.Name(), []byte(content), 0644)
+	err = os.WriteFile(file.Name(), []byte(content), 0644)
 	if err != nil {
 		t.Fatal(err)
 	}

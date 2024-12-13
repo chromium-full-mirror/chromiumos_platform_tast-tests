@@ -7,7 +7,6 @@ package crosca
 
 import (
 	"context"
-	"io/ioutil"
 	"os"
 	"strconv"
 	"strings"
@@ -477,7 +476,7 @@ func startVideoStreamingAndMouseAction(ctx context.Context, s *testing.State, ui
 	// Try to read the perf output. Perf data is debug only so failure
 	// is not considered fatal
 	s.Log("Read perf_output.txt")
-	data, err := ioutil.ReadFile(perfOutputFile)
+	data, err := os.ReadFile(perfOutputFile)
 	if err != nil {
 		s.Log("Failed reading perf_output.txt")
 	}

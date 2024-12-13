@@ -8,7 +8,6 @@ import (
 	"bytes"
 	"context"
 	"encoding/binary"
-	"io/ioutil"
 	"os"
 	"path/filepath"
 	"time"
@@ -65,7 +64,7 @@ func DownloadManager(ctx context.Context, s *testing.State) {
 	}(ctx)
 
 	// Check whether the downloaded file is accessible from ChromeOS.
-	original, err := ioutil.ReadFile(sourcePath)
+	original, err := os.ReadFile(sourcePath)
 	if err != nil {
 		s.Fatalf("Failed to read %s: %v", sourcePath, err)
 	}
@@ -78,7 +77,7 @@ func DownloadManager(ctx context.Context, s *testing.State) {
 	targetPathInCros := filepath.Join(cryptohomeUserPath, "MyFiles", "Downloads",
 		filename)
 
-	downloaded, err := ioutil.ReadFile(targetPathInCros)
+	downloaded, err := os.ReadFile(targetPathInCros)
 	if err != nil {
 		s.Fatalf("Failed to read %s: %v", targetPathInCros, err)
 	}

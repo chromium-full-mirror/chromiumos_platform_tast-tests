@@ -6,7 +6,6 @@ package crash
 
 import (
 	"context"
-	"io/ioutil"
 	"os"
 	"path/filepath"
 	"strings"
@@ -75,7 +74,7 @@ func createEphemeralCrashReport(ctx context.Context, crashDir, crashName string)
 
 	crashPath := filepath.Join(crashDir, crashName)
 
-	if err := ioutil.WriteFile(crashPath, []byte(crashName), 0644); err != nil {
+	if err := os.WriteFile(crashPath, []byte(crashName), 0644); err != nil {
 		return errors.Wrapf(err, "failed to create fake crash report %q", crashName)
 	}
 
@@ -113,7 +112,7 @@ func expectCrashReport(ctx context.Context, crashDir, crashName string, expectEx
 
 	// If the file should exist, check the contents.
 	if exists {
-		content, err := ioutil.ReadFile(crashPath)
+		content, err := os.ReadFile(crashPath)
 		if err != nil {
 			return errors.Wrapf(err, "couldn't read crash file %q", crashPath)
 		}
@@ -217,7 +216,7 @@ func Ephemeral(ctx context.Context, s *testing.State) {
 	// Since the ephemeral collector is run at the start of system-services before login, manually creating the file
 	// recreates the conditions expected at boot deterministically.
 	if params.oobeComplete {
-		if err := ioutil.WriteFile("/home/chronos/.oobe_completed", []byte(""), 0644); err != nil {
+		if err := os.WriteFile("/home/chronos/.oobe_completed", []byte(""), 0644); err != nil {
 			s.Fatal("Could not create OOBE completed marker file")
 		}
 	}

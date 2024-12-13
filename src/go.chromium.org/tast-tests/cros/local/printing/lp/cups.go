@@ -8,7 +8,7 @@ package lp
 
 import (
 	"context"
-	"io/ioutil"
+	"os"
 	"regexp"
 	"strings"
 
@@ -56,7 +56,7 @@ func CupsAddPrinter(ctx context.Context, printerName, uri, ppd string) error {
 	if ppd == "" {
 		return errors.New("must provide PPD to CupsAddPrinter")
 	}
-	ppdContents, err := ioutil.ReadFile(ppd)
+	ppdContents, err := os.ReadFile(ppd)
 	if err != nil {
 		return errors.Wrap(err, "failed to read PPD file")
 	}

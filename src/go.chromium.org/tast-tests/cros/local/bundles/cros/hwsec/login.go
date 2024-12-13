@@ -6,7 +6,6 @@ package hwsec
 
 import (
 	"context"
-	"io/ioutil"
 	"os"
 	"path/filepath"
 
@@ -61,7 +60,7 @@ func Login(ctx context.Context, s *testing.State) {
 		}
 
 		testFile = filepath.Join(userPath, "hello")
-		if err = ioutil.WriteFile(testFile, nil, 0666); err != nil {
+		if err = os.WriteFile(testFile, nil, 0666); err != nil {
 			s.Fatal("Failed to create a test file: ", err)
 		}
 	}()

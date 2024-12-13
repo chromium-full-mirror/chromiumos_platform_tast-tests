@@ -6,7 +6,6 @@ package filemanager
 
 import (
 	"context"
-	"io/ioutil"
 	"net/http"
 	"os"
 	"path/filepath"
@@ -117,7 +116,7 @@ func DragDrop(ctx context.Context, s *testing.State) {
 	// Setup the test file.
 	const textFile = "test.txt"
 	testFileLocation := filepath.Join(myFilesPath, textFile)
-	if err := ioutil.WriteFile(testFileLocation, []byte("blahblah"), 0644); err != nil {
+	if err := os.WriteFile(testFileLocation, []byte("blahblah"), 0644); err != nil {
 		s.Fatalf("Creating file %s failed: %s", testFileLocation, err)
 	}
 	defer os.Remove(testFileLocation)

@@ -7,7 +7,6 @@ package gallerycuj
 
 import (
 	"context"
-	"io/ioutil"
 	"os"
 	"path/filepath"
 	"strings"
@@ -34,7 +33,7 @@ import (
 // removeAllFilesInDirectory removes all files in a directory but leaves
 // the directory itself intact.
 func removeAllFilesInDirectory(directory string) error {
-	files, err := ioutil.ReadDir(directory)
+	files, err := os.ReadDir(directory)
 	if err != nil {
 		return errors.Wrapf(err, "failed to read files in %s", directory)
 	}
@@ -57,7 +56,7 @@ func unzipTestFiles(ctx context.Context, zipPath, filePath string) error {
 
 // getFileNames returns the file names of the specified file type.
 func getFileNames(ctx context.Context, filePath, fileType string) (fileNames []string, err error) {
-	files, err := ioutil.ReadDir(filePath)
+	files, err := os.ReadDir(filePath)
 	if err != nil {
 		return fileNames, errors.Wrap(err, "failed to read directory")
 	}

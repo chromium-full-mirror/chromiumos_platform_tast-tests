@@ -7,7 +7,7 @@ package ippusbbridge
 import (
 	"context"
 	"fmt"
-	"io/ioutil"
+	"io"
 	"net"
 	"net/http"
 	"os"
@@ -59,7 +59,7 @@ func ContactPrinterEndpoint(ctx context.Context, devInfo usbprinter.DevInfo, url
 	if err != nil {
 		return errors.Wrap(err, "failed to send request to ippusb_bridge socket")
 	}
-	_, err = ioutil.ReadAll(resp.Body)
+	_, err = io.ReadAll(resp.Body)
 	resp.Body.Close()
 	if err != nil {
 		return errors.Wrap(err, "failed to read response from ippusb_bridge")

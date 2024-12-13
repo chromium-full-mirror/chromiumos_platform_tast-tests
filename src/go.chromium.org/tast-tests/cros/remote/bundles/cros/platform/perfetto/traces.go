@@ -7,7 +7,6 @@ package perfetto
 import (
 	"context"
 	"io"
-	"io/ioutil"
 	"os"
 	"strings"
 
@@ -22,7 +21,7 @@ import (
 // RunPerfetto uses gRPC to run perfetto cmdline with
 // |traceConfigFile| in the DUT.
 func RunPerfetto(ctx context.Context, pc platform.PerfettoTraceBasedMetricsServiceClient, traceConfigPath string) (ret string, retErr error) {
-	config, err := ioutil.ReadFile(traceConfigPath)
+	config, err := os.ReadFile(traceConfigPath)
 	if err != nil {
 		return "", errors.Wrap(err, "failed to read config file")
 	}
@@ -32,7 +31,7 @@ func RunPerfetto(ctx context.Context, pc platform.PerfettoTraceBasedMetricsServi
 		return "", errors.Wrap(err, "failed to call gRPC GeneratePerfettoTrace")
 	}
 
-	tempFile, err := ioutil.TempFile("/tmp", "perfetto-trace-*.pb")
+	tempFile, err := os.CreateTemp("/tmp", "perfetto-trace-*.pb")
 	if err != nil {
 		return "", errors.Wrap(err, "failed to create temp file")
 	}

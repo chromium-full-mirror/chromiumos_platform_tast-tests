@@ -6,7 +6,6 @@ package feedback
 
 import (
 	"context"
-	"io/ioutil"
 	"os"
 	"path"
 	"strings"
@@ -63,7 +62,7 @@ func init() {
 
 // saveLog attempts to save the given log to the test's output directory.
 func saveLog(outDir, key, value string) error {
-	return ioutil.WriteFile(path.Join(outDir, key+".log"), []byte(value), 0664)
+	return os.WriteFile(path.Join(outDir, key+".log"), []byte(value), 0664)
 }
 
 // systemInformation corresponds to the "SystemInformation" defined in autotest_private.idl.

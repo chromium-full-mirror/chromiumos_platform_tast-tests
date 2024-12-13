@@ -10,7 +10,6 @@ import (
 	"encoding/json"
 	"fmt"
 	"io"
-	"io/ioutil"
 	"mime/multipart"
 	"net/http"
 	"os"
@@ -36,7 +35,7 @@ func HTTPGet(ctx context.Context, api string) (string, error) {
 		return "", errors.Wrapf(err, "failed to send request %q", url)
 	}
 	defer resp.Body.Close()
-	body, err := ioutil.ReadAll(resp.Body)
+	body, err := io.ReadAll(resp.Body)
 	if err != nil {
 		return "", errors.Wrap(err, "failed to read response body")
 	}
@@ -141,7 +140,7 @@ func UploadFile(ctx context.Context, filePath string) (string, error) {
 		return "", errors.Wrap(err, "failed to send request")
 	}
 	defer response.Body.Close()
-	content, err := ioutil.ReadAll(response.Body)
+	content, err := io.ReadAll(response.Body)
 	if err != nil {
 		return "", errors.Wrap(err, "failed to parse response")
 	}

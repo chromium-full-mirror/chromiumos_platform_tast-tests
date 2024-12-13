@@ -7,7 +7,7 @@ package cellular
 import (
 	"context"
 	"fmt"
-	"io/ioutil"
+	"io"
 	"net/http"
 	"time"
 
@@ -101,7 +101,7 @@ func DownloadPerf(ctx context.Context, s *testing.State) {
 			return errors.Errorf("HTTP GET returned bad status code: got %d, want 200", resp.StatusCode)
 		}
 
-		body, err := ioutil.ReadAll(resp.Body)
+		body, err := io.ReadAll(resp.Body)
 		if err != nil {
 			return errors.Wrap(err, "error reading data")
 		}

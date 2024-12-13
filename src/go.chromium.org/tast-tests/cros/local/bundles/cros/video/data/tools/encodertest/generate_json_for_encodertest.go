@@ -19,7 +19,6 @@ import (
 	"encoding/hex"
 	"encoding/json"
 	"fmt"
-	"io/ioutil"
 	"log"
 	"math"
 	"os"
@@ -146,7 +145,7 @@ func (info *jsonInfo) writeJSONFor(file string) (string, error) {
 	}
 
 	jsonPath := file + ".json"
-	return jsonPath, ioutil.WriteFile(jsonPath, s, 0644)
+	return jsonPath, os.WriteFile(jsonPath, s, 0644)
 }
 
 // computeMD5SumOf60Frames computes the md5 of YUV file of the first 60 frames

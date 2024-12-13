@@ -6,7 +6,6 @@ package graphics
 
 import (
 	"context"
-	"io/ioutil"
 	"os"
 	"path/filepath"
 	"reflect"
@@ -28,7 +27,7 @@ func flagsStringToMap(s string) map[string]struct{} {
 
 func TestParseUIUseFlags(t *testing.T) {
 	// Create a temporary directory for input configuration files.
-	tmpd, err := ioutil.TempDir("", t.Name())
+	tmpd, err := os.MkdirTemp("", t.Name())
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -51,7 +50,7 @@ func TestParseUIUseFlags(t *testing.T) {
 		t.Run(tc.name, func(t *testing.T) {
 			// Create a temporary file for the input configuration.
 			p := filepath.Join(tmpd, tc.name)
-			if err = ioutil.WriteFile(p, []byte(tc.conf), 0600); err != nil {
+			if err = os.WriteFile(p, []byte(tc.conf), 0600); err != nil {
 				t.Fatal(err)
 			}
 

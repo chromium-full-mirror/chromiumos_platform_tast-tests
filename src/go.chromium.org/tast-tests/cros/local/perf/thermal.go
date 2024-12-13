@@ -6,7 +6,7 @@ package perf
 
 import (
 	"context"
-	"io/ioutil"
+	"os"
 	"path/filepath"
 	"regexp"
 	"strconv"
@@ -95,7 +95,7 @@ func (ds *thermalDataSource) Snapshot(ctx context.Context, values *perf.Values) 
 	for _, metric := range ds.metrics {
 		var sum float64
 		for _, path := range metric.paths {
-			bs, err := ioutil.ReadFile(path)
+			bs, err := os.ReadFile(path)
 			if err != nil {
 				return errors.Wrapf(err, "failed to read %s", path)
 			}

@@ -6,7 +6,7 @@ package crostini
 
 import (
 	"context"
-	"io/ioutil"
+	"os"
 	"regexp"
 	"time"
 
@@ -159,7 +159,7 @@ func checkCrashReport(ctx context.Context, outDir string) error {
 	}
 
 	for fileName, fileRegexp := range fileNamesToRegexps {
-		fileData, err := ioutil.ReadFile(fileName)
+		fileData, err := os.ReadFile(fileName)
 		if err != nil {
 			return errors.Wrapf(err, "failed to read the file %v", fileName)
 		}

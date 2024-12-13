@@ -8,7 +8,6 @@ import (
 	"context"
 	"encoding/base64"
 	"fmt"
-	"io/ioutil"
 	"os"
 	"strings"
 
@@ -269,7 +268,7 @@ func (c *Concierge) startVM(ctx context.Context, vm *VM) (string, error) {
 	}
 
 	// Get the number of online cpus.
-	buf, err := ioutil.ReadFile("/sys/devices/system/cpu/online")
+	buf, err := os.ReadFile("/sys/devices/system/cpu/online")
 	if err != nil {
 		return diskPath, errors.Wrap(err, "failed to read number of online cpus")
 	}

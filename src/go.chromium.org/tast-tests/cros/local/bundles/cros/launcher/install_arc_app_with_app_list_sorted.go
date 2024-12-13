@@ -6,7 +6,6 @@ package launcher
 
 import (
 	"context"
-	"io/ioutil"
 	"os"
 	"time"
 
@@ -124,7 +123,7 @@ func InstallArcAppWithAppListSorted(ctx context.Context, s *testing.State) {
 	var opts []chrome.Option
 	testParam := s.Param().(launcher.SortTestType)
 
-	tmpDir, err := ioutil.TempDir("", "")
+	tmpDir, err := os.MkdirTemp("", "")
 	if err != nil {
 		s.Fatal("Failed to create a temporary directory: ", err)
 	}

@@ -8,7 +8,7 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
-	"io/ioutil"
+	"io"
 	"os"
 	"path/filepath"
 	"strings"
@@ -99,7 +99,7 @@ func VulkanOverlayAdaptorPerf(ctx context.Context, s *testing.State) {
 	}
 
 	logPath := s.OutDir() + "/VulkanOverlayAdaptorTest/Performance/"
-	files, err := ioutil.ReadDir(logPath)
+	files, err := os.ReadDir(logPath)
 	if err != nil {
 		s.Error("Failed to read VulkanOverlayAdaptor test result directory: ", err)
 	}
@@ -110,7 +110,7 @@ func VulkanOverlayAdaptorPerf(ctx context.Context, s *testing.State) {
 			s.Error("Failed to open test json: ", err)
 		}
 
-		val, _ := ioutil.ReadAll(jsonFile)
+		val, _ := io.ReadAll(jsonFile)
 		var result interface{}
 		json.Unmarshal([]byte(val), &result)
 		data := result.(map[string]interface{})

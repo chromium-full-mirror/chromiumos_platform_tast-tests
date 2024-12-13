@@ -6,7 +6,7 @@ package hwsec
 
 import (
 	"context"
-	"io/ioutil"
+	"os"
 	"path/filepath"
 	"time"
 
@@ -174,7 +174,7 @@ func CryptohomeTPMLiveTests(ctx context.Context, s *testing.State) {
 
 	if out, err := cmdRunner.RunWithCombinedOutput(ctx, "cryptohome-tpm-live-test", "--test="+s.Param().(testParams).testName); err != nil {
 		logFile := filepath.Join(s.OutDir(), "tpm_live_test_output.txt")
-		if writeErr := ioutil.WriteFile(logFile, out, 0644); writeErr != nil {
+		if writeErr := os.WriteFile(logFile, out, 0644); writeErr != nil {
 			s.Errorf("Failed to write to %s: %v", logFile, writeErr)
 		}
 

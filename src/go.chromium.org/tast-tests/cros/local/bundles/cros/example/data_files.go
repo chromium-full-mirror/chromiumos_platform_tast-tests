@@ -6,7 +6,7 @@ package example
 
 import (
 	"context"
-	"io/ioutil"
+	"os"
 	"strings"
 
 	"go.chromium.org/tast/core/testing"
@@ -28,7 +28,7 @@ func init() {
 
 func DataFiles(ctx context.Context, s *testing.State) {
 	// Read a data file that's directly checked in to this repository in the data/ subdirectory.
-	b, err := ioutil.ReadFile(s.DataPath("data_files_internal.txt"))
+	b, err := os.ReadFile(s.DataPath("data_files_internal.txt"))
 	if err != nil {
 		s.Error("Failed reading internal data file: ", err)
 	} else {
@@ -37,7 +37,7 @@ func DataFiles(ctx context.Context, s *testing.State) {
 
 	// Read a data file that's stored in Google Cloud Storage and linked by an external link
 	// file (*.external) in the data/ subdirectory.
-	if b, err = ioutil.ReadFile(s.DataPath("data_files_external.txt")); err != nil {
+	if b, err = os.ReadFile(s.DataPath("data_files_external.txt")); err != nil {
 		s.Error("Failed reading external data file: ", err)
 	} else {
 		s.Logf("Read external data file: %q", strings.TrimRight(string(b), "\n"))

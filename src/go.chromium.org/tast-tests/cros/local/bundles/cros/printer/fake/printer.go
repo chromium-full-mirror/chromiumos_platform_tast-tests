@@ -7,7 +7,7 @@ package fake
 
 import (
 	"context"
-	"io/ioutil"
+	"io"
 	"net"
 	"sync/atomic"
 
@@ -51,7 +51,7 @@ func (p *Printer) run() {
 		return
 	}
 
-	data, err := ioutil.ReadAll(conn)
+	data, err := io.ReadAll(conn)
 	if err != nil {
 		return
 	}
@@ -65,7 +65,7 @@ func (p *Printer) Close() {
 
 	// If p.conn has been initialized, close the connection.
 	if atomic.SwapInt32(&p.state, 1) == 2 {
-		// This triggers ioutil.ReadAll() in run() to return an error.
+		// This triggers io.ReadAll() in run() to return an error.
 		p.conn.Close()
 	}
 }
