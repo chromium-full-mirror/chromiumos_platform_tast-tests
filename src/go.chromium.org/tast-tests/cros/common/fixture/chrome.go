@@ -24,6 +24,8 @@ const (
 	ChromeLoggedInWith100FakeAppsWithBatterySaver = "chromeLoggedInWith100FakeAppsWithBatterySaver"
 	// Logged into a user session with 100 fake apps and the passthrough command decoder enabled.
 	ChromeLoggedInWith100FakeAppsPassthroughCmdDecoder = "chromeLoggedInWith100FakeAppsPassthroughCmdDecoder"
+	// Logged into a user session with Bounce Keys enabled.
+	ChromeLoggedInWithBounceKeys = "chromeLoggedInWithBounceKeys"
 	// Logged into a session with Gaia user where CalendarView is enabled.
 	ChromeLoggedInWithCalendarView = "chromeLoggedInWithCalendarView"
 	// Logged into a session with Gaia user where there are events set up to join Hangout meetings.

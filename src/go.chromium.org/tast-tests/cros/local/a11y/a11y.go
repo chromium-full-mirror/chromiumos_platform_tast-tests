@@ -17,6 +17,10 @@ import (
 	"go.chromium.org/tast-tests/cros/local/audio/crastestclient"
 	"go.chromium.org/tast-tests/cros/local/chrome"
 	"go.chromium.org/tast-tests/cros/local/chrome/browser"
+	"go.chromium.org/tast-tests/cros/local/chrome/uiauto"
+	"go.chromium.org/tast-tests/cros/local/chrome/uiauto/nodewith"
+	"go.chromium.org/tast-tests/cros/local/chrome/uiauto/ossettings"
+	"go.chromium.org/tast-tests/cros/local/chrome/uiauto/role"
 	"go.chromium.org/tast/core/ctxutil"
 	"go.chromium.org/tast/core/errors"
 )
@@ -46,6 +50,11 @@ const (
 // ReadOnlyGoogleDocURL is a URL to a read-only Google doc that contains only the text,
 // "Long-string-to-test-select-to-speak".
 const ReadOnlyGoogleDocURL string = "https://docs.google.com/document/d/1qpu3koSIHpBzQbxeEE-dofSKXCIgdc4yJLI-o1LpCPs/view"
+
+const (
+	// BounceKeysDefaultDelay is the default delay of Bounce Keys.
+	BounceKeysDefaultDelay = 500 * time.Millisecond
+)
 
 // SetFaceGazeEnabled enables the FaceGaze accessibility feature using the
 // settings private extension API. The reason we need this is that FaceGaze is
@@ -286,4 +295,24 @@ func SetUpTTSFeature(tfi TTSFeatureInputs) (tfd TTSFeatureData, e error) {
 	}
 
 	return TTSFeatureData{ctx, tconn, sm, tdown, crConn}, nil
+}
+
+// toggleKeyboardAndTextInputSetting is a helper function that toggles
+// a setting in Keyboard and Text Input settings page via Settings UI.
+func toggleKeyboardAndTextInputSetting(ctx context.Context, tconn *chrome.TestConn, cr *chrome.Chrome, ui *uiauto.Context, name string, enable bool) error {
+	heading := nodewith.NameStartingWith("Keyboard and text input").Role(role.Heading).Ancestor(ossettings.WindowFinder)
+	kbSettings, err := ossettings.LaunchAtPageURL(ctx, tconn, cr, "keyboardAndTextInput?settingId=1554", ui.Exists(heading))
+	if err != nil {
+		return errors.Wrap(err, "failed to open keyboard accessibility settings page")
+	}
+	defer kbSettings.Close(ctx)
+	if err := kbSettings.SetToggleOption(cr, name, enable)(ctx); err != nil {
+		return errors.Wrapf(err, "failed to toggle %q setting", name)
+	}
+	return nil
+}
+
+// ToggleBounceKeysSetting is a helper function that toggles Bounce Keys setting via Settings UI.
+func ToggleBounceKeysSetting(ctx context.Context, tconn *chrome.TestConn, cr *chrome.Chrome, ui *uiauto.Context, enable bool) error {
+	return toggleKeyboardAndTextInputSetting(ctx, tconn, cr, ui, "Bounce keys", enable)
 }
