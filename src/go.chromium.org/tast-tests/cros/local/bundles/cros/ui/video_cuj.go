@@ -58,6 +58,12 @@ func init() {
 				ExtraAttr:         []string{"group:cuj", "cuj_experimental"},
 				ExtraHardwareDeps: hwdep.D(hwdep.HasParavirtSchedControl()),
 			},
+			{
+				Name: "coral",
+				// No attrs because this test can only be triggered manually currently.
+				Fixture:           "loggedInToCUJUserWithCoralEnabled",
+				ExtraHardwareDeps: hwdep.D(hwdep.FeatureLevel(1)),
+			},
 		},
 	})
 }

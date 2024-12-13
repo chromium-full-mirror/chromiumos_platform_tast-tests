@@ -1205,6 +1205,51 @@ func init() {
 		PreTestTimeout:  CPUStablizationTimeout,
 		PostTestTimeout: postTestTimeout,
 	})
+	testing.AddFixture(&testing.Fixture{
+		Name: "loggedInToCUJUserWithCoralEnabled",
+		Desc: "CUJ test fixture with Coral feature enabled",
+		Contacts: []string{
+			"hcyang@google.com",
+			"cros-odml-foundations-eng@google.com",
+		},
+		BugComponent: "b:1445284",
+		Impl: &loggedInToCUJUserFixture{
+			chromeExtraOpts: []chrome.Option{
+				chrome.EnableFeatures(
+					"CoralFeature",
+				),
+			},
+		},
+		Parent:          "prepareForCUJ",
+		SetUpTimeout:    setUpTimeout,
+		ResetTimeout:    resetTimeout,
+		TearDownTimeout: resetTimeout,
+		PreTestTimeout:  CPUStablizationTimeout,
+		PostTestTimeout: postTestTimeout,
+	})
+	testing.AddFixture(&testing.Fixture{
+		Name: "loggedInToCUJUserWithCoralEnabledAndWebRTCEventLogging",
+		Desc: "CUJ test fixture with Coral feature enabled with WebRTCEventLogging enabled",
+		Contacts: []string{
+			"hcyang@google.com",
+			"cros-odml-foundations-eng@google.com",
+		},
+		BugComponent: "b:1445284",
+		Impl: &loggedInToCUJUserFixture{
+			chromeExtraOpts: []chrome.Option{
+				chrome.EnableFeatures(
+					"CoralFeature",
+				),
+				chrome.ExtraArgs(webRTCEventLogCommandFlag),
+			},
+		},
+		Parent:          "prepareForCUJ",
+		SetUpTimeout:    setUpTimeout,
+		ResetTimeout:    resetTimeout,
+		TearDownTimeout: resetTimeout,
+		PreTestTimeout:  CPUStablizationTimeout,
+		PostTestTimeout: postTestTimeout,
+	})
 }
 
 func prepareDocsBlockerExtension(s *testing.FixtState) (string, error) {

@@ -666,6 +666,21 @@ func init() {
 				},
 				Fixture: "loggedInToCUJUserWithWebRTCEventLoggingWithVsyncDecoding",
 			},
+			{
+				Name:    "coral",
+				Timeout: meetcuj.DefaultTestTimeout,
+				// No attrs because this test can only be triggered manually currently.
+				Val: meetcuj.MeetTest{
+					Bots:          []int{1, 3, 15},
+					Layout:        googlemeet.TiledLayout,
+					Cam:           true,
+					ZoomOut:       true,
+					Effects:       true,
+					FakeCamHALCfg: meetcuj.FakeCamHALCfg720p,
+				},
+				Fixture:           "loggedInToCUJUserWithCoralEnabledAndWebRTCEventLogging",
+				ExtraHardwareDeps: hwdep.D(hwdep.FeatureLevel(1)),
+			},
 		},
 	})
 }

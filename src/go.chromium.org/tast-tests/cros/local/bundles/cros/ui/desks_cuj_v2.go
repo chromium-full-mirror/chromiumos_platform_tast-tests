@@ -33,7 +33,6 @@ func init() {
 			"vivian.chen@cienet.com",
 		},
 		BugComponent: "b:1045832", // ChromeOS > Software > Performance > TPS
-		Attr:         []string{"group:cuj"},
 		SoftwareDeps: []string{"chrome"},
 		HardwareDeps: hwdep.D(hwdep.InternalDisplay()),
 		Data: []string{
@@ -51,7 +50,18 @@ func init() {
 			// 10 minutes.
 			"ui.DesksCUJV2.duration",
 		},
-		Fixture: "loggedInToCUJUser",
+		Params: []testing.Param{
+			{
+				ExtraAttr: []string{"group:cuj"},
+				Fixture:   "loggedInToCUJUser",
+			},
+			{
+				Name: "coral",
+				// No attrs because this test can only be triggered manually currently.
+				Fixture:           "loggedInToCUJUserWithCoralEnabled",
+				ExtraHardwareDeps: hwdep.D(hwdep.FeatureLevel(1)),
+			},
+		},
 		Timeout: 30 * time.Minute,
 	})
 }
