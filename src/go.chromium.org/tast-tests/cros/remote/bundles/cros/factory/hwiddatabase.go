@@ -36,6 +36,9 @@ var displayPanelNotProbable = []string{"starmie"}
 // Wifi is an essential component and should be probed in this test. The following platforms requires custom probe statement. The progress is tracked in b/261355069.
 var customProbePlatforms = []string{"trogdor", "strongbad"}
 
+// Deku is intended to have no wifi assembled(b/384404427).
+var wifiNotProbable = []string{"deku"}
+
 func init() {
 	testing.AddTest(&testing.Test{
 		Func:     HWIDDatabase,
@@ -52,7 +55,7 @@ func init() {
 		Params: []testing.Param{
 			testing.Param{
 				Name:              "probe_by_default",
-				ExtraHardwareDeps: hwdep.D(hwdep.SkipOnModel(append(storageNotProbable, displayPanelNotProbable...)...), hwdep.ChromeEC()),
+				ExtraHardwareDeps: hwdep.D(hwdep.SkipOnModel(append(append(storageNotProbable, displayPanelNotProbable...), wifiNotProbable...)...), hwdep.ChromeEC()),
 				Val: extraCmdParams{
 					extraBuildParams: []string{
 						"--add-firmware-components",
@@ -78,6 +81,17 @@ func init() {
 						"--add-firmware-components",
 						"--auto-accept-essential-prompt",
 						"display_panel",
+					},
+				},
+			},
+			testing.Param{
+				Name:              "allow_probe_no_wifi",
+				ExtraHardwareDeps: hwdep.D(hwdep.Model(wifiNotProbable...)),
+				Val: extraCmdParams{
+					extraBuildParams: []string{
+						"--add-firmware-components",
+						"--auto-accept-essential-prompt",
+						"wireless",
 					},
 				},
 			},
