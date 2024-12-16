@@ -18,7 +18,7 @@ import (
 	"time"
 
 	"go.chromium.org/tast-tests/cros/common/perf"
-	"go.chromium.org/tast-tests/cros/local/audio/crastestclient"
+	"go.chromium.org/tast-tests/cros/local/audio/crastests"
 	"go.chromium.org/tast-tests/cros/local/chrome"
 	"go.chromium.org/tast-tests/cros/local/chrome/ash"
 	"go.chromium.org/tast-tests/cros/local/colorcmp"
@@ -421,10 +421,10 @@ func TestPlay(ctx context.Context, s *testing.State, cr *chrome.Chrome,
 	}
 	defer vl.Close()
 
-	if err := crastestclient.Mute(ctx); err != nil {
+	if err := crastests.Mute(ctx); err != nil {
 		return err
 	}
-	defer crastestclient.Unmute(ctx)
+	defer crastests.Unmute(ctx)
 
 	server := httptest.NewServer(http.FileServer(s.DataFileSystem()))
 	defer server.Close()

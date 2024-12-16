@@ -16,6 +16,7 @@ import (
 	"go.chromium.org/tast-tests/cros/common/usbutils"
 	"go.chromium.org/tast-tests/cros/local/audio"
 	"go.chromium.org/tast-tests/cros/local/audio/crastestclient"
+	"go.chromium.org/tast-tests/cros/local/audio/crastests"
 	"go.chromium.org/tast-tests/cros/local/bundles/cros/typec/setup"
 	deviceSpeed "go.chromium.org/tast-tests/cros/local/bundles/cros/typec/typecutils"
 	"go.chromium.org/tast-tests/cros/local/chrome"
@@ -93,10 +94,10 @@ func ThunderboltDockStationFunctionality(ctx context.Context, s *testing.State) 
 	}
 
 	// Mute the device to avoid noisiness.
-	if err := crastestclient.Mute(ctx); err != nil {
+	if err := crastests.Mute(ctx); err != nil {
 		s.Fatal("Failed to mute: ", err)
 	}
-	defer crastestclient.Unmute(cleanupCtx)
+	defer crastests.Unmute(cleanupCtx)
 
 	// Read json config file.
 	jsonData, err := os.ReadFile(s.DataPath(testConfig))

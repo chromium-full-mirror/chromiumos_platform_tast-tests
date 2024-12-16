@@ -14,7 +14,7 @@ import (
 	"go.chromium.org/tast-tests/cros/common/audio/withchameleon"
 	"go.chromium.org/tast-tests/cros/common/testexec"
 	"go.chromium.org/tast-tests/cros/local/audio"
-	"go.chromium.org/tast-tests/cros/local/audio/crastestclient"
+	"go.chromium.org/tast-tests/cros/local/audio/crastests"
 	"go.chromium.org/tast-tests/cros/local/audio/nodematch"
 	"go.chromium.org/tast/core/errors"
 	"go.chromium.org/tast/core/testing"
@@ -100,7 +100,7 @@ func (outputPort CrosOutputPort) PreparePlayback(ctx context.Context, goldenFile
 
 		logger("playing: on dut")
 
-		tempPlaybackCmd := crastestclient.PlaybackFileCommand(ctx, goldenFile.Name(), int(playbackDuration.Seconds()), audioFormat.Channels, audioFormat.Rate)
+		tempPlaybackCmd := crastests.PlaybackFileCommand(ctx, goldenFile.Name(), int(playbackDuration.Seconds()), audioFormat.Channels, audioFormat.Rate)
 
 		logger("playing: with command: %v", tempPlaybackCmd.Args)
 		playbackErr = tempPlaybackCmd.Run(testexec.DumpLogOnError)
@@ -150,7 +150,7 @@ func (inputPort CrosInputPort) PrepareRecord(ctx context.Context, recordingFile 
 
 		logger("recording: on dut")
 
-		tempCaptureCmd := crastestclient.CaptureFileCommand(
+		tempCaptureCmd := crastests.CaptureFileCommand(
 			ctx, recordingFile.Name(),
 			int(recordDuration.Seconds()),
 			audioFormat.Channels,

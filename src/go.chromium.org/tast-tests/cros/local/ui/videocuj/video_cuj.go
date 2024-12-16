@@ -13,7 +13,7 @@ import (
 
 	"go.chromium.org/tast-tests/cros/common/action"
 	"go.chromium.org/tast-tests/cros/common/perf"
-	"go.chromium.org/tast-tests/cros/local/audio/crastestclient"
+	"go.chromium.org/tast-tests/cros/local/audio/crastests"
 	"go.chromium.org/tast-tests/cros/local/chrome"
 	"go.chromium.org/tast-tests/cros/local/chrome/ash"
 	"go.chromium.org/tast-tests/cros/local/chrome/cuj"
@@ -139,10 +139,10 @@ func Run(ctx context.Context, cr *chrome.Chrome, outDir string, testParam TestPa
 
 	// Mute the whole device, to prevent disturbing the lab while
 	// fiddling with the volume slider during the test.
-	if err := crastestclient.Mute(ctx); err != nil {
+	if err := crastests.Mute(ctx); err != nil {
 		return errors.Wrap(err, "failed to mute audio")
 	}
-	defer crastestclient.Unmute(closeCtx)
+	defer crastests.Unmute(closeCtx)
 
 	tabChecker, err := cuj.NewTabCrashChecker(ctx, tconn)
 	if err != nil {

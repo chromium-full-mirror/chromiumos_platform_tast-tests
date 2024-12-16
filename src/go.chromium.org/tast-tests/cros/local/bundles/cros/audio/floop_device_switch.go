@@ -10,6 +10,7 @@ import (
 
 	"go.chromium.org/tast-tests/cros/local/audio"
 	"go.chromium.org/tast-tests/cros/local/audio/crastestclient"
+	"go.chromium.org/tast-tests/cros/local/audio/crastests"
 	"go.chromium.org/tast-tests/cros/local/audio/debug"
 	"go.chromium.org/tast-tests/cros/local/audio/fixture"
 	"go.chromium.org/tast-tests/cros/local/audio/nodematch"
@@ -59,8 +60,8 @@ func FloopDeviceSwitch(ctx context.Context, s *testing.State) {
 	record := crastestclient.PinCaptureCommand(runCtx, floop, duration, 480)
 
 	// Playback function by CRAS.
-	stream1 := crastestclient.PlaybackCommand(runCtx, duration, 4096)
-	stream2 := crastestclient.PlaybackCommand(runCtx, duration, 512)
+	stream1 := crastests.PlaybackCommand(runCtx, duration, 4096)
+	stream2 := crastests.PlaybackCommand(runCtx, duration, 512)
 
 	record.Start()
 	stream1.Start()

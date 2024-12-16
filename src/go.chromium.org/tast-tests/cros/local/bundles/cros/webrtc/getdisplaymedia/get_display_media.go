@@ -16,7 +16,7 @@ import (
 	"time"
 
 	"go.chromium.org/tast-tests/cros/common/perf"
-	"go.chromium.org/tast-tests/cros/local/audio/crastestclient"
+	"go.chromium.org/tast-tests/cros/local/audio/crastests"
 	"go.chromium.org/tast-tests/cros/local/chrome"
 	"go.chromium.org/tast-tests/cros/local/chrome/ash"
 	"go.chromium.org/tast-tests/cros/local/chrome/display"
@@ -60,10 +60,10 @@ func RunGetDisplayMediaPerf(ctx context.Context, fileSystem http.FileSystem, cs 
 	}
 	defer ash.SetShelfBehavior(cleanupCtx, tconn, dispInfo.ID, origShelfBehavior)
 
-	if err := crastestclient.Mute(ctx); err != nil {
+	if err := crastests.Mute(ctx); err != nil {
 		return errors.Wrap(err, "failed to mute device")
 	}
-	defer crastestclient.Unmute(ctx)
+	defer crastests.Unmute(ctx)
 
 	server := httptest.NewServer(http.FileServer(fileSystem))
 	defer server.Close()

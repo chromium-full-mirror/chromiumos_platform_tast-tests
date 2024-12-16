@@ -13,6 +13,7 @@ import (
 	"go.chromium.org/tast-tests/cros/common/testexec"
 	"go.chromium.org/tast-tests/cros/local/audio"
 	"go.chromium.org/tast-tests/cros/local/audio/crastestclient"
+	"go.chromium.org/tast-tests/cros/local/audio/crastests"
 	"go.chromium.org/tast-tests/cros/local/audio/fixture"
 	"go.chromium.org/tast-tests/cros/local/bundles/cros/audio/device"
 	"go.chromium.org/tast-tests/cros/local/chrome"
@@ -114,7 +115,7 @@ func CrasRecordingCorrectness(ctx context.Context, s *testing.State) {
 	}
 
 	testing.ContextLog(ctx, "Capture output to ", recording.Path)
-	if err := crastestclient.CaptureFileCommand(
+	if err := crastests.CaptureFileCommand(
 		ctx, recording.Path,
 		recording.Duration,
 		recording.Channels,

@@ -22,7 +22,7 @@ import (
 	"go.chromium.org/tast-tests/cros/local/apps"
 	"go.chromium.org/tast-tests/cros/local/arc"
 	"go.chromium.org/tast-tests/cros/local/arc/optin"
-	"go.chromium.org/tast-tests/cros/local/audio/crastestclient"
+	"go.chromium.org/tast-tests/cros/local/audio/crastests"
 	"go.chromium.org/tast-tests/cros/local/chrome"
 	"go.chromium.org/tast-tests/cros/local/chrome/ash"
 	"go.chromium.org/tast-tests/cros/local/chrome/display"
@@ -1863,7 +1863,7 @@ func (f *loggedInToCUJUserFixture) SetUp(ctx context.Context, s *testing.FixtSta
 		}
 		defer kw.Close(ctx)
 
-		if err := crastestclient.Mute(ctx); err != nil {
+		if err := crastests.Mute(ctx); err != nil {
 			s.Log("Failed to mute audio: ", err)
 		}
 
@@ -1949,7 +1949,7 @@ func (f *loggedInToCUJUserFixture) TearDown(ctx context.Context, s *testing.Fixt
 			s.Log("Failed to disable ChromeVox: ", err)
 		}
 
-		if err := crastestclient.Unmute(ctx); err != nil {
+		if err := crastests.Unmute(ctx); err != nil {
 			s.Log("Failed to unmute audio: ", err)
 		}
 	}

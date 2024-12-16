@@ -12,7 +12,7 @@ import (
 
 	"go.chromium.org/tast-tests/cros/common/action"
 	"go.chromium.org/tast-tests/cros/common/perf"
-	"go.chromium.org/tast-tests/cros/local/audio/crastestclient"
+	"go.chromium.org/tast-tests/cros/local/audio/crastests"
 	"go.chromium.org/tast-tests/cros/local/chrome"
 	"go.chromium.org/tast-tests/cros/local/chrome/ash"
 	"go.chromium.org/tast-tests/cros/local/chrome/cuj"
@@ -170,10 +170,10 @@ func Run(ctx context.Context, s *testing.State) *perf.Values {
 
 	defer recorder.Close(closeCtx)
 
-	if err := crastestclient.Mute(ctx); err != nil {
+	if err := crastests.Mute(ctx); err != nil {
 		s.Fatal("Failed to mute audio: ", err)
 	}
-	defer crastestclient.Unmute(closeCtx)
+	defer crastests.Unmute(closeCtx)
 
 	defer faillog.DumpUITreeOnError(closeCtx, s.OutDir(), s.HasError, tconn)
 

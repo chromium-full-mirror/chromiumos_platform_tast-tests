@@ -17,7 +17,7 @@ import (
 
 	"go.chromium.org/tast-tests/cros/common/testexec"
 	"go.chromium.org/tast-tests/cros/local/audio"
-	"go.chromium.org/tast-tests/cros/local/audio/crastestclient"
+	"go.chromium.org/tast-tests/cros/local/audio/crastests"
 	"go.chromium.org/tast/core/ctxutil"
 	"go.chromium.org/tast/core/errors"
 	"go.chromium.org/tast/core/testing"
@@ -269,7 +269,7 @@ func CheckVideoMuted(ctx context.Context, path string) error {
 }
 
 func recordSound(ctx context.Context, recording audio.TestRawData, recordingErr chan error) {
-	if err := crastestclient.CaptureFileCommand(
+	if err := crastests.CaptureFileCommand(
 		ctx,
 		recording.Path,
 		recording.Duration,

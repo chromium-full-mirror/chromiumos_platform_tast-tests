@@ -11,6 +11,7 @@ import (
 	perfpkg "go.chromium.org/tast-tests/cros/common/perf"
 	"go.chromium.org/tast-tests/cros/local/audio"
 	"go.chromium.org/tast-tests/cros/local/audio/crastestclient"
+	"go.chromium.org/tast-tests/cros/local/audio/crastests"
 	"go.chromium.org/tast-tests/cros/local/audio/fixture"
 	"go.chromium.org/tast-tests/cros/local/bundles/cros/audio/device"
 	"go.chromium.org/tast-tests/cros/local/bundles/cros/audio/internal"
@@ -109,7 +110,7 @@ func init() {
 func crasPerfOneIteration(ctx context.Context, s *testing.State, pid int, pv *perfpkg.Values) {
 	const (
 		getDeviceTimeout = 3 * time.Second
-		blocksize        = 480
+		bufferSize       = 480
 		topInterval      = 1 * time.Second
 		perfDuration     = 10 * time.Second              // Duration to run perf command.
 		commandDuration  = perfDuration + 2*time.Second  // Duration to run audio command
@@ -136,8 +137,8 @@ func crasPerfOneIteration(ctx context.Context, s *testing.State, pid int, pv *pe
 	}
 
 	s.Log("start audio")
-	playbackCommand := crastestclient.PlaybackCommand(runCtx, int(commandDuration.Seconds()), blocksize)
-	captureCommand := crastestclient.CaptureCommand(runCtx, int(commandDuration.Seconds()), blocksize)
+	playbackCommand := crastests.PlaybackCommand(runCtx, int(commandDuration.Seconds()), bufferSize)
+	captureCommand := crastests.CaptureCommand(runCtx, int(commandDuration.Seconds()), bufferSize)
 
 	if param.CaptureEffects != effectsNone {
 		captureCommand.Args = append(captureCommand.Args, "--effects="+param.CaptureEffects)

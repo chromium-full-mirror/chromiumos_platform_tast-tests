@@ -11,7 +11,7 @@ import (
 
 	"go.chromium.org/tast-tests/cros/local/a11y"
 	"go.chromium.org/tast-tests/cros/local/audio"
-	"go.chromium.org/tast-tests/cros/local/audio/crastestclient"
+	"go.chromium.org/tast-tests/cros/local/audio/crastests"
 	"go.chromium.org/tast-tests/cros/local/chrome"
 	"go.chromium.org/tast-tests/cros/local/chrome/uiauto"
 	"go.chromium.org/tast-tests/cros/local/chrome/uiauto/nodewith"
@@ -152,7 +152,7 @@ func SetUp(ctx context.Context, html, className string) (d driver, e error) {
 
 	// Ensure the device is unmuted and that the volume is loud enough so that
 	// Dictation can recognize speech.
-	if err := crastestclient.Unmute(cleanUpCtx); err != nil {
+	if err := crastests.Unmute(cleanUpCtx); err != nil {
 		return newNoOpDriver(tdh), errors.Wrap(err, "failed to unmute the device")
 	}
 

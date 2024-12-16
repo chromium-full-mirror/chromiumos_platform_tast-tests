@@ -15,7 +15,7 @@ import (
 	"go.chromium.org/tast-tests/cros/common/fixture"
 	"go.chromium.org/tast-tests/cros/common/testexec"
 	"go.chromium.org/tast-tests/cros/local/audio"
-	"go.chromium.org/tast-tests/cros/local/audio/crastestclient"
+	"go.chromium.org/tast-tests/cros/local/audio/crastests"
 	audiofixture "go.chromium.org/tast-tests/cros/local/audio/fixture"
 	"go.chromium.org/tast-tests/cros/local/chrome"
 	"go.chromium.org/tast-tests/cros/local/chrome/uiauto/faillog"
@@ -95,7 +95,7 @@ func setInputEnabled(ctx context.Context, tconn *chrome.TestConn, enabled bool) 
 
 func playAndCaptureToCalculateRMS(ctx context.Context, input, output audio.TestRawData) (float64, error) {
 	// Playback function by CRAS.
-	playCmd := crastestclient.PlaybackFileCommand(
+	playCmd := crastests.PlaybackFileCommand(
 		ctx, input.Path,
 		input.Duration,
 		input.Channels,
@@ -111,7 +111,7 @@ func playAndCaptureToCalculateRMS(ctx context.Context, input, output audio.TestR
 	}
 
 	// Capture function by CRAS.
-	captureErr := crastestclient.CaptureFileCommand(
+	captureErr := crastests.CaptureFileCommand(
 		ctx, output.Path,
 		output.Duration,
 		output.Channels,

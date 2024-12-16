@@ -19,7 +19,7 @@ import (
 	"go.chromium.org/tast-tests/cros/local/a11y/sts"
 	"go.chromium.org/tast-tests/cros/local/a11y/tts"
 	"go.chromium.org/tast-tests/cros/local/arc"
-	"go.chromium.org/tast-tests/cros/local/audio/crastestclient"
+	"go.chromium.org/tast-tests/cros/local/audio/crastests"
 	"go.chromium.org/tast-tests/cros/local/chrome"
 	"go.chromium.org/tast-tests/cros/local/chrome/uiauto"
 	"go.chromium.org/tast-tests/cros/local/chrome/uiauto/faillog"
@@ -132,11 +132,11 @@ func prepareFeature(ctx context.Context, s *testing.State, cr *chrome.Chrome, a 
 	ctx, cancel := ctxutil.Shorten(ctx, 5*time.Second)
 	defer cancel()
 
-	if err := crastestclient.Mute(ctx); err != nil {
+	if err := crastests.Mute(ctx); err != nil {
 		return nil, errors.Wrap(err, "failed to mute device")
 	}
 	tdh.append(func(ctx context.Context) error {
-		return crastestclient.Unmute(ctx)
+		return crastests.Unmute(ctx)
 	})
 
 	if err := a.WaitIntentHelper(ctx); err != nil {

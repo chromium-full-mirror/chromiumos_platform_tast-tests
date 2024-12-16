@@ -10,7 +10,7 @@ import (
 	"time"
 
 	"go.chromium.org/tast-tests/cros/local/a11y"
-	"go.chromium.org/tast-tests/cros/local/audio/crastestclient"
+	"go.chromium.org/tast-tests/cros/local/audio/crastests"
 	"go.chromium.org/tast-tests/cros/local/chrome"
 	"go.chromium.org/tast-tests/cros/local/chrome/ash"
 	"go.chromium.org/tast-tests/cros/local/chrome/uiauto"
@@ -46,11 +46,11 @@ func TTSExtensionSettings(ctx context.Context, s *testing.State) {
 	// Mute the device to avoid noisiness.
 	ctxCleanup := ctx
 	ctx, cancel := ctxutil.Shorten(ctx, time.Second)
-	if err := crastestclient.Mute(ctx); err != nil {
+	if err := crastests.Mute(ctx); err != nil {
 		s.Fatal("Failed to mute: ", err)
 	}
 	defer cancel()
-	defer crastestclient.Unmute(ctxCleanup)
+	defer crastests.Unmute(ctxCleanup)
 
 	// Force-enable ChromeVox for the duration of this test.
 	if err := a11y.SetFeatureEnabled(ctx, tconn, a11y.SpokenFeedback, true); err != nil {

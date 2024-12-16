@@ -12,7 +12,7 @@ import (
 
 	"go.chromium.org/tast-tests/cros/local/a11y"
 	"go.chromium.org/tast-tests/cros/local/a11y/tts"
-	"go.chromium.org/tast-tests/cros/local/audio/crastestclient"
+	"go.chromium.org/tast-tests/cros/local/audio/crastests"
 	"go.chromium.org/tast-tests/cros/local/chrome"
 	"go.chromium.org/tast-tests/cros/local/chrome/uiauto"
 	"go.chromium.org/tast-tests/cros/local/chrome/uiauto/nodewith"
@@ -66,11 +66,11 @@ func ChromevoxHint(ctx context.Context, s *testing.State) {
 	}
 
 	// Mute the device to avoid noisiness.
-	if err := crastestclient.Mute(ctx); err != nil {
+	if err := crastests.Mute(ctx); err != nil {
 		s.Fatal("Failed to mute: ", err)
 	}
 
-	defer crastestclient.Unmute(cleanupCtx)
+	defer crastests.Unmute(cleanupCtx)
 
 	oobeConn, err := cr.WaitForOOBEConnection(ctx)
 	if err != nil {

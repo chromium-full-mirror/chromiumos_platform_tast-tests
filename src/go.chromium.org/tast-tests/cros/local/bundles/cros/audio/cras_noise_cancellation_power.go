@@ -9,7 +9,7 @@ import (
 	"time"
 
 	"go.chromium.org/tast-tests/cros/common/testexec"
-	"go.chromium.org/tast-tests/cros/local/audio/crastestclient"
+	"go.chromium.org/tast-tests/cros/local/audio/crastests"
 	"go.chromium.org/tast-tests/cros/local/audio/fixture"
 	"go.chromium.org/tast-tests/cros/local/audio/nodematch"
 	"go.chromium.org/tast-tests/cros/local/power"
@@ -139,11 +139,11 @@ func CrasNoiseCancellationPower(ctx context.Context, s *testing.State) {
 	const (
 		interval     = 5 * time.Second // Power metrics collect interval.
 		testDuration = 5 * time.Minute
-		blockSize    = 480
+		bufferSize   = 480
 	)
 
-	playbackCommand := crastestclient.PlaybackCommand(ctx, int(testDuration.Seconds()), blockSize)
-	captureCommand := crastestclient.CaptureCommand(ctx, int(testDuration.Seconds()), blockSize)
+	playbackCommand := crastests.PlaybackCommand(ctx, int(testDuration.Seconds()), bufferSize)
+	captureCommand := crastests.CaptureCommand(ctx, int(testDuration.Seconds()), bufferSize)
 	captureCommand.Args = append(captureCommand.Args, param.extraCrasClientArgs...)
 
 	r := power.NewRecorder(ctx, interval, s.OutDir(), s.TestName())

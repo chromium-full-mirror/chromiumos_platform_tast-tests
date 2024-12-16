@@ -10,6 +10,7 @@ import (
 
 	"go.chromium.org/tast-tests/cros/local/audio"
 	"go.chromium.org/tast-tests/cros/local/audio/crastestclient"
+	"go.chromium.org/tast-tests/cros/local/audio/crastests"
 	"go.chromium.org/tast-tests/cros/local/audio/debug"
 	"go.chromium.org/tast-tests/cros/local/audio/fixture"
 	"go.chromium.org/tast-tests/cros/local/audio/nodematch"
@@ -56,8 +57,8 @@ func FloopRecordStress(ctx context.Context, s *testing.State) {
 	defer cancel()
 
 	// Playback function by CRAS.
-	stream1 := crastestclient.PlaybackCommand(runCtx, duration, 512)
-	stream2 := crastestclient.PlaybackCommand(runCtx, duration, 4096)
+	stream1 := crastests.PlaybackCommand(runCtx, duration, 512)
+	stream2 := crastests.PlaybackCommand(runCtx, duration, 4096)
 
 	stream1.Start()
 	stream2.Start()

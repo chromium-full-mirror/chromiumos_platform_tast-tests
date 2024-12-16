@@ -17,6 +17,7 @@ import (
 	"go.chromium.org/tast-tests/cros/local/arc"
 	"go.chromium.org/tast-tests/cros/local/audio"
 	"go.chromium.org/tast-tests/cros/local/audio/crastestclient"
+	"go.chromium.org/tast-tests/cros/local/audio/crastests"
 	audioFixture "go.chromium.org/tast-tests/cros/local/audio/fixture"
 	"go.chromium.org/tast-tests/cros/local/camera/pnp"
 	"go.chromium.org/tast-tests/cros/local/camera/testutil"
@@ -461,7 +462,7 @@ func (f *fixture) SetUp(ctx context.Context, s *testing.FixtState) interface{} {
 	}
 	f.tb = tb
 
-	if err := crastestclient.Mute(ctx); err != nil {
+	if err := crastests.Mute(ctx); err != nil {
 		s.Fatal("Failed to mute audio: ", err)
 	}
 
@@ -515,7 +516,7 @@ func (f *fixture) TearDown(ctx context.Context, s *testing.FixtState) {
 		}
 	}
 
-	if err := crastestclient.Unmute(ctx); err != nil {
+	if err := crastests.Unmute(ctx); err != nil {
 		s.Error("Failed to unmute audio: ", err)
 	}
 

@@ -10,7 +10,7 @@ import (
 	"time"
 
 	"go.chromium.org/tast-tests/cros/local/audio"
-	"go.chromium.org/tast-tests/cros/local/audio/crastestclient"
+	"go.chromium.org/tast-tests/cros/local/audio/crastests"
 	"go.chromium.org/tast-tests/cros/local/chrome"
 	"go.chromium.org/tast-tests/cros/local/chrome/uiauto"
 	"go.chromium.org/tast-tests/cros/local/chrome/uiauto/nodewith"
@@ -41,7 +41,7 @@ func AudioFromFile(ctx context.Context, audioFilePath string) error {
 	}
 
 	// Playback function by CRAS.
-	playCmd := crastestclient.PlaybackFileCommand(
+	playCmd := crastests.PlaybackFileCommand(
 		ctx, audioInput.Path,
 		audioInput.Duration,
 		audioInput.Channels,

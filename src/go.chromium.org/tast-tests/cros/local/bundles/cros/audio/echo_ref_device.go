@@ -18,6 +18,7 @@ import (
 	"go.chromium.org/tast-tests/cros/common/testexec"
 	"go.chromium.org/tast-tests/cros/local/audio"
 	"go.chromium.org/tast-tests/cros/local/audio/crastestclient"
+	"go.chromium.org/tast-tests/cros/local/audio/crastests"
 	"go.chromium.org/tast-tests/cros/local/upstart"
 	"go.chromium.org/tast/core/ctxutil"
 	"go.chromium.org/tast/core/testing"
@@ -143,7 +144,7 @@ func EchoRefDevice(ctx context.Context, s *testing.State) {
 	}
 
 	testing.ContextLog(ctx, "Capture output to ", recording.Path)
-	if err := crastestclient.CaptureFileCommand(
+	if err := crastests.CaptureFileCommand(
 		ctx, recording.Path,
 		recording.Duration,
 		recording.Channels,

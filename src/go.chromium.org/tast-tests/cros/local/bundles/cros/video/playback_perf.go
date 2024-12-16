@@ -8,7 +8,7 @@ import (
 	"context"
 	"time"
 
-	"go.chromium.org/tast-tests/cros/local/audio/crastestclient"
+	"go.chromium.org/tast-tests/cros/local/audio/crastests"
 	"go.chromium.org/tast-tests/cros/local/bundles/cros/video/playback"
 	"go.chromium.org/tast-tests/cros/local/chrome"
 	"go.chromium.org/tast-tests/cros/local/chrome/ash"
@@ -1740,10 +1740,10 @@ func PlaybackPerf(ctx context.Context, s *testing.State) {
 	}
 	defer vl.Close()
 
-	if err := crastestclient.Mute(ctx); err != nil {
+	if err := crastests.Mute(ctx); err != nil {
 		s.Fatal("Failed to mute device: ", err)
 	}
-	defer crastestclient.Unmute(ctx)
+	defer crastests.Unmute(ctx)
 
 	playback.RunTest(ctx, s, tconn, testOpt)
 }

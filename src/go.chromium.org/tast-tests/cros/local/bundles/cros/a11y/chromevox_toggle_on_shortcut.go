@@ -11,7 +11,7 @@ import (
 	"time"
 
 	"go.chromium.org/tast-tests/cros/local/a11y/tts"
-	"go.chromium.org/tast-tests/cros/local/audio/crastestclient"
+	"go.chromium.org/tast-tests/cros/local/audio/crastests"
 	"go.chromium.org/tast-tests/cros/local/chrome"
 	"go.chromium.org/tast/core/ctxutil"
 	"go.chromium.org/tast/core/testing"
@@ -37,13 +37,13 @@ func ChromevoxToggleOnShortcut(ctx context.Context, s *testing.State) {
 	tconn, _ := cr.TestAPIConn(ctx)
 
 	// Mute the device to avoid noisiness.
-	if err := crastestclient.Mute(ctx); err != nil {
+	if err := crastests.Mute(ctx); err != nil {
 		s.Fatal("Failed to mute: ", err)
 	}
 	ctxCleanup := ctx
 	ctx, cancel := ctxutil.Shorten(ctx, time.Second)
 	defer cancel()
-	defer crastestclient.Unmute(ctxCleanup)
+	defer crastests.Unmute(ctxCleanup)
 
 	// Get a speech monitor for the Google TTS engine.
 	ed := tts.EngineData{

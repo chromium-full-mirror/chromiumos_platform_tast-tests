@@ -12,6 +12,7 @@ import (
 	"go.chromium.org/tast-tests/cros/common/fixture"
 	"go.chromium.org/tast-tests/cros/local/audio"
 	"go.chromium.org/tast-tests/cros/local/audio/crastestclient"
+	"go.chromium.org/tast-tests/cros/local/audio/crastests"
 	audiofixture "go.chromium.org/tast-tests/cros/local/audio/fixture"
 	"go.chromium.org/tast-tests/cros/local/audio/nodematch"
 	"go.chromium.org/tast/core/testing"
@@ -46,7 +47,7 @@ func CrasLoopbackCaptureTimestamp(ctx context.Context, s *testing.State) {
 	runCtx, cancel := context.WithTimeout(ctx, duration+5*time.Second)
 	defer cancel()
 
-	playbackCmd := crastestclient.PlaybackFileCommand(runCtx, "/dev/urandom", int(duration.Seconds()), 2, 48000)
+	playbackCmd := crastests.PlaybackFileCommand(runCtx, "/dev/urandom", int(duration.Seconds()), 2, 48000)
 	captureCmd := crastestclient.PinCaptureCommand(runCtx, floopDev, int(duration.Seconds()), 480)
 	captureCmd.Args = append(captureCmd.Args, "--show_ooo_timestamp")
 

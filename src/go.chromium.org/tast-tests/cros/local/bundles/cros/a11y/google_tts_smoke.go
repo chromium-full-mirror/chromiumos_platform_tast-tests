@@ -14,6 +14,7 @@ import (
 	"go.chromium.org/tast-tests/cros/local/audio"
 	"go.chromium.org/tast-tests/cros/local/audio/audionode"
 	"go.chromium.org/tast-tests/cros/local/audio/crastestclient"
+	"go.chromium.org/tast-tests/cros/local/audio/crastests"
 	"go.chromium.org/tast-tests/cros/local/chrome"
 	"go.chromium.org/tast/core/ctxutil"
 	"go.chromium.org/tast/core/errors"
@@ -61,10 +62,10 @@ func GoogleTtsSmoke(ctx context.Context, s *testing.State) {
 	}
 
 	// Mute the device to avoid noisiness.
-	if err := crastestclient.Mute(ctx); err != nil {
+	if err := crastests.Mute(ctx); err != nil {
 		s.Fatal("Failed to mute device: ", err)
 	}
-	defer crastestclient.Unmute(ctxCleanup)
+	defer crastests.Unmute(ctxCleanup)
 
 	oobeConn, err := cr.WaitForOOBEConnection(ctx)
 	if err != nil {

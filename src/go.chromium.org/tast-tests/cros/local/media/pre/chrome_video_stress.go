@@ -8,7 +8,7 @@ import (
 	"context"
 	"path/filepath"
 
-	"go.chromium.org/tast-tests/cros/local/audio/crastestclient"
+	"go.chromium.org/tast-tests/cros/local/audio/crastests"
 	"go.chromium.org/tast-tests/cros/local/chrome"
 	"go.chromium.org/tast-tests/cros/local/chrome/ash"
 	"go.chromium.org/tast-tests/cros/local/chrome/display"
@@ -119,7 +119,7 @@ func (f *chromeVideoStressImpl) SetUp(ctx context.Context, s *testing.FixtState)
 		s.Fatal("Failed to set values for verbose logging")
 	}
 	f.vl = vl
-	if err := crastestclient.Mute(ctx); err != nil {
+	if err := crastests.Mute(ctx); err != nil {
 		s.Fatal("Failed to mute device: ", err)
 	}
 	chrome.Lock()
@@ -145,7 +145,7 @@ func (f *chromeVideoStressImpl) TearDown(ctx context.Context, s *testing.FixtSta
 	if f.vl != nil {
 		f.vl.Close()
 	}
-	crastestclient.Unmute(ctx)
+	crastests.Unmute(ctx)
 
 	if err := f.cr.Close(ctx); err != nil {
 		s.Log("Failed to close Chrome connection: ", err)

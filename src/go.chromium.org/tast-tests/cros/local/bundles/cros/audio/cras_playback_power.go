@@ -10,7 +10,7 @@ import (
 
 	"go.chromium.org/tast-tests/cros/common/testexec"
 	"go.chromium.org/tast-tests/cros/local/audio"
-	"go.chromium.org/tast-tests/cros/local/audio/crastestclient"
+	"go.chromium.org/tast-tests/cros/local/audio/crastests"
 	"go.chromium.org/tast-tests/cros/local/power"
 	"go.chromium.org/tast/core/ctxutil"
 	"go.chromium.org/tast/core/errors"
@@ -100,10 +100,10 @@ func CrasPlaybackPower(ctx context.Context, s *testing.State) {
 	const (
 		interval     = 5 * time.Second // Power metrics collect interval.
 		testDuration = 20 * time.Minute
-		blockSize    = 480
+		bufferSize   = 480
 	)
 
-	playbackCommand := crastestclient.PlaybackCommand(ctx, int(testDuration.Seconds()), blockSize)
+	playbackCommand := crastests.PlaybackCommand(ctx, int(testDuration.Seconds()), bufferSize)
 
 	r := power.NewRecorder(ctx, interval, s.OutDir(), s.TestName())
 	defer r.Close(cleanupCtx)

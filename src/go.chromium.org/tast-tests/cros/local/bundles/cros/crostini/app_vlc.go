@@ -16,6 +16,7 @@ import (
 	"go.chromium.org/tast-tests/cros/common/testexec"
 	"go.chromium.org/tast-tests/cros/local/audio"
 	"go.chromium.org/tast-tests/cros/local/audio/crastestclient"
+	"go.chromium.org/tast-tests/cros/local/audio/crastests"
 	"go.chromium.org/tast-tests/cros/local/audio/fixture"
 	"go.chromium.org/tast-tests/cros/local/chrome/uiauto"
 	"go.chromium.org/tast-tests/cros/local/chrome/uiauto/faillog"
@@ -130,7 +131,7 @@ func AppVLC(ctx context.Context, s *testing.State) {
 
 	recordingFile := "/tmp/vlc_recording.raw"
 
-	if err := crastestclient.CaptureFileCommand(
+	if err := crastests.CaptureFileCommand(
 		ctx, recordingFile, int(sampleDuration.Seconds()),
 		audioChannels, sampleRate).Run(testexec.DumpLogOnError); err != nil {
 

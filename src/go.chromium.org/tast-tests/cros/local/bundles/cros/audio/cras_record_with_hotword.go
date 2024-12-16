@@ -14,6 +14,7 @@ import (
 	"go.chromium.org/tast-tests/cros/common/testexec"
 	"go.chromium.org/tast-tests/cros/local/audio"
 	"go.chromium.org/tast-tests/cros/local/audio/crastestclient"
+	"go.chromium.org/tast-tests/cros/local/audio/crastests"
 	"go.chromium.org/tast-tests/cros/local/audio/fixture"
 	"go.chromium.org/tast/core/testing"
 	"go.chromium.org/tast/core/testing/hwdep"
@@ -75,7 +76,7 @@ func CrasRecordWithHotword(ctx context.Context, s *testing.State) {
 	}
 
 	testing.ContextLog(runCtx, "Capture output to ", recording.Path)
-	if err := crastestclient.CaptureFileCommand(
+	if err := crastests.CaptureFileCommand(
 		runCtx, recording.Path,
 		recording.Duration,
 		recording.Channels,

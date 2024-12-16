@@ -14,7 +14,7 @@ import (
 	"time"
 
 	"go.chromium.org/tast-tests/cros/local/a11y/tts"
-	"go.chromium.org/tast-tests/cros/local/audio/crastestclient"
+	"go.chromium.org/tast-tests/cros/local/audio/crastests"
 	"go.chromium.org/tast-tests/cros/local/chrome"
 	"go.chromium.org/tast-tests/cros/local/chrome/browser"
 	"go.chromium.org/tast-tests/cros/local/chrome/uiauto"
@@ -253,11 +253,11 @@ func SetUpTTSFeature(tfi TTSFeatureInputs) (tfd TTSFeatureData, e error) {
 	}
 
 	// Mute the device to avoid noisiness.
-	if err := crastestclient.Mute(ctx); err != nil {
+	if err := crastests.Mute(ctx); err != nil {
 		return newNoOpTTSFeatureData(tdown), errors.Wrap(err, "failed to mute device")
 	}
 	tdown.Append(func() error {
-		return crastestclient.Unmute(cleanupCtx)
+		return crastests.Unmute(cleanupCtx)
 	})
 
 	if err := SetFeatureEnabled(ctx, tconn, feature, true); err != nil {

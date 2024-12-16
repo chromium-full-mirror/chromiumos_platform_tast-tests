@@ -20,6 +20,7 @@ import (
 	"go.chromium.org/tast-tests/cros/local/arc"
 	"go.chromium.org/tast-tests/cros/local/audio"
 	"go.chromium.org/tast-tests/cros/local/audio/crastestclient"
+	"go.chromium.org/tast-tests/cros/local/audio/crastests"
 	"go.chromium.org/tast-tests/cros/local/audio/fixture"
 	arcaudio "go.chromium.org/tast-tests/cros/local/bundles/cros/arc/audio"
 	"go.chromium.org/tast-tests/cros/local/chrome/ash"
@@ -310,20 +311,20 @@ func AudioOboetesterGlitch(ctx context.Context, s *testing.State) {
 		crastestclient.DumpAudioDiagnostics(ctx, s.OutDir())
 	}(cleanupCtx)
 
-	// Capture audio with crastestclient and gzip the result.
+	// Capture audio with crastests and gzip the result.
 	rawCaptureFilePath := path.Join(s.OutDir(), "capture.raw")
 	gzipCaptureFilePath := path.Join(s.OutDir(), "capture.raw.gz")
-	cmd := crastestclient.CaptureFileCommand(
+	cmd := crastests.CaptureFileCommand(
 		ctx, rawCaptureFilePath,
 		testDuration+5, // Add 5 seconds buffer for the audio starting delay.
 		8,
 		48000)
 	if err := cmd.Start(); err != nil {
-		s.Fatal("Start crastestclient capture error: ", err)
+		s.Fatal("Start crastests capture error: ", err)
 	}
 	defer func(ctx context.Context) {
 		if err := cmd.Wait(testexec.DumpLogOnError); err != nil {
-			testing.ContextLog(ctx, "Wait for crastestclient capture error: ", err)
+			testing.ContextLog(ctx, "Wait for crastests capture error: ", err)
 			return
 		}
 

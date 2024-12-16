@@ -11,7 +11,7 @@ import (
 	"strings"
 	"time"
 
-	"go.chromium.org/tast-tests/cros/local/audio/crastestclient"
+	"go.chromium.org/tast-tests/cros/local/audio/crastests"
 	"go.chromium.org/tast-tests/cros/local/chrome"
 	"go.chromium.org/tast-tests/cros/local/chrome/cuj"
 	"go.chromium.org/tast-tests/cros/local/chrome/uiauto"
@@ -524,7 +524,7 @@ func SetScreenSaverHelper(ctx context.Context, cr *chrome.Chrome, tconn *chrome.
 		defer uiHandler.Close(cleanupCtx)
 
 		// Mute the device to avoid noisiness.
-		if err := crastestclient.Mute(ctx); err != nil {
+		if err := crastests.Mute(ctx); err != nil {
 			errors.Wrap(err, "failed to mute device")
 		}
 

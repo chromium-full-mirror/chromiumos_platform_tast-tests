@@ -15,7 +15,7 @@ import (
 	"go.chromium.org/tast-tests/cros/common/testexec"
 	"go.chromium.org/tast-tests/cros/common/usbutils"
 	"go.chromium.org/tast-tests/cros/local/audio"
-	"go.chromium.org/tast-tests/cros/local/audio/crastestclient"
+	"go.chromium.org/tast-tests/cros/local/audio/crastests"
 	"go.chromium.org/tast-tests/cros/local/chrome"
 	"go.chromium.org/tast-tests/cros/local/chrome/cuj"
 	"go.chromium.org/tast-tests/cros/local/hdcputils"
@@ -91,10 +91,10 @@ func PlayH264AV1OnExternalDisplay(ctx context.Context, s *testing.State) {
 	}
 
 	// Mute the device to avoid noisiness.
-	if err := crastestclient.Mute(ctx); err != nil {
+	if err := crastests.Mute(ctx); err != nil {
 		s.Fatal("Failed to mute: ", err)
 	}
-	defer crastestclient.Unmute(cleanupCtx)
+	defer crastests.Unmute(cleanupCtx)
 
 	const isExtDisplay = true
 	defer cuj.SwitchWindowToDisplay(cleanupCtx, tconn, kb, !isExtDisplay)(ctx)
