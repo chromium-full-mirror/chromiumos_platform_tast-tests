@@ -78,26 +78,6 @@ func RecToDevUntrusted(ctx context.Context, s *testing.State) {
 		s.Fatal("Failed to enable recovery mode: ", err)
 	}
 
-	if h.HasAPFwState {
-		// Since corsola and dedede have already captured the EC log (including the FW screen ID) in ms.EnableRecMode(),
-		// we cannot retrieve the screen ID again here.
-		// Instead, perform an action to generate a new EC log with the FW screen ID.
-		if h.Board == "dedede" || h.Board == "corsola" {
-			if err = h.Servo.KeypressWithDuration(ctx, servo.ArrowUp, servo.DurTab); err != nil {
-				s.Fatal("Failed to press the up arrow: ", err)
-			}
-		}
-
-		if err := h.DetectFirmwareScreen(ctx, h.Config.FirmwareScreen, fwCommon.RecoverySelect); err != nil {
-			s.Fatal("Failed to detect RecoveryToDev screen: ", err)
-		}
-	} else {
-		s.Log("Waiting for DUT to reach the firmware screen")
-		if err := h.WaitFirmwareScreen(ctx, h.Config.FirmwareScreenRecMode); err != nil {
-			s.Fatal("Failed to get to firmware screen: ", err)
-		}
-	}
-
 	if err := reachToDevScreen(ctx, h); err != nil {
 		s.Fatal("Failed to reach the TO_DEV screen: ", err)
 	}

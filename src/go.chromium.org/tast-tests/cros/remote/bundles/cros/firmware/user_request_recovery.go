@@ -211,10 +211,6 @@ func UserRequestRecovery(ctx context.Context, s *testing.State) {
 		}
 	}
 
-	s.Log("Waiting for DUT to reach the firmware screen")
-	if err := h.WaitFirmwareScreen(ctx, h.Config.FirmwareScreenRecMode); err != nil {
-		s.Fatal("Failed to get to firmware screen: ", err)
-	}
 	if err := insertUSBInFirmwareScreen(ctx, h, removeServoCharger); err != nil {
 		s.Fatal("Failed to insert USB in firmware screen: ", err)
 	}

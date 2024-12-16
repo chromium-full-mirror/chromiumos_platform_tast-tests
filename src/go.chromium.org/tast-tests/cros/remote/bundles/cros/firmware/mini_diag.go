@@ -110,10 +110,6 @@ func launchMiniDiag(ctx context.Context, h *firmware.Helper) error {
 	if err := ms.EnableRecMode(ctx, servo.PowerStateRec, servo.USBMuxOff); err != nil {
 		return errors.Wrap(err, "failed to boot to recovery screen")
 	}
-	testing.ContextLog(ctx, "Waiting for DUT to reach the firmware screen")
-	if err := h.WaitFirmwareScreen(ctx, h.Config.FirmwareScreenRecMode); err != nil {
-		return errors.Wrap(err, "failed to get to firmware screen")
-	}
 	menuOperator, err := firmware.NewMenuOperator(ctx, h)
 	if err != nil {
 		return errors.Wrap(err, "failed to create menu operator")

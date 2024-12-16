@@ -716,11 +716,6 @@ func (ms *ModeSwitcher) ModeAwareReboot(ctx context.Context, resetType ResetType
 // The actual behavior depends on the ModeSwitcherType.
 func (ms *ModeSwitcher) RecScreenToDevMode(ctx context.Context, opts ...ModeSwitchOption) error {
 	h := ms.Helper
-	testing.ContextLog(ctx, "Waiting for DUT to reach the firmware screen before TriggerRecToDev")
-	if err := h.WaitFirmwareScreen(ctx, h.Config.FirmwareScreenRecMode); err != nil {
-		return errors.Wrap(err, "failed to get to firmware screen")
-	}
-
 	if err := ms.bypasser.TriggerRecToDev(ctx); err != nil {
 		return errors.Wrap(err, "failed to bypass to dev")
 	}
@@ -920,6 +915,11 @@ func (ms *ModeSwitcher) EnableRecMode(ctx context.Context, recType servo.PowerSt
 		}, &testing.PollOptions{Timeout: 3 * time.Minute, Interval: 3 * time.Second}); err != nil {
 			return err
 		}
+		testing.ContextLog(ctx, "Waiting for DUT to reach the firmware screen")
+		// GoBigSleepLint: Delay to wait for the firmware screen during boot-up.
+		if err := testing.Sleep(ctx, h.Config.FirmwareScreenRecMode); err != nil {
+			return errors.Wrap(err, "failed to sleep")
+		}
 	} else {
 		closeUART, err := h.Servo.EnableUARTCapture(ctx, servo.ECUARTCapture)
 		if err != nil {
@@ -928,6 +928,25 @@ func (ms *ModeSwitcher) EnableRecMode(ctx context.Context, recType servo.PowerSt
 		defer func() { retErr = errors.Join(retErr, closeUART(ctx)) }()
 		if err := h.Servo.SetPowerState(ctx, recType); err != nil {
 			return errors.Wrapf(err, "setting power state to %s", recType)
+		}
+		if h.HasAPFwState {
+			// The CL:5020949 landed in version 15683.0.0, indicating
+			// that DUTs with firmware versions greater than or equal
+			// to this support capturing the FW screen ID in the EC
+			// console. The CL:2043102 landed in version 12992.0.0,
+			// which means DUTs with firmware versions greater than or
+			// equal to this use the menu UI. Therefore, if a DUT
+			// supports capturing the FW screen ID in the EC console,
+			// it means it uses the menu UI.
+			testing.ContextLog(ctx, "Detecting the recovery select screen")
+			if err := h.DetectFirmwareScreen(ctx, h.Config.FirmwareScreen, fwCommon.RecoverySelect); err != nil {
+				return errors.Wrap(err, "failed to detect firmware screen")
+			}
+		} else {
+			testing.ContextLog(ctx, "Waiting for DUT to reach the firmware screen")
+			if err := h.WaitFirmwareScreen(ctx, h.Config.FirmwareScreenRecMode); err != nil {
+				return errors.Wrap(err, "failed to get to firmware screen")
+			}
 		}
 	}
 

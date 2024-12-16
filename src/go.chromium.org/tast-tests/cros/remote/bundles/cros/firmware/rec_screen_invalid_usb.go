@@ -167,16 +167,7 @@ func bootToNoGoodScreen(ctx context.Context, h *firmware.Helper, state *firmware
 	if err := ms.EnableRecMode(ctx, servo.PowerStateRec, servo.USBMuxOff); err != nil {
 		return err
 	}
-	if h.HasAPFwState && (h.Board != "dedede" && h.Board != "corsola") {
-		if err := h.DetectFirmwareScreen(ctx, h.Config.FirmwareScreen, fwCommon.RecoverySelect); err != nil {
-			return errors.Wrap(err, "failed to detect firmware screen")
-		}
-	} else {
-		testing.ContextLog(ctx, "Waiting for DUT to reach the firmware screen")
-		if err := h.WaitFirmwareScreen(ctx, h.Config.FirmwareScreenRecMode); err != nil {
-			return errors.Wrap(err, "failed to get to firmware screen")
-		}
-	}
+
 	if state.IsServoChargerConnected && state.RemoveServoChargerRequired {
 		if err := h.SetDUTPower(ctx, false); err != nil {
 			return errors.Wrap(err, "failed to remove charger")

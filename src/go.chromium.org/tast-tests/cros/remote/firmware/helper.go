@@ -1749,8 +1749,8 @@ func (h *Helper) WaitFirmwareScreen(ctx context.Context, timeout time.Duration) 
 					// zork/gumboz and hatch/nightfury, we've seen that when
 					// the keyboard was found enabled, there might still be a
 					// slight delay until the firmware screen was displayed.
-					// Sleeping for 1 second usually helped.
-					if err := testing.Sleep(ctx, 1*time.Second); err != nil {
+					// Sleeping for 3 seconds usually helped.
+					if err := testing.Sleep(ctx, 3*time.Second); err != nil {
 						return errors.Wrap(err, "failed to sleep")
 					}
 					return nil
@@ -1792,6 +1792,12 @@ func (h *Helper) DetectFirmwareScreen(ctx context.Context, timeout time.Duration
 		return errors.Errorf("failed to find pattern %s in the output", fwScreenRe)
 	}
 	testing.ContextLog(ctx, "Found AP_FW ", screenID)
+	// GoBigSleepLint: On some machines, there might still be a
+	// slight delay until the firmware screen was displayed.
+	// Sleeping for 3 seconds usually helped.
+	if err := testing.Sleep(ctx, 3*time.Second); err != nil {
+		return errors.Wrap(err, "failed to sleep")
+	}
 	return nil
 }
 
@@ -1986,9 +1992,6 @@ func (h *Helper) LaunchMiniOS(ctx context.Context, kbShortcutBoot, miniOSOld boo
 	if err := ms.EnableRecMode(ctx, servo.PowerStateRec, servo.USBMuxOff); err != nil {
 		return errors.Wrap(err, "failed to enable recovery mode")
 	}
-	if err := h.WaitFirmwareScreen(ctx, h.Config.FirmwareScreenRecMode); err != nil {
-		return errors.Wrap(err, "failed to get to firmware screen")
-	}
 	if kbShortcutBoot {
 		newbp, err := NewBypasser(ctx, h)
 		if err != nil {
@@ -2142,10 +2145,6 @@ func (h *Helper) BootToRecoveryMode(ctx context.Context, state *CheckAndSetServo
 	}
 	if err := ms.EnableRecMode(ctx, recType, servo.USBMuxOff); err != nil {
 		return errors.Wrap(err, "failed to reboot the DUT into the recovery screen")
-	}
-	testing.ContextLog(ctx, "Waiting for DUT to reach the firmware screen")
-	if err := h.WaitFirmwareScreen(ctx, h.Config.FirmwareScreenRecMode); err != nil {
-		return errors.Wrap(err, "failed to get to firmware screen")
 	}
 	if state.RemoveServoChargerRequired {
 		if err := h.SetDUTPower(ctx, false); err != nil {

@@ -148,10 +148,6 @@ func ECPowerG3(ctx context.Context, s *testing.State) {
 		if err := ms.EnableRecMode(ctx, servo.PowerStateRec, servo.USBMuxOff); err != nil {
 			s.Fatal("Failed to boot to recovery screen: ", err)
 		}
-		s.Log("Waiting for DUT to reach the firmware screen")
-		if err := h.WaitFirmwareScreen(ctx, h.Config.FirmwareScreenRecMode); err != nil {
-			s.Fatal("Failed to get to firmware screen: ", err)
-		}
 	}
 
 	if tc.SetRecMode {

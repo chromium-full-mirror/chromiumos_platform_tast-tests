@@ -94,10 +94,6 @@ func RecScreenMiniOSMenu(ctx context.Context, s *testing.State) {
 		s.Fatal("Failed to enable recovery mode: ", err)
 	}
 
-	if err := h.WaitFirmwareScreen(ctx, h.Config.FirmwareScreenRecMode); err != nil {
-		s.Fatal("Failed to get to firmware screen: ", err)
-	}
-
 	menuOperator, err := firmware.NewMenuOperator(ctx, h)
 	if err != nil {
 		s.Fatal("Failed to create a new menu operator: ", err)

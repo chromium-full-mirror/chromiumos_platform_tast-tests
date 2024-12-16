@@ -9,6 +9,7 @@ import (
 	"strings"
 	"time"
 
+	fwCommon "go.chromium.org/tast-tests/cros/common/firmware"
 	"go.chromium.org/tast-tests/cros/common/servo"
 	"go.chromium.org/tast-tests/cros/remote/bundles/cros/firmware/utils"
 	"go.chromium.org/tast-tests/cros/remote/firmware"
@@ -128,9 +129,21 @@ func RecToDevFromECRW(ctx context.Context, s *testing.State) {
 		s.Fatal("Failed to press power key on DUT: ", err)
 	}
 
+	if h.HasAPFwState {
+		s.Log("Detecting the recovery select screen")
+		if err := h.DetectFirmwareScreen(ctx, h.Config.FirmwareScreen, fwCommon.RecoverySelect); err != nil {
+			s.Fatal("Failed to detect firmware screen")
+		}
+	} else {
+		s.Log("Waiting for DUT to reach the firmware screen")
+		if err := h.WaitFirmwareScreen(ctx, h.Config.FirmwareScreenRecMode); err != nil {
+			s.Fatal("Failed to detect firmware screen")
+		}
+	}
+
 	s.Log("Pressing Ctrl-D or equivalent to get to Dev mode (expected to fail)")
 	if err := ms.RecScreenToDevMode(ctx, firmware.SkipWaitConnect); err != nil {
-		testing.ContextLog(ctx, "Failed to transition to dev mode from rec mode, this is expected behavior")
+		s.Log("Failed to transition to dev mode from rec mode, this is expected behavior")
 		if err := h.Servo.SetPowerState(ctx, servo.PowerStateWarmReset); err != nil {
 			s.Fatal("Failed to perform a warm reset: ", err)
 		}

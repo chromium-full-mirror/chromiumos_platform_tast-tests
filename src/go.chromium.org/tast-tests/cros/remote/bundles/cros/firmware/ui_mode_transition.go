@@ -85,18 +85,6 @@ func UIModeTransition(ctx context.Context, s *testing.State) {
 			expBootMode:  fwCommon.BootModeNormal,
 		},
 	} {
-		var closeUART func(ctx context.Context) error
-		if h.HasAPFwState {
-			closeUART, err := h.Servo.EnableUARTCapture(ctx, servo.ECUARTCapture)
-			if err != nil {
-				s.Fatal("Failed to enable capture EC UART: ", err)
-			}
-			defer func() {
-				if err := closeUART(ctx); err != nil {
-					s.Error("Failed to cancel capture EC UART: ", err)
-				}
-			}()
-		}
 		switch boot.transition {
 		case normalToDev:
 			if err := ms.EnableRecMode(ctx, servo.PowerStateRec, servo.USBMuxHost); err != nil {
@@ -104,21 +92,31 @@ func UIModeTransition(ctx context.Context, s *testing.State) {
 			}
 
 			if h.HasAPFwState {
-				if err := h.DetectFirmwareScreen(ctx, h.Config.FirmwareScreen, fwCommon.RecoverySelect); err != nil {
-					s.Log("Failed to detect firmware screen: ", err)
+				closeUART, err := h.Servo.EnableUARTCapture(ctx, servo.ECUARTCapture)
+				if err != nil {
+					s.Fatal("Failed to enable capture EC UART: ", err)
 				}
-			} else {
-				s.Logf("Waiting for %s (firmware screen)", h.Config.FirmwareScreen)
-				// GoBigSleepLint: Allow time for DUT to reach firmware screen.
-				if err := testing.Sleep(ctx, h.Config.FirmwareScreen); err != nil {
-					s.Fatal("Failed to wait for firmware screen: ", err)
-				}
+				defer func() {
+					if err := closeUART(ctx); err != nil {
+						s.Error("Failed to cancel capture EC UART: ", err)
+					}
+				}()
 			}
-
 			if err := triggerRecToDev(ctx); err != nil {
 				s.Fatal("Failed to trigger recovery to dev: ", err)
 			}
 		case devToNormal:
+			if h.HasAPFwState {
+				closeUART, err := h.Servo.EnableUARTCapture(ctx, servo.ECUARTCapture)
+				if err != nil {
+					s.Fatal("Failed to enable capture EC UART: ", err)
+				}
+				defer func() {
+					if err := closeUART(ctx); err != nil {
+						s.Error("Failed to cancel capture EC UART: ", err)
+					}
+				}()
+			}
 			if err := h.Servo.SetPowerState(ctx, servo.PowerStateReset); err != nil {
 				s.Fatal("Faild to reset DUT: ", err)
 			}
@@ -153,11 +151,6 @@ func UIModeTransition(ctx context.Context, s *testing.State) {
 			s.Fatal("Failed to check boot mode: ", err)
 		} else if !isExpMode {
 			s.Fatal("Found unexpected boot mode")
-		}
-		if h.HasAPFwState {
-			if err := closeUART(ctx); err != nil {
-				s.Fatal("Failed to disable capture EC UART: ", err)
-			}
 		}
 	}
 }
