@@ -28,6 +28,7 @@ type testOptions struct {
 	timeout         time.Duration
 	requiresARC     bool
 	criticalStaging bool
+	needsAloop      bool
 	// Foundational tests that should run on all devices. These tests should be lightweight enough
 	// to be stable enough to run on low performance devices and older versions of debian.
 	foundation bool
@@ -162,7 +163,7 @@ var appTests = map[string]testOptions{
 	"app_gedit_switch_ime.go":              {},
 	"app_gedit_unshare_folder.go":          {},
 	"app_libre_office.go":                  {},
-	"app_vlc.go":                           {},
+	"app_vlc.go":                           {needsAloop: true},
 	"app_vscode_emoji.go":                  {},
 	"app_vscode_from_file_manager.go":      {},
 	"app_vscode.go":                        {foundation: true},
@@ -192,6 +193,7 @@ func TestAppTestParams(t *testing.T) {
 				DeviceMode:              devicemode.ClamshellMode,
 				MinimumContainerVersion: minimumContainerVersion,
 				CriticalStaging:         options.criticalStaging,
+				NeedsAloop:              options.needsAloop,
 			}})
 		genparams.Ensure(t, filename, params)
 	}

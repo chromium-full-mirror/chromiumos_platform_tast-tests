@@ -15,6 +15,7 @@ import (
 	"go.chromium.org/tast-tests/cros/common/policy/fakedms"
 	"go.chromium.org/tast-tests/cros/local/audio"
 	"go.chromium.org/tast-tests/cros/local/audio/crastestclient"
+	audiofixture "go.chromium.org/tast-tests/cros/local/audio/fixture"
 	"go.chromium.org/tast-tests/cros/local/chrome/uiauto/faillog"
 	"go.chromium.org/tast-tests/cros/local/kioskmode"
 	"go.chromium.org/tast-tests/cros/local/policyutil"
@@ -40,7 +41,7 @@ func init() {
 		},
 		SoftwareDeps: []string{"chrome"},
 		VarDeps:      []string{"ui.signinProfileTestExtensionManifestKey"},
-		Fixture:      fixture.FakeDMSEnrolled,
+		Fixture:      audiofixture.AloopLoaded{Parent: fixture.FakeDMSEnrolled}.Instance(),
 		Timeout:      kioskmode.SetupDuration + kioskmode.LaunchDuration + kioskmode.CleanupDuration + 30*time.Second,
 		SearchFlags: []*testing.StringPair{
 			{
@@ -85,20 +86,12 @@ func DeviceSetVolume(ctx context.Context, s *testing.State) {
 	}
 	defer faillog.DumpUITreeWithScreenshotOnError(ctx, s.OutDir(), s.HasError, cr, "kiosk_with_FloatingAccessibilityMenuEnabled")
 
-	// Set up loopback devices as fallback.
-	unload, err := audio.LoadAloop(ctx)
-	if err != nil {
-		crastestclient.DumpAudioDiagnostics(ctx, s.OutDir())
-		s.Fatal("Failed to load ALSA loopback module: ", err)
-	}
-
 	defer func(ctx context.Context) {
 		// Wait for no stream before unloading aloop as unloading while there is a stream
 		// will cause the stream in ARC to be in an invalid state.
 		if err := crastestclient.WaitForNoStream(ctx, 5*time.Second); err != nil {
 			s.Error("Wait for no stream error: ", err)
 		}
-		unload(ctx)
 	}(cleanupCtx)
 
 	// NewVolumeHelper setup also checks that there are existing audio devices to

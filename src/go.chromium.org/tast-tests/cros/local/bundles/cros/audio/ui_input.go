@@ -16,6 +16,7 @@ import (
 	"go.chromium.org/tast-tests/cros/common/testexec"
 	"go.chromium.org/tast-tests/cros/local/audio"
 	"go.chromium.org/tast-tests/cros/local/audio/crastestclient"
+	audiofixture "go.chromium.org/tast-tests/cros/local/audio/fixture"
 	"go.chromium.org/tast-tests/cros/local/chrome"
 	"go.chromium.org/tast-tests/cros/local/chrome/uiauto/faillog"
 	"go.chromium.org/tast-tests/cros/local/chrome/uiauto/quicksettings"
@@ -52,23 +53,23 @@ func init() {
 		Params: []testing.Param{
 			{
 				Name:    "gain_fieldtrial_config_disable",
-				Fixture: fixture.ChromeLoggedInWithFieldTrialConfigDisable,
+				Fixture: audiofixture.AloopLoaded{Parent: fixture.ChromeLoggedInWithFieldTrialConfigDisable}.Instance(),
 				Val:     gainSlider,
 			},
 			{
 				Name:    "mute_fieldtrial_config_disable",
-				Fixture: fixture.ChromeLoggedInWithFieldTrialConfigDisable,
+				Fixture: audiofixture.AloopLoaded{Parent: fixture.ChromeLoggedInWithFieldTrialConfigDisable}.Instance(),
 				Val:     muteButton,
 			},
 			{
 				Name:      "gain_fieldtrial_config_enable",
-				Fixture:   fixture.ChromeLoggedInWithFieldTrialConfigEnable,
+				Fixture:   audiofixture.AloopLoaded{Parent: fixture.ChromeLoggedInWithFieldTrialConfigEnable}.Instance(),
 				Val:       gainSlider,
 				ExtraAttr: []string{"informational"},
 			},
 			{
 				Name:      "mute_fieldtrial_config_enable",
-				Fixture:   fixture.ChromeLoggedInWithFieldTrialConfigEnable,
+				Fixture:   audiofixture.AloopLoaded{Parent: fixture.ChromeLoggedInWithFieldTrialConfigEnable}.Instance(),
 				Val:       muteButton,
 				ExtraAttr: []string{"informational"},
 			},
@@ -291,13 +292,6 @@ func UIInput(ctx context.Context, s *testing.State) {
 		s.Fatal("Failed to get keyboard: ", err)
 	}
 	defer kb.Close(ctx)
-
-	// Load ALSA loopback module.
-	unload, err := audio.LoadAloop(ctx)
-	if err != nil {
-		s.Fatal("Failed to load ALSA loopback module: ", err)
-	}
-	defer unload(cleanupCtx)
 
 	// Defer call to DumpUITree for debugging before unloading the ALSA loopback module.
 	defer func(ctx context.Context) {

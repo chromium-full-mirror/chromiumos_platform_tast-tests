@@ -29,32 +29,31 @@ import (
 // microphone and sets up a fake one if necessary. The caller should
 // schedule a deferred call to the returned cleanup function to unload
 // aloop if err is nil.
-func SetUpProjectorApp(ctx context.Context, tconn *chrome.TestConn, app *apps.App) (func(ctx context.Context), error) {
+func SetUpProjectorApp(ctx context.Context, tconn *chrome.TestConn, app *apps.App) error {
 	if err := launcher.LaunchAndWaitForAppOpen(tconn, *app)(ctx); err != nil {
-		return nil, errors.Wrap(err, "failed to open Projector app")
+		return errors.Wrap(err, "failed to open Projector app")
 	}
 
 	if err := DismissOnboardingDialog(ctx, tconn); err != nil {
-		return nil, errors.Wrap(err, "failed to close the onboarding dialog")
+		return errors.Wrap(err, "failed to close the onboarding dialog")
 	}
 
 	if err := audio.WaitForDevice(ctx, audio.InputStream); err == nil {
-		return func(ctx context.Context) {}, nil
+		return nil
 	}
 
 	testing.ContextLog(ctx, "Microphone is unavailable, verifying new screencast button is disabled")
 	if err := VerifyNewScreencastButtonDisabled(ctx, tconn, "Turn on microphone"); err != nil {
-		return nil, errors.Wrap(err, "microphone is unavailable, but new screencast button is enabled")
+		return errors.Wrap(err, "microphone is unavailable, but new screencast button is enabled")
 	}
 
 	// Set up CRAS Aloop for audio test. Set up a fake microphone
 	// so the test may proceed.
-	cleanup, err := voice.EnableAloop(ctx, tconn)
-	if err != nil {
-		return nil, errors.Wrap(err, "failed to enable aloop")
+	if err := voice.ActivateAloopNodes(ctx, tconn, voice.LoopbackPlayBack, voice.LoopbackCapture); err != nil {
+		return errors.Wrap(err, "failed to activate aloop")
 	}
 
-	return cleanup, nil
+	return nil
 }
 
 // DismissOnboardingDialog closes the onboarding dialog if it exists.

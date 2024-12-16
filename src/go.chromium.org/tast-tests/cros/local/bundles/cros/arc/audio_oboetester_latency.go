@@ -16,6 +16,7 @@ import (
 	"go.chromium.org/tast-tests/cros/common/perf"
 	"go.chromium.org/tast-tests/cros/local/arc"
 	"go.chromium.org/tast-tests/cros/local/audio"
+	"go.chromium.org/tast-tests/cros/local/audio/fixture"
 	arcaudio "go.chromium.org/tast-tests/cros/local/bundles/cros/arc/audio"
 	"go.chromium.org/tast-tests/cros/local/chrome/ash"
 	"go.chromium.org/tast-tests/cros/local/cryptohome"
@@ -44,7 +45,7 @@ func init() {
 				arc.WithExtraString("in_api", "aaudio"),
 				arc.WithExtraString("out_api", "aaudio"),
 			},
-			Fixture: "arcBooted",
+			Fixture: fixture.AloopLoaded{Parent: "arcBooted"}.Instance(),
 		}, {
 			Name:         "aaudio_pvsched",
 			BugComponent: "b:167279",
@@ -52,7 +53,7 @@ func init() {
 				arc.WithExtraString("in_api", "aaudio"),
 				arc.WithExtraString("out_api", "aaudio"),
 			},
-			Fixture:           "arcBootedWithPvSchedEnabled",
+			Fixture:           fixture.AloopLoaded{Parent: "arcBootedWithPvSchedEnabled"}.Instance(),
 			ExtraHardwareDeps: hwdep.D(hwdep.HasParavirtSchedControl()),
 		}, {
 			Name: "opensles",
@@ -60,7 +61,7 @@ func init() {
 				arc.WithExtraString("in_api", "opensles"),
 				arc.WithExtraString("out_api", "opensles"),
 			},
-			Fixture: "arcBooted",
+			Fixture: fixture.AloopLoaded{Parent: "arcBooted"}.Instance(),
 		}, {
 			Name:         "opensles_pvsched",
 			BugComponent: "b:167279",
@@ -68,7 +69,7 @@ func init() {
 				arc.WithExtraString("in_api", "opensles"),
 				arc.WithExtraString("out_api", "opensles"),
 			},
-			Fixture:           "arcBootedWithPvSchedEnabled",
+			Fixture:           fixture.AloopLoaded{Parent: "arcBootedWithPvSchedEnabled"}.Instance(),
 			ExtraHardwareDeps: hwdep.D(hwdep.HasParavirtSchedControl()),
 		}},
 	})

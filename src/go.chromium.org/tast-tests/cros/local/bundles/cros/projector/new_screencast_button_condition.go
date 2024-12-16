@@ -10,6 +10,7 @@ import (
 	"time"
 
 	"go.chromium.org/tast-tests/cros/local/a11y"
+	"go.chromium.org/tast-tests/cros/local/audio/fixture"
 	"go.chromium.org/tast-tests/cros/local/chrome/familylink"
 	"go.chromium.org/tast-tests/cros/local/chrome/projector"
 	"go.chromium.org/tast-tests/cros/local/chrome/uiauto"
@@ -34,7 +35,7 @@ func init() {
 		// this test a tautology.
 		SoftwareDeps: []string{"chrome", "soda", "gaia"},
 		Timeout:      5 * time.Minute,
-		Fixture:      "projectorLogin",
+		Fixture:      fixture.AloopLoaded{Parent: "projectorLogin"}.Instance(),
 	})
 }
 
@@ -48,11 +49,9 @@ func NewScreencastButtonCondition(ctx context.Context, s *testing.State) {
 	defer faillog.DumpUITreeOnError(ctxForCleanUp, s.OutDir(), s.HasError, tconn)
 
 	app := s.FixtValue().(projector.HasApp).App()
-	cleanup, err := projector.SetUpProjectorApp(ctx, tconn, app)
-	if err != nil {
+	if err := projector.SetUpProjectorApp(ctx, tconn, app); err != nil {
 		s.Fatal("Failed to set up Projector app: ", err)
 	}
-	defer cleanup(ctxForCleanUp)
 
 	s.Log("Microphone is enabled, verifying that the new screencast button is enabled")
 	ui := uiauto.New(tconn)

@@ -15,24 +15,19 @@ import (
 	"go.chromium.org/tast/core/errors"
 )
 
-// SetupLoopbackDevice setups ALSA loopback (aloop) module and select the loopback devices
-// as the output and input.
+// SetupLoopbackDevice selects the loopback devices as the output and input.
+// ALSA loopback (aloop) must be loaded via the fixture.AloopLoaded fixture
+// before this function is called.
 func SetupLoopbackDevice(ctx context.Context, cr *chrome.Chrome, outDir string, hasError func() bool) (cleanup func(context.Context), err error) {
 	timeForCleanUp := 10 * time.Second
 	ctxForCleanUp := ctx
 	ctx, cancel := ctxutil.Shorten(ctx, timeForCleanUp)
 	defer cancel()
 
-	unload, err := audio.LoadAloop(ctx)
-	if err != nil {
-		return nil, errors.Wrap(err, "failed to load ALSA loopback module")
-	}
-
 	cleanup = func(ctx context.Context) {
 		// Wait for no stream before unloading aloop as unloading while there is a stream
 		// will cause the stream in ARC to be in an invalid state.
 		_ = crastestclient.WaitForNoStream(ctx, 5*time.Second)
-		unload(ctx)
 	}
 
 	if err := audio.SetupLoopback(ctx, cr, outDir, hasError); err != nil {

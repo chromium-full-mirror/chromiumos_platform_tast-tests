@@ -20,6 +20,7 @@ import (
 	"go.chromium.org/tast-tests/cros/local/arc"
 	"go.chromium.org/tast-tests/cros/local/audio"
 	"go.chromium.org/tast-tests/cros/local/audio/crastestclient"
+	"go.chromium.org/tast-tests/cros/local/audio/fixture"
 	arcaudio "go.chromium.org/tast-tests/cros/local/bundles/cros/arc/audio"
 	"go.chromium.org/tast-tests/cros/local/chrome/ash"
 	"go.chromium.org/tast-tests/cros/local/chrome/uiauto"
@@ -69,7 +70,7 @@ func init() {
 		SoftwareDeps: []string{"chrome", "arc"},
 		Data:         []string{"oboetester_debug.apk"},
 		Attr:         []string{"group:crosbolt", "crosbolt_perbuild", "group:audio"},
-		Timeout:      7 * time.Minute,
+		Timeout:      8 * time.Minute,
 		Params: []testing.Param{
 			{
 				Name: "aaudio_noload",
@@ -81,7 +82,7 @@ func init() {
 					},
 					threshold: 30,
 				},
-				Fixture: "arcBooted",
+				Fixture: fixture.AloopLoaded{Parent: "arcBooted"}.Instance(),
 			},
 			{
 				Name:         "aaudio_noload_pvsched",
@@ -94,7 +95,7 @@ func init() {
 					},
 					threshold: 30,
 				},
-				Fixture:           "arcBootedWithPvSchedEnabled",
+				Fixture:           fixture.AloopLoaded{Parent: "arcBootedWithPvSchedEnabled"}.Instance(),
 				ExtraHardwareDeps: hwdep.D(hwdep.HasParavirtSchedControl()),
 			},
 			{
@@ -106,7 +107,7 @@ func init() {
 						arc.WithExtraString("out_api", "aaudio"),
 					},
 				},
-				Fixture: "arcBooted",
+				Fixture: fixture.AloopLoaded{Parent: "arcBooted"}.Instance(),
 			},
 			{
 				Name:         "aaudio_speedometer_pvsched",
@@ -118,7 +119,7 @@ func init() {
 						arc.WithExtraString("out_api", "aaudio"),
 					},
 				},
-				Fixture:           "arcBootedWithPvSchedEnabled",
+				Fixture:           fixture.AloopLoaded{Parent: "arcBootedWithPvSchedEnabled"}.Instance(),
 				ExtraHardwareDeps: hwdep.D(hwdep.HasParavirtSchedControl()),
 			},
 			{
@@ -131,7 +132,7 @@ func init() {
 					},
 					threshold: 30,
 				},
-				Fixture: "arcBooted",
+				Fixture: fixture.AloopLoaded{Parent: "arcBooted"}.Instance(),
 			},
 			{
 				Name:         "opensles_noload_pvsched",
@@ -144,7 +145,7 @@ func init() {
 					},
 					threshold: 30,
 				},
-				Fixture:           "arcBootedWithPvSchedEnabled",
+				Fixture:           fixture.AloopLoaded{Parent: "arcBootedWithPvSchedEnabled"}.Instance(),
 				ExtraHardwareDeps: hwdep.D(hwdep.HasParavirtSchedControl()),
 			},
 			{
@@ -156,7 +157,7 @@ func init() {
 						arc.WithExtraString("out_api", "opensles"),
 					},
 				},
-				Fixture: "arcBooted",
+				Fixture: fixture.AloopLoaded{Parent: "arcBooted"}.Instance(),
 			},
 
 			// Run the test with a stricter threshold for the selected models.
@@ -171,7 +172,7 @@ func init() {
 					},
 					threshold: 5,
 				},
-				Fixture: "arcBooted",
+				Fixture: fixture.AloopLoaded{Parent: "arcBooted"}.Instance(),
 			},
 			{
 				Name:              "opensles_noload_strict",
@@ -184,7 +185,7 @@ func init() {
 					},
 					threshold: 5,
 				},
-				Fixture: "arcBooted",
+				Fixture: fixture.AloopLoaded{Parent: "arcBooted"}.Instance(),
 			},
 		},
 	})

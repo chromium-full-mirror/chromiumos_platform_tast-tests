@@ -239,7 +239,7 @@ func TestAudioLoopbackCorrectnessParams(t *testing.T) {
 			},
 			incorrectSlicesLimit: {{ .Val.IncorrectSlicesLimit }},
 		},
-		{{if .Fixture}} Fixture: "{{ .Fixture }}", {{end}}
+		Fixture: fixture.AloopLoaded{ {{if .Fixture}} Parent: "{{ .Fixture }}" {{end}} }.Instance(),
 	},
 	{{ end }}`, params)
 	genparams.Ensure(t, "audio_loopback_correctness.go", code)

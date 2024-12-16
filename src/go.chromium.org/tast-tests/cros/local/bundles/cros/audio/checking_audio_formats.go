@@ -14,6 +14,7 @@ import (
 	"go.chromium.org/tast-tests/cros/common/usbutils"
 	"go.chromium.org/tast-tests/cros/local/audio"
 	"go.chromium.org/tast-tests/cros/local/audio/crastestclient"
+	"go.chromium.org/tast-tests/cros/local/audio/fixture"
 	"go.chromium.org/tast-tests/cros/local/chrome"
 	"go.chromium.org/tast-tests/cros/local/chrome/uiauto/filesapp"
 	"go.chromium.org/tast-tests/cros/local/chrome/uiauto/quicksettings"
@@ -36,7 +37,7 @@ func init() {
 		HardwareDeps: hwdep.D(hwdep.Speaker()),
 		Data:         []string{"audio.flac", "audio.m4a", "audio.ogg", "audio.wav", "audio.mp3", "audio.5.1.mp3"},
 		Vars:         []string{"audio.usbDetectionName"},
-		Fixture:      "chromeLoggedIn",
+		Fixture:      fixture.AloopLoaded{Parent: "chromeLoggedIn"}.Instance(),
 		Params: []testing.Param{{
 			ExtraAttr: []string{
 				"group:mainline",
@@ -64,19 +65,12 @@ func CheckingAudioFormats(ctx context.Context, s *testing.State) {
 	ctx, cancel := ctxutil.Shorten(ctx, 10*time.Second)
 	defer cancel()
 
-	// Set up capture (aloop) module.
-	unload, err := audio.LoadAloop(ctx)
-	if err != nil {
-		s.Fatal("Failed to load ALSA loopback module: ", err)
-	}
-
 	defer func(ctx context.Context) {
 		// Wait for no stream before unloading aloop as unloading while there is a stream
 		// will cause the stream in ARC to be in an invalid state.
 		if err := crastestclient.WaitForNoStream(ctx, 5*time.Second); err != nil {
 			s.Error("Wait for no stream error: ", err)
 		}
-		unload(ctx)
 	}(cleanupCtx)
 
 	// Select ALSA loopback output and input nodes as active nodes by UI.

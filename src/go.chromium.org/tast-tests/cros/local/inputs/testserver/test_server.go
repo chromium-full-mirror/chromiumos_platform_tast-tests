@@ -514,11 +514,9 @@ func (its *InputsTestServer) validateVKTypingInField(uc *useractions.UserContext
 func (its *InputsTestServer) validateVoiceInField(uc *useractions.UserContext, inputField InputField, inputData data.InputData, dataPath func(string) string) uiauto.Action {
 	action := func(ctx context.Context) error {
 		// Setup CRAS Aloop for audio test.
-		cleanup, err := voice.EnableAloop(ctx, its.tconn)
-		if err != nil {
+		if err := voice.ActivateAloopNodes(ctx, its.tconn, voice.LoopbackPlayBack, voice.LoopbackCapture); err != nil {
 			return err
 		}
-		defer cleanup(ctx)
 
 		vkbCtx := vkb.NewContext(its.cr, its.tconn)
 		return uiauto.Combine("validate vk voice input function on field "+string(inputField),

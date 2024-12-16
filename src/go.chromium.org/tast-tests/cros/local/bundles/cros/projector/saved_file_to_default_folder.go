@@ -12,6 +12,7 @@ import (
 	"path/filepath"
 	"time"
 
+	"go.chromium.org/tast-tests/cros/local/audio/fixture"
 	"go.chromium.org/tast-tests/cros/local/chrome"
 	"go.chromium.org/tast-tests/cros/local/chrome/familylink"
 	"go.chromium.org/tast-tests/cros/local/chrome/projector"
@@ -36,7 +37,7 @@ func init() {
 		SoftwareDeps: []string{"chrome", "ondevice_speech", "gaia"},
 		HardwareDeps: hwdep.D(hwdep.Microphone()),
 		Timeout:      12 * time.Minute,
-		Fixture:      "projectorLogin",
+		Fixture:      fixture.AloopLoaded{Parent: "projectorLogin"}.Instance(),
 	})
 }
 
@@ -56,11 +57,9 @@ func SavedFileToDefaultFolder(ctx context.Context, s *testing.State) {
 	defer faillog.DumpUITreeOnError(cleanupCtx, s.OutDir(), s.HasError, tconn)
 
 	app := s.FixtValue().(projector.HasApp).App()
-	cleanup, err := projector.SetUpProjectorApp(ctx, tconn, app)
-	if err != nil {
+	if err := projector.SetUpProjectorApp(ctx, tconn, app); err != nil {
 		s.Fatal("Failed to set up Projector app: ", err)
 	}
-	defer cleanup(cleanupCtx)
 
 	// We need to clean up any screencasts after the test to
 	// prevent taking up Drive quota over time.

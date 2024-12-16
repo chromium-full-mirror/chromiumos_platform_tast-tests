@@ -9,6 +9,7 @@ import (
 	"context"
 	"time"
 
+	"go.chromium.org/tast-tests/cros/local/audio/fixture"
 	"go.chromium.org/tast-tests/cros/local/chrome/familylink"
 	"go.chromium.org/tast-tests/cros/local/chrome/projector"
 	"go.chromium.org/tast-tests/cros/local/chrome/uiauto"
@@ -31,7 +32,7 @@ func init() {
 		SoftwareDeps: []string{"chrome", "ondevice_speech", "gaia"},
 		HardwareDeps: hwdep.D(hwdep.Microphone()),
 		Timeout:      10 * time.Minute,
-		Fixture:      "projectorLogin",
+		Fixture:      fixture.AloopLoaded{Parent: "projectorLogin"}.Instance(),
 	})
 }
 
@@ -47,11 +48,9 @@ func LocalPlayback(ctx context.Context, s *testing.State) {
 	ui := uiauto.New(tconn).WithTimeout(2 * time.Minute)
 
 	app := s.FixtValue().(projector.HasApp).App()
-	cleanup, err := projector.SetUpProjectorApp(ctx, tconn, app)
-	if err != nil {
+	if err := projector.SetUpProjectorApp(ctx, tconn, app); err != nil {
 		s.Fatal("Failed to set up Projector app: ", err)
 	}
-	defer cleanup(ctxForCleanUp)
 
 	// We need to clean up any screencasts after the test to
 	// prevent taking up Drive quota over time.

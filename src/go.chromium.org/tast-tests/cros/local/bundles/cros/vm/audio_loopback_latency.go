@@ -13,6 +13,7 @@ import (
 
 	"go.chromium.org/tast-tests/cros/common/perf"
 	"go.chromium.org/tast-tests/cros/local/audio"
+	"go.chromium.org/tast-tests/cros/local/audio/fixture"
 	"go.chromium.org/tast-tests/cros/local/bundles/cros/vm/audioutils"
 	"go.chromium.org/tast-tests/cros/local/bundles/cros/vm/dlc"
 	"go.chromium.org/tast/core/testing"
@@ -33,7 +34,7 @@ func init() {
 		Data:         []string{runLoopbackLatency},
 		Timeout:      8 * time.Minute,
 		SoftwareDeps: []string{"vm_host", "chrome", "dlc"},
-		Fixture:      "vmDLC",
+		Fixture:      fixture.AloopLoaded{Parent: "vmDLC"}.Instance(),
 		Params: []testing.Param{{
 			Name: "virtio_cras_snd",
 			Val: audioutils.Config{
@@ -51,13 +52,7 @@ func AudioLoopbackLatency(ctx context.Context, s *testing.State) {
 
 	config := s.Param().(audioutils.Config)
 
-	unload, err := audio.LoadAloop(ctx)
-	if err != nil {
-		s.Fatal("Failed to load ALSA loopback module: ", err)
-	}
-	defer unload(ctx)
-
-	if err = audio.SetupLoopback(ctx, data.Chrome, s.OutDir(), s.HasError); err != nil {
+	if err := audio.SetupLoopback(ctx, data.Chrome, s.OutDir(), s.HasError); err != nil {
 		s.Fatal("Failed to setup loopback device: ", err)
 	}
 

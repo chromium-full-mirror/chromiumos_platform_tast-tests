@@ -174,6 +174,10 @@ type Param struct {
 	// CriticalStaging controls whether mainline test variants are added to
 	// group:criticalstaging.
 	CriticalStaging bool
+
+	// NeedsAloop indicates whether a test relies on audio loopback to be
+	// set up
+	NeedsAloop bool
 }
 
 type generatedParam struct {
@@ -376,6 +380,9 @@ func MakeTestParamsFromList(t genparams.TestingT, baseCases []Param) string {
 					fixture = fmt.Sprintf("\"crostini%s%s\"", cases.Title(language.Und).String(i.debianVersion.Codename), arcStatus)
 				}
 
+				if testCase.NeedsAloop {
+					fixture = fmt.Sprintf("fixture.AloopLoaded{Parent: %s}.Instance()", fixture)
+				}
 			} else {
 				extraData = append(extraData,
 					fmt.Sprintf("crostini.GetContainerMetadataArtifact(%q, %t)", i.debianVersion.Codename, testCase.UseLargeContainer),

@@ -51,24 +51,6 @@ func AudioFromFile(ctx context.Context, audioFilePath string) error {
 	return playCmd.Wait()
 }
 
-// EnableAloop loads and enables Aloop then sets it as active input/output node.
-func EnableAloop(ctx context.Context, tconn *chrome.TestConn) (func(ctx context.Context), error) {
-	// Load ALSA loopback module.
-	unload, err := audio.LoadAloop(ctx)
-	if err != nil {
-		return nil, errors.Wrap(err, "failed to load ALSA loopback module")
-	}
-
-	// Activate the Aloop nodes.
-	if err := ActivateAloopNodes(ctx, tconn, LoopbackPlayBack, LoopbackCapture); err != nil {
-		// Unload ALSA loopback if any following setups failed.
-		unload(ctx)
-		return nil, err
-	}
-
-	return unload, nil
-}
-
 // ActivateAloopNodes activates Aloop nodes as input/output devices.
 // Switching nodes via UI interactions is the recommended way, instead of using
 // cras.SetActiveNode() method, as UI will always send the preference input/output

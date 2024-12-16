@@ -16,6 +16,7 @@ import (
 	"go.chromium.org/tast-tests/cros/common/testexec"
 	"go.chromium.org/tast-tests/cros/local/audio"
 	"go.chromium.org/tast-tests/cros/local/audio/crastestclient"
+	"go.chromium.org/tast-tests/cros/local/audio/fixture"
 	"go.chromium.org/tast-tests/cros/local/chrome/uiauto"
 	"go.chromium.org/tast-tests/cros/local/chrome/uiauto/faillog"
 	"go.chromium.org/tast-tests/cros/local/chrome/uiauto/launcher"
@@ -46,7 +47,7 @@ func init() {
 				Name:              "bookworm_clamshell_stable",
 				ExtraSoftwareDeps: []string{"crostini_app", "dlc"},
 				ExtraHardwareDeps: crostini.CrostiniAppStable,
-				Fixture:           "crostiniBookwormLargeContainerClamshell",
+				Fixture:           fixture.AloopLoaded{Parent: "crostiniBookwormLargeContainerClamshell"}.Instance(),
 				Timeout:           15 * time.Minute,
 			},
 		},
@@ -76,12 +77,6 @@ func AppVLC(ctx context.Context, s *testing.State) {
 	s.AttachErrorHandlers(handler, handler)
 
 	ui := uiauto.New(tconn)
-
-	unload, err := audio.LoadAloop(ctx)
-	if err != nil {
-		s.Fatal("Failed to load loopback audio device: ", err)
-	}
-	defer unload(cleanupCtx)
 
 	if err := audio.SetupLoopback(ctx, cr, s.OutDir(), s.HasError); err != nil {
 		s.Fatal("Failed to set up loopback audio device: ", err)
