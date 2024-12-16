@@ -75,11 +75,10 @@ func Coral(ctx context.Context, s *testing.State) {
 		// Use built-in sites so the test is more stable and won't be broken by
 		// changes in third-party websites. These sites form a coral group so a coral
 		// chip should show up.
-		br := cr.Browser()
-		br.NewTab(ctx, "chrome://version")
-		br.NewTab(ctx, "chrome://device-log")
-		br.NewTab(ctx, "chrome://histograms")
-		br.NewTab(ctx, "chrome://settings")
+		cr.NewConn(ctx, "chrome://version")
+		cr.NewConn(ctx, "chrome://device-log")
+		cr.NewConn(ctx, "chrome://histograms")
+		cr.NewConn(ctx, "chrome://settings")
 
 		// Activate and dismiss overview repeatedly until the coral chip shows.
 		// Unfortunately we don't have a good way to ensure that the coral ship

@@ -126,7 +126,7 @@ func SaveImageToFaillog(ctx context.Context, s *testing.State, img image.Image, 
 
 // OpenURLAndWaitForStreamToReady waits until camera stream is loaded and vcTray is triggered.
 func OpenURLAndWaitForStreamToReady(ctx context.Context, tconn *chrome.TestConn, cr *chrome.Chrome, url string, vcTray *vctray.VCTray) error {
-	if _, err := cr.Browser().NewTab(ctx, url); err != nil {
+	if _, err := cr.NewConn(ctx, url); err != nil {
 		return err
 	}
 

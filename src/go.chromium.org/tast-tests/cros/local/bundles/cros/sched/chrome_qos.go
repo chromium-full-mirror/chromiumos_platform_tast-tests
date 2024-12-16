@@ -141,7 +141,6 @@ func getBackgroundProcessIds(ctx context.Context, s *testing.State, processes []
 
 func ChromeQoS(ctx context.Context, s *testing.State) {
 	cr := s.FixtValue().(chrome.HasChrome).Chrome()
-	br := cr.Browser()
 
 	// Cgroups of chrome processes are updated via D-Bus messages. The updates can be delayed if the
 	// system is busy. Poll the cgroups of Chrome processes here until they are stabilized.
@@ -173,7 +172,7 @@ func ChromeQoS(ctx context.Context, s *testing.State) {
 	// different renderer processes.
 	testURL := utils.CompileHTMLDataURL([]byte(simpleHTML))
 
-	conn, err := br.NewTab(ctx, testURL)
+	conn, err := cr.NewConn(ctx, testURL)
 	if err != nil {
 		s.Fatal("Failed to open simple page: ", err)
 	}
@@ -186,7 +185,7 @@ func ChromeQoS(ctx context.Context, s *testing.State) {
 	pidsBefore := getBackgroundProcessIds(ctx, s, rendererProcesses)
 
 	// By opening a new tab, the existing page goes to background.
-	conn2, err := br.NewTab(ctx, testURL)
+	conn2, err := cr.NewConn(ctx, testURL)
 	if err != nil {
 		s.Fatal("Failed to open new tab: ", err)
 	}

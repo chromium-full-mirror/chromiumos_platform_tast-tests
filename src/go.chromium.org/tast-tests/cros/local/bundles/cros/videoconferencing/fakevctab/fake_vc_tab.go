@@ -25,7 +25,7 @@ type VcTabUI struct {
 
 // LaunchTab opens a new tab for the url.
 func LaunchTab(ctx context.Context, tconn *chrome.TestConn, cr *chrome.Chrome, url string) (*VcTabUI, error) {
-	if _, err := cr.Browser().NewTab(ctx, url); err != nil {
+	if _, err := cr.NewConn(ctx, url); err != nil {
 		return nil, err
 	}
 

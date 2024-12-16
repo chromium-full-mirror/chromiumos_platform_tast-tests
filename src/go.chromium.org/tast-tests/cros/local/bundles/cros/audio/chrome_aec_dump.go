@@ -87,7 +87,7 @@ func ChromeAECDump(ctx context.Context, s *testing.State) {
 	}
 
 	// Open an arbitrary web page that has access to navigator.mediaDevices.
-	recorderPage, err := cr.Browser().NewTab(ctx, "chrome://version")
+	recorderPage, err := cr.NewConn(ctx, "chrome://version")
 	if err != nil {
 		s.Fatal("Cannot open recorder: ", err)
 	}
@@ -102,7 +102,7 @@ func ChromeAECDump(ctx context.Context, s *testing.State) {
 		s.Fatal("Cannot start capture in Chrome: ", err)
 	}
 
-	playerPage, err := cr.Browser().NewTab(ctx, server.URL+"/"+data.AudioLong16Wav)
+	playerPage, err := cr.NewConn(ctx, server.URL+"/"+data.AudioLong16Wav)
 	if err != nil {
 		s.Fatal("Cannot open player: ", err)
 	}

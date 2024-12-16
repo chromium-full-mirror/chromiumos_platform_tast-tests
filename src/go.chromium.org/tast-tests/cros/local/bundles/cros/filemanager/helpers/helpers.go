@@ -32,7 +32,7 @@ func InstallRequiredExtensions(ctx context.Context, cr *chrome.Chrome, tconn *ch
 	docsOfflineExtensionID := "ghbmnnjooekpmoecnnnilnnbdlolhkhi"
 	applicationLauncherForDriveExtensionID := "lmjegmlicamnimmfhcmpkclmigmmcbeh"
 
-	conn, err := cr.Browser().NewTab(ctx, "chrome://extensions-internals")
+	conn, err := cr.NewConn(ctx, "chrome://extensions-internals")
 	if err != nil {
 		return errors.Wrap(err, "failed to open chrome://extensions-internals tab")
 	}

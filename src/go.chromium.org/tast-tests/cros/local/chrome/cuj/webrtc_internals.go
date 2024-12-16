@@ -23,7 +23,6 @@ import (
 	"go.chromium.org/tast-tests/cros/common/testexec"
 	"go.chromium.org/tast-tests/cros/local/audio"
 	"go.chromium.org/tast-tests/cros/local/chrome"
-	"go.chromium.org/tast-tests/cros/local/chrome/browser"
 	"go.chromium.org/tast-tests/cros/local/chrome/uiauto"
 	"go.chromium.org/tast-tests/cros/local/chrome/uiauto/filesapp"
 	"go.chromium.org/tast-tests/cros/local/chrome/uiauto/nodewith"
@@ -55,25 +54,6 @@ func ExpandCreateDumpSection(ctx context.Context, tconn *chrome.TestConn) error 
 		ui.DoDefaultUntil(createDumpSection, ui.WithTimeout(5*time.Second).WaitUntilExists(createDumpSection.Expanded())),
 		ui.WaitUntilExists(webRTCDownloadButton),
 	)(ctx)
-}
-
-// OpenWebRTCInternals opens chrome://webrtc-internals now so it will collect data on the meeting's streams.
-func OpenWebRTCInternals(ctx context.Context, cr *chrome.Chrome) (*chrome.Conn, error) {
-	conn, err := cr.Browser().NewTab(ctx, WebRTCInternalsURL, browser.WithNewWindow())
-	if err != nil {
-		return nil, errors.Wrapf(err, "failed to open %s", WebRTCInternalsURL)
-	}
-
-	tconn, err := cr.TestAPIConn(ctx)
-	if err != nil {
-		return nil, errors.Wrap(err, "failed to create Test API connection")
-	}
-
-	if err := ExpandCreateDumpSection(ctx, tconn); err != nil {
-		return nil, errors.Wrapf(err, "failed to expand %q section in %s", createDumpSectionName, WebRTCInternalsURL)
-	}
-
-	return conn, nil
 }
 
 // DumpWebRTCInternals downloads a dump from chrome://webrtc-internals and

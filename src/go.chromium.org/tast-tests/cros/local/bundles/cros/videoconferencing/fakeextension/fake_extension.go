@@ -48,7 +48,7 @@ var (
 
 // Launch triggers VcTester popup window in browser extensions.
 func Launch(ctx context.Context, tconn *chrome.TestConn, cr *chrome.Chrome) (*ExtensionUI, error) {
-	if _, err := cr.Browser().NewTab(ctx, chrome.NewTabURL); err != nil {
+	if _, err := cr.NewConn(ctx, chrome.NewTabURL); err != nil {
 		return nil, err
 	}
 

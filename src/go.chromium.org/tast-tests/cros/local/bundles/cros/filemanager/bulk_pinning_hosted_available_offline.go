@@ -143,7 +143,7 @@ func openFileAndEnsureTitleContainsDocName(files *filesapp.FilesApp, tconn *chro
 // registered.
 func verifyDocsServiceWorkerCached(ctx context.Context, cr *chrome.Chrome) error {
 	// Open up docs.google.com to kick off the service worker caching mechanism.
-	docsConn, err := cr.Browser().NewTab(ctx, "https://docs.google.com")
+	docsConn, err := cr.NewConn(ctx, "https://docs.google.com")
 	if err != nil {
 		return errors.Wrap(err, "failed to navigate to google docs")
 	}
@@ -154,7 +154,7 @@ func verifyDocsServiceWorkerCached(ctx context.Context, cr *chrome.Chrome) error
 	// Open up the service worker internals page to monitor exactly when the
 	// service worker gets properly registered. Once registered the offline
 	// functionality should be available.
-	conn, err := cr.Browser().NewTab(ctx, "chrome://serviceworker-internals")
+	conn, err := cr.NewConn(ctx, "chrome://serviceworker-internals")
 	if err != nil {
 		return errors.Wrap(err, "failed to navigate to serviceworker-internals")
 	}
