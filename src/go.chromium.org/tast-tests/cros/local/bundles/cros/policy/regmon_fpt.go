@@ -31,13 +31,8 @@ func init() {
 		},
 		SoftwareDeps: []string{"chrome", "amd64"},
 		Data:         []string{"autofill_address_enabled.html"},
-		Attr: []string{
-			"group:golden_tier",
-			"group:mainline",
-			"informational",
-			"group:hw_agnostic",
-		},
-		Timeout: 6*time.Minute + power.RecorderTimeout,
+		Attr:         []string{"group:crosbolt", "crosbolt_nightly"},
+		Timeout:      6*time.Minute + power.RecorderTimeout,
 		SearchFlags: []*testing.StringPair{
 			pci.SearchFlag(&policy.PasswordManagerEnabled{}, pci.VerifiedValue),
 		},
