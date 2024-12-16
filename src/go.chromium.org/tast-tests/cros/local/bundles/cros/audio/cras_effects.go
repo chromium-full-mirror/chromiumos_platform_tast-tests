@@ -55,6 +55,7 @@ func init() {
 		BugComponent: "b:776546",
 		Attr:         []string{},
 		Timeout:      30 * time.Second,
+		HardwareDeps: hwdep.D(hwdep.Microphone(), hwdep.Speaker()),
 		Params: []testing.Param{
 			// AEC provider tests.
 			{
