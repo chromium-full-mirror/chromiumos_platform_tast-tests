@@ -7,6 +7,7 @@ package factory
 import (
 	"context"
 	"encoding/json"
+	"strings"
 	"time"
 
 	"go.chromium.org/tast-tests/cros/remote/bundles/cros/factory/fixture"
@@ -158,8 +159,20 @@ func HWIDDatabase(ctx context.Context, s *testing.State) {
 	buildArgs := []string{"build-database"}
 	buildArgs = append(buildArgs, testExtraCmdParams.extraBuildParams...)
 	buildDatabaseCmd := conn.CommandContext(ctx, "hwid", buildArgs...)
-	if err := buildDatabaseCmd.Run(ssh.DumpLogOnError); err != nil {
-		s.Fatal("Failed to build the HWID database: ", err)
+	if output, err := buildDatabaseCmd.CombinedOutput(ssh.DumpLogOnError); err != nil {
+		stringOutput := string(output)
+		s.Log("Captured output:", "\n", stringOutput)
+		lastNonEmptyLine := ""
+		splitOutput := strings.Split(stringOutput, "\n")
+		for index := range splitOutput {
+			line := splitOutput[len(splitOutput)-index-1]
+			trimmedLine := strings.TrimSpace(line)
+			if trimmedLine != "" {
+				lastNonEmptyLine = trimmedLine + ": "
+				break
+			}
+		}
+		s.Fatal("Failed to build the HWID database: ", lastNonEmptyLine, err)
 	}
 
 	// Only verifies the format, probed components. As the database is built
