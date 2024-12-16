@@ -71,6 +71,18 @@ func DevBootUSBDisallowed(ctx context.Context, s *testing.State) {
 	}
 	var state firmware.CheckAndSetServoCharger = h.CheckServoChargerBeforeBootingFromUSB(ctx)
 
+	if h.HasAPFwState {
+		closeUART, err := h.Servo.EnableUARTCapture(ctx, servo.ECUARTCapture)
+		if err != nil {
+			s.Fatal("Failed to enable capture EC UART: ", err)
+		}
+		defer func() {
+			if err := closeUART(ctx); err != nil {
+				s.Error("Failed to cancel capture EC UART: ", err)
+			}
+		}()
+	}
+
 	s.Log("Removing USB")
 	if err := h.Servo.SetUSBMuxState(ctx, servo.USBMuxOff); err != nil {
 		s.Fatal("Failed to remove USB: ", err)
@@ -89,10 +101,17 @@ func DevBootUSBDisallowed(ctx context.Context, s *testing.State) {
 	if err := h.DUT.WaitUnreachable(waitDisconnectCtx); err != nil {
 		s.Fatal("Failed to wait for DUT to become unreachable after sending a warm reset: ", err)
 	}
-	s.Logf("Sleeping for %s (FirmwareScreen) ", h.Config.FirmwareScreen)
-	// GoBigSleepLint: Delay to wait for the firmware screen during boot-up.
-	if err := testing.Sleep(ctx, h.Config.FirmwareScreen); err != nil {
-		s.Fatalf("Failed to sleep for %s: %v", h.Config.FirmwareScreen, err)
+
+	if h.HasAPFwState {
+		if err := h.DetectFirmwareScreen(ctx, h.Config.FirmwareScreen, fwCommon.DeveloperMode); err != nil {
+			s.Log("Failed to detect firmware screen: ", err)
+		}
+	} else {
+		s.Logf("Sleeping for %s (FirmwareScreen) ", h.Config.FirmwareScreen)
+		// GoBigSleepLint: Delay to wait for the firmware screen during boot-up.
+		if err := testing.Sleep(ctx, h.Config.FirmwareScreen); err != nil {
+			s.Fatalf("Failed to sleep for %s: %v", h.Config.FirmwareScreen, err)
+		}
 	}
 
 	if err := h.ByPassDevBootTimeout(ctx); err != nil {
@@ -161,9 +180,15 @@ func DevBootUSBDisallowed(ctx context.Context, s *testing.State) {
 		if err := h.Servo.KeypressWithDuration(ctx, servo.Enter, servo.DurTab); err != nil {
 			s.Fatal("Failed to press enter key: ", err)
 		}
-		// GoBigSleepLint: Simulate a specific speed of button presses.
-		if err := testing.Sleep(ctx, h.Config.KeypressDelay); err != nil {
-			s.Fatalf("Failed to sleep for %v s, %v", h.Config.KeypressDelay, err)
+		if h.HasAPFwState {
+			if err := h.DetectFirmwareScreen(ctx, h.Config.FirmwareScreen, fwCommon.DeveloperMode); err != nil {
+				s.Log("Failed to detect firmware screen: ", err)
+			}
+		} else {
+			// GoBigSleepLint: Simulate a specific speed of button presses.
+			if err := testing.Sleep(ctx, h.Config.KeypressDelay); err != nil {
+				s.Fatalf("Failed to sleep for %v s, %v", h.Config.KeypressDelay, err)
+			}
 		}
 	}
 	s.Log("Pressing Ctrl-D")

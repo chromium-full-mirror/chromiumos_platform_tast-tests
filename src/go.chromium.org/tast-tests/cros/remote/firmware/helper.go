@@ -2404,10 +2404,18 @@ func (h *Helper) ReturnToDeveloperScreen(ctx context.Context) error {
 	if err := h.Servo.PressKey(ctx, "<esc>", servo.DurTab); err != nil {
 		return errors.Wrap(err, "failed to press esc key")
 	}
-	// GoBigSleepLint: Simulate a specific speed of key presses.
-	if err := testing.Sleep(ctx, h.Config.KeypressDelay); err != nil {
-		return errors.Wrapf(err, "failed to sleep for %v second", h.Config.KeypressDelay)
+
+	if h.HasAPFwState {
+		if err := h.DetectFirmwareScreen(ctx, h.Config.FirmwareScreen, fwCommon.DeveloperToNorm); err != nil {
+			return errors.Wrap(err, "failed to detect firmware screen")
+		}
+	} else {
+		// GoBigSleepLint: Simulate a specific speed of key presses.
+		if err := testing.Sleep(ctx, h.Config.KeypressDelay); err != nil {
+			return errors.Wrapf(err, "failed to sleep for %v second", h.Config.KeypressDelay)
+		}
 	}
+
 	return nil
 }
 
