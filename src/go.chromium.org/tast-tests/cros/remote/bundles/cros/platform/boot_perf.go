@@ -450,6 +450,7 @@ func collectExtraDebugInfo(ctx context.Context, s *testing.State) (bool, error) 
 func bootPerfMetricBounds(ctx context.Context, features *protocol.DUTFeatures, board string, dut *dut.DUT) []bounds.MetricBounds {
 	maxSecondsPowerOnToKernel := 1.0
 	maxSecondsPowerOnToLogin := 8.0
+	ecRebootTime := 0.5
 
 	if ok, _, _ := hwdep.IsIntelUarchEqualOrNewerThan(hwdep.IntelUarchs{IntelBigCoreOrderList: []hwdep.IntelBigCoreOrder{hwdep.MeteorLake}}).Satisfied(features.GetHardware()); ok {
 		// Intel MeteorLake and newer always have FW splash screen, and get +0.35s
@@ -466,9 +467,18 @@ func bootPerfMetricBounds(ctx context.Context, features *protocol.DUTFeatures, b
 	if board == "atlas" { // b/122563096#comment5
 		testing.ContextLogf(ctx, "atlas waiver: Adjusting maxSecondsPowerOnToKernel from %f to 1.52", maxSecondsPowerOnToKernel)
 		maxSecondsPowerOnToKernel = 1.52
-	} else if board == "coral" { // b/177845648#comment30
-		testing.ContextLogf(ctx, "coral waiver: Adjusting maxSecondsPowerOnToKernel from %f to 1.3", maxSecondsPowerOnToKernel)
-		maxSecondsPowerOnToKernel = 1.3
+	} else if board == "coral" {
+		testing.ContextLogf(ctx, "coral waiver: Adjusting maxSecondsPowerOnToKernel from %f to 1.4 (2 for EC reboot)", maxSecondsPowerOnToKernel)
+		maxSecondsPowerOnToKernel = 1.4 // b/177845648#comment30
+		ecRebootTime = 0.6              // EC reboot gets extra time also: b/345835444#comment3
+		testing.ContextLogf(ctx, "coral waiver: Adjusting maxSecondsPowerOnToLogin from %f to 10", maxSecondsPowerOnToLogin)
+		maxSecondsPowerOnToLogin = 10 // b/364942918
+	} else if board == "octopus" { // b/111625580 & b/119845733
+		testing.ContextLogf(ctx, "octopus waiver: Adjusting maxSecondsPowerOnToKernel from %f to 1.4 (2 for EC reboot)", maxSecondsPowerOnToKernel)
+		maxSecondsPowerOnToKernel = 1.4
+		ecRebootTime = 0.6
+		testing.ContextLogf(ctx, "octopus waiver: Adjusting maxSecondsPowerOnToLogin from %f to 10", maxSecondsPowerOnToLogin)
+		maxSecondsPowerOnToLogin = 10 // b/121040937 & b/120006504
 	} else if board == "dedede" { // b/177845648#comment30
 		testing.ContextLogf(ctx, "dedede waiver: Adjusting maxSecondsPowerOnToKernel from %f to 1.3", maxSecondsPowerOnToKernel)
 		maxSecondsPowerOnToKernel = 1.3
@@ -517,12 +527,12 @@ func bootPerfMetricBounds(ctx context.Context, features *protocol.DUTFeatures, b
 		{
 			Test:   bounds.MatchRegexp(`ec_reboot_bounds$`),
 			Metric: bounds.MatchRegexp(`seconds_power_on_to_kernel$`),
-			Bounds: bounds.Max(maxSecondsPowerOnToKernel + 0.5),
+			Bounds: bounds.Max(maxSecondsPowerOnToKernel + ecRebootTime),
 		},
 		{
 			Test:   bounds.MatchRegexp(`ec_reboot_bounds$`),
 			Metric: bounds.MatchRegexp(`seconds_power_on_to_login$`),
-			Bounds: bounds.Max(maxSecondsPowerOnToLogin + 0.5),
+			Bounds: bounds.Max(maxSecondsPowerOnToLogin + ecRebootTime),
 		},
 	}
 }
