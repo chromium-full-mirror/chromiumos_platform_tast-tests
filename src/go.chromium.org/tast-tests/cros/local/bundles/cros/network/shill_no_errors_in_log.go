@@ -41,8 +41,6 @@ const shillJob = "shill"
 // Shill should be stopped before calling this function and should be restarted
 // after calling this function.
 func startShillAndWaitForNetworks(ctx context.Context, s *testing.State) {
-	const resetShillTimeout = 30 * time.Second
-
 	if err := upstart.RestartJob(ctx, shillJob); err != nil {
 		s.Fatal("Failed starting shill: ", err)
 	}
@@ -52,12 +50,22 @@ func startShillAndWaitForNetworks(ctx context.Context, s *testing.State) {
 		s.Fatal("Failed creating shill manager proxy: ", err)
 	}
 
-	// Wait until a service is online.
-	expectProps := map[string]interface{}{
+	// Wait until a service is connected.
+	connectedProps := map[string]interface{}{
+		shillconst.ServicePropertyIsConnected: true,
+	}
+	if _, err := manager.WaitForServiceProperties(ctx, connectedProps, 30*time.Second); err != nil {
+		s.Fatal("Failed to wait for connected service: ", err)
+	}
+
+	// Conditionally wait until a service to be online to cover the portal
+	// detection process in the log. Since a failure can be due to a transient
+	// environmental issue, do log instead of failing the test on failure.
+	onlineProps := map[string]interface{}{
 		shillconst.ServicePropertyState: shillconst.ServiceStateOnline,
 	}
-	if _, err := manager.WaitForServiceProperties(ctx, expectProps, resetShillTimeout); err != nil {
-		s.Fatal("Failed to wait for online service: ", err)
+	if _, err := manager.WaitForServiceProperties(ctx, onlineProps, 15*time.Second); err != nil {
+		s.Log("Failed to wait for online service: ", err)
 	}
 
 	if ethernetAvailable, err := manager.IsAvailable(ctx, shill.TechnologyEthernet); err != nil {
