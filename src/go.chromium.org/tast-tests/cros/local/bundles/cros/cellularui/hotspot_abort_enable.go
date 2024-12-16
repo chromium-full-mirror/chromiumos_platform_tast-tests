@@ -12,7 +12,9 @@ import (
 	"go.chromium.org/tast-tests/cros/local/chrome"
 	"go.chromium.org/tast-tests/cros/local/chrome/uiauto"
 	"go.chromium.org/tast-tests/cros/local/chrome/uiauto/faillog"
+	"go.chromium.org/tast-tests/cros/local/chrome/uiauto/nodewith"
 	"go.chromium.org/tast-tests/cros/local/chrome/uiauto/ossettings"
+	"go.chromium.org/tast-tests/cros/local/chrome/uiauto/role"
 	"go.chromium.org/tast/core/ctxutil"
 	"go.chromium.org/tast/core/testing"
 	"go.chromium.org/tast/core/testing/hwdep"
@@ -164,9 +166,11 @@ func HotspotAbortEnable(ctx context.Context, s *testing.State) {
 	}
 
 	ui := uiauto.New(tconn)
+	// Specify the ancestor, since elements in main settings page might have the same attribute with elements in the navigation list.
+	mainPage := nodewith.Role(role.Main).Ancestor(ossettings.WindowFinder)
 	if err := uiauto.Combine("Toggle on hotspot",
-		ui.LeftClick(ossettings.HotspotToggle),
-		ui.WaitUntilExists(ossettings.HotspotTurningOnSublabel),
+		ui.LeftClick(ossettings.HotspotToggle.Ancestor(mainPage)),
+		ui.WaitUntilExists(ossettings.HotspotTurningOnSublabel.Ancestor(mainPage)),
 	)(ctx); err != nil {
 		s.Fatal("Failed to toggle on hotspot and see turning on sublabel: ", err)
 	}
@@ -175,8 +179,8 @@ func HotspotAbortEnable(ctx context.Context, s *testing.State) {
 	testing.Sleep(ctx, 500*time.Millisecond)
 
 	if err := uiauto.Combine("Abort enable hotspot",
-		ui.LeftClick(ossettings.HotspotToggle),
-		ui.WaitUntilExists(ossettings.HotspotOffSublabel),
+		ui.LeftClick(ossettings.HotspotToggle.Ancestor(mainPage)),
+		ui.WaitUntilExists(ossettings.HotspotOffSublabel.Ancestor(mainPage)),
 	)(ctx); err != nil {
 		s.Fatal("Failed to abort enable hotspot: ", err)
 	}

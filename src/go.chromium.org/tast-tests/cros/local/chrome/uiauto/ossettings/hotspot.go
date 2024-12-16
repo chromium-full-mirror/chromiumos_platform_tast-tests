@@ -64,7 +64,9 @@ func (s *OSSettings) ToggleHotspot(ctx context.Context, tconn *chrome.TestConn, 
 		return nil
 	}
 
-	if err := s.ui.WaitUntilExists(HotspotOffSublabel)(ctx); err != nil {
+	// Specify the ancestor, since elements in main settings page might have the same attribute with elements in the navigation list.
+	mainPage := nodewith.Role(role.Main).Ancestor(WindowFinder)
+	if err := s.ui.WaitUntilExists(HotspotOffSublabel.Ancestor(mainPage))(ctx); err != nil {
 		return errors.Wrap(err, "failed to find expected hotspot status label")
 	}
 
