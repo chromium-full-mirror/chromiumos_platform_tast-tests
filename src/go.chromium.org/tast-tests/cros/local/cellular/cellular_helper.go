@@ -277,7 +277,7 @@ func RebootL850VerizonIfModemCanNoLongerConnect(ctx context.Context, modemPtr **
 
 	if connectionError == "org.freedesktop.ModemManager1.Error.MobileEquipment.NotAllowed" {
 		testing.ContextLog(ctx, "Modem cannot connect to vzwinternet(b/309953824). Reset modem")
-		if *modemPtr, err = RestartModemWithHelper(ctx); err != nil {
+		if *modemPtr, err = ResetModemWithHelper(ctx); err != nil {
 			testing.ContextLogf(ctx, "Failed to restart modem: %s", err)
 			return err
 		}
@@ -891,7 +891,7 @@ func (h *Helper) CaptureDBusLogs(ctx context.Context) error {
 	return nil
 }
 
-// ResetModem calls Device.ResetModem(cellular) and if reset fails it calls RestartModemWithHelper
+// ResetModem calls Device.ResetModem(cellular) and if reset fails it calls ResetModemWithHelper
 // returns true if the reset succeeded, or an error otherwise.
 func (h *Helper) ResetModem(ctx context.Context) (time.Duration, error) {
 	ctx, st := timing.Start(ctx, "Helper.ResetModem")
@@ -912,10 +912,10 @@ func (h *Helper) ResetModem(ctx context.Context) (time.Duration, error) {
 	}
 
 	if err != nil || modemType == cellularconst.ModemTypeNL668 {
-		if _, err := RestartModemWithHelper(ctx); err != nil {
-			return time.Since(start), errors.Wrap(err, "Modem reset with RestartModemWithHelper failed")
+		if _, err := ResetModemWithHelper(ctx); err != nil {
+			return time.Since(start), errors.Wrap(err, "Modem reset with ResetModemWithHelper failed")
 		}
-		testing.ContextLog(ctx, "Modem reset with RestartModemWithHelper succeeded")
+		testing.ContextLog(ctx, "Modem reset with ResetModemWithHelper succeeded")
 	}
 
 	// With the single device support,a shill cellular device will be present even after triggering the modem reset.

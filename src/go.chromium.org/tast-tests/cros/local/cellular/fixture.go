@@ -617,7 +617,7 @@ func (f *cellularFixture) SetUp(ctx context.Context, s *testing.FixtState) inter
 		testing.ContextLog(ctx, "starfish configured for ", sfCarrier, " at slot index: ", sfIndex)
 		// if a starfish v0 (regular starfish), a modem restart is required
 		if f.sf.GetModuleVersion(ctx) == starfish.ModuleVersion0 {
-			if _, err = RestartModemWithHelper(ctx); err != nil {
+			if _, err = ResetModemWithHelper(ctx); err != nil {
 				s.Fatal("Failed to restart modem: ", err)
 			}
 		}
@@ -1074,7 +1074,7 @@ func waitForModemToBeExported(ctx context.Context) (*modemmanager.Modem, error) 
 	if err != nil {
 		if ModemHelperPathExists() {
 			testing.ContextLog(ctx, "No modem exported by ModemManager, attempting to restart the modem")
-			modem, err = RestartModemWithHelper(ctx)
+			modem, err = ResetModemWithHelper(ctx)
 			if err != nil {
 				return nil, errors.Wrap(err, "failed to restart modem")
 			}

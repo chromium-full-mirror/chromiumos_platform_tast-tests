@@ -15,7 +15,6 @@ import (
 	// The contents of go.chromium.org/chromiumos/modemfwd are built and generated in platform2/modemfwd/.
 	mfwd "go.chromium.org/chromiumos/modemfwd"
 	"go.chromium.org/tast-tests/cros/common/testexec"
-	"go.chromium.org/tast-tests/cros/local/modemfwd"
 	"go.chromium.org/tast-tests/cros/local/modemmanager"
 	"go.chromium.org/tast/core/errors"
 	"go.chromium.org/tast/core/testing"
@@ -183,22 +182,14 @@ func GetDlcIDForVariant(ctx context.Context) (string, error) {
 
 }
 
-// RestartModemWithHelper uses the modemfwd helper to force a modem restart.
-func RestartModemWithHelper(ctx context.Context) (*modemmanager.Modem, error) {
+// ResetModemWithHelper uses the modemfwd helper to force a modem restart.
+func ResetModemWithHelper(ctx context.Context) (*modemmanager.Modem, error) {
 	helper, err := GetModemFirmwareHelperEntry(ctx)
 	if err != nil {
 		return nil, errors.Wrap(err, "failed to get modem firmware helper")
 	}
 
-	device, err := GetModemFirmwareDevice(ctx)
-	if err != nil {
-		return nil, errors.Wrap(err, "failed to get modem device")
-	}
-
-	if err := modemfwd.WaitForDevice(ctx, device.DeviceId); err != nil {
-		return nil, errors.Wrap(err, "failed to wait for modem device")
-	}
-
+	testing.ContextLog(ctx, "Reset modem with modemfwd helper")
 	helperPath := filepath.Join(GetModemHelperPath(), helper.Filename)
 	args := helper.ExtraArgument
 	args = append([]string{"--reboot"}, args...)
