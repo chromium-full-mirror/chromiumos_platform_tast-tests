@@ -149,14 +149,14 @@ func TestCalcGBB(t *testing.T) {
 	}
 
 	// 2 bits
-	m = CalcGBBMask([]pb.GBBFlag{pb.GBBFlag_DEV_SCREEN_SHORT_DELAY, pb.GBBFlag_FORCE_DEV_BOOT_FASTBOOT_FULL_CAP})
+	m = CalcGBBMask([]pb.GBBFlag{pb.GBBFlag_DEV_SCREEN_SHORT_DELAY, pb.GBBFlag_FORCE_MANUAL_RECOVERY})
 
-	if m != (0x0001<<pb.GBBFlag_DEV_SCREEN_SHORT_DELAY)|(0x0001<<pb.GBBFlag_FORCE_DEV_BOOT_FASTBOOT_FULL_CAP) {
+	if m != (0x0001<<pb.GBBFlag_DEV_SCREEN_SHORT_DELAY)|(0x0001<<pb.GBBFlag_FORCE_MANUAL_RECOVERY) {
 		t.Fatalf("unexpected mask for 2 bits: %v", m)
 	}
 
 	f = CalcGBBFlags(m)
-	if len(f) != 2 || f[0] != pb.GBBFlag_DEV_SCREEN_SHORT_DELAY || f[1] != pb.GBBFlag_FORCE_DEV_BOOT_FASTBOOT_FULL_CAP {
+	if len(f) != 2 || f[0] != pb.GBBFlag_DEV_SCREEN_SHORT_DELAY || f[1] != pb.GBBFlag_FORCE_MANUAL_RECOVERY {
 		t.Fatalf("unexpected flags for 2 bits: %v", f)
 	}
 }

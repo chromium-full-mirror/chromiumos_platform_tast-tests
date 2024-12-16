@@ -55,7 +55,6 @@ package crostini
 import (
 	"fmt"
 	"log"
-	"strings"
 	"time"
 
 	"go.chromium.org/tast-tests/cros/common/genparams"
@@ -63,6 +62,8 @@ import (
 	"go.chromium.org/tast-tests/cros/local/vm"
 
 	"golang.org/x/exp/slices"
+	"golang.org/x/text/cases"
+	"golang.org/x/text/language"
 )
 
 // Param specifies how each set of crostini tests should be generated.
@@ -368,11 +369,11 @@ func MakeTestParamsFromList(t genparams.TestingT, baseCases []Param) string {
 					} else if testCase.DeviceMode == devicemode.ClamshellMode {
 						suffix = "Clamshell"
 					}
-					fixture = fmt.Sprintf("\"crostini%sLargeContainer%s\"", strings.Title(i.debianVersion.Codename), suffix)
+					fixture = fmt.Sprintf("\"crostini%sLargeContainer%s\"", cases.Title(language.Und).String(i.debianVersion.Codename), suffix)
 				} else if testCase.UseGaiaLogin {
-					fixture = fmt.Sprintf("\"crostini%sGaia%s\"", strings.Title(i.debianVersion.Codename), arcStatus)
+					fixture = fmt.Sprintf("\"crostini%sGaia%s\"", cases.Title(language.Und).String(i.debianVersion.Codename), arcStatus)
 				} else {
-					fixture = fmt.Sprintf("\"crostini%s%s\"", strings.Title(i.debianVersion.Codename), arcStatus)
+					fixture = fmt.Sprintf("\"crostini%s%s\"", cases.Title(language.Und).String(i.debianVersion.Codename), arcStatus)
 				}
 
 			} else {
@@ -384,11 +385,11 @@ func MakeTestParamsFromList(t genparams.TestingT, baseCases []Param) string {
 				if testCase.SelfManagedInstall {
 					precondition = ""
 				} else if testCase.UseLargeContainer {
-					precondition = fmt.Sprintf("crostini.StartedBy%s%sLargeContainer()", "Dlc", strings.Title(i.debianVersion.Codename))
+					precondition = fmt.Sprintf("crostini.StartedBy%s%sLargeContainer()", "Dlc", cases.Title(language.Und).String(i.debianVersion.Codename))
 				} else if testCase.UseGaiaLogin {
-					precondition = fmt.Sprintf("crostini.StartedBy%s%sGaia()", "Dlc", strings.Title(i.debianVersion.Codename))
+					precondition = fmt.Sprintf("crostini.StartedBy%s%sGaia()", "Dlc", cases.Title(language.Und).String(i.debianVersion.Codename))
 				} else {
-					precondition = fmt.Sprintf("crostini.StartedBy%s%s()", "Dlc", strings.Title(i.debianVersion.Codename))
+					precondition = fmt.Sprintf("crostini.StartedBy%s%s()", "Dlc", cases.Title(language.Und).String(i.debianVersion.Codename))
 				}
 			}
 
@@ -413,7 +414,7 @@ func MakeTestParamsFromList(t genparams.TestingT, baseCases []Param) string {
 			}
 
 			if testCase.SelfManagedInstall {
-				testParam.Val = fmt.Sprintf("vm.Debian%s", strings.Title(i.debianVersion.Codename))
+				testParam.Val = fmt.Sprintf("vm.Debian%s", cases.Title(language.Und).String(i.debianVersion.Codename))
 			}
 
 			if testCase.UseFixture {

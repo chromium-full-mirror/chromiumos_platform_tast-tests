@@ -147,15 +147,6 @@ func setDeviceLocalAccountsProto(m *protoreflect.Message, policyName, fieldName 
 			deviceLocalAccountProto.KioskApp = &kioskAppProto
 		}
 
-		if v.AndroidKioskAppInfo != nil {
-			androidKioskProto := empb.AndroidKioskAppInfoProto{}
-			androidKioskProto.PackageName = v.AndroidKioskAppInfo.PackageName
-			androidKioskProto.ClassName = v.AndroidKioskAppInfo.ClassName
-			androidKioskProto.DisplayName = v.AndroidKioskAppInfo.DisplayName
-			androidKioskProto.Action = v.AndroidKioskAppInfo.Action
-			deviceLocalAccountProto.AndroidKioskApp = &androidKioskProto
-		}
-
 		if v.WebKioskAppInfo != nil {
 			webKioskAppProto := empb.WebKioskAppInfoProto{}
 			webKioskAppProto.Url = v.WebKioskAppInfo.Url

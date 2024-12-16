@@ -104,10 +104,8 @@ func (c *Conn) ConsoleAPICalled(ctx context.Context) (runtime.ConsoleAPICalledCl
 // Tests should not feel obligated to call this to clean up.
 func (c *Conn) CloseTarget(ctx context.Context) error {
 	args := &target.CloseTargetArgs{TargetID: c.targetID}
-	if reply, err := c.cl.Target.CloseTarget(ctx, args); err != nil {
+	if _, err := c.cl.Target.CloseTarget(ctx, args); err != nil {
 		return err
-	} else if !reply.Success {
-		return errors.New("failed to close target")
 	}
 	return nil
 }

@@ -108,7 +108,7 @@ func QuickInsertPower(ctx context.Context, s *testing.State) {
 	}
 
 	// Run through the queries repeatedly until `powerTotal` has elapsed.
-	for i, startTime := 0, time.Now(); time.Now().Sub(startTime) < powerTotal; i++ {
+	for i, startTime := 0, time.Now(); time.Since(startTime) < powerTotal; i++ {
 		// Open Quick Insert and search the current query.
 		query := queries[i%len(queries)]
 		if err := uiauto.Combine("search GIFs",

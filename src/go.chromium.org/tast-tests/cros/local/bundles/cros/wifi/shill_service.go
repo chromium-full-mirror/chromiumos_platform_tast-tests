@@ -4228,6 +4228,7 @@ func (s *ShillService) EnsureTestProfileAvailable(ctx context.Context, _ *empty.
 
 // GetNetworksForGeolocation returns geolocation cache
 // Deprecated: use GetWiFiNetworksForGeolocation instead.
+//lint:ignore SA1019 this function uses a deprecated return type in order to conform to the expected interface
 func (s *ShillService) GetNetworksForGeolocation(ctx context.Context, _ *empty.Empty) (*wifi.GetNetworksForGeolocationResponse, error) {
 	return nil, errors.New("GetNetworksForGeolocation is deprecated, use GetWiFiNetworksForGeolocation instead")
 }

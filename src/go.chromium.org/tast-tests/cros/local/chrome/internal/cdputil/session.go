@@ -197,10 +197,8 @@ func (s *Session) CreateTarget(ctx context.Context, url string, opts ...CreateTa
 
 // CloseTarget closes the target identified by the given id.
 func (s *Session) CloseTarget(ctx context.Context, id target.ID) error {
-	if reply, err := s.client.Target.CloseTarget(ctx, &target.CloseTargetArgs{TargetID: id}); err != nil {
+	if _, err := s.client.Target.CloseTarget(ctx, &target.CloseTargetArgs{TargetID: id}); err != nil {
 		return err
-	} else if !reply.Success {
-		return errors.New("unknown failure")
 	}
 
 	return testing.Poll(ctx, func(ctx context.Context) error {

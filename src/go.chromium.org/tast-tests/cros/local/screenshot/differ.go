@@ -568,7 +568,7 @@ func (d *differ) capture(ctx context.Context, screenshotName string, finder *nod
 		draw.Draw(cropped, dstSize, img, srcOffset, draw.Src)
 
 		for _, rect := range removedRects {
-			draw.Draw(cropped, rect, &image.Uniform{color.Transparent}, image.ZP, draw.Src)
+			draw.Draw(cropped, rect, &image.Uniform{color.Transparent}, image.Point{}, draw.Src)
 		}
 
 		f, err = os.Create(filepath.Join(dir, screenshotFile))

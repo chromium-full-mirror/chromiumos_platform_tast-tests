@@ -3100,13 +3100,6 @@ const (
 	EphemeralModeEnable                                      // 3
 )
 
-type AndroidKioskAppInfo struct {
-	PackageName *string `json:"package_name,omitempty"`
-	ClassName   *string `json:"class_name,omitempty"`
-	Action      *string `json:"action,omitempty"`
-	DisplayName *string `json:"display_name,omitempty"`
-}
-
 type KioskAppInfo struct {
 	AppId     *string `json:"app_id,omitempty"`
 	UpdateUrl *string `json:"update_url,omitempty"`
@@ -3120,7 +3113,6 @@ type WebKioskAppInfo struct {
 type DeviceLocalAccountInfo struct {
 	AccountID           *string              `json:"account_id,omitempty"`
 	AccountType         *AccountType         `json:"type,omitempty"`
-	AndroidKioskAppInfo *AndroidKioskAppInfo `json:"android_kiosk_app,omitempty"`
 	KioskAppInfo        *KioskAppInfo        `json:"kiosk_app,omitempty"`
 	WebKioskAppInfo     *WebKioskAppInfo     `json:"web_kiosk_app,omitempty"`
 	EphemeralMode       *EphemeralMode       `json:"ephemeral_mode,omitempty"`
