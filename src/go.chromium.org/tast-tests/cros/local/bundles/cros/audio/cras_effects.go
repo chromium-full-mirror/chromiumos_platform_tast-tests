@@ -293,7 +293,7 @@ func init() {
 					inputDevice:             "INTERNAL_MIC",
 					outputDevice:            "INTERNAL_SPEAKER",
 				}.Instance(),
-				ExtraHardwareDeps: hwdep.D(hwdep.Model(internal.DSPAPNCModels...)),
+				ExtraHardwareDeps: hwdep.D(hwdep.Model(internal.DSPAECNCModels...)),
 				ExtraAttr:         []string{"group:mainline"},
 			},
 			{
@@ -316,7 +316,7 @@ func init() {
 					inputDevice:             "INTERNAL_MIC",
 					outputDevice:            "INTERNAL_SPEAKER",
 				}.Instance(),
-				ExtraHardwareDeps: hwdep.D(hwdep.Model(internal.DSPAPNCModels...)),
+				ExtraHardwareDeps: hwdep.D(hwdep.Model(internal.DSPAECNCModels...)),
 				ExtraAttr:         []string{"group:mainline"},
 			},
 			{
@@ -339,7 +339,7 @@ func init() {
 					inputDevice:             "INTERNAL_MIC",
 					outputDevice:            "ALSA_LOOPBACK", // Using non-internal speaker should block DSP AEC.
 				}.Instance(),
-				ExtraHardwareDeps: hwdep.D(hwdep.Model(internal.DSPAPNCModels...)),
+				ExtraHardwareDeps: hwdep.D(hwdep.Model(internal.DSPAECNCModels...)),
 				ExtraAttr:         []string{"group:mainline"},
 			},
 			{
@@ -362,7 +362,7 @@ func init() {
 					inputDevice:             "INTERNAL_MIC",
 					outputDevice:            "ALSA_LOOPBACK", // Using non-internal speaker should block DSP AEC.
 				}.Instance(),
-				ExtraHardwareDeps: hwdep.D(hwdep.Model(internal.DSPAPNCModels...)),
+				ExtraHardwareDeps: hwdep.D(hwdep.Model(internal.DSPAECNCModels...)),
 				ExtraAttr:         []string{"group:mainline"},
 			},
 			// NC provider tests with both DSP, AP NC, and AST.
@@ -386,7 +386,7 @@ func init() {
 					inputDevice:             "INTERNAL_MIC",
 					outputDevice:            "INTERNAL_SPEAKER",
 				}.Instance(),
-				ExtraHardwareDeps: hwdep.D(hwdep.Model(internal.DSPAPNCModels...), hwdep.FeatureLevel(1)),
+				ExtraHardwareDeps: hwdep.D(hwdep.Model(internal.DSPAECNCModels...), hwdep.FeatureLevel(1)),
 				ExtraAttr: []string{
 					"group:mainline", "group:cbx", "cbx_feature_enabled", "cbx_stable",
 				},
@@ -411,7 +411,7 @@ func init() {
 					inputDevice:             "INTERNAL_MIC",
 					outputDevice:            "INTERNAL_SPEAKER",
 				}.Instance(),
-				ExtraHardwareDeps: hwdep.D(hwdep.Model(internal.DSPAPNCModels...)),
+				ExtraHardwareDeps: hwdep.D(hwdep.Model(internal.DSPAECNCModels...), hwdep.FeatureLevel(1)),
 				ExtraAttr:         []string{"group:mainline"},
 			},
 			{
@@ -434,7 +434,7 @@ func init() {
 					inputDevice:             "INTERNAL_MIC",
 					outputDevice:            "ALSA_LOOPBACK", // Using non-internal speaker should block DSP AEC.
 				}.Instance(),
-				ExtraHardwareDeps: hwdep.D(hwdep.Model(internal.DSPAPNCModels...), hwdep.FeatureLevel(1)),
+				ExtraHardwareDeps: hwdep.D(hwdep.Model(internal.DSPAECNCModels...), hwdep.FeatureLevel(1)),
 				ExtraAttr: []string{
 					"group:mainline", "group:cbx", "cbx_feature_enabled", "cbx_stable",
 				},
@@ -581,7 +581,7 @@ func init() {
 					inputDevice:             "INTERNAL_MIC",
 					outputDevice:            "INTERNAL_SPEAKER",
 				}.Instance(),
-				ExtraHardwareDeps: hwdep.D(hwdep.Model(internal.DSPAPNCModels...)),
+				ExtraHardwareDeps: hwdep.D(hwdep.Model(internal.DSPAECNCModels...)),
 				ExtraAttr:         []string{"group:mainline"},
 			},
 			{
@@ -602,7 +602,7 @@ func init() {
 					inputDevice:             "INTERNAL_MIC",
 					outputDevice:            "INTERNAL_SPEAKER",
 				}.Instance(),
-				ExtraHardwareDeps: hwdep.D(hwdep.Model(internal.DSPAPNCModels...)),
+				ExtraHardwareDeps: hwdep.D(hwdep.Model(internal.DSPAECNCModels...)),
 				ExtraAttr:         []string{"group:mainline"},
 			},
 			{
@@ -623,7 +623,7 @@ func init() {
 					inputDevice:             "INTERNAL_MIC",
 					outputDevice:            "INTERNAL_SPEAKER",
 				}.Instance(),
-				ExtraHardwareDeps: hwdep.D(hwdep.Model(internal.DSPAPNCModels...)),
+				ExtraHardwareDeps: hwdep.D(hwdep.Model(internal.DSPAECNCModels...)),
 				ExtraAttr:         []string{"group:mainline"},
 			},
 			{
@@ -644,7 +644,7 @@ func init() {
 					inputDevice:             "INTERNAL_MIC",
 					outputDevice:            "INTERNAL_SPEAKER",
 				}.Instance(),
-				ExtraHardwareDeps: hwdep.D(hwdep.Model(internal.DSPAPNCModels...)),
+				ExtraHardwareDeps: hwdep.D(hwdep.Model(internal.DSPAECNCModels...)),
 				ExtraAttr:         []string{"group:mainline"},
 			},
 			// Interactions with forced voice isolation and AST.
@@ -665,7 +665,7 @@ func init() {
 					inputDevice:             "INTERNAL_MIC",
 					outputDevice:            "INTERNAL_SPEAKER",
 				}.Instance(),
-				ExtraHardwareDeps: hwdep.D(hwdep.Model(internal.DSPAPNCModels...)),
+				ExtraHardwareDeps: hwdep.D(hwdep.Model(internal.DSPAECNCModels...), hwdep.FeatureLevel(1)),
 				ExtraAttr:         []string{"group:mainline"},
 			},
 			{
@@ -685,7 +685,7 @@ func init() {
 					inputDevice:             "INTERNAL_MIC",
 					outputDevice:            "INTERNAL_SPEAKER",
 				}.Instance(),
-				ExtraHardwareDeps: hwdep.D(hwdep.Model(internal.DSPAPNCModels...), hwdep.FeatureLevel(1)),
+				ExtraHardwareDeps: hwdep.D(hwdep.Model(internal.DSPAECNCModels...), hwdep.FeatureLevel(1)),
 				ExtraAttr: []string{
 					"group:mainline", "group:cbx", "cbx_feature_enabled", "cbx_stable",
 				},
@@ -707,7 +707,7 @@ func init() {
 					inputDevice:             "INTERNAL_MIC",
 					outputDevice:            "INTERNAL_SPEAKER",
 				}.Instance(),
-				ExtraHardwareDeps: hwdep.D(hwdep.Model(internal.DSPAPNCModels...)),
+				ExtraHardwareDeps: hwdep.D(hwdep.Model(internal.DSPAECNCModels...), hwdep.FeatureLevel(1)),
 				ExtraAttr:         []string{"group:mainline"},
 			},
 			{
@@ -727,7 +727,7 @@ func init() {
 					inputDevice:             "INTERNAL_MIC",
 					outputDevice:            "INTERNAL_SPEAKER",
 				}.Instance(),
-				ExtraHardwareDeps: hwdep.D(hwdep.Model(internal.DSPAPNCModels...)),
+				ExtraHardwareDeps: hwdep.D(hwdep.Model(internal.DSPAECNCModels...), hwdep.FeatureLevel(1)),
 				ExtraAttr:         []string{"group:mainline"},
 			},
 			// Others.
@@ -749,7 +749,7 @@ func init() {
 					inputDevice:             "INTERNAL_MIC",
 					outputDevice:            "INTERNAL_SPEAKER",
 				}.Instance(),
-				ExtraHardwareDeps: hwdep.D(hwdep.Model(internal.DSPAPNCModels...)),
+				ExtraHardwareDeps: hwdep.D(hwdep.Model(internal.DSPAECNCModels...)),
 				ExtraAttr:         []string{"group:mainline"},
 			},
 			{
@@ -770,7 +770,7 @@ func init() {
 					inputDevice:             "INTERNAL_MIC",
 					outputDevice:            "INTERNAL_SPEAKER",
 				}.Instance(),
-				ExtraHardwareDeps: hwdep.D(hwdep.Model(internal.DSPAPNCModels...)),
+				ExtraHardwareDeps: hwdep.D(hwdep.Model(internal.DSPAECNCModels...)),
 				ExtraAttr:         []string{"group:mainline"},
 			},
 			{
@@ -833,7 +833,7 @@ func init() {
 					inputDevice:             "INTERNAL_MIC",
 					outputDevice:            "INTERNAL_SPEAKER",
 				}.Instance(),
-				ExtraHardwareDeps: hwdep.D(hwdep.Model(internal.DSPAPNCModels...), hwdep.FeatureLevel(1)),
+				ExtraHardwareDeps: hwdep.D(hwdep.Model(internal.DSPAECNCModels...), hwdep.FeatureLevel(1)),
 				ExtraAttr: []string{
 					"group:mainline", "group:cbx", "cbx_feature_enabled", "cbx_stable",
 				},
