@@ -13,13 +13,13 @@ import (
 	"time"
 
 	"android.googlesource.com/platform/external/perfetto/protos/perfetto/trace/github.com/google/perfetto/perfetto_proto"
-	"github.com/golang/protobuf/proto"
 	"github.com/mafredri/cdp"
 	"github.com/mafredri/cdp/devtool"
 	"github.com/mafredri/cdp/protocol/target"
 	"github.com/mafredri/cdp/protocol/tracing"
 	"github.com/mafredri/cdp/rpcc"
 	"github.com/mafredri/cdp/session"
+	"google.golang.org/protobuf/proto"
 
 	"go.chromium.org/tast/core/errors"
 	"go.chromium.org/tast/core/testing"

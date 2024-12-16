@@ -8,7 +8,7 @@ import (
 	"encoding/json"
 	"testing"
 
-	"github.com/gogo/protobuf/proto"
+	"google.golang.org/protobuf/encoding/prototext"
 
 	empb "go.chromium.org/chromiumos/policy/chromium/policy/enterprise_management_proto"
 )
@@ -99,6 +99,6 @@ func TestSetSubMessage(t *testing.T) {
 	policy.SetProto(&message)
 
 	if *userProto.GetSubProto1().ReportAppUsageCollectionRateMs.Value != 20 {
-		t.Errorf("ReportAppUsageCollectionRateMs not set in %s", proto.MarshalTextString(&userProto))
+		t.Errorf("ReportAppUsageCollectionRateMs not set in %s", prototext.Format(&userProto))
 	}
 }

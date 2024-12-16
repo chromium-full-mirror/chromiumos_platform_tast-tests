@@ -9,7 +9,7 @@ import (
 	"time"
 
 	"github.com/godbus/dbus/v5"
-	"github.com/golang/protobuf/proto"
+	"google.golang.org/protobuf/proto"
 
 	pppb "go.chromium.org/chromiumos/system_api/patchpanel_proto"
 	"go.chromium.org/tast-tests/cros/common/crypto/certificate"

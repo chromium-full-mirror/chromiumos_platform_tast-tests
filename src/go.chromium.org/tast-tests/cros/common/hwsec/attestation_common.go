@@ -21,7 +21,7 @@ import (
 	"net/url"
 	"strings"
 
-	"github.com/golang/protobuf/proto"
+	"google.golang.org/protobuf/proto"
 
 	apb "go.chromium.org/chromiumos/system_api/attestation_proto"
 

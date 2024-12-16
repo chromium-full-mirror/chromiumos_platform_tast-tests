@@ -17,10 +17,11 @@ import (
 	"strings"
 	"time"
 
-	"github.com/golang/protobuf/jsonpb"
-	"github.com/golang/protobuf/proto"
 	"github.com/google/go-cmp/cmp"
 	"golang.org/x/crypto/ssh"
+	"google.golang.org/protobuf/encoding/protojson"
+	"google.golang.org/protobuf/encoding/prototext"
+	"google.golang.org/protobuf/proto"
 	"google.golang.org/protobuf/reflect/protoreflect"
 	"google.golang.org/protobuf/testing/protocmp"
 
@@ -159,7 +160,7 @@ func requiredFields(ctx context.Context, s *testing.State) (requiredFieldSet, er
 	s.Log("Verification spec path: ", verificationSpecPath)
 
 	message := &hvpb.HwVerificationSpec{}
-	if err := proto.UnmarshalText(string(output), message); err != nil {
+	if err := prototext.Unmarshal(output, message); err != nil {
 		return nil, err
 	}
 
@@ -268,7 +269,7 @@ func trimFields(message *rppb.ProbeResult, fieldsMapping requiredFieldSet) (sort
 						values.Set(valuesFieldDesc, valuesFieldDesc.Default())
 					}
 				}
-				probeResults = append(probeResults, values.Interface().(proto.Message))
+				probeResults = append(probeResults, values.Interface())
 			}
 		}
 	}
@@ -343,7 +344,7 @@ func collectFields(deviceInfo *hvpb.HwVerificationReport_GenericDeviceInfo, fiel
 		fieldsList := deviceInfoPr.Get(fieldsListDesc).List()
 		for i := 0; i < fieldsList.Len(); i++ {
 			fields := fieldsList.Get(i).Message()
-			messageList = append(messageList, fields.Interface().(proto.Message))
+			messageList = append(messageList, fields.Interface())
 		}
 	}
 	sort.Sort(messageList)
@@ -366,7 +367,7 @@ func hwVerify(ctx context.Context, dut *dut.DUT, fieldsMapping requiredFieldSet)
 		}
 	}
 	message := &hvpb.HwVerificationReport{}
-	if err := proto.Unmarshal(output, message); err != nil {
+	if err := proto.Unmarshal([]byte(output), message); err != nil {
 		return nil, err
 	}
 	return collectFields(message.GetGenericDeviceInfo(), fieldsMapping)
@@ -433,13 +434,13 @@ func report(ctx context.Context, s *testing.State, fieldsMapping requiredFieldSe
 		return nil, errors.New("isCompliant should be a boolean value")
 	}
 
-	if err := jsonpb.UnmarshalString(qualificationStatus, &hvpb.HwVerificationReport{}); err != nil {
+	if err := protojson.Unmarshal([]byte(qualificationStatus), &hvpb.HwVerificationReport{}); err != nil {
 		return nil, errors.New("cannot decode qualification status section to a proto message")
 	}
 
 	resultText := splits[1]
 	message := &hvpb.HwVerificationReport_GenericDeviceInfo{}
-	if err := proto.UnmarshalText(resultText, message); err != nil {
+	if err := prototext.Unmarshal([]byte(resultText), message); err != nil {
 		return nil, errors.Wrap(err, "cannot unmarshal")
 	}
 	return collectFields(message, fieldsMapping)

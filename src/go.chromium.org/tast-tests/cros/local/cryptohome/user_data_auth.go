@@ -8,7 +8,7 @@ import (
 	"context"
 
 	"github.com/godbus/dbus/v5"
-	"github.com/golang/protobuf/proto"
+	"google.golang.org/protobuf/proto"
 
 	uda "go.chromium.org/chromiumos/system_api/user_data_auth_proto"
 

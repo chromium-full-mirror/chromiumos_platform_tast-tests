@@ -10,7 +10,7 @@ import (
 	"path/filepath"
 	"time"
 
-	"github.com/golang/protobuf/proto"
+	"google.golang.org/protobuf/proto"
 
 	featuredpb "go.chromium.org/chromiumos/system_api/featured_proto"
 	"go.chromium.org/tast/core/errors"

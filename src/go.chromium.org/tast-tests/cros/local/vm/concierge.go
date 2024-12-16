@@ -13,7 +13,7 @@ import (
 	"strings"
 
 	"github.com/godbus/dbus/v5"
-	"github.com/golang/protobuf/proto"
+	"google.golang.org/protobuf/proto"
 
 	cpb "go.chromium.org/chromiumos/system_api/vm_cicerone_proto"   // protobufs for container management
 	vmpb "go.chromium.org/chromiumos/system_api/vm_concierge_proto" // protobufs for VM management

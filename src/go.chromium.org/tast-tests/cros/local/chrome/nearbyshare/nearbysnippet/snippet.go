@@ -13,7 +13,7 @@ import (
 	"strings"
 	"time"
 
-	"github.com/golang/protobuf/proto"
+	"google.golang.org/protobuf/proto"
 
 	"go.chromium.org/tast-tests/cros/common/android"
 	"go.chromium.org/tast-tests/cros/common/android/adb"

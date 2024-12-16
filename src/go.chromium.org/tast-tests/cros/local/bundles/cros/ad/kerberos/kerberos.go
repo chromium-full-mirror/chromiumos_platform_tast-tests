@@ -10,7 +10,7 @@ import (
 	"os"
 
 	"github.com/godbus/dbus/v5"
-	"github.com/golang/protobuf/proto"
+	"google.golang.org/protobuf/proto"
 
 	kp "go.chromium.org/chromiumos/system_api/kerberos_proto"
 	"go.chromium.org/tast-tests/cros/local/dbusutil"

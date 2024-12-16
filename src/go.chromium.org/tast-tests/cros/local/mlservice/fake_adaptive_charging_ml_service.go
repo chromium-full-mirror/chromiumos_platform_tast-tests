@@ -11,7 +11,7 @@ import (
 
 	"github.com/godbus/dbus/v5"
 	"github.com/godbus/dbus/v5/introspect"
-	"github.com/golang/protobuf/proto"
+	"google.golang.org/protobuf/proto"
 
 	pb "go.chromium.org/chromiumos/system_api/ml_proto"
 	"go.chromium.org/tast-tests/cros/local/upstart"

@@ -10,7 +10,7 @@ import (
 	"os"
 
 	"github.com/godbus/dbus/v5"
-	"github.com/golang/protobuf/proto"
+	"google.golang.org/protobuf/proto"
 
 	pp "go.chromium.org/chromiumos/system_api/patchpanel_proto"
 

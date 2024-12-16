@@ -15,7 +15,7 @@ import (
 	"time"
 
 	"github.com/godbus/dbus/v5"
-	"github.com/golang/protobuf/proto"
+	"google.golang.org/protobuf/proto"
 
 	spb "go.chromium.org/chromiumos/system_api/seneschal_proto"   // protobufs for seneschal
 	cpb "go.chromium.org/chromiumos/system_api/vm_cicerone_proto" // protobufs for container management

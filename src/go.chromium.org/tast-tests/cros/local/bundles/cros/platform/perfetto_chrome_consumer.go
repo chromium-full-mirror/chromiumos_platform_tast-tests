@@ -11,7 +11,8 @@ import (
 	"time"
 
 	"android.googlesource.com/platform/external/perfetto/protos/perfetto/trace/github.com/google/perfetto/perfetto_proto"
-	"github.com/golang/protobuf/proto"
+	"google.golang.org/protobuf/encoding/prototext"
+	"google.golang.org/protobuf/proto"
 
 	"go.chromium.org/tast-tests/cros/local/chrome"
 	"go.chromium.org/tast-tests/cros/local/tracing"
@@ -62,12 +63,12 @@ func PerfettoChromeConsumer(ctx context.Context, s *testing.State) {
 	}
 	// Unmarshall the pbtxt and then marshall to binary protobuf.
 	config := &perfetto_proto.TraceConfig{}
-	if err := proto.UnmarshalText(string(configTxt), config); err != nil {
+	if err := prototext.Unmarshal(configTxt, config); err != nil {
 		s.Fatal("Failed to unmarshal perfetto config: ", err)
 	}
 	configPb, err := proto.Marshal(config)
 	if err != nil {
-		s.Fatal("Failed to marshal perfetto config: err")
+		s.Fatal("Failed to marshal perfetto config: ", err)
 	}
 
 	// triedToStopTracing means that cr.StopTracing(cleanupCtx) was already done, with or without success (if it failed then we have no reason to try again with the same timeout.)

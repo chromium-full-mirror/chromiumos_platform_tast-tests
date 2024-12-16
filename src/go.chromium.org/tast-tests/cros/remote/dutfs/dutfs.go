@@ -15,7 +15,6 @@ import (
 	"os"
 	"time"
 
-	"github.com/golang/protobuf/ptypes"
 	"golang.org/x/sys/unix"
 	"google.golang.org/grpc"
 
@@ -237,11 +236,11 @@ func (fi fileInfo) Mode() os.FileMode {
 }
 
 func (fi fileInfo) ModTime() time.Time {
-	ts, err := ptypes.Timestamp(fi.pb.Modified)
+	err := fi.pb.Modified.CheckValid()
 	if err != nil {
 		return time.Time{}
 	}
-	return ts
+	return fi.pb.Modified.AsTime()
 }
 
 func (fi fileInfo) IsDir() bool {

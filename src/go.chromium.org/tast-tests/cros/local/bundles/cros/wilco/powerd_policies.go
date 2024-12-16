@@ -9,7 +9,7 @@ import (
 	"io/ioutil"
 	"time"
 
-	"github.com/golang/protobuf/proto"
+	"google.golang.org/protobuf/proto"
 
 	pmpb "go.chromium.org/chromiumos/system_api/power_manager_proto"
 

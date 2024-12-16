@@ -9,8 +9,7 @@ import (
 	"math"
 	"time"
 
-	"github.com/golang/protobuf/ptypes"
-	"github.com/golang/protobuf/ptypes/empty"
+	"google.golang.org/protobuf/types/known/emptypb"
 
 	"go.chromium.org/tast-tests/cros/remote/dut"
 	//lint:ignore ST1019 multiple imports with different identifiers help code readability
@@ -111,22 +110,22 @@ func readClocks(ctx context.Context, s *testing.State, params *arcpb.SuspendServ
 }
 
 func calcClockDiffs(t0, t1 *arcpb.ClockValues) (clockDiffs, error) {
-	t0Boottime, err := ptypes.Duration(t0.ClockBoottime)
-	if err != nil {
+	if err := t0.ClockBoottime.CheckValid(); err != nil {
 		return clockDiffs{}, errors.Wrap(err, "failed to convert t0.ClockBoottime")
 	}
-	t1Boottime, err := ptypes.Duration(t1.ClockBoottime)
-	if err != nil {
+	t0Boottime := t0.ClockBoottime.AsDuration()
+	if err := t1.ClockBoottime.CheckValid(); err != nil {
 		return clockDiffs{}, errors.Wrap(err, "failed to convert t1.ClockBoottime")
 	}
-	t0Monotonic, err := ptypes.Duration(t0.ClockMonotonic)
-	if err != nil {
+	t1Boottime := t1.ClockBoottime.AsDuration()
+	if err := t0.ClockMonotonic.CheckValid(); err != nil {
 		return clockDiffs{}, errors.Wrap(err, "failed to convert t0.ClockMonotonic")
 	}
-	t1Monotonic, err := ptypes.Duration(t1.ClockMonotonic)
-	if err != nil {
+	t0Monotonic := t0.ClockMonotonic.AsDuration()
+	if err := t1.ClockMonotonic.CheckValid(); err != nil {
 		return clockDiffs{}, errors.Wrap(err, "failed to convert t1.ClockMonotonic")
 	}
+	t1Monotonic := t1.ClockMonotonic.AsDuration()
 	return clockDiffs{
 		bootDiff: time.Duration(t1Boottime - t0Boottime),
 		monoDiff: time.Duration(t1Monotonic - t0Monotonic),
@@ -175,14 +174,14 @@ func Suspend(ctx context.Context, s *testing.State) {
 		defer cl.Close(ctx)
 		service := arc.NewSuspendServiceClient(cl.Conn)
 		// Login to start ARC (re-login if it is logged in already)
-		params, err := service.Prepare(ctx, &empty.Empty{})
+		params, err := service.Prepare(ctx, &emptypb.Empty{})
 		if err != nil {
 			s.Fatal("SuspendService.Prepare returned an error: ", err)
 		}
 		defer func() {
 			// Finalize may fail if the service connection is lost.
 			// Resources used by the service will be freed up anyways, so ignoring the error here.
-			_, err = service.Finalize(ctx, &empty.Empty{})
+			_, err = service.Finalize(ctx, &emptypb.Empty{})
 			if err != nil {
 				s.Log("SuspendService.Finalize returned an error (ignorable): ", err)
 			}

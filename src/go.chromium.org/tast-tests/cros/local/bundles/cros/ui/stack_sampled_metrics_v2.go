@@ -14,7 +14,6 @@ import (
 
 	spb "go.chromium.org/chromiumos/system_api/stack_sampled_metrics_status_proto"
 
-	"github.com/golang/protobuf/proto"
 	"go.chromium.org/tast-tests/cros/common/fixture"
 	"go.chromium.org/tast-tests/cros/local/bundles/cros/ui/executioncontext"
 	"go.chromium.org/tast-tests/cros/local/chrome"
@@ -22,6 +21,7 @@ import (
 	"go.chromium.org/tast/core/errors"
 	"go.chromium.org/tast/core/testing"
 	"golang.org/x/sys/unix"
+	"google.golang.org/protobuf/proto"
 )
 
 const (

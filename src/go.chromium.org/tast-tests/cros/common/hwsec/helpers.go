@@ -19,7 +19,7 @@ import (
 	"strings"
 	"time"
 
-	"github.com/golang/protobuf/proto"
+	"google.golang.org/protobuf/proto"
 
 	tmpb "go.chromium.org/chromiumos/system_api/tpm_manager_proto"
 

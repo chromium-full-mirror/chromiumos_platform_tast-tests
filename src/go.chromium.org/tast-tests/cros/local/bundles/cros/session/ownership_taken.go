@@ -7,7 +7,7 @@ package session
 import (
 	"context"
 
-	"github.com/golang/protobuf/proto"
+	"google.golang.org/protobuf/proto"
 
 	"go.chromium.org/chromiumos/policy/chromium/policy/enterprise_management_proto"
 

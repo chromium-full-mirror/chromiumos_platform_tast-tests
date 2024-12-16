@@ -14,7 +14,7 @@ import (
 	"strings"
 
 	"android.googlesource.com/platform/external/perfetto/protos/perfetto/metrics/github.com/google/perfetto/perfetto_proto"
-	"github.com/gogo/protobuf/proto"
+	"google.golang.org/protobuf/encoding/prototext"
 
 	"go.chromium.org/tast-tests/cros/common/testexec"
 	"go.chromium.org/tast-tests/cros/local/arc"
@@ -151,7 +151,7 @@ func Metrics(ctx context.Context, traceResultPath string, metrics ...string) (*p
 		return nil, err
 	}
 	metricsProto := &perfetto_proto.TraceMetrics{}
-	if err := proto.UnmarshalText(string(output), metricsProto); err != nil {
+	if err := prototext.Unmarshal(output, metricsProto); err != nil {
 		return nil, errors.Wrap(err, "failed to unmarshal metrics result")
 	}
 

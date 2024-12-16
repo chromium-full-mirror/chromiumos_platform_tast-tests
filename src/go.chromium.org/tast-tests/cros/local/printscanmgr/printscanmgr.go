@@ -10,7 +10,7 @@ import (
 	"context"
 
 	"github.com/godbus/dbus/v5"
-	"github.com/golang/protobuf/proto"
+	"google.golang.org/protobuf/proto"
 
 	ppb "go.chromium.org/chromiumos/system_api/printscanmgr_proto"
 

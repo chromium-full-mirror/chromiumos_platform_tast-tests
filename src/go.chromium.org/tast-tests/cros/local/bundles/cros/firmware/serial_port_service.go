@@ -7,10 +7,9 @@ package firmware
 import (
 	"context"
 
-	"github.com/golang/protobuf/ptypes"
-	"github.com/golang/protobuf/ptypes/empty"
-	"github.com/golang/protobuf/ptypes/wrappers"
 	"google.golang.org/grpc"
+	"google.golang.org/protobuf/types/known/emptypb"
+	"google.golang.org/protobuf/types/known/wrapperspb"
 
 	"go.chromium.org/tast-tests/cros/common/firmware/serial"
 	pb "go.chromium.org/tast-tests/cros/services/cros/firmware"
@@ -37,10 +36,12 @@ type SerialPortService struct {
 func (s *SerialPortService) Open(ctx context.Context, in *pb.SerialPortConfig) (*pb.PortId, error) {
 	testing.ContextLog(ctx, "Opening service port")
 
-	readTimeout, err := ptypes.Duration(in.GetReadTimeout())
+	readTimeoutProto := in.GetReadTimeout()
+	err := readTimeoutProto.CheckValid()
 	if err != nil {
 		return nil, errors.Wrap(err, "converting ReadTimeout")
 	}
+	readTimeout := readTimeoutProto.AsDuration()
 	p, err := serial.NewConnectedPortOpener(in.GetName(), int(in.GetBaud()), readTimeout).OpenPort(ctx)
 	if err != nil {
 		return nil, err
@@ -70,7 +71,7 @@ func (s *SerialPortService) getPort(id uint32) (serial.Port, error) {
 }
 
 // Read handles the Read rpc call.
-func (s *SerialPortService) Read(ctx context.Context, in *pb.SerialReadRequest) (*wrappers.BytesValue, error) {
+func (s *SerialPortService) Read(ctx context.Context, in *pb.SerialReadRequest) (*wrapperspb.BytesValue, error) {
 	p, err := s.getPort(in.GetId().GetValue())
 	if err != nil {
 		return nil, err
@@ -80,11 +81,11 @@ func (s *SerialPortService) Read(ctx context.Context, in *pb.SerialReadRequest) 
 	if err != nil {
 		return nil, err
 	}
-	return &wrappers.BytesValue{Value: buf[:readLen]}, err
+	return &wrapperspb.BytesValue{Value: buf[:readLen]}, err
 }
 
 // Write handles the Write rpc call.
-func (s *SerialPortService) Write(ctx context.Context, in *pb.SerialWriteRequest) (*wrappers.Int64Value, error) {
+func (s *SerialPortService) Write(ctx context.Context, in *pb.SerialWriteRequest) (*wrapperspb.Int64Value, error) {
 	p, err := s.getPort(in.GetId().GetValue())
 	if err != nil {
 		return nil, err
@@ -93,20 +94,20 @@ func (s *SerialPortService) Write(ctx context.Context, in *pb.SerialWriteRequest
 	if err != nil {
 		return nil, err
 	}
-	return &wrappers.Int64Value{Value: int64(n)}, err
+	return &wrapperspb.Int64Value{Value: int64(n)}, err
 }
 
 // Flush handles the Flush rpc call.
-func (s *SerialPortService) Flush(ctx context.Context, in *pb.PortId) (*empty.Empty, error) {
+func (s *SerialPortService) Flush(ctx context.Context, in *pb.PortId) (*emptypb.Empty, error) {
 	p, err := s.getPort(in.GetValue())
 	if err != nil {
 		return nil, err
 	}
-	return &empty.Empty{}, p.Flush(ctx)
+	return &emptypb.Empty{}, p.Flush(ctx)
 }
 
 // Close handles the Close rpc call.
-func (s *SerialPortService) Close(ctx context.Context, in *pb.PortId) (*empty.Empty, error) {
+func (s *SerialPortService) Close(ctx context.Context, in *pb.PortId) (*emptypb.Empty, error) {
 	id := in.GetValue()
 	p, err := s.getPort(id)
 	if err != nil {
@@ -116,5 +117,5 @@ func (s *SerialPortService) Close(ctx context.Context, in *pb.PortId) (*empty.Em
 		return nil, err
 	}
 	delete(s.ports, id)
-	return &empty.Empty{}, nil
+	return &emptypb.Empty{}, nil
 }

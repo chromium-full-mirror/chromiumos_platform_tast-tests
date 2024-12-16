@@ -8,7 +8,7 @@ import (
 	"context"
 	"time"
 
-	"github.com/golang/protobuf/ptypes"
+	"google.golang.org/protobuf/types/known/durationpb"
 
 	common "go.chromium.org/tast-tests/cros/common/firmware/serial"
 	pb "go.chromium.org/tast-tests/cros/services/cros/firmware"
@@ -26,7 +26,7 @@ func (c *RemotePortOpener) OpenPort(ctx context.Context) (common.Port, error) {
 	id, err := c.serviceClient.Open(ctx, &pb.SerialPortConfig{
 		Name:        c.config.Name,
 		Baud:        int64(c.config.Baud),
-		ReadTimeout: ptypes.DurationProto(c.config.ReadTimeout),
+		ReadTimeout: durationpb.New(c.config.ReadTimeout),
 	})
 	if err != nil {
 		return nil, errors.Wrap(err, "opening remote port")

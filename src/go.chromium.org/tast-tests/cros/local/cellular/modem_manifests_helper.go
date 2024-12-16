@@ -11,7 +11,7 @@ import (
 	"os"
 	"path/filepath"
 
-	"github.com/golang/protobuf/proto"
+	"google.golang.org/protobuf/encoding/prototext"
 	// The contents of go.chromium.org/chromiumos/modemfwd are built and generated in platform2/modemfwd/.
 	mfwd "go.chromium.org/chromiumos/modemfwd"
 	"go.chromium.org/tast-tests/cros/common/testexec"
@@ -35,7 +35,7 @@ func ParseModemFirmwareManifest(ctx context.Context) (*mfwd.FirmwareManifestV2, 
 
 	testing.ContextLog(ctx, "Parsing modem firmware proto")
 	manifest := &mfwd.FirmwareManifestV2{}
-	if err := proto.UnmarshalText(string(output), manifest); err != nil {
+	if err := prototext.Unmarshal(output, manifest); err != nil {
 		return nil, errors.Wrapf(err, "failed to parse firmware manifest: %s", modemFirmwareProtoPath)
 	}
 	testing.ContextLog(ctx, "Parsed successfully")
@@ -70,7 +70,7 @@ func ParseModemHelperManifest(ctx context.Context) (*mfwd.HelperManifest, error)
 
 	testing.ContextLog(ctx, "Parsing modem helper proto")
 	manifest := &mfwd.HelperManifest{}
-	if err := proto.UnmarshalText(string(output), manifest); err != nil {
+	if err := prototext.Unmarshal(output, manifest); err != nil {
 		return nil, errors.Wrapf(err, "failed to parse helper manifest: %s", modemHelperProtoPath)
 	}
 	testing.ContextLog(ctx, "Parsed successfully")

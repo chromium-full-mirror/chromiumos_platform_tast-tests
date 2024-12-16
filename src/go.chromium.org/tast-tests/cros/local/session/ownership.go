@@ -15,8 +15,8 @@ import (
 	"path/filepath"
 	"time"
 
-	"github.com/golang/protobuf/proto"
 	"golang.org/x/crypto/pkcs12"
+	"google.golang.org/protobuf/proto"
 
 	"go.chromium.org/chromiumos/policy/chromium/policy/enterprise_management_proto"
 	lm "go.chromium.org/chromiumos/system_api/login_manager_proto"

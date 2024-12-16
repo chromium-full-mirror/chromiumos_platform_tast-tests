@@ -16,13 +16,14 @@ import (
 	"strings"
 	"time"
 
-	"github.com/golang/protobuf/ptypes"
-	"github.com/golang/protobuf/ptypes/empty"
 	"go.chromium.org/chromiumos/config/go/api/test/tls"
 	"go.chromium.org/chromiumos/config/go/api/test/tls/dependencies/longrunning"
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/status"
+	"google.golang.org/protobuf/proto"
+	"google.golang.org/protobuf/types/known/anypb"
+	"google.golang.org/protobuf/types/known/emptypb"
 
 	"go.chromium.org/tast-tests/cros/common/commonautoupdate"
 	"go.chromium.org/tast-tests/cros/common/testexec"
@@ -129,7 +130,7 @@ func EnsureUpdateStatusIdle(ctx context.Context, dut *dut.DUT, rpcHint *testing.
 	defer cl.Close(ctx)
 
 	updateClient := aupb.NewUpdateServiceClient(cl.Conn)
-	if _, err := updateClient.EnsureUpdateEngineReady(ctx, &empty.Empty{}); err != nil {
+	if _, err := updateClient.EnsureUpdateEngineReady(ctx, &emptypb.Empty{}); err != nil {
 		return errors.Wrap(err, "update engine is not idle")
 	}
 
@@ -146,7 +147,7 @@ func ResetUpdateStatus(ctx context.Context, dut *dut.DUT, rpcHint *testing.RPCHi
 	defer cl.Close(ctx)
 
 	updateClient := aupb.NewUpdateServiceClient(cl.Conn)
-	if _, err := updateClient.ResetUpdateEngine(ctx, &empty.Empty{}); err != nil {
+	if _, err := updateClient.ResetUpdateEngine(ctx, &emptypb.Empty{}); err != nil {
 		return errors.Wrap(err, "failed to reset update engine")
 	}
 
@@ -180,7 +181,7 @@ func PeriodicUpdateFromGS(ctx context.Context, dut *dut.DUT, outdir string, rpcH
 		// Clear stateful lsb_release after finish.
 		defer updateClient.OverwriteStatefulLSBRelease(ctx, &aupb.LSBRelease{ContentJson: []byte("{}")})
 
-		status, err := updateClient.PeriodicCheckForUpdate(ctx, &empty.Empty{})
+		status, err := updateClient.PeriodicCheckForUpdate(ctx, &emptypb.Empty{})
 		if err != nil {
 			return errors.Wrap(err, "failed to do periodic update")
 		}
@@ -242,7 +243,7 @@ func ConfigureNebraskaFromGS(ctx context.Context, conn *grpc.ClientConn, dut *du
 	}
 	defer func(ctx context.Context) {
 		if retErr != nil {
-			_, err := nebraskaClient.Stop(ctx, &empty.Empty{})
+			_, err := nebraskaClient.Stop(ctx, &emptypb.Empty{})
 			retErr = errors.Join(retErr, err)
 		}
 	}(cleanupCtx)
@@ -305,7 +306,7 @@ func updateFromGSInternal(ctx context.Context, dut *dut.DUT, outdir string, rpcH
 		return errors.Wrap(err, "failed to start Nebraska")
 	}
 	defer func(ctx context.Context) {
-		_, err := nebraskaClient.Stop(ctx, &empty.Empty{})
+		_, err := nebraskaClient.Stop(ctx, &emptypb.Empty{})
 		retErr = errors.Join(retErr, err)
 	}(cleanupCtx)
 
@@ -362,7 +363,7 @@ func cacheForDUT(ctx context.Context, dut *dut.DUT, TLWAddress, gsPathPrefix str
 	}
 
 	resp := &tls.CacheForDutResponse{}
-	if err := ptypes.UnmarshalAny(respAny, resp); err != nil {
+	if err := anypb.UnmarshalTo(respAny, resp, proto.UnmarshalOptions{}); err != nil {
 		return "", errors.Errorf("unexpected response from CacheForDut, %v", respAny)
 	}
 

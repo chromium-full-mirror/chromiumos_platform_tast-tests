@@ -16,11 +16,11 @@ import (
 	"strings"
 	"time"
 
-	"github.com/golang/protobuf/proto"
 	"github.com/google/go-cmp/cmp"
 	"github.com/google/go-cmp/cmp/cmpopts"
 	cpb "go.chromium.org/chromiumos/system_api/cryptohome_proto"
 	uda "go.chromium.org/chromiumos/system_api/user_data_auth_proto"
+	"google.golang.org/protobuf/proto"
 
 	"go.chromium.org/tast/core/errors"
 	"go.chromium.org/tast/core/testing"

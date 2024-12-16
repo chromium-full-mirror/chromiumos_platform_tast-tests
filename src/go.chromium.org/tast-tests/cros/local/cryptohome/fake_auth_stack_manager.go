@@ -16,7 +16,7 @@ import (
 	"sync"
 
 	"github.com/godbus/dbus/v5"
-	"github.com/golang/protobuf/proto"
+	"google.golang.org/protobuf/proto"
 
 	messages "go.chromium.org/chromiumos/system_api/biod_messages_proto"
 

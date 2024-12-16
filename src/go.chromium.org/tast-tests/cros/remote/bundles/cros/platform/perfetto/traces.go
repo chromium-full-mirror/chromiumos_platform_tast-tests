@@ -12,7 +12,7 @@ import (
 	"strings"
 
 	"android.googlesource.com/platform/external/perfetto/protos/perfetto/metrics/github.com/google/perfetto/perfetto_proto"
-	"github.com/golang/protobuf/proto"
+	"google.golang.org/protobuf/encoding/prototext"
 
 	"go.chromium.org/tast-tests/cros/common/testexec"
 	"go.chromium.org/tast-tests/cros/services/cros/platform"
@@ -72,7 +72,7 @@ func RunMetrics(ctx context.Context, outputPath string, metrics []string) (*perf
 	}
 
 	tbm := &perfetto_proto.TraceMetrics{}
-	if err := proto.UnmarshalText(string(out), tbm); err != nil {
+	if err := prototext.Unmarshal(out, tbm); err != nil {
 		return nil, errors.Wrap(err, "failed to unmarshal metrics result")
 	}
 

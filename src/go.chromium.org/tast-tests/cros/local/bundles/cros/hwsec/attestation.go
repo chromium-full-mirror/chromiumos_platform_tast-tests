@@ -7,7 +7,7 @@ package hwsec
 import (
 	"context"
 
-	"github.com/golang/protobuf/proto"
+	"google.golang.org/protobuf/proto"
 	"github.com/google/uuid"
 
 	apb "go.chromium.org/chromiumos/system_api/attestation_proto"

@@ -9,9 +9,9 @@ import (
 	"io/ioutil"
 	"os"
 
-	"github.com/golang/protobuf/ptypes"
 	"golang.org/x/sys/unix"
 	"google.golang.org/grpc"
+	"google.golang.org/protobuf/types/known/timestamppb"
 
 	"go.chromium.org/tast-tests/cros/services/cros/baserpc"
 	"go.chromium.org/tast/core/fsutil"
@@ -211,15 +211,11 @@ func (fs *FileSystemService) WriteFileAtOffset(ctx context.Context, req *baserpc
 }
 
 func toFileInfoProto(fi os.FileInfo) (*baserpc.FileInfo, error) {
-	ts, err := ptypes.TimestampProto(fi.ModTime())
-	if err != nil {
-		return nil, err
-	}
 	return &baserpc.FileInfo{
 		Name:     fi.Name(),
 		Size:     uint64(fi.Size()),
 		Mode:     uint64(fi.Mode()),
-		Modified: ts,
+		Modified: timestamppb.New(fi.ModTime()),
 	}, nil
 }
 

@@ -11,9 +11,9 @@ import (
 	"sync"
 	"time"
 
-	"github.com/golang/protobuf/jsonpb"
-	"github.com/golang/protobuf/proto"
 	"google.golang.org/grpc"
+	"google.golang.org/protobuf/encoding/protojson"
+	"google.golang.org/protobuf/proto"
 
 	"go.chromium.org/tast-tests/cros/local/apps"
 	fpb "go.chromium.org/tast-tests/cros/local/bundles/cros/feedback/proto"
@@ -157,8 +157,8 @@ func (svc *UserFeedbackService) GetUserFeedback(ctx context.Context, req *pb.Get
 	if err = proto.Unmarshal(content, report); err != nil {
 		return nil, errors.Wrap(err, "failed to parse user feedback report")
 	}
-	marshaler := jsonpb.Marshaler{Indent: "  "}
-	userFeedbackJSON, err := marshaler.MarshalToString(report)
+	marshaler := protojson.MarshalOptions{Indent: "  "}
+	userFeedbackJSON := marshaler.Format(report)
 
 	res := &pb.GetUserFeedbackResponse{
 		UserFeedback: userFeedbackJSON,

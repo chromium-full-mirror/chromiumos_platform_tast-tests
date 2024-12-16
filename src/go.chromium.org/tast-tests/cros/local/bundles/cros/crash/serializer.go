@@ -12,7 +12,7 @@ import (
 	"os"
 	"path/filepath"
 
-	"github.com/golang/protobuf/proto"
+	"google.golang.org/protobuf/proto"
 	"go.chromium.org/chromiumos/config/go/api/test/tls"
 
 	"go.chromium.org/tast-tests/cros/common/testexec"

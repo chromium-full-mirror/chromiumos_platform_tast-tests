@@ -8,7 +8,7 @@ import (
 	"context"
 
 	"github.com/godbus/dbus/v5"
-	"github.com/golang/protobuf/proto"
+	"google.golang.org/protobuf/proto"
 
 	cpb "go.chromium.org/chromiumos/system_api/plugin_vm_service_proto"
 	"go.chromium.org/tast-tests/cros/common/fixture"

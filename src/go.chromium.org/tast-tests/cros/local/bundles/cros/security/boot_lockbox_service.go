@@ -8,9 +8,9 @@ import (
 	"context"
 
 	"github.com/godbus/dbus/v5"
-	"github.com/golang/protobuf/proto"
-	"github.com/golang/protobuf/ptypes/empty"
 	"google.golang.org/grpc"
+	"google.golang.org/protobuf/proto"
+	"google.golang.org/protobuf/types/known/emptypb"
 
 	cpb "go.chromium.org/chromiumos/system_api/bootlockbox_proto"
 	"go.chromium.org/tast-tests/cros/local/chrome"
@@ -41,7 +41,7 @@ type BootLockboxService struct {
 	cr *chrome.Chrome
 }
 
-func (c *BootLockboxService) NewChromeLogin(ctx context.Context, req *empty.Empty) (*empty.Empty, error) {
+func (c *BootLockboxService) NewChromeLogin(ctx context.Context, req *emptypb.Empty) (*emptypb.Empty, error) {
 	if c.cr != nil {
 		return nil, errors.New("Chrome already available")
 	}
@@ -51,16 +51,16 @@ func (c *BootLockboxService) NewChromeLogin(ctx context.Context, req *empty.Empt
 		return nil, err
 	}
 	c.cr = cr
-	return &empty.Empty{}, nil
+	return &emptypb.Empty{}, nil
 }
 
-func (c *BootLockboxService) CloseChrome(ctx context.Context, req *empty.Empty) (*empty.Empty, error) {
+func (c *BootLockboxService) CloseChrome(ctx context.Context, req *emptypb.Empty) (*emptypb.Empty, error) {
 	if c.cr == nil {
 		return nil, errors.New("Chrome not available")
 	}
 	err := c.cr.Close(ctx)
 	c.cr = nil
-	return &empty.Empty{}, err
+	return &emptypb.Empty{}, err
 }
 
 func (*BootLockboxService) Read(ctx context.Context, request *security.ReadBootLockboxRequest) (*security.ReadBootLockboxResponse, error) {
@@ -92,7 +92,7 @@ func (*BootLockboxService) Read(ctx context.Context, request *security.ReadBootL
 	}
 }
 
-func (*BootLockboxService) Store(ctx context.Context, request *security.StoreBootLockboxRequest) (*empty.Empty, error) {
+func (*BootLockboxService) Store(ctx context.Context, request *security.StoreBootLockboxRequest) (*emptypb.Empty, error) {
 	_, obj, err := dbusutil.Connect(ctx, dbusName, dbus.ObjectPath(dbusPath))
 	if err != nil {
 		return nil, errors.Wrapf(err, "failed to connect to %s", dbusName)
@@ -118,7 +118,7 @@ func (*BootLockboxService) Store(ctx context.Context, request *security.StoreBoo
 	switch reply.GetError() {
 	// Ignore normal error and not surface to the caller for now
 	case cpb.BootLockboxErrorCode_BOOTLOCKBOX_ERROR_NOT_SET, cpb.BootLockboxErrorCode_BOOTLOCKBOX_ERROR_NVSPACE_UNINITIALIZED:
-		return &empty.Empty{}, nil
+		return &emptypb.Empty{}, nil
 	default:
 		return nil, errors.Errorf("StoreBootLockbox returns error %d", reply.GetError())
 	}

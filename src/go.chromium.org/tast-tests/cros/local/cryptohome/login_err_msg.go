@@ -10,9 +10,9 @@ import (
 	"fmt"
 
 	"github.com/godbus/dbus/v5"
-	"github.com/golang/protobuf/proto"
 	"go.chromium.org/tast-tests/cros/local/dbusutil"
 	"go.chromium.org/tast/core/errors"
+	"google.golang.org/protobuf/proto"
 )
 
 const (

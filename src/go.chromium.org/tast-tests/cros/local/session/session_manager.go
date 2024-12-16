@@ -10,7 +10,7 @@ import (
 	"time"
 
 	"github.com/godbus/dbus/v5"
-	"github.com/golang/protobuf/proto"
+	"google.golang.org/protobuf/proto"
 
 	"go.chromium.org/chromiumos/policy/chromium/policy/enterprise_management_proto"
 	lm "go.chromium.org/chromiumos/system_api/login_manager_proto"
