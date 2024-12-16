@@ -284,6 +284,26 @@ func RoamFT(ctx context.Context, s *testing.State) {
 		ctx, cancel = ds.ReserveForClose(ctx)
 		defer cancel()
 
+		// Setup capture on ap0 channel to see if it is beaconing (b/376723062).
+		pcapPrimCh := tf.PcapRouter()
+		freqOps0, err := ap0.Config().PcapFreqOptions()
+		if err != nil {
+			s.Fatal("Failed to get Freq Opts: ", err)
+		}
+		capturer0, err0 := pcapPrimCh.StartCapture(ctx, tf.UniqueAPName(), ap0.Config().Channel, false /*is6GHz*/, freqOps0)
+		if err0 != nil {
+			s.Fatal("Failed to start capturer: ", err)
+		}
+		defer func(ctx context.Context) {
+			pcapPrimCh.StopCapture(ctx, capturer0)
+		}(ctx)
+		ctx, cancel = ctxutil.Shorten(ctx, 5*time.Second)
+		defer cancel()
+
+		if err := testing.Sleep(ctx, time.Second); err != nil {
+			s.Error("interrupted while sleeping for capturer startup", err)
+		}
+
 		connResp, err := tf.ConnectWifi(ctx, ap0.Config().SSID, dutcfg.ConnSecurity(ap0SecConf))
 		if err != nil {
 			if expectedFailure {
@@ -341,6 +361,25 @@ func RoamFT(ctx context.Context, s *testing.State) {
 		}(ctx)
 		ctx, cancel = ap1.ReserveForClose(ctx)
 		defer cancel()
+
+		// Setup capture on ap1 channel to see if it is beaconing (b/376723062).
+		freqOps1, err := ap1.Config().PcapFreqOptions()
+		if err != nil {
+			s.Fatal("Failed to get Freq Opts: ", err)
+		}
+		capturer1, err1 := pcapPrimCh.StartCapture(ctx, tf.UniqueAPName(), ap1.Config().Channel, false /*is6GHz*/, freqOps1)
+		if err1 != nil {
+			s.Fatal("Failed to start capturer: ", err)
+		}
+		defer func(ctx context.Context) {
+			pcapPrimCh.StopCapture(ctx, capturer1)
+		}(ctx)
+		ctx, cancel = ctxutil.Shorten(ctx, 5*time.Second)
+		defer cancel()
+
+		if err := testing.Sleep(ctx, time.Second); err != nil {
+			s.Error("interrupted while sleeping for capturer startup", err)
+		}
 
 		s.Logf("Sending BSS TM Request from AP %s to DUT %s", mac0, clientMAC)
 		req := hostapd.BSSTMReqParams{Neighbors: []string{mac1.String()}}
