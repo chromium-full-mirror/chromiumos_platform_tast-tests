@@ -68,6 +68,11 @@ type DiagLog struct {
 	Result  DiagResult
 }
 
+// File exposed by the kernel to clear the eventlog.
+const (
+	clearEventlogFile = "clear_eventlog"
+)
+
 func parseEventTime(input string) (time.Time, error) {
 	var err error
 	for _, timeFmt := range []string{"2006-01-02 15:04:05", "2006-01-02 15:04:05-0700"} {
@@ -83,7 +88,13 @@ func parseEventTime(input string) (time.Time, error) {
 // ClearEventlog runs 'elogtool clear' to clear elog.
 func (r *Reporter) ClearEventlog(ctx context.Context) error {
 	testing.ContextLog(ctx, "Clearing the event log")
-	return r.d.Conn().CommandContext(ctx, "elogtool", "clear").Run(ssh.DumpLogOnError)
+	path, err := r.CommandOutput(ctx, `sh`, `-c`, `find /sys -name "$0"`, clearEventlogFile)
+	if err != nil || path == "" {
+		testing.ContextLogf(ctx, "Failed to find file %s. Falling back to clearing the eventlog using elogtool", clearEventlogFile)
+		return r.d.Conn().CommandContext(ctx, `elogtool`, `clear`).Run(ssh.DumpLogOnError)
+	} else {
+		return r.d.Conn().CommandContext(ctx, `sh`, `-c`, `echo 1 > "$0"`, path).Run(ssh.DumpLogOnError)
+	}
 }
 
 // GetRawEventLogs returns the result of `elogtool list` with
