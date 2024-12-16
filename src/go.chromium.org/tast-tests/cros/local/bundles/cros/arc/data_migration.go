@@ -243,7 +243,7 @@ func tryDataMigration(ctx context.Context, creds chrome.Creds, params dataMigrat
 		chrome.ARCSupported(),
 		chrome.KeepState(),
 		chrome.UnRestrictARCCPU(),
-		chrome.DisableFeatures("ArcEnableVirtioBlkForData"),
+		chrome.DisableFeatures("ArcEnableVirtioBlkForData", "DeferArcActivationUntilUserSessionStartUpTaskCompletion"),
 		chrome.ExtraArgs(arc.DisableSyncFlags()...),
 		// Disable Chrome Sync to work around b/349317910.
 		chrome.ExtraArgs("--disable-sync"),
