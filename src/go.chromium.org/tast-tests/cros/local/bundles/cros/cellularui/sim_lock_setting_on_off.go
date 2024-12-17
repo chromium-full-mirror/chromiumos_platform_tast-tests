@@ -12,6 +12,7 @@ import (
 	"go.chromium.org/tast-tests/cros/local/chrome"
 	"go.chromium.org/tast-tests/cros/local/chrome/uiauto"
 	"go.chromium.org/tast-tests/cros/local/chrome/uiauto/expandable"
+	"go.chromium.org/tast-tests/cros/local/chrome/uiauto/faillog"
 	"go.chromium.org/tast-tests/cros/local/chrome/uiauto/ossettings"
 	"go.chromium.org/tast-tests/cros/local/input"
 	"go.chromium.org/tast/core/ctxutil"
@@ -36,10 +37,15 @@ func init() {
 }
 
 func SimLockSettingOnOff(ctx context.Context, s *testing.State) {
+	cleanupCtx := ctx
+	ctx, cancel := ctxutil.Shorten(ctx, 45*time.Second)
+	defer cancel()
+
 	cr, err := chrome.New(ctx)
 	if err != nil {
 		s.Fatal("Failed to create a new instance of Chrome: ", err)
 	}
+	defer cr.Close(cleanupCtx)
 
 	tconn, err := cr.TestAPIConn(ctx)
 	if err != nil {
@@ -59,8 +65,8 @@ func SimLockSettingOnOff(ctx context.Context, s *testing.State) {
 	if err != nil {
 		s.Fatal("Failed to open mobile data subpage: ", err)
 	}
-
-	defer app.Close(ctx)
+	defer app.Close(cleanupCtx)
+	defer faillog.DumpUITreeWithScreenshotWithTestAPIOnError(cleanupCtx, s.OutDir(), s.HasError, tconn, "os_settings")
 
 	currentPin, currentPuk, err := helper.GetPINAndPUKForICCID(ctx, iccid)
 	if err != nil {
@@ -74,13 +80,10 @@ func SimLockSettingOnOff(ctx context.Context, s *testing.State) {
 		// Do graceful exit, not to run tests on unknown puk duts.
 		s.Fatalf("Failed to find PUK code for ICCID : %s, skipping the test", iccid)
 	}
-
-	cleanupCtx := ctx
-	ctx, cancel := ctxutil.Shorten(ctx, 30*time.Second)
-	defer cancel()
-
 	defer func(ctx context.Context) {
-		helper.ClearSIMLock(ctx, currentPin, currentPuk)
+		if err := helper.ClearSIMLock(ctx, currentPin, currentPuk); err != nil {
+			s.Fatal("Failed to clear PIN/PUK lock: ", err)
+		}
 		if errs := helper.ResetShill(ctx); errs != nil {
 			s.Fatal("Failed to reset shill: ", errs)
 		}
@@ -90,7 +93,7 @@ func SimLockSettingOnOff(ctx context.Context, s *testing.State) {
 	if err != nil {
 		s.Fatal("Failed to open the keyboard: ", err)
 	}
-	defer kb.Close(ctx)
+	defer kb.Close(cleanupCtx)
 
 	ui := uiauto.New(tconn).WithTimeout(120 * time.Second)
 	if err := uiauto.Combine("Toggle on the SIM Lock setting",
