@@ -223,13 +223,23 @@ func docContent(ctx context.Context, tconn *chrome.TestConn) (string, error) {
 // ShowTheDocMenus shows the doc menus if it's hidden.
 func ShowTheDocMenus(tconn *chrome.TestConn, kb *input.KeyboardEventWriter) action.Action {
 	ui := uiauto.New(tconn)
+	menuBar := nodewith.Name("Menu bar").Role(role.Banner).Ancestor(docsApplication)
+	modeAndViewToolBar := nodewith.Name("Mode and view").Role(role.Toolbar).Ancestor(docsApplication)
 	hideTheMenusButton := nodewith.Name("Hide the menus (Ctrl+Shift+F)").Role(role.Button).Ancestor(docsApplication)
 	showTheMenusButton := nodewith.Name("Show the menus (Ctrl+Shift+F)").Role(role.Button).Ancestor(docsApplication)
 	showTheMenus := uiauto.NamedCombine("show the menus",
 		kb.AccelAction("Ctrl+Shift+F"),
 		ui.WaitUntilExists(hideTheMenusButton),
-		ui.WaitForLocation(hideTheMenusButton))
+		ui.WaitForLocation(hideTheMenusButton),
+	)
+	exitFullScreen := uiauto.NamedCombine("exit full screen",
+		kb.AccelAction("Esc"),
+		ui.WaitUntilExists(modeAndViewToolBar),
+	)
 	return uiauto.Combine("show the doc menus",
+		ui.WaitUntilExists(menuBar),
+		// In some cases, the toolbar is hidden in full screen.
+		uiauto.IfFailThen(ui.Exists(modeAndViewToolBar), exitFullScreen),
 		ui.WaitUntilAnyExists(hideTheMenusButton, showTheMenusButton),
 		uiauto.IfSuccessThen(ui.Exists(showTheMenusButton), showTheMenus))
 }
