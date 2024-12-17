@@ -10,12 +10,12 @@ import (
 
 	"go.chromium.org/tast-tests/cros/local/cellular"
 	"go.chromium.org/tast-tests/cros/local/chrome"
-	"go.chromium.org/tast-tests/cros/local/chrome/ash"
 	"go.chromium.org/tast-tests/cros/local/chrome/uiauto"
 	"go.chromium.org/tast-tests/cros/local/chrome/uiauto/faillog"
 	"go.chromium.org/tast-tests/cros/local/chrome/uiauto/lockscreen"
 	"go.chromium.org/tast-tests/cros/local/chrome/uiauto/ossettings"
 	"go.chromium.org/tast-tests/cros/local/chrome/uiauto/quicksettings"
+	"go.chromium.org/tast-tests/cros/local/diagnosticsutils"
 	"go.chromium.org/tast/core/ctxutil"
 	"go.chromium.org/tast/core/testing"
 	"go.chromium.org/tast/core/testing/hwdep"
@@ -155,7 +155,7 @@ func HotspotEnableDisableInLockScreen(ctx context.Context, s *testing.State) {
 	}
 
 	// Making sure DUT is in clamshell mode to prevent virtual keyboard from popping up in lock screen.
-	cleanUp, err := ash.EnsureTabletModeDisabledWithKeyboardEnabled(ctx)
+	cleanUp, err := diagnosticsutils.EnsureClamshellMode(ctx, tconn)
 	if err != nil {
 		s.Fatal("Failed to ensure DUT in clamshell mode: ", err)
 	}
