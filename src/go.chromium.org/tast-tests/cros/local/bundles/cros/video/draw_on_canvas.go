@@ -37,6 +37,7 @@ func init() {
 			"andrescj@chromium.org",
 		},
 		BugComponent: "b:168352", // ChromeOS > Platform > Graphics > Video
+		Attr:         []string{"group:graphics", "graphics_video", "graphics_perbuild"},
 		SoftwareDeps: []string{"chrome", caps.HWDecodeH264, "proprietary_codecs"},
 		Data:         []string{"video-on-canvas.html"},
 		Fixture:      "chromeVideo",
