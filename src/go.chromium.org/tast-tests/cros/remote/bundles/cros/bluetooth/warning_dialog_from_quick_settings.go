@@ -25,16 +25,15 @@ import (
 
 func init() {
 	testing.AddTest(&testing.Test{
-		Func:           WarningDialogFromQuickSettings,
-		LifeCycleStage: testing.LifeCycleInDevelopment,
-		Desc:           "Checks that a bluetooth mouse can be used to complete OOBE",
+		Func: WarningDialogFromQuickSettings,
+		Desc: "Checks that a bluetooth mouse can be used to complete OOBE",
 		Contacts: []string{
-			"alfredyu@cienet.com",
-			"chromeos-connectivity-cienet-external@google.com",
+			"cros-device-enablement@google.com",
 		},
-		VarDeps:      []string{"servo"},
-		BugComponent: "b:1578688", // ChromeOS > External > Cienet > Manual Test Automation > Test stabilization
-		Attr:         []string{"group:bluetooth"},
+		VarDeps:        []string{"servo"},
+		LifeCycleStage: testing.LifeCycleOwnerMonitored,
+		BugComponent:   "b:1131776", // ChromeOS > Software > Fundamentals > Device Enablement > Connectivity > Bluetooth
+		Attr:           []string{"group:bluetooth"},
 		TestBedDeps: []string{tbdep.Wificell, tbdep.BluetoothStateNormal,
 			tbdep.ServoStateWorking, tbdep.WorkingBluetoothPeers(2)},
 		SoftwareDeps: []string{"chrome"},
@@ -49,15 +48,13 @@ func init() {
 		HardwareDeps:    hwdep.D(hwdep.FormFactor(hwdep.Chromebox, hwdep.Chromebit)),
 		VariantCategory: `{"name": "BT_Chipset_Kernel"}`,
 		Params: []testing.Param{{
-			Name:      "floss_disabled",
-			Fixture:   "chromeLoggedInWith2BTPeersBluetoothWarningEnabledFlossDisabled",
-			ExtraAttr: []string{"bluetooth_flaky"},
-			Val:       cbt.DeviceTypeLEMouse,
+			Name:    "floss_disabled",
+			Fixture: "chromeLoggedInWith2BTPeersBluetoothWarningEnabledFlossDisabled",
+			Val:     cbt.DeviceTypeLEMouse,
 		}, {
-			Name:      "floss_enabled",
-			Fixture:   "chromeLoggedInWith2BTPeersBluetoothWarningEnabledFlossEnabled",
-			ExtraAttr: []string{"bluetooth_floss_flaky"},
-			Val:       cbt.DeviceTypeLEMouse,
+			Name:    "floss_enabled",
+			Fixture: "chromeLoggedInWith2BTPeersBluetoothWarningEnabledFlossEnabled",
+			Val:     cbt.DeviceTypeLEMouse,
 		}},
 		Timeout: time.Minute * 3,
 	})
