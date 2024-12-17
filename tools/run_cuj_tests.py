@@ -572,12 +572,12 @@ def write_local_dut_info(results_dir: Path, label: str) -> str:
     with open(results_dir / "dut-info.txt", "r", encoding="utf-8") as dutinfo:
         dutinfo_text = dutinfo.read()
 
-    product = re.findall('model: "(.*)"', dutinfo_text)[0].strip().lower()
-    board = re.findall('platform: "(.*)"', dutinfo_text)[0].strip().lower()
-    brand = re.findall('brand: "(.*)"', dutinfo_text)[0].strip()
-    os_version = re.findall('os_version: "(.*)"', dutinfo_text)[0].strip()
+    product = re.findall('model:[\s]+"(.*)"', dutinfo_text)[0].strip().lower()
+    board = re.findall('platform:[\s]+"(.*)"', dutinfo_text)[0].strip().lower()
+    brand = re.findall('brand:[\s]+"(.*)"', dutinfo_text)[0].strip()
+    os_version = re.findall('os_version:[\s]+"(.*)"', dutinfo_text)[0].strip()
     memory_gb = math.ceil(
-        int(re.findall("size_megabytes:(.*)", dutinfo_text)[0]) / 1000
+        int(re.findall("size_megabytes:[\s]+(.*)", dutinfo_text)[0]) / 1000
     )
 
     with open(
@@ -641,7 +641,6 @@ def write_local_dut_info(results_dir: Path, label: str) -> str:
         "dut_hostname": dut_hostname,
         "label": label,
     }
-
     local_dut_info_json = json.dumps(local_dut_info, indent=4)
     with open(
         results_dir / "local_dut_info.txt", "w", encoding="utf-8"
