@@ -148,6 +148,9 @@ func KeyboardLayout(ctx context.Context, s *testing.State) {
 				noOpKeystrokes = append(noOpKeystrokes, keystroke{key: key, modifiers: modifiers})
 			}
 
+			unicode := getUniCode(nodeInfo.Value)
+			testing.ContextLogf(ctx, "result: [%s] %s", nodeInfo.Value, unicode)
+
 			w.Write([]string{
 				getModifierInCsv(csvShiftLabel, modifiers.Shift),
 				getModifierInCsv(csvAltgrLabel, modifiers.Altgr),
@@ -158,7 +161,7 @@ func KeyboardLayout(ctx context.Context, s *testing.State) {
 				"",
 				"",
 				nodeInfo.Value,
-				getUniCode(nodeInfo.Value)})
+				unicode})
 
 			// No-op looking outcome indicates either true no-op,
 			// or ongoing dead-key composition or modifier latch
@@ -185,6 +188,9 @@ func KeyboardLayout(ctx context.Context, s *testing.State) {
 					s.Fatal("Failed to get node info: ", err)
 				}
 
+				unicode := getUniCode(nodeInfo.Value)
+				testing.ContextLogf(ctx, "result: [%s] %s", nodeInfo.Value, unicode)
+
 				w.Write([]string{
 					getModifierInCsv(csvShiftLabel, keystroke1.modifiers.Shift),
 					getModifierInCsv(csvAltgrLabel, keystroke1.modifiers.Altgr),
@@ -195,7 +201,7 @@ func KeyboardLayout(ctx context.Context, s *testing.State) {
 					getModifierInCsv(csvCapsLabel, modifiers2.Caps),
 					key2.KeyName,
 					nodeInfo.Value,
-					getUniCode(nodeInfo.Value)})
+					unicode})
 
 				// No-op looking outcome indicates either true
 				// no-op, or dead-key composition or modifier
