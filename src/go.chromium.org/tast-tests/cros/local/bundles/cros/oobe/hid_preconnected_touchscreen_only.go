@@ -8,6 +8,7 @@ import (
 	"context"
 	"time"
 
+	"go.chromium.org/tast-tests/cros/common/tbdep"
 	"go.chromium.org/tast-tests/cros/local/bundles/cros/oobe/fixture"
 	"go.chromium.org/tast-tests/cros/local/oobe"
 	"go.chromium.org/tast/core/testing"
@@ -29,6 +30,7 @@ func init() {
 		Attr:         []string{"group:cr_oobe", "cr_oobe_chromebox_chromebase"},
 		SoftwareDeps: []string{"chrome"},
 		HardwareDeps: hwdep.D(hwdep.FormFactor(hwdep.Chromebase), hwdep.SkipOnModel("kalista", "karma")),
+		TestBedDeps:  []string{tbdep.ServoStateWorking},
 		Fixture:      "chromeEnterOobeHidDetectionServoOff",
 		Timeout:      time.Second * 15,
 	})
