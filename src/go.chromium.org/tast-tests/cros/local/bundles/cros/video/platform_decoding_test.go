@@ -446,6 +446,12 @@ func TestPlatformDecodingParams(t *testing.T) {
 					param.IgnoredSysLogs = strings.Join(ignoredSysLogs, ", ")
 					param.HardwareDeps = strings.Join(hardwareDeps, ", ")
 					params = append(params, param)
+
+					param.Name = "cros_codecs_" + param.Name
+					param.HardwareDeps = param.HardwareDeps + ", " + "hwdep.SupportsCrosCodecs()"
+					param.Decoder = ccdecPath
+					param.DecoderArgsBuilder = genDecoderArgsBuilder(param.Name, "vp9")
+					params = append(params, param)
 				}
 			}
 		}
@@ -480,6 +486,12 @@ func TestPlatformDecodingParams(t *testing.T) {
 			}
 
 			param.IgnoredSysLogs = strings.Join(ignoredSysLogs, ", ")
+			params = append(params, param)
+
+			param.Name = "cros_codecs_" + param.Name
+			param.HardwareDeps = param.HardwareDeps + ", " + "hwdep.SupportsCrosCodecs()"
+			param.Decoder = ccdecPath
+			param.DecoderArgsBuilder = genDecoderArgsBuilder(param.Name, "vp8")
 			params = append(params, param)
 		}
 
@@ -518,6 +530,12 @@ func TestPlatformDecodingParams(t *testing.T) {
 			}
 			param.IgnoredSysLogs = strings.Join(ignoredSysLogs, ", ")
 			params = append(params, param)
+
+			param.Name = "cros_codecs_" + param.Name
+			param.HardwareDeps = param.HardwareDeps + ", " + "hwdep.SupportsCrosCodecs()"
+			param.Decoder = ccdecPath
+			param.DecoderArgsBuilder = genDecoderArgsBuilder(param.Name, "h264")
+			params = append(params, param)
 		}
 
 		// Generate V4L2 HEVC tests.
@@ -553,6 +571,12 @@ func TestPlatformDecodingParams(t *testing.T) {
 			}
 			param.IgnoredSysLogs = strings.Join(ignoredSysLogs, ", ")
 			params = append(params, param)
+
+			param.Name = "cros_codecs_" + param.Name
+			param.HardwareDeps = param.HardwareDeps + ", " + "hwdep.SupportsCrosCodecs()"
+			param.Decoder = ccdecPath
+			param.DecoderArgsBuilder = genDecoderArgsBuilder(param.Name, "hevc")
+			params = append(params, param)
 		}
 
 		// Generates V4L2 HEVC tests from bugs files.
@@ -584,6 +608,12 @@ func TestPlatformDecodingParams(t *testing.T) {
 				param.Attr = append(param.Attr, "graphics_weekly")
 			}
 			param.IgnoredSysLogs = strings.Join(ignoredSysLogs, ", ")
+			params = append(params, param)
+
+			param.Name = "cros_codecs_" + param.Name
+			param.HardwareDeps = param.HardwareDeps + ", " + "hwdep.SupportsCrosCodecs()"
+			param.Decoder = ccdecPath
+			param.DecoderArgsBuilder = genDecoderArgsBuilder(param.Name, "hevc")
 			params = append(params, param)
 		}
 	}
