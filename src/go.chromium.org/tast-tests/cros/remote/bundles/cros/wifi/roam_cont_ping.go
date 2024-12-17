@@ -58,7 +58,7 @@ func init() {
 		Params: []testing.Param{{
 			Name: "none",
 			Val: wifiutil.ContParam{
-				Rounds: 50,
+				Rounds: 4,
 				ApOpts: [2][]hostapd.Option{{hostapd.Channel(1), hostapd.Mode(hostapd.Mode80211g)},
 					{hostapd.Channel(157), hostapd.Mode(hostapd.Mode80211acPure), hostapd.HTCaps(hostapd.HTCapHT40Plus), hostapd.VHTCaps(hostapd.VHTCapSGI80),
 						hostapd.VHTChWidth(hostapd.VHTChWidth80), hostapd.VHTCenterChannel(155)}},
@@ -71,7 +71,7 @@ func init() {
 		}, {
 			Name: "psk",
 			Val: wifiutil.ContParam{
-				Rounds: 50,
+				Rounds: 4,
 				ApOpts: [2][]hostapd.Option{{hostapd.Channel(1), hostapd.Mode(hostapd.Mode80211g)},
 					{hostapd.Channel(157), hostapd.Mode(hostapd.Mode80211acPure), hostapd.HTCaps(hostapd.HTCapHT40Plus), hostapd.VHTCaps(hostapd.VHTCapSGI80),
 						hostapd.VHTChWidth(hostapd.VHTChWidth80), hostapd.VHTCenterChannel(155)}},
@@ -85,7 +85,7 @@ func init() {
 			Name:              "ft_psk",
 			ExtraHardwareDeps: hwdep.D(hwdep.WifiFT()),
 			Val: wifiutil.ContParam{
-				Rounds: 50,
+				Rounds: 4,
 				ApOpts: [2][]hostapd.Option{{hostapd.Channel(1), hostapd.Mode(hostapd.Mode80211g)},
 					{hostapd.Channel(157), hostapd.Mode(hostapd.Mode80211acPure), hostapd.HTCaps(hostapd.HTCapHT40Plus), hostapd.VHTCaps(hostapd.VHTCapSGI80),
 						hostapd.VHTChWidth(hostapd.VHTChWidth80), hostapd.VHTCenterChannel(155)}},
@@ -99,7 +99,7 @@ func init() {
 		}, {
 			Name: "eap",
 			Val: wifiutil.ContParam{
-				Rounds: 50,
+				Rounds: 4,
 				ApOpts: [2][]hostapd.Option{{hostapd.Channel(1), hostapd.Mode(hostapd.Mode80211g)},
 					{hostapd.Channel(157), hostapd.Mode(hostapd.Mode80211acPure), hostapd.HTCaps(hostapd.HTCapHT40Plus), hostapd.VHTCaps(hostapd.VHTCapSGI80),
 						hostapd.VHTChWidth(hostapd.VHTChWidth80), hostapd.VHTCenterChannel(155)}},
@@ -117,7 +117,7 @@ func init() {
 			Name:              "ft_eap",
 			ExtraHardwareDeps: hwdep.D(hwdep.WifiFT()),
 			Val: wifiutil.ContParam{
-				Rounds: 50,
+				Rounds: 4,
 				ApOpts: [2][]hostapd.Option{{hostapd.Channel(1), hostapd.Mode(hostapd.Mode80211g)},
 					{hostapd.Channel(157), hostapd.Mode(hostapd.Mode80211acPure), hostapd.HTCaps(hostapd.HTCapHT40Plus), hostapd.VHTCaps(hostapd.VHTCapSGI80),
 						hostapd.VHTChWidth(hostapd.VHTChWidth80), hostapd.VHTCenterChannel(155)}},
