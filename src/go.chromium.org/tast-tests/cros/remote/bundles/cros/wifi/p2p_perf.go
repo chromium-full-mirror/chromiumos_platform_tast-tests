@@ -6,7 +6,9 @@ package wifi
 
 import (
 	"context"
+	"fmt"
 	"strconv"
+	"time"
 
 	"go.chromium.org/tast-tests/cros/common/perf"
 	"go.chromium.org/tast-tests/cros/common/tbdep"
@@ -21,6 +23,18 @@ import (
 	"go.chromium.org/tast/core/testing"
 	"go.chromium.org/tast/core/testing/hwdep"
 )
+
+var defaultP2PPerfTestTypes []perfmanager.TestType = []perfmanager.TestType{
+	perfmanager.TestTypeUDPBidirectional,
+	perfmanager.TestTypeTCPRx,
+	perfmanager.TestTypeTCPTx,
+}
+
+type p2pPerfTestcase struct {
+	p2pOpts   []p2p.GroupOption
+	testType  []perfmanager.TestType
+	powerSave bool
+}
 
 func init() {
 	testing.AddTest(&testing.Test{
@@ -39,6 +53,27 @@ func init() {
 			"cd1": hwdep.D(hwdep.WifiP2P()),
 		},
 		Requirements: []string{tdreq.WiFiGenSupportWFD},
+		Timeout:      2*time.Minute + 3*time.Duration(len(defaultP2PPerfTestTypes))*time.Minute,
+		Params: []testing.Param{
+			{
+				// Checks performance on 2.4GHz band.
+				Name: "2_4g",
+				Val: []p2pPerfTestcase{{
+					p2pOpts:   []p2p.GroupOption{p2p.SetFreq(2462)},
+					testType:  defaultP2PPerfTestTypes,
+					powerSave: true,
+				}},
+			},
+			{
+				// Checks performance on 5GHz band.
+				Name: "5g",
+				Val: []p2pPerfTestcase{{
+					p2pOpts:   []p2p.GroupOption{p2p.SetFreq(5180)},
+					testType:  defaultP2PPerfTestTypes,
+					powerSave: true,
+				}},
+			},
+		},
 	})
 }
 
@@ -56,64 +91,81 @@ func P2PPerf(ctx context.Context, s *testing.State) {
 		8- Deconfigure the p2p GO.
 	*/
 	tf := s.FixtValue().(*wificell.TestFixture)
-	if err := tf.P2PConfigureGO(ctx, wificell.P2PDeviceDUT, p2p.SetFreq(5180)); err != nil {
-		s.Fatal("Failed to configure the p2p group owner (GO): ", err)
-	}
-	defer func(ctx context.Context) {
-		if err := tf.P2PDeconfigureGO(ctx); err != nil {
-			s.Error("Failed to deconfigure the p2p group owner (GO): ", err)
+
+	testOnce := func(ctx context.Context, s *testing.State, tc p2pPerfTestcase) {
+		if err := tf.P2PConfigureGO(ctx, wificell.P2PDeviceDUT, tc.p2pOpts...); err != nil {
+			s.Fatal("Failed to configure the p2p group owner (GO): ", err)
 		}
-	}(ctx)
-	ctx, cancel := tf.ReserveForDeconfigP2P(ctx)
-	defer cancel()
+		defer func(ctx context.Context) {
+			if err := tf.P2PDeconfigureGO(ctx); err != nil {
+				s.Error("Failed to deconfigure the p2p group owner (GO): ", err)
+			}
+		}(ctx)
+		ctx, cancel := tf.ReserveForDeconfigP2P(ctx)
+		defer cancel()
 
-	if err := tf.P2PConnect(ctx, wificell.P2PDeviceCompanionDUT); err != nil {
-		s.Fatal("Failed to connect the p2p client to the p2p group owner (GO) network: ", err)
-	}
-	defer func(ctx context.Context) {
-		if err := tf.P2PDisconnect(ctx); err != nil {
-			s.Error("Failed to disconnect p2p client from GO: ", err)
+		if err := tf.P2PConnect(ctx, wificell.P2PDeviceCompanionDUT); err != nil {
+			s.Fatal("Failed to connect the p2p client to the p2p group owner (GO) network: ", err)
 		}
-	}(ctx)
-	ctx, cancel = tf.ReserveForDeconfigP2P(ctx)
-	defer cancel()
+		defer func(ctx context.Context) {
+			if err := tf.P2PDisconnect(ctx); err != nil {
+				s.Error("Failed to disconnect p2p client from GO: ", err)
+			}
+		}(ctx)
+		ctx, cancel = tf.ReserveForDeconfigP2P(ctx)
+		defer cancel()
 
-	// Print the P2P channel configuration.
-	iwr := iw.NewRemoteRunner(tf.P2PGOConn())
-	iface, err := tf.P2PGOIface(ctx)
-	if err != nil {
-		s.Error("Failed to get P2P GO interface name: ", err)
-	}
-	chConfig, err := iwr.RadioConfig(ctx, iface)
-	if err != nil {
-		s.Error("Failed the P2P channel configuration: ", err)
-	}
-
-	testing.ContextLogf(ctx, "P2P channel configuration: Channel Number = %d, Frequency = %d, Width = %d", chConfig.Number, chConfig.Freq, chConfig.Width)
-
-	p2pGO, err := tf.P2PDevice(ctx, wificell.P2PDeviceDUT)
-	if err != nil {
-		s.Fatal("Failed to run performance test: ", err)
-	}
-	p2pClient, err := tf.P2PDevice(ctx, wificell.P2PDeviceCompanionDUT)
-	if err != nil {
-		s.Fatal("Failed to run performance test: ", err)
-	}
-	finalResult, err := wifiutil.P2PPerf(ctx, ctx, tf, p2pGO, p2pClient, s.OutDir(), "p2p", perfmanager.TestTypeTCPBidirectional, iperf.Version2)
-	if err != nil {
-		s.Fatal("Failed to run performance test: ", err)
-	}
-
-	pv := perf.NewValues()
-	defer func() {
-		if err := pv.Save(s.OutDir()); err != nil {
-			s.Error("Failed to save perf data: ", err)
+		// Print the P2P channel configuration.
+		iwr := iw.NewRemoteRunner(tf.P2PGOConn())
+		iface, err := tf.P2PGOIface(ctx)
+		if err != nil {
+			s.Error("Failed to get P2P GO interface name: ", err)
 		}
-	}()
+		chConfig, err := iwr.RadioConfig(ctx, iface)
+		if err != nil {
+			s.Error("Failed the P2P channel configuration: ", err)
+		}
 
-	pv.Set(perf.Metric{
-		Name:      "p2p_tcp_ave_tput_ch" + strconv.Itoa(chConfig.Number),
-		Unit:      "Mbps",
-		Direction: perf.BiggerIsBetter,
-	}, float64(finalResult.Throughput/iperf.Mbps))
+		testing.ContextLogf(ctx, "P2P channel configuration: Channel Number = %d, Frequency = %d, Width = %d", chConfig.Number, chConfig.Freq, chConfig.Width)
+
+		p2pGO, err := tf.P2PDevice(ctx, wificell.P2PDeviceDUT)
+		if err != nil {
+			s.Fatal("Failed to run performance test: ", err)
+		}
+		p2pClient, err := tf.P2PDevice(ctx, wificell.P2PDeviceCompanionDUT)
+		if err != nil {
+			s.Fatal("Failed to run performance test: ", err)
+		}
+
+		for _, testType := range tc.testType {
+			finalResult, err := wifiutil.P2PPerf(ctx, ctx, tf, p2pGO, p2pClient, s.OutDir(), "p2p", testType, iperf.Version2)
+			if err != nil {
+				s.Fatal("Failed to run performance test: ", err)
+			}
+
+			pv := perf.NewValues()
+			defer func() {
+				if err := pv.Save(s.OutDir()); err != nil {
+					s.Error("Failed to save perf data: ", err)
+				}
+			}()
+
+			pv.Set(perf.Metric{
+				Name:      "p2p_" + string(testType) + "_ave_tput_ch" + strconv.Itoa(chConfig.Number),
+				Unit:      "Mbps",
+				Direction: perf.BiggerIsBetter,
+			}, float64(finalResult.Throughput/iperf.Mbps))
+		}
+		s.Log("Deconfiguring")
+	}
+	testcases := s.Param().([]p2pPerfTestcase)
+	for i, tc := range testcases {
+		subtest := func(ctx context.Context, s *testing.State) {
+			testOnce(ctx, s, tc)
+		}
+		if !s.Run(ctx, fmt.Sprintf("Testcase #%d", i), subtest) {
+			// Stop if any sub-test failed.
+			return
+		}
+	}
 }
