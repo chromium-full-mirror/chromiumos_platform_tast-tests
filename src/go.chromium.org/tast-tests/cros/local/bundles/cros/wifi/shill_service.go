@@ -3642,7 +3642,7 @@ func (s *ShillService) P2PDeviceInfo(ctx context.Context, request *wifi.P2PDevic
 func (s *ShillService) p2pDeviceInfoWPACLI(ctx context.Context, request *wifi.P2PDeviceInfoRequest) (
 	ret *wifi.P2PDeviceInfoResponse, retErr error) {
 	wpar := localwpacli.NewLocalRunnerOnIface(request.Id)
-	ssid, key, mac, freq, err := wpar.P2PLinkInfo(ctx)
+	ssid, key, mac, freq, _, err := wpar.P2PLinkInfo(ctx)
 	if err != nil {
 		return &wifi.P2PDeviceInfoResponse{}, err
 	}
@@ -3652,7 +3652,7 @@ func (s *ShillService) p2pDeviceInfoWPACLI(ctx context.Context, request *wifi.P2
 		Data: &wifi.P2PData{
 			Ssid: ssid,
 			Key:  key,
-			Freq: uint32(freq)},
+			Freq: freq},
 		MacAddress: mac,
 	}
 	return

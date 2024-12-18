@@ -12,12 +12,15 @@ import (
 
 	"go.chromium.org/tast-tests/cros/common/network/firewall"
 	"go.chromium.org/tast-tests/cros/common/perf"
+	"go.chromium.org/tast-tests/cros/common/wifi/iw"
 	"go.chromium.org/tast-tests/cros/remote/bundles/cros/wifi/wifiutil/perfmanager"
 	remotefirewall "go.chromium.org/tast-tests/cros/remote/network/firewall"
 	"go.chromium.org/tast-tests/cros/remote/network/iperf"
 	remoteiw "go.chromium.org/tast-tests/cros/remote/wifi/iw"
+	remotewpacli "go.chromium.org/tast-tests/cros/remote/wifi/wpacli"
 	"go.chromium.org/tast-tests/cros/remote/wificell"
 	"go.chromium.org/tast-tests/cros/remote/wificell/router/common/support"
+
 	"go.chromium.org/tast/core/ctxutil"
 	"go.chromium.org/tast/core/errors"
 	"go.chromium.org/tast/core/ssh"
@@ -298,4 +301,25 @@ func InfraPerf(ctx, cleanUpCtx context.Context, tf *wificell.TestFixture, wd wif
 		return ret, errors.Wrap(err, "failed to run performance test")
 	}
 	return ret, nil
+}
+
+// GetP2PConnectionParameters collects P2P connection parameters from various runners and returns them as values.
+func GetP2PConnectionParameters(ctx context.Context, wd wificell.WiFiDevice) (*iw.ChannelConfig, uint32, error) {
+	iwr := remoteiw.NewRemoteRunner(wd.Conn())
+	iface, err := wd.IfName(ctx, wificell.P2PIfaceType)
+	if err != nil {
+		return nil, 0, errors.Wrap(err, "failed to get P2P interface name")
+	}
+	chConfig, err := iwr.RadioConfig(ctx, iface)
+	if err != nil {
+		return nil, 0, errors.Wrap(err, "failed to get the P2P channel configuration")
+	}
+
+	wpar := remotewpacli.NewRemoteRunnerOnIface(wd.Conn(), iface)
+	_, _, _, gen, _, err := wpar.P2PLinkInfo(ctx)
+	if err != nil {
+		return nil, 0, errors.Wrap(err, "failed to get the P2P WiFi generation")
+	}
+
+	return chConfig, gen, nil
 }

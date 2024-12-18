@@ -263,21 +263,26 @@ func (r *Runner) P2PGroupDisconnect(ctx context.Context, ipr *ip.Runner,
 
 // P2PLinkInfo returns the p2p link information.
 func (r *Runner) P2PLinkInfo(ctx context.Context) (
-	string, string, string, uint32, error) {
+	string, string, string, uint32, uint32, error) {
 	passphrase, err := r.p2pPassphrase(ctx)
 	if err != nil {
-		return "", "", "", 0, err
+		return "", "", "", 0, 0, err
 	}
 
-	ssid, mac, freq, err := r.Status(ctx)
+	ssid, mac, freq, gen, err := r.Status(ctx)
 	if err != nil {
-		return "", passphrase, "", 0, err
+		return "", passphrase, "", 0, 0, err
 	}
 
 	retFreq, err := strconv.Atoi(freq)
 	if err != nil {
-		return "", passphrase, "", 0, err
+		return "", passphrase, "", 0, 0, err
 	}
 
-	return ssid, passphrase, mac, uint32(retFreq), nil
+	retGen, err := strconv.Atoi(gen)
+	if err != nil {
+		return "", passphrase, "", 0, 0, err
+	}
+
+	return ssid, passphrase, mac, uint32(retGen), uint32(retFreq), nil
 }

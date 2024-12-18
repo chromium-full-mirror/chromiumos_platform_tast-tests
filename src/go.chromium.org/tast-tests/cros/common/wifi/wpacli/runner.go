@@ -495,22 +495,26 @@ func (r *Runner) KeyMgmt(ctx context.Context) (string, error) {
 }
 
 // Status returns status information.
-func (r *Runner) Status(ctx context.Context) (string, string, string, error) {
+func (r *Runner) Status(ctx context.Context) (string, string, string, string, error) {
 	sMap, err := r.statusMap(ctx)
+	var wifiGeneration string
 	if err != nil {
-		return "", "", "", err
+		return "", "", "", "", err
 	}
 	if _, ok := sMap["ssid"]; !ok {
-		return "", "", "", errors.New("ssid not found in status map")
+		return "", "", "", "", errors.New("ssid not found in status map")
 	}
 	if _, ok := sMap["address"]; !ok {
-		return "", "", "", errors.New("address not found in status map")
+		return "", "", "", "", errors.New("address not found in status map")
 	}
 	if _, ok := sMap["freq"]; !ok {
-		return "", "", "", errors.New("freq not found in status map")
+		return "", "", "", "", errors.New("freq not found in status map")
 	}
+	if _, ok := sMap["wifi_generation"]; ok {
+		wifiGeneration = sMap["wifi_generation"]
+	} // Can be empty on GO.
 
-	return sMap["ssid"], sMap["address"], sMap["freq"], nil
+	return sMap["ssid"], sMap["address"], sMap["freq"], wifiGeneration, nil
 }
 
 // NewWPAMonitor returns new WPA Monitor that will be handled by this runner.

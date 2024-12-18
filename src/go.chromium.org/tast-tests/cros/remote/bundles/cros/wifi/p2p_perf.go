@@ -17,7 +17,6 @@ import (
 	"go.chromium.org/tast-tests/cros/remote/bundles/cros/wifi/wifiutil"
 	"go.chromium.org/tast-tests/cros/remote/bundles/cros/wifi/wifiutil/perfmanager"
 	"go.chromium.org/tast-tests/cros/remote/network/iperf"
-	"go.chromium.org/tast-tests/cros/remote/wifi/iw"
 	"go.chromium.org/tast-tests/cros/remote/wificell"
 
 	"go.chromium.org/tast/core/testing"
@@ -115,19 +114,6 @@ func P2PPerf(ctx context.Context, s *testing.State) {
 		ctx, cancel = tf.ReserveForDeconfigP2P(ctx)
 		defer cancel()
 
-		// Print the P2P channel configuration.
-		iwr := iw.NewRemoteRunner(tf.P2PGOConn())
-		iface, err := tf.P2PGOIface(ctx)
-		if err != nil {
-			s.Error("Failed to get P2P GO interface name: ", err)
-		}
-		chConfig, err := iwr.RadioConfig(ctx, iface)
-		if err != nil {
-			s.Error("Failed the P2P channel configuration: ", err)
-		}
-
-		testing.ContextLogf(ctx, "P2P channel configuration: Channel Number = %d, Frequency = %d, Width = %d", chConfig.Number, chConfig.Freq, chConfig.Width)
-
 		p2pGO, err := tf.P2PDevice(ctx, wificell.P2PDeviceDUT)
 		if err != nil {
 			s.Fatal("Failed to run performance test: ", err)
@@ -136,6 +122,14 @@ func P2PPerf(ctx context.Context, s *testing.State) {
 		if err != nil {
 			s.Fatal("Failed to run performance test: ", err)
 		}
+
+		// Get the P2P configuration.
+		chConfig, gen, err := wifiutil.GetP2PConnectionParameters(ctx, p2pClient)
+		if err != nil {
+			s.Fatal("Failed to run performance test: ", err)
+		}
+
+		testing.ContextLogf(ctx, "P2P channel configuration: Generation = %v, Channel Number = %d, Frequency = %d, Width = %d", gen, chConfig.Number, chConfig.Freq, chConfig.Width)
 
 		for _, testType := range tc.testType {
 			finalResult, err := wifiutil.P2PPerf(ctx, ctx, tf, p2pGO, p2pClient, s.OutDir(), "p2p", testType, iperf.Version2)
