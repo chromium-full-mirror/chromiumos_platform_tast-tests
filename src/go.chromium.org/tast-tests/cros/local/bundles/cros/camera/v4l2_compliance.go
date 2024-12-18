@@ -38,6 +38,7 @@ func V4L2Compliance(ctx context.Context, s *testing.State) {
 		"13d3:5519": "b/258798506", // Focus out of range
 		"0c45:636e": "b/281539980", // Camera in Factory Mode
 		"3277:0003": "b/383995807", // Focus return EIO
+		"0408:302f": "b/384912098", // AutoExposure has bad flags
 	}
 
 	captureDevices, err := testutil.CaptureDevicesFromV4L2Test(ctx)
