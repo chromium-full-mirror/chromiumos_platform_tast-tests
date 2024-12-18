@@ -62,6 +62,11 @@ func RecToDevUntrusted(ctx context.Context, s *testing.State) {
 	if err := h.Reporter.ClearEventlog(ctx); err != nil {
 		s.Fatal("Failed to clear event log: ", err)
 	}
+
+	if err := ms.EnableRecMode(ctx, servo.PowerStateRec, servo.USBMuxOff); err != nil {
+		s.Fatal("Failed to enable recovery mode: ", err)
+	}
+
 	if h.HasAPFwState {
 		closeUART, err := h.Servo.EnableUARTCapture(ctx, servo.ECUARTCapture)
 		if err != nil {
@@ -74,10 +79,6 @@ func RecToDevUntrusted(ctx context.Context, s *testing.State) {
 		}()
 	}
 
-	if err := ms.EnableRecMode(ctx, servo.PowerStateRec, servo.USBMuxOff); err != nil {
-		s.Fatal("Failed to enable recovery mode: ", err)
-	}
-
 	if err := reachToDevScreen(ctx, h); err != nil {
 		s.Fatal("Failed to reach the TO_DEV screen: ", err)
 	}
@@ -86,9 +87,15 @@ func RecToDevUntrusted(ctx context.Context, s *testing.State) {
 		s.Fatal("Failed to test untrusted entry to dev mode: ", err)
 	}
 
-	s.Log("Rebooting the DUT with a warm reset")
-	if err := h.Servo.SetPowerState(ctx, servo.PowerStateWarmReset); err != nil {
-		s.Fatal("Failed to warm reset the DUT: ", err)
+	s.Log("Rebooting the DUT with a cold reset")
+	if err := h.Servo.SetPowerState(ctx, servo.PowerStateReset); err != nil {
+		s.Fatal("Failed to cold reset the DUT: ", err)
+	}
+
+	waitUnreachableCtx, cancelUnreachable := context.WithTimeout(ctx, 2*time.Minute)
+	defer cancelUnreachable()
+	if err := h.DUT.WaitUnreachable(waitUnreachableCtx); err != nil {
+		s.Fatal("Failed to wait DUT unreachable: ", err)
 	}
 
 	s.Log("Waiting for DUT to reconnect")
@@ -162,6 +169,15 @@ func enterDevModeUntrusted(ctx context.Context, h *firmware.Helper) error {
 	if err := h.Servo.PressUSBKey(ctx, "<enter>", servo.DurTab); err != nil {
 		return err
 	}
+
+	if h.HasAPFwState {
+		// The window should pop up, and the screen ID should remain RecoveryToDev.
+		testing.ContextLog(ctx, "Detecting the RecoveryToDev screen")
+		if err := h.DetectFirmwareScreen(ctx, h.Config.FirmwareScreen, fwCommon.RecoveryToDev); err != nil {
+			return errors.Wrap(err, "failed to detect RecoveryToDev screen")
+		}
+	}
+
 	testing.ContextLog(ctx, "Verifying DUT doesn't boot because of the untrusted inputs")
 	waitConnectCtx, cancelWaitConnect := context.WithTimeout(ctx, firmware.DevScreenTimeout+h.Config.DelayRebootToPing)
 	defer cancelWaitConnect()
