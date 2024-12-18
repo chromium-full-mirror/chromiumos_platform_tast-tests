@@ -8,6 +8,7 @@ import (
 	"context"
 	"image"
 	"image/color"
+	"math"
 	"os"
 	"path/filepath"
 	"time"
@@ -26,6 +27,9 @@ import (
 	"go.chromium.org/tast/core/testing"
 	"go.chromium.org/tast/core/testing/hwdep"
 )
+
+// Whether the test should skip checking the screenshot corners.
+type screenCornerRadius = int
 
 const verifyPixelsTimeout = 5 * time.Second
 
@@ -49,9 +53,19 @@ func init() {
 		},
 		Timeout:      kioskmode.SetupDuration + kioskmode.LaunchDuration + kioskmode.CleanupDuration + verifyPixelsTimeout,
 		SoftwareDeps: []string{"reboot", "chrome"},
-		HardwareDeps: hwdep.D(hwdep.Display()),
 		VarDeps:      []string{"ui.signinProfileTestExtensionManifestKey"},
 		Fixture:      fixture.FakeDMSEnrolled,
+		Params: []testing.Param{
+			{
+				Val:               screenCornerRadius(0),
+				ExtraHardwareDeps: hwdep.D(hwdep.SkipOnModel("bugzzy")),
+			},
+			{
+				Name:              "corner_radius_20",
+				Val:               screenCornerRadius(20),
+				ExtraHardwareDeps: hwdep.D(hwdep.Model("bugzzy")),
+			},
+		},
 		SearchFlags: []*testing.StringPair{
 			{
 				Key: "feature_id",
@@ -89,7 +103,7 @@ func waitUntilGreenAppStarted(ctx context.Context, cr *chrome.Chrome, outDir str
 	return nil
 }
 
-func verifyScreenIsAllGreen(ctx context.Context, screenshotPath string) error {
+func verifyScreenIsAllGreen(ctx context.Context, radius screenCornerRadius, screenshotPath string) error {
 	testing.ContextLog(ctx, "Verifying screen is all green")
 	return testing.Poll(ctx, func(ctx context.Context) error {
 		if err := screenshot.Capture(ctx, screenshotPath); err != nil {
@@ -105,6 +119,9 @@ func verifyScreenIsAllGreen(ctx context.Context, screenshotPath string) error {
 		}
 		for x := img.Bounds().Min.X; x < img.Bounds().Max.X; x++ {
 			for y := img.Bounds().Min.Y; y < img.Bounds().Max.Y; y++ {
+				if isInRoundedCorner(radius, x, y, img.Bounds()) {
+					continue
+				}
 				if c := img.At(x, y); c != greenApp.IconColor {
 					return errors.Errorf("mismatching color %v found at (%v,%v), expected %v", c, x, y, greenApp.IconColor)
 				}
@@ -131,6 +148,7 @@ func saveTestArtifacts(ctx context.Context, cr *chrome.Chrome, hasError bool, ou
 func NoUnexpectedUI(ctx context.Context, s *testing.State) {
 	fdms := s.FixtValue().(fakedms.HasFakeDMS).FakeDMS()
 	signinTestExtensionManifestKey := s.RequiredVar("ui.signinProfileTestExtensionManifestKey")
+	screenCornerRadius := s.Param().(screenCornerRadius)
 
 	cleanupCtx := ctx
 	ctx, cancel := ctxutil.Shorten(ctx, kioskmode.CleanupDuration)
@@ -169,7 +187,18 @@ func NoUnexpectedUI(ctx context.Context, s *testing.State) {
 		s.Fatal("Kiosk launched but app did not start: ", err)
 	}
 
-	if err := verifyScreenIsAllGreen(ctx, filepath.Join(s.OutDir(), "GreenApp.png")); err != nil {
+	if err := verifyScreenIsAllGreen(
+		ctx,
+		screenCornerRadius,
+		filepath.Join(s.OutDir(), "GreenApp.png"),
+	); err != nil {
 		s.Fatal("Failed to verify Kiosk is all green: ", err)
 	}
+}
+
+func isInRoundedCorner(radius screenCornerRadius, x, y int, bounds image.Rectangle) bool {
+	min := func(a, b int) int { return int(math.Min(float64(a), float64(b))) }
+	xOffsetToBorder := min(x, bounds.Max.X-x)
+	yOffsetToBorder := min(y, bounds.Max.Y-y)
+	return xOffsetToBorder+yOffsetToBorder <= radius
 }
