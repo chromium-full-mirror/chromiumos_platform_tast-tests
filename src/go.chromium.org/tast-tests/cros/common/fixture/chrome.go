@@ -58,6 +58,8 @@ const (
 	ChromeLoggedInWithFieldTrialConfigDisableAndVerboseConsent = "chromeLoggedInWithFieldTrialConfigDisableAndVerboseConsent"
 	// Logged in to a user session with SchedQoSOnResourcedForChrome feature enabled.
 	ChromeLoggedInWithSchedQoS = "chromeLoggedInWithSchedQoS"
+	// Logged into a user session with Slow Keys enabled.
+	ChromeLoggedInWithSlowKeys = "chromeLoggedInWithSlowKeys"
 	// Logged in to a user session with oak feature enabled.
 	ChromeLoggedInWithOak = "chromeLoggedInWithOak"
 	// Logged into a user session with FaceGaze enabled.

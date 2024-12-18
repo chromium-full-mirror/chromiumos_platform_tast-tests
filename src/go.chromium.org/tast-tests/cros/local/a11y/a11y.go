@@ -54,6 +54,8 @@ const ReadOnlyGoogleDocURL string = "https://docs.google.com/document/d/1qpu3koS
 const (
 	// BounceKeysDefaultDelay is the default delay of Bounce Keys.
 	BounceKeysDefaultDelay = 500 * time.Millisecond
+	// SlowKeysDefaultDelay is the default delay of Slow Keys.
+	SlowKeysDefaultDelay = 500 * time.Millisecond
 )
 
 // SetFaceGazeEnabled enables the FaceGaze accessibility feature using the
@@ -315,4 +317,9 @@ func toggleKeyboardAndTextInputSetting(ctx context.Context, tconn *chrome.TestCo
 // ToggleBounceKeysSetting is a helper function that toggles Bounce Keys setting via Settings UI.
 func ToggleBounceKeysSetting(ctx context.Context, tconn *chrome.TestConn, cr *chrome.Chrome, ui *uiauto.Context, enable bool) error {
 	return toggleKeyboardAndTextInputSetting(ctx, tconn, cr, ui, "Bounce keys", enable)
+}
+
+// ToggleSlowKeysSetting is a helper function that toggles Slow Keys setting via Settings UI.
+func ToggleSlowKeysSetting(ctx context.Context, tconn *chrome.TestConn, cr *chrome.Chrome, ui *uiauto.Context, enable bool) error {
+	return toggleKeyboardAndTextInputSetting(ctx, tconn, cr, ui, "Slow keys", enable)
 }

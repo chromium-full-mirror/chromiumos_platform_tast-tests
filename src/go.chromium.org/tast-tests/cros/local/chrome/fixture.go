@@ -404,6 +404,19 @@ func init() {
 	})
 
 	testing.AddFixture(&testing.Fixture{
+		Name:         fixture.ChromeLoggedInWithSlowKeys,
+		Desc:         "Logged into a user session with AccessibilitySlowKeys enabled",
+		Contacts:     []string{"chromeos-a11y-eng@google.com", "aluh@chromium.org"},
+		BugComponent: "b:1686419", // ChromeOS > Software > Experiences > Accessibility > Features > Slow And Bounce Keys
+		Impl: NewLoggedInFixture(func(ctx context.Context, s *testing.FixtState) ([]Option, error) {
+			return []Option{EnableFeatures("AccessibilitySlowKeys")}, nil
+		}),
+		SetUpTimeout:    FixtureSetUpTimeout,
+		ResetTimeout:    ResetTimeout,
+		TearDownTimeout: ResetTimeout,
+	})
+
+	testing.AddFixture(&testing.Fixture{
 		Name:     fixture.ChromeLoggedInWithOak,
 		Desc:     "Logged into a user session with oak feature enabled",
 		Contacts: []string{"sammiequon@google.com"},
