@@ -31,7 +31,7 @@ func init() {
 		BugComponent: "b:958036",
 		Attr:         []string{"group:typec", "typec_mcci"},
 		HardwareDeps: hwdep.D(hwdep.ECFeatureTypecCmd(), hwdep.ChromeEC()),
-		Vars:         []string{"typec.McciSerial"},
+		Vars:         []string{"typec.McciSerial", "typec.McciPath"},
 	})
 }
 
@@ -49,7 +49,8 @@ func init() {
 func HpdWake(ctx context.Context, s *testing.State) {
 	d := s.DUT()
 
-	sw, err := mcci.GetSwitch(s.RequiredVar("typec.McciSerial"))
+	path, _ := s.Var("typec.McciPath")
+	sw, err := mcci.GetSwitch(s.RequiredVar("typec.McciSerial"), path)
 	if err != nil {
 		s.Fatal("Failed to get MCCI switch handle: ", err)
 	}

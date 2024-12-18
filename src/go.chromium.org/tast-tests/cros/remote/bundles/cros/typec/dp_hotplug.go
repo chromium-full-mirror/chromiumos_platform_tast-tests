@@ -25,7 +25,7 @@ func init() {
 		// ChromeOS > Platform > Technologies > USB
 		BugComponent: "b:958036",
 		Attr:         []string{"group:typec", "typec_dp_bringup"},
-		Vars:         []string{"typec.McciSerial", "typec.McciPort"},
+		Vars:         []string{"typec.McciSerial", "typec.McciPort", "typec.McciPath"},
 		Timeout:      7 * time.Minute,
 	})
 }
@@ -55,7 +55,8 @@ func DpHotplug(ctx context.Context, s *testing.State) {
 		s.Fatal("Failed to parse MCCI port commandline variable: ", err)
 	}
 
-	sw, err := mcci.GetSwitch(s.RequiredVar("typec.McciSerial"))
+	path, _ := s.Var("typec.McciPath")
+	sw, err := mcci.GetSwitch(s.RequiredVar("typec.McciSerial"), path)
 	if err != nil {
 		s.Fatal("Failed to get MCCI switch handle: ", err)
 	}

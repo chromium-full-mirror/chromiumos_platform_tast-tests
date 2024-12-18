@@ -24,10 +24,15 @@ type Switch struct {
 }
 
 // GetSwitch returns a handle to the MCCI switch with serial number `serialNum`.
-func GetSwitch(serialNum string) (*Switch, error) {
+// If a non-empty path is provided, the function will check it in addition to the serial ports list.
+func GetSwitch(serialNum, path string) (*Switch, error) {
 	ports, err := serial.GetPortsList()
 	if err != nil {
 		return nil, errors.Wrap(err, "unable to retrieve serial ports list")
+	}
+
+	if path != "" {
+		ports = append(ports, path)
 	}
 
 	if len(ports) == 0 {

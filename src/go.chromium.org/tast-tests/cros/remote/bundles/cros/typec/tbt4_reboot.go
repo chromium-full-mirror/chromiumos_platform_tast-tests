@@ -25,7 +25,7 @@ func init() {
 		BugComponent: "b:958036",
 		Attr:         []string{"group:typec", "typec_tbt4_bringup"},
 		SoftwareDeps: []string{"reboot"},
-		Vars:         []string{"typec.McciSerial", "typec.McciPort"},
+		Vars:         []string{"typec.McciSerial", "typec.McciPort", "typec.McciPath"},
 	})
 }
 
@@ -55,7 +55,8 @@ func Tbt4Reboot(ctx context.Context, s *testing.State) {
 		s.Fatal("Failed to parse MCCI port commandline variable: ", err)
 	}
 
-	sw, err := mcci.GetSwitch(s.RequiredVar("typec.McciSerial"))
+	path, _ := s.Var("typec.McciPath")
+	sw, err := mcci.GetSwitch(s.RequiredVar("typec.McciSerial"), path)
 	if err != nil {
 		s.Fatal("Failed to get MCCI switch handle: ", err)
 	}
