@@ -94,7 +94,7 @@ func DocsCUJ(ctx context.Context, s *testing.State) {
 		defer cleanup()
 	}
 
-	if _, err := docscuj.Run(ctx, cr, testParam, s.OutDir(), traceConfigPath, s.TestName()); err != nil {
+	if _, err := docscuj.Run(ctx, cr, testParam, s.OutDir(), traceConfigPath, s.TestName(), cujrecorder.RecorderOptions{}); err != nil {
 		s.Fatal("Failed to run DocsCUJ: ", err)
 	}
 }

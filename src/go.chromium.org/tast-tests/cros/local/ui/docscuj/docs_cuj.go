@@ -44,7 +44,7 @@ type TestParam struct {
 
 // Run opens up a new Google Doc, and types paragraphs in multiple
 // languages, speeds, and styles, to test the Google Docs performance.
-func Run(ctx context.Context, cr *chrome.Chrome, testParam TestParam, outDir, systemTraceConfigPath, testName string) (pv *perf.Values, retErr error) {
+func Run(ctx context.Context, cr *chrome.Chrome, testParam TestParam, outDir, systemTraceConfigPath, testName string, cujRecorderOptions cujrecorder.RecorderOptions) (pv *perf.Values, retErr error) {
 	// Shorten context a bit to allow for cleanup.
 	closeCtx := ctx
 	ctx, cancel := ctxutil.Shorten(ctx, 5*time.Second)
@@ -89,7 +89,7 @@ func Run(ctx context.Context, cr *chrome.Chrome, testParam TestParam, outDir, sy
 		}
 	}
 
-	recorder, err := cujrecorder.NewRecorder(ctx, tconn, nil, cujrecorder.RecorderOptions{})
+	recorder, err := cujrecorder.NewRecorder(ctx, tconn, nil, cujRecorderOptions)
 	if err != nil {
 		return nil, errors.Wrap(err, "failed to create a recorder")
 	}
@@ -226,17 +226,15 @@ func Run(ctx context.Context, cr *chrome.Chrome, testParam TestParam, outDir, sy
 		}
 		cleanUpDoc = true
 
-		ws, err := ash.GetAllWindows(ctx, tconn)
+		ws, err := ash.FindOnlyWindow(ctx, tconn, func(w *ash.Window) bool {
+			return strings.Contains(w.Title, "Google Docs")
+		})
 		if err != nil {
-			return errors.Wrap(err, "failed to get all windows")
-		}
-
-		if len(ws) != 1 {
-			return errors.Wrapf(err, "unexpected number of open windows; got %d, expected 1", len(ws))
+			return errors.Wrap(err, "failed to find Docs window")
 		}
 
 		recorder.Annotate(ctx, "Maximize_window")
-		if err := ash.SetWindowStateAndWait(ctx, tconn, ws[0].ID, ash.WindowStateMaximized); err != nil {
+		if err := ash.SetWindowStateAndWait(ctx, tconn, ws.ID, ash.WindowStateMaximized); err != nil {
 			return errors.Wrap(err, "failed to set window state to maximized")
 		}
 
