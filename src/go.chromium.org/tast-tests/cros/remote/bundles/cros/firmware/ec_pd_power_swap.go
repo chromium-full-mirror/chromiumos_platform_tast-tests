@@ -103,7 +103,8 @@ func init() {
 const (
 	pdStatePollTimeout  time.Duration = 10 * time.Second
 	pdStatePollInterval time.Duration = 500 * time.Millisecond
-	pdSettleTime        time.Duration = 3 * time.Second
+	pdSettleTimeDefault time.Duration = 3 * time.Second
+	pdSettleTimeDTSMode time.Duration = 5 * time.Second
 )
 
 func ECPDPowerSwap(ctx context.Context, s *testing.State) {
@@ -183,6 +184,10 @@ func ECPDPowerSwap(ctx context.Context, s *testing.State) {
 			}
 		}
 
+		var pdSettleTime time.Duration = pdSettleTimeDefault
+		if testParams.DTS == firmware.DTSModeOn {
+			pdSettleTime = pdSettleTimeDTSMode
+		}
 		curPowerRole = nowPowerRole
 		// GoBigSleepLint: Let PDC settle before initiating next PRS
 		if err := testing.Sleep(ctx, pdSettleTime); err != nil {
