@@ -1,0 +1,5 @@
+{
+    "url": "gs://chromiumos-test-assets-public/tast/cros/recorderapp/input_1k_tokens_recording_20241206.json",
+    "size": 6322075,
+    "sha256sum": "77c41e85b1cd00fc1ad42be446ff97d44ef886f0807fb3251217257e9f86cdc6"
+}

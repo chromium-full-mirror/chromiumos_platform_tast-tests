@@ -27,6 +27,7 @@ import (
 
 const (
 	recorderTestPageURL = "chrome://recorder-app/#/test"
+	modelActionTimeout  = 4 * time.Minute
 )
 
 // App represents a ChromeOS Recorder App instance.
@@ -172,7 +173,7 @@ func (a *App) PlayFirstRecording() uiauto.Action {
 // RequestRecordingSummary returns a function to toggle the summary button in
 // the playback page.
 func (a *App) RequestRecordingSummary() uiauto.Action {
-	return a.RequestRecordingSummaryWithTimeout(30 * time.Second)
+	return a.RequestRecordingSummaryWithTimeout(modelActionTimeout)
 }
 
 // RequestRecordingSummaryWithTimeout returns a function to toggle the summary
@@ -187,7 +188,7 @@ func (a *App) RequestRecordingSummaryWithTimeout(timeout time.Duration) uiauto.A
 // RequestTitleSuggestions returns a function to request and wait for the title
 // suggestions.
 func (a *App) RequestTitleSuggestions() uiauto.Action {
-	return a.RequestTitleSuggestionsWithTimeout(30 * time.Second)
+	return a.RequestTitleSuggestionsWithTimeout(modelActionTimeout)
 }
 
 // RequestTitleSuggestionsWithTimeout returns a function to request and wait for
