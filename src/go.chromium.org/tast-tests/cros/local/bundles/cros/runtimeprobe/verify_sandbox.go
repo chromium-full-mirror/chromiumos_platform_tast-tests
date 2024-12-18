@@ -17,6 +17,7 @@ import (
 
 	"go.chromium.org/tast/core/errors"
 	"go.chromium.org/tast/core/testing"
+	"go.chromium.org/tast/core/testing/hwdep"
 )
 
 type verifySandboxTestParams struct {
@@ -118,6 +119,7 @@ func init() {
 				probeConfig: probeConfig{[]probeStatement{
 					probeStatement{"ec_component"},
 				}}},
+			ExtraHardwareDeps: hwdep.D(hwdep.SkipOnModel("deku")),
 		}, {
 			Name: "tpm",
 			Val: verifySandboxTestParams{
