@@ -137,6 +137,10 @@ func P2PPerf(ctx context.Context, s *testing.State) {
 				s.Fatal("Failed to run performance test: ", err)
 			}
 
+			if err := wifiutil.VerifyPerformanceValues(ctx, testType, chConfig, gen, uint32(finalResult.Throughput/iperf.Mbps)); err != nil {
+				s.Error("Throughput failed verification: ", err)
+			}
+
 			pv := perf.NewValues()
 			defer func() {
 				if err := pv.Save(s.OutDir()); err != nil {

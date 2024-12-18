@@ -323,3 +323,82 @@ func GetP2PConnectionParameters(ctx context.Context, wd wificell.WiFiDevice) (*i
 
 	return chConfig, gen, nil
 }
+
+// Test thresholds are 3D map[testType][generation][bandwidth]
+var expectedP2PThroughput = map[perfmanager.TestType]map[uint32]map[int]perfmanager.ExpectedTput{
+	perfmanager.TestTypeTCPTx: {
+		4: {
+			20: perfmanager.ExpectedTput{Must: 61, Should: 86},   // [wifi-tput-0031-v01]
+			40: perfmanager.ExpectedTput{Must: 115, Should: 166}, // [wifi-tput-0036-v01]
+		},
+		5: {
+			20: perfmanager.ExpectedTput{Must: 74, Should: 103},  // [wifi-tput-0039-v01]
+			40: perfmanager.ExpectedTput{Must: 153, Should: 221}, // [wifi-tput-0042-v01]
+			80: perfmanager.ExpectedTput{Must: 200, Should: 250}, // [wifi-tput-0045-v01]
+		},
+		6: {
+			20:  perfmanager.ExpectedTput{Must: 122, Should: 140}, // [wifi-tput-0048-v01]
+			40:  perfmanager.ExpectedTput{Must: 200, Should: 250}, // [wifi-tput-0051-v01]
+			80:  perfmanager.ExpectedTput{Must: 200, Should: 400}, // [wifi-tput-0054-v01]
+			160: perfmanager.ExpectedTput{Must: 200, Should: 500}, // [wifi-tput-0057-v01]
+		},
+	},
+	perfmanager.TestTypeTCPRx: {
+		4: {
+			20: perfmanager.ExpectedTput{Must: 61, Should: 86},   // [wifi-tput-0032-v01]
+			40: perfmanager.ExpectedTput{Must: 115, Should: 166}, // [wifi-tput-0037-v01]
+		},
+		5: {
+			20: perfmanager.ExpectedTput{Must: 74, Should: 103},  // [wifi-tput-0040-v01]
+			40: perfmanager.ExpectedTput{Must: 153, Should: 221}, // [wifi-tput-0043-v01]
+			80: perfmanager.ExpectedTput{Must: 200, Should: 250}, // [wifi-tput-0046-v01]
+		},
+		6: {
+			20:  perfmanager.ExpectedTput{Must: 122, Should: 140}, // [wifi-tput-0049-v01]
+			40:  perfmanager.ExpectedTput{Must: 200, Should: 250}, // [wifi-tput-0052-v01]
+			80:  perfmanager.ExpectedTput{Must: 200, Should: 400}, // [wifi-tput-0055-v01]
+			160: perfmanager.ExpectedTput{Must: 200, Should: 500}, // [wifi-tput-0058-v01]
+		},
+	},
+	perfmanager.TestTypeUDPBidirectional: {
+		4: {
+			20: perfmanager.ExpectedTput{Must: 72, Should: 90},   // [wifi-tput-0004-v01]
+			40: perfmanager.ExpectedTput{Must: 135, Should: 180}, // [wifi-tput-0009-v01]
+		},
+		5: {
+			20: perfmanager.ExpectedTput{Must: 87, Should: 100},  // [wifi-tput-0012-v01]
+			40: perfmanager.ExpectedTput{Must: 180, Should: 220}, // [wifi-tput-0015-v01]
+			80: perfmanager.ExpectedTput{Must: 347, Should: 400}, // [wifi-tput-0018-v01]
+		},
+		6: {
+			20:  perfmanager.ExpectedTput{Must: 143, Should: 160}, // [wifi-tput-0021-v01]
+			40:  perfmanager.ExpectedTput{Must: 258, Should: 300}, // [wifi-tput-0024-v01]
+			80:  perfmanager.ExpectedTput{Must: 350, Should: 400}, // [wifi-tput-0027-v01]
+			160: perfmanager.ExpectedTput{Must: 350, Should: 400}, // [wifi-tput-0030-v01]
+		},
+	},
+}
+
+// VerifyPerformanceValues checks if the measured throughput meets the required criteria.
+func VerifyPerformanceValues(ctx context.Context, testType perfmanager.TestType, chConfig *iw.ChannelConfig, gen, tput uint32) error {
+	thresholds, ok := expectedP2PThroughput[testType][gen][chConfig.Width]
+	if !ok {
+		testing.ContextLogf(ctx, "Could not find required thresholds for %v/gen%v/%vMhz, skipping verification",
+			testType, gen, chConfig.Width)
+		return nil
+	}
+
+	if tput < uint32(thresholds.Must) {
+		return errors.Errorf("Throughput: %v Mbps does not meet the requirement %v Mbps", tput, thresholds.Must)
+	}
+
+	if tput < uint32(thresholds.Should) {
+		testing.ContextLogf(ctx, "WARNING: Throughput: %v Mbps is above %v Mbps, but should do better (above %v Mbps)",
+			tput, thresholds.Must, thresholds.Should)
+	} else {
+		testing.ContextLogf(ctx, "Throughput: %v Mbps is above %v Mbps desired for gen %v, %v MHz bandwidth",
+			tput, thresholds.Should, gen, chConfig.Width)
+	}
+
+	return nil
+}
