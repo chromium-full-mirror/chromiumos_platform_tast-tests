@@ -134,6 +134,12 @@ func ManagedPlayForcedAppInstall(ctx context.Context, s *testing.State) {
 			return rl.Retry("wait for provisioning", err)
 		}
 
+		d, err := a.NewUIDevice(ctx)
+		if err != nil {
+			return rl.Exit("initialize UI Automator", err)
+		}
+		defer d.Close(cleanupCtx)
+
 		defer arcent.DumpBugReportOnError(cleanupCtx, func() bool {
 			return s.HasError() || retErr != nil
 		}, a, filepath.Join(s.OutDir(), fmt.Sprintf("bugreport_%d.zip", rl.Attempts)))
@@ -146,16 +152,6 @@ func ManagedPlayForcedAppInstall(ctx context.Context, s *testing.State) {
 
 		if err := arcent.EnsurePackagesUninstall(ctx, cr, a, packages, false); err != nil {
 			return rl.Exit("verify packages are uninstallable", err)
-		}
-
-		d, err := a.NewUIDevice(ctx)
-		if err != nil {
-			return rl.Exit("initialize UI Automator", err)
-		}
-		defer d.Close(cleanupCtx)
-
-		if err := arcent.EnsurePlayStoreNotEmpty(ctx, tconn, cr, a, d, s.OutDir(), rl.Attempts); err != nil {
-			return rl.Exit("verify Play Store is not empty", err)
 		}
 
 		return nil

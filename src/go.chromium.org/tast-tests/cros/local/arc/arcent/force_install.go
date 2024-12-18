@@ -187,9 +187,10 @@ func EnsurePlayStoreState(ctx context.Context, tconn *chrome.TestConn, cr *chrom
 	const (
 		emptyPlayStoreText = "No results found."
 	)
+	testing.ContextLog(ctx, "Ensure Play Store to be empty=", shouldBeEmpty)
 
 	cleanupCtx := ctx
-	ctx, cancel := ctxutil.Shorten(ctx, 30*time.Second)
+	ctx, cancel := ctxutil.Shorten(ctx, 5*time.Second)
 	defer cancel()
 
 	attempts := 0
@@ -217,6 +218,7 @@ func EnsurePlayStoreState(ctx context.Context, tconn *chrome.TestConn, cr *chrom
 
 		err = testing.Poll(ctx, func(ctx context.Context) error {
 			attempts++
+			testing.ContextLog(ctx, "Searching for apps. Attempt #", attempts)
 
 			if running, err := act.IsRunning(ctx); err != nil {
 				return testing.PollBreak(err)
@@ -247,7 +249,7 @@ func EnsurePlayStoreState(ctx context.Context, tconn *chrome.TestConn, cr *chrom
 
 			// Play Store is considered to be empty when we didn't find an app blurb or app card.
 			return assertState(ctx, true, "no app in the catalog")
-		}, &testing.PollOptions{Interval: 5 * time.Second, Timeout: 30 * time.Second})
+		}, &testing.PollOptions{Interval: time.Second})
 
 		if err != nil {
 			playstore.Close(ctx, a)
@@ -258,19 +260,21 @@ func EnsurePlayStoreState(ctx context.Context, tconn *chrome.TestConn, cr *chrom
 
 // IsAnyAppInCatalog finds an app icon in Play Store catalog view.
 func IsAnyAppInCatalog(ctx context.Context, d *ui.Device) bool {
-	selectors := [][]ui.SelectorOption{
-		{ui.DescriptionStartsWith("Image of app or game")},
-		{ui.ResourceID("com.android.vending:id/mini_blurb")},
-		{ui.ResourceID("com.android.vending:id/play_card")},
-		{ui.DescriptionContains("Install")},
-		{ui.Text("Install")},
-		{ui.Text("Apps")},
+	selectors := []ui.SelectorOption{
+		ui.DescriptionStartsWith("Image of app or game"),
+		ui.ResourceID("com.android.vending:id/mini_blurb"),
+		ui.ResourceID("com.android.vending:id/play_card"),
+		ui.DescriptionContains("Install"),
+		ui.Text("Install"),
+		ui.Text("Apps"),
 	}
 
 	for _, selector := range selectors {
-		if err := d.Object(selector...).Exists(ctx); err == nil {
+		var err error
+		if err = d.Object(selector).Exists(ctx); err == nil {
 			return true
 		}
+		testing.ContextLog(ctx, "Selector not found: ", err)
 	}
 
 	return false
