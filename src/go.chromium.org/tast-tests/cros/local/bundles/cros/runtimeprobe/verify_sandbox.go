@@ -60,12 +60,6 @@ func init() {
 			// This probe function can only be run on amd64.
 			ExtraSoftwareDeps: []string{"amd64"},
 		}, {
-			Name: "tcpc",
-			Val: verifySandboxTestParams{
-				probeConfig: probeConfig{[]probeStatement{
-					probeStatement{"tcpc"},
-				}}},
-		}, {
 			Name: "battery",
 			Val: verifySandboxTestParams{
 				probeConfig: probeConfig{[]probeStatement{
