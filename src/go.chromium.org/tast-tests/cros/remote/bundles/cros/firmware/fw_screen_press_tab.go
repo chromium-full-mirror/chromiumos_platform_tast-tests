@@ -86,17 +86,17 @@ func FWScreenPressTab(ctx context.Context, s *testing.State) {
 		s.Fatal("Failed to warm reset the DUT: ", err)
 	}
 
+	waitUnreachableCtx, cancelUnreachable := context.WithTimeout(ctx, 2*time.Minute)
+	defer cancelUnreachable()
+	if err := h.DUT.WaitUnreachable(waitUnreachableCtx); err != nil {
+		s.Fatal("Failed to wait DUT unreachable: ", err)
+	}
+
 	if h.HasAPFwState {
 		if err := h.DetectFirmwareScreen(ctx, h.Config.FirmwareScreen, fwCommon.DeveloperMode); err != nil {
 			s.Log("Failed to detect firmware screen: ", err)
 		}
 	} else {
-		waitUnreachableCtx, cancelUnreachable := context.WithTimeout(ctx, 2*time.Minute)
-		defer cancelUnreachable()
-		if err := h.DUT.WaitUnreachable(waitUnreachableCtx); err != nil {
-			s.Fatal("Failed to wait DUT unreachable: ", err)
-		}
-
 		s.Logf("Sleeping for %s (FirmwareScreen) ", h.Config.FirmwareScreen)
 		// GoBigSleepLint: Delay to wait for the firmware screen during boot-up.
 		if err := testing.Sleep(ctx, h.Config.FirmwareScreen); err != nil {

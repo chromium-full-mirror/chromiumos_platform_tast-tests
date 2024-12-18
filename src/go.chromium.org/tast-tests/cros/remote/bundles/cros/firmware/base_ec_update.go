@@ -164,6 +164,13 @@ func BaseECUpdate(ctx context.Context, s *testing.State) {
 			if err := h.Servo.SetPowerState(ctx, servo.PowerStateWarmReset); err != nil {
 				s.Fatal("Failed to reboot DUT by servo: ", err)
 			}
+
+			waitUnreachableCtx, cancelUnreachable := context.WithTimeout(ctx, 2*time.Minute)
+			defer cancelUnreachable()
+			if err := h.DUT.WaitUnreachable(waitUnreachableCtx); err != nil {
+				s.Fatal("Failed to wait DUT unreachable: ", err)
+			}
+
 			s.Log("Waiting for DUT to power ON")
 			waitConnectCtx, cancelWaitConnect := context.WithTimeout(ctx, 2*time.Minute)
 			defer cancelWaitConnect()
@@ -206,6 +213,13 @@ func BaseECUpdate(ctx context.Context, s *testing.State) {
 		if err := h.Servo.SetPowerState(ctx, servo.PowerStateWarmReset); err != nil {
 			s.Fatal("Failed to reboot DUT by servo: ", err)
 		}
+
+		waitUnreachableCtx, cancelUnreachable := context.WithTimeout(ctx, 2*time.Minute)
+		defer cancelUnreachable()
+		if err := h.DUT.WaitUnreachable(waitUnreachableCtx); err != nil {
+			s.Fatal("Failed to wait DUT unreachable: ", err)
+		}
+
 		s.Log("Waiting for DUT to power ON")
 		waitConnectCtx, cancelWaitConnect := context.WithTimeout(ctx, 2*time.Minute)
 		defer cancelWaitConnect()

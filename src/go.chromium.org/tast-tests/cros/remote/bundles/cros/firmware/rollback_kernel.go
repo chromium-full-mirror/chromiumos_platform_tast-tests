@@ -35,7 +35,6 @@ func init() {
 		},
 		BugComponent: "b:792402", // ChromeOS > Platform > Enablement > Firmware > FAFT
 		Attr:         []string{"group:firmware", "firmware_bios", "firmware_level2"},
-		Requirements: []string{"sys-fw-0021-v01", "sys-fw-0024-v01", "sys-fw-0025-v01"},
 		ServiceDeps:  []string{"tast.cros.firmware.KernelService"},
 		Params: []testing.Param{
 			{
@@ -258,7 +257,7 @@ func RollbackKernel(ctx context.Context, s *testing.State) {
 	if err := h.DUT.Conn().CommandContext(ctx, "reboot").Run(); err != nil && !errors.As(err, &context.DeadlineExceeded) {
 		s.Fatal("Failed to run reboot command: ", err)
 	}
-	waitDisconnectCtx, cancelWaitDisconnect := context.WithTimeout(ctx, 1*time.Minute)
+	waitDisconnectCtx, cancelWaitDisconnect := context.WithTimeout(ctx, 2*time.Minute)
 	defer cancelWaitDisconnect()
 	if err := h.DUT.WaitUnreachable(waitDisconnectCtx); err != nil {
 		s.Fatal("Failed to wait for DUT to become unreachable, warm reset failed: ", err)

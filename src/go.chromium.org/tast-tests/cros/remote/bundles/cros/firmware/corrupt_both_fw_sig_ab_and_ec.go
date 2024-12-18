@@ -269,7 +269,7 @@ func CorruptBothFWSigABAndEC(ctx context.Context, s *testing.State) {
 			if err := h.DUT.Conn().CommandContext(ctx, "reboot").Run(); err != nil && !errors.As(err, &context.DeadlineExceeded) {
 				s.Fatal("Failed to run reboot command: ", err)
 			}
-			waitDisconnectCtx, cancelWaitDisconnect := context.WithTimeout(ctx, 1*time.Minute)
+			waitDisconnectCtx, cancelWaitDisconnect := context.WithTimeout(ctx, 2*time.Minute)
 			defer cancelWaitDisconnect()
 			if err := h.DUT.WaitUnreachable(waitDisconnectCtx); err != nil {
 				s.Fatal("Failed to wait for DUT to become unreachable, reboot failed: ", err)

@@ -119,6 +119,13 @@ func RecScreenMiniOS(ctx context.Context, s *testing.State) {
 		if err := h.Servo.SetPowerState(ctx, servo.PowerStateWarmReset); err != nil {
 			s.Error("Failed to warm reset DUT: ", err)
 		}
+
+		waitUnreachableCtx, cancelUnreachable := context.WithTimeout(ctx, 2*time.Minute)
+		defer cancelUnreachable()
+		if err := h.DUT.WaitUnreachable(waitUnreachableCtx); err != nil {
+			s.Error("Failed to wait DUT unreachable: ", err)
+		}
+
 		waitConnectCtx, cancelWaitConnect := context.WithTimeout(ctx, h.Config.DelayRebootToPing)
 		defer cancelWaitConnect()
 		if err := h.WaitConnect(waitConnectCtx, firmware.ResetEthernetDongle); err != nil {

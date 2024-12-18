@@ -144,6 +144,13 @@ func ECTabletMode(ctx context.Context, s *testing.State) {
 		if err := powerCycleDUT(); err != nil {
 			s.Fatal("Failed to power-cycle DUT: ", err)
 		}
+
+		waitUnreachableCtx, cancelUnreachable := context.WithTimeout(ctx, 2*time.Minute)
+		defer cancelUnreachable()
+		if err := h.DUT.WaitUnreachable(waitUnreachableCtx); err != nil {
+			s.Fatal("Failed to wait DUT unreachable: ", err)
+		}
+
 		s.Log("Wait for DUT to power ON")
 		waitConnectCtx, cancelWaitConnect := context.WithTimeout(ctx, 3*time.Minute)
 		defer cancelWaitConnect()
