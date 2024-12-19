@@ -55,7 +55,7 @@ func init() {
 		BugComponent: "b:715469", // ChromeOS > Platform > System > Hardware Security > HwSec GSC > Ti50
 		Attr: []string{
 			"group:gsc",
-			"gsc_dt_ab", "gsc_dt_shield", "gsc_ot_shield", "gsc_ot_fpga_cw310",
+			"gsc_dt_ab", "gsc_dt_shield", "gsc_ot_shield",
 			"gsc_image_ti50",
 			"gsc_nightly"},
 		Fixture: fixture.GSCOpenCCD,
@@ -66,18 +66,29 @@ func init() {
 				formFactor:   ti50.FfClamshell,
 				mainFunction: ti50RBOXClamshell,
 			},
+			ExtraAttr: []string{"gsc_ot_fpga_cw310"},
+		}, {
+			// Note that FPGA cannot tests this strap setting since all 8 strap values
+			// that the FGPAs can distinguish have been used already.
+			Name: "clamshell_non_invert",
+			Val: ti50ValidRBOXParam{
+				formFactor:   ti50.FfClamshellNonInvert,
+				mainFunction: ti50RBOXClamshellNonInvert,
+			},
 		}, {
 			Name: "tablet",
 			Val: ti50ValidRBOXParam{
 				formFactor:   ti50.FfTablet,
 				mainFunction: ti50RBOXTablet,
 			},
+			ExtraAttr: []string{"gsc_ot_fpga_cw310"},
 		}, {
 			Name: "box",
 			Val: ti50ValidRBOXParam{
 				formFactor:   ti50.FfBox,
 				mainFunction: ti50RBOXBox,
 			},
+			ExtraAttr: []string{"gsc_ot_fpga_cw310"},
 		}},
 	})
 }
@@ -160,15 +171,23 @@ func ti50RBOXBox(ctx context.Context, s *testing.State, b utils.DevboardHelper, 
 }
 
 func ti50RBOXClamshell(ctx context.Context, s *testing.State, b utils.DevboardHelper, i *ti50.CrOSImage) {
+	ti50RBOXClamshellInternal(ctx, true, s, b, i)
+}
+
+func ti50RBOXClamshellNonInvert(ctx context.Context, s *testing.State, b utils.DevboardHelper, i *ti50.CrOSImage) {
+	ti50RBOXClamshellInternal(ctx, false, s, b, i)
+}
+
+func ti50RBOXClamshellInternal(ctx context.Context, ksoAssertedState bool, s *testing.State, b utils.DevboardHelper, i *ti50.CrOSImage) {
 	th := utils.FirmwareTestingHelper{FirmwareTestingHelperDelegate: s}
 	s.Log("Verifying KSO is passed through when power button not pressed")
 	b.GpioSet(ctx, ti50.GpioTi50PowerBtnL, true)
-	b.GpioSet(ctx, ti50.GpioTi50EcKso2Inv, true)
+	b.GpioSet(ctx, ti50.GpioTi50EcKso2Inv, ksoAssertedState)
 	if b.GpioGet(ctx, ti50.GpioTi50Kso2) {
 		s.Error("GSC should forward asserted GpioTi50EcKso2Inv")
 	}
 
-	b.GpioSet(ctx, ti50.GpioTi50EcKso2Inv, false)
+	b.GpioSet(ctx, ti50.GpioTi50EcKso2Inv, !ksoAssertedState)
 	if !b.GpioGet(ctx, ti50.GpioTi50Kso2) {
 		s.Error("GSC should forward de-asserted GpioTi50EcKso2Inv")
 	}

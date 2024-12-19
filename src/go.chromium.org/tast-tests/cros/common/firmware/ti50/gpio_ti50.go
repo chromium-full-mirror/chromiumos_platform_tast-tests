@@ -12,6 +12,9 @@ const (
 	// FfClamshell puts ti50 image into Clamshell form factor mode via strapping
 	// resistors.
 	FfClamshell GpioStrap = "TI50_FF_CLAMSHELL"
+	// FfClamshellNonInvert puts ti50 image into Clamshell form factor but without
+	// inverting KSO input from EC mode via strapping resistors.
+	FfClamshellNonInvert GpioStrap = "TI50_FF_CLAMSHELL_NON_INVERT"
 	// FfBox puts ti50 image into Box form factor mode via strapping resistors.
 	FfBox GpioStrap = "TI50_FF_BOX"
 )
