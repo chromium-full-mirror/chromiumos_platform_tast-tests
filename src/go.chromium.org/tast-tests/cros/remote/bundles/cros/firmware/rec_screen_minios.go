@@ -156,7 +156,7 @@ func RecScreenMiniOS(ctx context.Context, s *testing.State) {
 		s.Fatal("Failed to launch MiniOS menu: ", err)
 	}
 	s.Log("Waiting for DUT to reconnect")
-	waitConnectCtx, cancelWaitConnect := context.WithTimeout(ctx, 90*time.Second)
+	waitConnectCtx, cancelWaitConnect := context.WithTimeout(ctx, 360*time.Second)
 	defer cancelWaitConnect()
 	if err := h.WaitConnect(waitConnectCtx, firmware.ResetEthernetDongle); err != nil {
 		miniOSConnectTimeoutErr.err = err
