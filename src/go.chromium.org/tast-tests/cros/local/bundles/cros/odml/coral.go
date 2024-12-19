@@ -89,7 +89,7 @@ func Coral(ctx context.Context, s *testing.State) {
 		// expected behavior for the coral feature, so here we just poll until it
 		// shows up.
 		birchButtonAttrs := map[string]interface{}{
-			"className": "BirchChipButton",
+			"className": "CoralChipButton",
 		}
 		if err := testing.Poll(ctx, func(ctx context.Context) error {
 			if err := ash.SetOverviewModeAndWait(ctx, tconn, true); err != nil {
