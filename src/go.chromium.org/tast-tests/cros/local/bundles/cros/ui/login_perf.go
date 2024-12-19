@@ -232,30 +232,18 @@ func init() {
 	})
 }
 
-type loginPerfTestConfig struct {
-	arcMode              string             // ARC++ mode name.
-	arcOpt               []chrome.Option    // Additional Chrome options to control ARC++.
-	creds                chrome.Creds       // Test user credentials.
-	currentWindows       int                // Test will ensure that at least this number of windows will be restored.
-	expectHistograms     []string           // The list of expected histograms. Test will wait for all of them to get reported.
-	inTabletMode         bool               // Whether Chrome should run in tablet mode.
-	param                loginPerfTestParam // Tast subtest parameters.
-	windows              int                // Number of restored windows as configured.
-	signinExtManifestKey string             // Key used for login extension.
-}
-
 // loginPerfStartToLoginScreen starts Chrome to the login screen.
 func loginPerfStartToLoginScreen(
 	ctx context.Context,
-	testConfig *loginPerfTestConfig,
+	signinExtManifestKey string,
+	param loginPerfTestParam,
 ) (cr *chrome.Chrome, retErr error) {
 	// chrome.NoLogin() and chrome.KeepState() are needed to show the login
 	// screen with a user pod (instead of the OOBE login screen).
 	options := []chrome.Option{
 		chrome.NoLogin(),
 		chrome.KeepState(),
-		chrome.LoadSigninProfileExtension(
-			testConfig.signinExtManifestKey),
+		chrome.LoadSigninProfileExtension(signinExtManifestKey),
 		// Disable OOBE testing API for measurement runs because it can affect the performance. See b/354825581.
 		chrome.DisableOOBETestAPI(),
 		chrome.EnableRestoreTabs(),
@@ -265,16 +253,29 @@ func loginPerfStartToLoginScreen(
 		// Disable whats-new page. See crbug.com/1271436.
 		chrome.DisableFeatures("ChromeWhatsNewUI"),
 		chrome.ExtraArgs("--disable-sync"),
-		chrome.DisableFeatures(testConfig.param.disabledFeatures...),
-		chrome.EnableFeatures(testConfig.param.enabledFeatures...),
+		chrome.DisableFeatures(param.disabledFeatures...),
+		chrome.EnableFeatures(param.enabledFeatures...),
 	}
 	// Disable the ARC deferring feature, which is enabled by default in production.
 	// Even though it can improve login performance, the behavior depends on ARC usage during sessions.
 	// To get consistent results, we intentionally disable the feature for measurement runs.
 	// But we skip disabling the feature if it's enabled explicitly because disabling a feature precedes enabling it.
-	shouldDeferARC := slices.Contains(testConfig.param.enabledFeatures, deferARC) || slices.Contains(testConfig.param.enabledFeatures, deferARCForceEnabled)
+	shouldDeferARC := slices.Contains(param.enabledFeatures, deferARC) || slices.Contains(param.enabledFeatures, deferARCForceEnabled)
 	if !shouldDeferARC {
 		options = append(options, chrome.DisableFeatures(deferARC))
+	}
+
+	// Append additional ARC options.
+	switch param.arcMode {
+	case noarc:
+	case arcenabled:
+		options = append(options,
+			chrome.ARCSupported(),
+			chrome.DisableFeatures("ArcExternalStorageAccess"),
+			disableARCSyncOption,
+		)
+	default:
+		panic(fmt.Sprintf("Unknown arcMode value=%v", param.arcMode))
 	}
 
 	// Drop caches to simulate cold boot.
@@ -283,10 +284,7 @@ func loginPerfStartToLoginScreen(
 	}
 	testing.ContextLog(ctx, "loginPerfStartToLoginScreen: File caches dropped")
 
-	cr, err := chrome.New(
-		ctx,
-		append(options, testConfig.arcOpt...)...,
-	)
+	cr, err := chrome.New(ctx, options...)
 	if err != nil {
 		return nil, errors.Wrap(err, "failed to start chrome")
 	}
@@ -312,8 +310,8 @@ func loginPerfStartToLoginScreen(
 	}
 	defer faillog.DumpUITreeOnError(ctx, outDir, func() bool { return retErr != nil }, tLoginConn)
 
-	if err := ash.SetTabletModeEnabled(ctx, tLoginConn, testConfig.inTabletMode); err != nil {
-		return nil, errors.Wrapf(err, "failed to set tablet mode %v", testConfig.inTabletMode)
+	if err := ash.SetTabletModeEnabled(ctx, tLoginConn, param.tabletMode); err != nil {
+		return nil, errors.Wrapf(err, "failed to set tablet mode %v", param.tabletMode)
 	}
 
 	// Wait for the login screen to be ready for password entry.
@@ -443,17 +441,16 @@ func maxHistogramValue(h *histogram.Histogram) (float64, error) {
 
 func reportMaxHistogramValue(
 	ctx context.Context,
-	pv *perfutil.Values,
 	hist *histogram.Histogram,
-	unit,
-	valueName string,
+	unit string,
+	pv *perfutil.Values,
 ) error {
 	value, err := maxHistogramValue(hist)
 	if err != nil {
 		return errors.Wrapf(err, "failed to get %s data", hist.Name)
 	}
 	pv.Append(perf.Metric{
-		Name:      valueName,
+		Name:      hist.Name,
 		Unit:      unit,
 		Direction: perf.SmallerIsBetter,
 	}, value)
@@ -543,11 +540,9 @@ func setAlwaysRestoreSettings(ctx context.Context, tconn *chrome.TestConn) error
 // initializeLoginPerfTest initializes user session state that will be restored
 // in subsequent test runs.
 func initializeLoginPerfTest(ctx context.Context,
-	sOutDir,
-	loginPool string,
+	signinExtManifestKey string,
 	param loginPerfTestParam,
-	signinExtManifestKey,
-	url string,
+	animationPageURL string,
 ) (
 	retCreds chrome.Creds,
 	retErr error,
@@ -556,6 +551,8 @@ func initializeLoginPerfTest(ctx context.Context,
 	cleanupContext := ctx
 	ctx, cancel := ctxutil.Shorten(ctx, 30*time.Second)
 	defer cancel()
+
+	loginPool := dma.CredsFromPool(ui.GaiaPoolDefaultVarName)
 
 	options := []chrome.Option{
 		chrome.GAIALoginPool(loginPool),
@@ -592,22 +589,25 @@ func initializeLoginPerfTest(ctx context.Context,
 
 	creds := cr.Creds()
 
-	testing.ContextLog(ctx, "Opting into Play Store")
+	outDir, ok := testing.ContextOutDir(ctx)
+	if !ok || outDir == "" {
+		return chrome.Creds{}, errors.New("failed to get the out directory")
+	}
+
 	tconn, err := cr.TestAPIConn(ctx)
 	if err != nil {
 		return chrome.Creds{}, errors.Wrap(err, "failed to connect to test api")
 	}
+	defer faillog.DumpUITreeOnError(ctx, outDir, func() bool { return retErr != nil }, tconn)
+
+	testing.ContextLog(ctx, "Opting into Play Store")
 	if arc.Supported() {
 		if err := optin.Perform(ctx, cr, tconn); err != nil {
 			return chrome.Creds{}, errors.Wrap(err, "failed to optin to Play Store")
 		}
 		testing.ContextLog(ctx, "Optin finished")
-	} else {
-		testing.ContextLog(ctx, "ARC++ is not supported. Running test without ARC")
-	}
 
-	// Wait for ARC++ aps to download and initialize.
-	if arc.Supported() {
+		// Wait for ARC++ aps to download and initialize.
 		testing.ContextLog(ctx, "Initialize: Waiting for arc to install initial apps")
 		histogram, metricsErr := metrics.WaitForHistogram(
 			ctx,
@@ -636,16 +636,19 @@ func initializeLoginPerfTest(ctx context.Context,
 			return chrome.Creds{}, errors.Wrap(err, "failed to run initial wait time")
 		}
 	} else {
+		testing.ContextLog(ctx, "ARC++ is not supported. Running test without ARC")
+
 		testing.ContextLog(ctx, "Initialize: Waiting 1 minute to allow time for session to fully initialize")
 		// GoBigSleepLint: Give session time to settle.
 		if err := testing.Sleep(ctx, time.Minute); err != nil {
 			return chrome.Creds{}, errors.Wrap(err, "failed to run initial wait time")
 		}
 	}
-	defer faillog.DumpUITreeOnError(ctx, sOutDir, func() bool { return retErr != nil }, tconn)
+
 	if err := setAlwaysRestoreSettings(ctx, tconn); err != nil {
 		return chrome.Creds{}, errors.Wrap(err, "failed to adjust always restore settings")
 	}
+
 	if err := logout(ctx, cr); err != nil {
 		return creds, errors.Wrap(err, "failed to log out")
 	}
@@ -655,16 +658,10 @@ func initializeLoginPerfTest(ctx context.Context,
 	// Log in and log out to create a user pod on the login screen and required number of windows in session.
 	err = func() error {
 		// We do not need ARC to create Chrome windows.
-		testConfig := &loginPerfTestConfig{
-			arcMode:              param.arcMode,
-			arcOpt:               []chrome.Option{},
-			creds:                creds,
-			inTabletMode:         false,
-			param:                param,
-			windows:              param.windows,
-			signinExtManifestKey: signinExtManifestKey,
-		}
-		cr, err := loginPerfStartToLoginScreen(ctx, testConfig)
+		modifiedParam := param
+		modifiedParam.arcMode = noarc
+		modifiedParam.tabletMode = false
+		cr, err := loginPerfStartToLoginScreen(ctx, signinExtManifestKey, modifiedParam)
 		if err != nil {
 			return err
 		}
@@ -682,6 +679,7 @@ func initializeLoginPerfTest(ctx context.Context,
 		if err != nil {
 			return err
 		}
+
 		// Wait for windows to be restored.
 		var visible int
 		if err := testing.Poll(ctx, func(ctx context.Context) error {
@@ -697,7 +695,7 @@ func initializeLoginPerfTest(ctx context.Context,
 			return errors.Wrap(err, "failed to check number of existing windows before creating new ones")
 		}
 		testing.ContextLogf(ctx, "Before creating windows: visible=%d", visible)
-		if err := loginPerfCreateWindows(ctx, cr, url, param.windows); err != nil {
+		if err := loginPerfCreateWindows(ctx, cr, animationPageURL, param.windows); err != nil {
 			return err
 		}
 		testing.ContextLog(ctx, "Sign out: sleep for 20 seconds to let session settle")
@@ -718,20 +716,36 @@ func initializeLoginPerfTest(ctx context.Context,
 	return creds, nil
 }
 
-// testFunction is the actual test flow that could executed multiple times to get average data or generate tracing.
-func testFunction(
+type loginPerfTracingConfig struct {
+	configFilePath  string
+	extraCategories []string
+	resultOutDir    string
+	resultFileName  string
+}
+
+// measureLoginPerformance is the actual test flow that could executed multiple times to get average data or generate tracing. Tracing is disabled if `tracingConfig` is nil.
+func measureLoginPerformance(
 	ctx context.Context,
-	s *testing.State,
-	name string,
-	testConfig *loginPerfTestConfig,
-	runTracing bool,
+	signinExtManifestKey string,
+	creds chrome.Creds,
+	param loginPerfTestParam,
+	tracingConfig *loginPerfTracingConfig,
 ) (
 	*chrome.Chrome,
 	[]*histogram.Histogram,
 	map[perf.Metric][]float64,
 	error,
 ) {
-	cr, err := loginPerfStartToLoginScreen(ctx, testConfig)
+	var expectedHistograms []string
+	{
+		displCount, err := modetest.NumberOfOutputsConnected(ctx)
+		if err != nil {
+			return nil, nil, nil, errors.Wrap(err, "failed to get connected display count")
+		}
+		expectedHistograms = constructExpectedHistograms(param, displCount > 0)
+	}
+
+	cr, err := loginPerfStartToLoginScreen(ctx, signinExtManifestKey, param)
 	if err != nil {
 		return cr, nil, nil, errors.Wrap(err, "failed to start to login screen")
 	}
@@ -746,9 +760,9 @@ func testFunction(
 		testing.ContextLog(ctx, "ps aux result:")
 		testing.ContextLog(ctx, string(out))
 		if err != nil {
-			s.Fatal("ps aux failed with: ", err)
+			return errors.Wrap(err, "ps aux failed")
 		}
-		err = loginPerfDoLogin(ctx, cr, testConfig.creds)
+		err = loginPerfDoLogin(ctx, cr, creds)
 		if err != nil {
 			return errors.Wrap(err, "failed to log in")
 		}
@@ -766,7 +780,7 @@ func testFunction(
 			// Stopping tracing before the full 10 seconds have
 			// elapsed reduces the trace file size by approximately
 			// 20% (from ~10MB to ~8MB) per file.
-			s.Log("Sleep for 5 seconds to wait for last metrics before stopping tracing")
+			testing.ContextLog(ctx, "Sleep for 5 seconds to wait for last metrics before stopping tracing")
 			// GoBigSleepLint: Controls the tracing time.
 			if err := testing.Sleep(ctx, 5*time.Second); err != nil {
 				return errors.Wrap(err, "failed to sleep for 5 seconds")
@@ -776,7 +790,7 @@ func testFunction(
 			}
 			sleepTime = 5 * time.Second
 		}
-		s.Logf("Sleep for %f seconds to let session settle and save restore data", sleepTime.Seconds())
+		testing.ContextLogf(ctx, "Sleep for %f seconds to let session settle and save restore data", sleepTime.Seconds())
 		// GoBigSleepLint: Give session time to settle and save restore data.
 		if err := testing.Sleep(ctx, sleepTime); err != nil {
 			return errors.Wrapf(err, "failed to sleep for %f seconds", sleepTime.Seconds())
@@ -820,7 +834,7 @@ func testFunction(
 		cujrecorder.RecorderOptions{RecordLoginEvents: true},
 	)
 	if err != nil {
-		s.Fatal("Failed to create a CUJ recorder: ", err)
+		return cr, nil, nil, errors.Wrap(err, "failed to create a CUJ recorder")
 	}
 	defer cujRecorder.Close(closeCtx)
 
@@ -830,7 +844,7 @@ func testFunction(
 		cujrecorder.AnyChromeCommonMetricConfigs(),
 	} {
 		if err := cujRecorder.AddCollectedMetrics(metricConfig...); err != nil {
-			s.Fatal("Failed to add recorded metrics: ", err)
+			return cr, nil, nil, errors.Wrap(err, "failed to add recorded metrics")
 		}
 	}
 
@@ -843,13 +857,13 @@ func testFunction(
 			return errors.Wrap(err, "failed to sync DUT")
 		}
 		var stopTracingCallback func(ctx context.Context) error
-		if runTracing {
-			var extraCategories []string
-			if cmdlineVarTracingExtraCategories.Value() != "" {
-				extraCategories = strings.Split(cmdlineVarTracingExtraCategories.Value(), ",")
-			}
+		if tracingConfig != nil {
 			// See go/trace-in-cuj-tests about rules for tracing.
-			if err := cujRecorder.StartTracingWithExtraCategories(ctx, s.OutDir(), name+"-trace.data", s.DataPath(loginPerfTraceConfigFileName), extraCategories...); err != nil {
+			if err := cujRecorder.StartTracingWithExtraCategories(ctx,
+				tracingConfig.resultOutDir,
+				tracingConfig.resultFileName,
+				tracingConfig.configFilePath,
+				tracingConfig.extraCategories...); err != nil {
 				return errors.Wrap(err, "failed to start tracing")
 			}
 			stopTracingCallback = cujRecorder.StopTracing
@@ -863,7 +877,7 @@ func testFunction(
 			func(ctx context.Context) error {
 				return testFunc(ctx, stopTracingCallback)
 			},
-			testConfig.expectHistograms...,
+			expectedHistograms...,
 		)
 		if err != nil {
 			return err
@@ -873,8 +887,10 @@ func testFunction(
 		if visible, err = countVisibleWindows(ctx, cr); err != nil {
 			return err
 		}
-		if visible != testConfig.currentWindows && visible != testConfig.currentWindows+1 {
-			err = errors.Errorf("unexpected number of visible windows: expected %d, found %d", testConfig.currentWindows, visible)
+
+		expected := param.windows
+		if visible != expected && visible != expected+1 {
+			err = errors.Errorf("unexpected number of visible windows: expected %d, found %d", expected, visible)
 		}
 		return err
 	}
@@ -892,15 +908,56 @@ func testFunction(
 	return cr, histograms, tpsValues.GetValues(), err
 }
 
+func constructExpectedHistograms(param loginPerfTestParam, hasDisplay bool) []string {
+	suffix := suffixClamshellMode
+	if param.tabletMode {
+		suffix = suffixTabletMode
+	}
+
+	ret := []string{
+		establishGpuChannelSyncTime,
+		ashTastBootTimeLogin2,
+		bootTimeLogin2,
+		bootTimeLogin3,
+		uptimeLogoutToUIStopAfterLogout,
+		uptimeUIStopToProcessesTerminatedAfterLogout,
+		uptimeOtherProcessesTerminatedToChromeExecAfterLogout,
+		uptimeChromeExecToLoginPromptVisibleAfterLogout,
+		uptimeLogout,
+		uptimeLoginPromptSetupTimeAfterLogout,
+		uptimeLogoutToLoginPromptVisible,
+
+		metricAllBrowserWindowsCreated,
+		metricAllBrowserWindowsShown,
+		metricAllShelfIconsLoaded,
+		metricDeferredTasksStarted,
+	}
+	// Following histograms are only collected when the DUT is connected to the display.
+	if hasDisplay {
+		ret = append(ret, metricAllBrowserWindowsPresented,
+			metricShelfLoginAnimationEnd,
+			metricTotalDuration,
+			metricPostLoginAnimationDurationPrefix+suffix,
+			metricPostLoginAnimationSmoothnessPrefix+suffix,
+			metricPostLoginAnimationJankPrefix+suffix)
+	}
+	if param.arcMode != noarc {
+		ret = append(ret,
+			ashTastArcUIAvailableAfterLoginDuration,
+			arcTastUIAvailableTimeDelta,
+		)
+	}
+
+	return ret
+}
+
 // storeHistograms transforms []*histogram.Histogram test results into perf Values to report.
 func storeHistograms(
 	ctx context.Context,
-	expectHistograms []string,
-	pv *perfutil.Values,
 	hists []*histogram.Histogram,
+	pv *perfutil.Values,
 ) error {
 	for _, hist := range hists {
-		valueName := hist.Name
 		switch hist.Name {
 		case
 			ashTastBootTimeLogin2,
@@ -916,8 +973,7 @@ func storeHistograms(
 			uptimeLogout,
 			uptimeLoginPromptSetupTimeAfterLogout,
 			uptimeLogoutToLoginPromptVisible:
-
-			reportMaxHistogramValue(ctx, pv, hist, "millisecond", valueName)
+			reportMaxHistogramValue(ctx, hist, "millisecond", pv)
 
 		case
 			metricAllBrowserWindowsCreated,
@@ -929,17 +985,17 @@ func storeHistograms(
 			metricPostLoginAnimationDurationPrefix + suffixClamshellMode,
 			metricPostLoginAnimationDurationPrefix + suffixTabletMode,
 			metricDeferredTasksStarted:
-			storeHistogramMeanValue(ctx, pv, hist, "ms", perf.SmallerIsBetter)
+			storeHistogramMeanValue(ctx, hist, "ms", perf.SmallerIsBetter, pv)
 
 		case
 			metricPostLoginAnimationSmoothnessPrefix + suffixClamshellMode,
 			metricPostLoginAnimationSmoothnessPrefix + suffixTabletMode:
-			storeHistogramMeanValue(ctx, pv, hist, "percent", perf.BiggerIsBetter)
+			storeHistogramMeanValue(ctx, hist, "percent", perf.BiggerIsBetter, pv)
 
 		case
 			metricPostLoginAnimationJankPrefix + suffixClamshellMode,
 			metricPostLoginAnimationJankPrefix + suffixTabletMode:
-			storeHistogramMeanValue(ctx, pv, hist, "percent", perf.SmallerIsBetter)
+			storeHistogramMeanValue(ctx, hist, "percent", perf.SmallerIsBetter, pv)
 
 		default:
 			return errors.Errorf("unknown histogram %q", hist.Name)
@@ -950,10 +1006,10 @@ func storeHistograms(
 
 func storeHistogramMeanValue(
 	ctx context.Context,
-	pv *perfutil.Values,
 	hist *histogram.Histogram,
 	unit string,
 	direction perf.Direction,
+	pv *perfutil.Values,
 ) error {
 	value, err := hist.Mean()
 	if err != nil {
@@ -975,44 +1031,20 @@ func LoginPerf(ctx context.Context, s *testing.State) {
 	ctx, cancel := ctxutil.Shorten(ctx, 10*time.Second)
 	defer cancel()
 
+	signinExtManifestKey := s.RequiredVar("ui.signinProfileTestExtensionManifestKey")
 	param := s.Param().(loginPerfTestParam)
 
 	// Run an http server to serve the test contents for accessing from the chrome browsers.
 	server := httptest.NewServer(http.FileServer(s.DataFileSystem()))
 	defer server.Close()
-
-	url := server.URL + "/animation.html"
-
-	displCount, err := modetest.NumberOfOutputsConnected(ctx)
-	if err != nil {
-		s.Fatal("Failed to get connected displays count: ", err)
-	}
-
-	// Run the login flow for various situations.
-	// - change the number of browser windows, 2 or 8
-	// - the window system status; clamshell mode or tablet mode.
-	windows := param.windows
-	arcMode := param.arcMode
-
-	var arcOpt []chrome.Option
-	switch arcMode {
-	case noarc:
-	case arcenabled:
-		arcOpt = []chrome.Option{chrome.ARCSupported(),
-			chrome.DisableFeatures("ArcExternalStorageAccess"),
-			disableARCSyncOption}
-	default:
-		s.Fatal("Unknown arcMode value=", arcMode)
-	}
+	animationPageURL := server.URL + "/animation.html"
 
 	// Log in and log out to create a user pod on the login screen.
 	creds, err := initializeLoginPerfTest(
 		ctx,
-		s.OutDir(),
-		dma.CredsFromPool(ui.GaiaPoolDefaultVarName),
+		signinExtManifestKey,
 		param,
-		s.RequiredVar("ui.signinProfileTestExtensionManifestKey"),
-		url,
+		animationPageURL,
 	)
 	if err != nil {
 		s.Fatal("Failed to initialize test: ", err)
@@ -1029,62 +1061,9 @@ func LoginPerf(ctx context.Context, s *testing.State) {
 		s.Fatalf("Invalid value for %s: %v", cmdlineVarMinSuccessfulRuns.Name(), err)
 	}
 	r.SetRunsNumber(perfutil.RunnerCyclesOptions{MaxRuns: int(minRuns) + 2, MinSuccessfulRuns: int(minRuns)})
-	s.Logf("Starting test: %s for  %d windows", arcMode, windows)
+	s.Logf("Starting test: %s for  %d windows", param.arcMode, param.windows)
 
-	inTabletMode := param.tabletMode
-	suffix := suffixClamshellMode
-	if inTabletMode {
-		suffix = suffixTabletMode
-	}
-
-	allHistograms := []string{
-		establishGpuChannelSyncTime,
-		ashTastBootTimeLogin2,
-		bootTimeLogin2,
-		bootTimeLogin3,
-		uptimeLogoutToUIStopAfterLogout,
-		uptimeUIStopToProcessesTerminatedAfterLogout,
-		uptimeOtherProcessesTerminatedToChromeExecAfterLogout,
-		uptimeChromeExecToLoginPromptVisibleAfterLogout,
-		uptimeLogout,
-		uptimeLoginPromptSetupTimeAfterLogout,
-		uptimeLogoutToLoginPromptVisible,
-
-		metricAllBrowserWindowsCreated,
-		metricAllBrowserWindowsShown,
-		metricAllShelfIconsLoaded,
-		metricDeferredTasksStarted,
-	}
-	// Histogram is only collected when the DUT is connected to the display.
-	if displCount > 0 {
-		allHistograms = append(allHistograms, metricAllBrowserWindowsPresented)
-		allHistograms = append(allHistograms, metricShelfLoginAnimationEnd)
-		allHistograms = append(allHistograms, metricTotalDuration)
-		allHistograms = append(allHistograms, metricPostLoginAnimationDurationPrefix+suffix)
-		allHistograms = append(allHistograms, metricPostLoginAnimationSmoothnessPrefix+suffix)
-		allHistograms = append(allHistograms, metricPostLoginAnimationJankPrefix+suffix)
-	}
-	if arcMode != noarc {
-		allHistograms = append(allHistograms,
-			ashTastArcUIAvailableAfterLoginDuration,
-			arcTastUIAvailableTimeDelta,
-		)
-	}
-
-	testConfig := &loginPerfTestConfig{
-		arcMode,
-		arcOpt,
-		creds,
-		param.windows,
-		allHistograms,
-		inTabletMode,
-		param,
-		windows,
-		s.RequiredVar("ui.signinProfileTestExtensionManifestKey"),
-	}
-
-	// |cr| and |l| are shared between multiple
-	// runs, because Chrome connection must to be
+	// |cr| is shared between multiple runs, because Chrome connection must to be
 	// closed only after histograms are stored.
 	var cr *chrome.Chrome
 
@@ -1104,8 +1083,8 @@ func LoginPerf(ctx context.Context, s *testing.State) {
 				var histograms []*metrics.Histogram
 				var tpsValues map[perf.Metric][]float64
 				var err error
-				// Fill in external 'cr', 'l'.
-				cr, histograms, tpsValues, err = testFunction(ctx, s, name, testConfig, false)
+				// Fill in external 'cr'.
+				cr, histograms, tpsValues, err = measureLoginPerformance(ctx, signinExtManifestKey, creds, param, nil /*tracingConfig*/)
 				r.Values().MergeWithSuffix("", tpsValues)
 				return histograms, err
 			}),
@@ -1124,12 +1103,7 @@ func LoginPerf(ctx context.Context, s *testing.State) {
 				}
 			}()
 
-			if err := storeHistograms(
-				ctx,
-				testConfig.expectHistograms,
-				pv,
-				hists,
-			); err != nil {
+			if err := storeHistograms(ctx, hists, pv); err != nil {
 				return errors.Wrap(err, "storeHistograms failed")
 			}
 			if err := logout(ctx, cr); err != nil {
@@ -1143,6 +1117,7 @@ func LoginPerf(ctx context.Context, s *testing.State) {
 	if len(allRunErrors) > 0 {
 		s.Logf("WARNING: Some of the %s runs ended with failures. All run errors: %v", testName, allRunErrors)
 	}
+
 	// Do a tracing run.
 	// Values are not stored to the perf results, but only reported to the test log.
 	// Tracing run is different from performance run and we need metrics values from the
@@ -1150,10 +1125,21 @@ func LoginPerf(ctx context.Context, s *testing.State) {
 	// Tracing run errors are logged but do not fail the test.
 	tracingValues := perfutil.NewValues(false /*dropMinMax*/)
 
+	var tracingExtraCategories []string
+	if cmdlineVarTracingExtraCategories.Value() != "" {
+		tracingExtraCategories = strings.Split(cmdlineVarTracingExtraCategories.Value(), ",")
+	}
+	tracingConfig := &loginPerfTracingConfig{
+		configFilePath:  s.DataPath(loginPerfTraceConfigFileName),
+		extraCategories: tracingExtraCategories,
+		resultOutDir:    s.OutDir(),
+		resultFileName:  fmt.Sprintf("%s-trace.data", testName),
+	}
+
 	var tracingHistograms []*metrics.Histogram
 	var tpsValues map[perf.Metric][]float64
 
-	cr, tracingHistograms, tpsValues, err = testFunction(ctx, s, fmt.Sprintf("%s-tracing", testName), testConfig, true)
+	cr, tracingHistograms, tpsValues, err = measureLoginPerformance(ctx, signinExtManifestKey, creds, param, tracingConfig)
 	defer func() {
 		// cr is not valid after logout.
 		if cr == nil {
@@ -1166,12 +1152,7 @@ func LoginPerf(ctx context.Context, s *testing.State) {
 
 	if err != nil {
 		s.Logf("WARNING: Failed to run tracing for the test scenario %s-tracing: %s", testName, err)
-	} else if err := storeHistograms(
-		ctx,
-		testConfig.expectHistograms,
-		tracingValues,
-		tracingHistograms,
-	); err != nil {
+	} else if err := storeHistograms(ctx, tracingHistograms, tracingValues); err != nil {
 		s.Logf("WARNING: Failed to dump tracing histograms for the test scenario %s-tracing: %v", testName, err)
 	} else {
 		tracingValues.ForEach(func(name string, value []float64) {
