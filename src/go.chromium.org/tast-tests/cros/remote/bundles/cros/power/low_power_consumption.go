@@ -299,7 +299,7 @@ var entranceTable = map[string]func(ctx context.Context, dut *dut.DUT, helper *f
 		// first, suspend the device (with delay)
 		pwrDbusCtx, cancel := context.WithTimeout(ctx, 2*time.Second)
 		defer cancel()
-		if err := dut.Conn().CommandContext(pwrDbusCtx, "powerd_dbus_suspend", "--delay=10").Run(); err != nil && !errors.Is(err, context.DeadlineExceeded) {
+		if err := dut.Conn().CommandContext(pwrDbusCtx, "sh", "-c", "nohup powerd_dbus_suspend --delay=10 &").Run(); err != nil && !errors.Is(err, context.DeadlineExceeded) {
 			return errors.Errorf("failed to set powerd_dbus_suspend: %s", err)
 		}
 		// during the delay, unplug charger
