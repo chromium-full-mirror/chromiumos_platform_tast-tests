@@ -177,7 +177,7 @@ func GSCPCRFWMPPolicy(ctx context.Context, s *testing.State) {
 	}
 
 	if testParams.extend != "" {
-		tpm.TpmvPCR0ExtendCheckDigest(testParams.extend, testParams.digest)
+		tpm.TpmvPCRExtendCheckDigest(0, testParams.extend, testParams.digest)
 	}
 
 	ccdstate, err := i.Command(ctx, "ccdstate")

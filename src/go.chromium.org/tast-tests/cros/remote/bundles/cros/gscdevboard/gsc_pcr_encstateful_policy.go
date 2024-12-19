@@ -148,7 +148,7 @@ func GSCPCREncstatefulPolicy(ctx context.Context, s *testing.State) {
 	tpm := b.ResetAndTpmStartup(ctx, i, ti50.CCDModeOff, ti50.FfClamshell)
 
 	if testParams.extend != "" {
-		tpm.TpmvPCR0ExtendCheckDigest(testParams.extend, testParams.digest)
+		tpm.TpmvPCRExtendCheckDigest(0, testParams.extend, testParams.digest)
 	}
 
 	ccdstate, err := i.Command(ctx, "ccdstate")

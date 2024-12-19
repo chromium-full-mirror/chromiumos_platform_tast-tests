@@ -496,14 +496,18 @@ const (
 	ZeroPCR = "0000000000000000000000000000000000000000000000000000000000000000"
 )
 
-// TpmvPCR0Read reads the contents of PCR0
-func (t *TpmHandle) TpmvPCR0Read() (*tpm2.PCRReadResponse, error) {
+// TpmvPCRRead reads the contents of the given PCR
+func (t *TpmHandle) TpmvPCRRead(pcr uint8) (*tpm2.PCRReadResponse, error) {
+	if pcr > 7 {
+		return nil, errors.Errorf("invalid PCR: %d", pcr)
+	}
+	pcrSelect := []byte{1 << pcr, 0x00, 0x00}
 	pcrRead := tpm2.PCRRead{
 		PCRSelectionIn: tpm2.TPMLPCRSelection{
 			PCRSelections: []tpm2.TPMSPCRSelection{
 				{
 					Hash:      tpm2.TPMAlgSHA256,
-					PCRSelect: []byte{0x01, 0x00, 0x00},
+					PCRSelect: pcrSelect,
 				},
 			},
 		},
@@ -511,14 +515,14 @@ func (t *TpmHandle) TpmvPCR0Read() (*tpm2.PCRReadResponse, error) {
 	return pcrRead.Execute(t)
 }
 
-// TpmvPCR0Extend extends the value into PCR0
-func (t *TpmHandle) TpmvPCR0Extend(extendDigest string) error {
+// TpmvPCRExtend extends the value into the given PCR
+func (t *TpmHandle) TpmvPCRExtend(pcr uint8, extendDigest string) error {
 	extendBytes, err := hex.DecodeString(extendDigest)
 	if err != nil {
 		return errors.Wrap(err, "failed to decode extend value")
 	}
 	authHandle := tpm2.AuthHandle{
-		Handle: tpm2.TPMHandle(0),
+		Handle: tpm2.TPMHandle(pcr),
 		Auth:   tpm2.PasswordAuth(nil),
 	}
 	pcrExtend := tpm2.PCRExtend{
@@ -533,27 +537,27 @@ func (t *TpmHandle) TpmvPCR0Extend(extendDigest string) error {
 		},
 	}
 	if _, err := pcrExtend.Execute(t); err != nil {
-		return errors.Wrap(err, "PCR extend failed")
+		return errors.Wrapf(err, "PCR%d extend failed", pcr)
 	}
 	return nil
 }
 
-// TpmvPCR0ExtendCheckDigest extends PCR0 and checks that the new value it reads matches the expected digest
-func (t *TpmHandle) TpmvPCR0ExtendCheckDigest(extendDigest, expectedDigest string) error {
+// TpmvPCRExtendCheckDigest extends PCR and checks that the new value it reads matches the expected digest
+func (t *TpmHandle) TpmvPCRExtendCheckDigest(pcr uint8, extendDigest, expectedDigest string) error {
 	expectedBytes, err := hex.DecodeString(expectedDigest)
 	if err != nil {
 		return errors.Wrap(err, "failed to decode expected digest")
 	}
-	err = t.TpmvPCR0Extend(extendDigest)
+	err = t.TpmvPCRExtend(pcr, extendDigest)
 	if err != nil {
-		return errors.Wrap(err, "failed to extend PCR0")
+		return errors.Wrapf(err, "failed to extend PCR%d", pcr)
 	}
-	read, err := t.TpmvPCR0Read()
+	read, err := t.TpmvPCRRead(pcr)
 	if err != nil {
-		return errors.Wrap(err, "PCR read failed")
+		return errors.Wrapf(err, "PCR%d read failed", pcr)
 	}
 	if !bytes.Equal(read.PCRValues.Digests[0].Buffer, expectedBytes) {
-		return errors.Wrap(err, "PCR0 did not match the expected value")
+		return errors.Wrapf(err, "PCR%d did not match the expected value", pcr)
 	}
 	return nil
 }
