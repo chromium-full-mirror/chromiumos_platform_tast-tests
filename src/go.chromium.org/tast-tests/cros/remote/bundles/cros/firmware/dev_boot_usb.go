@@ -136,7 +136,6 @@ func DevBootUSB(ctx context.Context, s *testing.State) {
 		s.Fatal("Failed to remove the USB: ", err)
 	}
 
-	var closeUART func(ctx context.Context) error
 	if h.HasAPFwState {
 		closeUART, err := h.Servo.EnableUARTCapture(ctx, servo.ECUARTCapture)
 		if err != nil {
@@ -168,9 +167,6 @@ func DevBootUSB(ctx context.Context, s *testing.State) {
 		// GoBigSleepLint: Delay to wait for the firmware screen during boot-up.
 		if err := testing.Sleep(ctx, h.Config.FirmwareScreen); err != nil {
 			s.Fatalf("Failed to sleep for %s: %v", h.Config.FirmwareScreen, err)
-		}
-		if err := closeUART(ctx); err != nil {
-			s.Fatal("Failed to cancel capture EC UART: ", err)
 		}
 	}
 
