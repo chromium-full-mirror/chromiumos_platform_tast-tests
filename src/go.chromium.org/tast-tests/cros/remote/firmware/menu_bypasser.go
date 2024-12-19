@@ -7,6 +7,7 @@ package firmware
 import (
 	"context"
 
+	fwCommon "go.chromium.org/tast-tests/cros/common/firmware"
 	"go.chromium.org/tast-tests/cros/common/servo"
 	"go.chromium.org/tast/core/errors"
 	"go.chromium.org/tast/core/testing"
@@ -224,13 +225,13 @@ func (lmb *legacyMenuBypasser) BypassDevDefaultBoot(ctx context.Context) error {
 // menu UI".
 
 // Menu items in recovery select screen:
-// 	0. Language
-// 	1. Recovery using phone (always hidden)
-// 	2. Recovery using external disk
-// 	3. Recovery using internet connection (shown if minios_enabled)
-// 	4. Launch diagnostics (shown if minidiag_enabled)
-// 	5. Advanced options
-// 	6. Power off
+//  0. Language
+//  1. Recovery using phone (always hidden)
+//  2. Recovery using external disk
+//  3. Recovery using internet connection (shown if minios_enabled)
+//  4. Launch diagnostics (shown if minidiag_enabled)
+//  5. Advanced options
+//  6. Power off
 type menuOperator struct {
 	baseMenuBypasser
 	miniDiagEnabled bool
@@ -433,10 +434,16 @@ func (mo *menuOperator) TriggerRecToMinidiag(ctx context.Context) error {
 	if err := mo.navigator.SelectOption(ctx); err != nil {
 		return errors.Wrap(err, "failed to select \"Launch diagnostics\"")
 	}
-	testing.ContextLogf(ctx, "Waiting for %s (firmware screen)", h.Config.FirmwareScreen)
-	// GoBigSleepLint: Sleep for model specific time.
-	if err := testing.Sleep(ctx, h.Config.FirmwareScreen); err != nil {
-		return errors.Wrapf(err, "failed to wait for %s", h.Config.FirmwareScreen)
+	if h.HasAPFwState {
+		testing.ContextLog(ctx, "Detecting the Diagnostics screen")
+		if err := h.DetectFirmwareScreen(ctx, h.Config.FirmwareScreen, fwCommon.Diagnostics); err != nil {
+			return errors.Wrap(err, "failed to detect Diagnostics screen")
+		}
+	} else {
+		testing.ContextLogf(ctx, "Waiting for %s (firmware screen)", h.Config.FirmwareScreen)
+		if err := h.WaitFirmwareScreen(ctx, h.Config.FirmwareScreen); err != nil {
+			return errors.Wrap(err, "failed to get to firmware screen")
+		}
 	}
 	return nil
 }
@@ -466,9 +473,16 @@ func (mo *menuOperator) NavigateMinidiagStorage(ctx context.Context) error {
 	if err := mo.navigator.SelectOption(ctx); err != nil {
 		return errors.Wrap(err, "failed to select \"Storage (Health) Info\"")
 	}
-	// GoBigSleepLint: Sleep for model specific time.
-	if err := testing.Sleep(ctx, h.Config.KeypressDelay); err != nil {
-		return errors.Wrapf(err, "failed to wait for %s", h.Config.KeypressDelay)
+	if h.HasAPFwState {
+		testing.ContextLog(ctx, "Detecting the DiagnosticsStorageHealth screen")
+		if err := h.DetectFirmwareScreen(ctx, h.Config.FirmwareScreen, fwCommon.DiagnosticsStorageHealth); err != nil {
+			return errors.Wrap(err, "failed to detect DiagnosticsStorageHealth screen")
+		}
+	} else {
+		// GoBigSleepLint: Sleep for model specific time.
+		if err := testing.Sleep(ctx, h.Config.KeypressDelay); err != nil {
+			return errors.Wrapf(err, "failed to wait for %s", h.Config.KeypressDelay)
+		}
 	}
 	if err := MoveTo(ctx, h, mo.navigator, 0, 4); err != nil {
 		return err
@@ -483,9 +497,16 @@ func (mo *menuOperator) NavigateMinidiagStorage(ctx context.Context) error {
 	if err := mo.navigator.SelectOption(ctx); err != nil {
 		return errors.Wrap(err, "failed to back to MiniDiag root screen")
 	}
-	// GoBigSleepLint: Sleep for model specific time.
-	if err := testing.Sleep(ctx, h.Config.KeypressDelay); err != nil {
-		return errors.Wrapf(err, "failed to wait for %s", h.Config.KeypressDelay)
+	if h.HasAPFwState {
+		testing.ContextLog(ctx, "Detecting the Diagnostics screen")
+		if err := h.DetectFirmwareScreen(ctx, h.Config.FirmwareScreen, fwCommon.Diagnostics); err != nil {
+			return errors.Wrap(err, "failed to detect Diagnostics screen")
+		}
+	} else {
+		// GoBigSleepLint: Sleep for model specific time.
+		if err := testing.Sleep(ctx, h.Config.KeypressDelay); err != nil {
+			return errors.Wrapf(err, "failed to wait for %s", h.Config.KeypressDelay)
+		}
 	}
 	return nil
 }
@@ -522,16 +543,30 @@ func (mo *menuOperator) NavigateMinidiagQuickMemoryCheck(ctx context.Context) er
 	if err := mo.navigator.SelectOption(ctx); err != nil {
 		return errors.Wrap(err, "failed to select \"Quick memory test\"")
 	}
-	// GoBigSleepLint: Sleep for model specific time.
-	if err := testing.Sleep(ctx, h.Config.KeypressDelay); err != nil {
-		return errors.Wrapf(err, "failed to wait for %s", h.Config.KeypressDelay)
+	if h.HasAPFwState {
+		testing.ContextLog(ctx, "Detecting the DiagnosticsMemoryQuick screen")
+		if err := h.DetectFirmwareScreen(ctx, h.Config.FirmwareScreen, fwCommon.DiagnosticsMemoryQuick); err != nil {
+			return errors.Wrap(err, "failed to detect DiagnosticsMemoryQuick screen")
+		}
+	} else {
+		// GoBigSleepLint: Sleep for model specific time.
+		if err := testing.Sleep(ctx, h.Config.KeypressDelay); err != nil {
+			return errors.Wrapf(err, "failed to wait for %s", h.Config.KeypressDelay)
+		}
 	}
 	if err := mo.navigator.SelectOption(ctx); err != nil {
 		return errors.Wrap(err, "failed to back to \"MiniDiag root screen\"")
 	}
-	// GoBigSleepLint: Sleep for model specific time.
-	if err := testing.Sleep(ctx, h.Config.KeypressDelay); err != nil {
-		return errors.Wrapf(err, "failed to wait for %s", h.Config.KeypressDelay)
+	if h.HasAPFwState {
+		testing.ContextLog(ctx, "Detecting the Diagnostics screen")
+		if err := h.DetectFirmwareScreen(ctx, h.Config.FirmwareScreen, fwCommon.Diagnostics); err != nil {
+			return errors.Wrap(err, "failed to detect Diagnostics screen")
+		}
+	} else {
+		// GoBigSleepLint: Sleep for model specific time.
+		if err := testing.Sleep(ctx, h.Config.KeypressDelay); err != nil {
+			return errors.Wrapf(err, "failed to wait for %s", h.Config.KeypressDelay)
+		}
 	}
 	return nil
 }
