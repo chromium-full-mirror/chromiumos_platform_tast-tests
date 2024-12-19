@@ -19,6 +19,7 @@ import (
 	"golang.org/x/sys/unix"
 
 	"go.chromium.org/tast-tests/cros/common/dma"
+	"go.chromium.org/tast-tests/cros/common/testexec"
 	"go.chromium.org/tast-tests/cros/common/ui"
 	"go.chromium.org/tast-tests/cros/local/apps"
 	"go.chromium.org/tast-tests/cros/local/arc"
@@ -46,6 +47,10 @@ const (
 	vmDataMigrationTestImageFilename   = "capybara.jpg"
 	vmDataMigrationTestImageXattrKey   = "user.arc.test"
 	vmDataMigrationTestImageXattrValue = "xattr-test"
+
+	// Borrowed from vendor/xts/gts-tests/hostsidetests/font/app/assets in Android repo.
+	vmDataMigrationTestFontTtfFileName       = "vm_data_migration/NotoColorEmoji.ttf"
+	vmDataMigrationTestFontSignatureFileName = "vm_data_migration/NotoColorEmoji.sig"
 
 	vmDataMigrationProjinheritTestFilePath = "data/media/0/Pictures/projinherittest"
 	inodeFlagPROJINHERIT                   = 0x20000000
@@ -80,7 +85,11 @@ func init() {
 			"no_lvm_stateful_partition",
 			"gaia",
 		},
-		Data:    []string{vmDataMigrationTestImageFilename},
+		Data: []string{
+			vmDataMigrationTestImageFilename,
+			vmDataMigrationTestFontTtfFileName,
+			vmDataMigrationTestFontSignatureFileName,
+		},
 		Timeout: vmDataMigrationTestTimeout,
 		VarDeps: []string{ui.GaiaPoolDefaultVarName},
 		Params: []testing.Param{{
@@ -177,6 +186,13 @@ func signInForPreMigrationData(ctx context.Context, s *testing.State) (chrome.Cr
 	// or older. The flag caused migration failure.
 	if err := createFileWithEOFBLOCKS(ctx, androidDataDir); err != nil {
 		s.Fatal("Failed to create a file with EOFBLOCKS flag: ", err)
+	}
+
+	// Regression check for b/384841851. Update the system font to create a file in
+	// /data/fonts/files with fs-verity enabled.
+	if err := createUpdatedFontFile(ctx, a, s.DataPath(vmDataMigrationTestFontTtfFileName),
+		s.DataPath(vmDataMigrationTestFontSignatureFileName)); err != nil {
+		s.Fatal("Failed to create updated font file: ", err)
 	}
 
 	return cr.Creds(), cr.NormalizedUser()
@@ -415,6 +431,21 @@ func createFileWithEOFBLOCKS(ctx context.Context, androidDataDir string) error {
 	}
 
 	return nil
+}
+
+func createUpdatedFontFile(ctx context.Context, a *arc.ARC, fontTtfPath string, fontSigPath string) error {
+	const (
+		fontTtfArcPath = "/data/local/tmp/NotoColorEmoji.ttf"
+		fontSigArcPath = "/data/local/tmp/NotoColorEmoji.sig"
+	)
+
+	if err := a.PushFile(ctx, fontTtfPath, fontTtfArcPath); err != nil {
+		return errors.Wrap(err, "failed to push font ttf file")
+	}
+	if err := a.PushFile(ctx, fontSigPath, fontSigArcPath); err != nil {
+		return errors.Wrap(err, "failed to push font signature file")
+	}
+	return a.Command(ctx, "cmd", "font", "update", fontTtfArcPath, fontSigArcPath).Run(testexec.DumpLogOnError)
 }
 
 func createDirWithPROJINHERIT(ctx context.Context, androidDataDir string) error {
