@@ -51,11 +51,6 @@ import (
 
 const (
 	establishGpuChannelSyncTime                           = "GPU.EstablishGpuChannelSyncTime"
-	allBrowserWindowsCreated                              = "Ash.LoginSessionRestore.AllBrowserWindowsCreated"
-	allBrowserWindowsShown                                = "Ash.LoginSessionRestore.AllBrowserWindowsShown"
-	allBrowserWindowsPresented                            = "Ash.LoginSessionRestore.AllBrowserWindowsPresented"
-	allShelfIconsLoaded                                   = "Ash.LoginSessionRestore.AllShelfIconsLoaded"
-	shelfLoginAnimationEnd                                = "Ash.LoginSessionRestore.ShelfLoginAnimationEnd"
 	ashTastBootTimeLogin2                                 = "Ash.Tast.BootTime.Login2"
 	ashTastArcUIAvailableAfterLoginDuration               = "Ash.Tast.ArcUiAvailableAfterLogin.Duration"
 	arcTastUIAvailableTimeDelta                           = "Arc.Tast.UiAvailable.TimeDelta"
@@ -70,17 +65,16 @@ const (
 	uptimeLogoutToLoginPromptVisible                      = "Uptime.LogoutToLoginPromptVisible"
 	loginPerfTraceConfigFileName                          = "login_perf_trace_config.pbtxt"
 
-	// TODO(b/343001594): Remove the "new" prefix once we have removed old metrics.
-	newMetricAllBrowserWindowsCreated           = "Ash.LoginPerf.AutoRestore.AllBrowserWindowsCreated"
-	newMetricAllBrowserWindowsShown             = "Ash.LoginPerf.AutoRestore.AllBrowserWindowsShown"
-	newMetricAllBrowserWindowsPresented         = "Ash.LoginPerf.AutoRestore.AllBrowserWindowsPresented"
-	newMetricAllShelfIconsLoaded                = "Ash.LoginPerf.AutoRestore.AllShelfIconsLoaded"
-	newMetricShelfLoginAnimationEnd             = "Ash.LoginPerf.AutoRestore.ShelfLoginAnimationEnd"
-	newMetricTotalDuration                      = "Ash.LoginPerf.AutoRestore.TotalDuration"
-	newMetricPostLoginAnimationDurationPrefix   = "Ash.LoginPerf.AutoRestore.PostLoginAnimation.Duration"
-	newMetricPostLoginAnimationSmoothnessPrefix = "Ash.LoginPerf.AutoRestore.PostLoginAnimation.Smoothness"
-	newMetricPostLoginAnimationJankPrefix       = "Ash.LoginPerf.AutoRestore.PostLoginAnimation.Jank"
-	newMetricDeferredTasksStarted               = "Ash.LoginPerf.AutoRestore.DeferredTasksStarted"
+	metricAllBrowserWindowsCreated           = "Ash.LoginPerf.AutoRestore.AllBrowserWindowsCreated"
+	metricAllBrowserWindowsShown             = "Ash.LoginPerf.AutoRestore.AllBrowserWindowsShown"
+	metricAllBrowserWindowsPresented         = "Ash.LoginPerf.AutoRestore.AllBrowserWindowsPresented"
+	metricAllShelfIconsLoaded                = "Ash.LoginPerf.AutoRestore.AllShelfIconsLoaded"
+	metricShelfLoginAnimationEnd             = "Ash.LoginPerf.AutoRestore.ShelfLoginAnimationEnd"
+	metricTotalDuration                      = "Ash.LoginPerf.AutoRestore.TotalDuration"
+	metricPostLoginAnimationDurationPrefix   = "Ash.LoginPerf.AutoRestore.PostLoginAnimation.Duration"
+	metricPostLoginAnimationSmoothnessPrefix = "Ash.LoginPerf.AutoRestore.PostLoginAnimation.Smoothness"
+	metricPostLoginAnimationJankPrefix       = "Ash.LoginPerf.AutoRestore.PostLoginAnimation.Jank"
+	metricDeferredTasksStarted               = "Ash.LoginPerf.AutoRestore.DeferredTasksStarted"
 
 	suffixClamshellMode = ".ClamshellMode"
 	suffixTabletMode    = ".TabletMode"
@@ -901,31 +895,18 @@ func testFunction(
 // storeHistograms transforms []*histogram.Histogram test results into perf Values to report.
 func storeHistograms(
 	ctx context.Context,
-	expectHistograms, heuristicsHistograms []string,
+	expectHistograms []string,
 	pv *perfutil.Values,
 	hists []*histogram.Histogram,
 ) error {
-	heuristicsHistogramsMap := make(map[string]bool, len(expectHistograms))
-	for _, v := range heuristicsHistograms {
-		heuristicsHistogramsMap[v] = true
-	}
-
 	for _, hist := range hists {
-		if heuristicsHistogramsMap[hist.Name] {
-			perfutil.StoreMetricWithHeuristics(ctx, pv, hist, "")
-			continue
-		}
 		valueName := hist.Name
 		switch hist.Name {
-		case allBrowserWindowsCreated,
-			allBrowserWindowsPresented,
-			allBrowserWindowsShown,
-			allShelfIconsLoaded,
+		case
 			ashTastBootTimeLogin2,
 			bootTimeLogin2,
 			bootTimeLogin3,
 			establishGpuChannelSyncTime,
-			shelfLoginAnimationEnd,
 			ashTastArcUIAvailableAfterLoginDuration,
 			arcTastUIAvailableTimeDelta,
 			uptimeLogoutToUIStopAfterLogout,
@@ -939,25 +920,25 @@ func storeHistograms(
 			reportMaxHistogramValue(ctx, pv, hist, "millisecond", valueName)
 
 		case
-			newMetricAllBrowserWindowsCreated,
-			newMetricAllBrowserWindowsShown,
-			newMetricAllBrowserWindowsPresented,
-			newMetricAllShelfIconsLoaded,
-			newMetricShelfLoginAnimationEnd,
-			newMetricTotalDuration,
-			newMetricPostLoginAnimationDurationPrefix + suffixClamshellMode,
-			newMetricPostLoginAnimationDurationPrefix + suffixTabletMode,
-			newMetricDeferredTasksStarted:
+			metricAllBrowserWindowsCreated,
+			metricAllBrowserWindowsShown,
+			metricAllBrowserWindowsPresented,
+			metricAllShelfIconsLoaded,
+			metricShelfLoginAnimationEnd,
+			metricTotalDuration,
+			metricPostLoginAnimationDurationPrefix + suffixClamshellMode,
+			metricPostLoginAnimationDurationPrefix + suffixTabletMode,
+			metricDeferredTasksStarted:
 			storeHistogramMeanValue(ctx, pv, hist, "ms", perf.SmallerIsBetter)
 
 		case
-			newMetricPostLoginAnimationSmoothnessPrefix + suffixClamshellMode,
-			newMetricPostLoginAnimationSmoothnessPrefix + suffixTabletMode:
+			metricPostLoginAnimationSmoothnessPrefix + suffixClamshellMode,
+			metricPostLoginAnimationSmoothnessPrefix + suffixTabletMode:
 			storeHistogramMeanValue(ctx, pv, hist, "percent", perf.BiggerIsBetter)
 
 		case
-			newMetricPostLoginAnimationJankPrefix + suffixClamshellMode,
-			newMetricPostLoginAnimationJankPrefix + suffixTabletMode:
+			metricPostLoginAnimationJankPrefix + suffixClamshellMode,
+			metricPostLoginAnimationJankPrefix + suffixTabletMode:
 			storeHistogramMeanValue(ctx, pv, hist, "percent", perf.SmallerIsBetter)
 
 		default:
@@ -1056,17 +1037,8 @@ func LoginPerf(ctx context.Context, s *testing.State) {
 		suffix = suffixTabletMode
 	}
 
-	heuristicsHistograms := []string{
-		"Ash.LoginAnimation.Smoothness" + suffix,
-		"Ash.LoginAnimation.Jank" + suffix,
-		"Ash.LoginAnimation.Duration2" + suffix,
-	}
-
 	allHistograms := []string{
 		establishGpuChannelSyncTime,
-		allBrowserWindowsCreated,
-		allBrowserWindowsShown,
-		allShelfIconsLoaded,
 		ashTastBootTimeLogin2,
 		bootTimeLogin2,
 		bootTimeLogin3,
@@ -1078,23 +1050,19 @@ func LoginPerf(ctx context.Context, s *testing.State) {
 		uptimeLoginPromptSetupTimeAfterLogout,
 		uptimeLogoutToLoginPromptVisible,
 
-		newMetricAllBrowserWindowsCreated,
-		newMetricAllBrowserWindowsShown,
-		newMetricAllShelfIconsLoaded,
-		newMetricDeferredTasksStarted,
+		metricAllBrowserWindowsCreated,
+		metricAllBrowserWindowsShown,
+		metricAllShelfIconsLoaded,
+		metricDeferredTasksStarted,
 	}
 	// Histogram is only collected when the DUT is connected to the display.
 	if displCount > 0 {
-		allHistograms = append(allHistograms, allBrowserWindowsPresented)
-		allHistograms = append(allHistograms, shelfLoginAnimationEnd)
-		allHistograms = append(allHistograms, heuristicsHistograms...)
-
-		allHistograms = append(allHistograms, newMetricAllBrowserWindowsPresented)
-		allHistograms = append(allHistograms, newMetricShelfLoginAnimationEnd)
-		allHistograms = append(allHistograms, newMetricTotalDuration)
-		allHistograms = append(allHistograms, newMetricPostLoginAnimationDurationPrefix+suffix)
-		allHistograms = append(allHistograms, newMetricPostLoginAnimationSmoothnessPrefix+suffix)
-		allHistograms = append(allHistograms, newMetricPostLoginAnimationJankPrefix+suffix)
+		allHistograms = append(allHistograms, metricAllBrowserWindowsPresented)
+		allHistograms = append(allHistograms, metricShelfLoginAnimationEnd)
+		allHistograms = append(allHistograms, metricTotalDuration)
+		allHistograms = append(allHistograms, metricPostLoginAnimationDurationPrefix+suffix)
+		allHistograms = append(allHistograms, metricPostLoginAnimationSmoothnessPrefix+suffix)
+		allHistograms = append(allHistograms, metricPostLoginAnimationJankPrefix+suffix)
 	}
 	if arcMode != noarc {
 		allHistograms = append(allHistograms,
@@ -1159,7 +1127,6 @@ func LoginPerf(ctx context.Context, s *testing.State) {
 			if err := storeHistograms(
 				ctx,
 				testConfig.expectHistograms,
-				heuristicsHistograms,
 				pv,
 				hists,
 			); err != nil {
@@ -1202,7 +1169,6 @@ func LoginPerf(ctx context.Context, s *testing.State) {
 	} else if err := storeHistograms(
 		ctx,
 		testConfig.expectHistograms,
-		heuristicsHistograms,
 		tracingValues,
 		tracingHistograms,
 	); err != nil {
