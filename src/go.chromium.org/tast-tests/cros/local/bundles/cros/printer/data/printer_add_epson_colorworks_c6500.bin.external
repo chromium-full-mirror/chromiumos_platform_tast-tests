@@ -1,0 +1,5 @@
+{
+  "url": "gs://chromiumos-test-assets-public/tast/cros/printer/printer_add_epson_colorworks_c6500_20241219.bin",
+  "size": 231670,
+  "sha256sum": "6d713e648f140deb1f8971bb17984d2fb44449110ae9d56e9df2cab95f0160fd"
+}

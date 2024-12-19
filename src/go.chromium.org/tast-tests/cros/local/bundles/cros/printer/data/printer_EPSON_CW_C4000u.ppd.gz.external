@@ -1,0 +1,5 @@
+{
+  "url": "gs://chromiumos-test-assets-public/tast/cros/printer/printer_EPSON_CW_C4000u_20241219.ppd.gz",
+  "size": 21913,
+  "sha256sum": "0f2d4ed0f4fb1e889cce5f09effd204f19edff0446fb11fa37dbbc866db1b73d"
+}

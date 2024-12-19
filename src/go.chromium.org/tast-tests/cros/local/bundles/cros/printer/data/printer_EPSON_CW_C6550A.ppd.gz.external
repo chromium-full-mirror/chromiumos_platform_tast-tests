@@ -1,0 +1,5 @@
+{
+  "url": "gs://chromiumos-test-assets-public/tast/cros/printer/printer_EPSON_CW_C6550A_20241219.ppd.gz",
+  "size": 26707,
+  "sha256sum": "9551fd05d6af5d1bd85e8921b62a41461672e5a3248433aa96c54cf646088b1b"
+}

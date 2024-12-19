@@ -202,6 +202,24 @@ func init() {
 				},
 				ExtraData: []string{"to_print.pdf", "printer_EpsonGenericColorModel.ppd", "printer_add_epson_printer_color_golden.bin"},
 			}, {
+				Name: "epson_colorworks_c4000",
+				Val: &ippprint.Params{
+					PPDFile:      "printer_EPSON_CW_C4000u.ppd.gz",
+					PrintFile:    "label_97x76mm.pdf",
+					ExpectedFile: "printer_add_epson_colorworks_c4000.bin",
+				},
+				ExtraData: []string{"label_97x76mm.pdf", "printer_EPSON_CW_C4000u.ppd.gz", "printer_add_epson_colorworks_c4000.bin"},
+				ExtraAttr: []string{"informational"},
+			}, {
+				Name: "epson_colorworks_c6500",
+				Val: &ippprint.Params{
+					PPDFile:      "printer_EPSON_CW_C6550A.ppd.gz",
+					PrintFile:    "label_97x76mm.pdf",
+					ExpectedFile: "printer_add_epson_colorworks_c6500.bin",
+				},
+				ExtraData: []string{"label_97x76mm.pdf", "printer_EPSON_CW_C6550A.ppd.gz", "printer_add_epson_colorworks_c6500.bin"},
+				ExtraAttr: []string{"informational"},
+			}, {
 				Name: "epson_monochrome",
 				Val: &ippprint.Params{
 					PPDFile:      "printer_EpsonGenericColorModel.ppd",

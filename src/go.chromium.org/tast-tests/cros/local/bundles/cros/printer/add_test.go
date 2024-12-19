@@ -110,6 +110,8 @@ func TestAddParams(t *testing.T) {
 		test("dymo_lm", "printer_add_dymo_printer_lm450.ppd", "printer_add_dymo_lm_printer_golden.bin"),
 		test("epson", "printer_EpsonWF3620.ppd", "printer_add_epson_printer_golden.ps"),
 		test("epson_color", "printer_EpsonGenericColorModel.ppd", "printer_add_epson_printer_color_golden.bin", "print-color-mode=color"),
+		iTestCustomInput("epson_colorworks_c4000", "printer_EPSON_CW_C4000u.ppd.gz", "label_97x76mm.pdf", "printer_add_epson_colorworks_c4000.bin"),
+		iTestCustomInput("epson_colorworks_c6500", "printer_EPSON_CW_C6550A.ppd.gz", "label_97x76mm.pdf", "printer_add_epson_colorworks_c6500.bin"),
 		test("epson_monochrome", "printer_EpsonGenericColorModel.ppd", "printer_add_epson_printer_monochrome_golden.bin", "print-color-mode=monochrome"),
 		test("generic", "printer_add_generic_printer_GenericPostScript.ppd.gz", "printer_add_generic_printer_golden.ps"),
 		test("hp_hpcups_hbpl1", "printer_add_hp_printer_pclm.ppd.gz", "printer_add_hp_printer_pclm_out.pclm"),
