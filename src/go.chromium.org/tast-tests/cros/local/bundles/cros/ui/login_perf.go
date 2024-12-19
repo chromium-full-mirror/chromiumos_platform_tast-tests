@@ -102,14 +102,6 @@ const (
 
 var disableARCSyncOption = chrome.ExtraArgs(arc.DisableSyncFlags()...)
 
-// TODO(b/335657898): Remove this once we do not need to compare metrics with
-// old results which were collected with uiauto enabled.
-var cmdlineVarUseUIAuto = testing.RegisterVarString(
-	"ui.LoginPerf.use_uiauto",
-	"false",
-	"Specify whether uiauto is used to await login animation.",
-)
-
 // NOTE: default set of categories is defined in `loginPerfTraceConfigFileName`.
 var cmdlineVarTracingExtraCategories = testing.RegisterVarString(
 	"ui.LoginPerf.tracing_extra_categories",
@@ -354,11 +346,6 @@ func loginPerfDoLogin(
 	cr *chrome.Chrome,
 	credentials chrome.Creds,
 ) (retErr error) {
-	useUIAuto, err := strconv.ParseBool(cmdlineVarUseUIAuto.Value())
-	if err != nil {
-		return errors.Wrap(err, "invalid value for ui.LoginPerf.use_uiauto")
-	}
-
 	outdir, ok := testing.ContextOutDir(ctx)
 	if !ok {
 		return errors.New("no output directory exists")
@@ -377,10 +364,10 @@ func loginPerfDoLogin(
 		return errors.Wrap(err, "password text field did not appear in the ui")
 	}
 
-	if !useUIAuto {
-		if err := tLoginConn.ResetAutomation(ctx); err != nil {
-			return errors.Wrap(err, "failed to reset automation feature")
-		}
+	// Reset automation as we no longer need it. Otherwise, automation requires extra work (e.g.
+	// updating accessibility tree) and makes it hard to investigate real performance issues.
+	if err := tLoginConn.ResetAutomation(ctx); err != nil {
+		return errors.Wrap(err, "failed to reset automation feature")
 	}
 
 	kb, err := input.Keyboard(ctx)
@@ -403,32 +390,13 @@ func loginPerfDoLogin(
 		return errors.Wrapf(err, "failed waiting to log in: last state: %+v", st)
 	}
 
-	if useUIAuto {
-		if err := ash.WaitForShelf(ctx, tLoginConn, 120*time.Second); err != nil {
-			return errors.Wrap(err, "shelf did not appear after logging in")
-		}
-	}
-
 	return nil
 }
 
 // waitForLoginAnimationEnd waits until the post login animation is complete.
 func waitForLoginAnimationEnd(ctx context.Context, tconn *chrome.TestConn) error {
-	useUIAuto, err := strconv.ParseBool(cmdlineVarUseUIAuto.Value())
-	if err != nil {
-		return errors.Wrap(err, "invalid value for ui.LoginPerf.use_uiauto")
-	}
-
-	if useUIAuto {
-		if err := ash.ForEachWindow(ctx, tconn, func(w *ash.Window) error {
-			return ash.WaitWindowFinishAnimating(ctx, tconn, w.ID)
-		}); err != nil {
-			return errors.Wrap(err, "failed to wait")
-		}
-	} else {
-		if err := tconn.Call(ctx, nil, "tast.promisify(chrome.autotestPrivate.waitForLoginAnimationEnd)"); err != nil {
-			return errors.Wrap(err, "failed to call waitForLoginAnimationEnd. Maybe old chrome is being used?")
-		}
+	if err := tconn.Call(ctx, nil, "tast.promisify(chrome.autotestPrivate.waitForLoginAnimationEnd)"); err != nil {
+		return errors.Wrap(err, "failed to call waitForLoginAnimationEnd")
 	}
 	return nil
 }
