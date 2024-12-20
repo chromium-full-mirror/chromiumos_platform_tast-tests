@@ -48,7 +48,6 @@ func init() {
 func UserRequestRecovery(ctx context.Context, s *testing.State) {
 	pv := s.FixtValue().(*fixture.Value)
 	h := pv.Helper
-	var removeServoCharger bool
 
 	type bootUSBTimeout struct {
 		err error
@@ -88,6 +87,20 @@ func UserRequestRecovery(ctx context.Context, s *testing.State) {
 	if err := h.Reporter.ClearEventlog(ctx); err != nil {
 		s.Fatal("Failed to clear event log: ", err)
 	}
+
+	if h.HasAPFwState {
+		closeUART, err := h.Servo.EnableUARTCapture(ctx, servo.ECUARTCapture)
+		if err != nil {
+			s.Fatal("Failed to enable capture EC UART: ", err)
+		}
+		defer func() {
+			if err := closeUART(ctx); err != nil {
+				s.Error("Failed to cancel capture EC UART: ", err)
+			}
+		}()
+	}
+
+	var state firmware.CheckAndSetServoCharger = h.CheckServoChargerBeforeBootingFromUSB(ctx)
 
 	s.Log("Powering off the USB")
 	if err := h.Servo.SetUSBMuxState(ctx, servo.USBMuxOff); err != nil {
@@ -140,10 +153,11 @@ func UserRequestRecovery(ctx context.Context, s *testing.State) {
 		if err := h.DUT.Conn().CommandContext(ctx, "crossystem", "recovery_request=0").Run(); err != nil {
 			s.Error("Failed to restore crossystem recovery_request to 0: ", err)
 		}
-		if removeServoCharger {
+		if !state.IsServoChargerConnected && state.RemoveServoChargerRequired {
 			if err := h.SetDUTPower(ctx, true); err != nil {
 				s.Fatal("Failed to connect charger: ", err)
 			}
+			state.IsServoChargerConnected = true
 			waitConnectCtx, cancelWaitConnect := context.WithTimeout(ctx, 90*time.Second)
 			defer cancelWaitConnect()
 			if err := h.WaitConnect(waitConnectCtx, firmware.ResetEthernetDongle); err != nil {
@@ -157,20 +171,6 @@ func UserRequestRecovery(ctx context.Context, s *testing.State) {
 		s.Fatal("Failed to set crossystem recovery_request to 193: ", err)
 	}
 
-	batteryExists, err := h.CheckBatteryAvailable(ctx)
-	if err != nil {
-		s.Fatal("Failed to check if battery is available: ", err)
-	}
-	supportPDRole, err := h.Servo.IsServoTypeC(ctx)
-	if err != nil {
-		s.Fatal("Failed to check the connection type: ", err)
-	}
-	// We saw that setting servo_pd_role:snk helps some machines
-	// to boot the USB in recovery mode.
-	if batteryExists && supportPDRole {
-		removeServoCharger = true
-	}
-
 	s.Log("Rebooting the DUT")
 	if err := h.DUT.Conn().CommandContext(ctx, "reboot").Run(); err != nil && !errors.As(err, &context.DeadlineExceeded) {
 		s.Fatal("Failed to run reboot command: ", err)
@@ -182,11 +182,18 @@ func UserRequestRecovery(ctx context.Context, s *testing.State) {
 	}
 
 	if hasBrokenScreen {
-		s.Log("Waiting for DUT to reach the firmware screen")
-		if err := h.WaitFirmwareScreen(ctx, h.Config.FirmwareScreen); err != nil {
-			s.Fatal("Failed to get to firmware screen: ", err)
+		if h.HasAPFwState {
+			testing.ContextLog(ctx, "Detecting the recovery select screen")
+			if err := h.DetectFirmwareScreen(ctx, h.Config.FirmwareScreen, fwCommon.RecoveryBroken); err != nil {
+				s.Fatal("Failed to detect firmware screen: ", err)
+			}
+		} else {
+			s.Log("Waiting for DUT to reach the firmware screen")
+			if err := h.WaitFirmwareScreen(ctx, h.Config.FirmwareScreen); err != nil {
+				s.Fatal("Failed to get to firmware screen: ", err)
+			}
 		}
-		if err := insertUSBInFirmwareScreen(ctx, h, removeServoCharger); err != nil {
+		if err := insertUSBInFirmwareScreen(ctx, h, &state); err != nil {
 			s.Fatal("Failed to insert USB in firmware screen: ", err)
 		}
 		s.Log("Checking if DUT reaches Broken Screen")
@@ -197,12 +204,17 @@ func UserRequestRecovery(ctx context.Context, s *testing.State) {
 		if err := h.Servo.SetUSBMuxState(ctx, servo.USBMuxOff); err != nil {
 			s.Fatal("Failed to power off the USB: ", err)
 		}
-		if removeServoCharger {
+		if !state.IsServoChargerConnected && state.RemoveServoChargerRequired {
 			// Sending power state command after removing charger might cause
 			// cr50 uart unresponsive on board grunt. Therefore, connect the
 			// charger before sending power state command.
 			if err := h.SetDUTPower(ctx, true); err != nil {
-				s.Fatal("Failed to remove charger: ", err)
+				s.Fatal("Failed to connect charger: ", err)
+			}
+			state.IsServoChargerConnected = true
+			// GoBigSleepLint: Wait for a after connecting the charger.
+			if err := testing.Sleep(ctx, 5*time.Second); err != nil {
+				s.Fatal("Failed to sleep: ", err)
 			}
 		}
 		s.Log("Rebooting the DUT to recovery screen")
@@ -211,7 +223,7 @@ func UserRequestRecovery(ctx context.Context, s *testing.State) {
 		}
 	}
 
-	if err := insertUSBInFirmwareScreen(ctx, h, removeServoCharger); err != nil {
+	if err := insertUSBInFirmwareScreen(ctx, h, &state); err != nil {
 		s.Fatal("Failed to insert USB in firmware screen: ", err)
 	}
 	expectedUSBBootCount++
@@ -228,10 +240,15 @@ func UserRequestRecovery(ctx context.Context, s *testing.State) {
 	if err := checkEventlog(ctx, h, hasBrokenScreen); err != nil {
 		s.Fatal("Failed to check event log: ", err)
 	}
-	if removeServoCharger {
-		// As mentioned in b/274953387, running the remote command 'poweroff' on trogdor and
-		// strongbad machines without AC connected will bring them into the hibernation
-		// state, which can cause error 'EC: No data was sent from the pty'.
+	if !state.IsServoChargerConnected && state.RemoveServoChargerRequired {
+		if err := h.SetDUTPower(ctx, true); err != nil {
+			s.Fatal("Failed to connect charger: ", err)
+		}
+		state.IsServoChargerConnected = true
+		// GoBigSleepLint: Wait for a after connecting the charger.
+		if err := testing.Sleep(ctx, 5*time.Second); err != nil {
+			s.Fatal("Failed to sleep: ", err)
+		}
 		if err := h.Servo.SetPowerState(ctx, servo.PowerStateOff); err != nil {
 			s.Fatal("Failed to set power_state:off: ", err)
 		}
@@ -240,15 +257,12 @@ func UserRequestRecovery(ctx context.Context, s *testing.State) {
 		if err := h.DUT.WaitUnreachable(waitUnreachableCtx); err != nil {
 			s.Fatal("Failed to wait for DUT to be unreachable after sending poweroff command: ", err)
 		}
-		if err := h.SetDUTPower(ctx, true); err != nil {
-			s.Fatal("Failed to remove charger: ", err)
-		}
 	}
 	s.Logf("Rebooting to %s mode", fwCommon.BootModeRecovery)
 	if err := ms.EnableRecMode(ctx, servo.PowerStateRec, servo.USBMuxOff); err != nil {
 		s.Fatal("Failed to reboot into recovery mode: ", err)
 	}
-	if err := insertUSBInFirmwareScreen(ctx, h, removeServoCharger); err != nil {
+	if err := insertUSBInFirmwareScreen(ctx, h, &state); err != nil {
 		s.Fatal("Failed to insert USB in firmware screen: ", err)
 	}
 	expectedUSBBootCount++
@@ -272,11 +286,12 @@ func UserRequestRecovery(ctx context.Context, s *testing.State) {
 	}
 }
 
-func insertUSBInFirmwareScreen(ctx context.Context, h *firmware.Helper, removeServoCharger bool) error {
-	if removeServoCharger {
+func insertUSBInFirmwareScreen(ctx context.Context, h *firmware.Helper, state *firmware.CheckAndSetServoCharger) error {
+	if state.IsServoChargerConnected && state.RemoveServoChargerRequired {
 		if err := h.SetDUTPower(ctx, false); err != nil {
 			return errors.Wrap(err, "failed to remove charger")
 		}
+		state.IsServoChargerConnected = false
 		// GoBigSleepLint: Wait for a while between removing the charger and
 		// booting the DUT from USB to prevent USB disconnected issues.
 		if err := testing.Sleep(ctx, 5*time.Second); err != nil {
