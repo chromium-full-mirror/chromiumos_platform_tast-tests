@@ -44,13 +44,13 @@ func init() {
 		Fixture:      setup.PowerAshGAIA,
 		Params: []testing.Param{
 			{
-				Name: "with_text_prompt",
+				Name: "gen_fill",
 				Val: reimagineTestParameters{
 					withPrompt: true,
 				},
 			},
 			{
-				Name: "without_text_prompt",
+				Name: "inpainting",
 				Val: reimagineTestParameters{
 					withPrompt: false,
 				},
