@@ -190,6 +190,18 @@ func DevBootInvalidUSB(ctx context.Context, s *testing.State) {
 		s.Fatal("Failed to remove the USB: ", err)
 	}
 
+	if h.HasAPFwState {
+		closeUART, err := h.Servo.EnableUARTCapture(ctx, servo.ECUARTCapture)
+		if err != nil {
+			s.Error("Failed to capture EC UART: ", err)
+		}
+		defer func() {
+			if err := closeUART(ctx); err != nil {
+				s.Error("Failed to cancel capture EC UART: ", err)
+			}
+		}()
+	}
+
 	s.Log("Rebooting the DUT with reset")
 	if err := h.Servo.SetPowerState(ctx, servo.PowerStateReset); err != nil {
 		s.Fatal("Failed to reboot the DUT with reset: ", err)
@@ -199,11 +211,16 @@ func DevBootInvalidUSB(ctx context.Context, s *testing.State) {
 	if err := h.DUT.WaitUnreachable(waitUnreachableCtx); err != nil {
 		s.Fatal("Failed to wait for DUT to be unreachable: ", err)
 	}
-
-	s.Logf("Sleeping %s (FirmwareScreen)", h.Config.FirmwareScreen)
-	// GoBigSleepLint: Wait for firmware screen.
-	if err := testing.Sleep(ctx, h.Config.FirmwareScreen); err != nil {
-		s.Fatalf("Failed to sleep for %s (FirmwareScreen): %v", h.Config.FirmwareScreen, err)
+	if h.HasAPFwState {
+		if err := h.DetectFirmwareScreen(ctx, h.Config.FirmwareScreen, fwCommon.DeveloperMode); err != nil {
+			s.Error("Failed to detect firmware screen: ", err)
+		}
+	} else {
+		s.Logf("Sleeping for %s (FirmwareScreen) ", h.Config.FirmwareScreen)
+		// GoBigSleepLint: Delay to wait for the firmware screen during boot-up.
+		if err := testing.Sleep(ctx, h.Config.FirmwareScreen); err != nil {
+			s.Fatalf("Failed to sleep for %s: %v", h.Config.FirmwareScreen, err)
+		}
 	}
 
 	if err := setPDDataRole(ctx, h, &state); err != nil {
@@ -218,7 +235,7 @@ func DevBootInvalidUSB(ctx context.Context, s *testing.State) {
 	switch testOpt.validBootAfterInvalidUSB {
 	case fromUSB:
 		devScreenBootSteps = []func(ctx context.Context, h *firmware.Helper) error{
-			ctrlUBootFromUSB,
+			ctrlUWithInvalidUSB,
 			selectBack,
 			restoreAndInsertUSB,
 			ctrlUBootFromUSB,
@@ -264,12 +281,14 @@ func DevBootInvalidUSB(ctx context.Context, s *testing.State) {
 		s.Fatalf("Failed to boot from expected boot mode, expected mode: %s", testOpt.expectedBootMode)
 	}
 
-	match, err := h.Reporter.CheckDisplayedScreens(ctx, testOpt.expectedFwScreens[h.Config.ModeSwitcherType])
-	if err != nil {
-		s.Fatal("Failed to check displayed firmware screens: ", err)
-	}
-	if !match {
-		s.Fatal("Did not find firmware screens as expected")
+	if !h.HasAPFwState {
+		match, err := h.Reporter.CheckDisplayedScreens(ctx, testOpt.expectedFwScreens[h.Config.ModeSwitcherType])
+		if err != nil {
+			s.Fatal("Failed to check displayed firmware screens: ", err)
+		}
+		if !match {
+			s.Fatal("Did not find firmware screens as expected")
+		}
 	}
 }
 
@@ -354,6 +373,18 @@ func restoreAndInsertUSB(ctx context.Context, h *firmware.Helper) error {
 	return nil
 }
 
+func ctrlUWithInvalidUSB(ctx context.Context, h *firmware.Helper) (retErr error) {
+	if err := ctrlUBootFromUSB(ctx, h); err != nil {
+		return err
+	}
+	if h.HasAPFwState {
+		if err := h.DetectFirmwareScreen(ctx, h.Config.FirmwareScreen, fwCommon.DeveloperInvalidDisk); err != nil {
+			return errors.Wrap(err, "failed to detect firmware screen")
+		}
+	}
+	return nil
+}
+
 func ctrlUBootFromUSB(ctx context.Context, h *firmware.Helper) error {
 	testing.ContextLog(ctx, "Pressing Ctrl-U")
 	if err := h.Servo.KeypressWithDuration(ctx, servo.CtrlU, servo.DurTab); err != nil {
@@ -367,7 +398,15 @@ func menuUIBootFromUSB(ctx context.Context, h *firmware.Helper) error {
 	if err != nil {
 		return errors.Wrap(err, "failed to create a new menu bypasser")
 	}
-	return menuBypasser.BypassDevBootUSB(ctx)
+	if err := menuBypasser.BypassDevBootUSB(ctx); err != nil {
+		return errors.Wrap(err, "failed to bypass dev mode")
+	}
+	if h.HasAPFwState {
+		if err := h.DetectFirmwareScreen(ctx, h.Config.FirmwareScreen, fwCommon.DeveloperInvalidDisk); err != nil {
+			return errors.Wrap(err, "failed to detect firmware screen")
+		}
+	}
+	return nil
 }
 
 func selectBack(ctx context.Context, h *firmware.Helper) error {
@@ -378,6 +417,11 @@ func selectBack(ctx context.Context, h *firmware.Helper) error {
 	testing.ContextLog(ctx, "Selecting \"Back\"")
 	if err := nvg.SelectOption(ctx); err != nil {
 		return errors.Wrap(err, "failed to select \"Back\"")
+	}
+	if h.HasAPFwState {
+		if err := h.DetectFirmwareScreen(ctx, h.Config.FirmwareScreen, fwCommon.DeveloperMode); err != nil {
+			return errors.Wrap(err, "failed to detect firmware screen")
+		}
 	}
 	return nil
 }
