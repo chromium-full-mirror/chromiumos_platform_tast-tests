@@ -167,20 +167,31 @@ func CompareFileContents(ctx context.Context, actual, expected, logDir, diffFn, 
 	cleanedActual := CleanContents(actual)
 	cleanedExpected := CleanContents(expected)
 
-	if diff := diff.Diff(cleanedActual, cleanedExpected); diff != "" {
-		actualModifier := "actual-"
-		expectedModifier := "expected-"
-		cleanedModifier := "cleaned-"
+	actualModifier := "actual-"
+	expectedModifier := "expected-"
+	cleanedModifier := "cleaned-"
 
-		// A small helper function to write the file to disk, along with appropriate
-		// logs.
-		writeData := func(description, data, filename string) {
-			path := filepath.Join(logDir, filename)
-			testing.ContextLog(ctx, "Dumping ", description, " data to ", path)
-			if err := ioutil.WriteFile(path, []byte(data), 0644); err != nil {
-				testing.ContextLog(ctx, "Failed to dump ", description, " data: ", err)
-			}
+	// A small helper function to write the file to disk, along with appropriate
+	// logs.
+	writeData := func(description, data, filename string) {
+		path := filepath.Join(logDir, filename)
+		testing.ContextLog(ctx, "Dumping ", description, " data to ", path)
+		if err := ioutil.WriteFile(path, []byte(data), 0644); err != nil {
+			testing.ContextLog(ctx, "Failed to dump ", description, " data: ", err)
 		}
+	}
+
+	if len(cleanedActual) != len(cleanedExpected) {
+		writeData("actual", actual, actualModifier+saveFn)
+		writeData("expected", expected, expectedModifier+saveFn)
+		writeData("cleaned actual", cleanedActual, cleanedModifier+actualModifier+saveFn)
+		writeData("cleaned expected", cleanedExpected, cleanedModifier+expectedModifier+saveFn)
+
+		return errors.Errorf("cleanedActual len (%d bytes) does not match cleanedExpected len (%d bytes).",
+			len(cleanedActual), len(cleanedExpected))
+	}
+
+	if diff := diff.Diff(cleanedActual, cleanedExpected); diff != "" {
 		writeData("diff", diff, diffFn)
 		writeData("actual", actual, actualModifier+saveFn)
 		writeData("expected", expected, expectedModifier+saveFn)
