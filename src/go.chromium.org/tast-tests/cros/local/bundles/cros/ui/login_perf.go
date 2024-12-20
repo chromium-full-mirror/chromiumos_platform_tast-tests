@@ -393,37 +393,6 @@ func waitForLoginAnimationEnd(ctx context.Context, tconn *chrome.TestConn) error
 	return nil
 }
 
-// loginPerfCreateWindows creates |n| windows and for Ash.
-func loginPerfCreateWindows(
-	ctx context.Context,
-	cr *chrome.Chrome,
-	url string,
-	n int,
-) error {
-	tconn, err := cr.TestAPIConn(ctx)
-	if err != nil {
-		return errors.Wrap(err, "failed to connect to Ash test api")
-	}
-	if err := ash.CreateWindows(ctx, tconn, cr, url, n); err != nil {
-		return errors.Wrap(err, "failed to create browser windows")
-	}
-
-	return nil
-}
-
-// countVisibleWindows is a proxy to ash.CountVisibleWindows(...)
-func countVisibleWindows(ctx context.Context, cr *chrome.Chrome) (int, error) {
-	tconn, err := cr.TestAPIConn(ctx)
-	if err != nil {
-		return 0, errors.Wrap(err, "failed to connect to Ash test api")
-	}
-	visible, err := ash.CountVisibleWindows(ctx, tconn)
-	if err != nil {
-		err = errors.Wrap(err, "failed to count browser windows")
-	}
-	return visible, nil
-}
-
 // maxHistogramValue calculates the estimated maximum of the histogram values.
 // At is an error when there are no data points.
 func maxHistogramValue(h *histogram.Histogram) (float64, error) {
@@ -680,24 +649,28 @@ func initializeLoginPerfTest(ctx context.Context,
 			return err
 		}
 
+		tconn, err := cr.TestAPIConn(ctx)
+		if err != nil {
+			return errors.Wrap(err, "failed to connect to test api")
+		}
+
 		// Wait for windows to be restored.
-		var visible int
-		if err := testing.Poll(ctx, func(ctx context.Context) error {
-			var err error
-			if visible, err = countVisibleWindows(ctx, cr); err != nil {
-				return testing.PollBreak(err)
-			}
-			if visible != 0 && visible != 1 {
-				return errors.Errorf("unexpected number of visible windows: expected %d, found %d", 0, visible)
-			}
-			return nil
-		}, &testing.PollOptions{Timeout: 10 * time.Second, Interval: 10 * time.Millisecond}); err != nil {
-			return errors.Wrap(err, "failed to check number of existing windows before creating new ones")
+		if err := waitForLoginAnimationEnd(ctx, tconn); err != nil {
+			return errors.Wrap(err, "failed to await login animation")
+		}
+
+		visible, err := ash.CountVisibleWindows(ctx, tconn)
+		if err != nil {
+			return errors.Wrap(err, "failed to count browser windows")
+		}
+		if visible != 0 && visible != 1 {
+			return errors.Errorf("unexpected number of visible windows before creating new ones: expected %d, found %d", 0, visible)
 		}
 		testing.ContextLogf(ctx, "Before creating windows: visible=%d", visible)
-		if err := loginPerfCreateWindows(ctx, cr, animationPageURL, param.windows); err != nil {
-			return err
+		if err := ash.CreateWindows(ctx, tconn, cr, animationPageURL, param.windows); err != nil {
+			return errors.Wrap(err, "failed to create browser windows")
 		}
+
 		testing.ContextLog(ctx, "Sign out: sleep for 20 seconds to let session settle")
 		// GoBigSleepLint: Give session time to settle.
 		if err := testing.Sleep(ctx, 20*time.Second); err != nil {
@@ -762,10 +735,12 @@ func measureLoginPerformance(
 		if err != nil {
 			return errors.Wrap(err, "ps aux failed")
 		}
+
 		err = loginPerfDoLogin(ctx, cr, creds)
 		if err != nil {
 			return errors.Wrap(err, "failed to log in")
 		}
+
 		tconn, err := cr.TestAPIConn(ctx)
 		if err != nil {
 			return errors.Wrap(err, "failed to connect to test api")
@@ -883,16 +858,20 @@ func measureLoginPerformance(
 			return err
 		}
 
-		visible := 0
-		if visible, err = countVisibleWindows(ctx, cr); err != nil {
-			return err
+		tconn, err := cr.TestAPIConn(ctx)
+		if err != nil {
+			return errors.Wrap(err, "failed to connect to Ash test api")
 		}
-
+		visible, err := ash.CountVisibleWindows(ctx, tconn)
+		if err != nil {
+			return errors.Wrap(err, "failed to count browser windows")
+		}
 		expected := param.windows
 		if visible != expected && visible != expected+1 {
-			err = errors.Errorf("unexpected number of visible windows: expected %d, found %d", expected, visible)
+			return errors.Errorf("unexpected number of visible windows: expected %d, found %d", expected, visible)
 		}
-		return err
+
+		return nil
 	}
 	if err := cujRecorder.Run(ctx, cujFunc); err != nil {
 		return cr, nil, nil, errors.Wrap(err, "failed to run the test scenario")
