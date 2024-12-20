@@ -985,7 +985,7 @@ func (f *cellularFixture) TearDown(ctx context.Context, s *testing.FixtState) {
 			}
 		}
 	}
-	if f.disableCellularInShill {
+	if f.disableCellularInShill && f.helper != nil {
 		if err := f.helper.Manager.EnableTechnology(ctx, shill.TechnologyCellular); err != nil {
 			s.Fatal("Unable to enable Cellular: ", err)
 		}
