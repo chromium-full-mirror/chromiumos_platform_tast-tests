@@ -69,17 +69,6 @@ func AutomaticallyDetectedApn(ctx context.Context, s *testing.State) {
 	if serviceLastGoodAPNInfoApnUserFriendlyName == "" {
 		serviceLastGoodAPNInfoApnUserFriendlyName = serviceLastGoodAPN[shillconst.DevicePropertyCellularAPNInfoApnName]
 	}
-	if serviceLastGoodAPNInfoApnUserFriendlyName == "" {
-		// Retrieve the APN name from known APN list if the name in shill profile is blank.
-		knownAPNs, err := cellular.GetKnownApns(ctx)
-		if err != nil {
-			s.Fatal("Failed to get known APNs: ", err)
-		}
-		if len(knownAPNs) > 0 {
-			serviceLastGoodAPNInfoApnUserFriendlyName = knownAPNs[0].APNInfo[shillconst.DevicePropertyCellularAPNInfoApnName].(string)
-		}
-	}
-
 	serviceLastGoodAPNInfoApnSource := serviceLastGoodAPN[shillconst.DevicePropertyCellularAPNInfoApnSource]
 	if err != nil {
 		s.Fatal("Error getting Service properties: ", err)
