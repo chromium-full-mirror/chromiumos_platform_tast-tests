@@ -14,6 +14,7 @@ import (
 
 	"go.chromium.org/tast-tests/cros/common/testexec"
 	"go.chromium.org/tast-tests/cros/local/audio"
+	"go.chromium.org/tast-tests/cros/local/audio/debug"
 	"go.chromium.org/tast-tests/cros/local/audio/fixture"
 	"go.chromium.org/tast-tests/cros/local/audio/nodematch"
 	"go.chromium.org/tast-tests/cros/local/bundles/cros/audio/device"
@@ -187,6 +188,12 @@ var _ fixture.ParameterizedFixture = crasNoiseCancellationFixture{}
 
 // Instance implements fixture.ParameterizedFixture.
 func (f crasNoiseCancellationFixture) Instance() string {
+	var voiceIsolationUIPreferredEffect audio.VoiceIsolationPreferredEffect
+	if f.styleTransferEnabled {
+		voiceIsolationUIPreferredEffect = audio.VoiceIsolationEffectStyleTransfer
+	} else if f.noiseCancellationEnabled {
+		voiceIsolationUIPreferredEffect = audio.VoiceIsolationEffectNoiseCancellation
+	}
 	return fixture.CrasSetUp{
 		CrasFeatures: fixture.CrasFeatureOverrides{
 			fixture.StyleTransfer: f.styleTransferEnabled,
@@ -194,9 +201,10 @@ func (f crasNoiseCancellationFixture) Instance() string {
 		Aloop: &fixture.AloopLoaded{
 			Channels: 2,
 		},
-		VoiceIsolationUIEnabled: f.noiseCancellationEnabled || f.styleTransferEnabled,
-		InputDevice:             nodematch.Type("ALSA_LOOPBACK"),
-		OutputDevice:            nodematch.Type("ALSA_LOOPBACK"),
+		VoiceIsolationUIEnabled:         f.noiseCancellationEnabled || f.styleTransferEnabled,
+		VoiceIsolationUIPreferredEffect: voiceIsolationUIPreferredEffect,
+		InputDevice:                     nodematch.Type("ALSA_LOOPBACK"),
+		OutputDevice:                    nodematch.Type("ALSA_LOOPBACK"),
 	}.Instance()
 }
 
@@ -235,6 +243,21 @@ func CrasNoiseCancellation(ctx context.Context, s *testing.State) {
 			s.Error("Cannot run playback: ", err)
 		}
 	}()
+
+	go func(ctx context.Context) {
+		for ctx.Err() == nil {
+			// GoBigSleepLint: Throttle debug dump, does not affect test results.
+			if err := testing.Sleep(ctx, 1*time.Second); err != nil {
+				return
+			}
+			debugInfo, err := debug.Dump(ctx)
+			if err != nil {
+				s.Log("Cannot get audio thread dump: ", err)
+				return
+			}
+			s.Logf("Streams: %+v", debugInfo.Streams)
+		}
+	}(playbackCaptureCtx)
 
 	// Run capture.
 	captureRaw := filepath.Join(s.OutDir(), "capture.raw")
