@@ -69,6 +69,11 @@ func AutomaticallyDetectedApn(ctx context.Context, s *testing.State) {
 	if serviceLastGoodAPNInfoApnUserFriendlyName == "" {
 		serviceLastGoodAPNInfoApnUserFriendlyName = serviceLastGoodAPN[shillconst.DevicePropertyCellularAPNInfoApnName]
 	}
+	if serviceLastGoodAPNInfoApnUserFriendlyName == "" {
+		// If there is no APN in the database, it will display "Modem APN". For more information see b/375010291.
+		serviceLastGoodAPNInfoApnUserFriendlyName = "Modem APN"
+	}
+
 	serviceLastGoodAPNInfoApnSource := serviceLastGoodAPN[shillconst.DevicePropertyCellularAPNInfoApnSource]
 	if err != nil {
 		s.Fatal("Error getting Service properties: ", err)
