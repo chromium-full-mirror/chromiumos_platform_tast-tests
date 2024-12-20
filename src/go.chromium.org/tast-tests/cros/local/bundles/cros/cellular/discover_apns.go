@@ -166,7 +166,8 @@ func verifyOnlyThisAPNEnabled(settings *ossettings.OSSettings, apn string) uiaut
 		}
 
 		// Check if the only enabled APN is the expected APN.
-		if !strings.Contains(moreOptionsButtons[0].Name, apn) {
+		// We force both strings to be lower-cased since the casing may be different even though the name is the same.
+		if !strings.Contains(strings.ToLower(moreOptionsButtons[0].Name), strings.ToLower(apn)) {
 			return errors.Errorf("unexpected enabled APN, got: %q; want: %q", moreOptionsButtons[0].Name, apn)
 		}
 
