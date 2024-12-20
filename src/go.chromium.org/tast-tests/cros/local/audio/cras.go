@@ -476,3 +476,24 @@ func (c *Cras) IsHfpMicSrSupported(ctx context.Context) (supported bool, err err
 	err = c.call(ctx, "IsHfpMicSrSupported").Store(&supported)
 	return supported, err
 }
+
+// VoiceIsolationPreferredEffect is the effect choice when voice isolation is enabled.
+type VoiceIsolationPreferredEffect uint32
+
+// EFFECT_TYPE from cras/common/src/types_internal.rs
+const (
+	VoiceIsolationEffectNoiseCancellation VoiceIsolationPreferredEffect = 1 << 0
+	VoiceIsolationEffectStyleTransfer     VoiceIsolationPreferredEffect = 1 << 2
+	VoiceIsolationEffectBeamforming       VoiceIsolationPreferredEffect = 1 << 3
+)
+
+// GetVoiceIsolationUIPreferredEffect gets the preferred effect for voice isolation.
+func (c *Cras) GetVoiceIsolationUIPreferredEffect(ctx context.Context) (effect string, err error) {
+	s2, err := c.dumpS2(ctx)
+	return s2.Input.VoiceIsolationUIPreferredEffect, err
+}
+
+// SetVoiceIsolationUIPreferredEffect sets the preferred effect for voice isolation.
+func (c *Cras) SetVoiceIsolationUIPreferredEffect(ctx context.Context, effect VoiceIsolationPreferredEffect) (err error) {
+	return c.call(ctx, "SetVoiceIsolationUIPreferredEffect", effect).Err
+}

@@ -18,26 +18,31 @@ import (
 )
 
 // SelectIODevices sets the default input and output devices of CRAS.
+// If a matcher for a given direction is nil, selection of that direction is skipped.
 //
 // UI must be stopped otherwise it may overwrite the settings.
 func SelectIODevices(ctx context.Context, cras *Cras, defaultInputDeviceMatcher, defaultOutputDeviceMatcher nodematch.Matcher) error {
-	testing.ContextLog(ctx, "Setting default input device to ", defaultInputDeviceMatcher)
-	if err := cras.SetActiveNodeByMatcher(ctx,
-		nodematch.All(
-			defaultInputDeviceMatcher,
-			nodematch.Direction(InputStream),
-		),
-	); err != nil {
-		return errors.Wrapf(err, "cannot set default input device to %s", defaultInputDeviceMatcher)
+	if defaultInputDeviceMatcher != nil {
+		testing.ContextLog(ctx, "Setting default input device to ", defaultInputDeviceMatcher)
+		if err := cras.SetActiveNodeByMatcher(ctx,
+			nodematch.All(
+				defaultInputDeviceMatcher,
+				nodematch.Direction(InputStream),
+			),
+		); err != nil {
+			return errors.Wrapf(err, "cannot set default input device to %s", defaultInputDeviceMatcher)
+		}
 	}
-	testing.ContextLog(ctx, "Setting default output device to ", defaultOutputDeviceMatcher)
-	if err := cras.SetActiveNodeByMatcher(ctx,
-		nodematch.All(
-			defaultOutputDeviceMatcher,
-			nodematch.Direction(OutputStream),
-		),
-	); err != nil {
-		return errors.Wrapf(err, "cannot set default output device to %s", defaultOutputDeviceMatcher)
+	if defaultOutputDeviceMatcher != nil {
+		testing.ContextLog(ctx, "Setting default output device to ", defaultOutputDeviceMatcher)
+		if err := cras.SetActiveNodeByMatcher(ctx,
+			nodematch.All(
+				defaultOutputDeviceMatcher,
+				nodematch.Direction(OutputStream),
+			),
+		); err != nil {
+			return errors.Wrapf(err, "cannot set default output device to %s", defaultOutputDeviceMatcher)
+		}
 	}
 	return nil
 }

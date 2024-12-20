@@ -40,6 +40,8 @@ type CrasSetUp struct {
 
 	// Set the VoiceIsolationUIEnabled D-Bus control.
 	VoiceIsolationUIEnabled bool
+	// SetVoiceIsolationUIPreferredEffect if not zero.
+	VoiceIsolationUIPreferredEffect audio.VoiceIsolationPreferredEffect
 
 	// The input device to select.
 	InputDevice nodematch.Matcher
@@ -102,6 +104,11 @@ func (pf CrasSetUp) DoCras(ctx context.Context) (*audio.Cras, error) {
 	}
 	if err := audio.SelectIODevices(ctx, cras, pf.InputDevice, pf.OutputDevice); err != nil {
 		return nil, errors.Wrap(err, "failed to select IO devices")
+	}
+	if pf.VoiceIsolationUIPreferredEffect != 0 {
+		if err := cras.SetVoiceIsolationUIPreferredEffect(ctx, pf.VoiceIsolationUIPreferredEffect); err != nil {
+			return nil, errors.Wrap(err, "failed to SetVoiceIsolationUIPreferredEffect")
+		}
 	}
 	if err := cras.SetVoiceIsolationUIEnabled(ctx, pf.VoiceIsolationUIEnabled); err != nil {
 		return nil, errors.Wrap(err, "failed to set voice isolation enabled/disabled")
