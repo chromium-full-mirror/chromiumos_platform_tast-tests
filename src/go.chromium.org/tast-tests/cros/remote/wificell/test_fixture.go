@@ -582,6 +582,21 @@ func (tf *TestFixture) initializeLabstation(ctx context.Context) error {
 
 	tf.androidDevices = append(make([]*androidDeviceData, 0), tf.options.AndroidDevices...)
 
+	for _, ad := range tf.androidDevices {
+		testing.ContextLogf(ctx, "Sync time for Andorid host %q", ad.serialNumber)
+		if err := ad.labstation.host.CommandContext(ctx, "adb", "-s", ad.serialNumber, "shell", "setprop", "persist.sys.timezone", "UTC").Run(); err != nil {
+			return errors.Wrap(err, "failed to set the timezone to UTC")
+		}
+		// Get the current UTC time in the format "YYYY-MM-DDTHH:MM:SS"
+		currentTime := time.Now().UTC().Format("2006-01-02T15:04:05")
+		if err := ad.labstation.host.CommandContext(ctx, "adb", "-s", ad.serialNumber, "shell", "date", currentTime).Run(); err != nil {
+			return errors.Wrapf(err, "failed to set internal clock for Andorid host %q", ad.serialNumber)
+		}
+		if err := ad.labstation.host.CommandContext(ctx, "adb", "-s", ad.serialNumber, "shell", "logcat", "-c").Run(); err != nil {
+			return errors.Wrapf(err, "failed to clear old logs on the Andorid host %q", ad.serialNumber)
+		}
+	}
+
 	return nil
 }
 
