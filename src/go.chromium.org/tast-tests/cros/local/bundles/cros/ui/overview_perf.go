@@ -222,7 +222,7 @@ func OverviewPerf(ctx context.Context, s *testing.State) {
 			}
 
 			if i == 0 {
-				if err := cr.Browser().CloseWithURL(ctx, chrome.BlankURL); err != nil {
+				if err := cr.CloseTargets(ctx, chrome.MatchTargetURL(chrome.BlankURL)); err != nil {
 					return errors.Wrap(err, "failed to close initial blank tab")
 				}
 			}
