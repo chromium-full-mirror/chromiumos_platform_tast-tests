@@ -128,20 +128,53 @@ func DevInsertUSBScreen(ctx context.Context, s *testing.State) {
 	if err := h.Servo.SetUSBMuxState(ctx, servo.USBMuxHost); err != nil {
 		s.Fatal("Failed to insert USB to DUT: ", err)
 	}
+	if h.HasAPFwState {
+		closeUART, err := h.Servo.EnableUARTCapture(ctx, servo.ECUARTCapture)
+		if err != nil {
+			s.Error("Failed to capture EC UART: ", err)
+		}
+		defer func() {
+			if err := closeUART(ctx); err != nil {
+				s.Error("Failed to cancel capture EC UART: ", err)
+			}
+		}()
+	}
 
 	s.Log("Rebooting DUT to developer screen")
 	if err := h.Servo.SetPowerState(ctx, servo.PowerStateReset); err != nil {
 		s.Fatal("Failed to cold reset dut: ", err)
 	}
-	s.Logf("Sleeping for %s (FirmwareScreen)", h.Config.FirmwareScreen)
-	// GoBigSleepLint: Delay to wait for the firmware screen during boot-up.
-	if err := testing.Sleep(ctx, h.Config.FirmwareScreen); err != nil {
-		s.Fatalf("Failed to sleep for %s: %v", h.Config.FirmwareScreen, err)
+	waitUnreachableCtx, cancelWaitUnreachable := context.WithTimeout(ctx, 2*time.Minute)
+	defer cancelWaitUnreachable()
+	if err := h.DUT.WaitUnreachable(waitUnreachableCtx); err != nil {
+		s.Fatal("Failed to wait for DUT to be unreachable: ", err)
+	}
+
+	if h.HasAPFwState {
+		if err := h.DetectFirmwareScreen(ctx, h.Config.FirmwareScreen, fwCommon.DeveloperMode); err != nil {
+			s.Error("Failed to detect firmware screen: ", err)
+		}
+	} else {
+		s.Logf("Sleeping for %s (FirmwareScreen) ", h.Config.FirmwareScreen)
+		// GoBigSleepLint: Delay to wait for the firmware screen during boot-up.
+		if err := testing.Sleep(ctx, h.Config.FirmwareScreen); err != nil {
+			s.Fatalf("Failed to sleep for %s: %v", h.Config.FirmwareScreen, err)
+		}
 	}
 
 	s.Log("Selecting \"Boot from external disk\"")
 	if err := menuBypasser.BypassDevBootUSB(ctx); err != nil {
 		s.Fatal("Failed to bypass firmware screen to usbdev mode: ", err)
+	}
+	if h.HasAPFwState {
+		if err := h.DetectFirmwareScreen(ctx, h.Config.FirmwareScreen, fwCommon.DeveloperBootExternal); err != nil {
+			s.Error("Failed to detect firmware screen: ", err)
+		}
+	} else {
+		// GoBigSleepLint: Sleep for model specific time.
+		if err := testing.Sleep(ctx, h.Config.KeypressDelay); err != nil {
+			s.Fatalf("Failed to sleep for %s (KeypressDelay): %v", h.Config.KeypressDelay, err)
+		}
 	}
 
 	var reconnectTimeout time.Duration
@@ -165,17 +198,19 @@ func DevInsertUSBScreen(ctx context.Context, s *testing.State) {
 		}
 		reconnectTimeout = h.Config.USBImageBootTimeout
 	case mainDiskBootFromDevScreen:
-		// GoBigSleepLint: Sleep for model specific time.
-		if err := testing.Sleep(ctx, h.Config.KeypressDelay); err != nil {
-			s.Fatalf("Failed to sleep for %s (KeypressDelay): %v", h.Config.KeypressDelay, err)
-		}
 		s.Log("Selecting \"Back\"")
 		if err := menuNavigator.SelectOption(ctx); err != nil {
 			s.Fatal("Failed to press \"Back\": ", err)
 		}
-		// GoBigSleepLint: Sleep for model specific time.
-		if err := testing.Sleep(ctx, h.Config.KeypressDelay); err != nil {
-			s.Fatalf("Failed to sleep for %s (KeypressDelay): %v", h.Config.KeypressDelay, err)
+		if h.HasAPFwState {
+			if err := h.DetectFirmwareScreen(ctx, h.Config.FirmwareScreen, fwCommon.DeveloperMode); err != nil {
+				s.Error("Failed to detect firmware screen: ", err)
+			}
+		} else {
+			// GoBigSleepLint: Sleep for model specific time.
+			if err := testing.Sleep(ctx, h.Config.KeypressDelay); err != nil {
+				s.Fatalf("Failed to sleep for %s (KeypressDelay): %v", h.Config.KeypressDelay, err)
+			}
 		}
 		s.Log("Selecting \"Boot from internal disk\"")
 		if err := menuBypasser.BypassDevMode(ctx); err != nil {
@@ -183,6 +218,7 @@ func DevInsertUSBScreen(ctx context.Context, s *testing.State) {
 		}
 		reconnectTimeout = h.Config.DelayRebootToPing
 	}
+
 	s.Log("Waiting for DUT to reconnect")
 	waitConnectCtx, cancelWaitConnect := context.WithTimeout(ctx, reconnectTimeout)
 	defer cancelWaitConnect()
@@ -198,12 +234,13 @@ func DevInsertUSBScreen(ctx context.Context, s *testing.State) {
 	if !isCorrectMode {
 		s.Fatal("Found DUT booted to the wrong mode")
 	}
-
-	match, err := h.Reporter.CheckDisplayedScreens(ctx, testOpt.expFwScreens)
-	if err != nil {
-		s.Fatal("Failed to check displayed screens: ", err)
-	}
-	if !match {
-		s.Fatalf("Unable to find matches for the expected screens %x", testOpt.expFwScreens)
+	if !h.HasAPFwState {
+		match, err := h.Reporter.CheckDisplayedScreens(ctx, testOpt.expFwScreens)
+		if err != nil {
+			s.Fatal("Failed to check displayed screens: ", err)
+		}
+		if !match {
+			s.Fatalf("Unable to find matches for the expected screens %x", testOpt.expFwScreens)
+		}
 	}
 }
