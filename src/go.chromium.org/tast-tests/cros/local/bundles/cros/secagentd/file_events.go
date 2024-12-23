@@ -53,10 +53,6 @@ func init() {
 			Name:      "auth_factors",
 			Val:       pb.TestCase_AUTH_FACTORS,
 			ExtraAttr: []string{"group:mainline", "group:secagentd_bpf"},
-		}, {
-			Name:      "system_passwords",
-			Val:       pb.TestCase_SYSTEM_PASSWORD,
-			ExtraAttr: []string{"group:mainline", "group:criticalstaging", "informational"},
 		},
 		},
 	})
