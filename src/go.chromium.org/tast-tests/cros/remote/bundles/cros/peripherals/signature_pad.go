@@ -16,9 +16,9 @@ import (
 	"go.chromium.org/tast-tests/cros/common/robotics/arm/amber"
 	"go.chromium.org/tast-tests/cros/remote/bundles/cros/peripherals/citrix"
 	"go.chromium.org/tast-tests/cros/remote/bundles/cros/peripherals/utils"
+	"go.chromium.org/tast-tests/cros/services/cros/peripherals"
 	ps "go.chromium.org/tast-tests/cros/services/cros/policy"
 	pb "go.chromium.org/tast-tests/cros/services/cros/ui"
-	"go.chromium.org/tast-tests/cros/services/cros/vdi"
 	"go.chromium.org/tast/core/ctxutil"
 	"go.chromium.org/tast/core/errors"
 	"go.chromium.org/tast/core/rpc"
@@ -51,14 +51,14 @@ func init() {
 		Timeout:      15 * time.Minute,
 		ServiceDeps: []string{
 			"tast.cros.policy.PolicyService",
-			"tast.cros.vdi.CitrixService",
+			"tast.cros.peripherals.PeriphService",
 			"tast.cros.ui.ScreenRecorderService",
 			utils.FaillogServiceName,
 		},
 		SoftwareDeps: []string{"chrome"},
 		Vars: []string{
-			"peripherals.ota_username",
-			"peripherals.ota_password",
+			"peripherals.username",
+			"peripherals.password",
 			"peripherals.record_screen",
 			"peripherals.manual_test",
 		},
@@ -91,9 +91,8 @@ func init() {
 
 func SignaturePad(ctx context.Context, s *testing.State) {
 	testParams := s.Param().(signaturePadTestParams)
-	otaUsername := s.RequiredVar("peripherals.ota_username")
-	otaPassword := s.RequiredVar("peripherals.ota_password")
-
+	username := s.RequiredVar("peripherals.username")
+	password := s.RequiredVar("peripherals.password")
 	// Prepare data path on DUT.
 	d := s.DUT()
 	dataPath, err := utils.CopyFilesToRemote(ctx, s, d, signaturePadData)
@@ -115,8 +114,8 @@ func SignaturePad(ctx context.Context, s *testing.State) {
 
 	policyClient := ps.NewPolicyServiceClient(cl.Conn)
 	if _, err := policyClient.GAIAEnrollAndLoginUsingChrome(ctx, &ps.GAIAEnrollAndLoginUsingChromeRequest{
-		Username:    otaUsername,
-		Password:    otaPassword,
+		Username:    username,
+		Password:    password,
 		DmserverURL: policy.DMServerProdURL,
 	}); err != nil {
 		s.Fatal("Failed to enroll using chrome: ", err)
@@ -129,10 +128,11 @@ func SignaturePad(ctx context.Context, s *testing.State) {
 			s.Fatal("Failed to parse argument 'peripherals.record_screen' of type bool: ", err)
 		}
 	}
+
 	if recordScreen {
 		s.Log("Screen recorder started")
 
-		filePath := filepath.Join(s.OutDir(), "signature.webm")
+		filePath := filepath.Join(s.OutDir(), s.TestName()+".webm")
 		startRequest := pb.StartRequest{
 			FileName: filePath,
 		}
@@ -156,8 +156,8 @@ func SignaturePad(ctx context.Context, s *testing.State) {
 		}(cleanupCtx)
 	}
 
-	citrixSvc := vdi.NewCitrixServiceClient(cl.Conn)
-	if _, err := citrixSvc.NewCitrix(ctx, &vdi.NewCitrixRequest{
+	svc := peripherals.NewPeriphServiceClient(cl.Conn)
+	if _, err := svc.NewCitrix(ctx, &peripherals.NewCitrixRequest{
 		DataPath: dataPath,
 	}); err != nil {
 		s.Fatal("Failed to create new Citrix: ", err)
@@ -165,12 +165,12 @@ func SignaturePad(ctx context.Context, s *testing.State) {
 
 	defer func(ctx context.Context) {
 		utils.DumpUITreeWithScreenshotToFile(ctx, cl.Conn, s.HasError, "ui_dump")
-		if _, err := citrixSvc.CloseCitrix(ctx, &empty.Empty{}); err != nil {
+		if _, err := svc.CloseCitrix(ctx, &empty.Empty{}); err != nil {
 			s.Log("Failed to close Citrix app: ", err)
 		}
 	}(cleanupCtx)
 
-	if _, err := citrixSvc.LoginCitrix(ctx, &empty.Empty{}); err != nil {
+	if _, err := svc.LoginCitrix(ctx, &empty.Empty{}); err != nil {
 		s.Fatal("Failed to login Citrix: ", err)
 	}
 
@@ -181,8 +181,7 @@ func SignaturePad(ctx context.Context, s *testing.State) {
 			s.Fatal("Failed to parse argument 'peripherals.manual_test' of type bool: ", err)
 		}
 	}
-
-	if err := performSignatureOperations(ctx, cl, citrixSvc, s.DataPath, testParams, manualTest); err != nil {
+	if err := performSignatureOperations(ctx, cl, svc, s.DataPath, testParams, manualTest); err != nil {
 		s.Fatal("Failed to perform signature operations: ", err)
 	}
 
@@ -190,7 +189,7 @@ func SignaturePad(ctx context.Context, s *testing.State) {
 
 // performSignatureOperations opens signature app in Citrix, starts to sign,
 // save, clear, load signature and verify the signatures are expected.
-func performSignatureOperations(ctx context.Context, cl *rpc.Client, citrixSvc vdi.CitrixServiceClient, dataPath func(string) string, params signaturePadTestParams, manualTest bool) (retErr error) {
+func performSignatureOperations(ctx context.Context, cl *rpc.Client, svc peripherals.PeriphServiceClient, dataPath func(string) string, params signaturePadTestParams, manualTest bool) (retErr error) {
 	const (
 		fileName      = "mySign.SIG"
 		startFileName = "start.png"
@@ -207,17 +206,17 @@ func performSignatureOperations(ctx context.Context, cl *rpc.Client, citrixSvc v
 	// Only Topaz devices require reconnecting the USB device.
 	// Scriptel device will be connected automatically.
 	if appName == citrix.TopazAppName {
-		if _, err := citrixSvc.ConnectUSBDevice(ctx, &vdi.ConnectUSBDeviceRequest{
+		if _, err := svc.ConnectUSBDeviceInCitrix(ctx, &peripherals.ConnectUSBDeviceInCitrixRequest{
 			DeviceName: deviceName,
 		}); err != nil {
-			return errors.Wrap(err, "failed to connect USB device")
+			return errors.Wrap(err, "failed to connect USB device in Citrix")
 		}
 	}
 
-	deleteFileRequest := &vdi.DeleteFileRequest{
+	deleteFileRequest := &peripherals.DeleteFileRequest{
 		FileName: fileName,
 	}
-	if _, err := citrixSvc.DeleteFileIfExists(ctx, deleteFileRequest); err != nil {
+	if _, err := svc.DeleteFileIfExists(ctx, deleteFileRequest); err != nil {
 		return errors.Wrap(err, "failed to delete file if exists")
 	}
 
@@ -226,7 +225,7 @@ func performSignatureOperations(ctx context.Context, cl *rpc.Client, citrixSvc v
 	defer cancel()
 
 	// Open Citrix app.
-	if _, err := citrixSvc.OpenCitrixApp(ctx, &vdi.OpenCitrixAppRequest{
+	if _, err := svc.OpenCitrixApp(ctx, &peripherals.OpenCitrixAppRequest{
 		AppName:  string(appName),
 		AppTitle: appTitle,
 		AppIcon:  appIcon,
@@ -236,20 +235,20 @@ func performSignatureOperations(ctx context.Context, cl *rpc.Client, citrixSvc v
 	isSavedAlready := false
 	defer func(ctx context.Context) {
 		if isSavedAlready {
-			if _, err := citrixSvc.DeleteFile(ctx, deleteFileRequest); err != nil {
+			if _, err := svc.DeleteFile(ctx, deleteFileRequest); err != nil {
 				testing.ContextLog(ctx, "Failed to delete file: ", err)
 			}
 		}
 	}(cleanupCtx)
 
 	// Start to sign signature.
-	if _, err := citrixSvc.StartSignature(ctx, &vdi.StartSignatureRequest{
+	if _, err := svc.StartSignature(ctx, &peripherals.StartSignatureRequest{
 		AppName: string(appName),
 	}); err != nil {
 		return errors.Wrap(err, "failed to start signature")
 	}
 
-	if _, err := citrixSvc.SaveCropScreenshot(ctx, &vdi.SaveCropScreenshotRequest{
+	if _, err := svc.SaveCropScreenshot(ctx, &peripherals.SaveCropScreenshotRequest{
 		FileName: startFileName,
 	}); err != nil {
 		return errors.Wrapf(err, "failed to save crop sceenshot to %s", startFileName)
@@ -271,32 +270,32 @@ func performSignatureOperations(ctx context.Context, cl *rpc.Client, citrixSvc v
 		}
 	}
 
-	if err := waitForSignatureToLoad(ctx, citrixSvc, startFileName, signFileName); err != nil {
+	if err := waitForSignatureToLoad(ctx, svc, startFileName, signFileName); err != nil {
 		return errors.Wrap(err, "failed to wait for signature to load")
 	}
 
-	signatureRequest := &vdi.SignatureRequest{
+	signatureRequest := &peripherals.SignatureRequest{
 		FileName: fileName,
 	}
 
 	// Save signature.
-	if _, err := citrixSvc.SaveSignature(ctx, signatureRequest); err != nil {
+	if _, err := svc.SaveSignature(ctx, signatureRequest); err != nil {
 		return errors.Wrap(err, "failed to save signature")
 	}
 	isSavedAlready = true
 
 	// Clear signature.
-	if _, err := citrixSvc.ClearSignature(ctx, &empty.Empty{}); err != nil {
+	if _, err := svc.ClearSignature(ctx, &empty.Empty{}); err != nil {
 		return errors.Wrap(err, "failed to clear signature")
 	}
 
-	if _, err := citrixSvc.SaveCropScreenshot(ctx, &vdi.SaveCropScreenshotRequest{
+	if _, err := svc.SaveCropScreenshot(ctx, &peripherals.SaveCropScreenshotRequest{
 		FileName: clearFileName,
 	}); err != nil {
 		return errors.Wrapf(err, "failed to save crop sceenshot to %s", clearFileName)
 	}
 
-	if _, err := citrixSvc.VerifyTwoImagesSimilarity(ctx, &vdi.VerifyTwoImagesSimilarityRequest{
+	if _, err := svc.VerifyTwoImagesSimilarity(ctx, &peripherals.VerifyTwoImagesSimilarityRequest{
 		FileName1:    clearFileName,
 		FileName2:    signFileName,
 		ExpectedSame: false,
@@ -305,17 +304,17 @@ func performSignatureOperations(ctx context.Context, cl *rpc.Client, citrixSvc v
 	}
 
 	// Load signature.
-	if _, err := citrixSvc.LoadSignature(ctx, signatureRequest); err != nil {
+	if _, err := svc.LoadSignature(ctx, signatureRequest); err != nil {
 		return errors.Wrap(err, "failed to load signature")
 	}
 	switch appName {
 	case citrix.TopazAppName:
-		if _, err := citrixSvc.SaveCropScreenshot(ctx, &vdi.SaveCropScreenshotRequest{
+		if _, err := svc.SaveCropScreenshot(ctx, &peripherals.SaveCropScreenshotRequest{
 			FileName: loadFileName,
 		}); err != nil {
 			return errors.Wrapf(err, "failed to save crop sceenshot to %s", loadFileName)
 		}
-		if _, err := citrixSvc.VerifyTwoImagesSimilarity(ctx, &vdi.VerifyTwoImagesSimilarityRequest{
+		if _, err := svc.VerifyTwoImagesSimilarity(ctx, &peripherals.VerifyTwoImagesSimilarityRequest{
 			FileName1:    loadFileName,
 			FileName2:    signFileName,
 			ExpectedSame: true,
@@ -323,7 +322,7 @@ func performSignatureOperations(ctx context.Context, cl *rpc.Client, citrixSvc v
 			return errors.Wrapf(err, "signatures %s and %s are different and expected to be the same", loadFileName, signFileName)
 		}
 	case citrix.ScriptelAppName:
-		if _, err := citrixSvc.WaitUntilIconExists(ctx, &vdi.WaitUntilIconExistsRequest{IconName: signFileName}); err != nil {
+		if _, err := svc.WaitUntilIconExists(ctx, &peripherals.WaitUntilIconExistsRequest{IconName: signFileName}); err != nil {
 			return errors.Wrap(err, "failed to verify that the signature has been loaded")
 		}
 	}
@@ -365,7 +364,7 @@ func moveRoboticArmToSign(ctx context.Context, dataPath func(string) string, mot
 // waitForSignatureToLoad waits for the signature to load.
 // It captures screenshots and compares them to ensure that the signature has changed
 // from the initial state to a loaded state.
-func waitForSignatureToLoad(ctx context.Context, citrixSvc vdi.CitrixServiceClient, startFileName, signFileName string) error {
+func waitForSignatureToLoad(ctx context.Context, svc peripherals.PeriphServiceClient, startFileName, signFileName string) error {
 	const lastFileName = "last_signature.png"
 	loadingSignature := false
 	testing.ContextLog(ctx, "Start waiting for signature to load")
@@ -375,7 +374,7 @@ func waitForSignatureToLoad(ctx context.Context, citrixSvc vdi.CitrixServiceClie
 		defer cancel()
 		defer func(ctx context.Context) {
 			if loadingSignature {
-				if _, err := citrixSvc.SaveCropScreenshot(ctx, &vdi.SaveCropScreenshotRequest{
+				if _, err := svc.SaveCropScreenshot(ctx, &peripherals.SaveCropScreenshotRequest{
 					FileName: lastFileName,
 				}); err != nil {
 					testing.ContextLogf(ctx, "Failed to save crop sceenshot to %s", lastFileName)
@@ -383,7 +382,7 @@ func waitForSignatureToLoad(ctx context.Context, citrixSvc vdi.CitrixServiceClie
 			}
 		}(saveLastFileCtx)
 
-		if _, err := citrixSvc.SaveCropScreenshot(ctx, &vdi.SaveCropScreenshotRequest{
+		if _, err := svc.SaveCropScreenshot(ctx, &peripherals.SaveCropScreenshotRequest{
 			FileName: signFileName,
 		}); err != nil {
 			return errors.Wrapf(err, "failed to save crop sceenshot to %s", signFileName)
@@ -392,7 +391,7 @@ func waitForSignatureToLoad(ctx context.Context, citrixSvc vdi.CitrixServiceClie
 			// Check whether the initial canvas and the signed canvas are different.
 			// If yes, it means that the signature has started to be loaded.
 			// If not, it will wait for loading.
-			if _, err := citrixSvc.VerifyTwoImagesSimilarity(ctx, &vdi.VerifyTwoImagesSimilarityRequest{
+			if _, err := svc.VerifyTwoImagesSimilarity(ctx, &peripherals.VerifyTwoImagesSimilarityRequest{
 				FileName1:    startFileName,
 				FileName2:    signFileName,
 				ExpectedSame: false,
@@ -404,7 +403,7 @@ func waitForSignatureToLoad(ctx context.Context, citrixSvc vdi.CitrixServiceClie
 		}
 		// If the signFile and the lastFile are the same, it means the signature
 		// has been loaded. If not, it means the signature is still loading.
-		if _, err := citrixSvc.VerifyTwoImagesSimilarity(ctx, &vdi.VerifyTwoImagesSimilarityRequest{
+		if _, err := svc.VerifyTwoImagesSimilarity(ctx, &peripherals.VerifyTwoImagesSimilarityRequest{
 			FileName1:    signFileName,
 			FileName2:    lastFileName,
 			ExpectedSame: true,

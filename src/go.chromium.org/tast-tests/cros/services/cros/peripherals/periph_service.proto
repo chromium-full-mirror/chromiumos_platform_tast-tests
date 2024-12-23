@@ -4,14 +4,14 @@
 
 syntax = "proto3";
 
-package tast.cros.vdi;
+package tast.cros.peripherals;
 
 import "google/protobuf/empty.proto";
 
-option go_package = "go.chromium.org/tast-tests/cros/services/cros/vdi";
+option go_package = "go.chromium.org/tast-tests/cros/services/cros/peripherals";
 
-// CitrixService provides RPC methods to be used by Citrix remote test.
-service CitrixService {
+// PeriphService provides RPC methods to be used by Peripherals remote test.
+service PeriphService {
   // NewCitrix creates a new instance of Citrix and launches the Citrix app.
   rpc NewCitrix(NewCitrixRequest) returns (google.protobuf.Empty) {}
 
@@ -24,8 +24,8 @@ service CitrixService {
   // CloseCitrix closes the Citrix app.
   rpc CloseCitrix(google.protobuf.Empty) returns (google.protobuf.Empty) {}
 
-  // ConnectUSBDevice connects USB device.
-  rpc ConnectUSBDevice(ConnectUSBDeviceRequest)
+  // ConnectUSBDeviceInCitrix connects USB device.
+  rpc ConnectUSBDeviceInCitrix(ConnectUSBDeviceInCitrixRequest)
       returns (google.protobuf.Empty) {}
 
   // OpenCitrixApp opens app in Citrix.
@@ -81,9 +81,9 @@ message NewCitrixRequest {
   string data_path = 3;
 }
 
-// ConnectUSBDeviceRequest contains the information needed to connect USB
-// device.
-message ConnectUSBDeviceRequest { string device_name = 1; }
+// ConnectUSBDeviceInCitrixRequest contains the information needed to connect
+// USB device.
+message ConnectUSBDeviceInCitrixRequest { string device_name = 1; }
 
 // OpenCitrixAppRequest contains the information needed to open app in Citrix.
 message OpenCitrixAppRequest {

@@ -6,9 +6,9 @@
 // versions:
 // 	protoc-gen-go v1.27.1
 // 	protoc        v4.23.3
-// source: citrix_service.proto
+// source: periph_service.proto
 
-package vdi
+package peripherals
 
 import (
 	context "context"
@@ -66,11 +66,11 @@ func (x FootPedalButton) String() string {
 }
 
 func (FootPedalButton) Descriptor() protoreflect.EnumDescriptor {
-	return file_citrix_service_proto_enumTypes[0].Descriptor()
+	return file_periph_service_proto_enumTypes[0].Descriptor()
 }
 
 func (FootPedalButton) Type() protoreflect.EnumType {
-	return &file_citrix_service_proto_enumTypes[0]
+	return &file_periph_service_proto_enumTypes[0]
 }
 
 func (x FootPedalButton) Number() protoreflect.EnumNumber {
@@ -79,7 +79,7 @@ func (x FootPedalButton) Number() protoreflect.EnumNumber {
 
 // Deprecated: Use FootPedalButton.Descriptor instead.
 func (FootPedalButton) EnumDescriptor() ([]byte, []int) {
-	return file_citrix_service_proto_rawDescGZIP(), []int{0}
+	return file_periph_service_proto_rawDescGZIP(), []int{0}
 }
 
 // NewCitrixRequest contains the information needed to create a new Citrix
@@ -97,7 +97,7 @@ type NewCitrixRequest struct {
 func (x *NewCitrixRequest) Reset() {
 	*x = NewCitrixRequest{}
 	if protoimpl.UnsafeEnabled {
-		mi := &file_citrix_service_proto_msgTypes[0]
+		mi := &file_periph_service_proto_msgTypes[0]
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		ms.StoreMessageInfo(mi)
 	}
@@ -110,7 +110,7 @@ func (x *NewCitrixRequest) String() string {
 func (*NewCitrixRequest) ProtoMessage() {}
 
 func (x *NewCitrixRequest) ProtoReflect() protoreflect.Message {
-	mi := &file_citrix_service_proto_msgTypes[0]
+	mi := &file_periph_service_proto_msgTypes[0]
 	if protoimpl.UnsafeEnabled && x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -123,7 +123,7 @@ func (x *NewCitrixRequest) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use NewCitrixRequest.ProtoReflect.Descriptor instead.
 func (*NewCitrixRequest) Descriptor() ([]byte, []int) {
-	return file_citrix_service_proto_rawDescGZIP(), []int{0}
+	return file_periph_service_proto_rawDescGZIP(), []int{0}
 }
 
 func (x *NewCitrixRequest) GetOtaUsername() string {
@@ -147,9 +147,9 @@ func (x *NewCitrixRequest) GetDataPath() string {
 	return ""
 }
 
-// ConnectUSBDeviceRequest contains the information needed to connect USB
-// device.
-type ConnectUSBDeviceRequest struct {
+// ConnectUSBDeviceInCitrixRequest contains the information needed to connect
+// USB device.
+type ConnectUSBDeviceInCitrixRequest struct {
 	state         protoimpl.MessageState
 	sizeCache     protoimpl.SizeCache
 	unknownFields protoimpl.UnknownFields
@@ -157,23 +157,23 @@ type ConnectUSBDeviceRequest struct {
 	DeviceName string `protobuf:"bytes,1,opt,name=device_name,json=deviceName,proto3" json:"device_name,omitempty"`
 }
 
-func (x *ConnectUSBDeviceRequest) Reset() {
-	*x = ConnectUSBDeviceRequest{}
+func (x *ConnectUSBDeviceInCitrixRequest) Reset() {
+	*x = ConnectUSBDeviceInCitrixRequest{}
 	if protoimpl.UnsafeEnabled {
-		mi := &file_citrix_service_proto_msgTypes[1]
+		mi := &file_periph_service_proto_msgTypes[1]
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		ms.StoreMessageInfo(mi)
 	}
 }
 
-func (x *ConnectUSBDeviceRequest) String() string {
+func (x *ConnectUSBDeviceInCitrixRequest) String() string {
 	return protoimpl.X.MessageStringOf(x)
 }
 
-func (*ConnectUSBDeviceRequest) ProtoMessage() {}
+func (*ConnectUSBDeviceInCitrixRequest) ProtoMessage() {}
 
-func (x *ConnectUSBDeviceRequest) ProtoReflect() protoreflect.Message {
-	mi := &file_citrix_service_proto_msgTypes[1]
+func (x *ConnectUSBDeviceInCitrixRequest) ProtoReflect() protoreflect.Message {
+	mi := &file_periph_service_proto_msgTypes[1]
 	if protoimpl.UnsafeEnabled && x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -184,12 +184,12 @@ func (x *ConnectUSBDeviceRequest) ProtoReflect() protoreflect.Message {
 	return mi.MessageOf(x)
 }
 
-// Deprecated: Use ConnectUSBDeviceRequest.ProtoReflect.Descriptor instead.
-func (*ConnectUSBDeviceRequest) Descriptor() ([]byte, []int) {
-	return file_citrix_service_proto_rawDescGZIP(), []int{1}
+// Deprecated: Use ConnectUSBDeviceInCitrixRequest.ProtoReflect.Descriptor instead.
+func (*ConnectUSBDeviceInCitrixRequest) Descriptor() ([]byte, []int) {
+	return file_periph_service_proto_rawDescGZIP(), []int{1}
 }
 
-func (x *ConnectUSBDeviceRequest) GetDeviceName() string {
+func (x *ConnectUSBDeviceInCitrixRequest) GetDeviceName() string {
 	if x != nil {
 		return x.DeviceName
 	}
@@ -210,7 +210,7 @@ type OpenCitrixAppRequest struct {
 func (x *OpenCitrixAppRequest) Reset() {
 	*x = OpenCitrixAppRequest{}
 	if protoimpl.UnsafeEnabled {
-		mi := &file_citrix_service_proto_msgTypes[2]
+		mi := &file_periph_service_proto_msgTypes[2]
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		ms.StoreMessageInfo(mi)
 	}
@@ -223,7 +223,7 @@ func (x *OpenCitrixAppRequest) String() string {
 func (*OpenCitrixAppRequest) ProtoMessage() {}
 
 func (x *OpenCitrixAppRequest) ProtoReflect() protoreflect.Message {
-	mi := &file_citrix_service_proto_msgTypes[2]
+	mi := &file_periph_service_proto_msgTypes[2]
 	if protoimpl.UnsafeEnabled && x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -236,7 +236,7 @@ func (x *OpenCitrixAppRequest) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use OpenCitrixAppRequest.ProtoReflect.Descriptor instead.
 func (*OpenCitrixAppRequest) Descriptor() ([]byte, []int) {
-	return file_citrix_service_proto_rawDescGZIP(), []int{2}
+	return file_periph_service_proto_rawDescGZIP(), []int{2}
 }
 
 func (x *OpenCitrixAppRequest) GetAppName() string {
@@ -272,7 +272,7 @@ type CloseCitrixAppRequest struct {
 func (x *CloseCitrixAppRequest) Reset() {
 	*x = CloseCitrixAppRequest{}
 	if protoimpl.UnsafeEnabled {
-		mi := &file_citrix_service_proto_msgTypes[3]
+		mi := &file_periph_service_proto_msgTypes[3]
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		ms.StoreMessageInfo(mi)
 	}
@@ -285,7 +285,7 @@ func (x *CloseCitrixAppRequest) String() string {
 func (*CloseCitrixAppRequest) ProtoMessage() {}
 
 func (x *CloseCitrixAppRequest) ProtoReflect() protoreflect.Message {
-	mi := &file_citrix_service_proto_msgTypes[3]
+	mi := &file_periph_service_proto_msgTypes[3]
 	if protoimpl.UnsafeEnabled && x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -298,7 +298,7 @@ func (x *CloseCitrixAppRequest) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use CloseCitrixAppRequest.ProtoReflect.Descriptor instead.
 func (*CloseCitrixAppRequest) Descriptor() ([]byte, []int) {
-	return file_citrix_service_proto_rawDescGZIP(), []int{3}
+	return file_periph_service_proto_rawDescGZIP(), []int{3}
 }
 
 func (x *CloseCitrixAppRequest) GetAppTitle() string {
@@ -320,7 +320,7 @@ type DeleteFileRequest struct {
 func (x *DeleteFileRequest) Reset() {
 	*x = DeleteFileRequest{}
 	if protoimpl.UnsafeEnabled {
-		mi := &file_citrix_service_proto_msgTypes[4]
+		mi := &file_periph_service_proto_msgTypes[4]
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		ms.StoreMessageInfo(mi)
 	}
@@ -333,7 +333,7 @@ func (x *DeleteFileRequest) String() string {
 func (*DeleteFileRequest) ProtoMessage() {}
 
 func (x *DeleteFileRequest) ProtoReflect() protoreflect.Message {
-	mi := &file_citrix_service_proto_msgTypes[4]
+	mi := &file_periph_service_proto_msgTypes[4]
 	if protoimpl.UnsafeEnabled && x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -346,7 +346,7 @@ func (x *DeleteFileRequest) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use DeleteFileRequest.ProtoReflect.Descriptor instead.
 func (*DeleteFileRequest) Descriptor() ([]byte, []int) {
-	return file_citrix_service_proto_rawDescGZIP(), []int{4}
+	return file_periph_service_proto_rawDescGZIP(), []int{4}
 }
 
 func (x *DeleteFileRequest) GetFileName() string {
@@ -369,7 +369,7 @@ type SaveCropScreenshotRequest struct {
 func (x *SaveCropScreenshotRequest) Reset() {
 	*x = SaveCropScreenshotRequest{}
 	if protoimpl.UnsafeEnabled {
-		mi := &file_citrix_service_proto_msgTypes[5]
+		mi := &file_periph_service_proto_msgTypes[5]
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		ms.StoreMessageInfo(mi)
 	}
@@ -382,7 +382,7 @@ func (x *SaveCropScreenshotRequest) String() string {
 func (*SaveCropScreenshotRequest) ProtoMessage() {}
 
 func (x *SaveCropScreenshotRequest) ProtoReflect() protoreflect.Message {
-	mi := &file_citrix_service_proto_msgTypes[5]
+	mi := &file_periph_service_proto_msgTypes[5]
 	if protoimpl.UnsafeEnabled && x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -395,7 +395,7 @@ func (x *SaveCropScreenshotRequest) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use SaveCropScreenshotRequest.ProtoReflect.Descriptor instead.
 func (*SaveCropScreenshotRequest) Descriptor() ([]byte, []int) {
-	return file_citrix_service_proto_rawDescGZIP(), []int{5}
+	return file_periph_service_proto_rawDescGZIP(), []int{5}
 }
 
 func (x *SaveCropScreenshotRequest) GetFileName() string {
@@ -420,7 +420,7 @@ type VerifyTwoImagesSimilarityRequest struct {
 func (x *VerifyTwoImagesSimilarityRequest) Reset() {
 	*x = VerifyTwoImagesSimilarityRequest{}
 	if protoimpl.UnsafeEnabled {
-		mi := &file_citrix_service_proto_msgTypes[6]
+		mi := &file_periph_service_proto_msgTypes[6]
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		ms.StoreMessageInfo(mi)
 	}
@@ -433,7 +433,7 @@ func (x *VerifyTwoImagesSimilarityRequest) String() string {
 func (*VerifyTwoImagesSimilarityRequest) ProtoMessage() {}
 
 func (x *VerifyTwoImagesSimilarityRequest) ProtoReflect() protoreflect.Message {
-	mi := &file_citrix_service_proto_msgTypes[6]
+	mi := &file_periph_service_proto_msgTypes[6]
 	if protoimpl.UnsafeEnabled && x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -446,7 +446,7 @@ func (x *VerifyTwoImagesSimilarityRequest) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use VerifyTwoImagesSimilarityRequest.ProtoReflect.Descriptor instead.
 func (*VerifyTwoImagesSimilarityRequest) Descriptor() ([]byte, []int) {
-	return file_citrix_service_proto_rawDescGZIP(), []int{6}
+	return file_periph_service_proto_rawDescGZIP(), []int{6}
 }
 
 func (x *VerifyTwoImagesSimilarityRequest) GetFileName1() string {
@@ -483,7 +483,7 @@ type WaitUntilIconExistsRequest struct {
 func (x *WaitUntilIconExistsRequest) Reset() {
 	*x = WaitUntilIconExistsRequest{}
 	if protoimpl.UnsafeEnabled {
-		mi := &file_citrix_service_proto_msgTypes[7]
+		mi := &file_periph_service_proto_msgTypes[7]
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		ms.StoreMessageInfo(mi)
 	}
@@ -496,7 +496,7 @@ func (x *WaitUntilIconExistsRequest) String() string {
 func (*WaitUntilIconExistsRequest) ProtoMessage() {}
 
 func (x *WaitUntilIconExistsRequest) ProtoReflect() protoreflect.Message {
-	mi := &file_citrix_service_proto_msgTypes[7]
+	mi := &file_periph_service_proto_msgTypes[7]
 	if protoimpl.UnsafeEnabled && x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -509,7 +509,7 @@ func (x *WaitUntilIconExistsRequest) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use WaitUntilIconExistsRequest.ProtoReflect.Descriptor instead.
 func (*WaitUntilIconExistsRequest) Descriptor() ([]byte, []int) {
-	return file_citrix_service_proto_rawDescGZIP(), []int{7}
+	return file_periph_service_proto_rawDescGZIP(), []int{7}
 }
 
 func (x *WaitUntilIconExistsRequest) GetIconName() string {
@@ -526,13 +526,13 @@ type VerifyFootPedalButtonPressedRequest struct {
 	sizeCache     protoimpl.SizeCache
 	unknownFields protoimpl.UnknownFields
 
-	Button FootPedalButton `protobuf:"varint,1,opt,name=button,proto3,enum=tast.cros.vdi.FootPedalButton" json:"button,omitempty"`
+	Button FootPedalButton `protobuf:"varint,1,opt,name=button,proto3,enum=tast.cros.peripherals.FootPedalButton" json:"button,omitempty"`
 }
 
 func (x *VerifyFootPedalButtonPressedRequest) Reset() {
 	*x = VerifyFootPedalButtonPressedRequest{}
 	if protoimpl.UnsafeEnabled {
-		mi := &file_citrix_service_proto_msgTypes[8]
+		mi := &file_periph_service_proto_msgTypes[8]
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		ms.StoreMessageInfo(mi)
 	}
@@ -545,7 +545,7 @@ func (x *VerifyFootPedalButtonPressedRequest) String() string {
 func (*VerifyFootPedalButtonPressedRequest) ProtoMessage() {}
 
 func (x *VerifyFootPedalButtonPressedRequest) ProtoReflect() protoreflect.Message {
-	mi := &file_citrix_service_proto_msgTypes[8]
+	mi := &file_periph_service_proto_msgTypes[8]
 	if protoimpl.UnsafeEnabled && x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -558,7 +558,7 @@ func (x *VerifyFootPedalButtonPressedRequest) ProtoReflect() protoreflect.Messag
 
 // Deprecated: Use VerifyFootPedalButtonPressedRequest.ProtoReflect.Descriptor instead.
 func (*VerifyFootPedalButtonPressedRequest) Descriptor() ([]byte, []int) {
-	return file_citrix_service_proto_rawDescGZIP(), []int{8}
+	return file_periph_service_proto_rawDescGZIP(), []int{8}
 }
 
 func (x *VerifyFootPedalButtonPressedRequest) GetButton() FootPedalButton {
@@ -580,7 +580,7 @@ type StartSignatureRequest struct {
 func (x *StartSignatureRequest) Reset() {
 	*x = StartSignatureRequest{}
 	if protoimpl.UnsafeEnabled {
-		mi := &file_citrix_service_proto_msgTypes[9]
+		mi := &file_periph_service_proto_msgTypes[9]
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		ms.StoreMessageInfo(mi)
 	}
@@ -593,7 +593,7 @@ func (x *StartSignatureRequest) String() string {
 func (*StartSignatureRequest) ProtoMessage() {}
 
 func (x *StartSignatureRequest) ProtoReflect() protoreflect.Message {
-	mi := &file_citrix_service_proto_msgTypes[9]
+	mi := &file_periph_service_proto_msgTypes[9]
 	if protoimpl.UnsafeEnabled && x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -606,7 +606,7 @@ func (x *StartSignatureRequest) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use StartSignatureRequest.ProtoReflect.Descriptor instead.
 func (*StartSignatureRequest) Descriptor() ([]byte, []int) {
-	return file_citrix_service_proto_rawDescGZIP(), []int{9}
+	return file_periph_service_proto_rawDescGZIP(), []int{9}
 }
 
 func (x *StartSignatureRequest) GetAppName() string {
@@ -629,7 +629,7 @@ type SignatureRequest struct {
 func (x *SignatureRequest) Reset() {
 	*x = SignatureRequest{}
 	if protoimpl.UnsafeEnabled {
-		mi := &file_citrix_service_proto_msgTypes[10]
+		mi := &file_periph_service_proto_msgTypes[10]
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		ms.StoreMessageInfo(mi)
 	}
@@ -642,7 +642,7 @@ func (x *SignatureRequest) String() string {
 func (*SignatureRequest) ProtoMessage() {}
 
 func (x *SignatureRequest) ProtoReflect() protoreflect.Message {
-	mi := &file_citrix_service_proto_msgTypes[10]
+	mi := &file_periph_service_proto_msgTypes[10]
 	if protoimpl.UnsafeEnabled && x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -655,7 +655,7 @@ func (x *SignatureRequest) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use SignatureRequest.ProtoReflect.Descriptor instead.
 func (*SignatureRequest) Descriptor() ([]byte, []int) {
-	return file_citrix_service_proto_rawDescGZIP(), []int{10}
+	return file_periph_service_proto_rawDescGZIP(), []int{10}
 }
 
 func (x *SignatureRequest) GetFileName() string {
@@ -665,22 +665,23 @@ func (x *SignatureRequest) GetFileName() string {
 	return ""
 }
 
-var File_citrix_service_proto protoreflect.FileDescriptor
+var File_periph_service_proto protoreflect.FileDescriptor
 
-var file_citrix_service_proto_rawDesc = []byte{
-	0x0a, 0x14, 0x63, 0x69, 0x74, 0x72, 0x69, 0x78, 0x5f, 0x73, 0x65, 0x72, 0x76, 0x69, 0x63, 0x65,
-	0x2e, 0x70, 0x72, 0x6f, 0x74, 0x6f, 0x12, 0x0d, 0x74, 0x61, 0x73, 0x74, 0x2e, 0x63, 0x72, 0x6f,
-	0x73, 0x2e, 0x76, 0x64, 0x69, 0x1a, 0x1b, 0x67, 0x6f, 0x6f, 0x67, 0x6c, 0x65, 0x2f, 0x70, 0x72,
-	0x6f, 0x74, 0x6f, 0x62, 0x75, 0x66, 0x2f, 0x65, 0x6d, 0x70, 0x74, 0x79, 0x2e, 0x70, 0x72, 0x6f,
-	0x74, 0x6f, 0x22, 0x75, 0x0a, 0x10, 0x4e, 0x65, 0x77, 0x43, 0x69, 0x74, 0x72, 0x69, 0x78, 0x52,
-	0x65, 0x71, 0x75, 0x65, 0x73, 0x74, 0x12, 0x21, 0x0a, 0x0c, 0x6f, 0x74, 0x61, 0x5f, 0x75, 0x73,
-	0x65, 0x72, 0x6e, 0x61, 0x6d, 0x65, 0x18, 0x01, 0x20, 0x01, 0x28, 0x09, 0x52, 0x0b, 0x6f, 0x74,
-	0x61, 0x55, 0x73, 0x65, 0x72, 0x6e, 0x61, 0x6d, 0x65, 0x12, 0x21, 0x0a, 0x0c, 0x6f, 0x74, 0x61,
-	0x5f, 0x70, 0x61, 0x73, 0x73, 0x77, 0x6f, 0x72, 0x64, 0x18, 0x02, 0x20, 0x01, 0x28, 0x09, 0x52,
-	0x0b, 0x6f, 0x74, 0x61, 0x50, 0x61, 0x73, 0x73, 0x77, 0x6f, 0x72, 0x64, 0x12, 0x1b, 0x0a, 0x09,
-	0x64, 0x61, 0x74, 0x61, 0x5f, 0x70, 0x61, 0x74, 0x68, 0x18, 0x03, 0x20, 0x01, 0x28, 0x09, 0x52,
-	0x08, 0x64, 0x61, 0x74, 0x61, 0x50, 0x61, 0x74, 0x68, 0x22, 0x3a, 0x0a, 0x17, 0x43, 0x6f, 0x6e,
-	0x6e, 0x65, 0x63, 0x74, 0x55, 0x53, 0x42, 0x44, 0x65, 0x76, 0x69, 0x63, 0x65, 0x52, 0x65, 0x71,
+var file_periph_service_proto_rawDesc = []byte{
+	0x0a, 0x14, 0x70, 0x65, 0x72, 0x69, 0x70, 0x68, 0x5f, 0x73, 0x65, 0x72, 0x76, 0x69, 0x63, 0x65,
+	0x2e, 0x70, 0x72, 0x6f, 0x74, 0x6f, 0x12, 0x15, 0x74, 0x61, 0x73, 0x74, 0x2e, 0x63, 0x72, 0x6f,
+	0x73, 0x2e, 0x70, 0x65, 0x72, 0x69, 0x70, 0x68, 0x65, 0x72, 0x61, 0x6c, 0x73, 0x1a, 0x1b, 0x67,
+	0x6f, 0x6f, 0x67, 0x6c, 0x65, 0x2f, 0x70, 0x72, 0x6f, 0x74, 0x6f, 0x62, 0x75, 0x66, 0x2f, 0x65,
+	0x6d, 0x70, 0x74, 0x79, 0x2e, 0x70, 0x72, 0x6f, 0x74, 0x6f, 0x22, 0x75, 0x0a, 0x10, 0x4e, 0x65,
+	0x77, 0x43, 0x69, 0x74, 0x72, 0x69, 0x78, 0x52, 0x65, 0x71, 0x75, 0x65, 0x73, 0x74, 0x12, 0x21,
+	0x0a, 0x0c, 0x6f, 0x74, 0x61, 0x5f, 0x75, 0x73, 0x65, 0x72, 0x6e, 0x61, 0x6d, 0x65, 0x18, 0x01,
+	0x20, 0x01, 0x28, 0x09, 0x52, 0x0b, 0x6f, 0x74, 0x61, 0x55, 0x73, 0x65, 0x72, 0x6e, 0x61, 0x6d,
+	0x65, 0x12, 0x21, 0x0a, 0x0c, 0x6f, 0x74, 0x61, 0x5f, 0x70, 0x61, 0x73, 0x73, 0x77, 0x6f, 0x72,
+	0x64, 0x18, 0x02, 0x20, 0x01, 0x28, 0x09, 0x52, 0x0b, 0x6f, 0x74, 0x61, 0x50, 0x61, 0x73, 0x73,
+	0x77, 0x6f, 0x72, 0x64, 0x12, 0x1b, 0x0a, 0x09, 0x64, 0x61, 0x74, 0x61, 0x5f, 0x70, 0x61, 0x74,
+	0x68, 0x18, 0x03, 0x20, 0x01, 0x28, 0x09, 0x52, 0x08, 0x64, 0x61, 0x74, 0x61, 0x50, 0x61, 0x74,
+	0x68, 0x22, 0x42, 0x0a, 0x1f, 0x43, 0x6f, 0x6e, 0x6e, 0x65, 0x63, 0x74, 0x55, 0x53, 0x42, 0x44,
+	0x65, 0x76, 0x69, 0x63, 0x65, 0x49, 0x6e, 0x43, 0x69, 0x74, 0x72, 0x69, 0x78, 0x52, 0x65, 0x71,
 	0x75, 0x65, 0x73, 0x74, 0x12, 0x1f, 0x0a, 0x0b, 0x64, 0x65, 0x76, 0x69, 0x63, 0x65, 0x5f, 0x6e,
 	0x61, 0x6d, 0x65, 0x18, 0x01, 0x20, 0x01, 0x28, 0x09, 0x52, 0x0a, 0x64, 0x65, 0x76, 0x69, 0x63,
 	0x65, 0x4e, 0x61, 0x6d, 0x65, 0x22, 0x69, 0x0a, 0x14, 0x4f, 0x70, 0x65, 0x6e, 0x43, 0x69, 0x74,
@@ -712,26 +713,27 @@ var file_citrix_service_proto_rawDesc = []byte{
 	0x69, 0x74, 0x55, 0x6e, 0x74, 0x69, 0x6c, 0x49, 0x63, 0x6f, 0x6e, 0x45, 0x78, 0x69, 0x73, 0x74,
 	0x73, 0x52, 0x65, 0x71, 0x75, 0x65, 0x73, 0x74, 0x12, 0x1b, 0x0a, 0x09, 0x69, 0x63, 0x6f, 0x6e,
 	0x5f, 0x6e, 0x61, 0x6d, 0x65, 0x18, 0x01, 0x20, 0x01, 0x28, 0x09, 0x52, 0x08, 0x69, 0x63, 0x6f,
-	0x6e, 0x4e, 0x61, 0x6d, 0x65, 0x22, 0x5d, 0x0a, 0x23, 0x56, 0x65, 0x72, 0x69, 0x66, 0x79, 0x46,
+	0x6e, 0x4e, 0x61, 0x6d, 0x65, 0x22, 0x65, 0x0a, 0x23, 0x56, 0x65, 0x72, 0x69, 0x66, 0x79, 0x46,
 	0x6f, 0x6f, 0x74, 0x50, 0x65, 0x64, 0x61, 0x6c, 0x42, 0x75, 0x74, 0x74, 0x6f, 0x6e, 0x50, 0x72,
-	0x65, 0x73, 0x73, 0x65, 0x64, 0x52, 0x65, 0x71, 0x75, 0x65, 0x73, 0x74, 0x12, 0x36, 0x0a, 0x06,
-	0x62, 0x75, 0x74, 0x74, 0x6f, 0x6e, 0x18, 0x01, 0x20, 0x01, 0x28, 0x0e, 0x32, 0x1e, 0x2e, 0x74,
-	0x61, 0x73, 0x74, 0x2e, 0x63, 0x72, 0x6f, 0x73, 0x2e, 0x76, 0x64, 0x69, 0x2e, 0x46, 0x6f, 0x6f,
-	0x74, 0x50, 0x65, 0x64, 0x61, 0x6c, 0x42, 0x75, 0x74, 0x74, 0x6f, 0x6e, 0x52, 0x06, 0x62, 0x75,
-	0x74, 0x74, 0x6f, 0x6e, 0x22, 0x32, 0x0a, 0x15, 0x53, 0x74, 0x61, 0x72, 0x74, 0x53, 0x69, 0x67,
-	0x6e, 0x61, 0x74, 0x75, 0x72, 0x65, 0x52, 0x65, 0x71, 0x75, 0x65, 0x73, 0x74, 0x12, 0x19, 0x0a,
-	0x08, 0x61, 0x70, 0x70, 0x5f, 0x6e, 0x61, 0x6d, 0x65, 0x18, 0x01, 0x20, 0x01, 0x28, 0x09, 0x52,
-	0x07, 0x61, 0x70, 0x70, 0x4e, 0x61, 0x6d, 0x65, 0x22, 0x2f, 0x0a, 0x10, 0x53, 0x69, 0x67, 0x6e,
-	0x61, 0x74, 0x75, 0x72, 0x65, 0x52, 0x65, 0x71, 0x75, 0x65, 0x73, 0x74, 0x12, 0x1b, 0x0a, 0x09,
-	0x66, 0x69, 0x6c, 0x65, 0x5f, 0x6e, 0x61, 0x6d, 0x65, 0x18, 0x01, 0x20, 0x01, 0x28, 0x09, 0x52,
-	0x08, 0x66, 0x69, 0x6c, 0x65, 0x4e, 0x61, 0x6d, 0x65, 0x2a, 0x3b, 0x0a, 0x0f, 0x46, 0x6f, 0x6f,
-	0x74, 0x50, 0x65, 0x64, 0x61, 0x6c, 0x42, 0x75, 0x74, 0x74, 0x6f, 0x6e, 0x12, 0x0a, 0x0a, 0x06,
-	0x43, 0x45, 0x4e, 0x54, 0x45, 0x52, 0x10, 0x00, 0x12, 0x08, 0x0a, 0x04, 0x4c, 0x45, 0x46, 0x54,
-	0x10, 0x01, 0x12, 0x09, 0x0a, 0x05, 0x52, 0x49, 0x47, 0x48, 0x54, 0x10, 0x02, 0x12, 0x07, 0x0a,
-	0x03, 0x54, 0x4f, 0x50, 0x10, 0x03, 0x32, 0xaf, 0x0b, 0x0a, 0x0d, 0x43, 0x69, 0x74, 0x72, 0x69,
-	0x78, 0x53, 0x65, 0x72, 0x76, 0x69, 0x63, 0x65, 0x12, 0x46, 0x0a, 0x09, 0x4e, 0x65, 0x77, 0x43,
-	0x69, 0x74, 0x72, 0x69, 0x78, 0x12, 0x1f, 0x2e, 0x74, 0x61, 0x73, 0x74, 0x2e, 0x63, 0x72, 0x6f,
-	0x73, 0x2e, 0x76, 0x64, 0x69, 0x2e, 0x4e, 0x65, 0x77, 0x43, 0x69, 0x74, 0x72, 0x69, 0x78, 0x52,
+	0x65, 0x73, 0x73, 0x65, 0x64, 0x52, 0x65, 0x71, 0x75, 0x65, 0x73, 0x74, 0x12, 0x3e, 0x0a, 0x06,
+	0x62, 0x75, 0x74, 0x74, 0x6f, 0x6e, 0x18, 0x01, 0x20, 0x01, 0x28, 0x0e, 0x32, 0x26, 0x2e, 0x74,
+	0x61, 0x73, 0x74, 0x2e, 0x63, 0x72, 0x6f, 0x73, 0x2e, 0x70, 0x65, 0x72, 0x69, 0x70, 0x68, 0x65,
+	0x72, 0x61, 0x6c, 0x73, 0x2e, 0x46, 0x6f, 0x6f, 0x74, 0x50, 0x65, 0x64, 0x61, 0x6c, 0x42, 0x75,
+	0x74, 0x74, 0x6f, 0x6e, 0x52, 0x06, 0x62, 0x75, 0x74, 0x74, 0x6f, 0x6e, 0x22, 0x32, 0x0a, 0x15,
+	0x53, 0x74, 0x61, 0x72, 0x74, 0x53, 0x69, 0x67, 0x6e, 0x61, 0x74, 0x75, 0x72, 0x65, 0x52, 0x65,
+	0x71, 0x75, 0x65, 0x73, 0x74, 0x12, 0x19, 0x0a, 0x08, 0x61, 0x70, 0x70, 0x5f, 0x6e, 0x61, 0x6d,
+	0x65, 0x18, 0x01, 0x20, 0x01, 0x28, 0x09, 0x52, 0x07, 0x61, 0x70, 0x70, 0x4e, 0x61, 0x6d, 0x65,
+	0x22, 0x2f, 0x0a, 0x10, 0x53, 0x69, 0x67, 0x6e, 0x61, 0x74, 0x75, 0x72, 0x65, 0x52, 0x65, 0x71,
+	0x75, 0x65, 0x73, 0x74, 0x12, 0x1b, 0x0a, 0x09, 0x66, 0x69, 0x6c, 0x65, 0x5f, 0x6e, 0x61, 0x6d,
+	0x65, 0x18, 0x01, 0x20, 0x01, 0x28, 0x09, 0x52, 0x08, 0x66, 0x69, 0x6c, 0x65, 0x4e, 0x61, 0x6d,
+	0x65, 0x2a, 0x3b, 0x0a, 0x0f, 0x46, 0x6f, 0x6f, 0x74, 0x50, 0x65, 0x64, 0x61, 0x6c, 0x42, 0x75,
+	0x74, 0x74, 0x6f, 0x6e, 0x12, 0x0a, 0x0a, 0x06, 0x43, 0x45, 0x4e, 0x54, 0x45, 0x52, 0x10, 0x00,
+	0x12, 0x08, 0x0a, 0x04, 0x4c, 0x45, 0x46, 0x54, 0x10, 0x01, 0x12, 0x09, 0x0a, 0x05, 0x52, 0x49,
+	0x47, 0x48, 0x54, 0x10, 0x02, 0x12, 0x07, 0x0a, 0x03, 0x54, 0x4f, 0x50, 0x10, 0x03, 0x32, 0xa7,
+	0x0c, 0x0a, 0x0d, 0x50, 0x65, 0x72, 0x69, 0x70, 0x68, 0x53, 0x65, 0x72, 0x76, 0x69, 0x63, 0x65,
+	0x12, 0x4e, 0x0a, 0x09, 0x4e, 0x65, 0x77, 0x43, 0x69, 0x74, 0x72, 0x69, 0x78, 0x12, 0x27, 0x2e,
+	0x74, 0x61, 0x73, 0x74, 0x2e, 0x63, 0x72, 0x6f, 0x73, 0x2e, 0x70, 0x65, 0x72, 0x69, 0x70, 0x68,
+	0x65, 0x72, 0x61, 0x6c, 0x73, 0x2e, 0x4e, 0x65, 0x77, 0x43, 0x69, 0x74, 0x72, 0x69, 0x78, 0x52,
 	0x65, 0x71, 0x75, 0x65, 0x73, 0x74, 0x1a, 0x16, 0x2e, 0x67, 0x6f, 0x6f, 0x67, 0x6c, 0x65, 0x2e,
 	0x70, 0x72, 0x6f, 0x74, 0x6f, 0x62, 0x75, 0x66, 0x2e, 0x45, 0x6d, 0x70, 0x74, 0x79, 0x22, 0x00,
 	0x12, 0x3f, 0x0a, 0x0b, 0x4c, 0x6f, 0x67, 0x69, 0x6e, 0x43, 0x69, 0x74, 0x72, 0x69, 0x78, 0x12,
@@ -746,46 +748,51 @@ var file_citrix_service_proto_rawDesc = []byte{
 	0x12, 0x16, 0x2e, 0x67, 0x6f, 0x6f, 0x67, 0x6c, 0x65, 0x2e, 0x70, 0x72, 0x6f, 0x74, 0x6f, 0x62,
 	0x75, 0x66, 0x2e, 0x45, 0x6d, 0x70, 0x74, 0x79, 0x1a, 0x16, 0x2e, 0x67, 0x6f, 0x6f, 0x67, 0x6c,
 	0x65, 0x2e, 0x70, 0x72, 0x6f, 0x74, 0x6f, 0x62, 0x75, 0x66, 0x2e, 0x45, 0x6d, 0x70, 0x74, 0x79,
-	0x22, 0x00, 0x12, 0x54, 0x0a, 0x10, 0x43, 0x6f, 0x6e, 0x6e, 0x65, 0x63, 0x74, 0x55, 0x53, 0x42,
-	0x44, 0x65, 0x76, 0x69, 0x63, 0x65, 0x12, 0x26, 0x2e, 0x74, 0x61, 0x73, 0x74, 0x2e, 0x63, 0x72,
-	0x6f, 0x73, 0x2e, 0x76, 0x64, 0x69, 0x2e, 0x43, 0x6f, 0x6e, 0x6e, 0x65, 0x63, 0x74, 0x55, 0x53,
-	0x42, 0x44, 0x65, 0x76, 0x69, 0x63, 0x65, 0x52, 0x65, 0x71, 0x75, 0x65, 0x73, 0x74, 0x1a, 0x16,
-	0x2e, 0x67, 0x6f, 0x6f, 0x67, 0x6c, 0x65, 0x2e, 0x70, 0x72, 0x6f, 0x74, 0x6f, 0x62, 0x75, 0x66,
-	0x2e, 0x45, 0x6d, 0x70, 0x74, 0x79, 0x22, 0x00, 0x12, 0x4e, 0x0a, 0x0d, 0x4f, 0x70, 0x65, 0x6e,
-	0x43, 0x69, 0x74, 0x72, 0x69, 0x78, 0x41, 0x70, 0x70, 0x12, 0x23, 0x2e, 0x74, 0x61, 0x73, 0x74,
-	0x2e, 0x63, 0x72, 0x6f, 0x73, 0x2e, 0x76, 0x64, 0x69, 0x2e, 0x4f, 0x70, 0x65, 0x6e, 0x43, 0x69,
+	0x22, 0x00, 0x12, 0x6c, 0x0a, 0x18, 0x43, 0x6f, 0x6e, 0x6e, 0x65, 0x63, 0x74, 0x55, 0x53, 0x42,
+	0x44, 0x65, 0x76, 0x69, 0x63, 0x65, 0x49, 0x6e, 0x43, 0x69, 0x74, 0x72, 0x69, 0x78, 0x12, 0x36,
+	0x2e, 0x74, 0x61, 0x73, 0x74, 0x2e, 0x63, 0x72, 0x6f, 0x73, 0x2e, 0x70, 0x65, 0x72, 0x69, 0x70,
+	0x68, 0x65, 0x72, 0x61, 0x6c, 0x73, 0x2e, 0x43, 0x6f, 0x6e, 0x6e, 0x65, 0x63, 0x74, 0x55, 0x53,
+	0x42, 0x44, 0x65, 0x76, 0x69, 0x63, 0x65, 0x49, 0x6e, 0x43, 0x69, 0x74, 0x72, 0x69, 0x78, 0x52,
+	0x65, 0x71, 0x75, 0x65, 0x73, 0x74, 0x1a, 0x16, 0x2e, 0x67, 0x6f, 0x6f, 0x67, 0x6c, 0x65, 0x2e,
+	0x70, 0x72, 0x6f, 0x74, 0x6f, 0x62, 0x75, 0x66, 0x2e, 0x45, 0x6d, 0x70, 0x74, 0x79, 0x22, 0x00,
+	0x12, 0x56, 0x0a, 0x0d, 0x4f, 0x70, 0x65, 0x6e, 0x43, 0x69, 0x74, 0x72, 0x69, 0x78, 0x41, 0x70,
+	0x70, 0x12, 0x2b, 0x2e, 0x74, 0x61, 0x73, 0x74, 0x2e, 0x63, 0x72, 0x6f, 0x73, 0x2e, 0x70, 0x65,
+	0x72, 0x69, 0x70, 0x68, 0x65, 0x72, 0x61, 0x6c, 0x73, 0x2e, 0x4f, 0x70, 0x65, 0x6e, 0x43, 0x69,
 	0x74, 0x72, 0x69, 0x78, 0x41, 0x70, 0x70, 0x52, 0x65, 0x71, 0x75, 0x65, 0x73, 0x74, 0x1a, 0x16,
 	0x2e, 0x67, 0x6f, 0x6f, 0x67, 0x6c, 0x65, 0x2e, 0x70, 0x72, 0x6f, 0x74, 0x6f, 0x62, 0x75, 0x66,
-	0x2e, 0x45, 0x6d, 0x70, 0x74, 0x79, 0x22, 0x00, 0x12, 0x50, 0x0a, 0x0e, 0x43, 0x6c, 0x6f, 0x73,
-	0x65, 0x43, 0x69, 0x74, 0x72, 0x69, 0x78, 0x41, 0x70, 0x70, 0x12, 0x24, 0x2e, 0x74, 0x61, 0x73,
-	0x74, 0x2e, 0x63, 0x72, 0x6f, 0x73, 0x2e, 0x76, 0x64, 0x69, 0x2e, 0x43, 0x6c, 0x6f, 0x73, 0x65,
-	0x43, 0x69, 0x74, 0x72, 0x69, 0x78, 0x41, 0x70, 0x70, 0x52, 0x65, 0x71, 0x75, 0x65, 0x73, 0x74,
-	0x1a, 0x16, 0x2e, 0x67, 0x6f, 0x6f, 0x67, 0x6c, 0x65, 0x2e, 0x70, 0x72, 0x6f, 0x74, 0x6f, 0x62,
-	0x75, 0x66, 0x2e, 0x45, 0x6d, 0x70, 0x74, 0x79, 0x22, 0x00, 0x12, 0x48, 0x0a, 0x0a, 0x44, 0x65,
-	0x6c, 0x65, 0x74, 0x65, 0x46, 0x69, 0x6c, 0x65, 0x12, 0x20, 0x2e, 0x74, 0x61, 0x73, 0x74, 0x2e,
-	0x63, 0x72, 0x6f, 0x73, 0x2e, 0x76, 0x64, 0x69, 0x2e, 0x44, 0x65, 0x6c, 0x65, 0x74, 0x65, 0x46,
+	0x2e, 0x45, 0x6d, 0x70, 0x74, 0x79, 0x22, 0x00, 0x12, 0x58, 0x0a, 0x0e, 0x43, 0x6c, 0x6f, 0x73,
+	0x65, 0x43, 0x69, 0x74, 0x72, 0x69, 0x78, 0x41, 0x70, 0x70, 0x12, 0x2c, 0x2e, 0x74, 0x61, 0x73,
+	0x74, 0x2e, 0x63, 0x72, 0x6f, 0x73, 0x2e, 0x70, 0x65, 0x72, 0x69, 0x70, 0x68, 0x65, 0x72, 0x61,
+	0x6c, 0x73, 0x2e, 0x43, 0x6c, 0x6f, 0x73, 0x65, 0x43, 0x69, 0x74, 0x72, 0x69, 0x78, 0x41, 0x70,
+	0x70, 0x52, 0x65, 0x71, 0x75, 0x65, 0x73, 0x74, 0x1a, 0x16, 0x2e, 0x67, 0x6f, 0x6f, 0x67, 0x6c,
+	0x65, 0x2e, 0x70, 0x72, 0x6f, 0x74, 0x6f, 0x62, 0x75, 0x66, 0x2e, 0x45, 0x6d, 0x70, 0x74, 0x79,
+	0x22, 0x00, 0x12, 0x50, 0x0a, 0x0a, 0x44, 0x65, 0x6c, 0x65, 0x74, 0x65, 0x46, 0x69, 0x6c, 0x65,
+	0x12, 0x28, 0x2e, 0x74, 0x61, 0x73, 0x74, 0x2e, 0x63, 0x72, 0x6f, 0x73, 0x2e, 0x70, 0x65, 0x72,
+	0x69, 0x70, 0x68, 0x65, 0x72, 0x61, 0x6c, 0x73, 0x2e, 0x44, 0x65, 0x6c, 0x65, 0x74, 0x65, 0x46,
 	0x69, 0x6c, 0x65, 0x52, 0x65, 0x71, 0x75, 0x65, 0x73, 0x74, 0x1a, 0x16, 0x2e, 0x67, 0x6f, 0x6f,
 	0x67, 0x6c, 0x65, 0x2e, 0x70, 0x72, 0x6f, 0x74, 0x6f, 0x62, 0x75, 0x66, 0x2e, 0x45, 0x6d, 0x70,
-	0x74, 0x79, 0x22, 0x00, 0x12, 0x50, 0x0a, 0x12, 0x44, 0x65, 0x6c, 0x65, 0x74, 0x65, 0x46, 0x69,
-	0x6c, 0x65, 0x49, 0x66, 0x45, 0x78, 0x69, 0x73, 0x74, 0x73, 0x12, 0x20, 0x2e, 0x74, 0x61, 0x73,
-	0x74, 0x2e, 0x63, 0x72, 0x6f, 0x73, 0x2e, 0x76, 0x64, 0x69, 0x2e, 0x44, 0x65, 0x6c, 0x65, 0x74,
-	0x65, 0x46, 0x69, 0x6c, 0x65, 0x52, 0x65, 0x71, 0x75, 0x65, 0x73, 0x74, 0x1a, 0x16, 0x2e, 0x67,
-	0x6f, 0x6f, 0x67, 0x6c, 0x65, 0x2e, 0x70, 0x72, 0x6f, 0x74, 0x6f, 0x62, 0x75, 0x66, 0x2e, 0x45,
-	0x6d, 0x70, 0x74, 0x79, 0x22, 0x00, 0x12, 0x58, 0x0a, 0x12, 0x53, 0x61, 0x76, 0x65, 0x43, 0x72,
-	0x6f, 0x70, 0x53, 0x63, 0x72, 0x65, 0x65, 0x6e, 0x73, 0x68, 0x6f, 0x74, 0x12, 0x28, 0x2e, 0x74,
-	0x61, 0x73, 0x74, 0x2e, 0x63, 0x72, 0x6f, 0x73, 0x2e, 0x76, 0x64, 0x69, 0x2e, 0x53, 0x61, 0x76,
+	0x74, 0x79, 0x22, 0x00, 0x12, 0x58, 0x0a, 0x12, 0x44, 0x65, 0x6c, 0x65, 0x74, 0x65, 0x46, 0x69,
+	0x6c, 0x65, 0x49, 0x66, 0x45, 0x78, 0x69, 0x73, 0x74, 0x73, 0x12, 0x28, 0x2e, 0x74, 0x61, 0x73,
+	0x74, 0x2e, 0x63, 0x72, 0x6f, 0x73, 0x2e, 0x70, 0x65, 0x72, 0x69, 0x70, 0x68, 0x65, 0x72, 0x61,
+	0x6c, 0x73, 0x2e, 0x44, 0x65, 0x6c, 0x65, 0x74, 0x65, 0x46, 0x69, 0x6c, 0x65, 0x52, 0x65, 0x71,
+	0x75, 0x65, 0x73, 0x74, 0x1a, 0x16, 0x2e, 0x67, 0x6f, 0x6f, 0x67, 0x6c, 0x65, 0x2e, 0x70, 0x72,
+	0x6f, 0x74, 0x6f, 0x62, 0x75, 0x66, 0x2e, 0x45, 0x6d, 0x70, 0x74, 0x79, 0x22, 0x00, 0x12, 0x60,
+	0x0a, 0x12, 0x53, 0x61, 0x76, 0x65, 0x43, 0x72, 0x6f, 0x70, 0x53, 0x63, 0x72, 0x65, 0x65, 0x6e,
+	0x73, 0x68, 0x6f, 0x74, 0x12, 0x30, 0x2e, 0x74, 0x61, 0x73, 0x74, 0x2e, 0x63, 0x72, 0x6f, 0x73,
+	0x2e, 0x70, 0x65, 0x72, 0x69, 0x70, 0x68, 0x65, 0x72, 0x61, 0x6c, 0x73, 0x2e, 0x53, 0x61, 0x76,
 	0x65, 0x43, 0x72, 0x6f, 0x70, 0x53, 0x63, 0x72, 0x65, 0x65, 0x6e, 0x73, 0x68, 0x6f, 0x74, 0x52,
 	0x65, 0x71, 0x75, 0x65, 0x73, 0x74, 0x1a, 0x16, 0x2e, 0x67, 0x6f, 0x6f, 0x67, 0x6c, 0x65, 0x2e,
 	0x70, 0x72, 0x6f, 0x74, 0x6f, 0x62, 0x75, 0x66, 0x2e, 0x45, 0x6d, 0x70, 0x74, 0x79, 0x22, 0x00,
-	0x12, 0x66, 0x0a, 0x19, 0x56, 0x65, 0x72, 0x69, 0x66, 0x79, 0x54, 0x77, 0x6f, 0x49, 0x6d, 0x61,
-	0x67, 0x65, 0x73, 0x53, 0x69, 0x6d, 0x69, 0x6c, 0x61, 0x72, 0x69, 0x74, 0x79, 0x12, 0x2f, 0x2e,
-	0x74, 0x61, 0x73, 0x74, 0x2e, 0x63, 0x72, 0x6f, 0x73, 0x2e, 0x76, 0x64, 0x69, 0x2e, 0x56, 0x65,
-	0x72, 0x69, 0x66, 0x79, 0x54, 0x77, 0x6f, 0x49, 0x6d, 0x61, 0x67, 0x65, 0x73, 0x53, 0x69, 0x6d,
-	0x69, 0x6c, 0x61, 0x72, 0x69, 0x74, 0x79, 0x52, 0x65, 0x71, 0x75, 0x65, 0x73, 0x74, 0x1a, 0x16,
-	0x2e, 0x67, 0x6f, 0x6f, 0x67, 0x6c, 0x65, 0x2e, 0x70, 0x72, 0x6f, 0x74, 0x6f, 0x62, 0x75, 0x66,
-	0x2e, 0x45, 0x6d, 0x70, 0x74, 0x79, 0x22, 0x00, 0x12, 0x5a, 0x0a, 0x13, 0x57, 0x61, 0x69, 0x74,
-	0x55, 0x6e, 0x74, 0x69, 0x6c, 0x49, 0x63, 0x6f, 0x6e, 0x45, 0x78, 0x69, 0x73, 0x74, 0x73, 0x12,
-	0x29, 0x2e, 0x74, 0x61, 0x73, 0x74, 0x2e, 0x63, 0x72, 0x6f, 0x73, 0x2e, 0x76, 0x64, 0x69, 0x2e,
+	0x12, 0x6e, 0x0a, 0x19, 0x56, 0x65, 0x72, 0x69, 0x66, 0x79, 0x54, 0x77, 0x6f, 0x49, 0x6d, 0x61,
+	0x67, 0x65, 0x73, 0x53, 0x69, 0x6d, 0x69, 0x6c, 0x61, 0x72, 0x69, 0x74, 0x79, 0x12, 0x37, 0x2e,
+	0x74, 0x61, 0x73, 0x74, 0x2e, 0x63, 0x72, 0x6f, 0x73, 0x2e, 0x70, 0x65, 0x72, 0x69, 0x70, 0x68,
+	0x65, 0x72, 0x61, 0x6c, 0x73, 0x2e, 0x56, 0x65, 0x72, 0x69, 0x66, 0x79, 0x54, 0x77, 0x6f, 0x49,
+	0x6d, 0x61, 0x67, 0x65, 0x73, 0x53, 0x69, 0x6d, 0x69, 0x6c, 0x61, 0x72, 0x69, 0x74, 0x79, 0x52,
+	0x65, 0x71, 0x75, 0x65, 0x73, 0x74, 0x1a, 0x16, 0x2e, 0x67, 0x6f, 0x6f, 0x67, 0x6c, 0x65, 0x2e,
+	0x70, 0x72, 0x6f, 0x74, 0x6f, 0x62, 0x75, 0x66, 0x2e, 0x45, 0x6d, 0x70, 0x74, 0x79, 0x22, 0x00,
+	0x12, 0x62, 0x0a, 0x13, 0x57, 0x61, 0x69, 0x74, 0x55, 0x6e, 0x74, 0x69, 0x6c, 0x49, 0x63, 0x6f,
+	0x6e, 0x45, 0x78, 0x69, 0x73, 0x74, 0x73, 0x12, 0x31, 0x2e, 0x74, 0x61, 0x73, 0x74, 0x2e, 0x63,
+	0x72, 0x6f, 0x73, 0x2e, 0x70, 0x65, 0x72, 0x69, 0x70, 0x68, 0x65, 0x72, 0x61, 0x6c, 0x73, 0x2e,
 	0x57, 0x61, 0x69, 0x74, 0x55, 0x6e, 0x74, 0x69, 0x6c, 0x49, 0x63, 0x6f, 0x6e, 0x45, 0x78, 0x69,
 	0x73, 0x74, 0x73, 0x52, 0x65, 0x71, 0x75, 0x65, 0x73, 0x74, 0x1a, 0x16, 0x2e, 0x67, 0x6f, 0x6f,
 	0x67, 0x6c, 0x65, 0x2e, 0x70, 0x72, 0x6f, 0x74, 0x6f, 0x62, 0x75, 0x66, 0x2e, 0x45, 0x6d, 0x70,
@@ -793,106 +800,108 @@ var file_citrix_service_proto_rawDesc = []byte{
 	0x74, 0x50, 0x65, 0x64, 0x61, 0x6c, 0x54, 0x65, 0x73, 0x74, 0x12, 0x16, 0x2e, 0x67, 0x6f, 0x6f,
 	0x67, 0x6c, 0x65, 0x2e, 0x70, 0x72, 0x6f, 0x74, 0x6f, 0x62, 0x75, 0x66, 0x2e, 0x45, 0x6d, 0x70,
 	0x74, 0x79, 0x1a, 0x16, 0x2e, 0x67, 0x6f, 0x6f, 0x67, 0x6c, 0x65, 0x2e, 0x70, 0x72, 0x6f, 0x74,
-	0x6f, 0x62, 0x75, 0x66, 0x2e, 0x45, 0x6d, 0x70, 0x74, 0x79, 0x22, 0x00, 0x12, 0x6c, 0x0a, 0x1c,
+	0x6f, 0x62, 0x75, 0x66, 0x2e, 0x45, 0x6d, 0x70, 0x74, 0x79, 0x22, 0x00, 0x12, 0x74, 0x0a, 0x1c,
 	0x56, 0x65, 0x72, 0x69, 0x66, 0x79, 0x46, 0x6f, 0x6f, 0x74, 0x50, 0x65, 0x64, 0x61, 0x6c, 0x42,
-	0x75, 0x74, 0x74, 0x6f, 0x6e, 0x50, 0x72, 0x65, 0x73, 0x73, 0x65, 0x64, 0x12, 0x32, 0x2e, 0x74,
-	0x61, 0x73, 0x74, 0x2e, 0x63, 0x72, 0x6f, 0x73, 0x2e, 0x76, 0x64, 0x69, 0x2e, 0x56, 0x65, 0x72,
-	0x69, 0x66, 0x79, 0x46, 0x6f, 0x6f, 0x74, 0x50, 0x65, 0x64, 0x61, 0x6c, 0x42, 0x75, 0x74, 0x74,
-	0x6f, 0x6e, 0x50, 0x72, 0x65, 0x73, 0x73, 0x65, 0x64, 0x52, 0x65, 0x71, 0x75, 0x65, 0x73, 0x74,
-	0x1a, 0x16, 0x2e, 0x67, 0x6f, 0x6f, 0x67, 0x6c, 0x65, 0x2e, 0x70, 0x72, 0x6f, 0x74, 0x6f, 0x62,
-	0x75, 0x66, 0x2e, 0x45, 0x6d, 0x70, 0x74, 0x79, 0x22, 0x00, 0x12, 0x50, 0x0a, 0x0e, 0x53, 0x74,
-	0x61, 0x72, 0x74, 0x53, 0x69, 0x67, 0x6e, 0x61, 0x74, 0x75, 0x72, 0x65, 0x12, 0x24, 0x2e, 0x74,
-	0x61, 0x73, 0x74, 0x2e, 0x63, 0x72, 0x6f, 0x73, 0x2e, 0x76, 0x64, 0x69, 0x2e, 0x53, 0x74, 0x61,
+	0x75, 0x74, 0x74, 0x6f, 0x6e, 0x50, 0x72, 0x65, 0x73, 0x73, 0x65, 0x64, 0x12, 0x3a, 0x2e, 0x74,
+	0x61, 0x73, 0x74, 0x2e, 0x63, 0x72, 0x6f, 0x73, 0x2e, 0x70, 0x65, 0x72, 0x69, 0x70, 0x68, 0x65,
+	0x72, 0x61, 0x6c, 0x73, 0x2e, 0x56, 0x65, 0x72, 0x69, 0x66, 0x79, 0x46, 0x6f, 0x6f, 0x74, 0x50,
+	0x65, 0x64, 0x61, 0x6c, 0x42, 0x75, 0x74, 0x74, 0x6f, 0x6e, 0x50, 0x72, 0x65, 0x73, 0x73, 0x65,
+	0x64, 0x52, 0x65, 0x71, 0x75, 0x65, 0x73, 0x74, 0x1a, 0x16, 0x2e, 0x67, 0x6f, 0x6f, 0x67, 0x6c,
+	0x65, 0x2e, 0x70, 0x72, 0x6f, 0x74, 0x6f, 0x62, 0x75, 0x66, 0x2e, 0x45, 0x6d, 0x70, 0x74, 0x79,
+	0x22, 0x00, 0x12, 0x58, 0x0a, 0x0e, 0x53, 0x74, 0x61, 0x72, 0x74, 0x53, 0x69, 0x67, 0x6e, 0x61,
+	0x74, 0x75, 0x72, 0x65, 0x12, 0x2c, 0x2e, 0x74, 0x61, 0x73, 0x74, 0x2e, 0x63, 0x72, 0x6f, 0x73,
+	0x2e, 0x70, 0x65, 0x72, 0x69, 0x70, 0x68, 0x65, 0x72, 0x61, 0x6c, 0x73, 0x2e, 0x53, 0x74, 0x61,
 	0x72, 0x74, 0x53, 0x69, 0x67, 0x6e, 0x61, 0x74, 0x75, 0x72, 0x65, 0x52, 0x65, 0x71, 0x75, 0x65,
 	0x73, 0x74, 0x1a, 0x16, 0x2e, 0x67, 0x6f, 0x6f, 0x67, 0x6c, 0x65, 0x2e, 0x70, 0x72, 0x6f, 0x74,
-	0x6f, 0x62, 0x75, 0x66, 0x2e, 0x45, 0x6d, 0x70, 0x74, 0x79, 0x22, 0x00, 0x12, 0x4a, 0x0a, 0x0d,
-	0x53, 0x61, 0x76, 0x65, 0x53, 0x69, 0x67, 0x6e, 0x61, 0x74, 0x75, 0x72, 0x65, 0x12, 0x1f, 0x2e,
-	0x74, 0x61, 0x73, 0x74, 0x2e, 0x63, 0x72, 0x6f, 0x73, 0x2e, 0x76, 0x64, 0x69, 0x2e, 0x53, 0x69,
-	0x67, 0x6e, 0x61, 0x74, 0x75, 0x72, 0x65, 0x52, 0x65, 0x71, 0x75, 0x65, 0x73, 0x74, 0x1a, 0x16,
-	0x2e, 0x67, 0x6f, 0x6f, 0x67, 0x6c, 0x65, 0x2e, 0x70, 0x72, 0x6f, 0x74, 0x6f, 0x62, 0x75, 0x66,
-	0x2e, 0x45, 0x6d, 0x70, 0x74, 0x79, 0x22, 0x00, 0x12, 0x4a, 0x0a, 0x0d, 0x4c, 0x6f, 0x61, 0x64,
-	0x53, 0x69, 0x67, 0x6e, 0x61, 0x74, 0x75, 0x72, 0x65, 0x12, 0x1f, 0x2e, 0x74, 0x61, 0x73, 0x74,
-	0x2e, 0x63, 0x72, 0x6f, 0x73, 0x2e, 0x76, 0x64, 0x69, 0x2e, 0x53, 0x69, 0x67, 0x6e, 0x61, 0x74,
+	0x6f, 0x62, 0x75, 0x66, 0x2e, 0x45, 0x6d, 0x70, 0x74, 0x79, 0x22, 0x00, 0x12, 0x52, 0x0a, 0x0d,
+	0x53, 0x61, 0x76, 0x65, 0x53, 0x69, 0x67, 0x6e, 0x61, 0x74, 0x75, 0x72, 0x65, 0x12, 0x27, 0x2e,
+	0x74, 0x61, 0x73, 0x74, 0x2e, 0x63, 0x72, 0x6f, 0x73, 0x2e, 0x70, 0x65, 0x72, 0x69, 0x70, 0x68,
+	0x65, 0x72, 0x61, 0x6c, 0x73, 0x2e, 0x53, 0x69, 0x67, 0x6e, 0x61, 0x74, 0x75, 0x72, 0x65, 0x52,
+	0x65, 0x71, 0x75, 0x65, 0x73, 0x74, 0x1a, 0x16, 0x2e, 0x67, 0x6f, 0x6f, 0x67, 0x6c, 0x65, 0x2e,
+	0x70, 0x72, 0x6f, 0x74, 0x6f, 0x62, 0x75, 0x66, 0x2e, 0x45, 0x6d, 0x70, 0x74, 0x79, 0x22, 0x00,
+	0x12, 0x52, 0x0a, 0x0d, 0x4c, 0x6f, 0x61, 0x64, 0x53, 0x69, 0x67, 0x6e, 0x61, 0x74, 0x75, 0x72,
+	0x65, 0x12, 0x27, 0x2e, 0x74, 0x61, 0x73, 0x74, 0x2e, 0x63, 0x72, 0x6f, 0x73, 0x2e, 0x70, 0x65,
+	0x72, 0x69, 0x70, 0x68, 0x65, 0x72, 0x61, 0x6c, 0x73, 0x2e, 0x53, 0x69, 0x67, 0x6e, 0x61, 0x74,
 	0x75, 0x72, 0x65, 0x52, 0x65, 0x71, 0x75, 0x65, 0x73, 0x74, 0x1a, 0x16, 0x2e, 0x67, 0x6f, 0x6f,
 	0x67, 0x6c, 0x65, 0x2e, 0x70, 0x72, 0x6f, 0x74, 0x6f, 0x62, 0x75, 0x66, 0x2e, 0x45, 0x6d, 0x70,
 	0x74, 0x79, 0x22, 0x00, 0x12, 0x42, 0x0a, 0x0e, 0x43, 0x6c, 0x65, 0x61, 0x72, 0x53, 0x69, 0x67,
 	0x6e, 0x61, 0x74, 0x75, 0x72, 0x65, 0x12, 0x16, 0x2e, 0x67, 0x6f, 0x6f, 0x67, 0x6c, 0x65, 0x2e,
 	0x70, 0x72, 0x6f, 0x74, 0x6f, 0x62, 0x75, 0x66, 0x2e, 0x45, 0x6d, 0x70, 0x74, 0x79, 0x1a, 0x16,
 	0x2e, 0x67, 0x6f, 0x6f, 0x67, 0x6c, 0x65, 0x2e, 0x70, 0x72, 0x6f, 0x74, 0x6f, 0x62, 0x75, 0x66,
-	0x2e, 0x45, 0x6d, 0x70, 0x74, 0x79, 0x22, 0x00, 0x42, 0x33, 0x5a, 0x31, 0x67, 0x6f, 0x2e, 0x63,
+	0x2e, 0x45, 0x6d, 0x70, 0x74, 0x79, 0x22, 0x00, 0x42, 0x3b, 0x5a, 0x39, 0x67, 0x6f, 0x2e, 0x63,
 	0x68, 0x72, 0x6f, 0x6d, 0x69, 0x75, 0x6d, 0x2e, 0x6f, 0x72, 0x67, 0x2f, 0x74, 0x61, 0x73, 0x74,
 	0x2d, 0x74, 0x65, 0x73, 0x74, 0x73, 0x2f, 0x63, 0x72, 0x6f, 0x73, 0x2f, 0x73, 0x65, 0x72, 0x76,
-	0x69, 0x63, 0x65, 0x73, 0x2f, 0x63, 0x72, 0x6f, 0x73, 0x2f, 0x76, 0x64, 0x69, 0x62, 0x06, 0x70,
-	0x72, 0x6f, 0x74, 0x6f, 0x33,
+	0x69, 0x63, 0x65, 0x73, 0x2f, 0x63, 0x72, 0x6f, 0x73, 0x2f, 0x70, 0x65, 0x72, 0x69, 0x70, 0x68,
+	0x65, 0x72, 0x61, 0x6c, 0x73, 0x62, 0x06, 0x70, 0x72, 0x6f, 0x74, 0x6f, 0x33,
 }
 
 var (
-	file_citrix_service_proto_rawDescOnce sync.Once
-	file_citrix_service_proto_rawDescData = file_citrix_service_proto_rawDesc
+	file_periph_service_proto_rawDescOnce sync.Once
+	file_periph_service_proto_rawDescData = file_periph_service_proto_rawDesc
 )
 
-func file_citrix_service_proto_rawDescGZIP() []byte {
-	file_citrix_service_proto_rawDescOnce.Do(func() {
-		file_citrix_service_proto_rawDescData = protoimpl.X.CompressGZIP(file_citrix_service_proto_rawDescData)
+func file_periph_service_proto_rawDescGZIP() []byte {
+	file_periph_service_proto_rawDescOnce.Do(func() {
+		file_periph_service_proto_rawDescData = protoimpl.X.CompressGZIP(file_periph_service_proto_rawDescData)
 	})
-	return file_citrix_service_proto_rawDescData
+	return file_periph_service_proto_rawDescData
 }
 
-var file_citrix_service_proto_enumTypes = make([]protoimpl.EnumInfo, 1)
-var file_citrix_service_proto_msgTypes = make([]protoimpl.MessageInfo, 11)
-var file_citrix_service_proto_goTypes = []interface{}{
-	(FootPedalButton)(0),                        // 0: tast.cros.vdi.FootPedalButton
-	(*NewCitrixRequest)(nil),                    // 1: tast.cros.vdi.NewCitrixRequest
-	(*ConnectUSBDeviceRequest)(nil),             // 2: tast.cros.vdi.ConnectUSBDeviceRequest
-	(*OpenCitrixAppRequest)(nil),                // 3: tast.cros.vdi.OpenCitrixAppRequest
-	(*CloseCitrixAppRequest)(nil),               // 4: tast.cros.vdi.CloseCitrixAppRequest
-	(*DeleteFileRequest)(nil),                   // 5: tast.cros.vdi.DeleteFileRequest
-	(*SaveCropScreenshotRequest)(nil),           // 6: tast.cros.vdi.SaveCropScreenshotRequest
-	(*VerifyTwoImagesSimilarityRequest)(nil),    // 7: tast.cros.vdi.VerifyTwoImagesSimilarityRequest
-	(*WaitUntilIconExistsRequest)(nil),          // 8: tast.cros.vdi.WaitUntilIconExistsRequest
-	(*VerifyFootPedalButtonPressedRequest)(nil), // 9: tast.cros.vdi.VerifyFootPedalButtonPressedRequest
-	(*StartSignatureRequest)(nil),               // 10: tast.cros.vdi.StartSignatureRequest
-	(*SignatureRequest)(nil),                    // 11: tast.cros.vdi.SignatureRequest
+var file_periph_service_proto_enumTypes = make([]protoimpl.EnumInfo, 1)
+var file_periph_service_proto_msgTypes = make([]protoimpl.MessageInfo, 11)
+var file_periph_service_proto_goTypes = []interface{}{
+	(FootPedalButton)(0),                        // 0: tast.cros.peripherals.FootPedalButton
+	(*NewCitrixRequest)(nil),                    // 1: tast.cros.peripherals.NewCitrixRequest
+	(*ConnectUSBDeviceInCitrixRequest)(nil),     // 2: tast.cros.peripherals.ConnectUSBDeviceInCitrixRequest
+	(*OpenCitrixAppRequest)(nil),                // 3: tast.cros.peripherals.OpenCitrixAppRequest
+	(*CloseCitrixAppRequest)(nil),               // 4: tast.cros.peripherals.CloseCitrixAppRequest
+	(*DeleteFileRequest)(nil),                   // 5: tast.cros.peripherals.DeleteFileRequest
+	(*SaveCropScreenshotRequest)(nil),           // 6: tast.cros.peripherals.SaveCropScreenshotRequest
+	(*VerifyTwoImagesSimilarityRequest)(nil),    // 7: tast.cros.peripherals.VerifyTwoImagesSimilarityRequest
+	(*WaitUntilIconExistsRequest)(nil),          // 8: tast.cros.peripherals.WaitUntilIconExistsRequest
+	(*VerifyFootPedalButtonPressedRequest)(nil), // 9: tast.cros.peripherals.VerifyFootPedalButtonPressedRequest
+	(*StartSignatureRequest)(nil),               // 10: tast.cros.peripherals.StartSignatureRequest
+	(*SignatureRequest)(nil),                    // 11: tast.cros.peripherals.SignatureRequest
 	(*emptypb.Empty)(nil),                       // 12: google.protobuf.Empty
 }
-var file_citrix_service_proto_depIdxs = []int32{
-	0,  // 0: tast.cros.vdi.VerifyFootPedalButtonPressedRequest.button:type_name -> tast.cros.vdi.FootPedalButton
-	1,  // 1: tast.cros.vdi.CitrixService.NewCitrix:input_type -> tast.cros.vdi.NewCitrixRequest
-	12, // 2: tast.cros.vdi.CitrixService.LoginCitrix:input_type -> google.protobuf.Empty
-	12, // 3: tast.cros.vdi.CitrixService.OpenCitrix:input_type -> google.protobuf.Empty
-	12, // 4: tast.cros.vdi.CitrixService.CloseCitrix:input_type -> google.protobuf.Empty
-	2,  // 5: tast.cros.vdi.CitrixService.ConnectUSBDevice:input_type -> tast.cros.vdi.ConnectUSBDeviceRequest
-	3,  // 6: tast.cros.vdi.CitrixService.OpenCitrixApp:input_type -> tast.cros.vdi.OpenCitrixAppRequest
-	4,  // 7: tast.cros.vdi.CitrixService.CloseCitrixApp:input_type -> tast.cros.vdi.CloseCitrixAppRequest
-	5,  // 8: tast.cros.vdi.CitrixService.DeleteFile:input_type -> tast.cros.vdi.DeleteFileRequest
-	5,  // 9: tast.cros.vdi.CitrixService.DeleteFileIfExists:input_type -> tast.cros.vdi.DeleteFileRequest
-	6,  // 10: tast.cros.vdi.CitrixService.SaveCropScreenshot:input_type -> tast.cros.vdi.SaveCropScreenshotRequest
-	7,  // 11: tast.cros.vdi.CitrixService.VerifyTwoImagesSimilarity:input_type -> tast.cros.vdi.VerifyTwoImagesSimilarityRequest
-	8,  // 12: tast.cros.vdi.CitrixService.WaitUntilIconExists:input_type -> tast.cros.vdi.WaitUntilIconExistsRequest
-	12, // 13: tast.cros.vdi.CitrixService.SetupFootPedalTest:input_type -> google.protobuf.Empty
-	9,  // 14: tast.cros.vdi.CitrixService.VerifyFootPedalButtonPressed:input_type -> tast.cros.vdi.VerifyFootPedalButtonPressedRequest
-	10, // 15: tast.cros.vdi.CitrixService.StartSignature:input_type -> tast.cros.vdi.StartSignatureRequest
-	11, // 16: tast.cros.vdi.CitrixService.SaveSignature:input_type -> tast.cros.vdi.SignatureRequest
-	11, // 17: tast.cros.vdi.CitrixService.LoadSignature:input_type -> tast.cros.vdi.SignatureRequest
-	12, // 18: tast.cros.vdi.CitrixService.ClearSignature:input_type -> google.protobuf.Empty
-	12, // 19: tast.cros.vdi.CitrixService.NewCitrix:output_type -> google.protobuf.Empty
-	12, // 20: tast.cros.vdi.CitrixService.LoginCitrix:output_type -> google.protobuf.Empty
-	12, // 21: tast.cros.vdi.CitrixService.OpenCitrix:output_type -> google.protobuf.Empty
-	12, // 22: tast.cros.vdi.CitrixService.CloseCitrix:output_type -> google.protobuf.Empty
-	12, // 23: tast.cros.vdi.CitrixService.ConnectUSBDevice:output_type -> google.protobuf.Empty
-	12, // 24: tast.cros.vdi.CitrixService.OpenCitrixApp:output_type -> google.protobuf.Empty
-	12, // 25: tast.cros.vdi.CitrixService.CloseCitrixApp:output_type -> google.protobuf.Empty
-	12, // 26: tast.cros.vdi.CitrixService.DeleteFile:output_type -> google.protobuf.Empty
-	12, // 27: tast.cros.vdi.CitrixService.DeleteFileIfExists:output_type -> google.protobuf.Empty
-	12, // 28: tast.cros.vdi.CitrixService.SaveCropScreenshot:output_type -> google.protobuf.Empty
-	12, // 29: tast.cros.vdi.CitrixService.VerifyTwoImagesSimilarity:output_type -> google.protobuf.Empty
-	12, // 30: tast.cros.vdi.CitrixService.WaitUntilIconExists:output_type -> google.protobuf.Empty
-	12, // 31: tast.cros.vdi.CitrixService.SetupFootPedalTest:output_type -> google.protobuf.Empty
-	12, // 32: tast.cros.vdi.CitrixService.VerifyFootPedalButtonPressed:output_type -> google.protobuf.Empty
-	12, // 33: tast.cros.vdi.CitrixService.StartSignature:output_type -> google.protobuf.Empty
-	12, // 34: tast.cros.vdi.CitrixService.SaveSignature:output_type -> google.protobuf.Empty
-	12, // 35: tast.cros.vdi.CitrixService.LoadSignature:output_type -> google.protobuf.Empty
-	12, // 36: tast.cros.vdi.CitrixService.ClearSignature:output_type -> google.protobuf.Empty
+var file_periph_service_proto_depIdxs = []int32{
+	0,  // 0: tast.cros.peripherals.VerifyFootPedalButtonPressedRequest.button:type_name -> tast.cros.peripherals.FootPedalButton
+	1,  // 1: tast.cros.peripherals.PeriphService.NewCitrix:input_type -> tast.cros.peripherals.NewCitrixRequest
+	12, // 2: tast.cros.peripherals.PeriphService.LoginCitrix:input_type -> google.protobuf.Empty
+	12, // 3: tast.cros.peripherals.PeriphService.OpenCitrix:input_type -> google.protobuf.Empty
+	12, // 4: tast.cros.peripherals.PeriphService.CloseCitrix:input_type -> google.protobuf.Empty
+	2,  // 5: tast.cros.peripherals.PeriphService.ConnectUSBDeviceInCitrix:input_type -> tast.cros.peripherals.ConnectUSBDeviceInCitrixRequest
+	3,  // 6: tast.cros.peripherals.PeriphService.OpenCitrixApp:input_type -> tast.cros.peripherals.OpenCitrixAppRequest
+	4,  // 7: tast.cros.peripherals.PeriphService.CloseCitrixApp:input_type -> tast.cros.peripherals.CloseCitrixAppRequest
+	5,  // 8: tast.cros.peripherals.PeriphService.DeleteFile:input_type -> tast.cros.peripherals.DeleteFileRequest
+	5,  // 9: tast.cros.peripherals.PeriphService.DeleteFileIfExists:input_type -> tast.cros.peripherals.DeleteFileRequest
+	6,  // 10: tast.cros.peripherals.PeriphService.SaveCropScreenshot:input_type -> tast.cros.peripherals.SaveCropScreenshotRequest
+	7,  // 11: tast.cros.peripherals.PeriphService.VerifyTwoImagesSimilarity:input_type -> tast.cros.peripherals.VerifyTwoImagesSimilarityRequest
+	8,  // 12: tast.cros.peripherals.PeriphService.WaitUntilIconExists:input_type -> tast.cros.peripherals.WaitUntilIconExistsRequest
+	12, // 13: tast.cros.peripherals.PeriphService.SetupFootPedalTest:input_type -> google.protobuf.Empty
+	9,  // 14: tast.cros.peripherals.PeriphService.VerifyFootPedalButtonPressed:input_type -> tast.cros.peripherals.VerifyFootPedalButtonPressedRequest
+	10, // 15: tast.cros.peripherals.PeriphService.StartSignature:input_type -> tast.cros.peripherals.StartSignatureRequest
+	11, // 16: tast.cros.peripherals.PeriphService.SaveSignature:input_type -> tast.cros.peripherals.SignatureRequest
+	11, // 17: tast.cros.peripherals.PeriphService.LoadSignature:input_type -> tast.cros.peripherals.SignatureRequest
+	12, // 18: tast.cros.peripherals.PeriphService.ClearSignature:input_type -> google.protobuf.Empty
+	12, // 19: tast.cros.peripherals.PeriphService.NewCitrix:output_type -> google.protobuf.Empty
+	12, // 20: tast.cros.peripherals.PeriphService.LoginCitrix:output_type -> google.protobuf.Empty
+	12, // 21: tast.cros.peripherals.PeriphService.OpenCitrix:output_type -> google.protobuf.Empty
+	12, // 22: tast.cros.peripherals.PeriphService.CloseCitrix:output_type -> google.protobuf.Empty
+	12, // 23: tast.cros.peripherals.PeriphService.ConnectUSBDeviceInCitrix:output_type -> google.protobuf.Empty
+	12, // 24: tast.cros.peripherals.PeriphService.OpenCitrixApp:output_type -> google.protobuf.Empty
+	12, // 25: tast.cros.peripherals.PeriphService.CloseCitrixApp:output_type -> google.protobuf.Empty
+	12, // 26: tast.cros.peripherals.PeriphService.DeleteFile:output_type -> google.protobuf.Empty
+	12, // 27: tast.cros.peripherals.PeriphService.DeleteFileIfExists:output_type -> google.protobuf.Empty
+	12, // 28: tast.cros.peripherals.PeriphService.SaveCropScreenshot:output_type -> google.protobuf.Empty
+	12, // 29: tast.cros.peripherals.PeriphService.VerifyTwoImagesSimilarity:output_type -> google.protobuf.Empty
+	12, // 30: tast.cros.peripherals.PeriphService.WaitUntilIconExists:output_type -> google.protobuf.Empty
+	12, // 31: tast.cros.peripherals.PeriphService.SetupFootPedalTest:output_type -> google.protobuf.Empty
+	12, // 32: tast.cros.peripherals.PeriphService.VerifyFootPedalButtonPressed:output_type -> google.protobuf.Empty
+	12, // 33: tast.cros.peripherals.PeriphService.StartSignature:output_type -> google.protobuf.Empty
+	12, // 34: tast.cros.peripherals.PeriphService.SaveSignature:output_type -> google.protobuf.Empty
+	12, // 35: tast.cros.peripherals.PeriphService.LoadSignature:output_type -> google.protobuf.Empty
+	12, // 36: tast.cros.peripherals.PeriphService.ClearSignature:output_type -> google.protobuf.Empty
 	19, // [19:37] is the sub-list for method output_type
 	1,  // [1:19] is the sub-list for method input_type
 	1,  // [1:1] is the sub-list for extension type_name
@@ -900,13 +909,13 @@ var file_citrix_service_proto_depIdxs = []int32{
 	0,  // [0:1] is the sub-list for field type_name
 }
 
-func init() { file_citrix_service_proto_init() }
-func file_citrix_service_proto_init() {
-	if File_citrix_service_proto != nil {
+func init() { file_periph_service_proto_init() }
+func file_periph_service_proto_init() {
+	if File_periph_service_proto != nil {
 		return
 	}
 	if !protoimpl.UnsafeEnabled {
-		file_citrix_service_proto_msgTypes[0].Exporter = func(v interface{}, i int) interface{} {
+		file_periph_service_proto_msgTypes[0].Exporter = func(v interface{}, i int) interface{} {
 			switch v := v.(*NewCitrixRequest); i {
 			case 0:
 				return &v.state
@@ -918,8 +927,8 @@ func file_citrix_service_proto_init() {
 				return nil
 			}
 		}
-		file_citrix_service_proto_msgTypes[1].Exporter = func(v interface{}, i int) interface{} {
-			switch v := v.(*ConnectUSBDeviceRequest); i {
+		file_periph_service_proto_msgTypes[1].Exporter = func(v interface{}, i int) interface{} {
+			switch v := v.(*ConnectUSBDeviceInCitrixRequest); i {
 			case 0:
 				return &v.state
 			case 1:
@@ -930,7 +939,7 @@ func file_citrix_service_proto_init() {
 				return nil
 			}
 		}
-		file_citrix_service_proto_msgTypes[2].Exporter = func(v interface{}, i int) interface{} {
+		file_periph_service_proto_msgTypes[2].Exporter = func(v interface{}, i int) interface{} {
 			switch v := v.(*OpenCitrixAppRequest); i {
 			case 0:
 				return &v.state
@@ -942,7 +951,7 @@ func file_citrix_service_proto_init() {
 				return nil
 			}
 		}
-		file_citrix_service_proto_msgTypes[3].Exporter = func(v interface{}, i int) interface{} {
+		file_periph_service_proto_msgTypes[3].Exporter = func(v interface{}, i int) interface{} {
 			switch v := v.(*CloseCitrixAppRequest); i {
 			case 0:
 				return &v.state
@@ -954,7 +963,7 @@ func file_citrix_service_proto_init() {
 				return nil
 			}
 		}
-		file_citrix_service_proto_msgTypes[4].Exporter = func(v interface{}, i int) interface{} {
+		file_periph_service_proto_msgTypes[4].Exporter = func(v interface{}, i int) interface{} {
 			switch v := v.(*DeleteFileRequest); i {
 			case 0:
 				return &v.state
@@ -966,7 +975,7 @@ func file_citrix_service_proto_init() {
 				return nil
 			}
 		}
-		file_citrix_service_proto_msgTypes[5].Exporter = func(v interface{}, i int) interface{} {
+		file_periph_service_proto_msgTypes[5].Exporter = func(v interface{}, i int) interface{} {
 			switch v := v.(*SaveCropScreenshotRequest); i {
 			case 0:
 				return &v.state
@@ -978,7 +987,7 @@ func file_citrix_service_proto_init() {
 				return nil
 			}
 		}
-		file_citrix_service_proto_msgTypes[6].Exporter = func(v interface{}, i int) interface{} {
+		file_periph_service_proto_msgTypes[6].Exporter = func(v interface{}, i int) interface{} {
 			switch v := v.(*VerifyTwoImagesSimilarityRequest); i {
 			case 0:
 				return &v.state
@@ -990,7 +999,7 @@ func file_citrix_service_proto_init() {
 				return nil
 			}
 		}
-		file_citrix_service_proto_msgTypes[7].Exporter = func(v interface{}, i int) interface{} {
+		file_periph_service_proto_msgTypes[7].Exporter = func(v interface{}, i int) interface{} {
 			switch v := v.(*WaitUntilIconExistsRequest); i {
 			case 0:
 				return &v.state
@@ -1002,7 +1011,7 @@ func file_citrix_service_proto_init() {
 				return nil
 			}
 		}
-		file_citrix_service_proto_msgTypes[8].Exporter = func(v interface{}, i int) interface{} {
+		file_periph_service_proto_msgTypes[8].Exporter = func(v interface{}, i int) interface{} {
 			switch v := v.(*VerifyFootPedalButtonPressedRequest); i {
 			case 0:
 				return &v.state
@@ -1014,7 +1023,7 @@ func file_citrix_service_proto_init() {
 				return nil
 			}
 		}
-		file_citrix_service_proto_msgTypes[9].Exporter = func(v interface{}, i int) interface{} {
+		file_periph_service_proto_msgTypes[9].Exporter = func(v interface{}, i int) interface{} {
 			switch v := v.(*StartSignatureRequest); i {
 			case 0:
 				return &v.state
@@ -1026,7 +1035,7 @@ func file_citrix_service_proto_init() {
 				return nil
 			}
 		}
-		file_citrix_service_proto_msgTypes[10].Exporter = func(v interface{}, i int) interface{} {
+		file_periph_service_proto_msgTypes[10].Exporter = func(v interface{}, i int) interface{} {
 			switch v := v.(*SignatureRequest); i {
 			case 0:
 				return &v.state
@@ -1043,21 +1052,21 @@ func file_citrix_service_proto_init() {
 	out := protoimpl.TypeBuilder{
 		File: protoimpl.DescBuilder{
 			GoPackagePath: reflect.TypeOf(x{}).PkgPath(),
-			RawDescriptor: file_citrix_service_proto_rawDesc,
+			RawDescriptor: file_periph_service_proto_rawDesc,
 			NumEnums:      1,
 			NumMessages:   11,
 			NumExtensions: 0,
 			NumServices:   1,
 		},
-		GoTypes:           file_citrix_service_proto_goTypes,
-		DependencyIndexes: file_citrix_service_proto_depIdxs,
-		EnumInfos:         file_citrix_service_proto_enumTypes,
-		MessageInfos:      file_citrix_service_proto_msgTypes,
+		GoTypes:           file_periph_service_proto_goTypes,
+		DependencyIndexes: file_periph_service_proto_depIdxs,
+		EnumInfos:         file_periph_service_proto_enumTypes,
+		MessageInfos:      file_periph_service_proto_msgTypes,
 	}.Build()
-	File_citrix_service_proto = out.File
-	file_citrix_service_proto_rawDesc = nil
-	file_citrix_service_proto_goTypes = nil
-	file_citrix_service_proto_depIdxs = nil
+	File_periph_service_proto = out.File
+	file_periph_service_proto_rawDesc = nil
+	file_periph_service_proto_goTypes = nil
+	file_periph_service_proto_depIdxs = nil
 }
 
 // Reference imports to suppress errors if they are not otherwise used.
@@ -1068,10 +1077,10 @@ var _ grpc.ClientConnInterface
 // is compatible with the grpc package it is being compiled against.
 const _ = grpc.SupportPackageIsVersion6
 
-// CitrixServiceClient is the client API for CitrixService service.
+// PeriphServiceClient is the client API for PeriphService service.
 //
 // For semantics around ctx use and closing/ending streaming RPCs, please refer to https://godoc.org/google.golang.org/grpc#ClientConn.NewStream.
-type CitrixServiceClient interface {
+type PeriphServiceClient interface {
 	// NewCitrix creates a new instance of Citrix and launches the Citrix app.
 	NewCitrix(ctx context.Context, in *NewCitrixRequest, opts ...grpc.CallOption) (*emptypb.Empty, error)
 	// LoginCitrix logins the Citrix app and connects to desktop.
@@ -1080,8 +1089,8 @@ type CitrixServiceClient interface {
 	OpenCitrix(ctx context.Context, in *emptypb.Empty, opts ...grpc.CallOption) (*emptypb.Empty, error)
 	// CloseCitrix closes the Citrix app.
 	CloseCitrix(ctx context.Context, in *emptypb.Empty, opts ...grpc.CallOption) (*emptypb.Empty, error)
-	// ConnectUSBDevice connects USB device.
-	ConnectUSBDevice(ctx context.Context, in *ConnectUSBDeviceRequest, opts ...grpc.CallOption) (*emptypb.Empty, error)
+	// ConnectUSBDeviceInCitrix connects USB device.
+	ConnectUSBDeviceInCitrix(ctx context.Context, in *ConnectUSBDeviceInCitrixRequest, opts ...grpc.CallOption) (*emptypb.Empty, error)
 	// OpenCitrixApp opens app in Citrix.
 	OpenCitrixApp(ctx context.Context, in *OpenCitrixAppRequest, opts ...grpc.CallOption) (*emptypb.Empty, error)
 	// CloseCitrixApp closes app in Citrix.
@@ -1110,178 +1119,178 @@ type CitrixServiceClient interface {
 	ClearSignature(ctx context.Context, in *emptypb.Empty, opts ...grpc.CallOption) (*emptypb.Empty, error)
 }
 
-type citrixServiceClient struct {
+type periphServiceClient struct {
 	cc grpc.ClientConnInterface
 }
 
-func NewCitrixServiceClient(cc grpc.ClientConnInterface) CitrixServiceClient {
-	return &citrixServiceClient{cc}
+func NewPeriphServiceClient(cc grpc.ClientConnInterface) PeriphServiceClient {
+	return &periphServiceClient{cc}
 }
 
-func (c *citrixServiceClient) NewCitrix(ctx context.Context, in *NewCitrixRequest, opts ...grpc.CallOption) (*emptypb.Empty, error) {
+func (c *periphServiceClient) NewCitrix(ctx context.Context, in *NewCitrixRequest, opts ...grpc.CallOption) (*emptypb.Empty, error) {
 	out := new(emptypb.Empty)
-	err := c.cc.Invoke(ctx, "/tast.cros.vdi.CitrixService/NewCitrix", in, out, opts...)
+	err := c.cc.Invoke(ctx, "/tast.cros.peripherals.PeriphService/NewCitrix", in, out, opts...)
 	if err != nil {
 		return nil, err
 	}
 	return out, nil
 }
 
-func (c *citrixServiceClient) LoginCitrix(ctx context.Context, in *emptypb.Empty, opts ...grpc.CallOption) (*emptypb.Empty, error) {
+func (c *periphServiceClient) LoginCitrix(ctx context.Context, in *emptypb.Empty, opts ...grpc.CallOption) (*emptypb.Empty, error) {
 	out := new(emptypb.Empty)
-	err := c.cc.Invoke(ctx, "/tast.cros.vdi.CitrixService/LoginCitrix", in, out, opts...)
+	err := c.cc.Invoke(ctx, "/tast.cros.peripherals.PeriphService/LoginCitrix", in, out, opts...)
 	if err != nil {
 		return nil, err
 	}
 	return out, nil
 }
 
-func (c *citrixServiceClient) OpenCitrix(ctx context.Context, in *emptypb.Empty, opts ...grpc.CallOption) (*emptypb.Empty, error) {
+func (c *periphServiceClient) OpenCitrix(ctx context.Context, in *emptypb.Empty, opts ...grpc.CallOption) (*emptypb.Empty, error) {
 	out := new(emptypb.Empty)
-	err := c.cc.Invoke(ctx, "/tast.cros.vdi.CitrixService/OpenCitrix", in, out, opts...)
+	err := c.cc.Invoke(ctx, "/tast.cros.peripherals.PeriphService/OpenCitrix", in, out, opts...)
 	if err != nil {
 		return nil, err
 	}
 	return out, nil
 }
 
-func (c *citrixServiceClient) CloseCitrix(ctx context.Context, in *emptypb.Empty, opts ...grpc.CallOption) (*emptypb.Empty, error) {
+func (c *periphServiceClient) CloseCitrix(ctx context.Context, in *emptypb.Empty, opts ...grpc.CallOption) (*emptypb.Empty, error) {
 	out := new(emptypb.Empty)
-	err := c.cc.Invoke(ctx, "/tast.cros.vdi.CitrixService/CloseCitrix", in, out, opts...)
+	err := c.cc.Invoke(ctx, "/tast.cros.peripherals.PeriphService/CloseCitrix", in, out, opts...)
 	if err != nil {
 		return nil, err
 	}
 	return out, nil
 }
 
-func (c *citrixServiceClient) ConnectUSBDevice(ctx context.Context, in *ConnectUSBDeviceRequest, opts ...grpc.CallOption) (*emptypb.Empty, error) {
+func (c *periphServiceClient) ConnectUSBDeviceInCitrix(ctx context.Context, in *ConnectUSBDeviceInCitrixRequest, opts ...grpc.CallOption) (*emptypb.Empty, error) {
 	out := new(emptypb.Empty)
-	err := c.cc.Invoke(ctx, "/tast.cros.vdi.CitrixService/ConnectUSBDevice", in, out, opts...)
+	err := c.cc.Invoke(ctx, "/tast.cros.peripherals.PeriphService/ConnectUSBDeviceInCitrix", in, out, opts...)
 	if err != nil {
 		return nil, err
 	}
 	return out, nil
 }
 
-func (c *citrixServiceClient) OpenCitrixApp(ctx context.Context, in *OpenCitrixAppRequest, opts ...grpc.CallOption) (*emptypb.Empty, error) {
+func (c *periphServiceClient) OpenCitrixApp(ctx context.Context, in *OpenCitrixAppRequest, opts ...grpc.CallOption) (*emptypb.Empty, error) {
 	out := new(emptypb.Empty)
-	err := c.cc.Invoke(ctx, "/tast.cros.vdi.CitrixService/OpenCitrixApp", in, out, opts...)
+	err := c.cc.Invoke(ctx, "/tast.cros.peripherals.PeriphService/OpenCitrixApp", in, out, opts...)
 	if err != nil {
 		return nil, err
 	}
 	return out, nil
 }
 
-func (c *citrixServiceClient) CloseCitrixApp(ctx context.Context, in *CloseCitrixAppRequest, opts ...grpc.CallOption) (*emptypb.Empty, error) {
+func (c *periphServiceClient) CloseCitrixApp(ctx context.Context, in *CloseCitrixAppRequest, opts ...grpc.CallOption) (*emptypb.Empty, error) {
 	out := new(emptypb.Empty)
-	err := c.cc.Invoke(ctx, "/tast.cros.vdi.CitrixService/CloseCitrixApp", in, out, opts...)
+	err := c.cc.Invoke(ctx, "/tast.cros.peripherals.PeriphService/CloseCitrixApp", in, out, opts...)
 	if err != nil {
 		return nil, err
 	}
 	return out, nil
 }
 
-func (c *citrixServiceClient) DeleteFile(ctx context.Context, in *DeleteFileRequest, opts ...grpc.CallOption) (*emptypb.Empty, error) {
+func (c *periphServiceClient) DeleteFile(ctx context.Context, in *DeleteFileRequest, opts ...grpc.CallOption) (*emptypb.Empty, error) {
 	out := new(emptypb.Empty)
-	err := c.cc.Invoke(ctx, "/tast.cros.vdi.CitrixService/DeleteFile", in, out, opts...)
+	err := c.cc.Invoke(ctx, "/tast.cros.peripherals.PeriphService/DeleteFile", in, out, opts...)
 	if err != nil {
 		return nil, err
 	}
 	return out, nil
 }
 
-func (c *citrixServiceClient) DeleteFileIfExists(ctx context.Context, in *DeleteFileRequest, opts ...grpc.CallOption) (*emptypb.Empty, error) {
+func (c *periphServiceClient) DeleteFileIfExists(ctx context.Context, in *DeleteFileRequest, opts ...grpc.CallOption) (*emptypb.Empty, error) {
 	out := new(emptypb.Empty)
-	err := c.cc.Invoke(ctx, "/tast.cros.vdi.CitrixService/DeleteFileIfExists", in, out, opts...)
+	err := c.cc.Invoke(ctx, "/tast.cros.peripherals.PeriphService/DeleteFileIfExists", in, out, opts...)
 	if err != nil {
 		return nil, err
 	}
 	return out, nil
 }
 
-func (c *citrixServiceClient) SaveCropScreenshot(ctx context.Context, in *SaveCropScreenshotRequest, opts ...grpc.CallOption) (*emptypb.Empty, error) {
+func (c *periphServiceClient) SaveCropScreenshot(ctx context.Context, in *SaveCropScreenshotRequest, opts ...grpc.CallOption) (*emptypb.Empty, error) {
 	out := new(emptypb.Empty)
-	err := c.cc.Invoke(ctx, "/tast.cros.vdi.CitrixService/SaveCropScreenshot", in, out, opts...)
+	err := c.cc.Invoke(ctx, "/tast.cros.peripherals.PeriphService/SaveCropScreenshot", in, out, opts...)
 	if err != nil {
 		return nil, err
 	}
 	return out, nil
 }
 
-func (c *citrixServiceClient) VerifyTwoImagesSimilarity(ctx context.Context, in *VerifyTwoImagesSimilarityRequest, opts ...grpc.CallOption) (*emptypb.Empty, error) {
+func (c *periphServiceClient) VerifyTwoImagesSimilarity(ctx context.Context, in *VerifyTwoImagesSimilarityRequest, opts ...grpc.CallOption) (*emptypb.Empty, error) {
 	out := new(emptypb.Empty)
-	err := c.cc.Invoke(ctx, "/tast.cros.vdi.CitrixService/VerifyTwoImagesSimilarity", in, out, opts...)
+	err := c.cc.Invoke(ctx, "/tast.cros.peripherals.PeriphService/VerifyTwoImagesSimilarity", in, out, opts...)
 	if err != nil {
 		return nil, err
 	}
 	return out, nil
 }
 
-func (c *citrixServiceClient) WaitUntilIconExists(ctx context.Context, in *WaitUntilIconExistsRequest, opts ...grpc.CallOption) (*emptypb.Empty, error) {
+func (c *periphServiceClient) WaitUntilIconExists(ctx context.Context, in *WaitUntilIconExistsRequest, opts ...grpc.CallOption) (*emptypb.Empty, error) {
 	out := new(emptypb.Empty)
-	err := c.cc.Invoke(ctx, "/tast.cros.vdi.CitrixService/WaitUntilIconExists", in, out, opts...)
+	err := c.cc.Invoke(ctx, "/tast.cros.peripherals.PeriphService/WaitUntilIconExists", in, out, opts...)
 	if err != nil {
 		return nil, err
 	}
 	return out, nil
 }
 
-func (c *citrixServiceClient) SetupFootPedalTest(ctx context.Context, in *emptypb.Empty, opts ...grpc.CallOption) (*emptypb.Empty, error) {
+func (c *periphServiceClient) SetupFootPedalTest(ctx context.Context, in *emptypb.Empty, opts ...grpc.CallOption) (*emptypb.Empty, error) {
 	out := new(emptypb.Empty)
-	err := c.cc.Invoke(ctx, "/tast.cros.vdi.CitrixService/SetupFootPedalTest", in, out, opts...)
+	err := c.cc.Invoke(ctx, "/tast.cros.peripherals.PeriphService/SetupFootPedalTest", in, out, opts...)
 	if err != nil {
 		return nil, err
 	}
 	return out, nil
 }
 
-func (c *citrixServiceClient) VerifyFootPedalButtonPressed(ctx context.Context, in *VerifyFootPedalButtonPressedRequest, opts ...grpc.CallOption) (*emptypb.Empty, error) {
+func (c *periphServiceClient) VerifyFootPedalButtonPressed(ctx context.Context, in *VerifyFootPedalButtonPressedRequest, opts ...grpc.CallOption) (*emptypb.Empty, error) {
 	out := new(emptypb.Empty)
-	err := c.cc.Invoke(ctx, "/tast.cros.vdi.CitrixService/VerifyFootPedalButtonPressed", in, out, opts...)
+	err := c.cc.Invoke(ctx, "/tast.cros.peripherals.PeriphService/VerifyFootPedalButtonPressed", in, out, opts...)
 	if err != nil {
 		return nil, err
 	}
 	return out, nil
 }
 
-func (c *citrixServiceClient) StartSignature(ctx context.Context, in *StartSignatureRequest, opts ...grpc.CallOption) (*emptypb.Empty, error) {
+func (c *periphServiceClient) StartSignature(ctx context.Context, in *StartSignatureRequest, opts ...grpc.CallOption) (*emptypb.Empty, error) {
 	out := new(emptypb.Empty)
-	err := c.cc.Invoke(ctx, "/tast.cros.vdi.CitrixService/StartSignature", in, out, opts...)
+	err := c.cc.Invoke(ctx, "/tast.cros.peripherals.PeriphService/StartSignature", in, out, opts...)
 	if err != nil {
 		return nil, err
 	}
 	return out, nil
 }
 
-func (c *citrixServiceClient) SaveSignature(ctx context.Context, in *SignatureRequest, opts ...grpc.CallOption) (*emptypb.Empty, error) {
+func (c *periphServiceClient) SaveSignature(ctx context.Context, in *SignatureRequest, opts ...grpc.CallOption) (*emptypb.Empty, error) {
 	out := new(emptypb.Empty)
-	err := c.cc.Invoke(ctx, "/tast.cros.vdi.CitrixService/SaveSignature", in, out, opts...)
+	err := c.cc.Invoke(ctx, "/tast.cros.peripherals.PeriphService/SaveSignature", in, out, opts...)
 	if err != nil {
 		return nil, err
 	}
 	return out, nil
 }
 
-func (c *citrixServiceClient) LoadSignature(ctx context.Context, in *SignatureRequest, opts ...grpc.CallOption) (*emptypb.Empty, error) {
+func (c *periphServiceClient) LoadSignature(ctx context.Context, in *SignatureRequest, opts ...grpc.CallOption) (*emptypb.Empty, error) {
 	out := new(emptypb.Empty)
-	err := c.cc.Invoke(ctx, "/tast.cros.vdi.CitrixService/LoadSignature", in, out, opts...)
+	err := c.cc.Invoke(ctx, "/tast.cros.peripherals.PeriphService/LoadSignature", in, out, opts...)
 	if err != nil {
 		return nil, err
 	}
 	return out, nil
 }
 
-func (c *citrixServiceClient) ClearSignature(ctx context.Context, in *emptypb.Empty, opts ...grpc.CallOption) (*emptypb.Empty, error) {
+func (c *periphServiceClient) ClearSignature(ctx context.Context, in *emptypb.Empty, opts ...grpc.CallOption) (*emptypb.Empty, error) {
 	out := new(emptypb.Empty)
-	err := c.cc.Invoke(ctx, "/tast.cros.vdi.CitrixService/ClearSignature", in, out, opts...)
+	err := c.cc.Invoke(ctx, "/tast.cros.peripherals.PeriphService/ClearSignature", in, out, opts...)
 	if err != nil {
 		return nil, err
 	}
 	return out, nil
 }
 
-// CitrixServiceServer is the server API for CitrixService service.
-type CitrixServiceServer interface {
+// PeriphServiceServer is the server API for PeriphService service.
+type PeriphServiceServer interface {
 	// NewCitrix creates a new instance of Citrix and launches the Citrix app.
 	NewCitrix(context.Context, *NewCitrixRequest) (*emptypb.Empty, error)
 	// LoginCitrix logins the Citrix app and connects to desktop.
@@ -1290,8 +1299,8 @@ type CitrixServiceServer interface {
 	OpenCitrix(context.Context, *emptypb.Empty) (*emptypb.Empty, error)
 	// CloseCitrix closes the Citrix app.
 	CloseCitrix(context.Context, *emptypb.Empty) (*emptypb.Empty, error)
-	// ConnectUSBDevice connects USB device.
-	ConnectUSBDevice(context.Context, *ConnectUSBDeviceRequest) (*emptypb.Empty, error)
+	// ConnectUSBDeviceInCitrix connects USB device.
+	ConnectUSBDeviceInCitrix(context.Context, *ConnectUSBDeviceInCitrixRequest) (*emptypb.Empty, error)
 	// OpenCitrixApp opens app in Citrix.
 	OpenCitrixApp(context.Context, *OpenCitrixAppRequest) (*emptypb.Empty, error)
 	// CloseCitrixApp closes app in Citrix.
@@ -1320,470 +1329,470 @@ type CitrixServiceServer interface {
 	ClearSignature(context.Context, *emptypb.Empty) (*emptypb.Empty, error)
 }
 
-// UnimplementedCitrixServiceServer can be embedded to have forward compatible implementations.
-type UnimplementedCitrixServiceServer struct {
+// UnimplementedPeriphServiceServer can be embedded to have forward compatible implementations.
+type UnimplementedPeriphServiceServer struct {
 }
 
-func (*UnimplementedCitrixServiceServer) NewCitrix(context.Context, *NewCitrixRequest) (*emptypb.Empty, error) {
+func (*UnimplementedPeriphServiceServer) NewCitrix(context.Context, *NewCitrixRequest) (*emptypb.Empty, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method NewCitrix not implemented")
 }
-func (*UnimplementedCitrixServiceServer) LoginCitrix(context.Context, *emptypb.Empty) (*emptypb.Empty, error) {
+func (*UnimplementedPeriphServiceServer) LoginCitrix(context.Context, *emptypb.Empty) (*emptypb.Empty, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method LoginCitrix not implemented")
 }
-func (*UnimplementedCitrixServiceServer) OpenCitrix(context.Context, *emptypb.Empty) (*emptypb.Empty, error) {
+func (*UnimplementedPeriphServiceServer) OpenCitrix(context.Context, *emptypb.Empty) (*emptypb.Empty, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method OpenCitrix not implemented")
 }
-func (*UnimplementedCitrixServiceServer) CloseCitrix(context.Context, *emptypb.Empty) (*emptypb.Empty, error) {
+func (*UnimplementedPeriphServiceServer) CloseCitrix(context.Context, *emptypb.Empty) (*emptypb.Empty, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method CloseCitrix not implemented")
 }
-func (*UnimplementedCitrixServiceServer) ConnectUSBDevice(context.Context, *ConnectUSBDeviceRequest) (*emptypb.Empty, error) {
-	return nil, status.Errorf(codes.Unimplemented, "method ConnectUSBDevice not implemented")
+func (*UnimplementedPeriphServiceServer) ConnectUSBDeviceInCitrix(context.Context, *ConnectUSBDeviceInCitrixRequest) (*emptypb.Empty, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method ConnectUSBDeviceInCitrix not implemented")
 }
-func (*UnimplementedCitrixServiceServer) OpenCitrixApp(context.Context, *OpenCitrixAppRequest) (*emptypb.Empty, error) {
+func (*UnimplementedPeriphServiceServer) OpenCitrixApp(context.Context, *OpenCitrixAppRequest) (*emptypb.Empty, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method OpenCitrixApp not implemented")
 }
-func (*UnimplementedCitrixServiceServer) CloseCitrixApp(context.Context, *CloseCitrixAppRequest) (*emptypb.Empty, error) {
+func (*UnimplementedPeriphServiceServer) CloseCitrixApp(context.Context, *CloseCitrixAppRequest) (*emptypb.Empty, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method CloseCitrixApp not implemented")
 }
-func (*UnimplementedCitrixServiceServer) DeleteFile(context.Context, *DeleteFileRequest) (*emptypb.Empty, error) {
+func (*UnimplementedPeriphServiceServer) DeleteFile(context.Context, *DeleteFileRequest) (*emptypb.Empty, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method DeleteFile not implemented")
 }
-func (*UnimplementedCitrixServiceServer) DeleteFileIfExists(context.Context, *DeleteFileRequest) (*emptypb.Empty, error) {
+func (*UnimplementedPeriphServiceServer) DeleteFileIfExists(context.Context, *DeleteFileRequest) (*emptypb.Empty, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method DeleteFileIfExists not implemented")
 }
-func (*UnimplementedCitrixServiceServer) SaveCropScreenshot(context.Context, *SaveCropScreenshotRequest) (*emptypb.Empty, error) {
+func (*UnimplementedPeriphServiceServer) SaveCropScreenshot(context.Context, *SaveCropScreenshotRequest) (*emptypb.Empty, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method SaveCropScreenshot not implemented")
 }
-func (*UnimplementedCitrixServiceServer) VerifyTwoImagesSimilarity(context.Context, *VerifyTwoImagesSimilarityRequest) (*emptypb.Empty, error) {
+func (*UnimplementedPeriphServiceServer) VerifyTwoImagesSimilarity(context.Context, *VerifyTwoImagesSimilarityRequest) (*emptypb.Empty, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method VerifyTwoImagesSimilarity not implemented")
 }
-func (*UnimplementedCitrixServiceServer) WaitUntilIconExists(context.Context, *WaitUntilIconExistsRequest) (*emptypb.Empty, error) {
+func (*UnimplementedPeriphServiceServer) WaitUntilIconExists(context.Context, *WaitUntilIconExistsRequest) (*emptypb.Empty, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method WaitUntilIconExists not implemented")
 }
-func (*UnimplementedCitrixServiceServer) SetupFootPedalTest(context.Context, *emptypb.Empty) (*emptypb.Empty, error) {
+func (*UnimplementedPeriphServiceServer) SetupFootPedalTest(context.Context, *emptypb.Empty) (*emptypb.Empty, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method SetupFootPedalTest not implemented")
 }
-func (*UnimplementedCitrixServiceServer) VerifyFootPedalButtonPressed(context.Context, *VerifyFootPedalButtonPressedRequest) (*emptypb.Empty, error) {
+func (*UnimplementedPeriphServiceServer) VerifyFootPedalButtonPressed(context.Context, *VerifyFootPedalButtonPressedRequest) (*emptypb.Empty, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method VerifyFootPedalButtonPressed not implemented")
 }
-func (*UnimplementedCitrixServiceServer) StartSignature(context.Context, *StartSignatureRequest) (*emptypb.Empty, error) {
+func (*UnimplementedPeriphServiceServer) StartSignature(context.Context, *StartSignatureRequest) (*emptypb.Empty, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method StartSignature not implemented")
 }
-func (*UnimplementedCitrixServiceServer) SaveSignature(context.Context, *SignatureRequest) (*emptypb.Empty, error) {
+func (*UnimplementedPeriphServiceServer) SaveSignature(context.Context, *SignatureRequest) (*emptypb.Empty, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method SaveSignature not implemented")
 }
-func (*UnimplementedCitrixServiceServer) LoadSignature(context.Context, *SignatureRequest) (*emptypb.Empty, error) {
+func (*UnimplementedPeriphServiceServer) LoadSignature(context.Context, *SignatureRequest) (*emptypb.Empty, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method LoadSignature not implemented")
 }
-func (*UnimplementedCitrixServiceServer) ClearSignature(context.Context, *emptypb.Empty) (*emptypb.Empty, error) {
+func (*UnimplementedPeriphServiceServer) ClearSignature(context.Context, *emptypb.Empty) (*emptypb.Empty, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method ClearSignature not implemented")
 }
 
-func RegisterCitrixServiceServer(s *grpc.Server, srv CitrixServiceServer) {
-	s.RegisterService(&_CitrixService_serviceDesc, srv)
+func RegisterPeriphServiceServer(s *grpc.Server, srv PeriphServiceServer) {
+	s.RegisterService(&_PeriphService_serviceDesc, srv)
 }
 
-func _CitrixService_NewCitrix_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+func _PeriphService_NewCitrix_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
 	in := new(NewCitrixRequest)
 	if err := dec(in); err != nil {
 		return nil, err
 	}
 	if interceptor == nil {
-		return srv.(CitrixServiceServer).NewCitrix(ctx, in)
+		return srv.(PeriphServiceServer).NewCitrix(ctx, in)
 	}
 	info := &grpc.UnaryServerInfo{
 		Server:     srv,
-		FullMethod: "/tast.cros.vdi.CitrixService/NewCitrix",
+		FullMethod: "/tast.cros.peripherals.PeriphService/NewCitrix",
 	}
 	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
-		return srv.(CitrixServiceServer).NewCitrix(ctx, req.(*NewCitrixRequest))
+		return srv.(PeriphServiceServer).NewCitrix(ctx, req.(*NewCitrixRequest))
 	}
 	return interceptor(ctx, in, info, handler)
 }
 
-func _CitrixService_LoginCitrix_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+func _PeriphService_LoginCitrix_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
 	in := new(emptypb.Empty)
 	if err := dec(in); err != nil {
 		return nil, err
 	}
 	if interceptor == nil {
-		return srv.(CitrixServiceServer).LoginCitrix(ctx, in)
+		return srv.(PeriphServiceServer).LoginCitrix(ctx, in)
 	}
 	info := &grpc.UnaryServerInfo{
 		Server:     srv,
-		FullMethod: "/tast.cros.vdi.CitrixService/LoginCitrix",
+		FullMethod: "/tast.cros.peripherals.PeriphService/LoginCitrix",
 	}
 	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
-		return srv.(CitrixServiceServer).LoginCitrix(ctx, req.(*emptypb.Empty))
+		return srv.(PeriphServiceServer).LoginCitrix(ctx, req.(*emptypb.Empty))
 	}
 	return interceptor(ctx, in, info, handler)
 }
 
-func _CitrixService_OpenCitrix_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+func _PeriphService_OpenCitrix_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
 	in := new(emptypb.Empty)
 	if err := dec(in); err != nil {
 		return nil, err
 	}
 	if interceptor == nil {
-		return srv.(CitrixServiceServer).OpenCitrix(ctx, in)
+		return srv.(PeriphServiceServer).OpenCitrix(ctx, in)
 	}
 	info := &grpc.UnaryServerInfo{
 		Server:     srv,
-		FullMethod: "/tast.cros.vdi.CitrixService/OpenCitrix",
+		FullMethod: "/tast.cros.peripherals.PeriphService/OpenCitrix",
 	}
 	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
-		return srv.(CitrixServiceServer).OpenCitrix(ctx, req.(*emptypb.Empty))
+		return srv.(PeriphServiceServer).OpenCitrix(ctx, req.(*emptypb.Empty))
 	}
 	return interceptor(ctx, in, info, handler)
 }
 
-func _CitrixService_CloseCitrix_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+func _PeriphService_CloseCitrix_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
 	in := new(emptypb.Empty)
 	if err := dec(in); err != nil {
 		return nil, err
 	}
 	if interceptor == nil {
-		return srv.(CitrixServiceServer).CloseCitrix(ctx, in)
+		return srv.(PeriphServiceServer).CloseCitrix(ctx, in)
 	}
 	info := &grpc.UnaryServerInfo{
 		Server:     srv,
-		FullMethod: "/tast.cros.vdi.CitrixService/CloseCitrix",
+		FullMethod: "/tast.cros.peripherals.PeriphService/CloseCitrix",
 	}
 	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
-		return srv.(CitrixServiceServer).CloseCitrix(ctx, req.(*emptypb.Empty))
+		return srv.(PeriphServiceServer).CloseCitrix(ctx, req.(*emptypb.Empty))
 	}
 	return interceptor(ctx, in, info, handler)
 }
 
-func _CitrixService_ConnectUSBDevice_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
-	in := new(ConnectUSBDeviceRequest)
+func _PeriphService_ConnectUSBDeviceInCitrix_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(ConnectUSBDeviceInCitrixRequest)
 	if err := dec(in); err != nil {
 		return nil, err
 	}
 	if interceptor == nil {
-		return srv.(CitrixServiceServer).ConnectUSBDevice(ctx, in)
+		return srv.(PeriphServiceServer).ConnectUSBDeviceInCitrix(ctx, in)
 	}
 	info := &grpc.UnaryServerInfo{
 		Server:     srv,
-		FullMethod: "/tast.cros.vdi.CitrixService/ConnectUSBDevice",
+		FullMethod: "/tast.cros.peripherals.PeriphService/ConnectUSBDeviceInCitrix",
 	}
 	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
-		return srv.(CitrixServiceServer).ConnectUSBDevice(ctx, req.(*ConnectUSBDeviceRequest))
+		return srv.(PeriphServiceServer).ConnectUSBDeviceInCitrix(ctx, req.(*ConnectUSBDeviceInCitrixRequest))
 	}
 	return interceptor(ctx, in, info, handler)
 }
 
-func _CitrixService_OpenCitrixApp_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+func _PeriphService_OpenCitrixApp_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
 	in := new(OpenCitrixAppRequest)
 	if err := dec(in); err != nil {
 		return nil, err
 	}
 	if interceptor == nil {
-		return srv.(CitrixServiceServer).OpenCitrixApp(ctx, in)
+		return srv.(PeriphServiceServer).OpenCitrixApp(ctx, in)
 	}
 	info := &grpc.UnaryServerInfo{
 		Server:     srv,
-		FullMethod: "/tast.cros.vdi.CitrixService/OpenCitrixApp",
+		FullMethod: "/tast.cros.peripherals.PeriphService/OpenCitrixApp",
 	}
 	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
-		return srv.(CitrixServiceServer).OpenCitrixApp(ctx, req.(*OpenCitrixAppRequest))
+		return srv.(PeriphServiceServer).OpenCitrixApp(ctx, req.(*OpenCitrixAppRequest))
 	}
 	return interceptor(ctx, in, info, handler)
 }
 
-func _CitrixService_CloseCitrixApp_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+func _PeriphService_CloseCitrixApp_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
 	in := new(CloseCitrixAppRequest)
 	if err := dec(in); err != nil {
 		return nil, err
 	}
 	if interceptor == nil {
-		return srv.(CitrixServiceServer).CloseCitrixApp(ctx, in)
+		return srv.(PeriphServiceServer).CloseCitrixApp(ctx, in)
 	}
 	info := &grpc.UnaryServerInfo{
 		Server:     srv,
-		FullMethod: "/tast.cros.vdi.CitrixService/CloseCitrixApp",
+		FullMethod: "/tast.cros.peripherals.PeriphService/CloseCitrixApp",
 	}
 	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
-		return srv.(CitrixServiceServer).CloseCitrixApp(ctx, req.(*CloseCitrixAppRequest))
+		return srv.(PeriphServiceServer).CloseCitrixApp(ctx, req.(*CloseCitrixAppRequest))
 	}
 	return interceptor(ctx, in, info, handler)
 }
 
-func _CitrixService_DeleteFile_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+func _PeriphService_DeleteFile_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
 	in := new(DeleteFileRequest)
 	if err := dec(in); err != nil {
 		return nil, err
 	}
 	if interceptor == nil {
-		return srv.(CitrixServiceServer).DeleteFile(ctx, in)
+		return srv.(PeriphServiceServer).DeleteFile(ctx, in)
 	}
 	info := &grpc.UnaryServerInfo{
 		Server:     srv,
-		FullMethod: "/tast.cros.vdi.CitrixService/DeleteFile",
+		FullMethod: "/tast.cros.peripherals.PeriphService/DeleteFile",
 	}
 	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
-		return srv.(CitrixServiceServer).DeleteFile(ctx, req.(*DeleteFileRequest))
+		return srv.(PeriphServiceServer).DeleteFile(ctx, req.(*DeleteFileRequest))
 	}
 	return interceptor(ctx, in, info, handler)
 }
 
-func _CitrixService_DeleteFileIfExists_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+func _PeriphService_DeleteFileIfExists_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
 	in := new(DeleteFileRequest)
 	if err := dec(in); err != nil {
 		return nil, err
 	}
 	if interceptor == nil {
-		return srv.(CitrixServiceServer).DeleteFileIfExists(ctx, in)
+		return srv.(PeriphServiceServer).DeleteFileIfExists(ctx, in)
 	}
 	info := &grpc.UnaryServerInfo{
 		Server:     srv,
-		FullMethod: "/tast.cros.vdi.CitrixService/DeleteFileIfExists",
+		FullMethod: "/tast.cros.peripherals.PeriphService/DeleteFileIfExists",
 	}
 	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
-		return srv.(CitrixServiceServer).DeleteFileIfExists(ctx, req.(*DeleteFileRequest))
+		return srv.(PeriphServiceServer).DeleteFileIfExists(ctx, req.(*DeleteFileRequest))
 	}
 	return interceptor(ctx, in, info, handler)
 }
 
-func _CitrixService_SaveCropScreenshot_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+func _PeriphService_SaveCropScreenshot_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
 	in := new(SaveCropScreenshotRequest)
 	if err := dec(in); err != nil {
 		return nil, err
 	}
 	if interceptor == nil {
-		return srv.(CitrixServiceServer).SaveCropScreenshot(ctx, in)
+		return srv.(PeriphServiceServer).SaveCropScreenshot(ctx, in)
 	}
 	info := &grpc.UnaryServerInfo{
 		Server:     srv,
-		FullMethod: "/tast.cros.vdi.CitrixService/SaveCropScreenshot",
+		FullMethod: "/tast.cros.peripherals.PeriphService/SaveCropScreenshot",
 	}
 	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
-		return srv.(CitrixServiceServer).SaveCropScreenshot(ctx, req.(*SaveCropScreenshotRequest))
+		return srv.(PeriphServiceServer).SaveCropScreenshot(ctx, req.(*SaveCropScreenshotRequest))
 	}
 	return interceptor(ctx, in, info, handler)
 }
 
-func _CitrixService_VerifyTwoImagesSimilarity_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+func _PeriphService_VerifyTwoImagesSimilarity_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
 	in := new(VerifyTwoImagesSimilarityRequest)
 	if err := dec(in); err != nil {
 		return nil, err
 	}
 	if interceptor == nil {
-		return srv.(CitrixServiceServer).VerifyTwoImagesSimilarity(ctx, in)
+		return srv.(PeriphServiceServer).VerifyTwoImagesSimilarity(ctx, in)
 	}
 	info := &grpc.UnaryServerInfo{
 		Server:     srv,
-		FullMethod: "/tast.cros.vdi.CitrixService/VerifyTwoImagesSimilarity",
+		FullMethod: "/tast.cros.peripherals.PeriphService/VerifyTwoImagesSimilarity",
 	}
 	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
-		return srv.(CitrixServiceServer).VerifyTwoImagesSimilarity(ctx, req.(*VerifyTwoImagesSimilarityRequest))
+		return srv.(PeriphServiceServer).VerifyTwoImagesSimilarity(ctx, req.(*VerifyTwoImagesSimilarityRequest))
 	}
 	return interceptor(ctx, in, info, handler)
 }
 
-func _CitrixService_WaitUntilIconExists_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+func _PeriphService_WaitUntilIconExists_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
 	in := new(WaitUntilIconExistsRequest)
 	if err := dec(in); err != nil {
 		return nil, err
 	}
 	if interceptor == nil {
-		return srv.(CitrixServiceServer).WaitUntilIconExists(ctx, in)
+		return srv.(PeriphServiceServer).WaitUntilIconExists(ctx, in)
 	}
 	info := &grpc.UnaryServerInfo{
 		Server:     srv,
-		FullMethod: "/tast.cros.vdi.CitrixService/WaitUntilIconExists",
+		FullMethod: "/tast.cros.peripherals.PeriphService/WaitUntilIconExists",
 	}
 	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
-		return srv.(CitrixServiceServer).WaitUntilIconExists(ctx, req.(*WaitUntilIconExistsRequest))
+		return srv.(PeriphServiceServer).WaitUntilIconExists(ctx, req.(*WaitUntilIconExistsRequest))
 	}
 	return interceptor(ctx, in, info, handler)
 }
 
-func _CitrixService_SetupFootPedalTest_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+func _PeriphService_SetupFootPedalTest_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
 	in := new(emptypb.Empty)
 	if err := dec(in); err != nil {
 		return nil, err
 	}
 	if interceptor == nil {
-		return srv.(CitrixServiceServer).SetupFootPedalTest(ctx, in)
+		return srv.(PeriphServiceServer).SetupFootPedalTest(ctx, in)
 	}
 	info := &grpc.UnaryServerInfo{
 		Server:     srv,
-		FullMethod: "/tast.cros.vdi.CitrixService/SetupFootPedalTest",
+		FullMethod: "/tast.cros.peripherals.PeriphService/SetupFootPedalTest",
 	}
 	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
-		return srv.(CitrixServiceServer).SetupFootPedalTest(ctx, req.(*emptypb.Empty))
+		return srv.(PeriphServiceServer).SetupFootPedalTest(ctx, req.(*emptypb.Empty))
 	}
 	return interceptor(ctx, in, info, handler)
 }
 
-func _CitrixService_VerifyFootPedalButtonPressed_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+func _PeriphService_VerifyFootPedalButtonPressed_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
 	in := new(VerifyFootPedalButtonPressedRequest)
 	if err := dec(in); err != nil {
 		return nil, err
 	}
 	if interceptor == nil {
-		return srv.(CitrixServiceServer).VerifyFootPedalButtonPressed(ctx, in)
+		return srv.(PeriphServiceServer).VerifyFootPedalButtonPressed(ctx, in)
 	}
 	info := &grpc.UnaryServerInfo{
 		Server:     srv,
-		FullMethod: "/tast.cros.vdi.CitrixService/VerifyFootPedalButtonPressed",
+		FullMethod: "/tast.cros.peripherals.PeriphService/VerifyFootPedalButtonPressed",
 	}
 	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
-		return srv.(CitrixServiceServer).VerifyFootPedalButtonPressed(ctx, req.(*VerifyFootPedalButtonPressedRequest))
+		return srv.(PeriphServiceServer).VerifyFootPedalButtonPressed(ctx, req.(*VerifyFootPedalButtonPressedRequest))
 	}
 	return interceptor(ctx, in, info, handler)
 }
 
-func _CitrixService_StartSignature_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+func _PeriphService_StartSignature_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
 	in := new(StartSignatureRequest)
 	if err := dec(in); err != nil {
 		return nil, err
 	}
 	if interceptor == nil {
-		return srv.(CitrixServiceServer).StartSignature(ctx, in)
+		return srv.(PeriphServiceServer).StartSignature(ctx, in)
 	}
 	info := &grpc.UnaryServerInfo{
 		Server:     srv,
-		FullMethod: "/tast.cros.vdi.CitrixService/StartSignature",
+		FullMethod: "/tast.cros.peripherals.PeriphService/StartSignature",
 	}
 	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
-		return srv.(CitrixServiceServer).StartSignature(ctx, req.(*StartSignatureRequest))
+		return srv.(PeriphServiceServer).StartSignature(ctx, req.(*StartSignatureRequest))
 	}
 	return interceptor(ctx, in, info, handler)
 }
 
-func _CitrixService_SaveSignature_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+func _PeriphService_SaveSignature_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
 	in := new(SignatureRequest)
 	if err := dec(in); err != nil {
 		return nil, err
 	}
 	if interceptor == nil {
-		return srv.(CitrixServiceServer).SaveSignature(ctx, in)
+		return srv.(PeriphServiceServer).SaveSignature(ctx, in)
 	}
 	info := &grpc.UnaryServerInfo{
 		Server:     srv,
-		FullMethod: "/tast.cros.vdi.CitrixService/SaveSignature",
+		FullMethod: "/tast.cros.peripherals.PeriphService/SaveSignature",
 	}
 	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
-		return srv.(CitrixServiceServer).SaveSignature(ctx, req.(*SignatureRequest))
+		return srv.(PeriphServiceServer).SaveSignature(ctx, req.(*SignatureRequest))
 	}
 	return interceptor(ctx, in, info, handler)
 }
 
-func _CitrixService_LoadSignature_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+func _PeriphService_LoadSignature_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
 	in := new(SignatureRequest)
 	if err := dec(in); err != nil {
 		return nil, err
 	}
 	if interceptor == nil {
-		return srv.(CitrixServiceServer).LoadSignature(ctx, in)
+		return srv.(PeriphServiceServer).LoadSignature(ctx, in)
 	}
 	info := &grpc.UnaryServerInfo{
 		Server:     srv,
-		FullMethod: "/tast.cros.vdi.CitrixService/LoadSignature",
+		FullMethod: "/tast.cros.peripherals.PeriphService/LoadSignature",
 	}
 	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
-		return srv.(CitrixServiceServer).LoadSignature(ctx, req.(*SignatureRequest))
+		return srv.(PeriphServiceServer).LoadSignature(ctx, req.(*SignatureRequest))
 	}
 	return interceptor(ctx, in, info, handler)
 }
 
-func _CitrixService_ClearSignature_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+func _PeriphService_ClearSignature_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
 	in := new(emptypb.Empty)
 	if err := dec(in); err != nil {
 		return nil, err
 	}
 	if interceptor == nil {
-		return srv.(CitrixServiceServer).ClearSignature(ctx, in)
+		return srv.(PeriphServiceServer).ClearSignature(ctx, in)
 	}
 	info := &grpc.UnaryServerInfo{
 		Server:     srv,
-		FullMethod: "/tast.cros.vdi.CitrixService/ClearSignature",
+		FullMethod: "/tast.cros.peripherals.PeriphService/ClearSignature",
 	}
 	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
-		return srv.(CitrixServiceServer).ClearSignature(ctx, req.(*emptypb.Empty))
+		return srv.(PeriphServiceServer).ClearSignature(ctx, req.(*emptypb.Empty))
 	}
 	return interceptor(ctx, in, info, handler)
 }
 
-var _CitrixService_serviceDesc = grpc.ServiceDesc{
-	ServiceName: "tast.cros.vdi.CitrixService",
-	HandlerType: (*CitrixServiceServer)(nil),
+var _PeriphService_serviceDesc = grpc.ServiceDesc{
+	ServiceName: "tast.cros.peripherals.PeriphService",
+	HandlerType: (*PeriphServiceServer)(nil),
 	Methods: []grpc.MethodDesc{
 		{
 			MethodName: "NewCitrix",
-			Handler:    _CitrixService_NewCitrix_Handler,
+			Handler:    _PeriphService_NewCitrix_Handler,
 		},
 		{
 			MethodName: "LoginCitrix",
-			Handler:    _CitrixService_LoginCitrix_Handler,
+			Handler:    _PeriphService_LoginCitrix_Handler,
 		},
 		{
 			MethodName: "OpenCitrix",
-			Handler:    _CitrixService_OpenCitrix_Handler,
+			Handler:    _PeriphService_OpenCitrix_Handler,
 		},
 		{
 			MethodName: "CloseCitrix",
-			Handler:    _CitrixService_CloseCitrix_Handler,
+			Handler:    _PeriphService_CloseCitrix_Handler,
 		},
 		{
-			MethodName: "ConnectUSBDevice",
-			Handler:    _CitrixService_ConnectUSBDevice_Handler,
+			MethodName: "ConnectUSBDeviceInCitrix",
+			Handler:    _PeriphService_ConnectUSBDeviceInCitrix_Handler,
 		},
 		{
 			MethodName: "OpenCitrixApp",
-			Handler:    _CitrixService_OpenCitrixApp_Handler,
+			Handler:    _PeriphService_OpenCitrixApp_Handler,
 		},
 		{
 			MethodName: "CloseCitrixApp",
-			Handler:    _CitrixService_CloseCitrixApp_Handler,
+			Handler:    _PeriphService_CloseCitrixApp_Handler,
 		},
 		{
 			MethodName: "DeleteFile",
-			Handler:    _CitrixService_DeleteFile_Handler,
+			Handler:    _PeriphService_DeleteFile_Handler,
 		},
 		{
 			MethodName: "DeleteFileIfExists",
-			Handler:    _CitrixService_DeleteFileIfExists_Handler,
+			Handler:    _PeriphService_DeleteFileIfExists_Handler,
 		},
 		{
 			MethodName: "SaveCropScreenshot",
-			Handler:    _CitrixService_SaveCropScreenshot_Handler,
+			Handler:    _PeriphService_SaveCropScreenshot_Handler,
 		},
 		{
 			MethodName: "VerifyTwoImagesSimilarity",
-			Handler:    _CitrixService_VerifyTwoImagesSimilarity_Handler,
+			Handler:    _PeriphService_VerifyTwoImagesSimilarity_Handler,
 		},
 		{
 			MethodName: "WaitUntilIconExists",
-			Handler:    _CitrixService_WaitUntilIconExists_Handler,
+			Handler:    _PeriphService_WaitUntilIconExists_Handler,
 		},
 		{
 			MethodName: "SetupFootPedalTest",
-			Handler:    _CitrixService_SetupFootPedalTest_Handler,
+			Handler:    _PeriphService_SetupFootPedalTest_Handler,
 		},
 		{
 			MethodName: "VerifyFootPedalButtonPressed",
-			Handler:    _CitrixService_VerifyFootPedalButtonPressed_Handler,
+			Handler:    _PeriphService_VerifyFootPedalButtonPressed_Handler,
 		},
 		{
 			MethodName: "StartSignature",
-			Handler:    _CitrixService_StartSignature_Handler,
+			Handler:    _PeriphService_StartSignature_Handler,
 		},
 		{
 			MethodName: "SaveSignature",
-			Handler:    _CitrixService_SaveSignature_Handler,
+			Handler:    _PeriphService_SaveSignature_Handler,
 		},
 		{
 			MethodName: "LoadSignature",
-			Handler:    _CitrixService_LoadSignature_Handler,
+			Handler:    _PeriphService_LoadSignature_Handler,
 		},
 		{
 			MethodName: "ClearSignature",
-			Handler:    _CitrixService_ClearSignature_Handler,
+			Handler:    _PeriphService_ClearSignature_Handler,
 		},
 	},
 	Streams:  []grpc.StreamDesc{},
-	Metadata: "citrix_service.proto",
+	Metadata: "periph_service.proto",
 }

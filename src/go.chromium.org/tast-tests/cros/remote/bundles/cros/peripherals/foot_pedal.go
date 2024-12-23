@@ -16,9 +16,9 @@ import (
 	"go.chromium.org/tast-tests/cros/common/robotics/arm/amber"
 	"go.chromium.org/tast-tests/cros/remote/bundles/cros/peripherals/citrix"
 	"go.chromium.org/tast-tests/cros/remote/bundles/cros/peripherals/utils"
+	"go.chromium.org/tast-tests/cros/services/cros/peripherals"
 	ps "go.chromium.org/tast-tests/cros/services/cros/policy"
 	pb "go.chromium.org/tast-tests/cros/services/cros/ui"
-	"go.chromium.org/tast-tests/cros/services/cros/vdi"
 	"go.chromium.org/tast/core/ctxutil"
 	"go.chromium.org/tast/core/rpc"
 	"go.chromium.org/tast/core/ssh/linuxssh"
@@ -29,7 +29,7 @@ import (
 // to operate the foot pedal.
 // The file should contain 5 positions in series:
 // Center button, Left button, Right button, Top button, Ready position.
-const footPedalMotionData = "foot_pedal_motion_data.csv"
+const footPedalMotionData = "citrix/foot_pedal_motion_data.csv"
 
 var footPedalData = append(citrix.CitrixData, citrix.FootPedalData...)
 
@@ -48,14 +48,14 @@ func init() {
 		Timeout:      10 * time.Minute,
 		ServiceDeps: []string{
 			"tast.cros.policy.PolicyService",
-			"tast.cros.vdi.CitrixService",
+			"tast.cros.peripherals.PeriphService",
 			"tast.cros.ui.ScreenRecorderService",
 			utils.FaillogServiceName,
 		},
 		SoftwareDeps: []string{"chrome"},
 		Vars: []string{
-			"peripherals.ota_username",
-			"peripherals.ota_password",
+			"peripherals.username",
+			"peripherals.password",
 			"peripherals.record_screen",
 			"peripherals.manual_test",
 		},
@@ -77,8 +77,8 @@ func FootPedal(ctx context.Context, s *testing.State) {
 		motionCount        = 5
 		readyPositionIndex = motionCount - 1
 	)
-	otaUsername := s.RequiredVar("vdi.ota_username")
-	otaPassword := s.RequiredVar("peripherals.ota_password")
+	username := s.RequiredVar("peripherals.username")
+	password := s.RequiredVar("peripherals.password")
 	// Prepare data path on DUT.
 	d := s.DUT()
 	dataPath, err := utils.CopyFilesToRemote(ctx, s, d, footPedalData)
@@ -100,8 +100,8 @@ func FootPedal(ctx context.Context, s *testing.State) {
 
 	policyClient := ps.NewPolicyServiceClient(cl.Conn)
 	if _, err := policyClient.GAIAEnrollAndLoginUsingChrome(ctx, &ps.GAIAEnrollAndLoginUsingChromeRequest{
-		Username:    otaUsername,
-		Password:    otaPassword,
+		Username:    username,
+		Password:    password,
 		DmserverURL: policy.DMServerProdURL,
 	}); err != nil {
 		s.Fatal("Failed to enroll using chrome: ", err)
@@ -116,7 +116,7 @@ func FootPedal(ctx context.Context, s *testing.State) {
 	}
 	if recordScreen {
 		s.Log("Screen recorder started")
-		filePath := filepath.Join(s.OutDir(), "foot_pedal.webm")
+		filePath := filepath.Join(s.OutDir(), s.TestName()+".webm")
 		startRequest := pb.StartRequest{
 			FileName: filePath,
 		}
@@ -140,8 +140,8 @@ func FootPedal(ctx context.Context, s *testing.State) {
 		}(cleanupCtx)
 	}
 
-	citrixSvc := vdi.NewCitrixServiceClient(cl.Conn)
-	if _, err := citrixSvc.NewCitrix(ctx, &vdi.NewCitrixRequest{
+	svc := peripherals.NewPeriphServiceClient(cl.Conn)
+	if _, err := svc.NewCitrix(ctx, &peripherals.NewCitrixRequest{
 		DataPath: dataPath,
 	}); err != nil {
 		s.Fatal("Failed to create new Citrix: ", err)
@@ -149,26 +149,25 @@ func FootPedal(ctx context.Context, s *testing.State) {
 
 	defer func(ctx context.Context) {
 		utils.DumpUITreeWithScreenshotToFile(ctx, cl.Conn, s.HasError, "ui_dump")
-		if _, err := citrixSvc.CloseCitrix(ctx, &empty.Empty{}); err != nil {
+		if _, err := svc.CloseCitrix(ctx, &empty.Empty{}); err != nil {
 			s.Log("Failed to close Citrix app: ", err)
 		}
 	}(cleanupCtx)
 
-	if _, err := citrixSvc.LoginCitrix(ctx, &empty.Empty{}); err != nil {
+	if _, err := svc.LoginCitrix(ctx, &empty.Empty{}); err != nil {
 		s.Fatal("Failed to login Citrix: ", err)
 	}
 
-	if _, err := citrixSvc.OpenCitrixApp(ctx, &vdi.OpenCitrixAppRequest{
+	if _, err := svc.OpenCitrixApp(ctx, &peripherals.OpenCitrixAppRequest{
 		AppName:  string(appName),
 		AppTitle: appTitle,
 	}); err != nil {
 		s.Fatalf("Failed to open Citrix app %v: %v", appName, err)
 	}
 
-	if _, err := citrixSvc.SetupFootPedalTest(ctx, &empty.Empty{}); err != nil {
+	if _, err := svc.SetupFootPedalTest(ctx, &empty.Empty{}); err != nil {
 		s.Fatal("Failed to set up foot pedal test: ", err)
 	}
-
 	manualTest := false
 	if val, ok := s.Var("peripherals.manual_test"); ok {
 		manualTest, err = strconv.ParseBool(val)
@@ -176,7 +175,6 @@ func FootPedal(ctx context.Context, s *testing.State) {
 			s.Fatal("Failed to parse argument 'peripherals.manual_test' of type bool: ", err)
 		}
 	}
-
 	var (
 		arm       *amber.Arm
 		positions [][]float32
@@ -195,7 +193,7 @@ func FootPedal(ctx context.Context, s *testing.State) {
 
 		positions, err = amber.ParsePositionsFromCSV(s.DataPath(footPedalMotionData))
 		if err != nil {
-			s.Fatal("Failed to read foot pedal movement data from file: ", err)
+			s.Fatal("Failed to read foot pedal motion data: ", err)
 		}
 		if len(positions) != motionCount {
 			s.Fatalf("Unexpected motion count: got %d, expected %d", len(positions), motionCount)
@@ -207,7 +205,7 @@ func FootPedal(ctx context.Context, s *testing.State) {
 		}
 	}
 
-	pressButtonAndVerify := func(ctx context.Context, button vdi.FootPedalButton) {
+	pressButtonAndVerify := func(ctx context.Context, button peripherals.FootPedalButton) {
 		if manualTest {
 			s.Logf("Please press the %v button manually", button)
 		} else {
@@ -223,18 +221,18 @@ func FootPedal(ctx context.Context, s *testing.State) {
 			}()
 		}
 
-		if _, err := citrixSvc.VerifyFootPedalButtonPressed(ctx, &vdi.VerifyFootPedalButtonPressedRequest{
+		if _, err := svc.VerifyFootPedalButtonPressed(ctx, &peripherals.VerifyFootPedalButtonPressedRequest{
 			Button: button,
 		}); err != nil {
 			s.Fatalf("Failed to verify %v button pressed: %v", button, err)
 		}
 	}
 
-	for _, button := range []vdi.FootPedalButton{
-		vdi.FootPedalButton_CENTER,
-		vdi.FootPedalButton_LEFT,
-		vdi.FootPedalButton_RIGHT,
-		vdi.FootPedalButton_TOP,
+	for _, button := range []peripherals.FootPedalButton{
+		peripherals.FootPedalButton_CENTER,
+		peripherals.FootPedalButton_LEFT,
+		peripherals.FootPedalButton_RIGHT,
+		peripherals.FootPedalButton_TOP,
 	} {
 		pressButtonAndVerify(ctx, button)
 	}
