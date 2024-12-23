@@ -307,20 +307,26 @@ func Run(ctx context.Context, cr *chrome.Chrome, outDir, systemTraceConfigPath s
 				volumeButton := nodewith.NameRegex(regexp.MustCompile("mute$")).Role(role.Button)
 				volumeSlider := nodewith.Name("volume").Role(role.Slider)
 
+				// Ensure the video is paused to get the location of volume button.
+				if err := videoConn.Eval(ctx, "video.pause()", nil); err != nil {
+					return errors.Wrap(err, "failed to pause video")
+				}
 				if err := action.Combine(
 					"open volume slider toggle",
 					// The volume button is frequently offscreen. ui.MakeVisible
 					// scrolls the page until the button is visible on screen.
 					ui.MakeVisible(volumeButton),
 					ui.EnsureFocused(volumeButton),
-					ui.WaitForLocation(volumeSlider),
 				)(ctx); err != nil {
 					return err
 				}
-
 				muteLocation, err := ui.Location(ctx, volumeButton)
 				if err != nil {
 					return errors.Wrap(err, "failed to get the mute button location")
+				}
+				// Ensure the video is playing after we get the location of volume button.
+				if err := videoConn.Eval(ctx, "video.play()", nil); err != nil {
+					return errors.Wrap(err, "failed to play video")
 				}
 
 				// Tap the mute button to collect mouse/touch input latency.
