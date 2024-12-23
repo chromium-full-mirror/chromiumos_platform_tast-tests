@@ -72,6 +72,8 @@ func init() {
 				"awadoron",
 				"beetley",
 				"blipper",
+				"bookem",
+				"boten",
 				"drawcia",
 				"drawlat",
 				"drawman",
