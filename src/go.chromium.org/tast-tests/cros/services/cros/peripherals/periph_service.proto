@@ -71,6 +71,44 @@ service PeriphService {
 
   // ClearSignature clears the signature.
   rpc ClearSignature(google.protobuf.Empty) returns (google.protobuf.Empty) {}
+
+  // Dictation services.
+
+  // NewDictationSupport creates a new instance of Dictation support.
+  rpc NewDictationSupport(google.protobuf.Empty)
+      returns (google.protobuf.Empty) {}
+
+  // CloseDictation closes the dictation support page.
+  rpc CloseDictation(google.protobuf.Empty) returns (google.protobuf.Empty) {}
+
+  // ConnectToDictationDevice connects to the dictation device with the given
+  // device name.
+  rpc ConnectToDictationDevice(ConnectToDictationDeviceRequest)
+      returns (google.protobuf.Empty) {}
+
+  // GetDictationDevices returns the dictation devices.
+  rpc GetDictationDevices(google.protobuf.Empty)
+      returns (GetDictationDevicesResponse) {}
+
+  // WaitDictationNewEvent waits for new event from dictation.
+  rpc WaitDictationNewEvent(WaitDictationNewEventRequest)
+      returns (google.protobuf.Empty) {}
+
+  // SetDictationEventMode sets the event mode to the given state.
+  rpc SetDictationEventMode(SetDictationEventModeRequest)
+      returns (google.protobuf.Empty) {}
+
+  // GetDictationEventMode returns the event mode.
+  rpc GetDictationEventMode(google.protobuf.Empty)
+      returns (GetDictationEventModeResponse) {}
+
+  // SetDictationSimpleLEDState sets the simple LED state to the given state.
+  rpc SetDictationSimpleLEDState(SetDictationSimpleLEDStateRequest)
+      returns (google.protobuf.Empty) {}
+
+  // SetDictationLEDState sets the LED state with given index and mode.
+  rpc SetDictationLEDState(SetDictationLEDStateRequest)
+      returns (google.protobuf.Empty) {}
 }
 
 // NewCitrixRequest contains the information needed to create a new Citrix
@@ -132,3 +170,36 @@ message StartSignatureRequest { string app_name = 1; }
 // SignatureRequest contains the information needed to save/load/clear the
 // signature.
 message SignatureRequest { string file_name = 1; }
+
+// ConnectToDictationDeviceRequest contains the information needed to connect to
+// the dictation device.
+message ConnectToDictationDeviceRequest { string device_name = 1; }
+
+// GetDictationDevicesResponse contains the response of getting the devices.
+message GetDictationDevicesResponse { string devices = 1; }
+
+// WaitDictationNewEventRequest contains the information needed to wait for new
+// event.
+message WaitDictationNewEventRequest {
+  string event = 1;
+  int64 timeout = 2;
+}
+
+// SetDictationEventModeRequest contains the information needed to set the event
+// mode.
+message SetDictationEventModeRequest { string event_mode = 1; }
+
+// GetDictationEventModeResponse contains the response of getting the event
+// mode.
+message GetDictationEventModeResponse { string event_mode = 1; }
+
+// SetDictationSimpleLEDStateRequest contains the information needed to set the
+// simple LED state.
+message SetDictationSimpleLEDStateRequest { string simple_led_state = 1; }
+
+// SetDictationLEDStateRequest contains the information needed to set the LED
+// state.
+message SetDictationLEDStateRequest {
+  string led_index = 1;
+  string led_mode = 2;
+}

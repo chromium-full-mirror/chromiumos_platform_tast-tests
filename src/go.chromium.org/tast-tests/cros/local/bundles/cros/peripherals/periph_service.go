@@ -6,12 +6,14 @@ package peripherals
 
 import (
 	"context"
+	"encoding/json"
 	"path/filepath"
 	"time"
 
 	"github.com/golang/protobuf/ptypes/empty"
 	"go.chromium.org/tast-tests/cros/common/testexec"
 	"go.chromium.org/tast-tests/cros/local/apps"
+	"go.chromium.org/tast-tests/cros/local/bundles/cros/peripherals/dictation"
 	"go.chromium.org/tast-tests/cros/local/chrome"
 	"go.chromium.org/tast-tests/cros/local/chrome/ash"
 	"go.chromium.org/tast-tests/cros/local/chrome/uiauto"
@@ -49,16 +51,17 @@ func init() {
 
 // PeriphService implements tast.cros.peripherals.PeriphService.
 type PeriphService struct {
-	s            *testing.ServiceState
-	sharedObject *common.SharedObjectsForService
-	tconn        *chrome.TestConn
-	kb           *input.KeyboardEventWriter
-	ud           *uidetection.Context
-	vdiConnector vdiApps.VDIInt
-	dataPath     func(string) string
-	signaturePad citrix.SignaturePad
-	bounds       coords.Rect
-	login        bool
+	s                *testing.ServiceState
+	sharedObject     *common.SharedObjectsForService
+	tconn            *chrome.TestConn
+	kb               *input.KeyboardEventWriter
+	ud               *uidetection.Context
+	dictationSupport *dictation.Support
+	vdiConnector     vdiApps.VDIInt
+	dataPath         func(string) string
+	signaturePad     citrix.SignaturePad
+	bounds           coords.Rect
+	login            bool
 }
 
 // NewCitrix creates a new instance of Citrix and launches the Citrix app.
@@ -340,6 +343,91 @@ func (p *PeriphService) LoadSignature(ctx context.Context, req *peripherals.Sign
 func (p *PeriphService) ClearSignature(ctx context.Context, req *empty.Empty) (*empty.Empty, error) {
 	if err := p.signaturePad.ClearSignature()(ctx); err != nil {
 		return nil, errors.Wrap(err, "failed to clear signature")
+	}
+	return &empty.Empty{}, nil
+}
+
+// NewDictationSupport creates a new dictation support
+func (p *PeriphService) NewDictationSupport(ctx context.Context, req *empty.Empty) (*empty.Empty, error) {
+	if p.sharedObject.Chrome == nil {
+		return nil, errors.New("chrome is nil")
+	}
+	var err error
+	p.dictationSupport, err = dictation.NewSupport(ctx, p.sharedObject.Chrome)
+	if err != nil {
+		return nil, errors.Wrap(err, "failed to create dictation support")
+	}
+
+	return &empty.Empty{}, nil
+}
+
+// CloseDictation closes the dictation support page.
+func (p *PeriphService) CloseDictation(ctx context.Context, req *empty.Empty) (*empty.Empty, error) {
+	if err := p.dictationSupport.Close(ctx); err != nil {
+		return nil, errors.Wrap(err, "failed to close the dictation support")
+	}
+	return &empty.Empty{}, nil
+}
+
+// ConnectToDictationDevice connects to the dictation device with the given device name.
+func (p *PeriphService) ConnectToDictationDevice(ctx context.Context, req *peripherals.ConnectToDictationDeviceRequest) (*empty.Empty, error) {
+	if err := p.dictationSupport.ConnectToDevice(req.DeviceName)(ctx); err != nil {
+		return nil, errors.Wrap(err, "failed to connect to device")
+	}
+	return &empty.Empty{}, nil
+}
+
+// GetDictationDevices returns the dictation devices.
+func (p *PeriphService) GetDictationDevices(ctx context.Context, req *empty.Empty) (*peripherals.GetDictationDevicesResponse, error) {
+	devices, err := p.dictationSupport.Devices(ctx)
+	if err != nil {
+		return nil, errors.Wrap(err, "failed to get devices")
+	}
+	deviceString, err := json.Marshal(devices)
+	if err != nil {
+		return nil, errors.Wrap(err, "failed to marshal devices")
+	}
+
+	return &peripherals.GetDictationDevicesResponse{Devices: string(deviceString)}, nil
+}
+
+// WaitDictationNewEvent waits for new event and saves the last event message.
+func (p *PeriphService) WaitDictationNewEvent(ctx context.Context, req *peripherals.WaitDictationNewEventRequest) (*empty.Empty, error) {
+	if err := p.dictationSupport.WaitNewEvent(string(req.Event), time.Duration(req.Timeout)*time.Millisecond)(ctx); err != nil {
+		return nil, errors.Wrap(err, "failed to wait new event")
+	}
+	return &empty.Empty{}, nil
+}
+
+// SetDictationEventMode sets the event mode to the given state.
+func (p *PeriphService) SetDictationEventMode(ctx context.Context, req *peripherals.SetDictationEventModeRequest) (*empty.Empty, error) {
+	if err := p.dictationSupport.SetEventMode(dictation.EventMode(req.EventMode))(ctx); err != nil {
+		return nil, errors.Wrap(err, "failed to set event mode")
+	}
+	return &empty.Empty{}, nil
+}
+
+// GetDictationEventMode returns the dictation event mode.
+func (p *PeriphService) GetDictationEventMode(ctx context.Context, req *empty.Empty) (*peripherals.GetDictationEventModeResponse, error) {
+	eventMode, err := p.dictationSupport.EventMode(ctx)
+	if err != nil {
+		return nil, errors.Wrap(err, "failed to get event mode")
+	}
+	return &peripherals.GetDictationEventModeResponse{EventMode: string(eventMode)}, nil
+}
+
+// SetDictationSimpleLEDState sets the simple LED state to the given state.
+func (p *PeriphService) SetDictationSimpleLEDState(ctx context.Context, req *peripherals.SetDictationSimpleLEDStateRequest) (*empty.Empty, error) {
+	if err := p.dictationSupport.SetSimpleLEDState(dictation.SimpleLEDState(req.SimpleLedState))(ctx); err != nil {
+		return nil, errors.Wrap(err, "failed to set simple LED state")
+	}
+	return &empty.Empty{}, nil
+}
+
+// SetDictationLEDState sets the LED state with given index and mode.
+func (p *PeriphService) SetDictationLEDState(ctx context.Context, req *peripherals.SetDictationLEDStateRequest) (*empty.Empty, error) {
+	if err := p.dictationSupport.SetLEDState(dictation.LEDIndex(req.LedIndex), dictation.LEDMode(req.LedMode))(ctx); err != nil {
+		return nil, errors.Wrap(err, "failed to set LED state")
 	}
 	return &empty.Empty{}, nil
 }
