@@ -103,18 +103,10 @@ var neuronParam = testingParam{
 
 		// TODO(b/364804438): Neuron delegate failed with incorrect outputs after
 		// turning on --allow_fp16_precision_for_fp32.
-		"SoftmaxOpTest/SoftmaxOpTest.Softmax4D/0",
-		"SoftmaxOpTest/SoftmaxOpTest.Softmax4D/1",
-		"SoftmaxOpTest/SoftmaxOpTest.Softmax3D/0",
-		"SoftmaxOpTest/SoftmaxOpTest.Softmax3D/1",
 		"SoftmaxOpTest/SoftmaxOpTest.Softmax1DMax/0",
 		"SoftmaxOpTest/SoftmaxOpTest.Softmax1DMax/1",
 		"SoftmaxOpTest/SoftmaxOpTest.Softmax1DInf/0",
 		"SoftmaxOpTest/SoftmaxOpTest.Softmax1DInf/1",
-		"SoftmaxOpTest/SoftmaxOpTest.Softmax2D/0",
-		"SoftmaxOpTest/SoftmaxOpTest.Softmax2D/1",
-		"SoftmaxOpTest/SoftmaxOpTest.Softmax2DMultithreading/0",
-		"SoftmaxOpTest/SoftmaxOpTest.Softmax2DMultithreading/1",
 	},
 	AllowFp16PrecisionForFp32: true,
 }
