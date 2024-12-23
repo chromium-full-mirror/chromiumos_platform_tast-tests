@@ -109,11 +109,6 @@ func EndProcess(ctx context.Context, s *testing.State) {
 				}
 			}
 
-			// Close the blank tab after all processes are opened.
-			if err := cr.Browser().CloseWithURL(ctx, chrome.BlankURL); err != nil {
-				s.Fatal("Failed to close blank tab: ", err)
-			}
-
 			if err := resources.taskManager.Open(ctx); err != nil {
 				s.Fatal("Failed to open the task manager: ", err)
 			}
