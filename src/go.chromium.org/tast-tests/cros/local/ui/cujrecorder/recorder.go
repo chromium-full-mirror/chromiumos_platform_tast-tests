@@ -63,7 +63,7 @@ const (
 	memoryMetricPrefix = "Memory."
 )
 
-const checkInterval = 5 * time.Second
+const checkIntervalDefault = 5 * time.Second
 
 const (
 	// SystemTraceConfigFile is a perfetto tracing config.
@@ -460,6 +460,8 @@ type RecorderOptions struct {
 	RecordLoginEvents bool
 
 	SkipBootShutdownMetrics bool
+
+	CheckInterval time.Duration
 }
 
 var performanceCUJDischargeThreshold = 25.0
@@ -638,6 +640,11 @@ func (r *Recorder) AnnotateSection(ctx context.Context, annotation string) func(
 func NewRecorder(ctx context.Context, tconn *chrome.TestConn, a *arc.ARC, options RecorderOptions) (*Recorder, error) {
 	if tconn == nil {
 		return nil, errors.New("tconn must never be nil")
+	}
+
+	// Set default value for CheckInterval, if not configured.
+	if options.CheckInterval == 0 {
+		options.CheckInterval = checkIntervalDefault
 	}
 
 	r := &Recorder{
@@ -1079,7 +1086,7 @@ func (r *Recorder) startRecording(ctx context.Context) (runCtx context.Context, 
 			perfSrc.NewThermalStateDataSource(true /*ignoreChargerType*/),
 			r.gpuDataSource,
 			perfSrc.NewMemoryDataSource("RAM.Absolute", "RAM.Diff.Absolute", "RAM"),
-		}, perf.Interval(checkInterval), perf.Prefix(tpsMetricPrefix), perf.EnableGracePeriod(), perf.WithCustomStartTime(r.startedAtTm))
+		}, perf.Interval(r.options.CheckInterval), perf.Prefix(tpsMetricPrefix), perf.EnableGracePeriod(), perf.WithCustomStartTime(r.startedAtTm))
 		if err != nil {
 			return nil, errors.Wrap(err, "failed to create TPS timeline")
 		}
@@ -1135,7 +1142,7 @@ func (r *Recorder) startRecording(ctx context.Context) (runCtx context.Context, 
 		}
 		r.powerTimeline, err = perf.NewTimeline(ctx,
 			powerTestMetrics,
-			perf.Interval(checkInterval), perf.Prefix(powerMetricPrefix), perf.EnableGracePeriod(), perf.WithCustomStartTime(r.startedAtTm))
+			perf.Interval(r.options.CheckInterval), perf.Prefix(powerMetricPrefix), perf.EnableGracePeriod(), perf.WithCustomStartTime(r.startedAtTm))
 		if err != nil {
 			return nil, errors.Wrap(err, "failed to create power timeline")
 		}
@@ -1150,7 +1157,7 @@ func (r *Recorder) startRecording(ctx context.Context) (runCtx context.Context, 
 		// timeline tracks relatively inexpensive memory metrics, like PSI.
 		r.memoryTimeline, err = perf.NewTimeline(ctx, []perf.TimelineDatasource{
 			perfSrc.NewPSIDataSource(r.arc),
-		}, perf.Interval(checkInterval), perf.Prefix(memoryMetricPrefix), perf.EnableGracePeriod(), perf.WithCustomStartTime(r.startedAtTm))
+		}, perf.Interval(r.options.CheckInterval), perf.Prefix(memoryMetricPrefix), perf.EnableGracePeriod(), perf.WithCustomStartTime(r.startedAtTm))
 		if err != nil {
 			return nil, errors.Wrap(err, "failed to create memory timeline")
 		}
