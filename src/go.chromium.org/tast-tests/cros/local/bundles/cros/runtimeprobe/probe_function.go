@@ -295,7 +295,7 @@ func init() {
 		Params: []testing.Param{
 			{
 				Name:              "battery",
-				ExtraHardwareDeps: common.ReleasedDeviceDeps(),
+				ExtraHardwareDeps: common.ReleasedDeviceDeps(hwdep.SkipOnModel("meep")),
 				Val: probeFunctionTestParam{
 					categories:           []string{"battery"},
 					allowExtraComponents: false,
@@ -321,7 +321,7 @@ func init() {
 			}, {
 				Name:              "camera_private",
 				Fixture:           fixture.DecryptProbeConfig,
-				ExtraHardwareDeps: common.UnreleasedDeviceDeps(hwdep.SkipOnModel("rynax")),
+				ExtraHardwareDeps: common.UnreleasedDeviceDeps(),
 				Val: probeFunctionTestParam{
 					categories:           []string{"camera"},
 					allowExtraComponents: false,
