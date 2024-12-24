@@ -16,6 +16,7 @@ import (
 
 	"go.chromium.org/tast-tests/cros/common/chrome/histogram"
 	"go.chromium.org/tast-tests/cros/common/perf"
+	"go.chromium.org/tast-tests/cros/local/audio"
 	"go.chromium.org/tast-tests/cros/local/chrome"
 	"go.chromium.org/tast-tests/cros/local/chrome/ash"
 	"go.chromium.org/tast-tests/cros/local/chrome/display"
@@ -55,6 +56,8 @@ type VCTestParams struct {
 	Trace bool
 	// If VoiceIsolation is true, enable input voice isolation effects on the platform.
 	VoiceIsolation bool
+	// The effect type to use for VoiceIsolation.
+	VoiceIsolationEffect audio.VoiceIsolationPreferredEffect
 	// If Blur is true, enable platform blurring.
 	Blur bool
 	// If Relight is true, enable platform relighting.
@@ -308,7 +311,7 @@ func runVCPerf(ctx context.Context, tconn *chrome.TestConn, s *testing.State, pa
 	ctx, cancel := ctxutil.Shorten(ctx, 2*time.Second)
 	defer cancel()
 
-	if err := setUpAudio(ctx, params.VoiceIsolation); err != nil {
+	if err := setUpAudio(ctx, params.VoiceIsolation, params.VoiceIsolationEffect); err != nil {
 		return errors.Wrap(err, "setUpAudio")
 	}
 

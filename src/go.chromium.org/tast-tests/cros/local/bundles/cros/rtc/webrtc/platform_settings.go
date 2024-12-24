@@ -7,6 +7,7 @@ package webrtc
 import (
 	"context"
 
+	"go.chromium.org/tast-tests/cros/local/audio"
 	"go.chromium.org/tast-tests/cros/local/audio/fixture"
 	"go.chromium.org/tast-tests/cros/local/audio/nodematch"
 	"go.chromium.org/tast-tests/cros/local/videoconferencing/effects"
@@ -14,12 +15,13 @@ import (
 	"go.chromium.org/tast/core/testing"
 )
 
-// setUpAudio configures the audio server according to noiseCancellation and styleTransfer.
-func setUpAudio(ctx context.Context, voiceIsolation bool) error {
+// setUpAudio configures the audio server according to voiceIsolation settings.
+func setUpAudio(ctx context.Context, voiceIsolation bool, voiceIsolationEffect audio.VoiceIsolationPreferredEffect) error {
 	_, err := fixture.CrasSetUp{
-		VoiceIsolationUIEnabled: voiceIsolation,
-		InputDevice:             nodematch.Type("INTERNAL_MIC"),
-		OutputDevice:            nodematch.Type("INTERNAL_SPEAKER"),
+		VoiceIsolationUIEnabled:         voiceIsolation,
+		VoiceIsolationUIPreferredEffect: voiceIsolationEffect,
+		InputDevice:                     nodematch.Type("INTERNAL_MIC"),
+		OutputDevice:                    nodematch.Type("INTERNAL_SPEAKER"),
 	}.DoCras(ctx)
 	return err
 }

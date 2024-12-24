@@ -11,6 +11,8 @@ import (
 	"time"
 
 	"go.chromium.org/tast-tests/cros/common/media/caps"
+	"go.chromium.org/tast-tests/cros/common/tbdep"
+	"go.chromium.org/tast-tests/cros/local/audio"
 	"go.chromium.org/tast-tests/cros/local/bundles/cros/rtc/webrtc"
 	"go.chromium.org/tast-tests/cros/local/chrome"
 	"go.chromium.org/tast-tests/cros/local/chrome/cuj"
@@ -156,6 +158,18 @@ func init() {
 				},
 				Fixture:   pre.ChromeRTCFixture(pre.AudioFeatureStyleTransfer),
 				ExtraAttr: []string{"group:crosbolt", "crosbolt_perbuild"},
+			},
+			{
+				Name: "4p_present_beamforming",
+				Val: webrtc.VCTestParams{
+					NumPeople:            4,
+					Present:              true,
+					VoiceIsolation:       true,
+					VoiceIsolationEffect: audio.VoiceIsolationEffectBeamforming,
+				},
+				Fixture:          pre.ChromeRTCFixture(pre.AudioFeatureNoiseCancellation),
+				ExtraAttr:        []string{"group:crosbolt", "crosbolt_perbuild"},
+				ExtraTestBedDeps: []string{tbdep.AudioBeamforming("intelligo")},
 			},
 			{
 				Name: "4p_text",
