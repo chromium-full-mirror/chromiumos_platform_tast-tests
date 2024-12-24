@@ -83,7 +83,9 @@ func init() {
 }
 
 func DevDefaultBoot(ctx context.Context, s *testing.State) {
-	h := s.FixtValue().(*fixture.Value).Helper
+	pv := s.FixtValue().(*fixture.Value)
+	h := pv.Helper
+
 	if err := h.RequireServo(ctx); err != nil {
 		s.Fatal("Failed to init servo: ", err)
 	}
@@ -119,30 +121,58 @@ func DevDefaultBoot(ctx context.Context, s *testing.State) {
 	if err := h.EnableDevBootUSB(ctx); err != nil {
 		s.Fatal("Failed to enable usb boot: ", err)
 	}
+
+	s.Log("Removing the USB")
+	if err := h.Servo.SetUSBMuxState(ctx, servo.USBMuxOff); err != nil {
+		s.Fatal("Failed to remove the USB: ", err)
+	}
+
+	// GoBigSleepLint: It may take some time for usb mux state to
+	// take effect.
+	if err := testing.Sleep(ctx, firmware.UsbVisibleTime); err != nil {
+		s.Fatalf("Failed to sleep for %v s: %v", firmware.UsbDisableTime, err)
+	}
+
 	cmd := fmt.Sprintf("dev_default_boot=%s", testOpt.bootTarget)
 	s.Logf("Setting %s", cmd)
 	if err := h.DUT.Conn().CommandContext(ctx, "crossystem", cmd).Run(); err != nil {
 		s.Fatalf("Failed to set crossystem %s: %v", cmd, err)
 	}
-	s.Log("Inserting a valid USB to DUT")
-	if err := h.Servo.SetUSBMuxState(ctx, servo.USBMuxDUT); err != nil {
-		s.Fatal("Failed to set USBMux: ", err)
-	}
+
+	var state firmware.CheckAndSetServoCharger = h.CheckServoChargerBeforeBootingFromUSB(ctx)
 
 	cleanupCtx := ctx
-	ctx, cancel := ctxutil.Shorten(ctx, 4*time.Minute)
+	ctx, cancel := ctxutil.Shorten(ctx, 25*time.Minute)
 	defer cancel()
 
 	// Reset crossystem parameter at the end of the test.
 	defer func(ctx context.Context) {
 		if err := h.EnsureDUTBooted(ctx); err != nil {
-			s.Fatal("Failed to reconnect to dut: ", err)
+			s.Error("Failed to reconnect to dut: ", err)
 		}
 		if err := h.DisableDevBootUSB(ctx); err != nil {
-			s.Fatal("Failed to disable usb boot: ", err)
+			s.Error("Failed to disable usb boot: ", err)
 		}
 		if err := h.DUT.Conn().CommandContext(ctx, "crossystem", "dev_default_boot=disk").Run(ssh.DumpLogOnError); err != nil {
-			s.Fatal("Failed to set crossystem dev_default_boot to disk: ", err)
+			s.Error("Failed to set crossystem dev_default_boot to disk: ", err)
+		}
+
+		if err := h.RebootWithSSHCommand(ctx, pv.BootMode); err != nil {
+			s.Error("Failed to reboot with VT2 command: ", err)
+		}
+
+		if state.RemoveServoChargerRequired && !state.IsServoChargerConnected {
+			if err := h.SetDUTPower(ctx, true); err != nil {
+				s.Error("Failed to connect charger: ", err)
+			}
+			state.IsServoChargerConnected = true
+
+			// It could take a longer time to reconnect to the DUT.
+			waitConnectCtx, cancelWaitConnect := context.WithTimeout(ctx, 15*time.Minute)
+			defer cancelWaitConnect()
+			if err := h.WaitConnect(waitConnectCtx, firmware.ResetEthernetDongle); err != nil {
+				s.Error("Failed to reconnect to the DUT: ", err)
+			}
 		}
 	}(cleanupCtx)
 
@@ -151,11 +181,11 @@ func DevDefaultBoot(ctx context.Context, s *testing.State) {
 		if err != nil {
 			s.Fatal("Failed to enable capture EC UART: ", err)
 		}
-		defer func() {
+		defer func(ctx context.Context) {
 			if err := closeUART(ctx); err != nil {
 				s.Error("Failed to cancel capture EC UART: ", err)
 			}
-		}()
+		}(cleanupCtx)
 	}
 
 	s.Log("Rebooting DUT to developer screen")
@@ -168,21 +198,50 @@ func DevDefaultBoot(ctx context.Context, s *testing.State) {
 		s.Fatal("Failed to wait for DUT to become unreachable after sending a warm reset: ", err)
 	}
 
+	if h.HasAPFwState {
+		if err := h.DetectFirmwareScreen(ctx, h.Config.FirmwareScreen, fwCommon.DeveloperMode); err != nil {
+			s.Fatal("Failed to detect firmware screen: ", err)
+		}
+	} else {
+		s.Log("Waiting for DUT to reach the firmware screen")
+		if err := h.WaitFirmwareScreen(ctx, h.Config.FirmwareScreen); err != nil {
+			s.Fatal("Failed to get to firmware screen: ", err)
+		}
+	}
+
+	if state.RemoveServoChargerRequired && state.IsServoChargerConnected {
+		s.Log("Removing servo charger")
+		if err := h.SetDUTPower(ctx, false); err != nil {
+			s.Fatal("Failed to remove charger: ", err)
+		}
+		state.IsServoChargerConnected = false
+		// GoBigSleepLint: Wait for a while between removing the charger and
+		// booting the DUT from USB to prevent USB disconnected issues.
+		if err := testing.Sleep(ctx, 5*time.Second); err != nil {
+			s.Fatal("Failed to sleep: ", err)
+		}
+	}
+
+	s.Log("Setting DFP mode")
+	if err := h.Servo.SetDUTPDDataRole(ctx, servo.DFP); err != nil {
+		s.Logf("Failed to set pd data role to DFP: %.400s", err)
+	}
+
+	s.Log("Inserting a valid USB to DUT")
+	if err := h.Servo.SetUSBMuxState(ctx, servo.USBMuxDUT); err != nil {
+		s.Fatal("Failed to insert USB to DUT: ", err)
+	}
+
+	// GoBigSleepLint: It may take some time for usb mux state to
+	// take effect.
+	if err := testing.Sleep(ctx, firmware.UsbVisibleTime); err != nil {
+		s.Fatalf("Failed to sleep for %v s: %v", firmware.UsbDisableTime, err)
+	}
+
 	switch testOpt.trigger {
 	case triggerByTimeout:
 		reconnectTimeout += firmware.DevScreenTimeout
 	case triggerByMenu:
-		if h.HasAPFwState {
-			if err := h.DetectFirmwareScreen(ctx, h.Config.FirmwareScreen, fwCommon.DeveloperMode); err != nil {
-				s.Fatal("Failed to detect firmware screen: ", err)
-			}
-		} else {
-			s.Log("Waiting for DUT to reach the firmware screen")
-			if err := h.WaitFirmwareScreen(ctx, h.Config.FirmwareScreen); err != nil {
-				s.Fatal("Failed to get to firmware screen: ", err)
-			}
-		}
-
 		menuBypasser, err := firmware.NewMenuBypasser(ctx, h)
 		if err != nil {
 			s.Fatal("Failed to create menu bypasser: ", err)
