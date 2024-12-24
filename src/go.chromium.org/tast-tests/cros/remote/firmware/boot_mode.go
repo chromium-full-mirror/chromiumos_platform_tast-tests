@@ -714,10 +714,24 @@ func (ms *ModeSwitcher) ModeAwareReboot(ctx context.Context, resetType ResetType
 // RecScreenToDevMode moves the DUT from the firmware bootup screen to Dev mode.
 // This should be called immediately after powering on.
 // The actual behavior depends on the ModeSwitcherType.
-func (ms *ModeSwitcher) RecScreenToDevMode(ctx context.Context, opts ...ModeSwitchOption) error {
+func (ms *ModeSwitcher) RecScreenToDevMode(ctx context.Context, opts ...ModeSwitchOption) (retErr error) {
 	h := ms.Helper
+	if h.HasAPFwState {
+		closeUART, err := h.Servo.EnableUARTCapture(ctx, servo.ECUARTCapture)
+		if err != nil {
+			return errors.Wrap(err, "failed to enable capture EC UART")
+		}
+		defer func() { retErr = errors.Join(retErr, closeUART(ctx)) }()
+	}
+
 	if err := ms.bypasser.TriggerRecToDev(ctx); err != nil {
 		return errors.Wrap(err, "failed to bypass to dev")
+	}
+
+	if h.HasAPFwState {
+		if err := h.DetectFirmwareScreen(ctx, h.Config.FirmwareScreen, fwCommon.DeveloperMode); err != nil {
+			return errors.Wrap(err, "failed to detect firmware screen")
+		}
 	}
 
 	// It takes some time to powerwash, etc. when going from normal -> dev, and at the end, we're at the dev mode screen and need to press Ctrl-D (or equivalent).
