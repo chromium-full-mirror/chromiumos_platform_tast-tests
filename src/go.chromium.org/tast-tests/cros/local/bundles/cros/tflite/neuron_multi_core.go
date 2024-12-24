@@ -25,11 +25,12 @@ func init() {
 	testing.AddTest(&testing.Test{
 		Func: NeuronMultiCore,
 		// TODO(b/381326127): Add multi-MVPU test.
-		Desc:         "Runs the test to use multi NPU core in MediaTek Neuron Delegate",
+		Desc:         "Runs the test to use multiple NPU cores in MediaTek Neuron Delegate",
 		Contacts:     []string{"cros-odml-foundations-eng@google.com", "ototot@chromium.org"},
 		BugComponent: "b:1445284", // ChromeOS > Platform > Technologies > Machine Learning > On-Device ML
 		Attr:         []string{"group:mainline", "informational"},
-		HardwareDeps: hwdep.D(hwdep.Model("rauru")), // Only rauru has multiple MDLA for now.
+		// Only rauru family has multiple NPU cores for now.
+		HardwareDeps: hwdep.D(hwdep.Model("rauru", "navi", "hylia")),
 		SoftwareDeps: []string{"ml_service", "tflite_mtk_neuron"},
 		Data:         []string{testModel},
 	})
