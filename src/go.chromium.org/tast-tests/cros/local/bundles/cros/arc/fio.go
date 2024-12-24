@@ -125,10 +125,15 @@ func init() {
 		Contacts: []string{"arc-storage@google.com", "momohatt@google.com"},
 		// ChromeOS > Software > ARC++ > Storage
 		BugComponent: "b:516669",
-		SoftwareDeps: []string{"chrome", "android_vm"},
-		Data:         append(fioJobFileNames(), fioX86BinaryData, fioARMBinaryData),
-		Timeout:      20 * time.Minute,
-		Attr:         []string{"group:crosbolt", "crosbolt_perbuild"},
+		SoftwareDeps: []string{
+			"chrome",
+			"android_vm",
+			// This test uses go/adb-root-on-arcvm-user-builds, which is not supported on GKI yet.
+			"no_arcvm_gki",
+		},
+		Data:    append(fioJobFileNames(), fioX86BinaryData, fioARMBinaryData),
+		Timeout: 20 * time.Minute,
+		Attr:    []string{"group:crosbolt", "crosbolt_perbuild"},
 		Params: []testing.Param{{
 			Name: "system",
 			Val: fioTestParams{
