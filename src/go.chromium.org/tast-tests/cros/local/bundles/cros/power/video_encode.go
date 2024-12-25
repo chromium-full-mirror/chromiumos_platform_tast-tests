@@ -15,8 +15,7 @@ import (
 	"go.chromium.org/tast-tests/cros/local/chrome/uiauto"
 	"go.chromium.org/tast-tests/cros/local/chrome/uiauto/faillog"
 	"go.chromium.org/tast-tests/cros/local/chrome/uiauto/nodewith"
-	"go.chromium.org/tast-tests/cros/local/chrome/uiauto/pointer"
-	"go.chromium.org/tast-tests/cros/local/chrome/uiauto/role"
+	"go.chromium.org/tast-tests/cros/local/chrome/uiauto/prompts"
 	"go.chromium.org/tast-tests/cros/local/power"
 	"go.chromium.org/tast-tests/cros/local/power/setup"
 	"go.chromium.org/tast/core/ctxutil"
@@ -130,7 +129,6 @@ func VideoEncode(ctx context.Context, s *testing.State) {
 	if err != nil {
 		s.Fatal("Failed to get ash tconn: ", err)
 	}
-	defer faillog.DumpUITreeOnError(ctx, s.OutDir(), s.HasError, tconn)
 
 	ui := uiauto.New(tconn)
 
@@ -141,6 +139,7 @@ func VideoEncode(ctx context.Context, s *testing.State) {
 	}
 	defer conn.Close()
 	defer conn.CloseTarget(cleanupCtx)
+	defer faillog.DumpUITreeWithScreenshotWithTestAPIOnError(cleanupCtx, s.OutDir(), s.HasError, tconn, "ui_dump")
 
 	w, err := ash.WaitForAnyWindow(ctx, tconn, ash.BrowserTypeMatch())
 	if err != nil {
@@ -172,27 +171,14 @@ func VideoEncode(ctx context.Context, s *testing.State) {
 		s.Fatal("Failed to navigate: ", err)
 	}
 
-	// Check whether we need camera permission by find one of these
-	// * Allow button for camera permission
-	// * cameraData node which indicate that the camera is already recorded
-	bubble := nodewith.NameStartingWith(permBubbleName).First()
-	allow := nodewith.Name("Allow").Role(role.Button).Ancestor(bubble)
-	cameraData := nodewith.NameRegex(regexp.MustCompile(cameraDataNameRegex)).First()
-
-	foundNode, err := ui.FindAnyExists(ctx, allow, cameraData)
-	if err != nil {
-		s.Fatal("Failed to find the permission bubble: ", err)
+	// Allow camera permission if the prompt exists.
+	if err := prompts.ClearPotentialPrompts(tconn, 30*time.Second, prompts.AllowCameraPermPrompt)(ctx); err != nil {
+		s.Fatal("Failed to clear camera permission prompt dialog: ", err)
 	}
 
-	// Click the allow button if found, and wait until cameraData node exists.
-	pc := pointer.NewMouse(tconn)
-	if foundNode == allow {
-		if err := pc.Click(allow)(ctx); err != nil {
-			s.Fatal("Failed to click permission bubble: ", err)
-		}
-		if err := ui.WaitUntilAnyExists(cameraData)(ctx); err != nil {
-			s.Fatal("Failed to find the fps data node: ", err)
-		}
+	cameraData := nodewith.NameRegex(regexp.MustCompile(cameraDataNameRegex)).First()
+	if err := ui.WaitUntilExists(cameraData)(ctx); err != nil {
+		s.Fatal("Failed to find the fps data node: ", err)
 	}
 
 	js := `changeFormat("` +
