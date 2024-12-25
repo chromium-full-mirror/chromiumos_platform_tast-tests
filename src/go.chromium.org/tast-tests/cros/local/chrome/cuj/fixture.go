@@ -15,6 +15,7 @@ import (
 
 	"go.chromium.org/tast-tests/cros/common/chrome/credconfig"
 	"go.chromium.org/tast-tests/cros/common/dma"
+	"go.chromium.org/tast-tests/cros/common/hwsec"
 	"go.chromium.org/tast-tests/cros/common/policy"
 	"go.chromium.org/tast-tests/cros/common/policy/fakedms"
 	"go.chromium.org/tast-tests/cros/common/testexec"
@@ -32,6 +33,7 @@ import (
 	"go.chromium.org/tast-tests/cros/local/chrome/uiauto/lockscreen"
 	"go.chromium.org/tast-tests/cros/local/chrome/uiauto/nodewith"
 	"go.chromium.org/tast-tests/cros/local/disk"
+	hwseclocal "go.chromium.org/tast-tests/cros/local/hwsec"
 	"go.chromium.org/tast-tests/cros/local/input"
 	"go.chromium.org/tast-tests/cros/local/logsaver"
 	"go.chromium.org/tast-tests/cros/local/mlbenchmark"
@@ -2033,6 +2035,21 @@ func (f *loggedInToCUJUserFixture) Reset(ctx context.Context) error {
 }
 
 func (f *loggedInToCUJUserFixture) PreTest(ctx context.Context, s *testing.FixtTestState) {
+	// Some tests that utilizes on-device ML will load models in odmld. We should restart odmld
+	// to make sure its model/cache states are clean.
+	var odmlDaemon = &hwsec.DaemonInfo{
+		Name:       "odml",
+		DaemonName: "odmld",
+		HasDBus:    false,
+	}
+	cmdRunner := hwseclocal.NewCmdRunner()
+	daemonController := hwsec.NewDaemonController(cmdRunner)
+	if err := daemonController.Restart(ctx, odmlDaemon); err != nil {
+		s.Log("Failed to restart odmld: ", err)
+	} else {
+		s.Log("Successfully restarted odmld")
+	}
+
 	if f.mlbenchmarkDataDirectory {
 		if _, err := os.Stat(mlbenchmark.DataDirectory); !os.IsNotExist(err) {
 			if err := os.RemoveAll(mlbenchmark.DataDirectory); err != nil {

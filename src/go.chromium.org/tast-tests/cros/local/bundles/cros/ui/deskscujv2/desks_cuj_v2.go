@@ -31,8 +31,9 @@ import (
 
 // TestParam is the test parameters for DesksCUJV2.
 type TestParam struct {
-	AnimationURL string
-	TestDuration time.Duration
+	AnimationURL      string
+	TestDuration      time.Duration
+	ExtraURLsForDesk1 []string
 }
 
 // Run runs the desks CUJ V2 by opening up 4 different desks and switching

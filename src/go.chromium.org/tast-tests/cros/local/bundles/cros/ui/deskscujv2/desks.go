@@ -145,8 +145,8 @@ func setUpDesks(ctx context.Context, cr *chrome.Chrome, kw *input.KeyboardEventW
 		if err := testing.Sleep(ctx, 5*time.Second); err != nil {
 			return errors.Wrap(err, "failed to sleep")
 		}
-
-		const totalTabs = 4 // This includes the 3 websites defined in urls, and the additional CrosVideo tab that opened in recorder.
+		// This includes the 3 websites defined in urls, the additional CrosVideo tab that opened in recorder, and any custom extra URLs.
+		totalTabs := 4 + len(testParam.ExtraURLsForDesk1)
 		scrollDownAndUp := func(ctx context.Context) error {
 			for tabIdx := 0; tabIdx < totalTabs; tabIdx++ {
 				if err := switchToTab(ctx, tconn, info, tabIdx); err != nil {
@@ -205,11 +205,11 @@ func setUpDesks(ctx context.Context, cr *chrome.Chrome, kw *input.KeyboardEventW
 		expectedNumWindows int           // Expected number of windows that should be open after desk setup.
 	}{
 		{
-			urls: []string{
+			urls: append([]string{
 				chromiumIssueURL,
 				chromeWebStoreExtensionURL,
 				youtubeURL,
-			},
+			}, testParam.ExtraURLsForDesk1...),
 			onVisitAction:      desk1VisitAction,
 			expectedNumWindows: 1,
 		},

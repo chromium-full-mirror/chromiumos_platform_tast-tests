@@ -54,12 +54,17 @@ func init() {
 			{
 				ExtraAttr: []string{"group:cuj"},
 				Fixture:   "loggedInToCUJUser",
+				Val:       deskscujv2.TestParam{},
 			},
 			{
 				Name: "coral",
 				// No attrs because this test can only be triggered manually currently.
 				Fixture:           "loggedInToCUJUserWithCoralEnabled",
 				ExtraHardwareDeps: hwdep.D(hwdep.FeatureLevel(1)),
+				Val: deskscujv2.TestParam{
+					// Adding this URL to desk 1 will form a valid suggested group in overview.
+					ExtraURLsForDesk1: []string{"chrome://device-log"},
+				},
 			},
 		},
 		Timeout: 30 * time.Minute,
@@ -71,7 +76,7 @@ func DesksCUJV2(ctx context.Context, s *testing.State) {
 
 	cr := s.FixtValue().(chrome.HasChrome).Chrome()
 
-	var testParam deskscujv2.TestParam
+	testParam := s.Param().(deskscujv2.TestParam)
 
 	deskCUJTestDuration := 10 * time.Minute
 	if testDuration, ok := s.Var("ui.DesksCUJV2.duration"); ok {
