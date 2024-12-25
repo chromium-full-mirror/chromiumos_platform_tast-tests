@@ -33,9 +33,15 @@ import (
 	"go.chromium.org/tast/core/testing"
 )
 
+// TestParam is the test parameters for VideoCUJ.
+type TestParam struct {
+	SystemTraceConfigPath string
+	ExtraURLsToOpen       []string
+}
+
 // Run runs VideoCUJ by opening CrosVideo and playing the video at
 // different resolutions and frame rates.
-func Run(ctx context.Context, cr *chrome.Chrome, outDir, systemTraceConfigPath string) (retErr error) {
+func Run(ctx context.Context, cr *chrome.Chrome, outDir string, testParam TestParam) (retErr error) {
 	const (
 		videoURL          = "https://crosvideo.appspot.com/?codec=%s&resolution=1080&loop=true"
 		totalTestDuration = 10 * time.Minute
@@ -66,6 +72,15 @@ func Run(ctx context.Context, cr *chrome.Chrome, outDir, systemTraceConfigPath s
 	pv, err := localPerf.CaptureDeviceSnapshot(ctx, "Initial")
 	if err != nil {
 		return errors.Wrap(err, "failed to capture device snapshot")
+	}
+
+	// Set up extra tabs requested by the caller.
+	for _, url := range testParam.ExtraURLsToOpen {
+		conn, err := cr.NewConn(ctx, url)
+		if err != nil {
+			return errors.Wrapf(err, "failed to open url %s", url)
+		}
+		defer conn.Close()
 	}
 
 	// Set up an about:blank page, so that we can use the given
@@ -263,7 +278,7 @@ func Run(ctx context.Context, cr *chrome.Chrome, outDir, systemTraceConfigPath s
 
 				// See go/trace-in-cuj-tests about rules for tracing.
 				if shouldRecordTrace {
-					if err := recorder.StartTracing(ctx, outDir, systemTraceConfigPath); err != nil {
+					if err := recorder.StartTracing(ctx, outDir, testParam.SystemTraceConfigPath); err != nil {
 						return errors.Wrap(err, "failed to start tracing")
 					}
 				}

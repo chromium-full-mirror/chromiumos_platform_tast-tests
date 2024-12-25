@@ -33,16 +33,19 @@ func init() {
 			{
 				ExtraAttr: []string{"group:cuj"},
 				Fixture:   "loggedInToCUJUser",
+				Val:       videocuj.TestParam{},
 			},
 			// Experimental variants.
 			{
 				Name:      "field_trials",
 				ExtraAttr: []string{"group:cuj", "cuj_experimental"},
 				Fixture:   "loggedInToCUJUserWithFieldTrials",
+				Val:       videocuj.TestParam{},
 			},
 			{
 				Name:    "battery_saver",
 				Fixture: "loggedInToCUJUserWithBatterySaver",
+				Val:     videocuj.TestParam{},
 			},
 			// TODO(b/292249282): Remove when Vulkan is launched on brya, volteer, and skyrim
 			{
@@ -50,6 +53,7 @@ func init() {
 				Fixture:           "loggedInToCUJUserVulkan",
 				ExtraAttr:         []string{"group:cuj"},
 				ExtraHardwareDeps: hwdep.D(hwdep.Model("redrix", "drobit", "frostflow")),
+				Val:               videocuj.TestParam{},
 			},
 			{
 				Name:              "pvsched",
@@ -57,12 +61,41 @@ func init() {
 				Fixture:           "loggedInToCUJUserWithPvSchedEnabled",
 				ExtraAttr:         []string{"group:cuj", "cuj_experimental"},
 				ExtraHardwareDeps: hwdep.D(hwdep.HasParavirtSchedControl()),
+				Val:               videocuj.TestParam{},
 			},
 			{
 				Name: "coral",
 				// No attrs because this test can only be triggered manually currently.
 				Fixture:           "loggedInToCUJUserWithCoralEnabled",
 				ExtraHardwareDeps: hwdep.D(hwdep.FeatureLevel(1)),
+				Val:               videocuj.TestParam{},
+			},
+			{
+				Name: "extra_tabs",
+				// No attrs because this test is only for comparing with extra_tabs_coral, which can only be triggered manually currently.
+				Fixture: "loggedInToCUJUser",
+				Val: videocuj.TestParam{
+					ExtraURLsToOpen: []string{
+						"chrome://device-log",
+						"chrome://version",
+						"chrome://histograms",
+						"chrome://settings",
+					},
+				},
+			},
+			{
+				Name: "extra_tabs_coral",
+				// No attrs because this test can only be triggered manually currently.
+				Fixture:           "loggedInToCUJUserWithCoralEnabled",
+				ExtraHardwareDeps: hwdep.D(hwdep.FeatureLevel(1)),
+				Val: videocuj.TestParam{
+					ExtraURLsToOpen: []string{
+						"chrome://device-log",
+						"chrome://version",
+						"chrome://histograms",
+						"chrome://settings",
+					},
+				},
 			},
 		},
 	})
@@ -72,7 +105,10 @@ func VideoCUJ(ctx context.Context, s *testing.State) {
 	cuj.WriteMetadataFile(ctx, s.TestName())
 	cr := s.FixtValue().(chrome.HasChrome).Chrome()
 
-	if err := videocuj.Run(ctx, cr, s.OutDir(), s.DataPath(cujrecorder.SystemTraceConfigFile)); err != nil {
+	testParam := s.Param().(videocuj.TestParam)
+	testParam.SystemTraceConfigPath = s.DataPath(cujrecorder.SystemTraceConfigFile)
+
+	if err := videocuj.Run(ctx, cr, s.OutDir(), testParam); err != nil {
 		s.Fatal("Failed to run VideoCUJ: ", err)
 	}
 }
