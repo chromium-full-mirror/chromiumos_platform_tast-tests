@@ -119,6 +119,18 @@ func RecToDevFromECRW(ctx context.Context, s *testing.State) {
 	}
 	s.Log("Current EC active copy: ", activeCopy)
 
+	if h.HasAPFwState {
+		closeUART, err := h.Servo.EnableUARTCapture(ctx, servo.ECUARTCapture)
+		if err != nil {
+			s.Fatal("Failed to enable capture EC UART: ", err)
+		}
+		defer func() {
+			if err := closeUART(ctx); err != nil {
+				s.Error("Failed to cancel capture EC UART: ", err)
+			}
+		}()
+	}
+
 	s.Log("Use keyboard recovery hostevent to move to rec mode")
 	if err := h.Servo.SetHostevent(ctx, servo.HosteventKeyboardRecovery); err != nil {
 		s.Fatal("Failed to set keyboard recovery hostevent: ", err)
@@ -130,14 +142,14 @@ func RecToDevFromECRW(ctx context.Context, s *testing.State) {
 	}
 
 	if h.HasAPFwState {
-		s.Log("Detecting the recovery select screen")
-		if err := h.DetectFirmwareScreen(ctx, h.Config.FirmwareScreen, fwCommon.RecoverySelect); err != nil {
-			s.Fatal("Failed to detect firmware screen")
+		s.Log("Detecting the broken screen")
+		if err := h.DetectFirmwareScreen(ctx, h.Config.FirmwareScreenRecMode, fwCommon.RecoveryBroken); err != nil {
+			s.Fatal("Failed to detect firmware screen: ", err)
 		}
 	} else {
 		s.Log("Waiting for DUT to reach the firmware screen")
 		if err := h.WaitFirmwareScreen(ctx, h.Config.FirmwareScreenRecMode); err != nil {
-			s.Fatal("Failed to detect firmware screen")
+			s.Fatal("Failed to wait for firmware screen: ", err)
 		}
 	}
 
