@@ -55,7 +55,7 @@ func init() {
 				setUpValidUSB:           false,
 				bootMethod:              devBootInternalKeyboard,
 			},
-			Timeout: 15 * time.Minute,
+			Timeout: 30 * time.Minute,
 		}, {
 			Name: "keyboard_with_usb",
 			Val: &devBootInternalParams{
@@ -97,15 +97,15 @@ func init() {
 				bootMethod:              devBootInternalKeyboard,
 				expectedFwScreens:       []fwCommon.FwScreenID{fwCommon.DeveloperMode, fwCommon.DeveloperBootExternal},
 			},
-			ExtraAttr:         []string{"firmware_usb"},
 			ExtraHardwareDeps: hwdep.D(hwdep.FirmwareUIType(hwdep.MenuUI)),
-			Timeout:           15 * time.Minute,
+			Timeout:           30 * time.Minute,
 		}},
 	})
 }
 
 func DevBootInternal(ctx context.Context, s *testing.State) {
-	h := s.FixtValue().(*fixture.Value).Helper
+	pv := s.FixtValue().(*fixture.Value)
+	h := pv.Helper
 
 	if err := h.RequireServo(ctx); err != nil {
 		s.Fatal("Failed to init servo: ", err)
@@ -117,19 +117,38 @@ func DevBootInternal(ctx context.Context, s *testing.State) {
 
 	testOpt := s.Param().(*devBootInternalParams)
 
+	var state firmware.CheckAndSetServoCharger = h.CheckServoChargerBeforeBootingFromUSB(ctx)
+
 	cleanupCtx := ctx
-	ctx, cancel := ctxutil.Shorten(ctx, 4*time.Minute)
+	ctx, cancel := ctxutil.Shorten(ctx, 10*time.Minute)
 	defer cancel()
 
 	defer func(ctx context.Context) {
 		if err := h.EnsureDUTBooted(ctx); err != nil {
-			s.Fatal("Failed to ensure dut has booted: ", err)
+			s.Error("Failed to ensure DUT has booted: ", err)
 		}
 		if err := h.DisableDevBootUSB(ctx); err != nil {
-			s.Fatal("Failed to disable dev boot from USB: ", err)
+			s.Error("Failed to disable dev boot from USB: ", err)
 		}
 		if err := h.SetDefaultBootDisk(ctx); err != nil {
-			s.Fatal("Failed to set dev default boot target to disk: ", err)
+			s.Error("Failed to set dev default boot target to disk: ", err)
+		}
+		if err := h.RebootWithSSHCommand(ctx, pv.BootMode); err != nil {
+			s.Fatal("Failed to reboot with VT2 command: ", err)
+		}
+
+		if state.RemoveServoChargerRequired && !state.IsServoChargerConnected {
+			if err := h.SetDUTPower(ctx, true); err != nil {
+				s.Error("Failed to connect charger: ", err)
+			}
+			state.IsServoChargerConnected = true
+
+			// It could take a longer time to reconnect to the DUT.
+			waitConnectCtx, cancelWaitConnect := context.WithTimeout(ctx, 5*time.Minute)
+			defer cancelWaitConnect()
+			if err := h.WaitConnect(waitConnectCtx, firmware.ResetEthernetDongle); err != nil {
+				s.Error("Failed to reconnect to the DUT: ", err)
+			}
 		}
 	}(cleanupCtx)
 
@@ -183,19 +202,55 @@ func DevBootInternal(ctx context.Context, s *testing.State) {
 		}
 	}
 
-	s.Log("Rebooting dut by warm reset")
+	if h.HasAPFwState {
+		closeUART, err := h.Servo.EnableUARTCapture(ctx, servo.ECUARTCapture)
+		if err != nil {
+			s.Fatal("Failed to enable capture EC UART: ", err)
+		}
+		defer func(ctx context.Context) {
+			if err := closeUART(ctx); err != nil {
+				s.Error("Failed to cancel capture EC UART: ", err)
+			}
+		}(cleanupCtx)
+	}
+
+	s.Log("Rebooting DUT by warm reset")
 	if err := h.Servo.SetPowerState(ctx, servo.PowerStateWarmReset); err != nil {
-		s.Fatal("Failed to warm reset dut: ", err)
+		s.Fatal("Failed to warm reset DUT: ", err)
 	}
 	waitDisconnectCtx, cancelWaitDisconnect := context.WithTimeout(ctx, 2*time.Minute)
 	defer cancelWaitDisconnect()
 	if err := h.DUT.WaitUnreachable(waitDisconnectCtx); err != nil {
 		s.Fatal("Failed to wait for DUT to become unreachable after sending a warm reset: ", err)
 	}
-	s.Logf("Sleeping for %s (FirmwareScreen) ", h.Config.FirmwareScreen)
-	// GoBigSleepLint: Delay to wait for the firmware screen during boot-up.
-	if err := testing.Sleep(ctx, h.Config.FirmwareScreen); err != nil {
-		s.Fatalf("Failed to sleep for %s: %v", h.Config.FirmwareScreen, err)
+
+	if h.HasAPFwState {
+		if err := h.DetectFirmwareScreen(ctx, h.Config.FirmwareScreen, fwCommon.DeveloperMode); err != nil {
+			s.Error("Failed to detect firmware screen: ", err)
+		}
+	} else {
+		s.Logf("Sleeping for %s (FirmwareScreen) ", h.Config.FirmwareScreen)
+		// GoBigSleepLint: Delay to wait for the firmware screen during boot-up.
+		if err := testing.Sleep(ctx, h.Config.FirmwareScreen); err != nil {
+			s.Fatalf("Failed to sleep for %s: %v", h.Config.FirmwareScreen, err)
+		}
+	}
+
+	if err := h.ByPassDevBootTimeout(ctx); err != nil {
+		s.Fatal("Failed to bypass dev boot timeout: ", err)
+	}
+
+	if state.RemoveServoChargerRequired && state.IsServoChargerConnected {
+		s.Log("Removing servo charger")
+		if err := h.SetDUTPower(ctx, false); err != nil {
+			s.Fatal("Failed to remove charger: ", err)
+		}
+		state.IsServoChargerConnected = false
+		// GoBigSleepLint: Wait for a while between removing the charger and
+		// booting the DUT from USB to prevent USB disconnected issues.
+		if err := testing.Sleep(ctx, 5*time.Second); err != nil {
+			s.Fatal("Failed to sleep: ", err)
+		}
 	}
 
 	if testOpt.enableDevBootUSB && !testOpt.setUpValidUSB {
@@ -203,6 +258,11 @@ func DevBootInternal(ctx context.Context, s *testing.State) {
 		testing.ContextLog(ctx, "Pressing Ctrl-U")
 		if err := h.Servo.KeypressWithDuration(ctx, servo.CtrlU, servo.DurTab); err != nil {
 			s.Fatal("Failed to press Ctrl-U: ", err)
+		}
+		if h.HasAPFwState {
+			if err := h.DetectFirmwareScreen(ctx, h.Config.FirmwareScreen, fwCommon.DeveloperBootExternal); err != nil {
+				s.Error("Failed to detect firmware screen: ", err)
+			}
 		}
 		// GoBigSleepLint: Simulate a specific speed of key press.
 		if err := testing.Sleep(ctx, h.Config.KeypressDelay); err != nil {
@@ -230,7 +290,7 @@ func DevBootInternal(ctx context.Context, s *testing.State) {
 			// and leaves menuSwitcher and tabletDetachableSwitcher on the dev screen.
 			// In either case, the DUT would not boot up.
 			if err := h.Servo.PressKey(ctx, " ", servo.DurTab); err != nil {
-				return errors.Wrap(err, "failed to press space while waiting for dut to connect")
+				return errors.Wrap(err, "failed to press space while waiting for DUT to connect")
 			}
 			// GoBigSleepLint: Simulate a specific speed of key press.
 			if err := testing.Sleep(ctx, h.Config.KeypressDelay); err != nil {
@@ -244,21 +304,21 @@ func DevBootInternal(ctx context.Context, s *testing.State) {
 			}
 			return nil
 		}, &testing.PollOptions{Timeout: h.Config.DelayRebootToPing}); err != nil {
-			s.Fatal("Failed to reconnect to dut: ", err)
+			s.Fatal("Failed to reconnect to DUT: ", err)
 		}
 	} else {
 		waitConnectCtx, cancelWaitConnect := context.WithTimeout(ctx, h.Config.DelayRebootToPing)
 		defer cancelWaitConnect()
 
 		if err := h.WaitConnect(waitConnectCtx, firmware.ResetEthernetDongle); err != nil {
-			s.Fatal("Failed to reconnect to dut: ", err)
+			s.Fatal("Failed to reconnect to DUT: ", err)
 		}
 	}
 
 	s.Log("Checking for DUT in dev mode")
 	bootFromDevMode, err := h.Reporter.CheckBootMode(ctx, fwCommon.BootModeDev)
 	if err != nil {
-		s.Fatal("Failed to get dut boot mode: ", err)
+		s.Fatal("Failed to get DUT boot mode: ", err)
 	}
 	if !bootFromDevMode {
 		s.Fatal("DUT did not boot to dev mode as expected")
