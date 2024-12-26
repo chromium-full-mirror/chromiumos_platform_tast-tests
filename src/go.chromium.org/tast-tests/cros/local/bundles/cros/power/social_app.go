@@ -11,7 +11,9 @@ import (
 	"strings"
 	"time"
 
+	"go.chromium.org/tast-tests/cros/local/arc"
 	"go.chromium.org/tast-tests/cros/local/bundles/cros/power/socialapp"
+	"go.chromium.org/tast-tests/cros/local/chrome/apps/thirdparty/element"
 	"go.chromium.org/tast-tests/cros/local/chrome/display"
 	"go.chromium.org/tast-tests/cros/local/chrome/uiauto"
 	"go.chromium.org/tast-tests/cros/local/chrome/uiauto/faillog"
@@ -119,6 +121,10 @@ func SocialApp(ctx context.Context, s *testing.State) {
 		s.Fatal("Failed to install app: ", err)
 	}
 	defer app.Uninstall(cleanupCtx)
+
+	if err := arc.DisableAppNotifications(ctx, a, element.ElementPackage); err != nil {
+		s.Fatal("Failed to disable app notifications: ", err)
+	}
 
 	recorder := power.NewRecorder(ctx, socialAppMeasurementInterval, s.OutDir(), s.TestName(), power.DischargeWatchdogOption(discharge))
 	defer recorder.Close(cleanupCtx)

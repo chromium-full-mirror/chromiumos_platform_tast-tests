@@ -185,4 +185,11 @@ func (e *Element) RunExtraOperations(ctx context.Context) error {
 	)(ctx)
 }
 
+// EnsureInRoom checks if the user is in the room, and attempts to rejoin if not.
+func (e *Element) EnsureInRoom(ctx context.Context) error {
+	return uiauto.NamedAction("ensure in room",
+		uiauto.IfFailThen(e.ele.CheckUserInRoom(e.roomName), e.ele.JoinRoom(e.roomName)),
+	)(ctx)
+}
+
 var _ SocialApp = (*Element)(nil)

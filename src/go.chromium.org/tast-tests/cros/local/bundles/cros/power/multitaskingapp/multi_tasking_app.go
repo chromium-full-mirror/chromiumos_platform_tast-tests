@@ -19,6 +19,7 @@ import (
 	"go.chromium.org/tast-tests/cros/local/bundles/cros/power/arcvideoplayback"
 	"go.chromium.org/tast-tests/cros/local/bundles/cros/power/socialapp"
 	"go.chromium.org/tast-tests/cros/local/chrome"
+	"go.chromium.org/tast-tests/cros/local/chrome/apps/thirdparty/element"
 	"go.chromium.org/tast-tests/cros/local/chrome/ash"
 	"go.chromium.org/tast-tests/cros/local/chrome/browser"
 	"go.chromium.org/tast-tests/cros/local/chrome/cuj"
@@ -136,6 +137,10 @@ func Run(ctx context.Context, resources *TestResources, params *TestParams) (ret
 		return errors.Wrap(err, "failed to install social app")
 	}
 	defer socialApp.Uninstall(cleanupCtx)
+
+	if err := arc.DisableAppNotifications(ctx, a, element.ElementPackage); err != nil {
+		return errors.Wrap(err, "failed to disable social app notifications")
+	}
 
 	videoApp := arcvideoplayback.NewExoPlayerApp(cr, tconn, kb, a, d, dataPath).(*arcvideoplayback.ExoPlayerApp)
 	if err := videoApp.Install(ctx); err != nil {
@@ -368,12 +373,12 @@ func browserActivity(ctx context.Context, conn *chrome.Conn, uiHandler cuj.UIAct
 // socialAppActivity defines test scenario of social app (Element in this case).
 // Typing messages and rename chatroom name for a while.
 func socialAppActivity(ctx context.Context, tconn *chrome.TestConn, uiHandler cuj.UIActionHandler, socialApp *socialapp.Element, socialAppTime time.Duration) error {
-	// If can't find Element icon, try to relaunch it.
-	if err := uiHandler.SwitchToAppWindow(apps.Element.Name)(ctx); err != nil {
-		testing.ContextLog(ctx, "Failed to switch to Element, try to launch it again")
-		if err = socialApp.Launch(ctx); err != nil {
-			return errors.Wrap(err, "failed to launch Element again")
-		}
+	if err := uiauto.Combine("ensure room access",
+		// If can't find Element icon, try to relaunch it.
+		uiauto.IfFailThen(uiHandler.SwitchToAppWindow(apps.Element.Name), socialApp.Launch),
+		socialApp.EnsureInRoom,
+	)(ctx); err != nil {
+		return errors.Wrap(err, "failed to ensure room access")
 	}
 
 	i := 1

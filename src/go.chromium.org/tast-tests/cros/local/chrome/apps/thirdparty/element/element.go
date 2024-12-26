@@ -37,8 +37,9 @@ const (
 )
 
 const (
-	elementPackage     = "im.vector.app"
-	elementIDPrefix    = elementPackage + ":id/"
+	// ElementPackage is the Android App package name for Element app.
+	ElementPackage     = "im.vector.app"
+	elementIDPrefix    = ElementPackage + ":id/"
 	createChatButtonID = elementIDPrefix + "newLayoutCreateChatButton"
 	messageFieldID     = elementIDPrefix + "composerEditText"
 	actionTitleID      = elementIDPrefix + "actionTitle"
@@ -54,6 +55,7 @@ const (
 	// If the network is unstable, account synchronization may take a long time.
 	syncTimeout      = 5 * time.Minute
 	loadTimeout      = time.Minute
+	longLoadTimeout  = 90 * time.Second
 	longUITimeout    = 30 * time.Second
 	defaultUITimeout = 15 * time.Second
 	shortUITimeout   = 5 * time.Second
@@ -86,15 +88,15 @@ func New(tconn *chrome.TestConn, kb *input.KeyboardEventWriter, a *arc.ARC, d *u
 // The app version will be logged after the installation.
 func (e *Element) Install(ctx context.Context) error {
 	if e.apkURL == "" {
-		return util.InstallApp(ctx, e.tconn, e.a, e.d, elementPackage)
+		return util.InstallApp(ctx, e.tconn, e.a, e.d, ElementPackage)
 	}
-	return util.InstallAppFromAPKURL(ctx, e.a, e.d, elementPackage, e.apkURL)
+	return util.InstallAppFromAPKURL(ctx, e.a, e.d, ElementPackage, e.apkURL)
 }
 
 // Uninstall uninstalls the Element app if it is installed.
 // This function does nothing if the app is initially uninstalled.
 func (e *Element) Uninstall(ctx context.Context) error {
-	return util.UninstallApp(ctx, e.a, elementPackage)
+	return util.UninstallApp(ctx, e.a, ElementPackage)
 }
 
 // Launch launches the Element app.
@@ -104,7 +106,7 @@ func (e *Element) Launch(ctx context.Context, launchTimeout time.Duration) error
 
 // Close closes the Element app.
 func (e *Element) Close(ctx context.Context) error {
-	return util.CloseApp(ctx, e.tconn, elementPackage)
+	return util.CloseApp(ctx, e.tconn, ElementPackage)
 }
 
 // Login logs in to Element app with Google account.
@@ -131,7 +133,6 @@ func (e *Element) Login(ctx context.Context, username string) error {
 	return uiauto.NamedCombine("skip splash",
 		// The |notNowButton| might take more time to appear on low-end devices.
 		apputil.ClickIfExist(notNowButton, longUITimeout),
-		e.dismissNotificationPrompt,
 		// Wait for the app finishes syncing the account data with the server.
 		// 1. If the account only joins a few rooms, the text would immediately disappear
 		// after being shown, and the UI might fail to capture it.
@@ -244,12 +245,12 @@ func (e *Element) dismissEncryptionAlertIfExists() uiauto.Action {
 	alert := e.d.Object(ui.ResourceID(elementIDPrefix + "llAlertBackground"))
 	elementWindow := nodewith.Name("Element").Role(role.Window).HasClass("Widget")
 	backButton := nodewith.Name("Back button").Role(role.Button).Ancestor(elementWindow)
-	skipButton := e.d.Object(ui.TextMatches("(?i)SKIP"), ui.PackageName(elementPackage))
+	skipButton := e.d.Object(ui.TextMatches("(?i)SKIP"), ui.PackageName(ElementPackage))
 	dismissAlert := uiauto.NamedCombine("dismiss encryption alert",
 		apputil.FindAndClick(alert, defaultUITimeout),
 		apputil.WaitUntilGone(alert, defaultUITimeout),
 		e.ui.LeftClick(backButton),
-		apputil.ClickIfExist(skipButton, defaultUITimeout),
+		uiauto.Retry(3, apputil.ClickIfExist(skipButton, defaultUITimeout)),
 	)
 	return uiauto.IfSuccessThen(
 		alert.Exists,
@@ -421,13 +422,13 @@ func (e *Element) sendMessageAndWait(expectedMessage string) uiauto.Action {
 		apputil.FindAndClick(sendButton, defaultUITimeout),
 		apputil.WaitForExists(expectedMessageText, defaultUITimeout),
 		// On low-end machine, the message might take more time to be sent.
-		apputil.WaitForExists(messageSentImage, loadTimeout),
+		apputil.WaitForExists(messageSentImage, longLoadTimeout),
 	)
 }
 
 // RenameCurrentRoom renames the current room.
 func (e *Element) RenameCurrentRoom(newRoomName string) uiauto.Action {
-	moreOptionsButton := e.d.Object(ui.PackageName(elementPackage), ui.Description("More options"), ui.Clickable(true))
+	moreOptionsButton := e.d.Object(ui.PackageName(ElementPackage), ui.Description("More options"), ui.Clickable(true))
 	optionTitle := e.d.Object(ui.Text("Settings"), ui.ResourceID(elementIDPrefix+"title"))
 	roomSettingsTitle := e.d.Object(ui.Text("Room settings"), ui.ResourceID(actionTitleID))
 	openSettingsPage := uiauto.NamedCombine("open Settings page",
@@ -448,7 +449,7 @@ func (e *Element) RenameCurrentRoom(newRoomName string) uiauto.Action {
 
 func (e *Element) setRoomNameAndSave(newRoomName string) uiauto.Action {
 	return func(ctx context.Context) error {
-		navigateUpButton := e.d.Object(ui.PackageName(elementPackage), ui.Description("Navigate up"), ui.ClassName(imageButtonClass))
+		navigateUpButton := e.d.Object(ui.PackageName(ElementPackage), ui.Description("Navigate up"), ui.ClassName(imageButtonClass))
 		discardChangeButton := e.d.Object(ui.Text("DISCARD CHANGES"), ui.ClassName(buttonClass))
 		returnToSettingsPage := uiauto.Combine("return to Settings page",
 			apputil.FindAndClick(navigateUpButton, defaultUITimeout),
@@ -527,6 +528,14 @@ func (e *Element) JoinRoom(roomName string) uiauto.Action {
 	)
 }
 
+// CheckUserInRoom checks if the user is currently in the specified room.
+func (e *Element) CheckUserInRoom(roomName string) uiauto.Action {
+	roomTitle := e.d.Object(ui.Text(roomName), ui.ResourceID(elementIDPrefix+"roomToolbarTitleView"))
+	return uiauto.NamedAction(fmt.Sprintf("check in %q room", roomName),
+		apputil.WaitForExists(roomTitle, defaultUITimeout),
+	)
+}
+
 // typeText types the text in the given field.
 func (e *Element) typeText(fieldID, text string) uiauto.Action {
 	textField := e.d.Object(ui.ResourceID(fieldID))
@@ -544,7 +553,7 @@ func (e *Element) typeText(fieldID, text string) uiauto.Action {
 // navigateUpToObject keeps clicking the "Navigate up" button to go back
 // to the previous page until the |expectedObject| appears.
 func (e *Element) navigateUpToObject(expectedObject *ui.Object) uiauto.Action {
-	navigateUpButton := e.d.Object(ui.PackageName(elementPackage), ui.Description("Navigate up"), ui.ClassName(imageButtonClass))
+	navigateUpButton := e.d.Object(ui.PackageName(ElementPackage), ui.Description("Navigate up"), ui.ClassName(imageButtonClass))
 	return uiauto.NamedCombine(fmt.Sprintf("navigate up to %v", expectedObject),
 		e.dismissEncryptionAlertIfExists(),
 		uiauto.IfFailThen(
