@@ -15,8 +15,6 @@ func SoundCardInitConditions() []hwdep.Condition {
 			"atlas", "nocturne", "lindar", "lillipup", "helios",
 			// Skip volteer2 as it's a reference design device not an official launched device.
 			"volteer2",
-			// TODO(b/283089078)
-			"geralt",
 		),
 	}
 }

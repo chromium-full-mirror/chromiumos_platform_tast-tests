@@ -86,6 +86,9 @@ UseVPD
 
 	// vpdFiles is the file that stores VPD values.
 	vpdFiles = "/sys/firmware/vpd/ro/dsm_calib_r0_%d"
+	// vpdFilesTAS2563 is the file that stores VPD values for TAS2563 devices
+	// TAS2563 has different VPD format.
+	vpdFilesTAS2563 = "/sys/firmware/vpd/ro/dsm_calib_value_%d"
 )
 
 // deviceSettings is the sound_card_init config.
@@ -160,7 +163,7 @@ func SoundCardInit(ctx context.Context, s *testing.State) {
 	}
 	numCh := uint(len(rdcRange))
 
-	if err := verifyVPDExist(ctx, d, numCh); err != nil {
+	if err := verifyVPDExist(ctx, d, numCh, amp); err != nil {
 		s.Fatal("Missing VPD: ", err)
 	}
 
@@ -254,10 +257,14 @@ func removeCalibrationFiles(ctx context.Context, d *rpcdut.RPCDUT, soundCardID s
 }
 
 // verifyVPDExist returns error if VPD files do not exist.
-func verifyVPDExist(ctx context.Context, d *rpcdut.RPCDUT, count uint) error {
+func verifyVPDExist(ctx context.Context, d *rpcdut.RPCDUT, count uint, amp string) error {
 	fs := dutfs.NewClient(d.RPC().Conn)
 	for i := 0; i < int(count); i++ {
-		f := fmt.Sprintf(vpdFiles, i)
+		vpdFileName := vpdFiles
+		if amp == "TAS2563" {
+			vpdFileName = vpdFilesTAS2563
+		}
+		f := fmt.Sprintf(vpdFileName, i)
 		exists, err := fs.Exists(ctx, f)
 		if err != nil {
 			return errors.Wrapf(err, "failed to stat %s", f)
