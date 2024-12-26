@@ -76,7 +76,7 @@ func CapslockRgbStateUpdates(ctx context.Context, s *testing.State) {
 	}
 	defer faillog.DumpUITreeOnError(cleanupCtx, s.OutDir(), s.HasError, tconn)
 
-	kb, err := input.Keyboard(ctx)
+	kb, err := input.VirtualKeyboard(ctx)
 	if err != nil {
 		s.Fatal("Failed to find keyboard: ", err)
 	}
