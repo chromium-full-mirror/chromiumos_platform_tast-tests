@@ -11,12 +11,18 @@ import (
 	"go.chromium.org/tast-tests/cros/common/shillconst"
 	"go.chromium.org/tast-tests/cros/local/network/dhcp"
 	"go.chromium.org/tast-tests/cros/local/network/hwsim"
+	"go.chromium.org/tast-tests/cros/local/network/testhooks"
 	"go.chromium.org/tast-tests/cros/local/network/virtualnet"
 	"go.chromium.org/tast-tests/cros/local/network/virtualnet/subnet"
 	"go.chromium.org/tast-tests/cros/local/shill"
 	"go.chromium.org/tast/core/ctxutil"
 	"go.chromium.org/tast/core/testing"
 )
+
+type initBoundTestParam struct {
+	port          int
+	dhcpcdVersion testhooks.DhcpcdVersion
+}
 
 func init() {
 	testing.AddTest(&testing.Test{
@@ -29,10 +35,28 @@ func init() {
 		SoftwareDeps: []string{"wifi"},
 		Fixture:      "shillSimulatedWiFi",
 		Params: []testing.Param{{
-			Val: dhcp.ServerPort,
+			Val: initBoundTestParam{
+				port:          dhcp.ServerPort,
+				dhcpcdVersion: testhooks.Dhcpcd7,
+			},
 		}, {
 			Name: "non_std_port",
-			Val:  54321, // random port value
+			Val: initBoundTestParam{
+				port:          54321, // random port value
+				dhcpcdVersion: testhooks.Dhcpcd7,
+			},
+		}, {
+			Name: "dhcpcd10",
+			Val: initBoundTestParam{
+				port:          dhcp.ServerPort,
+				dhcpcdVersion: testhooks.Dhcpcd10,
+			},
+		}, {
+			Name: "non_std_port_dhcpcd10",
+			Val: initBoundTestParam{
+				port:          54321, // random port value
+				dhcpcdVersion: testhooks.Dhcpcd10,
+			},
 		}},
 	})
 }
@@ -52,7 +76,20 @@ func DHCPInitBound(ctx context.Context, s *testing.State) {
 	ctx, cancel := ctxutil.Shorten(ctx, 10*time.Second)
 	defer cancel()
 
-	dhcpTestServerOpt := dhcp.WithSendPort(s.Param().(int))
+	param := s.Param().(initBoundTestParam)
+	hookEnv, err := testhooks.RunNetworkTestHooks(ctx,
+		testhooks.NewSaveNetLogHook(),
+		testhooks.NewTcpdumpHook(),
+		testhooks.NewDumpHostOnFailureHook(),
+		testhooks.NewSetDhcpcdVersionHook(param.dhcpcdVersion),
+	)
+	if err != nil {
+		s.Fatal("Failed to run network test hooks: ", err)
+	}
+	s.AttachErrorHandlers(hookEnv.OnErrorHandler, hookEnv.OnFatalHandler)
+	defer hookEnv.TearDownWithLogFailures(cleanupCtx, s.HasError)
+
+	dhcpTestServerOpt := dhcp.WithSendPort(param.port)
 
 	m, err := shill.NewManager(ctx)
 	if err != nil {

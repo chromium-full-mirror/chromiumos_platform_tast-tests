@@ -9,6 +9,7 @@ import (
 	"time"
 
 	"go.chromium.org/tast-tests/cros/local/network/dhcp"
+	"go.chromium.org/tast-tests/cros/local/network/testhooks"
 	"go.chromium.org/tast-tests/cros/local/network/virtualnet"
 	"go.chromium.org/tast-tests/cros/local/network/virtualnet/subnet"
 	"go.chromium.org/tast-tests/cros/local/shill"
@@ -16,6 +17,11 @@ import (
 	"go.chromium.org/tast/core/errors"
 	"go.chromium.org/tast/core/testing"
 )
+
+type twoServersNAKTestParam struct {
+	nakFirst      bool
+	dhcpcdVersion testhooks.DhcpcdVersion
+}
 
 func init() {
 	testing.AddTest(&testing.Test{
@@ -28,10 +34,28 @@ func init() {
 		// The param value represents whether NAK comes first.
 		Params: []testing.Param{{
 			Name: "nak_first",
-			Val:  true,
+			Val: twoServersNAKTestParam{
+				nakFirst:      true,
+				dhcpcdVersion: testhooks.Dhcpcd7,
+			},
 		}, {
 			Name: "ack_first",
-			Val:  false,
+			Val: twoServersNAKTestParam{
+				nakFirst:      false,
+				dhcpcdVersion: testhooks.Dhcpcd7,
+			},
+		}, {
+			Name: "nak_first_dhcpcd10",
+			Val: twoServersNAKTestParam{
+				nakFirst:      true,
+				dhcpcdVersion: testhooks.Dhcpcd10,
+			},
+		}, {
+			Name: "ack_first_dhcpcd10",
+			Val: twoServersNAKTestParam{
+				nakFirst:      false,
+				dhcpcdVersion: testhooks.Dhcpcd10,
+			},
 		}},
 	})
 }
@@ -45,6 +69,19 @@ func DHCPTwoServersNAK(ctx context.Context, s *testing.State) {
 	cleanupCtx := ctx
 	ctx, cancel := ctxutil.Shorten(ctx, 10*time.Second)
 	defer cancel()
+
+	param := s.Param().(twoServersNAKTestParam)
+	hookEnv, err := testhooks.RunNetworkTestHooks(ctx,
+		testhooks.NewSaveNetLogHook(),
+		testhooks.NewTcpdumpHook(),
+		testhooks.NewDumpHostOnFailureHook(),
+		testhooks.NewSetDhcpcdVersionHook(param.dhcpcdVersion),
+	)
+	if err != nil {
+		s.Fatal("Failed to run network test hooks: ", err)
+	}
+	s.AttachErrorHandlers(hookEnv.OnErrorHandler, hookEnv.OnFatalHandler)
+	defer hookEnv.TearDownWithLogFailures(cleanupCtx, s.HasError)
 
 	manager, err := shill.NewManager(ctx)
 	if err != nil {
@@ -76,12 +113,11 @@ func DHCPTwoServersNAK(ctx context.Context, s *testing.State) {
 	}
 
 	dhcpOpts := dhcp.NewOptionMap(gatewayIP, intendedIP)
-	nakFirst := s.Param().(bool)
 
 	discoverRule := dhcp.NewRespondToDiscovery(intendedIP.String(), gatewayIP.String(),
 		dhcpOpts, dhcp.FieldMap{}, true /*shouldRespond*/)
 	requestRule := dhcp.NewRejectAndRespondToRequest(intendedIP.String(), gatewayIP.String(),
-		dhcpOpts, dhcp.FieldMap{}, nakFirst)
+		dhcpOpts, dhcp.FieldMap{}, param.nakFirst)
 	requestRule.SetIsFinalHandler(true)
 
 	if _, errs := dhcp.RunTestWithEnv(ctx, rt, []dhcp.HandlingRule{*discoverRule, *requestRule}, func(ctx context.Context) error {
