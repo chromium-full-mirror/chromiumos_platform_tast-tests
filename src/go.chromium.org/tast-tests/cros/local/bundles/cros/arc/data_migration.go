@@ -18,6 +18,7 @@ import (
 	"go.chromium.org/tast-tests/cros/common/policy"
 	"go.chromium.org/tast-tests/cros/common/tape"
 	"go.chromium.org/tast-tests/cros/common/testexec"
+	"go.chromium.org/tast-tests/cros/local/apps"
 	"go.chromium.org/tast-tests/cros/local/arc"
 	"go.chromium.org/tast-tests/cros/local/arc/arcent"
 	"go.chromium.org/tast-tests/cros/local/arc/playstore"
@@ -193,6 +194,8 @@ func DataMigration(ctx context.Context, s *testing.State) {
 
 	creds := chrome.Creds{User: acc.Username, Pass: acc.Password}
 
+	testing.ContextLog(ctx, "Signing in with the test account to create profile")
+
 	// Create the profile of the test account.
 	cr, err := chrome.New(ctx, chrome.GAIALogin(creds))
 	if err != nil {
@@ -225,6 +228,8 @@ func tryDataMigration(ctx context.Context, creds chrome.Creds, params dataMigrat
 	cleanupCtx := ctx
 	ctx, cancel := ctxutil.Shorten(ctx, 1*time.Minute)
 	defer cancel()
+
+	testing.ContextLogf(ctx, "Testing the migration - attempt #%d", rl.Attempts)
 
 	// Ensure to sign out before executing mountVaultWithArchivedHomeData().
 	if err := upstart.RestartJob(ctx, "ui"); err != nil {
@@ -264,6 +269,15 @@ func tryDataMigration(ctx context.Context, creds chrome.Creds, params dataMigrat
 	}
 	defer cr.Close(cleanupCtx)
 
+	tconn, err := cr.TestAPIConn(ctx)
+	if err != nil {
+		return rl.Retry("connect to test API", err)
+	}
+
+	if err := apps.Launch(ctx, tconn, apps.PlayStore.ID); err != nil {
+		return rl.Retry("launch Play Store", err)
+	}
+
 	// Use the default boot timeout if not specified already.
 	if params.bootTimeout == 0 {
 		params.bootTimeout = arc.BootTimeout
@@ -288,12 +302,6 @@ func tryDataMigration(ctx context.Context, creds chrome.Creds, params dataMigrat
 		return rl.Exit("initializing UI Automator", err)
 	}
 	defer d.Close(cleanupCtx)
-
-	// Connect to Test API.
-	tconn, err := cr.TestAPIConn(ctx)
-	if err != nil {
-		return rl.Retry("connect to test API", err)
-	}
 
 	installFailed := false
 	recorder := uiauto.CreateAndStartScreenRecorder(ctx, tconn)
