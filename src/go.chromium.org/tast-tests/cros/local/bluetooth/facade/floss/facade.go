@@ -96,6 +96,85 @@ func SetFlossEnabled(ctx context.Context, enabled bool) error {
 	return nil
 }
 
+// SetLLPrivacy will attempt to set the LL privacy state through the floss manager
+// daemon.
+//
+// If floss manager daemon is not available or floss is not enabled, it will return
+// error, as LL privacy is only supported on floss.
+func SetLLPrivacy(ctx context.Context, enabled bool) error {
+	testing.ContextLogf(ctx, "Setting LL privacy enabled to %t", enabled)
+
+	// Check if floss is supported on the DUT and exit early if not.
+	flossSupported := upstart.JobExists(ctx, flossManagerDaemonJob)
+	if !flossSupported {
+		if enabled {
+			return errors.Errorf("DUT does not support floss (%q job does not exist)", flossManagerDaemonJob)
+		}
+		return nil
+	}
+
+	// Ensure floss manager daemon is running.
+	testing.ContextLogf(ctx, "Checking for floss manager daemon job %q", flossManagerDaemonJob)
+	if err := upstart.CheckJob(ctx, flossManagerDaemonJob); err != nil {
+		testing.ContextLogf(ctx, "Floss manager daemon job %q not running, restarting job and waiting for floss D-Bus service %q to come up", flossManagerDaemonJob, floss.DBusFlossManagerService)
+		if err := upstart.RestartJobAndWaitForDbusService(ctx, flossManagerDaemonJob, floss.DBusFlossManagerService); err != nil {
+			return errors.Wrapf(err, "failed to start floss manager daemon when trying to set floss enabled to %t", enabled)
+		}
+	}
+
+	testing.ContextLog(ctx, "Retrieving current floss enabled state with floss manager client")
+	manager, err := floss.DefaultManagerClient(ctx)
+	if err != nil {
+		return errors.Wrap(err, "failed to get default floss manager client")
+	}
+	if isEnabled, err := manager.GetFlossEnabled(ctx); err != nil {
+		return errors.Wrap(err, "failed to call GetFlossEnabled with floss manager client")
+	} else if isEnabled != true {
+		return errors.Wrap(err, "floss is not enabled, LL privacy only supports floss")
+	}
+
+	// Get powered state.
+	facade, err := NewBluetoothFlossFacade(ctx)
+	if err != nil {
+		return errors.Wrap(err, "failed to initialize new floss bluetooth facade")
+	}
+	powered, err := facade.IsPoweredOn(ctx)
+	if err != nil {
+		return errors.Wrap(err, "failed to check if floss adapter is enabled")
+	}
+
+	// The SetLLPrivacy Dbus call will restart adapter if it is already ON, but that makes it hard to wait for the desired state.
+	// Explicitly power-off here so we have the full control of the power state and can wait for the desired state easier.
+	if powered {
+		if err := facade.SetPowered(ctx, false); err != nil {
+			return errors.Wrap(err, "failed to power off floss adapter")
+		}
+		if err := facade.waitForAdapterEnabledState(ctx, false); err != nil {
+			return errors.Wrapf(err, "failed to wait for adapter HCI %d power state to be off", facade.adapterHCI)
+		}
+	}
+
+	// Set LL privacy through experimental client.
+	experimentalClient, err := floss.DefaultExperimentalClient(ctx)
+	if err != nil {
+		return errors.Wrap(err, "failed to get default floss experimental client")
+	}
+	if err := experimentalClient.SetLLPrivacy(ctx, enabled); err != nil {
+		return errors.Wrap(err, "failed to set LL privacy state")
+	}
+
+	// If the adapter was on, restore.
+	if powered {
+		if err := facade.SetPowered(ctx, true); err != nil {
+			return errors.Wrap(err, "failed to power on floss adapter")
+		}
+		if err := facade.waitForAdapterEnabledState(ctx, true); err != nil {
+			return errors.Wrapf(err, "failed to wait for adapter HCI %d power state to be on", facade.adapterHCI)
+		}
+	}
+	return nil
+}
+
 // BluetoothFlossFacade is an implementation of the BluetoothFacade interface
 // for the floss bluetooth stack.
 type BluetoothFlossFacade struct {

@@ -87,6 +87,20 @@ func (b *BtService) SetBluetoothStack(ctx context.Context, request *pb.SetBlueto
 	return &emptypb.Empty{}, nil
 }
 
+// SetLLPrivacy configures LL privacy state on the DUT
+func (b *BtService) SetLLPrivacy(ctx context.Context, request *pb.SetLLPrivacyRequest) (*emptypb.Empty, error) {
+	shortCtx, cancel := context.WithTimeout(ctx, 5*time.Second)
+	defer cancel()
+	isFlossEnabled, err := floss.GetFlossEnabled(shortCtx)
+	if err != nil || isFlossEnabled == false {
+		return nil, errors.Wrap(err, "floss is not enabled, LL privacy only supports floss")
+	}
+	if err := floss.SetLLPrivacy(shortCtx, request.Enabled); err != nil {
+		return nil, errors.Wrap(err, "failed to set LL privacy")
+	}
+	return &emptypb.Empty{}, nil
+}
+
 func (b *BtService) assertHasFacade() error {
 	if b.facade == nil {
 		return errors.New("facade not configured; call SetBluetoothStack prior to calling this method")

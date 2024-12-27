@@ -53,6 +53,9 @@ service BluetoothService {
   // SetPowered sets the default adapter's enabled state.
   rpc SetPowered(SetPoweredRequest) returns (google.protobuf.Empty) {}
 
+  // SetLLPrivacy sets the LL privacy enabled state.
+  rpc SetLLPrivacy(SetLLPrivacyRequest) returns (google.protobuf.Empty) {}
+
   // StartDiscovery starts the discovery of remote devices.
   rpc StartDiscovery(google.protobuf.Empty) returns (google.protobuf.Empty) {}
 
@@ -231,6 +234,8 @@ message AdapterPropertiesResponse {
 message IsPoweredOnResponse { bool isPoweredOn = 1; }
 
 message SetPoweredRequest { bool powered = 1; }
+
+message SetLLPrivacyRequest { bool enabled = 1; }
 
 message IsDiscoveringResponse { bool isDiscovering = 1; }
 

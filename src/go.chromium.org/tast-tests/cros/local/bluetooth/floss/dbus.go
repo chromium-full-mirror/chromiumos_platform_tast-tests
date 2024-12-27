@@ -26,6 +26,7 @@ const (
 	flossAdapterInterface                     = DBusFlossService + ".Bluetooth"
 	flossBluetoothCallbackInterface           = DBusFlossService + ".BluetoothCallback"
 	flossBluetoothConnectionCallbackInterface = DBusFlossService + ".BluetoothConnectionCallback"
+	flossExperimentalInterface                = DBusFlossService + ".Experimental"
 )
 
 // Floss object path suffixes for objects that are tied to a specific adapter.
