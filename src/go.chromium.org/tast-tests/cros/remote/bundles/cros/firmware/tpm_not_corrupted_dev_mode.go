@@ -13,6 +13,7 @@ import (
 	"github.com/4lon/crc8"
 	"golang.org/x/exp/slices"
 
+	fwCommon "go.chromium.org/tast-tests/cros/common/firmware"
 	"go.chromium.org/tast-tests/cros/common/servo"
 	"go.chromium.org/tast-tests/cros/remote/firmware"
 	"go.chromium.org/tast-tests/cros/remote/firmware/fixture"
@@ -125,7 +126,7 @@ func TPMNotCorruptedDevMode(ctx context.Context, s *testing.State) {
 	}
 
 	cleanupCtx := ctx
-	ctx, cancel := ctxutil.Shorten(ctx, 4*time.Minute)
+	ctx, cancel := ctxutil.Shorten(ctx, 6*time.Minute)
 	defer cancel()
 	defer func(ctx context.Context) {
 		if err := h.EnsureDUTBooted(ctx); err != nil {
@@ -139,6 +140,18 @@ func TPMNotCorruptedDevMode(ctx context.Context, s *testing.State) {
 		}
 	}(cleanupCtx)
 
+	if h.HasAPFwState {
+		closeUART, err := h.Servo.EnableUARTCapture(ctx, servo.ECUARTCapture)
+		if err != nil {
+			s.Fatal("Failed to capture EC UART: ", err)
+		}
+		defer func(ctx context.Context) {
+			if err := closeUART(ctx); err != nil {
+				s.Error("Failed to cancel capture EC UART: ", err)
+			}
+		}(cleanupCtx)
+	}
+
 	s.Log("Rebooting dut by warm reset")
 	if err := h.Servo.SetPowerState(ctx, servo.PowerStateWarmReset); err != nil {
 		s.Fatal("Failed to warm reset dut: ", err)
@@ -149,10 +162,16 @@ func TPMNotCorruptedDevMode(ctx context.Context, s *testing.State) {
 		s.Fatal("Failed to wait for DUT to become unreachable after sending a warm reset: ", err)
 	}
 
-	s.Logf("Sleeping for %s (FirmwareScreen) ", h.Config.FirmwareScreen)
-	// GoBigSleepLint: Delay to wait for the firmware screen during boot-up.
-	if err := testing.Sleep(ctx, h.Config.FirmwareScreen); err != nil {
-		s.Fatalf("Failed to sleep for %s: %v", h.Config.FirmwareScreen, err)
+	if h.HasAPFwState {
+		if err := h.DetectFirmwareScreen(ctx, h.Config.FirmwareScreen, fwCommon.DeveloperMode); err != nil {
+			s.Fatal("Failed to detect firmware screen: ", err)
+		}
+	} else {
+		s.Logf("Sleeping for %s (FirmwareScreen) ", h.Config.FirmwareScreen)
+		// GoBigSleepLint: Delay to wait for the firmware screen during boot-up.
+		if err := testing.Sleep(ctx, h.Config.FirmwareScreen); err != nil {
+			s.Fatalf("Failed to sleep for %s: %v", h.Config.FirmwareScreen, err)
+		}
 	}
 
 	s.Log("Resetting firmware screen timeout")
