@@ -160,6 +160,24 @@ func (a *App) StopRecording() uiauto.Action {
 	)
 }
 
+// RecordAudio records audio with duration length and saves recording.
+func (a *App) RecordAudio(ctx context.Context, duration time.Duration) error {
+	if err := a.StartRecording()(ctx); err != nil {
+		return err
+	}
+
+	// GoBigSleepLint: Records audio for |duration| seconds.
+	if err := testing.Sleep(ctx, duration); err != nil {
+		return err
+	}
+
+	if err := a.StopRecording()(ctx); err != nil {
+		return err
+	}
+
+	return nil
+}
+
 // PlayFirstRecording returns a function to click on the first recording on the
 // main page and wait until the playback page is ready.
 func (a *App) PlayFirstRecording() uiauto.Action {
