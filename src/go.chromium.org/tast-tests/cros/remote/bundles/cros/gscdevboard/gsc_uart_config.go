@@ -17,6 +17,10 @@ import (
 	"go.chromium.org/tast/core/testing"
 )
 
+const (
+	defaultBaud = 115200
+)
+
 func init() {
 	testing.AddTest(&testing.Test{
 		Func:    GSCUARTConfig,
@@ -40,7 +44,7 @@ func init() {
 			Val:  57600,
 		}, {
 			Name: "115200",
-			Val:  115200,
+			Val:  defaultBaud,
 		}},
 	})
 }
@@ -62,9 +66,26 @@ func GSCUARTConfig(ctx context.Context, s *testing.State) {
 }
 
 func testECUART(ctx context.Context, s *testing.State, b utils.DevboardHelper, i *ti50.CrOSImage, th utils.FirmwareTestingHelper, baud int) {
-	// Use the bitbang command to set the baud.
-	_, err := i.Command(ctx, fmt.Sprintf("bitbang 2 %d none", baud))
-	th.MustSucceed(err, "Command error")
+
+	// Send data to UART, expecting to read it out of the USB interface.
+	databuf := []byte(fmt.Sprintf("Baud rate %d. UART TX USB RX. The quick red fox jumps over the lazy brown dog", baud))
+
+	prependByte := false
+	// Use the bitbang command to update the baudrate.
+	if baud != defaultBaud {
+		_, err := i.Command(ctx, fmt.Sprintf("bitbang 2 %d none", baud))
+		th.MustSucceed(err, "Command error")
+		// TODO(b/356665223): Don't prepend 0xff after cr50 bitbang issue is resolved.
+		prependByte = b.TestbedType == ti50.GscH1Shield
+	}
+
+	// Cr50 sends 0xff before the rest of the data. Update the expected output.
+	var ccdBytes []byte
+	if prependByte {
+		ccdBytes = append([]byte{255}, databuf...)
+	} else {
+		ccdBytes = databuf
+	}
 
 	uart := b.PhysicalUartWithBaud(ti50.UartEC, baud)
 	ccd := b.CcdSerialInterfaceWithBaud(ti50.UartEC, time.Second, baud)
@@ -72,6 +93,10 @@ func testECUART(ctx context.Context, s *testing.State, b utils.DevboardHelper, i
 	defer ccd.Close(ctx)
 	th.MustSucceed(uart.Open(ctx), "Failed to open uart")
 	defer uart.Close(ctx)
+
+	out, err := i.Command(ctx, "bitbang")
+	th.MustSucceed(err, "Failed to run bitbang")
+	s.Log("bitbang:", out)
 
 	// Flush out any data.
 	for i := 0; i < 3; i++ {
@@ -83,16 +108,13 @@ func testECUART(ctx context.Context, s *testing.State, b utils.DevboardHelper, i
 	}
 	th.MustSucceed(err, "Error clearing buffer")
 
-	// Send data to UART, expecting to read it out of the USB interface.
-	databuf := []byte(fmt.Sprintf("Baud rate %d. UART TX USB RX. The quick red fox jumps over the lazy brown dog", baud))
-
 	th.MustSucceed(uart.WriteSerial(ctx, databuf), "Write error")
-	byt, err := ccd.ReadSerialBytes(ctx, len(databuf))
+	byt, err := ccd.ReadSerialBytes(ctx, len(ccdBytes))
 	if err != nil {
 		s.Errorf("Data sent to UART did not come out of USB: %s", err)
-	} else if !bytes.Equal(byt, databuf) {
+	} else if !bytes.Equal(byt, ccdBytes) {
 		s.Error("Data sent to UART came out of USB corrupted")
-		s.Errorf("%d UART to USB: Wanted '%+v' got '%+v'", baud, databuf, byt)
+		s.Errorf("%d UART to USB: Wanted '%+v' got '%+v'", baud, ccdBytes, byt)
 	} else {
 		s.Logf("%d UART to USB ok", baud)
 	}
