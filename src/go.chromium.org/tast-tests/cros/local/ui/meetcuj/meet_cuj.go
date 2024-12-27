@@ -910,6 +910,18 @@ func Run(ctx context.Context, meet MeetTest, cr *chrome.Chrome, testCaseVar func
 			return errors.Wrap(err, "failed to direct the spotlight bot to pin the test user")
 		}
 
+		isPresenting := false
+		presentingCleanupCtx := ctx
+		ctx, cancel = ctxutil.Shorten(ctx, 15*time.Second)
+		defer cancel()
+		defer func(ctx context.Context) {
+			if isPresenting {
+				if err := meetHelper.StopPresenting(ctx, ui); err != nil {
+					testing.ContextLog(ctx, "Failed to stop presenting: ", err)
+				}
+				isPresenting = false
+			}
+		}(presentingCleanupCtx)
 		if meet.Present {
 			if !meet.Docs {
 				return errors.New("need a Google Docs tab to present")
@@ -923,6 +935,7 @@ func Run(ctx context.Context, meet MeetTest, cr *chrome.Chrome, testCaseVar func
 			if err := meetHelper.PresentTab(ctx, collaborationConn, ui, kw, presentTabTitle); err != nil {
 				return errors.Wrap(err, "failed to start screen sharing")
 			}
+			isPresenting = true
 			expectedParticipantCount++
 
 			endPresentSection(ctx)
@@ -1242,6 +1255,7 @@ func Run(ctx context.Context, meet MeetTest, cr *chrome.Chrome, testCaseVar func
 			// is added to the meeting. Therefore, when screen sharing stops,
 			// the number of participants should decrease by one.
 			expectedParticipantCount--
+			isPresenting = false
 		}
 
 		// If we have a collaboration window open, navigate away from the page
@@ -1299,7 +1313,7 @@ func Run(ctx context.Context, meet MeetTest, cr *chrome.Chrome, testCaseVar func
 			if err := meetHelper.PresentTab(ctx, collaborationConn, ui, kw, "Google Slides"); err != nil {
 				return errors.Wrap(err, "failed to start screen sharing")
 			}
-
+			isPresenting = true
 			if err := googledocs.ClickOnSlidesWebArea(tconn)(ctx); err != nil {
 				return errors.Wrap(err, "failed to click on slide's web area")
 			}
@@ -1318,6 +1332,7 @@ func Run(ctx context.Context, meet MeetTest, cr *chrome.Chrome, testCaseVar func
 			if err := meetHelper.StopPresenting(ctx, ui); err != nil {
 				return errors.Wrap(err, "failed to stop presenting")
 			}
+			isPresenting = false
 			endSlidesInteractions(ctx)
 
 			if numPhases == 1 {
@@ -1353,6 +1368,7 @@ func Run(ctx context.Context, meet MeetTest, cr *chrome.Chrome, testCaseVar func
 			if err := meetHelper.PresentTab(ctx, collaborationConn, ui, kw, "Google Sheets"); err != nil {
 				return errors.Wrap(err, "failed to start screen sharing")
 			}
+			isPresenting = true
 			expectedParticipantCount++
 
 			if err := googledocs.ClickOnSheetsWebArea(tconn)(ctx); err != nil {
