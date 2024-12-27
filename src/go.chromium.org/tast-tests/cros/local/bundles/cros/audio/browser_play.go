@@ -121,6 +121,7 @@ func BrowserPlay(ctx context.Context, s *testing.State) {
 	if err := conn.WaitForExpr(ctx, "audio.ended"); err != nil {
 		s.Fatal("Failed to wait for audio to finish playing: ", err)
 	}
+	crastestclient.DumpAudioDiagnostics(ctx, s.OutDir())
 
 	// Verify the correctness of the played audio.
 	tone, err := audio.ReadS16LEPCM(recording.Path, recording.Channels)

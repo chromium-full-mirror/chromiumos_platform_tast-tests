@@ -15,6 +15,7 @@ import (
 
 	"go.chromium.org/tast-tests/cros/common/testexec"
 	"go.chromium.org/tast-tests/cros/local/audio"
+	"go.chromium.org/tast-tests/cros/local/audio/crastestclient"
 	audiofixture "go.chromium.org/tast-tests/cros/local/audio/fixture"
 	"go.chromium.org/tast-tests/cros/local/chrome"
 	"go.chromium.org/tast-tests/cros/local/chrome/uiauto"
@@ -31,7 +32,7 @@ func init() {
 		Desc:         "Tests basic audio recording on ash chrome browser",
 		Contacts:     []string{"chromeos-audio-bugs@google.com", "bailideng@google.com"},
 		BugComponent: "b:776546",
-		Attr:         []string{
+		Attr: []string{
 			"group:mainline",
 			"group:audio",
 			"group:release-health",
@@ -138,6 +139,7 @@ func BrowserRecord(ctx context.Context, s *testing.State) {
 	if err := conn.WaitForExpr(ctx, "recordFinished"); err != nil {
 		s.Fatal("Failed to wait for recording finish: ", err)
 	}
+	crastestclient.DumpAudioDiagnostics(ctx, s.OutDir())
 
 	// Download recorded file from webpage.
 	if err := conn.Eval(ctx, "download()", nil); err != nil {
