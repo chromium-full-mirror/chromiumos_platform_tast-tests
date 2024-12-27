@@ -109,6 +109,7 @@ type MeetTest struct {
 	FakeCamHALCfg       *FakeCameraHALCfg       // Enable Fake Camera HAL if the config is present.
 	MeasureEcho         bool                    // Whether to measure the echo RMS. The number of meeting participant bot must be one and should be enabled with human speech as the only audio source (no other noise) to accurately evaluate the echo RMS.
 	DisabledExperiments []string                // List of experiments to disable with the e= parameter in the Meet URL.
+	TabsForOverview     []string                // List of tabs we want to open and trigger overview. If empty, overview won't be triggered.
 }
 
 // FakeCamHALCfg720p is the fake camera HAL used in MeetCUJ.
@@ -1371,6 +1372,23 @@ func Run(ctx context.Context, meet MeetTest, cr *chrome.Chrome, testCaseVar func
 				if err := stopSnapshot(ctx); err != nil {
 					return errors.Wrap(err, "failed to stop snapshot for Google Sheets")
 				}
+			}
+		}
+
+		// Open some tabs and trigger overview.
+		if len(meet.TabsForOverview) > 0 {
+			for _, url := range meet.TabsForOverview {
+				conn, err := cr.NewConn(ctx, url, browser.WithNewWindow())
+				if err != nil {
+					return errors.Wrapf(err, "failed to open url %s", url)
+				}
+				defer conn.Close()
+			}
+			if err := inputsimulations.DoOverviewWorkflow(ctx, tconn, pc); err != nil {
+				return errors.Wrap(err, "failed to do overview workflow")
+			}
+			if err := meetWindow.ActivateWindow(ctx, tconn); err != nil {
+				return errors.Wrap(err, "failed to activate the Meet window")
 			}
 		}
 

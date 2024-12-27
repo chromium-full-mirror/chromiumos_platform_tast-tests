@@ -1237,6 +1237,7 @@ func init() {
 			"cros-odml-foundations-eng@google.com",
 		},
 		BugComponent: "b:1445284",
+		Data:         docsBlockerFiles,
 		Impl: &loggedInToCUJUserFixture{
 			chromeExtraOpts: []chrome.Option{
 				chrome.EnableFeatures(
@@ -1244,6 +1245,7 @@ func init() {
 				),
 				chrome.ExtraArgs(webRTCEventLogCommandFlag),
 			},
+			docsBlocker: true,
 		},
 		Parent:          "prepareForCUJ",
 		SetUpTimeout:    setUpTimeout,

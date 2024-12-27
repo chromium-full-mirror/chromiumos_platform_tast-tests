@@ -681,6 +681,55 @@ func init() {
 				Fixture:           "loggedInToCUJUserWithCoralEnabledAndWebRTCEventLogging",
 				ExtraHardwareDeps: hwdep.D(hwdep.FeatureLevel(1)),
 			},
+			{
+				Name:    "present_overview",
+				Timeout: meetcuj.DefaultTestTimeout,
+				// No attrs because this test is only for comparing with overview_coral, which can only be triggered manually currently.
+				Val: meetcuj.MeetTest{
+					Bots:           []int{1, 3, 15},
+					Layout:         googlemeet.TiledLayout,
+					Present:        true,
+					Docs:           true,
+					Split:          true,
+					Cam:            true,
+					ZoomOut:        true,
+					Effects:        true,
+					TypingDuration: meetcuj.DefaultMeetTimeout / 3,
+					FakeCamHALCfg:  meetcuj.FakeCamHALCfg720p,
+					TabsForOverview: []string{
+						"chrome://device-log",
+						"chrome://version",
+						"chrome://histograms",
+						"chrome://settings",
+					},
+				},
+				Fixture: "loggedInToCUJUserWithWebRTCEventLogging",
+			},
+			{
+				Name:    "present_overview_coral",
+				Timeout: meetcuj.DefaultTestTimeout,
+				// No attrs because this test can only be triggered manually currently.
+				Val: meetcuj.MeetTest{
+					Bots:           []int{1, 3, 15},
+					Layout:         googlemeet.TiledLayout,
+					Present:        true,
+					Docs:           true,
+					Split:          true,
+					Cam:            true,
+					ZoomOut:        true,
+					Effects:        true,
+					TypingDuration: meetcuj.DefaultMeetTimeout / 3,
+					FakeCamHALCfg:  meetcuj.FakeCamHALCfg720p,
+					TabsForOverview: []string{
+						"chrome://device-log",
+						"chrome://version",
+						"chrome://histograms",
+						"chrome://settings",
+					},
+				},
+				Fixture:           "loggedInToCUJUserWithCoralEnabledAndWebRTCEventLogging",
+				ExtraHardwareDeps: hwdep.D(hwdep.FeatureLevel(1)),
+			},
 		},
 	})
 }
