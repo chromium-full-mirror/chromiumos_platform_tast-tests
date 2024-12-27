@@ -161,6 +161,10 @@ func OfflinePipelineBenchmark(ctx context.Context, s *testing.State) {
 
 	cmd := testexec.CommandContext(
 		ctx,
+		// Wrap offline-pipeline with `time` so the process is a fork()
+		// of `time` instead of a fork() of tast, whose RSS would otherwise
+		// dominate offline-pipeline's ru_maxrss rusage.
+		"time", "-v", "-o", filepath.Join(s.OutDir(), "time.txt"),
 		"offline-pipeline", "--json",
 		fmt.Sprintf("--plugin-name=%s", plugin.Constructor),
 		fmt.Sprintf("--block-size-frames=%d", param.blockSizeFrames),
