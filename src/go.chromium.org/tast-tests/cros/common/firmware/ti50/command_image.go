@@ -29,7 +29,7 @@ var (
 	// FatalMsg is a regular expression.  If it ever matches any serial console output from
 	// the GSC, it should be reported as a test failure.
 	FatalMsg *regexp.Regexp = regexp.MustCompile(
-		`(Kernel panicked|WATCHDOG RESET IMMINENT|app exit|app panic|FIXME).*\n`)
+		`(Kernel panicked|WATCHDOG RESET IMMINENT|WATCHDOG PC|app exit|app panic|FIXME|PROCESS EXCEPTION).*\n`)
 )
 
 // CommandImage displays a prompt and responds to cli commands.

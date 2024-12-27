@@ -470,6 +470,9 @@ func (i *CrOSImage) SendConsoleRebootCmd(ctx context.Context) error {
 // response since the GSC is expected to reboot/crash. Note that this does not
 // detect if crash didn't happen due not using a DBG image.
 func (i *CrOSImage) SendDBGConsoleCrashCmd(ctx context.Context) error {
+	if i.TestbedType == GscH1Shield {
+		return i.WriteSerial(ctx, []byte("crash divzero\r"))
+	}
 	return i.WriteSerial(ctx, []byte("crash watchdog\r"))
 }
 

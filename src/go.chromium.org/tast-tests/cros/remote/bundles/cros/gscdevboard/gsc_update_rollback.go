@@ -93,7 +93,7 @@ func GSCUpdateRollback(ctx context.Context, s *testing.State) {
 		}
 
 		th.MustSucceed(i.SendDBGConsoleCrashCmd(ctx), "calling crash cmd")
-		immediateCtx, cancel := context.WithTimeout(ctx, 5*time.Second)
+		immediateCtx, cancel := context.WithTimeout(ctx, 12*time.Second)
 		defer cancel()
 		// We need to find and remove the fatal message from the UART output
 		// otherwise other console matches will return an error when they detect
