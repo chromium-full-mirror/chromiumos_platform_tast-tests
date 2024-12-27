@@ -247,6 +247,19 @@ func CorruptBothFWSigABAndEC(ctx context.Context, s *testing.State) {
 	if err := firmware.SetFWTries(ctx, h.DUT, fwCommon.RWSectionA, 0); err != nil {
 		s.Fatal("Failed to set FW tries to A: ", err)
 	}
+
+	if h.HasAPFwState {
+		closeUART, err := h.Servo.EnableUARTCapture(ctx, servo.ECUARTCapture)
+		if err != nil {
+			s.Fatal("Failed to enable capture EC UART: ", err)
+		}
+		defer func() {
+			if err := closeUART(ctx); err != nil {
+				s.Error("Failed to cancel capture EC UART: ", err)
+			}
+		}()
+	}
+
 	if err := flashCorruptEC(ctx, h, fmt.Sprintf("%s/ec_corrupt.bin", backupState.RemoteTempDir()), shellDir); err != nil {
 		s.Fatal("Failed to corrupt ec: ", err)
 	}
@@ -278,10 +291,18 @@ func CorruptBothFWSigABAndEC(ctx context.Context, s *testing.State) {
 				s.Fatal("Failed to remove the USB: ", err)
 			}
 		}
+
 		s.Log("Waiting for DUT to reach the firmware screen")
-		if err := h.WaitFirmwareScreen(ctx, h.Config.FirmwareScreenRecMode); err != nil {
-			s.Fatal("Failed to get to firmware screen: ", err)
+		if h.HasAPFwState {
+			if err := h.DetectFirmwareScreen(ctx, h.Config.FirmwareScreen, fwCommon.RecoveryBroken); err != nil {
+				s.Fatal("Failed to detect firmware screen: ", err)
+			}
+		} else {
+			if err := h.WaitFirmwareScreen(ctx, h.Config.FirmwareScreenRecMode); err != nil {
+				s.Fatal("Failed to get to firmware screen: ", err)
+			}
 		}
+
 		s.Log("Checking if EC active copy is RO")
 		if err := h.Servo.CheckECActiveCopyMatch(ctx, "RO"); err != nil {
 			s.Fatal("Failed to verify EC active copy: ", err)
@@ -305,9 +326,10 @@ func CorruptBothFWSigABAndEC(ctx context.Context, s *testing.State) {
 		if err := h.Servo.SetUSBMuxState(ctx, servo.USBMuxDUT); err != nil {
 			s.Fatal("Failed to insert a valid USB to DUT: ", err)
 		}
-
-		if err := h.WaitDUTConnectDuringBootFromUSB(ctx, !hasBrokenScreen); err != nil {
-			s.Fatalf("Failed to get expected behavior, expected stay in broken screen: %v: %v", hasBrokenScreen, err)
+		if !h.HasAPFwState {
+			if err := h.WaitDUTConnectDuringBootFromUSB(ctx, !hasBrokenScreen); err != nil {
+				s.Fatalf("Failed to get expected behavior, expected stay in broken screen: %v: %v", hasBrokenScreen, err)
+			}
 		}
 		if hasBrokenScreen {
 			if state.RemoveServoChargerRequired && !state.IsServoChargerConnected {
