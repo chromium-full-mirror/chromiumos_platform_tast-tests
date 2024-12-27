@@ -32,6 +32,16 @@ func init() {
 			"gsc_image_ti50",
 			"gsc_nightly"},
 		Fixture: fixture.GSCOpenCCD,
+		Params: []testing.Param{{
+			Name: "9600",
+			Val:  9600,
+		}, {
+			Name: "57600",
+			Val:  57600,
+		}, {
+			Name: "115200",
+			Val:  115200,
+		}},
 	})
 }
 
@@ -41,14 +51,14 @@ func GSCUARTConfig(ctx context.Context, s *testing.State) {
 	i := ti50.MustOpenCrOSImage(ctx, b, s, b.TestbedType)
 	defer i.Close(ctx)
 
+	baud := s.Param().(int)
+
 	s.Log("(Re)starting ti50")
 	b.ResetWithStraps(ctx, ti50.CCDModeOn)
 	th.MustSucceed(i.WaitUntilBooted(ctx), "GSC revives after reboot")
 	b.WaitUntilCCDConnectedAndUARTTXEnabled(ctx)
 
-	testECUART(ctx, s, b, i, th, 9600)
-	testECUART(ctx, s, b, i, th, 57600)
-	testECUART(ctx, s, b, i, th, 115200)
+	testECUART(ctx, s, b, i, th, baud)
 }
 
 func testECUART(ctx context.Context, s *testing.State, b utils.DevboardHelper, i *ti50.CrOSImage, th utils.FirmwareTestingHelper, baud int) {
@@ -82,7 +92,9 @@ func testECUART(ctx context.Context, s *testing.State, b utils.DevboardHelper, i
 		s.Errorf("Data sent to UART did not come out of USB: %s", err)
 	} else if !bytes.Equal(byt, databuf) {
 		s.Error("Data sent to UART came out of USB corrupted")
-		s.Errorf("Wanted '%+v' got '%+v'", databuf, byt)
+		s.Errorf("%d UART to USB: Wanted '%+v' got '%+v'", baud, databuf, byt)
+	} else {
+		s.Logf("%d UART to USB ok", baud)
 	}
 
 	th.MustSucceed(uart.ClearInput(ctx), "Error clearing buffer")
@@ -96,6 +108,8 @@ func testECUART(ctx context.Context, s *testing.State, b utils.DevboardHelper, i
 		s.Errorf("Data sent to USB did not come out of UART: %s", err)
 	} else if !bytes.Equal(byt, databuf) {
 		s.Error("Data sent to USB came out of UART corrupted")
-		s.Errorf("Wanted '%+v' got '%+v'", databuf, byt)
+		s.Errorf("%d USB to UART: Wanted '%+v' got '%+v'", baud, databuf, byt)
+	} else {
+		s.Logf("%d USB to UART ok", baud)
 	}
 }
