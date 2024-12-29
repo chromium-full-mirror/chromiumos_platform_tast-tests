@@ -39,7 +39,8 @@ import (
 )
 
 const (
-	uiJobName = "ui"
+	uiJobName    = "ui"
+	tearDownTime = 5 * time.Minute
 )
 
 // The Cellular test fixture ensures that modemfwd is stopped.
@@ -50,11 +51,11 @@ func init() {
 		Desc:            "Cellular tests are safe to run",
 		Contacts:        []string{"chromeos-cellular-team@google.com", "ejcaruso@google.com"},
 		BugComponent:    "b:167157", // ChromeOS > Platform > Connectivity > Cellular
-		SetUpTimeout:    4 * time.Minute,
+		SetUpTimeout:    4*time.Minute + tearDownTime,
 		ResetTimeout:    5 * time.Second,
 		PreTestTimeout:  4 * time.Minute,
 		PostTestTimeout: 3 * time.Minute,
-		TearDownTimeout: 5 * time.Second,
+		TearDownTimeout: tearDownTime,
 		Impl:            newCellularFixture(),
 		Vars:            []string{"autotest_host_info_labels"},
 	})
@@ -63,11 +64,11 @@ func init() {
 		Desc:            "Cellular tests without UI are safe to run",
 		Contacts:        []string{"chromeos-cellular-team@google.com", "andrewlassalle@google.com"},
 		BugComponent:    "b:167157", // ChromeOS > Platform > Connectivity > Cellular
-		SetUpTimeout:    4 * time.Minute,
+		SetUpTimeout:    4*time.Minute + tearDownTime,
 		ResetTimeout:    5 * time.Second,
 		PreTestTimeout:  4 * time.Minute,
 		PostTestTimeout: 3 * time.Minute,
-		TearDownTimeout: 5 * time.Second,
+		TearDownTimeout: tearDownTime,
 		Impl:            newCellularFixture().setStopUI(true),
 		Vars:            []string{"autotest_host_info_labels"},
 	})
@@ -76,11 +77,11 @@ func init() {
 		Desc:            "Cellular fixture that reboots in SetUp",
 		Contacts:        []string{"chromeos-cellular-team@google.com", "jstanko@google.com"},
 		BugComponent:    "b:167157", // ChromeOS > Platform > Connectivity > Cellular
-		SetUpTimeout:    4 * time.Minute,
+		SetUpTimeout:    4*time.Minute + tearDownTime,
 		ResetTimeout:    5 * time.Second,
 		PreTestTimeout:  4 * time.Minute,
 		PostTestTimeout: 3 * time.Minute,
-		TearDownTimeout: 5 * time.Second,
+		TearDownTimeout: tearDownTime,
 		Parent:          "cellularRebootSetupRemote",
 		Impl:            newCellularFixture(),
 		Vars:            []string{"autotest_host_info_labels"},
@@ -90,11 +91,11 @@ func init() {
 		Desc:            "Cellular suspend-resume fixture that reboots to help enforce isolation",
 		Contacts:        []string{"chromeos-cellular-team@google.com", "jstanko@google.com"},
 		BugComponent:    "b:167157", // ChromeOS > Platform > Connectivity > Cellular
-		SetUpTimeout:    4 * time.Minute,
+		SetUpTimeout:    4*time.Minute + tearDownTime,
 		ResetTimeout:    5 * time.Second,
 		PreTestTimeout:  4 * time.Minute,
 		PostTestTimeout: 3 * time.Minute,
-		TearDownTimeout: 5 * time.Second,
+		TearDownTimeout: tearDownTime,
 		Parent:          "cellularSuspendRemote",
 		Impl:            newCellularFixture(),
 		Vars:            []string{"autotest_host_info_labels"},
@@ -104,11 +105,11 @@ func init() {
 		Desc:            "Cellular stress fixture that reboots to help enforce isolation",
 		Contacts:        []string{"chromeos-cellular-team@google.com", "jstanko@google.com"},
 		BugComponent:    "b:167157", // ChromeOS > Platform > Connectivity > Cellular
-		SetUpTimeout:    4 * time.Minute,
+		SetUpTimeout:    4*time.Minute + tearDownTime,
 		ResetTimeout:    5 * time.Second,
 		PreTestTimeout:  4 * time.Minute,
 		PostTestTimeout: 3 * time.Minute,
-		TearDownTimeout: 5 * time.Second,
+		TearDownTimeout: tearDownTime,
 		Parent:          "cellularStressRemote",
 		Impl:            newCellularFixture(),
 		Vars:            []string{"autotest_host_info_labels"},
@@ -118,11 +119,11 @@ func init() {
 		Desc:            "Cellular e2e fixture that reboots to help enforce isolation",
 		Contacts:        []string{"chromeos-cellular-team@google.com", "jstanko@google.com"},
 		BugComponent:    "b:167157", // ChromeOS > Platform > Connectivity > Cellular
-		SetUpTimeout:    4 * time.Minute,
+		SetUpTimeout:    4*time.Minute + tearDownTime,
 		ResetTimeout:    5 * time.Second,
 		PreTestTimeout:  4 * time.Minute,
 		PostTestTimeout: 3 * time.Minute,
-		TearDownTimeout: 5 * time.Second,
+		TearDownTimeout: tearDownTime,
 		Parent:          "cellularE2ERemote",
 		Impl:            newCellularFixture(),
 		Vars:            []string{"autotest_host_info_labels"},
@@ -132,11 +133,11 @@ func init() {
 		Desc:            "Cellular hotspot fixture that reboots to help enforce isolation",
 		Contacts:        []string{"chromeos-cellular-team@google.com", "jstanko@google.com"},
 		BugComponent:    "b:167157", // ChromeOS > Platform > Connectivity > Cellular
-		SetUpTimeout:    4 * time.Minute,
+		SetUpTimeout:    4*time.Minute + tearDownTime,
 		ResetTimeout:    5 * time.Second,
 		PreTestTimeout:  4 * time.Minute,
 		PostTestTimeout: 3 * time.Minute,
-		TearDownTimeout: 5 * time.Second,
+		TearDownTimeout: tearDownTime,
 		Parent:          "cellularHotspotRemote",
 		Impl:            newCellularFixture(),
 		Vars:            []string{"autotest_host_info_labels"},
@@ -146,11 +147,11 @@ func init() {
 		Desc:            "Cellular dut-check fixture that reboots to help enforce isolation",
 		Contacts:        []string{"chromeos-cellular-team@google.com", "jstanko@google.com"},
 		BugComponent:    "b:167157", // ChromeOS > Platform > Connectivity > Cellular
-		SetUpTimeout:    4 * time.Minute,
+		SetUpTimeout:    4*time.Minute + tearDownTime,
 		ResetTimeout:    5 * time.Second,
 		PreTestTimeout:  4 * time.Minute,
 		PostTestTimeout: 3 * time.Minute,
-		TearDownTimeout: 5 * time.Second,
+		TearDownTimeout: tearDownTime,
 		Parent:          "cellularDUTCheckRemote",
 		Impl:            newCellularFixture(),
 		Vars:            []string{"autotest_host_info_labels"},
@@ -160,11 +161,11 @@ func init() {
 		Desc:            "Cellular autoconnect fixture that reboots in SetUp",
 		Contacts:        []string{"chromeos-cellular-team@google.com", "jstanko@google.com"},
 		BugComponent:    "b:167157", // ChromeOS > Platform > Connectivity > Cellular
-		SetUpTimeout:    4 * time.Minute,
+		SetUpTimeout:    4*time.Minute + tearDownTime,
 		ResetTimeout:    5 * time.Second,
 		PreTestTimeout:  4 * time.Minute,
 		PostTestTimeout: 3 * time.Minute,
-		TearDownTimeout: 5 * time.Second,
+		TearDownTimeout: tearDownTime,
 		Parent:          "cellularAutoconnectRemote",
 		Impl:            newCellularFixture(),
 		Vars:            []string{"autotest_host_info_labels"},
@@ -174,11 +175,11 @@ func init() {
 		Desc:            "Cellular tests are safe to run with a Test SIM",
 		Contacts:        []string{"chromeos-cellular-team@google.com", "ejcaruso@google.com"},
 		BugComponent:    "b:167157", // ChromeOS > Platform > Connectivity > Cellular
-		SetUpTimeout:    4 * time.Minute,
+		SetUpTimeout:    4*time.Minute + tearDownTime,
 		ResetTimeout:    5 * time.Second,
 		PreTestTimeout:  4 * time.Minute,
 		PostTestTimeout: 3 * time.Minute,
-		TearDownTimeout: 5 * time.Second,
+		TearDownTimeout: tearDownTime,
 		Impl:            newCellularFixture().setUseTestESIM(true),
 		Vars:            []string{"autotest_host_info_labels"},
 	})
@@ -187,11 +188,11 @@ func init() {
 		Desc:            "Cellular tests are safe to run and a fake DMS (for managed eSIM profiles) is running",
 		Contacts:        []string{"chromeos-cellular-team@google.com", "jiajunz@google.com"},
 		BugComponent:    "b:167157", // ChromeOS > Platform > Connectivity > Cellular
-		SetUpTimeout:    3 * time.Minute,
+		SetUpTimeout:    3*time.Minute + tearDownTime,
 		ResetTimeout:    5 * time.Second,
 		PreTestTimeout:  4 * time.Minute,
 		PostTestTimeout: 3 * time.Minute,
-		TearDownTimeout: 5 * time.Second,
+		TearDownTimeout: tearDownTime,
 		Impl:            newCellularFixture().setUseFakeDMS(true),
 		Parent:          fixture.FakeDMSEnrolled,
 		Vars:            []string{"autotest_host_info_labels"},
@@ -201,11 +202,11 @@ func init() {
 		Desc:            "Cellular tests are safe to run that require a Test SIM and a fake DMS (for managed eSIM profiles) is running",
 		Contacts:        []string{"chromeos-cellular-team@google.com", "jiajunz@google.com"},
 		BugComponent:    "b:167157", // ChromeOS > Platform > Connectivity > Cellular
-		SetUpTimeout:    3 * time.Minute,
+		SetUpTimeout:    3*time.Minute + tearDownTime,
 		ResetTimeout:    5 * time.Second,
 		PreTestTimeout:  4 * time.Minute,
 		PostTestTimeout: 3 * time.Minute,
-		TearDownTimeout: 5 * time.Second,
+		TearDownTimeout: tearDownTime,
 		Impl:            newCellularFixture().setUseFakeDMS(true).setUseTestESIM(true),
 		Parent:          fixture.FakeDMSEnrolled,
 		Vars:            []string{"autotest_host_info_labels"},
@@ -215,11 +216,11 @@ func init() {
 		Desc:            "Cellular tests are safe to run that require a functioning SIM and a fake DMS (for managed eSIM profiles) is running",
 		Contacts:        []string{"cros-device-enablement@google.com", "jiajunz@google.com"},
 		BugComponent:    "b:167157", // ChromeOS > Platform > Connectivity > Cellular
-		SetUpTimeout:    3 * time.Minute,
+		SetUpTimeout:    3*time.Minute + tearDownTime,
 		ResetTimeout:    5 * time.Second,
 		PreTestTimeout:  4 * time.Minute,
 		PostTestTimeout: 3 * time.Minute,
-		TearDownTimeout: 5 * time.Second,
+		TearDownTimeout: tearDownTime,
 		Impl:            newCellularFixture().setUseFakeDMS(true).setClearSIMLock(true),
 		Parent:          fixture.FakeDMSEnrolled,
 		Vars:            []string{"autotest_host_info_labels"},
@@ -232,11 +233,11 @@ func init() {
 			"chromeos-cellular-team@google.com",
 		},
 		BugComponent:    "b:167157", // ChromeOS > Platform > Connectivity > Cellular
-		SetUpTimeout:    5 * time.Minute,
+		SetUpTimeout:    5*time.Minute + tearDownTime,
 		ResetTimeout:    5 * time.Second,
 		PreTestTimeout:  4 * time.Minute,
 		PostTestTimeout: 3 * time.Minute,
-		TearDownTimeout: 5 * time.Second,
+		TearDownTimeout: tearDownTime,
 		Impl:            newCellularFixture().setRestartMM(true).setRestartOnFailure([]string{modemmanager.JobName}).setDaemonUptimeBeforeTest(0 * time.Second).setDisableCellularInShill(true),
 		Vars:            []string{"autotest_host_info_labels"},
 	})
@@ -248,11 +249,11 @@ func init() {
 			"chromeos-cellular-team@google.com",
 		},
 		BugComponent:    "b:167157", // ChromeOS > Platform > Connectivity > Cellular
-		SetUpTimeout:    5 * time.Minute,
+		SetUpTimeout:    5*time.Minute + tearDownTime,
 		ResetTimeout:    5 * time.Second,
 		PreTestTimeout:  4 * time.Minute,
 		PostTestTimeout: 3 * time.Minute,
-		TearDownTimeout: 5 * time.Second,
+		TearDownTimeout: tearDownTime,
 		Impl:            newCellularFixture().setRestartOnFailure([]string{modemmanager.JobName}).setResetShillProfileOnPostTest(true).setDaemonUptimeBeforeTest(0 * time.Second),
 		Vars:            []string{"autotest_host_info_labels"},
 	})
@@ -264,11 +265,11 @@ func init() {
 			"chromeos-cellular-team@google.com",
 		},
 		BugComponent:    "b:167157", // ChromeOS > Platform > Connectivity > Cellular
-		SetUpTimeout:    5 * time.Minute,
+		SetUpTimeout:    5*time.Minute + tearDownTime,
 		ResetTimeout:    5 * time.Second,
 		PreTestTimeout:  4 * time.Minute,
 		PostTestTimeout: 3 * time.Minute,
-		TearDownTimeout: 5 * time.Second,
+		TearDownTimeout: tearDownTime,
 		Impl:            newCellularFixture().setRestartOnFailure([]string{modemmanager.JobName}).setResetShillProfileOnPostTest(true).setDaemonUptimeBeforeTest(0 * time.Second).setStopUI(true),
 		Vars:            []string{"autotest_host_info_labels"},
 	})
@@ -277,11 +278,11 @@ func init() {
 		Desc:            "Arc tests on cellular interface",
 		Contacts:        []string{"chromeos-cellular-team@google.com", "madhavadas@google.com"},
 		BugComponent:    "b:167157", // ChromeOS > Platform > Connectivity > Cellular
-		SetUpTimeout:    4 * time.Minute,
+		SetUpTimeout:    4*time.Minute + tearDownTime,
 		ResetTimeout:    5 * time.Second,
 		PreTestTimeout:  4 * time.Minute,
 		PostTestTimeout: 3 * time.Minute,
-		TearDownTimeout: 5 * time.Second,
+		TearDownTimeout: tearDownTime,
 		Impl:            newCellularFixture().setHasArc(true),
 		Parent:          "arcBooted",
 		Vars:            []string{"autotest_host_info_labels"},
@@ -291,11 +292,11 @@ func init() {
 		Desc:            "Cellular tests that require a functioning roaming SIM are safe to run",
 		Contacts:        []string{"cros-device-enablement@google.com", "nikhilcn@google.com"},
 		BugComponent:    "b:167157", // ChromeOS > Platform > Connectivity > Cellular
-		SetUpTimeout:    4 * time.Minute,
+		SetUpTimeout:    4*time.Minute + tearDownTime,
 		ResetTimeout:    5 * time.Second,
 		PreTestTimeout:  4 * time.Minute,
 		PostTestTimeout: 3 * time.Minute,
-		TearDownTimeout: 5 * time.Second,
+		TearDownTimeout: tearDownTime,
 		Impl:            newCellularFixture().setUseRoaming(true).setCheckSIM(true),
 		Vars:            []string{"autotest_host_info_labels"},
 	})
@@ -304,11 +305,11 @@ func init() {
 		Desc:            "Cellular tests that require a functioning SIM are safe to run",
 		Contacts:        []string{"cros-device-enablement@google.com", "nikhilcn@google.com"},
 		BugComponent:    "b:167157", // ChromeOS > Platform > Connectivity > Cellular
-		SetUpTimeout:    4 * time.Minute,
+		SetUpTimeout:    4*time.Minute + tearDownTime,
 		ResetTimeout:    5 * time.Second,
 		PreTestTimeout:  4 * time.Minute,
 		PostTestTimeout: 3 * time.Minute,
-		TearDownTimeout: 5 * time.Second,
+		TearDownTimeout: tearDownTime,
 		Impl:            newCellularFixture().setCheckSIM(true),
 		Vars:            []string{"autotest_host_info_labels"},
 	})
@@ -317,11 +318,11 @@ func init() {
 		Desc:            "Power tests for cellular connectivity",
 		Contacts:        []string{"chromeos-cellular-team@google.com", "rmao@google.com"},
 		BugComponent:    "b:167157", // ChromeOS > Platform > Connectivity > Cellular
-		SetUpTimeout:    4 * time.Minute,
+		SetUpTimeout:    4*time.Minute + tearDownTime,
 		ResetTimeout:    5 * time.Second,
 		PreTestTimeout:  4 * time.Minute,
 		PostTestTimeout: 3 * time.Minute,
-		TearDownTimeout: 5 * time.Second,
+		TearDownTimeout: tearDownTime,
 		Impl:            newCellularFixture().setCheckSIM(true),
 		Parent:          "powerMetricsNoUI",
 		Vars:            []string{"autotest_host_info_labels"},
@@ -331,11 +332,11 @@ func init() {
 		Desc:            "Cellular tests that may affect SIM lock",
 		Contacts:        []string{"chromeos-cellular-team@google.com", "ejcaruso@google.com"},
 		BugComponent:    "b:167157", // ChromeOS > Platform > Connectivity > Cellular
-		SetUpTimeout:    4 * time.Minute,
+		SetUpTimeout:    4*time.Minute + tearDownTime,
 		ResetTimeout:    5 * time.Second,
 		PreTestTimeout:  4 * time.Minute,
 		PostTestTimeout: 3 * time.Minute,
-		TearDownTimeout: 5 * time.Second,
+		TearDownTimeout: tearDownTime,
 		Impl:            newCellularFixture().setClearSIMLock(true),
 		Vars:            []string{"autotest_host_info_labels"},
 	})
@@ -344,11 +345,11 @@ func init() {
 		Desc:            "Cellular tests that require Chrome login first",
 		Contacts:        []string{"chromeos-cellular-team@google.com", "madhavadas@google.com"},
 		BugComponent:    "b:167157", // ChromeOS > Platform > Connectivity > Cellular
-		SetUpTimeout:    4 * time.Minute,
+		SetUpTimeout:    4*time.Minute + tearDownTime,
 		ResetTimeout:    5 * time.Second,
 		PreTestTimeout:  4 * time.Minute,
 		PostTestTimeout: 3 * time.Minute,
-		TearDownTimeout: 5 * time.Second,
+		TearDownTimeout: tearDownTime,
 		Parent:          "cellularE2ERemote",
 		Impl:            newCellularFixture().setHasChrome(true),
 		Vars:            []string{"autotest_host_info_labels"},
@@ -358,11 +359,11 @@ func init() {
 		Desc:            "Cellular fixture that enforces that the network is connectable as part of the reset, if not then the DUT is rebooted",
 		Contacts:        []string{"chromeos-cellular-team@google.com", "jstanko@google.com"},
 		BugComponent:    "b:167157", // ChromeOS > Platform > Connectivity > Cellular
-		SetUpTimeout:    4 * time.Minute,
+		SetUpTimeout:    4*time.Minute + tearDownTime,
 		ResetTimeout:    5 * time.Second,
 		PreTestTimeout:  4 * time.Minute,
 		PostTestTimeout: 3 * time.Minute,
-		TearDownTimeout: 5 * time.Second,
+		TearDownTimeout: tearDownTime,
 		Parent:          "cellularEnforceConnectionRemote",
 		// We dont need to reset on failure since we will be rebooting if we can't connect.
 		Impl: newCellularFixture().setRestartOnFailure([]string{}),
@@ -376,11 +377,11 @@ func init() {
 			"chromeos-cellular-team@google.com",
 		},
 		BugComponent:    "b:167157", // ChromeOS > Platform > Connectivity > Cellular
-		SetUpTimeout:    5 * time.Minute,
+		SetUpTimeout:    5*time.Minute + tearDownTime,
 		ResetTimeout:    5 * time.Second,
 		PreTestTimeout:  4 * time.Minute,
 		PostTestTimeout: 3 * time.Minute,
-		TearDownTimeout: 5 * time.Second,
+		TearDownTimeout: tearDownTime,
 		Vars:            []string{"autotest_host_info_labels"},
 		Impl:            newCellularFixture().setRestartOnFailure([]string{modemmanager.JobName}).setResetShillProfileOnPostTest(true).setDaemonUptimeBeforeTest(0 * time.Second),
 		Parent:          "cellularEnforceConnectionRemote",
@@ -504,7 +505,7 @@ func (f *cellularFixture) SetUp(ctx context.Context, s *testing.FixtState) inter
 	// Add a cleanUp function to fix the fixture if it fails, as TearDown is only executed if the
 	// SetUp is successful.
 	cleanupCtx := ctx
-	ctx, cancel := ctxutil.Shorten(ctx, 20*time.Second)
+	ctx, cancel := ctxutil.Shorten(ctx, tearDownTime)
 	defer cancel()
 	// Ensure the test restores the modemfwd state.
 	defer f.fixtureCleanUp(cleanupCtx, s)
