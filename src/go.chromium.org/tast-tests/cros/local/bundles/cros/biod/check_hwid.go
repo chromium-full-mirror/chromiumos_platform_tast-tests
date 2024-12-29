@@ -8,6 +8,7 @@ import (
 	"context"
 	"fmt"
 	"strconv"
+	"strings"
 
 	"go.chromium.org/tast-tests/cros/common/fingerprint"
 	"go.chromium.org/tast-tests/cros/common/testexec"
@@ -51,6 +52,12 @@ func CheckHWID(ctx context.Context, s *testing.State) {
 	} else {
 		chipInfoMap := fingerprint.ParseColonDelimitedOutput(string(mcuCmdOut))
 		mcu = chipInfoMap["name"]
+		// Handle mcu running zephyr which may have more specific name.
+		if strings.HasPrefix(mcu, "stm32f412") {
+			mcu = "stm32f412"
+		} else if strings.HasPrefix(mcu, "stm32h7") {
+			mcu = "stm32h7x3"
+		}
 	}
 
 	// grab the fingerprint_sensor info from dut.
