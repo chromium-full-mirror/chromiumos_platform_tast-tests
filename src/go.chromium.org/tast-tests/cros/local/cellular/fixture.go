@@ -881,8 +881,20 @@ func (f *cellularFixture) restartJobs(ctx context.Context, restartOnFailure []st
 		}
 	}
 	if len(restartOnFailure) > 0 {
-		// GoBigSleepLint - Delay starting the next test to avoid any transients caused by restarting MM and shill.
-		testing.Sleep(ctx, f.daemonUptimeBeforeTest)
+		deadline, ok := ctx.Deadline()
+		if ok {
+			// Don't wait exactly until deadline. Leave some time for other things to complete.
+			maxSleepTime := time.Until(deadline) - 4*time.Second
+			if maxSleepTime > f.daemonUptimeBeforeTest {
+				maxSleepTime = f.daemonUptimeBeforeTest
+			}
+			if maxSleepTime > 0 {
+				testing.ContextLog(ctx, "Wait for daemon uptime:", maxSleepTime)
+				// GoBigSleepLint - Delay starting the next test to avoid any transients caused by restarting MM and shill.
+				testing.Sleep(ctx, maxSleepTime)
+			}
+		}
+
 	}
 }
 
