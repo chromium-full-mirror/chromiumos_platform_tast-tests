@@ -8,6 +8,7 @@ import (
 	"context"
 	"time"
 
+	fwCommon "go.chromium.org/tast-tests/cros/common/firmware"
 	"go.chromium.org/tast-tests/cros/common/servo"
 	fwUtils "go.chromium.org/tast-tests/cros/remote/bundles/cros/firmware/utils"
 	"go.chromium.org/tast-tests/cros/remote/firmware"
@@ -45,7 +46,8 @@ func init() {
 }
 
 func WriteProtectCrossystem(ctx context.Context, s *testing.State) {
-	h := s.FixtValue().(*fixture.Value).Helper
+	pv := s.FixtValue().(*fixture.Value)
+	h := pv.Helper
 	if err := h.RequireServo(ctx); err != nil {
 		s.Fatal("Failed to connect to servo: ", err)
 	}
@@ -76,7 +78,7 @@ func WriteProtectCrossystem(ctx context.Context, s *testing.State) {
 		}
 	}(cleanupContext)
 
-	rebootFuncs := map[string]func(context.Context, *firmware.Helper) error{
+	rebootFuncs := map[string]func(context.Context, *firmware.Helper, fwCommon.BootMode) error{
 		"mode aware reboot":        performModeAwareReboot,
 		"reboot with shutdown cmd": performRebootWithShutdownCmd,
 		"reboot with reboot cmd":   performRebootWithRebootCmd,
@@ -85,17 +87,17 @@ func WriteProtectCrossystem(ctx context.Context, s *testing.State) {
 	}
 
 	for rebootType, rebootFunc := range rebootFuncs {
-		if err := checkWPOverReboot(ctx, h, rebootFunc); err != nil {
+		if err := checkWPOverReboot(ctx, h, rebootFunc, pv.BootMode); err != nil {
 			s.Fatalf("Failed to preserve WP over %q: %v", rebootType, err)
 		}
 	}
 }
 
-func checkWPOverReboot(ctx context.Context, h *firmware.Helper, rebootFunc func(context.Context, *firmware.Helper) error) error {
+func checkWPOverReboot(ctx context.Context, h *firmware.Helper, rebootFunc func(context.Context, *firmware.Helper, fwCommon.BootMode) error, fromMode fwCommon.BootMode) error {
 	if err := h.Servo.SetFWWPState(ctx, servo.FWWPStateOff); err != nil {
 		return errors.Wrap(err, "failed to disable hardware WP")
 	}
-	if err := rebootFunc(ctx, h); err != nil {
+	if err := rebootFunc(ctx, h, fromMode); err != nil {
 		return errors.Wrap(err, "failed to reboot")
 	}
 	if err := fwUtils.CheckCrossystemWPSW(ctx, h, 0); err != nil {
@@ -104,7 +106,7 @@ func checkWPOverReboot(ctx context.Context, h *firmware.Helper, rebootFunc func(
 	if err := h.Servo.SetFWWPState(ctx, servo.FWWPStateOn); err != nil {
 		return errors.Wrap(err, "failed to enable hardware WP")
 	}
-	if err := rebootFunc(ctx, h); err != nil {
+	if err := rebootFunc(ctx, h, fromMode); err != nil {
 		return errors.Wrap(err, "failed to reboot")
 	}
 	if err := fwUtils.CheckCrossystemWPSW(ctx, h, 1); err != nil {
@@ -113,7 +115,7 @@ func checkWPOverReboot(ctx context.Context, h *firmware.Helper, rebootFunc func(
 	return nil
 }
 
-func performRebootWithECReboot(ctx context.Context, h *firmware.Helper) error {
+func performRebootWithECReboot(ctx context.Context, h *firmware.Helper, fromMode fwCommon.BootMode) error {
 	testing.ContextLog(ctx, "Rebooting the DUT with EC reboot command")
 	if err := h.Servo.RunECCommand(ctx, "reboot"); err != nil {
 		return errors.Wrap(err, "failed to ping EC console")
@@ -124,7 +126,12 @@ func performRebootWithECReboot(ctx context.Context, h *firmware.Helper) error {
 		return errors.Wrap(err, "failed to wait for DUT to become unreachable")
 	}
 
-	waitConnectCtx, cancel := context.WithTimeout(ctx, h.Config.DelayRebootToPing)
+	reconnectTimeout := h.Config.DelayRebootToPing
+	if fromMode == fwCommon.BootModeDev {
+		reconnectTimeout += firmware.DevScreenShortDelay + h.Config.FirmwareScreen
+	}
+
+	waitConnectCtx, cancel := context.WithTimeout(ctx, reconnectTimeout)
 	defer cancel()
 	if err := h.WaitConnect(waitConnectCtx, firmware.ResetEthernetDongle); err != nil {
 		currPowerState, stateErr := h.Servo.GetECSystemPowerState(ctx)
@@ -136,7 +143,7 @@ func performRebootWithECReboot(ctx context.Context, h *firmware.Helper) error {
 	return nil
 }
 
-func performRebootWithRebootCmd(ctx context.Context, h *firmware.Helper) error {
+func performRebootWithRebootCmd(ctx context.Context, h *firmware.Helper, fromMode fwCommon.BootMode) error {
 	testing.ContextLog(ctx, "Rebooting the DUT with a reboot command in VT2")
 	if err := h.DUT.Conn().CommandContext(ctx, "reboot").Run(); err != nil && !errors.As(err, &context.DeadlineExceeded) {
 		return errors.Wrap(err, "failed to run reboot command")
@@ -147,7 +154,12 @@ func performRebootWithRebootCmd(ctx context.Context, h *firmware.Helper) error {
 		return errors.Wrap(err, "failed to wait for DUT to become unreachable")
 	}
 
-	waitConnectCtx, cancelWaitConnect := context.WithTimeout(ctx, h.Config.DelayRebootToPing)
+	reconnectTimeout := h.Config.DelayRebootToPing
+	if fromMode == fwCommon.BootModeDev {
+		reconnectTimeout += firmware.DevScreenShortDelay + h.Config.FirmwareScreen
+	}
+
+	waitConnectCtx, cancelWaitConnect := context.WithTimeout(ctx, reconnectTimeout)
 	defer cancelWaitConnect()
 	if err := h.WaitConnect(waitConnectCtx, firmware.ResetEthernetDongle); err != nil {
 		currPowerState, stateErr := h.Servo.GetECSystemPowerState(ctx)
@@ -159,7 +171,7 @@ func performRebootWithRebootCmd(ctx context.Context, h *firmware.Helper) error {
 	return nil
 }
 
-func performRebootWithShutdownCmd(ctx context.Context, h *firmware.Helper) error {
+func performRebootWithShutdownCmd(ctx context.Context, h *firmware.Helper, fromMode fwCommon.BootMode) error {
 	testing.ContextLog(ctx, "Powering off the DUT with a shutdown command in VT2")
 	if err := h.DUT.Conn().CommandContext(ctx, "shutdown", "-P", "now").Run(); err != nil && !errors.As(err, &context.DeadlineExceeded) {
 		return errors.Wrap(err, "failed to run shutdown command")
@@ -175,7 +187,12 @@ func performRebootWithShutdownCmd(ctx context.Context, h *firmware.Helper) error
 		return errors.Wrapf(err, "failed to power on the DUT by pressing the power button for %v", h.Config.HoldPwrButtonPowerOn)
 	}
 
-	waitConnectCtx, cancel := context.WithTimeout(ctx, h.Config.DelayRebootToPing)
+	reconnectTimeout := h.Config.DelayRebootToPing
+	if fromMode == fwCommon.BootModeDev {
+		reconnectTimeout += firmware.DevScreenShortDelay + h.Config.FirmwareScreen
+	}
+
+	waitConnectCtx, cancel := context.WithTimeout(ctx, reconnectTimeout)
 	defer cancel()
 	if err := h.WaitConnect(waitConnectCtx, firmware.ResetEthernetDongle); err != nil {
 		currPowerState, stateErr := h.Servo.GetECSystemPowerState(ctx)
@@ -187,7 +204,7 @@ func performRebootWithShutdownCmd(ctx context.Context, h *firmware.Helper) error
 	return nil
 }
 
-func performRebootWithPowerBtn(ctx context.Context, h *firmware.Helper) error {
+func performRebootWithPowerBtn(ctx context.Context, h *firmware.Helper, fromMode fwCommon.BootMode) error {
 	testing.ContextLog(ctx, "Pressing the power button to power off the DUT")
 	if err := h.Servo.KeypressWithDuration(ctx, servo.PowerKey, servo.Dur(h.Config.HoldPwrButtonPowerOff)); err != nil {
 		return errors.Wrapf(err, "failed to power off the DUT by pressing the power button for %v", h.Config.HoldPwrButtonPowerOff)
@@ -203,7 +220,12 @@ func performRebootWithPowerBtn(ctx context.Context, h *firmware.Helper) error {
 		return errors.Wrapf(err, "failed to power on the DUT by pressing the power button for %v", h.Config.HoldPwrButtonPowerOn)
 	}
 
-	waitConnectCtx, cancel := context.WithTimeout(ctx, h.Config.DelayRebootToPing)
+	reconnectTimeout := h.Config.DelayRebootToPing
+	if fromMode == fwCommon.BootModeDev {
+		reconnectTimeout += firmware.DevScreenShortDelay + h.Config.FirmwareScreen
+	}
+
+	waitConnectCtx, cancel := context.WithTimeout(ctx, reconnectTimeout)
 	defer cancel()
 	if err := h.WaitConnect(waitConnectCtx, firmware.ResetEthernetDongle); err != nil {
 		currPowerState, stateErr := h.Servo.GetECSystemPowerState(ctx)
@@ -215,13 +237,17 @@ func performRebootWithPowerBtn(ctx context.Context, h *firmware.Helper) error {
 	return nil
 }
 
-func performModeAwareReboot(ctx context.Context, h *firmware.Helper) error {
+func performModeAwareReboot(ctx context.Context, h *firmware.Helper, fromMode fwCommon.BootMode) error {
 	ms, err := firmware.NewModeSwitcher(ctx, h)
 	if err != nil {
 		return errors.Wrap(err, "failed to create mode switcher")
 	}
+	var opts []firmware.ModeSwitchOption
+	if fromMode == fwCommon.BootModeDev {
+		opts = append(opts, firmware.AllowGBBForce)
+	}
 	testing.ContextLog(ctx, "Performing mode aware reboot")
-	if err := ms.ModeAwareReboot(ctx, firmware.ColdReset, firmware.AllowGBBForce); err != nil {
+	if err := ms.ModeAwareReboot(ctx, firmware.ColdReset, opts...); err != nil {
 		return errors.Wrap(err, "failed to perform mode aware reboot")
 	}
 	return nil
