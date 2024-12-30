@@ -99,7 +99,7 @@ type MeetTest struct {
 	Retouch             bool                    // Whether to turn on the platform-level face retouch feature.
 	NpuInference        bool                    // Whether to use NPU as inference backend for platform-level effects.
 	LiveCaptions        bool                    // Whether to turn on live captioning.
-	NoiseCancellation   bool                    // Whether to turn on noise cancellation.
+	StudioStyleMic      bool                    // Whether to turn on studio style mic (formerly noise cancellation).
 	StudioMic           bool                    // Whether to turn on studio mic.
 	ZoomOut             bool                    // Whether to zoom out on both the browser and display.
 	TabSwitchDocs       bool                    // Whether to switch between Docs and Meet. It cannot be true if docs is false.
@@ -680,7 +680,7 @@ func Run(ctx context.Context, meet MeetTest, cr *chrome.Chrome, testCaseVar func
 		meet.AdjustLighting ||
 		meet.BackgroundBlur ||
 		meet.Retouch ||
-		meet.NoiseCancellation ||
+		meet.StudioStyleMic ||
 		meet.StudioMic ||
 		meet.NpuInference {
 		testing.ContextLog(ctx, "Toggling platform VC effects")
@@ -704,16 +704,17 @@ func Run(ctx context.Context, meet MeetTest, cr *chrome.Chrome, testCaseVar func
 		}
 		// Passes inference backend.
 		effects.ApplyPlatformEffects(ctx, meet.AdjustLighting, meet.Retouch, blurLevel, effects.KAuto, inference)
-		// Studio mic and noise cancellation don't appear at the same time.
+		// Studio mic and studio style mic(noise cancellation) don't appear at the same time.
 		if meet.StudioMic {
 			if err := vct.ChangeSettingsInPanel(vct.SetStudioMic(meet.StudioMic))(ctx); err != nil {
 				return pv, errors.Wrap(err, "failed to configure platform VC effects: studio mic")
 			}
-		} else if meet.NoiseCancellation {
-			if err := vct.ChangeSettingsInPanel(vct.SetNoiseCancellation(meet.NoiseCancellation))(ctx); err != nil {
-				return pv, errors.Wrap(err, "failed to configure platform VC effects: noise cancellation")
+		} else if meet.StudioStyleMic {
+			if err := vct.ChangeSettingsInPanel(vct.SetStudioStyleMic(meet.StudioStyleMic))(ctx); err != nil {
+				return pv, errors.Wrap(err, "failed to configure platform VC effects: studio style mic")
 			}
 		}
+
 	}
 
 	testing.ContextLog(ctx, "Resetting browser zoom to 100%")

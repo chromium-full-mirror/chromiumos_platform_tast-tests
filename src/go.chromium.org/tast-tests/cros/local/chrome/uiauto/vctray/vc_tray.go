@@ -39,6 +39,7 @@ var (
 	liveCaptionButton       = nodewith.NameStartingWith("Toggle Live Caption").Role(role.ToggleButton)
 	adjustCameraFraming     = nodewith.NameStartingWith("Toggle Camera framing").Role(role.ToggleButton)
 	noiseCancellationButton = nodewith.NameStartingWith("Toggle Noise cancellation").Role(role.ToggleButton)
+	studioStyleMicButton    = nodewith.NameStartingWith("Toggle Studio-style mic").Role(role.ToggleButton)
 	settingsButton          = nodewith.Name("Settings").Role(role.Button)
 	adjustLightingPref      = nodewith.NameStartingWith("Appearance effects preferences, Improve lighting").Role(role.MenuItem)
 	faceRetouchPref         = nodewith.NameStartingWith("Appearance effects preferences, Portrait touch-up").Role(role.MenuItem)
@@ -225,9 +226,16 @@ func (vcTray VCTray) SetStudioLook(expectedOn bool) action.Action {
 	return vcTray.SetFeature(studioLookButton, expectedOn)
 }
 
-// SetNoiseCancellation toggles on/off the "Noise cancellation" option.
-func (vcTray VCTray) SetNoiseCancellation(expectedOn bool) action.Action {
-	return vcTray.SetFeature(noiseCancellationButton, expectedOn)
+// SetStudioStyleMic toggles "Studio-style mic" on/off on Chromebook Plus.
+// Falls back to "Noise cancellation" option for older UI versions.
+func (vcTray VCTray) SetStudioStyleMic(expectedOn bool) action.Action {
+	return uiauto.Combine("set studio style mic",
+		vcTray.ui.WaitUntilAnyExists(studioStyleMicButton, noiseCancellationButton),
+		uiauto.IfSucceedThenElse(vcTray.ui.Exists(studioStyleMicButton),
+			vcTray.SetFeature(studioStyleMicButton, expectedOn),
+			vcTray.SetFeature(noiseCancellationButton, expectedOn),
+		),
+	)
 }
 
 // SetStudioMic toggles on/off the "Studio mic" option.
