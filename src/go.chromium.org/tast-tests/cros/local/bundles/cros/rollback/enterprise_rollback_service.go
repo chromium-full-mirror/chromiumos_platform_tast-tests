@@ -103,14 +103,35 @@ func (e *EnterpriseRollbackService) Login(ctx context.Context, req *empty.Empty)
 		e.networkAPI = nil
 	}
 
-	// When auto-enrolling, we need Wait for the signin OOBE page to be shown.
-	// Waiting if enrollment is not expected causes the test to fail.
 	if *e.ownership == rpb.Ownership_AUTO_ENROLLING {
+		// When we expect automatic enrollment, we need wait for the signin OOBE page to be shown.
 		_, err := e.ash.WaitForOOBEConnectionWithPrefix(ctx, "chrome://oobe/gaia-signin")
 		if err != nil {
 			return nil, errors.Wrap(err, "could not find OOBE connection for gaia sign in")
 		}
 		testing.ContextLog(ctx, "Login page found after re-enrollment, logging in now")
+	} else if *e.ownership == rpb.Ownership_OOBE {
+		// Although we do not expect automatic enrollment to succeed, it may still cause a race condition.
+		// Wait until we either reach manual enrollment page or a login page.
+		// In case manual enrollment page is shown, ContinueLogin call below will ignore it and switch to login page anyway.
+		testing.ContextLog(ctx, "Awaiting enrollment attempt to finish by either showing login page or enrollment page")
+		if err := testing.Poll(ctx, func(ctx context.Context) error {
+			loginCtx, loginCtxcancel := context.WithTimeout(ctx, 3*time.Second)
+			defer loginCtxcancel()
+			_, err := e.ash.WaitForOOBEConnectionWithPrefix(loginCtx, "chrome://oobe/gaia-signin")
+			if err == nil {
+				return nil
+			}
+			enrollCtx, enrollCtxCancel := context.WithTimeout(ctx, 3*time.Second)
+			defer enrollCtxCancel()
+			_, err = e.ash.WaitForOOBEConnectionWithPrefix(enrollCtx, "chrome://oobe/oobe") // enrollment page
+			if err == nil {
+				return nil
+			}
+			return err
+		}, &testing.PollOptions{Timeout: 30 * time.Second}); err != nil {
+			return nil, errors.Wrap(err, "failed to wait for automatic enrollment attempt to finish")
+		}
 	}
 
 	if err := e.ash.ContinueLogin(ctx); err != nil {
