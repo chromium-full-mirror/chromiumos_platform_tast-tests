@@ -21,6 +21,8 @@ const (
 
 // Gpio straps used to setup TPM communication for each type of bus.
 const (
+	// TpmSpiSysRst configures GSC straps to select TPM communication via SPI bus with the SYS_RST_L tpm reset signal.
+	TpmSpiSysRst GpioStrap = "TI50_TPM_SPI_SYS_RST"
 	// TpmSpi configures GSC straps to select TPM communication via SPI bus.
 	TpmSpi GpioStrap = "TI50_TPM_SPI"
 	// TpmI2c configures GSC straps to select TPM communication via I2C bus.

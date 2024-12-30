@@ -942,6 +942,17 @@ func (i *CrOSImage) WaitForTestlabDisable(ctx context.Context, timeout time.Dura
 	return err
 }
 
+const (
+	// BoardPropSPI is the GSC board property mask for SPI TPMs
+	BoardPropSPI = (1 << 0)
+	// BoardPropI2C is the GSC board property mask for I2C TPMs
+	BoardPropI2C = (1 << 1)
+	// BoardPropSysRst is the GSC board property mask devices that use SYS_RST_L for TPM_RST_L
+	BoardPropSysRst = (1 << 5)
+	// BoardPropPltRst is the GSC board property mask devices that use PLT_RST_L for TPM_RST_L
+	BoardPropPltRst = (1 << 6)
+)
+
 // BoardProperties gets the numerical value from the "brdprop" GSC command.
 func (i *CrOSImage) BoardProperties(ctx context.Context) (uint64, error) {
 	output, err := i.safeCommand(ctx, "brdprop")
@@ -966,10 +977,10 @@ func (i *CrOSImage) BoardPropertiesTPMBus(ctx context.Context) (TpmBus, error) {
 	if err != nil {
 		return TpmBusInvalid, err
 	}
-	switch brdprop & 0x03 {
-	case 0x01:
+	switch brdprop & (BoardPropSPI | BoardPropI2C) {
+	case BoardPropSPI:
 		return TpmBusSpi, nil
-	case 0x02:
+	case BoardPropI2C:
 		return TpmBusI2c, nil
 	default:
 		return TpmBusInvalid, errors.Errorf("unrecognized brdprop value: 0x%08x", brdprop)
