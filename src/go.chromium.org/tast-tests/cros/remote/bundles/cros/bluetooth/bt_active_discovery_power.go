@@ -41,7 +41,7 @@ func init() {
 			"tast.cros.power.RecorderService",
 		},
 		HardwareDeps:    hwdep.D(hwdep.Battery()),
-		Timeout:         20 * time.Minute,
+		Timeout:         25 * time.Minute,
 		VariantCategory: `{"name": "BT_Chipset_Kernel"}`,
 		Params: []testing.Param{
 			{

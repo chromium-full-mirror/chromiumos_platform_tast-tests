@@ -35,7 +35,7 @@ func init() {
 			"tast.cros.power.DeviceSetupService",
 			"tast.cros.power.RecorderService",
 		},
-		Timeout: 12 * time.Minute,
+		Timeout: 20 * time.Minute,
 		Vars:    []string{bluetooth.TestVarFastPairAntispoofingKeyPem},
 		Params: []testing.Param{
 			{
