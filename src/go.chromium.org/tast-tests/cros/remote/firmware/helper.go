@@ -2063,13 +2063,20 @@ func (h *Helper) ReadTPMC(ctx context.Context, tpmReadArgs ...string) (out strin
 }
 
 // DeveloperUSBBoot checks if removing servo charger is required and performs a developer usb boot.
-func (h *Helper) DeveloperUSBBoot(ctx context.Context, state *CheckAndSetServoCharger) error {
+func (h *Helper) DeveloperUSBBoot(ctx context.Context, state *CheckAndSetServoCharger) (retErr error) {
 	if err := h.CloseRPCConnection(ctx); err != nil {
 		return errors.Wrap(err, "failed to close rpc connection")
 	}
 	ms, err := NewModeSwitcher(ctx, h)
 	if err != nil {
 		return errors.Wrap(err, "failed to create mode switcher")
+	}
+	if h.HasAPFwState {
+		closeUART, err := h.Servo.EnableUARTCapture(ctx, servo.ECUARTCapture)
+		if err != nil {
+			return errors.Wrap(err, "failed to enable capture EC UART")
+		}
+		defer func() { retErr = errors.Join(retErr, closeUART(ctx)) }()
 	}
 	testing.ContextLog(ctx, "Removing the USB to DUT")
 	if err := h.Servo.SetUSBMuxState(ctx, servo.USBMuxOff); err != nil {
@@ -2078,10 +2085,17 @@ func (h *Helper) DeveloperUSBBoot(ctx context.Context, state *CheckAndSetServoCh
 	if err := h.Servo.SetPowerState(ctx, servo.PowerStateReset); err != nil {
 		return errors.Wrap(err, "failed to cold reset the DUT")
 	}
-	testing.ContextLog(ctx, "Waiting for DUT to reach the firmware screen before bypassing dev")
-	if err := h.WaitFirmwareScreen(ctx, h.Config.FirmwareScreen); err != nil {
-		return errors.Wrap(err, "failed to get to firmware screen")
+	if h.HasAPFwState {
+		if err := h.DetectFirmwareScreen(ctx, h.Config.FirmwareScreen, fwCommon.DeveloperMode); err != nil {
+			return errors.Wrap(err, "failed to detect firmware screen")
+		}
+	} else {
+		testing.ContextLog(ctx, "Waiting for DUT to reach the firmware screen before bypassing dev")
+		if err := h.WaitFirmwareScreen(ctx, h.Config.FirmwareScreen); err != nil {
+			return errors.Wrap(err, "failed to get to firmware screen")
+		}
 	}
+
 	testing.ContextLog(ctx, "Resetting firmware screen timeout")
 	if err := h.Servo.PressKey(ctx, " ", servo.DurTab); err != nil {
 		return errors.Wrap(err, "failed to press space key to reset firmware screen timeout")
