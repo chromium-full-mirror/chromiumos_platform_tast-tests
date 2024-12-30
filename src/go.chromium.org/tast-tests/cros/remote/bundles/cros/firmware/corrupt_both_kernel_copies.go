@@ -16,6 +16,7 @@ import (
 
 	"github.com/golang/protobuf/ptypes/empty"
 
+	fwCommon "go.chromium.org/tast-tests/cros/common/firmware"
 	"go.chromium.org/tast-tests/cros/common/servo"
 	"go.chromium.org/tast-tests/cros/common/testexec"
 	"go.chromium.org/tast-tests/cros/remote/firmware"
@@ -303,6 +304,18 @@ func CorruptBothKernelCopies(ctx context.Context, s *testing.State) {
 		s.Fatal("Setting usb mux state to off: ", err)
 	}
 
+	if h.HasAPFwState {
+		closeUART, err := h.Servo.EnableUARTCapture(ctx, servo.ECUARTCapture)
+		if err != nil {
+			s.Fatal("Failed to enable capture EC UART: ", err)
+		}
+		defer func(ctx context.Context) {
+			if err := closeUART(ctx); err != nil {
+				s.Error("Failed to cancel capture EC UART: ", err)
+			}
+		}(cleanupContext)
+	}
+
 	s.Log("Rebooting the DUT")
 	if err := h.DUT.Conn().CommandContext(ctx, "reboot").Run(); err != nil && !errors.As(err, &context.DeadlineExceeded) {
 		s.Fatal("Failed to run reboot command: ", err)
@@ -312,21 +325,29 @@ func CorruptBothKernelCopies(ctx context.Context, s *testing.State) {
 	if err := h.DUT.WaitUnreachable(waitDisconnectCtx); err != nil {
 		s.Fatal("Failed to wait for DUT to become unreachable, reboot cmd failed: ", err)
 	}
-	s.Log("Waiting for DUT to reach the firmware screen")
-	if err := h.WaitFirmwareScreen(ctx, h.Config.FirmwareScreenRecMode); err != nil {
-		s.Fatal("Failed to get to firmware screen: ", err)
-	}
-	s.Log("Checking if DUT stays at the Broken Screen")
-	brokenToDevWaitConnectCtx, cancelWaitConnectBrokenToDev := context.WithTimeout(ctx, h.Config.DelayRebootToPing)
-	defer cancelWaitConnectBrokenToDev()
 
-	err = h.WaitConnect(brokenToDevWaitConnectCtx, firmware.ResetEthernetDongle)
-	switch err.(type) {
-	case nil:
-		s.Fatal("DUT woke up unexpectedly")
-	default:
-		if !errors.As(err, &context.DeadlineExceeded) {
-			s.Fatal("Unexpected error occurred: ", err)
+	if h.HasAPFwState {
+		if err := h.DetectFirmwareScreen(ctx, h.Config.FirmwareScreen, fwCommon.RecoveryBroken); err != nil {
+			s.Fatal("Failed to detect firmware screen: ", err)
+		}
+	} else {
+		s.Log("Waiting for DUT to reach the firmware screen")
+		if err := h.WaitFirmwareScreen(ctx, h.Config.FirmwareScreenRecMode); err != nil {
+			s.Fatal("Failed to get to firmware screen: ", err)
+		}
+
+		s.Log("Checking if DUT stays at the Broken Screen")
+		brokenToDevWaitConnectCtx, cancelWaitConnectBrokenToDev := context.WithTimeout(ctx, h.Config.DelayRebootToPing)
+		defer cancelWaitConnectBrokenToDev()
+
+		err = h.WaitConnect(brokenToDevWaitConnectCtx, firmware.ResetEthernetDongle)
+		switch err.(type) {
+		case nil:
+			s.Fatal("DUT woke up unexpectedly")
+		default:
+			if !errors.As(err, &context.DeadlineExceeded) {
+				s.Fatal("Unexpected error occurred: ", err)
+			}
 		}
 	}
 
