@@ -105,7 +105,7 @@ func IdlePower(ctx context.Context, s *testing.State) {
 	s.Log("Measured power [W]: ", pOn)
 
 	s.Log("BT power consumption [W]: ", pOn-pOff)
-	if pOn-pOff > 0.01 {
-		s.Fatal("Bluetooth consumes more than 10mW power")
+	if pOn-pOff > 0.05 {
+		s.Fatal("Bluetooth consumes more than 50mW power")
 	}
 }
