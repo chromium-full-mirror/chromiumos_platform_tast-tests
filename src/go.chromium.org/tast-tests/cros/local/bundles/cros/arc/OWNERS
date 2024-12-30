@@ -18,8 +18,8 @@ per-file managed_*.go=file:/src/go.chromium.org/tast-tests/cros/local/arc/OWNERS
 per-file unicorn_*.go=file:/src/go.chromium.org/tast-tests/cros/local/arc/OWNERS.managed
 
 # Play Store tests
-per-file optin*.go=mhasank@chromium.org
-per-file play_store_*.go=mhasank@chromium.org
+per-file optin*.go=jhorwich@chromium.org
+per-file play_store_*.go=jhorwich@chromium.org
 
 # Notification experts own notification-related tests
 per-file notification*.go=file:/src/go.chromium.org/tast-tests/cros/local/arc/OWNERS.notif
