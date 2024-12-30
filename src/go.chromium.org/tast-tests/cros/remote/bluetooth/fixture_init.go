@@ -23,6 +23,38 @@ const (
 
 func init() {
 	testing.AddFixture(&testing.Fixture{
+		Name: "chromeUIDisabledStandalonePowerFlossEnabled",
+		Desc: "Disables Chrome UI, enables Bluetooth Floss stack with power measurements, and no btpeer",
+		Contacts: []string{
+			"jiangzp@google.com",
+			"chromeos-bt-team@google.com",
+		},
+		BugComponent: "b:167317", // ChromeOS > Platform > Connectivity > Bluetooth
+		Impl: newFixture(&fixtureFeatures{
+			EnableChromeUI: false,
+			BTPeerCount:    0,
+			FlossEnabled:   true,
+			PowerEnabled:   true,
+		}),
+		Vars: []string{
+			fixtureVarBTPeers,
+			fixtureVarCustomChromeUsername,
+			fixtureVarCustomChromePassword,
+		},
+		SetUpTimeout:    setUpTimeout + BluetoothCooldownTimeout,
+		ResetTimeout:    resetTimeout,
+		TearDownTimeout: tearDownTimeout,
+		PostTestTimeout: postTestTimeout,
+		ServiceDeps: []string{
+			serviceDepBluetoothUIService,
+			serviceDepBluetoothService,
+			serviceDepChromeService,
+			serviceDepUpstartService,
+			serviceDepDeviceSetupService,
+			serviceDepRecorderService,
+		},
+	})
+	testing.AddFixture(&testing.Fixture{
 		Name: "chromeUIDisabledWith1BTPeerFlossDisabled",
 		Desc: "Disables Chrome UI, enables Bluetooth, and connects to 1 btpeer",
 		Contacts: []string{
