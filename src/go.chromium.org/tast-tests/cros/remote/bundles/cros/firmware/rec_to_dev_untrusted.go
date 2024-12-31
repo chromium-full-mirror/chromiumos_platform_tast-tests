@@ -91,18 +91,12 @@ func RecToDevUntrusted(ctx context.Context, s *testing.State) {
 		s.Fatal("Failed to cold reset the DUT: ", err)
 	}
 
-	waitUnreachableCtx, cancelUnreachable := context.WithTimeout(ctx, 2*time.Minute)
-	defer cancelUnreachable()
-	if err := h.DUT.WaitUnreachable(waitUnreachableCtx); err != nil {
-		s.Fatal("Failed to wait DUT unreachable: ", err)
-	}
-
 	s.Log("Waiting for DUT to reconnect")
 	waitConnectOps := []firmware.WaitConnectOption{firmware.ResetEthernetDongle}
 	waitConnectCtx, cancelWaitConnect := context.WithTimeout(ctx, h.Config.DelayRebootToPing)
 	defer cancelWaitConnect()
 	if err := h.WaitConnect(waitConnectCtx, waitConnectOps...); err != nil {
-		// Log the current power state when warm_reset fails.
+		// Log the current power state when reset fails.
 		if h.Config.ChromeEC {
 			currPowerState, powerStateErr := h.Servo.GetECSystemPowerState(ctx)
 			if powerStateErr != nil {
