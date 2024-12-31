@@ -8,6 +8,7 @@ import (
 	"context"
 	"encoding/csv"
 	"fmt"
+	"net/url"
 	"os"
 	"path/filepath"
 	"strings"
@@ -107,7 +108,7 @@ func KeyboardLayout(ctx context.Context, s *testing.State) {
 		s.Fatal("Failed to set input method: ", err)
 	}
 
-	filename := fmt.Sprintf("%s.csv", inputMethod.ID)
+	filename := fmt.Sprintf("%s.csv", url.QueryEscape(inputMethod.ID))
 	path := filepath.Join(s.OutDir(), filename)
 	file, err := os.Create(path)
 	if err != nil {
