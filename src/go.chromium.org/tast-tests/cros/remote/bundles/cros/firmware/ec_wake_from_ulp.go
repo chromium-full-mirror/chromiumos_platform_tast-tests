@@ -118,6 +118,8 @@ func init() {
 				"domiso",
 				"joxer",
 				"nirwen",
+				"pujjoga",
+				"pujjogatwin",
 				"quandiso",
 				"quandiso360",
 				"riven",
