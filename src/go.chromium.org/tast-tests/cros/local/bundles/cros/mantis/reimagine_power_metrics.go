@@ -9,6 +9,7 @@ import (
 	"time"
 
 	"go.chromium.org/tast-tests/cros/local/bundles/cros/mantis/constant"
+	"go.chromium.org/tast-tests/cros/local/bundles/cros/mantis/fixture"
 	"go.chromium.org/tast-tests/cros/local/bundles/cros/mantis/util"
 	"go.chromium.org/tast-tests/cros/local/chrome/apps/galleryapp"
 	"go.chromium.org/tast-tests/cros/local/chrome/uiauto"
@@ -40,8 +41,8 @@ func init() {
 		SoftwareDeps: []string{"chrome", "chrome_internal", "dlc"},
 		HardwareDeps: hwdep.D(hwdep.Model("navi")),
 		Data:         []string{constant.ImageTestFileName},
-		Attr:         []string{"group:crosbolt", "crosbolt_perbuild"},
-		Fixture:      setup.PowerAshGAIA,
+		Attr:         []string{"group:crosbolt", "crosbolt_nightly"},
+		Fixture:      fixture.PowerAshGaiaWithUpdateEngine,
 		Params: []testing.Param{
 			{
 				Name: "gen_fill",
