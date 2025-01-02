@@ -89,7 +89,8 @@ func init() {
 						fixture.StyleTransfer:       true,
 					},
 				}.Instance(),
-				ExtraAttr: []string{"group:crosbolt", "crosbolt_perbuild"},
+				ExtraHardwareDeps: hwdep.D(hwdep.FeatureLevel(1)),
+				ExtraAttr:         []string{"group:crosbolt", "crosbolt_perbuild"},
 			},
 			{
 				Name: "dsp_aec",
