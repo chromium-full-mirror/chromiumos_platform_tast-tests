@@ -174,8 +174,11 @@ func webMAndJSONFile(title videoTitle, height int) (string, string) {
 }
 
 func hardwareDeps(height int) string {
-	// Some grunt and octopus devices fails due to disk space shortage in 1080p and 2160p test cases.
-	// Set 24GB requirement.
+	// Some devices fails due to disk space shortage in 1080p and 2160p test cases.
+	// Set a disk space requirement to 32GB and 24GB for 2160p and 1080p, respectively.
+	if height >= 2160 {
+		return "hwdep.D(hwdep.MinStorage(32))"
+	}
 	if height >= 1080 {
 		return "hwdep.D(hwdep.MinStorage(24))"
 	}

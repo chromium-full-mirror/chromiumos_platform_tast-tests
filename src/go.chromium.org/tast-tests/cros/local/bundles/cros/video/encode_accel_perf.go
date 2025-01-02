@@ -108,7 +108,7 @@ func init() {
 				ExtraAttr:         []string{"graphics_perbuild"},
 				ExtraData:         []string{"encode/crowd_run-3840x2160_60frames.vp9.webm", "encode/crowd_run-3840x2160_60frames.vp9.webm.json"},
 				ExtraSoftwareDeps: []string{"autotest-capability:hw_enc_h264_2160_30"},
-				ExtraHardwareDeps: hwdep.D(hwdep.MinStorage(24)),
+				ExtraHardwareDeps: hwdep.D(hwdep.MinStorage(32)),
 			},
 			{
 				Name: "h264main_180p_crowd_run",
@@ -188,7 +188,7 @@ func init() {
 				ExtraAttr:         []string{"graphics_perbuild"},
 				ExtraData:         []string{"encode/crowd_run-3840x2160_60frames.vp9.webm", "encode/crowd_run-3840x2160_60frames.vp9.webm.json"},
 				ExtraSoftwareDeps: []string{"autotest-capability:hw_enc_h264_2160_30"},
-				ExtraHardwareDeps: hwdep.D(hwdep.MinStorage(24)),
+				ExtraHardwareDeps: hwdep.D(hwdep.MinStorage(32)),
 			},
 			{
 				Name: "h264high_180p_crowd_run",
@@ -268,7 +268,7 @@ func init() {
 				ExtraAttr:         []string{"graphics_perbuild"},
 				ExtraData:         []string{"encode/crowd_run-3840x2160_60frames.vp9.webm", "encode/crowd_run-3840x2160_60frames.vp9.webm.json"},
 				ExtraSoftwareDeps: []string{"autotest-capability:hw_enc_h264_2160_30"},
-				ExtraHardwareDeps: hwdep.D(hwdep.MinStorage(24)),
+				ExtraHardwareDeps: hwdep.D(hwdep.MinStorage(32)),
 			},
 			{
 				Name: "vp8_180p_crowd_run",
@@ -348,7 +348,7 @@ func init() {
 				ExtraAttr:         []string{"graphics_perbuild"},
 				ExtraData:         []string{"encode/crowd_run-3840x2160_60frames.vp9.webm", "encode/crowd_run-3840x2160_60frames.vp9.webm.json"},
 				ExtraSoftwareDeps: []string{"autotest-capability:hw_enc_vp8_2160_30"},
-				ExtraHardwareDeps: hwdep.D(hwdep.MinStorage(24)),
+				ExtraHardwareDeps: hwdep.D(hwdep.MinStorage(32)),
 			},
 			{
 				Name: "vp9_180p_crowd_run",
@@ -441,7 +441,7 @@ func init() {
 				ExtraAttr:         []string{"graphics_perbuild"},
 				ExtraData:         []string{"encode/crowd_run-3840x2160_60frames.vp9.webm", "encode/crowd_run-3840x2160_60frames.vp9.webm.json"},
 				ExtraSoftwareDeps: []string{"autotest-capability:hw_enc_vp9_2160_30"},
-				ExtraHardwareDeps: hwdep.D(hwdep.MinStorage(24)),
+				ExtraHardwareDeps: hwdep.D(hwdep.MinStorage(32)),
 			},
 			{
 				Name: "av1_180p_crowd_run",
@@ -521,7 +521,7 @@ func init() {
 				ExtraAttr:         []string{"graphics_perbuild"},
 				ExtraData:         []string{"encode/crowd_run-3840x2160_60frames.vp9.webm", "encode/crowd_run-3840x2160_60frames.vp9.webm.json"},
 				ExtraSoftwareDeps: []string{"autotest-capability:hw_enc_av1_2160_30"},
-				ExtraHardwareDeps: hwdep.D(hwdep.MinStorage(24)),
+				ExtraHardwareDeps: hwdep.D(hwdep.MinStorage(32)),
 			},
 			{
 				Name: "h264baseline_180p_desktop2",
@@ -601,7 +601,7 @@ func init() {
 				ExtraAttr:         []string{"graphics_perbuild"},
 				ExtraData:         []string{"encode/desktop2-3840x2160_170frames.vp9.webm", "encode/desktop2-3840x2160_170frames.vp9.webm.json"},
 				ExtraSoftwareDeps: []string{"autotest-capability:hw_enc_h264_2160_30"},
-				ExtraHardwareDeps: hwdep.D(hwdep.MinStorage(24)),
+				ExtraHardwareDeps: hwdep.D(hwdep.MinStorage(32)),
 			},
 			{
 				Name: "h264main_180p_desktop2",
@@ -681,7 +681,7 @@ func init() {
 				ExtraAttr:         []string{"graphics_perbuild"},
 				ExtraData:         []string{"encode/desktop2-3840x2160_170frames.vp9.webm", "encode/desktop2-3840x2160_170frames.vp9.webm.json"},
 				ExtraSoftwareDeps: []string{"autotest-capability:hw_enc_h264_2160_30"},
-				ExtraHardwareDeps: hwdep.D(hwdep.MinStorage(24)),
+				ExtraHardwareDeps: hwdep.D(hwdep.MinStorage(32)),
 			},
 			{
 				Name: "h264high_180p_desktop2",
@@ -761,7 +761,7 @@ func init() {
 				ExtraAttr:         []string{"graphics_perbuild"},
 				ExtraData:         []string{"encode/desktop2-3840x2160_170frames.vp9.webm", "encode/desktop2-3840x2160_170frames.vp9.webm.json"},
 				ExtraSoftwareDeps: []string{"autotest-capability:hw_enc_h264_2160_30"},
-				ExtraHardwareDeps: hwdep.D(hwdep.MinStorage(24)),
+				ExtraHardwareDeps: hwdep.D(hwdep.MinStorage(32)),
 			},
 			{
 				Name: "vp8_180p_desktop2",
@@ -841,7 +841,7 @@ func init() {
 				ExtraAttr:         []string{"graphics_perbuild"},
 				ExtraData:         []string{"encode/desktop2-3840x2160_170frames.vp9.webm", "encode/desktop2-3840x2160_170frames.vp9.webm.json"},
 				ExtraSoftwareDeps: []string{"autotest-capability:hw_enc_vp8_2160_30"},
-				ExtraHardwareDeps: hwdep.D(hwdep.MinStorage(24)),
+				ExtraHardwareDeps: hwdep.D(hwdep.MinStorage(32)),
 			},
 			{
 				Name: "vp9_180p_desktop2",
@@ -934,7 +934,7 @@ func init() {
 				ExtraAttr:         []string{"graphics_perbuild"},
 				ExtraData:         []string{"encode/desktop2-3840x2160_170frames.vp9.webm", "encode/desktop2-3840x2160_170frames.vp9.webm.json"},
 				ExtraSoftwareDeps: []string{"autotest-capability:hw_enc_vp9_2160_30"},
-				ExtraHardwareDeps: hwdep.D(hwdep.MinStorage(24)),
+				ExtraHardwareDeps: hwdep.D(hwdep.MinStorage(32)),
 			},
 			{
 				Name: "av1_180p_desktop2",
@@ -1014,7 +1014,7 @@ func init() {
 				ExtraAttr:         []string{"graphics_perbuild"},
 				ExtraData:         []string{"encode/desktop2-3840x2160_170frames.vp9.webm", "encode/desktop2-3840x2160_170frames.vp9.webm.json"},
 				ExtraSoftwareDeps: []string{"autotest-capability:hw_enc_av1_2160_30"},
-				ExtraHardwareDeps: hwdep.D(hwdep.MinStorage(24)),
+				ExtraHardwareDeps: hwdep.D(hwdep.MinStorage(32)),
 			},
 			{
 				Name: "h264baseline_720p_fallout4",
@@ -1055,7 +1055,7 @@ func init() {
 				ExtraAttr:         []string{"graphics_perbuild"},
 				ExtraData:         []string{"encode/fallout4-3840x2160_100frames.vp9.webm", "encode/fallout4-3840x2160_100frames.vp9.webm.json"},
 				ExtraSoftwareDeps: []string{"autotest-capability:hw_enc_h264_2160_30"},
-				ExtraHardwareDeps: hwdep.D(hwdep.MinStorage(24)),
+				ExtraHardwareDeps: hwdep.D(hwdep.MinStorage(32)),
 			},
 			{
 				Name: "h264main_720p_fallout4",
@@ -1096,7 +1096,7 @@ func init() {
 				ExtraAttr:         []string{"graphics_perbuild"},
 				ExtraData:         []string{"encode/fallout4-3840x2160_100frames.vp9.webm", "encode/fallout4-3840x2160_100frames.vp9.webm.json"},
 				ExtraSoftwareDeps: []string{"autotest-capability:hw_enc_h264_2160_30"},
-				ExtraHardwareDeps: hwdep.D(hwdep.MinStorage(24)),
+				ExtraHardwareDeps: hwdep.D(hwdep.MinStorage(32)),
 			},
 			{
 				Name: "h264high_720p_fallout4",
@@ -1137,7 +1137,7 @@ func init() {
 				ExtraAttr:         []string{"graphics_perbuild"},
 				ExtraData:         []string{"encode/fallout4-3840x2160_100frames.vp9.webm", "encode/fallout4-3840x2160_100frames.vp9.webm.json"},
 				ExtraSoftwareDeps: []string{"autotest-capability:hw_enc_h264_2160_30"},
-				ExtraHardwareDeps: hwdep.D(hwdep.MinStorage(24)),
+				ExtraHardwareDeps: hwdep.D(hwdep.MinStorage(32)),
 			},
 			{
 				Name: "vp8_720p_fallout4",
@@ -1178,7 +1178,7 @@ func init() {
 				ExtraAttr:         []string{"graphics_perbuild"},
 				ExtraData:         []string{"encode/fallout4-3840x2160_100frames.vp9.webm", "encode/fallout4-3840x2160_100frames.vp9.webm.json"},
 				ExtraSoftwareDeps: []string{"autotest-capability:hw_enc_vp8_2160_30"},
-				ExtraHardwareDeps: hwdep.D(hwdep.MinStorage(24)),
+				ExtraHardwareDeps: hwdep.D(hwdep.MinStorage(32)),
 			},
 			{
 				Name: "vp9_720p_fallout4",
@@ -1219,7 +1219,7 @@ func init() {
 				ExtraAttr:         []string{"graphics_perbuild"},
 				ExtraData:         []string{"encode/fallout4-3840x2160_100frames.vp9.webm", "encode/fallout4-3840x2160_100frames.vp9.webm.json"},
 				ExtraSoftwareDeps: []string{"autotest-capability:hw_enc_vp9_2160_30"},
-				ExtraHardwareDeps: hwdep.D(hwdep.MinStorage(24)),
+				ExtraHardwareDeps: hwdep.D(hwdep.MinStorage(32)),
 			},
 			{
 				Name: "av1_720p_fallout4",
@@ -1260,7 +1260,7 @@ func init() {
 				ExtraAttr:         []string{"graphics_perbuild"},
 				ExtraData:         []string{"encode/fallout4-3840x2160_100frames.vp9.webm", "encode/fallout4-3840x2160_100frames.vp9.webm.json"},
 				ExtraSoftwareDeps: []string{"autotest-capability:hw_enc_av1_2160_30"},
-				ExtraHardwareDeps: hwdep.D(hwdep.MinStorage(24)),
+				ExtraHardwareDeps: hwdep.D(hwdep.MinStorage(32)),
 			},
 			{
 				Name: "h264baseline_180p_gipsrecmotion",
@@ -1340,7 +1340,7 @@ func init() {
 				ExtraAttr:         []string{"graphics_perbuild"},
 				ExtraData:         []string{"encode/gipsrecmotion-3840x2160_140frames.vp9.webm", "encode/gipsrecmotion-3840x2160_140frames.vp9.webm.json"},
 				ExtraSoftwareDeps: []string{"autotest-capability:hw_enc_h264_2160_30"},
-				ExtraHardwareDeps: hwdep.D(hwdep.MinStorage(24)),
+				ExtraHardwareDeps: hwdep.D(hwdep.MinStorage(32)),
 			},
 			{
 				Name: "h264main_180p_gipsrecmotion",
@@ -1420,7 +1420,7 @@ func init() {
 				ExtraAttr:         []string{"graphics_perbuild"},
 				ExtraData:         []string{"encode/gipsrecmotion-3840x2160_140frames.vp9.webm", "encode/gipsrecmotion-3840x2160_140frames.vp9.webm.json"},
 				ExtraSoftwareDeps: []string{"autotest-capability:hw_enc_h264_2160_30"},
-				ExtraHardwareDeps: hwdep.D(hwdep.MinStorage(24)),
+				ExtraHardwareDeps: hwdep.D(hwdep.MinStorage(32)),
 			},
 			{
 				Name: "h264high_180p_gipsrecmotion",
@@ -1500,7 +1500,7 @@ func init() {
 				ExtraAttr:         []string{"graphics_perbuild"},
 				ExtraData:         []string{"encode/gipsrecmotion-3840x2160_140frames.vp9.webm", "encode/gipsrecmotion-3840x2160_140frames.vp9.webm.json"},
 				ExtraSoftwareDeps: []string{"autotest-capability:hw_enc_h264_2160_30"},
-				ExtraHardwareDeps: hwdep.D(hwdep.MinStorage(24)),
+				ExtraHardwareDeps: hwdep.D(hwdep.MinStorage(32)),
 			},
 			{
 				Name: "vp8_180p_gipsrecmotion",
@@ -1580,7 +1580,7 @@ func init() {
 				ExtraAttr:         []string{"graphics_perbuild"},
 				ExtraData:         []string{"encode/gipsrecmotion-3840x2160_140frames.vp9.webm", "encode/gipsrecmotion-3840x2160_140frames.vp9.webm.json"},
 				ExtraSoftwareDeps: []string{"autotest-capability:hw_enc_vp8_2160_30"},
-				ExtraHardwareDeps: hwdep.D(hwdep.MinStorage(24)),
+				ExtraHardwareDeps: hwdep.D(hwdep.MinStorage(32)),
 			},
 			{
 				Name: "vp9_180p_gipsrecmotion",
@@ -1673,7 +1673,7 @@ func init() {
 				ExtraAttr:         []string{"graphics_perbuild"},
 				ExtraData:         []string{"encode/gipsrecmotion-3840x2160_140frames.vp9.webm", "encode/gipsrecmotion-3840x2160_140frames.vp9.webm.json"},
 				ExtraSoftwareDeps: []string{"autotest-capability:hw_enc_vp9_2160_30"},
-				ExtraHardwareDeps: hwdep.D(hwdep.MinStorage(24)),
+				ExtraHardwareDeps: hwdep.D(hwdep.MinStorage(32)),
 			},
 			{
 				Name: "av1_180p_gipsrecmotion",
@@ -1753,7 +1753,7 @@ func init() {
 				ExtraAttr:         []string{"graphics_perbuild"},
 				ExtraData:         []string{"encode/gipsrecmotion-3840x2160_140frames.vp9.webm", "encode/gipsrecmotion-3840x2160_140frames.vp9.webm.json"},
 				ExtraSoftwareDeps: []string{"autotest-capability:hw_enc_av1_2160_30"},
-				ExtraHardwareDeps: hwdep.D(hwdep.MinStorage(24)),
+				ExtraHardwareDeps: hwdep.D(hwdep.MinStorage(32)),
 			},
 			{
 				Name: "h264baseline_180p_gipsrestat",
@@ -1833,7 +1833,7 @@ func init() {
 				ExtraAttr:         []string{"graphics_perbuild"},
 				ExtraData:         []string{"encode/gipsrestat-3840x2160_150frames.vp9.webm", "encode/gipsrestat-3840x2160_150frames.vp9.webm.json"},
 				ExtraSoftwareDeps: []string{"autotest-capability:hw_enc_h264_2160_30"},
-				ExtraHardwareDeps: hwdep.D(hwdep.MinStorage(24)),
+				ExtraHardwareDeps: hwdep.D(hwdep.MinStorage(32)),
 			},
 			{
 				Name: "h264main_180p_gipsrestat",
@@ -1913,7 +1913,7 @@ func init() {
 				ExtraAttr:         []string{"graphics_perbuild"},
 				ExtraData:         []string{"encode/gipsrestat-3840x2160_150frames.vp9.webm", "encode/gipsrestat-3840x2160_150frames.vp9.webm.json"},
 				ExtraSoftwareDeps: []string{"autotest-capability:hw_enc_h264_2160_30"},
-				ExtraHardwareDeps: hwdep.D(hwdep.MinStorage(24)),
+				ExtraHardwareDeps: hwdep.D(hwdep.MinStorage(32)),
 			},
 			{
 				Name: "h264high_180p_gipsrestat",
@@ -1993,7 +1993,7 @@ func init() {
 				ExtraAttr:         []string{"graphics_perbuild"},
 				ExtraData:         []string{"encode/gipsrestat-3840x2160_150frames.vp9.webm", "encode/gipsrestat-3840x2160_150frames.vp9.webm.json"},
 				ExtraSoftwareDeps: []string{"autotest-capability:hw_enc_h264_2160_30"},
-				ExtraHardwareDeps: hwdep.D(hwdep.MinStorage(24)),
+				ExtraHardwareDeps: hwdep.D(hwdep.MinStorage(32)),
 			},
 			{
 				Name: "vp8_180p_gipsrestat",
@@ -2073,7 +2073,7 @@ func init() {
 				ExtraAttr:         []string{"graphics_perbuild"},
 				ExtraData:         []string{"encode/gipsrestat-3840x2160_150frames.vp9.webm", "encode/gipsrestat-3840x2160_150frames.vp9.webm.json"},
 				ExtraSoftwareDeps: []string{"autotest-capability:hw_enc_vp8_2160_30"},
-				ExtraHardwareDeps: hwdep.D(hwdep.MinStorage(24)),
+				ExtraHardwareDeps: hwdep.D(hwdep.MinStorage(32)),
 			},
 			{
 				Name: "vp9_180p_gipsrestat",
@@ -2166,7 +2166,7 @@ func init() {
 				ExtraAttr:         []string{"graphics_perbuild"},
 				ExtraData:         []string{"encode/gipsrestat-3840x2160_150frames.vp9.webm", "encode/gipsrestat-3840x2160_150frames.vp9.webm.json"},
 				ExtraSoftwareDeps: []string{"autotest-capability:hw_enc_vp9_2160_30"},
-				ExtraHardwareDeps: hwdep.D(hwdep.MinStorage(24)),
+				ExtraHardwareDeps: hwdep.D(hwdep.MinStorage(32)),
 			},
 			{
 				Name: "av1_180p_gipsrestat",
@@ -2246,7 +2246,7 @@ func init() {
 				ExtraAttr:         []string{"graphics_perbuild"},
 				ExtraData:         []string{"encode/gipsrestat-3840x2160_150frames.vp9.webm", "encode/gipsrestat-3840x2160_150frames.vp9.webm.json"},
 				ExtraSoftwareDeps: []string{"autotest-capability:hw_enc_av1_2160_30"},
-				ExtraHardwareDeps: hwdep.D(hwdep.MinStorage(24)),
+				ExtraHardwareDeps: hwdep.D(hwdep.MinStorage(32)),
 			},
 			{
 				Name: "h264baseline_1080p_life_of_pixel",
@@ -2274,7 +2274,7 @@ func init() {
 				ExtraAttr:         []string{"graphics_perbuild"},
 				ExtraData:         []string{"encode/life_of_pixel-3840x2160_600frames.vp9.webm", "encode/life_of_pixel-3840x2160_600frames.vp9.webm.json"},
 				ExtraSoftwareDeps: []string{"autotest-capability:hw_enc_h264_2160_30"},
-				ExtraHardwareDeps: hwdep.D(hwdep.MinStorage(24)),
+				ExtraHardwareDeps: hwdep.D(hwdep.MinStorage(32)),
 			},
 			{
 				Name: "h264main_1080p_life_of_pixel",
@@ -2302,7 +2302,7 @@ func init() {
 				ExtraAttr:         []string{"graphics_perbuild"},
 				ExtraData:         []string{"encode/life_of_pixel-3840x2160_600frames.vp9.webm", "encode/life_of_pixel-3840x2160_600frames.vp9.webm.json"},
 				ExtraSoftwareDeps: []string{"autotest-capability:hw_enc_h264_2160_30"},
-				ExtraHardwareDeps: hwdep.D(hwdep.MinStorage(24)),
+				ExtraHardwareDeps: hwdep.D(hwdep.MinStorage(32)),
 			},
 			{
 				Name: "h264high_1080p_life_of_pixel",
@@ -2330,7 +2330,7 @@ func init() {
 				ExtraAttr:         []string{"graphics_perbuild"},
 				ExtraData:         []string{"encode/life_of_pixel-3840x2160_600frames.vp9.webm", "encode/life_of_pixel-3840x2160_600frames.vp9.webm.json"},
 				ExtraSoftwareDeps: []string{"autotest-capability:hw_enc_h264_2160_30"},
-				ExtraHardwareDeps: hwdep.D(hwdep.MinStorage(24)),
+				ExtraHardwareDeps: hwdep.D(hwdep.MinStorage(32)),
 			},
 			{
 				Name: "vp8_1080p_life_of_pixel",
@@ -2358,7 +2358,7 @@ func init() {
 				ExtraAttr:         []string{"graphics_perbuild"},
 				ExtraData:         []string{"encode/life_of_pixel-3840x2160_600frames.vp9.webm", "encode/life_of_pixel-3840x2160_600frames.vp9.webm.json"},
 				ExtraSoftwareDeps: []string{"autotest-capability:hw_enc_vp8_2160_30"},
-				ExtraHardwareDeps: hwdep.D(hwdep.MinStorage(24)),
+				ExtraHardwareDeps: hwdep.D(hwdep.MinStorage(32)),
 			},
 			{
 				Name: "vp9_1080p_life_of_pixel",
@@ -2386,7 +2386,7 @@ func init() {
 				ExtraAttr:         []string{"graphics_perbuild"},
 				ExtraData:         []string{"encode/life_of_pixel-3840x2160_600frames.vp9.webm", "encode/life_of_pixel-3840x2160_600frames.vp9.webm.json"},
 				ExtraSoftwareDeps: []string{"autotest-capability:hw_enc_vp9_2160_30"},
-				ExtraHardwareDeps: hwdep.D(hwdep.MinStorage(24)),
+				ExtraHardwareDeps: hwdep.D(hwdep.MinStorage(32)),
 			},
 			{
 				Name: "av1_1080p_life_of_pixel",
@@ -2414,7 +2414,7 @@ func init() {
 				ExtraAttr:         []string{"graphics_perbuild"},
 				ExtraData:         []string{"encode/life_of_pixel-3840x2160_600frames.vp9.webm", "encode/life_of_pixel-3840x2160_600frames.vp9.webm.json"},
 				ExtraSoftwareDeps: []string{"autotest-capability:hw_enc_av1_2160_30"},
-				ExtraHardwareDeps: hwdep.D(hwdep.MinStorage(24)),
+				ExtraHardwareDeps: hwdep.D(hwdep.MinStorage(32)),
 			},
 			{
 				Name: "h264baseline_1080p_life_of_process",
@@ -3035,7 +3035,7 @@ func init() {
 				ExtraAttr:         []string{"graphics_perbuild"},
 				ExtraData:         []string{"encode/fallout4-3840x2160_100frames.vp9.webm", "encode/fallout4-3840x2160_100frames.vp9.webm.json"},
 				ExtraSoftwareDeps: []string{"autotest-capability:hw_enc_h264_2160_30", "autotest-capability:hw_enc_h264_vbr"},
-				ExtraHardwareDeps: hwdep.D(hwdep.MinStorage(24)),
+				ExtraHardwareDeps: hwdep.D(hwdep.MinStorage(32)),
 			},
 			{
 				Name: "h264high_1080p_x2_vbr_fallout4",
