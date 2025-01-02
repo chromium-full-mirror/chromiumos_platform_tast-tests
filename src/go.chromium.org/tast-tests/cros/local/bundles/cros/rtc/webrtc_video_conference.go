@@ -142,9 +142,10 @@ func init() {
 			{
 				Name: "4p_present_noise_cancellation",
 				Val: webrtc.VCTestParams{
-					NumPeople:      4,
-					Present:        true,
-					VoiceIsolation: true,
+					NumPeople:            4,
+					Present:              true,
+					VoiceIsolation:       true,
+					VoiceIsolationEffect: audio.VoiceIsolationEffectNoiseCancellation,
 				},
 				Fixture:   pre.ChromeRTCFixture(pre.AudioFeatureNoiseCancellation),
 				ExtraAttr: []string{"group:crosbolt", "crosbolt_perbuild"},
@@ -152,12 +153,14 @@ func init() {
 			{
 				Name: "4p_present_noise_cancellation_style_transfer",
 				Val: webrtc.VCTestParams{
-					NumPeople:      4,
-					Present:        true,
-					VoiceIsolation: true,
+					NumPeople:            4,
+					Present:              true,
+					VoiceIsolation:       true,
+					VoiceIsolationEffect: audio.VoiceIsolationEffectStyleTransfer,
 				},
-				Fixture:   pre.ChromeRTCFixture(pre.AudioFeatureStyleTransfer),
-				ExtraAttr: []string{"group:crosbolt", "crosbolt_perbuild"},
+				Fixture:           pre.ChromeRTCFixture(pre.AudioFeatureStyleTransfer),
+				ExtraHardwareDeps: hwdep.D(hwdep.FeatureLevel(1)),
+				ExtraAttr:         []string{"group:crosbolt", "crosbolt_perbuild"},
 			},
 			{
 				Name: "4p_present_beamforming",
