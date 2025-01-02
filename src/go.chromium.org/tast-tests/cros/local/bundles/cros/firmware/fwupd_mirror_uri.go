@@ -26,7 +26,7 @@ func init() {
 			"chromeos-fwupd@google.com",
 			"nicholasbishop@google.com",
 		},
-		Attr:         []string{"group:mainline", "informational"},
+		Attr:         []string{"group:mainline", "informational", "group:criticalstaging"},
 		SoftwareDeps: []string{"fwupd"},
 		Fixture:      "prepareFwupd",
 	})
