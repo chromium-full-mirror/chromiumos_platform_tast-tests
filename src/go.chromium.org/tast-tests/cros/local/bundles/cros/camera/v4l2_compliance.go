@@ -40,6 +40,7 @@ func V4L2Compliance(ctx context.Context, s *testing.State) {
 		"0c45:6a16": "b/385324740", // Backlight and Contrast out of range
 		"3277:0003": "b/383995807", // Focus return EIO
 		"3277:0004": "b/383995807", // Focus return EIO
+		"5850:0001": "b/384912098", // Focus return EIO
 		"0408:302f": "b/384912098", // AutoExposure has bad flags
 	}
 
