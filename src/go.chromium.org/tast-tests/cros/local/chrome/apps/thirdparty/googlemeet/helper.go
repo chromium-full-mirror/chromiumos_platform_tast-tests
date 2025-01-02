@@ -203,11 +203,13 @@ func (h *HRTelemetryHelper) SetReceiveResolution720p(ctx context.Context) error 
 
 // OpenPresentDialog opens the presentation dialog with "A tab" mode.
 func (h *HRTelemetryHelper) OpenPresentDialog(ctx context.Context) error {
-	if err := h.meetConn.Eval(ctx, "hrTelemetryApi.presentation.present()", nil); err != nil {
-		return err
+	present := func(ctx context.Context) error {
+		return h.meetConn.Eval(ctx, "hrTelemetryApi.presentation.present()", nil)
 	}
+
 	ui := uiauto.New(h.tconn)
-	if err := ui.WaitUntilExists(nodewith.HasClass("TableView").Role(role.ListGrid))(ctx); err != nil {
+	chromeTab := nodewith.Name("Chrome Tab").Role(role.Tab)
+	if err := ui.WithTimeout(time.Minute).RetryUntil(present, ui.WaitUntilExists(chromeTab))(ctx); err != nil {
 		return errors.Wrap(err, "failed to find the screen-sharing popup")
 	}
 	return nil
