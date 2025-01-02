@@ -28,6 +28,8 @@ var unstableModelsTimestampInOrder = []string{
 	"aleena", "barla", "careena", "treeya", "liara", "kasumi360", "kasumi",
 	// TODO(b/333498998): Undo skip after fix.
 	"craaskbowl", "craask", "craaskvin", "craasneto", "hideo", "quandiso", "xivu360", "yahiko",
+	// TODO(b/333498998): Undo skip after fix.
+	"jubilant", "jubileum",
 }
 
 func init() {
