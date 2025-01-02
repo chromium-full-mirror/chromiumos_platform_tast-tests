@@ -116,8 +116,11 @@ func P2POnOffRobustnessTest(ctx context.Context, s *testing.State, tf *wificell.
 	// We're not storing all previous identifiers, as it has been determined, that due to a rather small
 	// SSID randomness (>1/4000) and law of big numbers we would have too many accidental reuses,
 	// especially in extended suits.
-	// Checking only two consecutive values should be enough.
 	var previousGoMACAddress, previousClientMACAddress, previousSSID string
+	// The way the P2P SSID is created (DIRECT-** *==[a-zA-Z0-9]) makes it reasonably possible to
+	// even repeat consecutively (1 in 70 tests). That would generate too many flake results just
+	// due to pure probability. This means even a single consecutive SSID repetition does not mean failure.
+	consecutiveSsidErrors := 0
 
 	// We're running in a simple loop instead of s.Run() on purpose, we want to bail out on the first error.
 	for i := 0; i < rounds; i++ {
@@ -128,16 +131,18 @@ func P2POnOffRobustnessTest(ctx context.Context, s *testing.State, tf *wificell.
 			return errors.Wrapf(err, "failure during round %v", i)
 		}
 		if goMACAddress == previousGoMACAddress {
-			err = errors.Join(err, errors.Wrapf(err,
+			err = errors.Join(err, errors.Errorf(
 				"failure during round %v, GO MAC Address %v used consecutively", i, goMACAddress))
 		}
 		if clientMACAddress == previousClientMACAddress {
-			err = errors.Join(err, errors.Wrapf(err,
-				"failure during round %v, Client MAC Address %v used consecutively", i, goMACAddress))
+			err = errors.Join(err, errors.Errorf(
+				"failure during round %v, Client MAC Address %v used consecutively", i, clientMACAddress))
 		}
 		if ssid == previousSSID {
-			err = errors.Join(err, errors.Wrapf(err,
-				"failure during round %v, P2P %v used consecutively", i, goMACAddress))
+			// Let's not fail upon the first failure, but count these cases to make sure
+			// we catch any inconsistency in name generation.
+			consecutiveSsidErrors++
+			testing.ContextLogf(ctx, "P2P SSID %v used consecutively", ssid)
 		}
 		if err != nil {
 			return err
@@ -163,6 +168,9 @@ func P2POnOffRobustnessTest(ctx context.Context, s *testing.State, tf *wificell.
 			return errors.Wrap(err, "error while validating P2P Client PIDs")
 		}
 		resInfosGO = append(resInfosGO, resInfoGO)
+	}
+	if consecutiveSsidErrors > 2 {
+		return errors.Errorf("too many (%v) identical SSIDs generated consecutively", consecutiveSsidErrors)
 	}
 	testing.ContextLog(ctx, "GO Start: ", resInfosGO[0].String())
 	testing.ContextLog(ctx, "GO End:   ", resInfosGO[len(resInfosGO)-1].String())
