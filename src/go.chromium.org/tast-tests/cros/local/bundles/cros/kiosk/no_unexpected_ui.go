@@ -53,6 +53,7 @@ func init() {
 		},
 		Timeout:      kioskmode.SetupDuration + kioskmode.LaunchDuration + kioskmode.CleanupDuration + verifyPixelsTimeout,
 		SoftwareDeps: []string{"reboot", "chrome"},
+		HardwareDeps: hwdep.D(hwdep.Display()),
 		VarDeps:      []string{"ui.signinProfileTestExtensionManifestKey"},
 		Fixture:      fixture.FakeDMSEnrolled,
 		Params: []testing.Param{
