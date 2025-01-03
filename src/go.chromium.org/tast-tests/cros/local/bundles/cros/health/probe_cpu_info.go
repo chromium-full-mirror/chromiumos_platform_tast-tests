@@ -24,10 +24,6 @@ import (
 	"go.chromium.org/tast/core/testing"
 )
 
-type probeCPUInfoTestParams struct {
-	CPUTempVerification bool
-}
-
 func init() {
 	testing.AddTest(&testing.Test{
 		Func: ProbeCPUInfo,
@@ -44,17 +40,6 @@ func init() {
 		SoftwareDeps: []string{"diagnostics"},
 		Fixture:      "crosHealthdRunning",
 		Timeout:      3 * time.Minute,
-		Params: []testing.Param{{
-			Val: probeCPUInfoTestParams{
-				CPUTempVerification: false,
-			},
-		}, {
-			Name: "cpu_temp_verification",
-			Val: probeCPUInfoTestParams{
-				CPUTempVerification: true,
-			},
-			ExtraAttr: []string{"informational", "group:criticalstaging"},
-		}},
 	})
 }
 
@@ -385,7 +370,6 @@ func validateCPUTempData(info *types.CPUInfo) error {
 }
 
 func ProbeCPUInfo(ctx context.Context, s *testing.State) {
-	CPUTempVerification := s.Param().(probeCPUInfoTestParams).CPUTempVerification
 	params := croshealthd.TelemParams{Category: croshealthd.TelemCategoryCPU}
 
 	var info types.CPUInfo
@@ -419,9 +403,7 @@ func ProbeCPUInfo(ctx context.Context, s *testing.State) {
 			s.Fatal("Failed to validate empty memory keyLockerdata")
 		}
 	}
-	if CPUTempVerification {
-		if err := validateCPUTempData(&info); err != nil {
-			s.Fatal("Failed to validate cpu temp data: ", err)
-		}
+	if err := validateCPUTempData(&info); err != nil {
+		s.Fatal("Failed to validate cpu temp data: ", err)
 	}
 }
