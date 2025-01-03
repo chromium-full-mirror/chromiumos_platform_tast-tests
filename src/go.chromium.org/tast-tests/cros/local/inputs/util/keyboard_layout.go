@@ -227,6 +227,10 @@ var LinuxKeyCodes = []LinuxKeyCode{
 		LinuxKeyCode: input.KEY_102ND,
 		KeyName:      "KEY_102ND", // intl backslash
 	},
+	{
+		LinuxKeyCode: input.KEY_SPACE,
+		KeyName:      "KEY_SPACE",
+	},
 }
 
 // ModifiersStatusCombo is set of all modifier keys combonation.
