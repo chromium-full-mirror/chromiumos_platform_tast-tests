@@ -144,8 +144,10 @@ func init() {
 			// 10 min for setting up (login and opening tabs) +(3 min for each suspend/resume) * 5 times
 			Timeout: 30 * time.Minute,
 		}, {
-			Name:    "fw_qual",
-			Fixture: fixture.NormalMode,
+			Name: "fw_qual",
+			// TODO: When stable, change firmware_unstable to a firmware_bios.
+			ExtraAttr: []string{"group:firmware", "firmware_unstable"},
+			Fixture:   fixture.NormalMode,
 			Val: testArgsForSuspendPerf{
 				numSuspend:    5,
 				benchMarkEval: true,
