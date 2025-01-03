@@ -28,7 +28,7 @@ const (
 	fetchSupportPacketEnrollmentTimeout       = 6 * time.Minute
 	fetchSupportPacketIssueCommandRetries     = 3
 	fetchSupportPacketIssueCommandRetryDelay  = 20 * time.Second
-	fetchSupportPacketCommandExecutionTimeout = 10 * time.Minute
+	fetchSupportPacketCommandExecutionTimeout = 20 * time.Minute
 	fetchSupportPacketReportingTimeout        = 3 * time.Minute
 	fetchSupportPacketCleanupTimeout          = 3 * time.Minute
 	fetchSupportPacketTestTimeout             = fetchSupportPacketEnrollmentTimeout + (fetchSupportPacketIssueCommandRetries * fetchSupportPacketIssueCommandRetryDelay) + fetchSupportPacketCommandExecutionTimeout + fetchSupportPacketReportingTimeout + fetchSupportPacketCleanupTimeout
