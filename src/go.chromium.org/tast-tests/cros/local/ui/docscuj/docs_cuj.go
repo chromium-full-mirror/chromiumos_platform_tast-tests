@@ -267,11 +267,6 @@ func Run(ctx context.Context, cr *chrome.Chrome, testParam TestParam, outDir, sy
 			return errors.Wrap(err, "failed to update Google Doc title")
 		}
 
-		// Page numbers can help give context to screenshots within the test.
-		if err := googledocs.EnablePageNumbers(ctx, pc, ac); err != nil {
-			return errors.Wrap(err, "failed to enable page numbers on the Google Doc")
-		}
-
 		// Running the drag mouse cycle is an easy way to both get
 		// mouse drag metrics and focus the center of the page. Without
 		// this, the Google Doc body would not be focused and ready for
