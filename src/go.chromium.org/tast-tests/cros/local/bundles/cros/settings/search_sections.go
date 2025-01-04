@@ -184,7 +184,7 @@ func searchDetail(st settingsSearchType) []settingsSearchDetail {
 				expectedResultRole: role.GenericContainer,
 			}, {
 				keyword:            "android",
-				expectedResult:     `Google Play Store`,
+				expectedResult:     `Manage Google Play preferences`,
 				expectedResultRole: role.GenericContainer,
 			},
 		}
