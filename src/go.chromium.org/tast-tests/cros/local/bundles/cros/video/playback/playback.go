@@ -331,8 +331,24 @@ func measurePerformance(ctx context.Context, params measureParams) error {
 
 		go func() {
 			defer wg.Done()
+
+			const maxDuration = 180 * time.Second
+			if measurementDuration > maxDuration {
+				batErr = errors.Errorf("the measurement duration is too large: measurementDuration=%v maxDuration=%v", measurementDuration, maxDuration)
+				return
+			}
+			steadyPowerDeadline := time.Now().Add(maxDuration)
+			if ctxutil.DeadlineBefore(ctx, steadyPowerDeadline) {
+				batErr = errors.New("insufficient time remaining to perform graphics.MeasureSteadyStateSystemPowerConsumption()")
+				return
+			}
+
+			// Create context whose deadline is maxDuration from now.
+			steadyCtx, cancel := context.WithDeadline(ctx, steadyPowerDeadline)
+			defer cancel()
+
 			batErr = graphics.MeasureSteadyStateSystemPowerConsumption(
-				ctx,
+				steadyCtx,
 				params.tconn,
 				100,                  /*numSamples*/
 				500*time.Millisecond, /*samplePeriod*/
