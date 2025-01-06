@@ -117,7 +117,7 @@ func KeyboardLayout(ctx context.Context, s *testing.State) {
 	defer file.Close()
 
 	w := csv.NewWriter(file)
-	w.Write([]string{"shift-1", "altgr-1", "caps-1", "location-1", "shift-2", "altgr-2", "caps-2", "location-2", "string", "unicode"})
+	w.Write([]string{"shift_1", "altgr_1", "caps_1", "location_1", "shift_2", "altgr_2", "caps_2", "location_2", "string", "unicode"})
 	noOpKeystrokes := make([]keystroke, 0)
 
 	// Whether ESC is needed to abort possible dead-key composition or
