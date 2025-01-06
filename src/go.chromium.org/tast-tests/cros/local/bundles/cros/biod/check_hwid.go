@@ -39,7 +39,7 @@ func init() {
 // This test should also match Paris Recovery's cros_fingerprint_exec.go "Collect fingerprint" action.
 func CheckHWID(ctx context.Context, s *testing.State) {
 	board, err := crosconfig.Get(ctx, "/fingerprint", "board")
-	if err != nil {
+	if err != nil || board == "" {
 		// In the error case, assume device does not have fingerprint.
 		board = "None"
 	}
@@ -97,6 +97,8 @@ func checkFingerprintInfo(board, mcu, sensor string) bool {
 	validCombinations := map[string]map[string]string{
 		"bloonchipper": {"stm32f412": "210"},
 		"dartmonkey":   {"stm32h7x3": "1400"},
+		"nami_fp":      {"stm32h7x3": "1400"},
+		"nocturne_fp":  {"stm32h7x3": "1400"},
 		"helipilot":    {"NPCX99FP": "210"},
 		"buccaneer":    {"NPCX99FP": "4f4f"},
 		"None":         {"None": "None"},
