@@ -75,7 +75,7 @@ func init() {
 				Val: playbackPowerTestParam{
 					testAction:   testIdle,
 					mainAction:   runDocsCUJ,
-					launchConfig: recorderapp.LaunchConfig{SummaryForceEnabled: true},
+					launchConfig: recorderapp.LaunchConfig{},
 					duration:     data.Input1KRecordingDuration,
 					recording:    data.Input1KRecording,
 				},
@@ -87,7 +87,7 @@ func init() {
 				Val: playbackPowerTestParam{
 					testAction:   testIdle,
 					mainAction:   runDocsCUJ,
-					launchConfig: recorderapp.LaunchConfig{SummaryForceEnabled: true},
+					launchConfig: recorderapp.LaunchConfig{},
 					duration:     data.Input3KRecordingDuration,
 					recording:    data.Input3KRecording,
 				},
@@ -99,7 +99,7 @@ func init() {
 				Val: playbackPowerTestParam{
 					testAction:   testIdle,
 					mainAction:   runDocsCUJ,
-					launchConfig: recorderapp.LaunchConfig{SummaryForceEnabled: true},
+					launchConfig: recorderapp.LaunchConfig{},
 					duration:     data.Input7K5RecordingDuration,
 					recording:    data.Input7K5Recording,
 				},
@@ -111,7 +111,7 @@ func init() {
 				Val: playbackPowerTestParam{
 					testAction:   testIdle,
 					mainAction:   runDocsCUJ,
-					launchConfig: recorderapp.LaunchConfig{SummaryForceEnabled: true},
+					launchConfig: recorderapp.LaunchConfig{},
 					duration:     data.Input11KRecordingDuration,
 					recording:    data.Input11KRecording,
 				},
