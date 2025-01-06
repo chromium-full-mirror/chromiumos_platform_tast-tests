@@ -68,9 +68,11 @@ func (f *FreezeFUSEService) TestMountZipAndSuspend(ctx context.Context, request 
 	// find/cat are forked before writing the PID to cgroup.procs.
 	// Sync is run before the while loop to speed up the kernel's sync before
 	// the stress script starts hammering the filesystem.
+	// Redirect output from the 'find' command to /dev/null to avoid memory usage issues
+	// caused by buffering large volumes of output.
 	script := "echo $$ > /sys/fs/cgroup/freezer/ui/cgroup.procs;" +
 		"sync;" +
-		"while true; do find /media/archive -type f; done"
+		"while true; do find /media/archive -type f; done 1>/dev/null 2>/dev/null"
 
 	cmd := testexec.CommandContext(
 		ctx,
