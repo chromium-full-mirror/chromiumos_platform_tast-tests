@@ -141,6 +141,70 @@ func init() {
 				Timeout: 1 * time.Minute,
 			},
 			{
+				Name: "api_create_context_from_type_device_type_all",
+				Val: oclctsTest{
+					executable: "test_api",
+					args:       "create_context_from_type_device_type_all",
+				},
+				Timeout: 1 * time.Minute,
+			},
+			{
+				Name: "api_create_context_from_type_device_type_default",
+				Val: oclctsTest{
+					executable: "test_api",
+					args:       "create_context_from_type_device_type_default",
+				},
+				Timeout: 1 * time.Minute,
+			},
+			{
+				Name: "api_negative_create_command_queue",
+				Val: oclctsTest{
+					executable: "test_api",
+					args:       "negative_create_command_queue",
+				},
+				Timeout: 1 * time.Minute,
+			},
+			{
+				Name: "api_negative_create_command_queue_with_properties",
+				Val: oclctsTest{
+					executable: "test_api",
+					args:       "negative_create_command_queue_with_properties",
+				},
+				Timeout: 1 * time.Minute,
+			},
+			{
+				Name: "api_negative_create_command_queue_with_properties_khr",
+				Val: oclctsTest{
+					executable: "test_api",
+					args:       "negative_create_command_queue_with_properties_khr",
+				},
+				Timeout: 1 * time.Minute,
+			},
+			{
+				Name: "api_kernel_local_memory_size",
+				Val: oclctsTest{
+					executable: "test_api",
+					args:       "kernel_local_memory_size",
+				},
+				Timeout: 1 * time.Minute,
+			},
+			{
+				Name: "api_set_command_queue_property",
+				Val: oclctsTest{
+					executable: "test_api",
+					args:       "set_command_queue_property",
+				},
+				Timeout: 1 * time.Minute,
+			},
+			{
+				Name: "api_set_default_device_command_queue",
+				Val: oclctsTest{
+					executable: "test_api",
+					args:       "set_default_device_command_queue",
+				},
+				Timeout: 1 * time.Minute,
+			},
+			{
 				Name: "api_binary_get",
 				Val: oclctsTest{
 					executable: "test_api",
@@ -265,6 +329,22 @@ func init() {
 				Val: oclctsTest{
 					executable: "test_api",
 					args:       "consistency_read_write_images",
+				},
+				Timeout: 1 * time.Minute,
+			},
+			{
+				Name: "api_consistency_requirements_fp64",
+				Val: oclctsTest{
+					executable: "test_api",
+					args:       "consistency_requirements_fp64",
+				},
+				Timeout: 1 * time.Minute,
+			},
+			{
+				Name: "api_consistency_requirements_fp16",
+				Val: oclctsTest{
+					executable: "test_api",
+					args:       "consistency_requirements_fp16",
 				},
 				Timeout: 1 * time.Minute,
 			},
@@ -961,6 +1041,30 @@ func init() {
 				Val: oclctsTest{
 					executable: "test_api",
 					args:       "sub_group_dispatch",
+				},
+				Timeout: 1 * time.Minute,
+			},
+			{
+				Name: "api_work_group_suggested_local_size_1d",
+				Val: oclctsTest{
+					executable: "test_api",
+					args:       "work_group_suggested_local_size_1D",
+				},
+				Timeout: 1 * time.Minute,
+			},
+			{
+				Name: "api_work_group_suggested_local_size_2d",
+				Val: oclctsTest{
+					executable: "test_api",
+					args:       "work_group_suggested_local_size_2D",
+				},
+				Timeout: 1 * time.Minute,
+			},
+			{
+				Name: "api_work_group_suggested_local_size_3d",
+				Val: oclctsTest{
+					executable: "test_api",
+					args:       "work_group_suggested_local_size_3D",
 				},
 				Timeout: 1 * time.Minute,
 			},
@@ -2089,6 +2193,22 @@ func init() {
 				Val: oclctsTest{
 					executable: "test_bruteforce",
 					args:       "divide -w -1",
+				},
+				Timeout: 1 * time.Minute,
+			},
+			{
+				Name: "bruteforce_erfc",
+				Val: oclctsTest{
+					executable: "test_bruteforce",
+					args:       "erfc -w -1",
+				},
+				Timeout: 1 * time.Minute,
+			},
+			{
+				Name: "bruteforce_erf",
+				Val: oclctsTest{
+					executable: "test_bruteforce",
+					args:       "erf -w -1",
 				},
 				Timeout: 1 * time.Minute,
 			},
@@ -3981,6 +4101,366 @@ func init() {
 				Timeout: 1 * time.Minute,
 			},
 			{
+				Name: "cl_copy_images_1dbuffer_cl_snorm_int8",
+				Val: oclctsTest{
+					executable: "test_cl_copy_images",
+					args:       "1Dbuffer CL_SNORM_INT8",
+				},
+				Timeout: 1 * time.Minute,
+			},
+			{
+				Name: "cl_copy_images_1dbuffer_cl_snorm_int16",
+				Val: oclctsTest{
+					executable: "test_cl_copy_images",
+					args:       "1Dbuffer CL_SNORM_INT16",
+				},
+				Timeout: 1 * time.Minute,
+			},
+			{
+				Name: "cl_copy_images_1dbuffer_cl_unorm_int8",
+				Val: oclctsTest{
+					executable: "test_cl_copy_images",
+					args:       "1Dbuffer CL_UNORM_INT8",
+				},
+				Timeout: 1 * time.Minute,
+			},
+			{
+				Name: "cl_copy_images_1dbuffer_cl_unorm_int16",
+				Val: oclctsTest{
+					executable: "test_cl_copy_images",
+					args:       "1Dbuffer CL_UNORM_INT16",
+				},
+				Timeout: 1 * time.Minute,
+			},
+			{
+				Name: "cl_copy_images_1dbuffer_cl_unorm_short_565",
+				Val: oclctsTest{
+					executable: "test_cl_copy_images",
+					args:       "1Dbuffer CL_UNORM_SHORT_565",
+				},
+				Timeout: 1 * time.Minute,
+			},
+			{
+				Name: "cl_copy_images_1dbuffer_cl_unorm_short_555",
+				Val: oclctsTest{
+					executable: "test_cl_copy_images",
+					args:       "1Dbuffer CL_UNORM_SHORT_555",
+				},
+				Timeout: 1 * time.Minute,
+			},
+			{
+				Name: "cl_copy_images_1dbuffer_cl_unorm_int_101010",
+				Val: oclctsTest{
+					executable: "test_cl_copy_images",
+					args:       "1Dbuffer CL_UNORM_INT_101010",
+				},
+				Timeout: 1 * time.Minute,
+			},
+			{
+				Name: "cl_copy_images_1dbuffer_cl_signed_int8",
+				Val: oclctsTest{
+					executable: "test_cl_copy_images",
+					args:       "1Dbuffer CL_SIGNED_INT8",
+				},
+				Timeout: 1 * time.Minute,
+			},
+			{
+				Name: "cl_copy_images_1dbuffer_cl_signed_int16",
+				Val: oclctsTest{
+					executable: "test_cl_copy_images",
+					args:       "1Dbuffer CL_SIGNED_INT16",
+				},
+				Timeout: 1 * time.Minute,
+			},
+			{
+				Name: "cl_copy_images_1dbuffer_cl_signed_int32",
+				Val: oclctsTest{
+					executable: "test_cl_copy_images",
+					args:       "1Dbuffer CL_SIGNED_INT32",
+				},
+				Timeout: 1 * time.Minute,
+			},
+			{
+				Name: "cl_copy_images_1dbuffer_cl_unsigned_int8",
+				Val: oclctsTest{
+					executable: "test_cl_copy_images",
+					args:       "1Dbuffer CL_UNSIGNED_INT8",
+				},
+				Timeout: 1 * time.Minute,
+			},
+			{
+				Name: "cl_copy_images_1dbuffer_cl_unsigned_int16",
+				Val: oclctsTest{
+					executable: "test_cl_copy_images",
+					args:       "1Dbuffer CL_UNSIGNED_INT16",
+				},
+				Timeout: 1 * time.Minute,
+			},
+			{
+				Name: "cl_copy_images_1dbuffer_cl_unsigned_int32",
+				Val: oclctsTest{
+					executable: "test_cl_copy_images",
+					args:       "1Dbuffer CL_UNSIGNED_INT32",
+				},
+				Timeout: 1 * time.Minute,
+			},
+			{
+				Name: "cl_copy_images_1dbuffer_cl_half_float",
+				Val: oclctsTest{
+					executable: "test_cl_copy_images",
+					args:       "1Dbuffer CL_HALF_FLOAT",
+				},
+				Timeout: 1 * time.Minute,
+			},
+			{
+				Name: "cl_copy_images_1dbuffer_cl_float",
+				Val: oclctsTest{
+					executable: "test_cl_copy_images",
+					args:       "1Dbuffer CL_FLOAT",
+				},
+				Timeout: 1 * time.Minute,
+			},
+			{
+				Name: "cl_copy_images_1dto1dbuffer_cl_snorm_int8",
+				Val: oclctsTest{
+					executable: "test_cl_copy_images",
+					args:       "1DTo1Dbuffer CL_SNORM_INT8",
+				},
+				Timeout: 1 * time.Minute,
+			},
+			{
+				Name: "cl_copy_images_1dto1dbuffer_cl_snorm_int16",
+				Val: oclctsTest{
+					executable: "test_cl_copy_images",
+					args:       "1DTo1Dbuffer CL_SNORM_INT16",
+				},
+				Timeout: 1 * time.Minute,
+			},
+			{
+				Name: "cl_copy_images_1dto1dbuffer_cl_unorm_int8",
+				Val: oclctsTest{
+					executable: "test_cl_copy_images",
+					args:       "1DTo1Dbuffer CL_UNORM_INT8",
+				},
+				Timeout: 1 * time.Minute,
+			},
+			{
+				Name: "cl_copy_images_1dto1dbuffer_cl_unorm_int16",
+				Val: oclctsTest{
+					executable: "test_cl_copy_images",
+					args:       "1DTo1Dbuffer CL_UNORM_INT16",
+				},
+				Timeout: 1 * time.Minute,
+			},
+			{
+				Name: "cl_copy_images_1dto1dbuffer_cl_unorm_short_565",
+				Val: oclctsTest{
+					executable: "test_cl_copy_images",
+					args:       "1DTo1Dbuffer CL_UNORM_SHORT_565",
+				},
+				Timeout: 1 * time.Minute,
+			},
+			{
+				Name: "cl_copy_images_1dto1dbuffer_cl_unorm_short_555",
+				Val: oclctsTest{
+					executable: "test_cl_copy_images",
+					args:       "1DTo1Dbuffer CL_UNORM_SHORT_555",
+				},
+				Timeout: 1 * time.Minute,
+			},
+			{
+				Name: "cl_copy_images_1dto1dbuffer_cl_unorm_int_101010",
+				Val: oclctsTest{
+					executable: "test_cl_copy_images",
+					args:       "1DTo1Dbuffer CL_UNORM_INT_101010",
+				},
+				Timeout: 1 * time.Minute,
+			},
+			{
+				Name: "cl_copy_images_1dto1dbuffer_cl_signed_int8",
+				Val: oclctsTest{
+					executable: "test_cl_copy_images",
+					args:       "1DTo1Dbuffer CL_SIGNED_INT8",
+				},
+				Timeout: 1 * time.Minute,
+			},
+			{
+				Name: "cl_copy_images_1dto1dbuffer_cl_signed_int16",
+				Val: oclctsTest{
+					executable: "test_cl_copy_images",
+					args:       "1DTo1Dbuffer CL_SIGNED_INT16",
+				},
+				Timeout: 1 * time.Minute,
+			},
+			{
+				Name: "cl_copy_images_1dto1dbuffer_cl_signed_int32",
+				Val: oclctsTest{
+					executable: "test_cl_copy_images",
+					args:       "1DTo1Dbuffer CL_SIGNED_INT32",
+				},
+				Timeout: 1 * time.Minute,
+			},
+			{
+				Name: "cl_copy_images_1dto1dbuffer_cl_unsigned_int8",
+				Val: oclctsTest{
+					executable: "test_cl_copy_images",
+					args:       "1DTo1Dbuffer CL_UNSIGNED_INT8",
+				},
+				Timeout: 1 * time.Minute,
+			},
+			{
+				Name: "cl_copy_images_1dto1dbuffer_cl_unsigned_int16",
+				Val: oclctsTest{
+					executable: "test_cl_copy_images",
+					args:       "1DTo1Dbuffer CL_UNSIGNED_INT16",
+				},
+				Timeout: 1 * time.Minute,
+			},
+			{
+				Name: "cl_copy_images_1dto1dbuffer_cl_unsigned_int32",
+				Val: oclctsTest{
+					executable: "test_cl_copy_images",
+					args:       "1DTo1Dbuffer CL_UNSIGNED_INT32",
+				},
+				Timeout: 1 * time.Minute,
+			},
+			{
+				Name: "cl_copy_images_1dto1dbuffer_cl_half_float",
+				Val: oclctsTest{
+					executable: "test_cl_copy_images",
+					args:       "1DTo1Dbuffer CL_HALF_FLOAT",
+				},
+				Timeout: 1 * time.Minute,
+			},
+			{
+				Name: "cl_copy_images_1dto1dbuffer_cl_float",
+				Val: oclctsTest{
+					executable: "test_cl_copy_images",
+					args:       "1DTo1Dbuffer CL_FLOAT",
+				},
+				Timeout: 1 * time.Minute,
+			},
+			{
+				Name: "cl_copy_images_1dbufferto1d_cl_snorm_int8",
+				Val: oclctsTest{
+					executable: "test_cl_copy_images",
+					args:       "1DbufferTo1D CL_SNORM_INT8",
+				},
+				Timeout: 1 * time.Minute,
+			},
+			{
+				Name: "cl_copy_images_1dbufferto1d_cl_snorm_int16",
+				Val: oclctsTest{
+					executable: "test_cl_copy_images",
+					args:       "1DbufferTo1D CL_SNORM_INT16",
+				},
+				Timeout: 1 * time.Minute,
+			},
+			{
+				Name: "cl_copy_images_1dbufferto1d_cl_unorm_int8",
+				Val: oclctsTest{
+					executable: "test_cl_copy_images",
+					args:       "1DbufferTo1D CL_UNORM_INT8",
+				},
+				Timeout: 1 * time.Minute,
+			},
+			{
+				Name: "cl_copy_images_1dbufferto1d_cl_unorm_int16",
+				Val: oclctsTest{
+					executable: "test_cl_copy_images",
+					args:       "1DbufferTo1D CL_UNORM_INT16",
+				},
+				Timeout: 1 * time.Minute,
+			},
+			{
+				Name: "cl_copy_images_1dbufferto1d_cl_unorm_short_565",
+				Val: oclctsTest{
+					executable: "test_cl_copy_images",
+					args:       "1DbufferTo1D CL_UNORM_SHORT_565",
+				},
+				Timeout: 1 * time.Minute,
+			},
+			{
+				Name: "cl_copy_images_1dbufferto1d_cl_unorm_short_555",
+				Val: oclctsTest{
+					executable: "test_cl_copy_images",
+					args:       "1DbufferTo1D CL_UNORM_SHORT_555",
+				},
+				Timeout: 1 * time.Minute,
+			},
+			{
+				Name: "cl_copy_images_1dbufferto1d_cl_unorm_int_101010",
+				Val: oclctsTest{
+					executable: "test_cl_copy_images",
+					args:       "1DbufferTo1D CL_UNORM_INT_101010",
+				},
+				Timeout: 1 * time.Minute,
+			},
+			{
+				Name: "cl_copy_images_1dbufferto1d_cl_signed_int8",
+				Val: oclctsTest{
+					executable: "test_cl_copy_images",
+					args:       "1DbufferTo1D CL_SIGNED_INT8",
+				},
+				Timeout: 1 * time.Minute,
+			},
+			{
+				Name: "cl_copy_images_1dbufferto1d_cl_signed_int16",
+				Val: oclctsTest{
+					executable: "test_cl_copy_images",
+					args:       "1DbufferTo1D CL_SIGNED_INT16",
+				},
+				Timeout: 1 * time.Minute,
+			},
+			{
+				Name: "cl_copy_images_1dbufferto1d_cl_signed_int32",
+				Val: oclctsTest{
+					executable: "test_cl_copy_images",
+					args:       "1DbufferTo1D CL_SIGNED_INT32",
+				},
+				Timeout: 1 * time.Minute,
+			},
+			{
+				Name: "cl_copy_images_1dbufferto1d_cl_unsigned_int8",
+				Val: oclctsTest{
+					executable: "test_cl_copy_images",
+					args:       "1DbufferTo1D CL_UNSIGNED_INT8",
+				},
+				Timeout: 1 * time.Minute,
+			},
+			{
+				Name: "cl_copy_images_1dbufferto1d_cl_unsigned_int16",
+				Val: oclctsTest{
+					executable: "test_cl_copy_images",
+					args:       "1DbufferTo1D CL_UNSIGNED_INT16",
+				},
+				Timeout: 1 * time.Minute,
+			},
+			{
+				Name: "cl_copy_images_1dbufferto1d_cl_unsigned_int32",
+				Val: oclctsTest{
+					executable: "test_cl_copy_images",
+					args:       "1DbufferTo1D CL_UNSIGNED_INT32",
+				},
+				Timeout: 1 * time.Minute,
+			},
+			{
+				Name: "cl_copy_images_1dbufferto1d_cl_half_float",
+				Val: oclctsTest{
+					executable: "test_cl_copy_images",
+					args:       "1DbufferTo1D CL_HALF_FLOAT",
+				},
+				Timeout: 1 * time.Minute,
+			},
+			{
+				Name: "cl_copy_images_1dbufferto1d_cl_float",
+				Val: oclctsTest{
+					executable: "test_cl_copy_images",
+					args:       "1DbufferTo1D CL_FLOAT",
+				},
+				Timeout: 1 * time.Minute,
+			},
+			{
 				Name: "cl_copy_images_2darray_cl_float",
 				Val: oclctsTest{
 					executable: "test_cl_copy_images",
@@ -5301,6 +5781,126 @@ func init() {
 				Timeout: 1 * time.Minute,
 			},
 			{
+				Name: "cl_fill_images_1dbuffer_cl_snorm_int8",
+				Val: oclctsTest{
+					executable: "test_cl_fill_images",
+					args:       "1Dbuffer CL_SNORM_INT8",
+				},
+				Timeout: 1 * time.Minute,
+			},
+			{
+				Name: "cl_fill_images_1dbuffer_cl_snorm_int16",
+				Val: oclctsTest{
+					executable: "test_cl_fill_images",
+					args:       "1Dbuffer CL_SNORM_INT16",
+				},
+				Timeout: 1 * time.Minute,
+			},
+			{
+				Name: "cl_fill_images_1dbuffer_cl_unorm_int8",
+				Val: oclctsTest{
+					executable: "test_cl_fill_images",
+					args:       "1Dbuffer CL_UNORM_INT8",
+				},
+				Timeout: 1 * time.Minute,
+			},
+			{
+				Name: "cl_fill_images_1dbuffer_cl_unorm_int16",
+				Val: oclctsTest{
+					executable: "test_cl_fill_images",
+					args:       "1Dbuffer CL_UNORM_INT16",
+				},
+				Timeout: 1 * time.Minute,
+			},
+			{
+				Name: "cl_fill_images_1dbuffer_cl_unorm_short_565",
+				Val: oclctsTest{
+					executable: "test_cl_fill_images",
+					args:       "1Dbuffer CL_UNORM_SHORT_565",
+				},
+				Timeout: 1 * time.Minute,
+			},
+			{
+				Name: "cl_fill_images_1dbuffer_cl_unorm_short_555",
+				Val: oclctsTest{
+					executable: "test_cl_fill_images",
+					args:       "1Dbuffer CL_UNORM_SHORT_555",
+				},
+				Timeout: 1 * time.Minute,
+			},
+			{
+				Name: "cl_fill_images_1dbuffer_cl_unorm_int_101010",
+				Val: oclctsTest{
+					executable: "test_cl_fill_images",
+					args:       "1Dbuffer CL_UNORM_INT_101010",
+				},
+				Timeout: 1 * time.Minute,
+			},
+			{
+				Name: "cl_fill_images_1dbuffer_cl_signed_int8",
+				Val: oclctsTest{
+					executable: "test_cl_fill_images",
+					args:       "1Dbuffer CL_SIGNED_INT8",
+				},
+				Timeout: 1 * time.Minute,
+			},
+			{
+				Name: "cl_fill_images_1dbuffer_cl_signed_int16",
+				Val: oclctsTest{
+					executable: "test_cl_fill_images",
+					args:       "1Dbuffer CL_SIGNED_INT16",
+				},
+				Timeout: 1 * time.Minute,
+			},
+			{
+				Name: "cl_fill_images_1dbuffer_cl_signed_int32",
+				Val: oclctsTest{
+					executable: "test_cl_fill_images",
+					args:       "1Dbuffer CL_SIGNED_INT32",
+				},
+				Timeout: 1 * time.Minute,
+			},
+			{
+				Name: "cl_fill_images_1dbuffer_cl_unsigned_int8",
+				Val: oclctsTest{
+					executable: "test_cl_fill_images",
+					args:       "1Dbuffer CL_UNSIGNED_INT8",
+				},
+				Timeout: 1 * time.Minute,
+			},
+			{
+				Name: "cl_fill_images_1dbuffer_cl_unsigned_int16",
+				Val: oclctsTest{
+					executable: "test_cl_fill_images",
+					args:       "1Dbuffer CL_UNSIGNED_INT16",
+				},
+				Timeout: 1 * time.Minute,
+			},
+			{
+				Name: "cl_fill_images_1dbuffer_cl_unsigned_int32",
+				Val: oclctsTest{
+					executable: "test_cl_fill_images",
+					args:       "1Dbuffer CL_UNSIGNED_INT32",
+				},
+				Timeout: 1 * time.Minute,
+			},
+			{
+				Name: "cl_fill_images_1dbuffer_cl_half_float",
+				Val: oclctsTest{
+					executable: "test_cl_fill_images",
+					args:       "1Dbuffer CL_HALF_FLOAT",
+				},
+				Timeout: 1 * time.Minute,
+			},
+			{
+				Name: "cl_fill_images_1dbuffer_cl_float",
+				Val: oclctsTest{
+					executable: "test_cl_fill_images",
+					args:       "1Dbuffer CL_FLOAT",
+				},
+				Timeout: 1 * time.Minute,
+			},
+			{
 				Name: "cl_fill_images_2darray_cl_float",
 				Val: oclctsTest{
 					executable: "test_cl_fill_images",
@@ -5901,6 +6501,126 @@ func init() {
 				Timeout: 1 * time.Minute,
 			},
 			{
+				Name: "cl_get_info_1dbuffer_cl_snorm_int8",
+				Val: oclctsTest{
+					executable: "test_cl_get_info",
+					args:       "1Dbuffer CL_SNORM_INT8",
+				},
+				Timeout: 1 * time.Minute,
+			},
+			{
+				Name: "cl_get_info_1dbuffer_cl_snorm_int16",
+				Val: oclctsTest{
+					executable: "test_cl_get_info",
+					args:       "1Dbuffer CL_SNORM_INT16",
+				},
+				Timeout: 1 * time.Minute,
+			},
+			{
+				Name: "cl_get_info_1dbuffer_cl_unorm_int8",
+				Val: oclctsTest{
+					executable: "test_cl_get_info",
+					args:       "1Dbuffer CL_UNORM_INT8",
+				},
+				Timeout: 1 * time.Minute,
+			},
+			{
+				Name: "cl_get_info_1dbuffer_cl_unorm_int16",
+				Val: oclctsTest{
+					executable: "test_cl_get_info",
+					args:       "1Dbuffer CL_UNORM_INT16",
+				},
+				Timeout: 1 * time.Minute,
+			},
+			{
+				Name: "cl_get_info_1dbuffer_cl_unorm_short_565",
+				Val: oclctsTest{
+					executable: "test_cl_get_info",
+					args:       "1Dbuffer CL_UNORM_SHORT_565",
+				},
+				Timeout: 1 * time.Minute,
+			},
+			{
+				Name: "cl_get_info_1dbuffer_cl_unorm_short_555",
+				Val: oclctsTest{
+					executable: "test_cl_get_info",
+					args:       "1Dbuffer CL_UNORM_SHORT_555",
+				},
+				Timeout: 1 * time.Minute,
+			},
+			{
+				Name: "cl_get_info_1dbuffer_cl_unorm_int_101010",
+				Val: oclctsTest{
+					executable: "test_cl_get_info",
+					args:       "1Dbuffer CL_UNORM_INT_101010",
+				},
+				Timeout: 1 * time.Minute,
+			},
+			{
+				Name: "cl_get_info_1dbuffer_cl_signed_int8",
+				Val: oclctsTest{
+					executable: "test_cl_get_info",
+					args:       "1Dbuffer CL_SIGNED_INT8",
+				},
+				Timeout: 1 * time.Minute,
+			},
+			{
+				Name: "cl_get_info_1dbuffer_cl_signed_int16",
+				Val: oclctsTest{
+					executable: "test_cl_get_info",
+					args:       "1Dbuffer CL_SIGNED_INT16",
+				},
+				Timeout: 1 * time.Minute,
+			},
+			{
+				Name: "cl_get_info_1dbuffer_cl_signed_int32",
+				Val: oclctsTest{
+					executable: "test_cl_get_info",
+					args:       "1Dbuffer CL_SIGNED_INT32",
+				},
+				Timeout: 1 * time.Minute,
+			},
+			{
+				Name: "cl_get_info_1dbuffer_cl_unsigned_int8",
+				Val: oclctsTest{
+					executable: "test_cl_get_info",
+					args:       "1Dbuffer CL_UNSIGNED_INT8",
+				},
+				Timeout: 1 * time.Minute,
+			},
+			{
+				Name: "cl_get_info_1dbuffer_cl_unsigned_int16",
+				Val: oclctsTest{
+					executable: "test_cl_get_info",
+					args:       "1Dbuffer CL_UNSIGNED_INT16",
+				},
+				Timeout: 1 * time.Minute,
+			},
+			{
+				Name: "cl_get_info_1dbuffer_cl_unsigned_int32",
+				Val: oclctsTest{
+					executable: "test_cl_get_info",
+					args:       "1Dbuffer CL_UNSIGNED_INT32",
+				},
+				Timeout: 1 * time.Minute,
+			},
+			{
+				Name: "cl_get_info_1dbuffer_cl_half_float",
+				Val: oclctsTest{
+					executable: "test_cl_get_info",
+					args:       "1Dbuffer CL_HALF_FLOAT",
+				},
+				Timeout: 1 * time.Minute,
+			},
+			{
+				Name: "cl_get_info_1dbuffer_cl_float",
+				Val: oclctsTest{
+					executable: "test_cl_get_info",
+					args:       "1Dbuffer CL_FLOAT",
+				},
+				Timeout: 1 * time.Minute,
+			},
+			{
 				Name: "cl_get_info_2darray_cl_float",
 				Val: oclctsTest{
 					executable: "test_cl_get_info",
@@ -6497,6 +7217,126 @@ func init() {
 				Val: oclctsTest{
 					executable: "test_cl_read_write_images",
 					args:       "1D CL_UNSIGNED_INT8",
+				},
+				Timeout: 1 * time.Minute,
+			},
+			{
+				Name: "cl_read_write_images_1dbuffer_cl_snorm_int8",
+				Val: oclctsTest{
+					executable: "test_cl_read_write_images",
+					args:       "1Dbuffer CL_SNORM_INT8",
+				},
+				Timeout: 1 * time.Minute,
+			},
+			{
+				Name: "cl_read_write_images_1dbuffer_cl_snorm_int16",
+				Val: oclctsTest{
+					executable: "test_cl_read_write_images",
+					args:       "1Dbuffer CL_SNORM_INT16",
+				},
+				Timeout: 1 * time.Minute,
+			},
+			{
+				Name: "cl_read_write_images_1dbuffer_cl_unorm_int8",
+				Val: oclctsTest{
+					executable: "test_cl_read_write_images",
+					args:       "1Dbuffer CL_UNORM_INT8",
+				},
+				Timeout: 1 * time.Minute,
+			},
+			{
+				Name: "cl_read_write_images_1dbuffer_cl_unorm_int16",
+				Val: oclctsTest{
+					executable: "test_cl_read_write_images",
+					args:       "1Dbuffer CL_UNORM_INT16",
+				},
+				Timeout: 1 * time.Minute,
+			},
+			{
+				Name: "cl_read_write_images_1dbuffer_cl_unorm_short_565",
+				Val: oclctsTest{
+					executable: "test_cl_read_write_images",
+					args:       "1Dbuffer CL_UNORM_SHORT_565",
+				},
+				Timeout: 1 * time.Minute,
+			},
+			{
+				Name: "cl_read_write_images_1dbuffer_cl_unorm_short_555",
+				Val: oclctsTest{
+					executable: "test_cl_read_write_images",
+					args:       "1Dbuffer CL_UNORM_SHORT_555",
+				},
+				Timeout: 1 * time.Minute,
+			},
+			{
+				Name: "cl_read_write_images_1dbuffer_cl_unorm_int_101010",
+				Val: oclctsTest{
+					executable: "test_cl_read_write_images",
+					args:       "1Dbuffer CL_UNORM_INT_101010",
+				},
+				Timeout: 1 * time.Minute,
+			},
+			{
+				Name: "cl_read_write_images_1dbuffer_cl_signed_int8",
+				Val: oclctsTest{
+					executable: "test_cl_read_write_images",
+					args:       "1Dbuffer CL_SIGNED_INT8",
+				},
+				Timeout: 1 * time.Minute,
+			},
+			{
+				Name: "cl_read_write_images_1dbuffer_cl_signed_int16",
+				Val: oclctsTest{
+					executable: "test_cl_read_write_images",
+					args:       "1Dbuffer CL_SIGNED_INT16",
+				},
+				Timeout: 1 * time.Minute,
+			},
+			{
+				Name: "cl_read_write_images_1dbuffer_cl_signed_int32",
+				Val: oclctsTest{
+					executable: "test_cl_read_write_images",
+					args:       "1Dbuffer CL_SIGNED_INT32",
+				},
+				Timeout: 1 * time.Minute,
+			},
+			{
+				Name: "cl_read_write_images_1dbuffer_cl_unsigned_int8",
+				Val: oclctsTest{
+					executable: "test_cl_read_write_images",
+					args:       "1Dbuffer CL_UNSIGNED_INT8",
+				},
+				Timeout: 1 * time.Minute,
+			},
+			{
+				Name: "cl_read_write_images_1dbuffer_cl_unsigned_int16",
+				Val: oclctsTest{
+					executable: "test_cl_read_write_images",
+					args:       "1Dbuffer CL_UNSIGNED_INT16",
+				},
+				Timeout: 1 * time.Minute,
+			},
+			{
+				Name: "cl_read_write_images_1dbuffer_cl_unsigned_int32",
+				Val: oclctsTest{
+					executable: "test_cl_read_write_images",
+					args:       "1Dbuffer CL_UNSIGNED_INT32",
+				},
+				Timeout: 1 * time.Minute,
+			},
+			{
+				Name: "cl_read_write_images_1dbuffer_cl_half_float",
+				Val: oclctsTest{
+					executable: "test_cl_read_write_images",
+					args:       "1Dbuffer CL_HALF_FLOAT",
+				},
+				Timeout: 1 * time.Minute,
+			},
+			{
+				Name: "cl_read_write_images_1dbuffer_cl_float",
+				Val: oclctsTest{
+					executable: "test_cl_read_write_images",
+					args:       "1Dbuffer CL_FLOAT",
 				},
 				Timeout: 1 * time.Minute,
 			},
@@ -7113,6 +7953,14 @@ func init() {
 				Val: oclctsTest{
 					executable: "test_compiler",
 					args:       "features_macro",
+				},
+				Timeout: 1 * time.Minute,
+			},
+			{
+				Name: "compiler_features_macro_coupling",
+				Val: oclctsTest{
+					executable: "test_compiler",
+					args:       "features_macro_coupling",
 				},
 				Timeout: 1 * time.Minute,
 			},
@@ -8501,6 +9349,86 @@ func init() {
 				Timeout: 1 * time.Minute,
 			},
 			{
+				Name: "conversions_char_half",
+				Val: oclctsTest{
+					executable: "test_conversions",
+					args:       "char_half -w -1",
+				},
+				Timeout: 1 * time.Minute,
+			},
+			{
+				Name: "conversions_char_sat_half",
+				Val: oclctsTest{
+					executable: "test_conversions",
+					args:       "char_sat_half -w -1",
+				},
+				Timeout: 1 * time.Minute,
+			},
+			{
+				Name: "conversions_char_rte_half",
+				Val: oclctsTest{
+					executable: "test_conversions",
+					args:       "char_rte_half -w -1",
+				},
+				Timeout: 1 * time.Minute,
+			},
+			{
+				Name: "conversions_char_sat_rte_half",
+				Val: oclctsTest{
+					executable: "test_conversions",
+					args:       "char_sat_rte_half -w -1",
+				},
+				Timeout: 1 * time.Minute,
+			},
+			{
+				Name: "conversions_char_rtp_half",
+				Val: oclctsTest{
+					executable: "test_conversions",
+					args:       "char_rtp_half -w -1",
+				},
+				Timeout: 1 * time.Minute,
+			},
+			{
+				Name: "conversions_char_sat_rtp_half",
+				Val: oclctsTest{
+					executable: "test_conversions",
+					args:       "char_sat_rtp_half -w -1",
+				},
+				Timeout: 1 * time.Minute,
+			},
+			{
+				Name: "conversions_char_rtn_half",
+				Val: oclctsTest{
+					executable: "test_conversions",
+					args:       "char_rtn_half -w -1",
+				},
+				Timeout: 1 * time.Minute,
+			},
+			{
+				Name: "conversions_char_sat_rtn_half",
+				Val: oclctsTest{
+					executable: "test_conversions",
+					args:       "char_sat_rtn_half -w -1",
+				},
+				Timeout: 1 * time.Minute,
+			},
+			{
+				Name: "conversions_char_rtz_half",
+				Val: oclctsTest{
+					executable: "test_conversions",
+					args:       "char_rtz_half -w -1",
+				},
+				Timeout: 1 * time.Minute,
+			},
+			{
+				Name: "conversions_char_sat_rtz_half",
+				Val: oclctsTest{
+					executable: "test_conversions",
+					args:       "char_sat_rtz_half -w -1",
+				},
+				Timeout: 1 * time.Minute,
+			},
+			{
 				Name: "conversions_double_char",
 				Val: oclctsTest{
 					executable: "test_conversions",
@@ -8901,6 +9829,46 @@ func init() {
 				Timeout: 1 * time.Minute,
 			},
 			{
+				Name: "conversions_double_half",
+				Val: oclctsTest{
+					executable: "test_conversions",
+					args:       "double_half -w -1",
+				},
+				Timeout: 1 * time.Minute,
+			},
+			{
+				Name: "conversions_double_rte_half",
+				Val: oclctsTest{
+					executable: "test_conversions",
+					args:       "double_rte_half -w -1",
+				},
+				Timeout: 1 * time.Minute,
+			},
+			{
+				Name: "conversions_double_rtp_half",
+				Val: oclctsTest{
+					executable: "test_conversions",
+					args:       "double_rtp_half -w -1",
+				},
+				Timeout: 1 * time.Minute,
+			},
+			{
+				Name: "conversions_double_rtn_half",
+				Val: oclctsTest{
+					executable: "test_conversions",
+					args:       "double_rtn_half -w -1",
+				},
+				Timeout: 1 * time.Minute,
+			},
+			{
+				Name: "conversions_double_rtz_half",
+				Val: oclctsTest{
+					executable: "test_conversions",
+					args:       "double_rtz_half -w -1",
+				},
+				Timeout: 1 * time.Minute,
+			},
+			{
 				Name: "conversions_float_char",
 				Val: oclctsTest{
 					executable: "test_conversions",
@@ -9297,6 +10265,486 @@ func init() {
 				Val: oclctsTest{
 					executable: "test_conversions",
 					args:       "float_ushort -w -1",
+				},
+				Timeout: 1 * time.Minute,
+			},
+			{
+				Name: "conversions_float_half",
+				Val: oclctsTest{
+					executable: "test_conversions",
+					args:       "float_half -w -1",
+				},
+				Timeout: 1 * time.Minute,
+			},
+			{
+				Name: "conversions_float_rte_half",
+				Val: oclctsTest{
+					executable: "test_conversions",
+					args:       "float_rte_half -w -1",
+				},
+				Timeout: 1 * time.Minute,
+			},
+			{
+				Name: "conversions_float_rtp_half",
+				Val: oclctsTest{
+					executable: "test_conversions",
+					args:       "float_rtp_half -w -1",
+				},
+				Timeout: 1 * time.Minute,
+			},
+			{
+				Name: "conversions_float_rtn_half",
+				Val: oclctsTest{
+					executable: "test_conversions",
+					args:       "float_rtn_half -w -1",
+				},
+				Timeout: 1 * time.Minute,
+			},
+			{
+				Name: "conversions_float_rtz_half",
+				Val: oclctsTest{
+					executable: "test_conversions",
+					args:       "float_rtz_half -w -1",
+				},
+				Timeout: 1 * time.Minute,
+			},
+			{
+				Name: "conversions_half_uchar",
+				Val: oclctsTest{
+					executable: "test_conversions",
+					args:       "half_uchar -w -1",
+				},
+				Timeout: 1 * time.Minute,
+			},
+			{
+				Name: "conversions_half_rte_uchar",
+				Val: oclctsTest{
+					executable: "test_conversions",
+					args:       "half_rte_uchar -w -1",
+				},
+				Timeout: 1 * time.Minute,
+			},
+			{
+				Name: "conversions_half_rtp_uchar",
+				Val: oclctsTest{
+					executable: "test_conversions",
+					args:       "half_rtp_uchar -w -1",
+				},
+				Timeout: 1 * time.Minute,
+			},
+			{
+				Name: "conversions_half_rtn_uchar",
+				Val: oclctsTest{
+					executable: "test_conversions",
+					args:       "half_rtn_uchar -w -1",
+				},
+				Timeout: 1 * time.Minute,
+			},
+			{
+				Name: "conversions_half_rtz_uchar",
+				Val: oclctsTest{
+					executable: "test_conversions",
+					args:       "half_rtz_uchar -w -1",
+				},
+				Timeout: 1 * time.Minute,
+			},
+			{
+				Name: "conversions_half_char",
+				Val: oclctsTest{
+					executable: "test_conversions",
+					args:       "half_char -w -1",
+				},
+				Timeout: 1 * time.Minute,
+			},
+			{
+				Name: "conversions_half_rte_char",
+				Val: oclctsTest{
+					executable: "test_conversions",
+					args:       "half_rte_char -w -1",
+				},
+				Timeout: 1 * time.Minute,
+			},
+			{
+				Name: "conversions_half_rtp_char",
+				Val: oclctsTest{
+					executable: "test_conversions",
+					args:       "half_rtp_char -w -1",
+				},
+				Timeout: 1 * time.Minute,
+			},
+			{
+				Name: "conversions_half_rtn_char",
+				Val: oclctsTest{
+					executable: "test_conversions",
+					args:       "half_rtn_char -w -1",
+				},
+				Timeout: 1 * time.Minute,
+			},
+			{
+				Name: "conversions_half_rtz_char",
+				Val: oclctsTest{
+					executable: "test_conversions",
+					args:       "half_rtz_char -w -1",
+				},
+				Timeout: 1 * time.Minute,
+			},
+			{
+				Name: "conversions_half_ushort",
+				Val: oclctsTest{
+					executable: "test_conversions",
+					args:       "half_ushort -w -1",
+				},
+				Timeout: 1 * time.Minute,
+			},
+			{
+				Name: "conversions_half_rte_ushort",
+				Val: oclctsTest{
+					executable: "test_conversions",
+					args:       "half_rte_ushort -w -1",
+				},
+				Timeout: 1 * time.Minute,
+			},
+			{
+				Name: "conversions_half_rtp_ushort",
+				Val: oclctsTest{
+					executable: "test_conversions",
+					args:       "half_rtp_ushort -w -1",
+				},
+				Timeout: 1 * time.Minute,
+			},
+			{
+				Name: "conversions_half_rtn_ushort",
+				Val: oclctsTest{
+					executable: "test_conversions",
+					args:       "half_rtn_ushort -w -1",
+				},
+				Timeout: 1 * time.Minute,
+			},
+			{
+				Name: "conversions_half_rtz_ushort",
+				Val: oclctsTest{
+					executable: "test_conversions",
+					args:       "half_rtz_ushort -w -1",
+				},
+				Timeout: 1 * time.Minute,
+			},
+			{
+				Name: "conversions_half_short",
+				Val: oclctsTest{
+					executable: "test_conversions",
+					args:       "half_short -w -1",
+				},
+				Timeout: 1 * time.Minute,
+			},
+			{
+				Name: "conversions_half_rte_short",
+				Val: oclctsTest{
+					executable: "test_conversions",
+					args:       "half_rte_short -w -1",
+				},
+				Timeout: 1 * time.Minute,
+			},
+			{
+				Name: "conversions_half_rtp_short",
+				Val: oclctsTest{
+					executable: "test_conversions",
+					args:       "half_rtp_short -w -1",
+				},
+				Timeout: 1 * time.Minute,
+			},
+			{
+				Name: "conversions_half_rtn_short",
+				Val: oclctsTest{
+					executable: "test_conversions",
+					args:       "half_rtn_short -w -1",
+				},
+				Timeout: 1 * time.Minute,
+			},
+			{
+				Name: "conversions_half_rtz_short",
+				Val: oclctsTest{
+					executable: "test_conversions",
+					args:       "half_rtz_short -w -1",
+				},
+				Timeout: 1 * time.Minute,
+			},
+			{
+				Name: "conversions_half_uint",
+				Val: oclctsTest{
+					executable: "test_conversions",
+					args:       "half_uint -w -1",
+				},
+				Timeout: 1 * time.Minute,
+			},
+			{
+				Name: "conversions_half_rte_uint",
+				Val: oclctsTest{
+					executable: "test_conversions",
+					args:       "half_rte_uint -w -1",
+				},
+				Timeout: 1 * time.Minute,
+			},
+			{
+				Name: "conversions_half_rtp_uint",
+				Val: oclctsTest{
+					executable: "test_conversions",
+					args:       "half_rtp_uint -w -1",
+				},
+				Timeout: 1 * time.Minute,
+			},
+			{
+				Name: "conversions_half_rtn_uint",
+				Val: oclctsTest{
+					executable: "test_conversions",
+					args:       "half_rtn_uint -w -1",
+				},
+				Timeout: 1 * time.Minute,
+			},
+			{
+				Name: "conversions_half_rtz_uint",
+				Val: oclctsTest{
+					executable: "test_conversions",
+					args:       "half_rtz_uint -w -1",
+				},
+				Timeout: 1 * time.Minute,
+			},
+			{
+				Name: "conversions_half_int",
+				Val: oclctsTest{
+					executable: "test_conversions",
+					args:       "half_int -w -1",
+				},
+				Timeout: 1 * time.Minute,
+			},
+			{
+				Name: "conversions_half_rte_int",
+				Val: oclctsTest{
+					executable: "test_conversions",
+					args:       "half_rte_int -w -1",
+				},
+				Timeout: 1 * time.Minute,
+			},
+			{
+				Name: "conversions_half_rtp_int",
+				Val: oclctsTest{
+					executable: "test_conversions",
+					args:       "half_rtp_int -w -1",
+				},
+				Timeout: 1 * time.Minute,
+			},
+			{
+				Name: "conversions_half_rtn_int",
+				Val: oclctsTest{
+					executable: "test_conversions",
+					args:       "half_rtn_int -w -1",
+				},
+				Timeout: 1 * time.Minute,
+			},
+			{
+				Name: "conversions_half_rtz_int",
+				Val: oclctsTest{
+					executable: "test_conversions",
+					args:       "half_rtz_int -w -1",
+				},
+				Timeout: 1 * time.Minute,
+			},
+			{
+				Name: "conversions_half_half",
+				Val: oclctsTest{
+					executable: "test_conversions",
+					args:       "half_half -w -1",
+				},
+				Timeout: 1 * time.Minute,
+			},
+			{
+				Name: "conversions_half_rte_half",
+				Val: oclctsTest{
+					executable: "test_conversions",
+					args:       "half_rte_half -w -1",
+				},
+				Timeout: 1 * time.Minute,
+			},
+			{
+				Name: "conversions_half_rtp_half",
+				Val: oclctsTest{
+					executable: "test_conversions",
+					args:       "half_rtp_half -w -1",
+				},
+				Timeout: 1 * time.Minute,
+			},
+			{
+				Name: "conversions_half_rtn_half",
+				Val: oclctsTest{
+					executable: "test_conversions",
+					args:       "half_rtn_half -w -1",
+				},
+				Timeout: 1 * time.Minute,
+			},
+			{
+				Name: "conversions_half_rtz_half",
+				Val: oclctsTest{
+					executable: "test_conversions",
+					args:       "half_rtz_half -w -1",
+				},
+				Timeout: 1 * time.Minute,
+			},
+			{
+				Name: "conversions_half_float",
+				Val: oclctsTest{
+					executable: "test_conversions",
+					args:       "half_float -w -1",
+				},
+				Timeout: 1 * time.Minute,
+			},
+			{
+				Name: "conversions_half_rte_float",
+				Val: oclctsTest{
+					executable: "test_conversions",
+					args:       "half_rte_float -w -1",
+				},
+				Timeout: 1 * time.Minute,
+			},
+			{
+				Name: "conversions_half_rtp_float",
+				Val: oclctsTest{
+					executable: "test_conversions",
+					args:       "half_rtp_float -w -1",
+				},
+				Timeout: 1 * time.Minute,
+			},
+			{
+				Name: "conversions_half_rtn_float",
+				Val: oclctsTest{
+					executable: "test_conversions",
+					args:       "half_rtn_float -w -1",
+				},
+				Timeout: 1 * time.Minute,
+			},
+			{
+				Name: "conversions_half_rtz_float",
+				Val: oclctsTest{
+					executable: "test_conversions",
+					args:       "half_rtz_float -w -1",
+				},
+				Timeout: 1 * time.Minute,
+			},
+			{
+				Name: "conversions_half_double",
+				Val: oclctsTest{
+					executable: "test_conversions",
+					args:       "half_double -w -1",
+				},
+				Timeout: 1 * time.Minute,
+			},
+			{
+				Name: "conversions_half_rte_double",
+				Val: oclctsTest{
+					executable: "test_conversions",
+					args:       "half_rte_double -w -1",
+				},
+				Timeout: 1 * time.Minute,
+			},
+			{
+				Name: "conversions_half_rtp_double",
+				Val: oclctsTest{
+					executable: "test_conversions",
+					args:       "half_rtp_double -w -1",
+				},
+				Timeout: 1 * time.Minute,
+			},
+			{
+				Name: "conversions_half_rtn_double",
+				Val: oclctsTest{
+					executable: "test_conversions",
+					args:       "half_rtn_double -w -1",
+				},
+				Timeout: 1 * time.Minute,
+			},
+			{
+				Name: "conversions_half_rtz_double",
+				Val: oclctsTest{
+					executable: "test_conversions",
+					args:       "half_rtz_double -w -1",
+				},
+				Timeout: 1 * time.Minute,
+			},
+			{
+				Name: "conversions_half_ulong",
+				Val: oclctsTest{
+					executable: "test_conversions",
+					args:       "half_ulong -w -1",
+				},
+				Timeout: 1 * time.Minute,
+			},
+			{
+				Name: "conversions_half_rte_ulong",
+				Val: oclctsTest{
+					executable: "test_conversions",
+					args:       "half_rte_ulong -w -1",
+				},
+				Timeout: 1 * time.Minute,
+			},
+			{
+				Name: "conversions_half_rtp_ulong",
+				Val: oclctsTest{
+					executable: "test_conversions",
+					args:       "half_rtp_ulong -w -1",
+				},
+				Timeout: 1 * time.Minute,
+			},
+			{
+				Name: "conversions_half_rtn_ulong",
+				Val: oclctsTest{
+					executable: "test_conversions",
+					args:       "half_rtn_ulong -w -1",
+				},
+				Timeout: 1 * time.Minute,
+			},
+			{
+				Name: "conversions_half_rtz_ulong",
+				Val: oclctsTest{
+					executable: "test_conversions",
+					args:       "half_rtz_ulong -w -1",
+				},
+				Timeout: 1 * time.Minute,
+			},
+			{
+				Name: "conversions_half_long",
+				Val: oclctsTest{
+					executable: "test_conversions",
+					args:       "half_long -w -1",
+				},
+				Timeout: 1 * time.Minute,
+			},
+			{
+				Name: "conversions_half_rte_long",
+				Val: oclctsTest{
+					executable: "test_conversions",
+					args:       "half_rte_long -w -1",
+				},
+				Timeout: 1 * time.Minute,
+			},
+			{
+				Name: "conversions_half_rtp_long",
+				Val: oclctsTest{
+					executable: "test_conversions",
+					args:       "half_rtp_long -w -1",
+				},
+				Timeout: 1 * time.Minute,
+			},
+			{
+				Name: "conversions_half_rtn_long",
+				Val: oclctsTest{
+					executable: "test_conversions",
+					args:       "half_rtn_long -w -1",
+				},
+				Timeout: 1 * time.Minute,
+			},
+			{
+				Name: "conversions_half_rtz_long",
+				Val: oclctsTest{
+					executable: "test_conversions",
+					args:       "half_rtz_long -w -1",
 				},
 				Timeout: 1 * time.Minute,
 			},
@@ -10101,6 +11549,86 @@ func init() {
 				Timeout: 1 * time.Minute,
 			},
 			{
+				Name: "conversions_int_half",
+				Val: oclctsTest{
+					executable: "test_conversions",
+					args:       "int_half -w -1",
+				},
+				Timeout: 1 * time.Minute,
+			},
+			{
+				Name: "conversions_int_sat_half",
+				Val: oclctsTest{
+					executable: "test_conversions",
+					args:       "int_sat_half -w -1",
+				},
+				Timeout: 1 * time.Minute,
+			},
+			{
+				Name: "conversions_int_rte_half",
+				Val: oclctsTest{
+					executable: "test_conversions",
+					args:       "int_rte_half -w -1",
+				},
+				Timeout: 1 * time.Minute,
+			},
+			{
+				Name: "conversions_int_sat_rte_half",
+				Val: oclctsTest{
+					executable: "test_conversions",
+					args:       "int_sat_rte_half -w -1",
+				},
+				Timeout: 1 * time.Minute,
+			},
+			{
+				Name: "conversions_int_rtp_half",
+				Val: oclctsTest{
+					executable: "test_conversions",
+					args:       "int_rtp_half -w -1",
+				},
+				Timeout: 1 * time.Minute,
+			},
+			{
+				Name: "conversions_int_sat_rtp_half",
+				Val: oclctsTest{
+					executable: "test_conversions",
+					args:       "int_sat_rtp_half -w -1",
+				},
+				Timeout: 1 * time.Minute,
+			},
+			{
+				Name: "conversions_int_rtn_half",
+				Val: oclctsTest{
+					executable: "test_conversions",
+					args:       "int_rtn_half -w -1",
+				},
+				Timeout: 1 * time.Minute,
+			},
+			{
+				Name: "conversions_int_sat_rtn_half",
+				Val: oclctsTest{
+					executable: "test_conversions",
+					args:       "int_sat_rtn_half -w -1",
+				},
+				Timeout: 1 * time.Minute,
+			},
+			{
+				Name: "conversions_int_rtz_half",
+				Val: oclctsTest{
+					executable: "test_conversions",
+					args:       "int_rtz_half -w -1",
+				},
+				Timeout: 1 * time.Minute,
+			},
+			{
+				Name: "conversions_int_sat_rtz_half",
+				Val: oclctsTest{
+					executable: "test_conversions",
+					args:       "int_sat_rtz_half -w -1",
+				},
+				Timeout: 1 * time.Minute,
+			},
+			{
 				Name: "conversions_long_char",
 				Val: oclctsTest{
 					executable: "test_conversions",
@@ -10897,6 +12425,86 @@ func init() {
 				Val: oclctsTest{
 					executable: "test_conversions",
 					args:       "long_ushort -w -1",
+				},
+				Timeout: 1 * time.Minute,
+			},
+			{
+				Name: "conversions_long_half",
+				Val: oclctsTest{
+					executable: "test_conversions",
+					args:       "long_half -w -1",
+				},
+				Timeout: 1 * time.Minute,
+			},
+			{
+				Name: "conversions_long_sat_half",
+				Val: oclctsTest{
+					executable: "test_conversions",
+					args:       "long_sat_half -w -1",
+				},
+				Timeout: 1 * time.Minute,
+			},
+			{
+				Name: "conversions_long_rte_half",
+				Val: oclctsTest{
+					executable: "test_conversions",
+					args:       "long_rte_half -w -1",
+				},
+				Timeout: 1 * time.Minute,
+			},
+			{
+				Name: "conversions_long_sat_rte_half",
+				Val: oclctsTest{
+					executable: "test_conversions",
+					args:       "long_sat_rte_half -w -1",
+				},
+				Timeout: 1 * time.Minute,
+			},
+			{
+				Name: "conversions_long_rtp_half",
+				Val: oclctsTest{
+					executable: "test_conversions",
+					args:       "long_rtp_half -w -1",
+				},
+				Timeout: 1 * time.Minute,
+			},
+			{
+				Name: "conversions_long_sat_rtp_half",
+				Val: oclctsTest{
+					executable: "test_conversions",
+					args:       "long_sat_rtp_half -w -1",
+				},
+				Timeout: 1 * time.Minute,
+			},
+			{
+				Name: "conversions_long_rtn_half",
+				Val: oclctsTest{
+					executable: "test_conversions",
+					args:       "long_rtn_half -w -1",
+				},
+				Timeout: 1 * time.Minute,
+			},
+			{
+				Name: "conversions_long_sat_rtn_half",
+				Val: oclctsTest{
+					executable: "test_conversions",
+					args:       "long_sat_rtn_half -w -1",
+				},
+				Timeout: 1 * time.Minute,
+			},
+			{
+				Name: "conversions_long_rtz_half",
+				Val: oclctsTest{
+					executable: "test_conversions",
+					args:       "long_rtz_half -w -1",
+				},
+				Timeout: 1 * time.Minute,
+			},
+			{
+				Name: "conversions_long_sat_rtz_half",
+				Val: oclctsTest{
+					executable: "test_conversions",
+					args:       "long_sat_rtz_half -w -1",
 				},
 				Timeout: 1 * time.Minute,
 			},
@@ -11701,6 +13309,86 @@ func init() {
 				Timeout: 1 * time.Minute,
 			},
 			{
+				Name: "conversions_short_half",
+				Val: oclctsTest{
+					executable: "test_conversions",
+					args:       "short_half -w -1",
+				},
+				Timeout: 1 * time.Minute,
+			},
+			{
+				Name: "conversions_short_sat_half",
+				Val: oclctsTest{
+					executable: "test_conversions",
+					args:       "short_sat_half -w -1",
+				},
+				Timeout: 1 * time.Minute,
+			},
+			{
+				Name: "conversions_short_rte_half",
+				Val: oclctsTest{
+					executable: "test_conversions",
+					args:       "short_rte_half -w -1",
+				},
+				Timeout: 1 * time.Minute,
+			},
+			{
+				Name: "conversions_short_sat_rte_half",
+				Val: oclctsTest{
+					executable: "test_conversions",
+					args:       "short_sat_rte_half -w -1",
+				},
+				Timeout: 1 * time.Minute,
+			},
+			{
+				Name: "conversions_short_rtp_half",
+				Val: oclctsTest{
+					executable: "test_conversions",
+					args:       "short_rtp_half -w -1",
+				},
+				Timeout: 1 * time.Minute,
+			},
+			{
+				Name: "conversions_short_sat_rtp_half",
+				Val: oclctsTest{
+					executable: "test_conversions",
+					args:       "short_sat_rtp_half -w -1",
+				},
+				Timeout: 1 * time.Minute,
+			},
+			{
+				Name: "conversions_short_rtn_half",
+				Val: oclctsTest{
+					executable: "test_conversions",
+					args:       "short_rtn_half -w -1",
+				},
+				Timeout: 1 * time.Minute,
+			},
+			{
+				Name: "conversions_short_sat_rtn_half",
+				Val: oclctsTest{
+					executable: "test_conversions",
+					args:       "short_sat_rtn_half -w -1",
+				},
+				Timeout: 1 * time.Minute,
+			},
+			{
+				Name: "conversions_short_rtz_half",
+				Val: oclctsTest{
+					executable: "test_conversions",
+					args:       "short_rtz_half -w -1",
+				},
+				Timeout: 1 * time.Minute,
+			},
+			{
+				Name: "conversions_short_sat_rtz_half",
+				Val: oclctsTest{
+					executable: "test_conversions",
+					args:       "short_sat_rtz_half -w -1",
+				},
+				Timeout: 1 * time.Minute,
+			},
+			{
 				Name: "conversions_uchar_char",
 				Val: oclctsTest{
 					executable: "test_conversions",
@@ -12497,6 +14185,86 @@ func init() {
 				Val: oclctsTest{
 					executable: "test_conversions",
 					args:       "uchar_ushort -w -1",
+				},
+				Timeout: 1 * time.Minute,
+			},
+			{
+				Name: "conversions_uchar_half",
+				Val: oclctsTest{
+					executable: "test_conversions",
+					args:       "uchar_half -w -1",
+				},
+				Timeout: 1 * time.Minute,
+			},
+			{
+				Name: "conversions_uchar_sat_half",
+				Val: oclctsTest{
+					executable: "test_conversions",
+					args:       "uchar_sat_half -w -1",
+				},
+				Timeout: 1 * time.Minute,
+			},
+			{
+				Name: "conversions_uchar_rte_half",
+				Val: oclctsTest{
+					executable: "test_conversions",
+					args:       "uchar_rte_half -w -1",
+				},
+				Timeout: 1 * time.Minute,
+			},
+			{
+				Name: "conversions_uchar_sat_rte_half",
+				Val: oclctsTest{
+					executable: "test_conversions",
+					args:       "uchar_sat_rte_half -w -1",
+				},
+				Timeout: 1 * time.Minute,
+			},
+			{
+				Name: "conversions_uchar_rtp_half",
+				Val: oclctsTest{
+					executable: "test_conversions",
+					args:       "uchar_rtp_half -w -1",
+				},
+				Timeout: 1 * time.Minute,
+			},
+			{
+				Name: "conversions_uchar_sat_rtp_half",
+				Val: oclctsTest{
+					executable: "test_conversions",
+					args:       "uchar_sat_rtp_half -w -1",
+				},
+				Timeout: 1 * time.Minute,
+			},
+			{
+				Name: "conversions_uchar_rtn_half",
+				Val: oclctsTest{
+					executable: "test_conversions",
+					args:       "uchar_rtn_half -w -1",
+				},
+				Timeout: 1 * time.Minute,
+			},
+			{
+				Name: "conversions_uchar_sat_rtn_half",
+				Val: oclctsTest{
+					executable: "test_conversions",
+					args:       "uchar_sat_rtn_half -w -1",
+				},
+				Timeout: 1 * time.Minute,
+			},
+			{
+				Name: "conversions_uchar_rtz_half",
+				Val: oclctsTest{
+					executable: "test_conversions",
+					args:       "uchar_rtz_half -w -1",
+				},
+				Timeout: 1 * time.Minute,
+			},
+			{
+				Name: "conversions_uchar_sat_rtz_half",
+				Val: oclctsTest{
+					executable: "test_conversions",
+					args:       "uchar_sat_rtz_half -w -1",
 				},
 				Timeout: 1 * time.Minute,
 			},
@@ -13301,6 +15069,86 @@ func init() {
 				Timeout: 1 * time.Minute,
 			},
 			{
+				Name: "conversions_uint_half",
+				Val: oclctsTest{
+					executable: "test_conversions",
+					args:       "uint_half -w -1",
+				},
+				Timeout: 1 * time.Minute,
+			},
+			{
+				Name: "conversions_uint_sat_half",
+				Val: oclctsTest{
+					executable: "test_conversions",
+					args:       "uint_sat_half -w -1",
+				},
+				Timeout: 1 * time.Minute,
+			},
+			{
+				Name: "conversions_uint_rte_half",
+				Val: oclctsTest{
+					executable: "test_conversions",
+					args:       "uint_rte_half -w -1",
+				},
+				Timeout: 1 * time.Minute,
+			},
+			{
+				Name: "conversions_uint_sat_rte_half",
+				Val: oclctsTest{
+					executable: "test_conversions",
+					args:       "uint_sat_rte_half -w -1",
+				},
+				Timeout: 1 * time.Minute,
+			},
+			{
+				Name: "conversions_uint_rtp_half",
+				Val: oclctsTest{
+					executable: "test_conversions",
+					args:       "uint_rtp_half -w -1",
+				},
+				Timeout: 1 * time.Minute,
+			},
+			{
+				Name: "conversions_uint_sat_rtp_half",
+				Val: oclctsTest{
+					executable: "test_conversions",
+					args:       "uint_sat_rtp_half -w -1",
+				},
+				Timeout: 1 * time.Minute,
+			},
+			{
+				Name: "conversions_uint_rtn_half",
+				Val: oclctsTest{
+					executable: "test_conversions",
+					args:       "uint_rtn_half -w -1",
+				},
+				Timeout: 1 * time.Minute,
+			},
+			{
+				Name: "conversions_uint_sat_rtn_half",
+				Val: oclctsTest{
+					executable: "test_conversions",
+					args:       "uint_sat_rtn_half -w -1",
+				},
+				Timeout: 1 * time.Minute,
+			},
+			{
+				Name: "conversions_uint_rtz_half",
+				Val: oclctsTest{
+					executable: "test_conversions",
+					args:       "uint_rtz_half -w -1",
+				},
+				Timeout: 1 * time.Minute,
+			},
+			{
+				Name: "conversions_uint_sat_rtz_half",
+				Val: oclctsTest{
+					executable: "test_conversions",
+					args:       "uint_sat_rtz_half -w -1",
+				},
+				Timeout: 1 * time.Minute,
+			},
+			{
 				Name: "conversions_ulong_char",
 				Val: oclctsTest{
 					executable: "test_conversions",
@@ -14097,6 +15945,166 @@ func init() {
 				Val: oclctsTest{
 					executable: "test_conversions",
 					args:       "ulong_ushort -w -1",
+				},
+				Timeout: 1 * time.Minute,
+			},
+			{
+				Name: "conversions_ulong_half",
+				Val: oclctsTest{
+					executable: "test_conversions",
+					args:       "ulong_half -w -1",
+				},
+				Timeout: 1 * time.Minute,
+			},
+			{
+				Name: "conversions_ulong_sat_half",
+				Val: oclctsTest{
+					executable: "test_conversions",
+					args:       "ulong_sat_half -w -1",
+				},
+				Timeout: 1 * time.Minute,
+			},
+			{
+				Name: "conversions_ulong_rte_half",
+				Val: oclctsTest{
+					executable: "test_conversions",
+					args:       "ulong_rte_half -w -1",
+				},
+				Timeout: 1 * time.Minute,
+			},
+			{
+				Name: "conversions_ulong_sat_rte_half",
+				Val: oclctsTest{
+					executable: "test_conversions",
+					args:       "ulong_sat_rte_half -w -1",
+				},
+				Timeout: 1 * time.Minute,
+			},
+			{
+				Name: "conversions_ulong_rtp_half",
+				Val: oclctsTest{
+					executable: "test_conversions",
+					args:       "ulong_rtp_half -w -1",
+				},
+				Timeout: 1 * time.Minute,
+			},
+			{
+				Name: "conversions_ulong_sat_rtp_half",
+				Val: oclctsTest{
+					executable: "test_conversions",
+					args:       "ulong_sat_rtp_half -w -1",
+				},
+				Timeout: 1 * time.Minute,
+			},
+			{
+				Name: "conversions_ulong_rtn_half",
+				Val: oclctsTest{
+					executable: "test_conversions",
+					args:       "ulong_rtn_half -w -1",
+				},
+				Timeout: 1 * time.Minute,
+			},
+			{
+				Name: "conversions_ulong_sat_rtn_half",
+				Val: oclctsTest{
+					executable: "test_conversions",
+					args:       "ulong_sat_rtn_half -w -1",
+				},
+				Timeout: 1 * time.Minute,
+			},
+			{
+				Name: "conversions_ulong_rtz_half",
+				Val: oclctsTest{
+					executable: "test_conversions",
+					args:       "ulong_rtz_half -w -1",
+				},
+				Timeout: 1 * time.Minute,
+			},
+			{
+				Name: "conversions_ulong_sat_rtz_half",
+				Val: oclctsTest{
+					executable: "test_conversions",
+					args:       "ulong_sat_rtz_half -w -1",
+				},
+				Timeout: 1 * time.Minute,
+			},
+			{
+				Name: "conversions_ushort_half",
+				Val: oclctsTest{
+					executable: "test_conversions",
+					args:       "ushort_half -w -1",
+				},
+				Timeout: 1 * time.Minute,
+			},
+			{
+				Name: "conversions_ushort_sat_half",
+				Val: oclctsTest{
+					executable: "test_conversions",
+					args:       "ushort_sat_half -w -1",
+				},
+				Timeout: 1 * time.Minute,
+			},
+			{
+				Name: "conversions_ushort_rte_half",
+				Val: oclctsTest{
+					executable: "test_conversions",
+					args:       "ushort_rte_half -w -1",
+				},
+				Timeout: 1 * time.Minute,
+			},
+			{
+				Name: "conversions_ushort_sat_rte_half",
+				Val: oclctsTest{
+					executable: "test_conversions",
+					args:       "ushort_sat_rte_half -w -1",
+				},
+				Timeout: 1 * time.Minute,
+			},
+			{
+				Name: "conversions_ushort_rtp_half",
+				Val: oclctsTest{
+					executable: "test_conversions",
+					args:       "ushort_rtp_half -w -1",
+				},
+				Timeout: 1 * time.Minute,
+			},
+			{
+				Name: "conversions_ushort_sat_rtp_half",
+				Val: oclctsTest{
+					executable: "test_conversions",
+					args:       "ushort_sat_rtp_half -w -1",
+				},
+				Timeout: 1 * time.Minute,
+			},
+			{
+				Name: "conversions_ushort_rtn_half",
+				Val: oclctsTest{
+					executable: "test_conversions",
+					args:       "ushort_rtn_half -w -1",
+				},
+				Timeout: 1 * time.Minute,
+			},
+			{
+				Name: "conversions_ushort_sat_rtn_half",
+				Val: oclctsTest{
+					executable: "test_conversions",
+					args:       "ushort_sat_rtn_half -w -1",
+				},
+				Timeout: 1 * time.Minute,
+			},
+			{
+				Name: "conversions_ushort_rtz_half",
+				Val: oclctsTest{
+					executable: "test_conversions",
+					args:       "ushort_rtz_half -w -1",
+				},
+				Timeout: 1 * time.Minute,
+			},
+			{
+				Name: "conversions_ushort_sat_rtz_half",
+				Val: oclctsTest{
+					executable: "test_conversions",
+					args:       "ushort_sat_rtz_half -w -1",
 				},
 				Timeout: 1 * time.Minute,
 			},
@@ -15013,6 +17021,22 @@ func init() {
 				Timeout: 1 * time.Minute,
 			},
 			{
+				Name: "events_callback_on_error_enqueue_command",
+				Val: oclctsTest{
+					executable: "test_events",
+					args:       "callback_on_error_enqueue_command",
+				},
+				Timeout: 1 * time.Minute,
+			},
+			{
+				Name: "events_callback_on_error_simple",
+				Val: oclctsTest{
+					executable: "test_events",
+					args:       "callback_on_error_simple",
+				},
+				Timeout: 1 * time.Minute,
+			},
+			{
 				Name: "events_event_enqueue_barrier_with_event_list",
 				Val: oclctsTest{
 					executable: "test_events",
@@ -15285,6 +17309,22 @@ func init() {
 				Timeout: 1 * time.Minute,
 			},
 			{
+				Name: "generic_address_space_generic_atomics_invariant",
+				Val: oclctsTest{
+					executable: "test_generic_address_space",
+					args:       "generic_atomics_invariant",
+				},
+				Timeout: 1 * time.Minute,
+			},
+			{
+				Name: "generic_address_space_generic_atomics_variant",
+				Val: oclctsTest{
+					executable: "test_generic_address_space",
+					args:       "generic_atomics_variant",
+				},
+				Timeout: 1 * time.Minute,
+			},
+			{
 				Name: "generic_address_space_generic_ptr_to_host_mem",
 				Val: oclctsTest{
 					executable: "test_generic_address_space",
@@ -15553,6 +17593,14 @@ func init() {
 				Val: oclctsTest{
 					executable: "test_half",
 					args:       "vstore_half -w",
+				},
+				Timeout: 1 * time.Minute,
+			},
+			{
+				Name: "image_streams_cl_ext_image_raw10_raw12",
+				Val: oclctsTest{
+					executable: "test_image_streams",
+					args:       "cl_ext_image_raw10_raw12",
 				},
 				Timeout: 1 * time.Minute,
 			},
@@ -17165,6 +19213,126 @@ func init() {
 				Timeout: 1 * time.Minute,
 			},
 			{
+				Name: "kernel_image_methods_1dbuffer_cl_snorm_int8",
+				Val: oclctsTest{
+					executable: "test_kernel_image_methods",
+					args:       "1Dbuffer CL_SNORM_INT8",
+				},
+				Timeout: 1 * time.Minute,
+			},
+			{
+				Name: "kernel_image_methods_1dbuffer_cl_snorm_int16",
+				Val: oclctsTest{
+					executable: "test_kernel_image_methods",
+					args:       "1Dbuffer CL_SNORM_INT16",
+				},
+				Timeout: 1 * time.Minute,
+			},
+			{
+				Name: "kernel_image_methods_1dbuffer_cl_unorm_int8",
+				Val: oclctsTest{
+					executable: "test_kernel_image_methods",
+					args:       "1Dbuffer CL_UNORM_INT8",
+				},
+				Timeout: 1 * time.Minute,
+			},
+			{
+				Name: "kernel_image_methods_1dbuffer_cl_unorm_int16",
+				Val: oclctsTest{
+					executable: "test_kernel_image_methods",
+					args:       "1Dbuffer CL_UNORM_INT16",
+				},
+				Timeout: 1 * time.Minute,
+			},
+			{
+				Name: "kernel_image_methods_1dbuffer_cl_unorm_short_565",
+				Val: oclctsTest{
+					executable: "test_kernel_image_methods",
+					args:       "1Dbuffer CL_UNORM_SHORT_565",
+				},
+				Timeout: 1 * time.Minute,
+			},
+			{
+				Name: "kernel_image_methods_1dbuffer_cl_unorm_short_555",
+				Val: oclctsTest{
+					executable: "test_kernel_image_methods",
+					args:       "1Dbuffer CL_UNORM_SHORT_555",
+				},
+				Timeout: 1 * time.Minute,
+			},
+			{
+				Name: "kernel_image_methods_1dbuffer_cl_unorm_int_101010",
+				Val: oclctsTest{
+					executable: "test_kernel_image_methods",
+					args:       "1Dbuffer CL_UNORM_INT_101010",
+				},
+				Timeout: 1 * time.Minute,
+			},
+			{
+				Name: "kernel_image_methods_1dbuffer_cl_signed_int8",
+				Val: oclctsTest{
+					executable: "test_kernel_image_methods",
+					args:       "1Dbuffer CL_SIGNED_INT8",
+				},
+				Timeout: 1 * time.Minute,
+			},
+			{
+				Name: "kernel_image_methods_1dbuffer_cl_signed_int16",
+				Val: oclctsTest{
+					executable: "test_kernel_image_methods",
+					args:       "1Dbuffer CL_SIGNED_INT16",
+				},
+				Timeout: 1 * time.Minute,
+			},
+			{
+				Name: "kernel_image_methods_1dbuffer_cl_signed_int32",
+				Val: oclctsTest{
+					executable: "test_kernel_image_methods",
+					args:       "1Dbuffer CL_SIGNED_INT32",
+				},
+				Timeout: 1 * time.Minute,
+			},
+			{
+				Name: "kernel_image_methods_1dbuffer_cl_unsigned_int8",
+				Val: oclctsTest{
+					executable: "test_kernel_image_methods",
+					args:       "1Dbuffer CL_UNSIGNED_INT8",
+				},
+				Timeout: 1 * time.Minute,
+			},
+			{
+				Name: "kernel_image_methods_1dbuffer_cl_unsigned_int16",
+				Val: oclctsTest{
+					executable: "test_kernel_image_methods",
+					args:       "1Dbuffer CL_UNSIGNED_INT16",
+				},
+				Timeout: 1 * time.Minute,
+			},
+			{
+				Name: "kernel_image_methods_1dbuffer_cl_unsigned_int32",
+				Val: oclctsTest{
+					executable: "test_kernel_image_methods",
+					args:       "1Dbuffer CL_UNSIGNED_INT32",
+				},
+				Timeout: 1 * time.Minute,
+			},
+			{
+				Name: "kernel_image_methods_1dbuffer_cl_half_float",
+				Val: oclctsTest{
+					executable: "test_kernel_image_methods",
+					args:       "1Dbuffer CL_HALF_FLOAT",
+				},
+				Timeout: 1 * time.Minute,
+			},
+			{
+				Name: "kernel_image_methods_1dbuffer_cl_float",
+				Val: oclctsTest{
+					executable: "test_kernel_image_methods",
+					args:       "1Dbuffer CL_FLOAT",
+				},
+				Timeout: 1 * time.Minute,
+			},
+			{
 				Name: "kernel_image_methods_1d_cl_float",
 				Val: oclctsTest{
 					executable: "test_kernel_image_methods",
@@ -17877,46 +20045,6 @@ func init() {
 				Timeout: 1 * time.Minute,
 			},
 			{
-				Name: "printf_address_space_0",
-				Val: oclctsTest{
-					executable: "test_printf",
-					args:       "address_space_0",
-				},
-				Timeout: 1 * time.Minute,
-			},
-			{
-				Name: "printf_address_space_1",
-				Val: oclctsTest{
-					executable: "test_printf",
-					args:       "address_space_1",
-				},
-				Timeout: 1 * time.Minute,
-			},
-			{
-				Name: "printf_address_space_2",
-				Val: oclctsTest{
-					executable: "test_printf",
-					args:       "address_space_2",
-				},
-				Timeout: 1 * time.Minute,
-			},
-			{
-				Name: "printf_address_space_3",
-				Val: oclctsTest{
-					executable: "test_printf",
-					args:       "address_space_3",
-				},
-				Timeout: 1 * time.Minute,
-			},
-			{
-				Name: "printf_address_space_4",
-				Val: oclctsTest{
-					executable: "test_printf",
-					args:       "address_space_4",
-				},
-				Timeout: 1 * time.Minute,
-			},
-			{
 				Name: "printf_buffer_size",
 				Val: oclctsTest{
 					executable: "test_printf",
@@ -17925,538 +20053,154 @@ func init() {
 				Timeout: 1 * time.Minute,
 			},
 			{
-				Name: "printf_char_0",
-				Val: oclctsTest{
-					executable: "test_printf",
-					args:       "char_0",
-				},
-				Timeout: 1 * time.Minute,
-			},
-			{
-				Name: "printf_char_1",
-				Val: oclctsTest{
-					executable: "test_printf",
-					args:       "char_1",
-				},
-				Timeout: 1 * time.Minute,
-			},
-			{
-				Name: "printf_char_2",
-				Val: oclctsTest{
-					executable: "test_printf",
-					args:       "char_2",
-				},
-				Timeout: 1 * time.Minute,
-			},
-			{
-				Name: "printf_float_0",
-				Val: oclctsTest{
-					executable: "test_printf",
-					args:       "float_0",
-				},
-				Timeout: 1 * time.Minute,
-			},
-			{
-				Name: "printf_float_10",
-				Val: oclctsTest{
-					executable: "test_printf",
-					args:       "float_10",
-				},
-				Timeout: 1 * time.Minute,
-			},
-			{
-				Name: "printf_float_11",
-				Val: oclctsTest{
-					executable: "test_printf",
-					args:       "float_11",
-				},
-				Timeout: 1 * time.Minute,
-			},
-			{
-				Name: "printf_float_1",
-				Val: oclctsTest{
-					executable: "test_printf",
-					args:       "float_1",
-				},
-				Timeout: 1 * time.Minute,
-			},
-			{
-				Name: "printf_float_12",
-				Val: oclctsTest{
-					executable: "test_printf",
-					args:       "float_12",
-				},
-				Timeout: 1 * time.Minute,
-			},
-			{
-				Name: "printf_float_13",
-				Val: oclctsTest{
-					executable: "test_printf",
-					args:       "float_13",
-				},
-				Timeout: 1 * time.Minute,
-			},
-			{
-				Name: "printf_float_14",
-				Val: oclctsTest{
-					executable: "test_printf",
-					args:       "float_14",
-				},
-				Timeout: 1 * time.Minute,
-			},
-			{
-				Name: "printf_float_15",
-				Val: oclctsTest{
-					executable: "test_printf",
-					args:       "float_15",
-				},
-				Timeout: 1 * time.Minute,
-			},
-			{
-				Name: "printf_float_16",
-				Val: oclctsTest{
-					executable: "test_printf",
-					args:       "float_16",
-				},
-				Timeout: 1 * time.Minute,
-			},
-			{
-				Name: "printf_float_17",
-				Val: oclctsTest{
-					executable: "test_printf",
-					args:       "float_17",
-				},
-				Timeout: 1 * time.Minute,
-			},
-			{
-				Name: "printf_float_2",
-				Val: oclctsTest{
-					executable: "test_printf",
-					args:       "float_2",
-				},
-				Timeout: 1 * time.Minute,
-			},
-			{
-				Name: "printf_float_3",
-				Val: oclctsTest{
-					executable: "test_printf",
-					args:       "float_3",
-				},
-				Timeout: 1 * time.Minute,
-			},
-			{
-				Name: "printf_float_4",
-				Val: oclctsTest{
-					executable: "test_printf",
-					args:       "float_4",
-				},
-				Timeout: 1 * time.Minute,
-			},
-			{
-				Name: "printf_float_5",
-				Val: oclctsTest{
-					executable: "test_printf",
-					args:       "float_5",
-				},
-				Timeout: 1 * time.Minute,
-			},
-			{
-				Name: "printf_float_6",
-				Val: oclctsTest{
-					executable: "test_printf",
-					args:       "float_6",
-				},
-				Timeout: 1 * time.Minute,
-			},
-			{
-				Name: "printf_float_7",
-				Val: oclctsTest{
-					executable: "test_printf",
-					args:       "float_7",
-				},
-				Timeout: 1 * time.Minute,
-			},
-			{
-				Name: "printf_float_8",
-				Val: oclctsTest{
-					executable: "test_printf",
-					args:       "float_8",
-				},
-				Timeout: 1 * time.Minute,
-			},
-			{
-				Name: "printf_float_9",
-				Val: oclctsTest{
-					executable: "test_printf",
-					args:       "float_9",
-				},
-				Timeout: 1 * time.Minute,
-			},
-			{
-				Name: "printf_float_limits_0",
-				Val: oclctsTest{
-					executable: "test_printf",
-					args:       "float_limits_0",
-				},
-				Timeout: 1 * time.Minute,
-			},
-			{
-				Name: "printf_float_limits_1",
-				Val: oclctsTest{
-					executable: "test_printf",
-					args:       "float_limits_1",
-				},
-				Timeout: 1 * time.Minute,
-			},
-			{
-				Name: "printf_float_limits_2",
-				Val: oclctsTest{
-					executable: "test_printf",
-					args:       "float_limits_2",
-				},
-				Timeout: 1 * time.Minute,
-			},
-			{
-				Name: "printf_half_0",
-				Val: oclctsTest{
-					executable: "test_printf",
-					args:       "half_0",
-				},
-				Timeout: 1 * time.Minute,
-			},
-			{
-				Name: "printf_half_1",
-				Val: oclctsTest{
-					executable: "test_printf",
-					args:       "half_1",
-				},
-				Timeout: 1 * time.Minute,
-			},
-			{
-				Name: "printf_half_2",
-				Val: oclctsTest{
-					executable: "test_printf",
-					args:       "half_2",
-				},
-				Timeout: 1 * time.Minute,
-			},
-			{
-				Name: "printf_half_3",
-				Val: oclctsTest{
-					executable: "test_printf",
-					args:       "half_3",
-				},
-				Timeout: 1 * time.Minute,
-			},
-			{
-				Name: "printf_half_4",
-				Val: oclctsTest{
-					executable: "test_printf",
-					args:       "half_4",
-				},
-				Timeout: 1 * time.Minute,
-			},
-			{
-				Name: "printf_half_5",
-				Val: oclctsTest{
-					executable: "test_printf",
-					args:       "half_5",
-				},
-				Timeout: 1 * time.Minute,
-			},
-			{
-				Name: "printf_half_6",
-				Val: oclctsTest{
-					executable: "test_printf",
-					args:       "half_6",
-				},
-				Timeout: 1 * time.Minute,
-			},
-			{
-				Name: "printf_half_7",
-				Val: oclctsTest{
-					executable: "test_printf",
-					args:       "half_7",
-				},
-				Timeout: 1 * time.Minute,
-			},
-			{
-				Name: "printf_half_8",
-				Val: oclctsTest{
-					executable: "test_printf",
-					args:       "half_8",
-				},
-				Timeout: 1 * time.Minute,
-			},
-			{
-				Name: "printf_half_9",
-				Val: oclctsTest{
-					executable: "test_printf",
-					args:       "half_9",
-				},
-				Timeout: 1 * time.Minute,
-			},
-			{
-				Name: "printf_half_limits_0",
-				Val: oclctsTest{
-					executable: "test_printf",
-					args:       "half_limits_0",
-				},
-				Timeout: 1 * time.Minute,
-			},
-			{
-				Name: "printf_half_limits_1",
-				Val: oclctsTest{
-					executable: "test_printf",
-					args:       "half_limits_1",
-				},
-				Timeout: 1 * time.Minute,
-			},
-			{
-				Name: "printf_half_limits_2",
-				Val: oclctsTest{
-					executable: "test_printf",
-					args:       "half_limits_2",
-				},
-				Timeout: 1 * time.Minute,
-			},
-			{
-				Name: "printf_hexadecimal_0",
-				Val: oclctsTest{
-					executable: "test_printf",
-					args:       "hexadecimal_0",
-				},
-				Timeout: 1 * time.Minute,
-			},
-			{
-				Name: "printf_hexadecimal_1",
-				Val: oclctsTest{
-					executable: "test_printf",
-					args:       "hexadecimal_1",
-				},
-				Timeout: 1 * time.Minute,
-			},
-			{
-				Name: "printf_hexadecimal_2",
-				Val: oclctsTest{
-					executable: "test_printf",
-					args:       "hexadecimal_2",
-				},
-				Timeout: 1 * time.Minute,
-			},
-			{
-				Name: "printf_hexadecimal_3",
-				Val: oclctsTest{
-					executable: "test_printf",
-					args:       "hexadecimal_3",
-				},
-				Timeout: 1 * time.Minute,
-			},
-			{
-				Name: "printf_hexadecimal_4",
-				Val: oclctsTest{
-					executable: "test_printf",
-					args:       "hexadecimal_4",
-				},
-				Timeout: 1 * time.Minute,
-			},
-			{
-				Name: "printf_int_0",
-				Val: oclctsTest{
-					executable: "test_printf",
-					args:       "int_0",
-				},
-				Timeout: 1 * time.Minute,
-			},
-			{
-				Name: "printf_int_1",
-				Val: oclctsTest{
-					executable: "test_printf",
-					args:       "int_1",
-				},
-				Timeout: 1 * time.Minute,
-			},
-			{
-				Name: "printf_int_2",
-				Val: oclctsTest{
-					executable: "test_printf",
-					args:       "int_2",
-				},
-				Timeout: 1 * time.Minute,
-			},
-			{
-				Name: "printf_int_3",
-				Val: oclctsTest{
-					executable: "test_printf",
-					args:       "int_3",
-				},
-				Timeout: 1 * time.Minute,
-			},
-			{
-				Name: "printf_int_4",
-				Val: oclctsTest{
-					executable: "test_printf",
-					args:       "int_4",
-				},
-				Timeout: 1 * time.Minute,
-			},
-			{
-				Name: "printf_int_5",
-				Val: oclctsTest{
-					executable: "test_printf",
-					args:       "int_5",
-				},
-				Timeout: 1 * time.Minute,
-			},
-			{
-				Name: "printf_int_6",
-				Val: oclctsTest{
-					executable: "test_printf",
-					args:       "int_6",
-				},
-				Timeout: 1 * time.Minute,
-			},
-			{
-				Name: "printf_int_7",
-				Val: oclctsTest{
-					executable: "test_printf",
-					args:       "int_7",
-				},
-				Timeout: 1 * time.Minute,
-			},
-			{
-				Name: "printf_int_8",
-				Val: oclctsTest{
-					executable: "test_printf",
-					args:       "int_8",
-				},
-				Timeout: 1 * time.Minute,
-			},
-			{
-				Name: "printf_octal_0",
-				Val: oclctsTest{
-					executable: "test_printf",
-					args:       "octal_0",
-				},
-				Timeout: 1 * time.Minute,
-			},
-			{
-				Name: "printf_octal_1",
-				Val: oclctsTest{
-					executable: "test_printf",
-					args:       "octal_1",
-				},
-				Timeout: 1 * time.Minute,
-			},
-			{
-				Name: "printf_octal_2",
-				Val: oclctsTest{
-					executable: "test_printf",
-					args:       "octal_2",
-				},
-				Timeout: 1 * time.Minute,
-			},
-			{
-				Name: "printf_octal_3",
-				Val: oclctsTest{
-					executable: "test_printf",
-					args:       "octal_3",
-				},
-				Timeout: 1 * time.Minute,
-			},
-			{
-				Name: "printf_string_0",
-				Val: oclctsTest{
-					executable: "test_printf",
-					args:       "string_0",
-				},
-				Timeout: 1 * time.Minute,
-			},
-			{
-				Name: "printf_string_1",
-				Val: oclctsTest{
-					executable: "test_printf",
-					args:       "string_1",
-				},
-				Timeout: 1 * time.Minute,
-			},
-			{
-				Name: "printf_string_2",
-				Val: oclctsTest{
-					executable: "test_printf",
-					args:       "string_2",
-				},
-				Timeout: 1 * time.Minute,
-			},
-			{
-				Name: "printf_unsigned_0",
-				Val: oclctsTest{
-					executable: "test_printf",
-					args:       "unsigned_0",
-				},
-				Timeout: 1 * time.Minute,
-			},
-			{
-				Name: "printf_unsigned_1",
-				Val: oclctsTest{
-					executable: "test_printf",
-					args:       "unsigned_1",
-				},
-				Timeout: 1 * time.Minute,
-			},
-			{
-				Name: "printf_vector_0",
-				Val: oclctsTest{
-					executable: "test_printf",
-					args:       "vector_0",
-				},
-				Timeout: 1 * time.Minute,
-			},
-			{
-				Name: "printf_vector_1",
-				Val: oclctsTest{
-					executable: "test_printf",
-					args:       "vector_1",
-				},
-				Timeout: 1 * time.Minute,
-			},
-			{
-				Name: "printf_vector_2",
-				Val: oclctsTest{
-					executable: "test_printf",
-					args:       "vector_2",
-				},
-				Timeout: 1 * time.Minute,
-			},
-			{
-				Name: "printf_vector_3",
-				Val: oclctsTest{
-					executable: "test_printf",
-					args:       "vector_3",
-				},
-				Timeout: 1 * time.Minute,
-			},
-			{
-				Name: "printf_vector_4",
-				Val: oclctsTest{
-					executable: "test_printf",
-					args:       "vector_4",
-				},
-				Timeout: 1 * time.Minute,
-			},
-			{
-				Name: "printf_vector_5",
-				Val: oclctsTest{
-					executable: "test_printf",
-					args:       "vector_5",
-				},
-				Timeout: 1 * time.Minute,
-			},
-			{
 				Name: "profiling_copy_array",
 				Val: oclctsTest{
 					executable: "test_profiling",
 					args:       "copy_array",
+				},
+				Timeout: 1 * time.Minute,
+			},
+			{
+				Name: "printf_int",
+				Val: oclctsTest{
+					executable: "test_printf",
+					args:       "int",
+				},
+				Timeout: 1 * time.Minute,
+			},
+			{
+				Name: "printf_half",
+				Val: oclctsTest{
+					executable: "test_printf",
+					args:       "half",
+				},
+				Timeout: 1 * time.Minute,
+			},
+			{
+				Name: "printf_half_limits",
+				Val: oclctsTest{
+					executable: "test_printf",
+					args:       "half_limits",
+				},
+				Timeout: 1 * time.Minute,
+			},
+			{
+				Name: "printf_float",
+				Val: oclctsTest{
+					executable: "test_printf",
+					args:       "float",
+				},
+				Timeout: 1 * time.Minute,
+			},
+			{
+				Name: "printf_float_limits",
+				Val: oclctsTest{
+					executable: "test_printf",
+					args:       "float_limits",
+				},
+				Timeout: 1 * time.Minute,
+			},
+			{
+				Name: "printf_octal",
+				Val: oclctsTest{
+					executable: "test_printf",
+					args:       "octal",
+				},
+				Timeout: 1 * time.Minute,
+			},
+			{
+				Name: "printf_unsigned",
+				Val: oclctsTest{
+					executable: "test_printf",
+					args:       "unsigned",
+				},
+				Timeout: 1 * time.Minute,
+			},
+			{
+				Name: "printf_hexadecimal",
+				Val: oclctsTest{
+					executable: "test_printf",
+					args:       "hexadecimal",
+				},
+				Timeout: 1 * time.Minute,
+			},
+			{
+				Name: "printf_char",
+				Val: oclctsTest{
+					executable: "test_printf",
+					args:       "char",
+				},
+				Timeout: 1 * time.Minute,
+			},
+			{
+				Name: "printf_string",
+				Val: oclctsTest{
+					executable: "test_printf",
+					args:       "string",
+				},
+				Timeout: 1 * time.Minute,
+			},
+			{
+				Name: "printf_vector",
+				Val: oclctsTest{
+					executable: "test_printf",
+					args:       "vector",
+				},
+				Timeout: 1 * time.Minute,
+			},
+			{
+				Name: "printf_address_space",
+				Val: oclctsTest{
+					executable: "test_printf",
+					args:       "address_space",
+				},
+				Timeout: 1 * time.Minute,
+			},
+			{
+				Name: "printf_format_string",
+				Val: oclctsTest{
+					executable: "test_printf",
+					args:       "format_string",
+				},
+				Timeout: 1 * time.Minute,
+			},
+			{
+				Name: "printf_mixed_format_random",
+				Val: oclctsTest{
+					executable: "test_printf",
+					args:       "mixed_format_random",
+				},
+				Timeout: 1 * time.Minute,
+			},
+			{
+				Name: "printf_double",
+				Val: oclctsTest{
+					executable: "test_printf",
+					args:       "double",
+				},
+				Timeout: 1 * time.Minute,
+			},
+			{
+				Name: "printf_double_limits",
+				Val: oclctsTest{
+					executable: "test_printf",
+					args:       "double_limits",
+				},
+				Timeout: 1 * time.Minute,
+			},
+			{
+				Name: "printf_length_specifier",
+				Val: oclctsTest{
+					executable: "test_printf",
+					args:       "length_specifier",
+				},
+				Timeout: 1 * time.Minute,
+			},
+			{
+				Name: "printf_long",
+				Val: oclctsTest{
+					executable: "test_printf",
+					args:       "long",
 				},
 				Timeout: 1 * time.Minute,
 			},
@@ -18489,6 +20233,22 @@ func init() {
 				Val: oclctsTest{
 					executable: "test_profiling",
 					args:       "execute",
+				},
+				Timeout: 1 * time.Minute,
+			},
+			{
+				Name: "profiling_execute_multipass",
+				Val: oclctsTest{
+					executable: "test_profiling",
+					args:       "execute_multipass",
+				},
+				Timeout: 1 * time.Minute,
+			},
+			{
+				Name: "profiling_profiling_timebase",
+				Val: oclctsTest{
+					executable: "test_profiling",
+					args:       "profiling_timebase",
 				},
 				Timeout: 1 * time.Minute,
 			},
@@ -20029,32 +21789,999 @@ func init() {
 				Timeout: 1 * time.Minute,
 			},
 			{
-				Name: "workgroups_work_group_suggested_local_size_1d",
+				Name: "cl_khr_command_buffer_single_ndrange",
 				Val: oclctsTest{
-					executable: "test_workgroups",
-					args:       "work_group_suggested_local_size_1D",
+					executable: "test_cl_khr_command_buffer",
+					args:       "single_ndrange",
 				},
 				Timeout: 1 * time.Minute,
 			},
 			{
-				Name: "workgroups_work_group_suggested_local_size_2d",
+				Name: "cl_khr_command_buffer_interleaved_enqueue",
 				Val: oclctsTest{
-					executable: "test_workgroups",
-					args:       "work_group_suggested_local_size_2D",
+					executable: "test_cl_khr_command_buffer",
+					args:       "interleaved_enqueue",
 				},
 				Timeout: 1 * time.Minute,
 			},
 			{
-				Name: "workgroups_work_group_suggested_local_size_3d",
+				Name: "cl_khr_command_buffer_mixed_commands",
 				Val: oclctsTest{
-					executable: "test_workgroups",
-					args:       "work_group_suggested_local_size_3D",
+					executable: "test_cl_khr_command_buffer",
+					args:       "mixed_commands",
+				},
+				Timeout: 1 * time.Minute,
+			},
+			{
+				Name: "cl_khr_command_buffer_explicit_flush",
+				Val: oclctsTest{
+					executable: "test_cl_khr_command_buffer",
+					args:       "explicit_flush",
+				},
+				Timeout: 1 * time.Minute,
+			},
+			{
+				Name: "cl_khr_command_buffer_out_of_order",
+				Val: oclctsTest{
+					executable: "test_cl_khr_command_buffer",
+					args:       "out_of_order",
+				},
+				Timeout: 1 * time.Minute,
+			},
+			{
+				Name: "cl_khr_command_buffer_simultaneous_out_of_order",
+				Val: oclctsTest{
+					executable: "test_cl_khr_command_buffer",
+					args:       "simultaneous_out_of_order",
+				},
+				Timeout: 1 * time.Minute,
+			},
+			{
+				Name: "cl_khr_command_buffer_info_queues",
+				Val: oclctsTest{
+					executable: "test_cl_khr_command_buffer",
+					args:       "info_queues",
+				},
+				Timeout: 1 * time.Minute,
+			},
+			{
+				Name: "cl_khr_command_buffer_info_ref_count",
+				Val: oclctsTest{
+					executable: "test_cl_khr_command_buffer",
+					args:       "info_ref_count",
+				},
+				Timeout: 1 * time.Minute,
+			},
+			{
+				Name: "cl_khr_command_buffer_info_state",
+				Val: oclctsTest{
+					executable: "test_cl_khr_command_buffer",
+					args:       "info_state",
+				},
+				Timeout: 1 * time.Minute,
+			},
+			{
+				Name: "cl_khr_command_buffer_info_prop_array",
+				Val: oclctsTest{
+					executable: "test_cl_khr_command_buffer",
+					args:       "info_prop_array",
+				},
+				Timeout: 1 * time.Minute,
+			},
+			{
+				Name: "cl_khr_command_buffer_info_context",
+				Val: oclctsTest{
+					executable: "test_cl_khr_command_buffer",
+					args:       "info_context",
+				},
+				Timeout: 1 * time.Minute,
+			},
+			{
+				Name: "cl_khr_command_buffer_basic_profiling",
+				Val: oclctsTest{
+					executable: "test_cl_khr_command_buffer",
+					args:       "basic_profiling",
+				},
+				Timeout: 1 * time.Minute,
+			},
+			{
+				Name: "cl_khr_command_buffer_simultaneous_profiling",
+				Val: oclctsTest{
+					executable: "test_cl_khr_command_buffer",
+					args:       "simultaneous_profiling",
+				},
+				Timeout: 1 * time.Minute,
+			},
+			{
+				Name: "cl_khr_command_buffer_regular_wait_for_command_buffer",
+				Val: oclctsTest{
+					executable: "test_cl_khr_command_buffer",
+					args:       "regular_wait_for_command_buffer",
+				},
+				Timeout: 1 * time.Minute,
+			},
+			{
+				Name: "cl_khr_command_buffer_command_buffer_wait_for_command_buffer",
+				Val: oclctsTest{
+					executable: "test_cl_khr_command_buffer",
+					args:       "command_buffer_wait_for_command_buffer",
+				},
+				Timeout: 1 * time.Minute,
+			},
+			{
+				Name: "cl_khr_command_buffer_command_buffer_wait_for_sec_command_buffer",
+				Val: oclctsTest{
+					executable: "test_cl_khr_command_buffer",
+					args:       "command_buffer_wait_for_sec_command_buffer",
+				},
+				Timeout: 1 * time.Minute,
+			},
+			{
+				Name: "cl_khr_command_buffer_return_event_callback",
+				Val: oclctsTest{
+					executable: "test_cl_khr_command_buffer",
+					args:       "return_event_callback",
+				},
+				Timeout: 1 * time.Minute,
+			},
+			{
+				Name: "cl_khr_command_buffer_clwaitforevents_single",
+				Val: oclctsTest{
+					executable: "test_cl_khr_command_buffer",
+					args:       "clwaitforevents_single",
+				},
+				Timeout: 1 * time.Minute,
+			},
+			{
+				Name: "cl_khr_command_buffer_clwaitforevents",
+				Val: oclctsTest{
+					executable: "test_cl_khr_command_buffer",
+					args:       "clwaitforevents",
+				},
+				Timeout: 1 * time.Minute,
+			},
+			{
+				Name: "cl_khr_command_buffer_command_buffer_wait_for_regular",
+				Val: oclctsTest{
+					executable: "test_cl_khr_command_buffer",
+					args:       "command_buffer_wait_for_regular",
+				},
+				Timeout: 1 * time.Minute,
+			},
+			{
+				Name: "cl_khr_command_buffer_wait_for_sec_queue_event",
+				Val: oclctsTest{
+					executable: "test_cl_khr_command_buffer",
+					args:       "wait_for_sec_queue_event",
+				},
+				Timeout: 1 * time.Minute,
+			},
+			{
+				Name: "cl_khr_command_buffer_user_event_wait",
+				Val: oclctsTest{
+					executable: "test_cl_khr_command_buffer",
+					args:       "user_event_wait",
+				},
+				Timeout: 1 * time.Minute,
+			},
+			{
+				Name: "cl_khr_command_buffer_user_events_wait",
+				Val: oclctsTest{
+					executable: "test_cl_khr_command_buffer",
+					args:       "user_events_wait",
+				},
+				Timeout: 1 * time.Minute,
+			},
+			{
+				Name: "cl_khr_command_buffer_user_event_callback",
+				Val: oclctsTest{
+					executable: "test_cl_khr_command_buffer",
+					args:       "user_event_callback",
+				},
+				Timeout: 1 * time.Minute,
+			},
+			{
+				Name: "cl_khr_command_buffer_queue_substitution",
+				Val: oclctsTest{
+					executable: "test_cl_khr_command_buffer",
+					args:       "queue_substitution",
+				},
+				Timeout: 1 * time.Minute,
+			},
+			{
+				Name: "cl_khr_command_buffer_properties_queue_substitution",
+				Val: oclctsTest{
+					executable: "test_cl_khr_command_buffer",
+					args:       "properties_queue_substitution",
+				},
+				Timeout: 1 * time.Minute,
+			},
+			{
+				Name: "cl_khr_command_buffer_simultaneous_queue_substitution",
+				Val: oclctsTest{
+					executable: "test_cl_khr_command_buffer",
+					args:       "simultaneous_queue_substitution",
+				},
+				Timeout: 1 * time.Minute,
+			},
+			{
+				Name: "cl_khr_command_buffer_fill_image",
+				Val: oclctsTest{
+					executable: "test_cl_khr_command_buffer",
+					args:       "fill_image",
+				},
+				Timeout: 1 * time.Minute,
+			},
+			{
+				Name: "cl_khr_command_buffer_fill_buffer",
+				Val: oclctsTest{
+					executable: "test_cl_khr_command_buffer",
+					args:       "fill_buffer",
+				},
+				Timeout: 1 * time.Minute,
+			},
+			{
+				Name: "cl_khr_command_buffer_fill_svm_buffer",
+				Val: oclctsTest{
+					executable: "test_cl_khr_command_buffer",
+					args:       "fill_svm_buffer",
+				},
+				Timeout: 1 * time.Minute,
+			},
+			{
+				Name: "cl_khr_command_buffer_copy_image",
+				Val: oclctsTest{
+					executable: "test_cl_khr_command_buffer",
+					args:       "copy_image",
+				},
+				Timeout: 1 * time.Minute,
+			},
+			{
+				Name: "cl_khr_command_buffer_copy_buffer",
+				Val: oclctsTest{
+					executable: "test_cl_khr_command_buffer",
+					args:       "copy_buffer",
+				},
+				Timeout: 1 * time.Minute,
+			},
+			{
+				Name: "cl_khr_command_buffer_copy_svm_buffer",
+				Val: oclctsTest{
+					executable: "test_cl_khr_command_buffer",
+					args:       "copy_svm_buffer",
+				},
+				Timeout: 1 * time.Minute,
+			},
+			{
+				Name: "cl_khr_command_buffer_copy_buffer_to_image",
+				Val: oclctsTest{
+					executable: "test_cl_khr_command_buffer",
+					args:       "copy_buffer_to_image",
+				},
+				Timeout: 1 * time.Minute,
+			},
+			{
+				Name: "cl_khr_command_buffer_copy_image_to_buffer",
+				Val: oclctsTest{
+					executable: "test_cl_khr_command_buffer",
+					args:       "copy_image_to_buffer",
+				},
+				Timeout: 1 * time.Minute,
+			},
+			{
+				Name: "cl_khr_command_buffer_copy_buffer_rect",
+				Val: oclctsTest{
+					executable: "test_cl_khr_command_buffer",
+					args:       "copy_buffer_rect",
+				},
+				Timeout: 1 * time.Minute,
+			},
+			{
+				Name: "cl_khr_command_buffer_barrier_wait_list",
+				Val: oclctsTest{
+					executable: "test_cl_khr_command_buffer",
+					args:       "barrier_wait_list",
+				},
+				Timeout: 1 * time.Minute,
+			},
+			{
+				Name: "cl_khr_command_buffer_basic_printf",
+				Val: oclctsTest{
+					executable: "test_cl_khr_command_buffer",
+					args:       "basic_printf",
+				},
+				Timeout: 1 * time.Minute,
+			},
+			{
+				Name: "cl_khr_command_buffer_simultaneous_printf",
+				Val: oclctsTest{
+					executable: "test_cl_khr_command_buffer",
+					args:       "simultaneous_printf",
+				},
+				Timeout: 1 * time.Minute,
+			},
+			{
+				Name: "cl_khr_command_buffer_basic_set_kernel_arg",
+				Val: oclctsTest{
+					executable: "test_cl_khr_command_buffer",
+					args:       "basic_set_kernel_arg",
+				},
+				Timeout: 1 * time.Minute,
+			},
+			{
+				Name: "cl_khr_command_buffer_pending_set_kernel_arg",
+				Val: oclctsTest{
+					executable: "test_cl_khr_command_buffer",
+					args:       "pending_set_kernel_arg",
+				},
+				Timeout: 1 * time.Minute,
+			},
+			{
+				Name: "cl_khr_command_buffer_event_info_command_type",
+				Val: oclctsTest{
+					executable: "test_cl_khr_command_buffer",
+					args:       "event_info_command_type",
+				},
+				Timeout: 1 * time.Minute,
+			},
+			{
+				Name: "cl_khr_command_buffer_event_info_command_queue",
+				Val: oclctsTest{
+					executable: "test_cl_khr_command_buffer",
+					args:       "event_info_command_queue",
+				},
+				Timeout: 1 * time.Minute,
+			},
+			{
+				Name: "cl_khr_command_buffer_event_info_execution_status",
+				Val: oclctsTest{
+					executable: "test_cl_khr_command_buffer",
+					args:       "event_info_execution_status",
+				},
+				Timeout: 1 * time.Minute,
+			},
+			{
+				Name: "cl_khr_command_buffer_event_info_context",
+				Val: oclctsTest{
+					executable: "test_cl_khr_command_buffer",
+					args:       "event_info_context",
+				},
+				Timeout: 1 * time.Minute,
+			},
+			{
+				Name: "cl_khr_command_buffer_event_info_reference_count",
+				Val: oclctsTest{
+					executable: "test_cl_khr_command_buffer",
+					args:       "event_info_reference_count",
+				},
+				Timeout: 1 * time.Minute,
+			},
+			{
+				Name: "cl_khr_command_buffer_finalize_invalid",
+				Val: oclctsTest{
+					executable: "test_cl_khr_command_buffer",
+					args:       "finalize_invalid",
+				},
+				Timeout: 1 * time.Minute,
+			},
+			{
+				Name: "cl_khr_command_buffer_finalize_empty",
+				Val: oclctsTest{
+					executable: "test_cl_khr_command_buffer",
+					args:       "finalize_empty",
+				},
+				Timeout: 1 * time.Minute,
+			},
+			{
+				Name: "cl_khr_command_buffer_negative_retain_command_buffer_invalid_command_buffer",
+				Val: oclctsTest{
+					executable: "test_cl_khr_command_buffer",
+					args:       "negative_retain_command_buffer_invalid_command_buffer",
+				},
+				Timeout: 1 * time.Minute,
+			},
+			{
+				Name: "cl_khr_command_buffer_negative_release_command_buffer_invalid_command_buffer",
+				Val: oclctsTest{
+					executable: "test_cl_khr_command_buffer",
+					args:       "negative_release_command_buffer_invalid_command_buffer",
+				},
+				Timeout: 1 * time.Minute,
+			},
+			{
+				Name: "cl_khr_command_buffer_negative_finalize_command_buffer_invalid_command_buffer",
+				Val: oclctsTest{
+					executable: "test_cl_khr_command_buffer",
+					args:       "negative_finalize_command_buffer_invalid_command_buffer",
+				},
+				Timeout: 1 * time.Minute,
+			},
+			{
+				Name: "cl_khr_command_buffer_negative_finalize_command_buffer_not_recording_state",
+				Val: oclctsTest{
+					executable: "test_cl_khr_command_buffer",
+					args:       "negative_finalize_command_buffer_not_recording_state",
+				},
+				Timeout: 1 * time.Minute,
+			},
+			{
+				Name: "cl_khr_command_buffer_negative_command_buffer_command_fill_buffer_queue_not_null",
+				Val: oclctsTest{
+					executable: "test_cl_khr_command_buffer",
+					args:       "negative_command_buffer_command_fill_buffer_queue_not_null",
+				},
+				Timeout: 1 * time.Minute,
+			},
+			{
+				Name: "cl_khr_command_buffer_negative_command_buffer_command_fill_buffer_context_not_same",
+				Val: oclctsTest{
+					executable: "test_cl_khr_command_buffer",
+					args:       "negative_command_buffer_command_fill_buffer_context_not_same",
+				},
+				Timeout: 1 * time.Minute,
+			},
+			{
+				Name: "cl_khr_command_buffer_negative_command_buffer_command_fill_buffer_sync_points_null_or_num_zero",
+				Val: oclctsTest{
+					executable: "test_cl_khr_command_buffer",
+					args:       "negative_command_buffer_command_fill_buffer_sync_points_null_or_num_zero",
+				},
+				Timeout: 1 * time.Minute,
+			},
+			{
+				Name: "cl_khr_command_buffer_negative_command_buffer_command_fill_buffer_invalid_command_buffer",
+				Val: oclctsTest{
+					executable: "test_cl_khr_command_buffer",
+					args:       "negative_command_buffer_command_fill_buffer_invalid_command_buffer",
+				},
+				Timeout: 1 * time.Minute,
+			},
+			{
+				Name: "cl_khr_command_buffer_negative_command_buffer_command_fill_buffer_finalized_command_buffer",
+				Val: oclctsTest{
+					executable: "test_cl_khr_command_buffer",
+					args:       "negative_command_buffer_command_fill_buffer_finalized_command_buffer",
+				},
+				Timeout: 1 * time.Minute,
+			},
+			{
+				Name: "cl_khr_command_buffer_negative_command_buffer_command_fill_buffer_mutable_handle_not_null",
+				Val: oclctsTest{
+					executable: "test_cl_khr_command_buffer",
+					args:       "negative_command_buffer_command_fill_buffer_mutable_handle_not_null",
+				},
+				Timeout: 1 * time.Minute,
+			},
+			{
+				Name: "cl_khr_command_buffer_negative_command_buffer_command_fill_image_queue_not_null",
+				Val: oclctsTest{
+					executable: "test_cl_khr_command_buffer",
+					args:       "negative_command_buffer_command_fill_image_queue_not_null",
+				},
+				Timeout: 1 * time.Minute,
+			},
+			{
+				Name: "cl_khr_command_buffer_negative_command_buffer_command_fill_image_context_not_same",
+				Val: oclctsTest{
+					executable: "test_cl_khr_command_buffer",
+					args:       "negative_command_buffer_command_fill_image_context_not_same",
+				},
+				Timeout: 1 * time.Minute,
+			},
+			{
+				Name: "cl_khr_command_buffer_negative_command_buffer_command_fill_image_sync_points_null_or_num_zero",
+				Val: oclctsTest{
+					executable: "test_cl_khr_command_buffer",
+					args:       "negative_command_buffer_command_fill_image_sync_points_null_or_num_zero",
+				},
+				Timeout: 1 * time.Minute,
+			},
+			{
+				Name: "cl_khr_command_buffer_negative_command_buffer_command_fill_image_invalid_command_buffer",
+				Val: oclctsTest{
+					executable: "test_cl_khr_command_buffer",
+					args:       "negative_command_buffer_command_fill_image_invalid_command_buffer",
+				},
+				Timeout: 1 * time.Minute,
+			},
+			{
+				Name: "cl_khr_command_buffer_negative_command_buffer_command_fill_image_finalized_command_buffer",
+				Val: oclctsTest{
+					executable: "test_cl_khr_command_buffer",
+					args:       "negative_command_buffer_command_fill_image_finalized_command_buffer",
+				},
+				Timeout: 1 * time.Minute,
+			},
+			{
+				Name: "cl_khr_command_buffer_negative_command_buffer_command_fill_image_mutable_handle_not_null",
+				Val: oclctsTest{
+					executable: "test_cl_khr_command_buffer",
+					args:       "negative_command_buffer_command_fill_image_mutable_handle_not_null",
+				},
+				Timeout: 1 * time.Minute,
+			},
+			{
+				Name: "cl_khr_command_buffer_negative_create_command_buffer_num_queues",
+				Val: oclctsTest{
+					executable: "test_cl_khr_command_buffer",
+					args:       "negative_create_command_buffer_num_queues",
+				},
+				Timeout: 1 * time.Minute,
+			},
+			{
+				Name: "cl_khr_command_buffer_negative_create_command_buffer_null_queues",
+				Val: oclctsTest{
+					executable: "test_cl_khr_command_buffer",
+					args:       "negative_create_command_buffer_null_queues",
+				},
+				Timeout: 1 * time.Minute,
+			},
+			{
+				Name: "cl_khr_command_buffer_negative_create_command_buffer_repeated_properties",
+				Val: oclctsTest{
+					executable: "test_cl_khr_command_buffer",
+					args:       "negative_create_command_buffer_repeated_properties",
+				},
+				Timeout: 1 * time.Minute,
+			},
+			{
+				Name: "cl_khr_command_buffer_negative_create_command_buffer_not_supported_properties",
+				Val: oclctsTest{
+					executable: "test_cl_khr_command_buffer",
+					args:       "negative_create_command_buffer_not_supported_properties",
+				},
+				Timeout: 1 * time.Minute,
+			},
+			{
+				Name: "cl_khr_command_buffer_negative_create_command_buffer_queue_without_min_properties",
+				Val: oclctsTest{
+					executable: "test_cl_khr_command_buffer",
+					args:       "negative_create_command_buffer_queue_without_min_properties",
+				},
+				Timeout: 1 * time.Minute,
+			},
+			{
+				Name: "cl_khr_command_buffer_negative_create_command_buffer_device_does_not_support_out_of_order_queue",
+				Val: oclctsTest{
+					executable: "test_cl_khr_command_buffer",
+					args:       "negative_create_command_buffer_device_does_not_support_out_of_order_queue",
+				},
+				Timeout: 1 * time.Minute,
+			},
+			{
+				Name: "cl_khr_command_buffer_negative_command_ndrange_queue_not_null",
+				Val: oclctsTest{
+					executable: "test_cl_khr_command_buffer",
+					args:       "negative_command_ndrange_queue_not_null",
+				},
+				Timeout: 1 * time.Minute,
+			},
+			{
+				Name: "cl_khr_command_buffer_negative_command_ndrange_kernel_with_different_context",
+				Val: oclctsTest{
+					executable: "test_cl_khr_command_buffer",
+					args:       "negative_command_ndrange_kernel_with_different_context",
+				},
+				Timeout: 1 * time.Minute,
+			},
+			{
+				Name: "cl_khr_command_buffer_negative_command_ndrange_kernel_sync_points_null_or_num_zero",
+				Val: oclctsTest{
+					executable: "test_cl_khr_command_buffer",
+					args:       "negative_command_ndrange_kernel_sync_points_null_or_num_zero",
+				},
+				Timeout: 1 * time.Minute,
+			},
+			{
+				Name: "cl_khr_command_buffer_negative_command_ndrange_kernel_invalid_command_buffer",
+				Val: oclctsTest{
+					executable: "test_cl_khr_command_buffer",
+					args:       "negative_command_ndrange_kernel_invalid_command_buffer",
+				},
+				Timeout: 1 * time.Minute,
+			},
+			{
+				Name: "cl_khr_command_buffer_negative_command_ndrange_kernel_invalid_properties",
+				Val: oclctsTest{
+					executable: "test_cl_khr_command_buffer",
+					args:       "negative_command_ndrange_kernel_invalid_properties",
+				},
+				Timeout: 1 * time.Minute,
+			},
+			{
+				Name: "cl_khr_command_buffer_negative_command_ndrange_kernel_command_buffer_finalized",
+				Val: oclctsTest{
+					executable: "test_cl_khr_command_buffer",
+					args:       "negative_command_ndrange_kernel_command_buffer_finalized",
+				},
+				Timeout: 1 * time.Minute,
+			},
+			{
+				Name: "cl_khr_command_buffer_negative_command_ndrange_kernel_mutable_handle_not_null",
+				Val: oclctsTest{
+					executable: "test_cl_khr_command_buffer",
+					args:       "negative_command_ndrange_kernel_mutable_handle_not_null",
+				},
+				Timeout: 1 * time.Minute,
+			},
+			{
+				Name: "cl_khr_command_buffer_negative_command_ndrange_kernel_not_support_printf",
+				Val: oclctsTest{
+					executable: "test_cl_khr_command_buffer",
+					args:       "negative_command_ndrange_kernel_not_support_printf",
+				},
+				Timeout: 1 * time.Minute,
+			},
+			{
+				Name: "cl_khr_command_buffer_negative_command_ndrange_kernel_with_enqueue_call",
+				Val: oclctsTest{
+					executable: "test_cl_khr_command_buffer",
+					args:       "negative_command_ndrange_kernel_with_enqueue_call",
+				},
+				Timeout: 1 * time.Minute,
+			},
+			{
+				Name: "cl_khr_command_buffer_negative_command_buffer_command_copy_buffer_queue_not_null",
+				Val: oclctsTest{
+					executable: "test_cl_khr_command_buffer",
+					args:       "negative_command_buffer_command_copy_buffer_queue_not_null",
+				},
+				Timeout: 1 * time.Minute,
+			},
+			{
+				Name: "cl_khr_command_buffer_negative_command_buffer_command_copy_buffer_different_contexts",
+				Val: oclctsTest{
+					executable: "test_cl_khr_command_buffer",
+					args:       "negative_command_buffer_command_copy_buffer_different_contexts",
+				},
+				Timeout: 1 * time.Minute,
+			},
+			{
+				Name: "cl_khr_command_buffer_negative_command_buffer_command_copy_buffer_sync_points_null_or_num_zero",
+				Val: oclctsTest{
+					executable: "test_cl_khr_command_buffer",
+					args:       "negative_command_buffer_command_copy_buffer_sync_points_null_or_num_zero",
+				},
+				Timeout: 1 * time.Minute,
+			},
+			{
+				Name: "cl_khr_command_buffer_negative_command_buffer_command_copy_buffer_invalid_command_buffer",
+				Val: oclctsTest{
+					executable: "test_cl_khr_command_buffer",
+					args:       "negative_command_buffer_command_copy_buffer_invalid_command_buffer",
+				},
+				Timeout: 1 * time.Minute,
+			},
+			{
+				Name: "cl_khr_command_buffer_negative_command_buffer_command_copy_buffer_finalized_command_buffer",
+				Val: oclctsTest{
+					executable: "test_cl_khr_command_buffer",
+					args:       "negative_command_buffer_command_copy_buffer_finalized_command_buffer",
+				},
+				Timeout: 1 * time.Minute,
+			},
+			{
+				Name: "cl_khr_command_buffer_negative_command_buffer_command_copy_buffer_mutable_handle_not_null",
+				Val: oclctsTest{
+					executable: "test_cl_khr_command_buffer",
+					args:       "negative_command_buffer_command_copy_buffer_mutable_handle_not_null",
+				},
+				Timeout: 1 * time.Minute,
+			},
+			{
+				Name: "cl_khr_command_buffer_negative_command_buffer_command_copy_image_queue_not_null",
+				Val: oclctsTest{
+					executable: "test_cl_khr_command_buffer",
+					args:       "negative_command_buffer_command_copy_image_queue_not_null",
+				},
+				Timeout: 1 * time.Minute,
+			},
+			{
+				Name: "cl_khr_command_buffer_negative_command_buffer_command_copy_image_different_contexts",
+				Val: oclctsTest{
+					executable: "test_cl_khr_command_buffer",
+					args:       "negative_command_buffer_command_copy_image_different_contexts",
+				},
+				Timeout: 1 * time.Minute,
+			},
+			{
+				Name: "cl_khr_command_buffer_negative_command_buffer_command_copy_image_sync_points_null_or_num_zero",
+				Val: oclctsTest{
+					executable: "test_cl_khr_command_buffer",
+					args:       "negative_command_buffer_command_copy_image_sync_points_null_or_num_zero",
+				},
+				Timeout: 1 * time.Minute,
+			},
+			{
+				Name: "cl_khr_command_buffer_negative_command_buffer_command_copy_image_invalid_command_buffer",
+				Val: oclctsTest{
+					executable: "test_cl_khr_command_buffer",
+					args:       "negative_command_buffer_command_copy_image_invalid_command_buffer",
+				},
+				Timeout: 1 * time.Minute,
+			},
+			{
+				Name: "cl_khr_command_buffer_negative_command_buffer_command_copy_image_finalized_command_buffer",
+				Val: oclctsTest{
+					executable: "test_cl_khr_command_buffer",
+					args:       "negative_command_buffer_command_copy_image_finalized_command_buffer",
+				},
+				Timeout: 1 * time.Minute,
+			},
+			{
+				Name: "cl_khr_command_buffer_negative_command_buffer_command_copy_image_mutable_handle_not_null",
+				Val: oclctsTest{
+					executable: "test_cl_khr_command_buffer",
+					args:       "negative_command_buffer_command_copy_image_mutable_handle_not_null",
+				},
+				Timeout: 1 * time.Minute,
+			},
+			{
+				Name: "cl_khr_command_buffer_negative_get_command_buffer_info_invalid_command_buffer",
+				Val: oclctsTest{
+					executable: "test_cl_khr_command_buffer",
+					args:       "negative_get_command_buffer_info_invalid_command_buffer",
+				},
+				Timeout: 1 * time.Minute,
+			},
+			{
+				Name: "cl_khr_command_buffer_negative_get_command_buffer_info_not_supported_param_name",
+				Val: oclctsTest{
+					executable: "test_cl_khr_command_buffer",
+					args:       "negative_get_command_buffer_info_not_supported_param_name",
+				},
+				Timeout: 1 * time.Minute,
+			},
+			{
+				Name: "cl_khr_command_buffer_negative_get_command_buffer_info_queues",
+				Val: oclctsTest{
+					executable: "test_cl_khr_command_buffer",
+					args:       "negative_get_command_buffer_info_queues",
+				},
+				Timeout: 1 * time.Minute,
+			},
+			{
+				Name: "cl_khr_command_buffer_negative_get_command_buffer_info_ref_count",
+				Val: oclctsTest{
+					executable: "test_cl_khr_command_buffer",
+					args:       "negative_get_command_buffer_info_ref_count",
+				},
+				Timeout: 1 * time.Minute,
+			},
+			{
+				Name: "cl_khr_command_buffer_negative_get_command_buffer_info_state",
+				Val: oclctsTest{
+					executable: "test_cl_khr_command_buffer",
+					args:       "negative_get_command_buffer_info_state",
+				},
+				Timeout: 1 * time.Minute,
+			},
+			{
+				Name: "cl_khr_command_buffer_negative_get_command_buffer_info_prop_array",
+				Val: oclctsTest{
+					executable: "test_cl_khr_command_buffer",
+					args:       "negative_get_command_buffer_info_prop_array",
+				},
+				Timeout: 1 * time.Minute,
+			},
+			{
+				Name: "cl_khr_command_buffer_negative_get_command_buffer_info_context",
+				Val: oclctsTest{
+					executable: "test_cl_khr_command_buffer",
+					args:       "negative_get_command_buffer_info_context",
+				},
+				Timeout: 1 * time.Minute,
+			},
+			{
+				Name: "cl_khr_command_buffer_negative_command_buffer_command_svm_queue_not_null",
+				Val: oclctsTest{
+					executable: "test_cl_khr_command_buffer",
+					args:       "negative_command_buffer_command_svm_queue_not_null",
+				},
+				Timeout: 1 * time.Minute,
+			},
+			{
+				Name: "cl_khr_command_buffer_negative_command_buffer_command_svm_sync_points_null_or_num_zero",
+				Val: oclctsTest{
+					executable: "test_cl_khr_command_buffer",
+					args:       "negative_command_buffer_command_svm_sync_points_null_or_num_zero",
+				},
+				Timeout: 1 * time.Minute,
+			},
+			{
+				Name: "cl_khr_command_buffer_negative_command_buffer_command_svm_invalid_command_buffer",
+				Val: oclctsTest{
+					executable: "test_cl_khr_command_buffer",
+					args:       "negative_command_buffer_command_svm_invalid_command_buffer",
+				},
+				Timeout: 1 * time.Minute,
+			},
+			{
+				Name: "cl_khr_command_buffer_negative_command_buffer_command_svm_finalized_command_buffer",
+				Val: oclctsTest{
+					executable: "test_cl_khr_command_buffer",
+					args:       "negative_command_buffer_command_svm_finalized_command_buffer",
+				},
+				Timeout: 1 * time.Minute,
+			},
+			{
+				Name: "cl_khr_command_buffer_negative_command_buffer_command_svm_mutable_handle_not_null",
+				Val: oclctsTest{
+					executable: "test_cl_khr_command_buffer",
+					args:       "negative_command_buffer_command_svm_mutable_handle_not_null",
+				},
+				Timeout: 1 * time.Minute,
+			},
+			{
+				Name: "cl_khr_command_buffer_negative_command_buffer_copy_image_queue_not_null",
+				Val: oclctsTest{
+					executable: "test_cl_khr_command_buffer",
+					args:       "negative_command_buffer_copy_image_queue_not_null",
+				},
+				Timeout: 1 * time.Minute,
+			},
+			{
+				Name: "cl_khr_command_buffer_negative_command_buffer_copy_image_context_not_same",
+				Val: oclctsTest{
+					executable: "test_cl_khr_command_buffer",
+					args:       "negative_command_buffer_copy_image_context_not_same",
+				},
+				Timeout: 1 * time.Minute,
+			},
+			{
+				Name: "cl_khr_command_buffer_negative_command_buffer_copy_image_sync_points_null_or_num_zero",
+				Val: oclctsTest{
+					executable: "test_cl_khr_command_buffer",
+					args:       "negative_command_buffer_copy_image_sync_points_null_or_num_zero",
+				},
+				Timeout: 1 * time.Minute,
+			},
+			{
+				Name: "cl_khr_command_buffer_negative_command_buffer_copy_image_invalid_command_buffer",
+				Val: oclctsTest{
+					executable: "test_cl_khr_command_buffer",
+					args:       "negative_command_buffer_copy_image_invalid_command_buffer",
+				},
+				Timeout: 1 * time.Minute,
+			},
+			{
+				Name: "cl_khr_command_buffer_negative_command_buffer_copy_image_finalized_command_buffer",
+				Val: oclctsTest{
+					executable: "test_cl_khr_command_buffer",
+					args:       "negative_command_buffer_copy_image_finalized_command_buffer",
+				},
+				Timeout: 1 * time.Minute,
+			},
+			{
+				Name: "cl_khr_command_buffer_negative_command_buffer_copy_image_mutable_handle_not_null",
+				Val: oclctsTest{
+					executable: "test_cl_khr_command_buffer",
+					args:       "negative_command_buffer_copy_image_mutable_handle_not_null",
+				},
+				Timeout: 1 * time.Minute,
+			},
+			{
+				Name: "cl_khr_command_buffer_negative_command_buffer_barrier_not_null_queue",
+				Val: oclctsTest{
+					executable: "test_cl_khr_command_buffer",
+					args:       "negative_command_buffer_barrier_not_null_queue",
+				},
+				Timeout: 1 * time.Minute,
+			},
+			{
+				Name: "cl_khr_command_buffer_negative_command_buffer_barrier_invalid_command_buffer",
+				Val: oclctsTest{
+					executable: "test_cl_khr_command_buffer",
+					args:       "negative_command_buffer_barrier_invalid_command_buffer",
+				},
+				Timeout: 1 * time.Minute,
+			},
+			{
+				Name: "cl_khr_command_buffer_negative_command_buffer_barrier_buffer_finalized",
+				Val: oclctsTest{
+					executable: "test_cl_khr_command_buffer",
+					args:       "negative_command_buffer_barrier_buffer_finalized",
+				},
+				Timeout: 1 * time.Minute,
+			},
+			{
+				Name: "cl_khr_command_buffer_negative_command_buffer_barrier_mutable_handle_not_null",
+				Val: oclctsTest{
+					executable: "test_cl_khr_command_buffer",
+					args:       "negative_command_buffer_barrier_mutable_handle_not_null",
+				},
+				Timeout: 1 * time.Minute,
+			},
+			{
+				Name: "cl_khr_command_buffer_negative_command_buffer_barrier_sync_points_null_or_num_zero",
+				Val: oclctsTest{
+					executable: "test_cl_khr_command_buffer",
+					args:       "negative_command_buffer_barrier_sync_points_null_or_num_zero",
+				},
+				Timeout: 1 * time.Minute,
+			},
+			{
+				Name: "cl_khr_command_buffer_negative_enqueue_command_buffer_invalid_command_buffer",
+				Val: oclctsTest{
+					executable: "test_cl_khr_command_buffer",
+					args:       "negative_enqueue_command_buffer_invalid_command_buffer",
+				},
+				Timeout: 1 * time.Minute,
+			},
+			{
+				Name: "cl_khr_command_buffer_negative_enqueue_command_buffer_not_finalized",
+				Val: oclctsTest{
+					executable: "test_cl_khr_command_buffer",
+					args:       "negative_enqueue_command_buffer_not_finalized",
+				},
+				Timeout: 1 * time.Minute,
+			},
+			{
+				Name: "cl_khr_command_buffer_negative_enqueue_command_buffer_without_simultaneous_no_pending_state",
+				Val: oclctsTest{
+					executable: "test_cl_khr_command_buffer",
+					args:       "negative_enqueue_command_buffer_without_simultaneous_no_pending_state",
+				},
+				Timeout: 1 * time.Minute,
+			},
+			{
+				Name: "cl_khr_command_buffer_negative_enqueue_command_buffer_null_queues_num_queues",
+				Val: oclctsTest{
+					executable: "test_cl_khr_command_buffer",
+					args:       "negative_enqueue_command_buffer_null_queues_num_queues",
+				},
+				Timeout: 1 * time.Minute,
+			},
+			{
+				Name: "cl_khr_command_buffer_negative_enqueue_command_buffer_num_queues_not_zero_different_while_buffer_creation",
+				Val: oclctsTest{
+					executable: "test_cl_khr_command_buffer",
+					args:       "negative_enqueue_command_buffer_num_queues_not_zero_different_while_buffer_creation",
+				},
+				Timeout: 1 * time.Minute,
+			},
+			{
+				Name: "cl_khr_command_buffer_negative_enqueue_command_buffer_not_valid_queue_in_queues",
+				Val: oclctsTest{
+					executable: "test_cl_khr_command_buffer",
+					args:       "negative_enqueue_command_buffer_not_valid_queue_in_queues",
+				},
+				Timeout: 1 * time.Minute,
+			},
+			{
+				Name: "cl_khr_command_buffer_negative_enqueue_queue_not_compatible",
+				Val: oclctsTest{
+					executable: "test_cl_khr_command_buffer",
+					args:       "negative_enqueue_queue_not_compatible",
+				},
+				Timeout: 1 * time.Minute,
+			},
+			{
+				Name: "cl_khr_command_buffer_negative_enqueue_queue_with_different_context",
+				Val: oclctsTest{
+					executable: "test_cl_khr_command_buffer",
+					args:       "negative_enqueue_queue_with_different_context",
+				},
+				Timeout: 1 * time.Minute,
+			},
+			{
+				Name: "cl_khr_command_buffer_negative_enqueue_command_buffer_different_context_than_event",
+				Val: oclctsTest{
+					executable: "test_cl_khr_command_buffer",
+					args:       "negative_enqueue_command_buffer_different_context_than_event",
+				},
+				Timeout: 1 * time.Minute,
+			},
+			{
+				Name: "cl_khr_command_buffer_negative_enqueue_event_wait_list_null_or_events_null",
+				Val: oclctsTest{
+					executable: "test_cl_khr_command_buffer",
+					args:       "negative_enqueue_event_wait_list_null_or_events_null",
 				},
 				Timeout: 1 * time.Minute,
 			},
 		},
-	},
-	)
+	})
 }
 
 // OpenclCts runs one test of the OpenCL-CTS to check the OpenCL compliance.
