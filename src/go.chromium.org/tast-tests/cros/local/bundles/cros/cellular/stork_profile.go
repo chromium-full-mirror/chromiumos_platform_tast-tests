@@ -20,7 +20,6 @@ func init() {
 		Contacts: []string{
 			"chromeos-cellular-team@google.com",
 			"khorimoto@google.com",
-			"pholla@google.com",
 		},
 		BugComponent: "b:167157", // ChromeOS > Platform > Connectivity > Cellular
 		Attr:         []string{"group:cellular", "cellular_sim_test_esim", "group:release-health", "release-health_cellular"},

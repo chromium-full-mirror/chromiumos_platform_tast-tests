@@ -22,7 +22,7 @@ func init() {
 	testing.AddTest(&testing.Test{
 		Func:         HermesTestCI,
 		Desc:         "Perform eSIM operations on test eSIM",
-		Contacts:     []string{"chromeos-cellular-team@google.com", "pholla@google.com"},
+		Contacts:     []string{"chromeos-cellular-team@google.com"},
 		BugComponent: "b:167157", // ChromeOS > Platform > Connectivity > Cellular
 		Attr:         []string{"group:cellular", "cellular_sim_test_esim", "cellular_cq", "group:release-health", "release-health_cellular"},
 		Fixture:      "cellularTestESIM",
