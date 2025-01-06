@@ -101,13 +101,7 @@ func MiniDiag(ctx context.Context, s *testing.State) {
 	}
 }
 
-func launchMiniDiag(ctx context.Context, h *firmware.Helper) (retErr error) {
-	closeUART, err := h.Servo.EnableUARTCapture(ctx, servo.ECUARTCapture)
-	if err != nil {
-		return errors.Wrap(err, "failed to enable capture EC UART")
-	}
-	defer func() { retErr = errors.Join(retErr, closeUART(ctx)) }()
-
+func launchMiniDiag(ctx context.Context, h *firmware.Helper) error {
 	ms, err := firmware.NewModeSwitcher(ctx, h)
 	if err != nil {
 		return errors.Wrap(err, "failed to create mode switcher")
