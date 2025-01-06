@@ -86,7 +86,10 @@ func init() {
 		Contacts:     []string{"cros-ca-eng@google.com"},
 		BugComponent: "b:385700", // ChromeOS > Software > Consumer > Apps Suite
 		// TODO b/370867669 - Remove the disableFeatures flags here.
-		Impl:            eaFixture(true, chrome.FieldTrialConfig(chrome.FieldTrialConfigEnable), chrome.DisableFeatures("PreinstalledWebAppsCoreOnly")),
+		Impl: eaFixture(true, chrome.FieldTrialConfig(
+			chrome.FieldTrialConfigEnable),
+			chrome.DisableFeatures("PreinstalledWebAppsCoreOnly"),
+			chrome.ExtraArgs("--ash-no-nudges")),
 		PreTestTimeout:  preTestTimeout,
 		PostTestTimeout: postTestTimeout,
 		SetUpTimeout:    chrome.LoginTimeout,
