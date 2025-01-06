@@ -13,7 +13,6 @@ import (
 	labapi "go.chromium.org/chromiumos/config/go/test/lab/api"
 
 	"go.chromium.org/tast-tests/cros/common/perf"
-	"go.chromium.org/tast-tests/cros/common/shillconst"
 	"go.chromium.org/tast-tests/cros/common/tbdep"
 	tdreq "go.chromium.org/tast-tests/cros/common/testdevicerequirements"
 	"go.chromium.org/tast-tests/cros/common/wifi/security"
@@ -24,7 +23,6 @@ import (
 	"go.chromium.org/tast-tests/cros/remote/updateutil"
 	remoteiw "go.chromium.org/tast-tests/cros/remote/wifi/iw"
 	"go.chromium.org/tast-tests/cros/remote/wificell"
-	"go.chromium.org/tast-tests/cros/remote/wificell/dutcfg"
 	ap "go.chromium.org/tast-tests/cros/remote/wificell/hostapd"
 	"go.chromium.org/tast/core/ctxutil"
 	"go.chromium.org/tast/core/errors"
@@ -590,11 +588,7 @@ func NetworkWifiPerf(ctx context.Context, s *testing.State) {
 			defer cancel()
 		}
 
-		// TODO(b/381917659): Remove ServicePropertyLinkMonitorDisable.
-		configProps := map[string]interface{}{
-			shillconst.ServicePropertyLinkMonitorDisable: true,
-		}
-		_, err = tf.ConnectWifiAP(ctx, apIface, dutcfg.ConnProperties(configProps))
+		_, err = tf.ConnectWifiAP(ctx, apIface)
 		if err != nil {
 			s.Fatal("Failed to connect to WiFi, err: ", err)
 		}
