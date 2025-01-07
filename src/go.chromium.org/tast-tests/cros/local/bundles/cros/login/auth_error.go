@@ -30,7 +30,7 @@ func init() {
 			"chromeos-sw-engprod@google.com",
 		},
 		BugComponent: "b:1207311", // ChromeOS > Software > Commercial (Enterprise) > Identity > LURS
-		SoftwareDeps: []string{"chrome", "chrome_internal"},
+		SoftwareDeps: []string{"chrome", "chrome_internal", "non_meet_device"},
 		Attr:         []string{"group:mainline", "group:hw_agnostic"},
 		VarDeps:      []string{"ui.signinProfileTestExtensionManifestKey"},
 		Timeout:      chrome.LoginTimeout + 90*time.Second,
