@@ -26,7 +26,7 @@ func init() {
 	testing.AddTest(&testing.Test{
 		Func:     ManagedPlayStore3pEmm,
 		Desc:     "Checks that Play Store mode is loaded correctly for 3p EMM customer",
-		Contacts: []string{"arc-commercial@google.com", "mhasank@chromium.org"},
+		Contacts: []string{"arc-commercial@google.com", "yaohuali@google.com"},
 		// ChromeOS > Software > ARC++ > Commercial > Tast Tests
 		BugComponent: "b:1487630",
 		Attr:         []string{"group:mainline", "group:arc-functional"},

@@ -26,7 +26,6 @@ func init() {
 		Desc: "A functional test that verifies proxy is supported in ARC",
 		Contacts: []string{
 			"cros-ufo-testing@google.com",
-			"mhasank@chromium.org",
 			"yanghenry@google.com",
 		},
 		// ChromeOS > EngProd > Software > Trust & Safety > UFO Testing

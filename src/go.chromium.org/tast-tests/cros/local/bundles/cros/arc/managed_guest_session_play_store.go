@@ -30,7 +30,7 @@ func init() {
 		Desc: "Verifies that Play Store is not available in Managed Guest Session",
 		Contacts: []string{
 			"arc-commercial@google.com",
-			"mhasank@chromium.org",
+			"yaohuali@google.com",
 		},
 		// ChromeOS > Software > ARC++ > Commercial > Tast Tests
 		BugComponent: "b:1487630",

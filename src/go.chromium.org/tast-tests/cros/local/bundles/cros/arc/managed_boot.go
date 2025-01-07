@@ -30,7 +30,7 @@ func init() {
 	testing.AddTest(&testing.Test{
 		Func:     ManagedBoot,
 		Desc:     "Checks that ARC is booted when policy is set",
-		Contacts: []string{"arc-commercial@google.com", "mhasank@chromium.org"},
+		Contacts: []string{"arc-commercial@google.com", "yaohuali@google.com"},
 		// ChromeOS > Software > ARC++ > Commercial > Tast Tests
 		BugComponent: "b:1487630",
 		Attr:         []string{"group:mainline"},

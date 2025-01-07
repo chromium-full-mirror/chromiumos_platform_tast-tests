@@ -26,7 +26,7 @@ func init() {
 		Desc: "A functional test that verifies that ARC is healthy during optin",
 		Contacts: []string{
 			"arc-core@google.com",
-			"mhasank@chromium.org",
+			"jhorwich@google.com",
 		},
 		// ChromeOS > Software > ARC++ > Core > Play Store Setup
 		BugComponent: "b:1131344",

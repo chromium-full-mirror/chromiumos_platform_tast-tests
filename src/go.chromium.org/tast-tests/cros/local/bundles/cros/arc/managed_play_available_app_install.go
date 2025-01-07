@@ -25,7 +25,7 @@ func init() {
 	testing.AddTest(&testing.Test{
 		Func:     ManagedPlayAvailableAppInstall,
 		Desc:     "Checks that available apps can be installed in Play Store",
-		Contacts: []string{"arc-commercial@google.com", "mhasank@chromium.org"},
+		Contacts: []string{"arc-commercial@google.com", "yaohuali@google.com"},
 		// ChromeOS > Software > ARC++ > Commercial > Tast Tests
 		BugComponent: "b:1487630",
 		Attr:         []string{"group:mainline"},

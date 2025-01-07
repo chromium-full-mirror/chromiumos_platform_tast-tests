@@ -25,7 +25,7 @@ func init() {
 		Desc: "A functional test that validates the 'Check Network' button in optin dialog",
 		Contacts: []string{
 			"arc-core@google.com",
-			"mhasank@chromium.org", // author.
+			"jhorwich@google.com",
 		},
 		// ChromeOS > Software > ARC++ > Core > Play Store Setup
 		BugComponent: "b:1131344",

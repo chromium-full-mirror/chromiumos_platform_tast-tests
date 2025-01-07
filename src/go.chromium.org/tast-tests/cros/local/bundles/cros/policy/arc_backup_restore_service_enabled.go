@@ -24,7 +24,7 @@ func init() {
 		Desc: "Test the behavior of ArcBackupRestoreServiceEnabled policy: check the Backup Manager state after setting the policy",
 		Contacts: []string{
 			"arc-commercial@google.com",
-			"mhasank@chromium.org",
+			"yaohuali@google.com",
 		},
 		// ChromeOS > Software > ARC++ > Commercial > Tast Tests
 		BugComponent: "b:1487630",

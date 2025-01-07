@@ -26,7 +26,7 @@ func init() {
 	testing.AddTest(&testing.Test{
 		Func:     ManagedGuestSessionAppInstall,
 		Desc:     "Verifies app is force-installed in MGS",
-		Contacts: []string{"arc-commercial@google.com", "mhasank@chromium.org"},
+		Contacts: []string{"arc-commercial@google.com", "yaohuali@google.com"},
 		// ChromeOS > Software > ARC++ > Commercial > Tast Tests
 		BugComponent: "b:1487630",
 		Attr:         []string{"group:dpanel-end2end", "group:dmserver-enrollment-daily"},

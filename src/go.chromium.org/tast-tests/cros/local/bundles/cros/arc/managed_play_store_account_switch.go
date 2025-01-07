@@ -34,7 +34,7 @@ func init() {
 	testing.AddTest(&testing.Test{
 		Func:     ManagedPlayStoreAccountSwitch,
 		Desc:     "Checks that we can switch to secondary account in Play Store only when mode is block list",
-		Contacts: []string{"arc-commercial@google.com", "mhasank@chromium.org"},
+		Contacts: []string{"arc-commercial@google.com", "preranap@google.com"},
 		// ChromeOS > Software > ARC++ > Commercial > Tast Tests
 		BugComponent: "b:1487630",
 		Attr:         []string{

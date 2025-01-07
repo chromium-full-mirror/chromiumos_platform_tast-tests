@@ -35,7 +35,6 @@ func init() {
 			// Please assign test failures to current constable on-call
 			"arc-constables@google.com",
 			"arc-core@google.com",
-			"mhasank@chromium.org",
 		},
 		// ChromeOS > Software > ARC++ > Core > Play Store Setup
 		BugComponent: "b:1131344",

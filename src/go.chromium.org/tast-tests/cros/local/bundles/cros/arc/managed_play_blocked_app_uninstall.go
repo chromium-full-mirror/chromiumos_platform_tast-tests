@@ -29,7 +29,7 @@ func init() {
 	testing.AddTest(&testing.Test{
 		Func:     ManagedPlayBlockedAppUninstall,
 		Desc:     "Checks that blocked apps are removed if they are installed",
-		Contacts: []string{"arc-commercial@google.com", "mhasank@chromium.org"},
+		Contacts: []string{"arc-commercial@google.com", "yaohuali@google.com"},
 		// ChromeOS > Software > ARC++ > Commercial > Tast Tests
 		BugComponent: "b:1487630",
 		Attr:         []string{"group:mainline"},

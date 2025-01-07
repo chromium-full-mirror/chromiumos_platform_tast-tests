@@ -33,7 +33,7 @@ func init() {
 	testing.AddTest(&testing.Test{
 		Func:     SystemProps,
 		Desc:     "Verifies that all ARC system props are set",
-		Contacts: []string{"arc-commercial@google.com", "mhasank@chromium.org"},
+		Contacts: []string{"arc-commercial@google.com", "jhorwich@google.com"},
 		// ChromeOS > Software > ARC++ > Commercial > Tast Tests
 		BugComponent: "b:1487630",
 		Attr:         []string{"group:mainline", "group:hw_agnostic"},

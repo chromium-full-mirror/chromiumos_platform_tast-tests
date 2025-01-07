@@ -30,7 +30,7 @@ func init() {
 	testing.AddTest(&testing.Test{
 		Func:     ManagedConfigurationVars,
 		Desc:     "Checks that managed configuration variables are replaced for force-installed apps",
-		Contacts: []string{"arc-commercial@google.com", "mhasank@chromium.org"},
+		Contacts: []string{"arc-commercial@google.com", "yaohuali@google.com"},
 		// ChromeOS > Software > ARC++ > Commercial > Tast Tests
 		BugComponent: "b:1487630",
 		Attr:         []string{"group:mainline"},

@@ -29,7 +29,6 @@ func init() {
 		Desc: "A functional test that verifies provisioning flow for managed user",
 		Contacts: []string{
 			"arc-commercial@google.com",
-			"mhasank@chromium.org",
 			"yaohuali@google.com",
 		},
 		// ChromeOS > Software > ARC++ > Commercial > Tast Tests
