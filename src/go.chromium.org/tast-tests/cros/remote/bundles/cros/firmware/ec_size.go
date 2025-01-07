@@ -58,6 +58,7 @@ var chipSizeMap = map[string]int{
 	"npcx_int_spi":        512,
 	"npcx_spi":            512,
 	"npcx_uut":            512,
+	"rts5915":             960,
 	"stm32":               256,
 	"stm32f09x":           256,
 }
