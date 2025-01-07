@@ -90,6 +90,12 @@ func (pf CrasSetUp) Instance() string {
 // Most code should use CrasSetUp as a fixture as it also helps configure Chrome and aloop.
 // Only use this when Chrome and aloop are already configured elsewhere.
 func (pf CrasSetUp) DoCras(ctx context.Context) (*audio.Cras, error) {
+	if pf.VoiceIsolationUIPreferredEffect == audio.VoiceIsolationEffectBeamforming {
+		if err := audio.CheckBeamforming(ctx); err != nil {
+			return nil, errors.Wrap(err, "audio.CheckBeamforming")
+		}
+	}
+
 	cras, err := audio.RestartCras(ctx)
 	if err != nil {
 		return nil, errors.Wrap(err, "cannot restart CRAS")

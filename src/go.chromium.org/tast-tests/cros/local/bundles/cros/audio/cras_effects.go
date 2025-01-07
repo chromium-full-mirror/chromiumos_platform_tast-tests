@@ -786,10 +786,11 @@ func init() {
 					},
 				},
 				Fixture: crasEffectsSetUp{
-					features:                crasEffectsFeaturesAPNC,
-					voiceIsolationUIEnabled: false,
-					inputDevice:             "INTERNAL_MIC",
-					outputDevice:            "INTERNAL_SPEAKER",
+					features:                        crasEffectsFeaturesAPNC,
+					voiceIsolationUIEnabled:         false,
+					voiceIsolationUIPreferredEffect: audio.VoiceIsolationEffectBeamforming,
+					inputDevice:                     "INTERNAL_MIC",
+					outputDevice:                    "INTERNAL_SPEAKER",
 				}.Instance(),
 				ExtraTestBedDeps: []string{tbdep.AudioBeamforming("intelligo")},
 				ExtraAttr:        []string{"group:mainline"},
@@ -807,10 +808,11 @@ func init() {
 					},
 				},
 				Fixture: crasEffectsSetUp{
-					features:                crasEffectsFeaturesAPNC,
-					voiceIsolationUIEnabled: true,
-					inputDevice:             "INTERNAL_MIC",
-					outputDevice:            "INTERNAL_SPEAKER",
+					features:                        crasEffectsFeaturesAPNC,
+					voiceIsolationUIEnabled:         true,
+					voiceIsolationUIPreferredEffect: audio.VoiceIsolationEffectBeamforming,
+					inputDevice:                     "INTERNAL_MIC",
+					outputDevice:                    "INTERNAL_SPEAKER",
 				}.Instance(),
 				ExtraTestBedDeps: []string{tbdep.AudioBeamforming("intelligo")},
 				ExtraAttr:        []string{"group:mainline"},
@@ -849,10 +851,11 @@ type crasEffectsParam struct {
 }
 
 type crasEffectsSetUp struct {
-	features                fixture.CrasFeatureOverrides
-	inputDevice             string
-	outputDevice            string
-	voiceIsolationUIEnabled bool
+	features                        fixture.CrasFeatureOverrides
+	inputDevice                     string
+	outputDevice                    string
+	voiceIsolationUIEnabled         bool
+	voiceIsolationUIPreferredEffect audio.VoiceIsolationPreferredEffect
 }
 
 var _ fixture.ParameterizedFixture = crasEffectsSetUp{}
@@ -863,9 +866,10 @@ func (pf crasEffectsSetUp) Instance() string {
 		Aloop: &fixture.AloopLoaded{
 			Channels: 2,
 		},
-		InputDevice:             nodematch.Type(pf.inputDevice),
-		OutputDevice:            nodematch.Type(pf.outputDevice),
-		VoiceIsolationUIEnabled: pf.voiceIsolationUIEnabled,
+		InputDevice:                     nodematch.Type(pf.inputDevice),
+		OutputDevice:                    nodematch.Type(pf.outputDevice),
+		VoiceIsolationUIEnabled:         pf.voiceIsolationUIEnabled,
+		VoiceIsolationUIPreferredEffect: pf.voiceIsolationUIPreferredEffect,
 	}.Instance()
 }
 
