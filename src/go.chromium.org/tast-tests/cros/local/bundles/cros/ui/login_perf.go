@@ -65,16 +65,20 @@ const (
 	uptimeLogoutToLoginPromptVisible                      = "Uptime.LogoutToLoginPromptVisible"
 	loginPerfTraceConfigFileName                          = "login_perf_trace_config.pbtxt"
 
-	metricAllBrowserWindowsCreated           = "Ash.LoginPerf.AutoRestore.AllBrowserWindowsCreated"
-	metricAllBrowserWindowsShown             = "Ash.LoginPerf.AutoRestore.AllBrowserWindowsShown"
-	metricAllBrowserWindowsPresented         = "Ash.LoginPerf.AutoRestore.AllBrowserWindowsPresented"
-	metricAllShelfIconsLoaded                = "Ash.LoginPerf.AutoRestore.AllShelfIconsLoaded"
-	metricShelfLoginAnimationEnd             = "Ash.LoginPerf.AutoRestore.ShelfLoginAnimationEnd"
-	metricTotalDuration                      = "Ash.LoginPerf.AutoRestore.TotalDuration"
-	metricPostLoginAnimationDurationPrefix   = "Ash.LoginPerf.AutoRestore.PostLoginAnimation.Duration"
-	metricPostLoginAnimationSmoothnessPrefix = "Ash.LoginPerf.AutoRestore.PostLoginAnimation.Smoothness"
-	metricPostLoginAnimationJankPrefix       = "Ash.LoginPerf.AutoRestore.PostLoginAnimation.Jank"
-	metricDeferredTasksStarted               = "Ash.LoginPerf.AutoRestore.DeferredTasksStarted"
+	categoryAutoRestore   = "Ash.LoginPerf.AutoRestore."
+	categoryManualRestore = "Ash.LoginPerf.ManualRestore."
+
+	metricAllShelfIconsLoaded                = "AllShelfIconsLoaded"
+	metricShelfLoginAnimationEnd             = "ShelfLoginAnimationEnd"
+	metricTotalDuration                      = "TotalDuration"
+	metricPostLoginAnimationDurationPrefix   = "PostLoginAnimation.Duration"
+	metricPostLoginAnimationSmoothnessPrefix = "PostLoginAnimation.Smoothness"
+	metricPostLoginAnimationJankPrefix       = "PostLoginAnimation.Jank"
+	metricDeferredTasksStarted               = "DeferredTasksStarted"
+
+	metricAutoRestoreAllBrowserWindowsCreated   = "Ash.LoginPerf.AutoRestore.AllBrowserWindowsCreated"
+	metricAutoRestoreAllBrowserWindowsShown     = "Ash.LoginPerf.AutoRestore.AllBrowserWindowsShown"
+	metricAutoRestoreAllBrowserWindowsPresented = "Ash.LoginPerf.AutoRestore.AllBrowserWindowsPresented"
 
 	suffixClamshellMode = ".ClamshellMode"
 	suffixTabletMode    = ".TabletMode"
@@ -115,12 +119,14 @@ var cmdlineVarMinSuccessfulRuns = testing.RegisterVarString(
 //   - windows: 8
 //   - arcMode: arcenabled
 //   - tabletMode: false
+//   - autoSessionRestore: true
 type loginPerfTestParam struct {
-	windows          int      // Number of session restored windows.
-	arcMode          string   // ARC mode to test.
-	tabletMode       bool     // Whether to run the test in tablet mode.
-	disabledFeatures []string // Controls ash-chrome features to be disabled.
-	enabledFeatures  []string // Controls ash-chrome features to be enabled.
+	windows            int      // Number of session restored windows.
+	arcMode            string   // ARC mode to test.
+	tabletMode         bool     // Whether to run the test in tablet mode.
+	autoSessionRestore bool     // Whether to restore session automatically.
+	disabledFeatures   []string // Controls ash-chrome features to be disabled.
+	enabledFeatures    []string // Controls ash-chrome features to be enabled.
 }
 
 func init() {
@@ -147,6 +153,7 @@ func init() {
 				8,          // windows
 				arcenabled, // arcMode
 				false,      // tabletMode
+				true,       // autoSessionRestore
 				[]string{}, // disabledFeatures
 				[]string{}, // enabledFeatures
 			},
@@ -157,6 +164,7 @@ func init() {
 				2,          // windows
 				noarc,      // arcMode
 				false,      // tabletMode
+				true,       // autoSessionRestore
 				[]string{}, // disabledFeatures
 				[]string{}, // enabledFeatures
 			},
@@ -167,6 +175,7 @@ func init() {
 				8,          // windows
 				noarc,      // arcMode
 				false,      // tabletMode
+				true,       // autoSessionRestore
 				[]string{}, // disabledFeatures
 				[]string{}, // enabledFeatures
 			},
@@ -178,6 +187,7 @@ func init() {
 				2,          // windows
 				arcenabled, // arcMode
 				false,      // tabletMode
+				true,       // autoSessionRestore
 				[]string{}, // disabledFeatures
 				[]string{}, // enabledFeatures
 			},
@@ -189,6 +199,19 @@ func init() {
 				8,          // windows
 				arcenabled, // arcMode
 				true,       // tabletMode
+				true,       // autoSessionRestore
+				[]string{}, // disabledFeatures
+				[]string{}, // enabledFeatures
+			},
+		}, {
+			Name:              "manual_restore",
+			ExtraAttr:         []string{"group:cuj", "cuj_loginperf"},
+			ExtraSoftwareDeps: []string{"arc"},
+			Val: loginPerfTestParam{
+				8,          // windows
+				arcenabled, // arcMode
+				false,      // tabletMode
+				false,      // autoSessionRestore
 				[]string{}, // disabledFeatures
 				[]string{}, // enabledFeatures
 			},
@@ -201,6 +224,7 @@ func init() {
 				2,                             // windows
 				arcenabled,                    // arcMode
 				false,                         // tabletMode
+				true,                          // autoSessionRestore
 				[]string{"ReadaheadForLogin"}, // disabledFeatures
 				[]string{},                    // enabledFeatures
 			},
@@ -213,6 +237,7 @@ func init() {
 				2,                               // windows
 				arcenabled,                      // arcMode
 				false,                           // tabletMode
+				true,                            // autoSessionRestore
 				[]string{deferARC},              // disabledFeatures
 				[]string{deferConciergeStartup}, // enabledFeatures
 			},
@@ -225,6 +250,7 @@ func init() {
 				2,          // windows
 				arcenabled, // arcMode
 				false,      // tabletMode
+				true,       // autoSessionRestore
 				[]string{}, // disabledFeatures
 				[]string{deferConciergeStartup, deferARCForceEnabled}, // enabledFeatures
 			},
@@ -471,10 +497,11 @@ func logout(ctx context.Context, cr *chrome.Chrome) error {
 	return nil
 }
 
-// setAlwaysRestoreSettings opens OS settings and sets the 'Always restore' setting. In order to
-// avoid possible noise when collecting the browser login time performance at restoring time, this
-// function also makes sure to close the OS settings app before returning.
-func setAlwaysRestoreSettings(ctx context.Context, tconn *chrome.TestConn) error {
+// setSessionRestoreSetting opens OS settings and sets the 'Always restore' setting or
+// 'Ask every time' depending on `autoRestore`. In order to avoid possible noise when collecting the
+// browser login time performance at restoring time, this function also makes sure to close the OS
+// settings app before returning.
+func setSessionRestoreSetting(ctx context.Context, tconn *chrome.TestConn, autoRestore bool) error {
 	settings, err := ossettings.LaunchAtPage(ctx, tconn, ossettings.SystemPreferences)
 	if err != nil {
 		return errors.Wrap(err, "failed to launch system preferences page")
@@ -482,14 +509,21 @@ func setAlwaysRestoreSettings(ctx context.Context, tconn *chrome.TestConn) error
 
 	restoreButtonReg := regexp.MustCompile("(Restore session on startup|Welcome Recap)")
 	restoreButtonNode := nodewith.NameRegex(restoreButtonReg).Role(role.ComboBoxSelect)
+
 	alwaysRestoreOptionNode := nodewith.NameRegex(regexp.MustCompile("Always (restore|open)")).Role(role.MenuListOption)
+	askEveryTimeOptionNode := nodewith.NameRegex(regexp.MustCompile("Ask every time")).Role(role.MenuListOption)
+
+	optionNode := alwaysRestoreOptionNode
+	if !autoRestore {
+		optionNode = askEveryTimeOptionNode
+	}
 
 	ui := uiauto.New(tconn)
-	if err := uiauto.Combine("set \"Always open\" setting in the settings app",
+	if err := uiauto.Combine("set session restore setting in the settings app",
 		ui.WaitUntilExists(restoreButtonNode),
 		ui.DoDefault(restoreButtonNode),
-		ui.WaitUntilExists(alwaysRestoreOptionNode),
-		ui.DoDefault(alwaysRestoreOptionNode),
+		ui.WaitUntilExists(optionNode),
+		ui.DoDefault(optionNode),
 	)(ctx); err != nil {
 		return err
 	}
@@ -504,6 +538,34 @@ func setAlwaysRestoreSettings(ctx context.Context, tconn *chrome.TestConn) error
 	// state information to the backend. Therefore, sleep 3 seconds here.
 	// GoBigSleepLint: crbug.com/1314785
 	return testing.Sleep(ctx, 3*time.Second)
+}
+
+func cancelSessionRestoreOnWelcomeRecap(ctx context.Context, tconn *chrome.TestConn) error {
+	noThanksButtonNode := nodewith.ClassName("PillButton").Name("No thanks")
+
+	ui := uiauto.New(tconn)
+	if err := uiauto.Combine("click \"No thanks\" option on the Welcome Recap screen",
+		ui.WithTimeout(5*time.Second).WaitUntilExists(noThanksButtonNode),
+		ui.DoDefault(noThanksButtonNode),
+	)(ctx); err != nil {
+		return errors.Wrap(err, "failed to select \"No thanks\" option on Welcome Recap screen")
+	}
+
+	return nil
+}
+
+func restoreSessionOnWelcomeRecap(ctx context.Context, tconn *chrome.TestConn) error {
+	openButtonNode := nodewith.ClassName("PillButton").Name("Open")
+
+	ui := uiauto.New(tconn)
+	if err := uiauto.Combine("click \"Open\" option on the Welcome Recap screen",
+		ui.WithTimeout(5*time.Second).WaitUntilExists(openButtonNode),
+		ui.DoDefault(openButtonNode),
+	)(ctx); err != nil {
+		return errors.Wrap(err, "failed to select \"Open\" option on Welcome Recap screen")
+	}
+
+	return nil
 }
 
 // initializeLoginPerfTest initializes user session state that will be restored
@@ -614,7 +676,7 @@ func initializeLoginPerfTest(ctx context.Context,
 		}
 	}
 
-	if err := setAlwaysRestoreSettings(ctx, tconn); err != nil {
+	if err := setSessionRestoreSetting(ctx, tconn, param.autoSessionRestore); err != nil {
 		return chrome.Creds{}, errors.Wrap(err, "failed to adjust always restore settings")
 	}
 
@@ -654,9 +716,16 @@ func initializeLoginPerfTest(ctx context.Context,
 			return errors.Wrap(err, "failed to connect to test api")
 		}
 
-		// Wait for windows to be restored.
+		// Wait until the session settles.
 		if err := waitForLoginAnimationEnd(ctx, tconn); err != nil {
 			return errors.Wrap(err, "failed to await login animation")
+		}
+
+		// If session restore is manual, explicitly discard the previous session to start new one.
+		if !param.autoSessionRestore {
+			if err := cancelSessionRestoreOnWelcomeRecap(ctx, tconn); err != nil {
+				return errors.Wrap(err, "failed to cancel session restore")
+			}
 		}
 
 		visible, err := ash.CountVisibleWindows(ctx, tconn)
@@ -782,6 +851,13 @@ func measureLoginPerformance(
 			return errors.Wrap(err, "failed to force send-uptime-metrics to be reported again")
 		}
 
+		// If session restore is manual, restore the previous session.
+		if !param.autoSessionRestore {
+			if err := restoreSessionOnWelcomeRecap(ctx, tconn); err != nil {
+				return errors.Wrap(err, "failed to restore previous session")
+			}
+		}
+
 		// Ash.LoginAnimation.Duration.* are reported only a few frames
 		// after the animation end. Trigger next system UI animation
 		// to push the metrics through.
@@ -893,6 +969,13 @@ func constructExpectedHistograms(param loginPerfTestParam, hasDisplay bool) []st
 		suffix = suffixTabletMode
 	}
 
+	var category string
+	if param.autoSessionRestore {
+		category = categoryAutoRestore
+	} else {
+		category = categoryManualRestore
+	}
+
 	ret := []string{
 		establishGpuChannelSyncTime,
 		ashTastBootTimeLogin2,
@@ -906,19 +989,26 @@ func constructExpectedHistograms(param loginPerfTestParam, hasDisplay bool) []st
 		uptimeLoginPromptSetupTimeAfterLogout,
 		uptimeLogoutToLoginPromptVisible,
 
-		metricAllBrowserWindowsCreated,
-		metricAllBrowserWindowsShown,
-		metricAllShelfIconsLoaded,
-		metricDeferredTasksStarted,
+		category + metricAllShelfIconsLoaded,
+		category + metricDeferredTasksStarted,
+	}
+	// Following histograms are only collected when session restore is automatic.
+	if param.autoSessionRestore {
+		ret = append(ret, metricAutoRestoreAllBrowserWindowsCreated, metricAutoRestoreAllBrowserWindowsShown)
 	}
 	// Following histograms are only collected when the DUT is connected to the display.
 	if hasDisplay {
-		ret = append(ret, metricAllBrowserWindowsPresented,
-			metricShelfLoginAnimationEnd,
-			metricTotalDuration,
-			metricPostLoginAnimationDurationPrefix+suffix,
-			metricPostLoginAnimationSmoothnessPrefix+suffix,
-			metricPostLoginAnimationJankPrefix+suffix)
+		ret = append(ret,
+			category+metricShelfLoginAnimationEnd,
+			category+metricTotalDuration,
+			category+metricPostLoginAnimationDurationPrefix+suffix,
+			category+metricPostLoginAnimationSmoothnessPrefix+suffix,
+			category+metricPostLoginAnimationJankPrefix+suffix,
+		)
+		// Following histograms are only collected when session restore is automatic.
+		if param.autoSessionRestore {
+			ret = append(ret, metricAutoRestoreAllBrowserWindowsPresented)
+		}
 	}
 	if param.arcMode != noarc {
 		ret = append(ret,
@@ -955,25 +1045,35 @@ func storeHistograms(
 			reportMaxHistogramValue(ctx, hist, "millisecond", pv)
 
 		case
-			metricAllBrowserWindowsCreated,
-			metricAllBrowserWindowsShown,
-			metricAllBrowserWindowsPresented,
-			metricAllShelfIconsLoaded,
-			metricShelfLoginAnimationEnd,
-			metricTotalDuration,
-			metricPostLoginAnimationDurationPrefix + suffixClamshellMode,
-			metricPostLoginAnimationDurationPrefix + suffixTabletMode,
-			metricDeferredTasksStarted:
+			metricAutoRestoreAllBrowserWindowsCreated,
+			metricAutoRestoreAllBrowserWindowsShown,
+			metricAutoRestoreAllBrowserWindowsPresented,
+			categoryAutoRestore + metricAllShelfIconsLoaded,
+			categoryAutoRestore + metricShelfLoginAnimationEnd,
+			categoryAutoRestore + metricTotalDuration,
+			categoryAutoRestore + metricPostLoginAnimationDurationPrefix + suffixClamshellMode,
+			categoryAutoRestore + metricPostLoginAnimationDurationPrefix + suffixTabletMode,
+			categoryAutoRestore + metricDeferredTasksStarted,
+			categoryManualRestore + metricAllShelfIconsLoaded,
+			categoryManualRestore + metricShelfLoginAnimationEnd,
+			categoryManualRestore + metricTotalDuration,
+			categoryManualRestore + metricPostLoginAnimationDurationPrefix + suffixClamshellMode,
+			categoryManualRestore + metricPostLoginAnimationDurationPrefix + suffixTabletMode,
+			categoryManualRestore + metricDeferredTasksStarted:
 			storeHistogramMeanValue(ctx, hist, "ms", perf.SmallerIsBetter, pv)
 
 		case
-			metricPostLoginAnimationSmoothnessPrefix + suffixClamshellMode,
-			metricPostLoginAnimationSmoothnessPrefix + suffixTabletMode:
+			categoryAutoRestore + metricPostLoginAnimationSmoothnessPrefix + suffixClamshellMode,
+			categoryAutoRestore + metricPostLoginAnimationSmoothnessPrefix + suffixTabletMode,
+			categoryManualRestore + metricPostLoginAnimationSmoothnessPrefix + suffixClamshellMode,
+			categoryManualRestore + metricPostLoginAnimationSmoothnessPrefix + suffixTabletMode:
 			storeHistogramMeanValue(ctx, hist, "percent", perf.BiggerIsBetter, pv)
 
 		case
-			metricPostLoginAnimationJankPrefix + suffixClamshellMode,
-			metricPostLoginAnimationJankPrefix + suffixTabletMode:
+			categoryAutoRestore + metricPostLoginAnimationJankPrefix + suffixClamshellMode,
+			categoryAutoRestore + metricPostLoginAnimationJankPrefix + suffixTabletMode,
+			categoryManualRestore + metricPostLoginAnimationJankPrefix + suffixClamshellMode,
+			categoryManualRestore + metricPostLoginAnimationJankPrefix + suffixTabletMode:
 			storeHistogramMeanValue(ctx, hist, "percent", perf.SmallerIsBetter, pv)
 
 		default:
