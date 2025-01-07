@@ -37,7 +37,7 @@ const (
 const (
 	// PowerAshGaiaWithUpdateEngine is a fixture for power test that depends on update-engine
 	PowerAshGaiaWithUpdateEngine string = "powerAshGaiaWithUpdateEngine"
-	LoggedInWithUpdateEngine            = "loggedInWithUpdateEngine"
+	LoggedInWithUpdateEngine     string = "loggedInWithUpdateEngine"
 )
 
 func init() {

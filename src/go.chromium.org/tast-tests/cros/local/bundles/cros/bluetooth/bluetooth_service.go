@@ -92,7 +92,7 @@ func (b *BtService) SetLLPrivacy(ctx context.Context, request *pb.SetLLPrivacyRe
 	shortCtx, cancel := context.WithTimeout(ctx, 5*time.Second)
 	defer cancel()
 	isFlossEnabled, err := floss.GetFlossEnabled(shortCtx)
-	if err != nil || isFlossEnabled == false {
+	if err != nil || !isFlossEnabled {
 		return nil, errors.Wrap(err, "floss is not enabled, LL privacy only supports floss")
 	}
 	if err := floss.SetLLPrivacy(shortCtx, request.Enabled); err != nil {

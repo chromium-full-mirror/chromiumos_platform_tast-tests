@@ -16,7 +16,6 @@ import (
 	"go.chromium.org/tast-tests/cros/local/arc/apputil"
 	"go.chromium.org/tast-tests/cros/local/chrome"
 	"go.chromium.org/tast-tests/cros/local/chrome/ash"
-	"go.chromium.org/tast-tests/cros/local/chrome/cuj"
 	"go.chromium.org/tast-tests/cros/local/chrome/uiauto"
 	"go.chromium.org/tast-tests/cros/local/chrome/uiauto/nodewith"
 	"go.chromium.org/tast-tests/cros/local/chrome/uiauto/role"
@@ -256,25 +255,6 @@ func (e *Element) dismissEncryptionAlertIfExists() uiauto.Action {
 		alert.Exists,
 		dismissAlert,
 	)
-}
-
-// dismissNotificationPrompt dismisses the notification prompt if it pops up and
-// waits for the create room button to appear.
-func (e *Element) dismissNotificationPrompt(ctx context.Context) error {
-	createRoomButton := e.d.Object(ui.Description("Create a new conversation or room"), ui.ResourceID(createChatButtonID))
-	notificationText := e.d.Object(ui.Text("Allow Element to send you notifications?"), ui.ClassName(textClass))
-	foundObject, err := cuj.FindAnyExists(ctx, defaultUITimeout, createRoomButton, notificationText)
-	if err != nil {
-		return errors.Wrap(err, "failed to find objects before dismissing notification prompt")
-	}
-	if foundObject == notificationText {
-		dontAllowButton := e.d.Object(ui.Text("Don’t allow"), ui.ResourceID("com.android.permissioncontroller:id/permission_deny_button"))
-		return uiauto.NamedCombine("dismiss notification prompt",
-			apputil.FindAndClick(dontAllowButton, defaultUITimeout),
-			apputil.WaitForExists(createRoomButton, defaultUITimeout),
-		)(ctx)
-	}
-	return nil
 }
 
 // SignOut signs out from Element app.

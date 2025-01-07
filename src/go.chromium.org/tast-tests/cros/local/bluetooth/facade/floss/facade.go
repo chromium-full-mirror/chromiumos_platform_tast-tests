@@ -129,7 +129,7 @@ func SetLLPrivacy(ctx context.Context, enabled bool) error {
 	}
 	if isEnabled, err := manager.GetFlossEnabled(ctx); err != nil {
 		return errors.Wrap(err, "failed to call GetFlossEnabled with floss manager client")
-	} else if isEnabled != true {
+	} else if !isEnabled {
 		return errors.Wrap(err, "floss is not enabled, LL privacy only supports floss")
 	}
 
