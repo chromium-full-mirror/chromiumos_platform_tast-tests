@@ -190,11 +190,6 @@ func SetUp(ctx context.Context, html, className string) (d driver, e error) {
 	}
 	tdh.Append(brConn.Close)
 
-	// Close the extra new tab page.
-	if err := cr.Browser().CloseWithURL(ctx, chrome.NewTabURL); err != nil {
-		return newNoOpDriver(tdh), errors.Wrap(err, "failed to close new tab page")
-	}
-
 	// Enable Dictation.
 	if err := a11y.SetFeatureEnabled(ctx, tconn, a11y.Dictation, true); err != nil {
 		return newNoOpDriver(tdh), errors.Wrap(err, "failed to enable Dictation")

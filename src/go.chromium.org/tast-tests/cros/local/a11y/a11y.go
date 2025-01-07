@@ -291,11 +291,6 @@ func SetUpTTSFeature(tfi TTSFeatureInputs) (tfd TTSFeatureData, e error) {
 		return crConn.Close()
 	})
 
-	// Close the extra new tab page.
-	if err := cr.Browser().CloseWithURL(ctx, chrome.NewTabURL); err != nil {
-		return newNoOpTTSFeatureData(tdown), errors.Wrap(err, "failed to close new tab page")
-	}
-
 	return TTSFeatureData{ctx, tconn, sm, tdown, crConn}, nil
 }
 
