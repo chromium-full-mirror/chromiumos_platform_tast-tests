@@ -9,8 +9,10 @@ import (
 	"fmt"
 	"time"
 
+	"go.chromium.org/tast-tests/cros/common/testexec"
 	"go.chromium.org/tast-tests/cros/local/audio"
 	"go.chromium.org/tast-tests/cros/local/audio/nodematch"
+	"go.chromium.org/tast-tests/cros/local/upstart"
 	"go.chromium.org/tast/core/errors"
 	"go.chromium.org/tast/core/testing"
 )
@@ -93,6 +95,18 @@ func (pf CrasSetUp) DoCras(ctx context.Context) (*audio.Cras, error) {
 	if pf.VoiceIsolationUIPreferredEffect == audio.VoiceIsolationEffectBeamforming {
 		if err := audio.CheckBeamforming(ctx); err != nil {
 			return nil, errors.Wrap(err, "audio.CheckBeamforming")
+		}
+	}
+
+	// Stop CRAS and install DLCs.
+	if err := upstart.StopJob(ctx, "cras"); err != nil {
+		return nil, errors.Wrap(err, "cannot stop CRAS")
+	}
+	{
+		ctx, cancel := context.WithTimeout(ctx, 2*time.Minute) // Retry DLC installation up to 2 minutes.
+		defer cancel()
+		if err := testexec.CommandContext(ctx, "cras_server_tool", "install-dlcs").Run(testexec.DumpLogOnError); err != nil {
+			return nil, errors.Wrap(err, "cannot install CRAS DLCs")
 		}
 	}
 
