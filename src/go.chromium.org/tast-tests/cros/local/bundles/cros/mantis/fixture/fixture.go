@@ -7,10 +7,16 @@ package fixture
 
 import (
 	"context"
+	"path/filepath"
+	"time"
 
+	"go.chromium.org/tast-tests/cros/common/dma"
 	commonfixture "go.chromium.org/tast-tests/cros/common/fixture"
+	"go.chromium.org/tast-tests/cros/common/ui"
 	"go.chromium.org/tast-tests/cros/local/chrome"
+	"go.chromium.org/tast-tests/cros/local/chrome/uiauto"
 	powersetup "go.chromium.org/tast-tests/cros/local/power/setup"
+	"go.chromium.org/tast/core/errors"
 	"go.chromium.org/tast/core/testing"
 )
 
@@ -21,12 +27,22 @@ var mantisPowerTestOptions = powersetup.PowerTestOptions{
 	KeyboardBrightness: powersetup.SetKbBrightnessToZero,
 }
 
-// PowerAshGaiaWithUpdateEngine is a fixture for power test that depends on update-engine
-const PowerAshGaiaWithUpdateEngine string = "powerAshGaiaWithUpdateEngine"
+const (
+	resetTimeout    = 30 * time.Second
+	preTestTimeout  = 10 * time.Second
+	postTestTimeout = 15 * time.Second
+)
+
+// List of fixture names for Mantis
+const (
+	// PowerAshGaiaWithUpdateEngine is a fixture for power test that depends on update-engine
+	PowerAshGaiaWithUpdateEngine string = "powerAshGaiaWithUpdateEngine"
+	LoggedInWithUpdateEngine            = "loggedInWithUpdateEngine"
+)
 
 func init() {
 	testing.AddFixture(&testing.Fixture{
-		Name:         "powerAshGaiaWithUpdateEngine",
+		Name:         PowerAshGaiaWithUpdateEngine,
 		Desc:         "PowerAsh fixture for tests that depends on update engine",
 		Contacts:     []string{"cros-mantis@google.com", "nurlitadf@google.com"},
 		BugComponent: "b:1445284",
@@ -40,25 +56,54 @@ func init() {
 		PostTestTimeout: powersetup.PostTestTimeout,
 		Parent:          commonfixture.UpdateEngine, // Ensure update engine is reset. go/cros-tast-updateengine-not-ready-error
 	})
+
+	testing.AddFixture(&testing.Fixture{
+		Name:            LoggedInWithUpdateEngine,
+		Desc:            "Logged into a user session with update engine setup",
+		Contacts:        []string{"cros-mantis@google.com", "nurlitadf@google.com"},
+		BugComponent:    "b:1445284", // ChromeOS > Platform > Technologies > Machine Learning > On-Device ML
+		Impl:            &fixture{},
+		PreTestTimeout:  preTestTimeout,
+		PostTestTimeout: postTestTimeout,
+		SetUpTimeout:    chrome.LoginTimeout,
+		ResetTimeout:    resetTimeout,
+		TearDownTimeout: chrome.ResetTimeout,
+		Parent:          commonfixture.UpdateEngine,
+	})
 }
 
 type fixture struct {
-	cr *chrome.Chrome
+	cr       *chrome.Chrome
+	recorder *uiauto.ScreenRecorder
+	tconn    *chrome.TestConn
 }
 
 // Data is the struct exposed to tests.
 type Data struct {
-	Chrome *chrome.Chrome
+	Chrome      *chrome.Chrome
+	TestAPIConn *chrome.TestConn
 }
 
 func (f *fixture) SetUp(ctx context.Context, s *testing.FixtState) interface{} {
-	cr, err := chrome.New(ctx)
+	// Prepare Chrome browser.
+	opts := []chrome.Option{
+		chrome.GAIALoginPool(dma.CredsFromPool(ui.GaiaPoolDefaultVarName)),
+	}
+
+	var err error
+	f.cr, err = chrome.New(ctx, opts...)
 	if err != nil {
 		s.Fatal("Failed to start Chrome: ", err)
 	}
-	f.cr = cr
+
+	f.tconn, err = f.cr.TestAPIConn(ctx)
+	if err != nil {
+		s.Fatal("Failed to get test API connection: ", err)
+	}
+
 	return Data{
-		Chrome: cr,
+		Chrome:      f.cr,
+		TestAPIConn: f.tconn,
 	}
 }
 
@@ -67,14 +112,34 @@ func (f *fixture) TearDown(ctx context.Context, s *testing.FixtState) {
 		s.Error("Failed to tear down Chrome: ", err)
 	}
 	f.cr = nil
+	f.tconn = nil
 }
 
 func (f *fixture) Reset(ctx context.Context) error {
+	if err := f.cr.Responded(ctx); err != nil {
+		return errors.Wrap(err, "existing Chrome connection is unusable")
+	}
+	if err := f.cr.ResetState(ctx); err != nil {
+		return errors.Wrap(err, "failed resetting existing Chrome session")
+	}
 	return nil
 }
 
 func (f *fixture) PreTest(ctx context.Context, s *testing.FixtTestState) {
+	recorder, err := uiauto.NewScreenRecorder(ctx, f.tconn)
+	if err != nil {
+		s.Log("Failed to create screen recorder: ", err)
+		return
+	}
+	if err := recorder.Start(ctx, f.tconn); err != nil {
+		s.Log("Failed to start screen recorder: ", err)
+		return
+	}
+	f.recorder = recorder
 }
 
 func (f *fixture) PostTest(ctx context.Context, s *testing.FixtTestState) {
+	if f.recorder != nil {
+		f.recorder.StopAndSaveOnError(ctx, filepath.Join(s.OutDir(), "record.webm"), s.HasError)
+	}
 }
