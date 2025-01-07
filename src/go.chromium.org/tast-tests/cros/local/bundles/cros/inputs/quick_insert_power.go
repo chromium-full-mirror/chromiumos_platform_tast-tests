@@ -24,19 +24,16 @@ import (
 func init() {
 	testing.AddTest(&testing.Test{
 		Func:         QuickInsertPower,
-		Desc:         "Collect power metrics when device is in idle with UI",
+		Desc:         "Collect power metrics for Quick Insert",
 		BugComponent: "b:1361410",
-		Contacts:     []string{"chromeos-power-team@google.com"},
+		Contacts:     []string{"e14s-eng@google.com"},
 		SoftwareDeps: []string{"chrome"},
 		Params: []testing.Param{{
 			Fixture: fixture.ClamshellNonVKWithPicker,
 			Val:     power.TimeParams{Total: 10 * time.Minute, Interval: 5 * time.Second},
 			ExtraAttr: []string{
-				"group:power",
-				"power_daily",
-				"power_weekly",
-				"group:release-health",
-				"release-health_power",
+				"group:crosbolt",
+				"crosbolt_perbuild",
 			},
 		}},
 		Timeout: 15*time.Minute + power.RecorderTimeout,
