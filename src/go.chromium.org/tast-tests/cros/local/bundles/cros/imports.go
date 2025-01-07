@@ -6,7 +6,6 @@ package main
 
 import (
 	// Underscore-imported packages register their tests via init functions.
-
 	_ "go.chromium.org/tast-tests/cros/local/bundles/cros/a11y"
 	_ "go.chromium.org/tast-tests/cros/local/bundles/cros/accountmanager"
 	_ "go.chromium.org/tast-tests/cros/local/bundles/cros/ad"
@@ -155,6 +154,7 @@ import (
 	_ "go.chromium.org/tast-tests/cros/local/bundles/cros/ui"
 	_ "go.chromium.org/tast-tests/cros/local/bundles/cros/uidetection"
 	_ "go.chromium.org/tast-tests/cros/local/bundles/cros/usb"
+	_ "go.chromium.org/tast-tests/cros/local/bundles/cros/usb/fixture"
 	_ "go.chromium.org/tast-tests/cros/local/bundles/cros/usbip"
 	_ "go.chromium.org/tast-tests/cros/local/bundles/cros/uwb"
 	_ "go.chromium.org/tast-tests/cros/local/bundles/cros/vdi"
