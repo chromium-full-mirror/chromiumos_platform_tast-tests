@@ -24,7 +24,6 @@ func init() {
 		Desc: "Verify typec charging behavior on wilco devices",
 		Contacts: []string{
 			"chromeos-faft@google.com",
-			"cienet-firmware@cienet.corp-partner.google.com",
 		},
 		BugComponent: "b:792402", // ChromeOS > Platform > Enablement > Firmware > FAFT
 		Attr:         []string{"group:firmware"},

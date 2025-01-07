@@ -130,7 +130,6 @@ func init() {
 		Desc: "Check that tablet mode allows waking screen from additional triggers",
 		Contacts: []string{
 			"chromeos-faft@google.com",
-			"arthur.chuang@cienet.com",
 		},
 		BugComponent: "b:792402", // ChromeOS > Platform > Enablement > Firmware > FAFT
 		Attr:         []string{"group:firmware", "firmware_ec"},

@@ -97,7 +97,6 @@ func init() {
 		Desc: "Ensure bootability and system level performance with old RO AP builds",
 		Contacts: []string{
 			"chromeos-faft@google.com",
-			"cienet-firmware@cienet.corp-partner.google.com",
 		},
 		BugComponent: "b:792402", // ChromeOS > Platform > Enablement > Firmware > FAFT
 		Attr:         []string{"group:firmware", "firmware_trial"},

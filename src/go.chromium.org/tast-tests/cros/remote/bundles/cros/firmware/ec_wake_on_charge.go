@@ -45,7 +45,6 @@ func init() {
 		Desc: "Checks that device will charge when EC is in a low-power mode, as a replacement for manual test 1.4.11",
 		Contacts: []string{
 			"chromeos-faft@google.com",
-			"arthur.chuang@cienet.com",
 		},
 		BugComponent: "b:792402", // ChromeOS > Platform > Enablement > Firmware > FAFT
 		// TODO: When stable, change firmware_unstable to a different attr.

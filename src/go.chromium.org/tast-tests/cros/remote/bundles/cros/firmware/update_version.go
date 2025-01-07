@@ -53,7 +53,6 @@ func init() {
 		Desc: "Verify if the key version matches the expectation after autoupdate mode",
 		Contacts: []string{
 			"chromeos-faft@google.com",
-			"cienet-firmware@cienet.corp-partner.google.com",
 		},
 		BugComponent: "b:792402", // ChromeOS > Platform > Enablement > Firmware > FAFT
 		Attr:         []string{"group:firmware", "firmware_bios", "firmware_level2"},

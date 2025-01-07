@@ -22,7 +22,6 @@ func init() {
 		Desc: "Estimate battery life in deep sleep state, as a replacement for manual test 1.10.1",
 		Contacts: []string{
 			"chromeos-faft@google.com",
-			"hc.tsai@cienet.com",
 			"jbettis@google.com",
 		},
 		BugComponent: "b:792402", // ChromeOS > Platform > Enablement > Firmware > FAFT

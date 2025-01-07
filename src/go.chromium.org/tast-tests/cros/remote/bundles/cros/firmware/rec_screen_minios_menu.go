@@ -24,7 +24,6 @@ func init() {
 		Desc: "Verify DUT can boot MiniOS through the recovery screen menu",
 		Contacts: []string{
 			"chromeos-faft@google.com",
-			"cienet-firmware@cienet.corp-partner.google.com",
 		},
 		BugComponent: "b:792402", // ChromeOS > Platform > Enablement > Firmware > FAFT
 		// TODO: Remove the test since it has been merged to rec_screen_minios.go.

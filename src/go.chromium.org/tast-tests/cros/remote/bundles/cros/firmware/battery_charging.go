@@ -30,7 +30,6 @@ func init() {
 		Desc: "Verify battery information when charger state is changed during suspend",
 		Contacts: []string{
 			"chromeos-faft@google.com",
-			"arthur.chuang@cienet.com",
 		},
 		BugComponent: "b:792402", // ChromeOS > Platform > Enablement > Firmware > FAFT
 		Attr:         []string{"group:firmware", "firmware_ec"},

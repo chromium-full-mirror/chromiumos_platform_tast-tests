@@ -32,7 +32,6 @@ func init() {
 		Desc: "Checks that flag values are preserved over different power cycles",
 		Contacts: []string{
 			"chromeos-faft@google.com",
-			"arthur.chuang@cienet.com",
 		},
 		BugComponent: "b:792402", // ChromeOS > Platform > Enablement > Firmware > FAFT
 		Attr:         []string{"group:firmware", "firmware_bios", "firmware_level4"},

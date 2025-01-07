@@ -45,7 +45,6 @@ func init() {
 		Desc: "Verify crossystem dev_default_boot functionality",
 		Contacts: []string{
 			"chromeos-faft@google.com",
-			"cienet-firmware@cienet.corp-partner.google.com",
 		},
 		BugComponent: "b:792402", // ChromeOS > Platform > Enablement > Firmware > FAFT
 		Attr:         []string{"group:firmware", "firmware_bios", "firmware_level2", "firmware_usb"},

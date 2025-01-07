@@ -43,7 +43,6 @@ func init() {
 		Desc: "Checks that power button actions at varied durations behave as expected in laptop mode",
 		Contacts: []string{
 			"chromeos-faft@google.com",
-			"cienet-firmware@cienet.corp-partner.google.com",
 		},
 		BugComponent: "b:792402", // ChromeOS > Platform > Enablement > Firmware > FAFT
 		Attr:         []string{"group:firmware", "firmware_ec"},

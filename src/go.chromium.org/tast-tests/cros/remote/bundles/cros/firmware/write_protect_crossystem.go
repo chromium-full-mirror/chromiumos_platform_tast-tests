@@ -25,7 +25,6 @@ func init() {
 		Contacts: []string{
 			"cros-flashrom-team@google.com",
 			"tij@google.com",
-			"cienet-firmware@cienet.corp-partner.google.com",
 		},
 		BugComponent: "b:750299",
 		Attr:         []string{"group:firmware", "firmware_bios", "firmware_level2"},

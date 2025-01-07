@@ -28,7 +28,6 @@ func init() {
 		Desc: "Verify that lid close triggers shutdown during firmware screens",
 		Contacts: []string{
 			"chromeos-faft@google.com",
-			"cienet-firmware@cienet.corp-partner.google.com",
 		},
 		BugComponent: "b:792402", // ChromeOS > Platform > Enablement > Firmware > FAFT
 		Attr:         []string{"group:firmware", "firmware_bios", "firmware_level4"},
