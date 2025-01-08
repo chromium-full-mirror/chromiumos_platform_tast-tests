@@ -228,12 +228,12 @@ type TestFixture struct {
 	p2pGO     P2PWiFiDevice
 	p2pClient P2PWiFiDevice
 
-	apID              int
-	seederIfaces      []*APIface
-	seederSSID        string
-	capturers         map[*APIface]map[int]*pcap.Capturer
-	tetheringCapturer *pcap.Capturer
-	useWpaCliAPI      bool
+	apID           int
+	seederIfaces   []*APIface
+	seederSSID     string
+	capturers      map[*APIface]map[int]*pcap.Capturer
+	customCapturer *pcap.Capturer
+	useWpaCliAPI   bool
 
 	// aps is a set of APs useful for deconfiguring all APs, which some tests require.
 	aps map[*APIface]struct{}
@@ -979,6 +979,10 @@ func (tf *TestFixture) Close(ctx context.Context) (firstErr error) {
 			d.rpc = nil
 		}
 	}
+
+	if err := tf.StopRecentPacketCapture(ctx); err != nil {
+		utils.CollectFirstErr(ctx, &firstErr, errors.Wrap(err, "failed to close custom capturer"))
+	}
 	return firstErr
 }
 
@@ -1241,6 +1245,54 @@ func (tf *TestFixture) DeconfigAllAPs(ctx context.Context) error {
 		}
 	}
 	return firstErr
+}
+
+// StopRecentPacketCapture stops the most recent packet capture.
+func (tf *TestFixture) StopRecentPacketCapture(ctx context.Context) (err error) {
+	if tf.customCapturer != nil {
+		err = tf.PcapRouter().StopCapture(ctx, tf.customCapturer)
+		tf.customCapturer = nil
+	}
+	return err
+}
+
+// StartPacketCapture starts a packet capture on a given channel using the default pcap router.
+func (tf *TestFixture) StartPacketCapture(ctx context.Context, channel, channelWidth int) (*pcap.Capturer, error) {
+	if err := tf.StopRecentPacketCapture(ctx); err != nil {
+		return nil, err
+	}
+
+	apOptions := []ap.Option{ap.Channel(int(channel))}
+	// Pick the maximum available standard per band (assuming Gale capabilities).
+	if channel <= 14 {
+		apOptions = append(apOptions, ap.Mode(ap.Mode80211nMixed))
+	} else {
+		apOptions = append(apOptions, ap.Mode(ap.Mode80211acMixed))
+	}
+	switch channelWidth {
+	case 20:
+		apOptions = append(apOptions, ap.HTCaps(ap.HTCapHT20))
+	case 40:
+		apOptions = append(apOptions, ap.HTCaps(ap.HTCapHT40))
+	case 80:
+		apOptions = append(apOptions, ap.HTCaps(ap.HTCapHT40), ap.VHTCaps(ap.VHTCapSGI80))
+	case 160:
+		apOptions = append(apOptions, ap.HTCaps(ap.HTCapHT40), ap.VHTCaps(ap.VHTCapVHT160))
+	}
+	config, err := hostapd.NewConfig(apOptions...)
+	if err != nil {
+		return nil, err
+	}
+	freqOps, err := config.PcapFreqOptions()
+	if err != nil {
+		return nil, err
+	}
+	capturer, err := tf.PcapRouter().StartCapture(ctx, tf.UniqueAPName(), config.Channel, config.Is6GHz, freqOps)
+	if err != nil {
+		return nil, errors.Wrap(err, "failed to start capturer")
+	}
+	tf.customCapturer = capturer
+	return capturer, nil
 }
 
 // StartWPAMonitor configures and starts wpa_supplicant events monitor
@@ -2280,39 +2332,11 @@ func (tf *TestFixture) StartTethering(ctx context.Context, dutIdx DutIdx, ops []
 
 	var capturer *pcap.Capturer
 	if tf.options.EnablePacketCapture {
-		apOptions := []ap.Option{ap.Channel(int(resp.Channel))}
-		// Pick the maximum available standard per band (assuming Gale capabilities).
-		if resp.Channel <= 14 {
-			apOptions = append(apOptions, ap.Mode(ap.Mode80211nMixed))
-		} else {
-			apOptions = append(apOptions, ap.Mode(ap.Mode80211acMixed))
-		}
-		switch resp.ChannelWidth {
-		case 20:
-			apOptions = append(apOptions, ap.HTCaps(ap.HTCapHT20))
-		case 40:
-			apOptions = append(apOptions, ap.HTCaps(ap.HTCapHT40))
-		case 80:
-			apOptions = append(apOptions, ap.HTCaps(ap.HTCapHT40), ap.VHTCaps(ap.VHTCapSGI80))
-		case 160:
-			apOptions = append(apOptions, ap.HTCaps(ap.HTCapHT40), ap.VHTCaps(ap.VHTCapVHT160))
-		}
-		config, err := hostapd.NewConfig(apOptions...)
-		if err != nil {
-			return nil, nil, err
-		}
-		freqOps, err := config.PcapFreqOptions()
-		if err != nil {
-			return nil, nil, err
-		}
-		capturer, err = tf.PcapRouter().StartCapture(ctx, tf.UniqueAPName(), config.Channel, config.Is6GHz, freqOps)
-		if err != nil {
-			return nil, nil, errors.Wrap(err, "failed to start capturer")
-		}
-		tf.tetheringCapturer = capturer
+		capturer, err = tf.StartPacketCapture(ctx, int(resp.Channel), int(resp.ChannelWidth))
 		defer func() {
 			if retErr != nil {
 				tf.PcapRouter().StopCapture(ctx, capturer)
+				tf.customCapturer = nil
 			}
 		}()
 	}
@@ -2325,9 +2349,7 @@ func (tf *TestFixture) StopTethering(ctx context.Context, dutIdx DutIdx, c *teth
 	ctx, st := timing.Start(ctx, "tf.StopTethering")
 	defer st.End()
 	resp, err := tf.duts[dutIdx].wifiClient.StopTethering(ctx, &wifi.StopTetheringRequest{UseWpaCliApi: tf.useWpaCliAPI, PriIface: c.PriIface})
-	if tf.tetheringCapturer != nil {
-		tf.PcapRouter().StopCapture(ctx, tf.tetheringCapturer)
-	}
+	tf.StopRecentPacketCapture(ctx)
 	if err != nil {
 		return nil, errors.Wrap(err, "client failed to stop tethering session")
 	}
