@@ -6,7 +6,6 @@ package a11y
 
 import (
 	"context"
-	"strings"
 	"time"
 
 	"go.chromium.org/tast-tests/cros/local/a11y"
@@ -17,7 +16,6 @@ import (
 	"go.chromium.org/tast-tests/cros/local/chrome/uiauto/role"
 	"go.chromium.org/tast-tests/cros/local/input"
 	"go.chromium.org/tast/core/ctxutil"
-	"go.chromium.org/tast/core/errors"
 	"go.chromium.org/tast/core/testing"
 )
 
@@ -51,12 +49,6 @@ func SlowKeys(ctx context.Context, s *testing.State) {
 
 	ui := uiauto.New(tconn)
 
-	kb, err := input.Keyboard(ctx)
-	if err != nil {
-		s.Fatal("Failed to create a keyboard: ", err)
-	}
-	defer kb.Close(cleanupCtx)
-
 	// Enable Slow Keys.
 	if err := a11y.ToggleSlowKeysSetting(ctx, tconn, cr, ui, true); err != nil {
 		s.Fatal("Failed to enable Slow Keys setting: ", err)
@@ -84,28 +76,16 @@ func SlowKeys(ctx context.Context, s *testing.State) {
 	}
 
 	// Helper functions for typing.
-	typeWithHolding := func(ctx context.Context, sequences []string, hold time.Duration) error {
-		for _, seq := range sequences {
-			if err := kb.AccelPress(ctx, seq); err != nil {
-				return errors.Wrapf(err, "failed to press %q", seq)
-			}
-			// GoBigSleepLint: Sleep to type with specified hold duration.
-			if err := testing.Sleep(ctx, hold); err != nil {
-				return errors.Wrapf(err, "failed to sleep for %v", hold)
-			}
-			if err := kb.AccelRelease(ctx, seq); err != nil {
-				return errors.Wrapf(err, "failed to release %q", seq)
-			}
-			// GoBigSleepLint: Sleep to simulate normal typing.
-			if err := testing.Sleep(ctx, 50*time.Millisecond); err != nil {
-				return errors.Wrap(err, "failed to sleep for 50ms")
-			}
-		}
-		return nil
-	}
 	deleteText := func(ctx context.Context, s *testing.State) {
-		if err := typeWithHolding(ctx, []string{"Ctrl+a", "Backspace"}, 550*time.Millisecond); err != nil {
-			s.Error("Failed to input text deletion sequence: ", err)
+		// Use a new keyboard with enough delay to actually type with slow keys.
+		kb, err := input.KeyboardWithCustomDelay(ctx, a11y.SlowKeysDefaultDelay+50*time.Millisecond)
+		if err != nil {
+			s.Fatal("Failed to create a keyboard to delete text: ", err)
+		}
+		defer kb.Close(ctx)
+
+		if err := kb.TypeSequence(ctx, []string{"Ctrl+a", "Backspace"}); err != nil {
+			s.Error("Failed to type text deletion sequence: ", err)
 		}
 		textNode := nodewith.Role(role.StaticText).Ancestor(textFieldNode)
 		if err := ui.WithTimeout(3 * time.Second).WaitUntilGone(textNode)(ctx); err != nil {
@@ -117,19 +97,19 @@ func SlowKeys(ctx context.Context, s *testing.State) {
 		name     string
 		input    string
 		expected string
-		hold     time.Duration
+		delay    time.Duration
 	}{
 		{
 			name:     "Long key presses",
 			input:    "abcde",
 			expected: "abcde",
-			hold:     a11y.SlowKeysDefaultDelay + 50*time.Millisecond,
+			delay:    a11y.SlowKeysDefaultDelay + 50*time.Millisecond,
 		},
 		{
 			name:     "Short key presses",
 			input:    "hijkl",
 			expected: "",
-			hold:     a11y.SlowKeysDefaultDelay - 200*time.Millisecond,
+			delay:    a11y.SlowKeysDefaultDelay - 200*time.Millisecond,
 		},
 	}
 	for _, subtest := range subtests {
@@ -140,9 +120,14 @@ func SlowKeys(ctx context.Context, s *testing.State) {
 			defer deleteText(ctx, s)
 			defer faillog.DumpUITreeWithScreenshotOnError(cleanupCtx, s.OutDir(), s.HasError, cr, subtest.name)
 
-			seqs := strings.Split(subtest.input, "")
-			if err := typeWithHolding(ctx, seqs, subtest.hold); err != nil {
-				s.Fatal("Failed to type with holding: ", err)
+			kb, err := input.KeyboardWithCustomDelay(ctx, subtest.delay)
+			if err != nil {
+				s.Fatalf("Failed to create a keyboard with delay %s: %v", subtest.delay, err)
+			}
+			defer kb.Close(cleanupCtx)
+
+			if err := kb.Type(ctx, subtest.input); err != nil {
+				s.Fatal("Failed to type string: ", err)
 			}
 			textNode := nodewith.Role(role.StaticText).Ancestor(textFieldNode)
 			if subtest.expected != "" {

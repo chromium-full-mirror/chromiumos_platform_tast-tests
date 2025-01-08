@@ -296,9 +296,9 @@ func SetUpTTSFeature(tfi TTSFeatureInputs) (tfd TTSFeatureData, e error) {
 
 // toggleKeyboardAndTextInputSetting is a helper function that toggles
 // a setting in Keyboard and Text Input settings page via Settings UI.
-func toggleKeyboardAndTextInputSetting(ctx context.Context, tconn *chrome.TestConn, cr *chrome.Chrome, ui *uiauto.Context, name string, enable bool) error {
+func toggleKeyboardAndTextInputSetting(ctx context.Context, tconn *chrome.TestConn, cr *chrome.Chrome, ui *uiauto.Context, name string, settingId int, enable bool) error {
 	heading := nodewith.NameStartingWith("Keyboard and text input").Role(role.Heading).Ancestor(ossettings.WindowFinder)
-	kbSettings, err := ossettings.LaunchAtPageURL(ctx, tconn, cr, "keyboardAndTextInput?settingId=1554", ui.Exists(heading))
+	kbSettings, err := ossettings.LaunchAtPageURL(ctx, tconn, cr, fmt.Sprintf("keyboardAndTextInput?settingId=%d", settingId), ui.Exists(heading))
 	if err != nil {
 		return errors.Wrap(err, "failed to open keyboard accessibility settings page")
 	}
@@ -311,10 +311,10 @@ func toggleKeyboardAndTextInputSetting(ctx context.Context, tconn *chrome.TestCo
 
 // ToggleBounceKeysSetting is a helper function that toggles Bounce Keys setting via Settings UI.
 func ToggleBounceKeysSetting(ctx context.Context, tconn *chrome.TestConn, cr *chrome.Chrome, ui *uiauto.Context, enable bool) error {
-	return toggleKeyboardAndTextInputSetting(ctx, tconn, cr, ui, "Bounce keys", enable)
+	return toggleKeyboardAndTextInputSetting(ctx, tconn, cr, ui, "Bounce keys", 1554, enable)
 }
 
 // ToggleSlowKeysSetting is a helper function that toggles Slow Keys setting via Settings UI.
 func ToggleSlowKeysSetting(ctx context.Context, tconn *chrome.TestConn, cr *chrome.Chrome, ui *uiauto.Context, enable bool) error {
-	return toggleKeyboardAndTextInputSetting(ctx, tconn, cr, ui, "Slow keys", enable)
+	return toggleKeyboardAndTextInputSetting(ctx, tconn, cr, ui, "Slow keys", 1555, enable)
 }
