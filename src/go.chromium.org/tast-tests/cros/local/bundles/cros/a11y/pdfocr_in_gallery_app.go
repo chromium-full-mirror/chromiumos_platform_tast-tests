@@ -36,6 +36,7 @@ func init() {
 		Contacts: []string{
 			"chrome-screen-ai@google.com", // Mailing list
 			"nektar@chromium.org",         // Test author
+			"kyungjunlee@google.com",
 		},
 		BugComponent: "b:1272894", // ChromeOS Public Tracker > Chrome & ChromeOS Accessibility > Accessibility > Machine Intelligence
 		Attr:         []string{"group:mainline", "informational"},
