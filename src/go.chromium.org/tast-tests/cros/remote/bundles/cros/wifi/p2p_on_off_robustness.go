@@ -51,7 +51,7 @@ func init() {
 				Val: []wifiutil.P2POnOffRobustnessTestcase{
 					{
 						PrintableName: "2_4G",
-						Opts:          []p2p.GroupOption{p2p.SetFreq(2462)},
+						Opts:          []p2p.GroupOption{p2p.SetFreq(2412)},
 						Rounds:        p2pOnOffDefaultRounds,
 					}, {
 						PrintableName: "5G",
@@ -68,7 +68,7 @@ func init() {
 				Val: []wifiutil.P2POnOffRobustnessTestcase{
 					{
 						PrintableName: "extended_2_4G",
-						Opts:          []p2p.GroupOption{p2p.SetFreq(2462)},
+						Opts:          []p2p.GroupOption{p2p.SetFreq(2412)},
 						Rounds:        p2pOnOffExtendedRounds,
 					}, {
 						PrintableName: "extended_5G",

@@ -12,6 +12,7 @@ import (
 	"go.chromium.org/tast-tests/cros/common/perf"
 	"go.chromium.org/tast-tests/cros/common/wifi/p2p"
 	"go.chromium.org/tast-tests/cros/remote/wificell"
+	"go.chromium.org/tast-tests/cros/remote/wificell/hostapd"
 	"go.chromium.org/tast/core/ctxutil"
 	"go.chromium.org/tast/core/errors"
 	"go.chromium.org/tast/core/testing"
@@ -121,6 +122,19 @@ func P2POnOffRobustnessTest(ctx context.Context, s *testing.State, tf *wificell.
 	// even repeat consecutively (1 in 70 tests). That would generate too many flake results just
 	// due to pure probability. This means even a single consecutive SSID repetition does not mean failure.
 	consecutiveSsidErrors := 0
+
+	freq := p2p.Freq(tc.Opts...)
+	channel, err := hostapd.FrequencyToChannel(freq)
+	if err != nil {
+		return err
+	}
+
+	if _, err = tf.StartPacketCapture(ctx, channel, 20); err != nil {
+		return errors.Wrap(err, "failure during setting up packet capture")
+	}
+	defer tf.StopRecentPacketCapture(ctx)
+	ctx, cancel = ctxutil.Shorten(ctx, 10*time.Second)
+	defer cancel()
 
 	// We're running in a simple loop instead of s.Run() on purpose, we want to bail out on the first error.
 	for i := 0; i < rounds; i++ {
