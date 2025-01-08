@@ -388,11 +388,19 @@ func newCommonKernelConfigCheck(ver *sysutil.KernelVersion, arch string) *kernel
 		}
 
 		// Kernel hardening.
-		builtin = append(builtin, "PAGE_TABLE_ISOLATION")
+		if ver.IsOrLess(6, 8) {
+			builtin = append(builtin, "PAGE_TABLE_ISOLATION")
+		} else {
+			builtin = append(builtin, "MITIGATION_PAGE_TABLE_ISOLATION")
+		}
 		// builtin = append(builtin, "RANDOMIZE_MEMORY")
 
 		// Retpoline is a Spectre v2 mitigation.
-		builtin = append(builtin, "RETPOLINE")
+		if ver.IsOrLess(6, 8) {
+			builtin = append(builtin, "RETPOLINE")
+		} else {
+			builtin = append(builtin, "MITIGATION_RETPOLINE")
+		}
 		// Dangerous; disables VDSO ASLR.
 		missing = append(missing, "COMPAT_VDSO")
 	}
