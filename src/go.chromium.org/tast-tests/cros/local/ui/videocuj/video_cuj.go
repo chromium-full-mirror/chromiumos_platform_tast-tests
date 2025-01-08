@@ -328,6 +328,7 @@ func Run(ctx context.Context, cr *chrome.Chrome, outDir string, testParam TestPa
 				}
 				if err := action.Combine(
 					"open volume slider toggle",
+					ui.MakeVisible(video),
 					// The volume button is frequently offscreen. ui.MakeVisible
 					// scrolls the page until the button is visible on screen.
 					ui.MakeVisible(volumeButton),
