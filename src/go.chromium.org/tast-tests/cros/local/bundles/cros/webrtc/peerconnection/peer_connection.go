@@ -252,10 +252,10 @@ func verifyCodecImplementation(ctx context.Context,
 	scalabilityMode string,
 	simulcasts int,
 	simulcastHWEncs []bool) error {
-	if err := verifyDecoderImplementation(ctx, conn, verifyDecoderMode, scalabilityMode); err != nil {
+	if err := verifyEncoderImplementation(ctx, conn, verifyEncoderMode, scalabilityMode, simulcasts, simulcastHWEncs); err != nil {
 		return err
 	}
-	if err := verifyEncoderImplementation(ctx, conn, verifyEncoderMode, scalabilityMode, simulcasts, simulcastHWEncs); err != nil {
+	if err := verifyDecoderImplementation(ctx, conn, verifyDecoderMode, scalabilityMode); err != nil {
 		return err
 	}
 	return nil
