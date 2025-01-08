@@ -25,7 +25,7 @@ func init() {
 	testing.AddTest(&testing.Test{
 		Func:         QuickInsertPower,
 		Desc:         "Collect power metrics for Quick Insert",
-		BugComponent: "b:1361410",
+		BugComponent: "b:95887",
 		Contacts:     []string{"e14s-eng@google.com"},
 		SoftwareDeps: []string{"chrome"},
 		Params: []testing.Param{{
