@@ -558,9 +558,11 @@ func (e *Element) typeText(fieldID, text string) uiauto.Action {
 	return uiauto.NamedCombine(fmt.Sprintf("type text %s", text),
 		apputil.FindAndClick(textField, defaultUITimeout),
 		apputil.WaitForExists(textFieldFocused, defaultUITimeout),
-		e.kb.AccelAction("Ctrl+A"),
-		e.kb.TypeAction(text),
-		apputil.WaitForExists(textFieldWithText, defaultUITimeout),
+		uiauto.Retry(retryTimes, uiauto.Combine("input text",
+			e.kb.AccelAction("Ctrl+A"),
+			e.kb.TypeAction(text),
+			apputil.WaitForExists(textFieldWithText, shortUITimeout),
+		)),
 	)
 }
 
