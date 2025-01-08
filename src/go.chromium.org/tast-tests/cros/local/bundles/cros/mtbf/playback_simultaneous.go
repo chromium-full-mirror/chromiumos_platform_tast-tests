@@ -109,11 +109,6 @@ func PlaybackSimultaneous(ctx context.Context, s *testing.State) {
 		}
 	}
 
-	// Close the empty tab after all videos are opened.
-	if err := cr.Browser().CloseWithURL(ctx, chrome.NewTabURL); err != nil {
-		s.Fatal("Failed to close empty tab: ", err)
-	}
-
 	// Switching between all tabs and verify all video sources are playing.
 	for order := range videoSources {
 		if err := kb.Accel(ctx, fmt.Sprintf("Ctrl+%d", order)); err != nil {
