@@ -95,6 +95,16 @@ func checkRequiredFields(roVPDContent, rwVPDContent string) error {
 }
 
 func checkVPDState(ctx context.Context, d *dut.DUT) error {
+	// b/380893851: Skip the VPD check on ChromeOS Flex.
+	isFlex, err := sysutil.IsChromeOSFlex(ctx, d)
+	if err != nil {
+		return errors.Wrap(err, "failed to determine if the DUT is running ChromeOS Flex")
+	}
+	if isFlex {
+		testing.ContextLog(ctx, "Skipping the VPD state check. ChromeOS Flex DUTs do not have VPD")
+		return nil
+	}
+
 	outDir, ok := testing.ContextOutDir(ctx)
 	if !ok {
 		return errors.New("no output directory")
