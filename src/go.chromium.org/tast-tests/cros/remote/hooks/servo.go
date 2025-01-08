@@ -114,11 +114,8 @@ func (h *servoHook) PreTest(ctx context.Context, s *HookTestState) error {
 	if h.connector == nil {
 		return nil
 	}
-	// Make sure servo is running.
-	if err := h.connector.startServo(ctx); err != nil {
-		testing.ContextLogf(ctx, "Failed to connect to servod before running test %s: %v",
-			s.TestName(), err)
-	}
+	// Tell labStation that servo is in-use.
+	h.connector.markServoInUse(ctx)
 	return nil
 }
 
@@ -158,6 +155,7 @@ type connector interface {
 	servoRunning(ctx context.Context) bool
 	cleanup(ctx context.Context)
 	collectLogs(ctx context.Context, dst string) error
+	markServoInUse(ctx context.Context)
 }
 
 type sshConnector struct {
@@ -208,6 +206,19 @@ func newSSHConnector(ctx context.Context, servoHost, keyFile, keyDir string,
 	}, nil
 }
 
+func (sc *sshConnector) markServoInUse(ctx context.Context) {
+	if sc == nil {
+		return
+	}
+	hst := sc.hst
+	port := sc.connInfo.ServoPort
+
+	inUseFile := fmt.Sprintf("/var/lib/servod/%d_in_use", port)
+	if out, err := hst.CommandContext(ctx, "touch", inUseFile).CombinedOutput(); err != nil {
+		testing.ContextLogf(ctx, "Failed to touch %s: %s: %v", inUseFile, string(out), err)
+	}
+}
+
 func (sc *sshConnector) startServo(ctx context.Context) error {
 	if sc == nil {
 		return nil
@@ -217,10 +228,8 @@ func (sc *sshConnector) startServo(ctx context.Context) error {
 	sshPort := sc.connInfo.ServoSSHPort
 	host := sc.connInfo.Hostname
 
-	inUseFile := fmt.Sprintf("/var/lib/servod/%d_in_use", port)
-	if out, err := hst.CommandContext(ctx, "touch", inUseFile).CombinedOutput(); err != nil {
-		testing.ContextLogf(ctx, "Failed to touch %s: %s: %v", inUseFile, string(out), err)
-	}
+	sc.markServoInUse(ctx)
+
 	if sc.servoRunning(ctx) {
 		testing.ContextLog(ctx, "Servo has already been running")
 		return nil
@@ -311,6 +320,10 @@ func newContainerConnector(ctx context.Context, servoHost, keyFile, keyDir strin
 		dutTopology: dutTopology,
 		connInfo:    connInfo,
 	}, nil
+}
+
+func (*containerConnector) markServoInUse(ctx context.Context) {
+	// Servo in container does not in-use file.
 }
 
 func (cc *containerConnector) startServo(ctx context.Context) (err error) {
