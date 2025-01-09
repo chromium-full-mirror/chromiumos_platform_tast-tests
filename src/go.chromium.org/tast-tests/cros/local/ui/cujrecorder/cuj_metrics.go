@@ -94,6 +94,8 @@ func CUJAshCommonMetricConfigs() []MetricConfig {
 		NewSmoothnessMetricConfig("Ash.HotseatTransition.AnimationSmoothness.TransitionToHiddenHotseat"),
 		NewSmoothnessMetricConfig("Ash.HotseatTransition.AnimationSmoothness.TransitionToShownHotseat"),
 		NewSmoothnessMetricConfig("Ash.SwipeHomeToOverviewGesture"),
+		NewCustomMetricConfig("Graphics.Paint.UI.NormalizedInvalidatedArea", "area", perf.SmallerIsBetter),
+
 		// Note that BootTime.* metrics have special handling in cujRecorder.Record().
 		NewBootAndShutdownCustomMetricConfig("BootTime.Authenticate", "ms", perf.SmallerIsBetter),
 		NewBootAndShutdownCustomMetricConfig("BootTime.Chrome", "ms", perf.SmallerIsBetter),
@@ -223,5 +225,8 @@ func GetShortenedPerformanceMetrics() ([]string, []string) {
 
 			// Graphics smoothness.
 			"Graphics.Smoothness.PercentDroppedFrames3.CompositorThread.Video",
+
+			// Other metrics.
+			"Graphics.Paint.UI.NormalizedInvalidatedArea",
 		}
 }
