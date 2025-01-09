@@ -28,7 +28,12 @@ func init() {
 			"chromeos-sw-engprod@google.com",
 		},
 		BugComponent: "b:1131838",
-		Attr:         []string{"group:cross-device-remote", "cross-device-remote_nearbyshare"},
+		Attr: []string{
+			"group:cross-device-remote",
+			"cross-device-remote_nearbyshare",
+			"group:release-health",
+			"release-health_cross_device",
+		},
 		SoftwareDeps: []string{"chrome"},
 		ServiceDeps:  []string{"tast.cros.nearbyservice.NearbyShareService"},
 		Vars:         []string{nearbycommon.KeepStateVar},

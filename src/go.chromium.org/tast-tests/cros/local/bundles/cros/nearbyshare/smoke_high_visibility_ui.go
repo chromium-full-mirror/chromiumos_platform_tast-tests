@@ -27,8 +27,13 @@ func init() {
 		BugComponent: "b:1131838",
 		// Use this variable to preserve user accounts on the DUT when running locally,
 		// i.e. tast run -var=keepState=true <dut> nearbyshare.SmokeHighVisibilityUI
-		Vars:         []string{nearbycommon.KeepStateVar},
-		Attr:         []string{"group:cross-device", "cross-device_nearbyshare"},
+		Vars: []string{nearbycommon.KeepStateVar},
+		Attr: []string{
+			"group:cross-device",
+			"cross-device_nearbyshare",
+			"group:release-health",
+			"release-health_cross_device",
+		},
 		SoftwareDeps: []string{"chrome"},
 	})
 }
