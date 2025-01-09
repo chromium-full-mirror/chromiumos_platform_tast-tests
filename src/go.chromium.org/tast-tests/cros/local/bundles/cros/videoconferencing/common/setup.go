@@ -44,7 +44,7 @@ func Setup(cleanupCtx context.Context, s *testing.State) (context.Context, *chro
 	srv := httptest.NewServer(http.FileServer(s.DataFileSystem()))
 
 	// Add permission.
-	cr.Browser().GrantPermissions(ctx, []string{fmt.Sprintf("%s/*", srv.URL)},
+	browser.GrantPermissions(ctx, tconn, []string{fmt.Sprintf("%s/*", srv.URL)},
 		browser.CameraContentSetting,
 		browser.MicrophoneContentSetting,
 	)

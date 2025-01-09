@@ -8,7 +8,7 @@ import (
 	"context"
 	"fmt"
 
-	"go.chromium.org/tast-tests/cros/common/action"
+	"go.chromium.org/tast-tests/cros/local/chrome"
 	"go.chromium.org/tast/core/errors"
 )
 
@@ -39,27 +39,19 @@ const (
 	ContentSettingAsk   string = "ask"
 )
 
-// SetContentSetting sets site content settings using Chrome API.
+// setContentSetting sets site content settings using Chrome API.
 // e.g. chrome.contentSettings.camera.set({primaryPattern: '*://meet.google.com/*', setting:'allow'})
 // allows Google Meet to use camera device.
-func (b *Browser) SetContentSetting(settingType ContentSettingType, filterKey ContentSettingFilterKey, filterValue, settingValue string) action.Action {
-	return func(ctx context.Context) error {
-		tconn, err := b.sess.TestAPIConn(ctx, b.autotestPrivateSupported)
-		if err != nil {
-			return errors.Wrap(err, "failed to create Test API connection")
-		}
-		script := fmt.Sprintf(`chrome.contentSettings.%s.set({%s: '%s', setting: '%s'})`, settingType, filterKey, filterValue, settingValue)
-		return tconn.Eval(ctx, script, nil)
-	}
+func setContentSetting(ctx context.Context, tconn *chrome.TestConn, settingType ContentSettingType, filterKey ContentSettingFilterKey, filterValue, settingValue string) error {
+	script := fmt.Sprintf(`chrome.contentSettings.%s.set({%s: '%s', setting: '%s'})`, settingType, filterKey, filterValue, settingValue)
+	return tconn.Eval(ctx, script, nil)
 }
 
 // GrantPermissions grants one or more permissions to given primary URL patterns.
-func (b *Browser) GrantPermissions(ctx context.Context, urlPatterns []string, permissionTypes ...ContentSettingType) error {
+func GrantPermissions(ctx context.Context, tconn *chrome.TestConn, urlPatterns []string, permissionTypes ...ContentSettingType) error {
 	for _, urlPattern := range urlPatterns {
 		for _, permissionType := range permissionTypes {
-			if err := b.SetContentSetting(
-				permissionType, ContentSettingFilterKeyPrimaryPattern, urlPattern, ContentSettingAllow,
-			)(ctx); err != nil {
+			if err := setContentSetting(ctx, tconn, permissionType, ContentSettingFilterKeyPrimaryPattern, urlPattern, ContentSettingAllow); err != nil {
 				return errors.Wrapf(err, "failed to grant permissions to %s", urlPattern)
 			}
 		}

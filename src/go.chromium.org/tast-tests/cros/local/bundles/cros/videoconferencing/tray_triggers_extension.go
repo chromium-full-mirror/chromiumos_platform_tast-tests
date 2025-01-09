@@ -68,7 +68,7 @@ func TrayTriggersExtension(cleanupCtx context.Context, s *testing.State) {
 
 	vcTray := vctray.New(ctx, tconn)
 
-	if err := fakeextension.GrantAVPermissions(ctx, cr); err != nil {
+	if err := fakeextension.GrantAVPermissions(ctx, tconn); err != nil {
 		s.Fatal("Failed to grant AV permissions: ", err)
 	}
 	extUI, err := fakeextension.Launch(ctx, tconn, cr)

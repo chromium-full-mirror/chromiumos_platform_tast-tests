@@ -55,7 +55,7 @@ func PrivacyIndicators(ctx context.Context, s *testing.State) {
 	defer faillog.DumpUITreeOnError(cleanupCtx, s.OutDir(), s.HasError, tconn)
 
 	// Grant mic, camera and notification to Meet to suppress prompts during testing.
-	if err = cr.Browser().GrantPermissions(ctx, []string{"*://meet.google.com/*"},
+	if err = browser.GrantPermissions(ctx, tconn, []string{"*://meet.google.com/*"},
 		browser.CameraContentSetting,
 		browser.MicrophoneContentSetting,
 		browser.NotificationsContentSetting,

@@ -29,14 +29,14 @@ type ExtensionUI struct {
 }
 
 // GrantAVPermissions grants Microphone, Camera permissions to the extension.
-func GrantAVPermissions(ctx context.Context, cr *chrome.Chrome) error {
-	extID, err := extensionID(ctx, cr)
+func GrantAVPermissions(ctx context.Context, tconn *chrome.TestConn) error {
+	extID, err := extensionID(ctx, tconn)
 	if err != nil {
 		return err
 	}
 
 	extURLPattern := fmt.Sprintf("*://%s/*", extID)
-	return cr.Browser().GrantPermissions(ctx, []string{extURLPattern},
+	return browser.GrantPermissions(ctx, tconn, []string{extURLPattern},
 		browser.CameraContentSetting,
 		browser.MicrophoneContentSetting,
 	)
@@ -71,13 +71,8 @@ func Launch(ctx context.Context, tconn *chrome.TestConn, cr *chrome.Chrome) (*Ex
 }
 
 // extensionID returns the extension id of the fake vc extension.
-func extensionID(ctx context.Context, cr *chrome.Chrome) (string, error) {
-	bTconn, err := cr.TestAPIConn(ctx)
-	if err != nil {
-		return "", errors.Wrap(err, "failed to connect to browser test API connection")
-	}
-
-	installApps, _ := ash.ExtensionApps(ctx, bTconn)
+func extensionID(ctx context.Context, tconn *chrome.TestConn) (string, error) {
+	installApps, _ := ash.ExtensionApps(ctx, tconn)
 	for _, app := range installApps {
 		if app.Name == common.VcAppName {
 			return app.ID, nil

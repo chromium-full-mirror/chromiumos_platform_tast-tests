@@ -141,7 +141,7 @@ func startMeeting(ctx context.Context, cr *chrome.Chrome, conn *chrome.Conn, mee
 	}
 
 	if permissionOption == WithAllPermissions {
-		if err := GrantPermissions(ctx, cr); err != nil {
+		if err := GrantPermissions(ctx, tconn); err != nil {
 			return nil, errors.Wrap(err, "failed to grant permissions to Meet")
 		}
 	}
@@ -411,7 +411,7 @@ func EnsurePWAInstalled(ctx context.Context, cr *chrome.Chrome, permissionOption
 
 	// Grant media permission with browser launched.
 	if permissionOption == WithAllPermissions {
-		if err := GrantPermissions(ctx, cr); err != nil {
+		if err := GrantPermissions(ctx, tconn); err != nil {
 			return errors.Wrap(err, "failed to grant permissions to Meet")
 		}
 	}
@@ -507,9 +507,9 @@ func (gm *GoogleMeet) waitUntilInMeeting(ctx context.Context) error {
 }
 
 // GrantPermissions grants Microphone, Camera and Notifications permissions to Google Meet.
-func GrantPermissions(ctx context.Context, cr *chrome.Chrome) error {
+func GrantPermissions(ctx context.Context, tconn *chrome.TestConn) error {
 	meetURLPatterns := []string{"*://meet.google.com/*"}
-	return cr.Browser().GrantPermissions(ctx, meetURLPatterns,
+	return browser.GrantPermissions(ctx, tconn, meetURLPatterns,
 		browser.CameraContentSetting,
 		browser.MicrophoneContentSetting,
 		browser.NotificationsContentSetting,

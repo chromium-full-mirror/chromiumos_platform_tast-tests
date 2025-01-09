@@ -284,10 +284,10 @@ func allowPerm(tconn *chrome.TestConn) action.Action {
 }
 
 // GrantPermissions grants Microphone, Camera and Notifications permissions to Zoom.
-func GrantPermissions(ctx context.Context, cr *chrome.Chrome) error {
+func GrantPermissions(ctx context.Context, tconn *chrome.TestConn) error {
 	zoomURLPatterns := []string{"*://zoom.us/*", "*://*.zoom.us/*"}
 
-	return cr.Browser().GrantPermissions(ctx, zoomURLPatterns,
+	return browser.GrantPermissions(ctx, tconn, zoomURLPatterns,
 		browser.CameraContentSetting,
 		browser.MicrophoneContentSetting,
 		browser.NotificationsContentSetting,

@@ -110,18 +110,19 @@ func NewFromTarget(ctx context.Context, cr *chrome.Chrome, tm chrome.TargetMatch
 // JoinMeeting joins a Zoom meeting via invite link.
 // And make sure the camera and microphone are turned on before entering the meeting.
 func JoinMeeting(ctx context.Context, cr *chrome.Chrome, conn *chrome.Conn, inviteLink string, permissionsOption PermissionOption) (*Zoom, error) {
+	tconn, err := cr.TestAPIConn(ctx)
+	if err != nil {
+		return nil, err
+	}
+
 	if permissionsOption == WithAllPermissions {
-		if err := GrantPermissions(ctx, cr); err != nil {
+		if err := GrantPermissions(ctx, tconn); err != nil {
 			return nil, errors.Wrap(err, "failed to grant permissions")
 		}
 	}
 
 	if err := navigateToZoomAndSignIn(ctx, cr, conn); err != nil {
 		return nil, errors.Wrap(err, "failed to navigate to Zoom or sign-in")
-	}
-	tconn, err := cr.TestAPIConn(ctx)
-	if err != nil {
-		return nil, err
 	}
 	if err := launchNewMeeting(ctx, conn, tconn, inviteLink); err != nil {
 		return nil, errors.Wrap(err, "failed to launch meeting")
