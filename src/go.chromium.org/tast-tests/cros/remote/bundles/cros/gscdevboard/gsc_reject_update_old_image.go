@@ -151,6 +151,8 @@ func GSCRejectUpdateOldImage(ctx context.Context, s *testing.State) {
 		fwVersion = oldH1ImageVersion
 	case ti50.GscOTShield:
 		fwVersion = oldOTImageVersion
+	case ti50.GscOpentitanCw310Fpga:
+		fwVersion = oldOTImageVersion
 	default:
 		s.Fatalf("No old image for %s", f.TestbedProperties.TestbedType)
 	}
