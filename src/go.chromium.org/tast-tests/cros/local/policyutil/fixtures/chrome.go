@@ -222,6 +222,25 @@ func init() {
 	})
 
 	testing.AddFixture(&testing.Fixture{
+		Name:         fixture.ChromeEnrolledLoggedInARCFlex,
+		Desc:         "Logged in and enrolled with ARC support (ChromeOS Flex)",
+		Contacts:     []string{"josephsussman@google.com", "chromeos-flex-eng@google.com"},
+		BugComponent: "b:998633", // ChromeOS > Platform > Enablement > ChromeOS Flex
+		Impl: &policyChromeFixture{
+			extraOptsFunc: func(ctx context.Context, s *testing.FixtState) ([]chrome.Option, error) {
+				return []chrome.Option{chrome.KeepEnrollment(), chrome.ARCEnabled(),
+					chrome.EnableFeatures("AndroidVpnAppsOnFlex")}, nil
+			},
+			waitForARC: true,
+		},
+		SetUpTimeout:    chrome.ManagedUserLoginTimeout + cleanupTimeout,
+		ResetTimeout:    chrome.ResetTimeout,
+		TearDownTimeout: chrome.ResetTimeout,
+		PostTestTimeout: 15 * time.Second,
+		Parent:          fixture.FakeDMSEnrolled,
+	})
+
+	testing.AddFixture(&testing.Fixture{
 		Name: fixture.ChromeEnrolledLoggedInShortMetricsInterval,
 		Desc: "Logged into a user session and reports metric every second",
 		Contacts: []string{

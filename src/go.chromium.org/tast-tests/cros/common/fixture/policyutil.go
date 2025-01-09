@@ -51,6 +51,8 @@ const (
 	ChromeUpdateEngineEnrolledLoggedIn = "chromeUpdateEngineEnrolledLoggedIn"
 	// ChromeEnrolledLoggedInARC is a fixture name.
 	ChromeEnrolledLoggedInARC = "chromeEnrolledLoggedInARC"
+	// ChromeEnrolledLoggedInARCFlex is a fixture name.
+	ChromeEnrolledLoggedInARCFlex = "chromeEnrolledLoggedInARCFlex"
 	// ChromeAdminDeskTemplatesLoggedIn is a fixture name.
 	ChromeAdminDeskTemplatesLoggedIn = "chromeAdminDeskTemplatesLoggedIn"
 	// ChromePolicyRealUserLoggedIn is a fixture name.
