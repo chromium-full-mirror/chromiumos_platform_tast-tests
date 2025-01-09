@@ -61,9 +61,11 @@ func (c *Connector) EnterServerURL(ctx context.Context, cfg *apps.VDILoginConfig
 // EnterCredentialsAndLogin waits for the screen and enters credentials.
 func (c *Connector) EnterCredentialsAndLogin(ctx context.Context, cfg *apps.VDILoginConfig) error {
 	testing.ContextLog(ctx, "Citrix: entering username and password and logging in")
-	//TODO: b/268335458 Relpace uidetect with uiauto when applicable.
+	ui := uiauto.New(c.tconn)
+
+	usernameTextField := nodewith.NameContaining("user@domain.com").Role(role.TextField)
 	if err := uiauto.Combine("enter username and password and connect login",
-		c.detector.WithTimeout(uiDetectionTimeout).WaitUntilExists(uidetection.TextBlock([]string{"User", "name"})),
+		ui.DoDefault(usernameTextField),
 		c.keyboard.TypeAction(cfg.Username),
 		c.keyboard.AccelAction("Tab"),
 		c.keyboard.TypeAction(cfg.Password),
