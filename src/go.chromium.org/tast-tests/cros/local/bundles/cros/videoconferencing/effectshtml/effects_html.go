@@ -153,7 +153,7 @@ func OpenURLAndWaitForStreamToReady(ctx context.Context, tconn *chrome.TestConn,
 
 // CloseURLAndWaitForWindowGone close the tab with the url and wait until vcTray disappears.
 func CloseURLAndWaitForWindowGone(ctx context.Context, tconn *chrome.TestConn, cr *chrome.Chrome, url string, vcTray *vctray.VCTray) error {
-	if err := cr.Browser().CloseWithURL(ctx, url); err != nil {
+	if err := cr.CloseTargets(ctx, chrome.MatchTargetURL(url)); err != nil {
 		return errors.Wrap(err, "Fail to close url")
 	}
 

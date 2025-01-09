@@ -46,5 +46,5 @@ func LaunchTab(ctx context.Context, tconn *chrome.TestConn, cr *chrome.Chrome, u
 
 // Close closes the tab with id inside VcTabUI.
 func (tabUI *VcTabUI) Close(ctx context.Context) error {
-	return tabUI.cr.Browser().CloseWithURL(ctx, tabUI.url)
+	return tabUI.cr.CloseTargets(ctx, chrome.MatchTargetURL(tabUI.url))
 }
