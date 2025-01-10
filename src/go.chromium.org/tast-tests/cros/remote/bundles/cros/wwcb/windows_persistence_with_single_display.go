@@ -34,7 +34,7 @@ func init() {
 		Desc:         "Test windows persistent settings with the single external display",
 		Contacts:     []string{"cros-wwcb-automation@google.com", "allion-wwcb@allion.corp-partner.google.com"},
 		BugComponent: "b:1289112", // ChromeOS > External > WWCB > Allion > Automation
-		Attr:         []string{
+		Attr: []string{
 			"group:wwcb",
 			"group:pasit",
 			"group:release-health",
@@ -134,8 +134,8 @@ func openAppsOnExternalDisplay(ctx context.Context, appsSvc pb.AppsServiceClient
 		return errors.Wrap(err, "failed to launch files app")
 	}
 
-	if _, err := appsSvc.LaunchPrimaryBrowser(ctx, &empty.Empty{}); err != nil {
-		return errors.Wrap(err, "failed to launch primary browser")
+	if _, err := appsSvc.LaunchBrowser(ctx, &empty.Empty{}); err != nil {
+		return errors.Wrap(err, "failed to launch browser")
 	}
 
 	// Retry to switch window, testing would fail on getting display info sometimes.

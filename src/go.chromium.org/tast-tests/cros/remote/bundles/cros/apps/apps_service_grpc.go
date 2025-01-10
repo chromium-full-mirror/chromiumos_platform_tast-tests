@@ -78,9 +78,9 @@ func AppsServiceGRPC(ctx context.Context, s *testing.State) { // NOLINT
 		s.Fatal("Failed to close files app: ", err)
 	}
 
-	browser, err := appsSvc.LaunchPrimaryBrowser(ctx, &empty.Empty{})
+	browser, err := appsSvc.LaunchBrowser(ctx, &empty.Empty{})
 	if err != nil {
-		s.Fatal("Failed to launch primary browser: ", err)
+		s.Fatal("Failed to launch browser: ", err)
 	}
 
 	if browser.Id != browserID {

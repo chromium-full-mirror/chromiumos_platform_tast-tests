@@ -91,8 +91,8 @@ func (svc *service) CloseApp(ctx context.Context, req *pb.CloseAppRequest) (*emp
 	})
 }
 
-// GetPrimaryBrowser returns the App used for the primary browser.
-func (svc *service) GetPrimaryBrowser(ctx context.Context, req *empty.Empty) (*pb.App, error) {
+// browserApp returns the browser App.
+func (svc *service) browserApp(ctx context.Context, req *empty.Empty) (*pb.App, error) {
 	return common.UseTconn(ctx, svc.sharedObject, func(tconn *chrome.TestConn) (*pb.App, error) {
 		app, err := ChromeOrChromium(ctx, tconn)
 		if err != nil {
@@ -102,9 +102,9 @@ func (svc *service) GetPrimaryBrowser(ctx context.Context, req *empty.Empty) (*p
 	})
 }
 
-// LaunchPrimaryBrowser launches the primary browser and returns the App launched.
-func (svc *service) LaunchPrimaryBrowser(ctx context.Context, req *empty.Empty) (*pb.App, error) {
-	app, err := svc.GetPrimaryBrowser(ctx, req)
+// LaunchBrowser launches the browser and returns the browser App.
+func (svc *service) LaunchBrowser(ctx context.Context, req *empty.Empty) (*pb.App, error) {
+	app, err := svc.browserApp(ctx, req)
 	if err != nil {
 		return app, err
 	}
