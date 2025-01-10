@@ -793,7 +793,7 @@ func init() {
 					outputDevice:                    "INTERNAL_SPEAKER",
 				}.Instance(),
 				ExtraTestBedDeps: []string{tbdep.AudioBeamforming("intelligo")},
-				ExtraAttr:        []string{"group:mainline"},
+				ExtraAttr:        []string{"group:mainline", "informational", "group:criticalstaging"},
 			},
 			{
 				Name: "beamforming_enabled_by_ui",
@@ -815,7 +815,7 @@ func init() {
 					outputDevice:                    "INTERNAL_SPEAKER",
 				}.Instance(),
 				ExtraTestBedDeps: []string{tbdep.AudioBeamforming("intelligo")},
-				ExtraAttr:        []string{"group:mainline"},
+				ExtraAttr:        []string{"group:mainline", "informational", "group:criticalstaging"},
 			},
 			{
 				Name: "style_transfer",
