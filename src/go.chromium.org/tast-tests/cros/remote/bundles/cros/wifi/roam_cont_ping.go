@@ -44,8 +44,6 @@ func init() {
 			tbdep.WifiStateNormal,
 			tbdep.BluetoothStateNormal,
 			tbdep.PeripheralWifiStateWorking,
-			// TODO(b/319149188) Replace this with a feature requirement once available.
-			tbdep.WifiRouterModels("OPENWRT[Ubiquiti_UniFi_6_Lite]")[0],
 		},
 		ServiceDeps: []string{wificell.ShillServiceName},
 		// A single DHCP server sharing same address pool for clients
