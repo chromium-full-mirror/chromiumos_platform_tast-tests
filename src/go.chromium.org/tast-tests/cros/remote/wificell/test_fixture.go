@@ -2221,6 +2221,12 @@ func (tf *TestFixture) StartTethering(ctx context.Context, dutIdx DutIdx, ops []
 		return nil, nil, errors.Wrap(err, "failed to create tethering config")
 	}
 
+	if (tf.duts[DefaultDUT].chipset == wlan.Intel7265 || tf.duts[DefaultDUT].chipset == wlan.Intel7260) && (c.Band == tethering.Band5g) {
+		// AC726X marks all the 5GHz channels in US as no_IR, thus cannot start SoftAP on high band. Use 2.4GHz band instead. Refer to b/385358399 for more context.
+		testing.ContextLog(ctx, "Replace and use low band on AC7265")
+		c.Band = tethering.Band2p4g
+	}
+
 	request := &wifi.TetheringRequest{
 		NoUplink:          c.NoUL,
 		AutoDisableMinute: c.AutoDisableMin,
