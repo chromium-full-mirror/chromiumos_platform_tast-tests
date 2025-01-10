@@ -36,6 +36,8 @@ type rxMeas struct {
 	TotalDecodeTime float64 `json:"totalDecodeTime"`
 	FramesDecoded   float64 `json:"framesDecoded"`
 	FramesDropped   float64 `json:"framesDropped"`
+	FrameWidth      float64 `json:"frameWidth"`
+	FrameHeight     float64 `json:"frameHeight"`
 }
 
 // ReadRTCReportFunc is the type of a function that reads WebRTC stats and fills out in rxMeas if decode is true, or txMeas.
@@ -300,13 +302,13 @@ func MeasureRTCDecodeStats(ctx context.Context, conn *chrome.Conn, streamWidth, 
 		if err := readRTCReport(ctx, conn, true, &rxm); err != nil {
 			return errors.Wrap(err, "failed to retrieve and/or parse getStats()")
 		}
-		rxMeasurements = append(rxMeasurements, rxm)
 
 		if rxm.FramesDecoded == 0 {
 			// Wait until the first frame is decoded before analyzind its contents.
 			// Slow devices might take a substantial amount of time: b/158848650.
 			continue
 		}
+		rxMeasurements = append(rxMeasurements, rxm)
 		if err := validateFrame(ctx, conn, streamWidth/8, streamHeight/8); err != nil {
 			return err
 		}

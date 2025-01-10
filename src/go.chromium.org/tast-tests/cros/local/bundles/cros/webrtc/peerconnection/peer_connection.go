@@ -98,23 +98,28 @@ type RTCTestParams struct {
 	TraceChromeEvents                     bool
 }
 
-// readRTCReport returns a function to read WebRTC stats for an |id| decoder and encoder.
-// |id| is an integer rating from 0 to N-1, where N is the number of spatial layers.
+// readRTCReport returns a function to read WebRTC stats for a peerConnection associated with |pcId|
+// and RTP stream for |rId| if |rId| is not -1 or the highest resolution stream.
+// |pcId| is an integer of peerconnection in the test page, ranging from 0 to N-1, where N is the number of spatial layers.
 // Since there are multiple outbound-rtp in the case of simulcast, the stat is selected whose frame height is the largest.
-// TODO(b/322436617): Verify all the decoders in simulcast.
+// |rid| is an integer of RTP Stream identier specified if and only if the |pcId| is local PeerConnection (i.e. simulcast encoder).
 // The out can be an arbitrary struct whose members are 'json' tagged, so that they will be filled.
-func readRTCReport(id int) webrtc.ReadRTCReportFunc {
+func readRTCReport(pcId, rid int) webrtc.ReadRTCReportFunc {
 	return func(ctx context.Context, conn *chrome.Conn, decode bool, out interface{}) error {
 		// Decode: remotePeerConnection, "inbound-rtp"
 		// Encode: localPeerConnection, "outbound-rtp"
 		var peerConnection string
 		var staticType string
+		var ridCondition string
 		if decode {
-			peerConnection = fmt.Sprintf("testVisible.remotePeerConnections[%d]", id)
+			peerConnection = fmt.Sprintf("testVisible.remotePeerConnections[%d]", pcId)
 			staticType = "inbound-rtp"
 		} else {
-			peerConnection = fmt.Sprintf("testVisible.localPeerConnections[%d]", id)
+			peerConnection = fmt.Sprintf("testVisible.localPeerConnections[%d]", pcId)
 			staticType = "outbound-rtp"
+			if rid != -1 {
+				ridCondition = fmt.Sprintf("report.rid == %d && ", rid)
+			}
 		}
 
 		return conn.Call(ctx, out, fmt.Sprintf(`async() => {
@@ -125,7 +130,7 @@ func readRTCReport(id int) webrtc.ReadRTCReportFunc {
 			}
 			var R = null;
 			for (const [_, report] of stats) {
-			  if (report['type'] === '%s' &&
+			  if (report['type'] === '%s' && %s
 			      (!R || R['frameHeight'] < report['frameHeight'])) {
 			    R = report;
 			  }
@@ -134,7 +139,7 @@ func readRTCReport(id int) webrtc.ReadRTCReportFunc {
 			  return R;
 			}
 			throw new Error("Stat not found");
-			}`, peerConnection, staticType))
+			}`, peerConnection, staticType, ridCondition))
 	}
 }
 
@@ -273,7 +278,7 @@ func verifyDecoderImplementation(ctx context.Context, conn *chrome.Conn, verifyD
 	}
 
 	for i := 0; i < numDecoders; i++ {
-		decImplName, hwDecoderUsed, err := webrtc.GetCodecImplementation(ctx, conn, true, readRTCReport(i))
+		decImplName, hwDecoderUsed, err := webrtc.GetCodecImplementation(ctx, conn, true, readRTCReport(i, -1))
 		if err != nil {
 			return errors.Wrapf(err, "failed to get decoder implementation name for remotePeerConnections[%d]", i)
 		}
@@ -296,23 +301,39 @@ func verifyEncoderImplementation(ctx context.Context, conn *chrome.Conn, verifyE
 	if err != nil {
 		return err
 	}
+
 	// The main local peer connection in spatial layer encoding is set to
 	// testVisible.localPeerConnections[numStreams - 1].
-	id := numStreams - 1
-
-	encImplName, hwEncoderUsed, err := webrtc.GetCodecImplementation(ctx, conn, false, readRTCReport(id))
-	if err != nil {
-		return errors.Wrap(err, "failed to get encoder implementation name")
-	}
+	pcID := numStreams - 1
 
 	if simulcasts > 1 {
-		// In simulcast encoding, if simulcastHWEncs is not provided, the encoder is expected to be single encoder without SimulcastEncoderAdapter.
+		var encImplName string
+		// For simulcast, we wait until the encoder for each RTP stream is active (= encode sufficient number of frames).
+		for rid := 0; rid < simulcasts; rid++ {
+			encImplName, _, err = webrtc.GetCodecImplementation(ctx, conn, false, readRTCReport(pcID, rid))
+			if err != nil {
+				return errors.Wrapf(err, "failed to get encoder implementation name of simulcasts rid=%d", rid)
+			}
+		}
+
+		// `PowerEfficient` in webrtc stats for each stream is true even if there is a hardware encoder used for any other stream.
+		// So we cannot verify with PowerEfficient and thus we check implementation name instead.
+		// If simulcastHWEncs is not provided, the encoder is expected to be single encoder without SimulcastEncoderAdapter.
+		// We use the encoder implementation name that we get the last time, when the most highest resolution RTP stream is running
+		// so that all the streams are likely active at the same time.
 		if len(simulcastHWEncs) > 1 {
 			return checkSimulcastEncImpl(encImplName, simulcastHWEncs)
 		}
 		if strings.Contains(encImplName, "SimulcastEncoderAdapter") {
 			return errors.Errorf("the simulcast encoding is executed with SimulcastEncoderAdapter, encoder name=%s", encImplName)
 		}
+
+		return nil
+	}
+
+	encImplName, hwEncoderUsed, err := webrtc.GetCodecImplementation(ctx, conn, false, readRTCReport(pcID, -1))
+	if err != nil {
+		return errors.Wrap(err, "failed to get encoder implementation name")
 	}
 
 	if verifyEncoderMode == VerifyHWEncoderUsed && !hwEncoderUsed {

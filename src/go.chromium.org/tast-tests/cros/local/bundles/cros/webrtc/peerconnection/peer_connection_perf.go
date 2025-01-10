@@ -116,7 +116,11 @@ func measurePerformance(ctx context.Context, s *testing.State, conn *chrome.Conn
 	// resolution stream from each eother, collect all the decoders' performance.
 	pcID := numStreams - 1
 	readCodecPC := fmt.Sprintf("testVisible.localPeerConnections[%d]", pcID)
-	if err := webrtc.MeasureRTCStats(ctx, conn, params.Profile, params.StreamWidth, params.StreamHeight, params.DisplayMediaType != "", params.Svc, readRTCReport(pcID), webrtc.CreateReadCodecFunc(readCodecPC), validateFrame, p.GetUnderlyingValues()); err != nil {
+	rid := -1
+	if params.Simulcasts > 1 {
+		rid = params.Simulcasts - 1
+	}
+	if err := webrtc.MeasureRTCStats(ctx, conn, params.Profile, params.StreamWidth, params.StreamHeight, params.DisplayMediaType != "", params.Svc, readRTCReport(pcID, rid), webrtc.CreateReadCodecFunc(readCodecPC), validateFrame, p.GetUnderlyingValues()); err != nil {
 		return errors.Wrap(err, "failed to measure RTCStats")
 	}
 
