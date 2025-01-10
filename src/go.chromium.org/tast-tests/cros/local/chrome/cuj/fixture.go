@@ -1649,6 +1649,7 @@ func (f *loggedInToCUJUserFixture) SetUp(ctx context.Context, s *testing.FixtSta
 				opts = append(opts, chrome.ARCEnabled())
 			}
 			opts = append(opts, chrome.ExtraArgs(arc.DisableSyncFlags()...))
+			opts = append(opts, chrome.DisableFeatures("ArcExternalStorageAccess"))
 			if f.useEnterprisePool {
 				fdms, err := startFakeDMSWithARCEnabled(ctx, s.OutDir(), creds.User)
 				if err != nil {
