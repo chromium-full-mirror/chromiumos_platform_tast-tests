@@ -54,7 +54,7 @@ func init() {
 			{
 				Name:              "french",
 				ExtraHardwareDeps: hwdep.D(pre.InputsStableModels),
-				ExtraAttr:         []string{"group:input-tools-upstream", "group:hw_agnostic", "group:release-health"},
+				ExtraAttr:         []string{"group:input-tools-upstream", "group:hw_agnostic", "group:release-health", "release-health_essential_inputs"},
 				// "French - French keyboard" input method uses a compact-layout VK for
 				// non-a11y mode where there's no dead keys, and a full-layout VK for
 				// a11y mode where there's dead keys. To test dead keys on the VK of
@@ -87,7 +87,7 @@ func init() {
 			{
 				Name:              "catalan",
 				ExtraHardwareDeps: hwdep.D(pre.InputsStableModels),
-				ExtraAttr:         []string{"group:input-tools-upstream", "group:hw_agnostic", "group:release-health"},
+				ExtraAttr:         []string{"group:input-tools-upstream", "group:hw_agnostic", "group:release-health", "release-health_essential_inputs"},
 				// "Catalan keyboard" input method uses the same full-layout VK (that
 				// has dead keys) for both a11y & non-a11y. Just use non-a11y here.
 				Fixture: fixture.TabletVK,

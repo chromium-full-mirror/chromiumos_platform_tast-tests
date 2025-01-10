@@ -41,7 +41,7 @@ func init() {
 		Params: []testing.Param{
 			{
 				Fixture:           fixture.ClamshellNonVK,
-				ExtraAttr:         []string{"group:input-tools-upstream", "group:release-health"},
+				ExtraAttr:         []string{"group:input-tools-upstream", "group:release-health", "release-health_essential_inputs"},
 				ExtraHardwareDeps: hwdep.D(pre.InputsStableModels),
 			},
 			{

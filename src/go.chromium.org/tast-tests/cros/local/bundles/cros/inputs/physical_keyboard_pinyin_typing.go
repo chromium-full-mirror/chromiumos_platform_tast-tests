@@ -30,7 +30,7 @@ func init() {
 		Desc:         "Checks that Pinyin physical keyboard works",
 		Contacts:     []string{"essential-inputs-gardener-oncall@google.com", "essential-inputs-team@google.com"},
 		BugComponent: "b:95887",
-		Attr:         []string{"group:mainline", "group:input-tools", "group:release-health"},
+		Attr:         []string{"group:mainline", "group:input-tools", "group:release-health", "release-health_essential_inputs"},
 		SoftwareDeps: []string{"inputs_deps", "chrome", "chrome_internal"},
 		SearchFlags: []*testing.StringPair{
 			{

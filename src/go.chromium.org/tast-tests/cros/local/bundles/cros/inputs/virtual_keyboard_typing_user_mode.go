@@ -39,7 +39,7 @@ func init() {
 		Desc:         "Checks that virtual keyboard works in different user modes",
 		Contacts:     []string{"essential-inputs-gardener-oncall@google.com", "essential-inputs-team@google.com"},
 		BugComponent: "b:95887",
-		Attr:         []string{"group:mainline", "group:input-tools", "group:hw_agnostic", "group:release-health"},
+		Attr:         []string{"group:mainline", "group:input-tools", "group:hw_agnostic", "group:release-health", "release-health_essential_inputs"},
 		SearchFlags: util.SearchFlagsWithIMEAndScreenPlay(
 			typingModeTestIMEs,
 			[]string{

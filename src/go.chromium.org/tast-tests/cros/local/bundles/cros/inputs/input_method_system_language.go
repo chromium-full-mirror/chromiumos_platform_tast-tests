@@ -42,7 +42,7 @@ func init() {
 			{
 				Name:              "es",
 				ExtraHardwareDeps: hwdep.D(pre.InputsStableModels),
-				ExtraAttr:         []string{"group:input-tools-upstream", "group:hw_agnostic", "group:release-health"},
+				ExtraAttr:         []string{"group:input-tools-upstream", "group:hw_agnostic", "group:release-health", "release-health_essential_inputs"},
 				Val: testParameters{
 					regionCode:           "es",
 					defaultInputMethodID: ime.SpanishSpain.ID,
@@ -60,7 +60,7 @@ func init() {
 			}, {
 				Name:              "fr",
 				ExtraHardwareDeps: hwdep.D(pre.InputsStableModels),
-				ExtraAttr:         []string{"group:input-tools-upstream", "group:release-health"},
+				ExtraAttr:         []string{"group:input-tools-upstream", "group:release-health", "release-health_essential_inputs"},
 				Val: testParameters{
 					regionCode:           "fr",
 					defaultInputMethodID: ime.FrenchFrance.ID,
@@ -78,7 +78,7 @@ func init() {
 			}, {
 				Name:              "jp",
 				ExtraHardwareDeps: hwdep.D(pre.InputsStableModels),
-				ExtraAttr:         []string{"group:input-tools-upstream", "group:hw_agnostic", "group:release-health"},
+				ExtraAttr:         []string{"group:input-tools-upstream", "group:hw_agnostic", "group:release-health", "release-health_essential_inputs"},
 				Val: testParameters{
 					regionCode:           "jp",
 					defaultInputMethodID: ime.AlphanumericWithJapaneseKeyboard.ID,

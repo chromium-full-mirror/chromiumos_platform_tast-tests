@@ -27,7 +27,11 @@ func init() {
 		Desc:         "Verifies that user can manage input methods in OS settings",
 		Contacts:     []string{"essential-inputs-gardener-oncall@google.com", "essential-inputs-team@google.com"},
 		BugComponent: "b:95887",
-		Attr:         []string{"group:mainline", "group:input-tools", "group:hw_agnostic"},
+		Attr: []string{
+			"group:mainline",
+			"group:input-tools",
+			"group:hw_agnostic",
+		},
 		SoftwareDeps: []string{"inputs_deps", "chrome", "chrome_internal"},
 		SearchFlags:  util.IMESearchFlags([]ime.InputMethod{ime.DefaultInputMethod}),
 		Timeout:      3 * time.Minute,
@@ -35,7 +39,7 @@ func init() {
 			{
 				ExtraHardwareDeps: hwdep.D(pre.InputsStableModels),
 				Fixture:           fixture.ClamshellNonVK,
-				ExtraAttr:         []string{"group:input-tools-upstream", "group:release-health"},
+				ExtraAttr:         []string{"group:input-tools-upstream", "group:release-health", "release-health_essential_inputs"},
 			},
 			{
 				Name:              "informational",
@@ -47,7 +51,7 @@ func init() {
 				Name:              "guest",
 				Fixture:           fixture.ClamshellNonVKInGuest,
 				ExtraHardwareDeps: hwdep.D(pre.InputsStableModels),
-				ExtraAttr:         []string{"group:input-tools-upstream", "group:release-health"},
+				ExtraAttr:         []string{"group:input-tools-upstream", "group:release-health", "release-health_essential_inputs"},
 			},
 			{
 				Name:              "guest_informational",

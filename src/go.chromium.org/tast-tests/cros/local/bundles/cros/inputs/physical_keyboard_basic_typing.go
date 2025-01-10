@@ -55,7 +55,7 @@ func init() {
 		Desc:         "Checks that user can do basic typing physical keyboard",
 		Contacts:     []string{"essential-inputs-gardener-oncall@google.com", "essential-inputs-team@google.com"},
 		BugComponent: "b:95887",
-		Attr:         []string{"group:mainline", "group:input-tools", "informational"},
+		Attr:         []string{"group:mainline", "group:input-tools"},
 		SoftwareDeps: []string{"inputs_deps", "chrome", "chrome_internal"},
 		SearchFlags: util.SearchFlagsWithIMEAndScreenPlay(
 			pkTypingTestIMEs,
@@ -71,7 +71,7 @@ func init() {
 				ExtraHardwareDeps: hwdep.D(pre.InputsStableModels),
 				Fixture:           fixture.ClamshellNonVK,
 				Val:               pkTypingTestIMEs,
-				ExtraAttr:         []string{"group:input-tools-upstream", "group:release-health"},
+				ExtraAttr:         []string{"group:input-tools-upstream", "group:release-health", "release-health_essential_inputs"},
 			},
 			{
 				Name:              "informational",
@@ -85,7 +85,7 @@ func init() {
 				ExtraHardwareDeps: hwdep.D(pre.InputsStableModels),
 				Fixture:           fixture.ClamshellNonVKWithFirstPartyVietnamese,
 				Val:               []ime.InputMethod{ime.VietnameseTelex, ime.VietnameseVNI},
-				ExtraAttr:         []string{"group:release-health"},
+				ExtraAttr:         []string{"group:release-health", "release-health_essential_inputs"},
 			},
 		},
 	})

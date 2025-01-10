@@ -32,7 +32,7 @@ func init() {
 		Desc:         "Test language packs handwriting dlc mounting",
 		Contacts:     []string{"cros-borders-eng@google.com", "xiuwen@google.com"},
 		BugComponent: "b:934840",
-		Attr:         []string{"group:language_packs_hw_recognition_dlc_download_daily", "group:release-health"},
+		Attr:         []string{"group:language_packs_hw_recognition_dlc_download_daily", "group:release-health", "release-health_essential_inputs"},
 		SoftwareDeps: []string{"chrome", "chrome_internal"},
 		Timeout:      10 * time.Minute,
 		HardwareDeps: hwdep.D(pre.InputsStableModels),
