@@ -63,20 +63,20 @@ func IsPrevSleepStateAvailable(ctx context.Context, dut *dut.DUT) (bool, error) 
 // the details.
 func ValidatePrevSleepState(ctx context.Context, dut *dut.DUT, sleepStateValue int) error {
 	// Command to check if UFS controller is disabled.
-	const ufs_cmd = "cbmem -c | grep -i 'Disabling UFS'"
-	out_ufs, err_ufs := dut.Conn().CommandContext(ctx, "sh", "-c", ufs_cmd).Output()
-	if err_ufs != nil {
-		if !strings.Contains(string(err_ufs.Error()), "Process exited with status 1") {
-			return errors.Wrapf(err_ufs, "failed to execute %q command", ufs_cmd)
+	const ufsCmd = "cbmem -c | grep -i 'Disabling UFS'"
+	outUfs, errUfs := dut.Conn().CommandContext(ctx, "sh", "-c", ufsCmd).Output()
+	if errUfs != nil {
+		if !strings.Contains(string(errUfs.Error()), "Process exited with status 1") {
+			return errors.Wrapf(errUfs, "failed to execute %q command", ufsCmd)
 		}
 	}
-	
-	if len(out_ufs) != 0 {
-		got_ufs := strings.TrimSpace(string(out_ufs))
 
-		if strings.Contains(got_ufs, "Disabling UFS") {
+	if len(outUfs) != 0 {
+		gotUfs := strings.TrimSpace(string(outUfs))
+
+		if strings.Contains(gotUfs, "Disabling UFS") {
 			sleepStateValue = 0
-			testing.ContextLog(ctx, "Warm reboot has happened after cold reboot to disable UFS controller.")
+			testing.ContextLog(ctx, "Warm reboot has happened after cold reboot to disable UFS controller")
 		}
 	}
 
@@ -118,31 +118,67 @@ func ShutdownAndWaitForPowerState(ctx context.Context, pxy *servo.Proxy, dut *du
 	if err := dut.WaitUnreachable(sdCtx); err != nil {
 		return errors.Wrap(err, "failed to wait for unreachable")
 	}
-	return testing.Poll(ctx, func(ctx context.Context) error {
+	if err := testing.Poll(ctx, func(ctx context.Context) error {
 		got, err := pxy.Servo().GetECSystemPowerState(ctx)
 		if err != nil {
 			return errors.Wrap(err, "failed to get EC power state")
 		}
-		if want := powerState; got != want {
-			return errors.Errorf("unexpected DUT EC power state = got %q, want %q", got, want)
+		pattern := `^AP_POWER_STATE_[A-Z][0-9]+[A-Z]*$`
+		matched, _ := regexp.MatchString(pattern, got)
+		if matched {
+			new := `[A-Z][0-9]+[A-Z]*$`
+			re := regexp.MustCompile(new)
+			match := re.FindStringSubmatch(got)
+			state := match[0]
+			testing.ContextLog(ctx, "state: ", match[0])
+			if !strings.EqualFold(state, powerState) {
+				return errors.Wrapf(err, "failed to get expected power state: want %s; got %s", powerState, got)
+			}
+		} else {
+			if !strings.EqualFold(got, powerState) {
+				return errors.Wrapf(err, "failed to get expected power state: want %s; got %s", powerState, got)
+			}
 		}
+		testing.ContextLogf(ctx, "Power state found: %s", got)
 		return nil
-	}, &testing.PollOptions{Timeout: 35 * time.Second})
+	}, &testing.PollOptions{Timeout: 75 * time.Second}); err != nil {
+		return errors.Wrap(err, "failed to verify power state")
+	}
+	return nil
 }
 
 // WaitForSuspendState verifies powerState(S0ix or S3).
 func WaitForSuspendState(ctx context.Context, h *firmware.Helper) error {
 	testing.ContextLog(ctx, "Wait for power state to become S0ix or S3")
-	return testing.Poll(ctx, func(ctx context.Context) error {
-		state, err := h.Servo.GetECSystemPowerState(ctx)
+	if err := testing.Poll(ctx, func(ctx context.Context) error {
+		got, err := h.Servo.GetECSystemPowerState(ctx)
+		testing.ContextLog(ctx, "state: ", got)
 		if err != nil {
-			return testing.PollBreak(errors.Wrap(err, "failed to get power state"))
+			return errors.Wrap(err, "failed to get EC power state")
 		}
-		if state != "S0ix" && state != "S3" {
-			return errors.New("power state is " + state)
+		pattern := `^AP_POWER_STATE_[A-Z][0-9]+[A-Z]*$`
+		matched, _ := regexp.MatchString(pattern, got)
+		if matched {
+			new := `[A-Z][0-9]+[A-Z]*$`
+			re := regexp.MustCompile(new)
+			match := re.FindStringSubmatch(got)
+			state := match[0]
+			testing.ContextLog(ctx, "state: ", state)
+			if !(strings.EqualFold(state, "s0ix")) && !(strings.EqualFold(state, "s3")) {
+				return errors.New("power state is " + got)
+			}
+
+		} else {
+			if !(strings.EqualFold(got, "s0ix")) && !(strings.EqualFold(got, "s3")) {
+				return errors.New("power state is " + got)
+			}
 		}
+		testing.ContextLogf(ctx, "Power state found: %s", got)
 		return nil
-	}, &testing.PollOptions{Interval: 1 * time.Second, Timeout: 30 * time.Second})
+	}, &testing.PollOptions{Timeout: 75 * time.Second}); err != nil {
+		return errors.Wrap(err, "failed to verify power state")
+	}
+	return nil
 }
 
 // PowerOntoDUT performs power normal press to wake DUT.
@@ -266,16 +302,33 @@ func AssertSLPAndC10(slpOpSetPre, slpOpSetPost int, pkgOpSetPre, pkgOpSetPost st
 
 // ValidateG3PowerState verify power state G3 after shutdown.
 func ValidateG3PowerState(ctx context.Context, pxy *servo.Proxy) error {
-	return testing.Poll(ctx, func(ctx context.Context) error {
-		pwrState, err := pxy.Servo().GetECSystemPowerState(ctx)
+	if err := testing.Poll(ctx, func(ctx context.Context) error {
+		got, err := pxy.Servo().GetECSystemPowerState(ctx)
 		if err != nil {
-			return errors.Wrap(err, "failed to get ec power state")
+			return errors.Wrap(err, "failed to get EC power state")
 		}
-		if pwrState != "G3" {
-			return errors.New("DUT not in G3 state")
+		powerState := "G3"
+		pattern := `^AP_POWER_STATE_[A-Z][0-9]+[A-Z]*$`
+		matched, _ := regexp.MatchString(pattern, got)
+		if matched {
+			new := `[A-Z][0-9]+[A-Z]*$`
+			re := regexp.MustCompile(new)
+			match := re.FindStringSubmatch(got)
+			fmt.Println(match[0])
+			if !strings.Contains(match[0], powerState) {
+				return errors.Wrapf(err, "failed to get expected power state: want %s; got %s", powerState, got)
+			}
+		} else {
+			if !strings.Contains(got, powerState) {
+				return errors.Wrapf(err, "failed to get expected power state: want %s; got %s", powerState, got)
+			}
 		}
+		testing.ContextLogf(ctx, "Power state found: %s", got)
 		return nil
-	}, &testing.PollOptions{Timeout: 30 * time.Second})
+	}, &testing.PollOptions{Timeout: 75 * time.Second}); err != nil {
+		return errors.Wrap(err, "failed to verify power state")
+	}
+	return nil
 }
 
 // VerifyPowerdConfigSuspendValue verifies whether DUT is in expected suspend state

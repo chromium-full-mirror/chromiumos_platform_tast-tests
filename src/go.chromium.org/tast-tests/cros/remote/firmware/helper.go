@@ -769,8 +769,22 @@ func (h *Helper) WaitForPowerStates(ctx context.Context, interval, timeout time.
 		if err != nil {
 			return errors.Wrap(err, "failed to check powerstate")
 		}
-		if !comparePowerStates(currPowerState, powerStates...) {
-			return errors.Errorf("Power state = %s", currPowerState)
+		pattern := `^AP_POWER_STATE_[A-Z][0-9]+[A-Z]*$`
+		matched, _ := regexp.MatchString(pattern, currPowerState)
+		if matched {
+			new := `[A-Z][0-9]+[A-Z]*$`
+			re := regexp.MustCompile(new)
+			match := re.FindStringSubmatch(currPowerState)
+
+			state := match[0]
+			testing.ContextLog(ctx, "state: ", state)
+			if !comparePowerStates(state, powerStates...) {
+				return errors.Errorf("failed to get expected power state: want %v; got %s", powerStates, state)
+			}
+		} else {
+			if !comparePowerStates(currPowerState, powerStates...) {
+				return errors.Errorf("failed to get expected power state: want %v; got %s", powerStates, currPowerState)
+			}
 		}
 		return nil
 	}, &testing.PollOptions{Timeout: timeout, Interval: interval})
@@ -782,7 +796,7 @@ func (h *Helper) WaitForPowerStates(ctx context.Context, interval, timeout time.
 
 func comparePowerStates(currState string, expectedStates ...string) bool {
 	for _, state := range expectedStates {
-		if currState == state {
+		if strings.EqualFold(state, currState) {
 			return true
 		}
 	}
