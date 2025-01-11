@@ -31,7 +31,7 @@ type impl struct{}
 
 // allowedRootfsPackages lists packages that are allowed to remove rootfs verification.
 var allowedRootfsPackages = []string{
-	"go.chromium.org/tast-tests/cros/remote/bundles/cros/intel",
+	"go.chromium.org/tast-tests/cros/remote/intel",
 }
 
 // CheckAllowedPackages checks if the caller is allowed to make rootfs writable.

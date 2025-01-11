@@ -52,7 +52,8 @@ type loggedIn struct {
 
 // allowedPackages lists packages that are allowed to remove rootfs verification.
 var allowedRootfsPackages = []string{
-	"go.chromium.org/tast-tests/cros/local/bundles/cros/intel",
+	"go.chromium.org/tast-tests/cros/local/intel",
+	"go.chromium.org/partner-intel-private/crosint_intel/local/bundles/crosint_intel/intel",
 }
 
 // checkAllowedPackages checks if the caller is allowed to remove rootfs.
