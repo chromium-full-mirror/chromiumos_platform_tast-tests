@@ -17,6 +17,7 @@ import (
 	"go.chromium.org/tast-tests/cros/local/chrome"
 	"go.chromium.org/tast-tests/cros/local/policyutil"
 	"go.chromium.org/tast/core/testing"
+	"go.chromium.org/tast/core/testing/hwdep"
 )
 
 func init() {
@@ -32,6 +33,8 @@ func init() {
 		SoftwareDeps: []string{"chrome", "flex_hwis"},
 		Attr:         []string{"group:mainline"},
 		Fixture:      fixture.ChromeEnrolledLoggedIn,
+		// b/365541979: Skip on the reven\nuc11.
+		HardwareDeps: hwdep.D(hwdep.SkipDMIProductName("NUC11TNKv5")),
 		SearchFlags: []*testing.StringPair{
 			pci.SearchFlag(&policy.DeviceFlexHwDataForProductImprovementEnabled{}, pci.VerifiedFunctionalityOS),
 		},
