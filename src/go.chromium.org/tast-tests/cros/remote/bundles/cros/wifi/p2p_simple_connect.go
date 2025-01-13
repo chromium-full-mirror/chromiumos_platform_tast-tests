@@ -6,12 +6,14 @@ package wifi
 
 import (
 	"context"
+	"time"
 
 	"go.chromium.org/tast-tests/cros/common/tbdep"
 	tdreq "go.chromium.org/tast-tests/cros/common/testdevicerequirements"
 	"go.chromium.org/tast-tests/cros/common/wifi/p2p"
 	"go.chromium.org/tast-tests/cros/remote/wificell"
-
+	"go.chromium.org/tast-tests/cros/remote/wificell/hostapd"
+	"go.chromium.org/tast/core/ctxutil"
 	"go.chromium.org/tast/core/testing"
 	"go.chromium.org/tast/core/testing/hwdep"
 )
@@ -43,7 +45,7 @@ func init() {
 				// Verifies that the DUT can connect to another DUT p2p group owner on 2.4GHz band.
 				Name: "chromebook_chromebook_2_4ghz",
 				Val: p2pSimpleConnectTestcase{
-					p2pOpts:         []p2p.GroupOption{p2p.SetFreq(2462)},
+					p2pOpts:         []p2p.GroupOption{p2p.SetFreq(2412)},
 					p2pGODevice:     wificell.P2PDeviceDUT,
 					p2pClientDevice: wificell.P2PDeviceCompanionDUT,
 				},
@@ -123,6 +125,21 @@ func P2PSimpleConnect(ctx context.Context, s *testing.State) {
 	}(ctx)
 	ctx, cancel := tf.ReserveForDeconfigP2P(ctx)
 	defer cancel()
+
+	if !tf.RequiresComplexRegulatory() {
+		// Setup capture at the GO frequency.
+		freq := p2p.Freq(testcase.p2pOpts...)
+		channel, err := hostapd.FrequencyToChannel(freq)
+		if err != nil {
+			s.Fatal("Failed to convert P2P GO frequency to channel: ", err)
+		}
+		if _, err = tf.StartPacketCapture(ctx, channel, 20); err != nil {
+			s.Fatal("Failed to start capturer: ", err)
+		}
+		defer tf.StopRecentPacketCapture(ctx)
+		ctx, cancel = ctxutil.Shorten(ctx, 10*time.Second)
+		defer cancel()
+	}
 
 	if err := tf.P2PConnect(ctx, testcase.p2pClientDevice); err != nil {
 		s.Fatal("Failed to connect the p2p client to the p2p group owner (GO) network: ", err)

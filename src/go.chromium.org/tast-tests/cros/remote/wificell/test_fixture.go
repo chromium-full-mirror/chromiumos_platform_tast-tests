@@ -2482,6 +2482,14 @@ func (tf *TestFixture) DUTDevice(dutIdx DutIdx) WiFiDevice {
 	return tf.duts[dutIdx]
 }
 
+// RequiresComplexRegulatory checks if the WiFi device requires complex regulatory setup.
+func (tf *TestFixture) RequiresComplexRegulatory() bool {
+	return (tf.duts[DefaultDUT].chipset == wlan.Intel7265 ||
+		tf.duts[DefaultDUT].chipset == wlan.Intel7260 ||
+		tf.NumberOfDUTs() == 2 && (tf.duts[PeerDUT1].chipset == wlan.Intel7265 ||
+			tf.duts[DefaultDUT].chipset == wlan.Intel7260))
+}
+
 // PcapDevice returns pcap device via its WiFiDevice interface.
 func (tf *TestFixture) PcapDevice() WiFiDevice {
 	return tf.pcap
