@@ -290,7 +290,7 @@ func (cs *CpuidleStateMetrics) Snapshot(ctx context.Context, values *perf.Values
 	// Total time spent in a state by all the cpus
 	totalResidency := make(map[string]int64)
 
-	for cpuName, perCPUDiffs := range diffs {
+	for _, perCPUDiffs := range diffs {
 		perCPUC0Residency := timeSlice
 
 		var perCPUTotalResidency int64
@@ -308,13 +308,11 @@ func (cs *CpuidleStateMetrics) Snapshot(ctx context.Context, values *perf.Values
 				// Adjust each state proportionally.
 				diff = int64(float64(diff) * adjustRate)
 			}
-			values.Append(cs.metrics[cpuName+"-"+stateName], (float64(diff)/float64(timeSlice))*100)
 			c0Residency -= diff
 			perCPUC0Residency -= diff
 
 			totalResidency[stateName] += diff
 		}
-		values.Append(cs.metrics[cpuName+"-"+c0State], (float64(perCPUC0Residency)/float64(timeSlice))*100)
 	}
 
 	for stateName, diff := range totalResidency {
