@@ -18485,37 +18485,6 @@ func (p *RelaunchWindow) Equal(iface interface{}) bool {
 }
 
 // ****************************************************************************
-// 855. LacrosAvailability
-// This policy has a default value of lacros_disallowed.
-// ****************************************************************************
-type LacrosAvailability struct {
-	Stat Status
-	Val  string
-}
-
-func (p *LacrosAvailability) Name() string          { return "LacrosAvailability" }
-func (p *LacrosAvailability) Scope() Scope          { return ScopeUser }
-func (p *LacrosAvailability) Status() Status        { return p.Stat }
-func (p *LacrosAvailability) UntypedV() interface{} { return p.Val }
-func (p *LacrosAvailability) UnmarshalAs(m json.RawMessage) (interface{}, error) {
-	var v string
-	if err := json.Unmarshal(m, &v); err != nil {
-		return nil, errors.Wrapf(err, "could not read %s as string", m)
-	}
-	return v, nil
-}
-func (p *LacrosAvailability) SetProto(m *protoreflect.Message) {
-	SetUserProto(m, p.Name(), p.Val)
-}
-func (p *LacrosAvailability) Equal(iface interface{}) bool {
-	v, ok := iface.(string)
-	if !ok {
-		return ok
-	}
-	return cmp.Equal(p.Val, v, cmpopts.EquateEmpty())
-}
-
-// ****************************************************************************
 // 856. DataLeakPreventionReportingEnabled
 // ****************************************************************************
 type DataLeakPreventionReportingEnabled struct {
@@ -22848,37 +22817,6 @@ func (p *UsbDetectorNotificationEnabled) SetProto(m *protoreflect.Message) {
 }
 func (p *UsbDetectorNotificationEnabled) Equal(iface interface{}) bool {
 	v, ok := iface.(bool)
-	if !ok {
-		return ok
-	}
-	return cmp.Equal(p.Val, v, cmpopts.EquateEmpty())
-}
-
-// ****************************************************************************
-// 1045. LacrosSelection
-// This policy has a default value of rootfs.
-// ****************************************************************************
-type LacrosSelection struct {
-	Stat Status
-	Val  string
-}
-
-func (p *LacrosSelection) Name() string          { return "LacrosSelection" }
-func (p *LacrosSelection) Scope() Scope          { return ScopeUser }
-func (p *LacrosSelection) Status() Status        { return p.Stat }
-func (p *LacrosSelection) UntypedV() interface{} { return p.Val }
-func (p *LacrosSelection) UnmarshalAs(m json.RawMessage) (interface{}, error) {
-	var v string
-	if err := json.Unmarshal(m, &v); err != nil {
-		return nil, errors.Wrapf(err, "could not read %s as string", m)
-	}
-	return v, nil
-}
-func (p *LacrosSelection) SetProto(m *protoreflect.Message) {
-	SetUserProto(m, p.Name(), p.Val)
-}
-func (p *LacrosSelection) Equal(iface interface{}) bool {
-	v, ok := iface.(string)
 	if !ok {
 		return ok
 	}
@@ -27558,6 +27496,7 @@ func (p *DirectSocketsBlockedForUrls) Equal(iface interface{}) bool {
 
 // ****************************************************************************
 // 1235. PrivacySandboxIpProtectionEnabled
+// This policy has a default value of False.
 // This policy can be modified without rebooting.
 // This is a future policy, it is not present in stable builds.
 // ****************************************************************************
@@ -28420,7 +28359,6 @@ func (p *DevicePostQuantumKeyAgreementEnabled) Equal(iface interface{}) bool {
 // ****************************************************************************
 // 1277. DefaultJavaScriptOptimizerSetting
 // This policy can be modified without rebooting.
-// This is a future policy, it is not present in stable builds.
 // ****************************************************************************
 type DefaultJavaScriptOptimizerSetting struct {
 	Stat Status
@@ -28452,7 +28390,6 @@ func (p *DefaultJavaScriptOptimizerSetting) Equal(iface interface{}) bool {
 // ****************************************************************************
 // 1278. JavaScriptOptimizerAllowedForSites
 // This policy can be modified without rebooting.
-// This is a future policy, it is not present in stable builds.
 // ****************************************************************************
 type JavaScriptOptimizerAllowedForSites struct {
 	Stat Status
@@ -28486,7 +28423,6 @@ func (p *JavaScriptOptimizerAllowedForSites) Equal(iface interface{}) bool {
 // ****************************************************************************
 // 1279. JavaScriptOptimizerBlockedForSites
 // This policy can be modified without rebooting.
-// This is a future policy, it is not present in stable builds.
 // ****************************************************************************
 type JavaScriptOptimizerBlockedForSites struct {
 	Stat Status
@@ -29545,6 +29481,266 @@ func (p *PasswordManagerPasskeysEnabled) SetProto(m *protoreflect.Message) {
 	SetUserProto(m, p.Name(), p.Val)
 }
 func (p *PasswordManagerPasskeysEnabled) Equal(iface interface{}) bool {
+	v, ok := iface.(bool)
+	if !ok {
+		return ok
+	}
+	return cmp.Equal(p.Val, v, cmpopts.EquateEmpty())
+}
+
+// ****************************************************************************
+// 1319. DevicePowerBatteryChargingOptimization
+// This policy can be modified without rebooting.
+// This is a future policy, it is not present in stable builds.
+// ****************************************************************************
+type DevicePowerBatteryChargingOptimization struct {
+	Stat Status
+	Val  int
+}
+
+func (p *DevicePowerBatteryChargingOptimization) Name() string {
+	return "DevicePowerBatteryChargingOptimization"
+}
+func (p *DevicePowerBatteryChargingOptimization) Scope() Scope          { return ScopeDevice }
+func (p *DevicePowerBatteryChargingOptimization) Status() Status        { return p.Stat }
+func (p *DevicePowerBatteryChargingOptimization) UntypedV() interface{} { return p.Val }
+func (p *DevicePowerBatteryChargingOptimization) UnmarshalAs(m json.RawMessage) (interface{}, error) {
+	var v int
+	if err := json.Unmarshal(m, &v); err != nil {
+		return nil, errors.Wrapf(err, "could not read %s as int", m)
+	}
+	return v, nil
+}
+func (p *DevicePowerBatteryChargingOptimization) SetProto(m *protoreflect.Message) {
+	SetDeviceProto(m, "DevicePowerBatteryChargingOptimization", "value", p.Val)
+}
+func (p *DevicePowerBatteryChargingOptimization) Equal(iface interface{}) bool {
+	v, ok := iface.(int)
+	if !ok {
+		return ok
+	}
+	return cmp.Equal(p.Val, v, cmpopts.EquateEmpty())
+}
+
+// ****************************************************************************
+// 1320. SmartCardConnectAllowedForUrls
+// This policy can be modified without rebooting.
+// This is a future policy, it is not present in stable builds.
+// ****************************************************************************
+type SmartCardConnectAllowedForUrls struct {
+	Stat Status
+	Val  []string
+}
+
+func (p *SmartCardConnectAllowedForUrls) Name() string          { return "SmartCardConnectAllowedForUrls" }
+func (p *SmartCardConnectAllowedForUrls) Scope() Scope          { return ScopeUser }
+func (p *SmartCardConnectAllowedForUrls) Status() Status        { return p.Stat }
+func (p *SmartCardConnectAllowedForUrls) UntypedV() interface{} { return p.Val }
+func (p *SmartCardConnectAllowedForUrls) UnmarshalAs(m json.RawMessage) (interface{}, error) {
+	var v []string
+	if err := json.Unmarshal(m, &v); err != nil {
+		return nil, errors.Wrapf(err, "could not read %s as []string", m)
+	}
+	return v, nil
+}
+func (p *SmartCardConnectAllowedForUrls) SetProto(m *protoreflect.Message) {
+	SetUserProto(m, p.Name(), p.Val)
+}
+func (p *SmartCardConnectAllowedForUrls) Equal(iface interface{}) bool {
+	v, ok := iface.([]string)
+	if !ok {
+		return ok
+	}
+	return cmp.Equal(p.Val, v, cmpopts.EquateEmpty())
+}
+
+// ****************************************************************************
+// 1321. SmartCardConnectBlockedForUrls
+// This policy can be modified without rebooting.
+// This is a future policy, it is not present in stable builds.
+// ****************************************************************************
+type SmartCardConnectBlockedForUrls struct {
+	Stat Status
+	Val  []string
+}
+
+func (p *SmartCardConnectBlockedForUrls) Name() string          { return "SmartCardConnectBlockedForUrls" }
+func (p *SmartCardConnectBlockedForUrls) Scope() Scope          { return ScopeUser }
+func (p *SmartCardConnectBlockedForUrls) Status() Status        { return p.Stat }
+func (p *SmartCardConnectBlockedForUrls) UntypedV() interface{} { return p.Val }
+func (p *SmartCardConnectBlockedForUrls) UnmarshalAs(m json.RawMessage) (interface{}, error) {
+	var v []string
+	if err := json.Unmarshal(m, &v); err != nil {
+		return nil, errors.Wrapf(err, "could not read %s as []string", m)
+	}
+	return v, nil
+}
+func (p *SmartCardConnectBlockedForUrls) SetProto(m *protoreflect.Message) {
+	SetUserProto(m, p.Name(), p.Val)
+}
+func (p *SmartCardConnectBlockedForUrls) Equal(iface interface{}) bool {
+	v, ok := iface.([]string)
+	if !ok {
+		return ok
+	}
+	return cmp.Equal(p.Val, v, cmpopts.EquateEmpty())
+}
+
+// ****************************************************************************
+// 1322. DeviceFlexArcPreloadEnabled
+// ****************************************************************************
+type DeviceFlexArcPreloadEnabled struct {
+	Stat Status
+	Val  bool
+}
+
+func (p *DeviceFlexArcPreloadEnabled) Name() string          { return "DeviceFlexArcPreloadEnabled" }
+func (p *DeviceFlexArcPreloadEnabled) Scope() Scope          { return ScopeDevice }
+func (p *DeviceFlexArcPreloadEnabled) Status() Status        { return p.Stat }
+func (p *DeviceFlexArcPreloadEnabled) UntypedV() interface{} { return p.Val }
+func (p *DeviceFlexArcPreloadEnabled) UnmarshalAs(m json.RawMessage) (interface{}, error) {
+	var v bool
+	if err := json.Unmarshal(m, &v); err != nil {
+		return nil, errors.Wrapf(err, "could not read %s as bool", m)
+	}
+	return v, nil
+}
+func (p *DeviceFlexArcPreloadEnabled) SetProto(m *protoreflect.Message) {
+	SetDeviceProto(m, "DeviceFlexArcPreloadEnabled", "value", p.Val)
+}
+func (p *DeviceFlexArcPreloadEnabled) Equal(iface interface{}) bool {
+	v, ok := iface.(bool)
+	if !ok {
+		return ok
+	}
+	return cmp.Equal(p.Val, v, cmpopts.EquateEmpty())
+}
+
+// ****************************************************************************
+// 1323. AllowedInputMethodsForceEnabled
+// This policy can be modified without rebooting.
+// ****************************************************************************
+type AllowedInputMethodsForceEnabled struct {
+	Stat Status
+	Val  bool
+}
+
+func (p *AllowedInputMethodsForceEnabled) Name() string          { return "AllowedInputMethodsForceEnabled" }
+func (p *AllowedInputMethodsForceEnabled) Scope() Scope          { return ScopeUser }
+func (p *AllowedInputMethodsForceEnabled) Status() Status        { return p.Stat }
+func (p *AllowedInputMethodsForceEnabled) UntypedV() interface{} { return p.Val }
+func (p *AllowedInputMethodsForceEnabled) UnmarshalAs(m json.RawMessage) (interface{}, error) {
+	var v bool
+	if err := json.Unmarshal(m, &v); err != nil {
+		return nil, errors.Wrapf(err, "could not read %s as bool", m)
+	}
+	return v, nil
+}
+func (p *AllowedInputMethodsForceEnabled) SetProto(m *protoreflect.Message) {
+	SetUserProto(m, p.Name(), p.Val)
+}
+func (p *AllowedInputMethodsForceEnabled) Equal(iface interface{}) bool {
+	v, ok := iface.(bool)
+	if !ok {
+		return ok
+	}
+	return cmp.Equal(p.Val, v, cmpopts.EquateEmpty())
+}
+
+// ****************************************************************************
+// 1324. WebRtcIPHandlingUrl
+// This policy can be modified without rebooting.
+// This is a future policy, it is not present in stable builds.
+// ****************************************************************************
+type WebRtcIPHandlingUrl struct {
+	Stat Status
+	Val  []*WebRtcIPHandlingUrlValue
+}
+
+type WebRtcIPHandlingUrlValue struct {
+	Handling string `json:"handling"`
+	Url      string `json:"url"`
+}
+
+func (p *WebRtcIPHandlingUrl) Name() string          { return "WebRtcIPHandlingUrl" }
+func (p *WebRtcIPHandlingUrl) Scope() Scope          { return ScopeUser }
+func (p *WebRtcIPHandlingUrl) Status() Status        { return p.Stat }
+func (p *WebRtcIPHandlingUrl) UntypedV() interface{} { return p.Val }
+func (p *WebRtcIPHandlingUrl) UnmarshalAs(m json.RawMessage) (interface{}, error) {
+	var v []*WebRtcIPHandlingUrlValue
+	if err := json.Unmarshal(m, &v); err != nil {
+		return nil, errors.Wrapf(err, "could not read %s as []*WebRtcIPHandlingUrlValue", m)
+	}
+	return v, nil
+}
+func (p *WebRtcIPHandlingUrl) SetProto(m *protoreflect.Message) {
+	SetUserProto(m, p.Name(), p.Val)
+}
+func (p *WebRtcIPHandlingUrl) Equal(iface interface{}) bool {
+	v, ok := iface.([]*WebRtcIPHandlingUrlValue)
+	if !ok {
+		return ok
+	}
+	return cmp.Equal(p.Val, v, cmpopts.EquateEmpty())
+}
+
+// ****************************************************************************
+// 1325. GenAIPhotoEditingSettings
+// This policy can be modified without rebooting.
+// This is a future policy, it is not present in stable builds.
+// ****************************************************************************
+type GenAIPhotoEditingSettings struct {
+	Stat Status
+	Val  int
+}
+
+func (p *GenAIPhotoEditingSettings) Name() string          { return "GenAIPhotoEditingSettings" }
+func (p *GenAIPhotoEditingSettings) Scope() Scope          { return ScopeUser }
+func (p *GenAIPhotoEditingSettings) Status() Status        { return p.Stat }
+func (p *GenAIPhotoEditingSettings) UntypedV() interface{} { return p.Val }
+func (p *GenAIPhotoEditingSettings) UnmarshalAs(m json.RawMessage) (interface{}, error) {
+	var v int
+	if err := json.Unmarshal(m, &v); err != nil {
+		return nil, errors.Wrapf(err, "could not read %s as int", m)
+	}
+	return v, nil
+}
+func (p *GenAIPhotoEditingSettings) SetProto(m *protoreflect.Message) {
+	SetUserProto(m, p.Name(), p.Val)
+}
+func (p *GenAIPhotoEditingSettings) Equal(iface interface{}) bool {
+	v, ok := iface.(int)
+	if !ok {
+		return ok
+	}
+	return cmp.Equal(p.Val, v, cmpopts.EquateEmpty())
+}
+
+// ****************************************************************************
+// 1326. PartitionedBlobUrlUsage
+// This policy can be modified without rebooting.
+// This is a future policy, it is not present in stable builds.
+// ****************************************************************************
+type PartitionedBlobUrlUsage struct {
+	Stat Status
+	Val  bool
+}
+
+func (p *PartitionedBlobUrlUsage) Name() string          { return "PartitionedBlobUrlUsage" }
+func (p *PartitionedBlobUrlUsage) Scope() Scope          { return ScopeUser }
+func (p *PartitionedBlobUrlUsage) Status() Status        { return p.Stat }
+func (p *PartitionedBlobUrlUsage) UntypedV() interface{} { return p.Val }
+func (p *PartitionedBlobUrlUsage) UnmarshalAs(m json.RawMessage) (interface{}, error) {
+	var v bool
+	if err := json.Unmarshal(m, &v); err != nil {
+		return nil, errors.Wrapf(err, "could not read %s as bool", m)
+	}
+	return v, nil
+}
+func (p *PartitionedBlobUrlUsage) SetProto(m *protoreflect.Message) {
+	SetUserProto(m, p.Name(), p.Val)
+}
+func (p *PartitionedBlobUrlUsage) Equal(iface interface{}) bool {
 	v, ok := iface.(bool)
 	if !ok {
 		return ok
@@ -30693,8 +30889,6 @@ func newByName(name string) (Policy, error) {
 		return &SharedArrayBufferUnrestrictedAccessAllowed{}, nil
 	case "RelaunchWindow":
 		return &RelaunchWindow{}, nil
-	case "LacrosAvailability":
-		return &LacrosAvailability{}, nil
 	case "DataLeakPreventionReportingEnabled":
 		return &DataLeakPreventionReportingEnabled{}, nil
 	case "AdditionalDnsQueryTypesEnabled":
@@ -30961,8 +31155,6 @@ func newByName(name string) (Policy, error) {
 		return &ShowCastSessionsStartedByOtherDevices{}, nil
 	case "UsbDetectorNotificationEnabled":
 		return &UsbDetectorNotificationEnabled{}, nil
-	case "LacrosSelection":
-		return &LacrosSelection{}, nil
 	case "PrivacySandboxPromptEnabled":
 		return &PrivacySandboxPromptEnabled{}, nil
 	case "PrivacySandboxAdTopicsEnabled":
@@ -31371,6 +31563,22 @@ func newByName(name string) (Policy, error) {
 		return &GenAiLensOverlaySettings{}, nil
 	case "PasswordManagerPasskeysEnabled":
 		return &PasswordManagerPasskeysEnabled{}, nil
+	case "DevicePowerBatteryChargingOptimization":
+		return &DevicePowerBatteryChargingOptimization{}, nil
+	case "SmartCardConnectAllowedForUrls":
+		return &SmartCardConnectAllowedForUrls{}, nil
+	case "SmartCardConnectBlockedForUrls":
+		return &SmartCardConnectBlockedForUrls{}, nil
+	case "DeviceFlexArcPreloadEnabled":
+		return &DeviceFlexArcPreloadEnabled{}, nil
+	case "AllowedInputMethodsForceEnabled":
+		return &AllowedInputMethodsForceEnabled{}, nil
+	case "WebRtcIPHandlingUrl":
+		return &WebRtcIPHandlingUrl{}, nil
+	case "GenAIPhotoEditingSettings":
+		return &GenAIPhotoEditingSettings{}, nil
+	case "PartitionedBlobUrlUsage":
+		return &PartitionedBlobUrlUsage{}, nil
 	default:
 		return nil, errors.New("Unknown policy " + name)
 	}
