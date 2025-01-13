@@ -83,7 +83,7 @@ func init() {
 		Contacts:     []string{"poromov@google.com", "cros-commercial-clippy-eng@google.com"},
 		BugComponent: "b:1401215", // ChromeOS > Software > Commercial (Enterprise) > Identity > 3P IdP > Enterprise Clippy
 		Impl: &onedriveFixture{
-			chromeOptions: append(opts, chrome.EnableFeatures("SkyVault")),
+			chromeOptions: append(opts, chrome.EnableFeatures("SkyVault"), chrome.DisableFeatures("WelcomeExperience")),
 			provider:      filesconsts.OneDrive,
 		},
 		Parent:          fixture.FakeDMS,
@@ -101,7 +101,7 @@ func init() {
 		Contacts:     []string{"poromov@google.com", "cros-commercial-clippy-eng@google.com"},
 		BugComponent: "b:1401215", // ChromeOS > Software > Commercial (Enterprise) > Identity > 3P IdP > Enterprise Clippy
 		Impl: &onedriveFixture{
-			chromeOptions: append(opts, chrome.EnableFeatures("SkyVault", "SkyVaultV2")),
+			chromeOptions: append(opts, chrome.EnableFeatures("SkyVault", "SkyVaultV2"), chrome.DisableFeatures("WelcomeExperience")),
 			provider:      filesconsts.OneDrive,
 		},
 		Parent:          fixture.FakeDMS,
