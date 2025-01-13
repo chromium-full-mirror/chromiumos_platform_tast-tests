@@ -474,30 +474,19 @@ func (m *Modem) IsPowered(ctx context.Context) (bool, error) {
 
 // IsRegistered checks modem registration state and returns a boolean.
 func (m *Modem) IsRegistered(ctx context.Context) (bool, error) {
-	// for SimpleModem GetStatus returned properties
-	var props map[string]interface{}
-	simpleModem, err := m.getSimpleModem(ctx)
+	modem3gpp, err := m.getModem3gpp(ctx)
 	if err != nil {
-		return false, errors.Wrap(err, "could not get simpleModem object")
+		return false, errors.Wrap(err, "failed to get modem3gpp object")
 	}
-	if err := simpleModem.Call(ctx, "GetStatus").Store(&props); err != nil {
-		return false, errors.Wrapf(err, "failed getting properties of %v", simpleModem)
-	}
-	simpleProps := dbusutil.NewProperties(props)
-	modemState, err := simpleProps.GetUint32(mmconst.SimpleModemPropertyRegState)
+	props, err := modem3gpp.GetProperties(ctx)
 	if err != nil {
-		return false, errors.Wrap(err, "missing 3gpp reg state property")
+		return false, errors.Wrap(err, "failed to call GetProperties on modem")
 	}
-	states := [2]mmconst.ModemRegState{
-		mmconst.ModemRegStateHome,
-		mmconst.ModemRegStateRoaming}
-
-	for _, value := range states {
-		if uint32(value) == modemState {
-			return true, nil
-		}
+	regState, err := props.GetUint32(mmconst.ModemModem3gppPropertyRegistrationState)
+	if err != nil {
+		return false, errors.Wrap(err, "missing registration state property")
 	}
-	return false, nil
+	return (regState == uint32(mmconst.ModemRegStateHome) || regState == uint32(mmconst.ModemRegStateRoaming)), nil
 }
 
 // IsConnected checks modem state and returns a boolean.

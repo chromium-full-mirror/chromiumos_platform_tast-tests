@@ -28,8 +28,9 @@ const (
 
 // ModemManager1.Modem.Modem3gpp properties
 const (
-	ModemModem3gppPropertyInitialEpsBearer = "InitialEpsBearer"
-	ModemModem3gppPropertyOperatorCode     = "OperatorCode"
+	ModemModem3gppPropertyInitialEpsBearer  = "InitialEpsBearer"
+	ModemModem3gppPropertyOperatorCode      = "OperatorCode"
+	ModemModem3gppPropertyRegistrationState = "RegistrationState"
 )
 
 // ModemManager1.Modem.Modem3gpp.ProfileManager properties
@@ -39,8 +40,7 @@ const (
 
 // ModemManager1.Modem.Simple properties
 const (
-	SimpleModemPropertyState    = "state"
-	SimpleModemPropertyRegState = "m3gpp-registration-state"
+	SimpleModemPropertyState = "state"
 )
 
 // ModemManager1.Modem.Signal properties
