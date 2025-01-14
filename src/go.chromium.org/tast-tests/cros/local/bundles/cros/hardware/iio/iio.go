@@ -14,6 +14,7 @@ import (
 	"strings"
 	"time"
 
+	"go.chromium.org/tast-tests/cros/local/crosconfig"
 	"go.chromium.org/tast/core/errors"
 	"go.chromium.org/tast/core/testing"
 )
@@ -195,7 +196,7 @@ func GetSensors(ctx context.Context) ([]*Sensor, error) {
 	}
 
 	for _, file := range files {
-		sensor, err := parseSensor(file.Name())
+		sensor, err := parseSensor(ctx, file.Name())
 		if err != nil {
 			if !errors.Is(err, errNoDeviceFound) && !errors.Is(err, errUnknownDeviceFound) {
 				testing.ContextLogf(ctx, "Parsing sensor %s FAILED: %+v", file.Name(), err)
@@ -210,7 +211,7 @@ func GetSensors(ctx context.Context) ([]*Sensor, error) {
 
 // parseSensor reads the sysfs directory at iioBasePath/devName and returns a
 // Sensor if it is a valid EC sensor.
-func parseSensor(devName string) (*Sensor, error) {
+func parseSensor(ctx context.Context, devName string) (*Sensor, error) {
 	var sensor Sensor
 	var location SensorLocation = None
 	var name SensorName
@@ -305,6 +306,15 @@ func parseSensor(devName string) (*Sensor, error) {
 			// Int will be 12, Frac 500000.
 			minFreq = minInt*1000 + minFrac/1000
 			maxFreq = maxInt*1000 + maxFrac/1000
+		}
+	}
+
+	// Lower max frequency if overridden by cros_config.
+	maxOdrStr, err := crosconfig.Get(ctx, "/hardware-properties", "ec-max-sensor-odr")
+	if err == nil {
+		maxOdr, err := strconv.Atoi(maxOdrStr)
+		if err == nil && maxOdr < maxFreq && maxOdr != 0 {
+			maxFreq = maxOdr
 		}
 	}
 
