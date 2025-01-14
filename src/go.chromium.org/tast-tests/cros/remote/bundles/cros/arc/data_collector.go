@@ -233,10 +233,10 @@ func init() {
 			Name:              "vm_t_branch_uprev",
 			ExtraAttr:         []string{"group:mainline", "informational"},
 			ExtraSoftwareDeps: []string{"android_vm_t"},
-			// x86-64 ARC: gimble(brya-Intel), kohaku(hatch-Intel), jinlon(hatch-Intel), berknip(zork-AMD), jelboz360(zork-AMD), vilboz(zork-AMD)
 			// x64only ARC: screebo(rex-Intel), karis(rex-Intel), frostflow(skyrim-AMD), markarth(skyrim-AMD)
-			// arm64 ARC: pompom(trogdor), pazquel(trogdor)
-			// arm64only ARC: starmie(staryu)
+			//              gimble(brya-Intel), kohaku(hatch-Intel), jinlon(hatch-Intel), berknip(zork-AMD),
+			//              jelboz360(zork-AMD), vilboz(zork-AMD)
+			// arm64only ARC: starmie(staryu) pompom(trogdor), pazquel(trogdor)
 			ExtraHardwareDeps: hwdep.D(hwdep.Model(
 				"gimble", "kohaku", "jinlon", "berknip", "jelboz360", "vilboz", "screebo", "karis", "frostflow", "markarth",
 				"pompom", "pazquel", "starmie")),
@@ -247,7 +247,7 @@ func init() {
 				uploadPackagesReference:       true,
 				uprevBranch:                   true,
 				dexOptCacheGen:                true,
-				requiredCPUAbisForBranchUprev: []string{"x86_64-houdini", "x64only-houdini", "x86_64-ndk", "arm64-native", "arm64only-native"},
+				requiredCPUAbisForBranchUprev: []string{"x64only-houdini", "x64only-ndk", "arm64only-native"},
 				dataDir:                       "/tmp/data_collector",
 				tmpCachesDir:                  "",
 			},
