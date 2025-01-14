@@ -24,6 +24,7 @@ func init() {
 			"josephsussman@google.com", // Test author
 		},
 		BugComponent: "b:998633", // ChromeOS > Platform > Enablement > ChromeOS Flex
+		Attr:         []string{"group:flex_arcvm"},
 		Fixture:      fixture.ChromeEnrolledLoggedInARCFlex,
 		HardwareDeps: hwdep.D(hwdep.Model("reven")),
 		SoftwareDeps: []string{"chrome"},
