@@ -527,8 +527,7 @@ func init() {
 	fixtureConfig = DefaultBootedFixtureConfig()
 	// s2idle state is visible via "dumpsys suspend_control_internal", which requires root
 	fixtureConfig.ArcvmConfig = func(context.Context) (string, error) {
-		// Pre-append the verifiedbootstate parameter while starting ARCVM.
-		return "^--params=androidboot.verifiedbootstate=orange", nil
+		return "--params=androidboot.arc.allow_adb_root=1", nil
 	}
 	// Initialization of the UiAutomator injects a KEYCODE_POWER event that races
 	// with ArcIdleManager putting the device into doze mode.

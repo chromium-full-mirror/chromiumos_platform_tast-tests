@@ -57,8 +57,7 @@ func VTSKeymint(ctx context.Context, s *testing.State) {
 
 	a := s.FixtValue().(*arc.PreData).ARC
 
-	// Pre-append the verifiedbootstate parameter while starting ARCVM.
-	if err := arc.WriteArcvmDevConf(ctx, "^--params=androidboot.verifiedbootstate=orange"); err != nil {
+	if err := arc.WriteArcvmDevConf(ctx, "--params=androidboot.arc.allow_adb_root=1"); err != nil {
 		s.Fatal("Failed to set arcvm_dev.conf: ", err)
 	}
 	defer arc.RestoreArcvmDevConf(cleanupCtx)

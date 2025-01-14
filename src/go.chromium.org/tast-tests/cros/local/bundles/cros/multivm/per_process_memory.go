@@ -77,9 +77,8 @@ func PerProcessMemory(ctx context.Context, s *testing.State) {
 	opts := s.Param().(*stateManagerOptions)
 
 	// Fetching smaps_rollup inside ARCVM requires adb root.
-	// Pre-append the verifiedbootstate parameter while starting ARCVM.
-	if err := arc.AppendToArcvmDevConf(ctx, "^--params=androidboot.verifiedbootstate=orange"); err != nil {
-		s.Fatal("Failed to enable adb root: ", err)
+	if err := arc.AppendToArcvmDevConf(ctx, "--params=androidboot.arc.allow_adb_root=1"); err != nil {
+		s.Fatal("Failed to set arcvm_dev.conf: ", err)
 	}
 	defer arc.RestoreArcvmDevConf(ctx)
 

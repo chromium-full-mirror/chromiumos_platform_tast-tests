@@ -68,8 +68,7 @@ const (
 
 func SwapManagement(ctx context.Context, s *testing.State) {
 	// Adding ArcVM dev config to allow adb root, for invoking per process reclaim.
-	// Pre-append the verifiedbootstate parameter while starting ARCVM.
-	arc.AppendToArcvmDevConf(ctx, "^--params=androidboot.verifiedbootstate=orange")
+	arc.AppendToArcvmDevConf(ctx, "--params=androidboot.arc.allow_adb_root=1")
 	defer arc.RestoreArcvmDevConf(ctx)
 
 	testParams := s.Param().(swapManagementTestParams)
