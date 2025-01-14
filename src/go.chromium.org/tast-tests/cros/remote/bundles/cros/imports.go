@@ -12,6 +12,7 @@ import (
 	_ "go.chromium.org/tast-tests/cros/remote/bundles/cros/autoupdate"
 	_ "go.chromium.org/tast-tests/cros/remote/bundles/cros/bisector"
 	_ "go.chromium.org/tast-tests/cros/remote/bundles/cros/bluetooth"
+	_ "go.chromium.org/tast-tests/cros/remote/bundles/cros/boca"
 	_ "go.chromium.org/tast-tests/cros/remote/bundles/cros/camera"
 	_ "go.chromium.org/tast-tests/cros/remote/bundles/cros/cellular"
 	_ "go.chromium.org/tast-tests/cros/remote/bundles/cros/certprovisioning"

@@ -1,0 +1,42 @@
+// Copyright 2025 The ChromiumOS Authors
+// Use of this source code is governed by a BSD-style license that can be
+// found in the LICENSE file.
+
+syntax = "proto3";
+
+package tast.cros.boca;
+
+import "google/protobuf/empty.proto";
+
+option go_package = "go.chromium.org/tast-tests/cros/services/cros/boca";
+
+// This service enables user to create a session from teacher account and
+// verify it has started on student account.
+service ClassToolsService {
+  // NewChromeLogin logs into a Chrome session as a fake user with the
+  // boca and bocaConsumer flag enabled.
+  // Close must be called later to clean up the associated resources.
+  rpc NewChromeLogin(CrOSLoginRequest) returns (google.protobuf.Empty) {}
+
+  // Close releases the resources obtained by New.
+  rpc CloseChrome(google.protobuf.Empty) returns (google.protobuf.Empty) {}
+
+  // Verify session is started on from teacher device.
+  rpc VerifySessionStart(google.protobuf.Empty)
+      returns (google.protobuf.Empty) {}
+
+  // Verify session is started on student device.
+  rpc VerifyStudentSession(google.protobuf.Empty)
+      returns (google.protobuf.Empty) {}
+
+  // Verify session is started on student device.
+  rpc EndSession(google.protobuf.Empty) returns (google.protobuf.Empty) {}
+}
+
+// CrOSLoginRequest to login to Chrome with configurable GAIA credentials.
+message CrOSLoginRequest {
+  string username = 1;
+  string password = 2;
+  string enabled_flags = 3;
+  string disabled_flags = 4;
+}

@@ -20,6 +20,7 @@ import (
 	_ "go.chromium.org/tast-tests/cros/local/bundles/cros/biod"
 	_ "go.chromium.org/tast-tests/cros/local/bundles/cros/bisector"
 	_ "go.chromium.org/tast-tests/cros/local/bundles/cros/bluetooth"
+	_ "go.chromium.org/tast-tests/cros/local/bundles/cros/boca"
 	_ "go.chromium.org/tast-tests/cros/local/bundles/cros/bruschetta"
 	_ "go.chromium.org/tast-tests/cros/local/bundles/cros/calendar"
 	_ "go.chromium.org/tast-tests/cros/local/bundles/cros/camera"
@@ -171,6 +172,7 @@ import (
 
 	_ "go.chromium.org/tast-tests/cros/local/camera/service" // import fixture for camera service tests
 	_ "go.chromium.org/tast-tests/cros/local/intel"          // import Intel fixtures.
+
 	// import fixtures for arc game performance testing.
 	// imports kioskLoggedIn fixtures. It is not referenced by tests as it
 	// returns FixtData type from policyutil/fixtures.
