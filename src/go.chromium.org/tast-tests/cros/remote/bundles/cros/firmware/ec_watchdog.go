@@ -89,6 +89,16 @@ func ECWatchdog(ctx context.Context, s *testing.State) {
 		s.Fatal("Failed to create config: ", err)
 	}
 
+	// Update ECCrashCache at the end of the test since this test intentionally triggers EC crashes
+	defer func() {
+		if err := h.EnsureDUTBooted(ctx); err != nil {
+			s.Error("Failed to boot DUT after test: ", err)
+		}
+		if err := h.UpdateECCrashCache(ctx); err != nil {
+			s.Error("Failed to update EC crash file cache after test: ", err)
+		}
+	}()
+
 	panicOnWatchdogWarning, err := isPanicOnWatchdogWarningEnabled(s.Features(""))
 	if err != nil {
 		s.Log("Unable to determine if panic on watchdog warning is enabled")
@@ -121,10 +131,6 @@ func ECWatchdog(ctx context.Context, s *testing.State) {
 		if watchdogPanicReason.MatchString(panicInfo) || watchdogWarnPanicReason.MatchString(panicInfo) {
 			s.Fatal("Failed to clear panicinfo")
 		}
-		if err := h.UpdateECCrashCache(ctx); err != nil {
-			s.Fatal("Failed to update EC crash file cache after test: ", err)
-		}
-
 	}
 
 	if oldBootID, err = h.Reporter.BootID(ctx); err != nil {
@@ -266,9 +272,6 @@ func ECWatchdog(ctx context.Context, s *testing.State) {
 	}
 	if !watchdogPanicReason.MatchString(panicInfo) {
 		s.Fatal("Watchdog panic reason missing in panicinfo")
-	}
-	if err := h.UpdateECCrashCache(ctx); err != nil {
-		s.Fatal("Failed to update EC crash file cache after test: ", err)
 	}
 	s.Logf("Boot ID old: %s, new: %s", newBootID, oldBootID)
 }
