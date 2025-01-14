@@ -491,31 +491,16 @@ func (m *Modem) IsRegistered(ctx context.Context) (bool, error) {
 
 // IsConnected checks modem state and returns a boolean.
 func (m *Modem) IsConnected(ctx context.Context) (bool, error) {
-	// for SimpleModem GetStatus returned properties
-	var props map[string]interface{}
-	simpleModem, err := m.getSimpleModem(ctx)
+	props, err := m.GetProperties(ctx)
 	if err != nil {
-		return false, errors.Wrap(err, "could not get simpleModem object")
+		return false, errors.Wrap(err, "failed to call GetProperties on modem")
 	}
-	if err := simpleModem.Call(ctx, "GetStatus").Store(&props); err != nil {
-		return false, errors.Wrapf(err, "failed getting properties of %v", simpleModem)
-	}
-	simpleProps := dbusutil.NewProperties(props)
-	modemState, err := simpleProps.GetUint32(mmconst.SimpleModemPropertyState)
-	testing.ContextLogf(ctx, "simple modem state is %d", modemState)
+	state, err := props.GetInt32(mmconst.ModemPropertyState)
 	if err != nil {
 		return false, errors.Wrap(err, "missing state property")
 	}
-	states := [2]mmconst.ModemState{
-		mmconst.ModemStateConnecting,
-		mmconst.ModemStateConnected}
-
-	for _, value := range states {
-		if uint32(value) == modemState {
-			return true, nil
-		}
-	}
-	return false, nil
+	testing.ContextLogf(ctx, "modemState in IsConnected is %d", state)
+	return (state == int32(mmconst.ModemStateConnecting) || state == int32(mmconst.ModemStateConnected)), nil
 }
 
 // EnableUnchecked sets the ModemEnable state to true.

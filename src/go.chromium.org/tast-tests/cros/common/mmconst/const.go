@@ -38,11 +38,6 @@ const (
 	ModemProfileManagerList = "List"
 )
 
-// ModemManager1.Modem.Simple properties
-const (
-	SimpleModemPropertyState = "state"
-)
-
 // ModemManager1.Modem.Signal properties
 const (
 	SignalPropertyLte     = "Lte"
