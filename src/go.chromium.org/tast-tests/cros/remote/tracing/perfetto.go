@@ -5,11 +5,17 @@
 package tracing
 
 import (
+	"bytes"
 	"context"
+	"encoding/csv"
+	"os"
+	"strconv"
 
 	"google.golang.org/protobuf/types/known/emptypb"
 
+	"go.chromium.org/tast-tests/cros/common/testexec"
 	pb "go.chromium.org/tast-tests/cros/services/cros/tracing"
+	"go.chromium.org/tast/core/dut"
 	"go.chromium.org/tast/core/errors"
 	"go.chromium.org/tast/core/rpc"
 )
@@ -166,4 +172,102 @@ func SaveRemoteSessionTraceData(ctx context.Context, cl *rpc.Client, tok *Remote
 	// Ignore the error because the perfetto command may already stop.
 	sess.Stop(ctx)
 	return saveFunc(sess.TraceDataPath())
+}
+
+// PerfettoQueryValue implements simple query for series of values
+type PerfettoQueryValue struct {
+	Name      string
+	Config    string
+	QueryFile string
+	token     *RemoteSessionToken
+	Values    []float64
+}
+
+// NewPerfettoQueryValue setup a PerfettoQueryValue with given name and
+// files. Note that the `configFile` must configure perfetto correctly to
+// record events (tables) used by `queryFile`. The `name` must specify
+// the corresponding column name.
+func NewPerfettoQueryValue(name, configFile, queryFile string) (*PerfettoQueryValue, error) {
+	config, err := os.ReadFile(configFile)
+	if err != nil {
+		return nil, err
+	}
+	return &PerfettoQueryValue{Name: name, Config: string(config), QueryFile: queryFile}, nil
+}
+
+// StartAndDetach starts recording events via perfetto and detach from
+// remote machine. Thus, user can record a metric of some actions after
+// this function call.
+func (q *PerfettoQueryValue) StartAndDetach(ctx context.Context, cl *rpc.Client) error {
+	sess, err := StartRemoteSession(ctx, cl, WithConfigTextData(q.Config), InBackground())
+	if err != nil {
+		return err
+	}
+	q.token = sess.Token()
+	return nil
+}
+
+// StopAndQuery stops recording and query a metric from the record.
+// The query must returns columns which has PerfettoQueryValue::Name.
+// If there are more than one results (lines) exist, this will record
+// all values to PerfettoQueryValue::Values.
+// Since the PerfettoQueryValue::Values is not cleared automatically,
+// if you run PerfettoQueryValue::StartAndDetach() and
+// PerfettoQueryValue::StopAndQuery() repeatedly, it appends the results.
+func (q *PerfettoQueryValue) StopAndQuery(ctx context.Context, dut *dut.DUT, cl *rpc.Client) error {
+	const traceProcessorPath = "/usr/bin/trace_processor_shell"
+	if q.token == nil {
+		return errors.New("perfetto session is not started")
+	}
+	tempFile, err := os.CreateTemp("/tmp", "perfetto-trace-*.pb")
+	if err != nil {
+		return errors.Wrap(err, "failed to create temp file")
+	}
+	tempFile.Close()
+	defer func() {
+		os.Remove(tempFile.Name())
+	}()
+
+	// Reconnect to remote session and get the result file.
+	if err := SaveRemoteSessionTraceData(ctx, cl, q.token,
+		func(src string) error {
+			return dut.GetFile(ctx, src, tempFile.Name())
+		}); err != nil {
+		return err
+	}
+	q.token = nil
+
+	cmd := testexec.CommandContext(ctx, traceProcessorPath, tempFile.Name(), "-q", q.QueryFile)
+	out, err := cmd.Output(testexec.DumpLogOnError)
+	if err != nil {
+		return errors.Wrap(err, "failed to run query with trace_processor_shell")
+	}
+	reader := csv.NewReader(bytes.NewReader(out))
+	data, err := reader.ReadAll()
+	if err != nil {
+		return errors.Wrap(err, "failed to parse query result")
+	}
+	if len(data) <= 1 {
+		return errors.New("failed to decord CSV or there is no data")
+	}
+	idx := -1
+	// Find appropriate column.
+	for i, n := range data[0] {
+		if q.Name == n {
+			idx = i
+			break
+		}
+	}
+	if idx == -1 {
+		return errors.New("failed to find corresponding column in the query result")
+	}
+	// Append corresponding results to Values.
+	for _, d := range data[1:] {
+		fv, err := strconv.ParseFloat(d[idx], 64)
+		if err != nil {
+			return errors.Wrap(err, "failed to parse query result value")
+		}
+		q.Values = append(q.Values, fv)
+	}
+	return nil
 }
