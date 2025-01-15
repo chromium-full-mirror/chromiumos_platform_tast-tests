@@ -158,6 +158,20 @@ func setupImageAndEraseInfo(ctx context.Context, v *Value, s TestingState, force
 	if v.TestbedProperties.TestbedType == ti50.GscH1Shield {
 		setupCr50Image(ctx, s, b, v.ImagePath, v.FwConfigJsons, v.TestbedProperties, true, v.TestbedProperties.TestbedType)
 	} else {
+		defer func() {
+			// Make every effort to flash image under test in the end, even if
+			// operations on DBG or EFI image results in fatal error.  In such cases,
+			// this particular test case will be bound to fail, but subsequent test
+			// cases may not use EFI, and the parent fixture SystemDevboard expects
+			// the image under test to still be on the GSC when a testcase terminates.
+
+			// Longer term, we should probably refactor this fixture, such that
+			// GSCInitialFactory does not have any parent, and the function of
+			// SystemDevboard would become helper methods used by fixture.
+			testing.ContextLog(ctx, "Flashing image under test")
+			mustSucceed(s, b.Setup(ctx, v.ImagePath, v.FwConfigJsons), "Setup for image under test")
+		}()
+
 		testing.ContextLog(ctx, "Flashing DBG image to erase filesystem and TPM")
 		debugImagePath, _ := v.DebugImagePath(ctx)
 		mustSucceed(s, b.Setup(ctx, debugImagePath, []string{}), "Setup DBG image")
@@ -168,9 +182,7 @@ func setupImageAndEraseInfo(ctx context.Context, v *Value, s TestingState, force
 		mustSucceed(s, b.Setup(ctx, efiImagePath, []string{}), "Setup EFI image")
 		eraseInfoPage(ctx, v, s)
 
-		testing.ContextLog(ctx, "Flashing image under test")
-		mustSucceed(s, b.Setup(ctx, v.ImagePath, v.FwConfigJsons), "Setup for image under test")
-
+		// Here, the image under test will be flashed by above "defer" statement.
 	}
 }
 
