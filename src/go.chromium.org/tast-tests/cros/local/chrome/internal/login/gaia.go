@@ -270,6 +270,16 @@ func performGAIALogin(ctx context.Context, cfg *config.Config, sess *driver.Sess
 			return testing.PollBreak(errors.Wrap(err, "failed to click on the primary action button"))
 		}
 
+		// Check if the username screen is gone and retry the login if it isn't.
+		if err := gaiaConn.WaitForExprWithTimeout(ctx, `() => {
+			const nodeList = document.querySelectorAll('label');
+			for (let i = 0; i < nodeList.length; i++) {
+				if (nodeList[i].innerHTML === 'Email or phone') return false;
+			}
+			return true;}`, 30*time.Second); err != nil {
+			return errors.Wrap(err, "failed to wait for username screen to go away")
+		}
+
 		if cfg.LoginMode() == config.SAMLLogin {
 			if err := gaiaConn.WaitForExpr(ctx, "document.querySelector('title').innerHTML != 'Sign in - Google Accounts'"); err != nil {
 				return errors.Wrap(err, "failed to wait for SAML page to be loaded")
