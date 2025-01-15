@@ -1,0 +1,34 @@
+buffers: {
+	size_kb: 4096
+	fill_policy: DISCARD
+}
+data_sources: {
+	config {
+		name: "track_event"
+		chrome_config {
+			trace_config: "{\"record_mode\":\"record-continuously\",\"included_categories\":[\"power\",\"disabled-by-default-power\",\"log\"],\"excluded_categories\":[\"*\"],\"memory_dump_config\":{}}"
+			privacy_filtering_enabled: false
+			client_priority: USER_INITIATED
+		}
+		track_event_config {
+			disabled_categories: "*"
+			enabled_categories: "power"
+			enabled_categories: "disabled-by-default-power"
+			enabled_categories: "log"
+			enabled_categories: "__metadata"
+			timestamp_unit_multiplier: 1000
+			filter_debug_annotations: false
+			enable_thread_time_sampling: true
+			filter_dynamic_event_names: false
+		}
+	}
+}
+data_sources: {
+	config {
+		name: "linux.ftrace"
+		ftrace_config {
+			ftrace_events: "power/suspend_resume"
+		}
+	}
+}
+duration_ms: 15000

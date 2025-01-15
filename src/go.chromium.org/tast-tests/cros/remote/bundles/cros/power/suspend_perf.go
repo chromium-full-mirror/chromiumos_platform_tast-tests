@@ -9,6 +9,7 @@ import (
 	"fmt"
 	"os"
 	"regexp"
+	"sort"
 	"strconv"
 	"strings"
 	"time"
@@ -80,6 +81,9 @@ type testArgsForSuspendPerf struct {
 
 const (
 	perfettoConfigFile = "perfetto/perfetto_cfg.pbtxt"
+
+	perfettoResumeConfigFile     = "perfetto/perfetto_resume_trace_cfg.pbtxt"
+	perfettoDisplayResumeSQLFile = "perfetto/perfetto_display_after_resume.sql"
 )
 
 func init() {
@@ -91,7 +95,7 @@ func init() {
 			"mhiramat@google.com",
 		},
 		BugComponent: "b:167279", // ChromeOS > Platform > baseOS > Performance
-		Data:         []string{perfettoConfigFile},
+		Data:         []string{perfettoConfigFile, perfettoResumeConfigFile, perfettoDisplayResumeSQLFile},
 		SoftwareDeps: []string{"chrome"},
 		ServiceDeps: []string{
 			"tast.cros.browser.ChromeService",
@@ -174,6 +178,9 @@ const (
 
 	// hwClockFile is the path where the timestamp, recorded by the RTC, will be saved to capture when the DUT wakes up from suspend.
 	hwClockFile = "/run/power_manager/root/hwclock-on-resume"
+
+	// displayAfterResumeName must specify the column name queried by perfettoDisplayResumeSQLFile.
+	displayAfterResumeName = "display_after_resume_ms"
 )
 
 type histogramRequest struct {
@@ -215,6 +222,10 @@ func SuspendPerf(ctx context.Context, s *testing.State) {
 		s.Fatal("Failed to convert ", forceTabsVarName, err)
 	}
 	pv := perf.NewValues()
+	displayAfterResume, err := tracing.NewPerfettoQueryValue(displayAfterResumeName, s.DataPath(perfettoResumeConfigFile), s.DataPath(perfettoDisplayResumeSQLFile))
+	if err != nil {
+		s.Fatal("Failed to setup "+displayAfterResumeName+" query: ", err)
+	}
 
 	var h *firmware.Helper
 	if args.benchMarkEval {
@@ -328,6 +339,9 @@ func SuspendPerf(ctx context.Context, s *testing.State) {
 	expectedSuspendStates := []string{"S0ix", "S3"}
 	for i := 0; i < args.numSuspend; i++ {
 		tracer.start(ctx, s, cl, true)
+		if err := displayAfterResume.StartAndDetach(ctx, cl); err != nil {
+			s.Fatal("Failed to start trace for "+displayAfterResumeName+": ", err)
+		}
 		// Suspend and resume
 		s.Logf("Suspending DUT for %d seconds", seconds)
 		mp.Disconnect(ctx)
@@ -376,6 +390,9 @@ func SuspendPerf(ctx context.Context, s *testing.State) {
 		if err := mempressure.ConnectTestEnv(ctx, cl.Conn, args.enableArc); err != nil {
 			s.Fatal("Failed to re-initalize test environment: ", err)
 		}
+		if err := displayAfterResume.StopAndQuery(ctx, s.DUT(), cl); err != nil {
+			s.Fatal("Failed to query "+displayAfterResumeName+": ", err)
+		}
 		tracer.save(ctx, s, cl, fmt.Sprintf("_resumed-%d", i))
 
 		// Reconnect to browser via memory pressure service.
@@ -407,6 +424,7 @@ func SuspendPerf(ctx context.Context, s *testing.State) {
 
 	// Write perf metrics from the Diff Histogram and save it.
 	writeMetricsFromHistograms(diff, pv)
+	writeMetricsFromQuery(displayAfterResume, pv)
 	if err := pv.Save(s.OutDir()); err != nil {
 		s.Fatal("Failed saving perf data: ", err)
 	}
@@ -832,4 +850,38 @@ func writeMetricsFromHistogram(hist *histogram.Histogram, suffix string, pv *per
 			Direction: perf.SmallerIsBetter,
 		}, p100)
 	}
+}
+
+func writeMetricsFromQuery(q *tracing.PerfettoQueryValue, pv *perf.Values) {
+	if len(q.Values) == 0 {
+		return
+	}
+	sort.Float64s(q.Values)
+
+	mean := func(fa []float64) float64 {
+		total := 0.0
+		for _, f := range fa {
+			total += f
+		}
+		return total / float64(len(fa))
+	}(q.Values)
+	pv.Set(perf.Metric{
+		Name:      fmt.Sprintf("%s_mean", q.Name),
+		Unit:      "ms",
+		Direction: perf.SmallerIsBetter,
+	}, mean)
+
+	p50 := q.Values[int(len(q.Values)/2)]
+	pv.Set(perf.Metric{
+		Name:      fmt.Sprintf("%s_p50", q.Name),
+		Unit:      "ms",
+		Direction: perf.SmallerIsBetter,
+	}, p50)
+
+	p100 := q.Values[len(q.Values)-1]
+	pv.Set(perf.Metric{
+		Name:      fmt.Sprintf("%s_p100", q.Name),
+		Unit:      "ms",
+		Direction: perf.SmallerIsBetter,
+	}, p100)
 }
