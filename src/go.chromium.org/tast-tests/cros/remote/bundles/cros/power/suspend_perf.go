@@ -177,14 +177,18 @@ const (
 )
 
 type histogramRequest struct {
+	// Name specifies the histogram name.
 	Name string
+
+	// If Optional is true, waitForHistogramsUpdate() tries to update it but does not wait for update.
+	Optional bool
 }
 
 // TODO make a new struct type with name and direction.
 var defaultMetrics = []*histogramRequest{
 	{Name: "Power.KernelSuspendTimeOnAC"},
 	{Name: "Power.KernelResumeTimeOnAC"},
-	{Name: "Power.DisplayAfterResumeDurationMsOnAC"},
+	{Name: "Power.DisplayAfterResumeDurationMsOnAC", Optional: true},
 	{Name: "Browser.Tabs.TotalSwitchDuration3"},
 }
 
@@ -744,6 +748,15 @@ func (c *compoundTracers) cleanUp(ctx context.Context, s *testing.State, cl *rpc
 	return tracing.CleanupRemoteInstance(ctx, cl, c.instanceName)
 }
 
+func histogramIsOptional(name string, req []*histogramRequest) bool {
+	for _, r := range req {
+		if r.Name == name {
+			return r.Optional
+		}
+	}
+	return true
+}
+
 func waitForHistogramsUpdate(ctx context.Context, tconn ui.TconnServiceClient, req []*histogramRequest, prev []*histogram.Histogram) ([]*histogram.Histogram, error) {
 	if err := testing.Poll(ctx, func(ctx context.Context) error {
 		curr, err := getHistograms(ctx, tconn, req)
@@ -757,7 +770,7 @@ func waitForHistogramsUpdate(ctx context.Context, tconn ui.TconnServiceClient, r
 		}
 
 		for _, h := range diff {
-			if h.TotalCount() == 0 {
+			if h.TotalCount() == 0 && !histogramIsOptional(h.Name, req) {
 				return errors.Errorf("histogram %s is still empty", h.Name)
 			}
 		}
