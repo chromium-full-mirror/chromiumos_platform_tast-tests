@@ -8,13 +8,13 @@ package dictation
 // Please refer to https://storage.googleapis.com/chromeos-mgmt-public-extension/dictation_support/index.html.
 // All events are used in the dictation support website.
 const (
-	eventInit          = "init"
-	eventRequestDevice = "requestDevice"
-	eventGetDevices    = "getDevices"
-	eventSetEventMode  = "setEventMode"
-	eventGetEventMode  = "getEventMode"
-	eventSetSimpleLED  = "setSimpleLedState"
-	eventSetLED        = "setLed"
+	EventInit          = "init"
+	EventRequestDevice = "requestDevice"
+	EventGetDevices    = "getDevices"
+	EventSetEventMode  = "setEventMode"
+	EventGetEventMode  = "getEventMode"
+	EventSetSimpleLED  = "setSimpleLedState"
+	EventSetLED        = "setLed"
 )
 
 // ReadyPosition is a constant for "Ready Position".
@@ -102,7 +102,8 @@ const (
 	SimpleLEDStateStandbyOverwrite SimpleLEDState = "StandbyOverwrite"
 )
 
-var ledStateToNumber = map[SimpleLEDState]int{
+// LEDStateToNumber is a map from SimpleLEDState to its number.
+var LEDStateToNumber = map[SimpleLEDState]int{
 	SimpleLEDStateOff:              0,
 	SimpleLEDStateRecordInsert:     1,
 	SimpleLEDStateRecordOverwrite:  2,
@@ -136,7 +137,8 @@ const (
 	LEDF4Button LEDIndex = "F4_BUTTON_LED"
 )
 
-var ledIndexToNumber = map[LEDIndex]int{
+// LEDIndexToNumber is a map from LEDIndex to its number.
+var LEDIndexToNumber = map[LEDIndex]int{
 	LEDRecordGreen:       0,
 	LEDRecordRed:         1,
 	LEDInstrctionGreen:   2,
@@ -163,7 +165,8 @@ const (
 	LEDModeOn LEDMode = "On"
 )
 
-var ledModeToNumber = map[LEDMode]int{
+// LEDModeToNumber is a map from LEDMode to its number.
+var LEDModeToNumber = map[LEDMode]int{
 	LEDModeOff:       0,
 	LEDModeBlinkSlow: 1,
 	LEDModeBlinkFast: 2,

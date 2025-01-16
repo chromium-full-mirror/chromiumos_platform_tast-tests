@@ -13,6 +13,7 @@ import (
 
 	"github.com/golang/protobuf/ptypes/empty"
 
+	dictationcommon "go.chromium.org/tast-tests/cros/common/dictation"
 	"go.chromium.org/tast-tests/cros/common/fixture"
 	"go.chromium.org/tast-tests/cros/common/policy"
 	"go.chromium.org/tast-tests/cros/common/robotics/arm/amber"
@@ -157,7 +158,7 @@ func performDictationOperations(ctx context.Context, cl *rpc.Client, dataPath fu
 	}); err != nil {
 		return errors.Wrapf(err, "failed to connect to device %v", deviceName)
 	}
-	eventModeHid := string(dictation.EventModeHid)
+	eventModeHid := string(dictationcommon.EventModeHid)
 	if _, err := svc.SetDictationEventMode(ctx, &peripherals.SetDictationEventModeRequest{
 		EventMode: eventModeHid,
 	}); err != nil {
@@ -268,12 +269,12 @@ func buttonEventsTesting(ctx context.Context, svc peripherals.PeriphServiceClien
 }
 
 func setSimpleLEDStateTesting(ctx context.Context, svc peripherals.PeriphServiceClient) error {
-	simpleLEDStateList := []dictation.SimpleLEDState{
-		dictation.SimpleLEDStateRecordInsert,
-		dictation.SimpleLEDStateRecordOverwrite,
-		dictation.SimpleLEDStateStandbyInsert,
-		dictation.SimpleLEDStateStandbyOverwrite,
-		dictation.SimpleLEDStateOff,
+	simpleLEDStateList := []dictationcommon.SimpleLEDState{
+		dictationcommon.SimpleLEDStateRecordInsert,
+		dictationcommon.SimpleLEDStateRecordOverwrite,
+		dictationcommon.SimpleLEDStateStandbyInsert,
+		dictationcommon.SimpleLEDStateStandbyOverwrite,
+		dictationcommon.SimpleLEDStateOff,
 	}
 	for _, state := range simpleLEDStateList {
 		if _, err := svc.SetDictationSimpleLEDState(ctx, &peripherals.SetDictationSimpleLEDStateRequest{
@@ -288,21 +289,21 @@ func setSimpleLEDStateTesting(ctx context.Context, svc peripherals.PeriphService
 }
 
 func setLEDStateTesting(ctx context.Context, svc peripherals.PeriphServiceClient) error {
-	ledIndexOrderedList := []dictation.LEDIndex{
-		dictation.LEDInstrctionGreen,
-		dictation.LEDInstrctionRed,
-		dictation.LEDInsOwrButtonGreen,
-		dictation.LEDInsOwrButtonRed,
-		dictation.LEDF1Button,
-		dictation.LEDF2Button,
-		dictation.LEDF3Button,
-		dictation.LEDF4Button,
+	ledIndexOrderedList := []dictationcommon.LEDIndex{
+		dictationcommon.LEDInstrctionGreen,
+		dictationcommon.LEDInstrctionRed,
+		dictationcommon.LEDInsOwrButtonGreen,
+		dictationcommon.LEDInsOwrButtonRed,
+		dictationcommon.LEDF1Button,
+		dictationcommon.LEDF2Button,
+		dictationcommon.LEDF3Button,
+		dictationcommon.LEDF4Button,
 	}
-	ledModeOrderedList := []dictation.LEDMode{
-		dictation.LEDModeOn,
-		dictation.LEDModeBlinkFast,
-		dictation.LEDModeBlinkSlow,
-		dictation.LEDModeOff,
+	ledModeOrderedList := []dictationcommon.LEDMode{
+		dictationcommon.LEDModeOn,
+		dictationcommon.LEDModeBlinkFast,
+		dictationcommon.LEDModeBlinkSlow,
+		dictationcommon.LEDModeOff,
 	}
 	for _, index := range ledIndexOrderedList {
 		for _, mode := range ledModeOrderedList {
@@ -326,8 +327,8 @@ func motionEventsTesting(ctx context.Context, svc peripherals.PeriphServiceClien
 		return nil
 	}
 	motionEventList := []string{
-		dictation.MotionEventPickedUp,
-		dictation.MotionEventLaidDown,
+		dictationcommon.MotionEventPickedUp,
+		dictationcommon.MotionEventLaidDown,
 	}
 
 	for _, event := range motionEventList {

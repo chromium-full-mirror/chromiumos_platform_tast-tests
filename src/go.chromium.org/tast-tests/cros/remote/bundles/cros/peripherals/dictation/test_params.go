@@ -6,6 +6,8 @@ package dictation
 
 import (
 	"time"
+
+	dictationcommon "go.chromium.org/tast-tests/cros/common/dictation"
 )
 
 // TestParams is a struct that holds the parameters for the dictation test.
@@ -47,36 +49,36 @@ const (
 
 var (
 	philipsMotionDataMap = map[string]int{
-		ReadyPosition:             0,
-		ButtonEndOfLetterPriority: 1,
-		ButtonInstruction:         2,
-		ButtonInsertOverwrite:     3,
-		ButtonRecord:              4,
-		ButtonRewind:              5,
-		ButtonForward:             6,
-		ButtonPlay:                7,
-		FunctionF1A:               8,
-		FunctionF2B:               9,
-		FunctionF3C:               10,
-		FunctionF4D:               11,
+		dictationcommon.ReadyPosition:             0,
+		dictationcommon.ButtonEndOfLetterPriority: 1,
+		dictationcommon.ButtonInstruction:         2,
+		dictationcommon.ButtonInsertOverwrite:     3,
+		dictationcommon.ButtonRecord:              4,
+		dictationcommon.ButtonRewind:              5,
+		dictationcommon.ButtonForward:             6,
+		dictationcommon.ButtonPlay:                7,
+		dictationcommon.FunctionF1A:               8,
+		dictationcommon.FunctionF2B:               9,
+		dictationcommon.FunctionF3C:               10,
+		dictationcommon.FunctionF4D:               11,
 	}
 
 	// ReadyPositionIndex is the index of the ready position in the motion data.
-	ReadyPositionIndex = philipsMotionDataMap[ReadyPosition]
+	ReadyPositionIndex = philipsMotionDataMap[dictationcommon.ReadyPosition]
 
 	philipsButtonTestList = []string{
-		ButtonRecord,
-		ButtonPlay,
-		ButtonRewind,
-		ButtonForward,
-		ButtonInstruction,
-		ButtonInsertOverwrite,
-		ButtonEndOfLetterPriority,
+		dictationcommon.ButtonRecord,
+		dictationcommon.ButtonPlay,
+		dictationcommon.ButtonRewind,
+		dictationcommon.ButtonForward,
+		dictationcommon.ButtonInstruction,
+		dictationcommon.ButtonInsertOverwrite,
+		dictationcommon.ButtonEndOfLetterPriority,
 		// TODO: The robotic arm needs to record the motion data of pressing the following buttons.
-		// ButtonCommand,
-		FunctionF1A,
-		FunctionF2B,
-		FunctionF3C,
-		FunctionF4D,
+		// dictationcommon.ButtonCommand,
+		dictationcommon.FunctionF1A,
+		dictationcommon.FunctionF2B,
+		dictationcommon.FunctionF3C,
+		dictationcommon.FunctionF4D,
 	}
 )

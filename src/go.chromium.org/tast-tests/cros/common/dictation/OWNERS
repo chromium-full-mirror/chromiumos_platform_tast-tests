@@ -1,0 +1,6 @@
+set noparent
+
+rzakarian@google.com
+chicheny@google.com
+
+include /src/go.chromium.org/tast-tests/cros/local/bundles/cros/peripherals/OWNERS

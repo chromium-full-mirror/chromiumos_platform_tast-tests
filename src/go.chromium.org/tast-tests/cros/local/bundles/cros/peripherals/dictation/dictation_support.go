@@ -14,6 +14,7 @@ import (
 	"time"
 
 	"go.chromium.org/tast-tests/cros/common/action"
+	dictationcommon "go.chromium.org/tast-tests/cros/common/dictation"
 	"go.chromium.org/tast-tests/cros/local/chrome"
 	"go.chromium.org/tast-tests/cros/local/chrome/uiauto"
 	"go.chromium.org/tast-tests/cros/local/chrome/uiauto/nodewith"
@@ -82,27 +83,27 @@ func (s *Support) Close(ctx context.Context) error {
 // ConnectToDevice inits and connects to the given device.
 func (s *Support) ConnectToDevice(deviceName string) action.Action {
 	ui := s.ui
-	initButton := nodewith.Name(eventInit).Role(role.Button)
-	requestDeviceButton := nodewith.Name(eventRequestDevice).Role(role.Button)
+	initButton := nodewith.Name(dictationcommon.EventInit).Role(role.Button)
+	requestDeviceButton := nodewith.Name(dictationcommon.EventRequestDevice).Role(role.Button)
 	deviceNameItem := nodewith.Name(deviceName).Role(role.GridCell)
 	connectButton := nodewith.Name("Connect").Role(role.Button)
 	return uiauto.NamedCombine(fmt.Sprintf("connect to device %q", deviceName),
 		ui.DoDefault(initButton),
-		s.WaitNewEvent(eventInit, defaultTimeout),
+		s.WaitNewEvent(dictationcommon.EventInit, defaultTimeout),
 		ui.DoDefaultUntil(requestDeviceButton, ui.WithTimeout(5*time.Second).WaitUntilExists(deviceNameItem)),
 		// Using DoDefault here may result in clicking on the wrong node, so use LeftClick instead.
 		ui.LeftClickUntil(deviceNameItem, ui.WithTimeout(5*time.Second).WaitUntilExists(deviceNameItem.Focused())),
 		ui.DoDefaultUntil(connectButton, ui.WithTimeout(5*time.Second).WaitUntilGone(connectButton)),
-		s.WaitNewEvent(eventRequestDevice, defaultTimeout),
+		s.WaitNewEvent(dictationcommon.EventRequestDevice, defaultTimeout),
 	)
 }
 
 // Devices returns the dictation devices.
 func (s *Support) Devices(ctx context.Context) ([]string, error) {
-	getDevicesButton := nodewith.Name(eventGetDevices).Role(role.Button).First()
+	getDevicesButton := nodewith.Name(dictationcommon.EventGetDevices).Role(role.Button).First()
 	if err := uiauto.NamedCombine("get devices",
 		s.ui.DoDefault(getDevicesButton),
-		s.WaitNewEvent(eventGetDevices, defaultTimeout),
+		s.WaitNewEvent(dictationcommon.EventGetDevices, defaultTimeout),
 	)(ctx); err != nil {
 		return nil, errors.Wrap(err, "failed to get devices")
 	}
@@ -145,12 +146,12 @@ func (s *Support) WaitNewEvent(expectedEvent string, timeout time.Duration) acti
 }
 
 // EventMode returns the current event mode.
-func (s *Support) EventMode(ctx context.Context) (EventMode, error) {
+func (s *Support) EventMode(ctx context.Context) (dictationcommon.EventMode, error) {
 	ui := s.ui
-	getEventModeButton := nodewith.Name(eventGetEventMode).Role(role.Button).First()
+	getEventModeButton := nodewith.Name(dictationcommon.EventGetEventMode).Role(role.Button).First()
 	if err := uiauto.NamedCombine("get event mode",
 		ui.DoDefault(getEventModeButton),
-		s.WaitNewEvent(eventGetEventMode, defaultTimeout),
+		s.WaitNewEvent(dictationcommon.EventGetEventMode, defaultTimeout),
 	)(ctx); err != nil {
 		return "", errors.Wrap(err, "failed to get event mode")
 	}
@@ -160,28 +161,28 @@ func (s *Support) EventMode(ctx context.Context) (EventMode, error) {
 		return "", errors.New("eventMode not found in the last event message")
 	}
 
-	return EventMode(matches[1]), nil
+	return dictationcommon.EventMode(matches[1]), nil
 }
 
 // SetEventMode sets the event mode to the given event mode.
-func (s *Support) SetEventMode(eventMode EventMode) action.Action {
+func (s *Support) SetEventMode(eventMode dictationcommon.EventMode) action.Action {
 	ui := s.ui
-	setEventModeButton := nodewith.Name(eventSetEventMode).Role(role.Button).First()
+	setEventModeButton := nodewith.Name(dictationcommon.EventSetEventMode).Role(role.Button).First()
 	eventModeItem := nodewith.NameContaining(string(eventMode)).Role(role.MenuListOption).First()
 	return uiauto.NamedCombine(fmt.Sprintf("set event mode to %q", eventMode),
 		ui.DoDefault(eventModeItem),
 		ui.DoDefault(setEventModeButton),
-		s.WaitNewEvent(eventSetEventMode, defaultTimeout),
+		s.WaitNewEvent(dictationcommon.EventSetEventMode, defaultTimeout),
 	)
 }
 
 // SetSimpleLEDState sets the simple LED state to the given state.
-func (s *Support) SetSimpleLEDState(state SimpleLEDState) action.Action {
+func (s *Support) SetSimpleLEDState(state dictationcommon.SimpleLEDState) action.Action {
 	ui := s.ui
 	simpleLEDStateItem := nodewith.NameContaining(string(state)).Role(role.MenuListOption).First()
-	setSimpleLEDStateButton := nodewith.Name(eventSetSimpleLED).Role(role.Button).First()
+	setSimpleLEDStateButton := nodewith.Name(dictationcommon.EventSetSimpleLED).Role(role.Button).First()
 	verifyEventMessage := func(ctx context.Context) error {
-		expectedNumber := ledStateToNumber[state]
+		expectedNumber := dictationcommon.LEDStateToNumber[state]
 
 		match := simpleLedStateRegex.FindStringSubmatch(s.lastEventMessage)
 		if len(match) < 2 {
@@ -200,23 +201,23 @@ func (s *Support) SetSimpleLEDState(state SimpleLEDState) action.Action {
 	return uiauto.NamedCombine(fmt.Sprintf("set simple led state to %q", state),
 		ui.DoDefaultUntil(simpleLEDStateItem, s.waitUntilSelected(simpleLEDStateItem)),
 		ui.DoDefault(setSimpleLEDStateButton),
-		s.WaitNewEvent(eventSetSimpleLED, defaultTimeout),
+		s.WaitNewEvent(dictationcommon.EventSetSimpleLED, defaultTimeout),
 		verifyEventMessage,
 	)
 }
 
 // SetLEDState sets the LED state with given index and mode.
-func (s *Support) SetLEDState(index LEDIndex, mode LEDMode) action.Action {
+func (s *Support) SetLEDState(index dictationcommon.LEDIndex, mode dictationcommon.LEDMode) action.Action {
 	ui := s.ui
 	indexOption := nodewith.NameContaining(string(index)).Role(role.MenuListOption)
 	speechMikeGroup := nodewith.NameContaining("SpeechMike").Role(role.Group)
 	// The third menu list in the SpeechMike group is the mode menu.
 	modeMenuList := nodewith.Role(role.MenuListPopup).Ancestor(speechMikeGroup).Nth(3)
 	modeOption := nodewith.NameContaining(string(mode)).Role(role.MenuListOption).Ancestor(modeMenuList).First()
-	setLEDButton := nodewith.Name(eventSetLED).Role(role.Button).First()
+	setLEDButton := nodewith.Name(dictationcommon.EventSetLED).Role(role.Button).First()
 	verifyEventMessage := func(ctx context.Context) error {
-		expectedLEDIndex := ledIndexToNumber[index]
-		expectedLEDMode := ledModeToNumber[mode]
+		expectedLEDIndex := dictationcommon.LEDIndexToNumber[index]
+		expectedLEDMode := dictationcommon.LEDModeToNumber[mode]
 
 		matches := indexAndModeRegex.FindStringSubmatch(s.lastEventMessage)
 		if len(matches) < 3 {
@@ -247,7 +248,7 @@ func (s *Support) SetLEDState(index LEDIndex, mode LEDMode) action.Action {
 		uiauto.IfFailThen(s.selected(modeOption),
 			ui.DoDefaultUntil(modeOption, s.waitUntilSelected(modeOption))),
 		ui.DoDefault(setLEDButton),
-		s.WaitNewEvent(eventSetLED, defaultTimeout),
+		s.WaitNewEvent(dictationcommon.EventSetLED, defaultTimeout),
 		verifyEventMessage,
 	)
 }

@@ -11,6 +11,7 @@ import (
 	"time"
 
 	"github.com/golang/protobuf/ptypes/empty"
+	dictationcommon "go.chromium.org/tast-tests/cros/common/dictation"
 	"go.chromium.org/tast-tests/cros/common/testexec"
 	"go.chromium.org/tast-tests/cros/local/apps"
 	"go.chromium.org/tast-tests/cros/local/bundles/cros/peripherals/dictation"
@@ -401,7 +402,7 @@ func (p *PeriphService) WaitDictationNewEvent(ctx context.Context, req *peripher
 
 // SetDictationEventMode sets the event mode to the given state.
 func (p *PeriphService) SetDictationEventMode(ctx context.Context, req *peripherals.SetDictationEventModeRequest) (*empty.Empty, error) {
-	if err := p.dictationSupport.SetEventMode(dictation.EventMode(req.EventMode))(ctx); err != nil {
+	if err := p.dictationSupport.SetEventMode(dictationcommon.EventMode(req.EventMode))(ctx); err != nil {
 		return nil, errors.Wrap(err, "failed to set event mode")
 	}
 	return &empty.Empty{}, nil
@@ -418,7 +419,7 @@ func (p *PeriphService) GetDictationEventMode(ctx context.Context, req *empty.Em
 
 // SetDictationSimpleLEDState sets the simple LED state to the given state.
 func (p *PeriphService) SetDictationSimpleLEDState(ctx context.Context, req *peripherals.SetDictationSimpleLEDStateRequest) (*empty.Empty, error) {
-	if err := p.dictationSupport.SetSimpleLEDState(dictation.SimpleLEDState(req.SimpleLedState))(ctx); err != nil {
+	if err := p.dictationSupport.SetSimpleLEDState(dictationcommon.SimpleLEDState(req.SimpleLedState))(ctx); err != nil {
 		return nil, errors.Wrap(err, "failed to set simple LED state")
 	}
 	return &empty.Empty{}, nil
@@ -426,7 +427,7 @@ func (p *PeriphService) SetDictationSimpleLEDState(ctx context.Context, req *per
 
 // SetDictationLEDState sets the LED state with given index and mode.
 func (p *PeriphService) SetDictationLEDState(ctx context.Context, req *peripherals.SetDictationLEDStateRequest) (*empty.Empty, error) {
-	if err := p.dictationSupport.SetLEDState(dictation.LEDIndex(req.LedIndex), dictation.LEDMode(req.LedMode))(ctx); err != nil {
+	if err := p.dictationSupport.SetLEDState(dictationcommon.LEDIndex(req.LedIndex), dictationcommon.LEDMode(req.LedMode))(ctx); err != nil {
 		return nil, errors.Wrap(err, "failed to set LED state")
 	}
 	return &empty.Empty{}, nil
