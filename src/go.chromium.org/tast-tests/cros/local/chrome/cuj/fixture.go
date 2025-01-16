@@ -51,12 +51,12 @@ import (
 )
 
 const (
-	// CPUStablizationTimeout is the time to wait for cpu stablization, which
+	// CPUStabilizationTimeout is the time to wait for cpu stabilization, which
 	// is the sum of cpu cool down time, cpu idle time, and cpu pkg state activity drop time.
-	CPUStablizationTimeout = cujrecorder.CooldownTimeout
+	CPUStabilizationTimeout = cujrecorder.CooldownTimeout
 	// BatteryChargingTimeout is the battery charging duration if capacity is
 	//  below 25%
-	BatteryChargingTimeout = 3 * time.Minute
+	BatteryChargingTimeout = 8 * time.Minute
 	// webRTCLogsGatherTimeout is the time allowed for gathering the WebRTC
 	// event log files into a gzip archive in the test output directory.
 	webRTCLogsGatherTimeout = 15 * time.Second
@@ -117,10 +117,10 @@ var disableChargeBatteryBeforeTest = testing.RegisterVarString(
 // minimumBatteryCapacity is the minimum battery capacity on top of the
 // low battery shutdown percentage.
 var minimumBatteryCapacity = 25.0
-var chargeBatteryTestPollOpt = &testing.PollOptions{Interval: 60 * time.Second, Timeout: 3 * time.Minute}
+var chargeBatteryTestPollOpt = &testing.PollOptions{Interval: 60 * time.Second, Timeout: BatteryChargingTimeout}
 
 // minimumBatteryRequirementForCUJs is the lowest value that CUJ tests can start
-// with for battery capcity - any lower and the test should fail.
+// with for battery capacity - any lower and the test should fail.
 var minimumBatteryRequirementForCUJs = 50.0
 
 var extraArgsVar = testing.RegisterVarString(
@@ -164,7 +164,7 @@ func init() {
 		Impl: &prepareCUJFixture{
 			minBatteryRequirement: minimumBatteryRequirementForCUJs,
 		},
-		PreTestTimeout:  CPUStablizationTimeout,
+		PreTestTimeout:  CPUStabilizationTimeout,
 		PostTestTimeout: postTestTimeout,
 		Parent:          "gpuWatchHangs",
 	})
@@ -180,7 +180,7 @@ func init() {
 			minBatteryRequirement: minimumBatteryRequirementForCUJs,
 			skipCPUCooldown:       true,
 		},
-		PreTestTimeout:  CPUStablizationTimeout,
+		PreTestTimeout:  CPUStabilizationTimeout,
 		PostTestTimeout: postTestTimeout,
 		Parent:          "gpuWatchHangs",
 	})
@@ -193,7 +193,7 @@ func init() {
 		},
 		BugComponent:    "b:1045832", // ChromeOS > Software > Performance > TPS
 		Impl:            &prepareCUJFixture{chargeBattery: true},
-		PreTestTimeout:  CPUStablizationTimeout + BatteryChargingTimeout + 5*time.Second,
+		PreTestTimeout:  CPUStabilizationTimeout + BatteryChargingTimeout + 5*time.Second,
 		PostTestTimeout: postTestTimeout,
 		Parent:          "gpuWatchHangs",
 	})
@@ -209,7 +209,7 @@ func init() {
 		SetUpTimeout:    chrome.EnrollmentAndLoginTimeout + chrome.GAIALoginTimeout,
 		ResetTimeout:    chrome.ResetTimeout,
 		TearDownTimeout: chrome.ResetTimeout,
-		PreTestTimeout:  CPUStablizationTimeout + BatteryChargingTimeout + 5*time.Second,
+		PreTestTimeout:  CPUStabilizationTimeout + BatteryChargingTimeout + 5*time.Second,
 		PostTestTimeout: postTestTimeout,
 		Parent:          "gpuWatchHangsEnrolled",
 	})
@@ -226,7 +226,7 @@ func init() {
 		SetUpTimeout:    setUpTimeout,
 		ResetTimeout:    resetTimeout,
 		TearDownTimeout: resetTimeout,
-		PreTestTimeout:  CPUStablizationTimeout,
+		PreTestTimeout:  CPUStabilizationTimeout,
 		PostTestTimeout: postTestTimeout,
 	})
 	testing.AddFixture(&testing.Fixture{
@@ -244,7 +244,7 @@ func init() {
 		SetUpTimeout:    setUpTimeout,
 		ResetTimeout:    resetTimeout,
 		TearDownTimeout: resetTimeout,
-		PreTestTimeout:  CPUStablizationTimeout,
+		PreTestTimeout:  CPUStabilizationTimeout,
 		PostTestTimeout: postTestTimeout,
 	})
 	testing.AddFixture(&testing.Fixture{
@@ -262,7 +262,7 @@ func init() {
 		SetUpTimeout:    setUpTimeout,
 		ResetTimeout:    resetTimeout,
 		TearDownTimeout: resetTimeout,
-		PreTestTimeout:  CPUStablizationTimeout,
+		PreTestTimeout:  CPUStabilizationTimeout,
 		PostTestTimeout: postTestTimeout,
 	})
 	// loggedInToCUJUserARCSupported fixture is similar to loggedInToCUJUser
@@ -286,7 +286,7 @@ func init() {
 		SetUpTimeout:    setUpWithOptinTimeout,
 		ResetTimeout:    resetTimeout,
 		TearDownTimeout: resetTimeout,
-		PreTestTimeout:  CPUStablizationTimeout,
+		PreTestTimeout:  CPUStabilizationTimeout,
 		PostTestTimeout: postTestTimeout,
 	})
 	testing.AddFixture(&testing.Fixture{
@@ -310,7 +310,7 @@ func init() {
 		SetUpTimeout:    setUpTimeout,
 		ResetTimeout:    resetTimeout,
 		TearDownTimeout: resetTimeout,
-		PreTestTimeout:  CPUStablizationTimeout,
+		PreTestTimeout:  CPUStabilizationTimeout,
 		PostTestTimeout: postTestTimeout,
 		Vars:            []string{"ui.cujEnterpriseAccountPool"},
 	})
@@ -331,7 +331,7 @@ func init() {
 		SetUpTimeout:    setUpTimeout,
 		ResetTimeout:    resetTimeout,
 		TearDownTimeout: resetTimeout,
-		PreTestTimeout:  CPUStablizationTimeout,
+		PreTestTimeout:  CPUStabilizationTimeout,
 		PostTestTimeout: postTestTimeout,
 	})
 	testing.AddFixture(&testing.Fixture{
@@ -352,7 +352,7 @@ func init() {
 		SetUpTimeout:    setUpWithOptinTimeout,
 		ResetTimeout:    resetTimeout,
 		TearDownTimeout: resetTimeout,
-		PreTestTimeout:  CPUStablizationTimeout,
+		PreTestTimeout:  CPUStabilizationTimeout,
 		PostTestTimeout: postTestTimeout,
 	})
 	testing.AddFixture(&testing.Fixture{
@@ -376,7 +376,7 @@ func init() {
 		SetUpTimeout:    setUpTimeout,
 		ResetTimeout:    resetTimeout,
 		TearDownTimeout: resetTimeout,
-		PreTestTimeout:  CPUStablizationTimeout,
+		PreTestTimeout:  CPUStabilizationTimeout,
 		PostTestTimeout: postTestTimeout,
 	})
 	testing.AddFixture(&testing.Fixture{
@@ -445,7 +445,7 @@ func init() {
 		SetUpTimeout:    chrome.EnrollmentAndLoginTimeout + chrome.GAIALoginTimeout + optin.OptinTimeout + 2*time.Minute,
 		ResetTimeout:    resetTimeout,
 		TearDownTimeout: resetTimeout,
-		PreTestTimeout:  CPUStablizationTimeout,
+		PreTestTimeout:  CPUStabilizationTimeout,
 		PostTestTimeout: postTestTimeout,
 	})
 	testing.AddFixture(&testing.Fixture{
@@ -468,7 +468,7 @@ func init() {
 		SetUpTimeout:    setUpTimeout,
 		ResetTimeout:    resetTimeout,
 		TearDownTimeout: resetTimeout,
-		PreTestTimeout:  CPUStablizationTimeout,
+		PreTestTimeout:  CPUStabilizationTimeout,
 		PostTestTimeout: postTestTimeout,
 	})
 	// TODO(b/331565548): Remove if VsyncDecoding is launched.
@@ -493,7 +493,7 @@ func init() {
 		SetUpTimeout:    setUpTimeout,
 		ResetTimeout:    resetTimeout,
 		TearDownTimeout: resetTimeout,
-		PreTestTimeout:  CPUStablizationTimeout,
+		PreTestTimeout:  CPUStabilizationTimeout,
 		PostTestTimeout: postTestTimeout,
 	})
 	// TODO(b/325918094): Remove when enough data is collected related to paravirt sched impact.
@@ -518,7 +518,7 @@ func init() {
 		SetUpTimeout:    setUpTimeout,
 		ResetTimeout:    resetTimeout,
 		TearDownTimeout: resetTimeout,
-		PreTestTimeout:  CPUStablizationTimeout,
+		PreTestTimeout:  CPUStabilizationTimeout,
 		PostTestTimeout: postTestTimeout,
 	})
 	testing.AddFixture(&testing.Fixture{
@@ -542,7 +542,7 @@ func init() {
 		SetUpTimeout:    setUpTimeout,
 		ResetTimeout:    resetTimeout,
 		TearDownTimeout: resetTimeout,
-		PreTestTimeout:  CPUStablizationTimeout,
+		PreTestTimeout:  CPUStabilizationTimeout,
 		PostTestTimeout: postTestTimeout,
 	})
 	testing.AddFixture(&testing.Fixture{
@@ -575,7 +575,7 @@ func init() {
 		SetUpTimeout:    setUpTimeout,
 		ResetTimeout:    resetTimeout,
 		TearDownTimeout: resetTimeout,
-		PreTestTimeout:  CPUStablizationTimeout,
+		PreTestTimeout:  CPUStabilizationTimeout,
 		PostTestTimeout: postTestTimeout,
 	})
 	testing.AddFixture(&testing.Fixture{
@@ -607,7 +607,7 @@ func init() {
 		SetUpTimeout:    setUpTimeout,
 		ResetTimeout:    resetTimeout,
 		TearDownTimeout: resetTimeout,
-		PreTestTimeout:  CPUStablizationTimeout,
+		PreTestTimeout:  CPUStabilizationTimeout,
 		PostTestTimeout: postTestTimeout,
 	})
 	testing.AddFixture(&testing.Fixture{
@@ -633,7 +633,7 @@ func init() {
 		SetUpTimeout:    setUpTimeout,
 		ResetTimeout:    resetTimeout,
 		TearDownTimeout: resetTimeout,
-		PreTestTimeout:  CPUStablizationTimeout,
+		PreTestTimeout:  CPUStabilizationTimeout,
 		PostTestTimeout: postTestTimeout,
 	})
 	testing.AddFixture(&testing.Fixture{
@@ -650,7 +650,7 @@ func init() {
 		SetUpTimeout:    setUpTimeout,
 		ResetTimeout:    resetTimeout,
 		TearDownTimeout: resetTimeout,
-		PreTestTimeout:  CPUStablizationTimeout,
+		PreTestTimeout:  CPUStabilizationTimeout,
 		PostTestTimeout: postTestTimeout,
 	})
 	testing.AddFixture(&testing.Fixture{
@@ -674,7 +674,7 @@ func init() {
 		SetUpTimeout:    setUpTimeout,
 		ResetTimeout:    resetTimeout,
 		TearDownTimeout: resetTimeout,
-		PreTestTimeout:  CPUStablizationTimeout,
+		PreTestTimeout:  CPUStabilizationTimeout,
 		PostTestTimeout: postTestTimeout,
 	})
 	testing.AddFixture(&testing.Fixture{
@@ -686,7 +686,7 @@ func init() {
 		},
 		BugComponent:    "b:1045832", // ChromeOS > Software > Performance > TPS
 		Impl:            &prepareCUJFixture{},
-		PreTestTimeout:  CPUStablizationTimeout + 3*time.Second,
+		PreTestTimeout:  CPUStabilizationTimeout + 3*time.Second,
 		PostTestTimeout: postTestTimeout,
 		Parent:          "gpuWatchHangs",
 	})
@@ -714,7 +714,7 @@ func init() {
 		SetUpTimeout:    setUpTimeout,
 		ResetTimeout:    resetTimeout,
 		TearDownTimeout: resetTimeout,
-		PreTestTimeout:  CPUStablizationTimeout,
+		PreTestTimeout:  CPUStabilizationTimeout,
 		PostTestTimeout: postTestTimeout,
 	})
 	testing.AddFixture(&testing.Fixture{
@@ -735,7 +735,7 @@ func init() {
 		SetUpTimeout:    setUpTimeout,
 		ResetTimeout:    resetTimeout,
 		TearDownTimeout: resetTimeout,
-		PreTestTimeout:  CPUStablizationTimeout,
+		PreTestTimeout:  CPUStabilizationTimeout,
 		PostTestTimeout: postTestTimeout,
 	})
 	testing.AddFixture(&testing.Fixture{
@@ -756,7 +756,7 @@ func init() {
 		SetUpTimeout:    setUpWithOptinTimeout,
 		ResetTimeout:    resetTimeout,
 		TearDownTimeout: resetTimeout,
-		PreTestTimeout:  CPUStablizationTimeout,
+		PreTestTimeout:  CPUStabilizationTimeout,
 		PostTestTimeout: postTestTimeout,
 	})
 	testing.AddFixture(&testing.Fixture{
@@ -780,7 +780,7 @@ func init() {
 		SetUpTimeout:    setUpTimeout,
 		ResetTimeout:    resetTimeout,
 		TearDownTimeout: resetTimeout,
-		PreTestTimeout:  CPUStablizationTimeout,
+		PreTestTimeout:  CPUStabilizationTimeout,
 		PostTestTimeout: postTestTimeout,
 	})
 	testing.AddFixture(&testing.Fixture{
@@ -822,7 +822,7 @@ func init() {
 		SetUpTimeout:    setUpTimeout,
 		ResetTimeout:    resetTimeout,
 		TearDownTimeout: resetTimeout,
-		PreTestTimeout:  CPUStablizationTimeout,
+		PreTestTimeout:  CPUStabilizationTimeout,
 		PostTestTimeout: postTestTimeout,
 	})
 	// TODO(b/325918094): Remove when enough data is collected related to paravirt sched impact.
@@ -842,7 +842,7 @@ func init() {
 		SetUpTimeout:    setUpWithOptinTimeout,
 		ResetTimeout:    resetTimeout,
 		TearDownTimeout: resetTimeout,
-		PreTestTimeout:  CPUStablizationTimeout,
+		PreTestTimeout:  CPUStabilizationTimeout,
 		PostTestTimeout: postTestTimeout,
 	})
 	testing.AddFixture(&testing.Fixture{
@@ -877,7 +877,7 @@ func init() {
 		SetUpTimeout:    setUpTimeout,
 		ResetTimeout:    resetTimeout,
 		TearDownTimeout: resetTimeout,
-		PreTestTimeout:  CPUStablizationTimeout,
+		PreTestTimeout:  CPUStabilizationTimeout,
 		PostTestTimeout: postTestTimeout,
 	})
 	testing.AddFixture(&testing.Fixture{
@@ -895,7 +895,7 @@ func init() {
 		SetUpTimeout:    setUpTimeout,
 		ResetTimeout:    resetTimeout,
 		TearDownTimeout: resetTimeout,
-		PreTestTimeout:  CPUStablizationTimeout,
+		PreTestTimeout:  CPUStabilizationTimeout,
 		PostTestTimeout: postTestTimeout,
 	})
 	testing.AddFixture(&testing.Fixture{
@@ -1003,7 +1003,7 @@ func init() {
 		SetUpTimeout:    setUpTimeout,
 		ResetTimeout:    resetTimeout,
 		TearDownTimeout: resetTimeout,
-		PreTestTimeout:  CPUStablizationTimeout,
+		PreTestTimeout:  CPUStabilizationTimeout,
 		PostTestTimeout: postTestTimeout,
 	})
 	testing.AddFixture(&testing.Fixture{
@@ -1021,7 +1021,7 @@ func init() {
 		SetUpTimeout:    setUpTimeout,
 		ResetTimeout:    resetTimeout,
 		TearDownTimeout: resetTimeout,
-		PreTestTimeout:  CPUStablizationTimeout,
+		PreTestTimeout:  CPUStabilizationTimeout,
 		PostTestTimeout: postTestTimeout,
 	})
 	testing.AddFixture(&testing.Fixture{
@@ -1046,7 +1046,7 @@ func init() {
 		SetUpTimeout:    setUpTimeout,
 		ResetTimeout:    resetTimeout,
 		TearDownTimeout: resetTimeout,
-		PreTestTimeout:  CPUStablizationTimeout,
+		PreTestTimeout:  CPUStabilizationTimeout,
 		PostTestTimeout: postTestTimeout,
 	})
 	testing.AddFixture(&testing.Fixture{
@@ -1097,7 +1097,7 @@ func init() {
 		SetUpTimeout:    setUpTimeout,
 		ResetTimeout:    resetTimeout,
 		TearDownTimeout: resetTimeout,
-		PreTestTimeout:  CPUStablizationTimeout,
+		PreTestTimeout:  CPUStabilizationTimeout,
 		PostTestTimeout: postTestTimeout,
 	})
 	testing.AddFixture(&testing.Fixture{
@@ -1118,7 +1118,7 @@ func init() {
 		SetUpTimeout:    setUpTimeout,
 		ResetTimeout:    resetTimeout,
 		TearDownTimeout: resetTimeout,
-		PreTestTimeout:  CPUStablizationTimeout,
+		PreTestTimeout:  CPUStabilizationTimeout,
 		PostTestTimeout: postTestTimeout,
 	})
 	testing.AddFixture(&testing.Fixture{
@@ -1200,7 +1200,7 @@ func init() {
 		SetUpTimeout:    setUpTimeout,
 		ResetTimeout:    resetTimeout,
 		TearDownTimeout: resetTimeout,
-		PreTestTimeout:  CPUStablizationTimeout,
+		PreTestTimeout:  CPUStabilizationTimeout,
 		PostTestTimeout: postTestTimeout,
 	})
 	testing.AddFixture(&testing.Fixture{
@@ -1222,7 +1222,7 @@ func init() {
 		SetUpTimeout:    setUpTimeout,
 		ResetTimeout:    resetTimeout,
 		TearDownTimeout: resetTimeout,
-		PreTestTimeout:  CPUStablizationTimeout,
+		PreTestTimeout:  CPUStabilizationTimeout,
 		PostTestTimeout: postTestTimeout,
 	})
 	testing.AddFixture(&testing.Fixture{
@@ -1247,7 +1247,7 @@ func init() {
 		SetUpTimeout:    setUpTimeout,
 		ResetTimeout:    resetTimeout,
 		TearDownTimeout: resetTimeout,
-		PreTestTimeout:  CPUStablizationTimeout,
+		PreTestTimeout:  CPUStabilizationTimeout,
 		PostTestTimeout: postTestTimeout,
 	})
 }
@@ -1342,7 +1342,7 @@ func runningPackages(ctx context.Context, a *arc.ARC) (map[string]struct{}, erro
 	return acts, nil
 }
 
-// chargeBatteryCapacity allows charging of the battery for 3 minutes if battery capacity
+// chargeBatteryCapacity allows charging of the battery for 8 minutes if battery capacity
 // is not higher than a pre-defined level (minimumBatteryCapacity+lowBatteryShutdownPercent).
 func chargeBatteryCapacity(ctx context.Context, minimumBatteryCapacity float64, chargeBatteryTestPollOpt *testing.PollOptions) error {
 	if err := setup.AllowBatteryCharging(ctx); err != nil {
@@ -1356,15 +1356,29 @@ func chargeBatteryCapacity(ctx context.Context, minimumBatteryCapacity float64, 
 	if err != nil {
 		return err
 	}
+	initCapacity := -1.0
 	if err := testing.Poll(ctx, func(ctx context.Context) error {
 		capacity, err := pm.ReadBatteryCapacity(ctx, devPath)
 		if err != nil {
+
 			return errors.Wrap(err, "failed to get battery capacity")
 		}
+		// Set the initial battery capacity.
+		if initCapacity < 0.0 {
+			initCapacity = capacity
+		}
+
 		testing.ContextLogf(ctx, "Current battery capacity: %.1f%%", capacity)
 		if capacity <= minimumBatteryCapacity+lowBatteryShutdownPercent {
-			return errors.New("current battery capacity is not higher than minimum")
+			if capacity <= initCapacity {
+				// Report that the battery was not charging.
+				return errors.Errorf("battery is not charging; initial=%.1f%%, current=%.1f%%, minimum=%.1f%%",
+					initCapacity, capacity, (minimumBatteryCapacity + lowBatteryShutdownPercent))
+			}
+			return errors.Errorf("current battery capacity (%.1f%%) does not meet the minimum %.1f%%",
+				capacity, (minimumBatteryCapacity + lowBatteryShutdownPercent))
 		}
+
 		return nil
 	}, chargeBatteryTestPollOpt); err != nil {
 		return errors.Wrap(err, "failed to get battery status")
@@ -1372,7 +1386,7 @@ func chargeBatteryCapacity(ctx context.Context, minimumBatteryCapacity float64, 
 	return nil
 }
 
-// chargeBatteryCapacityBeforePowerTest allows charging of the battery for 3 minutes if battery capacity
+// chargeBatteryCapacityBeforePowerTest allows charging of the battery for 8 minutes if battery capacity
 // is lower than a pre-defined level when the disableChargeBatteryBeforeTest variable is not true.
 // This is usually added before the case execution.
 func chargeBatteryCapacityBeforePowerTest(ctx context.Context, minBatteryCapacity float64) error {
@@ -1577,7 +1591,7 @@ func NewWPRLoggedInToCUJUserWithoutCooldownFixture(name, desc string, contacts [
 		SetUpTimeout:    setUpTimeout,
 		ResetTimeout:    resetTimeout,
 		TearDownTimeout: resetTimeout,
-		PreTestTimeout:  CPUStablizationTimeout,
+		PreTestTimeout:  CPUStabilizationTimeout,
 		PostTestTimeout: postTestTimeout,
 	}
 }
@@ -2150,7 +2164,7 @@ func (f *loggedInToCUJUserFixture) PostTest(ctx context.Context, s *testing.Fixt
 // saver on Android.
 // Android won't turn on battery saver unless the device is disconnected from
 // power. So we run `dumpsys battery unplug` to simulate it, and then toggle
-// battery saver to properly propegate the state into Android.
+// battery saver to properly propagate the state into Android.
 type androidBatterySaverFixture struct {
 	arc *arc.ARC
 }

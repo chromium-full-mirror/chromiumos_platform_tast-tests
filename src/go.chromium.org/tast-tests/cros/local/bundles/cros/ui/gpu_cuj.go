@@ -26,7 +26,7 @@ func init() {
 		BugComponent: "b:1045832", // ChromeOS > Software > Performance > TPS
 		Attr:         []string{"group:cuj"},
 		SoftwareDeps: []string{"chrome"},
-		Timeout:      25*time.Minute + cuj.CPUStablizationTimeout,
+		Timeout:      25*time.Minute + cuj.CPUStabilizationTimeout,
 		Data: []string{
 			"video.html",
 			"continuous_scroll_60fps.html",

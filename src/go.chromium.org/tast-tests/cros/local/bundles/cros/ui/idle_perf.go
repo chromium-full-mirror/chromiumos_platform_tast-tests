@@ -61,7 +61,7 @@ func init() {
 			cujrecorder.SystemTraceConfigFile,
 			facegaze.FakeCameraVideoFile720p,
 		},
-		Timeout: cuj.CPUStablizationTimeout + idleDuration,
+		Timeout: cuj.CPUStabilizationTimeout + idleDuration,
 
 		Params: []testing.Param{{
 			Val:               idlePerfTest{testType: testTypeARC},
