@@ -33,7 +33,7 @@ func init() {
 	testing.AddTest(&testing.Test{
 		Func:         VPNPolicy,
 		Desc:         "Test that VPN can correctly be configured from device and user policy",
-		Contacts:     []string{"cros-networking@google.com", "taoyl@google.com"},
+		Contacts:     []string{"cros-networking@google.com", "jiejiang@google.com"},
 		BugComponent: "b:1493959",
 		SoftwareDeps: []string{"reboot", "chrome"},
 		Attr: []string{

@@ -20,7 +20,7 @@ func init() {
 	testing.AddTest(&testing.Test{
 		Func:         CrostiniConnectivity,
 		Desc:         "Checks IPv4 and IPv6 connectivity inside penguin container",
-		Contacts:     []string{"cros-networking@google.com", "taoyl@google.com"},
+		Contacts:     []string{"cros-networking@google.com", "hugobenichi@google.com"},
 		BugComponent: "b:1493959",
 		Attr:         []string{"group:network", "network_platform"},
 		SoftwareDeps: []string{"chrome", "vm_host"},

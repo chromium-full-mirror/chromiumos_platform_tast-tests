@@ -33,7 +33,7 @@ func init() {
 		Desc: "Test that DNS config pushed by VPN servers are correctly applied",
 		Contacts: []string{
 			"cros-networking@google.com",
-			"taoyl@google.com",
+			"jasongustaman@google.com",
 		},
 		// ChromeOS > Platform > System > Networking > Continuous Maintenance
 		BugComponent: "b:1493959",

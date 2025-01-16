@@ -20,7 +20,7 @@ func init() {
 	testing.AddTest(&testing.Test{
 		Func:         VPNMojoConf,
 		Desc:         "Test that VPN can correctly be configured through Chrome mojo API",
-		Contacts:     []string{"cros-networking@google.com", "taoyl@google.com"},
+		Contacts:     []string{"cros-networking@google.com", "jiejiang@google.com"},
 		BugComponent: "b:1493959",
 		SoftwareDeps: []string{"chrome"},
 		Attr:         []string{"group:mainline", "group:release-health", "release-health_network"},

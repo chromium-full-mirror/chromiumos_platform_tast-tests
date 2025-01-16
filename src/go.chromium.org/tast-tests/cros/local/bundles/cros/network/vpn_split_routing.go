@@ -23,7 +23,7 @@ func init() {
 		Desc: "Test that split routing works correctly for VPN",
 		Contacts: []string{
 			"cros-networking@google.com",
-			"taoyl@google.com",
+			"jiejiang@google.com",
 		},
 		// ChromeOS > Platform > System > Networking > Continuous Maintenance
 		BugComponent: "b:1493959",

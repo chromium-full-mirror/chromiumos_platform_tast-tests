@@ -31,7 +31,7 @@ func init() {
 	testing.AddTest(&testing.Test{
 		Func:     DHCPPD,
 		Desc:     "Verify the shill behavior and routing semantics in a DHCPv6-PD environment",
-		Contacts: []string{"cros-networking@google.com", "taoyl@google.com"},
+		Contacts: []string{"cros-networking@google.com", "chenzikai@google.com"},
 		// ChromeOS > Platform > System > Networking > Continuous Maintenance
 		BugComponent: "b:1493959",
 		Attr:         []string{"group:mainline", "informational"},
