@@ -149,7 +149,6 @@ func defaultFullTopology(s *testing.FixtState, hostname string) *labapi.PasitHos
 // TestFixture is the PASIT test fixture.
 type TestFixture struct {
 	Helper          *Helper
-	defaultTopology func(*testing.FixtState, string) *labapi.PasitHost
 	hostConn        *ssh.Conn
 	hostForwarder   *ssh.Forwarder
 	grpcConn        *grpc.ClientConn

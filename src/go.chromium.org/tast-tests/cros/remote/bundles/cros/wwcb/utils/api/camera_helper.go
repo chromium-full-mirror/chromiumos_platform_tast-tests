@@ -24,7 +24,6 @@ var (
 	redColor   = &pixel{R: 240, G: 80, B: 80, A: 255}
 	greenColor = &pixel{R: 80, G: 240, B: 80, A: 255}
 	blueColor  = &pixel{R: 80, G: 80, B: 240, A: 255}
-	whiteColor = &pixel{R: 250, G: 250, B: 250, A: 255}
 	grayColor  = &pixel{R: 120, G: 120, B: 120, A: 255}
 
 	// webcamMappingLimitScore is the max allowable "difference" between two pixels
@@ -252,19 +251,4 @@ func distScore(s1, s2 *pixel) float64 {
 // score more high means two pixels more similar.
 func scalarScore(s1, s2 *pixel) float64 {
 	return 255 - distScore(s1, s2)/3
-}
-
-// filterColorPixelValue is for get max pixel value by color.
-func filterColorPixelValue(p *pixel) pixel {
-	colorStr := detectColor(p)
-
-	if colorStr == "red" {
-		return pixel{R: p.R, G: 0, B: 0, A: 255}
-	}
-
-	if colorStr == "green" {
-		return pixel{R: 0, G: p.G, B: 0, A: 255}
-	}
-
-	return pixel{R: 0, G: 0, B: p.B, A: 255}
 }

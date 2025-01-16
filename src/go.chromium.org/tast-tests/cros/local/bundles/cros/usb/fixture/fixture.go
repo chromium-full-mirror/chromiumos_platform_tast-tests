@@ -134,7 +134,7 @@ func (i *implUsbMon) PostTest(ctx context.Context, s *testing.FixtTestState) {
 
 	//Stop the usbmon capture.
 	cleanupCtx := ctx
-	ctx, cancel := i.runner.ReserveForClose(ctx)
+	_, cancel := i.runner.ReserveForClose(ctx)
 	defer cancel()
 	defer func(cleanupCtx context.Context) {
 		if err := i.runner.Close(cleanupCtx); err != nil {
