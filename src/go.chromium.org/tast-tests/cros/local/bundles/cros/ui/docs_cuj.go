@@ -24,7 +24,7 @@ func init() {
 		Desc: "Measures the total performance of the critical user journey for Google Docs",
 		Contacts: []string{
 			"cros-sw-perf@google.com",
-			"ramsaroop@google.com",
+			"yichenz@chromium.org",
 		},
 		BugComponent: "b:1045832", // ChromeOS > Software > Performance > TPS
 		Attr:         []string{"group:cuj"},

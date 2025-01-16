@@ -252,7 +252,7 @@ func init() {
 		Desc: "The main fixture used for UI CUJ tests with ARC disabled",
 		Contacts: []string{
 			"cros-sw-perf@google.com",
-			"ramsaroop@google.com",
+			"yichenz@chromium.org",
 		},
 		BugComponent: "b:1045832", // ChromeOS > Software > Performance > TPS
 		Impl: &loggedInToCUJUserFixture{
@@ -275,7 +275,7 @@ func init() {
 		Name: "loggedInToCUJUserARCSupported",
 		Desc: "The main fixture used for UI CUJ tests with ARC supported",
 		Contacts: []string{
-			"ramsaroop@google.com",
+			"yichenz@chromium.org",
 			"cros-sw-perf@google.com",
 		},
 		BugComponent: "b:1045832", // ChromeOS > Software > Performance > TPS
@@ -338,7 +338,7 @@ func init() {
 		Name: "loggedInAndKeepStateARCSupported",
 		Desc: "The CUJ test fixture which keeps login state with ARC supported",
 		Contacts: []string{
-			"ramsaroop@google.com",
+			"yichenz@chromium.org",
 			"cros-sw-perf@google.com",
 		},
 		BugComponent: "b:1045832", // ChromeOS > Software > Performance > TPS
@@ -452,7 +452,7 @@ func init() {
 		Name: "loggedInToCUJUserWithWebRTCEventLogging",
 		Desc: "CUJ test fixture with WebRTC event logging",
 		Contacts: []string{
-			"ramsaroop@google.com",
+			"yichenz@chromium.org",
 			"cros-sw-perf@google.com",
 		},
 		BugComponent: "b:1045832", // ChromeOS > Software > Performance > TPS
@@ -526,7 +526,7 @@ func init() {
 		Desc: "CUJ test fixture with WebRTC event logging with ARC disabled",
 		Contacts: []string{
 			"cros-sw-perf@google.com",
-			"ramsaroop@google.com",
+			"yichenz@chromium.org",
 		},
 		BugComponent: "b:1045832", // ChromeOS > Software > Performance > TPS
 		Data:         docsBlockerFiles,
@@ -549,7 +549,7 @@ func init() {
 		Name: "loggedInToCUJUserWithWebRTCEventLoggingWithVCEffects",
 		Desc: "CUJ test fixture with WebRTC event logging and VC platform effects enabled",
 		Contacts: []string{
-			"ramsaroop@google.com",
+			"yichenz@chromium.org",
 			"sammc@chromium.org",
 			"cros-sw-perf@google.com",
 			"cros-pe-pnp@google.com",
@@ -724,7 +724,7 @@ func init() {
 		Name: "loggedInToCUJUserWithFieldTrials",
 		Desc: "CUJ fixture with all field trials enabled",
 		Contacts: []string{
-			"ramsaroop@google.com",
+			"yichenz@chromium.org",
 			"cros-sw-perf@google.com",
 		},
 		BugComponent: "b:1045832", // ChromeOS > Software > Performance > TPS
@@ -745,7 +745,7 @@ func init() {
 		Name: "loggedInToCUJUserARCSupportedWithFieldTrials",
 		Desc: "CUJ fixture with ARC supported and all field trials",
 		Contacts: []string{
-			"ramsaroop@google.com",
+			"yichenz@chromium.org",
 			"cros-sw-perf@google.com",
 		},
 		BugComponent: "b:1045832", // ChromeOS > Software > Performance > TPS
@@ -766,7 +766,7 @@ func init() {
 		Name: "loggedInToCUJUserWithFieldTrialsAndWebRTCEventLogging",
 		Desc: "Variant of loggedInToCUJUserWithFieldTrials with WebRTCEventLogging enabled",
 		Contacts: []string{
-			"ramsaroop@google.com",
+			"yichenz@chromium.org",
 			"cros-sw-perf@google.com",
 		},
 		BugComponent: "b:1045832", // ChromeOS > Software > Performance > TPS
@@ -790,7 +790,7 @@ func init() {
 		Name: "loggedInToCUJUserWithFieldTrialsWithoutCooldown",
 		Desc: "CUJ fixture with all field trials enabled without CPU cooldown",
 		Contacts: []string{
-			"ramsaroop@google.com",
+			"yichenz@chromium.org",
 			"cros-sw-perf@google.com",
 		},
 		BugComponent: "b:1045832", // ChromeOS > Software > Performance > TPS
@@ -887,7 +887,7 @@ func init() {
 		Name: "loggedInToCUJUserWithChromeVox",
 		Desc: "CUJ fixture with ChromeVox enabled",
 		Contacts: []string{
-			"ramsaroop@google.com",
+			"yichenz@chromium.org",
 			"cros-sw-perf@google.com",
 		},
 		BugComponent: "b:1045832", // ChromeOS > Software > Performance > TPS
@@ -1128,7 +1128,7 @@ func init() {
 		Name: "loggedInToCUJUserWithForceComposition",
 		Desc: "Chrome from a pre-built image with composition forced on",
 		Contacts: []string{
-			"ramsaroop@google.com",
+			"yichenz@chromium.org",
 			"cros-sw-perf@google.com",
 		},
 		BugComponent: "b:1045832", // ChromeOS > Software > Performance > TPS
@@ -1147,7 +1147,7 @@ func init() {
 		Name: "loggedInToCUJUserWithForceNonDelegated",
 		Desc: "Chrome from a pre-built image with both delegated compositing and hw overlays forced off",
 		Contacts: []string{
-			"ramsaroop@google.com",
+			"yichenz@chromium.org",
 			"cros-sw-perf@google.com",
 		},
 		BugComponent: "b:1045832", // ChromeOS > Software > Performance > TPS
