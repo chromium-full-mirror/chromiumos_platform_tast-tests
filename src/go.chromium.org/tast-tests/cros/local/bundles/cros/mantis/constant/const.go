@@ -9,10 +9,12 @@ import "time"
 
 // Mantis related constant
 const (
-	ImageTestFileName   = "a_horse_20241127.png"
-	MantisDLCID         = "ml-dlc-302a455f-5453-43fb-a6a1-d856e6fe6435"
-	PowerMetricInterval = 5 * time.Second
+	ImageTestFileName       = "a_horse_20241127.png"
+	UnsafeImageTestFileName = "unsafe_image_20250116.jpg"
+	MantisDLCID             = "ml-dlc-302a455f-5453-43fb-a6a1-d856e6fe6435"
+	PowerMetricInterval     = 5 * time.Second
 	// DLC download might take up to 20 minutes.
 	PowerTestTimeout   = 20 * time.Minute
 	DefaultTestTimeout = 20 * time.Minute
+	DefaultUITimeout   = 5 * time.Second
 )
