@@ -24,11 +24,11 @@ type crasTimestampInOrderParameters struct {
 }
 
 var unstableModelsTimestampInOrder = []string{
-	// TODO(b/333498840): Undo skip after fix.
+	// Due to burstiness of hardware consumption and period size, these boards
+	// are unstable in the test when doing timestamp calculation with frames.
+	// See b/333498998comment#24 for details.
 	"aleena", "barla", "careena", "treeya", "liara", "kasumi360", "kasumi",
-	// TODO(b/333498998): Undo skip after fix.
 	"craaskbowl", "craask", "craaskvin", "craasneto", "hideo", "quandiso", "xivu360", "yahiko",
-	// TODO(b/333498998): Undo skip after fix.
 	"jubilant", "jubileum",
 }
 
@@ -38,7 +38,6 @@ func init() {
 		Desc:         "Verifies CRAS client receives timestamps that are in order",
 		Contacts:     []string{"chromeos-audio-bugs@google.com", "bailideng@google.com"},
 		BugComponent: "b:776546",
-		Attr:         []string{"group:mainline", "informational"},
 		Fixture:      "rebootForAudioDSPFixture",
 		Params: []testing.Param{{
 			Name:              "capture",
