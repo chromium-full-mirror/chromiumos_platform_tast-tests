@@ -98,6 +98,8 @@ async function start(
         scalabilityMode: svcScalabilityMode,
       };
     });
+  } else if (svcScalabilityMode.startsWith('L1')) {
+    init.sendEncodings = [{ scalabilityMode: svcScalabilityMode }];
   }
 
   localPC.addTransceiver(stream.getVideoTracks()[0], init);

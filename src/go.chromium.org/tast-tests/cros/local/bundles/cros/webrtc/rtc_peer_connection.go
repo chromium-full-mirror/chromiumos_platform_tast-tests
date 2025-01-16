@@ -749,6 +749,34 @@ func init() {
 			},
 			ExtraSoftwareDeps: []string{caps.HWEncodeAV1, "proprietary_codecs"},
 			Fixture:           "chromeZeroCopyTabCapture",
+		}, {
+			// This is a 2 temporal layers test.
+			// See https://www.w3.org/TR/webrtc-svc/#scalabilitymodes for SVC identifiers.
+			Name: "av1_svc_l1t2_verify_hw_enc",
+			Val: peerconnection.RTCTestParams{
+				VerifyDecoderMode: peerconnection.NoVerifyDecoderMode,
+				VerifyEncoderMode: peerconnection.VerifyHWEncoderUsed,
+				Profile:           "AV1",
+				StreamWidth:       defaultRTCStreamWidth,
+				StreamHeight:      defaultRTCStreamHeight,
+				Svc:               "L1T2",
+			},
+			ExtraSoftwareDeps: []string{caps.HWEncodeAV1},
+			Fixture:           "chromeVideoWithFakeWebcamAndVaapiAv1TemporalSVC",
+		}, {
+			// This is an encoding test of 3 temporal layers test.
+			// See https://www.w3.org/TR/webrtc-svc/#scalabilitymodes for SVC identifiers.
+			Name: "av1_svc_l1t3_verify_hw_enc",
+			Val: peerconnection.RTCTestParams{
+				VerifyDecoderMode: peerconnection.NoVerifyDecoderMode,
+				VerifyEncoderMode: peerconnection.VerifyHWEncoderUsed,
+				Profile:           "AV1",
+				StreamWidth:       defaultRTCStreamWidth,
+				StreamHeight:      defaultRTCStreamHeight,
+				Svc:               "L1T3",
+			},
+			ExtraSoftwareDeps: []string{caps.HWEncodeAV1},
+			Fixture:           "chromeVideoWithFakeWebcamAndVaapiAv1TemporalSVC",
 		}},
 	})
 }

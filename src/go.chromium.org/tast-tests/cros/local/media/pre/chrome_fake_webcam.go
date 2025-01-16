@@ -192,4 +192,23 @@ func initChromeFakeWebCamFixtures() {
 		ResetTimeout:    chrome.ResetTimeout,
 		TearDownTimeout: chrome.ResetTimeout,
 	})
+
+	// TODO(b/378401081): Remove once vaapi av1 temporal SVC encoding enabled by default.
+	testing.AddFixture(&testing.Fixture{
+		Name:         "chromeVideoWithFakeWebcamAndVaapiAv1TemporalSVC",
+		Desc:         "Similar to chromeVideoWithFakeWebcam fixture and allowing hw encoders for av1 temporal SVC encoding",
+		Contacts:     []string{"chromeos-gfx-video@google.com"},
+		BugComponent: "b:168352", // ChromeOS > Platform > Graphics > Video.
+		Impl: chrome.NewLoggedInFixture(func(ctx context.Context, s *testing.FixtState) ([]chrome.Option, error) {
+			return getChromeVideoOptions(
+				chrome.ExtraArgs(chromeFakeWebcamArgs...),
+				chrome.ExtraArgs(chromeWebRTCEncodedFrameArgs...),
+				chrome.EnableFeatures("VaapiAv1TemporalLayerEncoding"),
+			), nil
+		}),
+		Parent:          "gpuWatchDog",
+		SetUpTimeout:    chrome.FixtureSetUpTimeout,
+		ResetTimeout:    chrome.ResetTimeout,
+		TearDownTimeout: chrome.ResetTimeout,
+	})
 }

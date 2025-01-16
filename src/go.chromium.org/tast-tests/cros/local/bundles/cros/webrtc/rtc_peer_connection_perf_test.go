@@ -153,10 +153,6 @@ func skipTest(codec string, stream streamType, enc encoderImpl, dec decoderImpl)
 			// H264 temporal layer encoding is not supported for webrtc.
 			return true
 		}
-		if codec == "av1" && enc != swEnc {
-			// AV1 temporal layer encoding is not supported by a hardware encoder.
-			return true
-		}
 
 	case l2t3key, l3t3key, s3t3:
 		if codec != "vp9" {
@@ -256,11 +252,18 @@ func TestRTCPeerConnectionPerfParams(t *testing.T) {
 								paramData.Svc = string(stream)
 							}
 						}
+
+						// TODO(b/378401081): Remove once vaapi av1 temporal SVC encoding enabled by default.
+						fixture := toFixture(enc, dec, stream)
+						if codec == "av1" && stream == l1t3 && enc == hwEnc {
+							fixture = "chromeVideoWithFakeWebcamAndVaapiAv1TemporalSVC"
+						}
+
 						sourceData := rtcPerfTestSourceData{
 							Name:         fmt.Sprintf("%s_%dp%s_%s_%s", codec, resolution.Height, streamTypeStr, enc, dec),
 							ParamData:    paramData,
 							SoftwareDeps: softwareCodecsDeps(codec, enc, dec),
-							Fixture:      toFixture(enc, dec, stream),
+							Fixture:      fixture,
 						}
 						if dec == hwDec &&
 							(stream == l2t3key || stream == l3t3key) {
