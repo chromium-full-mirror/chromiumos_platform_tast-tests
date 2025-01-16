@@ -1,0 +1,5 @@
+{
+  "url": "gs://chromiumos-test-assets-public/tast/cros/arc/GtsGmsCoreSecurityTestApp_x86_64_20250116.apk",
+  "size": 4330967,
+  "sha256sum": "42182ed8ac500bac3126b4e4b60abe400f4b0e3ff2a8d432b3d4fb501dbb20d5"
+}
