@@ -10,6 +10,7 @@ import (
 
 	"go.chromium.org/tast-tests/cros/common/tbdep"
 	"go.chromium.org/tast-tests/cros/remote/bluetooth"
+	"go.chromium.org/tast-tests/cros/remote/bundles/cros/bluetooth/bluetoothutil"
 	sbt "go.chromium.org/tast-tests/cros/services/cros/bluetooth"
 	"go.chromium.org/tast/core/ctxutil"
 	"go.chromium.org/tast/core/testing"
@@ -116,7 +117,7 @@ func IdlePowerWithLLP(ctx context.Context, s *testing.State) {
 	s.Log("Measured power [W]: ", pOn)
 
 	s.Log("LL privacy power consumption [W]: ", pOn-pOff)
-	if pOn-pOff > 0.1 {
-		s.Fatal("Bluetooth consumes more than 100mW power")
+	if pOn-pOff > bluetoothutil.IdlePower {
+		s.Fatal("Power consumption is over limit")
 	}
 }

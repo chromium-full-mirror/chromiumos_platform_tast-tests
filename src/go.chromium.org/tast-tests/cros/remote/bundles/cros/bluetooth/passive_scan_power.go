@@ -158,6 +158,8 @@ func PassiveScanPower(ctx context.Context, s *testing.State) {
 		s.Log("Measured power for passive scan with 1 peer [W]: ", pPassiveScan)
 	}
 
-	// TODO: (b/301167351) Collect data to define baselines for test fail/pass.
 	s.Log("Passive scan power consumption: ", pPassiveScan-pIdle)
+	if pPassiveScan-pIdle > bluetoothutil.PassiveScanPower {
+		s.Fatal("Power consumption is over limit")
+	}
 }

@@ -14,6 +14,7 @@ import (
 	cbt "go.chromium.org/tast-tests/cros/common/chameleon/devices/common/bluetooth"
 	"go.chromium.org/tast-tests/cros/common/tbdep"
 	"go.chromium.org/tast-tests/cros/remote/bluetooth"
+	"go.chromium.org/tast-tests/cros/remote/bundles/cros/bluetooth/bluetoothutil"
 	bts "go.chromium.org/tast-tests/cros/services/cros/bluetooth"
 	"go.chromium.org/tast/core/testing"
 	"go.chromium.org/tast/core/testing/hwdep"
@@ -155,4 +156,8 @@ func BTActiveDiscoveryPower(ctx context.Context, s *testing.State) {
 
 	s.Log("Discovery power consumption with 0 peer advertising: ", pScan-pIdle)
 	s.Log("Discovery power consumption with 1 peer advertising: ", pScan1Peer-pIdle)
+
+	if pScan-pIdle > bluetoothutil.ActiveDiscoveryPower || pScan1Peer-pIdle > bluetoothutil.ActiveDiscoveryPower {
+		s.Fatal("Power consumption is over limit")
+	}
 }

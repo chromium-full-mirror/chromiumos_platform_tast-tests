@@ -105,13 +105,6 @@ func IdlePowerWithPairedDevice(ctx context.Context, s *testing.State) {
 	}
 	interval := 5 * time.Minute // Power measurement interval in minutes
 
-	// Attempt pairing device with DUT.
-	testing.ContextLogf(ctx, "Paring device %s", device.String())
-	if err := bluetoothutil.DiscoverAndPairDevice(ctx, fv.BluetoothService, device.LocalBluetoothAddress(), device.PinCode(), 45*time.Second); err != nil {
-		s.Fatalf("Failed to discover and pair device %s: %v", device.String(), err)
-	}
-	testing.ContextLogf(ctx, "Successfully paired device %s", device.String())
-
 	if err := fv.PowerCooldown(ctx); err != nil {
 		s.Fatal("Failed to cooldown for power measurement: ", err)
 	}
@@ -129,6 +122,36 @@ func IdlePowerWithPairedDevice(ctx context.Context, s *testing.State) {
 	if err != nil {
 		s.Fatal("Failed to read power: ", err)
 	}
-	// TODO: (b/301167351) Collect data to define baselines for test fail/pass.
-	s.Log("Measured power [W]: ", pOn)
+	s.Log("Measured power for idle [W]: ", pOn)
+
+	// Attempt pairing device with DUT.
+	testing.ContextLogf(ctx, "Paring device %s", device.String())
+	if err := bluetoothutil.DiscoverAndPairDevice(ctx, fv.BluetoothService, device.LocalBluetoothAddress(), device.PinCode(), 45*time.Second); err != nil {
+		s.Fatalf("Failed to discover and pair device %s: %v", device.String(), err)
+	}
+	testing.ContextLogf(ctx, "Successfully paired device %s", device.String())
+
+	if err := fv.PowerCooldown(ctx); err != nil {
+		s.Fatal("Failed to cooldown for power measurement: ", err)
+	}
+	fv.StartPowerRecording(ctx)
+
+	testing.ContextLog(ctx, "Keep BT on with 1 device paired for ", interval)
+	// GoBigSleepLint: sleep for measuring power consumption
+	testing.Sleep(ctx, interval)
+
+	pResults, err = fv.StopPowerRecording(ctx, s.TestName())
+	if err != nil {
+		s.Fatal("Failed to measure power consumption: ", err)
+	}
+	p1Peer, err := fv.GetPowerMetrics(ctx, pResults, "system")
+	if err != nil {
+		s.Fatal("Failed to read power: ", err)
+	}
+	s.Log("Measured power with 1 device paired [W]: ", p1Peer)
+
+	s.Log("BT power consumption [W]: ", p1Peer-pOn)
+	if p1Peer-pOn > bluetoothutil.IdleWith1PeerPower {
+		s.Fatal("Power consumption is over limit")
+	}
 }

@@ -208,6 +208,9 @@ func AudioPlayPower(ctx context.Context, s *testing.State) {
 		s.Fatal("Failed to read power: ", err)
 	}
 	s.Log("Measured system power with BT audio [W]: ", pOn)
-	// TODO: (b/301167351) Collect data to define baselines for test fail/pass.
+
 	s.Log("Bluetooth audio play power [W]: ", pOn-pIdle)
+	if pOn-pIdle > bluetoothutil.AudioPower {
+		s.Fatal("Power consumption is over limit")
+	}
 }

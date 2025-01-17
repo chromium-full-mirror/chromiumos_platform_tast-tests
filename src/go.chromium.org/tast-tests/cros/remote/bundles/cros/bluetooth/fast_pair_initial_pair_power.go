@@ -12,6 +12,7 @@ import (
 	cbt "go.chromium.org/tast-tests/cros/common/chameleon/devices/common/bluetooth"
 	"go.chromium.org/tast-tests/cros/common/tbdep"
 	"go.chromium.org/tast-tests/cros/remote/bluetooth"
+	"go.chromium.org/tast-tests/cros/remote/bundles/cros/bluetooth/bluetoothutil"
 	"go.chromium.org/tast/core/testing"
 	"go.chromium.org/tast/core/testing/hwdep"
 )
@@ -116,4 +117,8 @@ func FastPairInitialPairPower(ctx context.Context, s *testing.State) {
 	}
 	// TODO: (b/301167351) Collect data to define baselines for test fail/pass.
 	s.Log("Power consumption for Fast Pair with one peer nearby [W]: ", pPair)
+	s.Log("BT power consumption [W]: ", pPair-pWait)
+	if pPair-pWait > bluetoothutil.FastPairDiscoverPower {
+		s.Fatal("Power consumption is over limit")
+	}
 }
