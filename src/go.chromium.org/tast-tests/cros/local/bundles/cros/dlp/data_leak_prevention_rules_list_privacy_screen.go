@@ -40,7 +40,7 @@ func init() {
 		HardwareDeps: hwdep.D(hwdep.PrivacyScreen()),
 		Params: []testing.Param{{
 			Name:      "ash_blocked",
-			ExtraAttr: []string{"group:mainline", "informational", "group:criticalstaging"},
+			ExtraAttr: []string{"group:mainline", "informational"},
 			Fixture:   fixture.ChromePolicyLoggedIn,
 		}},
 		SearchFlags: []*testing.StringPair{
