@@ -74,8 +74,8 @@ type bundleAbi string
 type androidCodeName string
 
 const (
-	x86            bundleAbi = "x86"
-	arm            bundleAbi = "arm"
+	x86      bundleAbi       = "x86"
+	arm      bundleAbi       = "arm"
 	androidP androidCodeName = "androidP"
 	androidR androidCodeName = "androidR"
 	androidT androidCodeName = "androidT"
@@ -243,87 +243,115 @@ func (p *itsPreImpl) Close(ctx context.Context, s *testing.PreState) {
 }
 
 // PrepareEnvironment prepare the environment for running ITS
+// Require libraries: https://source.android.com/docs/compatibility/cts/its-release-notes-13
 func (h *ITSHelper) PrepareEnvironment(ctx context.Context, numpyPath string) (string, error) {
 	retStr := ""
-	createPy3VenvCmd := fmt.Sprintf("python3 -m venv %s/py3venv --copies", h.p.itsRoot())
-
-	out, err := testexec.CommandContext(ctx, "bash", "-c", createPy3VenvCmd).Output(testexec.DumpLogOnError)
+	testing.ContextLog(ctx, "Downloading Python3.9.2")
+	downloadPython392 := "wget https://www.python.org/ftp/python/3.9.2/Python-3.9.2.tgz"
+	out, err := testexec.CommandContext(ctx, "bash", "-c", downloadPython392).Output(testexec.DumpLogOnError)
 	if err != nil {
-		return "", errors.Wrap(err, "Fail to create python venv")
+		return retStr, errors.Wrap(err, "Fail to download python 3.9.2")
 	}
 	retStr += string(out)
 
-	pipCmd := fmt.Sprintf("%s/py3venv/bin/pip", h.p.itsRoot())
-	out, err = testexec.CommandContext(ctx, pipCmd, "install", numpyPath).Output(testexec.DumpLogOnError)
+	testing.ContextLog(ctx, "Extracting Python3.9.2")
+	tarPython392 := "tar -xvzf Python-3.9.2.tgz"
+	out, err = testexec.CommandContext(ctx, "bash", "-c", tarPython392).Output(testexec.DumpLogOnError)
+
 	if err != nil {
-		return "", errors.Wrap(err, "Fail to install numpy")
+		return retStr, errors.Wrap(err, "Fail to tar python 3.9.2")
 	}
 	retStr += string(out)
 
-	out, err = testexec.CommandContext(ctx, pipCmd, "install", "opencv-python-headless==3.4.8.29").Output(testexec.DumpLogOnError)
+	testing.ContextLog(ctx, "Installing Python3.9.2")
+	installPython392 := fmt.Sprintf("cd Python-3.9.2 && ./configure --prefix=%s/python3.9.2 && make && make install", h.p.itsRoot())
+	out, err = testexec.CommandContext(ctx, "bash", "-c", installPython392).Output(testexec.DumpLogOnError)
+
 	if err != nil {
-		return "", errors.Wrap(err, "Fail to install opencv-python")
+		return retStr, errors.Wrap(err, "Fail to install python 3.9.2")
 	}
 	retStr += string(out)
 
-	out, err = testexec.CommandContext(ctx, pipCmd, "install", "matplotlib>=3.3.2,<4.0").Output(testexec.DumpLogOnError)
+	testing.ContextLog(ctx, "Installing numpy")
+	pipCmd := fmt.Sprintf("%s/python3.9.2/bin/pip3", h.p.itsRoot())
+	out, err = testexec.CommandContext(ctx, pipCmd, "install", "numpy==1.20.3").Output(testexec.DumpLogOnError)
 	if err != nil {
-		return "", errors.Wrap(err, "Fail to install matplotlib")
+		return retStr, errors.Wrap(err, "Fail to install numpy")
 	}
 	retStr += string(out)
 
-	out, err = testexec.CommandContext(ctx, pipCmd, "install", "scipy==1.5.2").Output(testexec.DumpLogOnError)
+	testing.ContextLog(ctx, "Installing opencv-python")
+	out, err = testexec.CommandContext(ctx, pipCmd, "install", "opencv-python-headless>=3.3.2,<4.10").Output(testexec.DumpLogOnError)
 	if err != nil {
-		return "", errors.Wrap(err, "Fail to install scipy")
+		return retStr, errors.Wrap(err, "Fail to install opencv-python")
 	}
 	retStr += string(out)
 
-	out, err = testexec.CommandContext(ctx, pipCmd, "install", "pyserial>=3.5,<4.0").Output(testexec.DumpLogOnError)
+	testing.ContextLog(ctx, "Installing matplotlib")
+	out, err = testexec.CommandContext(ctx, pipCmd, "install", "matplotlib==3.3.4").Output(testexec.DumpLogOnError)
 	if err != nil {
-		return "", errors.Wrap(err, "Fail to install pyserial")
+		return retStr, errors.Wrap(err, "Fail to install matplotlib")
 	}
 	retStr += string(out)
 
-	out, err = testexec.CommandContext(ctx, pipCmd, "install", "Pillow>=8.1.0,<9.0").Output(testexec.DumpLogOnError)
+	testing.ContextLog(ctx, "Installing scipy")
+	out, err = testexec.CommandContext(ctx, pipCmd, "install", "scipy==1.6.2").Output(testexec.DumpLogOnError)
 	if err != nil {
-		return "", errors.Wrap(err, "Fail to install Pillow")
+		return retStr, errors.Wrap(err, "Fail to install scipy")
 	}
 	retStr += string(out)
 
-	out, err = testexec.CommandContext(ctx, pipCmd, "install", "PyYAML>=5.3.1,<6.0").Output(testexec.DumpLogOnError)
+	testing.ContextLog(ctx, "Installing pyserial")
+	out, err = testexec.CommandContext(ctx, pipCmd, "install", "pyserial==3.5").Output(testexec.DumpLogOnError)
 	if err != nil {
-		return "", errors.Wrap(err, "Fail to install PyYAML")
+		return retStr, errors.Wrap(err, "Fail to install pyserial")
 	}
 	retStr += string(out)
 
-	out, err = testexec.CommandContext(ctx, pipCmd, "install", "mobly").Output(testexec.DumpLogOnError)
+	testing.ContextLog(ctx, "Installing Pillow")
+	out, err = testexec.CommandContext(ctx, pipCmd, "install", "Pillow==8.3.1").Output(testexec.DumpLogOnError)
 	if err != nil {
-		return "", errors.Wrap(err, "Fail to install mobly")
+		return retStr, errors.Wrap(err, "Fail to install Pillow")
 	}
 	retStr += string(out)
 
+	testing.ContextLog(ctx, "Installing PyYAML")
+	out, err = testexec.CommandContext(ctx, pipCmd, "install", "PyYAML==5.4.1").Output(testexec.DumpLogOnError)
+	if err != nil {
+		return retStr, errors.Wrap(err, "Fail to install PyYAML")
+	}
+	retStr += string(out)
+
+	testing.ContextLog(ctx, "Installing mobly")
+	out, err = testexec.CommandContext(ctx, pipCmd, "install", "mobly==1.11").Output(testexec.DumpLogOnError)
+	if err != nil {
+		return retStr, errors.Wrap(err, "Fail to install mobly")
+	}
+	retStr += string(out)
+
+	testing.ContextLog(ctx, "Setup environment")
 	envsetup := fmt.Sprintf("%s/build/envsetup.sh", h.p.itsRoot())
-	py3Cmd := fmt.Sprintf("%s/py3venv/bin/python3", h.p.itsRoot())
+	py3Cmd := fmt.Sprintf("%s/python3.9.2/bin/python3", h.p.itsRoot())
 
 	if err := testexec.CommandContext(
 		ctx, "sudo", "sed", "-i", fmt.Sprintf("s#%s#%s#g", "Require python opencv", "Require Python opencv"), envsetup).Run(testexec.DumpLogOnError); err != nil {
-		return "", errors.Wrap(err, "failed to replace python path in envsetup.sh")
+		return retStr, errors.Wrap(err, "failed to replace python path in envsetup.sh")
 	}
 	if err := testexec.CommandContext(
 		ctx, "sudo", "sed", "-i", fmt.Sprintf("s#%s#%s#g", "python", py3Cmd), envsetup).Run(testexec.DumpLogOnError); err != nil {
-		return "", errors.Wrap(err, "failed to replace python path in envsetup.sh")
+		return retStr, errors.Wrap(err, "failed to replace python path in envsetup.sh")
 	}
 
 	runAllTestsPY := fmt.Sprintf("%s/tools/run_all_tests.py", h.p.itsRoot())
 	if err := testexec.CommandContext(
 		ctx, "sudo", "sed", "-i", fmt.Sprintf("s#%s#%s#g", "python3", py3Cmd), runAllTestsPY).Run(testexec.DumpLogOnError); err != nil {
-		return "", errors.Wrap(err, "failed to replace python path in run_all_tests.py")
+		return retStr, errors.Wrap(err, "failed to replace python path in run_all_tests.py")
 	}
 
 	runSensorFusionPY := fmt.Sprintf("%s/tools/run_sensor_fusion.py", h.p.itsRoot())
 	if err := testexec.CommandContext(
 		ctx, "sudo", "sed", "-i", fmt.Sprintf("s#%s#%s#g", "python", py3Cmd), runSensorFusionPY).Run(testexec.DumpLogOnError); err != nil {
-		return "", errors.Wrap(err, "failed to replace python path in run_sensor_fusion.py")
+		return retStr, errors.Wrap(err, "failed to replace python path in run_sensor_fusion.py")
 	}
 
 	os.Setenv("PATH", os.Getenv("PATH")+fmt.Sprintf(":%s/py3venv/bin/", h.p.itsRoot()))
@@ -336,7 +364,7 @@ func (h *ITSHelper) PrepareEnvironment(ctx context.Context, numpyPath string) (s
 func (h *ITSHelper) TestCmd(ctx context.Context, scene, camera int) *testexec.Cmd {
 	setupPath := path.Join("build", "envsetup.sh")
 	scriptPath := path.Join("tools", "run_all_tests.py")
-	py3Cmd := fmt.Sprintf("%s/py3venv/bin/python3", h.p.itsRoot())
+	py3Cmd := fmt.Sprintf("%s/python3.9.2/bin/python3", h.p.itsRoot())
 	cmdStr := fmt.Sprintf(`cd %s
 	chmod -R 755 .
 	source %s
