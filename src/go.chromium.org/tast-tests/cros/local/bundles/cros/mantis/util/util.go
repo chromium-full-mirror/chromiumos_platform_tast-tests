@@ -90,10 +90,9 @@ func OpenGalleryFromDownload(ctx context.Context, ui *uiauto.Context, tconn *chr
 		return errors.Wrap(err, "failed to check Gallery in shelf")
 	}
 
-	// Use image section to verify Gallery App rendering.
 	testing.ContextLog(ctx, "Wait for Gallery app rendering")
-	imageElement := nodewith.Role(role.Image).Name(testFile).Ancestor(galleryapp.RootFinder)
-	if err := ui.WithInterval(time.Second).WaitUntilExists(imageElement)(ctx); err != nil {
+	fileElement := nodewith.Role(role.Window).Name(testFile).Ancestor(galleryapp.RootFinder).First()
+	if err := ui.WithInterval(time.Second).WaitUntilExists(fileElement)(ctx); err != nil {
 		return errors.Wrap(err, "failed to render Gallery")
 	}
 
