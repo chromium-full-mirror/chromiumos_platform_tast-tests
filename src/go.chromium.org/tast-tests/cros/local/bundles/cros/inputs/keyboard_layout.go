@@ -73,7 +73,7 @@ func KeyboardLayout(ctx context.Context, s *testing.State) {
 
 	defer faillog.DumpUITreeWithScreenshotOnError(cleanupCtx, s.OutDir(), s.HasError, cr, "ui_tree")
 
-	kb, err := input.KeyboardWithCustomDelay(ctx, 15*time.Millisecond)
+	kb, err := input.KeyboardWithCustomDelay(ctx, 30*time.Millisecond)
 	if err != nil {
 		s.Fatal("Failed to get keyboard: ", err)
 	}
