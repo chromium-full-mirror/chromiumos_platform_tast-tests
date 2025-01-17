@@ -224,7 +224,7 @@ func init() {
 	testing.AddFixture(&testing.Fixture{
 		Name:         fixture.ChromeEnrolledLoggedInARCFlex,
 		Desc:         "Logged in and enrolled with ARC support (ChromeOS Flex)",
-		Contacts:     []string{"josephsussman@google.com", "chromeos-flex-eng@google.com"},
+		Contacts:     []string{"josephsussman@google.com", "chromeos-flex-eng+oncall@google.com"},
 		BugComponent: "b:998633", // ChromeOS > Platform > Enablement > ChromeOS Flex
 		Impl: &policyChromeFixture{
 			extraOptsFunc: func(ctx context.Context, s *testing.FixtState) ([]chrome.Option, error) {
