@@ -31,7 +31,6 @@ func init() {
 			Fixture:           "ccaLaunched",
 			ExtraAttr: []string{
 				"informational",
-				"group:criticalstaging",
 				"group:camera-libcamera",
 				"group:release-health",
 				"release-health_camera",
