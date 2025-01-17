@@ -53,7 +53,7 @@ func init() {
 				dnsProxyEnabled: true,
 			},
 			Fixture:   fixture.ChromeLoggedInWithRootNsDnsProxy,
-			ExtraAttr: []string{"informational", "group:criticalstaging"},
+			ExtraAttr: []string{"informational"},
 		}, {
 			Name: "controller_crash_proxy_disabled",
 			Val: resolvConfCrashTestParams{
@@ -74,7 +74,7 @@ func init() {
 				dnsProxyEnabled: true,
 			},
 			Fixture:   fixture.ChromeLoggedInWithRootNsDnsProxy,
-			ExtraAttr: []string{"informational", "group:criticalstaging"},
+			ExtraAttr: []string{"informational"},
 		}, {
 			Name: "system_proxy_crash_proxy_enabled",
 			Val: resolvConfCrashTestParams{
@@ -89,7 +89,7 @@ func init() {
 				dnsProxyEnabled:  true,
 			},
 			Fixture:   fixture.ChromeLoggedInWithRootNsDnsProxy,
-			ExtraAttr: []string{"informational", "group:criticalstaging"},
+			ExtraAttr: []string{"informational"},
 		}},
 	})
 }

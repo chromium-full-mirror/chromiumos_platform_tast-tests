@@ -36,7 +36,7 @@ func init() {
 		}, {
 			Name:      "root_ns",
 			Fixture:   fixture.ChromeLoggedInWithRootNsDnsProxy,
-			ExtraAttr: []string{"informational", "group:criticalstaging"},
+			ExtraAttr: []string{"informational"},
 		}},
 	})
 }

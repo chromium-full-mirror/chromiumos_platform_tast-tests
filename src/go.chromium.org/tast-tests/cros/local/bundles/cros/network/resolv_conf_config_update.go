@@ -53,7 +53,7 @@ func init() {
 				dnsProxyEnabled: true,
 			},
 			Fixture:   fixture.ChromeLoggedInWithRootNsDnsProxy,
-			ExtraAttr: []string{"informational", "group:criticalstaging"},
+			ExtraAttr: []string{"informational"},
 		}, {
 			Name: "ipv6_only_proxy_disabled",
 			Val: resolvConfConfigUpdateTestParams{
@@ -74,7 +74,7 @@ func init() {
 				dnsProxyEnabled: true,
 			},
 			Fixture:   fixture.ChromeLoggedInWithRootNsDnsProxy,
-			ExtraAttr: []string{"informational", "group:criticalstaging"},
+			ExtraAttr: []string{"informational"},
 		}, {
 			Name: "dual_stack_proxy_disabled",
 			Val: resolvConfConfigUpdateTestParams{
@@ -98,7 +98,7 @@ func init() {
 				dnsProxyEnabled: true,
 			},
 			Fixture:   fixture.ChromeLoggedInWithRootNsDnsProxy,
-			ExtraAttr: []string{"informational", "group:criticalstaging"},
+			ExtraAttr: []string{"informational"},
 		}},
 	})
 }

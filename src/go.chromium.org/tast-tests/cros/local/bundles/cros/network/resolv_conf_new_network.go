@@ -53,7 +53,7 @@ func init() {
 				dnsProxyEnabled: true,
 			},
 			Fixture:   fixture.ChromeLoggedInWithRootNsDnsProxy,
-			ExtraAttr: []string{"informational", "group:criticalstaging"},
+			ExtraAttr: []string{"informational"},
 		}, {
 			Name: "high_priority_proxy_disabled",
 			Val: resolvConfNewNetworkTestParams{
@@ -74,7 +74,7 @@ func init() {
 				dnsProxyEnabled: true,
 			},
 			Fixture:   fixture.ChromeLoggedInWithRootNsDnsProxy,
-			ExtraAttr: []string{"informational", "group:criticalstaging"},
+			ExtraAttr: []string{"informational"},
 		}, {
 			Name: "vpn_proxy_disabled",
 			Val: resolvConfNewNetworkTestParams{
@@ -98,7 +98,7 @@ func init() {
 				dnsProxyEnabled: true,
 			},
 			Fixture:   fixture.ChromeLoggedInWithRootNsDnsProxy,
-			ExtraAttr: []string{"informational", "group:criticalstaging"},
+			ExtraAttr: []string{"informational"},
 		}},
 	})
 }

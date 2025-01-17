@@ -123,7 +123,7 @@ func init() {
 				mode:   dns.DoHOff,
 				chrome: true,
 			},
-			ExtraAttr: []string{"informational", "group:criticalstaging"},
+			ExtraAttr: []string{"informational"},
 			Fixture:   fixture.ChromeLoggedInWithRootNsDnsProxy,
 		}, {
 			Name: "root_ns_chrome_doh_automatic",
@@ -131,7 +131,7 @@ func init() {
 				mode:   dns.DoHAutomatic,
 				chrome: true,
 			},
-			ExtraAttr: []string{"informational", "group:criticalstaging"},
+			ExtraAttr: []string{"informational"},
 			Fixture:   fixture.ChromeLoggedInWithRootNsDnsProxy,
 		}, {
 			Name: "root_ns_chrome_doh_always_on",
@@ -139,7 +139,7 @@ func init() {
 				mode:   dns.DoHAlwaysOn,
 				chrome: true,
 			},
-			ExtraAttr: []string{"informational", "group:criticalstaging"},
+			ExtraAttr: []string{"informational"},
 			Fixture:   fixture.ChromeLoggedInWithRootNsDnsProxy,
 		}, {
 			Name: "root_ns_arc_doh_off",
@@ -148,7 +148,7 @@ func init() {
 				arc:  true,
 			},
 			ExtraSoftwareDeps: []string{"arc"},
-			ExtraAttr:         []string{"informational", "group:criticalstaging"},
+			ExtraAttr:         []string{"informational"},
 			Fixture:           "arcBootedWithRootNsDnsProxy",
 		}, {
 			Name: "root_ns_arc_doh_automatic",
@@ -157,7 +157,7 @@ func init() {
 				arc:  true,
 			},
 			ExtraSoftwareDeps: []string{"arc"},
-			ExtraAttr:         []string{"informational", "group:criticalstaging"},
+			ExtraAttr:         []string{"informational"},
 			Fixture:           "arcBootedWithRootNsDnsProxy",
 		}, {
 			Name: "root_ns_arc_doh_always_on",
@@ -166,7 +166,7 @@ func init() {
 				arc:  true,
 			},
 			ExtraSoftwareDeps: []string{"arc"},
-			ExtraAttr:         []string{"informational", "group:criticalstaging"},
+			ExtraAttr:         []string{"informational"},
 			Fixture:           "arcBootedWithRootNsDnsProxy",
 		}, {
 			Name: "root_ns_crostini_doh_off",
@@ -176,7 +176,7 @@ func init() {
 			},
 			ExtraSoftwareDeps: []string{"vm_host", "dlc"},
 			ExtraHardwareDeps: crostini.CrostiniStable,
-			ExtraAttr:         []string{"informational", "group:criticalstaging"},
+			ExtraAttr:         []string{"informational"},
 			Fixture:           "crostiniBullseyeWithRootNsDnsProxy",
 		}, {
 			Name: "root_ns_crostini_doh_automatic",
@@ -186,7 +186,7 @@ func init() {
 			},
 			ExtraSoftwareDeps: []string{"vm_host", "dlc"},
 			ExtraHardwareDeps: crostini.CrostiniStable,
-			ExtraAttr:         []string{"informational", "group:criticalstaging"},
+			ExtraAttr:         []string{"informational"},
 			Fixture:           "crostiniBullseyeWithRootNsDnsProxy",
 		}, {
 			Name: "root_ns_crostini_doh_always_on",
@@ -196,7 +196,7 @@ func init() {
 			},
 			ExtraSoftwareDeps: []string{"vm_host", "dlc"},
 			ExtraHardwareDeps: crostini.CrostiniStable,
-			ExtraAttr:         []string{"informational", "group:criticalstaging"},
+			ExtraAttr:         []string{"informational"},
 			Fixture:           "crostiniBullseyeWithRootNsDnsProxy",
 		}},
 	})
