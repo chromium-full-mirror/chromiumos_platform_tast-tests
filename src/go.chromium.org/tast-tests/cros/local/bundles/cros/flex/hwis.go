@@ -25,7 +25,7 @@ func init() {
 		Func: HWIS,
 		Desc: "Tests that the ChromeOS Flex HWIS can run and exit successfully",
 		Contacts: []string{
-			"chromeos-flex-eng@google.com",
+			"chromeos-flex-eng+oncall@google.com",
 			"tinghaolin@google.com", // Test author
 			"tbrandston@google.com",
 		},

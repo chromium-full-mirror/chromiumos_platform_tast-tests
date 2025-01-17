@@ -20,7 +20,7 @@ func init() {
 		Func: OsInstall,
 		Desc: "Test OS install (the DUT must be started back up again after install succeeds)",
 		Contacts: []string{
-			"chromeos-flex-eng@google.com",
+			"chromeos-flex-eng+oncall@google.com",
 			"nicholasbishop@google.com",
 		},
 		BugComponent: "b:998633", // ChromeOS > Platform > Enablement > ChromeOS Flex

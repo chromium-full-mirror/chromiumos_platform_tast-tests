@@ -17,7 +17,7 @@ func init() {
 		Func: FlexID,
 		Desc: "Tests that the go/chromeos-flex-id is properly-formed",
 		Contacts: []string{
-			"chromeos-flex-eng@google.com",
+			"chromeos-flex-eng+oncall@google.com",
 			"josephsussman@google.com", // Test author
 		},
 		BugComponent: "b:998633", // ChromeOS > Platform > Enablement > ChromeOS Flex
