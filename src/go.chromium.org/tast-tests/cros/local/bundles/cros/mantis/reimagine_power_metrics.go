@@ -149,6 +149,25 @@ func ReimaginePowerMetrics(ctx context.Context, s *testing.State) {
 		s.Fatal("Error while waiting for spinner: ", err)
 	}
 
+	counter := 0
+
+	startTime := time.Now()
+	retryButton := nodewith.Role(role.Button).Name("Retry").Ancestor(galleryapp.RootFinder)
+	// Retry for one minute
+	for time.Since(startTime) < time.Minute {
+		if err := ui.LeftClick(retryButton)(ctx); err != nil {
+			s.Fatalf("Failed to click the retry button during retry %v: %v", counter, err)
+		}
+
+		if err := util.WaitForSpinner(ctx, tconn, ui); err != nil {
+			s.Fatalf("Error while waiting for spinner during retry %v: %v", counter, err)
+		}
+
+		counter++
+	}
+
+	s.Logf("Reimagine has been retried %v times", counter)
+
 	doneButton := nodewith.Role(role.Button).Name("Done").Ancestor(galleryapp.RootFinder)
 	if err := ui.LeftClick(doneButton)(ctx); err != nil {
 		s.Fatal("Failed to click the done button: ", err)
