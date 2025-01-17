@@ -21,7 +21,7 @@ func init() {
 			"aaronyu@google.com",
 		},
 		BugComponent: "b:776546",
-		Attr:         []string{"group:mainline", "informational", "group:criticalstaging"},
+		Attr:         []string{"group:mainline", "informational"},
 		Params: []testing.Param{
 			{
 				Name: "noise_cancellation",
