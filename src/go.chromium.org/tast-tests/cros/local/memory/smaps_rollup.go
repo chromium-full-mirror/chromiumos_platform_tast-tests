@@ -429,6 +429,8 @@ func PerProcessSmapsRollup(ctx context.Context, hasArc bool) (*FullSmapsRollup, 
 	// Separate host processes started by each crosvm instance.
 	crosvmRollups := make(map[int32]*CrosVMSmapsRollup)
 
+	crosvmVhostRollups := make(map[int32]*CrosVMSmapsRollup)
+
 	// Regex to extract tag of crosvm.
 	crosvmTagRegex := regexp.MustCompile(`--syslog-tag (\S+)\(\d+\)`)
 
@@ -470,12 +472,11 @@ func PerProcessSmapsRollup(ctx context.Context, hasArc bool) (*FullSmapsRollup, 
 			// handling.
 			subcmdMatch := crosvmDeviceCommandRegex.FindStringSubmatch(cmdline)
 			if len(subcmdMatch) == 1 {
-				crosvmRollups[p.Pid] = &CrosVMSmapsRollup{
+				crosvmVhostRollups[p.Pid] = &CrosVMSmapsRollup{
 					CrosVMPid: p.Pid,
 					Tag:       "ARCVM",
 					Rollups:   []*NamedSmapsRollup{},
 				}
-				foundARCVMPid = true
 				continue
 			}
 			m := crosvmTagRegex.FindStringSubmatch(cmdline)
@@ -532,6 +533,9 @@ func PerProcessSmapsRollup(ctx context.Context, hasArc bool) (*FullSmapsRollup, 
 		}
 		if r, ok := crosvmRollups[pPid]; ok {
 			crosvmRollup = r
+		}
+		if _, okPid := crosvmVhostRollups[r.Pid]; okPid {
+			r.Command = name + "-vhost-user"
 		}
 		if crosvmRollup != nil {
 			crosvmRollup.Rollups = append(crosvmRollup.Rollups, r)
