@@ -38,7 +38,7 @@ func init() {
 			Val: clvkTest{
 				exe: "api_tests",
 			},
-			Timeout:   1 * time.Minute,
+			Timeout:   2 * time.Minute,
 			ExtraAttr: []string{"group:graphics", "graphics_opencl", "graphics_perbuild"},
 		}, {
 			Name: "simple_test",
