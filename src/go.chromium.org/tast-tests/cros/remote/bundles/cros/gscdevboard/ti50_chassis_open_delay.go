@@ -103,6 +103,12 @@ func Ti50ChassisOpenDelay(ctx context.Context, s *testing.State) {
 	fixture.EnsureTestLabEnabled(ctx, s, b.DUTControlAndreiboard, i)
 	th.MustSucceed(i.TestlabOpen(ctx), "testlab open")
 	th.MustSucceed(i.CCDReset(ctx), "ccd reset")
+	// For MP images we must also ensure that we can open from USB and without
+	// devmode (this test is only interested in the CCD open delay)
+	err = i.SetCCDCapability(ctx, ti50.OpenFromUSB, ti50.CapAlways)
+	th.MustSucceed(err, "set OpenFromUSB to always")
+	err = i.SetCCDCapability(ctx, ti50.OpenNoDevMode, ti50.CapAlways)
+	th.MustSucceed(err, "set OpenNoDevMode to always")
 	// Capture caps in log.
 	i.Command(ctx, "ccd")
 	// Lock so we can test open.
