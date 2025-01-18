@@ -172,6 +172,7 @@ import (
 
 	_ "go.chromium.org/tast-tests/cros/local/camera/service" // import fixture for camera service tests
 	_ "go.chromium.org/tast-tests/cros/local/intel"          // import Intel fixtures.
+	_ "go.chromium.org/tast-tests/cros/local/ui"
 
 	// import fixtures for arc game performance testing.
 	// imports kioskLoggedIn fixtures. It is not referenced by tests as it

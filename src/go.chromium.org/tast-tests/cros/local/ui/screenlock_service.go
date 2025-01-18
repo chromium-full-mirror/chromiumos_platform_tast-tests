@@ -31,6 +31,7 @@ type ScreenLockService struct {
 	cr *chrome.Chrome
 }
 
+// ReuseChrome reuses an existing Chrome session.
 func (p *ScreenLockService) ReuseChrome(ctx context.Context, req *empty.Empty) (*empty.Empty, error) {
 	if p.cr != nil {
 		return nil, errors.New("Chrome already available")
@@ -44,6 +45,7 @@ func (p *ScreenLockService) ReuseChrome(ctx context.Context, req *empty.Empty) (
 	return &empty.Empty{}, nil
 }
 
+// NewChrome starts a new Chrome session, and logs in as a test user.
 func (p *ScreenLockService) NewChrome(ctx context.Context, req *empty.Empty) (*empty.Empty, error) {
 	if p.cr != nil {
 		return nil, errors.New("Chrome already available")
@@ -57,6 +59,7 @@ func (p *ScreenLockService) NewChrome(ctx context.Context, req *empty.Empty) (*e
 	return &empty.Empty{}, nil
 }
 
+// CloseChrome closes the Chrome session.
 func (p *ScreenLockService) CloseChrome(ctx context.Context, req *empty.Empty) (*empty.Empty, error) {
 	if p.cr == nil {
 		return nil, errors.New("Chrome not available")
@@ -66,6 +69,7 @@ func (p *ScreenLockService) CloseChrome(ctx context.Context, req *empty.Empty) (
 	return &empty.Empty{}, err
 }
 
+// Lock locks the screen.
 func (p *ScreenLockService) Lock(ctx context.Context, req *empty.Empty) (*empty.Empty, error) {
 	if p.cr == nil {
 		return nil, errors.New("Chrome not available")
