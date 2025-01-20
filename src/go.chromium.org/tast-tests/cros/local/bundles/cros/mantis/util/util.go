@@ -36,7 +36,8 @@ import (
 
 var (
 	backlightDropTarget = nodewith.HasClass("backlight-drop-target").Ancestor(galleryapp.RootFinder)
-	imageCanvas         = nodewith.Role(role.Image).Ancestor(backlightDropTarget).First()
+	// ImageCanvas is the node finder of the image opened in the Gallery app.
+	ImageCanvas = nodewith.Role(role.Image).Ancestor(backlightDropTarget).First()
 )
 
 // DownloadAndOpenFileInGallery is used to download an image and then open the image in Gallery app.
@@ -128,7 +129,7 @@ func EnsureDLCInstalled(ctx context.Context, dlcID string) error {
 
 // DrawOnImage draws a line on image in Gallery app.
 func DrawOnImage(ctx context.Context, tconn *chrome.TestConn, ui *uiauto.Context) error {
-	canvasBounds, err := ui.ImmediateLocation(ctx, imageCanvas)
+	canvasBounds, err := ui.ImmediateLocation(ctx, ImageCanvas)
 	if err != nil {
 		return errors.Wrap(err, "failed to get the canvas location")
 	}
@@ -137,7 +138,18 @@ func DrawOnImage(ctx context.Context, tconn *chrome.TestConn, ui *uiauto.Context
 		canvasBounds.CenterX(),
 		canvasBounds.CenterY(),
 	)
-	if err := mouse.Move(tconn, startLocation, 200*time.Millisecond)(ctx); err != nil {
+
+	endLocation := coords.NewPoint(
+		canvasBounds.CenterX()+50,
+		canvasBounds.CenterY()+50,
+	)
+
+	return DrawOnImageWithLocation(ctx, tconn, ui, startLocation, endLocation)
+}
+
+// DrawOnImageWithLocation Draws a line on an image in the Gallery app from a specified start to end location.
+func DrawOnImageWithLocation(ctx context.Context, tconn *chrome.TestConn, ui *uiauto.Context, start, end coords.Point) error {
+	if err := mouse.Move(tconn, start, 200*time.Millisecond)(ctx); err != nil {
 		return errors.Wrap(err, "failed to move mouse")
 	}
 
@@ -145,11 +157,7 @@ func DrawOnImage(ctx context.Context, tconn *chrome.TestConn, ui *uiauto.Context
 		return errors.Wrap(err, "failed to press mouse")
 	}
 
-	endLocation := coords.NewPoint(
-		canvasBounds.CenterX()+50,
-		canvasBounds.CenterY()+50,
-	)
-	if err := mouse.Move(tconn, endLocation, 200*time.Millisecond)(ctx); err != nil {
+	if err := mouse.Move(tconn, end, 200*time.Millisecond)(ctx); err != nil {
 		return errors.Wrap(err, "failed to move mouse")
 	}
 
@@ -186,6 +194,7 @@ func WaitForProgressBar(ctx context.Context, tconn *chrome.TestConn, ui *uiauto.
 }
 
 // LeftClickButton clicks on a button, will return an error if the button doesn't exist.
+// TODO(b/383666179): Remove and replace this function with ui.DoDefault.
 func LeftClickButton(ctx context.Context, ui *uiauto.Context, button *nodewith.Finder) error {
 	return uiauto.Combine("Left click on a button",
 		ui.WithTimeout(time.Minute).WaitUntilExists(button),
@@ -194,12 +203,12 @@ func LeftClickButton(ctx context.Context, ui *uiauto.Context, button *nodewith.F
 
 // GrabCanvasArea takes a screenshot of the canvas area.
 func GrabCanvasArea(ctx context.Context, cr *chrome.Chrome, tconn *chrome.TestConn, ui *uiauto.Context) (image.Image, error) {
-	if err := ui.WaitUntilExists(imageCanvas)(ctx); err != nil {
+	if err := ui.WaitUntilExists(ImageCanvas)(ctx); err != nil {
 		return nil, errors.Wrap(err, "failed to find image canvas")
 	}
 
 	// Get location of the image canvas.
-	loc, err := ui.Location(ctx, imageCanvas)
+	loc, err := ui.Location(ctx, ImageCanvas)
 	if err != nil {
 		return nil, errors.Wrap(err, "failed to get image canvas location")
 	}

@@ -6,23 +6,28 @@ package mantis
 
 import (
 	"context"
+	"math/rand"
 	"time"
 
 	"go.chromium.org/tast-tests/cros/local/bundles/cros/mantis/constant"
 	"go.chromium.org/tast-tests/cros/local/bundles/cros/mantis/fixture"
 	"go.chromium.org/tast-tests/cros/local/bundles/cros/mantis/util"
+	"go.chromium.org/tast-tests/cros/local/chrome"
 	"go.chromium.org/tast-tests/cros/local/chrome/apps/galleryapp"
 	"go.chromium.org/tast-tests/cros/local/chrome/uiauto"
 	"go.chromium.org/tast-tests/cros/local/chrome/uiauto/faillog"
 	"go.chromium.org/tast-tests/cros/local/chrome/uiauto/nodewith"
 	"go.chromium.org/tast-tests/cros/local/chrome/uiauto/role"
+	"go.chromium.org/tast-tests/cros/local/coords"
 	"go.chromium.org/tast-tests/cros/local/input"
+	"go.chromium.org/tast/core/ctxutil"
+	"go.chromium.org/tast/core/errors"
 	"go.chromium.org/tast/core/testing"
 	"go.chromium.org/tast/core/testing/hwdep"
 )
 
 type reimagineFeatureTestParameters struct {
-	withPrompt bool
+	prompts []string
 }
 
 func init() {
@@ -35,7 +40,7 @@ func init() {
 		},
 		BugComponent: "b:1445284",
 		Timeout:      constant.DefaultTestTimeout,
-		SoftwareDeps: []string{"chrome", "chrome_internal", "dlc"},
+		SoftwareDeps: []string{"chrome", "dlc"},
 		HardwareDeps: hwdep.D(hwdep.Model("navi")),
 		Data:         []string{constant.ImageTestFileName},
 		Attr:         []string{"group:mainline", "informational"},
@@ -44,20 +49,113 @@ func init() {
 			{
 				Name: "gen_fill",
 				Val: reimagineFeatureTestParameters{
-					withPrompt: true,
+					prompts: []string{"a cute cat"},
+				},
+			},
+			{
+				Name: "gen_fill_multiple_context",
+				Val: reimagineFeatureTestParameters{
+					prompts: []string{"a cute cat", "a row of mountain"},
 				},
 			},
 			{
 				Name: "inpainting",
 				Val: reimagineFeatureTestParameters{
-					withPrompt: false,
+					prompts: []string{""},
 				},
 			},
 		},
 	})
 }
 
+func getLineLocation(ctx context.Context, ui *uiauto.Context) (lineStart, lineEnd coords.Point, err error) {
+	canvasBounds, err := ui.ImmediateLocation(ctx, util.ImageCanvas)
+	if err != nil {
+		return lineStart, lineEnd, errors.Wrap(err, "unable to get canvas location")
+	}
+
+	lineStart = coords.NewPoint(rand.Intn(canvasBounds.Width)+canvasBounds.Left, rand.Intn(canvasBounds.Height)+canvasBounds.Top)
+	lineEnd = coords.NewPoint(rand.Intn(canvasBounds.Width)+canvasBounds.Left, rand.Intn(canvasBounds.Height)+canvasBounds.Top)
+
+	return lineStart, lineEnd, nil
+}
+
+func runAndVerifyReimagine(ctx context.Context, ui *uiauto.Context, tconn *chrome.TestConn, cr *chrome.Chrome, kb *input.KeyboardEventWriter, prompt string) error {
+	// Take a screenshot before reimagine.
+	imageBefore, err := util.GrabCanvasArea(ctx, cr, tconn, ui)
+	if err != nil {
+		return errors.Wrap(err, "failed to grab screenshot before reimagine")
+	}
+
+	editWithAIButton := nodewith.Role(role.ToggleButton).Name("Edit with AI").Ancestor(galleryapp.RootFinder)
+	if err := ui.DoDefault(editWithAIButton)(ctx); err != nil {
+		return errors.Wrap(err, "unable to click 'Edit with AI' button")
+	}
+
+	if err := util.WaitForProgressBar(ctx, tconn, ui); err != nil {
+		testing.ContextLog(ctx, "Error while waiting for progress bar: ", err)
+	}
+
+	reimagineButton := nodewith.Role(role.Button).Name("Reimagine").Ancestor(galleryapp.RootFinder).First()
+	if err := ui.DoDefault(reimagineButton)(ctx); err != nil {
+		return errors.Wrap(err, "failed to click the reimagine button")
+	}
+
+	if err := util.WaitForSpinner(ctx, tconn, ui); err != nil {
+		testing.ContextLog(ctx, "Error while waiting for spinner: ", err)
+	}
+
+	start, end, err := getLineLocation(ctx, ui)
+	if err != nil {
+		return errors.Wrap(err, "failed to get line location for scribble input")
+	}
+
+	// Draw a scribble on the image.
+	if err := util.DrawOnImageWithLocation(ctx, tconn, ui, start, end); err != nil {
+		return errors.Wrap(err, "failed draw on the image")
+	}
+
+	// Input the text prompt.
+	reimagineTextArea := nodewith.Role(role.TextField).Name("What do you want to generate in the area?").Ancestor(galleryapp.RootFinder)
+	if err := ui.LeftClick(reimagineTextArea)(ctx); err != nil {
+		return errors.Wrap(err, "failed to click the prompt text area")
+	}
+
+	if err := kb.Type(ctx, prompt); err != nil {
+		return errors.Wrap(err, "failed to type the text prompt")
+	}
+
+	if err := ui.DoDefault(reimagineButton)(ctx); err != nil {
+		return errors.Wrap(err, "failed to click the reimagine button")
+	}
+
+	if err := util.WaitForSpinner(ctx, tconn, ui); err != nil {
+		testing.ContextLog(ctx, "Error while waiting for spinner: ", err)
+	}
+
+	doneButton := nodewith.Role(role.Button).Name("Done").Ancestor(galleryapp.RootFinder)
+	if err := ui.DoDefault(doneButton)(ctx); err != nil {
+		return errors.Wrap(err, "failed to click the done button")
+	}
+
+	// Take a screenshot after reimagine.
+	imageAfter, err := util.GrabCanvasArea(ctx, cr, tconn, ui)
+	if err != nil {
+		return errors.Wrap(err, "failed to grab screenshot after reimagine")
+	}
+
+	if util.ImageDiff(imageBefore, imageAfter) == 0 {
+		return errors.Wrap(err, "the image before and after reimagine should not be identical")
+	}
+
+	return nil
+}
+
 func ReimagineFeature(ctx context.Context, s *testing.State) {
+	cleanupCtx := ctx
+	ctx, cancel := ctxutil.Shorten(ctx, 5*time.Second)
+	defer cancel()
+
 	cr := s.FixtValue().(fixture.Data).Chrome
 	tconn := s.FixtValue().(fixture.Data).TestAPIConn
 	defer faillog.DumpUITreeOnError(ctx, s.OutDir(), s.HasError, tconn)
@@ -67,85 +165,28 @@ func ReimagineFeature(ctx context.Context, s *testing.State) {
 	}
 
 	ui := uiauto.New(tconn)
-
-	// Take a screenshot before reimagine.
-	imageBefore, err := util.GrabCanvasArea(ctx, cr, tconn, ui)
+	// Set up keyboard.
+	kb, err := input.Keyboard(ctx)
 	if err != nil {
-		s.Fatal("Failed to grab screenshot before reimagine: ", err)
+		s.Fatal("Failed to find keyboard: ", err)
 	}
-
-	editWithAIButton := nodewith.Role(role.ToggleButton).Name("Edit with AI").Ancestor(galleryapp.RootFinder)
-	if err := uiauto.Combine("Trigger Mantis initialization by clicking on 'Edit with AI' button",
-		ui.WithTimeout(time.Minute).WaitUntilExists(editWithAIButton),
-		ui.LeftClick(editWithAIButton))(ctx); err != nil {
-		s.Fatal("Unable to click 'Edit with AI' button: ", err)
-	}
-
-	if err := util.WaitForProgressBar(ctx, tconn, ui); err != nil {
-		s.Log("Error while waiting for progress bar: ", err)
-	}
+	defer kb.Close(cleanupCtx)
 
 	params := s.Param().(reimagineFeatureTestParameters)
-	reimagineButton := nodewith.Role(role.Button).Name("Reimagine").Ancestor(galleryapp.RootFinder).First()
-	if err := util.LeftClickButton(ctx, ui, reimagineButton); err != nil {
-		s.Fatal("Failed to click the reimagine button: ", err)
-	}
-
-	if err := util.WaitForSpinner(ctx, tconn, ui); err != nil {
-		s.Log("Error while waiting for spinner: ", err)
-	}
-
-	// Draw a scribble on the image.
-	if err := util.DrawOnImage(ctx, tconn, ui); err != nil {
-		s.Fatal("Cannot draw on the image")
-	}
-
-	if params.withPrompt {
-		// Set up keyboard.
-		kb, err := input.Keyboard(ctx)
-		if err != nil {
-			s.Fatal("Failed to find keyboard: ", err)
-		}
-		defer kb.Close(ctx)
-
-		// Input the text prompt.
-		reimagineTextArea := nodewith.Role(role.TextField).Name("What do you want to generate in the area?").Ancestor(galleryapp.RootFinder)
-		if err := ui.LeftClick(reimagineTextArea)(ctx); err != nil {
-			s.Fatal("Failed to click the prompt text area: ", err)
-		}
-
-		if err := kb.Type(ctx, "a cute cat"); err != nil {
-			s.Fatal("Failed to type the text prompt: ", err)
+	for _, prompt := range params.prompts {
+		if err := runAndVerifyReimagine(ctx, ui, tconn, cr, kb, prompt); err != nil {
+			s.Fatalf("Reimagine failed for prompt %q: %v", prompt, err)
 		}
 	}
 
-	if err := util.LeftClickButton(ctx, ui, reimagineButton); err != nil {
-		s.Fatal("Failed to click the reimagine button: ", err)
-	}
-
-	s.Log("Reimagine on process")
-	if err := util.WaitForSpinner(ctx, tconn, ui); err != nil {
-		s.Log("Error while waiting for spinner: ", err)
-	}
-
-	doneButton := nodewith.Role(role.Button).Name("Done").Ancestor(galleryapp.RootFinder)
-	if err := util.LeftClickButton(ctx, ui, doneButton); err != nil {
-		s.Fatal("Failed to click the done button: ", err)
-	}
-
-	// Take a screenshot after reimagine.
 	imageAfter, err := util.GrabCanvasArea(ctx, cr, tconn, ui)
 	if err != nil {
 		s.Fatal("Failed to grab screenshot after reimagine: ", err)
 	}
 
-	if util.ImageDiff(imageBefore, imageAfter) == 0 {
-		s.Fatal("The image before and after reimagine should not be identical")
-	}
-
 	// Save the result image and close Gallery app.
 	saveButton := nodewith.Role(role.Button).Name("Save").Ancestor(galleryapp.RootFinder)
-	if err := util.LeftClickButton(ctx, ui, saveButton); err != nil {
+	if err := ui.DoDefault(saveButton)(ctx); err != nil {
 		s.Fatal("Failed to click the save button: ", err)
 	}
 	savedText := nodewith.Role(role.StaticText).Name("Saved").Ancestor(galleryapp.RootFinder)
