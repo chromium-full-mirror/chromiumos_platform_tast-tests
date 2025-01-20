@@ -124,6 +124,8 @@ func init() {
 				"pujjogatwin",
 				"quandiso",
 				"quandiso360",
+				"quandiso2",
+				"quandiso3602",
 				"riven",
 				"roric",
 				"rudriks",
