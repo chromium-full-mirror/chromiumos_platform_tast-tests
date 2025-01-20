@@ -40,7 +40,7 @@ func init() {
 			"ui.signinProfileTestExtensionManifestKey",
 		},
 		SoftwareDeps: []string{"chrome", "gsc", "reboot", "tpm_clear_allowed"},
-		HardwareDeps: hwdep.D(hwdep.ChromeEC(), hwdep.GSCUART()),
+		HardwareDeps: hwdep.D(hwdep.ChromeEC(), hwdep.GSCUART(), hwdep.Battery()),
 		ServiceDeps: []string{
 			"tast.cros.browser.ChromeService",
 			"tast.cros.shimlessrma.AppService",
