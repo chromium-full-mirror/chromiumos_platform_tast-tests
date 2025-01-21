@@ -12,7 +12,6 @@ import (
 
 	"go.chromium.org/tast-tests/cros/common/hwsec"
 	"go.chromium.org/tast-tests/cros/local/cryptohome"
-	cryptochrome "go.chromium.org/tast-tests/cros/local/cryptohome/chrome"
 	hwseclocal "go.chromium.org/tast-tests/cros/local/hwsec"
 	"go.chromium.org/tast/core/ctxutil"
 	"go.chromium.org/tast/core/errors"
@@ -63,42 +62,37 @@ func UssMigrationPinAfterPasswordMigration(ctx context.Context, s *testing.State
 	}
 
 	// Set up an auth factor with Vault Keyset backing.
-	if err := cryptochrome.WithModernPinDisabled(ctx, func() error {
+	if err := client.WithAuthSession(ctx, userName, false /*ephemeral*/, uda.AuthIntent_AUTH_INTENT_DECRYPT, func(authSessionID string) error {
 		// Create and mount the persistent user.
-		if err := client.WithAuthSession(ctx, userName, false /*ephemeral*/, uda.AuthIntent_AUTH_INTENT_DECRYPT, func(authSessionID string) error {
-			// Set up the user with a password auth factor.
-			if err := client.CreatePersistentUser(ctx, authSessionID); err != nil {
-				return errors.Wrap(err, "failed to create persistent user")
-			}
-			if _, err := client.PreparePersistentVault(ctx, authSessionID /*ecryptfs=*/, false); err != nil {
-				return errors.Wrap(err, "failed to prepare new persistent vault")
-			}
-			if err := client.CreateVaultKeyset(ctx, authSessionID, userPassword /*keyDataLabel=*/, passwordLabel, uda.AuthFactorType_AUTH_FACTOR_TYPE_PASSWORD /*disableKeyData=*/, false); err != nil {
-				return errors.Wrap(err, "failed to create password VaultKeyset")
-			}
-
-			// Write a test file to verify persistence.
-			if err := cryptohome.WriteFileForPersistence(ctx, userName); err != nil {
-				return errors.Wrap(err, "failed to write test file")
-			}
-
-			// Unmount the user.
-			if err := client.UnmountAll(ctx); err != nil {
-				return errors.Wrap(err, "failed to unmount vaults for re-mounting")
-			}
-
-			return nil
-		}); err != nil {
-			return errors.Wrap(err, "failed to create and set up the user")
+		if err := client.CreatePersistentUser(ctx, authSessionID); err != nil {
+			return errors.Wrap(err, "failed to create persistent user")
+		}
+		if _, err := client.PreparePersistentVault(ctx, authSessionID /*ecryptfs=*/, false); err != nil {
+			return errors.Wrap(err, "failed to prepare new persistent vault")
+		}
+		// Set up the user with a password auth factor.
+		if err := client.CreateVaultKeyset(ctx, authSessionID, userPassword /*keyDataLabel=*/, passwordLabel, uda.AuthFactorType_AUTH_FACTOR_TYPE_PASSWORD /*disableKeyData=*/, false); err != nil {
+			return errors.Wrap(err, "failed to create password VaultKeyset")
 		}
 
-		// Unmount all user vaults.
-		if err := cryptohome.UnmountVault(ctx, userName); err != nil {
-			return errors.Wrap(err, "failed to unmount vault after pre-migration mount")
+		// Write a test file to verify persistence.
+		if err := cryptohome.WriteFileForPersistence(ctx, userName); err != nil {
+			return errors.Wrap(err, "failed to write test file")
 		}
+
+		// Unmount the user.
+		if err := client.UnmountAll(ctx); err != nil {
+			return errors.Wrap(err, "failed to unmount vaults for re-mounting")
+		}
+
 		return nil
 	}); err != nil {
-		s.Fatal("Setup while USS migration was disabled failed: ", err)
+		s.Fatal("Failed to create and set up the user: ", err)
+	}
+
+	// Unmount all user vaults.
+	if err := cryptohome.UnmountVault(ctx, userName); err != nil {
+		s.Fatal("Failed to unmount vault after pre-migration mount: ", err)
 	}
 	defer cryptohome.RemoveVault(ctxForCleanUp, userName)
 
