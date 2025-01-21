@@ -3100,6 +3100,13 @@ const (
 	EphemeralModeEnable                                      // 3
 )
 
+type AndroidKioskAppInfo struct {
+	PackageName *string `json:"package_name,omitempty"`
+	ClassName   *string `json:"class_name,omitempty"`
+	Action      *string `json:"action,omitempty"`
+	DisplayName *string `json:"display_name,omitempty"`
+}
+
 type KioskAppInfo struct {
 	AppId     *string `json:"app_id,omitempty"`
 	UpdateUrl *string `json:"update_url,omitempty"`
@@ -3113,6 +3120,7 @@ type WebKioskAppInfo struct {
 type DeviceLocalAccountInfo struct {
 	AccountID           *string              `json:"account_id,omitempty"`
 	AccountType         *AccountType         `json:"type,omitempty"`
+	AndroidKioskAppInfo *AndroidKioskAppInfo `json:"android_kiosk_app,omitempty"`
 	KioskAppInfo        *KioskAppInfo        `json:"kiosk_app,omitempty"`
 	WebKioskAppInfo     *WebKioskAppInfo     `json:"web_kiosk_app,omitempty"`
 	EphemeralMode       *EphemeralMode       `json:"ephemeral_mode,omitempty"`
@@ -29483,7 +29491,6 @@ func (p *PasswordManagerPasskeysEnabled) Equal(iface interface{}) bool {
 // ****************************************************************************
 // 1319. DevicePowerBatteryChargingOptimization
 // This policy can be modified without rebooting.
-// This is a future policy, it is not present in stable builds.
 // ****************************************************************************
 type DevicePowerBatteryChargingOptimization struct {
 	Stat Status
@@ -29734,6 +29741,136 @@ func (p *PartitionedBlobUrlUsage) SetProto(m *protoreflect.Message) {
 }
 func (p *PartitionedBlobUrlUsage) Equal(iface interface{}) bool {
 	v, ok := iface.(bool)
+	if !ok {
+		return ok
+	}
+	return cmp.Equal(p.Val, v, cmpopts.EquateEmpty())
+}
+
+// ****************************************************************************
+// 1328. DefaultControlledFrameSetting
+// This policy can be modified without rebooting.
+// ****************************************************************************
+type DefaultControlledFrameSetting struct {
+	Stat Status
+	Val  int
+}
+
+func (p *DefaultControlledFrameSetting) Name() string          { return "DefaultControlledFrameSetting" }
+func (p *DefaultControlledFrameSetting) Scope() Scope          { return ScopeUser }
+func (p *DefaultControlledFrameSetting) Status() Status        { return p.Stat }
+func (p *DefaultControlledFrameSetting) UntypedV() interface{} { return p.Val }
+func (p *DefaultControlledFrameSetting) UnmarshalAs(m json.RawMessage) (interface{}, error) {
+	var v int
+	if err := json.Unmarshal(m, &v); err != nil {
+		return nil, errors.Wrapf(err, "could not read %s as int", m)
+	}
+	return v, nil
+}
+func (p *DefaultControlledFrameSetting) SetProto(m *protoreflect.Message) {
+	SetUserProto(m, p.Name(), p.Val)
+}
+func (p *DefaultControlledFrameSetting) Equal(iface interface{}) bool {
+	v, ok := iface.(int)
+	if !ok {
+		return ok
+	}
+	return cmp.Equal(p.Val, v, cmpopts.EquateEmpty())
+}
+
+// ****************************************************************************
+// 1329. ControlledFrameAllowedForUrls
+// This policy can be modified without rebooting.
+// ****************************************************************************
+type ControlledFrameAllowedForUrls struct {
+	Stat Status
+	Val  []string
+}
+
+func (p *ControlledFrameAllowedForUrls) Name() string          { return "ControlledFrameAllowedForUrls" }
+func (p *ControlledFrameAllowedForUrls) Scope() Scope          { return ScopeUser }
+func (p *ControlledFrameAllowedForUrls) Status() Status        { return p.Stat }
+func (p *ControlledFrameAllowedForUrls) UntypedV() interface{} { return p.Val }
+func (p *ControlledFrameAllowedForUrls) UnmarshalAs(m json.RawMessage) (interface{}, error) {
+	var v []string
+	if err := json.Unmarshal(m, &v); err != nil {
+		return nil, errors.Wrapf(err, "could not read %s as []string", m)
+	}
+	return v, nil
+}
+func (p *ControlledFrameAllowedForUrls) SetProto(m *protoreflect.Message) {
+	SetUserProto(m, p.Name(), p.Val)
+}
+func (p *ControlledFrameAllowedForUrls) Equal(iface interface{}) bool {
+	v, ok := iface.([]string)
+	if !ok {
+		return ok
+	}
+	return cmp.Equal(p.Val, v, cmpopts.EquateEmpty())
+}
+
+// ****************************************************************************
+// 1330. ControlledFrameBlockedForUrls
+// This policy can be modified without rebooting.
+// ****************************************************************************
+type ControlledFrameBlockedForUrls struct {
+	Stat Status
+	Val  []string
+}
+
+func (p *ControlledFrameBlockedForUrls) Name() string          { return "ControlledFrameBlockedForUrls" }
+func (p *ControlledFrameBlockedForUrls) Scope() Scope          { return ScopeUser }
+func (p *ControlledFrameBlockedForUrls) Status() Status        { return p.Stat }
+func (p *ControlledFrameBlockedForUrls) UntypedV() interface{} { return p.Val }
+func (p *ControlledFrameBlockedForUrls) UnmarshalAs(m json.RawMessage) (interface{}, error) {
+	var v []string
+	if err := json.Unmarshal(m, &v); err != nil {
+		return nil, errors.Wrapf(err, "could not read %s as []string", m)
+	}
+	return v, nil
+}
+func (p *ControlledFrameBlockedForUrls) SetProto(m *protoreflect.Message) {
+	SetUserProto(m, p.Name(), p.Val)
+}
+func (p *ControlledFrameBlockedForUrls) Equal(iface interface{}) bool {
+	v, ok := iface.([]string)
+	if !ok {
+		return ok
+	}
+	return cmp.Equal(p.Val, v, cmpopts.EquateEmpty())
+}
+
+// ****************************************************************************
+// 1331. ExternalStorageAllowlist
+// This policy can be modified without rebooting.
+// This is a future policy, it is not present in stable builds.
+// ****************************************************************************
+type ExternalStorageAllowlist struct {
+	Stat Status
+	Val  []*ExternalStorageAllowlistValue
+}
+
+type ExternalStorageAllowlistValue struct {
+	ProductId int `json:"product_id"`
+	VendorId  int `json:"vendor_id"`
+}
+
+func (p *ExternalStorageAllowlist) Name() string          { return "ExternalStorageAllowlist" }
+func (p *ExternalStorageAllowlist) Scope() Scope          { return ScopeUser }
+func (p *ExternalStorageAllowlist) Status() Status        { return p.Stat }
+func (p *ExternalStorageAllowlist) UntypedV() interface{} { return p.Val }
+func (p *ExternalStorageAllowlist) UnmarshalAs(m json.RawMessage) (interface{}, error) {
+	var v []*ExternalStorageAllowlistValue
+	if err := json.Unmarshal(m, &v); err != nil {
+		return nil, errors.Wrapf(err, "could not read %s as []*ExternalStorageAllowlistValue", m)
+	}
+	return v, nil
+}
+func (p *ExternalStorageAllowlist) SetProto(m *protoreflect.Message) {
+	SetUserProto(m, p.Name(), p.Val)
+}
+func (p *ExternalStorageAllowlist) Equal(iface interface{}) bool {
+	v, ok := iface.([]*ExternalStorageAllowlistValue)
 	if !ok {
 		return ok
 	}
@@ -31571,6 +31708,14 @@ func newByName(name string) (Policy, error) {
 		return &GenAIPhotoEditingSettings{}, nil
 	case "PartitionedBlobUrlUsage":
 		return &PartitionedBlobUrlUsage{}, nil
+	case "DefaultControlledFrameSetting":
+		return &DefaultControlledFrameSetting{}, nil
+	case "ControlledFrameAllowedForUrls":
+		return &ControlledFrameAllowedForUrls{}, nil
+	case "ControlledFrameBlockedForUrls":
+		return &ControlledFrameBlockedForUrls{}, nil
+	case "ExternalStorageAllowlist":
+		return &ExternalStorageAllowlist{}, nil
 	default:
 		return nil, errors.New("Unknown policy " + name)
 	}
