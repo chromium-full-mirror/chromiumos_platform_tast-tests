@@ -118,6 +118,7 @@ func init() {
 				"gallida360",
 				"gana",
 				"glassway",
+				"gothrax",
 				"joxer",
 				"nirwen",
 				"pujjoga",
