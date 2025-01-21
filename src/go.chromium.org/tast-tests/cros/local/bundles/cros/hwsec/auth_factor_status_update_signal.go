@@ -12,7 +12,6 @@ import (
 	uda "go.chromium.org/chromiumos/system_api/user_data_auth_proto"
 
 	"go.chromium.org/tast-tests/cros/common/hwsec"
-	cryptochrome "go.chromium.org/tast-tests/cros/local/cryptohome/chrome"
 	hwseclocal "go.chromium.org/tast-tests/cros/local/hwsec"
 	"go.chromium.org/tast/core/ctxutil"
 	"go.chromium.org/tast/core/errors"
@@ -85,56 +84,52 @@ func AuthFactorStatusUpdateSignal(ctx context.Context, s *testing.State) {
 	if _, err := client.RemoveVault(ctx, testUser1); err != nil {
 		s.Fatal("Failed to remove old vault for preparation: ", err)
 	}
-	if setupErr := cryptochrome.WithModernPin(ctx, func() error {
-		// Setup a new user with PIN.
-		setupUserWithModernPIN(ctx, ctxForCleanup, testUser1, cmdRunner, helper)
 
-		// Attempt to lockout the user so the signal could be sent.
-		authSession, authSessionID, err := cryptohomeHelper.StartAuthSession(ctx, testUser1, false /* ephemeral */, uda.AuthIntent_AUTH_INTENT_DECRYPT)
-		if err != nil {
-			s.Fatal("Failed to start auth session for PIN authentication: ", err)
-		}
-		// Make sure the authSession is invalidated even if the test fails.
-		defer cryptohomeHelper.InvalidateAuthSession(ctxForCleanup, authSessionID)
-		// We need to attempt until one attempt before locking out, so we are ready to catch the signal once an attempt locks the user out.
-		for i := 0; i < numberOfLockoutAttempts-1; i++ {
-			_, err = cryptohomeHelper.AuthenticatePinAuthFactor(ctx, authSessionID, authFactorLabelPin, incorrectPin)
-			if err == nil {
-				s.Fatal("Authentication with wrong PIN succeeded unexpectedly: ", err)
-			}
-		}
-		var authFactorStatusUpdateReply *uda.AuthFactorStatusUpdate
-		authFactorStatusUpdateReply, err = cryptohomeHelper.FailAuthenticatePinAuthFactorAndFetchStatusUpdate(ctx, authSessionID, authFactorLabelPin, incorrectPin, authSession.BroadcastId)
-		if err != nil {
-			s.Fatal("Authentication succeeded while it was expected to fail or status update signal was not fetched properly: ", err)
-		}
-		// Check if the timeout is correct
-		timeAvailableIn := authFactorStatusUpdateReply.AuthFactorWithStatus.StatusInfo.TimeAvailableIn
-		if timeAvailableIn > timeoutInMs || timeAvailableIn <= 0 || timeoutInMs-timeAvailableIn > delayBetweenLockoutAndSignalFetchInMs {
-			s.Fatal("time_available in is not set properly right after the lock out: ", timeAvailableIn)
-		}
+	// Setup a new user with PIN.
+	setupUser(ctx, ctxForCleanup, testUser1, cmdRunner, helper)
 
-		// Check if the timeout delay between two signals is correct.
-		_, err = cryptohomeHelper.FetchStatusUpdateSignal(ctx, authSession.BroadcastId)
-		if err != nil {
-			s.Fatal("StatusUpdateSignal was not fetched or its BroadcastID did not match that of the AuthSession: ", err)
+	// Attempt to lockout the user so the signal could be sent.
+	authSession, authSessionID, err := cryptohomeHelper.StartAuthSession(ctx, testUser1, false /* ephemeral */, uda.AuthIntent_AUTH_INTENT_DECRYPT)
+	if err != nil {
+		s.Fatal("Failed to start auth session for PIN authentication: ", err)
+	}
+	// Make sure the authSession is invalidated even if the test fails.
+	defer cryptohomeHelper.InvalidateAuthSession(ctxForCleanup, authSessionID)
+	// We need to attempt until one attempt before locking out, so we are ready to catch the signal once an attempt locks the user out.
+	for i := 0; i < numberOfLockoutAttempts-1; i++ {
+		_, err = cryptohomeHelper.AuthenticatePinAuthFactor(ctx, authSessionID, authFactorLabelPin, incorrectPin)
+		if err == nil {
+			s.Fatal("Authentication with wrong PIN succeeded unexpectedly: ", err)
 		}
-		cryptohomeHelper.InvalidateAuthSession(ctxForCleanup, authSessionID)
-		// Test if the status update signal is sent for a new auth session for a locked out user.
-		authSession, _, err = cryptohomeHelper.StartAuthSessionWithStatusUpdate(ctx, testUser1, false /* ephemeral */, uda.AuthIntent_AUTH_INTENT_DECRYPT)
-		if err != nil {
-			s.Fatal("Failed to start auth session for PIN authentication: ", err)
-		}
-		// Make sure the authSession is invalidated even if the test fails.
-		defer cryptohomeHelper.InvalidateAuthSession(ctxForCleanup, hex.EncodeToString(authSession.AuthSessionId))
-		return nil
-	}); setupErr != nil {
-		s.Fatal("Failed to setup with modern pin enabled: ", setupErr)
+	}
+	var authFactorStatusUpdateReply *uda.AuthFactorStatusUpdate
+	authFactorStatusUpdateReply, err = cryptohomeHelper.FailAuthenticatePinAuthFactorAndFetchStatusUpdate(ctx, authSessionID, authFactorLabelPin, incorrectPin, authSession.BroadcastId)
+	if err != nil {
+		s.Fatal("Authentication succeeded while it was expected to fail or status update signal was not fetched properly: ", err)
+	}
+	// Check if the timeout is correct
+	timeAvailableIn := authFactorStatusUpdateReply.AuthFactorWithStatus.StatusInfo.TimeAvailableIn
+	if timeAvailableIn > timeoutInMs || timeAvailableIn <= 0 || timeoutInMs-timeAvailableIn > delayBetweenLockoutAndSignalFetchInMs {
+		s.Fatal("time_available in is not set properly right after the lock out: ", timeAvailableIn)
+	}
+
+	// Check if the timeout delay between two signals is correct.
+	_, err = cryptohomeHelper.FetchStatusUpdateSignal(ctx, authSession.BroadcastId)
+	if err != nil {
+		s.Fatal("StatusUpdateSignal was not fetched or its BroadcastID did not match that of the AuthSession: ", err)
+	}
+	cryptohomeHelper.InvalidateAuthSession(ctxForCleanup, authSessionID)
+
+	// Test if the status update signal is sent for a new auth session for a locked out user.
+	authSession, _, err = cryptohomeHelper.StartAuthSessionWithStatusUpdate(ctx, testUser1, false /* ephemeral */, uda.AuthIntent_AUTH_INTENT_DECRYPT)
+	cryptohomeHelper.InvalidateAuthSession(ctxForCleanup, hex.EncodeToString(authSession.AuthSessionId))
+	if err != nil {
+		s.Fatal("Failed to start auth session for PIN authentication: ", err)
 	}
 }
 
-// setupUserWithModernPIN sets up a user with a password and a PIN auth factor.
-func setupUserWithModernPIN(ctx, ctxForCleanUp context.Context, userName string, cmdRunner *hwseclocal.CmdRunnerLocal, helper *hwseclocal.CmdHelperLocal) error {
+// setupUser sets up a user with a password and a PIN auth factor.
+func setupUser(ctx, ctxForCleanUp context.Context, userName string, cmdRunner *hwseclocal.CmdRunnerLocal, helper *hwseclocal.CmdHelperLocal) error {
 	cryptohomeHelper := helper.CryptohomeClient()
 
 	// Start an Auth session and get an authSessionID.
