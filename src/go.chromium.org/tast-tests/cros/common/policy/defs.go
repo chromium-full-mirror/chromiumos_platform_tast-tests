@@ -22382,9 +22382,9 @@ type IsolatedWebAppInstallForceList struct {
 }
 
 type IsolatedWebAppInstallForceListValue struct {
-	AllowDowngrades   bool   `json:"allow_downgrades"`
-	PinnedVersion     string `json:"pinned_version"`
-	UpdateChannel     string `json:"update_channel"`
+	AllowDowngrades   bool   `json:"allow_downgrades,omitempty"`
+	PinnedVersion     string `json:"pinned_version,omitempty"`
+	UpdateChannel     string `json:"update_channel,omitempty"`
 	UpdateManifestUrl string `json:"update_manifest_url"`
 	WebBundleId       string `json:"web_bundle_id"`
 }

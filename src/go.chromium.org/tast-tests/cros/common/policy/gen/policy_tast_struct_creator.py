@@ -737,6 +737,21 @@ type WebAppInstallForceListValueCustomIcon struct {
 """
   return attr_type, attr_structs
 
+def parse_override_isolated_web_app_install_force_list(p, refs):
+  value_name = 'IsolatedWebAppInstallForceListValue'
+  attr_type = '[]*' + value_name
+  attr_structs = """
+type IsolatedWebAppInstallForceListValue struct {
+\tAllowDowngrades\tbool\t`json:"allow_downgrades,omitempty"`
+\tPinnedVersion\tstring\t`json:"pinned_version,omitempty"`
+\tUpdateChannel\tstring\t`json:"update_channel,omitempty"`
+\tUpdateManifestUrl\tstring\t`json:"update_manifest_url"`
+\tWebBundleId\tstring\t`json:"web_bundle_id"`
+}
+
+"""
+  return attr_type, attr_structs
+
 def parse_override_required_client_certificate_for_device(p, refs):
   value_name = 'RequiredClientCertificateForDeviceValue'
   attr_type = '[]*' + value_name
@@ -796,6 +811,7 @@ PARSE_OVERRIDES = {
     'DeviceOpenNetworkConfiguration': parse_override_onc,
     'KerberosAccounts': parse_override_kerberos_accounts,
     'WebAppInstallForceList': parse_override_web_app_install_force_list,
+    'IsolatedWebAppInstallForceList': parse_override_isolated_web_app_install_force_list,
 }
 
 # Functions to use for reference objects when the default way won't work.
