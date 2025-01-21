@@ -110,7 +110,7 @@ func init() {
 		Name:         "chromeGraphicsHDR",
 		Desc:         "Logged into a user session for graphics testing for HDR buffers",
 		BugComponent: "b:885255", // ChromeOS > Platform > Graphics
-		Contacts:     []string{"chromeos-gfx-compositor@google.com", "mrfemi@google.com"},
+		Contacts:     []string{"chromeos-gfx-compositor@google.com"},
 		Parent:       "gpuWatchDog",
 		Impl: chrome.NewLoggedInFixture(func(ctx context.Context, s *testing.FixtState) ([]chrome.Option, error) {
 			return []chrome.Option{
@@ -127,7 +127,7 @@ func init() {
 		Name:         "chromeGraphicsPassthrough",
 		Desc:         "Logged into a user session for graphics testing with the passthrough command decoder feature enabled",
 		BugComponent: "b:885255", // ChromeOS > Platform > Graphics
-		Contacts:     []string{"chromeos-gfx@google.com", "hob@chromium.org"},
+		Contacts:     []string{"chromeos-gfx@google.com"},
 		Parent:       "gpuWatchDog",
 		Impl: chrome.NewLoggedInFixture(func(ctx context.Context, s *testing.FixtState) ([]chrome.Option, error) {
 			return []chrome.Option{disableFirmwareUpdater, enablePassthrough}, nil
@@ -141,7 +141,7 @@ func init() {
 		Name:         "chromeGraphicsVulkan",
 		Desc:         "Logged into a user session for graphics testing with Vulkan raster and composite",
 		BugComponent: "b:885255", // ChromeOS > Platform > Graphics
-		Contacts:     []string{"chromeos-gfx@google.com", "hob@chromium.org"},
+		Contacts:     []string{"chromeos-gfx@google.com"},
 		Parent:       "gpuWatchDog",
 		Impl: chrome.NewLoggedInFixture(func(ctx context.Context, s *testing.FixtState) ([]chrome.Option, error) {
 			return []chrome.Option{

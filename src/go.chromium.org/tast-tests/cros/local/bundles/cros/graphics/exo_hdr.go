@@ -27,7 +27,6 @@ func init() {
 		BugComponent: "b:1021073", // ChromeOS > Platform > Graphics > Compositor
 		Contacts: []string{
 			"chromeos-gfx-compositor@google.com",
-			"mrfemi@google.com",
 		},
 		Attr:         []string{"group:graphics", "graphics_perbuild"},
 		Fixture:      "chromeGraphicsHDR",
