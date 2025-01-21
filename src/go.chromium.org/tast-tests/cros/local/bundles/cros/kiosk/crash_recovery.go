@@ -126,7 +126,7 @@ func CrashRecovery(ctx context.Context, s *testing.State) {
 	// TODO(crbug.com/379867155) Remove this after chrome app kiosk crash recovery
 	// is independent of extensions garbage collection.
 	if appType == chromeApp {
-		if err := kiosk.WaitForExtensionGarbageCollectionLog(ctx); err != nil {
+		if err := kiosk.WaitForExtensionGarbageCollectionLogs(ctx); err != nil {
 			s.Fatal("Extensions garbage collection didn't finish: ", err)
 		}
 	}

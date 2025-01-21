@@ -86,6 +86,8 @@ const (
 	extensionGarbageCollectionCompletedLog = "Garbage collection for extensions on file thread is complete"
 	// extensionGarbageCollectionWaitDuration is the time estimate required to finish extensions garbage collection.
 	extensionGarbageCollectionWaitDuration = 2 * time.Minute
+	// extensionGarbageCollectionWaitDurationForAdditionalLogs is the time estimate required for additional extension garbage collection logs.
+	extensionGarbageCollectionWaitDurationForAdditionalLogs = 30 * time.Second
 
 	// policyPersistDuration is the time estimate for Chrome to store policies after a refresh.
 	policyPersistDuration = 15 * time.Second
@@ -294,11 +296,20 @@ func (k *Kiosk) WaitForSplashScreenClosed(ctx context.Context) error {
 	return nil
 }
 
-// WaitForExtensionGarbageCollectionLog uses the reader stored in this Kiosk struct to check if
-// the extensions garbage collection log is present.
-func (k *Kiosk) WaitForExtensionGarbageCollectionLog(ctx context.Context) error {
+// WaitForExtensionGarbageCollectionLogs uses the reader stored in this Kiosk struct to check if
+// the extensions garbage collection log(s) are present.
+func (k *Kiosk) WaitForExtensionGarbageCollectionLogs(ctx context.Context) error {
+	// Wait for the first extensionGarbageCollectionCompletedLog and return error if not found.
 	if err := waitLog(ctx, k.reader, extensionGarbageCollectionCompletedLog, extensionGarbageCollectionWaitDuration); err != nil {
 		return errors.Wrap(err, "Extension garbage collection didn't complete")
+	}
+
+	// To fix the bug: b/384660246, wait for additional extensionGarbageCollectionCompletedLog(s) if any.
+	if err := testing.Poll(ctx, func(ctx context.Context) error {
+		return waitLog(ctx, k.reader, extensionGarbageCollectionCompletedLog, extensionGarbageCollectionWaitDurationForAdditionalLogs)
+	}, nil); err != nil {
+		// Do not return error as it is acceptable to not find additional garbage collection logs.
+		return nil
 	}
 
 	return nil
