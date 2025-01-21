@@ -25,6 +25,7 @@ const (
 // UsbMassStorageImpl represents a virtual USB mass storage device.
 type UsbMassStorageImpl struct {
 	partitionUUID string
+	readOnly      bool
 }
 
 // NewUSBMassStorage returns an instance to help creating the virtual USB mass storage device.
@@ -90,6 +91,7 @@ func (m *UsbMassStorageImpl) PlugIn(ctx context.Context, readOnly bool) error {
 		return errors.Wrap(err, "failed to find the USB device part UUID")
 	}
 	m.partitionUUID = partitionUUID
+	m.readOnly = readOnly
 
 	// Wait for the device path emerge.
 	if err := testing.Poll(ctx, func(ctx context.Context) error {
@@ -117,6 +119,16 @@ func (m *UsbMassStorageImpl) FormatFileSystem(ctx context.Context, command strin
 	arg = append(arg, m.DevicePath())
 	if err := testexec.CommandContext(ctx, command, arg...).Run(testexec.DumpLogOnError); err != nil {
 		return errors.Wrap(err, "failed to format the file system")
+	}
+
+	// Now that the USB device is formatted, plug it out and plug it back in
+	// to allow cros-disks to correctly mount it.
+	readOnly := m.readOnly
+	if err := m.PlugOut(ctx); err != nil {
+		return err
+	}
+	if err := m.PlugIn(ctx, readOnly); err != nil {
+		return err
 	}
 
 	return nil
