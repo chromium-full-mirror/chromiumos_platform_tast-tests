@@ -90,6 +90,6 @@ func InternalDeviceTypeCheck(ctx context.Context, s *testing.State) {
 	}
 
 	if _, ok := ifaces[util.DiskTypeToString(disk.Type)]; !ok {
-		s.Fatalf("Unexepcted storage interface, want one of %v, got %s", ifaces, util.DiskTypeToString(disk.Type))
+		s.Fatalf("Unexpected storage interface, want one of %v, got %s", ifaces, util.DiskTypeToString(disk.Type))
 	}
 }
