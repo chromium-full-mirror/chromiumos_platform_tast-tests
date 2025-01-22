@@ -2,7 +2,7 @@
 // Use of this source code is governed by a BSD-style license that can be
 // found in the LICENSE file.
 
-package power
+package service
 
 import (
 	"context"
@@ -100,6 +100,7 @@ func (b *BatteryService) PrepareBattery(ctx context.Context, req *power.BatteryR
 	return &empty.Empty{}, nil
 }
 
+// StopChargeLimit stops after the battery charge limit.
 func (b *BatteryService) StopChargeLimit(ctx context.Context, req *empty.Empty) (*empty.Empty, error) {
 	if !setup.ChargeLimitEnabled(ctx) || !setup.ChargeControlV2Support(ctx) {
 		return &empty.Empty{}, nil
@@ -156,10 +157,12 @@ func (b *BatteryService) PowerSettingInIdleMode(ctx context.Context, req *empty.
 	return &empty.Empty{}, nil
 }
 
+// DisableBatteryCharging disables battery charging.
 func (b *BatteryService) DisableBatteryCharging(ctx context.Context, req *empty.Empty) (*empty.Empty, error) {
 	return &empty.Empty{}, setup.DisableBatteryCharging(ctx)
 }
 
+// AllowBatteryCharging allows battery charging.
 func (b *BatteryService) AllowBatteryCharging(ctx context.Context, req *empty.Empty) (*empty.Empty, error) {
 	return &empty.Empty{}, setup.AllowBatteryCharging(ctx)
 }
