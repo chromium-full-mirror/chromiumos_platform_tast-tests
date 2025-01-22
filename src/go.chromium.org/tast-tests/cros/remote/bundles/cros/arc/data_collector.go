@@ -249,7 +249,7 @@ func init() {
 				dexOptCacheGen:                true,
 				requiredCPUAbisForBranchUprev: []string{"x64only-houdini", "x64only-ndk", "arm64only-native"},
 				dataDir:                       "/tmp/data_collector",
-				tmpCachesDir:                  "",
+				tmpCachesDir:                  tmpVMCacheArtifactsRoot,
 			},
 		}},
 		VarDeps: []string{"arc.perfAccountPool"},
@@ -371,6 +371,7 @@ func DataCollector(ctx context.Context, s *testing.State) {
 	// TODO(b/279554423): Eventually enable this for container-rvc, vm-rvc,
 	// devices after initial experiments are conducted on local and vm-tm configs.
 	useDevCaches := (tmpCachesDir != "" && (!param.upload || param.androidPackage == "android-vm-tm"))
+
 	if useDevCaches {
 		// Make sure we clean up after ureadahead generation is finished using dev caches.
 		defer dututils.RemoveAllRemote(ctx, d, tmpCachesDir)
@@ -487,8 +488,18 @@ func DataCollector(ctx context.Context, s *testing.State) {
 	genPackagesReferenceAndGmsCoreCache := func() error {
 		service := arc.NewGmsCoreCacheServiceClient(cl.Conn)
 
+		var packagesCacheEnabled bool
+		if desc.VersionRelease >= 13 {
+			// Starting in ARC-TM, we no longer require packages caches to be
+			// set for GMS Core caches generation. Disable caches completely
+			// and use what device would generate.
+			packagesCacheEnabled = false
+		} else {
+			packagesCacheEnabled = true
+		}
+
 		request := arcpb.GmsCoreCacheRequest{
-			PackagesCacheEnabled:       true,
+			PackagesCacheEnabled:       packagesCacheEnabled,
 			GmsCoreEnabled:             false,
 			CopyGeneratedPackagesCache: false,
 		}
