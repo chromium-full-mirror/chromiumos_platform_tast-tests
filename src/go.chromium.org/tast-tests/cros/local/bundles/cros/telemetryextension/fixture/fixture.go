@@ -251,7 +251,7 @@ func (f *telemetryExtensionFixture) setupChromeForConsumers(ctx context.Context,
 }
 
 func (f *telemetryExtensionFixture) setupConnectionToPWA(ctx context.Context) error {
-	pwaConn, err := f.cr.NewConn(ctx, "https://googlechromelabs.github.io/cros-sample-telemetry-extension")
+	pwaConn, err := f.cr.NewConn(ctx, "https://googlechromelabs.github.io/cros-sample-telemetry-extension/test-page")
 	if err != nil {
 		return errors.Wrap(err, "failed to create connection to googlechromelabs.github.io")
 	}
