@@ -41,6 +41,7 @@ type BootLockboxService struct {
 	cr *chrome.Chrome
 }
 
+// NewChromeLogin starts a new Chrome session, and logs in as a test user.
 func (c *BootLockboxService) NewChromeLogin(ctx context.Context, req *emptypb.Empty) (*emptypb.Empty, error) {
 	if c.cr != nil {
 		return nil, errors.New("Chrome already available")
@@ -54,6 +55,7 @@ func (c *BootLockboxService) NewChromeLogin(ctx context.Context, req *emptypb.Em
 	return &emptypb.Empty{}, nil
 }
 
+// CloseChrome closes the Chrome session.
 func (c *BootLockboxService) CloseChrome(ctx context.Context, req *emptypb.Empty) (*emptypb.Empty, error) {
 	if c.cr == nil {
 		return nil, errors.New("Chrome not available")
@@ -92,6 +94,7 @@ func (*BootLockboxService) Read(ctx context.Context, request *security.ReadBootL
 	}
 }
 
+// Store stores the key-value pair in the boot lockbox.
 func (*BootLockboxService) Store(ctx context.Context, request *security.StoreBootLockboxRequest) (*emptypb.Empty, error) {
 	_, obj, err := dbusutil.Connect(ctx, dbusName, dbus.ObjectPath(dbusPath))
 	if err != nil {
