@@ -1,0 +1,8 @@
+set noparent
+
+# IWA team.
+greengrape@google.com
+simonha@google.com
+
+# Tast team for bulk/emergencies.
+include /OWNERS.tast

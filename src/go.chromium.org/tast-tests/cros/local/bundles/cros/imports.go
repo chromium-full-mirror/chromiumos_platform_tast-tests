@@ -69,6 +69,7 @@ import (
 	_ "go.chromium.org/tast-tests/cros/local/bundles/cros/inputs"
 	_ "go.chromium.org/tast-tests/cros/local/bundles/cros/instanttether"
 	_ "go.chromium.org/tast-tests/cros/local/bundles/cros/intel"
+	_ "go.chromium.org/tast-tests/cros/local/bundles/cros/iwa"
 	_ "go.chromium.org/tast-tests/cros/local/bundles/cros/kdump"
 	_ "go.chromium.org/tast-tests/cros/local/bundles/cros/kerberos"
 	_ "go.chromium.org/tast-tests/cros/local/bundles/cros/kernel"
