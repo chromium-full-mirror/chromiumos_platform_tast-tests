@@ -274,6 +274,9 @@ func performGAIALogin(ctx context.Context, cfg *config.Config, sess *driver.Sess
 		if err := gaiaConn.WaitForExprWithTimeout(ctx,
 			`document.querySelector('[aria-label="Email or phone"]')===null`,
 			30*time.Second); err != nil {
+			if err := clearGAIAField(ctx, gaiaConn, "#identifierId"); err != nil {
+				testing.ContextLog(ctx, "Failed to clear username field: ", err)
+			}
 			return errors.Wrap(err, "failed to wait for username screen to go away")
 		}
 
@@ -428,6 +431,24 @@ func insertGAIAField(ctx context.Context, gaiaConn *driver.Conn, selector, value
 	  field.value = value;
 	}`, selector, value); err != nil {
 		return errors.Wrapf(err, "failed to use %q element", selector)
+	}
+	return nil
+}
+
+// clearGAIAField clears a field of the GAIA login form.
+func clearGAIAField(ctx context.Context, conn *driver.Conn, selector string) error {
+	// Ensure that the input exists.
+	if err := conn.WaitForExpr(ctx, fmt.Sprintf(
+		"document.querySelector(%q)", selector)); err != nil {
+		return errors.Wrapf(err, "failed to wait for %q element", selector)
+	}
+
+	// Clear the field.
+	if err := conn.Call(ctx, nil, `(selector) => {
+	  const field = document.querySelector(selector);
+	  field.value = "";
+	}`, selector); err != nil {
+		return errors.Wrapf(err, "failed to clear %q element", selector)
 	}
 	return nil
 }
