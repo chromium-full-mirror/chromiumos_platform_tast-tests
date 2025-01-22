@@ -171,7 +171,8 @@ import (
 	_ "go.chromium.org/tast-tests/cros/local/bundles/cros/wwcb"
 
 	_ "go.chromium.org/tast-tests/cros/local/camera/service" // import fixture for camera service tests
-	_ "go.chromium.org/tast-tests/cros/local/intel"          // import Intel fixtures.
+	_ "go.chromium.org/tast-tests/cros/local/inputs/service"
+	_ "go.chromium.org/tast-tests/cros/local/intel" // import Intel fixtures.
 	_ "go.chromium.org/tast-tests/cros/local/power/service"
 	_ "go.chromium.org/tast-tests/cros/local/security"
 	_ "go.chromium.org/tast-tests/cros/local/typec"
