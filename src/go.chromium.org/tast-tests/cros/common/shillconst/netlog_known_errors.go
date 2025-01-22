@@ -15,8 +15,8 @@ type AllowedEntry struct {
 // InitializeAllowedEntries returns the allowed log entries with Counter = 0.
 func InitializeAllowedEntries() []AllowedEntry {
 	return []AllowedEntry{
-		{"dhcpcd7", "", ".*eth\\d: checksum failure from.*", 0},
-		{"dhcpcd7", "", ".*eth\\d: DHCP lease expired.*", 0},
+		{"dhcpcd7", "", ".*eth.*: checksum failure from.*", 0},
+		{"dhcpcd7", "", ".*eth.*: DHCP lease expired.*", 0},
 		{"dhcpcd7", "", ".*eth.*: truncated packet.*", 0},
 		{"dnsproxyd", "client.cc", ".*Unable to get properties for device.*", 0},
 		{"dnsproxyd", "client.cc", ".*Unable to get connected service properties for device.*", 0},
@@ -35,15 +35,16 @@ func InitializeAllowedEntries() []AllowedEntry {
 		{"patchpaneld", "network_monitor_service.cc", ".*Get device props failed.*", 0},
 		{"patchpaneld", "network_monitor_service.cc", ".*Could not obtain interface index for.*", 0}, // b/255732860
 		{"patchpaneld", "object_proxy.cc", ".*Failed to call method.*", 0},
+		// errno 2 (No such file or directory) and 16 (Device or resource busy) are
+		// expected when the interface itself is changing (e.g., removed).
+		{"patchpaneld", "rtnl_handler.cc", ".*sequence .* received error 2.*", 0},
+		{"patchpaneld", "rtnl_handler.cc", ".*sequence .* received error 16.*", 0},
 		{"patchpaneld", "scoped_ns.cc", ".*Could not open namespace.*", 0},
-		{"patchpaneld", "shill_client.cc", ".*Can't retrieve properties for device.*", 0},
-		{"patchpaneld", "shill_client.cc", ".*Empty interface name for shill Device \\/device\\/eth\\d.*", 0},
 		{"patchpaneld", "shill_client.cc", ".*Failed to obtain service.*GetProperties.*signature.*doesn't exist.*", 0},
-		{"patchpaneld", "shill_client.cc", ".*Unable to get Manager properties.*", 0}, // b/257637872
-		{"patchpaneld", "shill_client.cc", ".*Unable to get Service properties.*", 0}, // b/352394652
-		{"patchpaneld", "shill_client.cc", ".*Unknown interface name eth\\d.*", 0},
-		{"patchpaneld", "shill_client.cc", ".*Unable to get shill Device properties for \\/device\\/eth\\d.*", 0},                 // b/299130290
-		{"patchpaneld", "shill_client.cc", ".*Failed to update properties of Device \\/device\\/eth\\d.*", 0},                     // b/299130290
+		{"patchpaneld", "shill_client.cc", ".*Unable to get Manager properties.*", 0},                                             // b/257637872
+		{"patchpaneld", "shill_client.cc", ".*Unable to get Service properties.*", 0},                                             // b/352394652
+		{"patchpaneld", "shill_client.cc", ".*Unable to get shill Device properties for \\/device\\/eth.*", 0},                    // b/299130290
+		{"patchpaneld", "shill_client.cc", ".*Failed to update properties of Device \\/device\\/eth.*", 0},                        // b/299130290
 		{"shill", "dbus_method_invoker.h", ".*CallMethodAndBlockWithTimeout.*", 0},                                                // b/210893108
 		{"shill", "dbus_properties_proxy.cc", ".*GetAll failed on org.freedesktop.ModemManager1.*", 0},                            // b/215373366
 		{"shill", "dbus_properties_proxy.cc", ".*GetAll failed on org.chromium.Modemfwd.*", 0},                                    // b/364346232
