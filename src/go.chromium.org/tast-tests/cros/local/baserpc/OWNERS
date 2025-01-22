@@ -1,0 +1,4 @@
+set noparent
+
+# Tast team for bulk/emergencies
+include /OWNERS.tast

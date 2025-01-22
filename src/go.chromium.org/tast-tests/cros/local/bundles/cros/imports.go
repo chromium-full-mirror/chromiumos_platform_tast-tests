@@ -170,6 +170,7 @@ import (
 	_ "go.chromium.org/tast-tests/cros/local/bundles/cros/wmp"
 	_ "go.chromium.org/tast-tests/cros/local/bundles/cros/wwcb"
 
+	_ "go.chromium.org/tast-tests/cros/local/baserpc"
 	_ "go.chromium.org/tast-tests/cros/local/camera/service" // import fixture for camera service tests
 	_ "go.chromium.org/tast-tests/cros/local/firmware"
 	_ "go.chromium.org/tast-tests/cros/local/inputs/service"

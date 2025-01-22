@@ -100,6 +100,7 @@ func (fs *FileSystemService) WriteFile(ctx context.Context, req *baserpc.WriteFi
 	return &res, nil
 }
 
+// Remove removes the file.
 func (fs *FileSystemService) Remove(ctx context.Context, req *baserpc.RemoveRequest) (*baserpc.RemoveResponse, error) {
 	var res baserpc.RemoveResponse
 	res.Error = encodeErr(func() error {
