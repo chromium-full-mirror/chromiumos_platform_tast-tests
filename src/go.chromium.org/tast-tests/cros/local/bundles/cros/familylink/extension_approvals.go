@@ -66,8 +66,8 @@ func ExtensionApprovals(ctx context.Context, s *testing.State) {
 		s.Fatal("Failed to wait for pref: ", err)
 	}
 
-	if err := familylink.AddExtension(ctx, cr, tconn); err != nil {
-		s.Fatal("Failed to add extension: ", err)
+	if err := familylink.RequestExtension(ctx, cr, tconn); err != nil {
+		s.Fatal("Failed to request permission to add extension: ", err)
 	}
 
 	ui := uiauto.New(tconn).WithTimeout(20 * time.Second)

@@ -421,9 +421,9 @@ func WaitForBoolPrefValue(ctx context.Context, tconn *chrome.TestConn, prefName 
 	return nil
 }
 
-// AddExtension attempts to add an extension from the Chrome Webstore.
-func AddExtension(ctx context.Context, cr *chrome.Chrome, tconn *chrome.TestConn) error {
-	testing.ContextLog(ctx, "Adding extension as a supervised user")
+// RequestExtension attempts to request permission to add an extension from the Chrome Webstore.
+func RequestExtension(ctx context.Context, cr *chrome.Chrome, tconn *chrome.TestConn) error {
+	testing.ContextLog(ctx, "Requesting to add an extension as a supervised user")
 
 	// Open webstore in browser.
 	const extensionID = "djflhoibgkdhkhhcedjiklpkjnoahfmg" // Google-developed extension from Chrome Store.
@@ -438,15 +438,15 @@ func AddExtension(ctx context.Context, cr *chrome.Chrome, tconn *chrome.TestConn
 	ui := uiauto.New(tconn).WithTimeout(time.Minute)
 
 	// Install extension parent permission flow.
-	testing.ContextLog(ctx, "Finding button that adds the extension")
-	addButton := nodewith.Name("Add to Chrome").Role(role.Button).First()
-	if err := ui.WaitUntilExists(addButton)(ctx); err != nil {
+	testing.ContextLog(ctx, "Finding button that requests permission to add the extension")
+	requestButton := nodewith.NameStartingWith("A parent or guardian must approve for you to install this item").Role(role.Button)
+	if err := ui.WaitUntilExists(requestButton)(ctx); err != nil {
 		return errors.Wrap(err, "failed to load page")
 	}
 
-	testing.ContextLog(ctx, "Clicking button that adds the extension")
-	if err := ui.LeftClick(addButton)(ctx); err != nil {
-		return errors.Wrap(err, "failed to click add extension")
+	testing.ContextLog(ctx, "Clicking button that requests permission to add the extension")
+	if err := ui.LeftClick(requestButton)(ctx); err != nil {
+		return errors.Wrap(err, "failed to click Request")
 	}
 
 	return nil
