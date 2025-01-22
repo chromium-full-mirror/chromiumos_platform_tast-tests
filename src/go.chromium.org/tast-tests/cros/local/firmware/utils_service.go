@@ -28,7 +28,6 @@ import (
 	"go.chromium.org/tast-tests/cros/local/chrome/uiauto/role"
 	"go.chromium.org/tast-tests/cros/local/common"
 	"go.chromium.org/tast-tests/cros/local/crosconfig"
-	"go.chromium.org/tast-tests/cros/local/firmware"
 	"go.chromium.org/tast-tests/cros/local/input"
 	fwpb "go.chromium.org/tast-tests/cros/services/cros/firmware"
 	"go.chromium.org/tast/core/errors"
@@ -65,19 +64,19 @@ func (*UtilsService) BlockingSync(ctx context.Context, req *empty.Empty) (*empty
 	}
 
 	// Find the root device.
-	rootDevice, err := firmware.RootDevice(ctx)
+	rootDevice, err := RootDevice(ctx)
 	if err != nil {
 		return nil, err
 	}
 	devices := []string{rootDevice}
 
 	// If booted from removable media, sync the internal device too.
-	isRemovable, err := firmware.BootDeviceRemovable(ctx)
+	isRemovable, err := BootDeviceRemovable(ctx)
 	if err != nil {
 		return nil, err
 	}
 	if isRemovable {
-		internalDevice, err := firmware.InternalDevice(ctx)
+		internalDevice, err := InternalDevice(ctx)
 		if err != nil {
 			return nil, err
 		}
@@ -124,6 +123,7 @@ func (*UtilsService) BlockingSync(ctx context.Context, req *empty.Empty) (*empty
 	return &empty.Empty{}, nil
 }
 
+// FindPhysicalKeyboard finds the physical keyboard path.
 func (us *UtilsService) FindPhysicalKeyboard(ctx context.Context, req *empty.Empty) (*fwpb.InputDevicePath, error) {
 	foundKB, path, err := input.FindPhysicalKeyboard(ctx)
 	if err != nil {
@@ -135,6 +135,7 @@ func (us *UtilsService) FindPhysicalKeyboard(ctx context.Context, req *empty.Emp
 	}
 }
 
+// FindPowerKeyDevice finds the power key device.
 func (us *UtilsService) FindPowerKeyDevice(ctx context.Context, req *empty.Empty) (*fwpb.InputDevicePath, error) {
 	foundPowerKey, path, err := input.FindPowerKeyDevice(ctx)
 	if err != nil {
@@ -177,7 +178,7 @@ func (us *UtilsService) ReuseChrome(ctx context.Context, req *empty.Empty) (*emp
 		return &empty.Empty{}, nil
 	}
 
-	// First, look up the shared Chrome instance set by CheckVirtualKeyboarService (or other services).
+	// First, look up the shared Chrome instance set by CheckVirtualKeyboardService (or other services).
 	// Otherwise, reuse the one created by NewChrome in this service with the same options.
 	us.sharedObject.ChromeMutex.Lock()
 	defer us.sharedObject.ChromeMutex.Unlock()
