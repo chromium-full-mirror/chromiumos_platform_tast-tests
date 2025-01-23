@@ -117,11 +117,13 @@ func UsbguardBlocksUnknownDevicesAtLockScreen(ctx context.Context, s *testing.St
 	if _, err := ns.LockScreen(ctx, &empty.Empty{}); err != nil {
 		s.Fatal("Failed to lock Chrome: ", err)
 	}
+
 	// Check no crash report file.
-	if out, err := dut.Conn().CommandContext(ctx, "sudo", "ls", "/var/spool/crash").Output(exec.DumpLogOnError); err != nil {
-		s.Fatal("Failed to listing the folders under /var/spool/crash: ", err)
-	} else if string(out) != "" {
-		s.Fatal("Crash folder not empty")
+	if crashFileCount, err := log.CollectCrashReports(ctx, dut); err != nil {
+		s.Fatal("Failed to collect crash reports in /var/spool/crash: ", err)
+	} else if crashFileCount > 0 {
+		s.Logf("Crash report files count: %d", crashFileCount)
+		s.Fatal("Crash folder not empty, please check logs dir for copied crash report files.")
 	}
 	// Check devices.proto exsit.
 	if out, err := dut.Conn().CommandContext(ctx, "sudo", "ls", "/run/usb_bouncer").Output(exec.DumpLogOnError); err != nil {
