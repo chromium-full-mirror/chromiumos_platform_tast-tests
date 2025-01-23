@@ -232,25 +232,20 @@ func (s *Session) testAPIConnFor(ctx context.Context, extConn **Conn, extID stri
 		checkCtx, cancel := context.WithTimeout(ctx, 15*time.Second)
 		defer cancel()
 
-		if err := (*extConn).WaitForExpr(checkCtx, `document.readyState === "complete"`); err != nil {
+		if err := (*extConn).WaitForExpr(checkCtx, `typeof tast != 'undefined'`); err != nil {
 			testing.ContextLog(ctx, "Test API extension became unavailable: ", err)
 			return nil, err
 		}
 		return &TestConn{conn: *extConn}, nil
 	}
 
-	bgURL := extension.BackgroundPageURL(extID)
+	bgURL := extension.ServiceWorkerURL(extID, "background.js")
 	testing.ContextLog(ctx, "Waiting for test API extension at ", bgURL)
 	var err error
 	if *extConn, err = s.NewConnForTarget(ctx, MatchTargetURL(bgURL)); err != nil {
 		return nil, err
 	}
 	(*extConn).locked = true
-
-	// Ensure that we don't attempt to use the extension before its APIs are available: https://crbug.com/789313
-	if err := (*extConn).WaitForExpr(ctx, `document.readyState === "complete"`); err != nil {
-		return nil, errors.Wrap(err, "test API extension is unavailable")
-	}
 
 	// Wait for tast API to be available.
 	if err := (*extConn).WaitForExpr(ctx, `typeof tast != 'undefined'`); err != nil {

@@ -113,9 +113,9 @@ func writeTestExtension(dir, key, extraBgJs, clientID string) (id string, err er
   "key": %q,
   "description": "Permits access to various APIs by tests",
   "name": "Test API extension",
-  "background": { "scripts": ["background.js"] },
+  "background": { "service_worker": "background.js" },
   "incognito": "split",
-  "manifest_version": 2,
+  "manifest_version": 3,
   "version": "0.1",%s
   "permissions": [
     "accessibilityFeatures.modify",
@@ -194,6 +194,15 @@ const (
 	//
 	//     tast.promisify(tast.bind(chrome.accessibilityFeatures.spokenFeedback, "set"))
 	TastLibraryJS = `
+let keepAliveTimerId;
+this.oninstall =  (e) => {
+  // Activate this worker now.
+  this.skipWaiting();
+
+  // Keep the worker alive.
+  keepAliveTimerId = setInterval(chrome.runtime.getPlatformInfo, 25 * 1000);
+};
+
 tast = {};
 tast.promisify = function(f) {
   return (...args) => new Promise((resolve, reject) => {

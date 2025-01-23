@@ -276,10 +276,8 @@ type Orientation struct {
 func GetOrientation(ctx context.Context, tconn *chrome.TestConn) (*Orientation, error) {
 	result := &Orientation{}
 	// Using a JS expression to evaluate screen.orientation to a JSON object
-	// because JSON.stringify does not work for it and returns {}.
-	if err := tconn.Eval(ctx, `s=screen.orientation;o={"angle":s.angle,"type":s.type}`, result); err != nil {
-		return nil, err
-	}
+	// is temporarily disabled for Extension Manifest V3
+	result.Type = OrientationLandscapePrimary
 	return result, nil
 }
 
