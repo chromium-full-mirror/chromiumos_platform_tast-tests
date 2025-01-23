@@ -29878,6 +29878,72 @@ func (p *ExternalStorageAllowlist) Equal(iface interface{}) bool {
 }
 
 // ****************************************************************************
+// 1332. WebAuthenticationRemoteDesktopAllowedOrigins
+// This policy can be modified without rebooting.
+// This is a future policy, it is not present in stable builds.
+// ****************************************************************************
+type WebAuthenticationRemoteDesktopAllowedOrigins struct {
+	Stat Status
+	Val  []string
+}
+
+func (p *WebAuthenticationRemoteDesktopAllowedOrigins) Name() string {
+	return "WebAuthenticationRemoteDesktopAllowedOrigins"
+}
+func (p *WebAuthenticationRemoteDesktopAllowedOrigins) Scope() Scope          { return ScopeUser }
+func (p *WebAuthenticationRemoteDesktopAllowedOrigins) Status() Status        { return p.Stat }
+func (p *WebAuthenticationRemoteDesktopAllowedOrigins) UntypedV() interface{} { return p.Val }
+func (p *WebAuthenticationRemoteDesktopAllowedOrigins) UnmarshalAs(m json.RawMessage) (interface{}, error) {
+	var v []string
+	if err := json.Unmarshal(m, &v); err != nil {
+		return nil, errors.Wrapf(err, "could not read %s as []string", m)
+	}
+	return v, nil
+}
+func (p *WebAuthenticationRemoteDesktopAllowedOrigins) SetProto(m *protoreflect.Message) {
+	SetUserProto(m, p.Name(), p.Val)
+}
+func (p *WebAuthenticationRemoteDesktopAllowedOrigins) Equal(iface interface{}) bool {
+	v, ok := iface.([]string)
+	if !ok {
+		return ok
+	}
+	return cmp.Equal(p.Val, v, cmpopts.EquateEmpty())
+}
+
+// ****************************************************************************
+// 1333. ServiceWorkerToControlSrcdocIframeEnabled
+// ****************************************************************************
+type ServiceWorkerToControlSrcdocIframeEnabled struct {
+	Stat Status
+	Val  bool
+}
+
+func (p *ServiceWorkerToControlSrcdocIframeEnabled) Name() string {
+	return "ServiceWorkerToControlSrcdocIframeEnabled"
+}
+func (p *ServiceWorkerToControlSrcdocIframeEnabled) Scope() Scope          { return ScopeUser }
+func (p *ServiceWorkerToControlSrcdocIframeEnabled) Status() Status        { return p.Stat }
+func (p *ServiceWorkerToControlSrcdocIframeEnabled) UntypedV() interface{} { return p.Val }
+func (p *ServiceWorkerToControlSrcdocIframeEnabled) UnmarshalAs(m json.RawMessage) (interface{}, error) {
+	var v bool
+	if err := json.Unmarshal(m, &v); err != nil {
+		return nil, errors.Wrapf(err, "could not read %s as bool", m)
+	}
+	return v, nil
+}
+func (p *ServiceWorkerToControlSrcdocIframeEnabled) SetProto(m *protoreflect.Message) {
+	SetUserProto(m, p.Name(), p.Val)
+}
+func (p *ServiceWorkerToControlSrcdocIframeEnabled) Equal(iface interface{}) bool {
+	v, ok := iface.(bool)
+	if !ok {
+		return ok
+	}
+	return cmp.Equal(p.Val, v, cmpopts.EquateEmpty())
+}
+
+// ****************************************************************************
 // JSON deserialization logic (used by policy.Unmarshal).
 // ****************************************************************************
 
@@ -31716,6 +31782,10 @@ func newByName(name string) (Policy, error) {
 		return &ControlledFrameBlockedForUrls{}, nil
 	case "ExternalStorageAllowlist":
 		return &ExternalStorageAllowlist{}, nil
+	case "WebAuthenticationRemoteDesktopAllowedOrigins":
+		return &WebAuthenticationRemoteDesktopAllowedOrigins{}, nil
+	case "ServiceWorkerToControlSrcdocIframeEnabled":
+		return &ServiceWorkerToControlSrcdocIframeEnabled{}, nil
 	default:
 		return nil, errors.New("Unknown policy " + name)
 	}
