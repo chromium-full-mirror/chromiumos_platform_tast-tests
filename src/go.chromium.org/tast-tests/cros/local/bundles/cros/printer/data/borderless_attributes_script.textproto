@@ -167,6 +167,7 @@ steps {
                 string_values { value: "multiple-document-handling-supported" }
                 string_values { value: "operations-supported" }
                 string_values { value: "print-color-mode-supported" }
+                string_values { value: "print-scaling-supported" }
                 string_values { value: "printer-alert" }
                 string_values { value: "printer-alert-description" }
                 string_values { value: "printer-is-accepting-jobs" }
@@ -238,49 +239,53 @@ steps {
             attributes {
               name: "media-col"
               type: BEGIN_COLLECTION
-              collections { collections {
-                attributes {
-                  name: "media-size"
-                  type: BEGIN_COLLECTION
-                  collections { collections {
-                    attributes {
-                      name: "x-dimension"
-                      type: INTEGER
-                      int_values { int_values: 21000 }
+              collections {
+                collections {
+                  attributes {
+                    name: "media-size"
+                    type: BEGIN_COLLECTION
+                    collections {
+                      collections {
+                        attributes {
+                          name: "x-dimension"
+                          type: INTEGER
+                          int_values { int_values: 21000 }
+                        }
+                        attributes {
+                          name: "y-dimension"
+                          type: INTEGER
+                          int_values { int_values: 29700 }
+                        }
+                      }
                     }
-                    attributes {
-                      name: "y-dimension"
-                      type: INTEGER
-                      int_values { int_values: 29700 }
-                    }
-                  } }
+                  }
+                  attributes {
+                    name: "media-bottom-margin"
+                    type: INTEGER
+                    int_values { int_values: 0 }
+                  }
+                  attributes {
+                    name: "media-left-margin"
+                    type: INTEGER
+                    int_values { int_values: 0 }
+                  }
+                  attributes {
+                    name: "media-right-margin"
+                    type: INTEGER
+                    int_values { int_values: 0 }
+                  }
+                  attributes {
+                    name: "media-top-margin"
+                    type: INTEGER
+                    int_values { int_values: 0 }
+                  }
+                  attributes {
+                    name: "media-type"
+                    type: KEYWORD
+                    string_values { string_values { value: "photographic" } }
+                  }
                 }
-                attributes {
-                  name: "media-bottom-margin"
-                  type: INTEGER
-                  int_values { int_values: 0 }
-                }
-                attributes {
-                  name: "media-left-margin"
-                  type: INTEGER
-                  int_values { int_values: 0 }
-                }
-                attributes {
-                  name: "media-right-margin"
-                  type: INTEGER
-                  int_values { int_values: 0 }
-                }
-                attributes {
-                  name: "media-top-margin"
-                  type: INTEGER
-                  int_values { int_values: 0 }
-                }
-                attributes {
-                  name: "media-type"
-                  type: KEYWORD
-                  string_values { string_values { value: "photographic" } }
-                }
-              } }
+              }
             }
             attributes {
               name: "output-bin"
@@ -358,49 +363,53 @@ steps {
             attributes {
               name: "media-col"
               type: BEGIN_COLLECTION
-              collections { collections {
-                attributes {
-                  name: "media-size"
-                  type: BEGIN_COLLECTION
-                  collections { collections {
-                    attributes {
-                      name: "x-dimension"
-                      type: INTEGER
-                      int_values { int_values: 21000 }
+              collections {
+                collections {
+                  attributes {
+                    name: "media-size"
+                    type: BEGIN_COLLECTION
+                    collections {
+                      collections {
+                        attributes {
+                          name: "x-dimension"
+                          type: INTEGER
+                          int_values { int_values: 21000 }
+                        }
+                        attributes {
+                          name: "y-dimension"
+                          type: INTEGER
+                          int_values { int_values: 29700 }
+                        }
+                      }
                     }
-                    attributes {
-                      name: "y-dimension"
-                      type: INTEGER
-                      int_values { int_values: 29700 }
-                    }
-                  } }
+                  }
+                  attributes {
+                    name: "media-bottom-margin"
+                    type: INTEGER
+                    int_values { int_values: 0 }
+                  }
+                  attributes {
+                    name: "media-left-margin"
+                    type: INTEGER
+                    int_values { int_values: 0 }
+                  }
+                  attributes {
+                    name: "media-right-margin"
+                    type: INTEGER
+                    int_values { int_values: 0 }
+                  }
+                  attributes {
+                    name: "media-top-margin"
+                    type: INTEGER
+                    int_values { int_values: 0 }
+                  }
+                  attributes {
+                    name: "media-type"
+                    type: KEYWORD
+                    string_values { string_values { value: "photographic" } }
+                  }
                 }
-                attributes {
-                  name: "media-bottom-margin"
-                  type: INTEGER
-                  int_values { int_values: 0 }
-                }
-                attributes {
-                  name: "media-left-margin"
-                  type: INTEGER
-                  int_values { int_values: 0 }
-                }
-                attributes {
-                  name: "media-right-margin"
-                  type: INTEGER
-                  int_values { int_values: 0 }
-                }
-                attributes {
-                  name: "media-top-margin"
-                  type: INTEGER
-                  int_values { int_values: 0 }
-                }
-                attributes {
-                  name: "media-type"
-                  type: KEYWORD
-                  string_values { string_values { value: "photographic" } }
-                }
-              } }
+              }
             }
             attributes {
               name: "output-bin"
@@ -492,6 +501,7 @@ steps {
                 string_values { value: "multiple-document-handling-supported" }
                 string_values { value: "operations-supported" }
                 string_values { value: "print-color-mode-supported" }
+                string_values { value: "print-scaling-supported" }
                 string_values { value: "printer-alert" }
                 string_values { value: "printer-alert-description" }
                 string_values { value: "printer-is-accepting-jobs" }
@@ -617,6 +627,7 @@ steps {
                 string_values { value: "multiple-document-handling-supported" }
                 string_values { value: "operations-supported" }
                 string_values { value: "print-color-mode-supported" }
+                string_values { value: "print-scaling-supported" }
                 string_values { value: "printer-alert" }
                 string_values { value: "printer-alert-description" }
                 string_values { value: "printer-is-accepting-jobs" }
