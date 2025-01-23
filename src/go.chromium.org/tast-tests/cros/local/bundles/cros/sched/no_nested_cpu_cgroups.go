@@ -26,6 +26,16 @@ var allowPaths = map[string]struct{}{
 	// /chrome_renderers/background is allowed due to a historical reason.
 	// TODO(b/333974157): Remove after schedqos is launched.
 	"/sys/fs/cgroup/cpu/chrome_renderers/background": struct{}{},
+	// ARC containers uses nested cpu cgroup (e.g. grunt and hana) b/391793867.
+	"/sys/fs/cgroup/cpu/session_manager_containers/android": struct{}{},
+	// ARC containers uses nested cpu cgroup (e.g. grunt and hana) b/391793867.
+	"/sys/fs/cgroup/cpu/session_manager_containers/android/background": struct{}{},
+	// ARC containers uses nested cpu cgroup (e.g. grunt and hana) b/391793867.
+	"/sys/fs/cgroup/cpu/session_manager_containers/android/foreground": struct{}{},
+	// ARC containers uses nested cpu cgroup (e.g. grunt and hana) b/391793867.
+	"/sys/fs/cgroup/cpu/session_manager_containers/android/rt": struct{}{},
+	// ARC containers uses nested cpu cgroup (e.g. grunt and hana) b/391793867.
+	"/sys/fs/cgroup/cpu/session_manager_containers/android/top-app": struct{}{},
 }
 
 func init() {
