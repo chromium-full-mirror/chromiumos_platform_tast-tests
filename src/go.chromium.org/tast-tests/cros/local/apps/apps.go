@@ -506,8 +506,26 @@ type SystemWebApp struct {
 // ListRegisteredSystemWebApps returns all registered system web apps.
 func ListRegisteredSystemWebApps(ctx context.Context, tconn *chrome.TestConn) ([]*SystemWebApp, error) {
 	var s []*SystemWebApp
-	if err := tconn.Call(ctx, &s, "tast.promisify(chrome.autotestPrivate.getRegisteredSystemWebApps)"); err != nil {
-		return nil, errors.Wrap(err, "failed to call getRegisteredSystemWebApps")
+
+	// Polling is used here because the registration of System Web Apps is asynchronous.
+	// We need to Wait for the system web apps to be registered before list.
+	err := testing.Poll(ctx, func(ctx context.Context) error {
+		var err error
+		s, err = func() ([]*SystemWebApp, error) {
+			var s []*SystemWebApp
+			if err := tconn.Call(ctx, &s, "tast.promisify(chrome.autotestPrivate.getRegisteredSystemWebApps)"); err != nil {
+				return nil, errors.Wrap(err, "failed to call getRegisteredSystemWebApps")
+			}
+			return s, nil
+		}()
+		if err != nil {
+			return errors.Wrap(err, "failed to list registered system web apps")
+		}
+		return nil
+	}, &testing.PollOptions{Timeout: time.Minute, Interval: 5 * time.Second})
+
+	if err != nil {
+		return nil, err
 	}
 	return s, nil
 }

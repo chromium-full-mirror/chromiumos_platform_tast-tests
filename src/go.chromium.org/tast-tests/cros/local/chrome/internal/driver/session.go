@@ -183,6 +183,32 @@ func (s *Session) NewConnForTarget(ctx context.Context, tm TargetMatcher) (*Conn
 	return s.newConnInternal(ctx, t.TargetID, t.Type, t.URL)
 }
 
+// NewConnForWorkerTarget find a worker out of all available targets and returns a valid connection to the
+// all matched by tm.
+func (s *Session) NewConnForWorkerTarget(ctx context.Context, tm TargetMatcher, check func(*Conn) bool) (*Conn, error) {
+	targets, err := s.devsess.WaitForTargets(ctx, tm)
+	if err != nil {
+		return nil, s.watcher.ReplaceErr(err)
+	}
+	var lastError error
+	for _, t := range targets {
+		if t.Attached {
+			continue
+		}
+		conn, err := s.newConnInternal(ctx, t.TargetID, t.Type, t.URL)
+		if err != nil {
+			lastError = err
+		}
+		if check(conn) {
+			return conn, nil
+		}
+	}
+	if lastError != nil {
+		return nil, lastError
+	}
+	return nil, errors.New("failed to find connection to target")
+}
+
 // TryNewConnForTarget tries to connect to the matched target without waiting. It iterates through all
 // available targets and returns a connection to the first one that is matched by tm.
 // An error is returned if no target is found, tm matches multiple targets, or the connection cannot
@@ -242,9 +268,21 @@ func (s *Session) testAPIConnFor(ctx context.Context, extConn **Conn, extID stri
 	bgURL := extension.ServiceWorkerURL(extID, "background.js")
 	testing.ContextLog(ctx, "Waiting for test API extension at ", bgURL)
 	var err error
-	if *extConn, err = s.NewConnForTarget(ctx, MatchTargetURL(bgURL)); err != nil {
+	check := func(conn *Conn) bool {
+		if err := conn.WaitForExpr(ctx, `typeof tast != 'undefined'`); err != nil {
+			return false
+		}
+		if autotestPrivateSupported {
+			if err := conn.Eval(ctx, "chrome.autotestPrivate.initializeEvents()", nil); err != nil {
+				return false
+			}
+		}
+		return true
+	}
+	if *extConn, err = s.NewConnForWorkerTarget(ctx, MatchTargetURL(bgURL), check); err != nil {
 		return nil, err
 	}
+
 	(*extConn).locked = true
 
 	// Wait for tast API to be available.

@@ -251,6 +251,29 @@ func (s *Session) WaitForTarget(ctx context.Context, tm TargetMatcher) (*target.
 	return matched[0], nil
 }
 
+// WaitForTargets iterates through all available targets and returns a connection to the
+// all that are matched by tm. It polls until the target is found or ctx's deadline expires.
+func (s *Session) WaitForTargets(ctx context.Context, tm TargetMatcher) ([]*target.Info, error) {
+	var errNoMatch = errors.New("no targets matched")
+
+	var matched []*target.Info
+	if err := testing.Poll(ctx, func(ctx context.Context) error {
+		var err error
+		matched, err = s.FindTargets(ctx, tm)
+		if err != nil {
+			return err
+		}
+		if len(matched) == 0 {
+			return errNoMatch
+		}
+		return nil
+	}, pollOpts); err != nil && err != errNoMatch {
+		return nil, err
+	}
+
+	return matched, nil
+}
+
 // FindTargets returns the info about Targets, which satisfies the given cond condition.
 func (s *Session) FindTargets(ctx context.Context, tm TargetMatcher) ([]*target.Info, error) {
 	reply, err := s.client.Target.GetTargets(ctx)

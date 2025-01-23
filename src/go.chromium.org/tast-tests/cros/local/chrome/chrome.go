@@ -120,6 +120,9 @@ const (
 	persistentDir = "/usr/local/tmp/tast/chrome_session"
 	// extensionsDir is the directory for all chrome session extensions.
 	extensionsDir = persistentDir + "/extensions"
+
+	// TestExtensionURL is the URL corresponding to the test extension.
+	TestExtensionURL = "chrome-extension://behllobkkfkfnphdnhnkndlbkcpglgmj"
 )
 
 // locked is set to true while a precondition is active to prevent tests from calling New or Chrome.Close.
