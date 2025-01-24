@@ -22806,6 +22806,8 @@ func OpenclCts(ctx context.Context, s *testing.State) {
 	os.Setenv("CLVK_SUPPORTS_FILTER_LINEAR", "0")
 	// Default DEVICE_EXTENSIONS is only needed for performance purpose. Run the CTS without it.
 	os.Setenv("CLVK_DEVICE_EXTENSIONS", "")
+	// Do not run fp16 tests of the CTS. We don't need to reach OpenCL-CTS fp16 accuracy requirement.
+	os.Setenv("CLVK_DEVICE_EXTENSIONS_MASKED", "cl_khr_fp16")
 
 	// api_null_buffer_arg requires physical addressing to pass
 	// Do not run everything with physical addressing because it impacts performance
