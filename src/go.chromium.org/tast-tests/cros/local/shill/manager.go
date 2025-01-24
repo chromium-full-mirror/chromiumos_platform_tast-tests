@@ -407,10 +407,24 @@ func (m *Manager) DisableTechnologyForTesting(ctx context.Context, technology Te
 		return nil, errors.Wrapf(err, "unable to disable technology: %s", string(technology))
 	}
 	return func(ctx context.Context) {
-		m.EnableTechnology(ctx, technology)
+		enableRequested := false
 		// Ensure the Enable completes before the test ends so that cleanup will succeed.
 		const interval = 100 * time.Millisecond
 		testing.Poll(ctx, func(ctx context.Context) error {
+			//request to enable the technology once after making sure its device(s) is available
+			if !enableRequested {
+				devs, _, err := m.DevicesByTechnology(ctx, technology)
+				if err != nil {
+					return errors.Wrapf(err, "failed to find devices for %s", string(technology))
+				}
+				if devs == nil {
+					return errors.New("no devices found")
+				}
+				if err := m.EnableTechnology(ctx, technology); err != nil {
+					return errors.New("failed to enable")
+				}
+				enableRequested = true
+			}
 			enabled, err := m.IsEnabled(ctx, technology)
 			if err != nil {
 				return errors.Wrap(err, "failed to get enabled state")
