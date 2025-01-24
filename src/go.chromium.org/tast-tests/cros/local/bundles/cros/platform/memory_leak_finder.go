@@ -16,7 +16,7 @@ func init() {
 	testing.AddTest(&testing.Test{
 		Func:         MemoryLeakFinder,
 		Desc:         "Open tabs until discard several times; comparing the max tabs each time",
-		Contacts:     []string{"chromeos-memory@google.com", "dianders@google.com"},
+		Contacts:     []string{"chromeos-memory@google.com"},
 		BugComponent: "b:167286",
 		Attr:         []string{},
 		// TODO(b/298491915) - when test no longer times out
