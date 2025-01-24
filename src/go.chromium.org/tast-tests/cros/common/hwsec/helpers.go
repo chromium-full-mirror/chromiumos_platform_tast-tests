@@ -177,6 +177,36 @@ func (h *CmdHelper) RemoveAll(ctx context.Context, filename string) error {
 	return err
 }
 
+// RemoveAllChildren would delete all the files and dirs inside the specified
+// directory, but not the directory itself
+func (h *CmdHelper) RemoveAllChildren(ctx context.Context, filename string) error {
+	// Note that we do test -e, not test -d. if the file exist but is not a directory,
+	// it will trigger an error when calling RemoveAllChildren for it.
+	if _, err := h.cmdRunner.Run(ctx, "test", "-e", filename); err != nil {
+		testing.ContextLog(ctx, filename, " doesn't exist, no children to remove")
+		return nil
+	}
+
+	// ls -A1 gives all children, including hidden, but not '.' and '..',
+	// one filename on each line
+	children, err := h.cmdRunner.Run(ctx, "ls", "-A1", filename)
+	if err != nil {
+		return err
+	}
+
+	for _, childName := range strings.Split(string(children), "\n") {
+		if len(childName) == 0 {
+			continue
+		}
+		childPath := filepath.Join(filename, childName)
+		if err := h.RemoveAll(ctx, childPath); err != nil {
+			return err
+		}
+	}
+
+	return nil
+}
+
 // ReadFile would read data from the file
 func (h *CmdHelper) ReadFile(ctx context.Context, filename string) ([]byte, error) {
 	return h.cmdRunner.Run(ctx, "cat", "--", filename)

@@ -7,7 +7,6 @@ package hwsec
 import (
 	"context"
 	"os"
-	"path/filepath"
 	"strconv"
 	"strings"
 	"time"
@@ -59,13 +58,8 @@ func (h *CmdHelper) pathExistsInTar(ctx context.Context, tar, dataPath string) b
 func (h *CmdHelper) cleanupExistingDir(ctx context.Context, tar, path string) error {
 	if h.pathExistsInTar(ctx, tar, path) {
 		// Clean dir content. (note that deleting the directory itself may fail).
-		visiblePath := filepath.Join(path, "*")
-		if err := h.RemoveAll(ctx, visiblePath); err != nil {
-			return errors.Wrapf(err, "failed to remove old %v data", visiblePath)
-		}
-		hiddenPath := filepath.Join(path, ".*")
-		if err := h.RemoveAll(ctx, hiddenPath); err != nil {
-			return errors.Wrapf(err, "failed to remove old %v data", hiddenPath)
+		if err := h.RemoveAllChildren(ctx, path); err != nil {
+			return errors.Wrapf(err, "failed to remove old %v data", path)
 		}
 	}
 	return nil
