@@ -34,6 +34,7 @@ func init() {
 		},
 		// ChromeOS > Security > Hardening
 		BugComponent: "b:1040049",
+		SoftwareDeps: []string{"no_android_container"},
 		Params: []testing.Param{{
 			Name:              "non_flex",
 			ExtraAttr:         []string{"group:mainline"},
