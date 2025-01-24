@@ -23,7 +23,6 @@ func init() {
 		Desc: "Ensures certain files exist",
 		Contacts: []string{
 			"baseos-perf@google.com",
-			"dianders@chromium.org",
 			"joelaf@chromium.org",
 		},
 		BugComponent: "b:167279",
