@@ -28,9 +28,9 @@ func init() {
 	testing.AddTest(&testing.Test{
 		Func:         KernelCrash,
 		Desc:         "Verify artificial kernel crash creates crash files",
-		Contacts:     []string{"chromeos-data-eng@google.com", "swboyd@chromium.org", "dianders@chromium.org"},
+		Contacts:     []string{"chromeos-data-eng@google.com", "swboyd@chromium.org"},
 		BugComponent: "b:1032705",
-		Attr:         []string{
+		Attr: []string{
 			"group:mainline",
 			"informational",
 			"group:release-health",
