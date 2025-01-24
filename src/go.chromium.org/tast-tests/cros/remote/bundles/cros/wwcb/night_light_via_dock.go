@@ -225,7 +225,7 @@ func NightLightViaDock(ctx context.Context, s *testing.State) {
 	nightLightOff := "off"
 
 	extDispCamera := parings[displayIDs.DisplayIds[1]]
-	extDispHCVs[nightLightOff], err = tf.CameraHelper.GAMLightingValue(ctx, s.OutDir(), extDispCamera)
+	extDispHCVs[nightLightOff], err = tf.CameraHelper.GAMHotColdValue(ctx, s.OutDir(), extDispCamera)
 
 	if err != nil {
 		s.Fatal("Failed to get the external display HCV during night light is off: ", err)
@@ -233,7 +233,7 @@ func NightLightViaDock(ctx context.Context, s *testing.State) {
 	s.Logf("External display HCV during night light is off: %d", extDispHCVs[nightLightOff])
 
 	dutDispCamera := parings[displayIDs.DisplayIds[0]]
-	dutHCVs[nightLightOff], err = tf.CameraHelper.GAMLightingValue(ctx, s.OutDir(), dutDispCamera)
+	dutHCVs[nightLightOff], err = tf.CameraHelper.GAMHotColdValue(ctx, s.OutDir(), dutDispCamera)
 	if err != nil {
 		s.Fatal("Failed to get the DUT HCV during night light is off: ", err)
 	}
@@ -284,13 +284,13 @@ func NightLightViaDock(ctx context.Context, s *testing.State) {
 			s.Fatalf("Failed to set color temperature; got %s, want %s", clrTmpSilderInfo.NodeInfo.Value, test.colorTemperatureValue)
 		}
 
-		extDispHCVs[test.name], err = tf.CameraHelper.GAMLightingValue(ctx, s.OutDir(), extDispCamera)
+		extDispHCVs[test.name], err = tf.CameraHelper.GAMHotColdValue(ctx, s.OutDir(), extDispCamera)
 		if err != nil {
 			s.Fatalf("Failed to get the external display HCV during night light is %s: %v", test.name, err)
 		}
 		s.Logf("External display HCV during night light is %s: %d", test.name, extDispHCVs[test.name])
 
-		dutHCVs[test.name], err = tf.CameraHelper.GAMLightingValue(ctx, s.OutDir(), dutDispCamera)
+		dutHCVs[test.name], err = tf.CameraHelper.GAMHotColdValue(ctx, s.OutDir(), dutDispCamera)
 		if err != nil {
 			s.Fatalf("Failed to get the DUT HCV during night light is %s: %v", test.name, err)
 		}
