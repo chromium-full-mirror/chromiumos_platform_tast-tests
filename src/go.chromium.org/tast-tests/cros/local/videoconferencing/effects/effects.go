@@ -23,9 +23,10 @@ import (
 
 const (
 	// File watched by EffectsStreamManipulator to configure platform effects.
-	platformEffectsOverridePath = "/run/camera/effects/effects_config_override.json"
-	platformEffectsOverrideDir  = "/run/camera/effects"
-	stableDelegateSettingsFile  = "/etc/tflite/settings.json"
+	platformEffectsOverridePath        = "/run/camera/effects/effects_config_override.json"
+	platformEffectsOverrideDir         = "/run/camera/effects"
+	stableDelegateSettingsFallbackFile = "/etc/tflite/settings.json"
+	stableDelegateSettingsFile         = "/etc/ml_core/stable_delegate_settings.json"
 	// OpenCLCacheDir is the path to the opencl_cache directory.
 	OpenCLCacheDir = "/var/lib/ml_core/opencl_cache"
 )
@@ -143,6 +144,11 @@ func ApplyPlatformEffects(ctx context.Context, relight, retouch bool, blurLevel 
 		// The delegate for NPU is "stable".
 		platformEffects.Delegate = "stable"
 		platformEffects.StableDelegateSettingsFile = stableDelegateSettingsFile
+		if _, err := os.Stat(stableDelegateSettingsFile); errors.Is(err, os.ErrNotExist) {
+			// VC effects is not enabled on this platform. Fallback to the general settings provided by TFLite.
+			platformEffects.StableDelegateSettingsFile = stableDelegateSettingsFallbackFile
+		}
+
 	} else {
 		return nil, errors.New("invalid inference backend")
 	}
