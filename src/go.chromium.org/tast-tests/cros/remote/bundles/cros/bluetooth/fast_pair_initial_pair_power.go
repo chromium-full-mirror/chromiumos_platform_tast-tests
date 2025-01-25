@@ -22,11 +22,12 @@ func init() {
 		Func: FastPairInitialPairPower,
 		Desc: "Tests the power consumption for Fast Pair initial pairing scenario and while Fast Pair is enabled and device is advertising",
 		Contacts: []string{
-			"chromeos-bt-team@google.com",
+			"chromeos-cross-device-eng@google.com",
 			"jiangzp@google.com",
+			"joaquinmarquez@google.com",
 		},
 		BugComponent: "b:1133283", // ChromeOS > Software > System Services > Cross Device > Fast Pair
-		Attr:         []string{"group:bluetooth", "bluetooth_cross_device_fastpair"},
+		Attr:         []string{"group:bluetooth", "bluetooth_cross_device_fastpair", "bluetooth_floss_flaky"},
 		TestBedDeps:  []string{tbdep.Wificell, tbdep.BluetoothStateNormal, tbdep.WorkingBluetoothPeers(1)},
 		SoftwareDeps: []string{"chrome"},
 		HardwareDeps: hwdep.D(bluetooth.FastPairHardwareDep, hwdep.Battery()),
@@ -38,18 +39,7 @@ func init() {
 		},
 		Timeout: 20 * time.Minute,
 		Vars:    []string{bluetooth.TestVarFastPairAntispoofingKeyPem},
-		Params: []testing.Param{
-			{
-				Name:      "floss_disabled",
-				Fixture:   "chromeLoggedInAsUserWithFastPairAnd1BTPeerPowerFlossDisabled",
-				ExtraAttr: []string{"bluetooth_flaky"},
-			},
-			{
-				Name:      "floss_enabled",
-				Fixture:   "chromeLoggedInAsUserWithFastPairAnd1BTPeerPowerFlossEnabled",
-				ExtraAttr: []string{"bluetooth_floss_flaky"},
-			},
-		},
+		Fixture: "chromeLoggedInAsUserWithFastPairAnd1BTPeerPowerFlossEnabled",
 	})
 }
 

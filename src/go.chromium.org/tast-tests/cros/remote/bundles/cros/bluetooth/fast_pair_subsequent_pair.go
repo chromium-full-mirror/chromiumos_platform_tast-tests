@@ -22,11 +22,11 @@ func init() {
 		Func: FastPairSubsequentPair,
 		Desc: "Tests the Fast Pair subsequent pairing scenario",
 		Contacts: []string{
-			"chromeos-sw-engprod@google.com",
 			"chromeos-cross-device-eng@google.com",
 			"dclasson@google.com",
+			"joaquinmarquez@google.com",
 		},
-		BugComponent: "b:1133283",
+		BugComponent: "b:1133283", // ChromeOS > Software > System Services > Cross Device > Fast Pair
 		Attr:         []string{"group:bluetooth", "bluetooth_cross_device_fastpair_multidut"},
 		TestBedDeps:  []string{tbdep.Wificell, tbdep.WorkingBluetoothPeers(1)},
 		SoftwareDeps: []string{"chrome"},
@@ -39,16 +39,7 @@ func init() {
 		Vars: []string{
 			bluetooth.TestVarFastPairAntispoofingKeyPem,
 		},
-		Params: []testing.Param{
-			{
-				Name:    "floss_disabled",
-				Fixture: "twoChromebooksLoggedInWithFastPairAnd1BTPeerFlossDisabled",
-			},
-			{
-				Name:    "floss_enabled",
-				Fixture: "twoChromebooksLoggedInWithFastPairAnd1BTPeerFlossEnabled",
-			},
-		},
+		Fixture: "twoChromebooksLoggedInWithFastPairAnd1BTPeerFlossEnabled",
 	})
 }
 

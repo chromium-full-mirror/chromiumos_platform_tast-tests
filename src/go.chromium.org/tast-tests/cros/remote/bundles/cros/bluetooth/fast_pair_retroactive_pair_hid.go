@@ -22,11 +22,11 @@ func init() {
 		Func: FastPairRetroactivePairHID,
 		Desc: "Tests the Fast Pair retroactive pairing scenario with a HID. Floss only test",
 		Contacts: []string{
-			"chromeos-sw-engprod@google.com",
 			"chromeos-cross-device-eng@google.com",
 			"laikatherine@google.com",
+			"joaquinmarquez@google.com",
 		},
-		BugComponent: "b:1133283",
+		BugComponent: "b:1133283", // ChromeOS > Software > System Services > Cross Device > Fast Pair
 		Attr:         []string{"group:bluetooth", "bluetooth_cross_device_fastpair", "bluetooth_floss_flaky"},
 		TestBedDeps:  []string{tbdep.Wificell, tbdep.BluetoothStateNormal, tbdep.WorkingBluetoothPeers(1)},
 		SoftwareDeps: []string{"chrome"},

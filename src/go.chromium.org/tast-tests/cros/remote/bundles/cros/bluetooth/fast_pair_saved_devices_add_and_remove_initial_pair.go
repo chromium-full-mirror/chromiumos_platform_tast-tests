@@ -26,11 +26,11 @@ func init() {
 		Func: FastPairSavedDevicesAddAndRemoveInitialPair,
 		Desc: "Tests that Saved Devices subpage shows a newly added Saved Device after the Fast Pair initial pairing scenario, and removes the device after clicking Remove",
 		Contacts: []string{
-			"chromeos-sw-engprod@google.com",
 			"chromeos-cross-device-eng@google.com",
 			"dclasson@google.com",
+			"joaquinmarquez@google.com",
 		},
-		BugComponent: "b:1133283",
+		BugComponent: "b:1133283", // ChromeOS > Software > System Services > Cross Device > Fast Pair
 		Attr:         []string{"group:bluetooth", "bluetooth_cross_device_fastpair_multidut"},
 		TestBedDeps:  []string{tbdep.Wificell, tbdep.WorkingBluetoothPeers(1)},
 		SoftwareDeps: []string{"chrome"},
@@ -42,16 +42,7 @@ func init() {
 		},
 		Timeout: 3 * time.Minute,
 		VarDeps: []string{bluetooth.TestVarFastPairAntispoofingKeyPem},
-		Params: []testing.Param{
-			{
-				Name:    "floss_disabled",
-				Fixture: "twoChromebooksLoggedInWithFastPairAnd1BTPeerFlossDisabled",
-			},
-			{
-				Name:    "floss_enabled",
-				Fixture: "twoChromebooksLoggedInWithFastPairAnd1BTPeerFlossEnabled",
-			},
-		},
+		Fixture: "twoChromebooksLoggedInWithFastPairAnd1BTPeerFlossEnabled",
 	})
 }
 

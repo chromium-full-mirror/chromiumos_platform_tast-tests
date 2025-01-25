@@ -22,9 +22,9 @@ func init() {
 		Func: FastPairInitialPairKeyboard,
 		Desc: "Tests the Fast Pair initial pairing scenario with a keyboard. Floss only test",
 		Contacts: []string{
-			"chromeos-sw-engprod@google.com",
 			"chromeos-cross-device-eng@google.com",
 			"laikatherine@google.com",
+			"joaquinmarquez@google.com",
 		},
 		BugComponent: "b:1133283", // ChromeOS > Software > System Services > Cross Device > Fast Pair
 		Attr:         []string{"group:bluetooth", "bluetooth_cross_device_fastpair", "bluetooth_floss_flaky"},
