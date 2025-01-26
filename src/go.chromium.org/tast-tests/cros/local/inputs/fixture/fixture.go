@@ -43,6 +43,7 @@ const (
 	emojiPickerGifSupport
 	firstPartyVietnameseInput
 	altClickAndSixPackCustomization
+	lobster
 	orca
 	picker
 	withoutAssistMultiword
@@ -65,6 +66,7 @@ const (
 	ClamshellNonVKInGuestWithoutMultiwordSuggest      = "clamshellNonVKInGuestWithoutMultiwordSuggest"
 	ClamshellNonVKRestart                             = "clamshellNonVKRestart"
 	ClamshellNonVKWithMultiwordSuggest                = "clamshellNonVKWithMultiwordSuggest"
+	ClamshellNonVKWithLobster                         = "clamshellNonVKWithLobster"
 	ClamshellNonVKWithOrca                            = "clamshellNonVKWithOrca"
 	ClamshellNonVKWithPicker                          = "clamshellNonVKWithPicker"
 	ClamshellNonVKWithoutMultiwordSuggest             = "clamshellNonVKWithoutMultiwordSuggest"
@@ -251,6 +253,21 @@ func init() {
 		},
 		BugComponent:    "b:354660409",
 		Impl:            inputsFixture(clamshellMode, false, false, withoutAssistMultiword),
+		SetUpTimeout:    chrome.LoginTimeout,
+		PreTestTimeout:  preTestTimeout,
+		PostTestTimeout: postTestTimeout,
+		ResetTimeout:    resetTimeout,
+		TearDownTimeout: chrome.ResetTimeout,
+	})
+	testing.AddFixture(&testing.Fixture{
+		Name: ClamshellNonVKWithLobster,
+		Desc: "Clamshell mode with VK disabled and Lobster enabled",
+		Contacts: []string{
+			"xiuwen@google.com",
+			"essential-inputs-team@google.com",
+		},
+		BugComponent:    "b:383021453",
+		Impl:            inputsFixture(clamshellMode, false, true, lobster),
 		SetUpTimeout:    chrome.LoginTimeout,
 		PreTestTimeout:  preTestTimeout,
 		PostTestTimeout: postTestTimeout,
@@ -467,6 +484,9 @@ func (f *inputsFixtureImpl) SetUp(ctx context.Context, s *testing.FixtState) int
 			opts = append(opts, chrome.ExtraArgs("--enable-features=AltClickAndSixPackCustomization"))
 		case orca:
 			opts = append(opts, chrome.ExtraArgs("--enable-features=OrcaDogfood,MantaService"))
+		case lobster:
+			opts = append(opts, chrome.ExtraArgs("--enable-features=LobsterDogfood,LobsterRightClickMenu,LobsterQuickInsertZeroState,Mahi,FeatureManagementMahi,OrcaDogfood"))
+			opts = append(opts, chrome.ExtraArgs("--mahi-restrictions-override"))
 		case picker:
 			opts = append(opts, chrome.ExtraArgs("--enable-features=Picker,PickerGrid,PickerGifs"))
 			opts = append(opts, chrome.ExtraArgs("--picker-feature-key="+s.RequiredVar("inputs.Picker.pickerFeatureTestKey")))
