@@ -720,7 +720,7 @@ var DutchNetherlandsWithUSInternationalPCKeyboard = InputMethod{
 // EnglishUKWithDvorakKeyboard represents the input method of English (UK) with Dvorak keyboard.
 var EnglishUKWithDvorakKeyboard = InputMethod{
 	Name:                "English (UK) with Dvorak keyboard",
-	ID:                  "xkb:us:dvorak:eng",
+	ID:                  "xkb:gb:dvorak:eng",
 	HandwritingLanguage: LanguageEn,
 	VoiceLanguage:       LanguageEn,
 }
