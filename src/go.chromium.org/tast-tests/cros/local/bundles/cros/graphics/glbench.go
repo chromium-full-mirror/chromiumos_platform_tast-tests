@@ -34,20 +34,17 @@ func init() {
 		Params: []testing.Param{
 			// TODO(b/307460167): Update this test to use modern Crostini fixtures.
 			{
-				Name:      "",
-				Val:       config{config: &glbench.CrosConfig{}},
-				Timeout:   3 * time.Hour,
-				ExtraAttr: []string{"group:graphics", "graphics_nightly"},
-				Fixture:   "graphicsNoChrome",
+				Name:    "",
+				Val:     config{config: &glbench.CrosConfig{}},
+				Timeout: 3 * time.Hour,
+				Fixture: "graphicsNoChrome",
 			}, {
-				Name:      "hasty",
-				Val:       config{config: &glbench.CrosConfig{Hasty: true}},
-				ExtraAttr: []string{"group:mainline", "informational"},
-				Timeout:   5 * time.Minute,
-				Fixture:   "graphicsNoChrome",
+				Name:    "hasty",
+				Val:     config{config: &glbench.CrosConfig{Hasty: true}},
+				Timeout: 5 * time.Minute,
+				Fixture: "graphicsNoChrome",
 			}, {
 				Name:              "crostini_hasty",
-				ExtraAttr:         []string{"group:graphics", "graphics_weekly"},
 				ExtraData:         []string{crostini.GetContainerMetadataArtifact("buster", false), crostini.GetContainerRootfsArtifact("buster", false)},
 				ExtraSoftwareDeps: []string{"chrome", "crosvm_gpu", "vm_host", "dlc"},
 				ExtraHardwareDeps: crostini.CrostiniStable,
