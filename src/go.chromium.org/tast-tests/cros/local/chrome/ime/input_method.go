@@ -1253,7 +1253,7 @@ var inputMethods = []InputMethod{
 	ThaiTis,
 	Tigrinya,
 	Turkish,
-	Turkish,
+	TurkishWithFKeyboard,
 	Ukrainian,
 	Urdu,
 	VietnameseTelex,
