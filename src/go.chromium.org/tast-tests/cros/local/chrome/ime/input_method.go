@@ -1003,15 +1003,134 @@ var Ukrainian = InputMethod{
 	ID:   "xkb:ua::ukr",
 }
 
+// AmharicTransliteration represents the input method of Amharic Transliteration.
+var AmharicTransliteration = InputMethod{
+	Name: "Amharic Transliteration",
+	ID:   "am-t-i0-und",
+}
+
+// ArabicTransliteration represents the input method of Arabic Transliteration.
+var ArabicTransliteration = InputMethod{
+	Name: "Arabic Transliteration",
+	ID:   "ar-t-i0-und",
+}
+
+// BanglaTransliteration represents the input method of Bangla Transliteration.
+var BanglaTransliteration = InputMethod{
+	Name: "Bangla Transliteration",
+	ID:   "bn-t-i0-und",
+}
+
+// HebrewTransliteration represents the input method of Hebrew Transliteration.
+var HebrewTransliteration = InputMethod{
+	Name: "Hebrew Transliteration",
+	ID:   "he-t-i0-und",
+}
+
+// SerbianTransliteration represents the input method of Serbian Transliteration.
+var SerbianTransliteration = InputMethod{
+	Name: "Serbian Transliteration",
+	ID:   "sr-t-i0-und",
+}
+
+// Tigrinya represents the input method of Tigrinya.
+var Tigrinya = InputMethod{
+	Name: "Tigrinya",
+	ID:   "ti-t-i0-und",
+}
+
+// BanglaPhonetic represents the input method of Bangla Phonetic.
+var BanglaPhonetic = InputMethod{
+	Name: "Bangla Phonetic",
+	ID:   "vkd_bn_phone",
+}
+
+// DevanagariKeyboardPhonetic represents the input method of Devanagari keyboard (Phonetic).
+var DevanagariKeyboardPhonetic = InputMethod{
+	Name: "Devanagari keyboard (Phonetic)",
+	ID:   "vkd_deva_phone",
+}
+
+// EthiopicKeyboard represents the input method of Ethiopic keyboard.
+var EthiopicKeyboard = InputMethod{
+	Name: "Ethiopic keyboard",
+	ID:   "vkd_ethi",
+}
+
+// GujaratiPhonetic represents the input method of Gujarati Phonetic.
+var GujaratiPhonetic = InputMethod{
+	Name: "Gujarati Phonetic",
+	ID:   "vkd_gu_phone",
+}
+
+// KannadaPhonetic represents the input method of Kannada Phonetic.
+var KannadaPhonetic = InputMethod{
+	Name: "Kannada Phonetic",
+	ID:   "vkd_kn_phone",
+}
+
+// MalayalamPhonetic represents the input method of Malayalam Phonetic.
+var MalayalamPhonetic = InputMethod{
+	Name: "Malayalam Phonetic",
+	ID:   "vkd_ml_phone",
+}
+
+// BurmeseMyanmarWithMyansanKeyboard represents the input method of Burmese/Myanmar with Myansan keyboard.
+var BurmeseMyanmarWithMyansanKeyboard = InputMethod{
+	Name: "Burmese/Myanmar with Myansan keyboard",
+	ID:   "vkd_my_myansan",
+}
+
+// TamilITRANS represents the input method of Tamil ITRANS.
+var TamilITRANS = InputMethod{
+	Name: "Tamil ITRANS",
+	ID:   "vkd_ta_itrans",
+}
+
+// TamilPhonetic represents the input method of Tamil Phonetic.
+var TamilPhonetic = InputMethod{
+	Name: "Tamil Phonetic",
+	ID:   "vkd_ta_phone",
+}
+
+// TamilWithTamil99Keyboard represents the input method of Tamil with Tamil99 keyboard.
+var TamilWithTamil99Keyboard = InputMethod{
+	Name: "Tamil with Tamil99 keyboard",
+	ID:   "vkd_ta_tamil99",
+}
+
+// TeluguPhonetic represents the input method of Telugu Phonetic.
+var TeluguPhonetic = InputMethod{
+	Name: "Telugu Phonetic",
+	ID:   "vkd_te_phone",
+}
+
+// VietnameseWithTCVNKeyboard represents the input method of Vietnamese with TCVN keyboard.
+var VietnameseWithTCVNKeyboard = InputMethod{
+	Name: "Vietnamese with TCVN keyboard",
+	ID:   "vkd_vi_tcvn",
+}
+
+// VietnameseVIQR represents the input method of Vietnamese VIQR.
+var VietnameseVIQR = InputMethod{
+	Name: "Vietnamese VIQR",
+	ID:   "vkd_vi_viqr",
+}
+
 // inputMethods represents in-use (available) IMEs in ChromeOS.
 // Any IMEs displayed in OS settings can be added to this list.
 var inputMethods = []InputMethod{
 	AlphanumericWithJapaneseKeyboard,
+	AmharicTransliteration,
 	Arabic,
+	ArabicTransliteration,
 	Armenian,
+	BanglaPhonetic,
+	BanglaTransliteration,
 	Belarusian,
 	Bulgarian,
 	BulgarianWithPhoneticKeyboard,
+	BurmeseMyanmarWithMyansanKeyboard,
 	Cantonese,
 	ChineseArray,
 	ChineseCangjie,
@@ -1025,6 +1144,7 @@ var inputMethods = []InputMethod{
 	Czech,
 	CzechWithQWERTYKeyboard,
 	Danish,
+	DevanagariKeyboardPhonetic,
 	DutchBelgium,
 	DutchNetherlands,
 	DutchNetherlandsWithUSInternationalPCKeyboard,
@@ -1044,6 +1164,7 @@ var inputMethods = []InputMethod{
 	EnglishUSWithWorkmanInternationalKeyboard,
 	EnglishUSWithWorkmanKeyboard,
 	Estonian,
+	EthiopicKeyboard,
 	Faroese,
 	Filipino,
 	Finnish,
@@ -1061,7 +1182,9 @@ var inputMethods = []InputMethod{
 	Greek,
 	GreekTransliteration,
 	Gujarati,
+	GujaratiPhonetic,
 	Hebrew,
+	HebrewTransliteration,
 	Hindi,
 	Hungarian,
 	HungarianWithQWERTYKeyboard,
@@ -1072,6 +1195,7 @@ var inputMethods = []InputMethod{
 	Japanese,
 	JapaneseWithUSKeyboard,
 	Kannada,
+	KannadaPhonetic,
 	Kazakh,
 	Khmer,
 	Korean,
@@ -1081,6 +1205,7 @@ var inputMethods = []InputMethod{
 	Macedonian,
 	Malay,
 	Malayalam,
+	MalayalamPhonetic,
 	Maltese,
 	Marathi,
 	Mongolian,
@@ -1106,6 +1231,7 @@ var inputMethods = []InputMethod{
 	RussianWithPhoneticYaZHertKeyboard,
 	Sanskrit,
 	Serbian,
+	SerbianTransliteration,
 	Sinhala,
 	Slovak,
 	Slovenian,
@@ -1115,18 +1241,25 @@ var inputMethods = []InputMethod{
 	SpanishSpain,
 	Swedish,
 	Tamil,
+	TamilITRANS,
+	TamilPhonetic,
 	TamilWithInScriptKeyboard,
 	TamilWithKedmaneeKeyboard,
 	TamilWithPattachoteKeyboard,
+	TamilWithTamil99Keyboard,
 	TamilWithTypewriterKeyboard,
 	Telugu,
+	TeluguPhonetic,
 	ThaiTis,
+	Tigrinya,
 	Turkish,
 	Turkish,
 	Ukrainian,
 	Urdu,
 	VietnameseTelex,
+	VietnameseVIQR,
 	VietnameseVNI,
+	VietnameseWithTCVNKeyboard,
 }
 
 // ErrInputNotDefined indicates that the input method has not been defined.
