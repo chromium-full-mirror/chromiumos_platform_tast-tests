@@ -78,7 +78,7 @@ func Graduation(ctx context.Context, s *testing.State) {
 		s.Fatal("Failed to verify policies: ", err)
 	}
 
-	appItemOnShelf := nodewith.NameContaining("Content Transfer").ClassName(ash.ShelfAppButtonClassName)
+	appItemOnShelf := nodewith.NameContaining("Content transfer").ClassName(ash.ShelfAppButtonClassName)
 	if err := ui.WaitUntilExists(appItemOnShelf)(ctx); err != nil {
 		s.Fatal("Graduation app did not appear on shelf: ", err)
 	}
