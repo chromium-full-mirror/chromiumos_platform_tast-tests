@@ -16,7 +16,6 @@ import (
 	"go.chromium.org/tast-tests/cros/common/testexec"
 	"go.chromium.org/tast-tests/cros/remote/bundles/cros/arc/dututils"
 
-	"go.chromium.org/tast/core/dut"
 	"go.chromium.org/tast/core/errors"
 	"go.chromium.org/tast/core/testing"
 )
@@ -95,12 +94,7 @@ func findRecentCacheBuilderJar(ctx context.Context, versionRelease int) (string,
 
 // getCacheBuilderJar gets ARC build properties from the device, parses for build ID, and
 // generates gs URL for org.chromium.ard.cachebuilder.jar
-func getCacheBuilderJar(ctx context.Context, dut *dut.DUT, vmEnabled bool) (string, error) {
-	desc, err := dututils.GetBuildDescriptorRemotely(ctx, dut, vmEnabled)
-	if err != nil {
-		return "", errors.Wrap(err, "failed to get ARC build desc")
-	}
-
+func getCacheBuilderJar(ctx context.Context, desc *dututils.BuildDescriptor) (string, error) {
 	if desc.Official {
 		return fmt.Sprintf("%s/%s/%s/%s", buildsRoot, "git_*-linux-apps", desc.BuildID, cacheBuilderJarName), nil
 	}
@@ -110,8 +104,8 @@ func getCacheBuilderJar(ctx context.Context, dut *dut.DUT, vmEnabled bool) (stri
 
 // InstallCacheBuilderJar downloads corresponding version of cache builder library jar file from
 // the cloud and install it into provided directory.
-func InstallCacheBuilderJar(ctx context.Context, dut *dut.DUT, vmEnabled bool, dir string) (string, error) {
-	url, err := getCacheBuilderJar(ctx, dut, vmEnabled)
+func InstallCacheBuilderJar(ctx context.Context, desc *dututils.BuildDescriptor, dir string) (string, error) {
+	url, err := getCacheBuilderJar(ctx, desc)
 	if err != nil {
 		return "", err
 	}

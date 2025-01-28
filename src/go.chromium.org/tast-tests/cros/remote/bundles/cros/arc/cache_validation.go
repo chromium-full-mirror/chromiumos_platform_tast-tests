@@ -75,7 +75,7 @@ func CacheValidation(ctx context.Context, s *testing.State) {
 
 	param := s.Param().(testParamCacheValidation)
 
-	desc, err := dututils.GetBuildDescriptorRemotely(ctx, d, param.vmEnabled)
+	desc, err := dututils.GetBuildDescriptorRemotely(ctx, d, s.Features(""), param.vmEnabled)
 	if err != nil {
 		s.Fatal("Failed to get ARC build desc: ", err)
 	}
@@ -207,7 +207,7 @@ func CacheValidation(ctx context.Context, s *testing.State) {
 	}
 	defer os.RemoveAll(tempDir)
 
-	jarPath, err := cache.InstallCacheBuilderJar(ctx, d, param.vmEnabled, tempDir)
+	jarPath, err := cache.InstallCacheBuilderJar(ctx, desc, tempDir)
 	if err != nil {
 		s.Fatal("Failed to install cache builder library: ", err)
 	}

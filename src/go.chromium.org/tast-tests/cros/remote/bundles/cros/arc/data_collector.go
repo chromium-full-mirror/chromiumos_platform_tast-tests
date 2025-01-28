@@ -75,11 +75,12 @@ const (
 )
 
 type dataUploader struct {
-	ctx             context.Context
-	androidPackage  string
-	androidVersion  string
-	shouldUpload    bool
-	buildDescriptor *dututils.BuildDescriptor
+	ctx                 context.Context
+	androidPackage      string
+	androidVersion      string
+	shouldUpload        bool
+	buildDescriptor     *dututils.BuildDescriptor
+	buildDescriptorPath string
 }
 
 func (du *dataUploader) needUpload(bucket string) bool {
@@ -93,7 +94,7 @@ func (du *dataUploader) needUpload(bucket string) bool {
 		return false
 	}
 
-	gsURL := du.remoteURL(bucket, du.androidPackage, du.androidVersion)
+	gsURL, _ := du.remoteURLs(bucket, du.androidPackage, du.androidVersion)
 	// gsutil stat would return 1 for a non-existent object.
 	if err := exec.Command(gsUtil, "stat", gsURL).Run(); err != nil {
 		return true
@@ -104,12 +105,14 @@ func (du *dataUploader) needUpload(bucket string) bool {
 	return false
 }
 
-func (du *dataUploader) remoteURL(bucket, androidPackage, androidVersion string) string {
-	return fmt.Sprintf("%s/%s/%s_%s.tar", runtimeArtifactsRoot, androidPackage, bucket, androidVersion)
+func (du *dataUploader) remoteURLs(bucket, androidPackage, androidVersion string) (string, string) {
+	resourceURL := fmt.Sprintf("%s/%s/%s_%s.tar", runtimeArtifactsRoot, androidPackage, bucket, androidVersion)
+	resourceDescURL := fmt.Sprintf("%s_desc.json", resourceURL)
+	return resourceURL, resourceDescURL
 }
 
 func (du *dataUploader) upload(src, bucket string) error {
-	gsURL := du.remoteURL(bucket, du.androidPackage, du.androidVersion)
+	gsURL, gsDescURL := du.remoteURLs(bucket, du.androidPackage, du.androidVersion)
 
 	// Use gsutil command to upload the file to the server.
 	testing.ContextLogf(du.ctx, "Uploading %q to the server", gsURL)
@@ -125,6 +128,13 @@ func (du *dataUploader) upload(src, bucket string) error {
 	// artifacts. For example from APPS bucket.
 	if out, err := exec.Command(gsUtil, "acl", "ch", "-u", "AllUsers:READ", gsURL).CombinedOutput(); err != nil {
 		return errors.Wrapf(err, "failed to set read permission for %q to the server %q", gsURL, out)
+	}
+
+	if out, err := exec.Command(gsUtil, "copy", du.buildDescriptorPath, gsDescURL).CombinedOutput(); err != nil {
+		return errors.Wrapf(err, "failed to upload %q device information to the server %q", du.buildDescriptorPath, out)
+	}
+	if out, err := exec.Command(gsUtil, "acl", "ch", "-u", "AllUsers:READ", gsDescURL).CombinedOutput(); err != nil {
+		return errors.Wrapf(err, "failed to set read permission for %q to the server %q", gsDescURL, out)
 	}
 
 	return nil
@@ -318,10 +328,17 @@ func DataCollector(ctx context.Context, s *testing.State) {
 
 	param := s.Param().(testParam)
 
-	desc, err := dututils.GetBuildDescriptorRemotely(ctx, d, param.vmEnabled)
+	desc, err := dututils.GetBuildDescriptorRemotely(ctx, d, s.Features(""), param.vmEnabled)
 	if err != nil {
 		s.Fatal("Failed to get ARC build desc: ", err)
 	}
+
+	descPath := filepath.Join(s.OutDir(), "device_desc.json")
+	err = os.WriteFile(descPath, desc.ToJSON(), 0644)
+	if err != nil {
+		s.Fatal("Failed to save device info: ", err)
+	}
+
 	if desc.CPUAbi == "arm" || desc.CPUAbi == "x86" {
 		s.Fatal("Failed because 32-bit CPU ABI is no longer supported")
 	}
@@ -352,18 +369,20 @@ func DataCollector(ctx context.Context, s *testing.State) {
 	}
 
 	du := dataUploader{
-		ctx:             ctx,
-		androidPackage:  param.androidPackage,
-		androidVersion:  v,
-		shouldUpload:    param.upload,
-		buildDescriptor: desc,
+		ctx:                 ctx,
+		androidPackage:      param.androidPackage,
+		androidVersion:      v,
+		shouldUpload:        param.upload,
+		buildDescriptor:     desc,
+		buildDescriptorPath: descPath,
 	}
 	duUreadahead := dataUploader{
-		ctx:             ctx,
-		androidPackage:  param.androidPackage,
-		androidVersion:  vUreadahead,
-		shouldUpload:    param.upload,
-		buildDescriptor: desc,
+		ctx:                 ctx,
+		androidPackage:      param.androidPackage,
+		androidVersion:      vUreadahead,
+		shouldUpload:        param.upload,
+		buildDescriptor:     desc,
+		buildDescriptorPath: descPath,
 	}
 
 	// Create temp caches directory before starting generation.
@@ -527,7 +546,7 @@ func DataCollector(ctx context.Context, s *testing.State) {
 		os.Chmod(tempDir, 0744)
 
 		testing.ContextLog(ctx, "Created temp dir for cache builder: ", tempDir)
-		jarPath, err := cache.InstallCacheBuilderJar(ctx, d, param.vmEnabled, tempDir)
+		jarPath, err := cache.InstallCacheBuilderJar(ctx, desc, tempDir)
 		if err != nil {
 			s.Fatal("Failed to install cache builder library: ", err)
 		}
