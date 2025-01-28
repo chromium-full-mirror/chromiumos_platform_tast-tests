@@ -26,7 +26,8 @@ func init() {
 		BugComponent: "b:998633", // ChromeOS > Platform > Enablement > ChromeOS Flex
 		Attr:         []string{"group:flex_arcvm"},
 		Fixture:      fixture.ChromeEnrolledLoggedInARCFlex,
-		HardwareDeps: hwdep.D(hwdep.Model("reven")),
+		HardwareDeps: hwdep.D(hwdep.SkipDMIProductName("NUC11TNKv5"),
+			hwdep.Model("reven")),
 		SoftwareDeps: []string{"chrome"},
 		Timeout:      15 * time.Minute,
 	})
