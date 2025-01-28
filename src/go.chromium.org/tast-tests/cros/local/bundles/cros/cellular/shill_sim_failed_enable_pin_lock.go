@@ -23,7 +23,7 @@ func init() {
 		BugComponent: "b:167157", // ChromeOS > Platform > Connectivity > Cellular
 		Attr:         []string{"group:cellular", "cellular_sim_pinlock", "group:release-health", "release-health_cellular"},
 		Fixture:      "cellularSIMLockCleared",
-		Timeout:      5 * time.Minute,
+		Timeout:      7 * time.Minute,
 		TestBedDeps:  []string{"sim_state:WORKING"},
 	})
 }

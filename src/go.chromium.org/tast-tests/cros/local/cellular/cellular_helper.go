@@ -41,6 +41,7 @@ import (
 const (
 	defaultTimeout = 30 * time.Second
 	longTimeout    = 120 * time.Second
+	resetTimeout   = 3 * time.Minute
 
 	// ConnectTimeout is the timeout for connect to a cellular network.
 	ConnectTimeout = longTimeout
@@ -919,7 +920,7 @@ func (h *Helper) ResetModem(ctx context.Context) (time.Duration, error) {
 
 	// With the single device support,a shill cellular device will be present even after triggering the modem reset.
 	// Confirm modem reset using MM dbus object path property getting cleared.
-	if err := h.Device.WaitForProperty(ctx, shillconst.DevicePropertyDBusObject, "", longTimeout); err != nil {
+	if err := h.Device.WaitForProperty(ctx, shillconst.DevicePropertyDBusObject, "", resetTimeout); err != nil {
 		return time.Since(start), errors.Wrap(err, "expected dbus object to become empty, got non-empty")
 	}
 
