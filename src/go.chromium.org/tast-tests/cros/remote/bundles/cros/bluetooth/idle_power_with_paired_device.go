@@ -12,12 +12,15 @@ import (
 	"go.chromium.org/tast-tests/cros/common/tbdep"
 	"go.chromium.org/tast-tests/cros/remote/bluetooth"
 	"go.chromium.org/tast-tests/cros/remote/bundles/cros/bluetooth/bluetoothutil"
+	sbt "go.chromium.org/tast-tests/cros/services/cros/bluetooth"
+	"go.chromium.org/tast/core/ctxutil"
 	"go.chromium.org/tast/core/testing"
 	"go.chromium.org/tast/core/testing/hwdep"
 )
 
 type idlePowerWithPairedDeviceTestCase struct {
 	DeviceType cbt.DeviceType
+	LLPrivacy  bool
 }
 
 func init() {
@@ -47,6 +50,7 @@ func init() {
 				ExtraAttr: []string{"bluetooth_flaky"},
 				Val: &idlePowerWithPairedDeviceTestCase{
 					DeviceType: cbt.DeviceTypeLEKeyboard,
+					LLPrivacy:  false,
 				},
 			},
 			{
@@ -55,22 +59,61 @@ func init() {
 				ExtraAttr: []string{"bluetooth_flaky"},
 				Val: &idlePowerWithPairedDeviceTestCase{
 					DeviceType: cbt.DeviceTypeBluetoothAudio,
+					LLPrivacy:  false,
 				},
 			},
 			{
 				Name:      "floss_enabled_le_keyboard",
-				Fixture:   "chromeUIDisabledWith1BTPeerPowerFlossEnabled",
+				Fixture:   "chromeUIEnabledWith1BTPeerPowerFlossEnabled",
 				ExtraAttr: []string{"bluetooth_floss_flaky"},
 				Val: &idlePowerWithPairedDeviceTestCase{
 					DeviceType: cbt.DeviceTypeLEKeyboard,
+					LLPrivacy:  false,
+				},
+			},
+			{
+				Name:      "floss_enabled_le_mouse",
+				Fixture:   "chromeUIEnabledWith1BTPeerPowerFlossEnabled",
+				ExtraAttr: []string{"bluetooth_floss_flaky"},
+				Val: &idlePowerWithPairedDeviceTestCase{
+					DeviceType: cbt.DeviceTypeLEMouse,
+					LLPrivacy:  false,
+				},
+			},
+			{
+				Name:      "floss_enabled_mouse",
+				Fixture:   "chromeUIEnabledWith1BTPeerPowerFlossEnabled",
+				ExtraAttr: []string{"bluetooth_floss_flaky"},
+				Val: &idlePowerWithPairedDeviceTestCase{
+					DeviceType: cbt.DeviceTypeMouse,
+					LLPrivacy:  false,
 				},
 			},
 			{
 				Name:      "floss_enabled_bluetooth_audio",
-				Fixture:   "chromeUIDisabledWith1BTPeerPowerFlossEnabled",
+				Fixture:   "chromeUIEnabledWith1BTPeerPowerFlossEnabled",
 				ExtraAttr: []string{"bluetooth_floss_flaky"},
 				Val: &idlePowerWithPairedDeviceTestCase{
 					DeviceType: cbt.DeviceTypeBluetoothAudio,
+					LLPrivacy:  false,
+				},
+			},
+			{
+				Name:      "floss_enabled_llp_enabled_le_keyboard",
+				Fixture:   "chromeUIEnabledWith1BTPeerPowerFlossEnabled",
+				ExtraAttr: []string{"bluetooth_floss_flaky"},
+				Val: &idlePowerWithPairedDeviceTestCase{
+					DeviceType: cbt.DeviceTypeLEKeyboard,
+					LLPrivacy:  true,
+				},
+			},
+			{
+				Name:      "floss_enabled_llp_enabled_le_mouse",
+				Fixture:   "chromeUIEnabledWith1BTPeerPowerFlossEnabled",
+				ExtraAttr: []string{"bluetooth_floss_flaky"},
+				Val: &idlePowerWithPairedDeviceTestCase{
+					DeviceType: cbt.DeviceTypeLEMouse,
+					LLPrivacy:  true,
 				},
 			},
 		},
@@ -82,6 +125,22 @@ func IdlePowerWithPairedDevice(ctx context.Context, s *testing.State) {
 	fv := s.FixtValue().(*bluetooth.FixtValue)
 	btpeer := fv.BTPeers[0]
 	tc := s.Param().(*idlePowerWithPairedDeviceTestCase)
+
+	// Set LL privacy status.
+	if _, err := fv.BluetoothService.SetLLPrivacy(ctx, &sbt.SetLLPrivacyRequest{Enabled: tc.LLPrivacy}); err != nil {
+		s.Fatal("Failed to configure LL privacy: ", err)
+	}
+
+	cleanupCtx := ctx
+	ctx, cancel := ctxutil.Shorten(ctx, 30*time.Second)
+	defer cancel()
+
+	// Always try to disable LL privacy after test.
+	defer func(ctx context.Context) {
+		if _, err := fv.BluetoothService.SetLLPrivacy(ctx, &sbt.SetLLPrivacyRequest{Enabled: false}); err != nil {
+			s.Fatal("Failed to disable LL privacy: ", err)
+		}
+	}(cleanupCtx)
 
 	s.Log("Set bluetoothd config execution flags")
 	if err := btpeer.ChameleondClient().BluetoothAudioDevice().ResetStack(ctx, tc.DeviceType.String()); err != nil {
@@ -103,7 +162,7 @@ func IdlePowerWithPairedDevice(ctx context.Context, s *testing.State) {
 			s.Fatal("Failed to config audio device: ", err)
 		}
 	}
-	interval := 5 * time.Minute // Power measurement interval in minutes
+	interval := 5 * time.Minute // Power measurement interval in minutes.
 
 	if err := fv.PowerCooldown(ctx); err != nil {
 		s.Fatal("Failed to cooldown for power measurement: ", err)
@@ -111,10 +170,10 @@ func IdlePowerWithPairedDevice(ctx context.Context, s *testing.State) {
 	fv.StartPowerRecording(ctx)
 
 	testing.ContextLog(ctx, "Keep BT on for ", interval)
-	// GoBigSleepLint: sleep for measuring power consumption
+	// GoBigSleepLint: sleep for measuring power consumption.
 	testing.Sleep(ctx, interval)
 
-	pResults, err := fv.StopPowerRecording(ctx, s.TestName())
+	pResults, err := fv.StopPowerRecording(ctx, s.TestName()+".bt_on")
 	if err != nil {
 		s.Fatal("Failed to measure power consumption: ", err)
 	}
@@ -137,10 +196,10 @@ func IdlePowerWithPairedDevice(ctx context.Context, s *testing.State) {
 	fv.StartPowerRecording(ctx)
 
 	testing.ContextLog(ctx, "Keep BT on with 1 device paired for ", interval)
-	// GoBigSleepLint: sleep for measuring power consumption
+	// GoBigSleepLint: sleep for measuring power consumption.
 	testing.Sleep(ctx, interval)
 
-	pResults, err = fv.StopPowerRecording(ctx, s.TestName())
+	pResults, err = fv.StopPowerRecording(ctx, s.TestName()+".bt_1peer")
 	if err != nil {
 		s.Fatal("Failed to measure power consumption: ", err)
 	}
