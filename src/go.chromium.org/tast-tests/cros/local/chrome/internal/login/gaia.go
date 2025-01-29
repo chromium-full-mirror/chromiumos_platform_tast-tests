@@ -273,10 +273,11 @@ func performGAIALogin(ctx context.Context, cfg *config.Config, sess *driver.Sess
 		// Check if the username screen is gone and retry the login if it isn't.
 		if err := gaiaConn.WaitForExprWithTimeout(ctx,
 			`document.querySelector('[aria-label="Email or phone"]')===null`,
-			30*time.Second); err != nil {
+			60*time.Second); err != nil {
 			if err := clearGAIAField(ctx, gaiaConn, "#identifierId"); err != nil {
 				testing.ContextLog(ctx, "Failed to clear username field: ", err)
 			}
+			testing.ContextLog(ctx, "Failed to wait for username screen to go away attempt")
 			return errors.Wrap(err, "failed to wait for username screen to go away")
 		}
 
