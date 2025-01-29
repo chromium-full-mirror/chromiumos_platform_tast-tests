@@ -229,7 +229,7 @@ func init() {
 		Impl: &policyChromeFixture{
 			extraOptsFunc: func(ctx context.Context, s *testing.FixtState) ([]chrome.Option, error) {
 				return []chrome.Option{chrome.KeepEnrollment(), chrome.ARCEnabled(),
-					chrome.EnableFeatures("AndroidVpnAppsOnFlex")}, nil
+					chrome.EnableFeatures("VpnAppsOnFlex")}, nil
 			},
 			waitForARC: true,
 		},
