@@ -55,6 +55,11 @@ func ModemFWManifestVerification(ctx context.Context, s *testing.State) {
 		s.Fatalf("Failed to get device variant: %s", err)
 	}
 
+	dutModel, err := cellular.GetModel(ctx)
+	if err != nil {
+		s.Fatalf("Failed to get device model: %s", err)
+	}
+
 	missingFiles := make(map[string]bool)
 	var mainFirmwares map[string]bool
 	dlcCounter := 0
@@ -68,7 +73,7 @@ func ModemFWManifestVerification(ctx context.Context, s *testing.State) {
 			if err != nil {
 				s.Fatalf("Failed to get modem type: %s", err)
 			}
-			if err := verifyDlcManifest(ctx, device.GetDlc().GetDlcId(), modemType); err != nil {
+			if err := verifyDlcManifest(ctx, device.GetDlc().GetDlcId(), modemType, dutModel); err != nil {
 				s.Fatalf("Invalid DLC manifest : %s", err)
 			}
 			// Only the variant that matches the device's variant will contain a DLC that is
@@ -79,6 +84,8 @@ func ModemFWManifestVerification(ctx context.Context, s *testing.State) {
 			if dutVariant != device.Variant {
 				uninstallDlc = true
 				dlc.Install(ctx, device.Dlc.DlcId, "")
+			} else {
+				verifyDlcManifestOnMatchingModel(ctx, device.GetDlc().GetDlcId(), dutModel)
 			}
 			state, err := dlc.GetDlcState(ctx, device.Dlc.DlcId)
 			// Verify that the DLC exists in the dlcservice manifest
@@ -318,14 +325,15 @@ var (
 
 // ImageLoaderManifest holds the fields related to a imageloader manifest.
 type imageLoaderManifest struct {
-	CriticalUpdate      bool   `json:"critical-update"`
-	FactoryInstall      bool   `json:"factory-install"`
-	ID                  string `json:"id"`
-	LoadPinVerityDigest bool   `json:"loadpin-verity-digest"`
-	PowerwashSafe       bool   `json:"powerwash-safe"`
-	PreAllocatedSize    int64  `json:"pre-allocated-size,string"`
-	PreloadAllowed      bool   `json:"preload-allowed"`
-	UseLogicalVolume    bool   `json:"use-logical-volume"`
+	Attributes          map[string]interface{} `json:"attributes"`
+	CriticalUpdate      bool                   `json:"critical-update"`
+	FactoryInstall      bool                   `json:"factory-install"`
+	ID                  string                 `json:"id"`
+	LoadPinVerityDigest bool                   `json:"loadpin-verity-digest"`
+	PowerwashSafe       bool                   `json:"powerwash-safe"`
+	PreAllocatedSize    int64                  `json:"pre-allocated-size,string"`
+	PreloadAllowed      bool                   `json:"preload-allowed"`
+	UseLogicalVolume    bool                   `json:"use-logical-volume"`
 }
 
 // Metadata holds the fields related to the DLC metadata.
@@ -348,7 +356,7 @@ func getDlcMetadata(ctx context.Context, id string) (*dlcMetadata, error) {
 	return &metadata, nil
 }
 
-func verifyDlcManifest(ctx context.Context, dlcID string, modemType cellularconst.ModemType) error {
+func verifyDlcManifest(ctx context.Context, dlcID string, modemType cellularconst.ModemType, dutModel string) error {
 	metadata, err := getDlcMetadata(ctx, dlcID)
 	if err != nil {
 		return errors.Wrapf(err, "failed to get manifest for DLC: %s", dlcID)
@@ -390,5 +398,19 @@ func verifyDlcManifest(ctx context.Context, dlcID string, modemType cellularcons
 	if (modemType != cellularconst.ModemTypeL850) && !metadata.Manifest.LoadPinVerityDigest {
 		return errors.Errorf("DLC_LOADPIN_VERITY_DIGEST was not set in DLC %s", dlcID)
 	}
+	return nil
+}
+
+// verifyDlcManifestOnMatchingModel Verifies DLC manifest values that can only be verified in the
+// model that matches the dlc
+func verifyDlcManifestOnMatchingModel(ctx context.Context, dlcID, dutModel string) error {
+	metadata, err := getDlcMetadata(ctx, dlcID)
+	if err != nil {
+		return errors.Wrapf(err, "failed to get manifest for DLC: %s", dlcID)
+	}
+	if _, ok := metadata.Manifest.Attributes[dutModel]; !ok {
+		return errors.Errorf("attributes missing the model name. DLC: %s. Attributes: %q", dlcID, metadata.Manifest.Attributes)
+	}
+
 	return nil
 }

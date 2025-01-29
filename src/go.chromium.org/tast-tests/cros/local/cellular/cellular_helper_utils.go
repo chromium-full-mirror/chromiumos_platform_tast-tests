@@ -139,6 +139,17 @@ func getDevice(ctx context.Context) (cellularconst.DeviceInfo, error) {
 	return device, nil
 }
 
+// GetModel gets the model of the device using cros config.
+func GetModel(ctx context.Context) (string, error) {
+	tempModel, err := crosconfig.Get(ctx, "/", "name")
+	if crosconfig.IsNotFound(err) {
+		return "", errors.Wrap(err, "name property doesn't exist")
+	} else if err != nil {
+		return "", errors.Wrap(err, "failed to execute cros_config")
+	}
+	return tempModel, nil
+}
+
 // GetModemType gets DUT's modem type.
 func GetModemType(ctx context.Context) (cellularconst.ModemType, error) {
 	device, err := getDevice(ctx)
