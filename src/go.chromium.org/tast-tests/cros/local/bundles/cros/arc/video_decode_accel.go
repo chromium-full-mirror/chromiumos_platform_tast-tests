@@ -31,13 +31,13 @@ func init() {
 			Name:              "h264",
 			Val:               video.DecodeTestOptions{TestVideo: "test-25fps.h264"},
 			Fixture:           "arcBootedWithVideoLogging",
-			ExtraSoftwareDeps: []string{caps.HWDecodeH264, "android_p"},
+			ExtraSoftwareDeps: []string{caps.HWDecodeH264, "android_container_r"},
 			ExtraData:         []string{"test-25fps.h264", "test-25fps.h264.json"},
 		}, {
 			Name:              "h264_oopvd",
 			Val:               video.DecodeTestOptions{TestVideo: "test-25fps.h264"},
 			Fixture:           "arcBootedWithVideoLoggingAndOutOfProcessVideoDecoding",
-			ExtraSoftwareDeps: []string{caps.HWDecodeH264, "android_p"},
+			ExtraSoftwareDeps: []string{caps.HWDecodeH264, "android_container_r"},
 			ExtraData:         []string{"test-25fps.h264", "test-25fps.h264.json"},
 		}, {
 			Name:              "h264_vm",
@@ -55,13 +55,13 @@ func init() {
 			Name:              "vp8",
 			Val:               video.DecodeTestOptions{TestVideo: "test-25fps.vp8"},
 			Fixture:           "arcBootedWithVideoLogging",
-			ExtraSoftwareDeps: []string{caps.HWDecodeVP8, "android_p"},
+			ExtraSoftwareDeps: []string{caps.HWDecodeVP8, "android_container_r"},
 			ExtraData:         []string{"test-25fps.vp8", "test-25fps.vp8.json"},
 		}, {
 			Name:              "vp8_oopvd",
 			Val:               video.DecodeTestOptions{TestVideo: "test-25fps.vp8"},
 			Fixture:           "arcBootedWithVideoLoggingAndOutOfProcessVideoDecoding",
-			ExtraSoftwareDeps: []string{caps.HWDecodeVP8, "android_p"},
+			ExtraSoftwareDeps: []string{caps.HWDecodeVP8, "android_container_r"},
 			ExtraData:         []string{"test-25fps.vp8", "test-25fps.vp8.json"},
 		}, {
 			Name:              "vp8_vm",
@@ -79,13 +79,13 @@ func init() {
 			Name:              "vp9",
 			Val:               video.DecodeTestOptions{TestVideo: "test-25fps.vp9"},
 			Fixture:           "arcBootedWithVideoLogging",
-			ExtraSoftwareDeps: []string{caps.HWDecodeVP9, "android_p"},
+			ExtraSoftwareDeps: []string{caps.HWDecodeVP9, "android_container_r"},
 			ExtraData:         []string{"test-25fps.vp9", "test-25fps.vp9.json"},
 		}, {
 			Name:              "vp9_oopvd",
 			Val:               video.DecodeTestOptions{TestVideo: "test-25fps.vp9"},
 			Fixture:           "arcBootedWithVideoLoggingAndOutOfProcessVideoDecoding",
-			ExtraSoftwareDeps: []string{caps.HWDecodeVP9, "android_p"},
+			ExtraSoftwareDeps: []string{caps.HWDecodeVP9, "android_container_r"},
 			ExtraData:         []string{"test-25fps.vp9", "test-25fps.vp9.json"},
 		}, {
 			Name:              "vp9_vm",
