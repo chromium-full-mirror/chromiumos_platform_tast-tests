@@ -29,24 +29,6 @@ func initChromeFakeWebCamFixtures() {
 		TearDownTimeout: chrome.ResetTimeout,
 	})
 
-	testing.AddFixture(&testing.Fixture{
-		Name:         "chromeVideoWithFakeWebcamAndV4L2FlatStatefulDecoder",
-		Desc:         "Similar to chromeVideoWithFakeWebcam fixture but using the V4L2 Flat stateful VD",
-		Contacts:     []string{"chromeos-gfx-video@google.com"},
-		BugComponent: "b:168352", // ChromeOS > Platform > Graphics > Video.
-		Impl: chrome.NewLoggedInFixture(func(ctx context.Context, s *testing.FixtState) ([]chrome.Option, error) {
-			return getChromeVideoOptions(
-				chrome.ExtraArgs(chromeFakeWebcamArgs...),
-				chrome.EnableFeatures("V4L2FlatStatefulVideoDecoder"),
-				chrome.EnableFeatures("UseChromeOSDirectVideoDecoder"),
-			), nil
-		}),
-		Parent:          "gpuWatchDog",
-		SetUpTimeout:    chrome.FixtureSetUpTimeout,
-		ResetTimeout:    chrome.ResetTimeout,
-		TearDownTimeout: chrome.ResetTimeout,
-	})
-
 	// TODO(b/248528896): Remove once out-of-process video encoding is enabled by default.
 	testing.AddFixture(&testing.Fixture{
 		Name:         "chromeVideoWithFakeWebcamAndOOPVE",

@@ -116,18 +116,6 @@ func init() {
 			ExtraSoftwareDeps: []string{caps.HWDecodeH264, "proprietary_codecs"},
 			Fixture:           "chromeVideoWithFakeWebcam",
 		}, {
-			Name: "h264_verify_hw_dec_v4l2_flat_stateful",
-			Val: peerconnection.RTCTestParams{
-				VerifyDecoderMode: peerconnection.VerifyHWDecoderUsed,
-				VerifyEncoderMode: peerconnection.NoVerifyEncoderMode,
-				Profile:           "H264",
-				StreamWidth:       defaultRTCStreamWidth,
-				StreamHeight:      defaultRTCStreamHeight,
-			},
-			ExtraSoftwareDeps: []string{caps.HWDecodeH264, "proprietary_codecs"},
-			ExtraHardwareDeps: hwdep.D(hwdep.SupportsV4L2StatefulVideoDecoding()), // E.g. MT8173 Hana and QC SC7180 Trogdor.
-			Fixture:           "chromeVideoWithFakeWebcamAndV4L2FlatStatefulDecoder",
-		}, {
 			Name: "vp8_verify_hw_dec",
 			Val: peerconnection.RTCTestParams{
 				VerifyDecoderMode: peerconnection.VerifyHWDecoderUsed,
@@ -138,18 +126,6 @@ func init() {
 			},
 			ExtraSoftwareDeps: []string{caps.HWDecodeVP8},
 			Fixture:           "chromeVideoWithFakeWebcam",
-		}, {
-			Name: "vp8_verify_hw_dec_v4l2_flat_stateful",
-			Val: peerconnection.RTCTestParams{
-				VerifyDecoderMode: peerconnection.VerifyHWDecoderUsed,
-				VerifyEncoderMode: peerconnection.NoVerifyEncoderMode,
-				Profile:           "VP8",
-				StreamWidth:       defaultRTCStreamWidth,
-				StreamHeight:      defaultRTCStreamHeight,
-			},
-			ExtraSoftwareDeps: []string{caps.HWDecodeVP8},
-			ExtraHardwareDeps: hwdep.D(hwdep.SupportsV4L2StatefulVideoDecoding()), // E.g. MT8173 Hana and QC SC7180 Trogdor.
-			Fixture:           "chromeVideoWithFakeWebcamAndV4L2FlatStatefulDecoder",
 		}, {
 			// This is a 2 temporal layers test, via the (experimental) API.
 			// See https://www.w3.org/TR/webrtc-svc/#scalabilitymodes for SVC identifiers.
@@ -189,18 +165,6 @@ func init() {
 			},
 			ExtraSoftwareDeps: []string{caps.HWDecodeVP9},
 			Fixture:           "chromeVideoWithFakeWebcam",
-		}, {
-			Name: "vp9_verify_hw_dec_v4l2_flat_stateful",
-			Val: peerconnection.RTCTestParams{
-				VerifyDecoderMode: peerconnection.VerifyHWDecoderUsed,
-				VerifyEncoderMode: peerconnection.NoVerifyEncoderMode,
-				Profile:           "VP9",
-				StreamWidth:       defaultRTCStreamWidth,
-				StreamHeight:      defaultRTCStreamHeight,
-			},
-			ExtraSoftwareDeps: []string{caps.HWDecodeVP9},
-			ExtraHardwareDeps: hwdep.D(hwdep.SupportsV4L2StatefulVideoDecoding()), // E.g. MT8173 Hana and QC SC7180 Trogdor.
-			Fixture:           "chromeVideoWithFakeWebcamAndV4L2FlatStatefulDecoder",
 		}, {
 			Name: "vp9_1080p_verify_hw_dec",
 			Val: peerconnection.RTCTestParams{
