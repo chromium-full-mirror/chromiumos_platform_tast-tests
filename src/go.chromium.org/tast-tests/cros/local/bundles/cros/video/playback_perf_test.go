@@ -183,20 +183,7 @@ func TestPlaybackPerfConfig(t *testing.T) {
 				param.ExtraAttr = []string{"group:graphics", "graphics_video", "graphics_weekly"}
 			}
 			params = append(params, param)
-
 		}
-	}
-
-	for _, codec := range []string{"h264", "vp8", "vp9", "av1"} {
-		resolution, dec := 1080, "hw"
-		for _, fps := range []int{30, 60} {
-			param := genPlaybackPerfParam(codec, playback.GenDataPath(codec, resolution, fps), resolution, fps, dec,
-				"batch_decoding_in_renderer", "chromeVideoWithBatchDecodingInRenderer",
-				[]string{})
-			param.HardwareDeps = append(param.HardwareDeps, "hwdep.CPUSocFamily(\"intel\")")
-			params = append(params, param)
-		}
-
 	}
 
 	for _, codec := range []string{"h264", "vp9", "av1"} {
@@ -207,7 +194,6 @@ func TestPlaybackPerfConfig(t *testing.T) {
 				[]string{})
 			params = append(params, param)
 		}
-
 	}
 
 	for i, param := range params {

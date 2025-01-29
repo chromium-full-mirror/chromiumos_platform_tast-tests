@@ -160,22 +160,6 @@ func initChromeVideoFixtures() {
 		TearDownTimeout: chrome.ResetTimeout,
 	})
 	testing.AddFixture(&testing.Fixture{
-		Name:         "chromeVideoWithBatchDecodingInRenderer",
-		Desc:         "Similar to chromeVideo fixture but enabling batch decoding for non-MF renderer path",
-		Contacts:     []string{"chromeos-gfx-video@google.com"},
-		BugComponent: "b:168352", // ChromeOS > Platform > Graphics > Video.
-		Impl: chrome.NewLoggedInFixture(func(ctx context.Context, s *testing.FixtState) ([]chrome.Option, error) {
-			return getChromeVideoOptions(
-				chrome.ExtraArgs(chromeBypassPermissionsArgs...),
-				chrome.EnableFeatures("VideoDecodeBatching"),
-			), nil
-		}),
-		Parent:          "gpuWatchDog",
-		SetUpTimeout:    chrome.FixtureSetUpTimeout,
-		ResetTimeout:    chrome.ResetTimeout,
-		TearDownTimeout: chrome.ResetTimeout,
-	})
-	testing.AddFixture(&testing.Fixture{
 		Name:         "chromeVideoWithVCDInUtilityProcess",
 		Desc:         "Similar to chromeVideo fixture but running VCD in the utility process",
 		Contacts:     []string{"chromeos-camera-eng@google.com", "seannli@google.com"},
