@@ -45,23 +45,6 @@ func initChromeVideoFixtures() {
 		TearDownTimeout: chrome.ResetTimeout,
 	})
 
-	testing.AddFixture(&testing.Fixture{
-		Name:         "chromeVideoINPVD",
-		Desc:         "Logged into a user session with logging and out-of-process video decoding disabled",
-		Contacts:     []string{"chromeos-gfx-video@google.com"},
-		BugComponent: "b:168352", // ChromeOS > Platform > Graphics > Video.
-		Impl: chrome.NewLoggedInFixture(func(ctx context.Context, s *testing.FixtState) ([]chrome.Option, error) {
-			return getChromeVideoOptions(
-				chrome.ExtraArgs(chromeBypassPermissionsArgs...),
-				chrome.DisableFeatures("UseOutOfProcessVideoDecoding"),
-			), nil
-		}),
-		Parent:          "gpuWatchDog",
-		SetUpTimeout:    chrome.FixtureSetUpTimeout,
-		ResetTimeout:    chrome.ResetTimeout,
-		TearDownTimeout: chrome.ResetTimeout,
-	})
-
 	// TODO(b/248528896): Remove once out-of-process video encoding is enabled by default.
 	testing.AddFixture(&testing.Fixture{
 		Name:         "chromeVideoWithOOPVE",
@@ -87,22 +70,6 @@ func initChromeVideoFixtures() {
 		BugComponent: "b:168352", // ChromeOS > Platform > Graphics > Video.
 		Impl: chrome.NewLoggedInFixture(func(ctx context.Context, s *testing.FixtState) ([]chrome.Option, error) {
 			return getChromeVideoOptions(
-				chrome.GuestLogin(),
-			), nil
-		}),
-		Parent:          "gpuWatchDog",
-		SetUpTimeout:    chrome.FixtureSetUpTimeout,
-		ResetTimeout:    chrome.ResetTimeout,
-		TearDownTimeout: chrome.ResetTimeout,
-	})
-	testing.AddFixture(&testing.Fixture{
-		Name:         "chromeVideoINPVDWithGuestLogin",
-		Desc:         "Like chromeVideoWithGuestLogin but with out-of-process video decoding disabled",
-		Contacts:     []string{"chromeos-gfx-video@google.com"},
-		BugComponent: "b:168352", // ChromeOS > Platform > Graphics > Video.
-		Impl: chrome.NewLoggedInFixture(func(ctx context.Context, s *testing.FixtState) ([]chrome.Option, error) {
-			return getChromeVideoOptions(
-				chrome.DisableFeatures("UseOutOfProcessVideoDecoding"),
 				chrome.GuestLogin(),
 			), nil
 		}),
@@ -185,23 +152,6 @@ func initChromeVideoFixtures() {
 			return getChromeVideoOptions(
 				chrome.ExtraArgs(chromeBypassPermissionsArgs...),
 				chrome.ExtraArgs(chromeAllowDistinctiveIdentifierArgs...),
-			), nil
-		}),
-		Parent:          "gpuWatchDog",
-		SetUpTimeout:    chrome.FixtureSetUpTimeout,
-		ResetTimeout:    chrome.ResetTimeout,
-		TearDownTimeout: chrome.ResetTimeout,
-	})
-	testing.AddFixture(&testing.Fixture{
-		Name:         "chromeVideoINPVDWithDistinctiveIdentifier",
-		Desc:         "Like chromeVideoWithDistinctiveIdentifier but with out-of-process video decoding disabled",
-		Contacts:     []string{"chromeos-gfx-video@google.com"},
-		BugComponent: "b:168352", // ChromeOS > Platform > Graphics > Video.
-		Impl: chrome.NewLoggedInFixture(func(ctx context.Context, s *testing.FixtState) ([]chrome.Option, error) {
-			return getChromeVideoOptions(
-				chrome.ExtraArgs(chromeBypassPermissionsArgs...),
-				chrome.ExtraArgs(chromeAllowDistinctiveIdentifierArgs...),
-				chrome.DisableFeatures("UseOutOfProcessVideoDecoding"),
 			), nil
 		}),
 		Parent:          "gpuWatchDog",

@@ -50,12 +50,6 @@ func init() {
 			ExtraData:         []string{"bear-320x240.h264.mp4", "bear-320x240.h264.mp4.json"},
 			Fixture:           "chromeVideo",
 		}, {
-			Name:              "h264_hw_inpvd",
-			Val:               webcodecs.TestDecodeArgs{VideoFile: "bear-320x240.h264.mp4", Acceleration: webcodecs.PreferHardware},
-			ExtraSoftwareDeps: []string{"proprietary_codecs", caps.HWDecodeH264},
-			ExtraData:         []string{"bear-320x240.h264.mp4", "bear-320x240.h264.mp4.json"},
-			Fixture:           "chromeVideoINPVD",
-		}, {
 			Name:      "vp8_sw",
 			Val:       webcodecs.TestDecodeArgs{VideoFile: "bear-320x240.vp8.mp4", Acceleration: webcodecs.PreferSoftware},
 			ExtraData: []string{"bear-320x240.vp8.mp4", "bear-320x240.vp8.mp4.json"},

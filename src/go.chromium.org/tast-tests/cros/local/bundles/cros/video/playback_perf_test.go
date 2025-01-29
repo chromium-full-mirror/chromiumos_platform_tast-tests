@@ -147,40 +147,6 @@ func TestPlaybackPerfConfig(t *testing.T) {
 		}
 	}
 
-	// In-process video decoding (ash-chrome).
-	for _, resolution := range []int{720, 1080, 2160} {
-		fpss := []int{30}
-		if resolution >= 1080 {
-			fpss = append(fpss, 60)
-		}
-		for _, fps := range fpss {
-			param := genPlaybackPerfParam("h264", playback.GenDataPath("h264", resolution, fps),
-				resolution, fps, "hw", "inpvd", "chromeVideoINPVD", nil)
-			if resolution == 1080 && fps == 30 {
-				param.MeasureSteadyStateMetrics = true
-				param.PerfTracing = true
-			}
-			params = append(params, param)
-		}
-	}
-
-	// Long in-process video decoding (ash-chrome)
-	for _, codec := range []string{"h264", "hevc", "vp9", "av1"} {
-		resolution, fps, dec := 1080, 30, "hw"
-		file := playbackPerfLongFile[codec]
-		param := genPlaybackPerfParam(codec, file, resolution, fps, dec,
-			"long_inpvd", "chromeVideoINPVD",
-			[]string{"drm_atomic"})
-		// "rogue" is for MT8173 hana.
-		param.HardwareDeps = append(param.HardwareDeps, "hwdep.SkipGPUFamily(\"rogue\")", "hwdep.InternalDisplay()")
-		if codec == "h264" {
-			param.MeasureSteadyStateMetrics = true
-		}
-		param.MeasureRoughness = true
-		param.Duration = measurementDurationLong
-		params = append(params, param)
-	}
-
 	// All 1080p x 2, 720p x 4, 480p x 9 and 360p x 16 are equivalent to each
 	// other in number of pixels decoded per second. The next logical steps would
 	// be 240p x36 (6x6 grid) and maybe even 144p x100 (10x10 grid).

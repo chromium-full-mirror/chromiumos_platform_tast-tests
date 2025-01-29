@@ -62,25 +62,6 @@ func initChromeCaptureFixtures() {
 	})
 
 	testing.AddFixture(&testing.Fixture{
-		Name:         "chromeTabCaptureWithINPVDAndSWEncoding",
-		Desc:         "Like chromeTabCapture but with out-of-process video decoding disabled and forcing software encoding",
-		Contacts:     []string{"chromeos-gfx-video@google.com"},
-		BugComponent: "b:168352", // ChromeOS > Platform > Graphics > Video.
-		Impl: chrome.NewLoggedInFixture(func(ctx context.Context, s *testing.FixtState) ([]chrome.Option, error) {
-			return getChromeVideoOptions(
-				// Chrome automatically selects a tab page whose title contains "test".
-				chrome.ExtraArgs("--auto-select-tab-capture-source-by-title=test"),
-				chrome.ExtraArgs("--disable-accelerated-video-encode"),
-				chrome.DisableFeatures("UseOutOfProcessVideoDecoding"),
-			), nil
-		}),
-		Parent:          "gpuWatchDog",
-		SetUpTimeout:    chrome.FixtureSetUpTimeout,
-		ResetTimeout:    chrome.ResetTimeout,
-		TearDownTimeout: chrome.ResetTimeout,
-	})
-
-	testing.AddFixture(&testing.Fixture{
 		Name:         "chromeZeroCopyScreenCapture",
 		Desc:         "Logged into a user session with flag so that Chrome always picks the entire screen for getDisplayMedia(), bypassing the picker UI",
 		Contacts:     []string{"chromeos-gfx-video@google.com"},

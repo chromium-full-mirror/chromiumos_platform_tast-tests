@@ -72,7 +72,6 @@ const (
 
 	swDec decoderImpl = "sw_dec"
 	hwDec decoderImpl = "hw_dec"
-	inpVD decoderImpl = "hw_inpvd"
 )
 
 func isHardwareEncoderImpl(enc encoderImpl) bool {
@@ -89,7 +88,7 @@ func isHardwareDecoderImpl(dec decoderImpl) bool {
 	switch dec {
 	case swDec:
 		return false
-	case hwDec, inpVD:
+	case hwDec:
 		return true
 	}
 	panic(fmt.Sprintf("unknown decoder: %v", dec))
@@ -126,7 +125,7 @@ func softwareCodecsDeps(codec string, enc encoderImpl, dec decoderImpl) []string
 			deps = append(deps, caps.HWEncodeAV1)
 		}
 	}
-	if dec == hwDec || dec == inpVD {
+	if dec == hwDec {
 		switch codec {
 		case "h264":
 			deps = append(deps, caps.HWDecodeH264)
@@ -176,8 +175,6 @@ func toFixture(enc encoderImpl, dec decoderImpl, stream streamType) string {
 			return "chromeVideoWithFakeWebcamAndNoHwAcceleration"
 		case hwDec:
 			return "chromeVideoWithFakeWebcamAndSWEncoding"
-		case inpVD:
-			panic("we don't test INP-VD + software encoding")
 		}
 	case hwEnc:
 		switch dec {
@@ -185,8 +182,6 @@ func toFixture(enc encoderImpl, dec decoderImpl, stream streamType) string {
 			panic("we don't test hardware encoding + software decoding")
 		case hwDec:
 			return "chromeVideoWithFakeWebcam"
-		case inpVD:
-			return "chromeVideoINPVDWithFakeWebcam"
 		}
 	case oopVE:
 		if stream == s3t3 {
@@ -197,8 +192,6 @@ func toFixture(enc encoderImpl, dec decoderImpl, stream streamType) string {
 			panic("we don't test OOP-VE + software decoding")
 		case hwDec:
 			return "chromeVideoWithFakeWebcamAndOOPVE"
-		case inpVD:
-			return "chromeVideoWithFakeWebcamAndINPVDAndOOPVE"
 		}
 	}
 	panic(fmt.Sprintf("unexpected pair, enc=%s, dec=%s", string(enc), string(dec)))
@@ -400,55 +393,27 @@ func TestRTCPeerConnectionPerfParams(t *testing.T) {
 		}
 	}
 
-	// INP-VD and OOP-VE test cases.
+	// OOP-VE test cases.
 	for _, codec := range []string{"h264", "vp8", "vp9", "av1"} {
-		for _, ed := range [][]interface{}{
-			{oopVE, hwDec},
-			{oopVE, inpVD},
-			{hwEnc, inpVD},
-			// {swEnc, inpVD}, there is no fixture for this.
-		} {
-			var enc encoderImpl = ed[0].(encoderImpl)
-			var dec decoderImpl = ed[1].(decoderImpl)
-			paramData := rtcTestParamsData{
-				VerifyDecoderMode: toVerifyDecoderMode(dec),
-				VerifyEncoderMode: toVerifyEncoderMode(enc),
-				Profile:           strings.ToUpper(codec),
-				StreamWidth:       k720p.Width,
-				StreamHeight:      k720p.Height,
-				TraceChromeEvents: false,
-			}
-			if enc == oopVE {
-				paramData.VerifyOutOfProcessVideoEncodingIsUsed = true
-			}
-			sourceData := rtcPerfTestSourceData{
-				Name:         fmt.Sprintf("%s_720p_%s_%s", codec, enc, dec),
-				ParamData:    paramData,
-				SoftwareDeps: softwareCodecsDeps(codec, enc, dec),
-				Fixture:      toFixture(enc, dec, vanilla),
-			}
-			sourceDatas = append(sourceDatas, sourceData)
+		enc := oopVE
+		dec := hwDec
+		paramData := rtcTestParamsData{
+			VerifyDecoderMode:                     toVerifyDecoderMode(dec),
+			VerifyEncoderMode:                     toVerifyEncoderMode(enc),
+			Profile:                               strings.ToUpper(codec),
+			StreamWidth:                           k720p.Width,
+			StreamHeight:                          k720p.Height,
+			TraceChromeEvents:                     false,
+			VerifyOutOfProcessVideoEncodingIsUsed: true,
 		}
+		sourceData := rtcPerfTestSourceData{
+			Name:         fmt.Sprintf("%s_720p_%s_%s", codec, enc, dec),
+			ParamData:    paramData,
+			SoftwareDeps: softwareCodecsDeps(codec, enc, dec),
+			Fixture:      toFixture(enc, dec, vanilla),
+		}
+		sourceDatas = append(sourceDatas, sourceData)
 	}
-
-	// Tab capture + INP-VD test case.
-	tabCaptureINPVDParamData := rtcTestParamsData{
-		VerifyDecoderMode: toVerifyDecoderMode(inpVD),
-		VerifyEncoderMode: toVerifyEncoderMode(swEnc),
-		Profile:           "VP8",
-		StreamWidth:       k1080p.Width,
-		StreamHeight:      k1080p.Height,
-		Svc:               "L1T3",
-		DisplayMediaType:  "peerconnection.CaptureTab",
-		TraceChromeEvents: false,
-	}
-	tabCaptureINPVDSourceData := rtcPerfTestSourceData{
-		Name:         "vp8_1080p_tab_l1t3_sw_enc_hw_inpvd",
-		ParamData:    tabCaptureINPVDParamData,
-		SoftwareDeps: softwareCodecsDeps("vp8", swEnc, inpVD),
-		Fixture:      "chromeTabCaptureWithINPVDAndSWEncoding",
-	}
-	sourceDatas = append(sourceDatas, tabCaptureINPVDSourceData)
 
 	// Vaapi lock disabled test cases.
 	for _, codec := range []string{"h264", "vp8", "vp9", "av1"} {
