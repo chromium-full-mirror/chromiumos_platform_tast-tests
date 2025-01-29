@@ -9,7 +9,6 @@ import (
 	"encoding/json"
 	"fmt"
 	"image"
-	"image/color"
 	"math"
 	"path/filepath"
 	"strconv"
@@ -37,13 +36,11 @@ import (
 const defaultMinimalSizeResizableTask = 412
 
 const (
-	apk                     = "ArcCompanionLibDemo.apk"
-	companionLibDemoPkg     = "org.chromium.arc.companionlibdemo"
-	mainActivity            = ".MainActivity"
-	resizeActivity          = ".MoveResizeActivity"
-	shadowActivity          = ".ShadowActivity"
-	unresizableMainActivity = ".UnresizableMainActivity"
-	wallpaper               = "white_wallpaper.jpg"
+	apk                 = "ArcCompanionLibDemo.apk"
+	companionLibDemoPkg = "org.chromium.arc.companionlibdemo"
+	mainActivity        = ".MainActivity"
+	resizeActivity      = ".MoveResizeActivity"
+	wallpaper           = "white_wallpaper.jpg"
 )
 
 type companionLibTestEntry struct {
@@ -87,15 +84,6 @@ var generalTests = []companionLibTestEntry{
 	{"Move and Resize Window", resizeActivity, testResizeWindow},
 }
 
-// These tests do not pass on R, regardless of if it is VM or Container.
-var arcPOnlyTests = []companionLibTestEntry{
-	{"Popup Window", mainActivity, testPopupWindow},
-	{"Window shadow", shadowActivity, testWindowShadow},
-	{"Window Bound", mainActivity, testWindowBounds},
-	// TODO(sstan): Add unresizable activity sub-test for ARC R.
-	{"Window Bound for Unresizable Activity", unresizableMainActivity, testWindowBounds},
-}
-
 // Device mode changed by tast test will not cause the display mode change sometimes,
 // so move it to unstable tests.
 var unstableTests = []companionLibTestEntry{
@@ -118,11 +106,6 @@ func init() {
 		Fixture:      "arcBooted",
 		Timeout:      6 * time.Minute,
 		Params: []testing.Param{{
-			// Use the android_p dep for running on android P of the container.
-			ExtraSoftwareDeps: []string{"android_p"},
-			Val:               append(generalTests, arcPOnlyTests...),
-			ExtraAttr:         []string{"group:hw_agnostic"},
-		}, {
 			Name:              "container_r",
 			ExtraSoftwareDeps: []string{"android_container_r"},
 			Val:               generalTests,
@@ -201,111 +184,6 @@ func CompanionLibrary(ctx context.Context, s *testing.State) {
 			}
 		})
 	}
-}
-
-// testWindowShadow verifies that the enable / disable window shadow function from ChromeOS companion library is correct.
-func testWindowShadow(ctx context.Context, _ *arc.ARC, cr *chrome.Chrome, tconn *chrome.TestConn, act *arc.Activity, d *ui.Device) error {
-	const (
-		toggleButtonID         = companionLibDemoPkg + ":id/toggle_shadow"
-		shadowStatusTextViewID = companionLibDemoPkg + ":id/toggle_shadow_status_text_view"
-	)
-
-	// Change the window to normal state for display the shadow out of edge.
-	if err := setWindowStateSync(ctx, tconn, act, arc.WindowStateNormal); err != nil {
-		return errors.Wrap(err, "could not set window state to normal")
-	}
-
-	dispMode, err := ash.PrimaryDisplayMode(ctx, tconn)
-	if err != nil {
-		return errors.Wrap(err, "failed to get display mode")
-	}
-	dispInfo, err := display.GetInternalInfo(ctx, tconn)
-	if err != nil {
-		return errors.Wrap(err, "failed to get internal display info")
-	}
-
-	dispBounds := coords.ConvertBoundsFromDPToPX(dispInfo.Bounds, dispMode.DeviceScaleFactor)
-
-	// Check the pixel in a small width rectangle box from each edge.
-	const shadowWidth = 5
-
-	// TODO(sstan): Using set bound function replace the simple window bounds check.
-	winBounds, err := act.WindowBounds(ctx)
-	testing.ContextLogf(ctx, "WindowShadow: window = %v, display = %v", winBounds, dispBounds)
-
-	if err != nil {
-		return err
-	}
-	if winBounds.Width >= dispBounds.Width || winBounds.Height >= dispBounds.Height {
-		return errors.New("activity is larger than screen so that shadow can't be visible")
-	}
-	if winBounds.Left < shadowWidth || winBounds.Left+winBounds.Width+shadowWidth >= dispBounds.Width {
-		return errors.New("activity haven't enough space to show shadow")
-	}
-
-	imgWithShadow, err := screenshot.GrabScreenshot(ctx, cr)
-	if err != nil {
-		return errors.Wrap(err, "failed to grab screenshot")
-	}
-
-	// Push button to hide window shadow.
-	if err := d.Object(ui.ID(toggleButtonID)).Click(ctx); err != nil {
-		return errors.Wrap(err, "failed to click shadow toggle button")
-	}
-
-	if err := testing.Poll(ctx, func(ctx context.Context) error {
-		text, err := d.Object(ui.ID(shadowStatusTextViewID)).GetText(ctx)
-		// TODO(sstan): Using obj.WaitForExist() before GetText(), rather than Poll it.
-		if err != nil {
-			return err
-		}
-		// The TextView will change after shadow hidden.
-		if text != "Hidden" {
-			return errors.New("still waiting window shadow change")
-		}
-		return nil
-	}, &testing.PollOptions{Timeout: 4 * time.Second}); err != nil {
-		return errors.Wrap(err, "failed to hidden window shadow")
-	}
-
-	imgWithoutShadow, err := screenshot.GrabScreenshot(ctx, cr)
-	if err != nil {
-		return errors.Wrap(err, "failed to grab screenshot")
-	}
-
-	// Comparing bound outside pixels brightness change after hidden window shadow.
-	for _, test := range []struct {
-		name           string
-		x0, y0, x1, y1 int
-	}{
-		{"left   edge shadow", winBounds.Left - shadowWidth, winBounds.Top, winBounds.Left, winBounds.Top + winBounds.Height},
-		{"right  edge shadow", winBounds.Left + winBounds.Width, winBounds.Top, winBounds.Left + winBounds.Width + shadowWidth, winBounds.Top + winBounds.Height},
-		{"bottom edge shadow", winBounds.Left, winBounds.Top + winBounds.Height, winBounds.Left + winBounds.Width, winBounds.Top + winBounds.Height + shadowWidth},
-	} {
-		subImageWithShadow := imgWithShadow.(interface {
-			SubImage(r image.Rectangle) image.Image
-		}).SubImage(image.Rect(test.x0, test.y0, test.x1, test.y1))
-
-		subImageWithoutShadow := imgWithoutShadow.(interface {
-			SubImage(r image.Rectangle) image.Image
-		}).SubImage(image.Rect(test.x0, test.y0, test.x1, test.y1))
-
-		rect := subImageWithShadow.Bounds()
-		totalPixels := (rect.Max.Y - rect.Min.Y) * (rect.Max.X - rect.Min.X)
-		brighterPixelsCount, err := imgcmp.CountBrighterPixels(subImageWithShadow, subImageWithoutShadow)
-		testing.ContextLogf(ctx, "WindowShadow: Test %s, screenshot rect: %v, totalPixels: %d, brighterPixels: %d", test.name, rect, totalPixels, brighterPixelsCount)
-		if err != nil {
-			return errors.Wrap(err, "failed to count brighter pixels by subimg in screenshot")
-		}
-
-		// This is a rough estimation.
-		// If more than half pixels brighter than before in white background, it can be recogenized that the shadow has been hidden.
-		const pixelCountPercentageThreshold = 50
-		if brighterPixelsCount*100/totalPixels < pixelCountPercentageThreshold {
-			return errors.Errorf("%s has not be hidden", test.name)
-		}
-	}
-	return nil
 }
 
 // testCaptionHeight verifies that the caption height length getting from ChromeOS companion library is correct.
@@ -962,97 +840,6 @@ func testAlwaysOnTop(ctx context.Context, a *arc.ARC, cr *chrome.Chrome, tconn *
 	return nil
 }
 
-// testPopupWindow verifies that popup window's behaviors works as expected.
-func testPopupWindow(ctx context.Context, a *arc.ARC, cr *chrome.Chrome, tconn *chrome.TestConn, act *arc.Activity, d *ui.Device) error {
-	const (
-		showPopupWindowButtonID = companionLibDemoPkg + ":id/popup_window_button"
-		clipToTaskCheckboxID    = companionLibDemoPkg + ":id/clip_to_task_bounds"
-		dismissButtonID         = companionLibDemoPkg + ":id/dismiss"
-		popupWindowString       = "Popup Window"
-	)
-
-	countPopupWindowPixelPercentage := func(captionImage image.Image) float64 {
-		// https://developer.android.com/reference/android/R.color#holo_blue_light
-		holoBlueLight := color.RGBA{0x33, 0xb5, 0xe5, 0xff}
-		rect := captionImage.Bounds()
-		totalPixels := (rect.Max.Y - rect.Min.Y) * (rect.Max.X - rect.Min.X)
-		popupWindowPixelsCount := imgcmp.CountPixels(captionImage, holoBlueLight)
-		return float64(popupWindowPixelsCount) * 100.0 / float64(totalPixels)
-	}
-
-	dispMode, err := ash.PrimaryDisplayMode(ctx, tconn)
-	if err != nil {
-		return errors.Wrap(err, "failed to get display mode")
-	}
-	dispInfo, err := display.GetInternalInfo(ctx, tconn)
-	if err != nil {
-		return errors.Wrap(err, "failed to get internal display info")
-	}
-
-	// Set window on the top of the workspace insets. Make sure the framework can ignore the caption bar size of popup window layer. See b/147783396.
-	dispBounds := coords.ConvertBoundsFromDPToPX(dispInfo.Bounds, dispMode.DeviceScaleFactor)
-	setWindowBounds(ctx, d, coords.NewRect(0, 0, dispBounds.Width, dispBounds.Height))
-
-	captionHeight, err := act.CaptionHeight(ctx)
-	if err != nil {
-		return errors.Wrap(err, "failed to get caption height")
-	}
-	bounds, err := act.WindowBounds(ctx)
-	if err != nil {
-		return errors.Wrap(err, "failed to get window bounds")
-	}
-
-	if err := d.Object(ui.ID(showPopupWindowButtonID)).Click(ctx); err != nil {
-		return errors.Wrap(err, "failed to click popup window button")
-	}
-
-	// Check the popup window has poped.
-	if err := d.Object(ui.Text(popupWindowString)).WaitForExists(ctx, 5*time.Second); err != nil {
-		return errors.Wrap(err, "failed to popup window")
-	}
-	clipWindowCaption, err := getWindowCaptionScreenshot(ctx, cr, bounds.Top, bounds.Left, captionHeight, bounds.Width)
-	if err != nil {
-		return errors.Wrap(err, "failed to get clip window caption screenshot")
-	}
-
-	// In initial state, the popup window should be cliped to the task window bounds, which means it should be covered by window caption.
-	clipWindowCoverPercentage := countPopupWindowPixelPercentage(clipWindowCaption)
-	if clipWindowCoverPercentage > 0 {
-		testing.ContextLog(ctx, "PopupWindow: Clip popup window cover percentage: ", clipWindowCoverPercentage)
-		return errors.New("unexpected popup window bound: got uncliped; want cliped")
-	}
-
-	if err := d.Object(ui.ID(clipToTaskCheckboxID)).Click(ctx); err != nil {
-		return errors.Wrap(err, "failed to click the checkbox to disable clip bound")
-	}
-	if err := d.Object(ui.ID(dismissButtonID)).Click(ctx); err != nil {
-		return errors.Wrap(err, "failed to click dismiss button")
-	}
-	if err := d.Object(ui.ID(showPopupWindowButtonID)).Click(ctx); err != nil {
-		return errors.Wrap(err, "failed to click popup window button to show unclip window")
-	}
-	// Check the popup window has poped.
-	if err := d.Object(ui.Text(popupWindowString)).WaitForExists(ctx, 5*time.Second); err != nil {
-		return errors.Wrap(err, "failed to popup window")
-	}
-
-	// After disable the clip, the popup window should be cover the window caption.
-	unclipWindowCaption, err := getWindowCaptionScreenshot(ctx, cr, bounds.Top, bounds.Left, captionHeight, bounds.Width)
-	if err != nil {
-		return errors.Wrap(err, "failed to get unclip window caption screenshot")
-	}
-	upclipWindowCoverPercentage := countPopupWindowPixelPercentage(unclipWindowCaption)
-	if upclipWindowCoverPercentage == 0 {
-		testing.ContextLog(ctx, "PopupWindow: Unclip popup window cover percentage: ", upclipWindowCoverPercentage)
-		return errors.New("unexpected popup window bound: got cliped; want uncliped")
-	}
-
-	if err := d.Object(ui.ID(dismissButtonID)).Click(ctx); err != nil {
-		return errors.Wrap(err, "failed to click dismiss button on unclip window")
-	}
-	return nil
-}
-
 // testWindowState verifies that change window state by ChromeOS companion library works as expected.
 func testWindowState(ctx context.Context, _ *arc.ARC, _ *chrome.Chrome, tconn *chrome.TestConn, act *arc.Activity, d *ui.Device) error {
 	for _, test := range []struct {
@@ -1155,138 +942,6 @@ func testMaximize(ctx context.Context, _ *arc.ARC, _ *chrome.Chrome, tconn *chro
 	if err := clickMaximizeCheckbox(); err != nil {
 		return errors.Wrap(err, "failed to click the maximize checkbox")
 	}
-	return nil
-}
-
-// testWindowBounds verifies that the window bounds related API works as expected in ChromeOS Companion Lib.
-func testWindowBounds(ctx context.Context, _ *arc.ARC, _ *chrome.Chrome, tconn *chrome.TestConn, act *arc.Activity, d *ui.Device) error {
-	physicalDisplayDensity, err := act.DisplayDensity(ctx)
-	if err != nil {
-		return errors.Wrap(err, "failed to get physical display density")
-	}
-
-	dispMode, err := ash.PrimaryDisplayMode(ctx, tconn)
-	if err != nil {
-		return errors.Wrap(err, "failed to get display mode")
-	}
-	dispInfo, err := display.GetInternalInfo(ctx, tconn)
-	if err != nil {
-		return errors.Wrap(err, "failed to get internal display info")
-	}
-
-	// Each ARC app window has limitation of window bounds. The CompanionLib Demo use default window bound size.
-	minimizeSize := int(math.Round(defaultMinimalSizeResizableTask * physicalDisplayDensity))
-
-	// In clamshell mode, set window bound cannot set the window higher than caption.
-	// Get caption height for calculate expected window bound.
-	captionHeight, err := act.CaptionHeight(ctx)
-	if err != nil {
-		return err
-	}
-
-	dispBoundsPX := coords.ConvertBoundsFromDPToPX(dispInfo.Bounds, dispMode.DeviceScaleFactor)
-	shelfHeightPX := dispBoundsPX.Height - int(math.Round(float64(dispInfo.WorkArea.Height)*dispMode.DeviceScaleFactor))
-
-	// Change the window to normal state for make sure the bounds of window can be set.
-	if _, err := ash.SetARCAppWindowState(ctx, tconn, act.PackageName(), ash.WMEventNormal); err != nil {
-		return err
-	}
-	if err := ash.WaitForARCAppWindowState(ctx, tconn, act.PackageName(), ash.WindowStateNormal); err != nil {
-		return err
-	}
-
-	initAshWindow, err := ash.GetARCAppWindowInfo(ctx, tconn, companionLibDemoPkg)
-	if err != nil {
-		return err
-	}
-
-	initBounds, err := act.WindowBounds(ctx)
-	if err != nil {
-		return errors.Wrap(err, "failed to get window bounds")
-	}
-	testing.ContextLogf(ctx, "WindowBounds: original bounds rect: %v, minimize length: %v, caption height: %v", initBounds, minimizeSize, captionHeight)
-
-	originalShelfAlignment, err := ash.GetShelfAlignment(ctx, tconn, dispInfo.ID)
-	if err != nil {
-		return errors.Wrap(err, "failed to get shelf alignmnet")
-	}
-	defer ash.SetShelfAlignment(ctx, tconn, dispInfo.ID, originalShelfAlignment)
-
-	// It is possible that some TextView be set outside window, which would cause tast library cannot read messages.
-	// Should avoid this case in test.
-	for _, test := range []struct {
-		name string
-		// Format of coords.Rect is {top, left, width, height}, and it's not input for SetBounds function.
-		settingBound  coords.Rect
-		expectedBound coords.Rect
-	}{
-		{"trigger min size limit", coords.NewRect(0, 0, 0, 0), coords.NewRect(0, captionHeight, minimizeSize, minimizeSize)},
-		{"trigger min size limit again", coords.NewRect(0, captionHeight/2, minimizeSize/2, minimizeSize/2), coords.NewRect(0, captionHeight, minimizeSize, minimizeSize)},
-		{"fullscreen size", coords.NewRect(0, 0, dispBoundsPX.Width, dispBoundsPX.Height), coords.NewRect(0, captionHeight, dispBoundsPX.Width, dispBoundsPX.Height-captionHeight-shelfHeightPX)}, // Auto maximize. It means the edge will not over the shelf
-	} {
-		// The expected window bound depends on setting window bound and can be
-		// calculated directly, according to the window bound behavior.
-		if err := setWindowBounds(ctx, d, test.settingBound); err != nil {
-			return errors.Wrap(err, "failed to setting window bound")
-		}
-
-		// Because the conversion of DP to PX, we should be lenient with the epsilon.
-		const epsilon = 2
-
-		if err := testing.Poll(ctx, func(ctx context.Context) error {
-			w, err := ash.GetARCAppWindowInfo(ctx, tconn, companionLibDemoPkg)
-			if err != nil {
-				return err
-			}
-
-			chromeBounds := coords.ConvertBoundsFromDPToPX(w.BoundsInRoot, dispMode.DeviceScaleFactor)
-			chromeBounds.Top += captionHeight
-			chromeBounds.Height -= captionHeight
-			if !isSimilarRect(chromeBounds, test.expectedBound, epsilon) {
-				return errors.Errorf("Chrome bounds are different on subtest %v: got %v, want %v", test.name, chromeBounds, test.expectedBound)
-			}
-			return nil
-		}, &testing.PollOptions{Timeout: 5 * time.Second}); err != nil {
-			return errors.Wrap(err, "failed to wait for window bound change")
-		}
-
-		bound, err := windowBounds(ctx, d)
-		if err != nil {
-			return errors.Wrap(err, "failed to get window bound from UI message")
-		}
-		if !isSimilarRect(coords.Rect(bound), coords.Rect(test.expectedBound), epsilon) {
-			return errors.Errorf("wrong window bound on subtest %v, set %v: got %v, want %v", test.name, test.settingBound, bound, test.expectedBound)
-		}
-
-		if ashWindow, err := ash.GetARCAppWindowInfo(ctx, tconn, companionLibDemoPkg); err != nil {
-			return errors.Wrap(err, "failed to get window info")
-		} else if ashWindow.CanResize != initAshWindow.CanResize {
-			return errors.Errorf("unexpectedly changed window resizeability on subtest %v: got %t, want %t", test.name, ashWindow.CanResize, initAshWindow.CanResize)
-		}
-	}
-
-	// Check that app-controlled state is not modified by bounds change.
-	if appControlled, err := isAppControlled(ctx, d); err != nil {
-		return err
-	} else if appControlled {
-		return errors.New("unexpectedly changed app controlled state to true")
-	}
-
-	// Set app-controlled and resize back to the initial bounds.
-	// This should not change app-controlled state as well.
-	if err := setWindowState(ctx, d, "", true); err != nil {
-		return errors.Wrap(err, "failed to enable app controlled flag")
-	}
-	if err := setWindowBounds(ctx, d, initBounds); err != nil {
-		return errors.Wrap(err, "failed to setting window bound")
-	}
-
-	if appControlled, err := isAppControlled(ctx, d); err != nil {
-		return err
-	} else if !appControlled {
-		return errors.New("unexpectedly changed app controlled state to true")
-	}
-
 	return nil
 }
 

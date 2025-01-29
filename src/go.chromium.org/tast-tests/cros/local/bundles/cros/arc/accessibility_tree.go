@@ -30,11 +30,6 @@ type axTreeNode struct {
 	CustomActions   []string
 }
 
-type expectedNode struct {
-	CheckBoxAttributes map[string]interface{}
-	SeekBarAttributes  map[string]interface{}
-}
-
 // matches wraps the match of AutomationNode and adds checks for list attributes, because
 // match function of AutomationNode in javascript doesn't support the inclusion condition
 // of list attributes.
@@ -101,25 +96,10 @@ func init() {
 		Fixture:      "arcBootedWithoutUIAutomator",
 		Timeout:      4 * time.Minute,
 		Params: []testing.Param{{
-			Val: expectedNode{
-				CheckBoxAttributes: map[string]interface{}{},
-				SeekBarAttributes:  map[string]interface{}{},
-			},
-			ExtraSoftwareDeps: []string{"android_p"},
-			ExtraAttr:         []string{"group:hw_agnostic"},
-		}, {
-			Name: "container_r",
-			Val: expectedNode{
-				CheckBoxAttributes: map[string]interface{}{"checkedStateDescription": "state description not checked"},
-				SeekBarAttributes:  map[string]interface{}{"value": "state description 25"},
-			},
+			Name:              "container_r",
 			ExtraSoftwareDeps: []string{"android_container_r"},
 		}, {
-			Name: "vm",
-			Val: expectedNode{
-				CheckBoxAttributes: map[string]interface{}{"checkedStateDescription": "state description not checked"},
-				SeekBarAttributes:  map[string]interface{}{"value": "state description 25"},
-			},
+			Name:              "vm",
 			ExtraSoftwareDeps: []string{"android_vm"},
 			ExtraAttr:         []string{"group:hw_agnostic"},
 		}},
@@ -193,12 +173,12 @@ func AccessibilityTree(ctx context.Context, s *testing.State) {
 					{
 						Name:       "CheckBoxWithStateDescription",
 						Role:       role.CheckBox,
-						Attributes: s.Param().(expectedNode).CheckBoxAttributes,
+						Attributes: map[string]interface{}{"checkedStateDescription": "state description not checked"},
 					},
 					{
 						Name:       "seekBar",
 						Role:       role.Slider,
-						Attributes: s.Param().(expectedNode).SeekBarAttributes,
+						Attributes: map[string]interface{}{"value": "state description 25"},
 					},
 					{
 						Role: role.Slider,

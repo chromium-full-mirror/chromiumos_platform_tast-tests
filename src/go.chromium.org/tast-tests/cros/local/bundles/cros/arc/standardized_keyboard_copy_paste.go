@@ -32,8 +32,9 @@ func init() {
 		Timeout:      10 * time.Minute,
 		Fixture:      "arcBooted",
 		Params: []testing.Param{{
+			ExtraAttr:         []string{"informational"},
 			Val:               standardizedtestutil.GetClamshellTest(runStandardizedKeyboardCopyPasteTest),
-			ExtraSoftwareDeps: []string{"android_p"},
+			ExtraSoftwareDeps: []string{"android_container"},
 			ExtraHardwareDeps: hwdep.D(standardizedtestutil.ClamshellHardwareDep),
 		}, {
 			Name:              "tablet_mode",
