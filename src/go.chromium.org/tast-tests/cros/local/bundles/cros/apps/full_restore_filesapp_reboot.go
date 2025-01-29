@@ -23,8 +23,8 @@ func init() {
 		Func: FullRestoreFilesappReboot,
 		Desc: "Test full restore files app",
 		Contacts: []string{
-			"chromeos-apps-foundation-team@google.com",
-			"nancylingwang@google.com",
+			"cros-web-apps-team@google.com",
+			"renkens@google.com",
 		},
 		BugComponent: "b:1203766",
 		Attr:         []string{"group:mainline", "informational", "group:hw_agnostic"},
@@ -55,14 +55,17 @@ func FullRestoreFilesappReboot(ctx context.Context, s *testing.State) {
 		// GoBigSleepLint: According to the PRD of Full Restore go/chrome-os-full-restore-dd,
 		// it uses a throttle of 2.5s to save the app launching and window statue information to the backend.
 		// Therefore, sleep 5 seconds here.
-		testing.Sleep(ctx, 5*time.Second)
+		// TODO(b/394258768): Find a way to wait for the sync instead of sleeping.
+		if err := testing.Sleep(ctx, 5*time.Second); err != nil {
+			s.Fatal("Failed to sleep: ", err)
+		}
 	}()
 
 	func() {
 		cr, err := chrome.New(ctx,
 			// Set not to clear the notification after restore.
 			// By default, On startup is set to ask every time after reboot
-			// and there is an alertdialog asking the user to select whether to restore or not.
+			// and there is a window asking the user to select whether to restore or not.
 			chrome.RemoveNotification(false),
 			chrome.KeepState())
 		if err != nil {
@@ -75,16 +78,16 @@ func FullRestoreFilesappReboot(ctx context.Context, s *testing.State) {
 			s.Fatal("Failed to connect Test API: ", err)
 		}
 
-		alertDialog := nodewith.NameStartingWith("Restore apps?").Role(role.AlertDialog)
-		restoreButton := nodewith.Name("Restore").Role(role.Button).Ancestor(alertDialog)
+		restoreWidget := nodewith.ClassName("InformedRestoreWidget").Role(role.Window)
+		openButton := nodewith.Name("Open").Role(role.Button).Ancestor(restoreWidget)
 		downloads := nodewith.Name(filesapp.Downloads).Role(role.TreeItem).Ancestor(filesapp.WindowFinder(apps.FilesSWA.ID))
 
 		ui := uiauto.New(tconn)
 		defer faillog.DumpUITreeOnError(ctx, s.OutDir(), s.HasError, tconn)
 
 		if err := uiauto.Combine("restore files app",
-			// Click Restore on the restore alert.
-			ui.WithTimeout(30*time.Second).LeftClick(restoreButton),
+			// Click Open on the Welcome Recap window.
+			ui.WithTimeout(30*time.Second).LeftClick(openButton),
 
 			// Check Files app is restored.
 			ui.WaitUntilExists(downloads))(ctx); err != nil {

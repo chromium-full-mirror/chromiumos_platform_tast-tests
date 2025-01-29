@@ -22,10 +22,10 @@ import (
 func init() {
 	testing.AddTest(&testing.Test{
 		Func: FullRestoreAlwaysRestore,
-		Desc: "Test full restore always restore setting",
+		Desc: "Test full restore always open setting",
 		Contacts: []string{
-			"chromeos-apps-foundation-team@google.com",
-			"nancylingwang@google.com",
+			"cros-web-apps-team@google.com",
+			"renkens@google.com",
 		},
 		BugComponent: "b:1203766",
 		Attr:         []string{"group:mainline", "informational", "group:hw_agnostic"},
@@ -80,24 +80,29 @@ func openBrowser(ctx context.Context) error {
 	}
 	defer conn.Close()
 
-	// Open OS settings to set the 'Always restore' setting.
-	if _, err = ossettings.LaunchAtPage(ctx, tconn, nodewith.Name("Apps").Role(role.Link)); err != nil {
-		return errors.Wrap(err, "failed to launch Apps Settings")
+	// Open OS settings to set the 'Always open' setting.
+	if _, err = ossettings.LaunchAtPage(ctx, tconn, nodewith.Name("System preferences").Role(role.Link)); err != nil {
+		return errors.Wrap(err, "failed to launch system preferences settings")
 	}
 
 	ui := uiauto.New(tconn)
-	restoreCombox := nodewith.Name("Restore apps on startup").Role(role.ComboBoxSelect)
-	alwaysRestoreOption := nodewith.Name("Always restore").Role(role.ListBoxOption)
-	if err := uiauto.Combine("set 'Always restore' Settings",
-		ui.LeftClickUntil(restoreCombox, ui.WaitUntilExists(alwaysRestoreOption)),
-		ui.LeftClick(alwaysRestoreOption))(ctx); err != nil {
-		return errors.Wrap(err, "failed to set 'Always restore' Settings")
+	recapCombox := nodewith.Name("Welcome Recap").Role(role.ComboBoxSelect)
+	alwaysOpenOption := nodewith.Name("Always open").Role(role.MenuListOption)
+	if err := uiauto.Combine("set 'Always open' settings",
+		ui.WaitUntilExists(recapCombox),
+		ui.ScrollToVisible(recapCombox),
+		ui.LeftClickUntil(recapCombox, ui.WaitUntilExists(alwaysOpenOption)),
+		ui.LeftClick(alwaysOpenOption))(ctx); err != nil {
+		return errors.Wrap(err, "failed to set 'Always open' settings")
 	}
 
 	// GoBigSleepLint: According to the PRD of Full Restore go/chrome-os-full-restore-dd,
 	// it uses a throttle of 2.5s to save the app launching and window statue information to the backend.
 	// Therefore, sleep 5 seconds here.
-	testing.Sleep(ctx, 5*time.Second)
+	// TODO(b/394258768): Find a way to wait for the sync instead of sleeping.
+	if err := testing.Sleep(ctx, 5*time.Second); err != nil {
+		return errors.Wrap(err, "failed to sleep")
+	}
 
 	return nil
 }
@@ -106,7 +111,7 @@ func restoreBrowser(ctx context.Context, outDir string, hasError func() bool) er
 	opts := []chrome.Option{
 		// Set not to clear the notification after restore.
 		// By default, On startup is set to ask every time after reboot
-		// and there is an alertdialog asking the user to select whether to restore or not.
+		// and there is a window asking the user to select whether to restore or not.
 		chrome.RemoveNotification(false),
 		chrome.DisableFeatures("ChromeWhatsNewUI"),
 		chrome.EnableRestoreTabs(),
