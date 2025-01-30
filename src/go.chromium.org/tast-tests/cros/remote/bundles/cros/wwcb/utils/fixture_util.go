@@ -39,6 +39,12 @@ var (
 		"AUS20019_D00_04": "2001904",
 		"AUS20019_D00_05": "2001905",
 
+		"AUS20019_E00_01": "2001901", // New Type-A Fixture
+		"AUS20019_E00_02": "2001902", // New Type-A Fixture
+		"AUS20019_E00_03": "2001903", // New Type-A Fixture
+		"AUS20019_E00_04": "2001904", // New Type-A Fixture
+		"AUS20019_E00_05": "2001905", // New Type-A Fixture
+
 		"ADT21090_B00_01": "2109001",
 		"ADT21090_B00_02": "2109002",
 
