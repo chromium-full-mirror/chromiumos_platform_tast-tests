@@ -14,6 +14,7 @@ const (
 	ArcSnapshot                                         = "arc_snapshot"
 	ArcLoggingTest                                      = "arc_logging_test"
 	BuiltInCertProvisioningTesting                      = "built_in_cert_provisioning_testing"
+	BuiltInCertProvisioningAPITesting                   = "built_in_cert_provisioning_api_testing"
 	ChromeosbytebotCom                                  = "chromeosbytebot_com"
 	Crosprqa4Com                                        = "crosprqa4_com"
 	DefaultManaged                                      = "default_managed"

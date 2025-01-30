@@ -74,7 +74,7 @@ func init() {
 		}},
 		Params: []testing.Param{
 			{
-				Name: "alpha",
+				Name: "alpha", // Static flow.
 				Val: gaiaenrollment.TestParams{
 					DMServer: policy.DMServerAlphaURL,
 					PoolID:   tape.BuiltInCertProvisioningTesting,
@@ -85,10 +85,32 @@ func init() {
 				}},
 			},
 			{
-				Name: "prod",
+				Name: "prod", // Static flow.
 				Val: gaiaenrollment.TestParams{
 					DMServer: policy.DMServerProdURL,
 					PoolID:   tape.BuiltInCertProvisioningTesting,
+				},
+				// TODO b/346725308 Refactor to use utility and known dependency list.
+				ExtraSearchFlags: []*testing.StringPair{{
+					Key: "external_dependency", Value: "DMServerProd",
+				}},
+			},
+			{
+				Name: "dynamic_alpha",
+				Val: gaiaenrollment.TestParams{
+					DMServer: policy.DMServerAlphaURL,
+					PoolID:   tape.BuiltInCertProvisioningAPITesting,
+				},
+				// TODO b/346725308 Refactor to use utility and known dependency list.
+				ExtraSearchFlags: []*testing.StringPair{{
+					Key: "external_dependency", Value: "DMServerAlpha",
+				}},
+			},
+			{
+				Name: "dynamic_prod",
+				Val: gaiaenrollment.TestParams{
+					DMServer: policy.DMServerProdURL,
+					PoolID:   tape.BuiltInCertProvisioningAPITesting,
 				},
 				// TODO b/346725308 Refactor to use utility and known dependency list.
 				ExtraSearchFlags: []*testing.StringPair{{
