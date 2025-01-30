@@ -317,28 +317,17 @@ func getFpmcuBoardName(testName string) string {
 
 // setupServo sets up a servo host connected to FPMCU.
 func setupServo(ctx context.Context, testName string) (*testexec.Cmd, error) {
-	cmdServod := testexec.CommandContext(ctx, "servod", "--board="+getFpmcuBoardName(testName))
-	stdout, err := cmdServod.StdoutPipe()
-	if err != nil {
-		return nil, errors.Wrapf(err, "cannot watch stdout for %q", shutil.EscapeSlice(cmdServod.Args))
-	}
-	testing.ContextLogf(ctx, "Running command: %q", shutil.EscapeSlice(cmdServod.Args))
+	cmdServod := testexec.CommandContext(ctx, "servod", "-p=9999", "--board="+getFpmcuBoardName(testName))
+	testing.ContextLogf(ctx, "Starting command: %q", shutil.EscapeSlice(cmdServod.Args))
 	if err := cmdServod.Start(); err != nil {
 		return nil, errors.Wrapf(err, "%q failed", shutil.EscapeSlice(cmdServod.Args))
 	}
-	// Wait for servod to initialize.
-	sc := bufio.NewScanner(stdout)
-	for {
-		if !sc.Scan() {
-			if err := sc.Err(); err != nil {
-				return nil, errors.Wrap(err, "error while scanning servo output")
-			}
-			continue
-		}
-		t := sc.Text()
-		if strings.Contains(t, "INFO - Listening on localhost port") {
-			break
-		}
+
+	cmdServodTool := testexec.CommandContext(ctx, "servodtool", "instance", "wait-for-active", "-p=9999", "--timeout=20")
+	testing.ContextLogf(ctx, "Running command: %q", shutil.EscapeSlice(cmdServodTool.Args))
+	if output, err := cmdServodTool.CombinedOutput(); err != nil {
+		testing.ContextLogf(ctx, "Servod failed to start: %s", output)
+		return cmdServod, err
 	}
 	return cmdServod, nil
 }
@@ -502,11 +491,13 @@ func FpmcuUnittest(ctx context.Context, s *testing.State) {
 	}
 
 	cmdServod, err := setupServo(ctx, metadata.name)
+	if cmdServod != nil {
+		defer cmdServod.Wait(testexec.DumpLogOnError)
+		defer cmdServod.Signal(unix.SIGINT)
+	}
 	if err != nil {
 		s.Fatal("Failed to start servod: ", err)
 	}
-	defer cmdServod.Wait(testexec.DumpLogOnError)
-	defer cmdServod.Signal(unix.SIGINT)
 
 	// Reboot the FPMCU for a clean state.
 	if err := rebootFpmcu(ctx); err != nil {
