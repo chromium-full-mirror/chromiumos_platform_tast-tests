@@ -2332,7 +2332,9 @@ func (tf *TestFixture) StartTethering(ctx context.Context, dutIdx DutIdx, ops []
 
 	var capturer *pcap.Capturer
 	if tf.options.EnablePacketCapture {
-		capturer, err = tf.StartPacketCapture(ctx, int(resp.Channel), int(resp.ChannelWidth))
+		if capturer, err = tf.StartPacketCapture(ctx, int(resp.Channel), int(resp.ChannelWidth)); err != nil {
+			return nil, nil, errors.Wrap(err, "failed to start packet capture")
+		}
 		defer func() {
 			if retErr != nil {
 				tf.PcapRouter().StopCapture(ctx, capturer)

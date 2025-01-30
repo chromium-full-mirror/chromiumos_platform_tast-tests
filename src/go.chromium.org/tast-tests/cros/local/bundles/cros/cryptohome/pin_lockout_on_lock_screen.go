@@ -18,9 +18,6 @@ import (
 	"go.chromium.org/tast/core/testing"
 )
 
-// pinLockoutOnLockScreenConfig represents the different options for PIN lockout.
-type pinLockoutOnLockScreenConfig int
-
 func init() {
 	testing.AddTest(&testing.Test{
 		Func: PinLockoutOnLockScreen,
