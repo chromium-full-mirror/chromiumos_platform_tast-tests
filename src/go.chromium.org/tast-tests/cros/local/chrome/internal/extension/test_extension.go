@@ -25,6 +25,9 @@ const (
 
 	// testExtensionKey is a manifest key of the autotest extension.
 	testExtensionKey = "MIGfMA0GCSqGSIb3DQEBAQUAA4GNADCBiQKBgQDuUZGKCDbff6IRaxa4Pue7PPkxwPaNhGT3JEqppEsNWFjM80imEdqMbf3lrWqEfaHgaNku7nlpwPO1mu3/4Hr+XdNa5MhfnOnuPee4hyTLwOs3Vzz81wpbdzUxZSi2OmqMyI5oTaBYICfNHLwcuc65N5dbt6WKGeKgTpp4v7j7zwIDAQAB"
+
+	// TastLibraryLoadedExpr is a JavaScript expression that checks if the 'tast' library is defined.
+	TastLibraryLoadedExpr = `typeof tast != 'undefined'`
 )
 
 // testExtension describes information of a test extension.

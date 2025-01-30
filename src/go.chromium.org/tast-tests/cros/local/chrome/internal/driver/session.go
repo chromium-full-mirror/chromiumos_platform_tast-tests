@@ -258,7 +258,7 @@ func (s *Session) testAPIConnFor(ctx context.Context, extConn **Conn, extID stri
 		checkCtx, cancel := context.WithTimeout(ctx, 15*time.Second)
 		defer cancel()
 
-		if err := (*extConn).WaitForExpr(checkCtx, `typeof tast != 'undefined'`); err != nil {
+		if err := (*extConn).WaitForExpr(checkCtx, extension.TastLibraryLoadedExpr); err != nil {
 			testing.ContextLog(ctx, "Test API extension became unavailable: ", err)
 			return nil, err
 		}
@@ -269,7 +269,7 @@ func (s *Session) testAPIConnFor(ctx context.Context, extConn **Conn, extID stri
 	testing.ContextLog(ctx, "Waiting for test API extension at ", bgURL)
 	var err error
 	check := func(conn *Conn) bool {
-		if err := conn.WaitForExpr(ctx, `typeof tast != 'undefined'`); err != nil {
+		if err := conn.WaitForExpr(ctx, extension.TastLibraryLoadedExpr); err != nil {
 			return false
 		}
 		if autotestPrivateSupported {
@@ -286,7 +286,7 @@ func (s *Session) testAPIConnFor(ctx context.Context, extConn **Conn, extID stri
 	(*extConn).locked = true
 
 	// Wait for tast API to be available.
-	if err := (*extConn).WaitForExpr(ctx, `typeof tast != 'undefined'`); err != nil {
+	if err := (*extConn).WaitForExpr(ctx, extension.TastLibraryLoadedExpr); err != nil {
 		return nil, errors.Wrap(err, "tast API is unavailable")
 	}
 

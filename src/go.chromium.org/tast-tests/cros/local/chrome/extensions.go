@@ -6,6 +6,7 @@ package chrome
 
 import (
 	"context"
+	"time"
 
 	"go.chromium.org/tast-tests/cros/local/chrome/internal/extension"
 	"go.chromium.org/tast/core/errors"
@@ -18,6 +19,11 @@ func AddTastLibrary(ctx context.Context, conn *Conn) error {
 	// Ensure the page is loaded so the tast library will be added properly.
 	if err := conn.WaitForExpr(ctx, `document.readyState === "complete"`); err != nil {
 		return errors.Wrap(err, "failed waiting for page to load")
+	}
+	checkCtx, cancel := context.WithTimeout(ctx, 5*time.Second)
+	defer cancel()
+	if err := conn.WaitForExpr(checkCtx, extension.TastLibraryLoadedExpr); err == nil {
+		return nil
 	}
 	return conn.Eval(ctx, extension.TastLibraryJS, nil)
 }
