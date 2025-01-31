@@ -44,7 +44,7 @@ func init() {
 		Desc:         "Ensures that no nested cpu cgroups are created. Nested cpu cgroup has overhead on each scheduling",
 		Contacts:     []string{"baseos-perf@google.com", "kawasin@google.com"},
 		BugComponent: "b:167279", // ChromeOS > Platform > baseOS > Performance
-		Attr:         []string{"group:mainline", "group:criticalstaging", "informational"},
+		Attr:         []string{"group:mainline"},
 		SoftwareDeps: []string{"chrome"},
 		// Check the cpu cgroups structure at the timing when user login.
 		Fixture: fixture.ChromeLoggedIn,
