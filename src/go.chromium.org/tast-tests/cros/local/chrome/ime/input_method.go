@@ -1132,6 +1132,7 @@ var inputMethods = []InputMethod{
 	BulgarianWithPhoneticKeyboard,
 	BurmeseMyanmarWithMyansanKeyboard,
 	Cantonese,
+	Catalan,
 	ChineseArray,
 	ChineseCangjie,
 	ChineseDayi,
