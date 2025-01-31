@@ -583,6 +583,8 @@ func (f *cellularFixture) SetUp(ctx context.Context, s *testing.FixtState) inter
 		if f.modemLoggingStarted && s.HasError() {
 			if err := stopModemLogging(ctx); err != nil {
 				s.Log("Could not stop modem logging: ", err)
+			} else {
+				f.modemLoggingStarted = false
 			}
 		}
 	}(s)
@@ -996,6 +998,8 @@ func (f *cellularFixture) TearDown(ctx context.Context, s *testing.FixtState) {
 			} else {
 				s.Fatal("Could not stop modem logging: ", err)
 			}
+		} else {
+			f.modemLoggingStarted = false
 		}
 	}
 	if f.disableCellularInShill && f.helper != nil {
