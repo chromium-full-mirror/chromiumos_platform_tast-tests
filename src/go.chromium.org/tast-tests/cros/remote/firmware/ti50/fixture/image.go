@@ -59,8 +59,8 @@ const (
 	// branchImageBin is used instead of imageBin on branch builders.
 	branchImageBin = "ti50_Unknown_PrePVT_ti50-accessory-mp.bin"
 
-	// tastImageGlob matches images in tast/<testbedtype>-<imagetype>/.
-	tastImageGlob = "image*.bin"
+	// imageBinGlob matches signed image bin files.
+	imageBinGlob = "*.bin"
 
 	// tastConfigGlob matches fw config json files in tast/<testbedtype>-<imagetype>/.
 	tastConfigGlob = "opentitantool_fw_config.json"
@@ -68,8 +68,8 @@ const (
 	gsPrefix = "gs://"
 
 	// ToTBranch is the Tip-of-Tree branch having artifacts at postSubmitArtifactsBuilder.
-	ToTBranch                    string = "tot"
-	postSubmitArtifactsBuilder   string = "chromeos-image-archive/firmware-ti50-postsubmit"
+	ToTBranch                  string = "tot"
+	postSubmitArtifactsBuilder string = "chromeos-image-archive/firmware-ti50-postsubmit"
 	// b/352341481: Move back to postSubmit location once OT signing works.
 	otPostSubmitArtifactsBuilder string = "chromeos-localmirror-private/ot-nightly-test"
 
@@ -88,6 +88,8 @@ const (
 	efiImageTemplate   = "*_Unknown_NodeLocked-%s_*-accessory-mp.bin"
 	qualPrivateBucket  = "chromeos-localmirror-private/distfiles/"
 	qualBucket         = "chromeos-localmirror/distfiles/"
+	postsubmitBucket   = "chromeos-image-archive"
+	releaseBucket      = "chromeos-releases"
 
 	// GSC filenames
 	cr50Release          = "cr50.r0.0.*.w%s.tbz2"
@@ -154,6 +156,7 @@ func (v *ImageValue) FwConfigPaths() []string {
 // inputURL can be a local file, a gs file, or a gs build folder.
 func downloadImage(ctx context.Context, testbedProperties remoteTi50.TestbedProperties, imageType ImageType, s *testing.FixtState) (*ImageValue, error) {
 	var err error
+	var fullGlob, jsonGlob string
 	inputURL, _ := s.Var(BuildURL)
 	iv := &ImageValue{}
 
@@ -173,11 +176,12 @@ func downloadImage(ctx context.Context, testbedProperties remoteTi50.TestbedProp
 		case ToTBranch:
 			// Special value "latests-tot" finds the most recent complete set of artifacts,
 			// and then goes into the case below.
-			latestURL, err = findLatestCompletedTi50PostsubmitBuildURL(ctx, testbedProperties.TestbedType)
+			fullGlob, jsonGlob, err = findLatestCompletedTi50PostsubmitBuildURL(ctx, testbedProperties.TestbedType, imageType)
 			if err != nil {
 				return nil, err
 			}
-			testing.ContextLogf(ctx, "Found %s for %s", latestURL, inputURL)
+			testing.ContextLogf(ctx, "Found image: %s, config: %s for %s", fullGlob, jsonGlob, inputURL)
+			latestURL = jsonGlob
 		case Cr50QualBranch:
 			latestURL, err = lookupLatestGSCQualTarball(ctx, "cr50")
 			if err != nil {
@@ -218,20 +222,7 @@ func downloadImage(ctx context.Context, testbedProperties remoteTi50.TestbedProp
 		jsonURL := ""
 		// Assume URL is a build folder if it doesn't end in .bin.
 		if !strings.HasSuffix(inputURL, ".bin") {
-			tastURL := gsPrefix + filepath.Join(inputURL[len(gsPrefix):], "tast")
-
-			testing.ContextLogf(ctx, "Looking for tast directory %s", tastURL)
-			if gsURLExists(ctx, tastURL) {
-				imageDir, err := ti50ImageDirectory(testbedProperties.TestbedType, imageType)
-				if err != nil {
-					return nil, err
-				}
-				// Cloud directory (branch or main) has a "tast/" subdirectory,
-				// use images from there.
-				tastDir := filepath.Join(inputURL[len(gsPrefix):], "tast", imageDir)
-				fullURL = gsPrefix + filepath.Join(tastDir, tastImageGlob)
-				jsonURL = gsPrefix + filepath.Join(tastDir, tastConfigGlob)
-			} else {
+			if fullGlob == "" {
 				// Legacy artifact directory structure.
 				// Assume branch builds have a -channel in the URL.
 				var subDir string
@@ -243,8 +234,11 @@ func downloadImage(ctx context.Context, testbedProperties remoteTi50.TestbedProp
 					bin = imageBin
 				}
 				fullURL = gsPrefix + filepath.Join(inputURL[len(gsPrefix):], subDir, bin)
+				testing.ContextLogf(ctx, "Legacy artifact URL: %s", fullURL)
+			} else {
+				fullURL = fullGlob
+				jsonURL = jsonGlob
 			}
-			testing.ContextLogf(ctx, "Found tast directory %s", fullURL)
 		}
 
 		downloadedBin, err := DownloadToTempFile(ctx, "image bin", fullURL)
@@ -308,7 +302,8 @@ func downloadImage(ctx context.Context, testbedProperties remoteTi50.TestbedProp
 }
 
 // findLatestCompletedTi50PostsubmitBuildURL finds the most recent build with the full set of image artifacts.
-func findLatestCompletedTi50PostsubmitBuildURL(ctx context.Context, t ti50.TestbedType) (string, error) {
+// Returns the image and fw config json globs for the specified image type.
+func findLatestCompletedTi50PostsubmitBuildURL(ctx context.Context, t ti50.TestbedType, iT ImageType) (string, string, error) {
 	builder := postSubmitArtifactsBuilder
 	if t == ti50.GscOpentitanCw310Fpga || t == ti50.GscOTShield {
 		builder = otPostSubmitArtifactsBuilder
@@ -317,7 +312,7 @@ func findLatestCompletedTi50PostsubmitBuildURL(ctx context.Context, t ti50.Testb
 	builds, err := gsLs(ctx, "builds for tot", gsPrefix+builder)
 
 	if err != nil {
-		return "", err
+		return "", "", err
 	}
 
 	sort.Slice(builds, func(i, j int) bool {
@@ -342,6 +337,7 @@ func findLatestCompletedTi50PostsubmitBuildURL(ctx context.Context, t ti50.Testb
 Loop:
 	for i := len(builds) - 1; i >= 0; i-- {
 		build := builds[i]
+		var imageGlob, jsonGlob, theImageGlob, theJSONGlob string
 		scannedDirs := make(map[string]bool)
 		for _, boardType := range AllTi50TestbedTypes() {
 			if len(t) > 0 && boardType != t {
@@ -350,7 +346,7 @@ Loop:
 			for _, imageType := range AllTi50ImageTypes() {
 				dir, err := ti50ImageDirectory(boardType, imageType)
 				if err != nil {
-					return "", err
+					return "", "", err
 				}
 				if _, ok := scannedDirs[dir]; ok {
 					continue
@@ -358,17 +354,29 @@ Loop:
 				scannedDirs[dir] = true
 				artifactsDir := build + filepath.Join("tast", dir) + "/"
 
-				for _, g := range []string{tastImageGlob, tastConfigGlob} {
-					if !gsURLExists(ctx, artifactsDir+g) {
-						testing.ContextLogf(ctx, "Rejecting %s: %s missing", artifactsDir, g)
+				imageGlob = artifactsDir + imageBinGlob
+				if !gsURLExists(ctx, imageGlob) {
+					imageGlob = strings.Replace(build, postsubmitBucket, releaseBucket, 1) + filepath.Join(dir+".tar.bz2", imageBinGlob)
+					if !gsURLExists(ctx, imageGlob) {
+						testing.ContextLogf(ctx, "Rejecting %s: %s missing (and not found in %s)", artifactsDir, imageBinGlob, releaseBucket)
 						continue Loop
 					}
 				}
+
+				jsonGlob = artifactsDir + tastConfigGlob
+				if !gsURLExists(ctx, jsonGlob) {
+					testing.ContextLogf(ctx, "Rejecting %s: %s missing", artifactsDir, tastConfigGlob)
+					continue Loop
+				}
+				if imageType == iT {
+					theImageGlob = imageGlob
+					theJSONGlob = jsonGlob
+				}
 			}
 		}
-		return build, nil
+		return theImageGlob, theJSONGlob, nil
 	}
-	return "", errors.New("found no completed builds for tot")
+	return "", "", errors.New("found no completed builds for tot")
 }
 
 // DownloadToTempFile downloads url (gs) to a temp file.
