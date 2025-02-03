@@ -9,8 +9,6 @@ import (
 	"fmt"
 	"time"
 
-	"golang.org/x/exp/slices"
-
 	"go.chromium.org/tast-tests/cros/local/chrome"
 	"go.chromium.org/tast-tests/cros/local/chrome/uiauto"
 	"go.chromium.org/tast-tests/cros/local/chrome/uiauto/nodewith"
@@ -21,8 +19,10 @@ import (
 	"go.chromium.org/tast/core/testing"
 )
 
+var topGroup = nodewith.HasClass("halfToolbarIconTop").Role(role.Group)
+
 // ShowDesktop shows desktop.
-func ShowDesktop(ud *uidetection.Context, dataPath func(string) string) uiauto.Action {
+func ShowDesktop(ud *uidetection.Context, dataPath func(string) string, tconn *chrome.TestConn) uiauto.Action {
 	startBtn := uidetection.CustomIcon(dataPath(startBtnIcon))
 	shutText := uidetection.Word("Shut").First()
 	desktopText := uidetection.Word("Desktop").Below(shutText).First()
@@ -30,12 +30,12 @@ func ShowDesktop(ud *uidetection.Context, dataPath func(string) string) uiauto.A
 		uiauto.NamedCombine("show desktop",
 			ud.RightClick(startBtn),
 			ud.LeftClick(desktopText),
-			WaitForDesktop(ud, dataPath),
+			WaitForDesktop(tconn),
 		))
 }
 
 // EnterDesktop enters the Citrix desktop.
-func EnterDesktop(tconn *chrome.TestConn, ud *uidetection.Context, dataPath func(string) string) uiauto.Action {
+func EnterDesktop(tconn *chrome.TestConn) uiauto.Action {
 	ui := uiauto.New(tconn)
 	desktopText := nodewith.Name("Desktop").Role(role.StaticText).First()
 	launchingDesktopText := nodewith.Name("Launching desktop...").Role(role.StaticText).First()
@@ -44,28 +44,43 @@ func EnterDesktop(tconn *chrome.TestConn, ud *uidetection.Context, dataPath func
 		uiauto.IfSuccessThen(ui.Exists(desktopText), ui.DoDefault(desktopText)),
 		ui.WaitUntilExists(launchingDesktopText),
 		ui.WaitUntilGone(launchingDesktopText),
-		WaitForDesktop(ud, dataPath),
+		WaitForDesktop(tconn),
 	)
 }
 
 // WaitForDesktop waits for desktop to be visible.
-func WaitForDesktop(ud *uidetection.Context, dataPath func(string) string) uiauto.Action {
-	topBtn := uidetection.CustomIcon(dataPath(topBtnIcon))
+func WaitForDesktop(tconn *chrome.TestConn) uiauto.Action {
+	ui := uiauto.New(tconn)
 	return uiauto.NamedAction("wait for desktop",
-		ud.WaitUntilExists(topBtn),
+		ui.WithTimeout(time.Minute).WaitUntilExists(topGroup),
 	)
 }
 
 // LogOff logs off from Citrix desktop.
-func LogOff(ud *uidetection.Context, dataPath func(string) string) uiauto.Action {
-	topBtn := uidetection.CustomIcon(dataPath(topBtnIcon))
-	moreOptionBtn := uidetection.CustomIcon(dataPath(moreOptionBtnIcon))
-	logOffText := uidetection.TextBlockFromSentence("Log Off").First()
+func LogOff(tconn *chrome.TestConn) uiauto.Action {
+	moreOptionBtn := nodewith.HasClass("more").First()
+	logOffText := nodewith.Name("Log Off").Role(role.StaticText).First()
+	ui := uiauto.New(tconn)
 	return uiauto.NamedCombine("log off from Citrix desktop",
-		uiauto.IfFailThen(ud.Exists(topBtn), ShowDesktop(ud, dataPath)),
-		ud.LeftClick(topBtn),
-		ud.LeftClick(moreOptionBtn),
-		ud.LeftClick(logOffText),
+		ui.LeftClick(topGroup),
+		ui.LeftClick(moreOptionBtn),
+		ui.LeftClick(logOffText),
+	)
+}
+
+// ConnectUSBDevice connects the USB device to the DUT.
+func ConnectUSBDevice(tconn *chrome.TestConn) uiauto.Action {
+	ui := uiauto.New(tconn)
+	usbBtn := nodewith.HasClass("usb").First()
+	usbDeviceText := nodewith.Name("USB Devices").Role(role.StaticText)
+	connectCheckBox := nodewith.Name("Connect").Role(role.CheckBox).Focusable().First()
+	closeButton := nodewith.Name("Close button").HasClass("closeBtn")
+	return uiauto.NamedCombine("connect USB device",
+		ui.LeftClick(topGroup),
+		ui.LeftClick(usbBtn),
+		ui.WaitUntilExists(usbDeviceText),
+		ui.DoDefaultUntil(connectCheckBox, ui.WithTimeout(time.Second).WaitUntilGone(connectCheckBox)),
+		ui.LeftClick(closeButton),
 	)
 }
 
@@ -93,33 +108,6 @@ func openApp(ud *uidetection.Context, dataPath func(string) string, finder *uide
 		ud.WithTimeout(15*time.Second).DoubleClick(finder),
 		ud.WaitUntilExists(appTitleText),
 	))
-}
-
-// ConnectUSBDevice connects the USB device to the DUT.
-func ConnectUSBDevice(kb *input.KeyboardEventWriter, ud *uidetection.Context, dataPath func(string) string, deviceName string) uiauto.Action {
-	topBtn := uidetection.CustomIcon(dataPath(topBtnIcon))
-	deviceBtn := uidetection.CustomIcon(dataPath(usbDeviceBtnIcon))
-	closeBtn := uidetection.CustomIcon(dataPath(closeDialogBtnIcon))
-	usbDevicesText := uidetection.TextBlockFromSentence("USB Devices").First()
-	deviceNameText := uidetection.TextBlockFromSentence(deviceName).First()
-	availableText := uidetection.Word("Available").First()
-	connectText := uidetection.Word("Connect").First()
-	scrollDown := uiauto.NamedCombine("scroll down",
-		ud.LeftClick(deviceNameText),
-		uiauto.Repeat(3, kb.AccelAction("Down")),
-	)
-	connect := uiauto.NamedAction("connect",
-		ud.LeftClickUntil(connectText, ud.WithTimeout(15*time.Second).WaitUntilGone(connectText)),
-	)
-
-	return uiauto.NamedCombine("connect USB device",
-		ud.LeftClick(topBtn),
-		ud.LeftClick(deviceBtn),
-		ud.WaitUntilExists(usbDevicesText),
-		uiauto.IfSuccessThen(ud.Gone(availableText), scrollDown),
-		uiauto.IfSuccessThen(ud.Exists(availableText), connect),
-		ud.LeftClick(closeBtn),
-	)
 }
 
 // CloseApp closes the application with given name in Citrix.
@@ -153,46 +141,15 @@ func CloseApp(ctx context.Context, tconn *chrome.TestConn, kb *input.KeyboardEve
 	return nil
 }
 
-// SwitchResolution switches the display resolution to the given option.
-func SwitchResolution(ud *uidetection.Context, resolutionOption citrixResolution, dataPath func(string) string) uiauto.Action {
-	topBtn := uidetection.CustomIcon(dataPath(topBtnIcon))
-	moreOptionBtn := uidetection.CustomIcon(dataPath(moreOptionBtnIcon))
-	closeBtn := uidetection.CustomIcon(dataPath(closeDialogBtnIcon))
-	displayResolutionText := uidetection.TextBlockFromSentence("Display Resolution")
-	// Narrow down the resolution checkbox range.
-	// Default to use "Resolution" text as the upper bound.
-	previousOptionText := uidetection.Word("Resolution")
-	optionOrder := slices.Index(citrixResolutionSlice, resolutionOption)
-	// Set the previous resolution option as upper bound .
-	if optionOrder != 0 {
-		previousOption := string(citrixResolutionSlice[optionOrder-1])
-		previousOptionText = uidetection.TextBlockFromSentence(previousOption)
-	}
-	resolutionCheckBox := uidetection.CustomIcon(dataPath(resolutionButtonIcon)).Below(previousOptionText)
-	// Set the next resolution option as lower bound.
-	if optionOrder != len(citrixResolutionSlice)-1 {
-		nextResolution := citrixResolutionSlice[optionOrder+1]
-		nextResolutionOptionText := uidetection.TextBlockFromSentence(string(nextResolution))
-		resolutionCheckBox = resolutionCheckBox.Above(nextResolutionOptionText)
-	}
-	return uiauto.NamedCombine("switch resolution as "+string(resolutionOption),
-		ud.LeftClick(topBtn),
-		ud.LeftClick(moreOptionBtn),
-		ud.LeftClick(displayResolutionText),
-		ud.WaitUntilGone(displayResolutionText),
-		ud.LeftClick(resolutionCheckBox),
-		ud.LeftClick(closeBtn),
-	)
-}
-
 // DeleteFile deletes the file with given name.
 func DeleteFile(ud *uidetection.Context, dataPath func(string) string, fileName string) uiauto.Action {
 	fileNameText := uidetection.Word(fileName).First()
 	deleteText := uidetection.Word("Delete").First()
-	return uiauto.NamedCombine(fmt.Sprintf("delete file %q", fileName),
-		ud.RightClick(fileNameText),
-		ud.LeftClick(deleteText),
-	)
+	return uiauto.Retry(3,
+		uiauto.NamedCombine(fmt.Sprintf("delete file %q", fileName),
+			ud.WithTimeout(15*time.Second).RightClick(fileNameText),
+			ud.WithTimeout(15*time.Second).LeftClick(deleteText),
+		))
 }
 
 // DeleteFileIfExists deletes the file with given name if it exists.

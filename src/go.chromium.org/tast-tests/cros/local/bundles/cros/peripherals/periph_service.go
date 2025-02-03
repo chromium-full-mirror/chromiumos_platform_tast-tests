@@ -128,7 +128,7 @@ func (p *PeriphService) LoginCitrix(ctx context.Context, req *empty.Empty) (*emp
 		return nil, errors.Wrap(err, "failed to login to the Citrix application")
 	}
 	p.login = true
-	if err := citrix.EnterDesktop(p.tconn, p.ud, p.dataPath)(ctx); err != nil {
+	if err := citrix.EnterDesktop(p.tconn)(ctx); err != nil {
 		return nil, errors.Wrap(err, "failed to enter desktop")
 	}
 
@@ -157,7 +157,7 @@ func (p *PeriphService) OpenCitrix(ctx context.Context, req *empty.Empty) (*empt
 func (p *PeriphService) CloseCitrix(ctx context.Context, req *empty.Empty) (*empty.Empty, error) {
 	if p.login {
 		testing.ContextLog(ctx, "VDI: Log off from Citrix desktop")
-		if err := citrix.LogOff(p.ud, p.dataPath)(ctx); err != nil {
+		if err := citrix.LogOff(p.tconn)(ctx); err != nil {
 			return nil, errors.Wrap(err, "failed to log off from Citrix desktop")
 		}
 	}
@@ -180,7 +180,7 @@ func (p *PeriphService) CloseCitrix(ctx context.Context, req *empty.Empty) (*emp
 
 // ConnectUSBDeviceInCitrix connects USB device in Citrix.
 func (p *PeriphService) ConnectUSBDeviceInCitrix(ctx context.Context, req *peripherals.ConnectUSBDeviceInCitrixRequest) (*empty.Empty, error) {
-	if err := citrix.ConnectUSBDevice(p.kb, p.ud, p.dataPath, req.DeviceName)(ctx); err != nil {
+	if err := citrix.ConnectUSBDevice(p.tconn)(ctx); err != nil {
 		return nil, errors.Wrap(err, "failed to connect USB device")
 	}
 
@@ -217,7 +217,7 @@ func (p *PeriphService) CloseCitrixApp(ctx context.Context, req *peripherals.Clo
 // DeleteFile deletes file in Citrix desktop.
 func (p *PeriphService) DeleteFile(ctx context.Context, req *peripherals.DeleteFileRequest) (*empty.Empty, error) {
 	if err := uiauto.Combine("delete file",
-		citrix.ShowDesktop(p.ud, p.dataPath),
+		citrix.ShowDesktop(p.ud, p.dataPath, p.tconn),
 		citrix.DeleteFile(p.ud, p.dataPath, req.FileName),
 	)(ctx); err != nil {
 		return nil, errors.Wrap(err, "failed to delete file")
