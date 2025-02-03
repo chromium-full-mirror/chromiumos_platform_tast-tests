@@ -35,8 +35,6 @@ func init() {
 		// TODO(b/239203016): Stabilize the test.
 		//Attr:         []string{"group:mainline", "informational"},
 		Params: []testing.Param{{
-			ExtraSoftwareDeps: []string{"android_p"},
-		}, {
 			Name:              "vm",
 			ExtraSoftwareDeps: []string{"android_vm"},
 		}},
