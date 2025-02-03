@@ -356,13 +356,7 @@ func (i *CrOSImage) Help(ctx context.Context) (CrOSImageHelpOutput, error) {
 	if m == nil {
 		return CrOSImageHelpOutput{}, errors.New("failed to parse help output")
 	}
-	cmds := make([]string, 0)
-	for _, c := range strings.Split(m[1], " ") {
-		c = strings.TrimSpace(c)
-		if len(c) > 0 {
-			cmds = append(cmds, c)
-		}
-	}
+	cmds := strings.Fields(string(m[1]))
 	return CrOSImageHelpOutput{out, cmds}, nil
 }
 
