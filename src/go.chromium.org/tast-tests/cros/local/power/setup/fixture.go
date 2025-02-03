@@ -17,7 +17,6 @@ import (
 	"go.chromium.org/tast-tests/cros/common/utils"
 	"go.chromium.org/tast-tests/cros/local/arc"
 	"go.chromium.org/tast-tests/cros/local/arc/optin"
-	"go.chromium.org/tast-tests/cros/local/audio/fixture"
 	"go.chromium.org/tast-tests/cros/local/chrome"
 	"go.chromium.org/tast-tests/cros/local/chrome/ash"
 	"go.chromium.org/tast-tests/cros/local/policyutil/fixtures"
@@ -77,9 +76,6 @@ const (
 
 	// Read Aloud
 	PowerAshReadAloudWithFlagOn = "powerAshReadAloudWithFlagOn"
-
-	// Speak On Mute
-	PowerAshSpeakOnMute = "powerAshSpeakOnMute"
 
 	// Protected video playback
 	PowerAshProtectedVideo = "powerAshProtectedVideo"
@@ -603,36 +599,6 @@ func init() {
 			},
 		),
 		Parent:          "rebootForAudioDSPFixture",
-		SetUpTimeout:    SetUpTimeout,
-		ResetTimeout:    ResetTimeout,
-		TearDownTimeout: TearDownTimeout,
-		PreTestTimeout:  PreTestTimeout,
-		PostTestTimeout: PostTestTimeout,
-	})
-
-	testing.AddFixture(&testing.Fixture{
-		Name:         PowerAshSpeakOnMute,
-		Desc:         "Fixture for speak-on-mute power test",
-		BugComponent: "b:1361410",
-		Contacts: []string{
-			"chromeos-platform-power@google.com",
-			"mqg@chromium.org",
-			"aaronyu@google.com",
-		},
-		Impl: NewPowerUIFixture(PowerTestOptions{
-			NightLight:         DisableNightLight,
-			DarkTheme:          EnableLightTheme,
-			KeyboardBrightness: SetKbBrightnessToZero,
-			Wifi:               DisableWifiInterfaces,
-			Audio:              DoNotChangeAudio, // Uses audio.
-		}, PowerFixtureOptions{
-			BrowserExtraOpts: []chrome.Option{
-				chrome.EnableFeatures("CrosPrivacyHub"),
-				chrome.EnableFeatures("VideoConference"),
-				chrome.EnableFeatures("FeatureManagementVideoConference"),
-			},
-		}),
-		Parent:          fixture.AloopLoaded{Channels: 2}.Instance(),
 		SetUpTimeout:    SetUpTimeout,
 		ResetTimeout:    ResetTimeout,
 		TearDownTimeout: TearDownTimeout,
