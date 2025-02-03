@@ -6,6 +6,7 @@ package citrix
 
 import (
 	"fmt"
+	"time"
 
 	"go.chromium.org/tast-tests/cros/common/action"
 	"go.chromium.org/tast-tests/cros/local/chrome/uiauto"
@@ -15,10 +16,10 @@ import (
 
 const (
 	// FootPedalAppName is the name of the Foot Pedal application.
-	FootPedalAppName AppName = "Philips"
-
-	footPedalMarkIcon     = "citrix/foot_pedal_mark.png"
-	footPedalMaximizeIcon = "citrix/foot_pedal_maximize.png"
+	FootPedalAppName      AppName = "Philips"
+	footPedalDeviceName           = "Foot Control 2330"
+	footPedalMarkIcon             = "citrix/foot_pedal_mark.png"
+	footPedalMaximizeIcon         = "citrix/foot_pedal_maximize.png"
 )
 
 // FootPedalButton is the name of the foot pedal button.
@@ -48,12 +49,26 @@ func VerifyFootPedalButtonPressed(ud *uidetection.Context, button FootPedalButto
 func SetupFootPedalTest(kb *input.KeyboardEventWriter, ud *uidetection.Context, dataPath func(string) string) action.Action {
 	mark := uidetection.CustomIcon(dataPath(footPedalMarkIcon))
 	maximizeButton := uidetection.CustomIcon(dataPath(footPedalMaximizeIcon)).Above(mark)
+	footPedalDeviceText := uidetection.TextBlockFromSentence(footPedalDeviceName)
+	lastEventText := uidetection.TextBlockFromSentence("Last event")
+	selectFootControl := uiauto.Combine("select foot control",
+		kb.AccelAction("Tab"),
+		kb.AccelAction("Tab"),
+		uiauto.Retry(3, uiauto.Combine("press down to select foot control",
+			kb.AccelAction("Down"),
+			ud.WithTimeout(10*time.Second).WaitUntilExists(footPedalDeviceText),
+		)),
+	)
 	return uiauto.NamedCombine("set up foot pedal test",
 		ud.LeftClick(maximizeButton),
 		uiauto.NamedCombine("switch to device tab",
+			uiauto.IfFailThen(
+				ud.WithTimeout(10*time.Second).WaitUntilExists(footPedalDeviceText),
+				selectFootControl,
+			),
 			kb.AccelAction("Alt+1"),
 			// Wait for the text "Last event" to verify that it has switched
 			// to the device tab.
-			ud.WaitUntilExists(uidetection.TextBlockFromSentence("Last event")),
+			ud.WaitUntilExists(lastEventText),
 		))
 }
