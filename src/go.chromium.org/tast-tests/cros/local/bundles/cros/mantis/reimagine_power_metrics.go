@@ -155,8 +155,10 @@ func ReimaginePowerMetrics(ctx context.Context, s *testing.State) {
 	retryButton := nodewith.Role(role.Button).Name("Retry").Ancestor(galleryapp.RootFinder)
 	// Retry for one minute
 	for time.Since(startTime) < time.Minute {
-		if err := ui.LeftClick(retryButton)(ctx); err != nil {
-			s.Fatalf("Failed to click the retry button during retry %v: %v", counter, err)
+		if err := uiauto.Combine("Click the retry button",
+			ui.MakeVisible(retryButton),
+			ui.LeftClick(retryButton))(ctx); err != nil {
+			s.Fatal("Unable to click the retry button: ", err)
 		}
 
 		if err := util.WaitForSpinner(ctx, tconn, ui); err != nil {
