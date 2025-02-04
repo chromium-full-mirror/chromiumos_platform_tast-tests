@@ -137,11 +137,13 @@ func SandboxedServices(ctx context.Context, s *testing.State) {
 		{"hiberman", "root", "root", 0},                                       // TODO(b/293361061): Sandbox hiberman.
 		{"swap_management", "root", "root", 0},
 		{"odmld", "odml", "odml", mntNS | restrictCaps | noNewPrivs | seccomp},
+		{"dnsproxyd", "dns-proxy-system", "dns-proxy", restrictCaps | noNewPrivs | seccomp},
+		{"dnsproxyd", "dns-proxy-user", "dns-proxy", restrictCaps | noNewPrivs | seccomp},
 
 		// Processes running with CAP_SYS_ADMIN.
 		{"spaced", "spaced", "spaced", restrictCaps},
 		{"cros-disks", "cros-disks", "cros-disks", restrictCaps},
-		{"dnsproxyd", "dns-proxy", "dns-proxy", restrictCaps},
+		{"dnsproxyd", "dns-proxy", "dns-proxy", restrictCaps | noNewPrivs | seccomp},
 		{"shadercached", "shadercached", "shadercached", restrictCaps},
 
 		// These processes run as root in the ARC container.
