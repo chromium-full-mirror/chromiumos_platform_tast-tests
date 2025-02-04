@@ -7,6 +7,7 @@ package apputil
 
 import (
 	"context"
+	"strconv"
 	"strings"
 	"time"
 
@@ -21,6 +22,7 @@ import (
 	"go.chromium.org/tast-tests/cros/local/chrome/uiauto/nodewith"
 	"go.chromium.org/tast-tests/cros/local/chrome/uiauto/role"
 	"go.chromium.org/tast-tests/cros/local/input"
+	"go.chromium.org/tast-tests/cros/local/power/util"
 	"go.chromium.org/tast/core/errors"
 	"go.chromium.org/tast/core/testing"
 )
@@ -151,4 +153,34 @@ func DismissMobilePrompt(ctx context.Context, tconn *chrome.TestConn) error {
 		}
 	}
 	return nil
+}
+
+// GetAppVersionAsFloat validates and returns the version code represented by a single float.
+//
+// Assume the version number is numeric and period-seperated.
+// For example, if the version number
+// is 2.454.522, this function first separates out the version number into major,
+// minor, and patch version numbers of 2, 454, and 522 respectively, and then
+// combines the individually numbers into a single value with the formula:
+// minor * |digitsPerPart| + patch = 4540522.
+// To retrieve the individual pieces back later, the single value simply needs
+// to be integer divided and modularized w.r.t. the |digitsPerPart|:
+// patch = combined % |digitsPerPart| = 522,
+// minor = (combined / |digitsPerPart|) % |digitsPerPart| = 454.
+func GetAppVersionAsFloat(ctx context.Context, arc *arc.ARC, appPkgName string, digitsPerPart float64) (float64, error) {
+	versionName, err := util.GetAppVersion(ctx, arc, appPkgName)
+	if err != nil {
+		return 0, errors.Wrapf(err, "failed to get app version for %s", appPkgName)
+	}
+
+	var appVersionNum float64
+	appVersionSlice := strings.Split(versionName, ".")
+	for _, n := range appVersionSlice {
+		num, err := strconv.ParseFloat(n, 64)
+		if err != nil {
+			return 0, errors.Wrapf(err, "failed to convert %q to float", n)
+		}
+		appVersionNum = appVersionNum*digitsPerPart + num
+	}
+	return appVersionNum, nil
 }
