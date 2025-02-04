@@ -45,5 +45,10 @@ func NetworkListenersARC(ctx context.Context, s *testing.State) {
 	ls["*:2222"] = "/usr/sbin/sshd"
 	// node_exporter runs on port 9090 to monitor DUT resources.
 	ls["*:9090"] = "/usr/local/sbin/node_exporter"
+	// dnsproxyd listens on loopback and bridge interfaces (b/355134928).
+	ls["127.0.0.2:53"] = "/usr/sbin/dnsproxyd"
+	ls["127.0.0.3:53"] = "/usr/sbin/dnsproxyd"
+	ls["fd64:ffff::2:53"] = "/usr/sbin/dnsproxyd"
+	ls["fd64:ffff::3:53"] = "/usr/sbin/dnsproxyd"
 	netlisten.CheckPorts(ctx, s, ls)
 }

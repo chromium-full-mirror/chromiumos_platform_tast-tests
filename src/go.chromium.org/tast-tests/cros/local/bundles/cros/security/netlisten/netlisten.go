@@ -53,10 +53,13 @@ func CheckPorts(ctx context.Context, s *testing.State, expected map[string]strin
 		// Autotest also sometimes passes (or at least passed) open sockets to e.g. "sed" or "bash" child processes.
 		// gopsutil doesn't appear to report duplicate connections for child processes like lsof does, so we just
 		// exclude all Python and Autotest executables -- note that Python is only installed on dev and test images.
+		// The additional ARC DNS proxy listen check is added here because of the non-fixed listening address.
 		if strings.HasPrefix(exe, "/usr/local/bin/python") || strings.HasPrefix(exe, "/usr/local/autotest/") {
 			s.Logf("%v is listening at %v (probably dev- or test-related)", exe, realAddrPort)
 		} else if isUnderSSHDTree(st.Pid) {
 			s.Logf("%v is listening at %v (Tast-related)", exe, realAddrPort)
+		} else if isARCDDNSProxyListen(exe, addrPort) {
+			s.Logf("%v is listening at %v", exe, realAddrPort)
 		} else if expExe, expOpen := expected[addrPort]; !expOpen {
 			s.Errorf("%v is listening at %v", exe, realAddrPort)
 		} else if exe != expExe {
@@ -89,6 +92,17 @@ func isUnderSSHDTree(pid int32) bool {
 		pid = ppid
 	}
 	return false
+}
+
+// isARCDNSProxyListen returns whether the address port and executable
+// combinations are the allowed DNS proxy listening processes running on the
+// bridge interfaces for ARC (b/355134928).
+func isARCDDNSProxyListen(exe, addrPort string) bool {
+	if exe != "/usr/sbin/dnsproxyd" {
+		return false
+	}
+	// Patchpanel assigned or link-local address for the bridge interface.
+	return strings.HasPrefix(addrPort, "100.115.92.") || strings.HasPrefix(addrPort, "fe80::")
 }
 
 // getExe returns the executable path corresponding to the supplied PID.

@@ -33,6 +33,11 @@ func NetworkListenersNonARC(ctx context.Context, s *testing.State) {
 	ls := netlisten.Common(cr)
 	ls["*:22"] = "/usr/sbin/sshd"
 	ls["*:9090"] = "/usr/local/sbin/node_exporter"
+	// dnsproxyd listens on loopback and bridge interfaces (b/355134928).
+	ls["127.0.0.2:53"] = "/usr/sbin/dnsproxyd"
+	ls["127.0.0.3:53"] = "/usr/sbin/dnsproxyd"
+	ls["fd64:ffff::2:53"] = "/usr/sbin/dnsproxyd"
+	ls["fd64:ffff::3:53"] = "/usr/sbin/dnsproxyd"
 
 	if moblab.IsMoblab() {
 		ls["*:80"] = "/usr/sbin/apache2"
