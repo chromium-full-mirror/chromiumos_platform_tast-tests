@@ -17,7 +17,6 @@ import (
 	"golang.org/x/mod/semver"
 
 	"go.chromium.org/tast-tests/cros/common/firmware/futility"
-	"go.chromium.org/tast-tests/cros/common/servo"
 	"go.chromium.org/tast-tests/cros/common/testexec"
 	"go.chromium.org/tast-tests/cros/remote/dutfs"
 	"go.chromium.org/tast-tests/cros/remote/firmware"
@@ -147,38 +146,8 @@ func BaseECUpdate(ctx context.Context, s *testing.State) {
 		s.Fatal("Failed to modify base-ec: ", err)
 	}
 
-	cleanupCtx := ctx
 	ctx, cancel := ctxutil.Shorten(ctx, 3*time.Minute)
 	defer cancel()
-
-	// In case the detachable base did not update successfully, warm reset DUT
-	// at the end of the test to ensure that the base ec would be restored.
-	requiredReboot := true
-	defer func(ctx context.Context, reboot *bool) {
-		if *reboot {
-			// One of the previous steps in flashing base ec was probably
-			// unsuccessful, which might leave base ec unresponsive.
-			s.Log("Rebooting DUT to recover base ec")
-			h.CloseRPCConnection(ctx)
-			if err := h.Servo.SetPowerState(ctx, servo.PowerStateWarmReset); err != nil {
-				s.Fatal("Failed to reboot DUT by servo: ", err)
-			}
-
-			waitUnreachableCtx, cancelUnreachable := context.WithTimeout(ctx, 2*time.Minute)
-			defer cancelUnreachable()
-			if err := h.DUT.WaitUnreachable(waitUnreachableCtx); err != nil {
-				s.Fatal("Failed to wait DUT unreachable: ", err)
-			}
-
-			s.Log("Waiting for DUT to power ON")
-			waitConnectCtx, cancelWaitConnect := context.WithTimeout(ctx, 2*time.Minute)
-			defer cancelWaitConnect()
-
-			if err := h.WaitConnect(waitConnectCtx); err != nil {
-				s.Fatal("Failed to reconnect to DUT: ", err)
-			}
-		}
-	}(cleanupCtx, &requiredReboot)
 
 	s.Log("Flashing an old image to detachable-base ec")
 	if err := flashAnOldImgToDetachableBaseEC(ctx, dut, hammerConfigs, fileDir.modifiedBin); err != nil {
@@ -206,28 +175,12 @@ func BaseECUpdate(ctx context.Context, s *testing.State) {
 		s.Fatal("Failed to trigger and find notification window: ", err)
 	}
 
-	if !originalBaseEC.roProtected {
-		s.Log("Power-cycling DUT with a warm reset")
-		h.CloseRPCConnection(ctx)
-		if err := h.Servo.SetPowerState(ctx, servo.PowerStateWarmReset); err != nil {
-			s.Fatal("Failed to reboot DUT by servo: ", err)
-		}
-
-		waitUnreachableCtx, cancelUnreachable := context.WithTimeout(ctx, 2*time.Minute)
-		defer cancelUnreachable()
-		if err := h.DUT.WaitUnreachable(waitUnreachableCtx); err != nil {
-			s.Fatal("Failed to wait DUT unreachable: ", err)
-		}
-
-		s.Log("Waiting for DUT to power ON")
-		waitConnectCtx, cancelWaitConnect := context.WithTimeout(ctx, 2*time.Minute)
-		defer cancelWaitConnect()
-
-		if err := h.WaitConnect(waitConnectCtx); err != nil {
-			s.Fatal("Failed to reconnect to DUT: ", err)
-		}
+	// Restore the firmware to the original version
+	if err := dut.Conn().CommandContext(
+		ctx, "start", "hammerd", "UPDATE_IF=mismatch", "AT_BOOT=true",
+	).Run(testexec.DumpLogOnError); err != nil {
+		s.Fatal(err, "unable to run the hammerd command")
 	}
-	requiredReboot = false
 
 	s.Log("Saving the current base ec firmware version")
 	newBaseEC, err := getBaseECInfo(ctx, dut, hammerConfigs.pid)
