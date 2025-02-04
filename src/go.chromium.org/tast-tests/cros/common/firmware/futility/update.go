@@ -45,6 +45,7 @@ type updateOptions struct {
 	gbbFlags        int
 	setGBBFlags     bool
 	force           bool
+	manifest        bool
 }
 
 // NewUpdateOptions returns new updateOptions with image (BIOS) file path.
@@ -69,6 +70,12 @@ func (o *updateOptions) WithTryAB(tryAB bool) *updateOptions {
 // WithFast configures fast update mode.
 func (o *updateOptions) WithFast(fast bool) *updateOptions {
 	o.fast = fast
+	return o
+}
+
+// WithManifest configures manifest read mode.
+func (o *updateOptions) WithManifest(manifest bool) *updateOptions {
+	o.manifest = manifest
 	return o
 }
 
@@ -128,6 +135,9 @@ func (i *Instance) Update(ctx context.Context, opts *updateOptions) ([]byte, err
 	}
 	if opts.fast {
 		cmdArgs = append(cmdArgs, "--fast")
+	}
+	if opts.manifest {
+		cmdArgs = append(cmdArgs, "--manifest")
 	}
 	if len(opts.quirks) > 0 {
 		var quirks []string
