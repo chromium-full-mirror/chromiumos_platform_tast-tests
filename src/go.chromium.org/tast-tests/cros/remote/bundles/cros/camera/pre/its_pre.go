@@ -74,8 +74,8 @@ type bundleAbi string
 type androidCodeName string
 
 const (
-	x86            bundleAbi = "x86"
-	arm            bundleAbi = "arm"
+	x86      bundleAbi       = "x86"
+	arm      bundleAbi       = "arm"
 	androidP androidCodeName = "androidP"
 	androidR androidCodeName = "androidR"
 	androidT androidCodeName = "androidT"
@@ -245,7 +245,7 @@ func (p *itsPreImpl) Close(ctx context.Context, s *testing.PreState) {
 // PrepareEnvironment prepare the environment for running ITS
 func (h *ITSHelper) PrepareEnvironment(ctx context.Context, numpyPath string) (string, error) {
 	retStr := ""
-	createPy3VenvCmd := fmt.Sprintf("python3 -m venv %s/py3venv --copies", h.p.itsRoot())
+	createPy3VenvCmd := fmt.Sprintf("python3.8 -m venv %s/py3venv --copies", h.p.itsRoot())
 
 	out, err := testexec.CommandContext(ctx, "bash", "-c", createPy3VenvCmd).Output(testexec.DumpLogOnError)
 	if err != nil {
