@@ -31,10 +31,7 @@ func init() {
 		SoftwareDeps: []string{"chrome"},
 		HardwareDeps: hwdep.D(hwdep.ChromeEC()),
 		Timeout:      20 * time.Minute,
-		// TODO(b/298675713): This test can cause DUT to permanently lose ethernet,
-		//                    which prevents all subsequent tests from running.
-		//					  Add back attrs after fixing.
-		// Attr:         []string{"group:firmware", "firmware_pd_unstable"},
+		Attr:         []string{"group:firmware", "firmware_pd_unstable"},
 		Params: []testing.Param{{
 			Name: "normal",
 			Val: firmware.PDTestParams{
@@ -122,6 +119,19 @@ func PDUsbVersions(ctx context.Context, s *testing.State) {
 	if err := firmware.SetupPDTester(ctx, h, testParams); err != nil {
 		s.Fatal("Failed to configure Servo for PD testing: ", err)
 	}
+
+	// Ensure that the DUT is reset and a valid connection exists at the end of the test
+	defer func() {
+		h.Servo.ServoSetUSBVersion3(ctx, false)
+
+		if err := h.Servo.RunECCommand(ctx, "reboot"); err != nil {
+			s.Fatal("Failed to reboot: ", err)
+		}
+
+		if err := h.WaitConnect(ctx, firmware.SkipPDRoleSnk); err != nil {
+			s.Fatal("Failed to boot after test: ", err)
+		}
+	}()
 
 	testing.ContextLog(ctx, "turning USB 3 off")
 	h.Servo.ServoSetUSBVersion3(ctx, false)
