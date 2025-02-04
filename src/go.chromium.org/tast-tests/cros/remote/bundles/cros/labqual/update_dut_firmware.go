@@ -6,6 +6,7 @@ package labqual
 
 import (
 	"context"
+	"encoding/json"
 	"fmt"
 	"io"
 	"os"
@@ -22,9 +23,9 @@ import (
 	"go.chromium.org/tast-tests/cros/remote/firmware"
 	"go.chromium.org/tast-tests/cros/remote/firmware/fixture"
 	"go.chromium.org/tast-tests/cros/remote/firmware/reporters"
-	"go.chromium.org/tast/core/errors"
-	"go.chromium.org/tast/core/ssh/linuxssh"
-	"go.chromium.org/tast/core/testing"
+	errors "go.chromium.org/tast/core/errors"
+	linuxssh "go.chromium.org/tast/core/ssh/linuxssh"
+	testing "go.chromium.org/tast/core/testing"
 )
 
 const (
@@ -35,6 +36,43 @@ const (
 	defaultTarSuffix   = ".tar.bz2"
 	defaultTarballName = "firmware_from_source" + defaultTarSuffix
 )
+
+// Versions is the internal object of FW manifest
+type versions struct {
+	Ro string `json:"ro"`
+	Rw string `json:"rw"`
+}
+
+// Keys is the internal object of FW manifest
+type keys struct {
+	Root     string `json:"root"`
+	Recovery string `json:"recovery"`
+}
+
+// Host is the internal object of FW manifest
+type host struct {
+	Versions versions `json:"versions"`
+	Keys     keys     `json:"keys"`
+	Image    string   `json:"image"`
+}
+
+// Default is the internal object of FW manifest
+type defaults struct {
+	Host host `json:"host"`
+}
+
+// FWManifest represents the structure of the FW manifest read from FW tarball
+type fWManifest struct {
+	Default defaults `json:"default"`
+}
+
+// fwIDs represents a structure for initial and target FW IDs
+type fwIDs struct {
+	initialROFwid string
+	initialRWFwid string
+	targetROFwid  string
+	targetRWFwid  string
+}
 
 var (
 	// skipFWRestore indicates whether to skip restoring FW in the end
@@ -276,7 +314,14 @@ func UpdateDutFirmware(ctx context.Context, s *testing.State) {
 		flashECFirmwareFromDut(ctx, s, h, dutTmpDir, tmpDir, ecBinToFlash, monitorBinToFlash, ecChip)
 		flashECFirmware(ctx, s, h, servoTmpDir, tmpDir, ecChip)
 	}
-
+	apFirmwareFile := fmt.Sprintf("%s/%s", servoTmpDir, firmware.APFirmwareFileToFlash)
+	versions := getFWVersionsFromManifest(ctx, s, h, firmwarePathVal, apFirmwareFile)
+	fwids := fwIDs{
+		initialROFwid: initialROFwid,
+		initialRWFwid: initialRwFwid,
+		targetROFwid:  versions.Ro,
+		targetRWFwid:  versions.Rw,
+	}
 	// AP firmware file is copied to the DUT after EC flashing to handle a corner case for some models
 	// where all the firmware files in dut tmp directory become empty after EC firmware flashing.
 	dutFileMap := map[string]string{
@@ -288,8 +333,8 @@ func UpdateDutFirmware(ctx context.Context, s *testing.State) {
 	}
 	s.Logf("Files under %s: before AP flashing", dutTmpDir)
 	statFirmwareFilesOnDUT(ctx, s, h, dutTmpDir)
-	flashAPFirmwareFromDut(ctx, s, h, dutTmpDir, tmpDir, firmwarePathVal, localFirmwarePathVal, initialROFwid, initialRwFwid)
-	flashAPFirmware(ctx, s, h, servoTmpDir, firmwarePathVal, localFirmwarePathVal, ecChip, initialROFwid, initialRwFwid)
+	flashAPFirmwareFromDut(ctx, s, h, dutTmpDir, tmpDir, firmwarePathVal, localFirmwarePathVal, fwids)
+	flashAPFirmware(ctx, s, h, servoTmpDir, firmwarePathVal, localFirmwarePathVal, ecChip, fwids)
 }
 
 // untarLocalFirmwareFile untars the provided local firmware file to extract AP and EC images
@@ -355,7 +400,7 @@ func flashECFirmware(ctx context.Context, s *testing.State, h *firmware.Helper, 
 }
 
 // flashAPFirmware flashes the provided AP firmware on the DUT and restores the original AP firmware in the end.
-func flashAPFirmware(ctx context.Context, s *testing.State, h *firmware.Helper, servoTmpDir, firmwarePathVal, localFirmwarePathVal, ecChip, initialROFwid, initialRwFwid string) {
+func flashAPFirmware(ctx context.Context, s *testing.State, h *firmware.Helper, servoTmpDir, firmwarePathVal, localFirmwarePathVal, ecChip string, fwids fwIDs) {
 	futilityInstance, _ := futility.NewRemoteBuilder(h.ServoProxy).Build()
 	if shouldRestoreFW() {
 		s.Log("Backing up AP firmware")
@@ -392,7 +437,7 @@ func flashAPFirmware(ctx context.Context, s *testing.State, h *firmware.Helper, 
 
 				// Verify RO/RW firmware versions are the prior ones after flashing.
 				// This is when RO and RW have the same version ids (i.e., RO_old + RW_old).
-				if err := firmware.VerifyFwIDs(ctx, h, initialROFwid, initialRwFwid); err != nil {
+				if err := firmware.VerifyFwIDs(ctx, h, fwids.initialROFwid, fwids.initialRWFwid); err != nil {
 					s.Log("Failed while verifying firmware IDs after flashing backup fw at the end of test: ", err)
 				}
 			}
@@ -425,13 +470,13 @@ func flashAPFirmware(ctx context.Context, s *testing.State, h *firmware.Helper, 
 
 	// Verify RO/RW firmware versions are the downloaded firmware versions after flashing.
 	// This is when RO and RW have the same version ids (i.e., RO_old + RW_old).
-	if err := firmware.VerifyFwIDs(ctx, h, firmwarePathVal, firmwarePathVal); err != nil {
+	if err := firmware.VerifyFwIDs(ctx, h, fwids.targetROFwid, fwids.targetRWFwid); err != nil {
 		s.Fatalf("After flashing RO_old + RW_old ( %s + %s ): %v", firmwarePathVal, firmwarePathVal, err)
 	}
 }
 
 // flashAPFirmwareFromDut flashes the provided AP firmware on the DUT and restores the original AP firmware in the end.
-func flashAPFirmwareFromDut(ctx context.Context, s *testing.State, h *firmware.Helper, dutTmpDir, localTmpDir, firmwarePathVal, localFirmwarePathVal, initialROFwid, initialRwFwid string) {
+func flashAPFirmwareFromDut(ctx context.Context, s *testing.State, h *firmware.Helper, dutTmpDir, localTmpDir, firmwarePathVal, localFirmwarePathVal string, fwids fwIDs) {
 	futilityInstance, _ := futility.NewLocalBuilder(h.DUT).Build()
 	if shouldRestoreFW() {
 		s.Log("Backing up AP firmware")
@@ -476,7 +521,7 @@ func flashAPFirmwareFromDut(ctx context.Context, s *testing.State, h *firmware.H
 
 				// Verify RO/RW firmware versions are the prior ones after flashing.
 				// This is when RO and RW have the same version ids (i.e., RO_old + RW_old).
-				if err := firmware.VerifyFwIDs(ctx, h, initialROFwid, initialRwFwid); err != nil {
+				if err := firmware.VerifyFwIDs(ctx, h, fwids.initialROFwid, fwids.initialRWFwid); err != nil {
 					s.Log("Failed while verifying firmware IDs after flashing backup fw at the end of test: ", err)
 				}
 			}
@@ -504,7 +549,7 @@ func flashAPFirmwareFromDut(ctx context.Context, s *testing.State, h *firmware.H
 
 	// Verify RO/RW firmware versions are the downloaded firmware versions after flashing.
 	// This is when RO and RW have the same version ids (i.e., RO_old + RW_old).
-	if err := firmware.VerifyFwIDs(ctx, h, firmwarePathVal, firmwarePathVal); err != nil {
+	if err := firmware.VerifyFwIDs(ctx, h, fwids.targetROFwid, fwids.targetRWFwid); err != nil {
 		s.Fatalf("After flashing RO_old + RW_old ( %s + %s ): %v", firmwarePathVal, firmwarePathVal, err)
 	}
 }
@@ -577,6 +622,61 @@ func safeRebootDut(ctx context.Context, h *firmware.Helper) error {
 		return errors.Wrap(err, "failed to reconnect to DUT after reboot")
 	}
 	return nil
+}
+
+// getFWVersionsFromManifest reads the firmware versions from the firmware manifest file
+func getFWVersionsFromManifest(ctx context.Context, s *testing.State, h *firmware.Helper, firmwarePathVal, apFirmwareFile string) *versions {
+	s.Log("Reading manifest from downloaded firmware file")
+	futilityInstance, _ := futility.NewRemoteBuilder(h.ServoProxy).Build()
+	flashOpts := futility.NewUpdateOptions(apFirmwareFile).
+		WithManifest(true)
+	out, err := futilityInstance.Update(ctx, flashOpts)
+	if err != nil {
+		s.Fatal("Failed to read manifest file: ", err, "\nOutput:\n", string(out))
+	}
+	s.Logf("Got manifest file from fw, command output: %s", strings.Join(strings.Fields(string(out)), ""))
+	versions, err := parseFwManifest(ctx, s, out)
+	if err != nil {
+		s.Fatal("Failed to read manifest data: ", err)
+	}
+	s.Logf("Got RO version from manifest: %s", versions.Ro)
+	if err := safeRebootDut(ctx, h); err != nil {
+		s.Fatal("Failed to reboot DUT after flashing: ", err)
+	}
+	if versions.Ro == "" {
+		versions.Ro = firmwarePathVal
+	}
+	if versions.Rw == "" {
+		versions.Rw = firmwarePathVal
+	}
+	return versions
+}
+
+// parseFwManifest parses the firmware manifest json blob
+func parseFwManifest(ctx context.Context, s *testing.State, manifest []byte) (*versions, error) {
+	re := regexp.MustCompile(`.*INFO.*`)
+	match := re.Split(string(manifest), 2)
+
+	var root fWManifest
+	err := json.Unmarshal([]byte(strings.Join(strings.Fields(string(match[0])), "")), &root)
+	if err != nil {
+		return nil, err
+	}
+
+	s.Logf("Manifest Data: %s", root)
+	return &versions{Ro: getFWVersion(ctx, s, root.Default.Host.Versions.Ro), Rw: getFWVersion(ctx, s, root.Default.Host.Versions.Rw)}, nil
+}
+
+// getFWVersion accepts Fwid as input, splits the outputs and only returns the version numbers.
+func getFWVersion(ctx context.Context, s *testing.State, fwid string) string {
+	re := regexp.MustCompile(`Google_([a-z-A-Z_]*)\.(\d*\.\d*.\d*)`)
+	match := re.FindStringSubmatch(fwid)
+	if len(match) != 3 {
+		s.Logf("Unexpected fw id format got: %s", fwid)
+		return ""
+	}
+	fwidModel := strings.ToLower(match[2])
+	return fwidModel
 }
 
 // backupECFirmware takes a backup of current EC firmware.
