@@ -11,6 +11,7 @@ import (
 
 	"go.chromium.org/tast-tests/cros/common/fixture"
 	"go.chromium.org/tast-tests/cros/common/testexec"
+	"go.chromium.org/tast/core/errors"
 	"go.chromium.org/tast/core/lsbrelease"
 	"go.chromium.org/tast/core/testing"
 )
@@ -175,10 +176,17 @@ func (au *autoupdateFixt) PostTest(ctx context.Context, s *testing.FixtTestState
 	}
 
 	// Non-enterprise rollback may fail if it is run too early (b/241391509).
+	// update_engine may be busy (e.g. with DLCs), retry after a bit if the command fails (b/376208244).
 	s.Log("Restoring the original image with non-enterprise rollback")
-	if err := s.DUT().Conn().CommandContext(rollbackCtx, "update_engine_client", "--rollback", "--nopowerwash", "--follow").Run(); err != nil {
-		s.Fatal("Failed to rollback the DUT: ", err)
-	}
+	testing.Poll(rollbackCtx, func(ctx context.Context) error {
+		// Limit the timeout for the rollback command.
+		rollbackCmdCtx, cancel := context.WithTimeout(ctx, 10*time.Second)
+		defer cancel()
+		if err := s.DUT().Conn().CommandContext(rollbackCmdCtx, "update_engine_client", "--rollback", "--nopowerwash", "--follow").Run(); err != nil {
+			return errors.Wrap(err, "failed to rollback the DUT")
+		}
+		return nil
+	}, &testing.PollOptions{Interval: 10 * time.Second, Timeout: rollbackTimeout - time.Minute})
 
 	// Reboot the DUT.
 	s.Log("Rebooting the DUT after the  non-enterprise rollback")
