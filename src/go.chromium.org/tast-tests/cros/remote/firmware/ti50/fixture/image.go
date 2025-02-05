@@ -174,8 +174,6 @@ func downloadImage(ctx context.Context, testbedProperties remoteTi50.TestbedProp
 		branch := inputURL[len(LatestPrefix):]
 		switch branch {
 		case ToTBranch:
-			// Special value "latests-tot" finds the most recent complete set of artifacts,
-			// and then goes into the case below.
 			fullGlob, jsonGlob, err = findLatestCompletedTi50PostsubmitBuildURL(ctx, testbedProperties.TestbedType, imageType)
 			if err != nil {
 				return nil, err
@@ -223,18 +221,35 @@ func downloadImage(ctx context.Context, testbedProperties remoteTi50.TestbedProp
 		// Assume URL is a build folder if it doesn't end in .bin.
 		if !strings.HasSuffix(inputURL, ".bin") {
 			if fullGlob == "" {
-				// Legacy artifact directory structure.
-				// Assume branch builds have a -channel in the URL.
-				var subDir string
-				bin := branchImageBin
-				if !strings.Contains(inputURL, "-channel/") {
-					p := ti50ImageTypeToProject(imageType)
-					// Postsubmit builder images are 1 subdir deeper.
-					subDir = p + ".tar.bz2"
-					bin = imageBin
+				tastURL := gsPrefix + filepath.Join(strings.TrimPrefix(inputURL, gsPrefix), "tast")
+				testing.ContextLogf(ctx, "Looking for tast directory %s", tastURL)
+				if gsURLExists(ctx, tastURL) {
+					// Cloud directory has a "tast/" subdirectory, use images from there.
+					imageDir, err := ti50ImageDirectory(testbedProperties.TestbedType, imageType)
+					if err != nil {
+						return nil, err
+					}
+					imageGlob, jsonGlob, exists := tastImageAndJSONExists(ctx, inputURL, imageDir)
+					if !exists {
+						return nil, errors.New("Image or json files missing")
+					}
+					fullURL = imageGlob
+					jsonURL = jsonGlob
+					testing.ContextLogf(ctx, "Found tast directory %s", fullURL)
+				} else {
+					// Legacy artifact directory structure.
+					// Assume branch builds have a -channel in the URL.
+					var subDir string
+					bin := branchImageBin
+					if !strings.Contains(inputURL, "-channel/") {
+						p := ti50ImageTypeToProject(imageType)
+						// Postsubmit builder images are 1 subdir deeper.
+						subDir = p + ".tar.bz2"
+						bin = imageBin
+					}
+					fullURL = gsPrefix + filepath.Join(strings.TrimPrefix(inputURL, gsPrefix), subDir, bin)
+					testing.ContextLogf(ctx, "Legacy artifact URL: %s", fullURL)
 				}
-				fullURL = gsPrefix + filepath.Join(inputURL[len(gsPrefix):], subDir, bin)
-				testing.ContextLogf(ctx, "Legacy artifact URL: %s", fullURL)
 			} else {
 				fullURL = fullGlob
 				jsonURL = jsonGlob
@@ -337,7 +352,7 @@ func findLatestCompletedTi50PostsubmitBuildURL(ctx context.Context, t ti50.Testb
 Loop:
 	for i := len(builds) - 1; i >= 0; i-- {
 		build := builds[i]
-		var imageGlob, jsonGlob, theImageGlob, theJSONGlob string
+		var theImageGlob, theJSONGlob string
 		scannedDirs := make(map[string]bool)
 		for _, boardType := range AllTi50TestbedTypes() {
 			if len(t) > 0 && boardType != t {
@@ -352,20 +367,8 @@ Loop:
 					continue
 				}
 				scannedDirs[dir] = true
-				artifactsDir := build + filepath.Join("tast", dir) + "/"
-
-				imageGlob = artifactsDir + imageBinGlob
-				if !gsURLExists(ctx, imageGlob) {
-					imageGlob = strings.Replace(build, postsubmitBucket, releaseBucket, 1) + filepath.Join(dir+".tar.bz2", imageBinGlob)
-					if !gsURLExists(ctx, imageGlob) {
-						testing.ContextLogf(ctx, "Rejecting %s: %s missing (and not found in %s)", artifactsDir, imageBinGlob, releaseBucket)
-						continue Loop
-					}
-				}
-
-				jsonGlob = artifactsDir + tastConfigGlob
-				if !gsURLExists(ctx, jsonGlob) {
-					testing.ContextLogf(ctx, "Rejecting %s: %s missing", artifactsDir, tastConfigGlob)
+				imageGlob, jsonGlob, exists := tastImageAndJSONExists(ctx, build, dir)
+				if !exists {
 					continue Loop
 				}
 				if imageType == iT {
@@ -377,6 +380,28 @@ Loop:
 		return theImageGlob, theJSONGlob, nil
 	}
 	return "", "", errors.New("found no completed builds for tot")
+}
+
+func tastImageAndJSONExists(ctx context.Context, tastParentURL, imageDir string) (imageGlob, jsonGlob string, exists bool) {
+	tastParentURL = strings.TrimPrefix(tastParentURL, gsPrefix)
+	artifactsDir := filepath.Join(tastParentURL, "tast", imageDir)
+
+	imageGlob = gsPrefix + filepath.Join(artifactsDir, imageBinGlob)
+	if !gsURLExists(ctx, imageGlob) {
+		imageGlob = gsPrefix + filepath.Join(strings.Replace(tastParentURL, postsubmitBucket, releaseBucket, 1), imageDir+".tar.bz2", imageBinGlob)
+		if !gsURLExists(ctx, imageGlob) {
+			testing.ContextLogf(ctx, "Rejecting %s: %s missing (and not found in %s)", artifactsDir, imageBinGlob, releaseBucket)
+			return imageGlob, jsonGlob, false
+		}
+	}
+
+	jsonGlob = gsPrefix + filepath.Join(artifactsDir, tastConfigGlob)
+	if !gsURLExists(ctx, jsonGlob) {
+		testing.ContextLogf(ctx, "Rejecting %s: %s missing", artifactsDir, tastConfigGlob)
+		return imageGlob, jsonGlob, false
+	}
+
+	return imageGlob, jsonGlob, true
 }
 
 // DownloadToTempFile downloads url (gs) to a temp file.
