@@ -24,12 +24,20 @@ func init() {
 		Contacts: []string{"chromeos-usb-champs@google.com", "bszpila@google.com", "jthies@google.com"},
 		// ChromeOS > Platform > Technologies > USB
 		BugComponent: "b:958036",
-		Attr:         []string{"group:typec", "typec_tbt4_bringup", "typec_tbt3_bringup"},
+		Attr:         []string{"group:typec"},
 		SoftwareDeps: []string{"tpm2", "chrome"},
 		ServiceDeps:  []string{"tast.cros.typec.Service"},
 		Data:         []string{"testcert.p12"},
 		Vars:         []string{"typec.McciSerial", "typec.McciPort", "typec.McciPath"},
-		Timeout:      8 * time.Minute,
+		Params: []testing.Param{{
+			ExtraAttr: []string{"typec_tbt4_bringup", "typec_tbt3_bringup"},
+			Val:       10,
+			Timeout:   8 * time.Minute,
+		}, {
+			Name:    "stress",
+			Val:     50,
+			Timeout: 40 * time.Minute,
+		}},
 	})
 }
 
@@ -51,9 +59,11 @@ func init() {
 //	|                              |
 //	|______________________________|
 func TbtSuspend(ctx context.Context, s *testing.State) {
-	numIterations := 10
 
+	numIterations := s.Param().(int)
 	d := s.DUT()
+
+	s.Log("Number of iterations: ", numIterations)
 
 	portUsed, err := strconv.Atoi(s.RequiredVar("typec.McciPort"))
 	if err != nil {

@@ -24,10 +24,18 @@ func init() {
 		Contacts: []string{"chromeos-usb-champs@google.com", "bszpila@google.com", "jthies@google.com"},
 		// ChromeOS > Platform > Connectivity > USB
 		BugComponent: "b:958036",
-		Attr:         []string{"group:typec", "typec_dp_bringup"},
+		Attr:         []string{"group:typec"},
 		SoftwareDeps: []string{"reboot"},
 		Vars:         []string{"typec.McciSerial", "typec.McciPort", "typec.McciPath"},
-		Timeout:      7 * time.Minute,
+		Params: []testing.Param{{
+			ExtraAttr: []string{"typec_dp_bringup"},
+			Val:       5,
+			Timeout:   7 * time.Minute,
+		}, {
+			Name:    "stress",
+			Val:     25,
+			Timeout: 35 * time.Minute,
+		}},
 	})
 }
 
@@ -48,9 +56,10 @@ func init() {
 //	|                              |
 //	|______________________________|
 func DpReboot(ctx context.Context, s *testing.State) {
-	const numIterations = 5
-
+	numIterations := s.Param().(int)
 	d := s.DUT()
+
+	s.Log("Number of iterations: ", numIterations)
 
 	portUsed, err := strconv.Atoi(s.RequiredVar("typec.McciPort"))
 	if err != nil {

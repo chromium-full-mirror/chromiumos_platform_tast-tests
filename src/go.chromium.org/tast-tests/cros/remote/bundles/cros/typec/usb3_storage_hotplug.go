@@ -25,10 +25,18 @@ func init() {
 		Contacts: []string{"chromeos-usb-champs@google.com", "bszpila@google.com", "jthies@google.com"},
 		// ChromeOS > Platform > Technologies > USB
 		BugComponent: "b:958036",
-		Attr:         []string{"group:typec", "typec_usb_bringup"},
+		Attr:         []string{"group:typec"},
 		Vars:         []string{"typec.McciSerial", "typec.McciPort", "typec.McciPath"},
 		ServiceDeps:  []string{"tast.cros.usb.SysfsService"},
-		Timeout:      5 * time.Minute,
+		Params: []testing.Param{{
+			ExtraAttr: []string{"typec_usb_bringup"},
+			Val:       10,
+			Timeout:   5 * time.Minute,
+		}, {
+			Name:    "stress",
+			Val:     50,
+			Timeout: 25 * time.Minute,
+		}},
 	})
 }
 
@@ -49,9 +57,11 @@ func init() {
 //	|                              |
 //	|______________________________|
 func Usb3StorageHotplug(ctx context.Context, s *testing.State) {
-	numIterations := 10
 
+	numIterations := s.Param().(int)
 	d := s.DUT()
+
+	s.Log("Number of iterations: ", numIterations)
 
 	portUsed, err := strconv.Atoi(s.RequiredVar("typec.McciPort"))
 	if err != nil {
