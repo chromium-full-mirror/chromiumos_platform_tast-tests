@@ -73,6 +73,9 @@ func ECCrash(ctx context.Context, s *testing.State) {
 
 	h := s.FixtValue().(*fixture.Value).Helper
 
+	// Skip checking for EC crashes in this test because it crashes intentionally.
+	h.CheckECCrash = false
+
 	if err := h.RequireServo(ctx); err != nil {
 		s.Fatal("Failed to init servo: ", err)
 	}

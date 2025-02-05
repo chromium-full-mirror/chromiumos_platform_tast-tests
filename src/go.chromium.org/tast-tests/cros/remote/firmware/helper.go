@@ -135,6 +135,9 @@ type Helper struct {
 	// eccrashFileCache holds a cache of the current ec crash files in /var/spool/crash/ (without file ext).
 	ecCrashFileCache map[string]bool
 
+	// CheckECCrash holds a value that a test can set to false to skip checking for ec crashes.
+	CheckECCrash bool
+
 	// HasAPFwState indicates that the DUT firmware version supports reading firmware screen IDs from the EC console.
 	HasAPFwState bool
 }

@@ -226,9 +226,8 @@ type Value struct {
 
 // impl contains fields that are useful for Fixture methods.
 type impl struct {
-	value        *BaseValue
-	disallowSSH  bool
-	checkECCrash bool
+	value       *BaseValue
+	disallowSSH bool
 }
 
 type firmwareBackupAPImpl struct {
@@ -302,7 +301,7 @@ func (i *impl) SetUp(ctx context.Context, s *testing.FixtState) interface{} {
 	s.Log("Creating a new firmware Helper instance for fixture: ", i.String())
 	i.initHelper(ctx, s)
 
-	i.checkECCrash = true
+	i.value.Helper.CheckECCrash = true
 
 	return i.value
 }
@@ -446,7 +445,7 @@ func (i *impl) Reset(ctx context.Context) error {
 	// Close the RPC client in case the DUT rebooted at some point, and it doesn't recover well.
 	i.value.Helper.CloseRPCConnection(ctx)
 	// Reset after every test to retry for next test.
-	i.checkECCrash = true
+	i.value.Helper.CheckECCrash = true
 	return nil
 }
 
@@ -553,18 +552,18 @@ func (i *impl) PreTest(ctx context.Context, s *testing.FixtTestState) {
 	}
 
 	// Only get/check EC crash logs if ssh is allow, has cros EC, and is explicitly enabled..
-	if !i.disallowSSH && supportCrosEC == "yes" && i.checkECCrash {
+	if !i.disallowSSH && supportCrosEC == "yes" && i.value.Helper.CheckECCrash {
 		connectTimeout, cancel := context.WithTimeout(ctx, 5*time.Second)
 		defer cancel()
 		if err := i.value.Helper.WaitConnect(connectTimeout); err != nil {
 			s.Log(logECCrash("failed to connect to dut before test to clear ec crashes", s, err))
-			i.checkECCrash = false
+			i.value.Helper.CheckECCrash = false
 		} else {
 			s.Logf("Updating EC crash cache before test %s", s.TestName())
 			if err := i.value.Helper.UpdateECCrashCache(ctx); err != nil {
 				s.Log(logECCrash("failed to update EC crash cache", s, err))
 				// Couldn't update EC cache, don't check for crash files in post test.
-				i.checkECCrash = false
+				i.value.Helper.CheckECCrash = false
 			}
 
 		}
@@ -714,7 +713,7 @@ func (i *impl) PostTest(ctx context.Context, s *testing.FixtTestState) {
 	}
 
 	// Check EC crash logs if ssh is allowed and has cros EC and pretest successfully cached previous crash files.
-	if !i.disallowSSH && supportCrosEC == "yes" && i.checkECCrash {
+	if !i.disallowSSH && supportCrosEC == "yes" && i.value.Helper.CheckECCrash {
 		checkAndLogECCrashes(ctx, s, i)
 	}
 }

@@ -89,15 +89,8 @@ func ECWatchdog(ctx context.Context, s *testing.State) {
 		s.Fatal("Failed to create config: ", err)
 	}
 
-	// Update ECCrashCache at the end of the test since this test intentionally triggers EC crashes
-	defer func() {
-		if err := h.EnsureDUTBooted(ctx); err != nil {
-			s.Error("Failed to boot DUT after test: ", err)
-		}
-		if err := h.UpdateECCrashCache(ctx); err != nil {
-			s.Error("Failed to update EC crash file cache after test: ", err)
-		}
-	}()
+	// Skip checking for EC crashes in this test because it crashes intentionally.
+	h.CheckECCrash = false
 
 	panicOnWatchdogWarning, err := isPanicOnWatchdogWarningEnabled(s.Features(""))
 	if err != nil {
