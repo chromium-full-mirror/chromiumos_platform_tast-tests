@@ -31,13 +31,13 @@ const csvShiftLabel = "shift"
 const csvAltgrLabel = "altgr"
 const csvCapsLabel = "caps"
 
-var imeID = testing.RegisterVarString(
+var imeIDArg = testing.RegisterVarString(
 	"inputs.imeID",
 	"",
-	"The target imeID string",
+	"CrOS input method ID",
 )
 
-var altGr = testing.RegisterVarString(
+var altGrArg = testing.RegisterVarString(
 	"inputs.altGr",
 	"true",
 	"The flag for adding altGr case, it will be set true by default.",
@@ -88,19 +88,16 @@ func KeyboardLayout(ctx context.Context, s *testing.State) {
 	defer its.CloseAll(cleanupCtx)
 
 	ui := uiauto.New(tconn)
-	id := imeID.Value()
 
 	var needAltGrCase bool = true
-	altGr := altGr.Value()
-
-	if altGr == "false" {
+	if altGrArg.Value() == "false" {
 		needAltGrCase = false
 	}
 
 	// Check if the target ime info exists or not.
 	var inputMethod *ime.InputMethod
 
-	if inputMethod, err = ime.FindInputMethodByID(id); err != nil {
+	if inputMethod, err = ime.FindInputMethodByID(imeIDArg.Value()); err != nil {
 		s.Fatal("Missing input method info in ime.inputMethods")
 	}
 
