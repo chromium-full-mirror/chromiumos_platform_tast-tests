@@ -953,7 +953,7 @@ func (ms *ModeSwitcher) EnableRecMode(ctx context.Context, recType servo.PowerSt
 			// supports capturing the FW screen ID in the EC console,
 			// it means it uses the menu UI.
 			testing.ContextLog(ctx, "Detecting the recovery select screen")
-			if err := h.DetectFirmwareScreen(ctx, h.Config.FirmwareScreen, fwCommon.RecoverySelect); err != nil {
+			if err := h.DetectFirmwareScreen(ctx, h.Config.FirmwareScreenRecMode, fwCommon.RecoverySelect); err != nil {
 				return errors.Wrap(err, "failed to detect firmware screen")
 			}
 		} else {
