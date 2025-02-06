@@ -122,7 +122,7 @@ func init() {
 				},
 				ExtraHardwareDeps: hwdep.D(hwdep.Wifi80211ax6E()),
 				ExtraTestBedDeps:  []string{"wifi_router_features:WIFI_ROUTER_FEATURE_IEEE_802_11_AX_E"},
-				VariantCategory:   `{"name": "WifiBtChipset_Soc_Kernel_80211_AXE"}`,
+				VariantCategory:   `{"name": "WifiBtChipset_Soc_Kernel"}`,
 			},
 		},
 	})

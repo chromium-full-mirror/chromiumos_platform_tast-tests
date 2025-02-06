@@ -220,7 +220,7 @@ func simpleConnect80211ax() []*simpleConnectParams {
 		ExtraHardwareDeps:      `hwdep.D(hwdep.Wifi80211ax())`,
 		ExtraRequirements:      []string{tdreq.WiFiGenSupport80211ax, tdreq.WiFiRfSupport80211ax},
 		DepsWifiRouterFeatures: []api.WifiRouterFeature{api.WifiRouterFeature_WIFI_ROUTER_FEATURE_IEEE_802_11_AX},
-		VariantCategory:        "`{\"name\": \"WifiBtChipset_Soc_Kernel_80211_AX\"}`",
+		VariantCategory:        "`{\"name\": \"WifiBtChipset_Soc_Kernel\"}`",
 	}, {
 		Name:      "80211axhe40",
 		Fixture:   defaultFixture,
@@ -233,7 +233,7 @@ func simpleConnect80211ax() []*simpleConnectParams {
 		ExtraHardwareDeps:      `hwdep.D(hwdep.Wifi80211ax())`,
 		ExtraRequirements:      []string{tdreq.WiFiGenSupport80211ax, tdreq.WiFiRfSupport80211ax},
 		DepsWifiRouterFeatures: []api.WifiRouterFeature{api.WifiRouterFeature_WIFI_ROUTER_FEATURE_IEEE_802_11_AX},
-		VariantCategory:        "`{\"name\": \"WifiBtChipset_Soc_Kernel_80211_AX\"}`",
+		VariantCategory:        "`{\"name\": \"WifiBtChipset_Soc_Kernel\"}`",
 	}, {
 		Name:      "80211axhe80mixed",
 		Fixture:   defaultFixture,
@@ -246,7 +246,7 @@ func simpleConnect80211ax() []*simpleConnectParams {
 		ExtraHardwareDeps:      `hwdep.D(hwdep.Wifi80211ax())`,
 		ExtraRequirements:      []string{tdreq.WiFiGenSupport80211ax, tdreq.WiFiRfSupport80211ax},
 		DepsWifiRouterFeatures: []api.WifiRouterFeature{api.WifiRouterFeature_WIFI_ROUTER_FEATURE_IEEE_802_11_AX},
-		VariantCategory:        "`{\"name\": \"WifiBtChipset_Soc_Kernel_80211_AX\"}`",
+		VariantCategory:        "`{\"name\": \"WifiBtChipset_Soc_Kernel\"}`",
 	}, {
 		Name:      "80211axhe80pure",
 		Fixture:   defaultFixture,
@@ -260,7 +260,7 @@ func simpleConnect80211ax() []*simpleConnectParams {
 		ExtraHardwareDeps:      `hwdep.D(hwdep.Wifi80211ax())`,
 		ExtraRequirements:      []string{tdreq.WiFiGenSupport80211ax, tdreq.WiFiRfSupport80211ax},
 		DepsWifiRouterFeatures: []api.WifiRouterFeature{api.WifiRouterFeature_WIFI_ROUTER_FEATURE_IEEE_802_11_AX},
-		VariantCategory:        "`{\"name\": \"WifiBtChipset_Soc_Kernel_80211_AX\"}`",
+		VariantCategory:        "`{\"name\": \"WifiBtChipset_Soc_Kernel\"}`",
 	}}
 }
 
@@ -280,7 +280,7 @@ func simpleConnect80211axe() []*simpleConnectParams {
 		ExtraHardwareDeps:      `hwdep.D(hwdep.Wifi80211ax6E())`,
 		ExtraRequirements:      []string{tdreq.WiFiGenSupport6E, tdreq.WiFiRfSupport80211ax, tdreq.WiFiSecSupportOWE, tdreq.WiFiCertOWE},
 		DepsWifiRouterFeatures: []api.WifiRouterFeature{api.WifiRouterFeature_WIFI_ROUTER_FEATURE_IEEE_802_11_AX_E},
-		VariantCategory:        "`{\"name\": \"WifiBtChipset_Soc_Kernel_80211_AXE\"}`",
+		VariantCategory:        "`{\"name\": \"WifiBtChipset_Soc_Kernel\"}`",
 	}, {
 		Name:              "80211axe20",
 		Fixture:           defaultFixture,
@@ -298,7 +298,7 @@ func simpleConnect80211axe() []*simpleConnectParams {
 		ExtraHardwareDeps:      `hwdep.D(hwdep.Wifi80211ax6E())`,
 		ExtraRequirements:      []string{tdreq.WiFiGenSupport6E, tdreq.WiFiRfSupport80211ax},
 		DepsWifiRouterFeatures: []api.WifiRouterFeature{api.WifiRouterFeature_WIFI_ROUTER_FEATURE_IEEE_802_11_AX_E},
-		VariantCategory:        "`{\"name\": \"WifiBtChipset_Soc_Kernel_80211_AXE\"}`",
+		VariantCategory:        "`{\"name\": \"WifiBtChipset_Soc_Kernel\"}`",
 	}, {
 		Name:              "80211axe40",
 		Fixture:           defaultFixture,
@@ -316,7 +316,7 @@ func simpleConnect80211axe() []*simpleConnectParams {
 		ExtraHardwareDeps:      `hwdep.D(hwdep.Wifi80211ax6E())`,
 		ExtraRequirements:      []string{tdreq.WiFiGenSupport6E, tdreq.WiFiRfSupport80211ax},
 		DepsWifiRouterFeatures: []api.WifiRouterFeature{api.WifiRouterFeature_WIFI_ROUTER_FEATURE_IEEE_802_11_AX_E},
-		VariantCategory:        "`{\"name\": \"WifiBtChipset_Soc_Kernel_80211_AXE\"}`",
+		VariantCategory:        "`{\"name\": \"WifiBtChipset_Soc_Kernel\"}`",
 	}, {
 		Name:              "80211axe80mixed",
 		Fixture:           defaultFixture,
@@ -335,7 +335,7 @@ func simpleConnect80211axe() []*simpleConnectParams {
 		ExtraHardwareDeps:      `hwdep.D(hwdep.Wifi80211ax6E())`,
 		ExtraRequirements:      []string{tdreq.WiFiGenSupport6E, tdreq.WiFiRfSupport80211ax},
 		DepsWifiRouterFeatures: []api.WifiRouterFeature{api.WifiRouterFeature_WIFI_ROUTER_FEATURE_IEEE_802_11_AX_E},
-		VariantCategory:        "`{\"name\": \"WifiBtChipset_Soc_Kernel_80211_AXE\"}`",
+		VariantCategory:        "`{\"name\": \"WifiBtChipset_Soc_Kernel\"}`",
 	}, {
 		Name:              "80211axe80pure",
 		Fixture:           defaultFixture,
@@ -355,7 +355,7 @@ func simpleConnect80211axe() []*simpleConnectParams {
 		ExtraHardwareDeps:      `hwdep.D(hwdep.Wifi80211ax6E())`,
 		ExtraRequirements:      []string{tdreq.WiFiGenSupport6E, tdreq.WiFiRfSupport80211ax},
 		DepsWifiRouterFeatures: []api.WifiRouterFeature{api.WifiRouterFeature_WIFI_ROUTER_FEATURE_IEEE_802_11_AX_E},
-		VariantCategory:        "`{\"name\": \"WifiBtChipset_Soc_Kernel_80211_AXE\"}`",
+		VariantCategory:        "`{\"name\": \"WifiBtChipset_Soc_Kernel\"}`",
 	}, {
 		Name:              "80211axe160mixed",
 		Fixture:           defaultFixture,
@@ -374,7 +374,7 @@ func simpleConnect80211axe() []*simpleConnectParams {
 		ExtraHardwareDeps:      `hwdep.D(hwdep.Wifi80211ax6E())`,
 		ExtraRequirements:      []string{tdreq.WiFiGenSupport6E, tdreq.WiFiRf6E160MHz},
 		DepsWifiRouterFeatures: []api.WifiRouterFeature{api.WifiRouterFeature_WIFI_ROUTER_FEATURE_IEEE_802_11_AX_E},
-		VariantCategory:        "`{\"name\": \"WifiBtChipset_Soc_Kernel_80211_AXE\"}`",
+		VariantCategory:        "`{\"name\": \"WifiBtChipset_Soc_Kernel\"}`",
 	}, {
 		Name:    "80211axe160pure",
 		Fixture: defaultFixture,
@@ -394,7 +394,7 @@ func simpleConnect80211axe() []*simpleConnectParams {
 		ExtraHardwareDeps:      `hwdep.D(hwdep.Wifi80211ax6E())`,
 		ExtraRequirements:      []string{tdreq.WiFiGenSupport6E, tdreq.WiFiRf6E160MHz},
 		DepsWifiRouterFeatures: []api.WifiRouterFeature{api.WifiRouterFeature_WIFI_ROUTER_FEATURE_IEEE_802_11_AX_E},
-		VariantCategory:        "`{\"name\": \"WifiBtChipset_Soc_Kernel_80211_AXE\"}`",
+		VariantCategory:        "`{\"name\": \"WifiBtChipset_Soc_Kernel\"}`",
 	}}
 }
 
@@ -415,7 +415,7 @@ func simpleConnect80211be() []*simpleConnectParams {
 		}},
 		ExtraHardwareDeps:      `hwdep.D(hwdep.Wifi80211be())`,
 		DepsWifiRouterFeatures: []api.WifiRouterFeature{api.WifiRouterFeature_WIFI_ROUTER_FEATURE_IEEE_802_11_BE},
-		VariantCategory:        "`{\"name\": \"WifiBtChipset_Soc_Kernel_80211_BE\"}`",
+		VariantCategory:        "`{\"name\": \"WifiBtChipset_Soc_Kernel\"}`",
 	}, {
 		Name:      "80211beeht40",
 		Fixture:   defaultFixture,
@@ -432,7 +432,7 @@ func simpleConnect80211be() []*simpleConnectParams {
 		}},
 		ExtraHardwareDeps:      `hwdep.D(hwdep.Wifi80211be())`,
 		DepsWifiRouterFeatures: []api.WifiRouterFeature{api.WifiRouterFeature_WIFI_ROUTER_FEATURE_IEEE_802_11_BE},
-		VariantCategory:        "`{\"name\": \"WifiBtChipset_Soc_Kernel_80211_BE\"}`",
+		VariantCategory:        "`{\"name\": \"WifiBtChipset_Soc_Kernel\"}`",
 	}, {
 		Name:      "80211beeht80mixed",
 		Fixture:   defaultFixture,
@@ -450,7 +450,7 @@ func simpleConnect80211be() []*simpleConnectParams {
 		}},
 		ExtraHardwareDeps:      `hwdep.D(hwdep.Wifi80211be())`,
 		DepsWifiRouterFeatures: []api.WifiRouterFeature{api.WifiRouterFeature_WIFI_ROUTER_FEATURE_IEEE_802_11_BE},
-		VariantCategory:        "`{\"name\": \"WifiBtChipset_Soc_Kernel_80211_BE\"}`",
+		VariantCategory:        "`{\"name\": \"WifiBtChipset_Soc_Kernel\"}`",
 	}, {
 		Name:      "80211beeht80pure",
 		Fixture:   defaultFixture,
@@ -469,7 +469,7 @@ func simpleConnect80211be() []*simpleConnectParams {
 		}},
 		ExtraHardwareDeps:      `hwdep.D(hwdep.Wifi80211be())`,
 		DepsWifiRouterFeatures: []api.WifiRouterFeature{api.WifiRouterFeature_WIFI_ROUTER_FEATURE_IEEE_802_11_BE},
-		VariantCategory:        "`{\"name\": \"WifiBtChipset_Soc_Kernel_80211_BE\"}`",
+		VariantCategory:        "`{\"name\": \"WifiBtChipset_Soc_Kernel\"}`",
 	}}
 }
 
@@ -490,7 +490,7 @@ func simpleConnect80211be6ghz() []*simpleConnectParams {
 		ExtraHardwareDeps:      `hwdep.D(hwdep.Wifi80211be())`,
 		ExtraRequirements:      []string{tdreq.WiFiSecSupportOWE, tdreq.WiFiCertOWE},
 		DepsWifiRouterFeatures: []api.WifiRouterFeature{api.WifiRouterFeature_WIFI_ROUTER_FEATURE_IEEE_802_11_BE},
-		VariantCategory:        "`{\"name\": \"WifiBtChipset_Soc_Kernel_80211_BE\"}`",
+		VariantCategory:        "`{\"name\": \"WifiBtChipset_Soc_Kernel\"}`",
 	}, {
 		Name:              "80211beeht20_6ghz",
 		Fixture:           defaultFixture,
@@ -508,7 +508,7 @@ func simpleConnect80211be6ghz() []*simpleConnectParams {
 		}},
 		ExtraHardwareDeps:      `hwdep.D(hwdep.Wifi80211be())`,
 		DepsWifiRouterFeatures: []api.WifiRouterFeature{api.WifiRouterFeature_WIFI_ROUTER_FEATURE_IEEE_802_11_BE},
-		VariantCategory:        "`{\"name\": \"WifiBtChipset_Soc_Kernel_80211_BE\"}`",
+		VariantCategory:        "`{\"name\": \"WifiBtChipset_Soc_Kernel\"}`",
 	}, {
 		Name:              "80211beeht40_6ghz",
 		Fixture:           defaultFixture,
@@ -525,7 +525,7 @@ func simpleConnect80211be6ghz() []*simpleConnectParams {
 		}},
 		ExtraHardwareDeps:      `hwdep.D(hwdep.Wifi80211be())`,
 		DepsWifiRouterFeatures: []api.WifiRouterFeature{api.WifiRouterFeature_WIFI_ROUTER_FEATURE_IEEE_802_11_BE},
-		VariantCategory:        "`{\"name\": \"WifiBtChipset_Soc_Kernel_80211_BE\"}`",
+		VariantCategory:        "`{\"name\": \"WifiBtChipset_Soc_Kernel\"}`",
 	}, {
 		Name:              "80211beeht80mixed_6ghz",
 		Fixture:           defaultFixture,
@@ -543,7 +543,7 @@ func simpleConnect80211be6ghz() []*simpleConnectParams {
 		}},
 		ExtraHardwareDeps:      `hwdep.D(hwdep.Wifi80211be())`,
 		DepsWifiRouterFeatures: []api.WifiRouterFeature{api.WifiRouterFeature_WIFI_ROUTER_FEATURE_IEEE_802_11_BE},
-		VariantCategory:        "`{\"name\": \"WifiBtChipset_Soc_Kernel_80211_BE\"}`",
+		VariantCategory:        "`{\"name\": \"WifiBtChipset_Soc_Kernel\"}`",
 	}, {
 		Name:              "80211beeht80pure_6ghz",
 		Fixture:           defaultFixture,
@@ -562,7 +562,7 @@ func simpleConnect80211be6ghz() []*simpleConnectParams {
 		}},
 		ExtraHardwareDeps:      `hwdep.D(hwdep.Wifi80211be())`,
 		DepsWifiRouterFeatures: []api.WifiRouterFeature{api.WifiRouterFeature_WIFI_ROUTER_FEATURE_IEEE_802_11_BE},
-		VariantCategory:        "`{\"name\": \"WifiBtChipset_Soc_Kernel_80211_BE\"}`",
+		VariantCategory:        "`{\"name\": \"WifiBtChipset_Soc_Kernel\"}`",
 	}, {
 		Name:              "80211beeht160mixed_6ghz",
 		Fixture:           defaultFixture,
@@ -581,7 +581,7 @@ func simpleConnect80211be6ghz() []*simpleConnectParams {
 		}},
 		ExtraHardwareDeps:      `hwdep.D(hwdep.Wifi80211be())`,
 		DepsWifiRouterFeatures: []api.WifiRouterFeature{api.WifiRouterFeature_WIFI_ROUTER_FEATURE_IEEE_802_11_BE},
-		VariantCategory:        "`{\"name\": \"WifiBtChipset_Soc_Kernel_80211_BE\"}`",
+		VariantCategory:        "`{\"name\": \"WifiBtChipset_Soc_Kernel\"}`",
 	}, {
 		Name:              "80211beeht160pure_6ghz",
 		Fixture:           defaultFixture,
@@ -600,7 +600,7 @@ func simpleConnect80211be6ghz() []*simpleConnectParams {
 		}},
 		ExtraHardwareDeps:      `hwdep.D(hwdep.Wifi80211be())`,
 		DepsWifiRouterFeatures: []api.WifiRouterFeature{api.WifiRouterFeature_WIFI_ROUTER_FEATURE_IEEE_802_11_BE},
-		VariantCategory:        "`{\"name\": \"WifiBtChipset_Soc_Kernel_80211_BE\"}`",
+		VariantCategory:        "`{\"name\": \"WifiBtChipset_Soc_Kernel\"}`",
 	}, {
 		Name:              "80211beeht320mixed_6ghz",
 		Fixture:           defaultFixture,
@@ -620,7 +620,7 @@ func simpleConnect80211be6ghz() []*simpleConnectParams {
 		}},
 		ExtraHardwareDeps:      `hwdep.D(hwdep.Wifi80211be())`,
 		DepsWifiRouterFeatures: []api.WifiRouterFeature{api.WifiRouterFeature_WIFI_ROUTER_FEATURE_IEEE_802_11_BE},
-		VariantCategory:        "`{\"name\": \"WifiBtChipset_Soc_Kernel_80211_BE\"}`",
+		VariantCategory:        "`{\"name\": \"WifiBtChipset_Soc_Kernel\"}`",
 	}, {
 		Name:              "80211beeht320pure_6ghz",
 		Fixture:           defaultFixture,
@@ -640,7 +640,7 @@ func simpleConnect80211be6ghz() []*simpleConnectParams {
 		}},
 		ExtraHardwareDeps:      `hwdep.D(hwdep.Wifi80211be())`,
 		DepsWifiRouterFeatures: []api.WifiRouterFeature{api.WifiRouterFeature_WIFI_ROUTER_FEATURE_IEEE_802_11_BE},
-		VariantCategory:        "`{\"name\": \"WifiBtChipset_Soc_Kernel_80211_BE\"}`",
+		VariantCategory:        "`{\"name\": \"WifiBtChipset_Soc_Kernel\"}`",
 	}}
 }
 
@@ -953,7 +953,7 @@ func simpleConnectWPA3() []*simpleConnectParams {
 		Val:                    mkOps("Optional", "MixedWPA3Ext", "wpa.KeyMgmtSAEEXT"),
 		ExtraRequirements:      []string{tdreq.WiFiGenSupportPMF, tdreq.WiFiSecSupportWPA3Personal},
 		DepsWifiRouterFeatures: []api.WifiRouterFeature{api.WifiRouterFeature_WIFI_ROUTER_FEATURE_SAE_EXT_KEY},
-		VariantCategory:        "`{\"name\": \"WifiBtChipset_Soc_Kernel_SAE_EXT_KEY\"}`",
+		VariantCategory:        "`{\"name\": \"WifiBtChipset_Soc_Kernel\"}`",
 	}, {
 		Name:              "wpa3",
 		Fixture:           defaultFixture,
@@ -977,7 +977,7 @@ func simpleConnectWPA3() []*simpleConnectParams {
 		Val:                    mkOps("Required", "PureWPA3Ext", "wpa.KeyMgmtSAEEXT"),
 		ExtraRequirements:      []string{tdreq.WiFiGenSupportPMF, tdreq.WiFiSecSupportWPA3Personal},
 		DepsWifiRouterFeatures: []api.WifiRouterFeature{api.WifiRouterFeature_WIFI_ROUTER_FEATURE_SAE_EXT_KEY},
-		VariantCategory:        "`{\"name\": \"WifiBtChipset_Soc_Kernel_SAE_EXT_KEY\"}`",
+		VariantCategory:        "`{\"name\": \"WifiBtChipset_Soc_Kernel\"}`",
 	}}
 }
 

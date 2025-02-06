@@ -40,7 +40,7 @@ func init() {
 		ServiceDeps:     []string{wificell.ShillServiceName},
 		Fixture:         wificell.FixtureID(wificell.TFFeaturesCapture),
 		Requirements:    []string{tdreq.WiFiProcPassFW, tdreq.WiFiProcPassAVL, tdreq.WiFiProcPassAVLBeforeUpdates, tdreq.WiFiProcPassMatfunc, tdreq.WiFiProcPassMatfuncBeforeUpdates},
-		VariantCategory: `{"name": "WifiBtChipset_Soc_Kernel_80211_AXE"}`,
+		VariantCategory: `{"name": "WifiBtChipset_Soc_Kernel"}`,
 		SoftwareDeps:    []string{"wpa3_sae"},
 		HardwareDeps:    hwdep.D(hwdep.Wifi80211ax6E()),
 		Params: []testing.Param{
