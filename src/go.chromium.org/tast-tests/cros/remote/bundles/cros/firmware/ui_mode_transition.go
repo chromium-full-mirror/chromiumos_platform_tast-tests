@@ -84,14 +84,14 @@ func UIModeTransition(ctx context.Context, s *testing.State) {
 			expBootMode:  fwCommon.BootModeNormal,
 		},
 	} {
+		closeUART := func(ctx context.Context) error { return nil }
 		switch boot.transition {
 		case normalToDev:
 			if err := ms.EnableRecMode(ctx, servo.PowerStateRec, servo.USBMuxHost); err != nil {
 				s.Fatal("Failed to enable recovery mode: ", err)
 			}
-
 			if h.HasAPFwState {
-				closeUART, err := h.Servo.EnableUARTCapture(ctx, servo.ECUARTCapture)
+				closeUART, err = h.Servo.EnableUARTCapture(ctx, servo.ECUARTCapture)
 				if err != nil {
 					s.Fatal("Failed to enable capture EC UART: ", err)
 				}
@@ -106,7 +106,7 @@ func UIModeTransition(ctx context.Context, s *testing.State) {
 			}
 		case devToNormal:
 			if h.HasAPFwState {
-				closeUART, err := h.Servo.EnableUARTCapture(ctx, servo.ECUARTCapture)
+				closeUART, err = h.Servo.EnableUARTCapture(ctx, servo.ECUARTCapture)
 				if err != nil {
 					s.Fatal("Failed to enable capture EC UART: ", err)
 				}
@@ -123,6 +123,9 @@ func UIModeTransition(ctx context.Context, s *testing.State) {
 		if h.HasAPFwState {
 			if err := h.DetectFirmwareScreen(ctx, h.Config.FirmwareScreen, fwCommon.DeveloperMode); err != nil {
 				s.Log("Failed to detect firmware screen: ", err)
+			}
+			if err := closeUART(ctx); err != nil {
+				s.Error("Failed to cancel capture EC UART: ", err)
 			}
 		} else {
 			s.Logf("Waiting for %s (firmware screen)", h.Config.FirmwareScreen)
