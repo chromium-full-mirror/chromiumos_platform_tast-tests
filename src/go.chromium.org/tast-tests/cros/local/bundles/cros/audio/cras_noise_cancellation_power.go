@@ -47,7 +47,7 @@ func init() {
 			{
 				Name: "aec",
 				Val: crasNoiseCancellationPowerParam{
-					extraCrasClientArgs: []string{"--effects=aec"},
+					extraCrasClientArgs: []string{"--effects=0x1"},
 				},
 				Fixture: fixture.CrasSetUp{
 					ChromeFixture:           setup.PowerAshPlatformAudioNoiseCancellation,
@@ -60,7 +60,7 @@ func init() {
 			{
 				Name: "aec_nc",
 				Val: crasNoiseCancellationPowerParam{
-					extraCrasClientArgs: []string{"--effects=aec"},
+					extraCrasClientArgs: []string{"--effects=0x1"},
 				},
 				Fixture: fixture.CrasSetUp{
 					ChromeFixture:           setup.PowerAshPlatformAudioNoiseCancellation,
@@ -77,7 +77,7 @@ func init() {
 			{
 				Name: "aec_nc_ast",
 				Val: crasNoiseCancellationPowerParam{
-					extraCrasClientArgs: []string{"--effects=aec"},
+					extraCrasClientArgs: []string{"--effects=0x1"},
 				},
 				Fixture: fixture.CrasSetUp{
 					ChromeFixture:           setup.PowerAshPlatformAudioStyleTransfer,
