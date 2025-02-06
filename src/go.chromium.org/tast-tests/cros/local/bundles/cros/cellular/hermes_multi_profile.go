@@ -32,6 +32,14 @@ func HermesMultiProfile(ctx context.Context, s *testing.State) {
 		s.Fatal("Unable to get Hermes euicc: ", err)
 	}
 
+	profiles, err := euicc.InstalledProfiles(ctx, true)
+	if err != nil {
+		s.Fatal("Failed to get installed profiles: ", err)
+	}
+	if len(profiles) < 1 {
+		s.Fatal("No profiles found on euicc. Expected atleast one installed profile")
+	}
+
 	s.Log("Looking for enabled profile before test begins")
 	p, err := euicc.EnabledProfile(ctx)
 	if err != nil {
@@ -44,14 +52,6 @@ func HermesMultiProfile(ctx context.Context, s *testing.State) {
 		if err := p.Call(ctx, hermesconst.ProfileMethodDisable).Err; err != nil {
 			s.Fatalf("Failed to disable %s: %s", p.String(), err)
 		}
-	}
-
-	profiles, err := euicc.InstalledProfiles(ctx, true)
-	if err != nil {
-		s.Fatal("Failed to get installed profiles: ", err)
-	}
-	if len(profiles) < 1 {
-		s.Fatal("No profiles found on euicc. Expected atleast one installed profile")
 	}
 
 	for _, profile := range profiles {
