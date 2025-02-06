@@ -27,7 +27,7 @@ func init() {
 		Attr:         []string{"group:mainline", "informational"},
 		VarDeps:      []string{ui.GaiaPoolDefaultVarName},
 		SoftwareDeps: []string{"chrome"},
-		Fixture:      "arcBooted",
+		Fixture:      "arcBootedWithAllowAdbRoot",
 		Timeout:      chrome.LoginTimeout + arc.BootTimeout + 30*time.Second,
 		Params: []testing.Param{{
 			Name: "vm_x86_64",
@@ -51,16 +51,10 @@ func init() {
 }
 
 func VTSKeymint(ctx context.Context, s *testing.State) {
-	cleanupCtx := ctx
 	ctx, cancel := ctxutil.Shorten(ctx, 30*time.Second)
 	defer cancel()
 
 	a := s.FixtValue().(*arc.PreData).ARC
-
-	if err := arc.WriteArcvmDevConf(ctx, "--params=androidboot.arc.allow_adb_root=1"); err != nil {
-		s.Fatal("Failed to set arcvm_dev.conf: ", err)
-	}
-	defer arc.RestoreArcvmDevConf(cleanupCtx)
 
 	testing.ContextLog(ctx, "Restarting adbd as root")
 	if err := a.Root(ctx); err != nil {

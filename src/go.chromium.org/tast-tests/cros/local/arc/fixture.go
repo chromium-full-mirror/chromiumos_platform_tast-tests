@@ -68,9 +68,31 @@ func init() {
 		},
 	})
 
+	// arcBootedWithAllowAdbRoot is a fixture similar to arcBooted, except that
+	// ARC is booted with a param to allow adb root.
+	fixtureConfig := DefaultBootedFixtureConfig()
+	fixtureConfig.ArcvmConfig = func(context.Context) (string, error) {
+		return "--params=androidboot.arc.allow_adb_root=1", nil
+	}
+	testing.AddFixture(&testing.Fixture{
+		Name: "arcBootedWithAllowAdbRoot",
+		Desc: "ARC is booted with a param to allow adb root",
+		Contacts: []string{
+			"niwa@chromium.org",
+			"arcvm-eng-team@google.com",
+		},
+		BugComponent:    "b:883059", // ChromeOS > Software > ARC++ > ARCVM
+		Impl:            NewArcBootedFixture(fixtureConfig),
+		SetUpTimeout:    chrome.LoginTimeout + BootTimeout,
+		ResetTimeout:    ResetTimeout,
+		PreTestTimeout:  PreTestTimeout,
+		PostTestTimeout: PostTestTimeout,
+		TearDownTimeout: ResetTimeout,
+	})
+
 	// arcBootedWithoutUIAutomator is a fixture similar to arcBooted, except
 	// that UI Automator is not enabled.
-	fixtureConfig := DefaultBootedFixtureConfig()
+	fixtureConfig = DefaultBootedFixtureConfig()
 	fixtureConfig.EnableUIAutomator = false
 	testing.AddFixture(&testing.Fixture{
 		Name: "arcBootedWithoutUIAutomator",
