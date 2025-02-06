@@ -91,6 +91,9 @@ var expectedWLANDriver = map[wlan.DeviceID]map[string]string{
 	wlan.IntelBE200: {
 		defaultRevision: "wireless/iwl7000/iwlwifi/iwlwifi.ko",
 	},
+	wlan.IntelBE211: {
+		defaultRevision: "wireless/iwl7000/iwlwifi/iwlwifi.ko",
+	},
 	wlan.QualcommAtherosQCA6174: {
 		defaultRevision: "wireless/ath/ath10k/ath10k_pci.ko",
 		"4.4":           "wireless/ar10k/ath/ath10k/ath10k_pci.ko",
