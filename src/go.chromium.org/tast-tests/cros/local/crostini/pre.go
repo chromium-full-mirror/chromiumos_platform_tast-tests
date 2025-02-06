@@ -242,6 +242,10 @@ var LowPerfModels = []string{
 
 var optimalMemoryMegabytes = 7 * 1024
 
+// CrostiniSkipOnPlatforms skips Crostini tests on certain platforms.
+// TODO: b/394907330: re-enable tests on brya-kernelnext
+var CrostiniSkipOnPlatforms = hwdep.SkipOnPlatform("brya-kernelnext")
+
 // CrostiniMinDiskSizeCond is a hardware condition that only runs tests on models with > 15GB of disk size.
 // Crostini needs a minimum of 3GB of free space to install which is frequently not available on devices with 8GB
 // disks. For more see http://crbug.com/1039403
@@ -267,7 +271,7 @@ var CrostiniStableCond = hwdep.SkipOnModel(UnstableModels...)
 
 // CrostiniStable is a hardware dependency that only runs a test on models that can run Crostini tests without
 // known flakiness issues.
-var CrostiniStable = hwdep.D(CrostiniStableCond, CrostiniMinDiskSizeCond)
+var CrostiniStable = hwdep.D(CrostiniStableCond, CrostiniMinDiskSizeCond, CrostiniSkipOnPlatforms)
 
 // CrostiniUnstableCond is a hardware condition that is the inverse of CrostiniStableCond. It only runs a test on
 // models that are known to be flaky when running Crostini tests.
@@ -275,7 +279,7 @@ var CrostiniUnstableCond = hwdep.Model(UnstableModels...)
 
 // CrostiniUnstable is a hardware dependency that is the inverse of CrostiniStable. It only runs a test on
 // models that are known to be flaky when running Crostini tests.
-var CrostiniUnstable = hwdep.D(CrostiniUnstableCond, CrostiniMinDiskSizeCond)
+var CrostiniUnstable = hwdep.D(CrostiniUnstableCond, CrostiniMinDiskSizeCond, CrostiniSkipOnPlatforms)
 
 // CrostiniOptimalPerfCond is a hardware condition that only runs a test on
 // models that can run Crostini tests with sufficient CPU overhead to also run
@@ -285,7 +289,7 @@ var CrostiniOptimalPerfCond = hwdep.SkipOnModel(LowPerfModels...)
 // CrostiniOptimalPerf is a hardware dependency that only runs tests on models
 // that can run Crostini tests with sufficient CPU and memory overhead to to
 // also run ARCVM.
-var CrostiniOptimalPerf = hwdep.D(CrostiniOptimalPerfCond, CrostiniOptimalMemoryCond, CrostiniMinDiskSizeCond)
+var CrostiniOptimalPerf = hwdep.D(CrostiniOptimalPerfCond, CrostiniOptimalMemoryCond, CrostiniMinDiskSizeCond, CrostiniSkipOnPlatforms)
 
 // CrostiniLowPerfCond is a hardware condition that only runs a test on models
 // that cannot run Crostini tests with sufficient CPU overhead to also run
@@ -295,7 +299,7 @@ var CrostiniLowPerfCond = hwdep.Model(LowPerfModels...)
 // CrostiniLowPerf is a hardware dependency that only runs a test on models
 // that cannot run Crostini tests with sufficient CPU overhead to also run
 // ARCVM.
-var CrostiniLowPerf = hwdep.D(hwdepOr(CrostiniLowPerfCond, CrostiniLowMemoryCond), CrostiniMinDiskSizeCond)
+var CrostiniLowPerf = hwdep.D(hwdepOr(CrostiniLowPerfCond, CrostiniLowMemoryCond), CrostiniMinDiskSizeCond, CrostiniSkipOnPlatforms)
 
 // StableModelsForAppsTesting is a list of models on which the Crostini Apps tests are stable.
 var StableModelsForAppsTesting = []string{
@@ -406,11 +410,11 @@ var DisabledModelsForAppsTesting = []string{
 // CrostiniAppStable is a hardware dependency limiting the boards on which the Crostini Apps tests run.
 // App testing uses a large container which needs large space. Many DUTs in the lab do not have enough space.
 // The boards listed have enough space.
-var CrostiniAppStable = hwdep.D(hwdep.Model(StableModelsForAppsTesting...), hwdep.MinStorage(32))
+var CrostiniAppStable = hwdep.D(hwdep.Model(StableModelsForAppsTesting...), hwdep.MinStorage(32), CrostiniSkipOnPlatforms)
 
 // CrostiniAppUnstable is a hardware dependency in addition to CrostiniAppStable.
 // These models are expected to merge with CrostiniAppStable once approved stable.
-var CrostiniAppUnstable = hwdep.D(hwdep.SkipOnModel(append(StableModelsForAppsTesting, DisabledModelsForAppsTesting...)...), hwdep.MinStorage(32))
+var CrostiniAppUnstable = hwdep.D(hwdep.SkipOnModel(append(StableModelsForAppsTesting, DisabledModelsForAppsTesting...)...), hwdep.MinStorage(32), CrostiniSkipOnPlatforms)
 
 // interface defined for GetInstallerOptions to allow both
 // testing.State and testing.PreState to be passed in as the first
