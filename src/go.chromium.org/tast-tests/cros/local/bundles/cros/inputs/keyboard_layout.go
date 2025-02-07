@@ -25,11 +25,15 @@ import (
 	"go.chromium.org/tast/core/ctxutil"
 	"go.chromium.org/tast/core/testing"
 	"go.chromium.org/tast/core/testing/hwdep"
+
+	"golang.org/x/exp/slices"
 )
 
 const csvShiftLabel = "shift"
 const csvAltgrLabel = "altgr"
 const csvCapsLabel = "caps"
+
+var supportedHardwareLayoutTypes = []string{"ISO", "ANSI"}
 
 var imeIDArg = testing.RegisterVarString(
 	"inputs.imeID",
@@ -37,10 +41,10 @@ var imeIDArg = testing.RegisterVarString(
 	"CrOS input method ID",
 )
 
-var altGrArg = testing.RegisterVarString(
-	"inputs.altGr",
-	"true",
-	"The flag for adding altGr case, it will be set true by default.",
+var hardwareLayoutTypeArg = testing.RegisterVarString(
+	"inputs.hardwareLayoutType",
+	"ISO",
+	"Target hardware layout type: ISO (default) or ANSI.",
 )
 
 type keystroke struct {
@@ -89,9 +93,9 @@ func KeyboardLayout(ctx context.Context, s *testing.State) {
 
 	ui := uiauto.New(tconn)
 
-	var needAltGrCase bool = true
-	if altGrArg.Value() == "false" {
-		needAltGrCase = false
+	var hardwareLayoutType = hardwareLayoutTypeArg.Value()
+	if !slices.Contains(supportedHardwareLayoutTypes, hardwareLayoutType) {
+		s.Fatalf("Unknown hardwareLayoutType: %s", hardwareLayoutType)
 	}
 
 	// Check if the target ime info exists or not.
@@ -105,7 +109,7 @@ func KeyboardLayout(ctx context.Context, s *testing.State) {
 		s.Fatal("Failed to set input method: ", err)
 	}
 
-	filename := fmt.Sprintf("%s.csv", url.QueryEscape(inputMethod.ID))
+	filename := fmt.Sprintf("%s__%s.csv", url.QueryEscape(inputMethod.ID), hardwareLayoutType)
 	path := filepath.Join(s.OutDir(), filename)
 	file, err := os.Create(path)
 	if err != nil {
@@ -126,10 +130,13 @@ func KeyboardLayout(ctx context.Context, s *testing.State) {
 	}
 
 	for _, modifiers := range util.ModifiersStatusCombo {
-		if !needAltGrCase && modifiers.Altgr {
+		if !modifiersEligibleForHardwareLayout(modifiers, hardwareLayoutType) {
 			continue
 		}
 		for _, key := range util.LinuxKeyCodes {
+			if !keyEligibleForHardwareLayout(key, hardwareLayoutType) {
+				continue
+			}
 			if err := uiauto.NamedCombine(fmt.Sprintf("typing %s + %s", getModifierInfo(modifiers), key.KeyName),
 				its.Clear(inputField),
 				util.SingleKeyAction(needEsc, modifiers, key.LinuxKeyCode, kb),
@@ -170,10 +177,13 @@ func KeyboardLayout(ctx context.Context, s *testing.State) {
 
 	for _, keystroke1 := range noOpKeystrokes {
 		for _, modifiers2 := range util.ModifiersStatusCombo {
-			if !needAltGrCase && modifiers2.Altgr {
+			if !modifiersEligibleForHardwareLayout(modifiers2, hardwareLayoutType) {
 				continue
 			}
 			for _, key2 := range util.LinuxKeyCodes {
+				if !keyEligibleForHardwareLayout(key2, hardwareLayoutType) {
+					continue
+				}
 				if err := uiauto.NamedCombine(fmt.Sprintf("typing %s + %s, then %s + %s", getModifierInfo(keystroke1.modifiers), keystroke1.key.KeyName, getModifierInfo(modifiers2), key2.KeyName),
 					its.Clear(inputField),
 					util.TwoKeysAction(needEsc, keystroke1.modifiers, modifiers2, keystroke1.key.LinuxKeyCode, key2.LinuxKeyCode, kb),
@@ -210,6 +220,28 @@ func KeyboardLayout(ctx context.Context, s *testing.State) {
 	}
 
 	w.Flush()
+}
+
+func modifiersEligibleForHardwareLayout(modifiers util.ModifiersStatus, hardwareLayoutType string) bool {
+	switch hardwareLayoutType {
+	case "ISO":
+		return true
+	case "ANSI":
+		return !modifiers.Altgr
+	default:
+		return false
+	}
+}
+
+func keyEligibleForHardwareLayout(key util.LinuxKeyCode, hardwareLayoutType string) bool {
+	switch hardwareLayoutType {
+	case "ISO":
+		return true
+	case "ANSI":
+		return key.LinuxKeyCode != input.KEY_102ND
+	default:
+		return false
+	}
 }
 
 func getUniCode(str string) string {
