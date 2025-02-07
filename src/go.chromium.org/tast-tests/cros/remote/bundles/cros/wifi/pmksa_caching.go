@@ -140,13 +140,13 @@ func PMKSACaching(ctx context.Context, s *testing.State) {
 		 4. Conduct a ping test to ensure we are connected to AP0.
 		 5. Set up another AP "AP1" using random MAC, the same SSID, the same
 		    EAP or non-Open authentication and WiFi mode as AP0.
-		If FT is disabled:
 		 6.1. While the DUT connected to AP0, request DUT to discover then roam
 		      to AP1 using BSS TM Request.
 		 6.2. Assert that the Shill property WiFiBSSID is equal to the BSSID from
 		      AP1.
 		 6.3. Assert that EAP or non-Open authentication is NOT skipped during the
 		      roaming to AP1 if the test case is 802.1X or non-Open, respectively.
+		If FT is disabled:
 		 7.1. While the DUT connected to AP1, request DUT to roam to AP0 using
 		      BSS TM Request.
 		 7.2. Assert that the Shill property WiFiBSSID is equal to the BSSID from
@@ -163,13 +163,13 @@ func PMKSACaching(ctx context.Context, s *testing.State) {
 		If FT is enabled, the DUT uses FT instead of PMKSA caching during roaming,
 		so PMKSA caching can only be verfied when AP1 is torn down and the DUT
 		reconnects to AP0:
-		 6.1. Deconfigure AP1.
-		 6.2. Assert that the Shill property WiFiBSSID is equal to the BSSID from
+		 7.1. Deconfigure AP1.
+		 7.2. Assert that the Shill property WiFiBSSID is equal to the BSSID from
 		      AP0, which indicates a connection.
-		 6.3. Assert that non-Open authentication is skipped during the association
+		 7.3. Assert that non-Open authentication is skipped during the association
 		      to AP0.
-		 7. Verify the DUT is connected to AP0 within timeout.
-		 8. Clean up state and revert the steps from (1).
+		 8. Verify the DUT is connected to AP0 within timeout.
+		 9. Clean up state and revert the steps from (1).
 	*/
 	const (
 		ap0Channel  = 1
