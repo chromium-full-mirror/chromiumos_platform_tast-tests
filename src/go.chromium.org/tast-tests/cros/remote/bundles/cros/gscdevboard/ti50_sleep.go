@@ -472,10 +472,22 @@ func ti50NormalSleep(ctx context.Context, s *testing.State, b utils.DevboardHelp
 
 	s.Log("Simulating AP TPM request")
 	tpmHandle := b.Tpm(ctx, tpmBus)
-	didVid := tpmHandle.ReadRegister(ti50.TpmRegDidVid)
-	expectedDidVidValue := b.GscProperties().ExpectedDidVidValue()
-	if !bytes.Equal(didVid, expectedDidVidValue) {
-		s.Error("Unexpected TPM DID_VID immediately after wakeup: ", didVid)
+	// The GSC may not wake up quickly enough to be able to properly respond to the first SPI
+	// request, make up to three attempts.
+	for attempt := 1; ; attempt++ {
+		didVid, err := tpmHandle.OpenTitanToolTpmCommand("read-register", string(ti50.TpmRegDidVid))
+		if err != nil {
+			if attempt < 3 {
+				continue
+			} else {
+				s.Fatalf("Failed to read TPM register immediately after wakeup: %s", err)
+			}
+		}
+		expectedDidVidValue := b.GscProperties().ExpectedDidVidValue()
+		if !bytes.Equal(didVid, expectedDidVidValue) {
+			s.Error("Unexpected TPM DID_VID immediately after wakeup: ", didVid)
+		}
+		break
 	}
 	var whichPinTpmBus whichPin
 	if tpmBus == ti50.TpmBusI2c {
