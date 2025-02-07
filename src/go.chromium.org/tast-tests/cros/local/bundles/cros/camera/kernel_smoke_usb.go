@@ -53,8 +53,7 @@ func KernelSmokeUSB(ctx context.Context, s *testing.State) {
 		s.Fatal("Failed to enumerate all cameras: ", err)
 	}
 
-	// CaptureDevicesFromV4L2Test() only returns ones for USB cameras.
-	captureDevices, err := testutil.CaptureDevicesFromV4L2Test(ctx)
+	captureDevices, err := testutil.BuiltinUsbCamerasFromV4L2Test(ctx)
 	if err != nil {
 		s.Fatal("Failed to list capture devices: ", err)
 	}
