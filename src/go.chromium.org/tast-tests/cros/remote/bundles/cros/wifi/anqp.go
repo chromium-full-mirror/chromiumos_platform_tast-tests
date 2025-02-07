@@ -73,7 +73,7 @@ func init() {
 		Fixture:         wificell.FixtureID(wificell.TFFeaturesNone),
 		Timeout:         10 * time.Minute,
 		Requirements:    []string{tdreq.WiFiGenSupportPasspoint},
-		VariantCategory: `{"name": "WifiBtChipset_Soc_Kernel"}`,
+		VariantCategory: `{"name": "WifiBtChipset_Soc_Kernel_with_EVT"}`,
 		Params: []testing.Param{
 			{
 				Name: "anqp_basic_info",
