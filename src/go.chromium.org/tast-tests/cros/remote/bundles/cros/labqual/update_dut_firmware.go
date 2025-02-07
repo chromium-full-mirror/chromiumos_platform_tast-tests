@@ -17,6 +17,7 @@ import (
 
 	"go.chromium.org/tast-tests/cros/common/firmware/futility"
 	"go.chromium.org/tast-tests/cros/common/servo"
+	"go.chromium.org/tast-tests/cros/common/testexec"
 	"go.chromium.org/tast-tests/cros/remote/dutfs"
 	"go.chromium.org/tast-tests/cros/remote/firmware"
 	"go.chromium.org/tast-tests/cros/remote/firmware/fixture"
@@ -463,7 +464,7 @@ func flashAPFirmwareFromDut(ctx context.Context, s *testing.State, h *firmware.H
 					linuxssh.PreserveSymlinks); err != nil {
 					s.Fatal("Failed to copy files to dut: ", err)
 				}
-				if err := h.DUT.Conn().CommandContext(ctx, "chromeos-firmwareupdate", "-i", fmt.Sprintf("%s/%s", dutTmpDir, backupFirmwareFile)).Run(); err != nil {
+				if err := h.DUT.Conn().CommandContext(ctx, "chromeos-firmwareupdate", "-v", "-i", fmt.Sprintf("%s/%s", dutTmpDir, backupFirmwareFile)).Run(testexec.DumpLogOnError); err != nil {
 					s.Log("Failed to flash backup firmware bin file: ", err)
 				} else {
 					s.Log("Completed flashing of backup AP fw")
@@ -486,7 +487,7 @@ func flashAPFirmwareFromDut(ctx context.Context, s *testing.State, h *firmware.H
 	}
 
 	s.Log("Flashing DUT AP with downloaded firmware file")
-	if err := h.DUT.Conn().CommandContext(ctx, "chromeos-firmwareupdate", "-i", fmt.Sprintf("%s/%s", dutTmpDir, firmware.APFirmwareFileToFlash)).Run(); err != nil {
+	if err := h.DUT.Conn().CommandContext(ctx, "chromeos-firmwareupdate", "-v", "-i", fmt.Sprintf("%s/%s", dutTmpDir, firmware.APFirmwareFileToFlash)).Run(testexec.DumpLogOnError); err != nil {
 		s.Fatal("Failed to flash firmware bin file: ", err)
 	}
 	s.Log("Completed flashing of downloaded fw")
@@ -581,7 +582,7 @@ func safeRebootDut(ctx context.Context, h *firmware.Helper) error {
 // backupECFirmware takes a backup of current EC firmware.
 func backupECFirmware(ctx context.Context, s *testing.State, h *firmware.Helper, servoTmpDir, ecChip string) (bool, error) {
 	h.DisconnectDUT(ctx)
-	flashCmd := fmt.Sprintf("cd %s&&flash_ec --port=%d --read=%s/%s", servoTmpDir, h.ServoProxy.GetPort(), servoTmpDir, backupFirmwareFile)
+	flashCmd := fmt.Sprintf("cd %s&&flash_ec --verbose --port=%d --read=%s/%s", servoTmpDir, h.ServoProxy.GetPort(), servoTmpDir, backupFirmwareFile)
 	if strings.HasPrefix(ecChip, "it8") {
 		flashCmd += " --nouse_i2c_pseudo"
 	}
@@ -613,7 +614,7 @@ func runECFirmwareFlashServo(ctx context.Context, s *testing.State, h *firmware.
 
 // runECFirmwareFlashDut runs EC firmware flashing from the DUT
 func runECFirmwareFlashDut(ctx context.Context, s *testing.State, h *firmware.Helper, dutTmpDir, image string, allowFlashFailure bool) {
-	if err := h.DUT.Conn().CommandContext(ctx, "chromeos-firmwareupdate", "--ec_image", fmt.Sprintf("%s/%s", dutTmpDir, image)).Run(); err != nil {
+	if err := h.DUT.Conn().CommandContext(ctx, "chromeos-firmwareupdate", "-v", "--ec_image", fmt.Sprintf("%s/%s", dutTmpDir, image)).Run(testexec.DumpLogOnError); err != nil {
 		if !allowFlashFailure {
 			s.Fatal("Failed to flash firmware bin file: ", err)
 		}
