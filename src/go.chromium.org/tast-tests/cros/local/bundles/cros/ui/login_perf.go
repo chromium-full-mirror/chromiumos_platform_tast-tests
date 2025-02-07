@@ -50,7 +50,6 @@ import (
 )
 
 const (
-	establishGpuChannelSyncTime                           = "GPU.EstablishGpuChannelSyncTime"
 	ashTastBootTimeLogin2                                 = "Ash.Tast.BootTime.Login2"
 	ashTastArcUIAvailableAfterLoginDuration               = "Ash.Tast.ArcUiAvailableAfterLogin.Duration"
 	arcTastUIAvailableTimeDelta                           = "Arc.Tast.UiAvailable.TimeDelta"
@@ -977,7 +976,6 @@ func constructExpectedHistograms(param loginPerfTestParam, hasDisplay bool) []st
 	}
 
 	ret := []string{
-		establishGpuChannelSyncTime,
 		ashTastBootTimeLogin2,
 		bootTimeLogin2,
 		bootTimeLogin3,
@@ -1032,7 +1030,6 @@ func storeHistograms(
 			ashTastBootTimeLogin2,
 			bootTimeLogin2,
 			bootTimeLogin3,
-			establishGpuChannelSyncTime,
 			ashTastArcUIAvailableAfterLoginDuration,
 			arcTastUIAvailableTimeDelta,
 			uptimeLogoutToUIStopAfterLogout,
