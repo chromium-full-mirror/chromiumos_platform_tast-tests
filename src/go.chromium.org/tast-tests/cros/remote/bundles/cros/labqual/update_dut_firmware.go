@@ -94,7 +94,7 @@ func init() {
 			"peep-fleet-infra-sw@google.com",
 		},
 		BugComponent: "b:1032353", // Chrome Operations > Fleet > Software > OS Fleet Automation
-		Attr:         []string{"group:labqual_informational", "group:labqual_stable"},
+		Attr:         []string{"group:labqual_stable"},
 		SoftwareDeps: []string{"chrome"},
 		ServiceDeps:  []string{"tast.cros.firmware.BiosService", "tast.cros.firmware.UtilsService", "dutfs.ServiceName"},
 		Fixture:      fixture.NormalMode,
@@ -113,6 +113,9 @@ func UpdateDutFirmware(ctx context.Context, s *testing.State) {
 
 	if firmwarePathVal != "" && localFirmwarePathVal != "" {
 		s.Fatal("Only one of localFirmwarePath or firmwarePath can be specified")
+	}
+	if firmwarePathVal == "" && localFirmwarePathVal == "" {
+		s.Fatal("Atleast one of localFirmwarePath or firmwarePath should be specified")
 	}
 	if localFirmwarePathVal != "" {
 		_, err := os.Stat(localFirmwarePathVal)
