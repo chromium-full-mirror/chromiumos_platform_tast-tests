@@ -6,6 +6,7 @@ package mantis
 
 import (
 	"context"
+	"time"
 
 	"go.chromium.org/tast-tests/cros/local/bundles/cros/mantis/constant"
 	"go.chromium.org/tast-tests/cros/local/bundles/cros/mantis/fixture"
@@ -13,30 +14,20 @@ import (
 	"go.chromium.org/tast-tests/cros/local/chrome/apps/galleryapp"
 	"go.chromium.org/tast-tests/cros/local/chrome/uiauto"
 	"go.chromium.org/tast-tests/cros/local/chrome/uiauto/faillog"
+	"go.chromium.org/tast-tests/cros/local/chrome/uiauto/mouse"
 	"go.chromium.org/tast-tests/cros/local/chrome/uiauto/nodewith"
 	"go.chromium.org/tast-tests/cros/local/chrome/uiauto/role"
+	"go.chromium.org/tast-tests/cros/local/coords"
 	"go.chromium.org/tast/core/testing"
 	"go.chromium.org/tast/core/testing/hwdep"
 )
 
-const (
-	extraThinFileName  = "brush/extra_thin_20250122.png"
-	thinFileName       = "brush/thin_20250122.png"
-	mediumFileName     = "brush/medium_20250122.png"
-	thickFileName      = "brush/thick_20250122.png"
-	extraThickFileName = "brush/extra_thick_20250122.png"
-	pixelDiffThreshold = 100
-)
-
-type brushInputTestParameters struct {
-	brushName              string
-	expectedResultFileName string
-}
+const expectedResultFile = "rectangle_input_20250207.png"
 
 func init() {
 	testing.AddTest(&testing.Test{
-		Func: BrushInput,
-		Desc: "Verify brush functionality",
+		Func: RectangleInput,
+		Desc: "Verify rectangle input functionality",
 		Contacts: []string{
 			"cros-mantis@google.com",
 			"nurlitadf@google.com",
@@ -45,50 +36,13 @@ func init() {
 		Timeout:      constant.DefaultTestTimeout,
 		SoftwareDeps: []string{"chrome", "chrome_internal", "dlc"},
 		HardwareDeps: hwdep.D(hwdep.Model("navi")),
-		Data:         []string{constant.ImageTestFileName, extraThinFileName, thinFileName, mediumFileName, thickFileName, extraThickFileName},
+		Data:         []string{constant.ImageTestFileName, expectedResultFile},
 		Attr:         []string{"group:mainline", "informational"},
 		Fixture:      fixture.LoggedInWithUpdateEngine,
-		Params: []testing.Param{
-			{
-				Name: "extra_thin",
-				Val: brushInputTestParameters{
-					brushName:              "Extra thin",
-					expectedResultFileName: extraThinFileName,
-				},
-			},
-			{
-				Name: "thin",
-				Val: brushInputTestParameters{
-					brushName:              "Thin",
-					expectedResultFileName: thinFileName,
-				},
-			},
-			{
-				Name: "medium",
-				Val: brushInputTestParameters{
-					brushName:              "Medium",
-					expectedResultFileName: mediumFileName,
-				},
-			},
-			{
-				Name: "thick",
-				Val: brushInputTestParameters{
-					brushName:              "Thick",
-					expectedResultFileName: thickFileName,
-				},
-			},
-			{
-				Name: "extra_thick",
-				Val: brushInputTestParameters{
-					brushName:              "Extra thick",
-					expectedResultFileName: extraThickFileName,
-				},
-			},
-		},
 	})
 }
 
-func BrushInput(ctx context.Context, s *testing.State) {
+func RectangleInput(ctx context.Context, s *testing.State) {
 	cr := s.FixtValue().(fixture.Data).Chrome
 	tconn := s.FixtValue().(fixture.Data).TestAPIConn
 	defer faillog.DumpUITreeOnError(ctx, s.OutDir(), s.HasError, tconn)
@@ -117,15 +71,30 @@ func BrushInput(ctx context.Context, s *testing.State) {
 		s.Log("Error while waiting for spinner: ", err)
 	}
 
-	params := s.Param().(brushInputTestParameters)
-	brushButton := nodewith.Role(role.RadioButton).Name(params.brushName).Ancestor(galleryapp.RootFinder).First()
-	if err := ui.DoDefault(brushButton)(ctx); err != nil {
-		s.Fatal("Failed to click the brush button: ", err)
+	rectangleButton := nodewith.Role(role.ToggleButton).Name("Rectangle").Ancestor(galleryapp.RootFinder).First()
+	if err := ui.DoDefault(rectangleButton)(ctx); err != nil {
+		s.Log(uiauto.RootDebugInfo(ctx, tconn))
+		s.Fatal("Failed to click the rectangle button: ", err)
 	}
 
-	// Draw a line on the image.
-	if err := util.DrawOnImage(ctx, tconn, ui); err != nil {
-		s.Fatal("Cannot draw on the image: ", err)
+	canvasBounds, err := ui.ImmediateLocation(ctx, util.ImageCanvas)
+	if err != nil {
+		s.Fatal("Failed to get the canvas location: ", err)
+	}
+
+	startLocation := coords.NewPoint(
+		canvasBounds.Left+10,
+		canvasBounds.Top+10,
+	)
+
+	endLocation := coords.NewPoint(
+		canvasBounds.CenterX(),
+		canvasBounds.CenterY(),
+	)
+
+	// draw a rectangle on the image
+	if err := mouse.Drag(tconn, startLocation, endLocation, 200*time.Millisecond)(ctx); err != nil {
+		s.Fatal("Failed to move the mouse: ", err)
 	}
 
 	result, err := util.GrabCanvasArea(ctx, cr, tconn, ui)
@@ -133,13 +102,13 @@ func BrushInput(ctx context.Context, s *testing.State) {
 		s.Fatal("Failed to grab screenshot: ", err)
 	}
 
-	expectedResult, err := util.FetchImage(s.DataPath(params.expectedResultFileName))
+	expectedResult, err := util.FetchImage(s.DataPath(expectedResultFile))
 	if err != nil {
 		s.Fatal("Failed to get the expected image result file: ", err)
 	}
 
 	diff := util.ImageDiff(result, expectedResult)
-	if diff > pixelDiffThreshold {
+	if diff > 0 {
 		s.Fatal("The result and the expected result are different. Diff: ", diff)
 	}
 }

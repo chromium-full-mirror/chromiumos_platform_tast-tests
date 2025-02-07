@@ -9,6 +9,7 @@ import (
 	"context"
 	"image"
 	"math"
+	"os"
 	"path/filepath"
 	"time"
 
@@ -263,4 +264,20 @@ func CloseGallery(ctx context.Context, tconn *chrome.TestConn) error {
 		return errors.Wrap(err, "failed waiting for gallery to be closed")
 	}
 	return nil
+}
+
+// FetchImage fetches image from the provided file path.
+func FetchImage(filePath string) (image.Image, error) {
+	file, err := os.Open(filePath)
+	if err != nil {
+		return nil, errors.Wrapf(err, "failed to open file %s", filePath)
+	}
+	defer file.Close()
+
+	img, _, err := image.Decode(file)
+	if err != nil {
+		return nil, errors.Wrap(err, "failed to decode file")
+	}
+
+	return img, nil
 }
