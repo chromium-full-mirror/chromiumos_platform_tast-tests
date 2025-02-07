@@ -146,7 +146,7 @@ const (
 	// https://docs.google.com/spreadsheets/d/1youX_Yh2A6-Zd2T98ShjH_O8M9CZexDB9DCHpegNMvE
 	GscDTAndreiboard TestbedType = "gsc_dt_ab"
 
-	// GscDTShield is a small DT board on top of HyperDebug.
+	// GscDTShield is a small green DT board on top of HyperDebug.
 	GscDTShield TestbedType = "gsc_dt_shield"
 
 	// GscOpentitanCw310Fpga is a ChipWhisperer 310 FPGA board connected via ribbon cables to
@@ -156,11 +156,17 @@ const (
 	// GscHostEmulation is not a physical testbed, but an emulation on a Linux host computer.
 	GscHostEmulation TestbedType = "gsc_he"
 
-	// GscH1Shield is a small H1 board on top of HyperDebug.
+	// GscH1Shield is a small green H1 board on top of HyperDebug.
 	GscH1Shield TestbedType = "gsc_h1_shield"
 
-	// GscOTShield is a small OpenTitan board on top of HyperDebug.
+	// GscOTShield AKA Teacup is a purple board on top of HyperDebug for NT10.
 	GscOTShield TestbedType = "gsc_ot_shield"
+
+	// GscDTShieldV2 is a purple board meant for either NT11 or DT chip, with the DT chip fitted.
+	GscDTShieldV2 TestbedType = "gsc_dt_shield_v2"
+
+	// GscNTShieldV2 is a purple board meant for either NT11 or DT chip, with the NT11 chip fitted.
+	GscNTShieldV2 TestbedType = "gsc_nt_shield_v2"
 )
 
 // APROResultCode represents the status of AP RO verification.

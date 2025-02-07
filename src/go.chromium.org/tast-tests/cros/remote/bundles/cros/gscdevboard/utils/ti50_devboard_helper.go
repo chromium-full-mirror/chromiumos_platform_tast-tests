@@ -238,6 +238,8 @@ func (h DevboardHelper) GscProperties() GscProperties {
 		return &gscOT{}
 	case ti50.GscOTShield:
 		return &gscOT{}
+	case ti50.GscNTShieldV2:
+		return &gscOT{}
 	case ti50.GscHostEmulation:
 		return &gscHE{}
 	default:
@@ -873,6 +875,10 @@ func (h DevboardHelper) ReadGscTotalMilliAmps(ctx context.Context) float32 {
 		return h.readGscTotalMilliAmpsOtShield(ctx)
 	} else if h.TestbedType == ti50.GscH1Shield {
 		return h.readGscTotalMilliAmpsH1Shield(ctx)
+	} else if h.TestbedType == ti50.GscDTShieldV2 {
+		return h.readGscTotalMilliAmpsDtShield(ctx)
+	} else if h.TestbedType == ti50.GscNTShieldV2 {
+		return h.readGscTotalMilliAmpsDtShield(ctx)
 	} else {
 		h.Fatalf("current measurement not implemented for: %s", h.TestbedType)
 		return 0.0

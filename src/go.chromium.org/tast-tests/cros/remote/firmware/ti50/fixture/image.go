@@ -470,7 +470,11 @@ func imageDir(t ti50.TestbedType) string {
 		return fmt.Sprintf(DevGSCImageBucket, "cr50") + "h1_shield"
 	} else if t == ti50.GscDTShield {
 		return fmt.Sprintf(DevGSCImageBucket, "ti50") + "dt_shield"
+	} else if t == ti50.GscDTShieldV2 {
+		return fmt.Sprintf(DevGSCImageBucket, "ti50") + "dt_shield"
 	} else if t == ti50.GscOTShield {
+		return fmt.Sprintf(DevGSCImageBucket, "ti50") + "ot_shield"
+	} else if t == ti50.GscNTShieldV2 {
 		return fmt.Sprintf(DevGSCImageBucket, "ti50") + "ot_shield"
 	} else if t == ti50.GscOpentitanCw310Fpga {
 		return fmt.Sprintf(DevGSCImageBucket, "ti50") + "ot_fpga_cw310"
@@ -631,8 +635,12 @@ func ti50ImageDirectory(t ti50.TestbedType, i ImageType) (string, error) {
 	case ti50.GscDTAndreiboard:
 		fallthrough
 	case ti50.GscDTShield:
+		fallthrough
+	case ti50.GscDTShieldV2:
 		return "dt-" + n, nil
 	case ti50.GscOTShield:
+		fallthrough
+	case ti50.GscNTShieldV2:
 		return "nt-" + n, nil
 	case ti50.GscOpentitanCw310Fpga:
 		return "nuvotitan_cw310_a1-" + n, nil
