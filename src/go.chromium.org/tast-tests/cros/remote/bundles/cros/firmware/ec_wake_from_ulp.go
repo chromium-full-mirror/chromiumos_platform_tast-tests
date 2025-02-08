@@ -123,6 +123,7 @@ func init() {
 				"nirwen",
 				"pujjoga",
 				"pujjogatwin",
+				"pujjoniru",
 				"quandiso",
 				"quandiso360",
 				"quandiso2",
