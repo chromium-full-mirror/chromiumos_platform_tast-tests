@@ -83,11 +83,18 @@ func (h *HRTelemetryHelper) JoinMeetingWithDisabledExperiments(ctx context.Conte
 
 	// Experiments in the url are disabled using the e= parameter, where
 	// each experiment is prefixed with - to mark it as disabled.
-	return h.meetConn.Navigate(ctx, fmt.Sprintf(
+	if err := h.meetConn.Navigate(ctx, fmt.Sprintf(
 		"https://meet.google.com/%s/?e=-%s",
 		meetingCode,
 		strings.Join(disabledExperiments, ",-"),
-	))
+	)); err != nil {
+		return err
+	}
+
+	if err := webutil.WaitForQuiescence(ctx, h.meetConn, 30*time.Second); err != nil {
+		testing.ContextLog(ctx, "Failed to wait for meeting page to quiesce: ", err)
+	}
+	return nil
 }
 
 // JoinMeeting joins the meeting room with the conn source.
