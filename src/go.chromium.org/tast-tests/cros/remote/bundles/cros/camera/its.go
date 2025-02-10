@@ -136,6 +136,12 @@ func ITS(ctx context.Context, s *testing.State) {
 	if err != nil {
 		s.Fatal("Failed to Prepare ITS test environment: ", err)
 	}
+
+	err = its.CheckAdbConnection(ctx)
+	if err != nil {
+		s.Fatal("Failed to check adb connection: ", err)
+	}
+
 	testing.ContextLog(ctx, "Running ITS")
 	cmd := its.TestCmd(ctx, param.Scene, camID)
 

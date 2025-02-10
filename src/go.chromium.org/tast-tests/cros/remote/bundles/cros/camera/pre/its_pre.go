@@ -332,6 +332,34 @@ func (h *ITSHelper) PrepareEnvironment(ctx context.Context, numpyPath string) (s
 	return retStr, nil
 }
 
+// CheckAdbConnection check adb connection again before running ITS.
+func (h *ITSHelper) CheckAdbConnection(ctx context.Context) error {
+	devices, err := adb.Devices(ctx)
+	if err != nil {
+		return errors.Wrap(err, "failed to get adb connections")
+	}
+	// If no devices found
+	if len(devices) == 0 {
+		testing.ContextLog(ctx, "ADB re-connect to DUT")
+		adbDevice, err := adb.Connect(ctx, h.p.hostname, 30*time.Second)
+		if err != nil {
+			return errors.Wrap(err, "failed to set up adb connection to DUT")
+		}
+		h.p.adbDevice = adbDevice
+		devices, err = adb.Devices(ctx)
+		if err != nil {
+			return errors.Wrap(err, "failed to get adb connections")
+		}
+	}
+
+	testing.ContextLog(ctx, "Connected ADB Devices:")
+	for _, d := range devices {
+		testing.ContextLogf(ctx, "TransportID: %s, Serial: %s, Device: %s, Model: %s, Product: %s",
+			d.TransportID, d.Serial, d.Device, d.Model, d.Product)
+	}
+	return nil
+}
+
 // TestCmd returns command to run test scene with camera id.
 func (h *ITSHelper) TestCmd(ctx context.Context, scene, camera int) *testexec.Cmd {
 	setupPath := path.Join("build", "envsetup.sh")
