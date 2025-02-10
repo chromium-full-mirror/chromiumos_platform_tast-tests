@@ -16,6 +16,7 @@ import (
 	"go.chromium.org/tast-tests/cros/local/chrome/uiauto/faillog"
 	"go.chromium.org/tast-tests/cros/local/chrome/uiauto/nodewith"
 	"go.chromium.org/tast-tests/cros/local/chrome/uiauto/role"
+	"go.chromium.org/tast-tests/cros/local/cryptohome"
 	"go.chromium.org/tast/core/testing"
 	"go.chromium.org/tast/core/testing/hwdep"
 )
@@ -50,34 +51,32 @@ func init() {
 				Name: "original",
 				Val: expandBackgroundFeatureTestParameters{
 					ratioName:      "Ratio Original",
-					expectedWidth:  1376,
-					expectedHeight: 776,
+					expectedWidth:  1819,
+					expectedHeight: 1023,
 				},
 			},
 			{
 				Name: "square",
 				Val: expandBackgroundFeatureTestParameters{
-					ratioName: "Ratio Square",
-					// TODO(b/379806123): The width and height for square ratio is currently have a slight difference.
-					// Update the value once the feature support large images.
-					expectedWidth:  934,
-					expectedHeight: 931,
+					ratioName:      "Ratio Square",
+					expectedWidth:  1819,
+					expectedHeight: 1819,
 				},
 			},
 			{
 				Name: "4_3",
 				Val: expandBackgroundFeatureTestParameters{
 					ratioName:      "Ratio 4 by 3",
-					expectedWidth:  1244,
-					expectedHeight: 931,
+					expectedWidth:  1819,
+					expectedHeight: 1364,
 				},
 			},
 			{
 				Name: "3_2",
 				Val: expandBackgroundFeatureTestParameters{
 					ratioName:      "Ratio 3 by 2",
-					expectedWidth:  1376,
-					expectedHeight: 919,
+					expectedWidth:  1819,
+					expectedHeight: 1213,
 				},
 			},
 		},
@@ -102,8 +101,12 @@ func ExpandBackgroundFeature(ctx context.Context, s *testing.State) {
 		s.Fatal("Unable to click 'Edit with AI' button: ", err)
 	}
 
+	if err := util.WaitForSpinner(ctx, tconn, ui); err != nil {
+		s.Log("Error while waiting for spinner: ", err)
+	}
+
 	if err := util.WaitForProgressBar(ctx, tconn, ui); err != nil {
-		s.Fatal("Error while waiting for progress bar: ", err)
+		s.Log("Error while waiting for progress bar: ", err)
 	}
 
 	expandBackgroundButton := nodewith.Role(role.Button).Name("Expand Background").Ancestor(galleryapp.RootFinder).First()
@@ -149,13 +152,18 @@ func ExpandBackgroundFeature(ctx context.Context, s *testing.State) {
 		s.Fatal("Failed to save image: ", err)
 	}
 
-	imageAfter, err := util.GrabCanvasArea(ctx, cr, tconn, ui)
+	downloadsPath, err := cryptohome.DownloadsPath(ctx, cr.NormalizedUser())
 	if err != nil {
-		s.Fatal("Failed to grab screenshot after reimagine: ", err)
+		s.Fatal("Failed to get user's Download path: ", err)
 	}
 
-	gotWidth := imageAfter.Bounds().Max.X - imageAfter.Bounds().Min.X + 1
-	gotHeight := imageAfter.Bounds().Max.Y - imageAfter.Bounds().Min.Y + 1
+	imageAfter, err := util.FetchImage(downloadsPath + "/" + imageFileName)
+	if err != nil {
+		s.Fatal("Failed to get image result: ", err)
+	}
+
+	gotWidth := imageAfter.Bounds().Dx()
+	gotHeight := imageAfter.Bounds().Dy()
 
 	if gotWidth != int(params.expectedWidth) || gotHeight != int(params.expectedHeight) {
 		s.Fatalf("Got unexpected image size. Expected width: %v, height: %v. Got width: %v, height: %v", params.expectedWidth, params.expectedHeight, gotWidth, gotHeight)
