@@ -109,6 +109,60 @@ service PeriphService {
   // SetDictationLEDState sets the LED state with given index and mode.
   rpc SetDictationLEDState(SetDictationLEDStateRequest)
       returns (google.protobuf.Empty) {}
+
+  // NewSmartCard launches Chrome, creates a new SmartCard instance and
+  // navigates to the PIN entry page.
+  rpc NewSmartCard(google.protobuf.Empty) returns (google.protobuf.Empty) {}
+
+  // CleanupSmartCard cleanups smart card.
+  rpc CleanupSmartCard(google.protobuf.Empty) returns (google.protobuf.Empty) {}
+
+  // SetPIN sets PIN with given PIN code.
+  rpc SetPIN(SetPINRequest) returns (SetPINResponse) {}
+
+  // SmartCardSignIn signs in smart card.
+  rpc SmartCardSignIn(google.protobuf.Empty) returns (google.protobuf.Empty) {}
+
+  // SmartCardSignOut signs out smart card.
+  rpc SmartCardSignOut(google.protobuf.Empty) returns (google.protobuf.Empty) {}
+
+  // ReAuthentication signs out and signs in with the smart card.
+  rpc ReAuthentication(ReAuthenticationRequest)
+      returns (google.protobuf.Empty) {}
+
+  // SmartCardRemovalAndInsertionTesting tests whether the UI during smart
+  // card removal and insertion is as expected.
+  rpc SmartCardRemovalAndInsertionTesting(
+      SmartCardRemovalAndInsertionTestingRequest)
+      returns (google.protobuf.Empty) {}
+
+  // AddPerson adds person.
+  rpc AddPerson(google.protobuf.Empty) returns (google.protobuf.Empty) {}
+
+  // LockScreen locks screen.
+  rpc LockScreen(google.protobuf.Empty) returns (google.protobuf.Empty) {}
+
+  // SetSecurityTokenRemoval sets security policy and removal notification
+  // duration.
+  rpc SetSecurityTokenRemoval(SetSecurityTokenRemovalRequest)
+      returns (google.protobuf.Empty) {}
+
+  // WaitForAutoLockOrLogOut waits for auto lock or log out.
+  rpc WaitForAutoLockOrLogOut(SetSecurityTokenRemovalRequest)
+      returns (google.protobuf.Empty) {}
+
+  // WebApplicationAuthentication performs web application authentication
+  // with a smart card.
+  rpc WebApplicationAuthentication(WebApplicationAuthenticationRequest)
+      returns (google.protobuf.Empty) {}
+
+  // DriveLockCSSIAppTesting opens Drivelock CSSI app and recognizes
+  // the smart card.
+  rpc DriveLockCSSIAppTesting(SetPINRequest) returns (google.protobuf.Empty) {}
+
+  // VerifyCertificate verifies the account's certificate.
+  rpc VerifyCertificate(VerifyCertificateRequest)
+      returns (google.protobuf.Empty) {}
 }
 
 // NewCitrixRequest contains the information needed to create a new Citrix
@@ -203,3 +257,43 @@ message SetDictationLEDStateRequest {
   string led_index = 1;
   string led_mode = 2;
 }
+
+// SetPINRequest contains the information needed to set PIN.
+message SetPINRequest { string pin_code = 1; }
+
+// SetPINResponse contains the response of setting PIN.
+message SetPINResponse { string err = 1; }
+
+// ReAuthenticationRequest contains the information needed to
+// re-authentication.
+message ReAuthenticationRequest {
+  bool offline = 1;
+  string pin_code = 2;
+}
+
+// SmartCardRemovalAndInsertionTestingRequest contains the information
+// needed to test whether the UI during smart card removal and insertion
+// is as expected.
+message SmartCardRemovalAndInsertionTestingRequest {
+  bool offline = 1;
+  string wrong_pin_code = 2;
+  string correct_pin_code = 3;
+}
+
+// SetSecurityTokenRemoval contains the information needed to set
+// security token removal.
+message SetSecurityTokenRemovalRequest {
+  string security_policy_option = 1;
+  int64 duration = 2;
+}
+
+// WebApplicationAuthenticationRequest contains the information needed
+// to perform web application authentication.
+message WebApplicationAuthenticationRequest {
+  string email = 1;
+  string pin_code = 2;
+}
+
+// VerifyCertificateRequest contains the information needed to verify
+// certificate.
+message VerifyCertificateRequest { string username = 1; }
