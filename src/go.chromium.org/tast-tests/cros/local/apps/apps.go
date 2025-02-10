@@ -421,6 +421,12 @@ var Recorder = App{
 	Name: "Recorder",
 }
 
+// DriveLockSmartCardMiddleware has details about the DriveLock Smart Card Middleware app.
+var DriveLockSmartCardMiddleware = App{
+	ID:   "haeblkpifdemlfnkogkipmghfcbonief",
+	Name: "DriveLock Smart Card Middleware (CSSI)",
+}
+
 // Launch launches an app specified by appID.
 func Launch(ctx context.Context, tconn *chrome.TestConn, appID string) error {
 	_, err := InstalledAppID(ctx, tconn, func(app *ash.ChromeApp) bool { return app.AppID == appID }, nil)
