@@ -140,6 +140,8 @@ func dvfs(ctx context.Context) error {
 		"/sys/devices/platform/soc/13000000.gpu/",
 		// MT8192 (legacy downstream DT)
 		"/sys/devices/platform/soc/13000000.mali/",
+		// MT8196
+		"/sys/devices/platform/soc/48000000.gpu/",
 	})
 	if err != nil {
 		return errors.Wrap(err, "unknown soc for dvfs")
