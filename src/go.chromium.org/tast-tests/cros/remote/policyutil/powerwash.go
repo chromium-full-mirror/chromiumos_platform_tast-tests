@@ -7,6 +7,7 @@ package policyutil
 import (
 	"context"
 	"io"
+	"time"
 
 	"go.chromium.org/tast-tests/cros/remote/log"
 	"go.chromium.org/tast/core/dut"
@@ -20,8 +21,12 @@ import (
 func prepareBeforePowerwash(ctx context.Context, cloudStorage *testing.CloudStorage) (func(), io.ReadCloser, error) {
 	// Start downloading stateful image before doing powerwash.
 	testing.ContextLog(ctx, "Downloading stateful image")
-	statefulReader, err := cloudStorage.Open(ctx, "build-artifact:///stateful.tgz")
-	if err != nil {
+	var statefulReader io.ReadCloser
+	if err := testing.Poll(ctx, func(ctx context.Context) error {
+		var err error
+		statefulReader, err = cloudStorage.Open(ctx, "build-artifact:///stateful.tgz")
+		return err
+	}, &testing.PollOptions{Timeout: time.Minute}); err != nil {
 		return nil, nil, errors.Wrap(err, "failed to download stateful image")
 	}
 	return func() { statefulReader.Close() }, statefulReader, nil
