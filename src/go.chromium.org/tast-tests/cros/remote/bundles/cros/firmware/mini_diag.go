@@ -167,7 +167,7 @@ func warmResetDUT(ctx context.Context, h *firmware.Helper) error {
 		return errors.Wrap(err, "failed to wait DUT unreachable")
 	}
 
-	waitConnectCtx, cancelWaitConnect := context.WithTimeout(ctx, h.Config.DelayRebootToPing)
+	waitConnectCtx, cancelWaitConnect := context.WithTimeout(ctx, 2*h.Config.DelayRebootToPing)
 	defer cancelWaitConnect()
 
 	if err := h.WaitConnect(waitConnectCtx, firmware.ResetEthernetDongle); err != nil {
