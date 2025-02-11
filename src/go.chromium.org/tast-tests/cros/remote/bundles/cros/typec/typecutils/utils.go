@@ -430,3 +430,18 @@ func Usb2GetHidDeviceList(ctx context.Context, cl usb.SysfsServiceClient) ([]str
 
 	return hidDeviceList, nil
 }
+
+// CheckPowerRole verifies that the power role on a specified port is the expected one.
+func CheckPowerRole(ctx context.Context, dut *dut.DUT, powerRole string, portId uint8) error {
+	powerRole = strings.ToUpper(powerRole)
+
+	out, err := dut.Conn().CommandContext(ctx, "ectool", "typecstatus", fmt.Sprintf("%d", portId)).Output()
+	if err != nil {
+		return errors.Wrap(err, "failed to execute ectool typecstatus command")
+	}
+
+	if !strings.Contains(string(out), fmt.Sprintf("Role:%s", powerRole)) {
+		return errors.Wrapf(err, "power role was not %s", powerRole)
+	}
+	return nil
+}
