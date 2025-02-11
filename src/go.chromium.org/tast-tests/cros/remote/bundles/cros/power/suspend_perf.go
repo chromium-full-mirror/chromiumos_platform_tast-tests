@@ -87,6 +87,12 @@ const (
 	perfettoDisplayResumeSQLFile = "perfetto/perfetto_display_after_resume.sql"
 )
 
+var waiverMaxSystemResumeMs = testing.RegisterVarString(
+	"power.waiverMaxSystemResumeMs",
+	"",
+	"Override the maxSystemResumeMs time",
+)
+
 func init() {
 	testing.AddTest(&testing.Test{
 		Func: SuspendPerf,
@@ -372,12 +378,13 @@ func SuspendPerf(ctx context.Context, s *testing.State) {
 			if err := <-errCh; err != nil {
 				s.Fatalf("Failed to get one of %v power state: %s", expectedSuspendStates, err)
 			}
-			powerState := <-powerStateCh
+			_ = <-powerStateCh
 
 			if res != nil {
-				if err := evalSecondSystemResume(ctx, h, powerState, res.Output); err != nil {
-					s.Fatalf("Failed to pass the second system resume time evaluation in iteration %d: %v", i+1, err)
+				if err := evalSecondSystemResume(ctx, h, res.Output); err != nil {
+					s.Errorf("Iteration %d: %v", i+1, err)
 				}
+				displayAfterResume.StopAndQuery(ctx, s.DUT(), cl)
 				continue
 			}
 		}
@@ -472,7 +479,7 @@ func convertTimeStamp(timeStr string) (int64, error) {
 	return t.UnixMilli(), nil
 }
 
-func evalSecondSystemResume(ctx context.Context, h *firmware.Helper, powerState, wakeAlarm string) error {
+func evalSecondSystemResume(ctx context.Context, h *firmware.Helper, wakeAlarm string) error {
 	matchSubString := regexp.MustCompile(`rtc wakealarm: (\d+)`).FindStringSubmatch(wakeAlarm)
 	if len(matchSubString) != 2 {
 		return errors.Errorf("unexpected wakealarm format, got: %s", wakeAlarm)
@@ -493,11 +500,23 @@ func evalSecondSystemResume(ctx context.Context, h *firmware.Helper, powerState,
 	}
 
 	secondSystemResumeTime := actualWakeupTime - expectedWakeupTime*1000
-	if powerState == "S0ix" && secondSystemResumeTime > 500 {
-		return errors.Errorf("failed to resume from S0ix suspend state in 500 milliseconds, got %d", secondSystemResumeTime)
-	} else if powerState == "S3" && secondSystemResumeTime > 1000 {
-		return errors.Errorf("failed to resume from S3 suspend state in 1000 milliseconds, got %d", secondSystemResumeTime)
+	var maxSystemResumeMs int64
+	maxSystemResumeMs = 500
+
+	waiver := waiverMaxSystemResumeMs.Value()
+	if waiver != "" {
+		val, err := strconv.Atoi(waiver)
+		if err != nil {
+			return errors.Wrapf(err, "bad flag %s=%q", waiverMaxSystemResumeMs.Name(), waiver)
+		}
+		testing.ContextLogf(ctx, "Using user provided value %d for maxSystemResumeMs", val)
+		maxSystemResumeMs = int64(val)
 	}
+
+	if secondSystemResumeTime > maxSystemResumeMs {
+		return errors.Errorf("failed to resume from suspend state in %d milliseconds, got %d. Use --var=%s=??? to override if you have an approved waiver", maxSystemResumeMs, secondSystemResumeTime, waiverMaxSystemResumeMs.Name())
+	}
+	testing.ContextLogf(ctx, "Resume time %d ms within limit of %d ms", secondSystemResumeTime, maxSystemResumeMs)
 
 	return nil
 }
