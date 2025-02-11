@@ -85,7 +85,9 @@ func ModemFWManifestVerification(ctx context.Context, s *testing.State) {
 				uninstallDlc = true
 				dlc.Install(ctx, device.Dlc.DlcId, "")
 			} else {
-				verifyDlcManifestOnMatchingModel(ctx, device.GetDlc().GetDlcId(), dutModel)
+				if err := verifyDlcManifestOnMatchingModel(ctx, device.GetDlc().GetDlcId(), dutModel); err != nil {
+					s.Fatalf("Invalid DLC manifest : %s", err)
+				}
 			}
 			state, err := dlc.GetDlcState(ctx, device.Dlc.DlcId)
 			// Verify that the DLC exists in the dlcservice manifest
@@ -410,6 +412,9 @@ func verifyDlcManifestOnMatchingModel(ctx context.Context, dlcID, dutModel strin
 	}
 	if _, ok := metadata.Manifest.Attributes[dutModel]; !ok {
 		return errors.Errorf("attributes missing the model name. DLC: %s. Attributes: %q", dlcID, metadata.Manifest.Attributes)
+	}
+	if _, ok := metadata.Manifest.Attributes["modem"]; !ok {
+		return errors.Errorf("attributes missing the `modem` attribute. DLC: %s. Attributes: %q", dlcID, metadata.Manifest.Attributes)
 	}
 
 	return nil
