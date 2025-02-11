@@ -7,19 +7,17 @@ package smartlock
 
 import (
 	"context"
-	"encoding/json"
-	"fmt"
 	"path/filepath"
 	"time"
 
 	"go.chromium.org/tast-tests/cros/local/chrome"
 	"go.chromium.org/tast-tests/cros/local/chrome/crossdevice/crossdevicesettings"
+	"go.chromium.org/tast-tests/cros/local/chrome/uiauto/auth"
 	"go.chromium.org/tast-tests/cros/local/chrome/uiauto/lockscreen"
 	"go.chromium.org/tast-tests/cros/local/chrome/uiauto/ossettings"
 	"go.chromium.org/tast-tests/cros/local/input"
 
 	"go.chromium.org/tast/core/errors"
-	"go.chromium.org/tast/core/testing"
 )
 
 const (
@@ -42,7 +40,7 @@ func OpenConnectedDevicesPage(ctx context.Context, tconn *chrome.TestConn, cr *c
 
 // ToggleSmartLockEnabled opens the Connected devices page in OS Settings and toggles Smart Lock's enabled state
 func ToggleSmartLockEnabled(ctx context.Context, enable bool, tconn *chrome.TestConn, cr *chrome.Chrome, password string) error {
-	settings, err := OpenConnectedDevicesPage(ctx, tconn, cr)
+	_, err := OpenConnectedDevicesPage(ctx, tconn, cr)
 	if err != nil {
 		return errors.Wrap(err, "failed to open Connected devices page in OS Settings")
 	}
@@ -70,27 +68,14 @@ func ToggleSmartLockEnabled(ctx context.Context, enable bool, tconn *chrome.Test
 		return nil
 	}
 
-	// Flip the toggle. If toggling on, we need to provide an auth token.
+	// Flip the toggle. If toggling on, we need to authenticate with password.
 	if enable {
-		token, err := settings.AuthToken(ctx, settingsConn, password)
-		if err != nil {
-			return errors.Wrap(err, "failed to get auth token")
-		}
-		data, err := json.Marshal(token)
-		if err != nil {
-			return errors.Wrap(err, "failed to marshal auth token to JSON")
-		}
-		expr := fmt.Sprintf(`%s.authToken_ = %s`, crossdevicesettings.MultidevicePageJS, data)
-		if err := settingsConn.Eval(ctx, expr, nil); err != nil {
-			return errors.Wrap(err, "failed to set authToken_ property")
-		}
 		if err := settingsConn.Eval(ctx, smartLockToggle+`.click()`, nil); err != nil {
 			return errors.Wrap(err, "failed to toggle Smart Lock enabled on")
 		}
-		// When the toggle is enabled, the password dialog will be shown,
-		// but we only need to cancel it since we've already provided a token.
-		if err := settingsConn.Eval(ctx, multidevicePasswordPrompt+`.onCancelClick_()`, nil); err != nil {
-			return errors.Wrap(err, "failed to close password prompt")
+		// When the toggle is enabled, the auth dialog will be shown.
+		if err := auth.ConfirmPassword(ctx, cr, password); err != nil {
+			return errors.Wrap(err, "failed to confirm password")
 		}
 	} else {
 		if err := settingsConn.Eval(ctx, smartLockToggle+`.click()`, nil); err != nil {
@@ -177,10 +162,6 @@ func CheckSmartLockVisibilityOnLockScreen(ctx context.Context, expectVisible boo
 // goToLoginScreen signs out of the current session a couple of times so that
 // signin screen settings have a chance to take effect.
 func goToLoginScreen(ctx context.Context, cr *chrome.Chrome, _ *chrome.TestConn, kb *input.KeyboardEventWriter, loginOpts, noLoginOpts []chrome.Option) (*chrome.Chrome, *chrome.TestConn, error) {
-	if err := testing.Sleep(ctx, 10*time.Second); err != nil {
-		return nil, nil, errors.Wrap(err, "failed to sleep before SignOut")
-	}
-
 	var err error
 	if err = SignOut(ctx, cr, kb); err != nil {
 		return nil, nil, errors.Wrap(err, "failed to sign out")
