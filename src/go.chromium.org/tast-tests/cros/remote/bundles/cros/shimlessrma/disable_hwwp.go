@@ -242,9 +242,8 @@ func DisableHWWP(ctx context.Context, s *testing.State) {
 		s.Log("Fail to set USB Mux state: ", err)
 	}
 
-	// GoBigSleepLint: Wait for provisioning and finalizing.
-	if err := testing.Sleep(ctx, rmaweb.WaitForProvisionAndFinalize); err != nil {
-		s.Error("Fail to sleep: ", err)
+	if err := rmaweb.PollStateField(ctx, s, rmaweb.RmadStateFieldFinalizeRebooted, true, rmaweb.StateFieldPollingTimeout); err != nil {
+		s.Fatal("Fail to wait for finalize reboot: ", err)
 	}
 
 	uiHelper, err = rmaweb.NewUIHelper(ctx, s, &rmaweb.UIHelperOptions{

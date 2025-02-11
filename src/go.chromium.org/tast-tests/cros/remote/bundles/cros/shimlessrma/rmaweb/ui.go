@@ -7,6 +7,7 @@ package rmaweb
 
 import (
 	"context"
+	"encoding/json"
 	"fmt"
 	"os"
 	"path/filepath"
@@ -44,6 +45,9 @@ type FirmwareUpdateOption string
 // StoreLogFlag indicates whether to store log to USB during test.
 type StoreLogFlag bool
 
+// RmadStateField indicates the keys in rmad state JSON.
+type RmadStateField string
+
 const (
 	// SameUser indicates devices goes to same user.
 	SameUser DestinationOption = "SAME_USER"
@@ -66,12 +70,20 @@ const (
 	// FirmwareUpdateOptionSkip indicates skipping flashing AP RO firmwarm.
 	FirmwareUpdateOptionSkip FirmwareUpdateOption = "FIRMWARE_UPDATE_SOURCE_SKIP"
 
+	// RmadStateFieldFinalizeRebooted indicates whether the device has rebooted during
+	// the finalizing state.
+	RmadStateFieldFinalizeRebooted RmadStateField = "finalize_rebooted"
+
 	// WaitForRebootStart indicates the time to wait before reboot starting.
 	WaitForRebootStart = 10 * time.Second
 
 	// WaitForProvisionAndFinalize indicates the time to wait for Shimless RMA finishing
 	// provisioning and finalizing.
 	WaitForProvisionAndFinalize = 30 * time.Second
+
+	// StateFieldPollingTimeout indicates the time to wait for a field value being changed
+	// to an expected value.
+	StateFieldPollingTimeout = 90 * time.Second
 
 	// StoreLog indicates that log will be stored into usb during test.
 	StoreLog StoreLogFlag = true
@@ -288,7 +300,6 @@ func (uiHelper *UIHelper) CalibrateLidAccelerometerPageOperation(ctx context.Con
 		uiHelper.waitForPageToLoad("Calibration complete", timeInSecondToLoadPage),
 		uiHelper.waitAndClickButton("Next", longTimeInSecondToEnableButton),
 		uiHelper.waitForPageToLoad("Finalizing repair", timeInSecondToLoadPage),
-		uiHelper.waitForPageToLoad("Almost done!", timeInSecondToLoadPage),
 	)(ctx)
 }
 
@@ -301,7 +312,6 @@ func (uiHelper *UIHelper) CalibrateBaseGyroPageOperation(ctx context.Context) er
 		uiHelper.waitForPageToLoad("Calibration complete", timeInSecondToLoadPage),
 		uiHelper.waitAndClickButton("Next", longTimeInSecondToEnableButton),
 		uiHelper.waitForPageToLoad("Finalizing repair", timeInSecondToLoadPage),
-		uiHelper.waitForPageToLoad("Almost done!", timeInSecondToLoadPage),
 	)(ctx)
 }
 
@@ -501,7 +511,7 @@ func (uiHelper *UIHelper) saveRmaStateFile(ctx context.Context) error {
 	}
 
 	saveStateFile := func(from, to string) error {
-		rawOutput, err := uiHelper.readStateFile(ctx, from)
+		rawOutput, err := readStateFile(ctx, uiHelper.Dut, from)
 		if err != nil {
 			return errors.Wrapf(err, "failed to read data from %s", from)
 		}
@@ -529,8 +539,8 @@ func (uiHelper *UIHelper) saveRmaStateFile(ctx context.Context) error {
 }
 
 // readStateFile reads content of rmad state file and prettify the content.
-func (uiHelper *UIHelper) readStateFile(ctx context.Context, filename string) ([]byte, error) {
-	return uiHelper.Dut.Conn().CommandContext(ctx, "sh", "-c", fmt.Sprintf("jq . %s", filename)).Output()
+func readStateFile(ctx context.Context, dut *dut.DUT, filename string) ([]byte, error) {
+	return dut.Conn().CommandContext(ctx, "sh", "-c", fmt.Sprintf("jq . %s", filename)).Output()
 }
 
 func (uiHelper *UIHelper) findUSBName(ctx context.Context) (string, error) {
@@ -756,6 +766,50 @@ func (uiHelper *UIHelper) resetToUseRealSensorData(ctx context.Context) error {
 
 	output, _ := uiHelper.Dut.Conn().CommandContext(ctx, "ectool", "motionsense", "lid_angle").Output()
 	testing.ContextLogf(ctx, "Lid angle after reset is %q", string(output))
+
+	return nil
+}
+
+func getRmadStateJSON(ctx context.Context, dut *dut.DUT) (map[RmadStateField]interface{}, error) {
+	data, err := readStateFile(ctx, dut, stateFile)
+	if err != nil {
+		return nil, errors.Wrap(err, "fail to read state file")
+	}
+
+	var state map[RmadStateField]interface{}
+	err = json.Unmarshal(data, &state)
+	if err != nil {
+		return nil, errors.Wrap(err, "fail to unmarshal state file")
+	}
+
+	return state, nil
+}
+
+// PollStateField asserts that the value of a given field in the rmad state file matches an expected value.
+func PollStateField(ctx context.Context, s *testing.State, key RmadStateField, expectedValue interface{}, timeout time.Duration) error {
+	firmwareHelper := s.FixtValue().(*fixture.Value).Helper
+	dut := firmwareHelper.DUT
+
+	if err := testing.Poll(ctx, func(ctx context.Context) error {
+		if err := firmwareHelper.WaitConnect(ctx); err != nil {
+			return errors.Wrap(err, "fail to connect")
+		}
+
+		state, err := getRmadStateJSON(ctx, dut)
+		if err != nil {
+			return errors.Wrap(err, "fail to get rmad state")
+		}
+
+		if state[key] != expectedValue {
+			return errors.New("Device has not rebooted yet")
+		}
+
+		s.Logf("Asserted %s to be %v", key, expectedValue)
+
+		return nil
+	}, &testing.PollOptions{Timeout: timeout}); err != nil {
+		return errors.Wrapf(err, "fail to wait for %s being %v: ", key, expectedValue)
+	}
 
 	return nil
 }

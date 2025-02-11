@@ -147,7 +147,6 @@ func Calibration(ctx context.Context, s *testing.State) {
 	if err != nil {
 		s.Fatal("Fail to initialize RMA Helper: ", err)
 	}
-	defer uiHelper.DisposeResource(cleanupCtx)
 
 	if component == sensorAccel {
 		if err := uiHelper.CalibrateLidAccelerometerPageOperation(ctx); err != nil {
@@ -158,6 +157,20 @@ func Calibration(ctx context.Context, s *testing.State) {
 			s.Fatal("Fail to calibrate base gyro: ", err)
 		}
 	}
+
+	if err := rmaweb.PollStateField(ctx, s, rmaweb.RmadStateFieldFinalizeRebooted, true, rmaweb.StateFieldPollingTimeout); err != nil {
+		s.Fatal("Fail to wait for finalize reboot: ", err)
+	}
+
+	uiHelper, err = rmaweb.NewUIHelper(ctx, s, &rmaweb.UIHelperOptions{
+		KeepState:  true,
+		BypassRacc: false,
+	})
+	if err != nil {
+		s.Fatal("Fail to initialize RMA Helper: ", err)
+	}
+
+	defer uiHelper.DisposeResource(cleanupCtx)
 
 	if err := uiHelper.RepairCompletedPageOperation(ctx); err != nil {
 		s.Fatal("Fail to navigate to Repair Complete page: ", err)
