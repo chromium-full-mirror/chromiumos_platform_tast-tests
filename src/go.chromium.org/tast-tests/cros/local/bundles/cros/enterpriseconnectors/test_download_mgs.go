@@ -78,7 +78,7 @@ func init() {
 }
 
 func TestDownloadMGS(ctx context.Context, s *testing.State) {
-	cr, err := chrome.New(ctx, chrome.KeepEnrollment(), chrome.NoLogin())
+	cr, err := chrome.New(ctx, chrome.KeepEnrollment(), chrome.NoLogin(), chrome.DisableFeatures("InternalOnlyUisPref"))
 	if err != nil {
 		s.Fatal("Failed to start Chrome: ", err)
 	}

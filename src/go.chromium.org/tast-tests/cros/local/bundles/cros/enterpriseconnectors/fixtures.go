@@ -74,6 +74,7 @@ func CreateFixture(user, pw string) testing.FixtureImpl {
 			chrome.GAIALogin(chrome.Creds{User: username, Pass: password}),
 			chrome.ProdPolicy(),
 			chrome.EnableFeatures("FileTransferEnterpriseConnector", "FileTransferEnterpriseConnectorUI", "NewFilesPolicyUX"),
+			chrome.DisableFeatures("InternalOnlyUisPref"),
 			chrome.ExtraArgs("--disable-search-engine-choice-screen"),
 		}, nil
 
@@ -86,6 +87,7 @@ func createFixtureByPool(account string) testing.FixtureImpl {
 			chrome.GAIALoginPool(dma.CredsFromPool(account)),
 			chrome.ProdPolicy(),
 			chrome.EnableFeatures("FileTransferEnterpriseConnector", "FileTransferEnterpriseConnectorUI", "NewFilesPolicyUX"),
+			chrome.DisableFeatures("InternalOnlyUisPref"),
 			chrome.ExtraArgs("--disable-search-engine-choice-screen"),
 		}, nil
 	})
