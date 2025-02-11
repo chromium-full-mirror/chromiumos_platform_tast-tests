@@ -8,6 +8,9 @@ package benchmark
 
 import (
 	"context"
+	"fmt"
+	"regexp"
+	"strconv"
 
 	"go.chromium.org/tast-tests/cros/common/perf"
 	"go.chromium.org/tast-tests/cros/local/arc"
@@ -18,11 +21,12 @@ import (
 
 // BenchmarkingSession stores data for capturing results at the end of the session.
 type BenchmarkingSession struct {
-	sfm     *SurfaceFlingerMetrics
-	basemem *metrics.BaseMemoryStats
-	tconn   *chrome.TestConn
-	arc     *arc.ARC
-	outDir  string
+	sfm            *SurfaceFlingerMetrics
+	basemem        *metrics.BaseMemoryStats
+	tconn          *chrome.TestConn
+	arc            *arc.ARC
+	outDir         string
+	appPackageName string
 }
 
 // appTracingResults stores results for appTracing calls.
@@ -64,6 +68,12 @@ type Results struct {
 	SurfaceFlingerLatency float64
 	/// memoryPerfValues contains memory metrics capture at the start and end of a benchmarking session.
 	memoryPerfValues *perf.Values
+	// appResolutionHorizontal is a metric that represents the app's horizontal buffer resolution.
+	appResolutionHorizontal float64
+	// appResolutionVertical is a metric that represents the app's vertical buffer resolution.
+	appResolutionVertical float64
+	// appResolutionMP is a metric that represents the app's total buffer resolution in megapixels.
+	appResolutionMP float64
 }
 
 // StartBenchmarking begins the benchmarking process.
@@ -82,7 +92,7 @@ func StartBenchmarking(ctx context.Context, appPackageName string, tconn *chrome
 		return nil, errors.Wrap(err, "failed to start arcAppTracing benchmarking")
 	}
 
-	return &BenchmarkingSession{sfm, basemem, tconn, arc, outDir}, nil
+	return &BenchmarkingSession{sfm, basemem, tconn, arc, outDir, appPackageName}, nil
 }
 
 // Stop stops the benchmarking process and returns the parsed results.
@@ -118,6 +128,14 @@ func (session *BenchmarkingSession) Stop(ctx context.Context) (results Results, 
 	}
 
 	r.memoryPerfValues = memPerfValues
+
+	width, height, err := session.getAppResolutionAsFloat(ctx)
+	if err != nil {
+		return r, errors.Wrap(err, "failed to get the app resolution")
+	}
+	r.appResolutionHorizontal = width
+	r.appResolutionVertical = height
+	r.appResolutionMP = width * height / (1024 * 1024)
 	return r, nil
 }
 
@@ -127,6 +145,34 @@ func (session *BenchmarkingSession) LogMemoryStats(ctx context.Context, p *perf.
 		return errors.Wrap(err, "failed to collect memory metrics")
 	}
 	return nil
+}
+
+// getAppResolutionAsFloat retrieves the app buffer resolution from the 'adb shell dumpsys SurfaceFlinger' command
+// and returns the width and height.
+func (session *BenchmarkingSession) getAppResolutionAsFloat(ctx context.Context) (width, height float64, err error) {
+	command := fmt.Sprintf("dumpsys SurfaceFlinger | grep 'BufferStateLayer (%s' -A 10", session.appPackageName)
+	printOut, err := session.arc.Command(ctx, "/system/bin/sh", "-c", command).Output()
+	if err != nil {
+		return 0, 0, errors.Wrap(err, "could not read print data")
+	}
+
+	// Used to match the app buffer resolution pattern, i.e. activeBuffer=[1330x 750.
+	bufferSizeRe := `activeBuffer=\[\s*(\d+)x\s*(\d+)`
+	re := regexp.MustCompile(bufferSizeRe)
+	match := re.FindStringSubmatch(string(printOut))
+	if len(match) != 3 {
+		return 0, 0, errors.Wrapf(err, "invalid app resolution format: expected 3 values, go %d", len(match))
+	}
+	width, err = strconv.ParseFloat(match[1], 64)
+	if err != nil {
+		return 0, 0, errors.Wrapf(err, "failed to convert %q to float", match[1])
+	}
+	height, err = strconv.ParseFloat(match[2], 64)
+	if err != nil {
+		return 0, 0, errors.Wrapf(err, "failed to convert %q to float", match[2])
+	}
+
+	return width, height, nil
 }
 
 // SaveRuntimePerfResults sets and saves the runtime performance metric results.
@@ -140,6 +186,9 @@ func SaveRuntimePerfResults(p *perf.Values, r *Results, outDir string) error {
 	p.Set(JanksPercentagePerfMetric(), r.JanksPercentage)
 	p.Set(SurfaceFlingerFpsPerfMetric(), r.SurfaceFlingerFPS)
 	p.Set(SurfaceFlingerLatencyPerfMetric(), r.SurfaceFlingerLatency)
+	p.Set(AppResolutionHorizontalPerfMetric(), r.appResolutionHorizontal)
+	p.Set(AppResolutionVerticalPerfMetric(), r.appResolutionVertical)
+	p.Set(AppResolutionMPPerfMetric(), r.appResolutionMP)
 	p.Merge(r.memoryPerfValues)
 	return p.Save(outDir)
 }
@@ -159,6 +208,9 @@ func SaveRuntimePerfResultsWithPrefix(p *perf.Values, r *Results, prefix, outDir
 	setMetricWithPrefix(JanksPercentagePerfMetric(), r.JanksPercentage)
 	setMetricWithPrefix(SurfaceFlingerFpsPerfMetric(), r.SurfaceFlingerFPS)
 	setMetricWithPrefix(SurfaceFlingerLatencyPerfMetric(), r.SurfaceFlingerLatency)
+	setMetricWithPrefix(AppResolutionHorizontalPerfMetric(), r.appResolutionHorizontal)
+	setMetricWithPrefix(AppResolutionVerticalPerfMetric(), r.appResolutionVertical)
+	setMetricWithPrefix(AppResolutionMPPerfMetric(), r.appResolutionMP)
 	p.MergeWithPrefix(prefix, r.memoryPerfValues)
 	return p.Save(outDir)
 }
@@ -268,5 +320,32 @@ func SurfaceFlingerLatencyPerfMetric() perf.Metric {
 		Name:      "surfaceFlingerLatency",
 		Unit:      "seconds",
 		Direction: perf.SmallerIsBetter,
+	}
+}
+
+// AppResolutionHorizontalPerfMetric returns a standard metric that represents the horizontal buffer resolution of the app.
+func AppResolutionHorizontalPerfMetric() perf.Metric {
+	return perf.Metric{
+		Name:      "appResolutionHorizontal",
+		Unit:      "None",
+		Direction: perf.BiggerIsBetter,
+	}
+}
+
+// AppResolutionVerticalPerfMetric returns a standard metric that represents the vertical buffer resolution of the app.
+func AppResolutionVerticalPerfMetric() perf.Metric {
+	return perf.Metric{
+		Name:      "appResolutionVertical",
+		Unit:      "None",
+		Direction: perf.BiggerIsBetter,
+	}
+}
+
+// AppResolutionMPPerfMetric returns a standard metric that represents the total buffer resolution of the app in megapixels.
+func AppResolutionMPPerfMetric() perf.Metric {
+	return perf.Metric{
+		Name:      "appResolutionMPPerfMetric",
+		Unit:      "None",
+		Direction: perf.BiggerIsBetter,
 	}
 }
