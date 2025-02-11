@@ -496,12 +496,16 @@ func bootPerfMetricBounds(ctx context.Context, features *protocol.DUTFeatures, b
 			testing.ContextLogf(ctx, "brya/brask Celeron waiver: Adjusting maxSecondsPowerOnToLogin from %f to 8.5", maxSecondsPowerOnToLogin)
 			maxSecondsPowerOnToLogin = 8.5
 		}
-	} else if features.GetHardware().GetDeprecatedDeviceConfig().GetId().GetModel() == "gladios" &&
-		features.GetHardware().GetHardwareFeatures().GetStorage().GetStorageType() == api.Component_Storage_EMMC &&
-		features.GetHardware().GetHardwareFeatures().GetStorage().GetSizeGb() <= 64 {
-		// ROW 139, go/cros-waivers - gladios comes in several sizes and 64GB is the smallest, the detected size will be slightly smaller than 64GB
-		testing.ContextLogf(ctx, "gladios eMMC-64GB waiver: Adjusting maxSecondsPowerOnToLogin from %f to 10.57", maxSecondsPowerOnToLogin)
-		maxSecondsPowerOnToLogin = 10.57
+	} else if features.GetHardware().GetDeprecatedDeviceConfig().GetId().GetModel() == "gladios" {
+		// b/373945910#comment27
+		testing.ContextLogf(ctx, "gladios waiver: Adjusting maxSecondsPowerOnToKernel from %f to 1.351", maxSecondsPowerOnToKernel)
+		maxSecondsPowerOnToKernel = 1.351
+		if features.GetHardware().GetHardwareFeatures().GetStorage().GetStorageType() == api.Component_Storage_EMMC &&
+			features.GetHardware().GetHardwareFeatures().GetStorage().GetSizeGb() <= 64 {
+			// ROW 139, go/cros-waivers - gladios comes in several sizes and 64GB is the smallest, the detected size will be slightly smaller than 64GB
+			testing.ContextLogf(ctx, "gladios eMMC-64GB waiver: Adjusting maxSecondsPowerOnToLogin from %f to 10.57", maxSecondsPowerOnToLogin)
+			maxSecondsPowerOnToLogin = 10.57
+		}
 	} else if features.GetHardware().GetDeprecatedDeviceConfig().GetId().GetModel() == "omnigul" || features.GetHardware().GetDeprecatedDeviceConfig().GetId().GetModel() == "omniknight" {
 		// ROW 151 in go/cros-waivers
 		testing.ContextLogf(ctx, "%s waiver: Adjusting maxSecondsPowerOnToKernel from %f to 1.7", features.GetHardware().GetDeprecatedDeviceConfig().GetId().GetModel(), maxSecondsPowerOnToKernel)
