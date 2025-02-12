@@ -116,7 +116,7 @@ func runAndVerifyReimagine(ctx context.Context, ui *uiauto.Context, tconn *chrom
 	}
 
 	// Input the text prompt.
-	reimagineTextArea := nodewith.Role(role.TextField).Name("What do you want to generate in the area?").Ancestor(galleryapp.RootFinder)
+	reimagineTextArea := nodewith.Role(role.TextField).NameContaining("Write the word or phrase").Ancestor(galleryapp.RootFinder)
 	if err := ui.LeftClick(reimagineTextArea)(ctx); err != nil {
 		return errors.Wrap(err, "failed to click the prompt text area")
 	}

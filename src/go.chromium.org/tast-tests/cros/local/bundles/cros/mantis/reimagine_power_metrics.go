@@ -127,7 +127,7 @@ func ReimaginePowerMetrics(ctx context.Context, s *testing.State) {
 	params := s.Param().(reimagineTestParameters)
 	if params.withPrompt {
 		// Input the text prompt
-		reimagineTextArea := nodewith.Role(role.TextField).Name("What do you want to generate in the area?").Ancestor(galleryapp.RootFinder)
+		reimagineTextArea := nodewith.Role(role.TextField).NameContaining("Write the word or phrase").Ancestor(galleryapp.RootFinder)
 		if err := ui.LeftClick(reimagineTextArea)(ctx); err != nil {
 			s.Fatal("Failed to click the prompt text area: ", err)
 		}
