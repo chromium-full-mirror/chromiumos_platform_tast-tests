@@ -63,11 +63,11 @@ func KernelIwlwifiError(ctx context.Context, s *testing.State) {
 		s.Error("Failed to run the command df -mP: ", err)
 	}
 	content := "Output of the command df -mP at the beginning of the test:\n" + string(dfOutput)
-	duOutput, err := testexec.CommandContext(ctx, "du", "-a", "/mnt/stateful_partition/encrypted").Output()
+	duOutput, err := testexec.CommandContext(ctx, "du", "-a", "/var", "/home/chronos").Output()
 	if err != nil {
-		s.Error("Failed to run the command du -a /mnt/stateful_partition/encrypted: ", err)
+		s.Error("Failed to run the command du -a /var: ", err)
 	}
-	content = content + "\n\nOutput of the command du -a /mnt/stateful_partition/encrypted at the beginning of the test:\n" + string(duOutput)
+	content = content + "\n\nOutput of the command du -a /var /home/chronos at the beginning of the test:\n" + string(duOutput)
 	// Write the filesystem/disks info logs to the file logName.
 	dir, ok := testing.ContextOutDir(ctx)
 	if !ok {

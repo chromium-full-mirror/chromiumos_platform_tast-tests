@@ -7,6 +7,6 @@ package util
 // This file contains some shared constants for autoupdate tests.
 const (
 	TestFile        = "compat_testing_file"
-	EncstatefulFile = "/mnt/stateful_partition/encrypted/file"
+	EncstatefulFile = "/var/au_test_file"
 	TestFileContent = "content"
 )
