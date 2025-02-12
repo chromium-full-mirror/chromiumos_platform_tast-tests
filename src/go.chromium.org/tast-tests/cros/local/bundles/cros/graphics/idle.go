@@ -102,6 +102,37 @@ func Idle(ctx context.Context, s *testing.State) {
 	}
 }
 
+// boardProperty gets a specific property from /etc/lsb-release.
+func boardProperty(key string) string {
+	f, err := os.ReadFile("/etc/lsb-release")
+	if err != nil {
+		return ""
+	}
+	pattern := `(?m)^` + key + `=(.*)`
+	re := regexp.MustCompile(pattern)
+	submatchGroup := re.FindStringSubmatch(string(f))
+	// A legitimate submatchGroup would be ["key=result", "result"]
+	if len(submatchGroup) < 2 {
+		return ""
+	}
+	return strings.TrimSpace(submatchGroup[1])
+}
+
+// board returns the release board name.
+func board() string {
+	return boardProperty("CHROMEOS_RELEASE_BOARD")
+}
+
+// expectedGovernor returns the expected GPU devfreq governor according to the platform.
+func expectedGovernor() string {
+	switch board() {
+	case "rauru":
+		return "gpueb"
+	default:
+		return "simple_ondemand"
+	}
+}
+
 // getValidDir search the list of paths and return the directory which exists.
 func getValidDir(paths []string) (string, error) {
 	for _, path := range paths {
@@ -167,7 +198,7 @@ func dvfs(ctx context.Context) error {
 	}
 	governor := governors[0]
 	testing.ContextLogf(ctx, "DVFS governor = %s", governor)
-	if governor != "simple_ondemand" {
+	if governor != expectedGovernor() {
 		return errors.Errorf("expect simple_ondemand dvfs governor, got %v", governor)
 	}
 
