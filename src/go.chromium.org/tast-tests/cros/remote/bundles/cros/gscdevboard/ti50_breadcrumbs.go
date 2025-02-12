@@ -64,15 +64,12 @@ func Ti50Breadcrumbs(ctx context.Context, s *testing.State) {
 
 	s.Log("Disconnecting CCD to allow sleep")
 	b.GpioApplyStrap(ctx, ti50.CCDModeOff)
-	// TODO(b/350972387): Verify normal sleep once A1 OT silicon is available
-	if b.TestbedType != ti50.GscOTShield {
-		s.Log("Waiting for normal sleep")
-		b.GpioSet(ctx, ti50.GpioTi50PltRstL, true)
-		th.MustSucceed(i.WaitUntilNormalSleep(ctx, ti50.WaitForSleepTimeout), "Sleep when AP on")
-		// Expect pmuResumeFromSleep only after pmuNormalSleep. Wake from pmuDeepSleep will follow
-		// boot path instead.
-		expected = append(expected, pmuNormalSleep, pmuResumeFromSleep)
-	}
+	s.Log("Waiting for normal sleep")
+	b.GpioSet(ctx, ti50.GpioTi50PltRstL, true)
+	th.MustSucceed(i.WaitUntilNormalSleep(ctx, ti50.WaitForSleepTimeout), "Sleep when AP on")
+	// Expect pmuResumeFromSleep only after pmuNormalSleep. Wake from pmuDeepSleep will follow
+	// boot path instead.
+	expected = append(expected, pmuNormalSleep, pmuResumeFromSleep)
 
 	s.Log("Waiting for deep sleep")
 	b.GpioSet(ctx, ti50.GpioTi50PltRstL, false)
