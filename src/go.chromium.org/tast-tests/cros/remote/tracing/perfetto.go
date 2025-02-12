@@ -11,6 +11,7 @@ import (
 	"os"
 	"strconv"
 
+	"github.com/golang/protobuf/ptypes/empty"
 	"google.golang.org/protobuf/types/known/emptypb"
 
 	"go.chromium.org/tast-tests/cros/common/testexec"
@@ -117,6 +118,9 @@ func StartRemoteSession(ctx context.Context, cl *rpc.Client, opts ...remoteSessi
 	if config.GetConfig() == nil {
 		return nil, errors.New("this requires either config file path or config data")
 	}
+	// Finalize, just in case the service is started.
+	// Ignore the error.
+	service.Finalize(ctx, &empty.Empty{})
 	res, err := service.Start(ctx, config)
 	if err != nil {
 		return nil, errors.Wrap(err, "failed to start remote session")
