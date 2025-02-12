@@ -47,6 +47,7 @@ const (
 	orca
 	picker
 	withoutAssistMultiword
+	scannerDogfood
 )
 
 // List of fixture names for inputs.
@@ -69,6 +70,7 @@ const (
 	ClamshellNonVKWithLobster                         = "clamshellNonVKWithLobster"
 	ClamshellNonVKWithOrca                            = "clamshellNonVKWithOrca"
 	ClamshellNonVKWithPicker                          = "clamshellNonVKWithPicker"
+	ClamshellNonVKWithScannerDogfood                  = "clamshellNonVKWithScannerDogfood"
 	ClamshellNonVKWithoutMultiwordSuggest             = "clamshellNonVKWithoutMultiwordSuggest"
 	TabletVK                                          = "tabletVK"
 	TabletVKStereoAloopLoaded                         = "tabletVKStereoAloopLoaded"
@@ -306,6 +308,21 @@ func init() {
 		Vars:            []string{"inputs.Picker.pickerFeatureTestKey"},
 	})
 	testing.AddFixture(&testing.Fixture{
+		Name: ClamshellNonVKWithScannerDogfood,
+		Desc: "Clamshell mode with ScannerDogfood enabled",
+		Contacts: []string{
+			"zacpartridge@google.com",
+			"essential-inputs-team@google.com",
+		},
+		BugComponent:    "b:383422752",
+		Impl:            inputsFixture(clamshellMode, false, false, scannerDogfood),
+		SetUpTimeout:    chrome.LoginTimeout,
+		PreTestTimeout:  preTestTimeout,
+		PostTestTimeout: postTestTimeout,
+		ResetTimeout:    resetTimeout,
+		TearDownTimeout: chrome.ResetTimeout,
+	})
+	testing.AddFixture(&testing.Fixture{
 		Name: ClamshellNonVKWithDiacriticsOnPKLongpress,
 		Desc: "Clamshell mode with diacritics",
 		Contacts: []string{
@@ -487,6 +504,8 @@ func (f *inputsFixtureImpl) SetUp(ctx context.Context, s *testing.FixtState) int
 		case lobster:
 			opts = append(opts, chrome.ExtraArgs("--enable-features=LobsterDogfood,LobsterRightClickMenu,LobsterQuickInsertZeroState,Mahi,FeatureManagementMahi,OrcaDogfood"))
 			opts = append(opts, chrome.ExtraArgs("--mahi-restrictions-override"))
+		case scannerDogfood:
+			opts = append(opts, chrome.ExtraArgs("--enable-features=ScannerDogfood"))
 		case picker:
 			opts = append(opts, chrome.ExtraArgs("--enable-features=Picker,PickerGrid,PickerGifs"))
 			opts = append(opts, chrome.ExtraArgs("--picker-feature-key="+s.RequiredVar("inputs.Picker.pickerFeatureTestKey")))
