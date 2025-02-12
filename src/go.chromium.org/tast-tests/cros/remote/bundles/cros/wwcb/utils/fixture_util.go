@@ -27,42 +27,81 @@ var wwcbPowerCycleFixture = testing.RegisterVarString(
 
 var (
 	fixtureUID = map[string]string{
+		// USB v3.2 Type-C Fixtures:
 		"AUS19129_C01_01": "1912901",
 		"AUS19129_C01_02": "1912902",
 
+		// USB v4.0 Type-C Fixtures:
+		"AUS22095_B00_01": "2209501",
+		"AUS22095_B00_02": "2209502",
+
+		// HDMI v1.4 Fixtures:
 		"AHS20079_A00_01": "2007901",
 		"AHS20079_A00_02": "2007902",
 
+		// HDMI v2.1 Fixtures:
+		"AHS24067_B00_01": "2406701",
+		"AHS24067_B00_02": "2406702",
+
+		// Old Type-A fixtures:
 		"AUS20019_D00_01": "2001901",
 		"AUS20019_D00_02": "2001902",
 		"AUS20019_D00_03": "2001903",
 		"AUS20019_D00_04": "2001904",
 		"AUS20019_D00_05": "2001905",
 
-		"AUS20019_E00_01": "2001901", // New Type-A Fixture
-		"AUS20019_E00_02": "2001902", // New Type-A Fixture
-		"AUS20019_E00_03": "2001903", // New Type-A Fixture
-		"AUS20019_E00_04": "2001904", // New Type-A Fixture
-		"AUS20019_E00_05": "2001905", // New Type-A Fixture
+		// New Type-A Fixtures:
+		"AUS20019_E00_01": "2001901",
+		"AUS20019_E00_02": "2001902",
+		"AUS20019_E00_03": "2001903",
+		"AUS20019_E00_04": "2001904",
+		"AUS20019_E00_05": "2001905",
 
+		// DP v1.4 fixtures:
 		"ADT21090_B00_01": "2109001",
 		"ADT21090_B00_02": "2109002",
 
+		// DP v2.1 Fixtures:
+		"ADS24068_B00_01": "2406801",
+		"ADS24068_B00_02": "2406802",
+
+		// Ethernet Fixtures:
 		"XXRJ45SW_X00_01": "j45sw01",
 	}
 
 	fixtureCmd = map[string]map[string]string{
+		// USB v3.2 Type-C Fixtures:
 		"1912901": {"off": "0", "on": "1", "flip": "2"},
 		"1912902": {"off": "0", "on": "1", "flip": "2"},
+
+		// USB v4.0 Type-C Fixtures:
+		"2209501": {"off": "3", "on": "1", "A": "1", "B": "2"},
+		"2209502": {"off": "3", "on": "1", "A": "1", "B": "2"},
+
+		// HDMI v1.4 Fixtures:
 		"2007901": {"off": "2", "on": "1"},
 		"2007902": {"off": "2", "on": "1"},
+
+		// HDMI v2.1 Fixtures:
+		"2406701": {"off": "3", "on": "1"},
+		"2406702": {"off": "3", "on": "1"},
+
+		// Type-A fixtures, same for old and new fixtures:
 		"2001901": {"off": "2", "on": "1"},
 		"2001902": {"off": "2", "on": "1"},
 		"2001903": {"off": "2", "on": "1"},
 		"2001904": {"off": "2", "on": "1"},
 		"2001905": {"off": "2", "on": "1"},
+
+		// DP v1.4 fixtures:
 		"2109001": {"off": "3", "on": "1"},
 		"2109002": {"off": "3", "on": "1"},
+
+		// DP v2.1 fixtures:
+		"2406801": {"off": "3", "on": "1"},
+		"2406802": {"off": "3", "on": "1"},
+
+		// Ethernet Fixtures:
 		"j45sw01": {"off": "2", "on": "1"},
 	}
 
