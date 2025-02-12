@@ -22,7 +22,7 @@ func init() {
 		Func:         ShareDownloads,
 		Desc:         "Test sharing Downloads with Bruschetta",
 		Contacts:     []string{"clumptini+oncall@google.com"},
-		SoftwareDeps: []string{"chrome", "vm_host", "untrusted_vm", "dlc", "amd64"},
+		SoftwareDeps: []string{"chrome", "vm_host", "untrusted_vm", "dlc", "amd64", "no_brya_kernelnext"},
 		HardwareDeps: bruschetta.BruschettaHwDeps,
 		Attr:         []string{"group:mainline", "group:bruschetta_cq"},
 		BugComponent: "b:658562", // ChromeOS > Software > GuestOS

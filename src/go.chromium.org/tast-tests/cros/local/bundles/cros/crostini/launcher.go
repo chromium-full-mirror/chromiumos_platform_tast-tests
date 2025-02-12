@@ -47,7 +47,7 @@ func init() {
 			{
 				Name:              "local_wayland_bullseye_stable",
 				ExtraData:         []string{"launcher_wayland_demo_fixed_size.desktop", "launcher_wayland_demo.png"},
-				ExtraSoftwareDeps: []string{"dlc"},
+				ExtraSoftwareDeps: []string{"dlc", "no_brya_kernelnext"},
 				ExtraHardwareDeps: crostini.CrostiniOptimalPerf,
 				Fixture:           "crostiniBullseye",
 				Timeout:           7 * time.Minute,
@@ -61,7 +61,7 @@ func init() {
 			}, {
 				Name:              "local_wayland_bookworm_stable",
 				ExtraData:         []string{"launcher_wayland_demo_fixed_size.desktop", "launcher_wayland_demo.png"},
-				ExtraSoftwareDeps: []string{"dlc"},
+				ExtraSoftwareDeps: []string{"dlc", "no_brya_kernelnext"},
 				ExtraHardwareDeps: crostini.CrostiniOptimalPerf,
 				Fixture:           "crostiniBookworm",
 				Timeout:           7 * time.Minute,
@@ -75,7 +75,7 @@ func init() {
 			}, {
 				Name:              "local_x11_bullseye_stable",
 				ExtraData:         []string{"launcher_x11_demo_fixed_size.desktop", "launcher_x11_demo.png"},
-				ExtraSoftwareDeps: []string{"dlc"},
+				ExtraSoftwareDeps: []string{"dlc", "no_brya_kernelnext"},
 				ExtraHardwareDeps: crostini.CrostiniOptimalPerf,
 				Fixture:           "crostiniBullseye",
 				Timeout:           7 * time.Minute,
@@ -89,7 +89,7 @@ func init() {
 			}, {
 				Name:              "local_x11_bookworm_stable",
 				ExtraData:         []string{"launcher_x11_demo_fixed_size.desktop", "launcher_x11_demo.png"},
-				ExtraSoftwareDeps: []string{"dlc"},
+				ExtraSoftwareDeps: []string{"dlc", "no_brya_kernelnext"},
 				ExtraHardwareDeps: crostini.CrostiniOptimalPerf,
 				Fixture:           "crostiniBookworm",
 				Timeout:           7 * time.Minute,
@@ -103,7 +103,7 @@ func init() {
 			}, {
 				Name:              "system_wayland_bullseye_stable",
 				ExtraData:         []string{"launcher_wayland_demo_fixed_size.desktop", "launcher_wayland_demo.png"},
-				ExtraSoftwareDeps: []string{"dlc"},
+				ExtraSoftwareDeps: []string{"dlc", "no_brya_kernelnext"},
 				ExtraHardwareDeps: crostini.CrostiniOptimalPerf,
 				Fixture:           "crostiniBullseye",
 				Timeout:           7 * time.Minute,
@@ -117,7 +117,7 @@ func init() {
 			}, {
 				Name:              "system_wayland_bookworm_stable",
 				ExtraData:         []string{"launcher_wayland_demo_fixed_size.desktop", "launcher_wayland_demo.png"},
-				ExtraSoftwareDeps: []string{"dlc"},
+				ExtraSoftwareDeps: []string{"dlc", "no_brya_kernelnext"},
 				ExtraHardwareDeps: crostini.CrostiniOptimalPerf,
 				Fixture:           "crostiniBookworm",
 				Timeout:           7 * time.Minute,
@@ -131,7 +131,7 @@ func init() {
 			}, {
 				Name:              "system_x11_bullseye_stable",
 				ExtraData:         []string{"launcher_x11_demo_fixed_size.desktop", "launcher_x11_demo.png"},
-				ExtraSoftwareDeps: []string{"dlc"},
+				ExtraSoftwareDeps: []string{"dlc", "no_brya_kernelnext"},
 				ExtraHardwareDeps: crostini.CrostiniOptimalPerf,
 				Fixture:           "crostiniBullseye",
 				Timeout:           7 * time.Minute,
@@ -145,7 +145,7 @@ func init() {
 			}, {
 				Name:              "system_x11_bookworm_stable",
 				ExtraData:         []string{"launcher_x11_demo_fixed_size.desktop", "launcher_x11_demo.png"},
-				ExtraSoftwareDeps: []string{"dlc"},
+				ExtraSoftwareDeps: []string{"dlc", "no_brya_kernelnext"},
 				ExtraHardwareDeps: crostini.CrostiniOptimalPerf,
 				Fixture:           "crostiniBookworm",
 				Timeout:           7 * time.Minute,

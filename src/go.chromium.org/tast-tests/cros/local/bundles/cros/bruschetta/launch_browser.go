@@ -19,7 +19,7 @@ func init() {
 		Desc:         "Opens a browser window on the host from the guest, using several common approaches (/etc/alternatives, $BROWSER, and xdg-open)",
 		Contacts:     []string{"clumptini+oncall@google.com"},
 		Attr:         []string{"group:mainline", "group:bruschetta_cq"},
-		SoftwareDeps: []string{"chrome", "vm_host", "untrusted_vm", "dlc", "amd64"},
+		SoftwareDeps: []string{"chrome", "vm_host", "untrusted_vm", "dlc", "amd64", "no_brya_kernelnext"},
 		HardwareDeps: bruschetta.BruschettaHwDeps,
 		BugComponent: "b:658562", // ChromeOS > Software > GuestOS
 		Timeout:      3 * time.Minute,

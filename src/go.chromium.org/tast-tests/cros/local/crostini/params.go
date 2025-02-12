@@ -326,6 +326,8 @@ func MakeTestParamsFromList(t genparams.TestingT, baseCases []Param) string {
 
 			var extraSoftwareDeps []string
 			extraSoftwareDeps = append(extraSoftwareDeps, "dlc")
+			// TODO: b/394907330: re-enable tests on brya-kernelnext
+			extraSoftwareDeps = append(extraSoftwareDeps, "no_brya_kernelnext")
 
 			var hardwareDeps string
 			if testCase.UseLargeContainer {

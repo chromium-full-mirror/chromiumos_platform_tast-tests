@@ -34,7 +34,7 @@ func init() {
 			{
 				Name:              "stable",
 				ExtraData:         []string{crostini.GetContainerMetadataArtifact("bullseye", false), crostini.GetContainerRootfsArtifact("bullseye", false)},
-				ExtraSoftwareDeps: []string{"dlc"},
+				ExtraSoftwareDeps: []string{"dlc", "no_brya_kernelnext"},
 				ExtraHardwareDeps: crostini.CrostiniOptimalPerf,
 				Timeout:           14 * time.Minute,
 				Val:               vm.DebianBullseye,

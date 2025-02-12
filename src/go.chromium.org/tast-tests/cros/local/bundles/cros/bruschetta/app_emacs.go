@@ -26,7 +26,7 @@ func init() {
 		Attr:         []string{"group:mainline", "group:bruschetta_cq"},
 		Vars:         screenshot.ScreenDiffVars,
 		VarDeps:      uidetection.UIDetectionVars,
-		SoftwareDeps: []string{"chrome", "vm_host", "untrusted_vm", "dlc", "amd64"},
+		SoftwareDeps: []string{"chrome", "vm_host", "untrusted_vm", "dlc", "amd64", "no_brya_kernelnext"},
 		HardwareDeps: bruschetta.BruschettaHwDeps,
 		BugComponent: "b:658562", // ChromeOS > Software > GuestOS
 		Fixture:      bruschetta.BruschettaFixtureClamshell,
