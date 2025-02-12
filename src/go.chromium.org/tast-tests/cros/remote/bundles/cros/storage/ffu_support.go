@@ -29,7 +29,7 @@ func init() {
 }
 
 func FfuSupport(ctx context.Context, s *testing.State) {
-	const storageInfoPath = "/mnt/stateful_partition/encrypted/var/log/storage_info.txt"
+	const storageInfoPath = "/var/log/storage_info.txt"
 
 	bootIDChecker := util.NewBootIDChecker(ctx, s.DUT(), s)
 	defer util.FatalIfBootIDChanged(ctx, bootIDChecker, s)

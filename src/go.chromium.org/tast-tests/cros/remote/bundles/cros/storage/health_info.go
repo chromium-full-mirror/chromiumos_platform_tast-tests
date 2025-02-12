@@ -61,7 +61,7 @@ func emmcHealthSupported(ctx context.Context, disk *util.Disk) (bool, error) {
 }
 
 func ufsHealthSupported(ctx context.Context, dut *dut.DUT) (bool, error) {
-	const storageInfoPath = "/mnt/stateful_partition/encrypted/var/log/storage_info.txt"
+	const storageInfoPath = "/var/log/storage_info.txt"
 	storageInfo, err := util.RunCmdWithStringOutput(ctx, dut, "cat", storageInfoPath)
 	if err != nil {
 		return false, errors.Wrap(err, "could not read storage info from the device")

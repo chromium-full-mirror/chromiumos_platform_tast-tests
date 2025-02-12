@@ -15,7 +15,7 @@ import (
 	"golang.org/x/exp/maps"
 )
 
-const storageInfoPath = "/mnt/stateful_partition/encrypted/var/log/storage_info.txt"
+const storageInfoPath = "/var/log/storage_info.txt"
 
 const storageComponentType = "storage"
 

@@ -101,7 +101,7 @@ func UfsConfiguration(ctx context.Context, s *testing.State) {
 
 	// TODO: this can maybe be refactored to use parts of the AVL info code, since both are
 	// reading values from the file at this path.
-	const storageInfoPath = "/mnt/stateful_partition/encrypted/var/log/storage_info.txt"
+	const storageInfoPath = "/var/log/storage_info.txt"
 	storageInfo, err := util.RunCmdWithStringOutput(ctx, s.DUT(), "cat", storageInfoPath)
 	if err != nil {
 		s.Fatal("Could not read storage info from the device: ", err)
