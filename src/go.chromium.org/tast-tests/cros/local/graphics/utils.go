@@ -178,12 +178,41 @@ func parseSysfsMemory(ctx context.Context, file string) (map[string]int, error) 
 	}
 }
 
-// GetSysfsMemory returns gpu memory usage
+// GetSysfsMemory returns GPU memory usage in bytes.
 func GetSysfsMemory(ctx context.Context) (int, error) {
-	var errMsg string
-	file, err := GetValidKernelDriverDebugFile(ctx, []string{
-		"i915_gem_objects",
-	})
+	driverFilename, err := GetValidKernelDriverDebugFile(ctx, []string{"name"})
+	if err != nil {
+		return 0, errors.Wrap(err, "failed to get valid file with driver name")
+	}
+	driverName, err := os.ReadFile(driverFilename)
+	if err != nil {
+		return 0, errors.Wrapf(err, "failed to open %v", driverFilename)
+	}
+	driverReg := regexp.MustCompile("(.*) dev=0000:00:02.0")
+	driverMatches := driverReg.FindStringSubmatch(string(driverName))
+	if len(driverMatches) < 1 {
+		return 0, errors.Wrap(err, "failed to find driver name")
+	}
+	if driverMatches != nil && driverMatches[1] == "xe" {
+		bytesUsed, err := GetXeSysfsMemory(ctx)
+		if err != nil {
+			return 0, errors.Wrap(err, "failed to capture GPU memory for Xe driver")
+		}
+		return bytesUsed, nil
+	}
+	if driverMatches != nil && driverMatches[1] == "i915" {
+		bytesUsed, err := GetI915SysfsMemory(ctx)
+		if err != nil {
+			return 0, errors.Wrap(err, "failed to capture GPU memory for i915 driver")
+		}
+		return bytesUsed, nil
+	}
+	return 0, errors.Wrap(err, "failed to get valid file with driver name")
+}
+
+// Geti915SysfsMemory returns GPU memory usage for i915 driver in bytes.
+func GetI915SysfsMemory(ctx context.Context) (int, error) {
+	file, err := GetValidKernelDriverDebugFile(ctx, []string{"i915_gem_objects"})
 	if err != nil {
 		return 0, err
 	}
@@ -193,11 +222,37 @@ func GetSysfsMemory(ctx context.Context) (int, error) {
 	}
 	bytes, exists := parsedResults["bytes"]
 	if exists && bytes == 0 {
-		errMsg = strings.Join([]string{errMsg, string(file), "reported 0 bytes"}, " ")
-		return 0, errors.New(errMsg)
+		return 0, errors.New("reported 0 bytes")
 	}
 	return bytes, nil
+}
 
+// GetXeSysfsMemory returns GPU memory usage for Xe driver in bytes.
+func GetXeSysfsMemory(ctx context.Context) (int, error) {
+	file, err := GetValidKernelDriverDebugFile(ctx, []string{"gtt_mm"})
+	if err != nil {
+		return 0, err
+	}
+	gtusage, err := os.ReadFile(file)
+	if err != nil {
+		return 0, errors.Wrap(err, "failed to open file")
+	}
+	gtusageReg := regexp.MustCompile("usage: (.*)")
+	gtusageBytes := gtusageReg.FindStringSubmatch(string(gtusage))
+	if gtusageBytes == nil {
+		return 0, errors.Wrap(err, "failed to find gt usage")
+	}
+	if len(gtusageBytes) < 1 {
+		return 0, errors.Wrap(err, "failed to read gt usage")
+	}
+	gtusageIntBytes, err := strconv.Atoi(gtusageBytes[1])
+	if err != nil {
+		return 0, errors.Wrap(err, "failed to convert to int")
+	}
+	if gtusageIntBytes == 0 {
+		return 0, errors.New("reported 0 bytes")
+	}
+	return gtusageIntBytes, nil
 }
 
 // APIType identifies a graphics API that can be tested by DEQP.
