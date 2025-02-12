@@ -197,9 +197,9 @@ type PTZSettings struct {
 var PowerTimeParams = power.TimeParams{Interval: 5 * time.Second, Total: 300 * time.Second}
 
 // previewTimeoutDuringInit is the maximum time to wait for the preview to become
-// active during CCA initialization. The preview takes approximately 3 seconds to
+// active during CCA initialization. The preview takes approximately 5 seconds to
 // be ready on low-end devices.
-const previewTimeoutDuringInit = 3 * time.Second
+const previewTimeoutDuringInit = 5 * time.Second
 
 // Equal returns if PTZ settings a and b are equal.
 func (a *PTZSettings) Equal(b *PTZSettings) bool {
@@ -466,7 +466,7 @@ func (a *App) checkVideoState(ctx context.Context, active bool, duration time.Du
 				return errors.Wrap(jobErr, err.Error())
 			}
 		}
-		return err
+		return errors.Wrapf(err, "failed to wait for the video state to be %v within %v", active, duration.Round(time.Second))
 	}
 
 	// GoBigSleepLint: Due to the pipeline delay in camera stack, animation
