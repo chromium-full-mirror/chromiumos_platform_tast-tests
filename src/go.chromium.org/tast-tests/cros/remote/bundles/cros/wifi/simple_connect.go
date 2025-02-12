@@ -758,6 +758,7 @@ func init() {
 				}},
 				// TODO(b/189972561) Enable this test on Trogdor once active scanning on 5 GHz channel is enabled.
 				ExtraHardwareDeps: hwdep.D(hwdep.SkipOnPlatform("strongbad", "strongbad64", "strongbad-kernelnext", "trogdor", "trogdor64", "trogdor-kernelnext")),
+				VariantCategory:   `{"name": "WifiBtChipset_Soc_Kernel_Not_Trogdor_Strongbad"}`,
 			}, {
 				// Verifies that DUT can connect to a WEP network with both open and shared system authentication and 40-bit pre-shared keys.
 				Name:    "wep40",
@@ -813,6 +814,7 @@ func init() {
 				}},
 				ExtraHardwareDeps: hwdep.D(hwdep.WifiWEP()),
 				ExtraRequirements: []string{"wifi-sec-0007-v01"},
+				VariantCategory:   `{"name": "WifiBtChipset_Soc_Kernel_WEP"}`,
 			}, {
 				// Verifies that DUT can connect to a WEP network with both open and shared system authentication and 104-bit pre-shared keys.
 				Name:    "wep104",
@@ -868,6 +870,7 @@ func init() {
 				}},
 				ExtraHardwareDeps: hwdep.D(hwdep.WifiWEP()),
 				ExtraRequirements: []string{"wifi-sec-0007-v01"},
+				VariantCategory:   `{"name": "WifiBtChipset_Soc_Kernel_WEP"}`,
 			}, {
 				// Verifies that DUT can connect to a hidden WEP network with open/shared system authentication and 40/104-bit pre-shared keys.
 				Name:    "wephidden",
@@ -899,6 +902,7 @@ func init() {
 				}},
 				ExtraHardwareDeps: hwdep.D(hwdep.WifiWEP()),
 				ExtraRequirements: []string{"wifi-sec-0007-v01"},
+				VariantCategory:   `{"name": "WifiBtChipset_Soc_Kernel_WEP"}`,
 			}, {
 				// Verifies that DUT can connect to a protected network supporting for pure WPA with TKIP.
 				Name:    "wpatkip",
@@ -1373,6 +1377,7 @@ func init() {
 				// TODO(b/194644867): revisit after FW fix and verification.
 				ExtraHardwareDeps: hwdep.D(hwdep.WifiNotMarvell(), hwdep.SkipOnPlatform("trogdor", "strongbad", "trogdor-kernelnext"), hwdep.WifiWEP()),
 				ExtraRequirements: []string{"wifi-sec-0007-v01"},
+				VariantCategory:   `{"name": "WifiBtChipset_Soc_Kernel_Hwdep_Combination_1"}`,
 			}, {
 				// Verifies that DUT can connect to a protected network supporting for WPA-EAP encryption.
 				Name:    "8021xwpa",

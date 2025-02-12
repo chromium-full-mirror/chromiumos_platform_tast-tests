@@ -118,7 +118,7 @@ func init() {
 				ExtraHardwareDeps: hwdep.D(hwdep.WifiWEP(), hwdep.WifiNotMarvell()),
 				ExtraRequirements: []string{tdreq.WiFiSecSupportWEP},
 				ExtraAttr:         []string{"wificell_unstable"},
-				VariantCategory:   `{"name": "WifiBtChipset_Soc_Kernel_Not_Marvell"}`,
+				VariantCategory:   `{"name": "WifiBtChipset_Soc_Kernel_WEP"}`,
 			}, {
 				// Verifies that DUT can roam between two WPA-EAP APs in full view of it.
 				Name:              "8021xwpa",
@@ -152,7 +152,7 @@ func init() {
 				Val:               roamTestcaseWithTwoWEPAP.setRoamTime(12 * time.Second),
 				ExtraHardwareDeps: hwdep.D(hwdep.WifiWEP(), hwdep.WifiMarvell()),
 				ExtraRequirements: []string{tdreq.WiFiSecSupportWEP},
-				VariantCategory:   `{"name": "WifiBtChipset_Soc_Kernel_Marvell"}`,
+				VariantCategory:   `{"name": "WifiBtChipset_Soc_Kernel_WEP"}`,
 			}, {
 				// Verifies that DUT can roam between two WPA-EAP APs in full view of it.
 				Name:              "8021xwpa_marvell",

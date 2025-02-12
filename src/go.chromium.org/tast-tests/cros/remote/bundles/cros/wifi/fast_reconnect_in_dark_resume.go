@@ -39,7 +39,7 @@ func init() {
 		HardwareDeps:    hwdep.D(hwdep.Platform("volteer"), hwdep.ChromeEC()),
 		Fixture:         wificell.FixtureID(wificell.TFFeaturesNone),
 		Requirements:    []string{tdreq.WiFiGenSupportWiFi, tdreq.WiFiProcPassFW, tdreq.WiFiProcPassAVL, tdreq.WiFiProcPassAVLBeforeUpdates, tdreq.WiFiProcPassMatfunc, tdreq.WiFiProcPassMatfuncBeforeUpdates},
-		VariantCategory: `{"name": "WifiBtChipset_Soc_Kernel"}`,
+		VariantCategory: `{"name": "WifiBtChipset_Soc_Kernel_Only_Volteer"}`,
 	})
 }
 

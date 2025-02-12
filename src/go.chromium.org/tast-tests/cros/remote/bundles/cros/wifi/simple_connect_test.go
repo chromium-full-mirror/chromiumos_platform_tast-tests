@@ -730,6 +730,7 @@ func simpleConnectHidden() []*simpleConnectParams {
 		},
 		ExtraHardwareDepsDoc: []string{"TODO(b/189972561) Enable this test on Trogdor once active scanning on 5 GHz channel is enabled."},
 		ExtraHardwareDeps:    `hwdep.D(hwdep.SkipOnPlatform("strongbad", "strongbad64", "strongbad-kernelnext", "trogdor", "trogdor64", "trogdor-kernelnext"))`,
+		VariantCategory:      "`{\"name\": \"WifiBtChipset_Soc_Kernel_Not_Trogdor_Strongbad\"}`",
 	}}
 }
 
@@ -741,6 +742,7 @@ func simpleConnectWEP() []*simpleConnectParams {
 			Doc:               simpleConnectDocPref(fmt.Sprintf("a WEP network with both open and shared system authentication and %d-bit pre-shared keys.", keyLen)),
 			ExtraHardwareDeps: `hwdep.D(hwdep.WifiWEP())`,
 			ExtraRequirements: []string{tdreq.WiFiSecSupportWEP},
+			VariantCategory:   "`{\"name\": \"WifiBtChipset_Soc_Kernel_WEP\"}`",
 		}
 		for _, algo := range []string{"Open", "Shared"} {
 			for key := 0; key < 4; key++ {
@@ -778,6 +780,7 @@ func simpleConnectWEPHidden() *simpleConnectParams {
 		Val:               p,
 		ExtraHardwareDeps: `hwdep.D(hwdep.WifiWEP())`,
 		ExtraRequirements: []string{tdreq.WiFiSecSupportWEP},
+		VariantCategory:   "`{\"name\": \"WifiBtChipset_Soc_Kernel_WEP\"}`",
 	}
 }
 
@@ -1149,6 +1152,7 @@ func simpleConnect8021xWEP() *simpleConnectParams {
 			"Qualcomm looks at the security fixes in the FW.",
 			"TODO(b/194644867): revisit after FW fix and verification."},
 		ExtraHardwareDeps: `hwdep.D(hwdep.WifiNotMarvell(), hwdep.SkipOnPlatform("trogdor", "strongbad", "trogdor-kernelnext"), hwdep.WifiWEP())`,
+		VariantCategory:   "`{\"name\": \"WifiBtChipset_Soc_Kernel_Hwdep_Combination_1\"}`",
 		ExtraRequirements: []string{tdreq.WiFiSecSupportWEP},
 		Val: []simpleConnectParamsVal{{
 			APConfigs: []apConfigVal{{
