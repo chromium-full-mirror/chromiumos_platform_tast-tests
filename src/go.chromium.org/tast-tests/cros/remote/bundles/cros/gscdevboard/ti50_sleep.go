@@ -41,7 +41,7 @@ func init() {
 		},
 		BugComponent: "b:715469", // ChromeOS > Platform > System > Hardware Security > HwSec GSC > Ti50
 		Attr: []string{"group:gsc",
-			"gsc_dt_ab", "gsc_dt_shield", "gsc_ot_fpga_cw310",
+			"gsc_dt_ab", "gsc_dt_shield", "gsc_ot_fpga_cw310", "gsc_ot_shield",
 			"gsc_image_ti50",
 			"gsc_nightly"},
 		Fixture: fixture.GSCOpenCCD,
@@ -53,7 +53,6 @@ func init() {
 				tpmBus:          ti50.TpmBusSpi,
 				servoMicroStrap: ti50.ServoMicroDisconnected,
 			},
-			ExtraAttr: []string{"gsc_ot_shield"},
 		}, {
 			Name: "deep_spi_uservo",
 			Val: ti50SleepParam{
@@ -61,7 +60,6 @@ func init() {
 				tpmBus:          ti50.TpmBusSpi,
 				servoMicroStrap: ti50.ServoMicroConnected,
 			},
-			ExtraAttr: []string{"gsc_ot_shield"},
 		}, {
 			Name: "deep_i2c_no_uservo",
 			Val: ti50SleepParam{
@@ -69,7 +67,6 @@ func init() {
 				tpmBus:          ti50.TpmBusI2c,
 				servoMicroStrap: ti50.ServoMicroDisconnected,
 			},
-			ExtraAttr: []string{"gsc_ot_shield"},
 		}, {
 			Name: "deep_i2c_uservo",
 			Val: ti50SleepParam{
@@ -77,7 +74,6 @@ func init() {
 				tpmBus:          ti50.TpmBusI2c,
 				servoMicroStrap: ti50.ServoMicroConnected,
 			},
-			ExtraAttr: []string{"gsc_ot_shield"},
 		}, {
 			Name: "normal_spi_no_uservo",
 			Val: ti50SleepParam{
