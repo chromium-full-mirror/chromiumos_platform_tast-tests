@@ -16,8 +16,8 @@
     "out_entity": "Intel IPU6 BE SOC capture 0"
   },
   "brya": {
-    "bus_info": "pci:pci0000:00",
-    "out_entity": "Intel IPU6 BE SOC capture 0"
+    "bus_info": "PCI:0000:00:05.0",
+    "out_entity": "Intel IPU6 ISYS Capture 16"
   },
   "bugzzy-KCfa36": {
     "bus_info": "pci:pci0000:00",
@@ -60,16 +60,16 @@
     "out_entity": "rkisp1_selfpath"
   },
   "kano-CH0001": {
-    "bus_info": "pci:pci0000:00",
-    "out_entity": "Intel IPU6 BE SOC capture 1"
+    "bus_info": "PCI:0000:00:05.0",
+    "out_entity": "Intel IPU6 ISYS Capture 8"
   },
   "kano-CH3c6d": {
-    "bus_info": "pci:pci0000:00",
-    "out_entity": "Intel IPU6 BE SOC capture 1"
+    "bus_info": "PCI:0000:00:05.0",
+    "out_entity": "Intel IPU6 ISYS Capture 8"
   },
   "karis-CH3c6d": {
-    "bus_info": "pci:pci0000:00",
-    "out_entity": "Intel IPU6 BE SOC capture 1"
+    "bus_info": "PCI:0000:00:05.0",
+    "out_entity": "Intel IPU6 ISYS Capture 32"
   },
   "maglia-TC0003": {
     "bus_info": "pci:pci0000:00",
@@ -92,16 +92,8 @@
     "out_entity": "ipu3-cio2 0"
   },
   "redrix-PLcf06": {
-    "bus_info": "pci:pci0000:00",
-    "out_entity": "Intel IPU6 BE SOC capture 1"
-  },
-  "rex-CH3c6d": {
-    "bus_info": "pci:pci0000:00",
-    "out_entity": "Intel IPU6 BE SOC capture 1"
-  },
-  "rex-KC6977": {
-    "bus_info": "pci:pci0000:00",
-    "out_entity": "Intel IPU6 BE SOC capture 0"
+    "bus_info": "PCI:0000:00:05.0",
+    "out_entity": "Intel IPU6 ISYS Capture 16"
   },
   "riven-TC0003": {
     "bus_info": "pci:pci0000:00",
@@ -112,8 +104,8 @@
     "out_entity": "Intel IPU6 BE SOC capture 0"
   },
   "screebo-ST0d2c": {
-    "bus_info": "pci:pci0000:00",
-    "out_entity": "Intel IPU6 BE SOC capture 4"
+    "bus_info": "PCI:0000:00:05.0",
+    "out_entity": "Intel IPU6 ISYS Capture 32"
   },
   "skolas-KC4eb5": {
     "bus_info": "pci:pci0000:00",
@@ -136,8 +128,8 @@
     "out_entity": "Intel IPU6 BE SOC capture 0"
   },
   "vell-TCf939": {
-    "bus_info": "pci:pci0000:00",
-    "out_entity": "Intel IPU6 BE SOC capture 1"
+    "bus_info": "PCI:0000:00:05.0",
+    "out_entity": "Intel IPU6 ISYS Capture 8"
   },
   "voema-CH0001": {
     "bus_info": "pci:pci0000:00",
