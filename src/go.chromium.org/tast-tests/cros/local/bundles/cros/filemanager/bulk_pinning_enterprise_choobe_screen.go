@@ -43,11 +43,6 @@ func init() {
 			"drivefs",
 			"gaia",
 		},
-		Attr: []string{
-			"group:cbx",
-			"cbx_feature_enabled",
-			"cbx_stable",
-		},
 		VarDeps: []string{
 			"ui.signinProfileTestExtensionManifestKey",
 			"accountmanager.managedusername",
@@ -66,18 +61,33 @@ func init() {
 		Timeout: 5 * time.Minute,
 		Params: []testing.Param{{
 			Name: "unset",
+			ExtraAttr: []string{
+				"group:cbx",
+				"cbx_feature_enabled",
+				"cbx_unstable",
+			},
 			Val: bulkPinningPolicyTest{
 				policy:  &policy.DriveFileSyncAvailable{Stat: policy.StatusUnset},
 				visible: true,
 			},
 		}, {
 			Name: "disabled",
+			ExtraAttr: []string{
+				"group:cbx",
+				"cbx_feature_enabled",
+				"cbx_stable",
+			},
 			Val: bulkPinningPolicyTest{
 				policy:  &policy.DriveFileSyncAvailable{Val: "disabled"},
 				visible: false,
 			},
 		}, {
 			Name: "visible",
+			ExtraAttr: []string{
+				"group:cbx",
+				"cbx_feature_enabled",
+				"cbx_unstable",
+			},
 			Val: bulkPinningPolicyTest{
 				policy:  &policy.DriveFileSyncAvailable{Val: "visible"},
 				visible: true,
