@@ -19,11 +19,6 @@ import (
 	"go.chromium.org/tast/core/testing"
 )
 
-type closeAppParams struct {
-	AppName     string
-	AppOpenText []string
-}
-
 func init() {
 	testing.AddTest(&testing.Test{
 		Func: CloseApp,
@@ -48,32 +43,20 @@ func init() {
 				Name:      "citrix",
 				Fixture:   fixture.CitrixLaunched,
 				ExtraAttr: []string{"group:vdi_limited"},
-				Val: closeAppParams{
-					AppName:     "Notepad",
-					AppOpenText: []string{"Notepad", "Untitled"},
-				},
 			},
 			{
 				Name:      "kiosk_citrix",
 				Fixture:   fixture.KioskCitrixLaunched,
 				ExtraAttr: []string{"group:vdi_limited"},
-				Val: closeAppParams{
-					AppName:     "Notepad",
-					AppOpenText: []string{"Notepad", "Untitled"},
-				},
 			},
 			{
 				Name:      "mgs_citrix",
 				Fixture:   fixture.MgsCitrixLaunched,
 				ExtraAttr: []string{"group:vdi_limited"},
-				Val: closeAppParams{
-					AppName:     "Notepad",
-					AppOpenText: []string{"Notepad", "Untitled"},
-				},
 			},
 			// TODO(b/263380690): VMWare doesn't have as simple apps as notepad.
 		},
-		Data: []string{"notepad_window_controls.png"},
+		Data: []string{"notepad_window_controls.png", "notepad_launched_icon.png"},
 	})
 }
 
@@ -81,6 +64,7 @@ func CloseApp(ctx context.Context, s *testing.State) {
 	cr := s.FixtValue().(chrome.HasChrome).Chrome()
 	vdi := s.FixtValue().(fixtures.HasVDIConnector).VDIConnector()
 	uidetector := s.FixtValue().(fixtures.HasUIDetector).UIDetector()
+	kioskMode := s.FixtValue().(fixtures.IsInKioskMode).InKioskMode()
 
 	// Connect to Test API to use it with the UI library.
 	tconn, err := cr.TestAPIConn(ctx)
@@ -92,18 +76,18 @@ func CloseApp(ctx context.Context, s *testing.State) {
 
 	ui := uiauto.New(tconn)
 
-	appName := s.Param().(closeAppParams).AppName
+	const appName = "Notepad"
 
-	appTitleBar := uidetection.TextBlock(s.Param().(closeAppParams).AppOpenText).First()
+	appTitleBar := uidetection.CustomIcon(s.DataPath("notepad_launched_icon.png"))
 	isOpened := func(ctx context.Context) error {
 		if err := uidetector.WithTimeout(60 * time.Second).WithScreenshotResizing().WaitUntilExists(appTitleBar)(ctx); err != nil {
-			s.Fatal("fail: ", err)
+			return errors.Wrap(err, "failed waiting for the notepad to open")
 		}
 		return nil
 	}
 
 	// Open the app.
-	if err := vdi.SearchAndOpenApplication(ctx, appName, isOpened)(ctx); err != nil {
+	if err := vdi.OpenApplication(ctx, appName, isOpened)(ctx); err != nil {
 		s.Fatalf("Failed to open %v app: %v", appName, err)
 	}
 
@@ -120,13 +104,8 @@ func CloseApp(ctx context.Context, s *testing.State) {
 		s.Fatal("Failed to close the app from right click menu: ", err)
 	}
 
-	// Reset the search to be able to open the app again.
-	if err := vdi.ResetSearch(ctx); err != nil {
-		s.Fatal("Was not able to reset search results: ", err)
-	}
-
 	// Re-open the app.
-	if err := vdi.SearchAndOpenApplication(ctx, appName, isOpened)(ctx); err != nil {
+	if err := vdi.OpenApplication(ctx, appName, isOpened)(ctx); err != nil {
 		s.Fatalf("Failed to open %v app: %v", appName, err)
 	}
 
@@ -148,5 +127,10 @@ func CloseApp(ctx context.Context, s *testing.State) {
 		uidetector.WithTimeout(20*time.Second).Gone(appTitleBar),
 	)(ctx); err != nil {
 		s.Fatal("Failed to close the app with the close button: ", err)
+	}
+
+	// Cleanup after test by closing all apps.
+	if err := vdi.CleanupAllApps(ctx, kioskMode); err != nil {
+		s.Fatal("Failed to close all apps for the cleanup: ", err)
 	}
 }

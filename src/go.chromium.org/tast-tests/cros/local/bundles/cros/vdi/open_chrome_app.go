@@ -51,29 +51,16 @@ func init() {
 				ExtraAttr: []string{"group:vdi_limited"},
 			},
 			{
-				Name:    "vmware",
-				Fixture: fixture.VmwareLaunched,
-			},
-			{
 				Name:      "kiosk_citrix",
 				Fixture:   fixture.KioskCitrixLaunched,
 				ExtraAttr: []string{"group:vdi_limited"},
-			},
-			// b/207122370
-			// Vmware in Kiosk mode does not receive Ctrl+w to close tab.
-			{
-				Name:    "kiosk_vmware",
-				Fixture: fixture.KioskVmwareLaunched,
 			},
 			{
 				Name:      "mgs_citrix",
 				Fixture:   fixture.MgsCitrixLaunched,
 				ExtraAttr: []string{"group:vdi_limited"},
 			},
-			{
-				Name:    "mgs_vmware",
-				Fixture: fixture.MgsVmwareLaunched,
-			},
+			// TODO(b/396331887): Add VMware fixture to VDI tests when the infra is ready.
 		},
 	})
 }
@@ -92,7 +79,7 @@ func OpenChromeApp(ctx context.Context, s *testing.State) {
 
 	defer faillog.DumpUITreeWithScreenshotOnError(ctx, s.OutDir(), s.HasError, cr, "ui_tree")
 
-	const appToOpen = "Chrome"
+	const appToOpen = "Google Chrome"
 
 	isOpened := func(ctx context.Context) error {
 		if !kioskMode {
@@ -115,7 +102,12 @@ func OpenChromeApp(ctx context.Context, s *testing.State) {
 		return nil
 	}
 
-	if err := vdi.SearchAndOpenApplication(ctx, appToOpen, isOpened)(ctx); err != nil {
+	if err := vdi.OpenApplication(ctx, appToOpen, isOpened)(ctx); err != nil {
 		s.Fatalf("Failed to open %v app: %v", appToOpen, err)
+	}
+
+	// Cleanup after test by closing all apps.
+	if err := vdi.CleanupAllApps(ctx, kioskMode); err != nil {
+		s.Fatal("Failed to close all apps for the cleanup: ", err)
 	}
 }

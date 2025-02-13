@@ -15,7 +15,6 @@ import (
 	"go.chromium.org/tast-tests/cros/local/input"
 	"go.chromium.org/tast-tests/cros/local/uidetection"
 	"go.chromium.org/tast-tests/cros/local/vdi/fixtures"
-	"go.chromium.org/tast/core/errors"
 	"go.chromium.org/tast/core/testing"
 )
 
@@ -48,36 +47,29 @@ func init() {
 				Name:    "citrix",
 				Fixture: fixture.CitrixLaunched,
 				Val: desktopData{
-					DesktopName:   "WindowsServer2019",
 					RunDialogKeys: "Search+R",
 				},
 				ExtraAttr: []string{"group:vdi_limited"},
-			},
-			{
-				Name:    "vmware",
-				Fixture: fixture.VmwareLaunched,
-				Val: desktopData{
-					DesktopName:   "TD-RDS-DESKTOPS",
-					RunDialogKeys: "Ctrl+Search+R",
-				},
 			},
 			{
 				Name:    "mgs_citrix",
 				Fixture: fixture.MgsCitrixLaunched,
 				Val: desktopData{
-					DesktopName:   "WindowsServer2019",
 					RunDialogKeys: "Search+R",
 				},
 				ExtraAttr: []string{"group:vdi_limited"},
 			},
 			{
-				Name:    "mgs_vmware",
-				Fixture: fixture.MgsVmwareLaunched,
+				Name:    "kiosk_citrix",
+				Fixture: fixture.KioskCitrixLaunched,
 				Val: desktopData{
-					DesktopName:   "TD-RDS-DESKTOPS",
-					RunDialogKeys: "Ctrl+Search+R",
+					DesktopName:   "COMMERCIAL VDI",
+					RunDialogKeys: "Search+R",
 				},
+				ExtraAttr: []string{"group:vdi_limited"},
 			},
+			// TODO(b/396331887): Add VMware fixture to VDI tests when the infra is ready.
+
 		},
 		Data: []string{"toolbar_buttons_icon.png"},
 	})
@@ -87,6 +79,7 @@ func OpenDesktop(ctx context.Context, s *testing.State) {
 	cr := s.FixtValue().(chrome.HasChrome).Chrome()
 	vdi := s.FixtValue().(fixtures.HasVDIConnector).VDIConnector()
 	uidetector := s.FixtValue().(fixtures.HasUIDetector).UIDetector()
+	kioskMode := s.FixtValue().(fixtures.IsInKioskMode).InKioskMode()
 
 	defer faillog.DumpUITreeWithScreenshotOnError(ctx, s.OutDir(), s.HasError, cr, "ui_tree")
 
@@ -98,24 +91,10 @@ func OpenDesktop(ctx context.Context, s *testing.State) {
 
 	ui := uiauto.New(tconn)
 
-	isOpened := func(ctx context.Context) error {
-		recycleBin := uidetection.TextBlock([]string{"Recycle", "Bin"})
-		// Find the Recycle Bin first.
-		if err := uidetector.WithTimeout(60 * time.Second).WaitUntilExists(recycleBin)(ctx); err != nil {
-			return errors.Wrap(err, "failed waiting for the recycle bin to appear")
-		}
-		if err := uidetector.WithTimeout(10 * time.Second).WaitUntilExists(uidetection.CustomIcon(s.DataPath("toolbar_buttons_icon.png")))(ctx); err != nil {
-			return errors.Wrap(err, "failed waiting for the toolbar buttons icon to appear")
-		}
-
-		return nil
-	}
-
-	desktopToOpen := s.Param().(desktopData).DesktopName
 	keysToOpenRunDialog := s.Param().(desktopData).RunDialogKeys
 
-	if err := vdi.SearchAndOpenApplication(ctx, desktopToOpen, isOpened)(ctx); err != nil {
-		s.Fatalf("Failed to open %v app: %v", desktopToOpen, err)
+	if err := vdi.OpenDesktop(ctx); err != nil {
+		s.Fatal("Failed to open the desktop: ", err)
 	}
 
 	kb, err := input.Keyboard(ctx)
@@ -135,5 +114,10 @@ func OpenDesktop(ctx context.Context, s *testing.State) {
 		uidetector.WithTimeout(30*time.Second).WaitUntilExists(uidetection.Word("Run").First()),
 	)(ctx); err != nil {
 		s.Error("Failed to invoke opening the run dialog box: ", err)
+	}
+
+	// Cleanup after test by closing desktop.
+	if err := vdi.CleanUpDesktop(ctx, kioskMode); err != nil {
+		s.Fatal("Failed to close the desktop for the cleanup: ", err)
 	}
 }

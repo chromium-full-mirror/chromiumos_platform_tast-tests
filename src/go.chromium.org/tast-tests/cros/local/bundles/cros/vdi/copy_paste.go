@@ -19,6 +19,7 @@ import (
 	"go.chromium.org/tast-tests/cros/local/uidetection"
 	vdiApps "go.chromium.org/tast-tests/cros/local/vdi/apps"
 	"go.chromium.org/tast-tests/cros/local/vdi/fixtures"
+	"go.chromium.org/tast/core/ctxutil"
 	"go.chromium.org/tast/core/errors"
 	"go.chromium.org/tast/core/testing"
 )
@@ -65,6 +66,7 @@ func CopyPaste(ctx context.Context, s *testing.State) {
 	cr := s.FixtValue().(chrome.HasChrome).Chrome()
 	vdi := s.FixtValue().(fixtures.HasVDIConnector).VDIConnector()
 	uidetector := s.FixtValue().(fixtures.HasUIDetector).UIDetector()
+	kioskMode := s.FixtValue().(fixtures.IsInKioskMode).InKioskMode()
 
 	// Connect to Test API to use it with the UI library.
 	tconn, err := cr.TestAPIConn(ctx)
@@ -78,6 +80,10 @@ func CopyPaste(ctx context.Context, s *testing.State) {
 		s.Fatal("Failed to find keyboard: ", err)
 	}
 	defer kb.Close(ctx)
+
+	cleanupCtx := ctx
+	ctx, shortCancel := ctxutil.Shorten(ctx, 10*time.Second)
+	defer shortCancel()
 
 	if err := tconn.WaitForExpr(ctx, "chrome.clipboard"); err != nil {
 		s.Fatal("Failed to wait for chrome.clipboard API to become available: ", err)
@@ -104,7 +110,11 @@ func CopyPaste(ctx context.Context, s *testing.State) {
 
 	// Paste text in native app twice and check.
 	doOrFail(launchNativeTextApp(ctx, tconn, cr, apps.Text.ID, nativeAppURL), s, "failed to launch native text app")
-	doOrFail(pressKeys(ctx, kb, "Ctrl+V"), s, "failed to paste text into native app #1")
+	// Close the native app for the cleanup.
+	defer apps.Close(cleanupCtx, tconn, apps.Text.ID)
+	// doOrFail(focusWindow(ctx, tconn, "Text"), s, "failed to focus native app window")
+	doOrFail(pressKeys(ctx, kb, "Ctrl+A"), s, "failed to select all text in native app")
+	doOrFail(pressKeys(ctx, kb, "Ctrl+V"), s, "failed to paste text into native app #2")
 	doOrFail(pressKeys(ctx, kb, "Ctrl+V"), s, "failed to paste text into native app #2")
 	doOrFail(waitForText(ctx, uidetector, text2), s, "failed to find 2x pasted text in native app")
 
@@ -119,6 +129,11 @@ func CopyPaste(ctx context.Context, s *testing.State) {
 	doOrFail(pressKeys(ctx, kb, "Ctrl+V"), s, "failed to paste text into remote app #1")
 	doOrFail(pressKeys(ctx, kb, "Ctrl+V"), s, "failed to paste text into remote app #2")
 	doOrFail(waitForText(ctx, uidetector, text4), s, "failed to find 4x pasted text in remote app")
+
+	// Cleanup after test by closing all apps.
+	if err := vdi.CleanupAllApps(ctx, kioskMode); err != nil {
+		s.Fatal("Failed to close all apps for the cleanup: ", err)
+	}
 }
 
 func doOrFail(err error, s *testing.State, contextMessage string) {
@@ -139,7 +154,7 @@ func launchRemoteTextApp(ctx context.Context, tconn *chrome.TestConn, uidetector
 		return waitForText(ctx, uidetector, textToLookForWhenLaunched)
 	}
 
-	if err := vdi.SearchAndOpenApplication(ctx, appName, isOpened)(ctx); err != nil {
+	if err := vdi.OpenApplication(ctx, appName, isOpened)(ctx); err != nil {
 		return errors.Wrap(err, "failed to open remote app")
 	}
 
@@ -153,6 +168,9 @@ func launchRemoteTextApp(ctx context.Context, tconn *chrome.TestConn, uidetector
 }
 
 func launchNativeTextApp(ctx context.Context, tconn *chrome.TestConn, cr *chrome.Chrome, appID, appURL string) error {
+	ctx, cancel := context.WithTimeout(ctx, 30*time.Second)
+	defer cancel()
+
 	testing.ContextLogf(ctx, "Launching native text app: %s", appID)
 
 	if err := ash.WaitForChromeAppInstalled(ctx, tconn, appID, 2*time.Minute); err != nil {
@@ -163,17 +181,13 @@ func launchNativeTextApp(ctx context.Context, tconn *chrome.TestConn, cr *chrome
 		return errors.Wrap(err, "failed to launch native app")
 	}
 
+	if err := ash.WaitForApp(ctx, tconn, apps.Text.ID, time.Minute); err != nil {
+		return errors.Wrapf(err, "fail to wait for %s by app id %s", apps.Text.Name, apps.Text.ID)
+	}
+
 	_, err := ash.WaitForAppWindow(ctx, tconn, appID)
 	if err != nil {
 		return errors.Wrap(err, "failed to wait for native app to be launched")
-	}
-
-	appConn, err := cr.NewConnForTarget(ctx, chrome.MatchTargetURL(appURL))
-	if err != nil {
-		return errors.Wrap(err, "failed to get connection to native app")
-	}
-	if err := appConn.WaitForExpr(ctx, `document.activeElement.type === "textarea"`); err != nil {
-		return errors.Wrap(err, "failed to wait for native app to finish loading")
 	}
 
 	return nil

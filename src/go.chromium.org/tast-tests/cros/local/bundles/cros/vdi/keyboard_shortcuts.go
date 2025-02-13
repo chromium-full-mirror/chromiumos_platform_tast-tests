@@ -16,7 +16,6 @@ import (
 	"go.chromium.org/tast-tests/cros/local/input"
 	"go.chromium.org/tast-tests/cros/local/uidetection"
 	"go.chromium.org/tast-tests/cros/local/vdi/fixtures"
-	"go.chromium.org/tast/core/errors"
 	"go.chromium.org/tast/core/testing"
 )
 
@@ -51,18 +50,8 @@ func init() {
 				Fixture:   fixture.CitrixLaunched,
 				ExtraAttr: []string{"group:vdi_limited"},
 				Val: keyboardShortcutsParams{
-					DesktopName:   "WindowsServer2019",
 					RunDialogKeys: "Search+R",
 					StartMenuText: []string{"Citrix", "Workspace"},
-				},
-			},
-			{
-				Name:    "vmware",
-				Fixture: fixture.VmwareLaunched,
-				Val: keyboardShortcutsParams{
-					DesktopName:   "TD-RDS-DESKTOPS",
-					RunDialogKeys: "Ctrl+Search+R",
-					StartMenuText: []string{"Most", "used"},
 				},
 			},
 			{
@@ -70,20 +59,11 @@ func init() {
 				Fixture:   fixture.MgsCitrixLaunched,
 				ExtraAttr: []string{"group:vdi_limited"},
 				Val: keyboardShortcutsParams{
-					DesktopName:   "WindowsServer2019",
 					RunDialogKeys: "Search+R",
 					StartMenuText: []string{"Citrix", "Workspace"},
 				},
 			},
-			{
-				Name:    "mgs_vmware",
-				Fixture: fixture.MgsVmwareLaunched,
-				Val: keyboardShortcutsParams{
-					DesktopName:   "TD-RDS-DESKTOPS",
-					RunDialogKeys: "Ctrl+Search+R",
-					StartMenuText: []string{"Most", "used"},
-				},
-			},
+			// TODO(b/396331887): Add VMware fixture to VDI tests when the infra is ready.
 		},
 	})
 }
@@ -92,6 +72,7 @@ func KeyboardShortcuts(ctx context.Context, s *testing.State) {
 	cr := s.FixtValue().(chrome.HasChrome).Chrome()
 	vdi := s.FixtValue().(fixtures.HasVDIConnector).VDIConnector()
 	uidetector := s.FixtValue().(fixtures.HasUIDetector).UIDetector()
+	kioskMode := s.FixtValue().(fixtures.IsInKioskMode).InKioskMode()
 
 	defer faillog.DumpUITreeWithScreenshotOnError(ctx, s.OutDir(), s.HasError, cr, "ui_tree")
 
@@ -104,18 +85,8 @@ func KeyboardShortcuts(ctx context.Context, s *testing.State) {
 	ui := uiauto.New(tconn)
 
 	recycleBin := uidetection.TextBlock([]string{"Recycle", "Bin"})
-	isOpened := func(ctx context.Context) error {
-		// Finding the Recycle Bin seems to be less flaky than finding toolbar_buttons_icon.png.
-		if err := uidetector.WithTimeout(60 * time.Second).WaitUntilExists(recycleBin)(ctx); err != nil {
-			return errors.Wrap(err, "failed waiting for the recycle bin to appear")
-		}
-		return nil
-	}
-
-	// Open desktop.
-	desktopToOpen := s.Param().(keyboardShortcutsParams).DesktopName
-	if err := vdi.SearchAndOpenApplication(ctx, desktopToOpen, isOpened)(ctx); err != nil {
-		s.Fatalf("Failed to open %v app: %v", desktopToOpen, err)
+	if err := vdi.OpenDesktop(ctx); err != nil {
+		s.Fatal("Failed to open the desktop: ", err)
 	}
 
 	kb, err := input.Keyboard(ctx)
@@ -138,10 +109,11 @@ func KeyboardShortcuts(ctx context.Context, s *testing.State) {
 	}
 
 	// Open Notepad.
-	notepadApp := uidetection.TextBlock([]string{"Untitled", "Notepad"}).First()
+	notepadApp := uidetection.TextBlock([]string{"Untitled"}).First()
 	if err := ui.RetryUntil(
 		uiauto.Combine("open notepad",
 			uidetector.LeftClick(uidetection.Word("Run").First()),
+			kb.AccelAction("Ctrl+A"),
 			kb.TypeAction("notepad"),
 			kb.AccelAction("Enter"),
 		),
@@ -154,6 +126,7 @@ func KeyboardShortcuts(ctx context.Context, s *testing.State) {
 	if err := ui.RetryUntil(
 		uiauto.Combine("try copy & paste shortcuts inside the Notepad",
 			uidetector.LeftClick(notepadApp),
+			kb.AccelAction("Ctrl+A"),
 			kb.TypeAction("hello "),
 			kb.AccelAction("Ctrl+A"),
 			kb.AccelAction("Ctrl+C"),
@@ -202,7 +175,7 @@ func KeyboardShortcuts(ctx context.Context, s *testing.State) {
 	// Open Windows Start Menu.
 	if err := ui.RetryUntil(
 		kb.AccelAction("Ctrl+ESC"),
-		uidetector.WithTimeout(20*time.Second).WaitUntilExists(uidetection.TextBlock(s.Param().(keyboardShortcutsParams).StartMenuText)),
+		uidetector.WithTimeout(20*time.Second).WaitUntilExists(uidetection.TextBlock(s.Param().(keyboardShortcutsParams).StartMenuText).First()),
 	)(ctx); err != nil {
 		s.Error("Failed to open the Windows Start Menu: ", err)
 	}
@@ -211,4 +184,10 @@ func KeyboardShortcuts(ctx context.Context, s *testing.State) {
 	if err := kb.AccelAction("ESC")(ctx); err != nil {
 		s.Fatal("Failed to close the Windows Start menu: ", err)
 	}
+
+	// Cleanup after test by closing desktop.
+	if err := vdi.CleanUpDesktop(ctx, kioskMode); err != nil {
+		s.Fatal("Failed to close the desktop for the cleanup: ", err)
+	}
+
 }

@@ -27,9 +27,9 @@ type endVdiSessionData struct {
 }
 
 var citrixData = endVdiSessionData{
-	DesktopName:   "WindowsServer2019",
+	DesktopName:   "COMMERCIAL VDI",
 	EndSessionCmd: []string{"Disconnect"},
-	BackInVdiApp:  []string{"See", "more", "results"},
+	BackInVdiApp:  []string{"Citrix", "Workspace"},
 }
 
 // TODO b/270322387: add the VmWare implementation details
@@ -119,7 +119,7 @@ func EndVdiSession(ctx context.Context, s *testing.State) {
 		return nil
 	}
 
-	if err := vdi.SearchAndOpenApplication(ctx, appToOpen, checkRemoteDesktopStarted)(ctx); err != nil {
+	if err := vdi.OpenApplication(ctx, appToOpen, checkRemoteDesktopStarted)(ctx); err != nil {
 		s.Fatalf("Failed to open %v app: %v", appToOpen, err)
 	}
 
@@ -137,5 +137,10 @@ func EndVdiSession(ctx context.Context, s *testing.State) {
 		uidetector.WithTimeout(30*time.Second).WaitUntilExists(uidetection.TextBlock(data.BackInVdiApp)),
 	)(ctx); err != nil {
 		s.Fatal("Failed to log out: ", err)
+	}
+
+	// Cleanup after test by closing desktop.
+	if err := vdi.CleanUpDesktop(ctx, kioskMode); err != nil {
+		s.Fatal("Failed to close the desktop for the cleanup: ", err)
 	}
 }
