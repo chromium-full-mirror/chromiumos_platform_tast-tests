@@ -29,8 +29,8 @@ func init() {
 			Name:    "ac_power",
 			Val:     croshealthd.NewRoutineParams(croshealthd.RoutineACPower),
 			Fixture: "crosHealthdRunning",
-			// b/368603931: Skip on the reven\nuc11.
-			ExtraHardwareDeps: hwdep.D(hwdep.SkipDMIProductName("NUC11TNKv5")),
+			// b/368603931: Skip on the reven\nuc11 and reven\nuc13.
+			ExtraHardwareDeps: hwdep.D(hwdep.SkipDMIProductName("NUC11TNKv5", "NUC13OXKv5")),
 		}, {
 			// Contact: yycheng@google.com
 			Name:    "urandom",
