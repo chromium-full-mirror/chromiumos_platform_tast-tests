@@ -293,11 +293,6 @@ func (v *kioskFixtureState) Reset(ctx context.Context) error {
 		return errors.Wrap(err, "existing Chrome connection is unusable")
 	}
 
-	// Check the main VDI screen is on.
-	if err := v.vdiConnector.WaitForMainScreenVisible(ctx); err != nil {
-		return errors.Wrap(err, "VDI main screen was not present")
-	}
-
 	return nil
 }
 
@@ -310,41 +305,5 @@ func (v *kioskFixtureState) PostTest(ctx context.Context, s *testing.FixtTestSta
 
 	if err := dumpPolicies(ctx, tconn, fixtures.PolicyFileDump); err != nil {
 		s.Fatal("Could not store policies: ", err)
-	}
-
-	chrome.Unlock()
-	testing.ContextLog(ctx, "VDI kiosk: Restarting VDI app")
-	cr, err := v.kiosk.RestartChromeWithOptions(
-		ctx,
-		chrome.NoLogin(),
-		chrome.DMSPolicy(v.fdms.URL),
-		chrome.KeepState())
-	if err != nil {
-		s.Fatal("Failed to connect to new chrome instance: ", err)
-	}
-	v.cr = cr
-	chrome.Lock()
-
-	if err := v.kiosk.WaitLaunchLogs(ctx); err != nil {
-		s.Fatal("Kiosk is not started after restarting Chrome: ", err)
-	}
-
-	// A new connection is required since Chrome was restarted.
-	tconn, err = cr.TestAPIConn(ctx)
-	if err != nil {
-		s.Fatal("Failed to create Test API connection: ", err)
-	}
-
-	// Detector has to be recreated and updated in vdi connector.
-	detector := uidetection.NewDefault(tconn)
-	v.vdiConnector.ReplaceDetector(detector)
-
-	// After Kiosk restart applications ask for credentials.
-	if err := v.vdiConnector.EnterCredentialsAndLogin(ctx, &v.vdiConfig); err != nil {
-		s.Fatal("Failed to enter credentials and login: ", err)
-	}
-
-	if err := v.vdiConnector.WaitForMainScreenVisible(ctx); err != nil {
-		s.Fatal("VDI main screen was not present: ", err)
 	}
 }

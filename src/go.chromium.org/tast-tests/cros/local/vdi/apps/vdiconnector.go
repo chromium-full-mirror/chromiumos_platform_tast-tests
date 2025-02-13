@@ -34,8 +34,11 @@ type VDIInt interface {
 	Logout(ctx context.Context) error
 	LoginAfterRestart(ctx context.Context) error
 	WaitForMainScreenVisible(ctx context.Context) error
-	SearchAndOpenApplication(ctx context.Context, appName string, checkIfOpened func(context.Context) error) uiauto.Action
+	OpenApplication(ctx context.Context, appName string, checkIfOpened func(context.Context) error) uiauto.Action
+	OpenDesktop(ctx context.Context) error
+	CleanupAllApps(ctx context.Context, isKioskMode bool) error
+	CleanUpDesktop(ctx context.Context, isKioskMode bool) error
+	CloseDesktop(ctx context.Context) error
 	ResetSearch(ctx context.Context) error
 	ReplaceDetector(d *uidetection.Context)
-	CleanUpSession(ctx context.Context) error
 }

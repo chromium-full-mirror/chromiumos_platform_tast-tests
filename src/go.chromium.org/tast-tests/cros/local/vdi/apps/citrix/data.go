@@ -11,6 +11,7 @@ type AppName string
 // this as a data dependency when connecting to Citrix.
 var CitrixData = []string{
 	"citrix/Splashscreen_ServerUrlTbx.png",
+	"citrix/app_window_controls.png",
 }
 
 const (

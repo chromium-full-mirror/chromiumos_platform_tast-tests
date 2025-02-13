@@ -169,11 +169,11 @@ func (c *Connector) WaitForMainScreenVisible(ctx context.Context) error {
 	return nil
 }
 
-// SearchAndOpenApplication opens given application using search provided in
+// OpenApplication opens given application using search provided in
 // VMware, runs checkIfOpened function to ensure app opened. Before calling
 // make sure main VMware screen is visible by calling
 // WaitForMainScreenVisible(). Call ResetSearch() to clean the search state.
-func (c *Connector) SearchAndOpenApplication(ctx context.Context, appName string, checkIfOpened func(context.Context) error) uiauto.Action {
+func (c *Connector) OpenApplication(ctx context.Context, appName string, checkIfOpened func(context.Context) error) uiauto.Action {
 	return func(ctx context.Context) error {
 		testing.ContextLogf(ctx, "VMware: opening %s app", appName)
 		return uiauto.Combine("open "+appName+" application in VMware",
@@ -223,11 +223,26 @@ func (c *Connector) ReplaceDetector(d *uidetection.Context) {
 	c.detector = d
 }
 
-// CleanUpSession cleans up the session by logging off from existing
-// connections. It is being executed in fixtures (mgs, user session) PostTest()
-// function.
-// If not performed then user upon consecutive logins will have several apps
-// opened.
-func (c *Connector) CleanUpSession(ctx context.Context) error {
-	return errors.New("CleanUpSession for WMware is not implemented")
+// CleanupAllApps closes all apps in VMware given the mode.
+// TODO(b/396331761): Implement all missing function in the VDI interface for VMware when the infra is ready.
+func (c *Connector) CleanupAllApps(ctx context.Context, isKioskMode bool) error {
+	return errors.New("CleanupAllApps for WMware is not implemented")
+}
+
+// OpenDesktop opens the windows desktop.
+// TODO(b/396331761): Implement all missing function in the VDI interface for VMware when the infra is ready.
+func (c *Connector) OpenDesktop(ctx context.Context) error {
+	return errors.New("OpenDesktop for WMware is not implemented")
+}
+
+// CloseDesktop closes all apps and logs off the windows desktop.
+// TODO(b/396331761): Implement all missing function in the VDI interface for VMware when the infra is ready.
+func (c *Connector) CloseDesktop(ctx context.Context) error {
+	return errors.New("CloseDesktop for WMware is not implemented")
+}
+
+// CleanUpDesktop cleans up the desktop in VMware given the mode.
+// TODO(b/396331761): Implement all missing function in the VDI interface for VMware when the infra is ready.
+func (c *Connector) CleanUpDesktop(ctx context.Context, isKioskMode bool) error {
+	return errors.New("CleanUpDesktop for WMware is not implemented")
 }

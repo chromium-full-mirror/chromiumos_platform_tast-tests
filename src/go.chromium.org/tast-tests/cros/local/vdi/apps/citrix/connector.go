@@ -6,14 +6,15 @@ package citrix
 
 import (
 	"context"
+	"strings"
 	"time"
 
-	crApps "go.chromium.org/tast-tests/cros/local/apps"
 	"go.chromium.org/tast-tests/cros/local/chrome"
 	"go.chromium.org/tast-tests/cros/local/chrome/ash"
 	"go.chromium.org/tast-tests/cros/local/chrome/uiauto"
 	"go.chromium.org/tast-tests/cros/local/chrome/uiauto/nodewith"
 	"go.chromium.org/tast-tests/cros/local/chrome/uiauto/role"
+	"go.chromium.org/tast-tests/cros/local/coords"
 	"go.chromium.org/tast-tests/cros/local/input"
 	"go.chromium.org/tast-tests/cros/local/uidetection"
 	"go.chromium.org/tast-tests/cros/local/vdi/apps"
@@ -47,7 +48,7 @@ func (c *Connector) EnterServerURL(ctx context.Context, cfg *apps.VDILoginConfig
 	textField := nodewith.Name("Store URL or Email address").Role(role.TextField)
 	testing.ContextLog(ctx, "Citrix: entering server url")
 	if err := uiauto.Combine("enter citrix server url, connect and wait for next screen",
-		ui.WaitUntilExists(textField),
+		ui.WithTimeout(2*time.Minute).WaitUntilExists(textField),
 		ui.DoDefault(textField),
 		c.keyboard.TypeAction(cfg.Server),
 		c.keyboard.AccelAction("Enter"), // Connect to the server.
@@ -65,6 +66,7 @@ func (c *Connector) EnterCredentialsAndLogin(ctx context.Context, cfg *apps.VDIL
 
 	usernameTextField := nodewith.NameContaining("user@domain.com").Role(role.TextField)
 	if err := uiauto.Combine("enter username and password and connect login",
+		ui.WithTimeout(2*time.Minute).WaitUntilExists(usernameTextField),
 		ui.DoDefault(usernameTextField),
 		c.keyboard.TypeAction(cfg.Username),
 		c.keyboard.AccelAction("Tab"),
@@ -102,8 +104,10 @@ func (c *Connector) Logout(ctx context.Context) error {
 	//TODO: b/268335458 Relpace uidetect with uiauto when applicable.
 	if err := uiauto.Combine("log out from the Citrix",
 		c.detector.WithTimeout(uiDetectionTimeout).WaitUntilExists(uidetection.TextBlock([]string{"Citrix", "Workspace"})),
-		c.detector.LeftClick(uidetection.TextBlock([]string{"Citrix", "Workspace"})), // By clicking, focus on the first UI element.
-		c.detector.LeftClick(uidetection.Word("C").ExactMatch()),                     // Click on the user icon.
+		c.detector.LeftClick(uidetection.TextBlock([]string{"Citrix", "Workspace"})),
+		c.keyboard.AccelAction("Tab"),
+		c.keyboard.AccelAction("Enter"),
+		c.detector.WithTimeout(uiDetectionTimeout).WaitUntilExists(uidetection.TextBlock([]string{"Log", "Out"})), // Click on the user icon.
 		c.detector.WithScreenshotResizing().LeftClick(uidetection.TextBlock([]string{"Log", "Out"})),
 	)(ctx); err != nil {
 		return errors.Wrap(err, "failed to log out")
@@ -121,39 +125,116 @@ func (c *Connector) LoginAfterRestart(ctx context.Context) error {
 	return nil
 }
 
-// WaitForMainScreenVisible ensures that element visible on the screen
+// WaitForMainScreenVisible ensures that all apps are visible on the screen
 // indicates it is the main Citrix screen.
 func (c *Connector) WaitForMainScreenVisible(ctx context.Context) error {
-
-	if err := c.detector.WithTimeout(uiDetectionTimeout).WaitUntilExists(uidetection.TextBlock([]string{"Search", "Workspace"}))(ctx); err != nil {
-		return errors.Wrap(err, "didn't see expected text block after logging into Citrix")
+	if err := c.detector.WithTimeout(uiDetectionTimeout).WaitUntilExists(uidetection.TextBlock([]string{"Citrix", "Workspace"}).First())(ctx); err != nil {
+		return errors.Wrap(err, "didn't see expected text block in the main Citrix screen")
+	}
+	if err := c.detector.WithTimeout(uiDetectionTimeout).WaitUntilExists(uidetection.TextBlock([]string{"Google", "Chrome"}).First())(ctx); err != nil {
+		return errors.Wrap(err, "didn't see expected Google Chrome app in the main Citrix screen")
+	}
+	if err := c.detector.WithTimeout(uiDetectionTimeout).WaitUntilExists(uidetection.Word("Notepad").First())(ctx); err != nil {
+		return errors.Wrap(err, "didn't see expected Notepad app in the main Citrix screen")
+	}
+	if err := c.detector.WithTimeout(uiDetectionTimeout).WaitUntilExists(uidetection.TextBlock([]string{"COMMERCIAL", "VDI"}).First())(ctx); err != nil {
+		return errors.Wrap(err, "didn't see expected Desktop in the main Citrix screen")
 	}
 
 	return nil
 }
 
-// SearchAndOpenApplication opens given application using search provided in
-// Citrix, runs checkIfOpened function to ensure app opened. Before calling
+// OpenApplication opens given application in Citrix, runs
+// checkIfOpened function to ensure app opened. Before calling
 // make sure main Citrix screen is visible by calling
-// WaitForMainScreenVisible(). Call ResetSearch() to clean the search state.
-func (c *Connector) SearchAndOpenApplication(ctx context.Context, appName string, checkIfOpened func(context.Context) error) uiauto.Action {
+// WaitForMainScreenVisible().
+func (c *Connector) OpenApplication(ctx context.Context, appName string, checkIfOpened func(context.Context) error) uiauto.Action {
 	//TODO: b/268335458 Relpace uidetect with uiauto when applicable.
+	ui := uiauto.New(c.tconn)
 	return func(ctx context.Context) error {
 		testing.ContextLogf(ctx, "Citrix: opening app %s", appName)
+		appIcon := uidetection.TextBlock(strings.Fields(appName)).First()
 		return uiauto.Combine("open application "+appName+" in Citrix",
-			// kamilszarek@: I tried using uidetector clicking on test block
-			// "Search Workspace" and it wound click it but focus does not
-			// go on the search field.
-			c.keyboard.AccelAction("Tab"),
-			c.keyboard.AccelAction("Tab"),
-			c.keyboard.AccelAction("Tab"),   // Go to the search field.
-			c.keyboard.AccelAction("Enter"), // Move focus to the search field.
-			c.keyboard.TypeAction(appName),
-			c.keyboard.AccelAction("Down"),  // Go to the first result.
-			c.keyboard.AccelAction("Enter"), // Open the app.
-			checkIfOpened,
+			c.detector.WithTimeout(30*time.Second).WaitUntilExists(appIcon),
+			ui.RetryUntil(c.detector.LeftClick(appIcon), checkIfOpened),
 		)(ctx)
 	}
+}
+
+// closeAllAppsWithX closes all apps in Citrix. It's useful for closing apps launched in Kiosk session, since switching windows isn't possible in kiosk mode.
+func (c *Connector) closeAllAppsWithX(ctx context.Context) error {
+	testing.ContextLog(ctx, "Citrix: closing all apps with X button")
+	ui := uiauto.New(c.tconn)
+	appWindowControls := uidetection.CustomIcon(c.dataPath("citrix/app_window_controls.png"), uidetection.MinConfidence(0.65)).First()
+	doYouWantToSaveDialog := uidetection.TextBlock([]string{"Do", "you", "want", "to", "save", "changes"})
+	// Use polling to repeatedly try to close app windows until none are found.
+	if err := testing.Poll(ctx, func(ctx context.Context) error {
+		if err := c.detector.WithTimeout(uiDetectionTimeout).Exists(appWindowControls)(ctx); err != nil {
+			// No app windows found, so we're done.
+			return nil // Poll successfully completed
+		}
+
+		// Close an app window.
+		closeAppWithX := func(ctx context.Context) error {
+			windowControlsLoc, err := c.detector.WithTimeout(uiDetectionTimeout).Location(ctx, appWindowControls)
+			if err != nil {
+				return errors.Wrap(err, "failed to find the location of the window controls")
+			}
+			if err := ui.MouseClickAtLocation( /*left click*/ 0, coords.Point{X: windowControlsLoc.RightCenter().X, Y: windowControlsLoc.RightCenter().Y})(ctx); err != nil {
+				return errors.Wrap(err, "failed to close the app with the close button")
+			}
+			if err := c.detector.WaitUntilExists(doYouWantToSaveDialog); err == nil {
+				if err := uiauto.Combine("don't save",
+					c.keyboard.AccelAction("Tab"), // Move to "Don't Save" button
+					c.keyboard.AccelAction("Enter"),
+				)(ctx); err != nil {
+					return errors.Wrap(err, "couldn't click on don't save")
+				}
+			}
+			return nil
+		}
+
+		if err := closeAppWithX(ctx); err != nil {
+			// Log the error, but don't stop polling.  The window might still disappear.
+			testing.ContextLog(ctx, "Error closing app window (will retry): ", err)
+		}
+
+		return errors.New("app windows still exist") // Indicate that polling should continue.
+	}, &testing.PollOptions{Timeout: 2 * time.Minute}); err != nil {
+		// If polling times out, that means there are still app windows open, and we failed to close them.
+		return errors.Wrap(err, "failed to close all app windows")
+	}
+	return nil
+}
+
+// closeAllAppsWithLogoff closes all apps in Citrix using the Logoff script. It will force close all the Citrix apps for User and MGS.
+func (c *Connector) closeAllAppsWithLogoff(ctx context.Context) error {
+	testing.ContextLog(ctx, "Citrix: closing all apps using the Logoff script")
+	if err := c.focusOnMainScreenWindow(ctx); err != nil {
+		return errors.Wrap(err, "failed to focus on Citrix Workspace main screen")
+	}
+	logoff := uidetection.Word("Logoff")
+	return uiauto.Combine("run Logoff script",
+		c.detector.WithTimeout(30*time.Second).WaitUntilExists(logoff),
+		c.detector.LeftClick(logoff),
+	)(ctx)
+}
+
+// CloseDesktop closes all apps and logs off the windows desktop.
+func (c *Connector) CloseDesktop(ctx context.Context) error {
+	testing.ContextLog(ctx, "Citrix: closing desktop")
+	recycleBin := uidetection.TextBlock([]string{"Recycle", "Bin"})
+	// Recycle Bin exists, so the desktop is likely open.
+	if err := c.detector.WithTimeout(uiDetectionTimeout).WithScreenshotResizing().Exists(recycleBin)(ctx); err == nil {
+		if err := uiauto.Combine("Run Logout script",
+			// Move focus on Windows desktop.
+			c.detector.LeftClick(recycleBin),
+			c.keyboard.AccelAction("Ctrl+Alt+S"),
+		)(ctx); err != nil {
+			return errors.Wrap(err, "failed to run the Signout script using the combo keys Ctrl+Alt+S")
+		}
+	}
+	return nil
 }
 
 // ResetSearch cleans search field. Call only when search was triggered by
@@ -179,47 +260,89 @@ func (c *Connector) ReplaceDetector(d *uidetection.Context) {
 	c.detector = d
 }
 
-// CleanUpSession cleans up the session by logging off from existing
-// connections. It is being executed in fixtures (mgs, user session) PostTest()
-// function.
-// If not performed then user upon consecutive logins will have several apps
-// opened.
-func (c *Connector) CleanUpSession(ctx context.Context) error {
-	testing.ContextLog(ctx, "Citrix: open Connection Center and focus on it")
-	ui := uiauto.New(c.tconn)
-	vdiAppShelfButton := nodewith.Name(crApps.Citrix.Name).ClassName(ash.ShelfAppButtonClassName)
-	connectorCenterContextMenuItem := nodewith.Name("Connection Center").HasClass("MenuItemView")
-	if err := uiauto.Combine("open Connector Center on VDI app",
-		ui.RightClick(vdiAppShelfButton),
-		ui.WaitUntilExists(connectorCenterContextMenuItem),
-		ui.LeftClick(connectorCenterContextMenuItem),
-		ui.LeftClick(vdiAppShelfButton),
-		ui.WaitUntilExists(connectorCenterContextMenuItem),
-		ui.LeftClick(connectorCenterContextMenuItem),
-	)(ctx); err != nil {
-		return errors.Wrap(err, "failed to open Connector Center and bring it to the foreground")
+func (c *Connector) focusOnMainScreenWindow(ctx context.Context) error {
+	windowTitle := "Citrix Workspace"
+	testing.ContextLogf(ctx, "Focusing on window: %s", windowTitle)
+
+	matchTitle := func(w *ash.Window) bool {
+		return strings.Contains(w.Title, windowTitle)
 	}
 
-	session := nodewith.HasClass("sessionElement")
-	// Only if there are active sessions log off from them.
-	if err := ui.Exists(session)(ctx); err == nil {
-		testing.ContextLog(ctx, "Citrix: select session and log off")
-		logoffBtn := nodewith.Name("Logoff").HasClass("sessionButton").Role(role.Button)
-		if err := uiauto.Combine("select session and log off",
-			ui.LeftClick(session),
-			ui.LeftClick(logoffBtn),
-		)(ctx); err != nil {
-			return errors.Wrap(err, "failed to select session and log off")
-		}
-	} else {
-		testing.ContextLog(ctx, "Citrix: no active sessions found")
+	// Get the first window with title Citrix Workspace.
+	w, err := ash.FindWindow(ctx, c.tconn, matchTitle)
+	if err != nil {
+		return errors.Wrap(err, "could not find window with matching title")
 	}
-
-	// Close the Connection Center window.
-	closeButton := nodewith.HasClass("close_button")
-	if err := ui.LeftClick(closeButton)(ctx); err != nil {
-		return errors.Wrap(err, "failed to close the connection center")
+	if err := w.ActivateWindow(ctx, c.tconn); err != nil {
+		return errors.Wrap(err, "failed to activate window")
 	}
-
 	return nil
+}
+
+// OpenDesktop opens the windows desktop and makes sure that the desktop is visible.
+func (c *Connector) OpenDesktop(ctx context.Context) error {
+	const desktopName string = "COMMERCIAL VDI"
+	isOpened := func(ctx context.Context) error {
+		recycleBin := uidetection.TextBlock([]string{"Recycle", "Bin"})
+		// Find the Recycle Bin first.
+		if err := c.detector.WithTimeout(60 * time.Second).WaitUntilExists(recycleBin)(ctx); err != nil {
+			return errors.Wrap(err, "failed waiting for the recycle bin to appear")
+		}
+		return nil
+	}
+	if err := c.OpenApplication(ctx, desktopName, isOpened)(ctx); err != nil {
+		return errors.Wrap(err, "failed to close desktop")
+	}
+	return nil
+}
+
+// cleanUpDesktopKiosk cleans up the kiosk session by closing all apps using X button and closing the desktop if necessary.
+// It is being executed in fixtures vdi_kiosk only PostTest() function.
+func (c *Connector) cleanUpDesktopKiosk(ctx context.Context) error {
+	testing.ContextLog(ctx, "Citrix: Cleaning up desktop for kiosk session")
+	// Close apps if needed.
+	if err := c.closeAllAppsWithX(ctx); err != nil {
+		return errors.Wrap(err, "failed to close all the apps using the X button")
+	}
+	if err := c.CloseDesktop(ctx); err != nil {
+		return errors.Wrap(err, "failed to close desktop")
+	}
+	return c.WaitForMainScreenVisible(ctx)
+}
+
+// cleanUpDesktopUser cleans up the desktop session by the Signout script.
+// This should be used by User and MGS only. Use CleanUpKioskDesktopSession for Kiosk.
+func (c *Connector) cleanUpDesktopUser(ctx context.Context) error {
+	testing.ContextLog(ctx, "Citrix: Cleaning up desktop for User/MGS session")
+
+	if err := c.focusOnMainScreenWindow(ctx); err != nil {
+		return errors.Wrap(err, "failed to focus on Citrix Workspace main screen")
+	}
+	if err := c.OpenDesktop(ctx); err != nil {
+		return errors.Wrap(err, "failed to open desktop")
+	}
+	if err := c.CloseDesktop(ctx); err != nil {
+		return errors.Wrap(err, "failed to close desktop")
+	}
+	return c.WaitForMainScreenVisible(ctx)
+}
+
+// CleanupAllApps closes all apps in Citrix given the current mode.
+// If it is kiosk mode, then switching windows isn't possible and using the X button is required.
+// If it is User or MGS, then switching windows is possible and using the Logoff script is more stable.
+func (c *Connector) CleanupAllApps(ctx context.Context, isKioskMode bool) error {
+	if isKioskMode {
+		return c.closeAllAppsWithX(ctx)
+	}
+	return c.closeAllAppsWithLogoff(ctx)
+}
+
+// CleanUpDesktop ensures the Desktop is cleaned up using the Signout script.
+// If it is kiosk mode, then switching windows isn't possible and using the X button is required to close all apps first, then close the desktop.
+// If it is User or MGS, then switching windows is possible and opening desktop and using the Signout script is more stable.
+func (c *Connector) CleanUpDesktop(ctx context.Context, isKioskMode bool) error {
+	if isKioskMode {
+		return c.cleanUpDesktopKiosk(ctx)
+	}
+	return c.cleanUpDesktopUser(ctx)
 }

@@ -244,7 +244,7 @@ func OpenRemoteApplicationInCitirx(ctx context.Context, s *testing.FixtTestState
 		return uidetector.WaitUntilExists(uidetection.TextBlock(strings.Split(textToLookForWhenLaunched, " ")))(ctx)
 	}
 
-	if err := vdi.SearchAndOpenApplication(ctx, appName, isOpened)(ctx); err != nil {
+	if err := vdi.OpenApplication(ctx, appName, isOpened)(ctx); err != nil {
 		s.Fatal("Failed open remote app: ", err)
 	}
 

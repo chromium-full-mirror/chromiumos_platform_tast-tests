@@ -26,8 +26,8 @@ import (
 	"go.chromium.org/tast/core/testing"
 )
 
-// CitrixUsernamePrefix is the prefix before username (i.e. cros-citrix\user_1).
-const CitrixUsernamePrefix = "cros-citrix\\"
+// CitrixUsernamePrefix is the prefix before username (i.e. chromeos-vdi\user).
+const CitrixUsernamePrefix = "chromeos-vdi\\"
 
 func init() {
 	testing.AddFixture(&testing.Fixture{
@@ -313,52 +313,4 @@ func (v *fixtureState) Reset(ctx context.Context) error {
 func (v *fixtureState) PreTest(ctx context.Context, s *testing.FixtTestState) {}
 func (v *fixtureState) PostTest(ctx context.Context, s *testing.FixtTestState) {
 	defer faillog.DumpUITreeWithScreenshotOnError(ctx, s.OutDir(), s.HasError, v.cr, "vdi_fixt_posttest_ui_tree_"+s.TestName())
-
-	tconn, err := v.cr.TestAPIConn(ctx)
-	if err != nil {
-		s.Fatal("Failed to create Test API connection: ", err)
-	}
-
-	testing.ContextLog(ctx, "VDI: Closing all windows")
-	// Closing windows sometimes causes error
-	// (Error: No app window was found : id=-10004)
-	//  Keep retrying closing until all closed with no error.
-	if err := testing.Poll(ctx, func(ctx context.Context) error {
-		ws, err := ash.GetAllWindows(ctx, tconn)
-		if err != nil {
-			return errors.Wrap(err, "failed to get all open windows")
-		}
-
-		for _, w := range ws {
-			if err := w.CloseWindow(ctx, tconn); err != nil {
-				return errors.Wrapf(err, "warning: Failed to close window (%+v)", w)
-			}
-		}
-		return nil
-
-	}, &testing.PollOptions{
-		Timeout: 10 * time.Second,
-	}); err != nil {
-		s.Error("There was an error when closing windows: ", err)
-	}
-
-	testing.ContextLog(ctx, "VDI: Restarting VDI app")
-	if err := apps.Launch(ctx, tconn, v.vdiApplicationToStart.ID); err != nil {
-		s.Fatal("Failed to launch vdi app: ", err)
-	}
-	if err := ash.WaitForApp(ctx, tconn, v.vdiApplicationToStart.ID, time.Minute); err != nil {
-		s.Fatal("The VDI app did not appear in shelf after launch: ", err)
-	}
-
-	// In user session and mgs we simply call LoginAfterRestart. Applications
-	// (Citrix, VMWare) handle restarting themselves differently. Citrix does
-	// not require to do anything - it holds the session. VMWare makes user to
-	// pick server and provide credentials.
-	if err := v.vdiConnector.LoginAfterRestart(ctx); err != nil {
-		s.Fatal("Couldn't log in after restart: ", err)
-	}
-
-	if err := v.vdiConnector.WaitForMainScreenVisible(ctx); err != nil {
-		s.Fatal("VDI main screen was not present: ", err)
-	}
 }
