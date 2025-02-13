@@ -45,7 +45,7 @@ type webauthnConfig struct {
 type WebauthnService struct {
 	s *testing.ServiceState
 
-	cr           *chrome.Chrome
+	cr *chrome.Chrome
 	// Keeping keyboard in state instead of creating it each time because it takes about 5 seconds to create a keyboard.
 	keyboard *input.KeyboardEventWriter
 	conn     *chrome.Conn
