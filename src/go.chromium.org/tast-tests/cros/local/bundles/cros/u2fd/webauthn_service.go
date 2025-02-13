@@ -257,12 +257,8 @@ func (c *WebauthnService) DoMakeCredential(ctx context.Context, req *empty.Empty
 		return nil, errors.Wrap(err, "failed to get test API connection")
 	}
 
-	// If authenticator type is "Platform", there's only platform option so
-	// we don't have to manually click "This device".
-	if c.cfg.authenticatorType != hwsec.AuthenticatorType_PLATFORM {
-		if err := localu2fd.ChoosePlatformAuthenticator(ctx, tconn); err != nil {
-			return nil, err
-		}
+	if err := localu2fd.ChoosePlatformAuthenticator(ctx, tconn); err != nil {
+		return nil, err
 	}
 
 	if c.cfg.hasDialog {
