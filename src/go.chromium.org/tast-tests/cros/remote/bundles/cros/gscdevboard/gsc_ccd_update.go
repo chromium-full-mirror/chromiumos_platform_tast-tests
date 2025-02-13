@@ -15,13 +15,13 @@ import (
 	"go.chromium.org/tast/core/testing"
 )
 
-var consoleUpdateTooSoonRegexp = regexp.MustCompile("Attempted update too soon")
+var consoleUpdateTooSoonRegexp = regexp.MustCompile("(Attempted update too soon|chunk_came_too_soon)")
 var gsctoolUpdateTooSoonRegexp = regexp.MustCompile(`Error: status 0x9`)
 
 func init() {
 	testing.AddTest(&testing.Test{
-		Func:    Ti50CCDUpdate,
-		Desc:    "Ti50 firmware update over CCD using gsctool",
+		Func:    GSCCCDUpdate,
+		Desc:    "GSC firmware update over CCD using gsctool",
 		Timeout: 5 * time.Minute,
 		Contacts: []string{
 			"cros-hwsec@google.com", // CrOS GSC Developers
@@ -29,15 +29,15 @@ func init() {
 		},
 		BugComponent: "b:715469", // ChromeOS > Platform > System > Hardware Security > HwSec GSC > Ti50
 		Attr: []string{"group:gsc",
-			"gsc_dt_ab", "gsc_dt_shield", "gsc_ot_shield",
+			"gsc_dt_ab", "gsc_dt_shield", "gsc_h1_shield", "gsc_ot_shield",
 			"gsc_image_ti50",
 			"gsc_nightly"},
 		Fixture: fixture.SystemDevboard,
 	})
 }
 
-// Ti50CCDUpdate requires HW setup with SuzyQ cable from Andreib to drone/workstation.
-func Ti50CCDUpdate(ctx context.Context, s *testing.State) {
+// GSCCCDUpdate requires HW setup with SuzyQ cable from Andreib to drone/workstation.
+func GSCCCDUpdate(ctx context.Context, s *testing.State) {
 	f := s.FixtValue().(*fixture.Value)
 	th := utils.FirmwareTestingHelper{FirmwareTestingHelperDelegate: s}
 	b := utils.NewDevboardHelper(s)
