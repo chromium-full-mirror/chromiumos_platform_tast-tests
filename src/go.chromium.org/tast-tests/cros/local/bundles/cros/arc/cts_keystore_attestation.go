@@ -11,6 +11,7 @@ import (
 	"go.chromium.org/tast-tests/cros/local/arc"
 	"go.chromium.org/tast-tests/cros/local/chrome"
 	"go.chromium.org/tast/core/testing"
+	"go.chromium.org/tast/core/testing/hwdep"
 )
 
 const (
@@ -30,6 +31,7 @@ func init() {
 		Timeout:      chrome.LoginTimeout + arc.BootTimeout + 60*time.Second,
 		Fixture:      "arcBootedWithoutUIAutomator",
 		SoftwareDeps: []string{"android_vm_t", "chrome", "no_qemu"},
+		HardwareDeps: hwdep.D(hwdep.MinStorage(17)), // 16GB devices may not have enough free space to install the apk.
 		VarDeps:      []string{},
 		Params: []testing.Param{{
 			Name:              "vm_x86_64",
