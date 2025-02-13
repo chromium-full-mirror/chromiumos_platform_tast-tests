@@ -19,7 +19,7 @@ import (
 
 func init() {
 	testing.AddTest(&testing.Test{
-		Func:    Ti50KernelAntirollback,
+		Func:    GSCKernelAntirollback,
 		Desc:    "Tests creating, deleting, and recreating the kernel antirollback space",
 		Timeout: 30 * time.Second,
 		Contacts: []string{
@@ -35,7 +35,8 @@ func init() {
 	})
 }
 
-func Ti50KernelAntirollback(ctx context.Context, s *testing.State) {
+// GSCKernelAntirollback verify that the kernel antirollback space can be created, deleted, and recreated.
+func GSCKernelAntirollback(ctx context.Context, s *testing.State) {
 	// Test that the kernel antirollback space can be created, deleted, and recreated.
 	// 1. Create v0 antirollback space.
 	// 2. Attempt to verify against a v1 hash and check for failure.
