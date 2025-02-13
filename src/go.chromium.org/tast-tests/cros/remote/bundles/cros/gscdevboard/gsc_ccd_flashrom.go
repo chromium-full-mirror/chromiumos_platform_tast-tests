@@ -18,7 +18,7 @@ import (
 
 func init() {
 	testing.AddTest(&testing.Test{
-		Func:    Ti50CCDFlashrom,
+		Func:    GSCCCDFlashrom,
 		Desc:    "Measure flashrom speed over CCD",
 		Timeout: 30 * time.Minute,
 		Contacts: []string{
@@ -28,7 +28,7 @@ func init() {
 		BugComponent: "b:715469", // ChromeOS > Platform > System > Hardware Security > HwSec GSC > Ti50
 		Attr: []string{
 			"group:gsc",
-			"gsc_dt_shield", "gsc_ot_shield", "gsc_ot_fpga_cw310",
+			"gsc_dt_shield", "gsc_h1_shield", "gsc_ot_shield", "gsc_ot_fpga_cw310",
 			"gsc_image_ti50",
 			"gsc_nightly"},
 		Fixture: fixture.GSCOpenCCD,
@@ -45,8 +45,8 @@ func genContent(fill byte, length int) []byte {
 	return bytes.Repeat([]byte{fill}, length)
 }
 
-// Ti50CCDFlashrom measures flashrom speed over CCD.
-func Ti50CCDFlashrom(ctx context.Context, s *testing.State) {
+// GSCCCDFlashrom measures flashrom speed over CCD.
+func GSCCCDFlashrom(ctx context.Context, s *testing.State) {
 	b := utils.NewDevboardHelper(s)
 	th := utils.FirmwareTestingHelper{FirmwareTestingHelperDelegate: s}
 	i := ti50.MustOpenCrOSImage(ctx, b, s, b.TestbedType)
@@ -54,7 +54,7 @@ func Ti50CCDFlashrom(ctx context.Context, s *testing.State) {
 
 	// Enable CCD.
 	b.ResetWithStraps(ctx, ti50.CCDModeOn)
-	th.MustSucceed(i.WaitUntilBooted(ctx), "Ti50 revives after reboot")
+	th.MustSucceed(i.WaitUntilBooted(ctx), "GSC revives after reboot")
 	b.WaitUntilCCDConnected(ctx)
 
 	pv := perf.NewValues()
