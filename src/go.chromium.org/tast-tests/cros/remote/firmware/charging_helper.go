@@ -332,6 +332,12 @@ func PollToSetChargerStatus(ctx context.Context, h *Helper, attachCharger bool) 
 			return err // SetDUTPower might return PollBreak, so don't wrap.
 		}
 
+		if attachCharger {
+			if err := h.OpenCCD(ctx, false, false); err != nil {
+				return errors.Wrap(err, "open ccd")
+			}
+		}
+
 		return err
 		// Metaknight takes a worst case of ~120s to notice the charger, so retry for 200s instead.
 		// Include extra time to account for setting charger status with RPM.

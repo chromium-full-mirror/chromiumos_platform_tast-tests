@@ -145,10 +145,10 @@ func BootBatteryCutoff(ctx context.Context, s *testing.State) {
 	confirmBoot := func(ctx context.Context, wakeByAC bool) error {
 		// Wait for a connection to the DUT.
 		s.Log("Wait for SSH to DUT")
-		waitConnectCtx, cancelWaitConnect := context.WithTimeout(ctx, 6*time.Minute)
+		waitConnectCtx, cancelWaitConnect := context.WithTimeout(ctx, h.Config.DelayRebootToPing)
 		defer cancelWaitConnect()
 
-		if err := h.WaitConnect(waitConnectCtx, firmware.ResetEthernetDongle); err != nil {
+		if err := h.WaitConnect(waitConnectCtx, firmware.FromHibernation, firmware.ResetEthernetDongle); err != nil {
 			if wakeByAC && errors.Is(err, context.DeadlineExceeded) {
 				return &reconnectErr{E: errors.New("timed out reconnecting DUT. Attempting a press on power button")}
 			}
@@ -333,6 +333,10 @@ func BootBatteryCutoff(ctx context.Context, s *testing.State) {
 func wakeDUTS0(ctx context.Context, h *firmware.Helper) error {
 	retryCtx, cancelRetry := context.WithTimeout(ctx, 3*time.Minute)
 	defer cancelRetry()
+
+	if err := h.OpenCCD(ctx, false, false); err != nil {
+		return errors.Wrap(err, "open ccd")
+	}
 
 	// Check if DUT is at G3. If DUT is in G3, use power button to boot it into S0.
 	testing.ContextLog(retryCtx, "Checking if power state is at G3 or S5")
