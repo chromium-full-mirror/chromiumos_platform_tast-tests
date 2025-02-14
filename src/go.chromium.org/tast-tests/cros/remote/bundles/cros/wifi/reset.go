@@ -35,6 +35,7 @@ func init() {
 		// We only support reset on Intel/Marvell/QCA/RTK/MTK WiFi (iwlwifi/mwifiex/ath10k/rtw88/mt76).
 		// TODO(chromium:1070299): Currently we might need to exclude the unsupported devices with hwdep.SkipOnModel.
 		// Replace them with more proper hwdep in the future.
+		VariantCategory: `{"name": "WifiBtChipset_Soc_Kernel"}`,
 		Params: []testing.Param{
 			{
 				// Default AP settings ported from Autotest.
