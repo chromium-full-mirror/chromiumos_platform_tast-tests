@@ -35,7 +35,7 @@ func init() {
 			"tij@google.com",
 		},
 		BugComponent: "b:792402", // ChromeOS > Platform > Enablement > Firmware > FAFT
-		Attr:         []string{"group:firmware", "firmware_ec", "firmware_ec_stressed"},
+		Attr:         []string{"group:firmware", "firmware_ec", "firmware_ec_stressed", "firmware_ec_meets_kpi"},
 		SoftwareDeps: []string{"crossystem", "flashrom"},
 		HardwareDeps: hwdep.D(hwdep.ChromeEC(), hwdep.Platform("fizz", "kalista")),
 		ServiceDeps:  []string{"tast.cros.firmware.BiosService", "tast.cros.firmware.UtilsService"},

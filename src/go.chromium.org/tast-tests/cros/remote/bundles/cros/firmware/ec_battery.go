@@ -27,7 +27,7 @@ func init() {
 			"jbettis@chromium.org",
 		},
 		BugComponent: "b:792402", // ChromeOS > Platform > Enablement > Firmware > FAFT
-		Attr:         []string{"group:firmware", "firmware_ec", "firmware_ec_stressed"},
+		Attr:         []string{"group:firmware", "firmware_ec", "firmware_ec_stressed", "firmware_ec_meets_kpi"},
 		Fixture:      fixture.NormalMode,
 		HardwareDeps: hwdep.D(hwdep.ChromeEC(), hwdep.Battery()),
 	})
