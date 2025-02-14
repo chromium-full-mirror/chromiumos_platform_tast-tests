@@ -45,9 +45,10 @@ func init() {
 		ServiceDeps: []string{
 			wificell.ShillServiceName,
 		},
-		HardwareDeps: hwdep.D(hwdep.Wifi80211ax6E()),
-		Fixture:      wificell.FixtureID(wificell.TFFeaturesCapture),
-		Requirements: []string{tdreq.WiFiGenSupportWiFi, tdreq.WiFiProcPassFW, tdreq.WiFiProcPassAVL, tdreq.WiFiProcPassAVLBeforeUpdates, tdreq.WiFiProcPassMatfunc, tdreq.WiFiProcPassMatfuncBeforeUpdates},
+		HardwareDeps:    hwdep.D(hwdep.Wifi80211ax6E()),
+		Fixture:         wificell.FixtureID(wificell.TFFeaturesCapture),
+		Requirements:    []string{tdreq.WiFiGenSupportWiFi, tdreq.WiFiProcPassFW, tdreq.WiFiProcPassAVL, tdreq.WiFiProcPassAVLBeforeUpdates, tdreq.WiFiProcPassMatfunc, tdreq.WiFiProcPassMatfuncBeforeUpdates},
+		VariantCategory: `{"name": "WifiBtChipset_Soc_Kernel"}`,
 		Params: []testing.Param{
 			{
 				Name: "in_band",

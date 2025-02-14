@@ -22,11 +22,12 @@ func init() {
 		Contacts: []string{
 			"chromeos-wifi-champs@google.com", // WiFi oncall rotation
 		},
-		BugComponent: "b:893827", // ChromeOS > Platform > Connectivity > WiFi
-		Attr:         []string{"group:mainline", "group:wificell", "wificell_unstable", "informational"},
-		SoftwareDeps: []string{"wifi"},
-		TestBedDeps:  []string{tbdep.WifiStateNormal},
-		Fixture:      "wiphyEnabled",
+		BugComponent:    "b:893827", // ChromeOS > Platform > Connectivity > WiFi
+		Attr:            []string{"group:mainline", "group:wificell", "wificell_unstable", "informational"},
+		SoftwareDeps:    []string{"wifi"},
+		TestBedDeps:     []string{tbdep.WifiStateNormal},
+		Fixture:         "wiphyEnabled",
+		VariantCategory: `{"name": "WifiBtChipset_Soc_Kernel"}`,
 	})
 }
 

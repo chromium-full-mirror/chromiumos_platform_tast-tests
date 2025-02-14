@@ -43,9 +43,10 @@ func init() {
 			wificell.WifiUIServiceName,
 			wificell.OsSettingsServiceName,
 		},
-		SoftwareDeps: []string{"chrome"},
-		Fixture:      wificell.FixtureID(wificell.TFFeaturesNone),
-		Timeout:      4 * time.Minute,
+		SoftwareDeps:    []string{"chrome"},
+		Fixture:         wificell.FixtureID(wificell.TFFeaturesNone),
+		Timeout:         4 * time.Minute,
+		VariantCategory: `{"name": "WifiBtChipset_Soc_Kernel"}`,
 	})
 }
 

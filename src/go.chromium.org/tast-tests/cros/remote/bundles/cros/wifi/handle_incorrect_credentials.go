@@ -79,8 +79,9 @@ func init() {
 			"tast.cros.networkui.CertificateService",
 			wifiutil.FaillogServiceName,
 		),
-		SoftwareDeps: []string{"chrome"},
-		Fixture:      wificell.FixtureID(wificell.TFFeaturesNone),
+		SoftwareDeps:    []string{"chrome"},
+		Fixture:         wificell.FixtureID(wificell.TFFeaturesNone),
+		VariantCategory: `{"name": "WifiBtChipset_Soc_Kernel"}`,
 		Params: []testing.Param{
 			{
 				Name: "oobe_peap",

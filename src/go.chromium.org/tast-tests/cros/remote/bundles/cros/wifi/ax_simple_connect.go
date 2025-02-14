@@ -46,8 +46,9 @@ func init() {
 			wificell.ShillServiceName,
 			wificell.BluetoothServiceName,
 		},
-		Vars:         []string{"router", "pcap", "routertype"},
-		Requirements: []string{tdreq.WiFiGenSupport80211ax},
+		Vars:            []string{"router", "pcap", "routertype"},
+		Requirements:    []string{tdreq.WiFiGenSupport80211ax},
+		VariantCategory: `{"name": "WifiBtChipset_Soc_Kernel"}`,
 		Params: []testing.Param{
 			/* Disabled due to <1% pass rate over 30 days. See b/246820339
 			{

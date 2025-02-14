@@ -55,7 +55,8 @@ func init() {
 			"tast.cros.ui.ChromeUIService",
 			"tast.cros.chrome.uiauto.ossettings.OsSettingsService",
 		},
-		SoftwareDeps: []string{"chrome"},
+		SoftwareDeps:    []string{"chrome"},
+		VariantCategory: `{"name": "WifiBtChipset_Soc_Kernel"}`,
 		Params: []testing.Param{
 			{
 				Name: "symbols",

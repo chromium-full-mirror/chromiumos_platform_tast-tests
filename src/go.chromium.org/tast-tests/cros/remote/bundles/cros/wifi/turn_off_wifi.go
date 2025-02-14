@@ -37,8 +37,9 @@ func init() {
 			"tast.cros.browser.ChromeService",
 			"tast.cros.chrome.uiauto.quicksettings.QuickSettingsService",
 		},
-		SoftwareDeps: []string{"chrome"},
-		Fixture:      wificell.FixtureID(wificell.TFFeaturesNone),
+		SoftwareDeps:    []string{"chrome"},
+		Fixture:         wificell.FixtureID(wificell.TFFeaturesNone),
+		VariantCategory: `{"name": "WifiBtChipset_Soc_Kernel"}`,
 	})
 }
 

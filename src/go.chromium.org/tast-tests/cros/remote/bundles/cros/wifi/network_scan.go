@@ -50,8 +50,9 @@ func init() {
 			wificell.QuickSettingsServiceName,
 			wificell.OsSettingsServiceName,
 		},
-		SoftwareDeps: []string{"chrome"},
-		Fixture:      wificell.FixtureID(wificell.TFFeaturesNone),
+		SoftwareDeps:    []string{"chrome"},
+		Fixture:         wificell.FixtureID(wificell.TFFeaturesNone),
+		VariantCategory: `{"name": "WifiBtChipset_Soc_Kernel"}`,
 		Params: []testing.Param{
 			{
 				Name: "login",

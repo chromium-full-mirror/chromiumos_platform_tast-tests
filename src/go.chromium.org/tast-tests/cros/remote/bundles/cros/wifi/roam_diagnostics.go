@@ -81,13 +81,14 @@ func init() {
 		Contacts: []string{
 			"chromeos-wifi-champs@google.com", // WiFi oncall rotation
 		},
-		BugComponent: "b:893827", // ChromeOS > Platform > Connectivity > WiFi
-		Attr:         []string{"group:wificell_roam", "wificell_roam_perf"},
-		TestBedDeps:  []string{tbdep.Wificell, tbdep.WifiStateNormal, tbdep.BluetoothStateNormal, tbdep.PeripheralWifiStateWorking},
-		ServiceDeps:  []string{wificell.ShillServiceName},
-		Fixture:      wificell.FixtureID(wificell.TFFeaturesRouters | wificell.TFFeaturesAttenuator),
-		Requirements: []string{tdreq.WiFiGenSupportWiFi, tdreq.WiFiProcPassFW, tdreq.WiFiProcPassAVL, tdreq.WiFiProcPassAVLBeforeUpdates},
-		Timeout:      time.Minute * 90,
+		BugComponent:    "b:893827", // ChromeOS > Platform > Connectivity > WiFi
+		Attr:            []string{"group:wificell_roam", "wificell_roam_perf"},
+		TestBedDeps:     []string{tbdep.Wificell, tbdep.WifiStateNormal, tbdep.BluetoothStateNormal, tbdep.PeripheralWifiStateWorking},
+		ServiceDeps:     []string{wificell.ShillServiceName},
+		Fixture:         wificell.FixtureID(wificell.TFFeaturesRouters | wificell.TFFeaturesAttenuator),
+		Requirements:    []string{tdreq.WiFiGenSupportWiFi, tdreq.WiFiProcPassFW, tdreq.WiFiProcPassAVL, tdreq.WiFiProcPassAVLBeforeUpdates},
+		Timeout:         time.Minute * 90,
+		VariantCategory: `{"name": "WifiBtChipset_Soc_Kernel"}`,
 		Params: []testing.Param{
 			{
 				Val: []roamDiagnosticsTestcase{

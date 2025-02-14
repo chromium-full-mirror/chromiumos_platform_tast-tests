@@ -56,8 +56,9 @@ func init() {
 			wifiutil.FaillogServiceName,
 			"tast.cros.platform.UpstartService",
 		},
-		SoftwareDeps: []string{"chrome"},
-		Fixture:      wificell.FixtureID(wificell.TFFeaturesRouters),
+		SoftwareDeps:    []string{"chrome"},
+		Fixture:         wificell.FixtureID(wificell.TFFeaturesRouters),
+		VariantCategory: `{"name": "WifiBtChipset_Soc_Kernel"}`,
 		Params: []testing.Param{
 			{
 				Name: "cycle_wifi_wpa2",

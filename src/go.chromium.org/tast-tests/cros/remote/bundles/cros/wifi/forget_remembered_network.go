@@ -45,9 +45,10 @@ func init() {
 			"tast.cros.browser.ChromeService",
 			"tast.cros.wifi.WifiService",
 		},
-		SoftwareDeps: []string{"chrome"},
-		Fixture:      wificell.FixtureID(wificell.TFFeaturesNone),
-		Timeout:      7 * time.Minute,
+		SoftwareDeps:    []string{"chrome"},
+		Fixture:         wificell.FixtureID(wificell.TFFeaturesNone),
+		Timeout:         7 * time.Minute,
+		VariantCategory: `{"name": "WifiBtChipset_Soc_Kernel"}`,
 	})
 }
 

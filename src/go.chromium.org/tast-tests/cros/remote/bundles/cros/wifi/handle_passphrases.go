@@ -72,8 +72,9 @@ func init() {
 			wifiutil.FaillogServiceName,
 		),
 
-		SoftwareDeps: []string{"chrome"},
-		Vars:         []string{"ui.signinProfileTestExtensionManifestKey"},
+		SoftwareDeps:    []string{"chrome"},
+		Vars:            []string{"ui.signinProfileTestExtensionManifestKey"},
+		VariantCategory: `{"name": "WifiBtChipset_Soc_Kernel"}`,
 		Params: []testing.Param{
 			{
 				Name: "logged_in_hidden_wpa",

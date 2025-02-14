@@ -51,8 +51,9 @@ func init() {
 			"tast.cros.browser.ChromeService",
 			"tast.cros.wifi.WifiService",
 		},
-		SoftwareDeps: []string{"chrome"},
-		Fixture:      wificell.FixtureID(wificell.TFFeaturesWithUI),
+		SoftwareDeps:    []string{"chrome"},
+		Fixture:         wificell.FixtureID(wificell.TFFeaturesWithUI),
+		VariantCategory: `{"name": "WifiBtChipset_Soc_Kernel"}`,
 		Params: []testing.Param{
 			{
 				Name: "suspend",

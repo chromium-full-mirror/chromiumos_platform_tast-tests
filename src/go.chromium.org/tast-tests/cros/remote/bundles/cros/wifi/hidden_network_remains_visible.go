@@ -54,9 +54,10 @@ func init() {
 		},
 		SoftwareDeps: []string{"chrome", "reboot"},
 		// TODO(b/284522381, b/189972561): Remove the restrictions once the issue is resolved.
-		HardwareDeps: hwdep.D(hwdep.SkipOnWifiDevice(wlan.QualcommWCN3990, wlan.MediaTekMT7921PCIE)),
-		Fixture:      wificell.FixtureID(wificell.TFFeaturesNone),
-		Timeout:      7 * time.Minute, // It could take up to 4 minutes to reboot the DUT.
+		HardwareDeps:    hwdep.D(hwdep.SkipOnWifiDevice(wlan.QualcommWCN3990, wlan.MediaTekMT7921PCIE)),
+		Fixture:         wificell.FixtureID(wificell.TFFeaturesNone),
+		Timeout:         7 * time.Minute, // It could take up to 4 minutes to reboot the DUT.
+		VariantCategory: `{"name": "WifiBtChipset_Soc_Kernel"}`,
 	})
 }
 

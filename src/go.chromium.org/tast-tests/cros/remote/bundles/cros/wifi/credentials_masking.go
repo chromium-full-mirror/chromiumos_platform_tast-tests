@@ -70,9 +70,10 @@ func init() {
 			"tast.cros.wifi.WifiService",
 			"tast.cros.networkui.CrosNetworkConfigService",
 		),
-		SoftwareDeps: []string{"chrome"},
-		Fixture:      "wificellFixt",
-		Timeout:      3 * time.Minute,
+		SoftwareDeps:    []string{"chrome"},
+		Fixture:         "wificellFixt",
+		Timeout:         3 * time.Minute,
+		VariantCategory: `{"name": "WifiBtChipset_Soc_Kernel"}`,
 	})
 }
 

@@ -202,10 +202,11 @@ func init() {
 			"tast.cros.ui.ScreenRecorderService",
 			wifiutil.FaillogServiceName,
 		},
-		VarDeps:      []string{"ui.signinProfileTestExtensionManifestKey"},
-		SoftwareDeps: []string{"chrome"},
-		HardwareDeps: hwdep.D(hwdep.WifiNotMarvell()),
-		Fixture:      wificell.FixtureID(wificell.TFFeaturesRouters),
+		VarDeps:         []string{"ui.signinProfileTestExtensionManifestKey"},
+		SoftwareDeps:    []string{"chrome"},
+		HardwareDeps:    hwdep.D(hwdep.WifiNotMarvell()),
+		Fixture:         wificell.FixtureID(wificell.TFFeaturesRouters),
+		VariantCategory: `{"name": "WifiBtChipset_Soc_Kernel"}`,
 		Params: []testing.Param{
 			{
 				Name: "default_share_property",

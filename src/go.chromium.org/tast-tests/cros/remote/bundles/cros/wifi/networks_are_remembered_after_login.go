@@ -53,9 +53,10 @@ func init() {
 			"tast.cros.wifi.WifiService",
 			"tast.cros.ui.ChromeUIService",
 		},
-		SoftwareDeps: []string{"chrome"},
-		Fixture:      wificell.FixtureID(wificell.TFFeaturesNone),
-		Timeout:      5 * time.Minute,
+		SoftwareDeps:    []string{"chrome"},
+		Fixture:         wificell.FixtureID(wificell.TFFeaturesNone),
+		Timeout:         5 * time.Minute,
+		VariantCategory: `{"name": "WifiBtChipset_Soc_Kernel"}`,
 		Params: []testing.Param{
 			{
 				Name: "open_network",

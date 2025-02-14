@@ -29,10 +29,11 @@ func init() {
 		// This test is not in any group because it is for manual debugging
 		// a pcap problem that frame checksum might not be trust-worthy.
 		// See previous investigation in b/185378075.
-		Attr:        []string{"group:wificell"},
-		TestBedDeps: []string{tbdep.Wificell, tbdep.WifiStateNormal, tbdep.BluetoothStateNormal, tbdep.PeripheralWifiStateWorking},
-		ServiceDeps: []string{wificell.ShillServiceName},
-		Fixture:     wificell.FixtureID(wificell.TFFeaturesCapture),
+		Attr:            []string{"group:wificell"},
+		TestBedDeps:     []string{tbdep.Wificell, tbdep.WifiStateNormal, tbdep.BluetoothStateNormal, tbdep.PeripheralWifiStateWorking},
+		ServiceDeps:     []string{wificell.ShillServiceName},
+		Fixture:         wificell.FixtureID(wificell.TFFeaturesCapture),
+		VariantCategory: `{"name": "WifiBtChipset_Soc_Kernel"}`,
 	})
 }
 

@@ -43,9 +43,10 @@ func init() {
 			"tast.cros.chrome.uiauto.quicksettings.QuickSettingsService",
 			wifiutil.FaillogServiceName,
 		},
-		SoftwareDeps: []string{"chrome"},
-		Fixture:      wificell.FixtureID(wificell.TFFeaturesNone),
-		Timeout:      5 * time.Minute,
+		SoftwareDeps:    []string{"chrome"},
+		Fixture:         wificell.FixtureID(wificell.TFFeaturesNone),
+		Timeout:         5 * time.Minute,
+		VariantCategory: `{"name": "WifiBtChipset_Soc_Kernel"}`,
 	})
 }
 
