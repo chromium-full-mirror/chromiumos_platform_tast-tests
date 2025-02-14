@@ -132,7 +132,7 @@ func init() {
 			"chromeos-faft@google.com",
 		},
 		BugComponent: "b:792402", // ChromeOS > Platform > Enablement > Firmware > FAFT
-		Attr:         []string{"group:firmware", "firmware_ec"},
+		Attr:         []string{"group:firmware", "firmware_ec", "firmware_ec_stressed"},
 		Timeout:      10 * time.Minute,
 		SoftwareDeps: []string{"chrome"},
 		ServiceDeps:  []string{"tast.cros.firmware.UtilsService", "tast.cros.graphics.ScreenshotService", "tast.cros.inputs.TouchpadService", "tast.cros.inputs.TouchscreenService"},

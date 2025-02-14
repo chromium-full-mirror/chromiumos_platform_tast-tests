@@ -33,7 +33,7 @@ func init() {
 			"jbettis@chromium.org",
 		},
 		BugComponent: "b:792402", // ChromeOS > Platform > Enablement > Firmware > FAFT
-		Attr:         []string{"group:firmware", "firmware_ec", "firmware_smoke", "firmware_bringup"},
+		Attr:         []string{"group:firmware", "firmware_ec", "firmware_smoke", "firmware_bringup", "firmware_ec_stressed"},
 		Fixture:      fixture.NormalMode,
 		HardwareDeps: hwdep.D(hwdep.ChromeEC()),
 		Params: []testing.Param{

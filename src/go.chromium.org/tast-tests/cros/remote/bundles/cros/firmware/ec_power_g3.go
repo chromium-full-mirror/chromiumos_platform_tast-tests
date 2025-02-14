@@ -50,14 +50,14 @@ func init() {
 		Params: []testing.Param{
 			{
 				Name:      "shutdown",
-				ExtraAttr: []string{"firmware_ec"},
+				ExtraAttr: []string{"firmware_ec", "firmware_ec_stressed"},
 				Val: powerG3Params{
 					PowerOffMethod: shutdownCommand,
 				},
 			},
 			{
 				Name:      "power_button",
-				ExtraAttr: []string{"firmware_ec", "firmware_bringup"},
+				ExtraAttr: []string{"firmware_ec", "firmware_ec_stressed", "firmware_bringup"},
 				Val: powerG3Params{
 					PowerOffMethod: longPowerButtonPress,
 				},
@@ -80,7 +80,7 @@ func init() {
 			},
 			{
 				Name:              "power_state_snk",
-				ExtraAttr:         []string{"firmware_ec", "firmware_bringup"},
+				ExtraAttr:         []string{"firmware_ec", "firmware_ec_stressed", "firmware_bringup"},
 				ExtraHardwareDeps: hwdep.D(hwdep.Battery()),
 				Val: powerG3Params{
 					PowerOffMethod: powerStateOff,

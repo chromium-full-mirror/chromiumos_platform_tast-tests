@@ -22,7 +22,7 @@ func init() {
 			"jbettis@chromium.org",
 		},
 		BugComponent: "b:792402", // ChromeOS > Platform > Enablement > Firmware > FAFT
-		Attr:         []string{"group:firmware", "firmware_ec", "firmware_bringup"},
+		Attr:         []string{"group:firmware", "firmware_ec", "firmware_bringup", "firmware_ec_stressed"},
 		Vars:         []string{"servo"},
 		TestBedDeps:  []string{tbdep.ServoStateWorking},
 		HardwareDeps: hwdep.D(hwdep.ChromeEC()),

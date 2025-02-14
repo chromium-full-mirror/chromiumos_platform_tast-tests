@@ -67,7 +67,7 @@ func init() {
 			"chromeos-faft@google.com",
 		},
 		BugComponent: "b:792402", // ChromeOS > Platform > Enablement > Firmware > FAFT
-		Attr:         []string{"group:firmware", "firmware_ec"},
+		Attr:         []string{"group:firmware", "firmware_ec", "firmware_ec_stressed"},
 		SoftwareDeps: []string{"chrome"},
 		ServiceDeps:  []string{"tast.cros.ui.ScreenRecorderService", "tast.cros.browser.ChromeService", "tast.cros.ui.CheckVirtualKeyboardService", "tast.cros.firmware.UtilsService"},
 		Fixture:      fixture.NormalMode,

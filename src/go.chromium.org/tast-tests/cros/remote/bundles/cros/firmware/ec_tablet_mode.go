@@ -42,7 +42,7 @@ func init() {
 			"chromeos-faft@google.com",
 		},
 		BugComponent: "b:792402", // ChromeOS > Platform > Enablement > Firmware > FAFT
-		Attr:         []string{"group:firmware", "firmware_ec"},
+		Attr:         []string{"group:firmware", "firmware_ec", "firmware_ec_stressed"},
 		SoftwareDeps: []string{"chrome"},
 		Vars:         []string{"ui.signinProfileTestExtensionManifestKey"},
 		ServiceDeps:  []string{"tast.cros.ui.ScreenLockService", "tast.cros.ui.PowerMenuService", "tast.cros.graphics.ScreenshotService"},
