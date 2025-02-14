@@ -50,11 +50,16 @@ async function start(surface) {
                                     `${video.width}x${video.height}`));
           }
           // We know the expected dimensions only in the full screen capture case.
-          if (surface === 'monitor' &&
-              (video.width !== screen.width || video.height !== screen.height)) {
-            reject(new DOMException(`Unexpected capture resolution, got: `+
-              `${video.width}x${video.height}, expected ` +
-              `${screen.width}x${screen.height}`));
+          if (surface == 'monitor') {
+            // The chrome display capture stack avoids the odd resolution, so it
+            // aligns down the capture resolution when the screen size is odd.
+            const expected_width = screen.width - (screen.width % 2);
+            const expected_height = screen.height - (screen.height % 2);
+            if (video.width !== expected_width || video.height !== expected_height) {
+              reject(new DOMException(`Unexpected capture resolution, got: ` +
+                `${video.width}x${video.height}, expected ` +
+                `${screen.width}x${screen.height}`));
+            }
           }
 
           // getDisplayMedia() can produce very large dimensions, reduce for speed.
