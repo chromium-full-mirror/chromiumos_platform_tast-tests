@@ -12,18 +12,20 @@ import (
 
 // TestParams is a struct that holds the parameters for the dictation test.
 type TestParams struct {
-	DeviceName     string
-	MotionData     string
-	MotionDataMap  map[string]int
-	ButtonTestList []string
+	DeviceName       string
+	MotionData       string
+	MotionDataMap    map[string]int
+	ButtonTestList   []string
+	KeyboardTestList []string
 }
 
 // PhilipsTestParams holds the parameters for the Philips dictation test.
 var PhilipsTestParams = TestParams{
-	DeviceName:     "Philips Speech Processing SpeechMike III",
-	MotionData:     PhilipsMotionData,
-	MotionDataMap:  philipsMotionDataMap,
-	ButtonTestList: philipsButtonTestList,
+	DeviceName:       "Philips Speech Processing SpeechMike III",
+	MotionData:       PhilipsMotionData,
+	MotionDataMap:    philipsMotionDataMap,
+	ButtonTestList:   philipsButtonTestList,
+	KeyboardTestList: philipsKeyboardTestList,
 }
 
 const (
@@ -80,5 +82,14 @@ var (
 		dictationcommon.FunctionF2B,
 		dictationcommon.FunctionF3C,
 		dictationcommon.FunctionF4D,
+	}
+
+	philipsKeyboardTestList = []string{
+		dictationcommon.ButtonEndOfLetterPriority,
+		dictationcommon.ButtonInsertOverwrite,
+		dictationcommon.ButtonForward,
+		dictationcommon.ButtonInstruction,
+		dictationcommon.FunctionF1A,
+		dictationcommon.FunctionF2B,
 	}
 )

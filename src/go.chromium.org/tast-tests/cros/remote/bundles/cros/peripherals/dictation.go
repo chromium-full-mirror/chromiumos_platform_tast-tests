@@ -158,11 +158,9 @@ func performDictationOperations(ctx context.Context, cl *rpc.Client, dataPath fu
 	}); err != nil {
 		return errors.Wrapf(err, "failed to connect to device %v", deviceName)
 	}
-	eventModeHid := string(dictationcommon.EventModeHid)
-	if _, err := svc.SetDictationEventMode(ctx, &peripherals.SetDictationEventModeRequest{
-		EventMode: eventModeHid,
-	}); err != nil {
-		return errors.Wrapf(err, "failed to set event mode %v", eventModeHid)
+
+	if err := setDictationEventMode(ctx, svc, dictationcommon.EventModeHid); err != nil {
+		return err
 	}
 
 	res, err := svc.GetDictationEventMode(ctx, &empty.Empty{})
@@ -170,6 +168,7 @@ func performDictationOperations(ctx context.Context, cl *rpc.Client, dataPath fu
 		return errors.Wrap(err, "failed to get event mode")
 	}
 	eventMode := res.EventMode
+	eventModeHid := string(dictationcommon.EventModeHid)
 	if !strings.EqualFold(eventMode, eventModeHid) {
 		return errors.Errorf("unexpected event mode, got: %s, want: %s", eventMode, eventModeHid)
 	}
@@ -230,9 +229,24 @@ func performDictationOperations(ctx context.Context, cl *rpc.Client, dataPath fu
 		return errors.Wrap(err, "failed to test motion events")
 	}
 
+	if err := setDictationEventMode(ctx, svc, dictationcommon.EventModeKeyboard); err != nil {
+		return err
+	}
+
+	if err := keyboardEventsTesting(ctx, svc, params, arm, positions, waitTimeout, manualTest); err != nil {
+		return errors.Wrap(err, "failed to test keyboard events")
+	}
+
 	return nil
 }
-
+func setDictationEventMode(ctx context.Context, svc peripherals.PeriphServiceClient, eventMode dictationcommon.EventMode) error {
+	if _, err := svc.SetDictationEventMode(ctx, &peripherals.SetDictationEventModeRequest{
+		EventMode: string(eventMode),
+	}); err != nil {
+		return errors.Wrapf(err, "failed to set event mode %v", eventMode)
+	}
+	return nil
+}
 func buttonEventsTesting(ctx context.Context, svc peripherals.PeriphServiceClient, params dictation.TestParams,
 	arm *amber.Arm, positions [][]float32, waitTimeout time.Duration, manualTest bool) error {
 	pressButtonAndVerify := func(ctx context.Context, button string) error {
@@ -245,12 +259,16 @@ func buttonEventsTesting(ctx context.Context, svc peripherals.PeriphServiceClien
 			if err := arm.SingleMove(ctx, positions[index], motionDuration); err != nil {
 				return errors.Wrapf(err, "failed to move robotic arm to press %q button", button)
 			}
-			defer func() {
+			var cancel context.CancelFunc
+			cleanupCtx := ctx
+			ctx, cancel = ctxutil.Shorten(ctx, 20*time.Second)
+			defer cancel()
+			defer func(ctx context.Context) {
 				// Return to ready position for the next verification.
 				if err := arm.SingleMove(ctx, positions[dictation.ReadyPositionIndex], motionDuration); err != nil {
 					testing.ContextLog(ctx, "Failed to move to ready position after verification: ", err)
 				}
-			}()
+			}(cleanupCtx)
 		}
 		if _, err := svc.WaitDictationNewEvent(ctx, &peripherals.WaitDictationNewEventRequest{
 			Event:   button,
@@ -338,6 +356,57 @@ func motionEventsTesting(ctx context.Context, svc peripherals.PeriphServiceClien
 			Timeout: waitTimeout.Milliseconds(),
 		}); err != nil {
 			return errors.Wrapf(err, "failed to wait for the new event %q", event)
+		}
+	}
+	return nil
+}
+
+func keyboardEventsTesting(ctx context.Context, svc peripherals.PeriphServiceClient, params dictation.TestParams,
+	arm *amber.Arm, positions [][]float32, waitTimeout time.Duration, manualTest bool) error {
+	pressButtonAndVerify := func(ctx context.Context, button string) error {
+		cleanupCtx := ctx
+		ctx, cancel := ctxutil.Shorten(ctx, 20*time.Second)
+		defer cancel()
+
+		if _, err := svc.PrepareKeyboardEvent(ctx, &peripherals.KeyboardEventRequest{
+			Event: button,
+		}); err != nil {
+			return errors.Wrapf(err, "failed to prepare keyboard event %q", button)
+		}
+		defer func(ctx context.Context) {
+			if _, err := svc.CleanupKeyboardEvent(ctx, &peripherals.KeyboardEventRequest{
+				Event: button,
+			}); err != nil {
+				testing.ContextLogf(ctx, "Failed to clean up keyboard event %q", button)
+			}
+		}(cleanupCtx)
+
+		if manualTest {
+			testing.ContextLogf(ctx, "Please press %q button in %v", button, waitTimeout)
+		} else {
+			testing.ContextLogf(ctx, "Start to move robotic arm to press %q button", button)
+			motionDuration := dictation.MotionDuration
+			index := params.MotionDataMap[button]
+			if err := arm.SingleMove(ctx, positions[index], motionDuration); err != nil {
+				return errors.Wrapf(err, "failed to move robotic arm to press %q button", button)
+			}
+			defer func(ctx context.Context) {
+				// Return to ready position for the next verification.
+				if err := arm.SingleMove(ctx, positions[dictation.ReadyPositionIndex], motionDuration); err != nil {
+					testing.ContextLog(ctx, "Failed to move to ready position after verification: ", err)
+				}
+			}(cleanupCtx)
+		}
+		if _, err := svc.VerifyKeyboardEvent(ctx, &peripherals.KeyboardEventRequest{
+			Event: button,
+		}); err != nil {
+			return errors.Wrapf(err, "failed to verify keyboard event %q", button)
+		}
+		return nil
+	}
+	for _, button := range params.KeyboardTestList {
+		if err := pressButtonAndVerify(ctx, button); err != nil {
+			return errors.Wrapf(err, "failed to press button %q", button)
 		}
 	}
 	return nil

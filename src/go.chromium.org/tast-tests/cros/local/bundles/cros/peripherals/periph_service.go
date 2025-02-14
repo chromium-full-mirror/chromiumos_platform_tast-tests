@@ -422,6 +422,31 @@ func (p *PeriphService) WaitDictationNewEvent(ctx context.Context, req *peripher
 	return &empty.Empty{}, nil
 }
 
+// PrepareKeyboardEvent prepares the precondition for a keyboard event.
+func (p *PeriphService) PrepareKeyboardEvent(ctx context.Context, req *peripherals.KeyboardEventRequest) (*empty.Empty, error) {
+	if err := p.dictationSupport.PrepareKeyboardEvent(ctx, req.Event); err != nil {
+		return nil, errors.Wrap(err, "failed to prepare keyboard event")
+	}
+	return &empty.Empty{}, nil
+}
+
+// VerifyKeyboardEvent verifies that the given keyboard event is triggered.
+func (p *PeriphService) VerifyKeyboardEvent(ctx context.Context, req *peripherals.KeyboardEventRequest) (*empty.Empty, error) {
+	if err := p.dictationSupport.VerifyKeyboardEvent(ctx, req.Event); err != nil {
+		return nil, errors.Wrap(err, "failed to verify keyboard event")
+	}
+	return &empty.Empty{}, nil
+}
+
+// CleanupKeyboardEvent cleans up by performing necessary actions like
+// closing windows.
+func (p *PeriphService) CleanupKeyboardEvent(ctx context.Context, req *peripherals.KeyboardEventRequest) (*empty.Empty, error) {
+	if err := p.dictationSupport.CleanupKeyboardEvent(ctx, req.Event); err != nil {
+		return nil, errors.Wrap(err, "failed to clean up keyboard event")
+	}
+	return &empty.Empty{}, nil
+}
+
 // SetDictationEventMode sets the event mode to the given state.
 func (p *PeriphService) SetDictationEventMode(ctx context.Context, req *peripherals.SetDictationEventModeRequest) (*empty.Empty, error) {
 	if err := p.dictationSupport.SetEventMode(dictationcommon.EventMode(req.EventMode))(ctx); err != nil {

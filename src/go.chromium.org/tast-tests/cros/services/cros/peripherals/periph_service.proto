@@ -94,6 +94,19 @@ service PeriphService {
   rpc WaitDictationNewEvent(WaitDictationNewEventRequest)
       returns (google.protobuf.Empty) {}
 
+  // prepareKeyboardEvent prepares the precondition for a keyboard event.
+  rpc prepareKeyboardEvent(KeyboardEventRequest)
+      returns (google.protobuf.Empty) {}
+
+  // VerifyKeyboardEvent verifies that the given keyboard event is triggered.
+  rpc VerifyKeyboardEvent(KeyboardEventRequest)
+      returns (google.protobuf.Empty) {}
+
+  // CleanupKeyboardEvent cleans up by performing necessary actions like
+  // closing windows.
+  rpc CleanupKeyboardEvent(KeyboardEventRequest)
+      returns (google.protobuf.Empty) {}
+
   // SetDictationEventMode sets the event mode to the given state.
   rpc SetDictationEventMode(SetDictationEventModeRequest)
       returns (google.protobuf.Empty) {}
@@ -238,6 +251,10 @@ message WaitDictationNewEventRequest {
   string event = 1;
   int64 timeout = 2;
 }
+
+// KeyboardEventRequest contains the information needed to prepare and verify
+// keyboard event.
+message KeyboardEventRequest { string event = 1; }
 
 // SetDictationEventModeRequest contains the information needed to set the event
 // mode.

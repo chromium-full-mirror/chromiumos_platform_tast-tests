@@ -16,10 +16,12 @@ import (
 	"go.chromium.org/tast-tests/cros/common/action"
 	dictationcommon "go.chromium.org/tast-tests/cros/common/dictation"
 	"go.chromium.org/tast-tests/cros/local/chrome"
+	"go.chromium.org/tast-tests/cros/local/chrome/ash"
 	"go.chromium.org/tast-tests/cros/local/chrome/uiauto"
 	"go.chromium.org/tast-tests/cros/local/chrome/uiauto/nodewith"
 	"go.chromium.org/tast-tests/cros/local/chrome/uiauto/role"
 	"go.chromium.org/tast-tests/cros/local/chrome/webutil"
+	"go.chromium.org/tast/core/ctxutil"
 	"go.chromium.org/tast/core/errors"
 	"go.chromium.org/tast/core/testing"
 )
@@ -41,8 +43,14 @@ var (
 	indexAndModeRegex = regexp.MustCompile(`index:\s*(\d+)\s*mode:\s*(\d+)`)
 )
 
+var (
+	getEventModeButton = nodewith.Name(dictationcommon.EventGetEventMode).Role(role.Button).First()
+	setEventModeButton = nodewith.Name(dictationcommon.EventSetEventMode).Role(role.Button).First()
+)
+
 // Support holds the resources required for running dictation tests.
 type Support struct {
+	cr   *chrome.Chrome
 	conn *chrome.Conn
 	ui   *uiauto.Context
 	// eventMessages contains all event messages after the dictation support page is opened.
@@ -52,7 +60,7 @@ type Support struct {
 }
 
 // NewSupport creates a new Support instance.
-func NewSupport(ctx context.Context, cr *chrome.Chrome) (*Support, error) {
+func NewSupport(ctx context.Context, cr *chrome.Chrome) (s *Support, retErr error) {
 	tconn, err := cr.TestAPIConn(ctx)
 	if err != nil {
 		return nil, errors.Wrap(err, "failed to create Test API connection")
@@ -62,13 +70,33 @@ func NewSupport(ctx context.Context, cr *chrome.Chrome) (*Support, error) {
 		return nil, err
 	}
 
+	cleanupCtx := ctx
+	ctx, cancel := ctxutil.Shorten(ctx, 5*time.Second)
+	defer cancel()
+
+	defer func(ctx context.Context) {
+		if retErr != nil {
+			if err := conn.Close(); err != nil {
+				testing.ContextLog(ctx, "Failed to close connection: ", err)
+			}
+		}
+	}(cleanupCtx)
+
 	if err := webutil.WaitForQuiescence(ctx, conn, time.Minute); err != nil {
 		return nil, errors.Wrap(err, "failed to wait for the page loaded")
 	}
 
+	w, err := ash.WaitForAnyWindow(ctx, tconn, ash.BrowserTypeMatch())
+	if err != nil {
+		return nil, errors.Wrap(err, "failed to open a browser window")
+	}
+	if err := ash.SetWindowStateAndWait(ctx, tconn, w.ID, ash.WindowStateMaximized); err != nil {
+		return nil, errors.Wrap(err, "failed to maximize the browser window")
+	}
+
 	ui := uiauto.New(tconn)
 
-	return &Support{conn: conn, ui: ui}, nil
+	return &Support{cr: cr, conn: conn, ui: ui}, nil
 }
 
 // Close closes the dictation support page.
@@ -148,7 +176,6 @@ func (s *Support) WaitNewEvent(expectedEvent string, timeout time.Duration) acti
 // EventMode returns the current event mode.
 func (s *Support) EventMode(ctx context.Context) (dictationcommon.EventMode, error) {
 	ui := s.ui
-	getEventModeButton := nodewith.Name(dictationcommon.EventGetEventMode).Role(role.Button).First()
 	if err := uiauto.NamedCombine("get event mode",
 		ui.DoDefault(getEventModeButton),
 		s.WaitNewEvent(dictationcommon.EventGetEventMode, defaultTimeout),
@@ -167,7 +194,6 @@ func (s *Support) EventMode(ctx context.Context) (dictationcommon.EventMode, err
 // SetEventMode sets the event mode to the given event mode.
 func (s *Support) SetEventMode(eventMode dictationcommon.EventMode) action.Action {
 	ui := s.ui
-	setEventModeButton := nodewith.Name(dictationcommon.EventSetEventMode).Role(role.Button).First()
 	eventModeItem := nodewith.NameContaining(string(eventMode)).Role(role.MenuListOption).First()
 	return uiauto.NamedCombine(fmt.Sprintf("set event mode to %q", eventMode),
 		ui.DoDefault(eventModeItem),
