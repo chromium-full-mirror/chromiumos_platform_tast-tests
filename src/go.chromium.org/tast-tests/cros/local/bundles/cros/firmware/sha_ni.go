@@ -21,7 +21,7 @@ func init() {
 			"khwon@chromium.org", // Test Author
 		},
 		BugComponent: "b:792402", // ChromeOS > Platform > Enablement > Firmware > FAFT
-		Attr:         []string{"group:firmware", "firmware_ec"},
+		Attr:         []string{"group:firmware", "firmware_bios", "firmware_level5"},
 		HardwareDeps: hwdep.D(hwdep.CPUSupportsSHANI()),
 	})
 }
