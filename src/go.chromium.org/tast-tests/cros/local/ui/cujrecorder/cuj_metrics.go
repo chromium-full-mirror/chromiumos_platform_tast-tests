@@ -95,6 +95,8 @@ func CUJAshCommonMetricConfigs() []MetricConfig {
 		NewSmoothnessMetricConfig("Ash.HotseatTransition.AnimationSmoothness.TransitionToShownHotseat"),
 		NewSmoothnessMetricConfig("Ash.SwipeHomeToOverviewGesture"),
 		NewCustomMetricConfig("Graphics.Paint.UI.NormalizedInvalidatedArea", "area", perf.SmallerIsBetter),
+		NewCustomMetricConfig("Compositing.DirectRenderer.PartialSwap.TotalDamage", "area", perf.SmallerIsBetter),
+		NewCustomMetricConfig("Compositing.DirectRenderer.PartialSwap.ExtraDamage", "area", perf.SmallerIsBetter),
 
 		// Note that BootTime.* metrics have special handling in cujRecorder.Record().
 		NewBootAndShutdownCustomMetricConfig("BootTime.Authenticate", "ms", perf.SmallerIsBetter),
