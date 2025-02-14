@@ -31,7 +31,18 @@ func init() {
 		ServiceDeps:     []string{"tast.cros.bluetooth.BluetoothUIService"},
 		Timeout:         90 * time.Second,
 		VariantCategory: `{"name": "BT_Chipset_Kernel"}`,
-		Fixture:         "chromeLoggedInWith1BTPeerFlossEnabled",
+		Params: []testing.Param{
+			{
+				Name:    "floss_disabled__le_mouse",
+				Fixture: "chromeLoggedInWith1BTPeerFlossDisabled",
+				Val:     cbt.DeviceTypeLEMouse,
+			},
+			{
+				Name:    "floss_enabled__le_mouse",
+				Fixture: "chromeLoggedInWith1BTPeerFlossEnabled",
+				Val:     cbt.DeviceTypeLEMouse,
+			},
+		},
 	})
 }
 
