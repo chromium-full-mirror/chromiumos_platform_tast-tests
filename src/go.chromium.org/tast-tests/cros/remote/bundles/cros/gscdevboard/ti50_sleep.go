@@ -296,7 +296,7 @@ func Ti50Sleep(ctx context.Context, s *testing.State) {
 	pv := perf.NewValues()
 
 	// Wake source and pin values for OT chip.
-	if b.TestbedType == ti50.GscOTShield || b.TestbedType == ti50.GscOpentitanCw310Fpga {
+	if b.TestbedType == ti50.GscOTShield || b.TestbedType == ti50.GscOpentitanCw310Fpga || b.TestbedType == ti50.GscNTShieldV2 {
 		wakeSourceGpio = "00000004"
 		wakeSourceRbox = "00000001"
 		wakeSourceAdc = "00000002"
