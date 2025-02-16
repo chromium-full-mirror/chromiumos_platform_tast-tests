@@ -79,8 +79,7 @@ var bruschettaKeepVM = testing.RegisterVarString(
 )
 
 // BruschettaHwDeps prevents tests from running on devices without enough storage or RAM.
-// TODO: b/394907330: re-enable tests on brya-kernelnext
-var BruschettaHwDeps = hwdep.D(hwdep.MinStorage(50), hwdep.MinMemory(7*1024), hwdep.SkipOnPlatform("brya-kernelnext"))
+var BruschettaHwDeps = hwdep.D(hwdep.MinStorage(50), hwdep.MinMemory(7*1024))
 
 func init() {
 	testing.AddFixture(&testing.Fixture{
