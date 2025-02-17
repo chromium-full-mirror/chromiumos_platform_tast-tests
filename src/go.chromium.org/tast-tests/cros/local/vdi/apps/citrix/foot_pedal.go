@@ -17,9 +17,9 @@ import (
 const (
 	// FootPedalAppName is the name of the Foot Pedal application.
 	FootPedalAppName      AppName = "Philips"
-	footPedalDeviceName           = "Foot Control 2330"
-	footPedalMarkIcon             = "citrix/foot_pedal_mark.png"
-	footPedalMaximizeIcon         = "citrix/foot_pedal_maximize.png"
+	footPedalDeviceName   string  = "Foot Control 2330"
+	footPedalMarkIcon     string  = "citrix/foot_pedal_mark.png"
+	footPedalMaximizeIcon string  = "citrix/foot_pedal_maximize.png"
 )
 
 // FootPedalButton is the name of the foot pedal button.

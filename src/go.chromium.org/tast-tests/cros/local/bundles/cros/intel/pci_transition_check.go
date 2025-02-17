@@ -165,7 +165,7 @@ func deviceTransitionCheck(ctx context.Context, s *testing.State, pciAddress str
 	// Transitions between L0 and L1 states
 	printCurrentLinkStatus(ctx, s, linkControl)
 	s.Logf("Transitioning from L0 to L1 for device %s", pciAddress)
-	setPCI(ctx, s, pciAddress, fmt.Sprintf("CAP_EXP+0x10.W=0x2"))
+	setPCI(ctx, s, pciAddress, "CAP_EXP+0x10.W=0x2")
 
 	// GoBigSleepLint: Let it transition from L0 to L1.
 	if err := testing.Sleep(ctx, time.Second); err != nil {
@@ -192,7 +192,7 @@ func deviceTransitionCheck(ctx context.Context, s *testing.State, pciAddress str
 	printCurrentLinkStatus(ctx, s, linkControl)
 
 	s.Logf("Transitioning back from L1 to L0 for device %s", pciAddress)
-	setPCI(ctx, s, pciAddress, fmt.Sprintf("CAP_EXP+0x10.W=0x0"))
+	setPCI(ctx, s, pciAddress, "CAP_EXP+0x10.W=0x0")
 	// GoBigSleepLint: Let it transition from L1 to L0.
 	if err := testing.Sleep(ctx, time.Second); err != nil {
 		s.Error("Failed to sleep: ", err)
