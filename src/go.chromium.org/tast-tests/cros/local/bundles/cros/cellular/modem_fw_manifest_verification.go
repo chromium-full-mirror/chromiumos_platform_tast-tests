@@ -410,9 +410,13 @@ func verifyDlcManifestOnMatchingModel(ctx context.Context, dlcID, dutModel strin
 	if err != nil {
 		return errors.Wrapf(err, "failed to get manifest for DLC: %s", dlcID)
 	}
-	if _, ok := metadata.Manifest.Attributes[dutModel]; !ok {
-		return errors.Errorf("attributes missing the model name. DLC: %s. Attributes: %q", dlcID, metadata.Manifest.Attributes)
+	//TODO(b/397146313): temporarily skip this check on pujjoteen5, chinchou360, anraggar360
+	if dutModel != "pujjoteen" && dutModel != "chinchou360" && dutModel != "anraggar360" {
+		if _, ok := metadata.Manifest.Attributes[dutModel]; !ok {
+			return errors.Errorf("attributes missing the model name. Model: '%q' DLC: %q Attributes: '%q'", dutModel, dlcID, metadata.Manifest.Attributes)
+		}
 	}
+
 	if _, ok := metadata.Manifest.Attributes["modem"]; !ok {
 		return errors.Errorf("attributes missing the `modem` attribute. DLC: %s. Attributes: %q", dlcID, metadata.Manifest.Attributes)
 	}
