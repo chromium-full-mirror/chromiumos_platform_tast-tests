@@ -86,15 +86,16 @@ func validateMemoryData(memory *memoryInfo) error {
 func validateMemoryEncryptionData(memoryEncryption *memoryEncryptionInfo) error {
 	if memoryEncryption.EncryptionState == "" {
 		return errors.New("failed to verify EncryptionState")
-	}
-	if memoryEncryption.KeyLength <= 0 {
-		return errors.Errorf("failed to verify KeyLength : %d", memoryEncryption.KeyLength)
-	}
-	if memoryEncryption.MaxKeyNumber <= 0 {
-		return errors.Errorf("failed to verify MaxKeyNumber: %d", memoryEncryption.MaxKeyNumber)
-	}
-	if memoryEncryption.ActiveAlgrithm == "" {
-		return errors.New("failed to verify  ActiveAlgrithm")
+	} else if memoryEncryption.EncryptionState != "Memory encryption disabled" {
+		if memoryEncryption.KeyLength <= 0 {
+			return errors.Errorf("failed to verify KeyLength : %d", memoryEncryption.KeyLength)
+		}
+		if memoryEncryption.MaxKeyNumber <= 0 {
+			return errors.Errorf("failed to verify MaxKeyNumber: %d", memoryEncryption.MaxKeyNumber)
+		}
+		if memoryEncryption.ActiveAlgrithm == "" {
+			return errors.New("failed to verify ActiveAlgrithm")
+		}
 	}
 	return nil
 }
