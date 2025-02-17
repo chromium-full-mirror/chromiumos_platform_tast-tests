@@ -313,7 +313,7 @@ func (ms *Ms365) InstallPWA(ctx context.Context, cr *chrome.Chrome) error {
 		return errors.Wrap(err, "failed to login to Office site")
 	}
 
-	windowAfterSignIn := nodewith.Role(role.RootWebArea).Name("Home | Microsoft 365")
+	windowAfterSignIn := nodewith.Role(role.RootWebArea).NameRegex(regexp.MustCompile("Home | Microsoft 365.*"))
 	installIcon := nodewith.ClassName("PwaInstallView").Role(role.Button)
 	installButton := nodewith.Name("Install").Role(role.Button)
 
