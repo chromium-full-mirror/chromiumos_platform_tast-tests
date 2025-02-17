@@ -65,7 +65,7 @@ func genPlaybackPerfParam(codec, file string, resolution, fps int, dec, nameSuff
 	}
 	var hwDeps []string
 	if codec == "hevc" || codec == "hevc10" {
-		hwDeps = []string{"hwdep.SupportsHEVCVideoDecodingInChrome()"}
+		hwDeps = []string{"hwdep.HEVCVideoDecodingIsAllowedInChrome()"}
 	}
 	return playback.ParamData{
 		Name:            testName,

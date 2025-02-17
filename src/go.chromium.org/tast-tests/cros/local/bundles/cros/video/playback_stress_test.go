@@ -101,7 +101,7 @@ func genPlaybackStressParam(param playbackStressParam, hardwareDepsOverrides map
 		hwdeps = append(hwdeps, "hwdep.SuspendToMem()")
 	}
 	if param.codec == "hevc" {
-		hwdeps = append(hwdeps, "hwdep.SupportsHEVCVideoDecodingInChrome()")
+		hwdeps = append(hwdeps, "hwdep.HEVCVideoDecodingIsAllowedInChrome()")
 	}
 
 	if override, ok := hardwareDepsOverrides[testName]; ok {

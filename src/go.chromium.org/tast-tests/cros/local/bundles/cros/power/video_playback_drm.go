@@ -61,7 +61,7 @@ func init() {
 			Name:              "cencv3_hevc_ctr_ash",
 			Val:               videoPlaybackDrmTestParam{VideoName: "tulip_480p_hevc_cencv3_ctr.mpd"},
 			ExtraData:         append(hwdrmDataFiles, "drm_video_playback/tulip_480p_hevc_cencv3_ctr.mp4", "drm_video_playback/tulip_audio_aac_cencv3_ctr.mp4", "drm_video_playback/tulip_480p_hevc_cencv3_ctr.mpd"),
-			ExtraHardwareDeps: hwdep.D(hwdep.SupportsHEVCVideoDecodingInChrome()),
+			ExtraHardwareDeps: hwdep.D(hwdep.HEVCVideoDecodingIsAllowedInChrome()),
 			ExtraSoftwareDeps: []string{caps.HWDecodeCTRV3HEVC, "proprietary_codecs"},
 			Fixture:           "powerAshProtectedVideo",
 			Timeout:           6*time.Minute + power.RecorderTimeout,
