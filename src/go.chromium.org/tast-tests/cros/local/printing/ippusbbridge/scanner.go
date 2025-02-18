@@ -81,14 +81,13 @@ func PrepareScannerConnection(ctx context.Context, devInfo usbprinter.DevInfo, n
 		return nil, errors.Wrapf(err, "failed to stop ippusb-bridge instance for BUS=%03s DEV=%03s", bus, device)
 	}
 
+	const port = 60000
+
 	testing.ContextLog(ctx, "Setting up ipp-usb connection")
-	ippusbBridge := testexec.CommandContext(ctx, "ippusb_bridge", "--bus-device", fmt.Sprintf("%s:%s", bus, device))
+	ippusbBridge := testexec.CommandContext(ctx, "ippusb_bridge", "--bus-device", fmt.Sprintf("%s:%s", bus, device), "-p", fmt.Sprintf("%d", port))
 	if err := ippusbBridge.Start(); err != nil {
 		return nil, errors.Wrap(err, "failed to connect to printer with ippusb_bridge")
 	}
-
-	// Defined in src/platform2/ippusb_bridge/src/main.rs
-	const port = 60000
 
 	// Wait for ippusb_bridge to start up.
 	if err := testing.Poll(ctx, func(ctx context.Context) error {
