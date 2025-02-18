@@ -55,9 +55,9 @@ func ModemFWManifestVerification(ctx context.Context, s *testing.State) {
 		s.Fatalf("Failed to get device variant: %s", err)
 	}
 
-	dutModel, err := cellular.GetModel(ctx)
+	board, err := cellular.GetBoard(ctx)
 	if err != nil {
-		s.Fatalf("Failed to get device model: %s", err)
+		s.Fatalf("Failed to get board: %s", err)
 	}
 
 	missingFiles := make(map[string]bool)
@@ -73,7 +73,7 @@ func ModemFWManifestVerification(ctx context.Context, s *testing.State) {
 			if err != nil {
 				s.Fatalf("Failed to get modem type: %s", err)
 			}
-			if err := verifyDlcManifest(ctx, device.GetDlc().GetDlcId(), modemType, dutModel); err != nil {
+			if err := verifyDlcManifest(ctx, device.GetDlc().GetDlcId(), modemType, device.Variant, board); err != nil {
 				s.Fatalf("Invalid DLC manifest : %s", err)
 			}
 			// Only the variant that matches the device's variant will contain a DLC that is
@@ -84,10 +84,6 @@ func ModemFWManifestVerification(ctx context.Context, s *testing.State) {
 			if dutVariant != device.Variant {
 				uninstallDlc = true
 				dlc.Install(ctx, device.Dlc.DlcId, "")
-			} else {
-				if err := verifyDlcManifestOnMatchingModel(ctx, device.GetDlc().GetDlcId(), dutModel); err != nil {
-					s.Fatalf("Invalid DLC manifest : %s", err)
-				}
 			}
 			state, err := dlc.GetDlcState(ctx, device.Dlc.DlcId)
 			// Verify that the DLC exists in the dlcservice manifest
@@ -358,7 +354,7 @@ func getDlcMetadata(ctx context.Context, id string) (*dlcMetadata, error) {
 	return &metadata, nil
 }
 
-func verifyDlcManifest(ctx context.Context, dlcID string, modemType cellularconst.ModemType, dutModel string) error {
+func verifyDlcManifest(ctx context.Context, dlcID string, modemType cellularconst.ModemType, variantInManifest, board string) error {
 	metadata, err := getDlcMetadata(ctx, dlcID)
 	if err != nil {
 		return errors.Wrapf(err, "failed to get manifest for DLC: %s", dlcID)
@@ -400,26 +396,24 @@ func verifyDlcManifest(ctx context.Context, dlcID string, modemType cellularcons
 	if (modemType != cellularconst.ModemTypeL850) && !metadata.Manifest.LoadPinVerityDigest {
 		return errors.Errorf("DLC_LOADPIN_VERITY_DIGEST was not set in DLC %s", dlcID)
 	}
-	return nil
-}
 
-// verifyDlcManifestOnMatchingModel Verifies DLC manifest values that can only be verified in the
-// model that matches the dlc
-func verifyDlcManifestOnMatchingModel(ctx context.Context, dlcID, dutModel string) error {
-	metadata, err := getDlcMetadata(ctx, dlcID)
-	if err != nil {
-		return errors.Wrapf(err, "failed to get manifest for DLC: %s", dlcID)
-	}
-	//TODO(b/397146313): temporarily skip this check on pujjoteen5, chinchou360, anraggar360
-	if dutModel != "pujjoteen" && dutModel != "chinchou360" && dutModel != "anraggar360" {
-		if _, ok := metadata.Manifest.Attributes[dutModel]; !ok {
-			return errors.Errorf("attributes missing the model name. Model: '%q' DLC: %q Attributes: '%q'", dutModel, dlcID, metadata.Manifest.Attributes)
+	// Start with nissa only, and update the list as we enable the attribute on more boards. When
+	// all boards include the property, the board check can be removed.
+	var variantDlcAttributeShouldExistOnBoard = (board == "nissa")
+	// Until we move to crosworkon ebuilds, some DLCs in other boards will use a cached version
+	// of the package which does not have the DLC attribute `modem`, so skip this check on them.
+	if variantDlcAttributeShouldExistOnBoard {
+		if _, ok := metadata.Manifest.Attributes["modem"]; !ok {
+			return errors.Errorf("attributes missing the `modem` attribute. DLC: %s. Attributes: %q", dlcID, metadata.Manifest.Attributes)
 		}
 	}
-
-	if _, ok := metadata.Manifest.Attributes["modem"]; !ok {
-		return errors.Errorf("attributes missing the `modem` attribute. DLC: %s. Attributes: %q", dlcID, metadata.Manifest.Attributes)
+	// Note: The following check is equivalent to an XOR check. We are checking that boards listed
+	// in variantDlcAttributeShouldExistOnBoard have the variant as DLC attribute
+	// (based on MODEM_FW_DLC_FIRMWARE_VARIANT), and boards that are not listed, don't have it. The
+	// reason to do it this way is to ensure that variantDlcAttributeShouldExistOnBoard is updated
+	// as soon as the DLC attribute is added to other boards.
+	if _, ok := metadata.Manifest.Attributes[variantInManifest]; ok != variantDlcAttributeShouldExistOnBoard {
+		return errors.Errorf("attributes missing variant. Variant: '%q' DLC: %q Attributes: '%q'", variantInManifest, dlcID, metadata.Manifest.Attributes)
 	}
-
 	return nil
 }
