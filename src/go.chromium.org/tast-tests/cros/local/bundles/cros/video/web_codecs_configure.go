@@ -10,8 +10,10 @@ import (
 	"net/http"
 	"net/http/httptest"
 
+	"go.chromium.org/tast-tests/cros/common/media/caps"
 	"go.chromium.org/tast-tests/cros/local/chrome"
 	"go.chromium.org/tast/core/testing"
+	"go.chromium.org/tast/core/testing/hwdep"
 )
 
 type webCodecsConfig struct {
@@ -65,7 +67,9 @@ func init() {
 					scalabilityMode:"L1T2",
 				}`,
 			},
-			Fixture: "chromeVideo",
+			ExtraHardwareDeps: hwdep.D(hwdep.SupportsSVCEncoding("h264baseline", "l1t2")),
+			ExtraSoftwareDeps: []string{caps.HWEncodeH264},
+			Fixture:           "chromeVideoHardwareTemporalEncoding",
 		}, {
 			Name: "zoom_dec_hw",
 			Val: webCodecsConfig{
@@ -78,7 +82,8 @@ func init() {
 					optimizeForLatency: true
 				}`,
 			},
-			Fixture: "chromeVideo",
+			ExtraSoftwareDeps: []string{caps.HWDecodeH264},
+			Fixture:           "chromeVideo",
 		}},
 	})
 }
