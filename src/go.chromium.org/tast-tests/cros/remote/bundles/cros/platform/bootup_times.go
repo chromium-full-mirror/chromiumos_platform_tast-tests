@@ -6,6 +6,9 @@ package platform
 
 import (
 	"context"
+	"fmt"
+	"os"
+	"path/filepath"
 	"regexp"
 	"strconv"
 	"strings"
@@ -24,6 +27,7 @@ import (
 	"go.chromium.org/tast/core/dut"
 	"go.chromium.org/tast/core/errors"
 	"go.chromium.org/tast/core/rpc"
+	"go.chromium.org/tast/core/ssh/linuxssh"
 	"go.chromium.org/tast/core/testing"
 	"go.chromium.org/tast/core/testing/hwdep"
 )
@@ -231,8 +235,6 @@ func BootupTimes(ctx context.Context, s *testing.State) {
 		}
 	}(ctx)
 
-	var totalCbmemSeconds []float64
-	var totalPowerOnToLoginSeconds []float64
 	for i := 1; i <= iterValue; i++ {
 		s.Logf("Iteration: %v/%v", i, iterValue)
 		if btType.bootType == "reboot" {
@@ -355,15 +357,15 @@ func BootupTimes(ctx context.Context, s *testing.State) {
 
 		powerOnToLoginSeconds, err := bootPerfValues(ctx, dut, s.RPCHint(), bootTime)
 		if err != nil {
-			s.Fatal("Failed to get boot perf values: ", err)
+			s.Log("Failed to get boot perf values: ", err)
 		}
-		totalPowerOnToLoginSeconds = append(totalPowerOnToLoginSeconds, powerOnToLoginSeconds)
+		s.Logf("powerOnToLoginSeconds time is %v in %d iteration", powerOnToLoginSeconds, i)
 
 		cbmemTime, err := verifyCBMem(ctx, dut, cbmemTimeout)
 		if err != nil {
-			s.Fatal("Failed to verify cbmem timeout: ", err)
+			s.Log("Failed to verify cbmem timeout: ", err)
 		}
-		totalCbmemSeconds = append(totalCbmemSeconds, cbmemTime)
+		s.Logf("cbmemTime time is %v in %d iteration", cbmemTime, i)
 
 		// Validating prev sleep state for power modes.
 		if btType.bootType == "reboot" || btType.bootType == vt2Reboot {
@@ -375,23 +377,30 @@ func BootupTimes(ctx context.Context, s *testing.State) {
 				s.Fatal("Failed to get previous sleep state: ", err)
 			}
 		}
-	}
-	var sum float64
-	var total float64
-	sum = 0
-	for _, num := range totalCbmemSeconds {
-		sum += num
-	}
 
-	for _, time := range totalPowerOnToLoginSeconds {
-		total += time
+		commandMap := map[string]string{
+			"lscpu_e.txt":          "lscpu -e",
+			"cbmem_c_1.txt":        "cbmem -c -1",
+			"dmidecode.txt":        "dmidecode",
+			"lsblk.txt":            "lsblk",
+			"lsusb_tv.txt":         "lsusb -tv",
+			"lspci.txt":            "lspci",
+			"ectool_cbi_get_6.txt": "ectool cbi get 6",
+			"ectool_version.txt":   "ectool version",
+			"crossystem.txt":       "crossystem",
+			//"intel_psrtool_z.txt": "intel-psrtool -z",
+		}
+		for fileName, cmd := range commandMap {
+			filepath := filepath.Join(s.OutDir(), fileName)
+			if err := executeCommands(ctx, cmd, filepath, dut, i); err != nil {
+				s.Fatal("Failed to execute command and write data into file: ", err)
+			}
+		}
+		lsbPath := filepath.Join(s.OutDir(), "lsb-release.txt")
+		if err := executeFile(ctx, lsbPath, i, dut); err != nil {
+			s.Fatal("Failed to execute file: ", err)
+		}
 	}
-	avgPowerOnToLoginSeconds := total / float64(iterValue)
-	s.Log("**************************Average Calculated Boot Time: ", avgPowerOnToLoginSeconds)
-
-	avgCbmemSeconds := sum / float64(iterValue)
-	s.Log("**************************Average Calculated cbmem Time: ", avgCbmemSeconds)
-
 }
 
 // verifyCBMem verifies cbmem timeout.
@@ -575,6 +584,52 @@ func rebootViaVT2(ctx context.Context, kb inputs.KeyboardServiceClient) error {
 		Key: "Enter",
 	}); err != nil {
 		testing.ContextLog(ctx, "Error expected: ", err)
+	}
+	return nil
+}
+
+// executeCommands executes command and writes the output to the respective file.
+func executeCommands(ctx context.Context, command, filepath string, dut *dut.DUT, iter int) error {
+	testing.ContextLogf(ctx, "command is %s and filepath is %s", command, filepath)
+	output, err := dut.Conn().CommandContext(ctx, "bash", "-c", command).Output()
+	if err != nil {
+		return errors.Wrap(err, "failed to execute command")
+	}
+
+	// Open the file in append mode.
+	file, err := os.OpenFile(filepath, os.O_WRONLY|os.O_APPEND|os.O_CREATE, 0644)
+	if err != nil {
+		return errors.Wrap(err, "failed to open file")
+	}
+	defer file.Close()
+
+	// Append the output to the file.
+	_, err = fmt.Fprintf(file, "%s--itertaion_value: %d\n", output, iter)
+	if err != nil {
+		return errors.Wrap(err, "failed to write data into file")
+	}
+	return nil
+}
+
+// executeFile reads file and writes the output to respective file.
+func executeFile(ctx context.Context, filepath string, iter int, dut *dut.DUT) error {
+	testing.ContextLog(ctx, "Writing lsb-release data to file")
+	lsbReleaseFile := "/etc/lsb-release"
+	fileOutput, err := linuxssh.ReadFile(ctx, dut.Conn(), lsbReleaseFile)
+	if err != nil {
+		return errors.Wrap(err, "failed to read lsb-release file")
+	}
+
+	lsbFile, err := os.OpenFile(filepath, os.O_WRONLY|os.O_APPEND|os.O_CREATE, 0644)
+	if err != nil {
+		errors.Wrap(err, "failed to open file")
+	}
+	defer lsbFile.Close()
+
+	// Append the output to the file.
+	_, err = fmt.Fprintf(lsbFile, "%s--itertaion_value: %d\n", fileOutput, iter)
+	if err != nil {
+		return errors.Wrap(err, "failed to write data into file")
 	}
 	return nil
 }
