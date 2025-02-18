@@ -4,8 +4,8 @@
     "out_entity": "Intel IPU6 BE SOC capture 0"
   },
   "anraggar360-TXfc2c": {
-    "bus_info": "pci:pci0000:00",
-    "out_entity": "Intel IPU6 BE SOC capture 0"
+    "bus_info": "PCI:0000:00:05.0",
+    "out_entity": "Intel IPU6 ISYS Capture 8"
   },
   "atlas": {
     "bus_info": "PCI:0000:00:14.3",
@@ -40,12 +40,12 @@
     "out_entity": "mtk-cam raw-1 main-stream"
   },
   "craask-TC0002": {
-    "bus_info": "pci:pci0000:00",
-    "out_entity": "Intel IPU6 BE SOC capture 0"
+    "bus_info": "PCI:0000:00:05.0",
+    "out_entity": "Intel IPU6 ISYS Capture 8"
   },
   "craaskbowl-TC0003": {
-    "bus_info": "pci:pci0000:00",
-    "out_entity": "Intel IPU6 BE SOC capture 0"
+    "bus_info": "PCI:0000:00:05.0",
+    "out_entity": "Intel IPU6 ISYS Capture 8"
   },
   "domilly-TC0001": {
     "bus_info": "pci:pci0000:00",
@@ -136,15 +136,15 @@
     "out_entity": "Intel IPU6 BE SOC capture 1"
   },
   "xivu360-KC0001": {
-    "bus_info": "pci:pci0000:00",
-    "out_entity": "Intel IPU6 BE SOC capture 0"
+    "bus_info": "PCI:0000:00:05.0",
+    "out_entity": "Intel IPU6 ISYS Capture 16"
   },
   "yavilly-LV0001": {
     "bus_info": "pci:pci0000:00",
     "out_entity": "Intel IPU6 BE SOC capture 0"
   },
   "yavilly-TC0001": {
-    "bus_info": "pci:pci0000:00",
-    "out_entity": "Intel IPU6 BE SOC capture 0"
+    "bus_info": "PCI:0000:00:05.0",
+    "out_entity": "Intel IPU6 ISYS Capture 8"
   }
 }
