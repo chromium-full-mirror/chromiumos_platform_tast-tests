@@ -93,9 +93,6 @@ var neuronParam = testingParam{
 		"*IntegerMultiDimBroadcastSubshard*",
 		"*Float32MultiDimBroadcastSubshard*",
 
-		// TODO(b/338959718): Neuron delegate failed with all -128 output.
-		"*QuantizeOpTest.Int16ZeroPointInt8*",
-
 		// TODO(b/338963077): Neuron delegate should return kTfLiteError when seeing
 		// non-positive values.
 		"*RsqrtNegativeInt8*",
