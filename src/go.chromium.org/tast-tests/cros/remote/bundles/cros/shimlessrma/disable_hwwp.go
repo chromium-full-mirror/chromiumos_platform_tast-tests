@@ -219,6 +219,8 @@ func DisableHWWP(ctx context.Context, s *testing.State) {
 		s.Error("Fail to sleep: ", err)
 	}
 
+	// No need to recreate uiHelper after reboot here.
+	// We don't need to interact with UI during this boot.
 	if err := servoutil.SetBatteryState(ctx, firmwareHelper, servoutil.BatteryStateFollow); err != nil {
 		s.Fatal("Fail to connect battery: ", err)
 	}
@@ -227,18 +229,9 @@ func DisableHWWP(ctx context.Context, s *testing.State) {
 		s.Fatal("Fail to enable HWWP: ", err)
 	}
 
-	uiHelper, err = rmaweb.NewUIHelper(ctx, s, &rmaweb.UIHelperOptions{
-		KeepState:  true,
-		BypassRacc: bypassRacc,
-	})
-	if err != nil {
-		s.Fatal("Fail to initialize RMA Helper: ", err)
-	}
-	// Restart will dispose resources, so don't dispose resources explicitly.
-
 	// Given the flakiness of USB on the lab devices, the USB may malfunction at the first place.
 	// We should let the test continue if the USB is already unseen to the DUT.
-	if err := uiHelper.FirmwareHelper.Servo.SetUSBMuxState(ctx, servo.USBMuxHost); err != nil {
+	if err := firmwareHelper.Servo.SetUSBMuxState(ctx, servo.USBMuxHost); err != nil {
 		s.Log("Fail to set USB Mux state: ", err)
 	}
 

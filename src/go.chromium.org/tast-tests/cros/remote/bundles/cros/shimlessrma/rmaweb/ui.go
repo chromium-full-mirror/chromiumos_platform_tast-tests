@@ -791,6 +791,8 @@ func PollStateField(ctx context.Context, s *testing.State, key RmadStateField, e
 	dut := firmwareHelper.DUT
 
 	if err := testing.Poll(ctx, func(ctx context.Context) error {
+		s.Logf("Polling %s, expecting %v", key, expectedValue)
+
 		if err := firmwareHelper.WaitConnect(ctx); err != nil {
 			return errors.Wrap(err, "fail to connect")
 		}
