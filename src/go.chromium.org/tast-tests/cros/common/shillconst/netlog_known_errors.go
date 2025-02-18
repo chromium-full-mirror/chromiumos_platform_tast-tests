@@ -80,6 +80,7 @@ func InitializeAllowedEntries() []AllowedEntry {
 		// modemfwd is ready it will notify shill on any flashing operations.
 		{"shill", "cellular.cc", ".*The name org.chromium.Modemfwd was not provided by any .service files.*", 0},
 		{"shill", "utils.cc", ".*The name org.chromium.Modemfwd was not provided by any .service files.*", 0},
+		{"shill", "cellular.cc", ".*3GPP profiles were updated with no service.*", 0},
 		{"shill", "wifi.cc", ".*does not support MAC address randomization.*", 0}, // b/241418700
 		{"wpa_supplicant", "", ".*Could not set interface wlan0 flags \\(UP\\): Input\\/output error.*", 0},
 		{"wpa_supplicant", "", ".*nl80211: Could not set interface 'wlan0' UP.*", 0},
