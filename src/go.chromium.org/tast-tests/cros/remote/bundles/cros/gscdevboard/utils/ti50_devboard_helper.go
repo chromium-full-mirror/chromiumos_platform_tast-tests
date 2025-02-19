@@ -1065,6 +1065,15 @@ var apRoVerifyInfos = []apRoVerifyInfo{
 		AddrModeCmd: "ap_ro_verify addrmode 4byte",
 	},
 	{
+		Name:      "GD25Q256E/GD25B256E/GD25R256E/GD25Q256D",
+		FlashSize: 32 * 1024 * 1024,
+		WpSize:    0x00100000,
+		// Found with the `src/third_party/ap_wpsr` tool with
+		// `./ap_wpsr --name GD25Q256E/GD25B256E/GD25R256E/GD25Q256D --start 0 --length 0x00100000`
+		WpsrCmd:     "ap_ro_verify wpsr d4 fc 0 40",
+		AddrModeCmd: "ap_ro_verify addrmode 4byte",
+	},
+	{
 		Name:      "W25Q128.V..M",
 		FlashSize: 16 * 1024 * 1024,
 		WpSize:    0x00080000,
