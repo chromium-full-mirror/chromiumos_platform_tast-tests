@@ -27,12 +27,13 @@ func init() {
 		VarDeps: []string{
 			"ui.signinProfileTestExtensionManifestKey",
 		},
-		Attr:         []string{"group:cr_oobe", "cr_oobe_chromebox_chromebase"},
-		SoftwareDeps: []string{"chrome"},
-		HardwareDeps: hwdep.D(hwdep.FormFactor(hwdep.Chromebase), hwdep.SkipOnModel("kalista", "karma")),
-		TestBedDeps:  []string{tbdep.ServoStateWorking},
-		Fixture:      "chromeEnterOobeHidDetectionServoOff",
-		Timeout:      time.Second * 15,
+		Attr:            []string{"group:cr_oobe", "cr_oobe_chromebox_chromebase"},
+		SoftwareDeps:    []string{"chrome"},
+		HardwareDeps:    hwdep.D(hwdep.FormFactor(hwdep.Chromebase), hwdep.SkipOnModel("kalista", "karma")),
+		TestBedDeps:     []string{tbdep.ServoStateWorking},
+		Fixture:         "chromeEnterOobeHidDetectionServoOff",
+		Timeout:         time.Second * 15,
+		VariantCategory: `{"name": "Formfactor:Every_Chromebase_exclude_kalista"}`,
 	})
 }
 

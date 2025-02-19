@@ -29,13 +29,14 @@ func init() {
 		VarDeps: []string{
 			"ui.signinProfileTestExtensionManifestKey",
 		},
-		BugComponent: "b:1318544", // ChromeOS > Software > System Services > Connectivity > General
-		Attr:         []string{"group:cr_oobe", "cr_oobe_chromebox_chromebase"},
-		SoftwareDeps: []string{"chrome"},
-		HardwareDeps: hwdep.D(hwdep.FormFactor(hwdep.Chromebox)),
-		TestBedDeps:  []string{tbdep.ServoStateWorking},
-		Fixture:      "chromeEnterOobeHidDetectionServoOff",
-		Timeout:      time.Second * 60,
+		BugComponent:    "b:1318544", // ChromeOS > Software > System Services > Connectivity > General
+		Attr:            []string{"group:cr_oobe", "cr_oobe_chromebox_chromebase"},
+		SoftwareDeps:    []string{"chrome"},
+		HardwareDeps:    hwdep.D(hwdep.FormFactor(hwdep.Chromebox)),
+		TestBedDeps:     []string{tbdep.ServoStateWorking},
+		Fixture:         "chromeEnterOobeHidDetectionServoOff",
+		Timeout:         time.Second * 60,
+		VariantCategory: `{"name": "Formfactor:Every_Chromebox"}`,
 	})
 }
 
