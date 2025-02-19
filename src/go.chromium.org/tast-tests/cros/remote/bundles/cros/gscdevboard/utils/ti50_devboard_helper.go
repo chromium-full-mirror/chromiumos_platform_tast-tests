@@ -561,11 +561,13 @@ func (h DevboardHelper) WaitForTpm(ctx context.Context, tpmHandle *TpmHelper) {
 			continue
 		}
 		// If the test reads the DID_VID before Cr50 is ready, it'll
-		// respond with 0xff in the first couple of bytes. Ignore H1
-		// reads until the data is valid.
-		if h.TestbedType == ti50.GscH1Shield && len(didVid) > 0 && didVid[0] == 0xff {
-			testing.ContextLog(ctx, "Cr50 not ready - DID_VID ", didVid)
-			continue
+		// respond with 0xff in the first couple of bytes or all 1s.
+		// Ignore H1 reads until the data is valid.
+		if h.TestbedType == ti50.GscH1Shield {
+			if (len(didVid) > 0 && didVid[0] == 0xff) || bytes.Equal(didVid, []byte{1, 1, 1, 1}) {
+				testing.ContextLog(ctx, "Cr50 not ready - DID_VID ", didVid)
+				continue
+			}
 		}
 		h.Fatalf("Unexpected TPM DID_VID: %v", didVid)
 	}
