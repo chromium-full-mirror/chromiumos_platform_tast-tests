@@ -60,7 +60,6 @@ func (h *servoHook) SetUp(ctx context.Context, s *HookState) error {
 		}
 		return ""
 	}()
-	dut := s.DUT()
 	if h.servoHost == "" {
 		return nil
 	}
@@ -70,8 +69,8 @@ func (h *servoHook) SetUp(ctx context.Context, s *HookState) error {
 	}
 	h.dutTopology = dt
 
-	h.keyFile = dut.KeyFile()
-	h.keyDir = dut.KeyDir()
+	h.keyFile = s.KeyFile()
+	h.keyDir = s.KeyDir()
 	testing.ContextLog(ctx, "servoHook Setup")
 
 	connInfo, err := servo.SplitHostPort(h.servoHost)

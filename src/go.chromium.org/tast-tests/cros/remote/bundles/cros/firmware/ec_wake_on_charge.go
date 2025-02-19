@@ -49,7 +49,6 @@ func init() {
 		BugComponent: "b:792402", // ChromeOS > Platform > Enablement > Firmware > FAFT
 		// TODO: When stable, change firmware_unstable to a different attr.
 		Attr:         []string{"group:firmware", "firmware_unstable", "firmware_bringup"},
-		SoftwareDeps: []string{"chrome"},
 		Vars:         []string{"board", "model"},
 		Fixture:      fixture.NormalMode,
 		ServiceDeps:  []string{"tast.cros.firmware.UtilsService"},
@@ -336,6 +335,10 @@ func checkInformation(ctx context.Context, h *firmware.Helper, info *debugInform
 }
 
 func ensureClamshellMode(ctx context.Context, h *firmware.Helper, dut *dut.DUT, formFactor, tabletModeOff string) error {
+	// Skip this check if no ssh.
+	if dut == nil {
+		return nil
+	}
 	inTabletMode, err := checkTabletModeStatus(ctx, h)
 	if err != nil {
 		return errors.Wrap(err, "unable to check for DUT's tablet mode status")

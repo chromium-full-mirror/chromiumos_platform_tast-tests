@@ -32,7 +32,7 @@ func init() {
 // H1Console opens the H1 (cr50) console and runs the sysinfo command.
 func H1Console(ctx context.Context, s *testing.State) {
 	servoSpec, _ := s.Var("servo")
-	h := firmware.NewHelperWithoutDUT("", servoSpec, s.DUT().KeyFile(), s.DUT().KeyDir())
+	h := firmware.NewHelperWithoutDUT("", servoSpec, s.KeyFile(), s.KeyDir())
 	defer func() {
 		if err := h.Close(ctx); err != nil {
 			s.Fatal("Closing helper: ", err)

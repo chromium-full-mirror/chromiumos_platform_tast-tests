@@ -114,6 +114,13 @@ func (hs *HookState) RPCHint() *testing.RPCHint { return hs.fixtState.RPCHint() 
 // DUT returns a shared SSH connection.
 func (hs *HookState) DUT() *dut.DUT { return hs.fixtState.DUT() }
 
+// KeyFile returns an optional path to an unencrypted SSH private key.
+func (hs *HookState) KeyFile() string { return hs.fixtState.KeyFile() }
+
+// KeyDir returns an optional path to a directory containing standard
+// SSH keys to use if authentication via KeyFile is not accepted.
+func (hs *HookState) KeyDir() string { return hs.fixtState.KeyDir() }
+
 // CompanionDUT returns a shared SSH connection for a companion DUT.
 func (hs *HookState) CompanionDUT(role string) *dut.DUT { return hs.fixtState.CompanionDUT(role) }
 

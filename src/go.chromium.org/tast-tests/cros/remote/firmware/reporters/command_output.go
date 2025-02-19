@@ -24,6 +24,9 @@ func (r *Reporter) CommandOutputLines(ctx context.Context, format string, args .
 
 // CommandOutput reports the command output as a single string.
 func (r *Reporter) CommandOutput(ctx context.Context, format string, args ...string) (string, error) {
+	if r == nil || r.d == nil {
+		return "", errors.New("no dut available")
+	}
 	res, err := r.d.Conn().CommandContext(ctx, format, args...).Output()
 	if err != nil {
 		return "", errors.Wrapf(err, "failed to run %q command on dut: %q", prependString(format, args), res)
@@ -35,6 +38,9 @@ func (r *Reporter) CommandOutput(ctx context.Context, format string, args ...str
 
 // CombinedOutput reports the command stdout+stderr as a single string.
 func (r *Reporter) CombinedOutput(ctx context.Context, format string, args ...string) (string, error) {
+	if r == nil || r.d == nil {
+		return "", errors.New("no dut available")
+	}
 	res, err := r.d.Conn().CommandContext(ctx, format, args...).CombinedOutput(ssh.DumpLogOnError)
 	if err != nil {
 		return "", errors.Wrapf(err, "failed to run %q command on dut", prependString(format, args))

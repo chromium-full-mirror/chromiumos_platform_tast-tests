@@ -81,8 +81,14 @@ func ECSharedMemory(ctx context.Context, s *testing.State) {
 	 */
 	testing.Sleep(ctx, 5*time.Second)
 
-	if err := h.DUT.WaitConnect(ctx); err != nil {
-		s.Fatal("Failed connect to DUT: ", err)
+	if h.DUT != nil {
+		if err := h.DUT.WaitConnect(ctx); err != nil {
+			s.Fatal("Failed connect to DUT: ", err)
+		}
+	} else {
+		if err := h.WaitForPowerStates(ctx, time.Second, time.Minute, "S0"); err != nil {
+			s.Fatal("Failed waiting for S0: ", err)
+		}
 	}
 	s.Log("Check shared memory after crash")
 	if err := checkSharedMemory(ctx, h); err != nil {

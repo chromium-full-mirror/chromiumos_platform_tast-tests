@@ -47,7 +47,7 @@ func H1Version(ctx context.Context, s *testing.State) {
 	}
 
 	servoSpec, _ := s.Var("servo")
-	h := firmware.NewHelperWithoutDUT("", servoSpec, s.DUT().KeyFile(), s.DUT().KeyDir())
+	h := firmware.NewHelperWithoutDUT("", servoSpec, s.KeyFile(), s.KeyDir())
 	defer func() {
 		if err := h.Close(ctx); err != nil {
 			s.Fatal("Closing helper: ", err)

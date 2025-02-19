@@ -113,6 +113,9 @@ func BootTime(ctx context.Context, s *testing.State) {
 	if err := h.RequireServo(ctx); err != nil {
 		s.Fatal("Failed to init servo: ", err)
 	}
+	if err := h.RequireConfig(ctx); err != nil {
+		s.Fatal("Failed to local config: ", err)
+	}
 
 	cancel, err := h.Servo.EnableUARTCapture(ctx, servo.ECUARTCapture)
 	defer func() {

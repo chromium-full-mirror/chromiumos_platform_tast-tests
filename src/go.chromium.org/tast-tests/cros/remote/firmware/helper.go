@@ -31,6 +31,7 @@ import (
 	"go.chromium.org/tast/core/ctxutil"
 	"go.chromium.org/tast/core/dut"
 	"go.chromium.org/tast/core/errors"
+	"go.chromium.org/tast/core/framework/protocol"
 	"go.chromium.org/tast/core/rpc"
 	"go.chromium.org/tast/core/ssh"
 	"go.chromium.org/tast/core/ssh/linuxssh"
@@ -176,12 +177,16 @@ const ECCrashBaseDir = "/var/spool/crash/"
 // NewHelper creates a new Helper object with info from testing.State.
 // For tests that do not use a certain Helper aspect (e.g. RPC or Servo), it is OK to pass null-values (nil or "").
 func NewHelper(d *dut.DUT, rpcHint *testing.RPCHint, cfgFilepath, servoHostPort, dutHostname, powerunitHostname, powerunitOutlet, hydraHostname string) *Helper {
+	var reporter *reporters.Reporter
+	if d != nil {
+		reporter = reporters.New(d)
+	}
 	return &Helper{
 		cfgFilepath:       cfgFilepath,
 		DUT:               d,
 		keyFile:           d.KeyFile(),
 		keyDir:            d.KeyDir(),
-		Reporter:          reporters.New(d),
+		Reporter:          reporter,
 		rpcHint:           rpcHint,
 		servoHostPort:     servoHostPort,
 		dutHostname:       dutHostname,
@@ -2453,6 +2458,9 @@ func (h *Helper) ReturnToDeveloperScreen(ctx context.Context) error {
 // Since there are multiple files with the same name/different extensions,
 // it maps the base name (without ext) to all filepaths with that base name.
 func (h *Helper) GetAllECCrashFiles(ctx context.Context) (map[string][]string, error) {
+	if h.DUT == nil {
+		return nil, nil
+	}
 	out, err := h.DUT.Conn().CommandContext(ctx, "ls", "-1t", ECCrashBaseDir).Output(ssh.DumpLogOnError)
 	if err != nil {
 		return nil, errors.Wrapf(err, "failed to read %s dir on DUT", ECCrashBaseDir)
@@ -2505,22 +2513,31 @@ func (h *Helper) GetNewECCrashes(ctx context.Context) (map[string][]string, erro
 }
 
 // SupportAPFwState checks whether DUT supports the host command EC_CMD_AP_FW_STATE. Sets h.HasAPFwState to true if supported.
-func (h *Helper) SupportAPFwState(ctx context.Context) error {
+func (h *Helper) SupportAPFwState(ctx context.Context, dutFeatures *protocol.DUTFeatures) error {
 	if h.HasAPFwState {
 		return nil
 	}
 
-	roVersion, err := h.Reporter.GetFWVersion(ctx, reporters.CrossystemParamRoFwid)
-	if err != nil {
-		return errors.Wrap(err, "failed to get RO firmware version")
+	var roMajorVersion int
+	if dutFeatures != nil {
+		roMajorVersion = int(dutFeatures.GetHardware().GetHardwareFeatures().GetFwConfig().GetFwRoVersion().GetMajorVersion())
 	}
-	splitout := strings.Split(roVersion, ".")
-	if len(splitout) < 3 {
-		return errors.Wrapf(err, "got invalid firmware version: %v", roVersion)
+	if roMajorVersion <= 0 && h.Reporter != nil {
+		roVersion, err := h.Reporter.GetFWVersion(ctx, reporters.CrossystemParamRoFwid)
+		if err != nil {
+			return errors.Wrap(err, "failed to get RO firmware version")
+		}
+		splitout := strings.Split(roVersion, ".")
+		if len(splitout) < 3 {
+			return errors.Wrapf(err, "got invalid firmware version: %v", roVersion)
+		}
+		roMajorVersion, err = strconv.Atoi(splitout[0])
+		if err != nil {
+			return errors.Wrap(err, "failed to convert firmware major version value to integer value")
+		}
 	}
-	roMajorVersion, err := strconv.Atoi(splitout[0])
-	if err != nil {
-		return errors.Wrap(err, "failed to convert firmware major version value to integer value")
+	if roMajorVersion <= 0 {
+		testing.ContextLog(ctx, "Cannot find AP RO Firmware version. Maybe set -hwdeps='hardware_features<fw_config<fw_ro_version<major_version:12345>>>'")
 	}
 	// CL:5020949 laned in 15683.0.0
 	if roMajorVersion >= 15683 {

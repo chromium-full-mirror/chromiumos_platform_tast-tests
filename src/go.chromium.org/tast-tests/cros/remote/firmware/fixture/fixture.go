@@ -297,6 +297,9 @@ func (i *impl) SetUp(ctx context.Context, s *testing.FixtState) interface{} {
 	if err != nil {
 		s.Fatal("noSSH: ", err)
 	}
+	if s.DUT() == nil {
+		i.disallowSSH = true
+	}
 
 	s.Log("Creating a new firmware Helper instance for fixture: ", i.String())
 	i.initHelper(ctx, s)
@@ -312,6 +315,9 @@ func (i *firmwareBackupAPImpl) SetUp(ctx context.Context, s *testing.FixtState) 
 	i.disallowSSH, err = varToBool(s, "noSSH")
 	if err != nil {
 		s.Fatal("noSSH: ", err)
+	}
+	if s.DUT() == nil {
+		i.disallowSSH = true
 	}
 
 	// Get Helper from parent fixture
@@ -358,6 +364,9 @@ func (i *bootModeImpl) SetUp(ctx context.Context, s *testing.FixtState) interfac
 	i.disallowSSH, err = varToBool(s, "noSSH")
 	if err != nil {
 		s.Fatal("noSSH: ", err)
+	}
+	if s.DUT() == nil {
+		i.disallowSSH = true
 	}
 
 	v := s.Param().(bootModeParamVal)
@@ -572,9 +581,9 @@ func (i *impl) PreTest(ctx context.Context, s *testing.FixtTestState) {
 	// Check if the DUT supports the EC_CMD_AP_FW_STATE host command and store the result in h.HasAPFwState.
 	// If supported, detects the firmware screen from the ec console.
 	// Otherwise, use the delay strategy to ensure the DUT is on the correct firmware screen.
-	if err := i.value.Helper.SupportAPFwState(ctx); err != nil {
+	if err := i.value.Helper.SupportAPFwState(ctx, s.Features("")); err != nil {
 		// Unable to verify the firmware version. Set h.HasAPFwState to false and continue the test.
-		s.Error("Failed to check if DUT support APFwState, set : ", err)
+		s.Error("Failed to check if DUT support APFwState: ", err)
 	}
 }
 
@@ -804,9 +813,11 @@ func (i *bootModeImpl) PostTest(ctx context.Context, s *testing.FixtTestState) {
 	if err := i.value.Helper.EnsureDUTBooted(ctx); err != nil {
 		s.Fatal("DUT is offline after test end: ", err)
 	}
-	// Restarting UI logs out any potential chrome sessions logged in during a test.
-	if err := i.value.Helper.RestartUI(ctx); err != nil {
-		s.Fatal("Failed to restart ui after test end: ", err)
+	if !i.disallowSSH {
+		// Restarting UI logs out any potential chrome sessions logged in during a test.
+		if err := i.value.Helper.RestartUI(ctx); err != nil {
+			s.Fatal("Failed to restart ui after test end: ", err)
+		}
 	}
 }
 
@@ -932,8 +943,14 @@ func (i *impl) initHelper(ctx context.Context, s *testing.FixtState) {
 		servoSpec, _ := s.Var("servo")
 
 		if i.disallowSSH {
-			i.value.Helper = firmware.NewHelperWithoutDUT(s.DataPath(firmware.ConfigFile), servoSpec, s.DUT().KeyFile(), s.DUT().KeyDir())
+			i.value.Helper = firmware.NewHelperWithoutDUT(s.DataPath(firmware.ConfigFile), servoSpec, s.KeyFile(), s.KeyDir())
 			i.value.Helper.DisallowServices()
+			id := s.Features("").GetHardware().GetDeprecatedDeviceConfig().GetId()
+			if id != nil {
+				i.value.Helper.OverridePlatform(ctx, id.GetPlatform(), id.GetModel())
+			} else {
+				testing.ContextLog(ctx, "Platform/Host unknown, set -hwdeps='deprecated_device_config<id<platform:\"board\" model:\"model\">'")
+			}
 		} else {
 			dutHostname, _ := s.Var("dutHostname")
 			if dutHostname == "" {
