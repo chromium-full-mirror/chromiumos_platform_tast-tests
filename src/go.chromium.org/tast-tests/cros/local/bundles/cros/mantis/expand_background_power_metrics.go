@@ -23,6 +23,8 @@ import (
 	"go.chromium.org/tast/core/testing/hwdep"
 )
 
+const imageTestFileName = "a_cake_non_square_20250114.png"
+
 func init() {
 	testing.AddTest(&testing.Test{
 		Func: ExpandBackgroundPowerMetrics,
@@ -35,7 +37,7 @@ func init() {
 		Timeout:      constant.PowerTestTimeout,
 		SoftwareDeps: []string{"chrome", "chrome_internal", "dlc"},
 		HardwareDeps: hwdep.D(hwdep.Model("navi")),
-		Data:         []string{constant.ImageTestFileName},
+		Data:         []string{imageTestFileName},
 		Attr:         []string{"group:crosbolt", "crosbolt_nightly"},
 		Fixture:      fixture.PowerAshGaiaWithUpdateEngine,
 	})
@@ -57,7 +59,7 @@ func ExpandBackgroundPowerMetrics(ctx context.Context, s *testing.State) {
 		s.Fatal("Failed to ensure DLC installed: ", err)
 	}
 
-	if err := util.DownloadAndOpenFileInGallery(ctx, cr, s.DataPath(constant.ImageTestFileName), constant.ImageTestFileName); err != nil {
+	if err := util.DownloadAndOpenFileInGallery(ctx, cr, s.DataPath(imageTestFileName), imageTestFileName); err != nil {
 		s.Fatal("Failed to download and open file in Gallery: ", err)
 	}
 
@@ -90,7 +92,7 @@ func ExpandBackgroundPowerMetrics(ctx context.Context, s *testing.State) {
 	}
 
 	// Pick 16:9 ratio
-	ratioButton := nodewith.Role(role.RadioButton).Name("Ratio 16 by 9").Ancestor(galleryapp.RootFinder).First()
+	ratioButton := nodewith.Role(role.RadioButton).Name("Ratio Square").Ancestor(galleryapp.RootFinder).First()
 	if err := uiauto.Combine("Click ratio option",
 		ui.WithTimeout(time.Second*5).WaitUntilExists(ratioButton),
 		ui.LeftClick(ratioButton))(ctx); err != nil {
