@@ -10,6 +10,7 @@ package mcci
 import (
 	"fmt"
 	"regexp"
+	"strconv"
 	"strings"
 	"time"
 
@@ -70,6 +71,23 @@ func (sw Switch) EnablePort(portNum int) error {
 
 	serialStr := fmt.Sprintf("port %d\r", portNum)
 	return writeSerial(serialStr, sw.sPort)
+}
+
+// GetActivePort gets currently active port
+func (sw Switch) GetActivePort() (int, error) {
+	writeSerial("port\r", sw.sPort)
+	resultStr, err := readSerial(sw.sPort)
+	if err != nil {
+		return 0, errors.Wrap(err, "failed to get active port")
+	}
+
+	resultStr = strings.Trim(resultStr, "\r\n")
+	portInt, err := strconv.Atoi(resultStr)
+	if err != nil {
+		return 0, errors.Wrapf(err, "failed to convert port string %q to int", resultStr)
+	}
+
+	return portInt, nil
 }
 
 // Close closes the serial port interface for the MCCI switch.
