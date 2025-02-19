@@ -19,6 +19,7 @@ type GscProperties interface {
 	PreferredTPMBus() ti50.TpmBus
 	// HasEcRstFet indicates whether the GSC uses a secondary EC RST FET pin.
 	HasEcRstFet() bool
+	ChipType() ti50.ChipType
 }
 
 // I2CBus represents an I2C bus, naming the two signal pins in case the tests want to reconfigure

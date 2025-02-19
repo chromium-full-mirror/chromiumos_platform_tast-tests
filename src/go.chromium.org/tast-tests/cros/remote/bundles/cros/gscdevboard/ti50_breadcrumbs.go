@@ -105,7 +105,7 @@ func Ti50Breadcrumbs(ctx context.Context, s *testing.State) {
 
 	expected = append(expected, pmuTriggerHardReset)
 	// On OpenTitan, HardReset is same as SoftReset and both breadcrumbs are present.
-	if b.TestbedType == ti50.GscOTShield || b.TestbedType == ti50.GscOpentitanCw310Fpga {
+	if b.GscProperties().ChipType() == ti50.GscOT {
 		expected = append(expected, pmuTriggerSoftReset)
 	}
 	expected = append(expected, projectMain, pmuPreInit, projectStart, projectRun)

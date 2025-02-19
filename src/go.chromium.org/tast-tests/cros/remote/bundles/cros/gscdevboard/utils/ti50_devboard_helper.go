@@ -233,12 +233,8 @@ func NewDevboardHelper(s *testing.State) DevboardHelper {
 func (h DevboardHelper) GscProperties() GscProperties {
 	switch h.TestbedType {
 	case ti50.GscH1Shield:
-		return &gscCr50{}
-	case ti50.GscOpentitanCw310Fpga:
-		return &gscOT{}
-	case ti50.GscOTShield:
-		return &gscOT{}
-	case ti50.GscNTShieldV2:
+		return &gscH1{}
+	case ti50.GscOTShield, ti50.GscNTShieldV2, ti50.GscOpentitanCw310Fpga:
 		return &gscOT{}
 	case ti50.GscHostEmulation:
 		return &gscHE{}

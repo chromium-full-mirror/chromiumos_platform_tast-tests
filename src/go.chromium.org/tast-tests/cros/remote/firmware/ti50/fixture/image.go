@@ -320,7 +320,7 @@ func downloadImage(ctx context.Context, testbedProperties remoteTi50.TestbedProp
 // Returns the image and fw config json globs for the specified image type.
 func findLatestCompletedTi50PostsubmitBuildURL(ctx context.Context, t ti50.TestbedType, iT ImageType) (string, string, error) {
 	builder := postSubmitArtifactsBuilder
-	if t == ti50.GscOpentitanCw310Fpga || t == ti50.GscOTShield {
+	if t == ti50.GscOpentitanCw310Fpga || t == ti50.GscOTShield || t == ti50.GscNTShieldV2 {
 		builder = otPostSubmitArtifactsBuilder
 	}
 

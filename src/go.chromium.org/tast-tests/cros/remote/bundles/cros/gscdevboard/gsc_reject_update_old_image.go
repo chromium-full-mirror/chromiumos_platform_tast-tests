@@ -144,17 +144,15 @@ func GSCRejectUpdateOldImage(ctx context.Context, s *testing.State) {
 
 	var fwVersion string
 
-	switch f.TestbedProperties.TestbedType {
-	case ti50.GscDTShield:
-		fwVersion = oldDTImageVersion
-	case ti50.GscH1Shield:
+	switch b.GscProperties().ChipType() {
+	case ti50.GscH1:
 		fwVersion = oldH1ImageVersion
-	case ti50.GscOTShield:
-		fwVersion = oldOTImageVersion
-	case ti50.GscOpentitanCw310Fpga:
+	case ti50.GscDT:
+		fwVersion = oldDTImageVersion
+	case ti50.GscOT:
 		fwVersion = oldOTImageVersion
 	default:
-		s.Fatalf("No old image for %s", f.TestbedProperties.TestbedType)
+		s.Fatal("Unsupported testbed type")
 	}
 
 	bus := config.bus

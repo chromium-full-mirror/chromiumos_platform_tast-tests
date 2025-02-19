@@ -39,3 +39,7 @@ func (g *gscDT) PreferredTPMBus() ti50.TpmBus {
 func (g *gscDT) HasEcRstFet() bool {
 	return true
 }
+
+func (g *gscDT) ChipType() ti50.ChipType {
+	return ti50.GscDT
+}

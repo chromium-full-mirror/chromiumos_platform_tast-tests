@@ -53,15 +53,13 @@ func GSCFactoryConfig(ctx context.Context, s *testing.State) {
 	i := ti50.MustOpenCrOSImage(ctx, b, s, b.TestbedType)
 	defer i.Close(ctx)
 
-	f := s.FixtValue().(*fixture.Value)
-
 	var sameFactoryConfigError uint32
 	var factoryConfigError uint32
-	switch f.TestbedProperties.TestbedType {
-	case ti50.GscH1Shield:
+	switch b.GscProperties().ChipType() {
+	case ti50.GscH1:
 		sameFactoryConfigError = 0
 		factoryConfigError = cr50FactoryConfigError
-	case ti50.GscDTShield, ti50.GscOpentitanCw310Fpga, ti50.GscOTShield, ti50.GscHostEmulation:
+	case ti50.GscDT, ti50.GscOT, ti50.GscHE:
 		factoryConfigError = ti50FactoryConfigError
 		sameFactoryConfigError = factoryConfigError
 	default:

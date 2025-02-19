@@ -6,18 +6,18 @@ package utils
 
 import "go.chromium.org/tast-tests/cros/common/firmware/ti50"
 
-type gscCr50 struct {
+type gscH1 struct {
 }
 
-func (g *gscCr50) HasFpmcuUart() bool {
+func (g *gscH1) HasFpmcuUart() bool {
 	return false
 }
 
-func (g *gscCr50) ExpectedDidVidValue() []byte {
+func (g *gscH1) ExpectedDidVidValue() []byte {
 	return ti50.TpmH1DidVidValue
 }
 
-func (g *gscCr50) GscHostI2cBusses() map[byte]I2CBus {
+func (g *gscH1) GscHostI2cBusses() map[byte]I2CBus {
 	return map[byte]I2CBus{
 		0: I2CBus{
 			BusName:  ti50.I2cTi50Debug,
@@ -27,11 +27,15 @@ func (g *gscCr50) GscHostI2cBusses() map[byte]I2CBus {
 	}
 }
 
-func (g *gscCr50) PreferredTPMBus() ti50.TpmBus {
+func (g *gscH1) PreferredTPMBus() ti50.TpmBus {
 	return ti50.TpmBusSpi
 }
 
-func (g *gscCr50) HasEcRstFet() bool {
+func (g *gscH1) HasEcRstFet() bool {
 	// No EC Reset FET pin, but designs with Cr50 also have double reset issue.
 	return false
+}
+
+func (g *gscH1) ChipType() ti50.ChipType {
+	return ti50.GscH1
 }

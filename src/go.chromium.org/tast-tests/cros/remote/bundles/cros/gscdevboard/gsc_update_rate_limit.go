@@ -63,7 +63,7 @@ func reset(ctx context.Context, s *testing.State, b utils.DevboardHelper, i *ti5
 	case reboot:
 		s.Log("Running reboot")
 		i.SendConsoleRebootCmd(ctx)
-		if b.TestbedType == ti50.GscOTShield || b.TestbedType == ti50.GscOpentitanCw310Fpga {
+		if b.GscProperties().ChipType() == ti50.GscOT {
 			// On OpenTitan the `reboot` command triggers "software reset".
 			resetFlag = ti50.GscResetFlagSoftware
 		} else {

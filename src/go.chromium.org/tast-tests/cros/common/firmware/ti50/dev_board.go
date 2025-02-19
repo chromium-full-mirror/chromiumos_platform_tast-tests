@@ -169,6 +169,20 @@ const (
 	GscNTShieldV2 TestbedType = "gsc_nt_shield_v2"
 )
 
+// ChipType is the type of chip on a testbed.
+type ChipType string
+
+const (
+	// GscH1 is an H1 chip.
+	GscH1 ChipType = "H1"
+	// GscDT is an DT chip.
+	GscDT ChipType = "DT"
+	// GscOT is an OT chip.
+	GscOT ChipType = "OT"
+	// GscHE is host emulation.
+	GscHE ChipType = "HE"
+)
+
 // APROResultCode represents the status of AP RO verification.
 type APROResultCode byte
 

@@ -296,7 +296,7 @@ func Ti50Sleep(ctx context.Context, s *testing.State) {
 	pv := perf.NewValues()
 
 	// Wake source and pin values for OT chip.
-	if b.TestbedType == ti50.GscOTShield || b.TestbedType == ti50.GscOpentitanCw310Fpga || b.TestbedType == ti50.GscNTShieldV2 {
+	if b.GscProperties().ChipType() == ti50.GscOT {
 		wakeSourceGpio = "00000004"
 		wakeSourceRbox = "00000001"
 		wakeSourceAdc = "00000002"
@@ -363,7 +363,7 @@ func ti50DeepSleep(ctx context.Context, s *testing.State, b utils.DevboardHelper
 	}
 
 	// OpenTitan does not sleep while AC present.
-	if b.TestbedType == ti50.GscOTShield || b.TestbedType == ti50.GscOpentitanCw310Fpga {
+	if b.GscProperties().ChipType() == ti50.GscOT {
 		s.Log("Simulating AC present")
 		b.GpioSet(ctx, ti50.GpioTi50ACPresent, true)
 		if verifyDeepWakeup(ctx, s, i, b, gpioMonitor, wakeSourceRbox, nil, "AC present") {
