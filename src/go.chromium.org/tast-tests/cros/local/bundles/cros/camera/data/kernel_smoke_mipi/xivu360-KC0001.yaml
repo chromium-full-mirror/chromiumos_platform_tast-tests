@@ -72,9 +72,9 @@ remap_entity_by_name:
 - id: 159
   name: Intel IPU6 CSI2 3
 - id: 233
-  name: ov8856 11-0036
+  name_regex: ov8856 [0-9]+-0036
 - id: 247
-  name: dw9714 11-000c
+  name_regex: dw9714 [0-9]+-000c
 media_ctl:
   info:
     driver: intel-ipu6
