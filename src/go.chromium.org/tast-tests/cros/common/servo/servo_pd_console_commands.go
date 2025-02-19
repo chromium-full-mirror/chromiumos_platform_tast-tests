@@ -669,6 +669,30 @@ func (s *Servo) ServoCCNoPD(ctx context.Context, dts bool, connectionType USBCCu
 	return nil
 }
 
+var reEcSBU string = `SBU1_DET = ([\d]+) mV[\s].*SBU2_DET = ([\d]+) mV`
+
+// ServoGetSBU retrieves the SBU voltages
+func (s *Servo) ServoGetSBU(ctx context.Context) ([]int, error) {
+	ret := []int{0, 0}
+
+	out, err := s.RunServoCommandGetOutput(ctx, "adc", []string{reEcSBU})
+	if err != nil {
+		return ret, errors.Wrap(err, "failed to send adc command")
+	}
+
+	ret[0], err = strconv.Atoi(out[0][1])
+	if err != nil {
+		return ret, errors.Wrap(err, "failed to retrieve SBU voltage")
+	}
+
+	ret[1], err = strconv.Atoi(out[0][2])
+	if err != nil {
+		return ret, errors.Wrap(err, "failed to retrieve SBU voltage")
+	}
+
+	return ret, nil
+}
+
 // ServoGetConnectedStateAfterCCReconnect get the connected state after disconnect/reconnect using PDTester
 //
 // PDTester supports a feature which simulates a USB Type C disconnect
