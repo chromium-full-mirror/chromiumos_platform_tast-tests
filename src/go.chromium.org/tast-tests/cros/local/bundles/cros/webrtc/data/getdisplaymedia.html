@@ -49,16 +49,24 @@ async function start(surface) {
             reject(new DOMException(`Bad stream dimensions ` +
                                     `${video.width}x${video.height}`));
           }
-          // We know the expected dimensions only in the full screen capture case.
+          // We know the expected resolution range only in the full screen
+          // capture case.
           if (surface == 'monitor') {
+            // The chorme display capture stack captures the resolution
             // The chrome display capture stack avoids the odd resolution, so it
             // aligns down the capture resolution when the screen size is odd.
-            const expected_width = screen.width - (screen.width % 2);
-            const expected_height = screen.height - (screen.height % 2);
-            if (video.width !== expected_width || video.height !== expected_height) {
+            const expectedWidth = screen.width - (screen.width % 2);
+            const expectedHeight = screen.height - (screen.height % 2);
+            const kAcceptableDeviation = 2;
+            const minW = expectedWidth - kAcceptableDeviation;
+            const maxW = expectedWidth + kAcceptableDeviation;
+            const minH = expectedHeight - kAcceptableDeviation;
+            const maxH = expectedHeight + kAcceptableDeviation;
+            if (!(minW <= video.width && video.width <= maxW) ||
+              !(minH <= video.height && video.height <= maxH)) {
               reject(new DOMException(`Unexpected capture resolution, got: ` +
                 `${video.width}x${video.height}, expected ` +
-                `${screen.width}x${screen.height}`));
+                  `[${minW}-${maxW}]x[${minH}-${maxH}]`));
             }
           }
 
