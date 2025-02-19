@@ -92,7 +92,7 @@ func init() {
 		// ChromeOS > Software > ARC++ > Commercial > Tast Tests
 		BugComponent: "b:1487630",
 		Attr:         []string{"group:mainline", "informational"},
-		Timeout:      chrome.LoginTimeout + arc.BootTimeout + 30*time.Second,
+		Timeout:      chrome.LoginTimeout + arc.BootTimeout + 60*time.Second,
 		Fixture:      "arcBooted",
 		SoftwareDeps: []string{"android_vm_t", "chrome"},
 		VarDeps:      []string{uiCommon.GaiaPoolDefaultVarName},
@@ -153,10 +153,10 @@ func AttestationCertificate(ctx context.Context, s *testing.State) {
 		s.Fatal("Retrieving Key Attestation record from IntegrityAPIApp failed: ", err)
 	}
 
-	s.Log("Retrieved Key Attestation record: " + result)
+	s.Logf("Retrieved Key Attestation record: [%s]", result)
 
 	re := regexp.MustCompile(recordFirstLinePattern)
-	regexMatch := re.FindStringSubmatch(string(result))
+	regexMatch := re.FindStringSubmatch(result)
 	if regexMatch == nil {
 		s.Fatal("Unexpected format for first line of result")
 	}
@@ -204,12 +204,25 @@ func retrieveRecordFromAppUI(ctx context.Context, d *ui.Device) (string, error) 
 	}
 
 	keyAttestationResult := d.Object(ui.ID(certTesterPackageName + keyAttestationResponseTextID))
-	result, err := keyAttestationResult.GetText(ctx)
-	if err != nil {
-		return "", errors.Wrap(err, "failed to retrieve Key Attestation response text")
+
+	// Wait for non-empty result from Key Attestation response text.
+	var result string
+	if err := testing.Poll(ctx, func(ctx context.Context) error {
+		var err error
+		result, err = keyAttestationResult.GetText(ctx)
+		if err != nil {
+			return testing.PollBreak(errors.Wrap(err, "failed to retrieve Key Attestation response text"))
+		}
+
+		if len(string(result)) == 0 {
+			return errors.New("Received empty Key Attestation record")
+		}
+		return nil
+	}, &testing.PollOptions{Interval: time.Second, Timeout: 15 * time.Second}); err != nil {
+		return "", err
 	}
 
-	return result, nil
+	return string(result), nil
 }
 
 // verifyKeyAttestationRecord inspects the data within the record to validate the values
