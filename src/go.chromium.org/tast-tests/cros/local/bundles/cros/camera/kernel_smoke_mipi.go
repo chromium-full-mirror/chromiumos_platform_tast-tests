@@ -112,15 +112,17 @@ func configureMedia(ctx context.Context, bus, yaml string) error {
 	return cmd.Run(testexec.DumpLogOnError)
 }
 
-func captureFrames(ctx context.Context, bus, entity string) error {
+func captureFrames(ctx context.Context, bus, entity, format string) error {
 	cmd := testexec.CommandContext(ctx, "media-ctl", "-d", bus, "-e", entity)
 	out, err := cmd.Output(testexec.DumpLogOnError)
 	if err != nil {
 		return err
 	}
 	outDevice := strings.TrimRight(string(out[:]), "\n")
+	arg := append(strings.Fields(format), outDevice)
+	arg = append(arg, "--capture=10")
 
-	cmd = testexec.CommandContext(ctx, "yavta", "--capture=10", outDevice)
+	cmd = testexec.CommandContext(ctx, "yavta", arg...)
 	return cmd.Run(testexec.DumpLogOnError)
 }
 
@@ -136,6 +138,7 @@ func dumpMediaGraph(ctx context.Context, bus, dir string) error {
 
 type testInfo struct {
 	BusInfo   string `json:"bus_info"`
+	FormatArg string `json:"format_arg"`
 	OutEntity string `json:"out_entity"`
 }
 
@@ -186,7 +189,7 @@ func KernelSmokeMIPI(ctx context.Context, s *testing.State) {
 			s.Fatal("Failed to configure: ", err)
 		}
 
-		if err := captureFrames(ctx, info.BusInfo, info.OutEntity); err != nil {
+		if err := captureFrames(ctx, info.BusInfo, info.OutEntity, info.FormatArg); err != nil {
 			s.Fatal("Failed to capture: ", err)
 		}
 	}

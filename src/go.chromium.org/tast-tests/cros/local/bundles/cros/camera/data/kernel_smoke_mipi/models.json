@@ -1,150 +1,187 @@
 {
   "anraggar360-LC6ace": {
     "bus_info": "pci:pci0000:00",
+    "format_arg": "",
     "out_entity": "Intel IPU6 BE SOC capture 0"
   },
   "anraggar360-TXfc2c": {
     "bus_info": "PCI:0000:00:05.0",
+    "format_arg": "-s 4208x3120 -f SGRBG10",
     "out_entity": "Intel IPU6 ISYS Capture 8"
   },
   "atlas": {
     "bus_info": "PCI:0000:00:14.3",
+    "format_arg": "",
     "out_entity": "ipu3-cio2 0"
   },
   "aviko-KC4eb5": {
     "bus_info": "pci:pci0000:00",
+    "format_arg": "",
     "out_entity": "Intel IPU6 BE SOC capture 0"
   },
   "brya": {
     "bus_info": "PCI:0000:00:05.0",
+    "format_arg": "-s 3280x2464 -f SGRBG10",
     "out_entity": "Intel IPU6 ISYS Capture 16"
   },
   "bugzzy-KCfa36": {
     "bus_info": "pci:pci0000:00",
+    "format_arg": "",
     "out_entity": "Intel IPU6 BE SOC capture 0"
   },
   "ciri-KC523c": {
     "bus_info": "platform:16000000.camisp",
+    "format_arg": "",
     "out_entity": "mtk-cam raw-0 main-stream"
   },
   "ciri-KCc1c3": {
     "bus_info": "platform:16000000.camisp",
+    "format_arg": "",
     "out_entity": "mtk-cam raw-1 main-stream"
   },
   "ciri-LT4067": {
     "bus_info": "platform:16000000.camisp",
+    "format_arg": "",
     "out_entity": "mtk-cam raw-0 main-stream"
   },
   "ciri-LT7757": {
     "bus_info": "platform:16000000.camisp",
+    "format_arg": "",
     "out_entity": "mtk-cam raw-1 main-stream"
   },
   "craask-TC0002": {
     "bus_info": "PCI:0000:00:05.0",
+    "format_arg": "-s 3280x2464 -f SGRBG10",
     "out_entity": "Intel IPU6 ISYS Capture 8"
   },
   "craaskbowl-TC0003": {
     "bus_info": "PCI:0000:00:05.0",
+    "format_arg": "-s 2592x1944 -f SGRBG10",
     "out_entity": "Intel IPU6 ISYS Capture 8"
   },
   "domilly-TC0001": {
     "bus_info": "pci:pci0000:00",
+    "format_arg": "",
     "out_entity": "Intel IPU6 BE SOC capture 0"
   },
   "drawcia-LV0001": {
     "bus_info": "pci:pci0000:00",
+    "format_arg": "",
     "out_entity": "Intel IPU6 BE SOC capture 0"
   },
   "dru": {
     "bus_info": "platform:rkisp1",
+    "format_arg": "",
     "out_entity": "rkisp1_selfpath"
   },
   "kano-CH0001": {
     "bus_info": "PCI:0000:00:05.0",
+    "format_arg": "-s 1932x1092 -f SGRBG10",
     "out_entity": "Intel IPU6 ISYS Capture 8"
   },
   "kano-CH3c6d": {
     "bus_info": "PCI:0000:00:05.0",
+    "format_arg": "-s 2592x1444 -f SGRBG10",
     "out_entity": "Intel IPU6 ISYS Capture 8"
   },
   "karis-CH3c6d": {
     "bus_info": "PCI:0000:00:05.0",
+    "format_arg": "-s 2592x1444 -f SGRBG10",
     "out_entity": "Intel IPU6 ISYS Capture 32"
   },
   "maglia-TC0003": {
     "bus_info": "pci:pci0000:00",
+    "format_arg": "",
     "out_entity": "Intel IPU6 BE SOC capture 0"
   },
   "magolor-TC0003": {
     "bus_info": "pci:pci0000:00",
+    "format_arg": "",
     "out_entity": "Intel IPU6 BE SOC capture 0"
   },
   "nautilus": {
     "bus_info": "PCI:0000:00:14.3",
+    "format_arg": "",
     "out_entity": "ipu3-cio2 0"
   },
   "nautiluslte": {
     "bus_info": "PCI:0000:00:14.3",
+    "format_arg": "",
     "out_entity": "ipu3-cio2 0"
   },
   "nocturne": {
     "bus_info": "PCI:0000:00:14.3",
+    "format_arg": "",
     "out_entity": "ipu3-cio2 0"
   },
   "redrix-PLcf06": {
     "bus_info": "PCI:0000:00:05.0",
+    "format_arg": "-s 2592x1944 -f SGRBG10",
     "out_entity": "Intel IPU6 ISYS Capture 16"
   },
   "riven-TC0003": {
     "bus_info": "pci:pci0000:00",
+    "format_arg": "",
     "out_entity": "Intel IPU6 BE SOC capture 0"
   },
   "rudriks-TC0002": {
     "bus_info": "pci:pci0000:00",
+    "format_arg": "",
     "out_entity": "Intel IPU6 BE SOC capture 0"
   },
   "screebo-ST0d2c": {
     "bus_info": "PCI:0000:00:05.0",
+    "format_arg": "-s 1928x1208 -f SGRBG10",
     "out_entity": "Intel IPU6 ISYS Capture 32"
   },
   "skolas-KC4eb5": {
     "bus_info": "pci:pci0000:00",
+    "format_arg": "",
     "out_entity": "Intel IPU6 BE SOC capture 0"
   },
   "soraka": {
     "bus_info": "PCI:0000:00:14.3",
+    "format_arg": "",
     "out_entity": "ipu3-cio2 1"
   },
   "storo360-KC0001": {
     "bus_info": "pci:pci0000:00",
+    "format_arg": "",
     "out_entity": "Intel IPU6 BE SOC capture 0"
   },
   "teliks360-LC6ace": {
     "bus_info": "pci:pci0000:00",
+    "format_arg": "",
     "out_entity": "Intel IPU6 BE SOC capture 0"
   },
   "teliks360-TXfc2c": {
     "bus_info": "pci:pci0000:00",
+    "format_arg": "",
     "out_entity": "Intel IPU6 BE SOC capture 0"
   },
   "vell-TCf939": {
     "bus_info": "PCI:0000:00:05.0",
+    "format_arg": "-s 3280x2464 -f SGRBG10",
     "out_entity": "Intel IPU6 ISYS Capture 8"
   },
   "voema-CH0001": {
     "bus_info": "pci:pci0000:00",
+    "format_arg": "",
     "out_entity": "Intel IPU6 BE SOC capture 1"
   },
   "xivu360-KC0001": {
     "bus_info": "PCI:0000:00:05.0",
+    "format_arg": "-s 3280x2464 -f SGRBG10",
     "out_entity": "Intel IPU6 ISYS Capture 16"
   },
   "yavilly-LV0001": {
     "bus_info": "pci:pci0000:00",
+    "format_arg": "",
     "out_entity": "Intel IPU6 BE SOC capture 0"
   },
   "yavilly-TC0001": {
     "bus_info": "PCI:0000:00:05.0",
+    "format_arg": "-s 3280x2464 -f SGRBG10",
     "out_entity": "Intel IPU6 ISYS Capture 8"
   }
 }
