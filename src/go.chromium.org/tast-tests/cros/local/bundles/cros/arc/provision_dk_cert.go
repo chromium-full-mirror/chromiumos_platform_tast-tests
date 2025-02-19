@@ -36,7 +36,7 @@ func init() {
 		BugComponent: "b:1487630",
 		Attr:         []string{"group:mainline", "informational"},
 		Timeout:      chrome.LoginTimeout + arc.BootTimeout + 60*time.Second,
-		Fixture:      "arcBooted",
+		Fixture:      "arcBootedWithoutUIAutomator",
 		SoftwareDeps: []string{"android_vm_t", "chrome", "no_qemu"},
 		VarDeps:      []string{},
 		Params: []testing.Param{{
