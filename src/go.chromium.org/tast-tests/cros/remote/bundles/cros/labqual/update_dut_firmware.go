@@ -141,6 +141,10 @@ func UpdateDutFirmware(ctx context.Context, s *testing.State) {
 		s.Fatal("Failed to init servo: ", err)
 	}
 
+	// Skip checking for EC crashes in this test because some of the firmware
+	// flashed during this test can be flaky so crashes are expected.
+	h.CheckECCrash = false
+
 	ecChip, err := h.Servo.GetString(ctx, servo.ECChip)
 	if err != nil {
 		s.Fatal("Failed to read DUT EC Chip: ", err)
