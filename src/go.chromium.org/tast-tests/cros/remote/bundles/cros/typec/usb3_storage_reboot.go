@@ -74,6 +74,48 @@ func Usb3StorageReboot(ctx context.Context, s *testing.State) {
 		s.Fatal("Failed to get MCCI switch handle: ", err)
 	}
 	defer sw.Close()
+	if err := typecutils.UnmountRemovableMedia(ctx, d); err != nil {
+		s.Fatal("Failed to unmount removable media: ", err)
+	}
+
+	if err := typecutils.UnmountRemovableMedia(ctx, d); err != nil {
+		s.Fatal("Failed to unmount removable media: ", err)
+	}
+
+	// Dial rpc
+	cl, err := rpc.Dial(ctx, d, s.RPCHint())
+	if err != nil {
+		s.Fatal("Failed to connect to the RPC service on the DUT: ", err)
+	}
+	usbClient := usb.NewSysfsServiceClient(cl.Conn)
+
+	// Make sure the device is disconnected before testing
+	if port, err := sw.GetActivePort(); err != nil {
+		s.Fatal("Could not get used port before testing: ", err)
+	} else if port == portUsed {
+		devicesWhenOn, err := typecutils.Usb3GetExternalStorageList(ctx, usbClient)
+		if err != nil {
+			s.Fatal("Could not get storage device list before testing: ", err)
+		}
+		if err := sw.DisablePorts(); err != nil {
+			s.Fatal("Could not disable the port before testing: ", err)
+		}
+		if err := testing.Poll(ctx, func(ctx context.Context) error {
+			if devices, err := typecutils.Usb3GetExternalStorageList(ctx, usbClient); err != nil {
+				return errors.Wrap(err, "could not get storage device list before testing")
+			} else if len(devices) >= len(devicesWhenOn) {
+				return errors.New("failed to disconnect USB device")
+			}
+			return nil
+		}, &testing.PollOptions{Timeout: 10 * time.Second, Interval: time.Second}); err != nil {
+			s.Fatal("Failed to disconnect the device before the test: ", err)
+		}
+
+	} else if err := sw.DisablePorts(); err != nil {
+		s.Fatal("Could not disable the port before testing: ", err)
+	}
+
+	cl.Close(ctx)
 
 	for i := 1; i <= numIterations; i++ {
 		s.Log("Running iteration ", i)
@@ -85,41 +127,41 @@ func Usb3StorageReboot(ctx context.Context, s *testing.State) {
 
 // performUsb3StorageRebootIteration runs 1 iteration of the USB 3.X storage reboot test.
 func performUsb3StorageRebootIteration(ctx context.Context, s *testing.State, d *dut.DUT, sw *mcci.Switch, mcciPort int) error {
-	if err := typecutils.UnmountRemovableMedia(ctx, d); err != nil {
-		return errors.Wrap(err, "failed to unmount removable media")
-	}
-
-	// Disable the switch.
-	sw.DisablePorts()
-
-	// GoBigSleepLint: Give enough time for the DUT to process device disconnection.
-	if err := testing.Sleep(ctx, 5*time.Second); err != nil {
-		return errors.Wrap(err, "failed to sleep for USB disconnection")
-	}
-
-	// Enable the switch.
-	sw.EnablePort(mcciPort)
-
-	// GoBigSleepLint: Give enough time for the DUT to enumerate new USB devices.
-	if err := testing.Sleep(ctx, 10*time.Second); err != nil {
-		return errors.Wrap(err, "failed to sleep for USB enumeration")
-	}
-
+	// Dial rpc
 	cl, err := rpc.Dial(ctx, d, s.RPCHint())
 	if err != nil {
 		return errors.Wrap(err, "failed to connect to the RPC service on the DUT")
 	}
 	defer cl.Close(ctx)
-
-	// Get initial device count.
 	usbClient := usb.NewSysfsServiceClient(cl.Conn)
-	externalStorageBefore, err := typecutils.Usb3GetExternalStorageList(ctx, usbClient)
+
+	// Get the device count when switch is off
+	devicesWhenOff, err := typecutils.Usb3GetExternalStorageList(ctx, usbClient)
 	if err != nil {
 		return errors.Wrap(err, "could not get external storage device list before reboot")
 	}
 
-	if len(externalStorageBefore) == 0 {
-		return errors.New("could not find an external storage device before reboot")
+	// Enable the switch.
+	if err := sw.EnablePort(mcciPort); err != nil {
+		return errors.Wrap(err, "failed to enable the port")
+	}
+
+	// Check for enumeration
+	if err := testing.Poll(ctx, func(ctx context.Context) error {
+		devices, err := typecutils.Usb3GetExternalStorageList(ctx, usbClient)
+		if err != nil {
+			return errors.Wrap(err, "could not get external storage list after hotplug")
+		} else if len(devicesWhenOff) >= len(devices) {
+			return errors.New("failed to enumerate new USB storage device")
+		}
+		return nil
+	}, &testing.PollOptions{Timeout: 10 * time.Second, Interval: time.Second}); err != nil {
+		return err
+	}
+
+	externalStorageBefore, err := typecutils.Usb3GetExternalStorageList(ctx, usbClient)
+	if err != nil {
+		return errors.Wrap(err, "could not get external storage list after hotplug")
 	}
 
 	// Reboot the DUT.
@@ -136,14 +178,37 @@ func performUsb3StorageRebootIteration(ctx context.Context, s *testing.State, d 
 		return errors.Wrap(err, "failed to connect to the RPC service on the DUT")
 	}
 	defer cl.Close(ctx)
+	usbClient = usb.NewSysfsServiceClient(cl.Conn)
 
 	// Get device count after rebooting.
-	usbClient = usb.NewSysfsServiceClient(cl.Conn)
 	externalStorageAfter, err := typecutils.Usb3GetExternalStorageList(ctx, usbClient)
 	if err != nil {
 		return errors.Wrap(err, "could not get external storage device list after reboot")
 	} else if len(externalStorageAfter) < len(externalStorageBefore) {
 		return errors.New("external storage device failed to enumerate after reboot")
+	}
+
+	// Unmount the storage
+	if err := typecutils.UnmountRemovableMedia(ctx, d); err != nil {
+		return errors.Wrap(err, "failed to unmount removable media")
+	}
+
+	// Disable the switch.
+	if err := sw.DisablePorts(); err != nil {
+		return errors.Wrap(err, "failed to switch off the port")
+	}
+
+	// Check for disconnection
+	if err := testing.Poll(ctx, func(ctx context.Context) error {
+		devices, err := typecutils.Usb3GetExternalStorageList(ctx, usbClient)
+		if err != nil {
+			return errors.Wrap(err, "could not get external storage list after disconnection")
+		} else if len(devices) != len(devicesWhenOff) {
+			return errors.New("failed to disconnect USB storage device")
+		}
+		return nil
+	}, &testing.PollOptions{Timeout: 5 * time.Second, Interval: time.Second}); err != nil {
+		return err
 	}
 
 	return nil

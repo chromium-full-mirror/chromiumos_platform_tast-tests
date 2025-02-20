@@ -82,6 +82,36 @@ func Usb3StorageHotplug(ctx context.Context, s *testing.State) {
 	defer cl.Close(ctx)
 	usbClient := usb.NewSysfsServiceClient(cl.Conn)
 
+	if err := typecutils.UnmountRemovableMedia(ctx, d); err != nil {
+		s.Fatal("Failed to unmount removable media: ", err)
+	}
+
+	// Make sure the device is disconnected before testing
+	if port, err := sw.GetActivePort(); err != nil {
+		s.Fatal("Could not get used port before testing: ", err)
+	} else if port == portUsed {
+		devicesWhenOn, err := typecutils.Usb3GetExternalStorageList(ctx, usbClient)
+		if err != nil {
+			s.Fatal("Could not get storage device list before testing: ", err)
+		}
+		if err := sw.DisablePorts(); err != nil {
+			s.Fatal("Could not disable the port before testing: ", err)
+		}
+		if err := testing.Poll(ctx, func(ctx context.Context) error {
+			if devices, err := typecutils.Usb3GetExternalStorageList(ctx, usbClient); err != nil {
+				return errors.Wrap(err, "could not get storage device list before testing")
+			} else if len(devices) >= len(devicesWhenOn) {
+				return errors.New("failed to disconnect USB device")
+			}
+			return nil
+		}, &testing.PollOptions{Timeout: 10 * time.Second, Interval: time.Second}); err != nil {
+			s.Fatal("Failed to disconnect the device before the test: ", err)
+		}
+
+	} else if err := sw.DisablePorts(); err != nil {
+		s.Fatal("Could not disable the port before testing: ", err)
+	}
+
 	for i := 1; i <= numIterations; i++ {
 		s.Log("Running iteration ", i)
 		if err := performUsb3StorageHotplugIteration(ctx, d, usbClient, sw, portUsed); err != nil {
@@ -92,36 +122,52 @@ func Usb3StorageHotplug(ctx context.Context, s *testing.State) {
 
 // performUsb3StorageHotplugIteration runs 1 iteration of the USB 3.2 storage hotplug test.
 func performUsb3StorageHotplugIteration(ctx context.Context, d *dut.DUT, cl usb.SysfsServiceClient, sw *mcci.Switch, mcciPort int) error {
-	if err := typecutils.UnmountRemovableMedia(ctx, d); err != nil {
-		return errors.Wrap(err, "failed to unmount removable media")
-	}
 
-	// Disable the switch.
-	sw.DisablePorts()
-
-	// GoBigSleepLint: Give enough time for the DUT to process device disconnection.
-	if err := testing.Sleep(ctx, 5*time.Second); err != nil {
-		return errors.Wrap(err, "failed to sleep for USB disconnection")
-	}
-
-	externalStorageBefore, err := typecutils.Usb3GetExternalStorageList(ctx, cl)
+	// Get the devices when switch is off
+	devicesWhenOff, err := typecutils.Usb3GetExternalStorageList(ctx, cl)
 	if err != nil {
 		return errors.Wrap(err, "could not get external storage list before hotplug")
 	}
 
 	// Enable the switch.
-	sw.EnablePort(mcciPort)
-
-	// GoBigSleepLint: Give enough time for the DUT to enumerate new USB devices.
-	if err := testing.Sleep(ctx, 10*time.Second); err != nil {
-		return errors.Wrap(err, "failed to sleep for USB enumeration")
+	if err := sw.EnablePort(mcciPort); err != nil {
+		return errors.Wrap(err, "failed to enable the port")
 	}
 
-	externalStorageAfter, err := typecutils.Usb3GetExternalStorageList(ctx, cl)
-	if err != nil {
-		return errors.Wrap(err, "could not get external storage list after hotplug")
-	} else if len(externalStorageBefore) >= len(externalStorageAfter) {
-		return errors.New("failed to enumerate new USB storage device")
+	// Check for enumeration
+	if err := testing.Poll(ctx, func(ctx context.Context) error {
+		devices, err := typecutils.Usb3GetExternalStorageList(ctx, cl)
+		if err != nil {
+			return errors.Wrap(err, "could not get external storage list after hotplug")
+		} else if len(devicesWhenOff) >= len(devices) {
+			return errors.New("failed to enumerate new USB storage device")
+		}
+		return nil
+	}, &testing.PollOptions{Timeout: 10 * time.Second, Interval: time.Second}); err != nil {
+		return err
+	}
+
+	// Unmount the storage
+	if err := typecutils.UnmountRemovableMedia(ctx, d); err != nil {
+		return errors.Wrap(err, "failed to unmount removable media")
+	}
+
+	// Disable the switch.
+	if err := sw.DisablePorts(); err != nil {
+		return errors.Wrap(err, "failed to switch off the port")
+	}
+
+	// Check for disconnection
+	if err := testing.Poll(ctx, func(ctx context.Context) error {
+		devices, err := typecutils.Usb3GetExternalStorageList(ctx, cl)
+		if err != nil {
+			return errors.Wrap(err, "could not get external storage list after disconnection")
+		} else if len(devices) != len(devicesWhenOff) {
+			return errors.New("failed to disconnect USB storage device")
+		}
+		return nil
+	}, &testing.PollOptions{Timeout: 5 * time.Second, Interval: time.Second}); err != nil {
+		return err
 	}
 
 	return nil
