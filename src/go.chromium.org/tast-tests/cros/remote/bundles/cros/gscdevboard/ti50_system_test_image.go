@@ -29,7 +29,7 @@ func init() {
 		},
 		BugComponent: "b:715469", // ChromeOS > Platform > System > Hardware Security > HwSec GSC > Ti50
 		Attr: []string{"group:gsc",
-			"gsc_dt_ab", "gsc_dt_shield", "gsc_ot_shield", "gsc_he",
+			"gsc_dt_ab", "gsc_dt_shield", "gsc_ot_shield", "gsc_ot_fpga_cw310", "gsc_he",
 			"gsc_nightly"},
 		Params: []testing.Param{{
 			Name:      "sta",
