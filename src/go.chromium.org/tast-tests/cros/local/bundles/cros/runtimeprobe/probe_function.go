@@ -295,7 +295,7 @@ func init() {
 		Params: []testing.Param{
 			{
 				Name:              "battery",
-				ExtraHardwareDeps: common.ReleasedDeviceDeps(hwdep.SkipOnModel("meep")),
+				ExtraHardwareDeps: common.ReleasedDeviceDeps(),
 				Val: probeFunctionTestParam{
 					categories:           []string{"battery"},
 					allowExtraComponents: false,
