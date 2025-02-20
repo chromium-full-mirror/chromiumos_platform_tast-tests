@@ -79,11 +79,6 @@ func performDpHotplugSuspendIteration(ctx context.Context, d *dut.DUT, sw *mcci.
 	// Disconnect the dock.
 	sw.DisablePorts()
 
-	// GoBigSleepLint: Give enough time for a new display modeset after hot unplug.
-	if err := testing.Sleep(ctx, 10*time.Second); err != nil {
-		return errors.Wrap(err, "failed to sleep for display unplug modeset")
-	}
-
 	// Verify that there is no DP display.
 	if err := testing.Poll(ctx, func(ctx context.Context) error {
 		if conns, err := typecutils.FindConnectedDp(ctx, d); err != nil {
