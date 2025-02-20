@@ -340,6 +340,15 @@ func (h *CmdTPMClearHelper) ensureTPMIsReset(ctx context.Context, removeFiles bo
 
 	ownershipData, err := h.cmdRunner.Run(ctx, "hwsec-ownership-id", "id")
 	if err != nil {
+		// TODO(b/395648279): Remove additional logs after investigation.
+		whichOutput, errLog := h.cmdRunner.Run(ctx, "which", "hwsec-ownership-id")
+		testing.ContextLog(ctx, "`which hwsec-ownership-id` returned `", string(whichOutput), "`, errLog is `", errLog, "`")
+		findOutput, errLog := h.cmdRunner.Run(ctx, "find", "/", "-type", "f", "-name", "hwsec-ownership-id", "-print")
+		testing.ContextLog(ctx, "`find / -type f -name hwsec-ownership-id -print` returned `", string(findOutput), "`, errLog is `", errLog, "`")
+		testing.ContextLog(ctx, "PATH is `", os.Getenv("PATH"), "`")
+		catOutput, errLog := h.cmdRunner.Run(ctx, "cat", "/etc/lsb-release")
+		testing.ContextLog(ctx, "`cat /etc/lsb-release` returned `", string(catOutput), "`, errLog is `", errLog, "`")
+
 		return errors.Wrap(err, "failed to get ownership ID")
 	}
 	ownershipID := strings.TrimSpace(string(ownershipData))
