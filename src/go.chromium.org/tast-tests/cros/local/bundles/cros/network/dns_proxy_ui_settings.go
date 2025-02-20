@@ -70,7 +70,7 @@ func DNSProxyUISettings(ctx context.Context, s *testing.State) {
 	s.AttachErrorHandlers(dumpUI, dumpUI)
 
 	// Start screen recording, to help with debugging errors.
-	recorder, err := uiauto.NewScreenRecorder(ctx, tconn)
+	recorder, err := uiauto.NewScreenRecorder(ctx, tconn, cr)
 	if err != nil {
 		s.Fatal("Failed to create screen recorder: ", err)
 	}

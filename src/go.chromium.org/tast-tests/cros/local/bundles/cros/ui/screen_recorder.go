@@ -58,7 +58,7 @@ func ScreenRecorder(ctx context.Context, s *testing.State) {
 
 	defer faillog.DumpUITreeWithScreenshotOnError(cleanupCtx, s.OutDir(), s.HasError, cr, "ui_tree")
 
-	recorder, err := uiauto.NewScreenRecorder(ctx, tconn)
+	recorder, err := uiauto.NewScreenRecorder(ctx, tconn, cr)
 	if err != nil {
 		s.Fatal("Failed to create screen recorder: ", err)
 	}

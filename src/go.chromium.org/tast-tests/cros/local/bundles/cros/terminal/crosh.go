@@ -82,7 +82,7 @@ func Crosh(ctx context.Context, s *testing.State) {
 
 	croshPrompt := nodewith.NameRegex(regexp.MustCompile(`^crosh> ?$`)).Role(role.StaticText).First()
 
-	recorder := uiauto.CreateAndStartScreenRecorder(ctx, tconn)
+	recorder := uiauto.CreateAndStartScreenRecorder(ctx, tconn, cr)
 	defer uiauto.StopAndSaveOnError(cleanupCtx, recorder, filepath.Join(s.OutDir(), "screen_recording.webm"), s.HasError)
 	defer faillog.DumpUITreeWithScreenshotOnError(ctx, s.OutDir(), s.HasError, cr, "ui_tree")
 	// Run shell, verify prompt, exit.

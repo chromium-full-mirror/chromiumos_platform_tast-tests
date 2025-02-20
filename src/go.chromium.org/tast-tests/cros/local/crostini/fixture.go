@@ -42,8 +42,8 @@ const (
 	checkContainerTimeout  = time.Minute
 	takeSnapshotTimeout    = 5 * time.Second
 	restoreSnapshotTimeout = 10 * time.Second
-	preTestTimeout         = 30 * time.Second
-	postTestTimeout        = 30 * time.Second
+	preTestTimeout         = 40 * time.Second
+	postTestTimeout        = 40 * time.Second
 	uninstallationTimeout  = 2 * time.Minute
 	restartCrostiniTimeout = 30*time.Second + terminalapp.LaunchTerminalTimeout
 
@@ -433,13 +433,17 @@ func (f *crostiniFixture) SetUp(ctx context.Context, s *testing.FixtState) inter
 	}
 
 	// Setup the screen recorder.
-	screenRecorder := uiauto.CreateAndStartScreenRecorder(ctx, f.tconn)
-	hasChromeBeenReset := false
+	screenRecorder := uiauto.CreateAndStartScreenRecorder(ctx, f.tconn, f.cr)
+
+	if screenRecorder == nil {
+		faillog.SaveScreenshotToFile(ctx, f.tconn, s.OutDir(), "screenshot_for_screen_recorder_failure.png")
+		faillog.DumpUITreeToFile(ctx, s.OutDir(), f.tconn, "uitree_for_screen_recorder_failure.txt")
+	}
 	defer func(ctx context.Context) {
-		// The recorder will not exist if Chrome has been reset.
-		if !hasChromeBeenReset {
-			screenRecorder.StopAndSaveOnError(ctx, filepath.Join(s.OutDir(), "record.webm"), s.HasError)
+		if screenRecorder == nil {
+			return
 		}
+		screenRecorder.StopAndSaveOnError(ctx, filepath.Join(s.OutDir(), "record.webm"), s.HasError)
 	}(cleanupCtx)
 
 	// Setup the perf recorder.
@@ -524,7 +528,6 @@ func (f *crostiniFixture) SetUp(ctx context.Context, s *testing.FixtState) inter
 	if err := f.cr.ResetState(ctx); err != nil {
 		s.Fatal("Failed to reset chrome's state: ", err)
 	}
-	hasChromeBeenReset = true
 
 	f.preData.startedOK = true
 	vm.Lock()

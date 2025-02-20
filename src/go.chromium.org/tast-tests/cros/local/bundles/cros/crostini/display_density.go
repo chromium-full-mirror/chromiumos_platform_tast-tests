@@ -83,7 +83,7 @@ func DisplayDensity(ctx context.Context, s *testing.State) {
 		highDensity
 	)
 
-	recorder := uiauto.CreateAndStartScreenRecorder(ctx, pre.Tconn)
+	recorder := uiauto.CreateAndStartScreenRecorder(ctx, pre.Tconn, pre.Chrome)
 	defer uiauto.StopAndSaveOnError(cleanupCtx, recorder, filepath.Join(s.OutDir(), "screen_recording.webm"), s.HasError)
 
 	handler := faillog.DumpUITreeWithScreenshotHandler(cleanupCtx, tconn, "ui_tree")

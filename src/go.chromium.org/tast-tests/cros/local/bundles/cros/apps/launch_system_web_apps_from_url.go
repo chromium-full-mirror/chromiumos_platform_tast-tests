@@ -63,7 +63,7 @@ func LaunchSystemWebAppsFromURL(ctx context.Context, s *testing.State) {
 	}
 	defer kb.Close(ctx)
 
-	recorder := uiauto.CreateAndStartScreenRecorder(ctx, tconn)
+	recorder := uiauto.CreateAndStartScreenRecorder(ctx, tconn, cr)
 	defer uiauto.StopAndSaveOnError(cleanupCtx, recorder, filepath.Join(s.OutDir(), "screen_recording.webm"), s.HasError)
 
 	testAppInternalNames := map[string]struct{}{

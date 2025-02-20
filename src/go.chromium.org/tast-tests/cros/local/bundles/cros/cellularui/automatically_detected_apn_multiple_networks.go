@@ -85,7 +85,7 @@ func AutomaticallyDetectedApnMultipleNetworks(ctx context.Context, s *testing.St
 	// TODO(b/343143720): Remove the recorder once the issue is resolved.
 	// The settings page should go into the network details page after clicking the sub-page arrow button of the network,
 	// but sometimes the button is not working.
-	recorder := uiauto.CreateAndStartScreenRecorder(ctx, tconn)
+	recorder := uiauto.CreateAndStartScreenRecorder(ctx, tconn, cr)
 	defer uiauto.StopAndSaveOnError(cleanupCtx, recorder, filepath.Join(s.OutDir(), "screen_recording.webm"), s.HasError)
 
 	mdp, err := ossettings.OpenMobileDataSubpage(ctx, tconn, cr)

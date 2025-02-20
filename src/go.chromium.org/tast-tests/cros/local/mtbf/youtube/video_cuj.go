@@ -24,7 +24,6 @@ import (
 	"go.chromium.org/tast-tests/cros/local/chrome/webutil"
 	"go.chromium.org/tast-tests/cros/local/input"
 	"go.chromium.org/tast-tests/cros/local/ui/cujrecorder"
-
 	"go.chromium.org/tast/core/ctxutil"
 	"go.chromium.org/tast/core/errors"
 	"go.chromium.org/tast/core/testing"
@@ -184,7 +183,7 @@ func Run(ctx context.Context, resources TestResources, param TestParams) error {
 	defer cancel()
 
 	options := cujrecorder.NewPerformanceCUJOptions()
-	recorder, err := cujrecorder.NewRecorder(ctx, tconn, a, options)
+	recorder, err := cujrecorder.NewRecorder(ctx, tconn, cr, a, options)
 	if err != nil {
 		return errors.Wrap(err, "failed to create a recorder")
 	}

@@ -14,13 +14,12 @@ import (
 	"go.chromium.org/tast-tests/cros/common/wallpaper"
 	"go.chromium.org/tast-tests/cros/local/chrome"
 	"go.chromium.org/tast-tests/cros/local/chrome/uiauto"
-
 	"go.chromium.org/tast/core/testing"
 )
 
 const (
-	preTestTimeout  = 10 * time.Second
-	postTestTimeout = 10 * time.Second
+	preTestTimeout  = 20 * time.Second
+	postTestTimeout = 20 * time.Second
 )
 
 // Set of public fixture names for personalization tests.
@@ -178,7 +177,7 @@ func (f *personalizationBaseFixtureImpl) SetUp(ctx context.Context, s *testing.F
 }
 
 func (f *personalizationBaseFixtureImpl) PreTest(ctx context.Context, s *testing.FixtTestState) {
-	recorder, err := uiauto.NewScreenRecorder(ctx, f.tconn)
+	recorder, err := uiauto.NewScreenRecorder(ctx, f.tconn, f.cr)
 	if err != nil {
 		s.Log("Failed to create screen recorder: ", err)
 		return

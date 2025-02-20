@@ -20,7 +20,6 @@ import (
 	"go.chromium.org/tast-tests/cros/local/chrome/uiauto/nodewith"
 	"go.chromium.org/tast-tests/cros/local/chrome/uiauto/ossettings"
 	"go.chromium.org/tast-tests/cros/local/chrome/uiauto/role"
-
 	"go.chromium.org/tast/core/ctxutil"
 	"go.chromium.org/tast/core/errors"
 	"go.chromium.org/tast/core/testing"
@@ -74,7 +73,7 @@ func VerifySettings(ctx context.Context, s *testing.State) {
 		s.Fatal("Failed to optin to Play Store and Close: ", err)
 	}
 
-	recorder := uiauto.CreateAndStartScreenRecorder(ctx, tconn)
+	recorder := uiauto.CreateAndStartScreenRecorder(ctx, tconn, cr)
 	defer uiauto.StopAndSaveOnError(cleanupCtx, recorder, filepath.Join(s.OutDir(), "VerifySettings.webm"), s.HasError)
 
 	// Setup ARC.

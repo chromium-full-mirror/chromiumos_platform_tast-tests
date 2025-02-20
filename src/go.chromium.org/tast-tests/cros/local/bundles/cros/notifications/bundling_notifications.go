@@ -113,7 +113,7 @@ func BundlingNotifications(ctx context.Context, s *testing.State) {
 		outDir: s.OutDir(),
 	}
 
-	screenRecorder, err := uiauto.NewScreenRecorder(ctx, tconn)
+	screenRecorder, err := uiauto.NewScreenRecorder(ctx, tconn, cr)
 	if err != nil {
 		s.Log("Failed to create ScreenRecorder: ", err)
 	}

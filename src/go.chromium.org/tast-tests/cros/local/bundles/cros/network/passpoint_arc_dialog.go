@@ -160,7 +160,7 @@ func PasspointARCDialog(ctx context.Context, s *testing.State) {
 	}()
 
 	// Start screen recording, to help with debugging errors.
-	recorder, err := uiauto.NewScreenRecorder(ctx, tconn)
+	recorder, err := uiauto.NewScreenRecorder(ctx, tconn, cr)
 	if err != nil {
 		s.Fatal("Failed to create screen recorder: ", err)
 	}

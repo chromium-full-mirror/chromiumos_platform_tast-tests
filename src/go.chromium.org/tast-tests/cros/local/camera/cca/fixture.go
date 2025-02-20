@@ -24,7 +24,6 @@ import (
 	"go.chromium.org/tast-tests/cros/local/chrome"
 	"go.chromium.org/tast-tests/cros/local/chrome/uiauto"
 	powerFixture "go.chromium.org/tast-tests/cros/local/power/setup"
-
 	"go.chromium.org/tast/core/ctxutil"
 	"go.chromium.org/tast/core/errors"
 	"go.chromium.org/tast/core/fsutil"
@@ -534,7 +533,7 @@ func (f *fixture) PreTest(ctx context.Context, s *testing.FixtTestState) {
 		if err != nil {
 			s.Fatal("Failed to get test API: ", err)
 		}
-		f.screenRecorder = uiauto.CreateAndStartScreenRecorder(ctx, tconn)
+		f.screenRecorder = uiauto.CreateAndStartScreenRecorder(ctx, tconn, f.cr)
 		if f.screenRecorder == nil {
 			s.Fatal("Failed to create screen recorder")
 		}

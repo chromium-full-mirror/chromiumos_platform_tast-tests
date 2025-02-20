@@ -106,7 +106,7 @@ func GalleryCUJRun(ctx context.Context, cr *chrome.Chrome, proxyScriptPath, pdfF
 	}
 	defer kb.Close(closeCtx)
 
-	recorder, err := cujrecorder.NewRecorder(ctx, tconn, nil, cujrecorder.NewPerformanceCUJOptions())
+	recorder, err := cujrecorder.NewRecorder(ctx, tconn, cr, nil, cujrecorder.NewPerformanceCUJOptions())
 	if err != nil {
 		return nil, errors.Wrap(err, "failed to create a CUJ recorder")
 	}

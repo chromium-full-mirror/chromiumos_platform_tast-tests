@@ -91,7 +91,7 @@ func AdvancedProtectionAllowed(ctx context.Context, s *testing.State) {
 				s.Fatal("Failed to update policies: ", err)
 			}
 
-			recorder := uiauto.CreateAndStartScreenRecorder(ctx, tconn)
+			recorder := uiauto.CreateAndStartScreenRecorder(ctx, tconn, cr)
 			defer uiauto.StopAndSaveOnError(cleanupCtx, recorder, filepath.Join(s.OutDir(), "screen_recording_"+param.Name+".webm"), s.HasError)
 
 			defer faillog.DumpUITreeWithScreenshotOnError(ctx, s.OutDir(), s.HasError, cr, "ui_tree_"+param.Name)

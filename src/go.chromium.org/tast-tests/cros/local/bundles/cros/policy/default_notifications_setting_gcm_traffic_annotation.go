@@ -29,7 +29,6 @@ import (
 	"go.chromium.org/tast-tests/cros/local/chrome/uiauto/role"
 	"go.chromium.org/tast-tests/cros/local/cryptohome"
 	"go.chromium.org/tast-tests/cros/local/policyutil"
-
 	"go.chromium.org/tast/core/ctxutil"
 	"go.chromium.org/tast/core/errors"
 	"go.chromium.org/tast/core/testing"
@@ -131,7 +130,7 @@ func DefaultNotificationsSettingGcmTrafficAnnotation(ctx context.Context, s *tes
 				s.Fatal("Failed to update policies: ", err)
 			}
 
-			recorder := uiauto.CreateAndStartScreenRecorder(ctx, tconn)
+			recorder := uiauto.CreateAndStartScreenRecorder(ctx, tconn, cr)
 			defer uiauto.StopAndSaveOnError(cleanupCtx, recorder, filepath.Join(s.OutDir(), "screen_recording_"+param.name+".webm"), s.HasError)
 
 			// Setup server to send notifications from.

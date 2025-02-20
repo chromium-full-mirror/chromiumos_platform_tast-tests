@@ -116,7 +116,7 @@ func LinkCapturing(ctx context.Context, s *testing.State) {
 		s.Fatal("Failed installing the APK: ", err)
 	}
 
-	recorder := uiauto.CreateAndStartScreenRecorder(ctx, tconn)
+	recorder := uiauto.CreateAndStartScreenRecorder(ctx, tconn, cr)
 	defer uiauto.StopAndSaveOnError(cleanupCtx, recorder, filepath.Join(s.OutDir(), "screen_recording.webm"), s.HasError)
 
 	// Open chrome://app-service-internals to and download the installed apps.

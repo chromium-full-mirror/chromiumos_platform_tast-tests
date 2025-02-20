@@ -95,7 +95,7 @@ func KeyboardBinding(ctx context.Context, s *testing.State) {
 		s.Fatal("Failed to connect Test API: ", err)
 	}
 
-	screenRecorder, err := uiauto.NewScreenRecorder(ctx, tconn)
+	screenRecorder, err := uiauto.NewScreenRecorder(ctx, tconn, cr)
 	if err != nil {
 		s.Log("Failed to create ScreenRecorder: ", err)
 	}

@@ -80,7 +80,7 @@ func ShareDownloadsAddFiles(ctx context.Context, s *testing.State) {
 		s.Fatalf("Failed to remove all files in %s: %v", downloadsPath, err)
 	}
 
-	screenRecorder, err := uiauto.NewScreenRecorder(ctx, tconn)
+	screenRecorder, err := uiauto.NewScreenRecorder(ctx, tconn, cr)
 	if err != nil {
 		s.Log("Failed to create ScreenRecorder: ", err)
 	}

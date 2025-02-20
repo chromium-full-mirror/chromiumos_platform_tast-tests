@@ -82,7 +82,7 @@ func DisableArc(ctx context.Context, s *testing.State) {
 	// Setup screen recording and saving on error.
 	// TODO(b/178232263): remove this once the test is fixed.
 	s.Log("Starting screen recording")
-	screenRecorder, err := uiauto.NewScreenRecorder(ctx, tconn)
+	screenRecorder, err := uiauto.NewScreenRecorder(ctx, tconn, cr)
 	if err != nil {
 		s.Fatal("Failed to create ScreenRecorder: ", err)
 	}

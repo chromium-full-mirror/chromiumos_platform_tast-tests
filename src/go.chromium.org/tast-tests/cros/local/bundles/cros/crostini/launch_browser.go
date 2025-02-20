@@ -48,12 +48,13 @@ func init() {
 func LaunchBrowser(ctx context.Context, s *testing.State) {
 	cont := s.FixtValue().(crostini.FixtureData).Cont
 	tconn := s.FixtValue().(crostini.FixtureData).Tconn
+	cr := s.FixtValue().(crostini.FixtureData).Chrome
 
 	cleanupCtx := ctx
 	ctx, cancel := ctxutil.Shorten(ctx, 10*time.Second)
 	defer cancel()
 
-	recorder := uiauto.CreateAndStartScreenRecorder(ctx, tconn)
+	recorder := uiauto.CreateAndStartScreenRecorder(ctx, tconn, cr)
 	defer uiauto.StopAndSaveOnError(cleanupCtx, recorder, filepath.Join(s.OutDir(), "screen_recording.webm"), s.HasError)
 
 	runSubTest := func(name string, run func(ctx context.Context, s *testing.State)) {

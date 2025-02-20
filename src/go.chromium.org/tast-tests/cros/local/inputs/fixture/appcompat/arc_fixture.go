@@ -148,7 +148,7 @@ func (f *arcFixtureImpl) SetUp(ctx context.Context, s *testing.FixtState) interf
 }
 
 func (f *arcFixtureImpl) PreTest(ctx context.Context, s *testing.FixtTestState) {
-	f.recorder = uiauto.CreateAndStartScreenRecorder(ctx, f.tconn)
+	f.recorder = uiauto.CreateAndStartScreenRecorder(ctx, f.tconn, f.cr)
 
 	// clear the single line input field
 	if err := f.uidetector.Tap(uidetection.Word("Single"))(ctx); err != nil {

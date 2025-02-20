@@ -16,9 +16,8 @@ import (
 	"strings"
 	"time"
 
-	"golang.org/x/exp/slices"
-
 	"github.com/mafredri/cdp/rpcc"
+	"golang.org/x/exp/slices"
 
 	"go.chromium.org/tast-tests/cros/common/chrome/histogram"
 	"go.chromium.org/tast-tests/cros/common/dma"
@@ -882,6 +881,7 @@ func measureLoginPerformance(
 	cujRecorder, err := cujrecorder.NewRecorder(
 		ctx,
 		tLoginConn,
+		cr,
 		nil,
 		cujrecorder.RecorderOptions{RecordLoginEvents: true},
 	)

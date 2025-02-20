@@ -119,7 +119,7 @@ func UnicornParentPermission(ctx context.Context, s *testing.State) {
 		defer d.Close(cleanupCtx)
 
 		// Start screen recording for easier to debug failures.
-		screenRecorder, err := uiauto.NewScreenRecorder(ctx, tconn)
+		screenRecorder, err := uiauto.NewScreenRecorder(ctx, tconn, cr)
 		if err != nil || screenRecorder == nil {
 			return rl.Exit("create ScreenRecorder", err)
 		}

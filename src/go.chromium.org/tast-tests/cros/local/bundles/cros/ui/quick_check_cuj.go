@@ -76,7 +76,7 @@ func QuickCheckCUJ(ctx context.Context, s *testing.State) {
 
 	password := cr.Creds().Pass
 
-	recorder, err := cujrecorder.NewRecorder(ctx, tconn, nil, cujrecorder.RecorderOptions{})
+	recorder, err := cujrecorder.NewRecorder(ctx, tconn, cr, nil, cujrecorder.RecorderOptions{})
 	if err != nil {
 		s.Fatal("Failed to create a CUJ recorder: ", err)
 	}

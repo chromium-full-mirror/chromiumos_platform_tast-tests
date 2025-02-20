@@ -67,8 +67,8 @@ const (
 
 	networkConnectionTimeout = time.Minute
 	setUpTimeout             = 10 * time.Second
-	preTestTimeout           = 30 * time.Second
-	postTestTimeout          = 15 * time.Second
+	preTestTimeout           = 40 * time.Second
+	postTestTimeout          = 25 * time.Second
 )
 
 // Parameterize builds a parameterized fixture name.
@@ -271,7 +271,7 @@ func (f *quickAnswersFixture) SetUp(ctx context.Context, s *testing.FixtState) i
 }
 
 func (f *quickAnswersFixture) PreTest(ctx context.Context, s *testing.FixtTestState) {
-	f.recorder = uiauto.CreateAndStartScreenRecorder(ctx, f.tconn)
+	f.recorder = uiauto.CreateAndStartScreenRecorder(ctx, f.tconn, f.cr)
 
 	switch f.state {
 	case StateEnabled:

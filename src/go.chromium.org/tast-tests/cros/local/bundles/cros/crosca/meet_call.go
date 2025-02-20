@@ -308,7 +308,7 @@ func MeetCall(ctx context.Context, s *testing.State) {
 		}
 	}
 
-	recorder, err := cujrecorder.NewRecorder(ctx, tconn, nil, cujrecorder.RecorderOptions{
+	recorder, err := cujrecorder.NewRecorder(ctx, tconn, cr, nil, cujrecorder.RecorderOptions{
 		Mode: cujrecorder.Benchmark,
 	})
 	if err != nil {

@@ -34,8 +34,9 @@ func init() {
 			Value: "screenplay-936ea36a-b93f-4127-9260-9975e69365fa",
 		}},
 		HardwareDeps: hwdep.D(hwdep.InternalDisplay()),
-		Attr:         []string{"group:mainline", "informational", "group:release-health"},
-		Timeout:      1 * time.Minute,
+		// TODO(b/354048099): Re-enable once screen recording (via Chrome extension) is available for MV3.
+		//Attr:         []string{"group:mainline", "informational", "group:release-health"},
+		Timeout: 1 * time.Minute,
 	})
 }
 

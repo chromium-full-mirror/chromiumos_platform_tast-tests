@@ -84,3 +84,21 @@ func SaveScreenshotToFileWithTestAPIOnError(ctx context.Context, tconn *chrome.T
 		}
 	}
 }
+
+// SaveScreenshotToFile takes screenshot into a file '. This function will not work for external display.
+func SaveScreenshotToFile(ctx context.Context, tconn *chrome.TestConn, outDir, fileName string) {
+	dir := filepath.Join(outDir, faillogDir)
+	if err := os.MkdirAll(dir, 0777); err != nil {
+		testing.ContextLogf(ctx, "Failed to create directory %s: %v", dir, err)
+		return
+	}
+
+	screenshotFile := filepath.Join(dir, fileName)
+	testing.ContextLog(ctx, "Saving screenshot to ", screenshotFile)
+	// Take screenshot for internal display.
+	if err := screenshot.CaptureChromeWithTestAPI(ctx, tconn, screenshotFile); err != nil {
+		testing.ContextLog(ctx, "Failed to take screenshot: ", err)
+		// Return on error without further trying external displays.
+		return
+	}
+}

@@ -56,28 +56,29 @@ func init() {
 			// Warn users from sharing confidential information within company (screenshare_window): COM_DATPROT_CUJ4_TASK2_WF1.
 			Value: "screenplay-1e0b14ae-d9d3-4ae7-9962-0e6d342f58a1",
 		}},
+		// TODO(b/354048099): Re-enable once screen recording (via Chrome extension) is available for MV3.
 		Params: []testing.Param{{
-			Name:      "ash_blocked",
-			ExtraAttr: []string{"group:golden_tier"},
-			Fixture:   fixture.ChromePolicyLoggedIn,
+			Name: "ash_blocked",
+			//ExtraAttr: []string{"group:golden_tier"},
+			Fixture: fixture.ChromePolicyLoggedIn,
 			Val: screenshare.TestParams{
 				Name:        "blocked",
 				Restriction: restrictionlevel.Blocked,
 				Path:        screenshare.RestrictedPath,
 			},
 		}, {
-			Name:      "ash_warn_proceeded",
-			ExtraAttr: []string{"group:golden_tier"},
-			Fixture:   fixture.ChromePolicyLoggedIn,
+			Name: "ash_warn_proceeded",
+			//ExtraAttr: []string{"group:golden_tier"},
+			Fixture: fixture.ChromePolicyLoggedIn,
 			Val: screenshare.TestParams{
 				Name:        "warn_proceeded",
 				Restriction: restrictionlevel.WarnProceeded,
 				Path:        screenshare.RestrictedPath,
 			},
 		}, {
-			Name:      "ash_warn_cancelled",
-			ExtraAttr: []string{"group:mainline"},
-			Fixture:   fixture.ChromePolicyLoggedIn,
+			Name: "ash_warn_cancelled",
+			//ExtraAttr: []string{"group:mainline"},
+			Fixture: fixture.ChromePolicyLoggedIn,
 			Val: screenshare.TestParams{
 				Name:        "warn_cancelled",
 				Restriction: restrictionlevel.WarnCancelled,

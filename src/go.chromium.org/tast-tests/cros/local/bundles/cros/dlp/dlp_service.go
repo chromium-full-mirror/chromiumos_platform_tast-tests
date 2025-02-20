@@ -367,7 +367,7 @@ func (service *DataLeakPreventionService) Screenshare(ctx context.Context, req *
 		return &empty.Empty{}, errors.Wrap(err, "failed to connect to test API")
 	}
 
-	screenRecorder, err := uiauto.NewScreenRecorder(ctx, tconn)
+	screenRecorder, err := uiauto.NewScreenRecorder(ctx, tconn, service.chrome)
 	if err != nil {
 		return &empty.Empty{}, errors.Wrap(err, "failed to create screen recorder")
 	}

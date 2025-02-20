@@ -86,7 +86,7 @@ func Run(ctx context.Context, cr *chrome.Chrome, a *arc.ARC, isTablet bool, outD
 
 	ac := uiauto.New(tconn)
 
-	recorder, err := cujrecorder.NewRecorder(ctx, tconn, a, cujrecorder.RecorderOptions{})
+	recorder, err := cujrecorder.NewRecorder(ctx, tconn, cr, a, cujrecorder.RecorderOptions{})
 	if err != nil {
 		return errors.Wrap(err, "failed to create a recorder")
 	}

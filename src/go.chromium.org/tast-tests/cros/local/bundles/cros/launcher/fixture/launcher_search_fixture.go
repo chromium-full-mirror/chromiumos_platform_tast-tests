@@ -23,8 +23,8 @@ import (
 
 const (
 	launcherSearchSetUpTestTimeout = 4 * time.Minute
-	launcherSearchPreTestTimeout   = 10 * time.Second
-	launcherSearchPostTestTimeout  = 10 * time.Second
+	launcherSearchPreTestTimeout   = 20 * time.Second
+	launcherSearchPostTestTimeout  = 20 * time.Second
 	arcOptinTimeout                = 3 * time.Minute
 	oobeTimeout                    = 2 * time.Minute
 )
@@ -204,7 +204,7 @@ func (f *launcherSearchFixtureImpl) SetUp(ctx context.Context, s *testing.FixtSt
 }
 
 func (f *launcherSearchFixtureImpl) PreTest(ctx context.Context, s *testing.FixtTestState) {
-	recorder, err := uiauto.NewScreenRecorder(ctx, f.tconn)
+	recorder, err := uiauto.NewScreenRecorder(ctx, f.tconn, f.cr)
 	if err != nil {
 		s.Log("Failed to create screen recorder: ", err)
 		return

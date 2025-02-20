@@ -73,7 +73,7 @@ func SetAndClearGuest(ctx context.Context, s *testing.State) {
 	}(cleanupCtx)
 
 	filename := "first_session_recording.webm"
-	screenRecorder := uiauto.CreateAndStartScreenRecorder(ctx, tconn)
+	screenRecorder := uiauto.CreateAndStartScreenRecorder(ctx, tconn, cr)
 	// Note that this defer func may be called with the screen recorder from the first guest session or the second guest
 	// session depending on when a fatal error occurs.
 	defer func(ctx context.Context) {
@@ -113,7 +113,7 @@ func SetAndClearGuest(ctx context.Context, s *testing.State) {
 	}
 
 	filename = "second_session_recording.webm"
-	screenRecorder = uiauto.CreateAndStartScreenRecorder(ctx, tconn)
+	screenRecorder = uiauto.CreateAndStartScreenRecorder(ctx, tconn, cr)
 
 	ui = uiauto.New(tconn)
 

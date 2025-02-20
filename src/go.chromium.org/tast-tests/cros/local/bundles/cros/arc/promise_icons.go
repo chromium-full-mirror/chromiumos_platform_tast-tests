@@ -82,7 +82,7 @@ func PromiseIcons(ctx context.Context, s *testing.State) {
 	handler := faillog.DumpUITreeWithScreenshotHandler(cleanupCtx, tconn, "chrome_ui_tree")
 	s.AttachErrorHandlers(handler, handler)
 
-	recorder := uiauto.CreateAndStartScreenRecorder(ctx, tconn)
+	recorder := uiauto.CreateAndStartScreenRecorder(ctx, tconn, cr)
 	defer uiauto.StopAndSaveOnError(cleanupCtx, recorder, filepath.Join(s.OutDir(), "screen_recording.webm"), s.HasError)
 
 	ui := uiauto.New(tconn).WithTimeout(30 * time.Second)

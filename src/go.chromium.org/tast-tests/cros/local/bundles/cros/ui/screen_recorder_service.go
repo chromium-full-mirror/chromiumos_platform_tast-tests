@@ -85,7 +85,7 @@ func (svc *ScreenRecorderService) Start(ctx context.Context, req *pb.StartReques
 	// the Screen recording. Screen recording is limited to the time when the user is logged
 	// in and does not go beyond the boundary of a chrome session. Research to see recording
 	// can span across chrome sessions.
-	svc.screenRecorder, err = uiauto.NewScreenRecorder(ctx, tconn)
+	svc.screenRecorder, err = uiauto.NewScreenRecorder(ctx, tconn, cr)
 	if err != nil || svc.screenRecorder == nil {
 		return nil, errors.Wrap(err, "failed to create ScreenRecorder")
 	}

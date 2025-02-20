@@ -9,13 +9,13 @@ import (
 	"path/filepath"
 	"time"
 
-	"go.chromium.org/tast-tests/cros/local/inputs/inputactions"
 	"go.chromium.org/tast-tests/cros/local/chrome"
 	"go.chromium.org/tast-tests/cros/local/chrome/uiauto"
 	"go.chromium.org/tast-tests/cros/local/chrome/uiauto/nodewith"
 	"go.chromium.org/tast-tests/cros/local/chrome/uiauto/role"
 	"go.chromium.org/tast-tests/cros/local/chrome/useractions"
 	"go.chromium.org/tast-tests/cros/local/input"
+	"go.chromium.org/tast-tests/cros/local/inputs/inputactions"
 	"go.chromium.org/tast-tests/cros/local/uidetection"
 	"go.chromium.org/tast/core/testing"
 )
@@ -92,7 +92,7 @@ func (f *croshFixtureImpl) SetUp(ctx context.Context, s *testing.FixtState) inte
 }
 
 func (f *croshFixtureImpl) PreTest(ctx context.Context, s *testing.FixtTestState) {
-	f.recorder = uiauto.CreateAndStartScreenRecorder(ctx, f.tconn)
+	f.recorder = uiauto.CreateAndStartScreenRecorder(ctx, f.tconn, f.cr)
 
 	if err := uiauto.Combine("open crosh via typing hot key",
 		f.kb.AccelAction("Ctrl+Alt+t"),

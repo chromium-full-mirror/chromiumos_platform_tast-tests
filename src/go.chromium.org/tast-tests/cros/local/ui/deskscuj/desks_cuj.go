@@ -10,6 +10,8 @@ import (
 	"strings"
 	"time"
 
+	"github.com/mafredri/cdp/protocol/target"
+
 	"go.chromium.org/tast-tests/cros/common/perf"
 	"go.chromium.org/tast-tests/cros/local/chrome"
 	"go.chromium.org/tast-tests/cros/local/chrome/ash"
@@ -21,8 +23,6 @@ import (
 	localPerf "go.chromium.org/tast-tests/cros/local/perf"
 	"go.chromium.org/tast-tests/cros/local/power"
 	"go.chromium.org/tast-tests/cros/local/ui/cujrecorder"
-
-	"github.com/mafredri/cdp/protocol/target"
 	"go.chromium.org/tast/core/ctxutil"
 	"go.chromium.org/tast/core/errors"
 	"go.chromium.org/tast/core/testing"
@@ -108,7 +108,7 @@ func Run(ctx context.Context, cr *chrome.Chrome, testParam TestParam, args func(
 		return nil, errors.Wrap(err, "failed to wake display")
 	}
 
-	recorder, err := cujrecorder.NewRecorder(ctx, tconn, nil, cujrecorder.RecorderOptions{})
+	recorder, err := cujrecorder.NewRecorder(ctx, tconn, cr, nil, cujrecorder.RecorderOptions{})
 	if err != nil {
 		return nil, errors.Wrap(err, "failed to create the recorder")
 	}

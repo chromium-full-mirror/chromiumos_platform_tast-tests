@@ -161,7 +161,7 @@ func PlayStore(ctx context.Context, s *testing.State) {
 		}
 		defer d.Close(cleanupCtx)
 
-		recorder := uiauto.CreateAndStartScreenRecorder(ctx, tconn)
+		recorder := uiauto.CreateAndStartScreenRecorder(ctx, tconn, cr)
 		defer uiauto.StopAndSaveOnError(cleanupCtx, recorder, filepath.Join(s.OutDir(), "recording.webm"), s.HasError)
 
 		s.Log("Installing app")

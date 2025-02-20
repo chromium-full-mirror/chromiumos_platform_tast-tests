@@ -322,6 +322,7 @@ func (rec *record) saveMetric(ctx context.Context, pv *perf.Values, name string)
 // Recorder is a utility to measure various metrics for CUJ-style tests.
 type Recorder struct {
 	tconn *chrome.TestConn
+	cr    *chrome.Chrome
 	arc   *arc.ARC
 
 	// Metrics names keyed by relevant browser type.
@@ -518,7 +519,7 @@ func (r *Recorder) addScreenRecorder(ctx context.Context) error {
 		return errors.New("failed to get the out directory to save the screen recording")
 	}
 
-	screenRecorder, err := uiauto.NewScreenRecorder(ctx, r.tconn)
+	screenRecorder, err := uiauto.NewScreenRecorder(ctx, r.tconn, r.cr)
 	if err != nil {
 		return errors.Wrap(err, "failed to create ScreenRecorder")
 	}
@@ -636,7 +637,7 @@ func (r *Recorder) AnnotateSection(ctx context.Context, annotation string) func(
 // NewRecorder creates a Recorder based on the configs. It also aggregates the
 // metrics of each category (animation smoothness and input latency) and creates
 // the aggregated reports.
-func NewRecorder(ctx context.Context, tconn *chrome.TestConn, a *arc.ARC, options RecorderOptions) (*Recorder, error) {
+func NewRecorder(ctx context.Context, tconn *chrome.TestConn, cr *chrome.Chrome, a *arc.ARC, options RecorderOptions) (*Recorder, error) {
 	if tconn == nil {
 		return nil, errors.New("tconn must never be nil")
 	}
@@ -648,6 +649,7 @@ func NewRecorder(ctx context.Context, tconn *chrome.TestConn, a *arc.ARC, option
 
 	r := &Recorder{
 		tconn:               tconn,
+		cr:                  cr,
 		arc:                 a,
 		options:             options,
 		sessions:            make(map[string]*tracing.Session),

@@ -14,7 +14,6 @@ import (
 
 	"go.chromium.org/tast-tests/cros/local/audio/fixture"
 	"go.chromium.org/tast-tests/cros/local/chrome"
-
 	"go.chromium.org/tast/core/errors"
 	"go.chromium.org/tast/core/fsutil"
 	"go.chromium.org/tast/core/testing"
@@ -28,8 +27,8 @@ const (
 
 const (
 	resetTimeout    = 30 * time.Second
-	preTestTimeout  = 10 * time.Second
-	postTestTimeout = 15 * time.Second
+	preTestTimeout  = 20 * time.Second
+	postTestTimeout = 25 * time.Second
 )
 
 // Set VC related flags by default for all fixtures.

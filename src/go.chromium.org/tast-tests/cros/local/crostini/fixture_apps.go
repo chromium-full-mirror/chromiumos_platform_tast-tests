@@ -101,7 +101,7 @@ func (f *crostiniAppsFixture) SetUp(ctx context.Context, s *testing.FixtState) i
 
 func (f *crostiniAppsFixture) PreTest(ctx context.Context, s *testing.FixtTestState) {
 	// Setup the screen recorder.
-	recorder, err := uiauto.NewScreenRecorder(ctx, f.tconn)
+	recorder, err := uiauto.NewScreenRecorder(ctx, f.tconn, f.cr)
 	if err != nil {
 		s.Log("Failed to create screen recorder: ", err)
 	}

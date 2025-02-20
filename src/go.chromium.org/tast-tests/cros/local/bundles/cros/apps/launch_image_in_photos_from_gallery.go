@@ -45,14 +45,14 @@ func init() {
 			// Disabled by TORA.  See:b/330878684.
 			// "group:mainline", "informational"
 		},
-		Timeout:      8 * time.Minute,
+		Timeout: 8 * time.Minute,
 		SoftwareDeps: []string{
 			"chrome",
 			"chrome_internal",
 			// Disabled by TORA.  See:b/330878684.
 			// "gaia"
 		},
-		Data:         []string{testImageFileWithText},
+		Data: []string{testImageFileWithText},
 		Params: []testing.Param{
 			{
 				Name:              "stable",
@@ -95,7 +95,7 @@ func LaunchImageInPhotosFromGallery(ctx context.Context, s *testing.State) {
 	defer cancel()
 
 	// This test inherits a parent fixture from ARC++ where screen recorder is not available.
-	recorder, err := uiauto.NewScreenRecorder(ctx, tconn)
+	recorder, err := uiauto.NewScreenRecorder(ctx, tconn, cr)
 	if err != nil {
 		s.Log("Failed to create screen recorder: ", err)
 	} else {

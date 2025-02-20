@@ -83,7 +83,7 @@ func ESimInstallWithConfirmationCode(ctx context.Context, s *testing.State) {
 	}
 
 	// TODO: Remove this function once we no longer need it for debugging.
-	recorder := uiauto.CreateAndStartScreenRecorder(ctx, tconn)
+	recorder := uiauto.CreateAndStartScreenRecorder(ctx, tconn, cr)
 	defer uiauto.StopAndSaveOnError(cleanupCtx, recorder, filepath.Join(s.OutDir(), "recording.webm"), s.HasError)
 
 	mdp, err := ossettings.OpenMobileDataSubpage(ctx, tconn, cr)

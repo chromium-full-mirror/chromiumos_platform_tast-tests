@@ -88,7 +88,7 @@ func WindowCyclePerf(ctx context.Context, s *testing.State) {
 
 	runner := perfutil.NewRunner(cr, perfutil.RunnerOptions{IgnoreFirstRun: true, DropMinMaxValues: true})
 
-	recorder, err := cujrecorder.NewRecorder(ctx, tconn, nil, cujrecorder.RecorderOptions{
+	recorder, err := cujrecorder.NewRecorder(ctx, tconn, cr, nil, cujrecorder.RecorderOptions{
 		Mode:              cujrecorder.Benchmark,
 		CooldownBeforeRun: true,
 	})

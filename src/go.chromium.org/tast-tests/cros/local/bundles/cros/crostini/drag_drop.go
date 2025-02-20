@@ -23,7 +23,6 @@ import (
 	"go.chromium.org/tast-tests/cros/local/crostini"
 	"go.chromium.org/tast-tests/cros/local/crostini/ui/sharedfolders"
 	"go.chromium.org/tast-tests/cros/local/cryptohome"
-
 	"go.chromium.org/tast/core/ctxutil"
 	"go.chromium.org/tast/core/errors"
 	"go.chromium.org/tast/core/testing"
@@ -97,7 +96,7 @@ func DragDrop(ctx context.Context, s *testing.State) {
 	handler := faillog.DumpUITreeWithScreenshotHandler(cleanupCtx, tconn, "ui_tree")
 	s.AttachErrorHandlers(handler, handler)
 
-	recorder := uiauto.CreateAndStartScreenRecorder(ctx, pre.Tconn)
+	recorder := uiauto.CreateAndStartScreenRecorder(ctx, pre.Tconn, pre.Chrome)
 	defer uiauto.StopAndSaveOnError(cleanupCtx, recorder, filepath.Join(s.OutDir(), "screen_recording.webm"), s.HasError)
 
 	// Ensures landscape orientation.

@@ -5,21 +5,23 @@
 package uiauto
 
 import (
-	"bytes"
 	"context"
-	"encoding/base64"
 	"os"
 	"path/filepath"
 	"regexp"
 	"strings"
 	"time"
 
+	"github.com/google/uuid"
+
 	"go.chromium.org/tast-tests/cros/local/chrome"
 	"go.chromium.org/tast-tests/cros/local/chrome/uiauto/nodewith"
 	"go.chromium.org/tast-tests/cros/local/chrome/uiauto/role"
 	"go.chromium.org/tast-tests/cros/local/crash"
+	"go.chromium.org/tast-tests/cros/local/cryptohome"
 	"go.chromium.org/tast-tests/cros/local/input"
 	"go.chromium.org/tast/core/errors"
+	"go.chromium.org/tast/core/fsutil"
 	"go.chromium.org/tast/core/testing"
 )
 
@@ -28,6 +30,9 @@ type ScreenRecorder struct {
 	isRecording   bool
 	videoRecorder *chrome.JSObject
 	result        string
+	downloadsPath string
+	tconn         *chrome.TestConn
+	cr            *chrome.Chrome
 }
 
 type testingState interface {
@@ -115,28 +120,11 @@ func requestScreenShare(ctx context.Context, tconn *chrome.TestConn) (*ScreenRec
 
 // NewScreenRecorder creates a ScreenRecorder.
 // It only needs to create one ScreenRecorder during one test.
-// It chooses the entire desktop as the media stream.
-// Example:
-//
-//	  screenRecorder, err := uiauto.NewScreenRecorder(ctx, tconn)
-//	  if err != nil {
-//			s.Log("Failed to create ScreenRecorder: ", err)
-//	  }
-//
-// To stop, save, and release the recorder:
-//
-//	defer uiauto.ScreenRecorderStopSaveRelease(...)
-func NewScreenRecorder(ctx context.Context, tconn *chrome.TestConn) (*ScreenRecorder, error) {
-	sr, err := requestScreenShare(ctx, tconn)
-
-	if err != nil {
-		return nil, err
-	}
-	// Choose to record the entire desktop/screen with no audio.
-	if err := ChooseScreenRecorder(ctx, tconn); err != nil {
-		return nil, err
-	}
-	return sr, nil
+func NewScreenRecorder(ctx context.Context, tconn *chrome.TestConn, cr *chrome.Chrome) (*ScreenRecorder, error) {
+	return &ScreenRecorder{
+		cr:    cr,
+		tconn: tconn,
+	}, nil
 }
 
 // ChooseScreenRecorder makes the selection to record the entire desktop screen.
@@ -213,58 +201,31 @@ func NewTabRecorder(ctx context.Context, tconn *chrome.TestConn, tabIndex int) (
 // Start creates a new media recorder and starts to record the screen. As long as ScreenRecorder
 // is not recording, it can start to record again.
 func (r *ScreenRecorder) Start(ctx context.Context, tconn *chrome.TestConn) error {
-	if r.isRecording {
-		return errors.New("recorder already started")
+	downloadsPath, err := StartFromKB(ctx, tconn, r.cr)
+	if err != nil {
+		return errors.Wrap(err, "failed to start screen recording")
 	}
-
-	if err := r.videoRecorder.Call(ctx, nil, `function() {this.start();}`); err != nil {
-		return errors.Wrap(err, "failed to start to record screen")
-	}
-	testing.ContextLog(ctx, "Started screen recording")
-	r.isRecording = true
-
-	ui := New(tconn)
-	closeNotificationButton := nodewith.Name("Notification close").Role(role.Button)
-	messagePopupAlert := nodewith.HasClass("MessagePopupView").Role(role.AlertDialog)
-	if err := ui.LeftClickUntil(closeNotificationButton, ui.WithInterval(time.Second).WaitUntilGone(messagePopupAlert))(ctx); err != nil {
-		testing.ContextLog(ctx, "Failed to dismiss screenshare notification popup, it likely didn't appear: ", err)
-	}
+	r.downloadsPath = downloadsPath
 	return nil
 }
 
 // Stop ends the screen recording and stores the encoded base64 string.
 func (r *ScreenRecorder) Stop(ctx context.Context) error {
-	if !r.isRecording {
-		return errors.New("recorder hasn't started yet")
+	if err := StopRecordFromUI(ctx, r.tconn); err != nil {
+		return errors.Wrap(err, "failed to stop screen recording")
 	}
-
-	var result string
-	if err := r.videoRecorder.Call(ctx, &result, `function() {return this.stop();}`); err != nil {
-		return errors.Wrap(err, "failed to stop recording screen")
-	}
-	r.result = result
-	r.isRecording = false
 
 	return nil
 }
 
 // SaveInBytes saves the latest encoded string into a decoded bytes file.
 func (r *ScreenRecorder) SaveInBytes(ctx context.Context, filepath string) error {
-	parts := strings.Split(r.result, ",")
-	if len(parts) < 2 {
-		return errors.New("no content has been recorded. The recorder might have been stopped too soon")
+	if err := SaveOneRecordFromKB(ctx, r.tconn, filepath, r.downloadsPath); err != nil {
+		return errors.Wrapf(err, "failed to save %s", filepath)
 	}
-
-	// Decode base64 string.
-	reader := base64.NewDecoder(base64.StdEncoding, strings.NewReader(parts[1]))
-	buf := bytes.Buffer{}
-	if _, err := buf.ReadFrom(reader); err != nil {
-		return errors.Wrap(err, "failed to read from decoder")
-	}
-	if err := os.WriteFile(filepath, buf.Bytes(), 0644); err != nil {
-		return errors.Wrapf(err, "failed to dump bytes to %s", filepath)
-	}
-	return nil
+	os.RemoveAll(r.downloadsPath)
+	r.downloadsPath = ""
+	return nil // Successfully created an empty file.
 }
 
 // SaveInString saves the latest encoded string into a string file.
@@ -287,37 +248,15 @@ func (r *ScreenRecorder) FrameStatus(ctx context.Context) (string, error) {
 
 // Release frees the reference to Javascript for this video recorder.
 func (r *ScreenRecorder) Release(ctx context.Context) {
-	if r.isRecording {
-		if err := r.Stop(ctx); err != nil {
-			testing.ContextLog(ctx, "Failed to stop screen recorder: ", err)
-		}
-	}
-	if err := r.videoRecorder.Release(ctx); err != nil {
-		testing.ContextLog(ctx, "Failed to release screen recorder: ", err)
-	}
 }
 
 // StopAndSaveOnError ends the screen recording and save it on error.
 func (r *ScreenRecorder) StopAndSaveOnError(ctx context.Context, filepath string, hasError func() bool) {
-	if hasError() {
-		// GoBigSleepLint: If there's an error, we want to wait long enough to see
-		// what happens after the error. This allows you to sync logs to the video
-		// when the error has occurred, and also happens to help in case something
-		// happens after timing out.
-		if err := testing.Sleep(ctx, 2*time.Second); err != nil {
-			testing.ContextLog(ctx, "Failed to let screen recorder run after error: ", err)
-		}
+	if err := StopRecordFromKBAndSaveOnError(ctx, r.tconn, hasError, filepath, r.downloadsPath); err != nil {
+		testing.ContextLogf(ctx, "Failed to save screen record in bytes: %s", err)
 	}
-
-	if err := r.Stop(ctx); err != nil {
-		testing.ContextLogf(ctx, "Failed to stop recording: %s", err)
-	} else if hasError() {
-		testing.ContextLogf(ctx, "Saving screen record to %s", filepath)
-		if err := r.SaveInBytes(ctx, filepath); err != nil {
-			testing.ContextLogf(ctx, "Failed to save screen record in bytes: %s", err)
-		}
-	}
-	r.Release(ctx)
+	os.RemoveAll(r.downloadsPath)
+	r.downloadsPath = ""
 }
 
 // ScreenRecorderStopSaveRelease stops, saves and releases the screen recorder.
@@ -335,41 +274,6 @@ func ScreenRecorderStopSaveRelease(ctx context.Context, r *ScreenRecorder, fileN
 	}
 }
 
-// RecordScreen records the screen for the duration of the function into recording.webm.
-// For example, if you wanted to record your whole test, you would do the following:
-// func MyTest(ctx context.Context, s *testing.State) {
-//
-//	cr := s.PreValue().(pre.PreData).Chrome
-//	tconn := s.PreValue().(pre.PreData).TestAPIConn
-//	uiauto.RecordScreen(ctx, s, tconn, func() {
-//	<all your existing test code here>
-//	})
-//
-// }
-func RecordScreen(ctx context.Context, s testingState, tconn *chrome.TestConn, f func()) {
-	recorder, err := NewScreenRecorder(ctx, tconn)
-	if err != nil {
-		testing.ContextLog(ctx, "Failed to start screen recording: ", err)
-	}
-	if recorder != nil {
-		recorder.Start(ctx, tconn)
-		defer func() {
-			// If there's an error, we want to wait long enough to see what happens
-			// after the error. This allows you to see subtitles when the error has
-			// occurred, and also happens to help in case something happens after
-			// timing out.
-			if s.HasError() {
-				//  GoBigSleepLint: Allow time to observe artifacts of error
-				if err := testing.Sleep(ctx, 2*time.Second); err != nil {
-					testing.ContextLog(ctx, "Failed to let screen recorder run after error: ", err)
-				}
-			}
-			ScreenRecorderStopSaveRelease(ctx, recorder, filepath.Join(s.OutDir(), "recording.webm"))
-		}()
-	}
-	f()
-}
-
 // CreateAndStartScreenRecorder creates a ScreenRecorder and starts to record
 // the screen. Handles errors by logging them via the context and returning nil.
 // To handle errors manually, call CreateAndStartScreenRecorderWithError.
@@ -378,36 +282,11 @@ func RecordScreen(ctx context.Context, s testingState, tconn *chrome.TestConn, f
 //
 //	recorder := uiauto.CreateAndStartScreenRecorder(ctx, tconn)
 //	defer uiauto.StopAndSaveOnError(cleanupCtx, recorder, filepath.Join(s.OutDir(), "screen_recording.webm"), s.HasError)
-func CreateAndStartScreenRecorder(ctx context.Context, tconn *chrome.TestConn) *ScreenRecorder {
-	recorder, err := CreateAndStartScreenRecorderWithError(ctx, tconn)
+func CreateAndStartScreenRecorder(ctx context.Context, tconn *chrome.TestConn, cr *chrome.Chrome) *ScreenRecorder {
+	recorder, err := CreateAndStartScreenRecorderWithError(ctx, tconn, cr)
 	if err != nil {
 		testing.ContextLog(ctx, "Failed to create and start the screen recorder: ", err)
 	}
-	return recorder
-}
-
-// CreateAndStartScreenRecorderWithAutoSelect should be used the same way as
-// CreateAndStartScreenRecorder except that the following flag should be set:
-//
-//	chrome.ExtraArgs(`--auto-select-desktop-capture-source=display`)
-//
-// Screen recorder will then automatically skip all the confirmations.
-func CreateAndStartScreenRecorderWithAutoSelect(ctx context.Context, tconn *chrome.TestConn) *ScreenRecorder {
-	recorder, err := requestScreenShare(ctx, tconn)
-
-	if err != nil {
-		testing.ContextLog(ctx, "Failed to requestScreenShare: ", err)
-		return nil
-	}
-
-	if err := recorder.videoRecorder.Call(ctx, nil, `function() {this.start();}`); err != nil {
-		testing.ContextLog(ctx, "Failed to start to record screen: ", err)
-		return nil
-	}
-
-	testing.ContextLog(ctx, "Started screen recording")
-	recorder.isRecording = true
-
 	return recorder
 }
 
@@ -422,8 +301,8 @@ func CreateAndStartScreenRecorderWithAutoSelect(ctx context.Context, tconn *chro
 //		s.Log(ctx, "Failed to create and start the screen recorder: ", err)
 //	}
 //	defer uiauto.StopAndSaveOnError(cleanupCtx, recorder, filepath.Join(s.OutDir(), "screen_recording.webm"), s.HasError)
-func CreateAndStartScreenRecorderWithError(ctx context.Context, tconn *chrome.TestConn) (*ScreenRecorder, error) {
-	recorder, err := NewScreenRecorder(ctx, tconn)
+func CreateAndStartScreenRecorderWithError(ctx context.Context, tconn *chrome.TestConn, cr *chrome.Chrome) (*ScreenRecorder, error) {
+	recorder, err := NewScreenRecorder(ctx, tconn, cr)
 	if err != nil {
 		return nil, errors.Wrap(err, "failed to create screen recorder")
 	}
@@ -441,6 +320,54 @@ func StopAndSaveOnError(ctx context.Context, sr *ScreenRecorder, filepath string
 	if sr != nil {
 		sr.StopAndSaveOnError(ctx, filepath, hasError)
 	}
+}
+
+// generateUniqueFolderName create unique name for temp screen recording dir
+func generateUniqueFolderName() (string, error) {
+	id, err := uuid.NewRandom()
+	if err != nil {
+		return "", err
+	}
+	return id.String(), nil
+}
+
+// UniqueUserFolderName returns a unique path from the top level user folder.
+func UniqueUserFolderName(ctx context.Context, cr *chrome.Chrome) (string, error) {
+	originalDownloadsPath, err := cryptohome.DownloadsPath(ctx, cr.NormalizedUser())
+	testing.ContextLog(ctx, "default downloadsPath is:", originalDownloadsPath)
+	if err != nil {
+		return "", errors.Wrap(err, "failed to get user's Downloads path")
+	}
+
+	parentDir := filepath.Dir(originalDownloadsPath)
+
+	uniqueFolderName, err := generateUniqueFolderName()
+	if err != nil {
+		return "", errors.Wrap(err, "failed to generate unique folder name")
+	}
+	uniqueUserPath := filepath.Join(parentDir, uniqueFolderName)
+	return uniqueUserPath, nil
+}
+
+// StartFromKB creates an EventWriter of keyboard and downloadsPath by normalized user
+// to used by screen recording
+func StartFromKB(ctx context.Context, tconn *chrome.TestConn, cr *chrome.Chrome) (string, error) {
+	kb, err := input.Keyboard(ctx)
+	if err != nil {
+		return "", errors.Wrap(err, "failed to setup keyboard for screen recording")
+	}
+	downloadsPath, err := UniqueUserFolderName(ctx, cr)
+	if err != nil {
+		return "", errors.Wrap(err, "failed to generate unique folder name")
+	}
+
+	if err := StartRecordFromUI(ctx, tconn, kb, downloadsPath); err != nil {
+		return "", errors.Wrap(err, "failed to start screen recording on CrOS")
+	}
+
+	testing.ContextLog(ctx, "Started screen recording")
+
+	return downloadsPath, nil
 }
 
 // StartRecordFromKB starts screen record from keyboard.
@@ -487,20 +414,119 @@ func StartRecordFromKB(ctx context.Context, tconn *chrome.TestConn, kb *input.Ke
 	)(ctx)
 }
 
+// StartRecordFromUI starts screen record from UI and keyboard.
+// It clicks screen capture then select to record the whole desktop.
+// Using temporary dir during the recording process.
+func StartRecordFromUI(ctx context.Context, tconn *chrome.TestConn, kb *input.KeyboardEventWriter, downloadsPath string) error {
+	screenRecordBtn := nodewith.NameRegex(regexp.MustCompile("Screen record.*")).Role(role.ToggleButton)
+	fullScreenBtn := nodewith.NameRegex(regexp.MustCompile("Record full screen.*")).Role(role.ToggleButton)
+	settingsBtn := nodewith.NameRegex(regexp.MustCompile("Settings.*")).Role(role.ToggleButton)
+	selectBtn := nodewith.NameRegex(regexp.MustCompile("Select folder.*")).Role(role.Button)
+	myfilesBtn := nodewith.NameRegex(regexp.MustCompile("My files.*")).Role(role.Button)
+	newFolderBtn := nodewith.Name("New folder").Role(role.Button)
+	openBtn := nodewith.Name("Open").Role(role.Button)
+	desktop := nodewith.Role(role.Window).First()
+	newFolderTextBox := nodewith.NameRegex(regexp.MustCompile("New folder.*")).Role(role.InlineTextBox)
+	statusTrayBtm := nodewith.NameRegex(regexp.MustCompile("Status tray.*")).Role(role.Button)
+	screenCaptureBtm := nodewith.Name("Screen capture").Role(role.Button)
+
+	ui := New(tconn)
+
+	var expectNumber int
+
+	checkRecordFile := func(ctx context.Context) error {
+		const timeout = 10 * time.Second
+		return testing.Poll(ctx, func(ctx context.Context) error {
+			files, err := os.ReadDir(downloadsPath)
+			if err != nil {
+				return errors.Wrap(err, "failed to read files from Downloads")
+			}
+			if len(files) == expectNumber {
+				return nil
+			}
+			return errors.Wrapf(err, "failed to check number of files, got %d, want %d", len(files), expectNumber)
+		}, &testing.PollOptions{Timeout: timeout})
+	}
+
+	err := Combine("open screen record settings",
+		ui.LeftClick(statusTrayBtm),
+		ui.LeftClick(screenCaptureBtm),
+		ui.LeftClick(screenRecordBtn),
+		ui.LeftClick(settingsBtn),
+		ui.LeftClick(selectBtn),
+	)(ctx)
+	if err != nil {
+		return errors.Wrap(err, "failed to open screen record settings")
+	}
+
+	if _, err := os.Stat(downloadsPath); err != nil {
+		expectNumber = 1
+		base := filepath.Base(downloadsPath)
+		testing.ContextLog(ctx, "start recording in temp folder:", base)
+		err = Combine("create new folder and start recording",
+			ui.LeftClick(myfilesBtn),
+			ui.LeftClick(newFolderBtn),
+			ui.WaitUntilExists(newFolderTextBox),
+			// GoBigSleep: wait for a second to make sure it is editable.
+			Sleep(time.Second),
+			kb.TypeAction(base),
+			kb.AccelAction("Enter"),
+			ui.LeftClick(openBtn),
+			ui.LeftClick(fullScreenBtn),
+			ui.LeftClick(desktop),
+			checkRecordFile,
+		)(ctx)
+		if err != nil {
+			return errors.Wrap(err, "failed to create new folder")
+		}
+		return nil
+	}
+	files, err := os.ReadDir(downloadsPath)
+	if err != nil {
+		return errors.Wrap(err, "failed to read files from Downloads")
+	}
+	expectNumber = len(files) + 1
+	err = Combine("select folder and start recording",
+		ui.LeftClick(openBtn),
+		ui.LeftClick(fullScreenBtn),
+		ui.LeftClick(desktop),
+		checkRecordFile,
+	)(ctx)
+	if err != nil {
+		return errors.Wrap(err, "failed to select folder and start recording")
+	}
+	return nil
+}
+
 // StopRecordFromKBAndSaveOnError stops the record started by StartRecordFromKB.
 // If there is error, it copies the record file to the target dir .
 // It also removes the record file from Downloads for cleanup.
 func StopRecordFromKBAndSaveOnError(ctx context.Context, tconn *chrome.TestConn, hasError func() bool, dir, downloadsPath string) error {
+	if err := StopRecordFromUI(ctx, tconn); err != nil {
+		return errors.Wrap(err, "failed to stop recording")
+	}
+	if err := SaveRecordFromKBOnError(ctx, tconn, hasError, dir, downloadsPath); err != nil {
+		return errors.Wrap(err, "failed to save recording")
+	}
+	return nil
+}
+
+// StopRecordFromUI stops the recording by click the stop button.
+// Close "Screen recording completed" notification to avoid conflicts with other UI.
+func StopRecordFromUI(ctx context.Context, tconn *chrome.TestConn) error {
 	recordResult := nodewith.Name("Screen recording completed").Role(role.Alert)
+	screenRordingTaken := nodewith.Name("Screen recording taken").Role(role.GenericContainer)
+	screenRordingTakenCloseBtn := nodewith.Role(role.Button).Name("Notification close").HasClass("IconButton")
 	ui := New(tconn)
 	if err := Combine("stop record",
 		ui.LeftClick(ScreenRecordStopButton),
+		ui.WaitUntilExists(screenRordingTaken),
+		ui.LeftClick(screenRordingTakenCloseBtn),
 		ui.WaitUntilExists(recordResult))(ctx); err != nil {
 		testing.ContextLog(ctx, "Failed to stop recording: ", err)
 		return err
 	}
-
-	return SaveRecordFromKBOnError(ctx, tconn, hasError, dir, downloadsPath)
+	return nil
 }
 
 // ScreenRecordStopButton is the button to stop recording the screen.
@@ -509,6 +535,7 @@ var ScreenRecordStopButton = nodewith.Name("Stop screen recording").Role(role.Bu
 // SaveRecordFromKBOnError saves the recording from StartRecordFromKB.
 // This can be used without StopRecordFromKBAndSaveOnError if the screen recording was stopped automatically (i.e. if the screen was locked).
 func SaveRecordFromKBOnError(ctx context.Context, tconn *chrome.TestConn, hasError func() bool, dir, downloadsPath string) error {
+	testing.ContextLogf(ctx, "SaveRecordFromKBOnError to: %s", downloadsPath)
 	files, err := os.ReadDir(downloadsPath)
 	if err != nil {
 		return errors.Wrap(err, "failed to read files from Downloads")
@@ -523,6 +550,46 @@ func SaveRecordFromKBOnError(ctx context.Context, tconn *chrome.TestConn, hasErr
 				}
 				testing.ContextLogf(ctx, "Successfully copied the record file %s to %s", f.Name(), dir)
 			}
+		}
+	}
+	return nil
+}
+
+// SaveRecordFromKB saves the recording from StartRecordFromKB.
+func SaveRecordFromKB(ctx context.Context, tconn *chrome.TestConn, dir, downloadsPath string) error {
+	files, err := os.ReadDir(downloadsPath)
+	if err != nil {
+		return errors.Wrap(err, "failed to read files from Downloads")
+	}
+	for _, f := range files {
+		path := filepath.Join(downloadsPath, f.Name())
+		if strings.HasSuffix(f.Name(), ".webm") {
+			defer os.RemoveAll(path)
+			if err := crash.MoveFilesToOut(ctx, dir, path); err != nil {
+				return errors.Wrapf(err, "failed to copy records to %s", dir)
+			}
+			testing.ContextLogf(ctx, "Successfully copied the record file %s to %s", f.Name(), dir)
+		}
+	}
+	return nil
+}
+
+// SaveOneRecordFromKB saves the recording from StartRecordFromKB.
+func SaveOneRecordFromKB(ctx context.Context, tconn *chrome.TestConn, filename, downloadsPath string) error {
+	files, err := os.ReadDir(downloadsPath)
+	if err != nil {
+		return errors.Wrap(err, "failed to read files from Downloads")
+	}
+	testing.ContextLogf(ctx, "Saving files from %s to %s", downloadsPath, filename)
+	for _, f := range files {
+		path := filepath.Join(downloadsPath, f.Name())
+		testing.ContextLogf(ctx, "See file %s %s", f.Name(), path)
+		if strings.HasSuffix(f.Name(), ".webm") {
+			err := fsutil.MoveFile(path, filename)
+			if err != nil {
+				return errors.Wrapf(err, "failed to move %q to %q", path, filename)
+			}
+			break
 		}
 	}
 	return nil

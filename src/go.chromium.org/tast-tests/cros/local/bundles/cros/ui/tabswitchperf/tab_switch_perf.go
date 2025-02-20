@@ -83,7 +83,7 @@ func runSetup(ctx context.Context, s *testing.State) (*tabSwitchVariables, error
 		return nil, errors.Wrap(err, "failed to get ash-chrome test connection")
 	}
 
-	vars.recorder, err = cujrecorder.NewRecorder(ctx, vars.tconn, nil, cujrecorder.RecorderOptions{
+	vars.recorder, err = cujrecorder.NewRecorder(ctx, vars.tconn, vars.cr, nil, cujrecorder.RecorderOptions{
 		Mode:              cujrecorder.Benchmark,
 		CooldownBeforeRun: true,
 	})

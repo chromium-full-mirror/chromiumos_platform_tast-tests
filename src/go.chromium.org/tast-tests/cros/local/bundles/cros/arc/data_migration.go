@@ -28,7 +28,6 @@ import (
 	"go.chromium.org/tast-tests/cros/local/retry"
 	"go.chromium.org/tast-tests/cros/local/screenshot"
 	"go.chromium.org/tast-tests/cros/local/upstart"
-
 	"go.chromium.org/tast/core/ctxutil"
 	"go.chromium.org/tast/core/errors"
 	"go.chromium.org/tast/core/testing"
@@ -304,7 +303,7 @@ func tryDataMigration(ctx context.Context, creds chrome.Creds, params dataMigrat
 	defer d.Close(cleanupCtx)
 
 	installFailed := false
-	recorder := uiauto.CreateAndStartScreenRecorder(ctx, tconn)
+	recorder := uiauto.CreateAndStartScreenRecorder(ctx, tconn, cr)
 	defer uiauto.StopAndSaveOnError(cleanupCtx, recorder,
 		filepath.Join(outDir, fmt.Sprintf("recording-%d.mp4", rl.Attempts)),
 		func() bool { return installFailed })

@@ -22,8 +22,8 @@ import (
 
 const (
 	resetTimeout    = 30 * time.Second
-	preTestTimeout  = 10 * time.Second
-	postTestTimeout = 15 * time.Second
+	preTestTimeout  = 20 * time.Second
+	postTestTimeout = 25 * time.Second
 )
 
 // List of fixture names for Essential Apps.
@@ -207,7 +207,7 @@ func (f *fixtureImpl) SetUp(ctx context.Context, s *testing.FixtState) interface
 }
 
 func (f *fixtureImpl) PreTest(ctx context.Context, s *testing.FixtTestState) {
-	recorder, err := uiauto.NewScreenRecorder(ctx, f.tconn)
+	recorder, err := uiauto.NewScreenRecorder(ctx, f.tconn, f.cr)
 	if err != nil {
 		s.Log("Failed to create screen recorder: ", err)
 		return

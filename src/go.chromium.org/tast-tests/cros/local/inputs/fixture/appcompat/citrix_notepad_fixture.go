@@ -12,13 +12,13 @@ import (
 	"time"
 
 	"go.chromium.org/tast-tests/cros/common/fixture"
-	"go.chromium.org/tast-tests/cros/local/inputs/inputactions"
-	"go.chromium.org/tast-tests/cros/local/inputs/util"
 	"go.chromium.org/tast-tests/cros/local/chrome"
 	"go.chromium.org/tast-tests/cros/local/chrome/ime"
 	"go.chromium.org/tast-tests/cros/local/chrome/uiauto"
 	"go.chromium.org/tast-tests/cros/local/chrome/useractions"
 	"go.chromium.org/tast-tests/cros/local/input"
+	"go.chromium.org/tast-tests/cros/local/inputs/inputactions"
+	"go.chromium.org/tast-tests/cros/local/inputs/util"
 	"go.chromium.org/tast-tests/cros/local/uidetection"
 	"go.chromium.org/tast-tests/cros/local/vdi/apps"
 	"go.chromium.org/tast-tests/cros/local/vdi/fixtures"
@@ -41,6 +41,7 @@ const (
 // citrixNotepadFixtureImpl implements testing.FixtureImpl.
 type citrixNotepadFixtureImpl struct {
 	tconn      *chrome.TestConn
+	cr         *chrome.Chrome
 	uc         *useractions.UserContext
 	kb         *input.KeyboardEventWriter
 	uidetector *uidetection.Context
@@ -82,6 +83,7 @@ func (f *citrixNotepadFixtureImpl) SetUp(ctx context.Context, s *testing.FixtSta
 
 	f.uidetector = uidetector.WithScreenshotResizing()
 	f.vdi = vdi
+	f.cr = cr
 
 	// Connect to Test API to use it with the UI library.
 	tconn, err := cr.TestAPIConn(ctx)
@@ -112,7 +114,7 @@ func (f *citrixNotepadFixtureImpl) SetUp(ctx context.Context, s *testing.FixtSta
 }
 
 func (f *citrixNotepadFixtureImpl) PreTest(ctx context.Context, s *testing.FixtTestState) {
-	f.recorder = uiauto.CreateAndStartScreenRecorder(ctx, f.tconn)
+	f.recorder = uiauto.CreateAndStartScreenRecorder(ctx, f.tconn, f.cr)
 	util.OpenRemoteApplicationInCitirx(ctx, s, f.tconn, f.vdi, f.uidetector, appName, textToLookForWhenLaunched)
 }
 

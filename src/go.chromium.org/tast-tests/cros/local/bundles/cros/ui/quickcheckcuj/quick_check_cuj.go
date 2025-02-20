@@ -194,7 +194,7 @@ func Run(ctx context.Context, s *testing.State, cr *chrome.Chrome, pauseMode Pau
 	defer cancel()
 
 	options := cujrecorder.NewPerformanceCUJOptions()
-	recorder, err := cujrecorder.NewRecorder(ctx, tconn, nil, options)
+	recorder, err := cujrecorder.NewRecorder(ctx, tconn, cr, nil, options)
 	if err != nil {
 		s.Fatal("Failed to create a CUJ recorder: ", err)
 	}

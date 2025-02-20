@@ -92,7 +92,7 @@ func DeskTemplatesCUJ(ctx context.Context, s *testing.State) {
 		s.Fatal("Failed to delete saved desks: ", err)
 	}
 	// Set up metrics recorder for TPS calculation
-	recorder, err := cujrecorder.NewRecorder(ctx, tconn, nil, cujrecorder.RecorderOptions{})
+	recorder, err := cujrecorder.NewRecorder(ctx, tconn, cr, nil, cujrecorder.RecorderOptions{})
 	if err != nil {
 		s.Fatal("Failed to create the recorder: ", err)
 	}

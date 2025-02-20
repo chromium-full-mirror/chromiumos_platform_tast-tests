@@ -96,7 +96,7 @@ func Run(ctx context.Context, cr *chrome.Chrome, outDir string, testParam TestPa
 		return errors.Wrap(err, "failed to connect to test API connection")
 	}
 
-	recorder, err := cujrecorder.NewRecorder(ctx, tconn, nil, cujrecorder.RecorderOptions{})
+	recorder, err := cujrecorder.NewRecorder(ctx, tconn, cr, nil, cujrecorder.RecorderOptions{})
 	if err != nil {
 		return errors.Wrap(err, "failed to create a recorder")
 	}

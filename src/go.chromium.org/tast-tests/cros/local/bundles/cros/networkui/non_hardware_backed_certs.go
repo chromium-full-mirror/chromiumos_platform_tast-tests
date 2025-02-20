@@ -97,7 +97,7 @@ func NonHardwareBackedCerts(ctx context.Context, s *testing.State) {
 	defer cancelDeleteCertsCtx()
 
 	// TODO(b/368455160): Remove the recorder once the issue is resolved.
-	recorder := uiauto.CreateAndStartScreenRecorder(ctx, tconn)
+	recorder := uiauto.CreateAndStartScreenRecorder(ctx, tconn, cr)
 	defer uiauto.StopAndSaveOnError(deleteCertsCtx, recorder, filepath.Join(s.OutDir(), "screen_recording.webm"), s.HasError)
 
 	res := newNonHardwareBackedCertsTestResource(cr, tconn, certificate.TestCert1(), s.OutDir())

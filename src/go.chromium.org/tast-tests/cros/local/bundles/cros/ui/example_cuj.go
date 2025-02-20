@@ -69,7 +69,7 @@ func ExampleCUJ(ctx context.Context, s *testing.State) {
 	}
 
 	// Create a new recorder with cujrecorder.NewRecorder.
-	recorder, err := cujrecorder.NewRecorder(ctx, tconn, nil, cujrecorder.RecorderOptions{})
+	recorder, err := cujrecorder.NewRecorder(ctx, tconn, cr, nil, cujrecorder.RecorderOptions{})
 	if err != nil {
 		s.Fatal("Failed to create a recorder: ", err)
 	}

@@ -90,7 +90,7 @@ func Coral(ctx context.Context, s *testing.State) {
 			s.Fatal("Failed to restart odmld: ", err)
 		}
 
-		recorder, err := cujrecorder.NewRecorder(ctx, tconn, nil, cujrecorder.RecorderOptions{CooldownBeforeRun: true, CheckInterval: time.Second})
+		recorder, err := cujrecorder.NewRecorder(ctx, tconn, cr, nil, cujrecorder.RecorderOptions{CooldownBeforeRun: true, CheckInterval: time.Second})
 		if err != nil {
 			s.Fatal("Failed to create the CUJ recorder: ", err)
 		}

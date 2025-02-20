@@ -71,7 +71,7 @@ func ScreenshotGoogleDrive(ctx context.Context, s *testing.State) {
 	handler := faillog.DumpUITreeWithScreenshotHandler(cleanupCtx, tconn, "download_google_drive")
 	s.AttachErrorHandlers(handler, handler)
 
-	recorder, err := uiauto.NewScreenRecorder(ctx, tconn)
+	recorder, err := uiauto.NewScreenRecorder(ctx, tconn, fixt.Chrome)
 	if err != nil {
 		s.Log("Failed to create screen recorder: ", err)
 	}

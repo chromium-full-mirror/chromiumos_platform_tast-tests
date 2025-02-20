@@ -325,7 +325,7 @@ func (f *mediaFixtureImpl) PreTest(ctx context.Context, s *testing.FixtTestState
 	}
 
 	if !f.disableScreenRecorder {
-		f.recorder = uiauto.CreateAndStartScreenRecorderWithAutoSelect(ctx, f.tconn)
+		f.recorder = uiauto.CreateAndStartScreenRecorder(ctx, f.tconn, f.cr)
 	}
 }
 

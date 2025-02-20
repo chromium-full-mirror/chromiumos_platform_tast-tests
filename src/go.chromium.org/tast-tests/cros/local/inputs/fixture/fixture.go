@@ -20,15 +20,14 @@ import (
 	"go.chromium.org/tast-tests/cros/local/chrome/uiauto/vkb"
 	"go.chromium.org/tast-tests/cros/local/chrome/useractions"
 	"go.chromium.org/tast-tests/cros/local/inputs/inputactions"
-
 	"go.chromium.org/tast/core/errors"
 	"go.chromium.org/tast/core/testing"
 )
 
 const (
 	resetTimeout    = 30 * time.Second
-	preTestTimeout  = 10 * time.Second
-	postTestTimeout = 15 * time.Second
+	preTestTimeout  = 20 * time.Second
+	postTestTimeout = 25 * time.Second
 )
 
 // chromeOpts describes the extra chrome options needed.
@@ -563,7 +562,7 @@ func (f *inputsFixtureImpl) SetUp(ctx context.Context, s *testing.FixtState) int
 func (f *inputsFixtureImpl) PreTest(ctx context.Context, s *testing.FixtTestState) {
 	f.uc.SetTestName(s.TestName())
 
-	recorder, err := uiauto.NewScreenRecorder(ctx, f.tconn)
+	recorder, err := uiauto.NewScreenRecorder(ctx, f.tconn, f.cr)
 	if err != nil {
 		s.Log("Failed to create screen recorder: ", err)
 		return

@@ -17,7 +17,6 @@ import (
 	"go.chromium.org/tast-tests/cros/local/crostini"
 	"go.chromium.org/tast-tests/cros/local/ui/cujrecorder"
 	"go.chromium.org/tast-tests/cros/local/vm"
-
 	"go.chromium.org/tast/core/ctxutil"
 	"go.chromium.org/tast/core/errors"
 	"go.chromium.org/tast/core/testing"
@@ -131,7 +130,7 @@ func Run(ctx context.Context, gbInfo GBInfo, fixtValue interface{}, stateVars ma
 		}
 	}()
 
-	recorder, err := cujrecorder.NewRecorder(ctx, tconn, nil, cujrecorder.RecorderOptions{
+	recorder, err := cujrecorder.NewRecorder(ctx, tconn, cr, nil, cujrecorder.RecorderOptions{
 		CooldownBeforeRun: true,
 		TurnOffDisplay:    true,
 		Mode:              cujrecorder.Benchmark,

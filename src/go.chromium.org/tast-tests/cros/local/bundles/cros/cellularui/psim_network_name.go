@@ -109,7 +109,7 @@ func PSimNetworkName(ctx context.Context, s *testing.State) {
 	}
 
 	// TODO(b/333458823): Remove this function once we no longer need it for debugging.
-	recorder := uiauto.CreateAndStartScreenRecorder(ctx, tconn)
+	recorder := uiauto.CreateAndStartScreenRecorder(ctx, tconn, cr)
 	defer uiauto.StopAndSaveOnError(cleanupCtx, recorder, filepath.Join(s.OutDir(), "recording.webm"), s.HasError)
 
 	// Check if the network name is displayed correctly in the Mobile data subpage.

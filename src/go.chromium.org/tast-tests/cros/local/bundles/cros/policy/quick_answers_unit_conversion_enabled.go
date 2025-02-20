@@ -25,7 +25,6 @@ import (
 	"go.chromium.org/tast-tests/cros/local/policyutil/fixtures"
 	"go.chromium.org/tast-tests/cros/local/quickanswers"
 	"go.chromium.org/tast-tests/cros/local/testenv/proxy"
-
 	"go.chromium.org/tast/core/ctxutil"
 	"go.chromium.org/tast/core/testing"
 )
@@ -111,7 +110,7 @@ func QuickAnswersUnitConversionEnabled(ctx context.Context, s *testing.State) {
 				s.Fatal("Failed to update policies: ", err)
 			}
 
-			recorder := uiauto.CreateAndStartScreenRecorder(ctx, tconn)
+			recorder := uiauto.CreateAndStartScreenRecorder(ctx, tconn, cr)
 			defer uiauto.StopAndSaveOnError(cleanupCtx, recorder,
 				filepath.Join(s.OutDir(), fmt.Sprintf("screen_recording_%s.webm", param.Name)),
 				s.HasError)
