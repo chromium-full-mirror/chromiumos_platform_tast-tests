@@ -28,15 +28,6 @@ func init() {
 		Fixture:      "arcBooted",
 		Timeout:      chrome.LoginTimeout + arc.BootTimeout + 30*time.Second,
 		Params: []testing.Param{{
-			ExtraSoftwareDeps: []string{"android_p"},
-			// TODO(b/273223557): Download only one file for the current architecture.
-			ExtraData: []string{
-				"VtsHalKeymasterV3_0TargetTest_arm",
-				"VtsHalKeymasterV3_0TargetTest_arm64",
-				"VtsHalKeymasterV3_0TargetTest_x86",
-				"VtsHalKeymasterV3_0TargetTest_x86_64",
-			},
-		}, {
 			Name:              "container_r",
 			ExtraSoftwareDeps: []string{"android_container_r"},
 			ExtraData: []string{
@@ -86,10 +77,6 @@ func vtsTestExecName(ctx context.Context, a *arc.ARC) (string, error) {
 		return "VtsHalKeymasterV3_0TargetTest_arm", nil
 	} else if arch == "aarch64" {
 		return "VtsHalKeymasterV3_0TargetTest_arm64", nil
-	} else if arch == "i686" {
-		return "VtsHalKeymasterV3_0TargetTest_x86", nil
-	} else if arch == "x86_64" {
-		return "VtsHalKeymasterV3_0TargetTest_x86_64", nil
 	}
 
 	return "", errors.Errorf("no known test binary for %s architecture", arch)
