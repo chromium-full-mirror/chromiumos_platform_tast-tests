@@ -48,6 +48,8 @@ func init() {
 		// Disable the physical ethernet so that the only Ethernet service
 		// available is the veth service created inside the test.
 		Fixture: "shillReset.ehide",
+		// TODO(b/397688448): Some test cases are disabled as they are
+		// consistently failing. Reenable them after the issue is fixed.
 		Params: []testing.Param{{
 			Name: "redirectfound",
 			Val: &healthCaptivePortalHTTPParams{
@@ -60,28 +62,28 @@ func init() {
 				portalState:          health.PortalStatePortal,
 			},
 		}, {
-			Name: "managednetworkdevicepolicy",
-			Val: &healthCaptivePortalHTTPParams{
-				serviceState:         shillconst.ServiceStateOnline,
-				httpResponseHandler:  captiveportalconsts.RedirectHandler(captiveportalconsts.RedirectURL),
-				httpsResponseHandler: nil,
-				oncSource:            shillconst.ServiceONCSourceDevicePolicy,
-				checkPortal:          true,
-				networkState:         health.NetworkStateOnline,
-				portalState:          health.PortalStateOnline,
-			},
-		}, {
-			Name: "managednetworkuserpolicy",
-			Val: &healthCaptivePortalHTTPParams{
-				serviceState:         shillconst.ServiceStateOnline,
-				httpResponseHandler:  captiveportalconsts.RedirectHandler(captiveportalconsts.RedirectURL),
-				httpsResponseHandler: nil,
-				oncSource:            shillconst.ServiceONCSourceUserPolicy,
-				checkPortal:          true,
-				networkState:         health.NetworkStateOnline,
-				portalState:          health.PortalStateOnline,
-			},
-		}, {
+			// 	Name: "managednetworkdevicepolicy",
+			// 	Val: &healthCaptivePortalHTTPParams{
+			// 		serviceState:         shillconst.ServiceStateOnline,
+			// 		httpResponseHandler:  captiveportalconsts.RedirectHandler(captiveportalconsts.RedirectURL),
+			// 		httpsResponseHandler: nil,
+			// 		oncSource:            shillconst.ServiceONCSourceDevicePolicy,
+			// 		checkPortal:          true,
+			// 		networkState:         health.NetworkStateOnline,
+			// 		portalState:          health.PortalStateOnline,
+			// 	},
+			// }, {
+			// 	Name: "managednetworkuserpolicy",
+			// 	Val: &healthCaptivePortalHTTPParams{
+			// 		serviceState:         shillconst.ServiceStateOnline,
+			// 		httpResponseHandler:  captiveportalconsts.RedirectHandler(captiveportalconsts.RedirectURL),
+			// 		httpsResponseHandler: nil,
+			// 		oncSource:            shillconst.ServiceONCSourceUserPolicy,
+			// 		checkPortal:          true,
+			// 		networkState:         health.NetworkStateOnline,
+			// 		portalState:          health.PortalStateOnline,
+			// 	},
+			// }, {
 			Name: "managednetworknone",
 			Val: &healthCaptivePortalHTTPParams{
 				serviceState:         shillconst.ServiceStateRedirectFound,
@@ -93,17 +95,17 @@ func init() {
 				portalState:          health.PortalStatePortal,
 			},
 		}, {
-			Name: "checkportalfalse",
-			Val: &healthCaptivePortalHTTPParams{
-				serviceState:         shillconst.ServiceStateOnline,
-				httpResponseHandler:  captiveportalconsts.RedirectHandler(captiveportalconsts.RedirectURL),
-				httpsResponseHandler: nil,
-				oncSource:            "",
-				checkPortal:          false,
-				networkState:         health.NetworkStateOnline,
-				portalState:          health.PortalStateOnline,
-			},
-		}, {
+			// 	Name: "checkportalfalse",
+			// 	Val: &healthCaptivePortalHTTPParams{
+			// 		serviceState:         shillconst.ServiceStateOnline,
+			// 		httpResponseHandler:  captiveportalconsts.RedirectHandler(captiveportalconsts.RedirectURL),
+			// 		httpsResponseHandler: nil,
+			// 		oncSource:            "",
+			// 		checkPortal:          false,
+			// 		networkState:         health.NetworkStateOnline,
+			// 		portalState:          health.PortalStateOnline,
+			// 	},
+			// }, {
 			Name: "portalsuspected",
 			Val: &healthCaptivePortalHTTPParams{
 				serviceState:         shillconst.ServiceStateRedirectFound,

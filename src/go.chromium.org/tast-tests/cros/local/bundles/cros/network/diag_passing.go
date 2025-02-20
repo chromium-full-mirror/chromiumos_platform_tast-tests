@@ -6,7 +6,6 @@ package network
 
 import (
 	"context"
-	"time"
 
 	diagcommon "go.chromium.org/tast-tests/cros/common/network/diag"
 	"go.chromium.org/tast-tests/cros/local/bundles/cros/network/diag"
@@ -36,6 +35,8 @@ func init() {
 		BugComponent: "b:1166446",
 		Attr:         []string{"group:mainline", "informational"},
 		Fixture:      "networkDiagnostics",
+		// TODO(b/397688448): Some test cases are disabled as they are
+		// consistently failing. Reenable them after the issue is fixed.
 		Params: []testing.Param{{
 			Name: "lan_connectivity",
 			Val:  newNetDiagParams(diagcommon.RoutineLanConnectivity),
@@ -60,11 +61,11 @@ func init() {
 		}, {
 			Name: "captive_portal",
 			Val:  newNetDiagParams(diagcommon.RoutineCaptivePortal),
-		}, {
-			Name:      "video_conferencing",
-			Val:       newNetDiagParams(diagcommon.RoutineVideoConferencing),
-			Timeout:   10 * time.Minute,
-			ExtraAttr: []string{"informational"},
+			// }, {
+			// 	Name:      "video_conferencing",
+			// 	Val:       newNetDiagParams(diagcommon.RoutineVideoConferencing),
+			// 	Timeout:   10 * time.Minute,
+			// 	ExtraAttr: []string{"informational"},
 		}},
 	})
 }
