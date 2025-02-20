@@ -96,42 +96,34 @@ func (s *UsbTester) Close(ctx context.Context) error {
 	return nil
 }
 
-// PowerRole will return the current power role on the testers.
-func (s *UsbTester) PowerRole(ctx context.Context) (passport.PowerRole, error) {
+// doCapabilitySetRequest is a internal helper method that does the actual grpc request.
+func (s *UsbTester) doCapabilitySetRequest(
+	ctx context.Context,
+	req *passport.SetUsbTesterCapabilityRequest,
+) error {
 	reqctx, cancel := context.WithTimeout(ctx, 3*time.Second)
 	defer cancel()
 
-	reply, err := s.client.GetTesterCapability(
-		reqctx,
-		&passport.GetUsbTesterCapabilityRequest{
-			Id:         s.tester,
-			Capability: passport.Capability_POWER_ROLE,
-		},
-	)
+	req.Id = s.tester
 
-	if err != nil {
-		return passport.PowerRole_POWER_ROLE_NOT_SET, errors.Wrap(err, "failed to get power role")
+	reply, err := s.client.SetTesterCapability(reqctx, req)
+
+	if err != nil || (reply.GetErrCode() != 0) {
+		return errors.Wrapf(
+			err,
+			"failed to do set request, internal sdk error code was %d, internal sdk error message was %s",
+			reply.GetErrCode(),
+			reply.GetErrorMsg(),
+		)
 	}
 
-	return reply.GetPowerRole(), nil
+	return nil
 }
 
-// PowerRoleSRC will set the power role to source.
-func (s *UsbTester) PowerRoleSRC(ctx context.Context) error {
-	return setPowerRole(ctx, s, passport.PowerRole_SRC)
-}
-
-// PowerRoleSNK will set the power role to source.
-func (s *UsbTester) PowerRoleSNK(ctx context.Context) error {
-	return setPowerRole(ctx, s, passport.PowerRole_SNK)
-}
-
-func setPowerRole(ctx context.Context, s *UsbTester, role passport.PowerRole) error {
-	reqctx, cancel := context.WithTimeout(ctx, 3*time.Second)
-	defer cancel()
-
-	_, err := s.client.SetTesterCapability(
-		reqctx,
+// SetPowerRole will set the data role to the role passed in the argument.
+func (s *UsbTester) SetPowerRole(ctx context.Context, role passport.PowerRole) error {
+	return s.doCapabilitySetRequest(
+		ctx,
 		&passport.SetUsbTesterCapabilityRequest{
 			Id:         s.tester,
 			Capability: passport.Capability_POWER_ROLE,
@@ -140,69 +132,228 @@ func setPowerRole(ctx context.Context, s *UsbTester, role passport.PowerRole) er
 			},
 		},
 	)
-
-	return err
 }
 
-// TogglePowerRole this will toggle the power role.
-func (s *UsbTester) TogglePowerRole(ctx context.Context) error {
-
-	val, err := s.PowerRole(ctx)
-	if err != nil {
-		return errors.Wrap(err, "failed to get data role while togglinh")
-	}
-
-	if val == passport.PowerRole_SNK {
-		return s.PowerRoleSRC(ctx)
-	}
-
-	return s.PowerRoleSNK(ctx)
-}
-
-// DataRole will return the current data role on the testers.
-func (s *UsbTester) DataRole(ctx context.Context) (passport.DataRole, error) {
-	reqctx, cancel := context.WithTimeout(ctx, 3*time.Second)
-	defer cancel()
-
-	reply, err := s.client.GetTesterCapability(
-		reqctx,
-		&passport.GetUsbTesterCapabilityRequest{
-			Id:         s.tester,
-			Capability: passport.Capability_DATA_ROLE,
-		},
-	)
-
-	if err != nil {
-		return passport.DataRole_DATA_ROLE_NOT_SET, errors.Wrap(err, "failed to get data role")
-	}
-
-	return reply.GetDataRole(), nil
-}
-
-// DataRoleUFP will set the data role to ufp.
-func (s *UsbTester) DataRoleUFP(ctx context.Context) error {
-	return setDataRole(ctx, s, passport.DataRole_DATA_UFP)
-}
-
-// DataRoleDFP will set the data role to dfp.
-func (s *UsbTester) DataRoleDFP(ctx context.Context) error {
-	return setDataRole(ctx, s, passport.DataRole_DATA_DFP)
-}
-
-func setDataRole(ctx context.Context, s *UsbTester, role passport.DataRole) error {
-	reqctx, cancel := context.WithTimeout(ctx, 3*time.Second)
-	defer cancel()
-
-	_, err := s.client.SetTesterCapability(
-		reqctx,
+// SetDataRole will set the data role to ufp.
+func (s *UsbTester) SetDataRole(ctx context.Context, role passport.DataRole) error {
+	return s.doCapabilitySetRequest(
+		ctx,
 		&passport.SetUsbTesterCapabilityRequest{
-			Id:         s.tester,
 			Capability: passport.Capability_DATA_ROLE,
 			Value: &passport.SetUsbTesterCapabilityRequest_DataRole{
 				DataRole: role,
 			},
 		},
 	)
+}
 
-	return err
+// SetUsbChannel will set the usb channel, either 2.0 or 3.0.
+func (s *UsbTester) SetUsbChannel(ctx context.Context, channel passport.UsbChannel) error {
+	return s.doCapabilitySetRequest(
+		ctx,
+		&passport.SetUsbTesterCapabilityRequest{
+			Capability: passport.Capability_USB_CHANNEL,
+			Value: &passport.SetUsbTesterCapabilityRequest_UsbChannel{
+				UsbChannel: channel,
+			},
+		},
+	)
+}
+
+// SetPinAssignment will set the display port alternate mode pin assignment.
+func (s *UsbTester) SetPinAssignment(ctx context.Context, pinMode passport.PinAassignment) error {
+	return s.doCapabilitySetRequest(
+		ctx,
+		&passport.SetUsbTesterCapabilityRequest{
+			Capability: passport.Capability_PIN_ASSIGMENT,
+			Value: &passport.SetUsbTesterCapabilityRequest_PinMode{
+				PinMode: pinMode,
+			},
+		},
+	)
+}
+
+// SetInitPdState will set the initial PD state.
+func (s *UsbTester) SetInitPdState(ctx context.Context, state passport.InitPdState) error {
+	return s.doCapabilitySetRequest(
+		ctx,
+		&passport.SetUsbTesterCapabilityRequest{
+			Capability: passport.Capability_INIT_PD_STATE,
+			Value: &passport.SetUsbTesterCapabilityRequest_InitPdState{
+				InitPdState: state,
+			},
+		},
+	)
+}
+
+// SetSnkPdoCount will set the number of snk pdos.
+func (s *UsbTester) SetSnkPdoCount(ctx context.Context, cnt int64) error {
+	return s.doCapabilitySetRequest(
+		ctx,
+		&passport.SetUsbTesterCapabilityRequest{
+			Capability: passport.Capability_SNK_PDO_COUNT,
+			Value: &passport.SetUsbTesterCapabilityRequest_NonDescrete{
+				NonDescrete: cnt,
+			},
+		},
+	)
+}
+
+// SetSrcPdoCount will set the number of src pdos.
+func (s *UsbTester) SetSrcPdoCount(ctx context.Context, cnt int64) error {
+	return s.doCapabilitySetRequest(
+		ctx,
+		&passport.SetUsbTesterCapabilityRequest{
+			Capability: passport.Capability_SRC_PDO_COUNT,
+			Value: &passport.SetUsbTesterCapabilityRequest_NonDescrete{
+				NonDescrete: cnt,
+			},
+		},
+	)
+}
+
+// doCapabilityGetRequest is a internal helper method that does the actual grpc request.
+func (s *UsbTester) doCapabilityGetRequest(
+	ctx context.Context,
+	req *passport.GetUsbTesterCapabilityRequest,
+) (*passport.GetUsbTesterCapabilityReply, error) {
+	reqctx, cancel := context.WithTimeout(ctx, 3*time.Second)
+	defer cancel()
+
+	req.Id = s.tester
+
+	reply, err := s.client.GetTesterCapability(reqctx, req)
+
+	if err != nil {
+		return nil, errors.Wrap(err, "failed to get capability member")
+	}
+
+	return reply, nil
+}
+
+// DataRole will return the current data role on the testers.
+func (s *UsbTester) DataRole(ctx context.Context) (passport.DataRole, error) {
+	reply, err := s.doCapabilityGetRequest(
+		ctx,
+		&passport.GetUsbTesterCapabilityRequest{Capability: passport.Capability_DATA_ROLE},
+	)
+
+	return reply.GetDataRole(), err
+}
+
+// PowerRole will return the current power role on the testers.
+func (s *UsbTester) PowerRole(ctx context.Context) (passport.PowerRole, error) {
+	reply, err := s.doCapabilityGetRequest(
+		ctx,
+		&passport.GetUsbTesterCapabilityRequest{Capability: passport.Capability_POWER_ROLE},
+	)
+
+	return reply.GetPowerRole(), err
+}
+
+// UsbChannel will return the usb channel, either 2.0 or 3.0.
+func (s *UsbTester) UsbChannel(ctx context.Context) (passport.UsbChannel, error) {
+	reply, err := s.doCapabilityGetRequest(
+		ctx,
+		&passport.GetUsbTesterCapabilityRequest{Capability: passport.Capability_USB_CHANNEL},
+	)
+
+	return reply.GetUsbChannel(), err
+}
+
+// PinAssignment will return the display port alternate mode pin assignment.
+func (s *UsbTester) PinAssignment(ctx context.Context) (passport.PinAassignment, error) {
+	reply, err := s.doCapabilityGetRequest(
+		ctx,
+		&passport.GetUsbTesterCapabilityRequest{Capability: passport.Capability_PIN_ASSIGMENT},
+	)
+
+	return reply.GetPinMode(), err
+}
+
+// InitPdState will return the starting state of power delivery.
+func (s *UsbTester) InitPdState(ctx context.Context) (passport.InitPdState, error) {
+	reply, err := s.doCapabilityGetRequest(
+		ctx,
+		&passport.GetUsbTesterCapabilityRequest{Capability: passport.Capability_DATA_ROLE},
+	)
+
+	return reply.GetInitPdState(), err
+}
+
+// SnkPdoCount will return get the number of snk pdos.
+func (s *UsbTester) SnkPdoCount(ctx context.Context) (int64, error) {
+	reply, err := s.doCapabilityGetRequest(
+		ctx,
+		&passport.GetUsbTesterCapabilityRequest{Capability: passport.Capability_SNK_PDO_COUNT},
+	)
+
+	return reply.GetNonDescrete(), err
+}
+
+// SrcPdoCount will return get the number of src pdos.
+func (s *UsbTester) SrcPdoCount(ctx context.Context) (int64, error) {
+	reply, err := s.doCapabilityGetRequest(
+		ctx,
+		&passport.GetUsbTesterCapabilityRequest{Capability: passport.Capability_SRC_PDO_COUNT},
+	)
+
+	return reply.GetNonDescrete(), err
+}
+
+// DpInfo will get the display port information.
+func (s *UsbTester) DpInfo(ctx context.Context) (*passport.GetDpInfoReply, error) {
+
+	reply, err := s.client.GetDpInfo(
+		ctx,
+		&passport.GetDpInfoRequest{
+			Id: s.tester,
+		},
+	)
+	if err != nil {
+		return nil, errors.Wrap(err, "failed to get DP information")
+	}
+
+	return reply, nil
+}
+
+// Replug the cable. This simulates cable replug, it isn't an actual cable replug.
+func (s *UsbTester) Replug(ctx context.Context) error {
+
+	reply, err := s.client.ReplugCable(
+		ctx,
+		&passport.DoCableReplugRequest{
+			Id: s.tester,
+		},
+	)
+	if err != nil || reply.GetErrCode() != 0 {
+		return errors.Wrapf(
+			err,
+			"failed to do set request, internal sdk error code was %d, internal sdk error message was %s",
+			reply.GetErrCode(),
+			reply.GetErrorMsg(),
+		)
+	}
+
+	return nil
+}
+
+// HardReset the pd state.
+func (s *UsbTester) HardReset(ctx context.Context) error {
+	reply, err := s.client.HardResetTester(
+		ctx,
+		&passport.HardResetTesterRequest{
+			Id: s.tester,
+		},
+	)
+	if err != nil || reply.GetErrCode() != 0 {
+		return errors.Wrapf(
+			err,
+			"failed to do set request, internal sdk error code was %d, internal sdk error message was %s",
+			reply.GetErrCode(),
+			reply.GetErrorMsg(),
+		)
+	}
+
+	return nil
 }
