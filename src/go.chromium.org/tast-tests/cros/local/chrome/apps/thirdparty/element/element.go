@@ -494,7 +494,8 @@ func (e *Element) JoinRoom(roomName string) uiauto.Action {
 	roomFilter := e.d.Object(ui.Description("Filter room names"), ui.ResourceID(elementIDPrefix+"menu_home_filter"))
 	room := e.d.Object(ui.Text(roomName), ui.ResourceID(roomNameID))
 	roomTitle := e.d.Object(ui.Text(roomName), ui.ResourceID(elementIDPrefix+"roomToolbarTitleView"))
-	enterRoom := uiauto.NamedCombine("click room name to join",
+	enterRoom := uiauto.NamedCombine("search room and join",
+		e.typeText(searchFieldID, roomName),
 		apputil.FindAndClick(room, defaultUITimeout),
 		apputil.WaitUntilGone(room, defaultUITimeout),
 		apputil.WaitForExists(roomTitle, defaultUITimeout),
@@ -503,7 +504,6 @@ func (e *Element) JoinRoom(roomName string) uiauto.Action {
 		e.navigateUpToObject(roomFilter),
 		e.dismissEncryptionAlertIfExists(),
 		apputil.FindAndClick(roomFilter, defaultUITimeout),
-		e.typeText(searchFieldID, roomName),
 		uiauto.Retry(retryTimes, enterRoom),
 	)
 }
