@@ -21,6 +21,7 @@ import (
 	"go.chromium.org/tast-tests/cros/local/chrome/uiauto/nodewith"
 	"go.chromium.org/tast-tests/cros/local/chrome/uiauto/ossettings"
 	"go.chromium.org/tast-tests/cros/local/chrome/uiauto/role"
+	"go.chromium.org/tast-tests/cros/local/input"
 	"go.chromium.org/tast/core/ctxutil"
 	"go.chromium.org/tast/core/errors"
 )
@@ -56,7 +57,70 @@ const (
 	BounceKeysDefaultDelay = 500 * time.Millisecond
 	// SlowKeysDefaultDelay is the default delay of Slow Keys.
 	SlowKeysDefaultDelay = 500 * time.Millisecond
+	// MouseKeysDefaultDelay dictates cursor movement granularity
+	MouseKeysDefaultDelay = 100 * time.Millisecond
 )
+
+// MouseAction represents the mouse key actions.
+type MouseAction int
+
+// Mouse key actions.
+const (
+	MouseActionMoveUp MouseAction = iota
+	MouseActionMoveDown
+	MouseActionMoveLeft
+	MouseActionMoveRight
+	MouseActionClick
+	MouseActionSwitchMouseButton
+)
+
+// MouseButton represents the different mouse buttons.
+type MouseButton int
+
+// Mouse key buttons.
+const (
+	LeftMouseButton MouseButton = iota
+	RightMouseButton
+	BothMouseButtons
+)
+
+// MouseActionToKeyboardKey maps MouseAction to corresponding keyboard keys.
+func MouseActionToKeyboardKey(button MouseAction) string {
+	switch button {
+	case MouseActionMoveUp:
+		return "8"
+	case MouseActionMoveDown:
+		return "k"
+	case MouseActionMoveLeft:
+		return "u"
+	case MouseActionMoveRight:
+		return "o"
+	case MouseActionClick:
+		return "i"
+	case MouseActionSwitchMouseButton:
+		return ","
+	default:
+		return ""
+	}
+}
+
+// ChangeMouseButton cycles the current mouse button to the target button.
+func ChangeMouseButton(ctx context.Context, kb *input.KeyboardEventWriter, current MouseButton, target MouseButton) (MouseButton, error) {
+	for current != target {
+		if err := kb.Type(ctx, MouseActionToKeyboardKey(MouseActionSwitchMouseButton)); err != nil {
+			return current, err
+		}
+
+		if current == LeftMouseButton {
+			current = RightMouseButton
+		} else if current == RightMouseButton {
+			current = BothMouseButtons
+		} else if current == BothMouseButtons {
+			current = LeftMouseButton
+		}
+	}
+	return current, nil
+}
 
 // SetFaceGazeEnabled enables the FaceGaze accessibility feature using the
 // settings private extension API. The reason we need this is that FaceGaze is
@@ -317,4 +381,22 @@ func ToggleBounceKeysSetting(ctx context.Context, tconn *chrome.TestConn, cr *ch
 // ToggleSlowKeysSetting is a helper function that toggles Slow Keys setting via Settings UI.
 func ToggleSlowKeysSetting(ctx context.Context, tconn *chrome.TestConn, cr *chrome.Chrome, ui *uiauto.Context, enable bool) error {
 	return toggleKeyboardAndTextInputSetting(ctx, tconn, cr, ui, "Slow keys", 1555, enable)
+}
+
+func toggleCursorAndTouchpadSetting(ctx context.Context, tconn *chrome.TestConn, cr *chrome.Chrome, ui *uiauto.Context, name string, settingId int, enable bool) error {
+	heading := nodewith.NameStartingWith("Cursor and touchpad").Role(role.Heading).Ancestor(ossettings.WindowFinder)
+	cursorTouchpadSettings, err := ossettings.LaunchAtPageURL(ctx, tconn, cr, fmt.Sprintf("cursorAndTouchpad?settingId=%d", settingId), ui.Exists(heading))
+	if err != nil {
+		return errors.Wrap(err, "failed to open cursor and touchpad settings page")
+	}
+	defer cursorTouchpadSettings.Close(ctx)
+	if err := cursorTouchpadSettings.SetToggleOption(cr, name, enable)(ctx); err != nil {
+		return errors.Wrapf(err, "failed to toggle %q setting", name)
+	}
+	return nil
+}
+
+// ToggleMouseKeysSetting is a helper function that toggles Mouse Keys setting via Settings UI.
+func ToggleMouseKeysSetting(ctx context.Context, tconn *chrome.TestConn, cr *chrome.Chrome, ui *uiauto.Context, enable bool) error {
+	return toggleCursorAndTouchpadSetting(ctx, tconn, cr, ui, "Mouse Keys", 1538, enable)
 }

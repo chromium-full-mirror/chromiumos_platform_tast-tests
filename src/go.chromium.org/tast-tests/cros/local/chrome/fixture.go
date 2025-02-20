@@ -417,6 +417,19 @@ func init() {
 	})
 
 	testing.AddFixture(&testing.Fixture{
+		Name:         fixture.ChromeLoggedInWithMouseKeys,
+		Desc:         "Logged into a user session with AccessibilityMouseKeys enabled",
+		Contacts:     []string{"chromeos-a11y-eng@google.com", "lkupo@google.com"},
+		BugComponent: "b:1688530", // ChromeOS > Software > Experiences > Accessibility > Features >  Mouse Keys
+		Impl: NewLoggedInFixture(func(ctx context.Context, s *testing.FixtState) ([]Option, error) {
+			return []Option{EnableFeatures("AccessibilityMouseKeys")}, nil
+		}),
+		SetUpTimeout:    FixtureSetUpTimeout,
+		ResetTimeout:    ResetTimeout,
+		TearDownTimeout: ResetTimeout,
+	})
+
+	testing.AddFixture(&testing.Fixture{
 		Name:     fixture.ChromeLoggedInWithOak,
 		Desc:     "Logged into a user session with oak feature enabled",
 		Contacts: []string{"sammiequon@google.com"},
