@@ -52,12 +52,13 @@ func init() {
 		SoftwareDeps: []string{"diagnostics"},
 		Fixture:      "crosHealthdRunning",
 		Params: []testing.Param{{
-			ExtraHardwareDeps: hwdep.D(hwdep.SkipOnModel("primus", "boten", "robo", "lava", "xivu")),
+			ExtraHardwareDeps: hwdep.D(hwdep.SkipOnModel("primus", "boten", "robo", "lava", "xivu", "navi", "hylia")),
 		}, {
 			Name: "unstable",
 			// TODO(b/336951497): Fix and uprev EC on primus.
 			// TODO(b/360771683): Track flakiness of remaining models.
-			ExtraHardwareDeps: hwdep.D(hwdep.Model("primus", "boten", "robo", "lava", "xivu")),
+			// TODO(b/339210213): MT8196 (Navi/Hylia) GPU/NPU readings are inaccessible without active workload.
+			ExtraHardwareDeps: hwdep.D(hwdep.Model("primus", "boten", "robo", "lava", "xivu", "navi", "hylia")),
 			ExtraAttr:         []string{"informational"},
 		}},
 	})
