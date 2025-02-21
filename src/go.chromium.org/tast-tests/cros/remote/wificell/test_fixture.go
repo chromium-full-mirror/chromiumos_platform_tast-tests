@@ -1914,12 +1914,6 @@ func (tf *TestFixture) getLoggingConfig(ctx context.Context, wc *WifiClient) (in
 	return int(currentConfig.DebugLevel), currentConfig.DebugTags, err
 }
 
-// SetWakeOnWifi sets properties related to wake on WiFi.
-// DEPRECATED: Use tf.WifiClient().SetWakeOnWifi instead.
-func (tf *TestFixture) SetWakeOnWifi(ctx context.Context, ops ...SetWakeOnWifiOption) (shortenCtx context.Context, cleanupFunc func() error, retErr error) {
-	return tf.WifiClient().SetWakeOnWifi(ctx, ops...)
-}
-
 // WaitWifiConnected waits until WiFi is connected to the SHILL profile with specific GUID.
 func (tf *TestFixture) WaitWifiConnected(ctx context.Context, dutIdx DutIdx, guid string) error {
 	testing.ContextLogf(ctx, "Waiting for WiFi to be connected from DUT #%v to profile with GUID: %s", dutIdx, guid)

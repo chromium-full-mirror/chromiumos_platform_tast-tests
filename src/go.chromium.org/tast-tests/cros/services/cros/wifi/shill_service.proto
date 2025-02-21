@@ -249,25 +249,6 @@ service ShillService {
   rpc SetLoggingConfig(SetLoggingConfigRequest)
       returns (google.protobuf.Empty) {}
 
-  // GetWakeOnWifi gets WakeOnWiFi related properties of WiFi device.
-  rpc GetWakeOnWifi(google.protobuf.Empty) returns (GetWakeOnWifiResponse) {}
-
-  // SetWakeOnWifi sets WakeOnWiFi related properties of WiFi device.
-  rpc SetWakeOnWifi(SetWakeOnWifiRequest) returns (google.protobuf.Empty) {}
-
-  // CheckLastWakeReason checks if the last wake reason of WiFi device is as
-  // expected.
-  rpc CheckLastWakeReason(CheckLastWakeReasonRequest)
-      returns (google.protobuf.Empty) {}
-
-  // WatchDarkResume is a streaming gRPC which watchers power manager's D-Bus
-  // signals until next resume (SuspendDone), and returns the count of dark
-  // resumes.
-  // Note that it sends back an empty response first to notify the caller that
-  // the D-Bus watcher is ready.
-  rpc WatchDarkResume(google.protobuf.Empty)
-      returns (stream WatchDarkResumeResponse) {}
-
   // P2PGroupCreate creates WiFi Direct Group and takes its ownership.
   rpc P2PGroupCreate(P2PGroupCreateRequest) returns (P2PGroupCreateResponse) {}
 
