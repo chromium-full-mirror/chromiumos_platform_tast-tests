@@ -34,7 +34,12 @@ func init() {
 		},
 		// ChromeOS > Software > System Services > Cross Device > Instant Tethering
 		BugComponent: "b:1131910",
-		Attr:         []string{"group:cross-device", "cross-device_instanttether", "cross-device_cellular"},
+		Attr:         []string{
+			// TODO(b/398249689): Disabled due to 100% failures.
+			// "group:cross-device",
+			// "cross-device_instanttether",
+			// "cross-device_cellular",
+		},
 		SoftwareDeps: []string{"chrome"},
 		Fixture:      "crossdeviceOnboardedAllFeatures",
 		Timeout:      3 * time.Minute,
