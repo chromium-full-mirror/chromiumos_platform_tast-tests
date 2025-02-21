@@ -11,6 +11,7 @@ import (
 
 	"github.com/golang/protobuf/ptypes/empty"
 	"go.chromium.org/tast-tests/cros/remote/bundles/cros/wwcb/utils"
+	"go.chromium.org/tast-tests/cros/remote/bundles/cros/wwcb/utils/topology"
 	"go.chromium.org/tast-tests/cros/remote/dutfs"
 	"go.chromium.org/tast-tests/cros/services/cros/ui"
 	"go.chromium.org/tast/core/ctxutil"
@@ -26,8 +27,8 @@ func init() {
 		Contacts:     []string{"cros-wwcb-automation@google.com", "allion-wwcb@allion.corp-partner.google.com"},
 		BugComponent: "b:1289112", // ChromeOS > External > WWCB > Allion > Automation
 		Attr:         []string{"group:wwcb", "group:pasit", "pasit_hid"},
+		Fixture:      "wwcb.hid",
 		SoftwareDeps: []string{"chrome"},
-		Vars:         []string{"USBID"},
 		ServiceDeps: []string{"tast.cros.browser.ChromeService",
 			"tast.cros.ui.AutomationService",
 			"tast.cros.ui.ChromeUIService",
@@ -45,7 +46,6 @@ func ShortKeysCombinationsWithEmulator(ctx context.Context, s *testing.State) {
 	cleanupCtx := ctx
 	ctx, cancel := ctxutil.Shorten(ctx, 10*time.Second)
 	defer cancel()
-	USBID := s.RequiredVar("USBID")
 	// Set up the servo attached to the DUT.
 	dut := s.DUT()
 	// Connect to the gRPC server on the DUT.
@@ -77,7 +77,8 @@ func ShortKeysCombinationsWithEmulator(ctx context.Context, s *testing.State) {
 	defer utils.StopAndSaveScreenRecording(cleanupCtx, s, screenRecorder)
 
 	// Plug in the USB devices.
-	if err := utils.ControlFixture(ctx, USBID, "on"); err != nil {
+	tf := s.FixtValue().(*topology.TestFixture)
+	if _, err := tf.Helper.ActivateDeviceByType(ctx, topology.DeviceTypeHID); err != nil {
 		s.Fatal("Failed to control fixture to connect the corded keyboard: ", err)
 	}
 	if err := utils.InitSimulator(ctx); err != nil {

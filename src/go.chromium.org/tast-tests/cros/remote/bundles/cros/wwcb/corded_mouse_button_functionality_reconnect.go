@@ -14,6 +14,7 @@ import (
 
 	"go.chromium.org/tast-tests/cros/common/tbdep"
 	"go.chromium.org/tast-tests/cros/remote/bundles/cros/wwcb/utils"
+	"go.chromium.org/tast-tests/cros/remote/bundles/cros/wwcb/utils/topology"
 	"go.chromium.org/tast-tests/cros/services/cros/ui"
 	"go.chromium.org/tast/core/ctxutil"
 	"go.chromium.org/tast/core/rpc"
@@ -26,7 +27,7 @@ func init() {
 		Desc:         "Check the functionality of the mouse buttons after reconnect",
 		Contacts:     []string{"cros-wwcb-automation@google.com", "allion-wwcb@allion.corp-partner.google.com"},
 		BugComponent: "b:1289112", // ChromeOS > External > WWCB > Allion > Automation
-		Attr:         []string{
+		Attr: []string{
 			"group:wwcb",
 			"group:pasit",
 			"pasit_hid",
@@ -34,15 +35,15 @@ func init() {
 			"release-health_usb",
 		},
 		SoftwareDeps: []string{"chrome"},
-		Vars:         []string{"servo", "USBID"},
+		Vars:         []string{"servo"},
 		TestBedDeps:  []string{tbdep.ServoStateWorking},
 		ServiceDeps:  []string{"tast.cros.browser.ChromeService", "tast.cros.ui.AutomationService", "tast.cros.ui.ChromeUIService"},
 		Params: []testing.Param{{
 			Name:    "clamshell_mode",
-			Fixture: "enableServoAndDisableTabletMode",
+			Fixture: "wwcb.hidEnableServoAndDisableTabletMode",
 		}, {
 			Name:    "tablet_mode",
-			Fixture: "enableServoAndTabletMode",
+			Fixture: "wwcb.hidEnableServoAndTabletMode",
 		}},
 	})
 }
@@ -51,8 +52,6 @@ func CordedMouseButtonFunctionalityReconnect(ctx context.Context, s *testing.Sta
 	cleanupCtx := ctx
 	ctx, cancel := ctxutil.Shorten(ctx, 10*time.Second)
 	defer cancel()
-
-	USBID := s.RequiredVar("USBID")
 
 	// Connect to the gRPC server on the DUT.
 	cl, err := rpc.Dial(ctx, s.DUT(), s.RPCHint())
@@ -79,7 +78,9 @@ func CordedMouseButtonFunctionalityReconnect(ctx context.Context, s *testing.Sta
 	defer utils.CloseAllFixture(cleanupCtx)
 
 	// Plug in the USB devices.
-	if err := utils.ControlFixture(ctx, USBID, "on"); err != nil {
+	tf := s.FixtValue().(*topology.TestFixture)
+	usbID, err := tf.Helper.ActivateDeviceByType(ctx, topology.DeviceTypeHID)
+	if err != nil {
 		s.Fatal("Failed to turn on fixture to connect the corded mouse: ", err)
 	}
 
@@ -92,7 +93,7 @@ func CordedMouseButtonFunctionalityReconnect(ctx context.Context, s *testing.Sta
 	}
 
 	// Plug out the USB devices.
-	if err := utils.ControlFixture(ctx, USBID, "off"); err != nil {
+	if err := tf.Helper.DeactivateDeviceByID(ctx, usbID); err != nil {
 		s.Fatal("Failed to turn off fixture to connect the corded mouse: ", err)
 	}
 
@@ -103,7 +104,7 @@ func CordedMouseButtonFunctionalityReconnect(ctx context.Context, s *testing.Sta
 	}
 
 	// Plug in the USB devices.
-	if err := utils.ControlFixture(ctx, USBID, "on"); err != nil {
+	if err := tf.Helper.ActivateDeviceByID(ctx, usbID); err != nil {
 		s.Fatal("Failed to turn on fixture to connect the corded mouse after plug out: ", err)
 	}
 

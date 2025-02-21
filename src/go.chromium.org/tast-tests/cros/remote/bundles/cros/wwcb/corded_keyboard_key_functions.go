@@ -14,6 +14,7 @@ import (
 
 	"go.chromium.org/tast-tests/cros/common/tbdep"
 	"go.chromium.org/tast-tests/cros/remote/bundles/cros/wwcb/utils"
+	"go.chromium.org/tast-tests/cros/remote/bundles/cros/wwcb/utils/topology"
 	pb "go.chromium.org/tast-tests/cros/services/cros/apps"
 	"go.chromium.org/tast-tests/cros/services/cros/inputs"
 	"go.chromium.org/tast-tests/cros/services/cros/ui"
@@ -28,7 +29,7 @@ func init() {
 		Desc:         "Check the functionality of the top row function keys, special keys, and character keys on the corded keyboard",
 		Contacts:     []string{"cros-wwcb-automation@google.com", "allion-wwcb@allion.corp-partner.google.com"},
 		BugComponent: "b:1289112", // ChromeOS > External > WWCB > Allion > Automation
-		Attr:         []string{
+		Attr: []string{
 			"group:wwcb",
 			"group:pasit",
 			"pasit_hid",
@@ -36,15 +37,15 @@ func init() {
 			"release-health_usb",
 		},
 		SoftwareDeps: []string{"chrome"},
-		Vars:         []string{"servo", "USBID"},
+		Vars:         []string{"servo"},
 		TestBedDeps:  []string{tbdep.ServoStateWorking},
 		ServiceDeps:  []string{"tast.cros.browser.ChromeService", "tast.cros.ui.AutomationService", "tast.cros.apps.AppsService", "tast.cros.inputs.KeyboardService", "tast.cros.ui.ChromeUIService", "tast.cros.ui.ScreenRecorderService"},
 		Params: []testing.Param{{
 			Name:    "clamshell_mode",
-			Fixture: "enableServoAndDisableTabletMode",
+			Fixture: "wwcb.hidEnableServoAndDisableTabletMode",
 		}, {
 			Name:    "tablet_mode",
-			Fixture: "enableServoAndTabletMode",
+			Fixture: "wwcb.hidEnableServoAndTabletMode",
 		}},
 	})
 }
@@ -53,8 +54,6 @@ func CordedKeyboardKeyFunctions(ctx context.Context, s *testing.State) {
 	cleanupCtx := ctx
 	ctx, cancel := ctxutil.Shorten(ctx, 10*time.Second)
 	defer cancel()
-
-	USBID := s.RequiredVar("USBID")
 
 	// Connect to the gRPC server on the DUT.
 	cl, err := rpc.Dial(ctx, s.DUT(), s.RPCHint())
@@ -86,7 +85,8 @@ func CordedKeyboardKeyFunctions(ctx context.Context, s *testing.State) {
 	defer utils.CloseAllFixture(cleanupCtx)
 
 	// Plug in the USB devices.
-	if err := utils.ControlFixture(ctx, USBID, "on"); err != nil {
+	tf := s.FixtValue().(*topology.TestFixture)
+	if _, err := tf.Helper.ActivateDeviceByType(ctx, topology.DeviceTypeHID); err != nil {
 		s.Fatal("Failed to turn on fixture to connect the corded keyboard: ", err)
 	}
 
