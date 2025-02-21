@@ -54,14 +54,15 @@ type kernelAthErrorTestCase struct {
 
 func init() {
 	testing.AddTest(&testing.Test{
-		Func:         KernelAthError,
-		Desc:         "Verify kernel Ath crashes are logged as expected",
-		Contacts:     []string{"chromeos-data-eng@google.com", "arowa@google.com"},
-		BugComponent: "b:1032705",
-		Attr:         []string{"group:wificell", "wificell_func"},
-		SoftwareDeps: []string{"wifi"},
-		HardwareDeps: hwdep.D(hwdep.WifiQualcomm()),
-		Requirements: []string{tdreq.WiFiGenSupportWiFi, tdreq.WiFiProcPassFW, tdreq.WiFiProcPassAVL, tdreq.WiFiProcPassAVLBeforeUpdates, tdreq.WiFiProcPassMatfunc, tdreq.WiFiProcPassMatfuncBeforeUpdates},
+		Func:            KernelAthError,
+		Desc:            "Verify kernel Ath crashes are logged as expected",
+		Contacts:        []string{"chromeos-data-eng@google.com", "arowa@google.com"},
+		BugComponent:    "b:1032705",
+		Attr:            []string{"group:wificell", "wificell_func"},
+		SoftwareDeps:    []string{"wifi"},
+		HardwareDeps:    hwdep.D(hwdep.WifiQualcomm()),
+		Requirements:    []string{tdreq.WiFiGenSupportWiFi, tdreq.WiFiProcPassFW, tdreq.WiFiProcPassAVL, tdreq.WiFiProcPassAVLBeforeUpdates, tdreq.WiFiProcPassMatfunc, tdreq.WiFiProcPassMatfuncBeforeUpdates},
+		VariantCategory: `{"name": "WifiBtChipset_Soc_Kernel"}`,
 		Params: []testing.Param{
 			{
 				Name: "ath10k",
