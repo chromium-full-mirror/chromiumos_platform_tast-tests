@@ -15,6 +15,7 @@ import (
 	"github.com/golang/protobuf/ptypes/empty"
 	"go.chromium.org/tast-tests/cros/common/tbdep"
 	"go.chromium.org/tast-tests/cros/remote/bundles/cros/wwcb/utils"
+	"go.chromium.org/tast-tests/cros/remote/bundles/cros/wwcb/utils/topology"
 	"go.chromium.org/tast-tests/cros/remote/dutfs"
 	pb "go.chromium.org/tast-tests/cros/services/cros/apps"
 	"go.chromium.org/tast-tests/cros/services/cros/ui"
@@ -31,7 +32,7 @@ func init() {
 		Desc:         "Verify external mouse movement speed, scroll, and primary button functionality switching",
 		Contacts:     []string{"cros-wwcb-automation@google.com", "allion-wwcb@allion.corp-partner.google.com"},
 		BugComponent: "b:1289112", // ChromeOS > External > WWCB > Allion > Automation
-		Attr:         []string{
+		Attr: []string{
 			"group:wwcb",
 			"group:pasit",
 			"pasit_hid",
@@ -40,16 +41,16 @@ func init() {
 		},
 		SoftwareDeps: []string{"chrome"},
 		ServiceDeps:  []string{"tast.cros.browser.ChromeService", "tast.cros.apps.AppsService", "tast.cros.ui.AutomationService", "tast.cros.ui.ChromeUIService"},
-		Vars:         []string{"servo", "USBID"},
+		Vars:         []string{"servo"},
 		TestBedDeps:  []string{tbdep.ServoStateWorking},
 		Data:         []string{"detect_mouse_speed.html", "detect_mouse_wheel.html"},
 		Timeout:      5 * time.Minute,
 		Params: []testing.Param{{
 			Name:    "clamshell_mode",
-			Fixture: "enableServoAndDisableTabletMode",
+			Fixture: "wwcb.hidEnableServoAndDisableTabletMode",
 		}, {
 			Name:    "tablet_mode",
-			Fixture: "enableServoAndTabletMode",
+			Fixture: "wwcb.hidEnableServoAndTabletMode",
 		}},
 	})
 }
@@ -95,8 +96,9 @@ func ExternalMouseSpeedAndPrimaryButton(ctx context.Context, s *testing.State) {
 	// Dump the UI tree and screenshot on any failure
 	utils.AttachErrorHandlersForUITreeDump(cleanupCtx, s, cl.Conn)
 
-	USBID := s.RequiredVar("USBID")
-	if err := utils.ControlFixture(ctx, USBID, "on"); err != nil {
+	tf := s.FixtValue().(*topology.TestFixture)
+	usbID, err := tf.Helper.ActivateDeviceByType(ctx, topology.DeviceTypeHID)
+	if err != nil {
 		s.Fatal("Failed to plug in the external mouse: ", err)
 	}
 	if err := utils.InitSimulator(ctx); err != nil {
@@ -113,10 +115,10 @@ func ExternalMouseSpeedAndPrimaryButton(ctx context.Context, s *testing.State) {
 	if err := verifyMouseSpeed(ctx, appsSvc, uiautoSvc, fs, detectMouseSpeed); err != nil {
 		s.Fatal("Failed to verify mouse speed: ", err)
 	}
-	if err := utils.ControlFixture(ctx, USBID, "off"); err != nil {
+	if err := tf.Helper.DeactivateDeviceByID(ctx, usbID); err != nil {
 		s.Fatal("Failed to unplug the external mouse: ", err)
 	}
-	if err := utils.ControlFixture(ctx, USBID, "on"); err != nil {
+	if err := tf.Helper.ActivateDeviceByID(ctx, usbID); err != nil {
 		s.Fatal("Failed to replug the external mouse: ", err)
 	}
 

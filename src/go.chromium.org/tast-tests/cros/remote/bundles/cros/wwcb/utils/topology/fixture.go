@@ -82,6 +82,20 @@ func init() {
 				Val:    topologyParamVal{defaultTopology: defaultStorageTopology},
 			},
 			{
+				Name: "hid",
+				Val:  topologyParamVal{defaultTopology: defaultHIDTopology},
+			},
+			{
+				Name:   "hidEnableServoAndDisableTabletMode",
+				Parent: "enableServoAndDisableTabletMode",
+				Val:    topologyParamVal{defaultTopology: defaultHIDTopology},
+			},
+			{
+				Name:   "hidEnableServoAndTabletMode",
+				Parent: "enableServoAndTabletMode",
+				Val:    topologyParamVal{defaultTopology: defaultHIDTopology},
+			},
+			{
 				Name: "camera",
 				Val:  topologyParamVal{defaultTopology: defaultCameraTopology},
 			},
@@ -113,6 +127,11 @@ func varOrDefault(s *testing.FixtState, varName, defaultValue string) string {
 		return val
 	}
 	return defaultValue
+}
+
+func defaultHIDTopology(s *testing.FixtState, hostname string) *labapi.PasitHost {
+	usbID := varOrDefault(s, "USBID", "2001901")
+	return DefaultHIDTopology(hostname, usbID)
 }
 
 func defaultStorageTopology(s *testing.FixtState, hostname string) *labapi.PasitHost {
@@ -148,13 +167,13 @@ func defaultFullTopology(s *testing.FixtState, hostname string) *labapi.PasitHos
 
 // TestFixture is the PASIT test fixture.
 type TestFixture struct {
-	Helper          *Helper
-	hostConn        *ssh.Conn
-	hostForwarder   *ssh.Forwarder
-	grpcConn        *grpc.ClientConn
-	switchService   api.SwitchService
-	cameraService   api.CameraService
-	CameraHelper    *api.CameraServiceHelper
+	Helper        *Helper
+	hostConn      *ssh.Conn
+	hostForwarder *ssh.Forwarder
+	grpcConn      *grpc.ClientConn
+	switchService api.SwitchService
+	cameraService api.CameraService
+	CameraHelper  *api.CameraServiceHelper
 }
 
 // SetUp configures the fixture.

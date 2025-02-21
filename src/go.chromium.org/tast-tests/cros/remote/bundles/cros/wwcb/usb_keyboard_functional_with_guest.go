@@ -14,6 +14,7 @@ import (
 
 	"go.chromium.org/tast-tests/cros/common/tbdep"
 	"go.chromium.org/tast-tests/cros/remote/bundles/cros/wwcb/utils"
+	"go.chromium.org/tast-tests/cros/remote/bundles/cros/wwcb/utils/topology"
 	pb "go.chromium.org/tast-tests/cros/services/cros/apps"
 	"go.chromium.org/tast-tests/cros/services/cros/inputs"
 	"go.chromium.org/tast-tests/cros/services/cros/ui"
@@ -28,7 +29,7 @@ func init() {
 		Desc:         "Check keyboard input and verify that the function is working properly in guest mode",
 		Contacts:     []string{"cros-wwcb-automation@google.com", "allion-wwcb@allion.corp-partner.google.com"},
 		BugComponent: "b:1289112", // ChromeOS > External > WWCB > Allion > Automation
-		Attr:         []string{
+		Attr: []string{
 			"group:wwcb",
 			"group:pasit",
 			"pasit_hid",
@@ -36,7 +37,7 @@ func init() {
 			"release-health_usb",
 		},
 		SoftwareDeps: []string{"chrome"},
-		Vars:         []string{"servo", "USBID"},
+		Vars:         []string{"servo"},
 		TestBedDeps:  []string{tbdep.ServoStateWorking},
 		ServiceDeps: []string{
 			"tast.cros.browser.ChromeService",
@@ -47,10 +48,10 @@ func init() {
 		},
 		Params: []testing.Param{{
 			Name:    "clamshell_mode",
-			Fixture: "enableServoAndDisableTabletMode",
+			Fixture: "wwcb.hidEnableServoAndDisableTabletMode",
 		}, {
 			Name:    "tablet_mode",
-			Fixture: "enableServoAndTabletMode",
+			Fixture: "wwcb.hidEnableServoAndTabletMode",
 		}},
 	})
 }
@@ -71,8 +72,6 @@ func UsbKeyboardFunctionalWithGuest(ctx context.Context, s *testing.State) {
 	cleanupCtx := ctx
 	ctx, cancel := ctxutil.Shorten(ctx, 10*time.Second)
 	defer cancel()
-
-	USBID := s.RequiredVar("USBID")
 
 	// Set up the servo attached to the DUT.
 	dut := s.DUT()
@@ -100,7 +99,8 @@ func UsbKeyboardFunctionalWithGuest(ctx context.Context, s *testing.State) {
 	utils.AttachErrorHandlersForUITreeDump(cleanupCtx, s, cl.Conn)
 
 	// Plug in the USB devices.
-	if err := utils.ControlFixture(ctx, USBID, "on"); err != nil {
+	tf := s.FixtValue().(*topology.TestFixture)
+	if _, err := tf.Helper.ActivateDeviceByType(ctx, topology.DeviceTypeHID); err != nil {
 		s.Fatal("Failed to control fixture to connect the corded keyboard: ", err)
 	}
 	if err := utils.InitSimulator(ctx); err != nil {

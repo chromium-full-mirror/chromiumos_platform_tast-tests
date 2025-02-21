@@ -12,6 +12,7 @@ import (
 	"github.com/golang/protobuf/ptypes/empty"
 	"go.chromium.org/tast-tests/cros/common/tbdep"
 	"go.chromium.org/tast-tests/cros/remote/bundles/cros/wwcb/utils"
+	"go.chromium.org/tast-tests/cros/remote/bundles/cros/wwcb/utils/topology"
 	pb "go.chromium.org/tast-tests/cros/services/cros/apps"
 	inputspb "go.chromium.org/tast-tests/cros/services/cros/inputs"
 	"go.chromium.org/tast-tests/cros/services/cros/ui"
@@ -27,7 +28,7 @@ func init() {
 		Desc:         "Check the external keyboard functionality after reboot DUT",
 		Contacts:     []string{"cros-wwcb-automation@google.com", "allion-wwcb@allion.corp-partner.google.com"},
 		BugComponent: "b:1289112", // ChromeOS > External > WWCB > Allion > Automation
-		Attr:         []string{
+		Attr: []string{
 			"group:wwcb",
 			"group:pasit",
 			"pasit_hid",
@@ -35,7 +36,7 @@ func init() {
 			"release-health_usb",
 		},
 		SoftwareDeps: []string{"chrome"},
-		Vars:         []string{"servo", "USBID"},
+		Vars:         []string{"servo"},
 		TestBedDeps:  []string{tbdep.ServoStateWorking},
 		ServiceDeps: []string{
 			"tast.cros.browser.ChromeService",
@@ -46,10 +47,10 @@ func init() {
 		},
 		Params: []testing.Param{{
 			Name:    "clamshell_mode",
-			Fixture: "enableServoAndDisableTabletMode",
+			Fixture: "wwcb.hidEnableServoAndDisableTabletMode",
 		}, {
 			Name:    "tablet_mode",
-			Fixture: "enableServoAndTabletMode",
+			Fixture: "wwcb.hidEnableServoAndTabletMode",
 		}},
 	})
 }
@@ -60,7 +61,6 @@ func CordedKeyboardFunctionalityCheckAfterRebootDUT(ctx context.Context, s *test
 	defer cancel()
 
 	dut := s.DUT()
-	USBID := s.RequiredVar("USBID")
 
 	// Initialize fixtures to find the connected devices.
 	if err := utils.InitFixture(ctx); err != nil {
@@ -68,7 +68,8 @@ func CordedKeyboardFunctionalityCheckAfterRebootDUT(ctx context.Context, s *test
 	}
 	defer utils.CloseAllFixture(cleanupCtx)
 
-	if err := utils.ControlFixture(ctx, USBID, "on"); err != nil {
+	tf := s.FixtValue().(*topology.TestFixture)
+	if _, err := tf.Helper.ActivateDeviceByType(ctx, topology.DeviceTypeHID); err != nil {
 		s.Fatal("Failed to control fixture to connect the USB keyboard emulator: ", err)
 	}
 

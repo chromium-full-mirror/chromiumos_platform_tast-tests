@@ -235,3 +235,35 @@ func DefaultCameraTopology(hostname, cameraSwitch string) *labapi.PasitHost {
 		},
 	}
 }
+
+// DefaultHIDTopology creates a limited topology just for basic HID tests.
+func DefaultHIDTopology(hostname, hidSwitch string) *labapi.PasitHost {
+	return &labapi.PasitHost{
+		Devices: []*labapi.PasitHost_Device{
+			{
+				Id:   hostname,
+				Type: labapi.PasitHost_Device_DUT,
+			},
+			{
+				Id:   hidSwitch,
+				Type: labapi.PasitHost_Device_SWITCH_FIXTURE,
+			},
+			{
+				Id:   "hid_1",
+				Type: labapi.PasitHost_Device_HID,
+			},
+		},
+		Connections: []*labapi.PasitHost_Connection{
+			{
+				Type:     "USBA",
+				ParentId: hostname,
+				ChildId:  hidSwitch,
+			},
+			{
+				Type:     "USBA",
+				ParentId: hidSwitch,
+				ChildId:  "hid_1",
+			},
+		},
+	}
+}

@@ -17,6 +17,7 @@ import (
 	pb "go.chromium.org/tast-tests/cros/services/cros/apps"
 
 	//lint:ignore ST1019 multiple imports with different identifiers help code readability
+	"go.chromium.org/tast-tests/cros/remote/bundles/cros/wwcb/utils/topology"
 	"go.chromium.org/tast-tests/cros/services/cros/inputs"
 	inputspb "go.chromium.org/tast-tests/cros/services/cros/inputs"
 	"go.chromium.org/tast-tests/cros/services/cros/ui"
@@ -48,7 +49,7 @@ func init() {
 		Desc:         "Check the external keyboard functionality after lock/unlock the DUT",
 		Contacts:     []string{"cros-wwcb-automation@google.com", "allion-wwcb@allion.corp-partner.google.com"},
 		BugComponent: "b:1289112", // ChromeOS > External > WWCB > Allion > Automation
-		Attr:         []string{
+		Attr: []string{
 			"group:wwcb",
 			"group:pasit",
 			"pasit_hid",
@@ -56,7 +57,7 @@ func init() {
 			"release-health_usb",
 		},
 		SoftwareDeps: []string{"chrome"},
-		Vars:         []string{"servo", "USBID"},
+		Vars:         []string{"servo"},
 		TestBedDeps:  []string{tbdep.ServoStateWorking},
 		ServiceDeps: []string{
 			"tast.cros.nearbyservice.NearbyShareService",
@@ -67,10 +68,10 @@ func init() {
 			"tast.cros.ui.ChromeUIService",
 		}, Params: []testing.Param{{
 			Name:    "clamshell_mode",
-			Fixture: "enableServoAndDisableTabletMode",
+			Fixture: "wwcb.hidEnableServoAndDisableTabletMode",
 		}, {
 			Name:    "tablet_mode",
-			Fixture: "enableServoAndTabletMode",
+			Fixture: "wwcb.hidEnableServoAndTabletMode",
 		}},
 	})
 }
@@ -81,7 +82,6 @@ func CordedKeyboardFunctionalityCheckAfterLockUnlockScreen(ctx context.Context, 
 	defer cancel()
 
 	dut := s.DUT()
-	USBID := s.RequiredVar("USBID")
 
 	// Connect to the gRPC server on the DUT.
 	cl, err := rpc.Dial(ctx, s.DUT(), s.RPCHint())
@@ -107,7 +107,8 @@ func CordedKeyboardFunctionalityCheckAfterLockUnlockScreen(ctx context.Context, 
 	}
 	defer utils.CloseAllFixture(cleanupCtx)
 
-	if err := utils.ControlFixture(ctx, USBID, "on"); err != nil {
+	tf := s.FixtValue().(*topology.TestFixture)
+	if _, err := tf.Helper.ActivateDeviceByType(ctx, topology.DeviceTypeHID); err != nil {
 		s.Fatal("Failed to control fixture to connect the USB keyboard emulator: ", err)
 	}
 
