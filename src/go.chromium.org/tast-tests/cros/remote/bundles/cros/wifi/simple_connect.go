@@ -1441,8 +1441,6 @@ func init() {
 					}},
 					expectedFailure: true,
 				}},
-				// TODO(b/189986748): Remove the skiplist once those flaky boards have reached AUE.
-				ExtraHardwareDeps: hwdep.D(hwdep.SkipOnPlatform("banjo", "candy", "gnawty", "kip", "ninja", "sumo", "swanky", "winky")),
 				ExtraRequirements: []string{"wifi-sec-0006-v01"},
 			}, {
 				// Verifies that DUT can connect to an WPA3-Enterprise-transition AP

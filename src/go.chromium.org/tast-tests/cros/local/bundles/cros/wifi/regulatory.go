@@ -16,7 +16,6 @@ import (
 	"go.chromium.org/tast/core/ctxutil"
 	"go.chromium.org/tast/core/errors"
 	"go.chromium.org/tast/core/testing"
-	"go.chromium.org/tast/core/testing/hwdep"
 	"go.chromium.org/tast/core/testing/wlan"
 )
 
@@ -32,10 +31,8 @@ func init() {
 		BugComponent: "b:893827", // ChromeOS > Platform > Connectivity > WiFi
 		// This test doesn't technically require the wificell fixture, but it's best if non-default regulatory settings are used
 		// only in RF chambers.
-		Attr:         []string{"group:wificell", "wificell_func", "group:release-health", "release-health_wifi"},
-		SoftwareDeps: []string{"wifi"},
-		// TODO(b/192693354, b/155410645): StP2 + 3.18 doesn't have self-managed regdomain, skip the remaining board before uprev is finished.
-		HardwareDeps:    hwdep.D(hwdep.SkipOnPlatform("asuka", "sentry")),
+		Attr:            []string{"group:wificell", "wificell_func", "group:release-health", "release-health_wifi"},
+		SoftwareDeps:    []string{"wifi"},
 		TestBedDeps:     []string{tbdep.WifiStateNormal},
 		Requirements:    []string{tdreq.WiFiRegSupportNL80211CMD, tdreq.WiFiProcPassFW, tdreq.WiFiProcPassAVL, tdreq.WiFiProcPassAVLBeforeUpdates, tdreq.WiFiProcPassMatfunc, tdreq.WiFiProcPassMatfuncBeforeUpdates},
 		VariantCategory: `{"name": "WifiBtChipset_Soc_Kernel"}`,
