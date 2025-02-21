@@ -63,7 +63,8 @@ func NewFirmwareTest(ctx context.Context, dut *rpcdut.RPCDUT, servoSpec, outDir 
 
 	t.firmwareFile = *firmwareFile
 	if firmwareFile.KeyType == KeyTypeMp {
-		if err := ValidateBuildFwFile(ctx, t.dut, t.fpBoard, firmwareFile.FilePath); err != nil {
+		allowedKeys := []KeyType{KeyTypePreMp, KeyTypeMp}
+		if err := ValidateBuildFwFile(ctx, t.dut, t.fpBoard, firmwareFile.FilePath, allowedKeys); err != nil {
 			return nil, errors.Wrap(err, "failed to validate MP build firmware file")
 		}
 	}

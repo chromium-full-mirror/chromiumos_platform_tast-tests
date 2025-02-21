@@ -15,6 +15,8 @@ import (
 	"strings"
 	"time"
 
+	"golang.org/x/exp/slices"
+
 	fp "go.chromium.org/tast-tests/cros/common/fingerprint"
 	"go.chromium.org/tast-tests/cros/common/servo"
 	"go.chromium.org/tast-tests/cros/remote/dutfs"
@@ -180,7 +182,7 @@ func getExpectedFwInfo(fpBoard fp.BoardName, buildFwFile string, infoType fwInfo
 }
 
 // ValidateBuildFwFile checks that all attributes in the given firmware file match their expected values.
-func ValidateBuildFwFile(ctx context.Context, d *rpcdut.RPCDUT, fpBoard fp.BoardName, buildFwFile string) error {
+func ValidateBuildFwFile(ctx context.Context, d *rpcdut.RPCDUT, fpBoard fp.BoardName, buildFwFile string, allowedKeys []KeyType) error {
 	// Check hash on device.
 	actualHash, err := calculateSha256sum(ctx, d, buildFwFile)
 	if err != nil {
@@ -212,8 +214,8 @@ func ValidateBuildFwFile(ctx context.Context, d *rpcdut.RPCDUT, fpBoard fp.Board
 	if !ok {
 		return errors.Errorf("failed to get key type for key id: %s", actualKeyID)
 	}
-	if KeyType != KeyTypePreMp && KeyType != KeyTypeMp {
-		return errors.Errorf("key type %s is not allowed", KeyType)
+	if !slices.Contains(allowedKeys, KeyType) {
+		return errors.Errorf("key type %s is not allowed, allowed keys: %v", KeyType, allowedKeys)
 	}
 
 	// Check RO version.
