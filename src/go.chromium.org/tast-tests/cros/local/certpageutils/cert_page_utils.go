@@ -47,12 +47,15 @@ const failedToPressOkErr = "failed to press OK button"
 // failedToSelectNextUIElementErr is error message for failed interaction next UI element.
 const failedToSelectNextUIElementErr = "failed to select next UI element"
 
-// Define a custom type for context keys to avoid collisions
+// ContextKey is a key type to look up values in CTX contexts.
 type ContextKey string
 
 const (
 	// KeyboardKey is a key name for the keyboard in ctx if it is provided.
 	KeyboardKey ContextKey = "keyboard"
+
+	// IsNewUI is a key name in ctx for the usage of new UI in certificate manager.
+	IsNewUI ContextKey = "isNewUI"
 )
 
 // ManageCertSettingsWebArea is UI element finder for "Settings - Manage certificates" root web area.
@@ -82,6 +85,19 @@ func PressOkButton(ctx context.Context, ui *uiauto.Context, parent *nodewith.Fin
 	if err := ui.WithTimeout(7 * time.Second).WaitUntilGone(okButton)(ctx); err != nil {
 		return errors.Wrap(err, "failed to wait for OK button has gone")
 	}
+	return nil
+}
+
+// PressTabsAndEnter presses several keys to move into desired position.
+func PressTabsAndEnter(ctx context.Context) (retErr error) {
+	kb, kbCleanup, err := getKeyboard(ctx)
+	defer kbCleanup(ctx)
+	if err != nil {
+		return errors.Wrap(err, failedToSetupKeyboardErr)
+	}
+
+	kb.Accel(ctx, "Tab")
+	kb.Accel(ctx, "Enter")
 	return nil
 }
 
@@ -124,6 +140,26 @@ func RemoveFromDownloads(downloadsPath, fileDataPath, fileName string) (retErr e
 	return nil
 }
 
+// ImportCACertNewUI uses the Import button on the chrome://certificate-manager
+// page to manually import `caCertFileName` file to CA certificates.
+func ImportCACertNewUI(ctx context.Context, ui *uiauto.Context, caCertFileName string) (retErr error) {
+	if err := OpenUserInstalledCACertsNewUI(ctx, ui); err != nil {
+		return errors.Wrap(err, "failed to select Installed by you tab")
+	}
+	if err := uiauto.Combine("import CA cert",
+		ui.WaitUntilExists(nodewith.NameStartingWith("Import to Trusted Certificates").Role(role.Button)),
+		ui.DoDefault(nodewith.NameStartingWith("Import to Trusted Certificates").Role(role.Button)),
+		ui.WaitUntilExists(nodewith.Name(caCertFileName).Role(role.StaticText)),
+		ui.DoDefault(nodewith.Name(caCertFileName).Role(role.StaticText)),
+		ui.WaitUntilExists(nodewith.Name("Open").Role(role.Button).State("focusable", true)),
+		ui.DoDefault(nodewith.Name("Open").Role(role.Button)),
+	)(ctx); err != nil {
+		return errors.Wrap(err, "failed to import CA cert")
+	}
+
+	return nil
+}
+
 // ImportCACert uses the Import button on the chrome://settings/certificates
 // page to manually import `caCertFileName` file to CA certificates.
 func ImportCACert(ctx context.Context, ui *uiauto.Context, caCertFileName string) (retErr error) {
@@ -154,6 +190,21 @@ func IsClientCertImported(ctx context.Context, ui *uiauto.Context, clientOrg str
 		ui.DoDefault(nodewith.Name("Your certificates").Role(role.Tab)),
 		ui.WaitUntilExists(nodewith.Name("Your certificates").ClassName("tab selected")),
 		ui.WithTimeout(3*time.Second).WaitUntilExists(nodewith.Name(clientOrg).First()),
+	)(ctx); err == nil {
+		return true
+	}
+	return false
+}
+
+// IsCACertOrgExistsNewUI checks if CA certificate is present in the list of certificates.
+func IsCACertOrgExistsNewUI(ctx context.Context, ui *uiauto.Context, caOrg string) (status bool) {
+	caCertOrgText := nodewith.NameContaining(caOrg).Role(role.StaticText)
+	if err := uiauto.Combine("Open user's imported CA certs",
+		ui.WaitUntilExists(nodewith.NameStartingWith("Local certificates").Role(role.MenuItem)),
+		ui.DoDefault(nodewith.NameStartingWith("Local certificates").Role(role.MenuItem)),
+		ui.WaitUntilExists(nodewith.NameStartingWith("Installed by you ").Role(role.Link)),
+		ui.DoDefault(nodewith.NameStartingWith("Installed by you ").Role(role.Link)),
+		ui.WithTimeout(3*time.Second).WaitUntilExists(caCertOrgText),
 	)(ctx); err == nil {
 		return true
 	}
@@ -314,6 +365,31 @@ func DeleteClientCertWithRetry(ctx context.Context, ui *uiauto.Context, clientOr
 	return lastError
 }
 
+// DeleteCACertNewUI selects and deletes specific CA certificate on CA tab.
+func DeleteCACertNewUI(ctx context.Context, ui *uiauto.Context, conn *chrome.Conn, userCaCertName, caCertName string) (retErr error) {
+	if err := OpenUserInstalledCACertsNewUI(ctx, ui); err != nil {
+		return errors.Wrap(err, "failed to select CA certificates tab")
+	}
+
+	deleteNamePrefix := "Delete certificate " + userCaCertName
+	deleteButton := nodewith.NameStartingWith(deleteNamePrefix)
+	popupDialogPrefix := nodewith.NameStartingWith("Delete ")
+	dialogMessage := nodewith.NameStartingWith("If you delete a server")
+	if err := uiauto.Combine("delete CA cert",
+		ui.WaitUntilExists(deleteButton.Role(role.Button)),
+		ui.DoDefault(deleteButton.Role(role.Button)),
+		ui.WaitUntilExists(popupDialogPrefix.Role(role.Dialog)),
+		ui.WaitUntilExists(dialogMessage.Role(role.StaticText)),
+		ui.WaitUntilExists(nodewith.Name("Cancel").Role(role.Button)),
+		ui.WaitUntilExists(nodewith.Name("OK").Role(role.Button)),
+		ui.DoDefault(nodewith.Name("OK").Role(role.Button)),
+		ui.WaitUntilGone(popupDialogPrefix.Role(role.Dialog)),
+	)(ctx); err != nil {
+		return errors.Wrap(err, failedToDeleteCertErr)
+	}
+	return nil
+}
+
 // DeleteCACert selects and deletes specific CA certificate on CA tab.
 func DeleteCACert(ctx context.Context, ui *uiauto.Context, conn *chrome.Conn, caOrg, caCertName string) (retErr error) {
 	if err := SelectCACertificate(ctx, ui, conn, caOrg, caCertName); err != nil {
@@ -376,6 +452,34 @@ func expandCertOrganizationBox(organizationName string, conn *chrome.Conn, ui *u
 	)
 }
 
+// OpenUserInstalledCACertsNewUI opens "Installed by you" page in certificate manager.
+func OpenUserInstalledCACertsNewUI(ctx context.Context, ui *uiauto.Context) (retErr error) {
+	if err := uiauto.Combine("Open 'Installed by you' page",
+		ui.WaitUntilExists(nodewith.NameStartingWith("Local certificates").Role(role.MenuItem)),
+		ui.DoDefault(nodewith.NameStartingWith("Local certificates").Role(role.MenuItem)),
+		ui.WaitUntilExists(nodewith.NameStartingWith("Installed by you ").Role(role.Link)),
+		ui.DoDefault(nodewith.NameStartingWith("Installed by you ").Role(role.Link)),
+		ui.WaitUntilExists(nodewith.Name("Installed by you subpage back button").Role(role.Button)),
+	)(ctx); err != nil {
+		return errors.Wrap(err, "failed to open 'Installed by you' page")
+	}
+	return nil
+}
+
+// OpenAdminInstalledCACertsNewUI opens "Installed by your Administrator" page in certificate manager.
+func OpenAdminInstalledCACertsNewUI(ctx context.Context, ui *uiauto.Context) (retErr error) {
+	if err := uiauto.Combine("Open 'Installed by your Administrator' page",
+		ui.WaitUntilExists(nodewith.NameStartingWith("Local certificates").Role(role.MenuItem)),
+		ui.DoDefault(nodewith.NameStartingWith("Local certificates").Role(role.MenuItem)),
+		ui.WaitUntilExists(nodewith.NameStartingWith("Installed by your Administrator").Role(role.Link)),
+		ui.DoDefault(nodewith.NameStartingWith("Installed by your Administrator").Role(role.Link)),
+		ui.WaitUntilExists(nodewith.Name("Installed by your Administrator subpage back button").Role(role.Button)),
+	)(ctx); err != nil {
+		return errors.Wrap(err, "failed to open 'Installed by your Administrator' page")
+	}
+	return nil
+}
+
 // SelectCACertificateImpl selects CA on CA tab and open/close list of certificates
 // for the organization.
 func SelectCACertificateImpl(ctx context.Context, ui *uiauto.Context, conn *chrome.Conn, caOrg, caCertName string) (retErr error) {
@@ -426,6 +530,64 @@ func PressEscape(ctx context.Context) (retErr error) {
 	return nil
 }
 
+// OpenCertificateViewNewUI finds "View" button for the certificate and click on it.
+func OpenCertificateViewNewUI(ctx context.Context, ui *uiauto.Context, caOrg string) (retErr error) {
+	viewNamePrefix := "View certificate details for " + caOrg
+	viewButton := nodewith.NameStartingWith(viewNamePrefix).Role(role.Button).First()
+	if err := uiauto.Combine("Open 'View popup' for the certificate",
+		ui.WaitUntilExists(viewButton),
+		ui.DoDefault(viewButton),
+		ui.WaitUntilExists(nodewith.NameStartingWith("Certificate Viewer:").Role(role.RootWebArea)),
+	)(ctx); err != nil {
+		return errors.Wrap(err, "failed to open 'View popup' for the certificate")
+	}
+	return nil
+}
+
+// ChangeCACertificateTrustNewUI opens "Modification" tab in View popup and flips
+// trust value according to `isTrusted` parameter.
+func ChangeCACertificateTrustNewUI(ctx context.Context, ui *uiauto.Context, isTrusted bool) (retErr error) {
+	var prevTrustState string
+	var newTrustState string
+	if isTrusted {
+		prevTrustState = "Distrusted"
+		newTrustState = "Trusted"
+	} else {
+		prevTrustState = "Trusted"
+		newTrustState = "Distrusted"
+	}
+
+	if err := uiauto.Combine("Open Modification tab and check trust settings",
+		ui.WaitUntilExists(nodewith.Name("Modifications").Role(role.Tab)),
+		ui.DoDefault(nodewith.Name("Modifications").Role(role.Tab)),
+		ui.WaitUntilExists(nodewith.Name("Trust State").Role(role.StaticText)),
+		ui.WaitUntilExists(nodewith.Name(prevTrustState).Role(role.MenuListOption).Visible()),
+		ui.WaitUntilExists(nodewith.Name(newTrustState).Role(role.MenuListOption).Invisible()),
+		ui.WaitUntilExists(nodewith.Name("Hint").Role(role.MenuListOption).Invisible()),
+	)(ctx); err != nil {
+		return errors.Wrap(err, "failed to open Modification tab and check trust settings")
+	}
+
+	// Open drop down list for  trust setting using keyboard. Usage of "DoDefault"
+	// will break a visibility for the selected element. The other option was to
+	// use LeftClick(), but it is not always working correctly winith tablet mode.
+	if err := PressTabsAndEnter(ctx); err != nil {
+		return err
+	}
+
+	if err := uiauto.Combine("Modify trust settings for the certificate",
+		ui.DoDefault(nodewith.NameContaining(newTrustState).Role(role.MenuListOption)),
+		ui.WaitUntilExists(nodewith.NameContaining(newTrustState).Role(role.MenuListOption).Visible()),
+		ui.WaitUntilExists(nodewith.NameContaining(prevTrustState).Role(role.MenuListOption).Invisible()),
+	)(ctx); err != nil {
+		return errors.Wrap(err, "failed to modify trust settings for the certificate")
+	}
+	if err := PressEscape(ctx); err != nil {
+		return err
+	}
+	return nil
+}
+
 // SelectEditCACertificate finds "Edit" button from certificate action menu and click on it.
 func SelectEditCACertificate(ctx context.Context, ui *uiauto.Context) (retErr error) {
 	editButton := nodewith.Name("Edit").Role(role.MenuItem)
@@ -469,6 +631,23 @@ func setTrustCheckboxAndSave(ctx context.Context, ui *uiauto.Context, targetStat
 	if err := PressOkButton(ctx, ui, ManageCertSettingsWebArea); err != nil {
 		return errors.Wrap(err, "failed to press OK after CA certificates trust settings")
 	}
+	return nil
+}
+
+// SetCACertTrustNewUI sets trust setting for CA certificate to true or false.
+func SetCACertTrustNewUI(ctx context.Context, ui *uiauto.Context, conn *chrome.Conn, targetState bool, caOrg string) (retErr error) {
+	if err := OpenUserInstalledCACertsNewUI(ctx, ui); err != nil {
+		return errors.Wrap(err, "failed to open a page in cert manager")
+	}
+
+	if err := OpenCertificateViewNewUI(ctx, ui, caOrg); err != nil {
+		return errors.Wrap(err, "failed to open 'View popup'")
+	}
+
+	if err := ChangeCACertificateTrustNewUI(ctx, ui, targetState); err != nil {
+		return errors.Wrap(err, "failed to modify trust settings")
+	}
+
 	return nil
 }
 
@@ -566,4 +745,21 @@ func ClickElementWithConditionJSExpr(selector, entrySelector, conditionSelector,
 			}
 		})) { throw new Error("no element with a matched condition found"); };
 	})()`, entrySelector, conditionSelector, conditionText, selector)
+}
+
+// IsNewUIUsed checks that UI contains old "Authorities" header and returns false
+// if it is found. All next functions calls will be operating with new UI or with
+// old UI.
+func IsNewUIUsed(ctx context.Context, ui *uiauto.Context) bool {
+	if err := uiauto.Combine("test that Authorities are present in UI",
+		ui.WithTimeout(2*time.Second).WaitUntilExists(nodewith.Name("Authorities").Role(role.Tab)),
+	)(ctx); err != nil {
+		return true
+	}
+	return false
+}
+
+// IsNewUIActive fetches isNewUI value from the ctx and returns it as a bool.
+func IsNewUIActive(ctx context.Context) bool {
+	return ctx.Value(IsNewUI).(bool)
 }
