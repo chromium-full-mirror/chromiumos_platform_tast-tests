@@ -46,7 +46,8 @@ func SetUpMotionMark(ctx context.Context, ac *uiauto.Context) error {
 	const detectWaitTime = 2 * time.Minute
 
 	framerateText := nodewith.NameContaining("Framerate").Role(role.StaticText)
-	if err := ac.WithTimeout(detectWaitTime).WaitUntilExists(framerateText)(ctx); err != nil {
+	using60fpsText := nodewith.NameContaining("using 60fps").Role(role.StaticText)
+	if err := ac.WithTimeout(detectWaitTime).WaitUntilAnyExists(framerateText, using60fpsText)(ctx); err != nil {
 		return errors.Wrap(err, "benchmark failed to detect framerate")
 	}
 
