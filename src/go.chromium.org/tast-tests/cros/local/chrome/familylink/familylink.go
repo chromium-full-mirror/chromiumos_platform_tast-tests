@@ -287,6 +287,11 @@ func CreateGraduationPolicy() *policy.ContentTransferEnablementStatus {
 	}
 }
 
+// enableInternalUis enables the kInternalOnlyUisEnabled pref. It is disabled by default and blocks internal UIs.
+func enableInternalUis(ctx context.Context, tconn *chrome.TestConn) error {
+	return tconn.Call(ctx, nil, `tast.promisify(chrome.autotestPrivate.setAllowedPref)`, "internal_only_uis_enabled", true)
+}
+
 // VerifyUserSignedIntoBrowserAsChild creates and opens the browser, then checks that the provided email is signed in and recognized as a child user.
 // Note that `cr` and `tconn` passed in should be from ash-chrome.
 func VerifyUserSignedIntoBrowserAsChild(ctx context.Context, cr *chrome.Chrome, tconn *chrome.TestConn, email, outDir string) (err error) {
@@ -295,6 +300,8 @@ func VerifyUserSignedIntoBrowserAsChild(ctx context.Context, cr *chrome.Chrome, 
 	// Reserve time for cleanup.
 	ctx, cancel := ctxutil.Shorten(ctx, 10*time.Second)
 	defer cancel()
+
+	enableInternalUis(ctx, tconn)
 
 	// Set up browser and open a new tab window.
 	testing.ContextLog(ctx, "Opening browser with family link internals page")
