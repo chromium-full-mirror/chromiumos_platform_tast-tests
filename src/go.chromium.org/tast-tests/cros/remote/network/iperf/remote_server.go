@@ -162,7 +162,11 @@ func (c *RemoteServer) Stop(ctx context.Context) error {
 				psCmd := fmt.Sprintf("ps -e -o pid,cmd 2> /dev/null |grep \"%s\" |grep -v grep |grep -v %s", c.iperfPath, Minijail)
 				psFallbackCmd := fmt.Sprintf("ps w |grep \"%s\" |grep -v grep |grep -v %s", c.iperfPath, Minijail)
 				psCmd = fmt.Sprintf("%s || %s", psCmd, psFallbackCmd)
-				if out, err := c.conn.CommandContext(ctx, "sh", "-c", psCmd).Output(); err == nil && out != nil {
+				out, err := c.conn.CommandContext(ctx, "sh", "-c", psCmd).Output()
+				if err != nil {
+					return errors.Wrap(err, "failed to check if the iperf server is running")
+				}
+				if out != nil {
 					pid := strings.Fields(string(out))[0]
 					return errors.Errorf("iperf PID=%s is still exiting", pid)
 				}
@@ -181,7 +185,6 @@ func (c *RemoteServer) Stop(ctx context.Context) error {
 					allErrors = nil
 				}
 			}
-
 		}
 	} // Version3 cleans server by itself.
 	c.pid = ""
