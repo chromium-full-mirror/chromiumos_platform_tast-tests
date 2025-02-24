@@ -9,8 +9,6 @@ import (
 	"context"
 	"time"
 
-	"golang.org/x/exp/slices"
-
 	"go.chromium.org/tast/core/errors"
 
 	"go.chromium.org/chromiumos/config/go/test/lab/api/passport"
@@ -27,7 +25,7 @@ type UsbTester struct {
 
 // New Unigraf tester. It will connect to the the remote grcp server passed as
 // an argument.
-func New(ctx context.Context, uri, testerID string) (*UsbTester, error) {
+func New(ctx context.Context, uri string) (*UsbTester, error) {
 
 	conn, err := grpc.Dial(uri, grpc.WithInsecure())
 	if err != nil {
@@ -42,7 +40,6 @@ func New(ctx context.Context, uri, testerID string) (*UsbTester, error) {
 	ctl := &UsbTester{
 		conn:   conn,
 		client: client,
-		tester: testerID,
 		uri:    uri,
 	}
 	openctx, cancel := context.WithTimeout(ctx, 3*time.Second)
@@ -50,26 +47,20 @@ func New(ctx context.Context, uri, testerID string) (*UsbTester, error) {
 
 	testers, err := ctl.client.GetTesters(openctx, &passport.GetTestersRequest{})
 	if err != nil {
-		return nil, errors.Wrapf(
-			err,
-			"failed to get testers uri=%s",
-			uri,
-		)
+		return nil, errors.Wrapf(err, "failed to get testers uri=%s", uri)
 	}
 
-	if !slices.ContainsFunc(testers.Testers, func(x *passport.UsbTester) bool {
-		return x.Id == testerID
-	}) {
-		return nil, errors.Errorf("the given serial=%s is not present on the tester", testerID)
-	}
-
-	if _, err := ctl.client.OpenTester(openctx, &passport.OpenTesterRequest{Id: testerID}); err != nil {
-		return nil, errors.Wrapf(
-			err,
-			"failed to open serial=%s for uri=%s",
-			uri,
-			testerID,
+	// For the moment there is a maximum of 1 usb tester per setup.
+	if len(testers.Testers) != 1 {
+		return nil, errors.Errorf(
+			"the tester selection is ambiguous, there are %d testers",
+			len(testers.Testers),
 		)
+	}
+	ctl.tester = testers.Testers[0].Id
+
+	if _, err := ctl.client.OpenTester(openctx, &passport.OpenTesterRequest{Id: ctl.tester}); err != nil {
+		return nil, errors.Wrapf(err, "failed to open serial=%s for uri=%s", uri, ctl.tester)
 	}
 
 	return ctl, nil
@@ -356,4 +347,45 @@ func (s *UsbTester) HardReset(ctx context.Context) error {
 	}
 
 	return nil
+}
+
+// SetTestPort will set the active test port.
+func (s *UsbTester) SetTestPort(ctx context.Context, portID int64) error {
+	reply, err := s.client.SetActivePort(
+		ctx,
+		&passport.SetActivePortRequest{
+			Id:     s.tester,
+			PortId: uint32(portID),
+		},
+	)
+	if err != nil || reply.GetErrCode() != 0 {
+		return errors.Wrapf(
+			err,
+			"failed to do set request, internal sdk error code was %d, internal sdk error message was %s",
+			reply.GetErrCode(),
+			reply.GetErrorMsg(),
+		)
+	}
+
+	return nil
+}
+
+// TestPort will get the active test port.
+func (s *UsbTester) TestPort(ctx context.Context) (int64, error) {
+	reply, err := s.client.GetActivePort(
+		ctx,
+		&passport.GetActivePortRequest{
+			Id: s.tester,
+		},
+	)
+	if err != nil || reply.GetErrCode() != 0 || reply.GetMaxNumPorts() == 0 {
+		return 0, errors.Wrapf(
+			err,
+			"failed to do get request, internal sdk error code was %d, internal sdk error message was %s",
+			reply.GetErrCode(),
+			reply.GetErrorMsg(),
+		)
+	}
+
+	return int64(reply.GetPortId()), nil
 }
