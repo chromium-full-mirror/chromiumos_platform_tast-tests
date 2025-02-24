@@ -144,6 +144,6 @@ func PDResetHard(ctx context.Context, s *testing.State) {
 
 	// Test Hard Reset with DUT as power role SRC
 	if err := executeHardReset(ctx, s, iterationCount); err != nil {
-		s.Fatal("DUT power role SNK hard reset test failed: ", err)
+		s.Fatal("DUT power role SRC hard reset test failed: ", err)
 	}
 }
