@@ -36,12 +36,6 @@ var firmwareVersionMap = map[fingerprint.BoardName]map[string]firmwareMetadata{
 		},
 	},
 	fingerprint.BoardNameBuccaneer: {
-		"buccaneer_v2.0.26328-821504380b.bin": {
-			sha256sum: "6411e1a0ba252b6264fd64c805369d204892653418419d6634da8860bf0bdfcf",
-			roVersion: "buccaneer_v2.0.26328-821504380b",
-			rwVersion: "buccaneer_v2.0.26328-821504380b",
-			keyID:     "95fb0d0a5f1c1f658a0526430a3a184301421e32",
-		},
 		"buccaneer_v2.0.26328-821504380b-RO_v2.0.26330-4778869a66-RW.bin": {
 			sha256sum: "834f1140ffef8a02dbb3d7cd87c613dc5c2c45a66c6c05c78f68f78282c61cc9",
 			roVersion: "buccaneer_v2.0.26328-821504380b",
@@ -52,6 +46,12 @@ var firmwareVersionMap = map[fingerprint.BoardName]map[string]firmwareMetadata{
 			sha256sum: "f3f10bf720a17e3b238cd481cf491728ac02c5f548c8b4dd7c22ec4b99d85ff4",
 			roVersion: "buccaneer_v2.0.26328-821504380b",
 			rwVersion: "buccaneer_v2.0.26878-c9a5670643",
+			keyID:     "95fb0d0a5f1c1f658a0526430a3a184301421e32",
+		},
+		"buccaneer_v2.0.26328-821504380b-RO_v2.0.27609-ac26a0796b-RW.bin": {
+			sha256sum: "d06ea92e7f974381c3df00748526399bcef30c8446e27dd6f887bc7e1aaef157",
+			roVersion: "buccaneer_v2.0.26328-821504380b",
+			rwVersion: "buccaneer_v2.0.27609-ac26a0796b",
 			keyID:     "95fb0d0a5f1c1f658a0526430a3a184301421e32",
 		},
 	},
