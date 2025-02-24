@@ -150,7 +150,8 @@ func (session *BenchmarkingSession) LogMemoryStats(ctx context.Context, p *perf.
 // getAppResolutionAsFloat retrieves the app buffer resolution from the 'adb shell dumpsys SurfaceFlinger' command
 // and returns the width and height.
 func (session *BenchmarkingSession) getAppResolutionAsFloat(ctx context.Context) (width, height float64, err error) {
-	command := fmt.Sprintf("dumpsys SurfaceFlinger | grep 'BufferStateLayer (%s' -A 10", session.appPackageName)
+	// Run the dumpsys command to check BufferStateLayer or BufferQueueLayer across different Android versions.
+	command := fmt.Sprintf(`dumpsys SurfaceFlinger | grep -E 'Buffer(State|Queue)Layer \(%s' -A 10`, session.appPackageName)
 	printOut, err := session.arc.Command(ctx, "/system/bin/sh", "-c", command).Output()
 	if err != nil {
 		return 0, 0, errors.Wrap(err, "could not read print data")
