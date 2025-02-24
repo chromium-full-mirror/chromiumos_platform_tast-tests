@@ -20,7 +20,6 @@ func init() {
 		Desc: "Checks that /dev/cros_fp can be accessed by the biod user",
 		Contacts: []string{
 			"chromeos-fingerprint@google.com",
-			"hesling@chromium.org",
 		},
 		// ChromeOS > Platform > Services > Fingerprint
 		BugComponent: "b:782045",

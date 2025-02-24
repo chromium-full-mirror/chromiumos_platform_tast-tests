@@ -20,7 +20,6 @@ func init() {
 		Desc: "Validate that flash_fp_mcu can communicate with the FPMCU's bootloader",
 		Contacts: []string{
 			"chromeos-fingerprint@google.com",
-			"hesling@chromium.org", // Test author
 		},
 		// ChromeOS > Platform > Services > Fingerprint
 		BugComponent: "b:782045",

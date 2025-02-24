@@ -22,7 +22,6 @@ func init() {
 		Contacts: []string{
 			"chromeos-fingerprint@google.com",
 			"josienordrum@google.com", // Test Author
-			"hesling@chromium.org",
 		},
 		// ChromeOS > Platform > Services > Fingerprint
 		BugComponent: "b:782045",

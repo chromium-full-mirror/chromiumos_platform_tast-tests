@@ -20,7 +20,6 @@ func init() {
 		Desc: "Demonstrates how args can be used with the upstart service",
 		Contacts: []string{
 			"chromeos-fingerprint@google.com",
-			"hesling@chromium.org",
 		},
 		// ChromeOS > Platform > Services > Fingerprint
 		BugComponent: "b:782045",

@@ -21,7 +21,6 @@ func init() {
 		Desc: "Demonstrates how RPCDUT maintains an RPC connection across DUT reboots",
 		Contacts: []string{
 			"chromeos-fingerprint@google.com",
-			"hesling@chromium.org",
 		},
 		// ChromeOS > Platform > Services > Fingerprint
 		BugComponent: "b:782045",

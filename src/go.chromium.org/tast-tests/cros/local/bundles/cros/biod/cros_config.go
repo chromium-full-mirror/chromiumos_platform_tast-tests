@@ -18,7 +18,6 @@ func init() {
 		Desc: "Checks that the fingerprint cros-config is reasonable",
 		Contacts: []string{
 			"chromeos-fingerprint@google.com",
-			"hesling@chromium.org",
 		},
 		// ChromeOS > Platform > Services > Fingerprint
 		BugComponent: "b:782045",

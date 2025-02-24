@@ -20,7 +20,6 @@ func init() {
 		Desc: "Checks that the specific fingerprint firmware file is in rootfs",
 		Contacts: []string{
 			"chromeos-fingerprint@google.com",
-			"hesling@chromium.org",
 		},
 		// ChromeOS > Platform > Services > Fingerprint
 		BugComponent: "b:782045",

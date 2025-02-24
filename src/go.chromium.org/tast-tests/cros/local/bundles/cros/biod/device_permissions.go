@@ -18,7 +18,6 @@ func init() {
 		Desc: "Checks /dev/cros_fp's permissions and owner/group",
 		Contacts: []string{
 			"chromeos-fingerprint@google.com",
-			"hesling@chromium.org",
 		},
 		// ChromeOS > Platform > Services > Fingerprint
 		BugComponent: "b:782045",

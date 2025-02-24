@@ -18,7 +18,6 @@ func init() {
 		Desc: "Checks that the timberslide job instance for the fingerprint device is running",
 		Contacts: []string{
 			"chromeos-fingerprint@google.com",
-			"hesling@chromium.org",
 		},
 		// ChromeOS > Platform > Services > Fingerprint
 		BugComponent: "b:782045",

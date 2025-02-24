@@ -19,7 +19,6 @@ func init() {
 		Desc: "Example and test of the CommandContextUser function",
 		Contacts: []string{
 			"chromeos-fingerprint@google.com",
-			"hesling@chromium.org",
 		},
 		// ChromeOS > Platform > Services > Fingerprint
 		BugComponent: "b:782045",
