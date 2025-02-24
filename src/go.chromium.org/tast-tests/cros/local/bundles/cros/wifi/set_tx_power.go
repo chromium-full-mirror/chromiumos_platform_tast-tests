@@ -28,18 +28,19 @@ func init() {
 			// Updating the SAR tables in CBFS can break this test.
 			"group:firmware", "firmware_bios", "firmware_level5", "group:release-health", "release-health_wifi",
 		},
-		SoftwareDeps:    []string{"no_kernel_upstream"},
-		Requirements:    []string{tdreq.WiFiRegSupportDynamicPowerTable, tdreq.WiFiRegSupportStaticSAR, tdreq.WiFiRegSupportDynamicSAR, tdreq.WiFiRegSupportGeoSAR, tdreq.WiFiProcPassFW, tdreq.WiFiProcPassAVL, tdreq.WiFiProcPassAVLBeforeUpdates, tdreq.WiFiProcPassMatfunc, tdreq.WiFiProcPassMatfuncBeforeUpdates},
-		VariantCategory: `{"name": "All_Models"}`,
+		SoftwareDeps: []string{"no_kernel_upstream"},
+		Requirements: []string{tdreq.WiFiRegSupportDynamicPowerTable, tdreq.WiFiRegSupportStaticSAR, tdreq.WiFiRegSupportDynamicSAR, tdreq.WiFiRegSupportGeoSAR, tdreq.WiFiProcPassFW, tdreq.WiFiProcPassAVL, tdreq.WiFiProcPassAVLBeforeUpdates, tdreq.WiFiProcPassMatfunc, tdreq.WiFiProcPassMatfuncBeforeUpdates},
 		Params: []testing.Param{
 			{
 				// This test only runs on devices which do not use VPD SAR tables.
 				ExtraHardwareDeps: hwdep.D(hwdep.WifiNoVpdSar()),
+				VariantCategory:   `{"name": "All_Models_No_VPDSAR"}`,
 			},
 			{
 				// This test only runs on devices which use VPD SAR tables.
 				Name:              "vpd",
 				ExtraHardwareDeps: hwdep.D(hwdep.WifiVpdSar()),
+				VariantCategory:   `{"name": "All_Models_VPDSAR"}`,
 			},
 		},
 	})
