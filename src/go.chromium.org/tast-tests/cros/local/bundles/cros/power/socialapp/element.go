@@ -35,7 +35,7 @@ const (
 	// default version 1.6.6 on the github.
 	// The full links can be found under the Assets
 	// on https://github.com/vector-im/element-android/releases/tag/v1.6.6.
-	defaultApkURLBase = "https://github.com/vector-im/element-android/releases/download/v1.6.6/vector-gplay-rustCrypto-"
+	defaultApkURLBase = "https://github.com/element-hq/element-android/releases/download/v1.6.32/vector-gplay-"
 )
 
 var (

@@ -111,7 +111,7 @@ func (e *Element) Close(ctx context.Context) error {
 // Login logs in to Element app with Google account.
 // It will create an account if the account has not been created.
 func (e *Element) Login(ctx context.Context, username string) error {
-	haveAccountButton := e.d.Object(ui.Text("I ALREADY HAVE AN ACCOUNT"), ui.ResourceID(elementIDPrefix+"loginSplashAlreadyHaveAccount"))
+	haveAccountButton := e.d.Object(ui.Text("SIGN IN"), ui.ResourceID(elementIDPrefix+"loginSplashAlreadyHaveAccount"))
 	googleContinueButton := e.d.Object(ui.Text("Continue with Google"), ui.ClassName(buttonClass))
 	if err := uiauto.NamedCombine("login to Element app",
 		apputil.FindAndClick(haveAccountButton, defaultUITimeout),
