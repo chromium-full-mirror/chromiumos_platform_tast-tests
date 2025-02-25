@@ -103,14 +103,14 @@ func init() {
 				Val:               roamTestcaseWithTwoOpenAP.setRoamTime(5 * time.Second),
 				ExtraHardwareDeps: hwdep.D(hwdep.WifiNotMarvell()),
 				ExtraAttr:         []string{"wificell_unstable"},
-				VariantCategory:   `{"name": "WifiBtChipset_Soc_Kernel_Not_Marvell"}`,
+				VariantCategory:   `{"name": "WifiBtChipset_Soc_Kernel"}`,
 			}, {
 				// Verifies that DUT can roam between two WPA APs in full view of it.
 				Name:              "wpa",
 				Val:               roamTestcaseWithTwoWPAAP.setRoamTime(5 * time.Second),
 				ExtraHardwareDeps: hwdep.D(hwdep.WifiNotMarvell()),
 				ExtraAttr:         []string{"wificell_unstable"},
-				VariantCategory:   `{"name": "WifiBtChipset_Soc_Kernel_Not_Marvell"}`,
+				VariantCategory:   `{"name": "WifiBtChipset_Soc_Kernel"}`,
 			}, {
 				// Verifies that DUT can roam between two WEP APs in full view of it.
 				Name:              "wep",
@@ -126,26 +126,26 @@ func init() {
 				ExtraHardwareDeps: hwdep.D(hwdep.WifiNotMarvell()),
 				ExtraAttr:         []string{"wificell_unstable"},
 				ExtraRequirements: []string{tdreq.WiFiSecSupportWPA2Enterprise},
-				VariantCategory:   `{"name": "WifiBtChipset_Soc_Kernel_Not_Marvell"}`,
+				VariantCategory:   `{"name": "WifiBtChipset_Soc_Kernel"}`,
 			}, {
 				// Verifies that DUT can roam between two APs with minimal idle time after bss flush.
 				Name:              "flushbss",
 				Val:               roamTestcaseWithTwoOpenAP.setRoamTime(10 * time.Second).setEnableBSSFlush(true),
 				ExtraHardwareDeps: hwdep.D(hwdep.WifiNotMarvell()),
 				ExtraAttr:         []string{"wificell_unstable"},
-				VariantCategory:   `{"name": "WifiBtChipset_Soc_Kernel_Not_Marvell"}`,
+				VariantCategory:   `{"name": "WifiBtChipset_Soc_Kernel"}`,
 			}, {
 				// Verifies that DUT can roam between two APs in full view of it.
 				Name:              "marvell",
 				Val:               roamTestcaseWithTwoOpenAP.setRoamTime(12 * time.Second),
 				ExtraHardwareDeps: hwdep.D(hwdep.WifiMarvell()),
-				VariantCategory:   `{"name": "WifiBtChipset_Soc_Kernel_Marvell"}`,
+				VariantCategory:   `{"name": "WifiBtChipset_Soc_Kernel"}`,
 			}, {
 				// Verifies that DUT can roam between two WPA APs in full view of it.
 				Name:              "wpa_marvell",
 				Val:               roamTestcaseWithTwoWPAAP.setRoamTime(12 * time.Second),
 				ExtraHardwareDeps: hwdep.D(hwdep.WifiMarvell()),
-				VariantCategory:   `{"name": "WifiBtChipset_Soc_Kernel_Marvell"}`,
+				VariantCategory:   `{"name": "WifiBtChipset_Soc_Kernel"}`,
 			}, {
 				// Verifies that DUT can roam between two WEP APs in full view of it.
 				Name:              "wep_marvell",
@@ -159,13 +159,13 @@ func init() {
 				Val:               roamTestcaseWithTwo8021xWPAAP.setRoamTime(12 * time.Second),
 				ExtraHardwareDeps: hwdep.D(hwdep.WifiMarvell()),
 				ExtraRequirements: []string{tdreq.WiFiSecSupportWPA2Enterprise},
-				VariantCategory:   `{"name": "WifiBtChipset_Soc_Kernel_Marvell"}`,
+				VariantCategory:   `{"name": "WifiBtChipset_Soc_Kernel"}`,
 			}, {
 				// Verifies that DUT can roam between two APs with minimal idle time after bss flush.
 				Name:              "flushbss_marvell",
 				Val:               roamTestcaseWithTwoOpenAP.setRoamTime(12 * time.Second).setEnableBSSFlush(true),
 				ExtraHardwareDeps: hwdep.D(hwdep.WifiMarvell()),
-				VariantCategory:   `{"name": "WifiBtChipset_Soc_Kernel_Marvell"}`,
+				VariantCategory:   `{"name": "WifiBtChipset_Soc_Kernel"}`,
 			}, {
 				// Verifies that DUT can roam between two WPA APs in full view of it after suspend/resume.
 				Name:              "wpa_suspend",
@@ -173,7 +173,7 @@ func init() {
 				ExtraHardwareDeps: hwdep.D(hwdep.WifiNotMarvell()),
 				// TODO(b/362115332): Remove this attribute after the test is stable.
 				ExtraAttr:       []string{"wificell_unstable"},
-				VariantCategory: `{"name": "WifiBtChipset_Soc_Kernel_Not_Marvell"}`,
+				VariantCategory: `{"name": "WifiBtChipset_Soc_Kernel"}`,
 			}, {
 				// Verifies that DUT can roam between two WPA APs in full view of it after suspend/resume.
 				Name:              "wpa_suspend_marvell",
@@ -181,7 +181,7 @@ func init() {
 				ExtraHardwareDeps: hwdep.D(hwdep.WifiMarvell()),
 				// TODO(b/362115332): Remove this attribute after the test is stable.
 				ExtraAttr:       []string{"wificell_unstable"},
-				VariantCategory: `{"name": "WifiBtChipset_Soc_Kernel_Marvell"}`,
+				VariantCategory: `{"name": "WifiBtChipset_Soc_Kernel"}`,
 			},
 		},
 	})

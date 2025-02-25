@@ -45,7 +45,7 @@ func init() {
 				},
 				ExtraHardwareDeps: hwdep.D(hwdep.WifiNotMarvell()),
 				ExtraRequirements: []string{tdreq.WiFiSecSupportOWE, tdreq.WiFiCertOWE},
-				VariantCategory:   `{"name": "WifiBtChipset_Soc_Kernel_Not_Marvell"}`,
+				VariantCategory:   `{"name": "WifiBtChipset_Soc_Kernel"}`,
 			}, {
 				// Marvell chips do not support OWE so they should fall back to the public endpoint.
 				Name: "expect_public",
@@ -53,7 +53,7 @@ func init() {
 					expectedEncryption: false,
 				},
 				ExtraHardwareDeps: hwdep.D(hwdep.WifiMarvell()),
-				VariantCategory:   `{"name": "WifiBtChipset_Soc_Kernel_Marvell"}`,
+				VariantCategory:   `{"name": "WifiBtChipset_Soc_Kernel"}`,
 			},
 		},
 	})

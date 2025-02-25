@@ -50,7 +50,7 @@ func init() {
 		// issue(b:263033256), so skipped this test on reven.
 		HardwareDeps:    hwdep.D(hwdep.WifiIntel(), hwdep.SkipOnModel("reven")),
 		Requirements:    []string{tdreq.WiFiProcPassFW, tdreq.WiFiProcPassAVL, tdreq.WiFiProcPassAVLBeforeUpdates, tdreq.WiFiProcPassMatfunc, tdreq.WiFiProcPassMatfuncBeforeUpdates},
-		VariantCategory: `{"name": "WifiBtChipset_Soc_Kernel_Intel"}`,
+		VariantCategory: `{"name": "WifiBtChipset_Soc_Kernel"}`,
 	})
 }
 

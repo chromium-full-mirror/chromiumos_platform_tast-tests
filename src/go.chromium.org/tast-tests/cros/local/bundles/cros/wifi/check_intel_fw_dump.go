@@ -47,7 +47,7 @@ func init() {
 		TestBedDeps:     []string{tbdep.WifiStateNormal},
 		Fixture:         "wiphyEnabled",
 		Requirements:    []string{tdreq.WiFiProcPassFW, tdreq.WiFiProcPassAVL, tdreq.WiFiProcPassAVLBeforeUpdates, tdreq.WiFiProcPassMatfunc, tdreq.WiFiProcPassMatfuncBeforeUpdates},
-		VariantCategory: `{"name": "WifiBtChipset_Soc_Kernel_Intel"}`,
+		VariantCategory: `{"name": "WifiBtChipset_Soc_Kernel"}`,
 	})
 }
 
