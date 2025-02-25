@@ -87,7 +87,7 @@ func RunGetDisplayMediaPerf(ctx context.Context, fileSystem http.FileSystem, cs 
 	if err := power.ConfigurableCooldown(ctx, power.CooldownConfig{
 		UseFan: true,
 		SteadyStateConfig: &power.ThermalSteadyStateConfig{
-			SampleSize:           60,
+			SampleSize:           30,
 			Interval:             time.Second,
 			Timeout:              90 * time.Second,
 			MaxStandardDeviation: 1.0,
