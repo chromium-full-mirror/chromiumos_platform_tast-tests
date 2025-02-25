@@ -60,9 +60,9 @@
     "out_entity": "Intel IPU6 ISYS Capture 8"
   },
   "domilly-TC0001": {
-    "bus_info": "pci:pci0000:00",
-    "format_arg": "",
-    "out_entity": "Intel IPU6 BE SOC capture 0"
+    "bus_info": "PCI:0000:00:05.0",
+    "format_arg": "-s 3280x2464 -f SGRBG10",
+    "out_entity": "Intel IPU6 ISYS Capture 8"
   },
   "drawcia-LV0001": {
     "bus_info": "pci:pci0000:00",
@@ -120,14 +120,14 @@
     "out_entity": "Intel IPU6 ISYS Capture 16"
   },
   "riven-TC0003": {
-    "bus_info": "pci:pci0000:00",
-    "format_arg": "",
-    "out_entity": "Intel IPU6 BE SOC capture 0"
+    "bus_info": "PCI:0000:00:05.0",
+    "format_arg": "-s 2592x1944 -f SGRBG10",
+    "out_entity": "Intel IPU6 ISYS Capture 8"
   },
   "rudriks-TC0002": {
-    "bus_info": "pci:pci0000:00",
-    "format_arg": "",
-    "out_entity": "Intel IPU6 BE SOC capture 0"
+    "bus_info": "PCI:0000:00:05.0",
+    "format_arg": "-s 3280x2464 -f SGRBG10",
+    "out_entity": "Intel IPU6 ISYS Capture 8"
   },
   "screebo-ST0d2c": {
     "bus_info": "PCI:0000:00:05.0",
@@ -155,9 +155,9 @@
     "out_entity": "Intel IPU6 BE SOC capture 0"
   },
   "teliks360-TXfc2c": {
-    "bus_info": "pci:pci0000:00",
-    "format_arg": "",
-    "out_entity": "Intel IPU6 BE SOC capture 0"
+    "bus_info": "PCI:0000:00:05.0",
+    "format_arg": "-s 4208x3120 -f SGRBG10",
+    "out_entity": "Intel IPU6 ISYS Capture 8"
   },
   "vell-TCf939": {
     "bus_info": "PCI:0000:00:05.0",
