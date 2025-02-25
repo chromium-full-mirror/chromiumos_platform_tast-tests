@@ -42,7 +42,6 @@ func init() {
 		Contacts: []string{
 			"chromeos-data-eng@google.com",
 			"bgeffon@chromium.org",
-			"joelaf@google.com",
 		},
 		BugComponent: "b:1096648",
 		Attr:         []string{"group:mainline", "group:hw_agnostic"},

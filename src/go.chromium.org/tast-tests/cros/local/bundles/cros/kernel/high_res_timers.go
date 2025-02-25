@@ -20,7 +20,6 @@ func init() {
 		Desc: "Fails if timers have nanosecond resolution that is not 1 ns",
 		Contacts: []string{
 			"chromeos-kernel-test@google.com",
-			"joelaf@google.com",
 			"vineethrp@google.com",
 		},
 		BugComponent: "b:167278", // ChromeOS > Platform > System > Kernel

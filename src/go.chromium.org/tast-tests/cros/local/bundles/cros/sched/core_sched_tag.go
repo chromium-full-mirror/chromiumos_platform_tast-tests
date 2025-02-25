@@ -31,7 +31,6 @@ func init() {
 		Desc: "Ensures renderers scheduling cookies are assigned correctly",
 		Contacts: []string{
 			"baseos-perf@google.com",
-			"joelaf@google.com",
 		},
 		BugComponent: "b:167279",
 		Attr:         []string{"group:mainline"},

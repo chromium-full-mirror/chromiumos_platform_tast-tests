@@ -658,7 +658,6 @@ func init() {
 		Desc: "CUJ test fixture with WebRTC event logging with scx_central scheduler",
 		Contacts: []string{
 			"darrenwu@google.com",
-			"joelaf@google.com",
 			"cros-sw-perf@google.com",
 		},
 		BugComponent: "b:1045832", // ChromeOS > Software > Performance > TPS
@@ -683,7 +682,6 @@ func init() {
 		Desc: "The fixture to set sched RT before CUJ tests",
 		Contacts: []string{
 			"hsinyi@google.com",
-			"joelaf@google.com",
 			"cros-sw-perf@google.com",
 		},
 		BugComponent:    "b:1045832", // ChromeOS > Software > Performance > TPS
@@ -697,7 +695,6 @@ func init() {
 		Desc: "CUJ test fixture with WebRTC event logging and deadline server",
 		Contacts: []string{
 			"hsinyi@google.com",
-			"joelaf@google.com",
 			"cros-sw-perf@google.com",
 		},
 		BugComponent: "b:1045832", // ChromeOS > Software > Performance > TPS
