@@ -1,0 +1,88 @@
+// Copyright 2025 The ChromiumOS Authors
+// Use of this source code is governed by a BSD-style license that can be
+// found in the LICENSE file.
+
+// Package mousekeys provides functions to assist with interacting with the MouseKeys feature.
+package mousekeys
+
+import (
+	"context"
+
+	"go.chromium.org/tast-tests/cros/local/a11y"
+	"go.chromium.org/tast-tests/cros/local/chrome"
+	"go.chromium.org/tast-tests/cros/local/chrome/uiauto"
+	"go.chromium.org/tast-tests/cros/local/input"
+	"go.chromium.org/tast/core/errors"
+)
+
+// SetUp executes the MouseKeys set up code, and uses the keyboard to iterate over different
+// mouse actions.
+func SetUp(ctx context.Context, kb *input.KeyboardEventWriter, cr *chrome.Chrome) error {
+	tconn, err := cr.TestAPIConn(ctx)
+	if err != nil {
+		return errors.Wrap(err, "failed to create Test API connection")
+	}
+
+	ui := uiauto.New(tconn)
+	if err := a11y.ToggleMouseKeysSetting(ctx, tconn, cr, ui, true); err != nil {
+		return errors.Wrap(err, "failed to enable Mouse Keys setting")
+	}
+
+	return nil
+}
+
+// TearDown disables Mouse Keys and closes the keyboard event writer for test cleanup.
+func TearDown(ctx context.Context, kb *input.KeyboardEventWriter, cr *chrome.Chrome, tconn *chrome.TestConn) error {
+	ui := uiauto.New(tconn)
+	if err := a11y.ToggleMouseKeysSetting(ctx, tconn, cr, ui, false); err != nil {
+		return errors.Wrap(err, "failed to disable Mouse Keys setting during clean up")
+	}
+	kb.Close(ctx)
+
+	return nil
+}
+
+// PerformActionsForIdleTest performs a sequence of mouse movements forming a rough rectangle,
+// alternating mouse buttons and performing clicks. No apps are launched
+// as part of the clicking.
+func PerformActionsForIdleTest(ctx context.Context, kb *input.KeyboardEventWriter) error {
+	currentMouseButton := a11y.LeftMouseButton
+	for i := 0; i < 7; i++ {
+		actions := []a11y.MouseAction{
+			a11y.MouseActionMoveRight, a11y.MouseActionMoveRight, a11y.MouseActionMoveRight,
+			a11y.MouseActionMoveLeft, a11y.MouseActionMoveLeft, a11y.MouseActionMoveLeft,
+			a11y.MouseActionMoveLeft, a11y.MouseActionMoveLeft, a11y.MouseActionMoveLeft,
+			a11y.MouseActionMoveUp, a11y.MouseActionMoveUp, a11y.MouseActionMoveUp, a11y.MouseActionMoveUp,
+			a11y.MouseActionMoveDown, a11y.MouseActionMoveDown,
+			a11y.MouseActionSwitchMouseButton,
+			a11y.MouseActionClick,
+			a11y.MouseActionMoveLeft, a11y.MouseActionMoveLeft, a11y.MouseActionMoveLeft,
+			a11y.MouseActionMoveLeft, a11y.MouseActionMoveLeft, a11y.MouseActionMoveLeft,
+			a11y.MouseActionMoveRight, a11y.MouseActionMoveRight, a11y.MouseActionMoveRight,
+			a11y.MouseActionMoveUp, a11y.MouseActionMoveUp,
+			a11y.MouseActionClick,
+			a11y.MouseActionSwitchMouseButton,
+			a11y.MouseActionMoveRight, a11y.MouseActionClick,
+			a11y.MouseActionSwitchMouseButton,
+			a11y.MouseActionMoveLeft, a11y.MouseActionClick,
+		}
+
+		var err error
+		for _, action := range actions {
+			if action == a11y.MouseActionSwitchMouseButton {
+				targetButton := a11y.RightMouseButton
+				if currentMouseButton == a11y.RightMouseButton {
+					targetButton = a11y.LeftMouseButton
+				}
+				if currentMouseButton, err = a11y.ChangeMouseButton(ctx, kb, currentMouseButton, targetButton); err != nil {
+					return err
+				}
+			} else {
+				if err := kb.Type(ctx, a11y.MouseActionToKeyboardKey(action)); err != nil {
+					return err
+				}
+			}
+		}
+	}
+	return nil
+}

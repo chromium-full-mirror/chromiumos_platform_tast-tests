@@ -10,12 +10,15 @@ import (
 
 	"go.chromium.org/tast-tests/cros/common/fixture"
 	"go.chromium.org/tast-tests/cros/common/perf"
+	"go.chromium.org/tast-tests/cros/local/a11y"
 	"go.chromium.org/tast-tests/cros/local/a11y/facegaze"
+	"go.chromium.org/tast-tests/cros/local/a11y/mousekeys"
 	"go.chromium.org/tast-tests/cros/local/arc"
 	"go.chromium.org/tast-tests/cros/local/chrome"
 	"go.chromium.org/tast-tests/cros/local/chrome/cuj"
 	"go.chromium.org/tast-tests/cros/local/chrome/uiauto/quicksettings"
 	"go.chromium.org/tast-tests/cros/local/cpu"
+	"go.chromium.org/tast-tests/cros/local/input"
 	"go.chromium.org/tast-tests/cros/local/power"
 	"go.chromium.org/tast-tests/cros/local/ui/cujrecorder"
 
@@ -30,6 +33,7 @@ const (
 	testTypeBrowser
 	testTypeFaceGaze
 	testTypeFocusMode
+	testTypeMouseKeys
 )
 
 const (
@@ -82,6 +86,12 @@ func init() {
 				testType: testTypeFocusMode,
 			},
 			Fixture: fixture.ChromeLoggedInWithFocusMode,
+		}, {
+			Name: "mousekeys",
+			Val: idlePerfTest{
+				testType: testTypeMouseKeys,
+			},
+			Fixture: fixture.ChromeLoggedInWithMouseKeys,
 		}},
 	})
 }
@@ -107,6 +117,8 @@ func IdlePerf(ctx context.Context, s *testing.State) {
 	case testTypeFaceGaze:
 		fallthrough
 	case testTypeFocusMode:
+		fallthrough
+	case testTypeMouseKeys:
 		cr = s.FixtValue().(chrome.HasChrome).Chrome()
 	}
 
@@ -173,6 +185,26 @@ func IdlePerf(ctx context.Context, s *testing.State) {
 		defer func() {
 			if err := quicksettings.EnsureFocusModeEnds(closeCtx, tconn); err != nil {
 				s.Error("Failed to end Focus Mode: ", err)
+			}
+		}()
+	case testTypeMouseKeys:
+		kb, err := input.KeyboardWithCustomDelay(ctx, a11y.MouseKeysDefaultDelay+time.Second)
+		if err != nil {
+			s.Fatal("Failed to create keyboard: ", err)
+		}
+
+		if err := mousekeys.SetUp(ctx, kb, cr); err != nil {
+			s.Error("Failed to setup MouseKeys: ", err)
+		}
+
+		// Perform a series of mouse movements and clicks.
+		if err := mousekeys.PerformActionsForIdleTest(ctx, kb); err != nil {
+			s.Error("Failed to perform mouse actions: ", err)
+		}
+
+		defer func() {
+			if err := mousekeys.TearDown(ctx, kb, cr, tconn); err != nil {
+				s.Error("Failed to tear down MouseKeys: ", err)
 			}
 		}()
 	}
