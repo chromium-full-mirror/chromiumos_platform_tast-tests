@@ -59,7 +59,12 @@ func init() {
 		Params: []testing.Param{
 			{
 				Val:               screenCornerRadius(0),
-				ExtraHardwareDeps: hwdep.D(hwdep.SkipOnModel("bugzzy")),
+				ExtraHardwareDeps: hwdep.D(hwdep.SkipOnModel("bugzzy", "navi")),
+			},
+			{
+				Name:              "corner_radius_5",
+				Val:               screenCornerRadius(5),
+				ExtraHardwareDeps: hwdep.D(hwdep.Model("navi")),
 			},
 			{
 				Name:              "corner_radius_20",
