@@ -281,3 +281,22 @@ func FetchImage(filePath string) (image.Image, error) {
 
 	return img, nil
 }
+
+// OpenEditWithAIPanel clicks the "Edit with AI" button and then dismisses the FRE dialog if it is shown.
+// TODO(crbug.com/383666179): Modify other mantis tast tests to also use this function.
+func OpenEditWithAIPanel(ctx context.Context, ui *uiauto.Context) error {
+	editWithAIButton := nodewith.Role(role.ToggleButton).Name("Edit with AI").Ancestor(galleryapp.RootFinder)
+	if err := ui.DoDefault(editWithAIButton)(ctx); err != nil {
+		return errors.Wrap(err, "unable to click 'Edit with AI' button")
+	}
+
+	freDismissButton := nodewith.Role(role.ToggleButton).Name("Got it").Ancestor(galleryapp.RootFinder)
+	// If FRE is shown, click the dismiss button
+	if err := ui.Exists(freDismissButton)(ctx); err == nil {
+		if err := ui.DoDefault(freDismissButton)(ctx); err != nil {
+			return errors.Wrap(err, "failed to click on FRE dismiss button")
+		}
+	}
+
+	return nil
+}

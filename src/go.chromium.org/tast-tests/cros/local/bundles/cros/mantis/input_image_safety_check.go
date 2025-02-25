@@ -14,10 +14,8 @@ import (
 	"go.chromium.org/tast-tests/cros/local/chrome/uiauto/faillog"
 	"go.chromium.org/tast-tests/cros/local/chrome/uiauto/nodewith"
 	"go.chromium.org/tast-tests/cros/local/chrome/uiauto/role"
-	"go.chromium.org/tast-tests/cros/local/uidetection"
 	"go.chromium.org/tast/core/testing"
 	"go.chromium.org/tast/core/testing/hwdep"
-	"time"
 )
 
 type inputImageSafetyCheckTestParameters struct {
@@ -71,43 +69,28 @@ func InputImageSafetyCheck(ctx context.Context, s *testing.State) {
 
 	ui := uiauto.New(tconn)
 
-	editWithAIButton := nodewith.Role(role.ToggleButton).Name("Edit with AI").Ancestor(galleryapp.RootFinder)
-	if err := util.LeftClickButton(ctx, ui, editWithAIButton); err != nil {
-		s.Fatal("Unable to click 'Edit with AI' button: ", err)
+	if err := util.OpenEditWithAIPanel(ctx, ui); err != nil {
+		s.Fatal("Failed to open edit with AI panel: ", err)
 	}
 
 	if err := util.WaitForProgressBar(ctx, tconn, ui); err != nil {
 		s.Log("Error while waiting for progress bar: ", err)
 	}
 
-	// Hover to each tool buttons and then check whether the error tooltip is shown.
-	tools := []string{"Expand Background", "Remove Background", "Make a Sticker", "Reimagine"}
-	for _, tool := range tools {
-		toolButton := nodewith.Role(role.Button).Name(tool).Ancestor(galleryapp.RootFinder).First()
-		if err := uiauto.Combine("Hover mouse to tool button",
-			ui.WithTimeout(constant.DefaultUITimeout).WaitForLocation(toolButton),
-			ui.MouseMoveTo(toolButton, time.Second),
-		)(ctx); err != nil {
-			s.Fatal("Failed to hover to tool button: ", err)
-		}
+	var errorMessageShown bool
+	errorMessage := nodewith.Role(role.StaticText).Name("Inappropriate image.").Ancestor(galleryapp.RootFinder)
+	if err := ui.WithTimeout(constant.DefaultUITimeout).WaitUntilExists(errorMessage)(ctx); err != nil {
 
-		var errorTooltipExist bool
+		errorMessageShown = false
+	} else {
+		errorMessageShown = true
+	}
 
-		ud := uidetection.NewDefault(tconn)
+	if params.isSafe && errorMessageShown {
+		s.Fatal("Unexpected error message on a safe image")
+	}
 
-		errorTooltip := uidetection.TextBlock([]string{"Can't", "edit", "this", "image"})
-		if err := ud.WithTimeout(constant.DefaultUITimeout).WaitUntilExists(errorTooltip)(ctx); err != nil {
-			errorTooltipExist = false
-		} else {
-			errorTooltipExist = true
-		}
-
-		if params.isSafe && errorTooltipExist {
-			s.Fatal("Unexpected tooltip on a safe image")
-		}
-
-		if !params.isSafe && !errorTooltipExist {
-			s.Fatal("Tooltip isn't shown on an unsafe image")
-		}
+	if !params.isSafe && !errorMessageShown {
+		s.Fatal("Error message isn't shown on an unsafe image")
 	}
 }
