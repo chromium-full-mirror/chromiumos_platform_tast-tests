@@ -147,7 +147,7 @@ func init() {
 	testing.AddFixture(&testing.Fixture{
 		Name:            ArcBootedWithGalleryPhotosImageFeature,
 		Desc:            "ARC is booted with the MediaAppPhotosIntegrationImage feature flag enabled",
-		Contacts:        []string{"backlight-swe@google.com", "cros-ca-eng@google.com", "bugsnash@chromium.org"},
+		Contacts:        []string{"backlight-swe@google.com", "cros-ca-eng@google.com", "jopalmer@chromium.org"},
 		BugComponent:    "b:562866", // ChromeOS > Software > Consumer > Apps Suite > Backlight
 		Vars:            []string{uiCommon.GaiaPoolDefaultVarName},
 		Impl:            arc.NewArcBootedFixture(fixtureConfig),
