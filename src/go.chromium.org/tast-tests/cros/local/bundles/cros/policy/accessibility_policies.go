@@ -30,7 +30,7 @@ func init() {
 		Func: AccessibilityPolicies,
 		Desc: "Checks set values for the Accessability polices in the chrome.accessibilityFeatures map",
 		Contacts: []string{
-			"chromium-accessibility@chromium.org",
+			"chromeos-a11y-eng@google.com",
 		},
 		// ChromeOS Public Tracker > Experiences > Accessibility
 		BugComponent: "b:1272759",
