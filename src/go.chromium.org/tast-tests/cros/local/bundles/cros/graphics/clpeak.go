@@ -15,6 +15,7 @@ import (
 
 	"go.chromium.org/tast-tests/cros/common/perf"
 	"go.chromium.org/tast-tests/cros/common/testexec"
+	"go.chromium.org/tast-tests/cros/local/graphics/expectations"
 	"go.chromium.org/tast/core/errors"
 	"go.chromium.org/tast/core/testing"
 )
@@ -117,6 +118,18 @@ func Clpeak(ctx context.Context, s *testing.State) {
 		}
 	}()
 
+	expectation, err := expectations.GetTestExpectation(ctx, s.TestName())
+	if err != nil {
+		s.Fatal("Failed to load test expectation: ", err)
+	}
+	// Schedules a post-test expectations handling. If the test is expected to
+	// fail, but did not, then this generates an error.
+	defer func() {
+		if err := expectation.HandleFinalExpectation(); err != nil {
+			s.Error("Unmet expectation: ", err)
+		}
+	}()
+
 	// Allow to see clvk error and warn messages directly in test logFile.
 	os.Setenv("CLVK_LOG", "2")
 	// Force MAX_MEM_ALLOC_SIZE to the minimum required by OpenCL. It will avoid timeout on some devices.
@@ -127,17 +140,19 @@ func Clpeak(ctx context.Context, s *testing.State) {
 	stdout, stderr, err := testexec.CommandContext(ctx, clPeakBinPath, xmlArg, xmlFileAbsolutePath).SeparatedOutput(testexec.DumpLogOnError)
 	s.Log(string(stdout), string(stderr))
 	if err != nil {
-		s.Errorf("Failed to run %v: %v", clPeakBinPath, err)
-	}
-
-	// Read XML file and extract the data
-	xmlFile, err := os.Open(xmlFileAbsolutePath)
-	if err != nil {
-		s.Fatal("Failed to open file: ", err)
-	}
-	defer xmlFile.Close()
-	decoder := xml.NewDecoder(xmlFile)
-	if err = processElement(decoder, pv); err != nil {
-		s.Fatal("Error while gathering metrics: ", err)
+		if expErr := expectation.ReportErrorf("Failed to run %v: %v", clPeakBinPath, err); expErr != nil {
+			s.Error("Unexpected error: ", expErr)
+		}
+	} else {
+		// Read XML file and extract the data
+		xmlFile, err := os.Open(xmlFileAbsolutePath)
+		if err != nil {
+			s.Fatal("Failed to open file: ", err)
+		}
+		defer xmlFile.Close()
+		decoder := xml.NewDecoder(xmlFile)
+		if err = processElement(decoder, pv); err != nil {
+			s.Fatal("Error while gathering metrics: ", err)
+		}
 	}
 }
