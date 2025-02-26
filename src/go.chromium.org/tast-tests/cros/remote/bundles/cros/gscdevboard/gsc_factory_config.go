@@ -6,7 +6,10 @@ package gscdevboard
 
 import (
 	"context"
+	"encoding/binary"
 	"time"
+
+	"github.com/google/go-tpm/tpm2"
 
 	"go.chromium.org/tast-tests/cros/common/firmware/ti50"
 	"go.chromium.org/tast-tests/cros/remote/bundles/cros/gscdevboard/utils"
@@ -24,8 +27,10 @@ var (
 )
 
 const (
-	testFactoryConfig  = uint64(0x7000000000000011)
-	otherFactoryConfig = uint64(0x11)
+	testFactoryConfig                  = uint64(0x7000000000000011)
+	otherFactoryConfig                 = uint64(0x11)
+	nvFactoryConfig     tpm2.TPMHandle = 0x013fff06
+	nvFactoryConfigSize uint16         = 8
 )
 
 func init() {
@@ -153,8 +158,14 @@ func getFactoryConfig(ctx context.Context, b ti50.DevBoard, i *ti50.CrOSImage, t
 	}
 	testing.ContextLogf(ctx, "GSCToolConfig Config: %x", gSCToolConfig)
 
-	if gSCToolConfig != tpmConfig || consoleConfig != tpmConfig {
-		return 0, errors.Errorf("Configs do not match gsctool %x tpm %x console %x", gSCToolConfig, tpmConfig, consoleConfig)
+	virtualConfig, err := virtualNvmemReadFactoryConfig(tpm)
+	if err != nil {
+		return 0, err
+	}
+	testing.ContextLogf(ctx, "virtual nvmem config: %x", virtualConfig)
+
+	if gSCToolConfig != tpmConfig || consoleConfig != tpmConfig || virtualConfig != tpmConfig {
+		return 0, errors.Errorf("Configs do not match gsctool %x tpm %x console %x virtual nvmem %x", gSCToolConfig, tpmConfig, consoleConfig, virtualConfig)
 	}
 	return tpmConfig, nil
 }
@@ -170,4 +181,40 @@ func setFactoryConfig(ctx context.Context, tpm *utils.TpmHelper, factoryConfig u
 		return errors.Errorf("status %d did not match expected status %d", status, expectedStatus)
 	}
 	return nil
+}
+
+// virtualNvmemReadFactoryConfig reads the factory config value
+func virtualNvmemReadFactoryConfig(tpm *utils.TpmHelper) (uint64, error) {
+	attr := tpm2.TPMSNVPublic{
+		NVIndex: nvFactoryConfig,
+		NameAlg: tpm2.TPMAlgSHA1,
+		Attributes: tpm2.TPMANV{
+			AuthRead: true,
+			PPRead:   true,
+		},
+		DataSize: nvFactoryConfigSize,
+	}
+
+	nvName, err := tpm2.NVName(&attr)
+	if err != nil {
+		return 0, err
+	}
+	nvHandle := tpm2.NamedHandle{
+		Handle: nvFactoryConfig,
+		Name:   *nvName,
+	}
+
+	read := tpm2.NVRead{
+		AuthHandle: ti50.RootPlatformHandle,
+		NVIndex:    nvHandle,
+		Size:       nvFactoryConfigSize,
+	}
+
+	tpmFactoryConfig, err := read.Execute(tpm)
+	if err != nil {
+		return 0, err
+	}
+	factoryConfig := binary.LittleEndian.Uint64(tpmFactoryConfig.Data.Buffer)
+
+	return factoryConfig, nil
 }
