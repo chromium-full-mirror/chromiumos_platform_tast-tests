@@ -35,6 +35,9 @@ import (
 // TrustCheckboxText is a text on CA ssl trust checkbox.
 const TrustCheckboxText = "Trust this certificate for identifying websites"
 
+// FailedToCheckForNewUI is error message for failed check if new UI is used by cert manager.
+const FailedToCheckForNewUI = "Failed to determine if new UI is used : "
+
 // failedToSetupKeyboardErr is error message for not successful keyboard initialization.
 const failedToSetupKeyboardErr = "failed to setup keyboard"
 
@@ -64,6 +67,15 @@ var ManageCertSettingsWebArea = nodewith.Name("Settings - Manage certificates").
 // CertificatesPageURL is a certificates page url.
 const CertificatesPageURL = "chrome://settings/certificates"
 
+// userCACertPage is a name for the page with CA certificates imported by user.
+const userCACertPage = "userCA"
+
+// adminCACertPage is a name for the page with CA certificates installed by admin via policy.
+const adminCACertPage = "adminCA"
+
+// userClientCertPage is a name for the page with client certificates installed by user.
+const userClientCertPage = "userClient"
+
 // PressOkButton presses the "OK" on the dialog with the provided `parent`.
 // On some dialogs the "OK" button is generally a bit flaky, and on devices
 // in the tablet mode the DoDefault/LeftClick methods don't work at all
@@ -88,8 +100,8 @@ func PressOkButton(ctx context.Context, ui *uiauto.Context, parent *nodewith.Fin
 	return nil
 }
 
-// PressTabsAndEnter presses several keys to move into desired position.
-func PressTabsAndEnter(ctx context.Context) (retErr error) {
+// PressTabAndEnter presses several keys to move into desired position.
+func PressTabAndEnter(ctx context.Context) (retErr error) {
 	kb, kbCleanup, err := getKeyboard(ctx)
 	defer kbCleanup(ctx)
 	if err != nil {
@@ -189,39 +201,44 @@ func IsClientCertImported(ctx context.Context, ui *uiauto.Context, clientOrg str
 	if err := uiauto.Combine("check client cert",
 		ui.DoDefault(nodewith.Name("Your certificates").Role(role.Tab)),
 		ui.WaitUntilExists(nodewith.Name("Your certificates").ClassName("tab selected")),
-		ui.WithTimeout(3*time.Second).WaitUntilExists(nodewith.Name(clientOrg).First()),
-	)(ctx); err == nil {
-		return true
+		ui.WithTimeout(10*time.Second).WaitUntilExists(nodewith.Name(clientOrg).First()),
+	)(ctx); err != nil {
+		return false
 	}
-	return false
+	return true
 }
 
 // IsCACertOrgExistsNewUI checks if CA certificate is present in the list of certificates.
-func IsCACertOrgExistsNewUI(ctx context.Context, ui *uiauto.Context, caOrg string) (status bool) {
-	caCertOrgText := nodewith.NameContaining(caOrg).Role(role.StaticText)
-	if err := uiauto.Combine("Open user's imported CA certs",
-		ui.WaitUntilExists(nodewith.NameStartingWith("Local certificates").Role(role.MenuItem)),
-		ui.DoDefault(nodewith.NameStartingWith("Local certificates").Role(role.MenuItem)),
-		ui.WaitUntilExists(nodewith.NameStartingWith("Installed by you ").Role(role.Link)),
-		ui.DoDefault(nodewith.NameStartingWith("Installed by you ").Role(role.Link)),
-		ui.WithTimeout(3*time.Second).WaitUntilExists(caCertOrgText),
-	)(ctx); err == nil {
-		return true
+func IsCACertOrgExistsNewUI(ctx context.Context, ui *uiauto.Context, caOrg string) (status bool, err error) {
+	if err := OpenUserInstalledCACertsNewUI(ctx, ui); err != nil {
+		return false, errors.Wrap(err, "failed to select 'Installed by you' tab")
 	}
-	return false
+
+	caCertOrgText := nodewith.NameContaining(caOrg).Role(role.StaticText)
+	if err := uiauto.Combine("Find org name on open tab",
+		ui.WithTimeout(3*time.Second).WaitUntilExists(caCertOrgText),
+	)(ctx); err != nil {
+		return false, nil
+	}
+	return true, nil
 }
 
 // IsCACertOrgExists checks if CA certificate's org is present in the list of CA certificates orgs.
-func IsCACertOrgExists(ctx context.Context, ui *uiauto.Context, caOrg string) (status bool) {
+func IsCACertOrgExists(ctx context.Context, ui *uiauto.Context, caOrg string) (status bool, err error) {
 	caCertOrgText := nodewith.Name(caOrg).Role(role.StaticText)
 	if err := uiauto.Combine("Find CA org in orgs list",
 		ui.DoDefault(nodewith.Name("Authorities").Role(role.Tab)),
 		ui.WaitUntilExists(nodewith.Name("Authorities").ClassName("tab selected")),
-		ui.WithTimeout(3*time.Second).WaitUntilExists(caCertOrgText),
-	)(ctx); err == nil {
-		return true
+	)(ctx); err != nil {
+		return false, err
 	}
-	return false
+
+	if err := uiauto.Combine("Find CA org in orgs list",
+		ui.WithTimeout(3*time.Second).WaitUntilExists(caCertOrgText),
+	)(ctx); err != nil {
+		return false, nil
+	}
+	return true, nil
 }
 
 // ImportClientCertImpl uses the provided buttonName on the
@@ -447,37 +464,60 @@ func expandCertOrganizationBox(organizationName string, conn *chrome.Conn, ui *u
 	)
 	// If the certificate text visible, it indicates the certificate list is already expanded.
 	return uiauto.IfFailThen(
-		ui.WithTimeout(1*time.Second).WaitUntilExists(certificateText),
+		ui.WithTimeout(3*time.Second).WaitUntilExists(certificateText),
 		expandCertList,
 	)
 }
 
-// OpenUserInstalledCACertsNewUI opens "Installed by you" page in certificate manager.
-func OpenUserInstalledCACertsNewUI(ctx context.Context, ui *uiauto.Context) (retErr error) {
-	if err := uiauto.Combine("Open 'Installed by you' page",
-		ui.WaitUntilExists(nodewith.NameStartingWith("Local certificates").Role(role.MenuItem)),
-		ui.DoDefault(nodewith.NameStartingWith("Local certificates").Role(role.MenuItem)),
-		ui.WaitUntilExists(nodewith.NameStartingWith("Installed by you ").Role(role.Link)),
-		ui.DoDefault(nodewith.NameStartingWith("Installed by you ").Role(role.Link)),
-		ui.WaitUntilExists(nodewith.Name("Installed by you subpage back button").Role(role.Button)),
+// OpenCertsPageNewUI opens specific certificate's page in certificate manager.
+// func OpenUserInstalledCACertsNewUI(ctx context.Context, ui *uiauto.Context) (retErr error) {
+func OpenCertsPageNewUI(ctx context.Context, ui *uiauto.Context, pageType string) (retErr error) {
+	var menuItemName, pageLinkName, subpageButtonName string
+	switch pageType {
+	case userCACertPage:
+		menuItemName = "Local certificates"
+		pageLinkName = "Installed by you "
+		subpageButtonName = "Installed by you subpage back button"
+	case adminCACertPage:
+		menuItemName = "Local certificates"
+		pageLinkName = "Installed by your Administrator"
+		subpageButtonName = "Installed by your Administrator subpage back button"
+	case userClientCertPage:
+		menuItemName = "Your certificates"
+		pageLinkName = "View imported certificates"
+		subpageButtonName = "Client certificates from platform subpage back button"
+	default:
+		return errors.Errorf("invalid pageType %q", pageLinkName)
+	}
+
+	if err := uiauto.Combine(fmt.Sprintf("Open '%s' page", pageLinkName),
+		ui.WaitUntilExists(nodewith.NameStartingWith(menuItemName).Role(role.MenuItem)),
+		ui.DoDefault(nodewith.NameStartingWith(menuItemName).Role(role.MenuItem)),
+		ui.WaitUntilExists(nodewith.NameStartingWith(pageLinkName).Role(role.Link)),
+		ui.DoDefault(nodewith.NameStartingWith(pageLinkName).Role(role.Link)),
+		ui.WaitUntilExists(nodewith.Name(subpageButtonName).Role(role.Button)),
 	)(ctx); err != nil {
-		return errors.Wrap(err, "failed to open 'Installed by you' page")
+		return errors.Wrapf(err, "failed to open '%q' page", pageLinkName)
 	}
 	return nil
 }
 
-// OpenAdminInstalledCACertsNewUI opens "Installed by your Administrator" page in certificate manager.
+// OpenUserInstalledCACertsNewUI opens "Installed by you" page in certificate
+// manager with CA certs.
+func OpenUserInstalledCACertsNewUI(ctx context.Context, ui *uiauto.Context) (retErr error) {
+	return OpenCertsPageNewUI(ctx, ui, userCACertPage)
+}
+
+// OpenAdminInstalledCACertsNewUI opens "Installed by your Administrator" page
+// in certificate manager with CA certs.
 func OpenAdminInstalledCACertsNewUI(ctx context.Context, ui *uiauto.Context) (retErr error) {
-	if err := uiauto.Combine("Open 'Installed by your Administrator' page",
-		ui.WaitUntilExists(nodewith.NameStartingWith("Local certificates").Role(role.MenuItem)),
-		ui.DoDefault(nodewith.NameStartingWith("Local certificates").Role(role.MenuItem)),
-		ui.WaitUntilExists(nodewith.NameStartingWith("Installed by your Administrator").Role(role.Link)),
-		ui.DoDefault(nodewith.NameStartingWith("Installed by your Administrator").Role(role.Link)),
-		ui.WaitUntilExists(nodewith.Name("Installed by your Administrator subpage back button").Role(role.Button)),
-	)(ctx); err != nil {
-		return errors.Wrap(err, "failed to open 'Installed by your Administrator' page")
-	}
-	return nil
+	return OpenCertsPageNewUI(ctx, ui, adminCACertPage)
+}
+
+// OpenUserInstalledClientCertsNewUI opens "View imported certificates" page in certificate
+// manager with client certs.
+func OpenUserInstalledClientCertsNewUI(ctx context.Context, ui *uiauto.Context) (retErr error) {
+	return OpenCertsPageNewUI(ctx, ui, userClientCertPage)
 }
 
 // SelectCACertificateImpl selects CA on CA tab and open/close list of certificates
@@ -570,8 +610,8 @@ func ChangeCACertificateTrustNewUI(ctx context.Context, ui *uiauto.Context, isTr
 
 	// Open drop down list for  trust setting using keyboard. Usage of "DoDefault"
 	// will break a visibility for the selected element. The other option was to
-	// use LeftClick(), but it is not always working correctly winith tablet mode.
-	if err := PressTabsAndEnter(ctx); err != nil {
+	// use LeftClick(), but it is not always working correctly within tablet mode.
+	if err := PressTabAndEnter(ctx); err != nil {
 		return err
 	}
 
@@ -750,16 +790,112 @@ func ClickElementWithConditionJSExpr(selector, entrySelector, conditionSelector,
 // IsNewUIUsed checks that UI contains old "Authorities" header and returns false
 // if it is found. All next functions calls will be operating with new UI or with
 // old UI.
-func IsNewUIUsed(ctx context.Context, ui *uiauto.Context) bool {
-	if err := uiauto.Combine("test that Authorities are present in UI",
-		ui.WithTimeout(2*time.Second).WaitUntilExists(nodewith.Name("Authorities").Role(role.Tab)),
-	)(ctx); err != nil {
-		return true
+func IsNewUIUsed(ctx context.Context, ui *uiauto.Context, cr *chrome.Chrome) (status bool, retErr error) {
+	// Opening a new tab in browser.
+	conn, err := cr.NewConn(ctx, CertificatesPageURL)
+	if err != nil {
+		return false, err
 	}
-	return false
+	defer conn.Close()
+
+	if err := uiauto.Combine("test that Authorities are present in UI",
+		ui.WithTimeout(3*time.Second).WaitUntilExists(nodewith.Name("Authorities").Role(role.Tab)),
+	)(ctx); err != nil {
+		return true, nil
+	}
+	return false, nil
 }
 
 // IsNewUIActive fetches isNewUI value from the ctx and returns it as a bool.
 func IsNewUIActive(ctx context.Context) bool {
 	return ctx.Value(IsNewUI).(bool)
+}
+
+// DeleteUserCertNewUI selects and deletes specific client's certificate from "Your certificates" tab.
+func DeleteUserCertNewUI(ctx context.Context, ui *uiauto.Context, userCaCertName string) (retErr error) {
+	if err := OpenUserInstalledClientCertsNewUI(ctx, ui); err != nil {
+		return errors.Wrap(err, "failed to select client certificates tab")
+	}
+
+	dialogMessage := nodewith.NameStartingWith("If you delete one of").Role(role.StaticText)
+	deleteNamePrefix := "Delete certificate " + userCaCertName
+	deleteButton := nodewith.NameStartingWith(deleteNamePrefix).Role(role.Button)
+	popupDialog := nodewith.NameStartingWith("Delete ").Role(role.Dialog)
+
+	if err := uiauto.Combine("delete user cert",
+		ui.WaitUntilExists(deleteButton),
+		ui.DoDefault(deleteButton),
+		ui.WaitUntilExists(popupDialog),
+		ui.WaitUntilExists(dialogMessage),
+		ui.WaitUntilExists(nodewith.Name("Cancel").Role(role.Button)),
+		ui.WaitUntilExists(nodewith.Name("OK").Role(role.Button)),
+		ui.DoDefault(nodewith.Name("OK").Role(role.Button)),
+		ui.WaitUntilGone(popupDialog),
+	)(ctx); err != nil {
+		return errors.Wrap(err, failedToDeleteCertErr)
+	}
+	return nil
+}
+
+// ImportAndBindClientCertNewUI uses the Import and Bind button on the chrome://settings/certificates page
+// to manually import the client certificate from file.
+func ImportAndBindClientCertNewUI(ctx context.Context, ui *uiauto.Context, clientCertFileName, certFilePassword string) (retErr error) {
+	buttonNameForImport := "Import and Bind to Client certificates from platform"
+	return ImportClientCertImplNewUI(ctx, ui, clientCertFileName, certFilePassword, buttonNameForImport)
+}
+
+// ImportClientCertNewUI uses the Import button on the chrome://settings/certificates
+// page to manually import the client certificate from file.
+func ImportClientCertNewUI(ctx context.Context, ui *uiauto.Context, clientCertFileName, certFilePassword string) (retErr error) {
+	buttonNameForImport := "Import to Client certificates from platform"
+	return ImportClientCertImplNewUI(ctx, ui, clientCertFileName, certFilePassword, buttonNameForImport)
+}
+
+// ImportClientCertImplNewUI uses the provided buttonName on the
+// chrome://settings/certificates page to manually import
+// the client certificate from file.
+func ImportClientCertImplNewUI(ctx context.Context, ui *uiauto.Context, clientCertFileName, certFilePassword, buttonName string) (retErr error) {
+	kb, kbCleanup, err := getKeyboard(ctx)
+	defer kbCleanup(ctx)
+	if err != nil {
+		return errors.Wrap(err, failedToSetupKeyboardErr)
+	}
+
+	passwordDialog := nodewith.Name("Enter certificate password").Role(role.Dialog)
+	passwordTextBox := nodewith.Role(role.TextField).Editable()
+
+	if err := OpenUserInstalledClientCertsNewUI(ctx, ui); err != nil {
+		return errors.Wrap(err, "failed to select client certificates tab")
+	}
+	if err := uiauto.Combine("import client cert",
+		ui.WaitUntilExists(nodewith.Name(buttonName).Role(role.Button)),
+		ui.DoDefault(nodewith.Name(buttonName).Role(role.Button)),
+		ui.WaitUntilExists(nodewith.Name(clientCertFileName).Role(role.StaticText)),
+		ui.DoDefault(nodewith.Name(clientCertFileName).Role(role.StaticText)),
+		ui.WaitUntilExists(nodewith.Name("Open").Role(role.Button).State("focusable", true)),
+		ui.DoDefault(nodewith.Name("Open").Role(role.Button)),
+		ui.WaitUntilExists(passwordTextBox.Ancestor(passwordDialog).State("focusable", true)),
+		ui.DoDefault(passwordTextBox.Ancestor(passwordDialog)),
+		kb.TypeAction(certFilePassword),
+		kb.AccelAction("enter"),
+		ui.WithTimeout(3*time.Second).WaitUntilGone(passwordTextBox.Ancestor(passwordDialog)),
+	)(ctx); err != nil {
+		return errors.Wrap(err, "failed to import client cert")
+	}
+
+	return nil
+}
+
+// IsClientCertImportedNewUI checks if client certificate is present in the list of imported certificates.
+func IsClientCertImportedNewUI(ctx context.Context, ui *uiauto.Context, clientOrg string) (bool, error) {
+	if err := OpenUserInstalledClientCertsNewUI(ctx, ui); err != nil {
+		return false, err
+	}
+
+	if err := uiauto.Combine("check client cert",
+		ui.WithTimeout(3*time.Second).WaitUntilExists(nodewith.NameContaining(clientOrg).First()),
+	)(ctx); err != nil {
+		return false, nil
+	}
+	return true, nil
 }

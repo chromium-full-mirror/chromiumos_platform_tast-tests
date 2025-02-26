@@ -161,7 +161,7 @@ func expectImportUserCACertNotPossible(ctx context.Context, s *testing.State, ui
 		}
 
 		// There are 3 "Import" buttons, UI finder will look for any of them.
-		importButton := nodewith.Name("Import").Role(role.Button)
+		importButton := nodewith.NameStartingWith("Import").Role(role.Button)
 		assertUIElementNotPresent(ctx, s, ui, importButton)
 		return
 	}
@@ -179,10 +179,16 @@ func expectImportUserCACertNotPossible(ctx context.Context, s *testing.State, ui
 
 // expectDeleteUserCACertSuccess selects and deletes user's CA certificate on CA tab.
 func expectDeleteUserCACertSuccess(ctx context.Context, s *testing.State, ui *uiauto.Context, conn *chrome.Conn) {
+	certCheckError := "Failed to check if CA certificate is present in system: "
+	certNotFoundError := "CA Org is not present in system or IsCACertOrgExists can not find the cert"
 	if isNewUIActive(ctx) {
 		// This is testing that cert is present before it is deleted.
-		if status := utils.IsCACertOrgExistsNewUI(ctx, ui, userCaOrgNewUI); !status {
-			s.Fatal("CA Org is not present in system or IsCACertOrgExistsNewUI can not find the cert ")
+		status, err := utils.IsCACertOrgExistsNewUI(ctx, ui, userCaOrgNewUI)
+		if err != nil {
+			s.Fatal(certCheckError, err)
+		}
+		if !status {
+			s.Fatal(certNotFoundError)
 		}
 
 		if err := utils.DeleteCACertNewUI(ctx, ui, conn, userCaOrgNewUI, userCaCertName); err != nil {
@@ -192,8 +198,12 @@ func expectDeleteUserCACertSuccess(ctx context.Context, s *testing.State, ui *ui
 	}
 
 	// This is testing that cert is present before it is deleted.
-	if status := utils.IsCACertOrgExists(ctx, ui, userCaOrg); !status {
-		s.Fatal("CA Org is not present in system or IsCACertOrgExists can not find the cert ")
+	status, err := utils.IsCACertOrgExists(ctx, ui, userCaOrg)
+	if err != nil {
+		s.Fatal(certCheckError)
+	}
+	if !status {
+		s.Fatal(certNotFoundError)
 	}
 
 	if err := utils.DeleteCACert(ctx, ui, conn, userCaOrg, userCaCertName); err != nil {
@@ -358,15 +368,16 @@ func expectManagePolicyProvidedCACertNotPossible(ctx context.Context, s *testing
 	}
 }
 
-// expectManageUserCACertNotPossibleNewUI tests that it is not possible to manage CA certificate.
-// It will select specific CA certificate and open view popup for it. Then
-// it will check that "General", "Details" and "Modification" tabs are shown.
-// Then it will try to change "Trusted" value to "Distrusted" and check that
-// it will not become visible. The field with trust value is disabled and all
-// dropdown values are invisible. It is still possible to change visibility using developer
-// tool, but it will fail during Save. Unfortunately error message
-// has no node and can not be checked, so it tests that all values are still not
-// visible and also it tests that cert stays in the "Trusted" list after changes.
+// expectManageUserCACertNotPossibleNewUI tests that it is not possible to
+// manage CA certificate. It will select specific CA certificate and open view
+// popup for it. Then it will check that "General", "Details" and "Modification"
+// tabs are shown. Then it will try to change "Trusted" value to "Distrusted"
+// and check that it will not become visible. The field with trust value is
+// disabled and all dropdown values are invisible. It is still possible to
+// change visibility using developer tool, but it will fail during Save.
+// Unfortunately error message has no node and can not be checked, so it tests
+// that all values are still not visible and also it tests that cert stays in
+// the "Trusted" list after changes.
 func expectManageUserCACertNotPossibleNewUI(ctx context.Context, s *testing.State, ui *uiauto.Context, conn *chrome.Conn, caOrg string) {
 	if err := utils.OpenUserInstalledCACertsNewUI(ctx, ui); err != nil {
 		s.Fatal("Failed to select CA certificate: ", err)
@@ -451,14 +462,25 @@ func expectManageCACertNotPossible(ctx context.Context, s *testing.State, ui *ui
 // expectCACertNotImported checks that CA certificate's org is not present in the list of known orgs for CA certificates .
 // We are checking only org and not checking exact certificates, because even org should not exist.
 func expectCACertNotImported(ctx context.Context, s *testing.State, ui *uiauto.Context) {
+	certCheckErrorText := "Failed to check if CA certificate is present in system: "
+	certPresenceErrorText := "Cert for the CA Org is already present in system"
 	if isNewUIActive(ctx) {
-		if status := utils.IsCACertOrgExistsNewUI(ctx, ui, userCaOrgNewUI); status {
-			s.Fatal("CA Org is already present in system")
+		status, err := utils.IsCACertOrgExistsNewUI(ctx, ui, userCaOrgNewUI)
+		if err != nil {
+			s.Fatal(certCheckErrorText, err)
+		}
+		if status {
+			s.Fatal(certPresenceErrorText)
 		}
 		return
 	}
-	if status := utils.IsCACertOrgExists(ctx, ui, userCaOrg); status {
-		s.Fatal("CA Org is already present in system")
+
+	status, err := utils.IsCACertOrgExists(ctx, ui, userCaOrg)
+	if err != nil {
+		s.Fatal(certCheckErrorText)
+	}
+	if status {
+		s.Fatal(certPresenceErrorText)
 	}
 }
 
@@ -559,15 +581,9 @@ func AllowCACertificateManagement(ctx context.Context, s *testing.State) {
 			}
 
 			// Check if new UI for the certificate manager is used or the old UI.
-			isNewUIPresent := false
-			{
-				// Opening a new tab in browser.
-				conn, err := cr.NewConn(ctx, utils.CertificatesPageURL)
-				if err != nil {
-					s.Fatal("Failed to open a new tab in browser: ", err)
-				}
-				defer conn.Close()
-				isNewUIPresent = utils.IsNewUIUsed(ctx, ui)
+			isNewUIPresent, err := utils.IsNewUIUsed(ctx, ui, cr)
+			if err != nil {
+				s.Fatal(utils.FailedToCheckForNewUI, err)
 			}
 			ctx = context.WithValue(ctx, utils.IsNewUI, isNewUIPresent)
 
@@ -643,7 +659,10 @@ func AllowCACertificateManagement(ctx context.Context, s *testing.State) {
 		s.Fatal("Failed to open a new tab in browser: ", err)
 	}
 	defer conn.Close()
-	isNewUIPresent := utils.IsNewUIUsed(ctx, ui)
+	isNewUIPresent, err := utils.IsNewUIUsed(ctx, ui, cr)
+	if err != nil {
+		s.Fatal(utils.FailedToCheckForNewUI, err)
+	}
 	ctx = context.WithValue(ctx, utils.IsNewUI, isNewUIPresent)
 	expectCACertNotImported(ctx, s, ui)
 }

@@ -30,6 +30,9 @@ const clientCertificatePassword = "12345"
 // clientCertificateName is a cert name in list of certificates which is also equal to the org name of client.
 const clientCertificateName = "TEST_CLIENT_ORG"
 
+// clientCertificateNameNewUI is a cert name in list of certificates which is also equal to the org name of client.
+const clientCertificateNameNewUI = "O=TEST_CLIENT_ORG"
+
 // clientCertificateOrg is name for client's organization used in the list of client's certificates.
 const clientCertificateOrg = "org-TEST_CLIENT_ORG"
 
@@ -37,6 +40,12 @@ const clientCertificateOrg = "org-TEST_CLIENT_ORG"
 // be used by Chrome to authenticate on the website.
 // It is in a PKCS#12 format because that's what chrome supports for importing client certificates.
 const clientCertFile = "cert_settings_page_client_cert.p12"
+
+// failedToCheckForClientCertError is error message for failed check if client cert is already present in system.
+const failedToCheckForClientCertError = "Failed to check if client certificate is present in system: "
+
+// failedToOpenClientCertTabText is error message for the errors during opening users installed client certificates tab.
+const failedToOpenClientCertTabText = "Failed to open client certificates tab: "
 
 func init() {
 	testing.AddTest(&testing.Test{
@@ -83,6 +92,16 @@ func cleanClientCertificate(s *testing.State, downloadsPath string) {
 // expectImportClientCertSuccess imports client certificate using "Import and Bind" button
 // on the certificate management page.
 func expectImportClientCertSuccess(ctx context.Context, s *testing.State, ui *uiauto.Context) {
+	if utils.IsNewUIActive(ctx) {
+		if err := utils.ImportAndBindClientCertNewUI(ctx, ui, clientCertFile, clientCertificatePassword); err != nil {
+			s.Fatal("Can't import and bind client certificate: ", err)
+		}
+		if err := utils.WaitForClientCert(ctx, clientCertificateName); err != nil {
+			s.Fatal("Failed to wait for the client certificate: ", err)
+		}
+		return
+	}
+
 	if err := utils.ImportClientCert(ctx, ui, clientCertFile, clientCertificatePassword); err != nil {
 		s.Fatal("Can't import client certificate: ", err)
 	}
@@ -93,22 +112,58 @@ func expectImportClientCertSuccess(ctx context.Context, s *testing.State, ui *ui
 
 // expectClientCertNotImported checks that client certificate is not present in the list of imported certificates.
 func expectClientCertNotImported(ctx context.Context, s *testing.State, ui *uiauto.Context) {
+	errorText := "Clients certificate is present in system"
+	if utils.IsNewUIActive(ctx) {
+		status, err := utils.IsClientCertImportedNewUI(ctx, ui, clientCertificateNameNewUI)
+		if err != nil {
+			s.Fatal(failedToCheckForClientCertError, err)
+		}
+		if status {
+			s.Fatal(errorText)
+		}
+		return
+	}
+
 	if status := utils.IsClientCertImported(ctx, ui, clientCertificateOrg); status {
-		s.Fatal("Clients certificate is already present in system")
+		s.Fatal(errorText)
 	}
 }
 
 // expectImportNoBindClientCertSuccess imports client certificate using "Import" button
 // on the certificate management page.
 func expectImportNoBindClientCertSuccess(ctx context.Context, s *testing.State, ui *uiauto.Context) {
+	errorText := "Failed to import client certificate: "
+	if utils.IsNewUIActive(ctx) {
+		if err := utils.ImportClientCertNewUI(ctx, ui, clientCertFile, clientCertificatePassword); err != nil {
+			s.Fatal(errorText, err)
+		}
+		if err := utils.WaitForClientCert(ctx, clientCertificateName); err != nil {
+			s.Fatal("Failed to wait for the client certificate: ", err)
+		}
+		return
+	}
+
 	if err := utils.ImportNoBindClientCert(ctx, ui, clientCertFile, clientCertificatePassword); err != nil {
-		s.Fatal("Can't import client certificate: ", err)
+		s.Fatal(errorText, err)
 	}
 }
 
 // expectImportClientCertNotPossible checks that "Import" and "Import and Bind" buttons are not shown on screen.
 func expectImportClientCertNotPossible(ctx context.Context, s *testing.State,
 	ui *uiauto.Context) {
+	if utils.IsNewUIActive(ctx) {
+		if err := utils.OpenUserInstalledClientCertsNewUI(ctx, ui); err != nil {
+			s.Fatal(failedToOpenClientCertTabText, err)
+		}
+
+		// There are 2 "Import" buttons, UI finder will look for any of them.
+		importButton := nodewith.NameStartingWith("Import").Role(role.Button)
+		if err := ui.Exists(importButton)(ctx); err == nil {
+			s.Fatal("Unexpected presence of 'Import' button")
+		}
+		return
+	}
+
 	yourCertTab := nodewith.Name("Your certificates").Role(role.Tab)
 	if err := uiauto.Combine("Select Client certificates tab",
 		ui.DoDefault(yourCertTab),
@@ -128,9 +183,40 @@ func expectImportClientCertNotPossible(ctx context.Context, s *testing.State,
 	}
 }
 
+// expectDeleteClientCertNotPossibleNewUI checks that "Delete" button is not shown for the clients certificate.
+func expectDeleteClientCertNotPossibleNewUI(ctx context.Context, s *testing.State, ui *uiauto.Context) {
+	if err := utils.OpenUserInstalledClientCertsNewUI(ctx, ui); err != nil {
+		s.Fatal(failedToOpenClientCertTabText, err)
+	}
+
+	// Make sure that Delete buttons are not present, but other buttons are there.
+	deleteNamePrefix := "Delete certificate "
+	viewNamePrefix := "View certificate details for " + clientCertificateNameNewUI
+	exportNamePrefix := "Export"
+	deleteButton := nodewith.NameStartingWith(deleteNamePrefix).Role(role.Button)
+	viewButton := nodewith.NameStartingWith(viewNamePrefix).Role(role.Button)
+	exportButton := nodewith.NameStartingWith(exportNamePrefix).Role(role.Button)
+
+	if err := ui.Exists(deleteButton)(ctx); err == nil {
+		s.Fatal("Unexpected presence of 'Delete' button")
+	}
+	// Export button was removed on ChromeOS.
+	if err := ui.Exists(exportButton)(ctx); err == nil {
+		s.Fatal("Unexpected presence of 'Export' button")
+	}
+	if err := ui.Exists(viewButton)(ctx); err != nil {
+		s.Fatal("Unexpected absence of 'View' button")
+	}
+}
+
 // expectDeleteClientCertNotPossible checks that "Delete" in not shown in the action menu for the certificate,
 // while "View" and "Export" are shown.
 func expectDeleteClientCertNotPossible(ctx context.Context, s *testing.State, ui *uiauto.Context) {
+	if utils.IsNewUIActive(ctx) {
+		expectDeleteClientCertNotPossibleNewUI(ctx, s, ui)
+		return
+	}
+
 	if err := utils.OpenActionMenuForClientCertificate(ctx, ui, clientCertificateOrg); err != nil {
 		s.Fatal("Failed to open action menu: ", err)
 	}
@@ -157,8 +243,28 @@ func expectDeleteClientCertNotPossible(ctx context.Context, s *testing.State, ui
 
 // expectDeleteClientCertSuccess uses the Chrome's cert settings page to delete the client cert.
 func expectDeleteClientCertSuccess(ctx context.Context, s *testing.State, ui *uiauto.Context) {
+	clientCertNotPresentError := "Client cert is not present in system or IsClientCertImported can not find cert"
+	clientFailedToDeleteError := "Failed to delete client certificate: "
+	if utils.IsNewUIActive(ctx) {
+		status, err := utils.IsClientCertImportedNewUI(ctx, ui, clientCertificateNameNewUI)
+		if err != nil {
+			s.Fatal(failedToCheckForClientCertError, err)
+		}
+		if !status {
+			s.Fatal(clientCertNotPresentError)
+		}
+
+		if err := utils.DeleteUserCertNewUI(ctx, ui, clientCertificateNameNewUI); err != nil {
+			s.Fatal(clientFailedToDeleteError, err)
+		}
+		return
+	}
+
+	if status := utils.IsClientCertImported(ctx, ui, clientCertificateOrg); !status {
+		s.Fatal(clientCertNotPresentError)
+	}
 	if err := utils.DeleteClientCertWithRetry(ctx, ui, clientCertificateOrg); err != nil {
-		s.Fatal("Failed to delete client certificate: ", err)
+		s.Fatal(clientFailedToDeleteError, err)
 	}
 }
 
@@ -220,6 +326,13 @@ func AllowClientCertificateManagement(ctx context.Context, s *testing.State) {
 				s.Fatal("Failed to clean up: ", err)
 			}
 
+			// Check if new UI for the certificate manager is used or the old UI.
+			isNewUIPresent, err := utils.IsNewUIUsed(ctx, ui, cr)
+			if err != nil {
+				s.Fatal(utils.FailedToCheckForNewUI, err)
+			}
+			ctx = context.WithValue(ctx, utils.IsNewUI, isNewUIPresent)
+
 			// Import user's certificate which will be used for testing, if operations
 			// with certificates are forbidden.
 			if !param.canManageUserCert {
@@ -275,5 +388,10 @@ func AllowClientCertificateManagement(ctx context.Context, s *testing.State) {
 		s.Fatal("Failed to open a new tab in browser: ", err)
 	}
 	defer conn.Close()
+	isNewUIPresent, err := utils.IsNewUIUsed(ctx, ui, cr)
+	if err != nil {
+		s.Fatal(utils.FailedToCheckForNewUI, err)
+	}
+	ctx = context.WithValue(ctx, utils.IsNewUI, isNewUIPresent)
 	expectClientCertNotImported(ctx, s, ui)
 }
