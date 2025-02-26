@@ -18,7 +18,7 @@ const (
 	reboot  = "reboot"
 	powerOn = "power-on"
 
-	updateDelay = time.Second * 61
+	updateDelay = time.Second * 70
 )
 
 type updateConfig struct {
