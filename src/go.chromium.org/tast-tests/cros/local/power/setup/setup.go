@@ -7,7 +7,9 @@ package setup
 
 import (
 	"context"
+	"time"
 
+	"go.chromium.org/tast-tests/cros/common/action"
 	"go.chromium.org/tast-tests/cros/common/testexec"
 	"go.chromium.org/tast-tests/cros/local/chrome"
 	"go.chromium.org/tast-tests/cros/local/power"
@@ -439,7 +441,9 @@ func PowerTest(ctx context.Context, c *chrome.TestConn, options PowerTestOptions
 				testing.ContextLog(ctx, "Failed to disable powerd service: ", err)
 			}
 			if batteryDischarge.discharge {
-				if err := testexec.CommandContext(ctx, "sudo", "-u", "power", "send_debug_power_status", "--external_power=2").Run(); err != nil {
+				if err := action.RetryWithExponentialBackoff(5, func(ctx context.Context) error {
+					return testexec.CommandContext(ctx, "sudo", "-u", "power", "send_debug_power_status", "--external_power=2").Run()
+				}, 500*time.Millisecond, 2)(ctx); err != nil {
 					testing.ContextLog(ctx, "Failed to send power status: ", err)
 					return err
 				}
