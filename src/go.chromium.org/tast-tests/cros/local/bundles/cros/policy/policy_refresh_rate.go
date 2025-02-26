@@ -26,7 +26,7 @@ func init() {
 			"swapnilgupta@google.com", // Test author
 			"chromeos-commercial-remote-management@google.com",
 		},
-		BugComponent: "b:1263917",
+		BugComponent: "b:1111617",
 		SoftwareDeps: []string{"chrome"},
 		Attr:         []string{"group:golden_tier", "group:hw_agnostic"},
 		Fixture:      fixture.ChromePolicyLoggedIn,

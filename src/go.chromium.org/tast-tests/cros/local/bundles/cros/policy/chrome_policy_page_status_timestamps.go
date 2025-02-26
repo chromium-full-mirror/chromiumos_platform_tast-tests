@@ -32,7 +32,7 @@ func init() {
 			"sergiyb@google.com", // Test author
 			"chromeos-commercial-remote-management@google.com",
 		},
-		BugComponent: "b:1263917",
+		BugComponent: "b:1111617",
 		SoftwareDeps: []string{"chrome"},
 		Params: []testing.Param{
 			// TODO(b/308448107): Test unmanaged user on enrolled device in Ash.
