@@ -24,7 +24,7 @@ func init() {
 		Contacts: []string{
 			"cros-debugd@google.com",
 			"aashay@google.com",
-			"jorgelo@google.com",
+			"jorgelo@chromium.org",
 		},
 		// ChromeOS > Software > System Services > debugd
 		BugComponent: "b:1309999",

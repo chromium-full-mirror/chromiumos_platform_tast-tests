@@ -27,7 +27,7 @@ func init() {
 			"chromeos-data-eng@google.com",
 			"enlightened@chromium.org",
 			"allenwebb@chromium.org",
-			"jorgelo@google.com",
+			"jorgelo@chromium.org",
 		},
 		BugComponent: "b:1032705",
 		Attr:         []string{"group:mainline"},

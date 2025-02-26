@@ -24,7 +24,7 @@ func init() {
 		SoftwareDeps: []string{"chrome", "usbguard"},
 		BugComponent: "b:1048474", // ChromeOS > Security > Usb_bouncer/Usbguard
 		Contacts: []string{
-			"chromeos-security@google.com",
+			"chromeos-hardening@google.com",
 			"allenwebb@chromium.org",
 			"jorgelo@chromium.org",
 		},

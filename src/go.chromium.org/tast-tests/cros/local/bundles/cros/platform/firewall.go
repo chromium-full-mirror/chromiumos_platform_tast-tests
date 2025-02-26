@@ -24,7 +24,7 @@ func init() {
 		Func: Firewall,
 		Desc: "Ensure the firewall service is working correctly",
 		Contacts: []string{
-			"chromeos-security@google.com",
+			"chromeos-hardening@google.com",
 			"jorgelo@chromium.org", // Security team
 			"cros-networking@google.com",
 			"jasongustaman@google.com",
