@@ -27,7 +27,6 @@ func init() {
 		Desc: "Verify broken screen during user-request-recovery-boot, and manual recovery with usb",
 		Contacts: []string{
 			"chromeos-faft@google.com",
-			"shchen@google.com",
 		},
 		BugComponent: "b:792402", // ChromeOS > Platform > Enablement > Firmware > FAFT
 		Attr:         []string{"group:firmware", "firmware_bios", "firmware_level2", "firmware_usb", "group:labqual", "firmware_ro"},
