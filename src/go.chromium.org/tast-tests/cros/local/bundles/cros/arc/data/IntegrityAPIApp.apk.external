@@ -1,5 +1,5 @@
 {
-  "url": "gs://chromiumos-test-assets-public/tast/cros/arc/IntegrityAPIApp_20250122.apk",
-  "size": 2674515,
-  "sha256sum": "552341fadc135c1faee1fa5f552ba280c7745ea83136efc000a105635e168a81"
+  "url": "gs://chromiumos-test-assets-public/tast/cros/arc/IntegrityAPIApp_20250226.apk",
+  "size": 2158478,
+  "sha256sum": "65dcdb4625d6f56f5c0c67f89494172e35fbb0fe8e2506af639eefd599e2db52"
 }

@@ -21,6 +21,7 @@ import (
 	"go.chromium.org/tast/core/ctxutil"
 	"go.chromium.org/tast/core/errors"
 	"go.chromium.org/tast/core/testing"
+	"go.chromium.org/tast/core/testing/hwdep"
 )
 
 const (
@@ -95,6 +96,7 @@ func init() {
 		Timeout:      chrome.LoginTimeout + arc.BootTimeout + 60*time.Second,
 		Fixture:      "arcBooted",
 		SoftwareDeps: []string{"android_vm_t", "chrome"},
+		HardwareDeps: hwdep.D(hwdep.MinStorage(17)), // UI Automator is flaky on low storage devices.
 		VarDeps:      []string{uiCommon.GaiaPoolDefaultVarName},
 		Params: []testing.Param{{
 			ExtraData: []string{
