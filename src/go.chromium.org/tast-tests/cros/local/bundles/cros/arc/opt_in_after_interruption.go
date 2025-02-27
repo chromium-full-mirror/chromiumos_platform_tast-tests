@@ -44,8 +44,7 @@ func init() {
 		Desc: "Verify ARC Provisioning completes even with interruptions by restarting Chrome",
 		Contacts: []string{
 			"arc-performance@google.com",
-			"alanding@chromium.org", // Tast port author.
-			"khmel@chromium.org",    // Original autotest author.
+			"khmel@chromium.org", // Original autotest author.
 		},
 		// ChromeOS > Software > ARC++ > Performance
 		BugComponent: "b:168382",

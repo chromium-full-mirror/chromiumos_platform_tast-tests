@@ -41,7 +41,6 @@ func init() {
 			"arc-performance@google.com",
 			"cwd@chromium.org", // Author
 			"khmel@chromium.org",
-			"alanding@chromium.org",
 		},
 		// ChromeOS > Software > ARC++ > Performance
 		BugComponent: "b:168382",

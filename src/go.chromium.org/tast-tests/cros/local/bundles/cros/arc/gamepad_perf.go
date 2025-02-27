@@ -23,7 +23,6 @@ func init() {
 		Contacts: []string{
 			"arc-performance@google.com",
 			"hungmn@chromium.org",
-			"alanding@chromium.org",
 		},
 		// ChromeOS > Software > ARC++ > Performance
 		BugComponent: "b:168382",

@@ -51,7 +51,6 @@ func init() {
 		Desc:           "Captures set of apploading performance metrics and uploads them as perf metrics",
 		Contacts: []string{
 			"arc-performance@google.com",
-			"alanding@chromium.org",
 			"khmel@chromium.org",
 		},
 		// ChromeOS > Software > ARC++ > Performance

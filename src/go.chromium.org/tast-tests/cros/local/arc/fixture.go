@@ -155,7 +155,6 @@ func init() {
 		Name: "arcBootedWithDisableExternalStorage",
 		Desc: "ARC is booted with disabling sync flags, firmware updates and external storage access",
 		Contacts: []string{
-			"alanding@chromium.org",
 			"arc-performance@google.com",
 		},
 		// ChromeOS > Software > ARC++ > Performance
@@ -232,7 +231,6 @@ func init() {
 		Name: "arcBootedRestricted",
 		Desc: "ARC is booted in idle state",
 		Contacts: []string{
-			"alanding@chromium.org",
 			"arc-performance@google.com",
 		},
 		// ChromeOS > Software > ARC++ > Performance

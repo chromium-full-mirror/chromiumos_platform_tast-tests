@@ -22,7 +22,6 @@ func init() {
 		Desc: "Validates that ARC ureadahead packs in the host/guest OS exist and are valid",
 		Contacts: []string{
 			"arc-performance@google.com",
-			"alanding@google.com",
 			"khmel@google.com",
 		},
 		// ChromeOS > Software > ARC++ > Performance

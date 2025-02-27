@@ -35,8 +35,6 @@ func init() {
 		Desc:           "Captures set of media performance metrics and uploads them as perf metrics",
 		Contacts: []string{
 			"arc-performance@google.com",
-			"jasondchen@google.com",
-			"alanding@google.com",
 		},
 		// ChromeOS > Software > ARC++ > Performance
 		BugComponent: "b:168382",

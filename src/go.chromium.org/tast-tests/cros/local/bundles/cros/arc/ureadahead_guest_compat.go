@@ -25,7 +25,6 @@ func init() {
 		Desc: "Validates that ureadahead binary from CrOS host can work in the guest ARCVM OS",
 		Contacts: []string{
 			"arc-performance@google.com",
-			"alanding@google.com",
 			"khmel@google.com",
 		},
 		// ChromeOS > Software > ARC++ > Performance

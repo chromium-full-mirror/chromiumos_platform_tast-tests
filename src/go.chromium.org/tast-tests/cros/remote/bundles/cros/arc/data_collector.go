@@ -154,7 +154,6 @@ func init() {
 		Contacts: []string{
 			"arc-performance@google.com",
 			"khmel@chromium.org", // Original author.
-			"alanding@chromium.org",
 		},
 		// ChromeOS > Software > ARC++ > Performance
 		BugComponent: "b:168382",
