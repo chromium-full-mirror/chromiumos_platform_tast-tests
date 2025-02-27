@@ -44,7 +44,6 @@ import (
 	"go.chromium.org/tast-tests/cros/local/cryptohome"
 	"go.chromium.org/tast-tests/cros/local/graphics"
 	"go.chromium.org/tast-tests/cros/local/input"
-	"go.chromium.org/tast-tests/cros/local/loginstatus"
 	localPerf "go.chromium.org/tast-tests/cros/local/perf"
 	"go.chromium.org/tast-tests/cros/local/ui/cujrecorder"
 	"go.chromium.org/tast-tests/cros/local/upstart"
@@ -329,7 +328,9 @@ func Run(ctx context.Context, meet MeetTest, cr *chrome.Chrome, testCaseVar func
 			}
 			// Add 30 minutes to the bot duration, to ensure that the bots stay long
 			// enough for the test to get info from chrome://webrtc-internals.
-			botList, numFailures, err := bc.AddBots(sctx, meetingCode, botsToAdd, meetTimeout+30*time.Minute, meet.BotsOptions...)
+			// Add bots that requests HD video.
+			botsOptions := append(meet.BotsOptions, bond.WithHDVideo())
+			botList, numFailures, err := bc.AddBots(sctx, meetingCode, botsToAdd, meetTimeout+30*time.Minute, botsOptions...)
 			if err != nil {
 				return errors.Wrapf(err, "failed to create %d bots", botsToAdd)
 			}
@@ -896,18 +897,6 @@ func Run(ctx context.Context, meet MeetTest, cr *chrome.Chrome, testCaseVar func
 
 		if err := meetHelper.SetReceiveResolution720p(ctx); err != nil {
 			return errors.Wrap(err, "failed to request receiving 720p")
-		}
-		// Direct the spotlight bot to pin the test user so
-		// that the test user will have to provide HD video.
-		login, err := loginstatus.GetLoginStatus(ctx, tconn)
-		if err != nil {
-			return errors.Wrap(err, "failed to get login status")
-		}
-		if !login.IsLoggedIn {
-			return errors.Wrap(err, "expect to see a user is logged in in login status")
-		}
-		if err := bc.ExecuteScript(ctx, fmt.Sprintf("@b%d pin_participant_by_name %q", spotlightBotList[0], *login.DisplayName), meetingCode); err != nil {
-			return errors.Wrap(err, "failed to direct the spotlight bot to pin the test user")
 		}
 
 		isPresenting := false

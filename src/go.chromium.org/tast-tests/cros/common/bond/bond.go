@@ -10,8 +10,8 @@ import (
 	"context"
 	"encoding/json"
 	"io"
-	"os"
 	"net/http"
+	"os"
 	"time"
 
 	"golang.org/x/oauth2"
@@ -233,14 +233,15 @@ func (c *Client) ExecuteScript(ctx context.Context, script, meetingCode string) 
 }
 
 type addBotsOptions struct {
-	sendFPS         int
-	requestedLayout string
-	allowVP9        bool
-	sendVP9         bool
-	audio           bool
-	audioFilePath   string
-	videoFilePath   string
-	video           bool
+	sendFPS                  int
+	requestedVideoResolution map[string]int32
+	requestedLayout          string
+	allowVP9                 bool
+	sendVP9                  bool
+	audio                    bool
+	audioFilePath            string
+	videoFilePath            string
+	video                    bool
 }
 
 // AddBotsOption customizes the request of AddBods.
@@ -289,6 +290,17 @@ func WithVP9(allow, send bool) AddBotsOption {
 	}
 }
 
+// WithHDVideo requests video resolution to HD.
+func WithHDVideo() AddBotsOption {
+	var videoResolutionHD = map[string]int32{
+		"width":  1280,
+		"height": 720,
+	}
+	return func(opts *addBotsOptions) {
+		opts.requestedVideoResolution = videoResolutionHD
+	}
+}
+
 // WithoutVideo disable bot video
 func WithoutVideo() AddBotsOption {
 	return func(opts *addBotsOptions) {
@@ -330,6 +342,20 @@ func (c *Client) AddBots(ctx context.Context, meetingCode string, numBots int, t
 		NumberOfFailures int   `json:"numberOfFailures"`
 		BotIDs           []int `json:"botIds"`
 	}
+
+	mediaOptions := map[string]interface{}{
+		"audio_file_path": options.audioFilePath,
+		"mute_audio":      !options.audio,
+		"video_fps":       options.sendFPS,
+		"mute_video":      !options.video,
+	}
+
+	if options.requestedVideoResolution != nil {
+		mediaOptions["requested_video_resolution"] = options.requestedVideoResolution
+	} else {
+		mediaOptions["requested_layout"] = options.requestedLayout
+	}
+
 	req := map[string]interface{}{
 		"num_of_bots": numBots,
 		"ttl_secs":    ttl / time.Second,
@@ -337,13 +363,7 @@ func (c *Client) AddBots(ctx context.Context, meetingCode string, numBots int, t
 			"allow_vp9": options.allowVP9,
 			"send_vp9":  options.sendVP9,
 		},
-		"media_options": map[string]interface{}{
-			"audio_file_path":  options.audioFilePath,
-			"mute_audio":       !options.audio,
-			"video_fps":        options.sendFPS,
-			"mute_video":       !options.video,
-			"requested_layout": options.requestedLayout,
-		},
+		"media_options": mediaOptions,
 		"backend_options": map[string]string{
 			"mesi_apiary_url":      hangoutEndpoints,
 			"mas_one_platform_url": meetingEndpoints,
