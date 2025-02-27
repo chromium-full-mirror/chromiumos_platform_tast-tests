@@ -62,7 +62,8 @@ func init() {
 			},
 			ExtraSoftwareDeps: []string{"uefi_firmware"},
 			// TODO(b/396131222): Remove once we have reset the keys.
-			ExtraHardwareDeps: hwdep.D(hwdep.SkipDMIProductName("NUC13OXKv5")),
+			// TODO(b/393352804): Remove `NUC13OXKv5` when fixed.
+			ExtraHardwareDeps: hwdep.D(hwdep.SkipDMIProductName("NUC13OXKv5", "NUC13OXv5")),
 		}},
 	})
 }
