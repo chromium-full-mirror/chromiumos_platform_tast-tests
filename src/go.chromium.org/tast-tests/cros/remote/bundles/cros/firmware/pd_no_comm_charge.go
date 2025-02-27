@@ -27,7 +27,7 @@ func init() {
 			"chromeos-faft@google.com", // Owning team list
 			"jasonyuan@google.com",     // Test author
 		},
-		BugComponent: "b:156552219", // ChromeOS > Platform > Enablement > Firmware > FAFT
+		BugComponent: "b:792402", // ChromeOS > Platform > baseOS > Firmware > FAFT
 		Data:         []string{firmware.ConfigFile},
 		Vars:         []string{"servo"},
 		SoftwareDeps: []string{"chrome"},
