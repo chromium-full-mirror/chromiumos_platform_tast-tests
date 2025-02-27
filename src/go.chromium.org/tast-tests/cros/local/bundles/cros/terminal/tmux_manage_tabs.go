@@ -28,7 +28,6 @@ func init() {
 		Desc: "Test management of tabs of Terminal app tmux integration",
 		Contacts: []string{
 			"guestos-ui@google.com",
-			"lxj@google.com",
 		},
 		BugComponent: "b:658562",
 		Attr:         []string{"group:mainline", "informational"},

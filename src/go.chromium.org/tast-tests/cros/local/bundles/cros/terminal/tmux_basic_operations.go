@@ -24,7 +24,6 @@ func init() {
 		Desc: "Verify controlling tab, echo strings in the first Tmux tab, and detach and reattach tabs",
 		Contacts: []string{
 			"guestos-ui@google.com",
-			"lxj@google.com",
 		},
 		BugComponent: "b:658562",
 		Attr:         []string{"group:mainline", "informational", "group:hw_agnostic"},
