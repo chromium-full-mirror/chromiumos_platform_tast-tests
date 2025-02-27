@@ -32,9 +32,8 @@ func init() {
 		Func: DailyRefreshGooglePhotosWallpaper,
 		Desc: "Test setting Google Photos wallpapers as daily refresh source",
 		Contacts: []string{
-			"assistive-eng@google.com",
-			"xiaohuic@google.com",
-			"chromeos-sw-engprod@google.com",
+			"cros-p13n-eng@google.com",
+			"chromeos-consumer-engprod@google.com",
 		},
 		// ChromeOS > Software > Personalization
 		BugComponent: "b:1006527",

@@ -37,10 +37,8 @@ func init() {
 		Name: BaseFixture,
 		Desc: "Base fixture for Personalization tests",
 		Contacts: []string{
-			"pzliu@google.com",
-			"cowmoo@google.com",
-			"chromeos-sw-engprod@google.com",
-			"assistive-eng@google.com",
+			"cros-p13n-eng@google.com",
+			"chromeos-consumer-engprod@google.com",
 		},
 		// ChromeOS > Software > Personalization
 		BugComponent:    "b:1006527",
@@ -55,9 +53,8 @@ func init() {
 		Name: ClamshellFixture,
 		Desc: "Clamshell mode for Personalization tests",
 		Contacts: []string{
-			"thuongphan@google.com",
-			"chromeos-sw-engprod@google.com",
-			"assistive-eng@google.com",
+			"cros-p13n-eng@google.com",
+			"chromeos-consumer-engprod@google.com",
 		},
 		// ChromeOS > Software > Personalization
 		BugComponent:    "b:1006527",
@@ -72,9 +69,8 @@ func init() {
 		Name: GaiaFixture,
 		Desc: "Login using Gaia account for Personalization tests",
 		Contacts: []string{
-			"thuongphan@google.com",
-			"chromeos-sw-engprod@google.com",
-			"assistive-eng@google.com",
+			"cros-p13n-eng@google.com",
+			"chromeos-consumer-engprod@google.com",
 		},
 		// ChromeOS > Software > Personalization
 		BugComponent: "b:1006527",
@@ -93,9 +89,8 @@ func init() {
 		Name: GooglePhotosFixture,
 		Desc: "Login with Gaia account with Google Photos Wallpaper enabled and with existing photos",
 		Contacts: []string{
-			"thuongphan@google.com",
-			"chromeos-sw-engprod@google.com",
-			"assistive-eng@google.com",
+			"cros-p13n-eng@google.com",
+			"chromeos-consumer-engprod@google.com",
 		},
 		// ChromeOS > Software > Personalization
 		BugComponent: "b:1006527",
@@ -119,9 +114,8 @@ func init() {
 		Name: GooglePhotosClamshellFixture,
 		Desc: "Login with Gaia account that has google photos albums for screen saver tests in Clamshell mode",
 		Contacts: []string{
-			"assistive-eng@google.com",
-			"chromeos-sw-engprod@google.com",
-			"cowmoo@google.com",
+			"cros-p13n-eng@google.com",
+			"chromeos-consumer-engprod@google.com",
 		},
 		// ChromeOS > Software > Personalization
 		BugComponent: "b:1006527",
