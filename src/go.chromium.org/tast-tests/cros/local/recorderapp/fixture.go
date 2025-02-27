@@ -46,7 +46,7 @@ func init() {
 	testing.AddFixture(&testing.Fixture{
 		Name:            "recorderAppPrepared",
 		Desc:            "Set necessary settings for launching the Recorder App",
-		Contacts:        []string{"chromeos-recorder-app@google.com", "kamchonlathorn@chromium.org"},
+		Contacts:        []string{"chromeos-recorder-app@google.com", "hsuanling@google.com", "yuanchieh@google.com"},
 		BugComponent:    "b:1522466", // ChromeOS > Platform > Technologies > Audio > Recorder App
 		Impl:            &fixture{},
 		SetUpTimeout:    chrome.FixtureSetUpTimeout,
@@ -57,7 +57,7 @@ func init() {
 	testing.AddFixture(&testing.Fixture{
 		Name:         "powerAshWithRecorderApp",
 		Desc:         "PowerAsh fixture with Recorder App enabled",
-		Contacts:     []string{"chromeos-recorder-app@google.com", "kamchonlathorn@chromium.org"},
+		Contacts:     []string{"chromeos-recorder-app@google.com", "hsuanling@google.com", "yuanchieh@google.com"},
 		BugComponent: "b:1522466", // ChromeOS > Platform > Technologies > Audio > Recorder App
 		Impl: powersetup.NewPowerUIFixture(recorderAppPowerTestOptions, powersetup.PowerFixtureOptions{
 			EnableGAIALogin: true,
@@ -73,7 +73,7 @@ func init() {
 	testing.AddFixture(&testing.Fixture{
 		Name:         "powerAshGAIAWithRecorderAppAndAloopLoaded",
 		Desc:         "PowerAshGAIA fixture with Recorder App enabled and ALSA loopback device configured",
-		Contacts:     []string{"chromeos-recorder-app@google.com", "kamchonlathorn@chromium.org"},
+		Contacts:     []string{"chromeos-recorder-app@google.com", "hsuanling@google.com", "yuanchieh@google.com"},
 		BugComponent: "b:1522466", // ChromeOS > Platform > Technologies > Audio > Recorder App
 		Impl: powersetup.NewPowerUIFixture(recorderAppPowerTestOptions, powersetup.PowerFixtureOptions{
 			EnableGAIALogin: true,

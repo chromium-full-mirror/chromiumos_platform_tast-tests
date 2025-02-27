@@ -53,7 +53,7 @@ func init() {
 	testing.AddTest(&testing.Test{
 		Func:         RecordingMeetPower,
 		Desc:         "Collect power metrics when using Recorder App and Meet at the same time",
-		Contacts:     []string{"chromeos-recorder-app@google.com", "kamchonlathorn@chromium.org"},
+		Contacts:     []string{"chromeos-recorder-app@google.com", "hsuanling@google.com"},
 		BugComponent: "b:1522466", // ChromeOS > Platform > Technologies > Audio > Recorder App
 		VarDeps:      []string{"ui.bond_credentials"},
 		Timeout:      testDuration,

@@ -51,7 +51,7 @@ func init() {
 	testing.AddTest(&testing.Test{
 		Func:         PlaybackPower,
 		Desc:         "Collect power metrics for playback-related use cases in Recorder App",
-		Contacts:     []string{"chromeos-recorder-app@google.com", "kamchonlathorn@chromium.org"},
+		Contacts:     []string{"chromeos-recorder-app@google.com", "yuanchieh@google.com"},
 		BugComponent: "b:1522466", // ChromeOS > Platform > Technologies > Audio > Recorder App
 		Attr:         []string{"group:crosbolt", "crosbolt_perbuild"},
 		SoftwareDeps: []string{"chrome"},
