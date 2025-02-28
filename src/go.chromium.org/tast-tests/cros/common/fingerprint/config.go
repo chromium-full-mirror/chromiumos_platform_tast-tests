@@ -20,6 +20,7 @@ const (
 	BoardNameNami         BoardName = "nami_fp"
 	BoardNameHelipilot    BoardName = "helipilot"
 	BoardNameGwendolin    BoardName = "gwendolin"
+	BoardNameRosalia      BoardName = "rosalia"
 )
 
 // IsValid checks if the BoardName is a valid fingerprint board name.
@@ -31,7 +32,8 @@ func (b BoardName) IsValid() bool {
 		BoardNameNocturne,
 		BoardNameNami,
 		BoardNameHelipilot,
-		BoardNameGwendolin:
+		BoardNameGwendolin,
+		BoardNameRosalia:
 		return true
 	default:
 		return false
