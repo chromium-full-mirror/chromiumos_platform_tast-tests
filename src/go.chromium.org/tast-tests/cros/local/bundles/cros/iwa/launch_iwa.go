@@ -57,6 +57,7 @@ func LaunchIWA(ctx context.Context, s *testing.State) {
 	const (
 		kitchenSinkIWAUpdateManifestURL = "https://github.com/chromeos/iwa-sink/releases/latest/download/update.json"
 		kitchenSinkIWAWebBundleID       = "aiv4bxauvcu3zvbu6r5yynoh4atkzqqaoeof5mwz54b4zfywcrjuoaacai"
+		kitchenSinkIWAVersion           = "0.17.0"
 	)
 
 	pb := policy.NewBlob()
@@ -66,6 +67,7 @@ func LaunchIWA(ctx context.Context, s *testing.State) {
 				{
 					UpdateManifestUrl: kitchenSinkIWAUpdateManifestURL,
 					WebBundleId:       kitchenSinkIWAWebBundleID,
+					PinnedVersion:     kitchenSinkIWAVersion,
 				},
 			},
 		},
