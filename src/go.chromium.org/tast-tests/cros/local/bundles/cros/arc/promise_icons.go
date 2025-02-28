@@ -26,10 +26,9 @@ func init() {
 		Func: PromiseIcons,
 		Desc: "Verifies that a Play Store installation creates a promise icon in Launcher",
 		Contacts: []string{
-			"chromeos-apps-foundation-team@google.com",
-			"mattlui@google.com",
+			"cros-web-apps-team@google.com",
 		},
-		BugComponent: "b:1203766",
+		BugComponent: "b:1389907",
 		Attr: []string{
 			"group:mainline",
 			"informational",

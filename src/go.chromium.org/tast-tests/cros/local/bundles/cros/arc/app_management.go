@@ -41,10 +41,9 @@ func init() {
 		Func: AppManagement,
 		Desc: "Verifies integration of ARC apps into the OS Settings App Management UI",
 		Contacts: []string{
-			"chromeos-apps-foundation-team@google.com",
-			"tsergeant@chromium.org",
+			"cros-web-apps-team@google.com",
 		},
-		BugComponent: "b:1203766",
+		BugComponent: "b:1389907",
 		Attr:         []string{
 			// Disabled by TORA. See: b/341117039
 			// "group:mainline",

@@ -24,10 +24,12 @@ import (
 
 func init() {
 	testing.AddTest(&testing.Test{
-		Func:         PlayStoreOmnibox,
-		Desc:         "Installs a TWA and WebAPK app via Omnibox in Play Store",
-		Contacts:     []string{"chromeos-apps-foundation-core@google.com", "tsergeant@chromium.org"},
-		BugComponent: "b:1203766",
+		Func: PlayStoreOmnibox,
+		Desc: "Installs a TWA and WebAPK app via Omnibox in Play Store",
+		Contacts: []string{
+			"cros-web-apps-team@google.com",
+		},
+		BugComponent: "b:1389907",
 		Attr:         []string{"group:mainline", "informational"},
 		SoftwareDeps: []string{"gaia"},
 		Params: []testing.Param{{

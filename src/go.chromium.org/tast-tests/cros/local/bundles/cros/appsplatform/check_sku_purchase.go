@@ -19,9 +19,9 @@ func init() {
 		Func: CheckSkuPurchase,
 		Desc: "Verify the ARC Payments overlay appears and can be navigated",
 		Contacts: []string{
-			"chromeos-apps-foundation-team@google.com",
+			"cros-web-apps-team@google.com",
 		},
-		BugComponent: "b:1203766",
+		BugComponent: "b:1389907",
 		Attr: []string{
 			"group:mainline",
 			"informational",

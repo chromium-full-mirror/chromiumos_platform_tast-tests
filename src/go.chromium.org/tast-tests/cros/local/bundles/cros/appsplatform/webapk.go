@@ -43,10 +43,9 @@ func init() {
 		Func: WebAPK,
 		Desc: "Checks that a WebAPK can be used to share data to a web app",
 		Contacts: []string{
-			"chromeos-apps-foundation-team@google.com",
-			"tsergeant@chromium.org",
+			"cros-web-apps-team@google.com",
 		},
-		BugComponent: "b:1203766",
+		BugComponent: "b:1389907",
 		Attr:         []string{"group:mainline", "informational", "group:hw_agnostic"},
 		SoftwareDeps: []string{"chrome", "gaia"},
 		Data: []string{

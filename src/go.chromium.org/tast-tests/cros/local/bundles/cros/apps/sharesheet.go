@@ -30,9 +30,9 @@ func init() {
 		Func: Sharesheet,
 		Desc: "Verify sharing a file to PWA works",
 		Contacts: []string{
-			"chromeos-apps-foundation-team@google.com",
+			"cros-web-apps-team@google.com",
 		},
-		BugComponent: "b:1203766",
+		BugComponent: "b:1389907",
 		Attr:         []string{"group:mainline", "group:hw_agnostic"},
 		Data:         []string{"sharesheet_manifest.json", "sharesheet_service.js", "sharesheet_index.html", "sharesheet_icon.png"},
 		SoftwareDeps: []string{"chrome"},

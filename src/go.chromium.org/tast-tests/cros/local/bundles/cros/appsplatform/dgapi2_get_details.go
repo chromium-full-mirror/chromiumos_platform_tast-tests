@@ -21,9 +21,9 @@ func init() {
 		Func: Dgapi2GetDetails,
 		Desc: "Verify DGAPI2 test app returns expected details",
 		Contacts: []string{
-			"chromeos-apps-foundation-team@google.com",
+			"cros-web-apps-team@google.com",
 		},
-		BugComponent: "b:1203766",
+		BugComponent: "b:1389907",
 		Attr:         []string{"group:mainline", "informational", "group:hw_agnostic"},
 		SoftwareDeps: []string{"chrome", "gaia"},
 		Fixture:      "playBillingFixture",

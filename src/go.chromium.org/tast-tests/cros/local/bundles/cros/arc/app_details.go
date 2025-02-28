@@ -29,11 +29,9 @@ func init() {
 		Func: AppDetails,
 		Desc: "Verifies App Details in the OS Settings App Management UI",
 		Contacts: []string{
-			"chromeos-apps-foundation-team@google.com",
-			"tsergeant@google.com",
-			"djacobo@google.com",
+			"cros-web-apps-team@google.com",
 		},
-		BugComponent: "b:1203766",
+		BugComponent: "b:1389907",
 		Attr:         []string{"group:mainline", "informational", "group:hw_agnostic"},
 		SoftwareDeps: []string{"chrome", "android_vm_t", "gaia"},
 		Fixture:      "arcBootedWithPlayStore",

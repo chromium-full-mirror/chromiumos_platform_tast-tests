@@ -24,9 +24,9 @@ func init() {
 		Func: ChromeIntentPicker,
 		Desc: "Verify Chrome Intent Picker can launch ARC app by visiting URL",
 		Contacts: []string{
-			"chromeos-apps-foundation-team@google.com",
+			"cros-web-apps-team@google.com",
 		},
-		BugComponent: "b:1203766",
+		BugComponent: "b:1389907",
 		Attr:         []string{"group:mainline", "informational", "group:hw_agnostic"},
 		SoftwareDeps: []string{"chrome"},
 		Params: []testing.Param{{

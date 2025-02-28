@@ -27,7 +27,7 @@ func init() {
 			"cros-web-apps-team@google.com",
 			"renkens@google.com",
 		},
-		BugComponent: "b:1203766",
+		BugComponent: "b:1389907",
 		Attr:         []string{"group:mainline", "informational", "group:hw_agnostic"},
 		SoftwareDeps: []string{"chrome"},
 		Timeout:      6 * time.Minute,
