@@ -28,7 +28,7 @@ func init() {
 			{
 				Name:              "gtk3_wayland_bullseye_stable",
 				ExtraData:         []string{"toolkit_gtk3_demo.py"},
-				ExtraSoftwareDeps: []string{"dlc", "no_brya_kernelnext"},
+				ExtraSoftwareDeps: []string{"dlc"},
 				ExtraHardwareDeps: crostini.CrostiniOptimalPerf,
 				Fixture:           "crostiniBullseye",
 				Timeout:           7 * time.Minute,
@@ -39,7 +39,7 @@ func init() {
 			}, {
 				Name:              "gtk3_wayland_bookworm_stable",
 				ExtraData:         []string{"toolkit_gtk3_demo.py"},
-				ExtraSoftwareDeps: []string{"dlc", "no_brya_kernelnext"},
+				ExtraSoftwareDeps: []string{"dlc"},
 				ExtraHardwareDeps: crostini.CrostiniOptimalPerf,
 				Fixture:           "crostiniBookworm",
 				Timeout:           7 * time.Minute,
@@ -50,7 +50,7 @@ func init() {
 			}, {
 				Name:              "gtk3_x11_bullseye_stable",
 				ExtraData:         []string{"toolkit_gtk3_demo.py"},
-				ExtraSoftwareDeps: []string{"dlc", "no_brya_kernelnext"},
+				ExtraSoftwareDeps: []string{"dlc"},
 				ExtraHardwareDeps: crostini.CrostiniOptimalPerf,
 				Fixture:           "crostiniBullseye",
 				Timeout:           7 * time.Minute,
@@ -61,7 +61,7 @@ func init() {
 			}, {
 				Name:              "gtk3_x11_bookworm_stable",
 				ExtraData:         []string{"toolkit_gtk3_demo.py"},
-				ExtraSoftwareDeps: []string{"dlc", "no_brya_kernelnext"},
+				ExtraSoftwareDeps: []string{"dlc"},
 				ExtraHardwareDeps: crostini.CrostiniOptimalPerf,
 				Fixture:           "crostiniBookworm",
 				Timeout:           7 * time.Minute,
@@ -72,7 +72,7 @@ func init() {
 			}, {
 				Name:              "gtk4_wayland_bookworm_stable",
 				ExtraData:         []string{"toolkit_gtk4_demo.py"},
-				ExtraSoftwareDeps: []string{"dlc", "no_brya_kernelnext"},
+				ExtraSoftwareDeps: []string{"dlc"},
 				ExtraHardwareDeps: crostini.CrostiniOptimalPerf,
 				Fixture:           "crostiniBookworm",
 				Timeout:           7 * time.Minute,
@@ -83,7 +83,7 @@ func init() {
 			}, {
 				Name:              "gtk4_x11_bookworm_stable",
 				ExtraData:         []string{"toolkit_gtk4_demo.py"},
-				ExtraSoftwareDeps: []string{"dlc", "no_brya_kernelnext"},
+				ExtraSoftwareDeps: []string{"dlc"},
 				ExtraHardwareDeps: crostini.CrostiniOptimalPerf,
 				Fixture:           "crostiniBookworm",
 				Timeout:           7 * time.Minute,
@@ -94,7 +94,7 @@ func init() {
 			}, {
 				Name:              "qt5_x11_bullseye_stable",
 				ExtraData:         []string{"toolkit_qt5_demo.py"},
-				ExtraSoftwareDeps: []string{"dlc", "no_brya_kernelnext"},
+				ExtraSoftwareDeps: []string{"dlc"},
 				ExtraHardwareDeps: crostini.CrostiniOptimalPerf,
 				Fixture:           "crostiniBullseye",
 				Timeout:           7 * time.Minute,
@@ -105,7 +105,7 @@ func init() {
 			}, {
 				Name:              "qt5_x11_bookworm_stable",
 				ExtraData:         []string{"toolkit_qt5_demo.py"},
-				ExtraSoftwareDeps: []string{"dlc", "no_brya_kernelnext"},
+				ExtraSoftwareDeps: []string{"dlc"},
 				ExtraHardwareDeps: crostini.CrostiniOptimalPerf,
 				Fixture:           "crostiniBookworm",
 				Timeout:           7 * time.Minute,
@@ -117,7 +117,7 @@ func init() {
 				Name:              "qt5_wayland_bullseye_stable",
 				ExtraAttr:         []string{"informational"},
 				ExtraData:         []string{"toolkit_qt5_demo.py"},
-				ExtraSoftwareDeps: []string{"dlc", "no_brya_kernelnext"},
+				ExtraSoftwareDeps: []string{"dlc"},
 				ExtraHardwareDeps: crostini.CrostiniOptimalPerf,
 				Fixture:           "crostiniBullseye",
 				Timeout:           7 * time.Minute,
@@ -129,7 +129,7 @@ func init() {
 				Name:              "qt5_wayland_bookworm_stable",
 				ExtraAttr:         []string{"informational"},
 				ExtraData:         []string{"toolkit_qt5_demo.py"},
-				ExtraSoftwareDeps: []string{"dlc", "no_brya_kernelnext"},
+				ExtraSoftwareDeps: []string{"dlc"},
 				ExtraHardwareDeps: crostini.CrostiniOptimalPerf,
 				Fixture:           "crostiniBookworm",
 				Timeout:           7 * time.Minute,
@@ -140,7 +140,7 @@ func init() {
 			}, {
 				Name:              "qt6_x11_bookworm_stable",
 				ExtraData:         []string{"toolkit_qt6_demo.py"},
-				ExtraSoftwareDeps: []string{"dlc", "no_brya_kernelnext"},
+				ExtraSoftwareDeps: []string{"dlc"},
 				ExtraHardwareDeps: crostini.CrostiniOptimalPerf,
 				Fixture:           "crostiniBookworm",
 				Timeout:           7 * time.Minute,
@@ -151,7 +151,7 @@ func init() {
 			}, {
 				Name:              "qt6_wayland_bookworm_stable",
 				ExtraData:         []string{"toolkit_qt6_demo.py"},
-				ExtraSoftwareDeps: []string{"dlc", "no_brya_kernelnext"},
+				ExtraSoftwareDeps: []string{"dlc"},
 				ExtraHardwareDeps: crostini.CrostiniOptimalPerf,
 				Fixture:           "crostiniBookworm",
 				Timeout:           7 * time.Minute,
@@ -162,7 +162,7 @@ func init() {
 			}, {
 				Name:              "tkinter_bullseye_stable",
 				ExtraData:         []string{"toolkit_tkinter_demo.py"},
-				ExtraSoftwareDeps: []string{"dlc", "no_brya_kernelnext"},
+				ExtraSoftwareDeps: []string{"dlc"},
 				ExtraHardwareDeps: crostini.CrostiniOptimalPerf,
 				Fixture:           "crostiniBullseye",
 				Timeout:           7 * time.Minute,
@@ -173,7 +173,7 @@ func init() {
 			}, {
 				Name:              "tkinter_bookworm_stable",
 				ExtraData:         []string{"toolkit_tkinter_demo.py"},
-				ExtraSoftwareDeps: []string{"dlc", "no_brya_kernelnext"},
+				ExtraSoftwareDeps: []string{"dlc"},
 				ExtraHardwareDeps: crostini.CrostiniOptimalPerf,
 				Fixture:           "crostiniBookworm",
 				Timeout:           7 * time.Minute,

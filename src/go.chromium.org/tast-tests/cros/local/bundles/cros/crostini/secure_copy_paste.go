@@ -51,7 +51,7 @@ func init() {
 			{
 				Name:              "copy_wayland_bullseye_stable",
 				ExtraData:         []string{"secure_copy.py"},
-				ExtraSoftwareDeps: []string{"dlc", "no_brya_kernelnext"},
+				ExtraSoftwareDeps: []string{"dlc"},
 				ExtraHardwareDeps: crostini.CrostiniOptimalPerf,
 				Fixture:           "crostiniBullseye",
 				Timeout:           7 * time.Minute,
@@ -63,7 +63,7 @@ func init() {
 			}, {
 				Name:              "copy_wayland_bookworm_stable",
 				ExtraData:         []string{"secure_copy.py"},
-				ExtraSoftwareDeps: []string{"dlc", "no_brya_kernelnext"},
+				ExtraSoftwareDeps: []string{"dlc"},
 				ExtraHardwareDeps: crostini.CrostiniOptimalPerf,
 				Fixture:           "crostiniBookworm",
 				Timeout:           7 * time.Minute,
@@ -75,7 +75,7 @@ func init() {
 			}, {
 				Name:              "copy_x11_bullseye_stable",
 				ExtraData:         []string{"secure_copy.py"},
-				ExtraSoftwareDeps: []string{"dlc", "no_brya_kernelnext"},
+				ExtraSoftwareDeps: []string{"dlc"},
 				ExtraHardwareDeps: crostini.CrostiniOptimalPerf,
 				Fixture:           "crostiniBullseye",
 				Timeout:           7 * time.Minute,
@@ -87,7 +87,7 @@ func init() {
 			}, {
 				Name:              "copy_x11_bookworm_stable",
 				ExtraData:         []string{"secure_copy.py"},
-				ExtraSoftwareDeps: []string{"dlc", "no_brya_kernelnext"},
+				ExtraSoftwareDeps: []string{"dlc"},
 				ExtraHardwareDeps: crostini.CrostiniOptimalPerf,
 				Fixture:           "crostiniBookworm",
 				Timeout:           7 * time.Minute,
@@ -99,7 +99,7 @@ func init() {
 			}, {
 				Name:              "paste_wayland_bullseye_stable",
 				ExtraData:         []string{"secure_paste.py"},
-				ExtraSoftwareDeps: []string{"dlc", "no_brya_kernelnext"},
+				ExtraSoftwareDeps: []string{"dlc"},
 				ExtraHardwareDeps: crostini.CrostiniOptimalPerf,
 				Fixture:           "crostiniBullseye",
 				Timeout:           7 * time.Minute,
@@ -111,7 +111,7 @@ func init() {
 			}, {
 				Name:              "paste_wayland_bookworm_stable",
 				ExtraData:         []string{"secure_paste.py"},
-				ExtraSoftwareDeps: []string{"dlc", "no_brya_kernelnext"},
+				ExtraSoftwareDeps: []string{"dlc"},
 				ExtraHardwareDeps: crostini.CrostiniOptimalPerf,
 				Fixture:           "crostiniBookworm",
 				Timeout:           7 * time.Minute,
@@ -123,7 +123,7 @@ func init() {
 			}, {
 				Name:              "paste_x11_bullseye_stable",
 				ExtraData:         []string{"secure_paste.py"},
-				ExtraSoftwareDeps: []string{"dlc", "no_brya_kernelnext"},
+				ExtraSoftwareDeps: []string{"dlc"},
 				ExtraHardwareDeps: crostini.CrostiniOptimalPerf,
 				Fixture:           "crostiniBullseye",
 				Timeout:           7 * time.Minute,
@@ -135,7 +135,7 @@ func init() {
 			}, {
 				Name:              "paste_x11_bookworm_stable",
 				ExtraData:         []string{"secure_paste.py"},
-				ExtraSoftwareDeps: []string{"dlc", "no_brya_kernelnext"},
+				ExtraSoftwareDeps: []string{"dlc"},
 				ExtraHardwareDeps: crostini.CrostiniOptimalPerf,
 				Fixture:           "crostiniBookworm",
 				Timeout:           7 * time.Minute,

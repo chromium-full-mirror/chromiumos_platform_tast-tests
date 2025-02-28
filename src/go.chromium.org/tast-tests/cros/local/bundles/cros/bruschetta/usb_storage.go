@@ -34,7 +34,7 @@ func init() {
 		Func:         USBStorage,
 		Desc:         "USB storage functional tests for the bruschetta VM",
 		Contacts:     []string{"cros-virt-devices-guests@google.com", "chibar@google.com"},
-		SoftwareDeps: []string{"chrome", "vm_host", "untrusted_vm", "dlc", "amd64", "no_brya_kernelnext"},
+		SoftwareDeps: []string{"chrome", "vm_host", "untrusted_vm", "dlc", "amd64"},
 		HardwareDeps: bruschetta.BruschettaHwDeps,
 		Attr:         []string{"group:mainline"},
 		BugComponent: "b:1248538",
