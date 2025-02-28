@@ -29,10 +29,6 @@ func init() {
 			"arcvm-software@google.com", // Owner team.
 			"raging@google.com",         // Owner for VM tests.
 
-			// Contacts for TestPID and TestMount failure.
-			"rohitbm@chromium.org", // Original author.
-			"arc-eng@google.com",
-
 			// Contacts for TestMidis.
 			"pmalani@chromium.org", // original author
 			"chromeos-audio@google.com",

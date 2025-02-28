@@ -28,8 +28,8 @@ func init() {
 		Desc: "Tests that ARC is started in an on-demand manner",
 		Contacts: []string{
 			"arcvm-eng@google.com",
-			"hashimoto@google.com",
 			"yuholong@google.com",
+			"raging@google.com",
 		},
 		// ChromeOS > Software > ARC++ > ARCVM
 		BugComponent: "b:883059",

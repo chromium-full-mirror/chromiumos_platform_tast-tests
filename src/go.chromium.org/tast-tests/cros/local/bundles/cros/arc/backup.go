@@ -32,7 +32,6 @@ func init() {
 			"arcvm-software@google.com", // Owner team.
 			"niwa@google.com",           // ARCVM data migration.
 			"raging@google.com",         // Owner for VM tests.
-			"rohitbm@google.com",        // Original author.
 		},
 		BugComponent: "b:883059",
 		SoftwareDeps: []string{"chrome"},
