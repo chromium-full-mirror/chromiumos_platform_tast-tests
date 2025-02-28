@@ -34,6 +34,8 @@ const (
 	NocturneFPDevKey = "fingerprint_dev_keys/nocturne_fp/dev_key.pem"
 	// HelipilotFPDevKey is the path to the dev key
 	HelipilotFPDevKey = "fingerprint_dev_keys/helipilot/dev_key.pem"
+	// GwendolinFPDevKey is the path to the dev key
+	GwendolinFPDevKey = "fingerprint_dev_keys/gwendolin/dev_key.pem"
 )
 
 var devKeyMap = map[fp.BoardName]string{
@@ -43,6 +45,7 @@ var devKeyMap = map[fp.BoardName]string{
 	fp.BoardNameNami:         NamiFPDevKey,
 	fp.BoardNameNocturne:     NocturneFPDevKey,
 	fp.BoardNameHelipilot:    HelipilotFPDevKey,
+	fp.BoardNameGwendolin:    GwendolinFPDevKey,
 }
 
 // FingerprintImages is the name of this fixture.
@@ -79,6 +82,7 @@ func init() {
 			NamiFPDevKey,
 			NocturneFPDevKey,
 			HelipilotFPDevKey,
+			GwendolinFPDevKey,
 		},
 	})
 }
