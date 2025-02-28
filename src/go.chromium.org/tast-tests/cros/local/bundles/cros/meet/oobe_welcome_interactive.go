@@ -22,7 +22,7 @@ func init() {
 			"core-devices@google.com",
 			"joshuapius@google.com", // Test author
 		},
-		BugComponent: "b:341064525", // Communications > Video (Meet) > Platforms > Rooms > Core Devices (OS & Hardware)
+		BugComponent: "b:543707", // Communications > Video (Meet) > Platforms > Rooms > Core Devices (OS & Hardware)
 		Attr:         []string{"group:meet", "group:mainline", "informational", "group:hw_agnostic"},
 		SoftwareDeps: []string{"chrome", "meet_device"},
 		Timeout:      chrome.LoginTimeout + 45*time.Second,
