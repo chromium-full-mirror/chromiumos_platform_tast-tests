@@ -28,7 +28,6 @@ func NewChromeServiceClient(ctx context.Context, dutConn *grpc.ClientConn, chrom
 		LoginMode:                    ui.LoginMode_LOGIN_MODE_NO_LOGIN,
 		KeepState:                    true,
 		SigninProfileTestExtensionId: chromeSigninProfileTestExtensionID,
-		DisableFeatures:              []string{"Floss"},
 	}); err != nil {
 		return nil, errors.Wrap(err, "failed to configure chrome for wifi bluetooth testing on DUT")
 	}
@@ -36,13 +35,13 @@ func NewChromeServiceClient(ctx context.Context, dutConn *grpc.ClientConn, chrom
 }
 
 // NewBluetoothServiceClient creates a new BluetoothServiceClient and sets
-// the stack to always be bluez for use in wifi tests.
+// the stack to always be floss for use in wifi tests.
 func NewBluetoothServiceClient(ctx context.Context, dutConn *grpc.ClientConn) (bluetooth.BluetoothServiceClient, error) {
 	bluetoothService := bluetooth.NewBluetoothServiceClient(dutConn)
 	if _, err := bluetoothService.SetBluetoothStack(ctx, &bluetooth.SetBluetoothStackRequest{
-		StackType: bluetooth.BluetoothStackType_BLUETOOTH_STACK_TYPE_BLUEZ,
+		StackType: bluetooth.BluetoothStackType_BLUETOOTH_STACK_TYPE_FLOSS,
 	}); err != nil {
-		return nil, errors.Wrap(err, "failed to set DUT bluetooth stack to bluez")
+		return nil, errors.Wrap(err, "failed to set DUT bluetooth stack to floss")
 	}
 	return bluetoothService, nil
 }
@@ -109,6 +108,11 @@ func AssertBluetoothEnabledState(ctx context.Context, bluetoothService bluetooth
 		return errors.Wrapf(err, "failed to wait for BT powered status to be %t", bluetoothEnabled)
 	}
 	if bluetoothEnabled {
+		// TODO(b:403351552) Starting discovery will fail unless SetPowered is called.
+		if _, err := bluetoothService.SetPowered(ctx, &bluetooth.SetPoweredRequest{Powered: true}); err != nil {
+			return errors.Wrap(err, "failed to enable Bluetooth")
+		}
+
 		testing.ContextLog(ctx, "Validating BT is functional")
 		if err := ValidateBluetoothFunctional(ctx, bluetoothService); err != nil {
 			return errors.Wrap(err, "failed to validate Bluetooth is functional")

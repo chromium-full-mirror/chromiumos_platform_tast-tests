@@ -14,6 +14,7 @@ import (
 	tdreq "go.chromium.org/tast-tests/cros/common/testdevicerequirements"
 	"go.chromium.org/tast-tests/cros/remote/bundles/cros/wifi/wifiutil"
 	"go.chromium.org/tast-tests/cros/remote/wificell"
+	"go.chromium.org/tast-tests/cros/services/cros/bluetooth"
 	"go.chromium.org/tast-tests/cros/services/cros/wifi"
 	"go.chromium.org/tast/core/ctxutil"
 	"go.chromium.org/tast/core/rpc"
@@ -115,6 +116,14 @@ func PersistenceBluetoothSansWifi(ctx context.Context, s *testing.State) {
 		bluetoothService, err := wifiutil.NewBluetoothServiceClient(ctx, r.Conn)
 		if err != nil {
 			s.Fatal("Failed to create new bluetooth service client: ", err)
+		}
+		if _, err := bluetoothService.SetEnabledOnBoot(ctx, &bluetooth.SetEnabledOnBootRequest{
+			AdapterEnabledOnBoot: true,
+		}); err != nil {
+			s.Fatal("Failed to set bluetooth enabled on boot: ", err)
+		}
+		if _, err := bluetoothService.SetPowered(ctx, &bluetooth.SetPoweredRequest{Powered: true}); err != nil {
+			s.Fatal("Failed to re-enable bluetooth: ", err)
 		}
 		if err := wifiutil.AssertBluetoothEnabledState(ctx, bluetoothService, true); err != nil {
 			s.Fatal("Bluetooth not functioning: ", err)
