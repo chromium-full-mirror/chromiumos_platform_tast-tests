@@ -33,11 +33,6 @@ func init() {
 		VariantCategory: `{"name": "BT_Chipset_Kernel"}`,
 		Params: []testing.Param{
 			{
-				Name:    "floss_disabled__le_mouse",
-				Fixture: "chromeLoggedInWith1BTPeerFlossDisabled",
-				Val:     cbt.DeviceTypeLEMouse,
-			},
-			{
 				Name:    "floss_enabled__le_mouse",
 				Fixture: "chromeLoggedInWith1BTPeerFlossEnabled",
 				Val:     cbt.DeviceTypeLEMouse,
