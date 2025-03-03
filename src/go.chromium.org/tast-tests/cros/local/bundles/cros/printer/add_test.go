@@ -3,7 +3,7 @@
 // found in the LICENSE file.
 
 // Run "TAST_GENERATE_UPDATE=1 ~/chromiumos/src/platform/tast/tools/go.sh test add_test.go" inside the chroot
-// from the directory containing this file to regenerate parameters for add.go, add_printscanmgr.go, proxy_add.go.
+// from the directory containing this file to regenerate parameters for add.go, add_debugd.go, proxy_add.go.
 
 package printer
 
@@ -171,6 +171,6 @@ func TestAddParams(t *testing.T) {
 		iTestCustomInputNoArm32("tsc", "printer_add_tsc_printer_rastertobarcodetspl.ppd.gz", "receipt_70mmx80mm.pdf", "printer_add_tsc_printer_rastertobarcodetspl.bin"),
 	})
 	genparams.Ensure(t, "add.go", code)
-	genparams.Ensure(t, "add_printscanmgr.go", code)
+	genparams.Ensure(t, "add_debugd.go", code)
 	genparams.Ensure(t, "proxy_add.go", code)
 }

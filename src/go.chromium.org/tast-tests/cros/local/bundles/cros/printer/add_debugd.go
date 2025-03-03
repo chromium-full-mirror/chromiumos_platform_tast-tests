@@ -15,9 +15,9 @@ import (
 
 func init() {
 	testing.AddTest(&testing.Test{
-		Func:     AddPrintscanmgr,
-		Desc:     "Verifies the lp command enqueues print jobs using printscanmgr",
-		Contacts: []string{"project-bolton@google.com", "pmoy@chromium.org"},
+		Func:     AddDebugd,
+		Desc:     "Verifies the lp command enqueues print jobs using debugd",
+		Contacts: []string{"project-bolton@google.com"},
 		// ChromeOS > Platform > baseOS > Printing
 		BugComponent: "b:167231",
 		Attr: []string{
@@ -672,6 +672,6 @@ func init() {
 	})
 }
 
-func AddPrintscanmgr(ctx context.Context, s *testing.State) {
-	ippprint.Run(ctx, s, s.Param().(*ippprint.Params), true)
+func AddDebugd(ctx context.Context, s *testing.State) {
+	ippprint.Run(ctx, s, s.Param().(*ippprint.Params), false)
 }
