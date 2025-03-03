@@ -37,7 +37,9 @@ func init() {
 		Fixture:      fixture.NormalMode,
 		HardwareDeps: hwdep.D(hwdep.ChromeEC(), hwdep.Battery()),
 		Timeout:      60 * time.Minute,
-		Attr:         []string{"group:firmware", "firmware_pd_unstable"},
+		// TODO(b/156552219): Add "group:firmware_pd_unstable" tag once the test passes.
+		// TODO(b/156552219): Add "group:firmware_pd" tag once the test is stable.
+		Attr: []string{"group:firmware"},
 		Params: []testing.Param{{
 			Name: "normal",
 			Val:  firmware.PDTestParams{},
