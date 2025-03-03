@@ -62,11 +62,8 @@ func ReimagineSafetyCheck(ctx context.Context, s *testing.State) {
 	}
 	defer kb.Close(cleanupCtx)
 
-	editWithAIButton := nodewith.Role(role.ToggleButton).Name("Edit with AI").Ancestor(galleryapp.RootFinder)
-	if err := uiauto.Combine("Trigger Mantis initialization by clicking on 'Edit with AI' button",
-		ui.WithTimeout(time.Minute).WaitUntilExists(editWithAIButton),
-		ui.LeftClick(editWithAIButton))(ctx); err != nil {
-		s.Fatal("Unable to click 'Edit with AI' button: ", err)
+	if err := util.OpenEditWithAIPanel(ctx, ui); err != nil {
+		s.Fatal("Failed to open edit with AI panel: ", err)
 	}
 
 	if err := util.WaitForSpinner(ctx, tconn, ui); err != nil {

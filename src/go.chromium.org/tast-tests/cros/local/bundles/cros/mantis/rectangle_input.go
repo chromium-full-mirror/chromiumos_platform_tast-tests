@@ -53,9 +53,8 @@ func RectangleInput(ctx context.Context, s *testing.State) {
 
 	ui := uiauto.New(tconn)
 
-	editWithAIButton := nodewith.Role(role.ToggleButton).Name("Edit with AI").Ancestor(galleryapp.RootFinder)
-	if err := ui.DoDefault(editWithAIButton)(ctx); err != nil {
-		s.Fatal("Unable to click 'Edit with AI' button: ", err)
+	if err := util.OpenEditWithAIPanel(ctx, ui); err != nil {
+		s.Fatal("Failed to open edit with AI panel: ", err)
 	}
 
 	if err := util.WaitForProgressBar(ctx, tconn, ui); err != nil {

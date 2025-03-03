@@ -6,7 +6,6 @@ package mantis
 
 import (
 	"context"
-	"time"
 
 	"go.chromium.org/tast-tests/cros/local/bundles/cros/mantis/constant"
 	"go.chromium.org/tast-tests/cros/local/bundles/cros/mantis/fixture"
@@ -55,11 +54,8 @@ func UndoFunction(ctx context.Context, s *testing.State) {
 		s.Fatal("Failed to grab screenshot before reimagine: ", err)
 	}
 
-	editWithAIButton := nodewith.Role(role.ToggleButton).Name("Edit with AI").Ancestor(galleryapp.RootFinder)
-	if err := uiauto.Combine("Trigger Mantis initialization by clicking on 'Edit with AI' button",
-		ui.WithTimeout(time.Minute).WaitUntilExists(editWithAIButton),
-		ui.LeftClick(editWithAIButton))(ctx); err != nil {
-		s.Fatal("Unable to click 'Edit with AI' button: ", err)
+	if err := util.OpenEditWithAIPanel(ctx, ui); err != nil {
+		s.Fatal("Failed to open edit with AI panel: ", err)
 	}
 
 	if err := util.WaitForProgressBar(ctx, tconn, ui); err != nil {

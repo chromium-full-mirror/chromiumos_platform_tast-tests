@@ -76,11 +76,8 @@ func InitializationPowerMetrics(ctx context.Context, s *testing.State) {
 
 	ui := uiauto.New(tconn)
 
-	editWithAIButton := nodewith.Role(role.ToggleButton).Name("Edit with AI").Ancestor(galleryapp.RootFinder)
-	if err := uiauto.Combine("Trigger Mantis initialization by clicking on 'Edit with AI' button",
-		ui.WithTimeout(time.Minute).WaitUntilExists(editWithAIButton),
-		ui.LeftClick(editWithAIButton))(ctx); err != nil {
-		s.Fatal("Unable to click 'Edit with AI' button: ", err)
+	if err := util.OpenEditWithAIPanel(ctx, ui); err != nil {
+		s.Fatal("Failed to open edit with AI panel: ", err)
 	}
 
 	reimagineButton := nodewith.Role(role.Button).Name("Reimagine").Ancestor(galleryapp.RootFinder).First()

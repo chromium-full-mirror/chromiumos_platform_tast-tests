@@ -14,6 +14,7 @@ import (
 	"time"
 
 	"go.chromium.org/tast-tests/cros/local/apps"
+	"go.chromium.org/tast-tests/cros/local/bundles/cros/mantis/constant"
 	"go.chromium.org/tast-tests/cros/local/chrome"
 	"go.chromium.org/tast-tests/cros/local/chrome/apps/galleryapp"
 	"go.chromium.org/tast-tests/cros/local/chrome/ash"
@@ -295,16 +296,15 @@ func FetchImage(filePath string) (image.Image, error) {
 }
 
 // OpenEditWithAIPanel clicks the "Edit with AI" button and then dismisses the FRE dialog if it is shown.
-// TODO(crbug.com/383666179): Modify other mantis tast tests to also use this function.
 func OpenEditWithAIPanel(ctx context.Context, ui *uiauto.Context) error {
 	editWithAIButton := nodewith.Role(role.ToggleButton).Name("Edit with AI").Ancestor(galleryapp.RootFinder)
 	if err := ui.DoDefault(editWithAIButton)(ctx); err != nil {
 		return errors.Wrap(err, "unable to click 'Edit with AI' button")
 	}
 
-	freDismissButton := nodewith.Role(role.ToggleButton).Name("Got it").Ancestor(galleryapp.RootFinder)
+	freDismissButton := nodewith.Role(role.Button).Name("Got it").Ancestor(galleryapp.RootFinder)
 	// If FRE is shown, click the dismiss button
-	if err := ui.Exists(freDismissButton)(ctx); err == nil {
+	if err := ui.WithTimeout(constant.DefaultUITimeout).WaitUntilExists(freDismissButton)(ctx); err == nil {
 		if err := ui.DoDefault(freDismissButton)(ctx); err != nil {
 			return errors.Wrap(err, "failed to click on FRE dismiss button")
 		}

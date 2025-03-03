@@ -87,9 +87,8 @@ func runAndVerifyReimagine(ctx context.Context, ui *uiauto.Context, tconn *chrom
 		return errors.Wrap(err, "failed to grab screenshot before reimagine")
 	}
 
-	editWithAIButton := nodewith.Role(role.ToggleButton).Name("Edit with AI").Ancestor(galleryapp.RootFinder)
-	if err := ui.DoDefault(editWithAIButton)(ctx); err != nil {
-		return errors.Wrap(err, "unable to click 'Edit with AI' button")
+	if err := util.OpenEditWithAIPanel(ctx, ui); err != nil {
+		return errors.Wrap(err, "failed to open edit with AI panel")
 	}
 
 	if err := util.WaitForProgressBar(ctx, tconn, ui); err != nil {
