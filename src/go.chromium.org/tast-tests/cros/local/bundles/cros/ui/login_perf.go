@@ -22,6 +22,7 @@ import (
 
 	"go.chromium.org/tast-tests/cros/common/chrome/histogram"
 	"go.chromium.org/tast-tests/cros/common/dma"
+	"go.chromium.org/tast-tests/cros/common/fixture"
 	"go.chromium.org/tast-tests/cros/common/perf"
 	"go.chromium.org/tast-tests/cros/common/testexec"
 	"go.chromium.org/tast-tests/cros/common/ui"
@@ -145,6 +146,7 @@ func init() {
 		},
 		Data:    []string{"animation.html", "animation.js", loginPerfTraceConfigFileName},
 		Timeout: 15 * time.Minute,
+		Fixture: fixture.GpuRemoteWatcher,
 		Params: []testing.Param{{
 			ExtraAttr:         []string{"group:cuj", "cuj_loginperf"},
 			ExtraSoftwareDeps: []string{"arc"},
