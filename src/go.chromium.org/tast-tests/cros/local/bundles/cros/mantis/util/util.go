@@ -255,6 +255,18 @@ func ImageDiff(img1, img2 image.Image) float64 {
 	return numOfDiffPixel
 }
 
+// ImageDiffPercentage returns the difference between two images as a percentage.
+func ImageDiffPercentage(img1, img2 image.Image) float64 {
+	var bounds1 image.Rectangle = img1.Bounds()
+	var bounds2 image.Rectangle = img2.Bounds()
+	var width = int(math.Min(float64(bounds1.Max.X-bounds1.Min.X+1), float64(bounds2.Max.X-bounds2.Min.X+1)))
+	var height = int(math.Min(float64(bounds1.Max.Y-bounds1.Min.Y+1), float64(bounds2.Max.Y-bounds2.Min.Y+1)))
+	diff := ImageDiff(img1, img2)
+	total := float64(width) * float64(height)
+
+	return diff / total * 100
+}
+
 // CloseGallery closes the gallery app.
 func CloseGallery(ctx context.Context, tconn *chrome.TestConn) error {
 	if err := apps.Close(ctx, tconn, apps.Gallery.ID); err != nil {
