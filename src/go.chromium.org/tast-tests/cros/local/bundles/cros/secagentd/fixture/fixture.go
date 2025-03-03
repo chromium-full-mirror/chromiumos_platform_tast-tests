@@ -25,7 +25,8 @@ func init() {
 			"cros-enterprise-security@google.com",
 			"jasonling@google.com",
 		},
-		BugComponent: "b:1208373",
+		// ChromeOS > Security > ChromeOS Enterprise Security (XDR) > Alerts
+		BugComponent: "b:1676923",
 		Impl: chrome.NewLoggedInFixture(func(ctx context.Context, s *testing.FixtState) ([]chrome.Option, error) {
 			return []chrome.Option{chrome.EnableFeatures("CrOSLateBootSecagentdXDRFileEvents")}, nil
 		}),

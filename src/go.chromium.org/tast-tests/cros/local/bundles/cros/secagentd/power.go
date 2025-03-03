@@ -36,9 +36,10 @@ type enableXDR struct {
 
 func init() {
 	testing.AddTest(&testing.Test{
-		Func:         Power,
-		Desc:         "Navigate to different web pages and print them to pdf",
-		BugComponent: "b:1208373",
+		Func: Power,
+		Desc: "Navigate to different web pages and print them to pdf",
+		// ChromeOS > Security > ChromeOS Enterprise Security (XDR) > Alerts
+		BugComponent: "b:1676923",
 		Contacts: []string{
 			"cros-enterprise-security@google.com",
 			"aashay@google.com",

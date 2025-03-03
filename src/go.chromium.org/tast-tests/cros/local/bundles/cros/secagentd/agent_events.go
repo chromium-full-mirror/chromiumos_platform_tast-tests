@@ -40,8 +40,8 @@ func init() {
 			"jasonling@google.com",
 			"rborzello@google.com",
 		},
-		// ChromeOS > Security > ChromeOS Enterprise Security
-		BugComponent: "b:1208373",
+		// ChromeOS > Security > ChromeOS Enterprise Security (XDR) > Alerts
+		BugComponent: "b:1676923",
 		Attr:         []string{"group:mainline", "group:enterprise-reporting"},
 		Timeout:      3 * time.Minute,
 		SoftwareDeps: []string{"bpf", "shipping_kernel"},
