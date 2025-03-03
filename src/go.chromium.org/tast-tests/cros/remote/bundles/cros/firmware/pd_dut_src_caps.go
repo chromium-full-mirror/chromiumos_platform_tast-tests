@@ -28,7 +28,9 @@ func init() {
 		SoftwareDeps: []string{"chrome"},
 		HardwareDeps: hwdep.D(hwdep.ChromeEC()),
 		Timeout:      20 * time.Minute,
-		Attr:         []string{"group:firmware", "firmware_pd_unstable"},
+		// TODO(b/364648498): Add "group:firmware_pd_unstable" tag once the test passes.
+		// TODO(b/364648498): Add "group:firmware_pd" tag once the test is stable.
+		Attr:         []string{"group:firmware"},
 
 		Params: []testing.Param{{
 			Name: "dtson_src",
