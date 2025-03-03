@@ -39,8 +39,7 @@ func init() {
 			"robbarnes@google.com",
 		},
 		BugComponent: "b:792402", // ChromeOS > Platform > Enablement > Firmware > FAFT
-		// TODO: When stable, change firmware_unstable to a different attr.
-		Attr:         []string{"group:mainline", "informational", "group:firmware", "firmware_unstable"},
+		Attr:         []string{"group:mainline", "informational", "group:firmware", "firmware_ec", "firmware_ec_meets_kpi"},
 		Timeout:      10 * time.Minute,
 		Fixture:      fixture.NormalMode,
 		ServiceDeps:  []string{"tast.cros.crash.FixtureService"},
