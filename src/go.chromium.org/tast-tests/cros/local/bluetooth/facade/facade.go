@@ -7,7 +7,9 @@ package facade
 import (
 	"context"
 	"strings"
+	"time"
 
+	"go.chromium.org/tast-tests/cros/local/bluetooth/facade/bluez"
 	"go.chromium.org/tast-tests/cros/local/bluetooth/facade/common"
 	"go.chromium.org/tast-tests/cros/local/bluetooth/facade/floss"
 
@@ -21,9 +23,6 @@ var bluetoothFacadeSingleton common.BluetoothFacade = nil
 // bluetooth stack and initializes the corresponding BluetoothFacade
 // implementation for that stack. Only one BluetoothFacade may exist at one
 // time, and this method should be the only way that they are initialized.
-//
-// Currently Floss stack is initialized regardless of the stack specified,
-// as bluez is deprecated
 //
 // If the last initialized bluetooth stack is the same as the desired stack,
 // the BluetoothFacade instance will not be recreated, but instead reused. Thus,
@@ -39,11 +38,6 @@ var bluetoothFacadeSingleton common.BluetoothFacade = nil
 // function with bluez as the stackType so that it can ensure the DUT is
 // configured to use bluez.
 func NewBluetoothFacade(ctx context.Context, stackType common.BluetoothStackType) (common.BluetoothFacade, error) {
-	if stackType == common.BluetoothStackTypeBluez {
-		testing.ContextLog(ctx, "bluez is deprecated. Floss will be initialized")
-		stackType = common.BluetoothStackTypeFloss
-	}
-
 	if bluetoothFacadeSingleton != nil {
 		currentStackType := bluetoothFacadeSingleton.StackType()
 		if currentStackType == stackType {
@@ -53,8 +47,22 @@ func NewBluetoothFacade(ctx context.Context, stackType common.BluetoothStackType
 		bluetoothFacadeSingleton = nil
 	}
 	var facade common.BluetoothFacade
-
 	switch stackType {
+	case common.BluetoothStackTypeBluez:
+		if err := floss.SetFlossEnabled(ctx, false); err != nil {
+			return nil, errors.Wrap(err, "failed to disable floss prior to initializing bluez facade")
+		}
+		testing.ContextLog(ctx, "Initializing new bluez bluetooth facade")
+		if err := testing.Poll(ctx, func(ctx context.Context) error {
+			var err error
+			facade, err = bluez.NewBluetoothBluezFacade(ctx)
+			return err
+		}, &testing.PollOptions{
+			Interval: 1 * time.Second,
+			Timeout:  10 * time.Second,
+		}); err != nil {
+			return nil, errors.Wrap(err, "failed to initialize new bluez bluetooth facade")
+		}
 	case common.BluetoothStackTypeFloss:
 		if err := floss.SetFlossEnabled(ctx, true); err != nil {
 			return nil, errors.Wrap(err, "failed to enable floss prior to initializing floss facade")
