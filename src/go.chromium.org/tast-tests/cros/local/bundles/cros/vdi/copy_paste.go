@@ -48,14 +48,14 @@ func init() {
 		Requirements: []string{"screenplay-bbe00399-7b52-49ec-8402-9440c89f412c", "screenplay-ff8ef471-f3ce-4252-bee1-e7afcacd242a"},
 		Params: []testing.Param{
 			{
-				Name:    "citrix",
-				Fixture: fixture.CitrixLaunched,
-				// ExtraAttr: []string{"group:vdi_limited"}, TODO(b/263381075) fix failing test
+				Name:      "citrix",
+				Fixture:   fixture.CitrixLaunched,
+				ExtraAttr: []string{"group:vdi_limited"},
 			},
 			{
-				Name:    "mgs_citrix",
-				Fixture: fixture.MgsCitrixLaunched,
-				// ExtraAttr: []string{"group:vdi_limited"}, TODO(b/263381075) fix failing test
+				Name:      "mgs_citrix",
+				Fixture:   fixture.MgsCitrixLaunched,
+				ExtraAttr: []string{"group:vdi_limited"},
 			},
 			// TODO(b/263381075): VMWare doesn't have as simple apps as notepad.
 		},
