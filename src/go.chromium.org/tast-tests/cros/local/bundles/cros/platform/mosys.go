@@ -19,9 +19,10 @@ func init() {
 		Desc:         "Checks the mosys command's functionality",
 		SoftwareDeps: []string{"factory_flow", "mosys"},
 		Contacts: []string{
-			"mka@chromium.org",
+			"chromeos-kernel-test@google.com",
 			"kasaiah.bogineni@intel.com",
 			"ningappa.tirakannavar@intel.com",
+			"yidilin@google.com",
 		},
 		BugComponent: "b:970793", // ChromeOS > Platform > Enablement > Firmware > mosys
 		Attr:         []string{"group:mainline", "group:intel-gating", "group:intel-nda"},

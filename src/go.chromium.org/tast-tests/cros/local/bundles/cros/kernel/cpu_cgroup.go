@@ -15,9 +15,12 @@ import (
 
 func init() {
 	testing.AddTest(&testing.Test{
-		Func:         CPUCgroup,
-		Desc:         "Verifies that kernel CPU cgroups can be created",
-		Contacts:     []string{"chromeos-kernel-test@google.com", "mka@chromium.org"},
+		Func: CPUCgroup,
+		Desc: "Verifies that kernel CPU cgroups can be created",
+		Contacts: []string{
+			"chromeos-kernel-test@google.com",
+			"tzungbi@chromium.org",
+		},
 		BugComponent: "b:836930", // ChromeOS > Platform > System > Kernel > Tests & debug tools
 		Attr:         []string{"group:mainline"},
 	})
