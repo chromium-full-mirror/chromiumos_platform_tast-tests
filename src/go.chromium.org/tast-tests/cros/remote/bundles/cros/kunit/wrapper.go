@@ -23,9 +23,8 @@ func init() {
 		Desc: "Wrapper test that runs kunit tests",
 		Contacts: []string{
 			"chromeos-kernel@google.com",
-			"shraash@google.com",
+			"mhiramat@google.com",
 			"tzungbi@chromium.org",
-			"zsm@chromium.org",
 		},
 		// ChromeOS > Platform > System > Kernel > Syzkaller > Syzkaller-Dev > DKT
 		BugComponent: "b:1174001",
