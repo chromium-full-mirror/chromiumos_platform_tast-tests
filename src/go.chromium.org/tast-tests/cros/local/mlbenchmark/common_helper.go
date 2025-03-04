@@ -28,7 +28,14 @@ import (
 const (
 	// DataDirectory is the location to unpack any associated data files into.
 	DataDirectory = "/usr/local/mlbenchmark/data"
+
+	// Path to the debugfs's dmabuf usage info file.
+	dmabufInfoPath = "/sys/kernel/debug/dma_buf/bufinfo"
 )
+
+// The last line of bufinfo file is of the following pattern:
+// Total <total_buffers> objects, <total_size> bytes
+var dmabufInfoRegex = regexp.MustCompile(`Total (\d+) object[s]?, (\d+) byte[s]?`)
 
 // UnpackData will untar the file specified by `dataPath` into `DataDirectory`.
 func UnpackData(ctx context.Context, dataPath string) error {
@@ -68,9 +75,14 @@ func ParseNumeric(input string) (float64, error) {
 
 // PeakMemoryWatcher is a utility to poll a process's memory and measure peak usage.
 type PeakMemoryWatcher struct {
-	PeakGpuMemory float64
-	PeakRssMemory float64
-	PeakMemory    float64
+	// All units below are in MiB
+	PeakGpuMemory    float64
+	PeakRssMemory    float64
+	BaseDMABufMemory float64
+	// BasseDMABufMemory is the memory usage at the start. We record this because
+	// there may be some baseline usage of DMA Buffers before the test starts.
+	PeakDMABufMemory float64
+	PeakMemory       float64
 
 	interval     time.Duration // Time to wait between polling
 	pid          int
@@ -87,6 +99,33 @@ func NewPeakMemoryWatcher(pid int) *PeakMemoryWatcher {
 	}
 }
 
+// GetDMABufUsage retrieves the number of buffers used and the total bytes used as DMA buffer.
+func GetDMABufUsage() (totalBufferCount, totalBufferSize int64, err error) {
+	infoFileContents, err := os.ReadFile(dmabufInfoPath)
+	if err != nil {
+		return -1, -1, errors.Wrap(err, "failed to get dmabuf info")
+	}
+	var lastLine string
+	scanner := bufio.NewScanner(strings.NewReader(string(infoFileContents[:])))
+	for scanner.Scan() {
+		lastLine = scanner.Text()
+	}
+	matches := dmabufInfoRegex.FindStringSubmatch(lastLine)
+	if matches == nil {
+		return -1, -1, errors.Wrapf(err, "failed to parse dmabuf info from %q", string(lastLine))
+	}
+	totalBufferCount, err = strconv.ParseInt(matches[1], 10, 64)
+	if err != nil {
+		return -1, -1, errors.Wrapf(err, "failed to convert total buffer count %v to an integer", matches[1])
+	}
+	totalBufferSize, err = strconv.ParseInt(matches[2], 10, 64)
+	if err != nil {
+		return -1, -1, errors.Wrapf(err, "failed to convert total buffer size %v to an integer", matches[2])
+	}
+
+	return totalBufferCount, totalBufferSize, nil
+}
+
 // Start will begin running the watcher.
 func (r *PeakMemoryWatcher) Start(ctx context.Context) error {
 	if r.isRunning {
@@ -95,6 +134,14 @@ func (r *PeakMemoryWatcher) Start(ctx context.Context) error {
 
 	r.isRunning = true
 	r.runnerStatus = make(chan error, 1)
+
+	r.BaseDMABufMemory = 0.0
+	_, baseDMABufBytes, err := GetDMABufUsage()
+	if err == nil {
+		r.BaseDMABufMemory = math.Floor(float64(baseDMABufBytes) / 1024.0 / 1024.0)
+	} else {
+		testing.ContextLogf(ctx, "Couldn't retrieve starting dmabuf usage: %+v", err)
+	}
 
 	async.Run(ctx, func(ctx context.Context) {
 		for r.isRunning {
@@ -152,8 +199,17 @@ func (r *PeakMemoryWatcher) Start(ctx context.Context) error {
 				currentMaxGpu = math.Max(currentMaxGpu, total-shared)
 			}
 
+			currentDMABuf := 0.0
+			_, currentDMABufBytes, err := GetDMABufUsage()
+			if err == nil {
+				currentDMABuf = math.Floor(float64(currentDMABufBytes) / 1024.0 / 1024.0)
+			} else {
+				testing.ContextLogf(ctx, "Couldn't monitor dmabuf usage: %+v", err)
+			}
+
 			r.PeakGpuMemory = math.Max(r.PeakGpuMemory, currentMaxGpu)
 			r.PeakMemory = math.Max(r.PeakMemory, currentMaxGpu+currentRss)
+			r.PeakDMABufMemory = math.Max(r.PeakDMABufMemory, currentDMABuf)
 
 			// GoBigSleepLint: Sleep for user specified time.
 			if err := testing.Sleep(ctx, r.interval); err != nil {
