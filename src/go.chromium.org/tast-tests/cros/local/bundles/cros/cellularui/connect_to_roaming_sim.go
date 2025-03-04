@@ -2,7 +2,7 @@
 // Use of this source code is governed by a BSD-style license that can be
 // found in the LICENSE file.
 
-package cellular
+package cellularui
 
 import (
 	"context"
@@ -27,7 +27,7 @@ func init() {
 			"chromeos-connectivity-cienet-external@google.com",
 		},
 		// ChromeOS > External > Cienet > Manual Test Automation > Test stabilization
-		BugComponent: "b:1578688",
+		BugComponent:   "b:1578688",
 		LifeCycleStage: testing.LifeCycleOwnerMonitored,
 		SoftwareDeps:   []string{"chrome"},
 		Attr:           []string{"group:cellular", "cellular_sim_roaming"},
