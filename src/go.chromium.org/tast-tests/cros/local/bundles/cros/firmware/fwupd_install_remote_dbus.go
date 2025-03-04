@@ -23,7 +23,7 @@ func init() {
 			"chromeos-fwupd@google.com", // CrOS FWUPD
 			"rishabhagr@chromium.org",
 		},
-		Attr:         []string{"group:mainline", "informational"},
+		Attr:         []string{"group:mainline", "informational", "group:fwupd"},
 		SoftwareDeps: []string{"fwupd"},
 		Fixture:      "prepareFwupd",
 	})

@@ -27,7 +27,7 @@ func init() {
 			"chromeos-fwupd@google.com", // CrOS FWUPD
 			"rishabhagr@chromium.org",
 		},
-		Attr:         []string{"group:mainline"},
+		Attr:         []string{"group:mainline", "group:fwupd"},
 		SoftwareDeps: []string{"fwupd"},
 		Params: []testing.Param{{
 			// Baseline plugins that should always be present.
