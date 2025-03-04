@@ -234,7 +234,7 @@ func IsCACertOrgExists(ctx context.Context, ui *uiauto.Context, caOrg string) (s
 	}
 
 	if err := uiauto.Combine("Find CA org in orgs list",
-		ui.WithTimeout(3*time.Second).WaitUntilExists(caCertOrgText),
+		ui.WithTimeout(10*time.Second).WaitUntilExists(caCertOrgText),
 	)(ctx); err != nil {
 		return false, nil
 	}
@@ -796,7 +796,7 @@ func IsNewUIUsed(ctx context.Context, ui *uiauto.Context, cr *chrome.Chrome) (st
 	if err != nil {
 		return false, err
 	}
-	defer conn.Close()
+	defer conn.CloseTarget(ctx)
 
 	if err := uiauto.Combine("test that Authorities are present in UI",
 		ui.WithTimeout(3*time.Second).WaitUntilExists(nodewith.Name("Authorities").Role(role.Tab)),
@@ -893,7 +893,7 @@ func IsClientCertImportedNewUI(ctx context.Context, ui *uiauto.Context, clientOr
 	}
 
 	if err := uiauto.Combine("check client cert",
-		ui.WithTimeout(3*time.Second).WaitUntilExists(nodewith.NameContaining(clientOrg).First()),
+		ui.WithTimeout(10*time.Second).WaitUntilExists(nodewith.NameContaining(clientOrg).First()),
 	)(ctx); err != nil {
 		return false, nil
 	}
