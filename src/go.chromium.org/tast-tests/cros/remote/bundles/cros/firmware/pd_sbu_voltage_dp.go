@@ -85,6 +85,9 @@ func PDSBUVoltageDP(ctx context.Context, s *testing.State) {
 	}
 
 	out, err := h.Servo.ServoGetSBU(ctx)
+	if err != nil {
+		s.Fatal("Failed to retrieve SBU voltage: ", err)
+	}
 
 	sbu1 := out[0]
 	sbu2 := out[1]
