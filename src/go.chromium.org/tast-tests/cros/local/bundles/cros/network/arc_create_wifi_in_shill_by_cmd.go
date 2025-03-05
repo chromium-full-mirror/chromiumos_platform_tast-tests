@@ -87,7 +87,7 @@ func init() {
 					ssid: "GoogleGuest",
 					props: map[string]interface{}{
 						shillconst.ServicePropertyAutoConnect: false,
-						shillconst.ServicePropertyProxyConfig: `{"mode":"direct"}`,
+						shillconst.ServicePropertyProxyConfig: `{"mode":"fixed_servers","server":"http=hostname:2222"}`,
 					},
 				},
 			},
