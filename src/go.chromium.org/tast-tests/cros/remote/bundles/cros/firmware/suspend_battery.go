@@ -33,14 +33,14 @@ const (
 func init() {
 	testing.AddTest(&testing.Test{
 		Func: SuspendBattery,
+		// This test was inspired by b/200023198.
 		Desc: "Tests that the DUT suspends and resumes properly while on battery power",
 		Contacts: []string{
 			"chromeos-faft@google.com",
 		},
 		BugComponent: "b:792402", // ChromeOS > Platform > Enablement > Firmware > FAFT
 		TestBedDeps:  []string{tbdep.ServoStateWorking},
-		// TODO: When stable, change firmware_unstable to a different attr.
-		Attr:         []string{"group:firmware", "firmware_unstable"},
+		Attr:         []string{"group:firmware", "firmware_bios", "firmware_level5"},
 		HardwareDeps: hwdep.D(hwdep.ChromeEC(), hwdep.Battery()),
 		Fixture:      fixture.NormalMode,
 		Timeout:      3 * time.Hour, // Allow time for the battery to potentially charge up
