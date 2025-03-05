@@ -137,7 +137,7 @@ func PhysicalKeyboardAltgr(ctx context.Context, s *testing.State) {
 
 		s.Run(ctx, name, func(ctx context.Context, s *testing.State) {
 			// Reset Altgr, in case Altgr is in a held-down state (if release action did not get run due to failures)
-			defer keyboard.AccelAction("Altgr")(cleanupCtx)
+			defer keyboard.AccelAction("RightAlt")(cleanupCtx)
 			defer keyboard.AccelAction("Shift")(cleanupCtx)
 
 			defer faillog.DumpUITreeWithScreenshotOnError(ctx, s.OutDir(), s.HasError, cr, "ui_tree_"+string(name))
@@ -152,14 +152,14 @@ func PhysicalKeyboardAltgr(ctx context.Context, s *testing.State) {
 				uiauto.Combine("Verify PK Altgr Modifier Output",
 					its.Clear(inputField),
 					its.ClickFieldAndWaitForActive(inputField),
-					keyboard.AccelPressAction("Altgr"),
+					keyboard.AccelPressAction("RightAlt"),
 					keyboard.TypeAction(testcase.typeAction),
 					util.WaitForFieldTextToBe(tconn, inputField.Finder(), testcase.expectedText),
 					its.Clear(inputField),
 					its.ClickFieldAndWaitForActive(inputField),
 					keyboard.AccelPressAction("Shift"),
 					keyboard.TypeAction(testcase.typeAction),
-					keyboard.AccelReleaseAction("Altgr"),
+					keyboard.AccelReleaseAction("RightAlt"),
 					keyboard.AccelReleaseAction("Shift"),
 					util.WaitForFieldTextToBe(tconn, inputField.Finder(), testcase.expectedShiftedText),
 				),

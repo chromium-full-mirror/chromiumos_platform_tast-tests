@@ -285,9 +285,9 @@ func SingleKeyAction(needEsc bool, modifiers ModifiersStatus, key input.EventCod
 		ifThen(needEsc, kb.TypeKeyAction(input.KEY_ESC)),
 		ifThen(modifiers.Caps, kb.TypeKeyAction(input.KEY_CAPSLOCK)),
 		ifThen(modifiers.Shift, kb.AccelPressAction("Shift")),
-		ifThen(modifiers.Altgr, kb.AccelPressAction("AltGr")),
+		ifThen(modifiers.Altgr, kb.AccelPressAction("RightAlt")),
 		kb.TypeKeyAction(key),
-		ifThen(modifiers.Altgr, kb.AccelReleaseAction("AltGr")),
+		ifThen(modifiers.Altgr, kb.AccelReleaseAction("RightAlt")),
 		ifThen(modifiers.Shift, kb.AccelReleaseAction("Shift")),
 		ifThen(modifiers.Caps, kb.TypeKeyAction(input.KEY_CAPSLOCK)),
 	)
@@ -302,17 +302,17 @@ func TwoKeysAction(needEsc bool, modifiers1, modifiers2 ModifiersStatus, key1, k
 
 		ifThen(modifiers1.Caps, kb.TypeKeyAction(input.KEY_CAPSLOCK)),
 		ifThen(modifiers1.Shift, kb.AccelPressAction("Shift")),
-		ifThen(modifiers1.Altgr, kb.AccelPressAction("AltGr")),
+		ifThen(modifiers1.Altgr, kb.AccelPressAction("RightAlt")),
 		kb.TypeKeyAction(key1),
-		ifThen(modifiers1.Altgr && !modifiers2.Altgr, kb.AccelReleaseAction("AltGr")),
+		ifThen(modifiers1.Altgr && !modifiers2.Altgr, kb.AccelReleaseAction("RightAlt")),
 		ifThen(modifiers1.Shift && !modifiers2.Shift, kb.AccelReleaseAction("Shift")),
 		ifThen(modifiers1.Caps && !modifiers2.Caps, kb.TypeKeyAction(input.KEY_CAPSLOCK)),
 
 		ifThen(!modifiers1.Caps && modifiers2.Caps, kb.TypeKeyAction(input.KEY_CAPSLOCK)),
 		ifThen(!modifiers1.Shift && modifiers2.Shift, kb.AccelPressAction("Shift")),
-		ifThen(!modifiers1.Altgr && modifiers2.Altgr, kb.AccelPressAction("AltGr")),
+		ifThen(!modifiers1.Altgr && modifiers2.Altgr, kb.AccelPressAction("RightAlt")),
 		kb.TypeKeyAction(key2),
-		ifThen(modifiers2.Altgr, kb.AccelReleaseAction("AltGr")),
+		ifThen(modifiers2.Altgr, kb.AccelReleaseAction("RightAlt")),
 		ifThen(modifiers2.Shift, kb.AccelReleaseAction("Shift")),
 		ifThen(modifiers2.Caps, kb.TypeKeyAction(input.KEY_CAPSLOCK)),
 	)

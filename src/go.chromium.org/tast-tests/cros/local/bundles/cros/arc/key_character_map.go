@@ -131,9 +131,9 @@ func KeyCharacterMap(ctx context.Context, s *testing.State) {
 				{"shift+q", "A"},
 				{"5", "("},
 				{"shift+5", "5"},
-				{"altgr+5", "["},
+				{"rightalt+5", "["},
 				{"-", ")"},
-				{"altgr+-", "]"},
+				{"rightalt+-", "]"},
 				// Display values for dead keys are defined in android.view.KeyCharacterMap
 				{"[", "\u02c6"},       //  ACCENT_CIRCUMFLEX
 				{"shift+[", "\u00a8"}, //  ACCENT_UMLAUT

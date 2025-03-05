@@ -121,11 +121,12 @@ var shiftedRuneKeyCodes = map[rune]EventCode{
 
 // namedKeyCodes contains multi-character names describing keys that may be used in accelerators.
 var namedKeyCodes = map[string]EventCode{
-	"alt":    KEY_LEFTALT,
-	"ctrl":   KEY_LEFTCTRL,
-	"search": KEY_LEFTMETA,
-	"shift":  KEY_LEFTSHIFT,
-	"altgr":  KEY_RIGHTALT,
+	"alt":      KEY_LEFTALT,
+	"leftalt":  KEY_LEFTALT,
+	"ctrl":     KEY_LEFTCTRL,
+	"search":   KEY_LEFTMETA,
+	"shift":    KEY_LEFTSHIFT,
+	"rightalt": KEY_RIGHTALT,
 
 	"backspace": KEY_BACKSPACE,
 	"end":       KEY_END,
