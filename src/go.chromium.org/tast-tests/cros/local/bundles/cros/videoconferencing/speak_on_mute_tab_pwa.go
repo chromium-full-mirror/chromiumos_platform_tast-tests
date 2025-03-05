@@ -34,11 +34,11 @@ func init() {
 		Func: SpeakOnMuteTabPwa,
 		Desc: "Checks Speak-On-Mute is functional in Google Meet",
 		Contacts: []string{
-			"cros-video-conference-tast-tests@google.com",
-			"xiuwen@google.com",
+			"chromeos-audio-bugs@google.com",
+			"hunghsienchen@google.com",
 		},
 		Attr: []string{
-			"group:cbx", "cbx_feature_enabled", "cbx_unstable",
+			"group:cbx", "cbx_feature_enabled", "cbx_stable",
 		},
 		TestBedDeps: []string{tbdep.Cbx(true)},
 		Data: []string{
@@ -48,7 +48,7 @@ func init() {
 			data.VcAppIcon,
 			data.VcAppManifest,
 		},
-		BugComponent: "b:187682",
+		BugComponent: "b:776546",
 		Timeout:      3 * time.Minute,
 		SoftwareDeps: []string{"chrome"},
 		SearchFlags: []*testing.StringPair{
