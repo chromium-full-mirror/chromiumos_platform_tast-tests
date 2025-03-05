@@ -58,7 +58,7 @@ The EC meets KPI tests are run using:
 ```bash
 (inside chroot)
 DUT_IP=192.168.1.78 # Replace with actual IP of DUT
-tast run $DUT_IP '("group:firmware" && firmware_ec_meet_kpi)'
+tast run $DUT_IP '("group:firmware" && firmware_ec_meets_kpi)'
 ```
 
 ### firmware_ec_stressed
