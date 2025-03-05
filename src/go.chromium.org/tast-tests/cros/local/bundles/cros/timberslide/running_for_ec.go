@@ -18,7 +18,6 @@ func init() {
 		Desc: "Checks that the timberslide job instance for the EC is running",
 		Contacts: []string{
 			"chromeos-firmware@google.com",
-			"hesling@chromium.org",
 		},
 		// ChromeOS > Platform > System > Firmware > EC
 		BugComponent: "b:167114",
