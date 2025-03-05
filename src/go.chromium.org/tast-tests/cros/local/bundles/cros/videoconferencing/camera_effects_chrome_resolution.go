@@ -30,7 +30,8 @@ func init() {
 		Desc: "Checks Camera Effects in different resolution",
 		Contacts: []string{
 			"cros-video-conference-tast-tests@google.com",
-			"xiuwen@google.com",
+			"okuji@google.com",
+			"imranziad@google.com",
 		},
 		BugComponent: "b:187682",
 		Timeout:      10 * time.Minute,

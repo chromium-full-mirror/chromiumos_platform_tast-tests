@@ -28,7 +28,8 @@ func init() {
 		Desc: "Checks Video Effects retains after re-launching vc apps",
 		Contacts: []string{
 			"cros-video-conference-tast-tests@google.com",
-			"xiuwen@google.com",
+			"okuji@google.com",
+			"imranziad@google.com",
 		},
 		BugComponent: "b:187682",
 		Timeout:      10 * time.Minute,

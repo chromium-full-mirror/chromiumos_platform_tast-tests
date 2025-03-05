@@ -28,7 +28,8 @@ func init() {
 		Desc: "Verify camera effects using screen test",
 		Contacts: []string{
 			"cros-video-conference-tast-tests@google.com",
-			"xiuwen@google.com",
+			"okuji@google.com",
+			"imranziad@google.com",
 		},
 		BugComponent: "b:187682",
 		Attr: []string{
