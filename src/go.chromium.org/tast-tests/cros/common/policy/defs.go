@@ -29231,7 +29231,6 @@ func (p *ClassManagementEnabled) Equal(iface interface{}) bool {
 // ****************************************************************************
 // 1308. EnterpriseSearchAggregatorSettings
 // This policy can be modified without rebooting.
-// This is a future policy, it is not present in stable builds.
 // ****************************************************************************
 type EnterpriseSearchAggregatorSettings struct {
 	Stat Status
@@ -29239,11 +29238,12 @@ type EnterpriseSearchAggregatorSettings struct {
 }
 
 type EnterpriseSearchAggregatorSettingsValue struct {
-	IconUrl    string `json:"icon_url"`
-	Name       string `json:"name"`
-	SearchUrl  string `json:"search_url"`
-	Shortcut   string `json:"shortcut"`
-	SuggestUrl string `json:"suggest_url"`
+	IconUrl         string `json:"icon_url"`
+	Name            string `json:"name"`
+	RequireShortcut bool   `json:"require_shortcut"`
+	SearchUrl       string `json:"search_url"`
+	Shortcut        string `json:"shortcut"`
+	SuggestUrl      string `json:"suggest_url"`
 }
 
 func (p *EnterpriseSearchAggregatorSettings) Name() string {
@@ -29304,7 +29304,6 @@ func (p *WebAudioOutputBufferingEnabled) Equal(iface interface{}) bool {
 // ****************************************************************************
 // 1311. NTPOutlookCardVisible
 // This policy can be modified without rebooting.
-// This is a future policy, it is not present in stable builds.
 // ****************************************************************************
 type NTPOutlookCardVisible struct {
 	Stat Status
@@ -29336,7 +29335,6 @@ func (p *NTPOutlookCardVisible) Equal(iface interface{}) bool {
 // ****************************************************************************
 // 1312. NTPSharepointCardVisible
 // This policy can be modified without rebooting.
-// This is a future policy, it is not present in stable builds.
 // ****************************************************************************
 type NTPSharepointCardVisible struct {
 	Stat Status
@@ -29491,7 +29489,6 @@ func (p *PasswordManagerPasskeysEnabled) Equal(iface interface{}) bool {
 // ****************************************************************************
 // 1319. DevicePowerBatteryChargingOptimization
 // This policy can be modified without rebooting.
-// This is a future policy, it is not present in stable builds.
 // ****************************************************************************
 type DevicePowerBatteryChargingOptimization struct {
 	Stat Status
@@ -29650,7 +29647,6 @@ func (p *AllowedInputMethodsForceEnabled) Equal(iface interface{}) bool {
 // ****************************************************************************
 // 1324. WebRtcIPHandlingUrl
 // This policy can be modified without rebooting.
-// This is a future policy, it is not present in stable builds.
 // ****************************************************************************
 type WebRtcIPHandlingUrl struct {
 	Stat Status
@@ -29719,7 +29715,6 @@ func (p *GenAIPhotoEditingSettings) Equal(iface interface{}) bool {
 // ****************************************************************************
 // 1326. PartitionedBlobUrlUsage
 // This policy can be modified without rebooting.
-// This is a future policy, it is not present in stable builds.
 // ****************************************************************************
 type PartitionedBlobUrlUsage struct {
 	Stat Status
@@ -29844,7 +29839,6 @@ func (p *ControlledFrameBlockedForUrls) Equal(iface interface{}) bool {
 // ****************************************************************************
 // 1331. ExternalStorageAllowlist
 // This policy can be modified without rebooting.
-// This is a future policy, it is not present in stable builds.
 // ****************************************************************************
 type ExternalStorageAllowlist struct {
 	Stat Status
@@ -29872,6 +29866,168 @@ func (p *ExternalStorageAllowlist) SetProto(m *protoreflect.Message) {
 }
 func (p *ExternalStorageAllowlist) Equal(iface interface{}) bool {
 	v, ok := iface.([]*ExternalStorageAllowlistValue)
+	if !ok {
+		return ok
+	}
+	return cmp.Equal(p.Val, v, cmpopts.EquateEmpty())
+}
+
+// ****************************************************************************
+// 1332. WebAuthenticationRemoteDesktopAllowedOrigins
+// This policy can be modified without rebooting.
+// This is a future policy, it is not present in stable builds.
+// ****************************************************************************
+type WebAuthenticationRemoteDesktopAllowedOrigins struct {
+	Stat Status
+	Val  []string
+}
+
+func (p *WebAuthenticationRemoteDesktopAllowedOrigins) Name() string {
+	return "WebAuthenticationRemoteDesktopAllowedOrigins"
+}
+func (p *WebAuthenticationRemoteDesktopAllowedOrigins) Scope() Scope          { return ScopeUser }
+func (p *WebAuthenticationRemoteDesktopAllowedOrigins) Status() Status        { return p.Stat }
+func (p *WebAuthenticationRemoteDesktopAllowedOrigins) UntypedV() interface{} { return p.Val }
+func (p *WebAuthenticationRemoteDesktopAllowedOrigins) UnmarshalAs(m json.RawMessage) (interface{}, error) {
+	var v []string
+	if err := json.Unmarshal(m, &v); err != nil {
+		return nil, errors.Wrapf(err, "could not read %s as []string", m)
+	}
+	return v, nil
+}
+func (p *WebAuthenticationRemoteDesktopAllowedOrigins) SetProto(m *protoreflect.Message) {
+	SetUserProto(m, p.Name(), p.Val)
+}
+func (p *WebAuthenticationRemoteDesktopAllowedOrigins) Equal(iface interface{}) bool {
+	v, ok := iface.([]string)
+	if !ok {
+		return ok
+	}
+	return cmp.Equal(p.Val, v, cmpopts.EquateEmpty())
+}
+
+// ****************************************************************************
+// 1333. ServiceWorkerToControlSrcdocIframeEnabled
+// ****************************************************************************
+type ServiceWorkerToControlSrcdocIframeEnabled struct {
+	Stat Status
+	Val  bool
+}
+
+func (p *ServiceWorkerToControlSrcdocIframeEnabled) Name() string {
+	return "ServiceWorkerToControlSrcdocIframeEnabled"
+}
+func (p *ServiceWorkerToControlSrcdocIframeEnabled) Scope() Scope          { return ScopeUser }
+func (p *ServiceWorkerToControlSrcdocIframeEnabled) Status() Status        { return p.Stat }
+func (p *ServiceWorkerToControlSrcdocIframeEnabled) UntypedV() interface{} { return p.Val }
+func (p *ServiceWorkerToControlSrcdocIframeEnabled) UnmarshalAs(m json.RawMessage) (interface{}, error) {
+	var v bool
+	if err := json.Unmarshal(m, &v); err != nil {
+		return nil, errors.Wrapf(err, "could not read %s as bool", m)
+	}
+	return v, nil
+}
+func (p *ServiceWorkerToControlSrcdocIframeEnabled) SetProto(m *protoreflect.Message) {
+	SetUserProto(m, p.Name(), p.Val)
+}
+func (p *ServiceWorkerToControlSrcdocIframeEnabled) Equal(iface interface{}) bool {
+	v, ok := iface.(bool)
+	if !ok {
+		return ok
+	}
+	return cmp.Equal(p.Val, v, cmpopts.EquateEmpty())
+}
+
+// ****************************************************************************
+// 1335. GeminiSettings
+// This policy can be modified without rebooting.
+// This is a future policy, it is not present in stable builds.
+// ****************************************************************************
+type GeminiSettings struct {
+	Stat Status
+	Val  int
+}
+
+func (p *GeminiSettings) Name() string          { return "GeminiSettings" }
+func (p *GeminiSettings) Scope() Scope          { return ScopeUser }
+func (p *GeminiSettings) Status() Status        { return p.Stat }
+func (p *GeminiSettings) UntypedV() interface{} { return p.Val }
+func (p *GeminiSettings) UnmarshalAs(m json.RawMessage) (interface{}, error) {
+	var v int
+	if err := json.Unmarshal(m, &v); err != nil {
+		return nil, errors.Wrapf(err, "could not read %s as int", m)
+	}
+	return v, nil
+}
+func (p *GeminiSettings) SetProto(m *protoreflect.Message) {
+	SetUserProto(m, p.Name(), p.Val)
+}
+func (p *GeminiSettings) Equal(iface interface{}) bool {
+	v, ok := iface.(int)
+	if !ok {
+		return ok
+	}
+	return cmp.Equal(p.Val, v, cmpopts.EquateEmpty())
+}
+
+// ****************************************************************************
+// 1336. GenAISmartGroupingSettings
+// This policy can be modified without rebooting.
+// This is a future policy, it is not present in stable builds.
+// ****************************************************************************
+type GenAISmartGroupingSettings struct {
+	Stat Status
+	Val  int
+}
+
+func (p *GenAISmartGroupingSettings) Name() string          { return "GenAISmartGroupingSettings" }
+func (p *GenAISmartGroupingSettings) Scope() Scope          { return ScopeUser }
+func (p *GenAISmartGroupingSettings) Status() Status        { return p.Stat }
+func (p *GenAISmartGroupingSettings) UntypedV() interface{} { return p.Val }
+func (p *GenAISmartGroupingSettings) UnmarshalAs(m json.RawMessage) (interface{}, error) {
+	var v int
+	if err := json.Unmarshal(m, &v); err != nil {
+		return nil, errors.Wrapf(err, "could not read %s as int", m)
+	}
+	return v, nil
+}
+func (p *GenAISmartGroupingSettings) SetProto(m *protoreflect.Message) {
+	SetUserProto(m, p.Name(), p.Val)
+}
+func (p *GenAISmartGroupingSettings) Equal(iface interface{}) bool {
+	v, ok := iface.(int)
+	if !ok {
+		return ok
+	}
+	return cmp.Equal(p.Val, v, cmpopts.EquateEmpty())
+}
+
+// ****************************************************************************
+// 1337. GenAiChromeOsSmartActionsSettings
+// This policy can be modified without rebooting.
+// This is a future policy, it is not present in stable builds.
+// ****************************************************************************
+type GenAiChromeOsSmartActionsSettings struct {
+	Stat Status
+	Val  int
+}
+
+func (p *GenAiChromeOsSmartActionsSettings) Name() string          { return "GenAiChromeOsSmartActionsSettings" }
+func (p *GenAiChromeOsSmartActionsSettings) Scope() Scope          { return ScopeUser }
+func (p *GenAiChromeOsSmartActionsSettings) Status() Status        { return p.Stat }
+func (p *GenAiChromeOsSmartActionsSettings) UntypedV() interface{} { return p.Val }
+func (p *GenAiChromeOsSmartActionsSettings) UnmarshalAs(m json.RawMessage) (interface{}, error) {
+	var v int
+	if err := json.Unmarshal(m, &v); err != nil {
+		return nil, errors.Wrapf(err, "could not read %s as int", m)
+	}
+	return v, nil
+}
+func (p *GenAiChromeOsSmartActionsSettings) SetProto(m *protoreflect.Message) {
+	SetUserProto(m, p.Name(), p.Val)
+}
+func (p *GenAiChromeOsSmartActionsSettings) Equal(iface interface{}) bool {
+	v, ok := iface.(int)
 	if !ok {
 		return ok
 	}
@@ -31717,6 +31873,16 @@ func newByName(name string) (Policy, error) {
 		return &ControlledFrameBlockedForUrls{}, nil
 	case "ExternalStorageAllowlist":
 		return &ExternalStorageAllowlist{}, nil
+	case "WebAuthenticationRemoteDesktopAllowedOrigins":
+		return &WebAuthenticationRemoteDesktopAllowedOrigins{}, nil
+	case "ServiceWorkerToControlSrcdocIframeEnabled":
+		return &ServiceWorkerToControlSrcdocIframeEnabled{}, nil
+	case "GeminiSettings":
+		return &GeminiSettings{}, nil
+	case "GenAISmartGroupingSettings":
+		return &GenAISmartGroupingSettings{}, nil
+	case "GenAiChromeOsSmartActionsSettings":
+		return &GenAiChromeOsSmartActionsSettings{}, nil
 	default:
 		return nil, errors.New("Unknown policy " + name)
 	}
