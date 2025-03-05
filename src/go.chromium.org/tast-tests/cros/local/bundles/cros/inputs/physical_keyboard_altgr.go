@@ -109,6 +109,14 @@ func PhysicalKeyboardAltgr(ctx context.Context, s *testing.State) {
 			expectedText:        "₹",
 			expectedShiftedText: "",
 		},
+		{
+			// CrOS 1P rule-based input method with AltGr character assignments by
+			// layout remaps at IME layer (see https://crbug.com/243243592).
+			inputMethod:         ime.TamilWithInScriptKeyboard,
+			typeAction:          "0123456789",
+			expectedText:        "௦௧௨௩௪௫௬௭௮௯",
+			expectedShiftedText: "௦௧௨௩௪௫௬௭௮௯",
+		},
 	}
 
 	cleanupCtx := ctx
