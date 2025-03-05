@@ -37,7 +37,7 @@ func init() {
 			"chadduffin@chromium.org",
 		},
 		BugComponent: "b:1318544", // ChromeOS > Software > System Services > Connectivity > General
-		Attr:         []string{"group:wificell", "wificell_e2e", "group:release-health", "release-health_network"},
+		Attr:         []string{"group:network", "network_e2e", "group:release-health", "release-health_network"},
 		TestBedDeps:  []string{tbdep.Wificell, tbdep.WifiStateNormal, tbdep.BluetoothStateNormal, tbdep.PeripheralWifiStateWorking},
 		ServiceDeps: []string{
 			wificell.WifiUIServiceName,

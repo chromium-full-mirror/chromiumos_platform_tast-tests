@@ -45,7 +45,7 @@ func init() {
 		},
 		BugComponent:   "b:1318544", // ChromeOS > Software > System Services > Connectivity > General
 		LifeCycleStage: testing.LifeCycleOwnerMonitored,
-		Attr:           []string{"group:wificell", "wificell_e2e"},
+		Attr:           []string{"group:network", "network_e2e"},
 		TestBedDeps:    []string{tbdep.Wificell, tbdep.WifiStateNormal, tbdep.BluetoothStateNormal, tbdep.PeripheralWifiStateWorking},
 		ServiceDeps: []string{
 			wificell.ShillServiceName,
