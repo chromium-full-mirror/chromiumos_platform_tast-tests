@@ -92,8 +92,8 @@ func init() {
 	testing.AddTest(&testing.Test{
 		Func:         BatteryTestWrapper,
 		Desc:         "Runs test after (dis)charging the battery and unplugging the charger",
-		BugComponent: "b:167191", // ChromeOS > Platform > System > Power
-		Contacts:     []string{"cros-pe-pnp@google.com", "skardach@google.com"},
+		BugComponent: "b:1361410", // ChromeOS > Platform > Enablement > Power
+		Contacts:     []string{"cros-power-notifications@google.com", "skardach@google.com"},
 		Timeout:      24 * time.Hour, // Depends on subtest, so set maximum value here.
 		Params: []testing.Param{
 			{ // By default, work on user-provided vars. Special pre-configured cases go below.
