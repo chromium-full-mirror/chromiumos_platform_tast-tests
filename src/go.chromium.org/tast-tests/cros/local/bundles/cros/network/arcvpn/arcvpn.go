@@ -221,3 +221,21 @@ func SendMessage(ctx context.Context, a *arc.ARC, message string) error {
 	}
 	return nil
 }
+
+// StartARCVPNWithManualProxy starts the ARC test vpn app with manual proxy setting.
+func StartARCVPNWithManualProxy(ctx context.Context, a *arc.ARC, host string, port int, exlusionList ...string) error {
+	args := []string{
+		"--es", "proxy_host", host,
+		"--ei", "proxy_port", strconv.Itoa(port),
+		"--es", "proxy_exclusion_list", strings.Join(exlusionList, ","),
+	}
+	return broadcastLaunchVPNIntent(ctx, a, args...)
+}
+
+// StartARCVPNWithPACURLProxy starts the ARC test vpn app with PAC URL proxy setting.
+func StartARCVPNWithPACURLProxy(ctx context.Context, a *arc.ARC, pacURL string) error {
+	args := []string{
+		"--es", "pac_url", pacURL,
+	}
+	return broadcastLaunchVPNIntent(ctx, a, args...)
+}

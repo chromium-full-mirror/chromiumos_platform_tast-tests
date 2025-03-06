@@ -18,6 +18,8 @@ import android.net.ConnectivityManager;
 import android.net.IpPrefix;
 import android.net.LinkProperties;
 import android.net.Network;
+import android.net.ProxyInfo;
+import android.net.Uri;
 import android.net.VpnService;
 import android.os.Build.VERSION;
 import android.os.Build.VERSION_CODES;
@@ -40,9 +42,13 @@ import java.net.InetSocketAddress;
 import java.net.Socket;
 import java.net.SocketAddress;
 import java.net.UnknownHostException;
+import java.net.URI;
+import java.net.URISyntaxException;
 import java.nio.ByteBuffer;
+import java.util.Arrays;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
+import java.util.List;
 
 public class ArcTestVpnService extends VpnService {
     private static final String TAG = ArcTestVpnService.class.getSimpleName();
@@ -56,6 +62,10 @@ public class ArcTestVpnService extends VpnService {
     private static final String INCLUDED_ROUTES_KEY = "included_routes";
     private static final String EXCLUDED_ROUTES_KEY = "excluded_routes";
     private static final String MTU_KEY = "mtu";
+    private static final String MANUAL_PROXY_HOST = "proxy_host";
+    private static final String MANUAL_PROXY_PORT = "proxy_port";
+    private static final String MANUAL_PROXY_EXCLUSION_LIST = "proxy_exclusion_list";
+    private static final String PAC_URL = "pac_url";
     // Keys used for setting intent extras for connecting to toy VPN server.
     private static final String INTERFACE_KEY = "interface";
     private static final String ADDRESS_KEY = "address";
@@ -241,6 +251,37 @@ public class ArcTestVpnService extends VpnService {
         // MTU.
         builder.setMtu(intent.getIntExtra(MTU_KEY, DEFAULT_MTU));
 
+        // Proxy setting.
+        String host = intent.getStringExtra(MANUAL_PROXY_HOST);
+        int port = intent.getIntExtra(MANUAL_PROXY_PORT, -1);
+        String exclusionListStr = intent.getStringExtra(MANUAL_PROXY_EXCLUSION_LIST);
+        String pacUrl = intent.getStringExtra(PAC_URL);
+
+        boolean hasManualProxy = (host != null && !host.isEmpty() && port > 0);
+        boolean hasPacUrlProxy = (pacUrl != null && !pacUrl.isEmpty());
+
+        if (hasManualProxy && hasPacUrlProxy) {
+            Log.e(TAG, "Both manual proxy and PAC URL are given, only one should be used."
+                    + " Proxy is not set.");
+            return builder;
+        }
+
+        // Manual proxy settings
+        if (hasManualProxy) {
+            List<String> exclusionList = exclusionListStr != null ?
+                    Arrays.asList(exclusionListStr.split(",")) : null;
+            builder.setHttpProxy(ProxyInfo.buildDirectProxy(host, port, exclusionList));
+        }
+
+        // PAC URL proxy settings
+        if (hasPacUrlProxy) {
+            try {
+                new URI(pacUrl);
+                builder.setHttpProxy(ProxyInfo.buildPacProxy(Uri.parse(pacUrl)));
+            } catch (URISyntaxException e) {
+                Log.e(TAG, "Given PAC URL is not valid, PAC URL is not set", e);
+            }
+        }
         return builder;
     }
 
