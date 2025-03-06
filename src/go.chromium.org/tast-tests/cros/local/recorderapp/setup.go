@@ -87,20 +87,12 @@ func (a *App) ensureModelInstalled(ctx context.Context, setup Setup) error {
 	}
 
 	if setup.Config.SummaryForceEnabled {
-		// Install summary model.
-		if err := a.conn.Eval(ctx, "TestHelper.installSummaryModel()", nil); err != nil {
-			return errors.Wrap(err, "failed to install summary model")
+		// Install summary and title suggestion model.
+		if err := a.conn.Eval(ctx, "TestHelper.installGenAiModel()", nil); err != nil {
+			return errors.Wrap(err, "failed to install summary and title suggestion model")
 		}
-		if err := a.conn.WaitForExprWithTimeout(ctx, "TestHelper.isSummaryModelInstalled()", time.Minute); err != nil {
-			return errors.Wrap(err, "failed to wait for the summary model to be installed")
-		}
-
-		// Install title suggestion model.
-		if err := a.conn.Eval(ctx, "TestHelper.installTitleSuggestionModel()", nil); err != nil {
-			return errors.Wrap(err, "failed to install title suggestion model")
-		}
-		if err := a.conn.WaitForExprWithTimeout(ctx, "TestHelper.isTitleSuggestionModelInstalled()", time.Minute); err != nil {
-			return errors.Wrap(err, "failed to wait for the title suggestion model to be installed")
+		if err := a.conn.WaitForExprWithTimeout(ctx, "TestHelper.isGenAiModelInstalled()", 2*time.Minute); err != nil {
+			return errors.Wrap(err, "failed to wait for the summary and title suggestion model to be installed")
 		}
 	}
 	return nil
