@@ -149,6 +149,7 @@ func init() {
 				"yavilla",
 				"yavilly",
 				// Rex
+				"kanix",
 				"karis",
 				"screebo",
 				"screebo4es",
