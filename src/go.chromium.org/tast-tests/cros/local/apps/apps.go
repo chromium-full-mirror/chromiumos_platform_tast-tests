@@ -427,6 +427,12 @@ var DriveLockSmartCardMiddleware = App{
 	Name: "DriveLock Smart Card Middleware (CSSI)",
 }
 
+// SampleSystemWebApp has details about the Sample System Web app.
+var SampleSystemWebApp = App{
+	ID:   "jalmdcokfklmaoadompgacjlcomfckcf",
+	Name: "Sample System Web App",
+}
+
 // Launch launches an app specified by appID.
 func Launch(ctx context.Context, tconn *chrome.TestConn, appID string) error {
 	_, err := InstalledAppID(ctx, tconn, func(app *ash.ChromeApp) bool { return app.AppID == appID }, nil)

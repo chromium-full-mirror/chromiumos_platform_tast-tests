@@ -92,7 +92,7 @@ func AllowedApps(ctx context.Context, s *testing.State) {
 
 	for _, app := range appsInLauncher {
 		if !isAppAllowed(app) {
-			s.Fatal("Found disallowed app in MGS launcher: ", app.Name)
+			s.Error("Found disallowed app in MGS launcher: ", app.Name, ", id: ", app.AppID)
 		}
 	}
 }
@@ -110,6 +110,8 @@ func systemFeaturesDisableList() policy.Policy {
 		"gallery",
 		"terminal",
 		"recorder",
+		"print_jobs",
+		"key_shortcuts",
 	}}
 }
 
@@ -117,9 +119,8 @@ func systemFeaturesDisableList() policy.Policy {
 func isAppAllowed(app *ash.ChromeApp) bool {
 	allowedApps := []apps.App{
 		apps.Chrome,
-		apps.PrintManagement,
 		apps.FilesSWA,
-		apps.ShortcutCustomization,
+		apps.SampleSystemWebApp, // Installed by default in unofficial builds.
 	}
 
 	for _, expectedApp := range allowedApps {
