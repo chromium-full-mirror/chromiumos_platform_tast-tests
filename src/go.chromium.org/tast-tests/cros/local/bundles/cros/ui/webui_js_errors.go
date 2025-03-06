@@ -236,7 +236,7 @@ func WebUIJSErrors(ctx context.Context, s *testing.State) {
 
 	params := s.Param().(webUIJSErrorsParams)
 	const vModuleFlags = "--vmodule=chrome_js_error_report_processor=3,web_ui_impl=3,web_ui_main_frame_observer=3,webui_js_error_ui=3"
-	chromeOpts := []chrome.Option{chrome.ExtraArgs(vModuleFlags)}
+	chromeOpts := []chrome.Option{chrome.ExtraArgs(vModuleFlags), chrome.DisableFeatures("InternalOnlyUisPref")}
 	if params.fieldTrialConfigMode != chrome.FieldTrialConfigDefault {
 		chromeOpts = append(chromeOpts, chrome.FieldTrialConfig(params.fieldTrialConfigMode))
 	}
