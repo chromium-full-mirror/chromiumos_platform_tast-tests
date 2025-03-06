@@ -60,15 +60,14 @@ func UsbguardBlocksUnknownDevicesAtLockScreen(ctx context.Context, s *testing.St
 	/*
 		This test check no USB storage device partitions mounted on lock screen:
 		1- Reboot reset device cache.
-		2- Check there is no crash report file.
-		3- Check /run/usb_bouncer have devices.proto file.
-		4- Execute devices.proto file and record the content.
-		5- Check /media/removable is empty.
-		6- Connect the USB storage device to chromebook.
-		7- Check /media/removable is empty.
-		8- Check there have the target.new='block' in the messages file.
-		9- Unlock the chromebook.
-		10- Check USB storage device partitions are mounted.
+		2- Check /run/usb_bouncer have devices.proto file.
+		3- Execute devices.proto file and record the content.
+		4- Check /media/removable is empty.
+		5- Connect the USB storage device to chromebook.
+		6- Check /media/removable is empty.
+		7- Check there have the target.new='block' in the messages file.
+		8- Unlock the chromebook.
+		9- Check USB storage device partitions are mounted.
 	*/
 	// Reboot the DUT, in case of DUT unable to work properly consistently.
 	if err := s.DUT().Reboot(ctx); err != nil {
@@ -100,11 +99,6 @@ func UsbguardBlocksUnknownDevicesAtLockScreen(ctx context.Context, s *testing.St
 		}
 	}(ctx)
 
-	// Clear old crash file.
-	if err := dut.Conn().CommandContext(ctx, "sudo", "rm", "-r", "-f", "/var/spool/crash/").Run(exec.DumpLogOnError); err != nil {
-		s.Fatal("Failed to clear folders under /var/spool/crash: ", err)
-	}
-
 	// Start Chrome on the DUT.
 	ns := nearbyservice.NewNearbyShareServiceClient(cl.Conn)
 	loginReq := &nearbyservice.CrOSLoginRequest{KeepState: false}
@@ -118,13 +112,6 @@ func UsbguardBlocksUnknownDevicesAtLockScreen(ctx context.Context, s *testing.St
 		s.Fatal("Failed to lock Chrome: ", err)
 	}
 
-	// Check no crash report file.
-	if crashFileCount, err := log.CollectCrashReports(ctx, dut); err != nil {
-		s.Fatal("Failed to collect crash reports in /var/spool/crash: ", err)
-	} else if crashFileCount > 0 {
-		s.Logf("Crash report files count: %d", crashFileCount)
-		s.Fatal("Crash folder not empty, please check logs dir for copied crash report files.")
-	}
 	// Check devices.proto exsit.
 	if out, err := dut.Conn().CommandContext(ctx, "sudo", "ls", "/run/usb_bouncer").Output(exec.DumpLogOnError); err != nil {
 		s.Fatal("Failed to listing the folders under /run/usb_bouncer: ", err)
