@@ -37,7 +37,6 @@ const (
 )
 
 var (
-	consentTryItButton         = nodewith.Name("Try it").ClassName("MdTextButton")
 	consentGotItButton         = nodewith.Name("Got it").ClassName("MdTextButton")
 	contextMenu                = nodewith.ClassName("SubmenuView").Role("menu")
 	mahiMenuView               = nodewith.ClassName("MahiMenuView")
@@ -159,20 +158,14 @@ func MaybePassConsentFlow(
 		return errors.Wrap(err, "failed to right click")
 	}
 
-	if err := ui.WaitUntilExists(consentTryItButton)(ctx); err != nil {
-		if err := ui.WaitUntilAnyExists(SummarizeButton, compactSummaryButton)(ctx); err != nil {
-			return errors.Wrap(err, "no consent flow nor summary button")
-		}
-	} else {
-		if err := uiauto.Combine("Do consent flow",
-			ui.Exists(consentTryItButton),
-			ui.LeftClick(consentTryItButton),
-			ui.WaitUntilExists(consentGotItButton),
-			ui.LeftClick(consentGotItButton),
-			ui.WaitUntilAnyExists(anySummaryText, mahiErrorStatus),
-		)(ctx); err != nil {
-			return errors.Wrap(err, "failed to pass the consent flow")
-		}
+	if err := uiauto.Combine("Do consent flow",
+		ui.WaitUntilAnyExists(SummarizeButton, compactSummaryButton),
+		uiauto.IfSucceedThenElse(ui.Exists(SummarizeButton), ui.LeftClick(SummarizeButton), ui.LeftClick(compactSummaryButton)),
+		uiauto.IfSuccessThen(ui.Exists(consentGotItButton), ui.LeftClick(consentGotItButton)),
+		ui.WaitUntilGone(consentGotItButton),
+		ui.WaitUntilAnyExists(anySummaryText, mahiErrorStatus),
+	)(ctx); err != nil {
+		return errors.Wrap(err, "failed to pass the consent flow")
 	}
 
 	return CleanUIElement(ctx, ui, kb)
@@ -231,20 +224,14 @@ func MaybePassConsentFlowForGalleryPDF(
 		return errors.Wrap(err, "failed to right click")
 	}
 
-	if err := ui.WaitUntilExists(consentTryItButton)(ctx); err != nil {
-		if err := ui.WaitUntilExists(SummarizeButton)(ctx); err != nil {
-			return errors.Wrap(err, "no consent flow nor summary button")
-		}
-	} else {
-		if err := uiauto.Combine("Do consent flow",
-			ui.Exists(consentTryItButton),
-			ui.LeftClick(consentTryItButton),
-			ui.WaitUntilExists(consentGotItButton),
-			ui.LeftClick(consentGotItButton),
-			ui.WaitUntilGone(consentGotItButton),
-		)(ctx); err != nil {
-			return errors.Wrap(err, "failed to pass the consent flow")
-		}
+	if err := uiauto.Combine("Do consent flow",
+		ui.WaitUntilExists(SummarizeButton),
+		ui.LeftClick(SummarizeButton),
+		uiauto.IfSuccessThen(ui.Exists(consentGotItButton), ui.LeftClick(consentGotItButton)),
+		ui.WaitUntilGone(consentGotItButton),
+		ui.WaitUntilAnyExists(anySummaryText, mahiErrorStatus),
+	)(ctx); err != nil {
+		return errors.Wrap(err, "failed to pass the consent flow")
 	}
 
 	return CleanUIElement(ctx, ui, kb)
