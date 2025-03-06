@@ -14,7 +14,8 @@ const (
 	MantisDLCID             = "ml-dlc-302a455f-5453-43fb-a6a1-d856e6fe6435"
 	PowerMetricInterval     = 5 * time.Second
 	// DLC download might take up to 20 minutes.
-	PowerTestTimeout   = 20 * time.Minute
-	DefaultTestTimeout = 20 * time.Minute
-	DefaultUITimeout   = 5 * time.Second
+	PowerTestTimeout                    = 20 * time.Minute
+	DefaultTestTimeout                  = 20 * time.Minute
+	DefaultUITimeout                    = 5 * time.Second
+	DefaultImageDiffPercentageThreshold = float64(3)
 )

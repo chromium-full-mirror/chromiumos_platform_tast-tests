@@ -6,6 +6,8 @@ package mantis
 
 import (
 	"context"
+	"os"
+	"path/filepath"
 	"time"
 
 	"go.chromium.org/tast-tests/cros/local/bundles/cros/mantis/constant"
@@ -14,21 +16,24 @@ import (
 	"go.chromium.org/tast-tests/cros/local/chrome/apps/galleryapp"
 	"go.chromium.org/tast-tests/cros/local/chrome/uiauto"
 	"go.chromium.org/tast-tests/cros/local/chrome/uiauto/faillog"
+	"go.chromium.org/tast-tests/cros/local/chrome/uiauto/mouse"
 	"go.chromium.org/tast-tests/cros/local/chrome/uiauto/nodewith"
 	"go.chromium.org/tast-tests/cros/local/chrome/uiauto/role"
+	"go.chromium.org/tast-tests/cros/local/coords"
 	"go.chromium.org/tast-tests/cros/local/cryptohome"
+	"go.chromium.org/tast/core/ctxutil"
 	"go.chromium.org/tast/core/testing"
 	"go.chromium.org/tast/core/testing/hwdep"
 )
 
 const (
-	expectedResult = "remove_background_result_20250303.png"
+	makeAStickerExpectedResult = "make_a_sticker_result_20250306.png"
 )
 
 func init() {
 	testing.AddTest(&testing.Test{
-		Func: RemoveBackgroundFeature,
-		Desc: "Verify remove background functionality",
+		Func: MakeAStickerFeature,
+		Desc: "Verify make a sticker functionality",
 		Contacts: []string{
 			"cros-mantis@google.com",
 			"nurlitadf@google.com",
@@ -37,20 +42,31 @@ func init() {
 		Timeout:      constant.DefaultTestTimeout,
 		SoftwareDeps: []string{"chrome", "chrome_internal", "dlc"},
 		HardwareDeps: hwdep.D(hwdep.Model("navi")),
-		Data:         []string{constant.ImageTestFileName, expectedResult},
+		Data:         []string{constant.ImageTestFileName, makeAStickerExpectedResult},
 		Attr:         []string{"group:mainline", "informational"},
 		Fixture:      fixture.LoggedInWithUpdateEngine,
 	})
 }
 
-func RemoveBackgroundFeature(ctx context.Context, s *testing.State) {
+func MakeAStickerFeature(ctx context.Context, s *testing.State) {
 	cr := s.FixtValue().(fixture.Data).Chrome
 	tconn := s.FixtValue().(fixture.Data).TestAPIConn
-	defer faillog.DumpUITreeOnError(ctx, s.OutDir(), s.HasError, tconn)
+
+	cleanupCtx := ctx
+	ctx, cancel := ctxutil.Shorten(ctx, 5*time.Second)
+	defer cancel()
+	defer faillog.DumpUITreeOnError(cleanupCtx, s.OutDir(), s.HasError, tconn)
 
 	if err := util.DownloadAndOpenFileInGallery(ctx, cr, s.DataPath(constant.ImageTestFileName), constant.ImageTestFileName); err != nil {
 		s.Fatal("Failed to download and open file in Gallery: ", err)
 	}
+
+	downloadsPath, err := cryptohome.DownloadsPath(ctx, cr.NormalizedUser())
+	if err != nil {
+		s.Fatal("Failed to get user's Download path: ", err)
+	}
+
+	defer os.Remove(filepath.Join(downloadsPath, constant.ImageTestFileName))
 
 	ui := uiauto.New(tconn)
 
@@ -58,6 +74,8 @@ func RemoveBackgroundFeature(ctx context.Context, s *testing.State) {
 		s.Fatal("Failed to open edit with AI panel: ", err)
 	}
 
+	// The initialization process might be very quick, so the spinner
+	// and progress bar might not be detected by UI automation.
 	if err := util.WaitForSpinner(ctx, tconn, ui); err != nil {
 		s.Log("Error while waiting for spinner: ", err)
 	}
@@ -66,9 +84,9 @@ func RemoveBackgroundFeature(ctx context.Context, s *testing.State) {
 		s.Log("Error while waiting for progress bar: ", err)
 	}
 
-	removeBackgroundButton := nodewith.Role(role.Button).Name("Remove Background").Ancestor(galleryapp.RootFinder).First()
-	if err := ui.DoDefault(removeBackgroundButton)(ctx); err != nil {
-		s.Fatal("Unable to open 'Remove Background' panel: ", err)
+	makeAStickerButton := nodewith.Role(role.Button).Name("Make a Sticker").Ancestor(galleryapp.RootFinder).First()
+	if err := ui.DoDefault(makeAStickerButton)(ctx); err != nil {
+		s.Fatal("Unable to open 'Make a Sticker' panel: ", err)
 	}
 
 	if err := util.WaitForSpinner(ctx, tconn, ui); err != nil {
@@ -80,24 +98,36 @@ func RemoveBackgroundFeature(ctx context.Context, s *testing.State) {
 		s.Fatal("Cannot draw on the image: ", err)
 	}
 
-	// Click on the remove background button
-	if err := ui.DoDefault(removeBackgroundButton)(ctx); err != nil {
-		s.Fatal("Unable to click 'Remove Background' button: ", err)
+	// Click on the make a sticker button
+	if err := ui.LeftClickUntil(makeAStickerButton, ui.Exists(nodewith.NameContaining("Mark the area").Role(role.StaticText)))(ctx); err != nil {
+		s.Fatal("Unable to click 'Make a Sticker' button: ", err)
 	}
 
-	s.Log("Remove Background on process")
+	s.Log("Make a Sticker on process")
 	if err := util.WaitForSpinner(ctx, tconn, ui); err != nil {
 		s.Fatal("Error while waiting for spinner: ", err)
 	}
 
+	canvasBounds, err := ui.ImmediateLocation(ctx, util.ImageCanvas)
+	if err != nil {
+		s.Fatal("Failed to get canvas location: ", err)
+	}
+
+	if err := mouse.Click(tconn, coords.NewPoint(
+		canvasBounds.CenterX(),
+		canvasBounds.CenterY(),
+	), mouse.LeftButton)(ctx); err != nil {
+		s.Fatal("Failed to click the mouse: ", err)
+	}
+
 	doneButton := nodewith.Role(role.Button).Name("Done").Ancestor(galleryapp.RootFinder)
-	if err := ui.LeftClick(doneButton)(ctx); err != nil {
+	if err := ui.DoDefault(doneButton)(ctx); err != nil {
 		s.Fatal("Failed to click the done button: ", err)
 	}
 
 	// Save the result image and close Gallery app.
 	saveButton := nodewith.Role(role.Button).Name("Save").Ancestor(galleryapp.RootFinder)
-	if err := util.LeftClickButton(ctx, ui, saveButton); err != nil {
+	if err := ui.DoDefault(saveButton)(ctx); err != nil {
 		s.Fatal("Failed to click the save button: ", err)
 	}
 	savedText := nodewith.Role(role.StaticText).Name("Saved").Ancestor(galleryapp.RootFinder)
@@ -105,17 +135,12 @@ func RemoveBackgroundFeature(ctx context.Context, s *testing.State) {
 		s.Fatal("Failed to save image: ", err)
 	}
 
-	downloadsPath, err := cryptohome.DownloadsPath(ctx, cr.NormalizedUser())
-	if err != nil {
-		s.Fatal("Failed to get user's Download path: ", err)
-	}
-
 	gotResult, err := util.FetchImage(downloadsPath + "/" + constant.ImageTestFileName)
 	if err != nil {
 		s.Fatal("Failed to get image result: ", err)
 	}
 
-	expectedResult, err := util.FetchImage(s.DataPath(expectedResult))
+	expectedResult, err := util.FetchImage(s.DataPath(makeAStickerExpectedResult))
 	if err != nil {
 		s.Fatal("Failed to get expected result: ", err)
 	}
