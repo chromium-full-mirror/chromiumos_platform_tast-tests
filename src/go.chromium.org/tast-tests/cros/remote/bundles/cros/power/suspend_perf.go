@@ -163,9 +163,8 @@ func init() {
 		}, {
 			Name:             "fw_qual",
 			ExtraTestBedDeps: []string{tbdep.ServoStateWorking},
-			// TODO: When stable, change firmware_unstable to a firmware_bios.
-			ExtraAttr: []string{"group:firmware", "firmware_unstable"},
-			Fixture:   fixture.NormalMode,
+			ExtraAttr:        []string{"group:firmware", "firmware_bios", "firmware_level3"},
+			Fixture:          fixture.NormalMode,
 			Val: testArgsForSuspendPerf{
 				numSuspend:    5,
 				benchMarkEval: true,
