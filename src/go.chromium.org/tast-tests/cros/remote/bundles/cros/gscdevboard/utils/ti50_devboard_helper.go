@@ -349,7 +349,7 @@ func (h DevboardHelper) GpioBitbang(ctx context.Context, clock, waveform string,
 	}
 	startOutput, err := h.PlainCommand(ctx, "gpio", args...)
 	if err != nil {
-		h.Fatalf("failed to preform gpio bit-banging: %s. %s", args, err)
+		h.Fatalf("failed to perform gpio bit-banging: %s. %s", args, err)
 	}
 
 	output := bitbangingOutput{}
@@ -381,6 +381,23 @@ func (h DevboardHelper) GpioBitbang(ctx context.Context, clock, waveform string,
 type BitbangOutput struct {
 	Samples map[string]map[ti50.GpioName]bool
 	All     []map[ti50.GpioName]bool
+}
+
+// GpioDACBang controls given set of analog output pins with precise timing
+func (h DevboardHelper) GpioDACBang(ctx context.Context, clock, waveform string, gpios ...ti50.GpioName) {
+	args := make([]string, len(gpios)+5)
+	args[0] = "dac-bang"
+	args[1] = "--clock"
+	args[2] = clock
+	args[3] = "-s"
+	args[4] = waveform
+	for i := range gpios {
+		args[i+5] = string(gpios[i])
+	}
+	_, err := h.PlainCommand(ctx, "gpio", args...)
+	if err != nil {
+		h.Fatalf("failed to perform gpio dac-banging: %s. %s", args, err)
+	}
 }
 
 type initialLevels struct {

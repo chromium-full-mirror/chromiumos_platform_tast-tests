@@ -6,6 +6,8 @@ package gscdevboard
 
 import (
 	"context"
+	"fmt"
+	"regexp"
 	"time"
 
 	"go.chromium.org/tast-tests/cros/common/firmware/ti50"
@@ -145,6 +147,10 @@ func init() {
 	})
 }
 
+var (
+	reAdcMessage *regexp.Regexp = regexp.MustCompile(`ADC: (dis)?connected(.*)`)
+)
+
 func eventsMustBe(events utils.GpioEvents, expected []utils.GpioEdge, caseStr string, s *testing.State) {
 	if len(events.Sorted) != len(expected) {
 		s.Log("Got events: ", events)
@@ -246,6 +252,25 @@ func testStrapCorner(ctx context.Context, expectedState ti50.UsbDeviceLinkState,
 		eventsMustBe(b.GpioMonitorRead(ctx, gpioMonitor), []utils.GpioEdge{}, caseStr, s)
 	}
 
+	// Simulate voltage momentarily venturing outside detection range.  Should neither cause
+	// disconnection nor console output.
+	var cc1VoltsOutside, cc2VoltsOutside float32
+	if cc1Volts < 0.2 {
+		cc1VoltsOutside = 1.0
+	} else {
+		cc1VoltsOutside = 0.0
+	}
+	if cc2Volts < 0.2 {
+		cc2VoltsOutside = 1.0
+	} else {
+		cc2VoltsOutside = 0.0
+	}
+	b.GpioDACBang(ctx, "1kHz", fmt.Sprintf("%f %f 5ms %f %f", cc1VoltsOutside, cc2VoltsOutside, cc1Volts, cc2Volts), ti50.GpioTi50CC1, ti50.GpioTi50CC2)
+	if match, err := i.WaitUntilMatch(ctx, reAdcMessage, 2*time.Second); err == nil {
+		s.Errorf("ADC output during brief excursion: %s", match[0])
+	}
+	eventsMustBe(b.GpioMonitorRead(ctx, gpioMonitor), []utils.GpioEdge{}, caseStr+" brief excursion", s)
+
 	// Simulate disconnection of CCD cable.
 	b.GpioApplyStrap(ctx, ti50.CcdDisconnected)
 	th.MustSucceed(testing.Sleep(ctx, 2*time.Second), "Context expired while waiting for GSC to process the strap change") // GoBigSleepLint: Wait for GSC to process the strap change
@@ -261,9 +286,9 @@ func testStrapCorner(ctx context.Context, expectedState ti50.UsbDeviceLinkState,
 		}
 	}
 	if expectedState != ti50.UsbDisconnected {
-		eventsMustBe(b.GpioMonitorRead(ctx, gpioMonitor), []utils.GpioEdge{utils.GpioEdgeRising}, caseStr, s)
+		eventsMustBe(b.GpioMonitorRead(ctx, gpioMonitor), []utils.GpioEdge{utils.GpioEdgeRising}, caseStr+" disconnection", s)
 	} else {
-		eventsMustBe(b.GpioMonitorRead(ctx, gpioMonitor), []utils.GpioEdge{}, caseStr, s)
+		eventsMustBe(b.GpioMonitorRead(ctx, gpioMonitor), []utils.GpioEdge{}, caseStr+" disconnection", s)
 	}
 }
 
