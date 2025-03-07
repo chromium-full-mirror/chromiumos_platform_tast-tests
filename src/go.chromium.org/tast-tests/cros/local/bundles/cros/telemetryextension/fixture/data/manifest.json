@@ -18,7 +18,7 @@
     ],
     "externally_connectable": {
         "matches": [
-            "*://googlechromelabs.github.io/*"
+            "*://googlechromelabs.github.io/cros-sample-telemetry-extension/test-page/*"
         ]
     }
 }
