@@ -32,13 +32,12 @@ func init() {
 		},
 		BugComponent: "b:715469", // ChromeOS > Platform > System > Hardware Security > HwSec GSC > Ti50
 		Attr: []string{"group:gsc",
-			"gsc_dt_ab", "gsc_dt_shield", "gsc_h1_shield",
+			"gsc_dt_ab", "gsc_dt_shield", "gsc_h1_shield", "gsc_ot_shield",
 			"gsc_image_ti50",
 			"gsc_nightly"},
 		Fixture: fixture.GSCOpenCCD,
 		Params: []testing.Param{{
-			Name:      "deep_sleep",
-			ExtraAttr: []string{"gsc_ot_shield"},
+			Name: "deep_sleep",
 			Val: testBasicSleepConfig{
 				DeepSleep:     true,
 				Bus:           ti50.TpmBusSpi, // The TPM type doesn't matter for deep sleep.
