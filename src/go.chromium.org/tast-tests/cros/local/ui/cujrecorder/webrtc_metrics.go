@@ -38,6 +38,7 @@ var WebRTCMetricInfo = MetricInfo{
 	"WebRTC.Video.SentFramesPerSecond":                             {"fps", perf.BiggerIsBetter},
 	"WebRTC.Video.SentToInputFpsRatioPercent":                      {"percent", perf.BiggerIsBetter},
 	"WebRTC.Video.TimeInHdPercentage":                              {"percent", perf.BiggerIsBetter},
+	"WebRTC.Video.HarmonicFrameRate":                               {"fps", perf.BiggerIsBetter},
 }
 
 // WebRTCMetrics returns WebRTC common metrics which are required to be collected by conference CUJ tests.

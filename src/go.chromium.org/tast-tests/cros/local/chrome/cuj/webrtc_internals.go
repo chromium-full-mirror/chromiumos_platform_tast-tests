@@ -381,23 +381,31 @@ func ReportVideoStreams(pv *perf.Values, byID webrtcinternals.StatsIndexByStatsI
 		{"frameWidth", reportFloat64, ".frameWidth", "px", perf.BiggerIsBetter},
 		{"frameHeight", reportFloat64, ".frameHeight", "px", perf.BiggerIsBetter},
 		{"framesDecoded", reportFloat64, ".framesDecoded", "frames", perf.BiggerIsBetter},
+		{"framesEncoded", reportFloat64, ".framesEncoded", "frames", perf.BiggerIsBetter},
 		{"framesDropped", reportFloat64, ".framesDropped", "frames", perf.SmallerIsBetter},
 		{"framesPerSecond", reportFloat64, ".framesPerSecond", "fps", perf.BiggerIsBetter},
 		{"freezeCount", reportFloat64, ".freezeCount", "count", perf.SmallerIsBetter},
 		{"totalFreezesDuration", reportFloat64, ".totalFreezesDuration", "s", perf.SmallerIsBetter},
 		{"[codec]", reportVideoCodec, ".codec", "unitless", perf.BiggerIsBetter},
+		{"totalDecodeTime", reportFloat64, ".totalDecodeTime", "s", perf.SmallerIsBetter},
+		{"totalEncodeTime", reportFloat64, ".totalEncodeTime", "s", perf.SmallerIsBetter},
+		{"powerEfficientDecoder", reportPowerEfficient, ".powerEfficientDecoder", "unitless", perf.BiggerIsBetter},
+		{"powerEfficientEncoder", reportPowerEfficient, ".powerEfficientEncoder", "unitless", perf.BiggerIsBetter},
 	}
 
 	aggregates := map[string]float64{
 		"framesDecoded":        0,
+		"framesEncoded":        0,
 		"framesDropped":        0,
 		"freezeCount":          0,
 		"totalFreezesDuration": 0,
+		"totalDecodeTime":      0,
+		"totalEncodeTime":      0,
 	}
 
+	screenShareSuffix := ""
 	for _, id := range orderedIDs {
 		byAttribute := byID[id]
-		screenShareSuffix := ""
 		if contentTypeTimeline, ok := byAttribute["contentType"]; ok {
 			contentType, err := contentTypeTimeline.Collapse()
 			if err != nil {
@@ -409,6 +417,7 @@ func ReportVideoStreams(pv *perf.Values, byID webrtcinternals.StatsIndexByStatsI
 			}
 		}
 
+		variantSuffix := fmt.Sprintf(variantFormat, totalCount)
 		for _, config := range metrics {
 			timeline, ok := byAttribute[config.attribute]
 			if !ok {
@@ -434,11 +443,14 @@ func ReportVideoStreams(pv *perf.Values, byID webrtcinternals.StatsIndexByStatsI
 			}
 
 			pv.Set(perf.Metric{
-				Name:      fmt.Sprintf("WebRTCInternals.Video%s%s%s.%s", screenShareSuffix, directionSuffix, config.attributeSuffix, fmt.Sprintf(variantFormat, totalCount)),
+				Name:      fmt.Sprintf("WebRTCInternals.Video%s%s%s.%s", screenShareSuffix, directionSuffix, config.attributeSuffix, variantSuffix),
 				Unit:      config.unit,
 				Direction: config.direction,
 				Multiple:  true,
 			}, report...)
+		}
+		if err := recordCoderImplementation(pv, byAttribute, screenShareSuffix, directionSuffix, variantSuffix); err != nil {
+			return 0, 0, errors.Wrapf(err, "failed to record coder implementation attribute for %q", id)
 		}
 		totalCount++
 	}
@@ -461,6 +473,18 @@ func ReportVideoStreams(pv *perf.Values, byID webrtcinternals.StatsIndexByStatsI
 			Unit:      "percent",
 			Direction: perf.SmallerIsBetter,
 		}, aggregates["framesDropped"]/aggregates["framesDecoded"])
+		pv.Set(perf.Metric{
+			Name:      fmt.Sprintf("WebRTCInternals.Video%s.AverageDecodeTime", directionSuffix),
+			Unit:      "ms",
+			Direction: perf.SmallerIsBetter,
+		}, aggregates["totalDecodeTime"]/aggregates["framesDecoded"]*1000)
+	}
+	if aggregates["framesEncoded"] > 0 {
+		pv.Set(perf.Metric{
+			Name:      fmt.Sprintf("WebRTCInternals.Video%s%s.AverageEncodeTime", screenShareSuffix, directionSuffix),
+			Unit:      "ms",
+			Direction: perf.SmallerIsBetter,
+		}, aggregates["totalEncodeTime"]/aggregates["framesEncoded"]*1000)
 	}
 
 	return totalCount, screenshareCount, nil
@@ -490,4 +514,41 @@ func reportVideoCodec(value interface{}) (float64, error) {
 		return float64(vp9), nil
 	}
 	return 0, errors.Errorf("unrecognized video stream codec: %q", description)
+}
+
+func reportPowerEfficient(value interface{}) (float64, error) {
+	powerEfficient, ok := value.(bool)
+	if !ok {
+		return 0, errors.Errorf("%v is not of type bool", value)
+	}
+	if powerEfficient {
+		return 1, nil
+	}
+	return 0, nil
+}
+
+func recordCoderImplementation(pv *perf.Values, byAttribute webrtcinternals.StatsIndexByAttribute, screenShareSuffix, directionSuffix, variantSuffix string) error {
+	attribute := "decoderImplementation"
+	if directionSuffix == ".Outbound" {
+		attribute = "encoderImplementation"
+	}
+	timeline, ok := byAttribute[attribute]
+	if !ok {
+		return errors.Errorf("failed to get %s attribute", attribute)
+	}
+	if len(timeline) == 0 {
+		return errors.Errorf("%s attribute has no value", attribute)
+	}
+	implementation, ok := timeline[0].(string)
+	if !ok {
+		return errors.Errorf("%v is not of type string", implementation)
+	}
+	// Record the implementation in the name of the metric:
+	// Example: WebRTCInternals.Video.Screenshare.Outbound.encoderImplementation.SimulcastEncoderAdapter__libvpx__libvpx_.stream0
+	implementation = perf.InvalidNameRe.ReplaceAllString(implementation, "_")
+	pv.Set(perf.Metric{
+		Name: fmt.Sprintf("WebRTCInternals.Video%s%s.%s.%s.%s", screenShareSuffix, directionSuffix, attribute, implementation, variantSuffix),
+		Unit: "unitless",
+	}, 0)
+	return nil
 }
