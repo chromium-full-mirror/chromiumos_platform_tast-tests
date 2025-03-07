@@ -23,6 +23,7 @@ import (
 	cameraCrosconfig "go.chromium.org/tast-tests/cros/local/camera/crosconfig"
 	"go.chromium.org/tast-tests/cros/local/camera/pnp"
 	"go.chromium.org/tast-tests/cros/local/camera/testutil"
+	localPerf "go.chromium.org/tast-tests/cros/local/perf"
 	powersetup "go.chromium.org/tast-tests/cros/local/power/setup"
 	"go.chromium.org/tast-tests/cros/local/upstart"
 	"go.chromium.org/tast/core/ctxutil"
@@ -207,23 +208,9 @@ func saveProcessSmaps(ctx context.Context, cameraProcessList []cameraProcess, ou
 }
 
 func saveDmabuf(ctx context.Context, suffix string, pv *perf.Values) error {
-	cmd := testexec.CommandContext(ctx, "tail", "-n", "1", dmabufInfoPath)
-	dmabufInfo, err := cmd.Output(testexec.DumpLogOnError)
+	totalBufferCount, totalBufferSize, err := localPerf.GetDMABufUsage()
 	if err != nil {
-		return errors.Wrap(err, "failed to get dmabuf info")
-	}
-	testing.ContextLogf(ctx, "dmabuf info: %s", dmabufInfo)
-	matches := dmabufInfoRegex.FindStringSubmatch(string(dmabufInfo))
-	if matches == nil {
-		return errors.Wrapf(err, "failed to parse dmabuf info from %q", string(dmabufInfo))
-	}
-	totalBufferCount, err := strconv.Atoi(matches[1])
-	if err != nil {
-		return errors.Wrapf(err, "failed to convert total buffer count %v to an integer", matches[1])
-	}
-	totalBufferSize, err := strconv.Atoi(matches[2])
-	if err != nil {
-		return errors.Wrapf(err, "failed to convert total buffer size %v to an integer", matches[2])
+		return errors.Wrap(err, "failed to get dmabuf usage")
 	}
 
 	pv.Set(perf.Metric{
