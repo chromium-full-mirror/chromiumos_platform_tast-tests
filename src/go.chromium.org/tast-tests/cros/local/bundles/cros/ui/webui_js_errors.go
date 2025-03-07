@@ -236,7 +236,7 @@ func WebUIJSErrors(ctx context.Context, s *testing.State) {
 
 	params := s.Param().(webUIJSErrorsParams)
 	const vModuleFlags = "--vmodule=chrome_js_error_report_processor=3,web_ui_impl=3,web_ui_main_frame_observer=3,webui_js_error_ui=3"
-	chromeOpts := []chrome.Option{chrome.ExtraArgs(vModuleFlags), chrome.DisableFeatures("InternalOnlyUisPref")}
+	chromeOpts := []chrome.Option{chrome.ExtraArgs(vModuleFlags)}
 	if params.fieldTrialConfigMode != chrome.FieldTrialConfigDefault {
 		chromeOpts = append(chromeOpts, chrome.FieldTrialConfig(params.fieldTrialConfigMode))
 	}
@@ -262,6 +262,15 @@ func WebUIJSErrors(ctx context.Context, s *testing.State) {
 		s.Fatal("SetUpCrashTest failed: ", err)
 	}
 	defer crash.TearDownCrashTest(cleanupCtx)
+
+	// Enable access to internal webui page.
+	tconn, err := cr.TestAPIConn(ctx)
+	if err != nil {
+		s.Fatal("Getting test API connection failed: ", err)
+	}
+	if err = tconn.Call(ctx, nil, "tast.promisify(chrome.autotestPrivate.setAllowedPref)", "internal_only_uis_enabled", true); err != nil {
+		s.Fatal("Failed to set internal_only_uis_enabled: ", err)
+	}
 
 	conn, err := cr.NewConn(ctx, "chrome://webuijserror")
 	if err != nil {
