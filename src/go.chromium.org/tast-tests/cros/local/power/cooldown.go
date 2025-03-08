@@ -258,3 +258,30 @@ func Cooldown(ctx context.Context) error {
 
 	return nil
 }
+
+// FastThermalCooldown cools down the CPU temperature within a time
+// constraint of 90 seconds. It does not cool down the CPU usage, CPU package
+// state, or IO. It prioritises the cooldown speed rather than achieving
+// the lowest possible temperature, which is suitable for time-critical
+// situations.
+//
+// To skip cooldown for debugging, use
+// -var=cpu.Cooldown.skipCooldown=true.
+func FastThermalCooldown(ctx context.Context) error {
+	cfg := CooldownConfig{
+		UseFan: true,
+		SteadyStateConfig: &ThermalSteadyStateConfig{
+			SampleSize:           30,
+			Interval:             time.Second,
+			Timeout:              90 * time.Second,
+			MaxStandardDeviation: 1.0,
+			MaxTempAtTimeout:     55,
+		},
+	}
+
+	if err := ConfigurableCooldown(ctx, cfg); err != nil {
+		return errors.Wrap(err, "failed to power cooldown")
+	}
+
+	return nil
+}
