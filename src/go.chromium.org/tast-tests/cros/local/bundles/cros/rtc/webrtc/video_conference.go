@@ -351,16 +351,7 @@ func runVCPerf(ctx context.Context, tconn *chrome.TestConn, s *testing.State, pa
 	if err := wm.setupWindowView(ctx, tconn); err != nil {
 		return err
 	}
-	if err := power.ConfigurableCooldown(ctx, power.CooldownConfig{
-		UseFan: true,
-		SteadyStateConfig: &power.ThermalSteadyStateConfig{
-			SampleSize:           30,
-			Interval:             time.Second,
-			Timeout:              90 * time.Second,
-			MaxStandardDeviation: 1.0,
-			MaxTempAtTimeout:     50,
-		},
-	}); err != nil {
+	if err := power.FastThermalCooldown(ctx); err != nil {
 		return errors.Wrap(err, "failed waiting for DUT to cool down")
 	}
 	if params.Step {
