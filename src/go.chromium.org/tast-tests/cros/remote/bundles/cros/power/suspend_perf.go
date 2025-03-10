@@ -17,6 +17,7 @@ import (
 	"go.chromium.org/tast-tests/cros/common/chrome/histogram"
 	"go.chromium.org/tast-tests/cros/common/perf"
 	"go.chromium.org/tast-tests/cros/common/servo"
+	"go.chromium.org/tast-tests/cros/common/tbdep"
 	"go.chromium.org/tast-tests/cros/remote/cros/metrics"
 	"go.chromium.org/tast-tests/cros/remote/firmware"
 	"go.chromium.org/tast-tests/cros/remote/firmware/fixture"
@@ -154,7 +155,8 @@ func init() {
 			// 10 min for setting up (login and opening tabs) +(3 min for each suspend/resume) * 5 times
 			Timeout: 30 * time.Minute,
 		}, {
-			Name: "fw_qual",
+			Name:             "fw_qual",
+			ExtraTestBedDeps: []string{tbdep.ServoStateWorking},
 			// TODO: When stable, change firmware_unstable to a firmware_bios.
 			ExtraAttr: []string{"group:firmware", "firmware_unstable"},
 			Fixture:   fixture.NormalMode,

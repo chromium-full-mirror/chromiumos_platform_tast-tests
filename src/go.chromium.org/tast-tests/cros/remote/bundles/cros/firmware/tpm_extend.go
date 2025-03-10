@@ -13,6 +13,7 @@ import (
 	"strings"
 
 	"go.chromium.org/tast-tests/cros/common/hwsec"
+	"go.chromium.org/tast-tests/cros/common/tbdep"
 	"go.chromium.org/tast-tests/cros/remote/firmware/fixture"
 	"go.chromium.org/tast-tests/cros/remote/firmware/reporters"
 	hwsecremote "go.chromium.org/tast-tests/cros/remote/hwsec"
@@ -42,6 +43,7 @@ func init() {
 		Desc:         "Test to ensure TPM PCRs are extended correctly",
 		Contacts:     []string{"chromeos-firmware@google.com", "digehlot@google.com"},
 		BugComponent: "b:792402", // ChromeOS > Platform > Enablement > Firmware > FAFT
+		TestBedDeps:  []string{tbdep.ServoStateWorking},
 		Attr:         []string{"group:firmware", "firmware_bios", "firmware_level2"},
 		Params: []testing.Param{
 			{
@@ -56,9 +58,10 @@ func init() {
 				},
 			},
 			{
-				Name:      "recovery",
-				Fixture:   fixture.RecModeNoServices,
-				ExtraAttr: []string{"firmware_usb"},
+				Name:             "recovery",
+				Fixture:          fixture.RecModeNoServices,
+				ExtraTestBedDeps: []string{tbdep.ServoUSBState("NORMAL")},
+				ExtraAttr:        []string{"firmware_usb"},
 				Val: &bootModeArgs{
 					devMode:       0,
 					recMode:       1,
@@ -79,9 +82,10 @@ func init() {
 				},
 			},
 			{
-				Name:      "dev_recovery",
-				Fixture:   fixture.DevRecModeNoServices,
-				ExtraAttr: []string{"firmware_usb"},
+				Name:             "dev_recovery",
+				Fixture:          fixture.DevRecModeNoServices,
+				ExtraTestBedDeps: []string{tbdep.ServoUSBState("NORMAL")},
+				ExtraAttr:        []string{"firmware_usb"},
 				Val: &bootModeArgs{
 					devMode:       1,
 					recMode:       1,

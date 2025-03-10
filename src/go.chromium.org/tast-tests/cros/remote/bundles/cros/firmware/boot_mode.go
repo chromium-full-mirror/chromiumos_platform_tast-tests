@@ -14,6 +14,7 @@ import (
 
 	fwCommon "go.chromium.org/tast-tests/cros/common/firmware"
 	"go.chromium.org/tast-tests/cros/common/servo"
+	"go.chromium.org/tast-tests/cros/common/tbdep"
 	"go.chromium.org/tast-tests/cros/remote/firmware"
 	"go.chromium.org/tast-tests/cros/remote/firmware/fixture"
 	"go.chromium.org/tast-tests/cros/remote/firmware/reporters"
@@ -46,6 +47,7 @@ func init() {
 			"jbettis@chromium.org",
 		},
 		BugComponent: "b:792402", // ChromeOS > Platform > Enablement > Firmware > FAFT
+		TestBedDeps:  []string{tbdep.ServoStateWorking},
 		Attr:         []string{"group:firmware"},
 		SoftwareDeps: []string{"crossystem", "flashrom"},
 		Vars:         []string{"firmware.skipFlashUSB"},
@@ -75,8 +77,9 @@ func init() {
 				resetAfterBoot: true,
 				resetType:      firmware.WarmReset,
 			},
-			ExtraAttr: []string{"firmware_smoke", "firmware_usb", "firmware_bios", "firmware_level2", "firmware_ro"},
-			Timeout:   2 * time.Hour,
+			ExtraTestBedDeps: []string{tbdep.ServoUSBState("NORMAL")},
+			ExtraAttr:        []string{"firmware_smoke", "firmware_usb", "firmware_bios", "firmware_level2", "firmware_ro"},
+			Timeout:          2 * time.Hour,
 		}, {
 			Name:    "rec_cold",
 			Fixture: fixture.NormalMode,
@@ -85,8 +88,9 @@ func init() {
 				resetAfterBoot: true,
 				resetType:      firmware.ColdReset,
 			},
-			ExtraAttr: []string{"firmware_smoke", "firmware_usb", "firmware_bios", "firmware_level2", "firmware_ro"},
-			Timeout:   2 * time.Hour,
+			ExtraTestBedDeps: []string{tbdep.ServoUSBState("NORMAL")},
+			ExtraAttr:        []string{"firmware_smoke", "firmware_usb", "firmware_bios", "firmware_level2", "firmware_ro"},
+			Timeout:          2 * time.Hour,
 		}, {
 			Name:    "dev_usb_cold",
 			Fixture: fixture.USBDevModeNoServices,
@@ -94,8 +98,9 @@ func init() {
 				resetAfterBoot: true,
 				resetType:      firmware.ColdReset,
 			},
-			ExtraAttr: []string{"firmware_bios", "firmware_level2", "firmware_usb"},
-			Timeout:   2 * time.Hour,
+			ExtraTestBedDeps: []string{tbdep.ServoUSBState("NORMAL")},
+			ExtraAttr:        []string{"firmware_bios", "firmware_level2", "firmware_usb"},
+			Timeout:          2 * time.Hour,
 		}, {
 			Name:    "dev_warm",
 			Fixture: fixture.DevMode,
@@ -104,8 +109,9 @@ func init() {
 				resetType:         firmware.WarmReset,
 				checkBootFromMain: true,
 			},
-			ExtraAttr: []string{"firmware_smoke", "firmware_usb", "firmware_bios", "firmware_level2"},
-			Timeout:   2 * time.Hour,
+			ExtraTestBedDeps: []string{tbdep.ServoUSBState("NORMAL")},
+			ExtraAttr:        []string{"firmware_smoke", "firmware_usb", "firmware_bios", "firmware_level2"},
+			Timeout:          2 * time.Hour,
 		}, {
 			Name:    "dev_cold",
 			Fixture: fixture.DevMode,
@@ -114,32 +120,36 @@ func init() {
 				resetType:         firmware.ColdReset,
 				checkBootFromMain: true,
 			},
-			ExtraAttr: []string{"firmware_smoke", "firmware_usb", "firmware_bios", "firmware_level2"},
-			Timeout:   2 * time.Hour,
+			ExtraTestBedDeps: []string{tbdep.ServoUSBState("NORMAL")},
+			ExtraAttr:        []string{"firmware_smoke", "firmware_usb", "firmware_bios", "firmware_level2"},
+			Timeout:          2 * time.Hour,
 		}, {
 			Name:    "dev_to_rec",
 			Fixture: fixture.DevMode,
 			Val: bootModeTestParams{
 				bootToMode: fwCommon.BootModeRecovery,
 			},
-			ExtraAttr: []string{"firmware_smoke", "firmware_usb", "firmware_bios", "firmware_level2"},
-			Timeout:   2 * time.Hour,
+			ExtraTestBedDeps: []string{tbdep.ServoUSBState("NORMAL")},
+			ExtraAttr:        []string{"firmware_smoke", "firmware_usb", "firmware_bios", "firmware_level2"},
+			Timeout:          2 * time.Hour,
 		}, {
 			Name:    "rec_to_dev",
 			Fixture: fixture.RecModeNoServices,
 			Val: bootModeTestParams{
 				bootToMode: fwCommon.BootModeDev,
 			},
-			ExtraAttr: []string{"firmware_bios", "firmware_usb", "firmware_level2"},
-			Timeout:   2 * time.Hour,
+			ExtraTestBedDeps: []string{tbdep.ServoUSBState("NORMAL")},
+			ExtraAttr:        []string{"firmware_bios", "firmware_usb", "firmware_level2"},
+			Timeout:          2 * time.Hour,
 		}, {
 			Name:    "dev_gbb_to_rec",
 			Fixture: fixture.DevModeGBB,
 			Val: bootModeTestParams{
 				bootToMode: fwCommon.BootModeRecovery,
 			},
-			ExtraAttr: []string{"firmware_bios", "firmware_level2", "firmware_usb"},
-			Timeout:   2 * time.Hour,
+			ExtraTestBedDeps: []string{tbdep.ServoUSBState("NORMAL")},
+			ExtraAttr:        []string{"firmware_bios", "firmware_level2", "firmware_usb"},
+			Timeout:          2 * time.Hour,
 		}, {
 			Name:    "rec_to_dev_gbb",
 			Fixture: fixture.RecModeNoServices,
@@ -147,8 +157,9 @@ func init() {
 				bootToMode:    fwCommon.BootModeDev,
 				allowGBBForce: true,
 			},
-			ExtraAttr: []string{"firmware_bios", "firmware_usb", "firmware_level2"},
-			Timeout:   2 * time.Hour,
+			ExtraTestBedDeps: []string{tbdep.ServoUSBState("NORMAL")},
+			ExtraAttr:        []string{"firmware_bios", "firmware_usb", "firmware_level2"},
+			Timeout:          2 * time.Hour,
 		}, {
 			// Verifies that we can go from normal -> dev -> normal without GBB flags.
 			Name:    "normal_dev",

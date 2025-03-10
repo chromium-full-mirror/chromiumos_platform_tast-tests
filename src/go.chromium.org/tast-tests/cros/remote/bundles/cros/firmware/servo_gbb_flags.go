@@ -16,6 +16,7 @@ import (
 	common "go.chromium.org/tast-tests/cros/common/firmware"
 	commonbios "go.chromium.org/tast-tests/cros/common/firmware/bios"
 	"go.chromium.org/tast-tests/cros/common/servo"
+	"go.chromium.org/tast-tests/cros/common/tbdep"
 	"go.chromium.org/tast-tests/cros/remote/firmware/bios"
 	"go.chromium.org/tast-tests/cros/remote/firmware/fixture"
 	pb "go.chromium.org/tast-tests/cros/services/cros/firmware"
@@ -34,6 +35,7 @@ func init() {
 			"jbettis@chromium.org",
 		},
 		BugComponent: "b:792402", // ChromeOS > Platform > Enablement > Firmware > FAFT
+		TestBedDeps:  []string{tbdep.ServoStateWorking, tbdep.ServoComponent("ccd_gsc")},
 		Attr:         []string{"group:firmware", "firmware_cr50", "firmware_ccd", "firmware_bios", "firmware_level1"},
 		SoftwareDeps: []string{"flashrom"},
 		Fixture:      fixture.NormalMode,

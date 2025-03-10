@@ -13,6 +13,7 @@ import (
 	"github.com/golang/protobuf/ptypes/empty"
 	fwCommon "go.chromium.org/tast-tests/cros/common/firmware"
 	"go.chromium.org/tast-tests/cros/common/servo"
+	"go.chromium.org/tast-tests/cros/common/tbdep"
 	"go.chromium.org/tast-tests/cros/remote/firmware"
 	"go.chromium.org/tast-tests/cros/remote/firmware/fixture"
 	"go.chromium.org/tast-tests/cros/remote/firmware/reporters"
@@ -48,6 +49,7 @@ func init() {
 			"jbettis@google.com",
 		},
 		BugComponent: "b:792402", // ChromeOS > Platform > Enablement > Firmware > FAFT
+		TestBedDeps:  []string{tbdep.ServoStateWorking},
 		Attr:         []string{"group:firmware", "firmware_bios", "firmware_level4"},
 		HardwareDeps: hwdep.D(
 			// Eventlog is broken/wontfix on veyron devices.
@@ -108,9 +110,10 @@ func init() {
 			},
 			// Test eventlog upon normal->rec reboot.
 			{
-				Name:      "normal_rec",
-				ExtraAttr: []string{"firmware_usb", "firmware_ro"},
-				Fixture:   fixture.NormalMode,
+				Name:             "normal_rec",
+				ExtraTestBedDeps: []string{tbdep.ServoUSBState("NORMAL")},
+				ExtraAttr:        []string{"firmware_usb", "firmware_ro"},
+				Fixture:          fixture.NormalMode,
 				Val: eventLogParams{
 					bootToMode:        fwCommon.BootModeRecovery,
 					requiredEventSets: [][]string{{`System boot`, `(?i)Chrome ?OS Recovery Mode \| Recovery Button|boot_mode=Manual recovery`}},
@@ -120,9 +123,10 @@ func init() {
 			},
 			// Test eventlog upon rec->normal reboot.
 			{
-				Name:      "rec_normal",
-				ExtraAttr: []string{"firmware_usb", "firmware_ro"},
-				Fixture:   fixture.RecModeNoServices,
+				Name:             "rec_normal",
+				ExtraTestBedDeps: []string{tbdep.ServoUSBState("NORMAL")},
+				ExtraAttr:        []string{"firmware_usb", "firmware_ro"},
+				Fixture:          fixture.RecModeNoServices,
 				Val: eventLogParams{
 					bootToMode:        fwCommon.BootModeNormal,
 					requiredEventSets: [][]string{{`System boot`}},

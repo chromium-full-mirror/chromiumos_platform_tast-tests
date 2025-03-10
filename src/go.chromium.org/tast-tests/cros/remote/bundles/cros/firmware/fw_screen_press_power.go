@@ -11,6 +11,7 @@ import (
 
 	fwCommon "go.chromium.org/tast-tests/cros/common/firmware"
 	"go.chromium.org/tast-tests/cros/common/servo"
+	"go.chromium.org/tast-tests/cros/common/tbdep"
 	"go.chromium.org/tast-tests/cros/remote/firmware"
 	"go.chromium.org/tast-tests/cros/remote/firmware/fixture"
 	"go.chromium.org/tast/core/ctxutil"
@@ -30,6 +31,7 @@ func init() {
 			"chromeos-faft@google.com",
 		},
 		BugComponent: "b:792402", // ChromeOS > Platform > Enablement > Firmware > FAFT
+		TestBedDeps:  []string{tbdep.ServoStateWorking},
 		Attr:         []string{"group:firmware", "firmware_bios", "firmware_level2"},
 		Vars:         []string{"firmware.skipFlashUSB"},
 		Timeout:      2 * time.Hour,
@@ -64,7 +66,8 @@ func init() {
 			Val: &fwScreenPressPwrParams{
 				bootToScreen: fwCommon.FwInvalidScreen,
 			},
-			ExtraAttr: []string{"firmware_usb"},
+			ExtraTestBedDeps: []string{tbdep.ServoUSBState("NORMAL")},
+			ExtraAttr:        []string{"firmware_usb"},
 		}},
 	})
 }

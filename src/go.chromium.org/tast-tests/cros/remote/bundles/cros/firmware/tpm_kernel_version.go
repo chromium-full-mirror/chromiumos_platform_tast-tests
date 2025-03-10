@@ -8,6 +8,7 @@ import (
 	"context"
 	"strconv"
 
+	"go.chromium.org/tast-tests/cros/common/tbdep"
 	"go.chromium.org/tast-tests/cros/remote/firmware/fixture"
 	"go.chromium.org/tast-tests/cros/remote/firmware/reporters"
 	"go.chromium.org/tast/core/testing"
@@ -23,6 +24,7 @@ func init() {
 			"tij@google.com",
 		},
 		BugComponent: "b:792402", // ChromeOS > Platform > Enablement > Firmware > FAFT
+		TestBedDeps:  []string{tbdep.ServoStateWorking},
 		Attr:         []string{"group:firmware", "firmware_bios", "firmware_level3"},
 		HardwareDeps: hwdep.D(hwdep.ChromeEC()),
 		Params: []testing.Param{
@@ -37,10 +39,11 @@ func init() {
 				Fixture: fixture.DevModeGBB,
 			},
 			{
-				Name:      "dev_usb",
-				Val:       fixture.USBDevModeGBBNoServices,
-				Fixture:   fixture.USBDevModeGBBNoServices,
-				ExtraAttr: []string{"firmware_usb"},
+				Name:             "dev_usb",
+				Val:              fixture.USBDevModeGBBNoServices,
+				Fixture:          fixture.USBDevModeGBBNoServices,
+				ExtraTestBedDeps: []string{tbdep.ServoUSBState("NORMAL")},
+				ExtraAttr:        []string{"firmware_usb"},
 			},
 		},
 	})

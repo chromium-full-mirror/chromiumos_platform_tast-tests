@@ -11,6 +11,7 @@ import (
 	cryptossh "golang.org/x/crypto/ssh"
 
 	common "go.chromium.org/tast-tests/cros/common/firmware"
+	"go.chromium.org/tast-tests/cros/common/tbdep"
 	"go.chromium.org/tast-tests/cros/remote/firmware"
 	"go.chromium.org/tast-tests/cros/remote/firmware/fixture"
 	"go.chromium.org/tast-tests/cros/remote/firmware/reporters"
@@ -35,6 +36,7 @@ func init() {
 		},
 		BugComponent: "b:792402", // ChromeOS > Platform > Enablement > Firmware > FAFT
 		SoftwareDeps: []string{"crossystem"},
+		TestBedDeps:  []string{tbdep.ServoStateWorking},
 		Params: []testing.Param{{
 			Name:      "normal",
 			Val:       fixtureParams{expectedMode: common.BootModeNormal},
@@ -51,25 +53,29 @@ func init() {
 			Fixture:   fixture.DevModeGBB,
 			ExtraAttr: []string{"group:firmware", "firmware_smoke"},
 		}, {
-			Name:      "dev_usb",
-			Val:       fixtureParams{expectedMode: common.BootModeUSBDev},
-			Fixture:   fixture.USBDevModeNoServices,
-			ExtraAttr: []string{"group:firmware", "firmware_smoke", "firmware_usb"},
+			Name:             "dev_usb",
+			Val:              fixtureParams{expectedMode: common.BootModeUSBDev},
+			Fixture:          fixture.USBDevModeNoServices,
+			ExtraTestBedDeps: []string{tbdep.ServoUSBState("NORMAL")},
+			ExtraAttr:        []string{"group:firmware", "firmware_smoke", "firmware_usb"},
 		}, {
-			Name:      "dev_usb_gbb",
-			Val:       fixtureParams{expectedMode: common.BootModeUSBDev},
-			Fixture:   fixture.USBDevModeGBBNoServices,
-			ExtraAttr: []string{"group:firmware", "firmware_smoke", "firmware_usb"},
+			Name:             "dev_usb_gbb",
+			Val:              fixtureParams{expectedMode: common.BootModeUSBDev},
+			Fixture:          fixture.USBDevModeGBBNoServices,
+			ExtraTestBedDeps: []string{tbdep.ServoUSBState("NORMAL")},
+			ExtraAttr:        []string{"group:firmware", "firmware_smoke", "firmware_usb"},
 		}, {
-			Name:      "dev_rec",
-			Val:       fixtureParams{expectedMode: common.BootModeRecovery, isDevModeExpected: true},
-			Fixture:   fixture.DevRecModeNoServices,
-			ExtraAttr: []string{"group:firmware", "firmware_smoke", "firmware_usb", "group:labqual", "firmware_bios", "firmware_level2", "firmware_ro"},
+			Name:             "dev_rec",
+			Val:              fixtureParams{expectedMode: common.BootModeRecovery, isDevModeExpected: true},
+			Fixture:          fixture.DevRecModeNoServices,
+			ExtraTestBedDeps: []string{tbdep.ServoUSBState("NORMAL")},
+			ExtraAttr:        []string{"group:firmware", "firmware_smoke", "firmware_usb", "group:labqual", "firmware_bios", "firmware_level2", "firmware_ro"},
 		}, {
-			Name:      "rec",
-			Val:       fixtureParams{expectedMode: common.BootModeRecovery},
-			Fixture:   fixture.RecModeNoServices,
-			ExtraAttr: []string{"group:firmware", "firmware_smoke", "firmware_usb", "group:labqual", "firmware_bios", "firmware_level2", "firmware_ro"},
+			Name:             "rec",
+			Val:              fixtureParams{expectedMode: common.BootModeRecovery},
+			Fixture:          fixture.RecModeNoServices,
+			ExtraTestBedDeps: []string{tbdep.ServoUSBState("NORMAL")},
+			ExtraAttr:        []string{"group:firmware", "firmware_smoke", "firmware_usb", "group:labqual", "firmware_bios", "firmware_level2", "firmware_ro"},
 		}, {
 			Name:    "devusb_reinstall",
 			Val:     fixtureParams{expectedMode: common.BootModeUSBDev, leaveStatefulMarker: true},

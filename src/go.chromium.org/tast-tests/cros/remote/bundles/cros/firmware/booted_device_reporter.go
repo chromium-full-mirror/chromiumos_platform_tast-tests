@@ -7,6 +7,7 @@ package firmware
 import (
 	"context"
 
+	"go.chromium.org/tast-tests/cros/common/tbdep"
 	"go.chromium.org/tast-tests/cros/remote/firmware/fixture"
 	"go.chromium.org/tast-tests/cros/remote/firmware/reporters"
 	"go.chromium.org/tast/core/testing"
@@ -21,24 +22,27 @@ func init() {
 			"jbettis@chromium.org",
 		},
 		BugComponent: "b:792402", // ChromeOS > Platform > Enablement > Firmware > FAFT
+		TestBedDeps:  []string{tbdep.ServoStateWorking},
 		Attr:         []string{"group:firmware", "firmware_smoke"},
 		Params: []testing.Param{{
 			Fixture: fixture.NormalMode,
 			Val:     false,
 		}, {
-			Name:      "rec",
-			Fixture:   fixture.RecModeNoServices,
-			ExtraAttr: []string{"firmware_usb"},
-			Val:       true,
+			Name:             "rec",
+			Fixture:          fixture.RecModeNoServices,
+			ExtraTestBedDeps: []string{tbdep.ServoUSBState("NORMAL")},
+			ExtraAttr:        []string{"firmware_usb"},
+			Val:              true,
 		}, {
 			Name:    "dev",
 			Fixture: fixture.DevModeGBB,
 			Val:     false,
 		}, {
-			Name:      "usbdev",
-			Fixture:   fixture.USBDevModeGBBNoServices,
-			ExtraAttr: []string{"firmware_usb"},
-			Val:       true,
+			Name:             "usbdev",
+			Fixture:          fixture.USBDevModeGBBNoServices,
+			ExtraTestBedDeps: []string{tbdep.ServoUSBState("NORMAL")},
+			ExtraAttr:        []string{"firmware_usb"},
+			Val:              true,
 		}},
 	})
 }

@@ -15,6 +15,7 @@ import (
 	fwCommon "go.chromium.org/tast-tests/cros/common/firmware"
 	"go.chromium.org/tast-tests/cros/common/firmware/bios"
 	"go.chromium.org/tast-tests/cros/common/firmware/futility"
+	"go.chromium.org/tast-tests/cros/common/tbdep"
 	"go.chromium.org/tast-tests/cros/remote/dutfs"
 	"go.chromium.org/tast-tests/cros/remote/firmware"
 	"go.chromium.org/tast-tests/cros/remote/firmware/fixture"
@@ -55,16 +56,18 @@ func init() {
 			"chromeos-faft@google.com",
 		},
 		BugComponent: "b:792402", // ChromeOS > Platform > Enablement > Firmware > FAFT
+		TestBedDeps:  []string{tbdep.ServoStateWorking},
 		Attr:         []string{"group:firmware", "firmware_bios", "firmware_level2"},
 		Vars:         []string{"firmware.skipFlashUSB"},
 		Timeout:      120 * time.Minute,
 		ServiceDeps:  []string{"tast.cros.firmware.TPMService"},
 		Params: []testing.Param{
 			{
-				Name:      "firmware_data_key_version",
-				ExtraAttr: []string{"firmware_usb", "firmware_ro"},
-				Fixture:   fixture.BootModeFixtureWithAPBackup(fixture.NormalMode),
-				ExtraData: []string{fwDataKeyVerMakekeyFile, fwDataKeyVerCommonFile},
+				Name:             "firmware_data_key_version",
+				ExtraTestBedDeps: []string{tbdep.ServoUSBState("NORMAL")},
+				ExtraAttr:        []string{"firmware_usb", "firmware_ro"},
+				Fixture:          fixture.BootModeFixtureWithAPBackup(fixture.NormalMode),
+				ExtraData:        []string{fwDataKeyVerMakekeyFile, fwDataKeyVerCommonFile},
 				Val: &updateVersionTc{
 					makekeyFile:         fwDataKeyVerMakekeyFile,
 					commonFile:          fwDataKeyVerCommonFile,
@@ -84,9 +87,10 @@ func init() {
 				},
 			},
 			{
-				Name:      "firmware_version",
-				ExtraAttr: []string{"firmware_usb", "firmware_smoke", "firmware_ro"},
-				Fixture:   fixture.BootModeFixtureWithAPBackup(fixture.NormalMode),
+				Name:             "firmware_version",
+				ExtraTestBedDeps: []string{tbdep.ServoUSBState("NORMAL")},
+				ExtraAttr:        []string{"firmware_usb", "firmware_smoke", "firmware_ro"},
+				Fixture:          fixture.BootModeFixtureWithAPBackup(fixture.NormalMode),
 				Val: &updateVersionTc{
 					keyVersion:          fwVer,
 					tpmNvRAMHighByteIdx: 3,

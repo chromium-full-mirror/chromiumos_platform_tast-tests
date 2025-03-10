@@ -11,6 +11,7 @@ import (
 
 	fwCommon "go.chromium.org/tast-tests/cros/common/firmware"
 	"go.chromium.org/tast-tests/cros/common/servo"
+	"go.chromium.org/tast-tests/cros/common/tbdep"
 	"go.chromium.org/tast-tests/cros/remote/firmware"
 	"go.chromium.org/tast-tests/cros/remote/firmware/fixture"
 	"go.chromium.org/tast/core/errors"
@@ -44,6 +45,7 @@ func init() {
 			"tij@google.com",
 		},
 		BugComponent: "b:792402", // ChromeOS > Platform > Enablement > Firmware > FAFT
+		TestBedDeps:  []string{tbdep.ServoStateWorking},
 		Attr:         []string{"group:firmware"},
 		HardwareDeps: hwdep.D(hwdep.ChromeEC()),
 		Fixture:      fixture.NormalMode,
@@ -70,8 +72,9 @@ func init() {
 				},
 			},
 			{
-				Name:      "power_state_usb_plugged_in",
-				ExtraAttr: []string{"firmware_bios", "firmware_usb", "firmware_level2", "group:labqual", "firmware_ro"},
+				Name:             "power_state_usb_plugged_in",
+				ExtraTestBedDeps: []string{tbdep.ServoUSBState("NORMAL")},
+				ExtraAttr:        []string{"firmware_bios", "firmware_usb", "firmware_level2", "group:labqual", "firmware_ro"},
 				Val: powerG3Params{
 					PowerOffMethod: powerStateOff,
 					CheckUSB:       true,
@@ -88,8 +91,9 @@ func init() {
 				},
 			},
 			{
-				Name:      "power_state_rec_off",
-				ExtraAttr: []string{"firmware_bios", "firmware_usb", "firmware_level2", "group:labqual", "firmware_ro"},
+				Name:             "power_state_rec_off",
+				ExtraTestBedDeps: []string{tbdep.ServoUSBState("NORMAL")},
+				ExtraAttr:        []string{"firmware_bios", "firmware_usb", "firmware_level2", "group:labqual", "firmware_ro"},
 				Val: powerG3Params{
 					PowerOffMethod: powerStateOff,
 					SetRecMode:     true,

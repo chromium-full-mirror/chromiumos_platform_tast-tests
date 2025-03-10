@@ -39,6 +39,7 @@ import (
 	"context"
 
 	"go.chromium.org/tast/core/testing"
+	"go.chromium.org/tast-tests/cros/common/tbdep"
 )
 
 func init() {
@@ -50,6 +51,7 @@ func init() {
 			"me@chromium.org",          // Test author
 		},
 		BugComponent: "b:792402", // ChromeOS > Platform > Enablement > Firmware > FAFT
+		TestBedDeps:  []string{tbdep.ServoStateWorking},
 		// TODO: When stable, move to firmware_ec.
 		Attr: []string{"group:firmware", "firmware_unstable"},
 	})

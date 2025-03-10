@@ -20,6 +20,7 @@ import (
 	"go.chromium.org/tast-tests/cros/common/bounds"
 	"go.chromium.org/tast-tests/cros/common/perf"
 	"go.chromium.org/tast-tests/cros/common/servo"
+	"go.chromium.org/tast-tests/cros/common/tbdep"
 	tdreq "go.chromium.org/tast-tests/cros/common/testdevicerequirements"
 	"go.chromium.org/tast-tests/cros/remote/firmware"
 	"go.chromium.org/tast-tests/cros/remote/firmware/fixture"
@@ -92,6 +93,7 @@ func init() {
 				ExtraHardwareDeps: hwdep.D(hwdep.ChromeEC()),
 				Fixture:           fixture.NormalMode,
 				Val:               bootPerfEcReboot,
+				ExtraTestBedDeps:  []string{tbdep.ServoStateWorking},
 			},
 			{
 				Name:              "from_g3",
@@ -99,6 +101,7 @@ func init() {
 				ExtraHardwareDeps: hwdep.D(hwdep.ChromeEC()),
 				Fixture:           fixture.NormalMode,
 				Val:               bootPerfFromG3,
+				ExtraTestBedDeps:  []string{tbdep.ServoStateWorking},
 			},
 			{
 				Name:              "from_s5",
@@ -107,6 +110,7 @@ func init() {
 				ExtraSoftwareDeps: []string{"s5_inactivity_timeout"},
 				Fixture:           fixture.NormalMode,
 				Val:               bootPerfFromS5,
+				ExtraTestBedDeps:  []string{tbdep.ServoStateWorking},
 			},
 			// Variants of each test case that checks against defined bounds
 			{
@@ -114,10 +118,11 @@ func init() {
 				Val:  bootPerfWarmReboot,
 			},
 			{
-				Name:      "warm_reboot_bounds",
-				Fixture:   fixture.NormalMode,
-				Val:       bootPerfWarmReboot,
-				ExtraAttr: []string{"group:firmware", "firmware_unstable"},
+				Name:             "warm_reboot_bounds",
+				Fixture:          fixture.NormalMode,
+				Val:              bootPerfWarmReboot,
+				ExtraAttr:        []string{"group:firmware", "firmware_unstable"},
+				ExtraTestBedDeps: []string{tbdep.ServoStateWorking},
 			},
 			{
 				Name:              "ec_reboot_bounds",
@@ -125,6 +130,7 @@ func init() {
 				Fixture:           fixture.NormalMode,
 				Val:               bootPerfEcReboot,
 				ExtraAttr:         []string{"group:firmware", "firmware_unstable"},
+				ExtraTestBedDeps:  []string{tbdep.ServoStateWorking},
 			},
 			{
 				Name:              "from_g3_bounds",
@@ -132,6 +138,7 @@ func init() {
 				Fixture:           fixture.NormalMode,
 				Val:               bootPerfFromG3,
 				ExtraAttr:         []string{"group:firmware", "firmware_unstable"},
+				ExtraTestBedDeps:  []string{tbdep.ServoStateWorking},
 			},
 			{
 				Name:              "from_s5_bounds",
@@ -140,6 +147,7 @@ func init() {
 				Fixture:           fixture.NormalMode,
 				Val:               bootPerfFromS5,
 				ExtraAttr:         []string{"group:firmware", "firmware_unstable"},
+				ExtraTestBedDeps:  []string{tbdep.ServoStateWorking},
 			},
 		},
 

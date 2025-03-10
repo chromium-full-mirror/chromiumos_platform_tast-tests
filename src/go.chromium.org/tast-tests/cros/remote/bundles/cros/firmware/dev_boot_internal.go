@@ -11,6 +11,7 @@ import (
 
 	fwCommon "go.chromium.org/tast-tests/cros/common/firmware"
 	"go.chromium.org/tast-tests/cros/common/servo"
+	"go.chromium.org/tast-tests/cros/common/tbdep"
 	"go.chromium.org/tast-tests/cros/remote/firmware"
 	"go.chromium.org/tast-tests/cros/remote/firmware/fixture"
 	"go.chromium.org/tast/core/ctxutil"
@@ -43,6 +44,7 @@ func init() {
 			"chromeos-faft@google.com",
 		},
 		BugComponent: "b:792402", // ChromeOS > Platform > Enablement > Firmware > FAFT
+		TestBedDeps:  []string{tbdep.ServoStateWorking},
 		Attr:         []string{"group:firmware", "firmware_bios", "firmware_level4"},
 		SoftwareDeps: []string{"crossystem"},
 		Vars:         []string{"firmware.skipFlashUSB"},
@@ -64,8 +66,9 @@ func init() {
 				setUpValidUSB:           true,
 				bootMethod:              devBootInternalKeyboard,
 			},
-			ExtraAttr: []string{"firmware_usb"},
-			Timeout:   2 * time.Hour,
+			ExtraTestBedDeps: []string{tbdep.ServoUSBState("NORMAL")},
+			ExtraAttr:        []string{"firmware_usb"},
+			Timeout:          2 * time.Hour,
 		}, {
 			Name: "menu",
 			Val: &devBootInternalParams{
@@ -74,6 +77,7 @@ func init() {
 				setUpValidUSB:           true,
 				bootMethod:              devBootInternalMenu,
 			},
+			ExtraTestBedDeps:  []string{tbdep.ServoUSBState("NORMAL")},
 			ExtraAttr:         []string{"firmware_usb"},
 			ExtraHardwareDeps: hwdep.D(hwdep.FirmwareUIType(hwdep.LegacyMenuUI, hwdep.MenuUI)),
 			Timeout:           2 * time.Hour,
@@ -85,6 +89,7 @@ func init() {
 				setUpValidUSB:           true,
 				bootMethod:              devBootInternalButton,
 			},
+			ExtraTestBedDeps:  []string{tbdep.ServoUSBState("NORMAL")},
 			ExtraAttr:         []string{"firmware_usb"},
 			ExtraHardwareDeps: hwdep.D(hwdep.FormFactor(hwdep.Detachable)),
 			Timeout:           2 * time.Hour,
