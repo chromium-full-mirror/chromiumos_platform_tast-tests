@@ -5,6 +5,8 @@
 package arc
 
 import (
+	"runtime"
+
 	"github.com/shirou/gopsutil/v3/process"
 
 	"go.chromium.org/tast-tests/cros/local/sysutil"
@@ -48,6 +50,11 @@ func InitPID() (int32, error) {
 	if err != nil {
 		return -1, err
 	}
+
+	// TODO(b/401592311): The following call of process.Processes() may leave a
+	// lot of fds open. The reason is unclear now. Force a GC to clean them up
+	// before we find the root cause.
+	defer runtime.GC()
 
 	procs, err := process.Processes()
 	if err != nil {
