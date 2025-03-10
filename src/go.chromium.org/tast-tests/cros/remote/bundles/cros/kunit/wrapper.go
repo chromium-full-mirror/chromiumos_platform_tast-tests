@@ -162,21 +162,16 @@ func kunitResult(ctx context.Context, d *dut.DUT, name string) ([]string, error)
 // a consistent naming pattern. Hence, we look at the directories under /sys/kernel/debug/kunit and determine
 // |test_name| at runtime.
 func resultPaths(ctx context.Context, d *dut.DUT) []string {
-	dir, err := d.Conn().CommandContext(ctx, "ls", "/sys/kernel/debug/kunit").Output()
+	output, err := d.Conn().CommandContext(ctx, "find", "/sys/kernel/debug/kunit", "-type", "f", "-name", "results").Output()
 	if err != nil {
 		// Test was not kunit, ignore.
 		testing.ContextLog(ctx, "Unable to list /sys/kernel/debug/kunit")
 		return nil
 	}
-	tdirs := strings.Fields(strings.Trim(string(dir), "\n"))
-	if len(tdirs) == 0 {
+	if len(output) == 0 {
 		return nil
 	}
-	var paths []string
-	for _, tdir := range tdirs {
-		paths = append(paths, filepath.Join("/sys/kernel/debug/kunit", tdir, "results"))
-	}
-	return paths
+	return strings.Split(strings.TrimSpace(string(output)), "\n")
 }
 
 func unload(ctx context.Context, d *dut.DUT, name string) error {
