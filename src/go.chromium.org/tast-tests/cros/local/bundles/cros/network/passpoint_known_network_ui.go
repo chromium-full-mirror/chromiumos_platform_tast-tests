@@ -39,8 +39,8 @@ func init() {
 		Func:     PasspointKnownNetworkUI,
 		Desc:     "Wi-Fi Passpoint known network UI test",
 		Contacts: []string{"cros-networking@google.com", "damiendejean@google.com", "jiajunz@google.com"},
-		// ChromeOS > Platform > System > Networking
-		BugComponent: "b:156085",
+		// ChromeOS > Platform > baseOS > Networking > Continuous Maintenance
+		BugComponent: "b:1493959",
 		Fixture:      "shillSimulatedWiFi",
 		Attr:         []string{"group:mainline", "informational"},
 		SoftwareDeps: []string{"wifi", "chrome"},
