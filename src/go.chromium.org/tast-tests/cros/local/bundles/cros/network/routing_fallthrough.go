@@ -31,7 +31,7 @@ func init() {
 		Func:     RoutingFallthrough,
 		Desc:     "Verify the fall-through behavior for one IP family when the primary network is only configured with another family",
 		Contacts: []string{"cros-networking@google.com", "jiejiang@google.com"},
-		// ChromeOS > Platform > System > Networking > Continuous Maintenance
+		// ChromeOS > Platform > baseOS > Networking > Continuous Maintenance
 		BugComponent: "b:1493959",
 		Attr:         []string{"group:mainline", "group:network", "network_cq"},
 		SoftwareDeps: []string{"chrome"},

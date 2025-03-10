@@ -36,7 +36,7 @@ func init() {
 		Func:     PasspointARCDialog,
 		Desc:     "Checks if Passpoint dialog works on ARC",
 		Contacts: []string{"cros-networking@google.com", "jasongustaman@google.com"},
-		// ChromeOS > Platform > System > Networking > Continuous Maintenance
+		// ChromeOS > Platform > baseOS > Networking > Continuous Maintenance
 		BugComponent: "b:1493959",
 		Fixture:      "shillSimulatedWiFiWithArcBooted",
 		Attr:         []string{"group:network", "network_platform"},

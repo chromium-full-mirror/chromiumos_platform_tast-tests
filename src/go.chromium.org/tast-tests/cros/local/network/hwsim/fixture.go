@@ -73,7 +73,7 @@ func init() {
 			"damiendejean@google.com", // fixture maintainer
 			"cros-networking@google.com",
 		},
-		// ChromeOS > Platform > System > Networking > Continuous Maintenance
+		// ChromeOS > Platform > baseOS > Networking > Continuous Maintenance
 		BugComponent:    "b:1493959",
 		SetUpTimeout:    hwsimTimeout,
 		TearDownTimeout: hwsimTimeout,
@@ -98,7 +98,7 @@ func init() {
 			"damiendejean@google.com", // fixture maintainer
 			"cros-networking@google.com",
 		},
-		// ChromeOS > Platform > System > Networking > Continuous Maintenance
+		// ChromeOS > Platform > baseOS > Networking > Continuous Maintenance
 		BugComponent:    "b:1493959",
 		SetUpTimeout:    hwsimTimeout,
 		TearDownTimeout: hwsimTimeout,
@@ -120,7 +120,7 @@ func init() {
 			"damiendejean@google.com", // fixture maintainer
 			"cros-networking@google.com",
 		},
-		// ChromeOS > Platform > System > Networking > Continuous Maintenance
+		// ChromeOS > Platform > baseOS > Networking > Continuous Maintenance
 		BugComponent:    "b:1493959",
 		SetUpTimeout:    hwsimTimeout,
 		TearDownTimeout: hwsimTimeout,
@@ -139,7 +139,7 @@ func init() {
 			"damiendejean@google.com", // fixture maintainer
 			"cros-networking@google.com",
 		},
-		// ChromeOS > Platform > System > Networking > Continuous Maintenance
+		// ChromeOS > Platform > baseOS > Networking > Continuous Maintenance
 		BugComponent:    "b:1493959",
 		SetUpTimeout:    hwsimTimeout,
 		TearDownTimeout: hwsimTimeout,

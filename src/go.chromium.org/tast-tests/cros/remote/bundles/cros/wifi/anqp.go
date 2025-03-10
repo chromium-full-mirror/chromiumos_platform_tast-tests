@@ -65,7 +65,7 @@ func init() {
 		Func:     ANQP,
 		Desc:     "Verifies that a DUT is able to perform ANQP requests and process replies",
 		Contacts: []string{"cros-networking@google.com", "damiendejean@chromium.org"},
-		// ChromeOS > Platform > System > Networking > Continuous Maintenance
+		// ChromeOS > Platform > baseOS > Networking > Continuous Maintenance
 		BugComponent:    "b:1493959",
 		Attr:            []string{"group:wificell", "wificell_func", "wificell_unstable"},
 		TestBedDeps:     []string{tbdep.Wificell, tbdep.WifiStateNormal, tbdep.BluetoothStateNormal, tbdep.PeripheralWifiStateWorking},

@@ -24,7 +24,7 @@ func init() {
 		Func:     DHCPRebootNAK,
 		Desc:     "Verify the DHCP behavior in the case that DHCP server rejects the rebinding request with the previous lease",
 		Contacts: []string{"cros-networking@google.com", "jiejiang@google.com"},
-		// ChromeOS > Platform > System > Networking > Continuous Maintenance
+		// ChromeOS > Platform > baseOS > Networking > Continuous Maintenance
 		BugComponent: "b:1493959",
 		// TODO(b/356752035): Reenable the test.
 		// Attr:         []string{"group:mainline", "informational"},

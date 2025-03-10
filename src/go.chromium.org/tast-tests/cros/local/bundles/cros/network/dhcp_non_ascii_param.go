@@ -22,7 +22,7 @@ func init() {
 		Func:     DHCPNonASCIIParam,
 		Desc:     "Verify DHCP negotiation when the server response contain non-ASCII parameters",
 		Contacts: []string{"cros-networking@google.com", "jiejiang@google.com"},
-		// ChromeOS > Platform > System > Networking > Continuous Maintenance
+		// ChromeOS > Platform > baseOS > Networking > Continuous Maintenance
 		BugComponent: "b:1493959",
 		Attr:         []string{"group:mainline", "group:release-health", "release-health_network"},
 		Params: []testing.Param{

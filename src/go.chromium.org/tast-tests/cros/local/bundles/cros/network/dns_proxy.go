@@ -37,7 +37,7 @@ func init() {
 		Func:     DNSProxy,
 		Desc:     "Ensure that DNS proxies are working correctly",
 		Contacts: []string{"cros-networking@google.com", "jasongustaman@google.com"},
-		// ChromeOS > Platform > System > Networking > Continuous Maintenance
+		// ChromeOS > Platform > baseOS > Networking > Continuous Maintenance
 		BugComponent: "b:1493959",
 		Attr:         []string{"group:mainline", "group:release-health", "release-health_network"},
 		SoftwareDeps: []string{"chrome", "no_kernel_upstream"},

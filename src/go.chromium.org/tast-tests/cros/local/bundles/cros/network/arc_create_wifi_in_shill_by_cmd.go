@@ -40,7 +40,7 @@ func init() {
 		Func:     ARCCreateWifiInShillByCmd,
 		Desc:     "Test if wifi network can be correctly created in shill",
 		Contacts: []string{"cros-networking@google.com", "chuweih@google.com"},
-		// ChromeOS > Platform > System > Networking > Continuous Maintenance
+		// ChromeOS > Platform > baseOS > Networking > Continuous Maintenance
 		BugComponent: "b:1493959",
 		Fixture:      "shillSimulatedWiFiWithArcBooted",
 		Attr:         []string{"group:mainline"},

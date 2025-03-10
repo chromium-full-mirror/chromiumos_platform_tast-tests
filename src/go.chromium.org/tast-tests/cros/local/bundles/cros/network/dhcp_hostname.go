@@ -23,7 +23,7 @@ func init() {
 		Func:     DHCPHostname,
 		Desc:     "Verify the hostname option sent by the DHCP client",
 		Contacts: []string{"cros-networking@google.com", "jiejiang@google.com"},
-		// ChromeOS > Platform > System > Networking > Continuous Maintenance
+		// ChromeOS > Platform > baseOS > Networking > Continuous Maintenance
 		BugComponent: "b:1493959",
 		Attr:         []string{"group:mainline", "group:release-health", "release-health_network"},
 		// DHCP hostname property is written into the default profile but not user

@@ -34,7 +34,7 @@ func init() {
 		Contacts:     []string{"cros-networking@google.com", "chuweih@google.com"},
 		Attr:         []string{"group:network", "network_platform", "group:release-health", "release-health_network"},
 		SoftwareDeps: []string{"chrome"},
-		// ChromeOS > Platform > System > Networking > Continuous Maintenance
+		// ChromeOS > Platform > baseOS > Networking > Continuous Maintenance
 		BugComponent: "b:1493959",
 		Fixture:      "vpnEnvWithCerts",
 		Params: []testing.Param{

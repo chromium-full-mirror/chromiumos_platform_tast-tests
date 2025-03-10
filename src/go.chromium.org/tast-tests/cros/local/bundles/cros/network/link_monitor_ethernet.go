@@ -31,7 +31,7 @@ func init() {
 		Func:     LinkMonitorEthernet,
 		Desc:     "Verifies gateway reachability fail changes network to no connectivity",
 		Contacts: []string{"cros-networking@google.com", "ningyuan@google.com"},
-		// ChromeOS > Platform > System > Networking > Continuous Maintenance
+		// ChromeOS > Platform > baseOS > Networking > Continuous Maintenance
 		BugComponent: "b:1493959",
 		Attr:         []string{"group:network", "network_platform"},
 		Timeout:      10 * time.Minute,

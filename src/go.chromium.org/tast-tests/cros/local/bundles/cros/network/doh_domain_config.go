@@ -31,7 +31,7 @@ func init() {
 		Func:     DoHDomainConfig,
 		Desc:     "Ensure that DoH is used or bypassed correctly when DnsOverHttpsIncludedDomain and DnsOverHttpsExcludedDomain is set through policy",
 		Contacts: []string{"cros-networking@google.com", "jasongustaman@google.com"},
-		// ChromeOS > Platform > System > Networking > Continuous Maintenance
+		// ChromeOS > Platform > baseOS > Networking > Continuous Maintenance
 		BugComponent: "b:1493959",
 		Attr:         []string{"group:mainline", "informational"},
 		SoftwareDeps: []string{"chrome"},

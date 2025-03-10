@@ -29,7 +29,7 @@ func init() {
 		Func:     WireguardCrosh,
 		Desc:     "Verify using wireguard command in crosh to manage a wireguard service",
 		Contacts: []string{"cros-networking@google.com", "jiejiang@google.com"},
-		// ChromeOS > Platform > System > Networking > Continuous Maintenance
+		// ChromeOS > Platform > baseOS > Networking > Continuous Maintenance
 		BugComponent: "b:1493959",
 		// This test mainly verifies the crosh interface so it's hw_agnostic.
 		Attr:         []string{"group:mainline", "group:hw_agnostic"},

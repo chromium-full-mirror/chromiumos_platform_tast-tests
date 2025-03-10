@@ -41,7 +41,7 @@ func init() {
 		Func:     VPNPhysicalNetworkReconnect,
 		Desc:     "Checks VPN behavior on physical network disconnected and reconnected",
 		Contacts: []string{"cros-networking@google.com", "ningyuan@google.com"},
-		// ChromeOS > Platform > System > Networking > Continuous Maintenance
+		// ChromeOS > Platform > baseOS > Networking > Continuous Maintenance
 		BugComponent: "b:1493959",
 		// TODO(258091734): Move to CQ after test is stable.
 		Attr: []string{"group:mainline", "informational"},

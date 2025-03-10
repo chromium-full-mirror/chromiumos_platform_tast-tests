@@ -26,7 +26,7 @@ func init() {
 		Func:     RoutingDHCPClasslessStatic,
 		Desc:     "Verify the shill behavior and routing semantics in a DHCP environment with classless static routes (option 121)",
 		Contacts: []string{"cros-networking@google.com", "jiejiang@google.com"},
-		// ChromeOS > Platform > System > Networking > Continuous Maintenance
+		// ChromeOS > Platform > baseOS > Networking > Continuous Maintenance
 		BugComponent: "b:1493959",
 		Attr:         []string{"group:mainline"},
 	})

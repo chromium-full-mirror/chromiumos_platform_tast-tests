@@ -45,7 +45,7 @@ func init() {
 		Func:     ARCMultiNetworking,
 		Desc:     "Verifies guest network connectivity upon physical interface change",
 		Contacts: []string{"cros-networking@google.com", "ningyuan@google.com"},
-		// ChromeOS > Platform > System > Networking > Continuous Maintenance
+		// ChromeOS > Platform > baseOS > Networking > Continuous Maintenance
 		BugComponent: "b:1493959",
 		// TODO(b/331845752): Promote to criticalstaging and CQ after $BUG is fixed.
 		Attr:         []string{"group:mainline", "informational", "group:hw_agnostic"},

@@ -21,7 +21,7 @@ func init() {
 		Desc:     "An always-on VPN should be reconnected soon after disconnected by user",
 		Contacts: []string{"cros-networking@google.com", "jiejiang@google.com"},
 		Attr:     []string{"group:mainline", "informational"},
-		// ChromeOS > Platform > System > Networking > Continuous Maintenance
+		// ChromeOS > Platform > baseOS > Networking > Continuous Maintenance
 		BugComponent: "b:1493959",
 		Fixture:      "vpnEnvWithCerts",
 		Timeout:      1 * time.Minute,

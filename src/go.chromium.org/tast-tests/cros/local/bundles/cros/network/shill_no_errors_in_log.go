@@ -23,7 +23,7 @@ import (
 
 func init() {
 	testing.AddTest(&testing.Test{
-		// ChromeOS > Platform > System > Networking > Continuous Maintenance
+		// ChromeOS > Platform > baseOS > Networking > Continuous Maintenance
 		BugComponent: "b:1493959",
 		Func:         ShillNoErrorsInLog,
 		Desc:         "Checks that there are no unexpected error logs in net.log when shill restarts and becomes online",

@@ -25,7 +25,7 @@ func init() {
 			"cros-networking@google.com",
 			"jiejiang@google.com",
 		},
-		// ChromeOS > Platform > System > Networking > Continuous Maintenance
+		// ChromeOS > Platform > baseOS > Networking > Continuous Maintenance
 		BugComponent: "b:1493959",
 		SoftwareDeps: []string{"chrome"},
 		HardwareDeps: hwdep.D(hwdep.HasTpm()),

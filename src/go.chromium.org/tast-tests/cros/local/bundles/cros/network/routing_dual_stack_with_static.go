@@ -25,7 +25,7 @@ func init() {
 		Func:     RoutingDualStackWithStatic,
 		Desc:     "Verify the shill behavior and routing semantics when the network is dual-stack with DHCP and SLAAC, configure static IP on it",
 		Contacts: []string{"cros-networking@google.com", "jiejiang@google.com"},
-		// ChromeOS > Platform > System > Networking > Continuous Maintenance
+		// ChromeOS > Platform > baseOS > Networking > Continuous Maintenance
 		BugComponent: "b:1493959",
 		Attr:         []string{"group:mainline"},
 		Fixture:      fixture.ChromeLoggedIn,

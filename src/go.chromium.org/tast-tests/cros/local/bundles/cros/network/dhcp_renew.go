@@ -25,7 +25,7 @@ func init() {
 		Func:     DHCPRenew,
 		Desc:     "Verify the DHCP behavior in the case that no DHCP server during renew",
 		Contacts: []string{"cros-networking@google.com", "jiejiang@google.com"},
-		// ChromeOS > Platform > System > Networking > Continuous Maintenance
+		// ChromeOS > Platform > baseOS > Networking > Continuous Maintenance
 		BugComponent: "b:1493959",
 		Attr:         []string{"group:network", "network_platform", "group:release-health", "release-health_network"},
 		Params: []testing.Param{

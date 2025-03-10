@@ -25,7 +25,7 @@ func init() {
 		Func:     QosWebRTC,
 		Desc:     "Test QoS marks are correctly set on WebRTC packets",
 		Contacts: []string{"cros-networking@google.com", "jiejiang@google.com"},
-		// ChromeOS > Platform > System > Networking > Continuous Maintenance
+		// ChromeOS > Platform > baseOS > Networking > Continuous Maintenance
 		BugComponent: "b:1493959",
 		Fixture:      "shillSimulatedWiFi",
 		Attr:         []string{"group:mainline"},

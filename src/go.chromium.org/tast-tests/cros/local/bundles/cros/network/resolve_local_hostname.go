@@ -20,7 +20,7 @@ func init() {
 		Func:     ResolveLocalHostname,
 		Desc:     "Verifies .local mDNS hostnames are resolved via avahi",
 		Contacts: []string{"cros-networking@google.com"},
-		// ChromeOS > Platform > System > Networking > Continuous Maintenance
+		// ChromeOS > Platform > baseOS > Networking > Continuous Maintenance
 		BugComponent: "b:1493959",
 		Attr: []string{
 			"group:mainline",

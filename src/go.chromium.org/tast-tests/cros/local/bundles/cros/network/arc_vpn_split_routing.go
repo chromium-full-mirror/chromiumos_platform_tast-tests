@@ -49,7 +49,7 @@ func init() {
 		Func:     ARCVPNSplitRouting,
 		Desc:     "Verify routing for a split-routing ARCVPN",
 		Contacts: []string{"cros-networking@google.com", "jiejiang@google.com"},
-		// ChromeOS > Platform > System > Networking > Continuous Maintenance
+		// ChromeOS > Platform > baseOS > Networking > Continuous Maintenance
 		BugComponent: "b:1493959",
 		Attr:         []string{"group:mainline", "informational"},
 		Fixture:      "arcBooted",

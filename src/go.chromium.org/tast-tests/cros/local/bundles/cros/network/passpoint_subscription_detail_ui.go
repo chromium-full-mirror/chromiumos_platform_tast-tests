@@ -38,7 +38,7 @@ func init() {
 		Func:     PasspointSubscriptionDetailUI,
 		Desc:     "Wi-Fi Passpoint subscription detail UI test",
 		Contacts: []string{"cros-networking@google.com", "damiendejean@google.com", "nikhilcn@google.com"},
-		// ChromeOS > Platform > System > Networking > Continuous Maintenance
+		// ChromeOS > Platform > baseOS > Networking > Continuous Maintenance
 		BugComponent: "b:1493959",
 		Fixture:      "shillSimulatedWiFi",
 		Attr:         []string{"group:mainline", "informational"},

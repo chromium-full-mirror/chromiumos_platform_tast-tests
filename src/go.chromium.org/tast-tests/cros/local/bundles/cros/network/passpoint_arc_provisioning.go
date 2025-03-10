@@ -29,7 +29,7 @@ func init() {
 		Func:     PasspointARCProvisioning,
 		Desc:     "Passpoint network ARC provisioning tests",
 		Contacts: []string{"cros-networking@google.com", "jasongustaman@google.com", "damiendejean@google.com"},
-		// ChromeOS > Platform > System > Networking > Continuous Maintenance
+		// ChromeOS > Platform > baseOS > Networking > Continuous Maintenance
 		BugComponent: "b:1493959",
 		Fixture:      "shillSimulatedWiFiWithArcBooted",
 		Attr:         []string{"group:network", "network_platform"},

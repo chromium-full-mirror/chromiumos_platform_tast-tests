@@ -63,7 +63,7 @@ func init() {
 		Func:     PasspointSelection,
 		Desc:     "Wi-Fi Passpoint network selection tests",
 		Contacts: []string{"cros-networking@google.com", "damiendejean@google.com"},
-		// ChromeOS > Platform > System > Networking > Continuous Maintenance
+		// ChromeOS > Platform > baseOS > Networking > Continuous Maintenance
 		BugComponent: "b:1493959",
 		Fixture:      "shillSimulatedWiFi",
 		Attr:         []string{"group:mainline"},

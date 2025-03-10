@@ -34,7 +34,7 @@ func init() {
 		Func:     DNSProxyCaptivePortal,
 		Desc:     "Verify dns-proxy behaves correctly when shill detects a captive portal",
 		Contacts: []string{"cros-networking@google.com", "jasongustaman@google.com"},
-		// ChromeOS > Platform > System > Networking > Continuous Maintenance
+		// ChromeOS > Platform > baseOS > Networking > Continuous Maintenance
 		BugComponent: "b:1493959",
 		SoftwareDeps: []string{"chrome", "no_kernel_upstream"},
 		Params: []testing.Param{{

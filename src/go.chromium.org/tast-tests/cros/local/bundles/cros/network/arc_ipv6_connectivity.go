@@ -31,7 +31,7 @@ func init() {
 		Func:     ARCIPv6Connectivity,
 		Desc:     "Checks IPv6 connectivity inside ARC",
 		Contacts: []string{"cros-networking@google.com", "hugobenichi@google.com"},
-		// ChromeOS > Platform > System > Networking > Continuous Maintenance
+		// ChromeOS > Platform > baseOS > Networking > Continuous Maintenance
 		BugComponent: "b:1493959",
 		Attr:         []string{"group:mainline", "group:cq-medium", "group:hw_agnostic"},
 		SoftwareDeps: []string{"arc", "chrome"},

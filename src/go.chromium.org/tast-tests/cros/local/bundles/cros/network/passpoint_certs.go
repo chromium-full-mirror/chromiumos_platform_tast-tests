@@ -29,7 +29,7 @@ func init() {
 		Func:     PasspointCerts,
 		Desc:     "Passpoint network certificates provisioning and removal tests",
 		Contacts: []string{"cros-networking@google.com", "jasongustaman@google.com", "damiendejean@google.com"},
-		// ChromeOS > Platform > System > Networking > Continuous Maintenance
+		// ChromeOS > Platform > baseOS > Networking > Continuous Maintenance
 		BugComponent: "b:1493959",
 		Fixture:      "arcBooted",
 		Attr:         []string{"group:mainline"},

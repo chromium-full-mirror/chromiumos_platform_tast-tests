@@ -29,7 +29,7 @@ func init() {
 		Func:     DropInvalidPackets,
 		Desc:     "Verify that packets with IP addrs on the internal interfaces won't be sent out to physical networks",
 		Contacts: []string{"cros-networking@google.com", "jiejiang@chromium.org"},
-		// ChromeOS > Platform > System > Networking > Continuous Maintenance
+		// ChromeOS > Platform > baseOS > Networking > Continuous Maintenance
 		BugComponent: "b:1493959",
 		// We don't use ARC to do anything directly in this test, just to make sure
 		// that packets with ARC addresses also won't be sent out.

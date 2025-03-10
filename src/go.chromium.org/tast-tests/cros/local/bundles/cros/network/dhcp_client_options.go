@@ -22,7 +22,7 @@ func init() {
 		Func:     DHCPClientOptions,
 		Desc:     "Verify the DHCP options in the DHCP packets sent out by the client",
 		Contacts: []string{"cros-networking@google.com", "jiejiang@google.com"},
-		// ChromeOS > Platform > System > Networking > Continuous Maintenance
+		// ChromeOS > Platform > baseOS > Networking > Continuous Maintenance
 		BugComponent: "b:1493959",
 		Attr:         []string{"group:mainline", "group:release-health", "release-health_network"},
 		Params: []testing.Param{

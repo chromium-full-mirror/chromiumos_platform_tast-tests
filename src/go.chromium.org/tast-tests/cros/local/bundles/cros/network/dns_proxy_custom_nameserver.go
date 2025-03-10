@@ -24,7 +24,7 @@ func init() {
 		Func:     DNSProxyCustomNameserver,
 		Desc:     "Verify dns-proxy is elided when a custom nameserver is used",
 		Contacts: []string{"cros-networking@google.com", "jasongustaman@google.com"},
-		// ChromeOS > Platform > System > Networking > Continuous Maintenance
+		// ChromeOS > Platform > baseOS > Networking > Continuous Maintenance
 		BugComponent: "b:1493959",
 		Attr:         []string{"group:network", "network_platform"},
 		SoftwareDeps: []string{"chrome", "arc", "no_kernel_upstream"},

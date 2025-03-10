@@ -24,7 +24,7 @@ func init() {
 		Func:     ResolvConfPortal,
 		Desc:     "Verify resolv.conf is properly updated on network changes of non-online networks",
 		Contacts: []string{"cros-networking@google.com", "jasongustaman@google.com"},
-		// ChromeOS > Platform > System > Networking > Continuous Maintenance
+		// ChromeOS > Platform > baseOS > Networking > Continuous Maintenance
 		BugComponent: "b:1493959",
 		Attr:         []string{"group:mainline", "group:hw_agnostic"},
 		Params: []testing.Param{{

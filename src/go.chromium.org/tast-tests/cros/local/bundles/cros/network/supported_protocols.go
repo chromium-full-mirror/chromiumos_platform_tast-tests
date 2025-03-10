@@ -24,7 +24,7 @@ func init() {
 			"hugobenichi@google.com",
 			"chromeos-kernel-test@google.com",
 		},
-		// ChromeOS > Platform > System > Networking > Continuous Maintenance
+		// ChromeOS > Platform > baseOS > Networking > Continuous Maintenance
 		BugComponent: "b:1493959",
 		Attr:         []string{"group:mainline", "group:network", "network_cq", "group:release-health", "release-health_network"},
 	})

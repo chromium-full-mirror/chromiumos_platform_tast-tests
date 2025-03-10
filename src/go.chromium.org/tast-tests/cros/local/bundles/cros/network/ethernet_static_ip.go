@@ -27,7 +27,7 @@ func init() {
 			"cros-networking@google.com",
 			"matthewmwang@chromium.org",
 		},
-		// ChromeOS > Platform > System > Networking > Continuous Maintenance
+		// ChromeOS > Platform > baseOS > Networking > Continuous Maintenance
 		BugComponent: "b:1493959",
 		Attr:         []string{"group:network", "network_platform", "group:release-health", "release-health_network"},
 	})

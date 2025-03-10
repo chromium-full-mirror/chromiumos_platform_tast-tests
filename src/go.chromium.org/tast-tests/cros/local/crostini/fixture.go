@@ -310,7 +310,7 @@ func init() {
 			"jasongustaman@google.com",
 			"cros-networking@google.com",
 		},
-		// ChromeOS > Platform > System > Networking > Continuous Maintenance
+		// ChromeOS > Platform > baseOS > Networking > Continuous Maintenance
 		BugComponent: "b:1493959",
 		Impl: &crostiniFixture{preData: preTestDataBullseye,
 			extraOptsFunc: func(ctx context.Context, s *testing.FixtState) ([]chrome.Option, error) {

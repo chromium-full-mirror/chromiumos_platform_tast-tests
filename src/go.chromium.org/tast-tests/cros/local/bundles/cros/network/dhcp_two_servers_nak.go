@@ -28,7 +28,7 @@ func init() {
 		Func:     DHCPTwoServersNAK,
 		Desc:     "Verify the DHCP behavior in the case of two DHCP servers",
 		Contacts: []string{"cros-networking@google.com", "jiejiang@google.com"},
-		// ChromeOS > Platform > System > Networking > Continuous Maintenance
+		// ChromeOS > Platform > baseOS > Networking > Continuous Maintenance
 		BugComponent: "b:1493959",
 		Attr:         []string{"group:mainline", "group:release-health", "release-health_network"},
 		// The param value represents whether NAK comes first.

@@ -35,7 +35,7 @@ func init() {
 			"chromeos-wifi-champs@google.com", // WiFi oncall rotation; or http://b/new?component=893827
 			"cros-networking@google.com",
 		},
-		// ChromeOS > Platform > System > Networking > Continuous Maintenance
+		// ChromeOS > Platform > baseOS > Networking > Continuous Maintenance
 		BugComponent: "b:1493959",
 		Attr:         []string{"group:mainline", "group:network", "network_cq", "group:release-health", "release-health_network"},
 		Fixture:      "ensureNoUI",

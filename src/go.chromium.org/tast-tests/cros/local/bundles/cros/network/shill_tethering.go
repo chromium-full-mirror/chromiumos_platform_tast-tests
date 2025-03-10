@@ -34,7 +34,7 @@ func init() {
 		Func:     ShillTethering,
 		Desc:     "Verify the behavior of the tethering feature",
 		Contacts: []string{"cros-networking@google.com", "akahuang@google.com"},
-		// ChromeOS > Platform > System > Networking > Continuous Maintenance
+		// ChromeOS > Platform > baseOS > Networking > Continuous Maintenance
 		BugComponent: "b:1493959",
 		Fixture:      "shillSimulatedWiFi",
 		Attr:         []string{"group:mainline"},
