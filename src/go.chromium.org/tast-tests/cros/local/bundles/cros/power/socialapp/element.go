@@ -147,6 +147,8 @@ func (e *Element) SetUp(ctx context.Context) error {
 // CleanUp leaves the created room and signs out.
 func (e *Element) CleanUp(ctx context.Context) error {
 	return uiauto.NamedCombine("leave room and sign out",
+		// Ensure the user is inside the room before leaving.
+		e.EnsureInRoom(),
 		// Leaving the room as the last member would trigger an automatic room deletion.
 		e.ele.LeaveRoom(e.roomName),
 		e.ele.SignOut(),
@@ -186,10 +188,10 @@ func (e *Element) RunExtraOperations(ctx context.Context) error {
 }
 
 // EnsureInRoom checks if the user is in the room, and attempts to rejoin if not.
-func (e *Element) EnsureInRoom(ctx context.Context) error {
+func (e *Element) EnsureInRoom() uiauto.Action {
 	return uiauto.NamedAction("ensure in room",
 		uiauto.IfFailThen(e.ele.CheckUserInRoom(e.roomName), e.ele.JoinRoom(e.roomName)),
-	)(ctx)
+	)
 }
 
 var _ SocialApp = (*Element)(nil)

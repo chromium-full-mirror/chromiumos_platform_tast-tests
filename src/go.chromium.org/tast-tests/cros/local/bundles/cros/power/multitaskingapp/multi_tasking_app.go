@@ -376,7 +376,7 @@ func socialAppActivity(ctx context.Context, tconn *chrome.TestConn, uiHandler cu
 	if err := uiauto.Combine("ensure room access",
 		// If can't find Element icon, try to relaunch it.
 		uiauto.IfFailThen(uiHandler.SwitchToAppWindow(apps.Element.Name), socialApp.Launch),
-		socialApp.EnsureInRoom,
+		socialApp.EnsureInRoom(),
 	)(ctx); err != nil {
 		return errors.Wrap(err, "failed to ensure room access")
 	}

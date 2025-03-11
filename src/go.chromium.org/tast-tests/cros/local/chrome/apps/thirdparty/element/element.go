@@ -263,11 +263,11 @@ func (e *Element) SignOut() uiauto.Action {
 		androidTitleID   = "android:id/title"
 		generalTextTitle = "General"
 	)
-	openSettingsButton := e.d.Object(ui.Description("Open settings"), ui.ResourceID(elementIDPrefix+"avatar"))
+	profilePicture := e.d.Object(ui.DescriptionContains("Profile picture"), ui.ResourceID(elementIDPrefix+"avatar"))
 	generalTitle := e.d.Object(ui.Text(generalTextTitle), ui.ResourceID(androidTitleID))
 	openGeneralSettings := uiauto.NamedCombine("open general settings",
-		e.navigateUpToObject(openSettingsButton),
-		apputil.FindAndClick(openSettingsButton, defaultUITimeout),
+		e.navigateUpToObject(profilePicture),
+		apputil.FindAndClick(profilePicture, defaultUITimeout),
 		apputil.FindAndClick(generalTitle, defaultUITimeout),
 	)
 
@@ -326,15 +326,16 @@ func (e *Element) CreateRoom(roomName string) uiauto.Action {
 
 // LeaveRoom leaves the current room.
 // The room will be deleted after seven days after the last member leaves.
+// This function assumed the user is inside the corresponding room.
 func (e *Element) LeaveRoom(roomName string) uiauto.Action {
-	createRoomButton := e.d.Object(ui.Description("Create a new conversation or room"), ui.ResourceID(createChatButtonID))
 	roomNameText := e.d.Object(ui.ResourceID(roomNameID), ui.Text(roomName))
-	leaveRoomButton := e.d.Object(ui.ResourceID(actionTitleID), ui.Text("Leave the room"))
+	profileAppBar := e.d.Object(ui.ResourceID(elementIDPrefix + "matrixProfileAppBarLayout"))
+	actionBarRoot := e.d.Object(ui.ResourceID(elementIDPrefix + "action_bar_root"))
+	leaveRoomButton := e.d.Object(ui.ResourceID(actionTitleID), ui.Text("Leave Room"))
 	leaveButton := e.d.Object(ui.Text("LEAVE"), ui.ClassName(buttonClass))
 	return uiauto.NamedCombine("leave room "+roomName,
-		// Navigate up to the home page of the app.
-		e.navigateUpToObject(createRoomButton),
-		apputil.LongClickUntilExists(e.tconn, roomNameText, leaveRoomButton, defaultUITimeout),
+		e.openSettingsPage(),
+		e.swipeToShowObject(actionBarRoot, profileAppBar, leaveRoomButton, swipeDuration),
 		apputil.FindAndClick(leaveRoomButton, defaultUITimeout),
 		apputil.FindAndClick(leaveButton, defaultUITimeout),
 		apputil.WaitUntilGone(leaveButton, defaultUITimeout),
@@ -409,21 +410,24 @@ func (e *Element) sendMessageAndWait(expectedMessage string) uiauto.Action {
 // RenameCurrentRoom renames the current room.
 func (e *Element) RenameCurrentRoom(newRoomName string) uiauto.Action {
 	moreOptionsButton := e.d.Object(ui.PackageName(ElementPackage), ui.Description("More options"), ui.Clickable(true))
-	optionTitle := e.d.Object(ui.Text("Settings"), ui.ResourceID(elementIDPrefix+"title"))
-	roomSettingsTitle := e.d.Object(ui.Text("Room settings"), ui.ResourceID(actionTitleID))
-	openSettingsPage := uiauto.NamedCombine("open Settings page",
-		apputil.FindAndClick(moreOptionsButton, defaultUITimeout),
-		apputil.FindAndClick(optionTitle, defaultUITimeout),
-		apputil.WaitForExists(roomSettingsTitle, defaultUITimeout),
-	)
-
 	return uiauto.NamedCombine("rename current room as "+newRoomName,
 		e.navigateUpToObject(moreOptionsButton),
 		e.dismissEncryptionAlertIfExists(),
-		openSettingsPage,
+		e.openSettingsPage(),
 		// Sometimes the save button does not appear.
 		// Retry to ensure the room is renamed.
 		uiauto.Retry(retryTimes, e.setRoomNameAndSave(newRoomName)),
+	)
+}
+
+func (e *Element) openSettingsPage() uiauto.Action {
+	moreOptionsButton := e.d.Object(ui.PackageName(ElementPackage), ui.Description("More options"), ui.Clickable(true))
+	optionTitle := e.d.Object(ui.Text("Settings"), ui.ResourceID(elementIDPrefix+"title"))
+	roomSettingsTitle := e.d.Object(ui.Text("Room settings"), ui.ResourceID(actionTitleID))
+	return uiauto.NamedCombine("open Settings page",
+		apputil.FindAndClick(moreOptionsButton, defaultUITimeout),
+		apputil.FindAndClick(optionTitle, defaultUITimeout),
+		apputil.WaitForExists(roomSettingsTitle, defaultUITimeout),
 	)
 }
 
@@ -564,7 +568,7 @@ func (e *Element) swipeToShowObject(startObject, endObject, expectedObject *ui.O
 		// Use DragAndDrop to simulate the swipe action.
 		return e.ui.WithTimeout(longUITimeout).RetryUntil(
 			apputil.DragAndDrop(e.a, startPoint, endPoint, swipeDuration),
-			apputil.WaitForExists(expectedObject, defaultUITimeout),
+			apputil.WaitForExists(expectedObject, shortUITimeout),
 		)(ctx)
 	}
 }
