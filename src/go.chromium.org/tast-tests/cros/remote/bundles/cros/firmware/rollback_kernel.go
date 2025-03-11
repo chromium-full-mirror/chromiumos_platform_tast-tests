@@ -15,6 +15,7 @@ import (
 
 	common "go.chromium.org/tast-tests/cros/common/firmware"
 	"go.chromium.org/tast-tests/cros/common/servo"
+	"go.chromium.org/tast-tests/cros/common/tbdep"
 	"go.chromium.org/tast-tests/cros/remote/firmware"
 	"go.chromium.org/tast-tests/cros/remote/firmware/fixture"
 	"go.chromium.org/tast-tests/cros/remote/firmware/reporters"
@@ -35,6 +36,7 @@ func init() {
 			"tij@google.com",
 		},
 		BugComponent: "b:792402", // ChromeOS > Platform > Enablement > Firmware > FAFT
+		TestBedDeps:  []string{tbdep.ServoStateWorking},
 		Attr:         []string{"group:firmware", "firmware_bios", "firmware_level2"},
 		ServiceDeps:  []string{"tast.cros.firmware.KernelService"},
 		Params: []testing.Param{

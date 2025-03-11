@@ -9,6 +9,7 @@ import (
 	"strings"
 	"time"
 
+	"go.chromium.org/tast-tests/cros/common/tbdep"
 	"go.chromium.org/tast-tests/cros/remote/firmware"
 	"go.chromium.org/tast-tests/cros/remote/firmware/fixture"
 	"go.chromium.org/tast/core/testing"
@@ -22,6 +23,7 @@ func init() {
 		Contacts:     []string{"chromeos-firmware@google.com", "digehlot@google.com"},
 		BugComponent: "b:792402", // ChromeOS > Platform > Enablement > Firmware > FAFT
 		HardwareDeps: hwdep.D(hwdep.FirmwareSplashScreen()),
+		TestBedDeps:  []string{tbdep.ServoStateWorking},
 		Attr:         []string{"group:firmware", "firmware_bios", "firmware_level2"},
 		Fixture:      fixture.NormalMode,
 		Timeout:      5 * time.Minute,

@@ -18,6 +18,7 @@ import (
 	"go.chromium.org/tast-tests/cros/common/firmware/bios"
 	"go.chromium.org/tast-tests/cros/common/firmware/futility"
 	"go.chromium.org/tast-tests/cros/common/servo"
+	"go.chromium.org/tast-tests/cros/common/tbdep"
 	"go.chromium.org/tast-tests/cros/remote/firmware"
 	"go.chromium.org/tast-tests/cros/remote/firmware/fixture"
 	"go.chromium.org/tast-tests/cros/remote/firmware/reporters"
@@ -47,6 +48,7 @@ func init() {
 			"chromeos-faft@google.com",
 		},
 		BugComponent: "b:792402", // ChromeOS > Platform > Enablement > Firmware > FAFT
+		TestBedDeps:  []string{tbdep.ServoStateWorking},
 		Attr:         []string{"group:firmware", "firmware_ec", "firmware_bios", "firmware_level3", "firmware_ec_stressed", "firmware_ec_meets_kpi"},
 		HardwareDeps: hwdep.D(hwdep.ChromeEC(), hwdep.SkipOnPlatform("fizz", "kalista")),
 		Timeout:      2 * time.Hour,

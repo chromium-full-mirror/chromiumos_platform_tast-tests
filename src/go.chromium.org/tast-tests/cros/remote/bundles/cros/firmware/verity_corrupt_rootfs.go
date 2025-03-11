@@ -10,6 +10,7 @@ import (
 	"time"
 
 	"github.com/golang/protobuf/ptypes/empty"
+	"go.chromium.org/tast-tests/cros/common/tbdep"
 	"go.chromium.org/tast-tests/cros/remote/firmware"
 	"go.chromium.org/tast-tests/cros/remote/firmware/fixture"
 	pb "go.chromium.org/tast-tests/cros/services/cros/firmware"
@@ -30,6 +31,7 @@ func init() {
 			"tij@google.com",
 		},
 		BugComponent: "b:792402", // ChromeOS > Platform > Enablement > Firmware > FAFT
+		TestBedDeps:  []string{tbdep.ServoStateWorking},
 		Attr:         []string{"group:firmware", "firmware_bios", "firmware_level3"},
 		ServiceDeps:  []string{"tast.cros.firmware.KernelService"},
 		HardwareDeps: hwdep.D(hwdep.ChromeEC()),

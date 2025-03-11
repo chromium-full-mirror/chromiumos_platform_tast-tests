@@ -11,6 +11,7 @@ import (
 	"time"
 
 	"go.chromium.org/tast-tests/cros/common/servo"
+	"go.chromium.org/tast-tests/cros/common/tbdep"
 	"go.chromium.org/tast-tests/cros/remote/firmware/fixture"
 
 	"go.chromium.org/tast/core/errors"
@@ -33,6 +34,7 @@ func init() {
 			"chromeos-faft@google.com",
 		},
 		BugComponent: "b:792402", // ChromeOS > Platform > Enablement > Firmware > FAFT
+		TestBedDeps:  []string{tbdep.ServoStateWorking},
 		Attr:         []string{"group:firmware", "firmware_bios", "firmware_level1"},
 		SoftwareDeps: []string{"wilco"},
 		Fixture:      fixture.NormalMode,

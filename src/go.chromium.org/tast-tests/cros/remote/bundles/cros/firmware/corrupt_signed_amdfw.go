@@ -9,6 +9,7 @@ import (
 	"time"
 
 	"go.chromium.org/tast-tests/cros/common/firmware/bios"
+	"go.chromium.org/tast-tests/cros/common/tbdep"
 	"go.chromium.org/tast-tests/cros/remote/firmware/fixture"
 	"go.chromium.org/tast/core/testing"
 	"go.chromium.org/tast/core/testing/hwdep"
@@ -20,6 +21,7 @@ func init() {
 		Desc:         "Servo based Signed AMDFW section corruption test",
 		Contacts:     []string{"chromeos-faft@google.com", "kramasub@google.com"},
 		BugComponent: "b:792402", // ChromeOS > Platform > Enablement > Firmware > FAFT
+		TestBedDeps:  []string{tbdep.ServoStateWorking},
 		Attr:         []string{"group:firmware", "firmware_bios", "firmware_level3", "firmware_ro"},
 		Timeout:      20 * time.Minute,
 		HardwareDeps: hwdep.D(hwdep.ChromeEC(), hwdep.SkipOnModel(

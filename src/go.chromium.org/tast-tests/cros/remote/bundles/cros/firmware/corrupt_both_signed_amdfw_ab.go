@@ -11,6 +11,7 @@ import (
 
 	"go.chromium.org/tast-tests/cros/common/firmware/bios"
 	"go.chromium.org/tast-tests/cros/common/firmware/futility"
+	"go.chromium.org/tast-tests/cros/common/tbdep"
 	rbios "go.chromium.org/tast-tests/cros/remote/firmware/bios"
 	"go.chromium.org/tast-tests/cros/remote/firmware/fixture"
 	"go.chromium.org/tast/core/dut"
@@ -26,6 +27,7 @@ func init() {
 		Desc:         "Servo based both A and B signed AMDFW corruption test. This test corrupts both A and B SIGNED_AMDFW FMAP section, and restores it via servo",
 		Contacts:     []string{"chromeos-faft@google.com", "kramasub@google.com"},
 		BugComponent: "b:792402", // ChromeOS > Platform > Enablement > Firmware > FAFT
+		TestBedDeps:  []string{tbdep.ServoStateWorking},
 		Attr:         []string{"group:firmware", "firmware_bios", "firmware_level3", "firmware_ro"},
 		HardwareDeps: hwdep.D(hwdep.ChromeEC(), hwdep.SkipOnModel(
 			// AMD devices before skyrim don't have the separate signed AMDFW section.

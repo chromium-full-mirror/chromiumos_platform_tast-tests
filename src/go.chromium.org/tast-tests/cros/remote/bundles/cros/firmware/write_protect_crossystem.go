@@ -10,6 +10,7 @@ import (
 
 	fwCommon "go.chromium.org/tast-tests/cros/common/firmware"
 	"go.chromium.org/tast-tests/cros/common/servo"
+	"go.chromium.org/tast-tests/cros/common/tbdep"
 	fwUtils "go.chromium.org/tast-tests/cros/remote/bundles/cros/firmware/utils"
 	"go.chromium.org/tast-tests/cros/remote/firmware"
 	"go.chromium.org/tast-tests/cros/remote/firmware/fixture"
@@ -28,6 +29,7 @@ func init() {
 			"tij@google.com",
 		},
 		BugComponent: "b:750299",
+		TestBedDeps:  []string{tbdep.ServoStateWorking},
 		Attr:         []string{"group:firmware", "firmware_bios", "firmware_level2"},
 		SoftwareDeps: []string{"crossystem", "flashrom"},
 		HardwareDeps: hwdep.D(hwdep.ChromeEC()),
