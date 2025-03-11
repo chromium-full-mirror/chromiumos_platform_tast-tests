@@ -60,6 +60,7 @@ func SandboxedServices(ctx context.Context, s *testing.State) {
 	baseline := []*procReqs{
 		{"udevd", "root", "root", 0},    // needs root to create device nodes and change owners/perms
 		{"frecon", "root", "frecon", 0}, // needs root and no namespacing to launch shells
+		{"arc_manager", "root", "root", 0},
 		{"session_manager", "root", "root", 0},
 		{"rsyslogd", "syslog", "syslog", mntNS | restrictCaps},
 		{"systemd-journal", "syslog", "syslog", mntNS | restrictCaps},
