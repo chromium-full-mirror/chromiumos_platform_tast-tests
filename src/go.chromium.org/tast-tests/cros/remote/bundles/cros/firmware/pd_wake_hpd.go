@@ -10,6 +10,7 @@ import (
 
 	"go.chromium.org/tast-tests/cros/common/servo"
 	"go.chromium.org/tast-tests/cros/common/tbdep"
+	"go.chromium.org/tast-tests/cros/common/typecutils"
 	"go.chromium.org/tast-tests/cros/remote/firmware"
 	"go.chromium.org/tast-tests/cros/remote/firmware/fixture"
 	"go.chromium.org/tast/core/testing"
@@ -34,30 +35,72 @@ func init() {
 		Timeout:      60 * time.Minute,
 		Attr:         []string{"group:firmware", "firmware_pd_unstable"},
 		Params: []testing.Param{{
-			Name: "plug",
+			Name:              "plug",
+			ExtraHardwareDeps: hwdep.D(hwdep.HasNoPDCChip()),
 			Val: firmware.PDTestParams{
-				DTS:       firmware.DTSModeOff,
-				DPAltPlug: true,
+				DTS:        firmware.DTSModeOff,
+				DPAltPlug:  true,
+				HasPDCChip: false,
 			},
 		}, {
-			Name: "plug_snk",
+			Name:              "plug_snk",
+			ExtraHardwareDeps: hwdep.D(hwdep.HasNoPDCChip()),
 			Val: firmware.PDTestParams{
-				PowerRole: firmware.RoleSink,
-				DTS:       firmware.DTSModeOff,
-				DPAltPlug: true,
+				PowerRole:  firmware.RoleSink,
+				DTS:        firmware.DTSModeOff,
+				DPAltPlug:  true,
+				HasPDCChip: false,
 			},
 		}, {
-			Name: "receptacle",
+			Name:              "receptacle",
+			ExtraHardwareDeps: hwdep.D(hwdep.HasNoPDCChip()),
 			Val: firmware.PDTestParams{
-				DTS:       firmware.DTSModeOff,
-				DPAltPlug: false,
+				DTS:        firmware.DTSModeOff,
+				DPAltPlug:  false,
+				HasPDCChip: false,
 			},
 		}, {
-			Name: "receptacle_snk",
+			Name:              "receptacle_snk",
+			ExtraHardwareDeps: hwdep.D(hwdep.HasNoPDCChip()),
 			Val: firmware.PDTestParams{
-				PowerRole: firmware.RoleSink,
-				DTS:       firmware.DTSModeOff,
-				DPAltPlug: false,
+				PowerRole:  firmware.RoleSink,
+				DTS:        firmware.DTSModeOff,
+				DPAltPlug:  false,
+				HasPDCChip: false,
+			},
+		}, {
+			Name:              "plug_pdc",
+			ExtraHardwareDeps: hwdep.D(hwdep.HasPDCChip()),
+			Val: firmware.PDTestParams{
+				DTS:        firmware.DTSModeOff,
+				DPAltPlug:  true,
+				HasPDCChip: true,
+			},
+		}, {
+			Name:              "plug_snk_pdc",
+			ExtraHardwareDeps: hwdep.D(hwdep.HasPDCChip()),
+			Val: firmware.PDTestParams{
+				PowerRole:  firmware.RoleSink,
+				DTS:        firmware.DTSModeOff,
+				DPAltPlug:  true,
+				HasPDCChip: true,
+			},
+		}, {
+			Name:              "receptacle_pdc",
+			ExtraHardwareDeps: hwdep.D(hwdep.HasPDCChip()),
+			Val: firmware.PDTestParams{
+				DTS:        firmware.DTSModeOff,
+				DPAltPlug:  false,
+				HasPDCChip: true,
+			},
+		}, {
+			Name:              "receptacle_snk_pdc",
+			ExtraHardwareDeps: hwdep.D(hwdep.HasPDCChip()),
+			Val: firmware.PDTestParams{
+				PowerRole:  firmware.RoleSink,
+				DTS:        firmware.DTSModeOff,
+				DPAltPlug:  false,
+				HasPDCChip: true,
 			},
 		}},
 	})
@@ -80,12 +123,6 @@ func PDWakeHPD(ctx context.Context, s *testing.State) {
 		s.Fatal("Failed to create config: ", err)
 	}
 
-	// TODO(b/298675713): change hwdep to depend on pdc, not just brox
-	board, err := h.Reporter.Board(ctx)
-	if err != nil {
-		s.Fatal("Failed to get board name: ", err)
-	}
-
 	testParams := s.Param().(firmware.PDTestParams)
 
 	if err := firmware.SetupPDTester(ctx, h, testParams); err != nil {
@@ -101,12 +138,14 @@ func PDWakeHPD(ctx context.Context, s *testing.State) {
 	}
 
 	testing.ContextLog(ctx, "verifying DP is enabled")
-	typecInfo, err := h.Servo.GetTypeCInfo(ctx, h.DUT)
-	if err != nil {
-		s.Fatal("Failed to retrieve type-c information: ", err)
-	}
-	if typecInfo.DPMode != servo.DPEnable {
-		s.Fatal("Type-c DP did not enable")
+	if out, err := typecutils.FindConnectedDp(ctx, h.DUT); err != nil || len(out) == 0 {
+		typecInfo, err := h.Servo.GetTypeCInfo(ctx, h.DUT)
+		if err != nil {
+			s.Fatal("Failed to retrieve type-c information: ", err)
+		}
+		if typecInfo.DPMode != servo.DPEnable {
+			s.Fatal("Type-c DP did not enable")
+		}
 	}
 
 	configs := []hpdConfigs{
@@ -166,7 +205,7 @@ func PDWakeHPD(ctx context.Context, s *testing.State) {
 		}
 
 		// ec policy always wake on high regardless of previous state
-		if hpd.expectedWake || board != "brox" {
+		if hpd.expectedWake || !testParams.HasPDCChip {
 			if powerState != "S0" {
 				s.Errorf("Test case %d: Expected power state: S0, actual: %s", idx, string(powerState))
 				TestFailures++

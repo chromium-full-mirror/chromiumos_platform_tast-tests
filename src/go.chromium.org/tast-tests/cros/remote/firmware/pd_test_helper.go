@@ -55,6 +55,7 @@ type PDTestParams struct {
 	PowerRole     ServoPowerRole
 	NumIterations int
 	DPAltPlug     bool
+	HasPDCChip    bool
 }
 
 // SetupPDTester handles some boilerplate tasks to prepare the Servo for PD testing:
