@@ -342,12 +342,19 @@ func (h *CmdTPMClearHelper) ensureTPMIsReset(ctx context.Context, removeFiles bo
 	if err != nil {
 		// TODO(b/395648279): Remove additional logs after investigation.
 		whichOutput, errLog := h.cmdRunner.Run(ctx, "which", "hwsec-ownership-id")
-		testing.ContextLog(ctx, "`which hwsec-ownership-id` returned `", string(whichOutput), "`, errLog is `", errLog, "`")
+		testing.ContextLogf(ctx, "`which hwsec-ownership-id` returned `%s`, errLog is `%s`", string(whichOutput), errLog)
 		findOutput, errLog := h.cmdRunner.Run(ctx, "find", "/", "-type", "f", "-name", "hwsec-ownership-id", "-print")
-		testing.ContextLog(ctx, "`find / -type f -name hwsec-ownership-id -print` returned `", string(findOutput), "`, errLog is `", errLog, "`")
-		testing.ContextLog(ctx, "PATH is `", os.Getenv("PATH"), "`")
+		testing.ContextLogf(ctx, "`find / -type f -name hwsec-ownership-id -print` returned `%s`, errLog is `%s`", string(findOutput), errLog)
+		pathOutput, errLog := h.cmdRunner.Run(ctx, "sh", "-c", "echo $PATH")
+		testing.ContextLogf(ctx, "`echo $PATH` returned `%s`, errLog is `%s`", string(pathOutput), errLog)
 		catOutput, errLog := h.cmdRunner.Run(ctx, "cat", "/etc/lsb-release")
-		testing.ContextLog(ctx, "`cat /etc/lsb-release` returned `", string(catOutput), "`, errLog is `", errLog, "`")
+		testing.ContextLogf(ctx, "`cat /etc/lsb-release` returned `%s`, errLog is `%s`", string(catOutput), errLog)
+		lsOutput, errLog := h.cmdRunner.Run(ctx, "ls", "-l", "/usr/local/bin/hwsec-ownership-id")
+		testing.ContextLogf(ctx, "`ls -l /usr/local/bin/hwsec-ownership-id` returned `%s`, errLog is `%s`", string(lsOutput), errLog)
+		hoiOutput, errLog := h.cmdRunner.Run(ctx, "hwsec-ownership-id", "id")
+		testing.ContextLogf(ctx, "`hwsec-ownership-id` returned `%s`, errLog is `%s`", string(hoiOutput), errLog)
+		fullpathhoiOutput, errLog := h.cmdRunner.Run(ctx, "/usr/local/bin/hwsec-ownership-id", "id")
+		testing.ContextLogf(ctx, "`/usr/local/bin/hwsec-ownership-id id` returned `%s`, errLog is `%s`", string(fullpathhoiOutput), errLog)
 
 		return errors.Wrap(err, "failed to get ownership ID")
 	}
