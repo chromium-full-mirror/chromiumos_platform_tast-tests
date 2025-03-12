@@ -228,6 +228,10 @@ var LinuxKeyCodes = []LinuxKeyCode{
 		KeyName:      "KEY_102ND", // intl backslash
 	},
 	{
+		LinuxKeyCode: input.KEY_RO,
+		KeyName:      "KEY_RO",
+	},
+	{
 		LinuxKeyCode: input.KEY_SPACE,
 		KeyName:      "KEY_SPACE",
 	},

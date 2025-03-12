@@ -33,7 +33,7 @@ const csvShiftLabel = "shift"
 const csvAltgrLabel = "altgr"
 const csvCapsLabel = "caps"
 
-var supportedHardwareLayoutTypes = []string{"ISO", "ANSI"}
+var supportedHardwareLayoutTypes = []string{"ISO", "ANSI", "ABNT"}
 
 var imeIDArg = testing.RegisterVarString(
 	"inputs.imeID",
@@ -44,7 +44,7 @@ var imeIDArg = testing.RegisterVarString(
 var hardwareLayoutTypeArg = testing.RegisterVarString(
 	"inputs.hardwareLayoutType",
 	"ISO",
-	"Target hardware layout type: ISO (default) or ANSI.",
+	"Target hardware layout type: ISO (default), ANSI, or ABNT.",
 )
 
 type keystroke struct {
@@ -228,6 +228,8 @@ func modifiersEligibleForHardwareLayout(modifiers util.ModifiersStatus, hardware
 		return true
 	case "ANSI":
 		return !modifiers.Altgr
+	case "ABNT":
+		return true
 	default:
 		return false
 	}
@@ -236,9 +238,11 @@ func modifiersEligibleForHardwareLayout(modifiers util.ModifiersStatus, hardware
 func keyEligibleForHardwareLayout(key util.LinuxKeyCode, hardwareLayoutType string) bool {
 	switch hardwareLayoutType {
 	case "ISO":
-		return true
+		return key.LinuxKeyCode != input.KEY_RO
 	case "ANSI":
-		return key.LinuxKeyCode != input.KEY_102ND
+		return (key.LinuxKeyCode != input.KEY_102ND) && (key.LinuxKeyCode != input.KEY_RO)
+	case "ABNT":
+		return true
 	default:
 		return false
 	}
