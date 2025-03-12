@@ -232,6 +232,10 @@ var LinuxKeyCodes = []LinuxKeyCode{
 		KeyName:      "KEY_RO",
 	},
 	{
+		LinuxKeyCode: input.KEY_YEN,
+		KeyName:      "KEY_YEN",
+	},
+	{
 		LinuxKeyCode: input.KEY_SPACE,
 		KeyName:      "KEY_SPACE",
 	},
