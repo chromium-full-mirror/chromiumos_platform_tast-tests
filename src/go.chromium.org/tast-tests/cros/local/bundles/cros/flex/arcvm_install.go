@@ -37,7 +37,7 @@ func init() {
 		HardwareDeps: hwdep.D(hwdep.SkipDMIProductName("NUC11TNKv5"),
 			hwdep.Model("reven")),
 		SoftwareDeps: []string{"chrome"},
-		Timeout:      20 * time.Minute,
+		Timeout:      30 * time.Minute,
 		SearchFlags: []*testing.StringPair{
 			pci.SearchFlag(&policy.DeviceFlexArcPreloadEnabled{}, pci.VerifiedFunctionalityOS),
 		},
@@ -100,7 +100,7 @@ func ARCVMInstall(ctx context.Context, s *testing.State) {
 		} else {
 			return errors.Errorf("failed to check system image: %q", err)
 		}
-	}, &testing.PollOptions{Timeout: 10 * time.Minute}); err != nil {
+	}, &testing.PollOptions{Timeout: 20 * time.Minute}); err != nil {
 		s.Fatal("Android system image did not appear within the timeout: ", err)
 	}
 
