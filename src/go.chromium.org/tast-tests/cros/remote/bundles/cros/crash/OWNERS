@@ -4,3 +4,6 @@ per-file kernel_crash.go=swboyd@chromium.org
 per-file watchdog_crash.go=swboyd@chromium.org
 per-file ec_crash.go=file:chromiumos/owners:v1:/firmware/OWNERS.cros_ec
 per-file ec_safe_mode.go=file:chromiumos/owners:v1:/firmware/OWNERS.cros_ec
+
+# Tast team for bulk/emergencies
+include /OWNERS.tast
