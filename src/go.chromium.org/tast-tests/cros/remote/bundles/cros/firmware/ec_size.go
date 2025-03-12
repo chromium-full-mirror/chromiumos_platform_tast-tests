@@ -55,6 +55,7 @@ var chipSizeMap = map[string]int{
 	"NPCX993F.A.00160207": 512,
 	"npcx9m3f.00160207":   512,
 	"npcx9m7f.00160207":   1024,
+	"npcx9m7fb.12010101":  512,
 	"npcx_int_spi":        512,
 	"npcx_spi":            512,
 	"npcx_uut":            512,
