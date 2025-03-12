@@ -604,6 +604,11 @@ func Run(ctx context.Context, meet MeetTest, cr *chrome.Chrome, testCaseVar func
 		return pv, errors.Wrap(err, "the number of bots is unexpected")
 	}
 
+	// Make sure the default camera is turned on.
+	if err := meetHelper.SetCamera(ctx, true); err != nil {
+		return pv, errors.Wrap(err, "failed to turn on camera")
+	}
+
 	doDefaultMoreOptions := func(ctx context.Context) error {
 		moreOptionsFinder := nodewith.Name("More options").Role(role.PopUpButton)
 		moreOptionsButtons, err := ui.NodesInfo(ctx, moreOptionsFinder)
@@ -640,8 +645,8 @@ func Run(ctx context.Context, meet MeetTest, cr *chrome.Chrome, testCaseVar func
 					}
 					removeAllItem := nodewith.Name("Remove all").Role(role.MenuItem)
 					return uiauto.Combine("turn off visual effects",
-						ui.LeftClick(popUpButton),
-						ui.LeftClick(removeAllItem))(ctx)
+						ui.DoDefault(popUpButton),
+						ui.DoDefault(removeAllItem))(ctx)
 				}
 			}
 			return uiLongWait.DoDefaultUntil(effect,

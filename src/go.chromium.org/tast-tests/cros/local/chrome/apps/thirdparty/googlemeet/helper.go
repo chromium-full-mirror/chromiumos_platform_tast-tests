@@ -182,7 +182,24 @@ func (h *HRTelemetryHelper) SetMicrophone(ctx context.Context, expectedOn bool) 
 
 // SetCamera sets the camera to the given state.
 func (h *HRTelemetryHelper) SetCamera(ctx context.Context, expectedOn bool) error {
-	return h.meetConn.Eval(ctx, fmt.Sprintf("hrTelemetryApi.setCameraMuted(%t)", !expectedOn), nil)
+	setCamera := func(ctx context.Context) error {
+		testing.ContextLog(ctx, "Set camera to ", expectedOn)
+		return h.meetConn.Eval(ctx, fmt.Sprintf("hrTelemetryApi.setCameraMuted(%t)", !expectedOn), nil)
+	}
+	ui := uiauto.New(h.tconn)
+	meetRootWebArea := nodewith.NameContaining("Meet").Role(role.RootWebArea)
+	cameraName := "Turn off camera"
+	if !expectedOn {
+		cameraName = "Turn on camera"
+	}
+	// The camera button's role is sometimes a toggle button and sometimes
+	// a button, so the role is not included here.
+	cameraButton := nodewith.Name(cameraName).Ancestor(meetRootWebArea)
+	if err := uiauto.IfSuccessThen(ui.Gone(cameraButton),
+		ui.RetryUntil(setCamera, ui.WithTimeout(5*time.Second).WaitUntilExists(cameraButton)))(ctx); err != nil {
+		return errors.Wrapf(err, "failed to set camera to %t", expectedOn)
+	}
+	return nil
 }
 
 // GetParticipantCount gets the number of the participants in the meeting room.
