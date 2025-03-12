@@ -15,6 +15,7 @@ import (
 	arcutil "go.chromium.org/tast-tests/cros/local/network/arc"
 	"go.chromium.org/tast-tests/cros/local/network/ping"
 	"go.chromium.org/tast-tests/cros/local/network/testhooks"
+	"go.chromium.org/tast-tests/cros/local/network/virtualnet"
 	"go.chromium.org/tast-tests/cros/local/network/virtualnet/subnet"
 	"go.chromium.org/tast-tests/cros/local/network/vpn"
 	"go.chromium.org/tast-tests/cros/local/shill"
@@ -108,18 +109,28 @@ func ARCVPNSplitRouting(ctx context.Context, s *testing.State) {
 	vpnEnv := networkEnv.Server1
 	physicalEnv := networkEnv.Server2
 
+	createIPv4Subnet := func(cidr string) *subnet.IPv4Subnet {
+		ret, err := subnet.FromIPv4CIDR(cidr)
+		if err != nil {
+			s.Fatal("Failed to create IPv4 subnet from CIDR string: ", err)
+		}
+		return ret
+	}
+
+	createIPv6Subnet := func(cidr string) *subnet.IPv6Subnet {
+		ret, err := subnet.FromIPv6CIDR(cidr)
+		if err != nil {
+			s.Fatal("Failed to create IPv6 subnet from CIDR string: ", err)
+		}
+		return ret
+	}
+
 	// Subnets for the VPN overlay. Note that the ARC VPN in the test doesn't
 	// really support tunneling IPv6 traffic -- it will only claim to the Android
 	// system that it does. Since we don't support IPv6 ARC VPN in the host this
 	// should be enough in this test.
-	vpnIPv4Subnet, err := subnet.FromIPv4CIDR("10.11.12.0/24")
-	if err != nil {
-		s.Fatal("Failed to get IPv4 subnet from CIDR string: ", err)
-	}
-	vpnIPv6Subnet, err := subnet.FromIPv6CIDR("fddf::/64")
-	if err != nil {
-		s.Fatal("Failed to get IPv6 subnet from CIDR string: ", err)
-	}
+	vpnIPv4Subnet := createIPv4Subnet("10.11.12.0/24")
+	vpnIPv6Subnet := createIPv6Subnet("fddf::/64")
 
 	// Subnets for physical env.
 	physicalAddrs, err := physicalEnv.GetVethInAddrs(ctx)
@@ -133,6 +144,26 @@ func ARCVPNSplitRouting(ctx context.Context, s *testing.State) {
 	physicalIPv6Subnet := &net.IPNet{
 		IP:   physicalAddrs.IPv6Addrs[0],
 		Mask: net.CIDRMask(64, 128),
+	}
+
+	// Set up an additional Env which is reachable via physical but not
+	// reachable via VPN. The IPv6 addr of this Env will be included in the VPN
+	// in all test cases (explicitly or implicitly), and can be used for
+	// verifying the IPv6 blackhole route for this subnet is set up properly.
+	physicalEnv2, err := virtualnet.CreateEnv(ctx, "physical2")
+	if err != nil {
+		s.Fatal("Failed to create the second physical Env: ", err)
+	}
+	// Note: IPv4 subnet does not matter here, but ConnectToRouter() requires
+	// one.
+	physicalIPv4Subnet2 := createIPv4Subnet("10.12.14.0/24")
+	physicalIPv6Subnet2 := createIPv6Subnet("fdff::/64")
+	if err := physicalEnv2.ConnectToRouter(ctx, networkEnv.Router, physicalIPv4Subnet2, physicalIPv6Subnet2); err != nil {
+		s.Fatal("Failed to connect the second physical Env to router: ", err)
+	}
+	physicalIPv6Addr2 := physicalIPv6Subnet2.GetAddrEndWith(2)
+	if err := ping.ExpectPingSuccessWithTimeout(ctx, physicalIPv6Addr2.String(), "chronos", 5*time.Second); err != nil {
+		s.Fatal("Failed to verify IPv6 connectivity to the second physical Env: ", err)
 	}
 
 	// "Subnets" for default routes.
@@ -156,6 +187,7 @@ func ARCVPNSplitRouting(ctx context.Context, s *testing.State) {
 	case arcVPNSplitRoutingTestCaseIncludedRoutes:
 		opts = append(opts, vpn.WithIPv4IncludedRoute(&vpnIPv4Subnet.IPNet))
 		opts = append(opts, vpn.WithIPv6IncludedRoute(&vpnIPv6Subnet.IPNet))
+		opts = append(opts, vpn.WithIPv6IncludedRoute(&physicalIPv6Subnet2.IPNet))
 	case arcVPNSplitRoutingTestCaseExcludedRoutes:
 		opts = append(opts, vpn.WithExcludedRoute(physicalIPv4Subnet))
 		opts = append(opts, vpn.WithExcludedRoute(physicalIPv6Subnet))
@@ -226,29 +258,37 @@ func ARCVPNSplitRouting(ctx context.Context, s *testing.State) {
 		role string
 	}
 	var reachableIPs []ipAndRole
-	var unreachableIPs []ipAndRole
+	unreachableIPs := []ipAndRole{
+		// For an ARC VPN, all destinations in the included routes will be
+		// blocked on the host, so this should not be reachable in all cases.
+		ipAndRole{physicalIPv6Addr2.String(), "VPN included IPv6"},
+	}
 	switch tc {
 	case arcVPNSplitRoutingTestCaseIncludedRoutes:
+		fallthrough
 	case arcVPNSplitRoutingTestCaseExcludedRoutes:
 		reachableIPs = append(reachableIPs, ipAndRole{physicalAddrs.IPv4Addr.String(), "physical IPv4"})
 		reachableIPs = append(reachableIPs, ipAndRole{physicalAddrs.IPv6Addrs[0].String(), "physical IPv6"})
 		reachableIPs = append(reachableIPs, ipAndRole{server.OverlayIPv4, "VPN overlay IPv4"})
-		// Skip VPN overlay IPv6 check since it won't be reachable by any chance.
-		// Check the VPN underlay IPv6 to verify is blackhole route is applied properly.
+		// VPN overlay IPv6 won't be reachable. Check it here as a confidence check for our setup.
+		unreachableIPs = append(unreachableIPs, ipAndRole{server.OverlayIPv6, "VPN overlay IPv6"})
+
+		// Check the VPN underlay IPv6 to verify if blackhole route is applied properly.
 		vpnUnderlayAddrs, err := vpnEnv.GetVethInAddrs(ctx)
 		if err != nil {
 			s.Fatal("Failed to get addrs in VPN env: ", err)
 		}
 		if tc == arcVPNSplitRoutingTestCaseIncludedRoutes {
-			reachableIPs = append(unreachableIPs, ipAndRole{vpnUnderlayAddrs.IPv6Addrs[0].String(), "VPN underlay IPv6"})
+			reachableIPs = append(reachableIPs, ipAndRole{vpnUnderlayAddrs.IPv6Addrs[0].String(), "VPN underlay IPv6"})
 		} else {
 			unreachableIPs = append(unreachableIPs, ipAndRole{vpnUnderlayAddrs.IPv6Addrs[0].String(), "VPN underlay IPv6"})
 		}
 	case arcVPNSplitRoutingTestCaseDefaultRoutes:
-		unreachableIPs = append(reachableIPs, ipAndRole{physicalAddrs.IPv4Addr.String(), "physical IPv4"})
+		unreachableIPs = append(unreachableIPs, ipAndRole{physicalAddrs.IPv4Addr.String(), "physical IPv4"})
 		unreachableIPs = append(unreachableIPs, ipAndRole{physicalAddrs.IPv6Addrs[0].String(), "physical IPv6"})
 		reachableIPs = append(reachableIPs, ipAndRole{server.OverlayIPv4, "VPN overlay IPv4"})
-		// Skip VPN overlay IPv6 check since it won't be reachable by any chance.
+		// VPN overlay IPv6 won't be reachable. Check it here as a confidence check for our setup.
+		unreachableIPs = append(unreachableIPs, ipAndRole{server.OverlayIPv6, "VPN overlay IPv6"})
 	}
 
 	for _, ip := range reachableIPs {
