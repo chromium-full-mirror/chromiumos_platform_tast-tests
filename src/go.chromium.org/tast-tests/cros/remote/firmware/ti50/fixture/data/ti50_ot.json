@@ -54,7 +54,6 @@
     {
       "name": "UART_DBG_TX_EC_RX",
       "mode": "Alternate",
-      "pull_mode": "None",
       "alias_of": "IOB5"
     },
     {

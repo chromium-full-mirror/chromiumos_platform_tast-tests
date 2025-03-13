@@ -41,7 +41,8 @@
     },
     {
       "name": "SYS_RST_L",
-      "mode": "Input",
+      "mode": "OpenDrain",
+      "level": false,
       "pull_mode": "PullUp",
       "alias_of": "M0"
     },
@@ -210,6 +211,10 @@
       "name": "AP_ON_SPI",
       "pins": [
 	{
+	  "name": "SYS_RST_L",
+	  "level": true
+	},
+	{
 	  "name": "PLT_RST_L",
 	  "level": true
 	},
@@ -240,6 +245,10 @@
 	  "level": true
 	},
 	{
+	  "name": "SYS_RST_L",
+	  "level": true
+	},
+	{
 	  "name": "EN_I2C_PU",
 	  "level": false
 	},
@@ -256,6 +265,10 @@
     {
       "name": "AP_OFF",
       "pins": [
+	{
+	  "name": "SYS_RST_L",
+	  "level": false
+	},
 	{
 	  "name": "PLT_RST_L",
 	  "level": false
