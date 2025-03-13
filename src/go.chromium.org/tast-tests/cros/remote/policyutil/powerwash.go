@@ -5,6 +5,7 @@
 package policyutil
 
 import (
+	"bytes"
 	"context"
 	"io"
 	"time"
@@ -18,28 +19,34 @@ import (
 )
 
 // prepareBeforePowerwash downloads the stateful image from Google cloud storage.
-func prepareBeforePowerwash(ctx context.Context, cloudStorage *testing.CloudStorage) (func(), io.ReadCloser, error) {
-	// Start downloading stateful image before doing powerwash.
+func prepareBeforePowerwash(ctx context.Context, cloudStorage *testing.CloudStorage) ([]byte, error) {
 	testing.ContextLog(ctx, "Downloading stateful image")
-	var statefulReader io.ReadCloser
+	var statefulImage []byte
 	if err := testing.Poll(ctx, func(ctx context.Context) error {
-		var err error
-		statefulReader, err = cloudStorage.Open(ctx, "build-artifact:///stateful.tgz")
-		return err
+		statefulReader, err := cloudStorage.Open(ctx, "build-artifact:///stateful.tgz")
+		if err != nil {
+			return errors.Wrap(err, "failed to request stateful image from cloud storage")
+		}
+		defer statefulReader.Close()
+		statefulImage, err = io.ReadAll(statefulReader)
+		if err != nil {
+			return errors.Wrap(err, "failed to read stateful image into buffer")
+		}
+		return nil
 	}, &testing.PollOptions{Timeout: time.Minute}); err != nil {
-		return nil, nil, errors.Wrap(err, "failed to download stateful image")
+		return nil, errors.Wrap(err, "failed to download stateful image")
 	}
-	return func() { statefulReader.Close() }, statefulReader, nil
+	return statefulImage, nil
 }
 
 // restoreAfterPowerwash restores the stateful partition from a provided image and Tast executables.
-func restoreAfterPowerwash(ctx context.Context, statefulReader io.ReadCloser, dut *dut.DUT, pushedFiles map[string]string) error {
+func restoreAfterPowerwash(ctx context.Context, statefulImage []byte, dut *dut.DUT, pushedFiles map[string]string) error {
 	// Restore stateful partition from the image and trigger postinstall steps.
 	testing.ContextLog(ctx, "Flashing stateful")
 	flashCmd := dut.Conn().CommandContext(
 		ctx, "/bin/tar", "--ignore-command-error", "--overwrite", "--directory",
 		"/mnt/stateful_partition", "--selinux", "-xz")
-	flashCmd.Stdin = statefulReader
+	flashCmd.Stdin = bytes.NewReader(statefulImage)
 	if err := flashCmd.Run(ssh.DumpLogOnError); err != nil {
 		return errors.Wrap(err, "failed to flash stateful partition")
 	}
@@ -102,17 +109,16 @@ type PowerwashFunc func(ctx context.Context) error
 //		s.Fatal("Powerwash failed: ", err)
 //	}
 func Powerwash(ctx context.Context, cloudStorage *testing.CloudStorage, dut *dut.DUT, pushedFiles map[string]string, powerwashFn PowerwashFunc) (retErr error) {
-	cleanup, statefulReader, err := prepareBeforePowerwash(ctx, cloudStorage)
+	statefulImage, err := prepareBeforePowerwash(ctx, cloudStorage)
 	if err != nil {
 		return errors.Wrap(err, "failed to prepare to powerwash")
 	}
-	defer cleanup()
 
 	// Store logs before powerwash.
 	log.Collect(ctx, dut)
 
 	defer func() {
-		if err := restoreAfterPowerwash(ctx, statefulReader, dut, pushedFiles); err != nil {
+		if err := restoreAfterPowerwash(ctx, statefulImage, dut, pushedFiles); err != nil {
 			retErr = errors.Join(retErr, errors.Wrap(err, "failed to restore after powerwash"))
 		}
 	}()
