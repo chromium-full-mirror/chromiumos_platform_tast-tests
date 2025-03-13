@@ -1409,6 +1409,9 @@ func Run(ctx context.Context, meet MeetTest, cr *chrome.Chrome, testCaseVar func
 		}
 
 		if err := checkParticipantCount(ctx, expectedParticipantCount); err != nil {
+			if isPresenting && ui.Gone(googlemeet.StopPresentingButton)(ctx) == nil {
+				return errors.Wrap(err, "the number of bots is unexpected, screen sharing is interrupted")
+			}
 			return errors.Wrap(err, "the number of bots is unexpected, the bond server may have lost bots")
 		}
 

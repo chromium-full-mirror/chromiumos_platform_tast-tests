@@ -48,8 +48,9 @@ type HRTelemetryHelper struct {
 }
 
 var (
-	stopPresentingRe     = regexp.MustCompile("(Stop presenting|Stop sharing)")
-	stopPresentingButton = nodewith.NameRegex(stopPresentingRe).Role(role.Button).First()
+	stopPresentingRe = regexp.MustCompile("(Stop presenting|Stop sharing)")
+	// StopPresentingButton is the finder for stop presenting button.
+	StopPresentingButton = nodewith.NameRegex(stopPresentingRe).Role(role.Button).First()
 )
 
 // NewHRTelemetryHelper returns a new HRTelemetryHelper object.
@@ -224,7 +225,7 @@ func (h *HRTelemetryHelper) OpenPresentDialog(ctx context.Context) error {
 
 // PresentTab presents the tab with |presentTabTitle|.
 func (h *HRTelemetryHelper) PresentTab(ctx context.Context, conn *chrome.Conn, ui *uiauto.Context, kw *input.KeyboardEventWriter, presentTabTitle string) error {
-	if err := ui.Exists(stopPresentingButton)(ctx); err == nil {
+	if err := ui.Exists(StopPresentingButton)(ctx); err == nil {
 		return nil
 	}
 
@@ -249,7 +250,7 @@ func (h *HRTelemetryHelper) PresentTab(ctx context.Context, conn *chrome.Conn, u
 		// Some low-end DUTs may take a long time to actually get to
 		// the presenting page. Wait for the "Stop presenting" to appear
 		// to ensure the page is being shared.
-		ui.WithTimeout(time.Minute).WaitUntilExists(stopPresentingButton),
+		ui.WithTimeout(time.Minute).WaitUntilExists(StopPresentingButton),
 	)(ctx); err != nil {
 		return errors.Wrap(err, "failed to select the tab to share")
 	}
@@ -273,8 +274,8 @@ func (h *HRTelemetryHelper) StopPresenting(ctx context.Context, ui *uiauto.Conte
 	}
 
 	return uiauto.NamedAction("stop presenting",
-		ui.WithTimeout(time.Minute).DoDefaultUntil(stopPresentingButton,
-			ui.WaitUntilGone(stopPresentingButton)),
+		ui.WithTimeout(time.Minute).DoDefaultUntil(StopPresentingButton,
+			ui.WaitUntilGone(StopPresentingButton)),
 	)(ctx)
 }
 
