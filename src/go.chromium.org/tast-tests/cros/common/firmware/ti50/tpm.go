@@ -10,6 +10,7 @@ import (
 	"encoding/binary"
 	"encoding/hex"
 	"fmt"
+	"time"
 
 	"github.com/google/go-tpm/tpm2"
 
@@ -109,7 +110,9 @@ func (t *TpmHandle) OpenTitanToolTpmCommand(subcmd string, subargs ...string) ([
 	var args []string
 	args = append(args, "tpm", "--gsc-ready", string(GpioTi50ApIntL), subcmd)
 	args = append(args, subargs...)
-	response, err := t.b.OpenTitanToolCommand(t.Ctx, string(t.Bus), args...)
+	ctx, cancel := context.WithTimeout(t.Ctx, 10*time.Second)
+	defer cancel()
+	response, err := t.b.OpenTitanToolCommand(ctx, string(t.Bus), args...)
 	if err != nil {
 		return nil, err
 	}
