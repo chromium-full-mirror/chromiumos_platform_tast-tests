@@ -44,23 +44,21 @@ func init() {
 		Data:         []string{imageFileName},
 		Attr:         []string{"group:mainline", "informational"},
 		Fixture:      fixture.LoggedInWithUpdateEngine,
-		// Currently T&S will always return an error on 16:9 ratio.
-		// TODO(b/388393994): Add 16:9 ratio once the T&S issue is resolved.
 		Params: []testing.Param{
-			{
-				Name: "original",
-				Val: expandBackgroundFeatureTestParameters{
-					ratioName:      "Ratio Original",
-					expectedWidth:  1819,
-					expectedHeight: 1023,
-				},
-			},
 			{
 				Name: "square",
 				Val: expandBackgroundFeatureTestParameters{
 					ratioName:      "Ratio Square",
 					expectedWidth:  1819,
 					expectedHeight: 1819,
+				},
+			},
+			{
+				Name: "16_9",
+				Val: expandBackgroundFeatureTestParameters{
+					ratioName:      "Ratio 16 by 9",
+					expectedWidth:  1820,
+					expectedHeight: 1023,
 				},
 			},
 			{
