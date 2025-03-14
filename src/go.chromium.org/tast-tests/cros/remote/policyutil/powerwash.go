@@ -33,7 +33,7 @@ func prepareBeforePowerwash(ctx context.Context, cloudStorage *testing.CloudStor
 			return errors.Wrap(err, "failed to read stateful image into buffer")
 		}
 		return nil
-	}, &testing.PollOptions{Timeout: time.Minute}); err != nil {
+	}, &testing.PollOptions{Timeout: 10 * time.Minute}); err != nil {
 		return nil, errors.Wrap(err, "failed to download stateful image")
 	}
 	return statefulImage, nil
