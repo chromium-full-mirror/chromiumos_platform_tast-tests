@@ -37,12 +37,11 @@ func init() {
 		LifeCycleStage: testing.LifeCycleOwnerMonitored,
 		Desc:           "Check the pin/unpin/re-pin for media control pod",
 		Contacts: []string{
-			// "cros-arc-te@google.com",
-			"cj.tsai@cienet.com",
-			"chromeos-connectivity-cienet-external@google.com",
+			"cros-arc-te@google.com",
 		},
 		BugComponent: "b:1052117", // ChromeOS > Software > ARC++ > EngProd
-		Attr:         []string{"group:mainline", "informational", "group:hw_agnostic"},
+		// Disable the this test since this no Google team has taken ownership. See b/403396055.
+		// Attr:         []string{"group:mainline", "informational", "group:hw_agnostic"},
 		SoftwareDeps: []string{"chrome", "chrome_internal", "arc", "gaia"},
 		Data:         []string{vlcVideo},
 		// There are two apps to be installed in this case.
