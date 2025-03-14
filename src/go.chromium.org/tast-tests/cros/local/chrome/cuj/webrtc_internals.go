@@ -266,8 +266,9 @@ func CalculateEchoRMS(ctx context.Context, downloadsPath string) (float64, error
 type videoCodec float64
 
 const (
-	vp8 videoCodec = 0
-	vp9 videoCodec = 1
+	vp8 videoCodec = iota
+	vp9
+	av1
 )
 
 // ReportWebRTCInternals reports info from a WebRTC internals dump to performance metrics.
@@ -512,6 +513,9 @@ func reportVideoCodec(value interface{}) (float64, error) {
 	}
 	if strings.HasPrefix(description, "VP9") {
 		return float64(vp9), nil
+	}
+	if strings.HasPrefix(description, "AV1") {
+		return float64(av1), nil
 	}
 	return 0, errors.Errorf("unrecognized video stream codec: %q", description)
 }
