@@ -1672,6 +1672,7 @@ func ReportWebRTCInternals(ctx context.Context, dump []byte, meetingCode string,
 	var inCountError, outCountErr error
 	numPeerConns := 0
 	numScreenshareConns := 0
+	outboundVideoStream := 0
 	pv := perf.NewValues()
 	for connID, peerConn := range webRTC.PeerConnections {
 		// Only record peer connections that are related to our
@@ -1697,10 +1698,11 @@ func ReportWebRTCInternals(ctx context.Context, dump []byte, meetingCode string,
 			return nil, errors.Errorf("unexpected number of inbound-rtp screenshare video streams in peer connection %v; got %d, want 0", connID, inScreenshareCount)
 		}
 		if outTotalCount == 0 {
+			testing.ContextLog(ctx, "Found no outbound-rtp video streams in peer connection ", connID)
 			outCountErr = errors.Errorf("found no outbound-rtp video streams in peer connection %v", connID)
 			continue
 		} else {
-			outCountErr = nil
+			outboundVideoStream++
 		}
 		expectedInTotalCount := 0
 		switch outScreenshareCount {
@@ -1734,7 +1736,7 @@ func ReportWebRTCInternals(ctx context.Context, dump []byte, meetingCode string,
 			return nil, errors.Errorf("found %d screenshare(s) among %d outbound-rtp video streams in peer connection %v, expected all or none", outScreenshareCount, outTotalCount, connID)
 		}
 	}
-	if outCountErr != nil {
+	if outboundVideoStream < expectedConns && outCountErr != nil {
 		return nil, outCountErr
 	}
 	if inCountError != nil {
