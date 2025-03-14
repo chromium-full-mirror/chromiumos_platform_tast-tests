@@ -24,8 +24,6 @@ const (
 	LegacyT RouterType = iota
 	// AxT is the ax router type.
 	AxT
-	// MtkOpenWrtT is the MTK router type.
-	MtkOpenWrtT
 	// OpenWrtT is the openwrt router type.
 	OpenWrtT
 	// UbuntuT is the Ubuntu router type.
@@ -46,8 +44,6 @@ func (rt RouterType) String() string {
 		typeStr = "Legacy"
 	case AxT:
 		typeStr = "AX"
-	case MtkOpenWrtT:
-		typeStr = "Mtk"
 	case OpenWrtT:
 		typeStr = "OpenWrt"
 	case UbuntuT:
