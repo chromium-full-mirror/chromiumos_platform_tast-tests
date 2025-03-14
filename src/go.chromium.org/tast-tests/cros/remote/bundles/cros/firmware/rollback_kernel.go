@@ -271,6 +271,13 @@ func RollbackKernel(ctx context.Context, s *testing.State) {
 
 	s.Log("Rebooting the DUT")
 	h.CloseRPCConnection(ctx)
+
+	// For dm-default-key layouts, the dev image preservation requires an extra preservation step.
+	// The binary will return success on all other layouts.
+	if err := h.DUT.Conn().CommandContext(ctx, "/usr/local/bin/preserve_dev_image").Run(ssh.DumpLogOnError); err != nil {
+		s.Fatal("Failed preserving dev image: ", err)
+	}
+
 	if err := h.DUT.Conn().CommandContext(ctx, "reboot").Run(); err != nil && !errors.As(err, &context.DeadlineExceeded) {
 		s.Fatal("Failed to run reboot command: ", err)
 	}

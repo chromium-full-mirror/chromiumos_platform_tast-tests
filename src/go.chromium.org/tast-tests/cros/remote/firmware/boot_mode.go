@@ -159,6 +159,12 @@ func (ms *ModeSwitcher) RebootToMode(ctx context.Context, toMode fwCommon.BootMo
 	if err := h.RequireConfig(ctx); err != nil {
 		return errors.Wrap(err, "failed to require config at the start of RebootToMode")
 	}
+	// For dm-default-key layouts, the dev image preservation requires an extra preservation step.
+	// The binary will return success on all other layouts.
+	if err := h.DUT.Conn().CommandContext(ctx, "/usr/local/bin/preserve_dev_image").Run(ssh.DumpLogOnError); err != nil {
+		return errors.Wrap(err, "failed preserving dev image")
+	}
+
 	waitConnectOpt := []WaitConnectOption{ResetEthernetDongle}
 	if !h.DUT.Connected(ctx) {
 		connectCtx, cancel := context.WithTimeout(ctx, h.Config.DelayRebootToPing)
@@ -549,6 +555,12 @@ func (ms *ModeSwitcher) ModeAwareReboot(ctx context.Context, resetType ResetType
 	origBootID, err := h.Reporter.BootID(ctx)
 	if err != nil {
 		return errors.Wrap(err, "determining boot ID before reboot")
+	}
+
+	// For dm-default-key layouts, the dev image preservation requires an extra preservation step.
+	// The binary will return success on all other layouts.
+	if err := h.DUT.Conn().CommandContext(ctx, "/usr/local/bin/preserve_dev_image").Run(ssh.DumpLogOnError); err != nil {
+		return errors.Wrap(err, "preserving dev image")
 	}
 
 	// Perform sync prior to reboot, then close the RPC connection.

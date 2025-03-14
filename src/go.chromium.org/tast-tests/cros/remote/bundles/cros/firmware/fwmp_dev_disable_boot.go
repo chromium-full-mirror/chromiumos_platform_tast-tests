@@ -178,6 +178,11 @@ func FwmpDevDisableBoot(ctx context.Context, s *testing.State) {
 	}
 	ownershipID := strings.TrimSpace(string(ownershipData))
 
+	s.Log("Preserving developer tools")
+	if err := s.DUT().Conn().CommandContext(ctx, "/usr/local/bin/preserve_dev_image").Run(); err != nil {
+		s.Fatal("Failed to preserve developer tools: ", err)
+	}
+
 	s.Log("Attempting reboot into dev mode")
 	if err := h.Servo.SetPowerState(ctx, servo.PowerStateWarmReset); err != nil {
 		s.Fatal("Failed to set power_state to reset: ", err)
