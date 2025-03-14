@@ -51,7 +51,7 @@ func init() {
 	testing.AddFixture(&testing.Fixture{
 		Name:         fixture.PersistentGellerARC,
 		Desc:         "Fixture setting persistent policy user for a Geller account",
-		Contacts:     []string{"sun.tsai@cienet.com", "vsavu@google.com", "chromeos-commercial-remote-management@google.com"},
+		Contacts:     []string{"chromeos-commercial-remote-management@google.com"},
 		BugComponent: "b:1111617", // ChromeOS > Software > Commercial (Enterprise) > Remote Management > Policy Stack
 		Vars: []string{
 			family.GellerAccountVarName,
