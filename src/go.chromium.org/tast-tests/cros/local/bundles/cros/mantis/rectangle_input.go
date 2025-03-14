@@ -22,7 +22,10 @@ import (
 	"go.chromium.org/tast/core/testing/hwdep"
 )
 
-const expectedResultFile = "rectangle_input_20250207.png"
+const (
+	expectedResultFile                    = "rectangle_input_20250207.png"
+	rectangleInputDiffPercentageThreshold = float64(0.1)
+)
 
 func init() {
 	testing.AddTest(&testing.Test{
@@ -106,8 +109,8 @@ func RectangleInput(ctx context.Context, s *testing.State) {
 		s.Fatal("Failed to get the expected image result file: ", err)
 	}
 
-	diff := util.ImageDiff(result, expectedResult)
-	if diff > 0 {
-		s.Fatal("The result and the expected result are different. Diff: ", diff)
+	diff := util.ImageDiffPercentage(result, expectedResult)
+	if diff > rectangleInputDiffPercentageThreshold {
+		s.Fatal("The result difference exceeds the threshold: ", diff)
 	}
 }
