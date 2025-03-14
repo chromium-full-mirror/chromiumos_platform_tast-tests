@@ -78,16 +78,25 @@ func InputImageSafetyCheck(ctx context.Context, s *testing.State) {
 	}
 
 	var errorMessageShown bool
-	errorMessage := nodewith.Role(role.StaticText).Name("Inappropriate image.").Ancestor(galleryapp.RootFinder)
+	errorMessage := nodewith.Role(role.StaticText).NameContaining("Can’t edit this image. Try another image.").Ancestor(galleryapp.RootFinder)
 	if err := ui.WithTimeout(constant.DefaultUITimeout).WaitUntilExists(errorMessage)(ctx); err != nil {
-
 		errorMessageShown = false
 	} else {
 		errorMessageShown = true
 	}
 
-	if params.isSafe && errorMessageShown {
-		s.Fatal("Unexpected error message on a safe image")
+	if params.isSafe {
+		if errorMessageShown {
+			s.Fatal("Unexpected error message on a safe image")
+		}
+
+		tools := []string{"Expand Background", "Remove Background", "Make a Sticker", "Reimagine", "Erase"}
+		for _, tool := range tools {
+			toolButton := nodewith.Role(role.Button).Name(tool).Ancestor(galleryapp.RootFinder).First()
+			if err := ui.WithTimeout(constant.DefaultUITimeout).WaitUntilExists(toolButton)(ctx); err != nil {
+				s.Fatalf("%q tool button should be shown: %v", tool, err)
+			}
+		}
 	}
 
 	if !params.isSafe && !errorMessageShown {
