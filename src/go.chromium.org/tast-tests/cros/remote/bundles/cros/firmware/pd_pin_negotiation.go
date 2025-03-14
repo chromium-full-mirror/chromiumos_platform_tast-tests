@@ -10,8 +10,10 @@ import (
 
 	"go.chromium.org/tast-tests/cros/common/servo"
 	"go.chromium.org/tast-tests/cros/common/tbdep"
+	"go.chromium.org/tast-tests/cros/common/typecutils"
 	"go.chromium.org/tast-tests/cros/remote/firmware"
 	"go.chromium.org/tast-tests/cros/remote/firmware/fixture"
+	"go.chromium.org/tast/core/errors"
 	"go.chromium.org/tast/core/testing"
 	"go.chromium.org/tast/core/testing/hwdep"
 )
@@ -62,8 +64,25 @@ func init() {
 }
 
 type pinsMF struct {
-	pinsCDEF string
-	mfPref   servo.MultiFunctionPref
+	pinsCDEF  string
+	mfPref    servo.MultiFunctionPref
+	pinExpect string
+}
+
+func verifyPins(input, output *(servo.TypeCInfo), pin string) error {
+	if input.DPMode != output.DPMode {
+		return errors.Errorf("incorrect DP activity, expected %d, got %d", input.DPMode, output.DPMode)
+	}
+
+	// TODO: b/371041395 track which pin is supposed to be selected in cases where multiple are supported.
+	if len(output.PinsCDEF) == 0 {
+		return errors.Errorf("no pin assignment found, expected %s", input.PinsCDEF)
+	}
+	if pin != output.PinsCDEF {
+		return errors.Errorf("incorrect pin assignment, expected %c, got %s", input.PinsCDEF[0], output.PinsCDEF)
+	}
+
+	return nil
 }
 
 func PDPinNegotiation(ctx context.Context, s *testing.State) {
@@ -80,10 +99,10 @@ func PDPinNegotiation(ctx context.Context, s *testing.State) {
 	}
 
 	pinsRange := []pinsMF{
-		pinsMF{"C", servo.MFPrefDisable},
-		pinsMF{"D", servo.MFPrefEnable},
-		pinsMF{"CD", servo.MFPrefDisable},
-		pinsMF{"CD", servo.MFPrefEnable},
+		pinsMF{"C", servo.MFPrefDisable, "C"},
+		pinsMF{"D", servo.MFPrefEnable, "D"},
+		pinsMF{"CD", servo.MFPrefDisable, "C"},
+		pinsMF{"CD", servo.MFPrefEnable, "D"},
 	}
 
 	for _, pins := range pinsRange {
@@ -94,12 +113,14 @@ func PDPinNegotiation(ctx context.Context, s *testing.State) {
 			s.Fatal("Failed to set DP alt-mode: ", err)
 		}
 		testing.ContextLog(ctx, "retrieving type-c information")
-		typecInfo, err := h.Servo.GetTypeCInfo(ctx, h.DUT)
-		if err != nil {
-			s.Fatal("Failed to retrieve type-c information: ", err)
-		}
-		if err := h.Servo.VerifyPins(&input, typecInfo, pins.mfPref); err != nil {
-			s.Fatal("Could not retrieve assigned DP setting: ", err)
+		if err := typecutils.CheckForDPAltMode(ctx, h.DUT, pins.pinExpect); err != nil {
+			typecInfo, err := h.Servo.GetTypeCInfo(ctx, h.DUT)
+			if err != nil {
+				s.Fatal("Failed to retrieve type-c information: ", err)
+			}
+			if err := verifyPins(&input, typecInfo, pins.pinExpect); err != nil {
+				s.Fatal("Could not retrieve assigned DP setting: ", err)
+			}
 		}
 	}
 

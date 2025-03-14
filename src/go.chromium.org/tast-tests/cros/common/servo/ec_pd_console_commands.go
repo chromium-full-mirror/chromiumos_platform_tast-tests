@@ -777,29 +777,6 @@ func (s *Servo) GetTypeCInfo(ctx context.Context, dut *dut.DUT) (*TypeCInfo, err
 	return ret, err
 }
 
-// VerifyPins checks that the type-c pin setting is the same as the assignment
-func (s *Servo) VerifyPins(input, output *TypeCInfo, mfPref MultiFunctionPref) error {
-	if input.DPMode != output.DPMode {
-		return errors.Errorf("incorrect DP activity, expected %d, got %d", input.DPMode, output.DPMode)
-	}
-
-	// TODO: b/371041395 track which pin is supposed to be selected in cases where multiple are supported.
-	if len(output.PinsCDEF) == 0 {
-		return errors.Errorf("no pin assignment found, expected %s", input.PinsCDEF)
-	}
-	if mfPref == MFPrefDisable {
-		if input.PinsCDEF[0] != output.PinsCDEF[0] {
-			return errors.Errorf("incorrect pin assignment, expected %c, got %s", input.PinsCDEF[0], output.PinsCDEF)
-		}
-	} else {
-		if input.PinsCDEF[len(input.PinsCDEF)-1] != output.PinsCDEF[0] {
-			return errors.Errorf("incorrect pin assignment, expected %c, got %s", input.PinsCDEF[len(input.PinsCDEF)-1], output.PinsCDEF)
-		}
-	}
-
-	return nil
-}
-
 // GetChargeSupport returns the DUT's charge information
 func (s *Servo) GetChargeSupport(ctx context.Context) (*ChargeSupport, error) {
 	reEcChgSup := ""

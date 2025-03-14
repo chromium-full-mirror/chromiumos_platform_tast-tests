@@ -109,8 +109,8 @@ func CheckForDPAltMode(ctx context.Context, d *dut.DUT, pinAssign string) error 
 			errors.Wrap(err, "couldn't parse VDO content of alt mode into int")
 		}
 
-		if (pinAssign == "c" && vdoVal&pinCBitMask != 0) ||
-			(pinAssign == "d" && vdoVal&pinDBitMask != 0) {
+		if (strings.ToLower(pinAssign) == "c" && vdoVal&pinCBitMask != 0) ||
+			(strings.ToLower(pinAssign) == "d" && vdoVal&pinDBitMask != 0) {
 			return nil
 		}
 	}
