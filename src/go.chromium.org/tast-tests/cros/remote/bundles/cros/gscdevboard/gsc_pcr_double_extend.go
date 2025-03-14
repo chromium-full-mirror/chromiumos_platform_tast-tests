@@ -98,16 +98,16 @@ func GSCPCRDoubleExtend(ctx context.Context, s *testing.State) {
 	zeroPCR, err := hex.DecodeString(ti50.ZeroPCR)
 	th.MustSucceed(err, "failed to decode zeroPCR")
 
-	read, err := tpm.TpmvPCRRead(testParams.pcr)
+	read, err := tpm.PCRRead(testParams.pcr)
 	th.MustSucceed(err, "failed to read pcr")
 	if !bytes.Equal(read.PCRValues.Digests[0].Buffer, zeroPCR) {
 		s.Fatalf("PCR%d is not after reset", testParams.pcr)
 	}
 
-	tpm.TpmvPCRExtendCheckDigest(testParams.pcr, testParams.firstExtend, testParams.firstDigest)
+	tpm.PCRExtendCheckDigest(testParams.pcr, testParams.firstExtend, testParams.firstDigest)
 	th.MustSucceed(err, "failed to extend first value")
 
-	err = tpm.TpmvPCRExtendCheckDigest(testParams.pcr, testParams.secondExtend, testParams.secondDigest)
+	err = tpm.PCRExtendCheckDigest(testParams.pcr, testParams.secondExtend, testParams.secondDigest)
 	th.MustSucceed(err, "unexpected result during second extend")
 
 	s.Log("PCR double extend policy worked")

@@ -499,8 +499,8 @@ const (
 	ZeroPCR = "0000000000000000000000000000000000000000000000000000000000000000"
 )
 
-// TpmvPCRRead reads the contents of the given PCR
-func (t *TpmHandle) TpmvPCRRead(pcr uint8) (*tpm2.PCRReadResponse, error) {
+// PCRRead reads the contents of the given PCR
+func (t *TpmHandle) PCRRead(pcr uint8) (*tpm2.PCRReadResponse, error) {
 	if pcr > 7 {
 		return nil, errors.Errorf("invalid PCR: %d", pcr)
 	}
@@ -518,8 +518,8 @@ func (t *TpmHandle) TpmvPCRRead(pcr uint8) (*tpm2.PCRReadResponse, error) {
 	return pcrRead.Execute(t)
 }
 
-// TpmvPCRExtend extends the value into the given PCR
-func (t *TpmHandle) TpmvPCRExtend(pcr uint8, extendDigest string) error {
+// PCRExtend extends the value into the given PCR
+func (t *TpmHandle) PCRExtend(pcr uint8, extendDigest string) error {
 	extendBytes, err := hex.DecodeString(extendDigest)
 	if err != nil {
 		return errors.Wrap(err, "failed to decode extend value")
@@ -545,17 +545,17 @@ func (t *TpmHandle) TpmvPCRExtend(pcr uint8, extendDigest string) error {
 	return nil
 }
 
-// TpmvPCRExtendCheckDigest extends PCR and checks that the new value it reads matches the expected digest
-func (t *TpmHandle) TpmvPCRExtendCheckDigest(pcr uint8, extendDigest, expectedDigest string) error {
+// PCRExtendCheckDigest extends PCR and checks that the new value it reads matches the expected digest
+func (t *TpmHandle) PCRExtendCheckDigest(pcr uint8, extendDigest, expectedDigest string) error {
 	expectedBytes, err := hex.DecodeString(expectedDigest)
 	if err != nil {
 		return errors.Wrap(err, "failed to decode expected digest")
 	}
-	err = t.TpmvPCRExtend(pcr, extendDigest)
+	err = t.PCRExtend(pcr, extendDigest)
 	if err != nil {
 		return errors.Wrapf(err, "failed to extend PCR%d", pcr)
 	}
-	read, err := t.TpmvPCRRead(pcr)
+	read, err := t.PCRRead(pcr)
 	if err != nil {
 		return errors.Wrapf(err, "PCR%d read failed", pcr)
 	}
