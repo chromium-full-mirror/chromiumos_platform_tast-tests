@@ -27,7 +27,7 @@ var (
 	videoSettingsTabButton   = nodewith.Name("Video").Role(role.Tab).Ancestor(settingsDialog)
 	generalSettingsTabButton = nodewith.Name("General").Role(role.Tab).Ancestor(settingsDialog)
 	closeSettingsButton      = nodewith.Name("Close dialog").Role(role.Button).Ancestor(settingsDialog)
-	resolutionButtonReg      = regexp.MustCompile("Auto|High definition|Standard definition")
+	resolutionButtonReg      = regexp.MustCompile("Send resolution \\(maximum\\)|Receive resolution \\(maximum\\)")
 	resolutionButton         = nodewith.NameRegex(resolutionButtonReg).Role(role.ComboBoxMenuButton).Ancestor(settingsDialog)
 )
 
