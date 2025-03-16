@@ -43,8 +43,8 @@ func init() {
 		Desc: "Smoke tests for vaapi libva decoding by running the media/gpu/vaapi/test:decode_test binary, for v4l2 decoding by running the drm-tests/v4l2_decode binary",
 		Contacts: []string{
 			"chromeos-gfx-video@google.com",
+			"hiroh@chromium.org",
 			"jchinlee@chromium.org",
-			"stevecho@chromium.org",
 		},
 		BugComponent: "b:168352", // ChromeOS > Platform > Graphics > Video
 		Attr:         []string{"group:graphics", "graphics_video", "graphics_video_platformdecoding"},

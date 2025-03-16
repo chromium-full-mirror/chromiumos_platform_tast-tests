@@ -29,7 +29,7 @@ func init() {
 		Desc: "Runs v4l2 compliance tests",
 		Contacts: []string{
 			"chromeos-gfx-video@google.com",
-			"stevecho@chromium.org",
+			"hiroh@chromium.org",
 		},
 		BugComponent: "b:168352", // ChromeOS > Platform > Graphics > Video
 		Attr:         []string{"group:graphics", "graphics_video", "graphics_perbuild"},

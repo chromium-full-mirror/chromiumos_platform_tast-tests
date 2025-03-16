@@ -21,7 +21,7 @@ func init() {
 		Desc: "Runs test_va_api, a shallow libva API test",
 		Contacts: []string{
 			"chromeos-gfx-video@google.com",
-			"stevecho@chromium.org",
+			"hiroh@chromium.org",
 		},
 		BugComponent: "b:168352", // ChromeOS > Platform > Graphics > Video
 		Attr:         []string{"group:graphics", "graphics_video", "graphics_weekly"},
