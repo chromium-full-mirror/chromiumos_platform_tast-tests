@@ -33,6 +33,10 @@ const (
 	// Set up VPN routes to only include VPN env for both IP families. Both VPN
 	// and physical env should be reachable as chronos user.
 	arcVPNSplitRoutingTestCaseIncludedRoutes arcVPNSplitRoutingTestCase = iota
+	// Set up VPN routes to only include VPN env for both IP families. Verify
+	// that the split-routing setup works for IPv4 and all IPv6 traffic should
+	// be blocked. This is a special test case for ARC R.
+	arcVPNSplitRoutingTestCaseIncludedRoutesRVC
 	// Set up VPN routes to only exclude physical env for both IP families. Both
 	// VPN and physical env should be reachable as chronos user.
 	arcVPNSplitRoutingTestCaseExcludedRoutes
@@ -62,6 +66,11 @@ func init() {
 				// IPv6 split routing is only supported on ARC T+.
 				ExtraSoftwareDeps: []string{"no_android_r"},
 			}, {
+				Name:              "included_arc_r",
+				Val:               arcVPNSplitRoutingTestCaseIncludedRoutesRVC,
+				ExtraSoftwareDeps: []string{"android_container_r"},
+			},
+			{
 				Name: "excluded",
 				Val:  arcVPNSplitRoutingTestCaseExcludedRoutes,
 				// IPv6 split routing is only supported on ARC T+.
@@ -270,10 +279,17 @@ func ARCVPNSplitRouting(ctx context.Context, s *testing.State) {
 		fallthrough
 	case arcVPNSplitRoutingTestCaseExcludedRoutes:
 		reachableIPs = append(reachableIPs, ipAndRole{physicalAddrs.IPv4Addr.String(), "physical IPv4"})
-		reachableIPs = append(reachableIPs, ipAndRole{physicalAddrs.IPv6Addrs[0].String(), "physical IPv6"})
 		reachableIPs = append(reachableIPs, ipAndRole{server.OverlayIPv4, "VPN overlay IPv4"})
 		// VPN overlay IPv6 won't be reachable. Check it here as a confidence check for our setup.
 		unreachableIPs = append(unreachableIPs, ipAndRole{server.OverlayIPv6, "VPN overlay IPv6"})
+
+		// The physical IPv6 addr is not included in the routes for VPN. On ARC
+		// T+, it should be reachable; while on ARC R, it should be blocked.
+		if tc == arcVPNSplitRoutingTestCaseIncludedRoutesRVC {
+			unreachableIPs = append(unreachableIPs, ipAndRole{physicalAddrs.IPv6Addrs[0].String(), "physical IPv6"})
+		} else {
+			reachableIPs = append(reachableIPs, ipAndRole{physicalAddrs.IPv6Addrs[0].String(), "physical IPv6"})
+		}
 
 		// Check the VPN underlay IPv6 to verify if blackhole route is applied properly.
 		vpnUnderlayAddrs, err := vpnEnv.GetVethInAddrs(ctx)
