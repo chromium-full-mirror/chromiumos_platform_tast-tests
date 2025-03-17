@@ -428,6 +428,32 @@ func PhysicalKeyboardJapaneseTyping(ctx context.Context, s *testing.State) {
 				util.WaitForFieldTextToBe(tconn, inputField.Finder(), "天気がiイ"),
 			),
 		},
+		// Committing a candidate should add it to the history and promote its ranking next time.
+		// Ctrl+Delete should remove input suggestion from history.
+		{
+			name:     "CtrlDeleteRemovesSuggestionFromHistory",
+			scenario: "Add a phrase to suggestions and then remove it from the history",
+			action: uiauto.Combine("type some text and commit it to history",
+				its.ClearThenClickFieldAndWaitForActive(inputField),
+				kb.TypeAction("kyou"),
+				kb.AccelAction("Ctrl+i"),
+				kb.AccelAction("Enter"),
+				its.ClearThenClickFieldAndWaitForActive(inputField),
+				kb.TypeAction("kyou"),
+				kb.AccelAction("Tab"),
+				util.GetNthCandidateTextAndThen(tconn, 0, func(suggestion string) uiauto.Action {
+					if suggestion != "キョウ" {
+						s.Errorf("Expected first suggestion to be 'キョウ' but got %q", suggestion)
+					}
+					return uiauto.Combine("press Ctrl+Delete to remove suggestion from history",
+						kb.AccelAction("Ctrl+Search+Backspace"),
+						kb.AccelAction("Enter"),
+						ui.WaitUntilGone(util.PKCandidatesFinder),
+						util.WaitForFieldTextToBe(tconn, inputField.Finder(), "きょう"),
+					)
+				}),
+			),
+		},
 	}
 
 	for _, subtest := range subtests {
