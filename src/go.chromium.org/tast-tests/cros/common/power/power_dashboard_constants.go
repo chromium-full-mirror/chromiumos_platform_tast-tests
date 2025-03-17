@@ -23,6 +23,7 @@ const (
 	GPUFreqMetricType          = "gpufreq_wavg."
 	GPUUsageMetricType         = "gpu_usage."
 	GPUMemoryMetricType        = "gpu_memory."
+	NPUFreqMetricType          = "npufreq_wavg."
 	PackageCstatesMetricType   = "cpupkg."
 	BatterySOCMetricType       = "battery."
 	HistogramMetricType        = "histogram."
@@ -50,6 +51,7 @@ const (
 	GPUFreqMetricTypeUnit          = "megahertz"
 	GPUUsageMetricTypeUnit         = "percent"
 	GPUMemoryMetricTypeUnit        = "KiB"
+	NPUFreqMetricTypeUnit          = "megahertz"
 	HistogramLatencyMetricTypeUnit = "us"
 	PackageCstatesMetricTypeUnit   = "percent"
 	PowerRelatedMetricTypeUnit     = "W"
@@ -97,6 +99,7 @@ var validMetricTypeMap = map[string]bool{
 	"gpufreq_wavg":      true,
 	"gpu_usage":         true,
 	"gpu_memory":        true,
+	"npufreq_wavg":      true,
 	"cpupkg":            true,
 	"histogram":         true,
 	"power":             true,

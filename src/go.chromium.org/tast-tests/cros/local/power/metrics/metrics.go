@@ -81,6 +81,7 @@ func TestMetricsWithoutBatteryInfo() []perf.TimelineDatasource {
 		NewFanMetrics(),
 		NewGPUUsageDataSource(),
 		NewGPUFreqMetrics(),
+		NewNPUFreqMetrics(),
 		NewZramIOMetrics(),
 		NewMemoryMetrics(),
 	}
