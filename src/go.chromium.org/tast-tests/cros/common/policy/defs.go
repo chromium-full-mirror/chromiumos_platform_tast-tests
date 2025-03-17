@@ -29683,7 +29683,6 @@ func (p *WebRtcIPHandlingUrl) Equal(iface interface{}) bool {
 // ****************************************************************************
 // 1325. GenAIPhotoEditingSettings
 // This policy can be modified without rebooting.
-// This is a future policy, it is not present in stable builds.
 // ****************************************************************************
 type GenAIPhotoEditingSettings struct {
 	Stat Status
@@ -29973,7 +29972,6 @@ func (p *GeminiSettings) Equal(iface interface{}) bool {
 // ****************************************************************************
 // 1336. GenAISmartGroupingSettings
 // This policy can be modified without rebooting.
-// This is a future policy, it is not present in stable builds.
 // ****************************************************************************
 type GenAISmartGroupingSettings struct {
 	Stat Status
@@ -30005,7 +30003,6 @@ func (p *GenAISmartGroupingSettings) Equal(iface interface{}) bool {
 // ****************************************************************************
 // 1337. GenAiChromeOsSmartActionsSettings
 // This policy can be modified without rebooting.
-// This is a future policy, it is not present in stable builds.
 // ****************************************************************************
 type GenAiChromeOsSmartActionsSettings struct {
 	Stat Status
@@ -30028,6 +30025,236 @@ func (p *GenAiChromeOsSmartActionsSettings) SetProto(m *protoreflect.Message) {
 }
 func (p *GenAiChromeOsSmartActionsSettings) Equal(iface interface{}) bool {
 	v, ok := iface.(int)
+	if !ok {
+		return ok
+	}
+	return cmp.Equal(p.Val, v, cmpopts.EquateEmpty())
+}
+
+// ****************************************************************************
+// 1338. RelaunchSupersededReleaseAge
+// This policy can be modified without rebooting.
+// This is a future policy, it is not present in stable builds.
+// ****************************************************************************
+type RelaunchSupersededReleaseAge struct {
+	Stat Status
+	Val  int
+}
+
+func (p *RelaunchSupersededReleaseAge) Name() string          { return "RelaunchSupersededReleaseAge" }
+func (p *RelaunchSupersededReleaseAge) Scope() Scope          { return ScopeUser }
+func (p *RelaunchSupersededReleaseAge) Status() Status        { return p.Stat }
+func (p *RelaunchSupersededReleaseAge) UntypedV() interface{} { return p.Val }
+func (p *RelaunchSupersededReleaseAge) UnmarshalAs(m json.RawMessage) (interface{}, error) {
+	var v int
+	if err := json.Unmarshal(m, &v); err != nil {
+		return nil, errors.Wrapf(err, "could not read %s as int", m)
+	}
+	return v, nil
+}
+func (p *RelaunchSupersededReleaseAge) SetProto(m *protoreflect.Message) {
+	SetUserProto(m, p.Name(), p.Val)
+}
+func (p *RelaunchSupersededReleaseAge) Equal(iface interface{}) bool {
+	v, ok := iface.(int)
+	if !ok {
+		return ok
+	}
+	return cmp.Equal(p.Val, v, cmpopts.EquateEmpty())
+}
+
+// ****************************************************************************
+// 1339. ClassManagementCaptionsEnabled
+// This policy can be modified without rebooting.
+// This is a future policy, it is not present in stable builds.
+// ****************************************************************************
+type ClassManagementCaptionsEnabled struct {
+	Stat Status
+	Val  bool
+}
+
+func (p *ClassManagementCaptionsEnabled) Name() string          { return "ClassManagementCaptionsEnabled" }
+func (p *ClassManagementCaptionsEnabled) Scope() Scope          { return ScopeUser }
+func (p *ClassManagementCaptionsEnabled) Status() Status        { return p.Stat }
+func (p *ClassManagementCaptionsEnabled) UntypedV() interface{} { return p.Val }
+func (p *ClassManagementCaptionsEnabled) UnmarshalAs(m json.RawMessage) (interface{}, error) {
+	var v bool
+	if err := json.Unmarshal(m, &v); err != nil {
+		return nil, errors.Wrapf(err, "could not read %s as bool", m)
+	}
+	return v, nil
+}
+func (p *ClassManagementCaptionsEnabled) SetProto(m *protoreflect.Message) {
+	SetUserProto(m, p.Name(), p.Val)
+}
+func (p *ClassManagementCaptionsEnabled) Equal(iface interface{}) bool {
+	v, ok := iface.(bool)
+	if !ok {
+		return ok
+	}
+	return cmp.Equal(p.Val, v, cmpopts.EquateEmpty())
+}
+
+// ****************************************************************************
+// 1340. ClassManagementClassroomIntegrationEnabled
+// This policy can be modified without rebooting.
+// This is a future policy, it is not present in stable builds.
+// ****************************************************************************
+type ClassManagementClassroomIntegrationEnabled struct {
+	Stat Status
+	Val  bool
+}
+
+func (p *ClassManagementClassroomIntegrationEnabled) Name() string {
+	return "ClassManagementClassroomIntegrationEnabled"
+}
+func (p *ClassManagementClassroomIntegrationEnabled) Scope() Scope          { return ScopeUser }
+func (p *ClassManagementClassroomIntegrationEnabled) Status() Status        { return p.Stat }
+func (p *ClassManagementClassroomIntegrationEnabled) UntypedV() interface{} { return p.Val }
+func (p *ClassManagementClassroomIntegrationEnabled) UnmarshalAs(m json.RawMessage) (interface{}, error) {
+	var v bool
+	if err := json.Unmarshal(m, &v); err != nil {
+		return nil, errors.Wrapf(err, "could not read %s as bool", m)
+	}
+	return v, nil
+}
+func (p *ClassManagementClassroomIntegrationEnabled) SetProto(m *protoreflect.Message) {
+	SetUserProto(m, p.Name(), p.Val)
+}
+func (p *ClassManagementClassroomIntegrationEnabled) Equal(iface interface{}) bool {
+	v, ok := iface.(bool)
+	if !ok {
+		return ok
+	}
+	return cmp.Equal(p.Val, v, cmpopts.EquateEmpty())
+}
+
+// ****************************************************************************
+// 1341. ClassManagementNetworkRestrictionEnabled
+// This policy can be modified without rebooting.
+// This is a future policy, it is not present in stable builds.
+// ****************************************************************************
+type ClassManagementNetworkRestrictionEnabled struct {
+	Stat Status
+	Val  bool
+}
+
+func (p *ClassManagementNetworkRestrictionEnabled) Name() string {
+	return "ClassManagementNetworkRestrictionEnabled"
+}
+func (p *ClassManagementNetworkRestrictionEnabled) Scope() Scope          { return ScopeUser }
+func (p *ClassManagementNetworkRestrictionEnabled) Status() Status        { return p.Stat }
+func (p *ClassManagementNetworkRestrictionEnabled) UntypedV() interface{} { return p.Val }
+func (p *ClassManagementNetworkRestrictionEnabled) UnmarshalAs(m json.RawMessage) (interface{}, error) {
+	var v bool
+	if err := json.Unmarshal(m, &v); err != nil {
+		return nil, errors.Wrapf(err, "could not read %s as bool", m)
+	}
+	return v, nil
+}
+func (p *ClassManagementNetworkRestrictionEnabled) SetProto(m *protoreflect.Message) {
+	SetUserProto(m, p.Name(), p.Val)
+}
+func (p *ClassManagementNetworkRestrictionEnabled) Equal(iface interface{}) bool {
+	v, ok := iface.(bool)
+	if !ok {
+		return ok
+	}
+	return cmp.Equal(p.Val, v, cmpopts.EquateEmpty())
+}
+
+// ****************************************************************************
+// 1342. ClassManagementSendingContentEnabled
+// This policy can be modified without rebooting.
+// This is a future policy, it is not present in stable builds.
+// ****************************************************************************
+type ClassManagementSendingContentEnabled struct {
+	Stat Status
+	Val  bool
+}
+
+func (p *ClassManagementSendingContentEnabled) Name() string {
+	return "ClassManagementSendingContentEnabled"
+}
+func (p *ClassManagementSendingContentEnabled) Scope() Scope          { return ScopeUser }
+func (p *ClassManagementSendingContentEnabled) Status() Status        { return p.Stat }
+func (p *ClassManagementSendingContentEnabled) UntypedV() interface{} { return p.Val }
+func (p *ClassManagementSendingContentEnabled) UnmarshalAs(m json.RawMessage) (interface{}, error) {
+	var v bool
+	if err := json.Unmarshal(m, &v); err != nil {
+		return nil, errors.Wrapf(err, "could not read %s as bool", m)
+	}
+	return v, nil
+}
+func (p *ClassManagementSendingContentEnabled) SetProto(m *protoreflect.Message) {
+	SetUserProto(m, p.Name(), p.Val)
+}
+func (p *ClassManagementSendingContentEnabled) Equal(iface interface{}) bool {
+	v, ok := iface.(bool)
+	if !ok {
+		return ok
+	}
+	return cmp.Equal(p.Val, v, cmpopts.EquateEmpty())
+}
+
+// ****************************************************************************
+// 1343. ClassManagementViewScreenEnabled
+// This policy can be modified without rebooting.
+// This is a future policy, it is not present in stable builds.
+// ****************************************************************************
+type ClassManagementViewScreenEnabled struct {
+	Stat Status
+	Val  bool
+}
+
+func (p *ClassManagementViewScreenEnabled) Name() string          { return "ClassManagementViewScreenEnabled" }
+func (p *ClassManagementViewScreenEnabled) Scope() Scope          { return ScopeUser }
+func (p *ClassManagementViewScreenEnabled) Status() Status        { return p.Stat }
+func (p *ClassManagementViewScreenEnabled) UntypedV() interface{} { return p.Val }
+func (p *ClassManagementViewScreenEnabled) UnmarshalAs(m json.RawMessage) (interface{}, error) {
+	var v bool
+	if err := json.Unmarshal(m, &v); err != nil {
+		return nil, errors.Wrapf(err, "could not read %s as bool", m)
+	}
+	return v, nil
+}
+func (p *ClassManagementViewScreenEnabled) SetProto(m *protoreflect.Message) {
+	SetUserProto(m, p.Name(), p.Val)
+}
+func (p *ClassManagementViewScreenEnabled) Equal(iface interface{}) bool {
+	v, ok := iface.(bool)
+	if !ok {
+		return ok
+	}
+	return cmp.Equal(p.Val, v, cmpopts.EquateEmpty())
+}
+
+// ****************************************************************************
+// 1344. KioskChromeAppsForceAllowed
+// This policy can be modified without rebooting.
+// This is a future policy, it is not present in stable builds.
+// ****************************************************************************
+type KioskChromeAppsForceAllowed struct {
+	Stat Status
+	Val  bool
+}
+
+func (p *KioskChromeAppsForceAllowed) Name() string          { return "KioskChromeAppsForceAllowed" }
+func (p *KioskChromeAppsForceAllowed) Scope() Scope          { return ScopeUser }
+func (p *KioskChromeAppsForceAllowed) Status() Status        { return p.Stat }
+func (p *KioskChromeAppsForceAllowed) UntypedV() interface{} { return p.Val }
+func (p *KioskChromeAppsForceAllowed) UnmarshalAs(m json.RawMessage) (interface{}, error) {
+	var v bool
+	if err := json.Unmarshal(m, &v); err != nil {
+		return nil, errors.Wrapf(err, "could not read %s as bool", m)
+	}
+	return v, nil
+}
+func (p *KioskChromeAppsForceAllowed) SetProto(m *protoreflect.Message) {
+	SetUserProto(m, p.Name(), p.Val)
+}
+func (p *KioskChromeAppsForceAllowed) Equal(iface interface{}) bool {
+	v, ok := iface.(bool)
 	if !ok {
 		return ok
 	}
@@ -31883,6 +32110,20 @@ func newByName(name string) (Policy, error) {
 		return &GenAISmartGroupingSettings{}, nil
 	case "GenAiChromeOsSmartActionsSettings":
 		return &GenAiChromeOsSmartActionsSettings{}, nil
+	case "RelaunchSupersededReleaseAge":
+		return &RelaunchSupersededReleaseAge{}, nil
+	case "ClassManagementCaptionsEnabled":
+		return &ClassManagementCaptionsEnabled{}, nil
+	case "ClassManagementClassroomIntegrationEnabled":
+		return &ClassManagementClassroomIntegrationEnabled{}, nil
+	case "ClassManagementNetworkRestrictionEnabled":
+		return &ClassManagementNetworkRestrictionEnabled{}, nil
+	case "ClassManagementSendingContentEnabled":
+		return &ClassManagementSendingContentEnabled{}, nil
+	case "ClassManagementViewScreenEnabled":
+		return &ClassManagementViewScreenEnabled{}, nil
+	case "KioskChromeAppsForceAllowed":
+		return &KioskChromeAppsForceAllowed{}, nil
 	default:
 		return nil, errors.New("Unknown policy " + name)
 	}
