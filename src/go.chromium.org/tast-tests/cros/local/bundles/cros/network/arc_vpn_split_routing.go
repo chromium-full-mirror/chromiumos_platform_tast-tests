@@ -59,10 +59,12 @@ func init() {
 			{
 				Name: "included",
 				Val:  arcVPNSplitRoutingTestCaseIncludedRoutes,
+				// IPv6 split routing is only supported on ARC T+.
+				ExtraSoftwareDeps: []string{"no_android_r"},
 			}, {
 				Name: "excluded",
 				Val:  arcVPNSplitRoutingTestCaseExcludedRoutes,
-				// Excluded route API is only supported on ARC T+.
+				// IPv6 split routing is only supported on ARC T+.
 				ExtraSoftwareDeps: []string{"no_android_r"},
 			}, {
 				Name: "default",
