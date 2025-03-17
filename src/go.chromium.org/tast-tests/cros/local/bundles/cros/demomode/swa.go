@@ -31,7 +31,7 @@ func init() {
 	testing.AddTest(&testing.Test{
 		Func:         SWA,
 		Desc:         "Verify that the Demo Mode System Web App launches in fullscreen and goes to windowed mode after user interaction",
-		Contacts:     []string{"cros-demo-mode-eng@google.com", "jacksontadie@google.com"},
+		Contacts:     []string{"cros-demo-mode-eng@google.com", "wanghaifan@google.com"},
 		BugComponent: "b:812312",
 		Attr:         []string{
 			// Disabled by TORA.  See:b/330711972.
