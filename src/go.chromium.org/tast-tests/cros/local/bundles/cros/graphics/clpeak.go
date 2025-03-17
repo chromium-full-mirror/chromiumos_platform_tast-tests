@@ -132,8 +132,14 @@ func Clpeak(ctx context.Context, s *testing.State) {
 
 	// Allow to see clvk error and warn messages directly in test logFile.
 	os.Setenv("CLVK_LOG", "2")
-	// Force MAX_MEM_ALLOC_SIZE to the minimum required by OpenCL. It will avoid timeout on some devices.
-	os.Setenv("CLVK_MAX_MEM_ALLOC_SIZE_MB", "1024")
+	// Force MAX_MEM_ALLOC_SIZE to the minimum required by OpenCL, or even lower. It will avoid timeout on some devices.
+	chipsetType := expectations.GpuChipsetFile
+	chipset, chipsetErr := chipsetType.GetDeviceIdentifier(ctx)
+	if chipsetErr == nil && chipset == "chipset-rogue" {
+		os.Setenv("CLVK_MAX_MEM_ALLOC_SIZE_MB", "128")
+	} else {
+		os.Setenv("CLVK_MAX_MEM_ALLOC_SIZE_MB", "1024")
+	}
 	xmlFileAbsolutePath := s.OutDir() + xmlFileName
 
 	// Run the whole suite once.
