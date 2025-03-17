@@ -94,6 +94,16 @@ func (p *PowerMenuService) PowerMenuPresent(ctx context.Context, req *empty.Empt
 		return nil, err
 	}
 
+	// TODO(b:399557656): remove once cause is understood
+	// OS builds after 16183.0.0 seem to break the UI automation on the lock
+	// screen, where it only updates when we dump the entire tree. Otherwise,
+	// automation fails to find the power menu on the lock screen even if it
+	// is actually visible.
+	_, err = uiauto.RootDebugInfo(ctx, p.tconn)
+	if err != nil {
+		return nil, errors.Wrap(err, "failed to dump UI tree")
+	}
+
 	// Check if the power menu is displayed
 	finder := nodewith.ClassName("PowerButtonMenuView").Onscreen().First()
 	exists, err := uiauto.New(p.tconn).IsNodeFound(ctx, finder)
