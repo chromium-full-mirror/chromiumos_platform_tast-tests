@@ -6,6 +6,7 @@ package metrics
 
 import (
 	"context"
+	"fmt"
 	"os"
 	"regexp"
 	"strconv"
@@ -67,6 +68,25 @@ func readGPUFrequency(ctx context.Context, collector gpuFreqCollector) (int64, e
 	return val / int64(collector.freqModifier), nil
 }
 
+func mtkGpuFreqCollectors() (collectors []gpuFreqCollector) {
+	for _, node := range []string{
+		"13000000.gpu",
+		"13000000.mali",
+		"13000000.mfgsys-gpu",
+		"13040000.gpu",
+		"13040000.mali",
+		"48000000.gpu",
+	} {
+		collectors = append(collectors, gpuFreqCollector{
+			description:        "Collect MTK GPU Frequency",
+			path:               fmt.Sprintf("/sys/devices/platform/soc/%s/devfreq/%s/cur_freq", node, node),
+			freqCapturePattern: "([0-9]+)",
+			freqModifier:       1000000,
+		})
+	}
+	return
+}
+
 // NewGPUFreqMetrics creates the struct to store GPU frequency metrics.
 func NewGPUFreqMetrics() *GPUFreqMetrics {
 	newMetrics := &GPUFreqMetrics{}
@@ -75,7 +95,7 @@ func NewGPUFreqMetrics() *GPUFreqMetrics {
 
 // Setup creates the metric depending on devices' support on GPU frequency info.
 func (g *GPUFreqMetrics) Setup(ctx context.Context, prefix, intervalName string) error {
-	for _, c := range []gpuFreqCollector{{
+	for _, c := range append([]gpuFreqCollector{{
 		description: "Collect i915 GPU Frequency",
 		path:        "/sys/kernel/debug/dri/0/i915_frequency_info",
 		// GPU actual frequency may be listed as "Actual freq" or "CAGF".
@@ -91,7 +111,7 @@ func (g *GPUFreqMetrics) Setup(ctx context.Context, prefix, intervalName string)
 		path:               `/sys/devices/platform/soc@0/5000000.gpu/devfreq/5000000.gpu/cur_freq`,
 		freqCapturePattern: "([0-9]+)",
 		freqModifier:       1000000,
-	}} {
+	}}, mtkGpuFreqCollectors()...) {
 		if _, err := readGPUFrequency(ctx, c); err == nil {
 			testing.ContextLog(ctx, c.description)
 			g.collector = c
