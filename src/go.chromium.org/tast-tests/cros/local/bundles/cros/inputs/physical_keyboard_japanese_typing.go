@@ -122,6 +122,34 @@ func PhysicalKeyboardJapaneseTyping(ctx context.Context, s *testing.State) {
 			scenario: "Type Romaji and check correct Hiragana",
 			action:   its.ValidateInputOnField(inputField, kb.TypeAction("nihongo"), "にほんご"),
 		},
+		// Enter should commit composition.
+		{
+			name:     "EnterCommitsComposition",
+			scenario: "Type Romaji and commit it using Enter",
+			action: its.ValidateInputOnField(inputField, uiauto.Combine("Type 'a' then Enter",
+				kb.TypeAction("a"),
+				kb.AccelAction("Enter"),
+			), "あ"),
+		},
+		// Shift+Enter should commit first suggestion.
+		{
+			name:     "ShiftEnterCommitsFirstSuggestion",
+			scenario: "Type Romaji and commit the first suggestion using Shift+Enter",
+			action: uiauto.Combine("type some text",
+				its.ClearThenClickFieldAndWaitForActive(inputField),
+				kb.TypeAction("wanpi"),
+				util.GetNthCandidateTextAndThen(tconn, 0, func(suggestion string) uiauto.Action {
+					if suggestion == "わんぴ" {
+						s.Fatal("For this test to be useful, the first suggestion shouldn't match the input exactly. Please update the test case")
+					}
+					return uiauto.Combine("press Shift+Enter and verify text",
+						kb.AccelAction("Shift+Enter"),
+						ui.WaitUntilGone(util.PKCandidatesFinder),
+						util.WaitForFieldTextToBe(tconn, inputField.Finder(), suggestion),
+					)
+				}),
+			),
+		},
 		// Type and edit the composition with various keys.
 		// TODO(b/289738600): Add test for Ctrl+Space and Ctrl+Shift+Space once they work.
 		{
