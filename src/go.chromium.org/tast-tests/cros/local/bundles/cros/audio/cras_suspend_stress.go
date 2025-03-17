@@ -13,7 +13,7 @@ import (
 
 	"go.chromium.org/tast-tests/cros/common/testexec"
 	"go.chromium.org/tast-tests/cros/local/audio"
-	"go.chromium.org/tast-tests/cros/local/audio/crastests"
+	"go.chromium.org/tast-tests/cros/local/audio/crastestclient"
 	"go.chromium.org/tast-tests/cros/local/audio/debug"
 	"go.chromium.org/tast-tests/cros/local/chrome"
 	"go.chromium.org/tast/core/ctxutil"
@@ -124,9 +124,11 @@ func runSuspendResumeOnce(ctx context.Context, node *audio.CrasNode) error {
 	// during the test).
 	var cmd *testexec.Cmd
 	if node.IsInput {
-		cmd = crastests.CaptureCommand(ctx, 0, testBufferSize)
+		// Can't be replaced with crastests due to the subsequent arg "pin_device".
+		cmd = crastestclient.CaptureCommand(ctx, 0, testBufferSize)
 	} else {
-		cmd = crastests.PlaybackCommand(ctx, 0, testBufferSize)
+		// Can't be replaced with crastests due to the subsequent arg "pin_device".
+		cmd = crastestclient.PlaybackCommand(ctx, 0, testBufferSize)
 	}
 	cmd.Args = append(cmd.Args, "--pin_device", strconv.FormatUint(node.ID>>32, 10))
 	if err := cmd.Start(); err != nil {
@@ -187,9 +189,11 @@ func runHealthCheckOnce(ctx context.Context, node *audio.CrasNode) error {
 	// Run a test command process of 1-second duration for health check.
 	var cmd *testexec.Cmd
 	if node.IsInput {
-		cmd = crastests.CaptureCommand(ctx, healthCheckDuration, testBufferSize)
+		// Can't be replaced with crastests due to the subsequent arg "pin_device".
+		cmd = crastestclient.CaptureCommand(ctx, healthCheckDuration, testBufferSize)
 	} else {
-		cmd = crastests.PlaybackCommand(ctx, healthCheckDuration, testBufferSize)
+		// Can't be replaced with crastests due to the subsequent arg "pin_device".
+		cmd = crastestclient.PlaybackCommand(ctx, healthCheckDuration, testBufferSize)
 	}
 	cmd.Args = append(cmd.Args, "--pin_device", strconv.FormatUint(node.ID>>32, 10))
 
