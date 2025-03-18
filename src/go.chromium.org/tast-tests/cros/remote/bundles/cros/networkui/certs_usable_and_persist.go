@@ -38,7 +38,7 @@ func init() {
 		},
 		// ChromeOS > External > Cienet > Manual Test Automation > Test stabilization
 		BugComponent: "b:1578688",
-		Attr:         []string{"group:network", "network_e2e_unstable"}, // Add "group:release-health", "release-health_wifi" after stabilized.
+		Attr:         []string{"group:wificell", "wificell_e2e_unstable"}, // Add "group:release-health", "release-health_wifi" after stabilized.
 		TestBedDeps:  []string{tbdep.Wificell, tbdep.WifiStateNormal, tbdep.BluetoothStateNormal, tbdep.PeripheralWifiStateWorking},
 		ServiceDeps: []string{
 			"tast.cros.browser.ChromeService",
