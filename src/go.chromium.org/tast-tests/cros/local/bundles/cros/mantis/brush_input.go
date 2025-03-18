@@ -20,11 +20,11 @@ import (
 )
 
 const (
-	extraThinFileName  = "brush/extra_thin_20250122.png"
-	thinFileName       = "brush/thin_20250122.png"
-	mediumFileName     = "brush/medium_20250122.png"
-	thickFileName      = "brush/thick_20250122.png"
-	extraThickFileName = "brush/extra_thick_20250122.png"
+	extraThinFileName  = "brush/extra_thin_20250318.png"
+	thinFileName       = "brush/thin_20250318.png"
+	mediumFileName     = "brush/medium_20250318.png"
+	thickFileName      = "brush/thick_20250318.png"
+	extraThickFileName = "brush/extra_thick_20250318.png"
 	pixelDiffThreshold = 100
 )
 
@@ -107,9 +107,9 @@ func BrushInput(ctx context.Context, s *testing.State) {
 		s.Log("Error while waiting for progress bar: ", err)
 	}
 
-	reimagineButton := nodewith.Role(role.Button).Name("Reimagine").Ancestor(galleryapp.RootFinder).First()
-	if err := ui.DoDefault(reimagineButton)(ctx); err != nil {
-		s.Fatal("Failed to click the reimagine button: ", err)
+	removeBackgroundButton := nodewith.Role(role.Button).Name("Remove Background").Ancestor(galleryapp.RootFinder).First()
+	if err := ui.DoDefault(removeBackgroundButton)(ctx); err != nil {
+		s.Fatal("Failed to click the remove background button: ", err)
 	}
 
 	if err := util.WaitForSpinner(ctx, tconn, ui); err != nil {
