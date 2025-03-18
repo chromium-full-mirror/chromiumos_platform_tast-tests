@@ -27,7 +27,7 @@ func init() {
 			"gwendal@chromium.org",
 			"chenghaoyang@chromium.org", // Test author
 		},
-		Attr:         []string{"group:sensors"},
+		Attr:         []string{"group:sensors", "group:dsp", "dsp_small"},
 		SoftwareDeps: []string{"iioservice"},
 	})
 }

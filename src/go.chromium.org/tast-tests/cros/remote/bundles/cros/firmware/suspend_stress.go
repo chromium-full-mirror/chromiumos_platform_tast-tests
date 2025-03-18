@@ -40,7 +40,7 @@ func init() {
 		BugComponent: "b:792402", // ChromeOS > Platform > Enablement > Firmware > FAFT
 		Vars:         []string{"firmware.suspendStressFailFast"},
 		TestBedDeps:  []string{tbdep.ServoStateWorking},
-		Attr:         []string{"group:firmware"},
+		Attr:         []string{"group:firmware", "group:dsp"},
 		ServiceDeps:  []string{"tast.cros.firmware.UtilsService", "tast.cros.firmware.TPMService"},
 		HardwareDeps: hwdep.D(hwdep.ChromeEC()),
 		SoftwareDeps: []string{"chrome"},
@@ -51,17 +51,18 @@ func init() {
 				// 10 iterations takes between 7-15 minutes depending on model and number of errors encountered.
 				Timeout:   20 * time.Minute,
 				Val:       10,
-				ExtraAttr: []string{"firmware_stress"},
+				ExtraAttr: []string{"dsp_small"},
 			},
 			{
 				Name:    "medium",
 				Timeout: 400 * time.Minute,
-				Val:     250,
+				Val:     250, ExtraAttr: []string{"dsp_medium"},
 			},
 			{
-				Name:    "fw_qual",
-				Timeout: 4000 * time.Minute,
-				Val:     2500,
+				Name:      "fw_qual",
+				Timeout:   4000 * time.Minute,
+				Val:       2500,
+				ExtraAttr: []string{"firmware_stress", "dsp_large"},
 			},
 		},
 	})

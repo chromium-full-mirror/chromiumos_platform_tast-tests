@@ -30,6 +30,8 @@ const (
 	ECToolNameMain ECToolName = "cros_ec"
 	// ECToolNameFingerprint selects the FPMCU using cros_fp.
 	ECToolNameFingerprint ECToolName = "cros_fp"
+	// ECToolNameISH selects the ISH using cros_ish
+	ECToolNameISH ECToolName = "cros_ish"
 )
 
 // ECTool allows for interaction with the host command `ectool`.
