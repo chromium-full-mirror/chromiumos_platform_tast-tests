@@ -84,6 +84,9 @@ func ValidateBluetoothFunctional(ctx context.Context, bluetoothService bluetooth
 	if _, err := bluetoothService.StartDiscovery(ctx, &empty.Empty{}); err != nil {
 		return errors.Wrap(err, "failed to start bluetooth adapter discovery")
 	}
+
+	// GoBigSleepLint: Add a sleep so starting discovery is fully completed.
+	testing.Sleep(ctx, 1*time.Second)
 	if _, err := bluetoothService.StopDiscovery(ctx, &empty.Empty{}); err != nil {
 		return errors.Wrap(err, "failed to stop bluetooth adapter discovery")
 	}
