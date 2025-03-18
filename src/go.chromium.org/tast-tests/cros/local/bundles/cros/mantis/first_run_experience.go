@@ -10,6 +10,7 @@ import (
 	"go.chromium.org/tast-tests/cros/local/bundles/cros/mantis/constant"
 	"go.chromium.org/tast-tests/cros/local/bundles/cros/mantis/fixture"
 	"go.chromium.org/tast-tests/cros/local/bundles/cros/mantis/util"
+	"go.chromium.org/tast-tests/cros/local/chrome"
 	"go.chromium.org/tast-tests/cros/local/chrome/apps/galleryapp"
 	"go.chromium.org/tast-tests/cros/local/chrome/uiauto"
 	"go.chromium.org/tast-tests/cros/local/chrome/uiauto/faillog"
@@ -44,6 +45,16 @@ func FirstRunExperience(ctx context.Context, s *testing.State) {
 
 	if err := util.DownloadAndOpenFileInGallery(ctx, cr, s.DataPath(constant.ImageTestFileName), constant.ImageTestFileName); err != nil {
 		s.Fatal("Failed to download and open file in Gallery: ", err)
+	}
+
+	// Connect to the Gallery app HTML page,
+	// where JavaScript can be executed to simulate interactions with the UI.
+	crconn, err := cr.NewConnForTarget(ctx, chrome.MatchTargetURL("chrome-untrusted://media-app/app.html"))
+	if err != nil {
+		s.Fatal("Failed to get connection to Gallery app: ", err)
+	}
+	if err := crconn.Call(ctx, nil, `() => {window.localStorage.setItem('edit-with-ai-onboarding-9xVt6pQ3G', 'false');}`); err != nil {
+		s.Fatal("Failed to set local storage: ", err)
 	}
 
 	ui := uiauto.New(tconn)
