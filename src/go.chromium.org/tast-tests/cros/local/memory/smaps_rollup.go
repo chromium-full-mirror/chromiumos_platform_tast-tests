@@ -432,10 +432,10 @@ func PerProcessSmapsRollup(ctx context.Context, hasArc bool) (*FullSmapsRollup, 
 	crosvmVhostRollups := make(map[int32]*CrosVMSmapsRollup)
 
 	// Regex to extract tag of crosvm.
-	crosvmTagRegex := regexp.MustCompile(`--syslog-tag (\S+)\(\d+\)`)
+	crosvmTagRegex := regexp.MustCompile(`--syslog-tag[ =](\S+)\(\d+\)`)
 
 	// Regex to extract device sub-command of crosvm device
-	crosvmDeviceCommandRegex := regexp.MustCompile(`^crosvm device`)
+	crosvmDeviceCommandRegex := regexp.MustCompile(`^crosvm\s+.*\s+device`)
 
 	// Generate a map of processes and their parent PIDs so that we can separate
 	// crosvm child processes from other host processes. Also generate a map of
@@ -464,17 +464,15 @@ func PerProcessSmapsRollup(ctx context.Context, hasArc bool) (*FullSmapsRollup, 
 			}
 
 			// This code block handles crosvm device commands.
-			// Currently, only arcvm uses vhost-user devices started by vhost_user_starter,
-			// so we tag these commands with "arcvm".
-			// TODO: b/381784661 - Remove this code block once vhost-user-starter supports the
-			// --syslog-tag option for starting vhost-user devices. This will allow us to tag
-			// the commands directly in the starter, eliminating the need for this special
-			// handling.
 			subcmdMatch := crosvmDeviceCommandRegex.FindStringSubmatch(cmdline)
 			if len(subcmdMatch) == 1 {
+				m := crosvmTagRegex.FindStringSubmatch(cmdline)
+				if len(m) != 2 {
+					return nil, errors.Errorf("failed to extract crosvm tag from cmdline %s", cmdline)
+				}
 				crosvmVhostRollups[p.Pid] = &CrosVMSmapsRollup{
 					CrosVMPid: p.Pid,
-					Tag:       "ARCVM",
+					Tag:       m[1],
 					Rollups:   []*NamedSmapsRollup{},
 				}
 				continue
