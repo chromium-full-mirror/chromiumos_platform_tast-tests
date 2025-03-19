@@ -76,6 +76,21 @@ func PollBluetoothPoweredStatus(ctx context.Context, bluetoothService bluetooth.
 	})
 }
 
+// PollBluetoothDiscoveryStatus polls the DUT's bluetooth adapter discovery setting until the context deadline is exceeded or until the correct discovery setting is observed.
+func PollBluetoothDiscoveryStatus(ctx context.Context, bluetoothService bluetooth.BluetoothServiceClient, isDiscovering bool) error {
+	return testing.Poll(ctx, func(ctx context.Context) error {
+		if response, err := bluetoothService.IsDiscovering(ctx, &empty.Empty{}); err != nil {
+			return errors.Wrap(err, "failed to get bluetooth IsDiscovering status")
+		} else if response.IsDiscovering != isDiscovering {
+			return errors.Errorf("Bluetooth IsDiscovering is %t, expected %t", response.IsDiscovering, isDiscovering)
+		}
+		return nil
+	}, &testing.PollOptions{
+		Timeout:  pollTimeout,
+		Interval: pollInterval,
+	})
+}
+
 // ValidateBluetoothFunctional validates that bluetooth is function on the DUT
 // by toggling bluetooth discovery. We don't actually care about the discovery
 // contents, just whether the discovery failed or not. We can stop the scan
@@ -85,10 +100,16 @@ func ValidateBluetoothFunctional(ctx context.Context, bluetoothService bluetooth
 		return errors.Wrap(err, "failed to start bluetooth adapter discovery")
 	}
 
-	// GoBigSleepLint: Add a sleep so starting discovery is fully completed.
-	testing.Sleep(ctx, 1*time.Second)
+	if err := PollBluetoothDiscoveryStatus(ctx, bluetoothService, true); err != nil {
+		return errors.Wrap(err, "failed to wait discovery to start")
+	}
+
 	if _, err := bluetoothService.StopDiscovery(ctx, &empty.Empty{}); err != nil {
 		return errors.Wrap(err, "failed to stop bluetooth adapter discovery")
+	}
+
+	if err := PollBluetoothDiscoveryStatus(ctx, bluetoothService, false); err != nil {
+		return errors.Wrap(err, "failed to wait discovery to stop")
 	}
 	return nil
 }
@@ -114,6 +135,11 @@ func AssertBluetoothEnabledState(ctx context.Context, bluetoothService bluetooth
 		// TODO(b:403351552) Starting discovery will fail unless SetPowered is called.
 		if _, err := bluetoothService.SetPowered(ctx, &bluetooth.SetPoweredRequest{Powered: true}); err != nil {
 			return errors.Wrap(err, "failed to enable Bluetooth")
+		}
+
+		testing.ContextLog(ctx, "Getting BT powered status")
+		if err := PollBluetoothPoweredStatus(ctx, bluetoothService, true); err != nil {
+			return errors.Wrap(err, "failed to wait for BT powered status to be true")
 		}
 
 		testing.ContextLog(ctx, "Validating BT is functional")
