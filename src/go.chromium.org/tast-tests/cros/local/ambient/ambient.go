@@ -49,12 +49,12 @@ const (
 // const for ambient video choices.
 const (
 	CloudsVideoName    = "Cloud Flow"
+	JupiterVideoName   = "Jupiter"
 	NewMexicoVideoName = "Earth Flow"
 )
 
-// DefaultVideoName specifies the video selected by default when the video theme
-// is active.
-const DefaultVideoName = NewMexicoVideoName
+// JupiterScreenSaverDefaultModel is the device model that has a different default video screen saver.
+const JupiterScreenSaverDefaultModel = "navi"
 
 // AlbumSelectedClassName specifies the label given to ambient albums that have
 // been selected in the hub.
@@ -92,6 +92,8 @@ var TestVideoSrc = youtube.VideoSrc{
 type TestParams struct {
 	TopicSource string
 	Theme       string
+	// The default video that gets selected for the video theme.
+	DefaultVideoName string
 	// Amount of time to wait for an ambient session to start (can include things
 	// like downloading photos, etc). Applies to all themes.
 	StartupTimeout time.Duration
@@ -127,9 +129,9 @@ func toNearestSecond(d time.Duration) int {
 	return int(d.Round(time.Second).Seconds())
 }
 
-// SetDeviceSettings changes settings for Ambient mode to speed up testing.
+// setDeviceSettings changes settings for Ambient mode to speed up testing.
 // Rounds values to the nearest second.
-func SetDeviceSettings(tconn *chrome.TestConn, deviceSettings DeviceSettings) uiauto.Action {
+func setDeviceSettings(tconn *chrome.TestConn, deviceSettings DeviceSettings) uiauto.Action {
 	return func(ctx context.Context) error {
 		if err := tconn.Call(
 			ctx,
@@ -618,12 +620,12 @@ func prepareScreenSaver(tconn *chrome.TestConn, ui *uiauto.Context, testParams T
 			if len(selectedVideos) != 1 {
 				return errors.New("exactly 1 selected video album expected")
 			}
-			if selectedVideos[0].Name != DefaultVideoName {
-				return errors.New("incorrect default ambient video is selected")
+			if selectedVideos[0].Name != testParams.DefaultVideoName {
+				return errors.New("incorrect default ambient video is selected wanted " + testParams.DefaultVideoName)
 			}
 
 			// Select the correct video if a non-default is requested.
-			if testParams.VideoThemeAlbum != DefaultVideoName {
+			if testParams.VideoThemeAlbum != testParams.DefaultVideoName {
 				albumToSelect := FindAlbumWithName(testParams.VideoThemeAlbum, albums)
 				if albumToSelect == nil {
 					return errors.New("failed to find video album with name " + testParams.VideoThemeAlbum)
@@ -637,7 +639,7 @@ func prepareScreenSaver(tconn *chrome.TestConn, ui *uiauto.Context, testParams T
 		// Close Personalization Hub after ambient mode setup is finished.
 		if err := uiauto.Combine("Close personalization app and set device settings",
 			personalization.ClosePersonalizationHub(ui),
-			SetDeviceSettings(tconn, DeviceSettings{
+			setDeviceSettings(tconn, DeviceSettings{
 				LockScreenIdle:         1 * time.Second,
 				BackgroundLockScreen:   2 * time.Second,
 				PhotoRefreshInterval:   1 * time.Second,

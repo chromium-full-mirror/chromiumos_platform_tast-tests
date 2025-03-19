@@ -16,6 +16,7 @@ import (
 	"go.chromium.org/tast-tests/cros/local/personalization"
 
 	"go.chromium.org/tast/core/testing"
+	"go.chromium.org/tast/core/testing/hwdep"
 )
 
 func init() {
@@ -38,20 +39,57 @@ func init() {
 			{
 				Name: "video_new_mexico",
 				Val: ambient.TestParams{
-					TopicSource:     ambient.VideoSource,
-					Theme:           ambient.VideoTheme,
-					VideoThemeAlbum: ambient.NewMexicoVideoName,
-					StartupTimeout:  ambient.StartVideoDefaultTimeout,
+					TopicSource:      ambient.VideoSource,
+					Theme:            ambient.VideoTheme,
+					VideoThemeAlbum:  ambient.NewMexicoVideoName,
+					StartupTimeout:   ambient.StartVideoDefaultTimeout,
+					DefaultVideoName: ambient.NewMexicoVideoName,
 				},
+				ExtraHardwareDeps: hwdep.D(hwdep.SkipOnModel(ambient.JupiterScreenSaverDefaultModel)),
 			},
 			{
 				Name: "video_clouds",
 				Val: ambient.TestParams{
-					TopicSource:     ambient.VideoSource,
-					Theme:           ambient.VideoTheme,
-					VideoThemeAlbum: ambient.CloudsVideoName,
-					StartupTimeout:  ambient.StartVideoDefaultTimeout,
+					TopicSource:      ambient.VideoSource,
+					Theme:            ambient.VideoTheme,
+					VideoThemeAlbum:  ambient.CloudsVideoName,
+					StartupTimeout:   ambient.StartVideoDefaultTimeout,
+					DefaultVideoName: ambient.NewMexicoVideoName,
 				},
+				ExtraHardwareDeps: hwdep.D(hwdep.SkipOnModel(ambient.JupiterScreenSaverDefaultModel)),
+			},
+			{
+				Name: "video_new_mexico_navi",
+				Val: ambient.TestParams{
+					TopicSource:      ambient.VideoSource,
+					Theme:            ambient.VideoTheme,
+					VideoThemeAlbum:  ambient.NewMexicoVideoName,
+					StartupTimeout:   ambient.StartVideoDefaultTimeout,
+					DefaultVideoName: ambient.JupiterVideoName,
+				},
+				ExtraHardwareDeps: hwdep.D(hwdep.Model(ambient.JupiterScreenSaverDefaultModel)),
+			},
+			{
+				Name: "video_jupiter_navi",
+				Val: ambient.TestParams{
+					TopicSource:      ambient.VideoSource,
+					Theme:            ambient.VideoTheme,
+					VideoThemeAlbum:  ambient.JupiterVideoName,
+					StartupTimeout:   ambient.StartVideoDefaultTimeout,
+					DefaultVideoName: ambient.JupiterVideoName,
+				},
+				ExtraHardwareDeps: hwdep.D(hwdep.Model(ambient.JupiterScreenSaverDefaultModel)),
+			},
+			{
+				Name: "video_clouds_navi",
+				Val: ambient.TestParams{
+					TopicSource:      ambient.VideoSource,
+					Theme:            ambient.VideoTheme,
+					VideoThemeAlbum:  ambient.CloudsVideoName,
+					StartupTimeout:   ambient.StartVideoDefaultTimeout,
+					DefaultVideoName: ambient.JupiterVideoName,
+				},
+				ExtraHardwareDeps: hwdep.D(hwdep.Model(ambient.JupiterScreenSaverDefaultModel)),
 			},
 		},
 	})
