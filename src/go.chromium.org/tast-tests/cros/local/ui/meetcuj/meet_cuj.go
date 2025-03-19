@@ -611,20 +611,32 @@ func Run(ctx context.Context, meet MeetTest, cr *chrome.Chrome, testCaseVar func
 
 	doDefaultMoreOptions := func(ctx context.Context) error {
 		moreOptionsFinder := nodewith.Name("More options").Role(role.PopUpButton)
+		callOptionsMenu := nodewith.Name("Call options").Role(role.Menu)
 		moreOptionsButtons, err := ui.NodesInfo(ctx, moreOptionsFinder)
 		if err != nil || len(moreOptionsButtons) < 1 {
 			return errors.Wrap(err, "failed to find more options button")
 		}
 		// Sometimes, the UI has two identical "More Options" buttons, which requires
 		// selecting the last one to be the correct button.
-		return ui.DoDefault(moreOptionsFinder.Nth(len(moreOptionsButtons) - 1))(ctx)
+		return ui.DoDefaultUntil(moreOptionsFinder.Nth(len(moreOptionsButtons)-1),
+			ui.WithTimeout(5*time.Second).WaitUntilExists(callOptionsMenu),
+		)(ctx)
 	}
 
 	applyEffects := nodewith.Name("Apply visual effects").Role(role.MenuItem)
+	effectsHeading := nodewith.Name("Effects").Role(role.Heading).Ancestor(meetRootWebArea)
 	blur := nodewith.Name("Blur your background").Role(role.ToggleButton).Focusable()
 	turnOffEffects := nodewith.Name("Turn off visual effects").Focusable()
 	closeButton := nodewith.Name("Close").Role(role.Button).Ancestor(meetRootWebArea).Focusable()
 	setEffect := func(ctx context.Context, effect *nodewith.Finder) error {
+		openEffectsPanel := uiauto.NamedCombine("open effects panel",
+			// Open the "More options" popup, and wait until we see
+			// "Apply visual effects".
+			doDefaultMoreOptions,
+			// Open the visual effects panel.
+			ui.WithTimeout(30*time.Second).DoDefault(applyEffects),
+			ui.WithTimeout(30*time.Second).WaitUntilExists(effectsHeading),
+		)
 		toggleEffect := func(ctx context.Context) error {
 			if effect == turnOffEffects {
 				toggleButton := turnOffEffects.Role(role.ToggleButton)
@@ -653,20 +665,11 @@ func Run(ctx context.Context, meet MeetTest, cr *chrome.Chrome, testCaseVar func
 				ui.WithTimeout(5*time.Second).WaitUntilCheckedState(effect, true))(ctx)
 		}
 
-		return uiauto.Combine(
+		return uiauto.NamedCombine(
 			fmt.Sprintf("set effect with node %v", effect),
-			// Open the "More options" popup, and wait until we see
-			// "Apply visual effects".
-			doDefaultMoreOptions,
-			uiLongWait.WaitUntilExists(applyEffects),
-
-			// Open the visual effects section.
-			ui.DoDefault(applyEffects),
-			uiLongWait.WaitUntilExists(effect),
-
+			uiauto.Retry(2, openEffectsPanel),
 			toggleEffect,
-
-			// Close the visual effects section.
+			// Close the visual effects panel.
 			ui.DoDefault(closeButton),
 			uiLongWait.WaitUntilGone(effect),
 		)(ctx)
