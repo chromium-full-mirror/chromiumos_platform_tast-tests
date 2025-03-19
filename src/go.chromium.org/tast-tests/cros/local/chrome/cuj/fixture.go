@@ -41,10 +41,12 @@ import (
 	"go.chromium.org/tast-tests/cros/local/power/setup"
 	pUtil "go.chromium.org/tast-tests/cros/local/power/util"
 	"go.chromium.org/tast-tests/cros/local/pvsched"
+	"go.chromium.org/tast-tests/cros/local/screenshot"
 	"go.chromium.org/tast-tests/cros/local/scx"
 	"go.chromium.org/tast-tests/cros/local/sysutil"
 	"go.chromium.org/tast-tests/cros/local/ui/cujrecorder"
 	"go.chromium.org/tast-tests/cros/local/wpr"
+	"go.chromium.org/tast/core/ctxutil"
 	"go.chromium.org/tast/core/errors"
 	"go.chromium.org/tast/core/fsutil"
 	"go.chromium.org/tast/core/testing"
@@ -1601,6 +1603,19 @@ func (f *loggedInToCUJUserFixture) SetUp(ctx context.Context, s *testing.FixtSta
 	var setupCompleted bool // Whether the SetUp function is successfully completed.
 	disableARC := f.disableARC || !arc.Supported()
 
+	screenshotCtx := ctx
+	ctx, cancel := ctxutil.Shorten(ctx, 10*time.Second)
+	defer cancel()
+
+	defer func(ctx context.Context) {
+		if s.HasError() {
+			path := filepath.Join(s.OutDir(), "fixture_failure.png")
+			if err := screenshot.Capture(ctx, path); err != nil {
+				s.Log("Failed to capture screenshot: ", err)
+			}
+		}
+	}(screenshotCtx)
+
 	func() {
 		var docsBlockerExtDir string
 		var err error
@@ -1737,7 +1752,6 @@ func (f *loggedInToCUJUserFixture) SetUp(ctx context.Context, s *testing.FixtSta
 		}
 
 		cr, err = chrome.New(ctx, opts...)
-
 		if err != nil {
 			s.Fatal("Failed to start Chrome: ", err)
 		}
