@@ -6,6 +6,7 @@ package inputs
 
 import (
 	"context"
+	"regexp"
 	"time"
 
 	"go.chromium.org/tast-tests/cros/local/chrome"
@@ -498,6 +499,19 @@ func PhysicalKeyboardJapaneseTyping(ctx context.Context, s *testing.State) {
 						util.WaitForFieldTextToBe(tconn, inputField.Finder(), text),
 					)
 				}),
+			),
+		},
+		// Smoke test for some more advanced features.
+		{
+			name:     "AdvancedFeaturesShouldWork",
+			scenario: "Trigger some advanced features and check if they work",
+			action: uiauto.Combine("type some text",
+				its.ClearThenClickFieldAndWaitForActive(inputField),
+				kb.TypeAction("ima  "),
+				ui.WaitUntilExists(util.PKCandidatesFinder.NameRegex(regexp.MustCompile("\\d+:\\d+"))),
+				its.ClearThenClickFieldAndWaitForActive(inputField),
+				kb.TypeAction("150-0002"),
+				ui.WaitUntilExists(util.PKCandidatesFinder.Name("東京都渋谷区渋谷")),
 			),
 		},
 		// Change input mode via the IME menu tray.
