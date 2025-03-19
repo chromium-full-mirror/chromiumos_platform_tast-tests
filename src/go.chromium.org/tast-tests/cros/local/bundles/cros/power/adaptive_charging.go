@@ -13,6 +13,7 @@ import (
 	"time"
 
 	"go.chromium.org/tast-tests/cros/common/testexec"
+	"go.chromium.org/tast-tests/cros/common/tbdep"
 	"go.chromium.org/tast-tests/cros/local/chrome"
 	"go.chromium.org/tast-tests/cros/local/chrome/uiauto"
 	"go.chromium.org/tast-tests/cros/local/chrome/uiauto/faillog"
@@ -42,6 +43,7 @@ func init() {
 			"release-health_power",
 		},
 		SoftwareDeps: []string{"chrome"},
+		TestBedDeps:  []string{tbdep.Power("battery")},
 		HardwareDeps: hwdep.D(
 			hwdep.Battery(),  // Test doesn't run on ChromeOS devices without a battery.
 			hwdep.ChromeEC(), // Test requires Chrome EC to set battery sustainer.
