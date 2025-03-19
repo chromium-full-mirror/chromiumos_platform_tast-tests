@@ -467,6 +467,22 @@ func PhysicalKeyboardJapaneseTyping(ctx context.Context, s *testing.State) {
 				}),
 			),
 		},
+		// Type uppercase latin characters and check that it's still composing.
+		{
+			name:     "UppercaseLatinShouldCompose",
+			scenario: "Type uppercase latin characters and check if it still composes",
+			action: uiauto.Combine("type some text",
+				its.ClearThenClickFieldAndWaitForActive(inputField),
+				kb.TypeAction("ABC"),
+				util.GetNthCandidateTextAndThen(tconn, 0, func(text string) uiauto.Action {
+					return uiauto.Combine("commit first suggestion verify text",
+						kb.AccelAction("Shift+Enter"),
+						ui.WaitUntilGone(util.PKCandidatesFinder),
+						util.WaitForFieldTextToBe(tconn, inputField.Finder(), text),
+					)
+				}),
+			),
+		},
 		// Change input mode via the IME menu tray.
 		{
 			name:     "ChangeInputModeQuickSettings",
