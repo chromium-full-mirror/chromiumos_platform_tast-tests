@@ -467,6 +467,23 @@ func PhysicalKeyboardJapaneseTyping(ctx context.Context, s *testing.State) {
 				}),
 			),
 		},
+		// Press F2 to convert without using history.
+		{
+			name:     "F2ConvertsWithoutHistory",
+			scenario: "Add a phrase to suggestions and then convert",
+			action: uiauto.Combine("type some text and commit it to history",
+				its.ClearThenClickFieldAndWaitForActive(inputField),
+				kb.TypeAction("kyou"),
+				kb.AccelAction("Ctrl+i"),
+				kb.AccelAction("Enter"),
+				its.ClearThenClickFieldAndWaitForActive(inputField),
+				kb.TypeAction("kyou"),
+				kb.AccelAction("F2"),
+				util.WaitForFieldTextToSatisfy(tconn, inputField.Finder(), "not from history", func(text string) bool {
+					return text != "" && text != "キョウ"
+				}),
+			),
+		},
 		// Type uppercase latin characters and check that it's still composing.
 		{
 			name:     "UppercaseLatinShouldCompose",
