@@ -1768,7 +1768,7 @@ func ReportWebRTCInternals(ctx context.Context, dump []byte, meetingCode string,
 // GetDisabledExperiments gets the list of partially rolled out experiments,
 // that should be disabled in Meet tests.
 func GetDisabledExperiments(ctx context.Context, cloudStorage *testing.CloudStorage) ([]string, error) {
-	reader, err := cloudStorage.Open(ctx, "gs://sw-perf-meet-experiments/meet-experiments/partial-rollout-experiments.txt")
+	reader, err := cloudStorage.Open(ctx, "gs://chromeos-test-assets-partner-shared/tast/crosint/meet-experiments/partial-rollout-experiments.txt")
 	if err != nil {
 		return nil, errors.Wrap(err, "failed to download experiment list")
 	}
