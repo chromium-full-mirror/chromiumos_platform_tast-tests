@@ -17592,38 +17592,6 @@ func (p *ClearBrowsingDataOnExitList) Equal(iface interface{}) bool {
 }
 
 // ****************************************************************************
-// 810. ProfilePickerOnStartupAvailability
-// ****************************************************************************
-type ProfilePickerOnStartupAvailability struct {
-	Stat Status
-	Val  int
-}
-
-func (p *ProfilePickerOnStartupAvailability) Name() string {
-	return "ProfilePickerOnStartupAvailability"
-}
-func (p *ProfilePickerOnStartupAvailability) Scope() Scope          { return ScopeUser }
-func (p *ProfilePickerOnStartupAvailability) Status() Status        { return p.Stat }
-func (p *ProfilePickerOnStartupAvailability) UntypedV() interface{} { return p.Val }
-func (p *ProfilePickerOnStartupAvailability) UnmarshalAs(m json.RawMessage) (interface{}, error) {
-	var v int
-	if err := json.Unmarshal(m, &v); err != nil {
-		return nil, errors.Wrapf(err, "could not read %s as int", m)
-	}
-	return v, nil
-}
-func (p *ProfilePickerOnStartupAvailability) SetProto(m *protoreflect.Message) {
-	SetUserProto(m, p.Name(), p.Val)
-}
-func (p *ProfilePickerOnStartupAvailability) Equal(iface interface{}) bool {
-	v, ok := iface.(int)
-	if !ok {
-		return ok
-	}
-	return cmp.Equal(p.Val, v, cmpopts.EquateEmpty())
-}
-
-// ****************************************************************************
 // 813. ManagedConfigurationPerOrigin
 // This policy can be modified without rebooting.
 // ****************************************************************************
@@ -30262,6 +30230,68 @@ func (p *KioskChromeAppsForceAllowed) Equal(iface interface{}) bool {
 }
 
 // ****************************************************************************
+// 1345. ReduceAcceptLanguageEnabled
+// This policy can be modified without rebooting.
+// ****************************************************************************
+type ReduceAcceptLanguageEnabled struct {
+	Stat Status
+	Val  bool
+}
+
+func (p *ReduceAcceptLanguageEnabled) Name() string          { return "ReduceAcceptLanguageEnabled" }
+func (p *ReduceAcceptLanguageEnabled) Scope() Scope          { return ScopeUser }
+func (p *ReduceAcceptLanguageEnabled) Status() Status        { return p.Stat }
+func (p *ReduceAcceptLanguageEnabled) UntypedV() interface{} { return p.Val }
+func (p *ReduceAcceptLanguageEnabled) UnmarshalAs(m json.RawMessage) (interface{}, error) {
+	var v bool
+	if err := json.Unmarshal(m, &v); err != nil {
+		return nil, errors.Wrapf(err, "could not read %s as bool", m)
+	}
+	return v, nil
+}
+func (p *ReduceAcceptLanguageEnabled) SetProto(m *protoreflect.Message) {
+	SetUserProto(m, p.Name(), p.Val)
+}
+func (p *ReduceAcceptLanguageEnabled) Equal(iface interface{}) bool {
+	v, ok := iface.(bool)
+	if !ok {
+		return ok
+	}
+	return cmp.Equal(p.Val, v, cmpopts.EquateEmpty())
+}
+
+// ****************************************************************************
+// 1346. GenAIInlineImageSettings
+// This policy can be modified without rebooting.
+// ****************************************************************************
+type GenAIInlineImageSettings struct {
+	Stat Status
+	Val  int
+}
+
+func (p *GenAIInlineImageSettings) Name() string          { return "GenAIInlineImageSettings" }
+func (p *GenAIInlineImageSettings) Scope() Scope          { return ScopeUser }
+func (p *GenAIInlineImageSettings) Status() Status        { return p.Stat }
+func (p *GenAIInlineImageSettings) UntypedV() interface{} { return p.Val }
+func (p *GenAIInlineImageSettings) UnmarshalAs(m json.RawMessage) (interface{}, error) {
+	var v int
+	if err := json.Unmarshal(m, &v); err != nil {
+		return nil, errors.Wrapf(err, "could not read %s as int", m)
+	}
+	return v, nil
+}
+func (p *GenAIInlineImageSettings) SetProto(m *protoreflect.Message) {
+	SetUserProto(m, p.Name(), p.Val)
+}
+func (p *GenAIInlineImageSettings) Equal(iface interface{}) bool {
+	v, ok := iface.(int)
+	if !ok {
+		return ok
+	}
+	return cmp.Equal(p.Val, v, cmpopts.EquateEmpty())
+}
+
+// ****************************************************************************
 // JSON deserialization logic (used by policy.Unmarshal).
 // ****************************************************************************
 
@@ -31348,8 +31378,6 @@ func newByName(name string) (Policy, error) {
 		return &SystemFeaturesDisableMode{}, nil
 	case "ClearBrowsingDataOnExitList":
 		return &ClearBrowsingDataOnExitList{}, nil
-	case "ProfilePickerOnStartupAvailability":
-		return &ProfilePickerOnStartupAvailability{}, nil
 	case "ManagedConfigurationPerOrigin":
 		return &ManagedConfigurationPerOrigin{}, nil
 	case "BrowserLabsEnabled":
@@ -32124,6 +32152,10 @@ func newByName(name string) (Policy, error) {
 		return &ClassManagementViewScreenEnabled{}, nil
 	case "KioskChromeAppsForceAllowed":
 		return &KioskChromeAppsForceAllowed{}, nil
+	case "ReduceAcceptLanguageEnabled":
+		return &ReduceAcceptLanguageEnabled{}, nil
+	case "GenAIInlineImageSettings":
+		return &GenAIInlineImageSettings{}, nil
 	default:
 		return nil, errors.New("Unknown policy " + name)
 	}
