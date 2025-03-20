@@ -74,7 +74,7 @@ func init() {
 			{
 				Name:             "power_state_usb_plugged_in",
 				ExtraTestBedDeps: []string{tbdep.ServoUSBState("NORMAL")},
-				ExtraAttr:        []string{"firmware_bios", "firmware_usb", "firmware_level2", "group:labqual", "firmware_ro"},
+				ExtraAttr:        []string{"firmware_bios", "firmware_level2", "group:labqual", "firmware_ro"},
 				Val: powerG3Params{
 					PowerOffMethod: powerStateOff,
 					CheckUSB:       true,
@@ -93,7 +93,7 @@ func init() {
 			{
 				Name:             "power_state_rec_off",
 				ExtraTestBedDeps: []string{tbdep.ServoUSBState("NORMAL")},
-				ExtraAttr:        []string{"firmware_bios", "firmware_usb", "firmware_level2", "group:labqual", "firmware_ro"},
+				ExtraAttr:        []string{"firmware_bios", "firmware_level2", "group:labqual", "firmware_ro"},
 				Val: powerG3Params{
 					PowerOffMethod: powerStateOff,
 					SetRecMode:     true,

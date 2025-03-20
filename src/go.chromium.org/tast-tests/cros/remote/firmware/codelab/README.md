@@ -80,10 +80,8 @@ Notice the `Attr` line in the above snippet. In previous Tast codelabs, we used 
 
 For those reasons, firmware tests have a separate group of attributes. The group is called `"group:firmware"`, and has a handful of sub-attributes. You can find all of those sub-attributes in [attr.go], and you can learn more about how we use them to run FAFT tests at [go/faft-tast-via-tauto].
 
-The `firmware_experimental` attribute is for tests that are particularly unstable, but it only runs on 1-2 duts.
-This mitigates the risk of accidentally putting a DUT into into a state that would cause other tests to fail.
-`firmware_unstable` is similar, in that it won't be run as part of qualifications, but will run on all duts.
-If we find that our test is stable enough, then we can promote it to another attribute, like `firmware_ec` (or smoke, cr50, slow, ccd as appropriate).
+The `firmware_unstable` tag won't be run as part of qualifications, but will run on all duts.
+If we find that our test is stable enough, then we can promote it to another attribute, like `firmware_ec` (or smoke, cr50 as appropriate).
 
 [attr.go]: https://chromium.googlesource.com/chromiumos/platform/tast/+/refs/heads/main/src/go.chromium.org/tast/core/internal/testing/attr.go
 [go/effective-cq]: http://goto.google.com/effective-cq

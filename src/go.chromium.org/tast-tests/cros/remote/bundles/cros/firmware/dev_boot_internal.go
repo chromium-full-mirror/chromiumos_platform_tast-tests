@@ -67,7 +67,6 @@ func init() {
 				bootMethod:              devBootInternalKeyboard,
 			},
 			ExtraTestBedDeps: []string{tbdep.ServoUSBState("NORMAL")},
-			ExtraAttr:        []string{"firmware_usb"},
 			Timeout:          2 * time.Hour,
 		}, {
 			Name: "menu",
@@ -78,7 +77,6 @@ func init() {
 				bootMethod:              devBootInternalMenu,
 			},
 			ExtraTestBedDeps:  []string{tbdep.ServoUSBState("NORMAL")},
-			ExtraAttr:         []string{"firmware_usb"},
 			ExtraHardwareDeps: hwdep.D(hwdep.FirmwareUIType(hwdep.LegacyMenuUI, hwdep.MenuUI)),
 			Timeout:           2 * time.Hour,
 		}, {
@@ -90,7 +88,6 @@ func init() {
 				bootMethod:              devBootInternalButton,
 			},
 			ExtraTestBedDeps:  []string{tbdep.ServoUSBState("NORMAL")},
-			ExtraAttr:         []string{"firmware_usb"},
 			ExtraHardwareDeps: hwdep.D(hwdep.FormFactor(hwdep.Detachable)),
 			Timeout:           2 * time.Hour,
 		}, {

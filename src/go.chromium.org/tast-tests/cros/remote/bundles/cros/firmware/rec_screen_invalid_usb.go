@@ -29,7 +29,7 @@ func init() {
 		},
 		BugComponent: "b:792402", // ChromeOS > Platform > Enablement > Firmware > FAFT
 		TestBedDeps:  []string{tbdep.ServoStateWorking, tbdep.ServoUSBState("NORMAL")},
-		Attr:         []string{"group:firmware", "firmware_bios", "firmware_level4", "firmware_usb", "firmware_ro"},
+		Attr:         []string{"group:firmware", "firmware_bios", "firmware_level4", "firmware_ro"},
 		Vars:         []string{"firmware.skipFlashUSB"},
 		Fixture:      fixture.NormalMode,
 		Timeout:      120 * time.Minute,

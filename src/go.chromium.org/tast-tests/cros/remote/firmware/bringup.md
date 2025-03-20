@@ -63,18 +63,6 @@ tast run -var servo=${SERVO?} \
   - '("group:firmware" && firmware_bringup)'
 ```
 
-if you want to exclude slow tests
-
-```shell
-tast run -var servo=${SERVO?} \
--hwdeps="deprecated_device_config <cpu:X86_64 \
-  id<platform:'${BOARD?}' model:'${MODEL?}'>> \
-  hardware_features<embedded_controller<present:PRESENT ec_type:EC_CHROME>
-      form_factor<form_factor:CLAMSHELL> \
-  >" \
-  - '("group:firmware" && firmware_bringup && !firmware_slow)'
-```
-
 ## Adapting a firmware test for bringup
 
 Follow the instructions for creating a [FAFT test in Tast](codelab/README.md).

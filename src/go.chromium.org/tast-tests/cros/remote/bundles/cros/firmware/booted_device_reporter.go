@@ -31,7 +31,6 @@ func init() {
 			Name:             "rec",
 			Fixture:          fixture.RecModeNoServices,
 			ExtraTestBedDeps: []string{tbdep.ServoUSBState("NORMAL")},
-			ExtraAttr:        []string{"firmware_usb"},
 			Val:              true,
 		}, {
 			Name:    "dev",
@@ -41,7 +40,6 @@ func init() {
 			Name:             "usbdev",
 			Fixture:          fixture.USBDevModeGBBNoServices,
 			ExtraTestBedDeps: []string{tbdep.ServoUSBState("NORMAL")},
-			ExtraAttr:        []string{"firmware_usb"},
 			Val:              true,
 		}},
 	})

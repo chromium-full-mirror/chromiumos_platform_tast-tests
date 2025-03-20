@@ -67,7 +67,6 @@ func init() {
 				bootToScreen: fwCommon.FwInvalidScreen,
 			},
 			ExtraTestBedDeps: []string{tbdep.ServoUSBState("NORMAL")},
-			ExtraAttr:        []string{"firmware_usb"},
 		}},
 	})
 }

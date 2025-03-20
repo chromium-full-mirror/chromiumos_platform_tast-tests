@@ -61,7 +61,6 @@ func init() {
 				Name:             "recovery",
 				Fixture:          fixture.RecModeNoServices,
 				ExtraTestBedDeps: []string{tbdep.ServoUSBState("NORMAL")},
-				ExtraAttr:        []string{"firmware_usb"},
 				Val: &bootModeArgs{
 					devMode:       0,
 					recMode:       1,
@@ -85,7 +84,6 @@ func init() {
 				Name:             "dev_recovery",
 				Fixture:          fixture.DevRecModeNoServices,
 				ExtraTestBedDeps: []string{tbdep.ServoUSBState("NORMAL")},
-				ExtraAttr:        []string{"firmware_usb"},
 				Val: &bootModeArgs{
 					devMode:       1,
 					recMode:       1,

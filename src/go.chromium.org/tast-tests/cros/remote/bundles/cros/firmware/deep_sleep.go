@@ -9,6 +9,7 @@ import (
 	"time"
 
 	"go.chromium.org/tast-tests/cros/common/servo"
+	"go.chromium.org/tast-tests/cros/common/tbdep"
 	"go.chromium.org/tast-tests/cros/remote/firmware"
 	"go.chromium.org/tast-tests/cros/remote/firmware/fixture"
 	"go.chromium.org/tast/core/errors"
@@ -25,8 +26,8 @@ func init() {
 			"jbettis@google.com",
 		},
 		BugComponent: "b:792402", // ChromeOS > Platform > Enablement > Firmware > FAFT
-		// firmware_slow is mapped into faft_ec, but in a separate group so it won't timeout.
-		Attr:         []string{"group:firmware", "firmware_bringup", "firmware_slow"},
+		TestBedDeps:  []string{tbdep.ServoStateWorking},
+		Attr:         []string{"group:firmware", "firmware_bringup", "firmware_ec"},
 		Vars:         []string{"firmware.hibernate_time", "board", "model"},
 		HardwareDeps: hwdep.D(hwdep.Battery(), hwdep.ChromeEC()),
 		Timeout:      260 * time.Minute, // 4hrs 20mins

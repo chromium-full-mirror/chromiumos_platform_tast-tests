@@ -112,7 +112,7 @@ func init() {
 			{
 				Name:             "normal_rec",
 				ExtraTestBedDeps: []string{tbdep.ServoUSBState("NORMAL")},
-				ExtraAttr:        []string{"firmware_usb", "firmware_ro"},
+				ExtraAttr:        []string{"firmware_ro"},
 				Fixture:          fixture.NormalMode,
 				Val: eventLogParams{
 					bootToMode:        fwCommon.BootModeRecovery,
@@ -125,7 +125,7 @@ func init() {
 			{
 				Name:             "rec_normal",
 				ExtraTestBedDeps: []string{tbdep.ServoUSBState("NORMAL")},
-				ExtraAttr:        []string{"firmware_usb", "firmware_ro"},
+				ExtraAttr:        []string{"firmware_ro"},
 				Fixture:          fixture.RecModeNoServices,
 				Val: eventLogParams{
 					bootToMode:        fwCommon.BootModeNormal,

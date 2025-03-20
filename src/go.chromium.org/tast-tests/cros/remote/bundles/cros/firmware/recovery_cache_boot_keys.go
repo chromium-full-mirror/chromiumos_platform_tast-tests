@@ -36,7 +36,7 @@ func init() {
 		},
 		BugComponent: "b:792402", // ChromeOS > Platform > Enablement > Firmware > FAFT
 		TestBedDeps:  []string{tbdep.ServoStateWorking, tbdep.ServoUSBState("NORMAL")},
-		Attr:         []string{"group:firmware", "firmware_usb"},
+		Attr:         []string{"group:firmware"},
 		Vars:         []string{"firmware.skipFlashUSB"},
 		// There are RECOVERY MRC CACHE and APOB CACHE on board skyrim, but it
 		// seems to prioritize the use of APOB CACHE. Skip the models of board

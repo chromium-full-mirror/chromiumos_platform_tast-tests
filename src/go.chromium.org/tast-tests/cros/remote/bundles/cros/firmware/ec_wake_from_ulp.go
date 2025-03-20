@@ -162,7 +162,6 @@ func init() {
 				"skyrim15w",
 				"whiterun",
 			)),
-			ExtraAttr:        []string{"firmware_servo_micro"},
 			ExtraTestBedDeps: []string{tbdep.ServoComponent("servo_micro")},
 			Val:              wakeDUTWithLidSwitch,
 		}, {

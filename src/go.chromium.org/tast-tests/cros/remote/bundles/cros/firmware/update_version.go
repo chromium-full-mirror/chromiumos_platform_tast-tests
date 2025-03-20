@@ -65,7 +65,7 @@ func init() {
 			{
 				Name:             "firmware_data_key_version",
 				ExtraTestBedDeps: []string{tbdep.ServoUSBState("NORMAL")},
-				ExtraAttr:        []string{"firmware_usb", "firmware_ro"},
+				ExtraAttr:        []string{"firmware_ro"},
 				Fixture:          fixture.BootModeFixtureWithAPBackup(fixture.NormalMode),
 				ExtraData:        []string{fwDataKeyVerMakekeyFile, fwDataKeyVerCommonFile},
 				Val: &updateVersionTc{
@@ -89,7 +89,7 @@ func init() {
 			{
 				Name:             "firmware_version",
 				ExtraTestBedDeps: []string{tbdep.ServoUSBState("NORMAL")},
-				ExtraAttr:        []string{"firmware_usb", "firmware_smoke", "firmware_ro"},
+				ExtraAttr:        []string{"firmware_smoke", "firmware_ro"},
 				Fixture:          fixture.BootModeFixtureWithAPBackup(fixture.NormalMode),
 				Val: &updateVersionTc{
 					keyVersion:          fwVer,

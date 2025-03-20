@@ -43,7 +43,6 @@ func init() {
 				Val:              fixture.USBDevModeGBBNoServices,
 				Fixture:          fixture.USBDevModeGBBNoServices,
 				ExtraTestBedDeps: []string{tbdep.ServoUSBState("NORMAL")},
-				ExtraAttr:        []string{"firmware_usb"},
 			},
 		},
 	})

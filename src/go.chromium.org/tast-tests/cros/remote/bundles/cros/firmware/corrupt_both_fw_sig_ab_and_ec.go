@@ -48,7 +48,7 @@ func init() {
 			"chromeos-faft@google.com",
 		},
 		BugComponent: "b:792402", // ChromeOS > Platform > Enablement > Firmware > FAFT
-		TestBedDeps:  []string{tbdep.ServoStateWorking},
+		TestBedDeps:  []string{tbdep.ServoStateWorking, tbdep.ServoUSBState("NORMAL")},
 		Attr:         []string{"group:firmware", "firmware_ec", "firmware_bios", "firmware_level3", "firmware_ec_stressed", "firmware_ec_meets_kpi"},
 		HardwareDeps: hwdep.D(hwdep.ChromeEC(), hwdep.SkipOnPlatform("fizz", "kalista")),
 		Timeout:      2 * time.Hour,
