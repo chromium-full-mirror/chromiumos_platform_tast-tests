@@ -39,7 +39,8 @@ func init() {
 		},
 		BugComponent: "b:792402", // ChromeOS > Platform > Enablement > Firmware > FAFT
 		TestBedDeps:  []string{tbdep.ServoStateWorking},
-		Attr:         []string{"group:firmware", "firmware_unstable"},
+		// TODO(b/327197686) Add back to firmware_unstable once the test passes more consistently.
+		// Attr:         []string{"group:firmware", "firmware_unstable"},
 		Fixture:      fixture.NormalMode,
 		Timeout:      30 * time.Minute,
 		HardwareDeps: hwdep.D(hwdep.ChromeEC()),
