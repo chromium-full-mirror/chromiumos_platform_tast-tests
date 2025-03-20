@@ -15,6 +15,7 @@ import (
 
 	"github.com/golang/protobuf/ptypes/empty"
 
+	"go.chromium.org/tast-tests/cros/common/tbdep"
 	"go.chromium.org/tast-tests/cros/remote/firmware/fixture"
 	crash_service "go.chromium.org/tast-tests/cros/services/cros/crash"
 
@@ -36,6 +37,7 @@ func init() {
 			"troywang@google.com",
 		},
 		BugComponent: "b:167114",
+		TestBedDeps:  []string{tbdep.ServoStateWorking},
 		Attr:         []string{"group:mainline", "informational", "group:firmware", "firmware_ec", "firmware_ec_stressed", "firmware_ec_meets_kpi"},
 		Timeout:      10 * time.Minute,
 		Fixture:      fixture.NormalMode,

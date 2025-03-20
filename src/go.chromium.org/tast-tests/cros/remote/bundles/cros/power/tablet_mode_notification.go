@@ -9,6 +9,7 @@ import (
 	"strings"
 	"time"
 
+	"go.chromium.org/tast-tests/cros/common/tbdep"
 	"go.chromium.org/tast-tests/cros/remote/tabletmode"
 	"go.chromium.org/tast/core/ctxutil"
 	"go.chromium.org/tast/core/dut"
@@ -29,6 +30,7 @@ func init() {
 		Contacts:     []string{"chromeos-power-team@google.com", "timvp@google.com", "cros-fw-engprod@google.com"},
 		ServiceDeps:  []string{"tast.cros.security.BootLockboxService"},
 		SoftwareDeps: []string{"chrome"},
+		TestBedDeps:  []string{tbdep.ServoStateWorking},
 		Attr:         []string{"group:mainline", "informational", "group:firmware", "firmware_ec", "firmware_ec_stressed", "firmware_ec_meets_kpi"},
 		Timeout:      5 * time.Minute,
 		// Restrict boards that don't support any method in the tabletmode package for forcing tabletmode.
