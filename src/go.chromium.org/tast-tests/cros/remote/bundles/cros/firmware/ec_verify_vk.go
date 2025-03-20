@@ -92,7 +92,6 @@ func init() {
 				tabletModeOn:      "basestate detach",
 				tabletModeOff:     "basestate attach",
 			},
-			ExtraAttr: []string{"firmware_detachable"},
 		}, {
 			Name:              "chromeslate",
 			ExtraHardwareDeps: hwdep.D(hwdep.FormFactor(hwdep.Chromeslate)),

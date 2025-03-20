@@ -171,7 +171,6 @@ func init() {
 				evTestdetectTouchpad:    false,
 				evTestdetectTouchscreen: true,
 			},
-			ExtraAttr: []string{"firmware_detachable"},
 		}, {
 			ExtraHardwareDeps: hwdep.D(
 				hwdep.FormFactor(hwdep.Convertible),

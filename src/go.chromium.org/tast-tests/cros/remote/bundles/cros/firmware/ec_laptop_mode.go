@@ -73,7 +73,6 @@ func init() {
 				formFactor:    "detachable",
 				setLaptopMode: "basestate attach",
 			},
-			ExtraAttr: []string{"firmware_detachable"},
 		}},
 		Timeout: 10 * time.Minute,
 	})

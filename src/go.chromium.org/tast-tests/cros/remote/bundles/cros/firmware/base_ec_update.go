@@ -41,7 +41,7 @@ func init() {
 		},
 		BugComponent: "b:792402", // ChromeOS > Platform > Enablement > Firmware > FAFT
 		TestBedDeps:  []string{tbdep.ServoStateWorking},
-		Attr:         []string{"group:firmware", "firmware_ec", "firmware_detachable", "firmware_ec_stressed", "firmware_ec_meets_kpi"},
+		Attr:         []string{"group:firmware", "firmware_ec", "firmware_ec_stressed", "firmware_ec_meets_kpi"},
 		SoftwareDeps: []string{"chrome"},
 		ServiceDeps:  []string{"tast.cros.firmware.UtilsService"},
 		HardwareDeps: hwdep.D(hwdep.ChromeEC(), hwdep.FormFactor(hwdep.Detachable), hwdep.Keyboard()),
