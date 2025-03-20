@@ -295,10 +295,12 @@ func OdfsStayInM365Pwa(ctx context.Context, s *testing.State) {
 	if param.isConsumerMicrosoft {
 		oneDriveUIAncestor = nodewith.Role(role.Window).NameRegex(regexp.MustCompile("Microsoft 365.*OneDrive")).ClassName("BrowserFrame")
 	}
-	oneDriveButton := nodewith.Role(role.ToggleButton).NameContaining("OneDrive").Ancestor(m365Context).First()
+	oneDriveButton := nodewith.Role(role.Link).NameContaining("OneDrive").Ancestor(m365Context).Focusable().First()
 	myFilesButton := nodewith.Role(role.Link).NameContaining("My files").Ancestor(oneDriveUIAncestor)
 	fileNameButton := nodewith.Role(role.StaticText).Name(fileName).Ancestor(oneDriveUIAncestor)
 	if err := uiauto.Combine("Open my files in OneDrive",
+		ui.WaitUntilExists(appsButton),
+		ui.DoDefault(appsButton),
 		ui.WaitUntilExists(oneDriveButton),
 		ui.DoDefault(oneDriveButton),
 		maybeDismissOneDriveAd(ui, oneDriveUIAncestor),
