@@ -38,7 +38,7 @@ func init() {
 		// This test doesn't actually need CCD, but in the lab, devices that can
 		// control charging with servo v4.x type-C also have CCD.
 		TestBedDeps:  []string{tbdep.ServoStateWorking, tbdep.ServoComponent("ccd_gsc")},
-		Attr:         []string{"group:firmware", "firmware_ec", "firmware_ec_stressed", "firmware_ec_meets_kpi"},
+		Attr:         []string{"group:firmware", "firmware_ec", "firmware_stressed", "firmware_meets_kpi"},
 		HardwareDeps: hwdep.D(hwdep.ChromeEC(), hwdep.Battery()),
 		SoftwareDeps: []string{"chrome"},
 		ServiceDeps: []string{

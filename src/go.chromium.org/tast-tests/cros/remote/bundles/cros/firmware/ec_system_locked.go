@@ -31,7 +31,7 @@ func init() {
 		},
 		BugComponent: "b:792402", // ChromeOS > Platform > Enablement > Firmware > FAFT
 		TestBedDeps:  []string{tbdep.ServoStateWorking},
-		Attr:         []string{"group:firmware", "firmware_ec", "firmware_ec_stressed"},
+		Attr:         []string{"group:firmware", "firmware_ec", "firmware_stressed"},
 		Fixture:      fixture.DevModeGBB,
 		HardwareDeps: hwdep.D(hwdep.ChromeEC()),
 		Timeout:      12 * time.Minute,

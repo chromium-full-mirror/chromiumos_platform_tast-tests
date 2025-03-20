@@ -38,7 +38,7 @@ func init() {
 		},
 		BugComponent: "b:167114",
 		TestBedDeps:  []string{tbdep.ServoStateWorking},
-		Attr:         []string{"group:mainline", "informational", "group:firmware", "firmware_ec", "firmware_ec_stressed", "firmware_ec_meets_kpi"},
+		Attr:         []string{"group:mainline", "informational", "group:firmware", "firmware_ec", "firmware_stressed", "firmware_meets_kpi"},
 		Timeout:      10 * time.Minute,
 		Fixture:      fixture.NormalMode,
 		ServiceDeps:  []string{"tast.cros.crash.FixtureService"},

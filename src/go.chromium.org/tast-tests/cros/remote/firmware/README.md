@@ -23,57 +23,57 @@ gate.
 
 > TODO: Link to the PE SW Gates document once public
 
-### firmware_ec_enabled
+### firmware_enabled
 
-The EC enabled tests must pass 100% before before exiting the Enabled gate.
+The enabled tests must pass 100% before before exiting the Enabled gate.
 
 These tests can be run either using an SSH connection to the DUT (preferred), or
 they can be run in `noSSH` mode.  See the [FAFT for bringup](./bringup.md) for
 details on running tests without SSH.
 
-When adding the `firmware_ec_enabled` attribute to any EC test you must also add both
-the `firmware_ec_meet_kpi` and `firmware_ec_stressed` attributes.  There is a pre-submit check
+When adding the `firmware_enabled` attribute to any test you must also add both
+the `firmware_meet_kpi` and `firmware_stressed` attributes.  There is a pre-submit check
 that verifies this.
 
-The EC enabled tests are run using:
+The enabled tests are run using:
 
 ```bash
 (inside chroot)
 DUT_IP=192.168.1.78 # Replace with actual IP of DUT
-tast run $DUT_IP '("group:firmware" && firmware_ec_enabled)'
+tast run $DUT_IP '("group:firmware" && firmware_enabled)'
 ```
 
-### firmware_ec_meet_kpi
+### firmware_meet_kpi
 
-The EC meets KPI tests include almost all the EC firmware tests, including all
-the tests tagged with the `firmware_ec_enabled` attribute.
+The meets KPI tests include almost all the firmware tests, including all
+the tests tagged with the `firmware_enabled` attribute.
 
 These tests require an SSH connection to the DUT.
 
-When adding the `firmware_ec_meet_kpi` attribute to any EC test you must also add the
-`firmware_ec_stressed` attribute.  There is a pre-submit check that verifies this.
+When adding the `firmware_meet_kpi` attribute to any test you must also add the
+`firmware_stressed` attribute.  There is a pre-submit check that verifies this.
 
-The EC meets KPI tests are run using:
+The meets KPI tests are run using:
 
 ```bash
 (inside chroot)
 DUT_IP=192.168.1.78 # Replace with actual IP of DUT
-tast run $DUT_IP '("group:firmware" && firmware_ec_meets_kpi)'
+tast run $DUT_IP '("group:firmware" && firmware_meets_kpi)'
 ```
 
-### firmware_ec_stressed
+### firmware_stressed
 
-The EC stressed tests include all the EC firmware tests, with the exception of
+The stressed tests include all the firmware tests, with the exception of
 tests tagged with the `firmware_experimental` attribute.
 
 These tests require an SSH connection to the DUT.
 
-The EC stressed tests are run using:
+The stressed tests are run using:
 
 ```bash
 (inside chroot)
 DUT_IP=192.168.1.78 # Replace with actual IP of DUT
-tast run $DUT_IP '("group:firmware" && firmware_ec_stressed)'
+tast run $DUT_IP '("group:firmware" && firmware_stressed)'
 ```
 
 ## Firmware Qualification
