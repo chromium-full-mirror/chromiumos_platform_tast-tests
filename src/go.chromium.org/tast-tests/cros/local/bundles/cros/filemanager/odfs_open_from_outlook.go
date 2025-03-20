@@ -14,6 +14,8 @@ import (
 	"go.chromium.org/tast-tests/cros/common/pci"
 	"go.chromium.org/tast-tests/cros/common/policy"
 	"go.chromium.org/tast-tests/cros/local/apps"
+	"go.chromium.org/tast-tests/cros/local/chrome"
+	"go.chromium.org/tast-tests/cros/local/chrome/browser"
 	"go.chromium.org/tast-tests/cros/local/chrome/uiauto"
 	"go.chromium.org/tast-tests/cros/local/chrome/uiauto/faillog"
 	"go.chromium.org/tast-tests/cros/local/chrome/uiauto/filesapp"
@@ -103,6 +105,27 @@ func signinInsideM365(ui *uiauto.Context) uiauto.Action {
 
 		return nil
 	}
+}
+
+// closeAllOtherTabs closes all other tabs besides the Outlook tab.
+func closeAllOtherTabs(ctx context.Context, tconn *chrome.TestConn) error {
+	outlookTab, err := browser.GetTabByTitle(ctx, tconn, "*Outlook*")
+	if err != nil {
+		return errors.Wrap(err, "failed to get Outlook tab")
+	}
+
+	allTabs, err := browser.AllTabs(ctx, tconn)
+	if err != nil {
+		return errors.Wrap(err, "failed to get all tabs")
+	}
+
+	var tabsToClose []int
+	for _, tab := range allTabs {
+		if tab.ID != outlookTab.ID {
+			tabsToClose = append(tabsToClose, tab.ID)
+		}
+	}
+	return browser.CloseTabsByID(ctx, tconn, tabsToClose)
 }
 
 // OdfsOpenFromOutlook verifies that links to Microsoft Office files which are
@@ -236,6 +259,11 @@ func OdfsOpenFromOutlook(ctx context.Context, s *testing.State) {
 				ui.LeftClick(emailLink),
 				ui.WithTimeout(20*time.Second).WaitUntilExists(m365Window),
 			)(ctx); err != nil {
+				// Close all other tabs besides Outlook.
+				if err := closeAllOtherTabs(ctx, tconn); err != nil {
+					s.Log("Failed to close all other tabs: ", err)
+				}
+
 				return errors.Wrap(err, "failed to open the link in the mail")
 			}
 
