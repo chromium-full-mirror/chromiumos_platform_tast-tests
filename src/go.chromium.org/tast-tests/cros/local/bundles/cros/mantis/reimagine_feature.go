@@ -91,8 +91,8 @@ func runAndVerifyReimagine(ctx context.Context, ui *uiauto.Context, tconn *chrom
 		return errors.Wrap(err, "failed to open edit with AI panel")
 	}
 
-	if err := util.WaitForProgressBar(ctx, tconn, ui); err != nil {
-		testing.ContextLog(ctx, "Error while waiting for progress bar: ", err)
+	if err := util.WaitForDLCPreparation(ctx, tconn, ui); err != nil {
+		testing.ContextLog(ctx, "Error while waiting for DLC preparation: ", err)
 	}
 
 	reimagineButton := nodewith.Role(role.Button).Name("Reimagine").Ancestor(galleryapp.RootFinder).First()

@@ -182,14 +182,14 @@ func WaitForSpinner(ctx context.Context, tconn *chrome.TestConn, ui *uiauto.Cont
 	return nil
 }
 
-// WaitForProgressBar waits for progress bar until it is gone.
-func WaitForProgressBar(ctx context.Context, tconn *chrome.TestConn, ui *uiauto.Context) error {
-	progressBar := nodewith.Role(role.ProgressIndicator).Ancestor(galleryapp.RootFinder).First()
-	if err := uiauto.Combine("Waiting for progress bar",
-		ui.WithTimeout(3*time.Second).WaitUntilExists(progressBar),
+// WaitForDLCPreparation waits for DLC download/installation.
+func WaitForDLCPreparation(ctx context.Context, tconn *chrome.TestConn, ui *uiauto.Context) error {
+	progressMessage := nodewith.Role(role.StaticText).NameContaining("Getting tools ready").Ancestor(galleryapp.RootFinder).First()
+	if err := uiauto.Combine("Waiting for DLC preparation",
+		ui.WithTimeout(constant.DefaultUITimeout).WaitUntilExists(progressMessage),
 		// DLC download might take up to 20 minutes.
-		ui.WithTimeout(20*time.Minute).WaitUntilGone(progressBar))(ctx); err != nil {
-		return errors.Wrap(err, "error while waiting for progress bar")
+		ui.WithTimeout(20*time.Minute).WaitUntilGone(progressMessage))(ctx); err != nil {
+		return errors.Wrap(err, "error while waiting for DLC preparation")
 	}
 
 	return nil

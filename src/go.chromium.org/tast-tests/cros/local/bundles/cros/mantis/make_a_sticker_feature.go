@@ -80,8 +80,8 @@ func MakeAStickerFeature(ctx context.Context, s *testing.State) {
 		s.Log("Error while waiting for spinner: ", err)
 	}
 
-	if err := util.WaitForProgressBar(ctx, tconn, ui); err != nil {
-		s.Log("Error while waiting for progress bar: ", err)
+	if err := util.WaitForDLCPreparation(ctx, tconn, ui); err != nil {
+		s.Log("Error while waiting for DLC preparation: ", err)
 	}
 
 	makeAStickerButton := nodewith.Role(role.Button).Name("Make a Sticker").Ancestor(galleryapp.RootFinder).First()

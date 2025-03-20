@@ -103,8 +103,8 @@ func BrushInput(ctx context.Context, s *testing.State) {
 		s.Fatal("Failed to open edit with AI panel: ", err)
 	}
 
-	if err := util.WaitForProgressBar(ctx, tconn, ui); err != nil {
-		s.Log("Error while waiting for progress bar: ", err)
+	if err := util.WaitForDLCPreparation(ctx, tconn, ui); err != nil {
+		s.Log("Error while waiting for DLC preparation: ", err)
 	}
 
 	removeBackgroundButton := nodewith.Role(role.Button).Name("Remove Background").Ancestor(galleryapp.RootFinder).First()

@@ -58,8 +58,8 @@ func UndoFunction(ctx context.Context, s *testing.State) {
 		s.Fatal("Failed to open edit with AI panel: ", err)
 	}
 
-	if err := util.WaitForProgressBar(ctx, tconn, ui); err != nil {
-		s.Log("Error while waiting for progress bar: ", err)
+	if err := util.WaitForDLCPreparation(ctx, tconn, ui); err != nil {
+		s.Log("Error while waiting for DLC preparation: ", err)
 	}
 
 	reimagineButton := nodewith.Role(role.Button).Name("Reimagine").Ancestor(galleryapp.RootFinder).First()
