@@ -10,6 +10,7 @@ import (
 
 	fwCommon "go.chromium.org/tast-tests/cros/common/firmware"
 	"go.chromium.org/tast-tests/cros/common/servo"
+	"go.chromium.org/tast-tests/cros/common/tbdep"
 	"go.chromium.org/tast-tests/cros/remote/firmware"
 	"go.chromium.org/tast-tests/cros/remote/firmware/fixture"
 	"go.chromium.org/tast/core/ctxutil"
@@ -26,7 +27,9 @@ func init() {
 			"chromeos-faft@google.com",
 		},
 		BugComponent: "b:792402", // ChromeOS > Platform > Enablement > Firmware > FAFT
-		Attr:         []string{"group:firmware", "firmware_trial"},
+		TestBedDeps:  []string{tbdep.ServoStateWorking},
+		// TODO(b/240649924): Add this test to some GSC suite, or delete it.
+		Attr:         []string{"group:firmware"},
 		HardwareDeps: hwdep.D(hwdep.ChromeEC(), hwdep.Battery(), hwdep.GSCUART()),
 		Fixture:      fixture.NormalMode,
 		SoftwareDeps: []string{"gsc"},

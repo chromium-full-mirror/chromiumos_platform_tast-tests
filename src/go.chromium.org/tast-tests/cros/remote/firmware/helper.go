@@ -1197,10 +1197,6 @@ func (h *Helper) OpenCCDNoTestlab(ctx context.Context) (retErr error) {
 		return errors.Wrap(err, "failed to create new boot mode switcher")
 	}
 
-	cleanupCtx := ctx
-	ctx, cancel := ctxutil.Shorten(ctx, 5*time.Minute)
-	defer cancel()
-
 	// Restore DUT's boot mode to the initial mode if
 	// it ends up in a different one after CCD is open.
 	defer func(ctx context.Context, initMode fwCommon.BootMode) {
@@ -1215,7 +1211,7 @@ func (h *Helper) OpenCCDNoTestlab(ctx context.Context) (retErr error) {
 				retErr = errors.Join(retErr, errors.Wrap(err, "failed to reboot into initial mode"))
 			}
 		}
-	}(cleanupCtx, initMode)
+	}(ctx, initMode)
 
 	// Verify OpenNoDevMode status.
 	_, openNoDevMode, err := h.Servo.GetCCDCapability(ctx, servo.OpenNoDevMode)
