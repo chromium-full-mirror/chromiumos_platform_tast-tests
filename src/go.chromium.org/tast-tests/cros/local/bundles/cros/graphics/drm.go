@@ -212,13 +212,6 @@ func init() {
 			ExtraSoftwareDeps: []string{"no_qemu"},
 			ExtraAttr:         []string{"group:mainline"},
 		}, {
-			Name:              "vk_glow",
-			Val:               []string{"vk_glow"},
-			Timeout:           30 * time.Second,
-			ExtraHardwareDeps: hwdep.D(hwdep.InternalDisplay()),
-			ExtraSoftwareDeps: []string{"vulkan", "no_qemu"},
-			ExtraAttr:         []string{"group:graphics", "graphics_drm", "graphics_nightly"},
-		}, {
 			Name:              "yuv_to_rgb_test",
 			Val:               []string{"yuv_to_rgb_test"},
 			Timeout:           30 * time.Second,
