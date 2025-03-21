@@ -86,15 +86,27 @@ func ECRebootEFS2(ctx context.Context, s *testing.State) {
 		}
 	}()
 
-	// CCD must be open to enable the GSC or EC reboot console commands used below.
-	if err := h.OpenCCD(ctx, false, false); err != nil {
-		s.Fatal("Failed to open CCD: ", err)
-	}
-
 	// Try to open CCD at the end of the test in case something after this test needs it.
 	defer func() {
 		h.Servo.RunGSCCommand(ctx, "ccd testlab open")
 	}()
+
+	// Open CCD to enable the GSC or EC reboot console commands used below.
+	if err := h.OpenCCD(ctx, false, false); err != nil {
+		s.Fatal("Failed to open CCD: ", err)
+	}
+
+	// Make sure that CCD capabilities are in their default states, in case some previous test changed them.
+	if err := h.Servo.RunGSCCommand(ctx, "ccd reset"); err != nil {
+		s.Fatal("Failed to reset CCD: ", err)
+	}
+
+	// For GSC reboot, GscFullConsole=Always is needed since CCD will lock after first reboot.
+	if err := h.Servo.SetCCDCapability(ctx, map[servo.CCDCap]servo.CCDCapState{
+		servo.GscFullConsole: servo.CapAlways,
+	}); err != nil {
+		s.Fatal("Failed to set CCD capability: ", err)
+	}
 
 	outDir, ok := testing.ContextOutDir(ctx)
 	if !ok {
