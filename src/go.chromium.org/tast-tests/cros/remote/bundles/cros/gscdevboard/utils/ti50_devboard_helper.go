@@ -1046,6 +1046,10 @@ func (h DevboardHelper) EnsureAPROVerificationSuccess(ctx context.Context, i *ti
 	if _, err := i.Command(ctx, flashInfo.AddrModeCmd); err != nil {
 		return errors.Errorf("failed to set addrmode: %s", err)
 	}
+	// Check for verification success to skip re-flashing the SPI flash chip unnecessarily (since it is slow).
+	if h.VerifyVerificationResultOnReboot(ctx, i, VerificationResultSuccess) == nil {
+		return nil
+	}
 	h.FlashSPIImage(ctx, i, imageName, imagePath, flashInfo.FlashSize)
 	return h.VerifyVerificationResultOnReboot(ctx, i, VerificationResultSuccess)
 }
