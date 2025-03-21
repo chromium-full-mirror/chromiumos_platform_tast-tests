@@ -156,8 +156,14 @@ func (e GpioEvents) FindFirstAfter(target GpioEvent, name ti50.GpioName) *GpioEv
 // String prints the gpio events in a table for logging
 func (e GpioEvents) String() string {
 	events := make([]string, len(e.Sorted))
+	var first, prev float64
 	for i := range e.Sorted {
-		events[i] = fmt.Sprintf("\t%-15s\t%s\t%dms", e.Sorted[i].Name, e.Sorted[i].Edge, e.Sorted[i].TimestampUS/1000)
+		cur := float64(e.Sorted[i].TimestampUS) / 1000
+		if first == 0 {
+			first = cur
+		}
+		events[i] = fmt.Sprintf("\t%-15s\t%s\t%.3fms\t(%.3fms\t+%.3fms)", e.Sorted[i].Name, e.Sorted[i].Edge, cur, cur-first, cur-prev)
+		prev = cur
 	}
 	return "\n" + strings.Join(events, "\n")
 }
