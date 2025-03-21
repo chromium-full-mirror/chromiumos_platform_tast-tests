@@ -30,7 +30,7 @@ func init() {
 		},
 		BugComponent: "b:750299",
 		TestBedDeps:  []string{tbdep.ServoStateWorking},
-		Attr:         []string{"group:firmware", "firmware_bios", "firmware_level2"},
+		Attr:         []string{"group:firmware", "firmware_bios"},
 		SoftwareDeps: []string{"crossystem", "flashrom"},
 		HardwareDeps: hwdep.D(hwdep.ChromeEC()),
 		Timeout:      25 * time.Minute,

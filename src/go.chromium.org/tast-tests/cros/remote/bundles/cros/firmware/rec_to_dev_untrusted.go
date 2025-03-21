@@ -27,7 +27,7 @@ func init() {
 			"chromeos-firmware@google.com"},
 		BugComponent: "b:792402", // ChromeOS > Platform > Enablement > Firmware > FAFT
 		TestBedDeps:  []string{tbdep.ServoStateWorking},
-		Attr:         []string{"group:firmware", "firmware_bios", "firmware_level2"},
+		Attr:         []string{"group:firmware", "firmware_bios"},
 		Fixture:      fixture.NormalMode,
 		HardwareDeps: hwdep.D(hwdep.ChromeEC(), hwdep.SkipOnFormFactor(hwdep.Chromebox, hwdep.Chromebase)),
 		Timeout:      20 * time.Minute,

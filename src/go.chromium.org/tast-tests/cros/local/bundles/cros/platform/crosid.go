@@ -18,7 +18,7 @@ func init() {
 		Contacts:     []string{"chromeos-config@google.com", "chromeos-faft@google.com"},
 		BugComponent: "b:970794", // ChromeOS > Platform > Enablement > Firmware > unibuild
 		SoftwareDeps: []string{"unibuild"},
-		Attr:         []string{"group:mainline", "group:firmware", "firmware_bios", "firmware_level5"},
+		Attr:         []string{"group:mainline", "group:firmware", "firmware_bios"},
 	})
 }
 

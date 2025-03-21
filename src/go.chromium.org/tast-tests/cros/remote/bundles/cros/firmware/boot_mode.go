@@ -58,7 +58,7 @@ func init() {
 				resetAfterBoot: true,
 				resetType:      firmware.WarmReset,
 			},
-			ExtraAttr: []string{"firmware_smoke", "firmware_bios", "firmware_level2"},
+			ExtraAttr: []string{"firmware_smoke", "firmware_bios"},
 			Timeout:   15 * time.Minute,
 		}, {
 			Name:    "normal_cold",
@@ -67,7 +67,7 @@ func init() {
 				resetAfterBoot: true,
 				resetType:      firmware.ColdReset,
 			},
-			ExtraAttr: []string{"firmware_smoke", "firmware_bios", "firmware_level2", "group:labqual"},
+			ExtraAttr: []string{"firmware_smoke", "firmware_bios", "group:labqual"},
 			Timeout:   15 * time.Minute,
 		}, {
 			Name:    "rec_warm",
@@ -78,7 +78,7 @@ func init() {
 				resetType:      firmware.WarmReset,
 			},
 			ExtraTestBedDeps: []string{tbdep.ServoUSBState("NORMAL")},
-			ExtraAttr:        []string{"firmware_smoke", "firmware_bios", "firmware_level2", "firmware_ro"},
+			ExtraAttr:        []string{"firmware_smoke", "firmware_bios", "firmware_ro"},
 			Timeout:          2 * time.Hour,
 		}, {
 			Name:    "rec_cold",
@@ -89,7 +89,7 @@ func init() {
 				resetType:      firmware.ColdReset,
 			},
 			ExtraTestBedDeps: []string{tbdep.ServoUSBState("NORMAL")},
-			ExtraAttr:        []string{"firmware_smoke", "firmware_bios", "firmware_level2", "firmware_ro"},
+			ExtraAttr:        []string{"firmware_smoke", "firmware_bios", "firmware_ro"},
 			Timeout:          2 * time.Hour,
 		}, {
 			Name:    "dev_usb_cold",
@@ -99,7 +99,7 @@ func init() {
 				resetType:      firmware.ColdReset,
 			},
 			ExtraTestBedDeps: []string{tbdep.ServoUSBState("NORMAL")},
-			ExtraAttr:        []string{"firmware_bios", "firmware_level2"},
+			ExtraAttr:        []string{"firmware_bios"},
 			Timeout:          2 * time.Hour,
 		}, {
 			Name:    "dev_warm",
@@ -110,7 +110,7 @@ func init() {
 				checkBootFromMain: true,
 			},
 			ExtraTestBedDeps: []string{tbdep.ServoUSBState("NORMAL")},
-			ExtraAttr:        []string{"firmware_smoke", "firmware_bios", "firmware_level2"},
+			ExtraAttr:        []string{"firmware_smoke", "firmware_bios"},
 			Timeout:          2 * time.Hour,
 		}, {
 			Name:    "dev_cold",
@@ -121,7 +121,7 @@ func init() {
 				checkBootFromMain: true,
 			},
 			ExtraTestBedDeps: []string{tbdep.ServoUSBState("NORMAL")},
-			ExtraAttr:        []string{"firmware_smoke", "firmware_bios", "firmware_level2"},
+			ExtraAttr:        []string{"firmware_smoke", "firmware_bios"},
 			Timeout:          2 * time.Hour,
 		}, {
 			Name:    "dev_to_rec",
@@ -130,7 +130,7 @@ func init() {
 				bootToMode: fwCommon.BootModeRecovery,
 			},
 			ExtraTestBedDeps: []string{tbdep.ServoUSBState("NORMAL")},
-			ExtraAttr:        []string{"firmware_smoke", "firmware_bios", "firmware_level2"},
+			ExtraAttr:        []string{"firmware_smoke", "firmware_bios"},
 			Timeout:          2 * time.Hour,
 		}, {
 			Name:    "rec_to_dev",
@@ -139,7 +139,7 @@ func init() {
 				bootToMode: fwCommon.BootModeDev,
 			},
 			ExtraTestBedDeps: []string{tbdep.ServoUSBState("NORMAL")},
-			ExtraAttr:        []string{"firmware_bios", "firmware_level2"},
+			ExtraAttr:        []string{"firmware_bios"},
 			Timeout:          2 * time.Hour,
 		}, {
 			Name:    "dev_gbb_to_rec",
@@ -148,7 +148,7 @@ func init() {
 				bootToMode: fwCommon.BootModeRecovery,
 			},
 			ExtraTestBedDeps: []string{tbdep.ServoUSBState("NORMAL")},
-			ExtraAttr:        []string{"firmware_bios", "firmware_level2"},
+			ExtraAttr:        []string{"firmware_bios"},
 			Timeout:          2 * time.Hour,
 		}, {
 			Name:    "rec_to_dev_gbb",
@@ -158,7 +158,7 @@ func init() {
 				allowGBBForce: true,
 			},
 			ExtraTestBedDeps: []string{tbdep.ServoUSBState("NORMAL")},
-			ExtraAttr:        []string{"firmware_bios", "firmware_level2"},
+			ExtraAttr:        []string{"firmware_bios"},
 			Timeout:          2 * time.Hour,
 		}, {
 			// Verifies that we can go from normal -> dev -> normal without GBB flags.
@@ -169,7 +169,7 @@ func init() {
 				allowGBBForce:  false,
 				resetAfterBoot: false,
 			},
-			ExtraAttr: []string{"firmware_bios", "firmware_level2"},
+			ExtraAttr: []string{"firmware_bios"},
 			Timeout:   15 * time.Minute,
 		}},
 	})

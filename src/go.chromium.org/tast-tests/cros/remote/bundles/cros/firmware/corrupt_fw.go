@@ -41,7 +41,7 @@ func init() {
 		},
 		BugComponent: "b:792402", // ChromeOS > Platform > Enablement > Firmware > FAFT
 		TestBedDeps:  []string{tbdep.ServoStateWorking},
-		Attr:         []string{"group:firmware", "firmware_bios", "firmware_level2"},
+		Attr:         []string{"group:firmware", "firmware_bios"},
 		HardwareDeps: hwdep.D(hwdep.ChromeEC(), hwdep.NoVbootCbfsIntegration()),
 		Timeout:      25 * time.Minute,
 		Params: []testing.Param{

@@ -27,7 +27,7 @@ func init() {
 			"chromeos-faft@google.com",
 		},
 		BugComponent: "b:792402", // ChromeOS > Platform > Enablement > Firmware > FAFT
-		Attr:         []string{"group:firmware", "firmware_bios", "firmware_level2"},
+		Attr:         []string{"group:firmware", "firmware_bios"},
 		HardwareDeps: hwdep.D(hwdep.IsIntelUarchEqualOrNewerThan(hwdep.IntelUarchs{IntelAtomOrderList: []hwdep.IntelAtomOrder{hwdep.Gracemont}, IntelBigCoreOrderList: []hwdep.IntelBigCoreOrder{hwdep.TigerLake}})),
 		Timeout:      20 * time.Minute,
 		Params: []testing.Param{

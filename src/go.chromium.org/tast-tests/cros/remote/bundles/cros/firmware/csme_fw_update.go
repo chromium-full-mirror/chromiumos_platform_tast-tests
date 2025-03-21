@@ -30,7 +30,7 @@ func init() {
 		SoftwareDeps: []string{"csme_update"},
 		ServiceDeps:  []string{"tast.cros.firmware.BiosService"},
 		TestBedDeps:  []string{tbdep.ServoStateWorking},
-		Attr:         []string{"group:firmware", "firmware_bios", "firmware_level2"},
+		Attr:         []string{"group:firmware", "firmware_bios"},
 		Vars:         []string{"firmware_branch", "ro_versions"},
 		Data:         []string{"shipped-firmwares.json"},
 		Timeout:      10 * time.Minute,

@@ -66,7 +66,7 @@ func init() {
 			},
 			{
 				Name:      "power_state",
-				ExtraAttr: []string{"firmware_bios", "firmware_level2", "firmware_bringup", "group:labqual"},
+				ExtraAttr: []string{"firmware_bios", "firmware_bringup", "group:labqual"},
 				Val: powerG3Params{
 					PowerOffMethod: powerStateOff,
 				},
@@ -74,7 +74,7 @@ func init() {
 			{
 				Name:             "power_state_usb_plugged_in",
 				ExtraTestBedDeps: []string{tbdep.ServoUSBState("NORMAL")},
-				ExtraAttr:        []string{"firmware_bios", "firmware_level2", "group:labqual", "firmware_ro"},
+				ExtraAttr:        []string{"firmware_bios", "group:labqual", "firmware_ro"},
 				Val: powerG3Params{
 					PowerOffMethod: powerStateOff,
 					CheckUSB:       true,
@@ -93,7 +93,7 @@ func init() {
 			{
 				Name:             "power_state_rec_off",
 				ExtraTestBedDeps: []string{tbdep.ServoUSBState("NORMAL")},
-				ExtraAttr:        []string{"firmware_bios", "firmware_level2", "group:labqual", "firmware_ro"},
+				ExtraAttr:        []string{"firmware_bios", "group:labqual", "firmware_ro"},
 				Val: powerG3Params{
 					PowerOffMethod: powerStateOff,
 					SetRecMode:     true,
@@ -102,7 +102,7 @@ func init() {
 			},
 			{
 				Name:      "power_button_from_ro",
-				ExtraAttr: []string{"firmware_bios", "firmware_level2", "group:labqual", "firmware_ro"},
+				ExtraAttr: []string{"firmware_bios", "group:labqual", "firmware_ro"},
 				Val: powerG3Params{
 					PowerOffMethod: longPowerButtonPress,
 					SetRecScreen:   true,

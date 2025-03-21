@@ -25,7 +25,7 @@ func init() {
 		BugComponent: "b:792402", // ChromeOS > Platform > Enablement > Firmware > FAFT
 		SoftwareDeps: []string{"crossystem", "flashrom"},
 		ServiceDeps:  []string{"tast.cros.firmware.BiosService", "tast.cros.firmware.UtilsService"},
-		Attr:         []string{"group:firmware", "firmware_bios", "firmware_level1"},
+		Attr:         []string{"group:firmware", "firmware_bios"},
 		Vars:         []string{"servo"},
 		TestBedDeps:  []string{tbdep.ServoStateWorking},
 		Params: []testing.Param{

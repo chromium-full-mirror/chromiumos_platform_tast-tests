@@ -38,7 +38,7 @@ func init() {
 		},
 		BugComponent: "b:792402", // ChromeOS > Platform > Enablement > Firmware > FAFT
 		TestBedDeps:  []string{tbdep.ServoStateWorking},
-		Attr:         []string{"group:firmware", "firmware_bios", "firmware_level5"},
+		Attr:         []string{"group:firmware", "firmware_bios"},
 		SoftwareDeps: []string{"flashrom"},
 		HardwareDeps: hwdep.D(hwdep.CPUSocFamily("intel")),
 		Fixture:      fixture.NormalMode,

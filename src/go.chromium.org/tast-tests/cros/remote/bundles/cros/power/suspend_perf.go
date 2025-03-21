@@ -163,7 +163,7 @@ func init() {
 		}, {
 			Name:             "fw_qual",
 			ExtraTestBedDeps: []string{tbdep.ServoStateWorking},
-			ExtraAttr:        []string{"group:firmware", "firmware_bios", "firmware_level3"},
+			ExtraAttr:        []string{"group:firmware", "firmware_bios"},
 			Fixture:          fixture.NormalMode,
 			Val: testArgsForSuspendPerf{
 				numSuspend:    5,

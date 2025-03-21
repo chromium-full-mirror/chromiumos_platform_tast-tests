@@ -26,7 +26,7 @@ func init() {
 		BugComponent: "b:893827", // ChromeOS > Platform > Connectivity > WiFi
 		Attr: []string{"group:mainline", "group:wificell", "wificell_func", "wificell_dut_validation", "group:labqual",
 			// Updating the SAR tables in CBFS can break this test.
-			"group:firmware", "firmware_bios", "firmware_level5", "group:release-health", "release-health_wifi",
+			"group:firmware", "firmware_bios", "group:release-health", "release-health_wifi",
 		},
 		SoftwareDeps: []string{"no_kernel_upstream"},
 		Requirements: []string{tdreq.WiFiRegSupportDynamicPowerTable, tdreq.WiFiRegSupportStaticSAR, tdreq.WiFiRegSupportDynamicSAR, tdreq.WiFiRegSupportGeoSAR, tdreq.WiFiProcPassFW, tdreq.WiFiProcPassAVL, tdreq.WiFiProcPassAVLBeforeUpdates, tdreq.WiFiProcPassMatfunc, tdreq.WiFiProcPassMatfuncBeforeUpdates},

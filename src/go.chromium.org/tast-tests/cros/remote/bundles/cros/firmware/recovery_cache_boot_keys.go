@@ -46,13 +46,13 @@ func init() {
 			{
 				Name:      "normal",
 				Fixture:   fixture.NormalMode,
-				ExtraAttr: []string{"firmware_bios", "firmware_level2", "firmware_ro"},
+				ExtraAttr: []string{"firmware_bios", "firmware_ro"},
 				Timeout:   2 * time.Hour,
 				Val:       1,
 			}, {
 				Name:      "dev",
 				Fixture:   fixture.DevModeGBB,
-				ExtraAttr: []string{"firmware_bios", "firmware_level2", "firmware_ro"},
+				ExtraAttr: []string{"firmware_bios", "firmware_ro"},
 				Timeout:   2 * time.Hour,
 				Val:       1,
 			},
