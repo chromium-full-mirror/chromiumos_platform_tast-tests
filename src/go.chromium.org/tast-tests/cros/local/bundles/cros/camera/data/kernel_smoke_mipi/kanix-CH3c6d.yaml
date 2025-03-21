@@ -1,0 +1,2425 @@
+remap_entity_by_name:
+- id: 1
+  name: Intel IPU6 ISYS Capture 0
+- id: 5
+  name: Intel IPU6 ISYS Capture 1
+- id: 9
+  name: Intel IPU6 ISYS Capture 2
+- id: 13
+  name: Intel IPU6 ISYS Capture 3
+- id: 17
+  name: Intel IPU6 ISYS Capture 4
+- id: 21
+  name: Intel IPU6 ISYS Capture 5
+- id: 25
+  name: Intel IPU6 ISYS Capture 6
+- id: 29
+  name: Intel IPU6 ISYS Capture 7
+- id: 33
+  name: Intel IPU6 ISYS Capture 8
+- id: 37
+  name: Intel IPU6 ISYS Capture 9
+- id: 41
+  name: Intel IPU6 ISYS Capture 10
+- id: 45
+  name: Intel IPU6 ISYS Capture 11
+- id: 49
+  name: Intel IPU6 ISYS Capture 12
+- id: 53
+  name: Intel IPU6 ISYS Capture 13
+- id: 57
+  name: Intel IPU6 ISYS Capture 14
+- id: 61
+  name: Intel IPU6 ISYS Capture 15
+- id: 65
+  name: Intel IPU6 ISYS Capture 16
+- id: 69
+  name: Intel IPU6 ISYS Capture 17
+- id: 73
+  name: Intel IPU6 ISYS Capture 18
+- id: 77
+  name: Intel IPU6 ISYS Capture 19
+- id: 81
+  name: Intel IPU6 ISYS Capture 20
+- id: 85
+  name: Intel IPU6 ISYS Capture 21
+- id: 89
+  name: Intel IPU6 ISYS Capture 22
+- id: 93
+  name: Intel IPU6 ISYS Capture 23
+- id: 97
+  name: Intel IPU6 ISYS Capture 24
+- id: 101
+  name: Intel IPU6 ISYS Capture 25
+- id: 105
+  name: Intel IPU6 ISYS Capture 26
+- id: 109
+  name: Intel IPU6 ISYS Capture 27
+- id: 113
+  name: Intel IPU6 ISYS Capture 28
+- id: 117
+  name: Intel IPU6 ISYS Capture 29
+- id: 121
+  name: Intel IPU6 ISYS Capture 30
+- id: 125
+  name: Intel IPU6 ISYS Capture 31
+- id: 129
+  name: Intel IPU6 ISYS Capture 32
+- id: 133
+  name: Intel IPU6 ISYS Capture 33
+- id: 137
+  name: Intel IPU6 ISYS Capture 34
+- id: 141
+  name: Intel IPU6 ISYS Capture 35
+- id: 145
+  name: Intel IPU6 ISYS Capture 36
+- id: 149
+  name: Intel IPU6 ISYS Capture 37
+- id: 153
+  name: Intel IPU6 ISYS Capture 38
+- id: 157
+  name: Intel IPU6 ISYS Capture 39
+- id: 161
+  name: Intel IPU6 ISYS Capture 40
+- id: 165
+  name: Intel IPU6 ISYS Capture 41
+- id: 169
+  name: Intel IPU6 ISYS Capture 42
+- id: 173
+  name: Intel IPU6 ISYS Capture 43
+- id: 177
+  name: Intel IPU6 ISYS Capture 44
+- id: 181
+  name: Intel IPU6 ISYS Capture 45
+- id: 185
+  name: Intel IPU6 ISYS Capture 46
+- id: 189
+  name: Intel IPU6 ISYS Capture 47
+- id: 193
+  name: Intel IPU6 CSI2 0
+- id: 203
+  name: Intel IPU6 CSI2 1
+- id: 213
+  name: Intel IPU6 CSI2 2
+- id: 223
+  name: Intel IPU6 CSI2 3
+- id: 233
+  name: Intel IPU6 CSI2 4
+- id: 243
+  name: Intel IPU6 CSI2 5
+- id: 349
+  name_regex: hi556 [0-9]+-0020
+media_ctl:
+  info:
+    driver: intel-ipu6
+    model: ipu6
+    serial:
+    bus_info: PCI:0000:00:05.0
+    media_version: 394828
+    hw_revision: 2156297497
+    driver_version: 394828
+  entities:
+  - desc:
+      id: 1
+      name: Intel IPU6 ISYS Capture 0
+      type: 65537
+      revision: 0
+      flags: 0
+      group_id: 0
+      pads: 1
+      links: 0
+    v4l_properties:
+      fmt_meta_capture:
+        dataformat: 945046861
+        buffersize: 9600
+      input: 0
+      priority: 2
+    pads:
+    - desc:
+        entity: 1
+        index: 0
+        flags: 5
+        reserved: [0, 0]
+      subdev_properties: {}
+      links: []
+  - desc:
+      id: 5
+      name: Intel IPU6 ISYS Capture 1
+      type: 65537
+      revision: 0
+      flags: 0
+      group_id: 0
+      pads: 1
+      links: 0
+    v4l_properties:
+      fmt_meta_capture:
+        dataformat: 945046861
+        buffersize: 9600
+      input: 0
+      priority: 2
+    pads:
+    - desc:
+        entity: 5
+        index: 0
+        flags: 5
+        reserved: [0, 0]
+      subdev_properties: {}
+      links: []
+  - desc:
+      id: 9
+      name: Intel IPU6 ISYS Capture 2
+      type: 65537
+      revision: 0
+      flags: 0
+      group_id: 0
+      pads: 1
+      links: 0
+    v4l_properties:
+      fmt_meta_capture:
+        dataformat: 945046861
+        buffersize: 9600
+      input: 0
+      priority: 2
+    pads:
+    - desc:
+        entity: 9
+        index: 0
+        flags: 5
+        reserved: [0, 0]
+      subdev_properties: {}
+      links: []
+  - desc:
+      id: 13
+      name: Intel IPU6 ISYS Capture 3
+      type: 65537
+      revision: 0
+      flags: 0
+      group_id: 0
+      pads: 1
+      links: 0
+    v4l_properties:
+      fmt_meta_capture:
+        dataformat: 945046861
+        buffersize: 9600
+      input: 0
+      priority: 2
+    pads:
+    - desc:
+        entity: 13
+        index: 0
+        flags: 5
+        reserved: [0, 0]
+      subdev_properties: {}
+      links: []
+  - desc:
+      id: 17
+      name: Intel IPU6 ISYS Capture 4
+      type: 65537
+      revision: 0
+      flags: 0
+      group_id: 0
+      pads: 1
+      links: 0
+    v4l_properties:
+      fmt_meta_capture:
+        dataformat: 945046861
+        buffersize: 9600
+      input: 0
+      priority: 2
+    pads:
+    - desc:
+        entity: 17
+        index: 0
+        flags: 5
+        reserved: [0, 0]
+      subdev_properties: {}
+      links: []
+  - desc:
+      id: 21
+      name: Intel IPU6 ISYS Capture 5
+      type: 65537
+      revision: 0
+      flags: 0
+      group_id: 0
+      pads: 1
+      links: 0
+    v4l_properties:
+      fmt_meta_capture:
+        dataformat: 945046861
+        buffersize: 9600
+      input: 0
+      priority: 2
+    pads:
+    - desc:
+        entity: 21
+        index: 0
+        flags: 5
+        reserved: [0, 0]
+      subdev_properties: {}
+      links: []
+  - desc:
+      id: 25
+      name: Intel IPU6 ISYS Capture 6
+      type: 65537
+      revision: 0
+      flags: 0
+      group_id: 0
+      pads: 1
+      links: 0
+    v4l_properties:
+      fmt_meta_capture:
+        dataformat: 945046861
+        buffersize: 9600
+      input: 0
+      priority: 2
+    pads:
+    - desc:
+        entity: 25
+        index: 0
+        flags: 5
+        reserved: [0, 0]
+      subdev_properties: {}
+      links: []
+  - desc:
+      id: 29
+      name: Intel IPU6 ISYS Capture 7
+      type: 65537
+      revision: 0
+      flags: 0
+      group_id: 0
+      pads: 1
+      links: 0
+    v4l_properties:
+      fmt_meta_capture:
+        dataformat: 945046861
+        buffersize: 9600
+      input: 0
+      priority: 2
+    pads:
+    - desc:
+        entity: 29
+        index: 0
+        flags: 5
+        reserved: [0, 0]
+      subdev_properties: {}
+      links: []
+  - desc:
+      id: 33
+      name: Intel IPU6 ISYS Capture 8
+      type: 65537
+      revision: 0
+      flags: 0
+      group_id: 0
+      pads: 1
+      links: 0
+    v4l_properties:
+      fmt_meta_capture:
+        dataformat: 945046861
+        buffersize: 9600
+      input: 0
+      priority: 2
+    pads:
+    - desc:
+        entity: 33
+        index: 0
+        flags: 5
+        reserved: [0, 0]
+      subdev_properties: {}
+      links: []
+  - desc:
+      id: 37
+      name: Intel IPU6 ISYS Capture 9
+      type: 65537
+      revision: 0
+      flags: 0
+      group_id: 0
+      pads: 1
+      links: 0
+    v4l_properties:
+      fmt_meta_capture:
+        dataformat: 945046861
+        buffersize: 9600
+      input: 0
+      priority: 2
+    pads:
+    - desc:
+        entity: 37
+        index: 0
+        flags: 5
+        reserved: [0, 0]
+      subdev_properties: {}
+      links: []
+  - desc:
+      id: 41
+      name: Intel IPU6 ISYS Capture 10
+      type: 65537
+      revision: 0
+      flags: 0
+      group_id: 0
+      pads: 1
+      links: 0
+    v4l_properties:
+      fmt_meta_capture:
+        dataformat: 945046861
+        buffersize: 9600
+      input: 0
+      priority: 2
+    pads:
+    - desc:
+        entity: 41
+        index: 0
+        flags: 5
+        reserved: [0, 0]
+      subdev_properties: {}
+      links: []
+  - desc:
+      id: 45
+      name: Intel IPU6 ISYS Capture 11
+      type: 65537
+      revision: 0
+      flags: 0
+      group_id: 0
+      pads: 1
+      links: 0
+    v4l_properties:
+      fmt_meta_capture:
+        dataformat: 945046861
+        buffersize: 9600
+      input: 0
+      priority: 2
+    pads:
+    - desc:
+        entity: 45
+        index: 0
+        flags: 5
+        reserved: [0, 0]
+      subdev_properties: {}
+      links: []
+  - desc:
+      id: 49
+      name: Intel IPU6 ISYS Capture 12
+      type: 65537
+      revision: 0
+      flags: 0
+      group_id: 0
+      pads: 1
+      links: 0
+    v4l_properties:
+      fmt_meta_capture:
+        dataformat: 945046861
+        buffersize: 9600
+      input: 0
+      priority: 2
+    pads:
+    - desc:
+        entity: 49
+        index: 0
+        flags: 5
+        reserved: [0, 0]
+      subdev_properties: {}
+      links: []
+  - desc:
+      id: 53
+      name: Intel IPU6 ISYS Capture 13
+      type: 65537
+      revision: 0
+      flags: 0
+      group_id: 0
+      pads: 1
+      links: 0
+    v4l_properties:
+      fmt_meta_capture:
+        dataformat: 945046861
+        buffersize: 9600
+      input: 0
+      priority: 2
+    pads:
+    - desc:
+        entity: 53
+        index: 0
+        flags: 5
+        reserved: [0, 0]
+      subdev_properties: {}
+      links: []
+  - desc:
+      id: 57
+      name: Intel IPU6 ISYS Capture 14
+      type: 65537
+      revision: 0
+      flags: 0
+      group_id: 0
+      pads: 1
+      links: 0
+    v4l_properties:
+      fmt_meta_capture:
+        dataformat: 945046861
+        buffersize: 9600
+      input: 0
+      priority: 2
+    pads:
+    - desc:
+        entity: 57
+        index: 0
+        flags: 5
+        reserved: [0, 0]
+      subdev_properties: {}
+      links: []
+  - desc:
+      id: 61
+      name: Intel IPU6 ISYS Capture 15
+      type: 65537
+      revision: 0
+      flags: 0
+      group_id: 0
+      pads: 1
+      links: 0
+    v4l_properties:
+      fmt_meta_capture:
+        dataformat: 945046861
+        buffersize: 9600
+      input: 0
+      priority: 2
+    pads:
+    - desc:
+        entity: 61
+        index: 0
+        flags: 5
+        reserved: [0, 0]
+      subdev_properties: {}
+      links: []
+  - desc:
+      id: 65
+      name: Intel IPU6 ISYS Capture 16
+      type: 65537
+      revision: 0
+      flags: 0
+      group_id: 0
+      pads: 1
+      links: 0
+    v4l_properties:
+      fmt_meta_capture:
+        dataformat: 945046861
+        buffersize: 9600
+      input: 0
+      priority: 2
+    pads:
+    - desc:
+        entity: 65
+        index: 0
+        flags: 5
+        reserved: [0, 0]
+      subdev_properties: {}
+      links: []
+  - desc:
+      id: 69
+      name: Intel IPU6 ISYS Capture 17
+      type: 65537
+      revision: 0
+      flags: 0
+      group_id: 0
+      pads: 1
+      links: 0
+    v4l_properties:
+      fmt_meta_capture:
+        dataformat: 945046861
+        buffersize: 9600
+      input: 0
+      priority: 2
+    pads:
+    - desc:
+        entity: 69
+        index: 0
+        flags: 5
+        reserved: [0, 0]
+      subdev_properties: {}
+      links: []
+  - desc:
+      id: 73
+      name: Intel IPU6 ISYS Capture 18
+      type: 65537
+      revision: 0
+      flags: 0
+      group_id: 0
+      pads: 1
+      links: 0
+    v4l_properties:
+      fmt_meta_capture:
+        dataformat: 945046861
+        buffersize: 9600
+      input: 0
+      priority: 2
+    pads:
+    - desc:
+        entity: 73
+        index: 0
+        flags: 5
+        reserved: [0, 0]
+      subdev_properties: {}
+      links: []
+  - desc:
+      id: 77
+      name: Intel IPU6 ISYS Capture 19
+      type: 65537
+      revision: 0
+      flags: 0
+      group_id: 0
+      pads: 1
+      links: 0
+    v4l_properties:
+      fmt_meta_capture:
+        dataformat: 945046861
+        buffersize: 9600
+      input: 0
+      priority: 2
+    pads:
+    - desc:
+        entity: 77
+        index: 0
+        flags: 5
+        reserved: [0, 0]
+      subdev_properties: {}
+      links: []
+  - desc:
+      id: 81
+      name: Intel IPU6 ISYS Capture 20
+      type: 65537
+      revision: 0
+      flags: 0
+      group_id: 0
+      pads: 1
+      links: 0
+    v4l_properties:
+      fmt_meta_capture:
+        dataformat: 945046861
+        buffersize: 9600
+      input: 0
+      priority: 2
+    pads:
+    - desc:
+        entity: 81
+        index: 0
+        flags: 5
+        reserved: [0, 0]
+      subdev_properties: {}
+      links: []
+  - desc:
+      id: 85
+      name: Intel IPU6 ISYS Capture 21
+      type: 65537
+      revision: 0
+      flags: 0
+      group_id: 0
+      pads: 1
+      links: 0
+    v4l_properties:
+      fmt_meta_capture:
+        dataformat: 945046861
+        buffersize: 9600
+      input: 0
+      priority: 2
+    pads:
+    - desc:
+        entity: 85
+        index: 0
+        flags: 5
+        reserved: [0, 0]
+      subdev_properties: {}
+      links: []
+  - desc:
+      id: 89
+      name: Intel IPU6 ISYS Capture 22
+      type: 65537
+      revision: 0
+      flags: 0
+      group_id: 0
+      pads: 1
+      links: 0
+    v4l_properties:
+      fmt_meta_capture:
+        dataformat: 945046861
+        buffersize: 9600
+      input: 0
+      priority: 2
+    pads:
+    - desc:
+        entity: 89
+        index: 0
+        flags: 5
+        reserved: [0, 0]
+      subdev_properties: {}
+      links: []
+  - desc:
+      id: 93
+      name: Intel IPU6 ISYS Capture 23
+      type: 65537
+      revision: 0
+      flags: 0
+      group_id: 0
+      pads: 1
+      links: 0
+    v4l_properties:
+      fmt_meta_capture:
+        dataformat: 945046861
+        buffersize: 9600
+      input: 0
+      priority: 2
+    pads:
+    - desc:
+        entity: 93
+        index: 0
+        flags: 5
+        reserved: [0, 0]
+      subdev_properties: {}
+      links: []
+  - desc:
+      id: 97
+      name: Intel IPU6 ISYS Capture 24
+      type: 65537
+      revision: 0
+      flags: 0
+      group_id: 0
+      pads: 1
+      links: 0
+    v4l_properties:
+      fmt_meta_capture:
+        dataformat: 945046861
+        buffersize: 9600
+      input: 0
+      priority: 2
+    pads:
+    - desc:
+        entity: 97
+        index: 0
+        flags: 5
+        reserved: [0, 0]
+      subdev_properties: {}
+      links: []
+  - desc:
+      id: 101
+      name: Intel IPU6 ISYS Capture 25
+      type: 65537
+      revision: 0
+      flags: 0
+      group_id: 0
+      pads: 1
+      links: 0
+    v4l_properties:
+      fmt_meta_capture:
+        dataformat: 945046861
+        buffersize: 9600
+      input: 0
+      priority: 2
+    pads:
+    - desc:
+        entity: 101
+        index: 0
+        flags: 5
+        reserved: [0, 0]
+      subdev_properties: {}
+      links: []
+  - desc:
+      id: 105
+      name: Intel IPU6 ISYS Capture 26
+      type: 65537
+      revision: 0
+      flags: 0
+      group_id: 0
+      pads: 1
+      links: 0
+    v4l_properties:
+      fmt_meta_capture:
+        dataformat: 945046861
+        buffersize: 9600
+      input: 0
+      priority: 2
+    pads:
+    - desc:
+        entity: 105
+        index: 0
+        flags: 5
+        reserved: [0, 0]
+      subdev_properties: {}
+      links: []
+  - desc:
+      id: 109
+      name: Intel IPU6 ISYS Capture 27
+      type: 65537
+      revision: 0
+      flags: 0
+      group_id: 0
+      pads: 1
+      links: 0
+    v4l_properties:
+      fmt_meta_capture:
+        dataformat: 945046861
+        buffersize: 9600
+      input: 0
+      priority: 2
+    pads:
+    - desc:
+        entity: 109
+        index: 0
+        flags: 5
+        reserved: [0, 0]
+      subdev_properties: {}
+      links: []
+  - desc:
+      id: 113
+      name: Intel IPU6 ISYS Capture 28
+      type: 65537
+      revision: 0
+      flags: 0
+      group_id: 0
+      pads: 1
+      links: 0
+    v4l_properties:
+      fmt_meta_capture:
+        dataformat: 945046861
+        buffersize: 9600
+      input: 0
+      priority: 2
+    pads:
+    - desc:
+        entity: 113
+        index: 0
+        flags: 5
+        reserved: [0, 0]
+      subdev_properties: {}
+      links: []
+  - desc:
+      id: 117
+      name: Intel IPU6 ISYS Capture 29
+      type: 65537
+      revision: 0
+      flags: 0
+      group_id: 0
+      pads: 1
+      links: 0
+    v4l_properties:
+      fmt_meta_capture:
+        dataformat: 945046861
+        buffersize: 9600
+      input: 0
+      priority: 2
+    pads:
+    - desc:
+        entity: 117
+        index: 0
+        flags: 5
+        reserved: [0, 0]
+      subdev_properties: {}
+      links: []
+  - desc:
+      id: 121
+      name: Intel IPU6 ISYS Capture 30
+      type: 65537
+      revision: 0
+      flags: 0
+      group_id: 0
+      pads: 1
+      links: 0
+    v4l_properties:
+      fmt_meta_capture:
+        dataformat: 945046861
+        buffersize: 9600
+      input: 0
+      priority: 2
+    pads:
+    - desc:
+        entity: 121
+        index: 0
+        flags: 5
+        reserved: [0, 0]
+      subdev_properties: {}
+      links: []
+  - desc:
+      id: 125
+      name: Intel IPU6 ISYS Capture 31
+      type: 65537
+      revision: 0
+      flags: 0
+      group_id: 0
+      pads: 1
+      links: 0
+    v4l_properties:
+      fmt_meta_capture:
+        dataformat: 945046861
+        buffersize: 9600
+      input: 0
+      priority: 2
+    pads:
+    - desc:
+        entity: 125
+        index: 0
+        flags: 5
+        reserved: [0, 0]
+      subdev_properties: {}
+      links: []
+  - desc:
+      id: 129
+      name: Intel IPU6 ISYS Capture 32
+      type: 65537
+      revision: 0
+      flags: 0
+      group_id: 0
+      pads: 1
+      links: 0
+    v4l_properties:
+      fmt_meta_capture:
+        dataformat: 945046861
+        buffersize: 9600
+      input: 0
+      priority: 2
+    pads:
+    - desc:
+        entity: 129
+        index: 0
+        flags: 5
+        reserved: [0, 0]
+      subdev_properties: {}
+      links: []
+  - desc:
+      id: 133
+      name: Intel IPU6 ISYS Capture 33
+      type: 65537
+      revision: 0
+      flags: 0
+      group_id: 0
+      pads: 1
+      links: 0
+    v4l_properties:
+      fmt_meta_capture:
+        dataformat: 945046861
+        buffersize: 9600
+      input: 0
+      priority: 2
+    pads:
+    - desc:
+        entity: 133
+        index: 0
+        flags: 5
+        reserved: [0, 0]
+      subdev_properties: {}
+      links: []
+  - desc:
+      id: 137
+      name: Intel IPU6 ISYS Capture 34
+      type: 65537
+      revision: 0
+      flags: 0
+      group_id: 0
+      pads: 1
+      links: 0
+    v4l_properties:
+      fmt_meta_capture:
+        dataformat: 945046861
+        buffersize: 9600
+      input: 0
+      priority: 2
+    pads:
+    - desc:
+        entity: 137
+        index: 0
+        flags: 5
+        reserved: [0, 0]
+      subdev_properties: {}
+      links: []
+  - desc:
+      id: 141
+      name: Intel IPU6 ISYS Capture 35
+      type: 65537
+      revision: 0
+      flags: 0
+      group_id: 0
+      pads: 1
+      links: 0
+    v4l_properties:
+      fmt_meta_capture:
+        dataformat: 945046861
+        buffersize: 9600
+      input: 0
+      priority: 2
+    pads:
+    - desc:
+        entity: 141
+        index: 0
+        flags: 5
+        reserved: [0, 0]
+      subdev_properties: {}
+      links: []
+  - desc:
+      id: 145
+      name: Intel IPU6 ISYS Capture 36
+      type: 65537
+      revision: 0
+      flags: 0
+      group_id: 0
+      pads: 1
+      links: 0
+    v4l_properties:
+      fmt_meta_capture:
+        dataformat: 945046861
+        buffersize: 9600
+      input: 0
+      priority: 2
+    pads:
+    - desc:
+        entity: 145
+        index: 0
+        flags: 5
+        reserved: [0, 0]
+      subdev_properties: {}
+      links: []
+  - desc:
+      id: 149
+      name: Intel IPU6 ISYS Capture 37
+      type: 65537
+      revision: 0
+      flags: 0
+      group_id: 0
+      pads: 1
+      links: 0
+    v4l_properties:
+      fmt_meta_capture:
+        dataformat: 945046861
+        buffersize: 9600
+      input: 0
+      priority: 2
+    pads:
+    - desc:
+        entity: 149
+        index: 0
+        flags: 5
+        reserved: [0, 0]
+      subdev_properties: {}
+      links: []
+  - desc:
+      id: 153
+      name: Intel IPU6 ISYS Capture 38
+      type: 65537
+      revision: 0
+      flags: 0
+      group_id: 0
+      pads: 1
+      links: 0
+    v4l_properties:
+      fmt_meta_capture:
+        dataformat: 945046861
+        buffersize: 9600
+      input: 0
+      priority: 2
+    pads:
+    - desc:
+        entity: 153
+        index: 0
+        flags: 5
+        reserved: [0, 0]
+      subdev_properties: {}
+      links: []
+  - desc:
+      id: 157
+      name: Intel IPU6 ISYS Capture 39
+      type: 65537
+      revision: 0
+      flags: 0
+      group_id: 0
+      pads: 1
+      links: 0
+    v4l_properties:
+      fmt_meta_capture:
+        dataformat: 945046861
+        buffersize: 9600
+      input: 0
+      priority: 2
+    pads:
+    - desc:
+        entity: 157
+        index: 0
+        flags: 5
+        reserved: [0, 0]
+      subdev_properties: {}
+      links: []
+  - desc:
+      id: 161
+      name: Intel IPU6 ISYS Capture 40
+      type: 65537
+      revision: 0
+      flags: 0
+      group_id: 0
+      pads: 1
+      links: 0
+    v4l_properties:
+      fmt_meta_capture:
+        dataformat: 945046861
+        buffersize: 9600
+      input: 0
+      priority: 2
+    pads:
+    - desc:
+        entity: 161
+        index: 0
+        flags: 5
+        reserved: [0, 0]
+      subdev_properties: {}
+      links: []
+  - desc:
+      id: 165
+      name: Intel IPU6 ISYS Capture 41
+      type: 65537
+      revision: 0
+      flags: 0
+      group_id: 0
+      pads: 1
+      links: 0
+    v4l_properties:
+      fmt_meta_capture:
+        dataformat: 945046861
+        buffersize: 9600
+      input: 0
+      priority: 2
+    pads:
+    - desc:
+        entity: 165
+        index: 0
+        flags: 5
+        reserved: [0, 0]
+      subdev_properties: {}
+      links: []
+  - desc:
+      id: 169
+      name: Intel IPU6 ISYS Capture 42
+      type: 65537
+      revision: 0
+      flags: 0
+      group_id: 0
+      pads: 1
+      links: 0
+    v4l_properties:
+      fmt_meta_capture:
+        dataformat: 945046861
+        buffersize: 9600
+      input: 0
+      priority: 2
+    pads:
+    - desc:
+        entity: 169
+        index: 0
+        flags: 5
+        reserved: [0, 0]
+      subdev_properties: {}
+      links: []
+  - desc:
+      id: 173
+      name: Intel IPU6 ISYS Capture 43
+      type: 65537
+      revision: 0
+      flags: 0
+      group_id: 0
+      pads: 1
+      links: 0
+    v4l_properties:
+      fmt_meta_capture:
+        dataformat: 945046861
+        buffersize: 9600
+      input: 0
+      priority: 2
+    pads:
+    - desc:
+        entity: 173
+        index: 0
+        flags: 5
+        reserved: [0, 0]
+      subdev_properties: {}
+      links: []
+  - desc:
+      id: 177
+      name: Intel IPU6 ISYS Capture 44
+      type: 65537
+      revision: 0
+      flags: 0
+      group_id: 0
+      pads: 1
+      links: 0
+    v4l_properties:
+      fmt_meta_capture:
+        dataformat: 945046861
+        buffersize: 9600
+      input: 0
+      priority: 2
+    pads:
+    - desc:
+        entity: 177
+        index: 0
+        flags: 5
+        reserved: [0, 0]
+      subdev_properties: {}
+      links: []
+  - desc:
+      id: 181
+      name: Intel IPU6 ISYS Capture 45
+      type: 65537
+      revision: 0
+      flags: 0
+      group_id: 0
+      pads: 1
+      links: 0
+    v4l_properties:
+      fmt_meta_capture:
+        dataformat: 945046861
+        buffersize: 9600
+      input: 0
+      priority: 2
+    pads:
+    - desc:
+        entity: 181
+        index: 0
+        flags: 5
+        reserved: [0, 0]
+      subdev_properties: {}
+      links: []
+  - desc:
+      id: 185
+      name: Intel IPU6 ISYS Capture 46
+      type: 65537
+      revision: 0
+      flags: 0
+      group_id: 0
+      pads: 1
+      links: 0
+    v4l_properties:
+      fmt_meta_capture:
+        dataformat: 945046861
+        buffersize: 9600
+      input: 0
+      priority: 2
+    pads:
+    - desc:
+        entity: 185
+        index: 0
+        flags: 5
+        reserved: [0, 0]
+      subdev_properties: {}
+      links: []
+  - desc:
+      id: 189
+      name: Intel IPU6 ISYS Capture 47
+      type: 65537
+      revision: 0
+      flags: 0
+      group_id: 0
+      pads: 1
+      links: 0
+    v4l_properties:
+      fmt_meta_capture:
+        dataformat: 945046861
+        buffersize: 9600
+      input: 0
+      priority: 2
+    pads:
+    - desc:
+        entity: 189
+        index: 0
+        flags: 5
+        reserved: [0, 0]
+      subdev_properties: {}
+      links: []
+  - desc:
+      id: 193
+      name: Intel IPU6 CSI2 0
+      type: 131072
+      revision: 0
+      flags: 0
+      group_id: 0
+      pads: 9
+      links: 8
+    v4l_properties: {}
+    pads:
+    - desc:
+        entity: 193
+        index: 0
+        flags: 5
+        reserved: [0, 0]
+      subdev_properties:
+        fmt:
+          width: 4096
+          height: 3072
+          code: 12298
+          field: 1
+          colorspace: 0
+          ycbcr_enc: 0
+          quantization: 0
+          xfer_func: 0
+          reserved: [0, 0, 0, 0, 0, 0, 0, 0, 0, 0]
+      links: []
+    - desc:
+        entity: 193
+        index: 1
+        flags: 2
+        reserved: [0, 0]
+      subdev_properties:
+        crop:
+          left: 0
+          top: 0
+          width: 0
+          height: 0
+        fmt:
+          width: 4096
+          height: 3072
+          code: 12298
+          field: 1
+          colorspace: 0
+          ycbcr_enc: 0
+          quantization: 0
+          xfer_func: 0
+          reserved: [0, 0, 0, 0, 0, 0, 0, 0, 0, 0]
+        selection:
+          crop:
+            left: 0
+            top: 0
+            width: 0
+            height: 0
+          crop_default:
+            left: 0
+            top: 0
+            width: 4096
+            height: 3072
+          crop_bounds:
+            left: 0
+            top: 0
+            width: 4096
+            height: 3072
+      links:
+      - sink:
+          entity: 1
+          index: 0
+          flags: 5
+          reserved: [0, 0]
+        flags: 0
+        reserved: [0, 0]
+    - desc:
+        entity: 193
+        index: 2
+        flags: 2
+        reserved: [0, 0]
+      subdev_properties: {}
+      links:
+      - sink:
+          entity: 5
+          index: 0
+          flags: 5
+          reserved: [0, 0]
+        flags: 0
+        reserved: [0, 0]
+    - desc:
+        entity: 193
+        index: 3
+        flags: 2
+        reserved: [0, 0]
+      subdev_properties: {}
+      links:
+      - sink:
+          entity: 9
+          index: 0
+          flags: 5
+          reserved: [0, 0]
+        flags: 0
+        reserved: [0, 0]
+    - desc:
+        entity: 193
+        index: 4
+        flags: 2
+        reserved: [0, 0]
+      subdev_properties: {}
+      links:
+      - sink:
+          entity: 13
+          index: 0
+          flags: 5
+          reserved: [0, 0]
+        flags: 0
+        reserved: [0, 0]
+    - desc:
+        entity: 193
+        index: 5
+        flags: 2
+        reserved: [0, 0]
+      subdev_properties: {}
+      links:
+      - sink:
+          entity: 17
+          index: 0
+          flags: 5
+          reserved: [0, 0]
+        flags: 0
+        reserved: [0, 0]
+    - desc:
+        entity: 193
+        index: 6
+        flags: 2
+        reserved: [0, 0]
+      subdev_properties: {}
+      links:
+      - sink:
+          entity: 21
+          index: 0
+          flags: 5
+          reserved: [0, 0]
+        flags: 0
+        reserved: [0, 0]
+    - desc:
+        entity: 193
+        index: 7
+        flags: 2
+        reserved: [0, 0]
+      subdev_properties: {}
+      links:
+      - sink:
+          entity: 25
+          index: 0
+          flags: 5
+          reserved: [0, 0]
+        flags: 0
+        reserved: [0, 0]
+    - desc:
+        entity: 193
+        index: 8
+        flags: 2
+        reserved: [0, 0]
+      subdev_properties: {}
+      links:
+      - sink:
+          entity: 29
+          index: 0
+          flags: 5
+          reserved: [0, 0]
+        flags: 0
+        reserved: [0, 0]
+  - desc:
+      id: 203
+      name: Intel IPU6 CSI2 1
+      type: 131072
+      revision: 0
+      flags: 0
+      group_id: 0
+      pads: 9
+      links: 8
+    v4l_properties: {}
+    pads:
+    - desc:
+        entity: 203
+        index: 0
+        flags: 5
+        reserved: [0, 0]
+      subdev_properties:
+        fmt:
+          width: 4096
+          height: 3072
+          code: 12298
+          field: 1
+          colorspace: 0
+          ycbcr_enc: 0
+          quantization: 0
+          xfer_func: 0
+          reserved: [0, 0, 0, 0, 0, 0, 0, 0, 0, 0]
+      links: []
+    - desc:
+        entity: 203
+        index: 1
+        flags: 2
+        reserved: [0, 0]
+      subdev_properties:
+        crop:
+          left: 0
+          top: 0
+          width: 0
+          height: 0
+        fmt:
+          width: 4096
+          height: 3072
+          code: 12298
+          field: 1
+          colorspace: 0
+          ycbcr_enc: 0
+          quantization: 0
+          xfer_func: 0
+          reserved: [0, 0, 0, 0, 0, 0, 0, 0, 0, 0]
+        selection:
+          crop:
+            left: 0
+            top: 0
+            width: 0
+            height: 0
+          crop_default:
+            left: 0
+            top: 0
+            width: 4096
+            height: 3072
+          crop_bounds:
+            left: 0
+            top: 0
+            width: 4096
+            height: 3072
+      links:
+      - sink:
+          entity: 33
+          index: 0
+          flags: 5
+          reserved: [0, 0]
+        flags: 0
+        reserved: [0, 0]
+    - desc:
+        entity: 203
+        index: 2
+        flags: 2
+        reserved: [0, 0]
+      subdev_properties: {}
+      links:
+      - sink:
+          entity: 37
+          index: 0
+          flags: 5
+          reserved: [0, 0]
+        flags: 0
+        reserved: [0, 0]
+    - desc:
+        entity: 203
+        index: 3
+        flags: 2
+        reserved: [0, 0]
+      subdev_properties: {}
+      links:
+      - sink:
+          entity: 41
+          index: 0
+          flags: 5
+          reserved: [0, 0]
+        flags: 0
+        reserved: [0, 0]
+    - desc:
+        entity: 203
+        index: 4
+        flags: 2
+        reserved: [0, 0]
+      subdev_properties: {}
+      links:
+      - sink:
+          entity: 45
+          index: 0
+          flags: 5
+          reserved: [0, 0]
+        flags: 0
+        reserved: [0, 0]
+    - desc:
+        entity: 203
+        index: 5
+        flags: 2
+        reserved: [0, 0]
+      subdev_properties: {}
+      links:
+      - sink:
+          entity: 49
+          index: 0
+          flags: 5
+          reserved: [0, 0]
+        flags: 0
+        reserved: [0, 0]
+    - desc:
+        entity: 203
+        index: 6
+        flags: 2
+        reserved: [0, 0]
+      subdev_properties: {}
+      links:
+      - sink:
+          entity: 53
+          index: 0
+          flags: 5
+          reserved: [0, 0]
+        flags: 0
+        reserved: [0, 0]
+    - desc:
+        entity: 203
+        index: 7
+        flags: 2
+        reserved: [0, 0]
+      subdev_properties: {}
+      links:
+      - sink:
+          entity: 57
+          index: 0
+          flags: 5
+          reserved: [0, 0]
+        flags: 0
+        reserved: [0, 0]
+    - desc:
+        entity: 203
+        index: 8
+        flags: 2
+        reserved: [0, 0]
+      subdev_properties: {}
+      links:
+      - sink:
+          entity: 61
+          index: 0
+          flags: 5
+          reserved: [0, 0]
+        flags: 0
+        reserved: [0, 0]
+  - desc:
+      id: 213
+      name: Intel IPU6 CSI2 2
+      type: 131072
+      revision: 0
+      flags: 0
+      group_id: 0
+      pads: 9
+      links: 8
+    v4l_properties: {}
+    pads:
+    - desc:
+        entity: 213
+        index: 0
+        flags: 5
+        reserved: [0, 0]
+      subdev_properties:
+        fmt:
+          width: 4096
+          height: 3072
+          code: 12298
+          field: 1
+          colorspace: 0
+          ycbcr_enc: 0
+          quantization: 0
+          xfer_func: 0
+          reserved: [0, 0, 0, 0, 0, 0, 0, 0, 0, 0]
+      links: []
+    - desc:
+        entity: 213
+        index: 1
+        flags: 2
+        reserved: [0, 0]
+      subdev_properties:
+        crop:
+          left: 0
+          top: 0
+          width: 0
+          height: 0
+        fmt:
+          width: 4096
+          height: 3072
+          code: 12298
+          field: 1
+          colorspace: 0
+          ycbcr_enc: 0
+          quantization: 0
+          xfer_func: 0
+          reserved: [0, 0, 0, 0, 0, 0, 0, 0, 0, 0]
+        selection:
+          crop:
+            left: 0
+            top: 0
+            width: 0
+            height: 0
+          crop_default:
+            left: 0
+            top: 0
+            width: 4096
+            height: 3072
+          crop_bounds:
+            left: 0
+            top: 0
+            width: 4096
+            height: 3072
+      links:
+      - sink:
+          entity: 65
+          index: 0
+          flags: 5
+          reserved: [0, 0]
+        flags: 0
+        reserved: [0, 0]
+    - desc:
+        entity: 213
+        index: 2
+        flags: 2
+        reserved: [0, 0]
+      subdev_properties: {}
+      links:
+      - sink:
+          entity: 69
+          index: 0
+          flags: 5
+          reserved: [0, 0]
+        flags: 0
+        reserved: [0, 0]
+    - desc:
+        entity: 213
+        index: 3
+        flags: 2
+        reserved: [0, 0]
+      subdev_properties: {}
+      links:
+      - sink:
+          entity: 73
+          index: 0
+          flags: 5
+          reserved: [0, 0]
+        flags: 0
+        reserved: [0, 0]
+    - desc:
+        entity: 213
+        index: 4
+        flags: 2
+        reserved: [0, 0]
+      subdev_properties: {}
+      links:
+      - sink:
+          entity: 77
+          index: 0
+          flags: 5
+          reserved: [0, 0]
+        flags: 0
+        reserved: [0, 0]
+    - desc:
+        entity: 213
+        index: 5
+        flags: 2
+        reserved: [0, 0]
+      subdev_properties: {}
+      links:
+      - sink:
+          entity: 81
+          index: 0
+          flags: 5
+          reserved: [0, 0]
+        flags: 0
+        reserved: [0, 0]
+    - desc:
+        entity: 213
+        index: 6
+        flags: 2
+        reserved: [0, 0]
+      subdev_properties: {}
+      links:
+      - sink:
+          entity: 85
+          index: 0
+          flags: 5
+          reserved: [0, 0]
+        flags: 0
+        reserved: [0, 0]
+    - desc:
+        entity: 213
+        index: 7
+        flags: 2
+        reserved: [0, 0]
+      subdev_properties: {}
+      links:
+      - sink:
+          entity: 89
+          index: 0
+          flags: 5
+          reserved: [0, 0]
+        flags: 0
+        reserved: [0, 0]
+    - desc:
+        entity: 213
+        index: 8
+        flags: 2
+        reserved: [0, 0]
+      subdev_properties: {}
+      links:
+      - sink:
+          entity: 93
+          index: 0
+          flags: 5
+          reserved: [0, 0]
+        flags: 0
+        reserved: [0, 0]
+  - desc:
+      id: 223
+      name: Intel IPU6 CSI2 3
+      type: 131072
+      revision: 0
+      flags: 0
+      group_id: 0
+      pads: 9
+      links: 8
+    v4l_properties: {}
+    pads:
+    - desc:
+        entity: 223
+        index: 0
+        flags: 5
+        reserved: [0, 0]
+      subdev_properties:
+        fmt:
+          width: 4096
+          height: 3072
+          code: 12298
+          field: 1
+          colorspace: 0
+          ycbcr_enc: 0
+          quantization: 0
+          xfer_func: 0
+          reserved: [0, 0, 0, 0, 0, 0, 0, 0, 0, 0]
+      links: []
+    - desc:
+        entity: 223
+        index: 1
+        flags: 2
+        reserved: [0, 0]
+      subdev_properties:
+        crop:
+          left: 0
+          top: 0
+          width: 0
+          height: 0
+        fmt:
+          width: 4096
+          height: 3072
+          code: 12298
+          field: 1
+          colorspace: 0
+          ycbcr_enc: 0
+          quantization: 0
+          xfer_func: 0
+          reserved: [0, 0, 0, 0, 0, 0, 0, 0, 0, 0]
+        selection:
+          crop:
+            left: 0
+            top: 0
+            width: 0
+            height: 0
+          crop_default:
+            left: 0
+            top: 0
+            width: 4096
+            height: 3072
+          crop_bounds:
+            left: 0
+            top: 0
+            width: 4096
+            height: 3072
+      links:
+      - sink:
+          entity: 97
+          index: 0
+          flags: 5
+          reserved: [0, 0]
+        flags: 0
+        reserved: [0, 0]
+    - desc:
+        entity: 223
+        index: 2
+        flags: 2
+        reserved: [0, 0]
+      subdev_properties: {}
+      links:
+      - sink:
+          entity: 101
+          index: 0
+          flags: 5
+          reserved: [0, 0]
+        flags: 0
+        reserved: [0, 0]
+    - desc:
+        entity: 223
+        index: 3
+        flags: 2
+        reserved: [0, 0]
+      subdev_properties: {}
+      links:
+      - sink:
+          entity: 105
+          index: 0
+          flags: 5
+          reserved: [0, 0]
+        flags: 0
+        reserved: [0, 0]
+    - desc:
+        entity: 223
+        index: 4
+        flags: 2
+        reserved: [0, 0]
+      subdev_properties: {}
+      links:
+      - sink:
+          entity: 109
+          index: 0
+          flags: 5
+          reserved: [0, 0]
+        flags: 0
+        reserved: [0, 0]
+    - desc:
+        entity: 223
+        index: 5
+        flags: 2
+        reserved: [0, 0]
+      subdev_properties: {}
+      links:
+      - sink:
+          entity: 113
+          index: 0
+          flags: 5
+          reserved: [0, 0]
+        flags: 0
+        reserved: [0, 0]
+    - desc:
+        entity: 223
+        index: 6
+        flags: 2
+        reserved: [0, 0]
+      subdev_properties: {}
+      links:
+      - sink:
+          entity: 117
+          index: 0
+          flags: 5
+          reserved: [0, 0]
+        flags: 0
+        reserved: [0, 0]
+    - desc:
+        entity: 223
+        index: 7
+        flags: 2
+        reserved: [0, 0]
+      subdev_properties: {}
+      links:
+      - sink:
+          entity: 121
+          index: 0
+          flags: 5
+          reserved: [0, 0]
+        flags: 0
+        reserved: [0, 0]
+    - desc:
+        entity: 223
+        index: 8
+        flags: 2
+        reserved: [0, 0]
+      subdev_properties: {}
+      links:
+      - sink:
+          entity: 125
+          index: 0
+          flags: 5
+          reserved: [0, 0]
+        flags: 0
+        reserved: [0, 0]
+  - desc:
+      id: 233
+      name: Intel IPU6 CSI2 4
+      type: 131072
+      revision: 0
+      flags: 0
+      group_id: 0
+      pads: 9
+      links: 8
+    v4l_properties: {}
+    pads:
+    - desc:
+        entity: 233
+        index: 0
+        flags: 5
+        reserved: [0, 0]
+      subdev_properties:
+        fmt:
+          width: 2592
+          height: 1444
+          code: 12298
+          field: 1
+          colorspace: 0
+          ycbcr_enc: 0
+          quantization: 0
+          xfer_func: 0
+          reserved: [0, 0, 0, 0, 0, 0, 0, 0, 0, 0]
+      links: []
+    - desc:
+        entity: 233
+        index: 1
+        flags: 2
+        reserved: [0, 0]
+      subdev_properties:
+        crop:
+          left: 0
+          top: 0
+          width: 2592
+          height: 1444
+        fmt:
+          width: 2592
+          height: 1444
+          code: 12298
+          field: 1
+          colorspace: 0
+          ycbcr_enc: 0
+          quantization: 0
+          xfer_func: 0
+          reserved: [0, 0, 0, 0, 0, 0, 0, 0, 0, 0]
+        selection:
+          crop:
+            left: 0
+            top: 0
+            width: 2592
+            height: 1444
+          crop_default:
+            left: 0
+            top: 0
+            width: 2592
+            height: 1444
+          crop_bounds:
+            left: 0
+            top: 0
+            width: 2592
+            height: 1444
+      links:
+      - sink:
+          entity: 129
+          index: 0
+          flags: 5
+          reserved: [0, 0]
+        flags: 1
+        reserved: [0, 0]
+    - desc:
+        entity: 233
+        index: 2
+        flags: 2
+        reserved: [0, 0]
+      subdev_properties: {}
+      links:
+      - sink:
+          entity: 133
+          index: 0
+          flags: 5
+          reserved: [0, 0]
+        flags: 0
+        reserved: [0, 0]
+    - desc:
+        entity: 233
+        index: 3
+        flags: 2
+        reserved: [0, 0]
+      subdev_properties: {}
+      links:
+      - sink:
+          entity: 137
+          index: 0
+          flags: 5
+          reserved: [0, 0]
+        flags: 0
+        reserved: [0, 0]
+    - desc:
+        entity: 233
+        index: 4
+        flags: 2
+        reserved: [0, 0]
+      subdev_properties: {}
+      links:
+      - sink:
+          entity: 141
+          index: 0
+          flags: 5
+          reserved: [0, 0]
+        flags: 0
+        reserved: [0, 0]
+    - desc:
+        entity: 233
+        index: 5
+        flags: 2
+        reserved: [0, 0]
+      subdev_properties: {}
+      links:
+      - sink:
+          entity: 145
+          index: 0
+          flags: 5
+          reserved: [0, 0]
+        flags: 0
+        reserved: [0, 0]
+    - desc:
+        entity: 233
+        index: 6
+        flags: 2
+        reserved: [0, 0]
+      subdev_properties: {}
+      links:
+      - sink:
+          entity: 149
+          index: 0
+          flags: 5
+          reserved: [0, 0]
+        flags: 0
+        reserved: [0, 0]
+    - desc:
+        entity: 233
+        index: 7
+        flags: 2
+        reserved: [0, 0]
+      subdev_properties: {}
+      links:
+      - sink:
+          entity: 153
+          index: 0
+          flags: 5
+          reserved: [0, 0]
+        flags: 0
+        reserved: [0, 0]
+    - desc:
+        entity: 233
+        index: 8
+        flags: 2
+        reserved: [0, 0]
+      subdev_properties: {}
+      links:
+      - sink:
+          entity: 157
+          index: 0
+          flags: 5
+          reserved: [0, 0]
+        flags: 0
+        reserved: [0, 0]
+  - desc:
+      id: 243
+      name: Intel IPU6 CSI2 5
+      type: 131072
+      revision: 0
+      flags: 0
+      group_id: 0
+      pads: 9
+      links: 8
+    v4l_properties: {}
+    pads:
+    - desc:
+        entity: 243
+        index: 0
+        flags: 5
+        reserved: [0, 0]
+      subdev_properties:
+        fmt:
+          width: 4096
+          height: 3072
+          code: 12298
+          field: 1
+          colorspace: 0
+          ycbcr_enc: 0
+          quantization: 0
+          xfer_func: 0
+          reserved: [0, 0, 0, 0, 0, 0, 0, 0, 0, 0]
+      links: []
+    - desc:
+        entity: 243
+        index: 1
+        flags: 2
+        reserved: [0, 0]
+      subdev_properties:
+        crop:
+          left: 0
+          top: 0
+          width: 0
+          height: 0
+        fmt:
+          width: 4096
+          height: 3072
+          code: 12298
+          field: 1
+          colorspace: 0
+          ycbcr_enc: 0
+          quantization: 0
+          xfer_func: 0
+          reserved: [0, 0, 0, 0, 0, 0, 0, 0, 0, 0]
+        selection:
+          crop:
+            left: 0
+            top: 0
+            width: 0
+            height: 0
+          crop_default:
+            left: 0
+            top: 0
+            width: 4096
+            height: 3072
+          crop_bounds:
+            left: 0
+            top: 0
+            width: 4096
+            height: 3072
+      links:
+      - sink:
+          entity: 161
+          index: 0
+          flags: 5
+          reserved: [0, 0]
+        flags: 0
+        reserved: [0, 0]
+    - desc:
+        entity: 243
+        index: 2
+        flags: 2
+        reserved: [0, 0]
+      subdev_properties: {}
+      links:
+      - sink:
+          entity: 165
+          index: 0
+          flags: 5
+          reserved: [0, 0]
+        flags: 0
+        reserved: [0, 0]
+    - desc:
+        entity: 243
+        index: 3
+        flags: 2
+        reserved: [0, 0]
+      subdev_properties: {}
+      links:
+      - sink:
+          entity: 169
+          index: 0
+          flags: 5
+          reserved: [0, 0]
+        flags: 0
+        reserved: [0, 0]
+    - desc:
+        entity: 243
+        index: 4
+        flags: 2
+        reserved: [0, 0]
+      subdev_properties: {}
+      links:
+      - sink:
+          entity: 173
+          index: 0
+          flags: 5
+          reserved: [0, 0]
+        flags: 0
+        reserved: [0, 0]
+    - desc:
+        entity: 243
+        index: 5
+        flags: 2
+        reserved: [0, 0]
+      subdev_properties: {}
+      links:
+      - sink:
+          entity: 177
+          index: 0
+          flags: 5
+          reserved: [0, 0]
+        flags: 0
+        reserved: [0, 0]
+    - desc:
+        entity: 243
+        index: 6
+        flags: 2
+        reserved: [0, 0]
+      subdev_properties: {}
+      links:
+      - sink:
+          entity: 181
+          index: 0
+          flags: 5
+          reserved: [0, 0]
+        flags: 0
+        reserved: [0, 0]
+    - desc:
+        entity: 243
+        index: 7
+        flags: 2
+        reserved: [0, 0]
+      subdev_properties: {}
+      links:
+      - sink:
+          entity: 185
+          index: 0
+          flags: 5
+          reserved: [0, 0]
+        flags: 0
+        reserved: [0, 0]
+    - desc:
+        entity: 243
+        index: 8
+        flags: 2
+        reserved: [0, 0]
+      subdev_properties: {}
+      links:
+      - sink:
+          entity: 189
+          index: 0
+          flags: 5
+          reserved: [0, 0]
+        flags: 0
+        reserved: [0, 0]
+  - desc:
+      id: 349
+      name: hi556 13-0020
+      type: 131073
+      revision: 0
+      flags: 0
+      group_id: 0
+      pads: 1
+      links: 1
+    v4l_properties: {}
+    controls:
+    - desc:
+        id: 9963793
+        type: 1
+        name: Exposure
+        minimum: 6
+        maximum: 2079
+        step: 1
+        default_value: 2079
+        flags: 0
+        elem_size: 4
+        reserved: [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
+          0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0]
+      values:
+      - 384
+    - desc:
+        id: 10356993
+        type: 1
+        name: Vertical Blanking
+        minimum: 637
+        maximum: 31323
+        step: 1
+        default_value: 637
+        flags: 0
+        elem_size: 4
+        reserved: [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
+          0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0]
+      values:
+      - 637
+    - desc:
+        id: 10356994
+        type: 1
+        name: Horizontal Blanking
+        minimum: 224
+        maximum: 224
+        step: 1
+        default_value: 224
+        flags: 4
+        elem_size: 4
+        reserved: [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
+          0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0]
+      values:
+      - 224
+    - desc:
+        id: 10356995
+        type: 1
+        name: Analogue Gain
+        minimum: 0
+        maximum: 240
+        step: 1
+        default_value: 0
+        flags: 0
+        elem_size: 4
+        reserved: [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
+          0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0]
+      values:
+      - 0
+    - desc:
+        id: 10422529
+        type: 9
+        name: Link Frequency
+        minimum: 0
+        maximum: 0
+        step: 1
+        default_value: 0
+        flags: 4
+        elem_size: 4
+        reserved: [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
+          0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0]
+      values:
+      - 0
+    - desc:
+        id: 10422530
+        type: 5
+        name: Pixel Rate
+        minimum: 0
+        maximum: 174800000
+        step: 1
+        default_value: 174800000
+        flags: 4
+        elem_size: 8
+        reserved: [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
+          0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0]
+      values:
+      - 174800000
+    - desc:
+        id: 10422531
+        type: 3
+        name: Test Pattern
+        minimum: 0
+        maximum: 8
+        step: 1
+        default_value: 0
+        flags: 0
+        elem_size: 4
+        reserved: [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
+          0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0]
+      values:
+      - 0
+    - desc:
+        id: 10422533
+        type: 1
+        name: Digital Gain
+        minimum: 0
+        maximum: 2048
+        step: 1
+        default_value: 256
+        flags: 0
+        elem_size: 4
+        reserved: [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
+          0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0]
+      values:
+      - 256
+    pads:
+    - desc:
+        entity: 349
+        index: 0
+        flags: 2
+        reserved: [0, 0]
+      subdev_properties:
+        crop:
+          left: 0
+          top: 250
+          width: 2592
+          height: 1444
+        fmt:
+          width: 2592
+          height: 1444
+          code: 12298
+          field: 1
+          colorspace: 0
+          ycbcr_enc: 0
+          quantization: 0
+          xfer_func: 0
+          reserved: [0, 0, 0, 0, 0, 0, 0, 0, 0, 0]
+        selection:
+          crop:
+            left: 0
+            top: 250
+            width: 2592
+            height: 1444
+          crop_default:
+            left: 0
+            top: 0
+            width: 2592
+            height: 1944
+          crop_bounds:
+            left: 0
+            top: 0
+            width: 2592
+            height: 1944
+          native_size:
+            left: 0
+            top: 0
+            width: 2592
+            height: 1944
+      links:
+      - sink:
+          entity: 233
+          index: 0
+          flags: 5
+          reserved: [0, 0]
+        flags: 3
+        reserved: [0, 0]

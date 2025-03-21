@@ -74,6 +74,11 @@
     "format_arg": "",
     "out_entity": "rkisp1_selfpath"
   },
+  "kanix-CH3c6d": {
+    "bus_info": "PCI:0000:00:05.0",
+    "format_arg": "-s 2592x1444 -f SGRBG10",
+    "out_entity": "Intel IPU6 ISYS Capture 32"
+  },
   "kano-CH0001": {
     "bus_info": "PCI:0000:00:05.0",
     "format_arg": "-s 1932x1092 -f SGRBG10",
