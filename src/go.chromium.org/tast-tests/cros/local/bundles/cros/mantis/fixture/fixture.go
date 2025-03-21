@@ -7,12 +7,13 @@ package fixture
 
 import (
 	"context"
+	"fmt"
 	"path/filepath"
+	"strings"
 	"time"
 
-	"go.chromium.org/tast-tests/cros/common/dma"
 	commonfixture "go.chromium.org/tast-tests/cros/common/fixture"
-	"go.chromium.org/tast-tests/cros/common/ui"
+	"go.chromium.org/tast-tests/cros/common/utils"
 	"go.chromium.org/tast-tests/cros/local/chrome"
 	"go.chromium.org/tast-tests/cros/local/chrome/uiauto"
 	powersetup "go.chromium.org/tast-tests/cros/local/power/setup"
@@ -84,13 +85,46 @@ type Data struct {
 	TestAPIConn *chrome.TestConn
 }
 
-func (f *fixture) SetUp(ctx context.Context, s *testing.FixtState) interface{} {
-	// Prepare Chrome browser.
-	opts := []chrome.Option{
-		chrome.GAIALoginPool(dma.CredsFromPool(ui.GaiaPoolDefaultVarName)),
+func gaiaLoginOption(ctx context.Context) (chrome.Option, error) {
+	const (
+		// TODO(crbug.com/404376751): Use the dedicated account pool with DMA consent enabled once available.
+		pltpBaseURL = "https://storage.googleapis.com/chromiumos-test-assets-public/power_LoadTest/account"
+		pltuURL     = pltpBaseURL + "/pltu_rand"
+		pltpURL     = pltpBaseURL + "/pltp_rand"
+	)
+
+	usernames, err := utils.FetchFromURL(ctx, pltuURL)
+	if err != nil {
+		return nil, errors.Wrap(err, "failed to fetch usernames")
+	}
+	password, err := utils.FetchFromURL(ctx, pltpURL)
+	if err != nil {
+		return nil, errors.Wrap(err, "failed to fetch password")
 	}
 
-	var err error
+	names := strings.Split(usernames, "\n")
+	password = strings.TrimSuffix(password, "\n")
+	var loginPool strings.Builder
+	// loginPool is a string containing multiple credentials separated by newlines:
+	//
+	// user1:pass1
+	// user2:pass2
+	// user3:pass3
+	for _, n := range names {
+		fmt.Fprintf(&loginPool, "%s:%s\n", n, password)
+	}
+
+	return chrome.GAIALoginPool(loginPool.String()), nil
+}
+
+func (f *fixture) SetUp(ctx context.Context, s *testing.FixtState) interface{} {
+	loginPool, err := gaiaLoginOption(ctx)
+	if err != nil {
+		s.Fatal("Failed to get login pool: ", err)
+	}
+	// Prepare Chrome browser.
+	opts := []chrome.Option{loginPool}
+
 	f.cr, err = chrome.New(ctx, opts...)
 	if err != nil {
 		s.Fatal("Failed to start Chrome: ", err)
