@@ -12,6 +12,7 @@ import (
 	"os"
 	"path/filepath"
 	"regexp"
+	"runtime"
 	"sort"
 	"strconv"
 	"strings"
@@ -635,6 +636,11 @@ func findCoreDumps(dirs []string) (paths []string, size int64) {
 // processRunning checks if a process named procName is running.
 func processRunning(procName string) (bool, error) {
 	const zombieStatus = "zombie"
+
+	// TODO(b/401592311): The following call of process.Processes() may leave a
+	// lot of fds open. The reason is unclear now. Force a GC to clean them up
+	// before we find the root cause.
+	defer runtime.GC()
 
 	ps, err := process.Processes()
 	if err != nil {
