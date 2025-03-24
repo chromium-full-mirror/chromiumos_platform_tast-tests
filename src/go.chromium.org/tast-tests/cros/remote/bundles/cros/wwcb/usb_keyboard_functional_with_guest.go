@@ -81,11 +81,6 @@ func UsbKeyboardFunctionalWithGuest(ctx context.Context, s *testing.State) {
 		s.Fatal("Failed to connect to the RPC service on the DUT after power the chrombook on: ", err)
 	}
 	defer cl.Close(cleanupCtx)
-	// Initialize fixtures to find the connected devices.
-	if err := utils.InitFixture(ctx); err != nil {
-		s.Fatal("Failed to initialize fixtures: ", err)
-	}
-	defer utils.CloseAllFixture(cleanupCtx)
 
 	// Start Chrome on the DUT.
 	cs := ui.NewChromeServiceClient(cl.Conn)

@@ -62,12 +62,6 @@ func CordedKeyboardFunctionalityCheckAfterRebootDUT(ctx context.Context, s *test
 
 	dut := s.DUT()
 
-	// Initialize fixtures to find the connected devices.
-	if err := utils.InitFixture(ctx); err != nil {
-		s.Fatal("Failed to initialize fixtures: ", err)
-	}
-	defer utils.CloseAllFixture(cleanupCtx)
-
 	tf := s.FixtValue().(*topology.TestFixture)
 	if _, err := tf.Helper.ActivateDeviceByType(ctx, topology.DeviceTypeHID); err != nil {
 		s.Fatal("Failed to control fixture to connect the USB keyboard emulator: ", err)

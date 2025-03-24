@@ -28,7 +28,7 @@ func init() {
 		Desc:         "Change Resolution being displayed on external monitor",
 		Contacts:     []string{"cros-wwcb-automation@google.com", "allion-wwcb@allion.corp-partner.google.com"},
 		BugComponent: "b:1289112", // ChromeOS > External > WWCB > Allion > Automation
-		Attr:         []string{
+		Attr: []string{
 			"group:wwcb",
 			"group:pasit",
 			"group:release-health",
@@ -71,12 +71,6 @@ func ChangeExternalDisplayResolution(ctx context.Context, s *testing.State) {
 
 	// Dump the UI tree and screenshot on any failure
 	utils.AttachErrorHandlersForUITreeDump(cleanupCtx, s, cl.Conn)
-
-	// Initialize fixtures to find the connected devices.
-	if err := utils.InitFixture(ctx); err != nil {
-		s.Fatal("Failed to initialize fixtures: ", err)
-	}
-	defer utils.CloseAllFixture(cleanupCtx)
 
 	defer func(ctx context.Context) {
 		if s.HasError() {

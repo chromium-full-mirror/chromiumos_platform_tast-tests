@@ -78,12 +78,6 @@ func CordedKeyboardKeyFunctions(ctx context.Context, s *testing.State) {
 	utils.StartRecording(ctx, s, screenRecorder)
 	defer utils.StopAndSaveScreenRecording(cleanupCtx, s, screenRecorder)
 
-	// Initialize fixtures to find the connected devices.
-	if err := utils.InitFixture(ctx); err != nil {
-		s.Fatal("Failed to initialize fixtures: ", err)
-	}
-	defer utils.CloseAllFixture(cleanupCtx)
-
 	// Plug in the USB devices.
 	tf := s.FixtValue().(*topology.TestFixture)
 	if _, err := tf.Helper.ActivateDeviceByType(ctx, topology.DeviceTypeHID); err != nil {

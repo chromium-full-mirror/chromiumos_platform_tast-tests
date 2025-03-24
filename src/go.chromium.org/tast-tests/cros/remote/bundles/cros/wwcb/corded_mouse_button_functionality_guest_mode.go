@@ -63,12 +63,6 @@ func CordedMouseButtonFunctionalityGuestMode(ctx context.Context, s *testing.Sta
 	// Dump the UI tree and screenshot on any failure
 	utils.AttachErrorHandlersForUITreeDump(cleanupCtx, s, cl.Conn)
 
-	// Initialize fixtures to find the connected devices.
-	if err := utils.InitFixture(ctx); err != nil {
-		s.Fatal("Failed to initialize fixtures: ", err)
-	}
-	defer utils.CloseAllFixture(cleanupCtx)
-
 	// Plug in the USB devices.
 	tf := s.FixtValue().(*topology.TestFixture)
 	if _, err := tf.Helper.ActivateDeviceByType(ctx, topology.DeviceTypeHID); err != nil {
