@@ -25,9 +25,7 @@ func init() {
 			"chiav@google.com",
 		},
 		Attr: []string{
-			"group:criticalstaging",
 			"group:mainline",
-			"informational",
 		},
 		SoftwareDeps: []string{"chrome", "amd64"},
 		Timeout:      1 * time.Minute,
