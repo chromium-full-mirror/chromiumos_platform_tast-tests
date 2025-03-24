@@ -27,7 +27,7 @@ type expandBackgroundFeatureTestParameters struct {
 	expectedHeight int64
 }
 
-const imageFileName = "a_cake_non_square_20250114.png"
+const imageFileName = "strawberry_20250324.jpg"
 
 func init() {
 	testing.AddTest(&testing.Test{
@@ -49,32 +49,32 @@ func init() {
 				Name: "square",
 				Val: expandBackgroundFeatureTestParameters{
 					ratioName:      "Ratio Square",
-					expectedWidth:  1819,
-					expectedHeight: 1819,
+					expectedWidth:  655,
+					expectedHeight: 655,
 				},
 			},
 			{
 				Name: "16_9",
 				Val: expandBackgroundFeatureTestParameters{
 					ratioName:      "Ratio 16 by 9",
-					expectedWidth:  1820,
-					expectedHeight: 1023,
+					expectedWidth:  757,
+					expectedHeight: 426,
 				},
 			},
 			{
 				Name: "4_3",
 				Val: expandBackgroundFeatureTestParameters{
 					ratioName:      "Ratio 4 by 3",
-					expectedWidth:  1819,
-					expectedHeight: 1364,
+					expectedWidth:  655,
+					expectedHeight: 491,
 				},
 			},
 			{
 				Name: "3_2",
 				Val: expandBackgroundFeatureTestParameters{
 					ratioName:      "Ratio 3 by 2",
-					expectedWidth:  1819,
-					expectedHeight: 1213,
+					expectedWidth:  655,
+					expectedHeight: 436,
 				},
 			},
 		},
