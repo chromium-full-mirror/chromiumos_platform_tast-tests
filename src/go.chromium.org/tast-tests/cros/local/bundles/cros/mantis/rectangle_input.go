@@ -23,7 +23,7 @@ import (
 )
 
 const (
-	expectedResultFile                    = "rectangle_input_20250207.png"
+	expectedResultFile                    = "rectangle_input_20250324.png"
 	rectangleInputDiffPercentageThreshold = float64(0.1)
 )
 

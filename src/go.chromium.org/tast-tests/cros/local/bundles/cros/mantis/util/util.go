@@ -101,6 +101,10 @@ func OpenGalleryFromDownload(ctx context.Context, ui *uiauto.Context, tconn *chr
 
 	files.Close(ctx)
 
+	if _, err = ash.MaximizeWindowTitleContains(ctx, tconn, apps.Gallery.Name); err != nil {
+		return errors.Wrap(err, "failed to maximize Gallery window")
+	}
+
 	return nil
 }
 
