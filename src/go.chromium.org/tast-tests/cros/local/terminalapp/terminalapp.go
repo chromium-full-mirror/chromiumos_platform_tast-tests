@@ -49,6 +49,7 @@ var (
 	sshTab              = nodewith.NameContaining("chronos@localhost:").Role(role.Window).ClassName("BrowserFrame")
 	terminalLeaveButton = nodewith.Name("Leave").Role(role.Button).HasClass("MdTextButton")
 	terminalTextField   = nodewith.Name("Terminal input").Role(role.TextField)
+	passwordDialog      = nodewith.NameRegex(regexp.MustCompile(`^\(chronos@(localhost|::1)\) Password:$`)).Role(role.TextField)
 
 	// Prompt is the input prefix.
 	Prompt = AsRow(nodewith.NameRegex(regexp.MustCompile(`\$\s*$`)))
@@ -194,15 +195,11 @@ func (ta *TerminalApp) dismissLeaveAppDialogIfShown() uiauto.Action {
 // SetUpSSHConnection sets up a ssh connection to chronos@localhost.
 func (ta *TerminalApp) SetUpSSHConnection(sshArgs string) uiauto.Action {
 	cmd := "chronos@localhost -o StrictHostKeyChecking=no " + sshArgs
-	relay := "--ssh-client-version=wasm"
 	addSSH := uiauto.Combine("input ssh information",
 		ta.ui.LeftClick(nodewith.Name("Add SSH").Role(role.Button)),
 		ta.ui.LeftClickUntilFocused(nodewith.Name("Command").Role(role.TextField)),
 		ta.Kb.TypeAction(cmd),
-		ta.ui.LeftClickUntilFocused(nodewith.Name("SSH relay server options").Role(role.TextField)),
-		ta.Kb.TypeAction(relay),
-		ta.ui.WithTimeout(2*time.Second).WaitUntilExists(nodewith.Role(role.StaticText).Name(cmd)),
-		ta.ui.WithTimeout(2*time.Second).WaitUntilExists(nodewith.Role(role.StaticText).Name(relay)))
+		ta.ui.WithTimeout(2*time.Second).WaitUntilExists(nodewith.Role(role.StaticText).Name(cmd)))
 
 	save := ta.ui.LeftClick(nodewith.Name("Save").Role(role.Button))
 	cancel := ta.ui.LeftClick(nodewith.Name("Cancel").Role(role.Button))
@@ -221,7 +218,7 @@ func (ta *TerminalApp) SetUpSSHConnection(sshArgs string) uiauto.Action {
 func (ta *TerminalApp) OpenSSHConnection() uiauto.Action {
 	return uiauto.Combine("open the ssh connection",
 		ta.ui.LeftClick(nodewith.Name("chronos@localhost").Role(role.Link)),
-		ta.ui.LeftClick(nodewith.NameRegex(regexp.MustCompile(`^\(chronos@(localhost|::1)\) Password:$`)).Role(role.TextField)),
+		ta.ui.WithTimeout(time.Minute).LeftClick(passwordDialog),
 		ta.Kb.TypeAction("test0000"),
 		ta.Kb.AccelAction("Enter"),
 		ta.ui.WaitUntilExists(nodewith.NameRegex(sshPromptRegex).Role(role.StaticText).First()),
