@@ -106,11 +106,12 @@ func AuthenticationEvents(ctx context.Context, s *testing.State) {
 	if err := testing.Poll(ctx, func(ctx context.Context) error {
 		_, err := secagentdaffiliation.GetSessionManagerReady(ctx, currTime)
 		return err
-	}, &testing.PollOptions{Timeout: 5 * time.Second}); err != nil {
-		s.Error("Failed to listen to session manager: ", err)
+	}, &testing.PollOptions{Timeout: 10 * time.Second}); err != nil {
+		s.Fatal("Failed to listen to session manager: ", err)
 	}
 
 	// 1: Login.
+	s.Log("Logging into device")
 	if err = cr.ContinueLogin(ctx); err != nil {
 		s.Fatal("Failed to log in: ", err)
 	}
@@ -129,6 +130,7 @@ func AuthenticationEvents(ctx context.Context, s *testing.State) {
 	}
 
 	// 2: Lock.
+	s.Log("Locking the device")
 	tconn, err := cr.TestAPIConn(ctx)
 	if err != nil {
 		s.Fatal("Failed to create Test API connection: ", err)
@@ -139,6 +141,7 @@ func AuthenticationEvents(ctx context.Context, s *testing.State) {
 	}
 
 	// 3: Auth Failures.
+	s.Log("Failing to login 3 times")
 	expFailures := 3
 	for i := 0; i < expFailures; i++ {
 		if err = lockscreen.EnterPassword(ctx, tconn, defaultUser, "Wrong Password", kb); err != nil {
@@ -147,11 +150,13 @@ func AuthenticationEvents(ctx context.Context, s *testing.State) {
 	}
 
 	// 4: Unlock.
+	s.Log("Unlocking the device")
 	if err := lockscreen.UnlockWithPassword(ctx, tconn, defaultUser, defaultPass, kb, 10*time.Second, 30*time.Second); err != nil {
 		s.Fatal("Failed to unlock the screen: ", err)
 	}
 
 	// 5: Logout
+	s.Log("Logging out of the device")
 	if err := quicksettings.SignOut(ctx, tconn); err != nil {
 		s.Fatal("Failed to logout: ", err)
 	}
