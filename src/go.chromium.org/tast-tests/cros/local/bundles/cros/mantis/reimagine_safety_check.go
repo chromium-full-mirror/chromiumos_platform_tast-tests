@@ -111,11 +111,8 @@ func ReimagineSafetyCheck(ctx context.Context, s *testing.State) {
 		s.Fatal("Error while waiting for spinner: ", err)
 	}
 
-	resultNodes := nodewith.Role(role.RadioButton).Name("Something went wrong").Ancestor(galleryapp.RootFinder)
-	for i := 0; i < 5; i++ {
-		currentNode := resultNodes.Nth(i)
-		if err := ui.Exists(currentNode)(ctx); err != nil {
-			s.Fatalf("The %vth result doesn't show the correct error message: %v", i, err)
-		}
+	resultNode := nodewith.Role(role.StaticText).NameContaining("Something went wrong").Ancestor(galleryapp.RootFinder)
+	if err := ui.Exists(resultNode)(ctx); err != nil {
+		s.Fatal("Gallery app doesn't show the correct error message: ", err)
 	}
 }
