@@ -27,7 +27,7 @@ func init() {
 		},
 		BugComponent: "b:792402", // ChromeOS > Platform > Enablement > Firmware > FAFT
 		TestBedDeps:  []string{tbdep.ServoStateWorking},
-		Attr:         []string{"group:firmware", "firmware_bringup", "firmware_ec"},
+		Attr:         []string{"group:firmware", "firmware_bringup", "firmware_ec", "firmware_meets_kpi", "firmware_stressed", "firmware_ec_ro", "firmware_ec_rw"},
 		Vars:         []string{"firmware.hibernate_time", "board", "model"},
 		HardwareDeps: hwdep.D(hwdep.Battery(), hwdep.ChromeEC()),
 		Timeout:      260 * time.Minute, // 4hrs 20mins

@@ -37,14 +37,15 @@ func init() {
 		},
 		BugComponent: "b:792402", // ChromeOS > Platform > Enablement > Firmware > FAFT
 		TestBedDeps:  []string{tbdep.ServoStateWorking},
-		Attr:         []string{"group:firmware", "firmware_bios"},
+		Attr:         []string{"group:firmware", "firmware_bios", "firmware_stressed", "firmware_bios_ro", "firmware_bios_rw"},
 		ServiceDeps:  []string{"tast.cros.firmware.KernelService"},
 		Params: []testing.Param{
 			{
-				Name:    "normal",
-				Fixture: fixture.NormalMode,
-				Val:     common.BootModeNormal,
-				Timeout: 30 * time.Minute,
+				Name:      "normal",
+				ExtraAttr: []string{"firmware_enabled", "firmware_meets_kpi"},
+				Fixture:   fixture.NormalMode,
+				Val:       common.BootModeNormal,
+				Timeout:   30 * time.Minute,
 			},
 			{
 				Name:    "dev",

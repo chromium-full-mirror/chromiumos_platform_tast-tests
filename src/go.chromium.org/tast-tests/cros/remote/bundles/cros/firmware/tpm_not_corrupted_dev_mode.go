@@ -72,7 +72,7 @@ func init() {
 		},
 		BugComponent: "b:792402", // ChromeOS > Platform > Enablement > Firmware > FAFT
 		TestBedDeps:  []string{tbdep.ServoStateWorking, tbdep.ServoUSBState("NORMAL")},
-		Attr:         []string{"group:firmware", "firmware_bios"},
+		Attr:         []string{"group:firmware", "firmware_bios", "firmware_enabled", "firmware_meets_kpi", "firmware_stressed", "firmware_bios_ro", "firmware_bios_rw"},
 		Timeout:      2 * time.Hour,
 		SoftwareDeps: []string{"crossystem"},
 		ServiceDeps:  []string{"tast.cros.firmware.TPMService"},

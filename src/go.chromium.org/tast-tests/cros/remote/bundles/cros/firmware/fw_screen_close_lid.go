@@ -32,7 +32,7 @@ func init() {
 		},
 		BugComponent: "b:792402", // ChromeOS > Platform > Enablement > Firmware > FAFT
 		TestBedDeps:  []string{tbdep.ServoStateWorking},
-		Attr:         []string{"group:firmware", "firmware_bios"},
+		Attr:         []string{"group:firmware", "firmware_bios", "firmware_stressed", "firmware_bios_ro", "firmware_bios_rw"},
 		HardwareDeps: hwdep.D(hwdep.ChromeEC(), hwdep.Lid()),
 		Timeout:      15 * time.Minute,
 		Params: []testing.Param{{
@@ -43,15 +43,17 @@ func init() {
 				bootToScreen: fwCommon.FwDeveloperScreen,
 			},
 		}, {
-			Name:    "to_norm",
-			Fixture: fixture.DevMode,
+			Name:      "to_norm",
+			ExtraAttr: []string{"firmware_enabled", "firmware_meets_kpi"},
+			Fixture:   fixture.DevMode,
 			Val: &fwScreenCloseLidParam{
 				bootMode:     fwCommon.BootModeDev,
 				bootToScreen: fwCommon.FwToNormScreen,
 			},
 		}, {
-			Name:    "broken",
-			Fixture: fixture.NormalMode,
+			Name:      "broken",
+			ExtraAttr: []string{"firmware_enabled", "firmware_meets_kpi"},
+			Fixture:   fixture.NormalMode,
 			Val: &fwScreenCloseLidParam{
 				bootMode:     fwCommon.BootModeNormal,
 				bootToScreen: fwCommon.FwBrokenScreen,

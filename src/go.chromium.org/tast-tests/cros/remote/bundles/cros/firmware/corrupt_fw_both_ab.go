@@ -29,13 +29,14 @@ func init() {
 		},
 		BugComponent: "b:792402", // ChromeOS > Platform > Enablement > Firmware > FAFT
 		TestBedDeps:  []string{tbdep.ServoStateWorking},
-		Attr:         []string{"group:firmware", "firmware_bios"},
+		Attr:         []string{"group:firmware", "firmware_bios", "firmware_stressed", "firmware_bios_ro", "firmware_bios_rw"},
 		HardwareDeps: hwdep.D(hwdep.ChromeEC()),
 		Timeout:      25 * time.Minute,
 		Params: []testing.Param{
 			{
-				Name:    "body_normal",
-				Fixture: fixture.BootModeFixtureWithAPBackup(fixture.NormalMode),
+				Name:      "body_normal",
+				ExtraAttr: []string{"firmware_meets_kpi"},
+				Fixture:   fixture.BootModeFixtureWithAPBackup(fixture.NormalMode),
 				Val: &rbios.CorruptTestVal{
 					SectionA: bios.FWBodyAImageSection, SectionB: bios.FWBodyBImageSection,
 				},
@@ -48,8 +49,9 @@ func init() {
 				},
 			},
 			{
-				Name:    "sig_normal",
-				Fixture: fixture.BootModeFixtureWithAPBackup(fixture.NormalMode),
+				Name:      "sig_normal",
+				ExtraAttr: []string{"firmware_meets_kpi"},
+				Fixture:   fixture.BootModeFixtureWithAPBackup(fixture.NormalMode),
 				Val: &rbios.CorruptTestVal{
 					SectionA: bios.FWSignAImageSection, SectionB: bios.FWSignBImageSection,
 				},

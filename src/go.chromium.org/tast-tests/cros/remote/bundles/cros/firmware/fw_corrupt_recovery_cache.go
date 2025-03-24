@@ -36,7 +36,7 @@ func init() {
 		},
 		BugComponent: "b:792402", // ChromeOS > Platform > Enablement > Firmware > FAFT
 		TestBedDeps:  []string{tbdep.ServoStateWorking, tbdep.ServoUSBState("NORMAL")},
-		Attr:         []string{"group:firmware", "firmware_bios", "firmware_ro"},
+		Attr:         []string{"group:firmware", "firmware_bios", "firmware_stressed", "firmware_bios_ro", "firmware_bios_rw"},
 		Timeout:      2 * time.Hour,
 		Vars:         []string{"firmware.skipFlashUSB"},
 		ServiceDeps:  []string{"tast.cros.firmware.BiosService"},
@@ -44,9 +44,10 @@ func init() {
 		SoftwareDeps: []string{"has_recovery_mrc_cache"},
 		Params: []testing.Param{
 			{
-				Name:    "normal",
-				Fixture: fixture.NormalMode,
-				Val:     common.BootModeNormal,
+				Name:      "normal",
+				ExtraAttr: []string{"firmware_meets_kpi", "firmware_ec", "firmware_ec_ro", "firmware_ec_rw"},
+				Fixture:   fixture.NormalMode,
+				Val:       common.BootModeNormal,
 			},
 			{
 				Name:    "dev",

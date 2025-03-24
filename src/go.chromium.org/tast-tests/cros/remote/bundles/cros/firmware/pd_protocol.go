@@ -29,7 +29,7 @@ func init() {
 		TestBedDeps:  []string{tbdep.ServoStateWorking},
 		Fixture:      fixture.NormalMode,
 		HardwareDeps: hwdep.D(hwdep.ChromeEC(), hwdep.SkipOnFormFactor(hwdep.Chromebox)),
-		Attr:         []string{"group:firmware", "firmware_pd"},
+		Attr:         []string{"group:firmware", "firmware_pd", "firmware_meets_kpi", "firmware_stressed", "firmware_ec_ro"},
 		Params: []testing.Param{{
 			Val: firmware.PDTestParams{
 				DTS: firmware.DTSModeOff,

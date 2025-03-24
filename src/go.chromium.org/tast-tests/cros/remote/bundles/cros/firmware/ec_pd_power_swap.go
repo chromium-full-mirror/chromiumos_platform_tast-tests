@@ -31,9 +31,10 @@ func init() {
 		HardwareDeps: hwdep.D(hwdep.ChromeEC()),
 		Timeout:      20 * time.Minute,
 		TestBedDeps:  []string{tbdep.ServoStateWorking},
-		Attr:         []string{"group:firmware", "firmware_pd"},
+		Attr:         []string{"group:firmware", "firmware_pd", "firmware_stressed", "firmware_ec_ro", "firmware_ec_rw", "firmware_bios_pdc"},
 		Params: []testing.Param{{
-			Name: "normal",
+			Name:      "normal",
+			ExtraAttr: []string{"firmware_enabled", "firmware_meets_kpi"},
 			Val: firmware.PDTestParams{
 				NumIterations: 1,
 				DTS:           firmware.DTSModeOff,
@@ -45,21 +46,24 @@ func init() {
 				DTS:           firmware.DTSModeOff,
 			},
 		}, {
-			Name: "flipcc",
+			Name:      "flipcc",
+			ExtraAttr: []string{"firmware_meets_kpi"},
 			Val: firmware.PDTestParams{
 				CC:            firmware.CCPolarityFlipped,
 				NumIterations: 1,
 				DTS:           firmware.DTSModeOff,
 			},
 		}, {
-			Name: "flipcc_stress",
+			Name:      "flipcc_stress",
+			ExtraAttr: []string{"firmware_meets_kpi"},
 			Val: firmware.PDTestParams{
 				CC:            firmware.CCPolarityFlipped,
 				NumIterations: 20,
 				DTS:           firmware.DTSModeOff,
 			},
 		}, {
-			Name: "dts",
+			Name:      "dts",
+			ExtraAttr: []string{"firmware_meets_kpi"},
 			Val: firmware.PDTestParams{
 				DTS:           firmware.DTSModeOn,
 				NumIterations: 1,
@@ -71,7 +75,8 @@ func init() {
 				NumIterations: 20,
 			},
 		}, {
-			Name: "flipcc_dts",
+			Name:      "flipcc_dts",
+			ExtraAttr: []string{"firmware_meets_kpi"},
 			Val: firmware.PDTestParams{
 				CC:            firmware.CCPolarityFlipped,
 				DTS:           firmware.DTSModeOn,
@@ -85,14 +90,16 @@ func init() {
 				NumIterations: 20,
 			},
 		}, {
-			Name: "shutdown",
+			Name:      "shutdown",
+			ExtraAttr: []string{"firmware_meets_kpi"},
 			Val: firmware.PDTestParams{
 				Shutdown:      true,
 				NumIterations: 1,
 				DTS:           firmware.DTSModeOff,
 			},
 		}, {
-			Name: "suspend",
+			Name:      "suspend",
+			ExtraAttr: []string{"firmware_meets_kpi"},
 			Val: firmware.PDTestParams{
 				Suspend:       true,
 				NumIterations: 1,

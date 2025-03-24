@@ -30,15 +30,16 @@ func init() {
 		},
 		BugComponent: "b:792402", // ChromeOS > Platform > Enablement > Firmware > FAFT
 		TestBedDeps:  []string{tbdep.ServoStateWorking},
-		Attr:         []string{"group:firmware", "firmware_bios"},
+		Attr:         []string{"group:firmware", "firmware_bios", "firmware_stressed", "firmware_bios_ro", "firmware_bios_rw"},
 		ServiceDeps:  []string{"tast.cros.firmware.KernelService"},
 		HardwareDeps: hwdep.D(hwdep.ChromeEC()),
 		Timeout:      30 * time.Minute,
 		Params: []testing.Param{
 			{
-				Name:    "a",
-				Fixture: fixture.NormalMode,
-				Val:     pb.PartitionCopy_A,
+				Name:      "a",
+				ExtraAttr: []string{"firmware_meets_kpi"},
+				Fixture:   fixture.NormalMode,
+				Val:       pb.PartitionCopy_A,
 			},
 			{
 				Name:    "a_dev",
@@ -46,9 +47,10 @@ func init() {
 				Val:     pb.PartitionCopy_A,
 			},
 			{
-				Name:    "b",
-				Fixture: fixture.NormalMode,
-				Val:     pb.PartitionCopy_B,
+				Name:      "b",
+				ExtraAttr: []string{"firmware_meets_kpi"},
+				Fixture:   fixture.NormalMode,
+				Val:       pb.PartitionCopy_B,
 			},
 			{
 				Name:    "b_dev",

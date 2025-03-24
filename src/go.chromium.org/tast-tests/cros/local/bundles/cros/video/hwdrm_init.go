@@ -25,7 +25,7 @@ func init() {
 		BugComponent: "b:168352", // ChromeOS > Platform > Graphics > Video
 		SoftwareDeps: []string{"protected_content", "hwdrm_stable"},
 		Timeout:      5 * time.Minute,
-		Attr:         []string{"group:mainline", "group:firmware", "firmware_bios"},
+		Attr:         []string{"group:mainline", "group:firmware", "firmware_bios", "firmware_meets_kpi", "firmware_stressed", "firmware_bios_ro", "firmware_bios_rw"},
 		Fixture:      "gpuWatchHangs",
 	})
 }

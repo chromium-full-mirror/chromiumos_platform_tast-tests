@@ -30,14 +30,15 @@ func init() {
 		SoftwareDeps: []string{"csme_update"},
 		ServiceDeps:  []string{"tast.cros.firmware.BiosService"},
 		TestBedDeps:  []string{tbdep.ServoStateWorking},
-		Attr:         []string{"group:firmware", "firmware_bios"},
+		Attr:         []string{"group:firmware", "firmware_bios", "firmware_stressed", "firmware_bios_ro", "firmware_bios_rw"},
 		Vars:         []string{"firmware_branch", "ro_versions"},
 		Data:         []string{"shipped-firmwares.json"},
 		Timeout:      10 * time.Minute,
 		Params: []testing.Param{
 			{
-				Name:    "normal",
-				Fixture: fixture.NormalMode,
+				Name:      "normal",
+				ExtraAttr: []string{"firmware_meets_kpi"},
+				Fixture:   fixture.NormalMode,
 			},
 			{
 				Name:    "dev",

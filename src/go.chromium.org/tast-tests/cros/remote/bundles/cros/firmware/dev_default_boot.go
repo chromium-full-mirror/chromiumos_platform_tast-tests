@@ -49,7 +49,7 @@ func init() {
 		},
 		BugComponent: "b:792402", // ChromeOS > Platform > Enablement > Firmware > FAFT
 		TestBedDeps:  []string{tbdep.ServoStateWorking, tbdep.ServoUSBState("NORMAL")},
-		Attr:         []string{"group:firmware", "firmware_bios"},
+		Attr:         []string{"group:firmware", "firmware_bios", "firmware_stressed", "firmware_bios_ro", "firmware_bios_rw"},
 		SoftwareDeps: []string{"crossystem"},
 		Vars:         []string{"firmware.skipFlashUSB"},
 		Fixture:      fixture.DevMode,
@@ -61,7 +61,8 @@ func init() {
 				bootTarget: devDefaultBootFromMainDisk,
 			},
 		}, {
-			Name: "timeout_usb",
+			Name:      "timeout_usb",
+			ExtraAttr: []string{"firmware_ec", "firmware_ec_ro", "firmware_ec_rw"},
 			Val: &devDefaultBootParam{
 				trigger:    triggerByTimeout,
 				bootTarget: devDefaultBootFromTheUSB,
@@ -74,7 +75,8 @@ func init() {
 			},
 			ExtraHardwareDeps: hwdep.D(hwdep.FirmwareUIType(hwdep.MenuUI, hwdep.LegacyMenuUI)),
 		}, {
-			Name: "menu_usb",
+			Name:      "menu_usb",
+			ExtraAttr: []string{"firmware_ec", "firmware_ec_ro", "firmware_ec_rw"},
 			Val: &devDefaultBootParam{
 				trigger:    triggerByMenu,
 				bootTarget: devDefaultBootFromTheUSB,

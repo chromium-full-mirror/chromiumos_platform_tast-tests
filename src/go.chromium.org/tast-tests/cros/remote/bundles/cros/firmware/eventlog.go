@@ -50,7 +50,7 @@ func init() {
 		},
 		BugComponent: "b:792402", // ChromeOS > Platform > Enablement > Firmware > FAFT
 		TestBedDeps:  []string{tbdep.ServoStateWorking},
-		Attr:         []string{"group:firmware", "firmware_bios"},
+		Attr:         []string{"group:firmware", "firmware_bios", "firmware_stressed", "firmware_bios_ro", "firmware_bios_rw"},
 		HardwareDeps: hwdep.D(
 			// Eventlog is broken/wontfix on veyron devices.
 			// See http://b/35585376#comment14 for more info.
@@ -63,7 +63,8 @@ func init() {
 		Params: []testing.Param{
 			// Test eventlog upon normal->normal reboot.
 			{
-				Name: "normal",
+				Name:      "normal",
+				ExtraAttr: []string{"firmware_enabled", "firmware_meets_kpi"},
 				// Disable on rammus (b/184778308) and coral (b/250684696)
 				ExtraHardwareDeps: hwdep.D(hwdep.SkipOnModel("leona", "shyvana", "astronaut", "babymega", "babytiger", "blacktiplte", "nasher", "robo360")),
 				Fixture:           fixture.NormalMode,
@@ -76,6 +77,7 @@ func init() {
 			{
 				// Allow some normally disallowed events on rammus. b/184778308
 				Name:              "rammus_normal",
+				ExtraAttr:         []string{"firmware_enabled", "firmware_meets_kpi"},
 				ExtraHardwareDeps: hwdep.D(hwdep.Model("leona", "shyvana")),
 				Fixture:           fixture.NormalMode,
 				Val: eventLogParams{
@@ -112,7 +114,7 @@ func init() {
 			{
 				Name:             "normal_rec",
 				ExtraTestBedDeps: []string{tbdep.ServoUSBState("NORMAL")},
-				ExtraAttr:        []string{"firmware_ro"},
+				ExtraAttr:        []string{"firmware_enabled", "firmware_meets_kpi"},
 				Fixture:          fixture.NormalMode,
 				Val: eventLogParams{
 					bootToMode:        fwCommon.BootModeRecovery,
@@ -125,7 +127,7 @@ func init() {
 			{
 				Name:             "rec_normal",
 				ExtraTestBedDeps: []string{tbdep.ServoUSBState("NORMAL")},
-				ExtraAttr:        []string{"firmware_ro"},
+				ExtraAttr:        []string{"firmware_enabled", "firmware_meets_kpi"},
 				Fixture:          fixture.RecModeNoServices,
 				Val: eventLogParams{
 					bootToMode:        fwCommon.BootModeNormal,
@@ -141,8 +143,9 @@ func init() {
 			// eldrid: S0ix Enter, S0ix Exit, Wake Source | Power Button | 0, EC Event | Power Button
 			// hayato: Sleep, Wake
 			{
-				Name:    "suspend_resume",
-				Fixture: fixture.NormalMode,
+				Name:      "suspend_resume",
+				ExtraAttr: []string{"firmware_enabled", "firmware_meets_kpi", "firmware_ec", "firmware_ec_ro", "firmware_ec_rw"},
+				Fixture:   fixture.NormalMode,
 				Val: eventLogParams{
 					suspendResume: true,
 					requiredEventSets: [][]string{
@@ -157,6 +160,7 @@ func init() {
 			// Test eventlog with hardware watchdog.
 			{
 				Name:              "watchdog",
+				ExtraAttr:         []string{"firmware_enabled", "firmware_meets_kpi"},
 				Fixture:           fixture.NormalMode,
 				ExtraSoftwareDeps: []string{"watchdog"},
 				Val: eventLogParams{

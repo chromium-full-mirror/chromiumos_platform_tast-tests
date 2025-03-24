@@ -69,13 +69,13 @@ func init() {
 			Val:              fixtureParams{expectedMode: common.BootModeRecovery, isDevModeExpected: true},
 			Fixture:          fixture.DevRecModeNoServices,
 			ExtraTestBedDeps: []string{tbdep.ServoUSBState("NORMAL")},
-			ExtraAttr:        []string{"group:firmware", "firmware_smoke", "group:labqual", "firmware_bios", "firmware_ro"},
+			ExtraAttr:        []string{"group:firmware", "firmware_smoke", "group:labqual", "firmware_bios", "firmware_stressed", "firmware_bios_ro", "firmware_bios_rw"},
 		}, {
 			Name:             "rec",
 			Val:              fixtureParams{expectedMode: common.BootModeRecovery},
 			Fixture:          fixture.RecModeNoServices,
 			ExtraTestBedDeps: []string{tbdep.ServoUSBState("NORMAL")},
-			ExtraAttr:        []string{"group:firmware", "firmware_smoke", "group:labqual", "firmware_bios", "firmware_ro"},
+			ExtraAttr:        []string{"group:firmware", "firmware_smoke", "group:labqual", "firmware_bios", "firmware_enabled", "firmware_meets_kpi", "firmware_stressed", "firmware_bios_ro", "firmware_bios_rw"},
 		}, {
 			Name:    "devusb_reinstall",
 			Val:     fixtureParams{expectedMode: common.BootModeUSBDev, leaveStatefulMarker: true},

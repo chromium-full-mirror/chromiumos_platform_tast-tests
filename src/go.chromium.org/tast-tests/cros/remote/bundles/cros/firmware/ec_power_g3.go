@@ -46,27 +46,26 @@ func init() {
 		},
 		BugComponent: "b:792402", // ChromeOS > Platform > Enablement > Firmware > FAFT
 		TestBedDeps:  []string{tbdep.ServoStateWorking},
-		Attr:         []string{"group:firmware"},
+		Attr:         []string{"group:firmware", "firmware_ec", "firmware_meets_kpi", "firmware_stressed", "firmware_ec_ro", "firmware_ec_rw"},
 		HardwareDeps: hwdep.D(hwdep.ChromeEC()),
 		Fixture:      fixture.NormalMode,
 		Params: []testing.Param{
 			{
-				Name:      "shutdown",
-				ExtraAttr: []string{"firmware_ec", "firmware_stressed", "firmware_meets_kpi"},
+				Name: "shutdown",
 				Val: powerG3Params{
 					PowerOffMethod: shutdownCommand,
 				},
 			},
 			{
 				Name:      "power_button",
-				ExtraAttr: []string{"firmware_ec", "firmware_stressed", "firmware_meets_kpi", "firmware_enabled", "firmware_bringup"},
+				ExtraAttr: []string{"firmware_enabled", "firmware_bringup"},
 				Val: powerG3Params{
 					PowerOffMethod: longPowerButtonPress,
 				},
 			},
 			{
 				Name:      "power_state",
-				ExtraAttr: []string{"firmware_bios", "firmware_bringup", "group:labqual"},
+				ExtraAttr: []string{"firmware_enabled", "firmware_bringup", "group:labqual"},
 				Val: powerG3Params{
 					PowerOffMethod: powerStateOff,
 				},
@@ -74,7 +73,7 @@ func init() {
 			{
 				Name:             "power_state_usb_plugged_in",
 				ExtraTestBedDeps: []string{tbdep.ServoUSBState("NORMAL")},
-				ExtraAttr:        []string{"firmware_bios", "group:labqual", "firmware_ro"},
+				ExtraAttr:        []string{"firmware_enabled", "group:labqual"},
 				Val: powerG3Params{
 					PowerOffMethod: powerStateOff,
 					CheckUSB:       true,
@@ -83,7 +82,7 @@ func init() {
 			},
 			{
 				Name:              "power_state_snk",
-				ExtraAttr:         []string{"firmware_ec", "firmware_stressed", "firmware_meets_kpi", "firmware_enabled", "firmware_bringup"},
+				ExtraAttr:         []string{"firmware_enabled", "firmware_bringup"},
 				ExtraHardwareDeps: hwdep.D(hwdep.Battery()),
 				Val: powerG3Params{
 					PowerOffMethod: powerStateOff,
@@ -93,7 +92,7 @@ func init() {
 			{
 				Name:             "power_state_rec_off",
 				ExtraTestBedDeps: []string{tbdep.ServoUSBState("NORMAL")},
-				ExtraAttr:        []string{"firmware_bios", "group:labqual", "firmware_ro"},
+				ExtraAttr:        []string{"firmware_enabled", "group:labqual"},
 				Val: powerG3Params{
 					PowerOffMethod: powerStateOff,
 					SetRecMode:     true,
@@ -102,7 +101,7 @@ func init() {
 			},
 			{
 				Name:      "power_button_from_ro",
-				ExtraAttr: []string{"firmware_bios", "group:labqual", "firmware_ro"},
+				ExtraAttr: []string{"firmware_enabled", "group:labqual"},
 				Val: powerG3Params{
 					PowerOffMethod: longPowerButtonPress,
 					SetRecScreen:   true,

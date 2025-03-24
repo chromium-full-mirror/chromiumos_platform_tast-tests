@@ -33,7 +33,7 @@ func init() {
 		},
 		BugComponent: "b:792402", // ChromeOS > Platform > Enablement > Firmware > FAFT
 		TestBedDeps:  []string{tbdep.ServoStateWorking},
-		Attr:         []string{"group:firmware", "firmware_pd"},
+		Attr:         []string{"group:firmware", "firmware_pd", "firmware_meets_kpi", "firmware_stressed", "firmware_ec_ro", "firmware_ec_rw", "firmware_bios_pdc"},
 		Fixture:      fixture.NormalMode,
 		SoftwareDeps: []string{"chrome"},
 		ServiceDeps:  []string{"tast.cros.browser.ChromeService"},

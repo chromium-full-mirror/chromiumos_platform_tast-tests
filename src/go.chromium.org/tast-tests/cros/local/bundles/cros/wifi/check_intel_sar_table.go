@@ -33,9 +33,9 @@ func init() {
 			"chromeos-faft@google.com",
 		},
 		SoftwareDeps: []string{"wifi"},
-		Attr: []string{"group:mainline", "group:wificell", "wificell_func", "wificell_dut_validation", "group:labqual",
+		Attr: []string{"group:mainline", "group:wificell", "wificell_func", "wificell_dut_validation", "group:labqual", "group:release-health", "release-health_wifi",
 			// Updating the SAR tables in CBFS can break this test.
-			"group:firmware", "firmware_bios", "group:release-health", "release-health_wifi",
+			"group:firmware", "firmware_bios", "firmware_meets_kpi", "firmware_stressed", "firmware_bios_ro", "firmware_bios_rw",
 		},
 		// NB: The WifiIntel dependency tracks a manually maintained list of devices.
 		// If the test is skipping when it should run or vice versa, check the hwdep

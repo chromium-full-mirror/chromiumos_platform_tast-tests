@@ -28,7 +28,7 @@ func init() {
 		Contacts:     []string{"chromeos-faft@google.com", "kramasub@google.com"},
 		BugComponent: "b:792402", // ChromeOS > Platform > Enablement > Firmware > FAFT
 		TestBedDeps:  []string{tbdep.ServoStateWorking},
-		Attr:         []string{"group:firmware", "firmware_bios", "firmware_ro"},
+		Attr:         []string{"group:firmware", "firmware_bios", "firmware_stressed", "firmware_bios_ro", "firmware_bios_rw"},
 		HardwareDeps: hwdep.D(hwdep.ChromeEC(), hwdep.SkipOnModel(
 			// AMD devices before skyrim don't have the separate signed AMDFW section.
 			// grunt
@@ -44,8 +44,9 @@ func init() {
 		ServiceDeps:  []string{"tast.cros.firmware.UtilsService"},
 		Params: []testing.Param{
 			{
-				Name:    "normal_mode",
-				Fixture: fixture.BootModeFixtureWithAPBackup(fixture.NormalMode),
+				Name:      "normal_mode",
+				ExtraAttr: []string{"firmware_meets_kpi"},
+				Fixture:   fixture.BootModeFixtureWithAPBackup(fixture.NormalMode),
 				Val: &rbios.CorruptTestVal{
 					SectionA: bios.SignedAMDFWAImageSection, SectionB: bios.SignedAMDFWBImageSection,
 				},

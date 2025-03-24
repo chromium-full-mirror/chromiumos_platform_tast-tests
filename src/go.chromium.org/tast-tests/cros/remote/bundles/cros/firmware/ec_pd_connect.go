@@ -32,7 +32,7 @@ func init() {
 		Fixture:      fixture.NormalMode,
 		HardwareDeps: hwdep.D(hwdep.ChromeEC()),
 		Timeout:      6 * time.Minute,
-		Attr:         []string{"group:firmware", "firmware_pd"},
+		Attr:         []string{"group:firmware", "firmware_pd", "firmware_enabled", "firmware_meets_kpi", "firmware_stressed", "firmware_ec_ro", "firmware_ec_rw", "firmware_bios_pdc"},
 		Params: []testing.Param{{
 			Name: "normal",
 			Val: firmware.PDTestParams{

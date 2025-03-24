@@ -24,7 +24,7 @@ func init() {
 		BugComponent: "b:792402", // ChromeOS > Platform > Enablement > Firmware > FAFT
 		HardwareDeps: hwdep.D(hwdep.FirmwareSplashScreen()),
 		TestBedDeps:  []string{tbdep.ServoStateWorking},
-		Attr:         []string{"group:firmware", "firmware_bios"},
+		Attr:         []string{"group:firmware", "firmware_bios", "firmware_meets_kpi", "firmware_stressed", "firmware_bios_ro", "firmware_bios_rw"},
 		Fixture:      fixture.NormalMode,
 		Timeout:      5 * time.Minute,
 	})

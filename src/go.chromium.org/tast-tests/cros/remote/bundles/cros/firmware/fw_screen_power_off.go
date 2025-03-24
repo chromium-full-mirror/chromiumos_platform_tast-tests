@@ -30,7 +30,7 @@ func init() {
 		},
 		BugComponent: "b:792402", // ChromeOS > Platform > Enablement > Firmware > FAFT
 		TestBedDeps:  []string{tbdep.ServoStateWorking},
-		Attr:         []string{"group:firmware", "firmware_bios"},
+		Attr:         []string{"group:firmware", "firmware_bios", "firmware_stressed", "firmware_bios_ro", "firmware_bios_rw"},
 		Timeout:      8 * time.Minute,
 		HardwareDeps: hwdep.D(hwdep.ChromeEC(), hwdep.FirmwareUIType(hwdep.MenuUI, hwdep.LegacyMenuUI)),
 		Params: []testing.Param{{
@@ -45,13 +45,14 @@ func init() {
 			Val: &fwScreenPowerOffParam{
 				menuPowerOffScreen: fwCommon.FwRecoveryScreen,
 			},
-			ExtraAttr: []string{"firmware_ro"},
+			ExtraAttr: []string{"firmware_enabled", "firmware_meets_kpi"},
 		}, {
 			Name:    "broken",
 			Fixture: fixture.NormalMode,
 			Val: &fwScreenPowerOffParam{
 				menuPowerOffScreen: fwCommon.FwBrokenScreen,
 			},
+			ExtraAttr: []string{"firmware_enabled", "firmware_meets_kpi"},
 		}},
 	})
 }

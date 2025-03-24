@@ -57,7 +57,7 @@ func init() {
 		},
 		BugComponent: "b:792402", // ChromeOS > Platform > Enablement > Firmware > FAFT
 		TestBedDeps:  []string{tbdep.ServoStateWorking},
-		Attr:         []string{"group:firmware", "firmware_bios"},
+		Attr:         []string{"group:firmware", "firmware_bios", "firmware_enabled", "firmware_meets_kpi", "firmware_stressed", "firmware_bios_ro", "firmware_bios_rw"},
 		Vars:         []string{"firmware.skipFlashUSB"},
 		Timeout:      120 * time.Minute,
 		ServiceDeps:  []string{"tast.cros.firmware.TPMService"},
@@ -65,7 +65,6 @@ func init() {
 			{
 				Name:             "firmware_data_key_version",
 				ExtraTestBedDeps: []string{tbdep.ServoUSBState("NORMAL")},
-				ExtraAttr:        []string{"firmware_ro"},
 				Fixture:          fixture.BootModeFixtureWithAPBackup(fixture.NormalMode),
 				ExtraData:        []string{fwDataKeyVerMakekeyFile, fwDataKeyVerCommonFile},
 				Val: &updateVersionTc{
@@ -89,7 +88,7 @@ func init() {
 			{
 				Name:             "firmware_version",
 				ExtraTestBedDeps: []string{tbdep.ServoUSBState("NORMAL")},
-				ExtraAttr:        []string{"firmware_smoke", "firmware_ro"},
+				ExtraAttr:        []string{"firmware_smoke"},
 				Fixture:          fixture.BootModeFixtureWithAPBackup(fixture.NormalMode),
 				Val: &updateVersionTc{
 					keyVersion:          fwVer,

@@ -44,11 +44,12 @@ func init() {
 		Contacts:     []string{"chromeos-firmware@google.com", "digehlot@google.com"},
 		BugComponent: "b:792402", // ChromeOS > Platform > Enablement > Firmware > FAFT
 		TestBedDeps:  []string{tbdep.ServoStateWorking},
-		Attr:         []string{"group:firmware", "firmware_bios"},
+		Attr:         []string{"group:firmware", "firmware_bios", "firmware_stressed", "firmware_bios_ro", "firmware_bios_rw"},
 		Params: []testing.Param{
 			{
-				Name:    "normal",
-				Fixture: fixture.NormalMode,
+				Name:      "normal",
+				ExtraAttr: []string{"firmware_enabled", "firmware_meets_kpi"},
+				Fixture:   fixture.NormalMode,
 				Val: &bootModeArgs{
 					devMode:       0,
 					recMode:       0,
@@ -59,6 +60,7 @@ func init() {
 			},
 			{
 				Name:             "recovery",
+				ExtraAttr:        []string{"firmware_enabled", "firmware_meets_kpi"},
 				Fixture:          fixture.RecModeNoServices,
 				ExtraTestBedDeps: []string{tbdep.ServoUSBState("NORMAL")},
 				Val: &bootModeArgs{

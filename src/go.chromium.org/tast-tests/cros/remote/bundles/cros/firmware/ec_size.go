@@ -25,7 +25,7 @@ func init() {
 		},
 		BugComponent: "b:792402", // ChromeOS > Platform > Enablement > Firmware > FAFT
 		TestBedDeps:  []string{tbdep.ServoStateWorking},
-		Attr:         []string{"group:firmware", "firmware_ec", "firmware_stressed", "firmware_meets_kpi"},
+		Attr:         []string{"group:firmware", "firmware_ec", "firmware_enabled", "firmware_meets_kpi", "firmware_stressed", "firmware_ec_ro", "firmware_ec_rw"},
 		HardwareDeps: hwdep.D(hwdep.ChromeEC(), hwdep.SkipOnModel(
 			// b/183899510: icarus boards reserve half of the flash for saving EC logs, and therefore report the wrong size via ectool
 			"cozmo", "pico", "pico6",

@@ -28,10 +28,11 @@ func init() {
 		},
 		BugComponent: "b:792402", // ChromeOS > Platform > Enablement > Firmware > FAFT
 		TestBedDeps:  []string{tbdep.ServoStateWorking},
-		Attr:         []string{"group:firmware", "firmware_bios"},
+		Attr:         []string{"group:firmware", "firmware_bios", "firmware_stressed", "firmware_bios_ro", "firmware_bios_rw"},
 		Fixture:      fixture.DevMode,
 		Params: []testing.Param{{
 			Name:              "chromebox",
+			ExtraAttr:         []string{"firmware_enabled", "firmware_meets_kpi"},
 			ExtraHardwareDeps: hwdep.D(hwdep.FormFactor(hwdep.Chromebox), hwdep.ExternalDisplay()),
 		}, {
 			Name:              "dev",

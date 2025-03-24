@@ -32,7 +32,7 @@ func init() {
 		},
 		BugComponent: "b:792402", // ChromeOS > Platform > Enablement > Firmware > FAFT
 		TestBedDeps:  []string{tbdep.ServoStateWorking},
-		Attr:         []string{"group:firmware", "firmware_bios"},
+		Attr:         []string{"group:firmware", "firmware_bios", "firmware_stressed", "firmware_bios_ro", "firmware_bios_rw"},
 		Vars:         []string{"firmware.skipFlashUSB"},
 		Timeout:      2 * time.Hour,
 		Params: []testing.Param{{
@@ -48,8 +48,9 @@ func init() {
 				bootToScreen: fwCommon.FwToNormScreen,
 			},
 		}, {
-			Name:    "broken_screen",
-			Fixture: fixture.NormalMode,
+			Name:      "broken_screen",
+			ExtraAttr: []string{"firmware_enabled", "firmware_meets_kpi"},
+			Fixture:   fixture.NormalMode,
 			Val: &fwScreenPressPwrParams{
 				bootToScreen: fwCommon.FwBrokenScreen,
 			},
@@ -59,13 +60,14 @@ func init() {
 			Val: &fwScreenPressPwrParams{
 				bootToScreen: fwCommon.FwRecoveryScreen,
 			},
-			ExtraAttr: []string{"firmware_ro"},
+			ExtraAttr: []string{"firmware_enabled", "firmware_meets_kpi"},
 		}, {
 			Name:    "invalid_screen",
 			Fixture: fixture.NormalMode,
 			Val: &fwScreenPressPwrParams{
 				bootToScreen: fwCommon.FwInvalidScreen,
 			},
+			ExtraAttr:        []string{"firmware_enabled", "firmware_meets_kpi"},
 			ExtraTestBedDeps: []string{tbdep.ServoUSBState("NORMAL")},
 		}},
 	})

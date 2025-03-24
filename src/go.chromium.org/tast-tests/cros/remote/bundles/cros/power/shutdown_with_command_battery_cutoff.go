@@ -34,7 +34,7 @@ func init() {
 		BugComponent: "b:792402", // ChromeOS > Platform > Enablement > Firmware > FAFT
 		ServiceDeps:  []string{"tast.cros.security.BootLockboxService"},
 		SoftwareDeps: []string{"chrome", "reboot"},
-		Attr:         []string{"group:mainline", "informational", "group:firmware", "firmware_ec"},
+		Attr:         []string{"group:mainline", "informational", "group:firmware", "firmware_bios", "firmware_enabled", "firmware_meets_kpi", "firmware_stressed", "firmware_bios_ro", "firmware_bios_rw", "firmware_ec", "firmware_ec_ro", "firmware_ec_rw"},
 		Fixture:      fixture.NormalMode,
 		Vars:         []string{"servo"},
 		TestBedDeps:  []string{tbdep.ServoStateWorking},

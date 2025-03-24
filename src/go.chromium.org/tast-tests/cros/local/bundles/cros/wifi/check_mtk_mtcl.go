@@ -34,7 +34,7 @@ func init() {
 		SoftwareDeps: []string{"wifi"},
 		Attr: []string{"group:mainline", "group:wificell", "wificell_func", "wificell_dut_validation", "group:labqual",
 			// Updating the MTCL tables in CBFS can break this test.
-			"group:firmware", "firmware_bios",
+			"group:firmware", "firmware_bios", "firmware_meets_kpi", "firmware_stressed", "firmware_bios_ro", "firmware_bios_rw",
 		},
 		// NB: This test is currently only valid on the MT7922 chipset. See http://go/cros-wifi-mtk-disable-6g for implementation details of the feature being tested.
 		HardwareDeps:    hwdep.D(hwdep.WifiDevice(hwdep.MediaTekMT7922PCIE)),
