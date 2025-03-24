@@ -51,7 +51,7 @@ func init() {
 				// 10 iterations takes between 7-15 minutes depending on model and number of errors encountered.
 				Timeout:   20 * time.Minute,
 				Val:       10,
-				ExtraAttr: []string{"dsp_small"},
+				ExtraAttr: []string{"firmware_stress", "dsp_small"},
 			},
 			{
 				Name:    "medium",
@@ -62,7 +62,7 @@ func init() {
 				Name:      "fw_qual",
 				Timeout:   4000 * time.Minute,
 				Val:       2500,
-				ExtraAttr: []string{"firmware_stress", "dsp_large"},
+				ExtraAttr: []string{"dsp_large"},
 			},
 		},
 	})
