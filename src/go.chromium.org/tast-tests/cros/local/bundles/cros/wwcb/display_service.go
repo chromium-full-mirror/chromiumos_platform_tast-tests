@@ -15,6 +15,7 @@ import (
 	"google.golang.org/grpc"
 
 	"go.chromium.org/tast-tests/cros/local/bundles/cros/wwcb/utils"
+	"go.chromium.org/tast-tests/cros/local/chrome"
 	"go.chromium.org/tast-tests/cros/local/chrome/ash"
 	"go.chromium.org/tast-tests/cros/local/chrome/display"
 	"go.chromium.org/tast-tests/cros/local/chrome/uiauto/checked"
@@ -274,6 +275,17 @@ func (ds *DisplayService) VerifyDisplayCount(ctx context.Context, req *wwcb.Quer
 	return &empty.Empty{}, nil
 }
 
+func getDisplayInfo(ctx context.Context, tconn *chrome.TestConn, index int32) (*display.Info, error) {
+	infos, err := display.GetInfo(ctx, tconn)
+	if err != nil {
+		return nil, errors.Wrap(err, "failed to get display info")
+	}
+	if int(index) >= len(infos) {
+		return nil, errors.New("display index is out of range")
+	}
+	return &infos[int(index)], nil
+}
+
 // ChangeResolution changes the given display's resolution, respectively low, medium and high resolution.
 func (ds *DisplayService) ChangeResolution(ctx context.Context, req *wwcb.QueryRequest) (*empty.Empty, error) {
 	cr := ds.sharedObject.Chrome
@@ -285,17 +297,12 @@ func (ds *DisplayService) ChangeResolution(ctx context.Context, req *wwcb.QueryR
 		return nil, errors.Wrap(err, "failed to create test API connection")
 	}
 
-	infos, err := display.GetInfo(ctx, tconn)
+	info, err := getDisplayInfo(ctx, tconn, req.DisplayIndex)
 	if err != nil {
 		return nil, errors.Wrap(err, "failed to get external display info")
 	}
 
-	if int(req.DisplayIndex) >= len(infos) {
-		return nil, errors.New("display index is out of range")
-	}
-
 	// Set the given display's low, medium and high resolution.
-	info := infos[req.DisplayIndex]
 	if len(info.Modes) < 3 {
 		return nil, errors.New("display modes are not enough")
 	}
@@ -318,22 +325,21 @@ func (ds *DisplayService) ChangeResolution(ctx context.Context, req *wwcb.QueryR
 			return nil, errors.Wrap(err, "failed to set display properties")
 		}
 
+		var changedInfo *display.Info
 		// Poll is required as completion of display.SetDisplayProperties.
 		if err := testing.Poll(ctx, func(ctx context.Context) error {
-			infos, err := display.GetInfo(ctx, tconn)
+			changedInfo, err = getDisplayInfo(ctx, tconn, req.DisplayIndex)
 			if err != nil {
-				return errors.Wrap(err, "failed to get display info")
+				return testing.PollBreak(errors.Wrap(err, "failed to get display info"))
 			}
-
-			if int(req.DisplayIndex) >= len(infos) {
-				return errors.New("display index is out of range")
+			// Test for success first in the display resolution started at 'low'.
+			if changedInfo.Bounds.Width == setWidth && changedInfo.Bounds.Height == setHeight {
+				return nil
 			}
-
-			changedInfo := infos[req.DisplayIndex]
-			if changedInfo.Bounds.Width != setWidth || changedInfo.Bounds.Height != setHeight {
+			if changedInfo.Bounds == info.Bounds {
 				return errors.New("the display mode has not changed yet")
 			}
-			return nil
+			return testing.PollBreak(errors.Errorf("unexpected display bounds, got: %d x %d, want: %d x %d", changedInfo.Bounds.Width, changedInfo.Bounds.Height, setWidth, setHeight))
 		}, &testing.PollOptions{Timeout: displayTimeout, Interval: displayInterval}); err != nil {
 			return nil, errors.Wrap(err, "failed to verfiy display properties")
 		}
@@ -360,6 +366,8 @@ func (ds *DisplayService) ChangeResolution(ctx context.Context, req *wwcb.QueryR
 		if imgWidth != setWidth || imgHeight != setHeight {
 			return nil, errors.Errorf("unexpected resolution, got: %dx%d, want: %dx%d", imgWidth, imgHeight, setWidth, setHeight)
 		}
+
+		info = changedInfo
 	}
 
 	return &empty.Empty{}, nil
