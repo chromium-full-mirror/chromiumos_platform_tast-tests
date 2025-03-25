@@ -32,7 +32,7 @@ func init() {
 			"josephsussman@google.com", // Test author
 		},
 		BugComponent: "b:998633", // ChromeOS > Platform > Enablement > ChromeOS Flex
-		Attr:         []string{"group:flex_arcvm"},
+		Attr:         []string{"group:flex_arcvm", "group:mainline", "informational", "group:criticalstaging"},
 		Fixture:      fixture.FakeDMSEnrolled,
 		HardwareDeps: hwdep.D(hwdep.SkipDMIProductName("NUC11TNKv5"),
 			hwdep.Model("reven")),
