@@ -11,6 +11,8 @@ import (
 	"go.chromium.org/tast-tests/cros/common/hwsec"
 	"go.chromium.org/tast-tests/cros/common/perf"
 	"go.chromium.org/tast-tests/cros/local/a11y"
+	"go.chromium.org/tast-tests/cros/local/arc"
+	"go.chromium.org/tast-tests/cros/local/bundles/cros/odml/fixture"
 	"go.chromium.org/tast-tests/cros/local/chrome"
 	"go.chromium.org/tast-tests/cros/local/chrome/ash"
 	"go.chromium.org/tast-tests/cros/local/chrome/uiauto"
@@ -42,18 +44,26 @@ func init() {
 		},
 		BugComponent: "b:1445284",
 		SoftwareDeps: []string{"chrome"},
-		// No attributes yet because this currently needs to be run manually to avoid DLC issues.
-		HardwareDeps: hwdep.D(hwdep.FeatureLevel(1)),
+		HardwareDeps: hwdep.D(hwdep.Model("navi")),
+		Attr:         []string{"group:mainline", "informational"},
 		Params: []testing.Param{{
 			Timeout: 3 * time.Minute,
 			// Whether the test should do performance setup.
-			Val: false,
+			Val:     false,
+			Fixture: fixture.CoralEnabled,
+		}, {
+			Name:    "japanese",
+			Timeout: 3 * time.Minute,
+			// Whether the test should do performance setup.
+			Val:     false,
+			Fixture: fixture.CoralEnabledJapanese,
 		}, {
 			// Test case that records performance. This might run much longer than validating the feature itself.
 			Name:    "perf",
 			Timeout: 7 * time.Minute,
 			// Whether the test should do performance setup.
-			Val: true,
+			Val:     true,
+			Fixture: fixture.CoralEnabled,
 		}},
 	})
 }
@@ -63,12 +73,7 @@ func Coral(ctx context.Context, s *testing.State) {
 	ctx, cancel := ctxutil.Shorten(ctx, 5*time.Second)
 	defer cancel()
 
-	cr, err := chrome.New(ctx, chrome.EnableFeatures("CoralFeature"))
-	if err != nil {
-		s.Fatal("Failed to create chrome: ", err)
-	}
-	defer cr.Close(cleanupCtx)
-
+	cr := s.FixtValue().(*arc.PreData).Chrome
 	tconn, err := cr.TestAPIConn(ctx)
 	if err != nil {
 		s.Fatal("Failed to create Test API connection: ", err)
