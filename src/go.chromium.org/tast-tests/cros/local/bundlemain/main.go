@@ -12,6 +12,7 @@ package bundlemain
 import (
 	"context"
 	"os"
+	"runtime"
 	"strings"
 	"time"
 
@@ -177,6 +178,9 @@ func testHookLocal(ctx context.Context, s *testing.TestHookState) func(ctx conte
 	}
 
 	return func(ctx context.Context, s *testing.TestHookState) {
+		// Do garbage collection after running each tests.
+		runtime.GC()
+
 		// Ensure the TPM is in the expect state after tast finish.
 		if err := hwsecCheckTPMState(ctx, hwsecTpmStatus, hwsecDACounter); err != nil {
 			if strings.Contains(err.Error(), `exec: "tpm_manager_client": executable file not found`) {
