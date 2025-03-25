@@ -95,17 +95,7 @@ func init() {
 			"miersh@google.com",                         // Test author
 		},
 		BugComponent: "b:1000044",
-		Attr: []string{
-			"group:golden_tier",
-			"group:medium_low_tier",
-			"group:hardware",
-			"group:complementary",
-			"group:hw_agnostic",
-			"group:network",
-			"network_e2e",
-			"group:release-health",
-			"release-health_network",
-		},
+		// TODO(b/354048099): Re-enable this test once the document is available in the background of MV3.
 		SoftwareDeps: []string{"chrome"},
 		Fixture:      fixture.ChromeLoggedInDisableSearchEngineChoice,
 		Timeout:      5 * time.Minute,

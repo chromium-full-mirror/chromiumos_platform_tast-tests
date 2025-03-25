@@ -99,8 +99,8 @@ func OpenPasswordManager(ctx context.Context, s *testing.State) {
 	}
 
 	// Wait for webpage to load its content after we accepted the warning.
-	if err := tconn.WaitForExpr(ctx, "document.readyState === 'complete'"); err != nil {
-		s.Fatal("Failed to wait document is ready: ", err)
+	if err := tconn.WaitForExpr(ctx, `typeof tast != 'undefined'`); err != nil {
+		s.Fatal("Test API extension became unavailable: ", err)
 	}
 
 	// The chrome.passwordsPrivate.addPassword only works if the password
