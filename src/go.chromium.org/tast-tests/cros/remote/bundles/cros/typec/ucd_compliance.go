@@ -26,7 +26,7 @@ func init() {
 	testing.AddTest(&testing.Test{
 		Func:         UCDCompliance,
 		Desc:         "Runs a suite of DP Compliance tests on UCD500 and extracts the results",
-		Contacts:     []string{"chromeos-usb-champs@google.com", "jstanko@chromium.org", "vincentchungzt@google.com"},
+		Contacts:     []string{"chromeos-usb-champs@google.com", "jstanko@chromium.org", "kamilplucinski@google.com", "bszpila@google.com"},
 		BugComponent: "b:1507626",
 		Attr:         []string{"group:typec", "typec_compliance_ex350"},
 		Params: []testing.Param{
