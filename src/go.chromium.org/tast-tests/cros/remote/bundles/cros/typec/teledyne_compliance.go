@@ -26,7 +26,7 @@ func init() {
 	testing.AddTest(&testing.Test{
 		Func:         TeledyneCompliance,
 		Desc:         "Runs a suite of USB PD Compliance tests on Teledyne testers and extracts the results",
-		Contacts:     []string{"chromeos-usb-champs@google.com", "jstanko@google.com", "vincentchungzt@google.com"},
+		Contacts:     []string{"chromeos-usb-champs@google.com", "jstanko@google.com", "kamilplucinski@google.com", "bszpila@google.com"},
 		BugComponent: "b:1507626",
 		Attr:         []string{"group:typec", "typec_compliance_ex350"},
 		Params: []testing.Param{
