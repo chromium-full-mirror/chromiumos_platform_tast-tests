@@ -275,9 +275,52 @@ type Orientation struct {
 // GetOrientation returns the Orientation of the display.
 func GetOrientation(ctx context.Context, tconn *chrome.TestConn) (*Orientation, error) {
 	result := &Orientation{}
-	// Using a JS expression to evaluate screen.orientation to a JSON object
-	// is temporarily disabled for Extension Manifest V3
+	testing.ContextLog(ctx, "Warning: GetOrientation using window bounds for orientation detection in Extension Manifest V3")
+
+	info, err := GetPrimaryInfo(ctx, tconn)
+	if err != nil {
+		testing.ContextLog(ctx, "Failed to get the primary display info: ", err)
+		return result, nil
+	}
+
 	result.Type = OrientationLandscapePrimary
+	if info.Bounds.Width < info.Bounds.Height {
+		result.Type = OrientationPortraitPrimary
+	}
+
+	var nativeWidth, nativeHeight int
+	// Iterate through the available display modes to find the native mode.
+	for _, mode := range info.Modes {
+		if mode.IsNative {
+			nativeWidth = mode.Width
+			nativeHeight = mode.Height
+			break
+		}
+	}
+
+	// If no native mode is found, use the first available mode.
+	if nativeWidth == 0 && len(info.Modes) > 0 {
+		nativeWidth = info.Modes[0].Width
+		nativeHeight = info.Modes[0].Height
+	}
+
+	// Angle based on the comparison of current bounds with native dimensions.
+	// See https://w3c.github.io/screen-orientation/#dfn-screen-orientation-values-lists
+	if nativeWidth <= 0 || nativeHeight <= 0 || nativeWidth == nativeHeight {
+		return result, nil
+	}
+	if info.Bounds.Width == nativeHeight && info.Bounds.Height == nativeWidth {
+		// Screens with a natural portrait orientation
+		if result.Type == OrientationLandscapePrimary {
+			result.Angle = 90
+		}
+	} else if info.Bounds.Width == nativeWidth && info.Bounds.Height == nativeHeight {
+		// Screens with a natural landscape orientation
+		if result.Type == OrientationPortraitPrimary {
+			result.Angle = 90
+		}
+	}
+
 	return result, nil
 }
 
