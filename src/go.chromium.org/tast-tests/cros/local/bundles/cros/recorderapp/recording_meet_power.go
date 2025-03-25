@@ -174,8 +174,9 @@ func RecordingMeetPower(ctx context.Context, s *testing.State) {
 	}
 	defer app.Close(cleanupCtx)
 
-	if err := app.SetWindowStateAndWait(ctx, ash.WindowStateSecondarySnapped); err != nil {
-		s.Error("Failed to snap the Recorder App window to the right: ", err)
+	// Maximize the window to make sure waveform display is not hidden by transcription panel.
+	if err := app.SetWindowStateAndWait(ctx, ash.WindowStateMaximized); err != nil {
+		s.Error("Failed to maximize the Recorder App window: ", err)
 	}
 
 	if param.recordAudio {
@@ -318,8 +319,9 @@ func setupGoogleMeet(ctx context.Context, cr *chrome.Chrome, tconn *chrome.TestC
 		return errors.Wrap(err, "failed to find the Meet window")
 	}
 
-	if err := ash.SetWindowStateAndWait(ctx, tconn, meetWindow.ID, ash.WindowStatePrimarySnapped); err != nil {
-		return errors.Wrap(err, "failed to snap the Meet window to the left")
+	// Maximize the window size to fit typical user behavior.
+	if err := ash.SetWindowStateAndWait(ctx, tconn, meetWindow.ID, ash.WindowStateMaximized); err != nil {
+		return errors.Wrap(err, "failed to maximize the Meet window")
 	}
 	return nil
 }
