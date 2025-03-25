@@ -32,7 +32,7 @@ func init() {
 	testing.AddTest(&testing.Test{
 		Func:     Ex350Compliance,
 		Desc:     "Runs a suite of USB PD Compliance tests on EX350 and extracts the results",
-		Contacts: []string{"chromeos-usb-champs@google.com", "jstanko@chromium.org", "vincentchungzt@google.com"},
+		Contacts: []string{"chromeos-usb-champs@google.com", "jstanko@chromium.org", "kamilplucinski@google.com", "bszpila@google.com"},
 		// ChromeOS > Platform > Technologies > USB
 		BugComponent: "b:958036",
 		Attr:         []string{"group:typec", "typec_compliance_ex350"},
