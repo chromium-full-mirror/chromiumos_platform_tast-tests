@@ -33,7 +33,7 @@ func init() {
 	})
 }
 
-func runOsInstallAndShutdown(ctx context.Context, s *testing.State) *osinstall.GetOsInfoResponse {
+func runOsInstallAndRestart(ctx context.Context, s *testing.State) *osinstall.GetOsInfoResponse {
 	cl, err := rpc.Dial(ctx, s.DUT(), s.RPCHint())
 	if err != nil {
 		s.Fatal("Failed to connect to the RPC service on the DUT: ", err)
@@ -68,20 +68,19 @@ func runOsInstallAndShutdown(ctx context.Context, s *testing.State) *osinstall.G
 		s.Fatal("OS install failed: ", err)
 	}
 
-	// Power off.
-	if _, err := client.ShutDown(ctx, &empty.Empty{}); err != nil {
-		s.Fatal("Failed to shut down: ", err)
+	// Restart.
+	if _, err := client.Restart(ctx, &empty.Empty{}); err != nil {
+		s.Fatal("Failed to restart: ", err)
 	}
 
 	return preInstallInfo
 }
 
 func OsInstall(ctx context.Context, s *testing.State) {
-	preInstallInfo := runOsInstallAndShutdown(ctx, s)
+	preInstallInfo := runOsInstallAndRestart(ctx, s)
 
-	// Wait for the DUT to shut down, then wait for it to come back up
-	// (hopefully with the newly installed system).
-	s.Log("Waiting for the DUT to shut down and then become reachable again")
+	// Wait for the DUT to come back up, hopefully with the newly installed system.
+	s.Log("Waiting for the DUT to become reachable again")
 	s.DUT().WaitUnreachable(ctx)
 	s.DUT().WaitConnect(ctx)
 

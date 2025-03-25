@@ -133,7 +133,7 @@ func (svc *osInstallService) RunOsInstall(ctx context.Context, req *empty.Empty)
 	return &empty.Empty{}, nil
 }
 
-func (svc *osInstallService) ShutDown(ctx context.Context, req *empty.Empty) (*empty.Empty, error) {
+func (svc *osInstallService) Restart(ctx context.Context, req *empty.Empty) (*empty.Empty, error) {
 	ui := svc.ui
 	// Open the status tray.
 	statusTrayNode := nodewith.ClassName(ash.StatusAreaClassName).Role(role.Pane)
@@ -157,8 +157,8 @@ func (svc *osInstallService) ShutDown(ctx context.Context, req *empty.Empty) (*e
 		return nil, err
 	}
 
-	// Press Shut down.
-	powerOffNode := nodewith.Name("Shut down").Role(role.MenuItem)
+	// Press Restart.
+	powerOffNode := nodewith.Name("Restart").Role(role.MenuItem)
 	if err := ui.WaitUntilExists(powerOffNode)(ctx); err != nil {
 		svc.DumpUITree(ctx)
 		return nil, err

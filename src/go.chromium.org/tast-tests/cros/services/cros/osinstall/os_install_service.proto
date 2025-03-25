@@ -12,21 +12,19 @@ option go_package = "go.chromium.org/tast-tests/cros/services/cros/osinstall";
 
 service OsInstallService {
   // Start Chrome and leave it on the OOBE screen.
-  rpc StartChrome (StartChromeRequest) returns (google.protobuf.Empty) {}
+  rpc StartChrome(StartChromeRequest) returns (google.protobuf.Empty) {}
 
   // Run the OS installer through the UI and wait for it to succeed.
-  rpc RunOsInstall (google.protobuf.Empty) returns (google.protobuf.Empty) {}
+  rpc RunOsInstall(google.protobuf.Empty) returns (google.protobuf.Empty) {}
 
-  // Shut down the device.
-  rpc ShutDown (google.protobuf.Empty) returns (google.protobuf.Empty) {}
+  // Restart the device.
+  rpc Restart(google.protobuf.Empty) returns (google.protobuf.Empty) {}
 
   // Get information about the running system.
-  rpc GetOsInfo (google.protobuf.Empty) returns (GetOsInfoResponse) {}
+  rpc GetOsInfo(google.protobuf.Empty) returns (GetOsInfoResponse) {}
 }
 
-message StartChromeRequest {
-  string SigninProfileTestExtensionID = 1;
-}
+message StartChromeRequest { string SigninProfileTestExtensionID = 1; }
 
 message GetOsInfoResponse {
   bool IsRunningFromInstaller = 1;
