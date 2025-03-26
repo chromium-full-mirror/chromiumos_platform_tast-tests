@@ -31,7 +31,7 @@ func init() {
 		HardwareDeps: hwdep.D(hwdep.ChromeEC()),
 		Timeout:      20 * time.Minute,
 		TestBedDeps:  []string{tbdep.ServoStateWorking},
-		Attr:         []string{"group:firmware", "firmware_pd_unstable"},
+		Attr:         []string{"group:firmware", "firmware_pd", "firmware_ec_ro", "firmware_ec_rw", "firmware_bios_pdc"},
 		Params: []testing.Param{{
 			Name: "normal",
 			Val: firmware.PDTestParams{
