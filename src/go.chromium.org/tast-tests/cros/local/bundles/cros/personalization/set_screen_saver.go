@@ -83,7 +83,9 @@ func init() {
 					Theme:                  ambient.FloatOnBy,
 					AnimationPlaybackSpeed: ambient.AnimationFastForwardPlaybackSpeed,
 					StartupTimeout:         ambient.StartAnimationDefaultTimeout,
-					PlayTestVideo:          true,
+
+					// TODO(b/406780009): enable PlayTestVideo to true once bug is resolved.
+					PlayTestVideo: false,
 				},
 			},
 		},
