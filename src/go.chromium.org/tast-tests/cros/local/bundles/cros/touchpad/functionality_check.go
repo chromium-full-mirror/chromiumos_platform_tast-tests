@@ -6,6 +6,10 @@ package touchpad
 
 import (
 	"context"
+	"fmt"
+	"io/ioutil"
+	"os/exec"
+	"regexp"
 	"strings"
 	"time"
 
@@ -29,7 +33,6 @@ func init() {
 		Contacts:     []string{"intel.chrome.automation.team@intel.com", "pathan.jilani@intel.com"},
 		BugComponent: "b:157291", // ChromeOS > External > Intel
 		SoftwareDeps: []string{"chrome"},
-		Attr:         []string{"group:mainline", "informational"},
 		HardwareDeps: hwdep.D(hwdep.ChromeEC(), hwdep.Touchpad(), hwdep.FormFactor(hwdep.Convertible)),
 		Fixture:      "chromeLoggedIn",
 		Params: []testing.Param{{
@@ -82,6 +85,31 @@ func FunctionalityCheck(ctx context.Context, s *testing.State) {
 	}, &testing.PollOptions{
 		Timeout: 10 * time.Second,
 	}); err != nil {
-		s.Error("Failed touchpad detection: ", err)
+		// Try if touchpad is detected with different wake source file.
+		// Gets touchpad event number from evtest.
+		out, _ := exec.Command("evtest").CombinedOutput()
+		re := regexp.MustCompile(`(?i)/dev/input/event([0-9]+):.*Touchpad.*`)
+		result := re.FindStringSubmatch(string(out))
+		touchpadEventNum := ""
+		if len(result) <= 1 {
+			s.Fatal("Failed to find touchpad in evtest command output")
+		}
+		touchpadEventNum = result[1]
+		wakeSourceFile := fmt.Sprintf("/sys/class/input/event%s/device/device/power/wakeup", touchpadEventNum)
+		if err := testing.Poll(ctx, func(ctx context.Context) error {
+			sourceOut, err := ioutil.ReadFile(wakeSourceFile)
+			if err != nil {
+				return testing.PollBreak(errors.Wrapf(err, "failed to read %q file", wakeSourceFile))
+			}
+			actualStatus := strings.TrimSpace(string(sourceOut))
+			if !strings.Contains(actualStatus, testOpt.detectionStatus) {
+				return errors.Errorf("unexpected detection status, want %q; got %q", testOpt.detectionStatus, actualStatus)
+			}
+			return nil
+		}, &testing.PollOptions{
+			Timeout: 10 * time.Second,
+		}); err != nil {
+			s.Error("Failed touchpad detection: ", err)
+		}
 	}
 }
