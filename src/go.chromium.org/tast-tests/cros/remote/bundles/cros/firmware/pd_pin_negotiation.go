@@ -114,6 +114,8 @@ func PDPinNegotiation(ctx context.Context, s *testing.State) {
 		}
 		testing.ContextLog(ctx, "retrieving type-c information")
 		if err := typecutils.CheckForDPAltMode(ctx, h.DUT, pins.pinExpect); err != nil {
+			testing.ContextLogf(ctx, "Could not find dp connection through svid: %s", err)
+
 			typecInfo, err := h.Servo.GetTypeCInfo(ctx, h.DUT)
 			if err != nil {
 				s.Fatal("Failed to retrieve type-c information: ", err)
