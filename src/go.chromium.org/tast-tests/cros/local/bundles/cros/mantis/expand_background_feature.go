@@ -6,6 +6,7 @@ package mantis
 
 import (
 	"context"
+	"math"
 	"time"
 
 	"go.chromium.org/tast-tests/cros/local/bundles/cros/mantis/constant"
@@ -23,11 +24,14 @@ import (
 
 type expandBackgroundFeatureTestParameters struct {
 	ratioName      string
-	expectedWidth  int64
-	expectedHeight int64
+	expectedWidth  float64
+	expectedHeight float64
 }
 
-const imageFileName = "strawberry_20250324.jpg"
+const (
+	imageFileName     = "strawberry_20250324.jpg"
+	sizeDiffThreshold = float64(5)
+)
 
 func init() {
 	testing.AddTest(&testing.Test{
@@ -157,10 +161,11 @@ func ExpandBackgroundFeature(ctx context.Context, s *testing.State) {
 		s.Fatal("Failed to get image result: ", err)
 	}
 
-	gotWidth := imageAfter.Bounds().Dx()
-	gotHeight := imageAfter.Bounds().Dy()
+	gotWidth := float64(imageAfter.Bounds().Dx())
+	gotHeight := float64(imageAfter.Bounds().Dy())
 
-	if gotWidth != int(params.expectedWidth) || gotHeight != int(params.expectedHeight) {
+	// Due to a bug in the image selection overlay component in the UI, the expand background's result size might have slight inconsistencies.
+	if math.Abs(gotWidth-params.expectedWidth) > sizeDiffThreshold || math.Abs(gotHeight-params.expectedHeight) > sizeDiffThreshold {
 		s.Fatalf("Got unexpected image size. Expected width: %v, height: %v. Got width: %v, height: %v", params.expectedWidth, params.expectedHeight, gotWidth, gotHeight)
 	}
 }
