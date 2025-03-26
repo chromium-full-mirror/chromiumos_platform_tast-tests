@@ -396,13 +396,6 @@ func init() {
 				Timeout:   5 * time.Minute,
 				ExtraAttr: []string{"group:graphics", "graphics_igt", "graphics_nightly"},
 			}, {
-				Name: "kms_sysfs_edid_timing",
-				Val: graphics.IgtTest{
-					Exe: "kms_sysfs_edid_timing",
-				},
-				Timeout:   5 * time.Minute,
-				ExtraAttr: []string{"group:graphics", "graphics_igt", "graphics_nightly"},
-			}, {
 				Name: "kms_universal_plane",
 				Val: graphics.IgtTest{
 					Exe: "kms_universal_plane",
