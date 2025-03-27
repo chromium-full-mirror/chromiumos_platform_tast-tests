@@ -8,6 +8,7 @@ import (
 	"context"
 	"os"
 	"path/filepath"
+	"regexp"
 	"runtime"
 	"strconv"
 	"strings"
@@ -96,13 +97,14 @@ func Temperature(ctx context.Context) (int, string, error) {
 		thermalZonePath = "/sys/class/thermal/thermal_zone*"
 	)
 
-	// thermalIgnoreTypes list thermal zones type to be ignored.
-	var thermalIgnoreTypes = []string{
-		// iwlwifi is the zone type of generic driver for WiFi adapters on most Intel platforms.
-		"iwlwifi",
-		// b/180696076: trogdor boards have a charger sensor which cools down extremely slowly when it charges the battery.
-		"charger-thermal",
-	}
+	// Regular expression to match different CPU vendors' thermal sensor types.
+	// - Intel: "x86_pkg_temp"
+	// - AMD: "acpitz", "acpitz0"
+	// - MediaTek: "cpu_thermal", "soc-thermal", "soc_max"
+	// - Qualcomm: "CPU", "cpu0-thermal"
+	// Note: On Intel platforms, there will be x86_pkg_temp and TCPU.
+	// In this case, 'TCPU' is not used. (See b/406409030#comment9)
+	thermalTypeNameReg := regexp.MustCompile("^(x86_pkg_temp|soc-thermal|soc_max|cpu_thermal|cpu0-thermal|CPU|acpitz[0-9]?)$")
 
 	zonePaths, err := filepath.Glob(thermalZonePath)
 	if err != nil || len(zonePaths) == 0 {
@@ -122,14 +124,7 @@ func Temperature(ctx context.Context) (int, string, error) {
 			return 0, "", errors.Wrapf(err, "failed to read %q", zoneTypePath)
 		}
 		zoneType := strings.TrimSpace(string(b))
-		ignoreZone := false
-		for _, zoneToIgnore := range thermalIgnoreTypes {
-			if strings.Contains(zoneType, zoneToIgnore) {
-				ignoreZone = true
-				break
-			}
-		}
-		if ignoreZone {
+		if !thermalTypeNameReg.MatchString(zoneType) {
 			continue
 		}
 
