@@ -19,18 +19,13 @@ import (
 	"go.chromium.org/tast/core/testing/hwdep"
 )
 
-const (
-	extraThinFileName  = "brush/extra_thin_20250318.png"
-	thinFileName       = "brush/thin_20250318.png"
-	mediumFileName     = "brush/medium_20250318.png"
-	thickFileName      = "brush/thick_20250318.png"
-	extraThickFileName = "brush/extra_thick_20250318.png"
-	pixelDiffThreshold = 100
-)
+type differenceRange struct {
+	low, high float64
+}
 
 type brushInputTestParameters struct {
-	brushName              string
-	expectedResultFileName string
+	brushName string
+	diffRange differenceRange
 }
 
 func init() {
@@ -45,43 +40,58 @@ func init() {
 		Timeout:      constant.DefaultTestTimeout,
 		SoftwareDeps: []string{"chrome", "chrome_internal", "dlc"},
 		HardwareDeps: hwdep.D(hwdep.Model("navi")),
-		Data:         []string{constant.ImageTestFileName, extraThinFileName, thinFileName, mediumFileName, thickFileName, extraThickFileName},
+		Data:         []string{constant.ImageTestFileName},
 		Attr:         []string{"group:mainline", "informational"},
 		Fixture:      fixture.LoggedInWithUpdateEngine,
 		Params: []testing.Param{
 			{
 				Name: "extra_thin",
 				Val: brushInputTestParameters{
-					brushName:              "Extra thin",
-					expectedResultFileName: extraThinFileName,
+					brushName: "Extra thin",
+					diffRange: differenceRange{
+						low:  0,
+						high: 0.1,
+					},
 				},
 			},
 			{
 				Name: "thin",
 				Val: brushInputTestParameters{
-					brushName:              "Thin",
-					expectedResultFileName: thinFileName,
+					brushName: "Thin",
+					diffRange: differenceRange{
+						low:  0.1,
+						high: 0.2,
+					},
 				},
 			},
 			{
 				Name: "medium",
 				Val: brushInputTestParameters{
-					brushName:              "Medium",
-					expectedResultFileName: mediumFileName,
+					brushName: "Medium",
+					diffRange: differenceRange{
+						low:  0.2,
+						high: 0.3,
+					},
 				},
 			},
 			{
 				Name: "thick",
 				Val: brushInputTestParameters{
-					brushName:              "Thick",
-					expectedResultFileName: thickFileName,
+					brushName: "Thick",
+					diffRange: differenceRange{
+						low:  0.45,
+						high: 0.6,
+					},
 				},
 			},
 			{
 				Name: "extra_thick",
 				Val: brushInputTestParameters{
-					brushName:              "Extra thick",
-					expectedResultFileName: extraThickFileName,
+					brushName: "Extra thick",
+					diffRange: differenceRange{
+						low:  0.7,
+						high: 0.85,
+					},
 				},
 			},
 		},
@@ -116,6 +126,11 @@ func BrushInput(ctx context.Context, s *testing.State) {
 		s.Log("Error while waiting for spinner: ", err)
 	}
 
+	before, err := util.GrabCanvasArea(ctx, cr, tconn, ui)
+	if err != nil {
+		s.Fatal("Failed to grab screenshot: ", err)
+	}
+
 	params := s.Param().(brushInputTestParameters)
 	brushButton := nodewith.Role(role.RadioButton).Name(params.brushName).Ancestor(galleryapp.RootFinder).First()
 	if err := ui.DoDefault(brushButton)(ctx); err != nil {
@@ -127,18 +142,13 @@ func BrushInput(ctx context.Context, s *testing.State) {
 		s.Fatal("Cannot draw on the image: ", err)
 	}
 
-	result, err := util.GrabCanvasArea(ctx, cr, tconn, ui)
+	after, err := util.GrabCanvasArea(ctx, cr, tconn, ui)
 	if err != nil {
 		s.Fatal("Failed to grab screenshot: ", err)
 	}
 
-	expectedResult, err := util.FetchImage(s.DataPath(params.expectedResultFileName))
-	if err != nil {
-		s.Fatal("Failed to get the expected image result file: ", err)
-	}
-
-	diff := util.ImageDiff(result, expectedResult)
-	if diff > pixelDiffThreshold {
-		s.Fatal("The result and the expected result are different. Diff: ", diff)
+	diff := util.ImageDiffPercentage(before, after)
+	if diff < params.diffRange.low || diff > params.diffRange.high {
+		s.Fatal("The before and after difference does not fall within acceptable range: ", diff)
 	}
 }

@@ -22,11 +22,6 @@ import (
 	"go.chromium.org/tast/core/testing/hwdep"
 )
 
-const (
-	expectedResultFile                    = "rectangle_input_20250324.png"
-	rectangleInputDiffPercentageThreshold = float64(0.1)
-)
-
 func init() {
 	testing.AddTest(&testing.Test{
 		Func: RectangleInput,
@@ -39,7 +34,7 @@ func init() {
 		Timeout:      constant.DefaultTestTimeout,
 		SoftwareDeps: []string{"chrome", "chrome_internal", "dlc"},
 		HardwareDeps: hwdep.D(hwdep.Model("navi")),
-		Data:         []string{constant.ImageTestFileName, expectedResultFile},
+		Data:         []string{constant.ImageTestFileName},
 		Attr:         []string{"group:mainline", "informational"},
 		Fixture:      fixture.LoggedInWithUpdateEngine,
 	})
@@ -64,6 +59,11 @@ func RectangleInput(ctx context.Context, s *testing.State) {
 		s.Log("Error while waiting for DLC preparation: ", err)
 	}
 
+	before, err := util.GrabCanvasArea(ctx, cr, tconn, ui)
+	if err != nil {
+		s.Fatal("Failed to grab screenshot: ", err)
+	}
+
 	reimagineButton := nodewith.Role(role.Button).Name("Reimagine").Ancestor(galleryapp.RootFinder).First()
 	if err := ui.DoDefault(reimagineButton)(ctx); err != nil {
 		s.Fatal("Failed to click the reimagine button: ", err)
@@ -85,8 +85,8 @@ func RectangleInput(ctx context.Context, s *testing.State) {
 	}
 
 	startLocation := coords.NewPoint(
-		canvasBounds.Left+10,
-		canvasBounds.Top+10,
+		canvasBounds.Left+1,
+		canvasBounds.Top+1,
 	)
 
 	endLocation := coords.NewPoint(
@@ -94,23 +94,19 @@ func RectangleInput(ctx context.Context, s *testing.State) {
 		canvasBounds.CenterY(),
 	)
 
-	// draw a rectangle on the image
+	// Draw a rectangle from the top left to the center, occupying ~25% of the image's area.
 	if err := mouse.Drag(tconn, startLocation, endLocation, 200*time.Millisecond)(ctx); err != nil {
 		s.Fatal("Failed to move the mouse: ", err)
 	}
 
-	result, err := util.GrabCanvasArea(ctx, cr, tconn, ui)
+	after, err := util.GrabCanvasArea(ctx, cr, tconn, ui)
 	if err != nil {
 		s.Fatal("Failed to grab screenshot: ", err)
 	}
 
-	expectedResult, err := util.FetchImage(s.DataPath(expectedResultFile))
-	if err != nil {
-		s.Fatal("Failed to get the expected image result file: ", err)
-	}
-
-	diff := util.ImageDiffPercentage(result, expectedResult)
-	if diff > rectangleInputDiffPercentageThreshold {
-		s.Fatal("The result difference exceeds the threshold: ", diff)
+	// For rectangle input, unselected areas will have a darker opacity, while selected areas will retain their original pixels.
+	diff := util.ImageDiffPercentage(before, after)
+	if diff < float64(74) || diff > float64(76) {
+		s.Fatal("The before and after difference does not fall within acceptable range: ", diff)
 	}
 }
