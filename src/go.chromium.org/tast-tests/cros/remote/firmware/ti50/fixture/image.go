@@ -110,6 +110,9 @@ const (
 	// SystemTestAuto2Image fixture downloads the system_test_auto_2 image bin.
 	SystemTestAuto2Image ImageType = "system_test_auto_2"
 
+	// SystemTestAutoAImage fixture downloads the system_test_auto_a image bin.
+	SystemTestAutoAImage ImageType = "system_test_auto_a"
+
 	// Ti50AImage fixture downloads the ti50a image bin.
 	Ti50AImage ImageType = "ti50a"
 )
@@ -688,7 +691,7 @@ func defaultConfigPath(s *testing.FixtState, testbedType ti50.TestbedType, image
 	}
 
 	switch imageType {
-	case SystemImage, SystemTestAutoImage, SystemTestAuto2Image, Ti50AImage:
+	case SystemImage, SystemTestAutoImage, SystemTestAuto2Image, SystemTestAutoAImage, Ti50AImage:
 		fw = FindFwName(testbedType)
 	default:
 		s.Fatal("Unknown image type: ", string(imageType))

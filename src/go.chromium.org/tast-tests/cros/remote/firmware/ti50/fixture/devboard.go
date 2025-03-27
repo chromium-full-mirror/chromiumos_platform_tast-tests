@@ -39,6 +39,10 @@ const (
 	// connection
 	SystemTestAuto2Devboard = "systemTestAuto2Devboard"
 
+	// SystemTestAutoADevboard fixture flashes a system_test_auto_a image and sets up a devboard
+	// connection
+	SystemTestAutoADevboard = "systemTestAutoADevboard"
+
 	// Ti50ADevboard fixture flashes a ti50a image and sets up a devboard connection
 	Ti50ADevboard = "ti50aDevboard"
 
@@ -84,6 +88,20 @@ func init() {
 		Contacts:        []string{"cros-hwsec@google.com", "ecgh@google.com"},
 		BugComponent:    "b:715469", // ChromeOS > Platform > System > Hardware Security > HwSec GSC > Ti50
 		Impl:            &devboardFixture{image: SystemTestAuto2Image},
+		Vars:            []string{DevBoardService, BuildURL, FwConfigJSON, Chip, Variant, Slot},
+		Data:            defaultFwConfigs,
+		SetUpTimeout:    setUpTimeout,
+		ResetTimeout:    resetTimeout,
+		TearDownTimeout: tearDownTimeout,
+		PreTestTimeout:  preTestTimeout,
+		PostTestTimeout: postTestTimeout,
+	})
+	testing.AddFixture(&testing.Fixture{
+		Name:            SystemTestAutoADevboard,
+		Desc:            "Uses devboardsvc to flash a system_test_auto_a image",
+		Contacts:        []string{"cros-hwsec@google.com", "ecgh@google.com"},
+		BugComponent:    "b:715469", // ChromeOS > Platform > System > Hardware Security > HwSec GSC > Ti50
+		Impl:            &devboardFixture{image: SystemTestAutoAImage},
 		Vars:            []string{DevBoardService, BuildURL, FwConfigJSON, Chip, Variant, Slot},
 		Data:            defaultFwConfigs,
 		SetUpTimeout:    setUpTimeout,

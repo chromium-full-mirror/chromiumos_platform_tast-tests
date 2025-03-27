@@ -41,6 +41,11 @@ func init() {
 			Val:       false, // hasKernelTests
 			Fixture:   fixture.SystemTestAuto2Devboard,
 			ExtraAttr: []string{"gsc_image_sta2"},
+		}, {
+			Name:      "sta_a",
+			Val:       false, // hasKernelTests
+			Fixture:   fixture.SystemTestAutoADevboard,
+			ExtraAttr: []string{"gsc_image_sta_a"},
 		}},
 	})
 }
