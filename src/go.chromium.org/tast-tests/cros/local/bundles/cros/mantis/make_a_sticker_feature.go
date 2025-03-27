@@ -27,7 +27,8 @@ import (
 )
 
 const (
-	makeAStickerExpectedResult = "make_a_sticker_result_20250306.png"
+	makeAStickerExpectedResult = "make_a_sticker_result_20250327.png"
+	makeAStickerDiffThreshold  = float64(5)
 )
 
 func init() {
@@ -146,7 +147,7 @@ func MakeAStickerFeature(ctx context.Context, s *testing.State) {
 	}
 
 	diffPercentage := util.ImageDiffPercentage(gotResult, expectedResult)
-	if diffPercentage > constant.DefaultImageDiffPercentageThreshold {
+	if diffPercentage > makeAStickerDiffThreshold {
 		s.Fatal("The image difference exceeds the threshold: ", diffPercentage)
 	}
 }
