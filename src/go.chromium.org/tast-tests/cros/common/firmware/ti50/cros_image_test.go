@@ -1522,6 +1522,67 @@ func testConvertCr50ResetFlags(t *testing.T, input, expected uint32) {
 	}
 }
 
+func TestConvertOTResetFlags1(t *testing.T) {
+	input := uint32(OTResetFlagPowerOn | OTResetFlagHibernate | OTResetFlagHard | OTResetBrownOut | OTResetFlagRbox)
+	expected := uint32(GscResetFlagPowerOn | GscResetFlagHibernate | GscResetFlagHard | GscResetBrownOut | GscResetFlagRbox)
+	testConvertOTResetFlags(t, input, expected)
+}
+
+func TestConvertOTResetFlags2(t *testing.T) {
+	input := uint32(0xffffffff)
+	expected := uint32(GscResetFlagPowerOn | GscResetFlagHibernate | GscResetFlagHard | GscResetBrownOut | GscResetFlagRbox)
+	testConvertOTResetFlags(t, input, expected)
+}
+
+func TestConvertOTResetFlags3(t *testing.T) {
+	input := uint32(OTResetFlagPowerOn)
+	expected := uint32(GscResetFlagPowerOn)
+	testConvertOTResetFlags(t, input, expected)
+}
+
+func TestConvertOTResetFlags4(t *testing.T) {
+	input := uint32(OTResetFlagHard)
+	expected := uint32(GscResetFlagHard)
+	testConvertOTResetFlags(t, input, expected)
+}
+
+func TestConvertOTResetFlags5(t *testing.T) {
+	input := uint32(OTResetFlagHibernate)
+	expected := uint32(GscResetFlagHibernate)
+	testConvertOTResetFlags(t, input, expected)
+}
+
+func TestConvertOTResetFlags6(t *testing.T) {
+	input := uint32(OTResetBrownOut)
+	expected := uint32(GscResetBrownOut)
+	testConvertOTResetFlags(t, input, expected)
+}
+
+func TestConvertOTResetFlags7(t *testing.T) {
+	input := uint32(OTResetFlagRbox)
+	expected := uint32(GscResetFlagRbox)
+	testConvertOTResetFlags(t, input, expected)
+}
+
+func TestConvertOTResetFlags8(t *testing.T) {
+	input := uint32(OTResetFlagHibernate | OTResetFlagRbox)
+	expected := uint32(GscResetFlagHibernate | GscResetFlagRbox)
+	testConvertOTResetFlags(t, input, expected)
+}
+
+func TestConvertOTResetFlags9(t *testing.T) {
+	input := uint32(OTResetFlagHibernate | OTResetFlagRbox)
+	expected := uint32(GscResetFlagHibernate | GscResetFlagRbox)
+	testConvertOTResetFlags(t, input, expected)
+}
+
+func testConvertOTResetFlags(t *testing.T, input, expected uint32) {
+	res := convertOTResetFlags(int64(input))
+	if expected != res {
+		t.Fatalf("flag mismatch with %x: expected %x got %x", input, expected, res)
+	}
+}
+
 func TestChipBID1(t *testing.T) {
 	input := `Board ID: ffffffff:ffffffff, flags: ffffffff`
 	expected := ChipBID{

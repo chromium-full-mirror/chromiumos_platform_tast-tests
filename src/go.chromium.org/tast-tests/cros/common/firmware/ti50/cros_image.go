@@ -1275,7 +1275,7 @@ type Sysinfo struct {
 }
 
 const (
-	// Cr50ResetFlagPowerOn Cr50 did a Power-on reset
+	// Cr50ResetFlagPowerOn is set when Cr50 did a Power-on reset
 	Cr50ResetFlagPowerOn = (1 << 3)
 	// Cr50ResetFlagHibernate is set when Cr50 woke from deep sleep
 	Cr50ResetFlagHibernate = (1 << 6)
@@ -1286,18 +1286,29 @@ const (
 	// Cr50ResetFlagRbox is set when Cr50 resumes because of an rbox wake source
 	Cr50ResetFlagRbox = (1 << 16)
 
-	// GscResetFlagPowerOn Cr50 did a Power-on reset
+	// GscResetFlagPowerOn is set when GSC did a Power-on reset
 	GscResetFlagPowerOn = 1
 	// GscResetFlagHibernate is set when Cr50 woke from deep sleep
 	GscResetFlagHibernate = (1 << 1)
-	// GscResetFlagSoftware is set when GSC requests a software reset
-	GscResetFlagSoftware = (1 << 2)
 	// GscResetFlagHard is set when GSC requests a hard reset
 	GscResetFlagHard = (1 << 5)
+	// GscResetBrownOut is set when GSC reset due to power loss
+	GscResetBrownOut = (1 << 6)
+	// GscResetFlagRbox is set when GSC resumes because of an rbox wake source
+	GscResetFlagRbox = (1 << 8)
 	// GscResetFlagRdd is when when Rdd woke GSC
 	GscResetFlagRdd = (1 << (31 - 0))
-	// GscResetFlagRbox is set when GSC resumes because of an rbox wake source
-	GscResetFlagRbox = (1 << (31 - 1))
+
+	// OTResetFlagPowerOn is set when OpenTitan did a Power-on reset
+	OTResetFlagPowerOn = 1
+	// OTResetFlagHibernate is set when OpenTitan woke from deep sleep
+	OTResetFlagHibernate = (1 << 1)
+	// OTResetFlagHard is set when OpenTitan requests a hard reset
+	OTResetFlagHard = (1 << 2)
+	// OTResetFlagRbox is set when OpenTitan resumes because of an rbox wake source
+	OTResetFlagRbox = (1 << 3)
+	// OTResetBrownOut is set when OpenTitan reset due to power loss
+	OTResetBrownOut = (1 << 5)
 )
 
 func convertCr50ResetFlags(flags int64) uint32 {
@@ -1316,6 +1327,26 @@ func convertCr50ResetFlags(flags int64) uint32 {
 	}
 	if flags&Cr50ResetFlagRbox != 0 {
 		res |= GscResetFlagRbox
+	}
+	return res
+}
+
+func convertOTResetFlags(flags int64) uint32 {
+	res := uint32(0)
+	if flags&OTResetFlagPowerOn != 0 {
+		res |= GscResetFlagPowerOn
+	}
+	if flags&OTResetFlagHibernate != 0 {
+		res |= GscResetFlagHibernate
+	}
+	if flags&OTResetFlagHard != 0 {
+		res |= GscResetFlagHard
+	}
+	if flags&OTResetFlagRbox != 0 {
+		res |= GscResetFlagRbox
+	}
+	if flags&OTResetBrownOut != 0 {
+		res |= GscResetBrownOut
 	}
 	return res
 }
@@ -1433,7 +1464,11 @@ func getSysinfoStruct(input map[string]string) (Sysinfo, error) {
 	if isCr50 {
 		result.ResetFlags = uint32(convertCr50ResetFlags(res))
 	} else {
-		result.ResetFlags = result.OriginalResetFlags
+		if isOT {
+			result.ResetFlags = uint32(convertOTResetFlags(res))
+		} else {
+			result.ResetFlags = result.OriginalResetFlags
+		}
 		result.FactoryModeValid = true
 		result.InFactoryMode = input["factoryMode"] == sysinfoFactoryMode
 	}

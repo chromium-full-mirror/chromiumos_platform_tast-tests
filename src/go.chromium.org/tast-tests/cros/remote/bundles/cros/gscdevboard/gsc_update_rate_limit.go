@@ -63,13 +63,7 @@ func reset(ctx context.Context, s *testing.State, b utils.DevboardHelper, i *ti5
 	case reboot:
 		s.Log("Running reboot")
 		i.SendConsoleRebootCmd(ctx)
-		if b.GscProperties().ChipType() == ti50.GscOT {
-			// On OpenTitan the `reboot` command triggers "software reset".
-			resetFlag = ti50.GscResetFlagSoftware
-		} else {
-			// Legacy GSC chip uses "hard reset".
-			resetFlag = ti50.GscResetFlagHard
-		}
+		resetFlag = ti50.GscResetFlagHard
 	case powerOn:
 		s.Log("Running power-on reset")
 		b.GpioSet(ctx, ti50.GpioTi50ResetL, false)
