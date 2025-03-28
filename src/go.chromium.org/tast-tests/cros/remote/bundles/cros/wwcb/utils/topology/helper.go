@@ -7,6 +7,7 @@ package topology
 
 import (
 	"context"
+	"sort"
 
 	labapi "go.chromium.org/chromiumos/config/go/test/lab/api"
 	"go.chromium.org/chromiumos/config/go/test/lab/api/passport"
@@ -188,8 +189,18 @@ func (t *Helper) ActivateDeviceByTypeVia(ctx context.Context, deviceType, viaTyp
 
 // PathToDeviceByType gets the connection path between the DUT and the first device of the requested type.
 func (t *Helper) PathToDeviceByType(deviceType labapi.PasitHost_Device_Type) (string, ConnectionPath, error) {
+	// To make the function deterministic -
+	// find the first device ID in alphabetically sorted list of devices with type == `deviceType`:
+	var deviceIds []string
+	for deviceID, device := range t.devices {
+		if device.GetType() == deviceType {
+			deviceIds = append(deviceIds, deviceID)
+		}
+	}
+	sort.Strings(deviceIds)
+
 	predicate := func(device *labapi.PasitHost_Device) bool {
-		return device.GetType() == deviceType
+		return device.GetId() == deviceIds[0]
 	}
 	devices, err := t.path(predicate)
 	if err != nil {
