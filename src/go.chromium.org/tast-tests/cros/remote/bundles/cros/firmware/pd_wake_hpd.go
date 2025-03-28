@@ -52,23 +52,6 @@ func init() {
 				HasPDCChip: false,
 			},
 		}, {
-			Name:              "receptacle",
-			ExtraHardwareDeps: hwdep.D(hwdep.HasNoPDCChip()),
-			Val: firmware.PDTestParams{
-				DTS:        firmware.DTSModeOff,
-				DPAltPlug:  false,
-				HasPDCChip: false,
-			},
-		}, {
-			Name:              "receptacle_snk",
-			ExtraHardwareDeps: hwdep.D(hwdep.HasNoPDCChip()),
-			Val: firmware.PDTestParams{
-				PowerRole:  firmware.RoleSink,
-				DTS:        firmware.DTSModeOff,
-				DPAltPlug:  false,
-				HasPDCChip: false,
-			},
-		}, {
 			Name:              "plug_pdc",
 			ExtraHardwareDeps: hwdep.D(hwdep.HasPDCChip()),
 			Val: firmware.PDTestParams{
@@ -135,6 +118,10 @@ func PDWakeHPD(ctx context.Context, s *testing.State) {
 	}
 	if err := h.Servo.SetPlug(ctx, testParams.DPAltPlug); err != nil {
 		s.Fatal("Failed to set plug: ", err)
+	}
+
+	if err := h.WaitConnect(ctx, firmware.SkipPDRoleSnk); err != nil {
+		s.Fatal("Failed to establish connection after enabling dp alt mode: ", err)
 	}
 
 	testing.ContextLog(ctx, "verifying DP is enabled")

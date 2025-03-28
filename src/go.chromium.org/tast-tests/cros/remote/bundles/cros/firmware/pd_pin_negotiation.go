@@ -112,6 +112,11 @@ func PDPinNegotiation(ctx context.Context, s *testing.State) {
 		if err := h.Servo.ServoSetDPConfigs(ctx, &input, pins.mfPref); err != nil {
 			s.Fatal("Failed to set DP alt-mode: ", err)
 		}
+
+		if err := h.WaitConnect(ctx, firmware.SkipPDRoleSnk); err != nil {
+			s.Fatal("Failed to establish connection after enabling dp alt mode: ", err)
+		}
+
 		testing.ContextLog(ctx, "retrieving type-c information")
 		if err := typecutils.CheckForDPAltMode(ctx, h.DUT, pins.pinExpect); err != nil {
 			testing.ContextLogf(ctx, "Could not find dp connection through svid: %s", err)
