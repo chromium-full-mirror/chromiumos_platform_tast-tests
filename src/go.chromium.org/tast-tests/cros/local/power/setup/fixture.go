@@ -87,6 +87,9 @@ const (
 	// Regmon
 	PowerAshRegmonEnabled  = "powerAshRegmonEnabled"
 	PowerAshRegmonDisabled = "powerAshRegmonDisabled"
+
+	// Captions on Braille Display
+	PowerAshCaptionsOnBraille = "powerAshCaptionsOnBraille"
 )
 
 // PowerFixtureOptions describes options used by the fixture only.
@@ -860,6 +863,29 @@ func init() {
 		PreTestTimeout:  PreTestTimeout,
 		PostTestTimeout: PostTestTimeout,
 		Parent:          cf.FakeDMS, // Allow setting policies
+	})
+
+	testing.AddFixture(&testing.Fixture{
+		Name: PowerAshCaptionsOnBraille,
+		Desc: "Fixture with captions on braille feature enabled",
+		Contacts: []string{
+			"chromeos-a11y-eng@google.com",
+			"xiyuan@google.com",
+		},
+		BugComponent: "b:1272895",
+		Impl: NewPowerUIFixture(PowerTestOptions{
+			NightLight:         DisableNightLight,
+			DarkTheme:          EnableLightTheme,
+			KeyboardBrightness: SetKbBrightnessToZero,
+		}, PowerFixtureOptions{
+			BrowserExtraOpts: []chrome.Option{
+				chrome.EnableFeatures("CaptionsOnBrailleDisplay"),
+			}}),
+		SetUpTimeout:    SetUpTimeout,
+		ResetTimeout:    ResetTimeout,
+		TearDownTimeout: TearDownTimeout,
+		PreTestTimeout:  PreTestTimeout,
+		PostTestTimeout: PostTestTimeout,
 	})
 }
 
