@@ -124,9 +124,6 @@ func init() {
 					"group:release-health",
 					"release-health_power",
 				},
-				// TODO(b/378405353): remove after the python 3.8->3.11 migration.
-				// 16 GB was a bit too small.
-				ExtraHardwareDeps: hwdep.D(hwdep.MinStorage(20)),
 			},
 		},
 	})
