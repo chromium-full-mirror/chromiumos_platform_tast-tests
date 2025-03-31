@@ -807,6 +807,21 @@ func (f *tastFixtureImpl) PostTest(ctx context.Context, s *testing.FixtTestState
 		} else if devInfo.Vendor == IntelVendorNum {
 			// Record the current time so only crashes after this time is collected.
 			currentTime := time.Now()
+			out, err := f.tf.DUTConn(DefaultDUT).CommandContext(ctx, "date").Output()
+			if err != nil {
+				s.Log("Failed to get the DUT current time, using runner current time instead: ", err)
+			} else {
+				dutCurrentTime := string(out)
+				dutCurrentTime = strings.TrimSpace(dutCurrentTime)
+				layout := "Mon Jan 2 15:04:05 MST 2006" // This is the reference time layout
+				t, err := time.Parse(layout, dutCurrentTime)
+				if err != nil {
+					s.Log("Error parsing time: ", err)
+				} else {
+					currentTime = t
+				}
+			}
+
 			// Firmware dump operations and existing crash data types are only
 			// supported on Intel WiFi chips for now.
 			if err := f.tf.WifiClient().TriggerIntelFirmwareDump(ctx); err != nil {
