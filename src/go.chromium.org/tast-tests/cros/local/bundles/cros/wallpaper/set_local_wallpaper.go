@@ -6,7 +6,6 @@ package wallpaper
 
 import (
 	"context"
-	"path/filepath"
 	"time"
 
 	"go.chromium.org/tast-tests/cros/local/chrome"
@@ -14,7 +13,6 @@ import (
 	"go.chromium.org/tast-tests/cros/local/chrome/uiauto/faillog"
 	"go.chromium.org/tast-tests/cros/local/chrome/uiauto/nodewith"
 	"go.chromium.org/tast-tests/cros/local/chrome/uiauto/role"
-	"go.chromium.org/tast-tests/cros/local/media/imgcmp"
 	"go.chromium.org/tast-tests/cros/local/personalization"
 	"go.chromium.org/tast-tests/cros/local/screenshot"
 	"go.chromium.org/tast-tests/cros/local/wallpaper"
@@ -98,7 +96,7 @@ func SetLocalWallpaper(ctx context.Context, s *testing.State) {
 	}
 
 	// Take a screenshot of the current wallpaper.
-	firstScreenshot, err := screenshot.GrabScreenshot(ctx, cr)
+	fillScreenshot, err := screenshot.GrabScreenshot(ctx, cr)
 	if err != nil {
 		s.Fatal("Failed to grab screenshot: ", err)
 	}
@@ -112,24 +110,10 @@ func SetLocalWallpaper(ctx context.Context, s *testing.State) {
 		s.Fatal("Failed to crop wallpaper to center: ", err)
 	}
 
-	// Take a screenshot of the same wallpaper with new layout.
-	secondScreenshot, err := screenshot.GrabScreenshot(ctx, cr)
-	if err != nil {
-		s.Fatal("Failed to grab screenshot: ", err)
-	}
-
 	// Verify that the wallpaper has indeed changed.
 	// The percentage takes into account the center cropped image is similar to the filled image.
 	const expectedSimilarityPercent = 60
-	if err = wallpaper.ValidateDiff(firstScreenshot, secondScreenshot, expectedSimilarityPercent); err != nil {
-		firstScreenshotPath := filepath.Join(s.OutDir(), "screenshot_1.png")
-		secondScreenshotPath := filepath.Join(s.OutDir(), "screenshot_2.png")
-		if err := imgcmp.DumpImageToPNG(ctx, &firstScreenshot, firstScreenshotPath); err != nil {
-			s.Errorf("Failed to dump image to %s: %v", firstScreenshotPath, err)
-		}
-		if err := imgcmp.DumpImageToPNG(ctx, &secondScreenshot, secondScreenshotPath); err != nil {
-			s.Errorf("Failed to dump image to %s: %v", secondScreenshotPath, err)
-		}
+	if err = wallpaper.ValidateBackgroundWithRefImage(cr, fillScreenshot, expectedSimilarityPercent, s.OutDir())(ctx); err != nil {
 		s.Fatal("Failed to validate center cropped wallpaper difference: ", err)
 	}
 }

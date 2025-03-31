@@ -25,7 +25,6 @@ import (
 	"go.chromium.org/tast-tests/cros/local/media/imgcmp"
 	"go.chromium.org/tast-tests/cros/local/personalization"
 	"go.chromium.org/tast-tests/cros/local/screenshot"
-
 	"go.chromium.org/tast/core/errors"
 	"go.chromium.org/tast/core/testing"
 )
@@ -186,6 +185,42 @@ func ValidateBackground(cr *chrome.Chrome, clr color.Color, expectedPercent int)
 			}
 			return nil
 		}, &testing.PollOptions{Timeout: 30 * time.Second, Interval: time.Second}); err != nil {
+			return err
+		}
+		return nil
+	}
+}
+
+// ValidateBackgroundWithRefImage takes a screenshot and checks the diff percentage between the screenshot image and the reference image.
+// Returns error if it's less than expectedPercent%. It will retry for 30 seconds with 1 second interval until either reaching the expected percentage or timeout.
+func ValidateBackgroundWithRefImage(cr *chrome.Chrome, referenceImg image.Image, expectedPercent int, outDir string) uiauto.Action {
+	return func(ctx context.Context) error {
+		var img image.Image
+		var screenshotErr error
+
+		// Take a screenshot and check the diff percentage with reference image.
+		err := testing.Poll(ctx, func(ctx context.Context) error {
+			img, screenshotErr = screenshot.GrabScreenshot(ctx, cr)
+			if screenshotErr != nil {
+				return errors.Wrap(screenshotErr, "failed to grab screenshot")
+			}
+			if err := ValidateDiff(img, referenceImg, expectedPercent); err != nil {
+				return err
+			}
+			return nil
+		}, &testing.PollOptions{Timeout: 30 * time.Second, Interval: time.Second})
+		if err != nil {
+			// Only dump images if the screenshot was successfully taken.
+			if screenshotErr == nil {
+				referenceImgPath := filepath.Join(outDir, "screenshot_1.png")
+				imgPath := filepath.Join(outDir, "screenshot_2.png")
+				if err := imgcmp.DumpImageToPNG(ctx, &referenceImg, referenceImgPath); err != nil {
+					return errors.Wrapf(err, "failed to dump image to %s", referenceImgPath)
+				}
+				if err := imgcmp.DumpImageToPNG(ctx, &img, imgPath); err != nil {
+					return errors.Wrapf(err, "failed to dump image to %s", imgPath)
+				}
+			}
 			return err
 		}
 		return nil
