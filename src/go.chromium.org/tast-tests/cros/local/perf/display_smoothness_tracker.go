@@ -98,3 +98,8 @@ func NewDisplaySmoothnessTracker() *DisplaySmoothnessTracker {
 		displayIDs: map[string]bool{},
 	}
 }
+
+// Started checks if the tracker is started.
+func (t *DisplaySmoothnessTracker) Started() bool {
+	return len(t.displayIDs) != 0
+}

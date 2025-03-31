@@ -15,6 +15,7 @@ import (
 	"go.chromium.org/tast-tests/cros/common/async"
 	"go.chromium.org/tast-tests/cros/common/perf"
 	"go.chromium.org/tast-tests/cros/local/chrome"
+	"go.chromium.org/tast-tests/cros/local/graphics/modetest"
 	"go.chromium.org/tast/core/errors"
 	"go.chromium.org/tast/core/testing"
 )
@@ -82,9 +83,17 @@ func (t *FrameDataTracker) Start(ctx context.Context, tconn *chrome.TestConn, ti
 		return errors.Wrap(err, "failed to start frame counting per sink")
 	}
 
-	t.dsTimeOffset = time.Since(timeZero)
-	if err := t.dsTracker.Start(ctx, tconn, "", throughputInterval); err != nil {
-		return errors.Wrap(err, "failed to start display smoothness tracking")
+	displCount, err := modetest.NumberOfOutputsConnected(ctx)
+	if err != nil {
+		testing.ContextLog(ctx, "Failed to get number of connected displays: ", err)
+	} else if displCount == 0 {
+		testing.ContextLog(ctx, "FrameDataTracker: no displays found; display smoothness tracker is not started")
+	} else {
+		// Start the data tracking if there is a display.
+		t.dsTimeOffset = time.Since(timeZero)
+		if err := t.dsTracker.Start(ctx, tconn, "", throughputInterval); err != nil {
+			return errors.Wrap(err, "failed to start display smoothness tracking")
+		}
 	}
 
 	t.overdrawTimeOffset = time.Since(timeZero)
@@ -126,21 +135,21 @@ func (t *FrameDataTracker) forceStop(ctx context.Context, tconn *chrome.TestConn
 	}
 
 	if _, err := t.dsTracker.Stop(ctx, tconn, ""); err != nil {
-		testing.ContextLog(ctx, errors.Wrap(err, "failed to stop display smoothness tracking"))
+		testing.ContextLog(ctx, "Unable to stop any prior display smoothness tracking: ", err)
 	}
 
 	if _, err := t.overdrawTracker.Stop(ctx, tconn); err != nil {
-		testing.ContextLog(ctx, errors.Wrap(err, "failed to stop overdraw tracking"))
+		testing.ContextLog(ctx, "Unable to stop any prior overdraw tracking: ", err)
 	}
 
 	var data []DisplayFrameData
 	if err := tconn.Call(ctx, &data, `tast.promisify(chrome.autotestPrivate.stopThroughputTrackerDataCollection)`); err != nil {
-		testing.ContextLog(ctx, errors.Wrap(err, "failed to stop data collection"))
+		testing.ContextLog(ctx, "Unable to stop any prior data collection: ", err)
 	}
 
 	var frameCountData []FrameCountingPerSinkData
 	if err := tconn.Call(ctx, &frameCountData, `tast.promisify(chrome.autotestPrivate.stopFrameCounting)`); err != nil {
-		testing.ContextLog(ctx, errors.Wrap(err, "failed to stop frame counting per sink"))
+		testing.ContextLog(ctx, "Unable to stop any prior frame counting per sink: ", err)
 	}
 
 	return nil
@@ -160,18 +169,19 @@ func (t *FrameDataTracker) Stop(ctx context.Context, tconn *chrome.TestConn) err
 		return ctx.Err()
 	}
 
-	dsData, err := t.dsTracker.Stop(ctx, tconn, "")
-	if err != nil {
-		if firstErr == nil {
+	// dsData will be nil if dsTracker has not started.
+	var dsData *DisplayFrameData
+	if t.dsTracker.Started() {
+		var err error
+		dsData, err = t.dsTracker.Stop(ctx, tconn, "")
+		if err != nil && firstErr == nil {
 			firstErr = errors.Wrap(err, "failed to stop display smoothness tracking")
 		}
 	}
 
 	overdrawData, err := t.overdrawTracker.Stop(ctx, tconn)
-	if err != nil {
-		if firstErr == nil {
-			firstErr = errors.Wrap(err, "failed to stop overdraw tracker")
-		}
+	if err != nil && firstErr == nil {
+		firstErr = errors.Wrap(err, "failed to stop overdraw tracker")
 	}
 
 	var data []DisplayFrameData
@@ -295,65 +305,63 @@ func (t *FrameDataTracker) Record(pv *perf.Values) {
 
 	// FrameData collecting on the DUTs may fail (b/210185705) or return no data.
 	// Check if data is collected before recording it.
-	if t.dsData == nil {
-		return
-	}
+	if t.dsData != nil {
+		if t.dsData.FramesExpected > 0 {
+			pv.Set(perf.Metric{
+				Name:      t.prefix + "DisplayJankMetric",
+				Unit:      "percent",
+				Direction: perf.SmallerIsBetter,
+			}, float64(t.dsData.JankCount)/float64(t.dsData.FramesExpected)*100)
+		}
 
-	if t.dsData.FramesExpected > 0 {
 		pv.Set(perf.Metric{
-			Name:      t.prefix + "DisplayJankMetric",
-			Unit:      "percent",
+			Name:      t.prefix + "Display.FramesExpected",
+			Unit:      "count",
+			Direction: perf.BiggerIsBetter,
+		}, float64(t.dsData.FramesExpected))
+		pv.Set(perf.Metric{
+			Name:      t.prefix + "Display.FramesProduced",
+			Unit:      "count",
+			Direction: perf.BiggerIsBetter,
+		}, float64(t.dsData.FramesProduced))
+		pv.Set(perf.Metric{
+			Name:      t.prefix + "Display.JankCount",
+			Unit:      "count",
 			Direction: perf.SmallerIsBetter,
-		}, float64(t.dsData.JankCount)/float64(t.dsData.FramesExpected)*100)
-	}
+		}, float64(t.dsData.JankCount))
 
-	pv.Set(perf.Metric{
-		Name:      t.prefix + "Display.FramesExpected",
-		Unit:      "count",
-		Direction: perf.BiggerIsBetter,
-	}, float64(t.dsData.FramesExpected))
-	pv.Set(perf.Metric{
-		Name:      t.prefix + "Display.FramesProduced",
-		Unit:      "count",
-		Direction: perf.BiggerIsBetter,
-	}, float64(t.dsData.FramesProduced))
-	pv.Set(perf.Metric{
-		Name:      t.prefix + "Display.JankCount",
-		Unit:      "count",
-		Direction: perf.SmallerIsBetter,
-	}, float64(t.dsData.JankCount))
+		smMetric := perf.Metric{
+			Name:      t.prefix + "Display.Smoothness",
+			Multiple:  true,
+			Unit:      "percent",
+			Direction: perf.BiggerIsBetter,
+			Interval:  fmt.Sprintf("%vs", throughputInterval.Seconds()),
+		}
+		for _, data := range t.dsData.Throughput {
+			pv.Append(smMetric, float64(data))
+		}
 
-	smMetric := perf.Metric{
-		Name:      t.prefix + "Display.Smoothness",
-		Multiple:  true,
-		Unit:      "percent",
-		Direction: perf.BiggerIsBetter,
-		Interval:  fmt.Sprintf("%vs", throughputInterval.Seconds()),
-	}
-	for _, data := range t.dsData.Throughput {
-		pv.Append(smMetric, float64(data))
-	}
+		jankTime := perf.Metric{
+			Name:     t.prefix + "Display.Jank.t",
+			Multiple: true,
+			Unit:     "s",
+		}
 
-	jankTime := perf.Metric{
-		Name:     t.prefix + "Display.Jank.t",
-		Multiple: true,
-		Unit:     "s",
-	}
+		offset := t.dsTimeOffset.Seconds()
+		for _, data := range t.dsData.JankTimestamps {
+			pv.Append(jankTime, offset+(float64(data)/1000))
+		}
 
-	offset := t.dsTimeOffset.Seconds()
-	for _, data := range t.dsData.JankTimestamps {
-		pv.Append(jankTime, offset+(float64(data)/1000))
-	}
-
-	jdMetric := perf.Metric{
-		Name:      t.prefix + "Display.JankDurations",
-		Multiple:  true,
-		Unit:      "ms",
-		Direction: perf.SmallerIsBetter,
-		Interval:  jankTime.Name,
-	}
-	for _, data := range t.dsData.JankDurations {
-		pv.Append(jdMetric, float64(data))
+		jdMetric := perf.Metric{
+			Name:      t.prefix + "Display.JankDurations",
+			Multiple:  true,
+			Unit:      "ms",
+			Direction: perf.SmallerIsBetter,
+			Interval:  jankTime.Name,
+		}
+		for _, data := range t.dsData.JankDurations {
+			pv.Append(jdMetric, float64(data))
+		}
 	}
 
 	overdrawTimelineName := t.prefix + "AverageOverdraw.t"

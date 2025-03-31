@@ -55,3 +55,8 @@ func (t *OverdrawTracker) Stop(ctx context.Context, tconn *chrome.TestConn) (*Ov
 func NewOverdrawTracker() *OverdrawTracker {
 	return &OverdrawTracker{}
 }
+
+// Started checks if the tracker is started.
+func (t *OverdrawTracker) Started() bool {
+	return t.collecting
+}
