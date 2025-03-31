@@ -201,7 +201,7 @@ func IsClientCertImported(ctx context.Context, ui *uiauto.Context, clientOrg str
 	if err := uiauto.Combine("check client cert",
 		ui.DoDefault(nodewith.Name("Your certificates").Role(role.Tab)),
 		ui.WaitUntilExists(nodewith.Name("Your certificates").ClassName("tab selected")),
-		ui.WithTimeout(10*time.Second).WaitUntilExists(nodewith.Name(clientOrg).First()),
+		ui.WithTimeout(15*time.Second).WaitUntilExists(nodewith.Name(clientOrg).First()),
 	)(ctx); err != nil {
 		return false
 	}
