@@ -5,9 +5,10 @@
 package policyutil
 
 import (
-	"bytes"
 	"context"
 	"io"
+	"os"
+	"strings"
 	"time"
 
 	"go.chromium.org/tast-tests/cros/remote/log"
@@ -19,40 +20,63 @@ import (
 )
 
 // prepareBeforePowerwash downloads the stateful image from Google cloud storage.
-func prepareBeforePowerwash(ctx context.Context, cloudStorage *testing.CloudStorage) ([]byte, error) {
-	testing.ContextLog(ctx, "Downloading stateful image")
-	var statefulImage []byte
+func prepareBeforePowerwash(ctx context.Context, cloudStorage *testing.CloudStorage) (string, error) {
+	// Create temporary file to store stateful image on the host. It is used in
+	// restoreAfterPowerwash and removed in the Powerwash functions below.
+	statefulImageFileOnHost, err := os.CreateTemp("", "")
+	if err != nil {
+		return "", errors.Wrap(err, "failed to create temporary file for stateful image on the host")
+	}
+	defer statefulImageFileOnHost.Close()
+
+	testing.ContextLogf(ctx, "Downloading stateful image to %s", statefulImageFileOnHost.Name())
 	if err := testing.Poll(ctx, func(ctx context.Context) error {
 		statefulReader, err := cloudStorage.Open(ctx, "build-artifact:///stateful.tgz")
 		if err != nil {
 			return errors.Wrap(err, "failed to request stateful image from cloud storage")
 		}
 		defer statefulReader.Close()
-		statefulImage, err = io.ReadAll(statefulReader)
-		if err != nil {
-			return errors.Wrap(err, "failed to read stateful image into buffer")
+
+		if _, err := io.Copy(statefulImageFileOnHost, statefulReader); err != nil {
+			return errors.Wrap(err, "failed to read stateful image into file")
 		}
+
 		return nil
 	}, &testing.PollOptions{Timeout: 10 * time.Minute}); err != nil {
-		return nil, errors.Wrap(err, "failed to download stateful image")
+		return "", errors.Wrap(err, "failed to download stateful image")
 	}
-	return statefulImage, nil
+
+	return statefulImageFileOnHost.Name(), nil
 }
 
 // restoreAfterPowerwash restores the stateful partition from a provided image and Tast executables.
-func restoreAfterPowerwash(ctx context.Context, statefulImage []byte, dut *dut.DUT, pushedFiles map[string]string) error {
-	// Restore stateful partition from the image and trigger postinstall steps.
-	testing.ContextLog(ctx, "Flashing stateful")
+func restoreAfterPowerwash(ctx context.Context, statefulImageFileOnHost string, dut *dut.DUT, pushedFiles map[string]string) error {
+	// Create temporary file to store stateful image on DUT.
+	mktempOutput, err := dut.Conn().CommandContext(ctx, "mktemp").Output(ssh.DumpLogOnError)
+	if err != nil {
+		return errors.Wrap(err, "failed to create a temporary file for stateful image on DUT")
+	}
+	statefulImageFileOnDUT := strings.TrimSpace(string(mktempOutput))
+
+	testing.ContextLogf(ctx, "Uploading stateful image file to %s on DUT", statefulImageFileOnDUT)
+	if _, err := linuxssh.PutFiles(ctx, dut.Conn(), map[string]string{
+		statefulImageFileOnHost: statefulImageFileOnDUT,
+	}, linuxssh.DereferenceSymlinks); err != nil {
+		return errors.Wrap(err, "failed to upload stateful image file to DUT")
+	}
+
+	testing.ContextLog(ctx, "Flashing stateful and triggering postinstall steps")
 	flashCmd := dut.Conn().CommandContext(
 		ctx, "/bin/tar", "--ignore-command-error", "--overwrite", "--directory",
-		"/mnt/stateful_partition", "--selinux", "-xz")
-	flashCmd.Stdin = bytes.NewReader(statefulImage)
+		"/mnt/stateful_partition", "--selinux", "-xzf", statefulImageFileOnDUT)
 	if err := flashCmd.Run(ssh.DumpLogOnError); err != nil {
 		return errors.Wrap(err, "failed to flash stateful partition")
 	}
 	if err := linuxssh.WriteFile(ctx, dut.Conn(), "/mnt/stateful_partition/.update_available", []byte("clobber"), 0644); err != nil {
 		return errors.Wrap(err, "failed to trigger postinstall steps")
 	}
+
+	testing.ContextLog(ctx, "Rebooting DUT")
 	if err := dut.Reboot(ctx); err != nil {
 		return errors.Wrap(err, "failed to reboot after flashing stateful")
 	}
@@ -62,7 +86,7 @@ func restoreAfterPowerwash(ctx context.Context, statefulImage []byte, dut *dut.D
 	}
 
 	// Push Tast executables to the DUT.
-	testing.ContextLog(ctx, "Pushing executables to target")
+	testing.ContextLog(ctx, "Pushing executables to target and resetting TPM")
 	if _, err := linuxssh.PutFiles(ctx, dut.Conn(), pushedFiles, linuxssh.DereferenceSymlinks); err != nil {
 		return errors.Wrap(err, "failed to push Tast executables")
 	}
@@ -109,7 +133,7 @@ type PowerwashFunc func(ctx context.Context) error
 //		s.Fatal("Powerwash failed: ", err)
 //	}
 func Powerwash(ctx context.Context, cloudStorage *testing.CloudStorage, dut *dut.DUT, pushedFiles map[string]string, powerwashFn PowerwashFunc) (retErr error) {
-	statefulImage, err := prepareBeforePowerwash(ctx, cloudStorage)
+	statefulImageFileOnHost, err := prepareBeforePowerwash(ctx, cloudStorage)
 	if err != nil {
 		return errors.Wrap(err, "failed to prepare to powerwash")
 	}
@@ -118,9 +142,10 @@ func Powerwash(ctx context.Context, cloudStorage *testing.CloudStorage, dut *dut
 	log.Collect(ctx, dut)
 
 	defer func() {
-		if err := restoreAfterPowerwash(ctx, statefulImage, dut, pushedFiles); err != nil {
+		if err := restoreAfterPowerwash(ctx, statefulImageFileOnHost, dut, pushedFiles); err != nil {
 			retErr = errors.Join(retErr, errors.Wrap(err, "failed to restore after powerwash"))
 		}
+		os.Remove(statefulImageFileOnHost)
 	}()
 
 	// Initiate powerwash.
