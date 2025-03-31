@@ -110,6 +110,16 @@ type GpioEvents struct {
 	ElapsedUS uint64
 }
 
+// IsRiseOf returns true if this GpioEvent represents a rising edge of the named signal.
+func (e GpioEvent) IsRiseOf(name ti50.GpioName) bool {
+	return e.Edge == GpioEdgeRising && e.Name == name
+}
+
+// IsFallOf returns true if this GpioEvent represents a falling edge of the named signal.
+func (e GpioEvent) IsFallOf(name ti50.GpioName) bool {
+	return e.Edge == GpioEdgeFalling && e.Name == name
+}
+
 // FindFirst returns the first gpio event that matches the specified args
 func (e GpioEvents) FindFirst(name ti50.GpioName, edge GpioEdge) *GpioEvent {
 	for _, event := range e.Events[name] {
