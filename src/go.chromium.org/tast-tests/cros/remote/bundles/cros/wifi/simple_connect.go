@@ -2428,6 +2428,9 @@ func init() {
 func SimpleConnect(ctx context.Context, s *testing.State) {
 	tf := s.FixtValue().(*wificell.TestFixture)
 
+	// TODO(b/407095728): Remove CollectIntelFirmwareDumpOnErr.
+	tf.CollectIntelFirmwareDumpOnError = true
+
 	pv := perf.NewValues()
 	defer func() {
 		if err := pv.Save(s.OutDir()); err != nil {
