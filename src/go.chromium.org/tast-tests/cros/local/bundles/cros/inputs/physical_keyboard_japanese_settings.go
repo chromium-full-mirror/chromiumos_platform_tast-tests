@@ -241,7 +241,7 @@ func PhysicalKeyboardJapaneseSettings(ctx context.Context, s *testing.State) {
 		{
 			name:          "KeymapStyleChromeOS",
 			feature:       useractions.FeatureJapaneseKeymapStyle,
-			settingAction: imesettings.SetJapaneseDropdown(ui, imesettings.JapaneseKeymapStyle, "Chrome OS"),
+			settingAction: imesettings.SetJapaneseDropdown(ui, imesettings.JapaneseKeymapStyle, "ChromeOS"),
 			// Ctrl+z; is "cancel composition" only in ChromeOS.
 			validationAction: its.ValidateInputOnField(inputField, uiauto.Combine("type and cancel composition", kb.TypeAction("a"), kb.AccelAction("Ctrl+z")), ""),
 		},

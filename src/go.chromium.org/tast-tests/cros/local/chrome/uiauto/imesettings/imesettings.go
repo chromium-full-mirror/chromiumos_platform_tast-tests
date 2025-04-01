@@ -121,7 +121,7 @@ func (i *IMESettings) OpenInputMethodSetting(tconn *chrome.TestConn, im ime.Inpu
 		// Japanese input settings page has not been migrated to OS Settings yet.
 		// Remove this special case once it is migrated.
 		if im.Equal(ime.JapaneseWithUSKeyboard) || im.Equal(ime.Japanese) {
-			imeSettingHeading = nodewith.Name("Japanese input settings").Role(role.Heading)
+			imeSettingHeading = nodewith.NameStartingWith("Japanese").Role(role.Heading)
 		} else {
 			imeSettingHeading = nodewith.Name(im.Name).Role(role.Heading).Ancestor(ossettings.WindowFinder)
 		}
@@ -227,28 +227,33 @@ func (i *IMESettings) setPKAutoCorrection(cr *chrome.Chrome, expected bool) uiau
 
 // SetJapaneseDropdown sets a dropdown in the Japanese settings page to the specified value.
 func SetJapaneseDropdown(ui *uiauto.Context, setting settingOption, value string) uiauto.Action {
-	dropdownFinder := nodewith.Name(string(setting)).Role(role.ComboBoxSelect)
-	dropdownItemFinder := nodewith.Name(value).Role(role.ListBoxOption)
+	dropdownFinder := nodewith.NameStartingWith(string(setting)).Role(role.ComboBoxSelect)
+	dropdownItemFinder := nodewith.Name(value).Ancestor(dropdownFinder)
 	return uiauto.Combine("set drop down option",
-		ui.LeftClick(dropdownFinder),
+		ui.MakeVisible(dropdownFinder),
+		ui.LeftClickUntil(dropdownFinder, ui.WithTimeout(3*time.Second).WaitUntilExists(dropdownFinder.Expanded())),
 		ui.WaitUntilExists(dropdownItemFinder),
 		ui.MakeVisible(dropdownItemFinder),
-		ui.LeftClick(dropdownItemFinder),
+		ui.LeftClickUntil(dropdownItemFinder, ui.WithTimeout(3*time.Second).WaitUntilExists(dropdownFinder.Collapsed())),
 	)
 }
 
 // SetJapaneseCheckbox sets a checkbox in the Japanese settings page to the specified value.
 func SetJapaneseCheckbox(ui *uiauto.Context, setting settingOption, value checked.Checked) uiauto.Action {
-	checkboxFinder := nodewith.Name(string(setting)).Role(role.CheckBox)
-	return func(ctx context.Context) error {
-		info, err := ui.Info(ctx, checkboxFinder)
-		if err != nil {
-			return errors.Wrap(err, "failed to get checkbox value")
-		}
-		if info.Checked == value {
-			testing.ContextLogf(ctx, "Skip to change %q: the current value is already %q", setting, value)
+	finder := nodewith.Name(string(setting))
+	return uiauto.Combine("set checkbox or toggle button",
+		ui.MakeVisible(finder),
+		func(ctx context.Context) error {
+			info, err := ui.Info(ctx, finder)
+			if err != nil {
+				return errors.Wrap(err, "failed to get checkbox or toggle button value")
+			}
+			if info.Checked == value {
+				testing.ContextLogf(ctx, "Skip to change %q: the current value is already %q", setting, value)
+				return nil
+			}
 			return nil
-		}
-		return ui.LeftClick(checkboxFinder)(ctx)
-	}
+		},
+		ui.LeftClickUntil(finder, ui.WithTimeout(3*time.Second).WaitUntilCheckedState(finder, value == checked.True)),
+	)
 }
