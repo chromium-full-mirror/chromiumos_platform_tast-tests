@@ -31,7 +31,7 @@ func init() {
 		},
 		BugComponent: "b:715469", // ChromeOS > Platform > System > Hardware Security > HwSec GSC > Ti50
 		Attr: []string{"group:gsc",
-			"gsc_dt_ab", "gsc_dt_shield", "gsc_ot_fpga_cw310", "gsc_ot_shield",
+			"gsc_dt_ab", "gsc_dt_shield", "gsc_h1_shield", "gsc_ot_fpga_cw310", "gsc_ot_shield",
 			"gsc_image_ti50",
 			"gsc_nightly"},
 		Fixture: fixture.GSCOpenCCD,
@@ -41,7 +41,6 @@ func init() {
 				bus: ti50.TpmBusSpi,
 				cmd: "-B",
 			},
-			ExtraAttr: []string{"gsc_h1_shield"},
 		}, {
 			Name: "i2c_apro_boot",
 			Val: testTPMCmd{
@@ -54,7 +53,6 @@ func init() {
 				bus: ti50.TpmBusSpi,
 				cmd: "--get_time",
 			},
-			ExtraAttr: []string{"gsc_h1_shield"},
 		}, {
 			Name: "i2c_get_time",
 			Val: testTPMCmd{
@@ -67,7 +65,6 @@ func init() {
 				bus: ti50.TpmBusSpi,
 				cmd: "--ccd_info",
 			},
-			ExtraAttr: []string{"gsc_h1_shield"},
 		}, {
 			Name: "i2c_ccd_info",
 			Val: testTPMCmd{
@@ -80,7 +77,6 @@ func init() {
 				bus: ti50.TpmBusSpi,
 				cmd: "--board_id",
 			},
-			ExtraAttr: []string{"gsc_h1_shield"},
 		}, {
 			Name: "i2c_board_id",
 			Val: testTPMCmd{
@@ -93,7 +89,6 @@ func init() {
 				bus: ti50.TpmBusSpi,
 				cmd: "--fwver",
 			},
-			ExtraAttr: []string{"gsc_h1_shield"},
 		}, {
 			Name: "i2c_fwver",
 			Val: testTPMCmd{
@@ -106,7 +101,6 @@ func init() {
 				bus: ti50.TpmBusSpi,
 				cmd: "--metrics",
 			},
-			ExtraAttr: []string{"gsc_h1_shield"},
 		}, {
 			Name: "i2c_metrics",
 			Val: testTPMCmd{
@@ -119,7 +113,6 @@ func init() {
 				bus: ti50.TpmBusSpi,
 				cmd: "--wp",
 			},
-			ExtraAttr: []string{"gsc_h1_shield"},
 		}, {
 			Name: "i2c_wp",
 			Val: testTPMCmd{
